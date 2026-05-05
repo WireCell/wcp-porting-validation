@@ -10,7 +10,7 @@ Eight families of scripts live here; each is documented below.
 | `track_response_l1sp_pdvd.py` | Validator for the PDVD L1SPFilterPD kernel JSONs (top + bottom) |
 | `illustrate_pdvd_w_sentinel_path_bug.py` | Diagnostic plot for the all-zero sentinel-path bug in the PDVD W FR |
 | `compare_sp_filters.py` | Compare PDVD and PDHD high-frequency-cutoff filters (Wiener wide/tight, Gaus, Wire) in frequency and time/wire-index domains |
-| `compare_lf_filters.py` | Compare PDVD and PDHD low-frequency-cutoff filters (LfFilter: loose/tight/tighter) in frequency and time domains |
+| `compare_lf_filters.py` | Compare PDVD and PDHD low-frequency-cutoff filters (LfFilter: loose/tight/tighter) in frequency domain, impulse response, and synthetic-waveform demo |
 | `noise_spectrum_compare.py` | Cross-detector post-NF noise frequency spectrum comparison: PDVD-top, PDVD-bottom, PDHD |
 
 Reference data:
@@ -108,19 +108,23 @@ Output PNGs (written beside the script):
 
 | File | Content |
 |---|---|
-| `compare_lf_filters_freq.png` | |H(f)| = 1 − exp(−(f/τ)²) for all three variants and both detectors |
-| `compare_lf_filters_time.png` | Time-domain complement G(t) showing the Gaussian baseline each filter removes; ±200 µs and ±30 µs panels |
+| `compare_lf_filters_freq.png` | `\|H(f)\|` = 1 − exp(−(f/τ)²) for all three variants and both detectors |
+| `compare_lf_filters_impulse.png` | Actual impulse response l(t) = iFFT[L(f)] = δ(t) − g(t); left=spike at t=0, right=negative wings (y clipped) |
+| `compare_lf_filters_demo.png` | Filter applied to a synthetic waveform (narrow signal + slow + medium sinusoidal baselines); shows what each variant removes |
 
 The LfFilter is a high-pass filter wired into the ROI-finding deconvolutions
 (`decon_2D_looseROI` / `_tightROI` / `_tighterROI` in `OmnibusSigProc`).
-Its complement G(f) = exp(−(f/τ)²) is a Gaussian low-pass; the iFFT G(t)
-reveals the time-scale of the baseline that each variant removes:
+Its actual impulse response is l(t) = δ(t) − g(t), where g(t) =
+iFFT[exp(−(f/τ)²)] is a Gaussian.  Convolving a waveform with l(t) passes it
+as-is (the δ spike) while subtracting a Gaussian-smeared copy (the −g wings),
+giving a high-pass effect.  The Gaussian wing FWHM = 2√(2 ln 2)/(π·τ)
+reveals the time-scale over which the filter affects neighboring samples:
 
-| Variant | PDVD τ (MHz) | PDHD τ (MHz) | Complement FWHM (µs) |
+| Variant | PDVD τ (MHz) | PDHD τ (MHz) | Wing FWHM g(t) (µs) |
 |---------|-------------|-------------|----------------------|
-| loose   | 0.002 | 0.002 (same) | ≈ 530 — DC-like drift only |
-| tight   | 0.014 | 0.016        | ≈ 53 / 47 µs |
-| tighter | 0.060 | 0.080        | ≈ 12 / 9 µs |
+| loose   | 0.002 | 0.002 (same) | ≈ 530 — DC-like drift only; l(t) ≈ δ(t) |
+| tight   | 0.014 | 0.016        | ≈ 53 (PDVD) / 47 (PDHD) |
+| tighter | 0.060 | 0.080        | ≈ 12 (PDVD) / 9 (PDHD) |
 
 PDVD top/bottom use byte-identical τ values.  PDVD loose = PDHD loose.
 
