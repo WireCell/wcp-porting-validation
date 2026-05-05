@@ -1,6 +1,6 @@
 # pdvd/sp_plot — PDVD signal-processing inspection scripts
 
-Five families of scripts live here; each is documented below.
+Six families of scripts live here; each is documented below.
 
 | Script | Purpose |
 |---|---|
@@ -9,6 +9,7 @@ Five families of scripts live here; each is documented below.
 | `cmd_plot_frames.py` | U/V/W frame views from a `FrameFileSink` archive |
 | `track_response_l1sp_pdvd.py` | Validator for the PDVD L1SPFilterPD kernel JSONs (top + bottom) |
 | `illustrate_pdvd_w_sentinel_path_bug.py` | Diagnostic plot for the all-zero sentinel-path bug in the PDVD W FR |
+| `compare_sp_filters.py` | Compare PDVD and PDHD high-frequency-cutoff filters (Wiener wide/tight, Gaus, Wire) in frequency and time/wire-index domains |
 
 Reference data:
 
@@ -16,6 +17,43 @@ Reference data:
 |---|---|
 | `handscan_039324_anode0.csv` | Hand-scan ground truth for run 39324 events 0-5, PDVD bottom anode 0.  Schema mirrors `pdhd/nf_plot/handscan_27409.csv` plus a `real ∈ {Yes, No, Missing}` column (Yes = real artifact must fire; No = real prolonged track that must NOT fire; Missing = real artifact the gate currently misses).  Consumed by `--validate` mode of `find_long_decon_artifacts_pdvd.py` and the default ground truth of `eval_l1sp_trigger_pdvd.py`. |
 | `pdvd_l1sp_rois_039324_evt{0..5}_anode0.csv` | Per-event clustered-ROI tables emitted by `find_long_decon_artifacts_pdvd.py --csv`.  Refresh after any defaults / algorithm change. |
+
+---
+
+## `compare_sp_filters.py` — HF-cutoff filter comparison
+
+Analytic reproduction of the high-frequency-cutoff (`HfFilter`) filters from
+`protodunevd/sp-filters.jsonnet` and `pdhd/sp-filters.jsonnet`.  Formula
+verified against `toolkit/util/src/Response.cxx:435-444` and
+`toolkit/sigproc/src/HfFilter.cxx:38-52`.
+
+```bash
+python compare_sp_filters.py           # all five PNGs
+python compare_sp_filters.py --only 5  # wire-filter comparison only
+```
+
+Output PNGs (written beside the script):
+
+| File | Content |
+|---|---|
+| `compare_wiener_wide_freq.png` | Wiener wide |H(f)| vs frequency — shows PDVD and PDHD wide are identical |
+| `compare_wiener_wide_time.png` | Wiener wide time-domain kernel (500 ns/tick, FWHM annotated) |
+| `compare_wiener_wide_vs_tight.png` | Wide vs tight per plane: frequency + time domain overlaid |
+| `compare_gauss.png` | Gaus_wide (σ=0.12 MHz, power=2): same for all detectors |
+| `compare_wire_filter.png` | Wire_ind / Wire_col in wire-frequency and wire-index spatial domains |
+
+**Wire-filter note.**  The σ values in jsonnet (e.g. `5.0/√π` for PDVD induction)
+are *frequency-domain* parameters.  A *larger* σ_code means the filter stays
+near 1 across all bins → near-delta in the spatial (wire-index) domain → **less**
+strip-to-strip smearing.  Approximate spatial width: σ_spatial ≈ 1/(π σ_code).
+
+| Detector | `Wire_ind` σ_code | σ_spatial (wires) |
+|---|---|---|
+| PDVD top/bottom | 5.0/√π ≈ 2.82 | ≈ 0.11 wire |
+| PDHD            | 0.75/√π ≈ 0.42 | ≈ 0.75 wire |
+
+PDHD induction smears ~6.7× wider across strips.  The collection wire filter
+(σ_code = 10.0/√π) is identical on both detectors.
 
 ---
 

@@ -287,3 +287,204 @@ Identical between detectors:
 | L1SP C++ | `sigproc/src/L1SPFilterPD.cxx` (shared) | same |
 | L1SP docs | `sigproc/docs/l1sp/L1SPFilterPD.md` | same |
 | Field-response file | `np04hd-garfield-6paths-mcmc-bestfit.json.bz2` (APA0) / `dune-garfield-1d565.json.bz2` (APA1–3) | `protodunevd_FR_imbalance3p_260501.json.bz2` (all anodes) |
+
+---
+
+## 11. SP-knob deep dive — five questions answered
+
+Sections 3–5 list these variables as table rows.  This section explains
+the mechanism and cross-detector implications for each.
+
+---
+
+### 11.1 `use_multi_plane_protection` does not change traditional ROI output ✅
+
+**Claim (from a colleague): enabling this option does not affect the traditional ROI determination.**  The code confirms this.
+
+When `use_multi_plane_protection: true` (the PDVD default;
+`protodunevd/sp.jsonnet:134`; C++ member default is `false`,
+`OmnibusSigProc.h:246`), the code appends two extra steps **after**
+`CleanUpROIs` and `generate_merge_ROIs`:
+
+```
+roi_refine.MP3ROI(iplane, ...)   // OmnibusSigProc.cxx:1754
+roi_refine.MP2ROI(iplane, ...)   // OmnibusSigProc.cxx:1756
+save_mproi(..., mp3_roi_traces, ...)  // :1758
+save_mproi(..., mp2_roi_traces, ...)  // :1759
+```
+
+`MP3ROI` / `MP2ROI` populate two dedicated members (`proteced_rois`,
+`mp_rois`) inside `ROI_refinement` and those members are saved to
+`mp3_roi_tag` / `mp2_roi_tag` output traces
+(`OmnibusSigProc.cxx:1911-1913`).
+
+The key: **the traditional refinement loop that immediately follows**
+(`BreakROIs` → `CheckROIs` → `CleanUpROIs` → `ShrinkROIs` →
+`CleanUpCollectionROIs` / `CleanUpInductionROIs` → `ExtendROIs`,
+`OmnibusSigProc.cxx:1768-1812`) **does not read `proteced_rois` or
+`mp_rois`**.  Those members are only accessed through
+`get_mp3_rois()` / `get_mp2_rois()`, which are called exactly once (in
+the `save_mproi` calls above) to write the extra tagged traces.
+`ROI_formation`'s loose/tight determination runs even earlier and is
+wholly independent.
+
+The companion flag `do_not_mp_protect_traditional`
+(`OmnibusSigProc.cxx:1760-1763`) clears the MP ROI maps after tagging;
+this flag confirms the design intent — the traditional path was never
+going to read them anyway.
+
+**Practical meaning for PDVD.**  Enabling MP generates additional
+`mp3_roi_tag` / `mp2_roi_tag` trace streams consumed by downstream
+imaging and DNN-SP stages.  The `gauss%d` and `wiener%d` output
+frames, and the ROI positions and boundaries that define them, are
+bit-identical whether MP is on or off.
+
+---
+
+### 11.2 `r_th_factor` — ROI-refinement RMS threshold scale
+
+`r_th_factor` is a multiplier applied to the per-channel deconvolved
+RMS during ROI **refinement**, not during the initial tight/loose ROI
+**formation**.
+
+**Stage distinction.**  Two separate threshold-factor knobs feed into
+`OmnibusSigProc.cxx:1637`:
+
+```
+ROI_formation: receives th_factor_ind / th_factor_col (troi_ind/col_th_factor in jsonnet)
+ROI_refinement: receives r_th_factor  ←  this knob
+```
+
+Inside `ROI_refinement`, the factor builds a per-row threshold
+`plane_rms.at(irow) * th_factor` that gates `get_above_threshold(...)`
+across `CleanUpROIs`, `BreakROIs`, `ShrinkROIs`, and extension-boundary
+checks (`ROI_refinement.cxx:323,497,1193,1203,1223,1246,1253,1272,
+1625,1628,1671,1674,1704,1707`).  A sample that falls below this bar
+contributes to shrinking or splitting an existing ROI or causes a weak
+ROI to be discarded.
+
+**Values.**  PDVD uniform `3.0` (`protodunevd/sp.jsonnet:109`);
+PDHD `2.5` on APA0 / `3.0` on APA1–3 (`pdhd/sp.jsonnet:73`).
+PDHD loosens APA0 to compensate for the V-plane anomaly that creates
+noisier induction; PDVD has no equivalent anomaly so uses a single
+uniform value.  The C++ default is also `3.0` (`OmnibusSigProc.h:147`).
+
+**Effect.**  Raising the factor trims more low-amplitude samples at ROI
+edges and rejects more weak ROIs; lowering it keeps smaller pulses at
+the cost of more noise-originated ROI fragments.
+
+---
+
+### 11.3 `r_fake_signal_*` — induction-plane charge threshold for ROI cleanup
+
+Four variables gate **absolute charge** (in deconvolved electrons)
+during the ROI cleanup step.
+
+| Variable | C++ default | PDVD / PDHD value |
+|----------|-------------|-------------------|
+| `r_fake_signal_low_th` | `500 e⁻` | **375 e⁻** |
+| `r_fake_signal_high_th` | `1000 e⁻` | **750 e⁻** |
+| `r_fake_signal_low_th_ind_factor` | `1.0` | `1.0` |
+| `r_fake_signal_high_th_ind_factor` | `1.0` | `1.0` |
+
+Defaults in `OmnibusSigProc.h:148-151`; PDVD override at
+`protodunevd/sp.jsonnet:110-113`.
+
+**What they do.**  After the main ROI refinement loop, two cleanup
+routines run:
+
+- `CleanUpCollectionROIs()` (`ROI_refinement.cxx:1289`): keeps a
+  collection ROI iff **any sample ≥ `high_th`** OR **mean ≥ `low_th`**
+  (line `1300`).
+- `CleanUpInductionROIs()` (`ROI_refinement.cxx:1371`): same logic
+  with thresholds multiplied by the `_ind_factor` knobs
+  (lines `1377-1378`).
+
+A ROI that fails both conditions is discarded as a "fake signal" (the
+name reflects the assumption that it is a noise fluctuation below MIP
+scale — the comment at line `1294` reads "electrons, about 1/2 of MIP
+per tick").
+
+**Effect of the PDVD/PDHD override (375/750 vs 500/1000).**  The
+lower thresholds are **more permissive**: weaker induction ROIs that
+would be discarded at 500/1000 survive at 375/750.  This matches the
+observation in §3 that both detectors override the WCT defaults
+identically — the numbers were carried forward from PDHD and have not
+been independently retuned for VD geometry or noise levels.
+
+**No top/bottom split in PDVD.**  The same thresholds apply to
+anodes 0–7 (`protodunevd/sp.jsonnet:110-113` does not branch on
+`ident`).  The `_ind_factor` knobs provide a relative induction/collection
+scaling axis for future per-region tuning without changing the
+collection-plane bar.
+
+---
+
+### 11.4 Wiener wide is not stale — it sets the shape of the wiener output
+
+The two Wiener filter sets serve **separate roles** in the
+deconvolution pipeline.  Wide is live and required.
+
+**Tight** (σ ≈ 0.149 / 0.160 / 0.136 MHz for U/V/W;
+`protodunevd/sp-filters.jsonnet:97-102`) drives all the internal
+deconvolutions used to **find** ROIs:
+
+```
+decon_2D_tightROI     → OmnibusSigProc.cxx:1274,1284,1294
+decon_2D_tighterROI   → :1320,1330,1340
+decon_2D_looseROI     → :1371,1391,1411
+```
+
+**Wide** (σ ≈ 0.187 / 0.194 / 0.176 MHz for U/V/W;
+`protodunevd/sp-filters.jsonnet:104-109`) is the sole filter inside
+`decon_2D_hits()` (`OmnibusSigProc.cxx:1525,1530,1535`), which
+re-deconvolves the raw data with a wider HF envelope and writes the
+result into `m_r_data[plane]`.  Immediately after, the ROI mask from
+the tight pipeline is applied (`roi_refine.apply_roi`, line `1815`)
+and the result is saved as the `wiener%d` output frame (line `1822`).
+
+**Implication.**  ROI *positions and boundaries* are determined by the
+tight path; the *signal amplitude and shape* inside those ROIs in the
+published `wiener%d` frame comes from the wide path.  Removing the
+wide filter list from the jsonnet config would cause `decon_2D_hits()`
+to silently use a null or default filter, corrupting the wiener output.
+
+**The §5 note "not selected by default in either detector's
+`wct-nf-sp.jsonnet`"** refers to the top-level driver not having an
+explicit `Wiener_wide_filters` override.  `sp.jsonnet:85-90` does
+pass both lists to `OmnibusSigProc` explicitly; the C++ then calls
+`decon_2D_hits()` unconditionally (line `1813`) within the normal
+processing loop.  Both PDHD and PDVD always run the wide path.
+
+---
+
+### 11.5 Wire-domain induction filter — PDVD has ~6.7× more wire-direction smearing than PDHD
+
+The `Wire_ind` and `Wire_col` filters are Gaussian kernels applied
+along the wire/strip axis (before `inv_c2r`) to smooth the
+2-D deconvolved data across adjacent readout elements.  A wider σ
+means more cross-channel mixing.
+
+| Detector | `Wire_ind` σ | `Wire_col` σ | Source |
+|----------|-------------|-------------|--------|
+| PDHD | `0.75/√π` ≈ 0.423 wire units | `10.0/√π` ≈ 5.64 | `pdhd/sp-filters.jsonnet:83-84` |
+| PDVD bottom | `5.0/√π` ≈ 2.82 | `10.0/√π` ≈ 5.64 | `protodunevd/sp-filters.jsonnet:111,113` |
+| PDVD top | `5.0/√π` ≈ 2.82 | `10.0/√π` ≈ 5.64 | `protodunevd/sp-filters.jsonnet:112,114` |
+
+**PDVD induction smearing is ~6.7× wider than PDHD's.**  The
+`Wire_ind_b` and `Wire_ind_t` values are numerically identical today
+(the `_b`/`_t` split is a structural hook — see §2).
+
+**Physical motivation.**  PDHD APAs use tensioned wires with ≈5 mm
+pitch; induced charge from a charged-particle track lands primarily on
+one to two wires.  PDVD CRP induction *strips* are wider and at an
+angle such that a typical track projects across more strips; the SP
+filter is sized accordingly so that the cross-strip smoothing mirrors
+the intrinsic charge sharing rather than fighting it.  The collection
+plane uses the same σ (10.0/√π) on both detectors because W-plane
+collection geometry is more similar across the two designs.
+
+**Context among other detectors.**  uBooNE `Wire_ind` ≈ 1.4/√π,
+SBND ≈ 1.05/√π, pDSP ≈ 0.75/√π (matching PDHD).  PDVD's 5.0/√π
+is the largest among production WCT configs and reflects the
+strip-geometry readout rather than a tuning choice.

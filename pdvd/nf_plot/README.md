@@ -156,9 +156,10 @@ cd pdvd/nf_plot
 /nfs/data/1/xning/wirecell-working/.direnv/python-3.11.9/bin/python3 track_response_pdhd.py
 /nfs/data/1/xning/wirecell-working/.direnv/python-3.11.9/bin/python3 track_response_pdvd_bottom.py
 /nfs/data/1/xning/wirecell-working/.direnv/python-3.11.9/bin/python3 track_response_pdvd_top.py
+/nfs/data/1/xning/wirecell-working/.direnv/python-3.11.9/bin/python3 track_response_compare.py
 ```
 
-Each script writes two PNGs in this directory: `track_response_<det>_U.png` and
+Each per-detector script writes two PNGs in this directory: `track_response_<det>_U.png` and
 `track_response_<det>_V.png`.  Each PNG has two panels:
 
 - **Top** — ADC waveform vs. time.  Three overlaid lines:
@@ -183,3 +184,24 @@ binomial lifetime attenuation (< 0.1%), transverse diffusion smearing, and
 upward channel-selection bias from the 5·RMS threshold.  See
 `/nfs/data/1/xning/wirecell-working/data/sim/sim-assumptions.md` for a
 full breakdown.  Discrepancies beyond ~20% warrant investigation.
+
+### Cross-detector comparison: `track_response_compare.py`
+
+Overlays all four detectors (PDHD, PDVD-bottom, PDVD-top, uBooNE) on a single
+pair of PNGs (`track_response_compare_U.png`, `track_response_compare_V.png`).
+
+Unlike the per-detector scripts (which rescale to the model trough), this script
+uses **absolute ADC units** — each curve is computed with its own correct gain,
+shaping, and postgain, so amplitude differences between detectors are physically
+meaningful.  All four curves are trough-aligned to a common reference time
+(`T_REF_US = 20 µs`).
+
+| Detector | FR file | Electronics | postgain | ADC/mV |
+|----------|---------|-------------|---------|--------|
+| PDHD APAs 1–3 | `dune-garfield-1d565.json.bz2` | cold 14 mV/fC, 2.2 µs | 1.0 | 11.70 |
+| PDVD bottom   | `protodunevd_FR_imbalance3p_260501.json.bz2` | cold 7.8 mV/fC, 2.2 µs | 1.0 | 11.70 |
+| PDVD top      | same FR | `JsonElecResponse` (dunevd-coldbox…) | 1.36 | 8.192 |
+| uBooNE        | `ub-10-half.json.bz2` | cold 14 mV/fC, 2.2 µs | 1.2 | 2.048 |
+
+The PDVD FR file is zero-padded to 160 µs so the long induction tails are
+captured without aliasing.
