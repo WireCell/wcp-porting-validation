@@ -488,3 +488,168 @@ collection geometry is more similar across the two designs.
 SBND ≈ 1.05/√π, pDSP ≈ 0.75/√π (matching PDHD).  PDVD's 5.0/√π
 is the largest among production WCT configs and reflects the
 strip-geometry readout rather than a tuning choice.
+
+---
+
+## 12. Wiener and LF filter selection — when each is used and how to tune
+
+---
+
+### 12.1 Wiener tight vs Wiener wide — different pipeline stages, not alternatives
+
+The tight and wide Wiener sets are **not** two optional choices for the
+same step.  They are active in different stages and serve opposite design
+goals: tight is for reliable *detection*, wide is for accurate *amplitude*.
+
+**Tight** (σ ≈ 0.149 / 0.160 / 0.136 MHz U/V/W on PDVD;
+`protodunevd/sp-filters.jsonnet:97-102`) is used in every
+ROI-*finding* deconvolution:
+
+| `decon_2D_*` call | Tight filter applied at | What the result feeds |
+|---|---|---|
+| `decon_2D_tighterROI` | `OmnibusSigProc.cxx:1320, 1330, 1340` | `r_data_tight` → `find_ROI_by_decon_itself` cross-check |
+| `decon_2D_tightROI` | `:1274, 1284, 1294` | `find_ROI_by_decon_itself` primary ROI seed |
+| `decon_2D_looseROI` | `:1371, 1391, 1411` | `find_ROI_loose` wide-sweep ROI seed |
+| `decon_2D_ROI_refine` | `:1250` | `roi_refine.load_data` → all refinement steps (`BreakROIs`, `ShrinkROIs`, `MP3ROI`, `MP2ROI`, `ExtendROIs`) |
+
+**Wide** (σ ≈ 0.187 / 0.194 / 0.176 MHz U/V/W; identical across PDHD
+and PDVD; `protodunevd/sp-filters.jsonnet:104-109`) appears in
+exactly **one** call:
+
+```
+decon_2D_hits()   OmnibusSigProc.cxx:1525, 1530, 1535
+```
+
+`decon_2D_hits` re-deconvolves the raw data with the wide HF envelope,
+writes the result into `m_r_data[plane]`, and that array is immediately
+masked by `roi_refine.apply_roi` (line 1815) and saved as the
+`wiener%d` output frame (line 1822).
+
+**Why two σ values?**
+A narrower HF cutoff (tight) suppresses more high-frequency noise before
+the threshold test.  The signal peak is also squashed, but for a
+boolean "is this above threshold?" decision that distortion is harmless
+— the ROI boundary comes out cleaner.  The wide σ is then used to
+re-deconvolve the same raw data with a softer HF cutoff, which preserves
+the true pulse shape and amplitude inside the already-identified ROIs.
+Using wide for detection would let more noise through and generate noisy
+ROI candidates; using tight for the published output would produce
+systematically clipped peaks.
+
+`decon_2D_charge` (`OmnibusSigProc.cxx:1554`) plays the analogous
+"wide" role for the `gauss%d` output using `m_Gaus_wide_filter`
+(lines 1560, 1564, 1568), with the same ROI mask applied at line 1838.
+So both `gauss%d` and `wiener%d` share the same ROI *positions* from
+the tight pipeline; they differ only in which HF filter shaped their
+amplitudes.
+
+---
+
+### 12.2 The three LF filters — one per ROI-finding decon path
+
+The LF (low-frequency) filters are induction-plane-only high-pass
+filters that kill 1/f-like noise below their rolloff frequency τ.  Each
+of the three variants is bound to a specific ROI-finding decon:
+
+| LF filter | τ PDVD / PDHD (MHz) | Bound to `decon_2D_*` | Purpose |
+|---|---|---|---|
+| `ROI_loose_lf` | 0.002 / 0.002 | `decon_2D_looseROI` (default) | Mildest rejection — retains the slow bipolar induction lobes for a wide, inclusive ROI sweep |
+| `ROI_tight_lf` | 0.014 / 0.016 | `decon_2D_tightROI` + per-channel fallback in `decon_2D_looseROI` | Mid rejection — primary threshold-based ROI detection |
+| `ROI_tighter_lf` | 0.06 / 0.08 | `decon_2D_tighterROI` | Strongest rejection — produces `r_data_tight`, a cross-check used inside `find_ROI_by_decon_itself` |
+
+Collection plane (W) is never LF-filtered.  `decon_2D_tightROI` skips
+the LF step when `plane == 2` (`:1294` only applies the HF filter),
+and `decon_2D_looseROI` returns immediately for plane 2 (`:1360-1362`).
+
+**Per-channel fallback in `decon_2D_looseROI`.**
+The loose path pre-computes two filter arrays: `roi_hf_filter_wf`
+(Wiener_tight × ROI_loose_lf) and `roi_hf_filter_wf1` (Wiener_tight ×
+ROI_tight_lf).  For each channel it then picks between them
+(`:1422-1425`):
+
+```cpp
+roi_hf_filter_wf2 = roi_hf_filter_wf;             // loose_lf by default
+if (masked_neighbors("bad", ...) or
+    masked_neighbors("lf_noisy", ...))
+    roi_hf_filter_wf2 = roi_hf_filter_wf1;         // switch to tight_lf
+```
+
+Channels surrounded by "bad" or "lf_noisy" masked neighbors get the
+more aggressively LF-rejected filter, which limits loose-ROI
+contamination from their elevated LF noise.
+
+**Why three paths instead of one?**
+`find_ROI_by_decon_itself` (`ROI_formation.cxx:391`) takes both
+`r_data` (tight-LF result) and `r_data_tight` (tighter-LF result) as
+arguments: it uses the primary pass to find ROI candidates and the
+secondary pass as a cross-check so that only candidates that survive
+both levels of LF rejection are promoted.  The loose path is
+independent — it runs at a lower threshold to catch activity that would
+fall below the tight cut, broadening acceptance at the cost of a higher
+false-positive rate that the subsequent refinement (`BreakROIs`,
+`ShrinkROIs`, `CleanUpROIs`, …) must manage.
+
+There is no `tighter_lf_tag` frame-output knob — only `tight_lf_tag`
+and `loose_lf_tag` are emitted as tagged output traces.  The
+tighter-LF decon is entirely internal to the ROI-finding stage.
+
+---
+
+### 12.3 How to tune
+
+All numerical values live in
+`cfg/pgrapher/experiment/protodunevd/sp-filters.jsonnet`
+(PDVD) or `cfg/pgrapher/experiment/pdhd/sp-filters.jsonnet` (PDHD).
+No C++ rebuild is required — only a jsonnet change.  For PDVD, apply
+changes to **both** `_b` and `_t` instances (currently identical values;
+see §5).
+
+**Wiener tight** (controls ROI finding and refinement quality)
+
+- Decrease σ or increase `power` → sharper HF cutoff → cleaner
+  threshold discrimination → fewer noise-driven false ROIs.
+- Increase σ or decrease `power` → softer cutoff → more signal-like
+  pulses pass the threshold → fewer missed ROIs but more noise
+  contamination.
+- Symptom: many tiny spurious ROIs on noisy channels → narrow σ or
+  raise power.
+- Symptom: signal ROIs broken into fragments or disappearing near
+  threshold → widen σ.
+- PDVD's current U-plane σ ≈ 0.149 MHz is already the narrowest of any
+  WCT production config and is likely an untuned inherited value (§5,
+  §9).
+
+**Wiener wide** (controls `wiener%d` pulse shape and noise inside ROIs)
+
+- Increase σ → softer HF rolloff → more faithful peak shape in
+  `wiener%d` → also more HF noise retained inside ROIs.
+- Decrease σ → smoother `wiener%d` output → squished peaks.
+- Symptom: wiener peaks look clipped or too narrow in time → widen σ.
+- Symptom: wiener output is noisy inside ROIs → narrow σ.
+- The PDHD and PDVD wide sets are currently byte-exact (§5); any PDVD
+  re-tuning of the wide set should happen in `protodunevd/sp-filters.jsonnet`
+  only.
+
+**LF filters** (control induction-plane LF noise rejection in ROI finding)
+
+- Increase τ on `ROI_tight_lf` → more aggressive LF cut → primary ROI
+  finder sees cleaner data on noisy, LF-heavy channels → may miss ROIs
+  from particles with slow drift signals.
+- Decrease τ on `ROI_loose_lf` → even gentler → wider sweep ROIs grow
+  further into LF-noise territory → refinement has more to clean up.
+- Tune by inspecting the `loose_lf_tag` debug trace, which carries the
+  output of `decon_2D_looseROI_debug_mode` (no per-channel tight-LF
+  fallback; `OmnibusSigProc.cxx:1885`) — that trace shows the pure
+  loose-LF decon without the noisy-neighbor override, useful for
+  diagnosing how much LF content survives.
+- The per-channel fallback threshold (neighbor count `n_bad_nn`,
+  `n_lfn_nn` at `:1415-1416`) is hard-coded; only τ is configurable
+  from jsonnet.
+
+**Tag-name knobs do not control filter selection.**
+`tight_lf_tag` and `loose_lf_tag` in `sp.jsonnet` only rename the
+output trace frame tags.  The actual filter used is set by the string
+knobs `ROI_tight_lf_filter`, `ROI_tighter_lf_filter`,
+`ROI_loose_lf_filter`, `Wiener_tight_filters`, and
+`Wiener_wide_filters`.  Changing a tag name has no effect on which
+filter object is loaded.
