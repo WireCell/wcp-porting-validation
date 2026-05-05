@@ -1,0 +1,266 @@
+#!/usr/bin/env python3
+"""
+Construct the data-driven Wiener filter W(f) = |S(f)|² / (|S(f)|² + |N(f)|²)
+for PDHD APA1, PDVD bottom, and PDVD top — U and V induction planes.
+
+Signal |S(f)|²
+  Analytic FR ⊗ ER perpendicular-line MIP-track response (one wire pitch),
+  i.e. the "standard candle" from track_response_compare.py.  Absolute ADC
+  scale is preserved (each detector's own gain, shaping, postgain, ADC/mV),
+  so a detector with smaller S/N gets a tighter filter.
+
+Noise |N(f)|²
+  Mean *power* per bin — <|FFT(channel)|²> averaged over all channels in the
+  plane — from the post-NF _raw TH2 in a magnify ROOT file.  Signal samples
+  are masked (Microboone SignalFilter) before the FFT.
+  NOTE: the parallel noise_spectrum_compare.py accumulates mean *amplitude*
+  <|X|> instead; squaring that would introduce a Jensen-inequality bias.  This
+  script accumulates <|X|²> directly.
+
+Window normalization (the "be careful with power vs amplitude" part)
+  The noise ROOT files contain N_long = 6000 ticks = 3000 µs.  The Wiener
+  filter is constructed on a T_WIN = 100 µs / N_SHORT = 200-tick window.
+  For stationary noise with one-sided PSD P(f) [ADC²/MHz]:
+
+    <|X_long(f)|²>  = P(f) · N_long / (2·dt)
+    <|X_short(f)|²> = P(f) · N_short / (2·dt)
+    ⇒  P_short = P_long · (N_short / N_long)          (linear in window length)
+
+  Amplitude (|X|) would scale as √(N_short/N_long); power scales as
+  N_short/N_long.  Both grids share the same Nyquist (1 MHz), so
+  P_long is linearly interpolated onto the coarser short grid before scaling.
+
+Signal truncation note
+  PDVD's analytic response is zero-padded to 160 µs (320 ticks).  Extracting
+  200 ticks centered on the trough clips ~30 µs from the long induction tails.
+  This affects |S(f)|² at low frequencies and is intrinsic to the 100 µs
+  window choice (not a bug).
+
+Outputs (same directory as this script):
+  wiener_filter_U.png
+  wiener_filter_V.png
+
+Each PNG has:
+  Top panel    — W(f) vs f (0..0.5 MHz), all three detectors.
+  Bottom panel — w(t) = iFFT[W(f)] vs t (±50 µs), all three detectors.
+"""
+
+import os, sys
+import numpy as np
+import uproot
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+SCRIPTDIR = os.path.dirname(os.path.abspath(__file__))
+NF_PLOT   = os.path.join(SCRIPTDIR, '..', 'nf_plot')
+sys.path.insert(0, NF_PLOT)
+
+from track_response_compare import (
+    DETECTORS as TR_DETECTORS, load_detector, compute_plane_wave,
+)
+
+T_WIN_US = 100.0
+TICK_US  = 0.5
+N_SHORT  = int(T_WIN_US / TICK_US)   # 200
+
+SIG_FACTOR = 4.0
+PAD_BINS   = 8
+SAT_ADC    = 4096.0
+
+PDVD_WORK = os.path.join(SCRIPTDIR, '..', 'work', '039324_0')
+PDHD_WORK = os.path.join(SCRIPTDIR, '..', '..', 'pdhd', 'work', '027409_0')
+
+# Extend the track-response detector specs with ROOT files and ident for noise.
+# Indices 0-2 of TR_DETECTORS are PDHD APA1-3, PDVD bottom, PDVD top.
+NOISE_ROOT = {
+    'PDHD APA1-3': (os.path.join(PDHD_WORK, 'magnify-run027409-evt0-apa1.root'), 1),
+    'PDVD bottom': (os.path.join(PDVD_WORK,  'magnify-run039324-evt0-anode0.root'), 0),
+    'PDVD top':    (os.path.join(PDVD_WORK,  'magnify-run039324-evt0-anode4.root'), 4),
+}
+
+# Only the three detectors we have noise for (no uBooNE).
+DETECTORS = [d for d in TR_DETECTORS if d['label'] in NOISE_ROOT]
+
+
+# ---------------------------------------------------------------------------
+# Signal-masking helper (verbatim from noise_spectrum_compare.py)
+# ---------------------------------------------------------------------------
+
+def signal_mask(wave):
+    good = wave < SAT_ADC
+    if not np.any(good):
+        return np.zeros(len(wave), dtype=bool)
+    p16, p50, p84 = np.percentile(wave[good], [16, 50, 84])
+    rms = np.sqrt(((p84 - p50) ** 2 + (p50 - p16) ** 2) / 2.0)
+    if rms == 0:
+        return np.zeros(len(wave), dtype=bool)
+    flag = (np.abs(wave - p50) > SIG_FACTOR * rms).astype(int)
+    kernel = np.ones(2 * PAD_BINS + 1, dtype=int)
+    return np.convolve(flag, kernel, mode='same').astype(bool)
+
+
+# ---------------------------------------------------------------------------
+# Noise: mean *power* per bin  (<|X|²>, not <|X|>)
+# ---------------------------------------------------------------------------
+
+def plane_mean_power_spectrum(root_file, hist_name):
+    """Return (freq_MHz, mean_power_ADC², N_long, n_channels)."""
+    f = uproot.open(root_file)
+    raw_all       = f[hist_name].values()
+    nch, ntick    = raw_all.shape
+    freq          = np.fft.rfftfreq(ntick, d=TICK_US)   # MHz
+    accum         = np.zeros(len(freq))
+    for i in range(nch):
+        w    = raw_all[i].astype(float)
+        med  = float(np.median(w))
+        w0   = w - med
+        mask = signal_mask(w)
+        if (~mask).any():
+            w0 -= float(w0[~mask].mean())
+        w0[mask] = 0.0
+        accum += np.abs(np.fft.rfft(w0)) ** 2          # power, not amplitude
+    return freq, accum / nch, ntick, nch
+
+
+# ---------------------------------------------------------------------------
+# Build signal window (200 ticks centred on the trough)
+# ---------------------------------------------------------------------------
+
+def signal_window(wave_adc):
+    i_neg  = int(np.argmin(wave_adc))
+    half   = N_SHORT // 2
+    win    = np.zeros(N_SHORT)
+    src_lo = max(0, i_neg - half)
+    src_hi = min(len(wave_adc), i_neg + half)
+    dst_lo = half - (i_neg - src_lo)
+    win[dst_lo:dst_lo + (src_hi - src_lo)] = wave_adc[src_lo:src_hi]
+    return win
+
+
+# ---------------------------------------------------------------------------
+# Wiener filter for one (detector, plane)
+# ---------------------------------------------------------------------------
+
+def wiener_one(spec, plane_id):
+    """
+    Returns dict with keys:
+      f_short  — frequency grid (MHz), length N_SHORT//2 + 1
+      W        — Wiener filter, same length
+      t        — time axis (µs), length N_SHORT, centred at 0
+      w_t      — iFFT of W (time-domain filter kernel)
+      S_pow    — |S(f)|² on f_short grid
+      N_pow    — |N(f)|² on f_short grid (rescaled to N_SHORT window)
+    """
+    root_file, ident = NOISE_ROOT[spec['label']]
+
+    # --- signal ---
+    fr, period_ns, N_fr, er = load_detector(spec)
+    wave_adc, _, _, _ = compute_plane_wave(fr, period_ns, N_fr, er, plane_id, spec)
+    sig_win = signal_window(wave_adc)
+    f_short = np.fft.rfftfreq(N_SHORT, TICK_US)          # MHz, 101 bins
+    S_pow   = np.abs(np.fft.rfft(sig_win)) ** 2
+
+    # --- noise (rescaled to N_SHORT window) ---
+    plane_prefix = {0: 'hu_raw', 1: 'hv_raw', 2: 'hw_raw'}[plane_id]
+    hist_name    = f'{plane_prefix}{ident}'
+    f_long, P_long, N_long, nch = plane_mean_power_spectrum(root_file, hist_name)
+    print(f'  [{spec["label"]}] plane {plane_id}  noise: {nch} ch, '
+          f'N_long={N_long}, scale={N_SHORT}/{N_long}={N_SHORT/N_long:.4f}')
+
+    # Interpolate long-window power onto short-window freq grid, then scale.
+    P_short = np.interp(f_short, f_long, P_long) * (N_SHORT / N_long)
+
+    # --- Wiener ---
+    W   = S_pow / (S_pow + P_short)   # real, in [0, 1]
+    w_t = np.fft.fftshift(np.fft.irfft(W, n=N_SHORT))
+    t   = (np.arange(N_SHORT) - N_SHORT // 2) * TICK_US
+
+    return {'f_short': f_short, 'W': W, 't': t, 'w_t': w_t,
+            'S_pow': S_pow, 'N_pow': P_short,
+            'label': spec['label'], 'color': spec['color']}
+
+
+# ---------------------------------------------------------------------------
+# Plot
+# ---------------------------------------------------------------------------
+
+def make_plot(plane_label, plane_id, results, outpath):
+    fig, axes = plt.subplots(2, 1, figsize=(12, 9))
+    fig.suptitle(
+        f'Plane {plane_label}  —  data-driven Wiener filter  '
+        f'W(f) = |S|² / (|S|² + |N|²)\n'
+        f'Signal: analytic FR⊗ER line-track  |  Noise: post-NF _raw, '
+        f'scaled to {T_WIN_US:.0f} µs window',
+        fontsize=10,
+    )
+
+    for r in results:
+        axes[0].plot(r['f_short'], r['W'],   color=r['color'], lw=1.5, label=r['label'])
+        axes[1].plot(r['t'],       r['w_t'], color=r['color'], lw=1.5, label=r['label'])
+
+    axes[0].set_xlabel('frequency (MHz)')
+    axes[0].set_ylabel('W(f)  [0..1]')
+    axes[0].set_title('Frequency domain')
+    axes[0].set_xlim(0, 0.5)
+    axes[0].set_ylim(-0.05, 1.05)
+    axes[0].axhline(0, color='gray', lw=0.5)
+    axes[0].grid(True, alpha=0.3)
+    axes[0].legend(fontsize=9)
+
+    axes[1].set_xlabel('time (µs)')
+    axes[1].set_ylabel('w(t)  [arb.]')
+    axes[1].set_title(f'Time domain  (iFFT of W, {T_WIN_US:.0f} µs window)')
+    axes[1].axhline(0, color='gray', lw=0.5)
+    axes[1].axvline(0, color='gray', lw=0.5, ls=':')
+    axes[1].grid(True, alpha=0.3)
+    axes[1].legend(fontsize=9)
+
+    plt.tight_layout()
+    plt.savefig(outpath, dpi=150)
+    plt.close()
+    print(f'  wrote {outpath}')
+
+
+# ---------------------------------------------------------------------------
+# Self-test
+# ---------------------------------------------------------------------------
+
+def _self_test():
+    print('_self_test: checking basic properties ...')
+    fr, period_ns, N_fr, er = load_detector(DETECTORS[0])
+    wave_adc, _, _, _ = compute_plane_wave(fr, period_ns, N_fr, er, 0, DETECTORS[0])
+    sig_win = signal_window(wave_adc)
+    f_short = np.fft.rfftfreq(N_SHORT, TICK_US)
+    S_pow   = np.abs(np.fft.rfft(sig_win)) ** 2
+    # Use a synthetic noise power (flat) to avoid file I/O in the test.
+    P_flat  = np.ones_like(S_pow) * float(S_pow.max()) * 0.5
+    W       = S_pow / (S_pow + P_flat)
+    assert np.all(W >= 0) and np.all(W <= 1), 'W not in [0,1]'
+    w_t     = np.fft.fftshift(np.fft.irfft(W, n=N_SHORT))
+    # Parseval round-trip: sum(|W|²) == N_SHORT * sum(|w_t|²) / N_SHORT (unnorm)
+    assert abs(np.sum(np.abs(W) ** 2) - np.sum(np.abs(np.fft.rfft(w_t)) ** 2)) < 1e-6, \
+        'iFFT round-trip failed'
+    print('_self_test: OK')
+
+
+# ---------------------------------------------------------------------------
+
+def run():
+    plane_map = {0: 'U', 1: 'V'}
+    for plane_id, plane_label in plane_map.items():
+        print(f'\n=== Plane {plane_label} ===')
+        results = []
+        for spec in DETECTORS:
+            r = wiener_one(spec, plane_id)
+            peak = r['w_t'].max()
+            print(f'  {spec["label"]:20s}  W_dc={r["W"][0]:.3f}  '
+                  f'W_pk={r["W"].max():.3f}  w_t_peak={peak:.4f}')
+            results.append(r)
+        outpath = os.path.join(SCRIPTDIR, f'wiener_filter_{plane_label}.png')
+        make_plot(plane_label, plane_id, results, outpath)
+
+
+if __name__ == '__main__':
+    _self_test()
+    run()

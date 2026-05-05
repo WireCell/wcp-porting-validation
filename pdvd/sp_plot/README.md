@@ -12,6 +12,7 @@ Eight families of scripts live here; each is documented below.
 | `compare_sp_filters.py` | Compare PDVD and PDHD high-frequency-cutoff filters (Wiener wide/tight, Gaus, Wire) in frequency and time/wire-index domains |
 | `compare_lf_filters.py` | Compare PDVD and PDHD low-frequency-cutoff filters (LfFilter: loose/tight/tighter) in frequency domain, impulse response, and synthetic-waveform demo |
 | `noise_spectrum_compare.py` | Cross-detector post-NF noise frequency spectrum comparison: PDVD-top, PDVD-bottom, PDHD |
+| `wiener_filter_construct.py` | Data-driven Wiener filter W(f) = \|S\|²/(\|S\|²+\|N\|²) for PDHD, PDVD-bottom, PDVD-top (U and V planes); plots frequency- and time-domain kernels |
 
 Reference data:
 
@@ -54,6 +55,54 @@ Signal masking mirrors `Microboone::SignalFilter`
 samples (< 4096 ADC), threshold at 4 × rms, padded by ±8 ticks. Masked
 samples are zeroed after anchoring the baseline to the non-signal mean, so
 zeroing signal peaks does not introduce a spurious DC offset.
+
+---
+
+## `wiener_filter_construct.py` — data-driven Wiener filter
+
+Constructs the textbook Wiener filter
+
+```
+W(f) = |S(f)|² / (|S(f)|² + |N(f)|²)
+```
+
+for PDHD APA1, PDVD bottom, and PDVD top, then iFFT's it into the
+time domain.
+
+**Signal `|S(f)|²`**: analytic FR ⊗ ER perpendicular-line MIP-track
+response (one wire pitch) — the same "standard candle" as
+`nf_plot/track_response_compare.py`.  Absolute ADC scale per detector
+(own gain, shaping, postgain, ADC/mV), so S/N differences between
+detectors feed directly into the filter shape.
+
+**Noise `|N(f)|²`**: mean *power* per frequency bin — `<|FFT(ch)|²>`
+averaged over all channels in the plane after signal masking (Microboone
+SignalFilter), from the same post-NF `_raw` ROOT files as
+`noise_spectrum_compare.py`.  This is `<|X|²>`, not `<|X|>²` (the
+existing noise_spectrum_compare.py returns the latter; the Jensen bias
+matters for the Wiener denominator).
+
+**Window and scaling**: the filter is built on a **100 µs / 200-tick**
+grid.  The noise was measured on a 3000 µs frame, so the mean power per
+bin is scaled by `N_short / N_long` before interpolating onto the 100 µs
+frequency grid.  Power (not amplitude) scales linearly with window length.
+
+```bash
+python3 wiener_filter_construct.py
+```
+
+Output PNGs (written beside the script):
+
+| File | Content |
+|---|---|
+| `wiener_filter_U.png` | U-plane: W(f) (top) and w(t) = iFFT[W] (bottom) for all three detectors |
+| `wiener_filter_V.png` | V-plane: same layout |
+
+Each PNG is a **2 × 1** panel:
+- **Top** — W(f) vs frequency (0–0.5 MHz).  W → 1 in the signal-dominated
+  band, W → 0 where noise dominates (typically above 0.3 MHz).
+- **Bottom** — w(t) vs time (±50 µs).  The time-domain filter kernel:
+  tighter detectors (lower S/N) produce broader kernels.
 
 ---
 
