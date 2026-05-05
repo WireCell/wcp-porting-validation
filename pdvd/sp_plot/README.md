@@ -1,6 +1,6 @@
 # pdvd/sp_plot — PDVD signal-processing inspection scripts
 
-Six families of scripts live here; each is documented below.
+Seven families of scripts live here; each is documented below.
 
 | Script | Purpose |
 |---|---|
@@ -10,6 +10,7 @@ Six families of scripts live here; each is documented below.
 | `track_response_l1sp_pdvd.py` | Validator for the PDVD L1SPFilterPD kernel JSONs (top + bottom) |
 | `illustrate_pdvd_w_sentinel_path_bug.py` | Diagnostic plot for the all-zero sentinel-path bug in the PDVD W FR |
 | `compare_sp_filters.py` | Compare PDVD and PDHD high-frequency-cutoff filters (Wiener wide/tight, Gaus, Wire) in frequency and time/wire-index domains |
+| `noise_spectrum_compare.py` | Cross-detector post-NF noise frequency spectrum comparison: PDVD-top, PDVD-bottom, PDHD |
 
 Reference data:
 
@@ -17,6 +18,41 @@ Reference data:
 |---|---|
 | `handscan_039324_anode0.csv` | Hand-scan ground truth for run 39324 events 0-5, PDVD bottom anode 0.  Schema mirrors `pdhd/nf_plot/handscan_27409.csv` plus a `real ∈ {Yes, No, Missing}` column (Yes = real artifact must fire; No = real prolonged track that must NOT fire; Missing = real artifact the gate currently misses).  Consumed by `--validate` mode of `find_long_decon_artifacts_pdvd.py` and the default ground truth of `eval_l1sp_trigger_pdvd.py`. |
 | `pdvd_l1sp_rois_039324_evt{0..5}_anode0.csv` | Per-event clustered-ROI tables emitted by `find_long_decon_artifacts_pdvd.py --csv`.  Refresh after any defaults / algorithm change. |
+
+---
+
+## `noise_spectrum_compare.py` — post-NF noise spectrum comparison
+
+Reads the post-NF `_raw` Magnify TH2 for one anode/APA per detector
+(PDVD-bot anode 0, PDVD-top anode 4, PDHD APA 1, all from event 0),
+masks signal-like samples per-channel using the `Microboone::SignalFilter`
+algorithm (4 × percentile-RMS threshold, ±8-tick pad), then computes the
+mean `|FFT|` across all channels in each wire plane.
+
+```bash
+/nfs/data/1/xqian/toolkit-dev/local/bin/python3 noise_spectrum_compare.py
+```
+
+Output PNGs (written beside the script):
+
+| File | Content |
+|---|---|
+| `noise_spectrum_compare_U.png` | U-plane spectra (left = absolute ADC, right = area-normalized) |
+| `noise_spectrum_compare_V.png` | V-plane spectra |
+| `noise_spectrum_compare_W.png` | W-plane spectra |
+
+Each PNG is a **1 × 2** panel:
+- **Left** — mean `|FFT|` in ADC vs frequency (0–1 MHz, linear scale).
+  Absolute amplitude reflects each detector's gain × ADC/mV product.
+- **Right** — same spectra divided by their trapezoidal area (units 1/MHz),
+  so all three curves integrate to 1 over 0–1 MHz. Lets you compare
+  spectral *shape* independent of overall amplitude.
+
+Signal masking mirrors `Microboone::SignalFilter`
+(`sigproc/src/Microboone.cxx:573`): percentile-based RMS from unsaturated
+samples (< 4096 ADC), threshold at 4 × rms, padded by ±8 ticks. Masked
+samples are zeroed after anchoring the baseline to the non-signal mean, so
+zeroing signal peaks does not introduce a spurious DC offset.
 
 ---
 
