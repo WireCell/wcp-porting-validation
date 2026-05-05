@@ -84,6 +84,10 @@ NOISE_ROOT = {
 # Only the three detectors we have noise for (no uBooNE).
 DETECTORS = [d for d in TR_DETECTORS if d['label'] in NOISE_ROOT]
 
+# Gaussian_wide parameters (from sp-filters.jsonnet): σ=0.12 MHz, power=2.
+# Identical for PDHD (Gaus_wide) and PDVD (Gaus_wide_b/t); flag=True (zero DC).
+GAUSS_WIDE = {'sigma': 0.12, 'power': 2.0}
+
 # PDHD Wiener_wide parameters per plane (from pdhd/sp-filters.jsonnet lines 70-81).
 # Note: PDVD and PDHD share the same wide-Wiener σ/power — the overlay
 # is labelled "Wiener_wide (PDHD = PDVD)" to reflect this.
@@ -117,6 +121,13 @@ def wiener_wide_analytic(f_mhz, plane_id):
     """Analytic PDHD/PDVD Wiener_wide filter on the given frequency grid."""
     p = WIENER_WIDE[plane_id]
     H = np.exp(-0.5 * (f_mhz / p['sigma']) ** p['power'])
+    H[0] = 0.0   # flag=True: zero DC bin
+    return H
+
+
+def gauss_wide_analytic(f_mhz):
+    """Analytic Gaus_wide filter (shared PDHD = PDVD) on the given frequency grid."""
+    H = np.exp(-0.5 * (f_mhz / GAUSS_WIDE['sigma']) ** GAUSS_WIDE['power'])
     H[0] = 0.0   # flag=True: zero DC bin
     return H
 
@@ -325,6 +336,15 @@ def make_plot(plane_label, plane_id, results, outpath):
     axes[0].plot(f_ref,   H_wide,   color='k', lw=1.5, ls='--', label=wide_lbl)
     axes[1].plot(t_ref,   h_wide_t, color='k', lw=1.5, ls='--', label='Wiener_wide (PDHD = PDVD)')
 
+    # Overlay Gaus_wide (identical for PDHD and PDVD — single line).
+    H_gauss   = gauss_wide_analytic(f_ref)
+    h_gauss_t = np.fft.fftshift(np.fft.irfft(H_gauss, n=N_SHORT))
+    gauss_lbl = (f'Gaus_wide (PDHD = PDVD)  '
+                 f'σ={GAUSS_WIDE["sigma"]:.4f} MHz  pow={GAUSS_WIDE["power"]:.3f}')
+    axes[0].plot(f_ref,   H_gauss,   color='tab:purple', lw=1.5, ls='--', label=gauss_lbl)
+    axes[1].plot(t_ref,   h_gauss_t, color='tab:purple', lw=1.5, ls='--',
+                 label='Gaus_wide (PDHD = PDVD)')
+
     axes[0].set_xlabel('frequency (MHz)')
     axes[0].set_ylabel('W(f)  [0..1]')
     axes[0].set_title('Frequency domain')
@@ -336,7 +356,8 @@ def make_plot(plane_label, plane_id, results, outpath):
 
     axes[1].set_xlabel('time (µs)')
     axes[1].set_ylabel('w(t)  [arb.]')
-    axes[1].set_title(f'Time domain  (iFFT of W, {T_WIN_US:.0f} µs window)')
+    axes[1].set_title(f'Time domain  (iFFT of W, {T_WIN_US:.0f} µs window, shown ±15 µs)')
+    axes[1].set_xlim(-15, 15)
     axes[1].axhline(0, color='gray', lw=0.5)
     axes[1].axvline(0, color='gray', lw=0.5, ls=':')
     axes[1].grid(True, alpha=0.3)
