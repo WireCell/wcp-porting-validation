@@ -41,8 +41,9 @@ Outputs (same directory as this script):
   wiener_filter_V.png
 
 Each PNG has:
-  Top panel    — W(f) vs f (0..1 MHz), all three detectors + PDHD Wiener_wide overlay.
-  Bottom panel — w(t) = iFFT[W(f)] vs t (±50 µs), all three detectors + Wiener_wide iFFT.
+  Top panel    — W(f) vs f (0..1 MHz), all three detectors + fitted parametric +
+                 production Wiener_tight per detector (dash-dot) + shared Wiener_wide (dashed).
+  Bottom panel — same overlays in the time domain (iFFT).
 """
 
 import os, sys
@@ -61,9 +62,9 @@ from track_response_compare import (
     DETECTORS as TR_DETECTORS, load_detector, compute_plane_wave,
 )
 
-T_WIN_US = 100.0
+T_WIN_US = 150.0
 TICK_US  = 0.5
-N_SHORT  = int(T_WIN_US / TICK_US)   # 200
+N_SHORT  = int(T_WIN_US / TICK_US)   # 300
 
 SIG_FACTOR = 4.0
 PAD_BINS   = 8
@@ -89,6 +90,26 @@ DETECTORS = [d for d in TR_DETECTORS if d['label'] in NOISE_ROOT]
 WIENER_WIDE = {
     0: {'sigma': 0.186765, 'power': 5.05429},   # U
     1: {'sigma': 0.1936,   'power': 5.77422},   # V
+}
+
+# Production Wiener_tight parameters per detector per plane.
+# PDHD: APA1-specific values (matching the noise data source, apa1.root).
+#   pdhd/sp-filters.jsonnet lines 58-65 (Wiener_tight_*_APA1)
+# PDVD: _b and _t share identical parameters.
+#   protodunevd/sp-filters.jsonnet lines 97-100 (Wiener_tight_*_{b,t})
+WIENER_TIGHT = {
+    'PDHD APA1-3': {
+        0: {'sigma': 0.203451,  'power': 5.78093},   # Wiener_tight_U_APA1
+        1: {'sigma': 0.160191,  'power': 3.54835},   # Wiener_tight_V_APA1
+    },
+    'PDVD bottom': {
+        0: {'sigma': 0.148788,  'power': 3.76194},   # Wiener_tight_U_b
+        1: {'sigma': 0.1596568, 'power': 4.36125},   # Wiener_tight_V_b
+    },
+    'PDVD top': {
+        0: {'sigma': 0.148788,  'power': 3.76194},   # Wiener_tight_U_t (= _b)
+        1: {'sigma': 0.1596568, 'power': 4.36125},   # Wiener_tight_V_t (= _b)
+    },
 }
 
 
@@ -274,12 +295,31 @@ def make_plot(plane_label, plane_id, results, outpath):
                          label=r['label'] + lbl_fit)
             axes[1].plot(r['t'],       h_fit_t, color=r['color'], lw=1.2, ls=':')
 
-    # Overlay analytic PDHD Wiener_wide (identical to PDVD wide).
     f_ref = results[0]['f_short']
-    H_wide = wiener_wide_analytic(f_ref, plane_id)
+    t_ref = results[0]['t']
+
+    # Overlay production Wiener_tight per detector (dash-dot, same colour).
+    # PDVD top and bottom share identical tight parameters; their lines overlap.
+    seen_tight = set()
+    for r in results:
+        tp = WIENER_TIGHT.get(r['label'], {}).get(plane_id)
+        if tp is None:
+            continue
+        key = (tp['sigma'], tp['power'])
+        H_tight   = _wiener_form(f_ref, tp['sigma'], tp['power'])
+        h_tight_t = np.fft.fftshift(np.fft.irfft(H_tight, n=N_SHORT))
+        suffix    = '(top = bottom)' if key in seen_tight else ''
+        lbl_tight = (f"{r['label']} Wiener_tight {suffix} "
+                     f"σ={tp['sigma']:.4f} MHz  pow={tp['power']:.3f}")
+        axes[0].plot(f_ref,   H_tight,   color=r['color'], lw=1.5, ls='-.',
+                     label=lbl_tight)
+        axes[1].plot(t_ref,   h_tight_t, color=r['color'], lw=1.5, ls='-.')
+        seen_tight.add(key)
+
+    # Overlay analytic Wiener_wide (identical for PDHD and PDVD — single line).
+    H_wide   = wiener_wide_analytic(f_ref, plane_id)
     h_wide_t = np.fft.fftshift(np.fft.irfft(H_wide, n=N_SHORT))
-    t_ref    = results[0]['t']
-    p = WIENER_WIDE[plane_id]
+    p        = WIENER_WIDE[plane_id]
     wide_lbl = (f'Wiener_wide (PDHD = PDVD)  '
                 f'σ={p["sigma"]:.4f} MHz  pow={p["power"]:.3f}')
     axes[0].plot(f_ref,   H_wide,   color='k', lw=1.5, ls='--', label=wide_lbl)
