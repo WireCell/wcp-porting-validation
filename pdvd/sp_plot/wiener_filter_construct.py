@@ -110,18 +110,34 @@ def _wiener_form(f, sigma, power):
     return np.exp(-0.5 * (f / sigma) ** power)
 
 
+def _log_wiener_form(f, sigma, power):
+    """log(H) = -0.5*(f/sigma)^power.  Used for log-space fitting."""
+    return -0.5 * (f / sigma) ** power
+
+
 def fit_wiener_params(f_mhz, W, f_lo=0.1, f_hi=0.5):
     """
-    Fit exp(-0.5*(f/sigma)^power) to W over [f_lo, f_hi] MHz.
+    Fit exp(-0.5*(f/sigma)^power) to W over [f_lo, f_hi] MHz in log space.
+
+    Fitting log(W) = -0.5*(f/sigma)^power (rather than W directly) weights
+    residuals by 1/W, giving the high-frequency tail stronger relative
+    influence.  The fitted curve is therefore slightly more aggressive
+    (lower) at the tail than a linear-space fit would produce.
+
     Returns (sigma_MHz, power) or (None, None) on failure.
     """
-    mask  = (f_mhz >= f_lo) & (f_mhz <= f_hi) & (W > 0)
+    # Exclude the noise-floor tail (W < 0.05).  Near-zero-W bins get very
+    # large weight in log space (log(0.02) = -3.9) and may include secondary
+    # spectral humps from signal leakage, both of which badly bias σ and
+    # power.  W = 0.05 is well inside the physical transition for all three
+    # detectors while cutting cleanly before any secondary humps.
+    mask  = (f_mhz >= f_lo) & (f_mhz <= f_hi) & (W > 0.05)
     f_fit = f_mhz[mask]
     W_fit = W[mask]
     if len(f_fit) < 3:
         return None, None
     try:
-        popt, _ = curve_fit(_wiener_form, f_fit, W_fit,
+        popt, _ = curve_fit(_log_wiener_form, f_fit, np.log(W_fit),
                             p0=[0.2, 4.0],
                             bounds=([0.02, 0.5], [2.0, 30.0]),
                             maxfev=10000)
