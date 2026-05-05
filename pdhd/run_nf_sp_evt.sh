@@ -58,6 +58,9 @@ Options:
                   Per-triggered-ROI NPZ files (raw/decon/lasso/smeared) written to
                   <wf_dir>/<RUN_PADDED>_<EVT>/<dump_tag>_<frame_ident>/.
                   View with: cd nf_plot && ./serve_l1sp_roi_viewer.sh <wf_dir>
+  -R              Special debug mode: also dump the pre-Wire-filter, pre-ROI
+                  deconvolved waveform per channel into the magnify ROOT as
+                  h{u,v,w}_rawdecon<ident>.  OFF in production.
   -h              Show this help message and exit.
 
 EVT may be 'all' to run every discovered event in parallel
@@ -74,6 +77,7 @@ REALITY="data"
 DUMP_ROOT=""
 CALIB_ROOT=""
 WF_ROOT=""
+DUMP_RAWDECON=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -90,6 +94,7 @@ while [ $# -gt 0 ]; do
         -c*) CALIB_ROOT="${1#-c}"; shift ;;
         -w) WF_ROOT="$2"; shift 2 ;;
         -w*) WF_ROOT="${1#-w}"; shift ;;
+        -R) DUMP_RAWDECON=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -211,6 +216,12 @@ process_event() {
         echo "L1SP calib dir:  $CALIB_DIR_ABS"
     fi
 
+    local RAWDECON_TLA=()
+    if [ "$DUMP_RAWDECON" -eq 1 ]; then
+        RAWDECON_TLA=(--tla-code dump_rawdecon=true)
+        echo "RawDecon dump:  ON (pre-Wire-filter pre-ROI tap into SP frame archives)"
+    fi
+
     wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
@@ -223,6 +234,7 @@ process_event() {
         --tla-code anode_indices="${ANODE_CODE}" \
         "${DUMP_TLA[@]}" \
         "${L1SP_TLA[@]}" \
+        "${RAWDECON_TLA[@]}" \
         -c wct-nf-sp.jsonnet
 
     echo "NF+SP done -> $WORKDIR"

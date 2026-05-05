@@ -13,7 +13,7 @@ Eight families of scripts live here; each is documented below.
 | `compare_lf_filters.py` | Compare PDVD and PDHD low-frequency-cutoff filters (LfFilter: loose/tight/tighter) in frequency domain, impulse response, and synthetic-waveform demo |
 | `noise_spectrum_compare.py` | Cross-detector post-NF noise frequency spectrum comparison: PDVD-top, PDVD-bottom, PDHD |
 | `wiener_filter_construct.py` | Data-driven Wiener filter W(f) = \|S\|²/(\|S\|²+\|N\|²) for PDHD, PDVD-bottom, PDVD-top (U and V planes); plots frequency- and time-domain kernels |
-| `filter_tune_viewer.py` + `serve_filter_tune_viewer.sh` | Interactive Bokeh viewer for tuning HF (Wiener / Gaus_wide) and LF (ROI_*_lf) software filters live on top of the per-channel deconvolved waveform |
+| `filter_tune_viewer.py` + `serve_filter_tune_viewer.sh` | Interactive Bokeh viewer for tuning Wire / HF (Wiener / Gaus_wide) / LF (ROI_*_lf) software filters live on top of the **bare** pre-Wire-filter, pre-ROI deconvolved waveform (`hu/v/w_rawdecon<ident>`); production-gauss overlay for comparison |
 
 Reference data:
 
@@ -107,28 +107,55 @@ Each PNG is a **2 × 1** panel:
 
 ---
 
-## `filter_tune_viewer.py` — interactive HF/LF filter tuning
+## `filter_tune_viewer.py` — interactive Wire/HF/LF filter tuning
 
-Bokeh-served web tool that loads the deconvolved waveform from a
-magnify ROOT file and lets you apply HF (Wiener / Gaus_wide) and LF
-(ROI_*_lf) software filters live on top, per channel.
+Bokeh-served web tool that loads the **bare** deconvolved waveform from
+a magnify ROOT file and lets you apply Wire / HF (Wiener / Gaus_wide) /
+LF (ROI_*_lf) software filters live on top, per channel.
 
-The "deconvolved" frame used as input is the existing
-`h{u,v,w}_wiener<ident>` TH2 in the magnify file: it is the output of
-`OmnibusSigProc::decon_2D_init` after FR/ER division and the geometric
-Wire_ind/Wire_col filter, but BEFORE any of the Wiener_*, Gaus_wide,
-or LF filters that the production chain applies later in
-`decon_2D_*ROI`. So no SP-chain code change is needed — just point the
-viewer at any magnify file produced by `./run_nf_sp ...`.
+### Input frame: `h{u,v,w}_rawdecon<ident>`
 
-Filter forms (matching `util/src/Response.cxx:435-444`):
+The viewer reads the special-mode TH2 family `h{u,v,w}_rawdecon<ident>`
+emitted by `OmnibusSigProc::decon_2D_init` immediately after FR/ER
+division but BEFORE any software filter (Wire_ind, Wire_col,
+Wiener_*, Gaus_wide, ROI_*_lf) and BEFORE any ROI mask.  Production
+runs do NOT emit this tag — it is opt-in via the `-R` flag on
+`run_nf_sp_evt.sh` and `run_sp_to_magnify_evt.sh` (see those scripts'
+`-h` help).
+
+If a magnify file lacks `rawdecon` (i.e. it was produced before the
+tap or without `-R`), the viewer falls back to `h{u,v,w}_wiener<ident>`
+— note that this is the post-Wiener-tight, post-LF, post-ROI-mask
+production frame, NOT a bare decon.  A red warning appears in the
+info row when the fallback is in effect.
+
+The same magnify file also yields `h{u,v,w}_gauss<ident>` —
+production's post-everything output, available as a dotted-green
+overlay on the time-domain plot for visual comparison "your tuned
+filter vs. production".
+
+### Filter forms (`util/src/Response.cxx:435-444`)
 
 ```
-HF: H(f) = exp(-0.5 * (f/sigma)**power),  H[0]=0 if zero-DC flag set
-LF: L(f) = 1 - exp(-(f/tau)**2)
+Wire / HF : H(f) = exp(-0.5 * (f/sigma)**power),  H[0]=0 if flag=true
+LF        : L(f) = 1 - exp(-(f/tau)**2)
 ```
 
-Launch (server-side):
+Wire is applied across the WIRE axis (frequency = cycles/wire),
+HF and LF across the time axis (frequency = MHz, Nyquist = 1 MHz).
+
+Production presets per detector (loaded into the dropdowns):
+
+| Filter | PDHD | PDVD |
+|---|---|---|
+| Wire_ind (U, V planes) | σ=0.4231, p=2 | σ=2.821, p=2 |
+| Wire_col (W plane) | σ=5.642, p=2 | σ=5.642, p=2 |
+| Gaus_wide (HF) | σ=0.12, p=2 | σ=0.12, p=2 |
+| Wiener_tight U / V / W (HF) | σ=0.222 / 0.223 / 0.226 | σ=0.15 / 0.15 / 0.25 |
+| Wiener_wide  U / V / W (HF) | σ=0.187 / 0.194 / 0.176 | (same as PDHD) |
+| ROI_loose_lf / tight / tighter (LF) | τ=0.002 / 0.014 / 0.06 | τ=0.00175 / 0.0185 / 0.145 |
+
+### Launch
 
 ```bash
 cd pdvd/sp_plot
@@ -142,38 +169,63 @@ ssh -L 5007:localhost:5007 user@workstation
 # then open http://localhost:5007/filter_tune_viewer
 ```
 
-The launcher script bakes in **all** PDHD APAs (0-3, run 27409 evt 0)
-and **all** PDVD anodes (0-7, run 39324 evt 0; anodes 0-3 = bottom CRP,
+The launcher bakes in **all** PDHD APAs (0-3, run 27409 evt 0) and
+**all** PDVD anodes (0-7, run 39324 evt 0; anodes 0-3 = bottom CRP,
 4-7 = top CRP).  Edit the `SPECS` array in the launcher to point at
-different events / files; each spec is `label|path|ident|detector` with
-`detector ∈ {pdhd, pdvd}` (selects which preset list — Wiener_tight,
-Wiener_wide, Gaus_wide, ROI_loose_lf, ROI_tight_lf, ROI_tighter_lf —
-appears in the dropdowns).
+different events / files; each spec is `label|path|ident|detector`
+with `detector ∈ {pdhd, pdvd}` (selects which preset list appears in
+the dropdowns).
 
-UI:
+### UI
+
 - **Top row**: file selector, U/V/W plane radio, channel TextInput
-  (typed global channel id), prev/next buttons, "Largest p-p" button
-  (jumps to the channel with the largest peak-to-peak in the current
-  plane), **Update plots** button (manual redraw fallback), **status
-  div** (`idle` / `computing...` / `done · compute = X.X ms`).
-- **Filter row**: HF column (preset Select, σ slider, power slider,
-  zero-DC checkbox) and LF column (preset Select, τ slider, typed-τ
-  TextInput for sub-slider precision).  Picking a preset writes its
-  values into the sliders; touching a slider switches preset to
-  `(none)` and uses the slider values directly.  Sliders use Bokeh's
-  `value_throttled` event so a redraw fires only on **mouse-release**,
-  not on every micro-step during drag — the slider knob still moves
-  freely while you adjust.
+  (typed global channel id), prev/next buttons, "Largest p-p"
+  button (jumps to the channel with the largest peak-to-peak in the
+  current plane), **Update plots** button (manual redraw fallback),
+  **status div** (`idle` / `computing...` / `done · compute = X.X ms`).
+- **Filter row** (three columns):
+  - **Wire** column: preset Select (Wire_ind / Wire_col / `(none)`),
+    σ slider (cycles/wire), power slider.  U/V default to Wire_ind,
+    W to Wire_col on plane change.
+  - **HF** column: preset Select, σ slider (MHz), power slider,
+    zero-DC checkbox.
+  - **LF** column: preset Select, τ slider (MHz), typed-τ TextInput
+    for sub-slider precision.
+
+  Picking a preset writes its values into the sliders; touching a
+  slider switches the preset back to `(none)` and uses the slider
+  values directly.  Sliders use Bokeh's `value_throttled` event so a
+  redraw fires only on **mouse-release**, not on every micro-step
+  during drag.
+
 - **Range row**: t-min / t-max tick TextInputs + Apply / Reset
   buttons for explicit time-range zoom (wheel/box-zoom also work).
-- **Plots** (linked sources):
-  1. *Decon waveform* — raw decon (dashed grey) overlaid with
-     filtered (blue), full window.
-  2. *Filter shapes* — HF, LF, and their product over 0..1 MHz.
-  3. *Channel spectrum* — `|X(f)|` of the raw decon (log-y), for
-     gauging where signal vs noise lives in this channel.
+  Also: **Show production 'gauss' overlay** checkbox — when on, the
+  green-dotted line on the time-domain panel shows the production
+  post-everything output for the same channel (read directly from
+  the magnify ROOT's `h{u,v,w}_gauss<ident>`).
 
-Environment: bokeh 3.9 lives in
+- **Plots**:
+  1. *Time domain* — raw decon (dashed grey), filtered (blue solid,
+     Wire×HF×LF), production gauss (dotted green, optional).
+  2. *Filter shapes* — Wire (purple, x rescaled to 0..1), HF (blue),
+     LF (red), HF×LF (green dashed).  Wire-axis x is rescaled so it
+     shares the panel with the time-axis filters; absolute σ values
+     are in the filter-row title bars.
+  3. *Channel spectrum* — `|X(f)|` of the raw decon (log-y).
+
+### How the Wire filter is applied
+
+`H_wire(k_w)` is multiplied along the wire-frequency axis of the
+plane-rfft, then inverse-FFT'd in the wire dimension.  The plane's
+2D FFT is cached lazily on first selection of a (file, plane), so
+subsequent renders only redo the multiplication + IFFT (~10 ms for
+a PDVD 476×6400 plane).  Choosing `(none)` skips the wire path and
+just does a per-channel rfft/irfft (sub-millisecond).
+
+### Environment
+
+bokeh 3.9 lives in
 `/nfs/data/1/xqian/toolkit-dev/.direnv/python-3.11.9/`; uproot lives
 in `/nfs/data/1/xqian/toolkit-dev/local/`.  The launcher prepends the
 `local/` site-packages onto `PYTHONPATH` so the bokeh-env interpreter

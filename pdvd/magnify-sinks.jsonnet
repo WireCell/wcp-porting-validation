@@ -19,7 +19,10 @@ function(tools, outputfile, runinfo=null) {
     data: {
       output_filename: outputfile,
       root_file_mode: if n == 0 then 'RECREATE' else 'UPDATE',
-      frames: ['gauss%d' % anode.data.ident, 'wiener%d' % anode.data.ident],
+      // 'rawdecon%d' is a special-mode tag (off in production); MagnifySink
+      // silently skips it when the input frame doesn't carry the tag.
+      frames: ['gauss%d' % anode.data.ident, 'wiener%d' % anode.data.ident,
+               'rawdecon%d' % anode.data.ident],
       // Retagger (inserted upstream) copies wiener<N> → threshold<N>, so
       // summaries get written as h[uvw]_threshold<N> as Magnify expects.
       summaries: ['threshold%d' % anode.data.ident],

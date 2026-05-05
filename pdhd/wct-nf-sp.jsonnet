@@ -46,6 +46,9 @@ function(
   l1sp_pd_adj_enable = true,                    // cross-channel adjacency expansion; default ON (see sigproc/docs/l1sp/L1SPFilterPD.md). Pass false to recover pre-2026-05-02 behaviour.
   l1sp_pd_adj_max_hops = 3,                     // iterative-expansion hop cap (default 3 ⇔ ±3 channels). Pass 1 to recover pre-2026-05-03 non-transitive behaviour.
   // l1sp_pd_planes is not exposed here: sp.jsonnet defaults to APA0→[0], APA1-3→[0,1].
+  // Special debug mode: also dump the pre-Wire-filter, pre-ROI deconvolved
+  // waveform (h{u,v,w}_rawdecon<ident> in the magnify ROOT).  OFF in production.
+  dump_rawdecon = false,
 )
 
   local tools = tools_all;
@@ -71,7 +74,8 @@ function(
                                     l1sp_pd_dump_path=l1sp_pd_dump_path,
                                     l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
                                     l1sp_pd_adj_enable=l1sp_pd_adj_enable,
-                                    l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops)
+                                    l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                                    dump_rawdecon=dump_rawdecon)
                     for a in tools.anodes];
 
   local resamplers_config = import 'pgrapher/common/resamplers.jsonnet';
@@ -101,7 +105,12 @@ function(
         name: 'spframesink%d' % n,
         data: {
           outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
-          tags: [
+          // Adds 'rawdecon%d' when dump_rawdecon is true (special debug mode).
+          tags: if dump_rawdecon then [
+            'gauss%d'    % n,
+            'wiener%d'   % n,
+            'rawdecon%d' % n,
+          ] else [
             'gauss%d'  % n,
             'wiener%d' % n,
           ],

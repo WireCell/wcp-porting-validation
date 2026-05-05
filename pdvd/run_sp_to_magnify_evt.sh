@@ -25,12 +25,14 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 
 SEL_TAG=""
 FORCE_INPUT_DATA=""
+INCLUDE_RAWDECON=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -I) FORCE_INPUT_DATA=1; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
+        -R) INCLUDE_RAWDECON=1; shift ;;   # rawdecon TH2 in magnify (special mode)
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -155,6 +157,11 @@ process_event() {
             ORIG_ARGS="--tla-code include_orig=false"
         fi
 
+        local RAWDECON_ARGS=""
+        if [ "$INCLUDE_RAWDECON" -eq 1 ]; then
+            RAWDECON_ARGS="--tla-code include_rawdecon=true"
+        fi
+
         wire-cell \
             -l stderr \
             -l "${LOG}:debug" \
@@ -167,6 +174,7 @@ process_event() {
             --tla-code "event=${EVENT_NO}" \
             ${RAW_ARGS} \
             ${ORIG_ARGS} \
+            ${RAWDECON_ARGS} \
             -c wct-sp-to-magnify.jsonnet
 
         echo "    done -> $OUTPUT"

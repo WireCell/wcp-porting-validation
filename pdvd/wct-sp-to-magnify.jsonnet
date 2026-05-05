@@ -50,7 +50,11 @@ function(
   include_raw       = true,
   raw_input_prefix  = 'protodune-sp-frames-raw',
   include_orig      = false,
-  orig_input_prefix = 'protodune-orig-frames'
+  orig_input_prefix = 'protodune-orig-frames',
+  // Special-mode pre-Wire-filter pre-ROI deconvolved waveform.  Set true
+  // when wct-nf-sp.jsonnet ran with dump_rawdecon=true so the SP frame
+  // archive carries the rawdecon%d tag.
+  include_rawdecon  = false,
 )
   local anodes  = [tools_all.anodes[i] for i in anode_indices];
   local nanodes = std.length(anodes);
@@ -72,7 +76,14 @@ function(
       name: 'frame_source_anode%d' % aid,
       data: {
         inname: '%s-anode%d.tar.bz2' % [input_prefix, aid],
-        tags: ['gauss%d' % aid, 'wiener%d' % aid],
+        tags: if include_rawdecon then [
+          'gauss%d'    % aid,
+          'wiener%d'   % aid,
+          'rawdecon%d' % aid,
+        ] else [
+          'gauss%d' % aid,
+          'wiener%d' % aid,
+        ],
       },
     }, nin=0, nout=1);
     // Retagger duplicates wiener<N> → [wiener<N>, threshold<N>] so
@@ -83,7 +94,11 @@ function(
       data: {
         tag_rules: [{
           frame: { '.*': '' },
-          trace: {
+          trace: if include_rawdecon then {
+            ['gauss%d' % aid]: 'gauss%d' % aid,
+            ['wiener%d' % aid]: ['wiener%d' % aid, 'threshold%d' % aid],
+            ['rawdecon%d' % aid]: 'rawdecon%d' % aid,
+          } else {
             ['gauss%d' % aid]: 'gauss%d' % aid,
             ['wiener%d' % aid]: ['wiener%d' % aid, 'threshold%d' % aid],
           },
