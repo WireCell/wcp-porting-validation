@@ -51,6 +51,7 @@ import uproot
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 SCRIPTDIR = os.path.dirname(os.path.abspath(__file__))
 NF_PLOT   = os.path.join(SCRIPTDIR, '..', 'nf_plot')
@@ -97,6 +98,36 @@ def wiener_wide_analytic(f_mhz, plane_id):
     H = np.exp(-0.5 * (f_mhz / p['sigma']) ** p['power'])
     H[0] = 0.0   # flag=True: zero DC bin
     return H
+
+
+# ---------------------------------------------------------------------------
+# Fit the data-driven W(f) to the WireCell parametric form:
+#   H(f) = exp(-0.5 * (f/sigma)^power)
+# H(0) = 1 by construction; the fit targets the falling edge.
+# ---------------------------------------------------------------------------
+
+def _wiener_form(f, sigma, power):
+    return np.exp(-0.5 * (f / sigma) ** power)
+
+
+def fit_wiener_params(f_mhz, W, f_lo=0.1, f_hi=0.5):
+    """
+    Fit exp(-0.5*(f/sigma)^power) to W over [f_lo, f_hi] MHz.
+    Returns (sigma_MHz, power) or (None, None) on failure.
+    """
+    mask  = (f_mhz >= f_lo) & (f_mhz <= f_hi) & (W > 0)
+    f_fit = f_mhz[mask]
+    W_fit = W[mask]
+    if len(f_fit) < 3:
+        return None, None
+    try:
+        popt, _ = curve_fit(_wiener_form, f_fit, W_fit,
+                            p0=[0.2, 4.0],
+                            bounds=([0.02, 0.5], [2.0, 30.0]),
+                            maxfev=10000)
+        return float(popt[0]), float(popt[1])
+    except RuntimeError:
+        return None, None
 
 
 # ---------------------------------------------------------------------------
@@ -192,8 +223,12 @@ def wiener_one(spec, plane_id):
     w_t = np.fft.fftshift(np.fft.irfft(W, n=N_SHORT))
     t   = (np.arange(N_SHORT) - N_SHORT // 2) * TICK_US
 
+    # Fit the falling edge to the WireCell parametric form.
+    sigma_fit, power_fit = fit_wiener_params(f_short, W)
+
     return {'f_short': f_short, 'W': W, 't': t, 'w_t': w_t,
             'S_pow': S_pow, 'N_pow': P_short,
+            'sigma_fit': sigma_fit, 'power_fit': power_fit,
             'label': spec['label'], 'color': spec['color']}
 
 
@@ -214,6 +249,14 @@ def make_plot(plane_label, plane_id, results, outpath):
     for r in results:
         axes[0].plot(r['f_short'], r['W'],   color=r['color'], lw=1.5, label=r['label'])
         axes[1].plot(r['t'],       r['w_t'], color=r['color'], lw=1.5, label=r['label'])
+        # Fitted parametric curve (dotted, same colour).
+        if r['sigma_fit'] is not None:
+            H_fit   = _wiener_form(r['f_short'], r['sigma_fit'], r['power_fit'])
+            h_fit_t = np.fft.fftshift(np.fft.irfft(H_fit, n=N_SHORT))
+            lbl_fit = (f"  fit σ={r['sigma_fit']:.4f} MHz  pow={r['power_fit']:.3f}")
+            axes[0].plot(r['f_short'], H_fit,   color=r['color'], lw=1.2, ls=':',
+                         label=r['label'] + lbl_fit)
+            axes[1].plot(r['t'],       h_fit_t, color=r['color'], lw=1.2, ls=':')
 
     # Overlay analytic PDHD Wiener_wide (identical to PDVD wide).
     f_ref = results[0]['f_short']
@@ -281,8 +324,10 @@ def run():
         for spec in DETECTORS:
             r = wiener_one(spec, plane_id)
             peak = r['w_t'].max()
+            s, p = r['sigma_fit'], r['power_fit']
+            fit_str = f'σ={s:.4f} MHz  pow={p:.3f}' if s is not None else 'fit failed'
             print(f'  {spec["label"]:20s}  W_dc={r["W"][0]:.3f}  '
-                  f'W_pk={r["W"].max():.3f}  w_t_peak={peak:.4f}')
+                  f'W_pk={r["W"].max():.3f}  w_t_peak={peak:.4f}  fit: {fit_str}')
             results.append(r)
         outpath = os.path.join(SCRIPTDIR, f'wiener_filter_{plane_label}.png')
         make_plot(plane_label, plane_id, results, outpath)
