@@ -250,10 +250,12 @@ def make_plot3():
     WINDOW_US = 5.0
     fig, axes = plt.subplots(2, 3, figsize=(15, 8))
     fig.suptitle(
-        'Wiener wide vs tight — frequency domain (top row) and time domain (bottom row)\n'
+        'Wiener wide vs tight + Gaus_wide — frequency domain (top row) and time domain (bottom row)\n'
         'Bottom row normalised to unit peak; grey verticals = 500 ns ticks.',
         fontsize=11,
     )
+
+    C_GAUS = '#2ca02c'   # green for Gaussian
 
     curves_defs = [
         ('PDVD wide (= PDHD wide)', PDVD_WIENER_WIDE,              C_PDVD,  '-',   2.0),
@@ -261,6 +263,15 @@ def make_plot3():
         ('PDHD tight (APAs 2/3/4)', PDHD_WIENER_TIGHT_DEFAULT,     C_PDHD,  '-.',  1.8),
         ('PDHD tight (APA1)',       PDHD_WIENER_TIGHT_APA1,        C_PDHD1, ':',   1.8),
     ]
+
+    # Gaussian is plane-independent — compute once outside the plane loop
+    gp = PDVD_GAUS_WIDE  # same for PDHD and PDVD top/bottom
+    freq_g, H_g = hf_pos_freq(N_TIME, MAX_FREQ_MHZ, gp['sigma'], gp['power'], True)
+    H_full_g = _hf_array(N_TIME, MAX_FREQ_MHZ, gp['sigma'], gp['power'], True)
+    t_g, h_g = iFFT_kernel(H_full_g, TICK_US)
+    fw_g = fwhm_of_kernel(h_g, TICK_US)
+    mask_g = np.abs(t_g) <= WINDOW_US
+    peak_g = h_g[mask_g].max()
 
     for col, (plane, plabel) in enumerate(zip(PLANES, PLANE_LABELS)):
         ax_f = axes[0, col]
@@ -280,6 +291,14 @@ def make_plot3():
             peak = h[mask].max()
             ax_t.plot(t[mask], h[mask] / peak, color=color, ls=ls, lw=lw,
                       label=f'{label}  FWHM≈{fw:.2f} µs')
+
+        # Gaussian — same curve on every plane panel
+        gaus_label_f = f'Gaus_wide (all detectors)\n  σ={gp["sigma"]:.2f} MHz  p={gp["power"]:.0f}'
+        gaus_label_t = f'Gaus_wide (all detectors)  FWHM≈{fw_g:.2f} µs'
+        ax_f.plot(freq_g, H_g, color=C_GAUS, ls=(0, (3, 1, 1, 1)), lw=1.8,
+                  label=gaus_label_f)
+        ax_t.plot(t_g[mask_g], h_g[mask_g] / peak_g, color=C_GAUS,
+                  ls=(0, (3, 1, 1, 1)), lw=1.8, label=gaus_label_t)
 
         # frequency panel
         ax_f.axhline(0.5, color='grey', lw=0.8, ls=':', label='H = 0.5')
