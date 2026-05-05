@@ -13,6 +13,7 @@ Eight families of scripts live here; each is documented below.
 | `compare_lf_filters.py` | Compare PDVD and PDHD low-frequency-cutoff filters (LfFilter: loose/tight/tighter) in frequency domain, impulse response, and synthetic-waveform demo |
 | `noise_spectrum_compare.py` | Cross-detector post-NF noise frequency spectrum comparison: PDVD-top, PDVD-bottom, PDHD |
 | `wiener_filter_construct.py` | Data-driven Wiener filter W(f) = \|S\|²/(\|S\|²+\|N\|²) for PDHD, PDVD-bottom, PDVD-top (U and V planes); plots frequency- and time-domain kernels |
+| `filter_tune_viewer.py` + `serve_filter_tune_viewer.sh` | Interactive Bokeh viewer for tuning HF (Wiener / Gaus_wide) and LF (ROI_*_lf) software filters live on top of the per-channel deconvolved waveform |
 
 Reference data:
 
@@ -103,6 +104,80 @@ Each PNG is a **2 × 1** panel:
   band, W → 0 where noise dominates (typically above 0.3 MHz).
 - **Bottom** — w(t) vs time (±50 µs).  The time-domain filter kernel:
   tighter detectors (lower S/N) produce broader kernels.
+
+---
+
+## `filter_tune_viewer.py` — interactive HF/LF filter tuning
+
+Bokeh-served web tool that loads the deconvolved waveform from a
+magnify ROOT file and lets you apply HF (Wiener / Gaus_wide) and LF
+(ROI_*_lf) software filters live on top, per channel.
+
+The "deconvolved" frame used as input is the existing
+`h{u,v,w}_wiener<ident>` TH2 in the magnify file: it is the output of
+`OmnibusSigProc::decon_2D_init` after FR/ER division and the geometric
+Wire_ind/Wire_col filter, but BEFORE any of the Wiener_*, Gaus_wide,
+or LF filters that the production chain applies later in
+`decon_2D_*ROI`. So no SP-chain code change is needed — just point the
+viewer at any magnify file produced by `./run_nf_sp ...`.
+
+Filter forms (matching `util/src/Response.cxx:435-444`):
+
+```
+HF: H(f) = exp(-0.5 * (f/sigma)**power),  H[0]=0 if zero-DC flag set
+LF: L(f) = 1 - exp(-(f/tau)**2)
+```
+
+Launch (server-side):
+
+```bash
+cd pdvd/sp_plot
+./serve_filter_tune_viewer.sh 5007    # bundles all PDHD APA0-3 + PDVD anode0-7
+```
+
+View from a remote laptop:
+
+```bash
+ssh -L 5007:localhost:5007 user@workstation
+# then open http://localhost:5007/filter_tune_viewer
+```
+
+The launcher script bakes in **all** PDHD APAs (0-3, run 27409 evt 0)
+and **all** PDVD anodes (0-7, run 39324 evt 0; anodes 0-3 = bottom CRP,
+4-7 = top CRP).  Edit the `SPECS` array in the launcher to point at
+different events / files; each spec is `label|path|ident|detector` with
+`detector ∈ {pdhd, pdvd}` (selects which preset list — Wiener_tight,
+Wiener_wide, Gaus_wide, ROI_loose_lf, ROI_tight_lf, ROI_tighter_lf —
+appears in the dropdowns).
+
+UI:
+- **Top row**: file selector, U/V/W plane radio, channel TextInput
+  (typed global channel id), prev/next buttons, "Largest p-p" button
+  (jumps to the channel with the largest peak-to-peak in the current
+  plane), **Update plots** button (manual redraw fallback), **status
+  div** (`idle` / `computing...` / `done · compute = X.X ms`).
+- **Filter row**: HF column (preset Select, σ slider, power slider,
+  zero-DC checkbox) and LF column (preset Select, τ slider, typed-τ
+  TextInput for sub-slider precision).  Picking a preset writes its
+  values into the sliders; touching a slider switches preset to
+  `(none)` and uses the slider values directly.  Sliders use Bokeh's
+  `value_throttled` event so a redraw fires only on **mouse-release**,
+  not on every micro-step during drag — the slider knob still moves
+  freely while you adjust.
+- **Range row**: t-min / t-max tick TextInputs + Apply / Reset
+  buttons for explicit time-range zoom (wheel/box-zoom also work).
+- **Plots** (linked sources):
+  1. *Decon waveform* — raw decon (dashed grey) overlaid with
+     filtered (blue), full window.
+  2. *Filter shapes* — HF, LF, and their product over 0..1 MHz.
+  3. *Channel spectrum* — `|X(f)|` of the raw decon (log-y), for
+     gauging where signal vs noise lives in this channel.
+
+Environment: bokeh 3.9 lives in
+`/nfs/data/1/xqian/toolkit-dev/.direnv/python-3.11.9/`; uproot lives
+in `/nfs/data/1/xqian/toolkit-dev/local/`.  The launcher prepends the
+`local/` site-packages onto `PYTHONPATH` so the bokeh-env interpreter
+can find uproot+awkward without modifying either env.
 
 ---
 
