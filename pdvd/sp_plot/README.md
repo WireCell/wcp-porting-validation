@@ -38,7 +38,7 @@ Output PNGs (written beside the script):
 |---|---|
 | `compare_wiener_wide_freq.png` | Wiener wide |H(f)| vs frequency — shows PDVD and PDHD wide are identical |
 | `compare_wiener_wide_time.png` | Wiener wide time-domain kernel (500 ns/tick, FWHM annotated) |
-| `compare_wiener_wide_vs_tight.png` | Wide vs tight per plane: frequency + time domain overlaid |
+| `compare_wiener_wide_vs_tight.png` | Wide vs tight Wiener + Gaus_wide per plane: frequency + time domain overlaid |
 | `compare_gauss.png` | Gaus_wide (σ=0.12 MHz, power=2): same for all detectors |
 | `compare_wire_filter.png` | Wire_ind / Wire_col in wire-frequency and wire-index spatial domains |
 
