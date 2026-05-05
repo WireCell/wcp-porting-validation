@@ -1,6 +1,6 @@
 # pdvd/sp_plot — PDVD signal-processing inspection scripts
 
-Seven families of scripts live here; each is documented below.
+Eight families of scripts live here; each is documented below.
 
 | Script | Purpose |
 |---|---|
@@ -10,6 +10,7 @@ Seven families of scripts live here; each is documented below.
 | `track_response_l1sp_pdvd.py` | Validator for the PDVD L1SPFilterPD kernel JSONs (top + bottom) |
 | `illustrate_pdvd_w_sentinel_path_bug.py` | Diagnostic plot for the all-zero sentinel-path bug in the PDVD W FR |
 | `compare_sp_filters.py` | Compare PDVD and PDHD high-frequency-cutoff filters (Wiener wide/tight, Gaus, Wire) in frequency and time/wire-index domains |
+| `compare_lf_filters.py` | Compare PDVD and PDHD low-frequency-cutoff filters (LfFilter: loose/tight/tighter) in frequency and time domains |
 | `noise_spectrum_compare.py` | Cross-detector post-NF noise frequency spectrum comparison: PDVD-top, PDVD-bottom, PDHD |
 
 Reference data:
@@ -90,6 +91,38 @@ strip-to-strip smearing.  Approximate spatial width: σ_spatial ≈ 1/(π σ_cod
 
 PDHD induction smears ~6.7× wider across strips.  The collection wire filter
 (σ_code = 10.0/√π) is identical on both detectors.
+
+---
+
+## `compare_lf_filters.py` — LF-cutoff filter comparison
+
+Analytic reproduction of the low-frequency-cutoff (`LfFilter`) filters from
+`protodunevd/sp-filters.jsonnet` and `pdhd/sp-filters.jsonnet`.  Formula
+verified against `toolkit/util/src/Response.cxx:444`.
+
+```bash
+python compare_lf_filters.py
+```
+
+Output PNGs (written beside the script):
+
+| File | Content |
+|---|---|
+| `compare_lf_filters_freq.png` | |H(f)| = 1 − exp(−(f/τ)²) for all three variants and both detectors |
+| `compare_lf_filters_time.png` | Time-domain complement G(t) showing the Gaussian baseline each filter removes; ±200 µs and ±30 µs panels |
+
+The LfFilter is a high-pass filter wired into the ROI-finding deconvolutions
+(`decon_2D_looseROI` / `_tightROI` / `_tighterROI` in `OmnibusSigProc`).
+Its complement G(f) = exp(−(f/τ)²) is a Gaussian low-pass; the iFFT G(t)
+reveals the time-scale of the baseline that each variant removes:
+
+| Variant | PDVD τ (MHz) | PDHD τ (MHz) | Complement FWHM (µs) |
+|---------|-------------|-------------|----------------------|
+| loose   | 0.002 | 0.002 (same) | ≈ 530 — DC-like drift only |
+| tight   | 0.014 | 0.016        | ≈ 53 / 47 µs |
+| tighter | 0.060 | 0.080        | ≈ 12 / 9 µs |
+
+PDVD top/bottom use byte-identical τ values.  PDVD loose = PDHD loose.
 
 ---
 
