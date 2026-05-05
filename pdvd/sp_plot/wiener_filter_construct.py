@@ -41,8 +41,8 @@ Outputs (same directory as this script):
   wiener_filter_V.png
 
 Each PNG has:
-  Top panel    — W(f) vs f (0..0.5 MHz), all three detectors.
-  Bottom panel — w(t) = iFFT[W(f)] vs t (±50 µs), all three detectors.
+  Top panel    — W(f) vs f (0..1 MHz), all three detectors + PDHD Wiener_wide overlay.
+  Bottom panel — w(t) = iFFT[W(f)] vs t (±50 µs), all three detectors + Wiener_wide iFFT.
 """
 
 import os, sys
@@ -81,6 +81,22 @@ NOISE_ROOT = {
 
 # Only the three detectors we have noise for (no uBooNE).
 DETECTORS = [d for d in TR_DETECTORS if d['label'] in NOISE_ROOT]
+
+# PDHD Wiener_wide parameters per plane (from pdhd/sp-filters.jsonnet lines 70-81).
+# Note: PDVD and PDHD share the same wide-Wiener σ/power — the overlay
+# is labelled "Wiener_wide (PDHD = PDVD)" to reflect this.
+WIENER_WIDE = {
+    0: {'sigma': 0.186765, 'power': 5.05429},   # U
+    1: {'sigma': 0.1936,   'power': 5.77422},   # V
+}
+
+
+def wiener_wide_analytic(f_mhz, plane_id):
+    """Analytic PDHD/PDVD Wiener_wide filter on the given frequency grid."""
+    p = WIENER_WIDE[plane_id]
+    H = np.exp(-0.5 * (f_mhz / p['sigma']) ** p['power'])
+    H[0] = 0.0   # flag=True: zero DC bin
+    return H
 
 
 # ---------------------------------------------------------------------------
@@ -199,10 +215,21 @@ def make_plot(plane_label, plane_id, results, outpath):
         axes[0].plot(r['f_short'], r['W'],   color=r['color'], lw=1.5, label=r['label'])
         axes[1].plot(r['t'],       r['w_t'], color=r['color'], lw=1.5, label=r['label'])
 
+    # Overlay analytic PDHD Wiener_wide (identical to PDVD wide).
+    f_ref = results[0]['f_short']
+    H_wide = wiener_wide_analytic(f_ref, plane_id)
+    h_wide_t = np.fft.fftshift(np.fft.irfft(H_wide, n=N_SHORT))
+    t_ref    = results[0]['t']
+    p = WIENER_WIDE[plane_id]
+    wide_lbl = (f'Wiener_wide (PDHD = PDVD)  '
+                f'σ={p["sigma"]:.4f} MHz  pow={p["power"]:.3f}')
+    axes[0].plot(f_ref,   H_wide,   color='k', lw=1.5, ls='--', label=wide_lbl)
+    axes[1].plot(t_ref,   h_wide_t, color='k', lw=1.5, ls='--', label='Wiener_wide (PDHD = PDVD)')
+
     axes[0].set_xlabel('frequency (MHz)')
     axes[0].set_ylabel('W(f)  [0..1]')
     axes[0].set_title('Frequency domain')
-    axes[0].set_xlim(0, 0.5)
+    axes[0].set_xlim(0, 1.0)
     axes[0].set_ylim(-0.05, 1.05)
     axes[0].axhline(0, color='gray', lw=0.5)
     axes[0].grid(True, alpha=0.3)
