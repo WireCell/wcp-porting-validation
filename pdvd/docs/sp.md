@@ -168,7 +168,7 @@ long-baseline wander.
 |------|---------|------|
 | `ROI_tight_lf` | 0.014 | Tight-ROI shaping — line 80 |
 | `ROI_tighter_lf` | 0.06 | Even tighter version used in refinement path — line 81 |
-| `ROI_loose_lf` | 0.002 | Loose-ROI (wider time support for extended MIP tails) — line 82 |
+| `ROI_loose_lf` | 0.002 (b) / 0.003 (t) | Loose-ROI (wider time support for extended MIP tails) — lines 82–83 |
 
 Larger τ → narrower time-domain envelope → tighter ROI boundaries.
 

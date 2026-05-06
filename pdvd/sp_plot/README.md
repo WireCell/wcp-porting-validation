@@ -175,7 +175,7 @@ PDHD file selector automatically picks the PDHD group; PDVD anode
 
 | Filter | PDHD | PDVD bottom + top |
 |---|---|---|
-| ROI_loose_lf | τ=0.002 | τ=0.002 |
+| ROI_loose_lf | τ=0.002 | τ=0.002 (bottom) / τ=0.003 (top) |
 | ROI_tight_lf | τ=0.016 | τ=0.014 |
 | ROI_tighter_lf | τ=0.08 | τ=0.06 |
 
@@ -335,11 +335,11 @@ reveals the time-scale over which the filter affects neighboring samples:
 
 | Variant | PDVD τ (MHz) | PDHD τ (MHz) | Wing FWHM g(t) (µs) |
 |---------|-------------|-------------|----------------------|
-| loose   | 0.002 | 0.002 (same) | ≈ 530 — DC-like drift only; l(t) ≈ δ(t) |
+| loose   | 0.002 (b) / 0.003 (t) | 0.002 | ≈ 530 µs (b) / ≈ 350 µs (t) — DC-like drift only; l(t) ≈ δ(t) |
 | tight   | 0.014 | 0.016        | ≈ 53 (PDVD) / 47 (PDHD) |
 | tighter | 0.060 | 0.080        | ≈ 12 (PDVD) / 9 (PDHD) |
 
-PDVD top/bottom use byte-identical τ values.  PDVD loose = PDHD loose.
+PDVD tight and tighter τ values are byte-identical top/bottom.  PDVD loose diverges: bottom = 0.002 (= PDHD), top = 0.003.
 
 ---
 

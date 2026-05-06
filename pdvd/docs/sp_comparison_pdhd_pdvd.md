@@ -126,7 +126,7 @@ to `_t`.
 
 | Name | PDHD τ (MHz) | PDVD `_b`/`_t` τ (MHz) | Same? | Notes |
 |------|-------------|------------------------|-------|-------|
-| `ROI_loose_lf` | `0.002` | `0.002` | ✅ | identical |
+| `ROI_loose_lf` | `0.002` | `0.002` (b) / `0.003` (t) | ❌ | top CRP tightened for baseline suppression |
 | `ROI_tight_lf` | `0.016` | `0.014` | ❌ slight | PDVD ~13% lower — marginally broader time support for tight ROIs |
 | `ROI_tighter_lf` | `0.08` | `0.06` | ❌ | PDVD ~25% lower — broader LF envelope in the refinement path |
 
@@ -553,7 +553,7 @@ of the three variants is bound to a specific ROI-finding decon:
 
 | LF filter | τ PDVD / PDHD (MHz) | Bound to `decon_2D_*` | Purpose |
 |---|---|---|---|
-| `ROI_loose_lf` | 0.002 / 0.002 | `decon_2D_looseROI` (default) | Mildest rejection — retains the slow bipolar induction lobes for a wide, inclusive ROI sweep |
+| `ROI_loose_lf` | 0.002 (b) / 0.003 (t) / 0.002 | `decon_2D_looseROI` (default) | Mildest rejection — retains the slow bipolar induction lobes for a wide, inclusive ROI sweep |
 | `ROI_tight_lf` | 0.014 / 0.016 | `decon_2D_tightROI` + per-channel fallback in `decon_2D_looseROI` | Mid rejection — primary threshold-based ROI detection |
 | `ROI_tighter_lf` | 0.06 / 0.08 | `decon_2D_tighterROI` | Strongest rejection — produces `r_data_tight`, a cross-check used inside `find_ROI_by_decon_itself` |
 
