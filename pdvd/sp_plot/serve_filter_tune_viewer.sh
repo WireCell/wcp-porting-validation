@@ -44,4 +44,6 @@ export PYTHONPATH=/nfs/data/1/xqian/toolkit-dev/local/lib/python3.11/site-packag
 exec "$BOKEH" serve --port "$PORT" \
     --allow-websocket-origin="localhost:${PORT}" \
     --allow-websocket-origin="127.0.0.1:${PORT}" \
+    --allow-websocket-origin="wcgpu1.phy.bnl.gov:${PORT}" \
+    --allow-websocket-origin="wcgpu1:${PORT}" \
     "$HERE/filter_tune_viewer.py" --args "${SPECS[@]}"

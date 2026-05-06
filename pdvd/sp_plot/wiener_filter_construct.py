@@ -19,7 +19,7 @@ Noise |N(f)|²
 
 Window normalization (the "be careful with power vs amplitude" part)
   The noise ROOT files contain N_long = 6000 ticks = 3000 µs.  The Wiener
-  filter is constructed on a T_WIN = 100 µs / N_SHORT = 200-tick window.
+  filter is constructed on a T_WIN = 150 µs / N_SHORT = 300-tick window.
   For stationary noise with one-sided PSD P(f) [ADC²/MHz]:
 
     <|X_long(f)|²>  = P(f) · N_long / (2·dt)
@@ -32,8 +32,8 @@ Window normalization (the "be careful with power vs amplitude" part)
 
 Signal truncation note
   PDVD's analytic response is zero-padded to 160 µs (320 ticks).  Extracting
-  200 ticks centered on the trough clips ~30 µs from the long induction tails.
-  This affects |S(f)|² at low frequencies and is intrinsic to the 100 µs
+  300 ticks centered on the trough clips ~30 µs from the long induction tails.
+  This affects |S(f)|² at low frequencies and is intrinsic to the 150 µs
   window choice (not a bug).
 
 Outputs (same directory as this script):

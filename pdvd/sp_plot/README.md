@@ -83,9 +83,9 @@ SignalFilter), from the same post-NF `_raw` ROOT files as
 existing noise_spectrum_compare.py returns the latter; the Jensen bias
 matters for the Wiener denominator).
 
-**Window and scaling**: the filter is built on a **100 µs / 200-tick**
+**Window and scaling**: the filter is built on a **150 µs / 300-tick**
 grid.  The noise was measured on a 3000 µs frame, so the mean power per
-bin is scaled by `N_short / N_long` before interpolating onto the 100 µs
+bin is scaled by `N_short / N_long` before interpolating onto the 150 µs
 frequency grid.  Power (not amplitude) scales linearly with window length.
 
 ```bash
@@ -144,16 +144,40 @@ LF        : L(f) = 1 - exp(-(f/tau)**2)
 Wire is applied across the WIRE axis (frequency = cycles/wire),
 HF and LF across the time axis (frequency = MHz, Nyquist = 1 MHz).
 
-Production presets per detector (loaded into the dropdowns):
+Production presets per detector (loaded into the dropdowns).
+Values taken verbatim from
+`cfg/pgrapher/experiment/{pdhd,protodunevd}/sp-filters.jsonnet`
+and cross-checked against `wiener_filter_construct.py:99-117`.
 
-| Filter | PDHD | PDVD |
+**Wire filters** (shared across all HF groups):
+
+| Filter | PDHD | PDVD bottom + top |
 |---|---|---|
-| Wire_ind (U, V planes) | σ=0.4231, p=2 | σ=2.821, p=2 |
-| Wire_col (W plane) | σ=5.642, p=2 | σ=5.642, p=2 |
-| Gaus_wide (HF) | σ=0.12, p=2 | σ=0.12, p=2 |
-| Wiener_tight U / V / W (HF) | σ=0.222 / 0.223 / 0.226 | σ=0.15 / 0.15 / 0.25 |
-| Wiener_wide  U / V / W (HF) | σ=0.187 / 0.194 / 0.176 | (same as PDHD) |
-| ROI_loose_lf / tight / tighter (LF) | τ=0.002 / 0.014 / 0.06 | τ=0.00175 / 0.0185 / 0.145 |
+| Wire_ind (U, V planes) | σ=0.75/√π ≈ 0.4231, p=2 | σ=5.0/√π ≈ 2.821, p=2 |
+| Wire_col (W plane) | σ=10.0/√π ≈ 5.642, p=2 | σ=10.0/√π ≈ 5.642, p=2 |
+
+**HF filters** — three separate preset groups (selector updates on file change):
+
+| Filter | PDHD (APA0/2/3) | PDHD APA1 | PDVD bottom (`_b`) | PDVD top (`_t`) |
+|---|---|---|---|---|
+| Gaus_wide | σ=0.12, p=2 | (same) | σ=0.12, p=2 | σ=0.12, p=2 |
+| Wiener_tight U | σ=0.221933, p=6.554 | σ=0.203451, p=5.781 | σ=0.148788, p=3.762 | (= bottom) |
+| Wiener_tight V | σ=0.222723, p=8.760 | σ=0.160191, p=3.548 | σ=0.159657, p=4.361 | (= bottom) |
+| Wiener_tight W | σ=0.225567, p=3.478 | σ=0.125448, p=5.271 | σ=0.136230, p=3.353 | (= bottom) |
+| Wiener_wide U | σ=0.186765, p=5.054 | (same) | σ=0.186765, p=5.054 | (= bottom) |
+| Wiener_wide V | σ=0.193600, p=5.774 | (same) | σ=0.193600, p=5.774 | (= bottom) |
+| Wiener_wide W | σ=0.175722, p=4.379 | (same) | σ=0.175722, p=4.379 | (= bottom) |
+
+PDHD file selector automatically picks the PDHD group; PDVD anode
+0–3 → bottom group; anode 4–7 → top group.
+
+**LF filters**:
+
+| Filter | PDHD | PDVD bottom + top |
+|---|---|---|
+| ROI_loose_lf | τ=0.002 | τ=0.002 |
+| ROI_tight_lf | τ=0.016 | τ=0.014 |
+| ROI_tighter_lf | τ=0.08 | τ=0.06 |
 
 ### Launch
 
@@ -183,33 +207,38 @@ the dropdowns).
   button (jumps to the channel with the largest peak-to-peak in the
   current plane), **Update plots** button (manual redraw fallback),
   **status div** (`idle` / `computing...` / `done · compute = X.X ms`).
-- **Filter row** (three columns):
-  - **Wire** column: preset Select (Wire_ind / Wire_col / `(none)`),
-    σ slider (cycles/wire), power slider.  U/V default to Wire_ind,
-    W to Wire_col on plane change.
-  - **HF** column: preset Select, σ slider (MHz), power slider,
-    zero-DC checkbox.
-  - **LF** column: preset Select, τ slider (MHz), typed-τ TextInput
-    for sub-slider precision.
+- **Filter A row** (blue) and **Filter B row** (orange dashed) — two
+  independent filter sets that are computed and overlaid simultaneously,
+  so you can compare e.g. a production preset against a custom tune
+  without switching back and forth.  Each row has three columns:
+  - **Wire** column: preset Select (Wire_ind / Wire_col / Custom /
+    `(none)`), σ Spinner (cycles/wire), power Spinner.  U/V
+    auto-switch to Wire_ind, W to Wire_col, on plane change.
+  - **HF** column: preset Select (detector-specific list; see tables
+    above), σ Spinner (MHz), power Spinner, zero-DC checkbox.
+  - **LF** column: preset Select (PDHD or PDVD values; see tables
+    above), τ Spinner (MHz).
 
-  Picking a preset writes its values into the sliders; touching a
-  slider switches the preset back to `(none)` and uses the slider
-  values directly.  Sliders use Bokeh's `value_throttled` event so a
-  redraw fires only on **mouse-release**, not on every micro-step
-  during drag.
+  Picking a named preset writes its values into the Spinners.
+  Editing a Spinner value while a named preset is active switches
+  the preset to `Custom` — the filter remains applied with your
+  typed values.  Selecting `(none)` bypasses the filter entirely.
+  Spinners use Bokeh's `value_throttled` event so a redraw fires
+  only on **Enter / focus-loss**, not on every keystroke.
 
 - **Range row**: t-min / t-max tick TextInputs + Apply / Reset
   buttons for explicit time-range zoom (wheel/box-zoom also work).
 
 - **Plots**:
-  1. *Time domain* — raw decon (dashed grey), filtered (blue solid,
-     Wire×HF×LF), production wiener post-ROI (dotted green).
-  2. *Filter shapes* — Wire (purple, x rescaled to 0..1), HF (blue),
-     LF (red), HF×LF (green dashed).  Wire-axis x is rescaled so it
-     shares the panel with the time-axis filters; absolute σ values
-     are in the filter-row title bars.
+  1. *Time domain* — raw decon (grey dashed), Filter A (blue solid),
+     Filter B (orange dashed), production wiener post-ROI (green dotted).
+  2. *Filter shapes* — Wire (purple / pink), HF (blue / orange),
+     LF (red / brown), HF×LF product (green / yellow-green dashed).
+     Wire-axis x is rescaled to share the panel with the time-axis
+     filters; absolute σ values are in the filter-row title bars.
   3. *Channel spectrum* — `|X(f)|` of the raw decon (linear-y);
-     filtered (blue) and production wiener (green) are overlaid.
+     Filter A (blue), Filter B (orange), and production wiener (green)
+     are overlaid.
 
 ### How the Wire filter is applied
 
