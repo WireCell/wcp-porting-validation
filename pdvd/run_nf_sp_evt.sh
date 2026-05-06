@@ -51,6 +51,10 @@ Options:
                   Per-group .npz files are written to
                   <dump_dir>/<RUN_PADDED>_<EVT>/apa<N>/.
                   View with: cd nf_plot && ./serve_coherent_viewer.sh <dump_dir>
+  -S <shield_dir> Enable PDVDShieldCouplingSub diagnostic dump (default: OFF).
+                  One shield_dump_ch<CHAN>.npz per top-U group written to
+                  <shield_dir>/<RUN_PADDED>_<EVT>/shield_dumps/.
+                  View with: cd nf_plot && ./serve_shield_tune_viewer.sh <dir>
 
   L1SP defaults to process mode (LASSO fit replaces gauss/wiener for
   triggered ROIs).  Bottom anodes (0-3) run the full LASSO; top anodes
@@ -83,6 +87,7 @@ EOF
 ANODE=""
 REALITY="data"
 DUMP_ROOT=""
+SHIELD_DUMP_ROOT=""
 CALIB_ROOT=""
 WF_ROOT=""
 L1SP_OFF=0
@@ -98,6 +103,8 @@ while [ $# -gt 0 ]; do
         -r*) REALITY="${1#-r}"; shift ;;
         -d) DUMP_ROOT="$2"; shift 2 ;;
         -d*) DUMP_ROOT="${1#-d}"; shift ;;
+        -S) SHIELD_DUMP_ROOT="$2"; shift 2 ;;
+        -S*) SHIELD_DUMP_ROOT="${1#-S}"; shift ;;
         -c) CALIB_ROOT="$2"; shift 2 ;;
         -c*) CALIB_ROOT="${1#-c}"; shift ;;
         -w) WF_ROOT="$2"; shift 2 ;;
@@ -193,6 +200,19 @@ process_event() {
         echo "Dump dir: $DUMP_DIR_ABS"
     fi
 
+    local SHIELD_DUMP_TLA=()
+    if [ -n "$SHIELD_DUMP_ROOT" ]; then
+        local SHIELD_DIR_ABS
+        case "$SHIELD_DUMP_ROOT" in
+            /*) SHIELD_DIR_ABS="$SHIELD_DUMP_ROOT" ;;
+            *)  SHIELD_DIR_ABS="$PDVD_DIR/$SHIELD_DUMP_ROOT" ;;
+        esac
+        SHIELD_DIR_ABS="${SHIELD_DIR_ABS}/${RUN_PADDED}_${EVT}/shield_dumps"
+        mkdir -p "$SHIELD_DIR_ABS"
+        SHIELD_DUMP_TLA=(--tla-str shield_dump_path="$SHIELD_DIR_ABS")
+        echo "Shield dump dir: $SHIELD_DIR_ABS"
+    fi
+
     # L1SP mode selection.  Precedence: -x > -w > -c > default (process).
     local L1SP_TLA=()
     if [ "$L1SP_OFF" -eq 1 ]; then
@@ -244,6 +264,7 @@ process_event() {
         --tla-str reality="${REALITY}" \
         --tla-code anode_indices="${ANODE_CODE}" \
         "${DUMP_TLA[@]}" \
+        "${SHIELD_DUMP_TLA[@]}" \
         "${L1SP_TLA[@]}" \
         "${RAWDECON_TLA[@]}" \
         -c wct-nf-sp.jsonnet

@@ -42,6 +42,7 @@ function(
   use_freqmask  = true,                    // apply per-channel frequency mask in NF; override with --tla-code use_freqmask=false
   debug_dump_path = '',                    // when non-empty, PDVDCoherentNoiseSub dumps per-group .npz under this dir (default OFF)
   debug_dump_groups = [],                  // optional whitelist of group ids (= first-channel idents). [] = all groups
+  shield_dump_path = '',                   // when non-empty, PDVDShieldCouplingSub dumps diagnostic npz per group here (default OFF)
   // L1SP defaults: tagger ON in dump mode, LASSO writeback OFF.  Users can
   // validate the ROI tagger via per-event NPZ dumps before the per-region
   // kernel files are generated.  Switch to 'process' (with kernels_file
@@ -71,7 +72,8 @@ function(
 
   local nf_maker = import 'pgrapher/experiment/protodunevd/nf.jsonnet';
   local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], tools.anodes[n].data.ident, name='nf%d' % tools.anodes[n].data.ident,
-                             debug_dump_path=debug_dump_path, debug_dump_groups=debug_dump_groups)
+                             debug_dump_path=debug_dump_path, debug_dump_groups=debug_dump_groups,
+                             shield_dump_path=shield_dump_path)
                     for n in std.range(0, std.length(tools.anodes) - 1)];
 
   local sp_maker = import 'pgrapher/experiment/protodunevd/sp.jsonnet';
