@@ -76,14 +76,8 @@ function(
       name: 'frame_source_anode%d' % aid,
       data: {
         inname: '%s-anode%d.tar.bz2' % [input_prefix, aid],
-        tags: if include_rawdecon then [
-          'gauss%d'    % aid,
-          'wiener%d'   % aid,
-          'rawdecon%d' % aid,
-        ] else [
-          'gauss%d' % aid,
-          'wiener%d' % aid,
-        ],
+        tags: ['gauss%d' % aid, 'wiener%d' % aid]
+              + (if include_rawdecon then ['rawdecon%d' % aid] else []),
       },
     }, nin=0, nout=1);
     // Retagger duplicates wiener<N> → [wiener<N>, threshold<N>] so
@@ -94,14 +88,10 @@ function(
       data: {
         tag_rules: [{
           frame: { '.*': '' },
-          trace: if include_rawdecon then {
+          trace: {
             ['gauss%d' % aid]: 'gauss%d' % aid,
             ['wiener%d' % aid]: ['wiener%d' % aid, 'threshold%d' % aid],
-            ['rawdecon%d' % aid]: 'rawdecon%d' % aid,
-          } else {
-            ['gauss%d' % aid]: 'gauss%d' % aid,
-            ['wiener%d' % aid]: ['wiener%d' % aid, 'threshold%d' % aid],
-          },
+          } + (if include_rawdecon then { ['rawdecon%d' % aid]: 'rawdecon%d' % aid } else {}),
         }],
       },
     }, nin=1, nout=1);

@@ -19,8 +19,8 @@ function(tools, outputfile, runinfo=null) {
     data: {
       output_filename: outputfile,
       root_file_mode: if n == 0 then 'RECREATE' else 'UPDATE',
-      // 'rawdecon%d' is a special-mode tag (off in production); MagnifySink
-      // silently skips it when the input frame doesn't carry the tag.
+      // 'rawdecon%d' is a special-mode tag (off in production);
+      // MagnifySink silently skips tags absent from the input frame.
       frames: ['gauss%d' % anode.data.ident, 'wiener%d' % anode.data.ident,
                'rawdecon%d' % anode.data.ident],
       // Retagger (inserted upstream) copies wiener<N> → threshold<N>, so

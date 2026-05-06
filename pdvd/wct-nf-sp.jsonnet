@@ -54,7 +54,7 @@ function(
   l1sp_pd_adj_max_hops = 3,                // adjacency hop cap (default 3 = +/-3 channels from any donor)
   // Special debug mode: also dump the pre-Wire-filter, pre-ROI deconvolved
   // waveform (h{u,v,w}_rawdecon<ident> in the magnify ROOT) for offline
-  // software-filter tuning.  OFF in production.  Pass via -r in run_nf_sp_evt.sh.
+  // software-filter tuning.  OFF in production.  Pass via -R in run_nf_sp_evt.sh.
   dump_rawdecon = false,
 )
 
@@ -113,18 +113,8 @@ function(
         name: 'spframesink%d' % anode_ident,
         data: {
           outname: '%s-anode%d.tar.bz2' % [sp_prefix, anode_ident],
-          // When dump_rawdecon is enabled, also persist 'rawdecon%d'.  When
-          // disabled, the SP frame won't carry the tag and FrameFileSink
-          // silently skips it.  Including it always keeps wct-sp-to-magnify
-          // / FrameFileSource tags lists detector-symmetric.
-          tags: if dump_rawdecon then [
-            'gauss%d'    % anode_ident,
-            'wiener%d'   % anode_ident,
-            'rawdecon%d' % anode_ident,
-          ] else [
-            'gauss%d'  % anode_ident,
-            'wiener%d' % anode_ident,
-          ],
+          tags: ['gauss%d' % anode_ident, 'wiener%d' % anode_ident]
+                + (if dump_rawdecon then ['rawdecon%d' % anode_ident] else []),
           digitize: false,
           masks: true,
         },

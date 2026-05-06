@@ -129,10 +129,10 @@ tap or without `-R`), the viewer falls back to `h{u,v,w}_wiener<ident>`
 production frame, NOT a bare decon.  A red warning appears in the
 info row when the fallback is in effect.
 
-The same magnify file also yields `h{u,v,w}_gauss<ident>` —
-production's post-everything output, available as a dotted-green
-overlay on the time-domain plot for visual comparison "your tuned
-filter vs. production".
+The same magnify file also yields `h{u,v,w}_wiener<ident>` —
+the production post-Wiener+LF+ROI output, shown always-on as a
+dotted-green overlay on the time-domain and spectrum panels for
+visual comparison "your tuned filter vs. production".
 
 ### Filter forms (`util/src/Response.cxx:435-444`)
 
@@ -200,28 +200,36 @@ the dropdowns).
 
 - **Range row**: t-min / t-max tick TextInputs + Apply / Reset
   buttons for explicit time-range zoom (wheel/box-zoom also work).
-  Also: **Show production 'gauss' overlay** checkbox — when on, the
-  green-dotted line on the time-domain panel shows the production
-  post-everything output for the same channel (read directly from
-  the magnify ROOT's `h{u,v,w}_gauss<ident>`).
 
 - **Plots**:
   1. *Time domain* — raw decon (dashed grey), filtered (blue solid,
-     Wire×HF×LF), production gauss (dotted green, optional).
+     Wire×HF×LF), production wiener post-ROI (dotted green).
   2. *Filter shapes* — Wire (purple, x rescaled to 0..1), HF (blue),
      LF (red), HF×LF (green dashed).  Wire-axis x is rescaled so it
      shares the panel with the time-axis filters; absolute σ values
      are in the filter-row title bars.
-  3. *Channel spectrum* — `|X(f)|` of the raw decon (log-y).
+  3. *Channel spectrum* — `|X(f)|` of the raw decon (linear-y);
+     filtered (blue) and production wiener (green) are overlaid.
 
 ### How the Wire filter is applied
 
-`H_wire(k_w)` is multiplied along the wire-frequency axis of the
-plane-rfft, then inverse-FFT'd in the wire dimension.  The plane's
-2D FFT is cached lazily on first selection of a (file, plane), so
-subsequent renders only redo the multiplication + IFFT (~10 ms for
-a PDVD 476×6400 plane).  Choosing `(none)` skips the wire path and
-just does a per-channel rfft/irfft (sub-millisecond).
+The offline Wire filter exactly reproduces the production order in
+`OmnibusSigProc::decon_2D_init`.  `rawdecon` arrives already wire-shifted
+and stripped to `m_nwires` rows; the viewer reverses that:
+
+1. Zero-pad `rawdecon` (time-rfft) to `m_fft_nwires = m_nwires + 2·WIRE_PAD`
+   rows (WIRE_PAD = 10, hardcoded to match both PDVD and PDHD field-response
+   files which use 21 wire paths).
+2. Undo the production wire-shift (`np.roll(..., -WIRE_PAD, axis=0)`).
+3. FFT along axis=0, multiply by `H_wire` and the time-axis filter `HL`.
+4. IFFT along axis=0 (keeping complex — no `.real`), redo wire-shift,
+   strip the pad rows to recover `m_nwires` rows.
+5. `irfft` along the time axis for the selected channel.
+
+The plane's time-rfft is cached lazily on first selection of a (file, plane),
+so subsequent renders only redo steps 2-5 (~10 ms for a PDVD 476×6400 plane).
+Choosing `(none)` for Wire skips steps 1-4 and goes straight to `irfft`
+per channel (sub-millisecond).
 
 ### Environment
 

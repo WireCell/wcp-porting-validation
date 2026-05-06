@@ -87,6 +87,7 @@ CALIB_ROOT=""
 WF_ROOT=""
 L1SP_OFF=0
 DUMP_RAWDECON=0
+DUMP_DECON=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -102,7 +103,7 @@ while [ $# -gt 0 ]; do
         -w) WF_ROOT="$2"; shift 2 ;;
         -w*) WF_ROOT="${1#-w}"; shift ;;
         -x) L1SP_OFF=1; shift ;;
-        -R) DUMP_RAWDECON=1; shift ;;
+        -R) DUMP_RAWDECON=1; DUMP_DECON=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -230,7 +231,7 @@ process_event() {
     local RAWDECON_TLA=()
     if [ "$DUMP_RAWDECON" -eq 1 ]; then
         RAWDECON_TLA=(--tla-code dump_rawdecon=true)
-        echo "RawDecon dump:  ON (pre-Wire-filter pre-ROI tap into SP frame archives)"
+        echo "RawDecon/Decon dump: ON (pre/post-filter taps into SP frame archives)"
     fi
 
     wire-cell \

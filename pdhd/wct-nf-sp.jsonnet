@@ -105,15 +105,8 @@ function(
         name: 'spframesink%d' % n,
         data: {
           outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
-          // Adds 'rawdecon%d' when dump_rawdecon is true (special debug mode).
-          tags: if dump_rawdecon then [
-            'gauss%d'    % n,
-            'wiener%d'   % n,
-            'rawdecon%d' % n,
-          ] else [
-            'gauss%d'  % n,
-            'wiener%d' % n,
-          ],
+          tags: ['gauss%d' % n, 'wiener%d' % n]
+                + (if dump_rawdecon then ['rawdecon%d' % n] else []),
           digitize: false,
           masks: true,
         },

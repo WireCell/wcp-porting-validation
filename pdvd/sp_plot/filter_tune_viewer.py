@@ -11,10 +11,9 @@ If ``rawdecon`` is missing in a magnify file, the tool falls back to
 the production ``wiener`` frame (post-everything) and warns -- mostly
 useful for archival files that predate the rawdecon tap.
 
-Production overlay: ``h{u,v,w}_gauss<ident>`` is the production
-post-Wire+Wiener+LF+ROI output.  A toggle puts it on the time-domain
-plot for direct visual comparison of "your tuned filter" vs.
-"production".
+Production overlay: ``h{u,v,w}_wiener<ident>`` is the production
+post-Wiener+LF+ROI output, shown always-on (dotted green) for
+comparing "your tuned filter" vs. production.
 
 Filter forms (matching ``util/src/Response.cxx:435-444``):
     HF / Wire: H(f) = exp(-0.5 * (f/sigma)**power),  H[0]=0 if flag=true
@@ -61,6 +60,10 @@ from bokeh.plotting import figure
 
 TICK_US = 0.5
 TICK_S = TICK_US * 1e-6
+
+# OmnibusSigProc wire-axis padding: m_pad_nwires == m_wire_shift == 10 for both
+# PDVD and PDHD (response file has 21 wire paths; enlargement = paths-1 = 20).
+WIRE_PAD = 10
 
 
 # ---- presets ---------------------------------------------------------------
@@ -187,39 +190,30 @@ class PlaneData:
 
     rawdecon: real (n_chan, n_tick) — bare deconvolved waveform (post FR/ER,
               pre Wire/HF/LF/ROI).  Fallback to wiener TH2 if rawdecon missing.
-    gauss:    real (n_chan, n_tick) or None — production post-everything output.
+    wiener:   real (n_chan, n_tick) or None — production post-Wiener post-ROI output.
     F:        rfft along time of rawdecon, complex (n_chan, n_freq_t).
-    G:        fft along axis 0 of F, complex (n_chan, n_freq_t).  Used to
-              apply Wire filter via 2D-frequency multiplication.
     ch_offset: global channel id of local row 0.
     used_fallback: True iff rawdecon was missing and we fell back to wiener.
     """
-    def __init__(self, rawdecon, gauss, ch_offset, used_fallback):
+    def __init__(self, rawdecon, wiener, ch_offset, used_fallback):
         self.rawdecon = rawdecon
-        self.gauss = gauss
+        self.wiener = wiener
         self.ch_offset = ch_offset
         self.used_fallback = used_fallback
-        # Cache the FFTs lazily on first render.
+        # Cache the time-axis rfft lazily on first render.
         self._F = None
-        self._G = None
 
     def F(self) -> np.ndarray:
         if self._F is None:
             self._F = np.fft.rfft(self.rawdecon.astype(np.float64), axis=1)
         return self._F
 
-    def G(self) -> np.ndarray:
-        if self._G is None:
-            self._G = np.fft.fft(self.F(), axis=0)
-        return self._G
-
 
 class MagnifyCache:
     """Lazy per-file loader for ``h{u,v,w}_rawdecon<ident>`` (preferred)
-    and ``h{u,v,w}_gauss<ident>`` (production overlay)."""
+    and ``h{u,v,w}_wiener<ident>`` (production overlay)."""
     RD_PFX = {0: "hu_rawdecon", 1: "hv_rawdecon", 2: "hw_rawdecon"}
     WN_PFX = {0: "hu_wiener",   1: "hv_wiener",   2: "hw_wiener"}
-    GS_PFX = {0: "hu_gauss",    1: "hv_gauss",    2: "hw_gauss"}
 
     def __init__(self, specs: list[FileSpec]):
         self._specs = {s.label: s for s in specs}
@@ -239,7 +233,6 @@ class MagnifyCache:
         spec = self._specs[label]
         rd_name = f"{self.RD_PFX[plane]}{spec.ident}"
         wn_name = f"{self.WN_PFX[plane]}{spec.ident}"
-        gs_name = f"{self.GS_PFX[plane]}{spec.ident}"
         with uproot.open(spec.path) as f:
             file_keys = {k.split(';')[0] for k in f.keys()}
             used_fallback = False
@@ -256,13 +249,14 @@ class MagnifyCache:
                       file=sys.stderr)
                 self._frames[key] = PlaneData(
                     rawdecon=np.zeros((1, 6000), dtype=np.float32),
-                    gauss=None, ch_offset=0, used_fallback=False)
+                    wiener=None, ch_offset=0, used_fallback=False)
                 return self._frames[key]
             rawdecon = np.asarray(src_h.values(), dtype=np.float32)
             ch_offset = int(round(src_h.to_numpy()[1][0]))
-            gauss = (np.asarray(f[gs_name].values(), dtype=np.float32)
-                     if gs_name in file_keys else None)
-        self._frames[key] = PlaneData(rawdecon=rawdecon, gauss=gauss,
+            # Production wiener overlay (separate from the rawdecon fallback path).
+            wiener = (np.asarray(f[wn_name].values(), dtype=np.float32)
+                      if wn_name in file_keys and not used_fallback else None)
+        self._frames[key] = PlaneData(rawdecon=rawdecon, wiener=wiener,
                                       ch_offset=ch_offset,
                                       used_fallback=used_fallback)
         return self._frames[key]
@@ -286,7 +280,7 @@ def main(argv):
     # ---- state ------------------------------------------------------------
     state = dict(
         wave_t=None,    # current channel rawdecon waveform (n_tick,)
-        gauss_t=None,   # current channel gauss (production) waveform or None
+        wiener_t=None,  # current channel production wiener waveform or None
         X=None,         # rfft of wave_t (n_tick//2 + 1,)
         f_mhz=None,     # rfft frequency grid in MHz
         n_tick=0,
@@ -332,9 +326,6 @@ def main(argv):
     wire_power  = Slider(title="Wire power", start=1.0, end=6.0, step=0.1,
                          value=2.0, width=320)
 
-    # Production-gauss overlay toggle.  Reads h{u,v,w}_gauss<id> from the
-    # same magnify file and shows it dotted-green on the time-domain plot.
-    gauss_overlay_chk = CheckboxGroup(labels=["Show production 'gauss' overlay"], active=[])
 
     # Time-range
     tmin_input = TextInput(title="t-min (tick)", value="0", width=120)
@@ -347,8 +338,7 @@ def main(argv):
                     active_scroll="wheel_zoom",
                     tools="pan,wheel_zoom,box_zoom,reset,save")
 
-    f_time = figure(title="Waveform — raw decon (dashed grey), filtered (blue), "
-                          "production gauss (dotted green, optional)",
+    f_time = figure(title="Waveform — filtered (blue), production wiener post-ROI (dotted green)",
                     **fig_kw_t)
     f_time.xaxis.axis_label = "tick (0.5 µs each)"
     f_time.yaxis.axis_label = "amplitude"
@@ -364,31 +354,29 @@ def main(argv):
     f_filter.y_range.start = -0.05
     f_filter.y_range.end = 1.05
 
-    f_spec = figure(title="Channel spectrum |X(f)| (raw decon, log-y)",
+    f_spec = figure(title="Channel spectrum |X(f)| — filtered (blue), production wiener (dotted green)",
                     height=220, sizing_mode="stretch_width",
                     active_scroll="wheel_zoom",
                     tools="pan,wheel_zoom,box_zoom,reset,save",
-                    y_axis_type="log")
+                    y_axis_type="linear")
     f_spec.xaxis.axis_label = "frequency (MHz)"
     f_spec.yaxis.axis_label = "|X(f)|"
     f_spec.x_range.start = 0.0
     f_spec.x_range.end = 1.0
 
-    src_raw   = ColumnDataSource(data=dict(x=[], y=[]))
-    src_filt  = ColumnDataSource(data=dict(x=[], y=[]))
-    src_gauss = ColumnDataSource(data=dict(x=[], y=[]))
-    src_hf    = ColumnDataSource(data=dict(x=[], y=[]))
-    src_lf    = ColumnDataSource(data=dict(x=[], y=[]))
-    src_wire  = ColumnDataSource(data=dict(x=[], y=[]))
-    src_prod  = ColumnDataSource(data=dict(x=[], y=[]))
-    src_spec  = ColumnDataSource(data=dict(x=[], y=[]))
+    src_filt    = ColumnDataSource(data=dict(x=[], y=[]))
+    src_wiener  = ColumnDataSource(data=dict(x=[], y=[]))
+    src_hf      = ColumnDataSource(data=dict(x=[], y=[]))
+    src_lf      = ColumnDataSource(data=dict(x=[], y=[]))
+    src_wire    = ColumnDataSource(data=dict(x=[], y=[]))
+    src_prod    = ColumnDataSource(data=dict(x=[], y=[]))
+    src_spec    = ColumnDataSource(data=dict(x=[], y=[]))
+    src_spec_wn = ColumnDataSource(data=dict(x=[], y=[]))
 
-    f_time.line("x", "y", source=src_raw,  line_width=1, color="#808080",
-                line_dash="dashed", legend_label="raw decon")
-    f_time.line("x", "y", source=src_filt, line_width=1.5, color="#1f77b4",
+    f_time.line("x", "y", source=src_filt,   line_width=1.5, color="#1f77b4",
                 legend_label="filtered (Wire×HF×LF)")
-    f_time.line("x", "y", source=src_gauss, line_width=1.5, color="#2ca02c",
-                line_dash="dotted", legend_label="production gauss (post-everything)")
+    f_time.line("x", "y", source=src_wiener, line_width=1.5, color="#2ca02c",
+                line_dash="dotted", legend_label="production wiener (post-ROI)")
     f_time.legend.location = "top_left"
     f_time.legend.click_policy = "hide"
 
@@ -403,7 +391,12 @@ def main(argv):
     f_filter.legend.location = "center_right"
     f_filter.legend.click_policy = "hide"
 
-    f_spec.line("x", "y", source=src_spec, line_width=1, color="#666666")
+    f_spec.line("x", "y", source=src_spec,    line_width=1,   color="#1f77b4",
+                legend_label="filtered")
+    f_spec.line("x", "y", source=src_spec_wn, line_width=1.5, color="#2ca02c",
+                line_dash="dotted", legend_label="production wiener")
+    f_spec.legend.location = "top_right"
+    f_spec.legend.click_policy = "hide"
 
     # ---- helpers ----------------------------------------------------------
     def detector() -> str:
@@ -462,24 +455,19 @@ def main(argv):
         chan_input.value = str(ch_global)
 
         wave = pdata.rawdecon[local].astype(np.float64)
-        gauss_wave = (pdata.gauss[local].astype(np.float64)
-                      if pdata.gauss is not None else None)
+        wiener_wave = (pdata.wiener[local].astype(np.float64)
+                       if pdata.wiener is not None else None)
         f_mhz = np.fft.rfftfreq(n_tick, TICK_S) * 1e-6
         X = np.fft.rfft(wave)
 
         state["wave_t"] = wave
-        state["gauss_t"] = gauss_wave
+        state["wiener_t"] = wiener_wave
         state["X"] = X
         state["f_mhz"] = f_mhz
         state["n_tick"] = n_tick
         state["n_chan"] = n_chan
         state["local_idx"] = local
         state["ch_global"] = ch_global
-
-        # Spectrum panel — log-magnitude, replace zeros with eps for log axis.
-        mag = np.abs(X)
-        mag = np.where(mag <= 0, 1e-12, mag)
-        src_spec.data = dict(x=f_mhz, y=mag)
 
     def _compute_filtered_waveform(plane_data: PlaneData,
                                    hf_kw, lf_kw, wire_kw,
@@ -498,10 +486,20 @@ def main(argv):
             X = plane_data.F()[local_idx, :]
             Y = np.fft.irfft(X * HL, n=n_tick)
         else:
-            # Full-plane wire-direction FFT path.  G is cached lazily.
-            W = wire_kernel(n_chan, wire_kw["sigma"], wire_kw["power"])
-            G_filt = plane_data.G() * W[:, None] * HL[None, :]
-            F2 = np.fft.ifft(G_filt, axis=0).real
+            # Wire filter at production-matching padded size (m_fft_nwires).
+            # rawdecon arrives already wire-shifted on the padded grid then stripped
+            # to m_nwires rows.  Reproduce production order: re-pad, undo shift,
+            # FFT axis=0 at m_fft_nwires, multiply, IFFT, re-shift, strip.
+            n_fft = n_chan + 2 * WIRE_PAD
+            F_src = plane_data.F()               # (n_chan, n_freq)
+            n_freq = F_src.shape[1]
+            F_pad = np.zeros((n_fft, n_freq), dtype=np.complex128)
+            F_pad[WIRE_PAD:WIRE_PAD + n_chan, :] = F_src
+            F_pad = np.roll(F_pad, -WIRE_PAD, axis=0)  # undo production wire-shift
+            W = wire_kernel(n_fft, wire_kw["sigma"], wire_kw["power"])
+            G_filt = np.fft.fft(F_pad, axis=0) * W[:, None] * HL[None, :]
+            F2 = np.fft.ifft(G_filt, axis=0)
+            F2 = np.roll(F2, +WIRE_PAD, axis=0)[WIRE_PAD:WIRE_PAD + n_chan, :]
             Y = np.fft.irfft(F2[local_idx, :], n=n_tick)
         return H, L, HL, Y
 
@@ -541,15 +539,31 @@ def main(argv):
 
         dt = (time.perf_counter() - t0) * 1000.0
 
-        src_raw.data  = dict(x=x_ticks, y=wave_t)
-        src_filt.data = dict(x=x_ticks, y=Y)
+        # Trim all time-domain data to the visible range so the y-axis
+        # auto-scales to the signal inside the window, not the edge artifacts.
+        try:
+            t_lo = max(0, int(tmin_input.value))
+            t_hi = min(n_tick, int(tmax_input.value))
+        except ValueError:
+            t_lo, t_hi = 0, n_tick
+        if t_hi <= t_lo:
+            t_lo, t_hi = 0, n_tick
 
-        # Production gauss overlay — only when the checkbox is on AND the
-        # current channel has gauss data.  Empty source hides the line.
-        if 0 in gauss_overlay_chk.active and state["gauss_t"] is not None:
-            src_gauss.data = dict(x=x_ticks, y=state["gauss_t"])
+        src_filt.data = dict(x=x_ticks[t_lo:t_hi], y=Y[t_lo:t_hi])
+
+        # Production wiener overlay — always shown when data is available.
+        wiener_t = state["wiener_t"]
+        if wiener_t is not None:
+            src_wiener.data = dict(x=x_ticks[t_lo:t_hi], y=wiener_t[t_lo:t_hi])
         else:
-            src_gauss.data = dict(x=[], y=[])
+            src_wiener.data = dict(x=[], y=[])
+
+        # Spectrum panel — filtered (blue), production wiener (green).
+        src_spec.data = dict(x=f_mhz, y=np.abs(np.fft.rfft(Y)))
+        if wiener_t is not None:
+            src_spec_wn.data = dict(x=f_mhz, y=np.abs(np.fft.rfft(wiener_t)))
+        else:
+            src_spec_wn.data = dict(x=[], y=[])
 
         src_hf.data   = dict(x=f_mhz, y=H)
         src_lf.data   = dict(x=f_mhz, y=L)
@@ -682,9 +696,6 @@ def main(argv):
                 wire_preset.value = "(none)"
         render()
 
-    def on_gauss_overlay(_a, _o, _n):
-        render()
-
     def on_apply_range():
         try:
             lo = int(tmin_input.value)
@@ -695,13 +706,15 @@ def main(argv):
             return
         f_time.x_range.start = lo
         f_time.x_range.end = hi
+        render()
 
     def on_reset_range():
         n = state["n_tick"] or 6000
-        tmin_input.value = "0"
-        tmax_input.value = str(n)
-        f_time.x_range.start = 0
-        f_time.x_range.end = n
+        tmin_input.value = "200"
+        tmax_input.value = str(n - 200)
+        f_time.x_range.start = 200
+        f_time.x_range.end = n - 200
+        render()
 
     file_select.on_change("value", on_file_change)
     plane_radio.on_change("active", on_plane_change)
@@ -722,7 +735,6 @@ def main(argv):
     lf_tau_text.on_change("value", on_lf_tau_text)
     for w in (wire_sigma, wire_power):
         w.on_change("value_throttled", on_wire_slider)
-    gauss_overlay_chk.on_change("active", on_gauss_overlay)
     update_btn.on_click(render)
 
     range_btn.on_click(on_apply_range)
@@ -751,8 +763,7 @@ def main(argv):
         Div(text="<b>Low-frequency filter</b> — L(f) = 1 − exp(−(f/τ)²)"),
         lf_preset, lf_tau, lf_tau_text,
     )
-    range_row = row(tmin_input, tmax_input, range_btn, reset_btn,
-                    gauss_overlay_chk)
+    range_row = row(tmin_input, tmax_input, range_btn, reset_btn)
     layout = column(
         sel_row,
         info_div,
