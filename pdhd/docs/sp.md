@@ -165,7 +165,7 @@ Used to suppress low-frequency baselines within ROIs.
 
 | Name | Type | `tau` (MHz) | Role |
 |------|------|-------------|------|
-| `ROI_loose_lf` | `LfFilter` | `0.002` | Loose-ROI LF suppression (gentlest). |
+| `ROI_loose_lf` | `LfFilter` | `0.003` | Loose-ROI LF suppression (gentlest). |
 | `ROI_tight_lf` | `LfFilter` | `0.016` | Tight-ROI LF suppression. |
 | `ROI_tighter_lf` | `LfFilter` | `0.08` | Tightest LF suppression — used in refinement. |
 
