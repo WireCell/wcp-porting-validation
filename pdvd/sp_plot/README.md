@@ -6,6 +6,7 @@ Eight families of scripts live here; each is documented below.
 |---|---|
 | `find_long_decon_artifacts_pdvd.py` | Offline reference detector for L1SP induction-plane artifacts (clustered output) |
 | `eval_l1sp_trigger_pdvd.py` | Compare the L1SP tagger output (Python CSV or C++ NPZ) against the hand-scan ground truth |
+| `extract_l1sp_clusters.py` | Extract L1SP-tagged ROI clusters from a calibration-dump NPZ and print a per-cluster summary table (any anode, top or bottom) |
 | `cmd_plot_frames.py` | U/V/W frame views from a `FrameFileSink` archive |
 | `track_response_l1sp_pdvd.py` | Validator for the PDVD L1SPFilterPD kernel JSONs (top + bottom) |
 | `illustrate_pdvd_w_sentinel_path_bug.py` | Diagnostic plot for the all-zero sentinel-path bug in the PDVD W FR |
@@ -340,6 +341,57 @@ reveals the time-scale over which the filter affects neighboring samples:
 | tighter | 0.060 | 0.080        | ≈ 12 (PDVD) / 9 (PDHD) |
 
 PDVD tight and tighter τ values are byte-identical top/bottom.  PDVD loose is now also byte-identical: bottom = top = PDHD = 0.003.
+
+---
+
+## `extract_l1sp_clusters.py` — L1SP calibration-dump cluster extractor
+
+Reads the per-ROI NPZ files produced by `run_nf_sp_evt.sh -c <calib_dir>`
+(`L1SPFilterPD` dump mode) and prints a per-cluster summary table in the
+format:
+
+```
+Run    Event/Anode  plane  ch_lo  ch_hi  t_lo  t_hi  nch  len_max  gmax  fill  fwhm_f  asym  efrac  triggered
+```
+
+Each cluster groups adjacent-channel, time-overlapping tagged ROIs (`flag_l1_adj ≠ 0`).
+Feature columns (`gmax`, `fill`, `fwhm_f`, `asym`, `efrac`) come from the
+max-gmax seed ROI in the cluster.  The `triggered` column lists the union of
+trigger arms that fired across all seed ROIs, ordered as in `decide_trigger()`:
+`asym_strong`, `L_long`, `L_loose`, `fill_shape`.  BFS-adjacency-promoted
+ROIs (promoted by a neighbour, not self-triggered) contribute `BFS_adj`.
+
+Thresholds are selected per anode:
+
+| Anode | Source |
+|-------|--------|
+| 0–3 (bottom) | `sp.jsonnet` PDVD overrides: `l1_len_long_mod=180`, `l1_len_fill_shape=90`, `fill=0.30`, `fwhm=0.25` |
+| 4–7 (top) | C++ header defaults (no sp.jsonnet override yet pending top-CRP hand-scan validation) |
+
+```bash
+# Single event, anodes 6 and 7
+python extract_l1sp_clusters.py \
+    --calib-dir /home/xqian/tmp/pdvd_l1sp_calib_039324_0/calib \
+    --run 39324 --event 0 --anode 6 7
+
+# All anodes found in the calib dir
+python extract_l1sp_clusters.py \
+    --calib-dir /home/xqian/tmp/pdvd_l1sp_calib_039324_0/calib \
+    --run 39324 --event 0
+```
+
+The calib dir is produced by:
+
+```bash
+cd pdvd
+./run_nf_sp_evt.sh -c <calib_dir> [-a <anode>] 039324 0
+# or directly:
+wire-cell ... --tla-str l1sp_pd_mode=dump \
+              --tla-str l1sp_pd_dump_path=<calib_dir> ...
+```
+
+`--wire-schema` is optional when `WIRECELL_PATH` includes the directory
+containing `protodunevd-wires-larsoft-v3.json.bz2`.
 
 ---
 
