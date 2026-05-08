@@ -19,7 +19,7 @@ All claims below are validated against
 | Sub-graph composition | `OmnibusSigProc` → optional L1SP merger | same |
 | Per-anode branching axis | APA0 vs APA1–3 (geometry / wire orientation) | bottom (`ident<4`) vs top (`ident≥4`) (electronics + ADC fullscale) |
 | `use_multi_plane_protection` default | `false` | `true` |
-| L1SP default mode | `'process'` (live) | `'dump'` (calibration phase — kernels not yet validated) |
+| L1SP default mode | `'process'` (live) | `'process'` (live; bottom-tuned trigger-gate overrides applied to all anodes) |
 
 ---
 
@@ -183,7 +183,7 @@ when `l1sp_pd_mode != ''`.
 
 | Knob | PDHD | PDVD bottom | PDVD top |
 |------|------|-------------|---------|
-| `l1sp_pd_mode` default | `'process'` (live; replaces gauss/wiener) | `'dump'` (tagger only; SP output unchanged) | `'dump'` |
+| `l1sp_pd_mode` default | `'process'` (live; replaces gauss/wiener) | `'process'` | `'process'` |
 | `kernels_file` | `pdhd_l1sp_kernels.json.bz2` | `pdvd_bottom_l1sp_kernels.json.bz2` | `pdvd_top_l1sp_kernels.json.bz2` |
 | `gain_scale` | `elec.gain / 14 mV/fC` | `elec.gain / 7.8 mV/fC` | `1.0` |
 | `process_planes` default | APA0: `[0]` (V anomalous); APA1–3: `[0,1]` | `[0,1]` | `[0,1]` |
@@ -198,10 +198,12 @@ PDHD's "very-long" 5th arm (`l1_len_very_long`, calibrated for run 027409
 in 2026) or PDHD's APA0-specific V-plane suppression — those are
 PDHD-specific calibration outcomes.
 
-PDVD is currently in `dump` mode because the per-region kernels
-(`pdvd_bottom_l1sp_kernels.json.bz2`, `pdvd_top_l1sp_kernels.json.bz2`)
-have not yet been validated end-to-end.  Once validation passes, flipping
-the default to `'process'` will activate the L1SP fit.
+PDVD is now in `process` mode for all anodes (0–7).  The bottom-tuned
+trigger-gate overrides (`l1_len_long_mod=180`, `l1_len_fill_shape=90`,
+`l1_fill_shape_fill_thr=0.30`, `l1_fill_shape_fwhm_thr=0.25`,
+`l1_pdvd_track_veto_enable=true`) are applied uniformly.  Top-CRP
+threshold validation against a hand-scan is pending; the bottom-tuned
+set is used as the starting point.
 
 ---
 
@@ -229,7 +231,7 @@ Identical between detectors:
 | `plane2layer` U↔V swap? | APA0 only | No |
 | Top vs bottom electronics branching? | n/a | Yes (`elecresponse`, `fullscale`, L1SP) |
 | Top vs bottom *filter parameters* differ? | n/a | **No** — `_b` == `_t` numerically |
-| L1SP enabled by default? | Yes (`'process'`) | No (`'dump'`, calibration phase) |
+| L1SP enabled by default? | Yes (`'process'`) | Yes (`'process'`, bottom-tuned overrides on all anodes) |
 | L1SP per-region kernel files? | Single file | Yes (bottom + top) |
 | Wiener-tight tuning origin? | PDHD calibration (run 027409) | Appears to be a pre-2019 WCT baseline |
 | Wiener-wide tuning? | PDHD calibration | Byte-exact copy from PDHD |

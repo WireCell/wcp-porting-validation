@@ -82,7 +82,7 @@ Config: `toolkit/cfg/pgrapher/experiment/protodunevd/params.jsonnet`
 
 ---
 
-## L1SP on top — tagger/calibration only; LASSO writeback gated off
+## L1SP on top — process mode; bottom-tuned trigger-gate overrides applied
 
 `L1SPFilterPD` has three operational modes
 (see [`toolkit/sigproc/docs/l1sp/L1SPFilterPD.md`](../../../../toolkit/sigproc/docs/l1sp/L1SPFilterPD.md)):
@@ -93,43 +93,40 @@ Config: `toolkit/cfg/pgrapher/experiment/protodunevd/params.jsonnet`
 | `dump` | yes | no | **no** | yes (`-c`) |
 | `''` (off) | no | no | no | no |
 
-For top anodes, **`process` is silently downgraded to `dump`** by
-`sp.jsonnet:144-149`:
-
-```jsonnet
-// PDVD top electronics not yet validated for the L1SP fit; cap 'process'
-// to 'dump' on top anodes (ident >= 4) so callers can request process
-// mode globally without accidentally enabling LASSO writeback on top.
-local _eff_mode = if anode.data.ident >= 4 && l1sp_pd_mode == 'process'
-                  then 'dump'
-                  else l1sp_pd_mode;
-```
+Process mode now applies to **all anodes (0–7)**.  The former
+`sp.jsonnet` auto-downgrade (`process → dump` for ident ≥ 4) has been
+removed.  `local _eff_mode = l1sp_pd_mode;` — top and bottom are treated
+identically.
 
 Effective modes per `run_nf_sp_evt.sh` flag:
 
-| Flag | Effective mode on top | Effective mode on bottom |
-|------|-----------------------|--------------------------|
-| *(none — default)* | dump (tagger only) | process |
-| `-w wf_dir` | dump | process + ROI waveform dump |
-| `-c calib_dir` | dump | dump |
-| `-x` | off | off |
+| Flag | Effective mode (all anodes 0–7) |
+|------|---------------------------------|
+| *(none — default)* | process |
+| `-w wf_dir` | process + ROI waveform dump |
+| `-c calib_dir` | dump |
+| `-x` | off |
 
-**Calibration is available on top.** In dump mode the tagger still fires
-and writes per-ROI asymmetry NPZs for offline analysis.  The C++ does
-not load the kernel file in dump mode (`init_resp()` is guarded on
-`!m_dump_mode`), so the workflow works even though top-CRP kernels exist
-in `wire-cell-data/` for future enablement.
+**Trigger-gate overrides** — the bottom-CRP tuned threshold set is now
+applied uniformly to all anodes (`sp.jsonnet`):
+
+| Override | Value | C++ default |
+|----------|-------|-------------|
+| `l1_len_long_mod` | 180 | 100 |
+| `l1_len_fill_shape` | 90 | 50 |
+| `l1_fill_shape_fill_thr` | 0.30 | 0.38 |
+| `l1_fill_shape_fwhm_thr` | 0.25 | 0.30 |
+| `l1_pdvd_track_veto_enable` | true | false |
+
+These were tuned against bottom-CRP hand-scans and are used as the
+starting point for top.  Top-CRP threshold validation against a dedicated
+hand-scan is pending.  Use `-c` to produce calibration NPZs and
+`sp_plot/extract_l1sp_clusters.py` to audit triggered ROIs.
 
 To produce calibration NPZs on a top anode:
 
 ```bash
-./run_nf_sp_evt.sh 039324 0 -a 4 -c work/calib
-# NPZs land under work/calib/039324_0/apa4_*.npz
+./run_nf_sp_evt.sh -a 7 -c /tmp/calib 039324 0
+# NPZs land under /tmp/calib/039324_0/apa7_*.npz
+python sp_plot/extract_l1sp_clusters.py --calib-dir /tmp/calib/039324_0 --anode 7 --run 39324 --event 0
 ```
-
-**Why is process mode disabled?**  Top-CRP shaping (`JsonElecResponse`,
-peak ≈ 7.2 mV/fC) has not yet been validated against the LASSO basis
-kernels and the smearing model.  Running LASSO writeback without that
-validation risks introducing a systematic bias into the gauss/wiener
-output.  The cap will be lifted by removing/narrowing `sp.jsonnet:144-149`
-once the top-CRP response is validated.
