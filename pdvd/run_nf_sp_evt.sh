@@ -57,10 +57,8 @@ Options:
                   View with: cd nf_plot && ./serve_shield_tune_viewer.sh <dir>
 
   L1SP defaults to process mode (LASSO fit replaces gauss/wiener for
-  triggered ROIs).  Bottom anodes (0-3) run the full LASSO; top anodes
-  (4-7) auto-fall to dump (tagger-only) per the cap in
-  cfg/pgrapher/experiment/protodunevd/sp.jsonnet.  Use the flags below
-  to override.  Precedence: -x > -w > -c > default.
+  triggered ROIs) on all anodes (0-7).  Use the flags below to override.
+  Precedence: -x > -w > -c > default.
   -c <calib_dir>  Switch L1SP to dump (tagger-only) mode.  Per-event NPZ
                   files with per-ROI asymmetry quantities are written to
                   <calib_dir>/<RUN_PADDED>_<EVT>/.
@@ -245,7 +243,7 @@ process_event() {
         echo "L1SP calib dir: $CALIB_DIR_ABS  (mode=dump)"
     else
         L1SP_TLA=(--tla-str l1sp_pd_mode=process)
-        echo "L1SP:           process mode (bottom anodes 0-3 fit; top 4-7 auto-fall to dump)"
+        echo "L1SP:           process mode (LASSO fit + waveform replacement on all anodes)"
     fi
 
     local RAWDECON_TLA=()
