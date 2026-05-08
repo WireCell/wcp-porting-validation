@@ -130,3 +130,9 @@ To produce calibration NPZs on a top anode:
 # NPZs land under /tmp/calib/039324_0/apa7_*.npz
 python sp_plot/extract_l1sp_clusters.py --calib-dir /tmp/calib/039324_0 --anode 7 --run 39324 --event 0
 ```
+
+**Regression test**: `sigproc/test/check_pdvd_anode7_nf_sp.bats` locks the
+current top-CRP NF+SP+L1SP output (run 039324 evt 0, anode 7) in a
+bit-exact reference fixture.  See
+[L1SPFilterPD.md §Test coverage](../../../../sigproc/docs/l1sp/L1SPFilterPD.md#test-coverage)
+for details.
