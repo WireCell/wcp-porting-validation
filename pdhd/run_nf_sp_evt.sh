@@ -202,8 +202,13 @@ process_event() {
         esac
         WF_DIR_ABS="${WF_DIR_ABS}/${RUN_PADDED}_${EVT}"
         mkdir -p "$WF_DIR_ABS"
-        L1SP_TLA=(--tla-str l1sp_pd_wf_dump_path="$WF_DIR_ABS")
-        echo "L1SP waveform dir: $WF_DIR_ABS"
+        # Per-ROI waveform dump: every ROI (including non-triggered) so the
+        # output is usable as an ML training set with negative examples.
+        # Set l1sp_pd_dump_all_rois=false in the wire-cell invocation below
+        # to recover the legacy "triggered-only" behaviour.
+        L1SP_TLA=(--tla-str l1sp_pd_wf_dump_path="$WF_DIR_ABS"
+                  --tla-code l1sp_pd_dump_all_rois=true)
+        echo "L1SP waveform dir: $WF_DIR_ABS  (all ROIs)"
     elif [ -n "$CALIB_ROOT" ]; then
         local CALIB_DIR_ABS
         case "$CALIB_ROOT" in
