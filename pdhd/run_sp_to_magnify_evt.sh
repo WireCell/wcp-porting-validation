@@ -1,6 +1,6 @@
 #!/bin/bash
 # Convert SP frame archives for one event to per-anode Magnify ROOT files.
-# Usage: ./run_sp_to_magnify_evt.sh [-I] [-s sel_tag] <run> <evt|all> [subrun]
+# Usage: ./run_sp_to_magnify_evt.sh [-I] [-s sel_tag] [-d on|off] <run> <evt|all> [subrun]
 #        ./run_sp_to_magnify_evt.sh      # list available runs
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
@@ -10,6 +10,9 @@
 #         input_data/<run_dir>/<evt_dir>/protodunehd-sp-frames-anode{0..3}.tar.bz2  (fallback)
 #   -I:  force loading SP/raw frames from input_data even if work dir has them
 #   -s:  work/<RUN_PADDED>_<EVT>_sel<TAG>/input/ (from run_select_evt.sh)
+#   -d:  on|off (default off).  When 'on', consume DNN-ROI output
+#        (protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2 from work/) instead of
+#        the standard SP frames.  Produced by run_nf_sp_dnnroi_evt.sh.
 # Orig frames (protodunehd-orig-frames-anode{N}.tar.bz2) are always sourced from
 # input_data when present, producing hu/hv/hw_orig<N> histograms in Magnify.
 # Output: work/<run>_<evt>[_sel<TAG>]/magnify-run<RUN>-evt<EVT>-apa<N>.root  (one per anode)
@@ -27,6 +30,7 @@ SEL_TAG=""
 FORCE_INPUT_DATA=""
 INCLUDE_RAWDECON=0
 INCLUDE_DECON=0
+USE_DNNROI="off"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -34,17 +38,28 @@ while [ $# -gt 0 ]; do
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -R) INCLUDE_RAWDECON=1; INCLUDE_DECON=1; shift ;;   # rawdecon+decon TH2 in magnify (special mode)
+        -d) USE_DNNROI="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+case "$USE_DNNROI" in
+    on|off) ;;
+    *) echo "[err] -d must be 'on' or 'off' (got '$USE_DNNROI')" >&2; exit 1 ;;
+esac
+if [ "$USE_DNNROI" = "on" ]; then
+    INPUT_BASENAME="protodunehd-sp-dnnroi-frames"
+else
+    INPUT_BASENAME="protodunehd-sp-frames"
+fi
 
 if [ $# -eq 0 ]; then
     list_runs; exit 0
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-I] [-s sel_tag] <run> <evt|all> [subrun]" >&2
+    echo "Usage: $0 [-I] [-s sel_tag] [-d on|off] <run> <evt|all> [subrun]" >&2
     exit 1
 fi
 RUN=$1
@@ -66,7 +81,7 @@ find_evtdir() {
                 echo "$cand"; return 0
             fi
         done
-        if ls "$rdir/protodunehd-sp-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+        if ls "$rdir/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
             echo "$rdir"; return 0
         fi
     done
@@ -100,14 +115,17 @@ process_event() {
     echo "Event dir: $EVTDIR"
 
     if [ -z "$SEL_TAG" ] && [ -z "$FORCE_INPUT_DATA" ] && \
-       ls "$WORKDIR/protodunehd-sp-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+       ls "$WORKDIR/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
         SP_DIR="$WORKDIR"
+    elif [ "$USE_DNNROI" = "on" ]; then
+        echo "[skip] run=$RUN evt=$EVT: no ${INPUT_BASENAME}-anode*.tar.bz2 in $WORKDIR (run run_nf_sp_dnnroi_evt.sh first)" >&2
+        return 2
     else
         SP_DIR="$EVTDIR"
     fi
-    echo "SP frames from: $SP_DIR"
+    echo "SP frames from: $SP_DIR (basename=${INPUT_BASENAME})"
 
-    ANODE0_ARCHIVE="$SP_DIR/protodunehd-sp-frames-anode0.tar.bz2"
+    ANODE0_ARCHIVE="$SP_DIR/${INPUT_BASENAME}-anode0.tar.bz2"
     if [ ! -s "$ANODE0_ARCHIVE" ]; then
         echo "[skip] run=$RUN evt=$EVT: missing or empty $ANODE0_ARCHIVE" >&2
         return 2
@@ -142,7 +160,7 @@ print(a.shape[1])
 
     PROCESSED=0
     for N in 0 1 2 3; do
-        f="$SP_DIR/protodunehd-sp-frames-anode${N}.tar.bz2"
+        f="$SP_DIR/${INPUT_BASENAME}-anode${N}.tar.bz2"
         if [ ! -s "$f" ]; then
             echo "Skipping apa ${N} (missing or empty $f)"
             continue
@@ -184,7 +202,7 @@ print(a.shape[1])
             -l stderr \
             -l "${LOG}:debug" \
             -L debug \
-            --tla-str  "input_prefix=${SP_DIR}/protodunehd-sp-frames" \
+            --tla-str  "input_prefix=${SP_DIR}/${INPUT_BASENAME}" \
             --tla-code "anode_indices=[${N}]" \
             --tla-str  "output_file=${OUTPUT}" \
             --tla-code "run=${RUN_STRIPPED}" \

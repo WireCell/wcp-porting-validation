@@ -30,19 +30,15 @@ local tools_all = tools_maker(params);
 
 function(
   orig_prefix   = 'protodunehd-orig-frames',
-  raw_prefix    = 'protodunehd-sp-frames-raw',
-  sp_only_prefix = 'protodunehd-sp-frames',  // baseline (pre-DNN) SP tap output
   sp_prefix     = 'protodunehd-sp-dnnroi-frames',
   reality       = 'data',
   anode_indices = std.range(0, std.length(tools_all.anodes) - 1),
   use_freqmask  = true,
   debug_dump_path = '',
   debug_dump_groups = [],
-  // L1SPFilterPD's FrameMerger only preserves raw / gauss / wiener / rawdecon
-  // trace tags.  The DNN-ROI input tags (loose_lf, mp2_roi, mp3_roi,
-  // decon_charge) get dropped through it, so the L1SP chain must be bypassed
-  // here.  If the user wants L1SP active *and* DNN-ROI, the merger rules in
-  // sp.jsonnet need to be extended to pass the debug tags through.
+  // L1SP inside sp.jsonnet stays off in the DNN chain (the DNN-ROI debug
+  // input tags would be dropped through its FrameMerger).  L1SP-after-DNN
+  // is wired separately via the use_l1sp_dnn TLA below.
   l1sp_pd_mode = '',
   l1sp_pd_dump_path = '',
   l1sp_pd_wf_dump_path = '',
@@ -145,37 +141,6 @@ function(
   local load_resamplers = resamplers_config(g, wc, tools);
   local resamplers = load_resamplers.resamplers;
 
-  local raw_frame_tap = function(n)
-    g.fan.tap('FrameFanout',
-      g.pnode({
-        type: 'FrameFileSink',
-        name: 'rawframesink%d' % n,
-        data: {
-          outname: '%s-anode%d.tar.bz2' % [raw_prefix, n],
-          tags: ['raw%d' % n],
-          digitize: false,
-          masks: true,
-        },
-      }, nin=1, nout=0),
-      'rawframetap%d' % n);
-
-  // SP-only frame tap (the standard gauss/wiener output, before DNN-ROI).
-  // Useful for direct SP vs DNN-ROI comparison.
-  local sp_frame_tap = function(n)
-    g.fan.tap('FrameFanout',
-      g.pnode({
-        type: 'FrameFileSink',
-        name: 'spframesink%d' % n,
-        data: {
-          outname: '%s-anode%d.tar.bz2' % [sp_only_prefix, n],
-          tags: ['gauss%d' % n, 'wiener%d' % n]
-                + (if dump_rawdecon then ['rawdecon%d' % n] else []),
-          digitize: false,
-          masks: true,
-        },
-      }, nin=1, nout=0),
-      'spframetap%d' % n);
-
   // Final frame sink: write the post-DNN frame (one trace tag per plane
   // plus the merged 'dnnspN' frame tag) when DNN-ROI is enabled,
   // otherwise just write the SP frame.
@@ -207,22 +172,20 @@ function(
     }, nin=0, nout=1);
 
     // L1SP-after-DNN envelope wraps SP + DNN + L1SP into one node; when
-    // disabled, the legacy three-step (SP → SP-tap → DNN) is used directly.
+    // disabled, the legacy two-step (SP → DNN) is used directly.
     local sp_dnn_l1sp_segment =
       if use_dnnroi && use_l1sp_dnn
       then [l1sp_dnn_maker(tools.anodes[n], sp_pipes[n], dnnroi_inner_pipes[n],
                            tools, params,
-                           sp_frame_tap=sp_frame_tap(n),
                            l1sp_pd_adj_enable=l1sp_pd_adj_enable,
                            l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops)]
-      else [sp_pipes[n], sp_frame_tap(n)]
+      else [sp_pipes[n]]
            + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
 
     g.pipeline(
       [src]
       + (if use_resampler then [resamplers[n]] else [])
       + [nf_pipes[n]]
-      + [raw_frame_tap(n)]
       + sp_dnn_l1sp_segment
       + [final_frame_sink(n)],
       'nfspdnn_pipe_%d' % n);

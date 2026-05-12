@@ -10,9 +10,8 @@
 #                             [-D cpu|gpu] [-M model.ts] [-m pp|mp] <run> <evt>
 #
 # Output: work/<RUN_PADDED>_<EVT>/
-#   - protodunehd-sp-frames-raw-anode{N}.tar.bz2 (NF output)
-#   - protodunehd-sp-frames-anode{N}.tar.bz2     (SP-only output, for baseline)
-#   - protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2 (post-DNN frame)
+#   - protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2 (post-DNN/L1SP frame —
+#     the single canonical archive consumed by downstream scripts)
 
 set -e
 
@@ -188,8 +187,6 @@ wire-cell \
     -L debug \
     -V "elecGain=${ELEC_GAIN}" \
     --tla-str orig_prefix="${EVTDIR}/protodunehd-orig-frames" \
-    --tla-str raw_prefix="${WORKDIR}/protodunehd-sp-frames-raw" \
-    --tla-str sp_only_prefix="${WORKDIR}/protodunehd-sp-frames" \
     --tla-str sp_prefix="${WORKDIR}/protodunehd-sp-dnnroi-frames" \
     --tla-str reality="${REALITY}" \
     --tla-code anode_indices="[${ANODE}]" \

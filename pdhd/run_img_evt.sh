@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run imaging for one event.
-# Usage: ./run_img_evt.sh [-I] [-a anode] [-S] [-s sel_tag] <run> <evt|all>
+# Usage: ./run_img_evt.sh [-I] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>
 #        ./run_img_evt.sh                # list available runs
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
@@ -14,6 +14,9 @@
 #   is used automatically as a fallback.
 #   -S:  force-prefer the sparse variant for every anode that has one.
 #   -s:  work/<RUN_PADDED>_<EVT>_sel<TAG>/input/ (from run_select_evt.sh)
+#   -d:  on|off (default off).  When 'on', consume DNN-ROI output
+#        (protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2 from work/) instead
+#        of the standard SP frames.  Produced by run_nf_sp_dnnroi_evt.sh.
 # Output: work/<run>_<evt>[_sel<TAG>]/clusters-apa-apa{N}-ms-{active,masked}.tar.gz
 
 set -e
@@ -29,6 +32,7 @@ ANODE=""
 SEL_TAG=""
 FORCE_SPARSE=false
 FORCE_INPUT_DATA=""
+USE_DNNROI="off"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -38,17 +42,28 @@ while [ $# -gt 0 ]; do
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -S) FORCE_SPARSE=true; shift ;;
+        -d) USE_DNNROI="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+case "$USE_DNNROI" in
+    on|off) ;;
+    *) echo "[err] -d must be 'on' or 'off' (got '$USE_DNNROI')" >&2; exit 1 ;;
+esac
+if [ "$USE_DNNROI" = "on" ]; then
+    INPUT_BASENAME="protodunehd-sp-dnnroi-frames"
+else
+    INPUT_BASENAME="protodunehd-sp-frames"
+fi
 
 if [ $# -eq 0 ]; then
     list_runs; exit 0
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-I] [-a anode] [-S] [-s sel_tag] <run> <evt|all>" >&2
+    echo "Usage: $0 [-I] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>" >&2
     exit 1
 fi
 RUN=$1
@@ -69,7 +84,7 @@ find_evtdir() {
                 echo "$cand"; return 0
             fi
         done
-        if ls "$rdir/protodunehd-sp-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+        if ls "$rdir/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
             echo "$rdir"; return 0
         fi
     done
@@ -115,18 +130,23 @@ process_event() {
     mkdir -p "$WORKDIR"
 
     # Prefer SP frames produced locally in work dir; -I forces input_data.
+    # When -d on, only the work-dir DNN-ROI archive is searched (no
+    # sparse fallback and no input_data fallback — those don't apply).
     if [ -z "$SEL_TAG" ] && [ -z "$FORCE_INPUT_DATA" ] && \
-       ls "$WORKDIR/protodunehd-sp-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
-        INPUT_PREFIX="${WORKDIR}/protodunehd-sp-frames"
+       ls "$WORKDIR/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
+        INPUT_PREFIX="${WORKDIR}/${INPUT_BASENAME}"
         echo "SP prefix: $INPUT_PREFIX"
+    elif [ "$USE_DNNROI" = "on" ]; then
+        echo "[skip] run=$RUN evt=$EVT: no ${INPUT_BASENAME}-anode*.tar.bz2 in $WORKDIR (run run_nf_sp_dnnroi_evt.sh first)" >&2
+        return 2
     else
         # Determine per-anode archive: dense by default; sparse if forced (-S) or
         # dense is missing.  Stage symlinks only when at least one anode uses sparse
         # (sparse archive name differs from FrameFileSource's expected pattern).
         NEED_STAGE=false
         for ai in "${ANODE_INDICES[@]}"; do
-            dense="${EVTDIR}/protodunehd-sp-frames-anode${ai}.tar.bz2"
-            sparse="${EVTDIR}/protodunehd-sp-frames-anode${ai}-sparseon.tar.bz2"
+            dense="${EVTDIR}/${INPUT_BASENAME}-anode${ai}.tar.bz2"
+            sparse="${EVTDIR}/${INPUT_BASENAME}-anode${ai}-sparseon.tar.bz2"
             if $FORCE_SPARSE && [ -f "$sparse" ]; then
                 NEED_STAGE=true; break
             elif [ ! -f "$dense" ] && [ -f "$sparse" ]; then
@@ -138,25 +158,25 @@ process_event() {
             STAGE_DIR="${WORKDIR}/sp_stage"
             mkdir -p "$STAGE_DIR"
             for ai in "${ANODE_INDICES[@]}"; do
-                dense="${EVTDIR}/protodunehd-sp-frames-anode${ai}.tar.bz2"
-                sparse="${EVTDIR}/protodunehd-sp-frames-anode${ai}-sparseon.tar.bz2"
+                dense="${EVTDIR}/${INPUT_BASENAME}-anode${ai}.tar.bz2"
+                sparse="${EVTDIR}/${INPUT_BASENAME}-anode${ai}-sparseon.tar.bz2"
                 if $FORCE_SPARSE && [ -f "$sparse" ]; then
-                    ln -sf "$sparse" "${STAGE_DIR}/protodunehd-sp-frames-anode${ai}.tar.bz2"
+                    ln -sf "$sparse" "${STAGE_DIR}/${INPUT_BASENAME}-anode${ai}.tar.bz2"
                     echo "  anode${ai}: sparse (forced)"
                 elif [ -f "$dense" ]; then
-                    ln -sf "$dense" "${STAGE_DIR}/protodunehd-sp-frames-anode${ai}.tar.bz2"
+                    ln -sf "$dense" "${STAGE_DIR}/${INPUT_BASENAME}-anode${ai}.tar.bz2"
                     echo "  anode${ai}: dense"
                 elif [ -f "$sparse" ]; then
-                    ln -sf "$sparse" "${STAGE_DIR}/protodunehd-sp-frames-anode${ai}.tar.bz2"
+                    ln -sf "$sparse" "${STAGE_DIR}/${INPUT_BASENAME}-anode${ai}.tar.bz2"
                     echo "  anode${ai}: sparse (dense not found)"
                 else
                     echo "[skip] run=$RUN evt=$EVT: no archive for anode${ai} in $EVTDIR" >&2
                     return 2
                 fi
             done
-            INPUT_PREFIX="${STAGE_DIR}/protodunehd-sp-frames"
+            INPUT_PREFIX="${STAGE_DIR}/${INPUT_BASENAME}"
         else
-            INPUT_PREFIX="${EVTDIR}/protodunehd-sp-frames"
+            INPUT_PREFIX="${EVTDIR}/${INPUT_BASENAME}"
         fi
     fi
 

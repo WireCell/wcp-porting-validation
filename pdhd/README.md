@@ -76,8 +76,10 @@ and the input-driven tick-handling policy).
 
 **Input**: `input_data/<run>/<evt>/protodunehd-orig-frames-anode{N}.tar.bz2`
 **Output** (under `work/<RUN_PADDED>_<EVT>/`):
-- `protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2` (post-DNN frame)
-- `protodunehd-sp-frames-anode{N}.tar.bz2` (SP-only baseline tap)
+- `protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2` — the single canonical
+  archive (with `-L on`, contains `raw%d` / `gauss%d` / `wiener%d`
+  trace tags).  Consumed by `run_img_evt.sh -d on` and
+  `run_sp_to_magnify_evt.sh -d on`.
 - `time_<RUN>_<EVT>_a<N>.txt` (CPU peak RSS, polled from
   `/proc/<pid>/status:VmHWM`)
 - `gpu_mem_<RUN>_<EVT>_a<N>.csv` (nvidia-smi VRAM trace, 100 ms)
@@ -87,7 +89,7 @@ and the input-driven tick-handling policy).
 Reads per-anode SP frame archives and produces cluster archives for each APA.
 
 ```bash
-./run_img_evt.sh [-I] [-a ANODE] [-S] [-s SEL_TAG] <run> <evt|all>
+./run_img_evt.sh [-I] [-a ANODE] [-S] [-s SEL_TAG] [-d on|off] <run> <evt|all>
 ```
 
 **Options**
@@ -98,6 +100,7 @@ Reads per-anode SP frame archives and produces cluster archives for each APA.
 | `-a N` | Process only anode N (default: all four, 0–3) |
 | `-S` | Force-prefer sparse archives (`*-sparseon.tar.bz2`) for every anode that has one |
 | `-s TAG` | Use a pre-selected input from `work/<run>_<evt>_<TAG>/input/` (produced by `run_select_evt.sh`) |
+| `-d on\|off` | Consume DNN-ROI output (`protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2` from `work/`, produced by `run_nf_sp_dnnroi_evt.sh`) instead of standard SP frames.  Default `off`. |
 
 **Input** (auto-discovered under `input_data/`):
 
@@ -154,13 +157,20 @@ clustering chain, producing output under the same work directory.
 ## Signal-processing frames → Magnify ROOT file
 
 ```bash
-./run_sp_to_magnify_evt.sh [-I] [-s SEL_TAG] <run> <evt|all> [subrun]
+./run_sp_to_magnify_evt.sh [-I] [-s SEL_TAG] [-d on|off] <run> <evt|all> [subrun]
 ```
 
 Converts per-anode SP frame archives into per-anode Magnify ROOT files
 (`magnify-run<RUN>-evt<EVT>-apa<N>.root`) containing TH2F waveform
 histograms and a `Trun` metadata tree.  Frame tick count is auto-extracted
 from the SP archive.
+
+| Flag | Meaning |
+|------|---------|
+| `-I` | Force loading SP frames from `input_data/` even if `work/` has them |
+| `-s TAG` | Use a pre-selected input directory (from `run_select_evt.sh`) |
+| `-d on\|off` | Consume DNN-ROI output (`protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2` from `work/`, produced by `run_nf_sp_dnnroi_evt.sh`) instead of standard SP frames.  Default `off`. |
+| `-R` | Include `rawdecon`+`decon` TH2 in Magnify (special debug mode) |
 
 ## Bee upload
 
