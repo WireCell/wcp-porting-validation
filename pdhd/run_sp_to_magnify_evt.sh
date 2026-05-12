@@ -166,7 +166,9 @@ print(a.shape[1])
             continue
         fi
 
-        OUTPUT="$WORKDIR/magnify-run${RUN_PADDED}-evt${EVT}-apa${N}.root"
+        local _OUT_TAG=""
+        [ "$USE_DNNROI" = "on" ] && _OUT_TAG="-dnnroi"
+        OUTPUT="$WORKDIR/magnify-run${RUN_PADDED}-evt${EVT}-apa${N}${_OUT_TAG}.root"
         LOG="$WORKDIR/wct_magnify_${RUN_PADDED}_${EVT}_apa${N}.log"
         echo "--- APA ${N}: $OUTPUT"
         rm -f "$LOG"
