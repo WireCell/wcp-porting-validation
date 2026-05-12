@@ -52,7 +52,7 @@ See `docs/nf.md`, `docs/sp.md`, `docs/nf_sp_workflow.md` for details.
 ## NF + SP + DNN-ROI
 
 ```bash
-./run_nf_sp_dnnroi_evt.sh [-a ANODE] [-D cpu|gpu] [-M MODEL] [-m pp|mp] <run> <evt>
+./run_nf_sp_dnnroi_evt.sh [-a ANODE] [-D cpu|gpu] [-M MODEL] [-m pp|mp] [-L on|off] <run> <evt>
 ```
 
 Runs NF + SP + DNN-ROI on a single anode/event using the TorchScript
@@ -64,14 +64,15 @@ model at `wire-cell-data/dnnroi/pdhd/CP43.ts`.
 | `-D cpu\|gpu` | TorchService device | `cpu` |
 | `-M PATH`     | TorchScript model path (resolved via `WIRECELL_PATH`) | `dnnroi/pdhd/CP43.ts` |
 | `-m pp\|mp`   | DNN-ROI wiring: `pp` (per-plane sequential, two 800-ch forwards) or `mp` (stacked, one 1600-ch forward) | `pp` |
+| `-L on\|off`  | Run `L1SPFilterPD` after DNN-ROI.  When `on`, the DNN output is fed to L1SP as the signal channel, raw is preserved through the chain, and the final frame carries `gauss%d` / `wiener%d` (L1SP-corrected DNN charge) alongside `raw%d`.  When `off`, the post-DNN frame is written directly (carries `dnnsp%d*` tags only). | `on` |
 | `-X NAME`     | If set, the C++ DNN node dumps `{NAME}_anode{N}_call{K}.pt` for offline verification | (off) |
 
 `pp` mode halves peak activation memory (~36 % CPU RSS reduction on
 APA0 vs `mp`) and eliminates U/V seam mixing inside the model.  Both
 modes use the same `.ts` — no retrain.  See
 `DNN_ROI_SP/docs/wirecell_deployment.md` for the full deployment
-write-up, memory measurements, and the input-driven tick-handling
-policy.
+write-up (including the L1SP-after-DNN envelope, memory measurements,
+and the input-driven tick-handling policy).
 
 **Input**: `input_data/<run>/<evt>/protodunehd-orig-frames-anode{N}.tar.bz2`
 **Output** (under `work/<RUN_PADDED>_<EVT>/`):

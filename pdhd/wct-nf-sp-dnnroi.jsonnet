@@ -64,6 +64,12 @@ function(
   dnnroi_mask_thresh = 0.5,
   dnnroi_nchunks = 1,
   dnnroi_debugfile = '',   // if non-empty, C++ node dumps per-call .pt
+
+  // L1SP-after-DNN: when true, run L1SPFilterPD after the DNN-ROI subgraph,
+  // feeding the DNN output as L1SP's sigtag.  See dnnroi_l1sp.md.
+  use_l1sp_dnn      = true,
+  l1sp_pd_adj_enable    = true,
+  l1sp_pd_adj_max_hops  = 3,
 )
 
   local tools = tools_all;
@@ -119,14 +125,21 @@ function(
   local _per_anode_dbg(n) =
     if dnnroi_debugfile == '' then ''
     else '%s_anode%d' % [dnnroi_debugfile, n];
-  local dnnroi_pipes = [dnnroi_maker(tools.anodes[n], ts,
-                                     nticks=dnnroi_nticks,
-                                     tick_per_slice=dnnroi_tick_per_slice,
-                                     output_scale=dnnroi_output_scale,
-                                     mask_thresh=dnnroi_mask_thresh,
-                                     nchunks=dnnroi_nchunks,
-                                     debugfile=_per_anode_dbg(n))
-                        for n in std.range(0, std.length(tools.anodes) - 1)];
+  local dnnroi_inner_pipes = [dnnroi_maker(tools.anodes[n], ts,
+                                           nticks=dnnroi_nticks,
+                                           tick_per_slice=dnnroi_tick_per_slice,
+                                           output_scale=dnnroi_output_scale,
+                                           mask_thresh=dnnroi_mask_thresh,
+                                           nchunks=dnnroi_nchunks,
+                                           debugfile=_per_anode_dbg(n))
+                              for n in std.range(0, std.length(tools.anodes) - 1)];
+
+  // L1SP-after-DNN envelope.  When use_l1sp_dnn=true, the envelope wraps
+  // SP + DNN-ROI + L1SP into a single per-anode subgraph (the FrameSplitter
+  // must sit BEFORE SP since OmnibusSigProc drops raw%d from its output).
+  // In that mode, the top-level pipeline below uses the envelope IN PLACE
+  // OF the separate sp_pipe + sp_frame_tap + dnnroi_pipe sequence.
+  local l1sp_dnn_maker = import 'pgrapher/experiment/pdhd/l1sp_after_dnnroi.jsonnet';
 
   local resamplers_config = import 'pgrapher/common/resamplers.jsonnet';
   local load_resamplers = resamplers_config(g, wc, tools);
@@ -173,8 +186,10 @@ function(
       data: {
         outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
         tags: if use_dnnroi
-              then ['dnnsp%d' % n, 'dnnsp%du' % n, 'dnnsp%dv' % n, 'dnnsp%dw' % n,
-                    'gauss%d' % n, 'wiener%d' % n]
+              then (if use_l1sp_dnn
+                    then ['gauss%d' % n, 'wiener%d' % n, 'raw%d' % n]
+                    else ['dnnsp%d' % n, 'dnnsp%du' % n, 'dnnsp%dv' % n, 'dnnsp%dw' % n,
+                          'gauss%d' % n, 'wiener%d' % n])
               else ['gauss%d' % n, 'wiener%d' % n],
         digitize: false,
         masks: true,
@@ -191,14 +206,24 @@ function(
       },
     }, nin=0, nout=1);
 
+    // L1SP-after-DNN envelope wraps SP + DNN + L1SP into one node; when
+    // disabled, the legacy three-step (SP → SP-tap → DNN) is used directly.
+    local sp_dnn_l1sp_segment =
+      if use_dnnroi && use_l1sp_dnn
+      then [l1sp_dnn_maker(tools.anodes[n], sp_pipes[n], dnnroi_inner_pipes[n],
+                           tools, params,
+                           sp_frame_tap=sp_frame_tap(n),
+                           l1sp_pd_adj_enable=l1sp_pd_adj_enable,
+                           l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops)]
+      else [sp_pipes[n], sp_frame_tap(n)]
+           + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
+
     g.pipeline(
       [src]
       + (if use_resampler then [resamplers[n]] else [])
       + [nf_pipes[n]]
       + [raw_frame_tap(n)]
-      + [sp_pipes[n]]
-      + [sp_frame_tap(n)]
-      + (if use_dnnroi then [dnnroi_pipes[n]] else [])
+      + sp_dnn_l1sp_segment
       + [final_frame_sink(n)],
       'nfspdnn_pipe_%d' % n);
 

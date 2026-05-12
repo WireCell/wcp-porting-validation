@@ -41,6 +41,12 @@ Options:
                  peak activation memory by feeding U and V to the model
                  in two (1, 3, 800, 1500) calls instead of one stacked
                  (1, 3, 1600, 1500) call.
+  -L <on|off>    Run L1SPFilterPD after DNN-ROI (default: on).  When on,
+                 the DNN output is fed to L1SP as the signal channel and
+                 raw ADC is preserved through the chain; the final frame
+                 carries L1SP-corrected gauss%d / wiener%d alongside
+                 raw%d.  When off, the post-DNN frame is written directly
+                 (carries dnnsp%d* tags only).
   -X <basename>  If set, the C++ DNN node dumps {basename}_anode{N}_call{K}.pt
                  (containing model input + output + meta) for each call.
                  Use with scripts/verify_wirecell_dnn.py in DNN_ROI_SP.
@@ -62,6 +68,7 @@ REALITY="data"
 DEVICE="cpu"
 MODEL="dnnroi/pdhd/CP43.ts"
 MODE="pp"
+L1SP="on"
 DEBUG_BASE=""
 
 while [ $# -gt 0 ]; do
@@ -73,6 +80,7 @@ while [ $# -gt 0 ]; do
         -D) DEVICE="$2"; shift 2 ;;
         -M) MODEL="$2"; shift 2 ;;
         -m) MODE="$2"; shift 2 ;;
+        -L) L1SP="$2"; shift 2 ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
@@ -83,6 +91,12 @@ done
 case "$MODE" in
     pp|mp) ;;
     *) echo "[err] -m must be 'pp' or 'mp' (got '$MODE')" >&2; exit 1 ;;
+esac
+
+case "$L1SP" in
+    on)  L1SP_TLA="true" ;;
+    off) L1SP_TLA="false" ;;
+    *) echo "[err] -L must be 'on' or 'off' (got '$L1SP')" >&2; exit 1 ;;
 esac
 
 if [ $# -lt 2 ]; then
@@ -134,6 +148,7 @@ echo "reality:     ${REALITY}"
 echo "device:      ${DEVICE}"
 echo "model:       ${MODEL}"
 echo "mode:        ${MODE}"
+echo "L1SP:        ${L1SP}"
 echo "Log:         $LOG"
 echo "Time log:    $TIME_LOG"
 echo "GPU CSV:     $GPU_CSV"
@@ -181,6 +196,7 @@ wire-cell \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
     --tla-str dnnroi_mode="${MODE}" \
+    --tla-code use_l1sp_dnn="${L1SP_TLA}" \
     "${DBG_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
