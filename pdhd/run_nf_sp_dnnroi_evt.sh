@@ -7,7 +7,8 @@
 #
 # Usage:
 #   ./run_nf_sp_dnnroi_evt.sh [-a anode] [-g elecGain] [-r reality]
-#                             [-D cpu|gpu] [-M model.ts] [-m pp|mp] <run> <evt>
+#                             [-D cpu|gpu] [-M model.ts] [-m pp|mp]
+#                             [-n 3|6] <run> <evt>
 #
 # Output: work/<RUN_PADDED>_<EVT>/
 #   - protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2 (post-DNN/L1SP frame —
@@ -35,6 +36,10 @@ Options:
   -D <device>    'cpu' (default) or 'gpu' for TorchService.
   -M <model>     TorchScript model path (resolved via WIRECELL_PATH).
                  Default: dnnroi/pdhd/CP43.ts
+  -n <3|6>       Input channels the model expects. 3 (default) = original
+                 CP43.ts; 6 = the 6-channel KD/QAT models. Selects the
+                 input tag set and input_scale (6-ch models bake per-channel
+                 normalization into the .ts, so they run with input_scale=1).
   -m <mode>      DNN-ROI wiring mode: 'pp' (per-plane sequential, default)
                  or 'mp' (stacked multi-plane, legacy).  Per-plane halves
                  peak activation memory by feeding U and V to the model
@@ -67,6 +72,7 @@ REALITY="data"
 DEVICE="cpu"
 MODEL="dnnroi/pdhd/CP43.ts"
 MODE="pp"
+NCHAN="3"
 L1SP="on"
 DEBUG_BASE=""
 
@@ -79,6 +85,7 @@ while [ $# -gt 0 ]; do
         -D) DEVICE="$2"; shift 2 ;;
         -M) MODEL="$2"; shift 2 ;;
         -m) MODE="$2"; shift 2 ;;
+        -n) NCHAN="$2"; shift 2 ;;
         -L) L1SP="$2"; shift 2 ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
         --) shift; break ;;
@@ -90,6 +97,11 @@ done
 case "$MODE" in
     pp|mp) ;;
     *) echo "[err] -m must be 'pp' or 'mp' (got '$MODE')" >&2; exit 1 ;;
+esac
+
+case "$NCHAN" in
+    3|6) ;;
+    *) echo "[err] -n must be '3' or '6' (got '$NCHAN')" >&2; exit 1 ;;
 esac
 
 case "$L1SP" in
@@ -147,6 +159,7 @@ echo "reality:     ${REALITY}"
 echo "device:      ${DEVICE}"
 echo "model:       ${MODEL}"
 echo "mode:        ${MODE}"
+echo "nchan:       ${NCHAN}"
 echo "L1SP:        ${L1SP}"
 echo "Log:         $LOG"
 echo "Time log:    $TIME_LOG"
@@ -193,6 +206,7 @@ wire-cell \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
     --tla-str dnnroi_mode="${MODE}" \
+    --tla-code dnnroi_nchan="${NCHAN}" \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
     "${DBG_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &

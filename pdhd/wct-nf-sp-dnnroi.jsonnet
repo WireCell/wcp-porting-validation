@@ -53,6 +53,7 @@ function(
                                             // 'mp' = stacked multi-plane (legacy)
   dnnroi_model  = 'dnnroi/pdhd/CP43.ts',    // resolved via WIRECELL_PATH
   dnnroi_device = 'cpu',                    // 'cpu' or 'gpu'
+  dnnroi_nchan  = 3,                        // 3 = CP43.ts; 6 = 6-ch KD/QAT models
   dnnroi_concurrency = 1,
   dnnroi_nticks = 6000,
   dnnroi_tick_per_slice = 4,                // training rebin=4
@@ -127,6 +128,7 @@ function(
                                            output_scale=dnnroi_output_scale,
                                            mask_thresh=dnnroi_mask_thresh,
                                            nchunks=dnnroi_nchunks,
+                                           nchan=dnnroi_nchan,
                                            debugfile=_per_anode_dbg(n))
                               for n in std.range(0, std.length(tools.anodes) - 1)];
 
