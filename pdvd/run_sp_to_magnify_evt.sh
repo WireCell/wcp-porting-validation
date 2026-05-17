@@ -1,6 +1,6 @@
 #!/bin/bash
 # Convert SP frame archives for one event to per-anode Magnify ROOT files.
-# Usage: ./run_sp_to_magnify_evt.sh [-I] [-s sel_tag] <run> <evt|all> [subrun]
+# Usage: ./run_sp_to_magnify_evt.sh [-I] [-d] [-s sel_tag] <run> <evt|all> [subrun]
 #        ./run_sp_to_magnify_evt.sh      # list available runs
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
@@ -9,10 +9,13 @@
 # Input:  work/<RUN_PADDED>_<EVT>/protodune-sp-frames-anode{0..7}.tar.bz2  (preferred)
 #         input_data/<run_dir>/<evt_dir>/protodune-sp-frames-anode{0..7}.tar.bz2  (fallback)
 #   -I:  force loading SP/raw frames from input_data even if work dir has them
+#   -d:  DNN-ROI mode: read protodune-sp-dnnroi-frames-anode{N}.tar.bz2 (from
+#        run_nf_sp_dnnroi_evt.sh) and write hu/hv/hw_dnnsp<N> histograms; the
+#        output ROOT name gets a '-dnnroi' suffix.
 #   -s:  work/<RUN_PADDED>_<EVT>_sel<TAG>/input/ (from run_select_evt.sh)
 # Orig frames (protodune-orig-frames-anode{N}.tar.bz2) are always sourced from
 # input_data when present, producing hu/hv/hw_orig<N> histograms in Magnify.
-# Output: work/<run>_<evt>[_sel<TAG>]/magnify-run<RUN>-evt<EVT>-anode<N>.root  (one per anode)
+# Output: work/<run>_<evt>[_sel<TAG>]/magnify-run<RUN>-evt<EVT>-anode<N>[-dnnroi].root
 
 set -e
 
@@ -27,10 +30,12 @@ SEL_TAG=""
 FORCE_INPUT_DATA=""
 INCLUDE_RAWDECON=0
 INCLUDE_DECON=0
+DNN_MODE=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -I) FORCE_INPUT_DATA=1; shift ;;
+        -d) DNN_MODE=1; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -R) INCLUDE_RAWDECON=1; INCLUDE_DECON=1; shift ;;   # rawdecon+decon TH2 in magnify (special mode)
@@ -44,12 +49,21 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-I] [-s sel_tag] <run> <evt|all> [subrun]" >&2
+    echo "Usage: $0 [-I] [-d] [-s sel_tag] <run> <evt|all> [subrun]" >&2
     exit 1
 fi
 RUN=$1
 EVT=$2
 SUBRUN=${3:-0}
+
+# DNN-ROI mode reads the post-DNN archives and suffixes the output ROOT name.
+if [ "$DNN_MODE" -eq 1 ]; then
+    INPUT_BASENAME="protodune-sp-dnnroi-frames"
+    OUT_SUFFIX="-dnnroi"
+else
+    INPUT_BASENAME="protodune-sp-frames"
+    OUT_SUFFIX=""
+fi
 
 RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
 [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
@@ -66,7 +80,7 @@ find_evtdir() {
                 echo "$cand"; return 0
             fi
         done
-        if ls "$rdir/protodune-sp-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+        if ls "$rdir/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
             echo "$rdir"; return 0
         fi
     done
@@ -99,14 +113,14 @@ process_event() {
     echo "Event dir: $EVTDIR"
 
     if [ -z "$SEL_TAG" ] && [ -z "$FORCE_INPUT_DATA" ] && \
-       ls "$WORKDIR/protodune-sp-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+       ls "$WORKDIR/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
         SP_DIR="$WORKDIR"
     else
         SP_DIR="$EVTDIR"
     fi
     echo "SP frames from: $SP_DIR"
 
-    ANODE0_ARCHIVE="$SP_DIR/protodune-sp-frames-anode0.tar.bz2"
+    ANODE0_ARCHIVE="$SP_DIR/${INPUT_BASENAME}-anode0.tar.bz2"
     if [ ! -s "$ANODE0_ARCHIVE" ]; then
         echo "[skip] run=$RUN evt=$EVT: missing or empty $ANODE0_ARCHIVE" >&2
         return 2
@@ -125,13 +139,13 @@ process_event() {
 
     local PROCESSED=0 N OUTPUT
     for N in 0 1 2 3 4 5 6 7; do
-        local f="$SP_DIR/protodune-sp-frames-anode${N}.tar.bz2"
+        local f="$SP_DIR/${INPUT_BASENAME}-anode${N}.tar.bz2"
         if [ ! -s "$f" ]; then
             echo "Skipping anode ${N} (missing or empty $f)"
             continue
         fi
 
-        OUTPUT="$WORKDIR/magnify-run${RUN_PADDED}-evt${EVT}-anode${N}.root"
+        OUTPUT="$WORKDIR/magnify-run${RUN_PADDED}-evt${EVT}-anode${N}${OUT_SUFFIX}.root"
         LOG="$WORKDIR/wct_magnify_${RUN_PADDED}_${EVT}_anode${N}.log"
         echo "--- Anode ${N}: $OUTPUT"
         rm -f "$LOG"
@@ -167,12 +181,13 @@ process_event() {
             -l stderr \
             -l "${LOG}:debug" \
             -L debug \
-            --tla-str  "input_prefix=${SP_DIR}/protodune-sp-frames" \
+            --tla-str  "input_prefix=${SP_DIR}/${INPUT_BASENAME}" \
             --tla-code "anode_indices=[${N}]" \
             --tla-str  "output_file=${OUTPUT}" \
             --tla-code "run=${RUN_STRIPPED}" \
             --tla-code "subrun=${SUBRUN}" \
             --tla-code "event=${EVENT_NO}" \
+            --tla-code "dnn_mode=$( [ "$DNN_MODE" -eq 1 ] && echo true || echo false )" \
             ${RAW_ARGS} \
             ${ORIG_ARGS} \
             ${RAWDECON_ARGS} \

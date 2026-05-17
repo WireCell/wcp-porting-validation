@@ -55,6 +55,10 @@ function(
   // when wct-nf-sp.jsonnet ran with dump_rawdecon=true so the SP frame
   // archive carries the rawdecon%d tag.
   include_rawdecon  = false,
+  // DNN-ROI mode: read the post-DNN archives (protodune-sp-dnnroi-frames),
+  // which carry a single 'dnnspN' frame tag (U+V DNN-ROI + W passthrough)
+  // with untagged traces, and write hu/hv/hw_dnnspN instead of gauss/wiener.
+  dnn_mode          = false,
 )
   local anodes  = [tools_all.anodes[i] for i in anode_indices];
   local nanodes = std.length(anodes);
@@ -69,7 +73,43 @@ function(
   local mag = (import 'magnify-sinks.jsonnet')(
     { anodes: anodes }, output_file, runinfo=runinfo);
 
-  local per_anode_graph(n, anode) =
+  // DNN-ROI per-anode pipeline: FrameFileSource(dnnspN) → MagnifySink.
+  // The post-DNN archive carries the U+V DNN-ROI + W passthrough traces
+  // under the single trace tag 'dnnspN' (FrameFileSource reads the archive
+  // file-tag as a trace tag); MagnifySink splits them into
+  // hu/hv/hw_dnnspN by channel geometry.
+  local dnn_anode_graph(n, anode) =
+    local aid = anode.data.ident;
+    local src = g.pnode({
+      type: 'FrameFileSource',
+      name: 'frame_source_anode%d' % aid,
+      data: {
+        inname: '%s-anode%d.tar.bz2' % [input_prefix, aid],
+        tags: ['dnnsp%d' % aid],
+      },
+    }, nin=0, nout=1);
+    local sink = g.pnode({
+      type: 'MagnifySink',
+      name: 'magdnndecon%d' % aid,
+      data: {
+        output_filename: output_file,
+        root_file_mode: if n == 0 then 'RECREATE' else 'UPDATE',
+        frames: ['dnnsp%d' % aid],
+        cmmtree: [['bad', 'T_bad%d' % aid]],
+        trace_has_tag: true,
+        anode: wc.tn(anode),
+      } + (if n == 0
+           then { runinfo: runinfo { anodeNo: aid },
+                  geo_tree: 'T_geo%d' % aid }
+           else {}),
+    }, nin=1, nout=1, uses=[anode]);
+    local dump = g.pnode({
+      type: 'DumpFrames',
+      name: 'dump_anode%d' % aid,
+    }, nin=1, nout=0);
+    g.pipeline([src, sink, dump], 'magnify_graph_anode%d' % aid);
+
+  local sp_anode_graph(n, anode) =
     local aid = anode.data.ident;
     local src = g.pnode({
       type: 'FrameFileSource',
@@ -101,6 +141,9 @@ function(
     }, nin=1, nout=0);
     g.pipeline([src, retag, mag.decon_pipe[n], dump],
                'magnify_graph_anode%d' % aid);
+
+  local per_anode_graph(n, anode) =
+    if dnn_mode then dnn_anode_graph(n, anode) else sp_anode_graph(n, anode);
 
   // Per-anode raw pipeline: FrameFileSource(raw) → MagnifySink(UPDATE) → DumpFrames.
   // Always UPDATE (decon anode-0 sink already RECREATEd the file).
