@@ -33,7 +33,9 @@ plane is passed through from standard SP gauss.
 ```
 
 Output (`work/<RUN_PADDED>_<EVT>/`):
-`protodune-sp-dnnroi-frames-anode{N}.tar.bz2` — one frame tagged `dnnsp{N}`.
+`protodune-sp-dnnroi-frames-anode{N}.tar.bz2` — a standard SP-style archive
+with trace tags `gauss{N}` (the DNN-ROI output) and `wiener{N}` (SP Wiener,
+carrying the per-channel threshold summary).
 
 Options: `-a` anode (default all 8), `-r` data|sim, `-D` cpu|gpu, `-M` model
 `.ts` (resolved via `WIRECELL_PATH`), `-X` debug-dump basename. The QAT INT8
@@ -45,8 +47,10 @@ model is CPU-only.
 ./run_sp_to_magnify_evt.sh -d 039324 0
 ```
 
-`-d` reads the `protodune-sp-dnnroi-frames` archives and writes
-`hu/hv/hw_dnnsp{N}` histograms; output ROOT name gets a `-dnnroi` suffix.
+`-d` reads the `protodune-sp-dnnroi-frames` archives and writes the standard
+`hu/hv/hw_{gauss,wiener,threshold}{N}` histograms — `gauss` is the DNN-ROI
+output, `threshold` the per-channel Wiener threshold (TH1F); output ROOT name
+gets a `-dnnroi` suffix.
 
 ## Validate vs standalone
 

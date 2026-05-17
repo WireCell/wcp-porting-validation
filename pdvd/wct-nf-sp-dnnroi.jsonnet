@@ -112,18 +112,18 @@ function(
   local load_resamplers = resamplers_config(g, wc, tools);
   local resamplers = load_resamplers.resamplers;
 
-  // Final frame sink: write the post-DNN frame under the merged 'dnnspN'
-  // frame tag when DNN-ROI is enabled (FrameFanin merges U+V+W into one
-  // frame and keeps only the frame tag), otherwise just write the SP frame.
+  // Final frame sink: write the post-DNN frame with standard SP trace tags
+  // gauss%d (= DNN-ROI output, U+V from the model + W passthrough) and
+  // wiener%d (= SP Wiener, carrying the per-channel threshold summary).
+  // dnnroi_mp.jsonnet builds those two tags so the DNN-ROI archive is
+  // structurally a standard SP archive; the non-DNN branch writes the same.
   local final_frame_sink = function(n)
     g.pnode({
       type: 'FrameFileSink',
       name: 'dnnroiframesink%d' % n,
       data: {
         outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
-        tags: if use_dnnroi
-              then ['dnnsp%d' % n]
-              else ['gauss%d' % n, 'wiener%d' % n],
+        tags: ['gauss%d' % n, 'wiener%d' % n],
         digitize: false,
         masks: true,
       },

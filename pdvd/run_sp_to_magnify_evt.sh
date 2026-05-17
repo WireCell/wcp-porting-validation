@@ -10,8 +10,10 @@
 #         input_data/<run_dir>/<evt_dir>/protodune-sp-frames-anode{0..7}.tar.bz2  (fallback)
 #   -I:  force loading SP/raw frames from input_data even if work dir has them
 #   -d:  DNN-ROI mode: read protodune-sp-dnnroi-frames-anode{N}.tar.bz2 (from
-#        run_nf_sp_dnnroi_evt.sh) and write hu/hv/hw_dnnsp<N> histograms; the
-#        output ROOT name gets a '-dnnroi' suffix.
+#        run_nf_sp_dnnroi_evt.sh).  That archive is a standard SP archive whose
+#        gauss<N> traces are the DNN-ROI output, so this writes the usual
+#        hu/hv/hw_{gauss,wiener,threshold}<N> histograms (gauss = DNN-ROI
+#        output); the output ROOT name gets a '-dnnroi' suffix.
 #   -s:  work/<RUN_PADDED>_<EVT>_sel<TAG>/input/ (from run_select_evt.sh)
 # Orig frames (protodune-orig-frames-anode{N}.tar.bz2) are always sourced from
 # input_data when present, producing hu/hv/hw_orig<N> histograms in Magnify.
@@ -187,7 +189,6 @@ process_event() {
             --tla-code "run=${RUN_STRIPPED}" \
             --tla-code "subrun=${SUBRUN}" \
             --tla-code "event=${EVENT_NO}" \
-            --tla-code "dnn_mode=$( [ "$DNN_MODE" -eq 1 ] && echo true || echo false )" \
             ${RAW_ARGS} \
             ${ORIG_ARGS} \
             ${RAWDECON_ARGS} \
