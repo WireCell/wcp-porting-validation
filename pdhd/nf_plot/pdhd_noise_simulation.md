@@ -5,8 +5,9 @@ wire-cell simulation — the components involved, the generation algorithm, and
 the input files.
 
 For whether this simulation matches data, see
-[`noise_rms_comparison.md`](noise_rms_comparison.md) (short answer: it
-under-predicts data and misses the APA-to-APA spread).
+[`noise_rms_comparison.md`](noise_rms_comparison.md) (short answer: against the
+post-NF data it is broadly consistent, within ~10% — the large pre-NF
+discrepancy was coherent noise).
 
 ## Where noise enters the simulation
 
@@ -99,8 +100,10 @@ the data/sim comparison.
 | example U/7350 `const` | 1.357e-8 V | 9.44e-9 V |
 | example U/7350 `amps[0]` | 1.185e-7 V | 6.40e-8 V |
 
-The same file feeds all four APAs, so the simulated noise is **APA-uniform** —
-it has no mechanism to reproduce the APA-to-APA variation seen in data.
+The same file feeds all four APAs, so the simulated noise is **APA-uniform**.
+The strong APA-to-APA spread in *raw* data is coherent noise, removed by noise
+filtering; the post-NF data is APA-uniform too, so on the post-NF footing this
+is not a defect (see `noise_rms_comparison.md`).
 
 ## Electronics and ADC configuration
 

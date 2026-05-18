@@ -3,16 +3,17 @@
 Per-channel electronics-noise RMS for ProtoDUNE Vertical Drift (PDVD).
 
 Extracts noise RMS vs channel for the U / V / W wire planes of each of the 8
-anodes, from raw pre-NF ADC frames.  Works on both real data and the
-noise-only simulation -- the `protodune-orig-frames` (data) and
-`pdvd-noise-sim` (sim) tar.bz2 archives share the same layout.
+anodes.  For data the input is the post-NF waveform (the NF-output `raw`
+frame); for the noise-only simulation it is the raw digitized frame.  The
+`protodune-sp-frames-raw` (data) and `pdvd-noise-sim` (sim) tar.bz2 archives
+share the same frame layout.
 
 Noise RMS method -- the WireCell sigproc Derivations::CalcRMS 4.5-sigma clip
 (sigproc/src/Derivations.cxx:7-20), iterated to convergence to fully exclude
 signal samples, then the population RMS of the remaining (noise) samples.
 
 Usage:
-  ./noise_rms.py --source data    # PDVD run039324 event 0 (raw orig frames)
+  ./noise_rms.py --source data    # PDVD run039324 event 0 (post-NF raw frames)
   ./noise_rms.py --source sim     # noise-only simulation  (pdvd_sim)
 
 Outputs (in noise_rms/ next to this script):
@@ -39,9 +40,9 @@ SIGMA = 4.5   # Derivations::CalcRMS signal-clip threshold
 
 SOURCES = {
     'data': {
-        'label': 'data (run039324 evt0)',
+        'label': 'data (run039324 evt0, post-NF)',
         'path': os.path.join(SCRIPTDIR, '..', 'input_data', 'run039324',
-                             'evt_0', 'protodune-orig-frames-anode%d.tar.bz2'),
+                             'evt_0', 'protodune-sp-frames-raw-anode%d.tar.bz2'),
     },
     'sim': {
         'label': 'noise-only sim',

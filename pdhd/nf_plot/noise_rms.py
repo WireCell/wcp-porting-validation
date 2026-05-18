@@ -3,16 +3,17 @@
 Per-channel electronics-noise RMS for ProtoDUNE Horizontal Drift (PDHD).
 
 Extracts noise RMS vs channel for the U / V / W wire planes of each of the 4
-APAs, from raw pre-NF ADC frames.  Works on both real data and the noise-only
-simulation -- the `protodunehd-orig-frames` (data) and `pdhd-noise-sim` (sim)
-tar.bz2 archives share the same layout.
+APAs.  For data the input is the post-NF waveform (the NF-output `raw` frame);
+for the noise-only simulation it is the raw digitized frame.  The
+`protodunehd-sp-frames-raw` (data) and `pdhd-noise-sim` (sim) tar.bz2 archives
+share the same frame layout.
 
 Noise RMS method -- the WireCell sigproc Derivations::CalcRMS 4.5-sigma clip
 (sigproc/src/Derivations.cxx:7-20), iterated to convergence to fully exclude
 signal samples, then the population RMS of the remaining (noise) samples.
 
 Usage:
-  ./noise_rms.py --source data    # PDHD run027409 event 0 (raw orig frames)
+  ./noise_rms.py --source data    # PDHD run027409 event 0 (post-NF raw frames)
   ./noise_rms.py --source sim     # noise-only simulation  (pdhd_sim)
 
 Outputs (in noise_rms/ next to this script):
@@ -43,9 +44,9 @@ HD_BOUNDARIES = [800, 1600]
 
 SOURCES = {
     'data': {
-        'label': 'data (run027409 evt0)',
+        'label': 'data (run027409 evt0, post-NF)',
         'path': os.path.join(SCRIPTDIR, '..', 'input_data', 'run027409',
-                             'evt_0', 'protodunehd-orig-frames-anode%d.tar.bz2'),
+                             'evt_0', 'protodunehd-sp-frames-raw-anode%d.tar.bz2'),
     },
     'sim': {
         'label': 'noise-only sim',

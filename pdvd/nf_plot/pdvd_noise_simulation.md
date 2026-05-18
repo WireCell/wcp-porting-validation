@@ -5,7 +5,9 @@ wire-cell simulation, for both the **top** and **bottom** drift volumes — the
 components involved, the generation algorithm, and the input files.
 
 For whether this simulation actually matches data, see
-[`noise_rms_comparison.md`](noise_rms_comparison.md) (short answer: it does not).
+[`noise_rms_comparison.md`](noise_rms_comparison.md) (short answer: no — and the
+post-NF comparison shows the fault is in the incoherent spectra files, not
+missing coherent noise).
 
 ## Where noise enters the simulation
 
