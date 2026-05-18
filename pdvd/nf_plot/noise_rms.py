@@ -7,8 +7,8 @@ anodes, from raw pre-NF ADC frames.  Works on both real data and the
 noise-only simulation -- the `protodune-orig-frames` (data) and
 `pdvd-noise-sim` (sim) tar.bz2 archives share the same layout.
 
-Noise RMS method -- replicates WireCell sigproc Derivations::CalcRMS
-(sigproc/src/Derivations.cxx:7-20): one-pass 4.5-sigma clip that excludes
+Noise RMS method -- the WireCell sigproc Derivations::CalcRMS 4.5-sigma clip
+(sigproc/src/Derivations.cxx:7-20), iterated to convergence to fully exclude
 signal samples, then the population RMS of the remaining (noise) samples.
 
 Usage:
@@ -75,17 +75,21 @@ def split_planes(frame, channels):
 
 
 def calc_rms(wave):
-    """Per-channel noise RMS -- replicates sigproc Derivations::CalcRMS:
-    one-pass 4.5-sigma clip to drop signal, population std of the rest.
-    np.std default ddof=0 matches WireCell Waveform::mean_rms."""
+    """Per-channel noise RMS -- the WireCell sigproc Derivations::CalcRMS
+    4.5-sigma clip (sigproc/src/Derivations.cxx:7-20), iterated until the
+    surviving-sample set converges so signal samples are fully excluded.
+    A single pass leaves a residual signal bias on busy channels; iterating
+    to convergence removes it. np.std (ddof=0) matches WCT Waveform::mean_rms."""
     w = wave.astype(np.float64)
-    mean, rms = w.mean(), w.std()
-    if rms == 0:
-        return 0.0
-    sub = w[np.abs(w - mean) < SIGMA * rms]
-    if sub.size < 2:
-        return float(rms)
-    return float(sub.std())
+    for _ in range(10):
+        mean, rms = w.mean(), w.std()
+        if rms == 0:
+            break
+        sub = w[np.abs(w - mean) < SIGMA * rms]
+        if sub.size < 2 or sub.size == w.size:
+            break
+        w = sub
+    return float(w.std())
 
 
 def extract(src):

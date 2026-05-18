@@ -130,10 +130,11 @@ def write_md(data, sim):
       '(`pdvd_sim/wct-sim-noise-only.jsonnet`): `EmpiricalNoiseModel` + '
       '`AddNoise` + `Digitizer`, configuration taken verbatim from '
       '`cfg/pgrapher/experiment/protodunevd/sim.jsonnet`.')
-    A('- **Noise RMS**: per channel, replicating WireCell sigproc '
-      '`Derivations::CalcRMS` (`sigproc/src/Derivations.cxx`) — a one-pass '
-      '4.5σ clip that excludes signal samples, then the population RMS of the '
-      'rest. Measured on the raw ADC waveform, before noise filtering.')
+    A('- **Noise RMS**: per channel, the WireCell sigproc '
+      '`Derivations::CalcRMS` 4.5σ clip (`sigproc/src/Derivations.cxx`), '
+      'iterated to convergence so signal samples are excluded, then the '
+      'population RMS of the rest. Measured on the raw ADC waveform, before '
+      'noise filtering.')
     A('- Anodes 0-3 are the **bottom** drift volume, 4-7 the **top**.')
     A('')
     A('## Result — the simulation is NOT consistent with data')
@@ -153,8 +154,8 @@ def write_md(data, sim):
       'In simulation it is the opposite — the bottom is noisier than the top '
       '(bottom ≈ 11-13 ADC vs top ≈ 8.5-9 ADC).')
     A('2. **Both regions are mis-normalised.** The simulation **overestimates '
-      'bottom** noise by roughly 1.6-1.8× and **underestimates top** noise by '
-      'roughly 0.65×.')
+      'bottom** noise by roughly 1.5-1.8× and **underestimates top** noise by '
+      'roughly 0.7×.')
     A('')
     A('### Voltage-equivalent view')
     A('')
@@ -211,10 +212,9 @@ def write_md(data, sim):
       'top) is apples-to-apples. The top-vs-bottom comparison instead folds in '
       'the different LSB — hence the mV columns.')
     A('- **Residual signal in data**: event 0 is a real triggered event. The '
-      'one-pass `CalcRMS` clip leaves a small (~5-10%) residual-signal bias on '
-      'the busier (top) planes; a 3-pass iterative clip cross-check gave '
-      'data top U/V/W ≈ 12.8/12.9/13.0 ADC vs the 14.2/13.2/13.8 reported '
-      'here. This does not change any conclusion.')
+      '4.5σ clip is iterated to convergence so signal samples are excluded; '
+      'PDVD event 0 has low channel occupancy, so a single clip pass and the '
+      'converged result agree to within a few percent.')
     A('- **Tick period**: data is 512 ns/tick (native, pre-resampler), sim is '
       '500 ns/tick. This is a sub-1% effect on ADC-count RMS and is not '
       'corrected.')

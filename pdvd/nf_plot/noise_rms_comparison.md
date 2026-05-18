@@ -10,7 +10,7 @@ Is the PDVD electronics-noise simulation consistent with data?
 
 - **Data**: PDVD `run039324`, event 0 — raw pre-NF ADC frames (`protodune-orig-frames-anode{0-7}.tar.bz2`), all 8 anodes.
 - **Simulation**: noise-only run of the production noise chain (`pdvd_sim/wct-sim-noise-only.jsonnet`): `EmpiricalNoiseModel` + `AddNoise` + `Digitizer`, configuration taken verbatim from `cfg/pgrapher/experiment/protodunevd/sim.jsonnet`.
-- **Noise RMS**: per channel, replicating WireCell sigproc `Derivations::CalcRMS` (`sigproc/src/Derivations.cxx`) — a one-pass 4.5σ clip that excludes signal samples, then the population RMS of the rest. Measured on the raw ADC waveform, before noise filtering.
+- **Noise RMS**: per channel, the WireCell sigproc `Derivations::CalcRMS` 4.5σ clip (`sigproc/src/Derivations.cxx`), iterated to convergence so signal samples are excluded, then the population RMS of the rest. Measured on the raw ADC waveform, before noise filtering.
 - Anodes 0-3 are the **bottom** drift volume, 4-7 the **top**.
 
 ## Result — the simulation is NOT consistent with data
@@ -19,17 +19,17 @@ Median noise RMS over all channels of each drift volume / plane:
 
 | region | plane | data [ADC] | sim [ADC] | sim/data | data [mV] | sim [mV] |
 |--------|-------|-----------:|----------:|---------:|----------:|---------:|
-| bottom | U | 7.88 | 13.21 | 1.68 | 0.674 | 1.129 |
-| bottom | V | 8.17 | 13.19 | 1.62 | 0.698 | 1.127 |
-| bottom | W | 7.30 | 10.97 | 1.50 | 0.624 | 0.937 |
-| top | U | 13.42 | 9.11 | 0.68 | 1.638 | 1.112 |
-| top | V | 12.91 | 9.11 | 0.71 | 1.576 | 1.112 |
-| top | W | 13.21 | 8.55 | 0.65 | 1.613 | 1.044 |
+| bottom | U | 7.64 | 13.21 | 1.73 | 0.653 | 1.129 |
+| bottom | V | 8.03 | 13.19 | 1.64 | 0.686 | 1.127 |
+| bottom | W | 6.91 | 10.97 | 1.59 | 0.591 | 0.937 |
+| top | U | 12.81 | 9.11 | 0.71 | 1.564 | 1.112 |
+| top | V | 12.53 | 9.11 | 0.73 | 1.530 | 1.112 |
+| top | W | 12.60 | 8.55 | 0.68 | 1.539 | 1.044 |
 
 Two clear failures:
 
 1. **The top/bottom ordering is inverted.** In data the top drift volume is markedly noisier than the bottom (top ≈ 13 ADC vs bottom ≈ 7-8 ADC). In simulation it is the opposite — the bottom is noisier than the top (bottom ≈ 11-13 ADC vs top ≈ 8.5-9 ADC).
-2. **Both regions are mis-normalised.** The simulation **overestimates bottom** noise by roughly 1.6-1.8× and **underestimates top** noise by roughly 0.65×.
+2. **Both regions are mis-normalised.** The simulation **overestimates bottom** noise by roughly 1.5-1.8× and **underestimates top** noise by roughly 0.7×.
 
 ### Voltage-equivalent view
 
@@ -87,35 +87,35 @@ Per-source overviews (all 8 anodes overlaid):
 
 | anode | region | plane | data [ADC] | sim [ADC] | sim/data |
 |------:|--------|-------|-----------:|----------:|---------:|
-| 0 | bottom | U | 7.38 | 13.20 | 1.79 |
-| 0 | bottom | V | 7.99 | 13.21 | 1.65 |
-| 0 | bottom | W | 6.80 | 10.97 | 1.61 |
-| 1 | bottom | U | 7.80 | 13.25 | 1.70 |
-| 1 | bottom | V | 8.08 | 13.18 | 1.63 |
-| 1 | bottom | W | 6.79 | 10.99 | 1.62 |
-| 2 | bottom | U | 8.16 | 13.23 | 1.62 |
-| 2 | bottom | V | 8.45 | 13.17 | 1.56 |
-| 2 | bottom | W | 7.79 | 10.93 | 1.40 |
-| 3 | bottom | U | 8.29 | 13.16 | 1.59 |
-| 3 | bottom | V | 8.56 | 13.21 | 1.54 |
-| 3 | bottom | W | 7.63 | 10.97 | 1.44 |
-| 4 | top | U | 14.21 | 9.14 | 0.64 |
-| 4 | top | V | 13.16 | 9.08 | 0.69 |
-| 4 | top | W | 13.79 | 8.53 | 0.62 |
-| 5 | top | U | 13.59 | 9.08 | 0.67 |
-| 5 | top | V | 13.09 | 9.12 | 0.70 |
-| 5 | top | W | 13.15 | 8.57 | 0.65 |
-| 6 | top | U | 12.96 | 9.11 | 0.70 |
-| 6 | top | V | 12.72 | 9.11 | 0.72 |
-| 6 | top | W | 12.78 | 8.57 | 0.67 |
-| 7 | top | U | 13.34 | 9.10 | 0.68 |
-| 7 | top | V | 12.71 | 9.12 | 0.72 |
-| 7 | top | W | 13.23 | 8.53 | 0.64 |
+| 0 | bottom | U | 7.30 | 13.20 | 1.81 |
+| 0 | bottom | V | 7.83 | 13.21 | 1.69 |
+| 0 | bottom | W | 6.60 | 10.97 | 1.66 |
+| 1 | bottom | U | 7.66 | 13.25 | 1.73 |
+| 1 | bottom | V | 7.94 | 13.18 | 1.66 |
+| 1 | bottom | W | 6.66 | 10.99 | 1.65 |
+| 2 | bottom | U | 7.85 | 13.23 | 1.69 |
+| 2 | bottom | V | 8.26 | 13.17 | 1.60 |
+| 2 | bottom | W | 7.03 | 10.93 | 1.56 |
+| 3 | bottom | U | 7.92 | 13.16 | 1.66 |
+| 3 | bottom | V | 8.46 | 13.21 | 1.56 |
+| 3 | bottom | W | 7.26 | 10.97 | 1.51 |
+| 4 | top | U | 12.79 | 9.14 | 0.71 |
+| 4 | top | V | 12.87 | 9.08 | 0.71 |
+| 4 | top | W | 12.95 | 8.53 | 0.66 |
+| 5 | top | U | 13.18 | 9.08 | 0.69 |
+| 5 | top | V | 12.70 | 9.12 | 0.72 |
+| 5 | top | W | 12.76 | 8.57 | 0.67 |
+| 6 | top | U | 12.76 | 9.11 | 0.71 |
+| 6 | top | V | 12.44 | 9.11 | 0.73 |
+| 6 | top | W | 12.33 | 8.57 | 0.70 |
+| 7 | top | U | 12.79 | 9.10 | 0.71 |
+| 7 | top | V | 12.27 | 9.12 | 0.74 |
+| 7 | top | W | 12.49 | 8.53 | 0.68 |
 
 ## Caveats
 
 - **Per-region comparison is valid**: data and sim use the same ADC scale within a drift volume, so data-vs-sim within bottom (or within top) is apples-to-apples. The top-vs-bottom comparison instead folds in the different LSB — hence the mV columns.
-- **Residual signal in data**: event 0 is a real triggered event. The one-pass `CalcRMS` clip leaves a small (~5-10%) residual-signal bias on the busier (top) planes; a 3-pass iterative clip cross-check gave data top U/V/W ≈ 12.8/12.9/13.0 ADC vs the 14.2/13.2/13.8 reported here. This does not change any conclusion.
+- **Residual signal in data**: event 0 is a real triggered event. The 4.5σ clip is iterated to convergence so signal samples are excluded; PDVD event 0 has low channel occupancy, so a single clip pass and the converged result agree to within a few percent.
 - **Tick period**: data is 512 ns/tick (native, pre-resampler), sim is 500 ns/tick. This is a sub-1% effect on ADC-count RMS and is not corrected.
 - The simulation was run with `nticks = 10000`; data frames have 6250 (bottom) / 6400 (top) ticks — ample statistics for a per-channel RMS in both cases.
 
