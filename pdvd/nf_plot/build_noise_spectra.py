@@ -18,9 +18,9 @@ Normalization -- see noise_spectrum_comparison.md:
               renormalization from the data grid (N_data,T_data) to the sim
               grid (10000,500 ns):  N = round(N_data * 500 / T_data).
               bottom data 6400 @ 500 ns -> 6400 ;  top data 6400 @ 512 ns -> 6250.
-  * gain / shaping are copied verbatim from the previous files -- inert
-    metadata (EmpiricalNoiseModel applies no gain/shaping correction when
-    `chanstat` is empty, which is the PDVD configuration).
+  * gain / shaping are fixed inert metadata -- EmpiricalNoiseModel applies no
+    gain/shaping correction when `chanstat` is empty, which is the PDVD
+    configuration, so these fields do not affect the generated noise.
 
 Each induction (U,V) plane gets one entry per strip-length bin; the collection
 plane (W) is single-length so it gets one entry.
@@ -39,13 +39,12 @@ PLANES = ['U', 'V', 'W']
 NGRID = 512                              # uniform freq points per entry
 FNYQ = 1.0e-3                            # 1/ns; model Nyquist at 500 ns tick
 
+# gain/shaping: inert metadata (no effect when chanstat empty); fixed values.
 REGION_OUT = {
-    'bottom': dict(infile='pdvd-bottom-noise-spectra-v1.json.bz2',
-                   outfile='pdvd-bottom-noise-spectra-v2.json.bz2',
-                   nsamples=6400),
-    'top': dict(infile='pdvd-top-noise-spectra-v2.json.bz2',
-                outfile='pdvd-top-noise-spectra-v3.json.bz2',
-                nsamples=6250),
+    'bottom': dict(outfile='pdvd-bottom-noise-spectra-v2.json.bz2',
+                   nsamples=6400, gain=2.2430470818000003e-12, shaping=2200.0),
+    'top': dict(outfile='pdvd-top-noise-spectra-v3.json.bz2',
+                nsamples=6250, gain=1.1535670706400003e-12, shaping=2200.0),
 }
 
 
@@ -63,16 +62,6 @@ def load_data():
             freq=npz[pre + '_freq'], amp=npz[pre + '_amp'],
             meanlen=float(meanlen), n=int(n))
     return out
-
-
-def metadata(infile):
-    """gain/shaping per plane from the previous spectra file (inert metadata)."""
-    with bz2.open(WCD + infile) as f:
-        entries = json.load(f)
-    meta = {}
-    for e in entries:
-        meta.setdefault(e['plane'], (e['gain'], e['shaping']))
-    return meta
 
 
 def leave_one_out(data, region):
@@ -97,12 +86,11 @@ def leave_one_out(data, region):
 
 def build_region(region, data):
     cfg = REGION_OUT[region]
-    meta = metadata(cfg['infile'])
     grid = np.linspace(0.0, FNYQ, NGRID)            # 1/ns
     entries = []
     for ip in range(3):
         ibs = sorted(b for (r, p, b) in data if r == region and p == ip)
-        gain, shaping = meta[ip]
+        gain, shaping = cfg['gain'], cfg['shaping']
         for ib in ibs:
             d = data[(region, ip, ib)]
             amp = np.interp(grid, d['freq'], d['amp'])  # flat-extrapolated

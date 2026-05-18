@@ -74,16 +74,10 @@ SOURCES = {
                              'evt_%d', 'protodune-sp-frames-raw-anode%d.tar.bz2'),
     },
     'sim': {
-        'label': 'noise-only simulation (original v1/v2 spectra)',
+        'label': 'noise-only simulation',
         'events': [None],
         'path': os.path.join(SCRIPTDIR, '..', '..', 'pdvd_sim', 'work',
                              'noise', 'all', 'pdvd-noise-sim-anode%d.tar.bz2'),
-    },
-    'simretuned': {
-        'label': 'noise-only simulation (data-retuned v2/v3 spectra)',
-        'events': [None],
-        'path': os.path.join(SCRIPTDIR, '..', '..', 'pdvd_sim', 'work',
-                             'noise', 'retuned', 'pdvd-noise-sim-anode%d.tar.bz2'),
     },
 }
 

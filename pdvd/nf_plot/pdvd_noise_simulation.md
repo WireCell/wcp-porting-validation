@@ -4,10 +4,12 @@ How electronics noise is generated in the ProtoDUNE Vertical Drift (PDVD)
 wire-cell simulation, for both the **top** and **bottom** drift volumes — the
 components involved, the generation algorithm, and the input files.
 
-For whether this simulation actually matches data, see
-[`noise_rms_comparison.md`](noise_rms_comparison.md) (short answer: no — and the
-post-NF comparison shows the fault is in the incoherent spectra files, not
-missing coherent noise).
+For whether this simulation matches data, see
+[`noise_spectrum_comparison.md`](noise_spectrum_comparison.md): the noise-spectra
+files were re-derived from data (run039324) and the simulation now reproduces the
+data noise spectrum to ~3 %.  The earlier
+[`noise_rms_comparison.md`](noise_rms_comparison.md) study found the original
+spectra mis-tuned and motivated that re-derivation.
 
 ## Where noise enters the simulation
 
@@ -80,19 +82,19 @@ noise-spectra files are used. The choice is hard-wired on the anode ident
 | | bottom drift | top drift |
 |---|---|---|
 | anodes | 0, 1, 2, 3 | 4, 5, 6, 7 |
-| spectra file (`wire-cell-data/`) | `pdvd-bottom-noise-spectra-v1.json.bz2` | `pdvd-top-noise-spectra-v2.json.bz2` |
-| entries | 11 | 11 |
-| stored `nsamples` / `period` | 6000 / 500 ns | 3000 / 500 ns |
-| sub-sampled frequency bins | 201 | 81 |
-| U-plane entries (`wirelen`) | 6: 52, 52, 918, 918, 1720.5, 1720.5 | 6: 52, 52, 918, 918, 1720.5, 1720.5 |
-| V-plane entries (`wirelen`) | 3: 52, 918, 1720.5 | 3: 52, 918, 1720.5 |
-| W-plane entries (`wirelen`) | 2: 1620.5, 1820.5 | 2: 1620.5, 1820.5 |
-| `shaping` (all entries) | 2200 ns | 2200 ns |
-| example U/52 `gain` | 2.243e-12 | 1.154e-12 |
-| example U/52 `const` | 6.76e-9 V | 2.57e-9 V |
-| example U/52 `amps[0]` | 9.40e-8 V | 3.37e-8 V |
+| spectra file (`wire-cell-data/`) | `pdvd-bottom-noise-spectra-v2.json.bz2` | `pdvd-top-noise-spectra-v3.json.bz2` |
+| entries | 15 (U 7, V 7, W 1) | 15 (U 7, V 7, W 1) |
+| stored `nsamples` / `period` | 6400 / 500 ns | 6250 / 500 ns |
+| frequency bins | 512 | 512 |
+| induction (U, V) `wirelen` | 7 strip-length bins, ~150–1720 mm | 7 strip-length bins, ~150–1720 mm |
+| collection (W) `wirelen` | 1 bin, 1679 mm | 1 bin, 1679 mm |
+| `const` (all entries) | 0 (white-noise floor folded into `amps`) | 0 |
+| `shaping` / `gain` | 2200 ns / inert metadata | 2200 ns / inert metadata |
 
-The stored top-volume amplitudes are markedly smaller than the bottom ones.
+These files are **data-retuned from run039324** — see
+[`noise_spectrum_comparison.md`](noise_spectrum_comparison.md) — and supersede
+the earlier mis-tuned `pdvd-bottom-noise-spectra-v1` / `pdvd-top-noise-spectra-v2`.
+With the data-derived spectra the top-volume noise is the *larger* of the two.
 The model resamples both files to the simulation's `nsamples`/`period`
 (`params.daq.nticks` = 10000, `params.daq.tick` = 500 ns).
 
