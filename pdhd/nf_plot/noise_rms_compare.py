@@ -2,11 +2,13 @@
 """
 Compare PDHD per-channel electronics-noise RMS: data vs. noise-only simulation.
 
-Reads noise_rms_data.npz and noise_rms_sim.npz (produced by noise_rms.py),
-overlays data and simulation RMS-vs-channel for every APA / plane, builds a
-summary figure, and writes the comparison report noise_rms_comparison.md.
+Reads noise_rms_data_prenf.npz, noise_rms_data.npz and noise_rms_sim.npz
+(produced by noise_rms.py), overlays data and simulation RMS-vs-channel for
+every APA / plane, builds summary figures -- including a three-way pre-NF /
+post-NF / simulation bar chart -- and writes the comparison report
+noise_rms_comparison.md.
 
-Run noise_rms.py --source data and --source sim first.
+Run noise_rms.py --source data, --source data_prenf and --source sim first.
 
 Usage:  ./noise_rms_compare.py
 """
@@ -89,6 +91,44 @@ def plot_summary(data, sim):
     plt.tight_layout()
     out = os.path.join(OUTDIR, 'noise_rms_compare_summary.png')
     plt.savefig(out, dpi=130)
+    plt.close()
+    print('  wrote %s' % out)
+
+
+def plot_three_way(prenf, data, sim):
+    """One presentation figure: median noise RMS per APA / plane for pre-NF
+    data, post-NF data and simulation side by side -- shows both the noise
+    reduction from noise filtering and the post-NF data/sim agreement."""
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+    fig.suptitle('PDHD noise RMS: noise filtering brings data to the '
+                 'simulated level', fontsize=13)
+    x = np.arange(NANODE)
+    w = 0.26
+    series = [
+        ('before NF (raw data)', prenf, '#9e9e9e', -w),
+        ('after NF (data)',      data,  '#1f77b4', 0.0),
+        ('simulation',           sim,   '#ff7f0e', +w),
+    ]
+    for ax, pl in zip(axes, PLANES):
+        for label, arrs, color, off in series:
+            meds = [med(arrs, n, pl) for n in x]
+            bars = ax.bar(x + off, meds, w, color=color,
+                          label=label if pl == 'U' else None)
+            for b, m in zip(bars, meds):
+                ax.text(b.get_x() + b.get_width() / 2, m + 0.25,
+                        '%.1f' % m, ha='center', va='bottom', fontsize=7.5)
+        ax.set_title('%s plane' % pl, fontsize=11)
+        ax.set_xlabel('APA')
+        ax.set_xticks(x)
+        ax.set_xticklabels(['APA %d' % n for n in x])
+        ax.grid(True, axis='y', alpha=0.3)
+    axes[0].set_ylabel('median noise RMS [ADC]')
+    axes[0].set_ylim(0, 24)
+    fig.legend(loc='lower center', ncol=3, fontsize=10,
+               bbox_to_anchor=(0.5, -0.01))
+    plt.tight_layout(rect=[0, 0.07, 1, 1])
+    out = os.path.join(OUTDIR, 'noise_rms_nf_data_sim.png')
+    plt.savefig(out, dpi=150)
     plt.close()
     print('  wrote %s' % out)
 
@@ -270,11 +310,12 @@ def write_md(data, sim):
 
 
 def main():
-    data, sim = load('data'), load('sim')
+    prenf, data, sim = load('data_prenf'), load('data'), load('sim')
     print('=== data vs sim comparison ===')
     for n in range(NANODE):
         plot_anode(n, data, sim)
     plot_summary(data, sim)
+    plot_three_way(prenf, data, sim)
     write_md(data, sim)
     print('done.')
 

@@ -48,6 +48,11 @@ SOURCES = {
         'path': os.path.join(SCRIPTDIR, '..', 'input_data', 'run027409',
                              'evt_0', 'protodunehd-sp-frames-raw-anode%d.tar.bz2'),
     },
+    'data_prenf': {
+        'label': 'data (run027409 evt0, pre-NF)',
+        'path': os.path.join(SCRIPTDIR, '..', 'input_data', 'run027409',
+                             'evt_0', 'protodunehd-orig-frames-anode%d.tar.bz2'),
+    },
     'sim': {
         'label': 'noise-only sim',
         'path': os.path.join(SCRIPTDIR, '..', '..', 'pdhd_sim', 'work',
