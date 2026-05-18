@@ -1,0 +1,270 @@
+# PDVD electronics-noise frequency spectra: data vs. simulation
+
+Per-channel electronics-noise **amplitude spectra** for ProtoDUNE Vertical
+Drift, extracted from data run039324, compared to the WireCell simulation, and
+used to **re-derive the simulation's noise-spectra files** so that simulation
+and data agree. Companion to [`pdvd_noise_simulation.md`](pdvd_noise_simulation.md)
+(how the noise simulation is built) and
+[`noise_rms_comparison.md`](noise_rms_comparison.md) (the earlier time-domain
+RMS study that motivated this work).
+
+## Question
+
+The earlier RMS study found the PDVD electronics-noise simulation **does not
+match data**: the simulation over-predicts the bottom drift and under-predicts
+the top. The simulation adds *incoherent* noise only (`AddNoise`, no
+`CoherentAddNoise`), drawn channel-by-channel from `EmpiricalNoiseModel` spectra
+files. Are those files mis-tuned, and can they be re-derived directly from data?
+
+## Result — yes; the retuned spectra make simulation and data agree to ~3%
+
+| | data / **original** sim | data / **retuned** sim |
+|---|---|---|
+| bottom drift (U/V/W, all strip lengths) | 0.58 – 0.63 | **0.97 – 1.00** |
+| top drift (U/V/W, all strip lengths) | 1.35 – 2.94 | **0.99 – 1.01** |
+
+The original simulation over-predicts bottom-drift noise by ~1.65× and
+under-predicts the top — badly (×2.9) for short strips, mildly (×1.36) for long
+ones, i.e. with the wrong strip-length slope. Re-deriving the spectra from
+run039324 closes the gap to **≤2.7 % in every plane / drift region / strip-length
+bin**.
+
+## Inputs and method
+
+- **Data** — PDVD `run039324`, **11 events** (`evt_0..evt_10`), all 8 anodes,
+  the **post-NF** waveform (`protodune-sp-frames-raw-anode{0-7}.tar.bz2`, frame
+  tag `raw<N>` — the noise-filter output of `pdvd/wct-nf-sp.jsonnet`). The
+  simulation models incoherent noise only and NF removes coherent noise from
+  data, so the post-NF data is the like-for-like target (same footing as
+  `noise_rms_comparison.md`). Bottom anodes 0-3 are 6400 ticks @ 500 ns; top
+  anodes 4-7 are 6400 ticks @ 512 ns.
+- **Simulation** — the noise-only sim `pdvd_sim/wct-sim-noise-only.jsonnet`
+  (`EmpiricalNoiseModel → AddNoise → Digitizer`), 10000 ticks @ 500 ns, run once
+  with the **original** spectra (`pdvd-{bottom,top}-noise-spectra-v1/v2`) and
+  once with the **retuned** spectra produced here.
+- Scripts: `noise_spectrum.py` (extraction), `noise_spectrum_compare.py`
+  (comparison + validation), `build_noise_spectra.py` (writes the new files).
+
+### Signal masking, FFT, averaging
+
+For each channel of each event: the robust noise RMS is taken from the 16–84
+percentile spread; a channel-event is **used only if it is signal-free** — no
+sample beyond 6σ (a real track, or a hot ADC code, flags it; ~6400 Gaussian
+samples never reach 6σ). This drops the cosmic-contaminated channel-events
+outright instead of zero-padding them, which would leak signal across all
+frequencies. Of run039324 ~68 % (bottom) / 78 % (top) of channel-events carry a
+flagged feature; the surviving signal-free set — hundreds to thousands of
+channel-events per strip-length bin — is ample and unbiased for a noise
+measurement (a channel's noise does not depend on whether a cosmic crossed it
+in that event).
+
+Each surviving waveform is median-subtracted and Fourier transformed
+(`numpy.rfft`); `|FFT|` is averaged over channels **and events**, grouped by
+drift region, wire plane, and strip-length bin. The averaged `|FFT|` is the
+**mean amplitude spectrum** — exactly the `amps` field consumed by
+`EmpiricalNoiseModel`.
+
+### Strip length — geometry and a worked example
+
+`EmpiricalNoiseModel` selects a channel's spectrum by **wire length**, computed
+as the **sum of the channel's wire-segment lengths**
+(`m_anode->wires(chid)` → `Σ ray_length`, `EmpiricalNoiseModel.cxx:342-346`).
+A PDVD channel may read **two** wire segments jumpered across CRP boundaries —
+1552 of 12288 channels are two-segment. The data here are binned by the **same**
+summed-segment length, so a data bin and a sim bin hold the same channels.
+
+Worked example — channel 189 (a two-segment induction channel), from
+`protodunevd-wires-larsoft-v3.json.bz2`:
+
+```
+  segment 0:  1704.73 mm
+  segment 1:    15.77 mm   (the short jumper)
+  -------------------------
+  total    :  1720.50 mm   = 172.05 cm   -> EmpiricalNoiseModel wirelen
+```
+
+Cross-check: `PDVD_strip_length.json.bz2` (the physical PDVD strip lengths)
+lists channel 189 at 171.96 cm — agreement to 0.05 %. Across the detector the
+geometry's maximum summed length, **1720.5 mm = 172.05 cm**, equals the physical
+strip maximum (171.96 cm): **no simulated wire exceeds the real geometry**, so
+no channels need to be excluded. The induction (U, V) planes span ~10–1720 mm
+with ~63 % of channels at the full 1720.5 mm; the **collection (W) plane is
+single-length, 1679 mm** for every channel, so it has no strip-length
+dependence to resolve.
+
+Strip-length binning follows the simulation's own scheme (3 induction wire-length
+anchors, refined here to **7 bins** to resolve the dependence; **1 bin** for the
+single-length W plane).
+
+### Normalization (read this — it is the subtle part)
+
+The `EmpiricalNoiseModel` `amps` are in **WireCell internal voltage units**,
+where `units::volt = 1e-6` (`Units.h`). The conversion from a digitized ADC
+count is
+
+```
+amp_internal  =  ADC * span_realvolt * 1e-6 / 16384
+```
+
+with the digitizer fullscale span = 1.4 V (bottom) / 2.0 V (top), 14-bit. The
+`1e-6` factor was **verified by a closure test**: the noise-only sim was run
+with the *existing* spectra files, the extraction above was applied to its
+output, and the result reproduced the input JSON `amps` as a flat ratio of
+`1.0e6` (= `units::volt`) — to 0.1 % across the band, ~1 % only at the Nyquist
+edge. This validated the whole recipe before any data was touched.
+
+Further points (see `pdvd_noise_simulation.md` for the model internals):
+
+- `amps` is the **mean** amplitude `E|FFT|`; `AddNoise` applies the mean→mode
+  factor √(2/π) at generation time, so the file stores the mean as-is.
+- `const` is set to **0**: the measured spectrum already includes the
+  white-noise floor, and the model forms `μ = √(amps² + const²)`.
+- **`nsamples` bookkeeping.** `E|FFT(f)|` scales as `√(N/T)` for `N` samples at
+  period `T`; the model rescales by `√(10000/nsamples)`. To make the model
+  reproduce the measured physical spectrum, the file stores
+  `nsamples = N_data · 500 / T_data` and `period = 500 ns`:
+  **bottom 6400** (6400 @ 500 ns), **top 6250** (6400 @ 512 ns). `amps` is then
+  the measured `|FFT|` with no further fudge factor.
+- Inter-source comparison renormalizes every spectrum to a common
+  (N=10000, T=500 ns) footing: `amp_ref = amp · √((10000/500)/(N/T))`.
+- The `gain`/`shaping` JSON fields are inert metadata for PDVD — with an empty
+  `chanstat` the model applies no gain/shaping correction
+  (`EmpiricalNoiseModel.cxx:368-377`) — and are copied verbatim from the
+  previous files. The run039324 front-end gain is 7.8 mV/fC (bottom), the
+  default in the NF/SP chain `cfg/pgrapher/experiment/protodunevd/params.jsonnet`.
+
+## Results
+
+### 1. Top vs. bottom drift
+
+![top vs bottom](noise_spectrum/noise_spectrum_topbottom.png)
+
+The two drift volumes have **different cold electronics** and behave very
+differently:
+
+- **Bottom** — a smooth bump peaking near 0.13 MHz and falling to the noise
+  floor by ~0.4 MHz. Amplitude ~0.6–1.0 ×10⁻⁷ (internal V) at full strip length.
+- **Top** — ~2× higher and a different shape: high at low frequency, a slow
+  roll-off, and a sharp analog **step at ~0.69 MHz** plus a narrow line near
+  0.9 MHz. Verified pre-NF (`protodune-orig-frames`) ≈ post-NF: the step is the
+  **top-electronics analog response**, not an NF artifact.
+
+### 2. Strip-length dependence
+
+![strip length](noise_spectrum/noise_spectrum_striplen.png)
+
+- **Bottom induction (U, V)** — noise rises ~2× from the shortest (~158 mm) to
+  the longest (1720 mm) strips, the expected capacitance-driven trend.
+- **Top induction (U, V)** — nearly **flat**: only ~15 % from short to long
+  strips. The top noise is dominated by a large strip-length-**independent**
+  component.
+- **Collection (W)** — single strip length (1679 mm), one spectrum per region.
+
+### 3. Data vs. the original simulation — the mismatch
+
+![bottom compare](noise_spectrum/noise_spectrum_compare_bottom.png)
+![top compare](noise_spectrum/noise_spectrum_compare_top.png)
+
+| region | plane | strip len [mm] | data/sim (original) |
+|---|---|---:|---:|
+| bottom | U | 158 → 1720 | 0.62 → 0.58 |
+| bottom | V | 154 → 1720 | 0.61 → 0.58 |
+| bottom | W | 1679 | 0.60 |
+| top | U | 155 → 1720 | 2.94 → 1.36 |
+| top | V | 153 → 1720 | 2.90 → 1.35 |
+| top | W | 1679 | 1.46 |
+
+Two distinct failures: the bottom is uniformly **~1.65× too loud** in the
+simulation; the top is **too quiet and has the wrong strip-length slope** — the
+simulation's top noise rises 2.4× with length while the data's barely moves.
+
+## Replacement spectra files
+
+`build_noise_spectra.py` writes the measured spectra into drop-in
+`EmpiricalNoiseModel` files:
+
+| file | drift | entries | `nsamples` |
+|---|---|---|---|
+| `pdvd-bottom-noise-spectra-v2.json.bz2` | bottom (anodes 0-3) | U=7, V=7, W=1 | 6400 |
+| `pdvd-top-noise-spectra-v3.json.bz2` | top (anodes 4-7) | U=7, V=7, W=1 | 6250 |
+
+Each entry carries the measured spectrum on a 512-point frequency grid;
+`const = 0`; `period = 500 ns`. **Leave-one-out cross-check** — dropping a
+middle induction wire-length entry and reconstructing it by the model's linear
+interpolation from its neighbours reproduces the measured bin to **2–5 % in the
+mean** (larger only at the small-amplitude high-frequency tail), confirming the
+strip-length binning is fine enough.
+
+The files are selected by a toggle in
+`cfg/pgrapher/experiment/protodunevd/params.jsonnet`:
+
+```jsonnet
+use_retuned_noise: false,   // false -> original v1/v2; true -> retuned v2/v3
+```
+
+**Default `false`** — existing production configs stay bit-identical. Override
+with `params { use_retuned_noise: true }` (or by editing the line) to use the
+retuned spectra.
+
+## Validation — retuned simulation vs. data
+
+The noise-only simulation was re-run with `use_retuned_noise: true` and the
+extraction repeated on its output.
+
+![bottom validate](noise_spectrum/noise_spectrum_validate_bottom.png)
+![top validate](noise_spectrum/noise_spectrum_validate_top.png)
+
+The retuned simulation reproduces the data spectrum **frequency-by-frequency and
+strip-length-bin-by-bin**, in both drift regions:
+
+| region | data / retuned sim (range over all planes & strip lengths) |
+|---|---|
+| bottom | 0.97 – 1.00 |
+| top | 0.99 – 1.01 |
+
+Worst single-bin deviation **2.7 %** (top V, 1596 mm, the lowest-statistics
+bin). The band-mean amplitude is the frequency integral of the spectrum, so this
+is equivalent to a per-bin noise-RMS agreement of the same few percent — the
+~1.65× / 2.9× discrepancies of the original spectra are gone.
+
+## Caveats
+
+- **Comparison footing.** Post-NF data vs. raw noise-only sim — the established
+  PDVD methodology (`noise_rms_comparison.md`, `noise_spectrum.py`). The retuned
+  spectra are therefore tuned to the **post-NF / incoherent** noise. They are
+  the correct input for this noise-only validation and for a noise-only sim;
+  using them as raw electronics-noise input to a full *sim → NF → SP* physics
+  chain would **double-count** the NF stage. NF on PDVD also slightly attenuates
+  the incoherent noise it keeps, biasing the absolute scale by a few percent.
+- **Short induction strips.** The shortest induction bin is centred at ~158 mm;
+  the few channels below it are flat-extrapolated by the model, which slightly
+  over-states their noise (visible as data/retuned ≈ 0.97 at the 158 mm bin).
+- **Top high-frequency features.** The ~0.69 MHz step and the ~0.9 MHz line are
+  carried into the retuned spectra (they are real, in the data); the 512-point
+  grid resolves them to ~1 part in 512, adequate for the noise RMS.
+- **Coherent noise** is still **not** simulated. This work retunes only the
+  incoherent spectra; a `CoherentAddNoise` component would be a separate study.
+
+## Reproduce
+
+```
+cd pdvd/nf_plot
+./noise_spectrum.py --source data         # 11 events, ~4 min
+./noise_spectrum.py --source sim          # original-spectra noise sim
+./build_noise_spectra.py                  # -> wire-cell-data/pdvd-*-noise-spectra-v{2,3}
+# re-run the noise sim with use_retuned_noise:true -> pdvd_sim/work/noise/retuned/
+./noise_spectrum.py --source simretuned
+./noise_spectrum_compare.py               # comparison + validation plots & table
+```
+
+## Conclusion
+
+The PDVD electronics-noise simulation mismatch is fully explained by mis-tuned
+`EmpiricalNoiseModel` spectra files: the bottom was ~1.65× too loud, the top too
+quiet with the wrong strip-length dependence. Re-deriving the spectra directly
+from run039324 — with the normalization pinned by a closure test — produces
+replacement files (`pdvd-bottom-noise-spectra-v2`, `pdvd-top-noise-spectra-v3`)
+that bring the simulation into **agreement with data to ≤3 %** across both drift
+regions, all three planes, and the full strip-length range. The files are wired
+behind a default-off jsonnet toggle so production configs are unchanged until
+the retuned spectra are explicitly adopted.
