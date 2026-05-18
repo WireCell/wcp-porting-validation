@@ -74,14 +74,20 @@ sub-sampled spectrum to the model's configured `nsamples`/`period`. An optional
 
 PDHD has 4 APAs with **identical** cold electronics, so a **single** noise
 spectra file is used for all of them. Which file is chosen depends on the
-front-end amplifier gain (`cfg/pgrapher/experiment/pdhd/params.jsonnet`):
+front-end amplifier gain — the `pdhd_noise` helper in
+`cfg/pgrapher/experiment/pdhd/params.jsonnet`:
 
 ```jsonnet
-noise: if $.elec.gain > 8*wc.mV/wc.fC
-       then "protodunehd-noise-spectra-14mVfC-v1.json.bz2"
-       else "protodunehd-noise-spectra-7d8mVfC-v1.json.bz2",
+local pdhd_noise(gain) =
+    local g = gain / (wc.mV / wc.fC);
+    if std.abs(g - 7.8) < 0.05 then "protodunehd-noise-spectra-7d8mVfC-v1.json.bz2"
+    else if std.abs(g - 14.0) < 0.05 then "protodunehd-noise-spectra-14mVfC-v1.json.bz2"
+    else error "...no spectra file for elec.gain = <g> mV/fC...";
 ```
 
+This is a **strict** selector over the four cold-electronics gain settings
+(4.7 / 7.8 / 14 / 25 mV/fC): files exist only for 7.8 and 14, and any other
+gain aborts the configuration rather than silently using a wrong-gain file.
 The gain is supplied at run time via `-V elecGain=<mV/fC>`. **Run 027409 was
 taken at 14 mV/fC** (`input_data/META.json`), so the 14 mV/fC file is used for
 the data/sim comparison.

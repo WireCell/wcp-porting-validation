@@ -11,9 +11,9 @@ Reads the noise_spectrum_{data,sim}.npz produced by noise_spectrum.py and
   * compares the two drift regions in data  -> noise_spectrum_topbottom.png
   * prints a data/sim band-mean ratio table.
 
-The simulation uses the data-retuned noise spectra (pdvd-bottom-noise-spectra-v2
-/ pdvd-top-noise-spectra-v3), so this is the data/simulation consistency check;
-see noise_spectrum_comparison.md.
+The simulation uses the data-retuned noise spectra
+(pdvd-bottom-noise-spectra-7d8mVfC-v1 / pdvd-top-noise-spectra-v3), so this is
+the data/simulation consistency check; see noise_spectrum_comparison.md.
 
 Normalization -- a waveform of N samples at period T has E|FFT(f)| proportional
 to sqrt(N/T)*sqrt(S(f)), so every spectrum is renormalized to a common

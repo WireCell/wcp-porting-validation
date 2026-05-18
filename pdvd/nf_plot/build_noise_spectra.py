@@ -4,8 +4,11 @@ Build replacement PDVD EmpiricalNoiseModel spectra files from the data
 extraction (noise_spectrum/noise_spectrum_data.npz, written by noise_spectrum.py).
 
 Writes drop-in spectra files:
-  wire-cell-data/pdvd-bottom-noise-spectra-v2.json.bz2   (anodes 0-3)
-  wire-cell-data/pdvd-top-noise-spectra-v3.json.bz2      (anodes 4-7)
+  wire-cell-data/pdvd-bottom-noise-spectra-7d8mVfC-v1.json.bz2  (anodes 0-3)
+  wire-cell-data/pdvd-top-noise-spectra-v3.json.bz2             (anodes 4-7)
+
+run039324 was read out at the 7.8 mV/fC bottom front-end gain, so the bottom
+file follows the PDHD per-gain naming convention (`...-7d8mVfC-...`).
 
 Normalization -- see noise_spectrum_comparison.md:
   * amps    = measured mean |FFT| in WireCell internal voltage units, as-is
@@ -18,9 +21,11 @@ Normalization -- see noise_spectrum_comparison.md:
               renormalization from the data grid (N_data,T_data) to the sim
               grid (10000,500 ns):  N = round(N_data * 500 / T_data).
               bottom data 6400 @ 500 ns -> 6400 ;  top data 6400 @ 512 ns -> 6250.
-  * gain / shaping are fixed inert metadata -- EmpiricalNoiseModel applies no
+  * gain / shaping are inert metadata -- EmpiricalNoiseModel applies no
     gain/shaping correction when `chanstat` is empty, which is the PDVD
-    configuration, so these fields do not affect the generated noise.
+    configuration, so these fields do not affect the generated noise.  The
+    bottom `gain` is nonetheless set to the 7.8 mV/fC value so it correctly
+    labels the run039324 readout gain.
 
 Each induction (U,V) plane gets one entry per strip-length bin; the collection
 plane (W) is single-length so it gets one entry.
@@ -39,10 +44,11 @@ PLANES = ['U', 'V', 'W']
 NGRID = 512                              # uniform freq points per entry
 FNYQ = 1.0e-3                            # 1/ns; model Nyquist at 500 ns tick
 
-# gain/shaping: inert metadata (no effect when chanstat empty); fixed values.
+# gain/shaping: inert metadata (no effect when chanstat empty).  The bottom
+# gain is the 7.8 mV/fC value (run039324 readout gain).
 REGION_OUT = {
-    'bottom': dict(outfile='pdvd-bottom-noise-spectra-v2.json.bz2',
-                   nsamples=6400, gain=2.2430470818000003e-12, shaping=2200.0),
+    'bottom': dict(outfile='pdvd-bottom-noise-spectra-7d8mVfC-v1.json.bz2',
+                   nsamples=6400, gain=1.2496976598600002e-12, shaping=2200.0),
     'top': dict(outfile='pdvd-top-noise-spectra-v3.json.bz2',
                 nsamples=6250, gain=1.1535670706400003e-12, shaping=2200.0),
 }

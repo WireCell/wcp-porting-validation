@@ -77,26 +77,30 @@ available but **not used** for PDVD (`chanstat` is empty).
 
 PDVD has two drift volumes with different cold electronics, so two separate
 noise-spectra files are used. The choice is hard-wired on the anode ident
-(`sim.jsonnet`: `params.files.noises[if anode.data.ident < 4 then 0 else 1]`):
+(`sim.jsonnet`: `params.files.noises[if anode.data.ident < 4 then 0 else 1]`).
+The **bottom** file is in turn selected by the front-end gain — the PDHD
+convention — so `wire-cell-data/` holds one bottom file per gain setting:
 
 | | bottom drift | top drift |
 |---|---|---|
 | anodes | 0, 1, 2, 3 | 4, 5, 6, 7 |
-| spectra file (`wire-cell-data/`) | `pdvd-bottom-noise-spectra-v2.json.bz2` | `pdvd-top-noise-spectra-v3.json.bz2` |
-| entries | 15 (U 7, V 7, W 1) | 15 (U 7, V 7, W 1) |
+| spectra file (`wire-cell-data/`) | `pdvd-bottom-noise-spectra-7d8mVfC-v1.json.bz2` (7.8 mV/fC, the run039324 readout gain) or `pdvd-bottom-noise-spectra-14mVfC-v1.json.bz2` (14 mV/fC) | `pdvd-top-noise-spectra-v3.json.bz2` |
+| entries | 15 (U 7, V 7, W 1) for 7d8mVfC | 15 (U 7, V 7, W 1) |
 | stored `nsamples` / `period` | 6400 / 500 ns | 6250 / 500 ns |
 | frequency bins | 512 | 512 |
 | induction (U, V) `wirelen` | 7 strip-length bins, ~150–1720 mm | 7 strip-length bins, ~150–1720 mm |
 | collection (W) `wirelen` | 1 bin, 1679 mm | 1 bin, 1679 mm |
 | `const` (all entries) | 0 (white-noise floor folded into `amps`) | 0 |
-| `shaping` / `gain` | 2200 ns / inert metadata | 2200 ns / inert metadata |
+| `shaping` / `gain` | 2200 ns / 7.8 (or 14) mV/fC metadata | 2200 ns / inert metadata |
 
-These files are **data-retuned from run039324** — see
-[`noise_spectrum_comparison.md`](noise_spectrum_comparison.md) — and supersede
-the earlier mis-tuned `pdvd-bottom-noise-spectra-v1` / `pdvd-top-noise-spectra-v2`.
-With the data-derived spectra the top-volume noise is the *larger* of the two.
-The model resamples both files to the simulation's `nsamples`/`period`
-(`params.daq.nticks` = 10000, `params.daq.tick` = 500 ns).
+The `7d8mVfC` file is **data-retuned from run039324** — see
+[`noise_spectrum_comparison.md`](noise_spectrum_comparison.md) — and is the
+default; with the data-derived spectra the top-volume noise is the *larger* of
+the two. The `14mVfC` file is the inherited earlier file (its `gain` field
+identifies it as a 14 mV/fC spectrum; not independently data-validated). See
+[`electronics_gain_and_noise.md`](electronics_gain_and_noise.md) for how the
+gain selects the file. The model resamples both files to the simulation's
+`nsamples`/`period` (`params.daq.nticks` = 10000, `params.daq.tick` = 500 ns).
 
 ### Electronics and ADC differences
 
