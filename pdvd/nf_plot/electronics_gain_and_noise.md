@@ -95,6 +95,14 @@ that always returned a filename and would silently mis-bin a third gain.)
 One residual caveat: the selector trusts `elec.gain` to be the true readout
 gain — it cannot verify the configured gain against the data.
 
+The selector lives in `params.files.noises`, which **every PDVD simulation
+reads** — the standalone noise-only sim (`pdvd_sim/wct-sim-noise-only.jsonnet`),
+the standard sim (`cfg/pgrapher/experiment/protodunevd/sim.jsonnet`), and the
+LArSoft with-track chain (`wcls-sim-drift-simchannel-splusn.jsonnet`) all take
+the noise file from `params.files.noises`; no config carries a hard-coded noise
+file. So the gain-based selection — and its abort-on-unsupported-gain — applies
+uniformly across stand-alone, with-track and standard configurations.
+
 ## 3. The gain bug this uncovered — and the fix
 
 Before this work the bottom config hard-wired a single file,
@@ -119,6 +127,11 @@ The fix, following the PDHD per-gain-file convention:
 The spectra-file `gain` field is still inert in the running simulation
 (`chanstat` empty), but it now correctly labels each file, and a future
 `ChanStat`-based rescaling would no longer be misled.
+
+`wire-cell-data/` now holds only the current PDVD noise-spectra files —
+`pdvd-bottom-noise-spectra-7d8mVfC-v1`, `pdvd-bottom-noise-spectra-14mVfC-v1`
+and `pdvd-top-noise-spectra-v3`; the superseded top files (`v2`, `v1.3`,
+`v1d3`) were removed to avoid confusion over which file is current.
 
 ## 4. The top `postgain` ~1.3 factor is decoupled from the noise
 
