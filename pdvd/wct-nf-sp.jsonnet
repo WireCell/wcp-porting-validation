@@ -57,6 +57,11 @@ function(
   // waveform (h{u,v,w}_rawdecon<ident> in the magnify ROOT) for offline
   // software-filter tuning.  OFF in production.  Pass via -R in run_nf_sp_evt.sh.
   dump_rawdecon = false,
+  // ROI-debug mode: run SP with use_roi_debug_mode + multi-plane protection so
+  // OmnibusSigProc emits the DNN-ROI input tags (loose_lf / tight_lf / mp2_roi /
+  // mp3_roi / decon_charge, alongside gauss) into the SP frame archive.
+  // OFF in production.
+  roi_debug = false,
 )
 
   local tools = tools_all;
@@ -77,7 +82,10 @@ function(
                     for n in std.range(0, std.length(tools.anodes) - 1)];
 
   local sp_maker = import 'pgrapher/experiment/protodunevd/sp.jsonnet';
-  local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' });
+  local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' }
+    + (if roi_debug
+       then { use_roi_debug_mode: true, use_multi_plane_protection: true, mp_tick_resolution: 4 }
+       else {}));
   local sp_pipes = [sp.make_sigproc(a,
                                     l1sp_pd_mode=l1sp_pd_mode,
                                     l1sp_pd_dump_path=l1sp_pd_dump_path,
@@ -116,7 +124,10 @@ function(
         data: {
           outname: '%s-anode%d.tar.bz2' % [sp_prefix, anode_ident],
           tags: ['gauss%d' % anode_ident, 'wiener%d' % anode_ident]
-                + (if dump_rawdecon then ['rawdecon%d' % anode_ident] else []),
+                + (if dump_rawdecon then ['rawdecon%d' % anode_ident] else [])
+                + (if roi_debug then [t % anode_ident for t in
+                     ['loose_lf%d', 'tight_lf%d', 'mp2_roi%d', 'mp3_roi%d', 'decon_charge%d']]
+                   else []),
           digitize: false,
           masks: true,
         },
