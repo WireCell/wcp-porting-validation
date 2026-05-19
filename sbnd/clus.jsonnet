@@ -91,7 +91,7 @@ local bs_live_face(apa, face) = {
         drift_speed: drift_speed,
         time_offset: time_offset,
         strategy: ["stepped"],
-        extra: [".*wire_index", "wpid"]
+        extra: ['.*wire_index', '.*charge_val', '.*charge_unc', 'wpid']
     }
 };
 local bs_dead_face(apa, face) = {
@@ -281,7 +281,7 @@ local clus_all_apa (
         cm.parallel_prolong(length_cut=35*wc.cm),
         cm.close(length_cut=1.2*wc.cm),
         cm.extend_loop(num_try=3),
-        cm.separate(use_ctpc=true),
+        // cm.separate(use_ctpc=true),
         cm.neutrino(),
         cm.isolated(),
         // cm.examine_bundles(),

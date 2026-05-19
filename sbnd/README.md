@@ -60,9 +60,9 @@ time lar --nskip 0 -n 1 -c wcls-img-clus-matching.fcl -s standalone-sample/2025f
 # process clustering output
 python merge-zip.py merged.zip "mabc-*.zip"
 ../upload-to-bee.sh merged.zip
+./merge-upload.sh
 # process qlmatching output
 # python merge-apa.py --inpath=data-sep --outpath=data --eventNo=0 # single event
-./merge-upload.sh
 ```
 
 wire information

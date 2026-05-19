@@ -10,20 +10,20 @@ python plot_simchannels.py --input 2025f-mc.root --entry 1 --channel-min 7250 --
 python plot_simchannels.py \
   --input 2025f-mc.root \
   --entry 1 \
-  --channel-min 6000 \
-  --channel-max 7600 \
+  --channel-min 0 \
+  --channel-max 1900 \
   --interactive \
-  --initial-channel 6500
+  --initial-channel 1000
 ```
 
 ## standalone files
 ```bash
 # Part A: dump image clusters
-lar -n 1 -c wcls-img-dump.fcl 2025f-mc.root
+lar -n 1 -c wcls-img-dump.fcl -s 2025f-mc.root --no-output
 
 # Part B: dump opflash data
-lar -n 1 -c wcls-flash-dump.fcl 2025f-mc.root
+lar -n 1 -c wcls-flash-dump.fcl -s 2025f-mc.root --no-output
 
 # Part C: clustering + QL matching + all-APA clustering (needs LArSoft env)
-lar -n 1 -c wct-clus-matching.fcl
+lar -n 1 -c wct-clus-matching.fcl --no-output
 ```
