@@ -32,8 +32,11 @@ continues downstream to SP.
 
 Bottom-drift (TDE) CRPs are digitized at a tick slightly different from
 500 ns. The Resampler resamples to the 500 ns grid that the SP field
-response files assume. Top-CRP anodes (ident ≥ 4) are already at 500 ns
-and skip this node.
+response files assume. Top-CRP anodes (ident ≥ 4) are physically at
+500 ns and skip this node — but the upstream extraction mislabels their
+`orig` tick as 512 ns, so `wct-nf-sp.jsonnet` re-stamps the top
+`FrameFileSource` `tick` to 500 ns at read time (data mode). That is a
+label correction, not a resample; see `docs/resampler.md`.
 
 Source: `toolkit/cfg/pgrapher/common/resamplers.jsonnet:6–16`
 Condition: `wct-nf-sp.jsonnet:111`

@@ -27,7 +27,7 @@ The full pipeline from raw data to SP frames is split across two steps:
 
 Options:
 - `-a N` — process only anode `N` (default: all 0–7).
-- `-r reality` — `data` (default) enables the 512→500 ns Resampler on bottom anodes (n<4); `sim` disables it.
+- `-r reality` — `data` (default) enables the 512→500 ns Resampler on bottom anodes (n<4) and re-stamps the top anodes' (n≥4) `orig` tick to 500 ns; `sim` disables both.
 
 The script sets `WIRECELL_PATH` to include `toolkit/cfg` and
 `wire-cell-data`, then calls `wire-cell` with `wct-nf-sp.jsonnet`.
@@ -56,7 +56,7 @@ passes to `wct-nf-sp.jsonnet` (`run_nf_sp_evt.sh:84-93`):
 | `orig_prefix` | `<evtdir>/protodune-orig-frames` | Input archive prefix (reads `{prefix}-anode{N}.tar.bz2`) |
 | `raw_prefix` | `<workdir>/protodune-sp-frames-raw` | Output prefix for NF frames |
 | `sp_prefix` | `<workdir>/protodune-sp-frames` | Output prefix for SP frames |
-| `reality` | `"data"` | `"data"` resamples bottom-drift anodes 0–3 (512→500 ns) before NF; `"sim"` skips |
+| `reality` | `"data"` | `"data"` resamples bottom-drift anodes 0–3 (512→500 ns) before NF and re-stamps the top anodes' (4–7) `orig` tick to 500 ns; `"sim"` skips both |
 | `anode_indices` | `[0,1,2,3,4,5,6,7]` or `[N]` if `-a N` | Which anodes to process |
 | `sigoutform` | `"dense"` | SP output format: `"sparse"` or `"dense"` |
 
@@ -65,7 +65,8 @@ passes to `wct-nf-sp.jsonnet` (`run_nf_sp_evt.sh:84-93`):
 `wct-nf-sp.jsonnet:94–117` builds one independent pipeline per anode:
 
 ```
-FrameFileSource  (orig frames, tag 'orig')
+FrameFileSource  (orig frames, tag 'orig';
+                  top anodes n>=4: tick=500 ns override when reality=="data")
   │
   ├─ [Resampler]        only when reality=="data" AND anode index n < 4
   │
@@ -96,12 +97,19 @@ Files:
 
 ProtoDUNE-VD has two CRP technologies:
 - **Bottom drift** (anodes 0–3, TDE): native readout tick ≠ 500 ns.
-- **Top drift** (anodes 4–7): already at 500 ns.
+- **Top drift** (anodes 4–7): physically digitized at 500 ns.
 
 The WireCell field-response files and SP deconvolution assume a uniform
 500 ns tick (`params.daq.tick = 0.5 µs`). The `Resampler` node
 (`period=500 ns, time_pad=linear`) brings bottom-drift waveforms to the
 common grid before any filtering.
+
+The top anodes need no resampling, but the upstream LArSoft extraction
+has a single global tick knob and mislabels the (physically 500 ns) top
+`orig` frames as 512 ns. In `data` mode `wct-nf-sp.jsonnet` therefore
+overrides the top `FrameFileSource` `tick` to `500 ns`, re-stamping the
+period at read time — a metadata label correction, **not** a resample.
+See `docs/resampler.md`.
 
 ## Trace tags in the output archives
 
