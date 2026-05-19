@@ -139,7 +139,12 @@ function(
       data: {
         inname: '%s-anode%d.tar.bz2' % [orig_prefix, aid],
         tags: ['orig'],
-      },
+      } + (
+        // Top-CRP (n>=4) orig frames are mislabeled 512 ns by the upstream
+        // extraction; the top is physically 500 ns.  Re-stamp the tick at
+        // read time so NF/SP run on the correct grid.  See wct-nf-sp.jsonnet.
+        if use_resampler && n >= 4 then { tick: 500 * wc.ns } else {}
+      ),
     }, nin=0, nout=1);
 
     g.pipeline(

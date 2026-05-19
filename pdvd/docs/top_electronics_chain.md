@@ -13,7 +13,7 @@ The pipeline for each anode runs inside a single `OmnibusNoiseFilter` pnode:
 
 | Step | Algorithm | Top behaviour | Bottom behaviour |
 |------|-----------|---------------|-----------------|
-| 0 | Resampler | **Skipped** — top clock is already 500 ns | Applied (512→500 ns, data mode only) |
+| 0 | Resampler | **Skipped** — top is physically 500 ns. But the upstream extraction mislabels the `orig` tick as 512 ns, so `wct-nf-sp.jsonnet` re-stamps the top `FrameFileSource` `tick` to 500 ns at read time (data mode) — a label fix, not a resample. | Applied (512→500 ns, data mode only) |
 | 1 | `PDVDOneChannelNoise` | Same | Same |
 | 2 | `PDVDCoherentNoiseSub` | Same algorithm; uses `chndb-resp-top.jsonnet` kernels | Same algorithm; uses `chndb-resp-bot.jsonnet` kernels |
 | 3 | `PDVDShieldCouplingSub` | **Top only, U-plane strips only** | Not applied |

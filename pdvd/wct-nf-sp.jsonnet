@@ -21,8 +21,10 @@
 //
 // Data vs simulation:
 //   reality='data' (default) inserts a Resampler (512 ns -> 500 ns) on the
-//   four bottom-drift anodes (n<4) before NF. Pass reality='sim' to skip
-//   resampling for simulated input that is already at 500 ns.
+//   four bottom-drift anodes (n<4) before NF, and re-stamps the top-drift
+//   anodes (n>=4) to 500 ns at read time -- the upstream extraction
+//   mislabels the (physically 500 ns) top frames as 512 ns. Pass
+//   reality='sim' to skip both, for simulated input already at 500 ns.
 
 local g = import 'pgraph.jsonnet';
 local wc = import 'wirecell.jsonnet';
@@ -145,7 +147,15 @@ function(
       data: {
         inname: '%s-anode%d.tar.bz2' % [orig_prefix, aid],
         tags: ['orig'],
-      },
+      } + (
+        // The upstream extraction stamps every anode's orig frames with a
+        // single tick (512 ns in data mode).  That is correct for the
+        // bottom CRP (n<4, handled by the Resampler below) but wrong for
+        // the top CRP (n>=4), which is physically digitized at 500 ns.
+        // Re-stamp the top tick at read time so NF/SP run on the correct
+        // 500 ns grid.  This is a label correction, not a resample.
+        if use_resampler && n >= 4 then { tick: 500 * wc.ns } else {}
+      ),
     }, nin=0, nout=1);
 
     local sink = g.pnode({ type: 'DumpFrames', name: 'dump%d' % aid }, nin=1, nout=0);

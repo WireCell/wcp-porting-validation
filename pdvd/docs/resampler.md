@@ -29,8 +29,14 @@ local use_resampler = (reality == 'data');
 
 `reality` is a TLA defaulting to `"data"`; pass `--tla-str reality="sim"` (or `-r sim` via `run_nf_sp_evt.sh`) to skip resampling for simulated input.
 
-Top-CRP anodes (idents 4–7) are already digitized at 500 ns and skip
-this node entirely.
+Top-CRP anodes (idents 4–7) are physically digitized at 500 ns and skip
+the `Resampler`.  Note, however, that the upstream LArSoft extraction has
+only a single global tick knob and mislabels the top `orig` frames as
+512 ns (same value as the bottom).  In `data` mode `wct-nf-sp.jsonnet`
+therefore overrides the top `FrameFileSource` `tick` to `500*wc.ns`,
+re-stamping the period at read time.  This is a metadata label
+correction, **not** a resample — the top samples are already 500 ns
+spaced; running the `Resampler` on them would corrupt the waveforms.
 
 The pnode is defined in `cfg/pgrapher/common/resamplers.jsonnet` and
 implemented in `aux/src/Resampler.cxx`.
