@@ -233,7 +233,50 @@ Setting `use_roi_debug_mode: true` in `sp.jsonnet:86` causes
 | `extend_roi<N>` | ROI after extend pass |
 
 These are not written to the SP archive by default. To capture them,
-add the tags to the `FrameFileSink` in `wct-nf-sp.jsonnet:76–91`.
+set the top-level `roi_debug = true` parameter in
+`wct-nf-sp.jsonnet:66`. That gates two things: (a) `OmnibusSigProc`
+runs with `use_roi_debug_mode + use_multi_plane_protection +
+mp_tick_resolution`, (b) the `FrameFileSink` per-anode `tags` list
+gains `loose_lf<N>`, `tight_lf<N>`, `mp2_roi<N>`, `mp3_roi<N>`,
+`decon_charge<N>` alongside the production `gauss<N>` / `wiener<N>`.
+
+### Regenerating ROI-debug archives after a toolkit change
+
+The DNN-ROI input plots (`DNN_ROI_SP/simulation/make_data_pics.py`)
+and the SP filter overlay (`DNN_ROI_SP/simulation/sp_filter_compare.py`
+via `sp_noise_compare.py:43`) **read from a dedicated path with the
+`_roidebug` suffix**:
+
+```
+work/<RUN_PADDED>_<EVT>_roidebug/protodune-sp-frames-anode{N}.tar.bz2
+```
+
+A normal `./run_nf_sp_evt.sh <run> <evt>` writes to the **non-suffixed**
+`work/<RUN_PADDED>_<EVT>/` (production gauss+wiener only), so the
+roidebug plots will silently keep using stale frames from a previous
+run. To refresh the downstream plots after a toolkit rebuild:
+
+```bash
+# 1. enable ROI-debug tags
+sed -i 's/^  roi_debug = false,$/  roi_debug = true,/' wct-nf-sp.jsonnet
+
+# 2. run with -x (disable L1SP -- its FrameMerger would otherwise strip
+#    the per-plane tags via mergemap; see sp.jsonnet:253-280)
+./run_nf_sp_evt.sh -x <run> <evt>
+
+# 3. move the output to the suffixed dir the plotters read from
+mv work/<RUN_PADDED>_<EVT> work/<RUN_PADDED>_<EVT>_roidebug
+
+# 4. REVERT the jsonnet (production must stay roi_debug=false)
+sed -i 's/^  roi_debug = true,.*$/  roi_debug = false,/' wct-nf-sp.jsonnet
+```
+
+`--tla-code roi_debug=true` on the wire-cell CLI is **ignored** because
+jsonnet treats the function parameter's default value as taking
+precedence — that's why the source edit is necessary.
+
+The cost is ~4 minutes per event (vs ~1.5 min for the normal path)
+because the SP archive includes 5 extra tag streams per anode.
 
 ### `dump_2d_spectra` — bare-decon 2D spectra dump
 
