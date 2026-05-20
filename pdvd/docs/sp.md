@@ -264,9 +264,12 @@ counterparts to `dumps_sim/sp_dump_*.npz`.
 Use case: directly verifying `decon = input / response` bin-for-bin (the
 ratio `|decon|·|response|/|input|` should be flat = 1 in (k_wire, f_time)),
 and locating notches in `|response|` that get amplified into peaks in
-`|decon|`. The PD-VD V-plane top-CRP `0.0019 MHz` pole investigation lives
-at `DNN_ROI_SP/docs/vplane_low_freq_pole.md`; plotting helper:
-`DNN_ROI_SP/simulation/sp_dump_plot.py`.
+`|decon|`. The PD-VD V-plane top-CRP `0.0019 MHz` pole was traced this way
+and **fixed** in `OmnibusSigProc.cxx:917-946` by replacing the swapped-
+weights linear-interp redigitize with a 5-tap boxcar average; analysis
+record at `DNN_ROI_SP/docs/vplane_low_freq_pole.md`. Plotting helper:
+`DNN_ROI_SP/simulation/sp_dump_plot.py`; end-to-end Python reproducer of
+the pipeline: `DNN_ROI_SP/simulation/toolkit_response_repro.py`.
 
 Off in production (`m_dump_2d_spectra` defaults to `false`).
 
