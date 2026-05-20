@@ -265,23 +265,32 @@ Use case: directly verifying `decon = input / response` bin-for-bin (the
 ratio `|decon|·|response|/|input|` should be flat = 1 in (k_wire, f_time)),
 and locating notches in `|response|` that get amplified into peaks in
 `|decon|`. The PD-VD V-plane top-CRP `0.0019 MHz` pole was traced this way
-and is **partially fixed** — two independent artefacts compound:
-* **Fix 1 (committed)** `OmnibusSigProc.cxx:917-946`: replaced the swapped-
-  weights linear-interp decimation with a 5-tap boxcar average (~8× recovery).
-* **Fix 2 (proposed, not yet in C++)** `OmnibusSigProc.cxx:884-895`: the
-  FR×ER FFT multiply uses a 1331-sample window, but the linear-conv
-  length is 1524, so the toolkit currently runs a **circular** conv whose
-  wraparound destructively suppresses the V crosshair by another ~28× when
-  the top JSON ER is used (the bottom analytic ColdElec is unaffected
-  because it has no sharp cutoff). The fix is to zero-pad both `arr` and
-  `eresp` to a longer window before the rfft. Demonstrated end-to-end in
-  the Python reproducer with `linear_conv=True`.
+and is **fully fixed** by two independent commits to the toolkit:
+* **Fix 1** (toolkit `16097a38`) `OmnibusSigProc.cxx:917-946`: replaced the
+  swapped-weights linear-interp decimation with a textbook recipe (~8×
+  recovery). The initial form used a 5-tap boxcar; later restored to
+  textbook linear-interp once Fix 2 made the decimation method irrelevant.
+* **Fix 2** (toolkit `6c219856`) `OmnibusSigProc.cxx:884-895`: the
+  FR×ER FFT multiply was a 1331-sample circular conv, but the linear-conv
+  length is 1524. The wraparound destructively suppressed the V crosshair
+  by ~28× when the top JSON ER was used (the bottom analytic ColdElec is
+  unaffected because it has no sharp cutoff). The fix pads
+  `fine_nticks` to `fft_best_length(2 × orig)` (~2662 samples for PDVD)
+  before the FFT, making the convolution linear. Verified end-to-end:
+  toolkit V crosshair `|c_resp|` matches the Python pointwise prediction
+  to 5 digits.
+
+**Time-origin caveat**: Fix 2 also restored the textbook linear-interp
+decimation. Relative to the boxcar form of Fix 1, this removes a +200 ns
+implicit FIR delay — the deconvolved waveform shifts +200 ns later.
+Downstream tick-alignment calibrations tuned against the boxcar state
+may need revisiting.
 
 Analysis record at `DNN_ROI_SP/docs/vplane_low_freq_pole.md`. Plotting
 helper: `DNN_ROI_SP/simulation/sp_dump_plot.py`; end-to-end Python
-reproducer of the pipeline (supports both Fix 1 and Fix 2 modes):
-`DNN_ROI_SP/simulation/toolkit_response_repro.py`; decisive linear-conv
-test: `DNN_ROI_SP/simulation/test_linear_conv.py`.
+reproducer of the pipeline (supports the `linear_conv=True` flag to
+match the new C++): `DNN_ROI_SP/simulation/toolkit_response_repro.py`;
+decisive linear-conv test: `DNN_ROI_SP/simulation/test_linear_conv.py`.
 
 Off in production (`m_dump_2d_spectra` defaults to `false`).
 
