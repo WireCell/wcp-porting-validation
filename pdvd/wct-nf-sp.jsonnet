@@ -84,7 +84,12 @@ function(
                     for n in std.range(0, std.length(tools.anodes) - 1)];
 
   local sp_maker = import 'pgrapher/experiment/protodunevd/sp.jsonnet';
-  local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse' }
+  // Diagnostic: dump the 2D (wire x time-freq) input/response/decon spectra
+  // from inside OmnibusSigProc::decon_2D_init() into NPZ files.  Off in
+  // production; enabled here for the V-plane pole investigation.
+  local sp = sp_maker(params, tools, { sparse: sigoutform == 'sparse',
+                                       dump_2d_spectra: true,
+                                       dump_2d_prefix: 'dumps_data/sp_dump' }
     + (if roi_debug
        then { use_roi_debug_mode: true, use_multi_plane_protection: true, mp_tick_resolution: 4 }
        else {}));

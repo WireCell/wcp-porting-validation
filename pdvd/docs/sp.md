@@ -235,6 +235,41 @@ Setting `use_roi_debug_mode: true` in `sp.jsonnet:86` causes
 These are not written to the SP archive by default. To capture them,
 add the tags to the `FrameFileSink` in `wct-nf-sp.jsonnet:76–91`.
 
+### `dump_2d_spectra` — bare-decon 2D spectra dump
+
+A second, independent diagnostic knob writes the 2D (k_wire, f_time) complex
+spectra captured inside `OmnibusSigProc::decon_2D_init()` to disk, one NPZ
+per (anode, plane). Three arrays per file, all on the *exact same*
+`(m_fft_nwires × m_fft_nticks)` grid SP uses internally:
+
+| key | content |
+|-----|---------|
+| `input`    | SP input spectrum (post-NF), after time-FFT and wire-FFT, BEFORE division by the response |
+| `response` | Overall response (field × electronics) spectrum on the same grid — the exact divisor in deconvolution |
+| `decon`    | After-division spectrum (bare decon; HF/Wiener/LF filters not yet applied) |
+
+Enable in `sp_maker` override (see `wct-nf-sp.jsonnet:87`):
+
+```jsonnet
+local sp = sp_maker(params, tools, { sparse: ...,
+                                     dump_2d_spectra: true,
+                                     dump_2d_prefix: 'dumps_data/sp_dump' });
+```
+
+Files land at `<dump_2d_prefix>_anode<N>_plane{U,V,W}.npz` relative to the
+wire-cell run cwd. The complementary Stage B side in
+`DNN_ROI_SP/simulation/stageB/wct-depo-sim-deposplat.jsonnet` writes its sim
+counterparts to `dumps_sim/sp_dump_*.npz`.
+
+Use case: directly verifying `decon = input / response` bin-for-bin (the
+ratio `|decon|·|response|/|input|` should be flat = 1 in (k_wire, f_time)),
+and locating notches in `|response|` that get amplified into peaks in
+`|decon|`. The PD-VD V-plane top-CRP `0.0019 MHz` pole investigation lives
+at `DNN_ROI_SP/docs/vplane_low_freq_pole.md`; plotting helper:
+`DNN_ROI_SP/simulation/sp_dump_plot.py`.
+
+Off in production (`m_dump_2d_spectra` defaults to `false`).
+
 ## Output archive
 
 ```jsonnet
