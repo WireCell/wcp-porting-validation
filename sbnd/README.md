@@ -56,6 +56,7 @@ time lar --nskip 0 -n 1 -c wcls-img-clus.fcl -s standalone-sample/2025f-mc.root 
 ../upload-to-bee.sh mabc-apa0-face0.zip
 ../upload-to-bee.sh mabc-apa1-face0.zip
 
+rm -rf data-sep
 time lar --nskip 0 -n 1 -c wcls-img-clus-matching.fcl -s standalone-sample/2025f-mc.root --no-output >& wcls-img-clus-matching.log
 # process clustering output
 python merge-zip.py merged.zip "mabc-*.zip"
