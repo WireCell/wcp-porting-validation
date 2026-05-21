@@ -52,6 +52,8 @@ Options:
   -X <basename>  If set, the C++ DNN node dumps {basename}_anode{N}_call{K}.pt
                  (model input + output + meta) for each call.  Use with
                  DNN_ROI_SP/scripts/verify_wirecell_dnn.py.
+  -T <thresh>    DNN sigmoid binarization threshold passed as
+                 --tla-code dnnroi_mask_thresh=<val>.  Default: 0.2.
   -h             Show this help.
 
 Input:  input_data/<run_dir>/<evt_dir>/protodune-orig-frames-anode{0..7}.tar.bz2
@@ -67,6 +69,7 @@ PRESET="fp32"
 MODEL=""
 MODEL_EXPLICIT=0
 DEBUG_BASE=""
+MASK_THRESH="0.2"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -83,6 +86,8 @@ while [ $# -gt 0 ]; do
         -M*) MODEL="${1#-M}"; MODEL_EXPLICIT=1; shift ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
         -X*) DEBUG_BASE="${1#-X}"; shift ;;
+        -T) MASK_THRESH="$2"; shift 2 ;;
+        -T*) MASK_THRESH="${1#-T}"; shift ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) _args+=("$1"); shift ;;
     esac
@@ -162,6 +167,7 @@ echo "reality:     ${REALITY}"
 echo "device:      ${DEVICE}"
 echo "model:       ${MODEL}"
 echo "anodes:      ${ANODE_CODE}"
+echo "mask_thresh: ${MASK_THRESH}"
 echo "Log:         $LOG"
 
 # Resolve debug-dump basename to an absolute path under WORKDIR if relative.
@@ -200,6 +206,7 @@ wire-cell \
     --tla-code anode_indices="${ANODE_CODE}" \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
+    --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
     "${DBG_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!

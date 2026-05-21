@@ -64,7 +64,7 @@ function(
   dnnroi_nticks = 6000,
   dnnroi_tick_per_slice = 4,                // training rebin=4
   dnnroi_output_scale = 1.0,
-  dnnroi_mask_thresh = 0.5,
+  dnnroi_mask_thresh = 0.2,
   dnnroi_nchunks = 1,
   dnnroi_debugfile = '',   // if non-empty, C++ node dumps per-call .pt
 

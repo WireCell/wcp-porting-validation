@@ -63,6 +63,8 @@ Options:
   -X <basename>  If set, the C++ DNN node dumps {basename}_anode{N}_call{K}.pt
                  (containing model input + output + meta) for each call.
                  Use with scripts/verify_wirecell_dnn.py in DNN_ROI_SP.
+  -T <thresh>    DNN sigmoid binarization threshold passed as
+                 --tla-code dnnroi_mask_thresh=<val>.  Default: 0.2.
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -88,6 +90,7 @@ NCHAN=""
 NCHAN_EXPLICIT=0
 L1SP="on"
 DEBUG_BASE=""
+MASK_THRESH="0.2"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -102,6 +105,7 @@ while [ $# -gt 0 ]; do
         -n) NCHAN="$2"; NCHAN_EXPLICIT=1; shift 2 ;;
         -L) L1SP="$2"; shift 2 ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
+        -T) MASK_THRESH="$2"; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -197,6 +201,7 @@ echo "model:       ${MODEL}"
 echo "mode:        ${MODE}"
 echo "nchan:       ${NCHAN}"
 echo "L1SP:        ${L1SP}"
+echo "mask_thresh: ${MASK_THRESH}"
 echo "Log:         $LOG"
 echo "Time log:    $TIME_LOG"
 echo "GPU CSV:     $GPU_CSV"
@@ -244,6 +249,7 @@ wire-cell \
     --tla-str dnnroi_mode="${MODE}" \
     --tla-code dnnroi_nchan="${NCHAN}" \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
+    --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
     "${DBG_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
