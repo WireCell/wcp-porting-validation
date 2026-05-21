@@ -42,8 +42,13 @@ function(
 
   // DNN-ROI specific
   use_dnnroi    = true,
-  dnnroi_model  = 'dnnroi/pdvd/pipe_distill_nestedunet_6ch.ts',  // FP32 best KD; resolved via WIRECELL_PATH
-  dnnroi_device = 'cpu',                    // 'cpu' or 'gpu'
+  // Default = FP32 best KD (6-ch).  Resolved via WIRECELL_PATH.
+  //   FP32 best KD:    pipe_distill_nestedunet_6ch.ts        (Dice 0.7816)
+  //   INT8 best QAT:   pipe_qat_nestedunet_6ch_ep0_int8.ts   (Dice 0.7797, CPU only)
+  // The shell wrapper run_nf_sp_dnnroi_evt.sh -P fp32|int8 sets this via tla-str.
+  dnnroi_model  = 'dnnroi/pdvd/pipe_distill_nestedunet_6ch.ts',
+  // dnnroi_model = 'dnnroi/pdvd/pipe_qat_nestedunet_6ch_ep0_int8.ts',  // INT8: requires dnnroi_device='cpu'
+  dnnroi_device = 'cpu',                    // 'cpu' or 'gpu'.  INT8 graph is CPU-only.
   dnnroi_nchan  = 6,                        // PDVD 6-ch deployment (DAGMan 287)
   dnnroi_concurrency = 1,
   dnnroi_nticks = 6000,

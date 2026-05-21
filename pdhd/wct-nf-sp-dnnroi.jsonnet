@@ -51,9 +51,15 @@ function(
   use_dnnroi    = true,
   dnnroi_mode   = 'pp',                     // 'pp' = per-plane sequential (default)
                                             // 'mp' = stacked multi-plane (legacy)
-  dnnroi_model  = 'dnnroi/pdhd/CP43.ts',    // resolved via WIRECELL_PATH
-  dnnroi_device = 'cpu',                    // 'cpu' or 'gpu'
-  dnnroi_nchan  = 3,                        // 3 = CP43.ts; 6 = 6-ch KD/QAT models
+  // Default = FP32 best KD (6-ch).  Resolved via WIRECELL_PATH.
+  //   FP32 best KD:    pipe_distill_transformer_6ch.ts       (Dice 0.9107)
+  //   INT8 best QAT:   pipe_qat_transformer_6ch_int8.ts      (Dice 0.8900, CPU only)
+  //   Legacy 3-ch:     CP43.ts                               (also set dnnroi_nchan=3)
+  // The shell wrapper run_nf_sp_dnnroi_evt.sh -P fp32|int8 sets this via tla-str.
+  dnnroi_model  = 'dnnroi/pdhd/pipe_distill_transformer_6ch.ts',
+  // dnnroi_model = 'dnnroi/pdhd/pipe_qat_transformer_6ch_int8.ts',  // INT8: requires dnnroi_device='cpu'
+  dnnroi_device = 'cpu',                    // 'cpu' or 'gpu'.  INT8 graph is CPU-only.
+  dnnroi_nchan  = 6,                        // 6 = production KD/QAT models; 3 = legacy CP43.ts
   dnnroi_concurrency = 1,
   dnnroi_nticks = 6000,
   dnnroi_tick_per_slice = 4,                // training rebin=4
