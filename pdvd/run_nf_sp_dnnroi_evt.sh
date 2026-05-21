@@ -39,9 +39,16 @@ Options:
   -r <reality>   'data' (default): inserts the 512->500 ns Resampler on the
                  bottom anodes (n<4) before NF.  'sim': skips it.
   -D <device>    'cpu' (default) or 'gpu' for TorchService.  The QAT INT8
-                 model is CPU-only.
+                 model is CPU-only; -P int8 forces -D cpu.
+  -P <preset>    'fp32' (default) or 'int8'.  Selects the production
+                 deployable for the current 6-ch PDVD campaign:
+                   fp32 -> dnnroi/pdvd/pipe_distill_nestedunet_6ch.ts
+                           (best FP32 KD; held-out Dice 0.7816)
+                   int8 -> dnnroi/pdvd/pipe_qat_nestedunet_6ch_ep0_int8.ts
+                           (best INT8 QAT; Dice 0.7797, -0.27% vs FP32)
+                 -M overrides the preset's model path.
   -M <model>     TorchScript model path (resolved via WIRECELL_PATH).
-                 Default: dnnroi/pdvd/kd_distill_transformer_4ch.ts
+                 Overrides -P.  Default: see -P fp32 above.
   -X <basename>  If set, the C++ DNN node dumps {basename}_anode{N}_call{K}.pt
                  (model input + output + meta) for each call.  Use with
                  DNN_ROI_SP/scripts/verify_wirecell_dnn.py.
@@ -54,8 +61,11 @@ EOF
 
 ANODE=""
 REALITY="data"
+DEVICE_EXPLICIT=0
 DEVICE="cpu"
-MODEL="dnnroi/pdvd/kd_distill_transformer_4ch.ts"
+PRESET="fp32"
+MODEL=""
+MODEL_EXPLICIT=0
 DEBUG_BASE=""
 _args=()
 while [ $# -gt 0 ]; do
@@ -65,10 +75,12 @@ while [ $# -gt 0 ]; do
         -a*) ANODE="${1#-a}"; shift ;;
         -r) REALITY="$2"; shift 2 ;;
         -r*) REALITY="${1#-r}"; shift ;;
-        -D) DEVICE="$2"; shift 2 ;;
-        -D*) DEVICE="${1#-D}"; shift ;;
-        -M) MODEL="$2"; shift 2 ;;
-        -M*) MODEL="${1#-M}"; shift ;;
+        -D) DEVICE="$2"; DEVICE_EXPLICIT=1; shift 2 ;;
+        -D*) DEVICE="${1#-D}"; DEVICE_EXPLICIT=1; shift ;;
+        -P) PRESET="$2"; shift 2 ;;
+        -P*) PRESET="${1#-P}"; shift ;;
+        -M) MODEL="$2"; MODEL_EXPLICIT=1; shift 2 ;;
+        -M*) MODEL="${1#-M}"; MODEL_EXPLICIT=1; shift ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
         -X*) DEBUG_BASE="${1#-X}"; shift ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
@@ -76,6 +88,22 @@ while [ $# -gt 0 ]; do
     esac
 done
 set -- "${_args[@]}"
+
+if [ "$MODEL_EXPLICIT" = "0" ]; then
+    case "$PRESET" in
+        fp32) MODEL="dnnroi/pdvd/pipe_distill_nestedunet_6ch.ts" ;;
+        int8)
+            MODEL="dnnroi/pdvd/pipe_qat_nestedunet_6ch_ep0_int8.ts"
+            if [ "$DEVICE_EXPLICIT" = "0" ]; then
+                DEVICE="cpu"
+            elif [ "$DEVICE" != "cpu" ]; then
+                echo "[err] -P int8 requires -D cpu (INT8 graph is CPU-only)" >&2
+                exit 1
+            fi
+            ;;
+        *) echo "[err] -P must be 'fp32' or 'int8' (got '$PRESET')" >&2; exit 1 ;;
+    esac
+fi
 
 if [ $# -eq 0 ]; then
     list_runs; exit 0

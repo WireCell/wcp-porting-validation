@@ -33,13 +33,22 @@ Options:
                  the model was trained on APA0 data).
   -g <elecGain>  FE amplifier gain in mV/fC. Default: 14.
   -r <reality>   'data' (default) or 'sim'.
-  -D <device>    'cpu' (default) or 'gpu' for TorchService.
+  -D <device>    'cpu' (default) or 'gpu' for TorchService.  The QAT INT8
+                 model is CPU-only; -P int8 forces -D cpu.
+  -P <preset>    'fp32' (default) or 'int8'.  Selects the production
+                 deployable for the current 6-ch PDHD campaign:
+                   fp32 -> dnnroi/pdhd/pipe_distill_transformer_6ch.ts
+                           (best FP32 KD; held-out Dice 0.9107)
+                   int8 -> dnnroi/pdhd/pipe_qat_transformer_6ch_int8.ts
+                           (best INT8 QAT; Dice 0.8900)
+                 Both presets set -n 6 by default; -M and -n still override.
   -M <model>     TorchScript model path (resolved via WIRECELL_PATH).
-                 Default: dnnroi/pdhd/CP43.ts
-  -n <3|6>       Input channels the model expects. 3 (default) = original
-                 CP43.ts; 6 = the 6-channel KD/QAT models. Selects the
-                 input tag set and input_scale (6-ch models bake per-channel
-                 normalization into the .ts, so they run with input_scale=1).
+                 Overrides -P.  Pass `-M dnnroi/pdhd/CP43.ts -n 3` to run
+                 the legacy 3-ch model.
+  -n <3|6>       Input channels the model expects. Overrides -P's default
+                 (6).  3 = legacy CP43.ts.  6-channel models bake
+                 per-channel normalization into the .ts, so they run with
+                 input_scale=1.
   -m <mode>      DNN-ROI wiring mode: 'pp' (per-plane sequential, default)
                  or 'mp' (stacked multi-plane, legacy).  Per-plane halves
                  peak activation memory by feeding U and V to the model
@@ -70,9 +79,13 @@ ANODE="0"
 ELEC_GAIN="14"
 REALITY="data"
 DEVICE="cpu"
-MODEL="dnnroi/pdhd/CP43.ts"
+DEVICE_EXPLICIT=0
+PRESET="fp32"
+MODEL=""
+MODEL_EXPLICIT=0
 MODE="pp"
-NCHAN="3"
+NCHAN=""
+NCHAN_EXPLICIT=0
 L1SP="on"
 DEBUG_BASE=""
 
@@ -82,10 +95,11 @@ while [ $# -gt 0 ]; do
         -a) ANODE="$2"; shift 2 ;;
         -g) ELEC_GAIN="$2"; shift 2 ;;
         -r) REALITY="$2"; shift 2 ;;
-        -D) DEVICE="$2"; shift 2 ;;
-        -M) MODEL="$2"; shift 2 ;;
+        -D) DEVICE="$2"; DEVICE_EXPLICIT=1; shift 2 ;;
+        -P) PRESET="$2"; shift 2 ;;
+        -M) MODEL="$2"; MODEL_EXPLICIT=1; shift 2 ;;
         -m) MODE="$2"; shift 2 ;;
-        -n) NCHAN="$2"; shift 2 ;;
+        -n) NCHAN="$2"; NCHAN_EXPLICIT=1; shift 2 ;;
         -L) L1SP="$2"; shift 2 ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
         --) shift; break ;;
@@ -93,6 +107,28 @@ while [ $# -gt 0 ]; do
         *) break ;;
     esac
 done
+
+if [ "$MODEL_EXPLICIT" = "0" ]; then
+    case "$PRESET" in
+        fp32) MODEL="dnnroi/pdhd/pipe_distill_transformer_6ch.ts" ;;
+        int8)
+            MODEL="dnnroi/pdhd/pipe_qat_transformer_6ch_int8.ts"
+            if [ "$DEVICE_EXPLICIT" = "0" ]; then
+                DEVICE="cpu"
+            elif [ "$DEVICE" != "cpu" ]; then
+                echo "[err] -P int8 requires -D cpu (INT8 graph is CPU-only)" >&2
+                exit 1
+            fi
+            ;;
+        *) echo "[err] -P must be 'fp32' or 'int8' (got '$PRESET')" >&2; exit 1 ;;
+    esac
+fi
+if [ "$NCHAN_EXPLICIT" = "0" ]; then
+    case "$MODEL" in
+        *CP43.ts) NCHAN="3" ;;
+        *)        NCHAN="6" ;;
+    esac
+fi
 
 case "$MODE" in
     pp|mp) ;;

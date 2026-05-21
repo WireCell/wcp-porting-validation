@@ -42,9 +42,9 @@ function(
 
   // DNN-ROI specific
   use_dnnroi    = true,
-  dnnroi_model  = 'dnnroi/pdvd/kd_distill_transformer_4ch.ts',  // resolved via WIRECELL_PATH
+  dnnroi_model  = 'dnnroi/pdvd/pipe_distill_nestedunet_6ch.ts',  // FP32 best KD; resolved via WIRECELL_PATH
   dnnroi_device = 'cpu',                    // 'cpu' or 'gpu'
-  dnnroi_nchan  = 4,                        // PDVD models are 4-channel
+  dnnroi_nchan  = 6,                        // PDVD 6-ch deployment (DAGMan 287)
   dnnroi_concurrency = 1,
   dnnroi_nticks = 6000,
   dnnroi_tick_per_slice = 4,                // training rebin=4
