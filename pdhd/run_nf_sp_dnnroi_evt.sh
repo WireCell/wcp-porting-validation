@@ -65,6 +65,12 @@ Options:
                  Use with scripts/verify_wirecell_dnn.py in DNN_ROI_SP.
   -T <thresh>    DNN sigmoid binarization threshold passed as
                  --tla-code dnnroi_mask_thresh=<val>.  Default: 0.2.
+  -w <wf_dir>    Enable L1SP per-ROI waveform dump (requires -L on).  Writes
+                 one NPZ per ROI under <wf_dir>/<RUN_PADDED>_<EVT>/apa<N>_*/.
+                 Auto-enables dump-all-rois unless overridden by -A.
+  -A <on|off>    Override dump-all-rois (default: on when -w is set, off
+                 otherwise).  When on, every ROI is dumped, not just the
+                 L1SP-triggered ones.
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -91,6 +97,9 @@ NCHAN_EXPLICIT=0
 L1SP="on"
 DEBUG_BASE=""
 MASK_THRESH="0.2"
+WF_DUMP_DIR=""
+DUMP_ALL_ROIS=""
+DUMP_ALL_EXPLICIT=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -106,6 +115,8 @@ while [ $# -gt 0 ]; do
         -L) L1SP="$2"; shift 2 ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
         -T) MASK_THRESH="$2"; shift 2 ;;
+        -w) WF_DUMP_DIR="$2"; shift 2 ;;
+        -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -202,6 +213,37 @@ echo "mode:        ${MODE}"
 echo "nchan:       ${NCHAN}"
 echo "L1SP:        ${L1SP}"
 echo "mask_thresh: ${MASK_THRESH}"
+
+# L1SP dump-mode wiring (mirrors run_nf_sp_evt.sh -w):
+#   -w sets dump_mode='dump' + wf_dump_path; auto-enables dump_all_rois.
+L1SP_DUMP_TLA=()
+if [ -n "$WF_DUMP_DIR" ]; then
+    if [ "$L1SP" != "on" ]; then
+        echo "[err] -w requires -L on (L1SP must run to emit dumps)" >&2; exit 1
+    fi
+    case "$WF_DUMP_DIR" in
+        /*) WF_ABS="$WF_DUMP_DIR" ;;
+        *)  WF_ABS="$PDHD_DIR/$WF_DUMP_DIR" ;;
+    esac
+    WF_EVT_DIR="$WF_ABS/${RUN_PADDED}_${EVT}"
+    mkdir -p "$WF_EVT_DIR"
+    if [ "$DUMP_ALL_EXPLICIT" = "0" ]; then DUMP_ALL_ROIS="on"; fi
+    case "$DUMP_ALL_ROIS" in
+        on)  DUMP_ALL_TLA="true" ;;
+        off) DUMP_ALL_TLA="false" ;;
+        *)   echo "[err] -A must be 'on' or 'off'" >&2; exit 1 ;;
+    esac
+    # NB: do NOT set l1sp_pd_mode='dump' here.  Per-ROI waveform NPZ writes
+    # happen in process mode as a side effect of LASSO write-back; 'dump'
+    # mode skips the LASSO fit and writes only the calibration NPZ.  This
+    # mirrors run_nf_sp_evt.sh -w (process + waveform dump).
+    L1SP_DUMP_TLA=(--tla-str l1sp_pd_wf_dump_path="$WF_EVT_DIR" \
+                   --tla-code l1sp_pd_dump_all_rois="$DUMP_ALL_TLA")
+    echo "L1SP dump:   $WF_EVT_DIR (dump_all_rois=$DUMP_ALL_ROIS)"
+elif [ "$DUMP_ALL_EXPLICIT" = "1" ]; then
+    echo "[warn] -A given without -w; ignoring (nothing to dump)" >&2
+fi
+
 echo "Log:         $LOG"
 echo "Time log:    $TIME_LOG"
 echo "GPU CSV:     $GPU_CSV"
@@ -251,6 +293,7 @@ wire-cell \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
     --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
     "${DBG_TLA[@]}" \
+    "${L1SP_DUMP_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

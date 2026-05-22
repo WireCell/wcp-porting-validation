@@ -186,7 +186,11 @@ function(
       then [l1sp_dnn_maker(tools.anodes[n], sp_pipes[n], dnnroi_inner_pipes[n],
                            tools, params,
                            l1sp_pd_adj_enable=l1sp_pd_adj_enable,
-                           l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops)]
+                           l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                           l1sp_pd_dump_mode=l1sp_pd_mode,
+                           l1sp_pd_dump_path=l1sp_pd_dump_path,
+                           l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
+                           l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois)]
       else [sp_pipes[n]]
            + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
 
