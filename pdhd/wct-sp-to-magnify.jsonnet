@@ -51,7 +51,7 @@ function(
   event             = 0,
   // Used only for Trun's total_time_bin metadata; TH2F binning is driven by the
   // actual frame shape from FrameFileSource.  Callers should pass the real frame
-  // tick count extracted from frame_gauss0_*.npy.
+  // tick count extracted from frame_gauss0_*.npy or frame_dnnsp0_*.npy.
   nticks            = 6000,
   include_raw       = true,
   raw_input_prefix  = 'protodunehd-sp-frames-raw',
@@ -61,6 +61,10 @@ function(
   // when the SP frame archive carries the rawdecon%d tag (i.e. wct-nf-sp.jsonnet
   // ran with dump_rawdecon=true).
   include_rawdecon  = false,
+  // Set true when the dnnroi archive was produced with L1SP off (carries dnnsp%d
+  // tags instead of gauss%d/wiener%d).  dnnsp%d is re-tagged to gauss%d so
+  // MagnifySink writes the standard hu/hv/hw_gauss%d histograms.
+  use_dnnsp         = false,
 )
   local anodes  = [tools_all.anodes[i] for i in anode_indices];
   local nanodes = std.length(anodes);
@@ -82,22 +86,27 @@ function(
       name: 'frame_source_anode%d' % aid,
       data: {
         inname: '%s-anode%d.tar.bz2' % [input_prefix, aid],
-        tags: ['gauss%d' % aid, 'wiener%d' % aid]
-              + (if include_rawdecon then ['rawdecon%d' % aid] else []),
+        tags: if use_dnnsp
+              then ['dnnsp%d' % aid]
+              else ['gauss%d' % aid, 'wiener%d' % aid]
+                   + (if include_rawdecon then ['rawdecon%d' % aid] else []),
       },
     }, nin=0, nout=1);
-    // Retagger duplicates wiener<N> → [wiener<N>, threshold<N>] so
-    // MagnifySink can write h[uvw]_threshold<N> TH1F (Magnify expects that name).
+    // Retagger: for L1SP-on, duplicate wiener<N> → [wiener<N>, threshold<N>].
+    // For L1SP-off (use_dnnsp), re-tag dnnsp<N> → gauss<N> so MagnifySink writes
+    // the standard hu/hv/hw_gauss<N> histograms.
     local retag = g.pnode({
       type: 'Retagger',
       name: 'retagger_anode%d' % aid,
       data: {
         tag_rules: [{
           frame: { '.*': '' },
-          trace: {
-            ['gauss%d' % aid]: 'gauss%d' % aid,
-            ['wiener%d' % aid]: ['wiener%d' % aid, 'threshold%d' % aid],
-          } + (if include_rawdecon then { ['rawdecon%d' % aid]: 'rawdecon%d' % aid } else {}),
+          trace: if use_dnnsp
+                 then { ['dnnsp%d' % aid]: 'gauss%d' % aid }
+                 else {
+                   ['gauss%d' % aid]: 'gauss%d' % aid,
+                   ['wiener%d' % aid]: ['wiener%d' % aid, 'threshold%d' % aid],
+                 } + (if include_rawdecon then { ['rawdecon%d' % aid]: 'rawdecon%d' % aid } else {}),
         }],
       },
     }, nin=1, nout=1);
