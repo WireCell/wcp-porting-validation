@@ -1,13 +1,13 @@
 """Bokeh hand-scan viewer for Stage-A round-1 candidates.
 
 Reads the artifacts written by ``code/inference/score_full_corpus.py`` and
-serves a clickable review tool:
+serves a clickable review tool. Layout is a single scrollable column:
 
   - Threshold slider over the data-corpus score, filtering the scan pool.
   - Score histogram with markers at the threshold and current ROI.
-  - Raw + decon waveforms (from consolidated data.h5) side-by-side.
+  - Raw + decon waveforms (from consolidated data.h5) stacked vertically.
   - Yes / No / Unsure buttons → append a row to handscan_round1.csv.
-  - Labels tab with a DataTable of everything labeled so far.
+  - Labels summary + DataTable of everything labeled so far, below the scan.
 
 Round-1 constraint: only train-split ROIs are scannable; val and test
 rows are blocked at the viewer level to keep them genuinely held out for
@@ -22,6 +22,14 @@ To view from a remote laptop::
 
     ssh -L 5008:localhost:5008 user@workstation
     # then http://localhost:5008/handscan_viewer
+
+Bokeh 3.9 quirks the viewer works around (do not re-introduce without
+testing): a ``Tabs`` wrapper triggers a SlickGrid render crash that
+silently blanks the figures, so the layout is a single column;
+``DataTable(autosize_mode="fit_columns")`` triggers a JS
+``ReferenceError: row is not defined`` in the bundled SlickGrid, so
+``autosize_mode="none"`` is used; and ``DataRange1d.start = None`` is no
+longer accepted as a reset.
 """
 from __future__ import annotations
 
@@ -49,8 +57,6 @@ from bokeh.models import (
     Slider,
     Span,
     TableColumn,
-    TabPanel,
-    Tabs,
     TextInput,
 )
 from bokeh.plotting import figure
@@ -276,7 +282,7 @@ def main(argv: list[str]) -> None:
         columns=[TableColumn(field=c, title=c) for c in
                  ["labeled_at_iso", "run", "event", "plane", "channel",
                   "score", "real", "type", "holdout", "note", "labeler"]],
-        height=520, sizing_mode="stretch_width", autosize_mode="fit_columns",
+        height=520, sizing_mode="stretch_width", autosize_mode="none",
     )
     labels_summary = Div(text="", sizing_mode="stretch_width")
     export_btn = Button(label="Export snapshot CSV", width=200)
@@ -408,9 +414,6 @@ def main(argv: list[str]) -> None:
         else:
             f_dec.title.text = "decon"
             f_dec.title.text_color = "black"
-            # let auto-range take over
-            f_dec.y_range.start = None
-            f_dec.y_range.end = None
             dec_note = (f"&nbsp; decon nonzero {dec_nz}/{n}")
         labels_now = labeled_by_real()
         prior_real = labels_now.get(int(ridx))
@@ -587,29 +590,24 @@ def main(argv: list[str]) -> None:
                      undo_btn, sizing_mode="stretch_width")
     meta_row = row(type_select, holdout_cb, labeler_input,
                    sizing_mode="stretch_width")
-    scan_tab = TabPanel(
-        title="Scan",
-        child=column(
-            title_div,
-            top_row, stats_div, jump_row,
-            f_hist,
-            f_raw, f_dec,
-            info_div, warn_div,
-            button_row,
-            meta_row, note_input,
-            sizing_mode="stretch_width",
-        ),
+    labels_section_header = Div(
+        text="<hr><h3>Labels so far</h3>", sizing_mode="stretch_width")
+    layout = column(
+        title_div,
+        top_row, stats_div, jump_row,
+        f_hist,
+        f_raw, f_dec,
+        info_div, warn_div,
+        button_row,
+        meta_row, note_input,
+        labels_section_header,
+        labels_summary, export_btn, labels_table,
+        sizing_mode="stretch_width",
     )
-    labels_tab = TabPanel(
-        title="Labels",
-        child=column(labels_summary, export_btn, labels_table,
-                     sizing_mode="stretch_width"),
-    )
-    tabs = Tabs(tabs=[scan_tab, labels_tab])
 
     reload_view()
 
-    curdoc().add_root(tabs)
+    curdoc().add_root(layout)
     curdoc().title = "L1SP hand-scan round 1"
 
 
