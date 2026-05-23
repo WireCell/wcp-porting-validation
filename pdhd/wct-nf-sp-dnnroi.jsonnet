@@ -117,8 +117,18 @@ function(
                          then { use_roi_debug_mode: true, use_multi_plane_protection: true }
                          else {});
   local sp = sp_maker(params, tools, sp_override);
+  // When DNN-ROI is in the chain, sp_pipes must NOT include an
+  // L1SPFilterPD node: L1SP belongs strictly AFTER DNN-ROI, inside the
+  // l1sp_after_dnnroi envelope.  An L1SP node placed before DNN-ROI
+  // drops the SP auxiliary tags (decon_charge, loose_lf, mp2_roi,
+  // mp3_roi, tight_lf) that DNN-ROI's 6-channel input model needs, so
+  // DNN-ROI ends up fed mostly zeros and outputs zero on the U/V planes
+  // it's responsible for.  Forcing l1sp_pd_mode='' here keeps
+  // sp.make_sigproc emitting bare SP only.  When DNN-ROI is bypassed
+  // (use_dnnroi=false), fall back to the legacy mix that lets l1sp run
+  // inside sp_pipes if the caller requested it.
   local sp_pipes = [sp.make_sigproc(a,
-                                    l1sp_pd_mode=l1sp_pd_mode,
+                                    l1sp_pd_mode=if use_dnnroi then '' else l1sp_pd_mode,
                                     l1sp_pd_dump_path=l1sp_pd_dump_path,
                                     l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
                                     l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,

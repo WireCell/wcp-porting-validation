@@ -81,6 +81,18 @@ Options:
   -A <on|off>    Override dump-all-rois (default: on when -w is set, off
                  otherwise).  When on, every ROI is dumped, not just the
                  L1SP-triggered ones.
+  -O <suffix>    Append <suffix> to the work-dir name so A/B comparison
+                 runs can live side-by-side without overwriting each
+                 other.  Default: '' (work/<RUN>_<EVT>/).  Example:
+                 '-O _noL1SP' writes to work/<RUN>_<EVT>_noL1SP/.
+  -Z <dir>       Write per-ROI L1SP-DNN debug NPZ under <dir>/.  Each
+                 anode writes one dnn_<tag>_<call>_<ident>.npz file
+                 with arrays: channel, plane, roi_start, roi_end,
+                 polarity, fired, score, wave (N,2,nbin), scalars
+                 (N,29), threshold[0], window_ticks[0].  Consumed by
+                 code/inference/diagnose_l1sp_dnn.py.  Requires
+                 -N dnn; ignored otherwise.  Relative paths resolve
+                 under the work dir.
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -111,6 +123,8 @@ MASK_THRESH="0.2"
 WF_DUMP_DIR=""
 DUMP_ALL_ROIS=""
 DUMP_ALL_EXPLICIT=0
+WORK_SUFFIX=""
+DNN_DEBUG_DIR=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -129,6 +143,8 @@ while [ $# -gt 0 ]; do
         -T) MASK_THRESH="$2"; shift 2 ;;
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
+        -O) WORK_SUFFIX="$2"; shift 2 ;;
+        -Z) DNN_DEBUG_DIR="$2"; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -220,7 +236,7 @@ if ! ls "$EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >/dev/null 2>&1;
     exit 2
 fi
 
-WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}"
+WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
 mkdir -p "$WORKDIR"
 LOG="$WORKDIR/wct_nfspdnn_${RUN_PADDED}_${EVT}_a${ANODE}.log"
 TIME_LOG="$WORKDIR/time_${RUN_PADDED}_${EVT}_a${ANODE}.txt"
@@ -270,6 +286,18 @@ echo "Log:         $LOG"
 echo "Time log:    $TIME_LOG"
 echo "GPU CSV:     $GPU_CSV"
 
+# Resolve L1SP-DNN per-ROI debug dir to an absolute path under WORKDIR if relative.
+L1SP_DNN_DBG_TLA=()
+if [ -n "$DNN_DEBUG_DIR" ]; then
+    case "$DNN_DEBUG_DIR" in
+        /*) DNN_DBG_ABS="$DNN_DEBUG_DIR" ;;
+        *)  DNN_DBG_ABS="$WORKDIR/$DNN_DEBUG_DIR" ;;
+    esac
+    mkdir -p "$DNN_DBG_ABS"
+    L1SP_DNN_DBG_TLA=(--tla-str l1sp_pd_dnn_debug_path="$DNN_DBG_ABS")
+    echo "L1SP-DNN debug: $DNN_DBG_ABS"
+fi
+
 # Resolve debug-dump basename to an absolute path under WORKDIR if relative.
 DBG_TLA=()
 if [ -n "$DEBUG_BASE" ]; then
@@ -317,6 +345,7 @@ wire-cell \
     --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
     "${DBG_TLA[@]}" \
     "${L1SP_DUMP_TLA[@]}" \
+    "${L1SP_DNN_DBG_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

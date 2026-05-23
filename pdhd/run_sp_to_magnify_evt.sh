@@ -31,6 +31,7 @@ FORCE_INPUT_DATA=""
 INCLUDE_RAWDECON=0
 INCLUDE_DECON=0
 USE_DNNROI="off"
+WORK_SUFFIX=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -39,6 +40,7 @@ while [ $# -gt 0 ]; do
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -R) INCLUDE_RAWDECON=1; INCLUDE_DECON=1; shift ;;   # rawdecon+decon TH2 in magnify (special mode)
         -d) USE_DNNROI="$2"; shift 2 ;;
+        -O) WORK_SUFFIX="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -110,7 +112,7 @@ process_event() {
             echo "[skip] run=$RUN evt=$EVT: no event dir found under input_data/" >&2
             return 2
         fi
-        WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}"
+        WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
     fi
     echo "Event dir: $EVTDIR"
 
