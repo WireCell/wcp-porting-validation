@@ -145,6 +145,12 @@ function(
   // wiener%d (= SP Wiener, carrying the per-channel threshold summary).
   // When use_l1sp_dnn=true, also include raw%d so the L1SP-modified frame's
   // raw channel survives to the archive.
+  // When use_l1sp_dnn=false, the post-DNN frame only carries the DNN-ROI
+  // output (no wiener traces — they live upstream in SP and are not
+  // propagated by the inner subgraph) so we save just gauss%d.  The
+  // dnnsp_to_gauss_retag below renames the inner subgraph's dnnsp%d trace
+  // tag to gauss%d so this sink config matches what downstream Magnify
+  // expects.
   local final_frame_sink = function(n)
     g.pnode({
       type: 'FrameFileSink',
@@ -153,11 +159,27 @@ function(
         outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
         tags: if use_l1sp_dnn
               then ['gauss%d' % n, 'wiener%d' % n, 'raw%d' % n]
-              else ['gauss%d' % n, 'wiener%d' % n],
+              else ['gauss%d' % n],
         digitize: false,
         masks: true,
       },
     }, nin=1, nout=0);
+
+  // Rename the inner DNN-ROI subgraph's unified trace tag dnnsp%d → gauss%d
+  // for the L1SP-off path so Magnify's expectation (gauss%d = DNN-ROI
+  // output) is met without changing the canonical dnnroi_pp.jsonnet
+  // (which other chains, including the L1SP-after-DNN envelope, depend on).
+  local dnn_to_gauss_retag = function(n)
+    g.pnode({
+      type: 'Retagger',
+      name: 'dnnsp_to_gauss%d' % n,
+      data: {
+        tag_rules: [{
+          frame: { ['dnnsp%d' % n]: 'gauss%d' % n },
+          merge: { ['dnnsp%d' % n]: 'gauss%d' % n },
+        }],
+      },
+    }, nin=1, nout=1);
 
   local per_anode_graph(n) =
     local anode = tools.anodes[n];
@@ -189,7 +211,9 @@ function(
                            l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
                            l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois)]
       else [sp_pipes[n]]
-           + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
+           + (if use_dnnroi
+              then [dnnroi_inner_pipes[n], dnn_to_gauss_retag(tools.anodes[n].data.ident)]
+              else []);
 
     g.pipeline(
       [src]
