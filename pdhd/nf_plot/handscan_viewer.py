@@ -4,9 +4,16 @@ Reads the artifacts written by ``code/inference/score_full_corpus.py`` and
 serves a clickable review tool. Layout is a single scrollable column:
 
   - Threshold slider over the data-corpus score, filtering the scan pool.
+  - "edge group" dropdown to scan boundary ROIs
+    (``start_tick <= 10`` or ``end_tick >= 5990``) separately from
+    interior ROIs.
   - Score histogram with markers at the threshold and current ROI.
   - Raw + decon waveforms (from consolidated data.h5) stacked vertically.
+    Raw uses a symmetric ±|peak| Y-window with a dotted y=0 line so
+    pulse asymmetry is directly readable.
   - Yes / No / Unsure buttons → append a row to handscan_round1.csv.
+    ``scan_stratum`` records ``top-score-edge`` vs
+    ``top-score-interior`` for downstream cohort analysis.
   - Labels summary + DataTable of everything labeled so far, below the scan.
 
 Round-1 constraint: only train-split ROIs are scannable; val and test
@@ -53,6 +60,7 @@ from bokeh.models import (
     Div,
     HoverTool,
     NumericInput,
+    Range1d,
     Select,
     Slider,
     Span,
@@ -90,6 +98,16 @@ TYPE_OPTIONS = [
 ]
 
 PLANE_NAMES = ["U", "V", "W"]
+
+# Frame-edge thresholds (DUNE-HD readout is 6000 ticks; see notes.md and
+# the v2-edge diagnostic plan). An ROI is "edge" if it touches either
+# the leading or trailing readout boundary.
+EDGE_START_LE = 10
+EDGE_END_GE = 5990
+
+
+def is_edge_row(start_tick: int, end_tick: int) -> bool:
+    return (start_tick <= EDGE_START_LE) or (end_tick >= EDGE_END_GE)
 
 
 # ----- IO helpers -------------------------------------------------------
@@ -181,16 +199,25 @@ def main(argv: list[str]) -> None:
     slider_lo = max(cfg.get("score_floor", 0.005),
                     float(np.floor(pool_min * 1000) / 1000))
     slider_hi = float(np.ceil(pool_max * 100) / 100)
+    thr_default = float(cfg.get("threshold_default", 0.020))
+    thr_default = min(max(thr_default, slider_lo), slider_hi)
     threshold = Slider(
         title="threshold (data score)", start=slider_lo, end=slider_hi,
-        step=0.001, value=0.020, sizing_mode="stretch_width",
+        step=0.001, value=thr_default, sizing_mode="stretch_width",
     )
+    enforce_train_only = bool(cfg.get("enforce_train_only", True))
 
     filter_select = Select(
         title="filter", value="unlabeled",
         options=["unlabeled", "all", "labeled-yes", "labeled-no",
                  "labeled-unsure"],
         width=160,
+    )
+
+    edge_select = Select(
+        title="edge group", value="any",
+        options=["any", "edge-only", "interior-only"],
+        width=140,
     )
 
     stats_div = Div(text="", sizing_mode="stretch_width")
@@ -227,7 +254,10 @@ def main(argv: list[str]) -> None:
     fig_kwargs = dict(height=180, sizing_mode="stretch_width",
                       tools="pan,wheel_zoom,box_zoom,reset,save",
                       active_scroll="wheel_zoom")
-    f_raw = figure(title="raw ADC", **fig_kwargs)
+    # Use Range1d on raw so we can enforce a symmetric ±peak Y-window per
+    # ROI; this makes positive/negative asymmetry directly readable.
+    f_raw = figure(title="raw ADC", y_range=Range1d(start=-1, end=1),
+                   **fig_kwargs)
     f_dec = figure(title="decon", x_range=f_raw.x_range, **fig_kwargs)
     for f in (f_raw, f_dec):
         f.xaxis.axis_label = "tick"
@@ -241,6 +271,10 @@ def main(argv: list[str]) -> None:
     for f, src in ((f_raw, src_raw), (f_dec, src_dec)):
         f.add_tools(HoverTool(tooltips=[("tick", "@x"), ("value", "@y")],
                               mode="vline"))
+    # y=0 guide on raw for asymmetry judging
+    f_raw.add_layout(Span(location=0, dimension="width",
+                          line_color="#666666", line_dash="dotted",
+                          line_width=1))
     roi_boxes = [BoxAnnotation(left=0, right=1, fill_color="#ccccff",
                                 fill_alpha=0.25, line_color=None)
                  for _ in range(2)]
@@ -311,6 +345,7 @@ def main(argv: list[str]) -> None:
         labeled = labeled_set()
         last_real = labeled_by_real()
         mode = filter_select.value
+        edge_mode = edge_select.value
         keep: list[tuple[int, int]] = []
         for _, r in pool_df.iterrows():
             ridx = int(r["row_idx"])
@@ -326,6 +361,11 @@ def main(argv: list[str]) -> None:
                 continue
             if mode == "labeled-unsure" and last_real.get(ridx) != "Unsure":
                 continue
+            is_edge = is_edge_row(int(r["start_tick"]), int(r["end_tick"]))
+            if edge_mode == "edge-only" and not is_edge:
+                continue
+            if edge_mode == "interior-only" and is_edge:
+                continue
             keep.append((int(r["rank"]), ridx))
         state_["filtered"] = keep
         if state_["cursor"] >= len(keep):
@@ -333,17 +373,25 @@ def main(argv: list[str]) -> None:
 
     def update_stats() -> None:
         thr = float(threshold.value)
-        n_above = int((pool_df["score"] >= thr).sum())
+        above_mask = pool_df["score"] >= thr
+        n_above = int(above_mask.sum())
+        is_edge_pool = ((pool_df["start_tick"] <= EDGE_START_LE) |
+                        (pool_df["end_tick"] >= EDGE_END_GE))
+        n_edge = int((above_mask & is_edge_pool).sum())
+        n_interior = n_above - n_edge
         n_lab = len(labels_df)
-        remaining = max(n_above - n_lab, 0)
         n_filtered = len(state_["filtered"])
         cursor = state_["cursor"] + 1 if n_filtered > 0 else 0
+        hygiene = ("<b>train-only round; val + test reserved</b>"
+                   if enforce_train_only
+                   else "<b>all splits scannable</b>")
         stats_div.text = (
-            f"<b>pool above threshold:</b> {n_above:,} &nbsp; "
+            f"<b>pool above threshold:</b> {n_above:,} "
+            f"(edge {n_edge:,} / interior {n_interior:,}) &nbsp; "
             f"<b>labeled (any):</b> {n_lab} &nbsp; "
             f"<b>filtered view:</b> {n_filtered:,} "
             f"(cursor {cursor}/{n_filtered}) &nbsp; "
-            f"<b>train-only round; val + test reserved</b>"
+            f"{hygiene}"
         )
 
     def update_labels_tab() -> None:
@@ -377,7 +425,7 @@ def main(argv: list[str]) -> None:
         rank, ridx = state_["filtered"][state_["cursor"]]
         meta = scores_df.iloc[ridx]
         split = str(meta["split"])
-        if split != "train":
+        if split != "train" and enforce_train_only:
             warn_div.text = (
                 f"<u>split = '{split}'</u> — not scannable in round 1. "
                 f"Move on or jump to a train-split ROI."
@@ -396,6 +444,15 @@ def main(argv: list[str]) -> None:
         for b in roi_boxes:
             b.left, b.right = start, end
         roi_span.location = float(meta["score"])
+        # Symmetric ±peak Y-window so positive/negative asymmetry is
+        # directly readable against the y=0 reference line.
+        raw_arr = np.asarray(raw, dtype=float)
+        if raw_arr.size:
+            peak = float(np.max(np.abs(raw_arr)))
+            if not np.isfinite(peak) or peak <= 0:
+                peak = 1.0
+            f_raw.y_range.start = -peak * 1.05
+            f_raw.y_range.end = peak * 1.05
         plane = int(meta["plane"])
         pname = PLANE_NAMES[plane] if 0 <= plane < 3 else str(plane)
         # Decon-storage diagnostic: ~9% of dumped ROIs (sim + data) have an
@@ -419,6 +476,20 @@ def main(argv: list[str]) -> None:
         prior_real = labels_now.get(int(ridx))
         prior_html = (f"<span style='color:#080'><b>prior label: "
                       f"{prior_real}</b></span><br>" if prior_real else "")
+        edge_kind = []
+        if start <= EDGE_START_LE:
+            edge_kind.append("start")
+        if end >= EDGE_END_GE:
+            edge_kind.append("end")
+        if edge_kind:
+            edge_badge = (" &nbsp; <span style='background:#fde;"
+                          "padding:1px 6px;border-radius:3px;"
+                          f"color:#a05'><b>EDGE ({'+'.join(edge_kind)})"
+                          "</b></span>")
+        else:
+            edge_badge = (" &nbsp; <span style='background:#eef;"
+                          "padding:1px 6px;border-radius:3px;"
+                          "color:#225'>interior</span>")
         info_div.text = (
             f"{prior_html}"
             f"<b>rank {rank} (cursor {state_['cursor']+1}/"
@@ -426,7 +497,7 @@ def main(argv: list[str]) -> None:
             f"run <b>{int(meta['run'])}</b> &nbsp; evt <b>{int(meta['event'])}</b>"
             f" &nbsp; APA <b>{int(meta['apa'])}</b> &nbsp; "
             f"plane <b>{pname}</b> &nbsp; ch <b>{int(meta['channel'])}</b>"
-            f" &nbsp; ticks <b>[{start}, {end})</b>"
+            f" &nbsp; ticks <b>[{start}, {end})</b>{edge_badge}"
             f"{dec_note}<br>"
             f"score <b>{float(meta['score']):.6f}</b> &nbsp; "
             f"vae_kl {float(meta['vae_kl']):.3f} &nbsp; "
@@ -455,6 +526,10 @@ def main(argv: list[str]) -> None:
         state_["cursor"] = 0
         reload_view()
 
+    def on_edge(_attr, _old, _new):
+        state_["cursor"] = 0
+        reload_view()
+
     def on_prev():
         if not state_["filtered"]:
             return
@@ -474,7 +549,7 @@ def main(argv: list[str]) -> None:
             return
         meta = scores_df.iloc[int(ridx)]
         split = str(meta["split"])
-        if split != "train":
+        if split != "train" and enforce_train_only:
             warn_div.text = (
                 f"refusing to label split='{split}' ROI (round-1 hygiene)"
             )
@@ -496,7 +571,12 @@ def main(argv: list[str]) -> None:
             "note": note_input.value or "",
             "scan_round": int(cfg.get("scan_round", 1)),
             "model_version": cfg.get("model_version", ""),
-            "scan_stratum": "top-score-thr-tunable",
+            "scan_stratum": (
+                "top-score-edge"
+                if is_edge_row(int(meta["start_tick"]),
+                               int(meta["end_tick"]))
+                else "top-score-interior"
+            ),
             "split": split,
             "holdout": "True" if holdout else "False",
             "asym": f"{float(meta['score']) - thr:+.6f}",
@@ -573,6 +653,7 @@ def main(argv: list[str]) -> None:
 
     threshold.on_change("value_throttled", on_threshold)
     filter_select.on_change("value", on_filter)
+    edge_select.on_change("value", on_edge)
     prev_btn.on_click(on_prev)
     next_btn.on_click(on_next)
     yes_btn.on_click(on_yes)
@@ -583,7 +664,8 @@ def main(argv: list[str]) -> None:
     export_btn.on_click(on_export)
 
     # ------------- layout --------------------------------------------------
-    top_row = row(threshold, filter_select, sizing_mode="stretch_width")
+    top_row = row(threshold, filter_select, edge_select,
+                  sizing_mode="stretch_width")
     jump_row = row(jump_run, jump_evt, jump_chan, jump_btn,
                    sizing_mode="stretch_width")
     button_row = row(prev_btn, yes_btn, no_btn, unsure_btn, next_btn,
