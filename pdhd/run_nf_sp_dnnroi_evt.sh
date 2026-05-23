@@ -54,6 +54,16 @@ Options:
                  peak activation memory by feeding U and V to the model
                  in two (1, 3, 800, 1500) calls instead of one stacked
                  (1, 3, 1600, 1500) call.
+  -N <heur|dnn>  L1SP tagger flavour when -L on (default: dnn).
+                 'heur' = legacy 5-arm asymmetry heuristic.
+                 'dnn'  = round-2 TorchScript model
+                          (wire-cell-data/l1sp/pdhd/l1sp_dnn_pdhd_v1.ts);
+                          polarity stays heuristic.  Threshold defaults
+                          to 0.94 (p99.9 of the round-2 training
+                          corpus); override via --tla-code
+                          l1sp_pd_dnn_threshold=<x> if needed.  See
+                          l1sp_dl_tagger/experiments/stage_a_pu_round2/
+                          deploy_round2.md.
   -L <on|off>    Run L1SPFilterPD after DNN-ROI (default: on).  When on,
                  the DNN output is fed to L1SP as the signal channel and
                  raw ADC is preserved through the chain; the final frame
@@ -95,6 +105,7 @@ MODE="pp"
 NCHAN=""
 NCHAN_EXPLICIT=0
 L1SP="on"
+L1SP_MODE="dnn"
 DEBUG_BASE=""
 MASK_THRESH="0.2"
 WF_DUMP_DIR=""
@@ -113,6 +124,7 @@ while [ $# -gt 0 ]; do
         -m) MODE="$2"; shift 2 ;;
         -n) NCHAN="$2"; NCHAN_EXPLICIT=1; shift 2 ;;
         -L) L1SP="$2"; shift 2 ;;
+        -N) L1SP_MODE="$2"; shift 2 ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
         -T) MASK_THRESH="$2"; shift 2 ;;
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
@@ -159,6 +171,15 @@ case "$L1SP" in
     on)  L1SP_TLA="true" ;;
     off) L1SP_TLA="false" ;;
     *) echo "[err] -L must be 'on' or 'off' (got '$L1SP')" >&2; exit 1 ;;
+esac
+
+# L1SP mode TLA — empty string preserves the legacy heuristic path,
+# 'dnn' switches L1SPFilterPD to the round-2 TorchScript model.
+# Only meaningful when L1SP is on.
+case "$L1SP_MODE" in
+    heur) L1SP_PD_MODE_TLA="" ;;
+    dnn)  L1SP_PD_MODE_TLA="dnn" ;;
+    *) echo "[err] -N must be 'heur' or 'dnn' (got '$L1SP_MODE')" >&2; exit 1 ;;
 esac
 
 if [ $# -lt 2 ]; then
@@ -212,6 +233,7 @@ echo "model:       ${MODEL}"
 echo "mode:        ${MODE}"
 echo "nchan:       ${NCHAN}"
 echo "L1SP:        ${L1SP}"
+echo "L1SP mode:   ${L1SP_MODE}"
 echo "mask_thresh: ${MASK_THRESH}"
 
 # L1SP dump-mode wiring (mirrors run_nf_sp_evt.sh -w):
@@ -291,6 +313,7 @@ wire-cell \
     --tla-str dnnroi_mode="${MODE}" \
     --tla-code dnnroi_nchan="${NCHAN}" \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
+    --tla-str l1sp_pd_mode="${L1SP_PD_MODE_TLA}" \
     --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
     "${DBG_TLA[@]}" \
     "${L1SP_DUMP_TLA[@]}" \
