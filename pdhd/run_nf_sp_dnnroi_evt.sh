@@ -56,14 +56,14 @@ Options:
                  (1, 3, 1600, 1500) call.
   -N <heur|dnn>  L1SP tagger flavour when -L on (default: dnn).
                  'heur' = legacy 5-arm asymmetry heuristic.
-                 'dnn'  = round-2 TorchScript model
+                 'dnn'  = round-3 TorchScript model
                           (wire-cell-data/l1sp/pdhd/l1sp_dnn_pdhd_v1.ts);
                           polarity stays heuristic.  Threshold defaults
-                          to 0.94 (p99.9 of the round-2 training
+                          to 0.99 (p99.9 of the round-3 training
                           corpus); override via --tla-code
                           l1sp_pd_dnn_threshold=<x> if needed.  See
-                          l1sp_dl_tagger/experiments/stage_a_pu_round2/
-                          deploy_round2.md.
+                          l1sp_dl_tagger/experiments/stage_a_pu_round3/
+                          deploy_round3.md.
   -L <on|off>    Run L1SPFilterPD after DNN-ROI (default: on).  When on,
                  the DNN output is fed to L1SP as the signal channel and
                  raw ADC is preserved through the chain; the final frame
