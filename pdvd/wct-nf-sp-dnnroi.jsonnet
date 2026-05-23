@@ -112,7 +112,7 @@ function(
     },
   };
 
-  local dnnroi_maker = import 'pgrapher/experiment/protodunevd/dnnroi_mp.jsonnet';
+  local dnnroi_maker = import 'pgrapher/experiment/protodunevd/dnnroi_pp.jsonnet';
   // Per-anode debug-file basename; when empty, the C++ node skips the dump.
   local _per_anode_dbg(n) =
     if dnnroi_debugfile == '' then ''
@@ -132,8 +132,8 @@ function(
   local resamplers = load_resamplers.resamplers;
 
   // (Tick-count alignment for the DNN-ROI model is handled inside the C++
-  // node via dnnroi_mp.jsonnet's `tick_pad_multiple=128` — see
-  // DNNROIFindingMultiPlane.cxx:233.  No Reframer needed in this driver.)
+  // node via dnnroi_pp.jsonnet's `tick_pad_multiple=128` — see
+  // DNNROIFinding.cxx (pad_mult branch).  No Reframer needed in this driver.)
 
   // L1SP-after-DNN envelope.  When use_l1sp_dnn=true && use_dnnroi=true the
   // envelope wraps SP + DNN-ROI + L1SP into a single per-anode subgraph (the

@@ -7,7 +7,7 @@
 #
 # Usage:
 #   ./run_nf_sp_dnnroi_evt.sh [-a anode] [-g elecGain] [-r reality]
-#                             [-D cpu|gpu] [-M model.ts] [-m pp|mp]
+#                             [-D cpu|gpu] [-M model.ts]
 #                             [-n 3|6] <run> <evt>
 #
 # Output: work/<RUN_PADDED>_<EVT>/
@@ -49,11 +49,6 @@ Options:
                  (6).  3 = legacy CP43.ts.  6-channel models bake
                  per-channel normalization into the .ts, so they run with
                  input_scale=1.
-  -m <mode>      DNN-ROI wiring mode: 'pp' (per-plane sequential, default)
-                 or 'mp' (stacked multi-plane, legacy).  Per-plane halves
-                 peak activation memory by feeding U and V to the model
-                 in two (1, 3, 800, 1500) calls instead of one stacked
-                 (1, 3, 1600, 1500) call.
   -N <heur|dnn>  L1SP tagger flavour when -L on (default: dnn).
                  'heur' = legacy 5-arm asymmetry heuristic.
                  'dnn'  = round-3 TorchScript model
@@ -113,7 +108,6 @@ DEVICE_EXPLICIT=0
 PRESET="fp32"
 MODEL=""
 MODEL_EXPLICIT=0
-MODE="pp"
 NCHAN=""
 NCHAN_EXPLICIT=0
 L1SP="on"
@@ -135,7 +129,6 @@ while [ $# -gt 0 ]; do
         -D) DEVICE="$2"; DEVICE_EXPLICIT=1; shift 2 ;;
         -P) PRESET="$2"; shift 2 ;;
         -M) MODEL="$2"; MODEL_EXPLICIT=1; shift 2 ;;
-        -m) MODE="$2"; shift 2 ;;
         -n) NCHAN="$2"; NCHAN_EXPLICIT=1; shift 2 ;;
         -L) L1SP="$2"; shift 2 ;;
         -N) L1SP_MODE="$2"; shift 2 ;;
@@ -172,11 +165,6 @@ if [ "$NCHAN_EXPLICIT" = "0" ]; then
         *)        NCHAN="6" ;;
     esac
 fi
-
-case "$MODE" in
-    pp|mp) ;;
-    *) echo "[err] -m must be 'pp' or 'mp' (got '$MODE')" >&2; exit 1 ;;
-esac
 
 case "$NCHAN" in
     3|6) ;;
@@ -246,7 +234,6 @@ echo "elecGain:    ${ELEC_GAIN} mV/fC"
 echo "reality:     ${REALITY}"
 echo "device:      ${DEVICE}"
 echo "model:       ${MODEL}"
-echo "mode:        ${MODE}"
 echo "nchan:       ${NCHAN}"
 echo "L1SP:        ${L1SP}"
 echo "L1SP mode:   ${L1SP_MODE}"
@@ -338,7 +325,6 @@ wire-cell \
     --tla-code anode_indices="[${ANODE}]" \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
-    --tla-str dnnroi_mode="${MODE}" \
     --tla-code dnnroi_nchan="${NCHAN}" \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
     --tla-str l1sp_pd_mode="${L1SP_PD_MODE_TLA}" \

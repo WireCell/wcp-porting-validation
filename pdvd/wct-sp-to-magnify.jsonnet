@@ -71,9 +71,10 @@ function(
 
   // Per-anode decon pipeline: FrameFileSource(gauss,wiener) → Retagger →
   // MagnifySink.  The DNN-ROI archive (protodune-sp-dnnroi-frames) is
-  // structurally a standard SP archive -- dnnroi_mp.jsonnet writes gauss%d
-  // (= DNN-ROI output) and wiener%d (= SP Wiener, with threshold summary) --
-  // so the same pipeline serves both the plain-SP and DNN-ROI inputs.
+  // structurally a standard SP archive -- the L1SP-after-DNN envelope's
+  // dnn_relabel writes gauss%d (= DNN-ROI output) and wiener%d (alias
+  // carrying the per-channel threshold summary) -- so the same pipeline
+  // serves both the plain-SP and DNN-ROI inputs.
   local sp_anode_graph(n, anode) =
     local aid = anode.data.ident;
     local src = g.pnode({

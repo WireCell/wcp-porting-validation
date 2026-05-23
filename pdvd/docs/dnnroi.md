@@ -12,12 +12,19 @@ Full design notes: `DNN_ROI_SP/docs/pdvd_wirecell_deployment.md`.
 |---|---|
 | `run_nf_sp_dnnroi_evt.sh` | runner: NF → SP → DNN-ROI for one event |
 | `wct-nf-sp-dnnroi.jsonnet` | top-level pipeline (per-anode src → resampler → NF → SP → DNN-ROI → sink) |
-| `cfg/.../protodunevd/dnnroi_mp.jsonnet` | per-anode DNN-ROI subgraph (`DNNROIFindingMultiPlane`) |
-| `wire-cell-data/dnnroi/pdvd/*.ts` | the 3 deployed TorchScript models |
+| `cfg/.../protodunevd/dnnroi_pp.jsonnet` | per-anode DNN-ROI subgraph (`DNNROIFinding`, per-plane sequential) |
+| `wire-cell-data/dnnroi/pdvd/*.ts` | the deployed TorchScript models |
 
-The DNN-ROI models are 4-channel (`loose_lf, mp2_roi, mp3_roi, gauss`) and feed
-the two induction planes stacked (U+V) to one model call; the W collection
-plane is passed through from standard SP gauss.
+The DNN-ROI models are 6-channel (`loose_lf, mp2_roi, mp3_roi, tight_lf,
+decon_charge, gauss`) and are called per-plane: U and V each feed the model
+in their own (1, 6, ~476, 1600) call, serialized through one TorchService;
+the W collection plane is passed through from standard SP gauss.
+
+The PDVD MobileNetV3-UNet has 5 stride-2 levels post-rebin, so the C++
+`DNNROIFinding` node is configured with `tick_pad_multiple=128`: it pads
+input `nticks` up to the next 128-multiple before inference and crops the
+output back to the original length. See `wire-cell-data/dnnroi/pdvd/README.md`
+for the per-`nticks` padding table.
 
 ## Run DNN-ROI
 

@@ -1,12 +1,9 @@
 // DNN-ROI variant of wct-nf-sp.jsonnet.
 //
-// Inserts a DNN-ROI subgraph (DNN_ROI_SP/checkpoints model exported as
-// wire-cell-data/dnnroi/pdhd/CP43.ts) after the standard SP pipeline,
-// per anode.  Two wiring modes selectable via TLA `dnnroi_mode`:
-//   'pp' (default): per-plane sequential — two DNNROIFinding calls
-//                   at (1, 3, 800, 1500) each, sharing CP43.ts.
-//   'mp':           stacked U+V via DNNROIFindingMultiPlane at
-//                   (1, 3, 1600, 1500); legacy, kept for comparison.
+// Inserts a DNN-ROI subgraph (model in wire-cell-data/dnnroi/pdhd/)
+// after the standard SP pipeline, per anode.  Per-plane sequential
+// wiring via dnnroi_pp.jsonnet: two DNNROIFinding calls per APA at
+// (1, 6, 800, 1500) each, sharing one TorchService.
 // All other behaviour is identical to wct-nf-sp.jsonnet.
 //
 // Run example (single anode, single event):
@@ -49,8 +46,6 @@ function(
 
   // DNN-ROI specific
   use_dnnroi    = true,
-  dnnroi_mode   = 'pp',                     // 'pp' = per-plane sequential (default)
-                                            // 'mp' = stacked multi-plane (legacy)
   // Default = FP32 best KD (6-ch).  Resolved via WIRECELL_PATH.
   //   FP32 best KD:    pipe_distill_transformer_6ch.ts       (Dice 0.9107)
   //   INT8 best QAT:   pipe_qat_transformer_6ch_int8.ts      (Dice 0.8900, CPU only)
@@ -149,10 +144,7 @@ function(
     },
   };
 
-  local dnnroi_maker =
-    if dnnroi_mode == 'pp'
-    then import 'pgrapher/experiment/pdhd/dnnroi_pp.jsonnet'
-    else import 'pgrapher/experiment/pdhd/dnnroi_mp.jsonnet';
+  local dnnroi_maker = import 'pgrapher/experiment/pdhd/dnnroi_pp.jsonnet';
   // Per-anode debug-file basename; when empty, the C++ node skips the dump.
   local _per_anode_dbg(n) =
     if dnnroi_debugfile == '' then ''
