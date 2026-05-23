@@ -57,6 +57,20 @@ function(
   dnnroi_mask_thresh = 0.2,
   dnnroi_nchunks = 1,
   dnnroi_debugfile = '',                    // if non-empty, C++ node dumps per-call .pt
+
+  // L1SP-after-DNN-ROI envelope (wraps SP + DNN-ROI + L1SP into one per-anode
+  // subgraph).  When use_l1sp_dnn=false (default), the file behaves exactly as
+  // before — L1SP stays off in the DNN-ROI chain.  When true, L1SP runs on
+  // the DNN-relabeled gauss/wiener tags using the PDVD-tuned config in
+  // pgrapher/experiment/protodunevd/l1sp_after_dnnroi.jsonnet.
+  use_l1sp_dnn = false,
+  l1sp_pd_mode = '',                        // 'process' | 'dump' | '' (off)
+  l1sp_pd_dump_path = '',                   // dump-mode NPZ dir
+  l1sp_pd_wf_dump_path = '',                // process-mode per-ROI waveform dump dir
+  l1sp_pd_dump_all_rois = false,            // dump every ROI, not just triggered
+  l1sp_pd_adj_enable = true,
+  l1sp_pd_adj_max_hops = 3,
+  l1sp_pd_planes = null,                    // null -> envelope default [0,1] (U+V)
 )
 
   local tools = tools_all;
@@ -117,18 +131,29 @@ function(
   local load_resamplers = resamplers_config(g, wc, tools);
   local resamplers = load_resamplers.resamplers;
 
+  // (Tick-count alignment for the DNN-ROI model is handled inside the C++
+  // node via dnnroi_mp.jsonnet's `tick_pad_multiple=128` — see
+  // DNNROIFindingMultiPlane.cxx:233.  No Reframer needed in this driver.)
+
+  // L1SP-after-DNN envelope.  When use_l1sp_dnn=true && use_dnnroi=true the
+  // envelope wraps SP + DNN-ROI + L1SP into a single per-anode subgraph (the
+  // FrameSplitter sits before SP since OmnibusSigProc drops raw%d).
+  local l1sp_dnn_maker = import 'pgrapher/experiment/protodunevd/l1sp_after_dnnroi.jsonnet';
+
   // Final frame sink: write the post-DNN frame with standard SP trace tags
   // gauss%d (= DNN-ROI output, U+V from the model + W passthrough) and
   // wiener%d (= SP Wiener, carrying the per-channel threshold summary).
-  // dnnroi_mp.jsonnet builds those two tags so the DNN-ROI archive is
-  // structurally a standard SP archive; the non-DNN branch writes the same.
+  // When use_l1sp_dnn=true, also include raw%d so the L1SP-modified frame's
+  // raw channel survives to the archive.
   local final_frame_sink = function(n)
     g.pnode({
       type: 'FrameFileSink',
       name: 'dnnroiframesink%d' % n,
       data: {
         outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
-        tags: ['gauss%d' % n, 'wiener%d' % n],
+        tags: if use_l1sp_dnn
+              then ['gauss%d' % n, 'wiener%d' % n, 'raw%d' % n]
+              else ['gauss%d' % n, 'wiener%d' % n],
         digitize: false,
         masks: true,
       },
@@ -152,12 +177,25 @@ function(
       ),
     }, nin=0, nout=1);
 
+    local sp_dnn_l1sp_segment =
+      if use_dnnroi && use_l1sp_dnn
+      then [l1sp_dnn_maker(anode, sp_pipes[n], dnnroi_inner_pipes[n],
+                           tools, params,
+                           l1sp_pd_adj_enable=l1sp_pd_adj_enable,
+                           l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                           l1sp_pd_planes=l1sp_pd_planes,
+                           l1sp_pd_dump_mode=l1sp_pd_mode,
+                           l1sp_pd_dump_path=l1sp_pd_dump_path,
+                           l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
+                           l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois)]
+      else [sp_pipes[n]]
+           + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
+
     g.pipeline(
       [src]
       + (if use_resampler && n < 4 then [resamplers[n]] else [])
       + [nf_pipes[n]]
-      + [sp_pipes[n]]
-      + (if use_dnnroi then [dnnroi_inner_pipes[n]] else [])
+      + sp_dnn_l1sp_segment
       + [final_frame_sink(aid)],
       'nfspdnn_pipe_%d' % n);
 

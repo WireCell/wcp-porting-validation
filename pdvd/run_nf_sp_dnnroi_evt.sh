@@ -54,6 +54,15 @@ Options:
                  DNN_ROI_SP/scripts/verify_wirecell_dnn.py.
   -T <thresh>    DNN sigmoid binarization threshold passed as
                  --tla-code dnnroi_mask_thresh=<val>.  Default: 0.2.
+  -L <on|off>    Wire L1SPFilterPD after DNN-ROI (default: off).  When on,
+                 the post-DNN gauss/wiener feeds L1SPFilterPD via the
+                 protodunevd/l1sp_after_dnnroi.jsonnet envelope.  Final
+                 frame archive then carries L1SP-corrected gauss%d /
+                 wiener%d alongside raw%d.
+  -w <wf_dir>   Enable L1SP per-ROI waveform dump (forces -L on).  Writes
+                 one NPZ per ROI under <wf_dir>/<RUN_PADDED>_<EVT>/apa<N>_*/.
+                 Auto-enables dump-all-rois unless overridden by -A.
+  -A <on|off>   Override dump-all-rois (default: on when -w is set).
   -h             Show this help.
 
 Input:  input_data/<run_dir>/<evt_dir>/protodune-orig-frames-anode{0..7}.tar.bz2
@@ -70,6 +79,10 @@ MODEL=""
 MODEL_EXPLICIT=0
 DEBUG_BASE=""
 MASK_THRESH="0.2"
+L1SP="off"
+WF_DUMP_DIR=""
+DUMP_ALL_ROIS=""
+DUMP_ALL_EXPLICIT=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -88,11 +101,28 @@ while [ $# -gt 0 ]; do
         -X*) DEBUG_BASE="${1#-X}"; shift ;;
         -T) MASK_THRESH="$2"; shift 2 ;;
         -T*) MASK_THRESH="${1#-T}"; shift ;;
+        -L) L1SP="$2"; shift 2 ;;
+        -L*) L1SP="${1#-L}"; shift ;;
+        -w) WF_DUMP_DIR="$2"; shift 2 ;;
+        -w*) WF_DUMP_DIR="${1#-w}"; shift ;;
+        -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
+        -A*) DUMP_ALL_ROIS="${1#-A}"; DUMP_ALL_EXPLICIT=1; shift ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+case "$L1SP" in
+    on|off) ;;
+    *) echo "[err] -L must be 'on' or 'off' (got '$L1SP')" >&2; exit 1 ;;
+esac
+# -w implies -L on (the envelope must be wired for L1SP to emit dumps).
+if [ -n "$WF_DUMP_DIR" ]; then L1SP="on"; fi
+case "$L1SP" in
+    on)  USE_L1SP_DNN_TLA="true" ;;
+    off) USE_L1SP_DNN_TLA="false" ;;
+esac
 
 if [ "$MODEL_EXPLICIT" = "0" ]; then
     case "$PRESET" in
@@ -168,7 +198,33 @@ echo "device:      ${DEVICE}"
 echo "model:       ${MODEL}"
 echo "anodes:      ${ANODE_CODE}"
 echo "mask_thresh: ${MASK_THRESH}"
+echo "L1SP:        ${L1SP}"
 echo "Log:         $LOG"
+
+# L1SP per-ROI waveform dump wiring.  -w sets the dump dir; the envelope
+# emits per-ROI NPZ in 'process' mode (LASSO writeback side effect — same
+# convention as PDHD's run_nf_sp_dnnroi_evt.sh -w).
+L1SP_DUMP_TLA=()
+if [ -n "$WF_DUMP_DIR" ]; then
+    case "$WF_DUMP_DIR" in
+        /*) WF_ABS="$WF_DUMP_DIR" ;;
+        *)  WF_ABS="$PDVD_DIR/$WF_DUMP_DIR" ;;
+    esac
+    WF_EVT_DIR="$WF_ABS/${RUN_PADDED}_${EVT}"
+    mkdir -p "$WF_EVT_DIR"
+    if [ "$DUMP_ALL_EXPLICIT" = "0" ]; then DUMP_ALL_ROIS="on"; fi
+    case "$DUMP_ALL_ROIS" in
+        on)  DUMP_ALL_TLA="true" ;;
+        off) DUMP_ALL_TLA="false" ;;
+        *)   echo "[err] -A must be 'on' or 'off' (got '$DUMP_ALL_ROIS')" >&2; exit 1 ;;
+    esac
+    L1SP_DUMP_TLA=(--tla-str l1sp_pd_mode="process" \
+                   --tla-str l1sp_pd_wf_dump_path="$WF_EVT_DIR" \
+                   --tla-code l1sp_pd_dump_all_rois="$DUMP_ALL_TLA")
+    echo "L1SP dump:   $WF_EVT_DIR (dump_all_rois=$DUMP_ALL_ROIS)"
+elif [ "$DUMP_ALL_EXPLICIT" = "1" ]; then
+    echo "[warn] -A given without -w; ignoring (nothing to dump)" >&2
+fi
 
 # Resolve debug-dump basename to an absolute path under WORKDIR if relative.
 DBG_TLA=()
@@ -207,7 +263,9 @@ wire-cell \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
     --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
+    --tla-code use_l1sp_dnn="${USE_L1SP_DNN_TLA}" \
     "${DBG_TLA[@]}" \
+    "${L1SP_DUMP_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 
