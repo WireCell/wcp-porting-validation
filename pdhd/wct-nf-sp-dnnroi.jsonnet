@@ -73,6 +73,24 @@ function(
   use_l1sp_dnn      = true,
   l1sp_pd_adj_enable    = true,
   l1sp_pd_adj_max_hops  = 3,
+
+  // ── ML L1SP tagger (l1sp_pd_mode == 'dnn') ─────────────────────────
+  // When l1sp_pd_mode == 'dnn', L1SPFilterPD replaces its 5-arm
+  // heuristic decide_trigger with a TorchScript model call.  Polarity
+  // is still sign(raw_asym_wide); only the fire/no-fire cut changes.
+  // Model file is resolved via WIRECELL_PATH and ships with
+  // wire-cell-data/l1sp/pdhd/.  Default threshold (0.94) = p99.9 of
+  // the round-2 training corpus.  See
+  // l1sp_dl_tagger/experiments/stage_a_pu_round2/deploy_round2.md.
+  l1sp_pd_dnn_model        = 'l1sp/pdhd/l1sp_dnn_pdhd_v1.ts',
+  l1sp_pd_dnn_device       = 'cpu',
+  l1sp_pd_dnn_concurrency  = 1,
+  l1sp_pd_dnn_threshold    = 0.94,
+  l1sp_pd_dnn_window_ticks = 256,
+  // When non-empty, L1SPFilterPD writes per-ROI (waveform, scalars,
+  // score, polarity, fired) to one NPZ per operator() call so the
+  // l1sp_dl_tagger Python validator can assert score parity.
+  l1sp_pd_dnn_debug_path   = '',
 )
 
   local tools = tools_all;
@@ -145,6 +163,18 @@ function(
   // OF the separate sp_pipe + sp_frame_tap + dnnroi_pipe sequence.
   local l1sp_dnn_maker = import 'pgrapher/experiment/pdhd/l1sp_after_dnnroi.jsonnet';
 
+  // TorchService for the ML L1SP tagger.  Built only when l1sp_pd_mode
+  // == 'dnn'; null otherwise so the heuristic path doesn't pull libtorch.
+  local l1sp_torch_service = if l1sp_pd_mode == 'dnn' then {
+    type: 'TorchService',
+    name: 'l1sp_dnn_pdhd',
+    data: {
+      model:       l1sp_pd_dnn_model,
+      device:      l1sp_pd_dnn_device,
+      concurrency: l1sp_pd_dnn_concurrency,
+    },
+  } else null;
+
   local resamplers_config = import 'pgrapher/common/resamplers.jsonnet';
   local load_resamplers = resamplers_config(g, wc, tools);
   local resamplers = load_resamplers.resamplers;
@@ -190,7 +220,11 @@ function(
                            l1sp_pd_dump_mode=l1sp_pd_mode,
                            l1sp_pd_dump_path=l1sp_pd_dump_path,
                            l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
-                           l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois)]
+                           l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
+                           l1sp_pd_torch_service=l1sp_torch_service,
+                           l1sp_pd_dnn_threshold=l1sp_pd_dnn_threshold,
+                           l1sp_pd_dnn_window_ticks=l1sp_pd_dnn_window_ticks,
+                           l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path)]
       else [sp_pipes[n]]
            + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
 
