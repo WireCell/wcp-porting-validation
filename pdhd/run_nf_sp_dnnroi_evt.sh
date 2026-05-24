@@ -49,16 +49,29 @@ Options:
                  (6).  3 = legacy CP43.ts.  6-channel models bake
                  per-channel normalization into the .ts, so they run with
                  input_scale=1.
-  -N <heur|dnn>  L1SP tagger flavour when -L on (default: dnn).
-                 'heur' = legacy 5-arm asymmetry heuristic.
-                 'dnn'  = round-3 TorchScript model
-                          (wire-cell-data/l1sp/pdhd/l1sp_dnn_pdhd_v1.ts);
-                          polarity stays heuristic.  Threshold defaults
-                          to 0.99 (p99.9 of the round-3 training
-                          corpus); override via --tla-code
-                          l1sp_pd_dnn_threshold=<x> if needed.  See
-                          l1sp_dl_tagger/experiments/stage_a_pu_round3/
-                          deploy_round3.md.
+  -N <heur|dnn|hybrid>
+                 L1SP tagger flavour when -L on (default: dnn).
+                 'heur'   = legacy 5-arm asymmetry heuristic.
+                 'dnn'    = round-3+ TorchScript model
+                            (wire-cell-data/l1sp/pdhd/l1sp_dnn_pdhd_v1.ts);
+                            polarity stays heuristic.  Threshold defaults
+                            to 0.99 (p99.9 of the round-3 training
+                            corpus); override via --tla-code
+                            l1sp_pd_dnn_threshold=<x> if needed.  See
+                            l1sp_dl_tagger/experiments/stage_a_pu_round3/
+                            deploy_round3.md.
+                 'hybrid' = heuristic 5-arm gates DNN inference.  DNN
+                            only runs on heur-positive ROIs (~1% of
+                            ROIs in production), so the L1SP stage is
+                            ~5-10x faster than full 'dnn'.  Polarity
+                            from heuristic when DNN confirms (score
+                            >= threshold); 0 otherwise.  Use with
+                            --loose-heur for best recovery, and lower
+                            l1sp_pd_dnn_threshold (e.g. 0.10) since
+                            the input population is heuristic-positive,
+                            not the full ROI set.  See
+                            l1sp_dl_tagger/experiments/stage_a_pu_round4/
+                            veto_mode_design.md.
   -L <on|off>    Run L1SPFilterPD after DNN-ROI (default: on).  When on,
                  the DNN output is fed to L1SP as the signal channel and
                  raw ADC is preserved through the chain; the final frame
@@ -104,6 +117,10 @@ Options:
                  DNN ROIs are typically shorter and the defaults reject
                  valid candidates that the trad chain flags. Recover
                  those here; let the downstream DNN L1SP refine.
+  --l1sp-thresh <val>
+                 Override the L1SP DNN sigmoid threshold (default from
+                 jsonnet: 0.9945, tuned for -N dnn). For -N hybrid use
+                 0.10 (Phase-A holdout precision/recall sweet spot).
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -137,6 +154,7 @@ WORK_SUFFIX=""
 DNN_DEBUG_DIR=""
 CALIB_ROOT=""
 LOOSE_HEUR=0
+L1SP_THRESH_OVERRIDE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -158,6 +176,7 @@ while [ $# -gt 0 ]; do
         -Z) DNN_DEBUG_DIR="$2"; shift 2 ;;
         -c) CALIB_ROOT="$2"; shift 2 ;;
         --loose-heur) LOOSE_HEUR=1; shift ;;
+        --l1sp-thresh) L1SP_THRESH_OVERRIDE="$2"; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -201,9 +220,10 @@ esac
 # 'dnn' switches L1SPFilterPD to the round-2 TorchScript model.
 # Only meaningful when L1SP is on.
 case "$L1SP_MODE" in
-    heur) L1SP_PD_MODE_TLA="" ;;
-    dnn)  L1SP_PD_MODE_TLA="dnn" ;;
-    *) echo "[err] -N must be 'heur' or 'dnn' (got '$L1SP_MODE')" >&2; exit 1 ;;
+    heur)   L1SP_PD_MODE_TLA="" ;;
+    dnn)    L1SP_PD_MODE_TLA="dnn" ;;
+    hybrid) L1SP_PD_MODE_TLA="hybrid" ;;
+    *) echo "[err] -N must be 'heur', 'dnn', or 'hybrid' (got '$L1SP_MODE')" >&2; exit 1 ;;
 esac
 
 if [ $# -lt 2 ]; then
@@ -303,6 +323,13 @@ if [ "$LOOSE_HEUR" = "1" ]; then
     echo "Loose heur:  gmax_min=300 min_length=10 energy_frac=0.20"
 fi
 
+# L1SP DNN sigmoid threshold override (typically 0.10 for hybrid mode).
+L1SP_THRESH_TLA=()
+if [ -n "$L1SP_THRESH_OVERRIDE" ]; then
+    L1SP_THRESH_TLA=(--tla-code l1sp_pd_dnn_threshold="$L1SP_THRESH_OVERRIDE")
+    echo "L1SP DNN thr: $L1SP_THRESH_OVERRIDE (override)"
+fi
+
 # L1SP calibration scalar-dump (Phase-B veto-mode investigation):
 #   -c switches L1SPFilterPD into 'dump' mode after DNN-ROI -- heuristic
 #   features computed and emitted per ROI, no LASSO/DNN correction.
@@ -385,6 +412,7 @@ wire-cell \
     "${L1SP_DNN_DBG_TLA[@]}" \
     "${L1SP_CALIB_TLA[@]}" \
     "${LOOSE_HEUR_TLA[@]}" \
+    "${L1SP_THRESH_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

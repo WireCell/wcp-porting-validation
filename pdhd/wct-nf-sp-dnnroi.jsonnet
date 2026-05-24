@@ -177,9 +177,10 @@ function(
   // OF the separate sp_pipe + sp_frame_tap + dnnroi_pipe sequence.
   local l1sp_dnn_maker = import 'pgrapher/experiment/pdhd/l1sp_after_dnnroi.jsonnet';
 
-  // TorchService for the ML L1SP tagger.  Built only when l1sp_pd_mode
-  // == 'dnn'; null otherwise so the heuristic path doesn't pull libtorch.
-  local l1sp_torch_service = if l1sp_pd_mode == 'dnn' then {
+  // TorchService for the ML L1SP tagger.  Built when l1sp_pd_mode is
+  // 'dnn' OR 'hybrid' (hybrid also calls DNN, just gated by heuristic).
+  // null otherwise so the heuristic-only path doesn't pull libtorch.
+  local l1sp_torch_service = if (l1sp_pd_mode == 'dnn' || l1sp_pd_mode == 'hybrid') then {
     type: 'TorchService',
     name: 'l1sp_dnn_pdhd',
     data: {
