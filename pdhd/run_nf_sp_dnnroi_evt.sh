@@ -88,6 +88,22 @@ Options:
                  code/inference/diagnose_l1sp_dnn.py.  Requires
                  -N dnn; ignored otherwise.  Relative paths resolve
                  under the work dir.
+  -c <calib_dir> Switch L1SP to scalar calibration dump (bypass) mode
+                 AFTER DNN-ROI.  Per-event NPZ files with per-ROI
+                 heuristic features (flag_l1, flag_l1_adj, 5-arm
+                 scalars) are written to <calib_dir>/<RUN_PADDED>_<EVT>/
+                 -- mirrors run_nf_sp_evt.sh -c so the trad-chain and
+                 DNN-chain heuristic outputs can be cross-joined.
+                 Overrides -N (dump mode skips both DNN and L1SP
+                 correction; only heuristic scalars are emitted).
+  --loose-heur   Loosen heuristic pre-filters for the DNN chain:
+                   l1_gmax_min        1500 -> 300
+                   l1_min_length        30 -> 10
+                   l1_energy_frac_thr 0.66 -> 0.20
+                 The default values were tuned against trad ROI extents;
+                 DNN ROIs are typically shorter and the defaults reject
+                 valid candidates that the trad chain flags. Recover
+                 those here; let the downstream DNN L1SP refine.
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -119,6 +135,8 @@ DUMP_ALL_ROIS=""
 DUMP_ALL_EXPLICIT=0
 WORK_SUFFIX=""
 DNN_DEBUG_DIR=""
+CALIB_ROOT=""
+LOOSE_HEUR=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -138,6 +156,8 @@ while [ $# -gt 0 ]; do
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
         -O) WORK_SUFFIX="$2"; shift 2 ;;
         -Z) DNN_DEBUG_DIR="$2"; shift 2 ;;
+        -c) CALIB_ROOT="$2"; shift 2 ;;
+        --loose-heur) LOOSE_HEUR=1; shift ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -273,6 +293,37 @@ echo "Log:         $LOG"
 echo "Time log:    $TIME_LOG"
 echo "GPU CSV:     $GPU_CSV"
 
+# Loose-heur pre-filter overrides (DNN-chain only) -- see help and the
+# veto_mode_design.md Phase-C analysis.
+LOOSE_HEUR_TLA=()
+if [ "$LOOSE_HEUR" = "1" ]; then
+    LOOSE_HEUR_TLA=(--tla-code l1sp_pd_gmax_min=300.0
+                    --tla-code l1sp_pd_min_length=10
+                    --tla-code l1sp_pd_energy_frac_thr=0.20)
+    echo "Loose heur:  gmax_min=300 min_length=10 energy_frac=0.20"
+fi
+
+# L1SP calibration scalar-dump (Phase-B veto-mode investigation):
+#   -c switches L1SPFilterPD into 'dump' mode after DNN-ROI -- heuristic
+#   features computed and emitted per ROI, no LASSO/DNN correction.
+#   Overrides -N (whether the user asked for heur or dnn L1SP).
+L1SP_CALIB_TLA=()
+if [ -n "$CALIB_ROOT" ]; then
+    case "$CALIB_ROOT" in
+        /*) CALIB_ABS="$CALIB_ROOT" ;;
+        *)  CALIB_ABS="$PDHD_DIR/$CALIB_ROOT" ;;
+    esac
+    CALIB_EVT_DIR="$CALIB_ABS/${RUN_PADDED}_${EVT}"
+    mkdir -p "$CALIB_EVT_DIR"
+    L1SP_PD_MODE_TLA="dump"
+    L1SP_CALIB_TLA=(--tla-str l1sp_pd_dump_path="$CALIB_EVT_DIR")
+    if [ -n "$WF_DUMP_DIR" ]; then
+        echo "[warn] -c (dump) overrides -w (process+waveform); waveform dump disabled." >&2
+        L1SP_DUMP_TLA=()
+    fi
+    echo "L1SP calib:  $CALIB_EVT_DIR (dump mode; -N overridden)"
+fi
+
 # Resolve L1SP-DNN per-ROI debug dir to an absolute path under WORKDIR if relative.
 L1SP_DNN_DBG_TLA=()
 if [ -n "$DNN_DEBUG_DIR" ]; then
@@ -332,6 +383,8 @@ wire-cell \
     "${DBG_TLA[@]}" \
     "${L1SP_DUMP_TLA[@]}" \
     "${L1SP_DNN_DBG_TLA[@]}" \
+    "${L1SP_CALIB_TLA[@]}" \
+    "${LOOSE_HEUR_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

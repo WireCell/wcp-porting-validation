@@ -87,6 +87,17 @@ function(
   // score, polarity, fired) to one NPZ per operator() call so the
   // l1sp_dl_tagger Python validator can assert score parity.
   l1sp_pd_dnn_debug_path   = '',
+  // ── Loose-heur pre-filter overrides (DNN-chain only) ───────────────
+  // Defaults match C++ defaults (trad-chain values). Loosen these in
+  // the DNN chain because (1) DNN ROIs are typically shorter/weaker
+  // than trad ROIs for the same signal -- which fails the default
+  // pre-filters -- and (2) the DNN L1SP tagger refines downstream, so
+  // heuristic false positives are vetoed there. See
+  // l1sp_dl_tagger/experiments/stage_a_pu_round4/veto_mode_design.md
+  // Phase-B/C analysis.
+  l1sp_pd_gmax_min         = 1500.0,
+  l1sp_pd_min_length       = 30,
+  l1sp_pd_energy_frac_thr  = 0.66,
 )
 
   local tools = tools_all;
@@ -227,7 +238,10 @@ function(
                            l1sp_pd_torch_service=l1sp_torch_service,
                            l1sp_pd_dnn_threshold=l1sp_pd_dnn_threshold,
                            l1sp_pd_dnn_window_ticks=l1sp_pd_dnn_window_ticks,
-                           l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path)]
+                           l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path,
+                           l1sp_pd_gmax_min=l1sp_pd_gmax_min,
+                           l1sp_pd_min_length=l1sp_pd_min_length,
+                           l1sp_pd_energy_frac_thr=l1sp_pd_energy_frac_thr)]
       else [sp_pipes[n]]
            + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
 
