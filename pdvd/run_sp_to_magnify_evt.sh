@@ -1,13 +1,13 @@
 #!/bin/bash
 # Convert SP frame archives for one event to per-anode Magnify ROOT files.
-# Usage: ./run_sp_to_magnify_evt.sh [-I] [-d] [-s sel_tag] <run> <evt|all> [subrun]
+# Usage: ./run_sp_to_magnify_evt.sh [-I] [-d] [-s sel_tag] [-O suffix] <run> <evt|all> [subrun]
 #        ./run_sp_to_magnify_evt.sh      # list available runs
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDVD_MAX_JOBS=N).  Events with missing inputs are skipped.
 #
-# Input:  work/<RUN_PADDED>_<EVT>/protodune-sp-frames-anode{0..7}.tar.bz2  (preferred)
-#         input_data/<run_dir>/<evt_dir>/protodune-sp-frames-anode{0..7}.tar.bz2  (fallback)
+# Input:  work/<RUN_PADDED>_<EVT>[<O_suffix>]/protodune-sp-frames-anode{0..7}.tar.bz2 (preferred)
+#         input_data/<run_dir>/<evt_dir>/protodune-sp-frames-anode{0..7}.tar.bz2 (fallback)
 #   -I:  force loading SP/raw frames from input_data even if work dir has them
 #   -d:  DNN-ROI mode: read protodune-sp-dnnroi-frames-anode{N}.tar.bz2 (from
 #        run_nf_sp_dnnroi_evt.sh).  That archive is a standard SP archive whose
@@ -15,9 +15,12 @@
 #        hu/hv/hw_{gauss,wiener,threshold}<N> histograms (gauss = DNN-ROI
 #        output); the output ROOT name gets a '-dnnroi' suffix.
 #   -s:  work/<RUN_PADDED>_<EVT>_sel<TAG>/input/ (from run_select_evt.sh)
+#   -O:  Append <suffix> to the workdir name AND to the output ROOT filename,
+#        matching run_nf_sp_dnnroi_evt.sh -O (e.g. -O _hybrid reads from
+#        work/<RUN>_<EVT>_hybrid/ and writes magnify-...-anode<N>-dnnroi-hybrid.root).
 # Orig frames (protodune-orig-frames-anode{N}.tar.bz2) are always sourced from
 # input_data when present, producing hu/hv/hw_orig<N> histograms in Magnify.
-# Output: work/<run>_<evt>[_sel<TAG>]/magnify-run<RUN>-evt<EVT>-anode<N>[-dnnroi].root
+# Output: work/<run>_<evt>[<O_suffix>][_sel<TAG>]/magnify-run<RUN>-evt<EVT>-anode<N>[-dnnroi][<O_suffix>].root
 
 set -e
 
@@ -33,6 +36,7 @@ FORCE_INPUT_DATA=""
 INCLUDE_RAWDECON=0
 INCLUDE_DECON=0
 DNN_MODE=0
+WORK_SUFFIX=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -40,6 +44,8 @@ while [ $# -gt 0 ]; do
         -d) DNN_MODE=1; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
+        -O) WORK_SUFFIX="$2"; shift 2 ;;
+        -O*) WORK_SUFFIX="${1#-O}"; shift ;;
         -R) INCLUDE_RAWDECON=1; INCLUDE_DECON=1; shift ;;   # rawdecon+decon TH2 in magnify (special mode)
         *) _args+=("$1"); shift ;;
     esac
@@ -65,6 +71,12 @@ if [ "$DNN_MODE" -eq 1 ]; then
 else
     INPUT_BASENAME="protodune-sp-frames"
     OUT_SUFFIX=""
+fi
+# -O appends to both the workdir and the output rootfile basename so A/B
+# comparison runs don't clobber each other.  Note: WORK_SUFFIX already
+# includes the leading underscore (matches run_nf_sp_dnnroi_evt.sh -O).
+if [ -n "$WORK_SUFFIX" ]; then
+    OUT_SUFFIX="${OUT_SUFFIX}${WORK_SUFFIX}"
 fi
 
 RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
@@ -110,7 +122,7 @@ process_event() {
             echo "[skip] run=$RUN evt=$EVT: no event dir found under input_data/" >&2
             return 2
         fi
-        WORKDIR="$PDVD_DIR/work/${RUN_PADDED}_${EVT}"
+        WORKDIR="$PDVD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
     fi
     echo "Event dir: $EVTDIR"
 

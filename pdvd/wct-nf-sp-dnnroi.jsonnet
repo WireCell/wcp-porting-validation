@@ -64,13 +64,32 @@ function(
   // the DNN-relabeled gauss/wiener tags using the PDVD-tuned config in
   // pgrapher/experiment/protodunevd/l1sp_after_dnnroi.jsonnet.
   use_l1sp_dnn = false,
-  l1sp_pd_mode = '',                        // 'process' | 'dump' | '' (off)
+  l1sp_pd_mode = '',                        // 'process' | 'dump' | 'dnn' | 'hybrid' | '' (off)
   l1sp_pd_dump_path = '',                   // dump-mode NPZ dir
   l1sp_pd_wf_dump_path = '',                // process-mode per-ROI waveform dump dir
   l1sp_pd_dump_all_rois = false,            // dump every ROI, not just triggered
   l1sp_pd_adj_enable = true,
   l1sp_pd_adj_max_hops = 3,
   l1sp_pd_planes = null,                    // null -> envelope default [0,1] (U+V)
+  // ── L1SP DNN tagger (mode == 'dnn' || 'hybrid').  Model file is
+  //    resolved via WIRECELL_PATH and ships with wire-cell-data/l1sp/pdvd/.
+  //    See experiments/stage_a_pu_round2_pdvd/deploy_round2.md for the
+  //    round-2 derivation of the per-CRP thresholds.
+  l1sp_pd_dnn_model        = 'l1sp/pdvd/l1sp_dnn_pdvd_v1.ts',
+  l1sp_pd_dnn_device       = 'cpu',
+  l1sp_pd_dnn_concurrency  = 1,
+  l1sp_pd_dnn_threshold    = 0.94,            // single-threshold fallback
+  l1sp_pd_dnn_threshold_bottom = null,        // per-CRP override (apa < 4)
+  l1sp_pd_dnn_threshold_top    = null,        // per-CRP override (apa >= 4)
+  l1sp_pd_dnn_window_ticks = 256,
+  l1sp_pd_dnn_debug_path   = '',
+  // ── Loose-heur pre-filter overrides (DNN-chain only).  Defaults match
+  //    the PDVD-deployed C++ values.  Use the runner's --loose-heur to
+  //    relax to (300, 10, 0.20) for hybrid mode; see deploy_round2.md
+  //    §"Phase A".
+  l1sp_pd_gmax_min         = 1500.0,
+  l1sp_pd_min_length       = 30,
+  l1sp_pd_energy_frac_thr  = 0.66,
 )
 
   local tools = tools_all;
@@ -139,6 +158,20 @@ function(
   // envelope wraps SP + DNN-ROI + L1SP into a single per-anode subgraph (the
   // FrameSplitter sits before SP since OmnibusSigProc drops raw%d).
   local l1sp_dnn_maker = import 'pgrapher/experiment/protodunevd/l1sp_after_dnnroi.jsonnet';
+
+  // TorchService for the L1SP DNN tagger.  Built when mode is 'dnn' or
+  // 'hybrid'; null otherwise so the heuristic-only path doesn't pull
+  // libtorch a second time.
+  local l1sp_torch_service =
+    if (l1sp_pd_mode == 'dnn' || l1sp_pd_mode == 'hybrid') then {
+      type: 'TorchService',
+      name: 'l1sp_dnn_pdvd',
+      data: {
+        model:       l1sp_pd_dnn_model,
+        device:      l1sp_pd_dnn_device,
+        concurrency: l1sp_pd_dnn_concurrency,
+      },
+    } else null;
 
   // Final frame sink: write the post-DNN frame with standard SP trace tags
   // gauss%d (= DNN-ROI output, U+V from the model + W passthrough) and
@@ -209,7 +242,16 @@ function(
                            l1sp_pd_dump_mode=l1sp_pd_mode,
                            l1sp_pd_dump_path=l1sp_pd_dump_path,
                            l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
-                           l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois)]
+                           l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
+                           l1sp_pd_torch_service=l1sp_torch_service,
+                           l1sp_pd_dnn_threshold=l1sp_pd_dnn_threshold,
+                           l1sp_pd_dnn_threshold_bottom=l1sp_pd_dnn_threshold_bottom,
+                           l1sp_pd_dnn_threshold_top=l1sp_pd_dnn_threshold_top,
+                           l1sp_pd_dnn_window_ticks=l1sp_pd_dnn_window_ticks,
+                           l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path,
+                           l1sp_pd_gmax_min=l1sp_pd_gmax_min,
+                           l1sp_pd_min_length=l1sp_pd_min_length,
+                           l1sp_pd_energy_frac_thr=l1sp_pd_energy_frac_thr)]
       else [sp_pipes[n]]
            + (if use_dnnroi
               then [dnnroi_inner_pipes[n], dnn_to_gauss_retag(tools.anodes[n].data.ident)]

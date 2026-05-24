@@ -54,11 +54,47 @@ Options:
                  DNN_ROI_SP/scripts/verify_wirecell_dnn.py.
   -T <thresh>    DNN sigmoid binarization threshold passed as
                  --tla-code dnnroi_mask_thresh=<val>.  Default: 0.2.
-  -L <on|off>    Wire L1SPFilterPD after DNN-ROI (default: off).  When on,
-                 the post-DNN gauss/wiener feeds L1SPFilterPD via the
+  -L <on|off>    Wire L1SPFilterPD after DNN-ROI (default: off; auto-on
+                 when -N is dnn or hybrid).  When on, the post-DNN
+                 gauss/wiener feeds L1SPFilterPD via the
                  protodunevd/l1sp_after_dnnroi.jsonnet envelope.  Final
                  frame archive then carries L1SP-corrected gauss%d /
                  wiener%d alongside raw%d.
+  -N <process|heur|dnn|hybrid>
+                 L1SP mode when -L is on (default: process).
+                   'process' = legacy 5-arm heuristic + LASSO (no model).
+                   'heur'    = alias for 'process' (PDHD-style naming).
+                   'dnn'     = call PDVD L1SP DNN on every ROI; LASSO if
+                               score >= dnn_threshold (per-CRP).
+                   'hybrid'  = loose 5-arm heuristic gates DNN inference.
+                               DNN runs only on heur-positive ROIs.
+                               Polarity from heur.  Track-veto is auto-
+                               disabled in this mode (the DNN is the FP
+                               suppressor).  Pair with --loose-heur for
+                               best recovery and the per-CRP DNN thresh.
+                               See experiments/stage_a_pu_round2_pdvd/
+                               deploy_round2.md.
+  --loose-heur   Loosen L1SP heuristic pre-filters for the DNN chain:
+                   l1_gmax_min        1500 -> 300
+                   l1_min_length        30 -> 10
+                   l1_energy_frac_thr 0.66 -> 0.20
+                 Recommended for -N hybrid (matches PDHD round-4 recipe;
+                 PDVD recovery ~98% on both CRPs per Phase A analysis).
+  --l1sp-thresh-bottom <val>
+                 DNN sigmoid threshold for bottom CRP (apa<4).  Default:
+                 jsonnet 0.94 (single fallback); deploy_round2.md picks
+                 0.16 from PR sweep at precision >= 0.70.
+  --l1sp-thresh-top <val>
+                 DNN sigmoid threshold for top CRP (apa>=4).  Default:
+                 jsonnet 0.94; deploy_round2.md picks 0.46.
+  --l1sp-thresh <val>
+                 Single threshold for both CRPs (overrides both above).
+  -Z <dir>       Write per-ROI L1SP-DNN debug NPZ under <dir>/ (resolved
+                 relative to the workdir if not absolute).  Required for
+                 LASSO-fire verification (see deploy_round2.md §"Phase E").
+  -O <suffix>    Append <suffix> to the work-dir name so A/B comparison
+                 runs don't clobber each other.  E.g. -O _hybrid writes
+                 to work/<RUN>_<EVT>_hybrid/.
   -w <wf_dir>   Enable L1SP per-ROI waveform dump (forces -L on).  Writes
                  one NPZ per ROI under <wf_dir>/<RUN_PADDED>_<EVT>/apa<N>_*/.
                  Auto-enables dump-all-rois unless overridden by -A.
@@ -79,10 +115,18 @@ MODEL=""
 MODEL_EXPLICIT=0
 DEBUG_BASE=""
 MASK_THRESH="0.2"
-L1SP="off"
+L1SP=""
+L1SP_EXPLICIT=0
+L1SP_MODE="process"
 WF_DUMP_DIR=""
 DUMP_ALL_ROIS=""
 DUMP_ALL_EXPLICIT=0
+DNN_DEBUG_DIR=""
+WORK_SUFFIX=""
+LOOSE_HEUR=0
+L1SP_THRESH_BOTTOM=""
+L1SP_THRESH_TOP=""
+L1SP_THRESH_SINGLE=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -101,8 +145,18 @@ while [ $# -gt 0 ]; do
         -X*) DEBUG_BASE="${1#-X}"; shift ;;
         -T) MASK_THRESH="$2"; shift 2 ;;
         -T*) MASK_THRESH="${1#-T}"; shift ;;
-        -L) L1SP="$2"; shift 2 ;;
-        -L*) L1SP="${1#-L}"; shift ;;
+        -L) L1SP="$2"; L1SP_EXPLICIT=1; shift 2 ;;
+        -L*) L1SP="${1#-L}"; L1SP_EXPLICIT=1; shift ;;
+        -N) L1SP_MODE="$2"; shift 2 ;;
+        -N*) L1SP_MODE="${1#-N}"; shift ;;
+        -Z) DNN_DEBUG_DIR="$2"; shift 2 ;;
+        -Z*) DNN_DEBUG_DIR="${1#-Z}"; shift ;;
+        -O) WORK_SUFFIX="$2"; shift 2 ;;
+        -O*) WORK_SUFFIX="${1#-O}"; shift ;;
+        --loose-heur) LOOSE_HEUR=1; shift ;;
+        --l1sp-thresh-bottom) L1SP_THRESH_BOTTOM="$2"; shift 2 ;;
+        --l1sp-thresh-top) L1SP_THRESH_TOP="$2"; shift 2 ;;
+        --l1sp-thresh) L1SP_THRESH_SINGLE="$2"; shift 2 ;;
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
         -w*) WF_DUMP_DIR="${1#-w}"; shift ;;
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
@@ -112,6 +166,21 @@ while [ $# -gt 0 ]; do
     esac
 done
 set -- "${_args[@]}"
+
+# Normalize -N alias.
+case "$L1SP_MODE" in
+    heur) L1SP_MODE="process" ;;
+    process|dnn|hybrid) ;;
+    *) echo "[err] -N must be one of process|heur|dnn|hybrid (got '$L1SP_MODE')" >&2; exit 1 ;;
+esac
+
+# -N dnn|hybrid auto-enables L1SP unless -L was given explicitly.
+if [ "$L1SP_EXPLICIT" = "0" ]; then
+    case "$L1SP_MODE" in
+        dnn|hybrid) L1SP="on" ;;
+        *)          L1SP="off" ;;
+    esac
+fi
 
 case "$L1SP" in
     on|off) ;;
@@ -123,6 +192,12 @@ case "$L1SP" in
     on)  USE_L1SP_DNN_TLA="true" ;;
     off) USE_L1SP_DNN_TLA="false" ;;
 esac
+
+# DNN-mode requires the L1SP envelope to be wired.
+if [ "$L1SP" = "off" ] && [ "$L1SP_MODE" != "process" ]; then
+    echo "[err] -N $L1SP_MODE requires -L on (the L1SP envelope must be wired)" >&2
+    exit 1
+fi
 
 if [ "$MODEL_EXPLICIT" = "0" ]; then
     case "$PRESET" in
@@ -187,7 +262,7 @@ else
     TAG_SUFFIX=""
 fi
 
-WORKDIR="$PDVD_DIR/work/${RUN_PADDED}_${EVT}"
+WORKDIR="$PDVD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
 mkdir -p "$WORKDIR"
 LOG="$WORKDIR/wct_nfspdnn_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.log"
 TIME_LOG="$WORKDIR/time_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.txt"
@@ -198,12 +273,12 @@ echo "device:      ${DEVICE}"
 echo "model:       ${MODEL}"
 echo "anodes:      ${ANODE_CODE}"
 echo "mask_thresh: ${MASK_THRESH}"
-echo "L1SP:        ${L1SP}"
+echo "L1SP:        ${L1SP} (mode=${L1SP_MODE})"
 echo "Log:         $LOG"
 
 # L1SP per-ROI waveform dump wiring.  -w sets the dump dir; the envelope
 # emits per-ROI NPZ in 'process' mode (LASSO writeback side effect — same
-# convention as PDHD's run_nf_sp_dnnroi_evt.sh -w).
+# convention as PDHD's run_nf_sp_dnnroi_evt.sh -w).  -w forces mode=process.
 L1SP_DUMP_TLA=()
 if [ -n "$WF_DUMP_DIR" ]; then
     case "$WF_DUMP_DIR" in
@@ -218,12 +293,58 @@ if [ -n "$WF_DUMP_DIR" ]; then
         off) DUMP_ALL_TLA="false" ;;
         *)   echo "[err] -A must be 'on' or 'off' (got '$DUMP_ALL_ROIS')" >&2; exit 1 ;;
     esac
-    L1SP_DUMP_TLA=(--tla-str l1sp_pd_mode="process" \
-                   --tla-str l1sp_pd_wf_dump_path="$WF_EVT_DIR" \
+    # -w forces 'process' mode (LASSO writeback path); silently override any -N.
+    L1SP_MODE="process"
+    L1SP_DUMP_TLA=(--tla-str l1sp_pd_wf_dump_path="$WF_EVT_DIR" \
                    --tla-code l1sp_pd_dump_all_rois="$DUMP_ALL_TLA")
-    echo "L1SP dump:   $WF_EVT_DIR (dump_all_rois=$DUMP_ALL_ROIS)"
+    echo "L1SP dump:   $WF_EVT_DIR (dump_all_rois=$DUMP_ALL_ROIS) [forces mode=process]"
 elif [ "$DUMP_ALL_EXPLICIT" = "1" ]; then
     echo "[warn] -A given without -w; ignoring (nothing to dump)" >&2
+fi
+
+# L1SP mode TLA — always passed when L1SP is on (empty when off so the
+# envelope's default 'process' applies via use_l1sp_dnn=false).
+L1SP_MODE_TLA=()
+if [ "$L1SP" = "on" ]; then
+    L1SP_MODE_TLA=(--tla-str l1sp_pd_mode="$L1SP_MODE")
+fi
+
+# Loose-heur preset (mirrors PDHD round-4 loose-heur values; see
+# experiments/stage_a_pu_round2_pdvd/deploy_round2.md §"Phase A" for the
+# PDVD recovery-rate validation that justifies these on PDVD too).
+LOOSE_HEUR_TLA=()
+if [ "$LOOSE_HEUR" = "1" ]; then
+    LOOSE_HEUR_TLA=(--tla-code l1sp_pd_gmax_min=300.0
+                    --tla-code l1sp_pd_min_length=10
+                    --tla-code l1sp_pd_energy_frac_thr=0.20)
+    echo "Loose heur:  gmax_min=300 min_length=10 energy_frac=0.20"
+fi
+
+# Per-CRP DNN threshold overrides.  --l1sp-thresh sets both legs.
+L1SP_THRESH_TLA=()
+if [ -n "$L1SP_THRESH_SINGLE" ]; then
+    L1SP_THRESH_TLA+=(--tla-code l1sp_pd_dnn_threshold="$L1SP_THRESH_SINGLE")
+fi
+if [ -n "$L1SP_THRESH_BOTTOM" ]; then
+    L1SP_THRESH_TLA+=(--tla-code l1sp_pd_dnn_threshold_bottom="$L1SP_THRESH_BOTTOM")
+    echo "L1SP thresh: bottom=$L1SP_THRESH_BOTTOM"
+fi
+if [ -n "$L1SP_THRESH_TOP" ]; then
+    L1SP_THRESH_TLA+=(--tla-code l1sp_pd_dnn_threshold_top="$L1SP_THRESH_TOP")
+    echo "L1SP thresh: top=$L1SP_THRESH_TOP"
+fi
+
+# L1SP-DNN per-ROI debug dump (one NPZ per call with channel, score,
+# fired, polarity, waveform, scalars). Required for LASSO-fire verification.
+L1SP_DNN_DBG_TLA=()
+if [ -n "$DNN_DEBUG_DIR" ]; then
+    case "$DNN_DEBUG_DIR" in
+        /*) DNN_DBG_ABS="$DNN_DEBUG_DIR" ;;
+        *)  DNN_DBG_ABS="$WORKDIR/$DNN_DEBUG_DIR" ;;
+    esac
+    mkdir -p "$DNN_DBG_ABS"
+    L1SP_DNN_DBG_TLA=(--tla-str l1sp_pd_dnn_debug_path="$DNN_DBG_ABS")
+    echo "L1SP-DNN debug: $DNN_DBG_ABS"
 fi
 
 # Resolve debug-dump basename to an absolute path under WORKDIR if relative.
@@ -266,6 +387,10 @@ wire-cell \
     --tla-code use_l1sp_dnn="${USE_L1SP_DNN_TLA}" \
     "${DBG_TLA[@]}" \
     "${L1SP_DUMP_TLA[@]}" \
+    "${L1SP_MODE_TLA[@]}" \
+    "${LOOSE_HEUR_TLA[@]}" \
+    "${L1SP_THRESH_TLA[@]}" \
+    "${L1SP_DNN_DBG_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 
