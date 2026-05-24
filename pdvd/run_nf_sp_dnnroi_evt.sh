@@ -74,12 +74,17 @@ Options:
                                best recovery and the per-CRP DNN thresh.
                                See experiments/stage_a_pu_round2_pdvd/
                                deploy_round2.md.
-  --loose-heur   Loosen L1SP heuristic pre-filters for the DNN chain:
+  --loose-heur   Loosen L1SP heuristic pre-filters for the DNN chain.
+                 Defaults are PDVD-optimized per Phase A2 sweep
+                 (experiments/stage_a_pu_round2_pdvd/deploy_round2.md §"Phase A2"):
                    l1_gmax_min        1500 -> 300
-                   l1_min_length        30 -> 10
+                   l1_min_length        30 -> 5      (PDHD uses 10; PDVD
+                                                      DNN-ROIs are shorter)
                    l1_energy_frac_thr 0.66 -> 0.20
-                 Recommended for -N hybrid (matches PDHD round-4 recipe;
-                 PDVD recovery ~98% on both CRPs per Phase A analysis).
+                 Recommended for -N hybrid.  Coverage of trad-positives
+                 across all 22 PDVD events: 76.0 % (vs 72.8 % at PDHD-loose).
+                 Override individual values with --gmax-min/--min-length/
+                 --energy-frac.
   --l1sp-thresh-bottom <val>
                  DNN sigmoid threshold for bottom CRP (apa<4).  Default:
                  jsonnet 0.94 (single fallback); deploy_round2.md picks
@@ -95,6 +100,22 @@ Options:
   -O <suffix>    Append <suffix> to the work-dir name so A/B comparison
                  runs don't clobber each other.  E.g. -O _hybrid writes
                  to work/<RUN>_<EVT>_hybrid/.
+  -c <calib_root>
+                 Switch L1SP to dump (tagger-only) mode and write per-ROI
+                 calib NPZs to <calib_root>/<RUN_PADDED>_<EVT>/apa<N>_*.npz.
+                 No LASSO write-back, no DNN dispatch — just the heuristic
+                 5-arm decision recorded per ROI for offline analysis.
+                 Pair with --gmax-min/--min-length/--energy-frac to dump
+                 at non-default pre-filters (useful for the loose-heur
+                 optimization sweep described in
+                 experiments/stage_a_pu_round2_pdvd/deploy_round2.md
+                 §"Phase A2").
+  --gmax-min <val>
+  --min-length <val>
+  --energy-frac <val>
+                 Per-parameter pre-filter overrides (override --loose-heur
+                 if both given).  Use these to dump at arbitrary triples
+                 for the optimization sweep.
   -w <wf_dir>   Enable L1SP per-ROI waveform dump (forces -L on).  Writes
                  one NPZ per ROI under <wf_dir>/<RUN_PADDED>_<EVT>/apa<N>_*/.
                  Auto-enables dump-all-rois unless overridden by -A.
@@ -124,6 +145,10 @@ DUMP_ALL_EXPLICIT=0
 DNN_DEBUG_DIR=""
 WORK_SUFFIX=""
 LOOSE_HEUR=0
+CALIB_ROOT=""
+GMAX_MIN_OVERRIDE=""
+MIN_LENGTH_OVERRIDE=""
+ENERGY_FRAC_OVERRIDE=""
 L1SP_THRESH_BOTTOM=""
 L1SP_THRESH_TOP=""
 L1SP_THRESH_SINGLE=""
@@ -154,6 +179,11 @@ while [ $# -gt 0 ]; do
         -O) WORK_SUFFIX="$2"; shift 2 ;;
         -O*) WORK_SUFFIX="${1#-O}"; shift ;;
         --loose-heur) LOOSE_HEUR=1; shift ;;
+        -c) CALIB_ROOT="$2"; shift 2 ;;
+        -c*) CALIB_ROOT="${1#-c}"; shift ;;
+        --gmax-min) GMAX_MIN_OVERRIDE="$2"; shift 2 ;;
+        --min-length) MIN_LENGTH_OVERRIDE="$2"; shift 2 ;;
+        --energy-frac) ENERGY_FRAC_OVERRIDE="$2"; shift 2 ;;
         --l1sp-thresh-bottom) L1SP_THRESH_BOTTOM="$2"; shift 2 ;;
         --l1sp-thresh-top) L1SP_THRESH_TOP="$2"; shift 2 ;;
         --l1sp-thresh) L1SP_THRESH_SINGLE="$2"; shift 2 ;;
@@ -175,11 +205,15 @@ case "$L1SP_MODE" in
 esac
 
 # -N dnn|hybrid auto-enables L1SP unless -L was given explicitly.
+# -c (calib dump) also auto-enables L1SP and overrides the mode to 'dump'.
 if [ "$L1SP_EXPLICIT" = "0" ]; then
     case "$L1SP_MODE" in
         dnn|hybrid) L1SP="on" ;;
         *)          L1SP="off" ;;
     esac
+fi
+if [ -n "$CALIB_ROOT" ]; then
+    L1SP="on"
 fi
 
 case "$L1SP" in
@@ -302,8 +336,26 @@ elif [ "$DUMP_ALL_EXPLICIT" = "1" ]; then
     echo "[warn] -A given without -w; ignoring (nothing to dump)" >&2
 fi
 
+# -c calib_root: switch to mode=dump, write per-ROI scalar NPZ.  Pair with
+# --gmax-min/--min-length/--energy-frac to dump at custom pre-filter values
+# (used by the Phase A2 optimization sweep).  Must happen BEFORE the
+# L1SP_MODE_TLA assembly below so the mode-flag flip takes effect.
+L1SP_CALIB_TLA=()
+if [ -n "$CALIB_ROOT" ]; then
+    case "$CALIB_ROOT" in
+        /*) CALIB_ABS="$CALIB_ROOT" ;;
+        *)  CALIB_ABS="$PDVD_DIR/$CALIB_ROOT" ;;
+    esac
+    CALIB_EVT_DIR="$CALIB_ABS/${RUN_PADDED}_${EVT}"
+    mkdir -p "$CALIB_EVT_DIR"
+    L1SP_MODE="dump"
+    L1SP_CALIB_TLA=(--tla-str l1sp_pd_dump_path="$CALIB_EVT_DIR")
+    echo "L1SP calib:  $CALIB_EVT_DIR [forces mode=dump]"
+fi
+
 # L1SP mode TLA — always passed when L1SP is on (empty when off so the
-# envelope's default 'process' applies via use_l1sp_dnn=false).
+# envelope's default 'process' applies via use_l1sp_dnn=false).  Built
+# AFTER -c so calib mode wins.
 L1SP_MODE_TLA=()
 if [ "$L1SP" = "on" ]; then
     L1SP_MODE_TLA=(--tla-str l1sp_pd_mode="$L1SP_MODE")
@@ -312,12 +364,32 @@ fi
 # Loose-heur preset (mirrors PDHD round-4 loose-heur values; see
 # experiments/stage_a_pu_round2_pdvd/deploy_round2.md §"Phase A" for the
 # PDVD recovery-rate validation that justifies these on PDVD too).
+# Per-parameter overrides (--gmax-min/--min-length/--energy-frac) take
+# precedence over --loose-heur.
 LOOSE_HEUR_TLA=()
 if [ "$LOOSE_HEUR" = "1" ]; then
-    LOOSE_HEUR_TLA=(--tla-code l1sp_pd_gmax_min=300.0
-                    --tla-code l1sp_pd_min_length=10
-                    --tla-code l1sp_pd_energy_frac_thr=0.20)
-    echo "Loose heur:  gmax_min=300 min_length=10 energy_frac=0.20"
+    # PDVD-optimized preset (Phase A2: min_length 10 -> 5 vs PDHD-loose
+    # because PDVD DNN-ROIs are shorter, so the length pre-filter is the
+    # dominant rejection knob).
+    GMAX_MIN_RESOLVED="${GMAX_MIN_OVERRIDE:-300.0}"
+    MIN_LENGTH_RESOLVED="${MIN_LENGTH_OVERRIDE:-5}"
+    ENERGY_FRAC_RESOLVED="${ENERGY_FRAC_OVERRIDE:-0.20}"
+else
+    GMAX_MIN_RESOLVED="$GMAX_MIN_OVERRIDE"
+    MIN_LENGTH_RESOLVED="$MIN_LENGTH_OVERRIDE"
+    ENERGY_FRAC_RESOLVED="$ENERGY_FRAC_OVERRIDE"
+fi
+if [ -n "$GMAX_MIN_RESOLVED" ]; then
+    LOOSE_HEUR_TLA+=(--tla-code l1sp_pd_gmax_min="$GMAX_MIN_RESOLVED")
+fi
+if [ -n "$MIN_LENGTH_RESOLVED" ]; then
+    LOOSE_HEUR_TLA+=(--tla-code l1sp_pd_min_length="$MIN_LENGTH_RESOLVED")
+fi
+if [ -n "$ENERGY_FRAC_RESOLVED" ]; then
+    LOOSE_HEUR_TLA+=(--tla-code l1sp_pd_energy_frac_thr="$ENERGY_FRAC_RESOLVED")
+fi
+if [ ${#LOOSE_HEUR_TLA[@]} -gt 0 ]; then
+    echo "Loose heur:  gmax_min=${GMAX_MIN_RESOLVED:-default} min_length=${MIN_LENGTH_RESOLVED:-default} energy_frac=${ENERGY_FRAC_RESOLVED:-default}"
 fi
 
 # Per-CRP DNN threshold overrides.  --l1sp-thresh sets both legs.
@@ -391,6 +463,7 @@ wire-cell \
     "${LOOSE_HEUR_TLA[@]}" \
     "${L1SP_THRESH_TLA[@]}" \
     "${L1SP_DNN_DBG_TLA[@]}" \
+    "${L1SP_CALIB_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 
