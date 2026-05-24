@@ -74,14 +74,14 @@ function(
   // heuristic decide_trigger with a TorchScript model call.  Polarity
   // is still sign(raw_asym_wide); only the fire/no-fire cut changes.
   // Model file is resolved via WIRECELL_PATH and ships with
-  // wire-cell-data/l1sp/pdhd/.  Default threshold (0.99) = p99.9 of
-  // the round-3 training corpus.  See
-  // l1sp_dl_tagger/experiments/stage_a_pu_round3/deploy_round3.md
-  // and ../stage_a_pu_round2/deploy_round2.md.
+  // wire-cell-data/l1sp/pdhd/.  Default threshold (0.9945) = p99.9 of
+  // the round-4 training corpus.  See
+  // l1sp_dl_tagger/experiments/stage_a_pu_round4/deploy_round4.md
+  // and ../stage_a_pu_round3/deploy_round3.md.
   l1sp_pd_dnn_model        = 'l1sp/pdhd/l1sp_dnn_pdhd_v1.ts',
   l1sp_pd_dnn_device       = 'cpu',
   l1sp_pd_dnn_concurrency  = 1,
-  l1sp_pd_dnn_threshold    = 0.99,
+  l1sp_pd_dnn_threshold    = 0.9945,
   l1sp_pd_dnn_window_ticks = 256,
   // When non-empty, L1SPFilterPD writes per-ROI (waveform, scalars,
   // score, polarity, fired) to one NPZ per operator() call so the
