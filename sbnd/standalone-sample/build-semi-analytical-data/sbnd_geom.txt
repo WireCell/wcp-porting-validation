@@ -1,0 +1,7 @@
+GEOM:active_center_y,0
+GEOM:active_center_z,250.5
+GEOM:active_size_y,407.465
+GEOM:active_size_z,501
+GEOM:cathode_x,0
+GEOM:drift_distance,202.05
+GEOM:n_tpc,2

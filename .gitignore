@@ -16,6 +16,7 @@ massif.*
 *.C
 *.h
 *.sh
+*.swp
 .ipynb_checkpoints
 gperf
 log*
@@ -23,3 +24,4 @@ dune-vd-cfg/*
 *~
 *.db
 fall-production
+__pycache__
