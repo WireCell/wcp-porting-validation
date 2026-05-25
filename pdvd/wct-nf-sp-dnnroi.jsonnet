@@ -74,15 +74,21 @@ function(
   // ── L1SP DNN tagger (mode == 'dnn' || 'hybrid').  Model file is
   //    resolved via WIRECELL_PATH and ships with wire-cell-data/l1sp/pdvd/.
   //    See experiments/stage_a_pu_round2_pdvd/deploy_round2.md for the
-  //    round-2 derivation of the per-CRP thresholds.
+  //    round-2 derivation of the per-CRP thresholds.  Defaults updated
+  //    2026-05-25: bottom 0.16 → 0.35, top stays 0.46.  Single-threshold
+  //    fallback set to 0.35 (used only when both per-CRP overrides null).
   l1sp_pd_dnn_model        = 'l1sp/pdvd/l1sp_dnn_pdvd_v1.ts',
   l1sp_pd_dnn_device       = 'cpu',
   l1sp_pd_dnn_concurrency  = 1,
-  l1sp_pd_dnn_threshold    = 0.94,            // single-threshold fallback
-  l1sp_pd_dnn_threshold_bottom = null,        // per-CRP override (apa < 4)
-  l1sp_pd_dnn_threshold_top    = null,        // per-CRP override (apa >= 4)
+  l1sp_pd_dnn_threshold    = 0.35,            // single-threshold fallback
+  l1sp_pd_dnn_threshold_bottom = 0.35,        // per-CRP override (apa < 4)
+  l1sp_pd_dnn_threshold_top    = 0.46,        // per-CRP override (apa >= 4)
   l1sp_pd_dnn_window_ticks = 256,
   l1sp_pd_dnn_debug_path   = '',
+  // Run DNN veto on adjacency-promoted ROIs too (default true since
+  // 2026-05-25).  Without it the heuristic-driven adjacency chain
+  // bypasses the DNN entirely.
+  l1sp_pd_adj_dnn_veto     = true,
   // ── Loose-heur pre-filter overrides (DNN-chain only).  Defaults match
   //    the PDVD-deployed C++ values.  Use the runner's --loose-heur to
   //    relax to (300, 10, 0.20) for hybrid mode; see deploy_round2.md
@@ -247,6 +253,7 @@ function(
                            l1sp_pd_dnn_threshold=l1sp_pd_dnn_threshold,
                            l1sp_pd_dnn_threshold_bottom=l1sp_pd_dnn_threshold_bottom,
                            l1sp_pd_dnn_threshold_top=l1sp_pd_dnn_threshold_top,
+                           l1sp_pd_adj_dnn_veto=l1sp_pd_adj_dnn_veto,
                            l1sp_pd_dnn_window_ticks=l1sp_pd_dnn_window_ticks,
                            l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path,
                            l1sp_pd_gmax_min=l1sp_pd_gmax_min,

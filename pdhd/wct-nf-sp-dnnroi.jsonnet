@@ -74,15 +74,19 @@ function(
   // heuristic decide_trigger with a TorchScript model call.  Polarity
   // is still sign(raw_asym_wide); only the fire/no-fire cut changes.
   // Model file is resolved via WIRECELL_PATH and ships with
-  // wire-cell-data/l1sp/pdhd/.  Default threshold (0.9945) = p99.9 of
-  // the round-4 training corpus.  See
-  // l1sp_dl_tagger/experiments/stage_a_pu_round4/deploy_round4.md
-  // and ../stage_a_pu_round3/deploy_round3.md.
+  // wire-cell-data/l1sp/pdhd/.  Default threshold 0.35, matching the
+  // 2026-05-25 deployed value (raised from 0.10).  See
+  // l1sp_dl_tagger/docs/12-l1sp-failure-027409-evt0.md and
+  // l1sp_dl_tagger/experiments/stage_a_pu_round4/deploy_round4.md.
   l1sp_pd_dnn_model        = 'l1sp/pdhd/l1sp_dnn_pdhd_v1.ts',
   l1sp_pd_dnn_device       = 'cpu',
   l1sp_pd_dnn_concurrency  = 1,
-  l1sp_pd_dnn_threshold    = 0.9945,
+  l1sp_pd_dnn_threshold    = 0.35,
   l1sp_pd_dnn_window_ticks = 256,
+  // Run DNN veto on adjacency-promoted ROIs too (default true since
+  // 2026-05-25).  Without it the heuristic-driven adjacency chain
+  // bypasses the DNN entirely.
+  l1sp_pd_adj_dnn_veto     = true,
   // When non-empty, L1SPFilterPD writes per-ROI (waveform, scalars,
   // score, polarity, fired) to one NPZ per operator() call so the
   // l1sp_dl_tagger Python validator can assert score parity.
@@ -238,6 +242,7 @@ function(
                            l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
                            l1sp_pd_torch_service=l1sp_torch_service,
                            l1sp_pd_dnn_threshold=l1sp_pd_dnn_threshold,
+                           l1sp_pd_adj_dnn_veto=l1sp_pd_adj_dnn_veto,
                            l1sp_pd_dnn_window_ticks=l1sp_pd_dnn_window_ticks,
                            l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path,
                            l1sp_pd_gmax_min=l1sp_pd_gmax_min,
