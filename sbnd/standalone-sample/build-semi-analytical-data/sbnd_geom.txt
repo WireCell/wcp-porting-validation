@@ -1,3 +1,4 @@
+GEOM:vuv_absorption_length,2000
 GEOM:active_center_y,0
 GEOM:active_center_z,250.5
 GEOM:active_size_y,407.465
