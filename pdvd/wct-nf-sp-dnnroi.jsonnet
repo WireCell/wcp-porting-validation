@@ -75,14 +75,15 @@ function(
   //    resolved via WIRECELL_PATH and ships with wire-cell-data/l1sp/pdvd/.
   //    See experiments/stage_a_pu_round2_pdvd/deploy_round2.md for the
   //    round-2 derivation of the per-CRP thresholds.  Defaults updated
-  //    2026-05-25: bottom 0.16 → 0.35, top stays 0.46.  Single-threshold
-  //    fallback set to 0.35 (used only when both per-CRP overrides null).
+  //    2026-05-25: bottom 0.16 → 0.35 → 0.5, top 0.46 → 0.5 — both
+  //    CRPs now share a single deployed threshold.  See doc 13 for
+  //    motivation.  Single-threshold fallback also 0.5.
   l1sp_pd_dnn_model        = 'l1sp/pdvd/l1sp_dnn_pdvd_v1.ts',
   l1sp_pd_dnn_device       = 'cpu',
   l1sp_pd_dnn_concurrency  = 1,
-  l1sp_pd_dnn_threshold    = 0.35,            // single-threshold fallback
-  l1sp_pd_dnn_threshold_bottom = 0.35,        // per-CRP override (apa < 4)
-  l1sp_pd_dnn_threshold_top    = 0.46,        // per-CRP override (apa >= 4)
+  l1sp_pd_dnn_threshold    = 0.5,             // single-threshold fallback
+  l1sp_pd_dnn_threshold_bottom = 0.5,         // per-CRP override (apa < 4)
+  l1sp_pd_dnn_threshold_top    = 0.5,         // per-CRP override (apa >= 4)
   l1sp_pd_dnn_window_ticks = 256,
   l1sp_pd_dnn_debug_path   = '',
   // Run DNN veto on adjacency-promoted ROIs too (default true since

@@ -74,14 +74,14 @@ function(
   // heuristic decide_trigger with a TorchScript model call.  Polarity
   // is still sign(raw_asym_wide); only the fire/no-fire cut changes.
   // Model file is resolved via WIRECELL_PATH and ships with
-  // wire-cell-data/l1sp/pdhd/.  Default threshold 0.35, matching the
-  // 2026-05-25 deployed value (raised from 0.10).  See
-  // l1sp_dl_tagger/docs/12-l1sp-failure-027409-evt0.md and
+  // wire-cell-data/l1sp/pdhd/.  Default threshold 0.5, matching the
+  // 2026-05-25 deployed value (raised 0.10 → 0.35 → 0.5).  See
+  // l1sp_dl_tagger/docs/13-l1sp-deploy-thresh0p5.md and
   // l1sp_dl_tagger/experiments/stage_a_pu_round4/deploy_round4.md.
   l1sp_pd_dnn_model        = 'l1sp/pdhd/l1sp_dnn_pdhd_v1.ts',
   l1sp_pd_dnn_device       = 'cpu',
   l1sp_pd_dnn_concurrency  = 1,
-  l1sp_pd_dnn_threshold    = 0.35,
+  l1sp_pd_dnn_threshold    = 0.5,
   l1sp_pd_dnn_window_ticks = 256,
   // Run DNN veto on adjacency-promoted ROIs too (default true since
   // 2026-05-25).  Without it the heuristic-driven adjacency chain
