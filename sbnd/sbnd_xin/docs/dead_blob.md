@@ -142,8 +142,54 @@ bee files:
 
 So the answer to "imaging or clustering?" is **clustering** — dead blobs
 enter the final bee `.zip` files via `MultiAlgBlobClustering` with
-`save_deadarea: true`. No change is needed in either `clus.jsonnet` or
-the MABC config; both are already correct.
+`save_deadarea: true`.
+
+## Per-TPC dead-area JSON (wire-cell-bee3 v2 schema)
+
+`wire-cell-bee3` commits `1967cd1` and `293539a` changed the bee server
+to (1) load *every* `channel-deadarea*.json` file in an upload as a
+separate mesh and (2) honor an optional per-TPC wrapper format that
+places the dead-area slab on the correct anode face for multi-TPC
+detectors. Without the wrapper, all polygons render on the
+most-negative-X face of the union envelope — wrong for SBND TPC 1.
+
+The v2 wrapper schema (see `wire-cell-bee3/docs/dead-area.md`):
+
+```json
+{
+  "version": 2,
+  "tpc": <int>,
+  "polygons": [ [[y0,z0], [y1,z1], ...], ... ]
+}
+```
+
+`tpc` is a zero-based index into the bee3 detector's `experiment.tpc.location`.
+For SBND the mapping is `tpc.location[0]` → anode at x = −201.75 cm
+(matches WCT anode ident 0) and `tpc.location[1]` → x = +201.75 cm
+(matches WCT anode ident 1), so **WCT `apa` ident is the bee3 TPC index
+for SBND**. This is only correct for detectors whose anodes are
+single-face; multi-face anodes (e.g. PDHD) need a separate
+`(apa, face) → tpc` table.
+
+### Toolkit implementation
+
+- `util/inc/WireCellUtil/Bee.h`, `util/src/Bee.cxx`: `Bee::Patches` gains
+  an optional `int tpc=-1` constructor parameter. When `tpc >= 0`, the
+  underlying `m_data` is an object `{version:2, tpc, polygons:[…]}` and
+  `flush`/`clear`/`size`/`empty` operate on `m_data["polygons"]`. When
+  `tpc == -1` (default), the legacy bare-array form is preserved for
+  back-compat with old bee viewers.
+- `clus/.../MultiAlgBlobClustering.{h,cxx}`: new config knob
+  `dead_area_version` (default `1` = legacy). When `≥ 2`, each
+  per-(apa, face) `Patches` is constructed with `tpc = apa`.
+- `sbnd_xin/clus.jsonnet`: both `MultiAlgBlobClustering` nodes
+  (per-face and all-APA) set `dead_area_version: 2`, so all SBND
+  uploads from this directory carry the v2 schema.
+
+Other detectors (PDHD, PDVD, μBooNE, …) stay on legacy bare-array until
+they opt in via their own jsonnet; the legacy format still renders
+correctly on bee3 (it lands on the union envelope, which is right for
+single-TPC detectors).
 
 ## Summary
 
@@ -152,6 +198,7 @@ the MABC config; both are already correct.
 | Live: 3-live + 2-live + 1-dead | regressed to single-3-view (mode-string mismatch from eef2df7) | restored via mode `'multi-3view'` |
 | Dead: 2-dead-plane (1 dummy + 2 masked) | already in place | unchanged |
 | Dead blobs → final bee files | already in place via `save_deadarea: true` (clustering stage) | unchanged |
+| Dead-area slab placement on each TPC anode | legacy bare-array JSON → both TPCs rendered on union envelope (wrong for SBND TPC 1) | v2 wrapper JSON with `tpc=apa` → correct per-anode placement on bee3 |
 
 ## Verification
 
@@ -163,10 +210,14 @@ the MABC config; both are already correct.
    accordingly; the prior measurement was 3114 → 4260 on evt2/APA0.
 2. `icluster-apa<N>-masked.npz` should be byte-identical before/after,
    since the masked fork was unchanged.
-3. Open one `mabc-<apa>-face<f>.zip` and confirm both the live
-   `clustering/3d` point set and the dead-area geometry are present —
-   this is just a sanity check; `save_deadarea: true` has been on
-   throughout.
+3. Open one `mabc-<apa>-face<f>.zip` and inspect a
+   `channel-deadarea-apa<N>-face0.json` entry — it must be a JSON object
+   with `version: 2`, `tpc: <apa>`, and a non-empty `polygons` array
+   (not the legacy top-level array form).
+4. Upload `mabc-all-apa.zip` to bee3 and confirm both TPCs' dead-area
+   slabs render on their respective anode faces (x ≈ −201.5 cm for
+   apa0, x ≈ +201.5 cm for apa1) rather than both stacking on the
+   negative-X envelope face.
 
 ## Follow-ups (out of scope here)
 
@@ -178,3 +229,8 @@ the MABC config; both are already correct.
   preferred for future configs, add the corresponding aliases to the
   dispatcher in `cfg/pgrapher/experiment/sbnd/img.jsonnet:342` so the
   intent is no longer silently dropped.
+- Extend `dead_area_version: 2` to multi-face-anode detectors (PDHD,
+  PDVD, ICARUS). The current toolkit code passes `tpc = apa`, which is
+  only correct when each anode has exactly one face. Multi-face anodes
+  need a `(apa, face) → tpc` mapping driven from the bee3 detector
+  geometry.

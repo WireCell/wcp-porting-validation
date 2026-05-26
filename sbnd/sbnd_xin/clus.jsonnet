@@ -148,6 +148,7 @@ local clus_per_face(anode, face, dump, output_dir, runNo, subRunNo, eventNo) = {
             subRunNo: subRunNo,
             eventNo: eventNo,
             save_deadarea: true,
+            dead_area_version: 2,
             anodes: [wc.tn(anode)],
             face: face,
             detector_volumes: wc.tn(dv),
@@ -221,6 +222,7 @@ local clus_all_apa(anodes, dump, output_dir, runNo, subRunNo, eventNo) = {
             subRunNo: subRunNo,
             eventNo: eventNo,
             save_deadarea: true,
+            dead_area_version: 2,
             anodes: [wc.tn(a) for a in anodes],
             detector_volumes: wc.tn(dv),
             bee_points_sets: [
