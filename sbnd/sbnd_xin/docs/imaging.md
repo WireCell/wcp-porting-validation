@@ -416,11 +416,19 @@ print(list(d.keys())[:10])   # e.g. ['cluster_0_nodes', 'cluster_0_edges', ...]
   anode (`GridTiling` face = 0 for APA0, 1 for APA1). The generic
   multi-face loop used in other detectors is commented out.
 
-- **Richer deghosting chain commented out** (`img.jsonnet:299`) — the
-  active pipeline today is "simple-solving" (one round of `BlobClustering →
-  BlobGrouping → ChargeSolving → LocalGeomClustering → ChargeSolving →
-  InSliceDeghosting → GlobalGeomClustering`). The multi-round
-  `ProjectionDeghosting` chain is in the file for future use.
+- **Deghosting depth is now a jsonnet toggle** — `img.solving()`,
+  `imgpipe()`, and `per_anode()` in
+  `cfg/pgrapher/experiment/sbnd/img.jsonnet` accept `full_deghost`
+  (default `false`). `false` runs the historical "simple-solving"
+  (one ChargeSolving triple + one `InSliceDeghosting` round);
+  `true` runs the uBooNE-matched "uboone-solving"
+  (two `ProjectionDeghosting` passes + three ChargeSolving triples +
+  three `InSliceDeghosting` rounds). `sbnd_xin/wct-img-all.jsonnet`
+  defaults `full_deghost=true`, so the standalone pipeline matches the
+  uBooNE chain. Pass `--tla-code full_deghost=false` to revert.
+  Production `wcls-img-clus.jsonnet` does not pass the flag, so it
+  inherits `false` and is bit-identical to the prior behavior.
+  See the next section for the algorithm-level comparison.
 
 - **`FrameQualityTagging` not in pipeline** (`img.jsonnet:93–116`) — the
   node is defined (with `min_time: 3180`, `max_time: 7870`) but is not
@@ -449,3 +457,210 @@ print(list(d.keys())[:10])   # e.g. ['cluster_0_nodes', 'cluster_0_edges', ...]
   Active blob count for evt2 / APA0 increased from 3,114 to 4,260 after
   the fix. The identical bug was present and fixed in
   `cfg/pgrapher/experiment/dune-vd/img.jsonnet:324`.
+
+---
+
+## Comparison with the uBooNE imaging chain
+
+Reference: `/home/xqian/work/scratch_wcgpu1/toolkit-dev/wcp-porting-img/wct-uboone-img.jsonnet`
+(canonical uBooNE imaging job; the `fgval/uboone-val.jsonnet` is a quick-look
+variant whose `solving` block is fully commented out and just runs
+`BlobClustering → GlobalGeomClustering`, so it is not the right baseline for
+algorithm comparison).
+
+This section was written in response to the question "is deghosting fully
+implemented in `sbnd_xin`, and are dead channels being read in correctly?"
+TL;DR:
+
+* **Deghosting is _not_ fully implemented in the imaging chain.** SBND's
+  active-fork `solving()` is `simple-solving` — no `ProjectionDeghosting`,
+  one `InSliceDeghosting` round, one `ChargeSolving` triple. uBooNE's
+  `uboone-solving` runs **two `ProjectionDeghosting` passes**, **three
+  `ChargeSolving` triples**, and **three `InSliceDeghosting` rounds**.
+* **Dead channels _are_ correctly read in** at the imaging boundary:
+  the `bad` CMM tag arrives in `chanmask_bad_<EVT>.npy` inside
+  `sp-frames.tar.bz2`, flows through `FrameFileSource` →
+  `ChannelSelector` → `CMMModifier` → `FrameMasking`, and is consumed
+  by both `MaskSlices` and the masked-fork 2-view fanpipe. `CMMModifier`
+  in SBND only does the "organize" step, however — the dynamic
+  veto / dead-charge augmentation knobs that uBooNE configures are all
+  commented out.
+
+### Active-fork "solving" pipeline — line-by-line
+
+`cfg/pgrapher/experiment/sbnd/img.jsonnet:299-300`:
+
+```jsonnet
+// ret: g.pipeline([bc, gd1, cs1, ld1, gd2, cs2, ld2, cs3, ld3, gc],"uboone-solving"),
+ret: g.pipeline([bc, cs1, ld1, gc],"simple-solving"),
+```
+
+where each step is built from local builders at lines 218–297. Reading the
+pipeline left-to-right:
+
+| Step alias | Component | SBND (`simple-solving`) | uBooNE (`uboone-solving`) |
+|---|---|---|---|
+| `bc`  | `BlobClustering`               (policy=`uboone`) | ✅ | ✅ |
+| `gd1` | `ProjectionDeghosting` round 1                    | **❌ skipped** | ✅ |
+| `cs1` | `BlobGrouping → ChargeSolving(uniform) → LocalGeomClustering → ChargeSolving(uboone)` round 1 | ✅ | ✅ |
+| `ld1` | `InSliceDeghosting` round 1 (`config_round=1`)    | ✅ | ✅ |
+| `gd2` | `ProjectionDeghosting` round 2                    | **❌ skipped** | ✅ |
+| `cs2` | charge-solving triple round 2                      | **❌ skipped** | ✅ |
+| `ld2` | `InSliceDeghosting` round 2 (`config_round=2`)    | **❌ skipped** | ✅ |
+| `cs3` | charge-solving triple round 3                      | **❌ skipped** | ✅ |
+| `ld3` | `InSliceDeghosting` round 3 (`config_round=3`)    | **❌ skipped** | ✅ |
+| `gc`  | `GlobalGeomClustering` (policy=`uboone`)          | ✅ | ✅ |
+
+Builders `global_deghosting(...)`, `local_deghosting(config_round=...)`,
+`solving(...)` are all _defined_ in the SBND `img.jsonnet` (lines 266–297),
+so the missing steps are present in code — they are simply not wired into
+the active pipeline.
+
+Physical meaning of the missing components:
+
+* **`ProjectionDeghosting`** drops blobs whose 2D wire-plane projections do
+  not survive a coincidence test against the deconvolved charge
+  distribution. It is most effective at trimming "ghost" blobs created when
+  one true track produces tile-pattern false matches across the three views.
+* **`InSliceDeghosting` rounds 2 and 3** rerun the same algorithm with
+  progressively tighter `config_round` settings after the charge has been
+  re-solved on the surviving blobs, refining which blobs survive.
+
+Empirically, the WCP/uBooNE production chain has shown that the
+multi-round combination of Projection- and InSlice- deghosting is what
+cleans up the bulk of pixelation-induced ghost blobs. The current SBND
+chain therefore likely overstates active blob count and total reconstructed
+charge in busy events. Switching SBND to `uboone-solving` is a one-line
+flip in `img.jsonnet`; per the project convention
+([CLAUDE.md / toggleable behavior changes](notes.md)), that change should
+be exposed as a jsonnet toggle defaulting OFF so existing production
+configs remain bit-identical until validated.
+
+### Dead-channel pathway — full audit
+
+End-to-end the "bad" CMM tag enters the imaging graph here:
+
+```
+1. cfg/pgrapher/experiment/sbnd/chndb-base.jsonnet:63
+   ↓  bad: [546, 607, 2781, 3232..3263, 4160..4191, 4374, 4800..4805,
+   ↓        5060, 5231, 5636, 5637, 7167, 7169, 8378, 8395, 8574,
+   ↓        10012, 10869, 10438..10443, 11147]   (≈ 92 channels)
+2. NF chain (production) writes "bad" cmm in the SP-output frame
+   ↓  In sbnd_xin: this archive comes from upstream LArSoft, so the
+   ↓  NF/chndb step is *bypassed*. The "bad" map is delivered in
+   ↓  the tarball as `chanmask_bad_<EVT>.npy`.
+3. FrameFileSource(input='sp-frames.tar.bz2', tags=['dnnsp'])
+   ↓  Reads chanmask_bad_<EVT>.npy and re-attaches it to the IFrame
+   ↓  as the "bad" channel-mask map.
+4. FrameFanout per-anode (wct-img-all.jsonnet:86-100)
+   ↓  Renames frame tag '.*' → 'orig<N>' and trace tag 'dnnsp' →
+   ↓  ['gauss<N>','wiener<N>'].  The channel-mask map flows through
+   ↓  unchanged (the rule list only mentions frame/trace; CMM tags
+   ↓  are not renamed).
+5. ChannelSelector (chsel_correct<N> and chsel_pipes)
+   ↓  Filters traces to channels [5638*N, 5638*(N+1)); the "bad" CMM
+   ↓  is preserved on the surviving channels.
+6. CMMModifier      cm_tag='bad'        (img.jsonnet:67-91)
+7. FrameMasking     cm_tag='bad'        (img.jsonnet:118-127)
+8. MaskSlices       wiener/charge/error tags driven by the masked-channel
+                    information; multi_active_slicing_tiling +
+                    multi_masked_2view_slicing_tiling fanpipes both fire.
+```
+
+All four `gauss<N>`-receiving nodes (`ChannelSelector`, `CMMModifier`,
+`FrameMasking`, `ChargeErrorFrameEstimator`) get the correct anode and the
+correct per-APA channel range. Both the **active fork** (`multi_active_…`,
+branches 0–3 covering 3-view + the three 2-view combinations) and the
+**masked fork** (`multi_masked_2view_…`, three dummy/masked permutations)
+consume the bad-channel state via `active_planes` / `masked_planes` /
+`dummy_planes`. So at the structural level **dead channels are correctly
+delivered, masked, and turned into 2-view blob hypotheses in the masked
+fork**.
+
+### `CMMModifier`: what SBND does vs. what uBooNE does
+
+`cfg/pgrapher/experiment/sbnd/img.jsonnet:67-91` keeps **only the "organize"
+step**; all other knobs are commented out. uBooNE
+(`wcp-porting-img/wct-uboone-img.jsonnet:57-81`) configures the full
+feature set:
+
+| Parameter | SBND | uBooNE |
+|---|---|---|
+| `cm_tag` | `'bad'` | `'bad'` |
+| `trace_tag` | `'gauss<N>'` | `'gauss'` |
+| `start` / `end` (veto window) | _disabled_ | 0 / 9592 |
+| `ncount_cont_ch`, `cont_ch_llimit`, `cont_ch_hlimit` | _disabled_ | 2; `[296, 7136]`; `[671, 7263]` (veto on continuous bad runs) |
+| `ncount_veto_ch`, `veto_ch_llimit`, `veto_ch_hlimit` | _disabled_ | 1; `[3684]`; `[3699]` (hard-coded veto channels) |
+| `dead_ch_ncount`, `dead_ch_charge`, `ncount_dead_ch`, `dead_ch_llimit`, `dead_ch_hlimit` | _disabled_ | 10 / 1000 / 2 / `[2160,2080]` / `[2176,2096]` (charge-based dead-channel addition) |
+| `ncount_org`, `org_llimit`, `org_hlimit` | 1; `[0]`; `[3427]` | 5; `[0,1920,3840,5760,7680]`; `[1919,3839,5759,7679,9592]` |
+
+What's missing in SBND (and what each knob does):
+
+* **Continuous-bad-channel veto** (`cont_ch_*`): when a stretch of `cont_ch_*`
+  contiguous bad channels is found within the given channel-range gates,
+  the dead range is widened with a fixed margin so neighbouring borderline
+  channels aren't trusted.
+* **Hard-veto channels** (`veto_ch_*`): explicit channels added to the bad
+  list regardless of input.
+* **Dynamic-dead-channel inference** (`dead_ch_*`): channels whose
+  cumulative `gauss` charge exceeds `dead_ch_charge` in `dead_ch_ncount`
+  ticks within the gates `[dead_ch_llimit, dead_ch_hlimit]` are
+  retroactively flagged as dead (i.e., the algorithm refuses to trust their
+  charge, presumably to catch railed/saturated channels).
+* **Multi-segment "organize"**: uBooNE organises bad-channel rectangles
+  per 1920-tick wire-plane segment; SBND treats the whole 3427-tick
+  readout as a single segment.
+
+These are all _augmentations_ on top of the chndb-supplied static bad list.
+SBND just propagates the static list as-is. For a well-tuned NF that
+emits a clean, accurate `chanmask_bad` this is fine; if there are
+known classes of bad behavior that the NF cannot capture (saturation,
+intermittent bad-channel pickup), they will not be cleaned up here.
+
+### Other algorithm / config differences in the imaging chain
+
+| Setting | SBND | uBooNE | Notes |
+|---|---|---|---|
+| Active-fork `tick_span` | 4 (= 2 µs) | 4 | identical |
+| Masked-fork `span` | 500 (= 250 µs) | 1744 (= 872 µs) | SBND uses a finer slice — gives a denser masked-fork blob set but more memory |
+| `MaskSlices.max_tbin` | 3427 | 9592 | drives off the readout-window length |
+| `nthreshold` (per-plane) | `[3.6, 3.6, 3.6]` | `[3.6, 3.6, 3.6]` | identical |
+| `ChargeErrorFrameEstimator.rebin` | 4 | 4 | |
+| `ChargeErrorFrameEstimator.fudge_factors` (U/V/W) | `[2.31, 2.31, 1.1]` | `[2.31, 2.31, 1.1]` | identical — these are the uBooNE-tuned values inherited verbatim; worth re-deriving for SBND once SP comparisons stabilise |
+| `ChargeErrorFrameEstimator.time_limits` (rebin-4 ticks) | `[12, 800]` | `[12, 800]` | identical; covers ticks 48–3200 — note SBND readout extends to 3427 so the tail 227 ticks are outside the error model |
+| `WaveformMap.filename` | `sbnd-charge-error.json.bz2` | `microboone-charge-error.json.bz2` | SBND-specific file (commit 2023-10-17) |
+| `GridTiling.face` | `anode.data.ident` (face 0 for APA0, face 1 for APA1) | `0` only (uBooNE has one anode) | SBND has 1 face per anode hard-wired |
+| `BlobClustering.policy` | `uboone` | `uboone` | identical |
+| `GlobalGeomClustering.policy` | `uboone` | `uboone` | identical |
+| `ChargeSolving.solve_config`, `whiten` | `uboone`, `true` | `uboone`, `true` | identical (used in the rounds that do run) |
+| Image-output schema | active + masked `.npz` per APA | active + masked `.npz` per APA | identical (uBooNE has only one APA, SBND has two) |
+
+`FrameQualityTagging` exists as a definition in both files but is not in
+either active `pre_proc` pipeline; the uBooNE pipeline composition is
+`[cmm_mod, frame_masking, charge_err]` and SBND is
+`[chsel_pipes, cmm_mod, frame_masking, charge_err]` — the only structural
+delta is the per-APA channel selector that SBND needs and uBooNE does not.
+
+### Action items implied by this audit
+
+1. ~~Switch the active-fork `solving()` to `uboone-solving`~~ **Done.**
+   `img.jsonnet`'s `solving` / `imgpipe` / `per_anode` accept
+   `full_deghost` (default `false`); `sbnd_xin/wct-img-all.jsonnet`
+   defaults `full_deghost=true`, so the standalone pipeline now runs the
+   full uBooNE chain. Production `wcls-img-clus.jsonnet` inherits the
+   `false` default and is unchanged. Closure-test verification: per
+   anode, `full_deghost=true` instantiates 2 `ProjectionDeghosting`,
+   3 `BlobGrouping`, 6 `ChargeSolving`, 3 `LocalGeomClustering`, and
+   3 `InSliceDeghosting` nodes (vs 0 / 1 / 2 / 1 / 1 in `false` mode);
+   confirmed by `jsonnet`-level node counts on both toggle states.
+2. **Re-evaluate `time_limits=[12,800]`** for `ChargeErrorFrameEstimator`
+   — the SBND readout is 3427 ticks ≈ 857 rebin-4 ticks, so the upper
+   bound is currently 57 rebin-ticks short of the readout end. Either
+   widen it to `~855` or document the conscious choice.
+3. **Re-derive `fudge_factors`** from SBND-specific SP closure data
+   rather than carrying the uBooNE-tuned `[2.31,2.31,1.1]`.
+4. **Decide on `CMMModifier` augmentation** — if SBND has known classes
+   of intermittent bad-channel behavior (railing, pickup), wire up the
+   `cont_ch_*` / `veto_ch_*` / `dead_ch_*` machinery rather than relying
+   solely on the static chndb list. Otherwise leave the current minimal
+   config and document explicitly that this is intentional.

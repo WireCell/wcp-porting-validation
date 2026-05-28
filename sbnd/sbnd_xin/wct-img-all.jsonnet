@@ -27,6 +27,7 @@ function(
   input         = 'sp-frames.tar.bz2',
   anode_indices = [0, 1],
   output_dir    = '',
+  full_deghost  = true,   // matches uBooNE chain (ProjectionDeghosting x2 + 3 ChargeSolving + 3 InSliceDeghosting); pass --tla-code full_deghost=false to revert to simple-solving
 )
   local anodes  = [tools_all.anodes[i] for i in anode_indices];
   local nanodes = std.length(anodes);
@@ -34,7 +35,7 @@ function(
   local img = import 'pgrapher/experiment/sbnd/img.jsonnet';
   local img_maker = img();
 
-  local img_pipes = [img_maker.per_anode(anodes[n], 'multi-3view', add_dump=false)
+  local img_pipes = [img_maker.per_anode(anodes[n], 'multi-3view', add_dump=false, full_deghost=full_deghost)
                      for n in std.range(0, nanodes - 1)];
 
   // Defensive per-anode filter: ensures the FrameFanout output for branch N contains only
