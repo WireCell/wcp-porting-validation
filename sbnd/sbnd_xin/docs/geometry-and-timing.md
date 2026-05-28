@@ -51,8 +51,8 @@ X ≈ [+2014.5, +2020.5] mm.
 
 | File | Line | Value | Context |
 |---|---|---|---|
-| `clus.jsonnet` | 22 | `FV_xmax: 201.45*wc.cm` | overall fiducial volume |
-| `clus.jsonnet` | 49 | `FV_xmax: 201.45*wc.cm` | `a1f0pA` drift-volume block |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | — | `FV_xmax: 201.05*wc.cm` | overall fiducial volume |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | — | `FV_xmax: 201.05*wc.cm` | `a1f0pA` drift-volume block |
 | `wct-img-2-bee.py` | 19, 21 | `--x0 "-201.45*cm"` / `"201.45*cm"` | bee-blobs undrift origin |
 
 ---
@@ -95,7 +95,7 @@ drift_speed : 1.563*wc.mm/wc.us
 
 | File | Line | Value | Context |
 |---|---|---|---|
-| `clus.jsonnet` | 13 | `1.563 mm/us` | `BlobSampler` drift speed; `time_offset` scaling |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | — | `1.563 mm/us` | `BlobSampler` drift speed; `time_offset` scaling |
 | `wct-clustering.jsonnet` | 32 | TLA default `1.563` | overlaid onto `simparams.lar.drift_speed` |
 | `run_clus_evt.sh` | 121 | `--tla-code "driftSpeed=1.563"` | explicit TLA forwarded to above |
 | `wct-img-2-bee.py` | 19, 21 | `±1.563 mm/us` | bee-blobs `--speed` arg |
@@ -130,15 +130,15 @@ default rather than a tuned non-nominal-field setting.
 
 ## Time offset
 
-**Local definition:** `clus.jsonnet:12`
+**Local definition:** `cfg/pgrapher/experiment/sbnd/clus.jsonnet`
 
 ```jsonnet
 local time_offset = -205 * wc.us;
 ```
 
 Used by:
-- `clus.jsonnet:40` (`dvm.a0f0pA.time_offset`) — passed into `BlobSampler`
-- `clus.jsonnet:82` (`bs_live_face data.time_offset`) — applied when sampling blob points into (x,y,z) space
+- `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (`dvm.a0f0pA.time_offset`) — passed into `BlobSampler`
+- `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (`bs_live_face data.time_offset`) — applied when sampling blob points into (x,y,z) space
 
 ### BEE undrift convention — why `wct-img-2-bee.py` uses `--t0 "200*us"` (positive)
 
@@ -165,7 +165,7 @@ Passing `--t0 "-205*us"` (i.e. the same sign as `time_offset`) shifts every
 blob by 2 × 205 us × 1.563 mm/us ≈ 64 cm — that was the kind of bug fixed
 on this branch.
 
-**APA-specific drift direction** (`clus.jsonnet:27`):
+**APA-specific drift direction** (`cfg/pgrapher/experiment/sbnd/clus.jsonnet`):
 
 ```jsonnet
 local drift_sign = if anode.data.ident%2 == 0 then 1 else -1;
@@ -304,16 +304,14 @@ with:
 
 **Previously a production bug:** `cfg/pgrapher/experiment/sbnd/img.jsonnet:47`
 used `5632*ident`, dropping the last 6 W-plane wires of APA0 and the last 12
-W-plane wires of APA1 (because the chsel_correct local filter and the shared
-chsel_pipes filter were applied in series, intersecting to `[0,5631]` for APA0
-and `[5638,11263]` for APA1).
+W-plane wires of APA1 (because `img.jsonnet`'s `chsel_pipes` channel selection
+restricted each anode to `[0,5631]` for APA0 and `[5638,11263]` for APA1).
 
 **Fixed (this branch):**
 
 | File | Line | Value |
 |---|---|---|
 | `cfg/pgrapher/experiment/sbnd/img.jsonnet` | 47 | `std.range(5638*ident, 5638*(ident+1)-1)` |
-| `wct-img-all.jsonnet` | 48–49 | `std.range(5638*N, 5638*(N+1)-1)` (defensive pre-filter; redundant after the shared fix but kept against regressions) |
 | `wct-sp-to-magnify.jsonnet` | 118 | Same `ChannelSelector` before `MagnifySink` |
 
 ---
@@ -323,8 +321,8 @@ and `[5638,11263]` for APA1).
 | Constant | Value | Source |
 |---|---|---|
 | `nticks` | 3427 | `wct-sp-to-magnify.jsonnet:45` TLA default; passed to `MagnifySink` `runinfo.total_time_bin`. Matches actual SP-frame readout window (input frames are 11276 × 3427). |
-| tick period | 0.5 µs | `clus.jsonnet:38` `tick: 0.5 * wc.us` |
-| `tick_drift` | `drift_speed * tick` | `clus.jsonnet:39` (= 0.78 µm per tick at 1.56 mm/µs) |
+| tick period | 0.5 µs | `cfg/pgrapher/experiment/sbnd/clus.jsonnet` `tick: 0.5 * wc.us` |
+| `tick_drift` | `drift_speed * tick` | `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (= 0.78 µm per tick at 1.56 mm/µs) |
 
 **Imaging tick clipping (also fixed on this branch):**
 `cfg/pgrapher/experiment/sbnd/img.jsonnet` previously hardcoded `MaskSlices.max_tbin: 3400`
@@ -355,7 +353,7 @@ as an overlay on `simparams.lar`:
 | `wct-sp-to-magnify.jsonnet` | `pgrapher/experiment/sbnd/simparams.jsonnet` |
 | `wct-img-all.jsonnet` | `pgrapher/experiment/sbnd/simparams.jsonnet`, `pgrapher/experiment/sbnd/img.jsonnet` |
 | `wct-clustering.jsonnet` | `pgrapher/experiment/sbnd/simparams.jsonnet` (with TLA overlay) |
-| `clus.jsonnet` | `pgrapher/common/clus.jsonnet` |
+| `clus.jsonnet` | `pgrapher/experiment/sbnd/clus.jsonnet` |
 | `magnify-sinks.jsonnet` | *(no sbnd-specific imports)* |
 
 All shared configs live under `$WIRECELL_PATH` → `toolkit/cfg/pgrapher/...`.
@@ -375,7 +373,7 @@ and 2024 data calibration notes):
 | Drift velocity = 1.563 mm/µs | 1.563 mm/µs (`simparams.jsonnet:16`); all `sbnd_xin/` sites now synced (see **Drift speed**) | ✅ |
 | Max drift time in data ≈ 1281–1282 µs | sim geometry gives ≈ 1290 µs (= (W − CPA) / v_d); the ~8 µs gap is consistent with data's wider cathode | ✅ |
 | CPA thickness in data ~±1.5 cm (~3 cm gap; DENT issue) | sim is ±0.45 cm (~1 cm gap; `params.jsonnet:24-25`) | ⚠ — known sim/data mismatch, not yet modelled |
-| TPC active volume Y ±200 cm, Z 0.15–500.85 cm (wire-readout overlap) | Not in this doc; cf. `wirecell-util wires-info $WIRECELL_DATA/sbnd-wires-geometry-v0206.json.bz2` and FV_y/FV_z in `clus.jsonnet:23-26` (±200.312 cm / 4.05–505.35 cm with margins) | (verify via `wires-info`) |
+| TPC active volume Y ±200 cm, Z 0.15–500.85 cm (wire-readout overlap) | Not in this doc; cf. `wirecell-util wires-info $WIRECELL_DATA/sbnd-wires-geometry-v0206.json.bz2` and FV_y/FV_z in `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (±199.312 cm / 0.85–500.15 cm with margins) | (verify via `wires-info`) |
 
 **Implication for WCT geometry:** none — the only ⚠ row (CPA thickness) is a
 known upstream sim/data study item, not a WCT configuration bug.

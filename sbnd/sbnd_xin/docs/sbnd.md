@@ -70,7 +70,7 @@ sbnd_xin/
 ├── wct-sp-to-magnify.jsonnet  # wire-cell config: stage 1 pipeline
 ├── wct-img-all.jsonnet        # wire-cell config: stage 2 pipeline
 ├── wct-clustering.jsonnet     # wire-cell config: stage 3 pipeline
-├── clus.jsonnet               # helper: per-APA / all-APA clustering subgraphs
+├── clus.jsonnet               # helper: re-exports canonical cfg/pgrapher/experiment/sbnd/clus.jsonnet (per-APA / all-APA clustering subgraphs)
 ├── magnify-sinks.jsonnet      # helper: per-anode MagnifySink pipelines
 │
 ├── wct-img-2-bee.py           # Python: invoke wirecell-img bee-blobs per anode
@@ -217,7 +217,8 @@ the resulting JSON files into `upload_evt<ID>.zip`, and passes it to
 
 ### Path B — clustering → Bee (no separate step needed)
 
-`MultiAlgBlobClustering` in `clus.jsonnet` writes Bee-format zip files
+`MultiAlgBlobClustering` in `clus.jsonnet` (which re-exports the canonical
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`) writes Bee-format zip files
 directly (`mabc-apa<N>-face0.zip`, `mabc-all-apa.zip`). These can be uploaded
 to Bee manually or via `upload-to-bee.sh <zipfile>`.
 
@@ -227,11 +228,11 @@ to Bee manually or via `upload-to-bee.sh <zipfile>`.
 
 - **5638 vs 5632 per-APA channels** — the shared
   `cfg/pgrapher/experiment/sbnd/img.jsonnet:47` previously used `5632*ident`, dropping
-  the last 6 W-plane wires of APA0 and the last 12 of APA1 (the local `chsel_correct`
-  pre-filter and the shared filter were applied in series, intersecting to
-  `[0,5631]` / `[5638,11263]`). Patched to `5638*ident` in the local toolkit clone.
-  The `chsel_correct` block in `wct-img-all.jsonnet` is kept as a defensive guard
-  against regression of the shared constant.
+  the last 6 W-plane wires of APA0 and the last 12 of APA1. Patched to `5638*ident`
+  in the local toolkit clone. The per-anode 5638-channel restriction is now done
+  solely by `img.jsonnet`'s internal `chsel_pipes` (which select
+  `5638*ident .. 5638*(ident+1)-1`); the previously redundant `chsel_correct`
+  ChannelSelector pre-filter in `wct-img-all.jsonnet` has been removed.
 
 - **Imaging tick clipping** — `cfg/pgrapher/experiment/sbnd/img.jsonnet` previously
   hardcoded `MaskSlices.max_tbin: 3400` (line 145) and `CMMModifier.org_hlimit: [3400]`

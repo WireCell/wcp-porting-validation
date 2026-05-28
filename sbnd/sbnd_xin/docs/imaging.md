@@ -78,11 +78,11 @@ FrameFileSource(tag='dnnsp')                    // reads sp-frames.tar.bz2 direc
     ▼ FrameFanout  (one branch per anode)
     │   rule N: {frame: '.*'→'origN', trace: dnnsp→['gaussN','wienerN']}
     │
-    ├─ [APA 0] chsel_correct0 → img_maker.per_anode(anode0, 'multi-3view')
+    ├─ [APA 0] img_maker.per_anode(anode0, 'multi-3view')
     │               ├─ port 0 → ClusterFileSink → icluster-apa0-active.npz
     │               └─ port 1 → ClusterFileSink → icluster-apa0-masked.npz
     │
-    └─ [APA 1] chsel_correct1 → img_maker.per_anode(anode1, 'multi-3view')
+    └─ [APA 1] img_maker.per_anode(anode1, 'multi-3view')
                     ├─ port 0 → ClusterFileSink → icluster-apa1-active.npz
                     └─ port 1 → ClusterFileSink → icluster-apa1-masked.npz
 ```
@@ -110,13 +110,13 @@ that emits port 0 (active clusters) and port 1 (masked clusters). A plain
 `g.pipeline` can only attach a single tail node, so `g.intern` is used to
 wire both ports explicitly to their respective `ClusterFileSink` nodes.
 
-### Defensive `chsel_correct<N>`
+### Per-anode channel selection
 
-(`wct-img-all.jsonnet:44–52`) Each branch adds a `ChannelSelector` that
-keeps only channels `5638*N .. 5638*(N+1)-1` with tags `gauss<N>` and
-`wiener<N>`. This is redundant with the same selector inside the shared
-imaging graph (fixed in the 5632→5638 patch) but prevents any future
-regression of the shared constant from silently corrupting the branch.
+The redundant per-branch `ChannelSelector` pre-filter that previously
+sat in front of each `per_anode(...)` has been removed. The per-anode
+5638-channel restriction (`5638*N .. 5638*(N+1)-1`) is handled by
+`img.jsonnet`'s internal `chsel_pipes` selector inside the shared
+imaging graph.
 
 ### Plugins
 
@@ -326,7 +326,7 @@ consumes both files together.
 | `input` | `--tla-str input=<path>` | `wct-img-all.jsonnet:27` | SP frame archive path |
 | `anode_indices` | `--tla-code anode_indices=[0,1]` | `wct-img-all.jsonnet:28` | which APAs to process |
 | `output_dir` | `--tla-str output_dir=<path>` | `wct-img-all.jsonnet:29` | directory for output `.npz` files |
-| channels per APA | `5638` (hard-coded) | `img.jsonnet:47`, `wct-img-all.jsonnet:48` | SBND: 1984 U + 1984 V + 1670 W |
+| channels per APA | `5638` (hard-coded) | `img.jsonnet:47` | SBND: 1984 U + 1984 V + 1670 W |
 | `max_tbin` | `3427` | `img.jsonnet:145` | SBND DAQ readout window (was 3400) |
 | active `tick_span` | `4` | `img.jsonnet:178`, `multi_active…` default | 2 µs per slice |
 | masked `span` | `500` | `img.jsonnet:191`, `multi_masked…` default | 250 µs per slice |
@@ -557,7 +557,7 @@ End-to-end the "bad" CMM tag enters the imaging graph here:
    ↓  ['gauss<N>','wiener<N>'].  The channel-mask map flows through
    ↓  unchanged (the rule list only mentions frame/trace; CMM tags
    ↓  are not renamed).
-5. ChannelSelector (chsel_correct<N> and chsel_pipes)
+5. ChannelSelector (chsel_pipes)
    ↓  Filters traces to channels [5638*N, 5638*(N+1)); the "bad" CMM
    ↓  is preserved on the surviving channels.
 6. CMMModifier      cm_tag='bad'        (img.jsonnet:67-91)

@@ -302,8 +302,9 @@ ClusterFileSource(icluster-apa<N>-masked.npz)  ─┤ clus.per_apa(anode<N>)
 
 ### `clus.jsonnet`
 
-Defines per-face, per-APA, and all-APA clustering subgraphs.
-Imported by `wct-clustering.jsonnet`.
+Thin re-export of the canonical in-tree module
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`, which defines the per-face,
+per-APA, and all-APA clustering subgraphs.  Imported by `wct-clustering.jsonnet`.
 
 **Exposes:** `per_face(anode, face, dump)`, `per_apa(anode, dump)`,
 `all_apa(anodes, dump)`, `detector_volumes(anodes, face)`
@@ -312,8 +313,8 @@ Imported by `wct-clustering.jsonnet`.
 `pointed`, `live_dead`, `extend`, `regular`, `parallel_prolong`, `close`,
 `extend_loop`, `separate`, `connect1`, `switch_scope`, `neutrino`, `isolated`)
 
-Key locals: `time_offset = -205 us` (`clus.jsonnet:12`),
-`drift_speed = 1.563 mm/us` (`clus.jsonnet:13`).
+Key locals (in the canonical `cfg/pgrapher/experiment/sbnd/clus.jsonnet`):
+`time_offset = -205 us`, `drift_speed = 1.563 mm/us`.
 See [geometry-and-timing.md](geometry-and-timing.md).
 
 ### `magnify-sinks.jsonnet`
