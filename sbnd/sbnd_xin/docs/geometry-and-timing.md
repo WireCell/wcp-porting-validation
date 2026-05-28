@@ -103,19 +103,29 @@ drift_speed : 1.563*wc.mm/wc.us
 Previously these four sites held three different values (1.56 / 1.563 / 1.565)
 which were historical hand-me-downs from different calibration passes. The
 largest discrepancy (1.56 vs 1.565) produced ≈ 1 mm of position error over the
-full ~201 cm drift. All `sbnd_xin/` sites now match the `simparams.jsonnet`
-source of truth.
+full ~201 cm drift.
 
-**Not synced** (out of scope for the local sbnd_xin/ cleanup):
-- `cfg/pgrapher/experiment/sbnd/clus.jsonnet:12` still has `1.56 * wc.mm / wc.us`
-  (shared upstream config).
-- `cfg/pgrapher/experiment/sbnd/fhicl/standard_detsim_sbnd.fcl:110` still has
-  `driftSpeed: 1.565`.
-- `cfg/pgrapher/experiment/sbnd/fhicl/wirecell_{pgrapher,tbb_deposet}_detsim_sbnd.fcl`
-  still have `driftSpeed: 1.59` (much larger discrepancy — worth a separate look).
+**Upstream sites also synced** (toolkit cfg tree, separate repo / commit):
 
-These flow through `params.lar.drift_speed` as TLAs but are overridden by
-`simparams.jsonnet`'s hard-coded `1.563` for the main sim+SP chain.
+| File | Line | Was | Now |
+|---|---|---|---|
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | 12 | `1.56` | `1.563` |
+| `cfg/pgrapher/experiment/sbnd/fhicl/standard_detsim_sbnd.fcl` | 110 | `1.565` | `1.563` |
+| `cfg/pgrapher/experiment/sbnd/fhicl/wirecell_pgrapher_detsim_sbnd.fcl` | 99 | `1.59` | `1.563` |
+| `cfg/pgrapher/experiment/sbnd/fhicl/wirecell_tbb_deposet_detsim_sbnd.fcl` | 98 | `1.59` | `1.563` |
+
+The two `1.59` values were a much larger discrepancy than the others (~2 %).
+The accompanying FHICL comment says only `# Electron drift speed, assumes a
+certain applied E-field` — no specific E-field is named, and the value appears
+in two unrelated FHICL files, both consistent with the value being a stale
+default rather than a tuned non-nominal-field setting.
+
+**Still out of sync — DL / DT / lifetime in the FHICL files.** Drift speed
+is not the only LAr parameter that drifted across configs. The three FHICL
+files above use `DL=4.0 DT=8.8 lifetime∈{10.0, 10.4}`, whereas the standalone
+`sbnd_xin/run_clus_evt.sh` uses `DL=6.2 DT=9.8 lifetime=10`. Not addressed
+in this sync — needs a separate decision about which set is the current
+calibration.
 
 ---
 
