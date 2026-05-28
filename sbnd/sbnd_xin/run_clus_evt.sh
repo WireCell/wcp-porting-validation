@@ -118,7 +118,7 @@ process_event() {
         --tla-code "DL=6.2" \
         --tla-code "DT=9.8" \
         --tla-code "lifetime=10" \
-        --tla-code "driftSpeed=1.565" \
+        --tla-code "driftSpeed=1.563" \
         -c wct-clustering.jsonnet
 
     echo "Clustering done -> $WORKDIR"

@@ -10,7 +10,7 @@ local f = import 'pgrapher/common/funcs.jsonnet';
 local clus = import 'pgrapher/common/clus.jsonnet';
 
 local time_offset = -200 * wc.us;
-local drift_speed = 1.56 * wc.mm / wc.us;
+local drift_speed = 1.563 * wc.mm / wc.us;
 local bee_dir = 'data';
 
 local common_coords = ['x', 'y', 'z'];
