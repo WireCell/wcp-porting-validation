@@ -222,6 +222,32 @@ MABC writes `mabc-apa<N>-face0.zip` directly; a `TensorFileSink`
 with `dump_mode=true` follows to drain the output stream into
 `trash-apa<N>-face0.tar.gz` (discardable placeholder).
 
+### Cluster id numbering (`cluster_id_order`)
+
+Both MABC stages set **`cluster_id_order: 'tree'`** in `clus.jsonnet`.
+
+A cluster's ident is the value the Bee display uses as `cluster_id`. The
+default (unset) ident is the sentinel `-1` (`Facade_Mixins.h:115`,
+`MultiAlgBlobClustering.h:217-245`). At load, MABC calls
+`enumerate_idents()` once, numbering the loaded clusters `1..N`
+(`MultiAlgBlobClustering.cxx:1644`). After each clustering step it calls
+`enumerate_idents(cluster_id_order)` (`:1727`) — **but that is a no-op when
+`cluster_id_order` is empty** (`Facade_Grouping.cxx:127-129`). With it
+unset, clusters created mid-pipeline (e.g. by the `pointed`/Steiner step,
+which builds fresh cluster facades) never receive a valid ident and keep
+`-1`; in the Bee display they all collapse onto a single `-1` "cluster",
+hiding the true count. Setting `cluster_id_order: 'tree'` re-runs the
+renumbering after every step (insertion order, starting at 1), so every
+cluster gets a distinct non-negative id and no `-1` appears.
+
+Reference: the uBooNE full-clustering chain
+(`wcp-porting-img/wct-uboone-clustering.jsonnet`) is the analogue of this
+per-APA stage. It leaves `cluster_id_order` unset but does **not** run a
+`pointed` front-step, so its reference Bee output (`fgval/*.zip`) shows no
+`-1` (its idents are input-derived, non-sequential). SBND instead renumbers
+explicitly via `cluster_id_order: 'tree'`, which both removes `-1` and gives
+clean `1..N` ids.
+
 ---
 
 ## All-APA stage — `clus_all_apa` (multi-TPC clustering)
