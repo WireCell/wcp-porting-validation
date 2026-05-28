@@ -238,8 +238,8 @@ to Bee manually or via `upload-to-bee.sh <zipfile>`.
   (line 89), silently dropping the last 27 ticks of every event. Both raised to 3427
   to match the actual SP-frame readout window (input frames are 11276 × 3427).
 
-- **Bee x0 / speed / t0 sign** — `wct-img-2-bee.py` uses `--t0 "200*us"` (positive)
-  even though `clus.jsonnet` defines `time_offset = -200*us`. The sign flip is
+- **Bee x0 / speed / t0 sign** — `wct-img-2-bee.py` uses `--t0 "205*us"` (positive)
+  even though `clus.jsonnet` defines `time_offset = -205*us`. The sign flip is
   intentional: `BlobSampler` (C++) **adds** `time_offset` while `wirecell-img bee-blobs`
   (Python) **subtracts** `--t0`. See [geometry-and-timing.md](geometry-and-timing.md)
   for the full derivation.

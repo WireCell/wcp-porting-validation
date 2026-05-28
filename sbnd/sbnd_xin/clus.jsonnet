@@ -9,7 +9,7 @@ local g = import 'pgraph.jsonnet';
 local f = import 'pgrapher/common/funcs.jsonnet';
 local clus = import 'pgrapher/common/clus.jsonnet';
 
-local time_offset = -200 * wc.us;
+local time_offset = -205 * wc.us;  // = -tick0_time (cfg/.../sbnd/params.jsonnet sim.tick0_time)
 local drift_speed = 1.563 * wc.mm / wc.us;
 local bee_dir = 'data';
 

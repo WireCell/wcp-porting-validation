@@ -28,7 +28,7 @@ its canonical source, any local override, and the reason for the override.
 | Channels per APA (real) | 5638 |
 | Frame length | 3427 ticks |
 | Tick period | 0.5 µs |
-| `tick0_time` (absolute time at tick 0) | −200 µs |
+| `tick0_time` (absolute time at tick 0) | −205 µs |
 
 ---
 
@@ -134,7 +134,7 @@ calibration.
 **Local definition:** `clus.jsonnet:12`
 
 ```jsonnet
-local time_offset = -200 * wc.us;
+local time_offset = -205 * wc.us;
 ```
 
 Used by:
@@ -159,12 +159,12 @@ x = x0 - speed * (t - t0)
 ```
 
 To make the two formulas consistent, `--t0` must be the **negative** of
-`time_offset`. Since `time_offset = -200 us`, the correct argument is
-`--t0 "+200*us"`.
+`time_offset`. Since `time_offset = -205 us`, the correct argument is
+`--t0 "+205*us"`.
 
-Passing `--t0 "-200*us"` (i.e. the same sign as `time_offset`) shifts every
-blob by 2 × 200 us × 1.563 mm/us ≈ 63 cm — that was the bug fixed on this
-branch.
+Passing `--t0 "-205*us"` (i.e. the same sign as `time_offset`) shifts every
+blob by 2 × 205 us × 1.563 mm/us ≈ 64 cm — that was the kind of bug fixed
+on this branch.
 
 **APA-specific drift direction** (`clus.jsonnet:27`):
 
@@ -179,14 +179,14 @@ Final `wct-img-2-bee.py` arguments (correct values on this branch):
 
 | APA | `--x0` | `--speed` | `--t0` |
 |---|---|---|---|
-| 0 | `-201.45*cm` | `-1.563*mm/us` | `200*us` |
-| 1 | `+201.45*cm` | `+1.563*mm/us` | `200*us` |
+| 0 | `-201.45*cm` | `-1.563*mm/us` | `205*us` |
+| 1 | `+201.45*cm` | `+1.563*mm/us` | `205*us` |
 
 ---
 
 ## Deconvolution timing chain
 
-This section explains where the local `time_offset = -200 µs` (above) comes
+This section explains where the local `time_offset = -205 µs` (above) comes
 from, what tick 0 of the deconvolved frame physically means, and how the
 final tick → X conversion is assembled. The chain has three pieces:
 (a) where tick 0 is anchored, (b) the ductor + reframer cancellation of the
@@ -194,22 +194,25 @@ response-plane offset, and (c) `OmnibusSigProc` per-plane alignment.
 
 ### (a) Where tick 0 is anchored
 
-**Source:** `cfg/pgrapher/experiment/sbnd/params.jsonnet:126-129`
+**Source:** `cfg/pgrapher/experiment/sbnd/params.jsonnet:130-133`
 
 ```jsonnet
 // The "absolute" time (ie, relative to trigger time?) that the lower edge
-// of final readout tick #0 should correspond to.  This is a
-// "fixed" notion.
-local tick0_time = -200*wc.us,
+// of final readout tick #0 should correspond to.
+// this is the default value unless overridden with extVar in main
+tick0_time: -205 * wc.us,
 ```
 
-Tick 0 of the final readout frame corresponds to absolute time **−200 µs**
-relative to trigger. The 200 µs pre-trigger buffer is a hardware/readout
-convention and is present in both simulation and data.
+Tick 0 of the final readout frame corresponds to absolute time **−205 µs**
+relative to trigger. The 205 µs pre-trigger buffer is a hardware/readout
+convention and is present in both simulation and data. Note that `tick0_time`
+is now a **member of `sim`** (not a `local`), so other components reference
+it as `$.sim.tick0_time`; older configs used a `local tick0_time = -200*wc.us`
+and the value was −200 µs.
 
 ### (b) Ductor + reframer cancellation
 
-**Source:** `cfg/pgrapher/experiment/sbnd/params.jsonnet:131-146`
+**Source:** `cfg/pgrapher/experiment/sbnd/params.jsonnet:135-150`
 
 ```jsonnet
 // Open the ductor's gate a bit early.
@@ -219,7 +222,7 @@ local response_nticks = wc.roundToInt(response_time_offset / $.daq.tick),
 ductor : {
     nticks: $.daq.nticks + response_nticks,
     readout_time: self.nticks * $.daq.tick,
-    start_time: tick0_time - response_time_offset,
+    start_time: $.sim.tick0_time - response_time_offset,
 },
 
 // To counter the enlarged duration of the ductor, a Reframer
@@ -235,10 +238,10 @@ Walk-through:
 - The ductor opens 64 µs earlier than `tick0_time` so it can compute the
   full field response from the response plane to W.
 - The reframer chops those 64 µs back off the front of the frame, restoring
-  the 3400-tick window.
+  the 3427-tick window.
 - **Net effect:** the response-plane offset opens and closes; after this
   round-trip the deconvolved hit time effectively stamps **W-arrival time**,
-  expressed in the absolute clock where tick 0 = −200 µs.
+  expressed in the absolute clock where tick 0 = −205 µs.
 
 ### (c) `OmnibusSigProc` per-plane alignment
 
@@ -246,7 +249,7 @@ Walk-through:
 
 ```jsonnet
 ftoffset: 0.0,                      // fine-time offset (sub-tick)
-ctoffset: 2.0*wc.microsecond,       // coarse-time offset (SBND override)
+ctoffset: 1.0*wc.microsecond,       // coarse-time offset (SBND override)
 ```
 
 `OmnibusSigProc` combines three offsets to circular-shift the deconvolved
@@ -262,7 +265,7 @@ The sum is applied as a circular time-shift in
 `sigproc/src/OmnibusSigProc.cxx:1203-1211` (declarations in
 `sigproc/inc/WireCellSigProc/OmnibusSigProc.h:110-117`). The result is that
 U, V, W deconvolved hits from a single physical track land at the same
-tick. SBND uses `ctoffset = +2 µs` (the common default is −8 µs); the
+tick. SBND uses `ctoffset = +1 µs` (the common default is −8 µs); the
 value is detector-tuned.
 
 ### Tick → X formula
@@ -277,7 +280,7 @@ X = X_W + drift_sign · (t + time_offset) · drift_speed
 
 with:
 - `X_W = ±202.05 cm` (W plane X, from the wire schema).
-- `time_offset = -200 µs` — exactly the negative of `tick0_time`, so
+- `time_offset = -205 µs` — exactly the negative of `tick0_time`, so
   `(t + time_offset)` becomes drift duration measured from trigger time.
 - `drift_speed = 1.563 mm/µs` (matches `simparams.jsonnet`; see the
   **Drift speed** section for the sync history and the remaining upstream
@@ -288,17 +291,17 @@ with:
 **Sanity check** (APA1, `drift_sign = -1`, `X_W = +202.05 cm`,
 `drift_speed = 1.563 mm/µs`):
 
-- Charge collected at W at trigger time ⇒ `t = 200 µs` ⇒ `(t + time_offset) = 0`
+- Charge collected at W at trigger time ⇒ `t = 205 µs` ⇒ `(t + time_offset) = 0`
   ⇒ `X = X_W = +202.05 cm`. ✅
 - Charge originating at the cathode (≈ +0.45 cm), full max drift ≈ 1290 µs
-  ⇒ `t ≈ 1490 µs` ⇒ drift = 1290 × 1.563 ≈ 201.6 cm ⇒ `X ≈ +0.45 cm`. ✅
+  ⇒ `t ≈ 1495 µs` ⇒ drift = 1290 × 1.563 ≈ 201.6 cm ⇒ `X ≈ +0.45 cm`. ✅
 
 ---
 
 ## Per-APA channel count
 
 **Real value:** 5638 channels per APA = 1984 U + 1984 V + 1670 W (confirmed by
-`wirecell-util wires-info sbnd-wires-geometry-v0202.json.bz2`).
+`wirecell-util wires-info sbnd-wires-geometry-v0206.json.bz2`).
 
 **Previously a production bug:** `cfg/pgrapher/experiment/sbnd/img.jsonnet:47`
 used `5632*ident`, dropping the last 6 W-plane wires of APA0 and the last 12
@@ -373,7 +376,7 @@ and 2024 data calibration notes):
 | Drift velocity = 1.563 mm/µs | 1.563 mm/µs (`simparams.jsonnet:16`); all `sbnd_xin/` sites now synced (see **Drift speed**) | ✅ |
 | Max drift time in data ≈ 1281–1282 µs | sim geometry gives ≈ 1290 µs (= (W − CPA) / v_d); the ~8 µs gap is consistent with data's wider cathode | ✅ |
 | CPA thickness in data ~±1.5 cm (~3 cm gap; DENT issue) | sim is ±0.45 cm (~1 cm gap; `params.jsonnet:24-25`) | ⚠ — known sim/data mismatch, not yet modelled |
-| TPC active volume Y ±200 cm, Z 0.15–500.85 cm (wire-readout overlap) | Not in this doc; cf. `wirecell-util wires-info $WIRECELL_DATA/sbnd-wires-geometry-v0202.json.bz2` and FV_y/FV_z in `clus.jsonnet:23-26` (±200.312 cm / 4.05–505.35 cm with margins) | (verify via `wires-info`) |
+| TPC active volume Y ±200 cm, Z 0.15–500.85 cm (wire-readout overlap) | Not in this doc; cf. `wirecell-util wires-info $WIRECELL_DATA/sbnd-wires-geometry-v0206.json.bz2` and FV_y/FV_z in `clus.jsonnet:23-26` (±200.312 cm / 4.05–505.35 cm with margins) | (verify via `wires-info`) |
 
 **Implication for WCT geometry:** none — the only ⚠ row (CPA thickness) is a
 known upstream sim/data study item, not a WCT configuration bug.

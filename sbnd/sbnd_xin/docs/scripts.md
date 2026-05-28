@@ -312,8 +312,8 @@ Imported by `wct-clustering.jsonnet`.
 `pointed`, `live_dead`, `extend`, `regular`, `parallel_prolong`, `close`,
 `extend_loop`, `separate`, `connect1`, `switch_scope`, `neutrino`, `isolated`)
 
-Key locals: `time_offset = -200 us` (`clus.jsonnet:12`),
-`drift_speed = 1.56 mm/us` (`clus.jsonnet:13`).
+Key locals: `time_offset = -205 us` (`clus.jsonnet:12`),
+`drift_speed = 1.563 mm/us` (`clus.jsonnet:13`).
 See [geometry-and-timing.md](geometry-and-timing.md).
 
 ### `magnify-sinks.jsonnet`
@@ -342,10 +342,10 @@ Geometry arguments passed to `wirecell-img bee-blobs`:
 | APA | `--x0` | `--speed` | `--t0` |
 |---|---|---|---|
 | 0 (x=-201.45 cm) | `-201.45*cm` | `-1.563*mm/us` | `200*us` |
-| 1 (x=+201.45 cm) | `201.45*cm` | `+1.563*mm/us` | `200*us` |
+| 1 (x=+201.45 cm) | `201.45*cm` | `+1.563*mm/us` | `205*us` |
 
-Note `--t0 "200*us"` is the **positive** value even though `clus.jsonnet`
-defines `time_offset = -200*us`. See [geometry-and-timing.md](geometry-and-timing.md).
+Note `--t0 "205*us"` is the **positive** value even though `clus.jsonnet`
+defines `time_offset = -205*us`. See [geometry-and-timing.md](geometry-and-timing.md).
 
 **Output:** `data/0/0-apa<N>.json` (one per anode), then `upload.zip`. Used only
 by the single-event path of `run_bee_img_evt.sh`; the `all`-mode path calls

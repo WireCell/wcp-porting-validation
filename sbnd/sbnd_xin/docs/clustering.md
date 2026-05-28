@@ -155,7 +155,7 @@ into 3D point clouds before clustering begins.
 
 (`BlobSampler.cxx`: Center @ line 452, Stepped @ line 703)
 
-`drift_speed = 1.56 mm/µs` and `time_offset = -200 µs` (`clus.jsonnet:12-13`)
+`drift_speed = 1.563 mm/µs` and `time_offset = -205 µs` (`clus.jsonnet:12-13`)
 drive the t→x conversion inside `bs_live_face`. These values are
 **hard-coded in `clus.jsonnet`** and are not overridden by the `driftSpeed`
 TLA — see [geometry-and-timing.md § "Drift speed"](geometry-and-timing.md)
@@ -332,7 +332,7 @@ parameters for each stage.
 | `a1f0pA` | +0.45..+201.45 cm | APA1 face 0, single-APA MABC |
 
 `a0f0pA` also carries the BlobSampler physics constants (`clus.jsonnet:37-41`):
-`drift_speed=1.56 mm/µs`, `tick=0.5 µs`, `time_offset=-200 µs`,
+`drift_speed=1.563 mm/µs`, `tick=0.5 µs`, `time_offset=-205 µs`,
 `nticks_live_slice=4`. `a1f0pA` inherits these from `a0f0pA` via Jsonnet
 `+` extension and overrides only the x bounds (`clus.jsonnet:47-50`).
 
