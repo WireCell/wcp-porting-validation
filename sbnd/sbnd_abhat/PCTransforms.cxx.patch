@@ -1,0 +1,22 @@
+diff --git a/clus/src/PCTransforms.cxx b/clus/src/PCTransforms.cxx
+index 7af8e237..1b0bf8ef 100644
+--- a/clus/src/PCTransforms.cxx
++++ b/clus/src/PCTransforms.cxx
+@@ -6,6 +6,7 @@
+ //
+ 
+ #include "WireCellClus/IPCTransform.h"
++#include "WireCellClus/SCECorrection.h"
+ #include "WireCellIface/IDetectorVolumes.h"
+ 
+ #include "WireCellIface/IConfigurable.h"
+@@ -178,6 +179,9 @@ public:
+         std::string dvtn = get<std::string>(cfg, "detector_volumes", "DetectorVolumes");
+         auto dv = Factory::find_tn<WireCell::IDetectorVolumes>(dvtn);
+         m_pcts["T0Correction"] = std::make_shared<T0Correction>(dv);
++        // SBND SCE (Space Charge Effect) -- dualmap TH3 correction.
++        // No-op if sce_map_file not in DetectorVolumes metadata.
++        m_pcts["SCECorrection"] = std::make_shared<SCECorrection>(dv);
+         // ...
+     }
+ 

@@ -1,0 +1,65 @@
+--- val_ref/sbnd/clus.jsonnet	2026-05-28 17:42:33.329274000 -0500
++++ sce_test/clus.jsonnet	2026-05-28 11:02:03.099949837 -0500
+@@ -21,6 +21,7 @@
+ 
+ local common_coords = ["x", "y", "z"];
+ local common_corr_coords = ["x_t0cor", "y", "z"];
++local common_sce_coords = ["x_sce", "y", "z"];
+ 
+ 
+ local dvm = {
+@@ -50,6 +51,7 @@
+         FV_xmax: -0.45 * wc.cm,
+         FV_xmin_margin: 2 * wc.cm,
+         FV_xmax_margin: 2 * wc.cm,
++        sce_map_file: "/cvmfs/sbnd.opensciencegrid.org/products/sbnd/sbnd_data/v01_42_00/SCEoffsets/SCEoffsets_SBND_E500_dualmap_CV_voxelTH3.root",
+     },
+     a1f0pA: $.a0f0pA + {
+         FV_xmin: 0.45 * wc.mm,
+@@ -202,7 +204,7 @@
+             bee_zip: "mabc-%s-face%d.zip"%[anode.name, face],
+             bee_detector: "sbnd",
+             initial_index: index,   // New RSE configuration
+-            use_config_rse: true,  // Enable use of configured RSE
++            use_config_rse: false,  // Enable use of configured RSE
+             runNo: LrunNo,
+             subRunNo: LsubRunNo,
+             eventNo: LeventNo,
+@@ -269,11 +271,11 @@
+     local cm = clus.clustering_methods(prefix="all",
+                                        detector_volumes=dv,
+                                        pc_transforms=pcts,
+-                                       coords=common_corr_coords),
++                                       coords=common_sce_coords),
+         
+     local cm_pipeline = [
+         // cm_old.examine_x_boundary(),
+-        cm_old.switch_scope(),
++        cm_old.switch_scope(correction_name="SCECorrection"),
+ 
+         cm.extend(flag=4, length_cut=60*wc.cm, num_try=0, length_2_cut=15*wc.cm, num_dead_try= 1),
+         cm.regular(name="1", length_cut=60*wc.cm, flag_enable_extend=false),
+@@ -312,7 +314,7 @@
+             bee_zip: "mabc-all-apa.zip",
+             bee_detector: "sbnd",
+             initial_index: index,   // New RSE configuration
+-            use_config_rse: true,  // Enable use of configured RSE
++            use_config_rse: false,  // Enable use of configured RSE
+             runNo: LrunNo,
+             subRunNo: LsubRunNo,
+             eventNo: LeventNo,
+@@ -335,6 +337,14 @@
+                     pcname: "3d",           // Which scope to use
+                     coords: ["x_t0cor", "y", "z"],    // Coordinates to use
+                     individual: false            // Output individual APA/Face
++                },
++                {
++                    name: "sce",                // SCE-corrected coords for W/E validation
++                    detector: "sbnd",
++                    algorithm: "sce",
++                    pcname: "3d",
++                    coords: common_sce_coords,  // ["x_sce","y","z"]
++                    individual: false
+                 }
+             ],
+             pipeline: wc.tns(cm_pipeline),
