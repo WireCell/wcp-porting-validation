@@ -165,9 +165,9 @@ Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
 | `output_dir` | str | — | output directory |
 | `run` / `subrun` / `event` | code | 0 / 0 / EVT_ID | Bee RSE metadata |
 | `reality` | str | `'sim'` | `'sim'` or `'data'` |
-| `DL` | code | 6.2 | longitudinal diffusion (cm²/s) |
-| `DT` | code | 9.8 | transverse diffusion (cm²/s) |
-| `lifetime` | code | 10 | electron lifetime (ms) |
+| `DL` | code | 4.0 | longitudinal diffusion (cm²/s) |
+| `DT` | code | 8.8 | transverse diffusion (cm²/s) |
+| `lifetime` | code | 35 | electron lifetime (ms) |
 | `driftSpeed` | code | 1.565 | drift speed (mm/µs) |
 
 **Log:** `work/evt<ID>/wct_clus_evt<ID>[_a<N>].log`; in `all` mode `work/.batch_clus_evt<ID>.log`

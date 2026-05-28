@@ -66,8 +66,8 @@ wire-cell \
   --tla-str  "output_dir=${WORKDIR}" \
   --tla-code "run=${RUN}" --tla-code "subrun=${SUBRUN}" --tla-code "event=${EVT_ID}" \
   --tla-str  "reality=sim" \
-  --tla-code "DL=6.2" --tla-code "DT=9.8" \
-  --tla-code "lifetime=10" --tla-code "driftSpeed=1.565" \
+  --tla-code "DL=4.0" --tla-code "DT=8.8" \
+  --tla-code "lifetime=35" --tla-code "driftSpeed=1.563" \
   -c wct-clustering.jsonnet
 ```
 
@@ -351,9 +351,9 @@ to decide whether a cluster is near a detector boundary.
 | `output_dir` | `.` | – | passed to `clus_maker(...)` | Directory for `mabc-*.zip` outputs |
 | `run` / `subrun` / `event` | 0/0/0 | – | MABC RSE fields | Stamped into Bee zip metadata |
 | `reality` | `'sim'` | – | consumed by `Clustering*` | Dead-channel treatment: `'sim'` or `'data'` |
-| `DL` | 6.2 | cm²/s | `params.lar.DL` | Longitudinal diffusion coefficient |
-| `DT` | 9.8 | cm²/s | `params.lar.DT` | Transverse diffusion coefficient |
-| `lifetime` | 10 | ms | `params.lar.lifetime` | Electron lifetime |
+| `DL` | 4.0 | cm²/s | `params.lar.DL` | Longitudinal diffusion coefficient |
+| `DT` | 8.8 | cm²/s | `params.lar.DT` | Transverse diffusion coefficient |
+| `lifetime` | 35 | ms | `params.lar.lifetime` | Electron lifetime |
 | `driftSpeed` | 1.565 | mm/µs | `params.lar.drift_speed` | Drift speed for MABC topology (not BlobSampler) |
 
 `clus.jsonnet`'s `drift_speed = 1.56 mm/µs` (line 13) is used by

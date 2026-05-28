@@ -115,9 +115,9 @@ process_event() {
         --tla-code "subrun=${SUBRUN_L}" \
         --tla-code "event=${EVT_ID}" \
         --tla-str  "reality=sim" \
-        --tla-code "DL=6.2" \
-        --tla-code "DT=9.8" \
-        --tla-code "lifetime=10" \
+        --tla-code "DL=4.0" \
+        --tla-code "DT=8.8" \
+        --tla-code "lifetime=35" \
         --tla-code "driftSpeed=1.563" \
         -c wct-clustering.jsonnet
 

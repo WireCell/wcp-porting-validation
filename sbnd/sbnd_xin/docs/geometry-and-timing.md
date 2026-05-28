@@ -120,12 +120,11 @@ certain applied E-field` — no specific E-field is named, and the value appears
 in two unrelated FHICL files, both consistent with the value being a stale
 default rather than a tuned non-nominal-field setting.
 
-**Still out of sync — DL / DT / lifetime in the FHICL files.** Drift speed
-is not the only LAr parameter that drifted across configs. The three FHICL
-files above use `DL=4.0 DT=8.8 lifetime∈{10.0, 10.4}`, whereas the standalone
-`sbnd_xin/run_clus_evt.sh` uses `DL=6.2 DT=9.8 lifetime=10`. Not addressed
-in this sync — needs a separate decision about which set is the current
-calibration.
+**LAr parameter sync (DL / DT / lifetime).** Synced across all sites to
+`DL=4.0 cm²/s`, `DT=8.8 cm²/s`, `lifetime=35 ms`. Touches
+`cfg/.../sbnd/simparams.jsonnet`, all three `cfg/.../sbnd/fhicl/*.fcl`,
+`sbnd_xin/run_clus_evt.sh`, and `sbnd_xin/wct-clustering.jsonnet`
+(previously held the older `DL=6.2 DT=9.8 lifetime=10` tuning).
 
 ---
 
@@ -341,9 +340,9 @@ as an overlay on `simparams.lar`:
 
 | Knob | Value | Units | Description |
 |---|---|---|---|
-| `DL` | 6.2 | cm²/s | longitudinal diffusion coefficient |
-| `DT` | 9.8 | cm²/s | transverse diffusion coefficient |
-| `lifetime` | 10 | ms | electron lifetime |
+| `DL` | 4.0 | cm²/s | longitudinal diffusion coefficient |
+| `DT` | 8.8 | cm²/s | transverse diffusion coefficient |
+| `lifetime` | 35 | ms | electron lifetime |
 | `driftSpeed` | 1.565 | mm/µs | overrides `simparams.lar.drift_speed` for clustering |
 | `reality` | `'sim'` | — | `'sim'` or `'data'`; controls dead-channel treatment |
 
