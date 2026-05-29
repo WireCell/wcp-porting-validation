@@ -1,10 +1,8 @@
-// sbnd_xin copy of standalone-sample/wct-clus-matching-standalone.jsonnet.
-// Only change vs. yuhw's original: all_apa(..., nu_tagging=false) so the
-// all-APA stage reproduces the pre-tagging reference chain (the qlport
-// neutrino-tagging downstream chain needs a `tagger_info` PC handoff from
-// WireCellMatch that is not yet ported; with it enabled the run segfaults in
-// TaggerCheckNeutrino on a null main_cluster). Imaging + clustering + Q/L
-// matching are unchanged.
+// Standalone SBND charge-light (Q/L) matching chain. Self-contained under
+// sbnd_xin: the clustering graph comes from the local clus.jsonnet (a thin
+// re-export of the in-tree canonical pgrapher/experiment/sbnd/clus.jsonnet),
+// NOT yuhw's ../clus.jsonnet. The in-tree all_apa is the pre-tagging chain (no
+// neutrino-tagging downstream), so no tagger_info handoff is required.
 //
 // Run via sbnd_xin/run_clust_QL_evt.sh.
 
@@ -51,20 +49,25 @@ local masked_clusters = [
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-local opflash_sources = [
+// SBND light I/O: read the per-APA opflash archive and attach it as a "flash"
+// point cloud onto the live root node of the cluster pctree (the matcher then
+// reads the light from there). Inserted at the clustering stage, per APA.
+local flash_io = [
     g.pnode({
-        type: "TensorFileSource",
-        name: "opflash_src_apa%d" % n,
+        type: 'FlashToPCTree',
+        name: 'flash_io_apa%d' % n,
         data: {
-            inname: "opflash_apa%d.tar.gz" % n,
+            input: "opflash_apa%d.tar.gz" % n,
             prefix: "opflash_",
         }
-    }, nin=0, nout=1)
+    }, nin=1, nout=1)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
 // --- Per-APA clustering ---
-local clus = import '../clus.jsonnet';
+// Local re-export of the in-tree canonical pgrapher/experiment/sbnd/clus.jsonnet
+// (keeps sbnd_xin standalone; no dependency on ../sbnd).
+local clus = import 'clus.jsonnet';
 local clus_maker = clus();
 local clus_pipes = [
     clus_maker.per_apa(tools.anodes[n], dump=false)
@@ -89,26 +92,27 @@ local matching_pipes = [
             flash_minPE: 50,
             semimodel_file: semimodel_file,
         },
-    }, nin=2, nout=1)
+    }, nin=1, nout=1)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
 // --- Per-APA subgraphs ---
+// active+masked -> clustering -> FlashToPCTree (attach light) -> QLMatching
 local per_apa = [g.intern(
-    innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
-    centernodes=[clus_pipes[n]],
+    innodes=[active_clusters[n], masked_clusters[n]],
+    centernodes=[clus_pipes[n], flash_io[n]],
     outnodes=[matching_pipes[n]],
     edges=[
         g.edge(active_clusters[n], clus_pipes[n], 0, 0),
         g.edge(masked_clusters[n], clus_pipes[n], 0, 1),
-        g.edge(clus_pipes[n], matching_pipes[n], 0, 0),
-        g.edge(opflash_sources[n], matching_pipes[n], 0, 1),
+        g.edge(clus_pipes[n], flash_io[n], 0, 0),
+        g.edge(flash_io[n], matching_pipes[n], 0, 0),
     ]
 ) for n in std.range(0, std.length(tools.anodes) - 1)];
 
 // --- All-APA clustering ---
-// nu_tagging=false: pre-tagging reference chain (see header).
-local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true, nu_tagging=false);
+// In-tree all_apa is the pre-tagging chain (no nu_tagging param; see header).
+local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true);
 
 local graph = g.intern(
     innodes=per_apa,

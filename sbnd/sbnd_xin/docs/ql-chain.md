@@ -21,10 +21,12 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
 
   per APA n ∈ {0,1}:
      ClusterFileSource(active)  ┐
-     ClusterFileSource(masked)  ├─► clus.per_apa(dump=false)  ─► QLMatching(matching n)
-     TensorFileSource(opflash)  ┘        (clustering)             (charge–light match)
+                                ├─► clus.per_apa ─► FlashToPCTree(n) ─► QLMatching(n)
+     ClusterFileSource(masked)  ┘   (clustering)   (read opflash_apa<n>,  (charge–light
+                                                    attach "flash" PC      match; reads
+                                                    to live root node)     flash from root)
                                                                        │
-                              fan-in (per-APA charge+t0) ─► clus.all_apa(nu_tagging=false)
+                                       fan-in (per-APA charge+t0) ─► clus.all_apa (pre-tagging)
                                                                        │
                                               ┌────────────────────────┼───────────────┐
                                        data-sep/<n>/            mabc-*.zip        TensorFileSink
@@ -34,6 +36,12 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
                                                               │
                                                         combined.zip ─► BEE URL
 ```
+
+Light I/O is a dedicated component: **`FlashToPCTree`** reads `opflash_apa<n>.tar.gz`
+and attaches the per-event flash matrix as a `flash` point cloud onto the live
+root node of the cluster pctree; `QLMatching` then reads the light from that root
+node (no separate flash input port). This mirrors the MicroBooNE
+`UbooneClusterSource` design. See `toolkit/match/docs/qlmatching-code.md` §1/§1a.
 
 Two side outputs feed BEE: **`data-sep/`** (written by `QLMatching`, the img +
 op layers) and **`mabc-*.zip`** (written by the clustering nodes). The graph's
@@ -58,15 +66,16 @@ writable `work/` dir.
 |------|----------|----------|
 | `icluster-apa{0,1}-active.npz` | `wcls-img-dump.fcl` | per-APA **live** `ICluster` dump (blobs/wires/channels) for all 10 events, serialized as a numpy archive read by `ClusterFileSource` |
 | `icluster-apa{0,1}-masked.npz` | `wcls-img-dump.fcl` | per-APA **dead/masked**-region clusters (the dead-area blobs; deserialized via `aux/ClusterArrays::to_cluster`, the `nudge=1e-3` dead-blob fix) |
-| `opflash_apa{0,1}.tar.gz` | `wcls-flash-dump.fcl` | per-APA optical flashes as a tensor archive (`prefix: "opflash_"`); read by `TensorFileSource` into the 2-D `[nflash, 1+nchan]` tensor QLMatching expects |
+| `opflash_apa{0,1}.tar.gz` | `wcls-flash-dump.fcl` | per-APA optical flashes as a tensor archive (`prefix: "opflash_"`), 2-D `[nflash, 1+nchan]`; read by `FlashToPCTree` (which composes a `TensorFileSource` internally) and attached as the `flash` PC on the live root node |
 | `semi-analytical-sbnd.json` | `build-semi-analytical-data/` (one-off) | SBND photon model: `VUVHits`, `VISHits`, `Geometry`, 312 `OpDets`; loaded by `QLMatching` via `Persist::load` (found on `WIRECELL_PATH` at `wire-cell-data/sbnd/photodet/`). Schema → `qlmatching-port.md`. |
 
 `mc` ⇒ `reality=sim` (`QLMatching data:false`); `data` ⇒ `reality=data`
 (`data:true`).
 
 **Reference output** (mc only): `input_files/input-10evt-mc/archive-runs/wct-standalone-10ev/<n>/`
-is yuhw's saved `data-sep` from the pre-tagging standalone run — the thing to
-diff against.
+is yuhw's saved `data-sep` from his standalone run. Note this chain now uses the
+in-tree `clus.jsonnet` (different clustering than yuhw's `../clus.jsonnet`), so
+its output legitimately differs from that archive — see §6.
 
 ---
 
@@ -103,28 +112,28 @@ What it does:
 
 ## 4. The config
 
-- **`sbnd_xin/wct-clus-matching-standalone.jsonnet`** — a local copy of yuhw's
-  `standalone-sample/wct-clus-matching-standalone.jsonnet`. Only change:
-  `clus_maker.all_apa(tools.anodes, dump=true, nu_tagging=false)`. It imports
-  `../clus.jsonnet` (resolves to `sbnd/clus.jsonnet` from `sbnd_xin/`), builds
-  per-APA `ClusterFileSource`/`TensorFileSource` + `clus.per_apa` + `QLMatching`,
-  fans into `clus.all_apa`, and declares the plugins (incl. `WireCellMatch`).
-- **`sbnd/clus.jsonnet`** (shared) — `all_apa`/`clus_all_apa` gained a
-  backward-compatible **`nu_tagging=true`** parameter gating the May-28 qlport
-  neutrino-tagging chain (pipeline steps + bee point sets + `bee_pf`). Default
-  `true` preserves existing behavior (verified: rendering the unchanged default
-  path is **byte-identical** pre/post-edit). The standalone copy sets it `false`.
+- **`sbnd_xin/wct-clus-matching-standalone.jsonnet`** — the standalone graph,
+  self-contained under `sbnd_xin` (no `../sbnd` dependency). It imports the
+  **local** `clus.jsonnet` (a thin re-export of the in-tree canonical
+  `pgrapher/experiment/sbnd/clus.jsonnet`, resolved on `WIRECELL_PATH`), builds
+  per-APA `ClusterFileSource` + `clus.per_apa` + **`FlashToPCTree`** +
+  `QLMatching` (single input now, `nin=1`), fans into `clus.all_apa`, and
+  declares the plugins (incl. `WireCellMatch`).
+- Per-APA wiring: `active/masked → clus.per_apa → FlashToPCTree (attach light)
+  → QLMatching`. `FlashToPCTree` reads `opflash_apa<n>.tar.gz` directly (it
+  composes a `TensorFileSource`), so there is no longer a separate opflash
+  source node or a 2-port `QLMatching` fanin.
+- **`clus.all_apa(dump=true)`** — the in-tree module is the **pre-tagging**
+  chain (no neutrino-tagging downstream, no `nu_tagging` parameter), so no
+  `tagger_info` handoff is required and the run does not hit the
+  `TaggerCheckNeutrino` null-`main_cluster` segfault.
 
-### Why `nu_tagging=false`
-The all-APA tagging chain `tagger_flag_transfer → recover_bundle →
-tagger_check_neutrino` (added to `clus.jsonnet` 2026-05-28, **after** yuhw's
-reference run) needs a per-cluster `tagger_info` point cloud to raise the
-`beam_flash` flag. The merged `QLMatching` does **not** write `tagger_info`, so
-`ClusteringTaggerFlagTransfer` sets zero `beam_flash` → `recover_bundle`
-recovers nothing → null `main_cluster` → null-deref segfault in
-`TaggerCheckNeutrino`. Disabling the chain both removes the crash and faithfully
-reproduces the pre-tagging reference. The real fix (write `tagger_info` in
-`QLMatching` + a null-guard in the tagger) is left for the refactor.
+### Clean break vs yuhw's reference jsonnets
+`QLMatching` changed from a 2-input `ITensorSetFanin` (cluster + flash ports) to
+a 1-input `ITensorSetFilter` (cluster only; flash read from the live root-node
+`flash` PC). Only this `sbnd_xin` chain was updated. yuhw's reference jsonnets in
+`wcp-porting-img/sbnd/{standalone-sample/,}` still wire `QLMatching` with 2
+ports and will need a matching update by their owner before they run again.
 
 ---
 
@@ -156,21 +165,26 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 
 ## 6. Verification & known state (mc)
 
-- **Imaging bit-identical** to the reference (`img` point counts match exactly
-  for all 10 events × both APAs) — confirms the merged dead-blob +
-  `ClusterFileSource` fixes don't perturb the live points.
-- **Matching bundle counts differ** slightly from the reference (e.g. evt0 op1
-  17 vs 19). This is **expected**: the improved clustering on this branch
-  produces different input clusters → different matches. Ruled out drift params
-  (header vs sim-detsim set give identical results).
+- **Light-IO refactor is bit-identical.** Moving the light from a `QLMatching`
+  input port to a `FlashToPCTree`-attached root-node PC reproduces the
+  pre-refactor in-tree-clus run **byte-for-byte**: all 40 `data-sep` JSONs
+  (`{img,op}-apa{0,1}` × 10 events) are identical. The refactor is pure
+  plumbing — no physics change. (`FlashToPCTree` composes the same
+  `TensorFileSource` reader, so the parsed flash values match exactly.)
+- **Output differs from yuhw's archived reference**, by design: this chain now
+  uses the in-tree canonical `clus.jsonnet` (pre-tagging) instead of yuhw's
+  `../clus.jsonnet`, a different clustering graph → different clusters →
+  different matches. That switch (for standalone-ness) was made deliberately and
+  is independent of the light-IO refactor.
 
-### Open items (for the refactor)
+### Open items
 - **`data` mode crashes** in `QLMatching` itself: unmatched clusters build a
   `TimingTPCBundle(nullptr, …)` whose ctor derefs the flash
-  (`QLMatching.cxx:629` / `TimingTPCBundle.cxx:50`). MC doesn't hit it.
-- **Latent default-tagging crash**: `nu_tagging` defaults to `true`, so any
-  other caller of `clus.jsonnet`'s `all_apa` that hits a no-recovered-bundle
-  event still segfaults until the `tagger_info` handoff + null-guard land.
+  (`TimingTPCBundle.cxx:50`). MC doesn't hit it. Pre-existing; untouched here.
+- **Hardcoded drift speed** `1.563e-3` in `QLMatching`'s per-point X correction,
+  not tied to the jsonnet `driftSpeed`. Pre-existing; untouched here.
+- **BEE packaging** still reaches into `../sbnd` (`bee-upload.sh`,
+  `merge-apa.py`, `../upload-to-bee.sh`); to be localized later.
 
 ---
 
@@ -179,11 +193,10 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 | Thing | Path |
 |-------|------|
 | driver | `sbnd_xin/run_clust_QL_evt.sh` |
-| standalone jsonnet (copy) | `sbnd_xin/wct-clus-matching-standalone.jsonnet` |
-| shared clustering config | `sbnd/clus.jsonnet` (the `nu_tagging` toggle) |
+| standalone jsonnet | `sbnd_xin/wct-clus-matching-standalone.jsonnet` |
+| clustering config | `sbnd_xin/clus.jsonnet` → in-tree `pgrapher/experiment/sbnd/clus.jsonnet` |
 | inputs (read-only) | `sbnd_xin/input_files/input-10evt-{mc,data}/` |
-| reference (mc) | `…/input-10evt-mc/archive-runs/wct-standalone-10ev/` |
 | work dir | `sbnd_xin/work/ql_<mode>/` |
-| packaging | `wcp-porting-img/sbnd/{bee-upload.sh,merge-apa.py}`, `wcp-porting-img/upload-to-bee.sh` |
-| matching component | `toolkit/match/` (`WireCellMatch`) |
+| packaging (still ../sbnd) | `wcp-porting-img/sbnd/{bee-upload.sh,merge-apa.py}`, `wcp-porting-img/upload-to-bee.sh` |
+| light-IO + matching components | `toolkit/match/` (`WireCellMatch`: `FlashToPCTree`, `QLMatching`) |
 | photon model JSON | `wire-cell-data/sbnd/photodet/semi-analytical-sbnd.json` |
