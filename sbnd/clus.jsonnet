@@ -3,11 +3,89 @@ local g = import "pgraph.jsonnet";
 local f = import 'pgrapher/common/funcs.jsonnet';
 local clus = import "pgrapher/common/clus.jsonnet";
 
+// SBND ParticleDataSet (5 dE/dx + 5 range LinterpFunctions + ParticleDataSet).
+// Tables are NIST/PDG (detector-agnostic) copied from qlport.  See plan in
+// sbnd/docs/qlport-to-sbnd-downstream-plan.md.
+local pds = (import "particle_dataset.jsonnet")();
+
 
 local time_offset = -200 * wc.us;
 local drift_speed = 1.56 * wc.mm / wc.us;
 local bee_dir = "data";
 local bee_zip = "mabc.zip";
+
+// dQ/dx calibration knobs passed through to TaggerCheckNeutrino /
+// UbooneMagnifyTrackingVisitor.  Same defaults as qlport for now; revisit
+// when SBND calibration is available.
+local dQdx_scale  = 0.1;
+local dQdx_offset = -1000;
+
+// Box recombination model.  Constants are from the uboone qlport entry, but
+// SBND nominal drift field is ~0.5 kV/cm vs uboone's 0.273.
+local sbnd_box_recomb = {
+    type: "BoxRecombination",
+    name: "box_recomb",
+    data: {
+        A:      1.0,
+        B:      0.255,
+        Efield: 0.5,     // SBND nominal (kV/cm)
+        rho:    1.38,
+        Wi:     23.6e-6,
+    },
+};
+
+// Fiducial volume.  v1 uses two rectangular PolyFiducial slabs (XY ∧ ZX)
+// matching the existing dvm box: X ∈ [-202.5, +201.45] cm, Y ∈ ±200.312 cm,
+// Z ∈ [4.05, 505.35] cm.  Refine with real cryostat polygons later.
+local sbnd_fid_xy = {
+    type: "PolyFiducial",
+    name: "fiducial_sbnd_xy",
+    data: {
+        axis: 2,         // Z-slabs, polygons live in the X-Y plane
+        slabs: [{
+            min:  4.05  * wc.cm,
+            max:  505.35* wc.cm,
+            corners: [
+                [-202.5  * wc.cm, -200.312 * wc.cm],
+                [ 201.45 * wc.cm, -200.312 * wc.cm],
+                [ 201.45 * wc.cm,  200.312 * wc.cm],
+                [-202.5  * wc.cm,  200.312 * wc.cm],
+            ],
+        }],
+    },
+};
+local sbnd_fid_zx = {
+    type: "PolyFiducial",
+    name: "fiducial_sbnd_zx",
+    data: {
+        axis: 1,         // Y-slabs, polygons live in the Z-X plane
+        slabs: [{
+            min: -200.312 * wc.cm,
+            max:  200.312 * wc.cm,
+            corners: [
+                [  4.05  * wc.cm, -202.5  * wc.cm],
+                [505.35  * wc.cm, -202.5  * wc.cm],
+                [505.35  * wc.cm,  201.45 * wc.cm],
+                [  4.05  * wc.cm,  201.45 * wc.cm],
+            ],
+        }],
+    },
+};
+local sbnd_fid = {
+    type: "CompositeFiducial",
+    name: "sbnd_fid",
+    data: {
+        logic: "and",
+        fiducials: [ wc.tn(sbnd_fid_xy), wc.tn(sbnd_fid_zx) ],
+    },
+};
+
+// uboone-trained smoke-test weight directories (resolved via WIRECELL_PATH
+// against wire-cell-data/).  Scores are meaningless for SBND but verify
+// that the C++ scoring/DL paths run end-to-end.  Set to "" to disable.
+local smoketest_numu_weights_dir = "uboone/weights";
+local smoketest_nue_weights_dir  = "uboone/weights";
+local smoketest_dl_weights = "uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth";
 
 local initial_index = "0";
 local initial_runNo = "1";
@@ -104,6 +182,23 @@ local bs_dead_face(apa, face) = {
 };
 // The factory used to give blob samplers to ClusteringRetile ("rt").
 local bs_rt_face = bs_live_face;
+
+// Special sampler for ImproveCluster_2: enable dead-cell mixing so the
+// retiler can interpolate across dead regions.  Matches qlport's
+// `bs_live_no_dead_mix`.
+local bs_live_no_dead_mix_face(apa, face) = {
+    type: "BlobSampler",
+    name: "live_no_dead_mix-%s-%d"%[apa, face],
+    data: {
+        drift_speed: drift_speed,
+        time_offset: time_offset,
+        strategy: {
+            name: "charge_stepped",
+            disable_mix_dead_cell: false,   // the key difference
+        },
+        extra: ['.*wire_index', '.*charge.*', 'wpid'],
+    },
+};
 
 
 local clus_per_face (
@@ -269,8 +364,66 @@ local clus_all_apa (
     local cm = clus.clustering_methods(prefix="all",
                                        detector_volumes=dv,
                                        pc_transforms=pcts,
+                                       fiducial=sbnd_fid,        // fiducialutils needs this
                                        coords=common_corr_coords),
-        
+
+    // ImproveCluster_2 retiler with the no-dead-mix sampler per anode
+    // (SBND has one face per anode in this pipeline).
+    local imp2_samplers = [
+        clus.sampler(bs_live_no_dead_mix_face(a.name, 0),
+                     apa=a.data.ident, face=0)
+        for a in anodes
+    ],
+    local improve_cluster_2_sbnd = cm.improve_cluster_2(
+        anodes=anodes,
+        samplers=imp2_samplers,
+        verbose=true,
+    ),
+
+    // uboone-trained BDT/DL scorers — smoke test only.  Scores are
+    // meaningless for SBND until retraining; the C++ paths should at
+    // least run end-to-end.
+    local numu_bdt_scorer = cm.numu_bdt_scorer(
+        numu1_weights_xml=     smoketest_numu_weights_dir + "/numu_tagger1.weights.xml",
+        numu2_weights_xml=     smoketest_numu_weights_dir + "/numu_tagger2.weights.xml",
+        numu3_weights_xml=     smoketest_numu_weights_dir + "/numu_tagger3.weights.xml",
+        cosmict10_weights_xml= smoketest_numu_weights_dir + "/cos_tagger_10.weights.xml",
+        numu_xgboost_xml=      smoketest_numu_weights_dir + "/numu_scalars_scores_0923.xml",
+    ),
+    local nue_bdt_scorer = cm.nue_bdt_scorer(
+        mipid_weights_xml=       smoketest_nue_weights_dir + "/mipid_BDT.weights.xml",
+        gap_weights_xml=         smoketest_nue_weights_dir + "/gap_BDT.weights.xml",
+        hol_lol_weights_xml=     smoketest_nue_weights_dir + "/hol_lol_BDT.weights.xml",
+        cme_anc_weights_xml=     smoketest_nue_weights_dir + "/cme_anc_BDT.weights.xml",
+        mgo_mgt_weights_xml=     smoketest_nue_weights_dir + "/mgo_mgt_BDT.weights.xml",
+        br1_weights_xml=         smoketest_nue_weights_dir + "/br1_BDT.weights.xml",
+        br3_weights_xml=         smoketest_nue_weights_dir + "/br3_BDT.weights.xml",
+        br3_3_weights_xml=       smoketest_nue_weights_dir + "/br3_3_BDT.weights.xml",
+        br3_5_weights_xml=       smoketest_nue_weights_dir + "/br3_5_BDT.weights.xml",
+        br3_6_weights_xml=       smoketest_nue_weights_dir + "/br3_6_BDT.weights.xml",
+        stemdir_br2_weights_xml= smoketest_nue_weights_dir + "/stem_dir_br2_BDT.weights.xml",
+        trimuon_weights_xml=     smoketest_nue_weights_dir + "/stl_lem_brm_BDT.weights.xml",
+        br4_tro_weights_xml=     smoketest_nue_weights_dir + "/br4_tro_BDT.weights.xml",
+        mipquality_weights_xml=  smoketest_nue_weights_dir + "/mipquality_BDT.weights.xml",
+        pio_1_weights_xml=       smoketest_nue_weights_dir + "/pio_1_BDT.weights.xml",
+        pio_2_weights_xml=       smoketest_nue_weights_dir + "/pio_2_BDT.weights.xml",
+        stw_spt_weights_xml=     smoketest_nue_weights_dir + "/stw_spt_BDT.weights.xml",
+        vis_1_weights_xml=       smoketest_nue_weights_dir + "/vis_1_BDT.weights.xml",
+        vis_2_weights_xml=       smoketest_nue_weights_dir + "/vis_2_BDT.weights.xml",
+        stw_2_weights_xml=       smoketest_nue_weights_dir + "/stw_2_BDT.weights.xml",
+        stw_3_weights_xml=       smoketest_nue_weights_dir + "/stw_3_BDT.weights.xml",
+        stw_4_weights_xml=       smoketest_nue_weights_dir + "/stw_4_BDT.weights.xml",
+        sig_1_weights_xml=       smoketest_nue_weights_dir + "/sig_1_BDT.weights.xml",
+        sig_2_weights_xml=       smoketest_nue_weights_dir + "/sig_2_BDT.weights.xml",
+        lol_1_weights_xml=       smoketest_nue_weights_dir + "/lol_1_BDT.weights.xml",
+        lol_2_weights_xml=       smoketest_nue_weights_dir + "/lol_2_BDT.weights.xml",
+        tro_1_weights_xml=       smoketest_nue_weights_dir + "/tro_1_BDT.weights.xml",
+        tro_2_weights_xml=       smoketest_nue_weights_dir + "/tro_2_BDT.weights.xml",
+        tro_4_weights_xml=       smoketest_nue_weights_dir + "/tro_4_BDT.weights.xml",
+        tro_5_weights_xml=       smoketest_nue_weights_dir + "/tro_5_BDT.weights.xml",
+        nue_xgboost_xml=         smoketest_nue_weights_dir + "/XGB_nue_seed2_0923.xml",
+    ),
+
     local cm_pipeline = [
         // cm_old.examine_x_boundary(),
         cm_old.switch_scope(),
@@ -285,9 +438,31 @@ local clus_all_apa (
         cm.neutrino(),
         cm.isolated(),
         // cm.examine_bundles(),
+
+        // --- qlport-style downstream chain (added 2026-05-27) ---
+        // tagger_flag_transfer re-added 2026-05-28: WireCellMatch now tags
+        // the main_clus, so the upstream `tagger_info` PC is available.
+        cm.tagger_flag_transfer("tagger"),
+        cm.clustering_recovering_bundle("recover_bundle", graph_name="relaxed_pid"),
+        cm.steiner(retiler=improve_cluster_2_sbnd, perf=true),
+        cm.fiducialutils(),
+        cm.tagger_check_neutrino(
+            trackfitting_config_file="sbnd_track_fitting.json",
+            recombination_model=wc.tn(sbnd_box_recomb),
+            particle_dataset=wc.tn(pds.particle_dataset),
+            perf=true,
+            dl_weights=smoketest_dl_weights,
+            dQdx_scale=dQdx_scale,
+            dQdx_offset=dQdx_offset,
+            clus_geom_helper="",                 // no SBND SCE in v1
+        ),
+        numu_bdt_scorer,
+        nue_bdt_scorer,
+        // --- end qlport-style chain ---
+
         #cm.retile(cut_time_low=3*wc.us,
         #          cut_time_high=5*wc.us,
-        #          anodes=anodes, 
+        #          anodes=anodes,
         #          samplers=[
         #              clus.sampler(bs_rt_face(0,0), apa=0, face=0),
         #              clus.sampler(bs_rt_face(0,1), apa=0, face=1),
@@ -335,11 +510,78 @@ local clus_all_apa (
                     pcname: "3d",           // Which scope to use
                     coords: ["x_t0cor", "y", "z"],    // Coordinates to use
                     individual: false            // Output individual APA/Face
-                }
+                },
+
+                // --- qlport-style bee point sets (added 2026-05-27) ---
+                // Steiner-graph / track-fit / shower-track / vertex point
+                // sets produced by CreateSteinerGraph and TaggerCheckNeutrino.
+                {
+                    name: "regular",
+                    visitor: "CreateSteinerGraph:all",
+                    detector: "sbnd",
+                    algorithm: "regular",
+                    pcname: "3d",
+                    coords: ["x_t0cor", "y", "z"],
+                    individual: false,
+                    filter: 1,                   // apply scope filter
+                },
+                {
+                    name: "steiner",
+                    visitor: "CreateSteinerGraph:all",
+                    detector: "sbnd",
+                    algorithm: "steiner",
+                    pcname: "steiner_pc",
+                    coords: ["x_t0cor", "y", "z"],
+                    individual: false,
+                },
+                {
+                    name: "track_fit",
+                    visitor: "TaggerCheckNeutrino:all",
+                    grouping: "live",
+                    detector: "sbnd",
+                    algorithm: "track_fit",
+                    pcname: "3d",
+                    coords: ["x", "y", "z"],
+                    individual: false,
+                    dQdx_scale: dQdx_scale,
+                    dQdx_offset: dQdx_offset,
+                },
+                {
+                    name: "shower_track",
+                    visitor: "TaggerCheckNeutrino:all",
+                    grouping: "live",
+                    detector: "sbnd",
+                    algorithm: "shower_track",
+                    pcname: "3d",
+                    coords: ["x", "y", "z"],
+                    individual: false,
+                    use_associate_points: true,
+                },
+                {
+                    name: "vertices",
+                    visitor: "TaggerCheckNeutrino:all",
+                    grouping: "live",
+                    detector: "sbnd",
+                    algorithm: "vertices",
+                    pcname: "3d",
+                    coords: ["x", "y", "z"],
+                    individual: false,
+                    use_graph_vertices: true,
+                },
+                // --- end qlport-style bee point sets ---
+            ],
+            // Particle-flow Bee output: one JSON per event in
+            // data/{index}/{index}-mc.json, emitted after TaggerCheckNeutrino.
+            bee_pf: [
+                {
+                    name: "mc",
+                    visitor: "TaggerCheckNeutrino:all",
+                    grouping: "live",
+                },
             ],
             pipeline: wc.tns(cm_pipeline),
         },
-    }, nin=1, nout=1, uses=anodes+[dv, pcts]+cm_pipeline),
+    }, nin=1, nout=1, uses=anodes+[dv, pcts, sbnd_box_recomb, sbnd_fid, sbnd_fid_xy, sbnd_fid_zx]+pds.all+cm_pipeline),
 
     local sink = g.pnode({
         type: "TensorFileSink",

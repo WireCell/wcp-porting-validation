@@ -27,3 +27,9 @@ lar -n 1 -c wcls-flash-dump.fcl -s 2025f-mc.root --no-output
 # Part C: clustering + QL matching + all-APA clustering (needs LArSoft env)
 lar -n 1 -c wct-clus-matching.fcl --no-output
 ```
+
+
+## Re-sim
+```bash
+lar -n 1 -c standard_detsim_sbnd-dump.fcl -s 2025f-mc.root -o 2025f-mc-resim.root
+```
