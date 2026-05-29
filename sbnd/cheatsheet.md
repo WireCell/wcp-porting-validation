@@ -79,4 +79,5 @@ https://raw.githubusercontent.com/HaiwangYu/wct-ci/refs/heads/main/visualization
 python plot_detsim.py --input standalone-sample/2025f-mc.root \
     --channel-min 5200 --channel-max 5300 --tick-min 0 --tick-max 2000 \
     --interactive
+python plot_magnify.py --input sbnd-data-check.root --channel-min 5200 --channel-max 5300 --tick-min 0 --tick-max 2000
 ```
