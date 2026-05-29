@@ -182,9 +182,6 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
   is independent of the light-IO refactor.
 
 ### Open items
-- **`data` mode crashes** in `QLMatching` itself: unmatched clusters build a
-  `TimingTPCBundle(nullptr, …)` whose ctor derefs the flash
-  (`TimingTPCBundle.cxx:50`). MC doesn't hit it. Pre-existing; untouched here.
 - **Hardcoded drift speed** `1.563e-3` in `QLMatching`'s per-point X correction,
   not tied to the jsonnet `driftSpeed`. Pre-existing; untouched here.
 - **BEE packaging** still reaches into `../sbnd` (`bee-upload.sh`,
