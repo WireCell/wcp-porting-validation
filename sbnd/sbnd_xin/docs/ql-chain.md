@@ -22,7 +22,7 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
   per APA n ∈ {0,1}:
      ClusterFileSource(active)  ┐
                                 ├─► clus.per_apa ─┐
-     ClusterFileSource(masked)  ┘   (clustering)  ├─► OpflashToFlashPCs(n) ─► QLMatching(n)
+     ClusterFileSource(masked)  ┘   (clustering)  ├─► FlashTensorToOpticalPCs(n) ─► QLMatching(n)
      TensorFileSource(opflash) ───────────────────┘   (expand matrix into          (charge–light
                                                         flash/light/flashlight       match; reads
                                                         PCs on live root node)       flash from root,
@@ -41,7 +41,7 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
 
 Light I/O is two graph nodes: **`Sio::TensorFileSource`** reads
 `opflash_apa<n>.tar.gz` (a `[nflash, 1+nchan]` matrix), and
-**`Aux::OpflashToFlashPCs`** (a generic, detector-agnostic converter in `aux/`)
+**`Aux::FlashTensorToOpticalPCs`** (a generic, detector-agnostic converter in `aux/`)
 expands it into the canonical
 `flash`/`light`/`flashlight` point clouds on the live root node of the cluster
 pctree — the **same schema** the MicroBooNE `UbooneClusterSource` writes.
@@ -73,7 +73,7 @@ writable `work/` dir.
 |------|----------|----------|
 | `icluster-apa{0,1}-active.npz` | `wcls-img-dump.fcl` | per-APA **live** `ICluster` dump (blobs/wires/channels) for all 10 events, serialized as a numpy archive read by `ClusterFileSource` |
 | `icluster-apa{0,1}-masked.npz` | `wcls-img-dump.fcl` | per-APA **dead/masked**-region clusters (the dead-area blobs; deserialized via `aux/ClusterArrays::to_cluster`, the `nudge=1e-3` dead-blob fix) |
-| `opflash_apa{0,1}.tar.gz` | `wcls-flash-dump.fcl` | per-APA optical flashes as a tensor archive (`prefix: "opflash_"`), 2-D `[nflash, 1+nchan]`; read by `Sio::TensorFileSource` and expanded into the canonical `flash`/`light`/`flashlight` PCs on the live root node by `Aux::OpflashToFlashPCs` |
+| `opflash_apa{0,1}.tar.gz` | `wcls-flash-dump.fcl` | per-APA optical flashes as a tensor archive (`prefix: "opflash_"`), 2-D `[nflash, 1+nchan]`; read by `Sio::TensorFileSource` and expanded into the canonical `flash`/`light`/`flashlight` PCs on the live root node by `Aux::FlashTensorToOpticalPCs` |
 | `semi-analytical-sbnd.json` | `build-semi-analytical-data/` (one-off) | SBND photon model: `VUVHits`, `VISHits`, `Geometry`, 312 `OpDets`; loaded by `QLMatching` via `Persist::load` (found on `WIRECELL_PATH` at `wire-cell-data/sbnd/photodet/`). Schema → `qlmatching-port.md`. |
 
 `mc` ⇒ `reality=sim` (`QLMatching data:false`); `data` ⇒ `reality=data`
@@ -125,16 +125,16 @@ What it does:
   **local** `clus.jsonnet` and `qlmatching.jsonnet` (thin re-exports of the in-tree
   canonical `pgrapher/experiment/sbnd/{clus,qlmatching}.jsonnet`, resolved on
   `WIRECELL_PATH`), builds per-APA `ClusterFileSource` + `clus.per_apa` +
-  `qlm.opflash_source`(`TensorFileSource`) + `qlm.flash_attach`(**`OpflashToFlashPCs`**)
+  `qlm.opflash_source`(`TensorFileSource`) + `qlm.flash_attach`(**`FlashTensorToOpticalPCs`**)
   + `qlm.matching`(`QLMatching`, single input, `nin=1`), fans into `clus.all_apa`, and
   declares the plugins (incl. `WireCellAux`, `WireCellSio`, `WireCellMatch`).
 - The matching nodes and the SBND matching constants (`nchan`, `ch_mask`) come from the
   canonical `cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet` helper (factory
   `function(params)`, mirroring `clus.jsonnet`); `drift_speed` flows from
   `params.lar.drift_speed`. The standalone just calls `qlm.opflash_source/flash_attach/matching`.
-- Per-APA wiring: `clus.per_apa`→`OpflashToFlashPCs` port 0 (pctree) and
-  `TensorFileSource`(opflash)→`OpflashToFlashPCs` port 1 (light), then
-  →`QLMatching`. The `Aux::OpflashToFlashPCs` fan-in (`nchan: 312`) expands the
+- Per-APA wiring: `clus.per_apa`→`FlashTensorToOpticalPCs` port 0 (pctree) and
+  `TensorFileSource`(opflash)→`FlashTensorToOpticalPCs` port 1 (light), then
+  →`QLMatching`. The `Aux::FlashTensorToOpticalPCs` fan-in (`nchan: 312`) expands the
   opflash matrix into the canonical `flash`/`light`/`flashlight` PCs on the live
   root node; `QLMatching` reads them there and writes back a per-cluster `flash`
   scalar (no 2-port `QLMatching` fanin).
@@ -182,7 +182,7 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 
 - **Canonical-flash consolidation is bit-identical.** Expanding the opflash
   matrix into the canonical `flash`/`light`/`flashlight` root-node PCs (via
-  `Aux::OpflashToFlashPCs`) and rebuilding `Opflash` from them reproduces the
+  `Aux::FlashTensorToOpticalPCs`) and rebuilding `Opflash` from them reproduces the
   baseline **byte-for-byte**: all 40 `data-sep` JSONs (`{img,op}-apa{0,1}` × 10
   events) are identical — the matching math is unchanged. The output tensorset
   additionally gains the canonical flash PCs + a per-cluster matched-flash
@@ -211,6 +211,6 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 | inputs (read-only) | `sbnd_xin/input_files/input-10evt-{mc,data}/` |
 | work dir | `sbnd_xin/work/ql_<mode>/` |
 | packaging (still ../sbnd) | `wcp-porting-img/sbnd/{bee-upload.sh,merge-apa.py}`, `wcp-porting-img/upload-to-bee.sh` |
-| light-IO components | `toolkit/sio/` (`TensorFileSource`) + `toolkit/aux/` (`OpflashToFlashPCs`) |
+| light-IO components | `toolkit/sio/` (`TensorFileSource`) + `toolkit/aux/` (`FlashTensorToOpticalPCs`) |
 | matching component | `toolkit/match/` (`WireCellMatch`: `QLMatching`, `Opflash`, `TimingTPCBundle`) |
 | photon model JSON | `wire-cell-data/sbnd/photodet/semi-analytical-sbnd.json` |

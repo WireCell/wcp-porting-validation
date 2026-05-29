@@ -61,7 +61,7 @@ local clus_pipes = [
 ];
 
 // --- SBND light I/O + QL matching ---
-// All matching graph nodes (TensorFileSource opflash reader -> OpflashToFlashPCs
+// All matching graph nodes (TensorFileSource opflash reader -> FlashTensorToOpticalPCs
 // canonical-flash-PC fan-in -> QLMatching) plus the SBND matching constants live in
 // the canonical in-tree helper, re-exported locally as ./qlmatching.jsonnet (same
 // shim pattern as ./clus.jsonnet).
@@ -76,7 +76,7 @@ local matching_pipes  = [
 
 // --- Per-APA subgraphs ---
 // active+masked -> clustering ─┐
-//                             ├─ OpflashToFlashPCs (canonical light PCs) -> QLMatching
+//                             ├─ FlashTensorToOpticalPCs (canonical light PCs) -> QLMatching
 //          TensorFileSource ──┘
 local per_apa = [g.intern(
     innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
