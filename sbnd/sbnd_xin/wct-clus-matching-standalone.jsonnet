@@ -49,20 +49,31 @@ local masked_clusters = [
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-// SBND light I/O: read the per-APA opflash archive and attach it as a "flash"
-// point cloud onto the live root node of the cluster pctree (the matcher then
-// reads the light from there). TensorFileToPCTree is the generic sio primitive
-// for "attach a tensor file as a named root-node PC". Per APA, clustering stage.
-local flash_io = [
+// SBND light I/O, two standard nodes per APA:
+//  1. TensorFileSource  reads the opflash archive -> opflash tensor set.
+//  2. AttachPointCloudToTree (generic aux fan-in) attaches that tensor as a
+//     "flash" point cloud onto the live root node of the cluster pctree.
+// QLMatching then reads the light from the root node. (Read at clustering stage.)
+local opflash_sources = [
     g.pnode({
-        type: 'TensorFileToPCTree',
-        name: 'flash_io_apa%d' % n,
+        type: "TensorFileSource",
+        name: "opflash_src_apa%d" % n,
         data: {
-            input: "opflash_apa%d.tar.gz" % n,
+            inname: "opflash_apa%d.tar.gz" % n,
             prefix: "opflash_",
+        }
+    }, nin=0, nout=1)
+    for n in std.range(0, std.length(tools.anodes) - 1)
+];
+
+local flash_attach = [
+    g.pnode({
+        type: 'AttachPointCloudToTree',
+        name: 'flash_attach_apa%d' % n,
+        data: {
             pcname: "flash",
         }
-    }, nin=1, nout=1)
+    }, nin=2, nout=1)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
@@ -99,16 +110,19 @@ local matching_pipes = [
 ];
 
 // --- Per-APA subgraphs ---
-// active+masked -> clustering -> TensorFileToPCTree (attach light) -> QLMatching
+// active+masked -> clustering ─┐
+//                             ├─ AttachPointCloudToTree (attach light) -> QLMatching
+//          TensorFileSource ──┘
 local per_apa = [g.intern(
-    innodes=[active_clusters[n], masked_clusters[n]],
-    centernodes=[clus_pipes[n], flash_io[n]],
+    innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
+    centernodes=[clus_pipes[n], flash_attach[n]],
     outnodes=[matching_pipes[n]],
     edges=[
         g.edge(active_clusters[n], clus_pipes[n], 0, 0),
         g.edge(masked_clusters[n], clus_pipes[n], 0, 1),
-        g.edge(clus_pipes[n], flash_io[n], 0, 0),
-        g.edge(flash_io[n], matching_pipes[n], 0, 0),
+        g.edge(clus_pipes[n], flash_attach[n], 0, 0),      // port 0 = pctree
+        g.edge(opflash_sources[n], flash_attach[n], 0, 1), // port 1 = opflash
+        g.edge(flash_attach[n], matching_pipes[n], 0, 0),
     ]
 ) for n in std.range(0, std.length(tools.anodes) - 1)];
 
@@ -131,9 +145,9 @@ local app = {
 local cmdline = {
     type: "wire-cell",
     data: {
-        plugins: ["WireCellGen", "WireCellPgraph", "WireCellSio", "WireCellSigProc",
-                  "WireCellImg", "WireCellRoot", "WireCellTbb", "WireCellClus",
-                  "WireCellMatch"],
+        plugins: ["WireCellGen", "WireCellPgraph", "WireCellAux", "WireCellSio",
+                  "WireCellSigProc", "WireCellImg", "WireCellRoot", "WireCellTbb",
+                  "WireCellClus", "WireCellMatch"],
         apps: ["Pgrapher"]
     }
 };
