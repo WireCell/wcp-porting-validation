@@ -50,36 +50,6 @@ local masked_clusters = [
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-// SBND light I/O, two standard nodes per APA:
-//  1. TensorFileSource  reads the opflash archive -> opflash matrix tensor set.
-//  2. OpflashToFlashPCs (match fan-in) expands that matrix into the canonical
-//     "flash"/"light"/"flashlight" point clouds (same schema as the MicroBooNE
-//     root/UbooneClusterSource) on the live root node of the cluster pctree.
-// QLMatching then reads the flashes from the canonical PCs and writes back a
-// per-cluster matched-flash scalar (so Cluster::get_flash() works downstream).
-local opflash_sources = [
-    g.pnode({
-        type: "TensorFileSource",
-        name: "opflash_src_apa%d" % n,
-        data: {
-            inname: "opflash_apa%d.tar.gz" % n,
-            prefix: "opflash_",
-        }
-    }, nin=0, nout=1)
-    for n in std.range(0, std.length(tools.anodes) - 1)
-];
-
-local flash_attach = [
-    g.pnode({
-        type: 'OpflashToFlashPCs',
-        name: 'flash_attach_apa%d' % n,
-        data: {
-            nchan: 312,
-        }
-    }, nin=2, nout=1)
-    for n in std.range(0, std.length(tools.anodes) - 1)
-];
-
 // --- Per-APA clustering ---
 // Local re-export of the in-tree canonical pgrapher/experiment/sbnd/clus.jsonnet
 // (keeps sbnd_xin standalone; no dependency on ../sbnd).
@@ -90,27 +60,17 @@ local clus_pipes = [
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-// --- QL Matching (now WCT-native) ---
-local matching_pipes = [
-    g.pnode({
-        type: 'QLMatching',
-        name: 'matching%d' % n,
-        local dv = clus_maker.detector_volumes([tools.anodes[n]]),
-        data: {
-            anode: wc.tn(tools.anodes[n]),
-            detector_volumes: wc.tn(dv),
-            bee_dir: "data-sep",
-            beamonly: false,
-            data: if reality == 'data' then true else false,
-            QtoL: 1.0,
-            drift_speed: params.lar.drift_speed,
-            nchan: 312,  // must match OpflashToFlashPCs.nchan (writer/reader coupling)
-            ch_mask: [39, 64, 66, 71, 85, 86, 87, 115, 138, 141, 197, 217, 221,
-                      222, 223, 226, 245, 249, 302],
-            flash_minPE: 50,
-            semimodel_file: semimodel_file,
-        },
-    }, nin=1, nout=1)
+// --- SBND light I/O + QL matching ---
+// All matching graph nodes (TensorFileSource opflash reader -> OpflashToFlashPCs
+// canonical-flash-PC fan-in -> QLMatching) plus the SBND matching constants live in
+// the canonical in-tree helper, re-exported locally as ./qlmatching.jsonnet (same
+// shim pattern as ./clus.jsonnet).
+local qlm = (import 'qlmatching.jsonnet')(params);
+local opflash_sources = [qlm.opflash_source(n) for n in std.range(0, std.length(tools.anodes) - 1)];
+local flash_attach    = [qlm.flash_attach(n)    for n in std.range(0, std.length(tools.anodes) - 1)];
+local matching_pipes  = [
+    qlm.matching(tools.anodes[n], clus_maker.detector_volumes([tools.anodes[n]]),
+                 n, reality, semimodel_file)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
