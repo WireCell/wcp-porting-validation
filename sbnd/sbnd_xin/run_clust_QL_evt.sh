@@ -28,7 +28,7 @@ LIFETIME=6        # ms
 DRIFTSPEED=1.565  # mm/us
 SEMIMODEL=semi-analytical-sbnd.json
 
-# sbnd_xin-local copy (sets nu_tagging=false to reproduce the pre-tagging chain)
+# sbnd_xin standalone chain (imports the in-tree pre-tagging clus.jsonnet)
 JSONNET="$SBND_DIR/wct-clus-matching-standalone.jsonnet"
 BEE_UPLOAD="$WCP_DIR/bee-upload.sh"
 
