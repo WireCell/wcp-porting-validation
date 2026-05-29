@@ -51,10 +51,12 @@ local masked_clusters = [
 ];
 
 // SBND light I/O, two standard nodes per APA:
-//  1. TensorFileSource  reads the opflash archive -> opflash tensor set.
-//  2. AttachPointCloudToTree (generic aux fan-in) attaches that tensor as a
-//     "flash" point cloud onto the live root node of the cluster pctree.
-// QLMatching then reads the light from the root node. (Read at clustering stage.)
+//  1. TensorFileSource  reads the opflash archive -> opflash matrix tensor set.
+//  2. OpflashToFlashPCs (match fan-in) expands that matrix into the canonical
+//     "flash"/"light"/"flashlight" point clouds (same schema as the MicroBooNE
+//     root/UbooneClusterSource) on the live root node of the cluster pctree.
+// QLMatching then reads the flashes from the canonical PCs and writes back a
+// per-cluster matched-flash scalar (so Cluster::get_flash() works downstream).
 local opflash_sources = [
     g.pnode({
         type: "TensorFileSource",
@@ -69,10 +71,10 @@ local opflash_sources = [
 
 local flash_attach = [
     g.pnode({
-        type: 'AttachPointCloudToTree',
+        type: 'OpflashToFlashPCs',
         name: 'flash_attach_apa%d' % n,
         data: {
-            pcname: "flash",
+            nchan: 312,
         }
     }, nin=2, nout=1)
     for n in std.range(0, std.length(tools.anodes) - 1)
@@ -102,6 +104,7 @@ local matching_pipes = [
             data: if reality == 'data' then true else false,
             QtoL: 1.0,
             drift_speed: params.lar.drift_speed,
+            nchan: 312,  // must match OpflashToFlashPCs.nchan (writer/reader coupling)
             ch_mask: [39, 64, 66, 71, 85, 86, 87, 115, 138, 141, 197, 217, 221,
                       222, 223, 226, 245, 249, 302],
             flash_minPE: 50,
@@ -113,7 +116,7 @@ local matching_pipes = [
 
 // --- Per-APA subgraphs ---
 // active+masked -> clustering ─┐
-//                             ├─ AttachPointCloudToTree (attach light) -> QLMatching
+//                             ├─ OpflashToFlashPCs (canonical light PCs) -> QLMatching
 //          TensorFileSource ──┘
 local per_apa = [g.intern(
     innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
