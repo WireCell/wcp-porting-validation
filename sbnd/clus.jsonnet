@@ -339,6 +339,9 @@ local clus_per_face (
 local clus_all_apa (
     anodes,
     dump = true,
+    nu_tagging = true,   // false → reproduce the pre-tagging chain (no qlport
+                         // downstream chain / bee sets; needs the tagger_info
+                         // PC handoff from WireCellMatch, not yet ported)
     ) = {
     local nanodes = std.length(anodes),
     local pcmerging = g.pnode({
@@ -438,7 +441,7 @@ local clus_all_apa (
         cm.neutrino(),
         cm.isolated(),
         // cm.examine_bundles(),
-
+    ] + (if nu_tagging then [
         // --- qlport-style downstream chain (added 2026-05-27) ---
         // tagger_flag_transfer re-added 2026-05-28: WireCellMatch now tags
         // the main_clus, so the upstream `tagger_info` PC is available.
@@ -459,6 +462,7 @@ local clus_all_apa (
         numu_bdt_scorer,
         nue_bdt_scorer,
         // --- end qlport-style chain ---
+    ] else []) + [
 
         #cm.retile(cut_time_low=3*wc.us,
         #          cut_time_high=5*wc.us,
@@ -511,6 +515,7 @@ local clus_all_apa (
                     coords: ["x_t0cor", "y", "z"],    // Coordinates to use
                     individual: false            // Output individual APA/Face
                 },
+            ] + (if nu_tagging then [
 
                 // --- qlport-style bee point sets (added 2026-05-27) ---
                 // Steiner-graph / track-fit / shower-track / vertex point
@@ -569,16 +574,16 @@ local clus_all_apa (
                     use_graph_vertices: true,
                 },
                 // --- end qlport-style bee point sets ---
-            ],
+            ] else []),
             // Particle-flow Bee output: one JSON per event in
             // data/{index}/{index}-mc.json, emitted after TaggerCheckNeutrino.
-            bee_pf: [
+            bee_pf: if nu_tagging then [
                 {
                     name: "mc",
                     visitor: "TaggerCheckNeutrino:all",
                     grouping: "live",
                 },
-            ],
+            ] else [],
             pipeline: wc.tns(cm_pipeline),
         },
     }, nin=1, nout=1, uses=anodes+[dv, pcts, sbnd_box_recomb, sbnd_fid, sbnd_fid_xy, sbnd_fid_zx]+pds.all+cm_pipeline),
@@ -609,6 +614,6 @@ local clus_all_apa (
 function () {
     per_face(anode, face=0, dump=true) :: clus_per_face(anode, face=face, dump=dump),
     per_apa(anode, dump=true) :: clus_per_face(anode, face=0, dump=dump), # face=anode is specific to sbnd
-    all_apa(anodes, dump=true) :: clus_all_apa(anodes, dump=dump),
+    all_apa(anodes, dump=true, nu_tagging=true) :: clus_all_apa(anodes, dump=dump, nu_tagging=nu_tagging),
     detector_volumes(anodes, face=0) :: detector_volumes(anodes=anodes, face=face),
 }
