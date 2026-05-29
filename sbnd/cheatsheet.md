@@ -71,3 +71,12 @@ wire information
 wirecell-util plot-wires /exp/sbnd/app/users/yuhw/wire-cell-data/sbnd-wires-geometry-v0206.json.bz2 sbnd-wires-geometry-v0206.pdf
 wirecell-util plot-wires /exp/sbnd/app/users/yuhw/wire-cell-data/sbnd-wires-geometry-v0200.json.bz2 sbnd-wires-geometry-v0200.pdf
 ```
+
+
+
+https://raw.githubusercontent.com/HaiwangYu/wct-ci/refs/heads/main/visualization-utilities/plot_detsim.py
+```bash
+python plot_detsim.py --input standalone-sample/2025f-mc.root \
+    --channel-min 5200 --channel-max 5300 --tick-min 0 --tick-max 2000 \
+    --interactive
+```
