@@ -97,15 +97,16 @@ What it does:
    ```
    wire-cell -l stderr -l "$LOG:debug" -L debug \
      -V reality=<sim|data> -V input=. -V semimodel_file=semi-analytical-sbnd.json \
-     -C DL=6.2 -C DT=9.8 -C lifetime=6 -C driftSpeed=1.565 \
+     -C DL=6.2 -C DT=9.8 -C lifetime=6 \
      -c <sbnd_xin>/wct-clus-matching-standalone.jsonnet
    ```
    **`-V` = ext-str (string), `-C` = ext-code (numeric)** — the jsonnet does
    `std.extVar('DL') * wc.cm2`, so the numeric vars must be `-C` (the jsonnet's
-   header comment showing `-V DL=…` is wrong and would error). Drift params are
+   header comment showing `-V DL=…` is wrong and would error). DL/DT/lifetime are
    editable vars at the top of the script; defaults are the documented sim set.
-   (Note: these feed the *clustering* drift model — `QLMatching` itself still
-   uses a hardcoded drift speed; see `qlmatching-code.md` §7.)
+   (Note: `drift_speed` is **not** passed — both the clustering and `QLMatching`
+   take it from the common SBND config (`simparams.jsonnet`: 1.563 mm/us) via
+   `params.lar.drift_speed`, so charge and light share one value.)
 4. Packages via `bee-upload.sh` (§5). **Upload is opt-in**: default builds
    `combined.zip` only (a runtime stub replaces the uploader); `--upload` runs
    the real upload and prints the BEE URL.
@@ -182,8 +183,6 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
   is independent of the light-IO refactor.
 
 ### Open items
-- **Hardcoded drift speed** `1.563e-3` in `QLMatching`'s per-point X correction,
-  not tied to the jsonnet `driftSpeed`. Pre-existing; untouched here.
 - **BEE packaging** still reaches into `../sbnd` (`bee-upload.sh`,
   `merge-apa.py`, `../upload-to-bee.sh`); to be localized later.
 

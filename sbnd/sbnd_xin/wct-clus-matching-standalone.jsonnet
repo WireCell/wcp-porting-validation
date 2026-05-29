@@ -21,7 +21,8 @@ local params = base {
     DL: std.extVar('DL') * wc.cm2 / wc.s,
     DT: std.extVar('DT') * wc.cm2 / wc.s,
     lifetime: std.extVar('lifetime') * wc.ms,
-    drift_speed: std.extVar('driftSpeed') * wc.mm / wc.us,
+    // drift_speed is taken from the common SBND config (simparams.jsonnet:
+    // 1.563 mm/us), not overridden here, so charge and light share one value.
   },
 };
 
@@ -100,6 +101,7 @@ local matching_pipes = [
             beamonly: false,
             data: if reality == 'data' then true else false,
             QtoL: 1.0,
+            drift_speed: params.lar.drift_speed,
             ch_mask: [39, 64, 66, 71, 85, 86, 87, 115, 138, 141, 197, 217, 221,
                       222, 223, 226, 245, 249, 302],
             flash_minPE: 50,

@@ -22,10 +22,12 @@ WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BASE}/wire-cell-data/sbnd/photodet:${WIRECELL_PATH}
 
 # --- Drift / lar params (documented sim values for this jsonnet; edit as needed) ---
+# NOTE: drift_speed is NOT passed here; it comes from the common SBND config
+# (pgrapher/experiment/sbnd/simparams.jsonnet: 1.563 mm/us) so charge and light
+# matching share one value.
 DL=6.2            # cm^2/s
 DT=9.8            # cm^2/s
 LIFETIME=6        # ms
-DRIFTSPEED=1.565  # mm/us
 SEMIMODEL=semi-analytical-sbnd.json
 
 # sbnd_xin standalone chain (imports the in-tree pre-tagging clus.jsonnet)
@@ -68,7 +70,7 @@ done
 echo "Mode:         $MODE  (reality=$REALITY)"
 echo "Input:        $INPUT_DIR"
 echo "Work dir:     $WORKDIR"
-echo "Drift params: DL=$DL DT=$DT lifetime=$LIFETIME driftSpeed=$DRIFTSPEED"
+echo "Drift params: DL=$DL DT=$DT lifetime=$LIFETIME (drift_speed from common config)"
 echo "Upload:       $([ "$DO_UPLOAD" = 1 ] && echo 'yes (BNL BEE)' || echo 'no (build only)')"
 echo "Log:          $LOG"
 
@@ -93,7 +95,6 @@ wire-cell \
     -C "DL=$DL" \
     -C "DT=$DT" \
     -C "lifetime=$LIFETIME" \
-    -C "driftSpeed=$DRIFTSPEED" \
     -c "$JSONNET"
 
 echo "[wire-cell] done -> data-sep/ + mabc-all-apa.zip"
