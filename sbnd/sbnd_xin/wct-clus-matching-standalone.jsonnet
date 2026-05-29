@@ -51,14 +51,16 @@ local masked_clusters = [
 
 // SBND light I/O: read the per-APA opflash archive and attach it as a "flash"
 // point cloud onto the live root node of the cluster pctree (the matcher then
-// reads the light from there). Inserted at the clustering stage, per APA.
+// reads the light from there). TensorFileToPCTree is the generic sio primitive
+// for "attach a tensor file as a named root-node PC". Per APA, clustering stage.
 local flash_io = [
     g.pnode({
-        type: 'FlashToPCTree',
+        type: 'TensorFileToPCTree',
         name: 'flash_io_apa%d' % n,
         data: {
             input: "opflash_apa%d.tar.gz" % n,
             prefix: "opflash_",
+            pcname: "flash",
         }
     }, nin=1, nout=1)
     for n in std.range(0, std.length(tools.anodes) - 1)
@@ -97,7 +99,7 @@ local matching_pipes = [
 ];
 
 // --- Per-APA subgraphs ---
-// active+masked -> clustering -> FlashToPCTree (attach light) -> QLMatching
+// active+masked -> clustering -> TensorFileToPCTree (attach light) -> QLMatching
 local per_apa = [g.intern(
     innodes=[active_clusters[n], masked_clusters[n]],
     centernodes=[clus_pipes[n], flash_io[n]],

@@ -21,10 +21,10 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
 
   per APA n ∈ {0,1}:
      ClusterFileSource(active)  ┐
-                                ├─► clus.per_apa ─► FlashToPCTree(n) ─► QLMatching(n)
-     ClusterFileSource(masked)  ┘   (clustering)   (read opflash_apa<n>,  (charge–light
-                                                    attach "flash" PC      match; reads
-                                                    to live root node)     flash from root)
+                                ├─► clus.per_apa ─► TensorFileToPCTree(n) ─► QLMatching(n)
+     ClusterFileSource(masked)  ┘   (clustering)   (read opflash_apa<n>,    (charge–light
+                                                    attach "flash" PC        match; reads
+                                                    to live root node)       flash from root)
                                                                        │
                                        fan-in (per-APA charge+t0) ─► clus.all_apa (pre-tagging)
                                                                        │
@@ -37,11 +37,12 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
                                                         combined.zip ─► BEE URL
 ```
 
-Light I/O is a dedicated component: **`FlashToPCTree`** reads `opflash_apa<n>.tar.gz`
-and attaches the per-event flash matrix as a `flash` point cloud onto the live
-root node of the cluster pctree; `QLMatching` then reads the light from that root
-node (no separate flash input port). This mirrors the MicroBooNE
-`UbooneClusterSource` design. See `toolkit/match/docs/qlmatching-code.md` §1/§1a.
+Light I/O is a generic `sio` component: **`TensorFileToPCTree`** reads
+`opflash_apa<n>.tar.gz` and attaches the per-event flash matrix as a `flash`
+point cloud onto the live root node of the cluster pctree; `QLMatching` then
+reads the light from that root node (no separate flash input port). This mirrors
+the MicroBooNE `UbooneClusterSource` design. See
+`toolkit/match/docs/qlmatching-code.md` §1/§1a.
 
 Two side outputs feed BEE: **`data-sep/`** (written by `QLMatching`, the img +
 op layers) and **`mabc-*.zip`** (written by the clustering nodes). The graph's
@@ -66,7 +67,7 @@ writable `work/` dir.
 |------|----------|----------|
 | `icluster-apa{0,1}-active.npz` | `wcls-img-dump.fcl` | per-APA **live** `ICluster` dump (blobs/wires/channels) for all 10 events, serialized as a numpy archive read by `ClusterFileSource` |
 | `icluster-apa{0,1}-masked.npz` | `wcls-img-dump.fcl` | per-APA **dead/masked**-region clusters (the dead-area blobs; deserialized via `aux/ClusterArrays::to_cluster`, the `nudge=1e-3` dead-blob fix) |
-| `opflash_apa{0,1}.tar.gz` | `wcls-flash-dump.fcl` | per-APA optical flashes as a tensor archive (`prefix: "opflash_"`), 2-D `[nflash, 1+nchan]`; read by `FlashToPCTree` (which composes a `TensorFileSource` internally) and attached as the `flash` PC on the live root node |
+| `opflash_apa{0,1}.tar.gz` | `wcls-flash-dump.fcl` | per-APA optical flashes as a tensor archive (`prefix: "opflash_"`), 2-D `[nflash, 1+nchan]`; read by `Sio::TensorFileToPCTree` (which composes a `TensorFileSource` internally) and attached as the `flash` PC on the live root node |
 | `semi-analytical-sbnd.json` | `build-semi-analytical-data/` (one-off) | SBND photon model: `VUVHits`, `VISHits`, `Geometry`, 312 `OpDets`; loaded by `QLMatching` via `Persist::load` (found on `WIRECELL_PATH` at `wire-cell-data/sbnd/photodet/`). Schema → `qlmatching-port.md`. |
 
 `mc` ⇒ `reality=sim` (`QLMatching data:false`); `data` ⇒ `reality=data`
@@ -116,11 +117,12 @@ What it does:
   self-contained under `sbnd_xin` (no `../sbnd` dependency). It imports the
   **local** `clus.jsonnet` (a thin re-export of the in-tree canonical
   `pgrapher/experiment/sbnd/clus.jsonnet`, resolved on `WIRECELL_PATH`), builds
-  per-APA `ClusterFileSource` + `clus.per_apa` + **`FlashToPCTree`** +
+  per-APA `ClusterFileSource` + `clus.per_apa` + **`TensorFileToPCTree`** +
   `QLMatching` (single input now, `nin=1`), fans into `clus.all_apa`, and
-  declares the plugins (incl. `WireCellMatch`).
-- Per-APA wiring: `active/masked → clus.per_apa → FlashToPCTree (attach light)
-  → QLMatching`. `FlashToPCTree` reads `opflash_apa<n>.tar.gz` directly (it
+  declares the plugins (incl. `WireCellSio`, `WireCellMatch`).
+- Per-APA wiring: `active/masked → clus.per_apa → TensorFileToPCTree (attach
+  light) → QLMatching`. `TensorFileToPCTree` (generic `sio` primitive,
+  configured `pcname: "flash"`) reads `opflash_apa<n>.tar.gz` directly (it
   composes a `TensorFileSource`), so there is no longer a separate opflash
   source node or a 2-port `QLMatching` fanin.
 - **`clus.all_apa(dump=true)`** — the in-tree module is the **pre-tagging**
@@ -166,10 +168,10 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 ## 6. Verification & known state (mc)
 
 - **Light-IO refactor is bit-identical.** Moving the light from a `QLMatching`
-  input port to a `FlashToPCTree`-attached root-node PC reproduces the
+  input port to a `TensorFileToPCTree`-attached root-node PC reproduces the
   pre-refactor in-tree-clus run **byte-for-byte**: all 40 `data-sep` JSONs
   (`{img,op}-apa{0,1}` × 10 events) are identical. The refactor is pure
-  plumbing — no physics change. (`FlashToPCTree` composes the same
+  plumbing — no physics change. (`TensorFileToPCTree` composes the same
   `TensorFileSource` reader, so the parsed flash values match exactly.)
 - **Output differs from yuhw's archived reference**, by design: this chain now
   uses the in-tree canonical `clus.jsonnet` (pre-tagging) instead of yuhw's
@@ -198,5 +200,6 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 | inputs (read-only) | `sbnd_xin/input_files/input-10evt-{mc,data}/` |
 | work dir | `sbnd_xin/work/ql_<mode>/` |
 | packaging (still ../sbnd) | `wcp-porting-img/sbnd/{bee-upload.sh,merge-apa.py}`, `wcp-porting-img/upload-to-bee.sh` |
-| light-IO + matching components | `toolkit/match/` (`WireCellMatch`: `FlashToPCTree`, `QLMatching`) |
+| light-IO component | `toolkit/sio/` (`WireCellSio`: `TensorFileToPCTree`) |
+| matching component | `toolkit/match/` (`WireCellMatch`: `QLMatching`) |
 | photon model JSON | `wire-cell-data/sbnd/photodet/semi-analytical-sbnd.json` |
