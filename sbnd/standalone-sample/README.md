@@ -16,17 +16,58 @@ python plot_simchannels.py \
   --initial-channel 1000
 ```
 
+## dump dnn recob::Wire frames
+
+Dump the DNN signal-ROI `recob::Wire` products into WCT frame files
+(float32 `.tar.bz2`, viewable with `wirecell-plot frame`).
+The fcl defaults to MC tags (`simtpc2d:dnnsp`); for data, swap the active
+`structs` block for the commented `sptpc2d:dnnsp` block.
+
+```bash
+# MC (as committed): simtpc2d:dnnsp
+lar -n 10 -c wcls-frame-dump.fcl -s 2025f-mc.root --no-output
+wirecell-plot frame -t dnnsp -o dnn-frames.pdf dnn-frames.tar.bz2
+
+# data: uncomment the sptpc2d structs block in wcls-frame-dump.fcl, then
+lar -n 10 -c wcls-frame-dump.fcl -s 2025f-data.root --no-output
+```
+
 ## standalone files
+
+mc
 ```bash
 # Part A: dump image clusters
 lar -n 1 -c wcls-img-dump.fcl -s 2025f-mc.root --no-output
-
 # Part B: dump opflash data
 lar -n 1 -c wcls-flash-dump.fcl -s 2025f-mc.root --no-output
 
-# Part C: clustering + QL matching + all-APA clustering (needs LArSoft env)
+data
+```bash
+# Part A: dump image clusters: icluster*.npz
+lar -n 10 -c wcls-img-dump.fcl -s 2025f-data.root --no-output
+# Part B: dump opflash data: opflash*.tar.gz
+lar -n 10 -c wcls-flash-dump.fcl -s 2025f-data.root --no-output
+```
+
+## matching:
+
+refactored lar-matching:
+```bash
+# clustering + QL matching + all-APA clustering (needs LArSoft env)
 lar -n 1 -c wct-clus-matching.fcl --no-output
 ```
+
+standalone wct-matching:
+```bash
+wire-cell -l stdout -L info \
+-V reality=sim \
+-V DL=6.2 -V DT=9.8 -V lifetime=6 -V driftSpeed=1.565 \
+-V input=input-10evt-data \
+-V semimodel_file=sbnd/photodet/semi-analytical-sbnd.json \
+-c wct-clus-matching-standalone.jsonnet
+```
+
+## upload to bee:
 
 
 ## Re-sim
