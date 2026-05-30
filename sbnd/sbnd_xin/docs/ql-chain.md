@@ -97,6 +97,13 @@ writable `work/` dir.
 `mc` ⇒ `reality=sim` (`QLMatching data:false`); `data` ⇒ `reality=data`
 (`data:true`).
 
+> **Open item — `data` mode frames.** The in-graph dead-area imaging needs each
+> event's `work/evt<ID>/sp-frames.tar.bz2`. Those exist for the **mc** event ids
+> (2 9 11 12 14 18 31 35 41 42, from the standard imaging chain) but **not** for the
+> data event ids — so `run_clust_QL_evt.sh data` exits cleanly with a "missing
+> per-event SP frames" error until the data SP frames are produced
+> (`run_sp_to_magnify_evt.sh` for each). Only `mc` is wired end-to-end today.
+
 **Reference output** (mc only): `input_files/input-10evt-mc/archive-runs/wct-standalone-10ev/<n>/`
 is yuhw's saved `data-sep` from his standalone run. Note this chain now uses the
 in-tree `clus.jsonnet` (different clustering than yuhw's `../clus.jsonnet`), so
