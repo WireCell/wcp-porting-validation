@@ -11,7 +11,10 @@
 # Input  (read-only, yuhw's): input_files/input-10evt-<mode>/
 #          icluster-apa{0,1}-{active,masked}.npz  opflash_apa{0,1}.tar.gz
 # Output (writable):          work/ql_<mode>/
-#          data-sep/<n>/<n>-{img,op}-apa{0,1}.json   mabc-all-apa.zip   combined.zip
+#          mabc-all-apa.zip   (single self-contained BEE zip: per event the
+#          img/clustering charge layers, the dead-area patches, AND the optical
+#          op/flash + Q/L-matching layer — all dumped by the all-APA MABC. No
+#          per-APA data-sep JSON and no combine step any more.)
 
 set -e
 
@@ -32,7 +35,9 @@ SEMIMODEL=semi-analytical-sbnd.json
 
 # sbnd_xin standalone chain (imports the in-tree pre-tagging clus.jsonnet)
 JSONNET="$SBND_DIR/wct-clus-matching-standalone.jsonnet"
-BEE_UPLOAD="$WCP_DIR/bee-upload.sh"
+# Direct BEE uploader (the all-APA MABC already writes one self-contained zip,
+# so there is no longer a separate combine step).
+BEE_UPLOADER="$WCP_DIR/upload-to-bee.sh"
 
 # --- Args ---
 MODE=mc
@@ -97,27 +102,24 @@ wire-cell \
     -C "lifetime=$LIFETIME" \
     -c "$JSONNET"
 
-echo "[wire-cell] done -> data-sep/ + mabc-all-apa.zip"
+echo "[wire-cell] done -> mabc-all-apa.zip (self-contained BEE zip)"
 
-# --- Package via bee-upload.sh (single-sourced merge logic) ---
-# Default: stub out the uploader so combined.zip is built but nothing is sent.
+OUT_ZIP="$WORKDIR/mabc-all-apa.zip"
+[ -f "$OUT_ZIP" ] || { echo "ERROR: expected BEE zip not produced: $OUT_ZIP" >&2; exit 1; }
+
+# --- Upload (optional) ---------------------------------------------------------
+# mabc-all-apa.zip is already the complete event-display zip (charge img/
+# clustering + dead area + optical op/flash), so we upload it directly — no
+# merge-apa.py / bee-upload.sh combine step.
 if [ "$DO_UPLOAD" = 1 ]; then
-    echo "[bee] building + uploading combined.zip ..."
-    bash "$BEE_UPLOAD"
+    echo "[bee] uploading mabc-all-apa.zip ..."
+    URL=$(BROWSER=echo bash "$BEE_UPLOADER" "$OUT_ZIP" | tail -1)
+    echo "[bee] $URL"
 else
-    STUB="$WORKDIR/.noupload.sh"
-    cat > "$STUB" <<'EOF'
-#!/bin/bash
-echo "[upload] SKIPPED (build-only). Re-run with --upload to publish: $1"
-EOF
-    chmod +x "$STUB"
-    echo "[bee] building combined.zip (upload skipped) ..."
-    UPLOAD_TO_BEE="$STUB" bash "$BEE_UPLOAD"
+    echo "[bee] upload skipped (re-run with --upload to publish)"
 fi
 
 echo
 echo "=== done ==="
-echo "  combined.zip: $WORKDIR/combined.zip"
-echo "  reference:    diff data-sep/ against"
-echo "                $INPUT_DIR/archive-runs/wct-standalone-10ev/  (mc only)"
-[ "$DO_UPLOAD" = 1 ] || echo "  upload:       re-run with --upload to publish to BNL BEE"
+echo "  BEE zip:   $OUT_ZIP"
+[ "$DO_UPLOAD" = 1 ] || echo "  upload:    re-run with --upload to publish to BNL BEE"

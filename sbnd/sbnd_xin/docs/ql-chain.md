@@ -29,14 +29,14 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
                                                                                      writes match scalar)
                                                                        │
                                        fan-in (per-APA charge+t0) ─► clus.all_apa (pre-tagging)
-                                                                       │
-                                              ┌────────────────────────┼───────────────┐
-                                       data-sep/<n>/            mabc-*.zip        TensorFileSink
-                                   <n>-img/op-apa{0,1}.json  (clustering layers)  (trash-all-apa)
-                                              └──────────── bee-upload.sh ─────────┘
-                                                       merge-apa.py + union
-                                                              │
-                                                        combined.zip ─► BEE URL
+                                                                       │  (MultiAlgBlobClustering,
+                                                                       │   save_opflash:true)
+                                              ┌────────────────────────┴───────────────┐
+                                       mabc-all-apa.zip                          TensorFileSink
+                                  per event: img + clustering + dead +           (trash-all-apa)
+                                  op (flash/Q-L) layers, all in one zip
+                                              │
+                                              └─► BEE URL  (uploaded as-is; no combine)
 ```
 
 Light I/O is two graph nodes: **`Sio::TensorFileSource`** reads
@@ -46,15 +46,20 @@ expands it into the canonical
 `flash`/`light`/`flashlight` point clouds on the live root node of the cluster
 pctree — the **same schema** the MicroBooNE `UbooneClusterSource` writes.
 `QLMatching` reads the flashes from those PCs (no separate flash input port) and
-writes back a per-cluster `flash` scalar, so SBND flashes interoperate with all
-`clus` tooling (`Cluster::get_flash()`, `ClusterFlashDump`, `retile`, BEE). See
-`toolkit/match/docs/qlmatching-code.md` §1/§1a.
+**persists the match into the pctree** — the per-cluster `flash` scalar +
+`cluster_t0`, plus (for the BEE op dump) a per-cluster `matched_flash_gid` /
+`flashpred` and a self-contained per-root `opflash` PC — so SBND flashes
+interoperate with all `clus` tooling (`Cluster::get_flash()`, `ClusterFlashDump`,
+`retile`, BEE). See `toolkit/match/docs/qlmatching-code.md` §1/§1a.
 
-Two side outputs feed BEE: **`data-sep/`** (written by `QLMatching`, the img +
-op layers) and **`mabc-*.zip`** (written by the clustering nodes). The graph's
-main tensor output goes to a throwaway `TensorFileSink`
-(`trash-all-apa.tar.gz`) — the deliverable is the BEE JSON, not the tensor
-stream.
+**All BEE output now comes from the all-APA clustering node.** The
+`clus.all_apa` `MultiAlgBlobClustering` (`save_opflash: true`) dumps, per event,
+the charge `img`/`clustering` layers, the dead-area patches **and** the optical
+`op` (flash / Q-L matching) layer into a single `mabc-all-apa.zip` — `QLMatching`
+no longer writes any BEE JSON itself, and there is no `data-sep/` tree and no
+`merge-apa.py`/`bee-upload.sh` combine step. The graph's main tensor output goes
+to a throwaway `TensorFileSink` (`trash-all-apa.tar.gz`); the deliverable is the
+BEE zip.
 
 The bundled npz/opflash hold **all 10 events**, so one `wire-cell` invocation
 processes the whole sample (events indexed 0..9 internally).
@@ -112,9 +117,9 @@ What it does:
    (Note: `drift_speed` is **not** passed — both the clustering and `QLMatching`
    take it from the common SBND config (`simparams.jsonnet`: 1.563 mm/us) via
    `params.lar.drift_speed`, so charge and light share one value.)
-4. Packages via `bee-upload.sh` (§5). **Upload is opt-in**: default builds
-   `combined.zip` only (a runtime stub replaces the uploader); `--upload` runs
-   the real upload and prints the BEE URL.
+4. The run already produces `mabc-all-apa.zip` (the complete BEE zip; §5).
+   **Upload is opt-in**: default is build-only; `--upload` uploads that zip
+   directly via `../upload-to-bee.sh` and prints the BEE URL (no combine step).
 
 ---
 
@@ -154,24 +159,20 @@ ports and will need a matching update by their owner before they run again.
 
 ## 5. Outputs & BEE link
 
-In `work/ql_<mode>/`:
-- `data-sep/<n>/<n>-img-apa{0,1}.json` — charge (3-D points) per APA, per event.
-- `data-sep/<n>/<n>-op-apa{0,1}.json` — light/matching per APA, per event (the
-  **matching result**: `op_t`, `op_pes`, `op_pes_pred`, `cluster_id`; see
-  `qlmatching-code.md` §5).
-- `mabc-all-apa.zip` (+ `mabc-apa{0,1}-face0.zip`) — clustering layers.
+In `work/ql_<mode>/` the single deliverable is **`mabc-all-apa.zip`**, written
+directly by the all-APA `MultiAlgBlobClustering`. Per event `<n>` it holds:
+- `<n>-img-global.json` / `<n>-clustering-global.json` — charge (3-D points),
+  pre- and post-clustering;
+- `<n>-channel-deadarea-apa{0,1}-face0.json` — dead-area patches (v2, per-TPC);
+- `<n>-op.json` — the **light / Q-L matching** layer (`op_t`, `op_pes`,
+  `op_pes_pred`, `op_peTotal`, `cluster_id`; every flash, matched or not — the
+  `cluster_id` indexes the `img-global` clusters). See `qlmatching-code.md` §5.
 
-Packaging (`wcp-porting-img/sbnd/bee-upload.sh`, runs on `$PWD`):
-1. unzip `mabc-*.zip` into `data/<n>/`;
-2. `merge-apa.py --inpath=data-sep --outpath=data --eventNo=<n>` merges the
-   per-APA `img`/`op` into `data/<n>/<n>-img.json` / `-op.json`;
-3. zip `data/` → `combined.zip`;
-4. upload via `../upload-to-bee.sh` → prints `https://www.phy.bnl.gov/twister/bee/set/<UUID>/event/list/`.
-
-To get a BEE link with matching from an already-built zip:
+This zip is already the complete event-display set — no `data-sep/`, no
+`merge-apa.py`, no `bee-upload.sh` combine. To get a BEE link:
 ```
 cd work/ql_mc
-BROWSER=echo bash /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/upload-to-bee.sh combined.zip
+BROWSER=echo bash /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/upload-to-bee.sh mabc-all-apa.zip
 ```
 or re-run `./run_clust_QL_evt.sh mc --upload`. In the viewer, the **`op`** layer
 is the charge–light matching; `img`/`clustering` are the imaging/clustering.
@@ -180,14 +181,17 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 
 ## 6. Verification & known state (mc)
 
-- **Canonical-flash consolidation is bit-identical.** Expanding the opflash
-  matrix into the canonical `flash`/`light`/`flashlight` root-node PCs (via
-  `Aux::FlashTensorToOpticalPCs`) and rebuilding `Opflash` from them reproduces the
-  baseline **byte-for-byte**: all 40 `data-sep` JSONs (`{img,op}-apa{0,1}` × 10
-  events) are identical — the matching math is unchanged. The output tensorset
-  additionally gains the canonical flash PCs + a per-cluster matched-flash
-  scalar (verified: `Cluster::get_flash()` returns valid for matched clusters),
-  which the `data-sep` BEE files do not depend on.
+- **Matching decisions are unchanged.** The matching math + the persisted match
+  (per-cluster `flash` scalar / `cluster_t0`) are byte-identical to the saved
+  baseline (verified while the legacy `data-sep` dump still existed: all 40
+  `{img,op}-apa{0,1}` × 10 JSONs were identical). The op layer now produced by
+  the MABC equals that legacy `dump_light` op (`op_t`/`op_pes`/`op_peTotal`/
+  `op_pes_pred`), with `cluster_id` now indexing `img-global` (a matched flash
+  resolves to the same physical cluster). **Known degeneracy (to fix later with
+  matching-algorithm tuning):** the pctree match is one-flash-per-cluster, so a
+  handful of legacy per-*bundle* display rows (one cluster matched to two
+  flashes, or a duplicate `(flash,cluster)` bundle) collapse to the single
+  persisted last-wins match (~5 rows over 4/10 mc events).
 - **Output differs from yuhw's archived reference**, by design: this chain now
   uses the in-tree canonical `clus.jsonnet` (pre-tagging) instead of yuhw's
   `../clus.jsonnet`, a different clustering graph → different clusters →
@@ -195,8 +199,12 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
   is independent of the light-IO refactor.
 
 ### Open items
-- **BEE packaging** still reaches into `../sbnd` (`bee-upload.sh`,
-  `merge-apa.py`, `../upload-to-bee.sh`); to be localized later.
+- **Multi-flash-per-cluster degeneracy** (above): the LASSO match can assign one
+  cluster to two flashes; the one-flash-per-cluster pctree keeps the last. Revisit
+  with matching-algorithm tuning if those rows matter for the display.
+- BEE packaging is now self-contained (the MABC writes the one zip; only
+  `../upload-to-bee.sh` is shared, for the network upload). `bee-upload.sh` /
+  `merge-apa.py` are no longer used by this chain.
 
 ---
 
@@ -210,7 +218,8 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 | matching config | `sbnd_xin/qlmatching.jsonnet` → in-tree `pgrapher/experiment/sbnd/qlmatching.jsonnet` |
 | inputs (read-only) | `sbnd_xin/input_files/input-10evt-{mc,data}/` |
 | work dir | `sbnd_xin/work/ql_<mode>/` |
-| packaging (still ../sbnd) | `wcp-porting-img/sbnd/{bee-upload.sh,merge-apa.py}`, `wcp-porting-img/upload-to-bee.sh` |
+| BEE op dump | `toolkit/clus/` (`MultiAlgBlobClustering` `save_opflash`) + `toolkit/util/` (`Bee::Flashes`) |
+| BEE upload (shared) | `wcp-porting-img/upload-to-bee.sh` |
 | light-IO components | `toolkit/sio/` (`TensorFileSource`) + `toolkit/aux/` (`FlashTensorToOpticalPCs`) |
 | matching component | `toolkit/match/` (`WireCellMatch`: `QLMatching`, `Opflash`, `TimingTPCBundle`) |
 | photon model JSON | `wire-cell-data/sbnd/photodet/semi-analytical-sbnd.json` |
