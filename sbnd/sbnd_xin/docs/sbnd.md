@@ -65,11 +65,13 @@ sbnd_xin/
 ├── run_select_evt.sh          # stage 1b (optional): Woodpecker GUI tick/channel selection
 ├── run_img_evt.sh             # stage 2: SP frames → imaging cluster .npz files
 ├── run_clus_evt.sh            # stage 3: imaging clusters → blob clustering .zip files
+├── run_ql_evt.sh             # stage 3b: imaging clusters + opflash → charge-light (Q/L) matching .zip (self-contained, per-event; see docs/ql-chain.md)
 ├── run_bee_img_evt.sh         # stage 4: imaging clusters → Bee display upload
 │
 ├── wct-sp-to-magnify.jsonnet  # wire-cell config: stage 1 pipeline
 ├── wct-img-all.jsonnet        # wire-cell config: stage 2 pipeline
 ├── wct-clustering.jsonnet     # wire-cell config: stage 3 pipeline
+├── wct-clus-matching-perevt.jsonnet # wire-cell config: stage 3b (per-event Q/L matching)
 ├── clus.jsonnet               # helper: re-exports canonical cfg/pgrapher/experiment/sbnd/clus.jsonnet (per-APA / all-APA clustering subgraphs)
 ├── magnify-sinks.jsonnet      # helper: per-anode MagnifySink pipelines
 │
@@ -152,6 +154,11 @@ work/evt<ID>/sp-frames.tar.bz2
    ▼  run_clus_evt.sh  →  wct-clustering.jsonnet + clus.jsonnet
    │     mabc-apa<N>-face0.zip    (per-APA clustering, Bee points included)
    │     mabc-all-apa.zip         (all-APA combined clustering)
+   │
+   ├─ (charge–light) run_ql_evt.sh  →  wct-clus-matching-perevt.jsonnet
+   │     + input-10evt-<mode>/opflash_apa{0,1}.tar.gz
+   │     work/ql_evt<ID>/mabc-all-apa.zip  (img + clustering + 2-view dead + op/Q-L)
+   │     self-contained per-event matching; see docs/ql-chain.md
    │
    ▼  run_bee_img_evt.sh  →  wct-img-2-bee.py  →  wirecell-img bee-blobs
          data/0/0-apa{0,1}.json

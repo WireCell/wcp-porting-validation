@@ -174,6 +174,45 @@ Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
 
 ---
 
+### `run_ql_evt.sh`
+
+**Purpose:** Per-event charge–light (Q/L) matching, **self-contained**. Reads the
+toolkit's own imaging output + that event's opflash, runs per-APA clustering +
+`QLMatching` + all-APA `MultiAlgBlobClustering`, and writes one Bee zip with the
+img / clustering / 2-view dead-area / op (flash + Q/L match) layers. The recommended
+matcher driver; see also `docs/ql-chain.md` §8. (The legacy all-10 single-run variant
+is `run_clust_QL_evt.sh`.)
+
+```
+Usage: ./run_ql_evt.sh [mc|data] <idx|all> [-a anode]
+  [mc|data]      mode (default mc); selects input_files/input-10evt-<mode>/
+  (no idx)       list available events for the mode
+  all:           process every event in parallel (_runlib.sh batch_*, SBND_MAX_JOBS)
+  -a:            restrict to one anode
+```
+
+**Prerequisite:** `run_img_evt.sh <idx>` first (produces the per-event
+`work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz`). Errors cleanly if missing.
+
+**Input:** `work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz` (toolkit imaging) +
+`input_files/input-10evt-<mode>/opflash_apa{0,1}.tar.gz` (split per event by the driver).
+
+**Output:** `work/ql_evt<ID>/mabc-all-apa.zip` (one event; isolated from the
+`run_clus_evt.sh` output in `work/evt<ID>/`).
+
+**Jsonnet driven:** `wct-clus-matching-perevt.jsonnet`
+
+**TLAs forwarded:** like `run_clus_evt.sh` plus `semimodel_file` (photon model);
+Q/L drift/diffusion defaults `DL=6.2 DT=9.8 lifetime=6 driftSpeed=1.563`.
+
+**Log:** `work/ql_evt<ID>/wct_ql_evt<ID>.log`; in `all` mode `work/.batch_ql_evt<ID>.log`
+
+**Note:** `data` mode is design-ready but errors at the imaging-output check until the
+data per-event SP frames exist (not on this machine; pending Haiwang) and are run
+through `run_img_evt.sh`.
+
+---
+
 ### `run_bee_img_evt.sh`
 
 **Purpose:** Convert imaging `.npz` cluster files to Bee JSON (one file per
