@@ -112,12 +112,13 @@ writable `work/` dir.
 `mc` ⇒ `reality=sim` (`QLMatching data:false`); `data` ⇒ `reality=data`
 (`data:true`).
 
-> **Open item — `data` mode frames.** The in-graph dead-area imaging needs each
-> event's `work/evt<ID>/sp-frames.tar.bz2`. Those exist for the **mc** event ids
-> (2 9 11 12 14 18 31 35 41 42, from the standard imaging chain) but **not** for the
-> data event ids — so `run_clust_QL_evt.sh data` exits cleanly with a "missing
-> per-event SP frames" error until the data SP frames are produced
-> (`run_sp_to_magnify_evt.sh` for each). Only `mc` is wired end-to-end today.
+> **`data` mode frames.** The in-graph dead-area imaging needs each event's
+> `work/evt<ID>/sp-frames.tar.bz2`. These are now self-extracted by
+> `run_img_evt.sh <mode>` (or `run_sp_to_magnify_evt.sh <mode>`) from
+> `input_files/input-10evt-<mode>/frames-dnn.tar.bz2`, for both mc and data. Run
+> `run_img_evt.sh data all` first to populate `work/evt<dataid>/`, then
+> `run_clust_QL_evt.sh data`. (The per-event `run_ql_evt.sh` in §8 is the
+> recommended driver and needs no combined `sp-frames-10evt.tar.bz2`.)
 
 **Reference output** (mc only): `input_files/input-10evt-mc/archive-runs/wct-standalone-10ev/<n>/`
 is yuhw's saved `data-sep` from his standalone run. Note this chain now uses the
@@ -268,7 +269,7 @@ The recommended driver for new work. Unlike the all-10 chain (§1–§7), it pro
 imaging** (`run_img_evt.sh`), not yuhw's larsoft dumps — so the MC sim→Q/L chain is
 self-contained and parallelizable.
 
-**Workflow** (per event): `run_img_evt.sh <idx>` → `run_ql_evt.sh mc <idx>`.
+**Workflow** (per event): `run_img_evt.sh <mode> <idx>` → `run_ql_evt.sh <mode> <idx>`.
 
 ```
 work/evt<ID>/icluster-apa{0,1}-active.npz  ┐(port 0, /live)   (toolkit imaging,
@@ -291,9 +292,9 @@ opflash_apa{0,1}.tar.gz (this event, split from input-10evt-<mode>/) ┘
   `work/evt<ID>/masked.npz`); op layer self-consistent (0 dangling `op_cluster_ids`,
   legacy schema); all 10 events run clean in parallel.
 
-> **Data** is not wired end-to-end yet: data per-event SP frames (hence
-> `work/evt<dataid>/`) are not on this machine (broken raw symlink to `/exp/sbnd/…`;
-> no data SP-frames archive). `run_ql_evt.sh data <idx>` errors cleanly at the
-> imaging-output check until those frames are produced (pending Haiwang) and run
-> through `run_img_evt.sh`. A data event-id list is derived from the data active npz,
-> so once `work/evt<dataid>/` exist the same driver runs data unchanged.
+> **Data** now runs the same way. The data SP frames are provided in
+> `input_files/input-10evt-data/frames-dnn.tar.bz2`, so
+> `run_img_evt.sh data <idx>` produces `work/evt<dataid>/` and
+> `run_ql_evt.sh data <idx>` then matches against that event's opflash
+> (`input-10evt-data/opflash_apa{0,1}.tar.gz`). The event-id list is derived from
+> the data frames archive, so `data all` fans out over all 10 data events.

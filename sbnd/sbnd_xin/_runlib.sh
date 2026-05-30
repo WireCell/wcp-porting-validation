@@ -3,9 +3,41 @@
 # Source after setting SBND_DIR:
 #   . "$SBND_DIR/_runlib.sh"
 
+# Default (mc) event list.  Overridden by load_events <mode>, which derives the
+# list from the mode's frames-dnn.tar.bz2 (so data ids 659242… are picked up).
 SBND_EVENTS=(2 9 11 12 14 18 31 35 41 42)
 
-# Print the 10 idx→EVT_ID mappings.  Called when the invoking script
+# Mode (mc|data) → the per-event SP-frame source archive provided upstream.
+sp_frames_archive() {
+    echo "$SBND_DIR/input_files/input-10evt-${1}/frames-dnn.tar.bz2"
+}
+
+# Populate SBND_EVENTS (in archive order) from the mode's frames-dnn archive.
+# Keeps the built-in mc list as a fallback if the archive is absent.
+load_events() {
+    local mode="${1:-mc}" archive
+    archive=$(sp_frames_archive "$mode")
+    if [ -s "$archive" ]; then
+        mapfile -t SBND_EVENTS < <(tar tjf "$archive" | sed -n 's/^frame_dnnsp_\([0-9][0-9]*\)\.npy$/\1/p')
+    fi
+    [ "${#SBND_EVENTS[@]}" -gt 0 ] || {
+        echo "ERROR: no events found for mode '$mode' ($archive)" >&2; return 1; }
+}
+
+# Extract one event's 5-member SP-frame subset from the mode archive into a
+# fresh single-event archive at <dest>.  Always (re)extracts so imaging tracks
+# the current frames-dnn.tar.bz2 (cheap: ~one event of npy).
+ensure_sp_frames() {
+    local mode="$1" evt_id="$2" dest="$3" src tmp
+    src=$(sp_frames_archive "$mode")
+    [ -s "$src" ] || { echo "ERROR: missing frames archive: $src" >&2; return 1; }
+    tmp=$(mktemp -d /home/xqian/tmp/sbnd_spf_XXXXXX) || return 1
+    tar -xjf "$src" -C "$tmp" --wildcards "*_${evt_id}.npy"
+    ( cd "$tmp" && tar -cjf "$dest" *_"${evt_id}".npy )
+    rm -rf "$tmp"
+}
+
+# Print the idx→EVT_ID mappings.  Called when the invoking script
 # receives no positional arguments.
 list_events() {
     echo "Available SBND events (1-based index → event ID):"
@@ -14,13 +46,13 @@ list_events() {
     done
 }
 
-# Resolve a 1-based event index (1..10) to the real event ID.
+# Resolve a 1-based event index to the real event ID.
 # Echoes the ID on stdout; on bad input writes the table to stderr and
 # returns 1 (callers should check $? or let set -e handle it).
 lookup_evt_id() {
-    local idx="$1"
-    if ! echo "$idx" | grep -qE '^[0-9]+$' || [ "$idx" -lt 1 ] || [ "$idx" -gt 10 ]; then
-        echo "ERROR: invalid event index '$idx' — must be 1..10" >&2
+    local idx="$1" n="${#SBND_EVENTS[@]}"
+    if ! echo "$idx" | grep -qE '^[0-9]+$' || [ "$idx" -lt 1 ] || [ "$idx" -gt "$n" ]; then
+        echo "ERROR: invalid event index '$idx' — must be 1..$n" >&2
         for i in "${!SBND_EVENTS[@]}"; do
             printf '    %d → %d\n' "$((i+1))" "${SBND_EVENTS[$i]}" >&2
         done

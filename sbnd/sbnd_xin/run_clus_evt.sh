@@ -1,9 +1,10 @@
 #!/bin/bash
 # Run SBND per-APA and all-APA blob clustering — standalone (no LArSoft).
-# Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-#        ./run_clus_evt.sh       # list available events
-#   idx:   1-based event index (1..10) — maps to event IDs: 2 9 11 12 14 18 31 35 41 42
-#   all:   process all 10 events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
+# Usage: ./run_clus_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+#        ./run_clus_evt.sh [mc|data]       # list available events
+#   mode:  mc (default) | data — selects the event list (clustering graph is mode-agnostic)
+#   idx:   1-based event index into the mode's event list; all = every event (parallel)
+#   all:   process all events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
 #   run:   run number stored in bee RSE metadata (default 0)
 #   subrun: subrun number (default 0)
 #   -a:    restrict to one anode (0 or 1)
@@ -19,11 +20,13 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 
 . "$SBND_DIR/_runlib.sh"
 
+MODE=mc
 ANODE=""
 SEL_TAG=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -33,6 +36,8 @@ while [ $# -gt 0 ]; do
 done
 set -- "${_args[@]}"
 
+load_events "$MODE" || exit 1
+
 if [ $# -eq 0 ]; then
     list_events; exit 0
 fi
@@ -40,6 +45,7 @@ fi
 IDX=$1
 RUN=${2:-0}
 SUBRUN=${3:-0}
+case "$MODE" in mc) REALITY=sim ;; data) REALITY=data ;; esac
 
 # True if the .npz exists, is nonempty on disk, AND contains at least one array.
 # A "no clusters" run still produces a 22-byte zip header (no .npy inside),
@@ -114,7 +120,7 @@ process_event() {
         --tla-code "run=${RUN_L}" \
         --tla-code "subrun=${SUBRUN_L}" \
         --tla-code "event=${EVT_ID}" \
-        --tla-str  "reality=sim" \
+        --tla-str  "reality=${REALITY}" \
         --tla-code "DL=4.0" \
         --tla-code "DT=8.8" \
         --tla-code "lifetime=35" \

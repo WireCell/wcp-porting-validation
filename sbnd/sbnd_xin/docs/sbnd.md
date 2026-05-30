@@ -90,12 +90,20 @@ sbnd_xin/
 ## Input
 
 The pipeline consumes a **per-event tarball of numpy arrays** produced by
-LArSoft's DNN signal-processing dump (`wcls-sp-dump.fcl`). The master
-multi-event tarball lives at:
+LArSoft's DNN signal-processing dump (`wcls-sp-dump.fcl`). Imaging and clustering
+are **mode-aware** (`mc` | `data`); each mode has its own master multi-event
+tarball provided upstream:
 
 ```
-input_files/2025f-mc-sp-frames.tar.bz2
+input_files/input-10evt-mc/frames-dnn.tar.bz2     # mc   events 2 9 11 12 14 18 31 35 41 42
+input_files/input-10evt-data/frames-dnn.tar.bz2   # data events 659242 … 660892
 ```
+
+Pass `mc` (default) or `data` as the first argument to `run_sp_to_magnify_evt.sh`,
+`run_img_evt.sh`, and `run_clus_evt.sh`; the event list is derived from the chosen
+archive (`run_*.sh <mode>` with no index lists it). MC and data event IDs are
+disjoint, so `work/evt<ID>/` never collides between modes. (The legacy
+`input_files/2025f-mc-sp-frames.tar.bz2` is no longer referenced.)
 
 Arrays inside the tarball (one set per event ID `<EVT>`):
 
@@ -110,36 +118,37 @@ Arrays inside the tarball (one set per event ID `<EVT>`):
 The loose `*_2.npy` files at the top of `sbnd_xin/` are sample copies for
 event 2; they are not consumed directly by the pipeline.
 
-**Event index mapping** (defined in each shell script):
+**Event index mapping** (mc mode; derived at run time from the mode archive —
+`./run_img_evt.sh <mode>` with no index prints the live table):
 
-| idx | Event ID |
-|---|---|
-| 1 | 2 |
-| 2 | 9 |
-| 3 | 11 |
-| 4 | 12 |
-| 5 | 14 |
-| 6 | 18 |
-| 7 | 31 |
-| 8 | 35 |
-| 9 | 41 |
-| 10 | 42 |
+| idx | mc Event ID | data Event ID |
+|---|---|---|
+| 1 | 2 | 659242 |
+| 2 | 9 | 659286 |
+| 3 | 11 | 659374 |
+| 4 | 12 | 659484 |
+| 5 | 14 | 659572 |
+| 6 | 18 | 659704 |
+| 7 | 31 | 659924 |
+| 8 | 35 | 660496 |
+| 9 | 41 | 660826 |
+| 10 | 42 | 660892 |
 
-The first call to `run_sp_to_magnify_evt.sh` (or any script that needs
-`sp-frames.tar.bz2`) extracts the per-event subset into `work/evt<ID>/`
-automatically.
+`run_img_evt.sh` (and `run_sp_to_magnify_evt.sh`) self-extract the per-event
+subset from the mode archive into `work/evt<ID>/sp-frames.tar.bz2` on use, so
+imaging is a complete entry point — no manual extraction step.
 
 ---
 
 ## Pipeline (end-to-end)
 
 ```
-input_files/2025f-mc-sp-frames.tar.bz2
-   │  (extracted on first use)
+input_files/input-10evt-<mode>/frames-dnn.tar.bz2     (mode = mc | data)
+   │  (per-event subset self-extracted on use)
    ▼
 work/evt<ID>/sp-frames.tar.bz2
    │
-   ▼  run_sp_to_magnify_evt.sh  →  wct-sp-to-magnify.jsonnet
+   ▼  run_sp_to_magnify_evt.sh <mode>  →  wct-sp-to-magnify.jsonnet
    │     magnify-evt<ID>-anode{0,1}.root         (Magnify ROOT for validation)
    │     sbnd-sp-frames-anode{0,1}.tar.bz2       (per-anode, for Woodpecker)
    │
@@ -147,11 +156,11 @@ work/evt<ID>/sp-frames.tar.bz2
    │     woodpecker GUI → masked per-anode archives
    │     merge_sel_archives.py → sp-frames.tar.bz2 with selection applied
    │
-   ▼  run_img_evt.sh  →  wct-img-all.jsonnet
+   ▼  run_img_evt.sh <mode>  →  wct-img-all.jsonnet
    │     icluster-apa{0,1}-active.npz
    │     icluster-apa{0,1}-masked.npz
    │
-   ▼  run_clus_evt.sh  →  wct-clustering.jsonnet + clus.jsonnet
+   ▼  run_clus_evt.sh <mode>  →  wct-clustering.jsonnet + clus.jsonnet
    │     mabc-apa<N>-face0.zip    (per-APA clustering, Bee points included)
    │     mabc-all-apa.zip         (all-APA combined clustering)
    │
@@ -180,18 +189,31 @@ export WIRECELL_PATH=/nfs/data/1/xqian/toolkit-dev/toolkit/cfg:\
 
 No manual export is needed before calling the scripts.
 
-### Quick start — event 2 (idx=1), full pipeline
+### Quick start — imaging + clustering (mc idx=1 → evt 2)
 
 ```sh
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin   # or wcp-porting-img/sbnd/sbnd_xin
 
-./run_sp_to_magnify_evt.sh 1          # produces work/evt2/magnify-evt2-anode{0,1}.root
-./run_img_evt.sh 1                    # produces work/evt2/icluster-apa{0,1}-*.npz
-./run_clus_evt.sh 1                   # produces work/evt2/mabc-*.zip
+./run_img_evt.sh  mc 1                # self-extracts SP frames → work/evt2/icluster-apa{0,1}-*.npz
+./run_clus_evt.sh mc 1                # produces work/evt2/mabc-*.zip
 ./run_bee_img_evt.sh 1                # uploads Bee display for imaging result
 ```
 
-Outputs land in `work/evt2/`. Logs are `work/evt2/wct_<stage>_evt2.log`.
+`run_img_evt.sh` is a complete entry point — it self-extracts the per-event SP
+frames, so the `run_sp_to_magnify_evt.sh` step is only needed for Magnify ROOT
+validation or Woodpecker selection.
+
+### Data mode (idx=1 → evt 659242)
+
+```sh
+./run_img_evt.sh  data 1              # work/evt659242/icluster-apa{0,1}-*.npz
+./run_clus_evt.sh data 1              # work/evt659242/mabc-*.zip  (reality=data)
+# all events in parallel:
+./run_img_evt.sh  data all
+./run_clus_evt.sh data all
+```
+
+Outputs land in `work/evt<ID>/`. Logs are `work/evt<ID>/wct_<stage>_evt<ID>.log`.
 
 ### With Woodpecker selection
 

@@ -1,8 +1,9 @@
 #!/bin/bash
 # Convert SBND imaging results to Bee JSON and upload.
-# Usage: ./run_bee_img_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-#        ./run_bee_img_evt.sh       # list available events
-#   idx:   1-based event index (1..10) — maps to event IDs: 2 9 11 12 14 18 31 35 41 42
+# Usage: ./run_bee_img_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+#        ./run_bee_img_evt.sh [mc|data]       # list available events
+#   mode:  mc (default) | data — selects the event list
+#   idx:   1-based event index into the mode's event list
 #   all:   combine all events into one upload zip and do a single Bee upload
 #   run:   run number for bee RSE metadata (default 0)
 #   subrun: subrun number (default 0)
@@ -18,11 +19,13 @@ SBND_DIR=$(cd "$(dirname "$0")" && pwd)
 
 . "$SBND_DIR/_runlib.sh"
 
+MODE=mc
 ANODE=""
 SEL_TAG=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -31,6 +34,8 @@ while [ $# -gt 0 ]; do
     esac
 done
 set -- "${_args[@]}"
+
+load_events "$MODE" || exit 1
 
 if [ $# -eq 0 ]; then
     list_events; exit 0

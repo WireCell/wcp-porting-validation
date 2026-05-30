@@ -16,9 +16,12 @@ Shared helper library sourced by every `run_*.sh` script. Provides:
 
 | Function | Description |
 |---|---|
-| `list_events` | Print the 10 idx→EVT_ID mappings; called on no-arg invocation |
+| `load_events <mode>` | Populate `SBND_EVENTS` (in archive order) from `input_files/input-10evt-<mode>/frames-dnn.tar.bz2`; keeps built-in mc list as fallback |
+| `ensure_sp_frames <mode> <evt_id> <dest>` | Extract one event's 5-member SP-frame subset from the mode archive into a fresh single-event `<dest>` (re-extracts each call) |
+| `sp_frames_archive <mode>` | Echo the mode's `frames-dnn.tar.bz2` path |
+| `list_events` | Print the idx→EVT_ID mappings; called on no-arg invocation |
 | `lookup_evt_id <idx>` | Resolve 1-based index to event ID; error + table on bad input |
-| `discover_event_indices` | Print `1 2 … 10`; used in `all`-mode loops |
+| `discover_event_indices` | Print `1 2 … N`; used in `all`-mode loops |
 | `batch_init` | Initialise counters and `BATCH_PIDS` assoc array |
 | `batch_wait_slot` | Block until fewer than `SBND_MAX_JOBS` (default `nproc`) jobs are running |
 | `batch_drain` | Wait for all remaining background jobs |
@@ -35,17 +38,18 @@ Not invoked directly.
 for `run_select_evt.sh` / Woodpecker).
 
 ```
-Usage: ./run_sp_to_magnify_evt.sh [-s sel_tag] <idx|all> [run] [subrun]
-  (no args)  list available events
-  idx:       1-based event index (1..10)
-  all:       process all 10 events in parallel
+Usage: ./run_sp_to_magnify_evt.sh [mc|data] [-s sel_tag] <idx|all> [run] [subrun]
+  (no args)  list available events (for the chosen mode)
+  mode:      mc (default) | data — selects input_files/input-10evt-<mode>/frames-dnn.tar.bz2
+  idx:       1-based event index into the mode's event list
+  all:       process all events in parallel
   run:       run number stored in ROOT Trun tree (default 0)
   subrun:    subrun number (default 0)
   -s:        use work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2 instead of work/evt<ID>/
 ```
 
-**Input:** `input_files/2025f-mc-sp-frames.tar.bz2` (extracted to
-`work/evt<ID>/sp-frames.tar.bz2` on first call). With `-s`, reads
+**Input:** `input_files/input-10evt-<mode>/frames-dnn.tar.bz2` (per-event subset
+extracted to `work/evt<ID>/sp-frames.tar.bz2`). With `-s`, reads
 `work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2`.
 
 **Output** (in `work/evt<ID>[_<SEL_TAG>]/`):
@@ -99,14 +103,19 @@ Sets `MPLBACKEND=WebAgg`; prints SSH port-forward instructions.
 cluster `.npz` files.
 
 ```
-Usage: ./run_img_evt.sh [-a anode] [-s sel_tag] <idx|all>
-  (no args)  list available events
-  all:       process all 10 events in parallel
+Usage: ./run_img_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all>
+  (no args)  list available events (for the chosen mode)
+  mode:      mc (default) | data — selects input_files/input-10evt-<mode>/frames-dnn.tar.bz2
+  all:       process all events in parallel
   -a:        restrict to one anode (0 or 1)
   -s:        use work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2
 ```
 
-**Input:** `work/evt<ID>[_<SEL_TAG>]/sp-frames.tar.bz2`
+**Input:** `input_files/input-10evt-<mode>/frames-dnn.tar.bz2` — this event's
+SP-frame subset is self-extracted to `work/evt<ID>/sp-frames.tar.bz2` (fresh each
+run, so imaging tracks the current frames archive). No separate
+`run_sp_to_magnify_evt.sh` step is required. With `-s`, reads the
+Woodpecker-masked `work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2` instead.
 
 **Output** (in `work/evt<ID>[_<SEL_TAG>]/`):
 
@@ -121,7 +130,7 @@ Usage: ./run_img_evt.sh [-a anode] [-s sel_tag] <idx|all>
 
 | TLA | Type | Value |
 |---|---|---|
-| `input` | str | path to `sp-frames.tar.bz2` |
+| `input` | str | path to self-extracted `work/evt<ID>/sp-frames.tar.bz2` |
 | `anode_indices` | code | `[0,1]` or `[<N>]` with `-a` |
 | `output_dir` | str | `work/evt<ID>[_<SEL_TAG>]/` |
 
@@ -136,13 +145,18 @@ Pre-validates `.npz` files and skips anodes with no active clusters so
 `PointTreeMerging` does not stall.
 
 ```
-Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-  (no args)      list available events
-  all:           process all 10 events in parallel
+Usage: ./run_clus_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+  (no args)      list available events (for the chosen mode)
+  mode:          mc (default) | data — selects the event list; sets reality=sim/data
+  all:           process all events in parallel
   run / subrun:  stored in Bee RSE metadata (default 0)
   -a:            restrict to one anode; skips all-APA stage
   -s:            use work/evt<ID>_<SEL_TAG>/ as working directory
 ```
+
+The clustering graph itself is mode-agnostic (`reality` is a passthrough TLA, and
+the drift/diffusion defaults below apply to both modes); `mode` only chooses the
+event list and the `reality` flag.
 
 **Input:** `work/evt<ID>[_<SEL_TAG>]/icluster-apa{0,1}-{active,masked}.npz`
 
@@ -219,8 +233,9 @@ through `run_img_evt.sh`.
 anode), package as a zip, and upload to the Bee event-display server.
 
 ```
-Usage: ./run_bee_img_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-  (no args)  list available events
+Usage: ./run_bee_img_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+  (no args)  list available events (for the chosen mode)
+  mode:      mc (default) | data — selects the event list
   all:       combine all events into one upload zip and do a single Bee upload
   -a:        restrict to one anode
   -s:        use work/evt<ID>_<SEL_TAG>/ as working directory

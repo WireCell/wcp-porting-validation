@@ -12,12 +12,12 @@
 # per-APA clustering + Q/L matching, and writes work/ql_evt<ID>/mabc-all-apa.zip
 # (img + clustering + 2-view dead-area + op/Q-L layers).
 #
-# Prerequisite:  ./run_img_evt.sh <idx>   (produces the per-event active+masked npz)
-# Workflow:      run_img_evt.sh  ->  run_ql_evt.sh
+# Prerequisite:  ./run_img_evt.sh <mode> <idx>   (produces the per-event active+masked npz)
+# Workflow:      run_img_evt.sh <mode>  ->  run_ql_evt.sh <mode>
 #
-# NOTE: data is not wired end-to-end yet — the data per-event SP frames (hence
-# work/evt<dataid>/) do not exist on this machine; ./run_ql_evt.sh data <idx>
-# errors cleanly at the "missing imaging output" check until those are produced.
+# Both mc and data are wired: per-event imaging comes from
+# input_files/input-10evt-<mode>/frames-dnn.tar.bz2 via run_img_evt.sh, and the
+# opflash is split from input_files/input-10evt-<mode>/opflash_apa{0,1}.tar.gz.
 
 set -e
 

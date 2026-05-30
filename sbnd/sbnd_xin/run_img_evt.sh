@@ -1,12 +1,13 @@
 #!/bin/bash
 # Run 3D imaging for one SBND event — standalone (no LArSoft).
-# Usage: ./run_img_evt.sh [-a anode] [-s sel_tag] <idx|all>
-#        ./run_img_evt.sh       # list available events
-#   idx:   1-based event index (1..10) — maps to event IDs: 2 9 11 12 14 18 31 35 41 42
-#   all:   process all 10 events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
+# Usage: ./run_img_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all>
+#        ./run_img_evt.sh [mc|data]       # list available events
+#   mode:  mc (default) | data — selects input_files/input-10evt-<mode>/frames-dnn.tar.bz2
+#   idx:   1-based event index into the mode's event list; all = every event (parallel)
+#   all:   process all events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
 #   -a:    restrict to one anode (0 or 1); default processes both
 #   -s:    use work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2 (from run_select_evt.sh)
-# Input:  work/evt<ID>[_<SEL_TAG>]/sp-frames.tar.bz2 (created by run_sp_to_magnify_evt.sh)
+# Input:  input_files/input-10evt-<mode>/frames-dnn.tar.bz2 (per-event subset extracted on use)
 # Output: work/evt<ID>[_<SEL_TAG>]/icluster-apa{0,1}-{active,masked}.npz
 
 set -e
@@ -17,11 +18,13 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 
 . "$SBND_DIR/_runlib.sh"
 
+MODE=mc
 ANODE=""
 SEL_TAG=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -30,6 +33,8 @@ while [ $# -gt 0 ]; do
     esac
 done
 set -- "${_args[@]}"
+
+load_events "$MODE" || exit 1
 
 if [ $# -eq 0 ]; then
     list_events; exit 0
@@ -45,15 +50,17 @@ process_event() {
     if [ -n "$SEL_TAG" ]; then
         WORKDIR="$SBND_DIR/work/evt${EVT_ID}_${SEL_TAG}"
         SP_ARCHIVE="$WORKDIR/input/sp-frames.tar.bz2"
+        if [ ! -s "$SP_ARCHIVE" ]; then
+            echo "[skip] idx=$IDX evt=$EVT_ID: selection archive not found: $SP_ARCHIVE" >&2
+            echo "  Run: ./run_select_evt.sh $IDX $SEL_TAG" >&2
+            return 2
+        fi
     else
         WORKDIR="$SBND_DIR/work/evt${EVT_ID}"
         SP_ARCHIVE="$WORKDIR/sp-frames.tar.bz2"
-    fi
-
-    if [ ! -s "$SP_ARCHIVE" ]; then
-        echo "[skip] idx=$IDX evt=$EVT_ID: SP archive not found: $SP_ARCHIVE" >&2
-        echo "  Run: ./run_sp_to_magnify_evt.sh $IDX" >&2
-        return 2
+        # Self-extract this event's SP frames from the mode archive (fresh each run).
+        mkdir -p "$WORKDIR"
+        ensure_sp_frames "$MODE" "$EVT_ID" "$SP_ARCHIVE" || return 2
     fi
 
     if [ -n "$ANODE" ]; then
