@@ -64,7 +64,7 @@ local opflash_sources = [
         type: "TensorFileSource",
         name: "opflash_src_apa%d" % n,
         data: {
-            inname: "opflash_apa%d.tar.gz" % n,
+            inname: "%s/opflash_apa%d.tar.gz" % [input, n],
             prefix: "opflash_",
         }
     }, nin=0, nout=1)
