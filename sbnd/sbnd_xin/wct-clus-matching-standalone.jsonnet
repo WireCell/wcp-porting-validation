@@ -45,10 +45,39 @@ local active_clusters = [
     ClusterFileSource("%s/icluster-apa%d-active.npz" % [input, tools.anodes[n].data.ident])
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
-local masked_clusters = [
-    ClusterFileSource("%s/icluster-apa%d-masked.npz" % [input, tools.anodes[n].data.ident])
+
+// --- Dead (masked) clusters: imaged in-toolkit from the SP frames ---
+// The dead pctree (/dead, port 1 of PointTreeBuilding) must be populated with the
+// toolkit's 2-view dead blobs (multi_masked_2view_slicing_tiling), NOT yuhw's
+// larsoft 1-view masked.npz.  We run only the masked imaging fork here; the live
+// (active) clusters stay yuhw's, so the charge-light matching is unchanged.  A
+// single FrameFileSource feeds a FrameFanout that renames the 'dnnsp' tag into the
+// per-anode 'gauss<id>'/'wiener<id>' tags the imaging pre_proc expects (mirrors
+// wct-img-all.jsonnet).  `frames` is the combined 10-event sp-frames archive.
+local frames = std.extVar('frames');
+local img = import 'pgrapher/experiment/sbnd/img.jsonnet';
+local img_maker = img();
+local masked_img = [
+    img_maker.per_anode(tools.anodes[n], 'masked', add_dump=false)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
+local fanout_rules = [
+    {
+        frame: { '.*': 'orig%d' % tools.anodes[n].data.ident },
+        trace: { dnnsp: ['gauss%d' % tools.anodes[n].data.ident, 'wiener%d' % tools.anodes[n].data.ident] },
+    }
+    for n in std.range(0, std.length(tools.anodes) - 1)
+];
+local frame_src = g.pnode({
+    type: 'FrameFileSource',
+    name: 'qlframes',
+    data: { inname: frames, tags: ['dnnsp'] },
+}, nin=0, nout=1);
+local frame_fan = g.pnode({
+    type: 'FrameFanout',
+    name: 'qlframe_fanout',
+    data: { multiplicity: std.length(tools.anodes), tag_rules: fanout_rules },
+}, nin=1, nout=std.length(tools.anodes));
 
 // --- Per-APA clustering ---
 // Local re-export of the in-tree canonical pgrapher/experiment/sbnd/clus.jsonnet
@@ -74,32 +103,31 @@ local matching_pipes  = [
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
-// --- Per-APA subgraphs ---
-// active+masked -> clustering ─┐
-//                             ├─ FlashTensorToOpticalPCs (canonical light PCs) -> QLMatching
-//          TensorFileSource ──┘
-local per_apa = [g.intern(
-    innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
-    centernodes=[clus_pipes[n], flash_attach[n]],
-    outnodes=[matching_pipes[n]],
-    edges=[
-        g.edge(active_clusters[n], clus_pipes[n], 0, 0),
-        g.edge(masked_clusters[n], clus_pipes[n], 0, 1),
-        g.edge(clus_pipes[n], flash_attach[n], 0, 0),      // port 0 = pctree
-        g.edge(opflash_sources[n], flash_attach[n], 0, 1), // port 1 = opflash
-        g.edge(flash_attach[n], matching_pipes[n], 0, 0),
-    ]
-) for n in std.range(0, std.length(tools.anodes) - 1)];
-
 // --- All-APA clustering ---
 // In-tree all_apa is the pre-tagging chain (no nu_tagging param; see header).
 local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true);
 
+// --- Flat graph ---
+// Per anode n:
+//   active ClusterFileSource ───────────────┐(port 0, /live)
+//   frame -> FrameFanout -> masked imaging ──┤(port 1, /dead)  -> PointTreeBuilding
+//                                            └─> clustering -> FlashTensorToOpticalPCs
+//   opflash TensorFileSource ──────────────────────────────┘(port 1) -> QLMatching
+//   ... -> all-APA MultiAlgBlobClustering (one mabc-all-apa.zip).
+local nanode = std.length(tools.anodes);
 local graph = g.intern(
-    innodes=per_apa,
+    innodes=active_clusters + opflash_sources + [frame_src],
+    centernodes=masked_img + clus_pipes + flash_attach + matching_pipes + [frame_fan],
     outnodes=[clus_all_apa],
-    edges=[g.edge(per_apa[i], clus_all_apa, 0, i)
-           for i in std.range(0, std.length(tools.anodes) - 1)]
+    edges=
+        [g.edge(frame_src, frame_fan, 0, 0)]
+        + [g.edge(frame_fan, masked_img[n], n, 0) for n in std.range(0, nanode - 1)]
+        + [g.edge(active_clusters[n], clus_pipes[n], 0, 0) for n in std.range(0, nanode - 1)]
+        + [g.edge(masked_img[n], clus_pipes[n], 0, 1) for n in std.range(0, nanode - 1)]
+        + [g.edge(clus_pipes[n], flash_attach[n], 0, 0) for n in std.range(0, nanode - 1)]
+        + [g.edge(opflash_sources[n], flash_attach[n], 0, 1) for n in std.range(0, nanode - 1)]
+        + [g.edge(flash_attach[n], matching_pipes[n], 0, 0) for n in std.range(0, nanode - 1)]
+        + [g.edge(matching_pipes[n], clus_all_apa, 0, n) for n in std.range(0, nanode - 1)]
 );
 
 local app = {

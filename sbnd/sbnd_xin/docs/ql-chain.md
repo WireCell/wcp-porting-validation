@@ -15,18 +15,20 @@ Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
 
 ```
                  input-10evt-<mode>/                (read-only, yuhw's)
-   icluster-apa0-active.npz  icluster-apa0-masked.npz   opflash_apa0.tar.gz
-   icluster-apa1-active.npz  icluster-apa1-masked.npz   opflash_apa1.tar.gz
-   semi-analytical-sbnd.json (wire-cell-data/sbnd/photodet, via WIRECELL_PATH)
+   icluster-apa0-active.npz   opflash_apa0.tar.gz
+   icluster-apa1-active.npz   opflash_apa1.tar.gz
+   semi-analytical-sbnd.json  (wire-cell-data/sbnd/photodet, via WIRECELL_PATH)
+   sp-frames-10evt.tar.bz2    (assembled by the driver from work/evt<ID>/sp-frames.tar.bz2)
 
   per APA n ∈ {0,1}:
-     ClusterFileSource(active)  ┐
-                                ├─► clus.per_apa ─┐
-     ClusterFileSource(masked)  ┘   (clustering)  ├─► FlashTensorToOpticalPCs(n) ─► QLMatching(n)
-     TensorFileSource(opflash) ───────────────────┘   (expand matrix into          (charge–light
-                                                        flash/light/flashlight       match; reads
-                                                        PCs on live root node)       flash from root,
-                                                                                     writes match scalar)
+     ClusterFileSource(active) ──────────────────┐ (port 0, /live)
+                                                  ├─► clus.per_apa ─┐
+     FrameFileSource ─► FrameFanout ─► masked     ┘ (port 1, /dead) │
+       imaging (multi_masked_2view_slicing_tiling)                  ├─► FlashTensorToOpticalPCs(n) ─► QLMatching(n)
+     TensorFileSource(opflash) ───────────────────────────────────┘   (expand matrix into          (charge–light
+                                                                        flash/light/flashlight       match; reads
+                                                                        PCs on live root node)       flash from root,
+                                                                                                     writes match scalar)
                                                                        │
                                        fan-in (per-APA charge+t0) ─► clus.all_apa (pre-tagging)
                                                                        │  (MultiAlgBlobClustering,
@@ -61,8 +63,19 @@ no longer writes any BEE JSON itself, and there is no `data-sep/` tree and no
 to a throwaway `TensorFileSink` (`trash-all-apa.tar.gz`); the deliverable is the
 BEE zip.
 
+**Dead area is generated in-toolkit, on the dead side — not by QLMatching.** The
+active clusters feed PointTreeBuilding port 0 → the `/live` pctree (what QLMatching
+matches to flashes); the in-graph masked imaging feeds port 1 → the `/dead` pctree
+(what `MABC::fill_bee_patches_from_cluster` dumps as `channel-deadarea-*` patches).
+QLMatching never reads the dead area. Using the toolkit's `multi_masked_2view_slicing_tiling`
+(2 dead views + dummy) instead of yuhw's 1-dead-view larsoft `masked.npz` yields the
+correct localized 2-view dead patches — identical to the standard `run_clus_evt.sh`
+chain. The live (active) clusters and opflash are unchanged, so matching is unaffected.
+
 The bundled npz/opflash hold **all 10 events**, so one `wire-cell` invocation
-processes the whole sample (events indexed 0..9 internally).
+processes the whole sample (events indexed 0..9 internally). The driver assembles
+`sp-frames-10evt.tar.bz2` in that same event order so PointTreeBuilding pairs each
+event's `/live` and `/dead` clusters.
 
 ---
 
@@ -77,8 +90,8 @@ writable `work/` dir.
 | File | Producer | Contents |
 |------|----------|----------|
 | `icluster-apa{0,1}-active.npz` | `wcls-img-dump.fcl` | per-APA **live** `ICluster` dump (blobs/wires/channels) for all 10 events, serialized as a numpy archive read by `ClusterFileSource` |
-| `icluster-apa{0,1}-masked.npz` | `wcls-img-dump.fcl` | per-APA **dead/masked**-region clusters (the dead-area blobs; deserialized via `aux/ClusterArrays::to_cluster`, the `nudge=1e-3` dead-blob fix) |
 | `opflash_apa{0,1}.tar.gz` | `wcls-flash-dump.fcl` | per-APA optical flashes as a tensor archive (`prefix: "opflash_"`), 2-D `[nflash, 1+nchan]`; read by `Sio::TensorFileSource` and expanded into the canonical `flash`/`light`/`flashlight` PCs on the live root node by `Aux::FlashTensorToOpticalPCs` |
+| `sp-frames-10evt.tar.bz2` | **driver** (this chain) | combined SP frames for the 10 events, concatenated by `run_clust_QL_evt.sh` from the per-event `work/evt<ID>/sp-frames.tar.bz2` (members are uniquely event-id–suffixed) in the active-npz event order. Read by `FrameFileSource`; the matching graph **images the dead/masked clusters in-toolkit** (`multi_masked_2view_slicing_tiling`) → the `/dead` pctree. Replaces the old larsoft `icluster-apa*-masked.npz` (which was tiled 1-dead-view, giving full-height dead strips). |
 | `semi-analytical-sbnd.json` | `build-semi-analytical-data/` (one-off) | SBND photon model: `VUVHits`, `VISHits`, `Geometry`, 312 `OpDets`; loaded by `QLMatching` via `Persist::load` (found on `WIRECELL_PATH` at `wire-cell-data/sbnd/photodet/`). Schema → `qlmatching-port.md`. |
 
 `mc` ⇒ `reality=sim` (`QLMatching data:false`); `data` ⇒ `reality=data`
