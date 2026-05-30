@@ -2,6 +2,10 @@
 # Standalone SBND charge-light (Q/L) matching chain — no LArSoft.
 # Reproduces yuhw's wct-clus-matching-standalone.jsonnet run + BEE packaging.
 #
+# LEGACY all-10 quick-run: one wire-cell call over yuhw's bundled multi-event
+# larsoft active npz, masked imaged in-graph.  For new work prefer the per-event
+# self-contained chain ./run_ql_evt.sh (toolkit-imaged clusters, parallelizable).
+#
 # Usage: ./run_clust_QL_evt.sh [mc|data] [--upload]
 #   mc   (default): input-10evt-mc,   reality=sim
 #   data:           input-10evt-data, reality=data

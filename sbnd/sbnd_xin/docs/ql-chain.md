@@ -7,7 +7,22 @@ the matching component internals see
 `toolkit/match/docs/qlmatching-code.md`; for the larsoft→WCT port and the
 photon-model JSON schema see `toolkit/match/docs/qlmatching-port.md`.
 
-Driver: **`sbnd_xin/run_clust_QL_evt.sh`**.
+Drivers (two):
+- **`sbnd_xin/run_ql_evt.sh [mc|data] <idx|all>`** — *recommended.* Per-event,
+  **self-contained**: matches one event at a time from the toolkit's OWN imaging
+  output (`run_img_evt.sh` → `work/evt<ID>/{active,masked}.npz`) + that event's
+  opflash, writing `work/ql_evt<ID>/mabc-all-apa.zip`. `all` runs events in
+  parallel (`_runlib.sh` `batch_*`, `SBND_MAX_JOBS`). See §8.
+- **`sbnd_xin/run_clust_QL_evt.sh [mc]`** — legacy all-10 quick-run: one
+  `wire-cell` call over yuhw's bundled multi-event larsoft active npz, with the
+  2-view dead area imaged in-graph from the SP frames. Single
+  `work/ql_mc/mabc-all-apa.zip` (10 events). §1–§7 describe this chain.
+
+The graphs differ in where the **charge clusters** come from: the per-event chain
+uses the toolkit's own imaging (`run_img_evt.sh`), so the MC sim→Q/L chain is
+self-contained and independent of yuhw's larsoft dumps; the all-10 chain uses
+yuhw's active clusters. Both produce the same BEE layers (img / clustering /
+2-view dead / op).
 
 ---
 
@@ -243,3 +258,42 @@ is the charge–light matching; `img`/`clustering` are the imaging/clustering.
 | light-IO components | `toolkit/sio/` (`TensorFileSource`) + `toolkit/aux/` (`FlashTensorToOpticalPCs`) |
 | matching component | `toolkit/match/` (`WireCellMatch`: `QLMatching`, `Opflash`, `TimingTPCBundle`) |
 | photon model JSON | `wire-cell-data/sbnd/photodet/semi-analytical-sbnd.json` |
+
+---
+
+## 8. Per-event self-contained chain (`run_ql_evt.sh`)
+
+The recommended driver for new work. Unlike the all-10 chain (§1–§7), it processes
+**one event at a time** and sources the **charge clusters from the toolkit's own
+imaging** (`run_img_evt.sh`), not yuhw's larsoft dumps — so the MC sim→Q/L chain is
+self-contained and parallelizable.
+
+**Workflow** (per event): `run_img_evt.sh <idx>` → `run_ql_evt.sh mc <idx>`.
+
+```
+work/evt<ID>/icluster-apa{0,1}-active.npz  ┐(port 0, /live)   (toolkit imaging,
+work/evt<ID>/icluster-apa{0,1}-masked.npz  ┘(port 1, /dead)    run_img_evt.sh)
+        → clus.per_apa → FlashTensorToOpticalPCs → QLMatching → clus.all_apa
+opflash_apa{0,1}.tar.gz (this event, split from input-10evt-<mode>/) ┘
+        → work/ql_evt<ID>/mabc-all-apa.zip   (img + clustering + 2-view dead + op)
+```
+
+- Graph: `wct-clus-matching-perevt.jsonnet` — mirrors `wct-clustering.jsonnet`
+  (reads active+masked from npz; **no in-graph imaging**) plus the opflash source /
+  `FlashTensorToOpticalPCs` / `QLMatching` nodes. TLAs: `input`, `output_dir`,
+  `anode_indices`, `run/subrun/event`, `reality`, `semimodel_file`, `DL/DT/lifetime/driftSpeed`.
+- Driver: `run_ql_evt.sh [mc|data] <idx|all> [-a anode]`. Requires `work/evt<ID>/`
+  imaging output (errors with a pointer to `run_img_evt.sh` if missing); splits the
+  event's opflash into `work/ql_evt<ID>/`; runs the graph. `all` fans out over events
+  in parallel via `_runlib.sh` `batch_*` (`SBND_MAX_JOBS`). Output is one
+  `work/ql_evt<ID>/mabc-all-apa.zip` per event (upload individually, or combine).
+- Verified (mc): per-event dead area is **identical** to `run_clus_evt.sh` (same
+  `work/evt<ID>/masked.npz`); op layer self-consistent (0 dangling `op_cluster_ids`,
+  legacy schema); all 10 events run clean in parallel.
+
+> **Data** is not wired end-to-end yet: data per-event SP frames (hence
+> `work/evt<dataid>/`) are not on this machine (broken raw symlink to `/exp/sbnd/…`;
+> no data SP-frames archive). `run_ql_evt.sh data <idx>` errors cleanly at the
+> imaging-output check until those frames are produced (pending Haiwang) and run
+> through `run_img_evt.sh`. A data event-id list is derived from the data active npz,
+> so once `work/evt<dataid>/` exist the same driver runs data unchanged.
