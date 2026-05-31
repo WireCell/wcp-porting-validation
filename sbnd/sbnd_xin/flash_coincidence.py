@@ -118,6 +118,62 @@ def coincidences(a0, a1):
     return allpairs, nearest
 
 
+def coincident_pe_pairs(a0, a1, win_ns):
+    """Total-PE pairs (pe_apa0, pe_apa1) for coincident flashes.
+
+    For each APA0 flash, match it to the nearest APA1 flash in the same event;
+    keep the pair only if |dt| <= win_ns. Returns ndarray [npair, 2].
+    """
+    pairs = []
+    for ev in sorted(set(a0) & set(a1)):
+        arr0, arr1 = a0[ev], a1[ev]
+        t0, t1 = arr0[:, 0], arr1[:, 0]
+        if t0.size == 0 or t1.size == 0:
+            continue
+        pe0 = arr0[:, 1:].sum(axis=1)
+        pe1 = arr1[:, 1:].sum(axis=1)
+        diff = np.abs(t0[:, None] - t1[None, :])
+        j = np.argmin(diff, axis=1)              # nearest APA1 for each APA0
+        ok = diff[np.arange(t0.size), j] <= win_ns
+        for i in np.where(ok)[0]:
+            pairs.append((pe0[i], pe1[j[i]]))
+    return np.array(pairs) if pairs else np.empty((0, 2))
+
+
+def make_pe2d_plot(loaded, win_ns, outfile):
+    """Log-log scatter of coincident PE(APA0) vs PE(APA1), data vs mc overlaid."""
+    fig, ax = plt.subplots(figsize=(7.5, 7))
+    styles = {"mc": dict(marker="x", color="tab:blue", s=45, linewidths=1.3),
+              "data": dict(marker="o", color="tab:red", s=36,
+                           facecolors="none", linewidths=1.3)}
+    allvals = []
+    for mode in ("mc", "data"):
+        p = coincident_pe_pairs(loaded[mode][0], loaded[mode][1], win_ns)
+        allvals.append(p.ravel())
+        # Pearson correlation of log10(PE) for the legend
+        r = (np.corrcoef(np.log10(p[:, 0]), np.log10(p[:, 1]))[0, 1]
+             if p.shape[0] > 1 else float("nan"))
+        ax.scatter(p[:, 0], p[:, 1], label="%s (N=%d, r=%.2f)" % (mode, p.shape[0], r),
+                   **styles[mode])
+    v = np.concatenate(allvals)
+    lo, hi = v[v > 0].min() * 0.7, v.max() * 1.4
+    ax.plot([lo, hi], [lo, hi], "k--", lw=1, alpha=0.6, label="PE$_0$ = PE$_1$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(lo, hi)
+    ax.set_ylim(lo, hi)
+    ax.set_xlabel("APA0 flash total PE")
+    ax.set_ylabel("APA1 flash total PE")
+    ax.set_title(r"Coincident cross-APA flash PE  ($|\Delta t|\leq%d$ ns)" % win_ns)
+    ax.legend(fontsize=9, loc="upper left")
+    ax.grid(alpha=0.3, which="both")
+    ax.set_aspect("equal")
+    fig.tight_layout()
+    fig.savefig(outfile, dpi=130)
+    plt.close(fig)
+    print("wrote", outfile)
+
+
 def hist_panel(ax, mc_us, data_us, win_us, nbins, title):
     """Overlay MC and data dt histograms on one axis."""
     edges = np.linspace(-win_us, win_us, nbins + 1)
@@ -176,6 +232,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--zoom", type=float, default=None,
                     help="zoom half-window in us (default: 1.0)")
+    ap.add_argument("--win-ns", type=float, default=80.0,
+                    help="coincidence half-window in ns for the PE 2D plot (default: 80)")
     args = ap.parse_args()
 
     os.makedirs(PICS, exist_ok=True)
@@ -201,6 +259,9 @@ def main():
 
     # ---- PE distribution ----
     make_pe_plot(loaded, os.path.join(PICS, "flash_pe_dist.png"))
+
+    # ---- coincident cross-APA PE 2D scatter (|dt| <= win_ns) ----
+    make_pe2d_plot(loaded, args.win_ns, os.path.join(PICS, "flash_pe2d_coinc.png"))
 
     # ---- zoom window ----
     # The wide plots show the coincidence peak is confined to the central bin,

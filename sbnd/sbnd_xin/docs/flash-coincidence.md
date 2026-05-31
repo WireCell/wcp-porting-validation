@@ -114,6 +114,26 @@ low-PE flashes** (down to ~40 PE) relative to data, which peaks toward higher PE
 "orphan" tail seen in the nearest-neighbor distributions — low-PE flashes that have no
 matching partner in the other APA.
 
+### Coincident cross-APA PE correlation (±80 ns window)
+
+Using a **±80 ns** coincidence window (which captures essentially the whole peak), each
+APA0 flash is matched to its nearest APA1 partner within the window, and the two total-PE
+values are plotted against each other (data = red open circles, mc = blue crosses):
+
+![PE 2D scatter](../pics/flash_pe2d_coinc.png)
+
+72 mc pairs and 94 data pairs. The structure is **anti-correlated** rather than lying on
+the PE₀ = PE₁ diagonal:
+
+- **Data (r = −0.56 in log PE)** splits into two lobes — high PE in one APA paired with low
+  PE in the other. This is the expected cathode-side signature: scintillation light from
+  activity near one APA's photodetectors gives a large flash there and a small one in the
+  far APA, and vice-versa. So the *relative* PE of the two APAs encodes which drift volume
+  the light came from.
+- **mc (r = −0.04)** is much more scattered and lacks this clean anti-correlation,
+  indicating the simulated inter-APA light sharing does not reproduce the data as cleanly
+  — worth following up in the optical/photon-propagation model.
+
 ## Takeaways
 
 1. The cross-APA flash coincidence is real and **very sharp: a few tens of ns** (68 %
@@ -131,3 +151,4 @@ matching partner in the other APA.
 - `flash_dump.csv` — all 649 flashes (mc + data, both APAs).
 - `pics/flash_coinc_{allpairs,nearest}_{wide,zoom,fine}.png` — Δt histograms.
 - `pics/flash_pe_dist.png` — per-flash total-PE distribution.
+- `pics/flash_pe2d_coinc.png` — coincident (±80 ns) cross-APA PE scatter, data vs mc.
