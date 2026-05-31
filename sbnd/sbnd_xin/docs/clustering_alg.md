@@ -115,7 +115,7 @@ None of `deghost`, `examine_x_boundary`, `protect_over_clustering`,
 | `deghost` | `clus/src/clustering_deghost.cxx` (`apas.size()>1` raises) | **per-APA, single APA only** (loops all faces within the APA) | removes ghost / duplicate clusters by comparing each cluster's 2D U/V/W wire-plane projections against a reference cloud built from longer, already-validated clusters |
 | `examine_x_boundary` | `clus/src/clustering_examine_x_boundary.cxx`; impl `Facade_Cluster.cxx:2337-2428` (`wpids().size()>1` raises) | **per-APA, single face only** | drift-boundary cleanup — see below |
 | `protect_over_clustering` | `clus/src/clustering_protect_overclustering.cxx` | **both** — accepts a multi-APA grouping but processes per `(apa,face)` via `time_blob_map`, using `get_nticks_per_slice().at(apa).at(face)` | prevents over-fragmentation by rebuilding connectivity with the "relaxed" graph topology (same physics as `connect_graph_relaxed`) |
-| `examine_bundles` | `clus/src/clustering_examine_bundles.cxx` ("All APA Faces", no apa/face restriction) | **both / all faces** | splits a cluster into its connected blob components via `Cluster::connected_blobs()` (default graph flavor `"relaxed"`) |
+| `examine_bundles` | `clus/src/clustering_examine_bundles.cxx` ("All APA Faces", no apa/face restriction) | **both / all faces** | per-blob *labeling* pass (not a split) — see below |
 | `retile` | `clus/src/clustering_retile.cxx`; core `clus/src/retile_cluster.cxx` (per-`(apa,face)` samplers) | **both** — multi-APA capable | re-tiles clusters from refined ray-grid activity: rebuild blobs → resample point clouds → form new "shadow" clusters |
 
 ### 4a. What case does `examine_x_boundary` handle?
@@ -139,7 +139,23 @@ fiducial boundary off the main in-volume cluster. Because it raises on
 `wpids().size() > 1`, it can only be applied per single APA/face (the per-APA
 stage), never on the merged all-APA grouping.
 
-### 4b. Does `examine_bundles` use the light/flash signal?
+### 4b. What `examine_bundles` examines (and what it does *not* do)
+
+It does **not** examine every cluster, and it does **not** split clusters. It
+loops over all live clusters (`clustering_examine_bundles.cxx:82`) but **skips
+any cluster that fails the scope filter** (`get_scope_filter(scope)`, line 85).
+For each in-scope cluster it runs `connected_blobs(dv, pcts, graph_name)`
+(line 98), which groups that cluster's blobs into connected components — the
+"bundles" — via the wire-overlap graph. It then picks the **main** bundle
+(maximum overlap with the previous main, lines 103-130, else the **longest**
+component, lines 139-166), marks it `-1`, and writes the per-blob labels back
+with `put_pcarray(b2groupid, "isolated", "perblob")` (line 168). It is a
+per-blob **labeling / annotation pass** — it records which connected-component
+bundle each blob belongs to and which bundle is the main one; it never calls
+`live_grouping.separate()`. The actual split into separate `Cluster` objects is
+left to the `isolated()` step.
+
+### 4c. Does `examine_bundles` use the light/flash signal?
 
 **No.** `examine_bundles` is purely **charge-based geometry**. It calls
 `Cluster::connected_blobs()`, which builds a wire-overlap connectivity graph and
