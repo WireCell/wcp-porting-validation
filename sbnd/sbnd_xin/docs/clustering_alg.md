@@ -208,3 +208,116 @@ holder — **no flash argument** — and whose body has no flash / PE / T0 / dri
 offset references. The toolkit's `retile` is therefore where the flash
 dependence was *added* (the `get_flash()` time-window gate of §4c, plus running
 in the T0-corrected `x_t0cor` scope).
+
+---
+
+## 5. Proposed improvement — wiring `deghost`, `examine_x_boundary`, `protect_overclustering` into the SBND chain
+
+None of these three currently run in `sbnd_xin` (the per-APA tail at
+`clus.jsonnet:146-150` lists `deghost`/`examine_x_boundary` commented out;
+`protect_overclustering` is absent entirely). The question is *where* each
+should be enabled. Short answer:
+
+- **`deghost`, `examine_x_boundary`, `protect_overclustering` → per-APA: yes.**
+- **`protect_overclustering` → combined: viable but contingent** (see §5c).
+- **`deghost`, `examine_x_boundary` → combined: not possible** (see §5b).
+
+### 5a. MicroBooNE intent and the SBND mapping
+
+In the prototype these three run as a **single contiguous block, in this exact
+order**, immediately after `connect1` in the one-and-only (single-TPC)
+clustering pass (`prototype_base/2dtoy/src/ToyClustering.cxx:362-388`):
+
+```
+Clustering_connect1();            // L362
+Clustering_deghost();             // L374
+Clustering_examine_x_boundary();  // L384
+Clustering_protect_overclustering(); // L388
+Clustering_neutrino();            // L395
+```
+
+Per-function intent, and how it maps onto SBND:
+
+| function | MicroBooNE intent | SBND mapping |
+|---|---|---|
+| `deghost` | **tomographic deghosting** — kill 3D clusters that are merely 2D wire-plane projection artifacts of other (longer, real) clusters | a per-drift-volume tomography artifact; arises in the per-APA imaging, so it belongs in the per-APA stage |
+| `examine_x_boundary` | peel charge that pokes past the single drift volume's drift (x) extent — wrong-T0 / cosmic charge extending beyond the anode or cathode | each SBND per-APA volume already has its own `FV_xmin`(anode/outer) / `FV_xmax`(cathode/inner) bounds (`clus.jsonnet:47-61`, `a0f0pA` / `a1f0pA`), so the same per-volume cleanup applies directly |
+| `protect_overclustering` | undo over-aggressive merges produced by the sorting passes (`extend`/`regular`/`parallel_prolong`/`close`/`separate`) | directly complements the 2026-05-28 per-APA over-merge fix; also relevant after the *combined* sorting passes (§5c) |
+
+MicroBooNE is a **single TPC / single drift volume**, so this whole block lived
+in what maps to SBND's **per-APA** stage. SBND additionally has a *combined /
+all-APA* stage (after `PointTreeMerging` + `switch_scope` T0 correction) that has
+**no prototype precedent** — every cross-stage placement decision below is a new
+SBND design choice, not a port.
+
+### 5b. Why `deghost` and `examine_x_boundary` are per-APA-only (forced, not chosen)
+
+These two are not a free choice: they **mechanically cannot** run on the combined
+grouping.
+
+- `deghost` raises `ValueError` if `apas.size() > 1` (`clustering_deghost.cxx`).
+- `examine_x_boundary` raises `ValueError` if `wpids().size() > 1`
+  (`clustering_examine_x_boundary.cxx:50-55`).
+
+The combined grouping holds both SBND drift volumes (multiple wpids), so both
+would throw. This also aligns with physics: `examine_x_boundary` is meant to
+*split off* charge beyond a single volume's drift bound — running it on the
+combined, T0-corrected frame would risk chopping a **genuine cathode-crossing
+track** (which the combined stage exists precisely to stitch together). So
+per-APA-only is both required and correct.
+
+**Suggested per-APA ordering** (append after `connect1`, preserving prototype
+order):
+
+```
+... cm.separate(use_ctpc=true), cm.connect1(),
+    cm.deghost(),
+    cm.examine_x_boundary(),
+    cm.protect_overclustering(),
+```
+
+### 5c. `protect_overclustering` in the combined stage — viable, with one caveat to validate
+
+`protect_overclustering` *can* run on a multi-wpid grouping (it processes per
+`(apa,face)` via `time_blob_map` and `get_nticks_per_slice().at(apa).at(face)`),
+and there is real motivation to run it there: the combined sorting passes
+(`extend`/`regular`/`parallel_prolong`/`close`/`separate`) run in the
+T0-corrected frame and can introduce *new* over-merges across the two drift
+volumes that the per-APA pass never saw. Following prototype order, it would slot
+**after `separate()` and before `neutrino()`** in the all-APA pipeline.
+
+**The caveat (the one thing to validate before enabling combined):** the function
+could split a genuine cathode-crossing cluster.
+
+- Its **initial** connectivity graph only links blobs within the same
+  `(apa,face)` — the intra-blob edges (`clustering_protect_overclustering.cxx:99-166`)
+  and the inter-blob edges iterate `time_blob_map()` per face
+  (`:173-174`). So a cathode-crosser (blobs in both volumes) starts as ≥2
+  disconnected components.
+- Its **reconnection phase** (`:386-523`) *does* consider all component pairs
+  regardless of face (3D-distance + Hough-direction + MST), so it can in
+  principle bridge them back. **But** the path-quality check `check_path`
+  (`:348-382`) walks the straight 3D path between the two pieces and counts any
+  step that lands *between* APA volumes — the cathode gap, where
+  `get_wireplaneid(...)` returns `apa()==-1` — as a **bad step** (`:374-378`);
+  too many bad steps invalidate the reconnection (`:380`).
+
+So whether a real collinear cathode-crossing muon survives depends on the
+fraction of its inter-volume path that falls in the cathode gap — **this is
+untested for SBND** and is the specific thing to validate. (Note this corrects
+the older review claim that cross-face pairs are "never considered": they *are*
+considered in the reconnection phase; they are merely penalized at the cathode.)
+
+**Conservative recommendation:** enable `protect_overclustering` in the per-APA
+stage first; enable it in the combined stage only after either (a) validating on
+SBND cathode-crossing events that genuine crossers are *not* split, or (b) adding
+a guard that skips clusters spanning multiple faces in the combined stage.
+
+### 5d. Rollout (toggleable, default OFF)
+
+All three change production clustering output, so per the project convention they
+must be added as **jsonnet toggles, defaulting OFF**, so existing production
+configs stay bit-identical. Recommended sequence: add the toggles (default off) →
+validate per-APA additions against current output (expect ghost removal,
+boundary-tail peeling, fewer over-merges) → resolve the §5c cathode-crosser
+question → only then enable combined `protect_overclustering`.
