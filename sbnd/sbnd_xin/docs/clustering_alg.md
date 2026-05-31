@@ -167,3 +167,44 @@ Contrast with `retile`, which **is** flash-gated: `retile_cluster.cxx:559-564`
 skips any cluster without a matched `get_flash()` or whose flash time falls
 outside `[m_cut_time_low, m_cut_time_high]`. So among these functions, only
 `retile` depends on QL/flash information.
+
+### 4d. Prototype (MicroBooNE) comparison — is light used there?
+
+Both functions were checked against the MicroBooNE prototype to see whether the
+*original* code used optical/light (flash, PE, PMT) information.
+
+**`examine_bundles` — prototype `ExamineBundles` / `ExamineBundle`**
+(`prototype_base/2dtoy/src/ExamineBundles.cxx`,
+header `prototype_base/2dtoy/inc/WCP2dToy/ExamineBundles.h`):
+
+```cpp
+FlashTPCBundleSelection ExamineBundles(WCP::FlashTPCBundleSelection bundles,
+                                       WCP::ToyCTPointCloud& ct_point_cloud);
+```
+
+The prototype runs *inside the charge–light matching framework*: it operates on
+`FlashTPCBundle` objects, each of which pairs a `PR3DCluster` with its matched
+`Opflash` plus `pred_pmt_light`, `flag_close_to_PMT`, etc. **But the actual
+splitting decision is purely charge/geometry**: it merges the bundle's clusters,
+calls `PR3DCluster::Examine_graph(ct_point_cloud)` (`ExamineBundles.cxx:77`) to
+find connected components — the prototype counterpart of the toolkit's
+`connected_blobs()` — and keeps the component with the largest overlap with the
+old main cluster. The flash / PE / PMT fields are only **carried through** onto
+the re-formed bundle (`ExamineBundles.cxx:107-118`: `get_flash()`,
+`set_pred_pmt_light()`, `set_flag_close_to_PMT()`), never consulted to decide
+the split.
+
+So the conclusion is the **same in both code bases**: the `examine_bundles`
+splitting logic is charge-only. The only difference is bookkeeping — the
+prototype re-attaches the result to its flash (because it lives in the bundle /
+matching stage), whereas the toolkit version is decoupled from flash and just
+writes per-blob `("isolated","perblob")` labels.
+
+**`retile` — no prototype equivalent.** There is no prototype re-tiling routine
+that uses light. The closest prototype function is
+`Improve_PR3DCluster[_1/_2]` (`prototype_base/pid/src/ImprovePR3DCluster.cxx`),
+whose signature takes only a cluster, the `ToyCTPointCloud`, the geometry, and a
+holder — **no flash argument** — and whose body has no flash / PE / T0 / drift-
+offset references. The toolkit's `retile` is therefore where the flash
+dependence was *added* (the `get_flash()` time-window gate of §4c, plus running
+in the T0-corrected `x_t0cor` scope).
