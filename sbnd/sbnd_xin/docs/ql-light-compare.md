@@ -38,6 +38,7 @@ The matcher writes both quantities to the Bee optical JSON `<n>-op.json`
 | `op_pes_pred[312]`| predicted PE per channel (filled only for **matched** flashes, only on the active PMT channels of that flash's TPC side; with `bee_flash_per_flash` it is the element-wise sum over the flash's matched clusters) |
 | `op_cluster_ids` | matched cluster ids (**empty ⇒ unmatched flash**); with `bee_flash_per_flash` (SBND all-APA) this is the full set of clusters matched to the flash, one flash per row |
 | `apa`            | "0"/"1", the flash's TPC side                          |
+| `op_flash_group` | (SBND all-APA, `flash_group_window>0`) ±80 ns flash-flash coincidence id shared by TPC0/TPC1 flashes; absent ⇒ no grouping. Display-only — does not affect the analysis below. |
 
 A **matched bundle** is a row with non-empty `op_cluster_ids` (so `op_pes_pred`
 is filled). This run: **186 matched bundles (MC), 130 (data)** across 10 events

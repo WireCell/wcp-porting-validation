@@ -96,6 +96,17 @@ bit-identical):
   a merged flash group paint with **distinct colors** while `cluster_id` stays the
   merged-group id used for the `op` association. Spatial merges (extend/regular/
   close) earlier in the all-APA stage are unaffected — they stay one object.
+- `op` layer, TPC0/TPC1 flash grouping — with `flash_group_window: 80*wc.ns` on the
+  all-APA MABC, flashes from the two TPC sides within ±80 ns are tagged with a
+  shared `op_flash_group` id. The MABC computes this **pre-pipeline** (a pure
+  function of flash times) and stashes a per-flash `group` array on the root
+  `opflash` PC, so the op dump reads it and every later pipeline step can reuse it.
+  (It must be pre-pipeline: the op dump runs before clustering so the 1:1
+  cluster↔flash mapping and the `flashpred` predicted-PE arrays are still intact —
+  both are gone after `examine_bundles` merges. `switch_scope`/post-pipeline were
+  tried and fail for exactly this reason.) The viewer shows a whole group together
+  (both flashes, TPC-labeled, + the union of their matched clusters); absent the
+  field it falls back to one-flash-at-a-time, so older op.json still works.
 
 **Dead area is generated in-toolkit, on the dead side — not by QLMatching.** The
 active clusters feed PointTreeBuilding port 0 → the `/live` pctree (what QLMatching
