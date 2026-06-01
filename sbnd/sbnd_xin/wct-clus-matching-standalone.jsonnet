@@ -49,8 +49,11 @@ local active_clusters = [
 // --- Dead (masked) clusters: imaged in-toolkit from the SP frames ---
 // The dead pctree (/dead, port 1 of PointTreeBuilding) must be populated with the
 // toolkit's 2-view dead blobs (multi_masked_2view_slicing_tiling), NOT yuhw's
-// larsoft 1-view masked.npz.  We run only the masked imaging fork here; the live
-// (active) clusters stay yuhw's, so the charge-light matching is unchanged.  A
+// larsoft 1-view masked.npz.  We run only the masked imaging fork here.  The live
+// (active) clusters above are also toolkit-imaged (run_clust_QL_evt.sh runs
+// wct-img-all.jsonnet on the same SP-frame bundle before this graph), so both
+// live and dead views come from the toolkit's multi-3view imaging -- this recovers
+// charge across W-plane dead channels that yuhw's larsoft active npz omitted.  A
 // single FrameFileSource feeds a FrameFanout that renames the 'dnnsp' tag into the
 // per-anode 'gauss<id>'/'wiener<id>' tags the imaging pre_proc expects (mirrors
 // wct-img-all.jsonnet).  `frames` is the combined 10-event sp-frames archive.

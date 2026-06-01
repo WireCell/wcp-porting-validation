@@ -2,9 +2,13 @@
 # Standalone SBND charge-light (Q/L) matching chain — no LArSoft.
 # Reproduces yuhw's wct-clus-matching-standalone.jsonnet run + BEE packaging.
 #
-# LEGACY all-10 quick-run: one wire-cell call over yuhw's bundled multi-event
-# larsoft active npz, masked imaged in-graph.  For new work prefer the per-event
-# self-contained chain ./run_ql_evt.sh (toolkit-imaged clusters, parallelizable).
+# All-10 quick-run: one wire-cell call over a 10-event SP-frame bundle.  Both the
+# live (active) AND dead (masked) clusters are toolkit-imaged here: this script
+# first runs wct-img-all.jsonnet on the assembled bundle to (re)produce the active
+# npz (multi-3view + full_deghost, including the 2-view-active branches that fill
+# W-plane dead-channel gaps), then the matching graph images the dead view in-graph
+# from the same bundle.  Only the opflash archives stay yuhw's (the light-matching
+# reference).  For per-event work prefer ./run_ql_evt.sh (parallelizable).
 #
 # Usage: ./run_clust_QL_evt.sh [mc|data] [--upload]
 #   mc   (default): input-10evt-mc,   reality=sim
@@ -13,7 +17,8 @@
 #                   (default: build combined.zip only, no network)
 #
 # Input  (read-only, yuhw's): input_files/input-10evt-<mode>/
-#          icluster-apa{0,1}-{active,masked}.npz  opflash_apa{0,1}.tar.gz
+#          icluster-apa0-active.npz  (event-order reference only)
+#          opflash_apa{0,1}.tar.gz   (light-matching reference)
 # Output (writable):          work/ql_<mode>/
 #          mabc.zip           (one shared self-contained BEE zip: per event the
 #          per-APA clustering views, the all-APA img/clustering charge layers,
@@ -64,12 +69,11 @@ INPUT_DIR="$SBND_DIR/input_files/input-10evt-$MODE"
 WORKDIR="$SBND_DIR/work/ql_$MODE"
 LOG="$WORKDIR/wct_clus_QL_$MODE.log"
 
-# Dead (masked) clusters are no longer read from a file: the matching graph images
-# them in-toolkit from the SP frames (2-view dead area).  Only the live (active)
-# clusters and the opflash archives are staged from yuhw's inputs.
+# Neither the live (active) nor the dead (masked) clusters are read from yuhw's
+# files anymore: the active npz are toolkit-imaged below from the SP-frame bundle
+# (wct-img-all.jsonnet), and the matching graph images the dead view in-graph.
+# Only the opflash archives are staged from yuhw's inputs (light-matching reference).
 INPUTS=(
-    icluster-apa0-active.npz
-    icluster-apa1-active.npz
     opflash_apa0.tar.gz      opflash_apa1.tar.gz
 )
 
@@ -130,6 +134,28 @@ for e in $EVENT_IDS; do
 done
 tar cjf "$WORKDIR/$FRAMES" -C "$FRAMES_STAGE" "${FRAME_MEMBERS[@]}"
 echo "[frames]      assembled $WORKDIR/$FRAMES ($(echo "$EVENT_IDS" | wc -w) events)"
+
+# --- Image the live (active) clusters in-toolkit from the same SP-frame bundle ---
+# wct-img-all.jsonnet runs multi-3view + full_deghost imaging (incl. the
+# 2-view-active branches that recover charge across W-plane dead channels), writing
+# a combined 10-event icluster-apa{0,1}-active.npz (and unused -masked.npz) into
+# $WORKDIR.  Generated from the same bundle in the same event order as the in-graph
+# dead imaging, so /live and /dead stay paired by event.
+IMG_LOG="$WORKDIR/wct_img_QL_$MODE.log"
+echo "[wire-cell] imaging toolkit active clusters from $FRAMES ..."
+wire-cell \
+    -l stderr \
+    -l "${IMG_LOG}:debug" \
+    -L debug \
+    --tla-str  "input=$WORKDIR/$FRAMES" \
+    --tla-code "anode_indices=[0,1]" \
+    --tla-str  "output_dir=$WORKDIR" \
+    -c "$SBND_DIR/wct-img-all.jsonnet"
+for a in 0 1; do
+    [ -f "$WORKDIR/icluster-apa$a-active.npz" ] \
+        || { echo "ERROR: imaging did not produce icluster-apa$a-active.npz" >&2; exit 1; }
+done
+echo "[wire-cell] active clusters imaged -> $WORKDIR/icluster-apa{0,1}-active.npz"
 
 cd "$WORKDIR"
 

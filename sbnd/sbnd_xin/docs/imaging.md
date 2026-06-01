@@ -458,6 +458,21 @@ print(list(d.keys())[:10])   # e.g. ['cluster_0_nodes', 'cluster_0_edges', ...]
   the fix. The identical bug was present and fixed in
   `cfg/pgrapher/experiment/dune-vd/img.jsonnet:324`.
 
+- **Bundled Q/L chain now images its own active clusters** (fixed
+  2026-06-01) — `run_clust_QL_evt.sh` historically fed yuhw's precomputed
+  LArSoft `icluster-apa*-active.npz` into the live view, so it did *not*
+  benefit from the 2-plane-active fix above and showed thin charge across
+  W-plane dead bands (e.g. physical evt2 / APA0, Z≈251 cm). The script now
+  runs `wct-img-all.jsonnet` (multi-3view + `full_deghost=true`) on the
+  same assembled 10-event SP-frame bundle to (re)produce the active npz
+  in-toolkit before matching; only the opflash archives stay yuhw's (the
+  light-matching reference). Result for physical evt2 / APA0: charge in the
+  W-dead band z∈[250,255) roughly doubles (≈1,126 → ≈2,276 points in the
+  all-APA view), and the bundled `mabc.zip` for that event is byte-identical
+  to the per-event toolkit run (`run_ql_evt.sh` → `work/ql_evt<ID>/`). NB:
+  the bundled run labels events by ordinal 0–9 (first event in the assembled
+  order = index 0), independent of the physical event id.
+
 ---
 
 ## Comparison with the uBooNE imaging chain
