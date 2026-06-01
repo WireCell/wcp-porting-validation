@@ -64,7 +64,8 @@ local wcls_input = {
 
 local img = import 'pgrapher/experiment/sbnd/img.jsonnet';
 local img_maker = img();
-local img_pipes = [img_maker.per_anode(a, "active2view+masked2view", add_dump = false, // active3view+masked1view, active2view+masked2view
+local img_config = std.extVar('img_config');
+local img_pipes = [img_maker.per_anode(a, img_config, add_dump = false,
                                        channels_per_apa = 5638 /* needs to be consistent with geom file */) for a in tools.anodes];
 
 local clus = import 'clus.jsonnet';

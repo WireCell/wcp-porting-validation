@@ -1,7 +1,7 @@
 #include "geometry_sbnd.fcl"
 
 process_name: wclssig2img
- 
+
 services: {
        @table::sbnd_geometry_services
 }
@@ -39,18 +39,12 @@ physics :{
 
             params : {
                 # Set "data" vs. "sim".
-                reality: "data"
-                # Image configuration
-                img_config: "active2view+masked2view"
+                reality: "sim"
+                # Image configuration: 3 active views, 1 dead (masked) view
+                img_config: "active3view+masked1view"
             }
             structs : {
-                # data/moon
-                # recobwire_tags: "[\"sptpc2d:gauss\", \"sptpc2d:wiener\"]"
-                # trace_tags: "[\"gauss\", \"wiener\"]"
-                # summary_tags: "[\"\", \"sptpc2d:wienersummary\"]"
-                # input_mask_tags: "[\"sptpc2d:badmasks\"]"
-                # output_mask_tags: "[\"bad\"]"
-                # sim
+                # sim configuration
                 recobwire_tags: "[\"simtpc2d:dnnsp\", \"simtpc2d:dnnsp\"]"
                 trace_tags: "[\"gauss\", \"wiener\"]"
                 summary_tags: "[\"\", \"simtpc2d:wienersummary\"]"
