@@ -15,10 +15,11 @@
 # Input  (read-only, yuhw's): input_files/input-10evt-<mode>/
 #          icluster-apa{0,1}-{active,masked}.npz  opflash_apa{0,1}.tar.gz
 # Output (writable):          work/ql_<mode>/
-#          mabc-all-apa.zip   (single self-contained BEE zip: per event the
-#          img/clustering charge layers, the dead-area patches, AND the optical
-#          op/flash + Q/L-matching layer — all dumped by the all-APA MABC. No
-#          per-APA data-sep JSON and no combine step any more.)
+#          mabc.zip           (one shared self-contained BEE zip: per event the
+#          per-APA clustering views, the all-APA img/clustering charge layers,
+#          the dead-area patches, AND the optical op/flash + Q/L-matching layer —
+#          all MABC nodes write into this single zip via a shared BeeSink. No
+#          per-APA zips and no combine step.)
 
 set -e
 
@@ -147,17 +148,17 @@ wire-cell \
     -C "lifetime=$LIFETIME" \
     -c "$JSONNET"
 
-echo "[wire-cell] done -> mabc-all-apa.zip (self-contained BEE zip)"
+echo "[wire-cell] done -> mabc.zip (one shared self-contained BEE zip)"
 
-OUT_ZIP="$WORKDIR/mabc-all-apa.zip"
+OUT_ZIP="$WORKDIR/mabc.zip"
 [ -f "$OUT_ZIP" ] || { echo "ERROR: expected BEE zip not produced: $OUT_ZIP" >&2; exit 1; }
 
 # --- Upload (optional) ---------------------------------------------------------
-# mabc-all-apa.zip is already the complete event-display zip (charge img/
-# clustering + dead area + optical op/flash), so we upload it directly — no
+# mabc.zip is already the complete event-display zip (per-APA + all-APA charge
+# img/clustering + dead area + optical op/flash), so we upload it directly — no
 # merge-apa.py / bee-upload.sh combine step.
 if [ "$DO_UPLOAD" = 1 ]; then
-    echo "[bee] uploading mabc-all-apa.zip ..."
+    echo "[bee] uploading mabc.zip ..."
     URL=$(BROWSER=echo bash "$BEE_UPLOADER" "$OUT_ZIP" | tail -1)
     echo "[bee] $URL"
 else

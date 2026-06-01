@@ -84,8 +84,16 @@ local frame_fan = g.pnode({
 // (keeps sbnd_xin standalone; no dependency on ../sbnd).
 local clus = import 'clus.jsonnet';
 local clus_maker = clus();
+// Single shared Bee sink: the per-APA and all-APA MultiAlgBlobClustering nodes
+// all write into this one zip (mabc.zip) instead of one zip per node, so the
+// run produces a single self-contained Bee file with every view.
+local bee_shared = {
+    type: 'BeeSink',
+    name: 'mabc_shared',
+    data: { outname: 'mabc.zip', initial_index: 0 },
+};
 local clus_pipes = [
-    clus_maker.per_apa(tools.anodes[n], dump=false)
+    clus_maker.per_apa(tools.anodes[n], dump=false, bee_sink=bee_shared)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
@@ -105,7 +113,7 @@ local matching_pipes  = [
 
 // --- All-APA clustering ---
 // In-tree all_apa is the pre-tagging chain (no nu_tagging param; see header).
-local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true);
+local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true, bee_sink=bee_shared);
 
 // --- Flat graph ---
 // Per anode n:
@@ -113,7 +121,8 @@ local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true);
 //   frame -> FrameFanout -> masked imaging ──┤(port 1, /dead)  -> PointTreeBuilding
 //                                            └─> clustering -> FlashTensorToOpticalPCs
 //   opflash TensorFileSource ──────────────────────────────┘(port 1) -> QLMatching
-//   ... -> all-APA MultiAlgBlobClustering (one mabc-all-apa.zip).
+//   ... -> all-APA MultiAlgBlobClustering.  All MABC nodes (per-APA + all-APA)
+//   write into one shared Bee zip (mabc.zip) via the bee_shared sink.
 local nanode = std.length(tools.anodes);
 local graph = g.intern(
     innodes=active_clusters + opflash_sources + [frame_src],

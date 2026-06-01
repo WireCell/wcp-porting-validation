@@ -109,6 +109,20 @@ runs with `use_flash_t0=false` (bit-identical with or without QL). Without QL,
 the all-APA clusters carry no flash, so `assign_flash_t0_groups` gives every
 cluster a unique singleton group and no flash-gated merge happens.
 
+### Bee output: one shared zip
+
+The three MABC nodes (per-APA apa0, per-APA apa1, all-APA) used to write three
+separate Bee zips (`mabc-apa0-face0.zip`, `mabc-apa1-face0.zip`,
+`mabc-all-apa.zip`). `wct-clus-matching-standalone.jsonnet` now defines one
+shared `BeeSink` node (`mabc_shared`, `outname: mabc.zip`) and passes it as the
+`bee_sink` of all three MABCs, so the run produces a **single** `mabc.zip`
+carrying every view: the per-APA `clustering-apaX-face0` (local-x, pre-QL
+snapshots that cannot be reconstructed downstream), the all-APA `img`/
+`clustering` (T0-corrected) layers, the optical `op` layer, and the dead-area
+patches. The per-APA nodes drop `save_deadarea` in shared mode to avoid a
+duplicate `channel-deadarea-*` entry. See `clus/docs/bee_output.md` ("Shared
+sink") for the index/lifecycle mechanics.
+
 ---
 
 ## 4. Reference: five functions not (fully) in the `sbnd_xin` chain
