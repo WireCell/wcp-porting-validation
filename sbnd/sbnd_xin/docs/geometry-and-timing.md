@@ -346,6 +346,40 @@ as an overlay on `simparams.lar`:
 
 ---
 
+## Scope-aware fiducial volume (`clustering_separate` / `clustering_neutrino`)
+
+`clustering_separate` (its `JudgeSeparateDec_2` boundary/exit test) and
+`clustering_neutrino` choose their fiducial-volume bounds to match the **scope** of the
+clustering pass, via the shared helper `select_scope_fv` (`clus/src/clustering_separate.cxx`,
+declared in `clus/inc/WireCellClus/ClusteringFuncs.h`). The scope is read from the
+face-level wire-plane ids present in the grouping (`Grouping::wpids()`):
+
+| Pass | `wpids()` (SBND) | FV used | x-range |
+|---|---|---|---|
+| per-APA TPC0 | `{a0f0pA}` (1 APA) | that drift volume's FV | `[-201.05, -2.5]` cm |
+| per-APA TPC1 | `{a1f0pA}` (1 APA) | that drift volume's FV | `[2.5, 201.05]` cm |
+| all-APA | `{a0f0pA, a1f0pA}` (>1 APA) | `overall` cryostat envelope | `[-201.05, 201.05]` cm |
+
+Rules: **>1 APA (or empty) → `overall`** (cryostat); this reproduces the legacy
+`dv->metadata(WirePlaneId(0))` reads bit-for-bit, so all-APA behavior is unchanged.
+**Single APA → the union (outermost envelope) of that APA's present per-`(APA,face)`
+blocks** (for a single-face APA like SBND, just that one block). Any field missing from a
+per-face block falls back to `overall`; `vertical_dir`/`beam_dir` are detector-global and
+always come from `overall`.
+
+This reverses the previous "always cryostat" convention: in a per-APA pass, "exiting"
+now means leaving the **clustered drift volume**, which is the physically correct notion
+when the grouping holds only one TPC's blobs.
+
+Config (`cfg/pgrapher/experiment/sbnd/clus.jsonnet`, `dvm`): the per-`(APA,face)` blocks
+`a0f0pA`/`a1f0pA` now define the full FV (x is genuinely per-TPC; y/z bounds + margins are
+sourced from `overall` since SBND TPCs span the full height/length). The change is in
+shared C++ but **SBND is the only config that actively runs `separate`/`neutrino`** (DUNE-VD
+has them commented out), so in practice only SBND is affected. The union/multi-face path is
+exercised only on multi-face detectors (untested on SBND).
+
+---
+
 ## Shared config file map
 
 | Local file | Imported shared config |
