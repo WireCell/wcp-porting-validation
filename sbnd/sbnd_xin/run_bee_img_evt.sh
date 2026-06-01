@@ -1,8 +1,10 @@
 #!/bin/bash
-# Convert SBND imaging results to Bee JSON and upload.
-# Usage: ./run_bee_img_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-#        ./run_bee_img_evt.sh       # list available events
-#   idx:   1-based event index (1..10) — maps to event IDs: 2 9 11 12 14 18 31 35 41 42
+# Convert SBND imaging results to Bee JSON and upload.  Run with -h for help.
+# Usage: ./run_bee_img_evt.sh [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+#        ./run_bee_img_evt.sh [mc|data] [-N n]   # list available events
+#   mode:  mc (default) | data — selects the event list
+#   -N:    event-sample size (default 10); e.g. -N 100 uses input-100evt-<mode>
+#   idx:   1-based event index into the chosen sample/mode
 #   all:   combine all events into one upload zip and do a single Bee upload
 #   run:   run number for bee RSE metadata (default 0)
 #   subrun: subrun number (default 0)
@@ -18,11 +20,35 @@ SBND_DIR=$(cd "$(dirname "$0")" && pwd)
 
 . "$SBND_DIR/_runlib.sh"
 
+usage() {
+    cat <<EOF
+Convert SBND imaging results to Bee JSON and upload to the BEE server.
+
+Usage: $(basename "$0") [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+       $(basename "$0") [mc|data] [-N n]            # list available events
+
+  mc|data   input set (default mc)
+  idx       1-based event index into the chosen sample/mode (see no-arg listing);
+            'all' combines every event into one upload zip + a single Bee upload
+  run/subrun  RSE metadata (default 0 0)
+  -a        restrict to one anode (0 or 1); default both
+  -s        use work/evt<ID>_<sel_tag>/ (from run_select_evt.sh)
+
+Requires: run_img_evt.sh first (per-event icluster npz).
+EOF
+    sbnd_common_help
+}
+
+MODE=mc
 ANODE=""
 SEL_TAG=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -N) SBND_SAMPLE="$2"; shift 2 ;;
+        -N*) SBND_SAMPLE="${1#-N}"; shift ;;
+        mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -31,6 +57,9 @@ while [ $# -gt 0 ]; do
     esac
 done
 set -- "${_args[@]}"
+
+sbnd_check_sample "$MODE" || exit 1
+load_events "$MODE" || exit 1
 
 if [ $# -eq 0 ]; then
     list_events; exit 0

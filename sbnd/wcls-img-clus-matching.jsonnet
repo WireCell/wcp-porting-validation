@@ -85,7 +85,7 @@ for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local matching_pipe = [
     g.pnode({
-        type: 'QLMatching',
+        type: 'wclsQLMatching',
         name: 'matching%d' % n,
         local dv = clus_maker.detector_volumes([tools.anodes[n]]), // face should be 0 for sbnd
         data: {

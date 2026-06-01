@@ -1,3 +1,14 @@
+# ============================================================================
+# DEPRECATED (2026-05-27). Use setup-local-opt.sh instead.
+#
+# All three workflows (standalone wirecell + the two `lar` paths) are now
+# consolidated onto /exp/sbnd/app/users/yuhw/opt, and larwirecell is built
+# against /opt (larsoft-wct036 mrb area, CMAKE_PREFIX_PATH=/opt). The wct-0.36.0
+# -install tree is kept only as a fallback baseline; nothing should use it by
+# default. This script still works if you ever need that fallback, but prefer
+# setup-local-opt.sh for all normal runs.
+# ============================================================================
+
 # Standalone WCT 0.36.0 + larwirecell env, self-contained under
 # /exp/sbnd/app/users/yuhw/wct-0.36.0-install.  Does NOT use the larsoft mrb
 # build area, so it's unaffected by any larwirecell rebuild elsewhere.

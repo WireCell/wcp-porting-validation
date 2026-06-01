@@ -1,12 +1,9 @@
 // DNN-ROI variant of wct-nf-sp.jsonnet.
 //
-// Inserts a DNN-ROI subgraph (DNN_ROI_SP/checkpoints model exported as
-// wire-cell-data/dnnroi/pdhd/CP43.ts) after the standard SP pipeline,
-// per anode.  Two wiring modes selectable via TLA `dnnroi_mode`:
-//   'pp' (default): per-plane sequential — two DNNROIFinding calls
-//                   at (1, 3, 800, 1500) each, sharing CP43.ts.
-//   'mp':           stacked U+V via DNNROIFindingMultiPlane at
-//                   (1, 3, 1600, 1500); legacy, kept for comparison.
+// Inserts a DNN-ROI subgraph (model in wire-cell-data/dnnroi/pdhd/)
+// after the standard SP pipeline, per anode.  Per-plane sequential
+// wiring via dnnroi_pp.jsonnet: two DNNROIFinding calls per APA at
+// (1, 6, 800, 1500) each, sharing one TorchService.
 // All other behaviour is identical to wct-nf-sp.jsonnet.
 //
 // Run example (single anode, single event):
@@ -49,8 +46,6 @@ function(
 
   // DNN-ROI specific
   use_dnnroi    = true,
-  dnnroi_mode   = 'pp',                     // 'pp' = per-plane sequential (default)
-                                            // 'mp' = stacked multi-plane (legacy)
   // Default = FP32 best KD (6-ch).  Resolved via WIRECELL_PATH.
   //   FP32 best KD:    pipe_distill_transformer_6ch.ts       (Dice 0.9107)
   //   INT8 best QAT:   pipe_qat_transformer_6ch_int8.ts      (Dice 0.8900, CPU only)
@@ -64,7 +59,7 @@ function(
   dnnroi_nticks = 6000,
   dnnroi_tick_per_slice = 4,                // training rebin=4
   dnnroi_output_scale = 1.0,
-  dnnroi_mask_thresh = 0.5,
+  dnnroi_mask_thresh = 0.2,
   dnnroi_nchunks = 1,
   dnnroi_debugfile = '',   // if non-empty, C++ node dumps per-call .pt
 
@@ -73,6 +68,40 @@ function(
   use_l1sp_dnn      = true,
   l1sp_pd_adj_enable    = true,
   l1sp_pd_adj_max_hops  = 3,
+
+  // ── ML L1SP tagger (l1sp_pd_mode == 'dnn') ─────────────────────────
+  // When l1sp_pd_mode == 'dnn', L1SPFilterPD replaces its 5-arm
+  // heuristic decide_trigger with a TorchScript model call.  Polarity
+  // is still sign(raw_asym_wide); only the fire/no-fire cut changes.
+  // Model file is resolved via WIRECELL_PATH and ships with
+  // wire-cell-data/l1sp/pdhd/.  Default threshold 0.5, matching the
+  // 2026-05-25 deployed value (raised 0.10 → 0.35 → 0.5).  See
+  // l1sp_dl_tagger/docs/13-l1sp-deploy-thresh0p5.md and
+  // l1sp_dl_tagger/experiments/stage_a_pu_round4/deploy_round4.md.
+  l1sp_pd_dnn_model        = 'l1sp/pdhd/l1sp_dnn_pdhd_v1.ts',
+  l1sp_pd_dnn_device       = 'cpu',
+  l1sp_pd_dnn_concurrency  = 1,
+  l1sp_pd_dnn_threshold    = 0.5,
+  l1sp_pd_dnn_window_ticks = 256,
+  // Run DNN veto on adjacency-promoted ROIs too (default true since
+  // 2026-05-25).  Without it the heuristic-driven adjacency chain
+  // bypasses the DNN entirely.
+  l1sp_pd_adj_dnn_veto     = true,
+  // When non-empty, L1SPFilterPD writes per-ROI (waveform, scalars,
+  // score, polarity, fired) to one NPZ per operator() call so the
+  // l1sp_dl_tagger Python validator can assert score parity.
+  l1sp_pd_dnn_debug_path   = '',
+  // ── Loose-heur pre-filter overrides (DNN-chain only) ───────────────
+  // Defaults match C++ defaults (trad-chain values). Loosen these in
+  // the DNN chain because (1) DNN ROIs are typically shorter/weaker
+  // than trad ROIs for the same signal -- which fails the default
+  // pre-filters -- and (2) the DNN L1SP tagger refines downstream, so
+  // heuristic false positives are vetoed there. See
+  // l1sp_dl_tagger/experiments/stage_a_pu_round4/veto_mode_design.md
+  // Phase-B/C analysis.
+  l1sp_pd_gmax_min         = 1500.0,
+  l1sp_pd_min_length       = 30,
+  l1sp_pd_energy_frac_thr  = 0.66,
 )
 
   local tools = tools_all;
@@ -99,8 +128,18 @@ function(
                          then { use_roi_debug_mode: true, use_multi_plane_protection: true }
                          else {});
   local sp = sp_maker(params, tools, sp_override);
+  // When DNN-ROI is in the chain, sp_pipes must NOT include an
+  // L1SPFilterPD node: L1SP belongs strictly AFTER DNN-ROI, inside the
+  // l1sp_after_dnnroi envelope.  An L1SP node placed before DNN-ROI
+  // drops the SP auxiliary tags (decon_charge, loose_lf, mp2_roi,
+  // mp3_roi, tight_lf) that DNN-ROI's 6-channel input model needs, so
+  // DNN-ROI ends up fed mostly zeros and outputs zero on the U/V planes
+  // it's responsible for.  Forcing l1sp_pd_mode='' here keeps
+  // sp.make_sigproc emitting bare SP only.  When DNN-ROI is bypassed
+  // (use_dnnroi=false), fall back to the legacy mix that lets l1sp run
+  // inside sp_pipes if the caller requested it.
   local sp_pipes = [sp.make_sigproc(a,
-                                    l1sp_pd_mode=l1sp_pd_mode,
+                                    l1sp_pd_mode=if use_dnnroi then '' else l1sp_pd_mode,
                                     l1sp_pd_dump_path=l1sp_pd_dump_path,
                                     l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
                                     l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
@@ -120,10 +159,7 @@ function(
     },
   };
 
-  local dnnroi_maker =
-    if dnnroi_mode == 'pp'
-    then import 'pgrapher/experiment/pdhd/dnnroi_pp.jsonnet'
-    else import 'pgrapher/experiment/pdhd/dnnroi_mp.jsonnet';
+  local dnnroi_maker = import 'pgrapher/experiment/pdhd/dnnroi_pp.jsonnet';
   // Per-anode debug-file basename; when empty, the C++ node skips the dump.
   local _per_anode_dbg(n) =
     if dnnroi_debugfile == '' then ''
@@ -144,6 +180,19 @@ function(
   // In that mode, the top-level pipeline below uses the envelope IN PLACE
   // OF the separate sp_pipe + sp_frame_tap + dnnroi_pipe sequence.
   local l1sp_dnn_maker = import 'pgrapher/experiment/pdhd/l1sp_after_dnnroi.jsonnet';
+
+  // TorchService for the ML L1SP tagger.  Built when l1sp_pd_mode is
+  // 'dnn' OR 'hybrid' (hybrid also calls DNN, just gated by heuristic).
+  // null otherwise so the heuristic-only path doesn't pull libtorch.
+  local l1sp_torch_service = if (l1sp_pd_mode == 'dnn' || l1sp_pd_mode == 'hybrid') then {
+    type: 'TorchService',
+    name: 'l1sp_dnn_pdhd',
+    data: {
+      model:       l1sp_pd_dnn_model,
+      device:      l1sp_pd_dnn_device,
+      concurrency: l1sp_pd_dnn_concurrency,
+    },
+  } else null;
 
   local resamplers_config = import 'pgrapher/common/resamplers.jsonnet';
   local load_resamplers = resamplers_config(g, wc, tools);
@@ -186,7 +235,19 @@ function(
       then [l1sp_dnn_maker(tools.anodes[n], sp_pipes[n], dnnroi_inner_pipes[n],
                            tools, params,
                            l1sp_pd_adj_enable=l1sp_pd_adj_enable,
-                           l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops)]
+                           l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                           l1sp_pd_dump_mode=l1sp_pd_mode,
+                           l1sp_pd_dump_path=l1sp_pd_dump_path,
+                           l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
+                           l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
+                           l1sp_pd_torch_service=l1sp_torch_service,
+                           l1sp_pd_dnn_threshold=l1sp_pd_dnn_threshold,
+                           l1sp_pd_adj_dnn_veto=l1sp_pd_adj_dnn_veto,
+                           l1sp_pd_dnn_window_ticks=l1sp_pd_dnn_window_ticks,
+                           l1sp_pd_dnn_debug_path=l1sp_pd_dnn_debug_path,
+                           l1sp_pd_gmax_min=l1sp_pd_gmax_min,
+                           l1sp_pd_min_length=l1sp_pd_min_length,
+                           l1sp_pd_energy_frac_thr=l1sp_pd_energy_frac_thr)]
       else [sp_pipes[n]]
            + (if use_dnnroi then [dnnroi_inner_pipes[n]] else []);
 

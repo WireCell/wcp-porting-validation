@@ -17,6 +17,7 @@ UUID="$($CURL_BIN \
 # echo "$DJANGO_TOKEN&file=@/home/vagrant/Sites/bee/test/test.zip"
 # echo "Please redirect your browser to:"
 URL="$LOGIN_URL/set/$UUID/event/list/"
-${BROWSER:-echo} "$URL"
+echo "$URL"
+[ -n "$BROWSER" ] && [ "$BROWSER" != "echo" ] && "$BROWSER" "$URL" >/dev/null 2>&1
 
 rm $COOKIES

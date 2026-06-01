@@ -8,6 +8,29 @@ All scripts are run from `sbnd_xin/`. Each sets `WIRECELL_PATH` to include
 
 ---
 
+## Common options (every `run_*.sh`)
+
+| Option | Effect |
+|---|---|
+| `-h`, `--help` | Print the script's usage, the resolved input/work-dir scheme, and the available input sets, then exit. |
+| `-N <n>` | Event-sample size: use `input_files/input-<n>evt-<mode>/` (default `10`). E.g. `-N 100` runs the 100-event sample. Equivalent to exporting `SBND_SAMPLE=<n>`. Validated against the directories that actually exist. |
+| `[mc\|data]` | Input set (default `mc`); also sets `reality=sim/data` where relevant. |
+| *(no `<idx>`)* | List the `idx → EVT_ID` map for the chosen **sample & mode**. |
+
+**"Which directory / which event am I running?"** — run any script with `-h`
+(shows the `input_files/input-<N>evt-<mode>/` input dir and the `work/evt<EVT_ID>/`
+output scheme) and with no `<idx>` (shows the index→event map). The runtime echoes
+the resolved work dir and `EVT_ID` for each event as it runs.
+
+**Samples available:** `input-10evt-{mc,data}` and `input-100evt-{mc,data}`.
+The **`mc` 100-event set is malformed** upstream — its `frames-dnn.tar.bz2` lists
+100 `frame_dnnsp` members but only **41 unique event ids** (duplicated frames); the
+matching opflash covers exactly those 41. `load_events` dedups (first-occurrence
+order), so the `mc` 100-set resolves to **41 events**. The `data` 100-set is clean
+(100 events, 1:1 with opflash).
+
+---
+
 ## Shell scripts (pipeline order)
 
 ### `_runlib.sh`
@@ -16,9 +39,16 @@ Shared helper library sourced by every `run_*.sh` script. Provides:
 
 | Function | Description |
 |---|---|
-| `list_events` | Print the 10 idx→EVT_ID mappings; called on no-arg invocation |
+| `load_events <mode>` | Populate `SBND_EVENTS` (in archive order, **deduped**) from `$(sbnd_input_dir <mode>)/frames-dnn.tar.bz2`; keeps built-in mc list as fallback |
+| `ensure_sp_frames <mode> <evt_id> <dest>` | Extract one event's 5-member SP-frame subset from the mode archive into a fresh single-event `<dest>` (re-extracts each call) |
+| `sp_frames_archive <mode>` | Echo the mode's `frames-dnn.tar.bz2` path (sample-aware) |
+| `sbnd_input_dir <mode>` | Echo `input_files/input-${SBND_SAMPLE}evt-<mode>` (honors `-N` / `SBND_SAMPLE`, default 10) |
+| `sbnd_check_sample <mode>` | Verify the chosen sample/mode input dir exists; on failure list available sets and return 1 |
+| `sbnd_list_samples` | List the `input-<N>evt-<mode>` sets present under `input_files/` |
+| `sbnd_common_help` | Print the shared `-N` / `-h` / paths footer used by every script's `usage()` |
+| `list_events` | Print the chosen sample line + idx→EVT_ID mappings; called on no-arg invocation |
 | `lookup_evt_id <idx>` | Resolve 1-based index to event ID; error + table on bad input |
-| `discover_event_indices` | Print `1 2 … 10`; used in `all`-mode loops |
+| `discover_event_indices` | Print `1 2 … N`; used in `all`-mode loops |
 | `batch_init` | Initialise counters and `BATCH_PIDS` assoc array |
 | `batch_wait_slot` | Block until fewer than `SBND_MAX_JOBS` (default `nproc`) jobs are running |
 | `batch_drain` | Wait for all remaining background jobs |
@@ -35,17 +65,18 @@ Not invoked directly.
 for `run_select_evt.sh` / Woodpecker).
 
 ```
-Usage: ./run_sp_to_magnify_evt.sh [-s sel_tag] <idx|all> [run] [subrun]
-  (no args)  list available events
-  idx:       1-based event index (1..10)
-  all:       process all 10 events in parallel
+Usage: ./run_sp_to_magnify_evt.sh [mc|data] [-N n] [-s sel_tag] <idx|all> [run] [subrun]
+  (no args)  list available events (for the chosen sample & mode); -h for full help
+  mode:      mc (default) | data — selects input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2
+  idx:       1-based event index into the mode's event list
+  all:       process all events in parallel
   run:       run number stored in ROOT Trun tree (default 0)
   subrun:    subrun number (default 0)
   -s:        use work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2 instead of work/evt<ID>/
 ```
 
-**Input:** `input_files/2025f-mc-sp-frames.tar.bz2` (extracted to
-`work/evt<ID>/sp-frames.tar.bz2` on first call). With `-s`, reads
+**Input:** `input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2` (per-event subset
+extracted to `work/evt<ID>/sp-frames.tar.bz2`). With `-s`, reads
 `work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2`.
 
 **Output** (in `work/evt<ID>[_<SEL_TAG>]/`):
@@ -68,8 +99,9 @@ then merge the masked per-anode archives back into a combined `dnnsp`-tagged
 archive that downstream pipeline scripts consume via `-s <sel_tag>`.
 
 ```
-Usage: ./run_select_evt.sh [-a anode] <idx> <sel_tag>
-  idx:      1-based event index
+Usage: ./run_select_evt.sh [mc|data] [-N n] [-a anode] <idx> <sel_tag>
+  (no args) list available events (for the chosen sample & mode); -h for full help
+  idx:      1-based event index into the chosen sample/mode
   sel_tag:  short label for this selection (e.g. sel1, tight, track5)
   -a:       restrict to one anode (0 or 1)
 ```
@@ -99,14 +131,19 @@ Sets `MPLBACKEND=WebAgg`; prints SSH port-forward instructions.
 cluster `.npz` files.
 
 ```
-Usage: ./run_img_evt.sh [-a anode] [-s sel_tag] <idx|all>
-  (no args)  list available events
-  all:       process all 10 events in parallel
+Usage: ./run_img_evt.sh [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all>
+  (no args)  list available events (for the chosen sample & mode); -h for full help
+  mode:      mc (default) | data — selects input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2
+  all:       process all events in parallel
   -a:        restrict to one anode (0 or 1)
   -s:        use work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2
 ```
 
-**Input:** `work/evt<ID>[_<SEL_TAG>]/sp-frames.tar.bz2`
+**Input:** `input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2` — this event's
+SP-frame subset is self-extracted to `work/evt<ID>/sp-frames.tar.bz2` (fresh each
+run, so imaging tracks the current frames archive). No separate
+`run_sp_to_magnify_evt.sh` step is required. With `-s`, reads the
+Woodpecker-masked `work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2` instead.
 
 **Output** (in `work/evt<ID>[_<SEL_TAG>]/`):
 
@@ -121,7 +158,7 @@ Usage: ./run_img_evt.sh [-a anode] [-s sel_tag] <idx|all>
 
 | TLA | Type | Value |
 |---|---|---|
-| `input` | str | path to `sp-frames.tar.bz2` |
+| `input` | str | path to self-extracted `work/evt<ID>/sp-frames.tar.bz2` |
 | `anode_indices` | code | `[0,1]` or `[<N>]` with `-a` |
 | `output_dir` | str | `work/evt<ID>[_<SEL_TAG>]/` |
 
@@ -136,13 +173,18 @@ Pre-validates `.npz` files and skips anodes with no active clusters so
 `PointTreeMerging` does not stall.
 
 ```
-Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-  (no args)      list available events
-  all:           process all 10 events in parallel
+Usage: ./run_clus_evt.sh [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+  (no args)      list available events (for the chosen sample & mode); -h for full help
+  mode:          mc (default) | data — selects the event list; sets reality=sim/data
+  all:           process all events in parallel
   run / subrun:  stored in Bee RSE metadata (default 0)
   -a:            restrict to one anode; skips all-APA stage
   -s:            use work/evt<ID>_<SEL_TAG>/ as working directory
 ```
+
+The clustering graph itself is mode-agnostic (`reality` is a passthrough TLA, and
+the drift/diffusion defaults below apply to both modes); `mode` only chooses the
+event list and the `reality` flag.
 
 **Input:** `work/evt<ID>[_<SEL_TAG>]/icluster-apa{0,1}-{active,masked}.npz`
 
@@ -165,12 +207,53 @@ Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
 | `output_dir` | str | — | output directory |
 | `run` / `subrun` / `event` | code | 0 / 0 / EVT_ID | Bee RSE metadata |
 | `reality` | str | `'sim'` | `'sim'` or `'data'` |
-| `DL` | code | 6.2 | longitudinal diffusion (cm²/s) |
-| `DT` | code | 9.8 | transverse diffusion (cm²/s) |
-| `lifetime` | code | 10 | electron lifetime (ms) |
+| `DL` | code | 4.0 | longitudinal diffusion (cm²/s) |
+| `DT` | code | 8.8 | transverse diffusion (cm²/s) |
+| `lifetime` | code | 35 | electron lifetime (ms) |
 | `driftSpeed` | code | 1.565 | drift speed (mm/µs) |
 
 **Log:** `work/evt<ID>/wct_clus_evt<ID>[_a<N>].log`; in `all` mode `work/.batch_clus_evt<ID>.log`
+
+---
+
+### `run_ql_evt.sh`
+
+**Purpose:** Per-event charge–light (Q/L) matching, **self-contained**. Reads the
+toolkit's own imaging output + that event's opflash, runs per-APA clustering +
+`QLMatching` + all-APA `MultiAlgBlobClustering`, and writes one Bee zip with the
+img / clustering / 2-view dead-area / op (flash + Q/L match) layers. The recommended
+matcher driver; see also `docs/ql-chain.md` §8. (The legacy all-10 single-run variant
+is `run_clust_QL_evt.sh`.)
+
+```
+Usage: ./run_ql_evt.sh [mc|data] [-N n] [-a anode] <idx|all>
+  [mc|data]      mode (default mc); selects input_files/input-<N>evt-<mode>/
+  (no idx)       list available events for the chosen sample & mode; -h for full help
+  all:           process every event in parallel (_runlib.sh batch_*, SBND_MAX_JOBS)
+  -a:            restrict to one anode
+```
+
+**Prerequisite:** `run_img_evt.sh <idx>` first (produces the per-event
+`work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz`). Errors cleanly if missing.
+
+**Input:** `work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz` (toolkit imaging) +
+`input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz` (split per event by the driver;
+events with no opflash in the sample are skipped with a clear message).
+
+**Output:** `work/ql_evt<ID>/mabc-all-apa.zip` (one event; isolated from the
+`run_clus_evt.sh` output in `work/evt<ID>/`).
+
+**Jsonnet driven:** `wct-clus-matching-perevt.jsonnet`
+
+**TLAs forwarded:** like `run_clus_evt.sh` plus `semimodel_file` (photon model);
+Q/L drift/diffusion defaults `DL=6.2 DT=9.8 lifetime=6 driftSpeed=1.563`.
+
+**Log:** `work/ql_evt<ID>/wct_ql_evt<ID>.log`; in `all` mode `work/.batch_ql_evt<ID>.log`
+
+**Note:** both `mc` and `data` are runnable — `input-{10,100}evt-{mc,data}` all exist.
+Run `run_img_evt.sh <mode> [-N n] <idx>` first to produce the per-event imaging the
+matcher reads. On the 100-event sets, `data` is fully covered (100 events, 1:1 with
+opflash) while `mc` resolves to 41 events (duplicated frames upstream; see Common options).
 
 ---
 
@@ -180,8 +263,9 @@ Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
 anode), package as a zip, and upload to the Bee event-display server.
 
 ```
-Usage: ./run_bee_img_evt.sh [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-  (no args)  list available events
+Usage: ./run_bee_img_evt.sh [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+  (no args)  list available events (for the chosen sample & mode); -h for full help
+  mode:      mc (default) | data — selects the event list
   all:       combine all events into one upload zip and do a single Bee upload
   -a:        restrict to one anode
   -s:        use work/evt<ID>_<SEL_TAG>/ as working directory
@@ -302,8 +386,9 @@ ClusterFileSource(icluster-apa<N>-masked.npz)  ─┤ clus.per_apa(anode<N>)
 
 ### `clus.jsonnet`
 
-Defines per-face, per-APA, and all-APA clustering subgraphs.
-Imported by `wct-clustering.jsonnet`.
+Thin re-export of the canonical in-tree module
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`, which defines the per-face,
+per-APA, and all-APA clustering subgraphs.  Imported by `wct-clustering.jsonnet`.
 
 **Exposes:** `per_face(anode, face, dump)`, `per_apa(anode, dump)`,
 `all_apa(anodes, dump)`, `detector_volumes(anodes, face)`
@@ -312,8 +397,8 @@ Imported by `wct-clustering.jsonnet`.
 `pointed`, `live_dead`, `extend`, `regular`, `parallel_prolong`, `close`,
 `extend_loop`, `separate`, `connect1`, `switch_scope`, `neutrino`, `isolated`)
 
-Key locals: `time_offset = -200 us` (`clus.jsonnet:12`),
-`drift_speed = 1.56 mm/us` (`clus.jsonnet:13`).
+Key locals (in the canonical `cfg/pgrapher/experiment/sbnd/clus.jsonnet`):
+`time_offset = -205 us`, `drift_speed = 1.563 mm/us`.
 See [geometry-and-timing.md](geometry-and-timing.md).
 
 ### `magnify-sinks.jsonnet`
@@ -342,10 +427,10 @@ Geometry arguments passed to `wirecell-img bee-blobs`:
 | APA | `--x0` | `--speed` | `--t0` |
 |---|---|---|---|
 | 0 (x=-201.45 cm) | `-201.45*cm` | `-1.563*mm/us` | `200*us` |
-| 1 (x=+201.45 cm) | `201.45*cm` | `+1.563*mm/us` | `200*us` |
+| 1 (x=+201.45 cm) | `201.45*cm` | `+1.563*mm/us` | `205*us` |
 
-Note `--t0 "200*us"` is the **positive** value even though `clus.jsonnet`
-defines `time_offset = -200*us`. See [geometry-and-timing.md](geometry-and-timing.md).
+Note `--t0 "205*us"` is the **positive** value even though `clus.jsonnet`
+defines `time_offset = -205*us`. See [geometry-and-timing.md](geometry-and-timing.md).
 
 **Output:** `data/0/0-apa<N>.json` (one per anode), then `upload.zip`. Used only
 by the single-event path of `run_bee_img_evt.sh`; the `all`-mode path calls

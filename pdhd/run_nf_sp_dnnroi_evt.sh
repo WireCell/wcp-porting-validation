@@ -7,7 +7,7 @@
 #
 # Usage:
 #   ./run_nf_sp_dnnroi_evt.sh [-a anode] [-g elecGain] [-r reality]
-#                             [-D cpu|gpu] [-M model.ts] [-m pp|mp]
+#                             [-D cpu|gpu] [-M model.ts]
 #                             [-n 3|6] <run> <evt>
 #
 # Output: work/<RUN_PADDED>_<EVT>/
@@ -49,11 +49,29 @@ Options:
                  (6).  3 = legacy CP43.ts.  6-channel models bake
                  per-channel normalization into the .ts, so they run with
                  input_scale=1.
-  -m <mode>      DNN-ROI wiring mode: 'pp' (per-plane sequential, default)
-                 or 'mp' (stacked multi-plane, legacy).  Per-plane halves
-                 peak activation memory by feeding U and V to the model
-                 in two (1, 3, 800, 1500) calls instead of one stacked
-                 (1, 3, 1600, 1500) call.
+  -N <heur|dnn|hybrid>
+                 L1SP tagger flavour when -L on (default: dnn).
+                 'heur'   = legacy 5-arm asymmetry heuristic.
+                 'dnn'    = round-3+ TorchScript model
+                            (wire-cell-data/l1sp/pdhd/l1sp_dnn_pdhd_v1.ts);
+                            polarity stays heuristic.  Threshold defaults
+                            to 0.99 (p99.9 of the round-3 training
+                            corpus); override via --tla-code
+                            l1sp_pd_dnn_threshold=<x> if needed.  See
+                            l1sp_dl_tagger/experiments/stage_a_pu_round3/
+                            deploy_round3.md.
+                 'hybrid' = heuristic 5-arm gates DNN inference.  DNN
+                            only runs on heur-positive ROIs (~1% of
+                            ROIs in production), so the L1SP stage is
+                            ~5-10x faster than full 'dnn'.  Polarity
+                            from heuristic when DNN confirms (score
+                            >= threshold); 0 otherwise.  Use with
+                            --loose-heur for best recovery, and lower
+                            l1sp_pd_dnn_threshold (e.g. 0.10) since
+                            the input population is heuristic-positive,
+                            not the full ROI set.  See
+                            l1sp_dl_tagger/experiments/stage_a_pu_round4/
+                            veto_mode_design.md.
   -L <on|off>    Run L1SPFilterPD after DNN-ROI (default: on).  When on,
                  the DNN output is fed to L1SP as the signal channel and
                  raw ADC is preserved through the chain; the final frame
@@ -63,6 +81,46 @@ Options:
   -X <basename>  If set, the C++ DNN node dumps {basename}_anode{N}_call{K}.pt
                  (containing model input + output + meta) for each call.
                  Use with scripts/verify_wirecell_dnn.py in DNN_ROI_SP.
+  -T <thresh>    DNN sigmoid binarization threshold passed as
+                 --tla-code dnnroi_mask_thresh=<val>.  Default: 0.2.
+  -w <wf_dir>    Enable L1SP per-ROI waveform dump (requires -L on).  Writes
+                 one NPZ per ROI under <wf_dir>/<RUN_PADDED>_<EVT>/apa<N>_*/.
+                 Auto-enables dump-all-rois unless overridden by -A.
+  -A <on|off>    Override dump-all-rois (default: on when -w is set, off
+                 otherwise).  When on, every ROI is dumped, not just the
+                 L1SP-triggered ones.
+  -O <suffix>    Append <suffix> to the work-dir name so A/B comparison
+                 runs can live side-by-side without overwriting each
+                 other.  Default: '' (work/<RUN>_<EVT>/).  Example:
+                 '-O _noL1SP' writes to work/<RUN>_<EVT>_noL1SP/.
+  -Z <dir>       Write per-ROI L1SP-DNN debug NPZ under <dir>/.  Each
+                 anode writes one dnn_<tag>_<call>_<ident>.npz file
+                 with arrays: channel, plane, roi_start, roi_end,
+                 polarity, fired, score, wave (N,2,nbin), scalars
+                 (N,29), threshold[0], window_ticks[0].  Consumed by
+                 code/inference/diagnose_l1sp_dnn.py.  Requires
+                 -N dnn; ignored otherwise.  Relative paths resolve
+                 under the work dir.
+  -c <calib_dir> Switch L1SP to scalar calibration dump (bypass) mode
+                 AFTER DNN-ROI.  Per-event NPZ files with per-ROI
+                 heuristic features (flag_l1, flag_l1_adj, 5-arm
+                 scalars) are written to <calib_dir>/<RUN_PADDED>_<EVT>/
+                 -- mirrors run_nf_sp_evt.sh -c so the trad-chain and
+                 DNN-chain heuristic outputs can be cross-joined.
+                 Overrides -N (dump mode skips both DNN and L1SP
+                 correction; only heuristic scalars are emitted).
+  --loose-heur   Loosen heuristic pre-filters for the DNN chain:
+                   l1_gmax_min        1500 -> 300
+                   l1_min_length        30 -> 10
+                   l1_energy_frac_thr 0.66 -> 0.20
+                 The default values were tuned against trad ROI extents;
+                 DNN ROIs are typically shorter and the defaults reject
+                 valid candidates that the trad chain flags. Recover
+                 those here; let the downstream DNN L1SP refine.
+  --l1sp-thresh <val>
+                 Override the L1SP DNN sigmoid threshold (default from
+                 jsonnet: 0.9945, tuned for -N dnn). For -N hybrid use
+                 0.10 (Phase-A holdout precision/recall sweet spot).
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -83,11 +141,20 @@ DEVICE_EXPLICIT=0
 PRESET="fp32"
 MODEL=""
 MODEL_EXPLICIT=0
-MODE="pp"
 NCHAN=""
 NCHAN_EXPLICIT=0
 L1SP="on"
+L1SP_MODE="dnn"
 DEBUG_BASE=""
+MASK_THRESH="0.2"
+WF_DUMP_DIR=""
+DUMP_ALL_ROIS=""
+DUMP_ALL_EXPLICIT=0
+WORK_SUFFIX=""
+DNN_DEBUG_DIR=""
+CALIB_ROOT=""
+LOOSE_HEUR=0
+L1SP_THRESH_OVERRIDE=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -98,10 +165,18 @@ while [ $# -gt 0 ]; do
         -D) DEVICE="$2"; DEVICE_EXPLICIT=1; shift 2 ;;
         -P) PRESET="$2"; shift 2 ;;
         -M) MODEL="$2"; MODEL_EXPLICIT=1; shift 2 ;;
-        -m) MODE="$2"; shift 2 ;;
         -n) NCHAN="$2"; NCHAN_EXPLICIT=1; shift 2 ;;
         -L) L1SP="$2"; shift 2 ;;
+        -N) L1SP_MODE="$2"; shift 2 ;;
         -X) DEBUG_BASE="$2"; shift 2 ;;
+        -T) MASK_THRESH="$2"; shift 2 ;;
+        -w) WF_DUMP_DIR="$2"; shift 2 ;;
+        -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
+        -O) WORK_SUFFIX="$2"; shift 2 ;;
+        -Z) DNN_DEBUG_DIR="$2"; shift 2 ;;
+        -c) CALIB_ROOT="$2"; shift 2 ;;
+        --loose-heur) LOOSE_HEUR=1; shift ;;
+        --l1sp-thresh) L1SP_THRESH_OVERRIDE="$2"; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -130,11 +205,6 @@ if [ "$NCHAN_EXPLICIT" = "0" ]; then
     esac
 fi
 
-case "$MODE" in
-    pp|mp) ;;
-    *) echo "[err] -m must be 'pp' or 'mp' (got '$MODE')" >&2; exit 1 ;;
-esac
-
 case "$NCHAN" in
     3|6) ;;
     *) echo "[err] -n must be '3' or '6' (got '$NCHAN')" >&2; exit 1 ;;
@@ -144,6 +214,16 @@ case "$L1SP" in
     on)  L1SP_TLA="true" ;;
     off) L1SP_TLA="false" ;;
     *) echo "[err] -L must be 'on' or 'off' (got '$L1SP')" >&2; exit 1 ;;
+esac
+
+# L1SP mode TLA — empty string preserves the legacy heuristic path,
+# 'dnn' switches L1SPFilterPD to the round-2 TorchScript model.
+# Only meaningful when L1SP is on.
+case "$L1SP_MODE" in
+    heur)   L1SP_PD_MODE_TLA="" ;;
+    dnn)    L1SP_PD_MODE_TLA="dnn" ;;
+    hybrid) L1SP_PD_MODE_TLA="hybrid" ;;
+    *) echo "[err] -N must be 'heur', 'dnn', or 'hybrid' (got '$L1SP_MODE')" >&2; exit 1 ;;
 esac
 
 if [ $# -lt 2 ]; then
@@ -184,7 +264,7 @@ if ! ls "$EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >/dev/null 2>&1;
     exit 2
 fi
 
-WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}"
+WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
 mkdir -p "$WORKDIR"
 LOG="$WORKDIR/wct_nfspdnn_${RUN_PADDED}_${EVT}_a${ANODE}.log"
 TIME_LOG="$WORKDIR/time_${RUN_PADDED}_${EVT}_a${ANODE}.txt"
@@ -194,12 +274,94 @@ echo "elecGain:    ${ELEC_GAIN} mV/fC"
 echo "reality:     ${REALITY}"
 echo "device:      ${DEVICE}"
 echo "model:       ${MODEL}"
-echo "mode:        ${MODE}"
 echo "nchan:       ${NCHAN}"
 echo "L1SP:        ${L1SP}"
+echo "L1SP mode:   ${L1SP_MODE}"
+echo "mask_thresh: ${MASK_THRESH}"
+
+# L1SP dump-mode wiring (mirrors run_nf_sp_evt.sh -w):
+#   -w sets dump_mode='dump' + wf_dump_path; auto-enables dump_all_rois.
+L1SP_DUMP_TLA=()
+if [ -n "$WF_DUMP_DIR" ]; then
+    if [ "$L1SP" != "on" ]; then
+        echo "[err] -w requires -L on (L1SP must run to emit dumps)" >&2; exit 1
+    fi
+    case "$WF_DUMP_DIR" in
+        /*) WF_ABS="$WF_DUMP_DIR" ;;
+        *)  WF_ABS="$PDHD_DIR/$WF_DUMP_DIR" ;;
+    esac
+    WF_EVT_DIR="$WF_ABS/${RUN_PADDED}_${EVT}"
+    mkdir -p "$WF_EVT_DIR"
+    if [ "$DUMP_ALL_EXPLICIT" = "0" ]; then DUMP_ALL_ROIS="on"; fi
+    case "$DUMP_ALL_ROIS" in
+        on)  DUMP_ALL_TLA="true" ;;
+        off) DUMP_ALL_TLA="false" ;;
+        *)   echo "[err] -A must be 'on' or 'off'" >&2; exit 1 ;;
+    esac
+    # NB: do NOT set l1sp_pd_mode='dump' here.  Per-ROI waveform NPZ writes
+    # happen in process mode as a side effect of LASSO write-back; 'dump'
+    # mode skips the LASSO fit and writes only the calibration NPZ.  This
+    # mirrors run_nf_sp_evt.sh -w (process + waveform dump).
+    L1SP_DUMP_TLA=(--tla-str l1sp_pd_wf_dump_path="$WF_EVT_DIR" \
+                   --tla-code l1sp_pd_dump_all_rois="$DUMP_ALL_TLA")
+    echo "L1SP dump:   $WF_EVT_DIR (dump_all_rois=$DUMP_ALL_ROIS)"
+elif [ "$DUMP_ALL_EXPLICIT" = "1" ]; then
+    echo "[warn] -A given without -w; ignoring (nothing to dump)" >&2
+fi
+
 echo "Log:         $LOG"
 echo "Time log:    $TIME_LOG"
 echo "GPU CSV:     $GPU_CSV"
+
+# Loose-heur pre-filter overrides (DNN-chain only) -- see help and the
+# veto_mode_design.md Phase-C analysis.
+LOOSE_HEUR_TLA=()
+if [ "$LOOSE_HEUR" = "1" ]; then
+    LOOSE_HEUR_TLA=(--tla-code l1sp_pd_gmax_min=300.0
+                    --tla-code l1sp_pd_min_length=10
+                    --tla-code l1sp_pd_energy_frac_thr=0.20)
+    echo "Loose heur:  gmax_min=300 min_length=10 energy_frac=0.20"
+fi
+
+# L1SP DNN sigmoid threshold override (typically 0.10 for hybrid mode).
+L1SP_THRESH_TLA=()
+if [ -n "$L1SP_THRESH_OVERRIDE" ]; then
+    L1SP_THRESH_TLA=(--tla-code l1sp_pd_dnn_threshold="$L1SP_THRESH_OVERRIDE")
+    echo "L1SP DNN thr: $L1SP_THRESH_OVERRIDE (override)"
+fi
+
+# L1SP calibration scalar-dump (Phase-B veto-mode investigation):
+#   -c switches L1SPFilterPD into 'dump' mode after DNN-ROI -- heuristic
+#   features computed and emitted per ROI, no LASSO/DNN correction.
+#   Overrides -N (whether the user asked for heur or dnn L1SP).
+L1SP_CALIB_TLA=()
+if [ -n "$CALIB_ROOT" ]; then
+    case "$CALIB_ROOT" in
+        /*) CALIB_ABS="$CALIB_ROOT" ;;
+        *)  CALIB_ABS="$PDHD_DIR/$CALIB_ROOT" ;;
+    esac
+    CALIB_EVT_DIR="$CALIB_ABS/${RUN_PADDED}_${EVT}"
+    mkdir -p "$CALIB_EVT_DIR"
+    L1SP_PD_MODE_TLA="dump"
+    L1SP_CALIB_TLA=(--tla-str l1sp_pd_dump_path="$CALIB_EVT_DIR")
+    if [ -n "$WF_DUMP_DIR" ]; then
+        echo "[warn] -c (dump) overrides -w (process+waveform); waveform dump disabled." >&2
+        L1SP_DUMP_TLA=()
+    fi
+    echo "L1SP calib:  $CALIB_EVT_DIR (dump mode; -N overridden)"
+fi
+
+# Resolve L1SP-DNN per-ROI debug dir to an absolute path under WORKDIR if relative.
+L1SP_DNN_DBG_TLA=()
+if [ -n "$DNN_DEBUG_DIR" ]; then
+    case "$DNN_DEBUG_DIR" in
+        /*) DNN_DBG_ABS="$DNN_DEBUG_DIR" ;;
+        *)  DNN_DBG_ABS="$WORKDIR/$DNN_DEBUG_DIR" ;;
+    esac
+    mkdir -p "$DNN_DBG_ABS"
+    L1SP_DNN_DBG_TLA=(--tla-str l1sp_pd_dnn_debug_path="$DNN_DBG_ABS")
+    echo "L1SP-DNN debug: $DNN_DBG_ABS"
+fi
 
 # Resolve debug-dump basename to an absolute path under WORKDIR if relative.
 DBG_TLA=()
@@ -241,10 +403,16 @@ wire-cell \
     --tla-code anode_indices="[${ANODE}]" \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
-    --tla-str dnnroi_mode="${MODE}" \
     --tla-code dnnroi_nchan="${NCHAN}" \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
+    --tla-str l1sp_pd_mode="${L1SP_PD_MODE_TLA}" \
+    --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
     "${DBG_TLA[@]}" \
+    "${L1SP_DUMP_TLA[@]}" \
+    "${L1SP_DNN_DBG_TLA[@]}" \
+    "${L1SP_CALIB_TLA[@]}" \
+    "${LOOSE_HEUR_TLA[@]}" \
+    "${L1SP_THRESH_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

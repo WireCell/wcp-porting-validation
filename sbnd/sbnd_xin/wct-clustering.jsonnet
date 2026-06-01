@@ -10,8 +10,8 @@
 //     --tla-str  output_dir=work/evt2 \
 //     --tla-code run=0 --tla-code subrun=0 --tla-code event=2 \
 //     --tla-str  reality=sim \
-//     --tla-code DL=6.2 --tla-code DT=9.8 \
-//     --tla-code lifetime=10 --tla-code driftSpeed=1.565 \
+//     --tla-code DL=4.0 --tla-code DT=8.8 \
+//     --tla-code lifetime=35 --tla-code driftSpeed=1.563 \
 //     -c wct-clustering.jsonnet
 
 local g = import 'pgraph.jsonnet';
@@ -26,10 +26,10 @@ function(
     subrun        = 0,
     event         = 0,
     reality       = 'sim',
-    DL            = 6.2,
-    DT            = 9.8,
-    lifetime      = 10.0,
-    driftSpeed    = 1.565,
+    DL            = 4.0,
+    DT            = 8.8,
+    lifetime      = 35.0,
+    driftSpeed    = 1.563,
 )
     // Build params inside function so all physics values are TLAs.
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';

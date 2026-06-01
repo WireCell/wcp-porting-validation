@@ -1,7 +1,9 @@
 #!/bin/bash
-# Select a region of interest from SBND SP frames using the Woodpecker GUI.
-# Usage: ./run_select_evt.sh [-a anode] <idx> <sel_tag>
-#   idx:     1-based event index (1..10) — maps to event IDs: 2 9 11 12 14 18 31 35 41 42
+# Select a region of interest from SBND SP frames using the Woodpecker GUI.  -h for help.
+# Usage: ./run_select_evt.sh [mc|data] [-N n] [-a anode] <idx> <sel_tag>
+#   mode:    mc (default) | data — selects the event list (input-<N>evt-<mode>)
+#   -N:      event-sample size (default 10); e.g. -N 100 uses input-100evt-<mode>
+#   idx:     1-based event index into the chosen sample/mode (see no-arg listing)
 #   sel_tag: short label for this selection (e.g. sel1, tight, track5)
 #   -a:      restrict to one anode (0 or 1)
 #
@@ -23,22 +25,35 @@ set -e
 
 SBND_DIR=$(cd "$(dirname "$0")" && pwd)
 
-SBND_EVENTS=(2 9 11 12 14 18 31 35 41 42)
+. "$SBND_DIR/_runlib.sh"
 
-lookup_evt_id() {
-    local idx="$1"
-    if ! echo "$idx" | grep -qE '^[0-9]+$' || [ "$idx" -lt 1 ] || [ "$idx" -gt 10 ]; then
-        echo "ERROR: invalid event index '$idx' — must be 1..10" >&2
-        for i in "${!SBND_EVENTS[@]}"; do echo "    $((i+1)) → ${SBND_EVENTS[$i]}" >&2; done
-        exit 1
-    fi
-    echo "${SBND_EVENTS[$((idx-1))]}"
+usage() {
+    cat <<EOF
+Select a region of interest from one SBND event's SP frames (Woodpecker GUI).
+
+Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx> <sel_tag>
+       $(basename "$0") [mc|data] [-N n]            # list available events
+
+  mc|data   input set (default mc)
+  idx       1-based event index into the chosen sample/mode (see no-arg listing)
+  sel_tag   short label for this selection (e.g. sel1, tight, track5)
+  -a        restrict to one anode (0 or 1)
+
+Requires: run_sp_to_magnify_evt.sh first (work/evt<ID>/sbnd-sp-frames-anode*.tar.bz2).
+Output:   work/evt<EVT_ID>_<sel_tag>/input/  (then pass -s <sel_tag> to the pipeline)
+EOF
+    sbnd_common_help
 }
 
+MODE=mc
 ANODE=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -N) SBND_SAMPLE="$2"; shift 2 ;;
+        -N*) SBND_SAMPLE="${1#-N}"; shift ;;
+        mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         *) _args+=("$1"); shift ;;
@@ -46,16 +61,22 @@ while [ $# -gt 0 ]; do
 done
 set -- "${_args[@]}"
 
+sbnd_check_sample "$MODE" || exit 1
+load_events "$MODE" || exit 1
+
+if [ $# -eq 0 ]; then
+    list_events; exit 0
+fi
+
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-a anode] <idx> <sel_tag>" >&2
-    echo "  sel_tag: short label for this selection (e.g. sel1, tight, track5)" >&2
+    usage >&2
     exit 1
 fi
 
 IDX=$1
 SEL_TAG=$2
 
-EVT_ID=$(lookup_evt_id "$IDX")
+EVT_ID=$(lookup_evt_id "$IDX") || exit 1
 WORKDIR="$SBND_DIR/work/evt${EVT_ID}"
 
 # Find per-anode SP frame archives (produced by run_sp_to_magnify_evt.sh).

@@ -13,6 +13,10 @@ It reads the per-anode imaging clusters produced by `run_img_evt.sh`
 Bee-format `.zip` archives ready for direct upload — **no separate
 `run_bee_*` step is needed for clustering output**.
 
+Throughout this document, `clus.jsonnet` refers to the canonical in-tree
+SBND clustering module `cfg/pgrapher/experiment/sbnd/clus.jsonnet`;
+`sbnd_xin/clus.jsonnet` is now only a thin re-export of it.
+
 The stage runs in two sequential phases:
 
 1. **Per-APA (single-TPC) clustering** — for each anode: build a
@@ -66,8 +70,8 @@ wire-cell \
   --tla-str  "output_dir=${WORKDIR}" \
   --tla-code "run=${RUN}" --tla-code "subrun=${SUBRUN}" --tla-code "event=${EVT_ID}" \
   --tla-str  "reality=sim" \
-  --tla-code "DL=6.2" --tla-code "DT=9.8" \
-  --tla-code "lifetime=10" --tla-code "driftSpeed=1.565" \
+  --tla-code "DL=4.0" --tla-code "DT=8.8" \
+  --tla-code "lifetime=35" --tla-code "driftSpeed=1.563" \
   -c wct-clustering.jsonnet
 ```
 
@@ -133,8 +137,8 @@ in `clus_all_apa` (`wct-clustering.jsonnet:84-89`).
 
 ## Per-APA stage — `clus_per_face` (single-TPC clustering)
 
-Defined in `clus.jsonnet:96-176`. One pipeline per APA; uses
-`face=0` always because SBND has one face per APA (`clus.jsonnet:270`).
+Defined in `clus.jsonnet`. One pipeline per APA; uses
+`face=0` always because SBND has one face per APA (`clus.jsonnet`).
 
 ```
 ClusterFileSource(active) ──┐
@@ -143,7 +147,7 @@ ClusterFileSource(masked) ──┘   (multiplicity=2,     (10-step per-APA pipe
                                  tags=['live','dead'])
 ```
 
-### BlobSamplers (`clus.jsonnet:77-94`)
+### BlobSamplers (`clus.jsonnet`)
 
 `PointTreeBuilding` takes two sampler references that convert 2D blobs
 into 3D point clouds before clustering begins.
@@ -155,13 +159,13 @@ into 3D point clouds before clustering begins.
 
 (`BlobSampler.cxx`: Center @ line 452, Stepped @ line 703)
 
-`drift_speed = 1.56 mm/µs` and `time_offset = -200 µs` (`clus.jsonnet:12-13`)
+`drift_speed = 1.563 mm/µs` and `time_offset = -205 µs` (`clus.jsonnet`)
 drive the t→x conversion inside `bs_live_face`. These values are
 **hard-coded in `clus.jsonnet`** and are not overridden by the `driftSpeed`
 TLA — see [geometry-and-timing.md § "Drift speed"](geometry-and-timing.md)
 for the three-value discrepancy story.
 
-### `PointTreeBuilding` (`clus.jsonnet:101-112`)
+### `PointTreeBuilding` (`clus.jsonnet`)
 
 `IClusterFaninTensorSet` (multiplicity=2, tags `['live','dead']`):
 runs both samplers over the respective input ICluster sets and builds a
@@ -179,7 +183,7 @@ The tree is serialized to `ITensorSet` at `inpath/outpath: 'pointtrees/%d'`.
 `anode` and `detector_volumes` (FV bounds for `a0f0pA` or `a1f0pA`)
 are attached for downstream spatial filtering.
 
-### `MultiAlgBlobClustering` — per-APA (`clus.jsonnet:120-164`)
+### `MultiAlgBlobClustering` — per-APA (`clus.jsonnet`)
 
 **Key insight**: MABC is a single C++ `ITensorSetFilter` component
 (`MultiAlgBlobClustering.cxx:1663-1712`). Its `pipeline:` array names
@@ -188,7 +192,7 @@ over the same in-memory `Grouping`/`Cluster`/`Blob` tree — **not** as
 separate WCT pnodes. Each `cm.*(...)` call in `clus.jsonnet` produces one
 config node (`Clustering*`) that MABC loads at configure time.
 
-**Per-APA `cm_pipeline`** (`clus.jsonnet:120-131`), in execution order:
+**Per-APA `cm_pipeline`** (`clus.jsonnet`), in execution order:
 
 | # | jsonnet call | C++ class | Key params | Purpose |
 |---|---|---|---|---|
@@ -208,7 +212,7 @@ config node (`Clustering*`) that MABC loads at configure time.
 `parallel_prolong`=286, `close`=295, `extend_loop`=303,
 `separate`=312, `connect1`=321.)
 
-**Bee output** (`clus.jsonnet:154-161`): one `bee_points_sets` entry:
+**Bee output** (`clus.jsonnet`): one `bee_points_sets` entry:
 
 | `name` | `algorithm` | `coords` | `individual` |
 |---|---|---|---|
@@ -218,11 +222,37 @@ MABC writes `mabc-apa<N>-face0.zip` directly; a `TensorFileSink`
 with `dump_mode=true` follows to drain the output stream into
 `trash-apa<N>-face0.tar.gz` (discardable placeholder).
 
+### Cluster id numbering (`cluster_id_order`)
+
+Both MABC stages set **`cluster_id_order: 'tree'`** in `clus.jsonnet`.
+
+A cluster's ident is the value the Bee display uses as `cluster_id`. The
+default (unset) ident is the sentinel `-1` (`Facade_Mixins.h:115`,
+`MultiAlgBlobClustering.h:217-245`). At load, MABC calls
+`enumerate_idents()` once, numbering the loaded clusters `1..N`
+(`MultiAlgBlobClustering.cxx:1644`). After each clustering step it calls
+`enumerate_idents(cluster_id_order)` (`:1727`) — **but that is a no-op when
+`cluster_id_order` is empty** (`Facade_Grouping.cxx:127-129`). With it
+unset, clusters created mid-pipeline (e.g. by the `pointed`/Steiner step,
+which builds fresh cluster facades) never receive a valid ident and keep
+`-1`; in the Bee display they all collapse onto a single `-1` "cluster",
+hiding the true count. Setting `cluster_id_order: 'tree'` re-runs the
+renumbering after every step (insertion order, starting at 1), so every
+cluster gets a distinct non-negative id and no `-1` appears.
+
+Reference: the uBooNE full-clustering chain
+(`wcp-porting-img/wct-uboone-clustering.jsonnet`) is the analogue of this
+per-APA stage. It leaves `cluster_id_order` unset but does **not** run a
+`pointed` front-step, so its reference Bee output (`fgval/*.zip`) shows no
+`-1` (its idents are input-derived, non-sequential). SBND instead renumbers
+explicitly via `cluster_id_order: 'tree'`, which both removes `-1` and gives
+clean `1..N` ids.
+
 ---
 
 ## All-APA stage — `clus_all_apa` (multi-TPC clustering)
 
-Defined in `clus.jsonnet:178-263`.
+Defined in `clus.jsonnet`.
 
 ```
 clus_per_face[apa0] ──┐
@@ -230,7 +260,7 @@ clus_per_face[apa0] ──┐
 clus_per_face[apa1] ──┘    (multiplicity=2)     (10-step all-APA pipeline)
 ```
 
-### `PointTreeMerging` (`clus.jsonnet:180-188`)
+### `PointTreeMerging` (`clus.jsonnet`)
 
 `ITensorSetFanin` with `multiplicity=nanodes`: receives one serialized
 PC tree per APA (each already containing live+dead clusters) and concatenates
@@ -240,7 +270,7 @@ the all-APA MABC would process each TPC independently.
 
 ### Coordinate-scope switch — why two `clustering_methods` factories
 
-`clus.jsonnet:191-194` instantiates two separate factories:
+`clus.jsonnet` instantiates two separate factories:
 
 ```jsonnet
 local cm_old = clus.clustering_methods(
@@ -253,7 +283,7 @@ local cm = clus.clustering_methods(
 ```
 
 Step 1 of the pipeline is `cm_old.switch_scope()` (`ClusteringSwitchScope`),
-which applies the `PCTransformSet` (`clus.jsonnet:70-75`) to insert a
+which applies the `PCTransformSet` (`clus.jsonnet`) to insert a
 T0-corrected x coordinate `x_t0cor` into the point cloud. All subsequent
 steps use `cm.*`, which reads `x_t0cor` as the primary x axis.
 
@@ -271,9 +301,9 @@ it reads from the existing `x` scope; the subsequent `cm.*` steps must use
 the `x_t0cor` factory. Passing either factory to the wrong step produces
 silently shifted clusters.
 
-### `MultiAlgBlobClustering` — all-APA (`clus.jsonnet:195-246`)
+### `MultiAlgBlobClustering` — all-APA (`clus.jsonnet`)
 
-**All-APA `cm_pipeline`** (`clus.jsonnet:195-206`), in execution order:
+**All-APA `cm_pipeline`** (`clus.jsonnet`), in execution order:
 
 | # | jsonnet call | C++ class | Note |
 |---|---|---|---|
@@ -291,7 +321,7 @@ silently shifted clusters.
 (Source line numbers in `cfg/pgrapher/common/clus.jsonnet`:
 `switch_scope`=374, `neutrino`=365, `isolated`=338.)
 
-**Bee output** (`clus.jsonnet:226-243`): two `bee_points_sets` entries:
+**Bee output** (`clus.jsonnet`): two `bee_points_sets` entries:
 
 | `name` | `algorithm` | `coords` | `individual` | What it shows |
 |---|---|---|---|---|
@@ -320,24 +350,24 @@ Both sets cover all APAs together (no per-cluster individual files).
 
 ---
 
-## Detector-volume metadata (`clus.jsonnet:19-51`)
+## Detector-volume metadata (`clus.jsonnet`)
 
 The `DetectorVolumes` config carries fiducial-volume bounds and drift
 parameters for each stage.
 
 | Block | x range | Purpose |
 |---|---|---|
-| `overall` | −202.5..+201.45 cm | Full-detector FV for all-APA MABC |
-| `a0f0pA` | −202.5..−0.45 cm | APA0 face 0, single-APA MABC |
-| `a1f0pA` | +0.45..+201.45 cm | APA1 face 0, single-APA MABC |
+| `overall` | −201.05..+201.05 cm | Full-detector FV for all-APA MABC |
+| `a0f0pA` | −201.05..−2.5 cm | APA0 face 0, single-APA MABC |
+| `a1f0pA` | +2.5..+201.05 cm | APA1 face 0, single-APA MABC |
 
-`a0f0pA` also carries the BlobSampler physics constants (`clus.jsonnet:37-41`):
-`drift_speed=1.56 mm/µs`, `tick=0.5 µs`, `time_offset=-200 µs`,
+`a0f0pA` also carries the BlobSampler physics constants (`clus.jsonnet`):
+`drift_speed=1.563 mm/µs`, `tick=0.5 µs`, `time_offset=-205 µs`,
 `nticks_live_slice=4`. `a1f0pA` inherits these from `a0f0pA` via Jsonnet
-`+` extension and overrides only the x bounds (`clus.jsonnet:47-50`).
+`+` extension and overrides only the x bounds (`clus.jsonnet`).
 
 The overall block has per-axis margins: x ±2 cm, y ±2.5 cm, z ±3 cm
-(`clus.jsonnet:27-32`). These margins are used by clustering algorithms
+(`clus.jsonnet`). These margins are used by clustering algorithms
 to decide whether a cluster is near a detector boundary.
 
 ---
@@ -351,12 +381,12 @@ to decide whether a cluster is near a detector boundary.
 | `output_dir` | `.` | – | passed to `clus_maker(...)` | Directory for `mabc-*.zip` outputs |
 | `run` / `subrun` / `event` | 0/0/0 | – | MABC RSE fields | Stamped into Bee zip metadata |
 | `reality` | `'sim'` | – | consumed by `Clustering*` | Dead-channel treatment: `'sim'` or `'data'` |
-| `DL` | 6.2 | cm²/s | `params.lar.DL` | Longitudinal diffusion coefficient |
-| `DT` | 9.8 | cm²/s | `params.lar.DT` | Transverse diffusion coefficient |
-| `lifetime` | 10 | ms | `params.lar.lifetime` | Electron lifetime |
+| `DL` | 4.0 | cm²/s | `params.lar.DL` | Longitudinal diffusion coefficient |
+| `DT` | 8.8 | cm²/s | `params.lar.DT` | Transverse diffusion coefficient |
+| `lifetime` | 35 | ms | `params.lar.lifetime` | Electron lifetime |
 | `driftSpeed` | 1.565 | mm/µs | `params.lar.drift_speed` | Drift speed for MABC topology (not BlobSampler) |
 
-`clus.jsonnet`'s `drift_speed = 1.56 mm/µs` (line 13) is used by
+`clus.jsonnet`'s `drift_speed = 1.56 mm/µs` is used by
 `BlobSampler` for t→x in point-cloud construction and is **not** overridden
 by the `driftSpeed` TLA. The 0.3 % discrepancy produces ≈ 0.6 mm position
 error at 201 cm drift — documented in
@@ -430,8 +460,8 @@ Zips are uploaded to the Bee event display via:
   data is discarded. The resulting file is ~29 bytes. See also
   [sbnd.md § "Known gotchas"](sbnd.md).
 
-- **`face=0` hard-wired** — `clus.jsonnet:270` calls `clus_per_face` with
-  `face=0` for SBND; the `per_face` wrapper (`clus.jsonnet:266`) exists for
+- **`face=0` hard-wired** — `clus.jsonnet` calls `clus_per_face` with
+  `face=0` for SBND; the `per_face` wrapper (`clus.jsonnet`) exists for
   detectors with multiple faces but is unused in SBND.
 
 - **Two-factory `cm`/`cm_old` pattern** — the `switch_scope` step must be

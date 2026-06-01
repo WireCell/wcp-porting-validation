@@ -31,6 +31,7 @@ FORCE_INPUT_DATA=""
 INCLUDE_RAWDECON=0
 INCLUDE_DECON=0
 USE_DNNROI="off"
+WORK_SUFFIX=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -39,6 +40,7 @@ while [ $# -gt 0 ]; do
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -R) INCLUDE_RAWDECON=1; INCLUDE_DECON=1; shift ;;   # rawdecon+decon TH2 in magnify (special mode)
         -d) USE_DNNROI="$2"; shift 2 ;;
+        -O) WORK_SUFFIX="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -110,7 +112,7 @@ process_event() {
             echo "[skip] run=$RUN evt=$EVT: no event dir found under input_data/" >&2
             return 2
         fi
-        WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}"
+        WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
     fi
     echo "Event dir: $EVTDIR"
 
@@ -137,10 +139,23 @@ process_event() {
     fi
     echo "Art event number: $EVENT_NO"
 
-    # Extract the actual frame tick count (number of columns in frame_gauss0_*.npy).
+    # Extract the actual frame tick count.  Try gauss0 first (L1SP-on dnnroi /
+    # plain SP), then fall back to dnnsp0 (L1SP-off dnnroi).
     SHAPE_TMP=$(mktemp -d)
     trap 'rm -rf "$SHAPE_TMP"' RETURN
-    FRAME_NPY="frame_gauss0_${EVENT_NO}.npy"
+    USE_DNNSP=false
+    for _FTAG in "gauss0" "dnnsp0"; do
+        FRAME_NPY="frame_${_FTAG}_${EVENT_NO}.npy"
+        if tar tjf "$ANODE0_ARCHIVE" 2>/dev/null | grep -qF "$FRAME_NPY"; then
+            [ "$_FTAG" = "dnnsp0" ] && USE_DNNSP=true
+            break
+        fi
+        FRAME_NPY=""
+    done
+    if [ -z "$FRAME_NPY" ]; then
+        echo "ERROR: no frame_gauss0_* or frame_dnnsp0_* found in $ANODE0_ARCHIVE" >&2
+        return 1
+    fi
     tar xjf "$ANODE0_ARCHIVE" -C "$SHAPE_TMP" "$FRAME_NPY"
     NTICKS=$(python3 -c "
 import numpy as np
@@ -151,7 +166,7 @@ print(a.shape[1])
         echo "ERROR: could not determine nticks from $FRAME_NPY (got: '$NTICKS')" >&2
         return 1
     fi
-    echo "Frame tick count: $NTICKS"
+    echo "Frame tick count: $NTICKS (tag source: ${FRAME_NPY})"
 
     mkdir -p "$WORKDIR"
     echo "Work dir: $WORKDIR"
@@ -211,6 +226,7 @@ print(a.shape[1])
             --tla-code "subrun=${SUBRUN}" \
             --tla-code "event=${EVENT_NO}" \
             --tla-code "nticks=${NTICKS}" \
+            --tla-code "use_dnnsp=${USE_DNNSP}" \
             ${RAW_ARGS} \
             ${ORIG_ARGS} \
             ${RAWDECON_ARGS} \

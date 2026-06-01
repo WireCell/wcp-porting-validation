@@ -1,13 +1,15 @@
 #!/bin/bash
-# Convert SBND SP frames for one event to per-anode Magnify ROOT files.
-# Usage: ./run_sp_to_magnify_evt.sh [-s sel_tag] <idx|all> [run] [subrun]
-#        ./run_sp_to_magnify_evt.sh       # list available events
-#   idx:     1-based event index (1..10) — maps to event IDs: 2 9 11 12 14 18 31 35 41 42
-#   all:     process all 10 events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
+# Convert SBND SP frames for one event to per-anode Magnify ROOT files.  -h for help.
+# Usage: ./run_sp_to_magnify_evt.sh [mc|data] [-N n] [-s sel_tag] <idx|all> [run] [subrun]
+#        ./run_sp_to_magnify_evt.sh [mc|data] [-N n]   # list available events
+#   mode:    mc (default) | data — selects input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2
+#   -N:      event-sample size (default 10); e.g. -N 100 uses input-100evt-<mode>
+#   idx:     1-based event index into the chosen sample/mode; all = every event (parallel)
+#   all:     process all events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
 #   run:     run number stored in ROOT Trun tree (default 0 for MC)
 #   subrun:  subrun number (default 0)
 #   -s:      use work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2 (from run_select_evt.sh)
-# Input:   input_files/2025f-mc-sp-frames.tar.bz2  (extracted to work/evt<ID>/ on first use)
+# Input:   input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2  (per-event subset extracted on use)
 # Output:  work/evt<ID>[_<SEL_TAG>]/magnify-evt<ID>-anode{0,1}.root
 #           work/evt<ID>[_<SEL_TAG>]/sbnd-sp-frames-anode{0,1}.tar.bz2  (for run_select_evt.sh)
 
@@ -19,10 +21,33 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 
 . "$SBND_DIR/_runlib.sh"
 
+usage() {
+    cat <<EOF
+Convert one (or all) SBND event's SP frames to per-anode Magnify ROOT files.
+
+Usage: $(basename "$0") [mc|data] [-N n] [-s sel_tag] <idx|all> [run] [subrun]
+       $(basename "$0") [mc|data] [-N n]            # list available events
+
+  mc|data   input set (default mc)
+  idx       1-based event index into the chosen sample/mode (see no-arg listing);
+            'all' processes every event in parallel (cap nproc, SBND_MAX_JOBS=N)
+  run/subrun  numbers stored in the ROOT Trun tree (default 0 0)
+  -s        use work/evt<ID>_<sel_tag>/input/sp-frames.tar.bz2 (run_select_evt.sh)
+
+Output: work/evt<EVT_ID>[_<sel_tag>]/magnify-evt<ID>-anode{0,1}.root (+ sp-frames archives)
+EOF
+    sbnd_common_help
+}
+
+MODE=mc
 SEL_TAG=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -N) SBND_SAMPLE="$2"; shift 2 ;;
+        -N*) SBND_SAMPLE="${1#-N}"; shift ;;
+        mc|data) MODE="$1"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         *) _args+=("$1"); shift ;;
@@ -30,12 +55,15 @@ while [ $# -gt 0 ]; do
 done
 set -- "${_args[@]}"
 
+sbnd_check_sample "$MODE" || exit 1
+load_events "$MODE" || exit 1
+
 if [ $# -eq 0 ]; then
     list_events; exit 0
 fi
 
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 [-s sel_tag] <idx|all> [run] [subrun]" >&2
+    usage >&2
     exit 1
 fi
 
@@ -46,7 +74,7 @@ SUBRUN=${3:-0}
 process_event() {
     local IDX=$1
     local EVT_ID RUN_L SUBRUN_L WORKDIR SP_ARCHIVE
-    local SOURCE_TAR TMPDIR_EXTRACT OUTPUT_PREFIX LOG SP_FRAME_PREFIX
+    local OUTPUT_PREFIX LOG SP_FRAME_PREFIX
     EVT_ID=$(lookup_evt_id "$IDX") || return 1
     RUN_L=${RUN:-0}
     SUBRUN_L=${SUBRUN:-0}
@@ -62,23 +90,11 @@ process_event() {
     else
         WORKDIR="$SBND_DIR/work/evt${EVT_ID}"
         SP_ARCHIVE="$WORKDIR/sp-frames.tar.bz2"
-        # Extract per-event subset from shared input tarball on first use.
-        if [ ! -s "$SP_ARCHIVE" ]; then
-            SOURCE_TAR="$SBND_DIR/input_files/2025f-mc-sp-frames.tar.bz2"
-            if [ ! -s "$SOURCE_TAR" ]; then
-                echo "[skip] idx=$IDX evt=$EVT_ID: source tarball not found: $SOURCE_TAR" >&2
-                return 2
-            fi
-            echo "Extracting event $EVT_ID from $SOURCE_TAR ..."
-            mkdir -p "$WORKDIR"
-            TMPDIR_EXTRACT=$(mktemp -d /home/xqian/tmp/sbnd_extract_XXXXXX)
-            trap 'rm -rf "$TMPDIR_EXTRACT"' RETURN
-            tar -xjf "$SOURCE_TAR" -C "$TMPDIR_EXTRACT" --wildcards "*_${EVT_ID}.npy"
-            (cd "$TMPDIR_EXTRACT" && tar -cjf "$SP_ARCHIVE" *.npy)
-            echo "  → $SP_ARCHIVE"
-        else
-            echo "SP archive already exists: $SP_ARCHIVE"
-        fi
+        # Extract this event's per-event subset from the mode frames archive.
+        mkdir -p "$WORKDIR"
+        echo "Extracting event $EVT_ID from $(sp_frames_archive "$MODE") ..."
+        ensure_sp_frames "$MODE" "$EVT_ID" "$SP_ARCHIVE" || return 2
+        echo "  → $SP_ARCHIVE"
     fi
 
     mkdir -p "$WORKDIR"
