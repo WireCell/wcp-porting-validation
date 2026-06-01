@@ -67,15 +67,21 @@ coordinate scope (`common_corr_coords`).
 | 5 | `parallel_prolong(length_cut=35cm)` | `ClusteringParallelProlong` | parallel / prolonged merge |
 | 6 | `close(length_cut=1.2cm)` | `ClusteringClose` | merge adjacent clusters |
 | 7 | `extend_loop(num_try=3)` | `ClusteringExtendLoop` | iterative extension |
-| 8 | `separate(use_ctpc=true)` | `ClusteringSeparate` | split over-merged clusters |
-| 9 | `neutrino()` | `ClusteringNeutrino` | neutrino-candidate clustering pass |
-| 10 | `isolated()` | `ClusteringIsolated` | flag isolated (unconnected) clusters |
+| 8 | `examine_bundles(use_flash_t0=true)` | `ClusteringExamineBundles` | merge each flash-time group into one cluster; mark main sub-component `-1` in `("isolated","perblob")` |
 
-**Per-APA-only vs combined-only.** The shared core (`extend`, `regular×2`,
-`parallel_prolong`, `close`, `extend_loop`, `separate`) is identical. Per-APA
-additionally has `pointed`, `live_dead`, `connect1` and starts in local `x`;
-combined starts with `switch_scope` (T0 correction) and ends with `neutrino` +
-`isolated`.
+Combined steps 2–8 set `use_flash_t0=true`, so steps 2–7 only merge clusters
+coincident in matched flash time (< 80 ns), and step 8 collapses each flash group
+into one cluster — like `clustering_isolated`'s end state but grouped by flash
+time. See `clus/docs/clustering_with_t0.md`.
+
+**Per-APA-only vs combined-only.** The shared merging core (`extend`, `regular×2`,
+`parallel_prolong`, `close`, `extend_loop`) is the same family. Per-APA
+additionally has `pointed`, `live_dead`, `connect1`, the cleanup tail
+(`separate`, `deghost`, `examine_x_boundary`, `protect_overclustering`,
+`neutrino`, `isolated`, `examine_bundles`) and starts in local `x` with
+`use_flash_t0=false`. Combined starts with `switch_scope` (T0 correction), runs
+the merging core with `use_flash_t0=true`, and ends with the flash-aware
+`examine_bundles` (replacing the former `separate`/`neutrino`/`isolated` tail).
 
 ---
 
@@ -94,13 +100,14 @@ per-cluster flash scalar + `cluster_t0` back onto the point-tree.
 (`clus.jsonnet:217`), so the all-APA MABC can dump the optical Bee display.
 Helper nodes are defined in `cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet`.
 
-**The clustering algorithms themselves do not change.** Both the per-APA and
-all-APA `cm_pipeline` arrays are identical in the with-QL and without-QL chains.
-QL matching is transparent to clustering: it reads matched clusters and writes a
-scalar match + T0; it does not alter clustering topology. (The downstream
-all-APA `switch_scope` does consume the per-cluster T0 written by matching, so
-QL matching influences the *coordinates* the combined stage sees, but not the
-list of algorithms run.)
+**The combined chain is now flash-aware (requires QL).** The all-APA merging
+steps run with `use_flash_t0=true` and the tail is `examine_bundles` (T0), so the
+combined stage depends on the per-cluster `cluster_t0`/`flash` written by QL
+matching — both for the `switch_scope` coordinate correction and to restrict
+merging to flash-coincident clusters. The per-APA `cm_pipeline` is unchanged and
+runs with `use_flash_t0=false` (bit-identical with or without QL). Without QL,
+the all-APA clusters carry no flash, so `assign_flash_t0_groups` gives every
+cluster a unique singleton group and no flash-gated merge happens.
 
 ---
 
@@ -155,13 +162,23 @@ bundle each blob belongs to and which bundle is the main one; it never calls
 `live_grouping.separate()`. The actual split into separate `Cluster` objects is
 left to the `isolated()` step.
 
+**`use_flash_t0=true` (combined stage).** A merge **pre-step** runs first:
+clusters are grouped by matched flash time (`assign_flash_t0_groups`) and each
+group is merged into one cluster (`merge_clusters`) before the labeling loop
+above runs. So in the combined stage `examine_bundles` *does* change topology
+(it merges flash-coincident clusters), then labels the merged cluster's bundles
+as usual. With `use_flash_t0=false` (per-APA) the pre-step is skipped and the
+behavior is exactly the labeling-only pass described above.
+
 ### 4c. Does `examine_bundles` use the light/flash signal?
 
-**No.** `examine_bundles` is purely **charge-based geometry**. It calls
-`Cluster::connected_blobs()`, which builds a wire-overlap connectivity graph and
-returns connected components; there are no references to flash / opflash /
-optical / PE / light anywhere in `clustering_examine_bundles.cxx`. The "bundles"
-in the name are blob (charge) bundles, not optical bundles.
+**Per-APA (`use_flash_t0=false`): no.** It is purely **charge-based geometry** —
+`Cluster::connected_blobs()` builds a wire-overlap connectivity graph; there is
+no flash/PE/light in the labeling path. The "bundles" in the name are blob
+(charge) bundles, not optical bundles. **Combined (`use_flash_t0=true`): yes,
+indirectly** — the merge pre-step groups clusters by the matched-flash time
+(`cluster_t0`) that QL matching wrote, so flash coincidence (not PE/geometry)
+decides which clusters merge.
 
 Contrast with `retile`, which **is** flash-gated: `retile_cluster.cxx:559-564`
 skips any cluster without a matched `get_flash()` or whose flash time falls
