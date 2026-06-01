@@ -351,21 +351,25 @@ as an overlay on `simparams.lar`:
 `clustering_separate` (its `JudgeSeparateDec_2` boundary/exit test) and
 `clustering_neutrino` choose their fiducial-volume bounds to match the **scope** of the
 clustering pass, via the shared helper `select_scope_fv` (`clus/src/clustering_separate.cxx`,
-declared in `clus/inc/WireCellClus/ClusteringFuncs.h`). The scope is read from the
-face-level wire-plane ids present in the grouping (`Grouping::wpids()`):
+declared in `clus/inc/WireCellClus/ClusteringFuncs.h`). The scope is read from the dv's
+**configured** drift volumes (`dv->wpident_faces()`) — i.e. which APAs/faces the
+`DetectorVolumes` node was built for — **not** from which TPCs happen to have live activity
+in a given event. This matters: an all-APA event with charge in only one TPC must still use
+the cryostat FV, which a live-activity (`Grouping::wpids()`) check would get wrong.
 
-| Pass | `wpids()` (SBND) | FV used | x-range |
+| Pass | configured volumes (SBND) | FV used | x-range |
 |---|---|---|---|
 | per-APA TPC0 | `{a0f0pA}` (1 APA) | that drift volume's FV | `[-201.05, -2.5]` cm |
 | per-APA TPC1 | `{a1f0pA}` (1 APA) | that drift volume's FV | `[2.5, 201.05]` cm |
 | all-APA | `{a0f0pA, a1f0pA}` (>1 APA) | `overall` cryostat envelope | `[-201.05, 201.05]` cm |
 
-Rules: **>1 APA (or empty) → `overall`** (cryostat); this reproduces the legacy
-`dv->metadata(WirePlaneId(0))` reads bit-for-bit, so all-APA behavior is unchanged.
-**Single APA → the union (outermost envelope) of that APA's present per-`(APA,face)`
-blocks** (for a single-face APA like SBND, just that one block). Any field missing from a
-per-face block falls back to `overall`; `vertical_dir`/`beam_dir` are detector-global and
-always come from `overall`.
+Rules: **>1 configured APA (or none) → `overall`** (cryostat); this reproduces the legacy
+`dv->metadata(WirePlaneId(0))` reads bit-for-bit, so all-APA behavior is unchanged
+regardless of per-event activity. **Single configured APA → the union (outermost envelope)
+of that APA's configured per-`(APA,face)` blocks** (for a single-face APA like SBND, just
+that one block; for a multi-face APA, the full APA even if a face is quiet). Any field
+missing from a per-face block falls back to `overall`; `vertical_dir`/`beam_dir` are
+detector-global and always come from `overall`.
 
 This reverses the previous "always cryostat" convention: in a per-APA pass, "exiting"
 now means leaving the **clustered drift volume**, which is the physically correct notion
