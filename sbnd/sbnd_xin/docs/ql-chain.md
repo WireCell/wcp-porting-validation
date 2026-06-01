@@ -78,6 +78,25 @@ no longer writes any BEE JSON itself, and there is no `data-sep/` tree and no
 to a throwaway `TensorFileSink` (`trash-all-apa.tar.gz`); the deliverable is the
 BEE zip.
 
+**Flash→multi-cluster and original cluster ids in the display.** Two SBND-only
+display refinements (both off by default elsewhere, so other detectors are
+bit-identical):
+- `op` layer — with `bee_flash_per_flash: true` the MABC emits **one row per
+  flash** carrying **all** matched cluster ids in `op_cluster_ids` (the predicted
+  light `op_pes_pred` is the element-wise sum over the matched clusters), instead
+  of one row per `(flash, cluster)`. So a flash matched to several clusters shows
+  them together (MicroBooNE-style); the viewer already reads `op_cluster_ids` as
+  an array. (Cluster ids here still index `img-global`, as before.)
+- `clustering-global` layer — the final flash-time merge (`examine_bundles`,
+  `use_flash_t0`) collapses a flash group (main + associated clusters) into one
+  cluster with one `cluster_id`. It now also stores, per blob, each member's
+  **original (pre-merge) ident** in a `real_cluster_id`/`perblob` array; the Bee
+  writer puts that into the per-point `real_cluster_id`, which the viewer uses for
+  coloring (falling back to `cluster_id` when absent). So the far-apart members of
+  a merged flash group paint with **distinct colors** while `cluster_id` stays the
+  merged-group id used for the `op` association. Spatial merges (extend/regular/
+  close) earlier in the all-APA stage are unaffected — they stay one object.
+
 **Dead area is generated in-toolkit, on the dead side — not by QLMatching.** The
 active clusters feed PointTreeBuilding port 0 → the `/live` pctree (what QLMatching
 matches to flashes); the in-graph masked imaging feeds port 1 → the `/dead` pctree

@@ -35,13 +35,15 @@ The matcher writes both quantities to the Bee optical JSON `<n>-op.json`
 | `op_t`           | flash time (µs)                                        |
 | `op_peTotal`     | total measured PE                                      |
 | `op_pes[312]`    | measured PE per optical channel                        |
-| `op_pes_pred[312]`| predicted PE per channel (filled only for **matched** flashes, only on the active PMT channels of that flash's TPC side) |
-| `op_cluster_ids` | matched cluster ids (**empty ⇒ unmatched flash**)      |
+| `op_pes_pred[312]`| predicted PE per channel (filled only for **matched** flashes, only on the active PMT channels of that flash's TPC side; with `bee_flash_per_flash` it is the element-wise sum over the flash's matched clusters) |
+| `op_cluster_ids` | matched cluster ids (**empty ⇒ unmatched flash**); with `bee_flash_per_flash` (SBND all-APA) this is the full set of clusters matched to the flash, one flash per row |
 | `apa`            | "0"/"1", the flash's TPC side                          |
 
 A **matched bundle** is a row with non-empty `op_cluster_ids` (so `op_pes_pred`
 is filled). This run: **186 matched bundles (MC), 130 (data)** across 10 events
-each.
+each. (These counts predate `bee_flash_per_flash`, which collapses a flash's
+several matched-cluster rows into one row — the matched-flash count is lower, the
+matched-cluster total unchanged.)
 
 The 10 events are labelled by directory index 0..9, which maps in streaming
 order to the real event ids — MC: `2, 9, 11, 12, 14, 18, 31, 35, 41, 42`;
