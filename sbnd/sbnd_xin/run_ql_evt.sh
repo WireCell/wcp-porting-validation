@@ -1,23 +1,26 @@
 #!/bin/bash
-# Per-event SBND charge-light (Q/L) matching — standalone, self-contained.
-# Usage: ./run_ql_evt.sh [mc|data] <idx|all> [-a anode]
-#        ./run_ql_evt.sh [mc|data]            # list available events
+# Per-event SBND charge-light (Q/L) matching — standalone, self-contained.  -h for help.
+# Usage: ./run_ql_evt.sh [mc|data] [-N n] <idx|all> [-a anode]
+#        ./run_ql_evt.sh [mc|data] [-N n]            # list available events
 #   mode:  mc (default) | data
-#   idx:   1-based event index into the mode's event list; all = every event (parallel)
+#   -N:    event-sample size (default 10); e.g. -N 100 uses input-100evt-<mode>
+#   idx:   1-based event index into the chosen sample/mode; all = every event (parallel)
 #   -a:    restrict to one anode (0 or 1)
 #
 # Self-contained: reads the toolkit's OWN per-event imaging output
 #   work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz   (from ./run_img_evt.sh)
-# plus that event's opflash (split from input_files/input-10evt-<mode>/), runs
+# plus that event's opflash (split from input_files/input-<N>evt-<mode>/), runs
 # per-APA clustering + Q/L matching, and writes work/ql_evt<ID>/mabc-all-apa.zip
 # (img + clustering + 2-view dead-area + op/Q-L layers).
 #
-# Prerequisite:  ./run_img_evt.sh <mode> <idx>   (produces the per-event active+masked npz)
+# Prerequisite:  ./run_img_evt.sh <mode> [-N n] <idx>  (produces the per-event active+masked npz)
 # Workflow:      run_img_evt.sh <mode>  ->  run_ql_evt.sh <mode>
 #
 # Both mc and data are wired: per-event imaging comes from
-# input_files/input-10evt-<mode>/frames-dnn.tar.bz2 via run_img_evt.sh, and the
-# opflash is split from input_files/input-10evt-<mode>/opflash_apa{0,1}.tar.gz.
+# input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2 via run_img_evt.sh, and the
+# opflash is split from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz.
+# NB: opflash members are keyed by event id, so an event lacking opflash in the
+# sample (e.g. parts of the 100evt set) is skipped with a clear message.
 
 set -e
 
@@ -32,12 +35,35 @@ JSONNET="$SBND_DIR/wct-clus-matching-perevt.jsonnet"
 # Q/L drift / diffusion (documented values; same as run_clust_QL_evt.sh).
 DL=6.2; DT=9.8; LIFETIME=6; DRIFTSPEED=1.563
 
+usage() {
+    cat <<EOF
+Per-event SBND charge-light (Q/L) matching — standalone, self-contained.
+
+Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
+       $(basename "$0") [mc|data] [-N n]            # list available events
+
+  mc|data   input set (default mc)
+  idx       1-based event index into the chosen sample/mode (see no-arg listing);
+            'all' matches every event in parallel (cap nproc, SBND_MAX_JOBS=N)
+  -a        restrict to one anode (0 or 1)
+
+Requires: run_img_evt.sh first (work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz).
+Opflash comes from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz (keyed
+by event id; events with no opflash in the sample are skipped).
+Output: work/ql_evt<EVT_ID>/mabc-all-apa.zip
+EOF
+    sbnd_common_help
+}
+
 # --- Args ---
 MODE=mc
 ANODE=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -N) SBND_SAMPLE="$2"; shift 2 ;;
+        -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
@@ -51,25 +77,18 @@ case "$MODE" in
     data) REALITY=data ;;
 esac
 
-INPUT_DIR="$SBND_DIR/input_files/input-10evt-$MODE"
-[ -d "$INPUT_DIR" ] || { echo "ERROR: missing input dir: $INPUT_DIR" >&2; exit 1; }
+sbnd_check_sample "$MODE" || exit 1
+INPUT_DIR=$(sbnd_input_dir "$MODE")
 [ -f "$JSONNET" ]   || { echo "ERROR: missing jsonnet: $JSONNET" >&2; exit 1; }
 
-# Event-id list/order, derived from the mode's active npz (mode-agnostic; same
-# order ClusterFileSource streams, so idx is stable).
-mapfile -t EVENT_IDS < <(python3 -c "
-import numpy as np, re
-z = np.load('$INPUT_DIR/icluster-apa0-active.npz')
-seen = []
-for k in z.files:
-    m = re.match(r'cluster_(\d+)_', k)
-    if m and m.group(1) not in seen:
-        seen.append(m.group(1))
-print('\n'.join(seen))
-")
-[ "${#EVENT_IDS[@]}" -gt 0 ] || { echo "ERROR: no events in $INPUT_DIR/icluster-apa0-active.npz" >&2; exit 1; }
+# Event-id list/order from the mode's frames-dnn archive (mode- and
+# sample-agnostic; same order downstream pipelines stream events, so idx is
+# stable).  The 100evt-mc set carries duplicate frames; load_events dedups.
+load_events "$MODE" || exit 1
+EVENT_IDS=("${SBND_EVENTS[@]}")
 
 if [ $# -eq 0 ]; then
+    echo "Sample: input-${SBND_SAMPLE}evt-$MODE   (${#EVENT_IDS[@]} events)"
     echo "Events for mode '$MODE' (idx -> EVT_ID):"
     for i in "${!EVENT_IDS[@]}"; do printf "  %2d -> %s\n" $((i + 1)) "${EVENT_IDS[$i]}"; done
     exit 0
@@ -111,6 +130,12 @@ process_event() {
     for n in 0 1; do
         local src="$INPUT_DIR/opflash_apa${n}.tar.gz"
         [ -s "$src" ] || { echo "ERROR: missing opflash: $src" >&2; return 1; }
+        # Skip events that have no opflash in this sample (e.g. parts of the
+        # 100evt set): without flashes Q/L matching cannot run.
+        if ! tar tzf "$src" | grep -q "^opflash_tensorset_${EVT_ID}_"; then
+            echo "[skip] evt $EVT_ID: no opflash for apa${n} in $(basename "$src")" >&2
+            return 2
+        fi
         local stage="$QLDIR/.opflash_stage_apa${n}"
         mkdir -p "$stage"
         tar xzf "$src" -C "$stage" --wildcards "opflash_tensorset_${EVT_ID}_*" "opflash_tensor_${EVT_ID}_*"

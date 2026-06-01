@@ -1,13 +1,14 @@
 #!/bin/bash
-# Run 3D imaging for one SBND event — standalone (no LArSoft).
-# Usage: ./run_img_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all>
-#        ./run_img_evt.sh [mc|data]       # list available events
-#   mode:  mc (default) | data — selects input_files/input-10evt-<mode>/frames-dnn.tar.bz2
-#   idx:   1-based event index into the mode's event list; all = every event (parallel)
+# Run 3D imaging for one SBND event — standalone (no LArSoft).  Run with -h for help.
+# Usage: ./run_img_evt.sh [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all>
+#        ./run_img_evt.sh [mc|data] [-N n]   # list available events
+#   mode:  mc (default) | data — selects input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2
+#   -N:    event-sample size (default 10); e.g. -N 100 uses input-100evt-<mode>
+#   idx:   1-based event index into the chosen sample/mode; all = every event (parallel)
 #   all:   process all events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
 #   -a:    restrict to one anode (0 or 1); default processes both
 #   -s:    use work/evt<ID>_<SEL_TAG>/input/sp-frames.tar.bz2 (from run_select_evt.sh)
-# Input:  input_files/input-10evt-<mode>/frames-dnn.tar.bz2 (per-event subset extracted on use)
+# Input:  input_files/input-<N>evt-<mode>/frames-dnn.tar.bz2 (per-event subset extracted on use)
 # Output: work/evt<ID>[_<SEL_TAG>]/icluster-apa{0,1}-{active,masked}.npz
 
 set -e
@@ -18,12 +19,33 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 
 . "$SBND_DIR/_runlib.sh"
 
+usage() {
+    cat <<EOF
+Run 3D imaging for one (or all) SBND event(s) — standalone, no LArSoft.
+
+Usage: $(basename "$0") [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all>
+       $(basename "$0") [mc|data] [-N n]            # list available events
+
+  mc|data   input set (default mc)
+  idx       1-based event index into the chosen sample/mode (see no-arg listing);
+            'all' images every event in parallel (cap nproc, override SBND_MAX_JOBS=N)
+  -a        restrict to one anode (0 or 1); default both
+  -s        use a selection from run_select_evt.sh (work/evt<ID>_<tag>/input/)
+
+Output: work/evt<EVT_ID>[_<sel_tag>]/icluster-apa{0,1}-{active,masked}.npz
+EOF
+    sbnd_common_help
+}
+
 MODE=mc
 ANODE=""
 SEL_TAG=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -N) SBND_SAMPLE="$2"; shift 2 ;;
+        -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
@@ -34,6 +56,7 @@ while [ $# -gt 0 ]; do
 done
 set -- "${_args[@]}"
 
+sbnd_check_sample "$MODE" || exit 1
 load_events "$MODE" || exit 1
 
 if [ $# -eq 0 ]; then

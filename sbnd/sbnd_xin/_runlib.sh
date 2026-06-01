@@ -7,9 +7,55 @@
 # list from the mode's frames-dnn.tar.bz2 (so data ids 659242… are picked up).
 SBND_EVENTS=(2 9 11 12 14 18 31 35 41 42)
 
-# Mode (mc|data) → the per-event SP-frame source archive provided upstream.
+# Event-sample size: selects the input set input_files/input-<N>evt-<mode>/.
+# Default 10.  Override per-run with the -N <n> flag (each script sets
+# SBND_SAMPLE before calling load_events) or by exporting SBND_SAMPLE=<n>.
+: "${SBND_SAMPLE:=10}"
+
+# input_files directory for a given mode, honoring SBND_SAMPLE.
+sbnd_input_dir() {
+    echo "$SBND_DIR/input_files/input-${SBND_SAMPLE}evt-${1}"
+}
+
+# List the input sets that actually exist under input_files/.
+sbnd_list_samples() {
+    echo "Available input sets (input-<N>evt-<mode>):"
+    local d found=0
+    for d in "$SBND_DIR"/input_files/input-*evt-*/; do
+        [ -d "$d" ] || continue
+        found=1; printf '  %s\n' "$(basename "$d")"
+    done
+    [ "$found" -eq 0 ] && echo "  (none found under $SBND_DIR/input_files)"
+}
+
+# Verify the chosen sample/mode input dir exists; on failure list what is there.
+sbnd_check_sample() {
+    local dir; dir=$(sbnd_input_dir "${1:-mc}")
+    [ -d "$dir" ] && return 0
+    echo "ERROR: no input set for sample=${SBND_SAMPLE} mode=${1:-mc}: $dir" >&2
+    sbnd_list_samples >&2
+    return 1
+}
+
+# Common '-h' footer shared by every run_*.sh script.
+sbnd_common_help() {
+    local sets
+    sets=$(ls -d "$SBND_DIR"/input_files/input-*evt-* 2>/dev/null | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
+    cat <<EOF
+Common options:
+  -N <n>     event-sample size: use input_files/input-<n>evt-<mode>/ (default 10).
+             Available sets: ${sets:-<none found>}
+  -h         show this help and exit.
+
+Run with no <idx> to list the idx -> event-ID map for the chosen sample & mode.
+Paths:  input  = input_files/input-<N>evt-<mode>/        (frames + opflash)
+        work   = work/evt<EVT_ID>/   (per event)         work/ql_<mode>/ (bundled)
+EOF
+}
+
+# Mode (mc|data) → the per-event SP-frame source archive (sample-aware).
 sp_frames_archive() {
-    echo "$SBND_DIR/input_files/input-10evt-${1}/frames-dnn.tar.bz2"
+    echo "$(sbnd_input_dir "$1")/frames-dnn.tar.bz2"
 }
 
 # Populate SBND_EVENTS (in archive order) from the mode's frames-dnn archive.
@@ -18,7 +64,10 @@ load_events() {
     local mode="${1:-mc}" archive
     archive=$(sp_frames_archive "$mode")
     if [ -s "$archive" ]; then
-        mapfile -t SBND_EVENTS < <(tar tjf "$archive" | sed -n 's/^frame_dnnsp_\([0-9][0-9]*\)\.npy$/\1/p')
+        # Dedup preserving first-occurrence order: some samples (e.g. the mc
+        # 100-event set) carry duplicate frame_dnnsp_<id> members; the index map
+        # must list each event once.
+        mapfile -t SBND_EVENTS < <(tar tjf "$archive" | sed -n 's/^frame_dnnsp_\([0-9][0-9]*\)\.npy$/\1/p' | awk '!seen[$0]++')
     fi
     [ "${#SBND_EVENTS[@]}" -gt 0 ] || {
         echo "ERROR: no events found for mode '$mode' ($archive)" >&2; return 1; }
@@ -40,6 +89,7 @@ ensure_sp_frames() {
 # Print the idx→EVT_ID mappings.  Called when the invoking script
 # receives no positional arguments.
 list_events() {
+    echo "Sample: input-${SBND_SAMPLE}evt-<mode>   (${#SBND_EVENTS[@]} events)"
     echo "Available SBND events (1-based index → event ID):"
     for i in "${!SBND_EVENTS[@]}"; do
         printf '  idx %-3d → evt %d\n' "$((i+1))" "${SBND_EVENTS[$i]}"

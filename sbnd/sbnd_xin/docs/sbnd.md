@@ -7,17 +7,36 @@
 
 ## Common conventions
 
-Every `run_*.sh` script (except `run_select_evt.sh`, which is interactive)
-shares three ergonomic features provided by `_runlib.sh`:
+Every `run_*.sh` script shares a set of ergonomic features provided by
+`_runlib.sh`:
 
-**No-arg listing** — run any script with no arguments to list all valid events:
+**`-h` / `--help`** — every script prints its usage, the resolved input/work-dir
+scheme, and the available input sets:
 ```bash
-./run_img_evt.sh
+./run_img_evt.sh -h
+```
+
+**`-N <n>` sample size** — choose which input set to run:
+`input_files/input-<n>evt-<mode>/` (default `10`). Equivalent to exporting
+`SBND_SAMPLE=<n>`. Available sets: `input-{10,100}evt-{mc,data}`.
+```bash
+./run_img_evt.sh mc -N 100 all     # image all events of the 100-event mc sample
+./run_ql_evt.sh  data -N 100 1     # Q/L-match idx 1 of the 100-event data sample
+```
+> The **mc 100-event set is malformed upstream**: 100 frame members but only 41
+> unique event ids (duplicated frames). `load_events` dedups, so it resolves to
+> 41 events. The **data 100-event set is clean** (100 events, 1:1 with opflash).
+
+**No-arg listing** — run any script with no `<idx>` to list valid events for the
+chosen sample & mode:
+```bash
+./run_img_evt.sh           # default 10evt mc
+# Sample: input-10evt-<mode>   (10 events)
 # Available SBND events (1-based index → event ID):
 #   idx 1   → evt 2
-#   idx 2   → evt 9
 #   ...
 #   idx 10  → evt 42
+./run_img_evt.sh data -N 100   # lists the 100 data events
 ```
 
 **`IDX=all` parallel mode** — pass `all` as the event index to process every
@@ -95,13 +114,15 @@ are **mode-aware** (`mc` | `data`); each mode has its own master multi-event
 tarball provided upstream:
 
 ```
-input_files/input-10evt-mc/frames-dnn.tar.bz2     # mc   events 2 9 11 12 14 18 31 35 41 42
-input_files/input-10evt-data/frames-dnn.tar.bz2   # data events 659242 … 660892
+input_files/input-10evt-mc/frames-dnn.tar.bz2      # mc   10-event set: 2 9 11 12 14 18 31 35 41 42
+input_files/input-10evt-data/frames-dnn.tar.bz2    # data 10-event set: 659242 … 660892
+input_files/input-100evt-mc/frames-dnn.tar.bz2     # mc   100-event set → 41 unique (duplicated upstream)
+input_files/input-100evt-data/frames-dnn.tar.bz2   # data 100-event set: 100 events, clean
 ```
 
-Pass `mc` (default) or `data` as the first argument to `run_sp_to_magnify_evt.sh`,
-`run_img_evt.sh`, and `run_clus_evt.sh`; the event list is derived from the chosen
-archive (`run_*.sh <mode>` with no index lists it). MC and data event IDs are
+Pass `mc` (default) or `data` as the first argument, and `-N <n>` to choose the
+sample size (default 10; e.g. `-N 100`); the event list is derived from the chosen
+archive (`run_*.sh <mode> [-N n]` with no index lists it). MC and data event IDs are
 disjoint, so `work/evt<ID>/` never collides between modes. (The legacy
 `input_files/2025f-mc-sp-frames.tar.bz2` is no longer referenced.)
 

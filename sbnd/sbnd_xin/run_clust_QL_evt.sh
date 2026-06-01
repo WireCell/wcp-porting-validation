@@ -2,23 +2,26 @@
 # Standalone SBND charge-light (Q/L) matching chain — no LArSoft.
 # Reproduces yuhw's wct-clus-matching-standalone.jsonnet run + BEE packaging.
 #
-# All-10 quick-run: one wire-cell call over a 10-event SP-frame bundle.  Both the
-# live (active) AND dead (masked) clusters are toolkit-imaged here: this script
-# first runs wct-img-all.jsonnet on the assembled bundle to (re)produce the active
-# npz (multi-3view + full_deghost, including the 2-view-active branches that fill
-# W-plane dead-channel gaps), then the matching graph images the dead view in-graph
-# from the same bundle.  Only the opflash archives stay yuhw's (the light-matching
-# reference).  For per-event work prefer ./run_ql_evt.sh (parallelizable).
+# Bundled all-events quick-run (-h for help): one wire-cell call over the whole
+# SP-frame bundle.  Both the live (active) AND dead (masked) clusters are
+# toolkit-imaged here: this script first runs wct-img-all.jsonnet on the assembled
+# bundle to (re)produce the active npz (multi-3view + full_deghost, including the
+# 2-view-active branches that fill W-plane dead-channel gaps), then the matching
+# graph images the dead view in-graph from the same bundle.  Only the opflash
+# archives stay yuhw's (the light-matching reference).  For per-event work prefer
+# ./run_ql_evt.sh (parallelizable).
 #
-# Usage: ./run_clust_QL_evt.sh [mc|data] [--upload]
-#   mc   (default): input-10evt-mc,   reality=sim
-#   data:           input-10evt-data, reality=data
+# Usage: ./run_clust_QL_evt.sh [mc|data] [-N n] [--upload]
+#   mc   (default): input-<N>evt-mc,   reality=sim
+#   data:           input-<N>evt-data, reality=data
+#   -N:             event-sample size (default 10); e.g. -N 100 uses input-100evt-<mode>
 #   --upload:       also upload combined.zip to the BNL BEE server
 #                   (default: build combined.zip only, no network)
 #
-# Input  (read-only, yuhw's): input_files/input-10evt-<mode>/
-#          icluster-apa0-active.npz  (event-order reference only)
-#          opflash_apa{0,1}.tar.gz   (light-matching reference)
+# Prerequisite: per-event SP frames work/evt<ID>/sp-frames.tar.bz2 for every event
+#   in the sample (run ./run_sp_to_magnify_evt.sh <mode> [-N n] all first).
+# Input  (read-only): input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz
+#                     (light-matching reference; event list comes from frames-dnn).
 # Output (writable):          work/ql_<mode>/
 #          mabc.zip           (one shared self-contained BEE zip: per event the
 #          per-APA clustering views, the all-APA img/clustering charge layers,
@@ -33,6 +36,26 @@ WCP_DIR=$(cd "$SBND_DIR/.." && pwd)                 # wcp-porting-img/sbnd
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BASE}/wire-cell-data/sbnd/photodet:${WIRECELL_PATH}
+
+. "$SBND_DIR/_runlib.sh"
+
+usage() {
+    cat <<EOF
+Bundled SBND charge-light (Q/L) matching over a whole event sample — no LArSoft.
+
+Usage: $(basename "$0") [mc|data] [-N n] [--upload]
+
+  mc|data   input set (default mc; sets reality sim/data)
+  --upload  upload the resulting mabc.zip to the BNL BEE server (default: build only)
+
+Both live and dead clusters are toolkit-imaged from the assembled SP-frame bundle
+(wct-img-all.jsonnet); opflash stays the light-matching reference.
+Prerequisite: work/evt<ID>/sp-frames.tar.bz2 for every event in the sample
+  (run ./run_sp_to_magnify_evt.sh <mode> [-N n] all first).
+Output: work/ql_<mode>/mabc.zip
+EOF
+    sbnd_common_help
+}
 
 # --- Drift / lar params (documented sim values for this jsonnet; edit as needed) ---
 # NOTE: drift_speed is NOT passed here; it comes from the common SBND config
@@ -52,11 +75,14 @@ BEE_UPLOADER="$WCP_DIR/upload-to-bee.sh"
 # --- Args ---
 MODE=mc
 DO_UPLOAD=0
-for arg in "$@"; do
-    case "$arg" in
-        mc|data) MODE="$arg" ;;
-        --upload) DO_UPLOAD=1 ;;
-        *) echo "ERROR: unknown argument '$arg' (use: [mc|data] [--upload])" >&2; exit 1 ;;
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -N) SBND_SAMPLE="$2"; shift 2 ;;
+        -N*) SBND_SAMPLE="${1#-N}"; shift ;;
+        mc|data) MODE="$1"; shift ;;
+        --upload) DO_UPLOAD=1; shift ;;
+        *) echo "ERROR: unknown argument '$1' (use: [mc|data] [-N n] [--upload]; -h for help)" >&2; exit 1 ;;
     esac
 done
 
@@ -65,7 +91,8 @@ case "$MODE" in
     data) REALITY=data ;;
 esac
 
-INPUT_DIR="$SBND_DIR/input_files/input-10evt-$MODE"
+sbnd_check_sample "$MODE" || exit 1
+INPUT_DIR=$(sbnd_input_dir "$MODE")
 WORKDIR="$SBND_DIR/work/ql_$MODE"
 LOG="$WORKDIR/wct_clus_QL_$MODE.log"
 
@@ -104,17 +131,12 @@ done
 # work/evt<ID>/sp-frames.tar.bz2 (each member uniquely suffixed by event id) in
 # the SAME event order the active-cluster npz streams them, so PointTreeBuilding
 # pairs /live (active) and /dead (imaged) by event.
-FRAMES="sp-frames-10evt.tar.bz2"
-EVENT_IDS=$(python3 -c "
-import numpy as np, re, sys
-z = np.load('$INPUT_DIR/icluster-apa0-active.npz')
-seen = []
-for k in z.files:
-    m = re.match(r'cluster_(\d+)_', k)
-    if m and m.group(1) not in seen:
-        seen.append(m.group(1))
-print(' '.join(seen))
-") || { echo "ERROR: could not read event order from $INPUT_DIR/icluster-apa0-active.npz" >&2; exit 1; }
+FRAMES="sp-frames-${SBND_SAMPLE}evt.tar.bz2"
+# Event-id list/order from the mode's frames-dnn archive (sample-aware; the
+# 100evt-mc set carries duplicate frames, which load_events dedups).  This is the
+# order the bundle is assembled in and matches yuhw's opflash order.
+load_events "$MODE" || exit 1
+EVENT_IDS="${SBND_EVENTS[*]}"
 echo "Event order:  $EVENT_IDS"
 
 FRAMES_STAGE="$WORKDIR/frames_stage"

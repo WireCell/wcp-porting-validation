@@ -1,9 +1,10 @@
 #!/bin/bash
-# Run SBND per-APA and all-APA blob clustering — standalone (no LArSoft).
-# Usage: ./run_clus_evt.sh [mc|data] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
-#        ./run_clus_evt.sh [mc|data]       # list available events
+# Run SBND per-APA and all-APA blob clustering — standalone (no LArSoft).  -h for help.
+# Usage: ./run_clus_evt.sh [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+#        ./run_clus_evt.sh [mc|data] [-N n]   # list available events
 #   mode:  mc (default) | data — selects the event list (clustering graph is mode-agnostic)
-#   idx:   1-based event index into the mode's event list; all = every event (parallel)
+#   -N:    event-sample size (default 10); e.g. -N 100 uses input-100evt-<mode>
+#   idx:   1-based event index into the chosen sample/mode; all = every event (parallel)
 #   all:   process all events in parallel (up to nproc jobs; override with SBND_MAX_JOBS=N)
 #   run:   run number stored in bee RSE metadata (default 0)
 #   subrun: subrun number (default 0)
@@ -20,12 +21,35 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 
 . "$SBND_DIR/_runlib.sh"
 
+usage() {
+    cat <<EOF
+Run SBND per-APA + all-APA blob clustering on imaged clusters — no LArSoft.
+
+Usage: $(basename "$0") [mc|data] [-N n] [-a anode] [-s sel_tag] <idx|all> [run] [subrun]
+       $(basename "$0") [mc|data] [-N n]            # list available events
+
+  mc|data   input set (default mc); clustering graph itself is mode-agnostic
+  idx       1-based event index into the chosen sample/mode (see no-arg listing);
+            'all' clusters every event in parallel (cap nproc, SBND_MAX_JOBS=N)
+  run/subrun  RSE metadata stored in the Bee output (default 0 0)
+  -a        restrict to one anode (0 or 1)
+  -s        use work/evt<ID>_<sel_tag>/ (from run_select_evt.sh)
+
+Requires: run_img_evt.sh first (per-event icluster npz).
+Output:   work/evt<EVT_ID>[_<sel_tag>]/mabc-<anode>-face0.zip, mabc-all-apa.zip
+EOF
+    sbnd_common_help
+}
+
 MODE=mc
 ANODE=""
 SEL_TAG=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
+        -h|--help) usage; exit 0 ;;
+        -N) SBND_SAMPLE="$2"; shift 2 ;;
+        -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
@@ -36,6 +60,7 @@ while [ $# -gt 0 ]; do
 done
 set -- "${_args[@]}"
 
+sbnd_check_sample "$MODE" || exit 1
 load_events "$MODE" || exit 1
 
 if [ $# -eq 0 ]; then
