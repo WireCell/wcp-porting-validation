@@ -40,6 +40,8 @@ physics :{
             params : {
                 # Set "data" vs. "sim".
                 reality: "data"
+                # Image configuration
+                img_config: "active3view+masked1view"
             }
             structs : {
                 # data/moon

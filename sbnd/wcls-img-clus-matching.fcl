@@ -51,6 +51,8 @@ physics :{
             params : {
                 # Set "data" vs. "sim".
                 reality: "sim"
+                # Image configuration
+                img_config: "active2view+masked2view"
                 opflash0_input_label: "opflashtpc0:"
                 opflash1_input_label: "opflashtpc1:"
             }

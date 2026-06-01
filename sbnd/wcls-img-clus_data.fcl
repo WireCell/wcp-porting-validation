@@ -51,10 +51,10 @@ physics :{
                 # input_mask_tags: "[\"sptpc2d:badmasks\"]"
                 # output_mask_tags: "[\"bad\"]"
                 # sim
-                recobwire_tags: "[\"simtpc2d:dnnsp\", \"simtpc2d:dnnsp\"]"
+                recobwire_tags: "[\"sptpc2d:dnnsp\", \"sptpc2d:dnnsp\"]"
                 trace_tags: "[\"gauss\", \"wiener\"]"
-                summary_tags: "[\"\", \"simtpc2d:wienersummary\"]"
-                input_mask_tags: "[\"simtpc2d:badmasks\"]"
+                summary_tags: "[\"\", \"sptpc2d:wienersummary\"]"
+                input_mask_tags: "[\"sptpc2d:badmasks\"]"
                 output_mask_tags: "[\"bad\"]"
             }
          }
