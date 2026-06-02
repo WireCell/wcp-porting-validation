@@ -32,7 +32,6 @@
 set -e
 
 SBND_DIR=$(cd "$(dirname "$0")" && pwd)
-WCP_DIR=$(cd "$SBND_DIR/.." && pwd)                 # wcp-porting-img/sbnd
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BASE}/wire-cell-data/sbnd/photodet:${WIRECELL_PATH}
@@ -69,8 +68,10 @@ SEMIMODEL=semi-analytical-sbnd.json
 # sbnd_xin standalone chain (imports the in-tree pre-tagging clus.jsonnet)
 JSONNET="$SBND_DIR/wct-clus-matching-standalone.jsonnet"
 # Direct BEE uploader (the all-APA MABC already writes one self-contained zip,
-# so there is no longer a separate combine step).
-BEE_UPLOADER="$WCP_DIR/upload-to-bee.sh"
+# so there is no longer a separate combine step).  It lives in sbnd_xin (a symlink
+# to ../../upload-to-bee.sh); $SBND_DIR/.. does not resolve to it because sbnd_xin
+# is itself a symlink, so reference it via $SBND_DIR directly.
+BEE_UPLOADER="$SBND_DIR/upload-to-bee.sh"
 
 # --- Args ---
 MODE=mc
@@ -146,23 +147,35 @@ load_events "$MODE" || exit 1
 EVENT_IDS="${SBND_EVENTS[*]}"
 echo "Event order:  $EVENT_IDS"
 
-FRAMES_STAGE="$WORKDIR/frames_stage"
-mkdir -p "$FRAMES_STAGE"
-FRAME_MEMBERS=()
+# Frames bundle for imaging (active via wct-img-all + dead in-graph), both from
+# the SP frames — i.e. clusters are re-imaged here with this chain's setup, NOT
+# read from any pre-imaged npz that may ship with the input set.  Prefer per-event
+# SP frames (work/evt<ID>/sp-frames.tar.bz2, the mc dev flow); when those are not
+# present, use the input set's pre-assembled frames-dnn.tar.bz2 directly (the data
+# sample ships it with the same per-event member layout, so it is a drop-in bundle).
+_have_spframes=1
 for e in $EVENT_IDS; do
-    SPF="$SBND_DIR/work/evt$e/sp-frames.tar.bz2"
-    if [ ! -s "$SPF" ]; then
-        echo "ERROR: missing per-event SP frames: $SPF" >&2
-        echo "  Generate it first: ./run_sp_to_magnify_evt.sh <idx-for-evt$e>" >&2
-        exit 1
-    fi
-    tar xjf "$SPF" -C "$FRAMES_STAGE"
-    for m in chanmask_bad channels_dnnsp frame_dnnsp summary_dnnsp tickinfo_dnnsp; do
-        FRAME_MEMBERS+=("${m}_${e}.npy")
-    done
+    [ -s "$SBND_DIR/work/evt$e/sp-frames.tar.bz2" ] || { _have_spframes=0; break; }
 done
-tar cjf "$WORKDIR/$FRAMES" -C "$FRAMES_STAGE" "${FRAME_MEMBERS[@]}"
-echo "[frames]      assembled $WORKDIR/$FRAMES ($(echo "$EVENT_IDS" | wc -w) events)"
+if [ "$_have_spframes" = 1 ]; then
+    FRAMES_STAGE="$WORKDIR/frames_stage"
+    mkdir -p "$FRAMES_STAGE"
+    FRAME_MEMBERS=()
+    for e in $EVENT_IDS; do
+        SPF="$SBND_DIR/work/evt$e/sp-frames.tar.bz2"
+        tar xjf "$SPF" -C "$FRAMES_STAGE"
+        for m in chanmask_bad channels_dnnsp frame_dnnsp summary_dnnsp tickinfo_dnnsp; do
+            FRAME_MEMBERS+=("${m}_${e}.npy")
+        done
+    done
+    tar cjf "$WORKDIR/$FRAMES" -C "$FRAMES_STAGE" "${FRAME_MEMBERS[@]}"
+    echo "[frames]      assembled $WORKDIR/$FRAMES from per-event SP frames ($(echo "$EVENT_IDS" | wc -w) events)"
+else
+    SRC_FRAMES="$INPUT_DIR/frames-dnn.tar.bz2"
+    [ -s "$SRC_FRAMES" ] || { echo "ERROR: no per-event SP frames in work/ and no $SRC_FRAMES" >&2; exit 1; }
+    cp "$SRC_FRAMES" "$WORKDIR/$FRAMES"
+    echo "[frames]      using input frames-dnn.tar.bz2 directly ($(echo "$EVENT_IDS" | wc -w) events)"
+fi
 
 # --- Image the live (active) clusters in-toolkit from the same SP-frame bundle ---
 # wct-img-all.jsonnet runs multi-3view + full_deghost imaging (incl. the

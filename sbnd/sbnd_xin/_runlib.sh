@@ -13,8 +13,14 @@ SBND_EVENTS=(2 9 11 12 14 18 31 35 41 42)
 : "${SBND_SAMPLE:=10}"
 
 # input_files directory for a given mode, honoring SBND_SAMPLE.
+# data: the production sample lives in a fixed, versioned directory (the old
+# input-<N>evt-data sets are no longer usable). Override with SBND_DATA_DIR.
 sbnd_input_dir() {
-    echo "$SBND_DIR/input_files/input-${SBND_SAMPLE}evt-${1}"
+    if [ "${1}" = "data" ]; then
+        echo "$SBND_DIR/input_files/${SBND_DATA_DIR:-input-1file-data-v10_14_02_02}"
+    else
+        echo "$SBND_DIR/input_files/input-${SBND_SAMPLE}evt-${1}"
+    fi
 }
 
 # List the input sets that actually exist under input_files/.
