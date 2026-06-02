@@ -232,7 +232,9 @@ directly by the all-APA `MultiAlgBlobClustering`. Per event `<n>` it holds:
 - `<n>-channel-deadarea-apa{0,1}-face0.json` — dead-area patches (v2, per-TPC);
 - `<n>-op.json` — the **light / Q-L matching** layer (`op_t`, `op_pes`,
   `op_pes_pred`, `op_peTotal`, `cluster_id`; every flash, matched or not — the
-  `cluster_id` indexes the `img-global` clusters). See `qlmatching-code.md` §5.
+  `cluster_id` indexes the `img-global` clusters). Flashes are emitted in
+  ascending `op_t` (flash-time) order, so the viewer's flash next/prev steps
+  low→high in time instead of the old first-seen order. See `qlmatching-code.md` §5.
 
 This zip is already the complete event-display set — no `data-sep/`, no
 `merge-apa.py`, no `bee-upload.sh` combine. To get a BEE link:
