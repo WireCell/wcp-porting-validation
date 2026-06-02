@@ -44,6 +44,11 @@ function(
     // (one QLMatching per APA -> PointTreeMerging -> all-APA MABC). true = one
     // joint QLMatching node matches both APAs and merges, feeding MABC directly.
     joint          = false,
+    // Hand-scan calibration dump path. '' (default) = off, production-identical.
+    // When set, QLMatching writes one per-event JSON (both TPCs) for the Q/L
+    // hand-scan viewer (sbnd_xin/ql_scan). run_ql_evt.sh -calib points it at
+    // work/evt<ID>/calib-evt<ID>.json.
+    calib_dump     = '',
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -98,7 +103,8 @@ function(
     local flash_attach   = [qlm.flash_attach(n) for n in std.range(0, nanodes - 1)];
     local matching_pipes = [qlm.matching(anodes[n], clus_maker.detector_volumes([anodes[n]]),
                                          n, reality, semimodel_file,
-                                         cathode_fiducial=cathode_fv.tn)
+                                         cathode_fiducial=cathode_fv.tn,
+                                         calib_dump=calib_dump)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Graph: per-APA matching (default) or joint multi-APA matching ---
@@ -110,7 +116,8 @@ function(
             //   (other APA's flash_attach) ───────────────────────┘     (merges per-APA trees)
             local jointql = qlm.matching_joint(anodes, clus_maker.detector_volumes(anodes),
                                                reality, semimodel_file,
-                                               cathode_fiducial=cathode_fv.tn);
+                                               cathode_fiducial=cathode_fv.tn,
+                                               calib_dump=calib_dump);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
             local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true);
             local per_apa_pre = [g.intern(

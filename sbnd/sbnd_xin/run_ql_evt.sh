@@ -46,6 +46,8 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   idx       1-based event index into the chosen sample/mode (see no-arg listing);
             'all' matches every event in parallel (cap nproc, SBND_MAX_JOBS=N)
   -a        restrict to one anode (0 or 1)
+  -calib    also dump work/ql_evt<ID>/calib-evt<ID>.json for the ql_scan
+            hand-scan viewer (matched zip output is unchanged)
 
 Requires: run_img_evt.sh first (work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz).
 Opflash comes from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz (keyed
@@ -64,6 +66,10 @@ ANODE=""
 # Both are byte-identical today; the joint node is where the joint algorithm lands.
 JOINT=true
 [ "${SBND_JOINT:-}" = "0" ] && JOINT=false
+# -calib: also dump the per-event Q/L hand-scan calibration JSON
+# (work/ql_evt<ID>/calib-evt<ID>.json) for the ql_scan viewer. Off by default;
+# the matched mabc-all-apa.zip output is byte-identical with or without it.
+CALIB=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -74,6 +80,7 @@ while [ $# -gt 0 ]; do
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s|--per-apa|--separate) JOINT=false; shift ;;
+        -calib|--calib) CALIB=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -150,7 +157,11 @@ process_event() {
         rm -rf "$stage"
     done
 
-    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT) -> $QLDIR/mabc-all-apa.zip"
+    # Optional hand-scan calibration dump (one per-event JSON, both TPCs).
+    local CALIB_TLA=()
+    [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}.json")
+
+    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
@@ -163,8 +174,9 @@ process_event() {
         --tla-code "DL=$DL" --tla-code "DT=$DT" \
         --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
         --tla-code "joint=$JOINT" \
+        "${CALIB_TLA[@]}" \
         -c "$JSONNET"
-    echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip"
+    echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
 
 mkdir -p "$SBND_DIR/work"
