@@ -116,34 +116,53 @@ class Event:
 state = {
     "evt": None,        # Event
     "focus": None,      # focused bundle index (into evt.bundles), or None
-    "selected": set(),  # set of selected bundle indices
-    "order": [],        # bundle indices in table display order
+    "selected": set(),  # set of selected bundle indices (GLOBAL, all groups)
+    "order": [],        # visible bundle indices in table display order
+    "group": None,      # current coincidence group id (the scan unit)
+    "groups": [],       # sorted group ids present in the event
 }
 
 
+# ----- coincidence-group helpers -------------------------------------------
+def event_groups(evt):
+    return sorted({f["group"] for f in evt.flash_by_gid.values()})
+
+
+def group_label(evt, g):
+    """'grp G  (T0:.. T1:.. us)' — the group's per-TPC flash times, for orienting."""
+    t = {0: None, 1: None}
+    for f in evt.flash_by_gid.values():
+        if f["group"] == g and t[f["apa"]] is None:
+            t[f["apa"]] = f["time"]
+    s = lambda x: ("%.1f" % x) if x is not None else "-"
+    return "grp %d  (T0:%s T1:%s us)" % (g, s(t[0]), s(t[1]))
+
+
+def group_flash_gid(apa):
+    """The flash gid for TPC `apa` in the current group (None if none). When a
+    group holds >1 flash on a TPC, prefer the focused bundle's flash, else first."""
+    evt = state["evt"]
+    g = state["group"]
+    gids = sorted(gid for gid, f in evt.flash_by_gid.items()
+                  if f["group"] == g and f["apa"] == apa)
+    if not gids:
+        return None
+    idx = state["focus"]
+    if idx is not None:
+        b = evt.bundles[idx]
+        if b["apa"] == apa and b["flash_gid"] in gids:
+            return b["flash_gid"]
+    return gids[0]
+
+
 # ----- selection-rule helpers ----------------------------------------------
-def selected_groups(apa):
+def cluster_eliminated(idx):
+    """True if bundle idx's main cluster is already claimed by a *different*
+    selected bundle (one cluster -> one flash). Applies across all groups."""
     evt = state["evt"]
-    return {evt.group_of(evt.bundles[i]["flash_gid"]) for i in state["selected"]
-            if evt.bundles[i]["apa"] == apa}
-
-
-def availability(idx):
-    """Return ('SELECTED'|'avail'|'cluster taken'|'coinc') for bundle idx."""
-    evt = state["evt"]
-    b = evt.bundles[idx]
-    if idx in state["selected"]:
-        return "SELECTED"
-    # cluster uniqueness: another selected bundle already claims this main cluster
-    for j in state["selected"]:
-        if j != idx and evt.bundles[j]["main_cluster"] == b["main_cluster"]:
-            return "cluster taken"
-    # coincidence: opposite-TPC selections restrict this TPC to their groups
-    other = 1 - b["apa"]
-    og = selected_groups(other)
-    if og and evt.group_of(b["flash_gid"]) not in og:
-        return "coinc"
-    return "avail"
+    cu = evt.bundles[idx]["main_cluster"]
+    return any(j != idx and evt.bundles[j]["main_cluster"] == cu
+               for j in state["selected"])
 
 
 def toggle_select(idx):
@@ -151,10 +170,6 @@ def toggle_select(idx):
     if idx in state["selected"]:
         state["selected"].discard(idx)
         return True, "deselected"
-    avail = availability(idx)
-    if avail == "coinc":
-        return False, ("blocked: flash not in +-80ns coincidence with the "
-                       "opposite-TPC selection")
     # cluster uniqueness: selecting replaces any prior bundle for the same cluster
     b = evt.bundles[idx]
     dropped = [j for j in state["selected"]
@@ -175,6 +190,9 @@ event_select = Select(title="Event", value=(LABELS[0] if LABELS else ""),
                       options=LABELS, width=180)
 prev_evt_btn = Button(label="< prev evt", width=90)
 next_evt_btn = Button(label="next evt >", width=90)
+group_select = Select(title="coincidence group", value="", options=[], width=240)
+prev_grp_btn = Button(label="< prev grp", width=90)
+next_grp_btn = Button(label="next grp >", width=90)
 select_btn = Button(label="Toggle match (focused)", button_type="primary", width=200)
 clear_btn = Button(label="Clear selections", width=140)
 save_btn = Button(label="Save labels", button_type="success", width=120)
@@ -205,34 +223,35 @@ table_cols = [
 table = DataTable(source=table_src, columns=table_cols, width=1100, height=300,
                   selectable=True, index_position=None)
 
-# Light-pattern figures (Y vertical, Z horizontal). Active PMTs of both TPCs are
-# drawn as faint outlines; the focused flash's TPC PMTs are sized by sqrt(PE).
-fig_kw = dict(height=300, width=430, match_aspect=True,
-              tools="pan,wheel_zoom,box_zoom,reset,save", active_scroll="wheel_zoom")
-f_meas = figure(title="measured light", **fig_kw)
-f_pred = figure(title="predicted light", **fig_kw)
-for f in (f_meas, f_pred):
+# Light-pattern figures (Y vertical, Z horizontal): a 2x2 grid of measured vs
+# predicted for TPC0 and TPC1. Positions are fixed, so the ranges are pinned to the
+# detector box (no zoom). Active PMTs of the panel's TPC are faint outlines; the
+# flash PMTs are sized by sqrt(PE).
+def radii(vals, hi):
+    # circle radius in cm, scaled by sqrt(PE/hi); 0-PE channels get a tiny dot
+    return (1.5 + 6.0 * np.sqrt(np.clip(vals, 0, None) / hi)).tolist()
+
+
+def make_light_fig(title):
+    f = figure(title=title, height=260, width=420, tools="pan,reset,save")
     f.xaxis.axis_label = "z (cm)"
     f.yaxis.axis_label = "y (cm)"
+    base = ColumnDataSource(data=dict(z=[], y=[]))
+    src = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[]))
+    f.scatter("z", "y", source=base, marker="circle", size=6,
+              fill_color=None, line_color="#cccccc")
+    g = f.circle("z", "y", source=src, radius="r",
+                 fill_color=linear_cmap("pe", "Viridis256", 0, 1),
+                 line_color="#333333", fill_alpha=0.85)
+    f.add_layout(ColorBar(color_mapper=g.glyph.fill_color["transform"], title="PE"), "right")
+    f.add_tools(HoverTool(renderers=[g], tooltips=[("PE", "@pe{0.0}")]))
+    return dict(fig=f, base=base, src=src, glyph=g)
 
-base_meas = ColumnDataSource(data=dict(z=[], y=[]))
-base_pred = ColumnDataSource(data=dict(z=[], y=[]))
-src_meas = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[]))
-src_pred = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[]))
-f_meas.scatter("z", "y", source=base_meas, marker="circle", size=6,
-               fill_color=None, line_color="#cccccc")
-f_pred.scatter("z", "y", source=base_pred, marker="circle", size=6,
-               fill_color=None, line_color="#cccccc")
-meas_cmap = linear_cmap("pe", "Viridis256", 0, 1)
-pred_cmap = linear_cmap("pe", "Viridis256", 0, 1)
-gm = f_meas.circle("z", "y", source=src_meas, radius="r",
-                   fill_color=meas_cmap, line_color="#333333", fill_alpha=0.85)
-gp = f_pred.circle("z", "y", source=src_pred, radius="r",
-                   fill_color=pred_cmap, line_color="#333333", fill_alpha=0.85)
-f_meas.add_layout(ColorBar(color_mapper=gm.glyph.fill_color["transform"], title="PE"), "right")
-f_pred.add_layout(ColorBar(color_mapper=gp.glyph.fill_color["transform"], title="PE"), "right")
-for f, s in ((f_meas, src_meas), (f_pred, src_pred)):
-    f.add_tools(HoverTool(renderers=[f.renderers[-1]], tooltips=[("PE", "@pe{0.0}")]))
+
+# LIGHT[apa] = {"meas": panel, "pred": panel}
+LIGHT = {apa: {"meas": make_light_fig("TPC%d measured" % apa),
+               "pred": make_light_fig("TPC%d predicted" % apa)}
+         for apa in (0, 1)}
 
 # Charge-projection figures (focused bundle's clusters, T0-shifted, in the fixed
 # detector box; both TPC boxes drawn). XY, YZ (z horiz, y vert), XZ (x horiz, z vert).
@@ -277,8 +296,13 @@ def fmt_flags(b):
 
 def rebuild_table():
     evt = state["evt"]
-    # display order: apa, flash gid, cluster
-    order = sorted(range(len(evt.bundles)),
+    g = state["group"]
+    # Visible = bundles of the current coincidence group whose cluster is not
+    # already claimed by another selected bundle (elimination spans all groups).
+    visible = [i for i in range(len(evt.bundles))
+               if evt.group_of(evt.bundles[i]["flash_gid"]) == g
+               and (i in state["selected"] or not cluster_eliminated(i))]
+    order = sorted(visible,
                    key=lambda i: (evt.bundles[i]["apa"],
                                   evt.bundles[i]["flash_gid"],
                                   evt.bundles[i]["main_cluster"]))
@@ -287,7 +311,7 @@ def rebuild_table():
     for i in order:
         b = evt.bundles[i]
         ndf = b["ndf"] or 1
-        cols["state"].append(availability(i))
+        cols["state"].append("SELECTED" if i in state["selected"] else "avail")
         cols["auto"].append("Y" if b["auto_selected"] else "")
         cols["apa"].append(b["apa"])
         cols["flash_gid"].append(b["flash_gid"])
@@ -326,58 +350,66 @@ def downsample(x, y, z):
 
 
 def render_light():
+    """Four panels: measured + predicted for TPC0 and TPC1. Measured is anchored
+    to the current group's per-TPC flash (a stable reference as rows are clicked);
+    predicted sums the selected bundles on that flash (or previews the focus)."""
     evt = state["evt"]
-    idx = state["focus"]
-    if idx is None:
-        for s in (base_meas, base_pred, src_meas, src_pred):
-            s.data = {k: [] for k in s.data}
-        return
-    b = evt.bundles[idx]
-    apa = b["apa"]
-    gid = b["flash_gid"]
-    flash = evt.flash_by_gid[gid]
+    for apa in (0, 1):
+        mp, pp = LIGHT[apa]["meas"], LIGHT[apa]["pred"]
+        am = evt.od_active & (evt.od_apa == apa)
+        chans = np.nonzero(am)[0]
+        # faint outline of this TPC's active PMTs
+        mp["base"].data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
+        pp["base"].data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
 
-    # faint outline of every active PMT, both TPCs
-    am = evt.od_active
-    base_meas.data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
-    base_pred.data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
+        gid = group_flash_gid(apa)
+        if gid is None:
+            mp["src"].data = dict(z=[], y=[], pe=[], r=[])
+            pp["src"].data = dict(z=[], y=[], pe=[], r=[])
+            mp["fig"].title.text = "TPC%d measured  (no flash in group)" % apa
+            pp["fig"].title.text = "TPC%d predicted" % apa
+            continue
+        flash = evt.flash_by_gid[gid]
+        meas = np.array(flash["pe"])[chans]
 
-    # this TPC's active channels
-    sel = am & (evt.od_apa == apa)
-    chans = np.nonzero(sel)[0]
-    meas = np.array(flash["pe"])[chans]
+        # predicted = sum over SELECTED bundles on THIS TPC's group-flash; if none,
+        # preview the focused bundle when it sits on this flash. Never cross-TPC.
+        share = [j for j in state["selected"]
+                 if evt.bundles[j]["apa"] == apa and evt.bundles[j]["flash_gid"] == gid]
+        previewed = False
+        if not share:
+            idx = state["focus"]
+            if (idx is not None and evt.bundles[idx]["apa"] == apa
+                    and evt.bundles[idx]["flash_gid"] == gid):
+                share = [idx]
+                previewed = True
+        pred_full = np.zeros(evt.nchan)
+        for j in share:
+            pj = evt.bundles[j]["pred_pe"]
+            if pj:
+                pred_full += np.array(pj)
+        pred = pred_full[chans]
 
-    # predicted = sum over SELECTED bundles sharing this flash (else focus bundle)
-    share = [j for j in state["selected"] if evt.bundles[j]["flash_gid"] == gid]
-    if not share:
-        share = [idx]
-    pred_full = np.zeros(evt.nchan)
-    for j in share:
-        pj = evt.bundles[j]["pred_pe"]
-        if pj:
-            pred_full += np.array(pj)
-    pred = pred_full[chans]
+        # Independent per-panel scales so the predicted *shape* stays readable even
+        # when its absolute PE is tiny next to a bright measured flash.
+        hi_meas = max(1.0, float(meas.max() if meas.size else 0))
+        hi_pred = max(1.0, float(pred.max() if pred.size else 0))
+        mp["glyph"].glyph.fill_color["transform"].high = hi_meas
+        pp["glyph"].glyph.fill_color["transform"].high = hi_pred
 
-    # Independent per-panel scales so the predicted *shape* stays readable even
-    # when its absolute PE is tiny next to a bright measured flash.
-    hi_meas = max(1.0, float(meas.max() if meas.size else 0))
-    hi_pred = max(1.0, float(pred.max() if pred.size else 0))
-    gm.glyph.fill_color["transform"].high = hi_meas
-    gp.glyph.fill_color["transform"].high = hi_pred
-
-    def radii(vals, hi):
-        # circle radius in cm, scaled by sqrt(PE/hi); 0-PE channels get a tiny dot
-        return (1.5 + 6.0 * np.sqrt(np.clip(vals, 0, None) / hi)).tolist()
-
-    src_meas.data = dict(z=evt.od_z[chans].tolist(), y=evt.od_y[chans].tolist(),
-                         pe=meas.tolist(), r=radii(meas, hi_meas))
-    src_pred.data = dict(z=evt.od_z[chans].tolist(), y=evt.od_y[chans].tolist(),
-                         pe=pred.tolist(), r=radii(pred, hi_pred))
-    npred = len([j for j in state["selected"] if evt.bundles[j]["flash_gid"] == gid])
-    f_meas.title.text = ("measured light  flash gid %d (id %d)  t=%.1f us  TPC%d  totPE=%.0f"
-                         % (gid, flash["id"], flash["time"], apa, flash["total_PE"]))
-    f_pred.title.text = ("predicted light  (sum of %d selected cluster(s) on this flash)"
-                         % npred if npred else "predicted light  (focused bundle)")
+        z = evt.od_z[chans].tolist()
+        y = evt.od_y[chans].tolist()
+        mp["src"].data = dict(z=z, y=y, pe=meas.tolist(), r=radii(meas, hi_meas))
+        pp["src"].data = dict(z=z, y=y, pe=pred.tolist(), r=radii(pred, hi_pred))
+        mp["fig"].title.text = ("TPC%d measured  gid %d (id %d)  t=%.1f us  totPE=%.0f"
+                                % (apa, gid, flash["id"], flash["time"], flash["total_PE"]))
+        if not share:
+            lab = "none selected"
+        elif previewed:
+            lab = "preview: focused bundle"
+        else:
+            lab = "sum of %d selected cluster(s)" % len(share)
+        pp["fig"].title.text = "TPC%d predicted  (%s)" % (apa, lab)
 
 
 def box_lines(g):
@@ -493,16 +525,40 @@ def refresh():
 # ---------------------------------------------------------------------------
 # Callbacks.
 # ---------------------------------------------------------------------------
+def set_light_ranges(evt):
+    """Pin each light panel to its TPC's detector box (fixed, no zoom)."""
+    for apa in (0, 1):
+        g = evt.geom.get(apa)
+        if not g:
+            continue
+        pz = 0.05 * (g["z_hi"] - g["z_lo"])
+        py = 0.05 * (g["y_hi"] - g["y_lo"])
+        for panel in (LIGHT[apa]["meas"], LIGHT[apa]["pred"]):
+            f = panel["fig"]
+            f.x_range.start, f.x_range.end = g["z_lo"] - pz, g["z_hi"] + pz
+            f.y_range.start, f.y_range.end = g["y_lo"] - py, g["y_hi"] + py
+
+
 def load_event(label):
-    state["evt"] = Event(FILE_OF[label])
+    evt = Event(FILE_OF[label])
+    state["evt"] = evt
     state["focus"] = None
     state["selected"] = set()
-    n = len(state["evt"].bundles)
-    nsel = sum(b["auto_selected"] for b in state["evt"].bundles)
-    status.text = ("Loaded <b>%s</b>: %d candidate bundles, %d flashes, %d clusters; "
-                   "%d auto-selected. Click a row to inspect; 'Toggle match' to pick."
-                   % (label, n, len(state["evt"].flash_by_gid),
-                      len(state["evt"].cluster_by_uid), nsel))
+    groups = event_groups(evt)
+    state["groups"] = groups
+    state["group"] = groups[0] if groups else None
+    set_light_ranges(evt)
+    # Populate the group selector (setting .value may re-fire on_group_change,
+    # which just re-refreshes — harmless).
+    group_select.options = [(str(g), group_label(evt, g)) for g in groups]
+    group_select.value = str(groups[0]) if groups else ""
+    n = len(evt.bundles)
+    nsel = sum(b["auto_selected"] for b in evt.bundles)
+    status.text = ("Loaded <b>%s</b>: %d contained bundles, %d flashes, %d clusters, "
+                   "%d coincidence groups; %d auto-selected. Pick a group, click a row "
+                   "to inspect, 'Toggle match' to select."
+                   % (label, n, len(evt.flash_by_gid), len(evt.cluster_by_uid),
+                      len(groups), nsel))
     refresh()
 
 
@@ -516,6 +572,22 @@ def step_event(d):
         return
     i = LABELS.index(event_select.value)
     event_select.value = LABELS[(i + d) % len(LABELS)]
+
+
+def on_group_change(attr, old, new):
+    if not new or state["evt"] is None:
+        return
+    state["group"] = int(new)
+    state["focus"] = None          # never carry focus across groups
+    refresh()
+
+
+def step_group(d):
+    groups = state["groups"]
+    if not groups or state["group"] is None:
+        return
+    i = groups.index(state["group"])
+    group_select.value = str(groups[(i + d) % len(groups)])
 
 
 def on_row_select(attr, old, new):
@@ -580,6 +652,9 @@ def on_save():
 event_select.on_change("value", on_event_change)
 prev_evt_btn.on_click(lambda: step_event(-1))
 next_evt_btn.on_click(lambda: step_event(+1))
+group_select.on_change("value", on_group_change)
+prev_grp_btn.on_click(lambda: step_group(-1))
+next_grp_btn.on_click(lambda: step_group(+1))
 table_src.selected.on_change("indices", on_row_select)
 select_btn.on_click(on_toggle)
 clear_btn.on_click(on_clear)
@@ -589,8 +664,9 @@ save_btn.on_click(on_save)
 # ---------------------------------------------------------------------------
 # Layout.
 # ---------------------------------------------------------------------------
-controls = row(event_select, prev_evt_btn, next_evt_btn, select_btn,
-               clear_btn, save_btn)
+controls = row(event_select, prev_evt_btn, next_evt_btn,
+               group_select, prev_grp_btn, next_grp_btn,
+               select_btn, clear_btn, save_btn)
 header = Div(text="<h2>SBND Q/L matching hand-scan</h2>", width=1100)
 layout = column(
     header,
@@ -598,7 +674,8 @@ layout = column(
     status,
     table,
     row(metrics, selsummary),
-    row(f_meas, f_pred),
+    row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
+        LIGHT[1]["meas"]["fig"], LIGHT[1]["pred"]["fig"]),
     row(f_xy, f_yz, f_xz),
 )
 

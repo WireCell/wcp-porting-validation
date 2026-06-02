@@ -51,7 +51,9 @@ disambiguates the two TPCs (same stride as the flash gid).
 | `clusters[]` | per cluster `{uid, ident, apa, npoints, x[], y[], z[], q[]}` (raw, un-shifted; the viewer applies `dx`) |
 | `bundles[]` | one per candidate (flash, cluster-group) pair — see below |
 
-Each `bundles[]` entry (the full candidate universe, i.e. `run.all_bundles`):
+Each `bundles[]` entry (the **TPC-contained** candidates — `run.all_bundles` filtered
+to those whose cluster stays inside the box after the T0 x-shift; uncontained bundles
+are skipped, since they carry zeroed metrics and are never auto-selected):
 
 ```
 apa, flash_gid, flash_id, main_cluster (uid), other_clusters[] (uids),
@@ -66,8 +68,9 @@ spec_end, window_truncated, auto_selected, pred_pe[nchan]
   re-clustering can drop weak matches). The hand-scan deliberately surfaces these —
   e.g. a flash matched to a cluster that, at its T0, predicts almost no light is a
   prime candidate to deselect.
-- `contained` = the bundle passed the TPC-containment gate and has a predicted-light
-  vector (uncontained bundles carry an empty `pred_pe`).
+- `contained` = the bundle passed the TPC-containment gate. Always `true` in the dump
+  now (uncontained bundles are filtered out at dump time); the field is kept for
+  schema stability.
 
 ---
 
@@ -87,28 +90,36 @@ ssh -L 5008:localhost:5008 user@wcgpu1
 ```
 
 ### Layout
-- **Event** selector + prev/next.
-- **Bundle table**: every candidate bundle for the event — `state`
-  (SELECTED / avail / blocked), `auto`, apa, flash, time, group, cluster, ks,
-  chi²/ndf, strength, measured/predicted PE, flags. Click a row to **focus** it.
+- **Event** selector + prev/next, and a **coincidence-group** selector + prev/next.
+  The hand-scan is done **one ±80 ns group at a time** (the navigation unit), so the
+  busy full-event bundle list is broken into the coincident TPC0/TPC1 units the eye
+  actually compares. Each group label shows its TPC0/TPC1 flash times.
+- **Bundle table**: only the **current group's** bundles, minus any whose cluster is
+  already claimed by a selection (see rules) — `state` (SELECTED / avail), `auto`,
+  apa, flash, time, group, cluster, ks, chi²/ndf, strength, measured/predicted PE,
+  flags. Click a row to **focus** it.
 - **Metrics panel**: the focused bundle's full metrics next to the quality
-  thresholds, and its flags. **Selection summary**: the current picks.
-- **Light patterns**: measured (left) vs predicted (right) PMT patterns for the
-  focused flash, drawn in the y–z plane (circle radius ∝ √PE, shared colour scale);
-  faint outlines mark every active PMT of both TPCs. The predicted pattern is the
-  **sum** over the clusters currently selected for that flash.
+  thresholds, and its flags. **Selection summary**: the current picks (all groups).
+- **Light patterns** — a 2×2 grid: **measured + predicted for TPC0** and **measured +
+  predicted for TPC1**. Positions are fixed, so the ranges are pinned to the detector
+  box (no zoom). The two **measured** panels are anchored to the group's per-TPC flash
+  (a stable reference that does not flicker as rows are clicked); the two **predicted**
+  panels sum the clusters selected on that TPC's flash (or preview the focused bundle
+  when nothing is selected yet). Circle radius ∝ √PE, independent per-panel scale.
 - **Charge projections**: X-Y, Y-Z, X-Z of the focused bundle's cluster(s), shifted
   by the bundle's T0 `dx`, inside the **fixed** detector box (both TPC boxes drawn);
   the currently-selected matches are shown faintly for context.
 
 ### Selection rules (enforced live)
-- **One flash per cluster** — selecting a bundle for a cluster drops that cluster's
-  other candidate bundles (and replaces any previous pick for it).
+- **±80 ns coincidence as the navigation unit** — you scan one coincidence group at a
+  time; within a group every bundle is coincident by construction, and the four light
+  panels show that group's TPC0 and TPC1 flash light together. Change the group with
+  the selector / prev-next.
+- **One flash per cluster** — selecting a bundle for a cluster removes that cluster's
+  other candidate bundles from the table, **across all groups** (and replaces any
+  previous pick for that cluster). This is how you whittle the candidates down.
 - **Many clusters per flash** — selecting several bundles that share a flash sums
   their predicted light (the measured pattern is unchanged).
-- **±80 ns coincidence as an availability filter** — once a flash is picked on one
-  TPC, only opposite-TPC bundles whose flash shares the same coincidence `group`
-  stay selectable (the rest show `coinc`).
 
 ### Save
 **Save labels** writes `work/ql_evt<ID>/labels-evt<ID>.json`: one entry per selected
@@ -122,8 +133,9 @@ reads the labels alone.
 ## Notes / scope
 - SBND only (both TPCs, ±80 ns groups, semi-analytical-sbnd geometry).
 - Per-flash semantics: coincident TPC0/TPC1 flashes stay **separate** matched flashes
-  linked as a pair; the coincidence is only an availability filter. This produces a
-  ground-truth coincident-pairing label that informs the deferred joint algorithm
+  linked as a pair; the coincidence is only the scan-navigation unit, never a merge
+  (predicted light sums only within one flash/TPC). This produces a ground-truth
+  coincident-pairing label that informs the deferred joint algorithm
   (`match/docs/joint-qlmatching-design.md`).
 - The labels are the deliverable; fitting updated χ²/threshold/`PE_err` parameters
   from them is downstream manual work, not part of this tool.
