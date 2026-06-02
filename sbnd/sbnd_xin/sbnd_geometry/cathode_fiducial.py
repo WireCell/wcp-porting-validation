@@ -205,7 +205,7 @@ def to_jsonnet(cx=0.0, ct=0.0, **kw):
 # Drawing
 # --------------------------------------------------------------------------
 KIND_STYLE = {  # edgecolor, fill alpha
-    "pad":     ("#7fb3d5", 0.12),
+    "pad":     ("#5b9bd5", 0.18),
     "htube":   ("#1f77b4", 0.30),
     "vtube":   ("#1f77b4", 0.30),
     "knuckle": ("#d62728", 0.45),
@@ -230,12 +230,16 @@ def draw(png="cathode_fiducial.png", cx=0.0, ct=0.0, **kw):
     from matplotlib.patches import Rectangle
     from matplotlib.lines import Line2D
 
+    from matplotlib.colors import to_rgba
+
     boxes = all_boxes(cx, ct, **kw)
     fig, axes = plt.subplots(1, 3, figsize=(19, 6.2), constrained_layout=True)
 
     def rect(ax, a, b, c, d, ec, alpha, lw=1.2):
-        ax.add_patch(Rectangle((a, c), b - a, d - c, fill=True, fc=ec,
-                               alpha=alpha, ec=ec, lw=lw, zorder=3))
+        # translucent fill but a SOLID edge, so full-plane regions (the pad slab)
+        # are visible by their boundary instead of washing out at low alpha.
+        ax.add_patch(Rectangle((a, c), b - a, d - c, fill=True,
+                               fc=to_rgba(ec, alpha), ec=ec, lw=lw, zorder=3))
 
     # ---- Panel 1: YZ cathode face (TPC0) -- the lattice grid over the pads ----
     ax = axes[0]
