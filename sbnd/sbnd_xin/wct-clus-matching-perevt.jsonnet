@@ -40,6 +40,10 @@ function(
     DT             = 9.8,
     lifetime       = 6.0,
     driftSpeed     = 1.563,
+    // Joint multi-APA matching toggle. false (default) = historical per-APA path
+    // (one QLMatching per APA -> PointTreeMerging -> all-APA MABC). true = one
+    // joint QLMatching node matches both APAs and merges, feeding MABC directly.
+    joint          = false,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -97,32 +101,59 @@ function(
                                          cathode_fiducial=cathode_fv.tn)
                             for n in std.range(0, nanodes - 1)];
 
-    // --- Per-APA subgraphs ---
-    // active ─┐
-    // masked ─┼─► clus.per_apa ─► FlashTensorToOpticalPCs ─► QLMatching
-    // opflash ┘
-    local per_apa = [g.intern(
-        innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
-        centernodes=[clus_pipes[n], flash_attach[n]],
-        outnodes=[matching_pipes[n]],
-        edges=[
-            g.edge(active_clusters[n], clus_pipes[n], 0, 0),   // port 0 = /live
-            g.edge(masked_clusters[n], clus_pipes[n], 0, 1),   // port 1 = /dead (2-view)
-            g.edge(clus_pipes[n], flash_attach[n], 0, 0),      // port 0 = pctree
-            g.edge(opflash_sources[n], flash_attach[n], 0, 1), // port 1 = opflash
-            g.edge(flash_attach[n], matching_pipes[n], 0, 0),
-        ]
-    ) for n in std.range(0, nanodes - 1)];
-
-    // --- All-APA clustering (pre-tagging) + BEE dump (img/clustering/dead/op) ---
-    local clus_all = clus_maker.all_apa(anodes, dump=true);
-
-    local graph = g.intern(
-        innodes=per_apa,
-        outnodes=[clus_all],
-        edges=[g.edge(per_apa[i], clus_all, 0, i)
-               for i in std.range(0, nanodes - 1)]
-    );
+    // --- Graph: per-APA matching (default) or joint multi-APA matching ---
+    local graph =
+        if joint then
+            // active ─┐
+            // masked ─┼─► clus.per_apa ─► FlashTensorToOpticalPCs ─┐
+            // opflash ┘                                            ├─► QLMatching(joint) ─► MABC
+            //   (other APA's flash_attach) ───────────────────────┘     (merges per-APA trees)
+            local jointql = qlm.matching_joint(anodes, clus_maker.detector_volumes(anodes),
+                                               reality, semimodel_file,
+                                               cathode_fiducial=cathode_fv.tn);
+            // MABC takes the single pre-merged tree directly (no PointTreeMerging).
+            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true);
+            local per_apa_pre = [g.intern(
+                innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
+                centernodes=[clus_pipes[n]],
+                outnodes=[flash_attach[n]],
+                edges=[
+                    g.edge(active_clusters[n], clus_pipes[n], 0, 0),   // port 0 = /live
+                    g.edge(masked_clusters[n], clus_pipes[n], 0, 1),   // port 1 = /dead (2-view)
+                    g.edge(clus_pipes[n], flash_attach[n], 0, 0),      // port 0 = pctree
+                    g.edge(opflash_sources[n], flash_attach[n], 0, 1), // port 1 = opflash
+                ]
+            ) for n in std.range(0, nanodes - 1)];
+            g.intern(
+                innodes=per_apa_pre,
+                centernodes=[jointql],
+                outnodes=[clus_all],
+                edges=[g.edge(per_apa_pre[i], jointql, 0, i) for i in std.range(0, nanodes - 1)]
+                      + [g.edge(jointql, clus_all, 0, 0)]
+            )
+        else
+            // active ─┐
+            // masked ─┼─► clus.per_apa ─► FlashTensorToOpticalPCs ─► QLMatching ─► (PointTreeMerging -> MABC)
+            // opflash ┘
+            local per_apa = [g.intern(
+                innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
+                centernodes=[clus_pipes[n], flash_attach[n]],
+                outnodes=[matching_pipes[n]],
+                edges=[
+                    g.edge(active_clusters[n], clus_pipes[n], 0, 0),   // port 0 = /live
+                    g.edge(masked_clusters[n], clus_pipes[n], 0, 1),   // port 1 = /dead (2-view)
+                    g.edge(clus_pipes[n], flash_attach[n], 0, 0),      // port 0 = pctree
+                    g.edge(opflash_sources[n], flash_attach[n], 0, 1), // port 1 = opflash
+                    g.edge(flash_attach[n], matching_pipes[n], 0, 0),
+                ]
+            ) for n in std.range(0, nanodes - 1)];
+            local clus_all = clus_maker.all_apa(anodes, dump=true);
+            g.intern(
+                innodes=per_apa,
+                outnodes=[clus_all],
+                edges=[g.edge(per_apa[i], clus_all, 0, i)
+                       for i in std.range(0, nanodes - 1)]
+            );
 
     local app = {
         type: 'Pgrapher',

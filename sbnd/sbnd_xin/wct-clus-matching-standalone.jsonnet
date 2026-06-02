@@ -14,6 +14,12 @@ local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local reality = std.extVar('reality');
 local semimodel_file = std.extVar('semimodel_file');
+// Joint multi-APA matching toggle (run_clust_QL_evt.sh passes -C joint=...).
+// true = one joint QLMatching node matches both APAs and merges, feeding MABC
+// directly; false = historical per-APA path (one QLMatching per APA ->
+// PointTreeMerging -> MABC).  Both are byte-identical today (the joint algorithm
+// is deferred); the joint wiring is the live home for it.
+local joint = std.extVar('joint');
 
 local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
 local params = base {
@@ -115,10 +121,15 @@ local matching_pipes  = [
                  n, reality, semimodel_file, cathode_fiducial=cathode_fv.tn)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
+// Joint matcher: one node fed by both APAs' flash_attach outputs (used iff joint).
+local matching_joint = qlm.matching_joint(tools.anodes, clus_maker.detector_volumes(tools.anodes),
+                                          reality, semimodel_file, cathode_fiducial=cathode_fv.tn);
 
 // --- All-APA clustering ---
 // In-tree all_apa is the pre-tagging chain (no nu_tagging param; see header).
-local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true, bee_sink=bee_shared);
+// premerged=joint: when joint, the joint matcher already merged the per-APA trees,
+// so all_apa skips its PointTreeMerging and feeds the single tree to MABC.
+local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true, bee_sink=bee_shared, premerged=joint);
 
 // --- Flat graph ---
 // Per anode n:
@@ -129,9 +140,19 @@ local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true, bee_sink=bee_sh
 //   ... -> all-APA MultiAlgBlobClustering.  All MABC nodes (per-APA + all-APA)
 //   write into one shared Bee zip (mabc.zip) via the bee_shared sink.
 local nanode = std.length(tools.anodes);
+// Matching stage: joint = one matching_joint node (flash_attach[n] -> port n) that
+// feeds MABC directly; per-APA = one matcher per APA -> all_apa's PointTreeMerging.
+local match_center = if joint then [matching_joint] else matching_pipes;
+local match_edges =
+    if joint then
+        [g.edge(flash_attach[n], matching_joint, 0, n) for n in std.range(0, nanode - 1)]
+        + [g.edge(matching_joint, clus_all_apa, 0, 0)]
+    else
+        [g.edge(flash_attach[n], matching_pipes[n], 0, 0) for n in std.range(0, nanode - 1)]
+        + [g.edge(matching_pipes[n], clus_all_apa, 0, n) for n in std.range(0, nanode - 1)];
 local graph = g.intern(
     innodes=active_clusters + opflash_sources + [frame_src],
-    centernodes=masked_img + clus_pipes + flash_attach + matching_pipes + [frame_fan],
+    centernodes=masked_img + clus_pipes + flash_attach + match_center + [frame_fan],
     outnodes=[clus_all_apa],
     edges=
         [g.edge(frame_src, frame_fan, 0, 0)]
@@ -140,8 +161,7 @@ local graph = g.intern(
         + [g.edge(masked_img[n], clus_pipes[n], 0, 1) for n in std.range(0, nanode - 1)]
         + [g.edge(clus_pipes[n], flash_attach[n], 0, 0) for n in std.range(0, nanode - 1)]
         + [g.edge(opflash_sources[n], flash_attach[n], 0, 1) for n in std.range(0, nanode - 1)]
-        + [g.edge(flash_attach[n], matching_pipes[n], 0, 0) for n in std.range(0, nanode - 1)]
-        + [g.edge(matching_pipes[n], clus_all_apa, 0, n) for n in std.range(0, nanode - 1)]
+        + match_edges
 );
 
 local app = {

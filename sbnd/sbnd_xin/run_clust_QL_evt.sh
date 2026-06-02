@@ -75,6 +75,12 @@ BEE_UPLOADER="$WCP_DIR/upload-to-bee.sh"
 # --- Args ---
 MODE=mc
 DO_UPLOAD=0
+# Joint matching default: both TPCs go into ONE QLMatching node (matches each APA
+# and merges, replacing the separate PointTreeMerging). --per-apa (or SBND_JOINT=0)
+# runs the legacy two-node per-APA path. Byte-identical today; joint is where the
+# joint algorithm lands.
+JOINT=true
+[ "${SBND_JOINT:-}" = "0" ] && JOINT=false
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
@@ -82,7 +88,8 @@ while [ $# -gt 0 ]; do
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         --upload) DO_UPLOAD=1; shift ;;
-        *) echo "ERROR: unknown argument '$1' (use: [mc|data] [-N n] [--upload]; -h for help)" >&2; exit 1 ;;
+        -s|--per-apa|--separate) JOINT=false; shift ;;
+        *) echo "ERROR: unknown argument '$1' (use: [mc|data] [-N n] [--upload] [--per-apa]; -h for help)" >&2; exit 1 ;;
     esac
 done
 
@@ -182,7 +189,7 @@ echo "[wire-cell] active clusters imaged -> $WORKDIR/icluster-apa{0,1}-active.np
 cd "$WORKDIR"
 
 # --- Run the standalone matching graph (outputs land in $WORKDIR) ---
-echo "[wire-cell] running matching graph ..."
+echo "[wire-cell] running matching graph (joint=$JOINT) ..."
 wire-cell \
     -l stderr \
     -l "${LOG}:debug" \
@@ -194,6 +201,7 @@ wire-cell \
     -C "DL=$DL" \
     -C "DT=$DT" \
     -C "lifetime=$LIFETIME" \
+    -C "joint=$JOINT" \
     -c "$JSONNET"
 
 echo "[wire-cell] done -> mabc.zip (one shared self-contained BEE zip)"

@@ -58,6 +58,12 @@ EOF
 # --- Args ---
 MODE=mc
 ANODE=""
+# Joint matching is the default: both TPCs go into ONE QLMatching node (which
+# matches each APA and merges, replacing the separate PointTreeMerging). Pass
+# --per-apa (or SBND_JOINT=0) to run the legacy two-node per-APA path instead.
+# Both are byte-identical today; the joint node is where the joint algorithm lands.
+JOINT=true
+[ "${SBND_JOINT:-}" = "0" ] && JOINT=false
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -67,6 +73,7 @@ while [ $# -gt 0 ]; do
         mc|data) MODE="$1"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
+        -s|--per-apa|--separate) JOINT=false; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -143,7 +150,7 @@ process_event() {
         rm -rf "$stage"
     done
 
-    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE) -> $QLDIR/mabc-all-apa.zip"
+    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
@@ -155,6 +162,7 @@ process_event() {
         --tla-str  "semimodel_file=$SEMIMODEL" \
         --tla-code "DL=$DL" --tla-code "DT=$DT" \
         --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
+        --tla-code "joint=$JOINT" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip"
 }
