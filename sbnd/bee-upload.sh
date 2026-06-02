@@ -37,9 +37,11 @@ if (( ${#mabc_zips[@]} )); then
     echo "[mabc]   extracting ${#mabc_zips[@]} zip(s) -> data/"
     for z in "${mabc_zips[@]}"; do
         # Each zip's internal layout is already "data/<n>/<n>-<alg>.json",
-        # so unzip at $PWD lays files in the right place without clobbering
-        # files contributed by other zips (different <alg>).
-        unzip -oq "$z"
+        # so extracting at $PWD lays files in the right place without
+        # clobbering files contributed by other zips (different <alg>).
+        # python3 -m zipfile is used in place of unzip(1) so this script
+        # works inside the SL7 apptainer image (no unzip there).
+        python3 -m zipfile -e "$z" .
     done
 else
     echo "[mabc]   no mabc-*.zip in $PWD"
@@ -52,7 +54,7 @@ if [[ -d data-sep ]]; then
         event_no=$(basename "$event_dir")
         if [[ -d "$event_dir" && "$event_no" =~ ^[0-9]+$ ]]; then
             echo "[apa]    event $event_no: merge-apa.py img/op apa0+apa1"
-            python "$MERGE_APA" --inpath=data-sep --outpath="$WORK" --eventNo="$event_no" > /dev/null
+            python3 "$MERGE_APA" --inpath=data-sep --outpath="$WORK" --eventNo="$event_no" > /dev/null
         fi
     done
 else
@@ -66,7 +68,8 @@ find "$WORK" -maxdepth 2 -type f | sort | sed 's,^,  ,'
 # --- Pack + upload ---------------------------------------------------------
 echo
 echo "[zip]    packaging $WORK -> $OUT_ZIP"
-zip -rq "$OUT_ZIP" "$WORK"
+# python3 -m zipfile (instead of zip(1)) for SL7 apptainer compatibility.
+python3 -m zipfile -c "$OUT_ZIP" "$WORK"
 
 echo "[upload] $OUT_ZIP"
 URL=$(BROWSER=echo bash "$UPLOAD" "$OUT_ZIP" | tail -1)

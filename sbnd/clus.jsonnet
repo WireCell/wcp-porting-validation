@@ -442,22 +442,22 @@ local clus_all_apa (
         // --- qlport-style downstream chain (added 2026-05-27) ---
         // tagger_flag_transfer re-added 2026-05-28: WireCellMatch now tags
         // the main_clus, so the upstream `tagger_info` PC is available.
-        cm.tagger_flag_transfer("tagger"),
-        cm.clustering_recovering_bundle("recover_bundle", graph_name="relaxed_pid"),
-        cm.steiner(retiler=improve_cluster_2_sbnd, perf=true),
-        cm.fiducialutils(),
-        cm.tagger_check_neutrino(
-            trackfitting_config_file="sbnd_track_fitting.json",
-            recombination_model=wc.tn(sbnd_box_recomb),
-            particle_dataset=wc.tn(pds.particle_dataset),
-            perf=true,
-            dl_weights=smoketest_dl_weights,
-            dQdx_scale=dQdx_scale,
-            dQdx_offset=dQdx_offset,
-            clus_geom_helper="",                 // no SBND SCE in v1
-        ),
-        numu_bdt_scorer,
-        nue_bdt_scorer,
+        // cm.tagger_flag_transfer("tagger"),
+        // cm.clustering_recovering_bundle("recover_bundle", graph_name="relaxed_pid"),
+        // cm.steiner(retiler=improve_cluster_2_sbnd, perf=true),
+        // cm.fiducialutils(),
+        // cm.tagger_check_neutrino(
+        //     trackfitting_config_file="sbnd_track_fitting.json",
+        //     recombination_model=wc.tn(sbnd_box_recomb),
+        //     particle_dataset=wc.tn(pds.particle_dataset),
+        //     perf=true,
+        //     dl_weights=smoketest_dl_weights,
+        //     dQdx_scale=dQdx_scale,
+        //     dQdx_offset=dQdx_offset,
+        //     clus_geom_helper="",                 // no SBND SCE in v1
+        // ),
+        // numu_bdt_scorer,
+        // nue_bdt_scorer,
         // --- end qlport-style chain ---
 
         #cm.retile(cut_time_low=3*wc.us,

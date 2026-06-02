@@ -1,0 +1,65 @@
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "detsim_drops.fcl"
+#include "opdetdigitizer_sbnd.fcl"
+
+process_name: wclsframedump
+
+services:
+{
+  TFileService: { fileName: "tf-default.root" }
+  @table::sbnd_detsim_services
+  AuxDetGeometry: @local::sbnd_auxdetgeo
+  @table::sbnd_geometry_services
+}
+
+source: {
+   module_type: RootInput
+}
+
+physics: {
+   producers: {
+
+      framedump: {
+         module_type: WireCellToolkit
+         wcls_main: {
+            tool_type: WCLS
+            apps: ["Pgrapher"]
+
+            logsinks: ["stdout"]
+            loglevels: ["debug"]
+
+            plugins: ["WireCellGen", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft"]
+
+            inputers: ["wclsCookedFrameSource:sigs"]
+
+            configs: ["wcls-frame-dump.jsonnet"]
+
+            params: {
+                outname: "frames-dnn.tar.bz2"
+            }
+            # ---- MC tags (2025f-mc.root): module label "sptpc2d" ----
+            structs: {
+                recobwire_tags:   "[\"sptpc2d:dnnsp\"]"
+                trace_tags:       "[\"dnnsp\"]"
+                summary_tags:     "[\"sptpc2d:wienersummary\"]"
+                input_mask_tags:  "[\"sptpc2d:badmasks\"]"
+                output_mask_tags: "[\"bad\"]"
+            }
+            # ---- DATA tags (2025f-data.root): module label "sptpc2d" ----
+            # Swap the structs block above for this one to dump data:
+            # structs: {
+            #     recobwire_tags:   "[\"sptpc2d:dnnsp\"]"
+            #     trace_tags:       "[\"dnnsp\"]"
+            #     summary_tags:     "[\"sptpc2d:wienersummary\"]"
+            #     input_mask_tags:  "[\"sptpc2d:badmasks\"]"
+            #     output_mask_tags: "[\"bad\"]"
+            # }
+         }
+      }
+   }
+
+   p1: [ framedump ]
+   trigger_paths: [ p1 ]
+
+}
