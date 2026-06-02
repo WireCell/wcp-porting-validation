@@ -81,6 +81,8 @@ function(
     // opflash TensorFileSource is built inline so it reads from the per-event
     // `input` dir (qlm.opflash_source hardcodes a bare cwd-relative filename).
     local qlm = (import 'qlmatching.jsonnet')(params);
+    // SBND CPA structure-exclusion fiducial (cushion is the live tuning knob).
+    local cathode_fv = (import 'cathode_fiducial.jsonnet')(cx=0.5*wc.cm, cy=0.5*wc.cm, cz=0.5*wc.cm);
     local opflash_sources = [g.pnode({
         type: 'TensorFileSource',
         name: 'opflash_src_apa%d' % anodes[n].data.ident,
@@ -91,7 +93,8 @@ function(
     }, nin=0, nout=1) for n in std.range(0, nanodes - 1)];
     local flash_attach   = [qlm.flash_attach(n) for n in std.range(0, nanodes - 1)];
     local matching_pipes = [qlm.matching(anodes[n], clus_maker.detector_volumes([anodes[n]]),
-                                         n, reality, semimodel_file)
+                                         n, reality, semimodel_file,
+                                         cathode_fiducial=cathode_fv.tn)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Per-APA subgraphs ---
@@ -136,4 +139,4 @@ function(
         },
     };
 
-    [cmdline] + g.uses(graph) + [app]
+    [cmdline] + g.uses(graph) + cathode_fv.configs + [app]

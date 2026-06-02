@@ -4,10 +4,16 @@ A simple, retunable description of the region occupied by the SBND **cathode
 (CPA) mechanical structure**, approximated by a few overlapping axis-aligned
 boxes, defined **per TPC** in the **wire-cell-toolkit coordinate system**.
 
-This is a *staging artifact*: it lives entirely in `sbnd_geometry/` and does
-**not** modify the toolkit. It exists so we can agree on the shape and the
-numbers, eyeball them against the real GDML structure, and then port them into
-the toolkit mechanically (see [§5](#5-how-to-implement-this-in-the-toolkit)).
+This file (`cathode_fiducial.py`) remains the **design/validation source of
+truth** for the box geometry. It has now been **ported into the toolkit** as the
+cushion-configurable jsonnet helper
+`cfg/pgrapher/experiment/sbnd/cathode_fiducial.jsonnet` (re-exported via
+`sbnd_xin/cathode_fiducial.jsonnet`), whose box bounds match this `.py` to 3
+decimals at cushion 0 and 0.5. It is consumed by `QLMatching` (cathode-end
+`flag_at_x_boundary`, via the `cathode_fiducial` tn; see
+`match/docs/qlmatching-code.md` §4.1a) and is reusable by any code needing a CPA
+structure-exclusion volume via the toolkit `IFiducial` interface. See
+[§5](#5-how-to-implement-this-in-the-toolkit) for the mechanics.
 
 | File | Role |
 |---|---|

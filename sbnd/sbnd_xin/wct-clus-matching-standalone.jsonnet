@@ -106,11 +106,13 @@ local clus_pipes = [
 // the canonical in-tree helper, re-exported locally as ./qlmatching.jsonnet (same
 // shim pattern as ./clus.jsonnet).
 local qlm = (import 'qlmatching.jsonnet')(params);
+// SBND CPA structure-exclusion fiducial (cushion is the live tuning knob).
+local cathode_fv = (import 'cathode_fiducial.jsonnet')(cx=0.5*wc.cm, cy=0.5*wc.cm, cz=0.5*wc.cm);
 local opflash_sources = [qlm.opflash_source(n) for n in std.range(0, std.length(tools.anodes) - 1)];
 local flash_attach    = [qlm.flash_attach(n)    for n in std.range(0, std.length(tools.anodes) - 1)];
 local matching_pipes  = [
     qlm.matching(tools.anodes[n], clus_maker.detector_volumes([tools.anodes[n]]),
-                 n, reality, semimodel_file)
+                 n, reality, semimodel_file, cathode_fiducial=cathode_fv.tn)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 
@@ -157,4 +159,4 @@ local cmdline = {
     }
 };
 
-[cmdline] + g.uses(graph) + [app]
+[cmdline] + g.uses(graph) + cathode_fv.configs + [app]
