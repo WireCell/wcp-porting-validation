@@ -2,7 +2,7 @@
 """SBND matched Q-L light: measured vs predicted PE (data vs simulation).
 
 The charge-light matcher (QLMatching) writes, per event, a Bee optical JSON
-<n>-op.json inside mabc-all-apa.zip.  Each flash row carries:
+<n>-op.json inside mabc.zip.  Each flash row carries:
     op_t            flash time (us)
     op_peTotal      total measured PE
     op_pes[312]     measured PE per optical channel
@@ -48,11 +48,11 @@ PERPMT_DUMP = os.path.join(HERE, "ql_perpmt_dump.csv")
 
 # mode -> (Bee zip, real event ids in streaming/dir-index order)
 MODES = {
-    "mc":   (os.path.join(HERE, "work/ql_mc/mabc-all-apa.zip"),
+    "mc":   (os.path.join(HERE, "work/ql_mc/mabc.zip"),
              [2, 9, 11, 12, 14, 18, 31, 35, 41, 42]),
-    "data": (os.path.join(HERE, "work/ql_data/mabc-all-apa.zip"),
-             [659242, 659286, 659374, 659484, 659572,
-              659704, 659924, 660496, 660826, 660892]),
+    "data": (os.path.join(HERE, "work/ql_data/mabc.zip"),
+             [686, 1258, 1302, 1346, 1698,
+              1720, 1808, 1852, 2028, 2050]),
 }
 
 NCHAN = 312

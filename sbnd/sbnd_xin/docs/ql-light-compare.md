@@ -16,18 +16,22 @@ between data and simulation**. The expectation going in:
   generate the event, so measured/predicted should sit near a fixed scale with
   little spread.
 - In **data** the photon model is not calibrated to the real detector, so the
-  measured/predicted normalization may be offset and/or broad.
+  measured/predicted normalization could be offset and/or broad.
 
-The result below bears this out: MC closes at `ratio ≈ 1`, data does not (it runs
-a factor of a few higher). The data offset is a real data–MC difference, though
-this analysis cannot by itself separate the light-model contribution from the
-charge-reconstruction and PE-calibration scales (see *What this does and does not
-tell us*).
+On this data sample (`input-1file-data-v10_14_02_02`) the result is that **both
+close near 1**: MC sits at `ratio ≈ 1.0` and data at `≈ 0.86` (measured ~14 %
+below predicted), each with a tight spread and a strong pattern (cosine) pile-up
+near 1. The data photon prediction now tracks the measured light well — a marked
+change from an earlier data sample (run-659xxx) on which data ran a factor of a
+few *high*; the data–MC normalization is therefore production-dependent, not a
+fixed property of the matcher. Any residual data–MC difference this analysis sees
+cannot by itself be separated into light-model, charge-reconstruction, and
+PE-calibration contributions (see *What this does and does not tell us*).
 
 ## Data source
 
 The matcher writes both quantities to the Bee optical JSON `<n>-op.json`
-(one per event, inside `mabc-all-apa.zip`, from `util/src/Bee.cxx`
+(one per event, inside `mabc.zip`, from `util/src/Bee.cxx`
 `Bee::Flashes::append`). Each flash row carries:
 
 | field            | meaning                                                |
@@ -41,15 +45,14 @@ The matcher writes both quantities to the Bee optical JSON `<n>-op.json`
 | `op_flash_group` | (SBND all-APA, `flash_group_window>0`) ±80 ns flash-flash coincidence id shared by TPC0/TPC1 flashes; absent ⇒ no grouping. Display-only — does not affect the analysis below. |
 
 A **matched bundle** is a row with non-empty `op_cluster_ids` (so `op_pes_pred`
-is filled). This run: **186 matched bundles (MC), 130 (data)** across 10 events
-each. (These counts predate `bee_flash_per_flash`, which collapses a flash's
-several matched-cluster rows into one row — the matched-flash count is lower, the
-matched-cluster total unchanged.)
+is filled). This run: **103 matched bundles (MC), 101 (data)** across 10 events
+each (96 active PMT channels each). With `bee_flash_per_flash` (SBND all-APA) a
+flash's several matched-cluster rows are collapsed into one, so a matched bundle
+here is one matched flash.
 
 The 10 events are labelled by directory index 0..9, which maps in streaming
 order to the real event ids — MC: `2, 9, 11, 12, 14, 18, 31, 35, 41, 42`;
-data: `659242, 659286, 659374, 659484, 659572, 659704, 659924, 660496, 660826,
-660892`.
+data: `686, 1258, 1302, 1346, 1698, 1720, 1808, 1852, 2028, 2050`.
 
 ## Method
 
@@ -74,75 +77,70 @@ keeps the genuine matches and drops the obvious mis-matches. It is exposed as
 
 ### Per event / APA summed PE — `pics/ql_event_apa_sumPE.png`
 One point per (event, APA), summing measured and predicted over that event/APA's
-matched bundles. **MC** clusters along `y = x` (predicted ≈ measured, both up to
-~10⁵ PE). **Data** sits well above `y = x`, and its predicted sums are an order
-of magnitude smaller (~10³–10⁴) than MC for comparable measured PE — the
-prediction systematically under-counts in data.
+matched bundles. **Both** MC and data cluster along `y = x` (predicted ≈ measured,
+both ~10⁴–2×10⁵ PE). Data sits right on the diagonal — its predicted sums are now
+comparable to MC for comparable measured PE, with no systematic under-count.
 
 ### Per PMT summed PE — `pics/ql_perpmt_sumPE.png`
-Per-channel measured vs predicted, summed over all matched bundles. **MC**
-straddles `y = x` (≈10⁴ both axes). **Data** sits an order of magnitude above
-`y = x` (predicted ~10²–10³, measured ~10³–10⁴). A mild APA0-vs-APA1 offset is
-visible in data (APA0-side predicted lower than APA1).
+Per-channel measured vs predicted, summed over all matched bundles. Both **MC**
+and **data** straddle `y = x` (≈10⁴ both axes). The same APA0-vs-APA1 split shows
+in both: the APA0-side channels form a lower cloud (~6×10³) than the APA1-side
+(~10⁴–2×10⁴), but both lie along the diagonal.
 
 ### Pattern similarity — `pics/ql_cosine_dist.png`
-MC matched bundles pile up near `cos = 1` (the per-PMT shape is well reproduced);
-data is flat with no pile-up near 1 — even the *pattern* is reproduced less well
-in data than in MC.
+Both MC and data matched bundles pile up near `cos = 1` (the per-PMT shape is well
+reproduced), with a small low-cosine tail in each. Data now tracks MC closely —
+the *pattern* of the light is reproduced about as well in data as in MC.
 
 ### Normalization — `pics/ql_ratio_dist.png` and `pics/ql_ratio_vs_cos.png`
-Distribution of `ratio = meas/pred` for the reasonably-matched population. MC
-peaks sharply at `ratio ≈ 1`; data is broad and shifted to several×. In the
-`ratio` vs `cos` scatter, the high-cosine region holds a tight MC blob at
-`ratio ≈ 1` that data lacks.
+Distribution of `ratio = meas/pred` for the reasonably-matched population. Both MC
+and data peak near `ratio ≈ 1`; MC sits right at 1, data slightly below (~0.86),
+both with comparable, modest spread. In the `ratio` vs `cos` scatter the
+high-cosine region holds a tight blob near `ratio ≈ 1` in **both** samples.
 
 **Headline numbers** (`cos ≥ 0.85`):
 
 | sample | N  | median ratio | 16–84 % band |
 |--------|---:|-------------:|--------------|
-| MC     | 79 | **1.29**     | [0.92, 11.76]|
-| data   | 26 | **~4** (2–5) | [1.01, 55.87]|
+| MC     | 65 | **1.01**     | [0.78, 1.90] |
+| data   | 63 | **0.86**     | [0.69, 1.38] |
 
-The strong, robust statement is the **MC** one: across all cuts the simulation
-ratio converges to **≈1.1–1.3 with shrinking spread** (1.33 → 1.29 → 1.16 → 1.13
-as the cut tightens). This is essentially a closure test — in MC the light
-prediction uses the same physics that generated the event, so measured ≈ predicted
-is expected, and it holds.
+Both samples now pass a closure-like test. **MC** converges to `ratio ≈ 1.0–1.07`
+across all cuts (1.07 → 1.01 → 1.01 → 1.07) with shrinking spread — the expected
+result, since in MC the light prediction uses the same physics that generated the
+event. **Data** converges to `ratio ≈ 0.86–0.99` (0.87 → 0.86 → 0.87 → 0.99),
+i.e. measured light ~14 % below predicted and stable across cuts. The clean
+qualitative result is that on this sample data **does** reproduce the MC closure
+to within ~15 %, with comparable N (data 63 vs MC 65 at `cos ≥ 0.85`).
 
-For **data** the ratio is higher — measured light is larger than predicted by a
-**factor of a few (~2–5×)** — but the number is small-N (6–35 bundles) and does
-not converge (it bounces 4.22 → 3.68 → 1.82 → 4.68 across cuts), so treat it as a
-bound, not a precise scale. The clean qualitative result is that data does **not**
-reproduce the MC `ratio ≈ 1` closure.
-
-**What this does and does not tell us.** The data≠1 offset comes from whatever
-*differs* between the data and MC runs — it is **not** the `QtoL`/efficiency
-normalization, which is identical in both runs (same `qlmatching.jsonnet`, same
-`semi-analytical-sbnd.json`) and therefore cannot produce a data–MC difference
-(raising `QtoL` to pull data to 1 would push MC below 1). The candidates are: the
-reconstructed charge `q` going into the prediction (the per-event/APA plot shows
-data **predicted** sums ~10× below MC — that is the charge input, not the light
-model), the ADC→PE calibration of the measured flash, and any real optical
-response the semi-analytical model does not capture for data. This analysis
-localizes a factor-of-a-few data excess **consistent with** the light
-model / light-yield not matching real data, but does not isolate it from the
-charge-reconstruction and PE-calibration scales.
+**What this does and does not tell us.** On this sample the data–MC normalization
+difference is small (data ≈ 0.86 vs MC ≈ 1.0, ~15 %), so there is no longer a
+large offset to attribute. The `QtoL`/efficiency normalization is identical in
+both runs (same `qlmatching.jsonnet`, same `semi-analytical-sbnd.json`) and so by
+construction cannot create a data–MC difference; the residual ~15 % comes from
+whatever *differs* between the two runs — the reconstructed charge `q` going into
+the prediction, the ADC→PE calibration of the measured flash, and any real optical
+response the semi-analytical model does not capture for data. This analysis shows
+that, for this data production, those effects largely cancel into a near-unity
+ratio; it does not isolate the individual contributions, and the result is
+sample-dependent (an earlier data sample ran several× high).
 
 ### Cut sensitivity (robustness)
 | cos cut | MC N | MC median | data N | data median |
 |--------:|-----:|----------:|-------:|------------:|
-| 0.80    | 91   | 1.33      | 35     | 4.22        |
-| 0.85    | 79   | 1.29      | 26     | 3.68        |
-| 0.90    | 59   | 1.16      | 14     | 1.82*       |
-| 0.95    | 26   | 1.13      | 6      | 4.68*       |
+| 0.80    | 73   | 1.07      | 73     | 0.87        |
+| 0.85    | 65   | 1.01      | 63     | 0.86        |
+| 0.90    | 54   | 1.01      | 45     | 0.87        |
+| 0.95    | 26   | 1.07      | 22     | 0.99        |
 
-MC sits at 1.1–1.3 throughout; data at several× throughout. (*data bins above
-0.85 have small N and bounce; 0.85 is the best-powered representative point.)
+MC sits at ≈1.0–1.07 throughout; data at ≈0.86–0.99 throughout, rising toward 1 as
+the cut tightens. Both are stable and well-powered (N stays comparable between
+samples), so 0.85 is a representative point.
 
 ## Caveats
-- The 16–84 % bands are inflated by a tail of bundles that pass the cosine cut
-  yet have a wrong overall scale (cluster fragments, saturation, out-of-time
-  pile-up). The **median** is the robust statistic; the per-event/APA and per-PMT
+- The 16–84 % bands carry a tail of bundles that pass the cosine cut yet have a
+  wrong overall scale (cluster fragments, saturation, out-of-time pile-up). The
+  **median** is the robust statistic; the per-event/APA and per-PMT
   aggregate plots (which average over mis-matches) tell the same story more
   cleanly.
 - Cosine over non-negative PE vectors is a weak discriminator — it can be high
@@ -154,8 +152,8 @@ MC sits at 1.1–1.3 throughout; data at several× throughout. (*data bins above
 ## Reproduce
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
-./run_clust_QL_evt.sh mc      # -> work/ql_mc/mabc-all-apa.zip
-./run_clust_QL_evt.sh data    # -> work/ql_data/mabc-all-apa.zip
+./run_clust_QL_evt.sh mc      # -> work/ql_mc/mabc.zip
+./run_clust_QL_evt.sh data    # -> work/ql_data/mabc.zip
 python3 ql_light_compare.py   # default --cos-cut 0.85
 ```
 
