@@ -102,12 +102,18 @@ def _zc(local_mm):
     return Z_CENTER_CM + local_mm * MM
 
 
-def cathode_boxes(tpc, cx=0.0, ct=0.0, pad=True, tube_hw_cm=None, include_boss=False):
+def cathode_boxes(tpc, cx=0.5, cy=0.5, cz=0.5, pad=True, tube_hw_cm=None,
+                  include_boss=False):
     """Per-TPC CPA structure-exclusion boxes (cm, toolkit frame).
 
+    The whole exclusion region is dilated by an independent per-side cushion in
+    each dimension (default 0.5 cm), applied to the pad slab, tube bars and
+    knuckles alike:
+
     tpc        : 0 (East, X<0) or 1 (West, X>0)
-    cx         : drift (X) cushion, cm, added to every reach.
-    ct         : transverse (Y,Z) cushion, cm, added to every Y/Z half-extent.
+    cx         : drift (X) cushion, cm, added to every reach (one-sided, deeper).
+    cy         : vertical (Y) cushion, cm, added to every Y half-extent (per side).
+    cz         : beam (Z) cushion, cm, added to every Z half-extent (per side).
     pad        : include the thin full-plane pad slab (default True).
     tube_hw_cm : tube bar transverse half-width (default = pipe radius 2.7 cm;
                  use ~6.1 cm to fill the whole inter-pad gap).
@@ -115,56 +121,62 @@ def cathode_boxes(tpc, cx=0.0, ct=0.0, pad=True, tube_hw_cm=None, include_boss=F
     """
     assert tpc in (0, 1)
     hw = (TUBE_HW_MM * MM) if tube_hw_cm is None else tube_hw_cm
-    yplane = PLANE_YH_MM * MM + ct
-    zlo, zhi = _zc(-PLANE_ZH_MM) - ct, _zc(PLANE_ZH_MM) + ct
-    boxes = []
-
-    # thin full-plane pad slab (mesh + foil)
-    if pad:
-        x0, x1 = _xspan(tpc, PAD_REACH_MM, cx, "pad")
-        boxes.append(Box("pad", x0, x1,
-                         -(PAD_YH_MM * MM + ct), (PAD_YH_MM * MM + ct),
-                         _zc(-PAD_ZH_MM) - ct, _zc(PAD_ZH_MM) + ct))
+    yplane = PLANE_YH_MM * MM + cy
+    zlo, zhi = _zc(-PLANE_ZH_MM) - cz, _zc(PLANE_ZH_MM) + cz
+    deep = []
 
     # deep horizontal tube bars (run along z) at the y gap-lines
     for y in HORIZ_Y_MM:
         x0, x1 = _xspan(tpc, TUBE_REACH_MM, cx, "tube")
         yc = y * MM
-        boxes.append(Box("htube_y%+05.0f" % y, x0, x1,
-                         yc - (hw + ct), yc + (hw + ct), zlo, zhi))
+        deep.append(Box("htube_y%+05.0f" % y, x0, x1,
+                        yc - (hw + cy), yc + (hw + cy), zlo, zhi))
 
     # deep vertical tube bars (run along y) at the z gap-lines
     for z in VERT_Z_MM:
         x0, x1 = _xspan(tpc, TUBE_REACH_MM, cx, "tube")
         zc = _zc(z)
-        boxes.append(Box("vtube_z%+05.0f" % z, x0, x1,
-                         -yplane, yplane, zc - (hw + ct), zc + (hw + ct)))
+        deep.append(Box("vtube_z%+05.0f" % z, x0, x1,
+                        -yplane, yplane, zc - (hw + cz), zc + (hw + cz)))
 
     # deeper knuckle boxes on the central vertical line (z=0)
     for y in KNK_Y_MM:
         x0, x1 = _xspan(tpc, KNK_REACH_MM, cx, "knuckle")
         yc = y * MM
-        boxes.append(Box("knuckle_y%+05.0f" % y, x0, x1,
-                         yc - (KNK_HY_MM * MM + ct), yc + (KNK_HY_MM * MM + ct),
-                         _zc(-KNK_HZ_MM) - ct, _zc(KNK_HZ_MM) + ct))
+        deep.append(Box("knuckle_y%+05.0f" % y, x0, x1,
+                        yc - (KNK_HY_MM * MM + cy), yc + (KNK_HY_MM * MM + cy),
+                        _zc(-KNK_HZ_MM) - cz, _zc(KNK_HZ_MM) + cz))
 
     # optional center boss (mostly covered by the central tube crossing)
     if include_boss:
         x0, x1 = _xspan(tpc, 13.5, cx, "boss")
-        boxes.append(Box("boss", x0, x1, -(13.5 * MM + ct), (13.5 * MM + ct),
-                         _zc(-29.5) - ct, _zc(29.5) + ct))
+        deep.append(Box("boss", x0, x1, -(13.5 * MM + cy), (13.5 * MM + cy),
+                        _zc(-29.5) - cz, _zc(29.5) + cz))
+
+    boxes = []
+    # thin full-plane pad slab (mesh + foil), thin in X. Its Y/Z extent is the
+    # bounding box of the whole tube/knuckle lattice (cushions included), so it
+    # covers the cathode plane out to and including the edge tube bars -- not
+    # just the foil-grid envelope (PAD_YH_MM/PAD_ZH_MM, kept for reference).
+    if pad:
+        x0, x1 = _xspan(tpc, PAD_REACH_MM, cx, "pad")
+        ymin = min(b.ymin for b in deep); ymax = max(b.ymax for b in deep)
+        zmin = min(b.zmin for b in deep); zmax = max(b.zmax for b in deep)
+        boxes.append(Box("pad", x0, x1, ymin, ymax, zmin, zmax))
+    boxes += deep
     return boxes
 
 
-def all_boxes(cx=0.0, ct=0.0, **kw):
-    return {0: cathode_boxes(0, cx, ct, **kw), 1: cathode_boxes(1, cx, ct, **kw)}
+def all_boxes(cx=0.5, cy=0.5, cz=0.5, **kw):
+    return {0: cathode_boxes(0, cx, cy, cz, **kw),
+            1: cathode_boxes(1, cx, cy, cz, **kw)}
 
 
-def inside(point_cm, cx=0.0, ct=0.0, **kw):
+def inside(point_cm, cx=0.5, cy=0.5, cz=0.5, **kw):
     """True if point (x,y,z in cm) is inside ANY CPA exclusion box (either TPC).
     Mirrors a toolkit CompositeFiducial{logic:'or'} over the per-TPC BoxFiducials."""
     for tpc in (0, 1):
-        for b in cathode_boxes(tpc, cx, ct, **kw):
+        for b in cathode_boxes(tpc, cx, cy, cz, **kw):
             if b.contains(point_cm):
                 return True
     return False
@@ -173,15 +185,15 @@ def inside(point_cm, cx=0.0, ct=0.0, **kw):
 # --------------------------------------------------------------------------
 # Toolkit jsonnet emitter (BoxFiducial + CompositeFiducial), paste-ready.
 # --------------------------------------------------------------------------
-def to_jsonnet(cx=0.0, ct=0.0, **kw):
+def to_jsonnet(cx=0.5, cy=0.5, cz=0.5, **kw):
     f = lambda v: "%.3f" % v
     L = ["// SBND CPA structure-exclusion fiducial (generated by cathode_fiducial.py)",
-         "// cx=%.3f cm (drift cushion), ct=%.3f cm (transverse cushion)" % (cx, ct),
+         "// per-side cushions: cx=%.3f (X), cy=%.3f (Y), cz=%.3f (Z) cm" % (cx, cy, cz),
          "local wc = import 'wirecell.jsonnet';",
          "local cpa_boxes = ["]
     names = []
     for tpc in (0, 1):
-        for b in cathode_boxes(tpc, cx, ct, **kw):
+        for b in cathode_boxes(tpc, cx, cy, cz, **kw):
             tn = "cpa-tpc%d-%s" % (tpc, b.name)
             names.append(tn)
             (x0, y0, z0), (x1, y1, z1) = b.ray()
@@ -213,17 +225,7 @@ KIND_STYLE = {  # edgecolor, fill alpha
 }
 
 
-def _pad_outlines():
-    """16 mesh-pad footprints in toolkit coords (z,y) cm, for the face view."""
-    out = []
-    for y in (517.5, -517.5, 1552.5, -1552.5):
-        for z in (667.0, -667.0, 1942.0, -1942.0):
-            out.append((_zc(z) - 1153.0 * MM / 2, _zc(z) + 1153.0 * MM / 2,
-                        y * MM - 913.0 * MM / 2, y * MM + 913.0 * MM / 2))
-    return out
-
-
-def draw(png="cathode_fiducial.png", cx=0.0, ct=0.0, **kw):
+def draw(png="cathode_fiducial.png", cx=0.5, cy=0.5, cz=0.5, **kw):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -232,7 +234,7 @@ def draw(png="cathode_fiducial.png", cx=0.0, ct=0.0, **kw):
 
     from matplotlib.colors import to_rgba
 
-    boxes = all_boxes(cx, ct, **kw)
+    boxes = all_boxes(cx, cy, cz, **kw)
     fig, axes = plt.subplots(1, 3, figsize=(19, 6.2), constrained_layout=True)
 
     def rect(ax, a, b, c, d, ec, alpha, lw=1.2):
@@ -241,17 +243,15 @@ def draw(png="cathode_fiducial.png", cx=0.0, ct=0.0, **kw):
         ax.add_patch(Rectangle((a, c), b - a, d - c, fill=True,
                                fc=to_rgba(ec, alpha), ec=ec, lw=lw, zorder=3))
 
-    # ---- Panel 1: YZ cathode face (TPC0) -- the lattice grid over the pads ----
+    # ---- Panel 1: YZ cathode face (TPC0) -- the exclusion boxes only ----
+    # (the physical CPA pads are NOT part of the FV definition, so not drawn)
     ax = axes[0]
-    for (z0, z1, y0, y1) in _pad_outlines():
-        ax.add_patch(Rectangle((z0, y0), z1 - z0, y1 - y0, fill=True,
-                               fc="0.92", ec="0.6", lw=0.6, zorder=1))
     for b in boxes[0]:
         st = KIND_STYLE[b.kind()]
         rect(ax, b.zmin, b.zmax, b.ymin, b.ymax, st[0], st[1])
     ax.set_xlim(-20, 520); ax.set_ylim(-220, 220); ax.set_aspect("equal")
     ax.set_xlabel("Z [cm] (beam)"); ax.set_ylabel("Y [cm] (vertical)")
-    ax.set_title("YZ cathode face (TPC0): pads (gray) + tube lattice")
+    ax.set_title("YZ cathode face (TPC0): pad slab + tube lattice")
 
     # ---- Panel 2: XZ slice at a pad-row (y = 51.75 cm) ----
     yslice = 51.75
@@ -284,32 +284,40 @@ def draw(png="cathode_fiducial.png", cx=0.0, ct=0.0, **kw):
            for k, lbl in [("pad", "pad slab (~0.6 cm)"),
                           ("htube", "tube bars (~2.7 cm)"),
                           ("knuckle", "knuckles (~4.1 cm)")]]
-    leg.append(Line2D([0], [0], color="0.6", lw=6, alpha=0.4, label="CPA pads"))
-    fig.legend(handles=leg, loc="outside lower center", ncol=4, frameon=False)
-    fig.suptitle("SBND CPA structure-exclusion: tube lattice (cx=%.1f cm, ct=%.1f cm)"
-                 % (cx, ct), fontsize=13)
+    fig.legend(handles=leg, loc="outside lower center", ncol=3, frameon=False)
+    fig.suptitle("SBND CPA structure-exclusion: tube lattice "
+                 "(cx=%.1f, cy=%.1f, cz=%.1f cm cushions)" % (cx, cy, cz), fontsize=13)
     fig.savefig(png, dpi=130)
     print("wrote", png)
 
 
 def _selfcheck():
-    # pad point away from any tube line: thin cut only
+    Z0 = dict(cx=0.0, cy=0.0, cz=0.0)        # bare geometry, no cushion
+    # --- bare-geometry reaches (zero cushion) ---
     pad_pt = (51.75, 183.8)  # (y, z) cm: pad-row center, pad-column center
-    assert inside((-0.3,) + pad_pt),       "shallow point on a pad should be inside (pad slab)"
-    assert not inside((-2.0,) + pad_pt),   "deep point on a pad should be OUTSIDE (no slab cut)"
+    assert inside((-0.3,) + pad_pt, **Z0),       "shallow point on a pad should be inside (pad slab)"
+    assert not inside((-2.0,) + pad_pt, **Z0),   "deep point on a pad should be OUTSIDE (no slab cut)"
     # horizontal tube (y=0 line), over a pad column: deep cut present
-    assert inside((-2.0, 0.0, 183.8)),     "deep point on a horizontal tube should be inside"
-    assert not inside((-4.0, 0.0, 183.8)), "tube reaches only ~2.7 cm; -4 outside"
+    assert inside((-2.0, 0.0, 183.8), **Z0),     "deep point on a horizontal tube should be inside"
+    assert not inside((-4.0, 0.0, 183.8), **Z0), "tube reaches only ~2.7 cm; -4 outside"
     # vertical tube (z=0 line), off the knuckles: deep cut present
-    assert inside((-2.0, 80.0, 250.5)),    "deep point on the central vertical tube should be inside"
-    assert not inside((-4.0, 80.0, 250.5)),"tube reaches only ~2.7 cm; -4 outside"
+    assert inside((-2.0, 80.0, 250.5), **Z0),    "deep point on the central vertical tube should be inside"
+    assert not inside((-4.0, 80.0, 250.5), **Z0),"tube reaches only ~2.7 cm; -4 outside"
     # knuckle: deepest
-    assert inside((-3.5, 51.75, 250.5)),   "knuckle point should be inside"
-    assert not inside((-4.5, 51.75, 250.5)),"knuckle reaches ~4.1 cm; -4.5 outside"
-    # cushion widens the pad slab
-    assert inside((-2.0,) + pad_pt, cx=2.0),"cx=2 widens pad slab past 2 cm"
+    assert inside((-3.5, 51.75, 250.5), **Z0),   "knuckle point should be inside"
+    assert not inside((-4.5, 51.75, 250.5), **Z0),"knuckle reaches ~4.1 cm; -4.5 outside"
     # mirror: TPC1 is +X
-    assert inside((2.0, 0.0, 183.8)),       "TPC1 horizontal tube at +X should be inside"
+    assert inside((2.0, 0.0, 183.8), **Z0),      "TPC1 horizontal tube at +X should be inside"
+    # --- pad slab spans the lattice bbox: covers out to the edge tube bars ---
+    # y=203 is beyond the foil envelope (201.85) and not on any tube line, yet
+    # within the edge-tube-bar reach -> shallow cut present, deep cut absent.
+    assert inside((-0.3, 203.0, 183.8), **Z0),   "pad slab should reach the edge tube bars (y~203)"
+    assert not inside((-2.0, 203.0, 183.8), **Z0),"no deep cut out at the plane edge"
+    # --- 0.5 cm default cushion dilates every region by 0.5 cm per side ---
+    assert inside((-4.5, 51.75, 250.5)),          "knuckle 4.1+0.5 -> -4.5 inside with default cushion"
+    assert not inside((-0.3, 210.0, 183.8), **Z0),"y=210 just past the bare plane edge (209.7)"
+    assert inside((-0.3, 210.0, 183.8)),          "...but inside once the 0.5 cm Y cushion is added"
+    assert inside((-2.0,) + pad_pt, cx=2.0),      "cx=2 widens pad slab past 2 cm"
     print("self-checks passed")
 
 

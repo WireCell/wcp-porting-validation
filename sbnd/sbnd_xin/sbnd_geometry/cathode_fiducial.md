@@ -12,7 +12,7 @@ the toolkit mechanically (see [§5](#5-how-to-implement-this-in-the-toolkit)).
 | File | Role |
 |---|---|
 | [`cathode_fiducial.py`](cathode_fiducial.py) | single source of truth — box numbers, `inside()` test, jsonnet emitter, drawing |
-| [`cathode_fiducial.png`](cathode_fiducial.png) | XZ / XY / YZ drawing of the boxes over the real structure |
+| [`cathode_fiducial.png`](cathode_fiducial.png) | XZ / XY / YZ drawing of the exclusion boxes (pad slab + tube lattice + knuckles) |
 | `cathode_fiducial.md` | this document |
 
 Related: [`geoDisplay.C`](geoDisplay.C) (view the GDML in ROOT),
@@ -119,42 +119,51 @@ cut only at the knuckles. (A uniform 2.7 cm slab over the whole plane would
 wrongly veto the thin pad area.) Boxes overlap by design — "inside the CPA
 region" = inside **any** box.
 
-Tunable parameters (all default to tight):
+Tunable parameters. The whole exclusion region is **dilated by an independent
+per-side cushion in each dimension, default 0.5 cm**, applied to the pad slab,
+tube bars and knuckles alike:
 
-- `cx` — drift (X) cushion, cm; added to every reach.
-- `ct` — transverse (Y, Z) cushion, cm; added to every half-extent.
+- `cx` — drift (X) cushion, cm; added to every reach (one-sided, deeper). Default **0.5**.
+- `cy` — vertical (Y) cushion, cm; added to every Y half-extent (per side). Default **0.5**.
+- `cz` — beam (Z) cushion, cm; added to every Z half-extent (per side). Default **0.5**.
 - `pad` — include the thin pad slab (default `True`; set `False` for no pad cut).
 - `tube_hw_cm` — tube-bar transverse half-width (default **2.7 cm** = pipe radius;
   use ~**6.1 cm** to fill the whole inter-pad gap instead of just the pipe).
 
-Numbers below are TPC0, `cx = ct = 0` (negate X for TPC1; `Z = 250.5 + local_z`).
+Numbers below are TPC0 at **bare geometry** (`cx = cy = cz = 0`); negate X for
+TPC1, `Z = 250.5 + local_z`.
 
 ### Pad slab (thin, full plane) — 1 box
-X [ −(0.6 + cx), 0 ], Y ±(201.85 + ct), Z 250.5 ± (252.8 + ct). Covers the mesh
-(0.05 cm) + foil (0.6 cm) over the whole cathode. **This is the only box over the
-pad area, and it is thin** — no 2.2 cm cut on the pads.
+X [ −(0.6 + cx), 0 ]; Y and Z span the **bounding box of the whole tube/knuckle
+lattice** (cushions included), i.e. Y ±(209.7 + cy), Z 250.5 ± (252.8 + cz).
+Covers the mesh (0.05 cm) + foil (0.6 cm) over the whole cathode **out to and
+including the edge tube bars** — not just the foil-grid envelope (±201.85 cm).
+**This is the only box over the pad area, and it is thin** — no 2.2 cm cut on the
+pads.
 
 ### Horizontal tube bars (along Z) — 5 boxes
-At **y = 0, ±103.5, ±207 cm**, each: X [ −(2.7 + cx), 0 ], Y = y ± (2.7 + ct),
+At **y = 0, ±103.5, ±207 cm**, each: X [ −(2.7 + cx), 0 ], Y = y ± (2.7 + cy),
 Z = full plane. Covers the Ø54 mm pipes and the corner elbows (same ±2.7 cm).
 
 ### Vertical tube bars (along Y) — 3 boxes
 At **z = 250.5, 123, 378 cm**, each: X [ −(2.7 + cx), 0 ], Y = full plane,
-Z = z ± (2.7 + ct).
+Z = z ± (2.7 + cz).
 
 ### Knuckle boxes — 4 boxes
 At **(y = ±51.75, ±155.25 cm, z = 250.5 cm)**, each: X [ −(4.1 + cx), 0 ],
-Y = y ± (5.0 + ct), Z = 250.5 ± (6.5 + ct). The deepest features, on the central
+Y = y ± (5.0 + cy), Z = 250.5 ± (6.5 + cz). The deepest features, on the central
 vertical line.
 
 **Total: 13 boxes per TPC, 26 total** (plus an optional center-boss box via
 `include_boss=True`, normally subsumed by the central tube crossing).
 
-The drawing ([`cathode_fiducial.png`](cathode_fiducial.png)) shows: **(left)** the
-YZ cathode face — the 16 pads (gray) with the blue tube lattice in the gaps and
-red knuckles; **(middle)** an XZ slice through a pad row — thin pad band with deep
-notches only at the vertical tubes/knuckle; **(right)** an XY slice through a pad
-column — thin pad band with deep notches only at the horizontal tubes.
+The drawing ([`cathode_fiducial.png`](cathode_fiducial.png)) shows the **exclusion
+boxes only** — the physical CPA pads are *not* drawn, since they are not part of
+the FV definition: **(left)** the YZ cathode face — the full-plane pad slab with
+the blue tube lattice in the gaps and red knuckles; **(middle)** an XZ slice
+through a pad row — thin pad band with deep notches only at the vertical
+tubes/knuckle; **(right)** an XY slice through a pad column — thin pad band
+(extending out past the edge tube bars) with deep notches at the horizontal tubes.
 
 ---
 
@@ -179,19 +188,20 @@ tubes + 3 vertical tubes + 4 knuckles), combined by a
 composite `contained()` is true → exclude it (or, for a good fiducial, AND with
 `NOT` this region).
 
-`cathode_fiducial.py` emits the exact jsonnet via `to_jsonnet(cx, ct)`
-(printed when you run the script). Excerpt (`cx = ct = 0`):
+`cathode_fiducial.py` emits the exact jsonnet via `to_jsonnet(cx, cy, cz)`
+(printed when you run the script). Excerpt at the default cushions
+(`cx = cy = cz = 0.5`):
 
 ```jsonnet
 local cpa_boxes = [
   { type: 'BoxFiducial', name: 'cpa-tpc0-pad',           // thin full-plane pad
     data: { bounds: {
-      tail: { x: -0.600*wc.cm, y: -201.850*wc.cm, z:  -2.300*wc.cm },
-      head: { x:  0.000*wc.cm, y:  201.850*wc.cm, z: 503.300*wc.cm } } } },
+      tail: { x: -1.100*wc.cm, y: -210.200*wc.cm, z:  -2.800*wc.cm },
+      head: { x:  0.000*wc.cm, y:  210.200*wc.cm, z: 503.800*wc.cm } } } },
   { type: 'BoxFiducial', name: 'cpa-tpc0-htube_y+0000',  // deep horizontal tube
     data: { bounds: {
-      tail: { x: -2.700*wc.cm, y:  -2.700*wc.cm, z:  -2.300*wc.cm },
-      head: { x:  0.000*wc.cm, y:   2.700*wc.cm, z: 503.300*wc.cm } } } },
+      tail: { x: -3.200*wc.cm, y:  -3.200*wc.cm, z:  -2.800*wc.cm },
+      head: { x:  0.000*wc.cm, y:   3.200*wc.cm, z: 503.800*wc.cm } } } },
   // ... 4 more h-tubes, 3 v-tubes, 4 knuckles, then the tpc1 mirror (x>0) ...
 ];
 local cpa_exclusion = {
@@ -204,9 +214,9 @@ local cpa_exclusion = {
 
 Where to wire it eventually: alongside the existing SBND fiducial in
 `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (which today holds the flat per-TPC
-`FV_xmin/FV_xmax` cut at ±1.5 cm "data CPA face"). The cushions `cx`/`ct` should
-become jsonnet parameters so the exclusion can be loosened without re-deriving
-geometry.
+`FV_xmin/FV_xmax` cut at ±1.5 cm "data CPA face"). The cushions `cx`/`cy`/`cz`
+should become jsonnet parameters so the exclusion can be loosened without
+re-deriving geometry.
 
 ---
 
@@ -219,17 +229,20 @@ python3 cathode_fiducial.py          # writes PNG, prints jsonnet, runs self-che
 
 In code:
 
+All public functions default to the **0.5 cm per-side cushion** (`cx=cy=cz=0.5`);
+pass `cx=cy=cz=0` for the bare geometry.
+
 ```python
 import cathode_fiducial as cf
 cf.inside((-0.3, 51.75, 183.8))               # -> True  (shallow, on a pad)
-cf.inside((-2.0, 51.75, 183.8))               # -> False (deep, on a pad -> NOT excluded)
+cf.inside((-2.0, 51.75, 183.8), cx=0, cy=0, cz=0)  # -> False (deep on a pad, bare geom)
 cf.inside((-2.0, 0.0,   183.8))               # -> True  (deep, on a horizontal tube)
 cf.inside((-3.5, 51.75, 250.5))               # -> True  (in a knuckle)
 cf.inside((-2.0, 51.75, 183.8), cx=2.0)       # -> True  (pad slab widened by cushion)
-cf.cathode_boxes(0, cx=1.0, ct=0.5)           # -> list of Box for TPC0 (13 boxes)
+cf.cathode_boxes(0, cx=1.0, cy=0.5, cz=0.5)   # -> list of Box for TPC0 (13 boxes)
 cf.cathode_boxes(0, pad=False)                # -> drop the pad slab (tubes only)
 cf.cathode_boxes(0, tube_hw_cm=6.1)           # -> widen tube bars to the full gap
-cf.to_jsonnet(cx=1.0, ct=0.5)                 # -> toolkit config string
+cf.to_jsonnet(cx=1.0, cy=0.5, cz=0.5)         # -> toolkit config string
 cf.draw("cathode_fiducial.png", cx=1.0)       # -> redraw with a cushion
 ```
 
