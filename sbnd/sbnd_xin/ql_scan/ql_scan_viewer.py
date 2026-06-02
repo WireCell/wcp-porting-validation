@@ -125,7 +125,10 @@ state = {
 
 # ----- coincidence-group helpers -------------------------------------------
 def event_groups(evt):
-    return sorted({f["group"] for f in evt.flash_by_gid.values()})
+    # Only groups that actually have a (contained) bundle to scan — after the
+    # contained-only dump many coincidence groups hold no candidate, and paging
+    # through empty stops would defeat the de-clutter goal.
+    return sorted({evt.group_of(b["flash_gid"]) for b in evt.bundles})
 
 
 def group_label(evt, g):
