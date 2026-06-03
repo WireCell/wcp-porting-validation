@@ -8,8 +8,11 @@ matching metrics (ks/chi2/ndf/strength) and flags, the cluster geometry and the
 detector box.
 
 The tool lets a human pick the correct flash<->cluster match per cluster and saves
-those labels (Save -> work/ql_evt<ID>/labels-evt<ID>.json) for later tuning of the
-QLMatching chi2 / metric parameters and the PE_err model.
+those labels (Save -> work/ql_labels/labels-evt<ID>.json) for later tuning of the
+QLMatching chi2 / metric parameters and the PE_err model. Labels and the autosaved
+selection live in work/ql_labels/ (a sibling of the per-event work/ql_evt<ID>/
+workspace) so run_ql_evt.sh's per-event `rm -rf` of that workspace cannot delete
+saved scan results.
 
 Selection rules (enforced live):
   * each cluster matches at most one flash (selecting a bundle drops the cluster's
@@ -835,9 +838,19 @@ def set_light_ranges(evt):
             f.y_range.start, f.y_range.end = g["y_lo"] - py, g["y_hi"] + py
 
 
+def labels_dir(evt):
+    """Persistent scan-output dir: a sibling of the per-event ql_evt<ID> workspace
+    (work/ql_labels/). Kept OUT of work/ql_evt<ID>/ so run_ql_evt.sh's per-event
+    `rm -rf` of that workspace cannot delete saved scan labels / selections."""
+    d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(evt.path))),
+                     "ql_labels")
+    os.makedirs(d, exist_ok=True)
+    return d
+
+
 def state_file(evt):
-    """Autosave path for the current selection (next to the event's calib dump)."""
-    return os.path.join(os.path.dirname(evt.path), ".scan_state.json")
+    """Autosave path for the current selection (in the persistent ql_labels dir)."""
+    return os.path.join(labels_dir(evt), ".scan_state-%s.json" % event_label(evt.path))
 
 
 def save_state():
@@ -1061,7 +1074,7 @@ def on_save():
                                         "close_to_PMT", "at_x_boundary", "spec_end",
                                         "window_truncated", "contained", "auto_selected")},
         })
-    dest = os.path.join(os.path.dirname(evt.path),
+    dest = os.path.join(labels_dir(evt),
                         "labels-%s.json" % event_select.value)
     with open(dest, "w") as fh:
         json.dump(out, fh, indent=1)
