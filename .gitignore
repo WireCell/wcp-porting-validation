@@ -27,3 +27,4 @@ fall-production
 __pycache__
 input-*-data*
 input-*-mc*
+temp

@@ -99,6 +99,7 @@ local matching_pipe = [
             // QtoL: if reality=='data' then 0.2 else 1.0,
             ch_mask: [39,  64,  66,  71,  85,  86,  87, 115, 138, 141, 197, 217, 221, 222, 223, 226, 245, 249, 302],
             flash_minPE: 50,
+            saturation_threshold: 5000,
         },
     }, nin=2, nout=1)
     for n in std.range(0, std.length(tools.anodes) - 1)
