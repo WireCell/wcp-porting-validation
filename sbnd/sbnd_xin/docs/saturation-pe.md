@@ -216,6 +216,22 @@ detectors. (Gray squares = `ch_mask` zeros.)
    dead-channel fact, so it was not changed without direction. The C++ default (`5000`) is
    unchanged, so only the SBND config is affected.
 
+   **Re-verified on new data (2026-06-02).** The 5 channels {67, 92, 170, 218, 248} were
+   re-checked on the datasets available since the original study — each read `pe == 0` in
+   **100 % of flashes** in its own TPC archive (the only place it could fire), with a max
+   PE of exactly 0:
+
+   | dataset | flashes (apa0 / apa1) | result |
+   |---------|-----------------------|--------|
+   | data `v10_14_02_02` | 139 / 123 | all 5 dead (zero-frac 1.0000) |
+   | data `apr29`        | 19 / 16   | all 5 dead (zero-frac 1.0000) |
+   | mc `10files`        | 2331 / 2353 | all 5 dead (zero-frac 1.0000) |
+
+   Channel→TPC split (semi-analytical model, `x<0 ⇒ apa0`): **67 → TPC1**; **92, 170, 218,
+   248 → TPC0** — the same 4-in-apa0 / 1-in-apa1 dead floor reported above. The dead-channel
+   conclusion therefore holds on the current `v10_14_02_02` data release as well as the
+   original sample. (Check script: `sbnd_xin/check_dead5.py`.)
+
 **Caveat — measured PE only.** This analysis sees only the *measured* per-PMT PE in the
 flash archives, not the matcher's *predicted* PE. The gate's literal premise is "a zero
 PMT in a bright flash *should have seen light*", which is a statement about the
