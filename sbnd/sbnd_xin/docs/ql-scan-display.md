@@ -110,15 +110,16 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   actually compares. Each group label shows its TPC0/TPC1 flash times. The group
   selector lists only groups that still have a bundle to scan; a group emptied by a
   selection made elsewhere is **skipped** by prev/next (see rules).
-- **Bundle table** (left) with the **selection summary** (right): the table shows
-  **all** of the current group's bundles. The first column is a **clickable ✓ checkbox** —
-  tick it to select the bundle (its predicted light joins the per-flash sum), untick to
-  remove it; tick **several** at once (e.g. two clusters on one TPC). A 🔒 in the next
-  column marks a bundle the **filter** forbids selecting (see rules). Remaining columns:
+- **Bundle table** (left) with the **selection checkboxes + summary** (right): the table
+  shows **all** of the current group's bundles, one per row, numbered in column `#` —
   `auto`, apa, flash, time, group, cluster, ks, chi²/ndf, strength, measured/predicted PE,
-  flags. Clicking a row (off the checkbox) **focuses** it for inspection — the blue row
-  highlight (inspecting) and the ✓ (selected) are independent. The summary beside it lists
-  the current picks (flash → clusters, all groups).
+  flags. Click a row to **focus** it for inspection (drives the light/projection panels).
+  Selecting is done with the **`select matches` checkbox list** beside the table: one box
+  per row (same `#` order, label `#: T<apa> fl<gid> c<clus> ks.. pr..`). **Tick a box to
+  select** that bundle — its predicted light joins the per-flash sum; tick **several**
+  (e.g. two clusters on one TPC) to combine them; untick to remove. A 🔒 in a label marks
+  a bundle the **filter** forbids selecting (see rules). The **selection summary** below
+  the boxes lists the current picks (flash → clusters, all groups).
 - **Metrics panel**: the focused bundle's full metrics next to the quality thresholds,
   and its flags.
 - **Compare-cluster table**: the **Compare cluster's flashes** button lists, in a second

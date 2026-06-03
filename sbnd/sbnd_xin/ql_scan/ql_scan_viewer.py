@@ -38,7 +38,7 @@ from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, DataTable, TableColumn, Select, Button,
                           Div, ColorBar, HoverTool, NumberFormatter, BasicTicker,
                           NumeralTickFormatter, Span, HTMLTemplateFormatter,
-                          CheckboxEditor, Toggle)
+                          CheckboxGroup, Toggle)
 from bokeh.transform import linear_cmap
 from bokeh.plotting import figure
 
@@ -228,23 +228,20 @@ metrics = Div(text="", width=560)
 selsummary = Div(text="", width=380)
 compare_div = Div(text="", width=1000)
 
-# `sel` is a CLICKABLE checkbox: tick it to add the bundle to the selection (its
-# predicted light then joins the per-flash sum), untick to remove it. Several boxes
-# on one TPC can be ticked at once (different clusters). The boolean renders as a
-# green check when set; CheckboxEditor makes the cell toggle on click.
-sel_fmt = HTMLTemplateFormatter(
-    template='<span style="color:#2ca02c;font-weight:bold;font-size:15px">'
-             '<%= value ? "\\u2714" : "" %></span>')
 # read-only green check (string field) for the compare table
 check_fmt = HTMLTemplateFormatter(
     template='<span style="color:#2ca02c;font-weight:bold;font-size:15px"><%= value %></span>')
-# a lock glyph on bundles the filter forbids selecting (cluster already matched)
-lock_fmt = HTMLTemplateFormatter(template='<span style="color:#999"><%= value %></span>')
+
+# Selection is driven by a real CheckboxGroup (reliable clickable boxes) beside the
+# table — one box per current-group bundle, in table-row order. Ticking a box adds the
+# bundle to the selection (its predicted light joins the per-flash sum); tick several
+# to combine clusters. A 🔒 in the label marks a bundle the filter forbids selecting.
+sel_group = CheckboxGroup(labels=[], active=[], width=380)
+sel_group_title = Div(text="<b>select matches</b> (tick to add to predicted sum)", width=380)
 
 table_src = ColumnDataSource(data=dict())
 table_cols = [
-    TableColumn(field="sel", title="✓", width=40, formatter=sel_fmt, editor=CheckboxEditor()),
-    TableColumn(field="lock", title="", width=26, formatter=lock_fmt),
+    TableColumn(field="row", title="#", width=30),
     TableColumn(field="auto", title="auto", width=45),
     TableColumn(field="apa", title="apa", width=35),
     TableColumn(field="flash_gid", title="flash", width=70),
@@ -262,8 +259,8 @@ table_cols = [
     TableColumn(field="pred", title="predPE", width=70, formatter=NumberFormatter(format="0.0")),
     TableColumn(field="flags", title="flags", width=150),
 ]
-table = DataTable(source=table_src, columns=table_cols, width=960, height=300,
-                  selectable=True, editable=True, index_position=None)
+table = DataTable(source=table_src, columns=table_cols, width=900, height=300,
+                  selectable=True, index_position=None)
 
 # Second table (request 4): every bundle whose main cluster matches the focused
 # bundle's, across all flashes/groups, so one cluster's candidate flashes can be
@@ -422,18 +419,18 @@ def rebuild_table():
                                   evt.bundles[i]["main_cluster"]))
     state["order"] = order
     cols = defaultdict(list)
-    for i in order:
+    labels = []
+    for r, i in enumerate(order):
         b = evt.bundles[i]
         ndf = b["ndf"] or 1
-        cols["sel"].append(i in state["selected"])
-        cols["lock"].append("🔒" if (state["filter_on"] and i not in state["selected"]
-                                     and cluster_eliminated(i)) else "")
+        cu_id = evt.cluster_by_uid[b["main_cluster"]]["ident"]
+        cols["row"].append(r)
         cols["auto"].append("Y" if b["auto_selected"] else "")
         cols["apa"].append(b["apa"])
         cols["flash_gid"].append(b["flash_gid"])
         cols["t_us"].append(evt.flash_by_gid[b["flash_gid"]]["time"])
         cols["grp"].append(evt.group_of(b["flash_gid"]))
-        cols["cluster"].append(evt.cluster_by_uid[b["main_cluster"]]["ident"])
+        cols["cluster"].append(cu_id)
         cols["noth"].append(len(b["other_clusters"]))
         cols["ks"].append(b["ks_dis"])
         cols["chi2ndf"].append(b["chi2"] / ndf)
@@ -441,9 +438,19 @@ def rebuild_table():
         cols["meas"].append(b["total_PE"])
         cols["pred"].append(b["total_pred_light"])
         cols["flags"].append(fmt_flags(b))
-    state["sel_snapshot"] = list(cols["sel"])
-    state["suppress_edit"] = True          # our own write — not a user checkbox click
+        locked = (state["filter_on"] and i not in state["selected"]
+                  and cluster_eliminated(i))
+        labels.append("%d: T%d fl%d c%d  ks%.2f pr%.0f%s"
+                      % (r, b["apa"], b["flash_gid"], cu_id, b["ks_dis"],
+                         b["total_pred_light"], "  🔒" if locked else ""))
     table_src.data = dict(cols)
+    # the CheckboxGroup is the clickable selector: labels in table-row order, the
+    # checked boxes = the selected bundles of this group. Guard the programmatic
+    # `active` write so it does not re-fire on_sel_group.
+    active = [r for r, i in enumerate(order) if i in state["selected"]]
+    state["suppress_edit"] = True
+    sel_group.labels = labels
+    sel_group.active = active
     state["suppress_edit"] = False
     # keep focus row highlighted
     if state["focus"] is not None and state["focus"] in order:
@@ -831,27 +838,32 @@ def on_toggle():
     refresh()
 
 
-def on_table_edit(attr, old, new):
-    """A checkbox in the bundle table was ticked/unticked by the user. Diff the
-    `sel` column against the snapshot we last wrote, apply each change through
-    set_selected (which honours the filter lock), then refresh."""
+def on_sel_group(attr, old, new):
+    """The user ticked/unticked a box in the selection CheckboxGroup. `new` is the
+    list of checked positions (into state['order']). Diff against the current
+    selection and apply each change through set_selected (which honours the filter
+    lock); refresh re-renders the predicted sum and reverts any rejected tick."""
     if state["suppress_edit"] or state["evt"] is None:
         return
-    cur = list(new.get("sel", []))
-    snap = state["sel_snapshot"]
     order = state["order"]
-    if len(cur) != len(snap) or len(cur) != len(order):
-        return
+    expected = {r for r, i in enumerate(order) if i in state["selected"]}
+    nowset = set(new)
     msgs = []
-    for r in range(len(cur)):
-        if bool(cur[r]) == bool(snap[r]):
+    last = None
+    for r in sorted(nowset ^ expected):
+        if r >= len(order):
             continue
-        ok, msg = set_selected(order[r], bool(cur[r]))
-        if not ok and msg:                 # e.g. locked by the filter
+        want = r in nowset
+        ok, msg = set_selected(order[r], want)
+        if ok:
+            last = order[r]
+        elif msg:
             msgs.append(msg)
+    if last is not None:
+        state["focus"] = last           # show the just-toggled bundle in the panels
     if msgs:
         status.text = " / ".join(msgs)
-    refresh()                              # re-renders predicted sum; reverts rejects
+    refresh()
 
 
 def on_filter(attr, old, new):
@@ -936,7 +948,7 @@ group_select.on_change("value", on_group_change)
 prev_grp_btn.on_click(lambda: step_group(-1))
 next_grp_btn.on_click(lambda: step_group(+1))
 table_src.selected.on_change("indices", on_row_select)
-table_src.on_change("data", on_table_edit)
+sel_group.on_change("active", on_sel_group)
 compare_src.selected.on_change("indices", on_compare_row)
 select_btn.on_click(on_toggle)
 clear_btn.on_click(on_clear)
@@ -956,7 +968,7 @@ layout = column(
     header,
     controls,
     status,
-    row(table, selsummary),
+    row(table, column(sel_group_title, sel_group, selsummary)),
     metrics,
     compare_div,
     compare_table,
