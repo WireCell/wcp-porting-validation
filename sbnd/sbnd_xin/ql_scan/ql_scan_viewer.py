@@ -37,7 +37,7 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, DataTable, TableColumn, Select, Button,
                           Div, ColorBar, HoverTool, NumberFormatter, BasicTicker,
-                          NumeralTickFormatter, Span)
+                          NumeralTickFormatter, Span, HTMLTemplateFormatter)
 from bokeh.transform import linear_cmap
 from bokeh.plotting import figure
 
@@ -219,9 +219,15 @@ metrics = Div(text="", width=560)
 selsummary = Div(text="", width=380)
 compare_div = Div(text="", width=1000)
 
+# A bold green check marks every SELECTED (hand-picked) bundle, so it is obvious at a
+# glance how many — and which — bundles you have chosen, on either TPC. This is the
+# committed-match indicator; the blue row highlight is just the row being inspected.
+check_fmt = HTMLTemplateFormatter(
+    template='<span style="color:#2ca02c;font-weight:bold;font-size:15px"><%= value %></span>')
+
 table_src = ColumnDataSource(data=dict())
 table_cols = [
-    TableColumn(field="state", title="state", width=90),
+    TableColumn(field="sel", title="✓", width=34, formatter=check_fmt),
     TableColumn(field="auto", title="auto", width=45),
     TableColumn(field="apa", title="apa", width=35),
     TableColumn(field="flash_gid", title="flash", width=70),
@@ -248,7 +254,7 @@ table = DataTable(source=table_src, columns=table_cols, width=960, height=300,
 # to jump the whole view (focus + group) to that candidate flash.
 compare_src = ColumnDataSource(data=dict())
 compare_cols = [
-    TableColumn(field="state", title="state", width=90),
+    TableColumn(field="sel", title="✓", width=34, formatter=check_fmt),
     TableColumn(field="auto", title="auto", width=45),
     TableColumn(field="flash_gid", title="flash", width=70),
     TableColumn(field="t_us", title="t(us)", width=70,
@@ -402,7 +408,7 @@ def rebuild_table():
     for i in order:
         b = evt.bundles[i]
         ndf = b["ndf"] or 1
-        cols["state"].append("SELECTED" if i in state["selected"] else "avail")
+        cols["sel"].append("✔" if i in state["selected"] else "")
         cols["auto"].append("Y" if b["auto_selected"] else "")
         cols["apa"].append(b["apa"])
         cols["flash_gid"].append(b["flash_gid"])
@@ -629,7 +635,7 @@ def rebuild_compare():
     cluster is being compared."""
     evt = state["evt"]
     cu = state["compare_cluster"]
-    empty = dict(state=[], auto=[], flash_gid=[], t_us=[], grp=[], ks=[],
+    empty = dict(sel=[], auto=[], flash_gid=[], t_us=[], grp=[], ks=[],
                  chi2ndf=[], strength=[], meas=[], pred=[], flags=[])
     if cu is None or cu not in evt.cluster_by_uid:
         compare_src.data = empty
@@ -645,7 +651,7 @@ def rebuild_compare():
     for i in rows:
         b = evt.bundles[i]
         ndf = b["ndf"] or 1
-        cols["state"].append("SELECTED" if i in state["selected"] else "avail")
+        cols["sel"].append("✔" if i in state["selected"] else "")
         cols["auto"].append("Y" if b["auto_selected"] else "")
         cols["flash_gid"].append(b["flash_gid"])
         cols["t_us"].append(evt.flash_by_gid[b["flash_gid"]]["time"])

@@ -112,10 +112,12 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   selection made elsewhere is **skipped** by prev/next (see rules).
 - **Bundle table** (left) with the **selection summary** (right): the table shows only
   the **current group's** bundles, minus any whose cluster is already claimed by a
-  selection (see rules) — `state` (SELECTED / avail), `auto`, apa, flash, time, group,
-  cluster, ks, chi²/ndf, strength, measured/predicted PE, flags. Click a row to
-  **focus** it. The summary beside it lists the current picks (flash → clusters, all
-  groups).
+  selection (see rules) — a green **✓** on every hand-selected bundle, `auto`, apa,
+  flash, time, group, cluster, ks, chi²/ndf, strength, measured/predicted PE, flags.
+  Click a row to **focus** it (blue row highlight = being inspected; ✓ = a committed
+  match — the two are independent). The summary beside it lists the current picks
+  (flash → clusters, all groups). You can carry **several ✓ on one TPC** at once
+  (different clusters); see rules.
 - **Metrics panel**: the focused bundle's full metrics next to the quality thresholds,
   and its flags.
 - **Compare-cluster table**: the **Compare cluster's flashes** button lists, in a second
@@ -151,7 +153,10 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   other candidate bundles from the table, **across all groups** (and replaces any
   previous pick for that cluster). This is how you whittle the candidates down.
 - **Many clusters per flash** — selecting several bundles that share a flash sums
-  their predicted light (the measured pattern is unchanged).
+  their predicted light (the measured pattern is unchanged). The cap is **one flash per
+  cluster, not one bundle per TPC**: you may ✓ two (or more) bundles on the same TPC as
+  long as they are different clusters; if they share that TPC's flash their predicted
+  patterns add, which is the whole point of the multi-cluster case.
 - **Empty groups are skipped** — once a cluster is picked, its rival bundles vanish
   from every group; a group left with no bundle drops out of the group navigation
   (prev/next), though the group you are currently viewing always stays selectable.
