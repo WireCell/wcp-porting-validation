@@ -8,11 +8,12 @@ matching metrics (ks/chi2/ndf/strength) and flags, the cluster geometry and the
 detector box.
 
 The tool lets a human pick the correct flash<->cluster match per cluster and saves
-those labels (Save -> work/ql_labels/labels-evt<ID>.json) for later tuning of the
-QLMatching chi2 / metric parameters and the PE_err model. Labels and the autosaved
-selection live in work/ql_labels/ (a sibling of the per-event work/ql_evt<ID>/
-workspace) so run_ql_evt.sh's per-event `rm -rf` of that workspace cannot delete
-saved scan results.
+those labels (Save -> work/ql_labels/<tag>/labels-evt<ID>.json) for later tuning of
+the QLMatching chi2 / metric parameters and the PE_err model. Labels and the
+autosaved selection live in work/ql_labels/ (a sibling of the per-event
+work/ql_evt<ID>/ workspace) so run_ql_evt.sh's per-event `rm -rf` of that workspace
+cannot delete saved scan results. Pass `--tag mc` / `--tag data` to subdir them
+(work/ql_labels/mc/, work/ql_labels/data/) so the two displays don't intermix.
 
 Selection rules (enforced live):
   * each cluster matches at most one flash (selecting a bundle drops the cluster's
@@ -77,7 +78,22 @@ def event_label(path):
     return base
 
 
-FILES = discover_files(sys.argv[1:])
+def extract_tag(argv):
+    """Pull an optional `--tag NAME` out of argv; the rest are calib globs/paths.
+    NAME namespaces the saved scan results into work/ql_labels/<NAME>/ so the MC and
+    data displays (separate servers) keep their labels apart. Empty ⇒ top-level."""
+    out, tag = [], ""
+    it = iter(argv)
+    for a in it:
+        if a in ("--tag", "-t"):
+            tag = next(it, "")
+        else:
+            out.append(a)
+    return tag, out
+
+
+SCAN_TAG, _ARGS = extract_tag(sys.argv[1:])
+FILES = discover_files(_ARGS)
 LABELS = [event_label(f) for f in FILES]
 FILE_OF = dict(zip(LABELS, FILES))
 
@@ -840,10 +856,12 @@ def set_light_ranges(evt):
 
 def labels_dir(evt):
     """Persistent scan-output dir: a sibling of the per-event ql_evt<ID> workspace
-    (work/ql_labels/). Kept OUT of work/ql_evt<ID>/ so run_ql_evt.sh's per-event
-    `rm -rf` of that workspace cannot delete saved scan labels / selections."""
+    (work/ql_labels/, or work/ql_labels/<tag>/ when --tag is given). Kept OUT of
+    work/ql_evt<ID>/ so run_ql_evt.sh's per-event `rm -rf` of that workspace cannot
+    delete saved scan labels / selections. The --tag subdir keeps the MC and data
+    displays' results apart (they share one work/ but run as separate servers)."""
     d = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(evt.path))),
-                     "ql_labels")
+                     "ql_labels", SCAN_TAG)
     os.makedirs(d, exist_ok=True)
     return d
 

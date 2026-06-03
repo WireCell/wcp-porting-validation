@@ -1,8 +1,12 @@
 #!/bin/bash
 # Serve the SBND Q/L matching hand-scan event display over HTTP.
 #
-# Usage: ./serve_ql_scan.sh [port] [calib-glob ...]
+# Usage: ./serve_ql_scan.sh [port] [--tag NAME] [calib-glob ...]
 #   port        (optional, default 5008)
+#   --tag NAME  (optional) namespace saved scan results into work/ql_labels/NAME/
+#               so the MC and data displays keep their labels apart, e.g.
+#                 ./serve_ql_scan.sh 5008 --tag mc   work/ql_evt{2,9,...}/calib-*.json
+#                 ./serve_ql_scan.sh 5009 --tag data work/ql_evt{686,...}/calib-*.json
 #   calib-glob  (optional) one or more globs/paths of per-event calib JSONs
 #               (default: ../work/ql_evt*/calib-evt*.json)
 #
@@ -19,6 +23,12 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 PORT=${1:-5008}
 shift || true
 
+# Optional --tag NAME (forwarded to the viewer; subdirs the saved labels).
+TAG_ARGS=()
+if [ "$1" = "--tag" ] || [ "$1" = "-t" ]; then
+    TAG_ARGS=(--tag "$2"); shift 2 || true
+fi
+
 # Calib JSONs to scan (default: every per-event dump under sbnd_xin/work).
 if [ "$#" -gt 0 ]; then
     SPECS=("$@")
@@ -34,4 +44,4 @@ exec "$BOKEH" serve --port "$PORT" \
     --allow-websocket-origin="127.0.0.1:${PORT}" \
     --allow-websocket-origin="wcgpu1.phy.bnl.gov:${PORT}" \
     --allow-websocket-origin="wcgpu1:${PORT}" \
-    "$HERE/ql_scan_viewer.py" --args "${SPECS[@]}"
+    "$HERE/ql_scan_viewer.py" --args "${TAG_ARGS[@]}" "${SPECS[@]}"

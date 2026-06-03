@@ -90,10 +90,11 @@ spec_end, window_truncated, auto_selected, pred_pe[nchan]
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
-./ql_scan/serve_ql_scan.sh 5008                       # default: scan work/ql_evt*/calib-evt*.json
-./ql_scan/serve_ql_scan.sh 5008 work/ql_evt2/calib-evt2.json   # explicit file(s)
-# data on its own port (mc ids 2,9,11,…; data ids 686,1258,…), explicit paths:
-./ql_scan/serve_ql_scan.sh 5009 work/ql_evt{686,1258,1302,1346,1698,1720,1808,1852,2028,2050}/calib-evt*.json
+# Tag each display so its saved results land in work/ql_labels/<tag>/ (mc vs data,
+# kept apart — both modes otherwise share one work/). The mc/data ids do not collide
+# (mc 2,9,11,…; data 686,1258,…) but --tag keeps the two displays' labels separate.
+./ql_scan/serve_ql_scan.sh 5008 --tag mc   work/ql_evt{2,9,11,12,14,18,31,35,41,42}/calib-evt*.json
+./ql_scan/serve_ql_scan.sh 5009 --tag data work/ql_evt{686,1258,1302,1346,1698,1720,1808,1852,2028,2050}/calib-evt*.json
 ```
 
 From a laptop, forward the port and open the app:
@@ -179,18 +180,20 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   could match, so you pick the better flash, then select it as usual.
 
 ### Selection persistence
-Your picks are **autosaved** to `work/ql_labels/.scan_state-evt<ID>.json` on every
+Your picks are **autosaved** to `work/ql_labels/<tag>/.scan_state-evt<ID>.json` on every
 select/deselect/clear and restored when the event loads — so they survive a page
 reload, a server restart, and switching between events (each event keeps its own set).
 Keys are `(flash_gid, main_cluster)`, stable across re-dumps. This is the live working
 state; the **Save labels** button below still writes the formal deliverable.
 
-Both files live in `work/ql_labels/` — a sibling of the per-event `work/ql_evt<ID>/`
+Both files live in `work/ql_labels/<tag>/` — a sibling of the per-event `work/ql_evt<ID>/`
 workspace, deliberately **outside** it so that re-running `run_ql_evt.sh` (which does
-`rm -rf work/ql_evt<ID>/` before each event) cannot delete your saved scan results.
+`rm -rf work/ql_evt<ID>/` before each event) cannot delete your saved scan results. The
+`<tag>` (from `--tag`, e.g. `mc` / `data`) keeps the two displays' results in separate
+subdirs; with no `--tag` they go straight into `work/ql_labels/`.
 
 ### Save
-**Save labels** writes `work/ql_labels/labels-evt<ID>.json`: one entry per selected
+**Save labels** writes `work/ql_labels/<tag>/labels-evt<ID>.json`: one entry per selected
 match with `flash_gid`, `flash_time_us`, `apa`, coincidence `group`,
 `cluster_idents[]`, and — for downstream tuning — the per-channel `op_pes`,
 `op_pe_err`, `pred_pes`, plus the metrics and flags. Self-contained: a later tuner
