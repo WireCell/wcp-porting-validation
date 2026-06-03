@@ -105,6 +105,13 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
 ```
 
 ### Layout
+- **Page order**: the three **charge-projection views** are at the **top** of the page
+  (so they are visible first on a small monitor), with a one-line caption directly
+  beneath them echoing the current **Event / coincidence group / load summary**.
+  Everything else — controls, status, the bundle table + selection boxes + metrics +
+  cluster roster, the compare table, and the light/histogram panels — follows **below**
+  the projections, so the top of the screen shows the plots and the bottom is where you
+  operate.
 - **Event** selector + prev/next, and a **coincidence-group** selector + prev/next.
   The hand-scan is done **one ±80 ns group at a time** (the navigation unit), so the
   busy full-event bundle list is broken into the coincident TPC0/TPC1 units the eye
@@ -125,10 +132,7 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   a bundle the **filter** forbids selecting (see rules). The **selection summary** below
   the boxes lists the current picks (flash → clusters, all groups).
 - **Metrics panel**: the focused bundle's full metrics next to the quality thresholds,
-  and its flags. It sits **to the right of the table** (not below it), and the three
-  charge-projection views are placed **directly under** the table row — so clicking a
-  bundle shows the table, its metrics, and the 3 views together without scrolling past
-  the light/histogram/compare panels.
+  and its flags. It sits **to the right of the table** (not below it).
 - **Cluster roster** (rightmost in the table row): every cluster in the event (both
   TPCs) with its ident, TPC, `npts`, `len(cm)` (3-D bounding-box diagonal), and a green
   **✓ → flash** when it has been matched. Shows at a glance which clusters are still

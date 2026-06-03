@@ -160,6 +160,7 @@ state = {
     "filter_on": False,       # lock: forbid selecting a cluster already matched
     "sel_snapshot": [],       # last pushed checkbox column (to detect user edits)
     "suppress_edit": False,   # guard while we (re)write the table data ourselves
+    "loaded_summary": "",     # the "Loaded <evt>: ..." sentence (echoed under the projections)
 }
 
 
@@ -259,6 +260,9 @@ status = Div(text="", width=1100)
 metrics = Div(text="", width=560)
 selsummary = Div(text="", width=380)
 compare_div = Div(text="", width=1000)
+# Echo of the event / coincidence group / load-summary, shown beneath the three
+# charge-projection plots so the context is visible without scrolling back up.
+proj_info = Div(text="", width=1180)
 
 # read-only green check (string field) for the compare table
 check_fmt = HTMLTemplateFormatter(
@@ -826,6 +830,20 @@ def rebuild_clusters():
     clus_src.data = dict(cols)
 
 
+def render_proj_info():
+    """Echo, beneath the projection plots, the same Event / coincidence group /
+    load-summary shown by the controls + status at the top of the page."""
+    evt = state["evt"]
+    if evt is None:
+        proj_info.text = ""
+        return
+    g = state["group"]
+    grp = group_label(evt, g) if g is not None else "-"
+    proj_info.text = (
+        "<b>Event</b> %s &nbsp;&nbsp; <b>coincidence group</b> %s<br>%s"
+        % (event_select.value, grp, state["loaded_summary"]))
+
+
 def refresh():
     rebuild_table()
     render_light()
@@ -835,6 +853,7 @@ def refresh():
     rebuild_compare()
     rebuild_clusters()
     sync_groups()
+    render_proj_info()
 
 
 # ---------------------------------------------------------------------------
@@ -919,12 +938,14 @@ def load_event(label):
     group_select.value = str(groups[0]) if groups else ""
     n = len(evt.bundles)
     nsel = sum(b["auto_selected"] for b in evt.bundles)
-    status.text = ("Loaded <b>%s</b>: %d contained bundles, %d flashes, %d clusters, "
-                   "%d coincidence groups; %d auto-selected. Pick a group; tick the ✓ box "
-                   "to select bundles (several per TPC add up in the predicted pattern); "
-                   "'Filter selected bundles' locks reused clusters."
-                   % (label, n, len(evt.flash_by_gid), len(evt.cluster_by_uid),
-                      len(groups), nsel))
+    summary = ("Loaded <b>%s</b>: %d contained bundles, %d flashes, %d clusters, "
+               "%d coincidence groups; %d auto-selected. Pick a group; tick the ✓ box "
+               "to select bundles (several per TPC add up in the predicted pattern); "
+               "'Filter selected bundles' locks reused clusters."
+               % (label, n, len(evt.flash_by_gid), len(evt.cluster_by_uid),
+                  len(groups), nsel))
+    status.text = summary
+    state["loaded_summary"] = summary
     refresh()
 
 
@@ -1123,15 +1144,15 @@ controls = row(event_select, prev_evt_btn, next_evt_btn,
                select_btn, clear_btn, save_btn, compare_btn, filter_btn)
 header = Div(text="<h2>SBND Q/L matching hand-scan</h2>", width=1100)
 layout = column(
+    # Charge-projection views first so a small monitor shows the plots up top; all the
+    # controls / tables / light panels follow below (top half = plots, bottom = operate).
+    row(f_xy, f_yz, f_xz),
+    proj_info,
     header,
     controls,
     status,
-    # focused-bundle inspection up top: table | select boxes + summary | metrics,
-    # with the three charge-projection views right below so they are visible without
-    # scrolling past the light/histogram/compare panels.
     row(table, column(sel_group_title, sel_group, selsummary), metrics,
         column(clus_title, clus_table)),
-    row(f_xy, f_yz, f_xz),
     compare_div,
     compare_table,
     row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
