@@ -113,7 +113,10 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
 - **Bundle table** (left) with the **selection checkboxes + summary** (right): the table
   shows **all** of the current group's bundles, one per row, numbered in column `#` —
   `auto`, apa, flash, time, group, cluster, ks, chi²/ndf, strength, measured/predicted PE,
-  flags. Click a row to **focus** it for inspection (drives the light/projection panels).
+  flags. Click a row to **focus** it for inspection (drives the light/projection panels) —
+  the focused row highlights **blue**. Rows of bundles already **selected** are tinted
+  **green** persistently (distinct from the blue click-focus), so the moment you land on a
+  group you can see which of its bundles you have already picked.
   Selecting is done with the **`select matches` checkbox list** beside the table: one box
   per row (same `#` order, label `#: T<apa> fl<gid> c<clus> ks.. pr..`). **Tick a box to
   select** that bundle — its predicted light joins the per-flash sum; tick **several**
@@ -150,8 +153,10 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   same measured/predicted vectors as the 2-D panels, giving the magnitude *and* pattern
   mismatch at a glance.
 - **Charge projections**: X-Y, Y-Z, X-Z of the focused bundle's cluster(s), shifted
-  by the bundle's T0 `dx`, inside the **fixed** detector box (both TPC boxes drawn);
-  the currently-selected matches are shown faintly for context.
+  by the bundle's T0 `dx`, inside the **fixed** detector box (both TPC boxes drawn).
+  **All selected** tracks (within *and* outside the current group) are drawn **gray** for
+  context; the selected tracks **in the current group** are overlaid **green**; and the
+  focused (clicked) bundle is drawn **blue** on top.
 
 ### Selection rules (enforced live)
 - **±80 ns coincidence as the navigation unit** — you scan one coincidence group at a

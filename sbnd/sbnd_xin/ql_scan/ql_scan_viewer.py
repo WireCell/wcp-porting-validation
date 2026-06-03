@@ -245,6 +245,19 @@ compare_div = Div(text="", width=1000)
 check_fmt = HTMLTemplateFormatter(
     template='<span style="color:#2ca02c;font-weight:bold;font-size:15px"><%= value %></span>')
 
+# Cell formatter that tints the whole row green when it is a SELECTED bundle, so the
+# already-picked rows stand out persistently (distinct from the blue click-focus
+# highlight and the default rows) the moment you land on a group. Reads a per-row
+# `sel_bg` field (the colour, or "transparent") shared by every column; values are
+# pre-formatted to strings in rebuild_table so the same formatter serves all columns.
+def cell_fmt(align):
+    return HTMLTemplateFormatter(template=(
+        '<div style="background-color:<%= sel_bg %>;text-align:' + align
+        + ';margin:-2px -5px;padding:2px 5px"><%= value %></div>'))
+fmt_l = cell_fmt("left")
+fmt_r = cell_fmt("right")
+SEL_BG = "#cde6cd"   # light green for selected rows
+
 # Selection is driven by a real CheckboxGroup (reliable clickable boxes) beside the
 # table — one box per current-group bundle, in table-row order. Ticking a box adds the
 # bundle to the selection (its predicted light joins the per-flash sum); tick several
@@ -254,23 +267,20 @@ sel_group_title = Div(text="<b>select matches</b> (tick to add to predicted sum)
 
 table_src = ColumnDataSource(data=dict())
 table_cols = [
-    TableColumn(field="row", title="#", width=30),
-    TableColumn(field="auto", title="auto", width=45),
-    TableColumn(field="apa", title="apa", width=35),
-    TableColumn(field="flash_gid", title="flash", width=70),
-    TableColumn(field="t_us", title="t(us)", width=70,
-                formatter=NumberFormatter(format="0.0")),
-    TableColumn(field="grp", title="grp", width=40),
-    TableColumn(field="cluster", title="clus", width=50),
-    TableColumn(field="noth", title="+oth", width=40),
-    TableColumn(field="ks", title="ks", width=55, formatter=NumberFormatter(format="0.000")),
-    TableColumn(field="chi2ndf", title="chi2/ndf", width=70,
-                formatter=NumberFormatter(format="0.0")),
-    TableColumn(field="strength", title="strength", width=70,
-                formatter=NumberFormatter(format="0.000")),
-    TableColumn(field="meas", title="measPE", width=70, formatter=NumberFormatter(format="0")),
-    TableColumn(field="pred", title="predPE", width=70, formatter=NumberFormatter(format="0.0")),
-    TableColumn(field="flags", title="flags", width=150),
+    TableColumn(field="row", title="#", width=30, formatter=fmt_l, sortable=False),
+    TableColumn(field="auto", title="auto", width=45, formatter=fmt_l, sortable=False),
+    TableColumn(field="apa", title="apa", width=35, formatter=fmt_l, sortable=False),
+    TableColumn(field="flash_gid", title="flash", width=70, formatter=fmt_l, sortable=False),
+    TableColumn(field="t_us", title="t(us)", width=70, formatter=fmt_r, sortable=False),
+    TableColumn(field="grp", title="grp", width=40, formatter=fmt_l, sortable=False),
+    TableColumn(field="cluster", title="clus", width=50, formatter=fmt_l, sortable=False),
+    TableColumn(field="noth", title="+oth", width=40, formatter=fmt_l, sortable=False),
+    TableColumn(field="ks", title="ks", width=55, formatter=fmt_r, sortable=False),
+    TableColumn(field="chi2ndf", title="chi2/ndf", width=70, formatter=fmt_r, sortable=False),
+    TableColumn(field="strength", title="strength", width=70, formatter=fmt_r, sortable=False),
+    TableColumn(field="meas", title="measPE", width=70, formatter=fmt_r, sortable=False),
+    TableColumn(field="pred", title="predPE", width=70, formatter=fmt_r, sortable=False),
+    TableColumn(field="flags", title="flags", width=150, formatter=fmt_l, sortable=False),
 ]
 table = DataTable(source=table_src, columns=table_cols, width=900, height=300,
                   selectable=True, index_position=None)
@@ -405,19 +415,25 @@ f_xy.xaxis.axis_label, f_xy.yaxis.axis_label = "x (cm)", "y (cm)"
 f_yz.xaxis.axis_label, f_yz.yaxis.axis_label = "z (cm)", "y (cm)"
 f_xz.xaxis.axis_label, f_xz.yaxis.axis_label = "x (cm)", "z (cm)"
 
-# focus cluster points, other selected clusters (context), and box outlines
+# focus cluster points (blue), all selected clusters as context (gray), the selected
+# clusters in the current group (green, on top of gray), plus the box outlines.
 foc_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))
 ctx_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))
+ctxg_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))
 box_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
                                      xs_xz=[], ys_xz=[]))
 f_xy.multi_line(xs="xs_xy", ys="ys_xy", source=box_src, line_color="#cc4444", line_width=1)
 f_yz.multi_line(xs="xs_yz", ys="ys_yz", source=box_src, line_color="#cc4444", line_width=1)
 f_xz.multi_line(xs="xs_xz", ys="ys_xz", source=box_src, line_color="#cc4444", line_width=1)
+# gray = all SELECTED tracks (any group) as context; green = selected tracks IN THE
+# CURRENT group (overlaid on gray); blue = the focused (clicked) bundle, on top.
 for f, hx, hy in ((f_xy, "x", "y"), (f_yz, "z", "y"), (f_xz, "x", "z")):
     f.scatter(hx, hy, source=ctx_src, marker="circle", size=2,
               fill_color="#bbbbbb", line_color=None, fill_alpha=0.4)
+    f.scatter(hx, hy, source=ctxg_src, marker="circle", size=3,
+              fill_color="#2ca02c", line_color=None, fill_alpha=0.55)
     f.scatter(hx, hy, source=foc_src, marker="circle", size=3,
-              fill_color="#1f77b4", line_color=None, fill_alpha=0.7)
+              fill_color="#1f77b4", line_color=None, fill_alpha=0.8)
 
 
 # ---------------------------------------------------------------------------
@@ -456,20 +472,25 @@ def rebuild_table():
         b = evt.bundles[i]
         ndf = b["ndf"] or 1
         cu_id = evt.cluster_by_uid[b["main_cluster"]]["ident"]
-        cols["row"].append(r)
+        # values are pre-formatted to strings: the row colouring is done by an
+        # HTMLTemplateFormatter (cell_fmt) shared across columns, which precludes the
+        # numeric NumberFormatter, so we format here.
+        cols["row"].append(str(r))
         cols["auto"].append("Y" if b["auto_selected"] else "")
-        cols["apa"].append(b["apa"])
-        cols["flash_gid"].append(b["flash_gid"])
-        cols["t_us"].append(evt.flash_by_gid[b["flash_gid"]]["time"])
-        cols["grp"].append(evt.group_of(b["flash_gid"]))
-        cols["cluster"].append(cu_id)
-        cols["noth"].append(len(b["other_clusters"]))
-        cols["ks"].append(b["ks_dis"])
-        cols["chi2ndf"].append(b["chi2"] / ndf)
-        cols["strength"].append(b["strength"])
-        cols["meas"].append(b["total_PE"])
-        cols["pred"].append(b["total_pred_light"])
+        cols["apa"].append(str(b["apa"]))
+        cols["flash_gid"].append(str(b["flash_gid"]))
+        cols["t_us"].append("%.1f" % evt.flash_by_gid[b["flash_gid"]]["time"])
+        cols["grp"].append(str(evt.group_of(b["flash_gid"])))
+        cols["cluster"].append(str(cu_id))
+        cols["noth"].append(str(len(b["other_clusters"])))
+        cols["ks"].append("%.3f" % b["ks_dis"])
+        cols["chi2ndf"].append("%.1f" % (b["chi2"] / ndf))
+        cols["strength"].append("%.3f" % b["strength"])
+        cols["meas"].append("%.0f" % b["total_PE"])
+        cols["pred"].append("%.1f" % b["total_pred_light"])
         cols["flags"].append(fmt_flags(b))
+        # green tint persists for selected bundles (distinct from blue click-focus)
+        cols["sel_bg"].append(SEL_BG if i in state["selected"] else "transparent")
         locked = (state["filter_on"] and i not in state["selected"]
                   and cluster_eliminated(i))
         labels.append("%d: T%d fl%d c%d  ks%.2f pr%.0f%s"
@@ -610,16 +631,22 @@ def render_projections():
     box_src.data = dict(xs_xy=xs_xy, ys_xy=ys_xy, xs_yz=xs_yz, ys_yz=ys_yz,
                         xs_xz=xs_xz, ys_xz=ys_xz)
 
-    # context: all currently-selected matches (both TPCs), T0-shifted
-    cx, cy, cz = [], [], []
+    # context: ALL selected matches (any group, both TPCs), T0-shifted, drawn gray;
+    # the selected matches IN THE CURRENT group are additionally drawn green on top.
+    cx, cy, cz = [], [], []          # gray: all selected
+    gx, gy, gz = [], [], []          # green: selected in current group
     for j in state["selected"]:
         b = evt.bundles[j]
         dx = evt.dx_cm(b["apa"], b["flash_gid"])
+        in_grp = evt.group_of(b["flash_gid"]) == state["group"]
         for uid in [b["main_cluster"]] + b["other_clusters"]:
             x, y, z = cluster_points(uid, b["apa"], dx)
             x, y, z = downsample(x, y, z)
             cx += x.tolist(); cy += y.tolist(); cz += z.tolist()
+            if in_grp:
+                gx += x.tolist(); gy += y.tolist(); gz += z.tolist()
     ctx_src.data = dict(x=cx, y=cy, z=cz)
+    ctxg_src.data = dict(x=gx, y=gy, z=gz)
 
     # focus bundle clusters, T0-shifted
     idx = state["focus"]
