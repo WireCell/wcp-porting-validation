@@ -443,8 +443,10 @@ def rebuild_table():
     # lock glyph and their checkbox is refused.
     visible = [i for i in range(len(evt.bundles))
                if evt.group_of(evt.bundles[i]["flash_gid"]) == g]
+    # longest tracks first (by the main cluster's extent), then a stable tiebreak
     order = sorted(visible,
-                   key=lambda i: (evt.bundles[i]["apa"],
+                   key=lambda i: (-evt.cluster_length(evt.bundles[i]["main_cluster"]),
+                                  evt.bundles[i]["apa"],
                                   evt.bundles[i]["flash_gid"],
                                   evt.bundles[i]["main_cluster"]))
     state["order"] = order
@@ -761,7 +763,9 @@ def rebuild_clusters():
         b = evt.bundles[j]
         for u in [b["main_cluster"]] + b["other_clusters"]:
             matched[u] = b["flash_gid"]
-    uids = sorted(evt.cluster_by_uid, key=lambda u: (evt.cluster_by_uid[u]["apa"],
+    # longest clusters first, then a stable tiebreak (TPC, ident)
+    uids = sorted(evt.cluster_by_uid, key=lambda u: (-evt.cluster_length(u),
+                                                     evt.cluster_by_uid[u]["apa"],
                                                      evt.cluster_by_uid[u]["ident"]))
     cols = defaultdict(list)
     for u in uids:
