@@ -1,0 +1,10 @@
+diff --git a/clus/wscript_build b/clus/wscript_build
+index bedec751..bf148e00 100644
+--- a/clus/wscript_build
++++ b/clus/wscript_build
+@@ -1,4 +1,4 @@
+-uses = 'WireCellAux WCPQuickhull'
++uses = 'WireCellAux WCPQuickhull ROOTSYS'
+ if bld.env.INCLUDES_PYTHON:
+     uses += ' WCPPyUtil'
+ bld.smplpkg('WireCellClus', use=uses)
