@@ -58,12 +58,18 @@ class PMTNonLinearity:
         self.p0, self.p1 = float(p0), float(p1)
         self.range_lo, self.range_hi = int(range_lo), int(range_hi)
         self.pretime = int(pretime)
+        # A channel with pesat<=0 or alpha<=0 has no DB saturation entry -> linear (no
+        # nonlinearity). The TF1 form divides by p0, so guard it rather than producing 0.
+        self.linear = (self.p0 <= 0.0) or (self.p1 <= 0.0)
         # fPEAttenuation_V[pe] = TF1.Eval(pe)/pe for pe in [range_lo, range_hi); else 1
         pe = np.arange(self.range_hi)
         self._atten = np.ones(self.range_hi, dtype=float)
-        nz = pe >= self.range_lo
-        self._atten[nz] = self.tf1(pe[nz]) / pe[nz]
-        self._sat_value = float(round(self.tf1(self.range_hi)))
+        if not self.linear:
+            nz = pe >= self.range_lo
+            self._atten[nz] = self.tf1(pe[nz]) / pe[nz]
+            self._sat_value = float(round(self.tf1(self.range_hi)))
+        else:
+            self._sat_value = float(self.range_hi)  # unused (no bin reaches the cap branch)
 
     def tf1(self, x):
         """Observed PE for a true accumulated load x: x / sqrt(1+(x/p0)^p1)."""
@@ -78,6 +84,8 @@ class PMTNonLinearity:
         PE in *this* bin.
         """
         pe_bins = np.asarray(pe_bins)
+        if self.linear:
+            return pe_bins.astype(float)
         # 4 ns running sum, inclusive of the current bin (matches accumulate(begin+bin-pre .. begin+bin+1))
         kernel = np.ones(self.pretime + 1, dtype=int)
         npe_acc = np.convolve(pe_bins, kernel)[: len(pe_bins)]  # acc[i] = sum(pe[i-pre..i])
@@ -218,15 +226,26 @@ def all_pmt_plot(params, n_true, outpath, illustrative, range_lo=100):
         for p0, p1, rh in zip(pesat, alpha, rhi)
     ])
 
-    norm = Normalize(pesat.min(), pesat.max())
+    # channels with pesat<=0 or alpha<=0 have no DB saturation entry -> linear (off)
+    off = (pesat <= 0) | (alpha <= 0)
+    active = ~off
+    norm = Normalize(pesat[active].min(), pesat[active].max()) if active.any() else Normalize(0, 1)
     fig, ax = plt.subplots(1, 2, figsize=(13, 5.6))
     for i in range(len(curves)):
-        col = cm.viridis(norm(pesat[i]))
-        ax[0].plot(n_true, curves[i], color=col, lw=0.6, alpha=0.55)
-        ax[1].plot(n_true, curves[i] / n_true, color=col, lw=0.6, alpha=0.55)
+        if off[i]:
+            ax[0].plot(n_true, curves[i], color="0.6", lw=0.5, ls="--", alpha=0.5)
+            ax[1].plot(n_true, curves[i] / n_true, color="0.6", lw=0.5, ls="--", alpha=0.5)
+        else:
+            col = cm.viridis(norm(pesat[i]))
+            ax[0].plot(n_true, curves[i], color=col, lw=0.7, alpha=0.6)
+            ax[1].plot(n_true, curves[i] / n_true, color=col, lw=0.7, alpha=0.6)
     ax[0].plot(n_true, n_true, "k:", lw=1.2, label="linear (ideal)")
+    if off.any():
+        ax[0].plot([], [], color="0.6", ls="--", lw=1,
+                   label=f"nonlinearity off ({int(off.sum())} ch)")
     ax[0].set_xlabel("NPE_true"); ax[0].set_ylabel("NPE_reco (≈ observed)")
-    ax[0].set_title(f"per-PMT mapping ({len(curves)} PMTs)"); ax[0].legend()
+    ax[0].set_title(f"per-PMT mapping ({int(active.sum())} active, "
+                    f"{int(off.sum())} off / {len(curves)} PMTs)"); ax[0].legend()
     ax[0].grid(alpha=0.3)
     ax[1].axhline(1.0, color="k", ls=":", lw=1)
     ax[1].set_xlabel("NPE_true"); ax[1].set_ylabel("NPE_reco / NPE_true")

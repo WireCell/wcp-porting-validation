@@ -464,7 +464,8 @@ python3 pmt_nonlinearity_curve.py --all-pmt --params-csv perchan.csv   # -> pics
 ```
 
 Per-channel `(PESat, Alpha)` are in the remote conditions DB (table `pds_calibration`,
-tag `v3r1`); export to a CSV `opch,pesat,alpha[,range_hi]`. With no `--params-csv` the
-all-PMT plot uses a **clearly-labelled illustrative synthetic spread** (placeholder until
-the real values are available). `pics/pmt_nonlinearity_allpmt.png` is currently that
-placeholder.
+tag `v3r1`); export to a CSV `opch,pesat,alpha[,range_hi]`. The real v3r1 values are
+checked in as `pmt_nonlin_params_v3r1.csv` (120 PMTs: 104 with a saturation curve,
+16 with `pesat=alpha=0` → nonlinearity off / linear), and `pics/pmt_nonlinearity_allpmt.png`
+is generated from it. With no `--params-csv` the all-PMT plot falls back to a
+**clearly-labelled illustrative synthetic spread**.
