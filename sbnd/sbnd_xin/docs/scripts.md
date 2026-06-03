@@ -447,3 +447,24 @@ Usage: python3 merge_sel_archives.py <orig_archive> <out_archive> <evt_id> <mask
 ```
 
 Channels for anodes that were not selected keep their original unmasked values.
+
+### `pmt_nonlinearity_curve.py`
+
+Standalone reproduction of the sbndcode PMT non-linearity (saturation) that maps
+`NPE_true → NPE_observed/reco`. Reproduces `PMTNonLinearityTF1::NObservedPE` exactly
+(TF1 `x/sqrt(1+(x/p0)^p1)`, 4 ns PE-accumulation window, per-bin scaling, hard cap); no
+LArSoft needed. See `match/docs/sbnd-opdetsim-chain.md` for the code trace.
+
+```
+# single-channel: NPE_true vs NPE_obs for single-burst + scintillation, plus inverse
+python3 pmt_nonlinearity_curve.py                  # -> pmt_nonlin_out/{png,csv}
+
+# all-PMT overlay (one curve per channel), real params from the conditions DB:
+python3 pmt_nonlinearity_curve.py --all-pmt --params-csv perchan.csv   # -> pics/pmt_nonlinearity_allpmt.png
+```
+
+Per-channel `(PESat, Alpha)` are in the remote conditions DB (table `pds_calibration`,
+tag `v3r1`); export to a CSV `opch,pesat,alpha[,range_hi]`. With no `--params-csv` the
+all-PMT plot uses a **clearly-labelled illustrative synthetic spread** (placeholder until
+the real values are available). `pics/pmt_nonlinearity_allpmt.png` is currently that
+placeholder.
