@@ -968,15 +968,17 @@ layout = column(
     header,
     controls,
     status,
-    row(table, column(sel_group_title, sel_group, selsummary)),
-    metrics,
+    # focused-bundle inspection up top: table | select boxes + summary | metrics,
+    # with the three charge-projection views right below so they are visible without
+    # scrolling past the light/histogram/compare panels.
+    row(table, column(sel_group_title, sel_group, selsummary), metrics),
+    row(f_xy, f_yz, f_xz),
     compare_div,
     compare_table,
     row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
         LIGHT[1]["meas"]["fig"], LIGHT[1]["pred"]["fig"]),
     row(HIST[0]["overlay"]["fig"], HIST[0]["ratio"]["fig"],
         HIST[1]["overlay"]["fig"], HIST[1]["ratio"]["fig"]),
-    row(f_xy, f_yz, f_xz),
 )
 
 curdoc().add_root(layout)

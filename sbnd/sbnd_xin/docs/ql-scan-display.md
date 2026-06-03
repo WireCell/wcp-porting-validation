@@ -121,7 +121,10 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   a bundle the **filter** forbids selecting (see rules). The **selection summary** below
   the boxes lists the current picks (flash → clusters, all groups).
 - **Metrics panel**: the focused bundle's full metrics next to the quality thresholds,
-  and its flags.
+  and its flags. It sits **to the right of the table** (not below it), and the three
+  charge-projection views are placed **directly under** the table row — so clicking a
+  bundle shows the table, its metrics, and the 3 views together without scrolling past
+  the light/histogram/compare panels.
 - **Compare-cluster table**: the **Compare cluster's flashes** button lists, in a second
   table, every candidate flash the *focused* cluster could match (all groups, sorted by
   flash time) with the same ks/chi²/strength/PE columns, so the right flash for that
