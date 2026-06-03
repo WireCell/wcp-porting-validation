@@ -8,6 +8,12 @@ charge cluster with an optical flash and produces, per optical channel, a
 efficiency — see `match/docs/semi-analytical-model.md` and
 `match/docs/QL_algorithm.md`) next to the **measured** PE of the flash.
 
+> Note: the 24 uncoated central PMTs now carry `VUVEfficiency = 0` (only
+> `VISEfficiency = 0.0357`), so their predicted PE comes from the reflected
+> visible component alone — matching the sbndcode simulation, which never
+> digitizes direct VUV on uncoated channels. See
+> `match/docs/sbnd-pmt-efficiencies.md`.
+
 This note quantifies how well predicted light tracks measured light for the
 *reasonably matched* bundles, and in particular the **normalization difference
 between data and simulation**. The expectation going in:
