@@ -37,7 +37,8 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, DataTable, TableColumn, Select, Button,
                           Div, ColorBar, HoverTool, NumberFormatter, BasicTicker,
-                          NumeralTickFormatter, Span, HTMLTemplateFormatter)
+                          NumeralTickFormatter, Span, HTMLTemplateFormatter,
+                          CheckboxEditor, Toggle)
 from bokeh.transform import linear_cmap
 from bokeh.plotting import figure
 
@@ -124,6 +125,9 @@ state = {
     "nav_groups": [],   # groups with >=1 visible bundle (prev/next cycle these)
     "compare_cluster": None,  # uid of the cluster shown in the compare table, or None
     "compare_order": [],      # bundle indices listed in the compare table
+    "filter_on": False,       # lock: forbid selecting a cluster already matched
+    "sel_snapshot": [],       # last pushed checkbox column (to detect user edits)
+    "suppress_edit": False,   # guard while we (re)write the table data ourselves
 }
 
 
@@ -172,32 +176,36 @@ def cluster_eliminated(idx):
                for j in state["selected"])
 
 
-def toggle_select(idx):
+def cluster_ident(idx):
     evt = state["evt"]
-    if idx in state["selected"]:
+    return evt.cluster_by_uid[evt.bundles[idx]["main_cluster"]]["ident"]
+
+
+def set_selected(idx, want):
+    """Add/remove bundle idx from the global selection. Returns (changed, message).
+    When the filter is on, a bundle whose cluster is already claimed by *another*
+    selected bundle is locked — it cannot be turned on (but stays visible)."""
+    if want and idx not in state["selected"]:
+        if state["filter_on"] and cluster_eliminated(idx):
+            return False, ("cluster %d is locked by the filter (already matched to "
+                           "another flash)" % cluster_ident(idx))
+        state["selected"].add(idx)
+        return True, "selected"
+    if (not want) and idx in state["selected"]:
         state["selected"].discard(idx)
         return True, "deselected"
-    # cluster uniqueness: selecting replaces any prior bundle for the same cluster
-    b = evt.bundles[idx]
-    dropped = [j for j in state["selected"]
-               if evt.bundles[j]["main_cluster"] == b["main_cluster"]]
-    for j in dropped:
-        state["selected"].discard(j)
-    state["selected"].add(idx)
-    msg = "selected"
-    if dropped:
-        msg += " (replaced this cluster's previous match)"
-    return True, msg
+    return False, ""
+
+
+def toggle_select(idx):
+    return set_selected(idx, idx not in state["selected"])
 
 
 def visible_count(g):
-    """Number of bundles of group g that survive the elimination rule (same rule as
-    rebuild_table). A group can drop to 0 once a selection elsewhere claims its
-    clusters; such a group is skipped by the navigation."""
+    """Bundles shown for group g (the whole group — rivals are no longer hidden).
+    Groups with at least one bundle stay in the navigation."""
     evt = state["evt"]
-    return sum(1 for i in range(len(evt.bundles))
-               if evt.group_of(evt.bundles[i]["flash_gid"]) == g
-               and (i in state["selected"] or not cluster_eliminated(i)))
+    return sum(1 for b in evt.bundles if evt.group_of(b["flash_gid"]) == g)
 
 
 # ---------------------------------------------------------------------------
@@ -214,20 +222,29 @@ select_btn = Button(label="Toggle match (focused)", button_type="primary", width
 clear_btn = Button(label="Clear selections", width=140)
 save_btn = Button(label="Save labels", button_type="success", width=120)
 compare_btn = Button(label="Compare cluster's flashes", width=200)
+filter_btn = Toggle(label="Filter selected bundles: OFF", width=220)
 status = Div(text="", width=1100)
 metrics = Div(text="", width=560)
 selsummary = Div(text="", width=380)
 compare_div = Div(text="", width=1000)
 
-# A bold green check marks every SELECTED (hand-picked) bundle, so it is obvious at a
-# glance how many — and which — bundles you have chosen, on either TPC. This is the
-# committed-match indicator; the blue row highlight is just the row being inspected.
+# `sel` is a CLICKABLE checkbox: tick it to add the bundle to the selection (its
+# predicted light then joins the per-flash sum), untick to remove it. Several boxes
+# on one TPC can be ticked at once (different clusters). The boolean renders as a
+# green check when set; CheckboxEditor makes the cell toggle on click.
+sel_fmt = HTMLTemplateFormatter(
+    template='<span style="color:#2ca02c;font-weight:bold;font-size:15px">'
+             '<%= value ? "\\u2714" : "" %></span>')
+# read-only green check (string field) for the compare table
 check_fmt = HTMLTemplateFormatter(
     template='<span style="color:#2ca02c;font-weight:bold;font-size:15px"><%= value %></span>')
+# a lock glyph on bundles the filter forbids selecting (cluster already matched)
+lock_fmt = HTMLTemplateFormatter(template='<span style="color:#999"><%= value %></span>')
 
 table_src = ColumnDataSource(data=dict())
 table_cols = [
-    TableColumn(field="sel", title="✓", width=34, formatter=check_fmt),
+    TableColumn(field="sel", title="✓", width=40, formatter=sel_fmt, editor=CheckboxEditor()),
+    TableColumn(field="lock", title="", width=26, formatter=lock_fmt),
     TableColumn(field="auto", title="auto", width=45),
     TableColumn(field="apa", title="apa", width=35),
     TableColumn(field="flash_gid", title="flash", width=70),
@@ -246,7 +263,7 @@ table_cols = [
     TableColumn(field="flags", title="flags", width=150),
 ]
 table = DataTable(source=table_src, columns=table_cols, width=960, height=300,
-                  selectable=True, index_position=None)
+                  selectable=True, editable=True, index_position=None)
 
 # Second table (request 4): every bundle whose main cluster matches the focused
 # bundle's, across all flashes/groups, so one cluster's candidate flashes can be
@@ -394,11 +411,11 @@ def fmt_flags(b):
 def rebuild_table():
     evt = state["evt"]
     g = state["group"]
-    # Visible = bundles of the current coincidence group whose cluster is not
-    # already claimed by another selected bundle (elimination spans all groups).
+    # Show every bundle of the current coincidence group (rivals are no longer
+    # hidden); when the filter is on, those whose cluster is already matched get a
+    # lock glyph and their checkbox is refused.
     visible = [i for i in range(len(evt.bundles))
-               if evt.group_of(evt.bundles[i]["flash_gid"]) == g
-               and (i in state["selected"] or not cluster_eliminated(i))]
+               if evt.group_of(evt.bundles[i]["flash_gid"]) == g]
     order = sorted(visible,
                    key=lambda i: (evt.bundles[i]["apa"],
                                   evt.bundles[i]["flash_gid"],
@@ -408,7 +425,9 @@ def rebuild_table():
     for i in order:
         b = evt.bundles[i]
         ndf = b["ndf"] or 1
-        cols["sel"].append("✔" if i in state["selected"] else "")
+        cols["sel"].append(i in state["selected"])
+        cols["lock"].append("🔒" if (state["filter_on"] and i not in state["selected"]
+                                     and cluster_eliminated(i)) else "")
         cols["auto"].append("Y" if b["auto_selected"] else "")
         cols["apa"].append(b["apa"])
         cols["flash_gid"].append(b["flash_gid"])
@@ -422,7 +441,10 @@ def rebuild_table():
         cols["meas"].append(b["total_PE"])
         cols["pred"].append(b["total_pred_light"])
         cols["flags"].append(fmt_flags(b))
+    state["sel_snapshot"] = list(cols["sel"])
+    state["suppress_edit"] = True          # our own write — not a user checkbox click
     table_src.data = dict(cols)
+    state["suppress_edit"] = False
     # keep focus row highlighted
     if state["focus"] is not None and state["focus"] in order:
         table_src.selected.indices = [order.index(state["focus"])]
@@ -736,8 +758,9 @@ def load_event(label):
     n = len(evt.bundles)
     nsel = sum(b["auto_selected"] for b in evt.bundles)
     status.text = ("Loaded <b>%s</b>: %d contained bundles, %d flashes, %d clusters, "
-                   "%d coincidence groups; %d auto-selected. Pick a group, click a row "
-                   "to inspect, 'Toggle match' to select."
+                   "%d coincidence groups; %d auto-selected. Pick a group; tick the ✓ box "
+                   "to select bundles (several per TPC add up in the predicted pattern); "
+                   "'Filter selected bundles' locks reused clusters."
                    % (label, n, len(evt.flash_by_gid), len(evt.cluster_by_uid),
                       len(groups), nsel))
     refresh()
@@ -804,7 +827,40 @@ def on_toggle():
     ok, msg = toggle_select(state["focus"])
     b = state["evt"].bundles[state["focus"]]
     status.text = ("bundle [flash %d, cluster %d]: %s"
-                   % (b["flash_gid"], state["evt"].cluster_by_uid[b["main_cluster"]]["ident"], msg))
+                   % (b["flash_gid"], cluster_ident(state["focus"]), msg or "no change"))
+    refresh()
+
+
+def on_table_edit(attr, old, new):
+    """A checkbox in the bundle table was ticked/unticked by the user. Diff the
+    `sel` column against the snapshot we last wrote, apply each change through
+    set_selected (which honours the filter lock), then refresh."""
+    if state["suppress_edit"] or state["evt"] is None:
+        return
+    cur = list(new.get("sel", []))
+    snap = state["sel_snapshot"]
+    order = state["order"]
+    if len(cur) != len(snap) or len(cur) != len(order):
+        return
+    msgs = []
+    for r in range(len(cur)):
+        if bool(cur[r]) == bool(snap[r]):
+            continue
+        ok, msg = set_selected(order[r], bool(cur[r]))
+        if not ok and msg:                 # e.g. locked by the filter
+            msgs.append(msg)
+    if msgs:
+        status.text = " / ".join(msgs)
+    refresh()                              # re-renders predicted sum; reverts rejects
+
+
+def on_filter(attr, old, new):
+    state["filter_on"] = bool(new)
+    filter_btn.label = "Filter selected bundles: %s" % ("ON" if new else "OFF")
+    filter_btn.button_type = "warning" if new else "default"
+    status.text = ("Filter ON — bundles reusing an already-matched cluster are locked "
+                   "(🔒) and cannot be selected." if new else
+                   "Filter OFF — any bundle can be selected.")
     refresh()
 
 
@@ -880,11 +936,13 @@ group_select.on_change("value", on_group_change)
 prev_grp_btn.on_click(lambda: step_group(-1))
 next_grp_btn.on_click(lambda: step_group(+1))
 table_src.selected.on_change("indices", on_row_select)
+table_src.on_change("data", on_table_edit)
 compare_src.selected.on_change("indices", on_compare_row)
 select_btn.on_click(on_toggle)
 clear_btn.on_click(on_clear)
 save_btn.on_click(on_save)
 compare_btn.on_click(on_compare)
+filter_btn.on_change("active", on_filter)
 
 
 # ---------------------------------------------------------------------------
@@ -892,7 +950,7 @@ compare_btn.on_click(on_compare)
 # ---------------------------------------------------------------------------
 controls = row(event_select, prev_evt_btn, next_evt_btn,
                group_select, prev_grp_btn, next_grp_btn,
-               select_btn, clear_btn, save_btn, compare_btn)
+               select_btn, clear_btn, save_btn, compare_btn, filter_btn)
 header = Div(text="<h2>SBND Q/L matching hand-scan</h2>", width=1100)
 layout = column(
     header,
