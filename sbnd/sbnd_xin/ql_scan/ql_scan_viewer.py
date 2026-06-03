@@ -36,7 +36,8 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, DataTable, TableColumn, Select, Button,
-                          Div, ColorBar, HoverTool, NumberFormatter)
+                          Div, ColorBar, HoverTool, NumberFormatter, BasicTicker,
+                          NumeralTickFormatter, Span)
 from bokeh.transform import linear_cmap
 from bokeh.plotting import figure
 
@@ -120,6 +121,9 @@ state = {
     "order": [],        # visible bundle indices in table display order
     "group": None,      # current coincidence group id (the scan unit)
     "groups": [],       # sorted group ids present in the event
+    "nav_groups": [],   # groups with >=1 visible bundle (prev/next cycle these)
+    "compare_cluster": None,  # uid of the cluster shown in the compare table, or None
+    "compare_order": [],      # bundle indices listed in the compare table
 }
 
 
@@ -186,6 +190,16 @@ def toggle_select(idx):
     return True, msg
 
 
+def visible_count(g):
+    """Number of bundles of group g that survive the elimination rule (same rule as
+    rebuild_table). A group can drop to 0 once a selection elsewhere claims its
+    clusters; such a group is skipped by the navigation."""
+    evt = state["evt"]
+    return sum(1 for i in range(len(evt.bundles))
+               if evt.group_of(evt.bundles[i]["flash_gid"]) == g
+               and (i in state["selected"] or not cluster_eliminated(i)))
+
+
 # ---------------------------------------------------------------------------
 # Bokeh widgets / figures.
 # ---------------------------------------------------------------------------
@@ -199,9 +213,11 @@ next_grp_btn = Button(label="next grp >", width=90)
 select_btn = Button(label="Toggle match (focused)", button_type="primary", width=200)
 clear_btn = Button(label="Clear selections", width=140)
 save_btn = Button(label="Save labels", button_type="success", width=120)
+compare_btn = Button(label="Compare cluster's flashes", width=200)
 status = Div(text="", width=1100)
 metrics = Div(text="", width=560)
-selsummary = Div(text="", width=540)
+selsummary = Div(text="", width=380)
+compare_div = Div(text="", width=1000)
 
 table_src = ColumnDataSource(data=dict())
 table_cols = [
@@ -223,20 +239,44 @@ table_cols = [
     TableColumn(field="pred", title="predPE", width=70, formatter=NumberFormatter(format="0.0")),
     TableColumn(field="flags", title="flags", width=150),
 ]
-table = DataTable(source=table_src, columns=table_cols, width=1100, height=300,
+table = DataTable(source=table_src, columns=table_cols, width=960, height=300,
                   selectable=True, index_position=None)
+
+# Second table (request 4): every bundle whose main cluster matches the focused
+# bundle's, across all flashes/groups, so one cluster's candidate flashes can be
+# compared side by side. Populated on demand by the "Compare" button; click a row
+# to jump the whole view (focus + group) to that candidate flash.
+compare_src = ColumnDataSource(data=dict())
+compare_cols = [
+    TableColumn(field="state", title="state", width=90),
+    TableColumn(field="auto", title="auto", width=45),
+    TableColumn(field="flash_gid", title="flash", width=70),
+    TableColumn(field="t_us", title="t(us)", width=70,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="grp", title="grp", width=40),
+    TableColumn(field="ks", title="ks", width=55, formatter=NumberFormatter(format="0.000")),
+    TableColumn(field="chi2ndf", title="chi2/ndf", width=70,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="strength", title="strength", width=70,
+                formatter=NumberFormatter(format="0.000")),
+    TableColumn(field="meas", title="measPE", width=70, formatter=NumberFormatter(format="0")),
+    TableColumn(field="pred", title="predPE", width=70, formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="flags", title="flags", width=150),
+]
+compare_table = DataTable(source=compare_src, columns=compare_cols, width=1000,
+                          height=200, selectable=True, index_position=None)
 
 # Light-pattern figures (Y vertical, Z horizontal): a 2x2 grid of measured vs
 # predicted for TPC0 and TPC1. Positions are fixed, so the ranges are pinned to the
 # detector box (no zoom). Active PMTs of the panel's TPC are faint outlines; the
 # flash PMTs are sized by sqrt(PE).
 def radii(vals, hi):
-    # circle radius in cm, scaled by sqrt(PE/hi); 0-PE channels get a tiny dot
-    return (1.5 + 6.0 * np.sqrt(np.clip(vals, 0, None) / hi)).tolist()
+    # circle radius in cm, scaled by sqrt(PE/hi); 0-PE channels get a small dot
+    return (2.5 + 9.0 * np.sqrt(np.clip(vals, 0, None) / hi)).tolist()
 
 
 def make_light_fig(title):
-    f = figure(title=title, height=260, width=420, tools="pan,reset,save")
+    f = figure(title=title, height=280, width=430, tools="pan,reset,save")
     f.xaxis.axis_label = "z (cm)"
     f.yaxis.axis_label = "y (cm)"
     base = ColumnDataSource(data=dict(z=[], y=[]))
@@ -246,8 +286,14 @@ def make_light_fig(title):
     g = f.circle("z", "y", source=src, radius="r",
                  fill_color=linear_cmap("pe", "Viridis256", 0, 1),
                  line_color="#333333", fill_alpha=0.85)
-    f.add_layout(ColorBar(color_mapper=g.glyph.fill_color["transform"], title="PE"), "right")
-    f.add_tools(HoverTool(renderers=[g], tooltips=[("PE", "@pe{0.0}")]))
+    cbar = ColorBar(color_mapper=g.glyph.fill_color["transform"], title="PE",
+                    ticker=BasicTicker(desired_num_ticks=6),
+                    formatter=NumeralTickFormatter(format="0,0"),
+                    width=14, padding=4, label_standoff=6,
+                    title_text_font_size="11px", title_standoff=6,
+                    major_label_text_font_size="10px")
+    f.add_layout(cbar, "right")
+    f.add_tools(HoverTool(renderers=[g], tooltips=[("PE", "@pe{0,0.0}")]))
     return dict(fig=f, base=base, src=src, glyph=g)
 
 
@@ -255,6 +301,48 @@ def make_light_fig(title):
 LIGHT = {apa: {"meas": make_light_fig("TPC%d measured" % apa),
                "pred": make_light_fig("TPC%d predicted" % apa)}
          for apa in (0, 1)}
+
+
+# 1-D per-channel comparison below the 2x2 light grid: for each TPC an overlay of
+# measured vs predicted PE over that TPC's active PMTs, and the pred/meas ratio.
+def make_hist_fig(title):
+    f = figure(title=title, height=220, width=430,
+               tools="pan,box_zoom,wheel_zoom,reset,save")
+    f.xaxis.axis_label = "active PMT (channel index)"
+    f.yaxis.axis_label = "PE"
+    meas_src = ColumnDataSource(data=dict(x=[], pe=[]))
+    pred_src = ColumnDataSource(data=dict(x=[], pe=[]))
+    f.vbar(x="x", top="pe", width=0.9, source=meas_src,
+           fill_color="#6baed6", line_color=None, fill_alpha=0.6,
+           legend_label="measured")
+    f.line("x", "pe", source=pred_src, line_color="#d62728", line_width=1.5,
+           legend_label="predicted")
+    f.scatter("x", "pe", source=pred_src, marker="circle", size=4,
+              fill_color="#d62728", line_color=None, legend_label="predicted")
+    f.legend.label_text_font_size = "9px"
+    f.legend.padding = 2
+    f.legend.location = "top_right"
+    f.legend.background_fill_alpha = 0.6
+    return dict(fig=f, meas=meas_src, pred=pred_src)
+
+
+def make_ratio_fig(title):
+    f = figure(title=title, height=220, width=430,
+               tools="pan,box_zoom,wheel_zoom,reset,save")
+    f.xaxis.axis_label = "active PMT (channel index)"
+    f.yaxis.axis_label = "pred / meas"
+    src = ColumnDataSource(data=dict(x=[], ratio=[]))
+    f.scatter("x", "ratio", source=src, marker="circle", size=5,
+              fill_color="#2ca02c", line_color=None, fill_alpha=0.8)
+    f.add_layout(Span(location=1.0, dimension="width", line_color="#888888",
+                      line_dash="dashed", line_width=1))
+    return dict(fig=f, src=src)
+
+
+# HIST[apa] = {"overlay": panel, "ratio": panel}
+HIST = {apa: {"overlay": make_hist_fig("TPC%d meas vs pred" % apa),
+              "ratio": make_ratio_fig("TPC%d pred/meas" % apa)}
+        for apa in (0, 1)}
 
 # Charge-projection figures (focused bundle's clusters, T0-shifted, in the fixed
 # detector box; both TPC boxes drawn). XY, YZ (z horiz, y vert), XZ (x horiz, z vert).
@@ -359,6 +447,7 @@ def render_light():
     evt = state["evt"]
     for apa in (0, 1):
         mp, pp = LIGHT[apa]["meas"], LIGHT[apa]["pred"]
+        ho, hr = HIST[apa]["overlay"], HIST[apa]["ratio"]
         am = evt.od_active & (evt.od_apa == apa)
         chans = np.nonzero(am)[0]
         # faint outline of this TPC's active PMTs
@@ -371,6 +460,11 @@ def render_light():
             pp["src"].data = dict(z=[], y=[], pe=[], r=[])
             mp["fig"].title.text = "TPC%d measured  (no flash in group)" % apa
             pp["fig"].title.text = "TPC%d predicted" % apa
+            ho["meas"].data = dict(x=[], pe=[])
+            ho["pred"].data = dict(x=[], pe=[])
+            hr["src"].data = dict(x=[], ratio=[])
+            ho["fig"].title.text = "TPC%d meas vs pred  (no flash in group)" % apa
+            hr["fig"].title.text = "TPC%d pred/meas" % apa
             continue
         flash = evt.flash_by_gid[gid]
         meas = np.array(flash["pe"])[chans]
@@ -413,6 +507,18 @@ def render_light():
         else:
             lab = "sum of %d selected cluster(s)" % len(share)
         pp["fig"].title.text = "TPC%d predicted  (%s)" % (apa, lab)
+
+        # 1-D per-channel comparison (same meas/pred over the active PMTs).
+        xidx = np.arange(meas.size)
+        ho["meas"].data = dict(x=xidx.tolist(), pe=meas.tolist())
+        ho["pred"].data = dict(x=xidx.tolist(), pe=pred.tolist())
+        mask = meas > 0     # ratio undefined where measured PE is 0 -> drop
+        hr["src"].data = dict(x=xidx[mask].tolist(),
+                              ratio=(pred[mask] / meas[mask]).tolist())
+        ho["fig"].title.text = ("TPC%d meas vs pred  (gid %d, t=%.1f us)"
+                                % (apa, gid, flash["time"]))
+        hr["fig"].title.text = ("TPC%d pred/meas  (%d/%d chans meas>0)"
+                                % (apa, int(mask.sum()), meas.size))
 
 
 def box_lines(g):
@@ -517,12 +623,72 @@ def render_summary():
                        + "<br>".join(lines))
 
 
+def rebuild_compare():
+    """Fill the compare table with every bundle sharing the focused cluster's uid
+    (one cluster -> naturally one TPC), across all flashes/groups. Empty when no
+    cluster is being compared."""
+    evt = state["evt"]
+    cu = state["compare_cluster"]
+    empty = dict(state=[], auto=[], flash_gid=[], t_us=[], grp=[], ks=[],
+                 chi2ndf=[], strength=[], meas=[], pred=[], flags=[])
+    if cu is None or cu not in evt.cluster_by_uid:
+        compare_src.data = empty
+        state["compare_order"] = []
+        compare_div.text = ("<i>focus a bundle, then 'Compare cluster's flashes' to "
+                            "list every flash this cluster could match.</i>")
+        compare_src.selected.indices = []
+        return
+    rows = [i for i in range(len(evt.bundles)) if evt.bundles[i]["main_cluster"] == cu]
+    rows.sort(key=lambda i: evt.flash_by_gid[evt.bundles[i]["flash_gid"]]["time"])
+    state["compare_order"] = rows
+    cols = defaultdict(list)
+    for i in rows:
+        b = evt.bundles[i]
+        ndf = b["ndf"] or 1
+        cols["state"].append("SELECTED" if i in state["selected"] else "avail")
+        cols["auto"].append("Y" if b["auto_selected"] else "")
+        cols["flash_gid"].append(b["flash_gid"])
+        cols["t_us"].append(evt.flash_by_gid[b["flash_gid"]]["time"])
+        cols["grp"].append(evt.group_of(b["flash_gid"]))
+        cols["ks"].append(b["ks_dis"])
+        cols["chi2ndf"].append(b["chi2"] / ndf)
+        cols["strength"].append(b["strength"])
+        cols["meas"].append(b["total_PE"])
+        cols["pred"].append(b["total_pred_light"])
+        cols["flags"].append(fmt_flags(b))
+    compare_src.data = dict(cols)
+    c = evt.cluster_by_uid[cu]
+    compare_div.text = ("<b>cluster %d (TPC%d)</b> &mdash; %d candidate flash(es); "
+                        "click a row to jump to that flash."
+                        % (c["ident"], c["apa"], len(rows)))
+    # highlight the focused row if it is in the list (programmatic; see on_compare_row)
+    idx = state["focus"]
+    compare_src.selected.indices = [rows.index(idx)] if idx in rows else []
+
+
+def sync_groups():
+    """Update the group dropdown to the non-empty groups (plus the current one, kept
+    valid even if it just emptied). prev/next cycle the non-empty set, so navigation
+    skips groups with no remaining bundle. Never sets .value (would re-fire)."""
+    evt = state["evt"]
+    nonempty = [g for g in state["groups"] if visible_count(g) > 0]
+    state["nav_groups"] = nonempty
+    keep = set(nonempty)
+    if state["group"] is not None:
+        keep.add(state["group"])
+    new_options = [(str(g), group_label(evt, g)) for g in sorted(keep)]
+    if group_select.options != new_options:
+        group_select.options = new_options
+
+
 def refresh():
     rebuild_table()
     render_light()
     render_projections()
     render_metrics()
     render_summary()
+    rebuild_compare()
+    sync_groups()
 
 
 # ---------------------------------------------------------------------------
@@ -547,6 +713,7 @@ def load_event(label):
     state["evt"] = evt
     state["focus"] = None
     state["selected"] = set()
+    state["compare_cluster"] = None
     groups = event_groups(evt)
     state["groups"] = groups
     state["group"] = groups[0] if groups else None
@@ -580,17 +747,26 @@ def step_event(d):
 def on_group_change(attr, old, new):
     if not new or state["evt"] is None:
         return
-    state["group"] = int(new)
-    state["focus"] = None          # never carry focus across groups
+    g = int(new)
+    state["group"] = g
+    # keep focus only when the focused bundle belongs to the new group (so a compare
+    # row-click can set focus then switch group without it being cleared here); a
+    # plain group navigation drops the now-foreign focus.
+    idx = state["focus"]
+    if idx is not None and state["evt"].group_of(state["evt"].bundles[idx]["flash_gid"]) != g:
+        state["focus"] = None
     refresh()
 
 
 def step_group(d):
-    groups = state["groups"]
-    if not groups or state["group"] is None:
+    nav = state["nav_groups"] or state["groups"]
+    if not nav:
         return
-    i = groups.index(state["group"])
-    group_select.value = str(groups[(i + d) % len(groups)])
+    cur = state["group"]
+    if cur in nav:
+        group_select.value = str(nav[(nav.index(cur) + d) % len(nav)])
+    else:
+        group_select.value = str(nav[0])
 
 
 def on_row_select(attr, old, new):
@@ -620,6 +796,35 @@ def on_clear():
     state["selected"] = set()
     status.text = "Cleared all selections."
     refresh()
+
+
+def on_compare():
+    if state["focus"] is None:
+        status.text = "Focus a bundle row first, then Compare."
+        return
+    cu = state["evt"].bundles[state["focus"]]["main_cluster"]
+    state["compare_cluster"] = cu
+    rebuild_compare()
+    status.text = ("Comparing cluster %d's candidate flashes (table below)."
+                   % state["evt"].cluster_by_uid[cu]["ident"])
+
+
+def on_compare_row(attr, old, new):
+    if not new:
+        return
+    order = state["compare_order"]
+    pos = new[0]
+    if not (0 <= pos < len(order)):
+        return
+    idx = order[pos]
+    if idx == state["focus"]:
+        return                      # programmatic re-highlight of the focused row
+    state["focus"] = idx            # set before the group switch so it survives it
+    g = state["evt"].group_of(state["evt"].bundles[idx]["flash_gid"])
+    if group_select.value == str(g):
+        refresh()
+    else:
+        group_select.value = str(g)  # fires on_group_change (keeps focus, then refresh)
 
 
 def on_save():
@@ -659,9 +864,11 @@ group_select.on_change("value", on_group_change)
 prev_grp_btn.on_click(lambda: step_group(-1))
 next_grp_btn.on_click(lambda: step_group(+1))
 table_src.selected.on_change("indices", on_row_select)
+compare_src.selected.on_change("indices", on_compare_row)
 select_btn.on_click(on_toggle)
 clear_btn.on_click(on_clear)
 save_btn.on_click(on_save)
+compare_btn.on_click(on_compare)
 
 
 # ---------------------------------------------------------------------------
@@ -669,16 +876,20 @@ save_btn.on_click(on_save)
 # ---------------------------------------------------------------------------
 controls = row(event_select, prev_evt_btn, next_evt_btn,
                group_select, prev_grp_btn, next_grp_btn,
-               select_btn, clear_btn, save_btn)
+               select_btn, clear_btn, save_btn, compare_btn)
 header = Div(text="<h2>SBND Q/L matching hand-scan</h2>", width=1100)
 layout = column(
     header,
     controls,
     status,
-    table,
-    row(metrics, selsummary),
+    row(table, selsummary),
+    metrics,
+    compare_div,
+    compare_table,
     row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
         LIGHT[1]["meas"]["fig"], LIGHT[1]["pred"]["fig"]),
+    row(HIST[0]["overlay"]["fig"], HIST[0]["ratio"]["fig"],
+        HIST[1]["overlay"]["fig"], HIST[1]["ratio"]["fig"]),
     row(f_xy, f_yz, f_xz),
 )
 

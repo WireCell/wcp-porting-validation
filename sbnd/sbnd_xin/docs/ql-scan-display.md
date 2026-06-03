@@ -93,19 +93,34 @@ ssh -L 5008:localhost:5008 user@wcgpu1
 - **Event** selector + prev/next, and a **coincidence-group** selector + prev/next.
   The hand-scan is done **one ±80 ns group at a time** (the navigation unit), so the
   busy full-event bundle list is broken into the coincident TPC0/TPC1 units the eye
-  actually compares. Each group label shows its TPC0/TPC1 flash times.
-- **Bundle table**: only the **current group's** bundles, minus any whose cluster is
-  already claimed by a selection (see rules) — `state` (SELECTED / avail), `auto`,
-  apa, flash, time, group, cluster, ks, chi²/ndf, strength, measured/predicted PE,
-  flags. Click a row to **focus** it.
-- **Metrics panel**: the focused bundle's full metrics next to the quality
-  thresholds, and its flags. **Selection summary**: the current picks (all groups).
+  actually compares. Each group label shows its TPC0/TPC1 flash times. The group
+  selector lists only groups that still have a bundle to scan; a group emptied by a
+  selection made elsewhere is **skipped** by prev/next (see rules).
+- **Bundle table** (left) with the **selection summary** (right): the table shows only
+  the **current group's** bundles, minus any whose cluster is already claimed by a
+  selection (see rules) — `state` (SELECTED / avail), `auto`, apa, flash, time, group,
+  cluster, ks, chi²/ndf, strength, measured/predicted PE, flags. Click a row to
+  **focus** it. The summary beside it lists the current picks (flash → clusters, all
+  groups).
+- **Metrics panel**: the focused bundle's full metrics next to the quality thresholds,
+  and its flags.
+- **Compare-cluster table**: the **Compare cluster's flashes** button lists, in a second
+  table, every candidate flash the *focused* cluster could match (all groups, sorted by
+  flash time) with the same ks/chi²/strength/PE columns, so the right flash for that
+  cluster can be read off side by side. Click a row to **jump** the whole view (focus +
+  group) to that candidate flash; the light/histogram/projection panels follow.
 - **Light patterns** — a 2×2 grid: **measured + predicted for TPC0** and **measured +
   predicted for TPC1**. Positions are fixed, so the ranges are pinned to the detector
   box (no zoom). The two **measured** panels are anchored to the group's per-TPC flash
   (a stable reference that does not flicker as rows are clicked); the two **predicted**
   panels sum the clusters selected on that TPC's flash (or preview the focused bundle
-  when nothing is selected yet). Circle radius ∝ √PE, independent per-panel scale.
+  when nothing is selected yet). Circle radius ∝ √PE, independent per-panel scale, with
+  a labelled PE colour bar.
+- **1-D comparison** — below the grid, per TPC an **overlay** of measured (bars) vs
+  predicted (line) PE over that TPC's active PMT channels, and a **pred/meas ratio**
+  (reference line at 1; channels with zero measured PE are dropped). These read off the
+  same measured/predicted vectors as the 2-D panels, giving the magnitude *and* pattern
+  mismatch at a glance.
 - **Charge projections**: X-Y, Y-Z, X-Z of the focused bundle's cluster(s), shifted
   by the bundle's T0 `dx`, inside the **fixed** detector box (both TPC boxes drawn);
   the currently-selected matches are shown faintly for context.
@@ -120,6 +135,12 @@ ssh -L 5008:localhost:5008 user@wcgpu1
   previous pick for that cluster). This is how you whittle the candidates down.
 - **Many clusters per flash** — selecting several bundles that share a flash sums
   their predicted light (the measured pattern is unchanged).
+- **Empty groups are skipped** — once a cluster is picked, its rival bundles vanish
+  from every group; a group left with no bundle drops out of the group navigation
+  (prev/next), though the group you are currently viewing always stays selectable.
+- **Compare a cluster's flashes** — the compare table (above) is the read-across that
+  complements the per-group view: it pins one cluster and shows all the flashes it
+  could match, so you pick the better flash, then select it as usual.
 
 ### Save
 **Save labels** writes `work/ql_evt<ID>/labels-evt<ID>.json`: one entry per selected
