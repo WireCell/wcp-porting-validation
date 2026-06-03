@@ -125,6 +125,10 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   charge-projection views are placed **directly under** the table row — so clicking a
   bundle shows the table, its metrics, and the 3 views together without scrolling past
   the light/histogram/compare panels.
+- **Cluster roster** (rightmost in the table row): every cluster in the event (both
+  TPCs) with its ident, TPC, `npts`, `len(cm)` (3-D bounding-box diagonal), and a green
+  **✓ → flash** when it has been matched. Shows at a glance which clusters are still
+  unassigned. Read-only; sorted by TPC then ident.
 - **Compare-cluster table**: the **Compare cluster's flashes** button lists, in a second
   table, every candidate flash the *focused* cluster could match (all groups, sorted by
   flash time) with the same ks/chi²/strength/PE columns, so the right flash for that

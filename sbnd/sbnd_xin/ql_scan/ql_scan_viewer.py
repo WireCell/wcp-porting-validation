@@ -93,6 +93,7 @@ class Event:
         self.flash_by_gid = {f["gid"]: f for f in self.d["flashes"]}
         self.cluster_by_uid = {c["uid"]: c for c in self.d["clusters"]}
         self.bundles = self.d["bundles"]
+        self._clen = {}                       # cached cluster lengths
         # opdet arrays (numpy) for fast light-pattern drawing
         od = self.d["opdets"]
         self.od_x = np.array([o["x"] for o in od])
@@ -104,6 +105,18 @@ class Event:
 
     def group_of(self, gid):
         return self.flash_by_gid[gid]["group"]
+
+    def cluster_length(self, uid):
+        """Spatial extent of a cluster (cm): the diagonal of its 3-D bounding box.
+        A cheap, stable size proxy for the roster (raw, un-shifted points)."""
+        if uid not in self._clen:
+            c = self.cluster_by_uid[uid]
+            if c["x"]:
+                d = sum((max(c[a]) - min(c[a])) ** 2 for a in ("x", "y", "z"))
+                self._clen[uid] = math.sqrt(d)
+            else:
+                self._clen[uid] = 0.0
+        return self._clen[uid]
 
     def dx_cm(self, apa, gid):
         """T0 x-shift (cm) applied to apa's charge for the flash at gid."""
@@ -285,6 +298,23 @@ compare_cols = [
 ]
 compare_table = DataTable(source=compare_src, columns=compare_cols, width=1000,
                           height=200, selectable=True, index_position=None)
+
+# Cluster roster (all clusters in the event, both TPCs): ident, TPC, #points,
+# length (bbox diagonal, cm), and whether it has been matched (✓ + the flash gid) —
+# so you can see at a glance which clusters are still unassigned.
+clus_title = Div(text="<b>clusters</b> (✓ = matched)", width=330)
+clus_src = ColumnDataSource(data=dict())
+clus_cols = [
+    TableColumn(field="sel", title="✓", width=30, formatter=check_fmt),
+    TableColumn(field="cluster", title="clus", width=50),
+    TableColumn(field="apa", title="TPC", width=40),
+    TableColumn(field="npts", title="npts", width=55),
+    TableColumn(field="length", title="len(cm)", width=65,
+                formatter=NumberFormatter(format="0.0")),
+    TableColumn(field="flash_gid", title="→flash", width=60),
+]
+clus_table = DataTable(source=clus_src, columns=clus_cols, width=330, height=300,
+                       selectable=True, index_position=None)
 
 # Light-pattern figures (Y vertical, Z horizontal): a 2x2 grid of measured vs
 # predicted for TPC0 and TPC1. Positions are fixed, so the ranges are pinned to the
@@ -721,6 +751,31 @@ def sync_groups():
         group_select.options = new_options
 
 
+def rebuild_clusters():
+    """Roster of every cluster in the event (both TPCs): ident, TPC, #points,
+    length, and the flash it is matched to (✓) if any — so the unassigned clusters
+    are obvious."""
+    evt = state["evt"]
+    matched = {}                            # cluster uid -> flash gid (via selection)
+    for j in state["selected"]:
+        b = evt.bundles[j]
+        for u in [b["main_cluster"]] + b["other_clusters"]:
+            matched[u] = b["flash_gid"]
+    uids = sorted(evt.cluster_by_uid, key=lambda u: (evt.cluster_by_uid[u]["apa"],
+                                                     evt.cluster_by_uid[u]["ident"]))
+    cols = defaultdict(list)
+    for u in uids:
+        c = evt.cluster_by_uid[u]
+        cols["sel"].append("✔" if u in matched else "")
+        cols["cluster"].append(c["ident"])
+        cols["apa"].append(c["apa"])
+        cols["npts"].append(c["npoints"])
+        cols["length"].append(evt.cluster_length(u))
+        cols["flash_gid"].append(matched.get(u, ""))
+    clus_src.selected.indices = []          # force repaint on same-row-set change
+    clus_src.data = dict(cols)
+
+
 def refresh():
     rebuild_table()
     render_light()
@@ -728,6 +783,7 @@ def refresh():
     render_metrics()
     render_summary()
     rebuild_compare()
+    rebuild_clusters()
     sync_groups()
 
 
@@ -971,7 +1027,8 @@ layout = column(
     # focused-bundle inspection up top: table | select boxes + summary | metrics,
     # with the three charge-projection views right below so they are visible without
     # scrolling past the light/histogram/compare panels.
-    row(table, column(sel_group_title, sel_group, selsummary), metrics),
+    row(table, column(sel_group_title, sel_group, selsummary), metrics,
+        column(clus_title, clus_table)),
     row(f_xy, f_yz, f_xz),
     compare_div,
     compare_table,
