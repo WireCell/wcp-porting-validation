@@ -20,6 +20,11 @@ local semimodel_file = std.extVar('semimodel_file');
 // PointTreeMerging -> MABC).  Both are byte-identical today (the joint algorithm
 // is deferred); the joint wiring is the live home for it.
 local joint = std.extVar('joint');
+// Per-PMT predicted-PE non-linearity correction toggle (run_clust_QL_evt.sh passes
+// -C pmt_nl=...; default true there, PMT_NL=false reproduces the OFF baseline). Threaded
+// into the local qlmatching.jsonnet wrapper's matching()/matching_joint(); canonical
+// production stays OFF.
+local pmt_nl = std.extVar('pmt_nl');
 
 local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
 local params = base {
@@ -118,12 +123,13 @@ local opflash_sources = [qlm.opflash_source(n) for n in std.range(0, std.length(
 local flash_attach    = [qlm.flash_attach(n)    for n in std.range(0, std.length(tools.anodes) - 1)];
 local matching_pipes  = [
     qlm.matching(tools.anodes[n], clus_maker.detector_volumes([tools.anodes[n]]),
-                 n, reality, semimodel_file, cathode_fiducial=cathode_fv.tn)
+                 n, reality, semimodel_file, cathode_fiducial=cathode_fv.tn, pmt_nl=pmt_nl)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 // Joint matcher: one node fed by both APAs' flash_attach outputs (used iff joint).
 local matching_joint = qlm.matching_joint(tools.anodes, clus_maker.detector_volumes(tools.anodes),
-                                          reality, semimodel_file, cathode_fiducial=cathode_fv.tn);
+                                          reality, semimodel_file, cathode_fiducial=cathode_fv.tn,
+                                          pmt_nl=pmt_nl);
 
 // --- All-APA clustering ---
 // In-tree all_apa is the pre-tagging chain (no nu_tagging param; see header).

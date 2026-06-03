@@ -82,6 +82,11 @@ DO_UPLOAD=0
 # joint algorithm lands.
 JOINT=true
 [ "${SBND_JOINT:-}" = "0" ] && JOINT=false
+
+# Per-PMT predicted-PE non-linearity correction (study feature; see
+# sbnd_xin/pmt_nonlinearity_curve.py). ON by default for the standalone study chain;
+# PMT_NL=false reproduces the canonical (production) OFF baseline for OFF-vs-ON comparison.
+PMT_NL="${PMT_NL:-true}"
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
@@ -215,6 +220,7 @@ wire-cell \
     -C "DT=$DT" \
     -C "lifetime=$LIFETIME" \
     -C "joint=$JOINT" \
+    -C "pmt_nl=$PMT_NL" \
     -c "$JSONNET"
 
 echo "[wire-cell] done -> mabc.zip (one shared self-contained BEE zip)"

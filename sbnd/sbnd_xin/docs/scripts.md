@@ -475,3 +475,29 @@ is generated from it — the **realized (scintillation)** per-PMT curve (the phy
 expectation for real flashes; near-linear, ~8–14% attenuation by NPE≈5000), not the
 worst-case envelope. With no `--params-csv` the all-PMT plot falls back to a
 **clearly-labelled illustrative synthetic spread**.
+
+`--emit-qlmatching` fits each PMT's realized curve (to NPE_true=10⁵) to a monotone
+log-quadratic capped power law `observed = knee·exp(β·L+γ·L²)`, `L=ln(x/knee)` (identity
+below `knee`≈700), and writes the per-OpDet `(β, γ)` arrays + knee as a jsonnet param file
+for QLMatching, plus a fit-vs-MC validation plot (`pics/pmt_nonlinearity_fit.png`,
+residual ≤2% over the data regime):
+
+```
+python3 pmt_nonlinearity_curve.py --emit-qlmatching --params-csv pmt_nonlin_params_v3r1.csv \
+        --params-out ../../toolkit/cfg/pgrapher/experiment/sbnd/pmt_nonlinearity_params.jsonnet
+```
+
+### `ql_nonlin_compare.py`
+
+Compares QLMatching predicted-vs-measured PE with the PMT non-linearity OFF vs ON, from two
+`mabc.zip` BEE archives per sample (`run_clust_QL_evt.sh` with `PMT_NL=false` / default on).
+Plots median pred/meas vs predicted-PE brightness (`pics/ql_pmt_nonlin_compare.png`). Finding:
+**MC** shows a mild saturation trend the correction flattens; **data** sees more light than the
+reconstructed charge explains (a charge/light effect, not PMT saturation), so the correction
+does not help there. The correction is a study feature — **OFF in canonical production**, ON in
+the standalone chain (`run_clust_QL_evt.sh`, `PMT_NL` env, default on; `PMT_NL=false` baseline).
+
+```
+python3 ql_nonlin_compare.py --mc-off mc_off.zip --mc-on mc_on.zip \
+                             --data-off data_off.zip --data-on data_on.zip
+```
