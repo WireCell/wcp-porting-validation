@@ -656,6 +656,10 @@ def rebuild_compare():
         cols["meas"].append(b["total_PE"])
         cols["pred"].append(b["total_pred_light"])
         cols["flags"].append(fmt_flags(b))
+    # Clear any stale selection *before* swapping the data: two different clusters can
+    # share the same candidate flashes, so the visible left columns (flash/t/grp/meas)
+    # are byte-identical and the grid won't repaint a still-selected row otherwise.
+    compare_src.selected.indices = []
     compare_src.data = dict(cols)
     c = evt.cluster_by_uid[cu]
     compare_div.text = ("<b>cluster %d (TPC%d)</b> &mdash; %d candidate flash(es); "
@@ -663,7 +667,8 @@ def rebuild_compare():
                         % (c["ident"], c["apa"], len(rows)))
     # highlight the focused row if it is in the list (programmatic; see on_compare_row)
     idx = state["focus"]
-    compare_src.selected.indices = [rows.index(idx)] if idx in rows else []
+    if idx in rows:
+        compare_src.selected.indices = [rows.index(idx)]
 
 
 def sync_groups():
@@ -779,6 +784,11 @@ def on_row_select(attr, old, new):
         render_light()
         render_projections()
         render_metrics()
+        # once the compare table is open, follow the focused cluster so re-focusing a
+        # different bundle refreshes it (no need to re-click Compare).
+        if state["compare_cluster"] is not None:
+            state["compare_cluster"] = state["evt"].bundles[state["focus"]]["main_cluster"]
+            rebuild_compare()
 
 
 def on_toggle():

@@ -107,7 +107,10 @@ ssh -L 5008:localhost:5008 user@wcgpu1
 - **Compare-cluster table**: the **Compare cluster's flashes** button lists, in a second
   table, every candidate flash the *focused* cluster could match (all groups, sorted by
   flash time) with the same ks/chi²/strength/PE columns, so the right flash for that
-  cluster can be read off side by side. Click a row to **jump** the whole view (focus +
+  cluster can be read off side by side. Once open it **follows the focus** — clicking a
+  different bundle re-lists that cluster's flashes (no need to re-press the button). Note
+  two clusters can share the same flashes, so the left columns may look identical while
+  ks/chi²/strength/predicted PE differ. Click a row to **jump** the whole view (focus +
   group) to that candidate flash; the light/histogram/projection panels follow.
 - **Light patterns** — a 2×2 grid: **measured + predicted for TPC0** and **measured +
   predicted for TPC1**. Positions are fixed, so the ranges are pinned to the detector
