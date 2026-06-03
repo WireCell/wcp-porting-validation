@@ -29,6 +29,18 @@ cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
 # -> work/ql_evt<ID>/calib-evt<ID>.json   (one per event, both TPCs)
 ```
 
+Data works identically — swap `mc` for `data`:
+
+```bash
+./run_img_evt.sh data all
+./run_ql_evt.sh  data all -calib
+```
+
+mc and data event ids are disjoint, so both sets' dumps coexist under `work/ql_evt<ID>/`
+in distinct per-event subdirs. Because the default serve glob picks up *every*
+`work/ql_evt*/calib-evt*.json`, scan a single dataset by passing its explicit paths (and a
+distinct port for a second, concurrent display) — see §2.
+
 The `-calib` flag is **off by default**; with it off the matched `mabc-all-apa.zip`
 is byte-for-byte identical (the dump method is never called). The dump is
 observation-only — it reads the matcher's finished state and never perturbs the
@@ -80,12 +92,14 @@ spec_end, window_truncated, auto_selected, pred_pe[nchan]
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
 ./ql_scan/serve_ql_scan.sh 5008                       # default: scan work/ql_evt*/calib-evt*.json
 ./ql_scan/serve_ql_scan.sh 5008 work/ql_evt2/calib-evt2.json   # explicit file(s)
+# data on its own port (mc ids 2,9,11,…; data ids 686,1258,…), explicit paths:
+./ql_scan/serve_ql_scan.sh 5009 work/ql_evt{686,1258,1302,1346,1698,1720,1808,1852,2028,2050}/calib-evt*.json
 ```
 
 From a laptop, forward the port and open the app:
 
 ```bash
-ssh -L 5008:localhost:5008 user@wcgpu1
+ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for data)
 # browser: http://localhost:5008/ql_scan_viewer
 ```
 
