@@ -452,8 +452,12 @@ Channels for anodes that were not selected keep their original unmasked values.
 
 Standalone reproduction of the sbndcode PMT non-linearity (saturation) that maps
 `NPE_true → NPE_observed/reco`. Reproduces `PMTNonLinearityTF1::NObservedPE` exactly
-(TF1 `x/sqrt(1+(x/p0)^p1)`, 4 ns PE-accumulation window, per-bin scaling, hard cap); no
-LArSoft needed. See `match/docs/sbnd-opdetsim-chain.md` for the code trace.
+(TF1 `x/sqrt(1+(x/p0)^p1)`, 5-sample `PreTime+1` PE-accumulation window, per-bin scaling,
+hard cap); no LArSoft needed. The non-linearity is applied **on the waveform**, so the tool
+also does an explicit waveform round-trip (`roundtrip_reco_pe`: build `Σ observed·SER`, ADC
+clip, integrate back ÷SPEArea) confirming `NPE_reco = Σ observed` — reco is linear, the ADC
+clip never engages. Plots **envelope** (single burst, worst-case `Eval(N)`) vs **realized**
+(scintillation, near-linear, physical). See `match/docs/sbnd-opdetsim-chain.md` for the trace.
 
 ```
 # single-channel: NPE_true vs NPE_obs for single-burst + scintillation, plus inverse
@@ -467,5 +471,7 @@ Per-channel `(PESat, Alpha)` are in the remote conditions DB (table `pds_calibra
 tag `v3r1`); export to a CSV `opch,pesat,alpha[,range_hi]`. The real v3r1 values are
 checked in as `pmt_nonlin_params_v3r1.csv` (120 PMTs: 104 with a saturation curve,
 16 with `pesat=alpha=0` → nonlinearity off / linear), and `pics/pmt_nonlinearity_allpmt.png`
-is generated from it. With no `--params-csv` the all-PMT plot falls back to a
+is generated from it — the **realized (scintillation)** per-PMT curve (the physical
+expectation for real flashes; near-linear, ~8–14% attenuation by NPE≈5000), not the
+worst-case envelope. With no `--params-csv` the all-PMT plot falls back to a
 **clearly-labelled illustrative synthetic spread**.

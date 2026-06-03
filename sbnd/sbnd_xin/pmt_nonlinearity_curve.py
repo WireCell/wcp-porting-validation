@@ -10,7 +10,7 @@ What it follows (see match/docs/sbnd-opdetsim-chain.md for the code trace):
   sbndcode `PMTNonLinearityTF1[ChannelByChannel]` applies, per 1 ns time bin of the
   PE-accumulator vector `nPE_v`:
 
-      npe_acc          = sum( pe[bin-PreTime .. bin] )            # 4 ns running sum
+      npe_acc          = sum( pe[bin-PreTime .. bin] )            # PreTime+1 = 5-bin sum
       observed[bin]    = pe[bin] * TF1.Eval(npe_acc) / npe_acc    # if npe_acc < range_hi
                        = round(TF1.Eval(range_hi))                # fully saturated cap
 
@@ -24,16 +24,24 @@ The chain here:
   Stage 1 (sim input)  : spread N_true PE into 1 ns bins by a chosen time profile.
   Stage 2 (sim nonlin) : apply the per-bin attenuation above -> observed PE per bin.
   Stage 3 (sim->reco)  : the reconstruction (deconvolution + OpHit area/SPEArea) is
-                         *linear* in the recorded PE, so reco recovers the OBSERVED
-                         (post-saturation) total.  N_observed = sum_bin observed[bin]
-                         is therefore what reco measures.
+                         *linear* in the recorded PE, and the SER area is calibrated to
+                         SPEArea per 1 PE.  So converting the waveform back to PE gives,
+                         exactly, N_reco = sum_bin observed[bin] in the unclipped regime.
+                         There is no direct NPE_true->NPE_reco function in sbndcode: the
+                         non-linearity lives per-bin on the waveform, so the total->total
+                         relation only exists as this integral over the time profile.
+                         `roundtrip_reco_pe()` below builds the SER waveform, applies the
+                         ADC-saturation clip, and integrates back to confirm the identity
+                         and to expose where (if ever) the ADC clip bites.
 
-Because saturation acts on a 4 ns running sum, the mapping depends on the light's
-time profile.  We compute two:
-  - single-burst : all PE inside one 4 ns window  -> N_obs = TF1.Eval(N_true)
-                   (the strongest-saturation envelope; channel curve shape itself)
-  - scintillation: fast (singlet) + slow (triplet) exponential mixture -> the
-                   realized, milder mapping.
+Because saturation acts on a PreTime+1 = 5-bin running sum (an instantaneous *rate*,
+not the total), the mapping depends entirely on the light's time profile.  We compute two:
+  - single-burst : all PE inside one <=5-bin window -> N_obs = TF1.Eval(N_true).  The
+                   strongest-saturation ENVELOPE (the bare TF1 shape); this is NOT the
+                   physical NPE_total->NPE_reco map -- it is the all-light-in-one-bin limit.
+  - scintillation: fast (singlet) + slow (triplet) exponential mixture.  The ~1.5 us
+                   triplet dilutes the per-window rate, so this REALIZED curve is nearly
+                   linear -- the physical mapping in normal operation.
 
 The forward curve and its numeric inverse (the saturation *correction* you apply to
 reconstructed PE) are written to CSV; a PNG plot is produced.
@@ -86,7 +94,8 @@ class PMTNonLinearity:
         pe_bins = np.asarray(pe_bins)
         if self.linear:
             return pe_bins.astype(float)
-        # 4 ns running sum, inclusive of the current bin (matches accumulate(begin+bin-pre .. begin+bin+1))
+        # PreTime+1 = 5-bin sum inclusive of the current bin
+        # (matches C++ accumulate(begin+bin-PreTime .. begin+bin+1), 5 elements for PreTime=4)
         kernel = np.ones(self.pretime + 1, dtype=int)
         npe_acc = np.convolve(pe_bins, kernel)[: len(pe_bins)]  # acc[i] = sum(pe[i-pre..i])
         out = np.zeros(len(pe_bins), dtype=float)
@@ -117,17 +126,24 @@ def bin_single_burst(n_true, window_ns=1, t0=8):
 
 
 def bin_scintillation(n_true, rng, f_fast=0.25, tau_fast=6.0, tau_slow=1500.0,
-                      tts_sigma=1.0, total_ns=8000):
+                      tts_sigma=1.0, t0=100.0, total_ns=None):
     """Sample N_true photon arrival times from a fast+slow exp mixture, bin to 1 ns.
 
     Defaults are approximate LAr scintillation (singlet ~few ns, triplet ~1.5 us);
     they are tunable, not pulled from a single authoritative sbndcode constant.
+
+    The profile is offset by `t0` ns (mirrors the sim's CableTime/t_min offset) so the
+    TTS-smeared prompt edge does not underflow t<0, and the window is sized to ~8 slow
+    lifetimes so the slow tail is not truncated -- both keep the *linear* case at exactly
+    NPE_reco = NPE_true (no spurious window loss masquerading as non-linearity).
     """
+    if total_ns is None:
+        total_ns = int(t0 + 8.0 * tau_slow)
     n_fast = rng.binomial(n_true, f_fast)
     n_slow = n_true - n_fast
     t_fast = rng.exponential(tau_fast, n_fast)
     t_slow = rng.exponential(tau_slow, n_slow)
-    t = np.concatenate([t_fast, t_slow])
+    t = t0 + np.concatenate([t_fast, t_slow])
     if tts_sigma > 0:
         t = t + rng.normal(0.0, tts_sigma, t.size)
     t = t[(t >= 0) & (t < total_ns)]
@@ -153,6 +169,24 @@ def sweep_scintillation(model, n_values, ntrials=50, seed=12345, **prof):
     return out
 
 
+def sweep_scintillation_multi(models, n_values, ntrials=50, seed=12345, **prof):
+    """Realized (scintillation) sweep for many channels at once.
+
+    The scintillation time profile is channel-independent, so sample it once per
+    (N_true, trial) and apply every channel's model to the same profile -- avoids
+    re-sampling 120x. Returns [len(models) x len(n_values)] of mean NPE_observed.
+    """
+    rng = np.random.default_rng(seed)
+    out = np.zeros((len(models), len(n_values)))
+    for j, n in enumerate(n_values):
+        for _ in range(ntrials):
+            pe = bin_scintillation(int(n), rng, **prof)
+            for i, m in enumerate(models):
+                out[i, j] += m.observed_waveform(pe).sum()
+    out /= ntrials
+    return out
+
+
 def build_inverse(n_true, n_obs):
     """Monotone numeric inverse: given observed PE, return the corrected true PE.
 
@@ -166,6 +200,42 @@ def build_inverse(n_true, n_obs):
         return np.interp(measured_pe, xo, xt)
 
     return correct
+
+
+# --------------------------------------------------------------------------------------
+# Stage 3 (explicit): waveform round-trip -- "convert the waveform back to PE"
+# --------------------------------------------------------------------------------------
+# The non-linearity is applied ON THE WAVEFORM (per bin, via AddSPE: npe x SER), so the
+# only physical reco PE is integrate(waveform)/SER-area.  This builds that waveform
+# explicitly (ideal SER, ADC-saturation clip) and integrates it back -- confirming the
+# identity N_reco == sum(observed) in the unclipped regime and exposing the ADC clip.
+# SER + ADC params from sbndcode digi_pmt_sbnd.fcl / DigiPMTSBNDAlg::Pulse1PE.
+def make_ser_ideal(rise=3.8, fall=13.7, transit=55.1, charge_to_adc=-25.97,
+                   mean_amp=0.9, dt=1.0):
+    """Ideal single-PE response (DigiPMTSBNDAlg::Pulse1PE), sampled every `dt` ns."""
+    import math
+    k = math.sqrt(2.0) * (math.sqrt(-math.log(0.1)) - math.sqrt(-math.log(0.9)))
+    sigma1, sigma2 = rise / k, fall / k
+    n = int((6.0 * sigma2 + transit) / dt)
+    t = np.arange(n) * dt
+    return np.where(t < transit,
+                    charge_to_adc * mean_amp * np.exp(-(t - transit) ** 2 / (2 * sigma1 ** 2)),
+                    charge_to_adc * mean_amp * np.exp(-(t - transit) ** 2 / (2 * sigma2 ** 2)))
+
+
+def roundtrip_reco_pe(observed, ser, baseline=14250.0, dyn_range=14250.0, dt=1.0):
+    """Build Sum_t observed[t]*SER on an ADC waveform, clip (CreateSaturation), integrate
+    back / SER-area -> N_reco.  Returns (N_reco, n_adc_clipped_samples)."""
+    obs = np.asarray(observed, dtype=float)
+    wave = np.full(len(obs) + len(ser), baseline)
+    for t in np.nonzero(obs > 0)[0]:
+        wave[t:t + len(ser)] += obs[t] * ser
+    floor, ceil = baseline - dyn_range, baseline + dyn_range          # ADC dynamic range
+    n_clip = int((wave < floor).sum() + (wave > ceil).sum())
+    clipped = np.clip(wave, floor, ceil)
+    ser_area = ser.sum() * dt                                         # ADC*ns per 1 PE
+    reco_pe = (clipped - baseline).sum() * dt / ser_area              # = OpHit Area / SPEArea
+    return reco_pe, n_clip
 
 
 # --------------------------------------------------------------------------------------
@@ -207,11 +277,16 @@ def illustrative_params(n=120, seed=2024, range_hi=7000):
     return np.column_stack([np.arange(n), pesat, alpha, np.full(n, range_hi)])
 
 
-def all_pmt_plot(params, n_true, outpath, illustrative, range_lo=100):
-    """Overlay each PMT's intrinsic NPE_true->NPE_reco (single-burst) saturation curve.
+def all_pmt_plot(params, n_true, outpath, illustrative, range_lo=100,
+                 ntrials=50, f_fast=0.25, tau_fast=6.0, tau_slow=1500.0):
+    """Overlay each PMT's *realized* NPE_true->NPE_reco curve (scintillation profile).
 
-    Reco is linear in the recorded PE, so NPE_reco ~= NPE_observed; the per-channel
-    mapping is each channel's TF1 (capped). Channels differ only through (PESat, Alpha).
+    Reco is linear in the recorded PE, so NPE_reco == NPE_observed (see roundtrip_reco_pe).
+    The realized curve is what real flashes produce: the ~1.5 us triplet dilutes the
+    per-window rate, so the response is nearly linear and only bends at high NPE.
+    Channels differ only through (PESat, Alpha). The curve depends on the assumed
+    scintillation profile (f_fast/tau_fast/tau_slow) -- a tool default, not an
+    authoritative sbndcode constant.
     """
     import matplotlib
     matplotlib.use("Agg")
@@ -221,10 +296,10 @@ def all_pmt_plot(params, n_true, outpath, illustrative, range_lo=100):
 
     pesat, alpha = params[:, 1], params[:, 2]
     rhi = params[:, 3].astype(int) if params.shape[1] > 3 else np.full(len(params), 7000)
-    curves = np.array([
-        sweep_single_burst(PMTNonLinearity(p0, p1, range_lo, int(rh)), n_true)
-        for p0, p1, rh in zip(pesat, alpha, rhi)
-    ])
+    models = [PMTNonLinearity(p0, p1, range_lo, int(rh))
+              for p0, p1, rh in zip(pesat, alpha, rhi)]
+    curves = sweep_scintillation_multi(models, n_true, ntrials=ntrials, seed=12345,
+                                       f_fast=f_fast, tau_fast=tau_fast, tau_slow=tau_slow)
 
     # channels with pesat<=0 or alpha<=0 have no DB saturation entry -> linear (off)
     off = (pesat <= 0) | (alpha <= 0)
@@ -243,17 +318,20 @@ def all_pmt_plot(params, n_true, outpath, illustrative, range_lo=100):
     if off.any():
         ax[0].plot([], [], color="0.6", ls="--", lw=1,
                    label=f"nonlinearity off ({int(off.sum())} ch)")
-    ax[0].set_xlabel("NPE_true"); ax[0].set_ylabel("NPE_reco (≈ observed)")
-    ax[0].set_title(f"per-PMT mapping ({int(active.sum())} active, "
+    ax[0].set_xlabel("NPE_true"); ax[0].set_ylabel("NPE_reco (= observed)")
+    ax[0].set_title(f"per-PMT realized mapping ({int(active.sum())} active, "
                     f"{int(off.sum())} off / {len(curves)} PMTs)"); ax[0].legend()
     ax[0].grid(alpha=0.3)
     ax[1].axhline(1.0, color="k", ls=":", lw=1)
     ax[1].set_xlabel("NPE_true"); ax[1].set_ylabel("NPE_reco / NPE_true")
     ax[1].set_title("attenuation factor"); ax[1].set_xscale("log"); ax[1].grid(alpha=0.3)
+    prof = (f"scintillation profile: f_fast={f_fast}, "
+            f"tau_fast={tau_fast:g} ns, tau_slow={tau_slow:g} ns (assumed)")
+    ax[1].text(0.02, 0.04, prof, transform=ax[1].transAxes, fontsize=7.5, color="0.35")
     sm = cm.ScalarMappable(norm=norm, cmap="viridis"); sm.set_array([])
     fig.colorbar(sm, ax=ax[1], label="PESat (TF1 p0)")
 
-    title = "SBND PMT non-linearity: NPE_true → NPE_reco, all PMTs"
+    title = "SBND PMT non-linearity: NPE_true → NPE_reco (realized / scintillation), all PMTs"
     if illustrative:
         fig.suptitle(title + "\nILLUSTRATIVE — synthetic per-channel (PESat, Alpha); "
                      "real values from conditions DB (tag v3r1) pending", color="darkred")
@@ -307,7 +385,9 @@ def main():
             params, illus = illustrative_params(range_hi=rh), True
             print("[warn] no --params-csv: using ILLUSTRATIVE synthetic per-channel spread")
         out = os.path.join(args.pics_dir, "pmt_nonlinearity_allpmt.png")
-        all_pmt_plot(params, n_true, out, illustrative=illus, range_lo=args.range_lo)
+        all_pmt_plot(params, n_true, out, illustrative=illus, range_lo=args.range_lo,
+                     ntrials=args.ntrials, f_fast=args.f_fast, tau_fast=args.tau_fast,
+                     tau_slow=args.tau_slow)
         return
 
     os.makedirs(args.outdir, exist_ok=True)
@@ -345,6 +425,24 @@ def main():
     demo = np.array([100.0, 200.0, 268.0])
     print("inverse (scint): measured", demo, "-> corrected true",
           np.round(inv_scint(demo), 1))
+
+    # --- waveform round-trip: confirm N_reco == sum(observed) (the user's question) ----
+    # Build the ADC waveform (SER * observed), clip, integrate back / SER-area.  Use the
+    # single-burst profile -- the worst case for the ADC clip.  Equality with sum(observed)
+    # shows that "convert the waveform back to PE" is just the sum, since reco is linear.
+    ser = make_ser_ideal()
+    print(f"{'NPE_true':>9} {'sum(obs)':>9} {'N_reco(wave)':>13} {'ADC-clip smp':>13}")
+    for n in [100, 500, 1000, 2000, args.nmax]:
+        if n > args.nmax:
+            continue
+        obs = model.observed_waveform(bin_single_burst(int(n)))
+        reco, nclip = roundtrip_reco_pe(obs, ser)
+        print(f"{n:>9d} {obs.sum():>9.1f} {reco:>13.1f} {nclip:>13d}")
+        if nclip == 0:
+            assert abs(reco - obs.sum()) < 1e-6 * max(obs.sum(), 1.0), \
+                f"round-trip mismatch at N={n}: {reco} vs {obs.sum()}"
+    print("  -> N_reco == sum(observed) wherever the ADC clip does not bite "
+          "(reco is linear; SER area == SPEArea per PE)")
 
     # --- plot -------------------------------------------------------------------------
     if not args.no_plot:
