@@ -97,7 +97,11 @@ local frame_fan = g.pnode({
 // Local re-export of the in-tree canonical pgrapher/experiment/sbnd/clus.jsonnet
 // (keeps sbnd_xin standalone; no dependency on ../sbnd).
 local clus = import 'clus.jsonnet';
-local clus_maker = clus();
+// rse_from_ident: this bundled chain is one wire-cell call over many events, and
+// each event's tensor ident already carries the real event id, so the MABC nodes
+// label the Bee display with the true event number (run/subrun = 0) instead of a
+// 0..N auto-increment.  Canonical production leaves this off (byte-identical).
+local clus_maker = clus(rse_from_ident=true);
 // Single shared Bee sink: the per-APA and all-APA MultiAlgBlobClustering nodes
 // all write into this one zip (mabc.zip) instead of one zip per node, so the
 // run produces a single self-contained Bee file with every view.
