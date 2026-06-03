@@ -808,11 +808,48 @@ def set_light_ranges(evt):
             f.y_range.start, f.y_range.end = g["y_lo"] - py, g["y_hi"] + py
 
 
+def state_file(evt):
+    """Autosave path for the current selection (next to the event's calib dump)."""
+    return os.path.join(os.path.dirname(evt.path), ".scan_state.json")
+
+
+def save_state():
+    """Persist the current selection to disk so it survives a page reload / restart /
+    event switch. Keyed by (flash_gid, main_cluster) — stable across re-dumps."""
+    evt = state["evt"]
+    if evt is None:
+        return
+    keys = [[evt.bundles[j]["flash_gid"], evt.bundles[j]["main_cluster"]]
+            for j in sorted(state["selected"])]
+    try:
+        with open(state_file(evt), "w") as fh:
+            json.dump({"selected": keys}, fh)
+    except OSError:
+        pass
+
+
+def load_state(evt):
+    """Restore a previously-saved selection (set of bundle indices) for this event."""
+    p = state_file(evt)
+    sel = set()
+    if not os.path.isfile(p):
+        return sel
+    try:
+        with open(p) as fh:
+            want = {tuple(k) for k in json.load(fh).get("selected", [])}
+    except (OSError, ValueError):
+        return sel
+    for j, b in enumerate(evt.bundles):
+        if (b["flash_gid"], b["main_cluster"]) in want:
+            sel.add(j)
+    return sel
+
+
 def load_event(label):
     evt = Event(FILE_OF[label])
     state["evt"] = evt
     state["focus"] = None
-    state["selected"] = set()
+    state["selected"] = load_state(evt)      # restore any saved picks for this event
     state["compare_cluster"] = None
     groups = event_groups(evt)
     state["groups"] = groups
@@ -895,6 +932,7 @@ def on_toggle():
     b = state["evt"].bundles[state["focus"]]
     status.text = ("bundle [flash %d, cluster %d]: %s"
                    % (b["flash_gid"], cluster_ident(state["focus"]), msg or "no change"))
+    save_state()
     refresh()
 
 
@@ -923,6 +961,7 @@ def on_sel_group(attr, old, new):
         state["focus"] = last           # show the just-toggled bundle in the panels
     if msgs:
         status.text = " / ".join(msgs)
+    save_state()
     refresh()
 
 
@@ -939,6 +978,7 @@ def on_filter(attr, old, new):
 def on_clear():
     state["selected"] = set()
     status.text = "Cleared all selections."
+    save_state()
     refresh()
 
 

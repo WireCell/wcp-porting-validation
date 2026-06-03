@@ -173,6 +173,13 @@ ssh -L 5008:localhost:5008 user@wcgpu1   # mc   (use -L 5009:localhost:5009 for 
   complements the per-group view: it pins one cluster and shows all the flashes it
   could match, so you pick the better flash, then select it as usual.
 
+### Selection persistence
+Your picks are **autosaved** to `work/ql_evt<ID>/.scan_state.json` on every
+select/deselect/clear and restored when the event loads — so they survive a page
+reload, a server restart, and switching between events (each event keeps its own set).
+Keys are `(flash_gid, main_cluster)`, stable across re-dumps. This is the live working
+state; the **Save labels** button below still writes the formal deliverable.
+
 ### Save
 **Save labels** writes `work/ql_evt<ID>/labels-evt<ID>.json`: one entry per selected
 match with `flash_gid`, `flash_time_us`, `apa`, coincidence `group`,
