@@ -470,6 +470,7 @@ def fmt_flags(b):
     if b["at_x_boundary"]:       parts.append("xbound")
     if b["spec_end"]:            parts.append("specend")
     if b["window_truncated"]:    parts.append("wtrunc")
+    if b.get("two_boundary"):    parts.append("2bnd")
     if not b["contained"]:       parts.append("UNCONTAINED")
     return ",".join(parts)
 
