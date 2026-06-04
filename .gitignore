@@ -25,6 +25,5 @@ dune-vd-cfg/*
 *.db
 fall-production
 __pycache__
-input-*-data*
-input-*-mc*
+input-*
 temp
