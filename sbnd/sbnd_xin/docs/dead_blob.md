@@ -191,6 +191,48 @@ they opt in via their own jsonnet; the legacy format still renders
 correctly on bee3 (it lands on the union envelope, which is right for
 single-TPC detectors).
 
+## Hand-declared dead region (event-1720 Y-Z spot)
+
+A fixed anode-plane defect near **y ≈ 0, z ≈ 251 cm** (the W collection wires are
+dead and the U/V signal is locally distorted) leaves a ~3.9 cm gap in the imaged
+points. In `examine_bundles`' relaxed connectivity graph that gap fragments a
+single through-going cosmic into a main + associated sub-cluster, which group-aware
+`QLMatching` then materializes as two clusters (SBND data evt 1720, APA0: one
+5240-pt track split into 2789 + 2376). We declare that spot dead, driven from one
+shared per-TPC channel list in `cfg/pgrapher/experiment/sbnd/dead_regions.jsonnet`
+(TPC0 `U[988,991) V[2970,2984) W[4800,4806)`; TPC1 = +5638, whose W mirror
+`[10438,10444)` is already chndb-bad).
+
+**The fix is two complementary, independent paths:**
+
+- **Dead WINDS — the functional fix (in `clus`, toolkit repo).**
+  The relaxed-graph bridge (`connect_graph_relaxed`) decides a gap is crossable via
+  `Grouping::is_good_point()` / `test_good_point()`, which count a plane OK only
+  where there is live charge **or** a *dead wind* (`get_closest_dead_chs` →
+  `get_dead_winds`). Dead winds are built **only from high-uncertainty channels in
+  the LIVE imaging** (`PointTreeBuilding::add_dead_winds`) — i.e. from real dead
+  *channels*, **never from dead blobs**. So a dead blob alone does **not** stop the
+  split. A new default-empty `inject_dead_winds` config on `PointTreeBuilding`
+  registers the region's U/V/W wires as dead winds (full-drift x window), wired
+  per-anode in `clus.jsonnet`'s `clus_per_face` `ptb` node. Because `is_good_point`
+  needs all three planes, the U∩V∩W triple-crossing localizes the effect to that one
+  Y-Z patch — no whole-wire side effects, and **no channels marked dead in imaging**
+  (which would spawn spurious dead blobs elsewhere via the 2-dead+1-dummy tiling).
+
+- **Dead BLOB — Bee visualization only (in `img`, toolkit repo).**
+  A new default-empty `masked_channels` config on `MaskSlices` (a per-channel
+  analogue of `dummy_planes`: masks exactly the listed channels across all slices)
+  plus a **4th branch** in `multi_masked_2view_slicing_tiling`
+  (`active=[], masked=[], dummy=[], masked_channels=region`, node suffix `_dead`).
+  `GridTiling` tiles those U+V+W activities into one dead blob at the crossing, which
+  flows through the dead `PointTreeBuilding` sampler into the Bee deadarea. It is
+  functionally inert for the split (that is the dead-winds' job) — purely visual.
+
+Both configs default empty → non-SBND configs and production are bit-identical.
+Validated on evt 1720: APA0 cluster 6 went from 2789 + 2376 (two clusters) to one
+5165-pt cluster; the Bee apa0 deadarea gained one patch at y ≈ 0, z ≈ 251; the
+neighboring track and all other clusters are unchanged (the fix is local).
+
 ## Summary
 
 | Goal | State before this commit | State after this commit |
@@ -199,6 +241,7 @@ single-TPC detectors).
 | Dead: 2-dead-plane (1 dummy + 2 masked) | already in place | unchanged |
 | Dead blobs → final bee files | already in place via `save_deadarea: true` (clustering stage) | unchanged |
 | Dead-area slab placement on each TPC anode | legacy bare-array JSON → both TPCs rendered on union envelope (wrong for SBND TPC 1) | v2 wrapper JSON with `tpc=apa` → correct per-anode placement on bee3 |
+| Hand-declared dead region (evt-1720 Y-Z spot) | not present; one cosmic split by the ~3.9 cm gap | dead winds (fix) + dead blob (visual) injected, local to the U∩V∩W crossing |
 
 ## Verification
 
