@@ -145,10 +145,41 @@ the PE₀ = PE₁ diagonal:
 3. For a coincidence cut, **±50–100 ns** captures essentially all genuine cross-APA
    matches while rejecting the combinatorial/orphan background.
 
+## In-time flash time relative to T0=0
+
+A separate question (not the cross-APA Δt above): in each event, where does the
+**in-time / beam flash** sit relative to T0=0? The opflash tar holds *all* flashes of
+the event (cosmics across the full ±1.2 ms readout); the in-time flash is the one with
+**min |time|**, taken across both APAs. This was measured on the larger
+**`input_files/input-3files-lan-reco2/`** data sample (3 source files × 50 events =
+150 events; each bundle dir `1/2/3` has its own `opflash_apa{0,1}.tar.gz`).
+
+![flash time nearest T0](../pics/flash_t0_lan_reco2.png)
+
+| quantity | value |
+|---|---|
+| events | 150 |
+| median (all) | **−0.731 µs** |
+| in-time peak, t ∈ (−1.2, 0) µs | **126/150** events, mean **−0.713 µs**, std **0.121** |
+| mean (all) | −0.519 µs (pulled by a ~24-event off-time tail) |
+
+The closest-to-T0 flash is sharply peaked at **≈ −0.71 µs** — i.e. data's in-time flash
+sits **below** zero, consistent with the standard 10-event data sample (≈ −0.74 µs) and on
+the **opposite side of zero from MC** (which lands at +0.4 to +1.6 µs; MC interaction times
+are not locked to a fixed trigger window the way triggered data is). ~24 events fall in a
+scattered off-time tail (no in-time flash reconstructed near zero — cosmic-only events or a
+missed beam flash). *(Note: `BEE-links.md` flags all three files as SIGSEGV in the larsoft
+bundle dump, but the frames/imaging/opflash outputs are intact, so this extraction is
+unaffected.)*
+
+Reproduce with `python3 flash_t0_lan_reco2.py` (run from `sbnd_xin/`).
+
 ## Files
 
 - `flash_coincidence.py` — analysis + plotting script.
 - `flash_dump.csv` — all 649 flashes (mc + data, both APAs).
+- `flash_t0_lan_reco2.py` — per-event in-time flash time vs T0 (3-file lan-reco2 sample).
 - `pics/flash_coinc_{allpairs,nearest}_{wide,zoom,fine}.png` — Δt histograms.
 - `pics/flash_pe_dist.png` — per-flash total-PE distribution.
 - `pics/flash_pe2d_coinc.png` — coincident (±80 ns) cross-APA PE scatter, data vs mc.
+- `pics/flash_t0_lan_reco2.png` — per-event flash time nearest T0=0 (3-file lan-reco2 data).
