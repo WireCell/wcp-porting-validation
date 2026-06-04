@@ -191,47 +191,56 @@ they opt in via their own jsonnet; the legacy format still renders
 correctly on bee3 (it lands on the union envelope, which is right for
 single-TPC detectors).
 
-## Hand-declared dead region (event-1720 Y-Z spot)
+## Hand-declared dead region (the W-defect band)
 
-A fixed anode-plane defect near **y ≈ 0, z ≈ 251 cm** (the W collection wires are
-dead and the U/V signal is locally distorted) leaves a ~3.9 cm gap in the imaged
-points. In `examine_bundles`' relaxed connectivity graph that gap fragments a
-single through-going cosmic into a main + associated sub-cluster, which group-aware
-`QLMatching` then materializes as two clusters (SBND data evt 1720, APA0: one
-5240-pt track split into 2789 + 2376). We declare that spot dead, driven from one
+The SBND anode has a fixed defect band — the **middle 6-ch W-plane dead area**
+(TPC0 W channels `4800–4805` / TPC1 mirror `10438–10443`, already chndb-bad): the
+collection (W) plane has no wires, and the induction (U/V) signal is locally
+distorted (tear-drops on the gap edge, empty decon in the center). The gap is
+**uniform top-to-bottom** — a full vertical column at the band's z. In
+`examine_bundles`' relaxed connectivity graph the imaging hole fragments a single
+through-going cosmic into a main + associated sub-cluster, which group-aware
+`QLMatching` materializes as two clusters (first seen on SBND data evt 1720, APA0:
+one ~5240-pt track split into 2789 + 2376 near y ≈ 0, z ≈ 251 cm).
+
+We declare the **whole vertical column** dead on all three planes, driven from one
 shared per-TPC channel list in `cfg/pgrapher/experiment/sbnd/dead_regions.jsonnet`
-(TPC0 `U[988,991) V[2970,2984) W[4800,4806)`; TPC1 = +5638, whose W mirror
-`[10438,10444)` is already chndb-bad).
+(W only — `region(anode_ident)` = the 6 W channels + full-drift x window +
+`gap: true`).
 
-**The fix is two complementary, independent paths:**
+**Why key the gap off the W channels (not a wider U/V wire list).**
+The grouping dead check `get_closest_dead_chs` keys on `(wind, x-drift)` with **no
+z/y discrimination along a wire**. A **W wind maps to a single z** (collection wires
+are vertical), so a dead W wind already describes a full-y, full-drift dead
+**column** — exactly the uniform gap. U/V winds map to **diagonal** (y,z) tracks, so
+declaring a U/V wire dead would pollute the entire diagonal far from the band. Hence
+the region carries **W channels only**; the full-column treatment is done in C++.
 
-- **Dead WINDS — the functional fix (in `clus`, toolkit repo).**
-  The relaxed-graph bridge (`connect_graph_relaxed`) decides a gap is crossable via
-  `Grouping::is_good_point()` / `test_good_point()`, which count a plane OK only
-  where there is live charge **or** a *dead wind* (`get_closest_dead_chs` →
-  `get_dead_winds`). Dead winds are built **only from high-uncertainty channels in
-  the LIVE imaging** (`PointTreeBuilding::add_dead_winds`) — i.e. from real dead
-  *channels*, **never from dead blobs**. So a dead blob alone does **not** stop the
-  split. A new default-empty `inject_dead_winds` config on `PointTreeBuilding`
-  registers the region's U/V/W wires as dead winds (full-drift x window), wired
-  per-anode in `clus.jsonnet`'s `clus_per_face` `ptb` node. Because `is_good_point`
-  needs all three planes, the U∩V∩W triple-crossing localizes the effect to that one
-  Y-Z patch — no whole-wire side effects, and **no channels marked dead in imaging**
-  (which would spawn spurious dead blobs elsewhere via the 2-dead+1-dummy tiling).
+**The functional fix (in `clus`, toolkit repo).**
+The relaxed-graph bridge (`connect_graph_relaxed`) decides a gap is crossable via
+`Grouping::is_good_point()` / `is_good_point_wc()` / `test_good_point()`, which count
+a plane OK where there is live charge **or** a *dead wind*. The default-empty
+`inject_dead_winds` config on `PointTreeBuilding` registers the region's wires
+(here W only). Entries flagged `gap: true` additionally route their **W winds** into
+a separate **dead-gap registry**, serialized to a `dead_gap_a*f*pW` point cloud and
+reconstituted downstream by `Grouping::build_wire_cache`. A new
+`Grouping::in_dead_gap()` projects a point to the W wind and, if it lands in that
+registry (x in window), returns **all three planes dead** — so the whole vertical
+column is crossable, not just the y ≈ 0 center where the old U∩V∩W triple-crossing
+happened to overlap. The check is folded into the three good-point functions only
+(not `get_closest_dead_chs`), so charge averaging is untouched. The gap registry is
+**separate** from the general `dead_winds[W]` map on purpose: keying off the latter
+would turn every chndb-bad W column into a crossable gap.
 
-- **Dead BLOB — Bee visualization only (in `img`, toolkit repo).**
-  A new default-empty `masked_channels` config on `MaskSlices` (a per-channel
-  analogue of `dummy_planes`: masks exactly the listed channels across all slices)
-  plus a **4th branch** in `multi_masked_2view_slicing_tiling`
-  (`active=[], masked=[], dummy=[], masked_channels=region`, node suffix `_dead`).
-  `GridTiling` tiles those U+V+W activities into one dead blob at the crossing, which
-  flows through the dead `PointTreeBuilding` sampler into the Bee deadarea. It is
-  functionally inert for the split (that is the dead-winds' job) — purely visual.
+**Bee visualization.** The 6-ch W dead band is already chndb-bad, so it renders in
+the Bee deadarea via the standard channel-deadarea slab (`save_deadarea` /
+`dead_area_version: 2`) — no hand-declared dead blob is injected. (An earlier
+`masked_channels` / 4th-branch dead-blob path existed for this and has been removed.)
 
-Both configs default empty → non-SBND configs and production are bit-identical.
-Validated on evt 1720: APA0 cluster 6 went from 2789 + 2376 (two clusters) to one
-5165-pt cluster; the Bee apa0 deadarea gained one patch at y ≈ 0, z ≈ 251; the
-neighboring track and all other clusters are unchanged (the fix is local).
+The `inject_dead_winds` config and the `gap` flag default empty/false → non-SBND
+configs and production are bit-identical; SBND output changes by design. Validated on
+evt 1720: APA0 cluster 6 stays unified (one ~5165-pt cluster, not 2789 + 2376), and
+the generalization additionally bridges off-center crossings of the same band.
 
 ## Summary
 
@@ -241,7 +250,7 @@ neighboring track and all other clusters are unchanged (the fix is local).
 | Dead: 2-dead-plane (1 dummy + 2 masked) | already in place | unchanged |
 | Dead blobs → final bee files | already in place via `save_deadarea: true` (clustering stage) | unchanged |
 | Dead-area slab placement on each TPC anode | legacy bare-array JSON → both TPCs rendered on union envelope (wrong for SBND TPC 1) | v2 wrapper JSON with `tpc=apa` → correct per-anode placement on bee3 |
-| Hand-declared dead region (evt-1720 Y-Z spot) | not present; one cosmic split by the ~3.9 cm gap | dead winds (fix) + dead blob (visual) injected, local to the U∩V∩W crossing |
+| Hand-declared W-defect band | dead winds (U∩V∩W) + dead blob, local to the y≈0 center patch | dead-gap registry (W-keyed), **full vertical column** dead on all planes; Bee blob removed (chndb-bad slab suffices) |
 
 ## Verification
 
