@@ -2,22 +2,11 @@
 //
 // Thin wrapper over the canonical, in-tree module
 // cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet (single source of truth for the SBND
-// matching graph and the production config, which keeps the PMT non-linearity OFF).
-//
-// This wrapper optionally enables the per-PMT predicted-PE non-linearity correction
-// (study-grade; the realized scintillation NPE_true->NPE_reco curve, parameterized in
-// sbnd_xin/pmt_nonlinearity_curve.py, params in cfg/.../pmt_nonlinearity_params.jsonnet;
-// see match/docs/sbnd-opdetsim-chain.md). Callers pass pmt_nl=true to turn it on; default
-// false => byte-identical to canonical. opflash_source / flash_attach are inherited.
+// matching graph and the production config). The canonical module now owns the per-PMT
+// predicted-PE non-linearity correction and applies it by default (pmt_nl=true); this
+// wrapper just forwards pmt_nl and adds the standalone-only cathode_diag overlay.
+// Pass pmt_nl=false to disable the correction. opflash_source / flash_attach inherited.
 local canonical = import 'pgrapher/experiment/sbnd/qlmatching.jsonnet';
-local nlp = import 'pgrapher/experiment/sbnd/pmt_nonlinearity_params.jsonnet';
-
-local nl_on = {
-    pmt_nonlinearity: true,
-    pmt_nl_knee: nlp.pmt_nl_knee,
-    pmt_nl_beta: nlp.pmt_nl_beta,
-    pmt_nl_gamma: nlp.pmt_nl_gamma,
-};
 
 // cathode_diag: path ('' => off) for the cathode-crossing TPC0/TPC1 offset
 // diagnostic (QLMatching logs the three-vector decomposition per cross-TPC
@@ -28,12 +17,12 @@ function(params)
     local base = canonical(params);
     base {
         matching(anode, dv, n, reality, semimodel_file, cathode_fiducial='', calib_dump='',
-                 pmt_nl=false, cathode_diag='')::
+                 pmt_nl=true, cathode_diag='')::
             base.matching(anode, dv, n, reality, semimodel_file, cathode_fiducial, calib_dump,
-                          extra=(if pmt_nl then nl_on else {}) + diag_on(cathode_diag)),
+                          pmt_nl=pmt_nl, extra=diag_on(cathode_diag)),
 
         matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial='', calib_dump='',
-                       pmt_nl=false, cathode_diag='')::
+                       pmt_nl=true, cathode_diag='')::
             base.matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial, calib_dump,
-                                extra=(if pmt_nl then nl_on else {}) + diag_on(cathode_diag)),
+                                pmt_nl=pmt_nl, extra=diag_on(cathode_diag)),
     }

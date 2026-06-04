@@ -231,6 +231,11 @@ Usage: ./run_ql_evt.sh [mc|data] [-N n] [-a anode] <idx|all>
   (no idx)       list available events for the chosen sample & mode; -h for full help
   all:           process every event in parallel (_runlib.sh batch_*, SBND_MAX_JOBS)
   -a:            restrict to one anode
+  -calib:        also dump work/ql_evt<ID>/calib-evt<ID>.json for the ql_scan viewer
+env:
+  PMT_NL=true|false    predicted-PE non-linearity (default true; false = OFF baseline)
+  CALIB_SUFFIX=.nl     insert a suffix in the calib filename (calib-evt<ID>.nl.json),
+                       so an NL rerun does not clobber a linear dump
 ```
 
 **Prerequisite:** `run_img_evt.sh <idx>` first (produces the per-event
@@ -494,10 +499,26 @@ Compares QLMatching predicted-vs-measured PE with the PMT non-linearity OFF vs O
 Plots median pred/meas vs predicted-PE brightness (`pics/ql_pmt_nonlin_compare.png`). Finding:
 **MC** shows a mild saturation trend the correction flattens; **data** sees more light than the
 reconstructed charge explains (a charge/light effect, not PMT saturation), so the correction
-does not help there. The correction is a study feature — **OFF in canonical production**, ON in
-the standalone chain (`run_clust_QL_evt.sh`, `PMT_NL` env, default on; `PMT_NL=false` baseline).
+does not help there. As of 2026-06-04 the correction is **ON by default for SBND** (canonical
+`qlmatching.jsonnet`; `PMT_NL=false` / `pmt_nl=false` recovers the OFF baseline).
 
 ```
 python3 ql_nonlin_compare.py --mc-off mc_off.zip --mc-on mc_on.zip \
                              --data-off data_off.zip --data-on data_on.zip
+```
+
+### `ql_pe_error.py`
+
+Measures the per-PMT light-error fraction `a` from the hand-scanned matches (the matcher assumes
+30% ⇒ `a=0.09`), modelling `E[(pred−meas)²] = meas + a·pred²`. Reads the per-event calib dumps
+(NL-on from `work/ql_nl_study/`, NL-off from `work/ql_evt<ID>/`) and the hand-scan selections
+(`work/ql_labels/<mode>/.scan_state-evt*.json`); aggregates **per flash** (pred summed over the
+selected clusters on a flash, meas once), drops `window_truncated`/`close_to_PMT` flashes, keeps
+PMTs (`opdet type==1`) in the flash's TPC. Writes 4-panel figures
+`pics/ql_pe_error_<mode>{,_nloff,_consistent}.png` (pred-vs-meas; local `a` vs pred; Y vs pred²;
+pull). Full writeup + findings in `docs/pe-error-study.md`. Default runs both modes:
+
+```
+python3 ql_pe_error.py            # data + mc
+python3 ql_pe_error.py mc         # one mode
 ```

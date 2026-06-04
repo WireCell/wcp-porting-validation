@@ -72,6 +72,14 @@ JOINT=true
 # (work/ql_evt<ID>/calib-evt<ID>.json) for the ql_scan viewer. Off by default;
 # the matched mabc-all-apa.zip output is byte-identical with or without it.
 CALIB=""
+# CALIB_SUFFIX: optional suffix inserted before .json in the calib-dump filename
+# (e.g. CALIB_SUFFIX=.nl -> calib-evt<ID>.nl.json), so an NL rerun does not clobber
+# the linear dump the hand-scan was based on. Default empty = calib-evt<ID>.json.
+CALIB_SUFFIX="${CALIB_SUFFIX:-}"
+# PMT_NL: enable the per-PMT predicted-light non-linearity correction (threaded into
+# the matching jsonnet as --tla-code pmt_nl). true (default, SBND going forward) maps
+# predicted PE into the saturated space. PMT_NL=false = identity (OFF baseline).
+PMT_NL="${PMT_NL:-true}"
 # -cathode-diag: log the cathode-crossing TPC0/TPC1 offset three-vector diagnostic
 # (grep "QLCATHODE" in the run log). Off by default; matched output is unchanged.
 CATHODE=""
@@ -165,7 +173,7 @@ process_event() {
 
     # Optional hand-scan calibration dump (one per-event JSON, both TPCs).
     local CALIB_TLA=()
-    [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}.json")
+    [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}${CALIB_SUFFIX}.json")
     # Optional cathode-crossing offset diagnostic (logs QLCATHODE lines to $LOG).
     local CATHODE_TLA=()
     [ -n "$CATHODE" ] && CATHODE_TLA=(--tla-str "cathode_diag=on")
@@ -183,6 +191,7 @@ process_event() {
         --tla-code "DL=$DL" --tla-code "DT=$DT" \
         --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
         --tla-code "joint=$JOINT" \
+        --tla-code "pmt_nl=$PMT_NL" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         -c "$JSONNET"
