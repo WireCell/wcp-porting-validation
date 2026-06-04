@@ -23,6 +23,12 @@ and `ClusteringRecoveringBundle` can decompose downstream. So the over-clusterin
 is partly "by design" — the question is whether a 16 cm EM blob 51 cm away from a
 through-going muon *should* be grouped with it.
 
+**Status:** the `isolated` `length_cut` (and `range_cut`) classification
+thresholds are now configurable (default unchanged at 20 cm / 150), and SBND opts
+into **`length_cut = 15 cm`** so this 16 cm gamma is no longer classified "small"
+and is left as its own cluster. See **Resolution implemented** below for the code
+locations and the 20-event impact study.
+
 ## How this was determined
 
 A temporary per-step probe was inserted in the MABC pipeline loop
@@ -107,49 +113,86 @@ is **51.35 cm < 80 cm**, and it is merged.
   endpoint, or is track- vs shower-like. A transversely-displaced EM blob is
   absorbed exactly the same as a genuine broken-off track fragment would be.
 
-## Ideas for improvement (no code changed yet)
+## Resolution implemented: configurable `length_cut`, SBND set to 15 cm
 
-Any change must be **jsonnet-togglable and default-OFF** so existing production
-output stays bit-identical (repo convention).
+The gamma is absorbed only because its 16.1 cm length is **under the 20 cm
+`length_cut`** that defines "small". The most direct, lowest-risk lever is to
+tighten that threshold so a ~16 cm EM blob is no longer auto-classified small.
 
-1. **Add a topology/angle gate to the small → big branch** (most direct). Mirror
-   the cheaper `clustering_neutrino` checks: only attach a small cluster to a big
-   one if it connects near a big-cluster **end/vertex** (`judge_vertex`) or is
-   roughly **collinear** with the local big-cluster direction at the contact
-   point. A 16 cm blob 51 cm transverse from a through-going muon would then be
-   rejected. This is the smallest, most targeted fix.
+`length_cut` (and `range_cut`) were **hardcoded** in `clustering_isolated.cxx`.
+They are now **configurable**, defaulting to the historical `20 cm` / `150`:
 
-2. **Make the 80 cm cut size/geometry aware.** 80 cm closest-point is very loose
-   for a 16 cm object. Options: scale the cut with the small cluster's length, or
-   require the gap to be small relative to a plausible track-continuation length
-   rather than an absolute 80 cm.
+- `clus/src/clustering_isolated.cxx` — `configure()` reads `length_cut`
+  (default `20*units::cm`) and `range_cut` (default `150`); both are threaded
+  into the classification at the top of `clustering_isolated()`.
+- `cfg/pgrapher/common/clus.jsonnet` — `isolated(... length_cut=null,
+  range_cut=null)`; the keys are emitted **only when non-null**, so every config
+  that omits them is byte-identical to before (the C++ defaults take over).
+- `cfg/pgrapher/experiment/sbnd/clus.jsonnet` — SBND opts in with
+  `cm.isolated(length_cut=15 * wc.cm)` (range_cut left at 150).
 
-3. **Track-vs-shower discriminant.** If the small cluster is shower-like (PCA
-   roundness, low `values[1]/values[0]` separation, charge spread) and not
-   collinear with the big track, keep it separate. EM gammas are exactly the
-   population this would protect.
+Note: this SBND file is shared by the standalone dev chain *and* LArSoft
+production (`wcls-img-clus.jsonnet` via `per_volume`), so the 15 cm value applies
+to both. Other detectors are unaffected (they never pass the key → 20 cm).
 
-4. **Treat it downstream instead of in clustering.** Because the per-blob
-   provenance is preserved in `"isolated"/"perblob"`, an alternative is to leave
-   `clustering_isolated` untouched and instead make the consumer (group-aware
-   QLMatching split, and/or the Bee clustering display) keep the associated EM
-   blob visually/logically distinct from the muon main. This avoids touching the
-   merge logic at all if the only concern is the displayed over-clustering.
+### Impact of 20 cm → 15 cm (10 MC + 10 data events)
 
-A reasonable first experiment is option (1) behind a default-OFF SBND flag,
-validated on this event (gamma id 50 should remain separate) plus the standard
-10-event MC sample to confirm no regressions on genuine track fragments.
+Metric = per-APA **sorted cluster size-vector** (point count per cluster), compared
+across both APAs of all 20 events (40 per-APA outputs). **Exactly 2 of the 40
+per-APA outputs change; the other 38 are byte-for-byte identical** (full
+size-vector diff, not just cluster count).
+
+| event | sample | APA | clusters 20cm → 15cm | what changed |
+|---|---|---|---|---|
+| evt11 | MC | apa0 | **14 → 15** | gamma **separated** from muon: muon 5678 → 5333 pts, new **355-pt** gamma cluster (was Bee cluster 7) |
+| evt1720 | data | apa1 | **8 → 9** | a **48-pt** piece split off the 8702 → 8654-pt cluster |
+| all 18 other events | 9 MC + 9 data | both APAs | unchanged | identical sorted size-vector in every APA |
+
+Per-cluster sizes (descending), for the two affected APAs:
+
+```
+evt11  apa0  20cm: [5678, 2041, 819, 645, 198, 80, 68, 14, 14, 13, 13, 12, 12, 12]
+evt11  apa0  15cm: [5333, 2031, 819, 645, 355, 198, 80, 68, 14, 14, 13, 13, 12, 12, 12]
+evt1720 apa1 20cm: [17737, 8702, 3039, 2253, 1951, 733, 10, 2]
+evt1720 apa1 15cm: [17737, 8654, 3039, 2253, 1951, 733, 48, 10, 2]
+```
+
+So the change is **surgical**: it only releases clusters whose length sits in the
+15–20 cm window that were previously pulled into a nearby long track. For the
+target (evt11) this is exactly the desired effect — the gamma blob is now its own
+cluster instead of part of the cosmic muon.
+
+### Caveats / things to watch
+- This is a **global** classification threshold, not gamma-specific. The single
+  data change (evt1720, a 48-pt fragment) is benign here, but on larger samples a
+  tighter cut could keep genuine short broken-off **track** fragments separate
+  that the 20 cm cut would have re-attached. Worth a wider-sample check before
+  treating 15 cm as final.
+- The underlying looseness is the **angle-less 80 cm small→big merge**
+  (`clustering_isolated.cxx:238-266`). `length_cut` only changes *which* clusters
+  enter that branch; it does not add a topology test. If short EM blobs longer
+  than 15 cm still get absorbed, the more complete fix is to add an
+  angle/vertex/PCA gate to the small→big merge (mirroring `clustering_neutrino`'s
+  `judge_vertex`/direction checks), which can also be made a default-OFF knob.
 
 ## Reproduction
 
 ```bash
 cd sbnd_xin
 ./run_clus_evt.sh mc 3          # event 11; inputs in work/evt11/icluster-apa0-*.npz
-# inspect work/evt11/mabc-apa0-face0.zip -> cluster 7 (muon + gamma)
+# 15 cm (current SBND config): work/evt11/mabc-apa0-face0.zip -> gamma is its own cluster
 ```
 
-The per-step / branch findings above were obtained by temporarily instrumenting
-`clus/src/MultiAlgBlobClustering.cxx` (per-step nearest-cluster probe) and
-`clus/src/clustering_isolated.cxx` (classification + small→big merge prints),
-rebuilding (`./wcb build && ./wcb install`), and re-running the same command. That
-instrumentation was removed afterward.
+To A/B the threshold, edit `cm.isolated(length_cut=15 * wc.cm)` in
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet` (drop the arg for the 20 cm default).
+The impact numbers above were produced by running all 10 MC + 10 data events at
+each setting and diffing the per-APA **sorted cluster size-vectors** (point count
+per `cluster_id`) from the Bee `*-clustering-*.json` — exact equality for 38 of
+40 per-APA outputs, the two changed ones listed above.
+
+The per-step / branch findings earlier in this doc were obtained by temporarily
+instrumenting `clus/src/MultiAlgBlobClustering.cxx` (per-step nearest-cluster
+probe) and `clus/src/clustering_isolated.cxx` (classification + small→big merge
+prints), rebuilding (`./wcb build && ./wcb install`), and re-running. That
+instrumentation was removed afterward; the configurable `length_cut`/`range_cut`
+described above is the only retained change.
