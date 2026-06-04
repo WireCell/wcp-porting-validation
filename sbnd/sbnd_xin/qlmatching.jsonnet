@@ -19,16 +19,21 @@ local nl_on = {
     pmt_nl_gamma: nlp.pmt_nl_gamma,
 };
 
+// cathode_diag: path ('' => off) for the cathode-crossing TPC0/TPC1 offset
+// diagnostic (QLMatching logs the three-vector decomposition per cross-TPC
+// cathode-crossing pair). Default '' keeps production byte-identical.
+local diag_on(cathode_diag) = (if cathode_diag != '' then { cathode_diag: cathode_diag } else {});
+
 function(params)
     local base = canonical(params);
     base {
         matching(anode, dv, n, reality, semimodel_file, cathode_fiducial='', calib_dump='',
-                 pmt_nl=false)::
+                 pmt_nl=false, cathode_diag='')::
             base.matching(anode, dv, n, reality, semimodel_file, cathode_fiducial, calib_dump,
-                          extra=(if pmt_nl then nl_on else {})),
+                          extra=(if pmt_nl then nl_on else {}) + diag_on(cathode_diag)),
 
         matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial='', calib_dump='',
-                       pmt_nl=false)::
+                       pmt_nl=false, cathode_diag='')::
             base.matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial, calib_dump,
-                                extra=(if pmt_nl then nl_on else {})),
+                                extra=(if pmt_nl then nl_on else {}) + diag_on(cathode_diag)),
     }

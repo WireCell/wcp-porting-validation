@@ -48,6 +48,8 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   -a        restrict to one anode (0 or 1)
   -calib    also dump work/ql_evt<ID>/calib-evt<ID>.json for the ql_scan
             hand-scan viewer (matched zip output is unchanged)
+  -cathode-diag  log the cathode-crossing TPC0/TPC1 offset three-vector
+            diagnostic (grep QLCATHODE in the run log; output unchanged)
 
 Requires: run_img_evt.sh first (work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz).
 Opflash comes from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz (keyed
@@ -70,6 +72,9 @@ JOINT=true
 # (work/ql_evt<ID>/calib-evt<ID>.json) for the ql_scan viewer. Off by default;
 # the matched mabc-all-apa.zip output is byte-identical with or without it.
 CALIB=""
+# -cathode-diag: log the cathode-crossing TPC0/TPC1 offset three-vector diagnostic
+# (grep "QLCATHODE" in the run log). Off by default; matched output is unchanged.
+CATHODE=""
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -81,6 +86,7 @@ while [ $# -gt 0 ]; do
         -a*) ANODE="${1#-a}"; shift ;;
         -s|--per-apa|--separate) JOINT=false; shift ;;
         -calib|--calib) CALIB=1; shift ;;
+        -cathode-diag|--cathode-diag) CATHODE=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -160,8 +166,11 @@ process_event() {
     # Optional hand-scan calibration dump (one per-event JSON, both TPCs).
     local CALIB_TLA=()
     [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}.json")
+    # Optional cathode-crossing offset diagnostic (logs QLCATHODE lines to $LOG).
+    local CATHODE_TLA=()
+    [ -n "$CATHODE" ] && CATHODE_TLA=(--tla-str "cathode_diag=on")
 
-    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}) -> $QLDIR/mabc-all-apa.zip"
+    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
@@ -175,6 +184,7 @@ process_event() {
         --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
         --tla-code "joint=$JOINT" \
         "${CALIB_TLA[@]}" \
+        "${CATHODE_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
