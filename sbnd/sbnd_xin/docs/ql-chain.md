@@ -69,6 +69,26 @@ pctree — the **same schema** the MicroBooNE `UbooneClusterSource` writes.
 interoperate with all `clus` tooling (`Cluster::get_flash()`, `ClusterFlashDump`,
 `retile`, BEE). See `toolkit/match/docs/qlmatching-code.md` §1/§1a.
 
+**Flash-time correction (`frame_apply_at_caf`).** Newer opflash dumps carry a
+per-frame scalar **`frame_apply_at_caf`** (ns) in the *tensor-set* metadata
+(`opflash_tensorset_<ident>_metadata.json`). When present, `FlashTensorToOpticalPCs`
+adds it to **every** flash/light time so downstream code (matching, `cluster_t0`,
+drift-x) sees only the corrected time. This re-references the raw optical clock to
+the CAF/trigger frame: an in-time beam flash that reads ≈ −0.7 µs raw lands in the
+**0.3–1.9 µs** window after correction (validation signature — see
+[`flash-coincidence.md`](flash-coincidence.md)). Controlled by the
+`correct_flash_time` knob on `flash_attach` in
+`cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet` (default **on**):
+
+- key **absent** in the file → no-op (offset 0), original time (the older
+  10-event MC/data dumps have empty metadata, so they are byte-identical);
+- key **present** + `correct_flash_time: true` → time `+= frame_apply_at_caf`;
+- `correct_flash_time: false` → raw, uncorrected time (key not read).
+
+Units are ns on both sides (the dump writes µs × 1000), so the correction is a
+plain add. Code: `aux/src/FlashTensorToOpticalPCs.cxx` (offset read from
+`data_ts->metadata()`, applied at the single matrix column-0 read site).
+
 **All BEE output now comes from the all-APA clustering node.** The
 `clus.all_apa` `MultiAlgBlobClustering` (`save_opflash: true`) dumps, per event,
 the charge `img`/`clustering` layers, the dead-area patches **and** the optical
