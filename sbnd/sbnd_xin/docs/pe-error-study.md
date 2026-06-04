@@ -93,8 +93,59 @@ Requires the NL dumps in `work/ql_nl_study/` (regenerate with
 `PMT_NL=true CALIB_SUFFIX=.nl ./run_ql_evt.sh <mode> -calib all`, then copy the
 `calib-evt*.nl.json` out before any linear rerun, since `run_ql_evt.sh` wipes `work/ql_evt<ID>/`).
 
-## Possible follow-up
+## The data recipe (implemented)
 
-Normalize `pred` to `meas` per flash (mimicking the matcher's `strength`) to remove the
-light-yield offset and isolate the pure per-PMT *shape* scatter — the cleanest read on the 30%,
-and the natural way to quantify the data/MC normalization mismatch on its own.
+From the above the data needs two corrections (sim is left alone — it under-predicts and is
+internally clean). Both live in `cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet`:
+
+1. **DATA prediction scale `QtoL = 0.86`** (sim `QtoL = 1.0`). Data over-predicts ~16%; since
+   `pred = q·QtoL·vis·eff`, lowering the data `QtoL` is exactly a prediction scale. Toggle by
+   `data_qtol = 1.0`.
+2. **PE-dependent error `σ² = meas + max(5 PE, 0.25·pred)²`** (config `pe_err_floor=5`,
+   `pe_err_frac=0.25`, `pe_err_knee=20`) for **both** data and sim — a constant 5 PE floor below
+   a 20 PE knee, 25% fractional above, so the fractional error is large at low PE and ~25% at
+   high PE. Conservative for sim, kept consistent so cuts derived on data carry over.
+   `pe_err_on_pred=true` makes the **bundle χ²** compute this error from the *predicted* PE
+   (`TimingTPCBundle::examine_bundle`); the **LASSO** keeps the per-flash measured-based weight
+   (its measured vector is shared across candidate bundles, so the weight there must be per-flash).
+
+Derivation/verification: `ql_derive*.py` (the σ vs PE fit) and the recipe figure
+`pics/ql_pe_error_data_recipe.png` (pull flattens to ≈1; median χ²/ndf in the python fit ≈ 1).
+
+## Data vs MC after the recipe
+
+`ql_recipe_compare.py` regenerates the calib dumps with the recipe (now the SBND default) and
+compares the updated χ²/ks for the hand-scans (`pics/ql_recipe_data_vs_mc.png`):
+
+| metric (hand-scan kept matches) | DATA | MC |
+|---|---|---|
+| median χ²/ndf (was ~5 with flat 30%) | **1.72** | **1.04** |
+| median ks (shape; ~unchanged by recipe) | 0.077 | 0.026 |
+| median meas/pred per flash | **1.01** | 1.17 |
+
+- **χ²/ndf collapses from ~5 to ~1–2** for both modes — the PE-error model calibrates the χ².
+- **Data normalization is fixed** (meas/pred 0.86 → 1.01); MC stays 1.17 (unscaled, under-predicts).
+- **ks barely moves** — it is shape-normalized, so scaling `pred` leaves it invariant (only small
+  group-composition shifts touch it). So "updated ks" looks ~unchanged by design, not a bug.
+- MC matches are tighter (lower χ²/ndf and ks) — sim is internally cleaner; the data-tuned error
+  is conservative for it.
+
+These updated χ²/ks (+ the hand-scan labels) are the inputs for further QLMatching cut tuning.
+
+## Reproduce
+
+```
+cd sbnd_xin
+python3 ql_pe_error.py            # per-PMT error study (NL on/off, consistent) -> pics/ql_pe_error_*.png
+python3 ql_recipe_compare.py      # data vs MC after the recipe -> pics/ql_recipe_data_vs_mc.png
+```
+
+Regenerate recipe calib dumps (recipe is the SBND default): `PMT_NL=true ./run_ql_evt.sh <mode>
+-calib all`, then copy `work/ql_evt*/calib-evt*.json` into `work/ql_recipe/`. (`run_ql_evt.sh`
+wipes `work/ql_evt<ID>/` each run, so copy out before switching.) The earlier NL on/off study
+dumps live in `work/ql_nl_study/`.
+
+Note: changing the error/scale changes the matcher's merge/selection, so a hand-scan
+`(flash_gid, main_cluster)` key can be relabeled within its flash group (one data case, evt1720:
+the main/associate flipped between two co-grouped clusters — same physical match). Clusters and
+flashes themselves are upstream and unchanged, so the hand-scan-keyed analysis stays the anchor.

@@ -522,3 +522,15 @@ pull). Full writeup + findings in `docs/pe-error-study.md`. Default runs both mo
 python3 ql_pe_error.py            # data + mc
 python3 ql_pe_error.py mc         # one mode
 ```
+
+### `ql_recipe_compare.py`
+
+Compares data vs MC Q/L **match quality** (χ²/ndf, ks, meas/pred) on the hand-scans AFTER the
+SBND data recipe (data `QtoL=0.86` + the PE-dependent error `σ²=meas+max(5 PE,0.25·pred)²`). Reads
+the regenerated recipe calib dumps from `work/ql_recipe/`. Finding: χ²/ndf drops from ~5 to ~1–2
+(data 1.72, MC 1.04), data normalization fixed (meas/pred → 1.01), ks ~unchanged (shape-invariant).
+Writes `pics/ql_recipe_data_vs_mc.png`. Full writeup in `docs/pe-error-study.md`.
+
+```
+python3 ql_recipe_compare.py
+```
