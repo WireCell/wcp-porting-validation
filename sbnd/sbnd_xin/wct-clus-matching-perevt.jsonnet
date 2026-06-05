@@ -59,6 +59,10 @@ function(
     // space (qlmatching.jsonnet -> pmt_nonlinearity_params.jsonnet). false = identity.
     // run_ql_evt.sh threads it via PMT_NL / --tla-code pmt_nl.
     pmt_nl         = true,
+    // Per-event dynamic dead-PMT auto-mask. false (default) = off, production-identical.
+    // true masks, per event, a PMT that never fires while its live neighbours do (a
+    // run-dead channel absent from the static ch_mask). run_ql_evt.sh -auto-mask enables it.
+    auto_mask      = false,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -115,7 +119,7 @@ function(
                                          n, reality, semimodel_file,
                                          cathode_fiducial=cathode_fv.tn,
                                          calib_dump=calib_dump, cathode_diag=cathode_diag,
-                                         pmt_nl=pmt_nl)
+                                         pmt_nl=pmt_nl, auto_mask=auto_mask)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Graph: per-APA matching (default) or joint multi-APA matching ---
@@ -129,7 +133,7 @@ function(
                                                reality, semimodel_file,
                                                cathode_fiducial=cathode_fv.tn,
                                                calib_dump=calib_dump, cathode_diag=cathode_diag,
-                                               pmt_nl=pmt_nl);
+                                               pmt_nl=pmt_nl, auto_mask=auto_mask);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
             local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true);
             local per_apa_pre = [g.intern(

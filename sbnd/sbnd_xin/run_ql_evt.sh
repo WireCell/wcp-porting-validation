@@ -50,6 +50,9 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             hand-scan viewer (matched zip output is unchanged)
   -cathode-diag  log the cathode-crossing TPC0/TPC1 offset three-vector
             diagnostic (grep QLCATHODE in the run log; output unchanged)
+  -auto-mask  enable the per-event dynamic dead-PMT auto-mask (masks a PMT
+            that is dead in THIS event while its live neighbours fire; off
+            by default => byte-identical; grep QLAUTOMASK in the run log)
 
 Requires: run_img_evt.sh first (work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz).
 Opflash comes from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz (keyed
@@ -83,6 +86,10 @@ PMT_NL="${PMT_NL:-true}"
 # -cathode-diag: log the cathode-crossing TPC0/TPC1 offset three-vector diagnostic
 # (grep "QLCATHODE" in the run log). Off by default; matched output is unchanged.
 CATHODE=""
+# -auto-mask: enable the per-event dynamic dead-PMT auto-mask (QLMatching auto_mask).
+# Off by default (production byte-identical); masks a PMT that is dead in THIS event
+# while its live neighbours fire (a run-dead channel absent from the static ch_mask).
+AUTOMASK="false"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -90,6 +97,7 @@ while [ $# -gt 0 ]; do
         -N) SBND_SAMPLE="$2"; shift 2 ;;
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
+        -auto-mask|--auto-mask) AUTOMASK="true"; shift ;;   # before -a* (it starts with -a)
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s|--per-apa|--separate) JOINT=false; shift ;;
@@ -192,6 +200,7 @@ process_event() {
         --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
         --tla-code "joint=$JOINT" \
         --tla-code "pmt_nl=$PMT_NL" \
+        --tla-code "auto_mask=$AUTOMASK" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         -c "$JSONNET"
