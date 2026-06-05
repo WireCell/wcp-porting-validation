@@ -15,6 +15,13 @@ work/ql_evt<ID>/ workspace) so run_ql_evt.sh's per-event `rm -rf` of that worksp
 cannot delete saved scan results. Pass `--tag mc` / `--tag data` to subdir them
 (work/ql_labels/mc/, work/ql_labels/data/) so the two displays don't intermix.
 
+Review mode: rather than scanning from scratch, click "Load auto-match" to seed the
+selection from QLMatching's own result (each bundle's `auto_selected` flag, dumped
+after matching finishes), then examine and correct it. The selection summary shows the
+running diff vs the matcher (+added / -removed). Save then records both the corrected
+`matches` and a `rejected_auto` list (auto-matches the human removed), so the
+hand-vs-matcher correction is fully recoverable for tuning.
+
 Selection rules (enforced live):
   * each cluster matches at most one flash (selecting a bundle drops the cluster's
     other candidate bundles);
@@ -252,6 +259,7 @@ group_select = Select(title="coincidence group", value="", options=[], width=240
 prev_grp_btn = Button(label="< prev grp", width=90)
 next_grp_btn = Button(label="next grp >", width=90)
 select_btn = Button(label="Toggle match (focused)", button_type="primary", width=200)
+loadauto_btn = Button(label="Load auto-match", width=140)
 clear_btn = Button(label="Clear selections", width=140)
 save_btn = Button(label="Save labels", button_type="success", width=120)
 compare_btn = Button(label="Compare cluster's flashes", width=200)
@@ -719,10 +727,20 @@ def render_metrics():
     metrics.text = html
 
 
+def auto_diff_line():
+    """One-line diff of the current selection against the matcher's auto_selected
+    bundles: how many the human added and how many auto-matches were removed."""
+    evt = state["evt"]
+    auto = {j for j, b in enumerate(evt.bundles) if b["auto_selected"]}
+    sel = state["selected"]
+    return ("<i>vs auto-match: +%d added, &minus;%d removed</i>"
+            % (len(sel - auto), len(auto - sel)))
+
+
 def render_summary():
     evt = state["evt"]
     if not state["selected"]:
-        selsummary.text = "<b>0 matches selected.</b>"
+        selsummary.text = "<b>0 matches selected.</b><br>" + auto_diff_line()
         return
     lines = []
     by_flash = defaultdict(list)
@@ -737,7 +755,8 @@ def render_summary():
                     for u in [b["main_cluster"]] + b["other_clusters"]]
         lines.append("flash %d (TPC%d, t=%.1fus, grp%d) &larr; clusters %s"
                      % (gid, f["apa"], f["time"], f["group"], cls))
-    selsummary.text = ("<b>%d selected match(es):</b><br>" % len(state["selected"])
+    selsummary.text = ("<b>%d selected match(es):</b> %s<br>"
+                       % (len(state["selected"]), auto_diff_line())
                        + "<br>".join(lines))
 
 
@@ -1055,6 +1074,20 @@ def on_filter(attr, old, new):
     refresh()
 
 
+def on_load_auto():
+    """Seed the selection from the matcher's result (auto_selected bundles), so the
+    scan starts as a review of QLMatching rather than from scratch. Replaces the
+    current selection."""
+    evt = state["evt"]
+    if evt is None:
+        return
+    state["selected"] = {j for j, b in enumerate(evt.bundles) if b["auto_selected"]}
+    status.text = ("Loaded %d auto-matched bundle(s) from QLMatching. Examine and "
+                   "correct, then Save." % len(state["selected"]))
+    save_state()
+    refresh()
+
+
 def on_clear():
     state["selected"] = set()
     status.text = "Cleared all selections."
@@ -1091,34 +1124,43 @@ def on_compare_row(attr, old, new):
         group_select.value = str(g)  # fires on_group_change (keeps focus, then refresh)
 
 
+def _match_entry(evt, j):
+    """The saved record for bundle j (shared by `matches` and `rejected_auto`)."""
+    b = evt.bundles[j]
+    f = evt.flash_by_gid[b["flash_gid"]]
+    return {
+        "flash_gid": b["flash_gid"], "flash_id": b["flash_id"],
+        "flash_time_us": f["time"], "apa": b["apa"], "group": f["group"],
+        "cluster_idents": [evt.cluster_by_uid[u]["ident"]
+                           for u in [b["main_cluster"]] + b["other_clusters"]],
+        "op_pes": f["pe"], "op_pe_err": f["pe_err"], "pred_pes": b["pred_pe"],
+        "metrics": {"ks_dis": b["ks_dis"], "chi2": b["chi2"], "ndf": b["ndf"],
+                    "strength": b["strength"],
+                    "total_PE": b["total_PE"], "total_pred_light": b["total_pred_light"]},
+        "flags": {k: b[k] for k in ("consistent", "potential_bad_match",
+                                    "close_to_PMT", "at_x_boundary", "spec_end",
+                                    "window_truncated", "contained", "auto_selected")},
+    }
+
+
 def on_save():
     evt = state["evt"]
-    if not state["selected"]:
-        status.text = "Nothing selected to save."
+    # auto-matches the human removed: a meaningful verdict, so an empty selection is
+    # still worth saving as long as there were auto-matches to reject.
+    rejected = sorted(j for j, b in enumerate(evt.bundles)
+                      if b["auto_selected"] and j not in state["selected"])
+    if not state["selected"] and not rejected:
+        status.text = "Nothing selected (and no auto-match to reject) to save."
         return
     out = {"event": event_select.value, "source": os.path.basename(evt.path),
-           "matches": []}
-    for j in sorted(state["selected"]):
-        b = evt.bundles[j]
-        f = evt.flash_by_gid[b["flash_gid"]]
-        out["matches"].append({
-            "flash_gid": b["flash_gid"], "flash_id": b["flash_id"],
-            "flash_time_us": f["time"], "apa": b["apa"], "group": f["group"],
-            "cluster_idents": [evt.cluster_by_uid[u]["ident"]
-                               for u in [b["main_cluster"]] + b["other_clusters"]],
-            "op_pes": f["pe"], "op_pe_err": f["pe_err"], "pred_pes": b["pred_pe"],
-            "metrics": {"ks_dis": b["ks_dis"], "chi2": b["chi2"], "ndf": b["ndf"],
-                        "strength": b["strength"],
-                        "total_PE": b["total_PE"], "total_pred_light": b["total_pred_light"]},
-            "flags": {k: b[k] for k in ("consistent", "potential_bad_match",
-                                        "close_to_PMT", "at_x_boundary", "spec_end",
-                                        "window_truncated", "contained", "auto_selected")},
-        })
+           "matches": [_match_entry(evt, j) for j in sorted(state["selected"])],
+           "rejected_auto": [_match_entry(evt, j) for j in rejected]}
     dest = os.path.join(labels_dir(evt),
                         "labels-%s.json" % event_select.value)
     with open(dest, "w") as fh:
         json.dump(out, fh, indent=1)
-    status.text = "Saved %d match(es) -> %s" % (len(out["matches"]), dest)
+    status.text = ("Saved %d match(es), %d rejected auto-match(es) -> %s"
+                   % (len(out["matches"]), len(rejected), dest))
 
 
 event_select.on_change("value", on_event_change)
@@ -1131,6 +1173,7 @@ table_src.selected.on_change("indices", on_row_select)
 sel_group.on_change("active", on_sel_group)
 compare_src.selected.on_change("indices", on_compare_row)
 select_btn.on_click(on_toggle)
+loadauto_btn.on_click(on_load_auto)
 clear_btn.on_click(on_clear)
 save_btn.on_click(on_save)
 compare_btn.on_click(on_compare)
@@ -1142,7 +1185,7 @@ filter_btn.on_change("active", on_filter)
 # ---------------------------------------------------------------------------
 controls = row(event_select, prev_evt_btn, next_evt_btn,
                group_select, prev_grp_btn, next_grp_btn,
-               select_btn, clear_btn, save_btn, compare_btn, filter_btn)
+               select_btn, loadauto_btn, clear_btn, save_btn, compare_btn, filter_btn)
 header = Div(text="<h2>SBND Q/L matching hand-scan</h2>", width=1100)
 layout = column(
     # Charge-projection views first so a small monitor shows the plots up top; all the
