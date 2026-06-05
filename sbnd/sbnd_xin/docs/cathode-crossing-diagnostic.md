@@ -204,3 +204,27 @@ against the SBND space-charge map.
 - `match/src/QLMatching.cxx` — `dump_cathode_diag` (the in-code instrument)
 - `/home/xqian/tmp/ql_cathode_offset/agg_diag.py` — parse QLCATHODE lines, global fit, data-vs-MC
 - `/home/xqian/tmp/ql_cathode_offset/verify_686_1852.png` — single-track confirmation of the two largest-offset data pairs
+
+## The same geometry now also drives a consistency flag (`flag_xtpc_consistent`)
+
+The three-vector machinery above is reused (not just for the offset measurement) to **confirm a
+match**: `QLMatching::flag_cross_tpc_consistency` (config `xtpc_flag`, SBND-on) pairs each TPC0×TPC1
+**matched main cluster** in a coincident flash group and sets a post-matching `flag_xtpc_consistent`
+(per-cluster output scalar `xtpc_consistent` + `-calib` field) when the two cathode halves connect as
+one track. It is observation-only — matched assignments are unchanged. Unlike this diagnostic it uses
+the **full** clusters (so a window-truncated half still gets a closest pair) and applies the per-TPC
+`dy/dz` to the closest-point vector.
+
+Two scenarios, cuts tuned on the 10 hand-scan **data** events (truth = both halves hand-scan-selected):
+
+| scenario | condition | cut |
+|---|---|---|
+| 1 — cathode end present | closest approach `d` (T0-corrected, `dy/dz` applied) | `d < 5 cm` |
+| 2 — `window_truncated` (cathode end missing, `d` large) | `conn`,`dir0`,`dir1` mutually collinear | `a01,a0c,a1c < 20°` |
+
+`flag = (d < 5) OR (truncated AND all three angles < 20°)`. Separation is near-perfect: no false pair
+has `d < 73 cm`. **DATA 8/10 true, 0/71 false (100% purity); MC 10/10, 0/15 false.** The 2 data misses
+are an unrecoverable outlier (evt1720, `conn` ⊥ track) and a borderline truncated case (evt2050,
+real `vhough` angle 31.7° ≈ the best false pair at 31.8° — purity-first, so dropped). MC catches all
+true crossers because its halves are cleaner (`dy/dz≈0`, small `d`). Full design:
+`match/docs/chisquare_flags_comparison.md` §16.
