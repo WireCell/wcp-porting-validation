@@ -205,26 +205,33 @@ against the SBND space-charge map.
 - `/home/xqian/tmp/ql_cathode_offset/agg_diag.py` — parse QLCATHODE lines, global fit, data-vs-MC
 - `/home/xqian/tmp/ql_cathode_offset/verify_686_1852.png` — single-track confirmation of the two largest-offset data pairs
 
-## The same geometry now also drives a consistency flag (`flag_xtpc_consistent`)
+## The same geometry now drives a pre-fit cull (`flag_xtpc_consistent`)
 
-The three-vector machinery above is reused (not just for the offset measurement) to **confirm a
-match**: `QLMatching::flag_cross_tpc_consistency` (config `xtpc_flag`, SBND-on) pairs each TPC0×TPC1
-**matched main cluster** in a coincident flash group and sets a post-matching `flag_xtpc_consistent`
-(per-cluster output scalar `xtpc_consistent` + `-calib` field) when the two cathode halves connect as
-one track. It is observation-only — matched assignments are unchanged. Unlike this diagnostic it uses
-the **full** clusters (so a window-truncated half still gets a closest pair) and applies the per-TPC
-`dy/dz` to the closest-point vector.
+The three-vector machinery above is reused (not just for the offset measurement) to **cull bundles
+before the fit**: `QLMatching::cull_cross_tpc` (config `xtpc_flag`, SBND-on) pairs **candidate** main
+clusters across TPC0×TPC1 in a coincident flash group; a pair confirmed as one cathode-crosser sets
+`flag_xtpc_consistent` on both bundles and drops each marked cluster's non-consistent rivals before
+the LASSO (so fewer bundles enter the fit). Unlike this diagnostic it uses the **full** clusters (so
+a window-truncated half still gets a closest pair) and applies the per-TPC `dy/dz` to the
+closest-point vector.
 
-Two scenarios, cuts tuned on the 10 hand-scan **data** events (truth = both halves hand-scan-selected):
+*(History: originally a post-matching observation-only confirm-stamp with a per-cluster
+`xtpc_consistent` output scalar; now a pre-fit cull that changes matching, and the root-node scalar
+was removed — only the `-calib` bundle field remains.)*
+
+Two scenarios, cuts tuned on the 10 hand-scan **data** events (truth = both halves hand-scan-selected),
+on the real C++ `vhough` values:
 
 | scenario | condition | cut |
 |---|---|---|
 | 1 — cathode end present | closest approach `d` (T0-corrected, `dy/dz` applied) | `d < 5 cm` |
-| 2 — `window_truncated` (cathode end missing, `d` large) | `conn`,`dir0`,`dir1` mutually collinear | `a01,a0c,a1c < 20°` |
+| 2 — `window_truncated` (cathode end missing, `d` large) | `conn`,`dir0`,`dir1` collinear **AND** bounded `d` | `a01,a0c,a1c < 20°` AND `d < 300 cm` |
 
-`flag = (d < 5) OR (truncated AND all three angles < 20°)`. Separation is near-perfect: no false pair
-has `d < 73 cm`. **DATA 8/10 true, 0/71 false (100% purity); MC 10/10, 0/15 false.** The 2 data misses
-are an unrecoverable outlier (evt1720, `conn` ⊥ track) and a borderline truncated case (evt2050,
-real `vhough` angle 31.7° ≈ the best false pair at 31.8° — purity-first, so dropped). MC catches all
-true crossers because its halves are cleaner (`dy/dz≈0`, small `d`). Full design:
+`flag = (d < 5) OR (truncated AND all three angles < 20° AND d < 300 cm)`. The scenario-2 **distance
+ceiling is new and load-bearing**: pairing *candidate* (not just matched) bundles admits far-apart
+collinear truncated pairs (data false `d=473 cm`, MC false `d=406/326 cm`, angles `< 14°`) that angle
+cannot reject (the MC false at `3.6°` is *more* collinear than the data true evt1302 at `2.8°`) — but
+every true scenario-2 pair sits at `d ≤ 264 cm`, so `d < 300 cm` cleanly separates them.
+**Flag purity 100% (data 16/16, MC 30/30).** End-to-end, the cull removes ~46 (data) / ~139 (MC)
+rival bundles pre-fit and takes **MC true-match agreement 91→97 (+6), DATA flat 92**. Full design:
 `match/docs/chisquare_flags_comparison.md` §16.
