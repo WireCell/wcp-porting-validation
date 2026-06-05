@@ -36,6 +36,8 @@ physics: {
             apps: [
                "TbbFlow"
             ]
+            logsinks: ["stdout"]
+            loglevels: ["debug"]
             configs: [
                "pgrapher/experiment/sbnd/wcls-sim-drift-depoflux-nf-sp.jsonnet"
             ]
