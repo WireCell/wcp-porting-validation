@@ -48,6 +48,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   -a        restrict to one anode (0 or 1)
   -calib    also dump work/ql_evt<ID>/calib-evt<ID>.json for the ql_scan
             hand-scan viewer (matched zip output is unchanged)
+  -cathode-diag  log the cathode-crossing TPC0/TPC1 offset three-vector
+            diagnostic (grep QLCATHODE in the run log; output unchanged)
+  -auto-mask  enable the per-event dynamic dead-PMT auto-mask (masks a PMT
+            that is dead in THIS event while its live neighbours fire; off
+            by default => byte-identical; grep QLAUTOMASK in the run log)
 
 Requires: run_img_evt.sh first (work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz).
 Opflash comes from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz (keyed
@@ -70,6 +75,21 @@ JOINT=true
 # (work/ql_evt<ID>/calib-evt<ID>.json) for the ql_scan viewer. Off by default;
 # the matched mabc-all-apa.zip output is byte-identical with or without it.
 CALIB=""
+# CALIB_SUFFIX: optional suffix inserted before .json in the calib-dump filename
+# (e.g. CALIB_SUFFIX=.nl -> calib-evt<ID>.nl.json), so an NL rerun does not clobber
+# the linear dump the hand-scan was based on. Default empty = calib-evt<ID>.json.
+CALIB_SUFFIX="${CALIB_SUFFIX:-}"
+# PMT_NL: enable the per-PMT predicted-light non-linearity correction (threaded into
+# the matching jsonnet as --tla-code pmt_nl). true (default, SBND going forward) maps
+# predicted PE into the saturated space. PMT_NL=false = identity (OFF baseline).
+PMT_NL="${PMT_NL:-true}"
+# -cathode-diag: log the cathode-crossing TPC0/TPC1 offset three-vector diagnostic
+# (grep "QLCATHODE" in the run log). Off by default; matched output is unchanged.
+CATHODE=""
+# -auto-mask: enable the per-event dynamic dead-PMT auto-mask (QLMatching auto_mask).
+# Off by default (production byte-identical); masks a PMT that is dead in THIS event
+# while its live neighbours fire (a run-dead channel absent from the static ch_mask).
+AUTOMASK="false"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -77,10 +97,12 @@ while [ $# -gt 0 ]; do
         -N) SBND_SAMPLE="$2"; shift 2 ;;
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
+        -auto-mask|--auto-mask) AUTOMASK="true"; shift ;;   # before -a* (it starts with -a)
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s|--per-apa|--separate) JOINT=false; shift ;;
         -calib|--calib) CALIB=1; shift ;;
+        -cathode-diag|--cathode-diag) CATHODE=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -159,9 +181,12 @@ process_event() {
 
     # Optional hand-scan calibration dump (one per-event JSON, both TPCs).
     local CALIB_TLA=()
-    [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}.json")
+    [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}${CALIB_SUFFIX}.json")
+    # Optional cathode-crossing offset diagnostic (logs QLCATHODE lines to $LOG).
+    local CATHODE_TLA=()
+    [ -n "$CATHODE" ] && CATHODE_TLA=(--tla-str "cathode_diag=on")
 
-    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}) -> $QLDIR/mabc-all-apa.zip"
+    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
@@ -174,7 +199,10 @@ process_event() {
         --tla-code "DL=$DL" --tla-code "DT=$DT" \
         --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
         --tla-code "joint=$JOINT" \
+        --tla-code "pmt_nl=$PMT_NL" \
+        --tla-code "auto_mask=$AUTOMASK" \
         "${CALIB_TLA[@]}" \
+        "${CATHODE_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }

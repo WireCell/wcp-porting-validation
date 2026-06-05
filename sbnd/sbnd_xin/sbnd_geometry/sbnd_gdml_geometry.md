@@ -56,6 +56,40 @@ Wire pitch = 3.0 mm for all planes. Angles measured from the +Y axis.
 
 All planes: y_C = 0, z_C = −412.5 mm (z_J = 2505.0 mm), same center as TPC.
 
+### 3.1 Anode support frame (APA) and the mid-z seam
+
+Each anode wall is **not** a single monolithic plane — it is built from **two APA support frames stacked along z** (`volOneAPAFrame`, stainless steel). The wire-plane volumes (`volTPCPlaneVert`, `volTPCPlane_U/_V`) are continuous featureless LAr boxes; the mechanical structure lives in these frames, which sit **just outboard of the wires**.
+
+The frame is a "picture-frame" composite (`unionAPA`) of hollow steel tubes:
+
+| Member | Box size x×y×z (mm) | Role |
+|--------|---------------------|------|
+| `boxAPATube_Longer` (×2) | 150 × 4150 × 100 | vertical rails at the z-edges of each frame |
+| `boxAPATube_Shorter` (×8) | 150 × 100 × 1132.84 | horizontal cross-bars (y = ±2025, ±675) |
+
+Placement (`volCryostat` frame; 4 frames total = 2 per anode wall):
+
+| x_C (mm) | z_C center (mm) | z_J center (mm) | frame z-span (z_C, mm) |
+|---------:|----------------:|----------------:|------------------------|
+| ±2112 | +889.0 | 3806.5 | [−393.8, +2171.8] |
+| ±2112 | −1714.0 | 1203.5 | [−2996.8, −431.2] |
+
+The frame plane is at **x = ±2112 mm**, i.e. ~92 mm behind the collection wires (x = ±2020.5 mm), on the non-drift side.
+
+**The mid-z seam.** The two frames on each wall meet at the detector center. Their facing **inner vertical rails** (each 100 mm wide in z, 4150 mm tall in y) sit at **z_J = 2436.3 and 2573.7 mm**, leaving a **37.4 mm gap centered on z_J = 2505.0 mm** (= z_C −412.5, the TPC z-center). No horizontal cross-bar lies at the seam — only the two rails.
+
+**Relation to the 6 dead W channels.** The 6 central-most collection (W) wires fall exactly in this rail gap:
+
+| W channel (East coll.) | z_J (mm) | offset from seam (mm) |
+|:----------------------:|---------:|----------------------:|
+| 4800–4805 | 2497.5 … 2512.5 | −7.5 … +7.5 (15 mm span, 3 mm pitch) |
+
+> **Caveat — geometry vs. real detector.** In the wire model the W plane is **fully continuous across the seam** (1670 wires, uniform 3.000 mm pitch, none missing or doubled), so the 6 dead channels are **not** represented in the geometry — they come from channel-status/masking and reflect the real mechanical CRP/APA junction. The GDML models **no screws, bolts, or joining plates** anywhere (searched: no such volumes exist); the junction is abstracted to the two steel frame rails. Those rails are grounded steel *behind* the collection plane, so their effect on the active drift field is minimal in simulation. The unused `volTPCPlaneVert_dummy` / `volTPCPlane_V_dummy` volumes are never placed.
+
+**Note on terminology.** The two **TPCs** (East/West) join at the **cathode** (x = 0). What joins at the **W/wire plane** is the two halves of a *single* anode (the two stacked APA frames) — an intra-anode seam, not the TPC-to-TPC boundary.
+
+Drawings: `anode_seam_view.png` (top view + seam zoom with the rails, the 37.4 mm gap, and the 6 dead W wires), `anode_frame_front.png` / `anode_frame_3d.png` (the stacked frames rendered by `geoDisplay.C`/`geoAnode()`), and `anode_gap_view.png` (the drift gap between the two TPCs). Reproduce with `python3 anode_seam_view.py` / `anode_gap_view.py`, or `root -l 'geoDisplay.C' -e 'geoAnode("sbnd_v02_06_nowires.gdml","out.png","front")'` (views: top/front/side/3d).
+
 ---
 
 ## 4. Cathode Plane (CPA)
@@ -303,6 +337,8 @@ For all other East modules, apply the same z-offset pattern to the respective mo
 4. **X-Arapuca local z offsets.** The full 192-position table was not computed exhaustively; the pattern from Module 1 applies to all modules with the appropriate module-center z substitution and East/West z-flip.
 
 5. **JSON z frame.** Any overlay of GDML-derived coordinates onto Wire-Cell outputs must use z_J (= z_C + 2917.5 mm), not z_C.
+
+6. **Mid-z anode seam (dead W channels).** Each anode wall is two stacked APA frames; their inner steel rails leave a 37.4 mm gap at z_J = 2505 mm where the 6 central W channels sit (the dead channels). The wire model is continuous there and no screws/joining plates are modeled — see Section 3.1.
 
 ---
 

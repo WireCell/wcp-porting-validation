@@ -49,6 +49,20 @@ function(
     // hand-scan viewer (sbnd_xin/ql_scan). run_ql_evt.sh -calib points it at
     // work/evt<ID>/calib-evt<ID>.json.
     calib_dump     = '',
+    // Cathode-crossing TPC0/TPC1 offset diagnostic. '' (default) = off,
+    // production-identical. When set (any non-empty string), QLMatching logs the
+    // three-vector (dir0, dir1, conn) decomposition per cross-TPC cathode-crossing
+    // pair (grep "QLCATHODE" in the run log). run_ql_evt.sh -cathode-diag enables it.
+    cathode_diag   = '',
+    // Per-PMT predicted-light non-linearity correction. true (default, SBND going
+    // forward) maps each PMT's accumulated predicted PE into the saturated (observed)
+    // space (qlmatching.jsonnet -> pmt_nonlinearity_params.jsonnet). false = identity.
+    // run_ql_evt.sh threads it via PMT_NL / --tla-code pmt_nl.
+    pmt_nl         = true,
+    // Per-event dynamic dead-PMT auto-mask. false (default) = off, production-identical.
+    // true masks, per event, a PMT that never fires while its live neighbours do (a
+    // run-dead channel absent from the static ch_mask). run_ql_evt.sh -auto-mask enables it.
+    auto_mask      = false,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -104,7 +118,8 @@ function(
     local matching_pipes = [qlm.matching(anodes[n], clus_maker.detector_volumes([anodes[n]]),
                                          n, reality, semimodel_file,
                                          cathode_fiducial=cathode_fv.tn,
-                                         calib_dump=calib_dump)
+                                         calib_dump=calib_dump, cathode_diag=cathode_diag,
+                                         pmt_nl=pmt_nl, auto_mask=auto_mask)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Graph: per-APA matching (default) or joint multi-APA matching ---
@@ -117,7 +132,8 @@ function(
             local jointql = qlm.matching_joint(anodes, clus_maker.detector_volumes(anodes),
                                                reality, semimodel_file,
                                                cathode_fiducial=cathode_fv.tn,
-                                               calib_dump=calib_dump);
+                                               calib_dump=calib_dump, cathode_diag=cathode_diag,
+                                               pmt_nl=pmt_nl, auto_mask=auto_mask);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
             local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true);
             local per_apa_pre = [g.intern(

@@ -231,6 +231,11 @@ Usage: ./run_ql_evt.sh [mc|data] [-N n] [-a anode] <idx|all>
   (no idx)       list available events for the chosen sample & mode; -h for full help
   all:           process every event in parallel (_runlib.sh batch_*, SBND_MAX_JOBS)
   -a:            restrict to one anode
+  -calib:        also dump work/ql_evt<ID>/calib-evt<ID>.json for the ql_scan viewer
+env:
+  PMT_NL=true|false    predicted-PE non-linearity (default true; false = OFF baseline)
+  CALIB_SUFFIX=.nl     insert a suffix in the calib filename (calib-evt<ID>.nl.json),
+                       so an NL rerun does not clobber a linear dump
 ```
 
 **Prerequisite:** `run_img_evt.sh <idx>` first (produces the per-event
@@ -475,3 +480,57 @@ is generated from it — the **realized (scintillation)** per-PMT curve (the phy
 expectation for real flashes; near-linear, ~8–14% attenuation by NPE≈5000), not the
 worst-case envelope. With no `--params-csv` the all-PMT plot falls back to a
 **clearly-labelled illustrative synthetic spread**.
+
+`--emit-qlmatching` fits each PMT's realized curve (to NPE_true=10⁵) to a monotone
+log-quadratic capped power law `observed = knee·exp(β·L+γ·L²)`, `L=ln(x/knee)` (identity
+below `knee`≈700), and writes the per-OpDet `(β, γ)` arrays + knee as a jsonnet param file
+for QLMatching, plus a fit-vs-MC validation plot (`pics/pmt_nonlinearity_fit.png`,
+residual ≤2% over the data regime):
+
+```
+python3 pmt_nonlinearity_curve.py --emit-qlmatching --params-csv pmt_nonlin_params_v3r1.csv \
+        --params-out ../../toolkit/cfg/pgrapher/experiment/sbnd/pmt_nonlinearity_params.jsonnet
+```
+
+### `ql_nonlin_compare.py`
+
+Compares QLMatching predicted-vs-measured PE with the PMT non-linearity OFF vs ON, from two
+`mabc.zip` BEE archives per sample (`run_clust_QL_evt.sh` with `PMT_NL=false` / default on).
+Plots median pred/meas vs predicted-PE brightness (`pics/ql_pmt_nonlin_compare.png`). Finding:
+**MC** shows a mild saturation trend the correction flattens; **data** sees more light than the
+reconstructed charge explains (a charge/light effect, not PMT saturation), so the correction
+does not help there. As of 2026-06-04 the correction is **ON by default for SBND** (canonical
+`qlmatching.jsonnet`; `PMT_NL=false` / `pmt_nl=false` recovers the OFF baseline).
+
+```
+python3 ql_nonlin_compare.py --mc-off mc_off.zip --mc-on mc_on.zip \
+                             --data-off data_off.zip --data-on data_on.zip
+```
+
+### `ql_pe_error.py`
+
+Measures the per-PMT light-error fraction `a` from the hand-scanned matches (the matcher assumes
+30% ⇒ `a=0.09`), modelling `E[(pred−meas)²] = meas + a·pred²`. Reads the per-event calib dumps
+(NL-on from `work/ql_nl_study/`, NL-off from `work/ql_evt<ID>/`) and the hand-scan selections
+(`work/ql_labels/<mode>/.scan_state-evt*.json`); aggregates **per flash** (pred summed over the
+selected clusters on a flash, meas once), drops `window_truncated`/`close_to_PMT` flashes, keeps
+PMTs (`opdet type==1`) in the flash's TPC. Writes 4-panel figures
+`pics/ql_pe_error_<mode>{,_nloff,_consistent}.png` (pred-vs-meas; local `a` vs pred; Y vs pred²;
+pull). Full writeup + findings in `docs/pe-error-study.md`. Default runs both modes:
+
+```
+python3 ql_pe_error.py            # data + mc
+python3 ql_pe_error.py mc         # one mode
+```
+
+### `ql_recipe_compare.py`
+
+Compares data vs MC Q/L **match quality** (χ²/ndf, ks, meas/pred) on the hand-scans AFTER the
+SBND data recipe (data `QtoL=0.86` + the PE-dependent error `σ²=meas+max(5 PE,0.25·pred)²`). Reads
+the regenerated recipe calib dumps from `work/ql_recipe/`. Finding: χ²/ndf drops from ~5 to ~1–2
+(data 1.72, MC 1.04), data normalization fixed (meas/pred → 1.01), ks ~unchanged (shape-invariant).
+Writes `pics/ql_recipe_data_vs_mc.png`. Full writeup in `docs/pe-error-study.md`.
+
+```
+python3 ql_recipe_compare.py
+```
