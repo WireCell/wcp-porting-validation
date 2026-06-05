@@ -46,6 +46,17 @@ Instead of building a match from scratch:
 
 `Clear selections` empties the scan; `Load auto-match` re-seeds it from the matcher.
 
+## Display layout
+
+- Controls are on two rows: event/group navigation on top, action buttons below.
+- **Filter selected bundles** defaults ON — once a cluster is matched to a flash it is
+  locked (🔒) from being selected for another. Toggle it off to override.
+- In the bundle, compare, and cluster tables the **apa / flash / cluster** columns are
+  kept adjacent for quick reading.
+- Pick a cluster in the **clusters** roster, then click **Compare cluster's flashes**
+  to list that cluster's candidate flashes in the second table (focusing a bundle row
+  still works too; the most recent of the two wins).
+
 ## Saved label schema
 
 ```jsonc

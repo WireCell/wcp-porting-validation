@@ -164,7 +164,9 @@ state = {
     "nav_groups": [],   # groups with >=1 visible bundle (prev/next cycle these)
     "compare_cluster": None,  # uid of the cluster shown in the compare table, or None
     "compare_order": [],      # bundle indices listed in the compare table
-    "filter_on": False,       # lock: forbid selecting a cluster already matched
+    "filter_on": True,        # lock: forbid selecting a cluster already matched (default ON)
+    "clus_pick": None,        # uid of the cluster clicked in the roster (drives Compare)
+    "clus_order": [],         # roster row order (row index -> cluster uid)
     "sel_snapshot": [],       # last pushed checkbox column (to detect user edits)
     "suppress_edit": False,   # guard while we (re)write the table data ourselves
     "loaded_summary": "",     # the "Loaded <evt>: ..." sentence (echoed under the projections)
@@ -263,7 +265,8 @@ loadauto_btn = Button(label="Load auto-match", width=140)
 clear_btn = Button(label="Clear selections", width=140)
 save_btn = Button(label="Save labels", button_type="success", width=120)
 compare_btn = Button(label="Compare cluster's flashes", width=200)
-filter_btn = Toggle(label="Filter selected bundles: OFF", width=220)
+filter_btn = Toggle(label="Filter selected bundles: ON", width=220,
+                    active=True, button_type="warning")
 status = Div(text="", width=1100)
 metrics = Div(text="", width=560)
 selsummary = Div(text="", width=380)
@@ -302,10 +305,10 @@ table_cols = [
     TableColumn(field="auto", title="auto", width=45, formatter=fmt_l, sortable=False),
     TableColumn(field="apa", title="apa", width=35, formatter=fmt_l, sortable=False),
     TableColumn(field="flash_gid", title="flash", width=70, formatter=fmt_l, sortable=False),
-    TableColumn(field="t_us", title="t(us)", width=70, formatter=fmt_r, sortable=False),
-    TableColumn(field="grp", title="grp", width=40, formatter=fmt_l, sortable=False),
     TableColumn(field="cluster", title="clus", width=50, formatter=fmt_l, sortable=False),
     TableColumn(field="noth", title="+oth", width=40, formatter=fmt_l, sortable=False),
+    TableColumn(field="t_us", title="t(us)", width=70, formatter=fmt_r, sortable=False),
+    TableColumn(field="grp", title="grp", width=40, formatter=fmt_l, sortable=False),
     TableColumn(field="ks", title="ks", width=55, formatter=fmt_r, sortable=False),
     TableColumn(field="chi2ndf", title="chi2/ndf", width=70, formatter=fmt_r, sortable=False),
     TableColumn(field="strength", title="strength", width=70, formatter=fmt_r, sortable=False),
@@ -324,7 +327,9 @@ compare_src = ColumnDataSource(data=dict())
 compare_cols = [
     TableColumn(field="sel", title="✓", width=34, formatter=check_fmt),
     TableColumn(field="auto", title="auto", width=45),
+    TableColumn(field="apa", title="apa", width=35),
     TableColumn(field="flash_gid", title="flash", width=70),
+    TableColumn(field="cluster", title="clus", width=50),
     TableColumn(field="t_us", title="t(us)", width=70,
                 formatter=NumberFormatter(format="0.0")),
     TableColumn(field="grp", title="grp", width=40),
@@ -349,10 +354,10 @@ clus_cols = [
     TableColumn(field="sel", title="✓", width=30, formatter=check_fmt),
     TableColumn(field="cluster", title="clus", width=50),
     TableColumn(field="apa", title="TPC", width=40),
+    TableColumn(field="flash_gid", title="→flash", width=60),
     TableColumn(field="npts", title="npts", width=55),
     TableColumn(field="length", title="len(cm)", width=65,
                 formatter=NumberFormatter(format="0.0")),
-    TableColumn(field="flash_gid", title="→flash", width=60),
 ]
 clus_table = DataTable(source=clus_src, columns=clus_cols, width=330, height=300,
                        selectable=True, index_position=None)
@@ -766,8 +771,8 @@ def rebuild_compare():
     cluster is being compared."""
     evt = state["evt"]
     cu = state["compare_cluster"]
-    empty = dict(sel=[], auto=[], flash_gid=[], t_us=[], grp=[], ks=[],
-                 chi2ndf=[], strength=[], meas=[], pred=[], flags=[])
+    empty = dict(sel=[], auto=[], apa=[], flash_gid=[], cluster=[], t_us=[], grp=[],
+                 ks=[], chi2ndf=[], strength=[], meas=[], pred=[], flags=[])
     if cu is None or cu not in evt.cluster_by_uid:
         compare_src.data = empty
         state["compare_order"] = []
@@ -784,7 +789,9 @@ def rebuild_compare():
         ndf = b["ndf"] or 1
         cols["sel"].append("✔" if i in state["selected"] else "")
         cols["auto"].append("Y" if b["auto_selected"] else "")
+        cols["apa"].append(b["apa"])
         cols["flash_gid"].append(b["flash_gid"])
+        cols["cluster"].append(evt.cluster_by_uid[b["main_cluster"]]["ident"])
         cols["t_us"].append(evt.flash_by_gid[b["flash_gid"]]["time"])
         cols["grp"].append(evt.group_of(b["flash_gid"]))
         cols["ks"].append(b["ks_dis"])
@@ -837,6 +844,7 @@ def rebuild_clusters():
     uids = sorted(evt.cluster_by_uid, key=lambda u: (-evt.cluster_length(u),
                                                      evt.cluster_by_uid[u]["apa"],
                                                      evt.cluster_by_uid[u]["ident"]))
+    state["clus_order"] = uids              # roster row index -> cluster uid (for Compare)
     cols = defaultdict(list)
     for u in uids:
         c = evt.cluster_by_uid[u]
@@ -948,6 +956,7 @@ def load_event(label):
     state["focus"] = None
     state["selected"] = load_state(evt)      # restore any saved picks for this event
     state["compare_cluster"] = None
+    state["clus_pick"] = None
     groups = event_groups(evt)
     state["groups"] = groups
     state["group"] = groups[0] if groups else None
@@ -1013,6 +1022,7 @@ def on_row_select(attr, old, new):
     pos = new[0]
     if 0 <= pos < len(order):
         state["focus"] = order[pos]
+        state["clus_pick"] = None       # focusing a bundle takes over from a roster pick
         render_light()
         render_projections()
         render_metrics()
@@ -1095,11 +1105,28 @@ def on_clear():
     refresh()
 
 
-def on_compare():
-    if state["focus"] is None:
-        status.text = "Focus a bundle row first, then Compare."
+def on_clus_select(attr, old, new):
+    """Remember the cluster clicked in the roster so the Compare button can list its
+    candidate flashes (an alternative to focusing one of its bundles in the table)."""
+    if not new:
         return
-    cu = state["evt"].bundles[state["focus"]]["main_cluster"]
+    order = state["clus_order"]
+    pos = new[0]
+    if 0 <= pos < len(order):
+        state["clus_pick"] = order[pos]
+        c = state["evt"].cluster_by_uid[order[pos]]
+        status.text = ("cluster %d (TPC%d) picked — click 'Compare cluster's flashes'."
+                       % (c["ident"], c["apa"]))
+
+
+def on_compare():
+    # Prefer a cluster clicked in the roster; otherwise fall back to the focused bundle.
+    cu = state["clus_pick"]
+    if cu is None:
+        if state["focus"] is None:
+            status.text = "Pick a cluster in the roster (or focus a bundle row), then Compare."
+            return
+        cu = state["evt"].bundles[state["focus"]]["main_cluster"]
     state["compare_cluster"] = cu
     rebuild_compare()
     status.text = ("Comparing cluster %d's candidate flashes (table below)."
@@ -1172,6 +1199,7 @@ next_grp_btn.on_click(lambda: step_group(+1))
 table_src.selected.on_change("indices", on_row_select)
 sel_group.on_change("active", on_sel_group)
 compare_src.selected.on_change("indices", on_compare_row)
+clus_src.selected.on_change("indices", on_clus_select)
 select_btn.on_click(on_toggle)
 loadauto_btn.on_click(on_load_auto)
 clear_btn.on_click(on_clear)
@@ -1183,9 +1211,12 @@ filter_btn.on_change("active", on_filter)
 # ---------------------------------------------------------------------------
 # Layout.
 # ---------------------------------------------------------------------------
-controls = row(event_select, prev_evt_btn, next_evt_btn,
-               group_select, prev_grp_btn, next_grp_btn,
-               select_btn, loadauto_btn, clear_btn, save_btn, compare_btn, filter_btn)
+# Two layers: navigation on top, actions below (keeps the button strip from
+# overflowing a narrow window).
+controls_nav = row(event_select, prev_evt_btn, next_evt_btn,
+                   group_select, prev_grp_btn, next_grp_btn)
+controls_act = row(select_btn, loadauto_btn, clear_btn, save_btn, compare_btn, filter_btn)
+controls = column(controls_nav, controls_act)
 header = Div(text="<h2>SBND Q/L matching hand-scan</h2>", width=1100)
 layout = column(
     # Charge-projection views first so a small monitor shows the plots up top; all the
