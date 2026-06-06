@@ -276,12 +276,19 @@ def run_app():
     bt_next = Button(label="next event >", width=100)
     sel_apa = Select(title="APA", value="all", options=["all", "0", "1"], width=80)
     sel_plane = Select(title="plane", value="all", options=["all", "u", "v", "w"], width=80)
+    # colormap limits; empty = auto (0.9 * view min/max).  One pair for the
+    # A/B panels (shared scale), one for the diff panel.
+    in_cmin_ab = TextInput(title="A/B cmap min", value="", placeholder="auto", width=100)
+    in_cmax_ab = TextInput(title="A/B cmap max", value="", placeholder="auto", width=100)
+    in_cmin_d = TextInput(title="diff cmap min", value="", placeholder="auto", width=100)
+    in_cmax_d = TextInput(title="diff cmap max", value="", placeholder="auto", width=100)
     info = Div(text="load files to begin", width=900)
     topdiv = Div(text="", width=420)
 
     # -- three linked 2D panels (A, B, A-B), bipolar colormap ----------------
     PAL = bipolar_palette()
-    PANEL_W, PANEL_H = 460, 420
+    # sized so the three panels fill a 1920-wide screen
+    PANEL_W, PANEL_H = 620, 540
 
     figs = {}
     img_srcs = {}
@@ -356,18 +363,38 @@ def run_app():
         if c1 - c0 < 2 or t1 - t0 < 2:
             return
 
-        # A and B share one symmetric color scale; diff gets its own.
+        # A and B share one color scale; diff gets its own.
         # Arrays are (channel, tick); display is channel on X, tick on Y,
         # so transpose the pooled block.
         imgs = {}
         for key, arr in (("a", state["a"]), ("b", state["b"]), ("d", state["diff"])):
             img, _, _ = maxpool2d_signed(arr[c0:c1, t0:t1], MAX_IMG_W, MAX_IMG_H)
             imgs[key] = img.T.astype(np.float32)
-        vab = max(float(np.abs(imgs["a"]).max()), float(np.abs(imgs["b"]).max()), 1e-9)
-        vd = max(float(np.abs(imgs["d"]).max()), 1e-9)
-        mappers["a"].low, mappers["a"].high = -vab, vab
-        mappers["b"].low, mappers["b"].high = -vab, vab
-        mappers["d"].low, mappers["d"].high = -vd, vd
+
+        def cmap_limits(lo_widget, hi_widget, data_lo, data_hi):
+            """Box value if parseable, else 0.9 * view min/max."""
+            def parse(w, default):
+                s = w.value.strip()
+                if not s:
+                    return default
+                try:
+                    return float(s)
+                except ValueError:
+                    return default
+            lo = parse(lo_widget, 0.9 * data_lo)
+            hi = parse(hi_widget, 0.9 * data_hi)
+            if hi <= lo:
+                hi = lo + 1e-9
+            return lo, hi
+
+        ab_lo = min(float(imgs["a"].min()), float(imgs["b"].min()))
+        ab_hi = max(float(imgs["a"].max()), float(imgs["b"].max()))
+        vlo, vhi = cmap_limits(in_cmin_ab, in_cmax_ab, ab_lo, ab_hi)
+        mappers["a"].low, mappers["a"].high = vlo, vhi
+        mappers["b"].low, mappers["b"].high = vlo, vhi
+        dlo, dhi = cmap_limits(in_cmin_d, in_cmax_d,
+                               float(imgs["d"].min()), float(imgs["d"].max()))
+        mappers["d"].low, mappers["d"].high = dlo, dhi
         for key in ("a", "b", "d"):
             img_srcs[key].data = dict(image=[imgs[key]], x=[c0], y=[t0],
                                       dw=[c1 - c0], dh=[t1 - t0])
@@ -419,6 +446,12 @@ def run_app():
 
     sel_apa.on_change("value", on_region)
     sel_plane.on_change("value", on_region)
+
+    def on_cmap(attr, old, new):
+        schedule_render(attr, old, new)
+
+    for w in (in_cmin_ab, in_cmax_ab, in_cmin_d, in_cmax_d):
+        w.on_change("value", on_cmap)
 
     # -- data loading -------------------------------------------------------
     def load_event():
@@ -483,7 +516,8 @@ def run_app():
     bt_next.on_click(lambda: step(+1))
 
     controls = column(row(in_a, in_b),
-                      row(in_tag_a, in_tag_b, bt_load, bt_prev, bt_next, sel_apa, sel_plane),
+                      row(in_tag_a, in_tag_b, bt_load, bt_prev, bt_next, sel_apa, sel_plane,
+                          in_cmin_ab, in_cmax_ab, in_cmin_d, in_cmax_d),
                       info)
     layout = column(controls,
                     row(fig_a, fig_b, fig_d),
