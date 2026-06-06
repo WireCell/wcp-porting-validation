@@ -35,6 +35,13 @@ NTOP = 5           # how many largest diffs to report
 NCH_U, NCH_V, NCH_W = 1984, 1984, 1670
 NCH_APA = NCH_U + NCH_V + NCH_W
 
+# sim::SimChannel TDC -> readout tick alignment: tick = tdc + SIMCH_TICK_OFFSET.
+SIMCH_TICK_OFFSET = -2990
+
+# recob::Wire tags are in units of ~electrons/50 (SP DeconNorm); scale them up
+# so gauss/wiener/dnnsp are directly comparable with simchannel electrons.
+WIRE_SCALE = 50.0
+
 
 def region_channels(apa, plane):
     """Channel window [lo, hi) for the APA / plane selection ('all' allowed)."""
@@ -95,11 +102,61 @@ class WireFile:
         eid = aux.id()
         return f"run {eid.run()} subrun {eid.subRun()} event {eid.event()}"
 
+    def simchannel_branch(self):
+        cands = [b.GetName() for b in self.tree.GetListOfBranches()
+                 if b.GetName().startswith("sim::SimChannels_")]
+        if not cands:
+            raise KeyError(f"no sim::SimChannels branch in {self.path}")
+        for n in cands:
+            if n.endswith("_ReDetSim."):
+                return n
+        return cands[0]
+
+    def _dense_simchannel(self, entry):
+        """(channel x tick) array of summed ionization electrons.
+
+        tick = tdc + SIMCH_TICK_OFFSET; entries shifted below tick 0 are dropped.
+        """
+        bname = self.simchannel_branch()
+        br = self.tree.GetBranch(bname)
+        br.GetEntry(entry)
+        scs = getattr(self.tree, bname).product()  # vector<sim::SimChannel>
+        if scs is None:
+            raise IOError(f"product missing for {bname} entry {entry}")
+        nch = 0
+        ntick = 0
+        store = []  # (channel, [(tick, electrons), ...])
+        for sc in scs:
+            ch = sc.Channel()
+            pairs = []
+            for tdcide in sc.TDCIDEMap():
+                tick = int(tdcide.first) + SIMCH_TICK_OFFSET
+                if tick < 0:
+                    continue
+                pairs.append((tick, float(sum(i.numElectrons for i in tdcide.second))))
+            store.append((ch, pairs))
+            nch = max(nch, ch + 1)
+            if pairs:
+                ntick = max(ntick, max(t for t, _ in pairs) + 1)
+        arr = np.zeros((nch, max(ntick, 1)), dtype=np.float32)
+        for ch, pairs in store:
+            for t, q in pairs:
+                arr[ch, t] += q
+        return arr
+
     def dense(self, entry, tag, module=DEFAULT_MODULE):
-        """(channel x tick) float32 array for one event; channel index = channel number."""
+        """(channel x tick) float32 array for one event; channel index = channel number.
+
+        tag "simchannel" reads sim::SimChannels (summed ionization electrons
+        per channel/tdc) instead of recob::Wire.
+        """
         key = (entry, tag, module)
         if key in self._cache:
             return self._cache[key]
+        if tag == "simchannel":
+            arr = self._dense_simchannel(entry)
+            self._cache = {key: arr}
+            return arr
         bname = self.branch_for_tag(tag, module)
         br = self.tree.GetBranch(bname)
         br.GetEntry(entry)
@@ -116,6 +173,7 @@ class WireFile:
         for w in wires:
             sig = np.asarray(w.Signal(), dtype=np.float32)
             arr[w.Channel(), : sig.size] = sig
+        arr *= WIRE_SCALE  # -> electrons, comparable with simchannel
         # keep only the latest event per (tag, module) to bound memory
         self._cache = {key: arr}
         return arr
@@ -199,15 +257,20 @@ def run_app():
     argv = sys.argv[1:]
     path_a = argv[0] if len(argv) > 0 else ""
     path_b = argv[1] if len(argv) > 1 else ""
-    tag0 = argv[2] if len(argv) > 2 else DEFAULT_TAG
+    tag_a0 = argv[2] if len(argv) > 2 else DEFAULT_TAG
+    tag_b0 = argv[3] if len(argv) > 3 else tag_a0
 
-    state = {"A": None, "B": None, "entry": 0, "tag": tag0,
+    state = {"A": None, "B": None, "entry": 0,
+             "tag_a": tag_a0, "tag_b": tag_b0,
              "a": None, "b": None, "diff": None}
 
     # -- widgets ------------------------------------------------------------
+    # A and B are each (file, tag); tags may differ, e.g. gauss vs dnnsp from
+    # the same file.  tag "simchannel" reads sim::SimChannels (electrons).
     in_a = TextInput(title="file A", value=path_a, width=420)
     in_b = TextInput(title="file B", value=path_b, width=420)
-    in_tag = TextInput(title="tag (product instance)", value=tag0, width=120)
+    in_tag_a = TextInput(title="tag A (gauss/wiener/dnnsp/simchannel)", value=tag_a0, width=220)
+    in_tag_b = TextInput(title="tag B", value=tag_b0, width=120)
     bt_load = Button(label="Load", button_type="primary", width=80)
     bt_prev = Button(label="< prev event", width=100)
     bt_next = Button(label="next event >", width=100)
@@ -253,7 +316,9 @@ def run_app():
     src_a = ColumnDataSource(data=dict(x=[], y=[]))
     src_b = ColumnDataSource(data=dict(x=[], y=[]))
     fig1d.line("x", "y", source=src_a, color="#2ca02c", legend_label="A", line_width=1.2)
-    fig1d.line("x", "y", source=src_b, color="#1f77b4", legend_label="B", line_width=1.2)
+    # B drawn as dots ON TOP of the A line so overlapping samples stay visible
+    fig1d.scatter("x", "y", source=src_b, color="#d62728", legend_label="B",
+                  size=3, marker="circle")
     fig1d.legend.click_policy = "hide"
 
     figdf = figure(title="A - B", width=700, height=260,
@@ -352,10 +417,10 @@ def run_app():
         if A is None or B is None:
             return
         entry = state["entry"]
-        tag = state["tag"]
+        tag_a, tag_b = state["tag_a"], state["tag_b"]
         try:
-            a = A.dense(entry, tag)
-            b = B.dense(entry, tag)
+            a = A.dense(entry, tag_a)
+            b = B.dense(entry, tag_b)
         except Exception as e:  # bad tag / entry: report, keep prior view
             info.text = f"<b>error:</b> {e}"
             return
@@ -374,13 +439,17 @@ def run_app():
         topdiv.text = ("<b>largest |A-B|</b>"
                        "<table border=1 cellpadding=3><tr><th>|A-B|</th>"
                        f"<th>channel</th><th>tick</th></tr>{rows}</table>")
-        print(f"[entry {entry} tag {tag}] largest |A-B|: "
+        print(f"[entry {entry} A:{tag_a} B:{tag_b}] largest |A-B|: "
               + ", ".join(f"{v:.5g}@(ch {c}, tick {t})" for v, c, t in tops),
               flush=True)
         info.text = (f"entry <b>{entry}</b> / {min(A.nevents, B.nevents)-1} "
-                     f"({A.event_label(entry)})&nbsp;&nbsp; tag: {tag} "
+                     f"({A.event_label(entry)})&nbsp;&nbsp; "
                      f"shape: {nch} ch x {nt} ticks<br>"
-                     f"A: {A.path}<br>B: {B.path}")
+                     f"A: {A.path} : <b>{tag_a}</b><br>"
+                     f"B: {B.path} : <b>{tag_b}</b>")
+        fig_a.title.text = f"A: {tag_a}"
+        fig_b.title.text = f"B: {tag_b}"
+        fig_d.title.text = "A - B"
         show_channel(tops[0][1])  # preload 1D with the worst channel
 
     def do_load():
@@ -390,7 +459,8 @@ def run_app():
         except Exception as e:
             info.text = f"<b>error:</b> {e}"
             return
-        state["tag"] = in_tag.value.strip() or DEFAULT_TAG
+        state["tag_a"] = in_tag_a.value.strip() or DEFAULT_TAG
+        state["tag_b"] = in_tag_b.value.strip() or state["tag_a"]
         state["entry"] = 0
         load_event()
 
@@ -406,7 +476,7 @@ def run_app():
     bt_next.on_click(lambda: step(+1))
 
     controls = column(row(in_a, in_b),
-                      row(in_tag, bt_load, bt_prev, bt_next, sel_apa, sel_plane),
+                      row(in_tag_a, in_tag_b, bt_load, bt_prev, bt_next, sel_apa, sel_plane),
                       info)
     layout = column(controls,
                     row(fig_a, fig_b, fig_d),
@@ -422,10 +492,11 @@ def run_app():
 def main_cli():
     """Standalone smoke test of the data layer: print top diffs of entry 0."""
     a, b = WireFile(sys.argv[1]), WireFile(sys.argv[2])
-    tag = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_TAG
+    tag_a = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_TAG
+    tag_b = sys.argv[4] if len(sys.argv) > 4 else tag_a
     print(f"A: {a.path} ({a.nevents} events)  branches: {a.wire_branches()}")
-    print(f"B: {b.path} ({b.nevents} events)")
-    da, db = aligned(a.dense(0, tag), b.dense(0, tag))
+    print(f"B: {b.path} ({b.nevents} events)  tags: A={tag_a} B={tag_b}")
+    da, db = aligned(a.dense(0, tag_a), b.dense(0, tag_b))
     print(f"shape {da.shape}; A sum {da.sum():.6g}  B sum {db.sum():.6g}")
     for v, c, t in top_diffs(da - db):
         print(f"  |A-B| {v:.5g} @ channel {c} tick {t}")
