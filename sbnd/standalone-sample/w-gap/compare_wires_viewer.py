@@ -446,7 +446,14 @@ def run_app():
         src_d.data = dict(x=x, y=a[ch] - b[ch])
         d = a[ch] - b[ch]
         k = int(np.argmax(np.abs(d)))
-        fig1d.title.text = (f"channel {ch}:  max|A-B| = {abs(d[k]):.4g} @ tick {k}")
+        qa = float(a[ch].sum())
+        qb = float(b[ch].sum())
+        qs = float(sim[ch].sum()) if (sim is not None and ch < sim.shape[0]) else float("nan")
+        fig1d.title.text = (f"channel {ch}:  max|A-B| = {abs(d[k]):.4g} @ tick {k}   "
+                            f"Q sim={qs:.4g} A={qa:.4g} B={qb:.4g}")
+        print(f"[channel {ch}] integrated charge: simchannel={qs:.6g} A={qa:.6g} B={qb:.6g}"
+              f"  (A-B={qa-qb:.4g}, A/sim={qa/qs if qs else float('nan'):.4f},"
+              f" B/sim={qb/qs if qs else float('nan'):.4f})", flush=True)
 
     def on_tap(event):
         show_channel(int(round(event.x)))
