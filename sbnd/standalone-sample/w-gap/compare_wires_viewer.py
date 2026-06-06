@@ -328,7 +328,9 @@ def run_app():
     fig_d = make_panel("d", "A - B", shared=fig_a)
 
     # -- 1D panels below ----------------------------------------------------
-    fig1d = figure(title="channel waveform (tap a 2D panel)", width=700, height=300,
+    # HTML caption above the 1D panel (figure titles cannot be colored)
+    cap1d = Div(text="channel waveform (tap a 2D panel)", width=700)
+    fig1d = figure(width=700, height=300,
                    x_axis_label="time tick", y_axis_label="signal",
                    tools="pan,box_zoom,wheel_zoom,reset,save")
     src_a = ColumnDataSource(data=dict(x=[], y=[]))
@@ -431,10 +433,61 @@ def run_app():
         rng.on_change("start", schedule_render)
         rng.on_change("end", schedule_render)
 
+    def update_1d_charges():
+        """Integrate sim/A/B over the 1D panel's current x (tick) zoom range."""
+        ch = state.get("ch", -1)
+        a, b = state["a"], state["b"]
+        if a is None or ch < 0 or ch >= a.shape[0]:
+            return
+        nt = a.shape[1]
+        xr = fig1d.x_range
+        t0 = 0 if xr.start is None else int(max(0, np.floor(xr.start)))
+        t1 = nt if xr.end is None else int(min(nt, np.ceil(xr.end)))
+        if t1 <= t0:
+            return
+        sim = state["sim"]
+        d = a[ch] - b[ch]
+        k = int(np.argmax(np.abs(d)))
+        qa = float(a[ch, t0:t1].sum())
+        qb = float(b[ch, t0:t1].sum())
+        qs = (float(sim[ch, t0:t1].sum())
+              if (sim is not None and ch < sim.shape[0]) else float("nan"))
+        # color the side whose integral is closer to sim green, the other red
+        col_a = col_b = "black"
+        if not np.isnan(qs):
+            if abs(qa - qs) <= abs(qb - qs):
+                col_a, col_b = "green", "red"
+            else:
+                col_a, col_b = "red", "green"
+        cap1d.text = (f"<b>channel {ch}</b>:  max|A-B| = {abs(d[k]):.4g} @ tick {k} &nbsp; "
+                      f"Q[{t0},{t1})&nbsp; sim={qs:.4g} "
+                      f"<span style='color:{col_a};font-weight:bold'>A={qa:.4g}</span> "
+                      f"<span style='color:{col_b};font-weight:bold'>B={qb:.4g}</span>")
+        print(f"[channel {ch} ticks {t0}:{t1}] integrated charge:"
+              f" simchannel={qs:.6g} A={qa:.6g} B={qb:.6g}"
+              f"  (A-B={qa-qb:.4g}, A/sim={qa/qs if qs else float('nan'):.4f},"
+              f" B/sim={qb/qs if qs else float('nan'):.4f})", flush=True)
+
+    charge_pending = {"on": False}
+
+    def charge_recalc():
+        charge_pending["on"] = False
+        update_1d_charges()
+
+    def on_1d_zoom(attr, old, new):
+        if charge_pending["on"]:
+            return
+        charge_pending["on"] = True
+        curdoc().add_timeout_callback(charge_recalc, 250)
+
+    fig1d.x_range.on_change("start", on_1d_zoom)
+    fig1d.x_range.on_change("end", on_1d_zoom)
+
     def show_channel(ch):
         a, b = state["a"], state["b"]
         if a is None or ch < 0 or ch >= a.shape[0]:
             return
+        state["ch"] = ch
         x = np.arange(a.shape[1])
         src_a.data = dict(x=x, y=a[ch])
         src_b.data = dict(x=x, y=b[ch])
@@ -444,16 +497,7 @@ def run_app():
         else:
             src_s.data = dict(x=[], y=[])
         src_d.data = dict(x=x, y=a[ch] - b[ch])
-        d = a[ch] - b[ch]
-        k = int(np.argmax(np.abs(d)))
-        qa = float(a[ch].sum())
-        qb = float(b[ch].sum())
-        qs = float(sim[ch].sum()) if (sim is not None and ch < sim.shape[0]) else float("nan")
-        fig1d.title.text = (f"channel {ch}:  max|A-B| = {abs(d[k]):.4g} @ tick {k}   "
-                            f"Q sim={qs:.4g} A={qa:.4g} B={qb:.4g}")
-        print(f"[channel {ch}] integrated charge: simchannel={qs:.6g} A={qa:.6g} B={qb:.6g}"
-              f"  (A-B={qa-qb:.4g}, A/sim={qa/qs if qs else float('nan'):.4f},"
-              f" B/sim={qb/qs if qs else float('nan'):.4f})", flush=True)
+        update_1d_charges()
 
     def on_tap(event):
         show_channel(int(round(event.x)))
@@ -585,7 +629,7 @@ def run_app():
                       info)
     layout = column(controls,
                     row(fig_a, fig_b, fig_d),
-                    row(column(fig1d, figdf), topdiv))
+                    row(column(cap1d, fig1d, figdf), topdiv))
     curdoc().add_root(layout)
     curdoc().title = "recob::Wire A-B compare"
 
