@@ -219,6 +219,20 @@ closest-point vector.
 `xtpc_consistent` output scalar; now a pre-fit cull that changes matching, and the root-node scalar
 was removed — only the `-calib` bundle field remains.)*
 
+**Update — flag-before-cull + scenario-1 steering (evt12 crosser fix).** `cull_cross_tpc`
+now only **flags** (sets `flag_xtpc_consistent`, plus `flag_xtpc_scenario1` for the tight
+scenario-1 case; `xtpc_pair_consistent` returns the scenario code). Two changes make a real
+cathode crosser whose TPC0 half is window-truncated actually match its crosser flash:
+(1) `cull_inconsistent` was moved out of the per-APA prefit so the flag pass runs on the
+**full pre-cull** bundle set (before each cluster is collapsed onto its single high-consistent
+flash) — candidates restricted to `at_x_boundary || window_truncated`; (2) the unified
+`cull_inconsistent` gives a **scenario-1 xtpc bundle priority**: it keeps that bundle and drops
+the cluster's high-consistent bundle on a *wrong* flash. Scenario-2 keeps the old weaker
+keep-(high|xtpc) rule; non-SBND / `xtpc_flag:false` is bit-identical. Validated against the
+10+10 hand-scans (A/B vs the pre-fix binary): fully surgical — the only change is MC evt12
+(TPC0 cluster 2 flash 14 → flash 5), MC agreement +1, data flat, 0 regressions. See
+`match/docs/qlmatching-evt12-xtpc-diagnosis.md`.
+
 Two scenarios, cuts tuned on the 10 hand-scan **data** events (truth = both halves hand-scan-selected),
 on the real C++ `vhough` values:
 
