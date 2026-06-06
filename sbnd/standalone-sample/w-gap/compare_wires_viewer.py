@@ -5,11 +5,12 @@ Reads `recob::Wires_<module>_<tag>_<process>` from files A and B via PyROOT
 (needs the sbndcode environment for dictionaries), builds dense (channel x
 tick) arrays per event and shows:
 
-  * 2D zoomable image of |A - B| (channel on Y, tick on X).  The view is
-    re-rendered server-side on every pan/zoom with max-pooling so isolated
-    single-tick spikes never disappear when zoomed out.
-  * Tap a channel in the 2D view -> side panel with the 1D waveforms of that
-    channel: A, B overlaid and the signed difference A-B.
+  * Three linked, zoomable 2D panels (channel on Y, tick on X): A, B and
+    A-B, all with a bipolar (blue-white-red) colormap centered at zero.
+    Every pan/zoom re-renders server-side with sign-preserving max-|v|
+    pooling so isolated single-tick spikes never disappear when zoomed out.
+  * Tap a channel in any 2D panel -> 1D waveforms of that channel below:
+    A, B overlaid and the signed difference A-B.
   * Controls: file paths for A and B (+ Load), product tag, previous/next
     event, and a table of the largest |A-B| entries (also printed to stdout).
 
@@ -26,9 +27,25 @@ import numpy as np
 
 DEFAULT_TAG = "dnnsp"
 DEFAULT_MODULE = "simtpc2d"
-MAX_IMG_W = 1400   # rendered image resolution budget (ticks axis)
-MAX_IMG_H = 900    # (channels axis)
+MAX_IMG_W = 800    # rendered image resolution budget per panel (channel axis)
+MAX_IMG_H = 600    # (tick axis)
 NTOP = 5           # how many largest diffs to report
+
+# SBND channel layout: per APA u(1984) + v(1984) + w(1670) = 5638 channels.
+NCH_U, NCH_V, NCH_W = 1984, 1984, 1670
+NCH_APA = NCH_U + NCH_V + NCH_W
+
+
+def region_channels(apa, plane):
+    """Channel window [lo, hi) for the APA / plane selection ('all' allowed)."""
+    if apa == "all":
+        return 0, 2 * NCH_APA
+    base = int(apa) * NCH_APA
+    lo, hi = {"all": (0, NCH_APA),
+              "u": (0, NCH_U),
+              "v": (NCH_U, NCH_U + NCH_V),
+              "w": (NCH_U + NCH_V, NCH_APA)}[plane]
+    return base + lo, base + hi
 
 
 # ---------------------------------------------------------------------------
@@ -119,8 +136,9 @@ def aligned(a, b):
     return a, b
 
 
-def maxpool2d(arr, max_h, max_w):
-    """Downsample |arr| by block max so spikes survive; returns (img, fy, fx)."""
+def maxpool2d_signed(arr, max_h, max_w):
+    """Downsample by block, keeping the element with the largest |value| so
+    spikes of either sign survive.  Returns (img, fy, fx)."""
     h, w = arr.shape
     fy = max(1, int(np.ceil(h / max_h)))
     fx = max(1, int(np.ceil(w / max_w)))
@@ -131,7 +149,10 @@ def maxpool2d(arr, max_h, max_w):
     if ph or pw:
         arr = np.pad(arr, ((0, ph), (0, pw)), constant_values=0)
     H, W = arr.shape
-    img = arr.reshape(H // fy, fy, W // fx, fx).max(axis=(1, 3))
+    blk = arr.reshape(H // fy, fy, W // fx, fx)
+    bmax = blk.max(axis=(1, 3))
+    bmin = blk.min(axis=(1, 3))
+    img = np.where(bmax > -bmin, bmax, bmin)
     return img, fy, fx
 
 
@@ -143,6 +164,27 @@ def top_diffs(diff, n=NTOP):
     return sorted(out, reverse=True)
 
 
+def bipolar_palette(n=256):
+    """Blue-white-red hex palette (matplotlib RdBu_r if available)."""
+    try:
+        import matplotlib.cm as cm
+        from matplotlib.colors import to_hex
+        cmap = cm.get_cmap("RdBu_r")
+        return [to_hex(cmap(i / (n - 1))) for i in range(n)]
+    except Exception:
+        out = []
+        for i in range(n):
+            t = i / (n - 1)
+            if t < 0.5:  # blue -> white
+                s = t * 2
+                r, g, b = int(255 * s), int(255 * s), 255
+            else:        # white -> red
+                s = (t - 0.5) * 2
+                r, g, b = 255, int(255 * (1 - s)), int(255 * (1 - s))
+            out.append(f"#{r:02x}{g:02x}{b:02x}")
+        return out
+
+
 # ---------------------------------------------------------------------------
 # Bokeh app
 # ---------------------------------------------------------------------------
@@ -150,7 +192,7 @@ def run_app():
     from bokeh.io import curdoc
     from bokeh.layouts import column, row
     from bokeh.models import (Button, ColorBar, ColumnDataSource, Div,
-                              LinearColorMapper, TextInput)
+                              LinearColorMapper, Select, TextInput)
     from bokeh.events import Tap
     from bokeh.plotting import figure
 
@@ -169,22 +211,43 @@ def run_app():
     bt_load = Button(label="Load", button_type="primary", width=80)
     bt_prev = Button(label="< prev event", width=100)
     bt_next = Button(label="next event >", width=100)
-    info = Div(text="load files to begin", width=560)
-    topdiv = Div(text="", width=560)
+    sel_apa = Select(title="APA", value="all", options=["all", "0", "1"], width=80)
+    sel_plane = Select(title="plane", value="all", options=["all", "u", "v", "w"], width=80)
+    info = Div(text="load files to begin", width=900)
+    topdiv = Div(text="", width=420)
 
-    # -- 2D figure ----------------------------------------------------------
-    mapper = LinearColorMapper(palette="Viridis256", low=0, high=1)
-    fig2d = figure(title="|A - B|", width=820, height=620,
-                   x_axis_label="time tick", y_axis_label="channel",
-                   tools="pan,box_zoom,wheel_zoom,reset,save",
-                   active_scroll="wheel_zoom")
-    img_src = ColumnDataSource(data=dict(image=[np.zeros((2, 2))], x=[0], y=[0], dw=[1], dh=[1]))
-    fig2d.image(image="image", x="x", y="y", dw="dw", dh="dh",
-                color_mapper=mapper, source=img_src)
-    fig2d.add_layout(ColorBar(color_mapper=mapper, width=12), "right")
+    # -- three linked 2D panels (A, B, A-B), bipolar colormap ----------------
+    PAL = bipolar_palette()
+    PANEL_W, PANEL_H = 460, 420
 
-    # -- 1D side panel ------------------------------------------------------
-    fig1d = figure(title="channel waveform (tap the 2D view)", width=560, height=320,
+    figs = {}
+    img_srcs = {}
+    mappers = {}
+
+    def make_panel(key, title, shared=None):
+        kw = dict(width=PANEL_W, height=PANEL_H,
+                  x_axis_label="channel", y_axis_label="time tick",
+                  tools="pan,box_zoom,wheel_zoom,reset,save",
+                  active_scroll="wheel_zoom", title=title)
+        if shared is not None:
+            kw["x_range"] = shared.x_range
+            kw["y_range"] = shared.y_range
+        fig = figure(**kw)
+        mapper = LinearColorMapper(palette=PAL, low=-1, high=1)
+        src = ColumnDataSource(data=dict(image=[np.zeros((2, 2), dtype=np.float32)],
+                                         x=[0], y=[0], dw=[1], dh=[1]))
+        fig.image(image="image", x="x", y="y", dw="dw", dh="dh",
+                  color_mapper=mapper, source=src)
+        fig.add_layout(ColorBar(color_mapper=mapper, width=10), "right")
+        figs[key], img_srcs[key], mappers[key] = fig, src, mapper
+        return fig
+
+    fig_a = make_panel("a", "A")
+    fig_b = make_panel("b", "B", shared=fig_a)
+    fig_d = make_panel("d", "A - B", shared=fig_a)
+
+    # -- 1D panels below ----------------------------------------------------
+    fig1d = figure(title="channel waveform (tap a 2D panel)", width=700, height=300,
                    x_axis_label="time tick", y_axis_label="signal",
                    tools="pan,box_zoom,wheel_zoom,reset,save")
     src_a = ColumnDataSource(data=dict(x=[], y=[]))
@@ -193,7 +256,7 @@ def run_app():
     fig1d.line("x", "y", source=src_b, color="#1f77b4", legend_label="B", line_width=1.2)
     fig1d.legend.click_policy = "hide"
 
-    figdf = figure(title="A - B", width=560, height=280,
+    figdf = figure(title="A - B", width=700, height=260,
                    x_axis_label="time tick", y_axis_label="A - B",
                    x_range=fig1d.x_range,
                    tools="pan,box_zoom,wheel_zoom,reset,save")
@@ -203,24 +266,41 @@ def run_app():
     # -- rendering ----------------------------------------------------------
     render_pending = {"on": False}
 
-    def render_view():
-        """Redraw the 2D image for the current axis ranges (max-pooled)."""
-        render_pending["on"] = False
+    def view_window():
+        """Current view as channel window (x axis) and tick window (y axis)."""
         diff = state["diff"]
-        if diff is None:
-            return
         nch, nt = diff.shape
-        x0 = int(max(0, np.floor(fig2d.x_range.start if fig2d.x_range.start is not None else 0)))
-        x1 = int(min(nt, np.ceil(fig2d.x_range.end if fig2d.x_range.end is not None else nt)))
-        y0 = int(max(0, np.floor(fig2d.y_range.start if fig2d.y_range.start is not None else 0)))
-        y1 = int(min(nch, np.ceil(fig2d.y_range.end if fig2d.y_range.end is not None else nch)))
-        if x1 - x0 < 2 or y1 - y0 < 2:
+        xr, yr = fig_a.x_range, fig_a.y_range
+        c0 = int(max(0, np.floor(xr.start if xr.start is not None else 0)))
+        c1 = int(min(nch, np.ceil(xr.end if xr.end is not None else nch)))
+        t0 = int(max(0, np.floor(yr.start if yr.start is not None else 0)))
+        t1 = int(min(nt, np.ceil(yr.end if yr.end is not None else nt)))
+        return c0, c1, t0, t1
+
+    def render_view():
+        """Redraw all three 2D images for the current axis ranges."""
+        render_pending["on"] = False
+        if state["diff"] is None:
             return
-        sub = np.abs(diff[y0:y1, x0:x1])
-        img, fy, fx = maxpool2d(sub, MAX_IMG_H, MAX_IMG_W)
-        mapper.high = max(float(img.max()), 1e-9)
-        img_src.data = dict(image=[img], x=[x0], y=[y0],
-                            dw=[x1 - x0], dh=[y1 - y0])
+        c0, c1, t0, t1 = view_window()
+        if c1 - c0 < 2 or t1 - t0 < 2:
+            return
+
+        # A and B share one symmetric color scale; diff gets its own.
+        # Arrays are (channel, tick); display is channel on X, tick on Y,
+        # so transpose the pooled block.
+        imgs = {}
+        for key, arr in (("a", state["a"]), ("b", state["b"]), ("d", state["diff"])):
+            img, _, _ = maxpool2d_signed(arr[c0:c1, t0:t1], MAX_IMG_W, MAX_IMG_H)
+            imgs[key] = img.T.astype(np.float32)
+        vab = max(float(np.abs(imgs["a"]).max()), float(np.abs(imgs["b"]).max()), 1e-9)
+        vd = max(float(np.abs(imgs["d"]).max()), 1e-9)
+        mappers["a"].low, mappers["a"].high = -vab, vab
+        mappers["b"].low, mappers["b"].high = -vab, vab
+        mappers["d"].low, mappers["d"].high = -vd, vd
+        for key in ("a", "b", "d"):
+            img_srcs[key].data = dict(image=[imgs[key]], x=[c0], y=[t0],
+                                      dw=[c1 - c0], dh=[t1 - t0])
 
     def schedule_render(attr, old, new):
         if render_pending["on"]:
@@ -228,7 +308,7 @@ def run_app():
         render_pending["on"] = True
         curdoc().add_timeout_callback(render_view, 150)
 
-    for rng in (fig2d.x_range, fig2d.y_range):
+    for rng in (fig_a.x_range, fig_a.y_range):
         rng.on_change("start", schedule_render)
         rng.on_change("end", schedule_render)
 
@@ -245,9 +325,26 @@ def run_app():
         fig1d.title.text = (f"channel {ch}:  max|A-B| = {abs(d[k]):.4g} @ tick {k}")
 
     def on_tap(event):
-        show_channel(int(round(event.y)))
+        show_channel(int(round(event.x)))
 
-    fig2d.on_event(Tap, on_tap)
+    for f in (fig_a, fig_b, fig_d):
+        f.on_event(Tap, on_tap)
+
+    # -- APA / plane region selection ----------------------------------------
+    def apply_region():
+        if state["diff"] is None:
+            return
+        lo, hi = region_channels(sel_apa.value, sel_plane.value)
+        nch, nt = state["diff"].shape
+        fig_a.x_range.start, fig_a.x_range.end = lo, min(hi, nch)
+        fig_a.y_range.start, fig_a.y_range.end = 0, nt
+        # range callbacks schedule the re-render
+
+    def on_region(attr, old, new):
+        apply_region()
+
+    sel_apa.on_change("value", on_region)
+    sel_plane.on_change("value", on_region)
 
     # -- data loading -------------------------------------------------------
     def load_event():
@@ -266,8 +363,9 @@ def run_app():
         state["a"], state["b"] = a, b
         state["diff"] = a - b
         nch, nt = a.shape
-        fig2d.x_range.start, fig2d.x_range.end = 0, nt
-        fig2d.y_range.start, fig2d.y_range.end = 0, nch
+        lo, hi = region_channels(sel_apa.value, sel_plane.value)
+        fig_a.x_range.start, fig_a.x_range.end = lo, min(hi, nch)
+        fig_a.y_range.start, fig_a.y_range.end = 0, nt
         render_view()
 
         tops = top_diffs(state["diff"])
@@ -280,9 +378,9 @@ def run_app():
               + ", ".join(f"{v:.5g}@(ch {c}, tick {t})" for v, c, t in tops),
               flush=True)
         info.text = (f"entry <b>{entry}</b> / {min(A.nevents, B.nevents)-1} "
-                     f"({A.event_label(entry)})<br>"
-                     f"A: {A.path}<br>B: {B.path}<br>tag: {tag} "
-                     f"shape: {nch} ch x {nt} ticks")
+                     f"({A.event_label(entry)})&nbsp;&nbsp; tag: {tag} "
+                     f"shape: {nch} ch x {nt} ticks<br>"
+                     f"A: {A.path}<br>B: {B.path}")
         show_channel(tops[0][1])  # preload 1D with the worst channel
 
     def do_load():
@@ -308,10 +406,11 @@ def run_app():
     bt_next.on_click(lambda: step(+1))
 
     controls = column(row(in_a, in_b),
-                      row(in_tag, bt_load, bt_prev, bt_next),
+                      row(in_tag, bt_load, bt_prev, bt_next, sel_apa, sel_plane),
                       info)
     layout = column(controls,
-                    row(fig2d, column(fig1d, figdf, topdiv)))
+                    row(fig_a, fig_b, fig_d),
+                    row(column(fig1d, figdf), topdiv))
     curdoc().add_root(layout)
     curdoc().title = "recob::Wire A-B compare"
 
