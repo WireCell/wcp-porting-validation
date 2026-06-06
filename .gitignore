@@ -23,7 +23,9 @@ log*
 dune-vd-cfg/*
 *~
 *.db
+*.csv
 fall-production
 __pycache__
 input-*
 temp
+rebase-scan

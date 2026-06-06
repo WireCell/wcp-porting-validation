@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+"""Compare recob::Wire products between two art ROOT files (Bokeh server).
+
+Reads `recob::Wires_<module>_<tag>_<process>` from files A and B via PyROOT
+(needs the sbndcode environment for dictionaries), builds dense (channel x
+tick) arrays per event and shows:
+
+  * 2D zoomable image of |A - B| (channel on Y, tick on X).  The view is
+    re-rendered server-side on every pan/zoom with max-pooling so isolated
+    single-tick spikes never disappear when zoomed out.
+  * Tap a channel in the 2D view -> side panel with the 1D waveforms of that
+    channel: A, B overlaid and the signed difference A-B.
+  * Controls: file paths for A and B (+ Load), product tag, previous/next
+    event, and a table of the largest |A-B| entries (also printed to stdout).
+
+Launched by serve_compare_wires.sh; mirrors the server-side-callback style of
+ql_scan/ql_scan_viewer.py.
+
+Usage (standalone test of the data layer):
+    python compare_wires_viewer.py A.root B.root [tag]
+"""
+
+import sys
+
+import numpy as np
+
+DEFAULT_TAG = "dnnsp"
+DEFAULT_MODULE = "simtpc2d"
+MAX_IMG_W = 1400   # rendered image resolution budget (ticks axis)
+MAX_IMG_H = 900    # (channels axis)
+NTOP = 5           # how many largest diffs to report
+
+
+# ---------------------------------------------------------------------------
+# Data layer (PyROOT)
+# ---------------------------------------------------------------------------
+class WireFile:
+    """One art ROOT file giving dense per-event (channel x tick) arrays."""
+
+    def __init__(self, path):
+        import ROOT  # deferred so --help works without the env
+        self.ROOT = ROOT
+        self.path = path
+        self.tfile = ROOT.TFile.Open(path)
+        if not self.tfile or self.tfile.IsZombie():
+            raise IOError(f"cannot open {path}")
+        self.tree = self.tfile.Get("Events")
+        if not self.tree:
+            raise IOError(f"no Events tree in {path}")
+        self.nevents = self.tree.GetEntries()
+        self._cache = {}  # (entry, branch) -> ndarray
+
+    def wire_branches(self):
+        """All recob::Wires branch names in the file."""
+        out = []
+        for b in self.tree.GetListOfBranches():
+            name = b.GetName()
+            if name.startswith("recob::Wires_"):
+                out.append(name)
+        return out
+
+    def branch_for_tag(self, tag, module=DEFAULT_MODULE):
+        want = f"recob::Wires_{module}_{tag}_"
+        cands = [n for n in self.wire_branches() if n.startswith(want)]
+        if not cands:
+            raise KeyError(f"no branch {want}* in {self.path}; have: {self.wire_branches()}")
+        # the same tag can exist from several processes (e.g. dnnsp from both
+        # DetSim and ReDetSim); prefer the re-processed one.
+        for n in cands:
+            if n.endswith("_ReDetSim."):
+                return n
+        return cands[0]
+
+    def event_label(self, entry):
+        br = self.tree.GetBranch("EventAuxiliary")
+        br.GetEntry(entry)
+        aux = getattr(self.tree, "EventAuxiliary")
+        eid = aux.id()
+        return f"run {eid.run()} subrun {eid.subRun()} event {eid.event()}"
+
+    def dense(self, entry, tag, module=DEFAULT_MODULE):
+        """(channel x tick) float32 array for one event; channel index = channel number."""
+        key = (entry, tag, module)
+        if key in self._cache:
+            return self._cache[key]
+        bname = self.branch_for_tag(tag, module)
+        br = self.tree.GetBranch(bname)
+        br.GetEntry(entry)
+        wrapper = getattr(self.tree, bname)
+        wires = wrapper.product()  # vector<recob::Wire>
+        if wires is None:
+            raise IOError(f"product missing for {bname} entry {entry}")
+        nch = 0
+        ntick = 0
+        for w in wires:
+            nch = max(nch, w.Channel() + 1)
+            ntick = max(ntick, w.NSignal())
+        arr = np.zeros((nch, ntick), dtype=np.float32)
+        for w in wires:
+            sig = np.asarray(w.Signal(), dtype=np.float32)
+            arr[w.Channel(), : sig.size] = sig
+        # keep only the latest event per (tag, module) to bound memory
+        self._cache = {key: arr}
+        return arr
+
+
+def aligned(a, b):
+    """Zero-pad A and B to a common (channel, tick) shape."""
+    nch = max(a.shape[0], b.shape[0])
+    nt = max(a.shape[1], b.shape[1])
+    if a.shape != (nch, nt):
+        tmp = np.zeros((nch, nt), dtype=a.dtype)
+        tmp[: a.shape[0], : a.shape[1]] = a
+        a = tmp
+    if b.shape != (nch, nt):
+        tmp = np.zeros((nch, nt), dtype=b.dtype)
+        tmp[: b.shape[0], : b.shape[1]] = b
+        b = tmp
+    return a, b
+
+
+def maxpool2d(arr, max_h, max_w):
+    """Downsample |arr| by block max so spikes survive; returns (img, fy, fx)."""
+    h, w = arr.shape
+    fy = max(1, int(np.ceil(h / max_h)))
+    fx = max(1, int(np.ceil(w / max_w)))
+    if fy == 1 and fx == 1:
+        return arr, 1, 1
+    ph = (-h) % fy
+    pw = (-w) % fx
+    if ph or pw:
+        arr = np.pad(arr, ((0, ph), (0, pw)), constant_values=0)
+    H, W = arr.shape
+    img = arr.reshape(H // fy, fy, W // fx, fx).max(axis=(1, 3))
+    return img, fy, fx
+
+
+def top_diffs(diff, n=NTOP):
+    """[(value, channel, tick)] of the n largest |diff| entries."""
+    flat = np.argpartition(np.abs(diff).ravel(), -n)[-n:]
+    out = [(float(abs(diff.ravel()[i])), int(i // diff.shape[1]), int(i % diff.shape[1]))
+           for i in flat]
+    return sorted(out, reverse=True)
+
+
+# ---------------------------------------------------------------------------
+# Bokeh app
+# ---------------------------------------------------------------------------
+def run_app():
+    from bokeh.io import curdoc
+    from bokeh.layouts import column, row
+    from bokeh.models import (Button, ColorBar, ColumnDataSource, Div,
+                              LinearColorMapper, TextInput)
+    from bokeh.events import Tap
+    from bokeh.plotting import figure
+
+    argv = sys.argv[1:]
+    path_a = argv[0] if len(argv) > 0 else ""
+    path_b = argv[1] if len(argv) > 1 else ""
+    tag0 = argv[2] if len(argv) > 2 else DEFAULT_TAG
+
+    state = {"A": None, "B": None, "entry": 0, "tag": tag0,
+             "a": None, "b": None, "diff": None}
+
+    # -- widgets ------------------------------------------------------------
+    in_a = TextInput(title="file A", value=path_a, width=420)
+    in_b = TextInput(title="file B", value=path_b, width=420)
+    in_tag = TextInput(title="tag (product instance)", value=tag0, width=120)
+    bt_load = Button(label="Load", button_type="primary", width=80)
+    bt_prev = Button(label="< prev event", width=100)
+    bt_next = Button(label="next event >", width=100)
+    info = Div(text="load files to begin", width=560)
+    topdiv = Div(text="", width=560)
+
+    # -- 2D figure ----------------------------------------------------------
+    mapper = LinearColorMapper(palette="Viridis256", low=0, high=1)
+    fig2d = figure(title="|A - B|", width=820, height=620,
+                   x_axis_label="time tick", y_axis_label="channel",
+                   tools="pan,box_zoom,wheel_zoom,reset,save",
+                   active_scroll="wheel_zoom")
+    img_src = ColumnDataSource(data=dict(image=[np.zeros((2, 2))], x=[0], y=[0], dw=[1], dh=[1]))
+    fig2d.image(image="image", x="x", y="y", dw="dw", dh="dh",
+                color_mapper=mapper, source=img_src)
+    fig2d.add_layout(ColorBar(color_mapper=mapper, width=12), "right")
+
+    # -- 1D side panel ------------------------------------------------------
+    fig1d = figure(title="channel waveform (tap the 2D view)", width=560, height=320,
+                   x_axis_label="time tick", y_axis_label="signal",
+                   tools="pan,box_zoom,wheel_zoom,reset,save")
+    src_a = ColumnDataSource(data=dict(x=[], y=[]))
+    src_b = ColumnDataSource(data=dict(x=[], y=[]))
+    fig1d.line("x", "y", source=src_a, color="#2ca02c", legend_label="A", line_width=1.2)
+    fig1d.line("x", "y", source=src_b, color="#1f77b4", legend_label="B", line_width=1.2)
+    fig1d.legend.click_policy = "hide"
+
+    figdf = figure(title="A - B", width=560, height=280,
+                   x_axis_label="time tick", y_axis_label="A - B",
+                   x_range=fig1d.x_range,
+                   tools="pan,box_zoom,wheel_zoom,reset,save")
+    src_d = ColumnDataSource(data=dict(x=[], y=[]))
+    figdf.line("x", "y", source=src_d, color="#d62728", line_width=1.2)
+
+    # -- rendering ----------------------------------------------------------
+    render_pending = {"on": False}
+
+    def render_view():
+        """Redraw the 2D image for the current axis ranges (max-pooled)."""
+        render_pending["on"] = False
+        diff = state["diff"]
+        if diff is None:
+            return
+        nch, nt = diff.shape
+        x0 = int(max(0, np.floor(fig2d.x_range.start if fig2d.x_range.start is not None else 0)))
+        x1 = int(min(nt, np.ceil(fig2d.x_range.end if fig2d.x_range.end is not None else nt)))
+        y0 = int(max(0, np.floor(fig2d.y_range.start if fig2d.y_range.start is not None else 0)))
+        y1 = int(min(nch, np.ceil(fig2d.y_range.end if fig2d.y_range.end is not None else nch)))
+        if x1 - x0 < 2 or y1 - y0 < 2:
+            return
+        sub = np.abs(diff[y0:y1, x0:x1])
+        img, fy, fx = maxpool2d(sub, MAX_IMG_H, MAX_IMG_W)
+        mapper.high = max(float(img.max()), 1e-9)
+        img_src.data = dict(image=[img], x=[x0], y=[y0],
+                            dw=[x1 - x0], dh=[y1 - y0])
+
+    def schedule_render(attr, old, new):
+        if render_pending["on"]:
+            return
+        render_pending["on"] = True
+        curdoc().add_timeout_callback(render_view, 150)
+
+    for rng in (fig2d.x_range, fig2d.y_range):
+        rng.on_change("start", schedule_render)
+        rng.on_change("end", schedule_render)
+
+    def show_channel(ch):
+        a, b = state["a"], state["b"]
+        if a is None or ch < 0 or ch >= a.shape[0]:
+            return
+        x = np.arange(a.shape[1])
+        src_a.data = dict(x=x, y=a[ch])
+        src_b.data = dict(x=x, y=b[ch])
+        src_d.data = dict(x=x, y=a[ch] - b[ch])
+        d = a[ch] - b[ch]
+        k = int(np.argmax(np.abs(d)))
+        fig1d.title.text = (f"channel {ch}:  max|A-B| = {abs(d[k]):.4g} @ tick {k}")
+
+    def on_tap(event):
+        show_channel(int(round(event.y)))
+
+    fig2d.on_event(Tap, on_tap)
+
+    # -- data loading -------------------------------------------------------
+    def load_event():
+        A, B = state["A"], state["B"]
+        if A is None or B is None:
+            return
+        entry = state["entry"]
+        tag = state["tag"]
+        try:
+            a = A.dense(entry, tag)
+            b = B.dense(entry, tag)
+        except Exception as e:  # bad tag / entry: report, keep prior view
+            info.text = f"<b>error:</b> {e}"
+            return
+        a, b = aligned(a, b)
+        state["a"], state["b"] = a, b
+        state["diff"] = a - b
+        nch, nt = a.shape
+        fig2d.x_range.start, fig2d.x_range.end = 0, nt
+        fig2d.y_range.start, fig2d.y_range.end = 0, nch
+        render_view()
+
+        tops = top_diffs(state["diff"])
+        rows = "".join(f"<tr><td>{v:.5g}</td><td>{c}</td><td>{t}</td></tr>"
+                       for v, c, t in tops)
+        topdiv.text = ("<b>largest |A-B|</b>"
+                       "<table border=1 cellpadding=3><tr><th>|A-B|</th>"
+                       f"<th>channel</th><th>tick</th></tr>{rows}</table>")
+        print(f"[entry {entry} tag {tag}] largest |A-B|: "
+              + ", ".join(f"{v:.5g}@(ch {c}, tick {t})" for v, c, t in tops),
+              flush=True)
+        info.text = (f"entry <b>{entry}</b> / {min(A.nevents, B.nevents)-1} "
+                     f"({A.event_label(entry)})<br>"
+                     f"A: {A.path}<br>B: {B.path}<br>tag: {tag} "
+                     f"shape: {nch} ch x {nt} ticks")
+        show_channel(tops[0][1])  # preload 1D with the worst channel
+
+    def do_load():
+        try:
+            state["A"] = WireFile(in_a.value.strip())
+            state["B"] = WireFile(in_b.value.strip())
+        except Exception as e:
+            info.text = f"<b>error:</b> {e}"
+            return
+        state["tag"] = in_tag.value.strip() or DEFAULT_TAG
+        state["entry"] = 0
+        load_event()
+
+    def step(dn):
+        if state["A"] is None:
+            return
+        nmax = min(state["A"].nevents, state["B"].nevents)
+        state["entry"] = int(np.clip(state["entry"] + dn, 0, nmax - 1))
+        load_event()
+
+    bt_load.on_click(do_load)
+    bt_prev.on_click(lambda: step(-1))
+    bt_next.on_click(lambda: step(+1))
+
+    controls = column(row(in_a, in_b),
+                      row(in_tag, bt_load, bt_prev, bt_next),
+                      info)
+    layout = column(controls,
+                    row(fig2d, column(fig1d, figdf, topdiv)))
+    curdoc().add_root(layout)
+    curdoc().title = "recob::Wire A-B compare"
+
+    if path_a and path_b:
+        do_load()
+
+
+# ---------------------------------------------------------------------------
+def main_cli():
+    """Standalone smoke test of the data layer: print top diffs of entry 0."""
+    a, b = WireFile(sys.argv[1]), WireFile(sys.argv[2])
+    tag = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_TAG
+    print(f"A: {a.path} ({a.nevents} events)  branches: {a.wire_branches()}")
+    print(f"B: {b.path} ({b.nevents} events)")
+    da, db = aligned(a.dense(0, tag), b.dense(0, tag))
+    print(f"shape {da.shape}; A sum {da.sum():.6g}  B sum {db.sum():.6g}")
+    for v, c, t in top_diffs(da - db):
+        print(f"  |A-B| {v:.5g} @ channel {c} tick {t}")
+
+
+if __name__.startswith("bokeh_app"):
+    run_app()
+elif __name__ == "__main__":
+    main_cli()
