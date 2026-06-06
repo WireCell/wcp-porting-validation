@@ -278,10 +278,15 @@ def run_app():
     sel_plane = Select(title="plane", value="all", options=["all", "u", "v", "w"], width=80)
     # colormap limits; empty = auto (0.9 * view min/max).  One pair for the
     # A/B panels (shared scale), one for the diff panel.
-    in_cmin_ab = TextInput(title="A/B cmap min", value="", placeholder="auto", width=100)
-    in_cmax_ab = TextInput(title="A/B cmap max", value="", placeholder="auto", width=100)
-    in_cmin_d = TextInput(title="diff cmap min", value="", placeholder="auto", width=100)
-    in_cmax_d = TextInput(title="diff cmap max", value="", placeholder="auto", width=100)
+    in_cmin_ab = TextInput(title="A/B cmap min", value="-5000", placeholder="auto", width=100)
+    in_cmax_ab = TextInput(title="A/B cmap max", value="5000", placeholder="auto", width=100)
+    in_cmin_d = TextInput(title="diff cmap min", value="-1000", placeholder="auto", width=100)
+    in_cmax_d = TextInput(title="diff cmap max", value="1000", placeholder="auto", width=100)
+    # diff panel mode: absolute (A-B) or relative (A-B)/(max(|A|,|B|)+eps).
+    # eps regularizes the 0/0 empty regions and low-amplitude ROI edges.
+    sel_dmode = Select(title="diff mode", value="abs",
+                       options=[("abs", "A-B"), ("rel", "(A-B)/max(|A|,|B|)")], width=150)
+    in_deps = TextInput(title="rel eps", value="100", width=80)
     info = Div(text="load files to begin", width=900)
     topdiv = Div(text="", width=420)
 
@@ -366,9 +371,21 @@ def run_app():
         # A and B share one color scale; diff gets its own.
         # Arrays are (channel, tick); display is channel on X, tick on Y,
         # so transpose the pooled block.
+        suba = state["a"][c0:c1, t0:t1]
+        subb = state["b"][c0:c1, t0:t1]
+        if sel_dmode.value == "rel":
+            try:
+                eps = float(in_deps.value.strip())
+            except ValueError:
+                eps = 100.0
+            subd = (suba - subb) / (np.maximum(np.abs(suba), np.abs(subb)) + max(eps, 1e-9))
+            fig_d.title.text = "(A - B) / (max(|A|,|B|) + %.4g)" % eps
+        else:
+            subd = suba - subb
+            fig_d.title.text = "A - B"
         imgs = {}
-        for key, arr in (("a", state["a"]), ("b", state["b"]), ("d", state["diff"])):
-            img, _, _ = maxpool2d_signed(arr[c0:c1, t0:t1], MAX_IMG_W, MAX_IMG_H)
+        for key, arr in (("a", suba), ("b", subb), ("d", subd)):
+            img, _, _ = maxpool2d_signed(arr, MAX_IMG_W, MAX_IMG_H)
             imgs[key] = img.T.astype(np.float32)
 
         def cmap_limits(lo_widget, hi_widget, data_lo, data_hi):
@@ -428,6 +445,25 @@ def run_app():
         f.on_event(Tap, on_tap)
 
     # -- APA / plane region selection ----------------------------------------
+    def update_top_table():
+        """Largest |A-B| within the selected APA/plane channel window."""
+        if state["diff"] is None:
+            return []
+        lo, hi = region_channels(sel_apa.value, sel_plane.value)
+        hi = min(hi, state["diff"].shape[0])
+        sub = state["diff"][lo:hi]
+        tops = [(v, c + lo, t) for v, c, t in top_diffs(sub)]
+        region = f"APA {sel_apa.value} / plane {sel_plane.value}"
+        rows = "".join(f"<tr><td>{v:.5g}</td><td>{c}</td><td>{t}</td></tr>"
+                       for v, c, t in tops)
+        topdiv.text = (f"<b>largest |A-B|</b> ({region})"
+                       "<table border=1 cellpadding=3><tr><th>|A-B|</th>"
+                       f"<th>channel</th><th>tick</th></tr>{rows}</table>")
+        print(f"[entry {state['entry']} {region}] largest |A-B|: "
+              + ", ".join(f"{v:.5g}@(ch {c}, tick {t})" for v, c, t in tops),
+              flush=True)
+        return tops
+
     def apply_region():
         if state["diff"] is None:
             return
@@ -443,6 +479,7 @@ def run_app():
 
     def on_region(attr, old, new):
         apply_region()
+        update_top_table()
 
     sel_apa.on_change("value", on_region)
     sel_plane.on_change("value", on_region)
@@ -450,8 +487,9 @@ def run_app():
     def on_cmap(attr, old, new):
         schedule_render(attr, old, new)
 
-    for w in (in_cmin_ab, in_cmax_ab, in_cmin_d, in_cmax_d):
+    for w in (in_cmin_ab, in_cmax_ab, in_cmin_d, in_cmax_d, in_deps):
         w.on_change("value", on_cmap)
+    sel_dmode.on_change("value", on_cmap)
 
     # -- data loading -------------------------------------------------------
     def load_event():
@@ -473,15 +511,7 @@ def run_app():
         apply_region()
         render_view()
 
-        tops = top_diffs(state["diff"])
-        rows = "".join(f"<tr><td>{v:.5g}</td><td>{c}</td><td>{t}</td></tr>"
-                       for v, c, t in tops)
-        topdiv.text = ("<b>largest |A-B|</b>"
-                       "<table border=1 cellpadding=3><tr><th>|A-B|</th>"
-                       f"<th>channel</th><th>tick</th></tr>{rows}</table>")
-        print(f"[entry {entry} A:{tag_a} B:{tag_b}] largest |A-B|: "
-              + ", ".join(f"{v:.5g}@(ch {c}, tick {t})" for v, c, t in tops),
-              flush=True)
+        tops = update_top_table()
         info.text = (f"entry <b>{entry}</b> / {min(A.nevents, B.nevents)-1} "
                      f"({A.event_label(entry)})&nbsp;&nbsp; "
                      f"shape: {nch} ch x {nt} ticks<br>"
@@ -517,7 +547,7 @@ def run_app():
 
     controls = column(row(in_a, in_b),
                       row(in_tag_a, in_tag_b, bt_load, bt_prev, bt_next, sel_apa, sel_plane,
-                          in_cmin_ab, in_cmax_ab, in_cmin_d, in_cmax_d),
+                          in_cmin_ab, in_cmax_ab, in_cmin_d, in_cmax_d, sel_dmode, in_deps),
                       info)
     layout = column(controls,
                     row(fig_a, fig_b, fig_d),
