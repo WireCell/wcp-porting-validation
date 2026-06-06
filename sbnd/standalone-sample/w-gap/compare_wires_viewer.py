@@ -249,8 +249,9 @@ def bipolar_palette(n=256):
 def run_app():
     from bokeh.io import curdoc
     from bokeh.layouts import column, row
-    from bokeh.models import (Button, ColorBar, ColumnDataSource, Div,
-                              LinearColorMapper, Range1d, Select, TextInput)
+    from bokeh.models import (Button, ColorBar, ColumnDataSource, DataTable,
+                              Div, LinearColorMapper, NumberFormatter, Range1d,
+                              Select, TableColumn, TextInput)
     from bokeh.events import Tap
     from bokeh.plotting import figure
 
@@ -290,6 +291,14 @@ def run_app():
     in_deps = TextInput(title="rel eps", value="100", width=80)
     info = Div(text="load files to begin", width=900)
     topdiv = Div(text="", width=420)
+    # clickable top-diff table: selecting a row shows that channel in 1D
+    top_src = ColumnDataSource(data=dict(v=[], c=[], t=[]))
+    top_table = DataTable(
+        source=top_src, width=420, height=200, index_position=None,
+        columns=[TableColumn(field="v", title="|A-B|",
+                             formatter=NumberFormatter(format="0.000")),
+                 TableColumn(field="c", title="channel"),
+                 TableColumn(field="t", title="tick")])
 
     # -- three linked 2D panels (A, B, A-B), bipolar colormap ----------------
     PAL = bipolar_palette()
@@ -515,11 +524,11 @@ def run_app():
         sub = state["diff"][lo:hi]
         tops = [(v, c + lo, t) for v, c, t in top_diffs(sub)]
         region = f"APA {sel_apa.value} / plane {sel_plane.value}"
-        rows = "".join(f"<tr><td>{v:.5g}</td><td>{c}</td><td>{t}</td></tr>"
-                       for v, c, t in tops)
-        topdiv.text = (f"<b>largest |A-B|</b> ({region})"
-                       "<table border=1 cellpadding=3><tr><th>|A-B|</th>"
-                       f"<th>channel</th><th>tick</th></tr>{rows}</table>")
+        topdiv.text = f"<b>largest |A-B|</b> ({region}) &mdash; click a row to inspect"
+        top_src.selected.indices = []
+        top_src.data = dict(v=[v for v, c, t in tops],
+                            c=[c for v, c, t in tops],
+                            t=[t for v, c, t in tops])
         print(f"[entry {state['entry']} {region}] largest |A-B|: "
               + ", ".join(f"{v:.5g}@(ch {c}, tick {t})" for v, c, t in tops),
               flush=True)
@@ -541,6 +550,16 @@ def run_app():
     def on_region(attr, old, new):
         apply_region()
         update_top_table()
+
+    def on_top_select(attr, old, new):
+        if not new:
+            return
+        chans = top_src.data["c"]
+        idx = new[0]
+        if 0 <= idx < len(chans):
+            show_channel(int(chans[idx]))
+
+    top_src.selected.on_change("indices", on_top_select)
 
     sel_apa.on_change("value", on_region)
     sel_plane.on_change("value", on_region)
@@ -629,7 +648,7 @@ def run_app():
                       info)
     layout = column(controls,
                     row(fig_a, fig_b, fig_d),
-                    row(column(cap1d, fig1d, figdf), topdiv))
+                    row(column(cap1d, fig1d, figdf), column(topdiv, top_table)))
     curdoc().add_root(layout)
     curdoc().title = "recob::Wire A-B compare"
 
