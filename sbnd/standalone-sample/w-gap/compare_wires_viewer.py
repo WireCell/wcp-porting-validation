@@ -262,7 +262,8 @@ def run_app():
 
     state = {"A": None, "B": None, "entry": 0,
              "tag_a": tag_a0, "tag_b": tag_b0,
-             "a": None, "b": None, "diff": None}
+             "a": None, "b": None, "diff": None,
+             "sim": None}  # simchannel truth from file A (1D overlay only)
 
     # -- widgets ------------------------------------------------------------
     # A and B are each (file, tag); tags may differ, e.g. gauss vs dnnsp from
@@ -332,6 +333,10 @@ def run_app():
                    tools="pan,box_zoom,wheel_zoom,reset,save")
     src_a = ColumnDataSource(data=dict(x=[], y=[]))
     src_b = ColumnDataSource(data=dict(x=[], y=[]))
+    src_s = ColumnDataSource(data=dict(x=[], y=[]))
+    # simchannel truth (from file A) drawn first so it sits underneath
+    fig1d.line("x", "y", source=src_s, color="#1f77b4", legend_label="simchannel(A)",
+               line_width=1.0)
     fig1d.line("x", "y", source=src_a, color="#2ca02c", legend_label="A", line_width=1.2)
     # B drawn as dots ON TOP of the A line so overlapping samples stay visible
     fig1d.scatter("x", "y", source=src_b, color="#d62728", legend_label="B",
@@ -433,6 +438,11 @@ def run_app():
         x = np.arange(a.shape[1])
         src_a.data = dict(x=x, y=a[ch])
         src_b.data = dict(x=x, y=b[ch])
+        sim = state["sim"]
+        if sim is not None and ch < sim.shape[0]:
+            src_s.data = dict(x=x, y=sim[ch])
+        else:
+            src_s.data = dict(x=[], y=[])
         src_d.data = dict(x=x, y=a[ch] - b[ch])
         d = a[ch] - b[ch]
         k = int(np.argmax(np.abs(d)))
@@ -507,6 +517,23 @@ def run_app():
         a, b = aligned(a, b)
         state["a"], state["b"] = a, b
         state["diff"] = a - b
+
+        # simchannel truth from file A for the 1D overlay (2D only if a tag
+        # explicitly selects it).  Pad/crop to the A/B shape.
+        state["sim"] = None
+        if tag_a != "simchannel":
+            try:
+                sim = A.dense(entry, "simchannel")
+                full = np.zeros_like(a)
+                nr = min(full.shape[0], sim.shape[0])
+                nc = min(full.shape[1], sim.shape[1])
+                full[:nr, :nc] = sim[:nr, :nc]
+                state["sim"] = full
+            except Exception as e:
+                log_msg = f"no simchannel overlay from A: {e}"
+                print(log_msg, flush=True)
+        else:
+            state["sim"] = a
         nch, nt = a.shape
         apply_region()
         render_view()
