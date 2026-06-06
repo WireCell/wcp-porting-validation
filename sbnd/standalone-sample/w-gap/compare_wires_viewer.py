@@ -250,7 +250,7 @@ def run_app():
     from bokeh.io import curdoc
     from bokeh.layouts import column, row
     from bokeh.models import (Button, ColorBar, ColumnDataSource, Div,
-                              LinearColorMapper, Select, TextInput)
+                              LinearColorMapper, Range1d, Select, TextInput)
     from bokeh.events import Tap
     from bokeh.plotting import figure
 
@@ -295,6 +295,11 @@ def run_app():
         if shared is not None:
             kw["x_range"] = shared.x_range
             kw["y_range"] = shared.y_range
+        else:
+            # explicit Range1d: DataRange1d would auto-fit to the rendered
+            # image and silently undo the APA/plane selection jumps.
+            kw["x_range"] = Range1d(0, 1)
+            kw["y_range"] = Range1d(0, 1)
         fig = figure(**kw)
         mapper = LinearColorMapper(palette=PAL, low=-1, high=1)
         src = ColumnDataSource(data=dict(image=[np.zeros((2, 2), dtype=np.float32)],
@@ -401,8 +406,12 @@ def run_app():
             return
         lo, hi = region_channels(sel_apa.value, sel_plane.value)
         nch, nt = state["diff"].shape
-        fig_a.x_range.start, fig_a.x_range.end = lo, min(hi, nch)
+        hi = min(hi, nch)
+        fig_a.x_range.start, fig_a.x_range.end = lo, hi
         fig_a.y_range.start, fig_a.y_range.end = 0, nt
+        # make the Reset tool come back to this region, not the startup range
+        fig_a.x_range.reset_start, fig_a.x_range.reset_end = lo, hi
+        fig_a.y_range.reset_start, fig_a.y_range.reset_end = 0, nt
         # range callbacks schedule the re-render
 
     def on_region(attr, old, new):
@@ -428,9 +437,7 @@ def run_app():
         state["a"], state["b"] = a, b
         state["diff"] = a - b
         nch, nt = a.shape
-        lo, hi = region_channels(sel_apa.value, sel_plane.value)
-        fig_a.x_range.start, fig_a.x_range.end = lo, min(hi, nch)
-        fig_a.y_range.start, fig_a.y_range.end = 0, nt
+        apply_region()
         render_view()
 
         tops = top_diffs(state["diff"])
