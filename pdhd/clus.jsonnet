@@ -16,6 +16,14 @@ local index = std.parseInt(initial_index);
 local common_coords = ["x", "y", "z"];
 local common_corr_coords = ["x_t0cor", "y", "z"];
 
+// Drift-side Bee display groups: APA0+APA2 (face0, drift -x) and APA1+APA3
+// (face1, drift +x).  Shared by the clustering points and the dead-area output
+// in the all-APA dump so each pair shows as a single Bee instance.
+local apa_drift_groups = [
+    { name: "group02", apas: [0, 2] },
+    { name: "group13", apas: [1, 3] },
+];
+
 
 local dvm = {
     overall: {
@@ -453,6 +461,7 @@ local clus_all_apa (
             eventNo: eventNo,
             save_deadarea: true,
             dead_area_version: 2,  // v2 wrapper (tpc=apa) so the dead slab lands on the correct PD anode face
+            dead_apa_groups: apa_drift_groups,  // group dead area by drift side -> 2 dead instances
             anodes: [wc.tn(a) for a in anodes],
             detector_volumes: wc.tn(dv),
             bee_points_sets: [  // New configuration for multiple bee points sets
@@ -471,6 +480,15 @@ local clus_all_apa (
                     pcname: "3d",           // Which scope to use
                     coords: ["x", "y", "z"],    // Coordinates to use (uncorrected; x_t0cor needs flash-associated t0)
                     individual: false            // Output individual APA/Face
+                },
+            {
+                    name: "clustering_grouped", // Drift-side grouped display
+                    detector: "protodunehd",
+                    algorithm: "clustering",    // -> clustering-group02 / clustering-group13
+                    pcname: "3d",
+                    coords: ["x", "y", "z"],
+                    individual: false,
+                    apa_groups: apa_drift_groups,
                 }
             ],
             pipeline: wc.tns(cm_pipeline),

@@ -182,11 +182,22 @@ Single-event mode produces `upload_<run>_<evt>[_sel<TAG>].zip` and uploads
 to Bee, printing the URL.
 
 `all` mode combines every event into one `upload-batch-run<RUN_PADDED>.zip`
-(layout `data/<i>/<i>-apa<N>.json`) and does a single upload.  The filename
-prefix matches the directory index because Bee groups events by the leading
-number of the filename stem (see `wirecell/bee/data.py:parse_pathname`);
-naming every file `0-apa<N>.json` would collapse all events into one Bee
-slot.
+and does a single upload.  The filename prefix matches the directory index
+because Bee groups events by the leading number of the filename stem (see
+`wirecell/bee/data.py:parse_pathname`); naming every file the same would
+collapse all events into one Bee slot.
+
+By default the four APAs are merged by drift side into two Bee instances per
+event — `data/<i>/<i>-group02.json` (APA0+APA2, drift −x) and
+`data/<i>/<i>-group13.json` (APA1+APA3, drift +x) — so each event shows two
+images instead of four.  Each pair shares drift geometry, so a single
+`bee-blobs` call per group renders correctly.  Set `PDHD_BEE_GROUP=0` to fall
+back to the legacy one-instance-per-APA output (`<i>-apa<N>.json`).
+
+The clustering Bee output (`run_clus_evt.sh` → `mabc-all-apa.zip`) uses the
+matching grouping: `clustering-group02`, `clustering-group13` (plus the
+all-APA `clustering-global`), and the dead area as `channel-deadarea-group02`
+/ `channel-deadarea-group13`.  See `clus/docs/bee_output.md` (APA grouping).
 
 ## Selection (optional pre-processing)
 
