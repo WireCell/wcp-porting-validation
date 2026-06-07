@@ -15,7 +15,11 @@ SBND_EVENTS=(2 9 11 12 14 18 31 35 41 42)
 # input_files directory for a given mode, honoring SBND_SAMPLE.
 # data: the production sample lives in a fixed, versioned directory (the old
 # input-<N>evt-data sets are no longer usable). Override with SBND_DATA_DIR.
+# SBND_INPUT_DIR (absolute path) overrides everything for ANY mode — used to
+# point at an externally-staged sample dir (e.g. one file of input-10files-mc
+# remapped to unique event ids).  Mode still drives reality (sim vs data).
 sbnd_input_dir() {
+    if [ -n "${SBND_INPUT_DIR:-}" ]; then echo "$SBND_INPUT_DIR"; return; fi
     if [ "${1}" = "data" ]; then
         echo "$SBND_DIR/input_files/${SBND_DATA_DIR:-input-1file-data-v10_14_02_02}"
     else
