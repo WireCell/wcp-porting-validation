@@ -74,3 +74,31 @@ wire-cell -l stdout -L info \
 ```bash
 lar -n 1 -c standard_detsim_sbnd-dump.fcl -s 2025f-mc.root -o 2025f-mc-resim.root
 ```
+
+
+## run Xin's
+  cd /exp/sbnd/app/users/yuhw/wcp-porting-img/sbnd/standalone-sample
+
+  # jsonnet + semimodel search paths (semimodel is referenced by bare name)
+  path-prepend /exp/sbnd/app/users/yuhw/wire-cell-toolkit/cfg               WIRECELL_PATH
+  path-prepend /exp/sbnd/app/users/yuhw/wcp-porting-img/sbnd/sbnd_xin       WIRECELL_PATH
+  path-prepend /exp/sbnd/app/users/yuhw/wire-cell-data/sbnd/photodet       WIRECELL_PATH
+
+  # 1) image the active clusters from the SP-frames bundle -> icluster-apa{0,1}-active.npz
+  wire-cell -l stderr -l wct-img.log:debug -L debug \
+      --tla-str  "input=2025f-mc-sp-frames.tar.bz2" \
+      --tla-code "anode_indices=[0,1]" \
+      --tla-str  "output_dir=." \
+      -c ../sbnd_xin/wct-img-all.jsonnet
+
+  # 2) the standalone clustering+matching graph
+  wire-cell -l stderr -l wct-clus-matching.log:debug -L debug \
+      -V reality=sim \
+      -V input=. \
+      -V frames=2025f-mc-sp-frames.tar.bz2 \
+      -V semimodel_file=semi-analytical-sbnd.json \
+      -C DL=6.2 -C DT=9.8 -C lifetime=6 \
+      -C joint=true -C pmt_nl=true \
+      -c ../sbnd_xin/wct-clus-matching-standalone.jsonnet
+
+BROWSER=echo bash ../sbnd_xin/upload-to-bee.sh mabc.zip
