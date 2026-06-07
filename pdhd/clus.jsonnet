@@ -482,7 +482,12 @@ local clus_all_apa (
                     individual: false            // Output individual APA/Face
                 },
             {
-                    name: "clustering_grouped", // Drift-side grouped display
+                    // name "img" dumps the live grouping BEFORE the all-APA
+                    // pipeline -> the per-APA clustering result, grouped by drift
+                    // side: clustering-group02 / clustering-group13.  The
+                    // "clustering" set above (end dump) gives clustering-global
+                    // (full-detector clustering).
+                    name: "img",
                     detector: "protodunehd",
                     algorithm: "clustering",    // -> clustering-group02 / clustering-group13
                     pcname: "3d",

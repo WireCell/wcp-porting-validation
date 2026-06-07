@@ -203,7 +203,7 @@ for _e in "${_all_events[@]}"; do
     # Group by drift side: APA0+APA2 -> group02, APA1+APA3 -> group13 (each
     # pair shares drift geometry).  Set PDHD_BEE_GROUP=0 for the legacy
     # one-instance-per-APA output.  Spec: "<name> <geo-idx> <member APA idx...>".
-    _bee_groups=( "group02 0 0 2" "group13 1 1 3" )
+    _bee_groups=( "imaging-group02 0 0 2" "imaging-group13 1 1 3" )
     if [ "${PDHD_BEE_GROUP:-1}" = "0" ]; then
         _bee_groups=( "apa0 0 0" "apa1 1 1" "apa2 2 2" "apa3 3 3" )
     fi

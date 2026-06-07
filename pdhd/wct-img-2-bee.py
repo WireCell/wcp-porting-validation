@@ -11,7 +11,7 @@ import sys, os
 # legacy one-instance-per-APA output.
 
 # Drift-side display groups: (name, geo-representative idx, member APA idxs).
-GROUPS = [("group02", 0, [0, 2]), ("group13", 1, [1, 3])]
+GROUPS = [("imaging-group02", 0, [0, 2]), ("imaging-group13", 1, [1, 3])]
 
 def anode_args(idx):
     if idx % 2 == 0:
