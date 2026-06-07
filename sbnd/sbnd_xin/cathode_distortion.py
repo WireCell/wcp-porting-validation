@@ -30,6 +30,8 @@ Outputs (pics/):
   cathode_xtpc_perp_yz.png            #4  xTPC transverse offset scatter+quiver (the clean, T0-immune signal)
   cathode_profiles.png                #5  transverse/perp residual vs Y and vs Z
   cathode_furthest_points_yz.png      #6  long-track cathode-most point map, coloured by dx
+  cathode_surface_3d.png              #7  apparent cathode as a 2-D surface in 3-D (drift residual over Y,Z)
+  cathode_closest_yz.png              #8  per-(Y,Z)-bin closest approach of charge to the cathode
 
 Usage:  python3 cathode_distortion.py [-j NPROC]
 """
@@ -50,8 +52,19 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PICS = os.path.join(HERE, "pics")
 CALIB_GLOB = os.path.join(HERE, "work", "ql_evt*", "calib-evt*.json")
 
-# The 10 MC reference events (run_ql_evt.sh mc); everything else is data.
+# MC reference: the original 10 mc events (small ids) + the input-10files-mc
+# baseline, which run_mcbase.sh remaps to globally-unique ids >= 700000.
+# Everything else (lan-reco2 + input-1file) is data.
 MC_IDS = {2, 9, 11, 12, 14, 18, 31, 35, 41, 42}
+MC_BASELINE_LO = 700000
+
+
+def is_mc(evt_id):
+    return evt_id in MC_IDS or evt_id >= MC_BASELINE_LO
+
+
+# cathode-plane drift position per TPC (cm); constant in the calib geometry block.
+CATHODE_X = {0: -0.45, 1: 0.45}
 
 # (Y,Z) plane extent (cm).  Y vertical, Z beam.
 Y_LO, Y_HI = -200.0, 200.0
@@ -88,17 +101,20 @@ def pca_dir(P):
 def process_event(path):
     """Per-event cathode observables from all auto_selected (matched) tracks.
 
-    Returns (cover, trans, furth, occ):
+    Returns (cover, trans, furth, occ, mind):
       cover : list (apa, y_end, z_end, dx)           cathode-reaching clusters (1 pt each)
       trans : list (apa, y_end, z_end, res_y, res_z) long-track cathode-end off-axis residual
       furth : list (apa, y_end, z_end, dx, extent)   long-track cathode-most point
       occ   : (OY,OZ) histogram of ALL matched-track points in the near-cathode slab
+      mind  : {apa: (OY,OZ)} per-(Y,Z)-bin MIN |x_corr - cathode_x| over all matched-track
+              points = closest approach of charge to the cathode (large ⇒ charge stops short)
     """
     occ = np.zeros((OY, OZ))
+    mind = {0: np.full((OY, OZ), np.inf), 1: np.full((OY, OZ), np.inf)}
     try:
         d = json.load(open(path))
     except Exception:
-        return [], [], [], occ
+        return [], [], [], occ, mind
     drift = d["drift_speed"]                                   # cm/us
     geom = {int(k): v for k, v in d["geometry"].items()}
     ftime = {f["gid"]: f["time"] for f in d["flashes"]}        # us
@@ -128,6 +144,12 @@ def process_event(path):
             if X.size < NPTS_MIN:
                 continue
             dcath = np.abs(X - cath)
+            # closest-approach map: per (Y,Z) bin, MIN |x_corr-cath| over ALL track points
+            inb = (Z >= Z_LO) & (Z < Z_HI) & (Y >= Y_LO) & (Y < Y_HI)
+            if inb.any():
+                iz = ((Z[inb] - Z_LO) / (Z_HI - Z_LO) * OZ).astype(int)
+                iy = ((Y[inb] - Y_LO) / (Y_HI - Y_LO) * OY).astype(int)
+                np.minimum.at(mind[apa], (iy, iz), dcath[inb])
             # slab occupancy: ALL points of this track within the near-cathode band
             slab = dcath < BAND
             if slab.any():
@@ -152,7 +174,7 @@ def process_event(path):
             perp = v - (v @ dirv) * dirv
             if np.hypot(perp[1], perp[2]) <= RES_MAX:
                 trans.append((apa, y_end, z_end, perp[1], perp[2]))
-    return cover, trans, furth, occ
+    return cover, trans, furth, occ, mind
 
 
 # ---------------------------------------------------------------------------
@@ -360,6 +382,62 @@ def plot_profiles(samp, xtpc):
     plt.close(fig)
 
 
+def plot_closest(mind, cy=10, cz=10):
+    """(Y,Z) map of the closest approach of charge to the cathode per bin
+    (min |x_corr - cathode_x|). 0 ⇒ charge reaches the cathode; large ⇒ charge
+    stops short there — a candidate distortion / dead region.  The fine (OY,OZ)
+    min grid is block-reduced to (cy,cz) so each bin aggregates many tracks
+    (otherwise a bin is large simply where no cosmic happened to graze)."""
+    by, bz = OY // cy, OZ // cz                          # block sizes (5x5 for 40x50->8x10? here 4x5)
+    fig, ax = plt.subplots(2, 2, figsize=(13, 9), sharex=True, sharey=True)
+    for r, mode in enumerate(["data", "mc"]):
+        for cc, apa in enumerate([0, 1]):
+            a = ax[r, cc]
+            m = mind[mode][apa].reshape(cy, by, cz, bz).min(axis=(1, 3))
+            m = np.where(np.isfinite(m), m, np.nan)
+            im = a.imshow(m, origin="lower", aspect="auto", extent=extent(),
+                          cmap="turbo", vmin=0, vmax=10)
+            fig.colorbar(im, ax=a, label="closest |x-x_cath| [cm]")
+            corners_annotate(a)
+            a.set_title(f"{mode}  TPC{apa}")
+            a.set_xlabel("Z [cm]"); a.set_ylabel("Y [cm]")
+    fig.suptitle("Closest approach of charge to the cathode per (Y,Z) bin (rebinned) — "
+                 "large = charge stops short (distortion or dead region)")
+    fig.tight_layout()
+    fig.savefig(os.path.join(PICS, "cathode_closest_yz.png"), dpi=110)
+    plt.close(fig)
+
+
+def plot_surface_3d(samp):
+    """The apparent cathode as a 2-D surface in 3-D: mean drift residual
+    dx = x_corr,end - cathode_x of all cathode-reaching tracks, per (Y,Z) cell.
+    A flat sheet at dx=0 ⇒ no distortion; warping ⇒ drift-direction distortion
+    (per-track random T0 errors average out over the many tracks in each cell)."""
+    yc = 0.5 * (YEDGES[:-1] + YEDGES[1:]); zc = 0.5 * (ZEDGES[:-1] + ZEDGES[1:])
+    ZZc, YYc = np.meshgrid(zc, yc)
+    fig = plt.figure(figsize=(14, 10))
+    for r, mode in enumerate(["data", "mc"]):
+        for cc, apa in enumerate([0, 1]):
+            ax = fig.add_subplot(2, 2, r * 2 + cc + 1, projection="3d")
+            s = np.array([t[1:4] for t in samp[mode]["cover"] if t[0] == apa])  # y,z,dx
+            if len(s):
+                m, n = binned_mean(s[:, 1], s[:, 0], s[:, 2], mincount=3)  # (y,z)
+                ok = np.isfinite(m)
+                if ok.sum() >= 3:
+                    ax.plot_trisurf(ZZc[ok], YYc[ok], m[ok], cmap="coolwarm",
+                                    vmin=-6, vmax=6, linewidth=0.1, antialiased=True)
+            ax.plot_surface(ZZc, YYc, np.zeros_like(ZZc), color="gray", alpha=0.12)
+            ax.set_zlim(-6, 6)
+            ax.set_title(f"{mode}  TPC{apa}  (N={len(s)})")
+            ax.set_xlabel("Z [cm]"); ax.set_ylabel("Y [cm]")
+            ax.set_zlabel(r"$\langle x_{end}-x_{cath}\rangle$ [cm]")
+            ax.view_init(elev=22, azim=-60)
+    fig.suptitle("Apparent cathode surface in 3D (drift residual over Y,Z) — flat=undistorted, warped=distortion")
+    fig.tight_layout()
+    fig.savefig(os.path.join(PICS, "cathode_surface_3d.png"), dpi=110)
+    plt.close(fig)
+
+
 def plot_furthest(samp):
     fig, ax = plt.subplots(1, 2, figsize=(13, 5.2), sharex=True, sharey=True)
     for cc, mode in enumerate(["data", "mc"]):
@@ -393,15 +471,18 @@ def main():
 
     samp = {m: {"cover": [], "trans": [], "furth": []} for m in ("data", "mc")}
     occ = {m: np.zeros((OY, OZ)) for m in ("data", "mc")}
+    mind = {m: {0: np.full((OY, OZ), np.inf), 1: np.full((OY, OZ), np.inf)} for m in ("data", "mc")}
     xtpc = {"data": [], "mc": []}
-    for path, (cover, trans, furth, oc) in zip(paths, results):
-        mode = "mc" if evt_id_of(path) in MC_IDS else "data"
+    for path, (cover, trans, furth, oc, md) in zip(paths, results):
+        mode = "mc" if is_mc(evt_id_of(path)) else "data"
         samp[mode]["cover"] += cover
         samp[mode]["trans"] += trans
         samp[mode]["furth"] += furth
         occ[mode] += oc
+        for apa in (0, 1):
+            np.minimum(mind[mode][apa], md[apa], out=mind[mode][apa])
     for mode in ("data", "mc"):
-        ids = [p for p in paths if (evt_id_of(p) in MC_IDS) == (mode == "mc")]
+        ids = [p for p in paths if is_mc(evt_id_of(p)) == (mode == "mc")]
         logs = [g for p in ids for g in glob.glob(os.path.join(os.path.dirname(p), "*.log"))]
         xtpc[mode] = parse_qlcathode(logs)
         print(f"  {mode}: cover={len(samp[mode]['cover'])} trans={len(samp[mode]['trans'])} "
@@ -413,6 +494,8 @@ def main():
     plot_xtpc(xtpc)
     plot_profiles(samp, xtpc)
     plot_furthest(samp)
+    plot_surface_3d(samp)
+    plot_closest(mind)
 
     for mode in ("data", "mc"):
         x = np.array(xtpc[mode]) if xtpc[mode] else np.empty((0, 6))
@@ -432,7 +515,7 @@ def main():
                   f"(Z={0.5*(ze[iz]+ze[iz+1]):.0f}, Y={0.5*(ye[iy]+ye[iy+1]):.0f}) cm")
     for apa, (z, y, dd) in sorted(hot.items()):
         print(f"  HOTSPOT (off-axis) TPC{apa}: max data residual {dd:.2f} cm at (Z={z:.0f}, Y={y:.0f}) cm")
-    print(f"wrote 6 plots to {PICS}")
+    print(f"wrote 8 plots to {PICS}")
 
 
 if __name__ == "__main__":
