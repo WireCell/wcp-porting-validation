@@ -15,6 +15,16 @@ local index = std.parseInt(initial_index);
 local common_coords = ["x", "y", "z"];
 local common_corr_coords = ["x_t0cor", "y", "z"];
 
+// Drift-side Bee display groups: anodes 0-3 (bottom drift, x0=-341.5cm) and
+// anodes 4-7 (top drift, x0=+341.5cm).  Each anode's two faces fold into its
+// group automatically (routing is per-anode via wpid.apa()).  Shared by the
+// clustering points and the dead-area output in the all-APA dump so each drift
+// side shows as a single Bee instance.
+local apa_drift_groups = [
+    { name: "group0123", apas: [0, 1, 2, 3] },
+    { name: "group4567", apas: [4, 5, 6, 7] },
+];
+
 
 // ProtoDUNE-VD geometry parameters
 // 8 anodes total: anodes 0-3 are bottom drift (centerline x=-3415.5mm, drift in +x direction)
@@ -462,17 +472,10 @@ local clus_all_apa (
             eventNo: eventNo,
             save_deadarea: true,
             dead_area_version: 2,  // v2 wrapper (tpc=apa) so the dead slab lands on the correct PDVD anode face
+            dead_apa_groups: apa_drift_groups,  // group dead area by drift side -> 2 dead instances
             anodes: [wc.tn(a) for a in anodes],
             detector_volumes: wc.tn(dv),
             bee_points_sets: [  // New configuration for multiple bee points sets
-            //    {
-            //        name: "img",                // Name of the bee points set
-            //        detector: "protodunevd",         // Detector name
-            //        algorithm: "img",           // Algorithm identifier
-            //        pcname: "3d",           // Which scope to use
-            //        coords: ["x", "y", "z"],    // Coordinates to use
-            //        individual: false           // Whether to output as a whole or individual APA/Face
-            //    },
             {
                     name: "clustering",         // Name of the bee points set
                     detector: "protodunevd",         // Detector name
@@ -480,6 +483,20 @@ local clus_all_apa (
                     pcname: "3d",           // Which scope to use
                     coords: ["x", "y", "z"],    // Coordinates to use (uncorrected; x_t0cor needs flash-associated t0)
                     individual: false            // Output individual APA/Face
+                },
+            {
+                    // name "img" dumps the live grouping BEFORE the all-APA
+                    // pipeline -> the per-anode clustering result, grouped by
+                    // drift side: clustering-group0123 / clustering-group4567.
+                    // The "clustering" set above (end dump) gives
+                    // clustering-global (full-detector clustering).
+                    name: "img",
+                    detector: "protodunevd",
+                    algorithm: "clustering",    // -> clustering-group0123 / clustering-group4567
+                    pcname: "3d",
+                    coords: ["x", "y", "z"],    // uncorrected, matching the global set
+                    individual: false,
+                    apa_groups: apa_drift_groups,
                 }
             ],
             pipeline: wc.tns(cm_pipeline),

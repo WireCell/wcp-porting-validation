@@ -34,6 +34,7 @@ pdvd/
 ├── run_sp_to_magnify_evt.sh ← SP frames → per-anode Magnify ROOT files
 ├── run_select_evt.sh        ← interactive Woodpecker region-of-interest crop
 ├── run_bee_img_evt.sh       ← Bee conversion + upload, from IMAGING output (no clustering)
+├── run_bee_combined_evt.sh  ← combined Bee link: imaging + clustering + dead, grouped by drift side
 ├── run_img.sh               ← original manual recipe (commented examples)
 ├── unzip.pl                 ← extract mabc*.zip into data/ (Path B Bee upload)
 ├── wct-img-2-bee.py         ← convert cluster tarballs → Bee JSON
@@ -269,6 +270,15 @@ the correct subdirectory per event.  The drift-speed / x0 geometry constants
 must stay in sync between `wct-img-2-bee.py` and the shell `all`-path in
 `run_bee_img_evt.sh`.
 
+By default the eight anodes are merged by drift side into **two** Bee instances
+per event — `<i>-imaging-group0123.json` (anodes 0–3, bottom drift, x0=−341.5cm)
+and `<i>-imaging-group4567.json` (anodes 4–7, top drift, x0=+341.5cm) — so each
+event shows two images instead of eight.  Each drift side shares geometry, so a
+single `bee-blobs` call per group renders correctly.  Set `PDVD_BEE_GROUP=0` to
+fall back to the legacy one-instance-per-anode output (`<i>-apa<N>.json`).
+Note `wirecell-img bee-blobs` has no dead-area code path, so this imaging-only
+link never carries a dead layer (the dead layer comes from clustering).
+
 ### `./run_select_evt.sh [-a anode] <run> <evt> <sel_tag>`
 
 Opens an interactive Woodpecker browser GUI to select a tick/channel region of
@@ -285,7 +295,9 @@ pipeline scripts to use the selection.  This script does **not** support
 
 Reads the per-anode imaging cluster tarballs
 (`clusters-apa-anode{N}-ms-active.tar.gz`) and calls
-`wirecell-img bee-blobs -g protodunevd` on each, writing `data/0/0-apa{N}.json`.
+`wirecell-img bee-blobs -g protodunevd`, by default merging the four anodes of
+each drift side into one instance (`data/<i>/<i>-imaging-group0123.json` and
+`-imaging-group4567.json`; `PDVD_BEE_GROUP=0` restores per-anode `0-apa{N}.json`).
 No clustering is performed — the Bee display shows the raw imaging blobs.
 The drift speed and x-offset sign differ by TPC half:
 
@@ -306,6 +318,36 @@ produce `mabc-anode{N}.zip` / `mabc-all-apa.zip` via
 ./unzip.pl        # expands mabc*.zip into data/
 ./zip-upload.sh   # rezips data/ → upload.zip, calls ../upload-to-bee.sh
 ```
+
+The all-anode `mabc-all-apa.zip` is grouped by drift side (anodes 0–3 vs 4–7):
+`clustering-group0123` / `clustering-group4567` (the **per-anode** clustering,
+dumped pre-pipeline via the `name:"img"` bee points set), `clustering-global`
+(the **all-anode** clustering, end dump), and `channel-deadarea-group0123` /
+`-group4567` (dead area, `dead_apa_groups`).  See
+[../../clus/docs/bee_output.md](../../clus/docs/bee_output.md) for the grouping
+mechanism (routing is per-anode via `wpid.apa()`, so each anode's two faces fold
+into its drift-side group automatically).
+
+### Path C — combined link (imaging + clustering + dead)
+
+```sh
+./run_bee_combined_evt.sh <run> [subrun]      # run run_clus_evt.sh <run> all first
+```
+
+Produces one `upload-combined-run<RUN_PADDED>.zip` / Bee link whose every event
+carries the full per-stage instance set (the "7-image situation"), all grouped
+by drift side:
+
+| Instances | Stage |
+|---|---|
+| `imaging-group0123` / `imaging-group4567` | after imaging (`bee-blobs` active blobs) |
+| `clustering-group0123` / `clustering-group4567` | after **per-anode** clustering (MABC `img` pre-pipeline dump) |
+| `clustering-global` | after **all-anode** clustering (MABC end dump) |
+| `channel-deadarea-group0123` / `-group4567` | dead area (v2 wrapper) |
+
+Imaging instances come from the active cluster tarballs; the clustering and dead
+instances are taken from each event's `mabc-all-apa.zip` (so run
+`run_clus_evt.sh <run> all` first).
 
 ### Upload mechanism
 
