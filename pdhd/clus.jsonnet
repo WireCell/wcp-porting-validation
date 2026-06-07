@@ -220,7 +220,8 @@ local clus_per_face (
             runNo: runNo,
             subRunNo: subRunNo,
             eventNo: eventNo,
-            save_deadarea: true, 
+            save_deadarea: true,
+            dead_area_version: 2,  // v2 wrapper (tpc=apa) so the dead slab lands on the correct PD anode face
             anodes: [wc.tn(anode)],
             face: face,
             detector_volumes: wc.tn(dv),
@@ -323,6 +324,7 @@ local clus_per_apa (
             subRunNo: subRunNo,
             eventNo: eventNo,
             save_deadarea: true,
+            dead_area_version: 2,  // v2 wrapper (tpc=apa) so the dead slab lands on the correct PD anode face
             anodes: [wc.tn(anode)],
             detector_volumes: wc.tn(dv),
             bee_points_sets: [
@@ -449,7 +451,8 @@ local clus_all_apa (
             runNo: runNo,
             subRunNo: subRunNo,
             eventNo: eventNo,
-            save_deadarea: true, 
+            save_deadarea: true,
+            dead_area_version: 2,  // v2 wrapper (tpc=apa) so the dead slab lands on the correct PD anode face
             anodes: [wc.tn(a) for a in anodes],
             detector_volumes: wc.tn(dv),
             bee_points_sets: [  // New configuration for multiple bee points sets
