@@ -32,11 +32,6 @@ local cluster_source(fname) = g.pnode({
     data: {
         inname: fname,
         anodes: [wc.tn(a) for a in anodes],
-        // Use the imaging-time blob corners (saved in the JSON) for the dead-area
-        // bee patch instead of re-deriving them from the boundary-less reloaded
-        // shape (2-view dead blobs otherwise spill past the anode).  C++ default
-        // is false; only the dead "corner" cloud is affected, live is unchanged.
-        restore_corners: true,
     }
 }, nin=0, nout=1, uses=anodes);
 local active_files = [ "%s/clusters-apa-apa%d-ms-active.tar.gz"%[input, a.data.ident] for a in anodes];
