@@ -67,11 +67,11 @@ def main():
                    help="skip channels with Q_truth below this (electrons)")
     p.add_argument("--events", type=int, default=None,
                    help="max events per file (default: all)")
-    p.add_argument("--xbins", default="1e4,1e6,100",
+    p.add_argument("--xbins", default="1e2,1e6,100",
                    help="x (truth charge) log binning for the 2D hists: min,max,nbins")
     p.add_argument("--ybins", default="-1,1,100",
                    help="y (bias) linear binning for the 2D hists: min,max,nbins")
-    p.add_argument("--xbins1d", default="1e4,1e6,25",
+    p.add_argument("--xbins1d", default="1e2,1e6,35",
                    help="x log binning for the 1D comparison figures: min,max,nbins")
     p.add_argument("--ineff-thresh", type=float, default=0.90,
                    help="bias < -thresh counts as in-efficiency; |bias| < thresh is 'normal'")
