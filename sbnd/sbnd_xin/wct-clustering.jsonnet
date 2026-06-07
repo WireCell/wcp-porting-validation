@@ -52,6 +52,11 @@ function(
         data: {
             inname: fname,
             anodes: [wc.tn(a) for a in anodes],
+            // Use the imaging-time blob corners (saved in the .npz) for the
+            // dead-area bee patch instead of re-deriving them from the reloaded
+            // shape.  C++ default false; only the dead "corner" cloud is
+            // affected, live is byte-identical.
+            restore_corners: true,
         },
     }, nin=0, nout=1, uses=anodes);
 

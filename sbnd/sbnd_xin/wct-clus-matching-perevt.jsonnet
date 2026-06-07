@@ -85,7 +85,10 @@ function(
     local cluster_source(fname) = g.pnode({
         type: 'ClusterFileSource',
         name: fname,
-        data: { inname: fname, anodes: [wc.tn(a) for a in anodes] },
+        // restore_corners: dead-area bee patch uses the imaging-time corners
+        // saved in the .npz, not the re-derived reloaded shape (C++ default
+        // false; dead "corner" cloud only, live byte-identical).
+        data: { inname: fname, anodes: [wc.tn(a) for a in anodes], restore_corners: true },
     }, nin=0, nout=1, uses=anodes);
 
     local active_clusters = [cluster_source('%s/icluster-apa%d-active.npz' % [input, a.data.ident]) for a in anodes];
