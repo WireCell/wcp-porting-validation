@@ -96,6 +96,12 @@ vertical W wires is the **+Z axis**. Wires are numbered in increasing pitch, so
   specific anode and face (front/back), because which physical wire becomes
   "wire 0" follows the wrapping.
 
+  > The **data-measured correction** to this U/V-vs-W registration is given in
+  > [`pdvd-uvw-wire-offset-calibration.md`](pdvd-uvw-wire-offset-calibration.md),
+  > including the conversion between a W-plane shift and a +Z shift of the first
+  > U/V wires: **move U & V toward +Z by 3.3 mm (bottom CRP) / −2.45 mm (top CRP)**
+  > — a *common-mode* U=V shift on top of the differential offsets tabulated here.
+
 - **v3 → v4 (this offset does change).** The offset shifts by **−0.35 to +0.37 mm**
   on *every* anode — including the top CRP. This is because the v3→v4 (v5-geometry)
   move is **not a perfectly rigid per-CRP translation of all three planes

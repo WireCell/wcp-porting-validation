@@ -172,6 +172,46 @@ W-pitch U/V-vs-W offset survives into v4 unchanged** and is exactly the residual
 calibrated here. In other words: v4 fixes the positions, this fixes the U/V↔W
 registration; they are independent and v4 still needs this.
 
+## Shifting U and V instead of W — sync with the first-wire-offset doc
+
+`pdvd-wire-geometry-v3-v4.md` describes the U/V-vs-W registration as the **first-wire
+offset along +Z** (`U[0]−W[0]`, `V[0]−W[0]`). This note used a **W shift**. They are
+the same correction seen from the two sides — applying *either* is verified to give
+the same 90 % / 83 % consistency. The dictionary (v4 base):
+
+| apply on | parameter | bottom / anode 0 | top / anode 4 |
+|---|---|---|---|
+| **W** plane (keep U,V) | ΔZ_W along z | −13.2 mm | +9.8 mm |
+| **U & V** planes (keep W) | dp along induction pitch | −6.6 mm (−0.86 strip) | +4.9 mm (+0.64 strip) |
+| ⤷ same, as **+Z move of U[0],V[0]** | ΔZ_U = ΔZ_V | **+3.3 mm** | **−2.45 mm** |
+| ⤷ same, as **channel** index | U / V | −0.86 / +0.86 ch | −0.64 / +0.64 ch |
+
+Geometry-fixed relations: **ΔZ_W = 2·dp** and the **+Z move of the first U/V wires is
+ΔZ_U = ΔZ_V = −dp/2 = −ΔZ_W/4** (the induction pitch makes 60° with the W pitch, so
+only the cos 60° = ½ z-projection of an induction-pitch shift counts toward W; hence
+the factor between `dp` and `ΔZ_{U,V}`).
+
+**So, to shift the first U and V wires:** move the **whole U and V planes toward +Z by
+3.3 mm on the bottom CRP, and toward −Z by 2.45 mm on the top CRP** (U and V move
+together, by the *same* amount). Equivalently slide them −0.86 / +0.64 induction strip
+along pitch. (The absolute `U[0]−W[0]` value in the other doc depends on its wire-0 /
+front-back-face / +Z-sign labeling; the **change** quoted here is convention-free.)
+
+### Is this consistent with the top/bottom symmetry of the other doc? (Q1)
+
+- The other doc's nominal first-wire offsets are **mirror-symmetric** top↔bottom (U/V
+  swap, values mirror). My correction **respects that mirror in sign**: the +Z move is
+  **+3.3 mm (bottom) vs −2.45 mm (top)** — opposite sign, as a mirror about the cathode
+  demands. ✓
+- It is **not symmetric in magnitude** (3.3 vs 2.45 mm; 0.86 vs 0.64 strip — a ~30 %
+  gap). So: **mirror-consistent in direction, not in size.**
+- My correction is a **common-mode** U=V shift (both move the same way), *distinct from*
+  the U≠V *differential* first-wire offsets the other doc tabulates — those are a fixed
+  geometric feature of the wrapping; this is an extra common shift on top of them.
+- In **channel** space both CRPs move the **same** way (U−, V+) → a common U/V
+  channel-numbering origin, the opposite z-sign being just the mirror. Whether the
+  0.86-vs-0.64 magnitude gap is real or single-track systematic needs more tracks.
+
 ## Caveats / next steps
 
 - **One track, one event, one face per CRP.** The offset is robust *within* each
