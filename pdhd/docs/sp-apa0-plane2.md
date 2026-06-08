@@ -11,9 +11,82 @@ chain) and [nf.md](nf.md). For the broader workflow see
 document; the tuning ideas in the last section are *suggestions* to be applied
 later as togglable, default-off knobs so production stays bit-identical.
 
+> **⚠️ 2026-06-08 CORRECTION — read §0 first.** An earlier version of this
+> document (and §1–§5 below) **misidentified which physical plane sits in which
+> processing slot**, and therefore drew the FR/ROI-path conclusions backwards.
+> §0 states the empirically-established ground truth; the legacy §1–§5 are kept
+> for context but every "plane 2 = W / V→collection-FR / W on collection path"
+> claim in them is **inverted** — see §0 for the correct mapping.
+
 ---
 
-## 1. The anomaly
+## 0. Ground truth (what the SP chain actually does)
+
+Established from the OmnibusSigProc channel-map debug (`cid → lind`) plus the
+per-plane `m_nwires`, on run 027409 evt 0, APA0 — and confirmed algebraically.
+
+### The mechanism: `plane2layer` is applied **twice** and cancels for the FR
+
+`plane2layer` is consumed in **two** places:
+
+1. **channel routing** (`OmnibusSigProc.cxx:254`): a physical plane `p`'s channels
+   are stored in processing **slot** `s = plane2layer[p]`;
+2. **field-response lookup** (`OmnibusSigProc.cxx:907`): slot `s` is deconvolved
+   with `fravg.planes[plane2layer[s]]`.
+
+`[0, 2, 1]` is a **transposition (self-inverse)**, so a physical plane `p` ends up
+deconvolved with `planes[plane2layer[plane2layer[p]]] = planes[p]` — **its own
+Garfield FR**. The double-application **cancels for the FR↔data pairing** and
+survives only as a **slot (= ROI-path) swap**. The ROI-path branch keys on the
+slot index (`if (iplane != 2) … else collection`, `OmnibusSigProc.cxx:1891`).
+
+### What production (`plane2layer=[0,2,1]`) actually produces
+
+| physical | channels | slot | ROI path | FR used (own Garfield) | gauss occ (027409:0) |
+|----------|----------|------|----------|------------------------|----------------------|
+| U | 0–799 | 0 | induction | `planes[0]` = U | 1.737% |
+| **W** | 1600–2559 | **1** | **induction** | `planes[2]` = W collection | 1.105% |
+| **V** | 800–1599 | **2** | **collection** | `planes[1]` = V induction | 1.441% |
+
+So production **already** routes **V (now collects) → collection ROI path** and
+**W (now induces) → induction ROI path**, with **each plane keeping its own/previous
+field response**. That is exactly the intended behaviour ("switch the ROI chain;
+deconvolve with each plane's own FR"); no further swap is needed to achieve it.
+
+### Where the legacy §1–§5 went wrong
+
+- Slot 2 was read as "plane 2 = W". Slot 2 actually holds **V** (cid 800–1599).
+  The empirical "**plane 2** takes the COLLECTION path" (§2) is correct as a *slot*
+  statement but the plane is **V**, not W.
+- The FR cancellation was missed, so the §1 table "V → collection FR, W → induction
+  FR" is wrong: **each plane is deconvolved with its own FR** (V→`planes[1]`,
+  W→`planes[2]`).
+- "W is LF-limited; collection 1.1% vs induction 0.2%" rested on the inverted
+  labels. Re-measured: production **W is on the induction path *with its collection
+  FR* at 1.105%**; the ~0.3% figure was W on the induction path *with the induction
+  FR* — i.e. the lever that crushed W was the **field response, not the LF filter**.
+
+### The abandoned geometry-relabel experiment (issue #322 style)
+
+A toggle (`apa0_vw_geom_swap`) was prototyped that relabels APA0's V↔W plane
+positions in a dedicated wires file and resets `plane2layer→[0,1,2]`. Because the
+slots were already as desired, the relabel **kept the ROI paths unchanged but
+flipped the FRs** (V→collection FR, W→induction FR) — the opposite of "keep each
+plane's own FR". U stayed byte-identical; V & W rawdecon changed grossly (the FR
+flip). Per user decision (keep each plane's own FR) the experiment was **reverted**;
+production is unchanged. Ground-truth notes: `/home/xqian/tmp/GROUND_TRUTH_plane2layer.md`.
+
+### Consequence for "optimize W"
+
+W is **already** on the induction ROI path (slot 1). Tuning its admission
+(e.g. softening the induction LF high-pass `ROI_tight_lf` for slot 1 only, which
+needs a per-plane LF factorization since the LF filters are currently single
+scalars shared across slots) can be done **directly on stock production** — no
+swap. Any such tuning must be measured against the real **1.105%** W baseline.
+
+---
+
+## 1. The anomaly  *(legacy — see §0 correction; mapping below is inverted)*
 
 In a DUNE-HD APA the three wire planes are **U** (induction, plane index 0),
 **V** (induction, plane index 1) and **W / Z** (collection, plane index 2).
@@ -112,6 +185,13 @@ induction `Wire_ind` (σ ≈ 0.42). This widens charge across collection wires; 
 a now-inducting plane 2 it is worth revisiting (see §5).
 
 ### Empirically confirmed (run 027409, evt 0, APA0)
+
+> **⚠️ Inverted labels — see §0.** The debug print below indexes by **slot**
+> (`iplane`), not physical plane. Slot 2 holds **V**, slot 1 holds **W** (per the
+> `cid→lind` map in §0). So "plane 2 takes the COLLECTION path" really means
+> **V takes the collection path**, and "plane 2 reports layer=1 (induction FR)"
+> means V is deconvolved with its **own** induction FR (`planes[1]`). The text
+> below, written under the old W-in-slot-2 reading, is kept verbatim for context.
 
 A temporary `log->info` was added at the ROI-path branch (`OmnibusSigProc.cxx:1891/1900`)
 and the event reprocessed (`./run_nf_sp_evt.sh -a 0 027409 0`). Per-plane output:
