@@ -86,7 +86,9 @@ skew would scale with the local slope and would not be flat).
 Equivalent **channel-index** statement of the symmetric U/V offset (v4):
 bottom CRP **U −0.86 / V +0.86 channels**, top CRP **U −0.64 / V +0.64 channels**
 — in both CRPs U decreases and V increases, opposite signs because the two
-induction planes' channel numbering runs in opposite pitch directions.
+induction planes' channel numbering runs in opposite pitch directions. (Beware: the
+channel-numbering *direction* also flips between top and bottom, so the same channel
+sign does **not** mean the same physical shift — see *Top vs bottom consistency*.)
 
 ### Recommended offset
 
@@ -104,26 +106,38 @@ is *not* one global numbering convention; it tracks the CRP. The values are also
 U/V-vs-W transverse registration error (consistent with a relative plane
 mis-placement / sub-pitch channel-map offset), not a clean off-by-N-wires bug.
 
-## Top vs bottom consistency
+## Top vs bottom consistency — and the symmetry question
 
-The two CRPs do **not** need the same W shift:
+The two CRPs need shifts that are **opposite in sign and unequal in magnitude**:
 
-| CRP / anode | ΔZ_W (W-pitch) | equiv. U/V channel offset |
-|---|---|---|
-| bottom / 0 | **−2.6** | U −0.86 / V +0.86 strip |
-| top / 4 | **+1.9** | U −0.64 / V +0.64 strip |
+| CRP / anode | W shift ΔZ_W | +Z move of U[0],V[0] | in W-pitch |
+|---|---|---|---|
+| bottom / 0 | −13.2 mm | **+3.3 mm** | −2.6 |
+| top / 4 | +9.8 mm | **−2.45 mm** | +1.9 |
 
-- **The z (W-pitch) shift is opposite in sign** (bottom −, top +). This is *expected*,
-  not an inconsistency: the two CRPs are mirror images about the cathode (U and V
-  angles swap top↔bottom — see `pdvd-wire-geometry-v3-v4.md` §2), so a channel-map
-  offset in a fixed hardware direction appears as **opposite z-shifts**.
-- **In channel/strip space the offset points the same way on both CRPs** — the U
-  index decreases and the V index increases — consistent with a *common* U/V
-  channel→wire numbering offset (same root cause on both CRPs).
-- **Magnitudes differ:** 0.86 (bottom) vs 0.64 (top) induction strips — same sign,
-  ~0.2 strip (~1.7 mm) apart. With one track per CRP this ~25 % difference could be
-  a real per-CRP difference or a single-track systematic; more tracks are needed to
-  decide. So: **consistent in direction/sign (mirror-correct), not yet in magnitude.**
+**Applying these as-measured BREAKS the bottom-{0,2} ↔ top-{5,7} first-wire symmetry.**
+The nominal geometry — and the `U[0]−W[0]`/`V[0]−W[0]` table in
+`pdvd-wire-geometry-v3-v4.md` §1 — is **mirror-symmetric about the cathode**: bottom
+{0,2} and top {5,7} carry the *same* value set with U↔V swapped, **same (positive)
+sign**. The cathode mirror is `x→−x` only, so **z is preserved**; preserving that
+symmetry therefore requires the **same +Z correction on both CRPs** (same sign *and*
+magnitude). The measured corrections are **opposite sign** (+3.3 vs −2.45 mm) and ~30 %
+apart, so bottom-{0,2} and top-{5,7} would no longer be mirror images.
+
+**What the opposite sign means.** A genuinely mirror-symmetric cause — a wire-position
+error, or a channel-map offset wired identically in both CRPs — would give the **same**
+sign z-shift on top and bottom. An **opposite-sign** shift instead tracks something that
+**flips between the two CRPs**, most naturally the **drift direction** (bottom drifts
++x, top −x). So the residual looks more like a CRP/drift-oriented z-offset than a
+mirror-symmetric geometry/channel error. (It is still flat in tick — not a track-slope
+timing skew.)
+
+**Caveats that could inflate the asymmetry:** one track per CRP, measured on
+*different* faces (anode 0 back face vs anode 4 front face), at different track angles.
+The clean test is several tracks per CRP on both faces: if the true correction is
+symmetric, more statistics should pull |bottom| and |top| together; if the opposite-sign
+asymmetry persists, it is a real CRP/drift effect to model — **not** a simple symmetric
+wire re-registration. **So: not yet consistent; the asymmetry is the main open question.**
 
 ## Recipe — build a U/V-vs-W-corrected file from v4
 
@@ -197,20 +211,19 @@ together, by the *same* amount). Equivalently slide them −0.86 / +0.64 inducti
 along pitch. (The absolute `U[0]−W[0]` value in the other doc depends on its wire-0 /
 front-back-face / +Z-sign labeling; the **change** quoted here is convention-free.)
 
-### Is this consistent with the top/bottom symmetry of the other doc? (Q1)
+### Does this keep the bottom-{0,2} ↔ top-{5,7} symmetry? (Q1)
 
-- The other doc's nominal first-wire offsets are **mirror-symmetric** top↔bottom (U/V
-  swap, values mirror). My correction **respects that mirror in sign**: the +Z move is
-  **+3.3 mm (bottom) vs −2.45 mm (top)** — opposite sign, as a mirror about the cathode
-  demands. ✓
-- It is **not symmetric in magnitude** (3.3 vs 2.45 mm; 0.86 vs 0.64 strip — a ~30 %
-  gap). So: **mirror-consistent in direction, not in size.**
-- My correction is a **common-mode** U=V shift (both move the same way), *distinct from*
-  the U≠V *differential* first-wire offsets the other doc tabulates — those are a fixed
-  geometric feature of the wrapping; this is an extra common shift on top of them.
-- In **channel** space both CRPs move the **same** way (U−, V+) → a common U/V
-  channel-numbering origin, the opposite z-sign being just the mirror. Whether the
-  0.86-vs-0.64 magnitude gap is real or single-track systematic needs more tracks.
+**No — as measured it does not.** Bottom {0,2} and top {5,7} have identical first-wire
+offsets with U↔V swapped (the other doc's table). Adding a common +Z shift keeps that
+symmetry **only if the shift is the same on both CRPs**. The measured shifts are +3.3 mm
+(bottom) and −2.45 mm (top) — opposite sign and unequal — so the symmetry is broken.
+The full discussion (why opposite sign points to a drift-oriented cause, and what to
+measure next) is in **Top vs bottom consistency** above.
+
+One thing that *is* clean: my correction is a **common-mode** U=V shift (U and V move
+the same way), which is a *different component* from the U≠V *differential* first-wire
+offsets the other doc tabulates — those are a fixed geometric feature of the wrapping;
+this rides on top of them.
 
 ## Caveats / next steps
 
