@@ -61,12 +61,14 @@ See `docs/nf.md`, `docs/sp.md`, `docs/nf_sp_workflow.md` for details.
 ./run_nf_sp_dnnroi_evt.sh [-a ANODE] [-D cpu|gpu] [-M MODEL] [-m pp|mp] [-L on|off] <run> <evt>
 ```
 
-Runs NF + SP + DNN-ROI on a single anode/event using the TorchScript
-model at `wire-cell-data/dnnroi/pdhd/CP43.ts`.
+Runs NF + SP + DNN-ROI on an event using the TorchScript model at
+`wire-cell-data/dnnroi/pdhd/CP43.ts`.  By default every anode present in
+the event is processed (the four PDHD APAs are geometrically identical, so
+the one shared model applies to each); pass `-a N` to restrict to one APA.
 
 | Flag | Meaning | Default |
 |------|---------|---------|
-| `-a N`        | Anode index 0–3 | 0 |
+| `-a N`        | Anode index 0–3 | all anodes present |
 | `-D cpu\|gpu` | TorchService device | `cpu` |
 | `-M PATH`     | TorchScript model path (resolved via `WIRECELL_PATH`) | `dnnroi/pdhd/CP43.ts` |
 | `-m pp\|mp`   | DNN-ROI wiring: `pp` (per-plane sequential, two 800-ch forwards) or `mp` (stacked, one 1600-ch forward) | `pp` |

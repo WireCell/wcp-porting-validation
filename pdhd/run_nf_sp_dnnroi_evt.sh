@@ -29,8 +29,10 @@ usage() {
 Usage: ./run_nf_sp_dnnroi_evt.sh [options] <run> <evt>
 
 Options:
-  -a <anode>     Anode index (0-3). Default: 0 (recommended for first run;
-                 the model was trained on APA0 data).
+  -a <anode>     Anode index (0-3). Default: all anodes present in the event
+                 (the four PDHD APAs are geometrically identical, so the one
+                 shared DNN-ROI model applies to each).  Pass e.g. -a 0 to
+                 restrict to a single APA.
   -g <elecGain>  FE amplifier gain in mV/fC. Default: 14.
   -r <reality>   'data' (default) or 'sim'.
   -D <device>    'cpu' (default) or 'gpu' for TorchService.  The QAT INT8
@@ -133,7 +135,7 @@ Output (under work/<RUN_PADDED>_<EVT>/):
 EOF
 }
 
-ANODE="0"
+ANODE=""           # empty => all anodes present in the event
 ELEC_GAIN="14"
 GAIN_EXPLICIT=0
 REALITY="data"
@@ -285,16 +287,34 @@ if [ "$GAIN_EXPLICIT" = "0" ] && [ -n "$AUTO_GAIN" ]; then
     ELEC_GAIN="$AUTO_GAIN"
 fi
 
-if ! ls "$EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >/dev/null 2>&1; then
-    echo "[err] missing $EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >&2
-    exit 2
+# Resolve the anode set: -a picks one; default is every anode whose orig frame
+# is present (the cfg builds one per-anode DNN-ROI subgraph per index, so missing
+# frames must be excluded or wire-cell errors).
+if [ -n "$ANODE" ]; then
+    if ! ls "$EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >/dev/null 2>&1; then
+        echo "[err] missing $EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >&2
+        exit 2
+    fi
+    ANODE_LIST=("$ANODE")
+    TAG_SUFFIX="_a${ANODE}"
+else
+    ANODE_LIST=()
+    for ai in 0 1 2 3; do
+        [ -f "$EVTDIR/protodunehd-orig-frames-anode${ai}.tar.bz2" ] && ANODE_LIST+=("$ai")
+    done
+    if [ ${#ANODE_LIST[@]} -eq 0 ]; then
+        echo "[err] no protodunehd-orig-frames-anode*.tar.bz2 in $EVTDIR" >&2
+        exit 2
+    fi
+    TAG_SUFFIX="_aALL"
 fi
+ANODE_CODE="[$(IFS=,; echo "${ANODE_LIST[*]}")]"
 
 WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
 mkdir -p "$WORKDIR"
-LOG="$WORKDIR/wct_nfspdnn_${RUN_PADDED}_${EVT}_a${ANODE}.log"
-TIME_LOG="$WORKDIR/time_${RUN_PADDED}_${EVT}_a${ANODE}.txt"
-GPU_CSV="$WORKDIR/gpu_mem_${RUN_PADDED}_${EVT}_a${ANODE}.csv"
+LOG="$WORKDIR/wct_nfspdnn_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.log"
+TIME_LOG="$WORKDIR/time_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.txt"
+GPU_CSV="$WORKDIR/gpu_mem_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.csv"
 echo "Work dir:    $WORKDIR"
 echo "elecGain:    ${ELEC_GAIN} mV/fC"
 echo "reality:     ${REALITY}"
@@ -398,7 +418,7 @@ if [ -n "$DEBUG_BASE" ]; then
     esac
     mkdir -p "$(dirname "$DBG_ABS")"
     DBG_TLA=(--tla-str dnnroi_debugfile="$DBG_ABS")
-    echo "Debug dump:  ${DBG_ABS}_anode${ANODE}_call*.pt"
+    echo "Debug dump:  ${DBG_ABS}_anode*_call*.pt (anodes ${ANODE_CODE})"
 fi
 
 cd "$PDHD_DIR"
@@ -436,7 +456,7 @@ wire-cell \
     --tla-str orig_prefix="${EVTDIR}/protodunehd-orig-frames" \
     --tla-str sp_prefix="${WORKDIR}/protodunehd-sp-dnnroi-frames" \
     --tla-str reality="${REALITY}" \
-    --tla-code anode_indices="[${ANODE}]" \
+    --tla-code anode_indices="${ANODE_CODE}" \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
     --tla-code dnnroi_nchan="${NCHAN}" \
