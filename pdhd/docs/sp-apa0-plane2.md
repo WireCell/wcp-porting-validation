@@ -361,3 +361,100 @@ recover sub-threshold broad signal; (3) last, as it also loosens U/V refine.
 | `sigproc/src/OmnibusSigProc.cxx` | 1860–1862, 2045 | `filter_responses_tn` consumption |
 | `sigproc/src/OmnibusSigProc.cxx` | 1890–1928 | Per-plane ROI branch (collection vs induction path) |
 | `pdhd/docs/sp.md` | whole | General SP chain (note the `plane2layer` "U/V" mislabel at 34/37) |
+
+---
+
+## 7. Implemented: APA0 W induction-path ROI tune (`apa0_w_roi_tune`)
+
+This section is the **authoritative, empirically-validated** outcome of the
+"optimize W" effort (§0.6). It supersedes the speculative collection-path
+suggestions of §5 — those were written before §0's correction established that W
+is already on the **induction** ROI path (slot 1), so the collection knobs in §5
+do not touch W.
+
+### Diagnosis (run 027409 evt 0, APA0, W region ch 2360–2400, t < 1600)
+
+The W signal's gaps are **not** a loose-ROI-finding failure — they are
+**refinement erosion**. Measured occupancy through the stages:
+
+| stage | W-region occ | note |
+|------|------|------|
+| loose-ROI ceiling (`cleanup_roi`, FR-on) | **10.2 %** | the realistic target; signal *is* found |
+| production gauss (`r_th_factor=2.5`, default refine) | 2.3 % | erosion: BreakROI split −32 %, ShrinkROI −42 % |
+| **tuned gauss** (`apa0_w_roi_tune`) | **6.3 %** | recovers most of the ceiling |
+
+So **Q1 (good loose ROIs?) = yes**; **Q2 (survive refinement?) = the problem**,
+and it is controllable through the existing refinement knobs.
+
+### The toggle
+
+`make_sigproc(..., apa0_w_roi_tune=false)` in `sp.jsonnet`. Default **false** ⇒
+production is **byte-identical** (the off-branch sets `r_pad=5`,
+`r_break_roi_loop=2` = the C++ defaults, and `r_th_factor=2.5` = the prior APA0
+value). When **true** *and* `anode.data.ident==0`, the induction-path refinement
+is loosened:
+
+| knob | prod (off) | tuned (on) | effect |
+|------|-----------|-----------|--------|
+| `r_break_roi_loop` | 2 | **0** | no `BreakROI` split of the prolonged W signal |
+| `r_pad` | 5 | **20** | wider `ShrinkROI` margin kept around each core |
+| `r_th_factor` | 2.5 | **1.5** | lower refine "is-signal" threshold; weak tails count as support |
+
+**Scope caveat — per-anode, not per-plane.** These are scalar
+`OmnibusSigProc` config keys, applied to APA0's **whole induction path = U + W**
+(V/collection skips Break/Shrink/CleanUpInduction and is untouched). U is also
+loosened (full-plane 2.8 % → unchanged final gauss values, mask extent only;
+in the track region U ROIs widen). A true **W-only** version needs the per-plane
+C++ factorization of `m_r_*` (mirror of `m_Wiener_tight_filters[plane]`) — not
+done here; the per-anode tune was accepted as the simpler, sufficient lever.
+
+### Why `filter_responses_tn` was left ON (the FR-correction probe)
+
+`filter_responses_tn` (APA0 `[plane0, plane2, plane1]`) is the per-plane FR
+correction multiplied into `overall_resp` **before** the ROI-finding decon
+(`OmnibusSigProc.cxx:1860`). It shapes the ROI mask only — the final gauss charge
+is reloaded clean either way (`:2045`), so U and V gauss are **byte-identical**
+on/off. For **W** it is essential **conditioning**: disabling it makes the
+induction-path loose ROI fire almost everywhere —
+
+| | loose-ROI ceiling | tuned gauss |
+|---|---|---|
+| FR **on** (production) | 10.2 % | 6.3 % |
+| FR **off** | **96.4 %** | 25.8 % |
+
+FR-off = maximum efficiency, near-zero purity (the whole region is flagged), so
+it is **not** used. The realistic ceiling is the FR-on 10.2 %.
+
+### Residual gap and how to close it
+
+Tuned gauss (6.3 %) vs FR-on ceiling (10.2 %): the remainder is `ShrinkROI` +
+`CleanUpInductionROIs` erosion (BreakROI is already disabled). The global knobs
+can narrow but not fully close it without also loosening U; full closure needs
+the per-plane `m_r_*` C++ path above.
+
+### Wiring & propagation through DNN-ROI
+
+- **Production NF-SP** (`wct-nf-sp.jsonnet`) does not pass the toggle ⇒ default
+  off ⇒ byte-identical.
+- **DNN-ROI driver** (`wct-nf-sp-dnnroi.jsonnet`) exposes `apa0_w_roi_tune` and
+  **defaults it true**; the tune flows through unchanged (W's collection-role
+  output is the traditional SP gauss, untouched by the U/V DNN). DNN-ROI chain
+  W-region: **2.6 % → 6.3 %** (matches the SP-level number exactly).
+
+### Validation artifacts
+
+| file | what |
+|------|------|
+| `work/027409_0/magnify-…-apa0-dnnroi.root` | DNN-ROI baseline (toggle off) |
+| `work/027409_0_wtune/magnify-…-apa0-dnnroi.root` | **DNN-ROI tuned** (toggle on) |
+| `work/027409_0/magnify-…-apa0-looseROI-FRon.root` | loose-ROI ceiling, FR on (10.2 %) |
+| `work/027409_0/magnify-…-apa0-looseROI-FRoff.root` | loose-ROI ceiling, FR off (96.4 %) |
+| `work/027409_0/magnify-…-apa0-Wtuned-noFR.root` | tuned gauss, FR off (25.8 %) |
+
+### Source reference (additions)
+
+| File | Lines | Role |
+|------|-------|------|
+| `cfg/pgrapher/experiment/pdhd/sp.jsonnet` | `apa0_w_roi_tune` param + `roi_tune` gate; `r_th_factor`/`r_pad`/`r_break_roi_loop` branches | the toggle |
+| `wcp-porting-img/pdhd/wct-nf-sp-dnnroi.jsonnet` | `apa0_w_roi_tune=true` default + pass-through to `make_sigproc` | DNN-chain wiring |
+| `sigproc/src/OmnibusSigProc.cxx` | 1993 (`r_break_roi_loop` loop), 2007 (`ShrinkROI`/`r_pad`), 1961/2011/2020 (`CleanUp*`), ctor 1842–1845 (`m_r_*`) | knobs' algorithmic sites |

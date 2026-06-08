@@ -44,6 +44,13 @@ function(
   l1sp_pd_adj_max_hops = 3,
   dump_rawdecon = false,
 
+  // APA0 W-plane induction-path ROI-refinement tune (sp.jsonnet
+  // apa0_w_roi_tune).  Default true in the DNN chain: recovers the
+  // gap-prone APA0 W signal (no BreakROI split, wider ShrinkROI pad,
+  // lower refine threshold; applies to APA0 U+W, V untouched).  Set
+  // false to recover the pre-tune, bit-identical APA0 SP behaviour.
+  apa0_w_roi_tune = true,
+
   // DNN-ROI specific
   use_dnnroi    = true,
   // Default = FP32 best KD (6-ch).  Resolved via WIRECELL_PATH.
@@ -145,6 +152,7 @@ function(
                                     l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
                                     l1sp_pd_adj_enable=l1sp_pd_adj_enable,
                                     l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                                    apa0_w_roi_tune=apa0_w_roi_tune,
                                     dump_rawdecon=dump_rawdecon)
                     for a in tools.anodes];
 
