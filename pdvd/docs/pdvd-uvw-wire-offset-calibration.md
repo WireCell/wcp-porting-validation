@@ -1,9 +1,11 @@
 # PDVD U/V–vs–W wire-offset calibration from real tracks (run 39324)
 
 Measured from real signal (2026-06-07). Analysis reproduces with
-`pdvd/pdvd_uvw_offset.py`; the calibration is now baked into a local **v5** wire file
-(`protodunevd-wires-larsoft-v5.json.bz2`) and confirmed by re-imaging — see
-**The v5 wire file** below.
+`pdvd/pdvd_uvw_offset.py`; the calibration is baked into a local **v5** wire file
+(`protodunevd-wires-larsoft-v5.json.bz2`) and run 39324 was re-imaged with it. **Caveat
+up front:** the geometric registration is validated, but the *imaging-level* effect on
+the two calibration tracks turned out **modest** (blob z is pinned by the unchanged W
+plane) — see **The v5 wire file** below for the honest imaging assessment.
 
 ## Why
 
@@ -187,10 +189,29 @@ pointed at v5, then reverted to v3). Per-anode Bee links (bee idx 0–7 = anode 
 | **v4 baseline** (positions correct, U/V-vs-W gap remains) | <https://www.phy.bnl.gov/twister/bee/set/fd21cf88-9936-4c38-8803-9b050ed63a2f/event/list/> |
 | **v5** (U/V-vs-W corrected) | <https://www.phy.bnl.gov/twister/bee/set/0150ea98-9d26-4c23-bacd-37c26a98187d/event/list/> |
 
-Compare the two links anode-by-anode: the v5 imaging closes the U/V-vs-W gaps that the
-per-tick consistency above quantifies (0–1 % → 83–90 % of track ticks now satisfy
-three-plane closure). Total imaged blobs are comparable (v4 36 833 / v5 34 223) — gap
-closure re-forms blobs at the correct W rather than simply adding them.
+**What the imaging actually shows (measured, `pdvd/check_gap_closure.py`,
+`check_z_residual.py`) — read this before claiming gap closure.** Along the two
+calibration tracks the v5-vs-v4 imaging change is **modest, not a dramatic gap fill**:
+
+- Drift-slice coverage in a 4 cm tube around the track is essentially unchanged
+  (anode 0: 97 % → 98 % of drift bins filled; anode 4: 67 % → 67 %).
+- Blob **z barely moves**: v4 blobs sit only −1.6 mm (anode 0) from the v5 track locus,
+  v5 at 0.0 mm — a ~1.6 mm nudge, **not** the 13 mm one might naively expect.
+
+The reason is structural: **blob z is pinned by the W collection plane** (vertical wires
+measure z), which v5 leaves untouched. Shifting U/V along z changes *which* W charge is
+three-plane-consistent and *whether* a blob forms where the W ROI is narrow — but it does
+**not** translate the track in z. So the per-tick consistency metric (0–1 % → 83–90 %) is
+a real statement about U∩V-crossing vs W-charge-*centroid* registration, yet on these
+**wide-W** tracks the blobs form at the U∩V crossing either way and the visible image is
+similar. The whole-anode blob total drops (v4 36 833 → v5 34 223; anode 1 −68 %), which
+looks like **removal of mis-registered / ghost blobs** rather than gap filling.
+
+**Bottom line:** v5 is the geometrically-correct U/V-vs-W registration (validated above),
+and its imaging effect is real but **track-topology-dependent** — expected to matter most
+where the W ROI is narrow (1–2 strips), and small on wide-W tracks like these two.
+**Compare the two Bee links on your own events** to judge the effect on the specific gaps
+you see; this calibration track is not by itself a strong gap-closure demonstrator.
 
 ### Equivalent W-shift recipe (alternative)
 

@@ -7,7 +7,8 @@ Measured directly from the shipped wire files (read-only inspection, 2026-06-07)
 
 > **A local `v5` now exists** = v4 with the induction U/V planes shifted along the W pitch
 > (+13.2 mm bottom / −9.8 mm top) to fix the U/V-vs-W registration measured from real
-> tracks. It closes the imaging gaps v4 still has. See
+> tracks. The geometric registration is validated; its *imaging-level* effect proved
+> modest on the calibration tracks (blob z is pinned by the unchanged W plane). See
 > `pdvd-uvw-wire-offset-calibration.md` (built with `pdvd/make_v5_uvwcal.py`, kept local).
 
 Both files have **8 anodes (idents 0–7), 16 faces, 48 planes, 13 840 wires,
