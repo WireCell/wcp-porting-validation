@@ -1,0 +1,91 @@
+
+#include "simulationservices_sbnd.fcl"
+#include "messages_sbnd.fcl"
+#include "detsim_drops.fcl"
+#include "opdetdigitizer_sbnd.fcl"
+
+# Imaging + clustering + Q/L matching using Xin's canonical WCT-native matching
+# (FlashTensorToOpticalPCs + QLMatching) instead of the old larwirecell
+# wclsQLMatching.  Same artROOT inputs as wcls-img-clus-matching.fcl; only the
+# config jsonnet and the extra WireCellAux/WireCellMatch plugins differ.
+#
+# Run inside the SL7 container after `source sbnd/setup-ap.sh`:
+#   time lar --nskip 0 -n 1 -c wcls-img-clus-matching-xin.fcl \
+#       -s standalone-sample/2025f-mc.root --no-output >& wcls-img-clus-matching-xin.log
+
+process_name: wclssig2img
+
+services:
+{
+  TFileService: { fileName: "tf-default.root" }
+  @table::sbnd_detsim_services
+  # FileCatalogMetadata: @local::sbnd_file_catalog_mc
+  AuxDetGeometry: @local::sbnd_auxdetgeo
+  @table::sbnd_geometry_services
+}
+
+
+source: {
+   module_type: RootInput
+   #saveMemoryObjectThreshold: 10485760 //commented Ewerton 2024-07-08
+
+   #inputCommands: ["drop *", "keep raw::RawDigits_*_*_*"]
+   #inputCommands: ["drop *", "keep *_*_*_Swizzler"]
+}
+
+physics :{
+   producers: {
+
+      sig2img : {
+         module_type : WireCellToolkit
+         wcls_main: {
+            tool_type: WCLS
+            apps: ["Pgrapher"]
+
+            logsinks: ["stdout"]
+            loglevels: ["debug"]
+
+            # WireCellAux: FlashTensorToOpticalPCs; WireCellMatch: QLMatching.
+            plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellQLMatch", "WireCellAux", "WireCellMatch"]
+
+            inputers: [
+                "wclsCookedFrameSource:sigs"
+                , "wclsOpFlashSource:tpc0"
+                , "wclsOpFlashSource:tpc1"
+                      ]
+
+            # outputers: ["wclsNumpyFrameSaver:signal"]
+
+            configs: ["wcls-img-clus-matching-xin.jsonnet"]
+
+            params : {
+                # Set "data" vs. "sim".
+                reality: "sim"
+                # Image configuration
+                img_config: "active2view+masked2view"
+                opflash0_input_label: "opflashtpc0:"
+                opflash1_input_label: "opflashtpc1:"
+            }
+            structs : {
+                # data/moon
+                # recobwire_tags: "[\"sptpc2d:gauss\", \"sptpc2d:wiener\"]"
+                # trace_tags: "[\"gauss\", \"wiener\"]"
+                # summary_tags: "[\"\", \"sptpc2d:wienersummary\"]"
+                # input_mask_tags: "[\"sptpc2d:badmasks\"]"
+                # output_mask_tags: "[\"bad\"]"
+                # sim
+                recobwire_tags: "[\"simtpc2d:dnnsp\", \"simtpc2d:dnnsp\"]"
+                # recobwire_tags: "[\"simtpc2d:gauss\", \"simtpc2d:wiener\"]"
+                trace_tags: "[\"gauss\", \"wiener\"]"
+                summary_tags: "[\"\", \"simtpc2d:wienersummary\"]"
+                input_mask_tags: "[\"simtpc2d:badmasks\"]"
+                output_mask_tags: "[\"bad\"]"
+            }
+         }
+      }
+   }
+
+   p1 : [ sig2img ]
+   trigger_paths : [ p1 ]
+
+}
