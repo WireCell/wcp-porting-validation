@@ -135,6 +135,7 @@ EOF
 
 ANODE="0"
 ELEC_GAIN="14"
+GAIN_EXPLICIT=0
 REALITY="data"
 DEVICE="cpu"
 DEVICE_EXPLICIT=0
@@ -163,7 +164,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
         -a) ANODE="$2"; shift 2 ;;
-        -g) ELEC_GAIN="$2"; shift 2 ;;
+        -g) ELEC_GAIN="$2"; GAIN_EXPLICIT=1; shift 2 ;;
         -r) REALITY="$2"; shift 2 ;;
         -D) DEVICE="$2"; DEVICE_EXPLICIT=1; shift 2 ;;
         -P) PRESET="$2"; shift 2 ;;
@@ -241,27 +242,48 @@ RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
 [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
 
-# Resolve event dir using the same heuristic as run_nf_sp_evt.sh.
+# Resolve event dir using the same heuristic as run_nf_sp_evt.sh.  Scans every
+# input_data* root (the reorg split data into input_data_<gain>_<old|new>_coh_grouping);
+# first match wins.  Keep this side-effect-free: it runs in a $(...) subshell, so
+# config is derived from the returned path below, not from vars set in here.
 find_evtdir() {
-    local base="$PDHD_DIR/input_data"
-    for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
-        local rdir="$base/$rname"
-        [ -d "$rdir" ] || continue
-        for ename in "evt${EVT}" "evt_${EVT}"; do
-            local cand="$rdir/$ename"
-            if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
-                echo "$cand"; return 0
+    local base
+    for base in "$PDHD_DIR"/input_data "$PDHD_DIR"/input_data_*; do
+        [ -d "$base" ] || continue
+        for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
+            local rdir="$base/$rname"
+            [ -d "$rdir" ] || continue
+            for ename in "evt${EVT}" "evt_${EVT}"; do
+                local cand="$rdir/$ename"
+                if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
+                    echo "$cand"; return 0
+                fi
+            done
+            if ls "$rdir/protodunehd-orig-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+                echo "$rdir"; return 0
             fi
         done
-        if ls "$rdir/protodunehd-orig-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
-            echo "$rdir"; return 0
-        fi
     done
     return 1
 }
 
 EVTDIR=$(find_evtdir) || { echo "[err] no event dir for run=$RUN evt=$EVT" >&2; exit 2; }
 echo "Event dir: $EVTDIR"
+
+# Auto-derive FE gain + coherent-noise grouping from the input-root dir name
+# (input_data_<gain>_<old|new>_coh_grouping).  Unknown/legacy roots leave the
+# toolkit defaults untouched.  Explicit -g still wins (see GAIN_EXPLICIT below).
+INPUT_ROOT_NAME="${EVTDIR#$PDHD_DIR/}"; INPUT_ROOT_NAME="${INPUT_ROOT_NAME%%/*}"
+case "$INPUT_ROOT_NAME" in
+    *_old_coh_grouping) AUTO_PREFLIP="true" ;;
+    *_new_coh_grouping) AUTO_PREFLIP="false" ;;
+    *)                  AUTO_PREFLIP="" ;;
+esac
+AUTO_GAIN=""
+[[ "$INPUT_ROOT_NAME" =~ ^input_data_([0-9p]+)_ ]] && AUTO_GAIN="${BASH_REMATCH[1]//p/.}"
+if [ "$GAIN_EXPLICIT" = "0" ] && [ -n "$AUTO_GAIN" ]; then
+    ELEC_GAIN="$AUTO_GAIN"
+fi
 
 if ! ls "$EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >/dev/null 2>&1; then
     echo "[err] missing $EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >&2
@@ -396,13 +418,15 @@ NVSMI_PID=$!
 # peak resident-set size for the lifetime of the process — better than
 # sampling because it captures the high-water mark exactly.
 RC=0
-# Pre-flip coherent-noise grouping: auto-enable when the local .coh_preflip
-# sentinel exists (run-027409 etc. decoded with the pre-2025-06-30 channel map).
-# Delete the sentinel once files are re-decoded with a post-flip duneprototypes.
+# Coherent-noise grouping: auto-selected from the input-root dir name
+# (set above).  *_old_coh_grouping -> pre-flip (run-027409 etc. decoded with
+# the pre-2025-06-30 channel map); *_new_coh_grouping / unknown -> toolkit default.
 COH_PREFLIP_TLA=()
-if [ -f "$PDHD_DIR/.coh_preflip" ]; then
+if [ "$AUTO_PREFLIP" = "true" ]; then
     COH_PREFLIP_TLA=(--tla-code coh_groups_preflip=true)
-    echo "[coh] .coh_preflip sentinel present -> PRE-FLIP coherent-noise grouping"
+    echo "[coh] $INPUT_ROOT_NAME -> PRE-FLIP (old) coherent-noise grouping"
+elif [ "$AUTO_PREFLIP" = "false" ]; then
+    echo "[coh] $INPUT_ROOT_NAME -> POST-FLIP (new) grouping (toolkit default)"
 fi
 wire-cell \
     -l stderr \

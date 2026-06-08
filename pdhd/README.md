@@ -21,8 +21,14 @@ discovered event for that run in parallel:
 ./run_img_evt.sh 027409 all
 ./run_clus_evt.sh 027409 all
 ```
-Events are discovered from `input_data/run<N>/evt_*` subdirectories and from
-existing `work/<RUN_PADDED>_<EVT>/` directories.  Jobs run concurrently up to
+Events are discovered from `input_data*/run<N>/evt_*` subdirectories and from
+existing `work/<RUN_PADDED>_<EVT>/` directories.  Input data lives in
+`input_data_<gain>_<old|new>_coh_grouping` roots (e.g.
+`input_data_14_old_coh_grouping`, `input_data_7p8_new_coh_grouping`); the NF/SP
+runners scan all of them, pick the root holding the requested run, and
+**auto-derive the FE gain (14 vs 7.8 mV/fC) and coherent-noise grouping
+(old/pre-flip vs new/post-flip) from that root's name** — no `-g` flag or
+`.coh_preflip` sentinel needed (see `docs/pdhd-coh-groups-preflip.md`).  Jobs run concurrently up to
 `$(nproc)` (override with `PDHD_MAX_JOBS=N`).  Per-event logs go to
 `work/.batch_<stage>_<run>_<evt>.log`.  A summary at the end shows ok / failed
 counts and the failed event ids.

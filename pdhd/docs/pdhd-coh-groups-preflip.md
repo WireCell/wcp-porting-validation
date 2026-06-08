@@ -54,22 +54,31 @@ entirely in this running directory:
   `base(...) { dft } + (if coh_groups_preflip then { groups, femb_negpulse_groups } else {})`.
   Default false ⇒ `+ {}` ⇒ **bit-identical** for colleagues.
 - **`run_nf_sp_evt.sh` / `run_nf_sp_dnnroi_evt.sh`** — auto-set
-  `--tla-code coh_groups_preflip=true` **iff** the local sentinel
-  **`pdhd/.coh_preflip`** exists (git-ignored).
+  `--tla-code coh_groups_preflip=true` from the **input-root directory name**.
+  The data is split into `input_data_<gain>_<old|new>_coh_grouping` dirs; the
+  scripts scan all `input_data*` roots, find the one holding the run, and derive
+  both the grouping (`*_old_coh_grouping` ⇒ pre-flip; `*_new_coh_grouping` ⇒
+  post-flip) and the FE gain (`_14_` ⇒ 14, `_7p8_` ⇒ 7.8 mV/fC) from that name.
+  An explicit `-g` still overrides the derived gain; an unknown/legacy root name
+  leaves the toolkit defaults (post-flip + `-g` default).  This replaces the old
+  `pdhd/.coh_preflip` sentinel, which is **retired** (no longer read).
 
 ## Usage
 
 ```sh
-# Process run-027409 (pre-flip) with the matching old grouping:
-touch pdhd/.coh_preflip            # one time; sticky, git-ignored
-./run_nf_sp_dnnroi_evt.sh -a 0 27409 0      # log prints "[coh] .coh_preflip ... PRE-FLIP"
-./run_nf_sp_evt.sh 27409 0                  # same for the SP/imaging chain
+# Process run-027409: lives in input_data_14_old_coh_grouping, so the scripts
+# auto-select gain=14 + pre-flip (old) grouping -- nothing to toggle:
+./run_nf_sp_dnnroi_evt.sh -a 0 27409 0   # log: "[coh] input_data_14_old_coh_grouping -> PRE-FLIP"
+./run_nf_sp_evt.sh 27409 0               # same for the SP/imaging chain
 
-# When files are re-decoded with a post-flip duneprototypes, revert to latest:
-rm pdhd/.coh_preflip
+# A 7.8/new run auto-selects gain=7.8 + post-flip grouping (toolkit default):
+./run_nf_sp_dnnroi_evt.sh -a 0 27980 0   # log: "[coh] input_data_7p8_new_coh_grouping -> POST-FLIP"
 ```
 
-Colleagues (no sentinel) always get the toolkit's latest post-flip grouping.
+When the run-027409 files are re-decoded with a post-flip duneprototypes, move
+them under an `input_data_<gain>_new_coh_grouping` dir (or rename the root) and
+the post-flip grouping follows automatically.  Colleagues using only the
+post-flip dataset always get the toolkit's latest grouping.
 
 ## Verification (2026-06-08)
 
