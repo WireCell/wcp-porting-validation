@@ -198,23 +198,36 @@ for _e in "${_all_events[@]}"; do
     echo "  [start] evt=$_e (bee index $_bee_idx)  art_event=$_event_no  clus: $_clus_input"
     mkdir -p "data/$_bee_idx"
 
-    # Build bee-blobs for each anode in parallel.
-    # Each anode writes to data/<bee_idx>/0-apa<j>.json — no filename collision.
+    # Group by drift side: anodes 0-3 -> group0123, anodes 4-7 -> group4567
+    # (each drift side shares geometry).  Set PDVD_BEE_GROUP=0 for the legacy
+    # one-instance-per-anode output.  Spec: "<name> <geo-idx> <member anode idx...>".
+    _bee_groups=( "imaging-group0123 0 0 1 2 3" "imaging-group4567 4 4 5 6 7" )
+    if [ "${PDVD_BEE_GROUP:-1}" = "0" ]; then
+        _bee_groups=( "apa0 0 0" "apa1 1 1" "apa2 2 2" "apa3 3 3" \
+                      "apa4 4 4" "apa5 5 5" "apa6 6 6" "apa7 7 7" )
+    fi
     _anode_pids=()
-    for _j in 0 1 2 3 4 5 6 7; do
-        _f="$_clus_input/clusters-apa-anode${_j}-ms-active.tar.gz"
-        [ -s "$_f" ] || continue
+    for _spec in "${_bee_groups[@]}"; do
+        # shellcheck disable=SC2086
+        set -- $_spec
+        _gname=$1; _geoidx=$2; shift 2
+        _files=()
+        for _j in "$@"; do
+            _f="$_clus_input/clusters-apa-anode${_j}-ms-active.tar.gz"
+            [ -s "$_f" ] && _files+=("$_f")
+        done
+        [ ${#_files[@]} -gt 0 ] || continue
         batch_wait_slot
         (
-            _geo_args=$(bee_anode_args "$_j")
+            _geo_args=$(bee_anode_args "$_geoidx")
             eval wirecell-img bee-blobs \
                 -g protodunevd -s uniform -d 1 \
                 --rse "$RUN_STRIPPED" "$SUBRUN" "$_event_no" \
                 $_geo_args \
-                -o "data/${_bee_idx}/${_bee_idx}-apa${_j}.json" \
-                "$_f"
+                -o "data/${_bee_idx}/${_bee_idx}-${_gname}.json" \
+                "${_files[@]}"
         ) &
-        BATCH_PIDS[$!]="evt${_e}_apa${_j}"
+        BATCH_PIDS[$!]="evt${_e}_${_gname}"
         _anode_pids+=($!)
     done
     # Wait for this event's anodes before moving to the next bee index.

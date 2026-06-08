@@ -26,7 +26,15 @@
 local g = import 'pgraph.jsonnet';
 local wc = import 'wirecell.jsonnet';
 
-local params = import 'pgrapher/experiment/pdhd/simparams.jsonnet';
+// Imaging uses simparams for its 500 ns tick (data is resampled 512->500 ns
+// before imaging).  But simparams redefines det.volumes with BOTH APA faces
+// sensitive ("cryostat side included"), which makes the dead/masked fork tile
+// phantom dead blobs on the driftless face.  Restore the data geometry's
+// det.volumes (one face per APA nulled = non-sensitive) so GridTiling suppresses
+// the driftless face; the sensitive face geometry is identical between the two.
+local simparams = import 'pgrapher/experiment/pdhd/simparams.jsonnet';
+local dataparams = import 'pgrapher/experiment/pdhd/params.jsonnet';
+local params = simparams { det+: { volumes: dataparams.det.volumes } };
 
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 local tools_all = tools_maker(params);
@@ -68,6 +76,11 @@ function(
         tbin: 0,
         nticks: params.daq.nticks,
         fill: 0.0,
+        // Carry the SP frame's bad-channel mask onto the reframed frame so the
+        // dead/masked imaging fork can tile dead regions; without this the CMM
+        // is dropped and the dead Bee layer comes out empty.  Safe here because
+        // tbin=0 keeps the mask tick ranges aligned.
+        keep_masks: true,
       },
     }, nin=1, nout=1, uses=[anode]);
     g.pipeline([src, reframer, img_maker.per_anode(anode)],

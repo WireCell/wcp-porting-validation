@@ -200,21 +200,35 @@ for _e in "${_all_events[@]}"; do
     echo "  [start] evt=$_e (bee index $_bee_idx)  art_event=$_event_no  clus: $_clus_input"
     mkdir -p "data/$_bee_idx"
 
+    # Group by drift side: APA0+APA2 -> group02, APA1+APA3 -> group13 (each
+    # pair shares drift geometry).  Set PDHD_BEE_GROUP=0 for the legacy
+    # one-instance-per-APA output.  Spec: "<name> <geo-idx> <member APA idx...>".
+    _bee_groups=( "imaging-group02 0 0 2" "imaging-group13 1 1 3" )
+    if [ "${PDHD_BEE_GROUP:-1}" = "0" ]; then
+        _bee_groups=( "apa0 0 0" "apa1 1 1" "apa2 2 2" "apa3 3 3" )
+    fi
     _anode_pids=()
-    for _j in 0 1 2 3; do
-        _f="$_clus_input/clusters-apa-apa${_j}-ms-active.tar.gz"
-        [ -s "$_f" ] || continue
+    for _spec in "${_bee_groups[@]}"; do
+        # shellcheck disable=SC2086
+        set -- $_spec
+        _gname=$1; _geoidx=$2; shift 2
+        _files=()
+        for _j in "$@"; do
+            _f="$_clus_input/clusters-apa-apa${_j}-ms-active.tar.gz"
+            [ -s "$_f" ] && _files+=("$_f")
+        done
+        [ ${#_files[@]} -gt 0 ] || continue
         batch_wait_slot
         (
-            _geo_args=$(bee_anode_args "$_j")
+            _geo_args=$(bee_anode_args "$_geoidx")
             eval wirecell-img bee-blobs \
                 -g protodunehd -s uniform -d 1 \
                 --rse "$RUN_STRIPPED" "$SUBRUN" "$_event_no" \
                 $_geo_args \
-                -o "data/${_bee_idx}/${_bee_idx}-apa${_j}.json" \
-                "$_f"
+                -o "data/${_bee_idx}/${_bee_idx}-${_gname}.json" \
+                "${_files[@]}"
         ) &
-        BATCH_PIDS[$!]="evt${_e}_apa${_j}"
+        BATCH_PIDS[$!]="evt${_e}_${_gname}"
         _anode_pids+=($!)
     done
     for _pid in "${_anode_pids[@]}"; do
