@@ -6,10 +6,11 @@ Measured directly from the shipped wire files (read-only inspection, 2026-06-07)
 - `wire-cell-data/protodunevd-wires-larsoft-v4.json.bz2` (experimental, Jun 7 2026, 194 054 B)
 
 > **A local `v5` now exists** = v4 with the induction U/V planes shifted along the W pitch
-> (+13.2 mm bottom / −9.8 mm top) to fix the U/V-vs-W registration measured from real
-> tracks. The geometric registration is validated; its *imaging-level* effect proved
-> modest on the calibration tracks (blob z is pinned by the unchanged W plane). See
-> `pdvd-uvw-wire-offset-calibration.md` (built with `pdvd/make_v5_uvwcal.py`, kept local).
+> to fix the U/V-vs-W registration measured from real tracks, assigned **by the two
+> registration types of this table** (+13.2 mm for type A {0,2,5,7}, −9.8 mm for type B
+> {1,3,4,6}) so the bottom↔top mirror symmetry is preserved. Validated + corroborated by a
+> per-anode blob-count recovery. See `pdvd-uvw-wire-offset-calibration.md` (built with
+> `pdvd/make_v5_uvwcal.py`, kept local).
 
 Both files have **8 anodes (idents 0–7), 16 faces, 48 planes, 13 840 wires,
 12 288 channels**. `v4` = **v3's channel assignment + the v5 GDML wire positions** (see the full

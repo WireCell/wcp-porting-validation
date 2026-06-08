@@ -2,10 +2,12 @@
 
 Measured from real signal (2026-06-07). Analysis reproduces with
 `pdvd/pdvd_uvw_offset.py`; the calibration is baked into a local **v5** wire file
-(`protodunevd-wires-larsoft-v5.json.bz2`) and run 39324 was re-imaged with it. **Caveat
-up front:** the geometric registration is validated, but the *imaging-level* effect on
-the two calibration tracks turned out **modest** (blob z is pinned by the unchanged W
-plane) — see **The v5 wire file** below for the honest imaging assessment.
+(`protodunevd-wires-larsoft-v5.json.bz2`) and run 39324 was re-imaged with it. **Two things
+to know up front:** (1) the shift is assigned **by registration type** ({0,2,5,7} vs
+{1,3,4,6}), which **respects** the cathode mirror symmetry — see *The symmetry*; (2) on the
+already-consistent wide-W calibration tracks the imaging change is **modest** (blob z is
+pinned by the unchanged W plane), but a *wrong* (by-CRP) shift is destructive and the by-type
+fix recovers it — see *The v5 wire file*.
 
 ## Why
 
@@ -92,56 +94,61 @@ bottom CRP **U −0.86 / V +0.86 channels**, top CRP **U −0.64 / V +0.64 chann
 — in both CRPs U decreases and V increases, opposite signs because the two
 induction planes' channel numbering runs in opposite pitch directions. (Beware: the
 channel-numbering *direction* also flips between top and bottom, so the same channel
-sign does **not** mean the same physical shift — see *Top vs bottom consistency*.)
+sign does **not** mean the same physical shift — see *The symmetry*.)
 
 ### Recommended offset
 
-Apply on top of **v4** (the better-positioned base; v3 differs only ~0.5 mm here):
+Apply on top of **v4** (the better-positioned base; v3 differs only ~0.5 mm here),
+**by registration type** (see *The symmetry*). v5 keeps W fixed and shifts U & V along z:
 
-- **Bottom CRP (anodes 0–3):** move the W collection wires by **ΔZ_W ≈ −13 mm**
-  (≈ −2.6 W-pitch) along z — or, keeping W fixed, shift the U & V strips
-  symmetrically by **dp ≈ −6.6 mm** (≈ −0.86 induction pitch; U −0.86 ch / V +0.86 ch).
-- **Top CRP (anodes 4–7):** move the W wires by **ΔZ_W ≈ +10 mm** (≈ +1.9 W-pitch)
-  — or shift U & V by **dp ≈ +4.9 mm** (≈ +0.64 induction pitch; U −0.64 ch / V +0.64 ch).
+- **Type A (anodes 0, 2, 5, 7):** shift U & V by **+13.2 mm** along z (W-pitch direction)
+  — equivalently move W by **ΔZ_W ≈ −13 mm**, or slide U & V by **dp ≈ −6.6 mm** along
+  induction pitch (U −0.86 ch / V +0.86 ch). Measured on anode 0.
+- **Type B (anodes 1, 3, 4, 6):** shift U & V by **−9.8 mm** along z — equivalently move W
+  by **ΔZ_W ≈ +10 mm**, or slide U & V by **dp ≈ +4.9 mm** (U −0.64 ch / V +0.64 ch).
+  Measured on anode 4.
 
-The offset is **different in sign and magnitude between top and bottom CRP**, so it
-is *not* one global numbering convention; it tracks the CRP. The values are also
-**fractional**, not an integer number of wires — so this is a *continuous*
-U/V-vs-W transverse registration error (consistent with a relative plane
-mis-placement / sub-pitch channel-map offset), not a clean off-by-N-wires bug.
+The two measured anodes (0 and 4) need different shifts — but they are **different
+registration *types***, not a top-vs-bottom difference. The first-wire-offset table in
+`pdvd-wire-geometry-v3-v4.md` §1 groups the 8 anodes into two types, each appearing once
+per CRP: **type A = {0, 2, 5, 7}**, **type B = {1, 3, 4, 6}**. Anode 0 is type A; anode 4
+is type B — so their different corrections track the **type**, not the CRP. The shift for
+each type's mirror partner in the *other* CRP follows from the cathode symmetry (next
+section). The values are also **fractional**, not an integer number of wires — a
+*continuous* sub-pitch U/V-vs-W registration error, not a clean off-by-N-wires bug.
 
-## Top vs bottom consistency — and the symmetry question
+## The symmetry — respected by assigning the shift by *type*
 
-The two CRPs need shifts that are **opposite in sign and unequal in magnitude**:
+Earlier drafts compared anode 0 (+13.2 mm) directly to anode 4 (−9.8 mm), called them
+"opposite sign", and concluded the correction *breaks* the cathode symmetry. **That was a
+mistake: anode 0 and anode 4 are different registration *types*, not mirror partners**, so
+their differing shifts say nothing about the symmetry.
 
-| CRP / anode | W shift ΔZ_W | +Z move of U[0],V[0] | in W-pitch |
-|---|---|---|---|
-| bottom / 0 | −13.2 mm | **+3.3 mm** | −2.6 |
-| top / 4 | +9.8 mm | **−2.45 mm** | +1.9 |
+The first-wire-offset table (`pdvd-wire-geometry-v3-v4.md` §1) groups the anodes by type,
+and the cathode mirror pairs **same-type** anodes across the two CRPs (top = bottom with
+U↔V swapped, z preserved):
 
-**Applying these as-measured BREAKS the bottom-{0,2} ↔ top-{5,7} first-wire symmetry.**
-The nominal geometry — and the `U[0]−W[0]`/`V[0]−W[0]` table in
-`pdvd-wire-geometry-v3-v4.md` §1 — is **mirror-symmetric about the cathode**: bottom
-{0,2} and top {5,7} carry the *same* value set with U↔V swapped, **same (positive)
-sign**. The cathode mirror is `x→−x` only, so **z is preserved**; preserving that
-symmetry therefore requires the **same +Z correction on both CRPs** (same sign *and*
-magnitude). The measured corrections are **opposite sign** (+3.3 vs −2.45 mm) and ~30 %
-apart, so bottom-{0,2} and top-{5,7} would no longer be mirror images.
+| type | first-wire character | anodes (mirror partners) | measured on | U,V z-shift |
+|---|---|---|---|---|
+| **A** | small (~1.0–1.8 mm) | bottom {0,2} ↔ top {5,7} | anode 0 | **+13.2 mm** |
+| **B** | large (3.5 / 11.7 mm) | bottom {1,3} ↔ top {4,6} | anode 4 | **−9.8 mm** |
 
-**What the opposite sign means.** A genuinely mirror-symmetric cause — a wire-position
-error, or a channel-map offset wired identically in both CRPs — would give the **same**
-sign z-shift on top and bottom. An **opposite-sign** shift instead tracks something that
-**flips between the two CRPs**, most naturally the **drift direction** (bottom drifts
-+x, top −x). So the residual looks more like a CRP/drift-oriented z-offset than a
-mirror-symmetric geometry/channel error. (It is still flat in tick — not a track-slope
-timing skew.)
+**The mirror demands the same shift on partners — and the by-type assignment gives it.**
+The correction is a *common-mode* shift (U and V move together, equally), and the cathode
+mirror is `x→−x` with **z preserved** and U↔V swapped. A common-mode z-shift is invariant
+under the U↔V swap, and z is preserved, so a type's two mirror-partner anodes must take the
+**same signed z-shift**. Assigning **type A {0,2,5,7} = +13.2 mm** and
+**type B {1,3,4,6} = −9.8 mm** therefore *respects* the symmetry by construction, rather
+than breaking it. (The opposite *sign* between type A and type B is a genuine
+type-dependent registration difference, fully allowed — it is not a symmetry violation.)
 
-**Caveats that could inflate the asymmetry:** one track per CRP, measured on
-*different* faces (anode 0 back face vs anode 4 front face), at different track angles.
-The clean test is several tracks per CRP on both faces: if the true correction is
-symmetric, more statistics should pull |bottom| and |top| together; if the opposite-sign
-asymmetry persists, it is a real CRP/drift effect to model — **not** a simple symmetric
-wire re-registration. **So: not yet consistent; the asymmetry is the main open question.**
+**Empirical corroboration.** Only anodes 0 (type A) and 4 (type B) were measured from
+tracks; {1,3,5,7} are *deduced* by the symmetry. An earlier v5 that (wrongly) shifted
+**by CRP** mis-corrected exactly those four — e.g. anode 1 (type B, true −9.8) got +13.2,
+i.e. ΔZ_W ≈ +9.8+13.2 ≈ **+23 mm** (4.5 W-pitch, catastrophic) and its imaged blobs
+collapsed 1917 → 608. The by-type v5 sends those four to ΔZ_W ≈ 0 and they **recover to
+~v4 levels** (anode 1 608 → 1994; see the imaging table below) — converting the deduction
+from "assumed" to "assumed **and** confirmed by imaging".
 
 ## The v5 wire file — built, validated, and imaged
 
@@ -156,19 +163,21 @@ the physically correct choice for absolute placement.
 
 `pdvd/make_v5_uvwcal.py`: from v4, keep the W plane (ident 2) untouched and shift each
 **U and V (ident 0,1) wire endpoint purely in z** (= the W pitch direction, since the
-vertical collection wires have pitch along z) by `−ΔZ_W`:
+vertical collection wires have pitch along z) by `−ΔZ_W`, assigned **by registration
+type** (so the cathode symmetry is respected — see *The symmetry* above):
 
-| CRP | anodes | ΔZ_W (mismatch) | **U,V z-shift applied** |
-|---|---|---|---|
-| bottom | 0–3 | −13.2 mm | **+13.2 mm** |
-| top | 4–7 | +9.8 mm | **−9.8 mm** |
+| type | anodes | ΔZ_W (mismatch) | **U,V z-shift applied** | source |
+|---|---|---|---|---|
+| **A** | 0, 2, 5, 7 | −13.2 mm | **+13.2 mm** | measured anode 0; {2,5,7} by symmetry |
+| **B** | 1, 3, 4, 6 | +9.8 mm | **−9.8 mm** | measured anode 4; {1,3,6} by symmetry |
 
 > **Magnitude note.** This is the **full ΔZ_W** in pure z. A rigid z-translation `t` of
 > *both* U and V lines moves the U∩V crossing by exactly `t`, so nulling
-> `z_cross − z_W = ΔZ_W` needs `−ΔZ_W`. Do **not** confuse this with the `+3.3 / −2.45 mm`
-> in the table above — those are the z-*component* of an *induction-pitch* slide (a
-> different motion, with a y-component too); the crossing still moves the full ΔZ_W via
-> `ΔZ_W = 2·dp`. "Along the **W** pitch direction" = pure z = the full ΔZ_W.
+> `z_cross − z_W = ΔZ_W` needs `−ΔZ_W`. Do **not** confuse it with the `+3.3 / −2.45 mm`
+> *induction-pitch* numbers quoted in the last section — those are the z-*component* of an
+> induction-pitch slide (a different motion, with a y-component too); the crossing still
+> moves the full ΔZ_W via `ΔZ_W = 2·dp`. "Along the **W** pitch direction" = pure z = the
+> full ΔZ_W.
 
 **Validated three independent ways** (`pdvd/validate_v5.py`):
 
@@ -186,32 +195,41 @@ pointed at v5, then reverted to v3). Per-anode Bee links (bee idx 0–7 = anode 
 
 | geometry | Bee link |
 |---|---|
-| **v4 baseline** (positions correct, U/V-vs-W gap remains) | <https://www.phy.bnl.gov/twister/bee/set/fd21cf88-9936-4c38-8803-9b050ed63a2f/event/list/> |
-| **v5** (U/V-vs-W corrected) | <https://www.phy.bnl.gov/twister/bee/set/0150ea98-9d26-4c23-bacd-37c26a98187d/event/list/> |
+| **v4 baseline** (positions correct, U/V-vs-W offset remains) | <https://www.phy.bnl.gov/twister/bee/set/fd21cf88-9936-4c38-8803-9b050ed63a2f/event/list/> |
+| **v5** (by-type U/V-vs-W correction) | <https://www.phy.bnl.gov/twister/bee/set/251465d9-d2b5-434b-8852-68e774518324/event/list/> |
 
-**What the imaging actually shows (measured, `pdvd/check_gap_closure.py`,
-`check_z_residual.py`) — read this before claiming gap closure.** Along the two
-calibration tracks the v5-vs-v4 imaging change is **modest, not a dramatic gap fill**:
+**Per-anode imaged-blob counts** (`pdvd/check_gap_closure.py` for coverage; counts below).
+The middle column is the *earlier, wrong* by-CRP v5 — shown only to demonstrate that the
+four symmetry-deduced anodes recover under the by-type fix:
 
-- Drift-slice coverage in a 4 cm tube around the track is essentially unchanged
-  (anode 0: 97 % → 98 % of drift bins filled; anode 4: 67 % → 67 %).
-- Blob **z barely moves**: v4 blobs sit only −1.6 mm (anode 0) from the v5 track locus,
-  v5 at 0.0 mm — a ~1.6 mm nudge, **not** the 13 mm one might naively expect.
+| anode | type | v4 baseline | by-CRP v5 (wrong) | **by-type v5** |
+|---|---|---|---|---|
+| 0 | A | 2678 | 2693 | 2693 |
+| 1 | B | 1917 | **608** | **1994** ✓ |
+| 2 | A | 3376 | 3290 | 3290 |
+| 3 | B | 1663 | 1312 | **1742** ✓ |
+| 4 | B | 13572 | 13657 | 13657 |
+| 5 | A | 4787 | 4693 | 4716 ✓ |
+| 6 | B | 3187 | 3226 | 3226 |
+| 7 | A | 5653 | 4744 | **5749** ✓ |
+| **total** | | 36 833 | 34 223 | **37 067** |
 
-The reason is structural: **blob z is pinned by the W collection plane** (vertical wires
-measure z), which v5 leaves untouched. Shifting U/V along z changes *which* W charge is
-three-plane-consistent and *whether* a blob forms where the W ROI is narrow — but it does
-**not** translate the track in z. So the per-tick consistency metric (0–1 % → 83–90 %) is
-a real statement about U∩V-crossing vs W-charge-*centroid* registration, yet on these
-**wide-W** tracks the blobs form at the U∩V crossing either way and the visible image is
-similar. The whole-anode blob total drops (v4 36 833 → v5 34 223; anode 1 −68 %), which
-looks like **removal of mis-registered / ghost blobs** rather than gap filling.
+Measured anodes 0,2,4,6 are unchanged (same shift in both v5s); the four *deduced* anodes
+1,3,5,7 recover to ~v4 levels — the empirical confirmation of the symmetry deduction.
 
-**Bottom line:** v5 is the geometrically-correct U/V-vs-W registration (validated above),
-and its imaging effect is real but **track-topology-dependent** — expected to matter most
-where the W ROI is narrow (1–2 strips), and small on wide-W tracks like these two.
-**Compare the two Bee links on your own events** to judge the effect on the specific gaps
-you see; this calibration track is not by itself a strong gap-closure demonstrator.
+**What the imaging change looks like on the measured tracks (`check_z_residual.py`).** On
+the *correctly-corrected* wide-W calibration tracks (anodes 0, 4) the change is **modest**:
+drift-slice coverage in a 4 cm tube is unchanged (anode 0 97 %→98 %, anode 4 67 %→67 %) and
+blob z moves only ~1.6 mm — because **blob z is pinned by the W collection plane** (vertical
+wires measure z), which v5 leaves untouched. Shifting U/V along z fixes *which* W charge is
+three-plane-consistent and *whether* a blob forms where the W ROI is narrow, but does **not**
+translate the track in z. So a *correct* shift is gentle on already-consistent wide-W tracks,
+whereas a *wrong* shift is destructive (the by-CRP anode 1, ΔZ_W ≈ +23 mm → 608 blobs).
+
+**Bottom line:** v5 is the geometrically-correct, symmetry-respecting U/V-vs-W registration
+(validated three ways + the recovery above). Its imaging effect is **track-topology-
+dependent** — largest where the W ROI is narrow, small on wide-W tracks like anodes 0/4.
+**Compare the v4-baseline and v5 Bee links on your own events** to judge the gaps you see.
 
 ### Equivalent W-shift recipe (alternative)
 
@@ -237,32 +255,30 @@ offset along +Z** (`U[0]−W[0]`, `V[0]−W[0]`). This note used a **W shift**. 
 the same correction seen from the two sides — applying *either* is verified to give
 the same 90 % / 83 % consistency. The dictionary (v4 base):
 
-| apply on | parameter | bottom / anode 0 | top / anode 4 |
+Columns are the two registration *types* (the value carries to each type's mirror
+partner in the other CRP, §*The symmetry*):
+
+| apply on | parameter | type A (0,2,5,7) / meas. anode 0 | type B (1,3,4,6) / meas. anode 4 |
 |---|---|---|---|
 | **W** plane (keep U,V) | ΔZ_W along z | −13.2 mm | +9.8 mm |
+| **U & V** planes, **along W pitch (z)** — *this is what v5 does* | −ΔZ_W | **+13.2 mm** | **−9.8 mm** |
 | **U & V** planes (keep W) | dp along induction pitch | −6.6 mm (−0.86 strip) | +4.9 mm (+0.64 strip) |
-| ⤷ same, as **+Z move of U[0],V[0]** | ΔZ_U = ΔZ_V | **+3.3 mm** | **−2.45 mm** |
+| ⤷ same, as **+Z move of U[0],V[0]** (z-component of the pitch slide) | ΔZ_U = ΔZ_V | +3.3 mm | −2.45 mm |
 | ⤷ same, as **channel** index | U / V | −0.86 / +0.86 ch | −0.64 / +0.64 ch |
 
-Geometry-fixed relations: **ΔZ_W = 2·dp** and the **+Z move of the first U/V wires is
-ΔZ_U = ΔZ_V = −dp/2 = −ΔZ_W/4** (the induction pitch makes 60° with the W pitch, so
-only the cos 60° = ½ z-projection of an induction-pitch shift counts toward W; hence
-the factor between `dp` and `ΔZ_{U,V}`).
-
-**So, to shift the first U and V wires:** move the **whole U and V planes toward +Z by
-3.3 mm on the bottom CRP, and toward −Z by 2.45 mm on the top CRP** (U and V move
-together, by the *same* amount). Equivalently slide them −0.86 / +0.64 induction strip
-along pitch. (The absolute `U[0]−W[0]` value in the other doc depends on its wire-0 /
-front-back-face / +Z-sign labeling; the **change** quoted here is convention-free.)
+Geometry-fixed relations for the *induction-pitch* slide: **ΔZ_W = 2·dp** and its z-component
+**ΔZ_U = ΔZ_V = −dp/2 = −ΔZ_W/4** (the induction pitch makes 60° with the W pitch, so only the
+cos 60° = ½ z-projection counts toward W). **v5 does not use this slide** — it uses the pure-z
+shift (row 2, the full −ΔZ_W). The induction-pitch row is the equivalent alternative.
 
 ### Does this keep the bottom-{0,2} ↔ top-{5,7} symmetry? (Q1)
 
-**No — as measured it does not.** Bottom {0,2} and top {5,7} have identical first-wire
-offsets with U↔V swapped (the other doc's table). Adding a common +Z shift keeps that
-symmetry **only if the shift is the same on both CRPs**. The measured shifts are +3.3 mm
-(bottom) and −2.45 mm (top) — opposite sign and unequal — so the symmetry is broken.
-The full discussion (why opposite sign points to a drift-oriented cause, and what to
-measure next) is in **Top vs bottom consistency** above.
+**Yes — when the shift is assigned by *type*, which is what v5 does.** Bottom {0,2} and top
+{5,7} are the two halves of **type A** and are cathode-mirror partners (identical first-wire
+offsets with U↔V swapped). v5 gives both the **same +13.2 mm** common-mode U/V z-shift; since
+the mirror preserves z and a common-mode shift is U↔V-swap-invariant, the corrected geometry
+is **still mirror-symmetric**. (Earlier this subsection answered "No" by comparing anode 0 to
+anode 4 — *different types*, not partners. That was the mistake corrected in §*The symmetry*.)
 
 One thing that *is* clean: my correction is a **common-mode** U=V shift (U and V move
 the same way), which is a *different component* from the U≠V *differential* first-wire
@@ -271,16 +287,16 @@ this rides on top of them.
 
 ## Caveats / next steps
 
-- **One track, one event, one face per CRP.** The offset is robust *within* each
-  track (flat ΔZ_W, v3≈v4) but should be confirmed on more tracks, the other face
-  of each anode, and anodes 1–3 / 5–7 before baking it into a wire file.
+- **One track per *type*.** Each type's shift is measured on a single track (anode 0 for
+  type A, anode 4 for type B); the other three anodes of each type are set by the cathode
+  symmetry and **corroborated** by the blob-count recovery (not independently fit). More
+  tracks per type, the other face, and per-anode fine-tuning remain worthwhile.
 - Only the `pU+pV` combination is constrained by W, so a *single* track cannot
   separate an asymmetric U-only vs V-only component from the symmetric one; the
-  symmetric form is assumed (and is what "the same offset for U and V" means).
-- **Applied & imaged.** v5 is built (U/V shifted along z, W fixed) and run 39324 evt 0
-  re-imaged with it (links above). The shift baked in is the **single-track** value per
-  CRP applied to all four anodes of that CRP — so per-anode/per-face fine-tuning, and the
-  opposite-sign bottom/top asymmetry, remain open (see *Top vs bottom consistency*).
+  symmetric (common-mode U=V) form is assumed — what "the same offset for U and V" means.
+- **Applied & imaged.** v5 is built (U/V shifted along z by type, W fixed) and run 39324
+  evt 0 re-imaged with it (links + recovery table above). The two type magnitudes (+13.2 /
+  −9.8 mm) come from one track each; a multi-track fit per type could refine them.
 
 ## Files
 

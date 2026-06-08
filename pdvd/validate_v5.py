@@ -20,7 +20,7 @@ TMP = "/home/xqian/tmp"
 V4 = f"{WD}/protodunevd-wires-larsoft-v4.json.bz2"
 V5 = f"{WD}/protodunevd-wires-larsoft-v5.json.bz2"
 WSHIFT = f"{TMP}/protodunevd-wires-larsoft-v4-Wshift.json.bz2"
-DZ_UV = {0:+13.2,1:+13.2,2:+13.2,3:+13.2, 4:-9.8,5:-9.8,6:-9.8,7:-9.8}
+DZ_UV = {0:+13.2,2:+13.2,5:+13.2,7:+13.2, 1:-9.8,3:-9.8,4:-9.8,6:-9.8}  # by type
 
 # ---------- 1. geometry file diff ------------------------------------------
 print("="*70); print("1. GEOMETRY FILE DIFF  v4 -> v5")
