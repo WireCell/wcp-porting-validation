@@ -21,9 +21,11 @@ The production config stays on **v3**.
   anodes **4–7 = top CRP** (at X ≈ +3415 mm). They are **mirror images** about the
   cathode (X = 0): the U/V wire angles are **swapped** between top and bottom, and
   the U–W / V–W X-offsets flip sign. Angles/pitch/counts are otherwise identical.
-- **v3 → v4.** A **near-rigid transverse shift of only the bottom CRP** (anodes
-  0–3); the top CRP (4–7) is essentially unchanged. No change in the drift (X)
-  direction, in angles, in counts, or in the channel↔plane map.
+- **v3 → v4.** The **large (~5.5 mm) transverse shift is on the bottom CRP only**
+  (anodes 0–3). The top CRP (4–7) is **not** untouched, though: its **U and V
+  planes also move ~0.1–0.4 mm** (while top W stays fixed), so the U/V-vs-W
+  registration changes on *both* CRPs. No change in the drift (X) direction, in
+  angles, in counts, or in the channel↔plane map.
 
 ---
 
@@ -159,13 +161,34 @@ all four top anodes move the same:
 | 6 | 0.27 mm | 0.27 mm | 0.00 mm |
 | 7 | 0.27 mm | 0.27 mm | 0.00 mm |
 
-**Interpretation.** v5 repositioned **only the bottom CRP**, by ~5.5 mm in the W
-pitch direction and ~2.5 mm in the U/V pitch direction (a near-rigid Y–Z
-translation; per-CRP best-fit residual ~0.2 mm). The top CRP is essentially
-unchanged (the 0.27 mm U/V residual is below pitch). Re-imaging run 39324 evts 0–4
-with v4 gave **blob counts essentially identical to v3** — a near-rigid per-CRP
-shift *moves* each image without filling gaps, so **moving to v5 geometry does not
-close the PDVD imaging gaps**.
+### What actually moved (per-plane shift vector, dy, dz in mm)
+
+Resolving the shift into its Y/Z components per plane (face-0, representative
+anode of each CRP) shows it is **not** a single rigid bottom-CRP translation:
+
+| | plane | bottom (anode 0) | top (anode 4) |
+|---|---|---|---|
+| | U | (+0.275, +5.257) | (+0.275, +0.243) |
+| | V | (−0.143, +5.375) | (−0.143, +0.126) |
+| | W | (0, +5.500) | (0, **0**) |
+
+Two distinct things are happening:
+
+1. **A large ~5.5 mm Z shift of the bottom CRP** (all three of its planes;
+   direction alternates sign by anode). Top W does **not** move.
+2. **A small in-plane adjustment of the U and V planes that is common to BOTH
+   CRPs** — note the U dy = +0.275 and V dy = −0.143 are *identical* on top and
+   bottom, plus a ~0.13–0.25 mm Z piece. This is why the **top CRP's U/V planes
+   move ~0.13–0.37 mm even though top W is fixed**.
+
+**Interpretation.** So "v5 moved only the bottom CRP" is only true for the *large*
+shift. The bottom CRP gets the ~5.5 mm (W) / ~2.5 mm (U/V pitch-direction) move
+(near-rigid, ~0.2 mm per-CRP residual). But v5 *also* nudges the **U/V planes on
+both CRPs** by a few tenths of a mm relative to a fixed W, so the U/V-vs-W
+registration changes everywhere — exactly the sub-mm offset changes seen in §1.
+The net effect is still small: re-imaging run 39324 evts 0–4 with v4 gave **blob
+counts essentially identical to v3** — the moves *shift* each image without filling
+gaps, so **moving to v5 geometry does not close the PDVD imaging gaps**.
 
 ---
 
