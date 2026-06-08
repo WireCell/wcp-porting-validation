@@ -228,6 +228,15 @@ process_event() {
         echo "RawDecon/Decon dump: ON (pre/post-filter taps into SP frame archives)"
     fi
 
+    # Pre-flip coherent-noise grouping: auto-enable when the local .coh_preflip
+    # sentinel exists (run-027409 etc. decoded with the pre-2025-06-30 channel
+    # map).  Delete the sentinel once files are re-decoded post-flip.
+    COH_PREFLIP_TLA=()
+    if [ -f "$PDHD_DIR/.coh_preflip" ]; then
+        COH_PREFLIP_TLA=(--tla-code coh_groups_preflip=true)
+        echo "[coh] .coh_preflip sentinel present -> PRE-FLIP coherent-noise grouping"
+    fi
+
     wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
@@ -238,6 +247,7 @@ process_event() {
         --tla-str sp_prefix="${WORKDIR}/protodunehd-sp-frames" \
         --tla-str reality="${REALITY}" \
         --tla-code anode_indices="${ANODE_CODE}" \
+        "${COH_PREFLIP_TLA[@]}" \
         "${DUMP_TLA[@]}" \
         "${L1SP_TLA[@]}" \
         "${RAWDECON_TLA[@]}" \

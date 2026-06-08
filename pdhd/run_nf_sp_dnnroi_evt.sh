@@ -396,6 +396,14 @@ NVSMI_PID=$!
 # peak resident-set size for the lifetime of the process — better than
 # sampling because it captures the high-water mark exactly.
 RC=0
+# Pre-flip coherent-noise grouping: auto-enable when the local .coh_preflip
+# sentinel exists (run-027409 etc. decoded with the pre-2025-06-30 channel map).
+# Delete the sentinel once files are re-decoded with a post-flip duneprototypes.
+COH_PREFLIP_TLA=()
+if [ -f "$PDHD_DIR/.coh_preflip" ]; then
+    COH_PREFLIP_TLA=(--tla-code coh_groups_preflip=true)
+    echo "[coh] .coh_preflip sentinel present -> PRE-FLIP coherent-noise grouping"
+fi
 wire-cell \
     -l stderr \
     -l "${LOG}:debug" \
@@ -412,6 +420,7 @@ wire-cell \
     --tla-str l1sp_pd_mode="${L1SP_PD_MODE_TLA}" \
     --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
     --tla-code apa0_w_roi_tune="${APA0_W_ROI_TUNE}" \
+    "${COH_PREFLIP_TLA[@]}" \
     "${DBG_TLA[@]}" \
     "${L1SP_DUMP_TLA[@]}" \
     "${L1SP_DNN_DBG_TLA[@]}" \

@@ -50,16 +50,25 @@ function(
   // Special debug mode: also dump the pre-Wire-filter, pre-ROI deconvolved
   // waveform (h{u,v,w}_rawdecon<ident> in the magnify ROOT).  OFF in production.
   dump_rawdecon = false,
+  // PRE-FLIP coherent-noise grouping override (run-027409 etc. decoded with the
+  // pre-2025-06-30 channel map).  Default false = toolkit's latest (post-flip)
+  // groups -> bit-identical for colleagues.  Run scripts set this true when the
+  // local `.coh_preflip` sentinel exists.  See pdhd-coh-groups-preflip.jsonnet.
+  coh_groups_preflip = false,
 )
 
   local tools = tools_all;
   local use_resampler = (reality == 'data');
 
   local base = import 'pgrapher/experiment/pdhd/chndb-base.jsonnet';
+  local coh_preflip = import 'pdhd-coh-groups-preflip.jsonnet';
   local chndb = [{
     type: 'OmniChannelNoiseDB',
     name: 'ocndbperfect%d' % n,
-    data: base(params, tools.anodes[n], tools.field, n, use_freqmask=use_freqmask) { dft: wc.tn(tools.dft) },
+    data: base(params, tools.anodes[n], tools.field, n, use_freqmask=use_freqmask) { dft: wc.tn(tools.dft) }
+          + (if coh_groups_preflip
+             then { groups: coh_preflip.groups(n), femb_negpulse_groups: coh_preflip.negpulse_groups }
+             else {}),
     uses: [tools.anodes[n], tools.field, tools.dft],
   } for n in std.range(0, std.length(tools.anodes) - 1)];
 
