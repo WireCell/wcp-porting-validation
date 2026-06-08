@@ -56,6 +56,41 @@ v3 file (v4 angles/pitch are identical to ≤0.01°):
   the thin CRP PCB stack. The sign flips between top and bottom because the two
   CRPs drift in opposite directions.
 
+### Pitch of the first U/V wire relative to W
+
+The §1 table above gave the **drift (X)** offsets. The *transverse* relationship —
+the pitch direction and where the first wire of each plane sits — is the following.
+Here "relative to W" means measured along **W's pitch direction**, which for the
+vertical W wires is the **+Z axis**. Wires are numbered in increasing pitch, so
+"first wire" = wire index 0.
+
+- **Pitch direction (robust).** U's and V's pitch directions each make **60° with
+  W's pitch** (= 30° off the horizontal Z axis), tilted to opposite sides in Y.
+  The Y-component **flips between top and bottom** — i.e. U and V swap which side
+  they lean, exactly mirroring the wire-angle swap:
+
+  | CRP | U pitch dir (Ŷ, Ẑ) | V pitch dir (Ŷ, Ẑ) | angle to W pitch |
+  |---|---|---|---|
+  | **bottom (0–3)** | (−0.866, +0.5) | (+0.866, +0.5) | 60° each |
+  | **top (4–7)** | (+0.866, +0.5) | (−0.866, +0.5) | 60° each |
+
+- **First-wire offset (Z position of U[0]/V[0] vs W[0]).** The first U/V wire
+  centre sits a small distance **ahead of the first W wire** along +Z. This offset
+  is **sub-pitch but not uniform** — the two faces of an anode swap the U↔V value,
+  and each CRP contains two registration "types" of anode. Measured (mm, along +Z):
+
+  | CRP | anode type | face | U[0]−W[0] | V[0]−W[0] |
+  |---|---|---|---|---|
+  | **bottom** | 0, 2 | front / back | 1.78 / 1.22 | 1.22 / 1.78 |
+  | **bottom** | 1, 3 | front / back | 11.69 / 3.48 | 3.48 / 11.69 |
+  | **top** | 4, 6 | front / back | 3.48 / 11.68 | 11.68 / 3.48 |
+  | **top** | 5, 7 | front / back | 1.22 / 1.78 | 1.78 / 1.22 |
+
+  The takeaway: the **pitch direction** of U/V vs W is a clean, fixed 60° that
+  mirror-flips top↔bottom; the absolute **first-wire transverse offset** is small
+  (≈1–12 mm, i.e. ≤ ~1.5 pitch) and depends on the specific anode and face
+  (front/back), because which physical wire becomes "wire 0" follows the wrapping.
+
 ---
 
 ## 2. Top (anodes 4–7) vs bottom (anodes 0–3)
