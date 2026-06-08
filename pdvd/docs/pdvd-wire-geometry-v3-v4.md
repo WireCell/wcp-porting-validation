@@ -5,6 +5,11 @@ Measured directly from the shipped wire files (read-only inspection, 2026-06-07)
 - `wire-cell-data/protodunevd-wires-larsoft-v3.json.bz2` (production, Apr 21 2025, 193 082 B)
 - `wire-cell-data/protodunevd-wires-larsoft-v4.json.bz2` (experimental, Jun 7 2026, 194 054 B)
 
+> **A local `v5` now exists** = v4 with the induction U/V planes shifted along the W pitch
+> (+13.2 mm bottom / −9.8 mm top) to fix the U/V-vs-W registration measured from real
+> tracks. It closes the imaging gaps v4 still has. See
+> `pdvd-uvw-wire-offset-calibration.md` (built with `pdvd/make_v5_uvwcal.py`, kept local).
+
 Both files have **8 anodes (idents 0–7), 16 faces, 48 planes, 13 840 wires,
 12 288 channels**. `v4` = **v3's channel assignment + the v5 GDML wire positions** (see the full
 audit in the toolkit repo: `img/docs/protodune-wire-geometry-channel-mapping-audit.md`).

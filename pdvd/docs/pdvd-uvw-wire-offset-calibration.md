@@ -1,7 +1,9 @@
 # PDVD U/V–vs–W wire-offset calibration from real tracks (run 39324)
 
-Measured from real signal (read-only on all inputs, 2026-06-07).
-Reproduce with `pdvd/pdvd_uvw_offset.py`.
+Measured from real signal (2026-06-07). Analysis reproduces with
+`pdvd/pdvd_uvw_offset.py`; the calibration is now baked into a local **v5** wire file
+(`protodunevd-wires-larsoft-v5.json.bz2`) and confirmed by re-imaging — see
+**The v5 wire file** below.
 
 ## Why
 
@@ -139,41 +141,62 @@ symmetric, more statistics should pull |bottom| and |top| together; if the oppos
 asymmetry persists, it is a real CRP/drift effect to model — **not** a simple symmetric
 wire re-registration. **So: not yet consistent; the asymmetry is the main open question.**
 
-## Recipe — build a U/V-vs-W-corrected file from v4
+## The v5 wire file — built, validated, and imaged
 
-Keep U and V; rigidly shift each CRP's W (collection, plane ident 2) plane in z by
-ΔZ_W (`pdvd/make_v4_uvwcal.py`):
+The correction is now baked into a local **`protodunevd-wires-larsoft-v5.json.bz2`**
+(in `wire-cell-data/`, kept local like v4 — not pushed to `WireCell/wire-cell-data`).
 
-```python
-from wirecell.util.wires import persist
-store = persist.load("protodunevd-wires-larsoft-v4.json.bz2")
-DZ = {0:-13.2, 1:-13.2, 2:-13.2, 3:-13.2,    # bottom CRP, mm
-      4:+9.8,  5:+9.8,  6:+9.8,  7:+9.8}       # top CRP
-pt_dz = {}
-for anode in store.anodes:
-    for fi in anode.faces:
-        for pi in store.faces[fi].planes:
-            if store.planes[pi].ident != 2:          # W plane only
-                continue
-            for wi in store.planes[pi].wires:
-                w = store.wires[wi]
-                pt_dz[w.tail] = pt_dz[w.head] = DZ[anode.ident]
-pts = list(store.points)
-for idx, dz in pt_dz.items():
-    pts[idx] = pts[idx]._replace(z=pts[idx].z + dz)
-persist.dump("protodunevd-wires-larsoft-v4-uvwcal.json.bz2",
-             persist.todict(store._replace(points=pts)))     # NOTE: dump todict(store)
-```
+**Convention chosen: keep W fixed, move U & V along the W pitch direction.** W is the
+collection plane and its absolute z is the trusted reference; shifting U/V (rather than
+W) lands the blobs at the *collection* z. A W-shift gives identical *internal*
+U∩V-vs-W consistency but would rigidly translate every blob by ΔZ_W — so U/V-shift is
+the physically correct choice for absolute placement.
 
-**Validation (mechanism).** Regenerating and re-measuring on the same tracks gives
-**median ΔZ_W ≈ 0** and **consistency 90 % (bottom) / 83 % (top)**, up from 0–1 %.
-This confirms the file-writing path; the *physics* validation is to point the
-production config at the new file, **re-image run 39324, and confirm the gaps
-close** (not done here — analysis only).
+`pdvd/make_v5_uvwcal.py`: from v4, keep the W plane (ident 2) untouched and shift each
+**U and V (ident 0,1) wire endpoint purely in z** (= the W pitch direction, since the
+vertical collection wires have pitch along z) by `−ΔZ_W`:
 
-Equivalent alternative (induction side): instead of moving W, shift the U **and** V
-strips by `dp` (−6.6 mm bottom / +4.9 mm top) along pitch — same effect on the
-image, since only `pU+pV` relative to W matters.
+| CRP | anodes | ΔZ_W (mismatch) | **U,V z-shift applied** |
+|---|---|---|---|
+| bottom | 0–3 | −13.2 mm | **+13.2 mm** |
+| top | 4–7 | +9.8 mm | **−9.8 mm** |
+
+> **Magnitude note.** This is the **full ΔZ_W** in pure z. A rigid z-translation `t` of
+> *both* U and V lines moves the U∩V crossing by exactly `t`, so nulling
+> `z_cross − z_W = ΔZ_W` needs `−ΔZ_W`. Do **not** confuse this with the `+3.3 / −2.45 mm`
+> in the table above — those are the z-*component* of an *induction-pitch* slide (a
+> different motion, with a y-component too); the crossing still moves the full ΔZ_W via
+> `ΔZ_W = 2·dp`. "Along the **W** pitch direction" = pure z = the full ΔZ_W.
+
+**Validated three independent ways** (`pdvd/validate_v5.py`):
+
+1. **Geometry file diff v4→v5** — W tail/head points byte-identical (max |Δ|=0); U,V
+   points moved *only* in z (max |Δx|,|Δy|=0), by exactly +13.2 / −9.8 mm (to 1e-13 mm).
+2. **Offset remeasure on the real tracks** — v5 gives **median ΔZ_W = −0.01 / −0.00 mm**
+   and ±½-pitch consistency **0.2 % → 89.9 %** (bottom) / **0.8 % → 83.1 %** (top).
+3. **W-shift vs U/V-shift equivalence** — v5 (U/V-shift) and the W-shift file
+   (`make_v4_uvwcal.py`) give **identical** median ΔZ_W and consistency, confirming the
+   two framings are the same correction seen from either side.
+
+**Imaging (the physics validation).** Run 39324 event 0 (art event 339850) was
+**re-imaged and re-clustered with v5**, all 8 anodes (production config temporarily
+pointed at v5, then reverted to v3). Per-anode Bee links (bee idx 0–7 = anode 0–7):
+
+| geometry | Bee link |
+|---|---|
+| **v4 baseline** (positions correct, U/V-vs-W gap remains) | <https://www.phy.bnl.gov/twister/bee/set/fd21cf88-9936-4c38-8803-9b050ed63a2f/event/list/> |
+| **v5** (U/V-vs-W corrected) | <https://www.phy.bnl.gov/twister/bee/set/0150ea98-9d26-4c23-bacd-37c26a98187d/event/list/> |
+
+Compare the two links anode-by-anode: the v5 imaging closes the U/V-vs-W gaps that the
+per-tick consistency above quantifies (0–1 % → 83–90 % of track ticks now satisfy
+three-plane closure). Total imaged blobs are comparable (v4 36 833 / v5 34 223) — gap
+closure re-forms blobs at the correct W rather than simply adding them.
+
+### Equivalent W-shift recipe (alternative)
+
+Instead of moving U/V, shift each CRP's W plane in z by ΔZ_W (`pdvd/make_v4_uvwcal.py`,
+DZ = −13.2 bottom / +9.8 top). Same *internal* consistency (verified identical above),
+but it displaces all blobs by ΔZ_W in z — use only if W's absolute z is not trusted.
 
 ## v3 vs v4
 
@@ -233,13 +256,19 @@ this rides on top of them.
 - Only the `pU+pV` combination is constrained by W, so a *single* track cannot
   separate an asymmetric U-only vs V-only component from the symmetric one; the
   symmetric form is assumed (and is what "the same offset for U and V" means).
-- To apply: regenerate the wire file with the W plane (or U+V) shifted by the
-  amounts above, or carry the shift as a channel-map offset, then re-image
-  run 39324 and confirm the gaps close. (Not done here — analysis only.)
+- **Applied & imaged.** v5 is built (U/V shifted along z, W fixed) and run 39324 evt 0
+  re-imaged with it (links above). The shift baked in is the **single-track** value per
+  CRP applied to all four anodes of that CRP — so per-anode/per-face fine-tuning, and the
+  opposite-sign bottom/top asymmetry, remain open (see *Top vs bottom consistency*).
 
 ## Files
 
 - `pdvd/pdvd_uvw_offset.py` — the analysis (parameterized over anode/geometry).
-- `pdvd/make_v4_uvwcal.py` — the recipe: build the corrected wire file from v4.
+- `pdvd/make_v5_uvwcal.py` — **build the v5 file**: keep W, shift U/V along z (canonical).
+- `pdvd/validate_v5.py` — three-way validation (file diff / offset remeasure / equivalence).
+- `pdvd/make_v4_uvwcal.py` — equivalent W-shift recipe (alternative).
+- `pdvd/build_peranode_bee_upload.sh` — per-anode Bee build+upload (used for both links).
 - `pdvd/docs/wire-offset-figs/` — `track-*`, `dzW-*` (per-tick mismatch +
   distribution), `yz-*` (U∩V crossings) for anode 0 and anode 4.
+- `wire-cell-data/protodunevd-wires-larsoft-v5.json.bz2` — the corrected file (local,
+  regenerate with `make_v5_uvwcal.py`; not committed to `WireCell/wire-cell-data`).
