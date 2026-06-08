@@ -73,20 +73,25 @@ RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
 [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
 
+# Scans every input_data* root (the reorg split data into
+# input_data_<gain>_<old|new>_coh_grouping); first match wins.
 find_evtdir() {
-    local base="$PDHD_DIR/input_data"
-    for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
-        local rdir="$base/$rname"
-        [ -d "$rdir" ] || continue
-        for ename in "evt${EVT}" "evt_${EVT}"; do
-            local cand="$rdir/$ename"
-            if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
-                echo "$cand"; return 0
+    local base
+    for base in "$PDHD_DIR"/input_data "$PDHD_DIR"/input_data_*; do
+        [ -d "$base" ] || continue
+        for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
+            local rdir="$base/$rname"
+            [ -d "$rdir" ] || continue
+            for ename in "evt${EVT}" "evt_${EVT}"; do
+                local cand="$rdir/$ename"
+                if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
+                    echo "$cand"; return 0
+                fi
+            done
+            if ls "$rdir/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
+                echo "$rdir"; return 0
             fi
         done
-        if ls "$rdir/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
-            echo "$rdir"; return 0
-        fi
     done
     return 1
 }
