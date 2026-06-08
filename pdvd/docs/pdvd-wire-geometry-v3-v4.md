@@ -8,7 +8,8 @@ Measured directly from the shipped wire files (read-only inspection, 2026-06-07)
 Both files have **8 anodes (idents 0–7), 16 faces, 48 planes, 13 840 wires,
 12 288 channels**. `v4` = **v3's channel assignment + the v5 GDML wire positions** (see the full
 audit in the toolkit repo: `img/docs/protodune-wire-geometry-channel-mapping-audit.md`).
-The production config stays on **v3**.
+The production config currently uses **v3**, but **v4 is clearly better in imaging**
+(see the §3 correction) and is preferred going forward.
 
 ## TL;DR
 
@@ -186,9 +187,16 @@ shift. The bottom CRP gets the ~5.5 mm (W) / ~2.5 mm (U/V pitch-direction) move
 (near-rigid, ~0.2 mm per-CRP residual). But v5 *also* nudges the **U/V planes on
 both CRPs** by a few tenths of a mm relative to a fixed W, so the U/V-vs-W
 registration changes everywhere — exactly the sub-mm offset changes seen in §1.
-The net effect is still small: re-imaging run 39324 evts 0–4 with v4 gave **blob
-counts essentially identical to v3** — the moves *shift* each image without filling
-gaps, so **moving to v5 geometry does not close the PDVD imaging gaps**.
+
+**Correction (2026-06-07): v4 is clearly better than v3 in imaging.** An earlier
+version of this note reported that re-imaging run 39324 with v4 gave blob counts
+"essentially identical to v3" and concluded v4 "does not close the gaps" — that was
+a **mistake in the comparison run**, not a real result. v4 (v5 positions) **does**
+improve the image. The benefit is in the **absolute wire positions**; a **separate,
+larger U/V-vs-W registration offset (~2–2.6 W-pitch) survives into v4 unchanged** and
+is what still limits the imaging. That offset has now been measured directly from
+real tracks (run 39324) and turned into a concrete fix — see
+[`pdvd-uvw-wire-offset-calibration.md`](pdvd-uvw-wire-offset-calibration.md).
 
 ---
 
@@ -205,6 +213,12 @@ channel→**plane** map and channel count match `PD2VDTPCChannelMap_v2` 100%; th
 open question is the channel→**wire** ordering, which can only be settled with a
 LArSoft `PD2VDChannelMapService` wire-dump. Full analysis in the toolkit repo:
 `img/docs/protodune-wire-geometry-channel-mapping-audit.md`.
+
+**Now measured from data.** This residual U/V-vs-W offset has since been pinned down
+directly from real tracks (run 39324): it is **~2.5 W-pitch (bottom CRP) / ~1.8
+(top)**, present in both v3 and v4, and removable by a per-CRP W-plane (or
+symmetric U/V) shift — see
+[`pdvd-uvw-wire-offset-calibration.md`](pdvd-uvw-wire-offset-calibration.md).
 
 ---
 
