@@ -77,19 +77,31 @@ vertical W wires is the **+Z axis**. Wires are numbered in increasing pitch, so
 - **First-wire offset (Z position of U[0]/V[0] vs W[0]).** The first U/V wire
   centre sits a small distance **ahead of the first W wire** along +Z. This offset
   is **sub-pitch but not uniform** — the two faces of an anode swap the U↔V value,
-  and each CRP contains two registration "types" of anode. Measured (mm, along +Z):
+  and each CRP contains two registration "types" of anode. Measured for **v3** and
+  **v4** (mm, along +Z; shown as `v3 → v4`):
 
   | CRP | anode type | face | U[0]−W[0] | V[0]−W[0] |
   |---|---|---|---|---|
-  | **bottom** | 0, 2 | front / back | 1.78 / 1.22 | 1.22 / 1.78 |
-  | **bottom** | 1, 3 | front / back | 11.69 / 3.48 | 3.48 / 11.69 |
-  | **top** | 4, 6 | front / back | 3.48 / 11.68 | 11.68 / 3.48 |
-  | **top** | 5, 7 | front / back | 1.22 / 1.78 | 1.78 / 1.22 |
+  | **bottom** | 0, 2 | front / back | 1.78→1.43 / 1.22→1.05 | 1.22→1.05 / 1.78→1.43 |
+  | **bottom** | 1, 3 | front / back | 11.69→11.89 / 3.48→3.85 | 3.48→3.85 / 11.69→11.89 |
+  | **top** | 4, 6 | front / back | 3.48→3.85 / 11.68→11.89 | 11.68→11.89 / 3.48→3.85 |
+  | **top** | 5, 7 | front / back | 1.22→1.05 / 1.78→1.43 | 1.78→1.43 / 1.22→1.05 |
 
   The takeaway: the **pitch direction** of U/V vs W is a clean, fixed 60° that
-  mirror-flips top↔bottom; the absolute **first-wire transverse offset** is small
-  (≈1–12 mm, i.e. ≤ ~1.5 pitch) and depends on the specific anode and face
-  (front/back), because which physical wire becomes "wire 0" follows the wrapping.
+  mirror-flips top↔bottom (identical in v3 and v4); the absolute **first-wire
+  transverse offset** is small (≈1–12 mm, i.e. ≤ ~1.5 pitch) and depends on the
+  specific anode and face (front/back), because which physical wire becomes
+  "wire 0" follows the wrapping.
+
+- **v3 → v4 (this offset does change).** The offset shifts by **−0.35 to +0.37 mm**
+  on *every* anode — including the top CRP. This is because the v3→v4 (v5-geometry)
+  move is **not a perfectly rigid per-CRP translation of all three planes
+  together**: on the bottom CRP, W shifts ~5.5 mm while U/V shift ~5.32 mm (along
+  slightly different transverse directions), and on the top CRP only U/V get the
+  tiny ~0.27 mm v5 residual while W stays put. So the U/V-vs-W *registration*
+  changes at the few-tenths-of-a-mm level even though the overall geometry move is
+  near-rigid. (The numbers in §1 and §2 — angles, pitch, X-stacking — are identical
+  in v3 and v4 to <0.01°.)
 
 ---
 
