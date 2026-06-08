@@ -1,0 +1,144 @@
+# PDVD wire geometry: U/V vs W, top vs bottom, v3 vs v4
+
+Measured directly from the shipped wire files (read-only inspection, 2026-06-07):
+
+- `wire-cell-data/protodunevd-wires-larsoft-v3.json.bz2` (production, Apr 21 2025, 193 082 B)
+- `wire-cell-data/protodunevd-wires-larsoft-v4.json.bz2` (experimental, Jun 7 2026, 194 054 B)
+
+Both files have **8 anodes (idents 0–7), 16 faces, 48 planes, 13 840 wires,
+12 288 channels**. `v4` = **v3's channel assignment + the v5 GDML wire positions** (see the full
+audit in the toolkit repo: `img/docs/protodune-wire-geometry-channel-mapping-audit.md`).
+The production config stays on **v3**.
+
+## TL;DR
+
+- **U/V relative to W.** Within each face the planes stack in drift (X) order
+  **U → V → W**, separated by **0.2 mm** steps in X, with W (collection) the
+  plane behind. Wire **angles** (measured in the Y–Z plane, from the +Z axis):
+  **W = 90°** (vertical), **U and V at ±30° off vertical**. Pitch:
+  **U = V = 7.65 mm**, **W = 5.10 mm**. U/V have ~286 wires/plane, W has 292.
+- **Top vs bottom.** Anodes **0–3 = bottom CRP** (at X ≈ −3415 mm),
+  anodes **4–7 = top CRP** (at X ≈ +3415 mm). They are **mirror images** about the
+  cathode (X = 0): the U/V wire angles are **swapped** between top and bottom, and
+  the U–W / V–W X-offsets flip sign. Angles/pitch/counts are otherwise identical.
+- **v3 → v4.** A **near-rigid transverse shift of only the bottom CRP** (anodes
+  0–3); the top CRP (4–7) is essentially unchanged. No change in the drift (X)
+  direction, in angles, in counts, or in the channel↔plane map.
+
+---
+
+## 1. U/V wires relative to W
+
+Wire direction is measured in the transverse Y–Z plane; angle is `atan2(dy, dz)`
+reduced to `[0,180)`, so **90° = vertical (along Y)**. Numbers below are the
+v3 file (v4 angles/pitch are identical to ≤0.01°):
+
+| plane | angle (Y–Z) | pitch | wires/plane | role |
+|---|---|---|---|---|
+| U | bottom 30.0° / top 150.0° | 7.65 mm | 286–287 | induction (1st seen) |
+| V | bottom 150.0° / top 30.0° | 7.65 mm | 286–287 | induction (2nd seen) |
+| W | 90.0° (both) | 5.10 mm | 292 | collection |
+
+- **Orientation.** W wires are **vertical** (along Y). U and V are the two
+  induction planes at **±30° from vertical** — i.e. ±60° from the W wire's
+  perpendicular. U and V are mirror images of each other across the vertical.
+- **Drift-direction stacking (X), per face.** The three planes sit at slightly
+  different X, ordered the way charge crosses them — **U closest to the drift
+  volume, then V, then W behind**:
+
+  | plane | bottom X (mm) | top X (mm) | offset from W |
+  |---|---|---|---|
+  | U | −3415.1 | +3415.1 | bottom +0.4 / top −0.4 mm |
+  | V | −3415.3 | +3415.3 | bottom +0.2 / top −0.2 mm |
+  | W | −3415.5 | +3415.5 | 0 (reference) |
+
+  So the three planes are stacked **0.2 mm apart in X** (U–V–W), as expected for
+  the thin CRP PCB stack. The sign flips between top and bottom because the two
+  CRPs drift in opposite directions.
+
+---
+
+## 2. Top (anodes 4–7) vs bottom (anodes 0–3)
+
+PDVD is two CRPs of 4 anodes each, mirror-symmetric about the cathode at X = 0:
+
+| | anodes | X position | U angle | V angle | W angle |
+|---|---|---|---|---|---|
+| **bottom CRP** | 0, 1, 2, 3 | −3415 mm | 30° | 150° | 90° |
+| **top CRP** | 4, 5, 6, 7 | +3415 mm | 150° | 30° | 90° |
+
+Key differences:
+
+- **X side / drift direction is opposite** (bottom at −X, top at +X).
+- **U and V wire angles are swapped** between top and bottom (a consequence of the
+  mirror): a U wire on the bottom is parallel to a V wire on the top.
+- **U–W / V–W X-offsets flip sign** (table in §1).
+- Pitch, wire counts, wrapping, and the channel↔plane assignment are **identical**
+  across all 8 anodes and both CRPs.
+
+---
+
+## 3. v3 → v4 wire shift (measured, matched wire-by-wire)
+
+`v4` carries the **v5 GDML positions** on top of v3's channels. The shift is
+purely transverse (no drift-X component, no angle change). `mean |shift|` is the
+3-D midpoint displacement; `pitch-comp` is its projection onto each plane's pitch
+direction (the component that actually moves the image):
+
+### By CRP group
+
+| group | plane | mean \|shift\| | max | pitch-direction comp. |
+|---|---|---|---|---|
+| **bottom (0–3)** | U | 5.32 mm | 5.52 | **2.48 mm** |
+| | V | 5.32 mm | 5.52 | **2.48 mm** |
+| | W | 5.50 mm | 5.50 | **5.50 mm** |
+| **top (4–7)** | U | 0.32 mm | 0.42 | 0.27 mm |
+| | V | 0.32 mm | 0.42 | 0.27 mm |
+| | W | 0.00 mm | 0.00 | 0.00 mm |
+
+### Per anode
+
+The shift is **uniform within each CRP** — all four bottom anodes move the same,
+all four top anodes move the same:
+
+| anode | U pitch-comp | V pitch-comp | W pitch-comp |
+|---|---|---|---|
+| 0 | 2.48 mm | 2.48 mm | 5.50 mm |
+| 1 | 2.48 mm | 2.48 mm | 5.50 mm |
+| 2 | 2.48 mm | 2.48 mm | 5.50 mm |
+| 3 | 2.48 mm | 2.48 mm | 5.50 mm |
+| 4 | 0.27 mm | 0.27 mm | 0.00 mm |
+| 5 | 0.27 mm | 0.27 mm | 0.00 mm |
+| 6 | 0.27 mm | 0.27 mm | 0.00 mm |
+| 7 | 0.27 mm | 0.27 mm | 0.00 mm |
+
+**Interpretation.** v5 repositioned **only the bottom CRP**, by ~5.5 mm in the W
+pitch direction and ~2.5 mm in the U/V pitch direction (a near-rigid Y–Z
+translation; per-CRP best-fit residual ~0.2 mm). The top CRP is essentially
+unchanged (the 0.27 mm U/V residual is below pitch). Re-imaging run 39324 evts 0–4
+with v4 gave **blob counts essentially identical to v3** — a near-rigid per-CRP
+shift *moves* each image without filling gaps, so **moving to v5 geometry does not
+close the PDVD imaging gaps**.
+
+---
+
+## 4. Caveat — the open issue is channel→wire, not geometry
+
+The wire **positions** (this doc) are well understood and v3↔v4↔v5 agree up to the
+bottom-CRP shift above. The unresolved PDVD issue is the **within-plane
+channel→wire assignment**: the shipped v3's U/V channel numbering follows a
+drift-order / channel-block convention that the current wire-cell converter does
+**not** reproduce (it differs on 12/16 U, 16/16 V, 12/16 W face-planes), and no
+upstream test validates it (`test_gdml_integration_v4` checks only Z-plane
+geometry). This is *not* a ±3-style shift and *not* a position error. v3's
+channel→**plane** map and channel count match `PD2VDTPCChannelMap_v2` 100%; the
+open question is the channel→**wire** ordering, which can only be settled with a
+LArSoft `PD2VDChannelMapService` wire-dump. Full analysis in the toolkit repo:
+`img/docs/protodune-wire-geometry-channel-mapping-audit.md`.
+
+---
+
+*Numbers measured with a read-only traversal of the v3/v4 wire schema files
+(`wirecell.util.wires.persist.load`); angles in the Y–Z plane from +Z, pitch as
+median adjacent-wire perpendicular spacing, v3→v4 shift matched wire-by-wire in
+lockstep plane order.*
