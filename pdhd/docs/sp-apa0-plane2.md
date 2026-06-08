@@ -111,6 +111,32 @@ uses `Wire_col` (σ = 10/√π ≈ 5.64, `sp-filters.jsonnet:84`), much wider th
 induction `Wire_ind` (σ ≈ 0.42). This widens charge across collection wires; for
 a now-inducting plane 2 it is worth revisiting (see §5).
 
+### Empirically confirmed (run 027409, evt 0, APA0)
+
+A temporary `log->info` was added at the ROI-path branch (`OmnibusSigProc.cxx:1891/1900`)
+and the event reprocessed (`./run_nf_sp_evt.sh -a 0 027409 0`). Per-plane output:
+
+```
+<OmnibusSigProc:apa0sigproc0> ROIpath: aid=0 iplane=0 layer=0 path=INDUCTION(3-step:tighter+tight+loose)
+<OmnibusSigProc:apa0sigproc0> ROIpath: aid=0 iplane=1 layer=2 path=INDUCTION(3-step:tighter+tight+loose)
+<OmnibusSigProc:apa0sigproc0> ROIpath: aid=0 iplane=2 layer=1 path=COLLECTION(simple:single-tight,no-LF)
+```
+
+This confirms two things directly:
+
+- **Plane 2 takes the COLLECTION (simpler) path**, not the induction path. The
+  `plane2layer` remap does *not* reroute the ROI processing — the branch keys on
+  the raw plane index (`iplane==2`), so the mapping cannot push plane 2 onto the
+  induction ROI path.
+- **The kernel is swapped, the path is not**: plane 2 reports `layer=1` (the
+  V/induction field response) while plane 1 reports `layer=2` (the W/collection
+  response) — the V↔W swap is real and affects the deconvolution kernel, yet
+  plane 2 is still processed by the collection ROI branch. (The debug print was
+  reverted after confirmation; production is unchanged.)
+
+This is precisely the mismatch motivating Tier-2 idea (4) in §5: induction-like
+data going through the collection ROI path.
+
 ---
 
 ## 3. The two kernels: ROI-finding vs charge deconvolution
