@@ -388,10 +388,13 @@ and it is controllable through the existing refinement knobs.
 
 ### The toggle (W-only, per-plane)
 
-`make_sigproc(..., apa0_w_roi_tune=false)` in `sp.jsonnet`. Default **false** ⇒
-production is **byte-identical** (no per-plane keys emitted ⇒ the scalar knobs
-apply ⇒ identical to prior production). When **true** *and* `anode.data.ident==0`,
-the refinement is loosened **on slot 1 (W) only**:
+`make_sigproc(..., apa0_w_roi_tune=true)` in `sp.jsonnet`. **Default `true` as of
+2026-06-08** — promoted to the standard PDHD config (this changes the APA0 W SP
+output for *all* PDHD chains vs the pre-2026-06-08 baseline; it is W-only, so U
+and V are unaffected). When the default holds *and* `anode.data.ident==0`, the
+refinement is loosened **on slot 1 (W) only**. Set **`false`** to recover the
+pre-tune APA0 W behaviour (no per-plane keys emitted ⇒ the scalar knobs apply ⇒
+byte-identical to pre-2026-06-08 production):
 
 | knob (slot 1 = W) | prod (off) | tuned (on) | effect |
 |------|-----------|-----------|--------|
@@ -441,11 +444,12 @@ additional W-slot threshold there.
 
 ### Wiring & propagation through DNN-ROI
 
-- **Production NF-SP** (`wct-nf-sp.jsonnet`) does not pass the toggle ⇒ default
-  off ⇒ byte-identical.
-- **DNN-ROI driver** (`wct-nf-sp-dnnroi.jsonnet`) exposes `apa0_w_roi_tune` and
-  **defaults it true** (`--w-tune false` on `run_nf_sp_dnnroi_evt.sh` recovers
-  off); the tune flows through unchanged (W's collection-role output is the
+- **Production NF-SP** (`wct-nf-sp.jsonnet`) does not pass the toggle ⇒ inherits
+  the `sp.jsonnet` default, which is now **`true`** (2026-06-08) ⇒ the APA0 W-tune
+  is ON in the SP chain too (W-only; U/V unchanged).
+- **DNN-ROI driver** (`wct-nf-sp-dnnroi.jsonnet`) also passes `apa0_w_roi_tune=true`
+  explicitly (redundant with the new default; `--w-tune false` on
+  `run_nf_sp_dnnroi_evt.sh` recovers off); the tune flows through unchanged (W's collection-role output is the
   traditional SP gauss, untouched by the U/V DNN). DNN-ROI chain W-region:
   **2.6 % → 6.3 %**. OFF vs W-only, **U and V gauss are byte-identical** (verified
   per-plane through MP2/MP3); only W differs — the W-only isolation is complete
@@ -455,6 +459,7 @@ additional W-slot threshold there.
 
 | file | what |
 |------|------|
+| `work/027409_0_preflip_wtune/magnify-…-apa0-dnnroi.root` | **DNN-ROI, W-tune ON (new default) + pre-flip coh grouping** — the standard for run-027409 (pre-flip) data, 2026-06-08 |
 | `work/027409_0_woff/magnify-…-apa0-dnnroi.root` | **DNN-ROI, tune OFF** (new binary) |
 | `work/027409_0_wonly/magnify-…-apa0-dnnroi.root` | **DNN-ROI, W-only tune ON** (U/V identical to off) |
 | `work/027409_0_wtune/magnify-…-apa0-dnnroi.root` | earlier all-induction tune (U also moved — superseded) |
