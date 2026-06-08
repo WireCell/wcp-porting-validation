@@ -246,10 +246,9 @@ recover sub-threshold broad signal; (3) last, as it also loosens U/V refine.
 4. **Route plane 2 through the induction 3-step ROI path.** Now that plane 2
    *inducts*, the richer induction admission (tighter+tight compare + loose-ROI
    extension + ROI-refine decon) may recover more than the single collection
-   pass. This is currently impossible from config: the branch keys on the **raw**
-   `iplane == 2` (`OmnibusSigProc.cxx:1891, 1914`; `decon_2D_looseROI` guard at
-   `:1550`), independent of `plane2layer`. It would need a config-selectable
-   "treat-as-induction" flag for that plane.
+   pass. **This is now implemented** as the `roi_plane2layer` factorization —
+   see §6. (Previously impossible from config: the branch keyed on the raw
+   `iplane == 2`, independent of `plane2layer`.)
 
 5. **Extend L1SPFilterPD to plane 2 (research, not a drop-in).** L1SP corrects
    unipolar-on-induction signals using pre-built bipolar+unipolar bases
@@ -267,7 +266,69 @@ recover sub-threshold broad signal; (3) last, as it also loosens U/V refine.
 
 ---
 
-## 6. Source reference index
+## 6. The `roi_plane2layer` factorization (implemented)
+
+The hard-coded "plane 2 = collection" assumption in the ROI **formation** path is
+now factored into a configurable per-plane remap, `roi_plane2layer` (default
+`[0,1,2]`). It mirrors the existing `plane2layer` (which remaps only the
+deconvolution **kernel**) but governs which ROI path a plane takes: plane `p` is
+treated as the collection plane (single tight pass, no LF, `th_col`) iff
+`roi_plane2layer[p] == 2`, else as an induction plane (3-step
+tighter+tight+loose, LF filters, `th_ind`). It is fully general — any plane can
+be assigned either ROI class, on any anode.
+
+**Scope (deliberately bounded).** The remap drives the ROI *formation* path only:
+the OmnibusSigProc branch, the LF application inside
+`decon_2D_tightROI`/`tighterROI`/`looseROI`, the looseROI early-return, and the
+tight-ROI threshold class in `ROI_formation`. The rms storage and all data arrays
+stay keyed on the **physical** plane (they feed the refinement stage by physical
+index). Refinement (`CleanUpCollectionROIs`/`CleanUpInductionROIs`, bound to the
+physical `rois_u/v/w` structures) and charge extraction stay on the physical
+plane and remain self-consistent.
+
+**Touch points** (all gated by the default `[0,1,2]` ⇒ byte-identical):
+
+| File | What |
+|------|------|
+| `sigproc/inc/WireCellSigProc/OmnibusSigProc.h` | `m_roi_plane2layer{0,1,2}` + `is_roi_collection(plane)` helper |
+| `sigproc/src/OmnibusSigProc.cxx` | config read; `roi_form.set_roi_plane2layer()`; replace raw `==2`/`!=2` in the formation path + LF branches with `is_roi_collection()` |
+| `sigproc/src/ROI_formation.{h,cxx}` | `set_roi_plane2layer()` + member; threshold class at the `find_ROI_by_decon_itself` rms loop follows the remap, storage stays physical |
+| `cfg/pgrapher/experiment/pdhd/sp.jsonnet` | `make_sigproc(..., roi_plane2layer=null)`; emits the key only when non-null |
+| `pdhd/wct-nf-sp.jsonnet` | `roi_plane2layer_apa0=null` TLA → passes the remap to APA0 only (APA1–3 always standard) |
+
+**Enabling the APA0 V↔W ROI-path swap:**
+
+```bash
+wire-cell ... --tla-code roi_plane2layer_apa0='[0,2,1]' -c wct-nf-sp.jsonnet
+```
+
+`[0,2,1]` sends the now-inducting W plane (index 2) through the induction ROI
+path and the now-collecting V plane (index 1) through the collection path —
+matching the `plane2layer=[0,2,1]` kernel swap.
+
+### Verification (run 027409, evt 0, APA0)
+
+- **Default off is byte-identical.** With `roi_plane2layer` unset, the SP output
+  (`gauss0`/`wiener0`/summary) is bit-for-bit identical to the pre-factorization
+  build. Checked against the FFTW run-to-run noise floor: two runs of the *same*
+  binary were themselves identical here, and old-vs-new(default) was identical
+  across all 8 frame members.
+- **The swap takes effect.** With `roi_plane2layer_apa0=[0,2,1]`, `gauss0`/
+  `wiener0` change (≈85k of 15.4M cells; the W-plane ROIs now formed via the
+  induction path), while the channel/tick geometry members are unchanged.
+- **Magnify** (n_ticks 5999 both):
+  - default: `work/027409_0/magnify-run027409-evt0-apa0.root`
+  - swap:    `work/027409_0_swap/magnify-run027409-evt0-apa0.root`
+
+> Note: the colleague's coherent-group commit (`fd12265b`) also dropped
+> `std.parseJson` around `std.extVar("elecGain")` in `params.jsonnet`, which
+> breaks the `-V elecGain=...` (string) standalone path with "Unexpected type
+> string, expected number". Restored as a type-robust form that accepts both a
+> string (`-V`) and a number (`--ext-code`, the dunesw path).
+
+---
+
+## 7. Source reference index
 
 | File | Lines | Role |
 |------|-------|------|

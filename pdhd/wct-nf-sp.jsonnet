@@ -46,6 +46,7 @@ function(
   l1sp_pd_dump_all_rois = false,                // when true (with -w), per-ROI NPZ fires for every ROI (incl. non-triggered) — for ML training set
   l1sp_pd_adj_enable = true,                    // cross-channel adjacency expansion; default ON (see sigproc/docs/l1sp/L1SPFilterPD.md). Pass false to recover pre-2026-05-02 behaviour.
   l1sp_pd_adj_max_hops = 3,                     // iterative-expansion hop cap (default 3 ⇔ ±3 channels). Pass 1 to recover pre-2026-05-03 non-transitive behaviour.
+  roi_plane2layer_apa0 = null,                  // APA0 ROI-class remap for OmnibusSigProc (default null=OFF => standard [0,1,2]). Pass --tla-code roi_plane2layer_apa0='[0,2,1]' to route the now-inducting W plane through the induction ROI path. APA1-3 always standard. See pdhd/docs/sp-apa0-plane2.md.
   // l1sp_pd_planes is not exposed here: sp.jsonnet defaults to APA0→[0], APA1-3→[0,1].
   // Special debug mode: also dump the pre-Wire-filter, pre-ROI deconvolved
   // waveform (h{u,v,w}_rawdecon<ident> in the magnify ROOT).  OFF in production.
@@ -77,6 +78,7 @@ function(
                                     l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
                                     l1sp_pd_adj_enable=l1sp_pd_adj_enable,
                                     l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                                    roi_plane2layer=(if a.data.ident == 0 then roi_plane2layer_apa0 else null),
                                     dump_rawdecon=dump_rawdecon)
                     for a in tools.anodes];
 
