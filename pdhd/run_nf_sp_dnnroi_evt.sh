@@ -155,6 +155,9 @@ DNN_DEBUG_DIR=""
 CALIB_ROOT=""
 LOOSE_HEUR=0
 L1SP_THRESH_OVERRIDE=""
+# APA0 W-plane ROI tune (sp.jsonnet apa0_w_roi_tune).  Default true (driver
+# default); pass --w-tune false for the bit-identical pre-tune APA0 SP.
+APA0_W_ROI_TUNE="true"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -173,6 +176,7 @@ while [ $# -gt 0 ]; do
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
         -O) WORK_SUFFIX="$2"; shift 2 ;;
+        --w-tune) APA0_W_ROI_TUNE="$2"; shift 2 ;;
         -Z) DNN_DEBUG_DIR="$2"; shift 2 ;;
         -c) CALIB_ROOT="$2"; shift 2 ;;
         --loose-heur) LOOSE_HEUR=1; shift ;;
@@ -407,6 +411,7 @@ wire-cell \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
     --tla-str l1sp_pd_mode="${L1SP_PD_MODE_TLA}" \
     --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
+    --tla-code apa0_w_roi_tune="${APA0_W_ROI_TUNE}" \
     "${DBG_TLA[@]}" \
     "${L1SP_DUMP_TLA[@]}" \
     "${L1SP_DNN_DBG_TLA[@]}" \

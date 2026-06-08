@@ -386,27 +386,33 @@ The W signal's gaps are **not** a loose-ROI-finding failure — they are
 So **Q1 (good loose ROIs?) = yes**; **Q2 (survive refinement?) = the problem**,
 and it is controllable through the existing refinement knobs.
 
-### The toggle
+### The toggle (W-only, per-plane)
 
 `make_sigproc(..., apa0_w_roi_tune=false)` in `sp.jsonnet`. Default **false** ⇒
-production is **byte-identical** (the off-branch sets `r_pad=5`,
-`r_break_roi_loop=2` = the C++ defaults, and `r_th_factor=2.5` = the prior APA0
-value). When **true** *and* `anode.data.ident==0`, the induction-path refinement
-is loosened:
+production is **byte-identical** (no per-plane keys emitted ⇒ the scalar knobs
+apply ⇒ identical to prior production). When **true** *and* `anode.data.ident==0`,
+the refinement is loosened **on slot 1 (W) only**:
 
-| knob | prod (off) | tuned (on) | effect |
+| knob (slot 1 = W) | prod (off) | tuned (on) | effect |
 |------|-----------|-----------|--------|
 | `r_break_roi_loop` | 2 | **0** | no `BreakROI` split of the prolonged W signal |
 | `r_pad` | 5 | **20** | wider `ShrinkROI` margin kept around each core |
 | `r_th_factor` | 2.5 | **1.5** | lower refine "is-signal" threshold; weak tails count as support |
 
-**Scope caveat — per-anode, not per-plane.** These are scalar
-`OmnibusSigProc` config keys, applied to APA0's **whole induction path = U + W**
-(V/collection skips Break/Shrink/CleanUpInduction and is untouched). U is also
-loosened (full-plane 2.8 % → unchanged final gauss values, mask extent only;
-in the track region U ROIs widen). A true **W-only** version needs the per-plane
-C++ factorization of `m_r_*` (mirror of `m_Wiener_tight_filters[plane]`) — not
-done here; the per-anode tune was accepted as the simpler, sufficient lever.
+**W-only via per-plane factorization (the C++ change).** Originally these were
+scalar `OmnibusSigProc` keys applied to APA0's *whole* induction path (U + W),
+which perturbed U (the DNN-ROI plane). They are now **per-plane**: each of
+`m_r_th_factor` / `m_r_pad` / `m_r_break_roi_loop` accepts an optional size-3
+array (`r_th_factor_planes` / `r_pad_planes` / `r_break_roi_loop_planes`,
+indexed by slot) with an **empty-vector ⇒ scalar-broadcast** fallback so the
+off-path is bit-identical. `ROI_refinement` reads them through
+`get_th_factor(plane)` / `get_pad(plane)` accessors (the plane is the slot the
+ROI was built with, `roi->get_plane()`); the break-loop count is per-plane in
+`OmnibusSigProc`. `sp.jsonnet` sets `[U, W, V] = [2.5, 1.5, 2.5]` etc., so
+**U (slot 0) and V/collection (slot 2) stay at the production values**. Verified:
+on 027409 evt 0, OFF vs W-only the final **U and V gauss are byte-identical**
+(through MP2/MP3) and only **W** differs; W-region 2.6 % → 6.3 %, U unchanged.
+The slot index is confirmed empirically — W moves, U does not, so slot 1 = W.
 
 ### Why `filter_responses_tn` was left ON (the FR-correction probe)
 
@@ -428,33 +434,39 @@ it is **not** used. The realistic ceiling is the FR-on 10.2 %.
 ### Residual gap and how to close it
 
 Tuned gauss (6.3 %) vs FR-on ceiling (10.2 %): the remainder is `ShrinkROI` +
-`CleanUpInductionROIs` erosion (BreakROI is already disabled). The global knobs
-can narrow but not fully close it without also loosening U; full closure needs
-the per-plane `m_r_*` C++ path above.
+`CleanUpInductionROIs` erosion (BreakROI is already disabled). Closing it further
+is now purely a tuning question on W's per-plane knobs (the C++ path is in place);
+`CleanUpInductionROIs` has no exposed knob, so full closure would need an
+additional W-slot threshold there.
 
 ### Wiring & propagation through DNN-ROI
 
 - **Production NF-SP** (`wct-nf-sp.jsonnet`) does not pass the toggle ⇒ default
   off ⇒ byte-identical.
 - **DNN-ROI driver** (`wct-nf-sp-dnnroi.jsonnet`) exposes `apa0_w_roi_tune` and
-  **defaults it true**; the tune flows through unchanged (W's collection-role
-  output is the traditional SP gauss, untouched by the U/V DNN). DNN-ROI chain
-  W-region: **2.6 % → 6.3 %** (matches the SP-level number exactly).
+  **defaults it true** (`--w-tune false` on `run_nf_sp_dnnroi_evt.sh` recovers
+  off); the tune flows through unchanged (W's collection-role output is the
+  traditional SP gauss, untouched by the U/V DNN). DNN-ROI chain W-region:
+  **2.6 % → 6.3 %**. OFF vs W-only, **U and V gauss are byte-identical** (verified
+  per-plane through MP2/MP3); only W differs — the W-only isolation is complete
+  at the final output.
 
 ### Validation artifacts
 
 | file | what |
 |------|------|
-| `work/027409_0/magnify-…-apa0-dnnroi.root` | DNN-ROI baseline (toggle off) |
-| `work/027409_0_wtune/magnify-…-apa0-dnnroi.root` | **DNN-ROI tuned** (toggle on) |
+| `work/027409_0_woff/magnify-…-apa0-dnnroi.root` | **DNN-ROI, tune OFF** (new binary) |
+| `work/027409_0_wonly/magnify-…-apa0-dnnroi.root` | **DNN-ROI, W-only tune ON** (U/V identical to off) |
+| `work/027409_0_wtune/magnify-…-apa0-dnnroi.root` | earlier all-induction tune (U also moved — superseded) |
 | `work/027409_0/magnify-…-apa0-looseROI-FRon.root` | loose-ROI ceiling, FR on (10.2 %) |
 | `work/027409_0/magnify-…-apa0-looseROI-FRoff.root` | loose-ROI ceiling, FR off (96.4 %) |
 | `work/027409_0/magnify-…-apa0-Wtuned-noFR.root` | tuned gauss, FR off (25.8 %) |
 
 ### Source reference (additions)
 
-| File | Lines | Role |
-|------|-------|------|
-| `cfg/pgrapher/experiment/pdhd/sp.jsonnet` | `apa0_w_roi_tune` param + `roi_tune` gate; `r_th_factor`/`r_pad`/`r_break_roi_loop` branches | the toggle |
-| `wcp-porting-img/pdhd/wct-nf-sp-dnnroi.jsonnet` | `apa0_w_roi_tune=true` default + pass-through to `make_sigproc` | DNN-chain wiring |
-| `sigproc/src/OmnibusSigProc.cxx` | 1993 (`r_break_roi_loop` loop), 2007 (`ShrinkROI`/`r_pad`), 1961/2011/2020 (`CleanUp*`), ctor 1842–1845 (`m_r_*`) | knobs' algorithmic sites |
+| File | Role |
+|------|------|
+| `cfg/pgrapher/experiment/pdhd/sp.jsonnet` | `apa0_w_roi_tune` param + `roi_tune` gate; emits per-plane `r_{th_factor,pad,break_roi_loop}_planes` `[U,W,V]` arrays when on |
+| `wcp-porting-img/pdhd/wct-nf-sp-dnnroi.jsonnet`, `run_nf_sp_dnnroi_evt.sh` | `apa0_w_roi_tune=true` default + pass-through; `--w-tune` CLI flag |
+| `sigproc/src/ROI_refinement.{h,cxx}` | per-plane `th_factor_v`/`pad_v` + `get_th_factor(plane)`/`get_pad(plane)` accessors (empty ⇒ scalar fallback); consumed in `load_data`, `generate_merge_ROIs`, `ShrinkROI`, `BreakROI` |
+| `sigproc/src/OmnibusSigProc.{h,cxx}` | reads `*_planes` config arrays; applies via `set_th_factor_planes`/`set_pad_planes`; per-plane break-loop count |
