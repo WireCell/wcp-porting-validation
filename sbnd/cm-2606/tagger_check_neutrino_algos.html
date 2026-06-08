@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>TaggerCheckNeutrino — algorithm flow</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body { font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+         margin: 24px; color: #1b1b1b; background: #fafafa; }
+  h1 { font-size: 20px; margin-bottom: 2px; }
+  .sub { color: #555; font-size: 13px; margin-bottom: 16px; }
+  .legend { font-size: 13px; background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            padding: 10px 14px; margin-bottom: 16px; max-width: 980px; }
+  .legend code { background: #f0f0f0; padding: 1px 4px; border-radius: 4px; }
+  .legend .sw { display:inline-block; width:12px; height:12px; border-radius:3px; vertical-align:middle; margin-right:5px; border:1px solid #999;}
+  .mermaid { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; }
+  footer { color:#777; font-size:12px; margin-top:14px; }
+</style>
+</head>
+<body>
+<h1>TaggerCheckNeutrino — pattern-recognition algorithm flow</h1>
+<div class="sub">Source: <code>wire-cell-toolkit/clus/src/TaggerCheckNeutrino.cxx</code> &nbsp;(<code>::visit()</code>).
+Every box is a <code>PatternAlgorithms</code> (or <code>TrackFitting</code>) call, in execution order.</div>
+
+<div class="legend">
+  <b>Legend</b> &nbsp;
+  <span class="sw" style="background:#cfe8cf"></span>setup / I-O &nbsp;
+  <span class="sw" style="background:#d6e4ff"></span>per-cluster pattern recognition &nbsp;
+  <span class="sw" style="background:#ffe8c2"></span>vertex determination &nbsp;
+  <span class="sw" style="background:#f3d0ff"></span>shower / pi0 &nbsp;
+  <span class="sw" style="background:#ffd6d6"></span>BDT taggers &nbsp;
+  <span class="sw" style="background:#eee"></span>finalize / outputs<br/>
+  Diamonds are branches. The "other beam-flash clusters" loop repeats the same 6-step PR per cluster
+  (long vs short variant). The bottom boxes are the Bee outputs filled by
+  <code>MultiAlgBlobClustering</code> after this visitor runs.
+</div>
+
+<pre class="mermaid">
+flowchart TD
+
+  %% ---------------- setup ----------------
+  subgraph SETUP["setup / inputs"]
+    direction TB
+    A0["set_detector_volume / set_pc_transforms"]:::io
+    A1["clear_graph + clear_segments<br/><i>(reset fitter state per event)</i>"]:::io
+    A2["ensemble.with_name('live')"]:::io
+    A3["scan clusters → main_cluster (flag main_cluster)<br/>+ other_clusters (flag beam_flash)"]:::io
+    A4{{"main_cluster == null ?"}}:::branch
+    A5["RETURN (no neutrino candidate)"]:::io
+    A6["track_fitter->preload_clusters(main + others)"]:::io
+    A7["pr_graph = new PR::Graph; track_fitter->add_graph"]:::io
+    A0-->A1-->A2-->A3-->A4
+    A4-- yes -->A5
+    A4-- no -->A6-->A7
+  end
+
+  %% ---------------- main cluster PR ----------------
+  subgraph MAIN["main_cluster initial pattern recognition"]
+    direction TB
+    M1["find_proto_vertex<br/>(break_tracks, 2 rounds)"]:::pr
+    M2["clustering_points"]:::pr
+    M3["separate_track_shower"]:::pr
+    M4["determine_direction<br/>(particle_data, recomb_model)"]:::pr
+    M5["shower_determining_in_main_cluster"]:::shower
+    M6["determine_main_vertex<br/>→ map_cluster_main_vertices[main]"]:::vtx
+    M1-->M2-->M3-->M4-->M5-->M6
+  end
+  A7-->M1
+
+  %% ---------------- other clusters loop ----------------
+  subgraph OTH["loop over other beam-flash clusters"]
+    direction TB
+    O0{{"cluster length > 6 cm ?"}}:::branch
+    OL["LONG: find_proto_vertex(break,2)"]:::pr
+    OS["SHORT: find_proto_vertex(no-break,1)<br/>fallback → init_point_segment"]:::pr
+    OC["clustering_points → separate_track_shower<br/>→ determine_direction<br/>→ shower_determining_in_main_cluster<br/>→ determine_main_vertex"]:::pr
+    O0-- yes -->OL-->OC
+    O0-- no -->OS-->OC
+  end
+  M6-->O0
+
+  DG["deghosting<br/>(all beam-flash clusters)"]:::pr
+  OC-->DG
+
+  %% ---------------- overall vertex ----------------
+  subgraph OV["overall neutrino vertex"]
+    direction TB
+    V0{{"dl_weights set ?"}}:::branch
+    VDL["determine_overall_main_vertex_DL<br/>(DL vertex rerank)"]:::vtx
+    VTR["determine_overall_main_vertex<br/>(traditional)"]:::vtx
+    VF["final_main_vertex<br/>= map[main_cluster]"]:::vtx
+    V0-- yes -->VDL
+    V0-- no -->VTR
+    VDL-- "unchanged" -->VTR
+    VDL-->VF
+    VTR-->VF
+  end
+  DG-->V0
+
+  %% ---------------- refine + showers ----------------
+  subgraph REF["if final_main_vertex: refine + shower clustering"]
+    direction TB
+    R0{{"final_main_vertex ?"}}:::branch
+    R1["improve_vertex"]:::vtx
+    R2["clustering_points"]:::pr
+    R3["examine_direction<br/>(final segment orientations)"]:::pr
+    R4["shower_clustering_with_nv<br/>(pi0 reconstruction)"]:::shower
+    R0-- yes -->R1-->R2-->R3-->R4
+  end
+  VF-->R0
+
+  %% ---------------- taggers ----------------
+  subgraph TAG["BDT taggers (only if final_main_vertex)"]
+    direction TB
+    T0["init_tagger_info"]:::io
+    T1["cosmic_tagger"]:::tag
+    T2["numu_tagger → (flag_long_muon, muon_length)"]:::tag
+    T3["ssm_tagger"]:::tag
+    T4["nue_tagger"]:::tag
+    T5["singlephoton_tagger"]:::tag
+    T0-->T1-->T2-->T3-->T4-->T5
+  end
+  R4-->T0
+  R0-- "no (skip refine+taggers)" -->FC
+
+  %% ---------------- finalize ----------------
+  subgraph FIN["finalize / store on grouping"]
+    direction TB
+    FC["cluster_fc_check → tagger_info.match_isFC"]:::fin
+    FK["fill_kine_tree → KineInfo"]:::fin
+    FV["final_main_vertex->set_flags(kNeutrinoVertex)"]:::fin
+    FS["track_fitter->set_pi0_data / set_main_vertex /<br/>set_showers / set_kine_info / set_tagger_info"]:::fin
+    GR["grouping.set_track_fitting(track_fitter)<br/>(+ pr_graph reachable via grouping)"]:::fin
+    FC-->FK-->FV-->FS-->GR
+  end
+  T5-->FC
+
+  %% ---------------- downstream bee ----------------
+  subgraph BEE["Bee outputs (filled by MultiAlgBlobClustering after this visitor)"]
+    direction LR
+    B1["track_fit<br/><i>segment fits(); q = dQ·scale+off</i>"]:::out
+    B2["shower_track<br/><i>associate_points; q = 15000 shower / 0 track</i>"]:::out
+    B3["vertices<br/><i>graph vertices; q = 15000 nu-vtx / 0</i>"]:::out
+    B4["mc (particle-flow tree)<br/><i>BFS from main vertex</i>"]:::out
+  end
+  GR-->B1
+  GR-->B2
+  GR-->B3
+  GR-->B4
+
+  classDef io fill:#cfe8cf,stroke:#5a9a5a,color:#143;
+  classDef pr fill:#d6e4ff,stroke:#5b82c4,color:#123;
+  classDef vtx fill:#ffe8c2,stroke:#d29a3a,color:#431;
+  classDef shower fill:#f3d0ff,stroke:#a564c4,color:#317;
+  classDef tag fill:#ffd6d6,stroke:#c45b5b,color:#411;
+  classDef fin fill:#eeeeee,stroke:#999,color:#222;
+  classDef out fill:#fff7d6,stroke:#c9b34a,color:#443;
+  classDef branch fill:#fff,stroke:#666,color:#222;
+</pre>
+
+<footer>
+Generated from TaggerCheckNeutrino.cxx::visit(). Open in a browser (Mermaid is loaded from a CDN, so an internet connection is needed to render).
+</footer>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'base', flowchart: { useMaxWidth: false } });</script>
+</body>
+</html>

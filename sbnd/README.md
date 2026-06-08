@@ -53,5 +53,5 @@ time lar --nskip 0 -n 1 -c wcls-img-clus-matching-xin.fcl -s standalone-sample/2
 Upload `mabc.zip` to Bee (Xin's direct uploader; prints the event-list URL):
 
 ```bash
-BROWSER=echo bash ../sbnd_xin/upload-to-bee.sh mabc.zip
+BROWSER=echo bash ./sbnd_xin/upload-to-bee.sh mabc.zip
 ```
