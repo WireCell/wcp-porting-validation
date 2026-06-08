@@ -237,6 +237,57 @@ Instead of moving U/V, shift each CRP's W plane in z by ΔZ_W (`pdvd/make_v4_uvw
 DZ = −13.2 bottom / +9.8 top). Same *internal* consistency (verified identical above),
 but it displaces all blobs by ΔZ_W in z — use only if W's absolute z is not trusted.
 
+## Can U and V take *separate* shifts? (separability study)
+
+The v5 correction is **common-mode** — U and V move together by the same `−ΔZ_W`. A
+natural follow-up: do U and V each need a *different* z-shift (still along the W-pitch /
+z direction, but unequal)? Geometrically there are two degrees of freedom, but **these
+data constrain only one of them — the sum `dzU+dzV`.** The U-vs-V *difference* is
+unmeasurable from three-plane consistency. This was checked nine independent ways
+(2026-06-08); all agree. Plots in `pics/`.
+
+**The geometry — why only the sum is observable.** The only handle is three-plane
+closure, and W is the vertical collection plane, so it pins only **z**. U and V are exact
+mirror images about that vertical, so — measured directly from the v4 wire `pdir` vectors —
+
+> `∂z_cross/∂dzU = ∂z_cross/∂dzV = 0.5000` *identically* (both anodes).
+
+A pure-z shift of U and a pure-z shift of V move the U∩V crossing's z by the **same**
+amount, so closure depends on `(dzU+dzV)` only. The difference `dzU−dzV` slides the
+crossing purely in **y** (`Δy = (dzV−dzU)/(2·tanθ)`, the *same* constant for every point) —
+i.e. it is a **rigid y-translation of the entire reconstructed image**, which no
+self-contained U/V/W test can detect (the same reason a global z-shift is invisible). It
+is a gauge symmetry, not a weak signal.
+
+**What was tried — all land on "only the sum":**
+
+| # | test | result | plot |
+|---|---|---|---|
+| 1 | single-track 2-D (dzU,dzV) scan (consistency + RMS) | optimum is a straight diagonal `dzU+dzV=const`, never a closed peak | `pdvd_uvw_2dscan_anode{0,4}.png` |
+| 2 | coordinate descent (the "wiggle adds info" idea) | returns the symmetric point from every seed, incl. asymmetric ones | — |
+| 3 | whole-plane multi-track triplets (pair every U·V, keep if a W peak is within ~2.5 pitch; 832 / 3886 triples) | same straight diagonal valley | `pdvd_wholeplane_anode{0,4}.png` |
+| 4 | charge-weighted peak matching, fine ±3 mm window | score **flat to 0.000 %** along the difference at fixed sum | `pdvd_chargematch_anode{0,4}.png` |
+| 5 | V-only fine fit (fix U & W, optimize V) | extra V = **+0.00 / +0.10 mm**; the mirror U-only fit gives the *identical* number → the split is a free gauge choice, not a measurement | — |
+| 6 | all-tracks fine-tune of the sum | median agrees with the single track but is half-pitch-comb contaminated → no clean improvement | `pdvd_wholeplane_finetune.png`, `pdvd_cleanmultitrack.png` |
+| 7 | V-residual diagnostic, single track (predict V from U∩W, compare to measured V) | centred on **0.00 mm**, RMS ~2 mm, 92–96 % within ½ V-pitch → **V has no room** | `pdvd_v_finetune_residual.png` |
+| 8 | V-residual, all tracks (correct per-face mapping) | dominant central spike on **0** (confirms) + discrete half-W-pitch comb = integer-wire assignment artifact, *not* a continuous offset | `pdvd_v_finetune_residual_alltracks.png` |
+
+The whole-plane attempts (#3, #6, #8) only ever sharpen or confirm the **sum**; pooling more
+tracks adds combinatorial / integer-wire / wire-wrapping scatter (a comb at half-W-pitch),
+never difference information. The clean single calibration track per type remains the most
+reliable estimate. The full anode-0 plane (`anode0_fullplane.png`) shows the ~6 multi-angle
+tracks used.
+
+**Conclusion.** The common-mode v5 already captures everything these tracks can measure
+(the sum, ≈ +13.2 / −9.8 mm per plane). A genuine U≠V differential may well exist in the
+true geometry, but measuring it requires an **external y-reference** — MC-truth y for a
+track, a track that starts/ends at a known-y boundary (CRP frame, cathode), or a LArSoft
+3-D cross-check — because the difference lives entirely in the reconstructed absolute *y*,
+which nothing internal to the U/V/W charge localises. **No separate U/V shift is applied;
+v5 stays common-mode.** Scripts: `pdvd_uvw_2dscan.py`, `pdvd_uvw_wholeplane_scan.py`,
+`pdvd_uvw_chargematch_scan.py`, `pdvd_uvw_vonly_scan.py`, `pdvd_uvw_wholeplane_finetune.py`,
+`pdvd_uvw_cleanmultitrack.py`, `pdvd_uvw_vresidual.py`, `pdvd_uvw_vresidual_alltracks.py`.
+
 ## v3 vs v4
 
 For *this* registration metric v3 and v4 are within ~0.5 mm (the v4 reposition
@@ -291,9 +342,12 @@ this rides on top of them.
   type A, anode 4 for type B); the other three anodes of each type are set by the cathode
   symmetry and **corroborated** by the blob-count recovery (not independently fit). More
   tracks per type, the other face, and per-anode fine-tuning remain worthwhile.
-- Only the `pU+pV` combination is constrained by W, so a *single* track cannot
-  separate an asymmetric U-only vs V-only component from the symmetric one; the
-  symmetric (common-mode U=V) form is assumed — what "the same offset for U and V" means.
+- Only the `pU+pV` combination is constrained by W, so neither a single track *nor*
+  all the tracks in the plane can separate an asymmetric U-only vs V-only component from
+  the symmetric one; the symmetric (common-mode U=V) form is assumed. This is now
+  established nine ways — see §*Can U and V take separate shifts?* — and is a gauge
+  symmetry (the difference is a rigid y-translation), breakable only with an external
+  y-reference.
 - **Applied & imaged.** v5 is built (U/V shifted along z by type, W fixed) and run 39324
   evt 0 re-imaged with it (links + recovery table above). The two type magnitudes (+13.2 /
   −9.8 mm) come from one track each; a multi-track fit per type could refine them.
@@ -305,6 +359,17 @@ this rides on top of them.
 - `pdvd/validate_v5.py` — three-way validation (file diff / offset remeasure / equivalence).
 - `pdvd/make_v4_uvwcal.py` — equivalent W-shift recipe (alternative).
 - `pdvd/build_peranode_bee_upload.sh` — per-anode Bee build+upload (used for both links).
+- **Separability study** (§*Can U and V take separate shifts?*) — analyses:
+  `pdvd/pdvd_uvw_2dscan.py` (single-track 2-D scan + coordinate descent),
+  `pdvd/pdvd_uvw_wholeplane_scan.py` (whole-plane multi-track triplets),
+  `pdvd/pdvd_uvw_chargematch_scan.py` (charge-weighted fine scan),
+  `pdvd/pdvd_uvw_vonly_scan.py` (V-only fine fit),
+  `pdvd/pdvd_uvw_wholeplane_finetune.py` + `pdvd/pdvd_uvw_cleanmultitrack.py` (all-tracks sum fine-tune),
+  `pdvd/pdvd_uvw_vresidual.py` + `pdvd/pdvd_uvw_vresidual_alltracks.py` (V-residual diagnostic).
+- `pdvd/pics/` — separability plots: `pdvd_uvw_2dscan_anode{0,4}.png`,
+  `pdvd_wholeplane_anode{0,4}.png`, `pdvd_chargematch_anode{0,4}.png`,
+  `pdvd_v_finetune_residual.png`, `pdvd_v_finetune_residual_alltracks.png`,
+  `pdvd_wholeplane_finetune.png`, `pdvd_cleanmultitrack.png`, `anode0_fullplane.png`.
 - `pdvd/docs/wire-offset-figs/` — `track-*`, `dzW-*` (per-tick mismatch +
   distribution), `yz-*` (U∩V crossings) for anode 0 and anode 4.
 - `wire-cell-data/protodunevd-wires-larsoft-v5.json.bz2` — the corrected file (local,
