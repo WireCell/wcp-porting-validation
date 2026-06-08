@@ -88,6 +88,25 @@ def extract_windows(wf, alg, nev, windows, min_truth):
     return out
 
 
+def fig_hist2d(label, q_t, bias, xedges, yedges, title, outname, plt, LogNorm):
+    """2D bias-vs-truth-charge histogram for one input."""
+    H, _, _ = np.histogram2d(q_t, bias, bins=[xedges, yedges])
+    fig, ax = plt.subplots(figsize=(9, 6.5))
+    pcm = ax.pcolormesh(xedges, yedges, H.T, cmap="viridis",
+                        norm=LogNorm(vmin=1, vmax=max(H.max(), 1)))
+    fig.colorbar(pcm, ax=ax, label="channels / bin")
+    ax.axhline(0, color="w", lw=0.8, alpha=0.7)
+    ax.set_xscale("log")
+    ax.set_xlabel("total truth charge on channel  [electrons]")
+    ax.set_ylabel("(Q_reco - Q_truth) / Q_truth")
+    med = np.median(bias) if bias.size else float("nan")
+    ax.set_title(f"{label}   ({title}, med {med:+.4f})")
+    fig.tight_layout()
+    fig.savefig(outname, dpi=130)
+    plt.close(fig)
+    print(f"wrote {outname}")
+
+
 def fig_ineff(series, xedges1d, xcenters1d, th, title, outname, plt):
     """series: list of (label, chan, q_t, bias).  In-eff counts vs truth charge."""
     fig, ax = plt.subplots(figsize=(10, 6.5))
@@ -217,22 +236,10 @@ def main():
 
         # per-pair 2D hist: full ticks, all planes (unchanged top-level output)
         _, q_t, bias = per["t0-max"]
-        H, _, _ = np.histogram2d(q_t, bias, bins=[xedges, yedges])
-        fig, ax = plt.subplots(figsize=(9, 6.5))
-        pcm = ax.pcolormesh(xedges, yedges, H.T, cmap="viridis",
-                            norm=LogNorm(vmin=1, vmax=max(H.max(), 1)))
-        fig.colorbar(pcm, ax=ax, label="channels / bin")
-        ax.axhline(0, color="w", lw=0.8, alpha=0.7)
-        ax.set_xscale("log")
-        ax.set_xlabel("total truth charge on channel  [electrons]")
-        ax.set_ylabel("(Q_reco - Q_truth) / Q_truth")
-        ax.set_title(f"{label}   (all ticks/planes, nev={nev}, med {np.median(bias):+.4f})")
-        fig.tight_layout()
         tag = label.replace("/", "_").replace(":", "_").replace(".root", "")
-        outname = f"{base_out}_{tag}{ext_out}"
-        fig.savefig(outname, dpi=130)
-        plt.close(fig)
-        print(f"wrote {outname}")
+        fig_hist2d(label, q_t, bias, xedges, yedges,
+                   f"all ticks/planes, nev={nev}",
+                   f"{base_out}_{tag}{ext_out}", plt, LogNorm)
 
     th = args.ineff_thresh
 
@@ -255,8 +262,16 @@ def main():
                       os.path.join(griddir, f"ineff_{tname}_{plane}{ext_out}"), plt)
             fig_meanbias(series, xedges1d, xcenters1d, th, title,
                          os.path.join(griddir, f"meanbias_{tname}_{plane}{ext_out}"), plt)
+            # one 2D bias-vs-truth hist per input for this config
+            for (lab, c, q, b) in series:
+                ptag = lab.replace("/", "_").replace(":", "_").replace(".root", "")
+                fig_hist2d(lab, q, b, xedges, yedges, title,
+                           os.path.join(griddir, f"hist2d_{tname}_{plane}_{ptag}{ext_out}"),
+                           plt, LogNorm)
 
-    print(f"grid written to {griddir}/ ({len(tick_cfgs)*len(PLANE_CFGS)} configs x 2 metrics)")
+    nconf = len(tick_cfgs) * len(PLANE_CFGS)
+    print(f"grid written to {griddir}/ ({nconf} configs x [ineff, meanbias, "
+          f"{len(args.pairs)} x hist2d])")
 
 
 if __name__ == "__main__":
