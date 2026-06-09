@@ -18,7 +18,13 @@ set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
 PORT=${1:-5012}
 NPZ=${2:-$HERE/cache/evt0.npz}
-MAGNIFY=${3:-/nfs/data/1/xqian/toolkit-dev/toolkit/pdvd/work/039324_0/magnify-run039324-evt0-anode{anode}.root}
+# NOTE: keep the '{anode}' template out of any ${...:-default} expansion -- the '}'
+# in '{anode}' prematurely closes the parameter expansion and corrupts the path.
+if [ -n "${3:-}" ]; then
+    MAGNIFY="$3"
+else
+    MAGNIFY='/nfs/data/1/xqian/toolkit-dev/toolkit/pdvd/work/039324_0/magnify-run039324-evt0-anode{anode}-dnnroi.root'
+fi
 
 BOKEH=/nfs/data/1/xqian/toolkit-dev/.direnv/python-3.11.9/bin/bokeh
 

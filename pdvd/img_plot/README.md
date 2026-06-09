@@ -25,14 +25,21 @@ Pick a free port (5005–5011 are often taken by other viewers; 5012+ is usually
 ## The three views
 
 1. **2D blob view** (transverse Z–Y, cm) at one time slice. Each fired U/V/W wire
-   is drawn as a ±half-pitch cell (U red, V green, W blue); the blob outline (from
-   the imaging `corners`) sits on top; the slice's Bee sampling points are overlaid
-   in orange. **◀ Prev / Next ▶** (or the `slice idx` spinner) step the slice.
-   *Hover* a wire to see its plane+channel; *tap* a wire to select that channel for
-   the waveform views.
+   is drawn as a ±half-pitch cell (U red, V green, W blue) with its center line; the
+   blob outline (from the imaging `corners`) sits on top; the slice's Bee sampling
+   points are overlaid in orange. The view **auto-zooms to the displayed blob
+   ±20 cm** (the full TPC is far too large to see or click a single wire).
+   **◀ Prev / Next ▶** (or the `slice idx` spinner) step the slice. *Hover* a wire
+   to see its plane, **wire index, and channel**; *tap* a wire to select its channel
+   for the waveform views. (The blob view is indexed by wire; the conversion to the
+   electronics channel the waveforms use happens automatically.)
 2. **3-D point projections** X-Y / Z-Y / X-Z (X = drift). The six X/Y/Z spinners +
-   **Apply window** restrict the shown region; **Reset window** returns to the data
-   bounds. The current slice's points are highlighted in red (drift-x window).
+   **Apply window** restrict the shown region (the projection points are filtered to
+   the window, not just highlighted); **Reset window** returns to the data bounds.
+   Or type an **X/Y/Z position** and click **Center window on pos** to set the window
+   to position ± a chosen pad (default 20 cm); **pos ← current slice** fills the
+   position from the blob you are viewing. The current slice's points are
+   highlighted in red.
 3. **Waveforms** for the tapped channels: 1-D ADC-vs-tick overlay (legend
    click-to-hide) plus 2-D U/V/W-vs-T images over the selected channels'
    neighborhood, with the current slice's tick window shaded. Pick the Magnify
@@ -90,9 +97,25 @@ the same plane and can be overlaid without re-sampling.
 The 1-D / 2-D waveform panels read per-anode Magnify ROOTs
 (`h{u,v,w}_<frame><anode>`, x = global channel, y = tick). If the ROOT for the
 current anode is missing, the panels stay empty and a red status line names the
-missing file — views 1 and 2 work regardless. Generate the ROOTs with the
-Magnify-PDVD / `run_sp_to_magnify_evt.sh` pipeline, then pass the template as the
-3rd argument to `serve_img_viewer.sh`.
+missing file — views 1 and 2 work regardless.
+
+Generate them with `run_sp_to_magnify_evt.sh`. For the **DNN-ROI** SP result
+(the `gauss` tag carries the DNN-ROI output), use `-d`:
+
+```bash
+cd pdvd
+./run_sp_to_magnify_evt.sh -d 39324 0      # -> work/039324_0/magnify-run039324-evt0-anode{0..7}-dnnroi.root
+```
+
+`serve_img_viewer.sh` **defaults** to that DNN-ROI template; override it with the
+3rd argument for a different ROOT set (use the `{anode}` placeholder):
+
+```bash
+./serve_img_viewer.sh 5012 cache/evt0.npz '/.../magnify-run039324-evt0-anode{anode}.root'
+```
+
+In the viewer the `Magnify frame` selector defaults to `gauss`; for a DNN-ROI ROOT
+that is the DNN-ROI output. Switch to `raw` to see the post-NF waveform.
 
 ## Files
 

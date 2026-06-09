@@ -29,11 +29,12 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (
     BoxAnnotation, Button, ColumnDataSource, Div, HoverTool, LinearColorMapper,
-    RadioButtonGroup, Select, Spinner, TapTool, TextInput,
+    RadioButtonGroup, Range1d, Select, Spinner, TapTool, TextInput,
 )
 from bokeh.plotting import figure
 
 TICK_NS = 500.0
+BLOB_PAD = 20.0   # cm padding around the displayed blob in the 2D view
 PLANE_NAME = {0: "U", 1: "V", 2: "W"}
 PLANE_COLOR = {0: "#d62728", 1: "#2ca02c", 2: "#1f77b4"}
 
@@ -95,7 +96,9 @@ class MagnifyCache:
         self._cache = {}                    # (anode,plane,frame) -> (values, ch_offset)
 
     def path(self, anode):
-        return self.template.format(anode=anode) if self.template else ""
+        # use replace, not str.format -- a stray brace in the template must not
+        # raise (it would crash the tap callback); a wrong path degrades to "not found".
+        return self.template.replace("{anode}", str(anode)) if self.template else ""
 
     def get(self, anode, plane, frame):
         key = (anode, plane, frame)
@@ -139,8 +142,9 @@ def main(argv):
     state = dict(anode=ev.anodes()[0], face=0, sidx=0, channels=[])
 
     # ---- sources ----------------------------------------------------------
-    src_bands = ColumnDataSource(dict(xs=[], ys=[], plane=[], channel=[], color=[]),
-                                 name="src_bands")
+    src_bands = ColumnDataSource(
+        dict(xs=[], ys=[], plane=[], wip=[], channel=[], color=[]),
+        name="src_bands")
     src_centers = ColumnDataSource(dict(xs=[], ys=[], color=[]))
     src_blob = ColumnDataSource(dict(xs=[], ys=[]))
     src_samp = ColumnDataSource(dict(z=[], y=[]))
@@ -152,7 +156,8 @@ def main(argv):
     f_yz = figure(title="2D blob view (transverse)", width=560, height=560,
                   x_axis_label="Z [cm]", y_axis_label="Y [cm]",
                   tools="pan,wheel_zoom,box_zoom,reset,save,tap",
-                  active_scroll="wheel_zoom")
+                  active_scroll="wheel_zoom",
+                  x_range=Range1d(0, 300), y_range=Range1d(-350, 350))
     band_r = f_yz.patches("xs", "ys", source=src_bands, fill_color="color",
                           fill_alpha=0.18, line_color="color", line_alpha=0.5)
     f_yz.multi_line("xs", "ys", source=src_centers, line_color="color",
@@ -162,7 +167,8 @@ def main(argv):
     f_yz.scatter("z", "y", source=src_samp, size=4, color="orange",
                  alpha=0.9, marker="circle")
     f_yz.add_tools(HoverTool(renderers=[band_r],
-                             tooltips=[("plane", "@plane"), ("channel", "@channel")]))
+                             tooltips=[("plane", "@plane"), ("wire", "@wip"),
+                                       ("channel", "@channel")]))
 
     # ---- view 2: projections ----------------------------------------------
     def proj(title, xl, yl):
@@ -223,6 +229,14 @@ def main(argv):
     b_apply = Button(label="Apply window", width=110, button_type="primary")
     b_reset = Button(label="Reset window", width=110)
 
+    # position -> window: type an X/Y/Z (cm), fill the window to position +/- pad
+    w_pos_x = TextInput(title="pos X", value="", width=80)
+    w_pos_y = TextInput(title="pos Y", value="", width=80)
+    w_pos_z = TextInput(title="pos Z", value="", width=80)
+    w_pos_pad = Spinner(title="± cm", value=20.0, step=5.0, low=1.0, width=80)
+    b_center = Button(label="Center window on pos", width=160, button_type="primary")
+    b_pos_here = Button(label="pos ← current slice", width=150)
+
     w_frame = Select(title="Magnify frame", value="gauss",
                      options=MAGNIFY_FRAMES, width=110)
     w_man_ch = TextInput(title="add channel", value="", width=110)
@@ -266,6 +280,7 @@ def main(argv):
             xs=[list(q[:, 1]) for q in quads],         # z horizontal
             ys=[list(q[:, 0]) for q in quads],         # y vertical
             plane=[PLANE_NAME[int(p)] for p in planes],
+            wip=[int(w) for w in b["band_wip"][bi]],
             channel=[int(c) for c in b["band_channel"][bi]],
             color=colors,
         )
@@ -284,6 +299,15 @@ def main(argv):
             poly = b["blob_poly_xy"][b["blob_poly_off"][k]:b["blob_poly_off"][k + 1]]
             bxs.append(list(poly[:, 1])); bys.append(list(poly[:, 0]))
         src_blob.data = dict(xs=bxs, ys=bys)
+        # zoom the blob view to the displayed blobs +/- BLOB_PAD cm (the full TPC
+        # is far too large to see or click a single wire).
+        zz = [v for sub in bxs for v in sub]
+        yy = [v for sub in bys for v in sub]
+        if zz:
+            f_yz.x_range.start = min(zz) - BLOB_PAD
+            f_yz.x_range.end = max(zz) + BLOB_PAD
+            f_yz.y_range.start = min(yy) - BLOB_PAD
+            f_yz.y_range.end = max(yy) + BLOB_PAD
         # sampling points OF the displayed blobs: drift-side + slice x-window +
         # inside one of the displayed blob polygons (the same test Gate 1 uses).
         # This is shared by the blob view and the projection highlight so the two
@@ -338,6 +362,33 @@ def main(argv):
             win[c + "lo"].value = float(np.floor(arr.min()))
             win[c + "hi"].value = float(np.ceil(arr.max()))
         apply_window()
+
+    def center_on_pos():
+        """Fill the window to (X,Y,Z) +/- pad and filter the projections to it."""
+        pad = float(w_pos_pad.value)
+        try:
+            pos = {c: float(w.value) for c, w in
+                   (("x", w_pos_x), ("y", w_pos_y), ("z", w_pos_z))}
+        except ValueError:
+            status.text = ("<span style='color:#c00'>position X/Y/Z must be "
+                           "numbers</span>")
+            return
+        for c in "xyz":
+            win[c + "lo"].value = pos[c] - pad
+            win[c + "hi"].value = pos[c] + pad
+        apply_window()
+
+    def pos_from_slice():
+        """Fill the position boxes from the centroid of the displayed blobs."""
+        blob_idx, sid = cur_slice_blobs()
+        if sid is None or blob_idx.size == 0:
+            return
+        pts = np.concatenate([
+            b["blob_poly_xy"][b["blob_poly_off"][k]:b["blob_poly_off"][k + 1]]
+            for k in blob_idx])
+        w_pos_y.value = f"{pts[:, 0].mean():.1f}"
+        w_pos_z.value = f"{pts[:, 1].mean():.1f}"
+        w_pos_x.value = f"{b['blob_xc'][blob_idx].mean():.1f}"
 
     # ---- view 3 waveforms -------------------------------------------------
     def render_waves():
@@ -457,6 +508,8 @@ def main(argv):
     w_slice.on_change("value", on_slice_spin)
     b_apply.on_click(apply_window)
     b_reset.on_click(reset_window)
+    b_center.on_click(center_on_pos)
+    b_pos_here.on_click(pos_from_slice)
     w_frame.on_change("value", lambda a, o, n: render_waves())
     b_clear.on_click(lambda: (state.update(channels=[]), refresh_chips(),
                               render_waves()))
@@ -476,12 +529,13 @@ def main(argv):
     controls = row(w_anode, w_face, b_prev, b_next, w_slice)
     winrow = row(win["xlo"], win["xhi"], win["ylo"], win["yhi"],
                  win["zlo"], win["zhi"], b_apply, b_reset)
+    posrow = row(w_pos_x, w_pos_y, w_pos_z, w_pos_pad, b_center, b_pos_here)
     chrow = row(w_frame, w_man_pl, w_man_ch, b_add, b_clear)
     layout = column(
         head,
         controls, slice_div,
         row(f_yz, column(Div(text="<b>3D point projections</b>"),
-                         row(f_xy, f_zy, f_xz), winrow)),
+                         row(f_xy, f_zy, f_xz), winrow, posrow)),
         Div(text="<hr><b>Waveforms</b> (tap a wire above to pick a channel)"),
         chrow, chips, f_wave,
         row(img2d[0], img2d[1], img2d[2]),

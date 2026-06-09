@@ -35,17 +35,27 @@ For the selected anode/face and time slice it draws, in the transverse plane:
 * the **blob outline**, taken directly from the imaging `corners` polygon, on top;
 * the **sampling points** of those blobs, overlaid in orange.
 
+The view **auto-zooms to the displayed blob ±20 cm** — the full TPC (~300 × 670 cm)
+is far too large to see, or click, an individual wire (each cell is only ~0.5–0.9
+cm wide).
+
 **◀ Prev / Next ▶** (or the `slice idx` spinner) step through the slices.
-*Hovering* a wire shows its plane and channel; *tapping* a wire selects that
-channel for the waveform views below — this is how you go from "this wire fired"
-to "show me its signal."
+*Hovering* a wire shows its plane, **wire index, and channel**; *tapping* a wire
+selects its channel for the waveform views below — this is how you go from "this
+wire fired" to "show me its signal." The blob view is indexed by wire; the
+wire→channel conversion the waveforms need is done from the geometry, so the
+correct electronics channel is selected automatically.
 
 ### 2. 3-D point projections (X-Y / Z-Y / X-Z, X = drift)
 
 The Bee 3-D points shown as three orthogonal projections. Six X/Y/Z spinners plus
-**Apply window** restrict the displayed region; **Reset window** returns to the
-full data bounds. When the time slice changes in view 1, the points belonging to
-the displayed blobs are **highlighted in red** across all three projections, so
+**Apply window** restrict the displayed region — the projection points are filtered
+to the window, not merely highlighted, so a region of interest is far less busy;
+**Reset window** returns to the full data bounds. As a shortcut, type an **X/Y/Z
+position** and click **Center window on pos** to set the window to position ± a
+chosen pad (default 20 cm); **pos ← current slice** fills the position from the
+blob you are viewing. When the time slice changes in view 1, the points belonging
+to the displayed blobs are **highlighted in red** across all three projections, so
 the slice you are inspecting is located within the whole event.
 
 ### 3. Waveforms (for the tapped channels)
@@ -55,9 +65,11 @@ the slice you are inspecting is located within the whole event.
 * three **2-D U/V/W-vs-T** images over the selected channels' neighborhood, with
   the current slice's tick window shaded.
 
-A `Magnify frame` selector chooses which deconvolution stage to show
-(`gauss/wiener/raw/orig`, plus `rawdecon/decon` when the ROOT was produced in the
-`-R` special mode). Channels can also be added manually (plane + number + **Add**).
+A `Magnify frame` selector chooses which stage to show (`gauss/wiener/raw/orig`,
+plus `rawdecon/decon` when the ROOT was produced in the `-R` special mode). For a
+**DNN-ROI** Magnify ROOT the `gauss` tag (the default) is the DNN-ROI output;
+switch to `raw` for the post-NF waveform. Channels can also be added manually
+(plane + number + **Add**).
 
 ## Data flow
 
@@ -106,31 +118,42 @@ for a slice, so the blob view and the projection highlight always agree.
 ## Running it
 
 ```bash
-cd pdvd/img_plot
-./preprocess_event.py                 # build cache/evt0.npz (+ sidecar, runs gates)
-./serve_img_viewer.sh 5012            # serve (pick a free port; 5005–5011 are often taken)
+cd pdvd
+
+# build the Magnify ROOTs for the waveform view (DNN-ROI SP result here)
+./run_sp_to_magnify_evt.sh -d 39324 0   # -> work/039324_0/magnify-...-anode{0..7}-dnnroi.root
+
+cd img_plot
+./preprocess_event.py                   # build cache/evt0.npz (+ sidecar, runs gates)
+./serve_img_viewer.sh 5012              # serve (pick a free port; 5005–5011 are often taken)
 
 # from your laptop:
 ssh -L 5012:localhost:5012 user@wcgpu1
 #   open http://localhost:5012/img_viewer
 ```
 
-For another event, point `--clusters-dir` / `--bee-dir` / `--bee-idx` at it and
-pass the matching Magnify template (with `{anode}`) as the 3rd argument to the
-serve script. See [`pdvd/img_plot/README.md`](../img_plot/README.md) for the full
-option list.
+`serve_img_viewer.sh` defaults to the DNN-ROI Magnify template; override it with the
+3rd argument (keep the `{anode}` placeholder). For another event, point
+`--clusters-dir` / `--bee-dir` / `--bee-idx` at it. See
+[`pdvd/img_plot/README.md`](../img_plot/README.md) for the full option list.
 
-## Status / limitations
+## Status
 
-* Views 1 and 2 are verified end-to-end (Gate 1 at 0.999; geometry, slice
-  stepping, projections, window filter and tap→channel all exercised).
-* View 3 (waveforms) is wired and degrades gracefully, but its rendering is
-  **unexercised** until a Magnify ROOT is generated for the event (none exists for
-  run 39324 evt 0 yet). Produce one with `run_sp_to_magnify_evt.sh` and pass its
-  path template to enable the waveform panels and Gate 2.
+All three views are verified end-to-end on run 39324 evt 0:
+
+* **Gate 1** (points-in-polygon) = **0.999**; geometry, slice stepping,
+  blob-view auto-zoom, projections, window/position filter and tap→channel all
+  exercised.
+* **Gate 2** (channel numbering) = **PASS** against the per-anode DNN-ROI Magnify
+  ROOTs; tapping a wire loads its waveform (e.g. U ch 428 → a real DNN-ROI pulse),
+  and the U/V/W-vs-T panels populate for the tapped plane.
 * Per-slice sampling points are matched to blobs by drift-x window + polygon
   containment; a negligible fraction of edge points (~0.1 %, the Gate-1 residual)
   may not be attributed to a blob.
+
+Note: the waveform view needs the per-anode Magnify ROOTs present; if one is
+missing the panels stay empty and a red status line names the file (views 1–2 work
+regardless).
 
 ## Source files
 

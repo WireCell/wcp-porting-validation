@@ -98,7 +98,7 @@ def main():
     b_anode, b_face, b_slice = [], [], []
     b_start, b_span, b_xlo, b_xhi, b_xc, b_val = [], [], [], [], [], []
     poly_xy, poly_off = [], [0]
-    band_blob, band_plane, band_chan = [], [], []
+    band_blob, band_plane, band_chan, band_wip = [], [], [], []
     band_quad = []                       # (Nw,4,2)
     chmap = {}                           # (anode,plane) -> [min,max] channel
 
@@ -150,6 +150,7 @@ def main():
                 for wip in range(beg, min(end, len(pgm.chans))):
                     band_blob.append(bi)
                     band_plane.append(plane)
+                    band_wip.append(wip)
                     ch = pgm.channel(wip)
                     band_chan.append(ch)
                     band_quad.append(pgm.band_quad(wip))
@@ -205,6 +206,7 @@ def main():
         blob_poly_xy=poly_xy, blob_poly_off=poly_off,
         band_blob=np.asarray(band_blob, dtype=np.int64),
         band_plane=np.asarray(band_plane, dtype=np.int8),
+        band_wip=np.asarray(band_wip, dtype=np.int32),
         band_channel=np.asarray(band_chan, dtype=np.int64),
         band_quad_yz=np.asarray(band_quad, dtype=np.float32),
         pts_x=pts_x, pts_y=pts_y, pts_z=pts_z,
