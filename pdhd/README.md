@@ -8,11 +8,17 @@ ProtoDUNE-HD signal-processed data.
 Every `run_*.sh` script (except `run_select_evt.sh`, which is interactive)
 shares three ergonomic features provided by `_runlib.sh`:
 
-**No-arg listing** — run any script with no arguments to list available runs:
+**No-arg listing** — run any script with no arguments to list available runs
+(scanned across every `input_data*` root):
 ```bash
 ./run_img_evt.sh
-# Available runs under .../pdhd/input_data:
-#   run027409     events: 1 2 3 4 5 6 7
+# Available runs under .../pdhd/input_data_14_old_coh_grouping:
+#   run027380     events: 0 1 2 3 4 5 6 7
+#   run027409     events: 0 1 2 3 4 5 6 7 12
+#   run027425     events: 5 6 9 12 20 21 27 32 33
+# Available runs under .../pdhd/input_data_7p8_new_coh_grouping:
+#   run027980     events: 0 1 2 3 4
+#   run029107     events: 0 1 2 3 4
 ```
 
 **`EVT=all` parallel mode** — pass `all` as the event number to process every
@@ -225,6 +231,9 @@ Imaging instances come from the active cluster tarballs; the clustering and
 dead instances are taken from each event's `mabc-all-apa.zip` (so run
 `run_clus_evt.sh <run> all` first).  See `clus/docs/bee_output.md`
 (APA grouping) for how the per-APA vs full-detector dumps are configured.
+
+A standing inventory of the processed runs and their combined Bee links lives in
+[docs/pdhd-standalone-run-bee-links.md](docs/pdhd-standalone-run-bee-links.md).
 
 ## Selection (optional pre-processing)
 
