@@ -4,11 +4,20 @@ What "the threshold" is in the 3-D imaging step, where its value comes from in
 the earlier (signal-processing) chain, and whether PDVD and PDHD differ in
 principle.
 
-Short answer: **the imaging threshold is `3.6 × (per-channel noise RMS)`**, with
-the per-channel RMS *measured live, per channel and per event*, by signal
-processing. PDVD and PDHD use the **identical mechanism and the identical 3.6σ
-value** — they are not different in principle. What differs is only the absolute
-RMS each channel reports, which the rule self-adapts to.
+Short answer: the imaging threshold is `nthreshold × (per-channel noise RMS)`,
+with the per-channel RMS *measured live, per channel and per event*, by signal
+processing. PDVD and PDHD use the **identical mechanism and the identical
+`nthreshold` value** — they are not different in principle. What differs is only
+the absolute RMS each channel reports, which the rule self-adapts to.
+
+> **Current default (both detectors): `nthreshold = [1e-6, 1e-6, 1e-6]`** — i.e.
+> effectively **zero threshold (charge > 0)**. This was changed from the former
+> `3.6σ` default on 2026-06-09. **Why `1e-6` and not literal `0`:** `MaskSlice`
+> falls back to a *high* fixed bar when the threshold evaluates to exactly zero
+> (`if (threshold == 0) threshold = m_default_threshold`, see §1), so a literal
+> `0` would do the opposite of "charge > 0". `1e-6` is the charge>0 surrogate.
+> The change affects every standalone PDVD/PDHD imaging run (it is **not**
+> bit-identical to the old 3.6σ reco).
 
 ## 1. What the threshold is (in the imaging code)
 
@@ -28,11 +37,13 @@ if (threshold == 0) threshold = m_default_threshold[planeid.index()];
   (`pdvd/img.jsonnet`, `pdhd/img.jsonnet`):
 
   ```jsonnet
-  nthreshold: [3.6, 3.6, 3.6],   // U, V, W
+  nthreshold: [1e-6, 1e-6, 1e-6],   // U, V, W — current default (charge>0)
+  // nthreshold: [3.6, 3.6, 3.6],   // former default: 3.6 sigma
   ```
 
   It is **dimensionless** — a number of sigma. Same value in both detectors and
-  for all three planes.
+  for all three planes. The current `1e-6` is "as low as the cut can go without
+  tripping the `threshold == 0` fallback below".
 
 - `summary[idx]` — the **per-channel noise RMS** of the deconvolved waveform,
   carried on the `wiener` trace as its *trace summary* (`summary_tag: wiener`).
@@ -42,22 +53,26 @@ A (channel, tick) is **active** when, roughly, the Wiener-deconvolved charge
 exceeds `threshold` (`MaskSliceBase::thresholding`, `MaskSlice.cxx:173`):
 
 ```cpp
-if (q_wiener > threshold) return true;            // primary cut: 3.6σ
+if (q_wiener > threshold) return true;            // primary cut: nthreshold·RMS
 // else: neighbour-slice rescue using the gauss waveform
 if ((q_gauss > q_next/3. && q_next > threshold) ||
     (q_gauss > q_prev/3. && q_prev > threshold)) is_active = true;
 ```
 
-So the operative cut is **3.6 × per-channel RMS** on the Wiener charge, with a
-softer neighbour-slice rescue so that a tick adjacent to a strong slice is not
-dropped on a fluctuation.
+So the operative cut is **`nthreshold` × per-channel RMS** on the Wiener charge
+(currently `1e-6 × RMS`, i.e. charge > 0), with a softer neighbour-slice rescue
+so that a tick adjacent to a strong slice is not dropped on a fluctuation.
 
 `m_default_threshold` (`= {587.8, 836.6, 567.97} × 4 ≈ {2351, 3346, 2272}`) is a
-**fallback used only when `summary == 0`** (e.g. a dead/empty channel that
-reports no RMS). Neither `pdvd/img.jsonnet` nor `pdhd/img.jsonnet` overrides it,
-so both inherit this header default. Note it is **MicroBooNE-inherited**, i.e.
-*not* derived from PD data — it applies only to zero-RMS channels, never to the
-live 3.6σ path.
+**fallback used only when the product `nthreshold × summary` is exactly 0** —
+in practice when `summary == 0` (a dead/empty channel that reports no RMS).
+This is exactly why the new default is `1e-6` and **not** `0`: with `1e-6`, a
+live channel gives `1e-6 × RMS > 0` so the fallback is skipped and the cut is
+the intended charge>0; a literal `0` would force `0 × RMS = 0` on *every*
+channel and substitute this high bar instead. Neither `pdvd/img.jsonnet` nor
+`pdhd/img.jsonnet` overrides `m_default_threshold`, so both inherit this header
+default. Note it is **MicroBooNE-inherited**, i.e. *not* derived from PD data —
+it applies only to zero-product channels, never to the live charge>0 path.
 
 ## 2. How the threshold value is obtained in the earlier (SP) chain
 
@@ -120,8 +135,9 @@ share the same per-wire `rms`, but a different multiplier and purpose. Values:
 | PDVD (`protodunevd/sp.jsonnet`) | 3.0 (explicit) | 5.0 (explicit) |
 | PDHD (`protodunehd/sp.jsonnet`) | 3 (code default) | 5 (code default) |
 
-Both detectors are effectively ind=3 / col=5. Lead with `nthreshold=3.6` for the
-*imaging* question; these `th_factor` numbers belong to SP, not imaging.
+Both detectors are effectively ind=3 / col=5. Lead with `nthreshold` for the
+*imaging* question; these `th_factor` numbers belong to SP, not imaging, and are
+**unaffected** by the imaging `nthreshold` change.
 
 ## 3. Are PDVD and PDHD different in principle?
 
@@ -129,23 +145,42 @@ Both detectors are effectively ind=3 / col=5. Lead with `nthreshold=3.6` for the
 
 | | PDVD | PDHD |
 |---|---|---|
-| imaging cut | `3.6 × RMS` (Wiener charge) | `3.6 × RMS` (Wiener charge) |
-| `nthreshold` (U,V,W) | `[3.6, 3.6, 3.6]` | `[3.6, 3.6, 3.6]` |
+| imaging cut | `nthreshold × RMS` (Wiener charge) | `nthreshold × RMS` (Wiener charge) |
+| `nthreshold` (U,V,W) | `[1e-6, 1e-6, 1e-6]` (was `[3.6,3.6,3.6]`) | `[1e-6, 1e-6, 1e-6]` (was `[3.6,3.6,3.6]`) |
 | RMS source | `wiener` trace summary from SP | `wiener` trace summary from SP |
 | RMS definition | `ROI_formation::cal_RMS` (quantile σ) | same code |
-| `default_threshold` fallback | header default (zero-RMS chans only) | header default |
+| `default_threshold` fallback | header default (zero-product chans only) | header default |
 | neighbour-slice rescue | yes | yes |
 
 The same `MaskSlice.cxx` / `ROI_formation.cxx` code serves both; the only config
-knob (`nthreshold`) is set to 3.6σ in each.
+knob (`nthreshold`) is set to the same value in each (now `1e-6`).
 
 What **does** differ between the two detectors is the *absolute* per-channel RMS
 — different electronics, noise spectra, and field responses give each detector
 (and each channel) its own noise level. But because the threshold is built as
-`3.6 × (that channel's measured RMS)` and the RMS is measured live per event,
-the rule **self-adapts**: the 3.6σ significance cut is identical even though the
-absolute charge bar is not. That is the clean answer — same principle, detector
-differences absorbed by the per-channel RMS.
+`nthreshold × (that channel's measured RMS)` and the RMS is measured live per
+event, the rule **self-adapts**: the significance cut is identical even though
+the absolute charge bar is not. That is the clean answer — same principle,
+detector differences absorbed by the per-channel RMS.
+
+## 4. Effect of the zero-threshold default (empirical)
+
+A 0σ / 1σ / 2σ comparison on one event per detector (PDVD run 039324 evt 0,
+PDHD run 027409 evt 0) showed that **`nthreshold = 1e-6` (charge>0) does *not*
+flood the image**: active-blob output grows only ~25–40 % versus 2σ, and
+imaging+clustering stay at the ~minute scale. The reason is that the active
+tiling requires multi-plane coincidence (3-view + 2-of-3), so isolated
+single-plane noise excursions rarely form blobs even when charge > 0. Output
+blob volume is cleanly monotonic 0σ > 1σ > 2σ on every anode/APA.
+
+Bee links from that comparison (0σ / 1σ / 2σ):
+
+- PDVD 039324 evt0: [0σ](https://www.phy.bnl.gov/twister/bee/set/2b6cac28-0557-4851-bb75-f1b50a2a63b7/event/list/) ·
+  [1σ](https://www.phy.bnl.gov/twister/bee/set/07fc4c80-5f0a-4e15-926e-83eef52eab2e/event/list/) ·
+  [2σ](https://www.phy.bnl.gov/twister/bee/set/7f793bd3-e563-4505-a4e6-30d208b4c9a8/event/list/)
+- PDHD 027409 evt0: [0σ](https://www.phy.bnl.gov/twister/bee/set/7c7fa285-5f1f-4d81-8185-b94502c7d44b/event/list/) ·
+  [1σ](https://www.phy.bnl.gov/twister/bee/set/42f84510-430f-492e-8a89-b3ae91eed3e1/event/list/) ·
+  [2σ](https://www.phy.bnl.gov/twister/bee/set/21916fda-fbe8-4f1a-9a4e-ac8ccd4e20d9/event/list/)
 
 ## Files referenced
 

@@ -112,8 +112,12 @@ local img = {
                 active_planes: active_planes,
                 masked_planes: masked_planes,
                 dummy_planes: dummy_planes,
-                // nthreshold: [1e-6, 1e-6, 1e-6],
-                nthreshold: [3.6, 3.6, 3.6],
+                // Imaging activity threshold = nthreshold * per-channel RMS.
+                // Default is ~zero (charge>0).  NB: a literal 0 would trip
+                // MaskSlice's `if(threshold==0) -> default_threshold` fallback
+                // (a HIGH MicroBooNE bar), so 1e-6 is the charge>0 surrogate.
+                // nthreshold: [3.6, 3.6, 3.6],  // previous default (3.6 sigma)
+                nthreshold: [1e-6, 1e-6, 1e-6],
             },
         }, nin=1, nout=1, uses=[anode]),
     }.ret,
