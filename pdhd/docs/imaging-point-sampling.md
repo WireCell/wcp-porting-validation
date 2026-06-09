@@ -2,7 +2,8 @@
 
 How 3-D points are produced from imaging blobs, what point clouds exist, and which
 ones feed clustering vs. the Bee event display. §8 contrasts this with how
-MicroBooNE (`qlport`) samples points (`charge_stepped`).
+MicroBooNE (`qlport`) samples points (`charge_stepped`); §9 records why PDHD/PDVD
+keep `stepped` (not `charge_stepped`) for the clustering stage.
 
 ## TL;DR
 
@@ -461,6 +462,70 @@ runs the full neutrino-ID/tracking tail.
 | re-sampling         | none                              | `improve_cluster_2` retiler (no-dead-mix)   |
 | constants           | 1.6 mm/µs, −250 µs                | 1.101 mm/µs, −1600 µs +6 mm offset          |
 | Bee `3d` view       | `img` + `clustering`              | `regular` (post-SteinerGraph) + PID sets    |
+
+---
+
+## 9. Why PDHD/PDVD use `stepped` (not `charge_stepped`) for clustering
+
+`charge_stepped` is the sampler for the **pattern-recognition / tracking stage**
+(MicroBooNE's neutrino-ID and 3-D tracking tail, where a dense, charge-confirmed
+point cloud feeds Steiner-tree building and PID). For the **clustering stage**
+that PDHD/PDVD run, plain `stepped` is good enough — and was confirmed so
+empirically. This section records that evaluation (2026-06-09); `stepped`
+remains the default live sampler.
+
+### 9.1 `charge_stepped` is a no-op vs `stepped` on PD (any positive threshold)
+
+Switching the live sampler to `charge_stepped` and sweeping `charge_threshold_*`
+on one event per detector (PDVD 039324 evt0, PDHD 027409 evt0) gives a clustering
+`"3d"` point cloud that is **point-for-point identical to `stepped`** (same
+multiset, 0 added / 0 removed) for every positive threshold tested:
+
+| `charge_threshold`                       | PDVD global pts | PDHD global pts |
+|------------------------------------------|-----------------|-----------------|
+| 4000 (MicroBooNE default)                | 79 018          | 102 363         |
+| 2000                                     | 79 018          | 102 363         |
+| 1500 / 1000 / 500 / 200 / 50 / 1         | 79 018          | 102 363         |
+| **0**                                    | 129 958 (+65 %) | 111 227 (+9 %)  |
+| `stepped` (reference)                    | 79 018          | 102 363         |
+
+Only `charge_threshold ≤ 0` changes the output, and the points it adds are
+charge-less (§9.3) — so no positive threshold makes `charge_stepped` differ from
+`stepped` on PD.
+
+### 9.2 Mechanism
+
+`charge_stepped` = the `stepped` geometry + a `use_all_wires` densification, gated
+by per-wire charge. Two facts make it collapse to `stepped` on PD:
+
+1. The original `stepped` crossings are tagged **"must"** and **bypass the charge
+   gate entirely** (`clus/src/BlobSampler.cxx:1195-1196`) — they are never removed.
+2. The extra densified crossings land on wires that carry **zero charge on ≥1
+   plane**: PD imaging already runs 3-plane `ChargeSolving`, so blobs contain only
+   charge-confirmed cells — there is no extra coincident charge for
+   `charge_stepped` to recover. Any positive threshold drops all of them.
+
+Runtime instrumentation of the gate (PDVD evt0, threshold 2000) confirms this: the
+configured threshold reaches the gate verbatim on all 35 106 sampled blobs, and of
+the 6 558 drops at the **final, point-determining** gate **0 (0.000 %)** had
+positive charge — every point-affecting drop is a zero-charge phantom crossing.
+(Dead planes are handled correctly: a bad plane's threshold is zeroed,
+`clus/src/BlobSampler.cxx:1027-1029`.)
+
+### 9.3 The threshold-0 densification is not an improvement
+
+At `charge_threshold = 0` the gate keeps the densified crossings (`0 < 0` is
+false). These extra points are **geometric grid-fills inside the existing blob
+envelope with no 3-plane charge confirmation** — they fatten tracks rather than
+extending or sharpening them. For clustering they add no information and risk
+noise, so they are not used.
+
+### 9.4 Conclusion
+
+`stepped` is the default live sampler for the PDHD/PDVD **clustering** chain
+(paired with the zero imaging activity threshold, `nthreshold = 1e-6`).
+`charge_stepped` belongs to the downstream **pattern-recognition** stage (as in
+MicroBooNE) and, on PD, offers nothing over `stepped` for clustering.
 
 ---
 
