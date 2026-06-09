@@ -4,21 +4,30 @@
 Inputs (per event):
   * wire geometry         protodunevd-wires-larsoft-v5.json.bz2
   * imaging cluster files clusters-apa-anode{0..7}-ms-active.tar.gz   (blob bounds)
-  * Bee JSON points       {idx}-imaging-group0123.json / group4567.json (as-is)
+  * stepped Bee points    mabc-all-apa.zip : 0-clustering-group0123/4567.json
 
 Output: <out>.npz  (numeric arrays) + <out>.json (scalars / metadata / gate results)
 
-Everything is stored in the **Bee frame** (cm): geometry mm / 10 for (y,z); the
-drift x is undrifted exactly as ``wirecell-img bee-blobs`` did, using the per-
-drift-side constants from build_v4_bee_evt0to4.sh:
-    anodes 0-3 (bottom): speed = -1.56 mm/us, x0 = -341.5 cm, t0 = 0
-    anodes 4-7 (top):    speed = +1.56 mm/us, x0 = +341.5 cm, t0 = 0
-Blob start/span are in ns; internal length unit is mm (units.cm == 10).
+Sampling points come from the toolkit "stepped" BlobSampler (threshold 0), as
+written by MultiAlgBlobClustering's pre-clustering ``name:"img"`` Bee hook into
+the per-drift-side instances ``0-clustering-group0123.json`` (anodes 0-3) and
+``0-clustering-group4567.json`` (anodes 4-7).  These are captured BEFORE the
+clustering pipeline (PDHD/PDVD have no T0 correction, so x == x_t0cor).
+
+Frame: everything is stored in the MABC point convention (cm) so the stepped
+points and the blob outlines share one plane.  The drift x is computed from the
+blob slice time with the toolkit BlobSampler ``time2drift`` formula
+(BlobSampler.cxx):
+    x = xorig + xsign*(t + time_offset)*drift_speed
+with time_offset = -250 us, drift_speed = 1.6 mm/us, xorig = the collection-plane
+(W) wire-center x of that (anode,face), and xsign = anodeface->dirx() (resolved
+empirically per (anode,face) against the points; +1 for anodes 0-3, -1 for 4-7).
+Geometry y,z are mm/10 (units.cm == 10).  Blob start/span are in ns.
 
 Two correctness gates run automatically:
-  Gate 1  points-in-polygon: Bee points (matched to a slice by drift-x window)
-          must fall inside a blob's Y-Z polygon -> validates the mm->cm/undrift
-          frame transform and the faceid/WIP geometry.
+  Gate 1  points-in-polygon: stepped points (matched to a slice by drift-x
+          window) must fall inside a blob's Y-Z polygon -> validates the frame
+          transform and the faceid/WIP geometry.
   Gate 2  channel numbering: every wire-band channel must lie within the Magnify
           ROOT channel range for its anode (skipped with a warning if ROOTs absent).
 """
@@ -28,34 +37,50 @@ import argparse
 import json
 import os
 import sys
+import zipfile
 
 import numpy as np
 
 import wirecell.img.tap as tap
 import geom as G
 
-# drift-side undrift constants (internal units: mm, ns ; cm == 10, us == 1000)
-SPEED_MM_PER_NS = 1.56 * 1.0 / 1000.0     # 1.56 * mm/us
-X0_MM = 341.5 * 10.0                       # 341.5 * cm
+# BlobSampler time2drift constants (internal units: mm, ns), from pdvd/clus.jsonnet
+DRIFT_MM_PER_NS = 1.6 / 1000.0       # 1.6 * mm/us
+TIME_OFFSET_NS = -250.0 * 1000.0     # -250 * us
 TICK_NS = 500.0
 
 
-def drift_params(anode):
-    """(speed_mm_per_ns, x0_mm) for an anode's drift side, matching bee-blobs."""
-    if anode <= 3:
-        return -SPEED_MM_PER_NS, -X0_MM
-    return SPEED_MM_PER_NS, X0_MM
+def time2drift_cm(xorig_cm, xsign, t_ns):
+    """Toolkit BlobSampler x convention (cm) for a slice time t_ns."""
+    return xorig_cm + xsign * (t_ns + TIME_OFFSET_NS) * DRIFT_MM_PER_NS * G.MM2CM
 
 
-def undrift_x_cm(anode, t_ns):
-    speed, x0 = drift_params(anode)
-    return (x0 - speed * t_ns) * G.MM2CM
+def load_group_points(mabc_zip):
+    """Read the stepped img-stage points from mabc-all-apa.zip.
 
-
-def load_bee(path):
-    with open(path) as f:
-        d = json.load(f)
-    return d
+    Returns parallel arrays x,y,z,q,cluster_id (cm / charge) and group (0 for
+    anodes 0-3, 1 for anodes 4-7), plus the bee RSE metadata.
+    """
+    group_members = {0: "0-clustering-group0123.json",
+                     1: "0-clustering-group4567.json"}
+    px, py, pz, pq, pcid, pgrp = [], [], [], [], [], []
+    meta = {}
+    with zipfile.ZipFile(mabc_zip) as z:
+        names = {os.path.basename(n): n for n in z.namelist()}
+        for grp, fn in group_members.items():
+            if fn not in names:
+                print(f"[warn] {fn} not in {mabc_zip}", file=sys.stderr)
+                continue
+            d = json.loads(z.read(names[fn]))
+            meta = dict(run=d.get("runNo"), subrun=d.get("subRunNo"),
+                        event=d.get("eventNo"), geom=d.get("geom"))
+            n = len(d["x"])
+            px.extend(d["x"]); py.extend(d["y"]); pz.extend(d["z"])
+            pq.extend(d["q"]); pcid.extend(d["cluster_id"])
+            pgrp.extend([grp] * n)
+            print(f"[pts] group {grp}: {n} stepped points from {fn}")
+    return (np.asarray(px), np.asarray(py), np.asarray(pz), np.asarray(pq),
+            np.asarray(pcid, dtype=np.int64), np.asarray(pgrp, dtype=np.int8), meta)
 
 
 def main():
@@ -66,13 +91,13 @@ def main():
                     default="/nfs/data/1/xqian/toolkit-dev/wire-cell-data/"
                             "protodunevd-wires-larsoft-v5.json.bz2")
     ap.add_argument("--clusters-dir",
-                    default="/nfs/data/1/xqian/toolkit-dev/toolkit/pdvd/work/039324_0",
-                    help="dir holding clusters-apa-anode{N}-ms-active.tar.gz")
-    ap.add_argument("--bee-dir",
-                    default="/nfs/data/1/xqian/toolkit-dev/toolkit/pdvd/data/0",
-                    help="dir holding {idx}-imaging-group0123/4567.json")
-    ap.add_argument("--bee-idx", default="0",
-                    help="filename prefix of the Bee group files (e.g. 0)")
+                    default="/home/xqian/work/scratch_wcgpu1/toolkit-dev/toolkit/"
+                            "pdvd/work/039324_0",
+                    help="dir holding clusters-apa-anode{N}-ms-active.tar.gz "
+                         "and mabc-all-apa.zip")
+    ap.add_argument("--mabc-zip", default="",
+                    help="mabc-all-apa.zip with the stepped img-stage points "
+                         "(default: <clusters-dir>/mabc-all-apa.zip)")
     ap.add_argument("--magnify-template", default="",
                     help="Magnify ROOT path template with {anode} for Gate 2 "
                          "(empty = skip Gate 2)")
@@ -81,11 +106,11 @@ def main():
     args = ap.parse_args()
 
     anodes = [int(a) for a in args.anodes.split(",")]
+    mabc_zip = args.mabc_zip or os.path.join(args.clusters_dir, "mabc-all-apa.zip")
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
 
     print(f"[geom] loading {args.wires}")
     store = G.load_store(args.wires)
-    # PlaneGeom cache, built lazily per (anode,face,plane)
     pg_cache = {}
 
     def plane_geom(anode, face, plane):
@@ -94,9 +119,9 @@ def main():
             pg_cache[key] = G.PlaneGeom(store, anode, face, plane)
         return pg_cache[key]
 
-    # ---- blob & band accumulators -----------------------------------------
+    # ---- blob & band accumulators (x deferred until xsign resolved) --------
     b_anode, b_face, b_slice = [], [], []
-    b_start, b_span, b_xlo, b_xhi, b_xc, b_val = [], [], [], [], [], []
+    b_start, b_span, b_val = [], [], []
     poly_xy, poly_off = [], [0]
     band_blob, band_plane, band_chan, band_wip = [], [], [], []
     band_quad = []                       # (Nw,4,2)
@@ -122,27 +147,18 @@ def main():
                 print(f"[gate] FAIL faceid->anode {a_chk} != filename {anode}",
                       file=sys.stderr)
                 sys.exit(2)
-            sliceid = int(d["sliceid"])
-            start = float(d["start"])
-            span = float(d["span"])
-            xa = undrift_x_cm(anode, start)
-            xb = undrift_x_cm(anode, start + span)
-            xlo, xhi = (xa, xb) if xa <= xb else (xb, xa)
-
             bi = len(b_anode)
-            b_anode.append(anode); b_face.append(face); b_slice.append(sliceid)
-            b_start.append(start); b_span.append(span)
-            b_xlo.append(xlo); b_xhi.append(xhi); b_xc.append(0.5 * (xlo + xhi))
+            b_anode.append(anode); b_face.append(face)
+            b_slice.append(int(d["sliceid"]))
+            b_start.append(float(d["start"])); b_span.append(float(d["span"]))
             b_val.append(float(d.get("val", 0.0)))
 
-            # blob polygon from precomputed corners (cols 1,2 = y,z in mm)
             corners = np.asarray(d["corners"], dtype=float)
             yz = corners[:, 1:3] * G.MM2CM
             yz = G.order_polygon(yz)
             poly_xy.extend(yz.tolist())
             poly_off.append(len(poly_xy))
 
-            # per-fired-wire bands from the wire store
             bounds = d["bounds"]   # [U,V,W] {beg,end}
             for plane in (0, 1, 2):
                 beg = int(bounds[plane]["beg"]); end = int(bounds[plane]["end"])
@@ -159,32 +175,56 @@ def main():
             nblob += 1
         print(f"[blob] anode {anode}: {nblob} blobs")
 
-    # ---- Bee points (as-is) -----------------------------------------------
-    pts_x, pts_y, pts_z, pts_q, pts_cid, pts_grp = [], [], [], [], [], []
-    group_files = {0: f"{args.bee_idx}-imaging-group0123.json",
-                   1: f"{args.bee_idx}-imaging-group4567.json"}
-    bee_meta = {}
-    for grp, fn in group_files.items():
-        path = os.path.join(args.bee_dir, fn)
-        if not os.path.isfile(path):
-            print(f"[warn] missing Bee file {path}", file=sys.stderr)
-            continue
-        bee = load_bee(path)
-        bee_meta = dict(run=bee.get("runNo"), subrun=bee.get("subRunNo"),
-                        event=bee.get("eventNo"), geom=bee.get("geom"))
-        npt = len(bee["x"])
-        pts_x.extend(bee["x"]); pts_y.extend(bee["y"]); pts_z.extend(bee["z"])
-        pts_q.extend(bee["q"]); pts_cid.extend(bee["cluster_id"])
-        pts_grp.extend([grp] * npt)
-        print(f"[bee] group {grp}: {npt} points from {fn}")
-
-    pts_x = np.asarray(pts_x); pts_y = np.asarray(pts_y); pts_z = np.asarray(pts_z)
-    pts_grp = np.asarray(pts_grp, dtype=np.int8)
-
     b_anode = np.asarray(b_anode, dtype=np.int16)
-    b_xlo = np.asarray(b_xlo); b_xhi = np.asarray(b_xhi)
+    b_face = np.asarray(b_face, dtype=np.int16)
+    b_start = np.asarray(b_start)
+    b_span = np.asarray(b_span)
     poly_xy = np.asarray(poly_xy, dtype=np.float32)
     poly_off = np.asarray(poly_off, dtype=np.int64)
+
+    # ---- stepped img-stage points -----------------------------------------
+    pts_x, pts_y, pts_z, pts_q, pts_cid, pts_grp, bee_meta = \
+        load_group_points(mabc_zip)
+
+    # ---- resolve x convention (xorig, xsign) per (anode,face) -------------
+    xconv = {}            # (anode,face) -> dict(xorig_cm, xsign, resid_cm, n)
+    sign_arr = np.ones(b_anode.size)       # per-blob xsign
+    xorig_arr = np.zeros(b_anode.size)     # per-blob xorig
+    for af in sorted(set(zip(b_anode.tolist(), b_face.tolist()))):
+        anode, face = af
+        xorig = G.wplane_x_cm(store, anode, face)
+        idx = np.where((b_anode == anode) & (b_face == face))[0]
+        # fattest blob of this (anode,face)
+        areas = [np.ptp(poly_xy[poly_off[bi]:poly_off[bi + 1], 0]) *
+                 np.ptp(poly_xy[poly_off[bi]:poly_off[bi + 1], 1]) for bi in idx]
+        bi = idx[int(np.argmax(areas))]
+        poly = poly_xy[poly_off[bi]:poly_off[bi + 1]]
+        grp = 0 if anode <= 3 else 1
+        m = pts_grp == grp
+        gx, gy, gz = pts_x[m], pts_y[m], pts_z[m]
+        inx = [gx[i] for i in range(gx.size)
+               if G.point_in_poly(gy[i], gz[i], poly)]
+        if inx:
+            med = float(np.median(inx))
+            cands = {s: abs(time2drift_cm(xorig, s, b_start[bi]) - med)
+                     for s in (+1, -1)}
+            xsign = min(cands, key=cands.get)
+            resid = cands[xsign]
+        else:
+            xsign = 1 if anode <= 3 else -1
+            resid = None
+        xconv[af] = dict(xorig_cm=float(xorig), xsign=int(xsign),
+                         resid_cm=(None if resid is None else float(resid)),
+                         n_points=len(inx))
+        sign_arr[idx] = xsign
+        xorig_arr[idx] = xorig
+
+    # ---- per-blob drift x via time2drift ----------------------------------
+    xa = time2drift_cm(xorig_arr, sign_arr, b_start)
+    xb = time2drift_cm(xorig_arr, sign_arr, b_start + b_span)
+    b_xlo = np.minimum(xa, xb)
+    b_xhi = np.maximum(xa, xb)
+    b_xc = 0.5 * (b_xlo + b_xhi)
 
     # ---- Gate 1: points-in-polygon ----------------------------------------
     gate1 = gate_points_in_poly(pts_x, pts_y, pts_z, pts_grp,
@@ -197,11 +237,11 @@ def main():
     np.savez_compressed(
         args.out,
         blob_anode=b_anode,
-        blob_face=np.asarray(b_face, dtype=np.int16),
+        blob_face=b_face,
         blob_sliceid=np.asarray(b_slice, dtype=np.int32),
-        blob_start_ns=np.asarray(b_start),
-        blob_span_ns=np.asarray(b_span),
-        blob_x_lo=b_xlo, blob_x_hi=b_xhi, blob_xc=np.asarray(b_xc),
+        blob_start_ns=b_start,
+        blob_span_ns=b_span,
+        blob_x_lo=b_xlo, blob_x_hi=b_xhi, blob_xc=b_xc,
         blob_val=np.asarray(b_val),
         blob_poly_xy=poly_xy, blob_poly_off=poly_off,
         band_blob=np.asarray(band_blob, dtype=np.int64),
@@ -210,8 +250,7 @@ def main():
         band_channel=np.asarray(band_chan, dtype=np.int64),
         band_quad_yz=np.asarray(band_quad, dtype=np.float32),
         pts_x=pts_x, pts_y=pts_y, pts_z=pts_z,
-        pts_q=np.asarray(pts_q), pts_cluster_id=np.asarray(pts_cid, dtype=np.int64),
-        pts_group=pts_grp,
+        pts_q=pts_q, pts_cluster_id=pts_cid, pts_group=pts_grp,
     )
     sidecar = os.path.splitext(args.out)[0] + ".json"
     with open(sidecar, "w") as f:
@@ -222,7 +261,8 @@ def main():
             n_bands=int(len(band_blob)),
             n_points=int(pts_x.size),
             tick_ns=TICK_NS,
-            speed_mm_per_ns=SPEED_MM_PER_NS, x0_mm=X0_MM,
+            drift_mm_per_ns=DRIFT_MM_PER_NS, time_offset_ns=TIME_OFFSET_NS,
+            xconv={f"{a}_{fc}": v for (a, fc), v in sorted(xconv.items())},
             channel_map={f"{a}_{p}": list(map(int, mm))
                          for (a, p), mm in sorted(chmap.items())},
             gate1=gate1, gate2=gate2,
@@ -230,6 +270,10 @@ def main():
 
     print(f"\n[out] {args.out}")
     print(f"[out] {sidecar}")
+    worst = max((v["resid_cm"] for v in xconv.values()
+                 if v["resid_cm"] is not None), default=None)
+    print(f"[xconv] resolved {len(xconv)} (anode,face); worst sign residual "
+          f"{worst:.2f} cm" if worst is not None else "[xconv] no points")
     print(f"[gate1] points-inside fraction: {gate1['inside_frac']:.3f} "
           f"(n={gate1['n_tested']})  -> {gate1['verdict']}")
     print(f"[gate2] {gate2['verdict']}")
@@ -237,10 +281,9 @@ def main():
 
 def gate_points_in_poly(px, py, pz, pgrp, b_anode, b_xlo, b_xhi,
                         poly_xy, poly_off, sample=4000, pad=0.5):
-    """Fraction of Bee points that fall inside some same-slice blob polygon."""
+    """Fraction of stepped points that fall inside some same-slice blob polygon."""
     if px.size == 0 or b_anode.size == 0:
         return dict(inside_frac=0.0, n_tested=0, verdict="SKIP (no data)")
-    # group 0 -> anodes 0-3, group 1 -> anodes 4-7
     grp_of_blob = (b_anode > 3).astype(np.int8)
     rng = np.random.default_rng(0)
     idx = rng.choice(px.size, size=min(sample, px.size), replace=False)

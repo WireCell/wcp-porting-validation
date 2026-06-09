@@ -36,6 +36,21 @@ def faceid_to_anode_face(faceid):
     return apa, face
 
 
+def wplane_x_cm(store, anode, face):
+    """Collection-plane (W, plane ident 2) wire-center x in cm for (anode,face).
+
+    This is ``xorig`` in the toolkit BlobSampler ``time2drift`` convention
+    (BlobSampler.cxx: ``plane_x(2) = anodeface->planes()[2]->wires().front()
+    ->center().x()``), which the MABC Bee points are written in.
+    """
+    a = store.anodes[anode]
+    f = store.faces[a.faces[face]]
+    pl = next(store.planes[pi] for pi in f.planes
+              if store.planes[pi].ident == 2)
+    w = store.wires[pl.wires[0]]
+    return 0.5 * (store.points[w.tail].x + store.points[w.head].x) * MM2CM
+
+
 class PlaneGeom:
     """Per-(anode,face,plane) wire lookup + pitch geometry, all in Bee cm."""
 

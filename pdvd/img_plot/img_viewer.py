@@ -94,6 +94,7 @@ class MagnifyCache:
     def __init__(self, template):
         self.template = template            # contains '{anode}' (or empty)
         self._cache = {}                    # (anode,plane,frame) -> (values, ch_offset)
+        self._bad = {}                      # anode -> {plane: set(global chid)}
 
     def path(self, anode):
         # use replace, not str.format -- a stray brace in the template must not
@@ -125,6 +126,32 @@ class MagnifyCache:
         self._cache[key] = result
         return result
 
+    def bad(self, anode):
+        """{plane: set(global chid)} from the Magnify T_bad<anode> dead-channel TTree
+        (the authoritative dead list shipped in the ROOT).  Empty if absent."""
+        if anode in self._bad:
+            return self._bad[anode]
+        out = {0: set(), 1: set(), 2: set()}
+        path = self.path(anode)
+        if path and os.path.isfile(path):
+            try:
+                import uproot
+                with uproot.open(path) as f:
+                    name = next((k.split(';')[0] for k in f.keys()
+                                 if k.split(';')[0] == f"T_bad{anode}"), None)
+                    if name:
+                        # T_bad also carries start_time/end_time; here every entry
+                        # spans the full readout (0..nticks) so we treat a listed
+                        # chid as dead for all ticks.  Revisit if partial-bad lists appear.
+                        arr = f[name].arrays(library="np")
+                        for ch, pl in zip(arr["chid"], arr["plane"]):
+                            if int(pl) in out:
+                                out[int(pl)].add(int(ch))
+            except Exception:                             # pragma: no cover
+                pass
+        self._bad[anode] = out
+        return out
+
 
 # ---- app -------------------------------------------------------------------
 
@@ -141,7 +168,8 @@ def main(argv):
 
     state = dict(anode=ev.anodes()[0], face=0, sidx=0, channels=[],
                  pos_window=None,   # None or dict(x,y,z,pad): lock views to a region
-                 slice_chan={})     # {plane: (cmin,cmax)} of the current slice's wires
+                 slice_chan={},     # {plane: (cmin,cmax)} of the current slice's wires
+                 render_lock=False) # suppress renders while programmatically retargeting
 
     # ---- sources ----------------------------------------------------------
     src_bands = ColumnDataSource(
@@ -261,6 +289,8 @@ def main(argv):
         return np.where(m)[0], sid
 
     def render_slice():
+        if state["render_lock"]:
+            return
         a, fc = state["anode"], state["face"]
         sl = ev.slices(a, fc)
         blob_idx, sid = cur_slice_blobs()
@@ -384,23 +414,32 @@ def main(argv):
             win[c + "hi"].value = float(np.ceil(arr.max()))
         apply_window()
 
-    def x_to_tick(anode, x_cm):
-        """Invert the bee-frame undrift: drift x (cm) -> readout tick."""
-        sp = ev.meta.get("speed_mm_per_ns", 0.00156)
-        x0 = ev.meta.get("x0_mm", 3415.0)
-        if anode <= 3:                    # bottom CRP drifts the other way
-            sp, x0 = -sp, -x0
-        t_ns = (x0 - 10.0 * x_cm) / sp    # 10 == units.cm in internal mm
+    def xconv_of(anode, face):
+        """(xorig_cm, xsign) of the MABC time2drift convention for (anode,face)."""
+        xc = ev.meta.get("xconv", {}).get(f"{anode}_{face}")
+        if xc:
+            return float(xc["xorig_cm"]), int(xc["xsign"])
+        return (-341.55, 1) if anode <= 3 else (341.55, -1)   # drift-side fallback
+
+    def x_to_tick(anode, face, x_cm):
+        """Invert the toolkit time2drift convention: drift x (cm) -> readout tick.
+
+        time2drift: x_cm = xorig + xsign*(t_ns + toff)*drift*0.1  (0.1 == 1/units.cm)
+        """
+        drift = ev.meta.get("drift_mm_per_ns", 0.0016)
+        toff = ev.meta.get("time_offset_ns", -250000.0)
+        xorig, xsign = xconv_of(anode, face)
+        t_ns = (x_cm - xorig) / (xsign * drift * 0.1) - toff
         return t_ns / TICK_NS
 
     def pos_tick_range():
-        """Tick window for the current anode from the locked X +/- pad, or None."""
+        """Tick window for the current anode/face from the locked X +/- pad, or None."""
         pw = state["pos_window"]
         if not pw:
             return None
-        a = state["anode"]
-        t1 = x_to_tick(a, pw["x"] - pw["pad"])
-        t2 = x_to_tick(a, pw["x"] + pw["pad"])
+        a, fc = state["anode"], state["face"]
+        t1 = x_to_tick(a, fc, pw["x"] - pw["pad"])
+        t2 = x_to_tick(a, fc, pw["x"] + pw["pad"])
         lo, hi = sorted((t1, t2))
         return max(0.0, lo), hi
 
@@ -414,9 +453,27 @@ def main(argv):
         w = np.where(sl == int(b["blob_sliceid"][j]))[0]
         return int(w[0]) if w.size else 0
 
+    def blob_at_pos(posx, posy, posz):
+        """(anode,face,sidx) of the blob whose drift-x window contains posx and whose
+        Y-Z polygon contains (posy,posz); the x-closest such blob.  None if no match."""
+        cand = np.where((b["blob_x_lo"] <= posx) & (posx <= b["blob_x_hi"]))[0]
+        if cand.size == 0:
+            return None
+        cand = cand[np.argsort(np.abs(b["blob_xc"][cand] - posx))]
+        for k in cand:
+            poly = b["blob_poly_xy"][b["blob_poly_off"][k]:b["blob_poly_off"][k + 1]]
+            if point_in_poly(posy, posz, poly):
+                a = int(b["blob_anode"][k]); fc = int(b["blob_face"][k])
+                sid = int(b["blob_sliceid"][k])
+                sl = ev.slices(a, fc)
+                w = np.where(sl == sid)[0]
+                return a, fc, int(w[0]) if w.size else 0
+        return None
+
     def center_on_pos():
-        """Lock all views to (X,Y,Z) +/- pad: filter the projections, zoom the blob
-        Y-Z view, jump to the slice nearest posX, and set the waveform tick range."""
+        """Lock all views to (X,Y,Z) +/- pad: auto-select the anode/face/slice the
+        point falls in, filter the projections, zoom the blob Y-Z view, and set the
+        waveform tick range."""
         pad = float(w_pos_pad.value)
         try:
             pos = {c: float(w.value) for c, w in
@@ -429,8 +486,26 @@ def main(argv):
         for c in "xyz":
             win[c + "lo"].value = pos[c] - pad
             win[c + "hi"].value = pos[c] + pad
-        state["sidx"] = nearest_slice_idx(state["anode"], state["face"], pos["x"])
-        w_slice.value = state["sidx"]
+        # auto-detect the anode/face/slice that contains the point
+        hit = blob_at_pos(pos["x"], pos["y"], pos["z"])
+        state["render_lock"] = True
+        if hit:
+            ta, tfc, tsidx = hit
+            state["anode"], state["face"], state["sidx"] = ta, tfc, tsidx
+            w_anode.value = str(ta)        # callbacks fire but render is locked
+            w_face.active = tfc
+            set_slice_spinner()
+            state["sidx"] = tsidx
+            w_slice.value = tsidx
+            status.text = (f"<span style='color:#070'>position in anode {ta} "
+                           f"face {tfc}, slice idx {tsidx}</span>")
+        else:
+            state["sidx"] = nearest_slice_idx(state["anode"], state["face"], pos["x"])
+            w_slice.value = state["sidx"]
+            status.text = ("<span style='color:#c60'>no blob contains that point; "
+                           "kept anode "
+                           f"{state['anode']} face {state['face']}</span>")
+        state["render_lock"] = False
         apply_window()   # filters projections + render_slice (-> blob view + waves)
 
     def pos_from_slice():
@@ -446,6 +521,26 @@ def main(argv):
         w_pos_x.value = f"{b['blob_xc'][blob_idx].mean():.1f}"
 
     # ---- view 3 waveforms -------------------------------------------------
+    def plane_chan_window(plane, off, nchan):
+        """Local-index channel window [c0,c1) shown for a plane: the locked Y-Z
+        slice channels +/-15, else the tapped channels' neighborhood +/-20.  None
+        if nothing to show."""
+        if state["pos_window"]:
+            rng = state["slice_chan"].get(plane)
+            if not rng:
+                return None
+            return max(rng[0] - off - 15, 0), min(rng[1] - off + 15, nchan)
+        locs = [c - off for p, c in state["channels"]
+                if p == plane and 0 <= c - off < nchan]
+        if not locs:
+            return None
+        return max(min(locs) - 20, 0), min(max(locs) + 20, nchan)
+
+    def dead_channels(plane, off, c0, c1):
+        """Global channels in window [c0,c1) listed dead in the Magnify T_bad tree."""
+        bad = mag.bad(state["anode"]).get(plane, set())
+        return [ch for ch in range(off + c0, off + c1) if ch in bad]
+
     def render_waves():
         a = state["anode"]
         frame = w_frame.value
@@ -466,6 +561,29 @@ def main(argv):
             else:
                 msgs.append(f"{PLANE_NAME[plane]}:{ch} outside ROOT range "
                             f"[{off},{off + vals.shape[0]})")
+        # dead channels (Magnify T_bad tree) within the displayed channel window:
+        # draw their ACTUAL waveform in grey, so a channel labelled dead that still
+        # carries a real pulse (a mis-label) is visible against the flat truly-dead
+        # ones.  Capped to keep the legend readable.
+        ndead = 0
+        sel = set(state["channels"])
+        for plane in (0, 1, 2):
+            vals, off, _ = mag.get(a, plane, frame)
+            if vals is None:
+                continue
+            win = plane_chan_window(plane, off, vals.shape[0])
+            if not win:
+                continue
+            for ch in dead_channels(plane, off, *win):
+                if (plane, ch) in sel or ndead >= 24:
+                    continue
+                local = ch - off
+                if not (0 <= local < vals.shape[0]):
+                    continue
+                wf = vals[local]
+                xs.append(list(range(len(wf)))); ys.append([float(v) for v in wf])
+                color.append("#999999"); label.append(f"dead {PLANE_NAME[plane]}:{ch}")
+                ndead += 1
         src_wave.data = dict(xs=xs, ys=ys, color=color, label=label)
         # 1D waveform tick (x) range = the locked X window, else the full readout
         tr = pos_tick_range()
@@ -487,27 +605,16 @@ def main(argv):
         a = state["anode"]
         pw = state["pos_window"]
         tr = pos_tick_range()
-        by_plane = {0: [], 1: [], 2: []}
-        for plane, ch in state["channels"]:
-            by_plane[plane].append(ch)
         for plane in (0, 1, 2):
             s = img_src[plane]
             p = img2d[plane]
             vals, off, err = mag.get(a, plane, frame)
             if vals is None:
                 s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
-            if pw:
-                rng = state["slice_chan"].get(plane)
-                if not rng:
-                    s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
-                c0 = max(rng[0] - off - 15, 0)
-                c1 = min(rng[1] - off + 15, vals.shape[0])
-            else:
-                locs = [c - off for c in by_plane[plane] if 0 <= c - off < vals.shape[0]]
-                if not locs:
-                    s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
-                c0 = max(min(locs) - 20, 0)
-                c1 = min(max(locs) + 20, vals.shape[0])
+            win = plane_chan_window(plane, off, vals.shape[0])
+            if not win:
+                s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
+            c0, c1 = win
             if c1 <= c0:
                 s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
             sub = vals[c0:c1, :].T                      # (ntick, nchanwin)
