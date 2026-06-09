@@ -387,9 +387,11 @@ def main(argv):
             img_band[plane].bottom = float(min(t0, t1))
             img_band[plane].top = float(max(t0, t1))
             img_band[plane].visible = True
+        tklo, tkhi = min(t0, t1), max(t0, t1)
         slice_div.text = (f"<b>anode {a} face {fc}</b> &mdash; slice "
                           f"{state['sidx'] + 1}/{sl.size} (id={sid}), "
-                          f"x&isin;[{xlo:.1f}, {xhi:.1f}] cm, {blob_idx.size} blobs")
+                          f"x&isin;[{xlo:.1f}, {xhi:.1f}] cm, "
+                          f"tick&isin;[{tklo:.0f}, {tkhi:.0f}], {blob_idx.size} blobs")
         render_waves()   # keep the 1D + 2D-vs-T panels in sync with the slice
 
     # ---- view 2 window ----------------------------------------------------
