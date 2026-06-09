@@ -87,7 +87,13 @@ for f in $wd/protodune-sp-dnnroi-frames-anode*.tar.bz2; do
   b=$(basename "$f"); ln -sf "$b" "$wd/${b/sp-dnnroi-frames/sp-frames}"
 done
 ./run_img_evt.sh  $run $evt     # -> clusters-apa-anode{N}-ms-{active,masked}.tar.gz
-./run_clus_evt.sh $run $evt     # -> mabc-anode{N}*.zip
+./run_clus_evt.sh $run $evt     # -> mabc-anode{N}*.zip + mabc-all-apa.zip
+```
+
+A per-run Bee link (all events of a run in one set) is then:
+
+```
+./run_bee_combined_evt.sh $run  # builds data/<evt>/ for every event, zips, uploads, prints the URL
 ```
 
 **Gotcha — silent non-DNN fallback.** If the symlink is missing, `run_img_evt.sh`
