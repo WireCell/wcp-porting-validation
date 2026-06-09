@@ -40,6 +40,11 @@ BLOB_PAD = 20.0   # cm padding around the displayed blob in the 2D view
 # slice, 0.32 cm apart.  Match a point to a slice by |pts_x - x_start| < half
 # that spacing (an exact-boundary window test drops them on float noise).
 PTS_X_HALF = 0.16
+# A sliver blob's center-fallback point can land just outside the drawn
+# polygon (the sampler's re-derived ray-grid corners differ slightly from the
+# file's corners for degenerate slivers; observed offsets up to ~0.42 cm), so
+# also accept points within this distance of a displayed blob's edge.
+PTS_EDGE_TOL = 0.5
 PLANE_NAME = {0: "U", 1: "V", 2: "W"}
 PLANE_COLOR = {0: "#d62728", 1: "#2ca02c", 2: "#1f77b4"}
 
@@ -61,6 +66,19 @@ def point_in_poly(y, z, poly):
             inside = not inside
         j = i
     return inside
+
+
+def dist_to_poly(y, z, poly):
+    """Min distance from (y,z) to the polygon's edges. poly: (N,2) of (y,z)."""
+    p = np.asarray(poly)
+    a = p
+    b = np.roll(p, -1, axis=0)
+    d = b - a
+    t = np.clip(((y - a[:, 0]) * d[:, 0] + (z - a[:, 1]) * d[:, 1])
+                / (d[:, 0] ** 2 + d[:, 1] ** 2 + 1e-30), 0.0, 1.0)
+    cy = a[:, 0] + t * d[:, 0]
+    cz = a[:, 1] + t * d[:, 1]
+    return float(np.min(np.hypot(y - cy, z - cz)))
 
 
 # ---- data ------------------------------------------------------------------
@@ -178,7 +196,8 @@ def main(argv):
 
     # ---- sources ----------------------------------------------------------
     src_bands = ColumnDataSource(
-        dict(xs=[], ys=[], plane=[], wip=[], channel=[], color=[]),
+        dict(xs=[], ys=[], plane=[], wip=[], channel=[], color=[],
+             fill=[], falpha=[], status=[]),
         name="src_bands")
     src_centers = ColumnDataSource(dict(xs=[], ys=[], color=[]))
     src_blob = ColumnDataSource(dict(xs=[], ys=[], val=[]))
@@ -194,8 +213,8 @@ def main(argv):
                   tools="pan,wheel_zoom,box_zoom,reset,save,tap",
                   active_scroll="wheel_zoom",
                   x_range=Range1d(0, 300), y_range=Range1d(-350, 350))
-    band_r = f_yz.patches("xs", "ys", source=src_bands, fill_color="color",
-                          fill_alpha=0.18, line_color="color", line_alpha=0.5)
+    band_r = f_yz.patches("xs", "ys", source=src_bands, fill_color="fill",
+                          fill_alpha="falpha", line_color="color", line_alpha=0.5)
     f_yz.multi_line("xs", "ys", source=src_centers, line_color="color",
                     line_width=1.0, line_alpha=0.9)
     blob_r = f_yz.patches("xs", "ys", source=src_blob, fill_alpha=0.0,
@@ -207,7 +226,8 @@ def main(argv):
                  alpha=0.9, marker="circle")
     f_yz.add_tools(HoverTool(renderers=[band_r],
                              tooltips=[("plane", "@plane"), ("wire", "@wip"),
-                                       ("channel", "@channel")]))
+                                       ("channel", "@channel"),
+                                       ("status", "@status")]))
     f_yz.add_tools(HoverTool(renderers=[blob_r, ghost_r],
                              tooltips=[("blob charge", "@val{0}")]))
 
@@ -318,7 +338,7 @@ def main(argv):
         blob_idx, sid = cur_slice_blobs()
         if sid is None:
             src_bands.data = dict(xs=[], ys=[], plane=[], wip=[], channel=[],
-                                  color=[])
+                                  color=[], fill=[], falpha=[], status=[])
             src_centers.data = dict(xs=[], ys=[], color=[])
             src_blob.data = dict(xs=[], ys=[], val=[])
             src_ghost.data = dict(xs=[], ys=[], val=[])
@@ -338,16 +358,31 @@ def main(argv):
         bsel[vis_idx] = True
         bmask = bsel[b["band_blob"]]
         bi = np.where(bmask)[0]
+        # a wire shared by several blobs is drawn once, else the overlapping
+        # fills stack alpha and shared wires look darker than the rest
+        if bi.size:
+            keys = np.stack([b["band_plane"][bi], b["band_wip"][bi]])
+            _, first = np.unique(keys, axis=1, return_index=True)
+            bi = bi[np.sort(first)]
         quads = b["band_quad_yz"][bi]                  # (n,4,2) -> (y,z)
         planes = b["band_plane"][bi]
         colors = [PLANE_COLOR[int(p)] for p in planes]
+        # dead channels (Magnify T_bad) drawn grey: a dead wire carries no
+        # signal, so blobs split around it in the active-plane tiling passes
+        # while a 2-view (masked-plane) pass re-covers it as its own blob.
+        bad = mag.bad(a)
+        chans = [int(c) for c in b["band_channel"][bi]]
+        isdead = [c in bad.get(int(p), set()) for p, c in zip(planes, chans)]
         src_bands.data = dict(
             xs=[list(q[:, 1]) for q in quads],         # z horizontal
             ys=[list(q[:, 0]) for q in quads],         # y vertical
             plane=[PLANE_NAME[int(p)] for p in planes],
             wip=[int(w) for w in b["band_wip"][bi]],
-            channel=[int(c) for c in b["band_channel"][bi]],
+            channel=chans,
             color=colors,
+            fill=["#888888" if d else c for d, c in zip(isdead, colors)],
+            falpha=[0.45 if d else 0.18 for d in isdead],
+            status=["DEAD" if d else "live" for d in isdead],
         )
         # wire center line = midline of the two +/- half-pitch edges
         # quad order = [tail-off, head-off, head+off, tail+off]
@@ -415,7 +450,9 @@ def main(argv):
         sel = []
         for pi in cand:
             yy, zz = b["pts_y"][pi], b["pts_z"][pi]
-            if any(point_in_poly(yy, zz, poly) for poly in polys):
+            if any(point_in_poly(yy, zz, poly)
+                   or dist_to_poly(yy, zz, poly) < PTS_EDGE_TOL
+                   for poly in polys):
                 sel.append(pi)
         sel = np.asarray(sel, dtype=np.int64)
         src_samp.data = dict(z=list(b["pts_z"][sel]), y=list(b["pts_y"][sel]))

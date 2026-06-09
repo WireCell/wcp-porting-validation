@@ -118,13 +118,15 @@ local pctransforms(dv) = {
 
 
 
-local bs_live_face(apa, face) = {
+local bs_live_face(apa, face, center_fallback=false) = {
     type: "BlobSampler",
     name: "live-%s-%d"%[apa, face],
     data: {
         drift_speed: drift_speed,
         time_offset: time_offset,
-        strategy: ["stepped"],
+        // center_fallback: emit one point at the blob center when the stepped
+        // grid yields none (tiny 1-wire blobs); default off -> bit-identical.
+        strategy: [{name: "stepped", center_fallback: center_fallback}],
         extra: [".*wire_index", ".*charge_val", ".*charge_unc", "wpid"]
     }
 };
@@ -148,6 +150,7 @@ local clus_per_face (
     runNo = 1,
     subRunNo = 1,
     eventNo = 1,
+    stepped_center_fallback = false,
     ) =
 {
 
@@ -171,7 +174,7 @@ local clus_per_face (
         }
     }, nin=1, nout=1, uses=[]),
 
-    local bsl = bs_live_face(anode.name, face),
+    local bsl = bs_live_face(anode.name, face, center_fallback=stepped_center_fallback),
     local bsd = bs_dead_face(anode.name, face),
 
     local ptb = g.pnode({
@@ -283,6 +286,7 @@ local clus_per_apa (
     runNo = 1,
     subRunNo = 1,
     eventNo = 1,
+    stepped_center_fallback = false,
     ) =
 {
     local cfout_live = g.pnode({
@@ -300,8 +304,8 @@ local clus_per_apa (
         }}, nin=1, nout=2),
 
     local per_face_pipes = [
-        clus_per_face(anode, face=0, dump=false, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo),
-        clus_per_face(anode, face=1, dump=false, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo),
+        clus_per_face(anode, face=0, dump=false, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, stepped_center_fallback=stepped_center_fallback),
+        clus_per_face(anode, face=1, dump=false, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, stepped_center_fallback=stepped_center_fallback),
     ],
 
     local pcmerging = g.pnode({
@@ -526,9 +530,9 @@ local clus_all_apa (
 }.ret;
 
 
-function (output_dir='', runNo=1, subRunNo=1, eventNo=1) {
+function (output_dir='', runNo=1, subRunNo=1, eventNo=1, stepped_center_fallback=false) {
     local bee_dir = if output_dir == '' then 'data' else output_dir,
-    per_face(anode, face=0, dump=true) :: clus_per_face(anode, face=face, dump=dump, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo),
-    per_apa(anode, dump=true) :: clus_per_apa(anode, dump=dump, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo),
+    per_face(anode, face=0, dump=true) :: clus_per_face(anode, face=face, dump=dump, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, stepped_center_fallback=stepped_center_fallback),
+    per_apa(anode, dump=true) :: clus_per_apa(anode, dump=dump, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, stepped_center_fallback=stepped_center_fallback),
     all_apa(anodes, dump=true) :: clus_all_apa(anodes, dump=dump, bee_dir=bee_dir, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo),
 }

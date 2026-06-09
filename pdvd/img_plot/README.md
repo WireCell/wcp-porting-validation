@@ -55,15 +55,30 @@ in the same zip is the *post*-clustering cloud — don't use it for the overlay.
   matched at source.
 * A slice's points all sit at exactly `x = time2drift(slice start)` (one x per
   slice, 0.32 cm apart); the viewer matches points to the displayed slice by
-  `|pts_x − blob_x_start| < 0.16 cm`.  2.6 % of charged slices (349/13210) have small blobs
-  the stepped sampler emitted no points for — those genuinely show 0 points.
+  `|pts_x − blob_x_start| < 0.16 cm`, then keeps points in-polygon **or within
+  0.5 cm of a displayed blob's edge** (sliver-blob fallback centers can land just
+  outside the drawn outline).
+* Tiny (≈1-wire) blobs used to get **no** stepped points (the single wire-crossing
+  candidate falls outside the third plane's strip window — 349/13210 charged
+  slices).  The stepped `BlobSampler` now has a **`center_fallback`** option
+  (default off = bit-identical): rerun clustering with
+  `PDVD_STEPPED_CENTER_FALLBACK=true ./run_clus_evt.sh <run> <evt>` and every
+  blob gets at least its center point — with that rerun all 13210 charged slices
+  show points.
+* **Adjacent blobs split at dead wires by design**: a dead channel breaks the
+  fired-wire strip in the active-plane tiling passes, and the 2-view pass that
+  masks the plane re-covers the dead region as its own blob (e.g. a3f1
+  display-slice 292: dead V 4707 → V206-only + V208-only + V207 recovery blob).
+  Dead-channel wire bands are drawn grey in the blob view to make this visible.
 
 See `pdvd/docs/imaging-event-display.md` § Provenance for the full trace.
 
 ## The three views
 
 1. **2D blob view** (transverse Z–Y, cm) at one time slice. Each fired U/V/W wire
-   is drawn as a ±half-pitch cell (U red, V green, W blue) with its center line; the
+   is drawn as a ±half-pitch cell (U red, V green, W blue) with its center line —
+   a wire shared by several blobs is drawn once, and **dead channels are filled
+   grey** (hover shows `status: DEAD`); the
    blob outline (from the imaging `corners`) sits on top — **solid black** for
    charged blobs, **dashed grey** for zero-charge ghosts (hover shows the charge;
    the **hide zero-charge blobs** checkbox removes them); the slice's stepped

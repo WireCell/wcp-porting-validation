@@ -21,6 +21,9 @@ function(
     run = 1,
     subrun = 1,
     event = 1,
+    // Stepped-sampler fallback: blobs the stepped grid leaves point-less get
+    // one point at the blob center.  Default off -> bit-identical output.
+    stepped_center_fallback = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -40,7 +43,7 @@ local active_clusters = [cluster_source(f) for f in active_files];
 local masked_clusters = [cluster_source(f) for f in masked_files];
 
 local clus = import 'clus.jsonnet';
-local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event);
+local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event, stepped_center_fallback=stepped_center_fallback);
 local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false) for n in std.range(0, nanodes - 1)];
 
 local img_clus_pipe = [g.intern(

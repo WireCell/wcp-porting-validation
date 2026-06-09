@@ -82,11 +82,49 @@ viewer therefore matches points to the displayed slice by
 window test `x_lo ≤ pts_x ≤ x_hi`, which dropped boundary points on ~1e-14 float
 noise — that was the "3 blobs, zero points" mismatch at slice 292 (the points were
 there all along; with the fixed rule that slice shows its 14 in-polygon points).
-Validation over all 13210 charged slices: every slice gets its points except (a)
-slices whose blobs are all zero-charge ghosts and (b) 2.6 % of charged slices (349/13210)
-whose (small) blobs the stepped sampler genuinely emitted **no** points for at any
-x (e.g. a3f1 slice id 1376) — a sampler-side property, visible in Bee too, not a
-viewer mismatch.
+**Tiny blobs the stepped sampler leaves point-less — and the `center_fallback`
+fix.**  2.6 % of charged slices (349/13210) used to show blobs with **zero**
+sampling points (e.g. a3f1 display-slice 298, blobs with val 91 and 23).  Root
+cause (`clus/src/BlobSampler.cxx`, "stepped"): for a 1×1×1-wire blob the only
+candidate is the crossing of the min- and max-plane *wire centers*, and that
+point must fall inside the third plane's strip window ± 0.03 pitch — measured on
+the slice-298 blobs, the U×V wire crossings land 1.29 / 0.71 pitches outside the
+W wire window, so every candidate is rejected and the blob gets no point.  The
+stepped sampler now has a **`center_fallback`** option (default **off**, so
+production output is bit-identical — verified byte-for-byte on this event): when
+the stepped grid yields nothing, the blob emits one point at its corner-average
+center.  The evt-0 artifacts are regenerated with the toggle **on**
+(`PDVD_STEPPED_CENTER_FALLBACK=true ./run_clus_evt.sh 39324 0`), after which
+**all 13210 charged slices show points** (and 28264 of 28269 charged blobs have
+their own point; the rest sit on faces with the known ~1-2 cm frame residual).
+Note the extra points feed the downstream clustering of that rerun too —
+cluster ids in the zip reshuffle, and one of 79k original points shifted by
+0.47 cm; the per-blob stepped points themselves are unchanged.
+
+The viewer matches points to a displayed blob by *in-polygon OR within 0.5 cm of
+the polygon edge*: a sliver blob's fallback center can land just outside the
+drawn outline (the sampler re-derives ray-grid corners that differ slightly from
+the file's corners for degenerate slivers; observed up to 0.42 cm).
+
+**Why adjacent blobs are split instead of merged — dead wires.**  Imaging *does*
+merge contiguous fired wires into one strip before forming blobs.  But a **dead
+channel carries no activity**, so in the tiling passes where its plane is active
+the strip breaks in two, and the 2-view pass that **masks** that plane re-covers
+the dead region as its own blob.  Worked example, a3f1 display-slice 292 (V
+channel **4707 is dead** in `T_bad3`): the 3 charged blobs are V-wire 206-only /
+208-only (the split halves, from active-V passes) and 207-only with full U/W
+spans (the dead-region recovery blob from the UW pass).  Same at display-slice
+301 with dead U channel 3794 (wip 40): U 37-39 / 41-42 split + U 40 recovery
+blob.  This is the designed dead-region behaviour of
+`multi_active_slicing_tiling`, not a bug; the viewer now fills dead-channel wire
+bands **grey** (hover shows `status: DEAD`) so these splits are self-explanatory.
+
+**Why the last two points of a row sit closer together.**  The stepped sampler
+walks each strip every `max(3, width/12)` wires from the strip start **and always
+adds the last wire** (`BlobSampler.cxx`): a W strip [66,77) samples wires
+{66,69,72,75} ∪ {76}, so the final two points are 1 pitch (0.51 cm) apart while
+the rest are 3 pitches (1.53 cm) apart.  Intentional — it guarantees the blob
+edge is sampled.
 
 ## The three linked views
 
@@ -95,7 +133,9 @@ viewer mismatch.
 For the selected anode/face and time slice it draws, in the transverse plane:
 
 * every **fired wire** as a ±half-pitch cell (filled band + center line), colored
-  by plane (U red, V green, W blue);
+  by plane (U red, V green, W blue); a wire shared by several blobs is **drawn
+  once** (overlapping fills used to stack alpha and look darker); **dead
+  channels** (Magnify `T_bad`) are filled **grey** — hover shows `status: DEAD`;
 * the **blob outline**, taken directly from the imaging `corners` polygon, on top —
   **solid black** for charged blobs, **dashed grey** for zero-charge ghosts (see
   Provenance above); hovering an outline shows the blob's solved charge, and the
@@ -204,8 +244,10 @@ cd pdvd
 # 1. imaging -> clusters-apa-anode{N}-ms-{active,masked}.tar.gz
 ./run_img_evt.sh 39324 0
 
-# 2. clustering -> mabc-all-apa.zip (carries the stepped img-stage points)
-./run_clus_evt.sh 39324 0
+# 2. clustering -> mabc-all-apa.zip (carries the stepped img-stage points).
+#    PDVD_STEPPED_CENTER_FALLBACK=true adds a center point for blobs the stepped
+#    sampler leaves point-less (used for the display artifacts; default false).
+PDVD_STEPPED_CENTER_FALLBACK=true ./run_clus_evt.sh 39324 0
 
 # 3. Magnify ROOTs for the waveform view (DNN-ROI SP result)
 ./run_sp_to_magnify_evt.sh -d 39324 0   # -> work/039324_0/magnify-...-anode{0..7}-dnnroi.root
@@ -238,6 +280,11 @@ All three views are verified end-to-end on run 39324 evt 0:
   a3f1 display-slice 289 = 1 charged blob + 2 zero-charge ghosts (3 points in the
   charged blob); display-slice 292 = 3 charged blobs with 14 in-polygon points
   (previously shown as 0 due to the float-edge window bug).
+* With the `center_fallback` rerun: **all 13210 charged slices** show sampling
+  points (was 349 without); the previously point-less tiny blobs at a3f1
+  display-slices 298 (val 91, 23) and 301 (val 673) each have their center point.
+* Wire dedupe verified at display-slice 292: 62 band rows → 24 unique wires;
+  the dead V channel 4707 band is grey-marked (and U 3794 at slice 301).
 
 Note: the waveform view needs the per-anode Magnify ROOTs present; if one is
 missing the panels stay empty and a red status line names the file (views 1-2 work

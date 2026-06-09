@@ -129,6 +129,7 @@ process_event() {
         --tla-code "run=${RUN_STRIPPED}" \
         --tla-code "subrun=${SUBRUN}" \
         --tla-code "event=${EVENT_NO}" \
+        --tla-code "stepped_center_fallback=${PDVD_STEPPED_CENTER_FALLBACK:-false}" \
         -c wct-clustering.jsonnet
 
     echo "Clustering done -> $WORKDIR"
