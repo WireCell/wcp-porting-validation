@@ -1,7 +1,8 @@
 # Point sampling in PDHD / PDVD imaging
 
 How 3-D points are produced from imaging blobs, what point clouds exist, and which
-ones feed clustering vs. the Bee event display.
+ones feed clustering vs. the Bee event display. §8 contrasts this with how
+MicroBooNE (`qlport`) samples points (`charge_stepped`).
 
 ## TL;DR
 
@@ -93,7 +94,8 @@ union. The strategies differ only in how they place points in the transverse
 | `charge_stepped`| `stepped` + per-wire charge filtering & dead-plane handling     |
 
 **PDHD/PDVD use only `stepped` (live) and `center` (dead).** The rest exist but
-are not wired into the production configs.
+are not wired into the PDHD/PDVD configs. **MicroBooNE (`qlport`) uses
+`charge_stepped` (live) and `center` (dead)** — see §8.
 
 ### 3.1 The `stepped` strategy (live blobs)
 
@@ -312,6 +314,156 @@ Source: `pdhd/clus.jsonnet:7-8,22-25,109-126`;
 
 ---
 
+## 8. MicroBooNE (`qlport`)
+
+MicroBooNE (`qlport/uboone-mabc.jsonnet`) runs the **same toolkit
+`WireCellClus` components** (BlobSampler, MABC, the `Aux::sample_live`/
+`sample_dead` helpers) but with a different upstream, a different live strategy,
+and different physics constants. The point-cloud *structure* attached to each
+blob (`3d`, `scalar`, `corner`, `ctpc_*`, `dead_winds_*`) is identical to
+PDHD/PDVD — only how the `3d` points are *chosen* and *projected* differs.
+
+### 8.1 Different pipeline shape — imaging is upstream, sampling is in the source
+
+PDHD/PDVD image in WCT (`img.jsonnet` → `GridTiling`) and sample later in
+`PointTreeBuilding`. MicroBooNE does **neither in WCT**: the blobs are already
+tiled (the WCP "TC" tiling, done in LArSoft/`wire-cell-pid`) and stored in a
+ROOT file. The toolkit pipeline *reads* them and samples immediately:
+
+```
+  [ROOT file: pre-tiled TC blobs + optical]
+   │
+   ├─ UbooneBlobSource × view-combos        (qlport:871)
+   │     live: uvw, uv, vw, wu               (qlport:1415)
+   │     dead: uv, vw, wu                     (qlport:1419)
+   ├─ BlobSetMerge                           → one blob stream
+   │
+   ▼
+  UbooneClusterSource                        ***SAMPLING HAPPENS HERE***
+   │  (root/src/UbooneClusterSource.cxx)
+   ├─ Aux::sample_live(bs_live,  …)   strategy=["charge_stepped"]   (:586)
+   ├─ Aux::sample_dead(iblob, …)      strategy=["center"]            (:600)
+   ├─ Aux::add_ctpc(…)                                              (:658)
+   └─ Aux::add_dead_winds(…)                                        (:659)
+   │
+   ▼
+  MultiAlgBlobClustering (MABC)  → Bee (.zip)
+```
+
+* The **view combinations** are the MicroBooNE analogue of live/dead imaging:
+  `uvw` is a normal 3-plane live blob; `uv`/`vw`/`wu` are 2-plane blobs where the
+  third plane is dead (so a blob is built from only two views). PDHD/PDVD instead
+  carry dead information per-channel via dead blobs + `dead_winds`.
+* Sampling lives in an `IClusterSource` (`UbooneClusterSource`), not in
+  `PointTreeBuilding`, but it calls the **same** `Aux::sample_live`/`sample_dead`
+  library helpers, so the resulting `"3d"`/`"scalar"`/`"corner"` columns match
+  PDHD/PDVD.
+
+### 8.2 The `charge_stepped` strategy (live blobs)
+
+`BlobSampler.cxx:901-1438`. This is an enhanced `stepped` that ports
+`WCPPID::calc_sampling_points()` from `wire-cell-pid` — i.e. it *is* the original
+MicroBooNE sampling. `stepped` (§3.1) is the stripped-down version PDHD/PDVD use;
+`charge_stepped` adds charge awareness on top of the identical geometric skeleton:
+
+1. **Same min/max/mid skeleton.** Find the max/min/mid-coverage strips, compute
+   `nmin`/`nmax` from `min_step_size=3` and `max_step_fraction=1/12`, and apply the
+   same `offset=0.5` diagonal shift to wire-center crossings
+   (`BlobSampler.cxx:982-1009,1073-1079`) — identical to `stepped`.
+2. **Small-blob densification — `use_all_wires`** (`:1053-1070`). If
+   `swidth(smax)·swidth(smin) ≤ max_wire_product_threshold` (default **2500**),
+   *every* wire in the min/max views is used instead of the stepped subset. Small
+   blobs therefore get a dense, every-wire grid; only large blobs fall back to the
+   `nmin`/`nmax` step. The original stepped wire set is still tracked as the
+   **"must"** set (`min_wires_set`/`max_wires_set`).
+3. **Charge filtering** (`:1134-1224`). For each candidate min×max crossing, the
+   per-wire charge is looked up in the slice activity (`get_wire_charge`,
+   `:1382-1437`). A crossing is **dropped** unless it is a "must" wire or its wire
+   charge clears the threshold (defaults `charge_threshold_max/min/other = 4000`).
+   The third ("mid") plane is also charge-gated. Crossings with all-zero charge are
+   dropped. This is what makes the MicroBooNE point cloud track real charge instead
+   of filling the whole RayGrid shape.
+4. **Dead-plane handling — `disable_mix_dead_cell`** (default **true**,
+   `:1016-1029`, `is_plane_bad` `:1254-1378`). When on, each of the three planes is
+   tested for "bad" (charge uncertainty `> dead_threshold=1e10` on the blob's first
+   or last wire); a bad plane's charge threshold is set to **0** so its (absent)
+   charge can't veto points. The `(charge != 0 || disable_mix_dead_cell)` clauses
+   then let zero-charge wires through on dead planes — i.e. dead cells are *not*
+   mixed into the charge requirement. Setting it **false** (the
+   `bs_live_no_dead_mix` sampler) lets dead-cell charge participate; that variant is
+   used only by the `improve_cluster_2` retiler (§8.4).
+5. **Aux** output is the same four fields as `stepped`
+   (`max/min_wire_interval`, `max/min_wire_type`, `:1238-1241`).
+
+`charge_stepped` also supports a **runtime config override**
+(`sample_blob_with_config` → `apply_runtime_config`, `:944-961,1444-1466`): a
+caller can pass per-call `charge_threshold_*`/`disable_mix_dead_cell`/`dead_threshold`
+that override the configured values for that one blob. This is how retiling
+(§8.4) re-samples improved clusters with different charge settings.
+
+### 8.3 Physics constants
+
+| constant            | PDHD/PDVD            | MicroBooNE (`qlport`)                         |
+|---------------------|----------------------|-----------------------------------------------|
+| live strategy       | `stepped`            | `charge_stepped`                              |
+| `drift_speed`       | 1.6 mm/µs            | **1.101 mm/µs**                              |
+| `time_offset`       | −250 µs              | **−1600 µs + 6 mm/drift_speed**             |
+| `tick`              | (slice default)      | **0.5 µs** (0.5 mm/tick)                     |
+| ticks per slice     | —                    | **4** (`nticks_live_slice`)                  |
+| `extra` regex       | split charge fields  | `[".*wire_index", ".*charge.*", "wpid"]`     |
+
+Source: `qlport/uboone-mabc.jsonnet:44-71` (samplers), `:141-145` (DetectorVolumes).
+The x-projection formula is the same `x = x_origin + xsign·(t_slice + time_offset)·drift_speed`
+(`Aux::time2drift`); only the constants change. Time binning is still the default
+`(1,0,1)` → one x-sample per blob at the slice start.
+
+### 8.4 Retiling re-samples (`improve_cluster_2`)
+
+Unlike PDHD/PDVD (which sample once), the MicroBooNE MABC pipeline re-samples
+during Steiner-graph construction. `cm.steiner(retiler=improve_cluster_2)`
+(`qlport:1244`) hands the clustering an `improve_cluster_2` retiler configured with
+the **`bs_live_no_dead_mix`** sampler (`charge_stepped` with
+`disable_mix_dead_cell=false`, `qlport:1171-1173`). When a cluster is improved, its
+blobs are re-tiled and re-sampled with dead-cell charge allowed to participate —
+densifying points across dead regions for the downstream PID/tracking. The
+`cut_time_low/high` retiler also exists (`qlport:1167-1169`) but is not wired into
+the default pipeline.
+
+### 8.5 Bee output
+
+MicroBooNE's `bee_points_sets` (`qlport:1267-1336+`) differ from PDHD/PDVD's
+`img`/`clustering` pair. The `img`/`clustering`/`retiled`/`examine` sets are
+commented out; the active sets are dumped **after specific visitors**:
+
+| name           | visitor / grouping       | pcname        | coords                | content                                  |
+|----------------|--------------------------|---------------|-----------------------|------------------------------------------|
+| `regular`      | `CreateSteinerGraph`     | `3d`          | `x_t0cor,y,z`         | the `charge_stepped` points (scope-filtered) |
+| `steiner`      | `CreateSteinerGraph`     | `steiner_pc`  | `x_t0cor,y,z`         | Steiner-tree vertices                    |
+| `track_fit`    | `TaggerCheckNeutrino`    | (PRGraph)     | —                     | track-fitted points, dQ/dx colored       |
+| `shower_track` | `TaggerCheckNeutrino`    | (PRGraph)     | —                     | points colored by shower/track class     |
+| `vertices`     | `TaggerCheckNeutrino`    | (PRGraph)     | —                     | PR-graph vertices                        |
+| `mc` (`bee_pf`)| `TaggerCheckNeutrino`    | (PF tree)     | —                     | particle-flow tree (Bee `mc` format)     |
+
+So MicroBooNE's "charge points" Bee view (`regular`) is the `charge_stepped`
+`"3d"` cloud — the same point-cloud-to-Bee path as PDHD/PDVD (§6.1), just dumped
+after `CreateSteinerGraph` and in `x_t0cor`. Unlike PDHD/PDVD it additionally
+ships `steiner_pc`, track-fit, and PID/PF Bee sets, because the MicroBooNE MABC
+runs the full neutrino-ID/tracking tail.
+
+### 8.6 Summary: MicroBooNE vs PDHD/PDVD
+
+| aspect              | PDHD/PDVD                          | MicroBooNE (`qlport`)                       |
+|---------------------|-----------------------------------|---------------------------------------------|
+| imaging             | in WCT (`img.jsonnet`)            | upstream (WCP TC tiling), read from ROOT    |
+| sampling node       | `PointTreeBuilding`               | `UbooneClusterSource`                        |
+| live strategy       | `stepped` (geometry only)         | `charge_stepped` (geometry + charge + dead) |
+| dead handling       | dead blobs + `dead_winds`         | 2-view blob combos (`uv`/`vw`/`wu`)         |
+| re-sampling         | none                              | `improve_cluster_2` retiler (no-dead-mix)   |
+| constants           | 1.6 mm/µs, −250 µs                | 1.101 mm/µs, −1600 µs +6 mm offset          |
+| Bee `3d` view       | `img` + `clustering`              | `regular` (post-SteinerGraph) + PID sets    |
+
+---
+
 ## Source map
 
 | topic                         | file:lines                                                |
@@ -322,6 +474,11 @@ Source: `pdhd/clus.jsonnet:7-8,22-25,109-126`;
 | bee_points_sets              | `pdhd/clus.jsonnet:236-245,467-498`                       |
 | strategy docs                 | `clus/inc/WireCellClus/BlobSampler.h:70-226`             |
 | `stepped` impl                | `clus/src/BlobSampler.cxx:703-885`                       |
+| `charge_stepped` impl (uBooNE)| `clus/src/BlobSampler.cxx:901-1438`                      |
+| uBooNE sampler config         | `qlport/uboone-mabc.jsonnet:44-82,141-145`              |
+| uBooNE sampling node          | `root/src/UbooneClusterSource.cxx:579-659`             |
+| uBooNE blob views / graphs    | `qlport/uboone-mabc.jsonnet:871-922,1414-1420`         |
+| uBooNE retiler / bee sets     | `qlport/uboone-mabc.jsonnet:1167-1173,1267-1336`       |
 | `center`/`corner`/`scalar`    | `aux/src/SamplingHelpers.cxx:9-245`                      |
 | `time2drift`                  | `aux/src/SamplingHelpers.cxx:247-256`                    |
 | `ctpc` / `dead_winds`         | `clus/src/PointTreeBuilding.cxx:272-516`                 |
