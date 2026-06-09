@@ -139,7 +139,9 @@ def main(argv):
     mag = MagnifyCache(magnify_template)
     b = ev.d
 
-    state = dict(anode=ev.anodes()[0], face=0, sidx=0, channels=[])
+    state = dict(anode=ev.anodes()[0], face=0, sidx=0, channels=[],
+                 pos_window=None,   # None or dict(x,y,z,pad): lock views to a region
+                 slice_chan={})     # {plane: (cmin,cmax)} of the current slice's wires
 
     # ---- sources ----------------------------------------------------------
     src_bands = ColumnDataSource(
@@ -187,7 +189,7 @@ def main(argv):
     f_wave = figure(title="1D waveforms (selected channels)", width=1120,
                     height=260, x_axis_label="tick", y_axis_label="ADC",
                     tools="pan,wheel_zoom,box_zoom,reset,save",
-                    active_scroll="wheel_zoom")
+                    active_scroll="wheel_zoom", x_range=Range1d(0, 6400))
     f_wave.multi_line("xs", "ys", source=src_wave, line_color="color",
                       line_width=1.3, legend_field="label")
     f_wave.legend.click_policy = "hide"
@@ -199,7 +201,8 @@ def main(argv):
         p = figure(title=f"{PLANE_NAME[plane]}-vs-T", width=370, height=300,
                    x_axis_label="channel", y_axis_label="tick",
                    tools="pan,wheel_zoom,box_zoom,reset,save",
-                   active_scroll="wheel_zoom")
+                   active_scroll="wheel_zoom",
+                   x_range=Range1d(0, 1), y_range=Range1d(0, 6400))
         s = ColumnDataSource(dict(image=[], x=[], y=[], dw=[], dh=[]))
         cm = LinearColorMapper(palette="Viridis256", nan_color="white")
         p.image(image="image", x="x", y="y", dw="dw", dh="dh", source=s,
@@ -262,11 +265,14 @@ def main(argv):
         sl = ev.slices(a, fc)
         blob_idx, sid = cur_slice_blobs()
         if sid is None:
-            src_bands.data = dict(xs=[], ys=[], plane=[], channel=[], color=[])
+            src_bands.data = dict(xs=[], ys=[], plane=[], wip=[], channel=[],
+                                  color=[])
             src_centers.data = dict(xs=[], ys=[], color=[])
             src_blob.data = dict(xs=[], ys=[])
             src_samp.data = dict(z=[], y=[])
+            state["slice_chan"] = {}
             slice_div.text = f"<b>anode {a} face {fc}</b>: no blobs"
+            render_waves()
             return
         # bands of these blobs
         bsel = np.zeros(b["blob_anode"].size, dtype=bool)
@@ -299,11 +305,24 @@ def main(argv):
             poly = b["blob_poly_xy"][b["blob_poly_off"][k]:b["blob_poly_off"][k + 1]]
             bxs.append(list(poly[:, 1])); bys.append(list(poly[:, 0]))
         src_blob.data = dict(xs=bxs, ys=bys)
-        # zoom the blob view to the displayed blobs +/- BLOB_PAD cm (the full TPC
-        # is far too large to see or click a single wire).
+        # per-plane channel span of this slice's wires (drives the 2D ch-vs-T view
+        # when a position is locked, and is the Y-Z-local channel set there).
+        pl_arr = b["band_plane"][bi]
+        ch_arr = b["band_channel"][bi]
+        state["slice_chan"] = {pl: (int(ch_arr[pl_arr == pl].min()),
+                                    int(ch_arr[pl_arr == pl].max()))
+                               for pl in (0, 1, 2) if (pl_arr == pl).any()}
+        # blob view range: locked to the position window if set (Y-Z range = window,
+        # X already centered on posX by the slice jump), else auto-zoom to the blob.
+        pw = state["pos_window"]
         zz = [v for sub in bxs for v in sub]
         yy = [v for sub in bys for v in sub]
-        if zz:
+        if pw:
+            f_yz.x_range.start = pw["z"] - pw["pad"]
+            f_yz.x_range.end = pw["z"] + pw["pad"]
+            f_yz.y_range.start = pw["y"] - pw["pad"]
+            f_yz.y_range.end = pw["y"] + pw["pad"]
+        elif zz:
             f_yz.x_range.start = min(zz) - BLOB_PAD
             f_yz.x_range.end = max(zz) + BLOB_PAD
             f_yz.y_range.start = min(yy) - BLOB_PAD
@@ -341,6 +360,7 @@ def main(argv):
         slice_div.text = (f"<b>anode {a} face {fc}</b> &mdash; slice "
                           f"{state['sidx'] + 1}/{sl.size} (id={sid}), "
                           f"x&isin;[{xlo:.1f}, {xhi:.1f}] cm, {blob_idx.size} blobs")
+        render_waves()   # keep the 1D + 2D-vs-T panels in sync with the slice
 
     # ---- view 2 window ----------------------------------------------------
     def _window_mask():
@@ -357,14 +377,46 @@ def main(argv):
         render_slice()   # refresh highlight under the new window
 
     def reset_window():
+        state["pos_window"] = None        # release the position lock
         for c in "xyz":
             arr = b["pts_" + c]
             win[c + "lo"].value = float(np.floor(arr.min()))
             win[c + "hi"].value = float(np.ceil(arr.max()))
         apply_window()
 
+    def x_to_tick(anode, x_cm):
+        """Invert the bee-frame undrift: drift x (cm) -> readout tick."""
+        sp = ev.meta.get("speed_mm_per_ns", 0.00156)
+        x0 = ev.meta.get("x0_mm", 3415.0)
+        if anode <= 3:                    # bottom CRP drifts the other way
+            sp, x0 = -sp, -x0
+        t_ns = (x0 - 10.0 * x_cm) / sp    # 10 == units.cm in internal mm
+        return t_ns / TICK_NS
+
+    def pos_tick_range():
+        """Tick window for the current anode from the locked X +/- pad, or None."""
+        pw = state["pos_window"]
+        if not pw:
+            return None
+        a = state["anode"]
+        t1 = x_to_tick(a, pw["x"] - pw["pad"])
+        t2 = x_to_tick(a, pw["x"] + pw["pad"])
+        lo, hi = sorted((t1, t2))
+        return max(0.0, lo), hi
+
+    def nearest_slice_idx(anode, face, posx):
+        """Index (into the (anode,face) slice list) of the slice nearest drift posx."""
+        sl = ev.slices(anode, face)
+        if sl.size == 0:
+            return 0
+        idxs = np.where((b["blob_anode"] == anode) & (b["blob_face"] == face))[0]
+        j = idxs[np.argmin(np.abs(b["blob_xc"][idxs] - posx))]
+        w = np.where(sl == int(b["blob_sliceid"][j]))[0]
+        return int(w[0]) if w.size else 0
+
     def center_on_pos():
-        """Fill the window to (X,Y,Z) +/- pad and filter the projections to it."""
+        """Lock all views to (X,Y,Z) +/- pad: filter the projections, zoom the blob
+        Y-Z view, jump to the slice nearest posX, and set the waveform tick range."""
         pad = float(w_pos_pad.value)
         try:
             pos = {c: float(w.value) for c, w in
@@ -373,10 +425,13 @@ def main(argv):
             status.text = ("<span style='color:#c00'>position X/Y/Z must be "
                            "numbers</span>")
             return
+        state["pos_window"] = dict(x=pos["x"], y=pos["y"], z=pos["z"], pad=pad)
         for c in "xyz":
             win[c + "lo"].value = pos[c] - pad
             win[c + "hi"].value = pos[c] + pad
-        apply_window()
+        state["sidx"] = nearest_slice_idx(state["anode"], state["face"], pos["x"])
+        w_slice.value = state["sidx"]
+        apply_window()   # filters projections + render_slice (-> blob view + waves)
 
     def pos_from_slice():
         """Fill the position boxes from the centroid of the displayed blobs."""
@@ -412,6 +467,12 @@ def main(argv):
                 msgs.append(f"{PLANE_NAME[plane]}:{ch} outside ROOT range "
                             f"[{off},{off + vals.shape[0]})")
         src_wave.data = dict(xs=xs, ys=ys, color=color, label=label)
+        # 1D waveform tick (x) range = the locked X window, else the full readout
+        tr = pos_tick_range()
+        if tr:
+            f_wave.x_range.start, f_wave.x_range.end = tr
+        else:
+            f_wave.x_range.start, f_wave.x_range.end = 0, (len(ys[0]) if ys else 6400)
         render_images(frame)
         if msgs:
             status.text = "<span style='color:#c00'>" + " | ".join(
@@ -420,26 +481,41 @@ def main(argv):
             status.text = ""
 
     def render_images(frame):
+        """2D ch-vs-T panels.  With a locked position: channel (x) axis = the Y-Z-
+        local wires of the current slice, tick (y) axis = the locked X window.  Else:
+        the tapped channels' neighborhood with auto ranges."""
         a = state["anode"]
+        pw = state["pos_window"]
+        tr = pos_tick_range()
         by_plane = {0: [], 1: [], 2: []}
         for plane, ch in state["channels"]:
             by_plane[plane].append(ch)
         for plane in (0, 1, 2):
             s = img_src[plane]
+            p = img2d[plane]
             vals, off, err = mag.get(a, plane, frame)
-            chs = by_plane[plane]
-            if vals is None or not chs:
-                s.data = dict(image=[], x=[], y=[], dw=[], dh=[])
-                continue
-            locs = [c - off for c in chs if 0 <= c - off < vals.shape[0]]
-            if not locs:
-                s.data = dict(image=[], x=[], y=[], dw=[], dh=[])
-                continue
-            c0 = max(min(locs) - 20, 0)
-            c1 = min(max(locs) + 20, vals.shape[0])
+            if vals is None:
+                s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
+            if pw:
+                rng = state["slice_chan"].get(plane)
+                if not rng:
+                    s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
+                c0 = max(rng[0] - off - 15, 0)
+                c1 = min(rng[1] - off + 15, vals.shape[0])
+            else:
+                locs = [c - off for c in by_plane[plane] if 0 <= c - off < vals.shape[0]]
+                if not locs:
+                    s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
+                c0 = max(min(locs) - 20, 0)
+                c1 = min(max(locs) + 20, vals.shape[0])
+            if c1 <= c0:
+                s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
             sub = vals[c0:c1, :].T                      # (ntick, nchanwin)
             s.data = dict(image=[sub], x=[off + c0], y=[0],
                           dw=[c1 - c0], dh=[vals.shape[1]])
+            p.x_range.start, p.x_range.end = off + c0, off + c1
+            p.y_range.start, p.y_range.end = (tr if (pw and tr)
+                                              else (0, vals.shape[1]))
 
     def refresh_chips():
         if not state["channels"]:
@@ -480,8 +556,7 @@ def main(argv):
         w_face.active = state["face"]
         state["sidx"] = 0
         set_slice_spinner()
-        render_slice()
-        render_waves()
+        render_slice()   # render_slice now refreshes the waveform panels too
 
     def on_face(attr, old, new):
         state["face"] = int(new)

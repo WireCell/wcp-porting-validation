@@ -51,12 +51,10 @@ correct electronics channel is selected automatically.
 The Bee 3-D points shown as three orthogonal projections. Six X/Y/Z spinners plus
 **Apply window** restrict the displayed region — the projection points are filtered
 to the window, not merely highlighted, so a region of interest is far less busy;
-**Reset window** returns to the full data bounds. As a shortcut, type an **X/Y/Z
-position** and click **Center window on pos** to set the window to position ± a
-chosen pad (default 20 cm); **pos ← current slice** fills the position from the
-blob you are viewing. When the time slice changes in view 1, the points belonging
-to the displayed blobs are **highlighted in red** across all three projections, so
-the slice you are inspecting is located within the whole event.
+**Reset window** returns to the full data bounds. When the time slice changes in
+view 1, the points belonging to the displayed blobs are **highlighted in red**
+across all three projections, so the slice you are inspecting is located within the
+whole event.
 
 ### 3. Waveforms (for the tapped channels)
 
@@ -70,6 +68,23 @@ plus `rawdecon/decon` when the ROOT was produced in the `-R` special mode). For 
 **DNN-ROI** Magnify ROOT the `gauss` tag (the default) is the DNN-ROI output;
 switch to `raw` for the post-NF waveform. Channels can also be added manually
 (plane + number + **Add**).
+
+### Position lock — one X/Y/Z point drives every view
+
+Type an **X/Y/Z position** (cm) and a **± pad** (default 20 cm), then **Center
+window on pos** (or **pos ← current slice** to fill the boxes from the blob you are
+viewing). This locks all three views to that 3-D region:
+
+* the **3-D projections** are filtered to position ± pad;
+* the **2-D blob view** zooms to the Y/Z window and jumps to the slice nearest
+  **posX**, so the drift coordinate is centered on the position;
+* the **1-D waveform** tick axis is the time window that **posX ± pad** maps to
+  (drift x → tick, inverting the bee-frame undrift);
+* the **2-D U/V/W-vs-T** panels show the Y-Z-local wires (the slice's channels ± a
+  margin) over that same X-derived tick window.
+
+**Reset window** releases the lock — the blob view returns to auto-zoom-per-blob
+and the waveforms to the full readout.
 
 ## Data flow
 

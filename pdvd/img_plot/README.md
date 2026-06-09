@@ -35,17 +35,31 @@ Pick a free port (5005–5011 are often taken by other viewers; 5012+ is usually
    electronics channel the waveforms use happens automatically.)
 2. **3-D point projections** X-Y / Z-Y / X-Z (X = drift). The six X/Y/Z spinners +
    **Apply window** restrict the shown region (the projection points are filtered to
-   the window, not just highlighted); **Reset window** returns to the data bounds.
-   Or type an **X/Y/Z position** and click **Center window on pos** to set the window
-   to position ± a chosen pad (default 20 cm); **pos ← current slice** fills the
-   position from the blob you are viewing. The current slice's points are
+   the window, not just highlighted); **Reset window** returns to the data bounds
+   and releases the position lock (below). The current slice's points are
    highlighted in red.
 3. **Waveforms** for the tapped channels: 1-D ADC-vs-tick overlay (legend
-   click-to-hide) plus 2-D U/V/W-vs-T images over the selected channels'
-   neighborhood, with the current slice's tick window shaded. Pick the Magnify
-   frame (`gauss/wiener/raw/orig`, default `gauss`; plus `rawdecon/decon` when the
-   ROOT was produced in the `-R` special mode). You can also add a channel
-   manually (plane + number + **Add**).
+   click-to-hide) plus 2-D U/V/W-vs-T images, with the current slice's tick window
+   shaded. Pick the Magnify frame (`gauss/wiener/raw/orig`, default `gauss`; plus
+   `rawdecon/decon` when the ROOT was produced in the `-R` special mode). You can
+   also add a channel manually (plane + number + **Add**).
+
+### Position lock — drive every view from one X/Y/Z point
+
+Type an **X/Y/Z position** (cm) and a **± pad** (default 20), then click **Center
+window on pos** (or **pos ← current slice** to fill the boxes from the blob you are
+viewing). This locks *all* views to that region:
+
+* **3-D projections** are filtered to the position ± pad window.
+* **2-D blob view** zooms to the Y/Z window and jumps to the slice nearest **posX**
+  (the drift coordinate), so X is centered on the position.
+* **1-D waveform** tick (x) axis is set to the time window that **posX ± pad** maps
+  to (drift x → tick).
+* **2-D U/V/W-vs-T** panels show the Y-Z-local wires (the current slice's channels
+  ± a margin) over that same X-derived tick window.
+
+**Reset window** releases the lock: the blob view returns to auto-zoom-per-blob and
+the waveforms to the full readout.
 
 ## Inputs and the preprocessing step
 
