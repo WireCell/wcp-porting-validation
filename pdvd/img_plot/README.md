@@ -42,13 +42,36 @@ MABC *before* clustering (`name:"img"` hook) — `bee-blobs` only does
 img-stage points are the true imaging-frame positions.  (The `clustering-global.json`
 in the same zip is the *post*-clustering cloud — don't use it for the overlay.)
 
+### Provenance (what stage the blobs/points are)
+
+* **Blobs** = per-anode imaging **after imaging deghosting**: 4 merged tiling
+  passes (3-view + UV/VW/UW 2-view) → "full" uboone solving with
+  ProjectionDeghosting + InSliceDeghosting ×3 + GlobalGeomClustering →
+  `ClusterFileSink` (`pdvd/img.jsonnet`).  Deghosting **zeroes ghosts but keeps
+  them in the file** (~19 % of blobs have `val == 0`) — the viewer draws them
+  dashed grey, with a checkbox to hide them.
+* **Points** = stepped sampling of **the same tar files**, read by MABC
+  pre-clustering (`pdvd/wct-clustering.jsonnet`) — so blobs and points are
+  matched at source.
+* A slice's points all sit at exactly `x = time2drift(slice start)` (one x per
+  slice, 0.32 cm apart); the viewer matches points to the displayed slice by
+  `|pts_x − blob_x_start| < 0.16 cm`.  2.6 % of charged slices (349/13210) have small blobs
+  the stepped sampler emitted no points for — those genuinely show 0 points.
+
+See `pdvd/docs/imaging-event-display.md` § Provenance for the full trace.
+
 ## The three views
 
 1. **2D blob view** (transverse Z–Y, cm) at one time slice. Each fired U/V/W wire
    is drawn as a ±half-pitch cell (U red, V green, W blue) with its center line; the
-   blob outline (from the imaging `corners`) sits on top; the slice's stepped
-   sampling points are overlaid in orange. The view **auto-zooms to the displayed
-   blob ±20 cm**. **◀ Prev / Next ▶** (or the `slice idx` spinner) step the slice.
+   blob outline (from the imaging `corners`) sits on top — **solid black** for
+   charged blobs, **dashed grey** for zero-charge ghosts (hover shows the charge;
+   the **hide zero-charge blobs** checkbox removes them); the slice's stepped
+   sampling points are overlaid in orange. The header reports the blob count with
+   the zero-charge tally, and a **fired-wire channels** line gives the slice's
+   per-plane channel ranges directly (no tapping needed). The view **auto-zooms
+   to the displayed blob ±20 cm**. **◀ Prev / Next ▶** (or the `slice idx`
+   spinner) step the slice.
    *Hover* a wire for its plane/**wire index/channel**; *tap* a wire to select its
    channel for the waveform views (wire→channel conversion is automatic).
 2. **3-D point projections** X-Y / Z-Y / X-Z (X = drift). The six X/Y/Z spinners +
@@ -56,12 +79,14 @@ in the same zip is the *post*-clustering cloud — don't use it for the overlay.
    highlighted); **Reset window** returns to the data bounds and releases the
    position lock. The current slice's points are highlighted in red.
 3. **Waveforms** for the tapped channels: 1-D ADC-vs-tick overlay (legend
-   click-to-hide) plus 2-D U/V/W-vs-T images, with the current slice's tick window
+   click-to-hide; the **ADC axis auto-ranges to the signals in the displayed tick
+   window**) plus 2-D U/V/W-vs-T images, with the current slice's tick window
    shaded. Pick the Magnify frame (`gauss/wiener/raw/orig`, default `gauss`; plus
    `rawdecon/decon` in `-R` mode). Add a channel manually (plane + number + **Add**).
    **Dead channels** from the Magnify `T_bad<anode>` TTree that fall in the shown
-   channel window are drawn in **grey with their actual waveform** — a "dead"
-   channel that still shows a real pulse flags a **mis-label**.
+   channel window are drawn in **grey with their actual waveform** in the 1-D
+   panel and as **grey vertical bars** in the 2-D panels (hover gives the
+   channel) — a "dead" channel that still shows a real pulse flags a **mis-label**.
 
 ### Position lock — drive every view from one X/Y/Z point
 

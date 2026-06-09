@@ -225,6 +225,10 @@ def main():
     b_xlo = np.minimum(xa, xb)
     b_xhi = np.maximum(xa, xb)
     b_xc = 0.5 * (b_xlo + b_xhi)
+    # x of the slice START -- the stepped sampler emits all of a slice's points
+    # exactly at this x (one x per slice, 0.32 cm apart), so the viewer matches
+    # points to a slice by |pts_x - x_start| < half the spacing.
+    b_xstart = xa
 
     # ---- Gate 1: points-in-polygon ----------------------------------------
     gate1 = gate_points_in_poly(pts_x, pts_y, pts_z, pts_grp,
@@ -242,6 +246,7 @@ def main():
         blob_start_ns=b_start,
         blob_span_ns=b_span,
         blob_x_lo=b_xlo, blob_x_hi=b_xhi, blob_xc=b_xc,
+        blob_x_start=b_xstart,
         blob_val=np.asarray(b_val),
         blob_poly_xy=poly_xy, blob_poly_off=poly_off,
         band_blob=np.asarray(band_blob, dtype=np.int64),

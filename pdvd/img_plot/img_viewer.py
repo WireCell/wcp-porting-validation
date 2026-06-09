@@ -28,13 +28,18 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (
-    BoxAnnotation, Button, ColumnDataSource, Div, HoverTool, LinearColorMapper,
-    RadioButtonGroup, Range1d, Select, Spinner, TapTool, TextInput,
+    BoxAnnotation, Button, Checkbox, ColumnDataSource, Div, HoverTool,
+    LinearColorMapper, RadioButtonGroup, Range1d, Select, Spinner, TapTool,
+    TextInput,
 )
 from bokeh.plotting import figure
 
 TICK_NS = 500.0
 BLOB_PAD = 20.0   # cm padding around the displayed blob in the 2D view
+# Stepped sampling points sit exactly at x = time2drift(slice start), one x per
+# slice, 0.32 cm apart.  Match a point to a slice by |pts_x - x_start| < half
+# that spacing (an exact-boundary window test drops them on float noise).
+PTS_X_HALF = 0.16
 PLANE_NAME = {0: "U", 1: "V", 2: "W"}
 PLANE_COLOR = {0: "#d62728", 1: "#2ca02c", 2: "#1f77b4"}
 
@@ -176,7 +181,8 @@ def main(argv):
         dict(xs=[], ys=[], plane=[], wip=[], channel=[], color=[]),
         name="src_bands")
     src_centers = ColumnDataSource(dict(xs=[], ys=[], color=[]))
-    src_blob = ColumnDataSource(dict(xs=[], ys=[]))
+    src_blob = ColumnDataSource(dict(xs=[], ys=[], val=[]))
+    src_ghost = ColumnDataSource(dict(xs=[], ys=[], val=[]))
     src_samp = ColumnDataSource(dict(z=[], y=[]))
     src_pts_all = ColumnDataSource(dict(x=[], y=[], z=[]))
     src_pts_hi = ColumnDataSource(dict(x=[], y=[], z=[]))
@@ -192,13 +198,18 @@ def main(argv):
                           fill_alpha=0.18, line_color="color", line_alpha=0.5)
     f_yz.multi_line("xs", "ys", source=src_centers, line_color="color",
                     line_width=1.0, line_alpha=0.9)
-    f_yz.patches("xs", "ys", source=src_blob, fill_alpha=0.0,
-                 line_color="black", line_width=2)
+    blob_r = f_yz.patches("xs", "ys", source=src_blob, fill_alpha=0.0,
+                          line_color="black", line_width=2)
+    ghost_r = f_yz.patches("xs", "ys", source=src_ghost, fill_alpha=0.0,
+                           line_color="#888888", line_width=1.5,
+                           line_dash="dashed")
     f_yz.scatter("z", "y", source=src_samp, size=4, color="orange",
                  alpha=0.9, marker="circle")
     f_yz.add_tools(HoverTool(renderers=[band_r],
                              tooltips=[("plane", "@plane"), ("wire", "@wip"),
                                        ("channel", "@channel")]))
+    f_yz.add_tools(HoverTool(renderers=[blob_r, ghost_r],
+                             tooltips=[("blob charge", "@val{0}")]))
 
     # ---- view 2: projections ----------------------------------------------
     def proj(title, xl, yl):
@@ -217,7 +228,8 @@ def main(argv):
     f_wave = figure(title="1D waveforms (selected channels)", width=1120,
                     height=260, x_axis_label="tick", y_axis_label="ADC",
                     tools="pan,wheel_zoom,box_zoom,reset,save",
-                    active_scroll="wheel_zoom", x_range=Range1d(0, 6400))
+                    active_scroll="wheel_zoom", x_range=Range1d(0, 6400),
+                    y_range=Range1d(-100, 100))
     f_wave.multi_line("xs", "ys", source=src_wave, line_color="color",
                       line_width=1.3, legend_field="label")
     f_wave.legend.click_policy = "hide"
@@ -225,6 +237,7 @@ def main(argv):
     img2d = {}
     img_src = {}
     img_band = {}
+    img_dead = {}
     for plane in (0, 1, 2):
         p = figure(title=f"{PLANE_NAME[plane]}-vs-T", width=370, height=300,
                    x_axis_label="channel", y_axis_label="tick",
@@ -235,6 +248,12 @@ def main(argv):
         cm = LinearColorMapper(palette="Viridis256", nan_color="white")
         p.image(image="image", x="x", y="y", dw="dw", dh="dh", source=s,
                 color_mapper=cm)
+        # dead channels (Magnify T_bad) = full-height grey bars on top of the image
+        sd = ColumnDataSource(dict(x=[], top=[], ch=[]))
+        dr = p.vbar(x="x", top="top", bottom=0, width=1.0, source=sd,
+                    fill_color="#888888", fill_alpha=0.45, line_alpha=0.0)
+        p.add_tools(HoverTool(renderers=[dr],
+                              tooltips=[("dead channel", "@ch")]))
         ba = BoxAnnotation(bottom=0, top=0, fill_color="red", fill_alpha=0.15,
                            line_color="red")
         ba.visible = False
@@ -242,6 +261,7 @@ def main(argv):
         img2d[plane] = p
         img_src[plane] = s
         img_band[plane] = ba
+        img_dead[plane] = sd
 
     # ---- widgets ----------------------------------------------------------
     w_anode = Select(title="Anode", value=str(state["anode"]),
@@ -250,7 +270,9 @@ def main(argv):
     b_prev = Button(label="◀ Prev slice", width=110)
     b_next = Button(label="Next slice ▶", width=110)
     w_slice = Spinner(title="slice idx", low=0, high=0, step=1, value=0, width=90)
+    w_ghosts = Checkbox(label="hide zero-charge blobs", active=False)
     slice_div = Div(text="", width=560, name="slice_div")
+    chan_div = Div(text="", width=560, name="chan_div")
     status = Div(text="", width=1120)
 
     win = {}
@@ -298,15 +320,22 @@ def main(argv):
             src_bands.data = dict(xs=[], ys=[], plane=[], wip=[], channel=[],
                                   color=[])
             src_centers.data = dict(xs=[], ys=[], color=[])
-            src_blob.data = dict(xs=[], ys=[])
+            src_blob.data = dict(xs=[], ys=[], val=[])
+            src_ghost.data = dict(xs=[], ys=[], val=[])
             src_samp.data = dict(z=[], y=[])
             state["slice_chan"] = {}
             slice_div.text = f"<b>anode {a} face {fc}</b>: no blobs"
+            chan_div.text = ""
             render_waves()
             return
-        # bands of these blobs
+        # zero-charge ghosts: blobs the charge solver / deghosting zeroed but
+        # left in the cluster file.  Optionally hidden; always counted.
+        vals = b["blob_val"][blob_idx]
+        nzero = int((vals == 0).sum())
+        vis_idx = blob_idx[vals > 0] if w_ghosts.active else blob_idx
+        # bands of the visible blobs
         bsel = np.zeros(b["blob_anode"].size, dtype=bool)
-        bsel[blob_idx] = True
+        bsel[vis_idx] = True
         bmask = bsel[b["band_blob"]]
         bi = np.where(bmask)[0]
         quads = b["band_quad_yz"][bi]                  # (n,4,2) -> (y,z)
@@ -329,12 +358,20 @@ def main(argv):
             ys=[[float(tmid[i, 0]), float(hmid[i, 0])] for i in range(len(quads))],
             color=colors,
         )
-        # blob outlines
+        # blob outlines: charged solid black, zero-charge dashed grey
         bxs, bys = [], []
-        for k in blob_idx:
+        cd = dict(xs=[], ys=[], val=[])
+        gd = dict(xs=[], ys=[], val=[])
+        for k in vis_idx:
             poly = b["blob_poly_xy"][b["blob_poly_off"][k]:b["blob_poly_off"][k + 1]]
+            v = float(b["blob_val"][k])
+            dst = cd if v > 0 else gd
+            dst["xs"].append(list(poly[:, 1]))
+            dst["ys"].append(list(poly[:, 0]))
+            dst["val"].append(v)
             bxs.append(list(poly[:, 1])); bys.append(list(poly[:, 0]))
-        src_blob.data = dict(xs=bxs, ys=bys)
+        src_blob.data = cd
+        src_ghost.data = gd
         # per-plane channel span of this slice's wires (drives the 2D ch-vs-T view
         # when a position is locked, and is the Y-Z-local channel set there).
         pl_arr = b["band_plane"][bi]
@@ -342,6 +379,11 @@ def main(argv):
         state["slice_chan"] = {pl: (int(ch_arr[pl_arr == pl].min()),
                                     int(ch_arr[pl_arr == pl].max()))
                                for pl in (0, 1, 2) if (pl_arr == pl).any()}
+        chan_div.text = "fired-wire channels: " + " &nbsp; ".join(
+            f"<span style='color:{PLANE_COLOR[pl]}'><b>{PLANE_NAME[pl]}</b>: "
+            f"{lo}&ndash;{hi} ({hi - lo + 1} ch)</span>"
+            for pl, (lo, hi) in sorted(state["slice_chan"].items())) \
+            if state["slice_chan"] else "fired-wire channels: <i>none</i>"
         # blob view range: locked to the position window if set (Y-Z range = window,
         # X already centered on posX by the slice jump), else auto-zoom to the blob.
         pw = state["pos_window"]
@@ -357,17 +399,19 @@ def main(argv):
             f_yz.x_range.end = max(zz) + BLOB_PAD
             f_yz.y_range.start = min(yy) - BLOB_PAD
             f_yz.y_range.end = max(yy) + BLOB_PAD
-        # sampling points OF the displayed blobs: drift-side + slice x-window +
-        # inside one of the displayed blob polygons (the same test Gate 1 uses).
-        # This is shared by the blob view and the projection highlight so the two
-        # views agree on "the data being viewed".
+        # sampling points OF the displayed blobs: drift-side + same slice +
+        # inside one of the displayed blob polygons.  A slice's stepped points
+        # all sit exactly at x = time2drift(slice start), so match on that x
+        # within half the 0.32 cm point spacing -- an exact [x_lo,x_hi] window
+        # test drops boundary points on ~1e-14 float noise.
         xlo = float(b["blob_x_lo"][blob_idx].min())
         xhi = float(b["blob_x_hi"][blob_idx].max())
+        xstart = float(b["blob_x_start"][blob_idx[0]])
         g = 0 if a <= 3 else 1
         cand = np.where((b["pts_group"] == g)
-                        & (b["pts_x"] >= xlo) & (b["pts_x"] <= xhi))[0]
+                        & (np.abs(b["pts_x"] - xstart) < PTS_X_HALF))[0]
         polys = [b["blob_poly_xy"][b["blob_poly_off"][k]:b["blob_poly_off"][k + 1]]
-                 for k in blob_idx]
+                 for k in vis_idx]
         sel = []
         for pi in cand:
             yy, zz = b["pts_y"][pi], b["pts_z"][pi]
@@ -388,10 +432,14 @@ def main(argv):
             img_band[plane].top = float(max(t0, t1))
             img_band[plane].visible = True
         tklo, tkhi = min(t0, t1), max(t0, t1)
+        ghost_note = (f" ({nzero} zero-charge"
+                      + (", hidden" if w_ghosts.active and nzero else "") + ")"
+                      if nzero else "")
         slice_div.text = (f"<b>anode {a} face {fc}</b> &mdash; slice "
                           f"{state['sidx'] + 1}/{sl.size} (id={sid}), "
                           f"x&isin;[{xlo:.1f}, {xhi:.1f}] cm, "
-                          f"tick&isin;[{tklo:.0f}, {tkhi:.0f}], {blob_idx.size} blobs")
+                          f"tick&isin;[{tklo:.0f}, {tkhi:.0f}], "
+                          f"{blob_idx.size} blobs{ghost_note}")
         render_waves()   # keep the 1D + 2D-vs-T panels in sync with the slice
 
     # ---- view 2 window ----------------------------------------------------
@@ -593,6 +641,14 @@ def main(argv):
             f_wave.x_range.start, f_wave.x_range.end = tr
         else:
             f_wave.x_range.start, f_wave.x_range.end = 0, (len(ys[0]) if ys else 6400)
+        # y range follows the signals inside the displayed tick window
+        if ys:
+            i0 = max(int(f_wave.x_range.start), 0)
+            i1 = int(np.ceil(f_wave.x_range.end))
+            lo = min(min(w[i0:i1] or w) for w in ys)
+            hi = max(max(w[i0:i1] or w) for w in ys)
+            pad = 0.08 * (hi - lo) or 1.0
+            f_wave.y_range.start, f_wave.y_range.end = lo - pad, hi + pad
         render_images(frame)
         if msgs:
             status.text = "<span style='color:#c00'>" + " | ".join(
@@ -612,16 +668,28 @@ def main(argv):
             p = img2d[plane]
             vals, off, err = mag.get(a, plane, frame)
             if vals is None:
-                s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
+                s.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+                img_dead[plane].data = dict(x=[], top=[], ch=[])
+                continue
             win = plane_chan_window(plane, off, vals.shape[0])
             if not win:
-                s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
+                s.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+                img_dead[plane].data = dict(x=[], top=[], ch=[])
+                continue
             c0, c1 = win
             if c1 <= c0:
-                s.data = dict(image=[], x=[], y=[], dw=[], dh=[]); continue
+                s.data = dict(image=[], x=[], y=[], dw=[], dh=[])
+                img_dead[plane].data = dict(x=[], top=[], ch=[])
+                continue
             sub = vals[c0:c1, :].T                      # (ntick, nchanwin)
             s.data = dict(image=[sub], x=[off + c0], y=[0],
                           dw=[c1 - c0], dh=[vals.shape[1]])
+            # dead channels in the window as full-height grey bars
+            # (image pixel for channel ch spans [ch, ch+1] -> bar center ch+0.5)
+            dch = dead_channels(plane, off, c0, c1)
+            img_dead[plane].data = dict(x=[ch + 0.5 for ch in dch],
+                                        top=[vals.shape[1]] * len(dch),
+                                        ch=dch)
             p.x_range.start, p.x_range.end = off + c0, off + c1
             p.y_range.start, p.y_range.end = (tr if (pw and tr)
                                               else (0, vals.shape[1]))
@@ -690,6 +758,7 @@ def main(argv):
     b_prev.on_click(lambda: step(-1))
     b_next.on_click(lambda: step(+1))
     w_slice.on_change("value", on_slice_spin)
+    w_ghosts.on_change("active", lambda a, o, n: render_slice())
     b_apply.on_click(apply_window)
     b_reset.on_click(reset_window)
     b_center.on_click(center_on_pos)
@@ -710,14 +779,14 @@ def main(argv):
     head = Div(text=f"<h2>PDVD imaging viewer &mdash; run {ev.meta.get('run')} "
                     f"evt {ev.meta.get('event')}</h2>"
                     f"<small>{npz_path}</small>", width=1120)
-    controls = row(w_anode, w_face, b_prev, b_next, w_slice)
+    controls = row(w_anode, w_face, b_prev, b_next, w_slice, w_ghosts)
     winrow = row(win["xlo"], win["xhi"], win["ylo"], win["yhi"],
                  win["zlo"], win["zhi"], b_apply, b_reset)
     posrow = row(w_pos_x, w_pos_y, w_pos_z, w_pos_pad, b_center, b_pos_here)
     chrow = row(w_frame, w_man_pl, w_man_ch, b_add, b_clear)
     layout = column(
         head,
-        controls, slice_div,
+        controls, slice_div, chan_div,
         row(f_yz, column(Div(text="<b>3D point projections</b>"),
                          row(f_xy, f_zy, f_xz), winrow, posrow)),
         Div(text="<hr><b>Waveforms</b> (tap a wire above to pick a channel)"),

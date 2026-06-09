@@ -38,6 +38,56 @@ instantly; the Magnify ROOTs (last two rows) are read lazily on demand.
 > PDHD/PDVD have **no T0 correction** (`x == x_t0cor`), so these img-stage points
 > are the true imaging-frame stepped positions.
 
+## Provenance — what the blobs and points actually are
+
+Both inputs were traced through the configs; **the blobs and the sampling points
+come from the same data, at the same pipeline stage**, so they are matched at
+source and no re-run is needed to align them.
+
+**Blobs** (`clusters-apa-anode{N}-ms-active.tar.gz`, written by the `pdvd/img.jsonnet`
+"multi" fork): per-anode **imaging output *after* imaging deghosting** — i.e. option
+(b) of {raw imaging / post-imaging-deghosting / post-clustering-deghosting}.  The
+pipeline that produces them is:
+
+1. `multi_active_slicing_tiling` — **four** tiling passes merged into one blob set:
+   3-view UVW plus the three 2-view combinations UV/VW/UW (third plane masked),
+   span 4 ticks (`pdvd/img.jsonnet:164`);
+2. "full" uboone solving **with deghosting** (`pdvd/img.jsonnet:202`):
+   `BlobClustering → ProjectionDeghosting → {BlobGrouping, ChargeSolving ×2,
+   LocalGeomClustering} → InSliceDeghosting` (3 rounds) `→ GlobalGeomClustering`;
+3. `ClusterFileSink` dumps the result.
+
+Crucially, **deghosting/solving zeroes ghost blobs but does not remove them from
+the file**: 19 % of all blobs in run 39324 evt 0 have `val == 0`.  This is what
+made "slice 289" (anode 3 face 1) look wrong — its 3 blobs all genuinely belong
+to the same slice id 949 and are **1 real blob (val = 61678) + 2 zero-charge
+ghosts**.  The viewer now draws zero-charge blobs as dashed grey outlines (with a
+checkbox to hide them), so the real content is one blob, as expected.  Multiple
+*charged* blobs in one slice are also legitimate: at slice id 952 the 3 blobs
+(val 4845/45510/13935) sit on **adjacent single V wires** (V bounds 206-207 /
+207-208 / 208-209) — one isochronous track segment crossing three V wires, not
+duplicates.
+
+**Sampling points** (`0-clustering-group0123/4567.json` inside `mabc-all-apa.zip`):
+MABC's pre-clustering `name:"img"` hook samples the live grouping built from **the
+very same `clusters-apa-anode{N}-ms-active.tar.gz` files**
+(`pdvd/wct-clustering.jsonnet:37`) with the stepped (threshold-0) `BlobSampler` —
+the same post-imaging-deghosting blobs, **before** any all-APA clustering or
+clustering-deghosting.
+
+**Point ↔ slice matching.** The stepped sampler emits *all* of a slice's points at
+exactly `x = time2drift(slice start)` — one x value per slice, 0.32 cm apart.  The
+viewer therefore matches points to the displayed slice by
+`|pts_x − x_start| < 0.16 cm` (half the spacing).  An earlier version used the
+window test `x_lo ≤ pts_x ≤ x_hi`, which dropped boundary points on ~1e-14 float
+noise — that was the "3 blobs, zero points" mismatch at slice 292 (the points were
+there all along; with the fixed rule that slice shows its 14 in-polygon points).
+Validation over all 13210 charged slices: every slice gets its points except (a)
+slices whose blobs are all zero-charge ghosts and (b) 2.6 % of charged slices (349/13210)
+whose (small) blobs the stepped sampler genuinely emitted **no** points for at any
+x (e.g. a3f1 slice id 1376) — a sampler-side property, visible in Bee too, not a
+viewer mismatch.
+
 ## The three linked views
 
 ### 1. 2-D blob view (transverse Z-Y, at one time slice)
@@ -46,8 +96,16 @@ For the selected anode/face and time slice it draws, in the transverse plane:
 
 * every **fired wire** as a ±half-pitch cell (filled band + center line), colored
   by plane (U red, V green, W blue);
-* the **blob outline**, taken directly from the imaging `corners` polygon, on top;
+* the **blob outline**, taken directly from the imaging `corners` polygon, on top —
+  **solid black** for charged blobs, **dashed grey** for zero-charge ghosts (see
+  Provenance above); hovering an outline shows the blob's solved charge, and the
+  **hide zero-charge blobs** checkbox removes the ghosts (and their wires/points);
 * the **stepped sampling points** of those blobs, overlaid in orange.
+
+The header line gives the slice's x and tick windows and the blob count with the
+zero-charge tally; below it a **fired-wire channels** line lists the slice's
+channel range per plane (colored U/V/W) so the channels can be read off without
+tapping any wire.
 
 The view auto-zooms to the displayed blob ±20 cm.  **◀ Prev / Next ▶** (or the
 `slice idx` spinner) step through slices.  *Hovering* a wire shows its plane, wire
@@ -64,9 +122,12 @@ blobs are highlighted in red across all three projections.
 ### 3. Waveforms (for the tapped channels)
 
 * a **1-D overlay** of ADC-vs-tick for each selected channel (legend
-  click-to-hide);
+  click-to-hide); the vertical (ADC) axis **auto-ranges to the signals inside the
+  displayed tick window**, so large pulses are never clipped and small ones fill
+  the panel;
 * three **2-D U/V/W-vs-T** images over the selected channels' neighborhood, with
-  the current slice's tick window shaded.
+  the current slice's tick window shaded and every **dead channel in the window
+  drawn as a full-height grey vertical bar** (hover gives its number).
 
 A `Magnify frame` selector chooses the stage (`gauss/wiener/raw/orig`, plus
 `rawdecon/decon` in the `-R` mode).  For a **DNN-ROI** ROOT the `gauss` tag (the
@@ -75,7 +136,8 @@ Channels can also be added manually (plane + number + **Add**).
 
 **Dead-channel overlay.** Channels listed in the Magnify `T_bad<anode>` TTree that
 fall in the displayed channel window are drawn in **grey** with their *actual*
-waveform.  A truly dead channel reads flat; a channel labelled dead that still
+waveform in the 1-D panel, and as **grey vertical bars** in the 2-D ch-vs-T
+panels.  A truly dead channel reads flat; a channel labelled dead that still
 carries a real pulse stands out — that is the intended check for **mis-labelled
 channels**.
 
@@ -172,6 +234,10 @@ All three views are verified end-to-end on run 39324 evt 0:
   ROOTs.
 * Position lock auto-detects anode/face/slice, tick inversion round-trips exactly,
   and the `T_bad` dead-channel overlay loads (100 dead channels on anode 0).
+* Point↔slice matching by slice-start x verified on the user-reported cases:
+  a3f1 display-slice 289 = 1 charged blob + 2 zero-charge ghosts (3 points in the
+  charged blob); display-slice 292 = 3 charged blobs with 14 in-polygon points
+  (previously shown as 0 due to the float-edge window bug).
 
 Note: the waveform view needs the per-anode Magnify ROOTs present; if one is
 missing the panels stay empty and a red status line names the file (views 1-2 work
