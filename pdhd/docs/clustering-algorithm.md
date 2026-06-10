@@ -39,6 +39,13 @@ Every stage is one `MultiAlgBlobClustering` (MABC) node executing a configured
 | a0f1pA, a1f0pA, ... | wall-facing (degenerate) faces: FV_x pinned at ±357.985 cm |
 | per-face params | `drift_speed` 1.6 mm/µs, `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
 
+`detector_volumes(anodes, face)` builds the per-stage `DetectorVolumes`; the
+`face` argument scopes the instance NAME (the per-face and per-drift-group
+stages name their dv for the one drift volume they operate on, e.g.
+`dv-apa0-2-0`).  The metadata always carries both faces of every anode:
+`Grouping::fill_dv_cache` reads drift parameters for every geometry face, so
+removing the off-scope face's entry would silently zero those cache values.
+
 Per face, two `ClusterScopeFilter`s (live/dead) feed one `PointTreeBuilding`
 with two `BlobSampler`s:
 
@@ -95,8 +102,17 @@ Dump (when standalone): `mabc-apa{N}.zip`.
 ## Stage 3 — per-drift-group (`clus_per_group`)
 
 `PointTreeMerging` over the 2 APAs of one drift side (`tolerate_missing:
-true` — an absent APA input does not abort): group02 = {APA0, APA2} (drift
-−x) and group13 = {APA1, APA3} (drift +x).  Coordinates: raw
+true` — an absent APA input does not abort).  A group is x-aligned APAs
+viewed through a **common face**, i.e. exactly one drift volume: group02 =
+{APA0, APA2} face 0 (drift −x) and group13 = {APA1, APA3} face 1 (drift +x).
+The group's `DetectorVolumes` is named for that drift volume
+(`detector_volumes(anodes, face)`, e.g. `dv-apa0-2-0`); its metadata still
+carries both faces of each anode because `Grouping::fill_dv_cache` reads
+drift parameters for every geometry face — the off-scope entries are inert
+(no data wpid carries them) and `examine_x_boundary` enforces the scope on
+the wpids actually present.  The opposite-face groups (APA0+APA2 face 1,
+APA1+APA3 face 0) are PDHD wall faces that do not image, so each drift side
+has exactly one populated group and they are not wired.  Coordinates: raw
 `["x","y","z"]`.  Then:
 
 | # | method | component | role |
@@ -108,7 +124,7 @@ true` — an absent APA input does not abort): group02 = {APA0, APA2} (drift
 | 5 | `close(1.2cm)` | ClusteringClose | |
 | 6 | `extend_loop(3)` | ClusteringExtendLoop | |
 | 7 | `separate(use_ctpc=true)` | ClusteringSeparate | split over-merged clusters (moved here from the per-face stage) |
-| 8 | `examine_x_boundary()` | ClusteringExamineXBoundary | split clusters at the drift-x fiducial boundary (newly enabled; the C++ accepts multi-wpid groupings whose wpids share identical FV_x metadata, true within one drift side) |
+| 8 | `examine_x_boundary()` | ClusteringExamineXBoundary | split clusters at the drift-x fiducial boundary (newly enabled; the C++ accepts multi-wpid groupings only when the wpids form one drift volume: same face AND identical FV_x metadata — mixed faces or differing x ranges raise) |
 | 9 | `neutrino()` | ClusteringNeutrino | neutrino-candidate tagging/merge |
 | 10 | `isolated()` | ClusteringIsolated | small→big isolated-cluster absorption |
 | 11 | `examine_bundles()` | ClusteringExamineBundles | bundle examination/final merge |

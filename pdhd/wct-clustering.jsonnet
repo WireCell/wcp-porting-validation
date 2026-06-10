@@ -43,12 +43,15 @@ local clus = import 'pgrapher/experiment/pdhd/clus.jsonnet';
 local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event,
                         time_offset=time_offset);
 
-// Drift-side groups: even idents (APA0+APA2, drift -x) and odd (APA1+APA3,
-// drift +x).  With a subset anode_indices only non-empty groups are built and
+// Drift-side groups: x-aligned APAs viewed through a COMMON face, i.e. one
+// drift volume: even idents (APA0+APA2) image through face 0 (drift -x), odd
+// (APA1+APA3) through face 1 (drift +x).  The opposite faces are PDHD wall
+// faces that do not image, so each drift side has exactly one populated
+// group.  With a subset anode_indices only non-empty groups are built and
 // the final merge multiplicity shrinks to match.
 local group_defs = [
-    { name: "group02", anodes: [a for a in anodes if a.data.ident % 2 == 0] },
-    { name: "group13", anodes: [a for a in anodes if a.data.ident % 2 == 1] },
+    { name: "group02", face: 0, anodes: [a for a in anodes if a.data.ident % 2 == 0] },
+    { name: "group13", face: 1, anodes: [a for a in anodes if a.data.ident % 2 == 1] },
 ];
 local groups = [gd for gd in group_defs if std.length(gd.anodes) > 0];
 local ngroups = std.length(groups);
@@ -59,7 +62,7 @@ local group_pipe(gd) =
     local actives = [cluster_source("%s/clusters-apa-apa%d-ms-active.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local maskeds = [cluster_source("%s/clusters-apa-apa%d-ms-masked.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
     local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false) for i in std.range(0, n - 1)];
-    local pg = clus_maker.per_group(gd.anodes, gd.name, dump=false);
+    local pg = clus_maker.per_group(gd.anodes, gd.name, gd.face, dump=false);
     g.intern(
         innodes = actives + maskeds,
         centernodes = apa_pipes,
