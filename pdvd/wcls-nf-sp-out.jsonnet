@@ -1,3 +1,10 @@
+// LOCAL VARIANT of cfg/pgrapher/experiment/protodunevd/wcls-nf-sp-out.jsonnet.
+// Single delta vs the cfg copy: a raw_frame_tap FrameFileSink per anode that
+// saves the post-NF (pre-SP) frames to protodune-sp-frames-raw-anode{N}.tar.bz2
+// (consumed by the nf_plot noise studies).  Kept local because the cfg copy is
+// driven by LArSoft fcl extVars, which cannot default a new on/off switch
+// without breaking existing fcl files.  Keep otherwise in sync with the cfg copy.
+//
 // This is a main entry point to configure a WC/LS job that applies
 // noise filtering and signal processing to existing RawDigits.  The
 // FHiCL is expected to provide the following parameters as attributes

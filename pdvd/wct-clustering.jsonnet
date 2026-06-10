@@ -2,7 +2,6 @@ local g = import "pgraph.jsonnet";
 local f = import "pgrapher/common/funcs.jsonnet";
 local wc = import "wirecell.jsonnet";
 
-local io = import 'pgrapher/common/fileio.jsonnet';
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local reality = 'data';
@@ -24,6 +23,14 @@ function(
     // Stepped-sampler fallback: blobs the stepped grid leaves point-less get
     // one point at the blob center.  Default off -> bit-identical output.
     stepped_center_fallback = false,
+    // Event-T0 / readout-tick0 compensation for the live BlobSampler drift-x
+    // conversion.  PDVD has no per-event T0, so default 0 (no preset T0).
+    // -250us would place trigger-time activity at its true x; see
+    // pgrapher/experiment/protodunevd/clus.jsonnet.
+    time_offset = 0,
+    // Accept any-volume containment in the switch_scope T0Correction filter
+    // (out-of-time clusters keep participating in all-APA merge passes).
+    relax_containment_filter = true,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -42,8 +49,9 @@ local masked_files = [ "%s/clusters-apa-anode%d-ms-masked.tar.gz"%[input, a.data
 local active_clusters = [cluster_source(f) for f in active_files];
 local masked_clusters = [cluster_source(f) for f in masked_files];
 
-local clus = import 'clus.jsonnet';
-local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event, stepped_center_fallback=stepped_center_fallback);
+local clus = import 'pgrapher/experiment/protodunevd/clus.jsonnet';
+local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event, stepped_center_fallback=stepped_center_fallback,
+                        time_offset=time_offset, relax_containment_filter=relax_containment_filter);
 local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false) for n in std.range(0, nanodes - 1)];
 
 local img_clus_pipe = [g.intern(
