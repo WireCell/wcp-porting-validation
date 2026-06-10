@@ -138,7 +138,7 @@ Dump (when standalone): `mabc-group02.zip` / `mabc-group13.zip`.
 | # | method | component | coords | role |
 |---|---|---|---|---|
 | 1 | `switch_scope()` | ClusteringSwitchScope (T0Correction) | x→x_t0cor | computes the T0-corrected coordinate set (`["x_t0cor","y","z"]`) and applies a containment scope filter per (apa,face) volume |
-| — | `cathode_connect(...)` | ClusteringCathodeConnect | x_t0cor | **commented out for now**: cathode-crossing connector with the SBND-tuned parameter set (cathode_x_cut=5cm, drift_cut=8cm, min_length_short=2cm, short_dir_len=25cm, conn_short_cut=30) as placeholder, plus `use_flash_t0=false` because PDHD has no flash matching (the default flash-coincidence gate would veto every pair).  PDHD's cathode is central at x=0 (the C++ default `cathode_x`); dimensions to be confirmed before enabling. |
+| 2 | `cathode_connect(...)` | ClusteringCathodeConnect | x_t0cor | **enabled 2026-06-09**: cathode-crossing connector with the SBND-tuned parameter set (cathode_x_cut=5cm, drift_cut=8cm, min_length_short=2cm, short_dir_len=25cm, conn_short_cut=30) as placeholder, plus `use_flash_t0=false` because PDHD has no flash matching (the default flash-coincidence gate would veto every pair).  PDHD's cathode is central at x=0 (the C++ default `cathode_x` — a config knob, not hardcoded).  Without a per-event T0 only near-trigger-time crossers qualify (a crosser's apparent cathode tips sit at \|x\| ≈ t0·v_drift on opposite sides of x=0); on run 027409 evt 0 the pass fires zero times and the output is content-identical to the pre-enable chain. |
 
 A `retile` block (ClusteringRetile with per-face stepped samplers) is present
 but commented out — the designated hook for re-tiling-based refinement.

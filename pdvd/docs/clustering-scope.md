@@ -86,13 +86,22 @@ drift-side groups.  DetectorVolumes: full detector (all 8 anodes +
 | # | pass | coords | key parameters |
 |---|------|--------|----------------|
 | 1 | `switch_scope` | x,y,z → x_t0cor,y,z | T0Correction; registers the corrected scope and scope-filters clusters by volume containment (see §3) |
-| — | `cathode_connect` | x_t0cor | **commented out** — SBND-tuned placeholder (cathode_x=0, cathode_x_cut=5cm, use_flash_t0=false since PDVD has no flash matching); the only candidate pass for cross-drift-side merging |
+| 2 | `cathode_connect` | x_t0cor | **enabled 2026-06-09** — SBND-tuned cuts (cathode_x=0 default, cathode_x_cut=5cm, drift_cut=8cm, use_flash_t0=false since PDVD has no flash matching); the only cross-drift-side merge pass |
 
 With no flash matching in PDVD every `cluster_t0` is 0, so `x_t0cor == x`
 numerically; the corrected scope still matters because it carries the
-containment scope-filter.  No merge passes run here, so the global cluster
-count equals the sum of the two stage-3 group counts until `cathode_connect`
-is enabled.  Note: `switch_scope` destroys and recreates every cluster,
+containment scope-filter.  `cathode_connect` is the only merge pass here, so
+the global cluster count equals the sum of the two stage-3 group counts
+except where it connects a cathode crosser.  Without a per-event T0 only
+near-trigger-time crossers qualify: a crosser's cathode tips appear at
+apparent |x| ≈ t0·v_drift on *opposite* sides of x=0, so out-of-time cosmics
+fail the 5 cm cathode window while a trigger-coincident crosser's tips sit
+at the ±2.54 cm sensitive-volume edges and pass.  (On the two locally imaged
+events — 039252/298567, 039253/49686 — it fires zero times; global = sum
+held.)  Stage-3 prerequisite: `examine_x_boundary(allow_mixed_faces=true)` —
+the same-face check added for PDHD drift-side groups (9a41546a) would
+otherwise raise on PDVD's per-group groupings, whose 8 wpids legitimately
+mix faces (an anode's faces are the y-halves of one CRP, identical FV_x).  Note: `switch_scope` destroys and recreates every cluster,
 which drops the per-cluster `isolated`/`perblob` arrays produced by stage
 3's `isolated`/`examine_bundles` (accepted; SBND re-runs `examine_bundles`
 after `switch_scope` when those are needed downstream).
@@ -127,7 +136,7 @@ Evidence cites `clus/src/`.
 | `neutrino` | yes | yes | yes | stage 3 | "handle all APA/Face" (clustering_neutrino.cxx:61); builds per-(apa,face) geometry maps; uses scope-selected fiducial volume |
 | `isolated` | yes | yes | yes | stage 3 | "Handle all APA/Faces" (clustering_isolated.cxx:75) |
 | `examine_bundles` | yes | yes | yes | stage 3 | "All APA Faces" (clustering_examine_bundles.cxx:79); needs CTPC when use_ctpc |
-| `cathode_connect` | n/a | no | all | stage 4 (commented) | cathode-crosser connector: pairs clusters in *different* APAs whose ends meet at a configured shared-cathode x (clustering_cathode_connect.cxx; requires wpid.apa() to differ).  PDVD's two drift volumes meet at x≈±25.4mm, matching the default cathode_x=0; `use_flash_t0=false` (`f68e5f6a`) disables the flash-coincidence gate PDVD cannot satisfy.  Cuts are SBND-tuned — validate before enabling |
+| `cathode_connect` | n/a | no | all | stage 4 (enabled 2026-06-09) | cathode-crosser connector: pairs clusters in *different* APAs whose ends meet at a configured shared-cathode x (clustering_cathode_connect.cxx; requires wpid.apa() to differ).  PDVD's two drift volumes meet at x≈±25.4mm, matching the default cathode_x=0; `use_flash_t0=false` (`f68e5f6a`) disables the flash-coincidence gate PDVD cannot satisfy.  Cuts are SBND-tuned placeholders |
 | `retile` | yes | yes | yes | not used (commented out) | re-tiles clusters through an IPCTreeMutate; defaults to and warns unless the T0-corrected scope is used (clustering_retile.cxx:67-81) |
 | `ctpointcloud` | — | — | — | not used | test/diagnostic only (clustering_ctpointcloud.cxx:51) |
 
@@ -179,4 +188,4 @@ as TLAs of `pdvd/wct-clustering.jsonnet`):
   (stage 3, raw coords), so the scope filter can no longer exclude clusters
   from those passes; relaxing it still matters so that `switch_scope` does
   not split clusters on filter results and so any post-correction pass
-  (`cathode_connect`, once enabled) sees every cluster.
+  (`cathode_connect`, now enabled) sees every cluster.
