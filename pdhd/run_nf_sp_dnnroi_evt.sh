@@ -123,6 +123,11 @@ Options:
                  Override the L1SP DNN sigmoid threshold (default from
                  jsonnet: 0.9945, tuned for -N dnn). For -N hybrid use
                  0.10 (Phase-A holdout precision/recall sweet spot).
+  --w-fix <on|off>
+                 Prolonged-W-signal fix (toolkit roi_mad_rms +
+                 w_col_break_roi_tune; see docs/sp-w-collection-roi-break.md).
+                 Default on (the sp.jsonnet defaults).  'off' recovers the
+                 bit-identical pre-fix SP for A/B comparison.
   --roi-debug    SP ROI-stage diagnosis mode: bypass DNN-ROI and L1SP
                  (their FrameMergers drop the SP debug tags) but force
                  the same OmnibusSigProc override as the production DNN
@@ -168,6 +173,7 @@ CALIB_ROOT=""
 LOOSE_HEUR=0
 L1SP_THRESH_OVERRIDE=""
 ROI_DEBUG=0
+W_FIX="on"
 # APA0 W-plane ROI tune (sp.jsonnet apa0_w_roi_tune).  Default true (driver
 # default); pass --w-tune false for the bit-identical pre-tune APA0 SP.
 APA0_W_ROI_TUNE="true"
@@ -195,6 +201,7 @@ while [ $# -gt 0 ]; do
         --loose-heur) LOOSE_HEUR=1; shift ;;
         --l1sp-thresh) L1SP_THRESH_OVERRIDE="$2"; shift 2 ;;
         --roi-debug) ROI_DEBUG=1; shift ;;
+        --w-fix) W_FIX="$2"; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -393,6 +400,15 @@ fi
 # override identical to the production DNN chain and sinks the per-stage ROI
 # tags.  W-plane output is unaffected by the bypassed stages (DNN-ROI and
 # L1SP only touch U/V).
+# Prolonged-W-signal fix A/B toggle (default on = sp.jsonnet defaults).
+W_FIX_TLA=()
+case "$W_FIX" in
+    on)  ;;
+    off) W_FIX_TLA=(--tla-code sp_roi_mad_rms=false --tla-code sp_w_col_break_roi_tune=false)
+         echo "W fix:       OFF (pre-fix SP, A/B baseline)" ;;
+    *) echo "[err] --w-fix must be 'on' or 'off' (got '$W_FIX')" >&2; exit 1 ;;
+esac
+
 ROI_DEBUG_TLA=()
 if [ "$ROI_DEBUG" = "1" ]; then
     ROI_DEBUG_TLA=(--tla-code use_dnnroi=false --tla-code sp_roi_debug_sink=true)
@@ -496,6 +512,7 @@ wire-cell \
     "${LOOSE_HEUR_TLA[@]}" \
     "${L1SP_THRESH_TLA[@]}" \
     "${ROI_DEBUG_TLA[@]}" \
+    "${W_FIX_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

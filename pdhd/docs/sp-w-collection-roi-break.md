@@ -162,16 +162,25 @@ especially common there, so the same failure class applies.
 * Pre-fix stage table and RMS numbers: §2–§3 (from `--roi-debug` runs on the
   production binary/config, whose W gauss segments byte-match the production
   archives in `work/027409_6` / `_7`).
-* Post-fix: re-run of the `--roi-debug` diagnosis and of the full DNN chain +
-  magnify for both events. *(Pending at the time of writing: the input
-  frames under `input_data_14_old_coh_grouping` →
-  `/nfs/data/1/xning/wirecell-working/data/` became unreadable mid-study
-  (`drwxrwxr--`, group 27658) — re-run as soon as access returns. The MAD
-  replay in §4 used the captured tight-decon waveforms and the exact C++
-  ROI-finding logic.)*
-* Toggle-off path: `roi_mad_rms=false` takes the untouched legacy branch in
-  `cal_RMS`; `w_col_break_roi_tune=false` omits the per-plane key entirely.
-  Both compile to configs byte-identical to pre-fix production.
+* **Post-fix per-stage rerun** (`--roi-debug`, fix ON), signal-window
+  coverage:
+
+  | stage | ch 9543 | ch 4532 |
+  |---|---|---|
+  | `cleanup_roi` | 3.8 % → **50.3 %**, core [2584,3624] contiguous | 6.3 % → **53.5 %**, core [4370,5377] contiguous |
+  | `gauss` | 22.6 % → **55.8 %**, charge sum 1.41M → **4.39M** | 16.7 % → **57.8 %**, charge sum 1.63M → **5.07M** |
+
+  (`break_roi_*` tags are absent for W post-fix — BreakROI disabled, the
+  loop never runs on slot 2.  The prolonged signal body is one continuous
+  gauss chunk: [2564,3659] / [4349,5431].)
+* **Toggle-off byte-identicality**: full-chain rerun with the new binary and
+  `--w-fix off` reproduces the pre-fix production archives **byte-identically**
+  (every npy member equal: raw/wiener/gauss, all planes, both events).
+* Config level: knobs-off configs compile byte-identical to pre-change
+  (wcsonnet diff on the full PDHD chain and PDVD `wct-nf-sp.jsonnet`);
+  knobs-on diffs are exactly the two new keys.
+* Production `work/027409_6` / `_7` frames + magnify regenerated with the fix
+  ON (pre-fix outputs preserved in `bak-pre-wfix/`).
 
 ## 6. Related
 
