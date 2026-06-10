@@ -15,9 +15,12 @@ imaging output (per APA):
         |  ClusterFileSource x2 per APA
         v
   per-APA stage (per_apa) -- internally runs the per-face stage on face 0/1
-        |  x4 APAs
+        |  x2 APAs per drift side
         v
-  all-APA stage (all_apa) -> mabc-all-apa.zip (Bee) + trash-all-apa.tar.gz
+  per-drift-group stage (per_group) -- {APA0,APA2} (drift -x) / {APA1,APA3} (drift +x)
+        |  x2 groups
+        v
+  all-TPC stage (all_tpc) -> mabc-all-apa.zip (Bee) + trash-all-apa.tar.gz
 ```
 
 Every stage is one `MultiAlgBlobClustering` (MABC) node executing a configured
@@ -67,11 +70,11 @@ Coordinates: raw `["x","y","z"]`.  Methods in order
 | 6 | `parallel_prolong(length_cut=35cm)` | ClusteringParallelProlong | merge parallel/prolonged track fragments |
 | 7 | `close(length_cut=1.2cm)` | ClusteringClose | merge clusters in close contact |
 | 8 | `extend_loop(num_try=3)` | ClusteringExtendLoop | iterate the extend family 3× |
-| 9 | `separate(use_ctpc=true)` | ClusteringSeparate | split over-merged clusters (PCA/topology) |
-| 10 | `connect1()` | ClusteringConnect1 | final connection pass |
+| 9 | `connect1()` | ClusteringConnect1 | final connection pass |
 
-(`isolated()` and `retile(...)` exist in the toolbox but are commented out at
-this stage.)
+(`separate(use_ctpc)` used to run between extend_loop and connect1; it moved
+to the per-drift-group stage.  `isolated()` and `retile(...)` exist in the
+toolbox but are commented out at this stage.)
 
 Per-face MABC dumps `mabc-apa{N}-face{F}.zip` (Bee set "clustering",
 `individual: true`) when run with `dump=true` — in the standard chain the
@@ -89,31 +92,43 @@ then a per-APA MABC runs:
 
 Dump (when standalone): `mabc-apa{N}.zip`.
 
-## Stage 3 — all-APA (`clus_all_apa`)
+## Stage 3 — per-drift-group (`clus_per_group`)
 
-`PointTreeMerging` over all 4 APAs (`tolerate_missing: true` — an absent APA
-input does not abort), then:
+`PointTreeMerging` over the 2 APAs of one drift side (`tolerate_missing:
+true` — an absent APA input does not abort): group02 = {APA0, APA2} (drift
+−x) and group13 = {APA1, APA3} (drift +x).  Coordinates: raw
+`["x","y","z"]`.  Then:
 
-| # | method | component | coords | role |
-|---|---|---|---|---|
-| 1 | `switch_scope()` | ClusteringSwitchScope (T0Correction) | x→x_t0cor | computes the T0-corrected coordinate set; subsequent methods run on `["x_t0cor","y","z"]` |
-| 2 | `extend(flag=4, 60cm/15cm, num_dead_try=1)` | ClusteringExtend | as stage 1, corrected coords |
-| 3 | `regular("1", 60cm, no extend)` | ClusteringRegular | |
-| 4 | `regular("2", 30cm, extend)` | ClusteringRegular | |
-| 5 | `parallel_prolong(35cm)` | ClusteringParallelProlong | |
-| 6 | `close(1.2cm)` | ClusteringClose | |
-| 7 | `extend_loop(3)` | ClusteringExtendLoop | |
-| 8 | `separate(use_ctpc=true)` | ClusteringSeparate | |
+| # | method | component | role |
+|---|---|---|---|
+| 1 | `extend(flag=4, 60cm/15cm, num_dead_try=1)` | ClusteringExtend | as stage 1, across the drift side |
+| 2 | `regular("1", 60cm, no extend)` | ClusteringRegular | |
+| 3 | `regular("2", 30cm, extend)` | ClusteringRegular | |
+| 4 | `parallel_prolong(35cm)` | ClusteringParallelProlong | |
+| 5 | `close(1.2cm)` | ClusteringClose | |
+| 6 | `extend_loop(3)` | ClusteringExtendLoop | |
+| 7 | `separate(use_ctpc=true)` | ClusteringSeparate | split over-merged clusters (moved here from the per-face stage) |
+| 8 | `examine_x_boundary()` | ClusteringExamineXBoundary | split clusters at the drift-x fiducial boundary (newly enabled; the C++ accepts multi-wpid groupings whose wpids share identical FV_x metadata, true within one drift side) |
 | 9 | `neutrino()` | ClusteringNeutrino | neutrino-candidate tagging/merge |
 | 10 | `isolated()` | ClusteringIsolated | small→big isolated-cluster absorption |
 | 11 | `examine_bundles()` | ClusteringExamineBundles | bundle examination/final merge |
+
+Dump (when standalone): `mabc-group02.zip` / `mabc-group13.zip`.
+
+## Stage 4 — all-TPC (`clus_all_tpc`)
+
+`PointTreeMerging` over the 2 drift groups (`tolerate_missing: true`), then:
+
+| # | method | component | coords | role |
+|---|---|---|---|---|
+| 1 | `switch_scope()` | ClusteringSwitchScope (T0Correction) | x→x_t0cor | computes the T0-corrected coordinate set (`["x_t0cor","y","z"]`) and applies a containment scope filter per (apa,face) volume |
+| — | `cathode_connect(...)` | ClusteringCathodeConnect | x_t0cor | **commented out for now**: cathode-crossing connector with the SBND-tuned parameter set (cathode_x_cut=5cm, drift_cut=8cm, min_length_short=2cm, short_dir_len=25cm, conn_short_cut=30) as placeholder, plus `use_flash_t0=false` because PDHD has no flash matching (the default flash-coincidence gate would veto every pair).  PDHD's cathode is central at x=0 (the C++ default `cathode_x`); dimensions to be confirmed before enabling. |
 
 A `retile` block (ClusteringRetile with per-face stepped samplers) is present
 but commented out — the designated hook for re-tiling-based refinement.
 
 Without a flash/T0 association, `x_t0cor` equals the (time_offset-shifted)
-apparent x; `switch_scope`'s T0Correction also applies a containment scope
-filter per (apa,face) volume.
+apparent x.
 
 ## Bee output (`mabc-all-apa.zip`)
 
