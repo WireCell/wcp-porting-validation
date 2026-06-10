@@ -134,7 +134,17 @@ as TLAs of `pdvd/wct-clustering.jsonnet`):
   point only if it is contained by its *own* (apa,face) volume; clusters with
   no accepted point are excluded from **all** subsequent all-APA merge passes
   (the 17.5% / 66.6% point exclusion documented in
-  [clustering-boundary-merge.md](clustering-boundary-merge.md)).  Relaxed, a
-  point passes if contained by *any* sensitive volume, so out-of-time
-  clusters keep participating in cross-CRP merging.  Other detectors are
+  [clustering-boundary-merge.md](clustering-boundary-merge.md)).  Relaxed,
+  the filter is **disabled entirely**: every point passes, every cluster
+  participates in cross-CRP merging, and `switch_scope` never splits a
+  cluster on filter results.  An earlier relaxed form (accept if contained by
+  *any* sensitive volume) proved insufficient: with no T0 the apparent x is
+  unreliable in both directions, and clusters can sit **entirely outside all
+  sensitive volumes** — early activity in the band between the anode-face
+  boundary (|x| = 335.835 cm) and the wire planes (|x| = 341.55 cm), late
+  activity in the cathode gap (|x| < 2.54 cm).  Run 039324 evt 0: 25 of 81
+  global clusters (10 anode-band + 15 cathode-band) were still excluded by
+  the any-volume form — e.g. a 92-point track tip at x ∈ [−341.6, −336.1]
+  left 0.57 cm from its parent track but never merged; with the filter
+  disabled the global cluster count drops 81 → 51.  Other detectors are
   unaffected (C++ default off; the key is set only in the PDVD config).

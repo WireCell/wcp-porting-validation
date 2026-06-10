@@ -93,18 +93,25 @@ containment), run 39324 evt 0:
 
 All of these clusters/fragments skip the all-APA merge passes.
 
-## Status / proposal (not implemented)
+## Status: FIXED (2026-06, two rounds)
 
 The switch-scope x-containment test was designed for chains where a flash-T0
 correction has already placed clusters at their true x (SBND).  For PDVD (no
 T0) it silently excludes a large fraction of clusters from cross-boundary
-merging.  Candidate fixes, all needing a jsonnet toggle (default OFF,
-bit-identical):
+merging.
 
-1. a `skip_x_containment` (or y-z-footprint-only containment) mode in
-   `ClusteringSwitchScope` / `T0Correction::filter` for no-T0 detectors; or
-2. accept same-drift-side volumes (apa group {0-3} vs {4-7}) instead of exact
-   (apa,face) match.
+**Round 1** — `relax_containment_filter` option on `PCTransformSet` (C++
+default off = production bit-identical; PDVD config sets it true): the filter
+accepted a point contained by *any* sensitive volume instead of its own
+(apa,face).  This recovered the opposite-drift-volume exclusions above
+(evt 0: 229 → 81 global clusters; pair 45/109 merged).
 
-Diagnosis only in this round, per request; the instrumentation has been
-reverted and the shipped artifacts are byte-identical to the clean run.
+**Round 2** — the any-volume form still excluded clusters sitting **entirely
+outside all sensitive volumes**: early-time activity in the band between the
+anode-face boundary (|x| = 335.835 cm) and the wire planes (|x| = 341.55 cm),
+and late-time activity in the cathode gap (|x| < 2.54 cm).  Evt 0: 25 of 81
+global clusters (10 anode-band + 15 cathode-band) — e.g. a 92-point track tip
+at x ∈ [−341.6, −336.1] separated by only 0.57 cm from its parent track.
+Relaxed mode now **disables the filter entirely** (every point passes, no
+switch_scope splitting); evt 0 global clusters drop 81 → 51.  See
+[clustering-scope.md](clustering-scope.md) §3 for the knob semantics.
