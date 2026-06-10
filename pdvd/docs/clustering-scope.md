@@ -11,11 +11,11 @@ Companion docs: [clus-workflow.md](clus-workflow.md) (graph topology, RSE,
 dead channels), [clustering-boundary-merge.md](clustering-boundary-merge.md)
 (the no-T0 scope-filter exclusion this config now relaxes).
 
-## 1. The current PDVD clustering algorithm
+## 1. The current PDVD clustering algorithm (4 stages, 2026-06 reorg)
 
-Three hierarchical stages.  Each stage is one `MultiAlgBlobClustering`
-(MABC) instance running an ordered pipeline of passes over a point-tree
-grouping.
+Four hierarchical stages (same structure as the PDHD 4-stage reorg, toolkit
+`fe1927e3`).  Each stage is one `MultiAlgBlobClustering` (MABC) instance
+running an ordered pipeline of passes over a point-tree grouping.
 
 ### Stage 1 — per APA-face (16 instances: 8 anodes x 2 faces)
 
@@ -34,57 +34,82 @@ the stepped live sampler and center dead sampler).  Coordinates:
 | 6 | `parallel_prolong` | length_cut=35cm — parallel/prolonged track merge |
 | 7 | `close` | length_cut=1.2cm — tiny-gap merge |
 | 8 | `extend_loop` | num_try=3 — iterative extension (4 internal passes per try) |
-| 9 | `separate` | use_ctpc=true — split over-merged clusters |
-| 10 | `connect1` | isochronous-aware final connection |
+| 9 | `connect1` | isochronous-aware final connection |
 
-Bee output: `mabc-anode{N}-face{F}.zip`.
+`separate` moved to stage 3 (the per-drift-group scope sees the whole track
+before splitting it).  Bee output: `mabc-anode{N}-face{F}.zip`.
 
-### Stage 2 — per APA (8 instances)
+### Stage 2 — per APA, two faces (8 instances)
 
 `PointTreeMerging` (multiplicity 2) merges the two faces' point trees.
-DetectorVolumes: both faces of the anode.  Single pass:
+DetectorVolumes: both faces of the anode.
 
 | # | pass | purpose |
 |---|------|---------|
-| 1 | `protect_overclustering` | split clusters whose blob connectivity does not support the merge |
+| 1 | `deghost` | remove ghost clusters (multi-face within one APA; use_ctpc=true) |
+| 2 | `protect_overclustering` | split clusters whose blob connectivity does not support the merge |
 
 Note: there is **no cross-face merge pass** at this stage — the two faces'
-clusters coexist in one grouping but are only ever merged later, in the
-all-APA stage.  Bee output: `mabc-anode{N}.zip`.
+clusters coexist in one grouping but are only ever merged in stage 3.  Bee
+output: `mabc-anode{N}.zip`.
 
-### Stage 3 — all APAs (1 instance)
+### Stage 3 — per drift-side group (2 instances: anodes 0-3, anodes 4-7)
 
-`PointTreeMerging` (multiplicity 8) merges all per-APA trees.
-DetectorVolumes: full detector (all 8 anodes + `overall` cryostat box).
+`PointTreeMerging` (multiplicity 4, tolerate_missing) merges the per-APA
+trees of one drift side.  DetectorVolumes: the group's 4 anodes (8 wpids,
+all sharing the same FV_x metadata).  Coordinates: raw `["x","y","z"]` —
+with no per-event T0, `x_t0cor == x`, so running the merge family before
+`switch_scope` is equivalent.
+
+| # | pass | key parameters |
+|---|------|----------------|
+| 1 | `extend` | flag=4, length_cut=60cm, num_dead_try=1 |
+| 2 | `regular` ("1") | length_cut=60cm, no extend |
+| 3 | `regular` ("2") | length_cut=30cm, with extend |
+| 4 | `parallel_prolong` | length_cut=35cm |
+| 5 | `close` | length_cut=1.2cm |
+| 6 | `extend_loop` | num_try=3 |
+| 7 | `separate` | use_ctpc=true |
+| 8 | `examine_x_boundary` | multi-wpid since toolkit `f68e5f6a` (all wpids must share FV_x — true within one drift side) |
+| 9 | `neutrino` | neutrino-interaction pattern recognition |
+| 10 | `isolated` | isolated small-cluster classification/merge |
+| 11 | `examine_bundles` | graph-based bundle re-examination |
+
+Bee output: `mabc-group0123.zip` / `mabc-group4567.zip`.
+
+### Stage 4 — all-TPC (1 instance)
+
+`PointTreeMerging` (multiplicity 2, tolerate_missing) merges the two
+drift-side groups.  DetectorVolumes: full detector (all 8 anodes +
+`overall` cryostat box).
 
 | # | pass | coords | key parameters |
 |---|------|--------|----------------|
 | 1 | `switch_scope` | x,y,z → x_t0cor,y,z | T0Correction; registers the corrected scope and scope-filters clusters by volume containment (see §3) |
-| 2 | `extend` | x_t0cor | flag=4, length_cut=60cm, num_dead_try=1 |
-| 3 | `regular` ("1") | x_t0cor | length_cut=60cm, no extend |
-| 4 | `regular` ("2") | x_t0cor | length_cut=30cm, with extend |
-| 5 | `parallel_prolong` | x_t0cor | length_cut=35cm |
-| 6 | `close` | x_t0cor | length_cut=1.2cm |
-| 7 | `extend_loop` | x_t0cor | num_try=3 |
-| 8 | `separate` | x_t0cor | use_ctpc=true |
-| 9 | `neutrino` | x_t0cor | neutrino-interaction pattern recognition |
-| 10 | `isolated` | x_t0cor | isolated small-cluster classification/merge |
-| 11 | `examine_bundles` | x_t0cor | graph-based bundle re-examination |
+| — | `cathode_connect` | x_t0cor | **commented out** — SBND-tuned placeholder (cathode_x=0, cathode_x_cut=5cm, use_flash_t0=false since PDVD has no flash matching); the only candidate pass for cross-drift-side merging |
 
 With no flash matching in PDVD every `cluster_t0` is 0, so `x_t0cor == x`
 numerically; the corrected scope still matters because it carries the
-containment scope-filter.  Bee output: `mabc-all-apa.zip` containing
-`clustering-group0123` / `clustering-group4567` (the **per-anode** result,
-dumped from the merged input *before* the all-APA passes via the
-`name:"img"` bee points set) and `clustering-global` (the final result).
+containment scope-filter.  No merge passes run here, so the global cluster
+count equals the sum of the two stage-3 group counts until `cathode_connect`
+is enabled.  Note: `switch_scope` destroys and recreates every cluster,
+which drops the per-cluster `isolated`/`perblob` arrays produced by stage
+3's `isolated`/`examine_bundles` (accepted; SBND re-runs `examine_bundles`
+after `switch_scope` when those are needed downstream).
+
+Bee output: `mabc-all-apa.zip` containing `clustering-group0123` /
+`clustering-group4567` (the **stage-3 per-drift-group output**, dumped from
+the merged input *before* the all-TPC passes via the `name:"img"` bee points
+set) and `clustering-global` (the final result).
 
 ## 2. Scope capability of every clustering pass
 
 Scope legend — **face**: single APA-face grouping; **APA**: one anode, both
-faces in one grouping; **all**: full-detector grouping.  "PDVD use" = where
-the current pipeline runs it.  Evidence cites `clus/src/`.
+faces in one grouping; **group**: 4 anodes of one drift side; **all**:
+full-detector grouping.  "PDVD use" = where the current pipeline runs it.
+Evidence cites `clus/src/`.
 
-| pass | face | APA | all | PDVD use | evidence / limiting mechanism |
+| pass | face | APA | group/all | PDVD use | evidence / limiting mechanism |
 |---|---|---|---|---|---|
 | `pointed` | yes | yes | yes | stage 1 | structure-only pruning, no geometry (clustering_pointed.cxx) |
 | `live_dead` | yes | untested | untested | stage 1 | per-wpid wire-geometry maps built for all wpids present, but live↔dead bridging is a per-face concept (dead regions are per-face); only exercised per-face |
@@ -93,22 +118,23 @@ the current pipeline runs it.  Evidence cites `clus/src/`.
 | `parallel_prolong` | yes | yes* | yes | stages 1+3 | as `regular`; NB hard-coded drift axis (1,0,0) — fine for PDVD/x-drift |
 | `close` | yes | yes* | yes | stages 1+3 | distance/direction only, no DetectorVolumes at all (clustering_close.cxx) |
 | `extend_loop` | yes | yes* | yes | stages 1+3 | wrapper looping `extend` 4 ways per iteration |
-| `separate` | yes | yes | yes | stages 1+3 | `select_scope_fv()` (clustering_separate.cxx:27-94) picks per-APA FV for single-APA DV, cryostat `overall` FV for multi-APA — explicitly scope-aware |
-| `connect1` | yes | **no** | **no** | stage 1 only | hard assertion: `wpids().size() > 1` → ValueError (clustering_connect.cxx:69-83, "This is for only one APA/face") |
-| `deghost` | yes | yes | **no** | not used | "all faces within a single APA"; `apas.size() > 1` → ValueError (clustering_deghost.cxx:118-174); needs CTPC point clouds when use_ctpc |
-| `examine_x_boundary` | yes | **no** | **no** | not used (commented out) | hard assertion: `wpids().size() > 1` → ValueError (clustering_examine_x_boundary.cxx:42-54); reads FV of the single wpid |
+| `separate` | yes | yes | yes | stage 3 | `select_scope_fv()` (clustering_separate.cxx:27-94) picks per-APA FV for single-APA DV, cryostat `overall` FV for multi-APA — explicitly scope-aware |
+| `connect1` | yes | **no** | **no** | stage 1 only | hard assertion: `wpids().size() > 1` → ValueError (clustering_connect.cxx:79-84, "This is for only one APA/face") |
+| `deghost` | yes | yes | **no** | stage 2 | "all faces within a single APA"; `apas.size() > 1` → ValueError (clustering_deghost.cxx:118-175; counts the grouping's *DetectorVolumes* wpids, so the stage-2 single-anode dv passes); needs CTPC point clouds when use_ctpc |
+| `examine_x_boundary` | yes | yes | group | stage 3 | multi-wpid since `f68e5f6a`: all wpids must share identical FV_x metadata or ValueError (clustering_examine_x_boundary.cxx:74-87) — true within a PDVD drift side, false across the cathode, so group scope is its ceiling |
 | `protect_overclustering` | yes | yes | yes | stage 2 | intra-cluster blob-graph analysis; reads per-wpid `nticks_live_slice` for every wpid present |
-| `switch_scope` | yes | yes | yes | stage 3 | applies a named IPCTransform (T0Correction) per cluster; scope-independent mechanics, but only meaningful where a corrected scope is wanted (post-merge, all-APA) |
+| `switch_scope` | yes | yes | yes | stage 4 | applies a named IPCTransform (T0Correction) per cluster; scope-independent mechanics, but only meaningful where a corrected scope is wanted (post-merge) |
 | `neutrino` | yes | yes | yes | stage 3 | "handle all APA/Face" (clustering_neutrino.cxx:61); builds per-(apa,face) geometry maps; uses scope-selected fiducial volume |
 | `isolated` | yes | yes | yes | stage 3 | "Handle all APA/Faces" (clustering_isolated.cxx:75) |
 | `examine_bundles` | yes | yes | yes | stage 3 | "All APA Faces" (clustering_examine_bundles.cxx:79); needs CTPC when use_ctpc |
-| `cathode_connect` | n/a | (yes) | (yes) | not used | SBND-specific cathode-crosser connector: pairs clusters in *different* APAs whose ends meet at a configured shared-cathode x.  PDVD's two drift volumes meet at the cathode plane (x≈±25.4mm), so the *mechanism* could in principle be retargeted, but all cuts are SBND-tuned — treat as SBND-only until validated |
+| `cathode_connect` | n/a | no | all | stage 4 (commented) | cathode-crosser connector: pairs clusters in *different* APAs whose ends meet at a configured shared-cathode x (clustering_cathode_connect.cxx; requires wpid.apa() to differ).  PDVD's two drift volumes meet at x≈±25.4mm, matching the default cathode_x=0; `use_flash_t0=false` (`f68e5f6a`) disables the flash-coincidence gate PDVD cannot satisfy.  Cuts are SBND-tuned — validate before enabling |
 | `retile` | yes | yes | yes | not used (commented out) | re-tiles clusters through an IPCTreeMutate; defaults to and warns unless the T0-corrected scope is used (clustering_retile.cxx:67-81) |
 | `ctpointcloud` | — | — | — | not used | test/diagnostic only (clustering_ctpointcloud.cxx:51) |
 
 `yes*` = no scope-limiting code found (same pairwise logic PDVD already runs
-per-face and all-APA), but the per-APA two-faces-in-one-grouping case is not
-exercised by any current PDVD stage — validate before relying on it.
+per-face and per-group), but the per-APA two-faces-in-one-grouping case is
+not exercised by any current PDVD merge stage — validate before relying on
+it.
 
 ## 3. T0 handling and the containment scope filter (2026-06 changes)
 
@@ -148,3 +174,9 @@ as TLAs of `pdvd/wct-clustering.jsonnet`):
   left 0.57 cm from its parent track but never merged; with the filter
   disabled the global cluster count drops 81 → 51.  Other detectors are
   unaffected (C++ default off; the key is set only in the PDVD config).
+
+  Under the 4-stage reorg the merge family runs *before* `switch_scope`
+  (stage 3, raw coords), so the scope filter can no longer exclude clusters
+  from those passes; relaxing it still matters so that `switch_scope` does
+  not split clusters on filter results and so any post-correction pass
+  (`cathode_connect`, once enabled) sees every cluster.

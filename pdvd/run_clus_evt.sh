@@ -7,7 +7,7 @@
 # override with PDVD_MAX_JOBS=N).  Events with missing inputs are skipped.
 #
 # Input:  work/<run>_<evt>[_sel<TAG>]/ (from imaging) or input_data event dir as fallback
-# Output: work/<run>_<evt>[_sel<TAG>]/mabc-anode{N}.zip, mabc-all-apa.zip
+# Output: work/<run>_<evt>[_sel<TAG>]/mabc-anode{N}.zip, mabc-group0123.zip, mabc-group4567.zip, mabc-all-apa.zip
 
 set -e
 

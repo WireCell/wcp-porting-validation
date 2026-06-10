@@ -34,7 +34,6 @@ function(
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
-local nanodes = std.length(anodes);
 
 local cluster_source(fname) = g.pnode({
     type: "ClusterFileSource",
@@ -44,33 +43,45 @@ local cluster_source(fname) = g.pnode({
         anodes: [wc.tn(a) for a in anodes],
     }
 }, nin=0, nout=1, uses=anodes);
-local active_files = [ "%s/clusters-apa-anode%d-ms-active.tar.gz"%[input, a.data.ident] for a in anodes];
-local masked_files = [ "%s/clusters-apa-anode%d-ms-masked.tar.gz"%[input, a.data.ident] for a in anodes];
-local active_clusters = [cluster_source(f) for f in active_files];
-local masked_clusters = [cluster_source(f) for f in masked_files];
 
 local clus = import 'pgrapher/experiment/protodunevd/clus.jsonnet';
 local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event, stepped_center_fallback=stepped_center_fallback,
                         time_offset=time_offset, relax_containment_filter=relax_containment_filter);
-local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false) for n in std.range(0, nanodes - 1)];
 
-local img_clus_pipe = [g.intern(
-    innodes = active_clusters + masked_clusters,
-    centernodes = [],
-    outnodes = [clus_pipes[n]],
-    edges = [
-        g.edge(active_clusters[n], clus_pipes[n], 0, 0),
-        g.edge(masked_clusters[n], clus_pipes[n], 0, 1),
-    ]
-)
-for n in std.range(0, nanodes - 1)];
+// Drift-side groups: anodes 0-3 (bottom drift) and anodes 4-7 (top drift).
+// With a subset anode_indices only non-empty groups are built and the final
+// merge multiplicity shrinks to match.
+local group_defs = [
+    { name: "group0123", anodes: [a for a in anodes if a.data.ident < 4] },
+    { name: "group4567", anodes: [a for a in anodes if a.data.ident >= 4] },
+];
+local groups = [gd for gd in group_defs if std.length(gd.anodes) > 0];
+local ngroups = std.length(groups);
 
-local clus_all_apa = clus_maker.all_apa(anodes);
+// One drift-side pipe: per-anode sources -> per_apa (stages 1+2) -> per_group (stage 3).
+local group_pipe(gd) =
+    local n = std.length(gd.anodes);
+    local actives = [cluster_source("%s/clusters-apa-anode%d-ms-active.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
+    local maskeds = [cluster_source("%s/clusters-apa-anode%d-ms-masked.tar.gz"%[input, a.data.ident]) for a in gd.anodes];
+    local apa_pipes = [clus_maker.per_apa(gd.anodes[i], dump=false) for i in std.range(0, n - 1)];
+    local pg = clus_maker.per_group(gd.anodes, gd.name, dump=false);
+    g.intern(
+        innodes = actives + maskeds,
+        centernodes = apa_pipes,
+        outnodes = [pg],
+        edges =
+            [g.edge(actives[i], apa_pipes[i], 0, 0) for i in std.range(0, n - 1)] +
+            [g.edge(maskeds[i], apa_pipes[i], 0, 1) for i in std.range(0, n - 1)] +
+            [g.edge(apa_pipes[i], pg, 0, i) for i in std.range(0, n - 1)]
+    );
+
+local group_pipes = [group_pipe(gd) for gd in groups];
+local clus_all_tpc = clus_maker.all_tpc(anodes, ngroups=ngroups);
 
 local graph = g.intern(
-    innodes=img_clus_pipe,
-    outnodes=[clus_all_apa],
-    edges=[g.edge(img_clus_pipe[i], clus_all_apa, 0, i) for i in std.range(0, nanodes-1)]
+    innodes=group_pipes,
+    outnodes=[clus_all_tpc],
+    edges=[g.edge(group_pipes[i], clus_all_tpc, 0, i) for i in std.range(0, ngroups - 1)]
 );
 
 local app = {
