@@ -57,16 +57,41 @@ pipeline that produces them is:
    LocalGeomClustering} → InSliceDeghosting` (3 rounds) `→ GlobalGeomClustering`;
 3. `ClusterFileSink` dumps the result.
 
-Crucially, **deghosting/solving zeroes ghost blobs but does not remove them from
-the file**: 19 % of all blobs in run 39324 evt 0 have `val == 0`.  This is what
-made "slice 289" (anode 3 face 1) look wrong — its 3 blobs all genuinely belong
-to the same slice id 949 and are **1 real blob (val = 61678) + 2 zero-charge
-ghosts**.  The viewer now draws zero-charge blobs as dashed grey outlines (with a
-checkbox to hide them), so the real content is one blob, as expected.  Multiple
-*charged* blobs in one slice are also legitimate: at slice id 952 the 3 blobs
-(val 4845/45510/13935) sit on **adjacent single V wires** (V bounds 206-207 /
-207-208 / 208-209) — one isochronous track segment crossing three V wires, not
-duplicates.
+**Zero-charge blobs: origin, and why they have sampling points.**  The blobs
+that charge solving and deghosting *reject* really are **removed from the graph**
+(this matches the familiar Bee experience of point clouds shrinking after each
+deghosting stage): `ProjectionDeghosting` deletes its tagged ghosts outright
+(`ProjectionDeghosting.cxx:461`), `InSliceDeghosting` rounds 1 and 2 drop every
+`TO_BE_REMOVED` blob (`InSliceDeghosting.cxx:791,857`), and round 3 keeps **only**
+blobs tagged `POTENTIAL_GOOD` (`:871-874`).  The `val == 0` blobs that remain in
+the file (19.5 % in run 39324 evt 0) are a *different*, deliberately-retained
+population: the charge-solver LASSO assigned them exactly **zero** charge (and
+nothing prunes them — PDVD uses the default blob threshold −1,
+`ChargeSolving.h:66`), but `blob_quality_ident` (`InSliceDeghosting.cxx:284-300`)
+tags a blob `POTENTIAL_GOOD` either when its own charge > 300 **or when a
+front/back time-neighbor blob has charge > 300** — so a solver-zeroed blob
+sitting next to a charged blob on the same track survives the final round.
+Verified empirically: of 400 randomly sampled zero-charge blobs, 90 % have a
+charged (> 300) overlapping blob within ±2 slices.
+
+These kept zero-charge blobs are then **sampled like any other blob** —
+`PointTreeBuilding::sample_live` (`PointTreeBuilding.cxx:206-225`) has no charge
+cut — so their stepped points appear in the Bee dumps and join the clustering
+(at a3f1 display-slice 298 the ghost points carry the same cluster id as the
+real track).  That is what "stray" sampling points outside all *black* boxes
+are: points of zero-charge blobs.  Decision (2026-06): **keep the sampling as
+is** (the round-3 retention is a designed safety net for marginal track
+segments) and make the display self-explanatory instead — zero-charge blobs are
+drawn as **dashed magenta outlines** (charged blobs stay solid black), and the
+hide-zero-charge checkbox removes the ghosts *and* the points contained only in
+them.
+
+This is also what made "slice 289" (anode 3 face 1) look wrong — its 3 blobs all
+genuinely belong to the same slice id 949 and are **1 real blob (val = 61678) +
+2 zero-charge ghosts**.  Multiple *charged* blobs in one slice are also
+legitimate: at slice id 952 the 3 blobs (val 4845/45510/13935) sit on **adjacent
+single V wires** (V bounds 206-207 / 207-208 / 208-209) — one isochronous track
+segment crossing three V wires, not duplicates.
 
 **Sampling points** (`0-clustering-group0123/4567.json` inside `mabc-all-apa.zip`):
 MABC's pre-clustering `name:"img"` hook samples the live grouping built from **the
@@ -93,13 +118,14 @@ W wire window, so every candidate is rejected and the blob gets no point.  The
 stepped sampler now has a **`center_fallback`** option (default **off**, so
 production output is bit-identical — verified byte-for-byte on this event): when
 the stepped grid yields nothing, the blob emits one point at its corner-average
-center.  The evt-0 artifacts are regenerated with the toggle **on**
-(`PDVD_STEPPED_CENTER_FALLBACK=true ./run_clus_evt.sh 39324 0`), after which
-**all 13210 charged slices show points** (and 28264 of 28269 charged blobs have
-their own point; the rest sit on faces with the known ~1-2 cm frame residual).
-Note the extra points feed the downstream clustering of that rerun too —
-cluster ids in the zip reshuffle, and one of 79k original points shifted by
-0.47 cm; the per-blob stepped points themselves are unchanged.
+center.  A rerun with the toggle on
+(`PDVD_STEPPED_CENTER_FALLBACK=true ./run_clus_evt.sh 39324 0`) gives **all
+13210 charged slices** points — but the extra points also feed that rerun's
+clustering (cluster ids reshuffle), and tiny *ghost* blobs gain centers too.
+**Decision (2026-06): the served evt-0 artifacts are generated with the toggle
+OFF** (the default; verified byte-identical to the pre-fallback state), so the
+2.6 % point-less tiny blobs are accepted as a known display limitation; flip
+the env var on only for studies that need every blob represented.
 
 The viewer matches points to a displayed blob by *in-polygon OR within 0.5 cm of
 the polygon edge*: a sliver blob's fallback center can land just outside the
@@ -137,9 +163,11 @@ For the selected anode/face and time slice it draws, in the transverse plane:
   once** (overlapping fills used to stack alpha and look darker); **dead
   channels** (Magnify `T_bad`) are filled **grey** — hover shows `status: DEAD`;
 * the **blob outline**, taken directly from the imaging `corners` polygon, on top —
-  **solid black** for charged blobs, **dashed grey** for zero-charge ghosts (see
-  Provenance above); hovering an outline shows the blob's solved charge, and the
-  **hide zero-charge blobs** checkbox removes the ghosts (and their wires/points);
+  **solid black** for charged blobs, **dashed magenta** for zero-charge ghosts (see
+  Provenance above; sampling points inside a magenta box belong to a kept
+  zero-charge blob, not to any charged blob); hovering an outline shows the blob's
+  solved charge, and the **hide zero-charge blobs** checkbox removes the ghosts
+  (and their wires/points);
 * the **stepped sampling points** of those blobs, overlaid in orange.
 
 The header line gives the slice's x and tick windows and the blob count with the
@@ -245,9 +273,10 @@ cd pdvd
 ./run_img_evt.sh 39324 0
 
 # 2. clustering -> mabc-all-apa.zip (carries the stepped img-stage points).
-#    PDVD_STEPPED_CENTER_FALLBACK=true adds a center point for blobs the stepped
-#    sampler leaves point-less (used for the display artifacts; default false).
-PDVD_STEPPED_CENTER_FALLBACK=true ./run_clus_evt.sh 39324 0
+#    The served artifacts use the default (center_fallback OFF).  Flip
+#    PDVD_STEPPED_CENTER_FALLBACK=true only for studies that need every tiny
+#    blob represented (it also feeds that rerun's clustering).
+./run_clus_evt.sh 39324 0
 
 # 3. Magnify ROOTs for the waveform view (DNN-ROI SP result)
 ./run_sp_to_magnify_evt.sh -d 39324 0   # -> work/039324_0/magnify-...-anode{0..7}-dnnroi.root
@@ -280,11 +309,16 @@ All three views are verified end-to-end on run 39324 evt 0:
   a3f1 display-slice 289 = 1 charged blob + 2 zero-charge ghosts (3 points in the
   charged blob); display-slice 292 = 3 charged blobs with 14 in-polygon points
   (previously shown as 0 due to the float-edge window bug).
-* With the `center_fallback` rerun: **all 13210 charged slices** show sampling
-  points (was 349 without); the previously point-less tiny blobs at a3f1
-  display-slices 298 (val 91, 23) and 301 (val 673) each have their center point.
+* The served artifacts use `center_fallback` **OFF** (default; byte-identical to
+  the pre-fallback zip, verified): 349/13210 charged slices contain tiny blobs
+  with no stepped point — a known, accepted limitation (rerun with
+  `PDVD_STEPPED_CENTER_FALLBACK=true` when needed).
 * Wire dedupe verified at display-slice 292: 62 band rows → 24 unique wires;
   the dead V channel 4707 band is grey-marked (and U 3794 at slice 301).
+* Zero-charge blobs draw as **dashed magenta**; scripted check at a3f1
+  display-slice 298: 14 points shown with ghosts visible (4 contained only in
+  magenta ghost boxes — the previously "stray" yellow points), 10 with
+  hide-zero-charge on (ghost-only points filtered with the ghosts).
 
 Note: the waveform view needs the per-anode Magnify ROOTs present; if one is
 missing the panels stay empty and a red status line names the file (views 1-2 work

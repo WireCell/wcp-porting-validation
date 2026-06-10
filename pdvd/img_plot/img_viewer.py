@@ -220,7 +220,7 @@ def main(argv):
     blob_r = f_yz.patches("xs", "ys", source=src_blob, fill_alpha=0.0,
                           line_color="black", line_width=2)
     ghost_r = f_yz.patches("xs", "ys", source=src_ghost, fill_alpha=0.0,
-                           line_color="#888888", line_width=1.5,
+                           line_color="magenta", line_width=2,
                            line_dash="dashed")
     f_yz.scatter("z", "y", source=src_samp, size=4, color="orange",
                  alpha=0.9, marker="circle")
@@ -393,7 +393,7 @@ def main(argv):
             ys=[[float(tmid[i, 0]), float(hmid[i, 0])] for i in range(len(quads))],
             color=colors,
         )
-        # blob outlines: charged solid black, zero-charge dashed grey
+        # blob outlines: charged solid black, zero-charge dashed magenta
         bxs, bys = [], []
         cd = dict(xs=[], ys=[], val=[])
         gd = dict(xs=[], ys=[], val=[])

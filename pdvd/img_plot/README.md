@@ -47,9 +47,13 @@ in the same zip is the *post*-clustering cloud — don't use it for the overlay.
 * **Blobs** = per-anode imaging **after imaging deghosting**: 4 merged tiling
   passes (3-view + UV/VW/UW 2-view) → "full" uboone solving with
   ProjectionDeghosting + InSliceDeghosting ×3 + GlobalGeomClustering →
-  `ClusterFileSink` (`pdvd/img.jsonnet`).  Deghosting **zeroes ghosts but keeps
-  them in the file** (~19 % of blobs have `val == 0`) — the viewer draws them
-  dashed grey, with a checkbox to hide them.
+  `ClusterFileSink` (`pdvd/img.jsonnet`).  Rejected ghosts are genuinely
+  **removed** from the file; the ~19 % of blobs with `val == 0` are a different,
+  deliberately *kept* population (charge-solver zeros whose time-neighbors are
+  charged — `POTENTIAL_GOOD` in InSliceDeghosting round 3).  They are sampled
+  like any blob, so their points appear in Bee and join clustering.  The viewer
+  draws them **dashed magenta**, with a checkbox to hide them (which also hides
+  their points).
 * **Points** = stepped sampling of **the same tar files**, read by MABC
   pre-clustering (`pdvd/wct-clustering.jsonnet`) — so blobs and points are
   matched at source.
@@ -58,13 +62,14 @@ in the same zip is the *post*-clustering cloud — don't use it for the overlay.
   `|pts_x − blob_x_start| < 0.16 cm`, then keeps points in-polygon **or within
   0.5 cm of a displayed blob's edge** (sliver-blob fallback centers can land just
   outside the drawn outline).
-* Tiny (≈1-wire) blobs used to get **no** stepped points (the single wire-crossing
+* Tiny (≈1-wire) blobs get **no** stepped points (the single wire-crossing
   candidate falls outside the third plane's strip window — 349/13210 charged
-  slices).  The stepped `BlobSampler` now has a **`center_fallback`** option
+  slices).  The stepped `BlobSampler` has a **`center_fallback`** option
   (default off = bit-identical): rerun clustering with
   `PDVD_STEPPED_CENTER_FALLBACK=true ./run_clus_evt.sh <run> <evt>` and every
-  blob gets at least its center point — with that rerun all 13210 charged slices
-  show points.
+  blob gets at least its center point.  **The served evt0 artifacts use the
+  default (off)** — the fallback also feeds the rerun's clustering (cluster ids
+  reshuffle) and gives tiny ghosts centers, so it is reserved for studies.
 * **Adjacent blobs split at dead wires by design**: a dead channel breaks the
   fired-wire strip in the active-plane tiling passes, and the 2-view pass that
   masks the plane re-covers the dead region as its own blob (e.g. a3f1
@@ -80,8 +85,9 @@ See `pdvd/docs/imaging-event-display.md` § Provenance for the full trace.
    a wire shared by several blobs is drawn once, and **dead channels are filled
    grey** (hover shows `status: DEAD`); the
    blob outline (from the imaging `corners`) sits on top — **solid black** for
-   charged blobs, **dashed grey** for zero-charge ghosts (hover shows the charge;
-   the **hide zero-charge blobs** checkbox removes them); the slice's stepped
+   charged blobs, **dashed magenta** for zero-charge ghosts (hover shows the
+   charge; the **hide zero-charge blobs** checkbox removes them and their
+   points); the slice's stepped
    sampling points are overlaid in orange. The header reports the blob count with
    the zero-charge tally, and a **fired-wire channels** line gives the slice's
    per-plane channel ranges directly (no tapping needed). The view **auto-zooms
