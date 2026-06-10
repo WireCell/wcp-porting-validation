@@ -122,6 +122,8 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 ## Q3. Clustering
 
 > For a deep-dive on graph topology, RSE propagation, dead-channel handling, and per-APA/face selection see **[clus-workflow.md](clus-workflow.md)**.
+> Per-pass scope capabilities and the T0/containment knobs: **[clustering-scope.md](clustering-scope.md)**.
+> Feasibility of replacing the two-faces-per-anode description with a single SBND-style face: **[single-face-anode-feasibility.md](single-face-anode-feasibility.md)**.
 
 **Purpose:** convert per-anode imaging cluster tarballs → multi-algorithm blob clustering → Bee zips.
 
