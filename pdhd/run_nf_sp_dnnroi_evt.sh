@@ -123,6 +123,15 @@ Options:
                  Override the L1SP DNN sigmoid threshold (default from
                  jsonnet: 0.9945, tuned for -N dnn). For -N hybrid use
                  0.10 (Phase-A holdout precision/recall sweet spot).
+  --roi-debug    SP ROI-stage diagnosis mode: bypass DNN-ROI and L1SP
+                 (their FrameMergers drop the SP debug tags) but force
+                 the same OmnibusSigProc override as the production DNN
+                 chain (use_roi_debug_mode + use_multi_plane_protection,
+                 so the SP-internal ROI processing is identical) and add
+                 the per-stage ROI tags (tight_lf, cleanup_roi,
+                 break_roi_1st/2nd, shrink_roi, extend_roi, decon_charge,
+                 mp2/mp3_roi) to the output frame archive.  Combine with
+                 -O to keep the run side-by-side with production output.
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -158,6 +167,7 @@ DNN_DEBUG_DIR=""
 CALIB_ROOT=""
 LOOSE_HEUR=0
 L1SP_THRESH_OVERRIDE=""
+ROI_DEBUG=0
 # APA0 W-plane ROI tune (sp.jsonnet apa0_w_roi_tune).  Default true (driver
 # default); pass --w-tune false for the bit-identical pre-tune APA0 SP.
 APA0_W_ROI_TUNE="true"
@@ -184,6 +194,7 @@ while [ $# -gt 0 ]; do
         -c) CALIB_ROOT="$2"; shift 2 ;;
         --loose-heur) LOOSE_HEUR=1; shift ;;
         --l1sp-thresh) L1SP_THRESH_OVERRIDE="$2"; shift 2 ;;
+        --roi-debug) ROI_DEBUG=1; shift ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -376,6 +387,19 @@ if [ -n "$L1SP_THRESH_OVERRIDE" ]; then
     echo "L1SP DNN thr: $L1SP_THRESH_OVERRIDE (override)"
 fi
 
+# SP ROI-stage diagnosis mode (--roi-debug): bypass DNN-ROI (use_dnnroi=false)
+# and the in-SP L1SP envelope (l1sp_pd_mode='' -- its FrameMergers would drop
+# the debug tags) while sp_roi_debug_sink=true keeps the OmnibusSigProc
+# override identical to the production DNN chain and sinks the per-stage ROI
+# tags.  W-plane output is unaffected by the bypassed stages (DNN-ROI and
+# L1SP only touch U/V).
+ROI_DEBUG_TLA=()
+if [ "$ROI_DEBUG" = "1" ]; then
+    ROI_DEBUG_TLA=(--tla-code use_dnnroi=false --tla-code sp_roi_debug_sink=true)
+    L1SP_PD_MODE_TLA=""
+    echo "ROI debug:   DNN/L1SP bypassed; per-stage ROI tags sunk to frame archive"
+fi
+
 # L1SP calibration scalar-dump (Phase-B veto-mode investigation):
 #   -c switches L1SPFilterPD into 'dump' mode after DNN-ROI -- heuristic
 #   features computed and emitted per ROI, no LASSO/DNN correction.
@@ -471,6 +495,7 @@ wire-cell \
     "${L1SP_CALIB_TLA[@]}" \
     "${LOOSE_HEUR_TLA[@]}" \
     "${L1SP_THRESH_TLA[@]}" \
+    "${ROI_DEBUG_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

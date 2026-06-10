@@ -366,6 +366,11 @@ recover sub-threshold broad signal; (3) last, as it also loosens U/V refine.
 
 ## 7. Implemented: APA0 W induction-path ROI tune (`apa0_w_roi_tune`)
 
+> Sibling fix for APA1–3: `sp-w-collection-roi-break.md` — prolonged W signals
+> on the *collection* path are fragmented at ROI finding (`cal_RMS` occupancy
+> inflation), fixed by `roi_mad_rms` + `w_col_break_roi_tune` (collection
+> BreakROI off, mirroring this tune's slot-1 disable).
+
 This section is the **authoritative, empirically-validated** outcome of the
 "optimize W" effort (§0.6). It supersedes the speculative collection-path
 suggestions of §5 — those were written before §0's correction established that W

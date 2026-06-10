@@ -297,6 +297,10 @@ for pattern recognition.
 | 11 | `use_roi_debug_mode` | `sp.jsonnet:66` | Flip to `true` to expose intermediate ROI tags for diagnosing any of the above. |
 | 12 | `field_response` files | `params.jsonnet:152–157` | Replace when a new Garfield calculation is available; regenerate `fltresp` too. |
 
+See also `sp-w-collection-roi-break.md`: prolonged (track-along-drift) W
+signals are fragmented at ROI finding by signal-occupancy inflation of
+`cal_RMS`; fixed by `roi_mad_rms` + `w_col_break_roi_tune` (both default ON).
+
 ---
 
 ## L1SPFilterPD — unipolar-induction correction
