@@ -56,3 +56,25 @@ that did proceed were carved against dense-extreme fallback points only.
   fragment crosses the isolated-trash threshold (blobs unchanged).
 - PDVD 39324 evt 0 refinement invariants (three pairs, 2-band complex,
   whole vertical track) re-verified after every tuning step.
+
+## Round 3: DNN-SP imaging provenance + collinear_interior (toolkit fbc4ad33)
+
+The first post-fix full-chain bee set was built from the WRONG SP frames:
+`run_img_evt.sh` defaults to `-d off` and, finding no
+`protodunehd-sp-frames-anode*.tar.bz2` in the work dirs, silently fell back
+to the OLD `input_data` traditional-SP archives — so the freshly regenerated
+DNN-SP frames (with the prolonged-W fix, toolkit 50239595) never reached
+imaging.  **PDHD imaging from DNN-SP output needs `-d on` explicitly**
+(PDVD is immune: its work dirs carry `protodune-sp-frames-* ->
+*-dnnroi-*` symlinks).  Verified the work-dir frames DO carry the W fix
+(ch 9543 evt 40920: 21.3 % vs 8.6 % pre-fix coverage; ch 4532 evt 40924:
+20.3 % vs 6.2 %) before rerunning imaging + clustering.
+
+On the correct (denser) DNN-SP imaging, evt 40900's two crossing tracks
+re-merged through a NEW mechanism: the carve shed a ~24 cm mid-track
+fragment of one track (holding the user-flagged point) that a later
+proximity merge attached to the other track's cluster.  Fixed by the
+`collinear_interior` knob (toolkit fbc4ad33): collinear_recover additionally
+absorbs whole short (<50 cm) sibling fragments lying along a track's axis
+inside its span.  All five flagged events re-verified PASS; PDVD 39324
+evt 0 invariants PASS; OFF-check content-identical.
