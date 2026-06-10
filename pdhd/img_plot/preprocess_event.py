@@ -20,7 +20,8 @@ points and the blob outlines share one plane.  The drift x is computed from the
 blob slice time with the toolkit BlobSampler ``time2drift`` formula
 (BlobSampler.cxx):
     x = xorig + xsign*(t + time_offset)*drift_speed
-with time_offset = -250 us, drift_speed = 1.6 mm/us, xorig = the collection-plane
+with time_offset = 0 (no preset T0; the clustering chain zeroed its -250 us
+readout-tick0 compensation), drift_speed = 1.6 mm/us, xorig = the collection-plane
 (W) wire-center x of that (anode,face), and xsign = anodeface->dirx() (resolved
 empirically per (anode,face) against the points; +1 for APAs 0/2, -1 for 1/3).
 Geometry y,z are mm/10 (units.cm == 10).  Blob start/span are in ns.
@@ -45,9 +46,10 @@ import numpy as np
 import wirecell.img.tap as tap
 import geom as G
 
-# BlobSampler time2drift constants (internal units: mm, ns), from pdhd/clus.jsonnet
+# BlobSampler time2drift constants (internal units: mm, ns), from
+# cfg/pgrapher/experiment/pdhd/clus.jsonnet
 DRIFT_MM_PER_NS = 1.6 / 1000.0       # 1.6 * mm/us
-TIME_OFFSET_NS = -250.0 * 1000.0     # -250 * us
+TIME_OFFSET_NS = 0.0                 # no preset T0 (was -250 * us)
 TICK_NS = 500.0
 
 

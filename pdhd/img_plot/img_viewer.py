@@ -514,6 +514,8 @@ def main(argv):
         time2drift: x_cm = xorig + xsign*(t_ns + toff)*drift*0.1  (0.1 == 1/units.cm)
         """
         drift = ev.meta.get("drift_mm_per_ns", 0.0016)
+        # Fallback -250us covers npz caches preprocessed before the chain
+        # zeroed its preset T0; new caches carry time_offset_ns = 0 in meta.
         toff = ev.meta.get("time_offset_ns", -250000.0)
         xorig, xsign = xconv_of(anode, face)
         t_ns = (x_cm - xorig) / (xsign * drift * 0.1) - toff

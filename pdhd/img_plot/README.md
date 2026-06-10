@@ -142,8 +142,8 @@ drift **x** is from the blob slice time via the toolkit `BlobSampler::time2drift
 x = xorig + xsign · (t + time_offset) · drift_speed
 ```
 
-* `time_offset = −250 µs`, `drift_speed = 1.6 mm/µs`
-  (`cfg/pgrapher/experiment/pdhd/clus.jsonnet`);
+* `time_offset = 0` (no preset T0; was −250 µs before the chain zeroed it),
+  `drift_speed = 1.6 mm/µs` (`cfg/pgrapher/experiment/pdhd/clus.jsonnet`);
 * `xorig` = W-plane wire-center x of that (anode,face): the cathode-facing
   (active) faces are at **−353.20 cm** (APAs 0/2, face 0) and **+353.00 cm**
   (APAs 1/3, face 1); the wall-facing faces at −361.79 / +361.59 cm;

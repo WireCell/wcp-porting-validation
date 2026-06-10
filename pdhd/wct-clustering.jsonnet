@@ -21,6 +21,11 @@ function(
     run = 1,
     subrun = 1,
     event = 1,
+    // Event-T0 / readout-tick0 compensation for the live BlobSampler drift-x
+    // conversion (WCT units, ns).  PDHD has no per-event T0, so default 0 (no
+    // preset T0).  -250us (-250000) would place trigger-time activity at its
+    // true x; see pgrapher/experiment/pdhd/clus.jsonnet.
+    time_offset = 0,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -40,7 +45,8 @@ local active_clusters = [cluster_source(f) for f in active_files];
 local masked_clusters = [cluster_source(f) for f in masked_files];
 
 local clus = import 'pgrapher/experiment/pdhd/clus.jsonnet';
-local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event);
+local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event,
+                        time_offset=time_offset);
 local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false) for n in std.range(0, nanodes - 1)];
 
 local img_clus_pipe = [g.intern(
