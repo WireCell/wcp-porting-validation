@@ -70,10 +70,12 @@ with no per-event T0, `x_t0cor == x`, so running the merge family before
 | 5 | `close` | length_cut=1.2cm |
 | 6 | `extend_loop` | num_try=3 |
 | 7 | `separate` | use_ctpc=true |
-| 8 | `examine_x_boundary` | multi-wpid since toolkit `f68e5f6a` (all wpids must share FV_x — true within one drift side) |
-| 9 | `neutrino` | neutrino-interaction pattern recognition |
-| 10 | `isolated` | isolated small-cluster classification/merge |
-| 11 | `examine_bundles` | graph-based bundle re-examination |
+| 8 | `connect1` | **added 2026-06-10** — MicroBooNE order after separate; reconnects dashed-line fragments (e.g. drift-direction tracks) at group scope; allow_mixed_faces=true |
+| 9 | `deghost` | **added 2026-06-10** — group-scope ghost removal; allow_mixed_faces=true, empty_view_unique=true (required at group scope, see clus/docs/clustering-group-connect1-deghost.md) |
+| 10 | `examine_x_boundary` | multi-wpid since toolkit `f68e5f6a` (all wpids must share FV_x — true within one drift side) |
+| 11 | `neutrino` | neutrino-interaction pattern recognition |
+| 12 | `isolated` | isolated small-cluster classification/merge |
+| 13 | `examine_bundles` | graph-based bundle re-examination |
 
 Bee output: `mabc-group0123.zip` / `mabc-group4567.zip`.
 
@@ -128,8 +130,8 @@ Evidence cites `clus/src/`.
 | `close` | yes | yes* | yes | stages 1+3 | distance/direction only, no DetectorVolumes at all (clustering_close.cxx) |
 | `extend_loop` | yes | yes* | yes | stages 1+3 | wrapper looping `extend` 4 ways per iteration |
 | `separate` | yes | yes | yes | stage 3 | `select_scope_fv()` (clustering_separate.cxx:27-94) picks per-APA FV for single-APA DV, cryostat `overall` FV for multi-APA — explicitly scope-aware |
-| `connect1` | yes | **no** | **no** | stage 1 only | hard assertion: `wpids().size() > 1` → ValueError (clustering_connect.cxx:79-84, "This is for only one APA/face") |
-| `deghost` | yes | yes | **no** | stage 2 | "all faces within a single APA"; `apas.size() > 1` → ValueError (clustering_deghost.cxx:118-175; counts the grouping's *DetectorVolumes* wpids, so the stage-2 single-anode dv passes); needs CTPC point clouds when use_ctpc |
+| `connect1` | yes | yes | group | stages 1+3 | generalized 2026-06-10: multi-wpid drift groups validated via `validate_drift_group()` (identical FV_x; same face unless allow_mixed_faces).  Per-point wpid routing for dead maps + 2D queries, per-cluster OR'd prolonged test over occupied volumes, extrapolations re-bucketed per volume (`make_points_linear_extrapolation` seed_wpid).  See clus/docs/clustering-group-connect1-deghost.md |
+| `deghost` | yes | yes | group | stages 2+3 | generalized 2026-06-10: multi-APA accepted when LIVE wpids form one drift volume (`validate_drift_group()`, allow_mixed_faces for PDVD).  Group instances REQUIRE empty_view_unique=true: an empty per-volume 2D index returns −1 which reads as overlap, else the longest cluster of each unseeded volume is wrongly destroyed.  Needs CTPC point clouds when use_ctpc |
 | `examine_x_boundary` | yes | yes | group | stage 3 | multi-wpid since `f68e5f6a`: all wpids must share identical FV_x metadata or ValueError (clustering_examine_x_boundary.cxx:74-87) — true within a PDVD drift side, false across the cathode, so group scope is its ceiling |
 | `protect_overclustering` | yes | yes | yes | stage 2 | intra-cluster blob-graph analysis; reads per-wpid `nticks_live_slice` for every wpid present |
 | `switch_scope` | yes | yes | yes | stage 4 | applies a named IPCTransform (T0Correction) per cluster; scope-independent mechanics, but only meaningful where a corrected scope is wanted (post-merge) |

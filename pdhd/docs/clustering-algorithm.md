@@ -124,10 +124,12 @@ has exactly one populated group and they are not wired.  Coordinates: raw
 | 5 | `close(1.2cm)` | ClusteringClose | |
 | 6 | `extend_loop(3)` | ClusteringExtendLoop | |
 | 7 | `separate(use_ctpc=true)` | ClusteringSeparate | split over-merged clusters (moved here from the per-face stage) |
-| 8 | `examine_x_boundary()` | ClusteringExamineXBoundary | split clusters at the drift-x fiducial boundary (newly enabled; the C++ accepts multi-wpid groupings only when the wpids form one drift volume: same face AND identical FV_x metadata — mixed faces or differing x ranges raise) |
-| 9 | `neutrino()` | ClusteringNeutrino | neutrino-candidate tagging/merge |
-| 10 | `isolated()` | ClusteringIsolated | small→big isolated-cluster absorption |
-| 11 | `examine_bundles()` | ClusteringExamineBundles | bundle examination/final merge |
+| 8 | `connect1()` | ClusteringConnect1 | **added 2026-06-10** — MicroBooNE order after separate: reconnect dashed-line fragments (e.g. drift-direction tracks) at group scope; generalized via per-point wpid routing + per-volume angles (clus/docs/clustering-group-connect1-deghost.md) |
+| 9 | `deghost(empty_view_unique=true)` | ClusteringDeghost | **added 2026-06-10** — group-scope ghost removal; empty_view_unique is REQUIRED at this scope (an empty per-volume 2D index otherwise reads as overlap and the longest cluster of each unseeded volume is wrongly destroyed) |
+| 10 | `examine_x_boundary()` | ClusteringExamineXBoundary | split clusters at the drift-x fiducial boundary (newly enabled; the C++ accepts multi-wpid groupings only when the wpids form one drift volume: same face AND identical FV_x metadata — mixed faces or differing x ranges raise) |
+| 11 | `neutrino()` | ClusteringNeutrino | neutrino-candidate tagging/merge |
+| 12 | `isolated()` | ClusteringIsolated | small→big isolated-cluster absorption |
+| 13 | `examine_bundles()` | ClusteringExamineBundles | bundle examination/final merge |
 
 Dump (when standalone): `mabc-group02.zip` / `mabc-group13.zip`.
 
