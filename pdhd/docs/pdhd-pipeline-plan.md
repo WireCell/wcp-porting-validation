@@ -1,5 +1,13 @@
 # PDHD event-processing pipeline port plan
 
+> **SUPERSEDED (2026-06):** the local-fork architecture this plan describes has
+> been retired.  `pdhd/clus.jsonnet`, `pdhd/img.jsonnet` and
+> `pdhd/magnify-sinks.jsonnet` were merged into the toolkit cfg tree
+> (`cfg/pgrapher/experiment/pdhd/`), and the local `wct-*.jsonnet` entry points
+> now import from there (mirroring PDVD).  See
+> `docs/clustering-algorithm.md` for the current clustering chain.  Kept for
+> the historical rationale and the SP-frame format notes below.
+
 Status: **Phase A complete; Phase B blocked on upstream data format**
 (see "Open issue — PDHD SP-frame format" below).
 

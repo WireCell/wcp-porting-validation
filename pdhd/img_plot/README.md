@@ -40,7 +40,8 @@ ssh -L 5013:localhost:5013 user@wcgpu1
 
 Use the **`-ms-active`** cluster files (real 3-view U∩V∩W blobs), not `-ms-masked`.
 The sampling points are the toolkit **stepped** (threshold-0) cloud captured by
-MABC *before* clustering (`name:"img"` hook in `pdhd/clus.jsonnet`, grouped by
+MABC *before* clustering (`name:"img"` hook in
+`cfg/pgrapher/experiment/pdhd/clus.jsonnet`, grouped by
 drift side: group02 = APAs 0+2, group13 = APAs 1+3) — `bee-blobs` only does
 `center`/`uniform`, so it is **not** used.  PDHD has no T0, so these img-stage
 points are the true imaging-frame positions.  (The `clustering-global.json` in
@@ -51,7 +52,7 @@ the same zip is the *post*-clustering cloud — don't use it for the overlay.)
 * **Blobs** = per-APA imaging **after imaging deghosting**: merged tiling
   passes (3-view + 2-view) → uboone-style solving with ProjectionDeghosting +
   InSliceDeghosting ×3 + GlobalGeomClustering → `ClusterFileSink`
-  (`pdhd/img.jsonnet`).  Rejected ghosts are genuinely **removed** from the
+  (`cfg/pgrapher/experiment/pdhd/img.jsonnet`).  Rejected ghosts are genuinely **removed** from the
   file; blobs with `val == 0` are a different, deliberately *kept* population
   (charge-solver zeros whose time-neighbors are charged — `POTENTIAL_GOOD` in
   InSliceDeghosting round 3).  They are sampled like any blob, so their points
@@ -141,7 +142,8 @@ drift **x** is from the blob slice time via the toolkit `BlobSampler::time2drift
 x = xorig + xsign · (t + time_offset) · drift_speed
 ```
 
-* `time_offset = −250 µs`, `drift_speed = 1.6 mm/µs` (`pdhd/clus.jsonnet`);
+* `time_offset = −250 µs`, `drift_speed = 1.6 mm/µs`
+  (`cfg/pgrapher/experiment/pdhd/clus.jsonnet`);
 * `xorig` = W-plane wire-center x of that (anode,face): the cathode-facing
   (active) faces are at **−353.20 cm** (APAs 0/2, face 0) and **+353.00 cm**
   (APAs 1/3, face 1); the wall-facing faces at −361.79 / +361.59 cm;

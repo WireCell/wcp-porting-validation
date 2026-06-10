@@ -76,7 +76,10 @@ function(
     total_time_bin: nticks,
   };
 
-  local mag = (import 'magnify-sinks.jsonnet')(
+  // decon_trun_pipe = Trun-aware decon sinks (RECREATE + runinfo on the first
+  // sink, threshold summaries, T_bad cmm trees); plain decon_pipe would
+  // silently drop Trun/threshold/cmm output.
+  local mag = (import 'pgrapher/experiment/pdhd/magnify-sinks.jsonnet')(
     { anodes: anodes }, output_file, runinfo=runinfo);
 
   local per_anode_graph(n, anode) =
@@ -114,7 +117,7 @@ function(
       type: 'DumpFrames',
       name: 'dump_anode%d' % aid,
     }, nin=1, nout=0);
-    g.pipeline([src, retag, mag.decon_pipe[n], dump],
+    g.pipeline([src, retag, mag.decon_trun_pipe[n], dump],
                'magnify_graph_anode%d' % aid);
 
   // Per-anode raw pipeline: FrameFileSource(raw) → MagnifySink(UPDATE) → DumpFrames.

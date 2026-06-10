@@ -39,7 +39,7 @@ local masked_files = [ "%s/clusters-apa-apa%d-ms-masked.tar.gz"%[input, a.data.i
 local active_clusters = [cluster_source(f) for f in active_files];
 local masked_clusters = [cluster_source(f) for f in masked_files];
 
-local clus = import 'clus.jsonnet';
+local clus = import 'pgrapher/experiment/pdhd/clus.jsonnet';
 local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event);
 local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false) for n in std.range(0, nanodes - 1)];
 
