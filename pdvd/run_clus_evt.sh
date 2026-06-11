@@ -16,6 +16,16 @@ PDVD_DIR=$(cd "$(dirname "$0")" && pwd)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
 
+# Preload tcmalloc for the clustering wire-cell process (~20% faster on
+# busy events).  Unlocked by the get_closest_blob pointer-order fix: with
+# it, glibc and tcmalloc outputs are byte-identical on the A/B event set.
+# Disable with WCT_TCMALLOC=off.
+TCMALLOC_SO=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+WC_PRELOAD=""
+if [ "${WCT_TCMALLOC:-on}" = "on" ] && [ -f "$TCMALLOC_SO" ]; then
+    WC_PRELOAD="LD_PRELOAD=$TCMALLOC_SO"
+fi
+
 . "$PDVD_DIR/_runlib.sh"
 
 ANODE=""
@@ -142,7 +152,7 @@ process_event() {
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
         return 1
     fi
-    env GOGC=off wire-cell \
+    env $WC_PRELOAD GOGC=off wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
         -L debug \
