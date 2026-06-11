@@ -19,6 +19,18 @@ SBND_DIR=$(cd "$(dirname "$0")" && pwd)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
 
+# Preload tcmalloc for the clustering wire-cell process.  Safe since the
+# BlobLess pointer-order fix: verified run-to-run deterministic AND
+# glibc==tcmalloc byte-identical on 5 events x 3 archives (incl. the
+# historically nondeterministic evt138670); see
+# clus/docs/imgclus-optimization-log.md entry 19.  Disable with
+# WCT_TCMALLOC=off.
+TCMALLOC_SO=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+WC_PRELOAD=""
+if [ "${WCT_TCMALLOC:-on}" = "on" ] && [ -f "$TCMALLOC_SO" ]; then
+    WC_PRELOAD="LD_PRELOAD=$TCMALLOC_SO"
+fi
+
 . "$SBND_DIR/_runlib.sh"
 
 usage() {
@@ -135,22 +147,36 @@ process_event() {
 
     cd "$SBND_DIR"
     rm -f "$LOG"
-    wire-cell \
+    # Pre-compile the config with wcsonnet and feed wire-cell pure JSON,
+    # with GOGC=off: with a pure-JSON config wire-cell never evaluates
+    # jsonnet (no Go heap) and GOGC=off disables the embedded gojsonnet
+    # runtime's collector entirely, including the 2-minute periodic forced
+    # GC that was identified as an intermittent-SIGABRT vector on long
+    # jobs (same pattern as pdhd/pdvd run_clus_evt.sh).
+    local CFG_JSON="$WORKDIR/.wct-clus${TAG_SUFFIX}.json"
+    wcsonnet \
+        -A "input=${WORKDIR}" \
+        -S "anode_indices=${ANODE_CODE}" \
+        -A "output_dir=${WORKDIR}" \
+        -S "run=${RUN_L}" \
+        -S "subrun=${SUBRUN_L}" \
+        -S "event=${EVT_ID}" \
+        -A "reality=${REALITY}" \
+        -S "DL=4.0" \
+        -S "DT=8.8" \
+        -S "lifetime=35" \
+        -S "driftSpeed=1.563" \
+        -o "$CFG_JSON" wct-clustering.jsonnet
+    if [ ! -s "$CFG_JSON" ]; then
+        echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
+        return 1
+    fi
+    env $WC_PRELOAD GOGC=off wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
         -L debug \
-        --tla-str  "input=${WORKDIR}" \
-        --tla-code "anode_indices=${ANODE_CODE}" \
-        --tla-str  "output_dir=${WORKDIR}" \
-        --tla-code "run=${RUN_L}" \
-        --tla-code "subrun=${SUBRUN_L}" \
-        --tla-code "event=${EVT_ID}" \
-        --tla-str  "reality=${REALITY}" \
-        --tla-code "DL=4.0" \
-        --tla-code "DT=8.8" \
-        --tla-code "lifetime=35" \
-        --tla-code "driftSpeed=1.563" \
-        -c wct-clustering.jsonnet
+        -c "$CFG_JSON"
+    rm -f "$CFG_JSON"
 
     echo "Clustering done -> $WORKDIR"
 }
