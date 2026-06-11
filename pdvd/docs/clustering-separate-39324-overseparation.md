@@ -59,12 +59,37 @@ The 102,129-pt cluster sat 2 % over the `max_hull_points=100000` cap —
 PDVD+PDHD.  After the raise the event separates (largest cluster 44.7k);
 verticals and bands come apart.
 
-**Known residual**: one 44.7k piece still holds two same-yz-slope bands at
-DIFFERENT x-slabs bridged by a crossing track.  None of the refinements is
-x-aware (merge_back works in the y-z projection; the two bands' offset means
-sit 96 cm apart, past the 85 cm anchor gate, so it correctly refused to
-merge them with the rest).  Splitting it would need an x-slab-aware split —
-left for a future round if flagged.
+**Known residual** (round 4): one 44.7k piece still holds two same-yz-slope
+bands at DIFFERENT x-slabs bridged by a crossing track.  None of the round-4
+refinements is x-aware.  **RESOLVED in round 5** by `iso_slab_split` — see
+below.
+
+# Round 5 (user scan of the full-run bee sets 74d1b7cb / ed8ac098)
+
+Six new cases; diagnosis + fixes in toolkit d40bbe25 (doc
+`clus/docs/clustering-separate-refine.md`):
+
+| case | diagnosis | fix |
+|---|---|---|
+| 27409 40900 under-sep (35k cl) | band_merge_back REGRESSION: two distinct same-slab 14.8k complexes merged as "4 band pieces" with union rms 58 cm (bands read 17–43) | union-rms cap ≤50 cm |
+| 27409 40924 over-sep | one straight cosmic in two touching pieces (6.5°, 0.3 cm); nothing rejoins ≥50 cm members | new `collinear_member_merge` |
+| 27409 40920 over-cluster | downstream connect1 merged two cosmics across carve-fragment debris; rejoining the fragments into their own tracks first removes the bait (deterministic, verified two identical reruns) | `collinear_member_merge` (side benefit) |
+| 339890 cl47 (the round-4 residual) | 2 iso bands at x-slabs 50 cm apart (24k @ x∈[59,67], 14k @ [115,123]) + 3 drift tracks chaining them under 5 cm connectivity; y-z mechanisms are x-blind | new `iso_slab_split`: 4 tracks + 2 bands, all five flagged structures distinct |
+| 339990 cl41/42 | band-interior-steal REGRESSION: 193 cm run spanning 66 cm in x (a real drift track) stolen into the band; second fusion was in the carve itself | steal x-gate (run x-extent ≤20 cm) + `iso_slab_split` |
+| 340010 75/87 merge | already merged in the full-run reprocess (the scanned set predated it) | none needed |
+
+Tuning history worth keeping: the first `collinear_member_merge` cut
+(union rms ≤12 cm) admitted a fork-adjacent pair in 27409 evt 40904
+(8.1 cm) whose rejoin made downstream connect1 fuse the two full fork
+prongs — the round-1 verified split.  All 12 genuine rejoins across the
+suite read ≤5.7 cm, so the gate is pinned at 7 cm.
+
+Round-5 verification: new checker `/home/xqian/tmp/check_round5.py` 6/6;
+round-4 matrix 11/11; PDHD five-event invariants 5/5; 39324 evt-0
+invariants; OFF-check content-identical; regression flows confined to
+separation families plus group-stage deghost/isolated re-judgment of
+newly-freed structures (largest: 27380 evt 1 drops a 5.5k single-slab
+ghost-like sheet; user-scanned runs change ≤0.2%).
 
 ## Verification
 
