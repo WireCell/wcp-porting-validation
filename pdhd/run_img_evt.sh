@@ -32,6 +32,18 @@ PDHD_DIR=$(cd "$(dirname "$0")" && pwd)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
 
+# Preload tcmalloc for the imaging wire-cell processes: imaging is allocator
+# bound (graph lifecycle churn) and tcmalloc cuts busy-event wall ~25-50%
+# with slightly lower RSS; outputs verified byte-identical on the A/B event
+# set.  Disable with WCT_TCMALLOC=off.  Do NOT apply to clustering: a
+# pointer-order-sensitive path there changes results under tcmalloc (see
+# clus/docs/imgclus-optimization-log.md).
+TCMALLOC_SO=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+WC_PRELOAD=""
+if [ "${WCT_TCMALLOC:-on}" = "on" ] && [ -f "$TCMALLOC_SO" ]; then
+    WC_PRELOAD="LD_PRELOAD=$TCMALLOC_SO"
+fi
+
 . "$PDHD_DIR/_runlib.sh"
 
 ANODE=""
@@ -247,12 +259,12 @@ print(a.shape[1])
             ALOG="$WORKDIR/wct_img_${RUN_PADDED}_${EVT}_a${ai}.log"
             rm -f "$ALOG"
             ai_t0=$SECONDS
-            wire-cell -l stderr -l "${ALOG}:debug" -L debug -c "$CFG_JSON"
+            env $WC_PRELOAD wire-cell -l stderr -l "${ALOG}:debug" -L debug -c "$CFG_JSON"
             echo "anode${ai} imaging: $((SECONDS - ai_t0)) s"
             rm -f "$CFG_JSON"
         done
     else
-        wire-cell \
+        env $WC_PRELOAD wire-cell \
             -l stderr \
             -l "${LOG}:debug" \
             -L debug \
