@@ -105,3 +105,21 @@ ghost-like sheet; user-scanned runs change ≤0.2%).
 - Full regression vs `bak-pre-mergeback`: PDVD 39324 0–10 + 39252/39253,
   PDHD 027409 + 027380 — flow analysis: separation-family reorganizations
   only.
+
+# Round 6 (user scan of self-reprocessed runs, post-round-5 code)
+
+Three cases — none was a separation failure; all three were DOWNSTREAM
+passes acting on (or failing to act on) separation results.  Diagnosis was
+pass-ablation (rerun with group-stage passes disabled one at a time):
+
+| case | diagnosis | fix (all knob-gated, default OFF) |
+|---|---|---|
+| PDHD 27980 art evt 24 (`027980_2` g02) cl36 should split | separate DID free the fat 80 cm/900-pt branch (r1=0.31, 67° off the 491 cm cosmic, touching at 0.86 cm) — then group-stage `connect1`'s skeleton-overlap merge re-glued it | separate `tag_family` stamps family members with a `sep_family` cluster scalar; `connect1(respect_separate_family=true)` refuses to reconnect same-family pairs when at least one piece is FAT (eval1/eval0 ≥ 0.15; thin-thin pairs stay mergeable — an unconditional veto re-split 340010's reconnected cosmic halves) |
+| PDVD 39324 339850 (`039324_0` g4567) cl63 should split | the band complex (x-slab [−160,−127]) and the drift-spanning track (x −150→−44) were SEPARATE clusters until `clustering_neutrino` merged them across a **22.9 cm** gap via its extended-cloud prolongations (ablation: split with neutrino off, merged with neutrino alone on) | `neutrino(protect_iso_band=true)`: band-like (blob x-extent < max(25 cm, 0.18·len)) vs non-band pairs only merge when truly touching (≤6 cm) |
+| PDVD 39252 298637 (`039252_5` g0123) cl27+cl25 should connect | two pieces of ONE cosmic (321 + ~100 cm, touching at **0.32 cm**, local end dirs 3.7° apart) from DIFFERENT parents: not family siblings (colmerge never sees the pair), global axes 10.0° apart (curvature) fail connect1's ≤5° prolongation, centroid offset 25.5 cm failed colmerge's old 15 cm gate, and get_length of the short piece sits just under the 100 cm floor | colmerge gates 10°→12°, 15→30 cm; new `collinear_global_merge` runs the member rejoin over ALL long thin clusters of the grouping (short-piece floor 80 cm, ≥100 cm anchor required); second in-family colmerge pass after iso_slab_split |
+
+Round-6 verification: `/home/xqian/tmp/check_round6.py` 3/3; all prior
+matrices (round-5 6/6, round-4 11/11, PDHD five-event, 39324 evt-0
+invariants) PASS; OFF-check content-identical; full regression sweep
+(39324 0–10, 39252 0–17, 39253 0–17, 27409, 27380, 27980 0–30) vs
+`bak-pre-round6` — every diff traced to the three mechanisms.
