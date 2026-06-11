@@ -78,7 +78,7 @@ Both the active (3-view, `tick_span=4`) and masked (2-view, `tick_span=500`)
 slicings go through this function, so dead-region blobs are truncated the same
 way.  All 8 anodes are affected equally.
 
-## Recommended fix
+## Fix (applied, toolkit `cc29f9cc` — see Verification below)
 
 `MaskSlice.cxx` auto-derives the window from the input frame when **both**
 knobs are 0 (`min_tbin == 0 and max_tbin == 0` → min/max over the traces'
@@ -110,6 +110,58 @@ Same config file; not the cause here, but tuned for shorter readouts:
 * `FrameQualityTagging` `min_time: 3180, max_time: 7870` — frame-quality
   evaluation window (MicroBooNE-era values).
 * `ChargeErrorFrameEstimator` `time_limits: [12, 800]`.
+
+## Verification (fix applied 2026-06-10, toolkit `cc29f9cc`)
+
+`min_tbin: 0, max_tbin: 0` applied to
+`cfg/pgrapher/experiment/protodunevd/img.jsonnet` and the full
+imaging + clustering chain re-run.
+
+**No-op check, run 039324 evt 0 (6400-tick readout), anode 0:**
+
+* `clusters-apa-anode0-ms-active.tar.gz` — inner content **byte-identical**
+  old vs new.
+* `-ms-masked` — old had 80 slices covering ticks 0→8000, i.e. 16 phantom
+  500-tick dead slices **beyond the 6400-tick frame end** (1040 of 5200 dead
+  blobs were artifacts past the readout); new has 64 slices covering 0→6400.
+  A second bug fixed by the same change, not a regression.
+
+**Recovery check, run 039252 evt 298679 (10000-tick readout):**
+
+![overlay post-fix](sp-img-tick-window-39252-anode0-postfix.png)
+
+* Anode 0: slices now reach tick 9196 (last activity); blobs 3720 → 4402.
+  SP samples without blob coverage drop U 23.7→6.2%, V 20.6→6.6%,
+  W 19.4→5.2% — now equal to the below-8000 baseline, i.e. the late window
+  is imaged exactly as well as the rest.  Below tick 8000 the coverage is
+  unchanged (missed-sample counts within ±3 of the pre-fix run).
+* Per-anode blob growth tracks the late-window SP fraction, confirming the
+  recovered blobs are the previously-truncated activity:
+
+  | anode | SP activity above tick 8000 | active blobs old → new |
+  |---|---|---|
+  | 0 | 16.1% | 3720 → 4402 (+18%) |
+  | 1 | 26.7% | 2529 → 3288 (+30%) |
+  | 2 | 16.9% | 1996 → 2390 (+20%) |
+  | 3 | 1.6% | 2363 → 2390 (+1%) |
+  | 4 | 17.2% | 10624 → 13017 (+23%) |
+  | 5 | 37.0% | 5962 → 10813 (+81%) |
+  | 6 | **74.5%** | 3184 → 28350 (+790%) |
+  | 7 | 20.3% | 10666 → 14126 (+32%) |
+
+  Anode 6 had three quarters of its event truncated away.
+* Clustering re-run end-to-end with no errors: global points 90460 → 222601,
+  clusters 95 → 119.
+
+**Bee displays (run 39252 evt 298679, imaging + clustering + dead):**
+
+* post-fix: <https://www.phy.bnl.gov/twister/bee/set/88c307b5-84e1-468d-907f-25efe69b9ef2/event/list/>
+* pre-fix baseline: <https://www.phy.bnl.gov/twister/bee/set/7cbd0eca-1428-4b7e-899d-14b6b4fe53e2/event/list/>
+
+Pre-fix outputs preserved in `work/039252_8/bak-pre-tbinfix/` and
+`work/039324_0/bak-pre-tbinfix/`.  Other 039252/039253/040475 events still
+carry pre-fix outputs; re-run `run_img_evt.sh`/`run_clus_evt.sh` before any
+new comparison.
 
 ## Reproduction
 
