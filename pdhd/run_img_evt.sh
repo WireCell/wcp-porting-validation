@@ -1,7 +1,13 @@
 #!/bin/bash
 # Run imaging for one event.
-# Usage: ./run_img_evt.sh [-I] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>
+# Usage: ./run_img_evt.sh [-I] [-P] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>
 #        ./run_img_evt.sh                # list available runs
+#
+#   -P:  per-anode sequential mode.  Runs one wire-cell process per anode
+#        instead of all anodes in one process.  Outputs are identical (the
+#        per-anode pipelines are independent); peak RSS drops from the sum
+#        of all anode pipelines to the busiest single anode.  Configs are
+#        pre-compiled per anode with wcsonnet to avoid N jsonnet compiles.
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDHD_MAX_JOBS=N).  Events with missing inputs are skipped.
@@ -33,10 +39,12 @@ SEL_TAG=""
 FORCE_SPARSE=false
 FORCE_INPUT_DATA=""
 USE_DNNROI="off"
+PER_ANODE=false
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -I) FORCE_INPUT_DATA=1; shift ;;
+        -P) PER_ANODE=true; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -63,7 +71,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-I] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>" >&2
+    echo "Usage: $0 [-I] [-P] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>" >&2
     exit 1
 fi
 RUN=$1
@@ -214,15 +222,46 @@ print(a.shape[1])
 
     cd "$PDHD_DIR"
     rm -f "$LOG"
-    wire-cell \
-        -l stderr \
-        -l "${LOG}:debug" \
-        -L debug \
-        --tla-str "input_prefix=${INPUT_PREFIX}" \
-        --tla-code "anode_indices=${ANODE_CODE}" \
-        --tla-str "output_dir=${WORKDIR}" \
-        --tla-code "nticks=${NTICKS}" \
-        -c wct-img-all.jsonnet
+    if $PER_ANODE; then
+        # One wire-cell process per anode, sequential.  Per-anode pipelines
+        # are independent and write only their own clusters-apa-* files, so
+        # outputs are identical to the all-anode run.
+        local CFG_JSON ALOG ai_t0
+        for ai in "${ANODE_INDICES[@]}"; do
+            wcsonnet \
+                -A "input_prefix=${INPUT_PREFIX}" \
+                -S "anode_indices=[$ai]" \
+                -A "output_dir=${WORKDIR}" \
+                -S "nticks=${NTICKS}" \
+                -o "$WORKDIR/.wct-img-a${ai}.json" wct-img-all.jsonnet &
+        done
+        wait
+        for ai in "${ANODE_INDICES[@]}"; do
+            CFG_JSON="$WORKDIR/.wct-img-a${ai}.json"
+            if [ ! -s "$CFG_JSON" ]; then
+                echo "ERROR: wcsonnet failed for anode${ai}" >&2; return 1
+            fi
+        done
+        for ai in "${ANODE_INDICES[@]}"; do
+            CFG_JSON="$WORKDIR/.wct-img-a${ai}.json"
+            ALOG="$WORKDIR/wct_img_${RUN_PADDED}_${EVT}_a${ai}.log"
+            rm -f "$ALOG"
+            ai_t0=$SECONDS
+            wire-cell -l stderr -l "${ALOG}:debug" -L debug -c "$CFG_JSON"
+            echo "anode${ai} imaging: $((SECONDS - ai_t0)) s"
+            rm -f "$CFG_JSON"
+        done
+    else
+        wire-cell \
+            -l stderr \
+            -l "${LOG}:debug" \
+            -L debug \
+            --tla-str "input_prefix=${INPUT_PREFIX}" \
+            --tla-code "anode_indices=${ANODE_CODE}" \
+            --tla-str "output_dir=${WORKDIR}" \
+            --tla-code "nticks=${NTICKS}" \
+            -c wct-img-all.jsonnet
+    fi
 
     echo "Imaging done -> $WORKDIR"
 }
