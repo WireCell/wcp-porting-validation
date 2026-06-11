@@ -2,6 +2,7 @@
 # gperftools CPU-profile clustering of one event.
 # Usage: ./profile_clus.sh <pdhd|pdvd> <run> <evt> [out.prof]
 # Pre-compiles the cfg with wcsonnet (SIGPROF kills gojsonnet GC otherwise).
+# Env overrides: PROFLIB / OUTDIR / HEAPOUT -- see profile_img.sh header.
 set -e
 AB_DIR=$(cd "$(dirname "$0")" && pwd)
 BASE_DIR=$(dirname "$AB_DIR")
@@ -25,12 +26,19 @@ EVENT_NO=$(tar tzf "$FIRST_CLUS" | head -1 | sed -E 's/.*cluster_([0-9]+)_.*/\1/
 
 CFG=/home/xqian/tmp/prof_clus_${DET}_${RUN_PADDED}_${EVT}.json
 wcsonnet -A "input=${WORKDIR}" -S "anode_indices=${ANODE_CODE}" \
-         -A "output_dir=${WORKDIR}" -S "run=${RUN_STRIPPED}" -S "subrun=0" \
+         -A "output_dir=${OUTDIR:-$WORKDIR}" -S "run=${RUN_STRIPPED}" -S "subrun=0" \
          -S "event=${EVENT_NO}" -o "$CFG" wct-clustering.jsonnet
 
-LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so.0 \
-CPUPROFILE="$OUT" CPUPROFILE_FREQUENCY=250 \
-wire-cell -l stderr -L info -c "$CFG"
+PROFLIB=${PROFLIB:-/usr/lib/x86_64-linux-gnu/libtcmalloc_and_profiler.so.4}
+if [ -n "$HEAPOUT" ]; then
+    LD_PRELOAD="$PROFLIB" HEAPPROFILE="$HEAPOUT" \
+    wire-cell -l stderr -L info -c "$CFG"
+    OUT="$HEAPOUT"
+else
+    LD_PRELOAD="$PROFLIB" \
+    CPUPROFILE="$OUT" CPUPROFILE_FREQUENCY=250 \
+    wire-cell -l stderr -L info -c "$CFG"
+fi
 
 echo "profile -> $OUT"
 echo "view: google-pprof --text $(which wire-cell) $OUT | head -40"

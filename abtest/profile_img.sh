@@ -2,6 +2,13 @@
 # gperftools CPU-profile one anode of one event's imaging.
 # Usage: ./profile_img.sh <pdhd|pdvd> <run> <evt> <anode> [out.prof]
 # Pre-compiles the cfg with wcsonnet (SIGPROF kills gojsonnet GC otherwise).
+# Env overrides:
+#   PROFLIB  - LD_PRELOAD lib (default libtcmalloc_and_profiler: production
+#              runs preload tcmalloc, so glibc-malloc profiles overstate
+#              allocator costs -- round-4 lesson)
+#   OUTDIR   - where wire-cell writes outputs (default the event WORKDIR;
+#              point at scratch to avoid racing real outputs)
+#   HEAPOUT  - if set, do tcmalloc HEAPPROFILE instead of CPU profile
 set -e
 AB_DIR=$(cd "$(dirname "$0")" && pwd)
 BASE_DIR=$(dirname "$AB_DIR")
@@ -28,11 +35,18 @@ fi
 
 CFG=/home/xqian/tmp/prof_cfg_${DET}_${RUN_PADDED}_${EVT}_a${AI}.json
 wcsonnet -A "input_prefix=${PREFIX}" -S "anode_indices=[$AI]" \
-         -A "output_dir=${WORKDIR}" "${EXTRA[@]}" -o "$CFG" wct-img-all.jsonnet
+         -A "output_dir=${OUTDIR:-$WORKDIR}" "${EXTRA[@]}" -o "$CFG" wct-img-all.jsonnet
 
-LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libprofiler.so.0 \
-CPUPROFILE="$OUT" CPUPROFILE_FREQUENCY=250 \
-wire-cell -l stderr -L info -c "$CFG"
+PROFLIB=${PROFLIB:-/usr/lib/x86_64-linux-gnu/libtcmalloc_and_profiler.so.4}
+if [ -n "$HEAPOUT" ]; then
+    LD_PRELOAD="$PROFLIB" HEAPPROFILE="$HEAPOUT" \
+    wire-cell -l stderr -L info -c "$CFG"
+    OUT="$HEAPOUT"
+else
+    LD_PRELOAD="$PROFLIB" \
+    CPUPROFILE="$OUT" CPUPROFILE_FREQUENCY=250 \
+    wire-cell -l stderr -L info -c "$CFG"
+fi
 
 echo "profile -> $OUT"
 echo "view: google-pprof --text $(which wire-cell) $OUT | head -40"
