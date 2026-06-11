@@ -185,6 +185,29 @@ process_event() {
         fi
     fi
 
+    # Probe the actual frame tick count from the first selected anode's
+    # archive; readout length varies run to run and the Reframer must match
+    # it exactly (too short truncates real activity, see
+    # pdvd/docs/sp-img-readout-window-truncation.md).
+    local _PROBE_ANODE=${ANODE_INDICES[0]}
+    local _PROBE_TAR="${INPUT_PREFIX}-anode${_PROBE_ANODE}.tar.bz2"
+    local _FRAME_NPY _SHAPE_TMP NTICKS
+    _FRAME_NPY=$(tar tjf "$_PROBE_TAR" | grep -m1 "^frame_gauss${_PROBE_ANODE}_") || {
+        echo "ERROR: no frame_gauss${_PROBE_ANODE}_* in $_PROBE_TAR" >&2; return 2; }
+    _SHAPE_TMP=$(mktemp -d /home/xqian/tmp/imgnticks.XXXXXX)
+    tar xjf "$_PROBE_TAR" -C "$_SHAPE_TMP" "$_FRAME_NPY"
+    NTICKS=$(python3 -c "
+import numpy as np
+a = np.load('${_SHAPE_TMP}/${_FRAME_NPY}', mmap_mode='r')
+print(a.shape[1])
+")
+    rm -rf "$_SHAPE_TMP"
+    if ! echo "$NTICKS" | grep -qE '^[0-9]+$'; then
+        echo "ERROR: could not determine nticks from $_FRAME_NPY (got: '$NTICKS')" >&2
+        return 2
+    fi
+    echo "Frame tick count: $NTICKS (from ${_FRAME_NPY})"
+
     LOG="$WORKDIR/wct_img_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.log"
     echo "Work dir:  $WORKDIR"
     echo "Log:       $LOG"
@@ -198,6 +221,7 @@ process_event() {
         --tla-str "input_prefix=${INPUT_PREFIX}" \
         --tla-code "anode_indices=${ANODE_CODE}" \
         --tla-str "output_dir=${WORKDIR}" \
+        --tla-code "nticks=${NTICKS}" \
         -c wct-img-all.jsonnet
 
     echo "Imaging done -> $WORKDIR"

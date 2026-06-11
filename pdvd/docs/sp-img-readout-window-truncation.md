@@ -163,6 +163,56 @@ Pre-fix outputs preserved in `work/039252_8/bak-pre-tbinfix/` and
 carry pre-fix outputs; re-run `run_img_evt.sh`/`run_clus_evt.sh` before any
 new comparison.
 
+## Full PDHD + PDVD readout-length audit (2026-06-10)
+
+Sweep of both detectors' chains for hard-coded tick counts, after the PDVD
+`max_tbin` incident.  Observed readout lengths: PDVD **varies by run**
+(6400 / 8000 / 10000 ticks); PDHD is 5999 ticks in all runs processed so far
+(027305→029107 checked).
+
+### Adaptive by design (no change needed)
+
+| stage | knob | why it adapts |
+|---|---|---|
+| NF (both) | `OmnibusNoiseFilter nticks: 0` | 0 = take from input ("Nonzero forces the number of ticks") |
+| SP in LArSoft (PDVD `wcls-nf-sp-out.jsonnet`) | `nticks: -1` | adaptive; empirically emitted the full 10000-tick frames for run 39252 |
+| DNN-ROI (both) | `dnnroi_nticks = 6000` is only a hint | `DNNROIFinding.cxx` oversize branch; run 39252 log confirms: `input_ticks=10048 exceeds configured nticks=6000, using input-driven size` |
+| Magnify TH2s (both) | — | histogram ranges are frame-driven (39252 ROOT has 10000-tick axes) |
+| Clustering (both) | `tick: 0.5*us`, `nticks_live_slice: 4` | physics constants / slice span, not readout length |
+| Bee conversion | `--speed/--t0/--x0` only | no tick count involved |
+
+### Fixed in this audit
+
+| stage | was | now |
+|---|---|---|
+| PDVD imaging slice window | `max_tbin: 8000` | `0` (auto) — toolkit `cc29f9cc`, verified above |
+| PDHD imaging slice window (`cfg/pgrapher/experiment/pdhd/img.jsonnet`) | `max_tbin: 8500` | `0` (auto) — verified on 027409 evt 0: all 4 APAs' active clusters **byte-identical**; masked slices 17→12 (extent 8500→6000 ticks), dead blobs scaled exactly ×12/17 (phantom slices beyond the 5999-tick readout removed) |
+| PDHD imaging Reframer (`pdhd/wct-img-all.jsonnet`) | `nticks: params.daq.nticks` (hard 6000; pads 5999→6000 today, would silently truncate a longer run) | `nticks` TLA, probed from the input frame by `run_img_evt.sh` (probe verified: 5999) |
+| PDVD Magnify `Trun.total_time_bin` (`run_sp_to_magnify_evt.sh`) | hard default 6000 (metadata lied on 10000-tick runs; PDHD's script already probed) | probed from the input frame; 39252 ROOT regenerated: total_time_bin 6000→10000, histograms bit-identical |
+
+All live imaging entry points (`wct-img-all.jsonnet`, `wcls-nf-sp-img.jsonnet`,
+`wcls-nf-dnnsp-img.jsonnet`, `wcls-img.jsonnet`, sim fans) import the same
+canonical per-experiment `img.jsonnet`, so they inherit the `max_tbin` fix.
+
+### Examined and left alone
+
+* `CMMModifier org_hlimit: [8500]` (both) — the organize pass only ever
+  *extends* a bad range's end up to 8500; ranges ending beyond 8500 pass
+  through untouched.  Verified on the 10000-tick run: dead blobs reach tick
+  10000.  Mild inconsistency remains (a mid-frame bad range is extended to
+  8500 rather than to the frame end) but nothing is truncated.
+* `FrameQualityTagging min_time: 3180 / max_time: 7870` (both) — **dormant**:
+  defined in `img.jsonnet` but not wired into the `pre_proc` pipeline
+  (`[cmm_mod, frame_masking, charge_err]`); the window is evaluation-only
+  anyway.
+* `ChargeErrorFrameEstimator time_limits: [12, 800]` (both) — clamps the ROI
+  *length* used in the charge-error lookup, not a frame position.  Independent
+  of readout length.
+* Dormant config variants with stale caps, no importers, untouched:
+  `protodunevd/img_bkup_ori.jsonnet` (8500),
+  `protodunevd/img_standalone.jsonnet` (6400),
+  `pdhd/img_simple.jsonnet` (8500).  Fix if ever revived.
+
 ## Reproduction
 
 Analysis scripts (throwaway): `/home/xqian/tmp/img_sp_invest/{cmp_frames,planes,blobmap,overlay,quant}.py`.

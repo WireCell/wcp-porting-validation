@@ -46,7 +46,12 @@ function(
   // Indices into tools_all.anodes to process; default = all
   anode_indices = std.range(0, std.length(tools_all.anodes) - 1),
   // Directory for output cluster files ('' means current directory)
-  output_dir = ''
+  output_dir = '',
+  // Reframer output length in ticks; 0 = fall back to params.daq.nticks.
+  // Readout length can vary run to run -- run_img_evt.sh probes the input
+  // frame and passes the actual value (see
+  // pdvd/docs/sp-img-readout-window-truncation.md).
+  nticks = 0
 )
 
   local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -76,7 +81,7 @@ function(
         anode: wc.tn(anode),
         tags: ['gauss%d' % aid, 'wiener%d' % aid],
         tbin: 0,
-        nticks: params.daq.nticks,
+        nticks: if nticks > 0 then nticks else params.daq.nticks,
         fill: 0.0,
         // Carry the SP frame's bad-channel mask onto the reframed frame so the
         // dead/masked imaging fork can tile dead regions; without this the CMM

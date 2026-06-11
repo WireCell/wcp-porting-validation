@@ -146,6 +146,27 @@ process_event() {
     fi
     echo "Art event number: $EVENT_NO"
 
+    # Probe the actual frame tick count; readout length varies run to run
+    # (6400/8000/10000 ticks seen) and the default nticks=6000 would stamp a
+    # wrong Trun total_time_bin (see
+    # docs/sp-img-readout-window-truncation.md).
+    local _FRAME_NPY _SHAPE_TMP NTICKS
+    _FRAME_NPY=$(tar tjf "$ANODE0_ARCHIVE" | grep -m1 "^frame_gauss") || {
+        echo "ERROR: no frame_gauss* in $ANODE0_ARCHIVE" >&2; return 1; }
+    _SHAPE_TMP=$(mktemp -d /home/xqian/tmp/magnticks.XXXXXX)
+    tar xjf "$ANODE0_ARCHIVE" -C "$_SHAPE_TMP" "$_FRAME_NPY"
+    NTICKS=$(python3 -c "
+import numpy as np
+a = np.load('${_SHAPE_TMP}/${_FRAME_NPY}', mmap_mode='r')
+print(a.shape[1])
+")
+    rm -rf "$_SHAPE_TMP"
+    if ! echo "$NTICKS" | grep -qE '^[0-9]+$'; then
+        echo "ERROR: could not determine nticks from $_FRAME_NPY (got: '$NTICKS')" >&2
+        return 1
+    fi
+    echo "Frame tick count: $NTICKS (from ${_FRAME_NPY})"
+
     mkdir -p "$WORKDIR"
     echo "Work dir: $WORKDIR"
 
@@ -201,6 +222,7 @@ process_event() {
             --tla-code "run=${RUN_STRIPPED}" \
             --tla-code "subrun=${SUBRUN}" \
             --tla-code "event=${EVENT_NO}" \
+            --tla-code "nticks=${NTICKS}" \
             ${RAW_ARGS} \
             ${ORIG_ARGS} \
             ${RAWDECON_ARGS} \

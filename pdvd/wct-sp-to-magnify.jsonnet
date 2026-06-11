@@ -46,7 +46,7 @@ function(
   run               = 0,
   subrun            = 0,
   event             = 0,
-  nticks            = 6000,  // pdvd SP frame length (3 ms at 500 ns/tick)
+  nticks            = 6000,  // fallback only; readout varies by run, run_sp_to_magnify_evt.sh probes and passes the actual value
   include_raw       = true,
   raw_input_prefix  = 'protodune-sp-frames-raw',
   include_orig      = false,
