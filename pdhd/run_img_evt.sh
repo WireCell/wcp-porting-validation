@@ -1,13 +1,15 @@
 #!/bin/bash
 # Run imaging for one event.
-# Usage: ./run_img_evt.sh [-I] [-P] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>
+# Usage: ./run_img_evt.sh [-I] [-1] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>
 #        ./run_img_evt.sh                # list available runs
 #
-#   -P:  per-anode sequential mode.  Runs one wire-cell process per anode
-#        instead of all anodes in one process.  Outputs are identical (the
-#        per-anode pipelines are independent); peak RSS drops from the sum
-#        of all anode pipelines to the busiest single anode.  Configs are
-#        pre-compiled per anode with wcsonnet to avoid N jsonnet compiles.
+#   Per-anode sequential mode is the DEFAULT: one wire-cell process per
+#   anode instead of all anodes in one process.  Outputs are identical (the
+#   per-anode pipelines are independent); peak RSS drops from the sum of
+#   all anode pipelines to the busiest single anode.  Configs are
+#   pre-compiled per anode with wcsonnet to avoid N jsonnet compiles.
+#   -1:  revert to the old single-process all-anode mode.
+#   -P:  accepted for back-compat (per-anode, now the default).
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDHD_MAX_JOBS=N).  Events with missing inputs are skipped.
@@ -35,9 +37,9 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 # Preload tcmalloc for the imaging wire-cell processes: imaging is allocator
 # bound (graph lifecycle churn) and tcmalloc cuts busy-event wall ~25-50%
 # with slightly lower RSS; outputs verified byte-identical on the A/B event
-# set.  Disable with WCT_TCMALLOC=off.  Do NOT apply to clustering: a
-# pointer-order-sensitive path there changes results under tcmalloc (see
-# clus/docs/imgclus-optimization-log.md).
+# set.  Disable with WCT_TCMALLOC=off.  (Clustering also preloads tcmalloc
+# since the BlobLess pointer-order fix; see run_clus_evt.sh and
+# clus/docs/imgclus-optimization-log.md.)
 TCMALLOC_SO=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 WC_PRELOAD=""
 if [ "${WCT_TCMALLOC:-on}" = "on" ] && [ -f "$TCMALLOC_SO" ]; then
@@ -51,12 +53,13 @@ SEL_TAG=""
 FORCE_SPARSE=false
 FORCE_INPUT_DATA=""
 USE_DNNROI="off"
-PER_ANODE=false
+PER_ANODE=true
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -I) FORCE_INPUT_DATA=1; shift ;;
         -P) PER_ANODE=true; shift ;;
+        -1) PER_ANODE=false; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -83,7 +86,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-I] [-P] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>" >&2
+    echo "Usage: $0 [-I] [-1] [-a anode] [-S] [-s sel_tag] [-d on|off] <run> <evt|all>" >&2
     exit 1
 fi
 RUN=$1
