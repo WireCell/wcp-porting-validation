@@ -119,17 +119,34 @@ process_event() {
 
     cd "$PDHD_DIR"
     rm -f "$LOG"
-    wire-cell \
+    # Pre-compile the config with wcsonnet and feed wire-cell pure JSON,
+    # with GOGC=off.  Rationale: an intermittent clustering SIGABRT was
+    # identified as the embedded gojsonnet Go runtime GC crashing
+    # ("traceback did not unwind completely").  libgojsonnet is hard-linked
+    # so its runtime threads exist regardless of config format, but with a
+    # pure-JSON config wire-cell never evaluates jsonnet (no Go heap) and
+    # GOGC=off disables the Go collector entirely, including the 2-minute
+    # periodic forced GC that is the crash vector.  Config is identical
+    # (same pattern as imaging -P).
+    local CFG_JSON="$WORKDIR/.wct-clus${TAG_SUFFIX}.json"
+    wcsonnet \
+        -A "input=${CLUS_INPUT}" \
+        -S "anode_indices=${ANODE_CODE}" \
+        -A "output_dir=${WORKDIR}" \
+        -S "run=${RUN_STRIPPED}" \
+        -S "subrun=${SUBRUN}" \
+        -S "event=${EVENT_NO}" \
+        -o "$CFG_JSON" wct-clustering.jsonnet
+    if [ ! -s "$CFG_JSON" ]; then
+        echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
+        return 1
+    fi
+    env GOGC=off wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
         -L debug \
-        --tla-str "input=${CLUS_INPUT}" \
-        --tla-code "anode_indices=${ANODE_CODE}" \
-        --tla-str "output_dir=${WORKDIR}" \
-        --tla-code "run=${RUN_STRIPPED}" \
-        --tla-code "subrun=${SUBRUN}" \
-        --tla-code "event=${EVENT_NO}" \
-        -c wct-clustering.jsonnet
+        -c "$CFG_JSON"
+    rm -f "$CFG_JSON"
 
     echo "Clustering done -> $WORKDIR"
 }

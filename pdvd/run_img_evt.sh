@@ -164,7 +164,7 @@ process_event() {
             ALOG="$WORKDIR/wct_img_${RUN_PADDED}_${EVT}_a${ai}.log"
             rm -f "$ALOG"
             ai_t0=$SECONDS
-            env $WC_PRELOAD wire-cell -l stderr -l "${ALOG}:debug" -L debug -c "$CFG_JSON"
+            env $WC_PRELOAD GOGC=off wire-cell -l stderr -l "${ALOG}:debug" -L debug -c "$CFG_JSON"
             echo "anode${ai} imaging: $((SECONDS - ai_t0)) s"
             rm -f "$CFG_JSON"
         done
