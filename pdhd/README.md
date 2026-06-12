@@ -1,4 +1,247 @@
+# pdhd — ProtoDUNE-HD per-event scripts
+
+Scripts and jsonnet configs for running per-event imaging and clustering on
+ProtoDUNE-HD signal-processed data.
+
+## Common conventions
+
+Every `run_*.sh` script (except `run_select_evt.sh`, which is interactive)
+shares three ergonomic features provided by `_runlib.sh`:
+
+**No-arg listing** — run any script with no arguments to list available runs
+(scanned across every `input_data*` root):
 ```bash
-../js.sh all wct-clustering.jsonnet "--no-services --no-params"
-wire-cell -l stdout -L debug -c wct-clustering.jsonnet -V input="run27380_0014_df3_sk3"
+./run_img_evt.sh
+# Available runs under .../pdhd/input_data_14_old_coh_grouping:
+#   run027380     events: 0 1 2 3 4 5 6 7
+#   run027409     events: 0 1 2 3 4 5 6 7 12
+#   run027425     events: 5 6 9 12 20 21 27 32 33
+# Available runs under .../pdhd/input_data_7p8_new_coh_grouping:
+#   run027980     events: 0 1 2 3 4
+#   run029107     events: 0 1 2 3 4
 ```
+
+**`EVT=all` parallel mode** — pass `all` as the event number to process every
+discovered event for that run in parallel:
+```bash
+./run_img_evt.sh 027409 all
+./run_clus_evt.sh 027409 all
+```
+Events are discovered from `input_data*/run<N>/evt_*` subdirectories and from
+existing `work/<RUN_PADDED>_<EVT>/` directories.  Input data lives in
+`input_data_<gain>_<old|new>_coh_grouping` roots (e.g.
+`input_data_14_old_coh_grouping`, `input_data_7p8_new_coh_grouping`); the NF/SP
+runners scan all of them, pick the root holding the requested run, and
+**auto-derive the FE gain (14 vs 7.8 mV/fC) and coherent-noise grouping
+(old/pre-flip vs new/post-flip) from that root's name** — no `-g` flag or
+`.coh_preflip` sentinel needed (see `docs/pdhd-coh-groups-preflip.md`).  Jobs run concurrently up to
+`$(nproc)` (override with `PDHD_MAX_JOBS=N`).  Per-event logs go to
+`work/.batch_<stage>_<run>_<evt>.log`.  A summary at the end shows ok / failed
+counts and the failed event ids.
+
+**Skip-on-missing** — in `all` mode, an event whose required inputs are absent
+(no SP frames, no cluster tarballs, or a `-s sel_tag` directory that doesn't
+exist) is skipped with a one-line note instead of aborting the whole batch.
+In single-event mode the same condition exits non-zero (exit 2 = skip, 1 =
+hard failure).
+
+**Concurrency cap** — controlled by `PDHD_MAX_JOBS` (default `nproc`):
+```bash
+PDHD_MAX_JOBS=4 ./run_img_evt.sh 027409 all   # cap at 4 simultaneous jobs
+```
+
+## NF + SP
+
+Standalone Noise Filter + Signal Processing chain (no art/LArSoft).
+```bash
+./run_nf_sp_evt.sh [-a ANODE] <run> <evt|all>
+```
+**Input**: `input_data/<run>/<evt>/protodunehd-orig-frames-anode{0..3}.tar.bz2`
+**Output**: `work/<run>_<evt>/protodunehd-sp-frames{,-raw}-anode{N}.tar.bz2`
+
+See `docs/nf.md`, `docs/sp.md`, `docs/nf_sp_workflow.md` for details.
+
+## NF + SP + DNN-ROI
+
+```bash
+./run_nf_sp_dnnroi_evt.sh [-a ANODE] [-D cpu|gpu] [-M MODEL] [-m pp|mp] [-L on|off] <run> <evt>
+```
+
+Runs NF + SP + DNN-ROI on an event using the TorchScript model at
+`wire-cell-data/dnnroi/pdhd/CP43.ts`.  By default every anode present in
+the event is processed (the four PDHD APAs are geometrically identical, so
+the one shared model applies to each); pass `-a N` to restrict to one APA.
+
+| Flag | Meaning | Default |
+|------|---------|---------|
+| `-a N`        | Anode index 0–3 | all anodes present |
+| `-D cpu\|gpu` | TorchService device | `cpu` |
+| `-M PATH`     | TorchScript model path (resolved via `WIRECELL_PATH`) | `dnnroi/pdhd/CP43.ts` |
+| `-m pp\|mp`   | DNN-ROI wiring: `pp` (per-plane sequential, two 800-ch forwards) or `mp` (stacked, one 1600-ch forward) | `pp` |
+| `-L on\|off`  | Run `L1SPFilterPD` after DNN-ROI.  When `on`, the DNN output is fed to L1SP as the signal channel, raw is preserved through the chain, and the final frame carries `gauss%d` / `wiener%d` (L1SP-corrected DNN charge) alongside `raw%d`.  When `off`, the post-DNN frame is written directly (carries `dnnsp%d*` tags only). | `on` |
+| `-X NAME`     | If set, the C++ DNN node dumps `{NAME}_anode{N}_call{K}.pt` for offline verification | (off) |
+
+`pp` mode halves peak activation memory (~36 % CPU RSS reduction on
+APA0 vs `mp`) and eliminates U/V seam mixing inside the model.  Both
+modes use the same `.ts` — no retrain.  See
+`DNN_ROI_SP/docs/wirecell_deployment.md` for the full deployment
+write-up (including the L1SP-after-DNN envelope, memory measurements,
+and the input-driven tick-handling policy).
+
+**Input**: `input_data/<run>/<evt>/protodunehd-orig-frames-anode{N}.tar.bz2`
+**Output** (under `work/<RUN_PADDED>_<EVT>/`):
+- `protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2` — the single canonical
+  archive (with `-L on`, contains `raw%d` / `gauss%d` / `wiener%d`
+  trace tags).  Consumed by `run_img_evt.sh -d on` and
+  `run_sp_to_magnify_evt.sh -d on`.
+- `time_<RUN>_<EVT>_a<N>.txt` (CPU peak RSS, polled from
+  `/proc/<pid>/status:VmHWM`)
+- `gpu_mem_<RUN>_<EVT>_a<N>.csv` (nvidia-smi VRAM trace, 100 ms)
+
+## Imaging
+
+Reads per-anode SP frame archives and produces cluster archives for each APA.
+
+```bash
+./run_img_evt.sh [-I] [-a ANODE] [-S] [-s SEL_TAG] [-d on|off] <run> <evt|all>
+```
+
+**Options**
+
+| Flag | Meaning |
+|------|---------|
+| `-I` | Force loading SP frames from `input_data/` even if `work/` has them |
+| `-a N` | Process only anode N (default: all four, 0–3) |
+| `-S` | Force-prefer sparse archives (`*-sparseon.tar.bz2`) for every anode that has one |
+| `-s TAG` | Use a pre-selected input from `work/<run>_<evt>_<TAG>/input/` (produced by `run_select_evt.sh`) |
+| `-d on\|off` | Consume DNN-ROI output (`protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2` from `work/`, produced by `run_nf_sp_dnnroi_evt.sh`) instead of standard SP frames.  Default `off`. |
+
+**Input** (auto-discovered under `input_data/`):
+
+```
+protodunehd-sp-frames-anode{N}.tar.bz2          # dense (default)
+protodunehd-sp-frames-anode{N}-sparseon.tar.bz2 # sparse variant
+```
+
+**Archive selection logic** (per anode):
+
+1. Dense archive present → use dense (default, no staging overhead).
+2. Dense archive missing, sparse present → use sparse automatically.
+3. `-S` flag given, sparse present → use sparse (force override).
+4. Neither present → error.
+
+When any anode needs a sparse archive, the script creates a small staging
+directory (`work/.../sp_stage/`) with symlinks so all archives share the
+filename pattern that `FrameFileSource` expects.
+
+**Sparse format note**: sparse archives omit zero rows per tag independently
+(e.g. `gauss0` and `wiener0` can have different row counts).  A `Reframer`
+node in `wct-img-all.jsonnet` densifies each tag to the full anode channel
+set before the imaging pipeline, so downstream components that require
+uniformly-sized trace vectors work transparently with both formats.
+
+**Output**: `work/<RUN>_<EVT>[_<SEL_TAG>]/clusters-apa-apa{N}-ms-{active,masked}.tar.gz`
+
+**Examples**
+
+```bash
+# All anodes, dense archives (default)
+./run_img_evt.sh 027409 1
+
+# Single anode
+./run_img_evt.sh -a 0 027409 1
+
+# Force sparse for anode 0 (anodes 1–3 fall back to dense automatically)
+./run_img_evt.sh -S -a 0 027409 1
+./run_img_evt.sh -S 027409 1
+
+# Use a pre-selected input set
+./run_img_evt.sh -s sel1 027409 1
+```
+
+## Clustering
+
+```bash
+./run_clus_evt.sh [-a ANODE] [-s SEL_TAG] <run> <evt|all> [subrun]
+```
+
+Reads cluster archives from `work/<run>_<evt>[_<SEL_TAG>]/` and runs the full
+clustering chain, producing output under the same work directory.
+
+## Signal-processing frames → Magnify ROOT file
+
+```bash
+./run_sp_to_magnify_evt.sh [-I] [-s SEL_TAG] [-d on|off] <run> <evt|all> [subrun]
+```
+
+Converts per-anode SP frame archives into per-anode Magnify ROOT files
+(`magnify-run<RUN>-evt<EVT>-apa<N>.root`) containing TH2F waveform
+histograms and a `Trun` metadata tree.  Frame tick count is auto-extracted
+from the SP archive.
+
+| Flag | Meaning |
+|------|---------|
+| `-I` | Force loading SP frames from `input_data/` even if `work/` has them |
+| `-s TAG` | Use a pre-selected input directory (from `run_select_evt.sh`) |
+| `-d on\|off` | Consume DNN-ROI output (`protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2` from `work/`, produced by `run_nf_sp_dnnroi_evt.sh`) instead of standard SP frames.  Default `off`. |
+| `-R` | Include `rawdecon`+`decon` TH2 in Magnify (special debug mode) |
+
+## Bee upload
+
+```bash
+./run_bee_img_evt.sh [-a ANODE] [-s SEL_TAG] <run> <evt|all> [subrun]
+```
+
+Single-event mode produces `upload_<run>_<evt>[_sel<TAG>].zip` and uploads
+to Bee, printing the URL.
+
+`all` mode combines every event into one `upload-batch-run<RUN_PADDED>.zip`
+and does a single upload.  The filename prefix matches the directory index
+because Bee groups events by the leading number of the filename stem (see
+`wirecell/bee/data.py:parse_pathname`); naming every file the same would
+collapse all events into one Bee slot.
+
+By default the four APAs are merged by drift side into two Bee instances per
+event — `data/<i>/<i>-imaging-group02.json` (APA0+APA2, drift −x) and
+`<i>-imaging-group13.json` (APA1+APA3, drift +x) — so each event shows two
+images instead of four.  Each pair shares drift geometry, so a single
+`bee-blobs` call per group renders correctly.  Set `PDHD_BEE_GROUP=0` to fall
+back to the legacy one-instance-per-APA output (`<i>-apa<N>.json`).
+
+Note `wirecell-img bee-blobs` has no dead-area code path, so the imaging-only
+link never carries a dead layer (the dead layer comes from clustering).
+
+### Combined link (imaging + clustering + dead)
+
+```bash
+./run_bee_combined_evt.sh <run> [subrun]      # runs run_clus_evt.sh first
+```
+
+Produces one `upload-combined-run<RUN_PADDED>.zip` / Bee link whose every event
+carries the full per-stage instance set, all grouped by drift side:
+
+| Instances | Stage |
+|---|---|
+| `imaging-group02` / `imaging-group13` | after imaging (`bee-blobs` active blobs) |
+| `clustering-group02` / `clustering-group13` | after **per-APA** clustering (MABC `img` pre-pipeline dump) |
+| `clustering-global` | after **all-APA** clustering (MABC end dump) |
+| `channel-deadarea-group02` / `-group13` | dead area (v2 wrapper) |
+
+Imaging instances come from the active cluster tarballs; the clustering and
+dead instances are taken from each event's `mabc-all-apa.zip` (so run
+`run_clus_evt.sh <run> all` first).  See `clus/docs/bee_output.md`
+(APA grouping) for how the per-APA vs full-detector dumps are configured.
+
+A standing inventory of the processed runs and their combined Bee links lives in
+[docs/pdhd-standalone-run-bee-links.md](docs/pdhd-standalone-run-bee-links.md).
+
+## Selection (optional pre-processing)
+
+```bash
+./run_select_evt.sh <run> <evt> <sel_tag>
+```
+
+Applies a channel/time selection and writes filtered SP frames to
+`work/<run>_<evt>_<sel_tag>/input/`.  Interactive (Woodpecker GUI); not
+batch-capable, so `EVT=all` is unsupported here.  Pass the resulting tag
+with `-s` to the imaging or clustering scripts.

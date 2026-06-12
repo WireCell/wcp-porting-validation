@@ -1,0 +1,29 @@
+# Dump SBND OpDet geometry as CSV (one OpDet per line) to standard output.
+#
+# Format per line:
+#   idx,x_cm,y_cm,z_cm,h_cm,w_cm,type,orientation
+#
+# type:   0 = bar/(X)Arapuca, 1 = dome PMT, 2 = disk
+# orient: 0 = anode/cathode plane (only mode used by SBND)
+#
+# Run inside an SL7 + sbndcode env, e.g.:
+#   source setup-local-0.36.0.sh (or your sbndcode env)
+#   lar -c dump_sbnd_opdets.fcl 2>&1 | grep '^OPDET:' \
+#       | sed 's/^OPDET://' > sbnd_opdets.csv
+
+#include "simulationservices_sbnd.fcl"
+
+services: {
+  @table::sbnd_geometry_services
+  AuxDetGeometry: @local::sbnd_auxdetgeo
+}
+
+source: { module_type: EmptyEvent  maxEvents: 1 }
+
+physics: {
+  analyzers: {
+    dumpopdets: { module_type: "SBNDOpDetDumper" }
+  }
+  e1: [ dumpopdets ]
+  end_paths: [ e1 ]
+}

@@ -1,0 +1,5 @@
+SBND WCT 0.36 SCECorrection validation -- 50 crossing-muon events
+points: 228404 (East 70503, West 157901)
+per-point residual reco-map: rms E=1.83e-04 W=2.23e-04 cm, max 8.42e-04 cm
+pooled mean|Dx|: East=0.4021 West=0.5338  W/E=1.327
+references: map vol-avg 1.276, 0.33-era reco 1.271

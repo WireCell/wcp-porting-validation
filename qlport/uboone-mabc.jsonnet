@@ -88,7 +88,32 @@ local ub = {
         uses: [detector_volumes]
     },
 
-    local detector_volumes = 
+    // UbooneGeomHelper provides FV checks and UBoone data-driven SCE position correction.
+    // Lives in WireCellRoot (not WireCellClus) because it depends on ROOT TH3F histograms.
+    // sce_offsets_file: resolved via Persist::resolve() in C++ against WIRECELL_PATH.
+    local uboone_geom_helper = {
+        type: "UbooneGeomHelper",
+        name: "",
+        data: {
+            sce_offsets_file: "uboone/SCEoffsets_dataDriven_combined_bkwd_Jan18.root",
+            "a0f0": {
+                FV_xmin: 1 * wc.cm,
+                FV_xmax: 255 * wc.cm,
+                FV_ymin: -99.5 * wc.cm,
+                FV_ymax: 101.5 * wc.cm,
+                FV_zmin: 15 * wc.cm,
+                FV_zmax: 1022 * wc.cm,
+                FV_xmin_margin: 2 * wc.cm,
+                FV_xmax_margin: 2 * wc.cm,
+                FV_ymin_margin: 2.5 * wc.cm,
+                FV_ymax_margin: 2.5 * wc.cm,
+                FV_zmin_margin: 3 * wc.cm,
+                FV_zmax_margin: 3 * wc.cm,
+            },
+        },
+    },
+
+    local detector_volumes =
     {
         type: "DetectorVolumes",
         name: "",
@@ -1132,7 +1157,10 @@ local ub = {
 
     MultiAlgBlobClustering(beezip, datapath=pointtree_datapath, live_sampler=$.bs_live,
                            index=0, runNo=1, subRunNo=1, eventNo=1, trackfitting_config="",
-                           tracking_output="") ::
+                           tracking_output="", dl_weights="",
+                           dQdx_scale=0.1, dQdx_offset=-1000,
+                           numu_weights_dir="",
+                           nue_weights_dir="") ::
         local cm = clus.clustering_methods(detector_volumes=detector_volumes,
                                            pc_transforms=pctransforms,
                                            fiducial=$.uboone_mc_fid);
@@ -1143,6 +1171,48 @@ local ub = {
         local improve_cluster_2 = cm.improve_cluster_2(anodes=anodes,
                                    samplers=[clus.sampler($.bs_live_no_dead_mix, apa=0, face=0)],
                                    verbose=true);
+
+        local numu_bdt_scorer = cm.numu_bdt_scorer(
+            numu1_weights_xml=     numu_weights_dir + "/numu_tagger1.weights.xml",
+            numu2_weights_xml=     numu_weights_dir + "/numu_tagger2.weights.xml",
+            numu3_weights_xml=     numu_weights_dir + "/numu_tagger3.weights.xml",
+            cosmict10_weights_xml= numu_weights_dir + "/cos_tagger_10.weights.xml",
+            numu_xgboost_xml=      numu_weights_dir + "/numu_scalars_scores_0923.xml",
+        );
+
+        local nue_bdt_scorer = cm.nue_bdt_scorer(
+            mipid_weights_xml=       nue_weights_dir + "/mipid_BDT.weights.xml",
+            gap_weights_xml=         nue_weights_dir + "/gap_BDT.weights.xml",
+            hol_lol_weights_xml=     nue_weights_dir + "/hol_lol_BDT.weights.xml",
+            cme_anc_weights_xml=     nue_weights_dir + "/cme_anc_BDT.weights.xml",
+            mgo_mgt_weights_xml=     nue_weights_dir + "/mgo_mgt_BDT.weights.xml",
+            br1_weights_xml=         nue_weights_dir + "/br1_BDT.weights.xml",
+            br3_weights_xml=         nue_weights_dir + "/br3_BDT.weights.xml",
+            br3_3_weights_xml=       nue_weights_dir + "/br3_3_BDT.weights.xml",
+            br3_5_weights_xml=       nue_weights_dir + "/br3_5_BDT.weights.xml",
+            br3_6_weights_xml=       nue_weights_dir + "/br3_6_BDT.weights.xml",
+            stemdir_br2_weights_xml= nue_weights_dir + "/stem_dir_br2_BDT.weights.xml",
+            trimuon_weights_xml=     nue_weights_dir + "/stl_lem_brm_BDT.weights.xml",
+            br4_tro_weights_xml=     nue_weights_dir + "/br4_tro_BDT.weights.xml",
+            mipquality_weights_xml=  nue_weights_dir + "/mipquality_BDT.weights.xml",
+            pio_1_weights_xml=       nue_weights_dir + "/pio_1_BDT.weights.xml",
+            pio_2_weights_xml=       nue_weights_dir + "/pio_2_BDT.weights.xml",
+            stw_spt_weights_xml=     nue_weights_dir + "/stw_spt_BDT.weights.xml",
+            vis_1_weights_xml=       nue_weights_dir + "/vis_1_BDT.weights.xml",
+            vis_2_weights_xml=       nue_weights_dir + "/vis_2_BDT.weights.xml",
+            stw_2_weights_xml=       nue_weights_dir + "/stw_2_BDT.weights.xml",
+            stw_3_weights_xml=       nue_weights_dir + "/stw_3_BDT.weights.xml",
+            stw_4_weights_xml=       nue_weights_dir + "/stw_4_BDT.weights.xml",
+            sig_1_weights_xml=       nue_weights_dir + "/sig_1_BDT.weights.xml",
+            sig_2_weights_xml=       nue_weights_dir + "/sig_2_BDT.weights.xml",
+            lol_1_weights_xml=       nue_weights_dir + "/lol_1_BDT.weights.xml",
+            lol_2_weights_xml=       nue_weights_dir + "/lol_2_BDT.weights.xml",
+            tro_1_weights_xml=       nue_weights_dir + "/tro_1_BDT.weights.xml",
+            tro_2_weights_xml=       nue_weights_dir + "/tro_2_BDT.weights.xml",
+            tro_4_weights_xml=       nue_weights_dir + "/tro_4_BDT.weights.xml",
+            tro_5_weights_xml=       nue_weights_dir + "/tro_5_BDT.weights.xml",
+            nue_xgboost_xml=         nue_weights_dir + "/XGB_nue_seed2_0923.xml",
+        );
 
         local tracking_visitor = {
             type: "UbooneMagnifyTrackingVisitor",
@@ -1155,34 +1225,36 @@ local ub = {
                 runNo: runNo,
                 subRunNo: subRunNo,
                 eventNo: eventNo,
-                dQdx_scale: 0.1,
-                dQdx_offset: -1000,
+                dQdx_scale: dQdx_scale,
+                dQdx_offset: dQdx_offset,
                 flag_skip_vertex: false,
             },
         };
 
+        local tagger_output_visitor = cm.tagger_output(output_filename=tracking_output);
+
+        local perf = true;   // single knob: controls timing printout for MABC and CreateSteinerGraph
+
         local cm_pipeline = [
             cm.tagger_flag_transfer("tagger"),
-            cm.clustering_recovering_bundle("recover_bundle"),
+            // //cm.examine_bundles(graph_name="relaxed_pid"),
+            cm.clustering_recovering_bundle("recover_bundle", graph_name="relaxed_pid"),
             cm.switch_scope(),
-            // cm.examine_bundles(),
-            // cm.retile(retiler=retiler),
-            cm.steiner(retiler=improve_cluster_2),
+            // //cm.retile(retiler=retiler),
+            cm.steiner(retiler=improve_cluster_2, perf=perf),
             cm.fiducialutils(),
-            //cm.tagger_check_stm(trackfitting_config_file=trackfitting_config,
-            //        recombination_model=wc.tn(ub.uBooNE_box_recomb_model),
-            //        particle_dataset=wc.tn(ub.particle_dataset)),
-            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config,
-                    recombination_model=wc.tn(ub.uBooNE_box_recomb_model),
-                    particle_dataset=wc.tn(ub.particle_dataset)),
-        ] + (if tracking_output != "" then [tracking_visitor] else []);
+            // //cm.tagger_check_stm(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset)),
+            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset), perf=perf, dl_weights=dl_weights, dQdx_scale=dQdx_scale, dQdx_offset=dQdx_offset, clus_geom_helper=wc.tn(uboone_geom_helper)),
+        ] + (if numu_weights_dir != "" then [numu_bdt_scorer] else [])
+          + (if nue_weights_dir  != "" then [nue_bdt_scorer]  else [])
+          + (if tracking_output != "" then [tracking_visitor, tagger_output_visitor] else []);
         pg.pnode({
         type: "MultiAlgBlobClustering",
         name: "",
         data:  {
             inpath: pointtree_datapath,
             outpath: pointtree_datapath,
-            perf: true,
+            perf: perf,
             bee_zip: beezip,
             initial_index: index,
             use_config_rse: true,  // Enable use of configured RSE
@@ -1255,13 +1327,47 @@ local ub = {
                     pcname: "3d",            // Not used for PRGraph, but required
                     coords: ["x", "y", "z"], // Not used for PRGraph, but required
                     individual: false,       // Output as global, not per APA/face
+                    dQdx_scale: dQdx_scale,
+                    dQdx_offset: dQdx_offset,
+                },
+                {
+                    name: "shower_track",    // Associated points colored by shower/track classification
+                    visitor: "TaggerCheckNeutrino",
+                    grouping: "live",
+                    detector: "uboone",
+                    algorithm: "shower_track",
+                    pcname: "3d",
+                    coords: ["x", "y", "z"],
+                    individual: false,
+                    use_associate_points: true,  // q=15000 if shower (traj or topo), q=0 if track
+                },
+                {
+                    name: "vertices",        // All PR graph vertices; main vertex has q=15000, others q=0
+                    visitor: "TaggerCheckNeutrino",
+                    grouping: "live",
+                    detector: "uboone",
+                    algorithm: "vertices",
+                    pcname: "3d",
+                    coords: ["x", "y", "z"],
+                    individual: false,
+                    use_graph_vertices: true,
                 },
 
+            ],
+            // Particle-flow Bee output: emitted once after TaggerCheckNeutrino runs.
+            // Produces one JSON file per event named "mc", a bare array of jsTree nodes
+            // matching the prototype "mc" format read by the Bee viewer.
+            bee_pf: [
+                {
+                    name: "mc",                      // output file: data/{index}/{index}-mc.json
+                    visitor: "TaggerCheckNeutrino",
+                    grouping: "live",
+                },
             ],
             pipeline: wc.tns(cm_pipeline),
             // cluster_id_order: "size", // or "tree" for insertion order or nothing for no rewriting
         }
-        }, nin=1, nout=1, uses=anodes + [detector_volumes, $.uBooNE_box_recomb_model, $.particle_dataset, $.muon_dEdx_function, $.pion_dEdx_function, $.kaon_dEdx_function, $.electron_dEdx_function, $.proton_dEdx_function, $.muon_range_function, $.pion_range_function, $.kaon_range_function, $.proton_range_function, $.electron_range_function, $.uboone_data_fid, $.uboone_data_fid_xy, $.uboone_data_fid_zx, $.uboone_mc_fid, $.uboone_mc_fid_xy, $.uboone_mc_fid_zx] + cm_pipeline),
+        }, nin=1, nout=1, uses=anodes + [detector_volumes, uboone_geom_helper, $.uBooNE_box_recomb_model, $.particle_dataset, $.muon_dEdx_function, $.pion_dEdx_function, $.kaon_dEdx_function, $.electron_dEdx_function, $.proton_dEdx_function, $.muon_range_function, $.pion_range_function, $.kaon_range_function, $.proton_range_function, $.electron_range_function, $.uboone_data_fid, $.uboone_data_fid_xy, $.uboone_data_fid_zx, $.uboone_mc_fid, $.uboone_mc_fid_xy, $.uboone_mc_fid_zx] + cm_pipeline),
 
 
     TensorFileSink(fname) :: pg.pnode({
@@ -1316,7 +1422,10 @@ local ingraph_dead(infiles, datapath=pointtree_datapath) = pg.pipeline([
 local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1, eventNo=1) =
     local tracking_output = "track_com_%d_%d.root" % [runNo, eventNo];
     pg.pipeline([
-        ub.MultiAlgBlobClustering(beezip, datapath=datapath, index=index, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, trackfitting_config="uboone_track_fitting.json", tracking_output=tracking_output),
+        ub.MultiAlgBlobClustering(beezip, datapath=datapath, index=index, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, trackfitting_config="uboone_track_fitting.json", tracking_output=tracking_output,
+                                  dl_weights="uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth",  // set to path of t48k-m16-l5-lr5d-res0.5-CP24.pth to enable DL vertex
+                                  numu_weights_dir="uboone/weights",
+                                  nue_weights_dir="uboone/weights"),
         ub.ClusterFlashDump(datapath=datapath)
     ]);
 //local outgraph(beezip,  datapath=pointtree_datapath) = pg.pipeline([

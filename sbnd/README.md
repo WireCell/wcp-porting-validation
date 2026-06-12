@@ -1,43 +1,57 @@
+# SBND Test
+
+## Setup
+
 ```bash
-# in SL7 container
-
-# setup 
-source setup.sh
-
-# run img and clus
-time lar --nskip 0 -n 4 -c wcls-img-clus.fcl -s input-moon.root --no-output >& log
-time lar --nskip 0 -n 4 -c wcls-img-dump.fcl -s input-moon.root --no-output >& log
-time wire-cell -l stdout -L debug -c wct-clus.jsonnet -V input="1event" >& log
-
-
-# merge two APAs
-python merge-zip.py merged.zip "mabc-*.zip"
-
-# upload to BEE
-../upload-to-bee.sh merged.zip
+source setup-local-opt.sh
 ```
 
+## Run
 
-Sim/prabhjot
 ```bash
-time lar --nskip 0 -n 4 -c wcls-img-clus.fcl -s input-prabhjot.root --no-output >& log
+rm -rf data-sep
+time lar --nskip 0 -n 1 -c wcls-img-clus-matching.fcl -s standalone-sample/2025f-mc.root --no-output >& wcls-img-clus-matching.log
 ```
 
+## Upload to Bee
 
-add matching
 ```bash
-time lar --nskip 1 -n 1 -c wcls-img-clus.fcl -s lynn-sim.root --no-output >& log
-time lar --nskip 1 -n 1 -c wcls-img-clus-matching.fcl -s lynn-sim.root --no-output >& lynn-sim.log
-time lar --nskip 0 -n 1 -c wcls-img-clus-matching.fcl -s lynn-iso.root --no-output >& lynn-iso.log
-time lar --nskip 0 -n 1 -c wcls-img-clus-matching.fcl -s lynn-30.root --no-output >& lynn-30.log
-
-python merge-zip.py merged.zip "mabc-*.zip"
-python merge-apa.py --inpath=data-sep --outpath=data --eventNo=0
-./merge-upload.sh
+./bee-upload.sh
 ```
 
-debug stuff
+## Xin's approach (full WCT-native img + clus + QL matching)
+
+A wcls job that reads the artROOT directly (`wclsCookedFrameSource` charge +
+`wclsOpFlashSource` light) but otherwise faithfully follows Xin's standalone
+chain (`sbnd_xin/wct-clus-matching-standalone.jsonnet` + `wct-img-all.jsonnet`),
+using the in-tree canonical toolkit modules (nothing in `sbnd_xin` is modified):
+
+- imaging: toolkit `img.jsonnet` `multi-3view` with `full_deghost=true`
+  (live + `multi_masked_2view` dead, recovers charge across dead W channels);
+- clustering: toolkit `clus.jsonnet` `per_apa` (`rse_from_ident=true`);
+- matching: canonical `FlashTensorToOpticalPCs` + **joint** `QLMatching`
+  (`WireCellMatch`) feeding the `premerged` all-APA clustering;
+- output: ONE shared Bee zip `mabc.zip` for every MABC node.
+
+Config: `wcls-img-clus-matching-xin.{fcl,jsonnet}`.
+
+Setup — `setup-ap.sh` builds on `setup-local-opt.sh` but prepends the toolkit
+cfg (so the toolkit img/clus/qlmatching/simparams win, Xin's environment) plus
+the photodet dir (so `QLMatching` finds `semi-analytical-sbnd.json`):
+
 ```bash
-python filter_cluster.py -o data-sep/2/2-img-apa0-cluster-2.json data-sep/2/2-img-apa0.json 2
-python filter_cluster.py -o ref-lynn-filter.json ref-lynn.json 2
+source setup-ap.sh
+```
+
+Run:
+
+```bash
+rm -f mabc.zip
+time lar --nskip 0 -n 1 -c wcls-img-clus-matching-xin.fcl -s standalone-sample/2025f-mc.root --no-output >& wcls-img-clus-matching-xin.log
+```
+
+Upload `mabc.zip` to Bee (Xin's direct uploader; prints the event-list URL):
+
+```bash
+BROWSER=echo bash ./sbnd_xin/upload-to-bee.sh mabc.zip
 ```

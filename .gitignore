@@ -7,6 +7,7 @@
 *.pdf
 *.npy
 *.npz
+*.png
 validation*
 test*
 tmp*
@@ -15,12 +16,18 @@ massif.*
 *.C
 *.h
 *.sh
+*.swp
 .ipynb_checkpoints
 gperf
 log*
 dune-vd-cfg/*
 *~
 *.db
-*.png
 *.txt
 *.tar.bz2
+*.csv
+fall-production
+__pycache__
+input-*
+temp
+rebase-scan

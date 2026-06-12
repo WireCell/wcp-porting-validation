@@ -64,9 +64,11 @@ local wcls_input = {
 
 local img = import 'pgrapher/experiment/sbnd/img.jsonnet';
 local img_maker = img();
-local img_pipes = [img_maker.per_anode(a, "multi-3view", add_dump = false) for a in tools.anodes];
+local img_config = std.extVar('img_config');
+local img_pipes = [img_maker.per_anode(a, img_config, add_dump = false,
+                                       channels_per_apa = 5638 /* needs to be consistent with geom file */) for a in tools.anodes];
 
-local clus = import 'clus.jsonnet';
+local clus = import 'pgrapher/experiment/sbnd/clus.jsonnet';
 local clus_maker = clus();
 local clus_pipes = [clus_maker.per_apa(anode, dump=false) for anode in tools.anodes];
 
@@ -83,7 +85,7 @@ for n in std.range(0, std.length(tools.anodes) - 1)];
 
 local matching_pipe = [
     g.pnode({
-        type: 'QLMatching',
+        type: 'wclsQLMatching',
         name: 'matching%d' % n,
         local dv = clus_maker.detector_volumes([tools.anodes[n]]), // face should be 0 for sbnd
         data: {
@@ -97,6 +99,7 @@ local matching_pipe = [
             // QtoL: if reality=='data' then 0.2 else 1.0,
             ch_mask: [39,  64,  66,  71,  85,  86,  87, 115, 138, 141, 197, 217, 221, 222, 223, 226, 245, 249, 302],
             flash_minPE: 50,
+            saturation_threshold: 5000,
         },
     }, nin=2, nout=1)
     for n in std.range(0, std.length(tools.anodes) - 1)

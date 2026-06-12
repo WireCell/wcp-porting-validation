@@ -6,7 +6,7 @@
 //         protodunehd-orig-frames-anode{N}.tar.bz2
 //   Part 2: this file  (runs standalone with wire-cell CLI)
 //     - reads per-anode orig frames, runs NF -> SP
-//     - saves NF frames: protodunehd-nf-frames-anode{N}.tar.bz2
+//     - saves NF frames: protodunehd-sp-frames-raw-anode{N}.tar.bz2
 //     - saves SP frames: protodunehd-sp-frames-anode{N}.tar.bz2
 //
 // Run example (all anodes):
@@ -17,6 +17,11 @@
 //
 // To process a subset of anodes:
 //   wire-cell ... --tla-code anode_indices='[0,1]' -c pgrapher/experiment/pdhd/wct-nf-sp.jsonnet
+//
+// Data vs simulation:
+//   reality='data' (default) inserts a Resampler (512 ns -> 500 ns) on every
+//   anode before NF, mirroring the LArSoft pdhd config. Pass reality='sim' to
+//   skip resampling for simulated input that is already at 500 ns.
 
 local g = import 'pgraph.jsonnet';
 local wc = import 'wirecell.jsonnet';
@@ -30,29 +35,63 @@ function(
   orig_prefix   = 'protodunehd-orig-frames',    // input prefix; reads {prefix}-anode{N}.tar.bz2
   raw_prefix    = 'protodunehd-sp-frames-raw',  // output prefix for NF (raw) frames
   sp_prefix     = 'protodunehd-sp-frames',      // output prefix for SP frames
-  use_resampler = 'true',                        // 'true' to resample all anodes
-  anode_indices = std.range(0, std.length(tools_all.anodes) - 1)
+  reality       = 'data',                       // 'data' enables the 512->500 ns Resampler; 'sim' disables it
+  anode_indices = std.range(0, std.length(tools_all.anodes) - 1),
+  use_freqmask  = true,                         // apply per-channel frequency mask in NF; override with --tla-code use_freqmask=false
+  debug_dump_path = '',                         // when non-empty, PDHDCoherentNoiseSub dumps per-group .npz under this dir (default OFF)
+  debug_dump_groups = [],                       // optional whitelist of group ids (= first-channel idents). [] = all groups
+  l1sp_pd_mode = 'process',                     // 'process' (default, ON) / 'dump' (calib bypass) / '' (OFF)
+  l1sp_pd_dump_path = '',                       // scalar dump directory (used when l1sp_pd_mode='dump'); pass via -c flag
+  l1sp_pd_wf_dump_path = '',                    // waveform dump directory (used when l1sp_pd_mode='process'); pass via -w flag
+  l1sp_pd_dump_all_rois = false,                // when true (with -w), per-ROI NPZ fires for every ROI (incl. non-triggered) — for ML training set
+  l1sp_pd_adj_enable = true,                    // cross-channel adjacency expansion; default ON (see sigproc/docs/l1sp/L1SPFilterPD.md). Pass false to recover pre-2026-05-02 behaviour.
+  l1sp_pd_adj_max_hops = 3,                     // iterative-expansion hop cap (default 3 ⇔ ±3 channels). Pass 1 to recover pre-2026-05-03 non-transitive behaviour.
+  // l1sp_pd_planes is not exposed here: sp.jsonnet defaults to APA0→[0], APA1-3→[0,1].
+  // Special debug mode: also dump the pre-Wire-filter, pre-ROI deconvolved
+  // waveform (h{u,v,w}_rawdecon<ident> in the magnify ROOT).  OFF in production.
+  dump_rawdecon = false,
+  // PRE-FLIP coherent-noise grouping override (run-027409 etc. decoded with the
+  // pre-2025-06-30 channel map).  Default false = toolkit's latest (post-flip)
+  // groups -> bit-identical for colleagues.  Run scripts set this true when the
+  // local `.coh_preflip` sentinel exists.  See pdhd-coh-groups-preflip.jsonnet.
+  coh_groups_preflip = false,
 )
 
   local tools = tools_all;
+  local use_resampler = (reality == 'data');
 
   local base = import 'pgrapher/experiment/pdhd/chndb-base.jsonnet';
+  local coh_preflip = import 'pdhd-coh-groups-preflip.jsonnet';
   local chndb = [{
     type: 'OmniChannelNoiseDB',
     name: 'ocndbperfect%d' % n,
-    data: base(params, tools.anodes[n], tools.field, n) { dft: wc.tn(tools.dft) },
+    data: base(params, tools.anodes[n], tools.field, n, use_freqmask=use_freqmask) { dft: wc.tn(tools.dft) }
+          + (if coh_groups_preflip
+             then { groups: coh_preflip.groups(n), femb_negpulse_groups: coh_preflip.negpulse_groups }
+             else {}),
     uses: [tools.anodes[n], tools.field, tools.dft],
   } for n in std.range(0, std.length(tools.anodes) - 1)];
 
   local nf_maker = import 'pgrapher/experiment/pdhd/nf.jsonnet';
-  local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n) for n in std.range(0, std.length(tools.anodes) - 1)];
+  local nf_pipes = [nf_maker(params, tools.anodes[n], chndb[n], n, name='nf%d' % n,
+                             debug_dump_path=debug_dump_path, debug_dump_groups=debug_dump_groups)
+                    for n in std.range(0, std.length(tools.anodes) - 1)];
 
   local sp_maker = import 'pgrapher/experiment/pdhd/sp.jsonnet';
   local sp = sp_maker(params, tools, { sparse: false });
-  local sp_pipes = [sp.make_sigproc(a) for a in tools.anodes];
+  local sp_pipes = [sp.make_sigproc(a,
+                                    l1sp_pd_mode=l1sp_pd_mode,
+                                    l1sp_pd_dump_path=l1sp_pd_dump_path,
+                                    l1sp_pd_wf_dump_path=l1sp_pd_wf_dump_path,
+                                    l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
+                                    l1sp_pd_adj_enable=l1sp_pd_adj_enable,
+                                    l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                                    dump_rawdecon=dump_rawdecon)
+                    for a in tools.anodes];
 
   local resamplers_config = import 'pgrapher/common/resamplers.jsonnet';
-  local resamplers = resamplers_config(g, wc, tools).resamplers;
+  local load_resamplers = resamplers_config(g, wc, tools);
+  local resamplers = load_resamplers.resamplers;
 
   // Tap: save NF output (raw) frame per anode
   local raw_frame_tap = function(n)
@@ -64,7 +103,7 @@ function(
           outname: '%s-anode%d.tar.bz2' % [raw_prefix, n],
           tags: ['raw%d' % n],
           digitize: false,
-          masks: true,  // save bad chanmask for downstream use
+          masks: true,
         },
       }, nin=1, nout=0),
       'rawframetap%d' % n);
@@ -77,12 +116,10 @@ function(
         name: 'spframesink%d' % n,
         data: {
           outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
-          tags: [
-            'gauss%d'  % n,
-            'wiener%d' % n,
-          ],
+          tags: ['gauss%d' % n, 'wiener%d' % n]
+                + (if dump_rawdecon then ['rawdecon%d' % n] else []),
           digitize: false,
-          masks: true,  // lf_noisy mask confuses FrameFileSource in imaging; only 'bad' is needed downstream
+          masks: true,
         },
       }, nin=1, nout=0),
       'spframetap%d' % n);
@@ -102,7 +139,7 @@ function(
 
     g.pipeline(
       [src]
-      + (if use_resampler == 'true' then [resamplers[n]] else [])
+      + (if use_resampler then [resamplers[n]] else [])
       + [nf_pipes[n]]
       + [raw_frame_tap(n)]
       + [sp_pipes[n]]

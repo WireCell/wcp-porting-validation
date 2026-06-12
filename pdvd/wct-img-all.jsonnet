@@ -45,8 +45,10 @@ function(
 
   local anodes = [tools_all.anodes[i] for i in anode_indices];
 
-  local img = import 'img.jsonnet';
-  local img_maker = img(output_dir=output_dir);
+  // Common imaging toolbox; PDVD slices on any positive charge (1e-6 = the
+  // charge>0 surrogate, see img.jsonnet) instead of the 3.6 sigma default.
+  local img = import 'pgrapher/experiment/protodunevd/img.jsonnet';
+  local img_maker = img(output_dir=output_dir, nthreshold=[1e-6, 1e-6, 1e-6]);
 
   // Build one FrameFileSource + imaging pipeline per anode
   local per_anode_graph(anode) =
@@ -60,7 +62,7 @@ function(
         tags: ['gauss%d' % aid, 'wiener%d' % aid],
       },
     }, nin=0, nout=1);
-    g.pipeline([src, img_maker.per_anode(anode)],
+    g.pipeline([src, img_maker.per_anode(anode, "multi")],
                'img_graph_anode%d' % aid);
 
   local graphs = [per_anode_graph(a) for a in anodes];

@@ -1,0 +1,4 @@
+- base knowledge: /exp/sbnd/app/users/yuhw/claude-utilities
+- in sl7, use this setup: sbnd/setup-local-opt.sh
+- local WCT: /exp/sbnd/app/users/yuhw/wire-cell-toolkit
+- local larwirecell: /exp/sbnd/app/users/yuhw/larsoft-wct036/v10_14_02/srcs/larwirecell
