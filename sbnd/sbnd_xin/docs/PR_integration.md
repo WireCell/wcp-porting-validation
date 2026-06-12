@@ -328,4 +328,144 @@ which is also what the physics needs.
 
 ---
 
-*Sections 3-7 follow.*
+## 3. STM tagger
+
+### 3.1 Algorithm overview
+
+The STM tagger classifies a flash-matched cluster as a **stopped muon (STM)**
+or **through-going muon (TGM)** — the two dominant cosmic topologies that
+survive generic cosmic rejection and must be removed before neutrino
+selection. It is the first "physics" tagger in the chain and exercises the
+full track-fitting machinery (§5) on a single cluster.
+
+| piece | where |
+|---|---|
+| Visitor `TaggerCheckSTM` (`cm.tagger_check_stm()`) | `clus/src/TaggerCheckSTM.cxx` (~2700 lines) |
+| Geometry helpers | `clus/src/FiducialUtils.cxx` (`check_dead_volume`, `check_signal_processing`, `inside_fiducial_volume`), `Clustering_Util.cxx` (`cluster_fc_check`) |
+| Port review | `clus/docs/patternrecognition/stm_tagger_review.md` |
+
+Per cluster the logic is (two rounds of endpoint detection, then a forward
+pass and — for ambiguous-direction tracks — a backward pass):
+
+1. **Endpoint analysis**: find the track's extreme points; for each, test
+   `inside_fiducial_volume`, `check_dead_volume` (walk along the track
+   direction; fail if >~81% of steps land in dead regions) and
+   `check_signal_processing` (fail if the apparent endpoint is explained by
+   SP inefficiency rather than a real stop).
+2. **Trajectory + dQ/dx fit** of the candidate muon path (rough path through
+   the Steiner graph, then two tracking iterations).
+3. **`find_first_kink`** — split candidate at kinks (delta rays, decays).
+4. **TGM check** — both endpoints at detector boundaries (anode/cathode
+   handling, incl. dead-volume-truncated variants) ⇒ `Flags::TGM`.
+5. **`eval_stm` dQ/dx ladder** — compare the end-of-track dQ/dx profile
+   against the muon Bragg-peak hypothesis (using the `ParticleDataSet`
+   dE/dx-vs-residual-range tables + recombination model) at several
+   thresholds ⇒ stopped-muon decision.
+6. **`search_other_tracks` / `check_other_tracks` / `detect_proton`** —
+   veto if additional activity at the stopping point looks like an
+   interaction (e.g. a proton) rather than a clean muon stop ⇒ if clean,
+   `Flags::STM`.
+
+Configuration (jsonnet `cm.tagger_check_stm(...)`):
+
+```jsonnet
+type: "TaggerCheckSTM",
+data: {
+  grouping: "live",
+  trackfitting_config_file: "",        // JSON preset (§5); "" = built-in defaults
+  particle_dataset: ...,               // dE/dx + range tables
+  recombination_model: ...,            // Box model (detector E-field!)
+  detector_volumes: ..., pc_transforms: ...,
+  shorted_y_w_range: [],               // e.g. [7135, 7264] = uboone shorted-Y W wires
+}
+```
+
+**Status:** ported and reviewed, but currently *commented out* in
+`uboone-mabc.jsonnet` (line 1246) — the neutrino tagger is the exercised
+path. Per the review's fidelity table the port-time issues (visitor stub,
+missing `Flags::STM`, TGM anode drift direction) are fixed; the one residual
+multi-TPC item is below.
+
+### 3.2 Integration attention points for SBND
+
+**Re-enable and re-baseline on MicroBooNE first.** Since the STM pass is
+off in the current qlport pipeline, step zero is to switch it on for
+MicroBooNE, regenerate the `track_com_*.root`/tagger-log references, and
+hand-check a few STM/TGM tags against the prototype. Only then port.
+
+**Residual single-TPC assumption (MULTI-APA-1).** `check_stm_conditions`
+derives `drift_dir` from the *first* `wpid` of the cluster
+(`TaggerCheckSTM.cxx:2167-2174` at review time). For an SBND cross-TPC
+cluster the two halves drift in **opposite x directions**, so any
+endpoint-vs-drift angle logic is wrong for one half. Fix as the review
+prescribes: per-endpoint `m_dv->face_dirx(wpid)` using the wpid containing
+that endpoint. The helpers (`cluster_fc_check`, `check_dead_volume`,
+`check_signal_processing`) are already per-point `contained_by()`-based and
+multi-APA-safe.
+
+**Boundary topology is genuinely new.** MicroBooNE: one anode (x≈0), one
+cathode (x≈256 cm); a TGM enters/exits through the FV surface of a single
+volume. SBND: two anodes at x ≈ ±201 cm and a **shared cathode at x ≈ 0**
+that is *interior* to the detector:
+
+- A cathode-crossing muon (post-`cathode_connect`, one cluster) is a TGM
+  whose "middle" passes through the cathode — its endpoints are at the two
+  *outer* boundaries. Boundary tests must use the **overall** FV for
+  cross-TPC clusters and the **per-TPC** FV for single-TPC clusters — reuse
+  the scope-aware FV selection pattern already in `clustering_separate`
+  (`select_scope_fv`).
+- A muon stopping *near the cathode* has its Bragg peak inside or behind the
+  CPA structure-exclusion zones (`cathode_fiducial.jsonnet`: pads, tube
+  lattice, knuckles). Treat the cathode like MicroBooNE treats dead regions:
+  an endpoint inside the CPA exclusion volume is "unobservable", not "not a
+  stop". The 3-D cathode fiducial built for QLMatching is the right helper.
+- A track clipped at the **anode** at its matched T0 is a different failure
+  (containment); the QL `require_containment` / `flag_at_x_boundary`
+  machinery already computes this — transfer the flags via
+  `tagger_flag_transfer` rather than recomputing.
+
+**Per-flash "main cluster", many per event.** MicroBooNE runs STM on the
+single beam-flash-matched main cluster. SBND has O(10) matched flash bundles
+per event (cosmics) plus the beam candidate. Run the tagger per matched
+bundle main cluster (`Flags::main_cluster` is set by `tagger_flag_transfer`
+from the QL matching output), and budget CPU accordingly — or gate on the
+beam window if the immediate goal is only neutrino selection.
+
+**Constants to re-derive, not copy:**
+
+- `shorted_y_w_range` — uboone-specific guard; for SBND either empty or
+  mapped to the W-defect dead band (already in the dead-gap registry; prefer
+  reading that registry over a hardcoded channel range).
+- `eval_stm` dQ/dx ladder thresholds — defined relative to MicroBooNE's MIP
+  dQ/dx normalization; revalidate after the SBND recombination model is in
+  (E-field 0.5 kV/cm vs 0.273 kV/cm changes the Box-model recombination
+  factor substantially, §5).
+- `check_dead_volume`/`check_signal_processing` step (1 cm) and ratios
+  (0.81/0.8) — geometry-neutral, keep; but confirm SBND dead regions are in
+  the CTPC dead grouping the helpers consult.
+
+### 3.3 Validation plan (MicroBooNE-style)
+
+1. **Function-level review is done** (`stm_tagger_review.md`); keep it
+   updated when the multi-TPC fixes land, same review format (logic / bugs /
+   efficiency / determinism four-point checklist).
+2. **MicroBooNE numerical parity** with the pass enabled: prototype vs
+   toolkit STM/TGM decisions per event on the `qlport` sample (the
+   `check_tagger_5384.pl` log-diff machinery), plus fitted-track ROOT
+   comparison.
+3. **SBND cosmic data is the natural testbench** (no MC needed for a first
+   pass): select geometrically obvious stopping muons (one endpoint well
+   inside FV) and through-goers from existing hand-scanned events; measure
+   tag efficiency and check the dQ/dx ladder fires on a visible Bragg peak.
+   The Bragg-peak shape in tagged STMs simultaneously validates the §5
+   dQ/dx chain and the recombination constants.
+4. **MC efficiency/mis-tag**: on the SBND simulation sample (§7), compute
+   STM/TGM efficiency vs truth (stopping/crossing muons) and the mis-tag
+   rate on true neutrino interactions — the MicroBooNE figures of merit.
+5. **Cross-TPC regression set**: the cathode-crossing event list from the
+   `cathode_connect` study doubles as the TGM-through-cathode regression
+   sample; every one of those should end up TGM-tagged.
+
+---
+
+*Sections 4-7 follow.*
