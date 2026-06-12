@@ -846,4 +846,131 @@ The MicroBooNE plan is written down in
 
 ---
 
-*Section 7 follows.*
+## 7. Running SBND simulation
+
+PR validation (track fitting above all) needs truth-known SBND MC. The
+template is the ProtoDUNE two-stage **depo-file-split** recipe in
+`DNN_ROI_SP/simulation/` — see `pdhd-sim-setup.md` (practised end-to-end,
+1-event + 50-event batch) and its PDVD peers. Mirror that layout with
+`stageA_sbnd/` + `stageB_sbnd/` peers.
+
+### 7.1 Two routes to MC
+
+**Route A — existing LArSoft-produced samples (already working).** The
+`input-10files-mc` baseline (dnnsp frames + opflash tensors produced by
+SBND production) runs through our full chain today via
+`build_mcbase_stage.py` + `run_mcbase.sh` (event-id remap UID = 700000 +
+file·1000 + evt, `SBND_INPUT_DIR` override). Best for: chain integration
+tests, flash matching on MC, selection-level studies. Limitation: truth
+lives back in the art files, so fit-vs-truth requires a separate truth
+extraction pass.
+
+**Route B — two-stage depo split (recommended for fitting validation).**
+
+```
+        ┌────── STAGE A (apptainer, stock sbndcode) ──────┐   ┌──── STAGE B (native, OUR toolkit) ────┐
+GENIE/CORSIKA ─> LArG4 ─> SimEnergyDeposit ─> depos-evt<N>.tar.bz2 ─> wire-cell: drift + sim + SP ─> frames
+```
+
+Re-running Stage B (toolkit/config iteration) never re-runs GEANT4 — the
+property that made the ProtoDUNE SP work fast, and exactly what track-fit
+tuning needs. The depo file itself is the 3-D truth for trajectory/dQ/dx
+comparison (DepoFluxSplat adds waveform-level truth if wanted, as in the
+PDHD training-mode graph).
+
+### 7.2 Stage A — sbndcode + depo extraction
+
+Adapt `stageA_pdhd/` one-to-one:
+
+1. `lar` chain inside the SL7 container: generator → g4. For the BNB
+   physics sample use the standard sbndcode GENIE+cosmics (overlay) fcls;
+   for a muon-only fit-validation sample, single-particle gen or CORSIKA
+   cosmics suffice and are simpler.
+2. Final step: a minimal fcl whose only producer is `WireCellToolkit`
+   running the detector-agnostic 2-node graph
+   (`wclsSimDepoSetSource → DepoFileSink`) — symlink
+   `stageA/wcls-extract-depos.jsonnet` as PDHD does. **Verify the
+   SimEnergyDeposit art tag in sbndcode** (PDHD/PDVD use
+   `IonAndScint`; sbndcode's refactored LArG4 label may differ — check the
+   reference detsim fcl the same way §A.4 of the PDHD recipe did).
+3. **Light:** unlike the ProtoDUNE recipe (which disables PDFastSim for a
+   ~50× stage speedup), SBND PR validation eventually needs flashes for
+   QLMatching. Two-track approach:
+   - *Fit-validation samples:* disable optical sim (fast), and inject
+     truth T0 into the clusters (a small switch_scope-level knob: set
+     `cluster_t0` from the true interaction time) so the PR chain runs
+     without matching.
+   - *Full-chain samples:* keep PDFastSim + the SBND opflash reco in
+     Stage A, and convert the recob::OpFlash products into the
+     `opflash_apa{N}.tar.gz` tensor format our flash loader reads
+     (timestamp + per-PMT PE matrix + `frame_apply_at_caf` metadata; see
+     `ql-chain.md`). This converter is new, small, and the only missing
+     piece for MC flash matching.
+4. Known Stage-A gotchas that will recur (all documented in
+   `pdhd-sim-setup.md`): CORSIKA OSDF pre-warm **and** `ShowerInputFiles`
+   pinning; the `ifdh` TMPDIR race under `xargs -P` batching (set per-job
+   `TMPDIR`); resumability sentinels keyed to the *last*-written output.
+
+### 7.3 Stage B — standalone wire-cell with our toolkit
+
+The SBND configs already exist: `cfg/pgrapher/experiment/sbnd/`
+{`params`, `simparams`, `sim`, `sp`, `nf`}.jsonnet (used by the
+`wcls-sim-drift-*` in-LArSoft references). The Stage B graph is the PDHD
+one with SBND imports: `DepoFileSource → DepoSetDrifter →
+DepoSetFanout(2 APAs) →` per-APA `(sim.splusn → SP)`, plus an optional
+DepoFluxSplat truth branch. Notes:
+
+- **2 APAs (idents 0,1)**, tick 0.5 µs, 3427-tick readout, drift speed
+  1.563 mm/µs — all inherited from `sbnd/simparams.jsonnet`; sim diffusion
+  DL/DT = 4.0/8.8 cm²/s, lifetime 35 ms.
+- **Check for required extVars** in `sbnd/params.jsonnet` before scripting
+  (the PDHD recipe lost an evening to the no-default `elecGain` TLA).
+- **NF:** skip for sim (matches the ProtoDUNE choice and our SP-input
+  expectations); the sim digitizer output goes straight to SP.
+- **SP output vs the chain's input convention.** Our imaging scripts
+  consume `frame_dnnsp_<E>.npy` members (DNN-ROI SP from production). From
+  standalone Stage B, start with **traditional SP (gauss)** packaged under
+  the same member names — fine for PR validation, but record the
+  difference; the production-faithful variant is to run SBND's DNN-ROI
+  model in Stage B (needs the SBND `.ts` model + `dnnroi` plumbing like
+  PDHD's) — that, plus `wirecell-gen morse-splat` smearing tuning if
+  the truth branch is used, are the two known follow-ups.
+- Package outputs per event under the `SBND_INPUT_DIR` conventions
+  (`frames-dnn.tar.bz2`, optional `opflash_apa{0,1}.tar.gz`) so
+  `run_img_evt.sh → run_clus_evt.sh → run_ql_evt.sh` (and the future PR
+  step) run on MC unchanged — `build_mcbase_stage.py` is the reference for
+  the member naming and the event-uid remap.
+
+### 7.4 Verification ladder
+
+Mirror the PDHD practice-run discipline:
+
+1. 1-event end-to-end practice first; record wall-clock, file sizes, and
+   every hiccup in a `sbnd-sim-setup.md` peer of `pdhd-sim-setup.md`.
+2. Plot check (a `make_pics`-style 2×N panel per APA): cosmic/track visible
+   in raw + SP panels, truth aligned with gauss.
+3. Push one practiced event through imaging → clustering → (matching or
+   truth-T0) → Bee; hand-scan against truth depos.
+4. Then the 50-event batch (`-P` with the TMPDIR fix), then the PR
+   validation samples of §3–§6: stopping muons, BNB νμ CC, νe CC, NC,
+   cathode-crossing topologies.
+
+---
+
+## Suggested order of work
+
+1. **Simulation first** (§7): it gates every truth-based validation. Route
+   A (existing MC) can start immediately; Route B in parallel.
+2. **Retiling + Steiner** (§1, §2) in the all-APA MABC instance — they are
+   pure infrastructure with crisp determinism/parity checks.
+3. **Track fitting** (§5) with the SBND preset + recombination, validated
+   on stopping cosmics from *data* while MC ramps up.
+4. **STM tagger** (§3) — first physics consumer of the fit; cosmic data
+   validation.
+5. **Neutrino tagger** (§4) with `dl_weights=""`; truth metrics on MC.
+6. **Selection taggers + retraining** (§6) last — they depend on everything
+   above being stable.
+
+At every step: keep the MicroBooNE qlport references byte-identical, keep
+new behavior jsonnet-togglable (default OFF outside SBND), and extend this
+document with what was actually observed.
