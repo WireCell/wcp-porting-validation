@@ -468,4 +468,156 @@ beam window if the immediate goal is only neutrino selection.
 
 ---
 
-*Sections 4-7 follow.*
+## 4. Neutrino tagger
+
+### 4.1 Algorithm overview
+
+`TaggerCheckNeutrino` (`cm.tagger_check_neutrino(...)`) is the port of the
+WCP prototype's **NeutrinoID** — the full pattern-recognition chain that
+turns a flash-matched cluster (+ its associated clusters) into a physics
+result: an interaction vertex, a particle-flow tree of track/shower
+segments, reconstructed kinematics, and the feature variables consumed by
+the event-selection BDTs (§6).
+
+| piece | where |
+|---|---|
+| Visitor entry | `clus/src/TaggerCheckNeutrino.cxx` |
+| Proto-vertex/segments | `clus/src/NeutrinoPatternBase.cxx`, `NeutrinoOtherSegments.cxx` |
+| Structure cleanup | `clus/src/NeutrinoStructureExaminer.cxx` |
+| Track/shower separation | `clus/src/NeutrinoTrackShowerSep.cxx` |
+| Vertex finding/fitting (+DL) | `clus/src/NeutrinoVertexFinder.cxx` |
+| Deghosting | `clus/src/NeutrinoDeghoster.cxx` |
+| Shower clustering | `clus/src/NeutrinoShowerClustering.cxx` |
+| Energy reco / kinematics | `clus/src/NeutrinoEnergyReco.cxx`, `NeutrinoKinematics.cxx` |
+| Prototype↔toolkit map | `clus/docs/porting/neutrino_id_function_map.md` |
+
+Sub-steps (prototype call order preserved):
+
+1. **`find_proto_vertex`** — seed vertices from the Steiner skeleton
+   (degree-based), trace rough paths, fit initial segments
+   (`init_point_segment`, `break_segments`, `find_other_segments`) →
+   the PR graph (`PR::Vertex` / `PR::Segment`).
+2. **`examine_structure`** — merge/break pathological segments.
+3. **`separate_track_shower`** — per-segment track vs EM-shower
+   classification (dQ/dx, topology).
+4. **`determine_main_vertex` / `improve_vertex`** — pick and refit the
+   interaction vertex; optionally **DL vertex** re-ranking (below).
+5. **`deghosting`** — drop segments that are projections/ghosts of others.
+6. **Shower clustering** — aggregate EM activity to the parent shower.
+7. **`fill_kine_tree`** — per-particle energies (dQ/dx-, range-, or
+   charge-based, via `ParticleDataSet` + recombination model), neutrino
+   energy.
+8. **`init_tagger_info`** — fill the ~200-variable `TaggerInfo` BDT feature
+   block (cosmic_*, numu_*, nue_*, ssm_*, pio_*, ...).
+
+Configuration (MicroBooNE values):
+
+```jsonnet
+cm.tagger_check_neutrino(
+  trackfitting_config_file = "uboone_track_fitting.json",   // §5
+  recombination_model = wc.tn(ub.uBooNE_box_recomb_model),
+  particle_dataset    = wc.tn(ub.particle_dataset),
+  dl_weights   = "uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth", // "" disables
+  dQdx_scale   = 0.1,   dQdx_offset = -1000,   // dQ/dx → DL-input normalization
+  clus_geom_helper = wc.tn(uboone_geom_helper), // SCE position corrections
+)
+// further knobs: dl_vtx_rerank=true, dl_vtx_top_k=5,
+// dl_vtx_min_accept_score=4.0, dl_vtx_score_scale=1000.0
+```
+
+**DL vertex**: a SparseConvNet model (uboone `.pth`, 0.5 cm voxels) scores
+candidate vertex positions from the dQ/dx-normalized point cloud; the
+geometric candidates are re-ranked against the top-K DL voxels. With
+`dl_weights=""` the chain falls back to pure geometric vertex finding — a
+fully functional mode.
+
+Bee outputs from this visitor: `track_fit` (fitted points, dQ/dx colored),
+`shower_track` (track/shower classification), `vertices` (PR-graph vertices,
+primary highlighted), and the `mc` particle-flow JSON (`bee_pf`).
+
+### 4.2 Integration attention points for SBND
+
+**What runs on what.** MicroBooNE runs NeutrinoID once per event on the
+beam-flash bundle. For SBND, restrict to **beam-window matched bundles**
+(flash time in the BNB gate) — running the full PR chain on every cosmic
+bundle is wasted CPU and was never the MicroBooNE operating point. The
+bundle structure (main + associated clusters via `perblob`/`isolated`
+arrays, group-aware matching) is already in the SBND chain;
+`tagger_flag_transfer` + `clustering_recovering_bundle` are the adapters
+that hand it to PR — verify they understand SBND's per-APA group tail
+(`real_cluster_id` from `examine_bundles`).
+
+**Hardcoded frame conventions are safe; drift is not.** Beam = +z and
+vertical = +y match MicroBooNE. But any sub-step using a drift direction or
+anode-distance must be per-wpid (same audit as §3). Specific known places to
+audit: direction-vs-drift angle cuts in track/shower separation,
+`shower_to_wall`-type distances (wall = which wall?), and deghosting (which
+compares segments along the drift axis — two clusters in *different* TPCs
+can never ghost each other; make sure the pair loop respects that, both for
+correctness and as a free 2× speedup).
+
+**Vertex at/near the cathode.** A BNB vertex can sit near x≈0 where (a) the
+CPA exclusion zones hide charge, and (b) the interaction's tracks may exit
+into both TPCs (a *cross-TPC PR graph* — topology MicroBooNE never has).
+The vertex finder must accept segments with mixed wpids attached to one
+vertex. This is the qualitatively new case to test first (§4.3).
+
+**Fiducial volumes.** MicroBooNE uses hand-drawn `PolyFiducial` XY/ZX
+polygons (data + MC variants). SBND should start from simple per-TPC boxes
+(the existing `DetectorVolumes` FV + margins) plus the cathode structure
+exclusion, and only add polygon complexity if validation demands it. The
+taggers consult `FiducialUtils` — wire SBND's fiducial composition into
+`cm.fiducialutils()` (it takes a `fiducial:` reference; uboone passes
+`uboone_mc_fid`).
+
+**SCE / `clus_geom_helper`.** uboone passes a `SimpleClusGeomHelper` for
+space-charge position corrections. SBND's SCE is smaller but not zero;
+start with the helper disabled (`""`), record it as a known systematic, and
+revisit once an SBND SCE map is available (kinematics vertex output has
+`_corr` fields that expect it).
+
+**ML retraining (required):** the SCN DL-vertex model is trained on
+MicroBooNE topology, wire spacing and the uboone dQ/dx normalization
+(`dQdx_scale=0.1`, `dQdx_offset=-1000` are part of the trained contract).
+For SBND: run with `dl_weights=""` until an SBND training sample exists
+(§7), then retrain (same SCN architecture; training input = fitted dQ/dx
+point clouds + true vertex from MC) and re-derive scale/offset against the
+SBND dQ/dx distribution. `qlport/dl_vtx_optimization/` holds the uboone
+optimization logs as the template for the acceptance-threshold tuning
+(`dl_vtx_min_accept_score`, `dl_vtx_top_k`).
+
+**Recombination + particle data.** `ParticleDataSet` (dE/dx and range
+tables) is detector-independent — reuse as is. The Box recombination model
+is **not**: uboone uses A=1.0, B=0.255 at E=0.273 kV/cm; SBND operates at
+0.5 kV/cm (use the ArgoNeuT/ICARUS-style modified-Box parameters at SBND's
+field). This single constant feeds every energy number downstream — get it
+in before any kinematics validation.
+
+### 4.3 Validation plan (MicroBooNE-style)
+
+1. **Function-level reviews exist** for every sub-component
+   (`clus/docs/patternrecognition/*_review.md`: main_vertex, vertex_fitting,
+   track_shower_sep, deghosting_kinematics, shower_clustering, ...). Any
+   SBND-driven change re-opens the relevant review file; keep MicroBooNE
+   numerically frozen (qlport `track_com_*.root` + `mc` bee_pf diffs).
+2. **SBND MC truth metrics** (needs §7 simulation): vertex residual
+   distribution (|reco−true|, fraction < 1 cm as the headline number),
+   track/shower classification purity/efficiency vs truth, per-particle and
+   neutrino energy closure (reco/true vs energy), all split by vertex-x to
+   expose cathode/anode edge effects.
+3. **Cross-TPC interaction test**: hand-pick (or truth-select) MC events
+   with vertices within ~10 cm of the cathode and tracks entering both
+   TPCs; verify a single PR graph with mixed-wpid segments and a vertex on
+   the correct side.
+4. **Bee hand-scans** of `vertices` + `track_fit` + `shower_track` + `mc`
+   sets — the same scan protocol as the QL hand-scans (10-event batches,
+   recorded verdicts), first on cosmic data (no vertexing expected — PR
+   should degrade gracefully), then on BNB MC.
+5. **Stability/determinism/cost**: identical reruns byte-identical;
+   per-bundle wall time logged (`perf: true`) — NeutrinoID is the most
+   expensive stage in the prototype, and SBND multiplicity makes the
+   beam-window gating of §4.2 load-bearing.
+
+---
+
+*Sections 5-7 follow.*
