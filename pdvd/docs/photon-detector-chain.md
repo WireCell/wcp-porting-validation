@@ -120,17 +120,49 @@ Authoritative counts from the mapping JSON
 | **Total** | **40** | **56** |
 
 Each map entry carries `channel`, `pd_type` (`Cathode`/`Membrane`/`PMT`), module `name`
-(`C1…C8`, `M1…M8`), wavelength shifter (`wls: "PTP"`), efficiencies (`eff_Ar`, `eff_Xe` ≈ 0.03),
-and a `HardwareChannel` list of `{Slot, Link, DaphneChannel, OfflineChannel}`. Example:
+(`C1…C8`, `M1…M8`), wavelength shifter (`wls`), efficiencies (`eff_Ar`, `eff_Xe`), and a
+`HardwareChannel` list of `{Slot, Link, DaphneChannel, OfflineChannel}`. The wavelength shifter and
+efficiency are **type-dependent**: X-ARAPUCAs are `wls: "PTP"` with `eff ≈ 0.03`; PMTs are
+`wls: "TPB"` with `eff ≈ 0.12`. Examples:
 
 ```json
 { "channel": 0, "pd_type": "Membrane", "name": "M1", "wls": "PTP",
   "eff_Ar": 0.03, "eff_Xe": 0.03,
   "HardwareChannel": [ {"Slot":7,"Link":0,"DaphneChannel":47,"OfflineChannel":2010},
                        {"Slot":7,"Link":0,"DaphneChannel":45,"OfflineChannel":2011} ] }
+{ "channel": 14, "pd_type": "PMT", "name": "", "wls": "TPB",
+  "eff_Ar": 0.12, "eff_Xe": 0.12,
+  "HardwareChannel": [ {"Slot":10,"Link":0,"DaphneChannel":4,"OfflineChannel":3010} ] }
 ```
 
-### 2.3 Channel mapping service
+### 2.3 Channel mapping convention
+
+The PDVD mapping is **OpChannel-centric** (unlike PDHD's electronics-first text map): the JSON's
+**`channel` (0–39) is the OpDet / OpChannel index** — the primary key consumed by the geometry and
+the photon library — and each entry hangs the hardware list *off* that key. The convention chain is
+the inverse direction of PDHD's:
+
+```
+JSON entry, keyed by  channel (0..39)  ==  OpDet / OpChannel index
+   ├─ pd_type / name / wls / eff_Ar / eff_Xe        (physics attributes)
+   └─ HardwareChannel[] : {Slot, Link, DaphneChannel, OfflineChannel}
+                                 │  the DAPHNE electronics that read this OpDet
+                                 ▼
+        OfflineChannel is block-coded by type:  Membrane ≈ 20xx,  Cathode ≈ 10xx,  PMT ≈ 30xx
+   channel (OpChannel)
+      │  ChannelsPerOpDet = 1
+      ▼
+   geo::OpDetGeoFromOpChannel(channel).GetCenter()  →  (x,y,z)
+      │  same index
+      ▼
+   photon-library column  (indexed by OpChannel — see §8)
+```
+
+Note an X-ARAPUCA OpDet maps to **two** DAPHNE channels (the `HardwareChannel` list has two
+entries), a PMT to one — hence 40 OpDet channels but 56 DAPHNE hardware channels (§2.2). The
+README also pins the **geometric** module→channel layout, e.g. membranes
+`M1(0) M3(1) / M2(2) M4(3) / M5(12) M7(13) / M6(18) M8(19)` (NO-TCO | TCO halves) and the cathode
+`C1(6)…C8(11)` layout. PMT `HardwareChannel`s are flagged "not fully defined yet" in the JSON.
 
 Wired in `dunecore/dunecore/Geometry/geometry_dune.fcl`:
 
@@ -144,8 +176,9 @@ protodunevd_wire_readout: {
 ```
 
 Implemented by `dunecore/dunecore/ChannelMap/PDVDPDMapAlg.hh` + `PDVDPDMapAlg_tool.cc` (loads the
-JSON; provides `pdType`, `ArgonEfficiency`/`XenonEfficiency`, channel lookups). PDVD selects this
-via `protodunevd_wire_readout` in `services_protodunevd.fcl`.
+JSON; provides `pdType`, `ArgonEfficiency`/`XenonEfficiency`, and the
+`OfflineChannel ↔ OpDet` lookups). PDVD selects this via `protodunevd_wire_readout` in
+`services_protodunevd.fcl`.
 
 ### 2.4 Runtime access
 
@@ -268,13 +301,145 @@ supplied.
 | OpDet channels | **40** (8 cathode + 8 membrane X-ARAPUCA + 24 PMT) | **160** (4 APA × 10 bars × 4 windows, X-ARAPUCA) |
 | OpDet shape/placement | large 65.3 cm square modules on cathode + membrane walls; PMTs | long ~209.6 cm bars (4 windows each) on APA frames |
 | PhotonVisibilityService | `protodune_photonvisibilityservice` (SP-inherited) | `protodune_hd_photonvisibilityservice` (HD-specific) |
+| Photon-library type (§8) | full voxel library `lib_Protodunev7_merged_avg.root` 140×120×140 — **SP geometry, not VD** | full voxel library `…protoDUNEhd_v2_refactored_nonActive.root` 122×67×93 (HD geometry) |
 | Backtracker labels | `PDFastSimAr`, `PDFastSimXe` | `PDFastSim` |
 | ScintPreScale | 0.2 | 1 |
-| Channel map | JSON `PDVD_PDS_Mapping_v09162025.json` via `PDVDPDMapAlg` | text `PD2HDChannelMap_v5.txt` via `PD2HDChannelMapService` |
+| PDS channel map | JSON `PDVD_PDS_Mapping_v09162025.json` (OpChannel-keyed) via `PDVDPDMapAlg` | text `DAPHNE_test5_ChannelMap_v1.txt` (electronics-keyed) via `DAPHNEChannelMapService` |
+| TPC/PDS time offset (§7) | −250 µs (copy of HD) | −250 µs |
 | DAPHNE decode | `DAPHNEReaderPDVD` (3 substreams) — **not in any job fcl** | `DAPHNEReaderPDHD` — has standalone job fcl, ✅ usable |
 | OpHit/OpFlash | none defined | declared in master job but **disabled** |
 | Flash matcher | none | none |
 | bee3 optical geometry | none (TPC only) | none (TPC only) |
+
+---
+
+## 7. Timing: PDS (light) vs TPC (charge) readout offset
+
+> *Analogue of "SBND's 250 µs".* PDVD's detector-clocks config is a **verbatim copy of PDHD's**, so
+> the light-vs-charge offset is **−250 µs**, same as HD.
+
+From `dunecore/dunecore/Utilities/detectorclocks_dune.fcl`:
+
+```fcl
+# "Implement new 6000 tick readout window (500 before trigger, or 250 us)"
+protodune_detectorclocks.G4RefTime:        -250.   # G4 time [us] where the electronics clock starts
+protodune_detectorclocks.TriggerOffsetTPC: -250.   # TPC readout start w.r.t. trigger (= 500 ticks @ 2 MHz)
+protodune_detectorclocks.DefaultTrigTime:   250.
+protodune_detectorclocks.DefaultBeamTime:   250.
+
+protodunehd_detectorclocks: @local::protodune_detectorclocks
+protodunehd_detectorclocks.ClockSpeedTPC:     2.0
+protodunehd_detectorclocks.ClockSpeedOptical: 62.5  # MHz → 16 ns optical tick
+
+# "PD VD config - copy config from PD HD"
+protodunevd_detectorclocks: @local::protodunehd_detectorclocks
+```
+
+`protodunevd_detectorclocks` is wired into every PDVD service table
+(`services_protodunevd.fcl:14,21,27,35`).
+
+**What the offset means.** The TPC readout window opens **250 µs (500 ticks @ 2 MHz) before** the
+trigger; the PDS/optical readout shares the trigger reference (`DefaultBeamTime = 250 µs`). So
+**light leads the start of the TPC window by 250 µs** — an interaction at trigger time is clocked
+out starting at TPC tick **500**. A flash matcher converts flash time → drift-x with this 250 µs
+anchor plus `drift_v · (t_flash − t_trigger)`.
+
+- **Optical clock granularity:** `ClockSpeedOptical = 62.5 MHz` → **16 ns** per optical tick
+  (inherited from HD; the base `protodune_detectorclocks` value of 150 MHz is overridden).
+- **SBND for comparison** (`sbndcode/.../detectorclocks_sbnd.fcl`): `TriggerOffsetTPC = −205 µs`,
+  `G4RefTime = −1700 µs`, optical 500 MHz (2 ns tick). SBND's "≈250 µs" is really −205 µs; PDVD's
+  analogue is −250 µs.
+- **Toolkit side:** PDVD's `cfg/pgrapher/experiment/protodunevd/clus.jsonnet` currently sets
+  **`time_offset = 0`** — the readout tick0 is at −250 µs, but PDVD has **no per-event T0** (no flash
+  matcher yet), so the imaging frame is left offset-free; restore −250 µs once a T0 measurement
+  exists (comment block at `protodunevd/clus.jsonnet:9-16`). SBND, which *does* have a flash T0, uses
+  `time_offset = −205 µs`.
+
+| Quantity | PDVD | PDHD | SBND |
+|---|---|---|---|
+| `TriggerOffsetTPC` | −250 µs (copy of HD) | −250 µs (500 ticks) | −205 µs |
+| `G4RefTime` | −250 µs | −250 µs | −1700 µs |
+| Optical clock | 62.5 MHz (16 ns) | 62.5 MHz (16 ns) | 500 MHz (2 ns) |
+| Toolkit `time_offset` | 0 (no T0; "true" = −250 µs) | 0 (no T0; "true" = −250 µs) | −205 µs |
+
+---
+
+## 8. Photon library: technology and wire-cell integration
+
+### 8.1 What the PDVD library is
+
+The named service `protodune_photonvisibilityservice` (selected in `services_protodunevd.fcl:45`,
+"PDSP-inherited") is **defined in external `duneopdet`**, not in the checked-out repos — it lives in
+`duneopdet/.../fcl/photpropservices_dune.fcl` (on cvmfs,
+`/cvmfs/dune.opensciencegrid.org/products/dune/duneopdet/<ver>/fcl/photpropservices_dune.fcl:301,335`):
+
+```fcl
+# ProtoDUNE Single Phase with arapucas
+protodunev7_photonvisibilityservice:
+{
+  NX: 140   NY: 120   NZ: 140
+  UseCryoBoundary: true
+  DoNotLoadLibrary: false
+  LibraryFile: "PhotonPropagation/LibraryData/lib_Protodunev7_merged_avg.root"
+  XMin: -120  XMax: 120  YMin: -120  YMax: 120  ZMin: 0  ZMax: 1200
+}
+# "Make the v7 visibility service the default"
+protodune_photonvisibilityservice: @local::protodunev7_photonvisibilityservice
+```
+
+- **Technology: a full voxelized lookup library** (a `phot::PhotonLibrary` ROOT table), *not* a
+  semi-analytical model — **140 × 120 × 140 ≈ 2.35 M voxels**, each storing per-OpChannel
+  visibility, with `UseCryoBoundary: true` (grid spans the cryostat).
+- **Important caveat:** this is the **ProtoDUNE *Single-Phase* "v7" library**
+  (`lib_Protodunev7_merged_avg.root`), generated for the **SP geometry**, *not* the vertical-drift
+  geometry. PDVD reuses it as an inherited placeholder. Its OpDet count/positions and detector
+  bounds (a single-drift SP volume, `Z` 0–1200) **do not correspond** to PDVD's 40 cathode/membrane
+  X-ARAPUCAs + PMTs — so light predictions from this library are not physically faithful to PDVD. A
+  VD-specific library (or semi-analytical model) is the real prerequisite for PDVD optical reco.
+- The `.root` file resolves at runtime via `FW_SEARCH_PATH` under `PhotonPropagation/LibraryData/`;
+  it is **not** in the source repos.
+
+### 8.2 How LArSoft uses it
+
+`PhotonVisibilityService` is consumed by **`PDFastSimAr`** and **`PDFastSimXe`** (the dual
+argon/xenon `FastOptical` path, §1.1): each scintillation deposit's photons are scaled by the
+deposit-voxel's per-OpChannel visibility, Poisson-sampled into `sim::OpDetBacktrackerRecord`, and
+digitized into `raw::OpDetWaveform`. Access is
+`phot::PhotonVisibilityService::GetAllVisibilities(point)` / `GetCounts(...)`, indexed by the
+**OpChannel** of §2.3.
+
+### 8.3 Integrating PDVD light into wire-cell
+
+As for PDHD (see that doc's §7.3), the toolkit's matcher (`match/`) does **not** read a ROOT
+library — it predicts light with `WireCell::Match::SemiAnalyticalModel`
+(`match/src/SemiAnalyticalModel.cxx`), configured by `VUVHits`/`VISHits` blocks + a `Geometry`
+struct + a JSON list of `OpticalDetector{center, h, w, type, orientation}`. The two integration
+routes are the same — but PDVD is **substantially harder** than HD:
+
+1. **Semi-analytical route.** Would need a PDVD OpDet-geometry JSON (40 channels from §2.3) plus
+   VD `VUVHits`/`VISHits` parameters. **But the current toolkit port supports only flat (X)Arapuca
+   (`type 0`) and dome PMT (`type 1`) at anode/cathode orientation, and explicitly *omits*** lateral
+   PD corrections, Xe absorption, and field-cage/vertical-border corrections
+   (`SemiAnalyticalModel.h:14-20`). PDVD breaks all three: **membrane** X-ARAPUCAs sit on the lateral
+   walls (not anode/cathode orientation), the **cathode** modules are double-sided, the **PMTs** are
+   a third population, and the **Xe-doped** scintillation (the `PDFastSimAr`+`PDFastSimXe` split)
+   wants the Xe-absorption branch. So this route requires porting those missing larsim branches
+   first.
+2. **Library route.** Add a `match/` reader for a VD photon library — but the inherited SP `v7`
+   library (§8.1) is geometrically wrong, so a **VD-specific library must be generated first**
+   (a `LibraryBuildJob` over `protodunevd_v5` geometry).
+
+Either way the surrounding plumbing must also be built — and PDVD starts one rung lower than HD
+(§4): there is **no OpHit/OpFlash producer wired at all**, so steps are:
+
+3. **Flashes:** wire a PDVD DAPHNE decode → OpHit → OpFlash chain (none exists today, §3), then
+   export per-event `op.json` (`op_t`, `op_pes` per OpChannel) in the bee3/toolkit schema (§5.1).
+4. **Time anchor:** apply the §7 offset (−250 µs + `drift_v·(t_flash − t_trigger)`).
+5. **Index alignment:** keep the `op_pes` vector, the light-model OpDet order, and the geometry
+   positions all in **OpChannel order** (§2.3) — the single shared index.
+
+In short: PDVD optical-to-wire-cell integration is gated on (a) a VD-faithful light model
+(library *or* extended semi-analytical), (b) an OpFlash producer, neither of which exists yet.
 
 ---
 
@@ -289,6 +454,9 @@ supplied.
 | Geometry / wire_readout / PD-map wiring | `dunecore/dunecore/Geometry/geometry_dune.fcl` |
 | PD channel map (JSON) | `dunecore/dunecore/ChannelMap/PDVD_PDS_Mapping_v09162025.json` |
 | PD-map algorithm tool | `dunecore/dunecore/ChannelMap/PDVDPDMapAlg.hh` + `PDVDPDMapAlg_tool.cc` |
+| Detector clocks (TPC/PDS time offset, §7) | `dunecore/dunecore/Utilities/detectorclocks_dune.fcl` (`protodunevd_detectorclocks`) |
+| Photon library definition (§8, external) | `duneopdet/.../fcl/photpropservices_dune.fcl` → `protodune_photonvisibilityservice` (= `protodunev7_…`) |
+| Toolkit light model (semi-analytical) | `toolkit/match/{src,inc/WireCellMatch}/SemiAnalyticalModel.{cxx,h}` |
 | DAPHNE decode (VD) | `duneprototypes/.../Protodune/vd/RawDecoding/DAPHNEReaderPDVD_module.cc` |
 | VD Coldbox PDS decoder (empty OpHit) | `duneprototypes/.../Coldbox/vd/VDColdboxPDSDecoder_module.cc` |
 | bee3 optical loader/schema | `wire-cell-bee3/events/static/js/bee/physics/op.js`, `wire-cell-bee3/docs/overview.md` |
