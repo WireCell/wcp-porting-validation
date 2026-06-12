@@ -117,7 +117,7 @@ function(
           outname: '%s-anode%d.tar.bz2' % [raw_prefix, anode_ident],
           tags: ['raw%d' % anode_ident],
           digitize: false,
-          masks: false,
+          masks: true,
         },
       }, nin=1, nout=0),
       'rawframetap%d' % anode_ident);
