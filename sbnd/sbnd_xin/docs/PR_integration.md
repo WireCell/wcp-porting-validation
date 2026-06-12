@@ -620,4 +620,124 @@ in before any kinematics validation.
 
 ---
 
-*Sections 5-7 follow.*
+## 5. Track trajectory and dQ/dx fitting
+
+### 5.1 Algorithm overview
+
+`TrackFitting` is the calorimetric core of the PR chain. It is **not a WCT
+component** — it is a utility class instantiated by the taggers
+(`TaggerCheckSTM`, `TaggerCheckNeutrino`) and passed into every
+`PatternAlgorithms` function:
+
+| piece | where |
+|---|---|
+| Core | `clus/src/TrackFitting.cxx` (~8350 lines), `TrackFitting_Util.cxx` |
+| Parameters | `clus/inc/WireCellClus/TrackFitting.h` (`Parameters` struct), `TrackFittingPresets.h` |
+| JSON preset (uboone) | `qlport/uboone_track_fitting.json` (~45 knobs) |
+| Deep dive / reviews | `clus/docs/track_fitting.md`; `clus/docs/patternrecognition/do_single_tracking_review.md`, `do_multi_tracking_review.md` |
+
+What it does, per segment (or jointly for all segments of a PR graph via
+`do_multi_tracking`):
+
+1. **Trajectory organization/fit** — order the segment's 3D points along
+   the path (spacing control `low_dis_limit`, endpoint handling
+   `end_point_limit`), fit a smooth trajectory.
+2. **3D→2D projection** — for each trajectory point, predict its (wire,
+   tick) signature on every plane, smearing by diffusion (`DL`, `DT`, drift
+   distance) and the **SP software-filter widths** (`col_sigma_w_T`,
+   `ind_sigma_u_T/v_T`, `add_sigma_L`).
+3. **Charge measurement** — read measured charge ± uncertainty from cached
+   per-event 2D charge maps keyed `(apa, face, plane) → (wire, tick)`;
+   dead/close wires enter with reduced weight (`dead_ind/col_weight`,
+   `close_ind/col_weight`); induction vs collection carry different
+   uncertainties (`rel_uncer_ind/col`, `add_uncer_col` = 300 e⁻, ...).
+4. **dQ/dx fit** — solve for the charge per trajectory point with a
+   regularized least-squares (LASSO-style, `lambda = 0.0005`) such that the
+   predicted 2D projections match the three planes' measurements — this
+   shares charge correctly at overlaps and through dead regions.
+5. **Calorimetry** — dE/dx via the recombination model; track KE by range
+   (`ParticleDataSet` range tables) or by dE/dx integration; shower energy
+   by charge integration.
+
+The fitted result is written back to the segments (and to Bee as the
+`track_fit` point set with dQ/dx coloring; ROOT output via the magnify
+tracking visitor for the validation harness).
+
+### 5.2 Integration attention points for SBND
+
+**The defaults encode MicroBooNE's response — create
+`sbnd_track_fitting.json`** (fork by duplication; do not edit the uboone
+preset). Walk every knob and decide "geometry", "response" or "tuning":
+
+- **Hardwired uboone drift constants.** `add_sigma_L = 1.428249 ×
+  0.5505 mm / 0.5` literally contains uboone's tick-drift
+  (1.101 mm/µs × 0.5 µs = 0.5505 mm). SBND: 1.563 mm/µs × 0.5 µs =
+  0.7815 mm per tick. Audit every parameter with a length-per-tick or
+  drift-speed flavor (`min_drift_time`, `time_tick_cut` are in ticks).
+- **Diffusion**: uboone fit values `DL=6.4, DT=9.8 cm²/s`; SBND sim uses
+  4.0/8.8 (`simparams.jsonnet`) and the data values should be measured.
+  Note SBND's max drift (~201 cm) is shorter, so mis-set diffusion hurts
+  less — but set it consciously.
+- **SP filter widths** (`col_sigma_w_T`, `ind_sigma_u_T/v_T`): these mirror
+  the smearing applied by *our* SP configuration. Re-derive from the SBND
+  SP filter setup (same procedure as the uboone numbers; wire pitch is 3 mm
+  in both detectors, and U/V at ±60°, so only the filter factors change).
+- **Charge uncertainties** (`rel_uncer_*`, `add_uncer_col=300 e⁻`,
+  `add_charge_uncer=600 e⁻`): tied to uboone noise and gain; revisit after
+  comparing SBND SP charge resolution (the Q/L PE-error-style study, but on
+  charge).
+- **Recombination**: all dE/dx conversion goes through the model passed by
+  the tagger — must be the SBND Box parameters at 0.5 kV/cm (§4.2).
+
+**Two TPCs.**
+
+- The 2D charge maps are already keyed by `(apa, face, plane)` — verify a
+  cross-TPC segment gathers measurements from **both** APAs and that the
+  per-point projection uses the wpid containing that point (drift sign,
+  anode x, tick↔x mapping all flip between TPCs).
+- A trajectory crossing the cathode traverses a few cm with **no
+  measurements** (CPA structure + exclusion zones). The dead-region
+  down-weighting machinery is the natural handler — confirm the cathode
+  zone is represented as "dead" to the fitter, otherwise the LASSO will
+  smear end-of-TPC charge into the gap.
+- dQ/dx continuity across the seam is a brand-new closure check (same muon,
+  two independent TPC calibrations): use it (§5.3).
+
+**T0 correctness feeds dQ/dx directly.** The projection uses the cluster's
+T0-corrected x to find the (wire, tick) of each point; a wrong `cluster_t0`
+shifts the predicted ticks off the measured charge and the fit degrades
+silently (low fitted charge, not an error). The QL-matching quality flags
+should travel with the cluster so poorly-matched bundles can be excluded
+from calorimetric studies.
+
+**Units discipline.** The JSON preset values are in implicit units (mm,
+ticks, electrons). When writing the SBND preset, comment every entry with
+its unit and origin — this file will be the SBND calorimetry reference.
+
+### 5.3 Validation plan (MicroBooNE-style)
+
+1. **Parity harness already exists** — this is exactly what
+   `qlport/run_5384.pl` + `wire-cell-uboone-magnify-tracking-convert` +
+   `check_tagger_5384.pl` validate: per-event fitted trajectories and dQ/dx
+   in `track_com_5384_*.root` compared prototype-vs-toolkit. Keep it green
+   through any SBND-motivated refactor.
+2. **Stopping-muon dQ/dx vs residual range** (data + MC): the canonical
+   MicroBooNE calibration plot. Select STM-tagged (or geometrically
+   selected) stopping cosmics, overlay fitted dQ/dx vs residual range on
+   the muon prediction (tables + SBND recombination). Gets MIP scale,
+   recombination and electronics gain right in one figure.
+3. **Per-TPC and cross-TPC closure**: MIP dQ/dx peak separately for TPC0
+   and TPC1 (must agree); dQ/dx step across the cathode for
+   cathode-crossing muons (must be continuous within errors).
+4. **Drift-dependence**: dQ/dx vs drift distance → electron lifetime
+   consistency with the purity monitors; also exposes T0/diffusion
+   mis-settings.
+5. **MC truth closure** (§7 sample): fitted trajectory residuals vs true
+   trajectory (transverse rms vs angle), fitted total charge vs true
+   deposited charge per track, proton/muon KE by range vs truth.
+6. **Determinism**: LASSO solves must stay run-to-run identical (same
+   Eigen path; watch the compiler-FP tie lessons from QL matching).
+
+---
+
+*Sections 6-7 follow.*
