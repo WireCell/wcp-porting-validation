@@ -1,0 +1,23 @@
+# detector run evt   (20+ event spot-check list, spans all profiled runs)
+pdhd 027305 2
+pdhd 027305 11
+pdhd 027380 0
+pdhd 027380 4
+pdhd 027409 6
+pdhd 027425 12
+pdhd 027980 5
+pdhd 027980 25
+pdhd 028084 2
+pdhd 028084 24
+pdhd 029107 4
+pdhd 029107 18
+pdvd 039252 1
+pdvd 039252 16
+pdvd 039253 2
+pdvd 039253 15
+pdvd 039324 2
+pdvd 039324 8
+pdvd 039349 7
+pdvd 039349 28
+pdvd 039349 60
+pdvd 040475 6

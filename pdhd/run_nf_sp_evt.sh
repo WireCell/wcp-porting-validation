@@ -73,6 +73,7 @@ EOF
 
 ANODE=""
 ELEC_GAIN="14"
+GAIN_EXPLICIT=0
 REALITY="data"
 DUMP_ROOT=""
 CALIB_ROOT=""
@@ -85,8 +86,8 @@ while [ $# -gt 0 ]; do
         -h|--help) usage; exit 0 ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
-        -g) ELEC_GAIN="$2"; shift 2 ;;
-        -g*) ELEC_GAIN="${1#-g}"; shift ;;
+        -g) ELEC_GAIN="$2"; GAIN_EXPLICIT=1; shift 2 ;;
+        -g*) ELEC_GAIN="${1#-g}"; GAIN_EXPLICIT=1; shift ;;
         -r) REALITY="$2"; shift 2 ;;
         -r*) REALITY="${1#-r}"; shift ;;
         -d) DUMP_ROOT="$2"; shift 2 ;;
@@ -116,20 +117,26 @@ RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
 [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
 
+# Scans every input_data* root (the reorg split data into
+# input_data_<gain>_<old|new>_coh_grouping); first match wins.  Side-effect-free:
+# runs in $(...), so gain/grouping are derived from the returned path, not here.
 find_evtdir() {
-    local base="$PDHD_DIR/input_data"
-    for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
-        local rdir="$base/$rname"
-        [ -d "$rdir" ] || continue
-        for ename in "evt${EVT}" "evt_${EVT}"; do
-            local cand="$rdir/$ename"
-            if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
-                echo "$cand"; return 0
+    local base
+    for base in "$PDHD_DIR"/input_data "$PDHD_DIR"/input_data_*; do
+        [ -d "$base" ] || continue
+        for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
+            local rdir="$base/$rname"
+            [ -d "$rdir" ] || continue
+            for ename in "evt${EVT}" "evt_${EVT}"; do
+                local cand="$rdir/$ename"
+                if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
+                    echo "$cand"; return 0
+                fi
+            done
+            if ls "$rdir/protodunehd-orig-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+                echo "$rdir"; return 0
             fi
         done
-        if ls "$rdir/protodunehd-orig-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
-            echo "$rdir"; return 0
-        fi
     done
     return 1
 }
@@ -147,6 +154,22 @@ process_event() {
         return 2
     fi
     echo "Event dir: $EVTDIR"
+
+    # Auto-derive FE gain + coherent-noise grouping from the input-root dir name
+    # (input_data_<gain>_<old|new>_coh_grouping).  Unknown/legacy roots keep the
+    # toolkit defaults; explicit -g still wins (GAIN_EXPLICIT).
+    local INPUT_ROOT_NAME AUTO_PREFLIP AUTO_GAIN
+    INPUT_ROOT_NAME="${EVTDIR#$PDHD_DIR/}"; INPUT_ROOT_NAME="${INPUT_ROOT_NAME%%/*}"
+    case "$INPUT_ROOT_NAME" in
+        *_old_coh_grouping) AUTO_PREFLIP="true" ;;
+        *_new_coh_grouping) AUTO_PREFLIP="false" ;;
+        *)                  AUTO_PREFLIP="" ;;
+    esac
+    AUTO_GAIN=""
+    [[ "$INPUT_ROOT_NAME" =~ ^input_data_([0-9p]+)_ ]] && AUTO_GAIN="${BASH_REMATCH[1]//p/.}"
+    if [ "$GAIN_EXPLICIT" = "0" ] && [ -n "$AUTO_GAIN" ]; then
+        ELEC_GAIN="$AUTO_GAIN"
+    fi
 
     if ! ls "$EVTDIR/protodunehd-orig-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
         echo "[skip] run=$RUN evt=$EVT: no protodunehd-orig-frames-anode*.tar.bz2 in $EVTDIR" >&2
@@ -228,6 +251,17 @@ process_event() {
         echo "RawDecon/Decon dump: ON (pre/post-filter taps into SP frame archives)"
     fi
 
+    # Coherent-noise grouping: auto-selected from the input-root dir name
+    # (derived above).  *_old_coh_grouping -> pre-flip (run-027409 etc. decoded
+    # with the pre-2025-06-30 channel map); *_new_coh_grouping / unknown -> default.
+    local COH_PREFLIP_TLA=()
+    if [ "$AUTO_PREFLIP" = "true" ]; then
+        COH_PREFLIP_TLA=(--tla-code coh_groups_preflip=true)
+        echo "[coh] $INPUT_ROOT_NAME -> PRE-FLIP (old) coherent-noise grouping"
+    elif [ "$AUTO_PREFLIP" = "false" ]; then
+        echo "[coh] $INPUT_ROOT_NAME -> POST-FLIP (new) grouping (toolkit default)"
+    fi
+
     wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
@@ -238,6 +272,7 @@ process_event() {
         --tla-str sp_prefix="${WORKDIR}/protodunehd-sp-frames" \
         --tla-str reality="${REALITY}" \
         --tla-code anode_indices="${ANODE_CODE}" \
+        "${COH_PREFLIP_TLA[@]}" \
         "${DUMP_TLA[@]}" \
         "${L1SP_TLA[@]}" \
         "${RAWDECON_TLA[@]}" \

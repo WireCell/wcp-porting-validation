@@ -1,0 +1,7 @@
+# detector run evt   (baseline event set for img+clus optimization A/B)
+pdhd 027409 0
+pdhd 027980 3
+pdhd 028084 18
+pdhd 027305 0
+pdvd 039349 0
+pdvd 039252 5

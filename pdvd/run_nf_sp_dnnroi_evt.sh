@@ -54,8 +54,8 @@ Options:
                  DNN_ROI_SP/scripts/verify_wirecell_dnn.py.
   -T <thresh>    DNN sigmoid binarization threshold passed as
                  --tla-code dnnroi_mask_thresh=<val>.  Default: 0.2.
-  -L <on|off>    Wire L1SPFilterPD after DNN-ROI (default: off; auto-on
-                 when -N is dnn or hybrid).  When on, the post-DNN
+  -L <on|off>    Wire L1SPFilterPD after DNN-ROI (default: on; pass
+                 -L off to disable).  When on, the post-DNN
                  gauss/wiener feeds L1SPFilterPD via the
                  protodunevd/l1sp_after_dnnroi.jsonnet envelope.  Final
                  frame archive then carries L1SP-corrected gauss%d /
@@ -204,13 +204,11 @@ case "$L1SP_MODE" in
     *) echo "[err] -N must be one of process|heur|dnn|hybrid (got '$L1SP_MODE')" >&2; exit 1 ;;
 esac
 
-# -N dnn|hybrid auto-enables L1SP unless -L was given explicitly.
+# L1SP defaults ON (matches run_nf_sp_evt.sh, which always wires L1SP).
+# Mode comes from -N (default 'process'); pass -L off to disable.
 # -c (calib dump) also auto-enables L1SP and overrides the mode to 'dump'.
 if [ "$L1SP_EXPLICIT" = "0" ]; then
-    case "$L1SP_MODE" in
-        dnn|hybrid) L1SP="on" ;;
-        *)          L1SP="off" ;;
-    esac
+    L1SP="on"
 fi
 if [ -n "$CALIB_ROOT" ]; then
     L1SP="on"

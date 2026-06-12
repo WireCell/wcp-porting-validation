@@ -15,9 +15,9 @@ GROUPS = [("imaging-group02", 0, [0, 2]), ("imaging-group13", 1, [1, 3])]
 
 def anode_args(idx):
     if idx % 2 == 0:
-        return '--speed "-1.6*mm/us" --t0 "250*us" --x0 "-358*cm"'
+        return '--speed "-1.6*mm/us" --t0 "0*us" --x0 "-358*cm"'
     else:
-        return '--speed "1.6*mm/us" --t0 "250*us" --x0 "358*cm"'
+        return '--speed "1.6*mm/us" --t0 "0*us" --x0 "358*cm"'
 
 def run_bee_blobs(rse, density, geo_idx, out_name, files):
     cmd = ('wirecell-img bee-blobs -g protodunehd -s uniform -d %f %s %s'

@@ -7,7 +7,7 @@
 # override with PDVD_MAX_JOBS=N).  Events with missing inputs are skipped.
 #
 # Input:  work/<run>_<evt>[_sel<TAG>]/ (from imaging) or input_data event dir as fallback
-# Output: work/<run>_<evt>[_sel<TAG>]/mabc-anode{N}.zip, mabc-all-apa.zip
+# Output: work/<run>_<evt>[_sel<TAG>]/mabc-anode{N}.zip, mabc-group0123.zip, mabc-group4567.zip, mabc-all-apa.zip
 
 set -e
 
@@ -15,6 +15,16 @@ PDVD_DIR=$(cd "$(dirname "$0")" && pwd)
 
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
+
+# Preload tcmalloc for the clustering wire-cell process (~20% faster on
+# busy events).  Unlocked by the get_closest_blob pointer-order fix: with
+# it, glibc and tcmalloc outputs are byte-identical on the A/B event set.
+# Disable with WCT_TCMALLOC=off.
+TCMALLOC_SO=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+WC_PRELOAD=""
+if [ "${WCT_TCMALLOC:-on}" = "on" ] && [ -f "$TCMALLOC_SO" ]; then
+    WC_PRELOAD="LD_PRELOAD=$TCMALLOC_SO"
+fi
 
 . "$PDVD_DIR/_runlib.sh"
 
@@ -119,17 +129,35 @@ process_event() {
 
     cd "$PDVD_DIR"
     rm -f "$LOG"
-    wire-cell \
+    # Pre-compile the config with wcsonnet and feed wire-cell pure JSON,
+    # with GOGC=off.  Rationale: an intermittent clustering SIGABRT was
+    # identified as the embedded gojsonnet Go runtime GC crashing
+    # ("traceback did not unwind completely").  libgojsonnet is hard-linked
+    # so its runtime threads exist regardless of config format, but with a
+    # pure-JSON config wire-cell never evaluates jsonnet (no Go heap) and
+    # GOGC=off disables the Go collector entirely, including the 2-minute
+    # periodic forced GC that is the crash vector.  Config is identical
+    # (same pattern as imaging -P).
+    local CFG_JSON="$WORKDIR/.wct-clus${TAG_SUFFIX}.json"
+    wcsonnet \
+        -A "input=${CLUS_INPUT}" \
+        -S "anode_indices=${ANODE_CODE}" \
+        -A "output_dir=${WORKDIR}" \
+        -S "run=${RUN_STRIPPED}" \
+        -S "subrun=${SUBRUN}" \
+        -S "event=${EVENT_NO}" \
+        -S "stepped_center_fallback=${PDVD_STEPPED_CENTER_FALLBACK:-false}" \
+        -o "$CFG_JSON" wct-clustering.jsonnet
+    if [ ! -s "$CFG_JSON" ]; then
+        echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
+        return 1
+    fi
+    env $WC_PRELOAD GOGC=off wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
         -L debug \
-        --tla-str "input=${CLUS_INPUT}" \
-        --tla-code "anode_indices=${ANODE_CODE}" \
-        --tla-str "output_dir=${WORKDIR}" \
-        --tla-code "run=${RUN_STRIPPED}" \
-        --tla-code "subrun=${SUBRUN}" \
-        --tla-code "event=${EVENT_NO}" \
-        -c wct-clustering.jsonnet
+        -c "$CFG_JSON"
+    rm -f "$CFG_JSON"
 
     echo "Clustering done -> $WORKDIR"
 }

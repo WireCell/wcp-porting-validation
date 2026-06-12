@@ -46,7 +46,7 @@ function(
   run               = 0,
   subrun            = 0,
   event             = 0,
-  nticks            = 6000,  // pdvd SP frame length (3 ms at 500 ns/tick)
+  nticks            = 6000,  // fallback only; readout varies by run, run_sp_to_magnify_evt.sh probes and passes the actual value
   include_raw       = true,
   raw_input_prefix  = 'protodune-sp-frames-raw',
   include_orig      = false,
@@ -66,7 +66,7 @@ function(
     total_time_bin: nticks,
   };
 
-  local mag = (import 'magnify-sinks.jsonnet')(
+  local mag = (import 'pgrapher/experiment/protodunevd/magnify-sinks.jsonnet')(
     { anodes: anodes }, output_file, runinfo=runinfo);
 
   // Per-anode decon pipeline: FrameFileSource(gauss,wiener) → Retagger →
@@ -105,7 +105,7 @@ function(
       type: 'DumpFrames',
       name: 'dump_anode%d' % aid,
     }, nin=1, nout=0);
-    g.pipeline([src, retag, mag.decon_pipe[n], dump],
+    g.pipeline([src, retag, mag.decon_trun_pipe[n], dump],
                'magnify_graph_anode%d' % aid);
 
   // Per-anode raw pipeline: FrameFileSource(raw) → MagnifySink(UPDATE) → DumpFrames.

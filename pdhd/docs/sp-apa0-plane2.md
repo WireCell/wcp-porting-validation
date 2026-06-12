@@ -11,9 +11,82 @@ chain) and [nf.md](nf.md). For the broader workflow see
 document; the tuning ideas in the last section are *suggestions* to be applied
 later as togglable, default-off knobs so production stays bit-identical.
 
+> **⚠️ 2026-06-08 CORRECTION — read §0 first.** An earlier version of this
+> document (and §1–§5 below) **misidentified which physical plane sits in which
+> processing slot**, and therefore drew the FR/ROI-path conclusions backwards.
+> §0 states the empirically-established ground truth; the legacy §1–§5 are kept
+> for context but every "plane 2 = W / V→collection-FR / W on collection path"
+> claim in them is **inverted** — see §0 for the correct mapping.
+
 ---
 
-## 1. The anomaly
+## 0. Ground truth (what the SP chain actually does)
+
+Established from the OmnibusSigProc channel-map debug (`cid → lind`) plus the
+per-plane `m_nwires`, on run 027409 evt 0, APA0 — and confirmed algebraically.
+
+### The mechanism: `plane2layer` is applied **twice** and cancels for the FR
+
+`plane2layer` is consumed in **two** places:
+
+1. **channel routing** (`OmnibusSigProc.cxx:254`): a physical plane `p`'s channels
+   are stored in processing **slot** `s = plane2layer[p]`;
+2. **field-response lookup** (`OmnibusSigProc.cxx:907`): slot `s` is deconvolved
+   with `fravg.planes[plane2layer[s]]`.
+
+`[0, 2, 1]` is a **transposition (self-inverse)**, so a physical plane `p` ends up
+deconvolved with `planes[plane2layer[plane2layer[p]]] = planes[p]` — **its own
+Garfield FR**. The double-application **cancels for the FR↔data pairing** and
+survives only as a **slot (= ROI-path) swap**. The ROI-path branch keys on the
+slot index (`if (iplane != 2) … else collection`, `OmnibusSigProc.cxx:1891`).
+
+### What production (`plane2layer=[0,2,1]`) actually produces
+
+| physical | channels | slot | ROI path | FR used (own Garfield) | gauss occ (027409:0) |
+|----------|----------|------|----------|------------------------|----------------------|
+| U | 0–799 | 0 | induction | `planes[0]` = U | 1.737% |
+| **W** | 1600–2559 | **1** | **induction** | `planes[2]` = W collection | 1.105% |
+| **V** | 800–1599 | **2** | **collection** | `planes[1]` = V induction | 1.441% |
+
+So production **already** routes **V (now collects) → collection ROI path** and
+**W (now induces) → induction ROI path**, with **each plane keeping its own/previous
+field response**. That is exactly the intended behaviour ("switch the ROI chain;
+deconvolve with each plane's own FR"); no further swap is needed to achieve it.
+
+### Where the legacy §1–§5 went wrong
+
+- Slot 2 was read as "plane 2 = W". Slot 2 actually holds **V** (cid 800–1599).
+  The empirical "**plane 2** takes the COLLECTION path" (§2) is correct as a *slot*
+  statement but the plane is **V**, not W.
+- The FR cancellation was missed, so the §1 table "V → collection FR, W → induction
+  FR" is wrong: **each plane is deconvolved with its own FR** (V→`planes[1]`,
+  W→`planes[2]`).
+- "W is LF-limited; collection 1.1% vs induction 0.2%" rested on the inverted
+  labels. Re-measured: production **W is on the induction path *with its collection
+  FR* at 1.105%**; the ~0.3% figure was W on the induction path *with the induction
+  FR* — i.e. the lever that crushed W was the **field response, not the LF filter**.
+
+### The abandoned geometry-relabel experiment (issue #322 style)
+
+A toggle (`apa0_vw_geom_swap`) was prototyped that relabels APA0's V↔W plane
+positions in a dedicated wires file and resets `plane2layer→[0,1,2]`. Because the
+slots were already as desired, the relabel **kept the ROI paths unchanged but
+flipped the FRs** (V→collection FR, W→induction FR) — the opposite of "keep each
+plane's own FR". U stayed byte-identical; V & W rawdecon changed grossly (the FR
+flip). Per user decision (keep each plane's own FR) the experiment was **reverted**;
+production is unchanged. Ground-truth notes: `/home/xqian/tmp/GROUND_TRUTH_plane2layer.md`.
+
+### Consequence for "optimize W"
+
+W is **already** on the induction ROI path (slot 1). Tuning its admission
+(e.g. softening the induction LF high-pass `ROI_tight_lf` for slot 1 only, which
+needs a per-plane LF factorization since the LF filters are currently single
+scalars shared across slots) can be done **directly on stock production** — no
+swap. Any such tuning must be measured against the real **1.105%** W baseline.
+
+---
+
+## 1. The anomaly  *(legacy — see §0 correction; mapping below is inverted)*
 
 In a DUNE-HD APA the three wire planes are **U** (induction, plane index 0),
 **V** (induction, plane index 1) and **W / Z** (collection, plane index 2).
@@ -110,6 +183,39 @@ A wire-domain smoothing filter is also applied during `decon_2D_init`: plane 2
 uses `Wire_col` (σ = 10/√π ≈ 5.64, `sp-filters.jsonnet:84`), much wider than the
 induction `Wire_ind` (σ ≈ 0.42). This widens charge across collection wires; for
 a now-inducting plane 2 it is worth revisiting (see §5).
+
+### Empirically confirmed (run 027409, evt 0, APA0)
+
+> **⚠️ Inverted labels — see §0.** The debug print below indexes by **slot**
+> (`iplane`), not physical plane. Slot 2 holds **V**, slot 1 holds **W** (per the
+> `cid→lind` map in §0). So "plane 2 takes the COLLECTION path" really means
+> **V takes the collection path**, and "plane 2 reports layer=1 (induction FR)"
+> means V is deconvolved with its **own** induction FR (`planes[1]`). The text
+> below, written under the old W-in-slot-2 reading, is kept verbatim for context.
+
+A temporary `log->info` was added at the ROI-path branch (`OmnibusSigProc.cxx:1891/1900`)
+and the event reprocessed (`./run_nf_sp_evt.sh -a 0 027409 0`). Per-plane output:
+
+```
+<OmnibusSigProc:apa0sigproc0> ROIpath: aid=0 iplane=0 layer=0 path=INDUCTION(3-step:tighter+tight+loose)
+<OmnibusSigProc:apa0sigproc0> ROIpath: aid=0 iplane=1 layer=2 path=INDUCTION(3-step:tighter+tight+loose)
+<OmnibusSigProc:apa0sigproc0> ROIpath: aid=0 iplane=2 layer=1 path=COLLECTION(simple:single-tight,no-LF)
+```
+
+This confirms two things directly:
+
+- **Plane 2 takes the COLLECTION (simpler) path**, not the induction path. The
+  `plane2layer` remap does *not* reroute the ROI processing — the branch keys on
+  the raw plane index (`iplane==2`), so the mapping cannot push plane 2 onto the
+  induction ROI path.
+- **The kernel is swapped, the path is not**: plane 2 reports `layer=1` (the
+  V/induction field response) while plane 1 reports `layer=2` (the W/collection
+  response) — the V↔W swap is real and affects the deconvolution kernel, yet
+  plane 2 is still processed by the collection ROI branch. (The debug print was
+  reverted after confirmation; production is unchanged.)
+
+This is precisely the mismatch motivating Tier-2 idea (4) in §5: induction-like
+data going through the collection ROI path.
 
 ---
 
@@ -255,3 +361,122 @@ recover sub-threshold broad signal; (3) last, as it also loosens U/V refine.
 | `sigproc/src/OmnibusSigProc.cxx` | 1860–1862, 2045 | `filter_responses_tn` consumption |
 | `sigproc/src/OmnibusSigProc.cxx` | 1890–1928 | Per-plane ROI branch (collection vs induction path) |
 | `pdhd/docs/sp.md` | whole | General SP chain (note the `plane2layer` "U/V" mislabel at 34/37) |
+
+---
+
+## 7. Implemented: APA0 W induction-path ROI tune (`apa0_w_roi_tune`)
+
+> Sibling fix for APA1–3: `sp-w-collection-roi-break.md` — prolonged W signals
+> on the *collection* path are fragmented at ROI finding (`cal_RMS` occupancy
+> inflation), fixed by `roi_mad_rms` + `w_col_break_roi_tune` (collection
+> BreakROI off, mirroring this tune's slot-1 disable).
+
+This section is the **authoritative, empirically-validated** outcome of the
+"optimize W" effort (§0.6). It supersedes the speculative collection-path
+suggestions of §5 — those were written before §0's correction established that W
+is already on the **induction** ROI path (slot 1), so the collection knobs in §5
+do not touch W.
+
+### Diagnosis (run 027409 evt 0, APA0, W region ch 2360–2400, t < 1600)
+
+The W signal's gaps are **not** a loose-ROI-finding failure — they are
+**refinement erosion**. Measured occupancy through the stages:
+
+| stage | W-region occ | note |
+|------|------|------|
+| loose-ROI ceiling (`cleanup_roi`, FR-on) | **10.2 %** | the realistic target; signal *is* found |
+| production gauss (`r_th_factor=2.5`, default refine) | 2.3 % | erosion: BreakROI split −32 %, ShrinkROI −42 % |
+| **tuned gauss** (`apa0_w_roi_tune`) | **6.3 %** | recovers most of the ceiling |
+
+So **Q1 (good loose ROIs?) = yes**; **Q2 (survive refinement?) = the problem**,
+and it is controllable through the existing refinement knobs.
+
+### The toggle (W-only, per-plane)
+
+`make_sigproc(..., apa0_w_roi_tune=true)` in `sp.jsonnet`. **Default `true` as of
+2026-06-08** — promoted to the standard PDHD config (this changes the APA0 W SP
+output for *all* PDHD chains vs the pre-2026-06-08 baseline; it is W-only, so U
+and V are unaffected). When the default holds *and* `anode.data.ident==0`, the
+refinement is loosened **on slot 1 (W) only**. Set **`false`** to recover the
+pre-tune APA0 W behaviour (no per-plane keys emitted ⇒ the scalar knobs apply ⇒
+byte-identical to pre-2026-06-08 production):
+
+| knob (slot 1 = W) | prod (off) | tuned (on) | effect |
+|------|-----------|-----------|--------|
+| `r_break_roi_loop` | 2 | **0** | no `BreakROI` split of the prolonged W signal |
+| `r_pad` | 5 | **20** | wider `ShrinkROI` margin kept around each core |
+| `r_th_factor` | 2.5 | **1.5** | lower refine "is-signal" threshold; weak tails count as support |
+
+**W-only via per-plane factorization (the C++ change).** Originally these were
+scalar `OmnibusSigProc` keys applied to APA0's *whole* induction path (U + W),
+which perturbed U (the DNN-ROI plane). They are now **per-plane**: each of
+`m_r_th_factor` / `m_r_pad` / `m_r_break_roi_loop` accepts an optional size-3
+array (`r_th_factor_planes` / `r_pad_planes` / `r_break_roi_loop_planes`,
+indexed by slot) with an **empty-vector ⇒ scalar-broadcast** fallback so the
+off-path is bit-identical. `ROI_refinement` reads them through
+`get_th_factor(plane)` / `get_pad(plane)` accessors (the plane is the slot the
+ROI was built with, `roi->get_plane()`); the break-loop count is per-plane in
+`OmnibusSigProc`. `sp.jsonnet` sets `[U, W, V] = [2.5, 1.5, 2.5]` etc., so
+**U (slot 0) and V/collection (slot 2) stay at the production values**. Verified:
+on 027409 evt 0, OFF vs W-only the final **U and V gauss are byte-identical**
+(through MP2/MP3) and only **W** differs; W-region 2.6 % → 6.3 %, U unchanged.
+The slot index is confirmed empirically — W moves, U does not, so slot 1 = W.
+
+### Why `filter_responses_tn` was left ON (the FR-correction probe)
+
+`filter_responses_tn` (APA0 `[plane0, plane2, plane1]`) is the per-plane FR
+correction multiplied into `overall_resp` **before** the ROI-finding decon
+(`OmnibusSigProc.cxx:1860`). It shapes the ROI mask only — the final gauss charge
+is reloaded clean either way (`:2045`), so U and V gauss are **byte-identical**
+on/off. For **W** it is essential **conditioning**: disabling it makes the
+induction-path loose ROI fire almost everywhere —
+
+| | loose-ROI ceiling | tuned gauss |
+|---|---|---|
+| FR **on** (production) | 10.2 % | 6.3 % |
+| FR **off** | **96.4 %** | 25.8 % |
+
+FR-off = maximum efficiency, near-zero purity (the whole region is flagged), so
+it is **not** used. The realistic ceiling is the FR-on 10.2 %.
+
+### Residual gap and how to close it
+
+Tuned gauss (6.3 %) vs FR-on ceiling (10.2 %): the remainder is `ShrinkROI` +
+`CleanUpInductionROIs` erosion (BreakROI is already disabled). Closing it further
+is now purely a tuning question on W's per-plane knobs (the C++ path is in place);
+`CleanUpInductionROIs` has no exposed knob, so full closure would need an
+additional W-slot threshold there.
+
+### Wiring & propagation through DNN-ROI
+
+- **Production NF-SP** (`wct-nf-sp.jsonnet`) does not pass the toggle ⇒ inherits
+  the `sp.jsonnet` default, which is now **`true`** (2026-06-08) ⇒ the APA0 W-tune
+  is ON in the SP chain too (W-only; U/V unchanged).
+- **DNN-ROI driver** (`wct-nf-sp-dnnroi.jsonnet`) also passes `apa0_w_roi_tune=true`
+  explicitly (redundant with the new default; `--w-tune false` on
+  `run_nf_sp_dnnroi_evt.sh` recovers off); the tune flows through unchanged (W's collection-role output is the
+  traditional SP gauss, untouched by the U/V DNN). DNN-ROI chain W-region:
+  **2.6 % → 6.3 %**. OFF vs W-only, **U and V gauss are byte-identical** (verified
+  per-plane through MP2/MP3); only W differs — the W-only isolation is complete
+  at the final output.
+
+### Validation artifacts
+
+| file | what |
+|------|------|
+| `work/027409_0_preflip_wtune/magnify-…-apa0-dnnroi.root` | **DNN-ROI, W-tune ON (new default) + pre-flip coh grouping** — the standard for run-027409 (pre-flip) data, 2026-06-08 |
+| `work/027409_0_woff/magnify-…-apa0-dnnroi.root` | **DNN-ROI, tune OFF** (new binary) |
+| `work/027409_0_wonly/magnify-…-apa0-dnnroi.root` | **DNN-ROI, W-only tune ON** (U/V identical to off) |
+| `work/027409_0_wtune/magnify-…-apa0-dnnroi.root` | earlier all-induction tune (U also moved — superseded) |
+| `work/027409_0/magnify-…-apa0-looseROI-FRon.root` | loose-ROI ceiling, FR on (10.2 %) |
+| `work/027409_0/magnify-…-apa0-looseROI-FRoff.root` | loose-ROI ceiling, FR off (96.4 %) |
+| `work/027409_0/magnify-…-apa0-Wtuned-noFR.root` | tuned gauss, FR off (25.8 %) |
+
+### Source reference (additions)
+
+| File | Role |
+|------|------|
+| `cfg/pgrapher/experiment/pdhd/sp.jsonnet` | `apa0_w_roi_tune` param + `roi_tune` gate; emits per-plane `r_{th_factor,pad,break_roi_loop}_planes` `[U,W,V]` arrays when on |
+| `wcp-porting-img/pdhd/wct-nf-sp-dnnroi.jsonnet`, `run_nf_sp_dnnroi_evt.sh` | `apa0_w_roi_tune=true` default + pass-through; `--w-tune` CLI flag |
+| `sigproc/src/ROI_refinement.{h,cxx}` | per-plane `th_factor_v`/`pad_v` + `get_th_factor(plane)`/`get_pad(plane)` accessors (empty ⇒ scalar fallback); consumed in `load_data`, `generate_merge_ROIs`, `ShrinkROI`, `BreakROI` |
+| `sigproc/src/OmnibusSigProc.{h,cxx}` | reads `*_planes` config arrays; applies via `set_th_factor_planes`/`set_pad_planes`; per-plane break-loop count |

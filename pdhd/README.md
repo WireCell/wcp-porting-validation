@@ -8,11 +8,17 @@ ProtoDUNE-HD signal-processed data.
 Every `run_*.sh` script (except `run_select_evt.sh`, which is interactive)
 shares three ergonomic features provided by `_runlib.sh`:
 
-**No-arg listing** — run any script with no arguments to list available runs:
+**No-arg listing** — run any script with no arguments to list available runs
+(scanned across every `input_data*` root):
 ```bash
 ./run_img_evt.sh
-# Available runs under .../pdhd/input_data:
-#   run027409     events: 1 2 3 4 5 6 7
+# Available runs under .../pdhd/input_data_14_old_coh_grouping:
+#   run027380     events: 0 1 2 3 4 5 6 7
+#   run027409     events: 0 1 2 3 4 5 6 7 12
+#   run027425     events: 5 6 9 12 20 21 27 32 33
+# Available runs under .../pdhd/input_data_7p8_new_coh_grouping:
+#   run027980     events: 0 1 2 3 4
+#   run029107     events: 0 1 2 3 4
 ```
 
 **`EVT=all` parallel mode** — pass `all` as the event number to process every
@@ -21,8 +27,14 @@ discovered event for that run in parallel:
 ./run_img_evt.sh 027409 all
 ./run_clus_evt.sh 027409 all
 ```
-Events are discovered from `input_data/run<N>/evt_*` subdirectories and from
-existing `work/<RUN_PADDED>_<EVT>/` directories.  Jobs run concurrently up to
+Events are discovered from `input_data*/run<N>/evt_*` subdirectories and from
+existing `work/<RUN_PADDED>_<EVT>/` directories.  Input data lives in
+`input_data_<gain>_<old|new>_coh_grouping` roots (e.g.
+`input_data_14_old_coh_grouping`, `input_data_7p8_new_coh_grouping`); the NF/SP
+runners scan all of them, pick the root holding the requested run, and
+**auto-derive the FE gain (14 vs 7.8 mV/fC) and coherent-noise grouping
+(old/pre-flip vs new/post-flip) from that root's name** — no `-g` flag or
+`.coh_preflip` sentinel needed (see `docs/pdhd-coh-groups-preflip.md`).  Jobs run concurrently up to
 `$(nproc)` (override with `PDHD_MAX_JOBS=N`).  Per-event logs go to
 `work/.batch_<stage>_<run>_<evt>.log`.  A summary at the end shows ok / failed
 counts and the failed event ids.
@@ -55,12 +67,14 @@ See `docs/nf.md`, `docs/sp.md`, `docs/nf_sp_workflow.md` for details.
 ./run_nf_sp_dnnroi_evt.sh [-a ANODE] [-D cpu|gpu] [-M MODEL] [-m pp|mp] [-L on|off] <run> <evt>
 ```
 
-Runs NF + SP + DNN-ROI on a single anode/event using the TorchScript
-model at `wire-cell-data/dnnroi/pdhd/CP43.ts`.
+Runs NF + SP + DNN-ROI on an event using the TorchScript model at
+`wire-cell-data/dnnroi/pdhd/CP43.ts`.  By default every anode present in
+the event is processed (the four PDHD APAs are geometrically identical, so
+the one shared model applies to each); pass `-a N` to restrict to one APA.
 
 | Flag | Meaning | Default |
 |------|---------|---------|
-| `-a N`        | Anode index 0–3 | 0 |
+| `-a N`        | Anode index 0–3 | all anodes present |
 | `-D cpu\|gpu` | TorchService device | `cpu` |
 | `-M PATH`     | TorchScript model path (resolved via `WIRECELL_PATH`) | `dnnroi/pdhd/CP43.ts` |
 | `-m pp\|mp`   | DNN-ROI wiring: `pp` (per-plane sequential, two 800-ch forwards) or `mp` (stacked, one 1600-ch forward) | `pp` |
@@ -217,6 +231,9 @@ Imaging instances come from the active cluster tarballs; the clustering and
 dead instances are taken from each event's `mabc-all-apa.zip` (so run
 `run_clus_evt.sh <run> all` first).  See `clus/docs/bee_output.md`
 (APA grouping) for how the per-APA vs full-detector dumps are configured.
+
+A standing inventory of the processed runs and their combined Bee links lives in
+[docs/pdhd-standalone-run-bee-links.md](docs/pdhd-standalone-run-bee-links.md).
 
 ## Selection (optional pre-processing)
 

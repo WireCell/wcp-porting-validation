@@ -40,13 +40,20 @@ for the per-`nticks` padding table.
 ```
 
 Output (`work/<RUN_PADDED>_<EVT>/`):
-`protodune-sp-dnnroi-frames-anode{N}.tar.bz2` — a standard SP-style archive
-with trace tags `gauss{N}` (the DNN-ROI output) and `wiener{N}` (SP Wiener,
-carrying the per-channel threshold summary).
+`protodune-sp-dnnroi-frames-anode{N}.tar.bz2` — a standard SP-style archive.
+Trace tags depend on whether L1SP is wired:
+
+- **L1SP on (default)**: `gauss{N}` and `wiener{N}`, both from the post-DNN
+  `L1SPFilterPD`. This is what the imaging/clustering chain needs.
+- **L1SP off** (`-L off`): `gauss{N}` only (raw DNN-ROI output). No
+  `wiener{N}`, so these frames are **not** directly imageable — imaging's
+  `MaskSlice` requires matching `gauss`/`wiener` and otherwise throws
+  `charge_traces.size()!=wiener_traces.size()`.
 
 Options: `-a` anode (default all 8), `-r` data|sim, `-D` cpu|gpu, `-M` model
-`.ts` (resolved via `WIRECELL_PATH`), `-X` debug-dump basename. The QAT INT8
-model is CPU-only.
+`.ts` (resolved via `WIRECELL_PATH`), `-X` debug-dump basename, `-N`
+process|dnn|hybrid (L1SP mode, default process), `--loose-heur` (loosen L1SP
+pre-filters). The QAT INT8 model is CPU-only.
 
 ## Magnify ROOT
 
@@ -65,9 +72,45 @@ gets a `-dnnroi` suffix.
 through `DNN_ROI_SP/scripts/verify_wirecell_dnn.py` to confirm the toolkit C++
 node reproduces standalone PyTorch inference.
 
+## End-to-end: DNN-ROI → imaging → clustering
+
+The imaging step (`run_img_evt.sh`) reads `work/<RUN>_<EVT>/protodune-sp-frames-anode{N}.tar.bz2`
+and requires both `gauss` and `wiener` tags. The DNN runner writes
+`protodune-sp-**dnnroi**-frames-anode{N}.tar.bz2`, so bridge the two names with
+a symlink before imaging (the runner does this for you in batch; do it by hand
+for a one-off):
+
+```
+run=039324; evt=0; wd=work/${run}_${evt}
+./run_nf_sp_dnnroi_evt.sh -D cpu -P fp32 -r data -N hybrid --loose-heur $run $evt
+for f in $wd/protodune-sp-dnnroi-frames-anode*.tar.bz2; do
+  b=$(basename "$f"); ln -sf "$b" "$wd/${b/sp-dnnroi-frames/sp-frames}"
+done
+./run_img_evt.sh  $run $evt     # -> clusters-apa-anode{N}-ms-{active,masked}.tar.gz
+./run_clus_evt.sh $run $evt     # -> mabc-anode{N}*.zip + mabc-all-apa.zip
+```
+
+A per-run Bee link (all events of a run in one set) is then:
+
+```
+./run_bee_combined_evt.sh $run  # builds data/<evt>/ for every event, zips, uploads, prints the URL
+```
+
+**Gotcha — silent non-DNN fallback.** If the symlink is missing, `run_img_evt.sh`
+falls back to the pre-made `protodune-sp-frames` under `input_data/` (standard
+non-DNN SP), producing valid-looking but wrong (non-DNN) clusters. Always
+confirm the `protodune-sp-frames-anode0` symlink exists in the work dir.
+
+**Gotcha — parallel `wire-cell` gets reaped.** Running ~4 DNN+L1SP `wire-cell`
+processes at once on the shared box has them SIGKILLed (`Killed`) in lockstep —
+not memory (a single event peaks <2 GiB), apparently an external watchdog/
+process cap. Run SP serially for heavy (cosmic, `nticks=8000`) runs.
+
 ## Notes
 
 - Anodes 0–3 (bottom drift volume) are the training corpus (crp1–4); anodes
   4–7 (top drift volume) are out-of-domain.
-- L1SP-after-DNN is not wired; L1SP inside SP is OFF in the DNN chain so the
-  DNN-ROI debug input tags survive.
+- L1SP-after-DNN now defaults **ON** in `run_nf_sp_dnnroi_evt.sh` (matches
+  `run_nf_sp_evt.sh`); mode comes from `-N` (default `process`), pass `-L off`
+  to disable. L1SP supplies the `wiener` tag the imaging chain needs; with
+  `-L off` only the raw DNN `gauss` survives (used for `-X` debug input dumps).

@@ -44,6 +44,26 @@ function(
   l1sp_pd_adj_max_hops = 3,
   dump_rawdecon = false,
 
+  // APA0 W-plane induction-path ROI-refinement tune (sp.jsonnet
+  // apa0_w_roi_tune).  Default true in the DNN chain: recovers the
+  // gap-prone APA0 W signal (no BreakROI split, wider ShrinkROI pad,
+  // lower refine threshold; applies to APA0 U+W, V untouched).  Set
+  // false to recover the pre-tune, bit-identical APA0 SP behaviour.
+  apa0_w_roi_tune = true,
+
+  // Prolonged-W-signal fix passthroughs (sp.jsonnet roi_mad_rms /
+  // w_col_break_roi_tune; both default true there).  Set false for the
+  // bit-identical pre-fix SP.  See docs/sp-w-collection-roi-break.md.
+  sp_roi_mad_rms = true,
+  sp_w_col_break_roi_tune = true,
+
+  // PRE-FLIP coherent-noise grouping override (run-027409 etc. decoded with the
+  // pre-2025-06-30 channel map).  Default false = use the toolkit's latest
+  // (post-flip, map-derived) groups -> bit-identical for colleagues.  The run
+  // scripts set this true when the local `.coh_preflip` sentinel is present.
+  // See pdhd-coh-groups-preflip.jsonnet.
+  coh_groups_preflip = false,
+
   // DNN-ROI specific
   use_dnnroi    = true,
   // Default = FP32 best KD (6-ch).  Resolved via WIRECELL_PATH.
@@ -102,16 +122,31 @@ function(
   l1sp_pd_gmax_min         = 1500.0,
   l1sp_pd_min_length       = 30,
   l1sp_pd_energy_frac_thr  = 0.66,
+
+  // SP ROI-stage diagnosis sink.  When true, the OmnibusSigProc debug +
+  // multi-plane-protection modes are forced ON (matching the production
+  // DNN-chain sp_override, so the SP-internal ROI processing is identical)
+  // and the per-stage ROI tags (tight_lf, cleanup_roi, break_roi_1st/2nd,
+  // shrink_roi, extend_roi, decon_charge, mp2/mp3_roi) are added to the
+  // FrameFileSink.  Use together with use_dnnroi=false: the DNN-ROI and
+  // L1SP envelopes contain FrameMergers whose mergemaps drop these tags,
+  // so the SP frame must reach the sink directly.  See
+  // docs/sp-w-collection-breakroi.md.
+  sp_roi_debug_sink = false,
 )
 
   local tools = tools_all;
   local use_resampler = (reality == 'data');
 
   local base = import 'pgrapher/experiment/pdhd/chndb-base.jsonnet';
+  local coh_preflip = import 'pdhd-coh-groups-preflip.jsonnet';
   local chndb = [{
     type: 'OmniChannelNoiseDB',
     name: 'ocndbperfect%d' % n,
-    data: base(params, tools.anodes[n], tools.field, n, use_freqmask=use_freqmask) { dft: wc.tn(tools.dft) },
+    data: base(params, tools.anodes[n], tools.field, n, use_freqmask=use_freqmask) { dft: wc.tn(tools.dft) }
+          + (if coh_groups_preflip
+             then { groups: coh_preflip.groups(n), femb_negpulse_groups: coh_preflip.negpulse_groups }
+             else {}),
     uses: [tools.anodes[n], tools.field, tools.dft],
   } for n in std.range(0, std.length(tools.anodes) - 1)];
 
@@ -124,7 +159,7 @@ function(
   // DNN-ROI input tags (loose_lf*, mp2_roi*, mp3_roi*, decon_charge*) require
   // OmnibusSigProc to be in debug + multi-plane-protection mode.
   local sp_override = { sparse: false }
-                      + (if use_dnnroi
+                      + (if use_dnnroi || sp_roi_debug_sink
                          then { use_roi_debug_mode: true, use_multi_plane_protection: true }
                          else {});
   local sp = sp_maker(params, tools, sp_override);
@@ -145,6 +180,9 @@ function(
                                     l1sp_pd_dump_all_rois=l1sp_pd_dump_all_rois,
                                     l1sp_pd_adj_enable=l1sp_pd_adj_enable,
                                     l1sp_pd_adj_max_hops=l1sp_pd_adj_max_hops,
+                                    apa0_w_roi_tune=apa0_w_roi_tune,
+                                    roi_mad_rms=sp_roi_mad_rms,
+                                    w_col_break_roi_tune=sp_w_col_break_roi_tune,
                                     dump_rawdecon=dump_rawdecon)
                     for a in tools.anodes];
 
@@ -207,12 +245,20 @@ function(
       name: 'dnnroiframesink%d' % n,
       data: {
         outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
-        tags: if use_dnnroi
-              then (if use_l1sp_dnn
-                    then ['gauss%d' % n, 'wiener%d' % n, 'raw%d' % n]
-                    else ['dnnsp%d' % n, 'dnnsp%du' % n, 'dnnsp%dv' % n, 'dnnsp%dw' % n,
-                          'gauss%d' % n, 'wiener%d' % n])
-              else ['gauss%d' % n, 'wiener%d' % n],
+        tags: (if use_dnnroi
+               then (if use_l1sp_dnn
+                     then ['gauss%d' % n, 'wiener%d' % n, 'raw%d' % n]
+                     else ['dnnsp%d' % n, 'dnnsp%du' % n, 'dnnsp%dv' % n, 'dnnsp%dw' % n,
+                           'gauss%d' % n, 'wiener%d' % n])
+               else ['gauss%d' % n, 'wiener%d' % n])
+              // Per-stage ROI diagnosis tags (effective with use_dnnroi=false
+              // only — the DNN/L1SP FrameMergers drop them otherwise).
+              + (if sp_roi_debug_sink
+                 then ['tight_lf%d' % n, 'loose_lf%d' % n, 'cleanup_roi%d' % n,
+                       'break_roi_1st%d' % n, 'break_roi_2nd%d' % n,
+                       'shrink_roi%d' % n, 'extend_roi%d' % n,
+                       'decon_charge%d' % n, 'mp3_roi%d' % n, 'mp2_roi%d' % n]
+                 else []),
         digitize: false,
         masks: true,
       },

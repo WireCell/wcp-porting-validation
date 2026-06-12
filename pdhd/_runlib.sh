@@ -3,25 +3,27 @@
 # Source after setting PDHD_DIR:
 #   . "$PDHD_DIR/_runlib.sh"
 
-# List runs found under input_data/.  Called when the invoking script
-# receives no positional arguments.
+# List runs found under input_data* roots.  Called when the invoking script
+# receives no positional arguments.  The reorg split data into
+# input_data_<gain>_<old|new>_coh_grouping, so scan all such roots.
 list_runs() {
-    local base="$PDHD_DIR/input_data"
-    [ -d "$base" ] || { echo "no input_data/ under $PDHD_DIR" >&2; return 1; }
-    echo "Available runs under $base:"
-    local found=0 d name evts
-    for d in "$base"/run*/; do
-        [ -d "$d" ] || continue
-        found=1
-        name=$(basename "$d")
-        evts=$(ls -d "$d"/evt_* 2>/dev/null | sed 's|.*/evt_||' | tr '\n' ' ')
-        if [ -n "$evts" ]; then
-            printf '  %-12s  events: %s\n' "$name" "$evts"
-        else
-            printf '  %-12s  (flat layout — specify event number explicitly)\n' "$name"
-        fi
+    local found=0 base d name evts
+    for base in "$PDHD_DIR"/input_data "$PDHD_DIR"/input_data_*; do
+        [ -d "$base" ] || continue
+        echo "Available runs under $base:"
+        for d in "$base"/run*/; do
+            [ -d "$d" ] || continue
+            found=1
+            name=$(basename "$d")
+            evts=$(ls -d "$d"/evt_* 2>/dev/null | sed 's|.*/evt_||' | tr '\n' ' ')
+            if [ -n "$evts" ]; then
+                printf '  %-12s  events: %s\n' "$name" "$evts"
+            else
+                printf '  %-12s  (flat layout — specify event number explicitly)\n' "$name"
+            fi
+        done
     done
-    [ "$found" -eq 0 ] && echo "  (none found)"
+    [ "$found" -eq 0 ] && echo "  (no input_data* runs found under $PDHD_DIR)"
     return 0
 }
 
@@ -36,11 +38,14 @@ discover_events() {
     run_stripped=$(echo "$run" | sed 's/^0*//')
     [ -z "$run_stripped" ] && run_stripped=0
     {
-        local rname rdir
-        for rname in "run${run}" "run${run_padded}" "run${run_stripped}"; do
-            rdir="$PDHD_DIR/input_data/$rname"
-            [ -d "$rdir" ] || continue
-            ls -d "$rdir"/evt_* 2>/dev/null | sed 's|.*/evt_||'
+        local base rname rdir
+        for base in "$PDHD_DIR"/input_data "$PDHD_DIR"/input_data_*; do
+            [ -d "$base" ] || continue
+            for rname in "run${run}" "run${run_padded}" "run${run_stripped}"; do
+                rdir="$base/$rname"
+                [ -d "$rdir" ] || continue
+                ls -d "$rdir"/evt_* 2>/dev/null | sed 's|.*/evt_||'
+            done
         done
         # work/<RUN_PADDED>_<EVT> and work/<RUN_PADDED>_<EVT>_<tag>
         ls -d "$PDHD_DIR/work/${run_padded}_"* 2>/dev/null \

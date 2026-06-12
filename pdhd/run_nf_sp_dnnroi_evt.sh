@@ -29,8 +29,10 @@ usage() {
 Usage: ./run_nf_sp_dnnroi_evt.sh [options] <run> <evt>
 
 Options:
-  -a <anode>     Anode index (0-3). Default: 0 (recommended for first run;
-                 the model was trained on APA0 data).
+  -a <anode>     Anode index (0-3). Default: all anodes present in the event
+                 (the four PDHD APAs are geometrically identical, so the one
+                 shared DNN-ROI model applies to each).  Pass e.g. -a 0 to
+                 restrict to a single APA.
   -g <elecGain>  FE amplifier gain in mV/fC. Default: 14.
   -r <reality>   'data' (default) or 'sim'.
   -D <device>    'cpu' (default) or 'gpu' for TorchService.  The QAT INT8
@@ -121,6 +123,20 @@ Options:
                  Override the L1SP DNN sigmoid threshold (default from
                  jsonnet: 0.9945, tuned for -N dnn). For -N hybrid use
                  0.10 (Phase-A holdout precision/recall sweet spot).
+  --w-fix <on|off>
+                 Prolonged-W-signal fix (toolkit roi_mad_rms +
+                 w_col_break_roi_tune; see docs/sp-w-collection-roi-break.md).
+                 Default on (the sp.jsonnet defaults).  'off' recovers the
+                 bit-identical pre-fix SP for A/B comparison.
+  --roi-debug    SP ROI-stage diagnosis mode: bypass DNN-ROI and L1SP
+                 (their FrameMergers drop the SP debug tags) but force
+                 the same OmnibusSigProc override as the production DNN
+                 chain (use_roi_debug_mode + use_multi_plane_protection,
+                 so the SP-internal ROI processing is identical) and add
+                 the per-stage ROI tags (tight_lf, cleanup_roi,
+                 break_roi_1st/2nd, shrink_roi, extend_roi, decon_charge,
+                 mp2/mp3_roi) to the output frame archive.  Combine with
+                 -O to keep the run side-by-side with production output.
   -h             Show this help.
 
 Output (under work/<RUN_PADDED>_<EVT>/):
@@ -133,8 +149,9 @@ Output (under work/<RUN_PADDED>_<EVT>/):
 EOF
 }
 
-ANODE="0"
+ANODE=""           # empty => all anodes present in the event
 ELEC_GAIN="14"
+GAIN_EXPLICIT=0
 REALITY="data"
 DEVICE="cpu"
 DEVICE_EXPLICIT=0
@@ -155,12 +172,17 @@ DNN_DEBUG_DIR=""
 CALIB_ROOT=""
 LOOSE_HEUR=0
 L1SP_THRESH_OVERRIDE=""
+ROI_DEBUG=0
+W_FIX="on"
+# APA0 W-plane ROI tune (sp.jsonnet apa0_w_roi_tune).  Default true (driver
+# default); pass --w-tune false for the bit-identical pre-tune APA0 SP.
+APA0_W_ROI_TUNE="true"
 
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
         -a) ANODE="$2"; shift 2 ;;
-        -g) ELEC_GAIN="$2"; shift 2 ;;
+        -g) ELEC_GAIN="$2"; GAIN_EXPLICIT=1; shift 2 ;;
         -r) REALITY="$2"; shift 2 ;;
         -D) DEVICE="$2"; DEVICE_EXPLICIT=1; shift 2 ;;
         -P) PRESET="$2"; shift 2 ;;
@@ -173,10 +195,13 @@ while [ $# -gt 0 ]; do
         -w) WF_DUMP_DIR="$2"; shift 2 ;;
         -A) DUMP_ALL_ROIS="$2"; DUMP_ALL_EXPLICIT=1; shift 2 ;;
         -O) WORK_SUFFIX="$2"; shift 2 ;;
+        --w-tune) APA0_W_ROI_TUNE="$2"; shift 2 ;;
         -Z) DNN_DEBUG_DIR="$2"; shift 2 ;;
         -c) CALIB_ROOT="$2"; shift 2 ;;
         --loose-heur) LOOSE_HEUR=1; shift ;;
         --l1sp-thresh) L1SP_THRESH_OVERRIDE="$2"; shift 2 ;;
+        --roi-debug) ROI_DEBUG=1; shift ;;
+        --w-fix) W_FIX="$2"; shift 2 ;;
         --) shift; break ;;
         -*) echo "unknown option: $1" >&2; usage; exit 1 ;;
         *) break ;;
@@ -237,21 +262,27 @@ RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
 [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
 
-# Resolve event dir using the same heuristic as run_nf_sp_evt.sh.
+# Resolve event dir using the same heuristic as run_nf_sp_evt.sh.  Scans every
+# input_data* root (the reorg split data into input_data_<gain>_<old|new>_coh_grouping);
+# first match wins.  Keep this side-effect-free: it runs in a $(...) subshell, so
+# config is derived from the returned path below, not from vars set in here.
 find_evtdir() {
-    local base="$PDHD_DIR/input_data"
-    for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
-        local rdir="$base/$rname"
-        [ -d "$rdir" ] || continue
-        for ename in "evt${EVT}" "evt_${EVT}"; do
-            local cand="$rdir/$ename"
-            if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
-                echo "$cand"; return 0
+    local base
+    for base in "$PDHD_DIR"/input_data "$PDHD_DIR"/input_data_*; do
+        [ -d "$base" ] || continue
+        for rname in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
+            local rdir="$base/$rname"
+            [ -d "$rdir" ] || continue
+            for ename in "evt${EVT}" "evt_${EVT}"; do
+                local cand="$rdir/$ename"
+                if [ -d "$cand" ] && [ -n "$(ls -A "$cand" 2>/dev/null)" ]; then
+                    echo "$cand"; return 0
+                fi
+            done
+            if ls "$rdir/protodunehd-orig-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
+                echo "$rdir"; return 0
             fi
         done
-        if ls "$rdir/protodunehd-orig-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
-            echo "$rdir"; return 0
-        fi
     done
     return 1
 }
@@ -259,16 +290,49 @@ find_evtdir() {
 EVTDIR=$(find_evtdir) || { echo "[err] no event dir for run=$RUN evt=$EVT" >&2; exit 2; }
 echo "Event dir: $EVTDIR"
 
-if ! ls "$EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >/dev/null 2>&1; then
-    echo "[err] missing $EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >&2
-    exit 2
+# Auto-derive FE gain + coherent-noise grouping from the input-root dir name
+# (input_data_<gain>_<old|new>_coh_grouping).  Unknown/legacy roots leave the
+# toolkit defaults untouched.  Explicit -g still wins (see GAIN_EXPLICIT below).
+INPUT_ROOT_NAME="${EVTDIR#$PDHD_DIR/}"; INPUT_ROOT_NAME="${INPUT_ROOT_NAME%%/*}"
+case "$INPUT_ROOT_NAME" in
+    *_old_coh_grouping) AUTO_PREFLIP="true" ;;
+    *_new_coh_grouping) AUTO_PREFLIP="false" ;;
+    *)                  AUTO_PREFLIP="" ;;
+esac
+AUTO_GAIN=""
+[[ "$INPUT_ROOT_NAME" =~ ^input_data_([0-9p]+)_ ]] && AUTO_GAIN="${BASH_REMATCH[1]//p/.}"
+if [ "$GAIN_EXPLICIT" = "0" ] && [ -n "$AUTO_GAIN" ]; then
+    ELEC_GAIN="$AUTO_GAIN"
 fi
+
+# Resolve the anode set: -a picks one; default is every anode whose orig frame
+# is present (the cfg builds one per-anode DNN-ROI subgraph per index, so missing
+# frames must be excluded or wire-cell errors).
+if [ -n "$ANODE" ]; then
+    if ! ls "$EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >/dev/null 2>&1; then
+        echo "[err] missing $EVTDIR/protodunehd-orig-frames-anode${ANODE}.tar.bz2" >&2
+        exit 2
+    fi
+    ANODE_LIST=("$ANODE")
+    TAG_SUFFIX="_a${ANODE}"
+else
+    ANODE_LIST=()
+    for ai in 0 1 2 3; do
+        [ -f "$EVTDIR/protodunehd-orig-frames-anode${ai}.tar.bz2" ] && ANODE_LIST+=("$ai")
+    done
+    if [ ${#ANODE_LIST[@]} -eq 0 ]; then
+        echo "[err] no protodunehd-orig-frames-anode*.tar.bz2 in $EVTDIR" >&2
+        exit 2
+    fi
+    TAG_SUFFIX="_aALL"
+fi
+ANODE_CODE="[$(IFS=,; echo "${ANODE_LIST[*]}")]"
 
 WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
 mkdir -p "$WORKDIR"
-LOG="$WORKDIR/wct_nfspdnn_${RUN_PADDED}_${EVT}_a${ANODE}.log"
-TIME_LOG="$WORKDIR/time_${RUN_PADDED}_${EVT}_a${ANODE}.txt"
-GPU_CSV="$WORKDIR/gpu_mem_${RUN_PADDED}_${EVT}_a${ANODE}.csv"
+LOG="$WORKDIR/wct_nfspdnn_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.log"
+TIME_LOG="$WORKDIR/time_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.txt"
+GPU_CSV="$WORKDIR/gpu_mem_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.csv"
 echo "Work dir:    $WORKDIR"
 echo "elecGain:    ${ELEC_GAIN} mV/fC"
 echo "reality:     ${REALITY}"
@@ -330,6 +394,28 @@ if [ -n "$L1SP_THRESH_OVERRIDE" ]; then
     echo "L1SP DNN thr: $L1SP_THRESH_OVERRIDE (override)"
 fi
 
+# SP ROI-stage diagnosis mode (--roi-debug): bypass DNN-ROI (use_dnnroi=false)
+# and the in-SP L1SP envelope (l1sp_pd_mode='' -- its FrameMergers would drop
+# the debug tags) while sp_roi_debug_sink=true keeps the OmnibusSigProc
+# override identical to the production DNN chain and sinks the per-stage ROI
+# tags.  W-plane output is unaffected by the bypassed stages (DNN-ROI and
+# L1SP only touch U/V).
+# Prolonged-W-signal fix A/B toggle (default on = sp.jsonnet defaults).
+W_FIX_TLA=()
+case "$W_FIX" in
+    on)  ;;
+    off) W_FIX_TLA=(--tla-code sp_roi_mad_rms=false --tla-code sp_w_col_break_roi_tune=false)
+         echo "W fix:       OFF (pre-fix SP, A/B baseline)" ;;
+    *) echo "[err] --w-fix must be 'on' or 'off' (got '$W_FIX')" >&2; exit 1 ;;
+esac
+
+ROI_DEBUG_TLA=()
+if [ "$ROI_DEBUG" = "1" ]; then
+    ROI_DEBUG_TLA=(--tla-code use_dnnroi=false --tla-code sp_roi_debug_sink=true)
+    L1SP_PD_MODE_TLA=""
+    echo "ROI debug:   DNN/L1SP bypassed; per-stage ROI tags sunk to frame archive"
+fi
+
 # L1SP calibration scalar-dump (Phase-B veto-mode investigation):
 #   -c switches L1SPFilterPD into 'dump' mode after DNN-ROI -- heuristic
 #   features computed and emitted per ROI, no LASSO/DNN correction.
@@ -372,7 +458,7 @@ if [ -n "$DEBUG_BASE" ]; then
     esac
     mkdir -p "$(dirname "$DBG_ABS")"
     DBG_TLA=(--tla-str dnnroi_debugfile="$DBG_ABS")
-    echo "Debug dump:  ${DBG_ABS}_anode${ANODE}_call*.pt"
+    echo "Debug dump:  ${DBG_ABS}_anode*_call*.pt (anodes ${ANODE_CODE})"
 fi
 
 cd "$PDHD_DIR"
@@ -392,6 +478,16 @@ NVSMI_PID=$!
 # peak resident-set size for the lifetime of the process — better than
 # sampling because it captures the high-water mark exactly.
 RC=0
+# Coherent-noise grouping: auto-selected from the input-root dir name
+# (set above).  *_old_coh_grouping -> pre-flip (run-027409 etc. decoded with
+# the pre-2025-06-30 channel map); *_new_coh_grouping / unknown -> toolkit default.
+COH_PREFLIP_TLA=()
+if [ "$AUTO_PREFLIP" = "true" ]; then
+    COH_PREFLIP_TLA=(--tla-code coh_groups_preflip=true)
+    echo "[coh] $INPUT_ROOT_NAME -> PRE-FLIP (old) coherent-noise grouping"
+elif [ "$AUTO_PREFLIP" = "false" ]; then
+    echo "[coh] $INPUT_ROOT_NAME -> POST-FLIP (new) grouping (toolkit default)"
+fi
 wire-cell \
     -l stderr \
     -l "${LOG}:debug" \
@@ -400,19 +496,23 @@ wire-cell \
     --tla-str orig_prefix="${EVTDIR}/protodunehd-orig-frames" \
     --tla-str sp_prefix="${WORKDIR}/protodunehd-sp-dnnroi-frames" \
     --tla-str reality="${REALITY}" \
-    --tla-code anode_indices="[${ANODE}]" \
+    --tla-code anode_indices="${ANODE_CODE}" \
     --tla-str dnnroi_model="${MODEL}" \
     --tla-str dnnroi_device="${DEVICE}" \
     --tla-code dnnroi_nchan="${NCHAN}" \
     --tla-code use_l1sp_dnn="${L1SP_TLA}" \
     --tla-str l1sp_pd_mode="${L1SP_PD_MODE_TLA}" \
     --tla-code dnnroi_mask_thresh="${MASK_THRESH}" \
+    --tla-code apa0_w_roi_tune="${APA0_W_ROI_TUNE}" \
+    "${COH_PREFLIP_TLA[@]}" \
     "${DBG_TLA[@]}" \
     "${L1SP_DUMP_TLA[@]}" \
     "${L1SP_DNN_DBG_TLA[@]}" \
     "${L1SP_CALIB_TLA[@]}" \
     "${LOOSE_HEUR_TLA[@]}" \
     "${L1SP_THRESH_TLA[@]}" \
+    "${ROI_DEBUG_TLA[@]}" \
+    "${W_FIX_TLA[@]}" \
     -c wct-nf-sp-dnnroi.jsonnet &
 WC_PID=$!
 

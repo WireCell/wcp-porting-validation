@@ -1,7 +1,15 @@
 #!/bin/bash
 # Run imaging for one event.
-# Usage: ./run_img_evt.sh [-I] [-a anode] [-s sel_tag] <run> <evt|all>
+# Usage: ./run_img_evt.sh [-I] [-1] [-a anode] [-s sel_tag] <run> <evt|all>
 #        ./run_img_evt.sh                # list available runs
+#
+#   Per-anode sequential mode is the DEFAULT: one wire-cell process per
+#   anode instead of all anodes in one process.  Outputs are identical (the
+#   per-anode pipelines are independent); peak RSS drops from the sum of
+#   all anode pipelines to the busiest single anode.  Configs are
+#   pre-compiled per anode with wcsonnet to avoid N jsonnet compiles.
+#   -1:  revert to the old single-process all-anode mode.
+#   -P:  accepted for back-compat (per-anode, now the default).
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDVD_MAX_JOBS=N).  Events with missing inputs are skipped.
@@ -19,15 +27,30 @@ PDVD_DIR=$(cd "$(dirname "$0")" && pwd)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
 
+# Preload tcmalloc for the imaging wire-cell processes: imaging is allocator
+# bound (graph lifecycle churn) and tcmalloc cuts busy-event wall ~25-50%
+# with slightly lower RSS; outputs verified byte-identical on the A/B event
+# set.  Disable with WCT_TCMALLOC=off.  (Clustering also preloads tcmalloc
+# since the BlobLess pointer-order fix; see run_clus_evt.sh and
+# clus/docs/imgclus-optimization-log.md.)
+TCMALLOC_SO=/usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+WC_PRELOAD=""
+if [ "${WCT_TCMALLOC:-on}" = "on" ] && [ -f "$TCMALLOC_SO" ]; then
+    WC_PRELOAD="LD_PRELOAD=$TCMALLOC_SO"
+fi
+
 . "$PDVD_DIR/_runlib.sh"
 
 ANODE=""
 SEL_TAG=""
 FORCE_INPUT_DATA=""
+PER_ANODE=true
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -I) FORCE_INPUT_DATA=1; shift ;;
+        -P) PER_ANODE=true; shift ;;
+        -1) PER_ANODE=false; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
@@ -42,7 +65,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-I] [-a anode] [-s sel_tag] <run> <evt|all>" >&2
+    echo "Usage: $0 [-I] [-1] [-a anode] [-s sel_tag] <run> <evt|all>" >&2
     exit 1
 fi
 RUN=$1
@@ -102,11 +125,14 @@ process_event() {
     fi
     echo "SP prefix: $SP_PREFIX"
 
+    local -a ANODE_INDICES
     if [ -n "$ANODE" ]; then
         ANODE_CODE="[$ANODE]"
+        ANODE_INDICES=("$ANODE")
         TAG_SUFFIX="_a${ANODE}"
     else
         ANODE_CODE="[0,1,2,3,4,5,6,7]"
+        ANODE_INDICES=(0 1 2 3 4 5 6 7)
         TAG_SUFFIX=""
     fi
 
@@ -117,14 +143,44 @@ process_event() {
 
     cd "$PDVD_DIR"
     rm -f "$LOG"
-    wire-cell \
-        -l stderr \
-        -l "${LOG}:debug" \
-        -L debug \
-        --tla-str "input_prefix=${SP_PREFIX}" \
-        --tla-code "anode_indices=${ANODE_CODE}" \
-        --tla-str "output_dir=${WORKDIR}" \
-        -c wct-img-all.jsonnet
+    if $PER_ANODE; then
+        # One wire-cell process per anode, sequential.  Per-anode pipelines
+        # are independent and write only their own clusters-apa-* files, so
+        # outputs are identical to the all-anode run.
+        local CFG_JSON ALOG ai ai_t0
+        for ai in "${ANODE_INDICES[@]}"; do
+            wcsonnet \
+                -A "input_prefix=${SP_PREFIX}" \
+                -S "anode_indices=[$ai]" \
+                -A "output_dir=${WORKDIR}" \
+                -o "$WORKDIR/.wct-img-a${ai}.json" wct-img-all.jsonnet &
+        done
+        wait
+        for ai in "${ANODE_INDICES[@]}"; do
+            CFG_JSON="$WORKDIR/.wct-img-a${ai}.json"
+            if [ ! -s "$CFG_JSON" ]; then
+                echo "ERROR: wcsonnet failed for anode${ai}" >&2; return 1
+            fi
+        done
+        for ai in "${ANODE_INDICES[@]}"; do
+            CFG_JSON="$WORKDIR/.wct-img-a${ai}.json"
+            ALOG="$WORKDIR/wct_img_${RUN_PADDED}_${EVT}_a${ai}.log"
+            rm -f "$ALOG"
+            ai_t0=$SECONDS
+            env $WC_PRELOAD GOGC=off wire-cell -l stderr -l "${ALOG}:debug" -L debug -c "$CFG_JSON"
+            echo "anode${ai} imaging: $((SECONDS - ai_t0)) s"
+            rm -f "$CFG_JSON"
+        done
+    else
+        env $WC_PRELOAD wire-cell \
+            -l stderr \
+            -l "${LOG}:debug" \
+            -L debug \
+            --tla-str "input_prefix=${SP_PREFIX}" \
+            --tla-code "anode_indices=${ANODE_CODE}" \
+            --tla-str "output_dir=${WORKDIR}" \
+            -c wct-img-all.jsonnet
+    fi
 
     echo "Imaging done -> $WORKDIR"
 }

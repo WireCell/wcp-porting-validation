@@ -19,15 +19,15 @@ pdvd/
 ├── upload-to-bee.sh         → ../upload-to-bee.sh
 │
 ├── wct-img-all.jsonnet      ← top-level imaging driver
-├── img.jsonnet              ← imaging pipeline library (imported by wct-img-all)
+│                              (imaging library lives in toolkit cfg:
+│                               pgrapher/experiment/protodunevd/img.jsonnet)
 ├── wct-clustering.jsonnet   ← top-level clustering driver
-├── clus.jsonnet             ← clustering pipeline library (imported by wct-clustering)
-├── clus-new.jsonnet         ← older PDHD-derived variant (reference only)
-├── wcls-nf-sp-out.jsonnet   ← ART/LArSoft NF+SP → frame tarballs (upstream step)
-├── wct-sim-check-track.jsonnet  ← single-track simulation check
+│                              (clustering library lives in toolkit cfg:
+│                               pgrapher/experiment/protodunevd/clus.jsonnet)
+├── wcls-nf-sp-out.jsonnet   ← ART/LArSoft NF+SP → frame tarballs (upstream step;
+│                              = cfg copy + raw-frame tap, see file header)
 │
 ├── _runlib.sh               ← shared helper library sourced by all run_*.sh scripts
-├── run_evt.pl               ← main per-(run,event) dispatcher
 ├── run_img_evt.sh           ← imaging only
 ├── run_clus_evt.sh          ← clustering only
 ├── run_nf_sp_evt.sh         ← standalone NF+SP (no LArSoft)
@@ -36,11 +36,15 @@ pdvd/
 ├── run_bee_img_evt.sh       ← Bee conversion + upload, from IMAGING output (no clustering)
 ├── run_bee_combined_evt.sh  ← combined Bee link: imaging + clustering + dead, grouped by drift side
 ├── run_img.sh               ← original manual recipe (commented examples)
-├── unzip.pl                 ← extract mabc*.zip into data/ (Path B Bee upload)
 ├── wct-img-2-bee.py         ← convert cluster tarballs → Bee JSON
 ├── wct-img-2-bee-only.py    ← single-anode debug variant
 ├── plot_frames.py           ← visualise SP frame archives as PNG
 ├── select_frames.py         ← interactive crop of frame archives (Qt UI)
+│
+├── old/                     ← retired configs/scripts kept for reference
+│   ├── clus-new.jsonnet     (older PDHD-derived clustering variant)
+│   ├── wct-raw-to-magnify.jsonnet, wct-sim-check-track.jsonnet
+│   └── run_evt.pl, unzip.pl, build_*.sh (superseded by run_*.sh family)
 │
 └── protodune-sp-frames-anode{0..7}.tar.bz2  ← SAMPLE INPUT (see Q1 below)
 ```
@@ -83,7 +87,7 @@ be run standalone without LArSoft.
 
 **Purpose:** convert per-anode SP frames → per-anode imaging cluster tarballs.
 
-**Config:** `wct-img-all.jsonnet` (imports `img.jsonnet`)
+**Config:** `wct-img-all.jsonnet` (imports `pgrapher/experiment/protodunevd/img.jsonnet` from the toolkit cfg)
 
 **Input:** `<input_prefix>-anode{0..7}.tar.bz2`
 
@@ -118,10 +122,12 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECE
 ## Q3. Clustering
 
 > For a deep-dive on graph topology, RSE propagation, dead-channel handling, and per-APA/face selection see **[clus-workflow.md](clus-workflow.md)**.
+> Per-pass scope capabilities and the T0/containment knobs: **[clustering-scope.md](clustering-scope.md)**.
+> Feasibility of replacing the two-faces-per-anode description with a single SBND-style face: **[single-face-anode-feasibility.md](single-face-anode-feasibility.md)**.
 
 **Purpose:** convert per-anode imaging cluster tarballs → multi-algorithm blob clustering → Bee zips.
 
-**Config:** `wct-clustering.jsonnet` (imports `clus.jsonnet`)
+**Config:** `wct-clustering.jsonnet` (imports `pgrapher/experiment/protodunevd/clus.jsonnet` from the toolkit cfg)
 
 **Input:** `<input>/clusters-apa-anode{N}-ms-active.tar.gz`
          + `<input>/clusters-apa-anode{N}-ms-masked.tar.gz`
@@ -150,8 +156,9 @@ TLA reference:
 
 ## Q4. Single config doing both imaging and clustering?
 
-No — the two steps are separate `wire-cell` invocations.  Use
-`perl run_evt.pl <run> <evt> chain` (see below) to run them in sequence.
+No — the two steps are separate `wire-cell` invocations.  Run
+`./run_img_evt.sh` then `./run_clus_evt.sh` (the old `perl run_evt.pl`
+dispatcher is retired to `old/`).
 
 ---
 
@@ -196,28 +203,6 @@ non-zero (exit code 2 for a skip, 1 for a hard failure).
 ```sh
 PDVD_MAX_JOBS=4 ./run_img_evt.sh 040475 all   # cap at 4 simultaneous jobs
 ```
-
-### `perl run_evt.pl [-a anode] <run> <evt> [stage]`
-
-Main dispatcher.  `stage` is one of:
-- `img` — imaging only
-- `clus` — clustering only
-- `bee` — Bee conversion + upload from imaging output (no clustering)
-- `chain` — img → clus → bee (**default**)
-
-```sh
-perl run_evt.pl 039324 1          # full chain
-perl run_evt.pl 039324 1 img      # imaging only
-perl run_evt.pl 039324 1 clus     # clustering only (uses imaging output if present)
-perl run_evt.pl 039324 1 bee      # upload to Bee
-perl run_evt.pl -a 3 039324 1 img # imaging for anode 3 only
-```
-
-The optional `-a N` (0–7) is forwarded to each underlying script, restricting
-all processing to that single anode.  The flag may appear anywhere in the
-argument list (before or after `<run>`, `<evt>`, etc.).
-
-Logs: `work/039324_1/wct_img_039324_1.log`, `work/039324_1/wct_clus_039324_1.log`
 
 ### `./run_nf_sp_evt.sh [-a anode] <run> <evt|all>`
 
@@ -310,12 +295,13 @@ After conversion: `zip -r upload data`, then `./upload-to-bee.sh upload.zip`.
 
 ### Path B — clustering → Bee via MABC's built-in writer (used by `run_clus_evt.sh`)
 
-`wct-clustering.jsonnet` / `clus.jsonnet` run MABC on the imaging tarballs and
-produce `mabc-anode{N}.zip` / `mabc-all-apa.zip` via
+`wct-clustering.jsonnet` (with the cfg library
+`pgrapher/experiment/protodunevd/clus.jsonnet`) runs MABC on the imaging
+tarballs and produces `mabc-anode{N}.zip` / `mabc-all-apa.zip` via
 `MultiAlgBlobClustering`'s built-in Bee writer — the Bee display here shows
 **clustered** blobs, in contrast to Path A's raw imaging blobs.  To upload:
 ```sh
-./unzip.pl        # expands mabc*.zip into data/
+./old/unzip.pl    # expands mabc*.zip into data/ (retired helper, still works)
 ./zip-upload.sh   # rezips data/ → upload.zip, calls ../upload-to-bee.sh
 ```
 
@@ -375,9 +361,9 @@ https://www.phy.bnl.gov/twister/bee/set/<UUID>/event/list/
 - **`run040475/evt_0/` is empty**: that directory exists but contains no data.
   Use `evt_1` instead.
 
-- **`clus-new.jsonnet`**: 4-anode PDHD-style variant with hard-coded
+- **`old/clus-new.jsonnet`**: 4-anode PDHD-style variant with hard-coded
   `detector: "protodunehd"` / `bee_detector: "sbnd"`.  Not used by current entry
-  points; kept for reference.
+  points; retired to `old/` for reference.
 
 - **`wct-img-2-bee.py` clears `data/` on each run**: in single-event mode,
   running `run_bee_img_evt.sh` sequentially for multiple events would overwrite

@@ -101,7 +101,9 @@ local clus = import 'clus.jsonnet';
 // each event's tensor ident already carries the real event id, so the MABC nodes
 // label the Bee display with the true event number (run/subrun = 0) instead of a
 // 0..N auto-increment.  Canonical production leaves this off (byte-identical).
-local clus_maker = clus(rse_from_ident=true);
+// reality gates the data-only pos_offset transverse calibration (data -> on,
+// sim -> off); see cfg/.../sbnd/clus.jsonnet pos_offset comment.
+local clus_maker = clus(rse_from_ident=true, reality=reality);
 // Single shared Bee sink: the per-APA and all-APA MultiAlgBlobClustering nodes
 // all write into this one zip (mabc.zip) instead of one zip per node, so the
 // run produces a single self-contained Bee file with every view.

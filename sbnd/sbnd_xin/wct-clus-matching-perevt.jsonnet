@@ -96,7 +96,8 @@ function(
         output_dir=output_dir,
         runNo=run,
         subRunNo=subrun,
-        eventNo=event);
+        eventNo=event,
+        reality=reality);
     local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false)
                         for n in std.range(0, nanodes - 1)];
 
