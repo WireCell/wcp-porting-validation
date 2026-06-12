@@ -210,4 +210,122 @@ clusters. This mirrors MicroBooNE where it runs after
 
 ---
 
-*Sections 2-7 follow.*
+## 2. Steiner graph building
+
+### 2.1 Algorithm overview
+
+The Steiner stage turns each cluster's unstructured point cloud into a
+**branching geometric skeleton** — the input to everything downstream
+(proto-vertex finding, track fitting, all taggers). It is implemented as the
+`CreateSteinerGraph` ensemble visitor (`cm.steiner(retiler=improve_cluster_2)`):
+
+| piece | where |
+|---|---|
+| Visitor `CreateSteinerGraph` | `clus/src/CreateSteinerGraph.{h,cxx}` |
+| Core algorithm `Steiner::Grapher` | `clus/src/SteinerGrapher.{h,cxx}`, `SteinerGrapher_helpers.cxx` |
+| Free helpers | `clus/src/SteinerFunctions.{h,cxx}` |
+| Deep dive | `clus/docs/steiner_graph.md`; port review `clus/docs/patternrecognition/steiner_graph_review.md` |
+
+Per cluster, the two-phase algorithm is:
+
+1. **Retiling** (§1): `ImproveCluster_2` resamples the cluster into a more
+   uniform point cloud and patches gaps near dead regions.
+2. **Graph construction** (`Steiner::Grapher::create_steiner_tree()`):
+   - Build a weighted graph over the resampled points (k-d-tree neighbor
+     search, edge weight = 3D distance).
+   - Find **Steiner terminals**: charge-significant points per blob
+     (`find_steiner_terminals()`, charge weighting with Q₀ = 10000,
+     factors 0.8/0.4, charge threshold 4000 — empirical MicroBooNE tuning;
+     `disable_dead_mix_cell` controls whether dead-mixed cells may be
+     terminals).
+   - Add intra-blob edges with discounted weights (0.8× distance when both
+     ends are terminals, 0.9× for one) so paths prefer charge-bearing routes.
+   - Run an MST (Kruskal) over the graph as the practical Steiner-tree proxy
+     and prune it down to the terminal-spanning skeleton.
+
+Outputs stored on the cluster facade:
+
+- `steiner_graph` — the reduced tree (named graph, Boost adjacency list);
+- `steiner_pc` — point cloud of the tree's points (`x_t0cor, y, z`, charge);
+- `flag_steiner_terminal` — marks which points are terminals.
+
+Graph-degree semantics drive the PR chain: degree-1 vertices are
+track/shower endpoints, degree-≥3 vertices are branch/vertex candidates.
+The later PR graph (`PR::Vertex`/`PR::Segment`, §4) is built by tracing
+paths *through* this skeleton.
+
+The Bee output set `steiner` (`pcname: "steiner_pc"`) and `regular`
+(`pcname: "3d"`) are both emitted by this visitor — that is how the skeleton
+is hand-scanned.
+
+### 2.2 Integration attention points for SBND
+
+**Scope plumbing, not algorithm.** The Grapher works on whatever point cloud
+scope `switch_scope()` selected. In SBND the corrected coordinates are
+`['x_t0cor', 'y_cor', 'z_cor']` for data (transverse `pos_offset` per TPC)
+vs `['x_t0cor', 'y', 'z']` for sim — make sure the Steiner stage and its Bee
+sets use `common_corr_coords(pos_offset_on)` exactly as the all-APA
+clustering does, or data clusters will be skeletonized in a frame 1 cm off
+from the one used for merging.
+
+**Cross-TPC clusters.** After `cathode_connect`, one cluster holds blobs
+with both `wpid`s. Points near the cathode from the two TPCs are ~cm apart
+after T0 correction, so the neighbor search will naturally bridge the seam —
+that is desired (one muon → one skeleton). Attention:
+
+- `form_cell_points_map()` keys points by blob; blobs from different
+  faces must not be conflated. The blob-vertex map is keyed by node index
+  (determinism fix), which is face-safe, but verify terminal finding uses
+  per-(apa,face) dead-cell information, not a global "the face".
+- The cathode dead zone (±~2.5 cm structure exclusion, see
+  `cathode_fiducial.jsonnet`) means there is a genuine charge gap at the
+  seam. Terminal-finding thresholds were tuned for MicroBooNE charge scales;
+  check that the seam does not split the skeleton into two trees (the MST is
+  global per cluster, so connectivity survives, but terminal pruning could
+  drop the bridge if no terminals exist near the cathode on either side).
+
+**Charge-threshold re-tuning.** Q₀ = 10000, threshold = 4000 and the
+0.8/0.4 factors encode MicroBooNE's gain and SP normalization. SBND's
+charge scale post-SP is similar but not identical — re-derive by comparing
+the dQ/dx MIP peak (electrons/cm) between detectors before trusting terminal
+selection, and prefer exposing these as jsonnet knobs rather than editing
+constants (they are currently hardcoded in `SteinerGrapher.cxx`).
+
+**Unmatched clusters.** Same policy question as §1: clusters with no
+`cluster_t0` have undefined `x_t0cor`. MicroBooNE always has one; SBND must
+either skip Steiner for unmatched clusters or run them at nominal T0 and
+propagate a flag the taggers can see.
+
+**Cost.** Steiner is graph-lifecycle heavy (same boost adjacency_list
+build/destroy pattern that dominated imaging cost). `perf: true` prints
+per-cluster timing — keep it on for the first SBND runs. SBND events are
+cosmic-rich (10+ matched clusters/event vs MicroBooNE's ~1 main cluster);
+consider restricting the Steiner+PR stages to **flash-matched clusters in
+the beam window** (or the QL `matched` survivors) rather than every cluster,
+which is also what the physics needs.
+
+### 2.3 Validation plan (MicroBooNE-style)
+
+1. **Port parity guard.** Multi-TPC generalizations must keep MicroBooNE
+   byte-identical: rerun the `qlport` event set, diff `track_com_*.root` and
+   tagger logs. The Steiner port already has a determinism review
+   (`steiner_graph_review.md`); preserve its invariants (node-index keys,
+   sorted edge iteration).
+2. **Skeleton sanity metrics on SBND.** Per cluster: number of terminals,
+   tree edge count, total tree length vs cluster length (`get_length`),
+   number of connected components after pruning (must be 1). Aggregate over
+   ~50 events; outliers are the debug sample.
+3. **Bee hand-scan.** Upload `regular` + `steiner` sets (the existing
+   `run_clus_evt.sh` upload path) and scan: straight cosmics (skeleton =
+   single chain), cathode crossers (single chain across the seam), showers
+   (branching), and tracks through the SBND W-defect dead band (skeleton
+   should bridge it via the dead-gap-aware sampling, not terminate).
+4. **Two-TPC seam check.** For each `cathode_connect`-merged cluster verify
+   exactly one Steiner component, and that the bridging edge length ≈ the
+   physical cathode gap (no multi-meter "shortcut" edges).
+5. **Determinism + timing.** Two identical runs → identical `steiner_pc`;
+   record per-cluster wall time on busy cosmic events to budget the chain.
+
+---
+
+*Sections 3-7 follow.*
