@@ -740,4 +740,110 @@ its unit and origin — this file will be the SBND calorimetry reference.
 
 ---
 
-*Sections 6-7 follow.*
+## 6. Various event-selection taggers
+
+### 6.1 Algorithm overview
+
+After `TaggerCheckNeutrino` has built the PR graph, the **selection layer**
+turns it into event-level decisions. Two parts:
+
+**(a) Feature-filling taggers** (inside the `clus` PR chain, called from
+`TaggerCheckNeutrino` / filling `TaggerInfo` ≈ 500 fields + `KineInfo`):
+
+| tagger | file | purpose |
+|---|---|---|
+| Cosmic tagger | `clus/src/NeutrinoTaggerCosmic.cxx` | generic cosmic flags (direction, containment, solid angle) |
+| NuMu tagger | `clus/src/NeutrinoTaggerNuMu.cxx` | νμ CC features (long muon, daughters) |
+| NuE tagger | `clus/src/NeutrinoTaggerNuE.cxx` | νe CC features (shower dE/dx stem, gaps, MIP quality, π⁰ overlap, …) |
+| Single-photon tagger | `clus/src/NeutrinoTaggerSinglePhoton.cxx` | NC γ features |
+| SSM tagger | `clus/src/NeutrinoTaggerSSM.cxx` | short straight muon (KDAR-style) features |
+| π⁰ kinematics | `clus/src/NeutrinoKinematics.cxx` (kine_pio_*) | two-shower invariant mass |
+
+Per-tagger port reviews live in `clus/docs/tagger/` (one file per NuE
+sub-block) and `clus/docs/patternrecognition/`.
+
+**(b) BDT scorers + output** (in `root/`, optional pipeline entries):
+
+| component | weights | output |
+|---|---|---|
+| `UbooneNumuBDTScorer` | 3 TMVA XMLs (`numu_tagger1/2/3`) + `cos_tagger_10` + XGBoost combiner (`numu_scalars_scores_0923.xml`) | `numu_score` + sub-scores |
+| `UbooneNueBDTScorer` | ~29 TMVA XMLs (mipid, gap, hol_lol, cme_anc, br1/3/…, stem, …) + XGB combiner | `nue_score` + 30 sub-scores |
+| `UbooneTaggerOutputVisitor` | — | writes `TaggerInfo`/`KineInfo` to ROOT |
+| `UbooneMagnifyTrackingVisitor` | — | fitted-track ROOT (`track_com_*.root`) |
+
+In `uboone-mabc.jsonnet` these are appended to the MABC pipeline only when
+`numu_weights_dir` / `nue_weights_dir` / `tracking_output` are set — the
+toggle pattern to keep.
+
+### 6.2 Integration attention points for SBND
+
+**All BDT weights are MicroBooNE-trained and must be retrained.** TMVA XML
++ XGBoost weights encode MicroBooNE feature distributions (energy scale,
+cosmic rate, beam spectrum — BNB is shared, which helps, but the detector
+isn't). The retraining needs the §7 MC (BNB ν + cosmics) plus
+data cosmics, and a feature-extraction run of the toolkit chain itself —
+i.e. **feature filling must be validated before any retraining starts**.
+Plan of record:
+
+1. Integrate and validate the feature-filling taggers with scorers OFF
+   (weight dirs `""`).
+2. Dump features with the tagger-output visitor; build the training sample
+   from toolkit output (never from prototype/WCP output — the features must
+   come from the same code that will run in production).
+3. Retrain TMVA/XGBoost with the MicroBooNE recipe; version the weight
+   files in `wire-cell-data` under `sbnd/`.
+
+**Feature definitions that silently assume one TPC.** Audit (same per-wpid
+checklist as §3/§4) the features that measure distances to detector
+boundaries or use drift direction: `shower_to_wall`-type lengths (which
+wall — the cathode is not a wall for a cross-TPC event), containment flags,
+`gap_*` variables (wire-gap detection must consult SBND's dead-gap
+registry, not uboone shorted-region lists), and cosmic-tagger
+directionality (SBND is shorter in y and wider in z; the "enters from top"
+priors differ). Each such feature should resolve geometry through
+`DetectorVolumes`/`FiducialUtils`, never through constants.
+
+**Naming/forking.** The scorers and output visitors are `Uboone*`
+components in `root/` (some genuinely uboone-specific via input ROOT
+formats). Follow the fork-by-duplication rule: create `Sbnd*` peers (or
+detector-neutral renames where the code is already generic) rather than
+threading SBND conditionals into the uboone components.
+
+**Thresholds in feature code.** Many features apply hardcoded cuts in
+physical units (energies in MeV, dQ/dx ratios). These travel with the
+recombination/energy-scale work (§4.2, §5.2): wrong energy scale → silently
+shifted features → garbage BDT input. Validate the energy scale *first*,
+features second, BDTs last.
+
+**Event-level plumbing.** SBND needs a decision per *beam-window bundle*,
+not per event-with-one-candidate. Decide early where the per-bundle scores
+land (cluster-scalar PCs next to `cluster_t0` is the natural place, so the
+selection survives file I/O and reaches CAF-level consumers) — mirroring
+how QL matching results are stored today.
+
+### 6.3 Validation plan (MicroBooNE-style)
+
+The MicroBooNE plan is written down in
+`clus/docs/tagger/tagger_validation_plan.md`; SBND inherits its structure:
+
+1. **Reasonableness (toolkit alone):** every `TaggerInfo`/`KineInfo` field
+   within physical range, fill-gates consistent (variables only filled when
+   their tagger ran). This is detector-neutral and runs on SBND immediately.
+2. **Distributional parity (uboone):** since PR is functionally-equivalent
+   but not bit-identical to the prototype, compare *distributions* of
+   features and BDT scores prototype-vs-toolkit on the qlport sample — not
+   per-event values. Keep this green while generalizing code for SBND.
+3. **SBND truth-based ROC:** after retraining, efficiency vs cosmic
+   rejection on MC (νμ CC, νe CC, NC, cosmics), the headline
+   generic-neutrino-selection numbers MicroBooNE quotes (their generic
+   selection: ~half the BNB νμ CC events at ~10⁻⁵ cosmic acceptance is the
+   shape of the target, not the number to copy).
+4. **Hand-scan tails:** Bee scans of highest-score cosmics (fakes) and
+   lowest-score true ν (misses) — feature debugging happens here.
+5. **Cross-check against the SBND production reco** (Pandora-based) on the
+   same events: not an apples-to-apples metric, but large disagreement
+   samples are efficient bug-finders in both directions.
+
+---
+
+*Section 7 follows.*
