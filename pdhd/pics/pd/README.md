@@ -111,3 +111,43 @@ template with a corrected baseline) needs no code change. Note ch 41, the
 worst over-subtractor, is dropped at hit level anyway by the LArSoft geometry
 check (`IsValidOpChannel` → "unrecognized channel number 41"), so its bad
 decon never reaches a flash.
+
+## Decision (2026-06-12): default switched to the 2024 averages
+
+Based on this, `flash/`'s **default `pdhd-spe-templates.json` is now the 2024
+FBK/HPK average templates** with flat Wiener N² (`noise_file: ''` in
+`flash.jsonnet`). The v1 per-channel set is preserved in
+`pdhd-spe-templates-v1.json` and regenerable with
+`extract_pdhd_spe_templates_v1.py`. This deliberately **diverges from the
+LArSoft production deconvolution** (which uses v1 and over-subtracts) in favour
+of a physically flat, DC-balanced result.
+
+## Can we calibrate the SPE from the data and do better? (`spe_calibration_study.png`)
+
+Tested directly (`make_spe_calibration_study.py`): isolate single-PE pulses
+from the raw snippets, average them (cross-correlation aligned), and use the
+result as the kernel. Conclusion — **not with this dataset**:
+
+- **Single PEs sit right at the noise/trigger floor.** The HPK SPE peak is
+  ~12–14 ADC while the line-noise RMS is ~4.5 ADC, i.e. only ~2.5–3σ, and the
+  self-trigger threshold cuts in at the same level. The amplitude spectrum of
+  isolated pulses peaks at ~11–12 ADC with no clean valley separating it from
+  noise.
+- **The low-amplitude average is noise-biased narrow.** Averaging 1-PE-band
+  pulses gives an SPE FWHM ~96 ns, far narrower than the 2024 template's
+  256 ns. As the amplitude band is raised (better SNR) the measured width
+  climbs through ~190 → ~225 ns, **converging on the 2024 template** — i.e. the
+  narrowing is a noise/threshold artefact and the 2024 width is consistent with
+  the data (panels 1–2).
+- **The long DC-balancing tail can't be measured.** What makes the 2024
+  template deconvolve flat is its long, smooth, DC-balanced (total area ≈ 0)
+  undershoot tail. In flash/cosmic data the late tail of any SPE is
+  contaminated by later light, so a data-extracted template is necessarily
+  short/truncated; such templates deconvolve far worse and erratically
+  (late-tail anywhere from +3 % to below −50 % of peak depending only on
+  extraction choices), versus the 2024 average's robust ≈ 0 % (panel 3).
+
+Doing better would need **dedicated low-light / LED calibration runs** with
+clean single-PE separation and a fully sampled response — exactly how the
+official 2024 and v1 templates were produced — not beam/cosmic self-triggered
+data. Reproduce: `python3 make_spe_calibration_study.py`.
