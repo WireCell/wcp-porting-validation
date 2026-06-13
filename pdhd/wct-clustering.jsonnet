@@ -26,6 +26,23 @@ function(
     // preset T0).  -250us (-250000) would place trigger-time activity at its
     // true x; see pgrapher/experiment/pdhd/clus.jsonnet.
     time_offset = 0,
+    // Per-event readout-vs-trigger offset in MICROSECONDS (the opflash metadata
+    // offset_us, ~250).  Applied DOWNSTREAM (Q/L matching geometry + T0Correction
+    // x_t0cor) rather than baked into x_raw, so the raw imaging x stays offset-free
+    // while flash-matched charge lands on the trigger time base.  Default 0 =>
+    // bit-identical.  run_clus_evt.sh reads offset_us from the opflash archive.
+    trigger_offset_us = 0,
+    // Interpose charge-light (Q/L) matching between the per-drift-group
+    // clustering (stage 3) and the final all-TPC clustering (stage 4).  Default
+    // false => the historical no-matching chain, bit-identical.  Reads the
+    // per-event opflash_pdhd-wct.tar.gz; a drift side with no light simply gets
+    // no matched flashes.  See pgrapher/experiment/pdhd/qlmatching.jsonnet.
+    do_qlmatch = false,
+    // Hand-scan calibration dump: when true (and do_qlmatch true) each drift-side
+    // QLMatching node writes work/<output_dir>/calib-evt<event>-<group>.json for the
+    // pdhd/ql_scan viewer.  Default false => no dump, matching output bit-identical.
+    // run_clus_evt.sh -calib sets this (and forces do_qlmatch).
+    calib = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -39,9 +56,10 @@ local cluster_source(fname) = g.pnode({
     }
 }, nin=0, nout=1, uses=anodes);
 
+local trigger_offset = trigger_offset_us * wc.us;
 local clus = import 'pgrapher/experiment/pdhd/clus.jsonnet';
 local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event,
-                        time_offset=time_offset);
+                        time_offset=time_offset, trigger_offset=trigger_offset);
 
 // Drift-side groups: x-aligned APAs viewed through a COMMON face, i.e. one
 // drift volume: even idents (APA0+APA2) image through face 0 (drift -x), odd
@@ -76,7 +94,45 @@ local group_pipe(gd) =
 local group_pipes = [group_pipe(gd) for gd in groups];
 local clus_all_tpc = clus_maker.all_tpc(anodes, ngroups=ngroups);
 
-local graph = g.intern(
+// Q/L matching for one drift-side group: opflash source -> flash_attach (2->1
+// fan-in: port0 = group cluster tree, port1 = opflash matrix) -> QLMatching.
+// The subgraph's free input is flash_attach port0 (port1 is wired internally),
+// its output is the matched cluster tree.  A representative anode of the group
+// (gd.anodes[0]) carries the shared drift-side geometry / per-TPC OpDet mask.
+local qlm = import 'pgrapher/experiment/pdhd/qlmatching.jsonnet';
+local qlm_maker = qlm(params, trigger_offset);
+// Per-drift-side hand-scan calibration dump path (empty unless `calib`).  Lands in
+// the event workspace beside mabc-*.zip, one file per group (the ql_scan viewer
+// merges group02 + group13 of an event into one two-side view).
+local calib_dump(gd) =
+    if calib then '%s/calib-evt%s-%s.json' % [output_dir, std.toString(event), gd.name]
+    else '';
+local ql_chain(gd) =
+    local src = qlm_maker.opflash_source(gd.name, "%s/opflash_pdhd-wct.tar.gz" % input);
+    local att = qlm_maker.flash_attach(gd.name);
+    local dv  = clus_maker.detector_volumes(gd.anodes, gd.face);
+    local mat = qlm_maker.matching(gd.anodes, dv, gd.name, gd.face, calib_dump(gd));
+    g.intern(
+        innodes=[att],
+        centernodes=[src],
+        outnodes=[mat],
+        edges=[
+            g.edge(src, att, 0, 1),
+            g.edge(att, mat, 0, 0),
+        ]
+    );
+
+local graph = if do_qlmatch then
+    local ql_pipes = [ql_chain(groups[i]) for i in std.range(0, ngroups - 1)];
+    g.intern(
+        innodes=group_pipes,
+        centernodes=ql_pipes,
+        outnodes=[clus_all_tpc],
+        edges=
+            [g.edge(group_pipes[i], ql_pipes[i], 0, 0) for i in std.range(0, ngroups - 1)] +
+            [g.edge(ql_pipes[i], clus_all_tpc, 0, i) for i in std.range(0, ngroups - 1)]
+    )
+else g.intern(
     innodes=group_pipes,
     outnodes=[clus_all_tpc],
     edges=[g.edge(group_pipes[i], clus_all_tpc, 0, i) for i in std.range(0, ngroups - 1)]
@@ -92,7 +148,7 @@ local app = {
 local cmdline = {
     type: "wire-cell",
     data: {
-        plugins: ["WireCellGen", "WireCellPgraph", "WireCellSio", "WireCellSigProc", "WireCellImg", "WireCellRoot", "WireCellTbb", "WireCellClus"],
+        plugins: ["WireCellGen", "WireCellPgraph", "WireCellSio", "WireCellSigProc", "WireCellImg", "WireCellRoot", "WireCellTbb", "WireCellClus", "WireCellMatch", "WireCellAux"],
         apps: ["Pgrapher"]
     }
 };

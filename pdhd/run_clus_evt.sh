@@ -30,6 +30,13 @@ fi
 
 ANODE=""
 SEL_TAG=""
+# Charge-light (Q/L) matching before the final all-TPC clustering: opt-in
+# (-q or PDHD_QLMATCH=1).  Default off => historical no-matching chain.
+QLMATCH=${PDHD_QLMATCH:-0}
+# -calib: also dump the per-drift-side Q/L hand-scan calibration JSONs
+# (work/<run6>_<evt>/calib-evt<EVT>-group{02,13}.json) for the pdhd/ql_scan viewer.
+# Implies Q/L matching; the matched mabc-*.zip output is byte-identical with/without it.
+CALIB=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -37,6 +44,8 @@ while [ $# -gt 0 ]; do
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
+        -q) QLMATCH=1; shift ;;
+        -calib|--calib) CALIB=1; QLMATCH=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -47,7 +56,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-a anode] [-s sel_tag] <run> <evt|all> [subrun]" >&2
+    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps)" >&2
     exit 1
 fi
 RUN=$1
@@ -138,6 +147,32 @@ process_event() {
     # GOGC=off disables the Go collector entirely, including the 2-minute
     # periodic forced GC that is the crash vector.  Config is identical
     # (same pattern as imaging -P).
+    # Per-event trigger offset for Q/L matching: read offset_us (~250) from the
+    # converted opflash archive metadata and apply it DOWNSTREAM (matching geometry
+    # + T0Correction x_t0cor).  Imaging stays offset-free (time_offset=0).  Stays 0
+    # when not matching or when the archive/metadata is absent (bit-identical).
+    TRIGGER_OFFSET_US=0
+    if [ "$QLMATCH" = 1 ]; then
+        OPFLASH_TAR="$CLUS_INPUT/opflash_pdhd-wct.tar.gz"
+        if [ -f "$OPFLASH_TAR" ]; then
+            TRIGGER_OFFSET_US=$(python3 - "$OPFLASH_TAR" <<'PY' || echo 0)
+import sys, json, tarfile
+off = 0.0
+with tarfile.open(sys.argv[1]) as tf:
+    for m in tf.getmembers():
+        if m.name.endswith("_metadata.json"):
+            md = json.loads(tf.extractfile(m).read())
+            if "offset_us" in md:
+                off = float(md["offset_us"])
+                break
+print(off)
+PY
+            echo "Trigger offset: ${TRIGGER_OFFSET_US} us (from $(basename "$OPFLASH_TAR"))"
+        else
+            echo "[warn] $OPFLASH_TAR not found; trigger_offset_us=0" >&2
+        fi
+    fi
+
     local CFG_JSON="$WORKDIR/.wct-clus${TAG_SUFFIX}.json"
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
@@ -146,6 +181,9 @@ process_event() {
         -S "run=${RUN_STRIPPED}" \
         -S "subrun=${SUBRUN}" \
         -S "event=${EVENT_NO}" \
+        -S "do_qlmatch=$([ "$QLMATCH" = 1 ] && echo true || echo false)" \
+        -S "calib=$([ "$CALIB" = 1 ] && echo true || echo false)" \
+        -S "trigger_offset_us=${TRIGGER_OFFSET_US}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

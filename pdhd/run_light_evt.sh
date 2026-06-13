@@ -63,14 +63,40 @@ mkdir -p "$WORKDIR"
 echo "input:  $INPUT_FILE"
 echo "output: $WORKDIR  (mode: $MODE)"
 
+# Per-event readout-vs-trigger offset (us) = (tc - rd_timestamp)*16ns from the ROOT
+# trigoff tree, selecting the candidate nearest the nominal 250us (same rule as the
+# C++ PDHDLight::read_trigger).  The WCT-native reco can't recover this from the
+# self-triggered snippets, so we read it here and pass it to OpFlashFinder, which
+# stamps it into the opflash metadata for downstream Q/L matching.
+OFFSET_US=$(python3 - "$INPUT_FILE" "$RUN" "$EVENT_NUM" <<'PY' || echo 0)
+import sys, uproot, numpy as np
+fn, run, event = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+off = 0.0
+try:
+    to = uproot.open(fn)["trigoff/trigger_offset"].arrays(library="np")
+    sel = (to["run"] == run) & (to["event"] == event)
+    if sel.any():
+        i = np.argmin(np.abs(to["offset_us"][sel] - 250.0))
+        off = float(to["offset_us"][sel][i])
+except Exception:
+    off = 0.0
+print(off)
+PY
+echo "trigger offset_us: $OFFSET_US"
+
 run_one() {
     local job=$1
     local cfg="$WORKDIR/.wct-light-${job}.json"
+    # Only the WCT-native reco stamps the offset; convert (PDHDOpFlashSource) reads
+    # the trigger itself, so its jsonnet has no offset_us parameter.
+    local extra=()
+    [ "$job" = reco ] && extra=(-S "offset_us=${OFFSET_US}")
     wcsonnet \
         -A "input_file=${INPUT_FILE}" \
         -A "output_dir=${WORKDIR}" \
         -S "run=${RUN}" \
         -S "event=${EVENT_NUM}" \
+        "${extra[@]}" \
         -o "$cfg" \
         "$PDHD_DIR/wct-light-${job}.jsonnet"
     wire-cell -l stderr -l "${WORKDIR}/light-${job}.log:debug" -L debug -c "$cfg"
