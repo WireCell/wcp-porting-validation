@@ -37,6 +37,7 @@ QLMATCH=${PDHD_QLMATCH:-0}
 # (work/<run6>_<evt>/calib-evt<EVT>-group{02,13}.json) for the pdhd/ql_scan viewer.
 # Implies Q/L matching; the matched mabc-*.zip output is byte-identical with/without it.
 CALIB=0
+OPDUMP=${PDHD_OPDUMP:-0}   # -op: dump the optical "op" bee instance (light + Q/L pred)
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -46,6 +47,7 @@ while [ $# -gt 0 ]; do
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -q) QLMATCH=1; shift ;;
         -calib|--calib) CALIB=1; QLMATCH=1; shift ;;
+        -op|--op) OPDUMP=1; QLMATCH=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -56,7 +58,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps)" >&2
+    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] [-op] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps; -op: + optical bee instance)" >&2
     exit 1
 fi
 RUN=$1
@@ -183,6 +185,7 @@ PY
         -S "event=${EVENT_NO}" \
         -S "do_qlmatch=$([ "$QLMATCH" = 1 ] && echo true || echo false)" \
         -S "calib=$([ "$CALIB" = 1 ] && echo true || echo false)" \
+        -S "save_opflash=$([ "$OPDUMP" = 1 ] && echo true || echo false)" \
         -S "trigger_offset_us=${TRIGGER_OFFSET_US}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then

@@ -43,6 +43,11 @@ function(
     // pdhd/ql_scan viewer.  Default false => no dump, matching output bit-identical.
     // run_clus_evt.sh -calib sets this (and forces do_qlmatch).
     calib = false,
+    // Dump the optical "op" bee instance (measured flash PE + Q/L predicted PE
+    // per matched cluster) from the all-TPC MABC, for the Bee event display.
+    // Needs do_qlmatch (the QLMatching "opflash" root PC); no-op otherwise.
+    // Default false => bit-identical.  run_clus_evt.sh -op sets this (+do_qlmatch).
+    save_opflash = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -92,7 +97,7 @@ local group_pipe(gd) =
     );
 
 local group_pipes = [group_pipe(gd) for gd in groups];
-local clus_all_tpc = clus_maker.all_tpc(anodes, ngroups=ngroups);
+local clus_all_tpc = clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=save_opflash);
 
 // Q/L matching for one drift-side group: opflash source -> flash_attach (2->1
 // fan-in: port0 = group cluster tree, port1 = opflash matrix) -> QLMatching.

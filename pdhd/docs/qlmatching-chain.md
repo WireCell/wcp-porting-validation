@@ -241,14 +241,57 @@ whose type is `1`).
 
 ---
 
+## 6. Optical "op" Bee instance (light + Q/L on the event display)
+
+To **see** the matching in the Bee event display — flashes overlaid on the charge
+clusters, with measured vs predicted light — the all-TPC `MultiAlgBlobClustering`
+can dump an optical `op` instance alongside the usual `imaging` / `clustering` /
+`channel-deadarea` ones.
+
+**Toggle (default OFF → bit-identical).** `save_opflash` is plumbed
+`run_clus_evt.sh -op` → `wct-clustering.jsonnet` (TLA `save_opflash`) →
+`clus.jsonnet` (`all_tpc(..., save_opflash)`) → the `clus_all_tpc` MABC node. It
+only does anything with `do_qlmatch` on (it reads QLMatching's `opflash` root PC),
+so `-op` implies `-q`; with it off the clustering output is unchanged.
+
+**What it dumps** (`MultiAlgBlobClustering::fill_bee_flashes`, written at the same
+*pre-pipeline* point as the `img` charge dump, where the per-APA matched clusters'
+1:1 flash association and cluster ids are still intact). One JSON
+`data/<idx>/<idx>-op.json` per event, with per-flash arrays ordered by ascending
+flash time:
+
+| field | meaning |
+|-------|---------|
+| `op_t` | flash time (µs) |
+| `op_pes` | **measured** PE per OpDet channel (the light) |
+| `op_pes_pred` | **Q/L predicted** PE per channel, element-wise summed over the matched clusters (the matching) |
+| `op_cluster_ids` | matched cluster id(s) — same enumeration as the charge dump, so a flash links to its physical cluster |
+| `op_peTotal` | total measured PE of the flash |
+| `apa` | `gid / 1000000` (the flash's APA/side) |
+
+A matched flash carries its cluster id(s) + predicted light; an unmatched flash
+emits empty `op_cluster_ids` / `op_pes_pred`. Only matched clusters with total
+predicted light ≥ 100 PE contribute a prediction (same cut as the legacy
+`dump_light`).
+
+**Build a combined link.** `run_bee_combined_evt.sh` already copies every
+`data/0/0-*.json` out of `mabc-all-apa.zip`, so once the events are clustered with
+`-op` the `0-op.json` is folded into the upload automatically — no builder change
+needed. Select the **op** instance in Bee to step through flashes and compare
+`op_pes` vs `op_pes_pred`.
+
+---
+
 ## Run it
 
 ```bash
 # from pdhd/ (this repo)
 ./run_clus_evt.sh -q  <run> <evt>     # -q / PDHD_QLMATCH=1 enables Q/L matching
 ./run_clus_evt.sh -calib <run> <evt>  # + dump candidate bundles for ql_scan viewer
+./run_clus_evt.sh -op <run> <evt>     # + dump the optical "op" Bee instance (§6); implies -q
 ```
 
-Output `mabc-all-apa.zip` carries the matched flash/T0 per cluster. The
-[`ql_scan`](ql-scan-display.md) viewer merges an event's group02 + group13 dumps into
-one two-side view.
+Output `mabc-all-apa.zip` carries the matched flash/T0 per cluster (and the `op`
+instance when `-op`). The [`ql_scan`](ql-scan-display.md) viewer merges an event's
+group02 + group13 dumps into one two-side view; for the Bee event display use `-op`
++ `run_bee_combined_evt.sh` (§6).
