@@ -60,12 +60,38 @@ opflash_pdhd-wct.tar.gz ─▶ TensorFileSource ─┐
 **independently**, each in its own `ApaRun` (`QLMatching.cxx:478`).
 
 <a name="group-aware-matching"></a>
-**Group-aware (main + associated).** Stage-3 per-group clustering tags blobs with an
-`isolated/perblob` array (−1 = main, ≥0 = sub-clusters). `QLMatching` splits each
-group into a main + associated clusters (`decompose_cluster_groups`,
-`QLMatching.cxx:694`), predicts light over the **whole** group, and anchors the
-bundle on the main. The matched T0 is copied to every cluster so `x_t0cor`
-(materialized at the first all-TPC `switch_scope`) drives the drift correction.
+**Group-aware (main + associated), then recomposed.** Stage-3 per-group clustering
+tags blobs with an `isolated/perblob` array (−1 = main, ≥0 = sub-clusters).
+`QLMatching` splits each group into a main + associated clusters
+(`decompose_cluster_groups`, `QLMatching.cxx:694`), predicts light over the
+**whole** group, and anchors the bundle on the main. The matched T0 is written to
+the main and copied to its associated clusters.
+
+> **The split is matching-INTERNAL and is undone before output.** After the fit,
+> `recompose_cluster_groups` (`QLMatching.cxx`, called in `operator()` after the
+> per-APA fit loop) merges each group's associated sub-clusters back into their
+> main via `Grouping::merge` — the inverse of the `decompose` `separate`. So
+> `QLMatching` emits a **T0/flash-annotated copy of its stage-3 input tree**: it
+> assigns T0 and **does not change the clustering**. The matched cluster then
+> carries the T0, and `x_t0cor` (materialized at the first all-TPC `switch_scope`)
+> drives the drift correction.
+>
+> **Why this is required.** If the split is left in the output, the downstream
+> all-TPC clustering inherits it. PDHD stage 4 is only `switch_scope` +
+> `cathode_connect` (`use_flash_t0=false`) — a pure cross-cathode merge with no
+> flash-T0 merge pass to re-absorb a within-volume split — so a single stage-3
+> cluster came out **separated** whenever the matcher ran (run 27305 evt 150: one
+> track split across clusters 1299/760/0/155). SBND's stage-4 `clus_all_apa`
+> *does* run flash-T0-gated merge passes (`extend/regular/.../examine_bundles`,
+> `use_flash_t0=true`) that re-absorb it, so SBND never showed the symptom. The
+> recompose makes the matcher grouping-preserving for **both** detectors;
+> verified on PDHD evt 150 (the QL-on cluster partition is now byte-identical to
+> the no-QL chain — `cluster_id` arrays match point-for-point, only the T0-driven
+> `x` shift differs) and on the SBND 10-event data sample (A/B with the recompose
+> off vs on: the final point cloud and the cluster partition are **identical**
+> for every event — only the arbitrary per-event `cluster_id` labels and the
+> within-cluster point order differ, since stage 4 now relabels a merged rather
+> than a pre-split input).
 
 ---
 
