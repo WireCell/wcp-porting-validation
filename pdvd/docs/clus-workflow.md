@@ -308,21 +308,31 @@ cm ≈ `xorig`, confirming full crossers reach the collection plane) **and** the
 cathode end in a small window near the cathode (rejects CPA / cross-volume
 over-merges above and short tracks below).
 
-**Result** (N = 59 clean full crossers — many more than PDHD; stable across cuts,
-1.55–1.58):
+**Estimator — use the pile-up, not the median.**  All genuine full crossers share
+the same true drift extent, so their reconstructed spans pile at one value; over-
+merged / large-overshoot tracks add a HIGH tail.  The *median* therefore drifts
+with the cluster composition (it gave 1.572 on the original 1.6 data but 1.522 on
+the re-clustered 1.57 data — not invariant), so the script uses the **pile-up**
+(mode of the span histogram), which is stable.  With a tight cathode window the
+median, p25 and mode all converge.
 
-| quantity | group0123 | group4567 | all |
-|---|---|---|---|
-| full-crosser span S (median, cm) | 345.9 | 343.8 | 345.0 |
-| **v_true = 1.6·D/S (mm/µs)** | **1.568** | **1.578** | **1.572** |
+**Result** (~50–60 clean full crossers, far more than PDHD).  The pile-up gives
+**v_true ≈ 1.56–1.57 mm/µs**; both drift volumes agree and the reco's 1.6 is
+~1.8 % high.  Consistent with the Walkowiak nominal at the PDVD field
+(`funcs.jsonnet drift_velocity`: 1.56 at 0.48 kV/cm) and the `speed1d55`
+field-response label.
 
-![A→C crosser x-span distribution](../drift_calib/drift_velocity_calib.png)
+**Closure / self-consistency** (the reproducible figure below).  After
+re-clustering all 142 events at the adopted 1.57, the full-crosser span pile-up
+sits at **~340 cm = D = 339 cm** — i.e. the reco now reproduces the true drift
+distance.  Running `calib_drift_velocity.py --v-reco 1.57` on the re-clustered
+dumps returns v_true = 1.57·D/S_pileup ≈ **1.563** (~0.4 % from 1.57): the loop
+closes.
 
-The two drift volumes agree and the reco's 1.6 is ~1.8 % too high.  Consistent
-with the Walkowiak nominal at the PDVD field (`funcs.jsonnet drift_velocity`:
-1.56 at 0.48 kV/cm) and the `speed1d55` field-response label.
+![A→C crosser x-span distribution (re-clustered @ 1.57; pile-up at D)](../drift_calib/drift_velocity_calib.png)
 
-**Config change.**  `drift_speed` set to **1.57 mm/µs** (data central):
+**Config change.**  `drift_speed` set to **1.57 mm/µs** (within the ~0.3–0.5 %
+estimator/statistics spread of the robust value):
 
 * `cfg/pgrapher/experiment/protodunevd/params.jsonnet` — PDVD-only `lar.drift_speed`
   override (feeds `img.jsonnet` dump, sim drift via `params.lar.drift_speed`).
@@ -335,5 +345,7 @@ are velocity-independent; only the clustering step (which builds the point cloud
 with `drift_speed` and writes `mabc-all-apa.zip`) needs re-running to pick up the
 new velocity.
 
-Reproduce: `python pdvd/drift_calib/calib_drift_velocity.py` (prints per-volume
-velocities + writes `pdvd/drift_calib/drift_velocity_calib.png`).
+Reproduce (the `work/` dumps are now re-clustered at 1.57, so pass the matching
+`--v-reco`): `python pdvd/drift_calib/calib_drift_velocity.py --v-reco 1.57`
+(prints per-volume velocities + writes `pdvd/drift_calib/drift_velocity_calib.png`).
+`--v-reco` must equal the `drift_speed` the input data was reconstructed with.

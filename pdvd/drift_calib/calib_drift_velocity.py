@@ -43,7 +43,12 @@ import zipfile
 
 import numpy as np
 
-V_RECO = 1.6  # mm/us, current toolkit drift_speed (cfg/.../protodunevd/clus.jsonnet)
+# Drift speed the INPUT mabc data was reconstructed with (NOT necessarily the
+# current config).  The original calibration ran on data made at 1.6 and yielded
+# ~1.57.  The work/ dumps have since been re-clustered at 1.57, so to re-derive
+# from the current data pass `--v-reco 1.57`; the full-crosser pile-up then sits at
+# D (~339 cm) and v_true comes back ~1.57 -- the closure / self-consistency check.
+V_RECO_DEFAULT = 1.6  # mm/us
 
 # Geometry (cm) -- params.jsonnet + protodunevd-wires-larsoft-v5 store.
 X_W = 341.55              # W collection plane (xorig in time2drift; = apa_cpa)
@@ -108,7 +113,26 @@ def is_full_crosser(r, anode_reach_min, cath_lo, cath_hi):
     return (cath_lo <= cc <= cath_hi) if r["grp"] == 0 else (-cath_hi <= cc <= -cath_lo)
 
 
-def report(tag, full):
+def span_pileup(sp, lo=330.0, hi=375.0, binw=3.0):
+    """Robust full-drift span = the PILE-UP (mode) of the span distribution.
+
+    All genuine full crossers share the same true drift extent, so their
+    reconstructed spans pile at one value; over-merged / large-overshoot tracks
+    add a HIGH tail that drags the *median* (so the median is NOT used here -- it
+    is tail-sensitive and shifts with cluster composition between reprocessings,
+    while the pile-up is stable).  Peak of a lightly-smoothed histogram.
+    """
+    sp = np.asarray(sp)
+    edges = np.arange(lo, hi + binw, binw)
+    h, _ = np.histogram(sp, bins=edges)
+    if h.sum() == 0:
+        return float(np.median(sp))
+    hs = np.convolve(h, np.ones(3) / 3.0, mode="same")
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    return float(centers[int(np.argmax(hs))])
+
+
+def report(tag, full, v_reco):
     if not full:
         print(f"[{tag}] no full crossers")
         return None
@@ -117,12 +141,13 @@ def report(tag, full):
     ov = np.array([(r["cath_coord"] if r["grp"] == 0 else -r["cath_coord"])
                    for r in full])           # signed cathode overshoot past x=0
     gaps = np.array([r["max_gap"] for r in full])
-    S = float(np.median(sp))
-    v_span = V_RECO * D / S
-    print(f"[{tag}] N={len(full)}  span median={S:.1f} cm (mean={sp.mean():.1f})  "
-          f"anode-reach median={np.median(ar):.1f} cm  cath-overshoot median={np.median(ov):.1f} cm  "
+    S = span_pileup(sp)                       # robust full-drift span (pile-up)
+    v_span = v_reco * D / S
+    print(f"[{tag}] N={len(full)}  span pile-up={S:.1f} cm (median={np.median(sp):.1f}, "
+          f"tail-inflated)  anode-reach median={np.median(ar):.1f} cm  "
+          f"cath-overshoot median={np.median(ov):.1f} cm  "
           f"max interior-gap median={np.median(gaps):.1f} cm")
-    print(f"      v_true = {v_span:.4f} mm/us   (span / D={D:.1f})")
+    print(f"      v_true = {v_span:.4f} mm/us   (pile-up span / D={D:.1f})")
     return dict(sp=sp, S=S, v_span=v_span, gaps=gaps)
 
 
@@ -136,15 +161,20 @@ def main():
     ap.add_argument("--anode-reach", type=float, default=330.0)
     ap.add_argument("--cath-lo", type=float, default=-5.0)
     ap.add_argument("--cath-hi", type=float, default=25.0)
+    ap.add_argument("--v-reco", type=float, default=V_RECO_DEFAULT,
+                    help="drift_speed the INPUT data was reconstructed with "
+                         "(1.6 for the original calibration; 1.57 for the "
+                         "re-clustered work/ dumps -> closure check)")
     ap.add_argument("--plot", default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "drift_velocity_calib.png"))
     args = ap.parse_args()
+    v_reco = args.v_reco
 
     zips = sorted(glob.glob(os.path.join(args.work, "*", "mabc-all-apa.zip")))
     if not zips:
         sys.exit(f"no mabc-all-apa.zip under {args.work}")
     print(f"[geom] D(collection->cathode surface)={D:.3f} cm   xorig={X_W} cm   "
-          f"v_reco={V_RECO} mm/us")
+          f"v_reco={v_reco} mm/us")
     print(f"[data] {len(zips)} events under {args.work}\n")
 
     all_rows = []
@@ -166,19 +196,19 @@ def main():
 
     g0 = [r for r in full if r["grp"] == 0]
     g1 = [r for r in full if r["grp"] == 1]
-    report("group0123 (anodes 0-3)", g0)
-    report("group4567 (anodes 4-7)", g1)
-    res = report("ALL", full)
+    report("group0123 (anodes 0-3)", g0, v_reco)
+    report("group4567 (anodes 4-7)", g1, v_reco)
+    res = report("ALL", full, v_reco)
 
     if res is not None:
         print(f"\n==> calibrated drift velocity v_true = {res['v_span']:.4f} mm/us (span / D).")
-        print(f"==> reco currently {V_RECO} mm/us  ->  "
-              f"~{100*(V_RECO/res['v_span']-1):.1f}% high.")
+        print(f"==> input data reconstructed at {v_reco} mm/us  ->  "
+              f"~{100*(v_reco/res['v_span']-1):.1f}% off.")
         _make_plot(args.plot, np.array([r["span"] for r in g0]),
-                   np.array([r["span"] for r in g1]), res["S"])
+                   np.array([r["span"] for r in g1]), res["S"], v_reco)
 
 
-def _make_plot(path, g0, g1, S):
+def _make_plot(path, g0, g1, S, v_reco):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -194,10 +224,11 @@ def _make_plot(path, g0, g1, S):
     ax.hist(g0, bins=edges, histtype="step", label=f"group0123 (N={g0.size})", color="C0")
     ax.hist(g1, bins=edges, histtype="step", label=f"group4567 (N={g1.size})", color="C1")
     ax.axvline(D, ls="--", color="g", label=f"D={D:.1f} (collection->cath)")
-    ax.axvline(S, ls="-", color="r", lw=1.5, label=f"S(median)={S:.1f}")
+    ax.axvline(S, ls="-", color="r", lw=1.5, label=f"S(pile-up)={S:.1f}")
     ax.set_xlabel("full-crosser drift x-span [cm]")
     ax.set_ylabel("clusters")
-    ax.set_title(f"PDVD A-C crosser x-span  ->  v_true={V_RECO*D/S:.4f} mm/us")
+    ax.set_title(f"PDVD A-C crosser x-span (data @ {v_reco} mm/us)  ->  "
+                 f"v_true={v_reco*D/S:.4f} mm/us")
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(path, dpi=110)
