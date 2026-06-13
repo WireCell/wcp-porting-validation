@@ -65,10 +65,23 @@ special test wiring at that window location.
 
 ## What is actually instrumented in these data
 
-Only the **x > 0 drift face** (OpDets 0–79) has electronics in runs 27305/27980.
-The x < 0 face (OpDets 80–159) is completely unequipped.
+The instrumented set is **run-dependent** — it reflects the ongoing 2024
+installation, so it differs between runs. The numbers below are **run 27305**'s
+`flashopdet/opdet_geo` snapshot (the file this doc is based on): only the
+**x > 0 drift face** (OpDets 0–79) has electronics there — 54 of its 80 windows
+have `nchan>0`; the x < 0 face (OpDets 80–159) is entirely `nchan=0`.
 
-Layout of the x > 0 face (10 y-columns × 8 z-rows = 80 windows):
+> **Caveat — this is not true for every run.** Verified directly in the WCT
+> opflash across 115 events (runs 27305/27980/28084/29107), the x < 0 side
+> (OpDets 80–119) **does** carry real flashes in **run 27980** (11/31 events,
+> PE up to several thousand); it is dark in 27305/28084/29107. So "x < 0 is
+> unequipped" holds for 27305 but **not** for 27980. The Q/L matching handles
+> this run-to-run variation with a per-event `auto_mask` (see
+> "Dead / masked channels" below) rather than a fixed list. OpDets **120–159**
+> are a separate case: they are read out in DAPHNE full-stream mode and never
+> appear in the WCT opflash in any run (global max PE = 0 / 115 events).
+
+Layout of the x > 0 face in **run 27305** (10 y-columns × 8 z-rows = 80 windows):
 
 | z-row | z (cm) | Windows instrumented (of 10) | Bar group |
 |---|---|---|---|
@@ -99,6 +112,54 @@ Summary:
 The 54 are individual acceptance **windows**, not whole bars. Some bars are
 partially instrumented (e.g. only 2 of their 4 windows cabled). The partial
 instrumentation reflects the ongoing installation state during the 2024 run period.
+
+---
+
+## Dead / masked channels for Q/L matching
+
+`QLMatching` declares all **160** OpChannels (`nchan=160`,
+`cfg/pgrapher/experiment/pdhd/qlmatching.jsonnet`). A channel that the photon
+model predicts light on but that carries **no measured PE** biases the per-flash
+χ²/ndf, so dead channels must be masked. PDHD uses the same two-tier scheme as
+SBND: a **static** `ch_mask` for permanently-dead / never-readout channels, plus
+a per-event **`auto_mask`** for run-dependent ones. All of this is plain config —
+the machinery lives in the shared `match/src/QLMatching.cxx`.
+
+**Static `ch_mask` (47 channels, permanent):**
+
+| Channels | Reason |
+|---|---|
+| `3` | noisy (LArSoft `IgnoreChannels`) |
+| `86, 87, 97, 107, 116, 117` | dead (LArSoft v1 `IgnoreChannels`; confirmed 0 PE in all 115 events) |
+| `120–159` | DAPHNE **full-stream** readout — skipped by the snippet decoder, so they never enter the WCT opflash (global max PE = 0 / 115 events). They exist only as always-zero columns in the `nchan=160` matrix. |
+
+Empirical basis: across 115 WCT opflash events (runs 27305/27980/28084/29107),
+the seven listed 0–119 channels never fire, and every channel in 120–159 is
+exactly 0 in every event.
+
+**Per-event `auto_mask` (run-dependent):** within one event/TPC, a channel whose
+event-max PE stays below `auto_mask_pe_low` while its nearest **live** neighbours
+see light (neighbour-median PE > `auto_mask_pe_bright` in ≥ `min_contrast`
+flashes) is dropped for that event. This catches a channel that is dead in
+**this** run but absent from the static list — e.g. the x < 0 side, which is
+cabled in run 27980 but not in 27305/28084/29107. PDHD thresholds:
+
+| knob | value | rationale (from the 115-event study) |
+|---|---|---|
+| `auto_mask_pe_low` | `10` | a *live* channel's event-max PE is ≥ 31.6 (p1) / ≥ 71 (p5); a dead one is 0. 10 sits in the empty gap (cleared by 99.83% of live channels). |
+| `auto_mask_pe_bright` | `50` | per-flash nonzero PE p75 = 55 — a real flash easily lifts the neighbour median above 50. |
+| `auto_mask_neighbors` | `4` | K nearest live channels for the brightness reference. |
+| `auto_mask_min_contrast` | `1` | ≥ 1 bright-neighbour flash required to mask. |
+| `auto_mask_min_flash` | `3` | skip auto-masking below 3 flashes (too little evidence). |
+
+Both tiers fold into the same per-channel `opdet_mask`, so prediction, χ², KS and
+ndf all inherit them. The `-calib` dump marks each channel's `auto_masked` flag
+(dynamic) vs the static `ch_mask`.
+
+> Note on the colleague's list (`-1 (disconnected); 86,87,97,107,116,117,147
+> (dead); 3 (noisy); 120–159 (full-stream)`): `-1` is a sentinel, not a real
+> OpChannel — nothing to mask. `147` falls inside the 120–159 full-stream block,
+> already covered. The rest map 1:1 onto the static `ch_mask` above.
 
 ---
 
