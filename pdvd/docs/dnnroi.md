@@ -74,19 +74,15 @@ node reproduces standalone PyTorch inference.
 
 ## End-to-end: DNN-ROI → imaging → clustering
 
-The imaging step (`run_img_evt.sh`) reads `work/<RUN>_<EVT>/protodune-sp-frames-anode{N}.tar.bz2`
-and requires both `gauss` and `wiener` tags. The DNN runner writes
-`protodune-sp-**dnnroi**-frames-anode{N}.tar.bz2`, so bridge the two names with
-a symlink before imaging (the runner does this for you in batch; do it by hand
-for a one-off):
+The DNN runner writes `protodune-sp-**dnnroi**-frames-anode{N}.tar.bz2`, and
+`run_img_evt.sh` now reads those **directly by default** (`-d on`, the standard
+chain) — no `protodune-sp-frames` symlink needed. Imaging requires both `gauss`
+and `wiener` tags, which the post-DNN `L1SPFilterPD` provides (L1SP on default):
 
 ```
-run=039324; evt=0; wd=work/${run}_${evt}
+run=039324; evt=0
 ./run_nf_sp_dnnroi_evt.sh -D cpu -P fp32 -r data -N hybrid --loose-heur $run $evt
-for f in $wd/protodune-sp-dnnroi-frames-anode*.tar.bz2; do
-  b=$(basename "$f"); ln -sf "$b" "$wd/${b/sp-dnnroi-frames/sp-frames}"
-done
-./run_img_evt.sh  $run $evt     # -> clusters-apa-anode{N}-ms-{active,masked}.tar.gz
+./run_img_evt.sh  $run $evt     # -d on default -> reads protodune-sp-dnnroi-frames
 ./run_clus_evt.sh $run $evt     # -> mabc-anode{N}*.zip + mabc-all-apa.zip
 ```
 
@@ -96,10 +92,14 @@ A per-run Bee link (all events of a run in one set) is then:
 ./run_bee_combined_evt.sh $run  # builds data/<evt>/ for every event, zips, uploads, prints the URL
 ```
 
-**Gotcha — silent non-DNN fallback.** If the symlink is missing, `run_img_evt.sh`
-falls back to the pre-made `protodune-sp-frames` under `input_data/` (standard
-non-DNN SP), producing valid-looking but wrong (non-DNN) clusters. Always
-confirm the `protodune-sp-frames-anode0` symlink exists in the work dir.
+**No more silent non-DNN fallback.** `run_img_evt.sh` defaults to `-d on` and
+reads the DNN-ROI frames from the work dir directly; if they are absent it
+**errors loudly** (`[skip] ... run run_nf_sp_dnnroi_evt.sh first`) instead of
+quietly imaging the traditional `protodune-sp-frames`. To deliberately image the
+traditional/loose-ROI SP frames, pass `-d off`. (Previously the DNN flow relied
+on a `protodune-sp-frames -> protodune-sp-dnnroi-frames` symlink, and a missing
+symlink silently produced non-DNN clusters; the `-d on` default removes that
+trap. The symlink is still honoured under `-d off` if present.)
 
 **Gotcha — parallel `wire-cell` gets reaped.** Running ~4 DNN+L1SP `wire-cell`
 processes at once on the shared box has them SIGKILLed (`Killed`) in lockstep —

@@ -22,9 +22,12 @@
 #   is used automatically as a fallback.
 #   -S:  force-prefer the sparse variant for every anode that has one.
 #   -s:  work/<RUN_PADDED>_<EVT>_sel<TAG>/input/ (from run_select_evt.sh)
-#   -d:  on|off (default off).  When 'on', consume DNN-ROI output
-#        (protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2 from work/) instead
-#        of the standard SP frames.  Produced by run_nf_sp_dnnroi_evt.sh.
+#   -d:  on|off (default ON).  When 'on' (the default), consume DNN-ROI output
+#        (protodunehd-sp-dnnroi-frames-anode{N}.tar.bz2 from work/, produced by
+#        run_nf_sp_dnnroi_evt.sh) -- the standard reconstruction chain.  Pass
+#        '-d off' to fall back to the traditional/loose-ROI SP frames.  Default
+#        is ON so imaging never silently falls back to the traditional chain
+#        when the DNN-ROI frames are simply absent (it errors loudly instead).
 # Output: work/<run>_<evt>[_sel<TAG>]/clusters-apa-apa{N}-ms-{active,masked}.tar.gz
 
 set -e
@@ -52,7 +55,7 @@ ANODE=""
 SEL_TAG=""
 FORCE_SPARSE=false
 FORCE_INPUT_DATA=""
-USE_DNNROI="off"
+USE_DNNROI="on"
 PER_ANODE=true
 _args=()
 while [ $# -gt 0 ]; do

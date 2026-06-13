@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run imaging for one event.
-# Usage: ./run_img_evt.sh [-I] [-1] [-a anode] [-s sel_tag] <run> <evt|all>
+# Usage: ./run_img_evt.sh [-I] [-1] [-a anode] [-s sel_tag] [-d on|off] <run> <evt|all>
 #        ./run_img_evt.sh                # list available runs
 #
 #   Per-anode sequential mode is the DEFAULT: one wire-cell process per
@@ -14,9 +14,15 @@
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDVD_MAX_JOBS=N).  Events with missing inputs are skipped.
 #
-# Input:  work/<RUN_PADDED>_<EVT>/protodune-sp-frames-anode{0..7}.tar.bz2  (preferred)
+# Input (default, -d on): work/<RUN_PADDED>_<EVT>/protodune-sp-dnnroi-frames-anode{0..7}.tar.bz2
+#         (the DNN-ROI standard chain, produced by run_nf_sp_dnnroi_evt.sh).
+#   -d on|off (default ON).  '-d off' uses the traditional/loose-ROI SP frames:
+#         work/<RUN_PADDED>_<EVT>/protodune-sp-frames-anode{0..7}.tar.bz2  (preferred)
 #         input_data/<run_dir>/<evt_dir>/protodune-sp-frames-anode{0..7}.tar.bz2  (fallback)
-#   -I:  force loading SP frames from input_data even if work dir has them
+#         Default is ON so imaging reads the DNN-ROI frames directly and never
+#         silently falls back to the traditional SP frames (it errors loudly if
+#         the DNN-ROI frames are absent).  No more sp-frames->dnnroi symlink needed.
+#   -I:  force loading (traditional) SP frames from input_data even if work dir has them
 #   -s:  work/<RUN_PADDED>_<EVT>_sel<TAG>/input/ (from run_select_evt.sh)
 # Output: work/<run>_<evt>[_sel<TAG>]/clusters-apa-anode{N}-ms-{active,masked}.tar.gz
 
@@ -45,6 +51,9 @@ ANODE=""
 SEL_TAG=""
 FORCE_INPUT_DATA=""
 PER_ANODE=true
+# DNN-ROI SP is the default imaging input (the standard reconstruction chain);
+# '-d off' falls back to traditional/loose-ROI SP frames.
+USE_DNNROI="on"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -55,10 +64,21 @@ while [ $# -gt 0 ]; do
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
+        -d) USE_DNNROI="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+case "$USE_DNNROI" in
+    on|off) ;;
+    *) echo "[err] -d must be 'on' or 'off' (got '$USE_DNNROI')" >&2; exit 1 ;;
+esac
+if [ "$USE_DNNROI" = "on" ]; then
+    INPUT_BASENAME="protodune-sp-dnnroi-frames"
+else
+    INPUT_BASENAME="protodune-sp-frames"
+fi
 
 if [ $# -eq 0 ]; then
     list_runs; exit 0
@@ -117,11 +137,23 @@ process_event() {
     fi
     echo "Event dir: $EVTDIR"
 
-    if [ -z "$SEL_TAG" ] && [ -z "$FORCE_INPUT_DATA" ] && \
-       ls "$WORKDIR/protodune-sp-frames-anode"*.tar.bz2 >/dev/null 2>&1; then
-        SP_PREFIX="$WORKDIR/protodune-sp-frames"
+    if [ "$USE_DNNROI" = "on" ]; then
+        # DNN-ROI frames live in the work dir (written by run_nf_sp_dnnroi_evt.sh),
+        # or in the selection input dir.  Never fall back to the traditional
+        # input_data SP frames -- error loudly so a missing DNN step is obvious.
+        if ls "$WORKDIR/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
+            SP_PREFIX="$WORKDIR/${INPUT_BASENAME}"
+        elif [ -n "$SEL_TAG" ] && ls "$EVTDIR/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
+            SP_PREFIX="$EVTDIR/${INPUT_BASENAME}"
+        else
+            echo "[skip] run=$RUN evt=$EVT: no ${INPUT_BASENAME}-anode*.tar.bz2 in $WORKDIR (run run_nf_sp_dnnroi_evt.sh first, or pass -d off for traditional SP)" >&2
+            return 2
+        fi
+    elif [ -z "$SEL_TAG" ] && [ -z "$FORCE_INPUT_DATA" ] && \
+       ls "$WORKDIR/${INPUT_BASENAME}-anode"*.tar.bz2 >/dev/null 2>&1; then
+        SP_PREFIX="$WORKDIR/${INPUT_BASENAME}"
     else
-        SP_PREFIX="$EVTDIR/protodune-sp-frames"
+        SP_PREFIX="$EVTDIR/${INPUT_BASENAME}"
     fi
     echo "SP prefix: $SP_PREFIX"
 
