@@ -170,7 +170,8 @@ chain and tunables.
 ## Update (2026-06-13): λ + normalization tuned and data reprocessed
 
 Following the diagnosis above, the visibility **spread** and the **normalization**
-were tuned jointly and the 27305 study events reprocessed.
+were tuned jointly and **all 23 run-27305 events with light** reprocessed end-to-end
+through the real clustering + Q/L chain at the tuned model.
 
 ### Method — offline re-predictor, validated against the C++
 
@@ -204,25 +205,34 @@ End-to-end reprocess of the cleanest anchor (real C++, λ=100, eff=0.023):
 | predicted light on dark PMTs | 49 % | **39 %** | 0 |
 | predicted total PE | 24552 | **10331** | 8052 |
 
-Aggregate over the (noisier) auto-selected anchor set, before → after:
-direct-PMT scale median **0.36 → 0.83**; integral scale **0.19 → 0.58**; dark-PMT
-fraction **47 % → 39 %**.
+**Aggregate over the full 23-event sample** (7 clean anchors: at_x_boundary,
+ndf≥30, measTot>3000, ks<0.4), before → after:
+
+| aggregate (median) | before (λ=2000) | after (λ=100, eff=0.023) |
+|---|---:|---:|
+| direct-PMT scale | 0.36 | **1.00** |
+| integral scale | 0.19 | **0.77** |
+| `N90` ratio pred/meas | 2.4 | **2.0** |
+| light on dark PMTs | 47 % | **39 %** |
+
+The two new well-matched anchors the larger sample brings in are striking —
+evt198 (direct 0.99, integral 1.04) and evt270 (`N90` 5 vs 5 exactly).
 
 ### What is fixed, and what is not
 
-- **Normalization: fixed.** The directly-lit-PMT scale is now ≈1 on the clean
-  crosser (0.83 median on the noisy set); the absolute light scale is calibrated.
+- **Normalization: fixed.** The directly-lit-PMT scale median is now **1.00** across
+  the 7 clean anchors (was 0.36) — the absolute light scale is calibrated, and it
+  holds as a population, not just on the single bright crosser.
 - **Spread: fixed for clean single-track crossers, residual otherwise.** λ=100
   shrinks every anchor's `N90`, but the longer / multi-track anchors (e.g. evt150's
-  29k-point blob, evt162) shrink from ~25 to ~14–16 without reaching their very low
-  measured `N90`, so the aggregate `N90` ratio stays ~2.6×. A single global λ cannot
-  capture this; the next-order correction is the **angular Gaisser–Hillas terms** (or
-  the voxel photon library), and **more clean crossers** (run 27980, more 27305
-  events) to pin it.
-- **Provisional.** The fit rests mainly on one bright crosser; `ks_dis` on that
-  bundle rose 0.158→0.256 (a different CDF metric than the physical concentration —
-  the pattern agreement clearly improved). Treat λ and `vuv_eff` as first-calibration,
-  not final.
+  29k-point blob, evt162, evt282) shrink from ~25 to ~14–16 without reaching their
+  very low measured `N90`, so the median `N90` ratio improves only 2.4 → 2.0. A
+  single global λ cannot capture this; the next-order correction is the **angular
+  Gaisser–Hillas terms** (or the voxel photon library), and **more clean crossers**
+  (run 27980, which also has x<0-side light) to pin it.
+- **Provisional.** On the brightest anchor the matcher's `ks_dis` rose 0.158→0.256
+  (a different CDF metric than the physical concentration — the pattern agreement
+  clearly improved). Treat λ and `vuv_eff` as first-calibration, not final.
 
 Analysis scripts: `pdhd/ql_light_calib/` (`repredict.py` validated re-predictor,
 `fit.py` λ sweep, `after_metrics.py` reprocessed-dump metrics).
