@@ -18,35 +18,38 @@ PDHD_DIR=$(cd "$(dirname "$0")" && pwd)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
 
-LIGHT_DIR="$PDHD_DIR/example_light_data"
+LIGHT_DIR="$PDHD_DIR/input_data_7p8_new_coh_grouping"
 
 INPUT_FILE=""
 MODE="both"
-while getopts "f:m:" opt; do
+DAQ_EVT=""   # DAQ event number in the ROOT file; defaults to the positional <evt>
+while getopts "f:m:e:" opt; do
     case $opt in
         f) INPUT_FILE="$OPTARG" ;;
         m) MODE="$OPTARG" ;;
-        *) echo "usage: $0 [-f FILE] [-m convert|reco|both] <run> <evt>" >&2; exit 1 ;;
+        e) DAQ_EVT="$OPTARG" ;;
+        *) echo "usage: $0 [-f FILE] [-m convert|reco|both] [-e DAQ_EVT] <run> <evt>" >&2; exit 1 ;;
     esac
 done
 shift $((OPTIND-1))
 
 if [ $# -lt 2 ]; then
-    echo "Available light-data files:"
-    ls "$LIGHT_DIR"/*.root 2>/dev/null | sed 's|.*/|  |'
-    echo "usage: $0 [-f FILE] <run> <evt>"
+    echo "Available light-data runs:"
+    ls -d "$LIGHT_DIR"/run*/ 2>/dev/null | sed 's|.*/run|  run|;s|/$||'
+    echo "usage: $0 [-f FILE] [-e DAQ_EVT] <run> <evt>"
     exit 0
 fi
 
 RUN=$1
-EVT=$2
+EVT=$2                       # label for the work dir (0-based index in this dataset)
+EVENT_NUM=${DAQ_EVT:-$EVT}   # event number selected from the ROOT file
 RUN_PADDED=$(printf "%06d" "$RUN")
 
 if [ -z "$INPUT_FILE" ]; then
-    # Prefer the multi-event np04hd_raw file for the run.
-    INPUT_FILE=$(ls "$LIGHT_DIR"/np04hd_raw_run${RUN_PADDED}_*.root 2>/dev/null | head -1)
+    # Prefer the multi-event np04hd_raw file for the run (per-run subdir).
+    INPUT_FILE=$(ls "$LIGHT_DIR"/run${RUN_PADDED}/np04hd_raw_run${RUN_PADDED}_*.root 2>/dev/null | head -1)
     if [ -z "$INPUT_FILE" ]; then
-        INPUT_FILE=$(ls "$LIGHT_DIR"/*run${RUN}*.root 2>/dev/null | head -1)
+        INPUT_FILE=$(ls "$LIGHT_DIR"/run${RUN_PADDED}/*run${RUN}*.root 2>/dev/null | head -1)
     fi
 fi
 if [ -z "$INPUT_FILE" ] || [ ! -f "$INPUT_FILE" ]; then
@@ -67,7 +70,7 @@ run_one() {
         -A "input_file=${INPUT_FILE}" \
         -A "output_dir=${WORKDIR}" \
         -S "run=${RUN}" \
-        -S "event=${EVT}" \
+        -S "event=${EVENT_NUM}" \
         -o "$cfg" \
         "$PDHD_DIR/wct-light-${job}.jsonnet"
     wire-cell -l stderr -l "${WORKDIR}/light-${job}.log:debug" -L debug -c "$cfg"

@@ -3,9 +3,10 @@
 A walk-through of the **raw PDHD photon-detector data** and the WCT-native light
 reconstruction in `flash/`, answering the practical questions: how long is a raw
 waveform, what is the tick, how is it triggered, what kernels deconvolve it, and
-how an OpHit's time and PE are built. It is grounded in the actual example data
-(`pdhd/example_light_data/`, converted into
-`pdhd/work/<run>_<evt>/light-frames*.tar.bz2`) and the three `flash/` components.
+how an OpHit's time and PE are built. It is grounded in the actual data
+(`pdhd/input_data_7p8_new_coh_grouping/run<RUN6>/np04hd_raw_run<RUN6>_*.root`,
+converted into `pdhd/work/<run>_<evt>/light-frames*.tar.bz2`) and the three
+`flash/` components.
 
 > Companion docs: `photon-detector-chain.md` (upstream DUNE survey, geometry,
 > timing offset), `flash/docs/stage1-root-conversion.md` (ROOT → WCT),
@@ -303,8 +304,8 @@ flash level the larana double-offset + width-tolerance machinery is sufficient (
 
 ### 4.2 The coincidence window is robust at 1 µs (data-checked)
 
-Measured over the four example events (`027305_150`, `027980_8`, `028084_74408`,
-`029107_983`):
+Measured over the first event of each run (`027305_0`, `027980_0`, `028084_0`,
+`029107_0` — DAQ 150, 8, 74408, 983):
 
 - the **time spread of the OpHits within a single reconstructed flash is always
   < 1 µs** (max 0.96 µs) — a 1 µs accumulator bin never splits a genuine flash;
@@ -348,12 +349,46 @@ with a synthetic two-side coincidence, where all-TPC produces one mixed flash an
 
 ---
 
+## 5. Data layout and running
+
+The light + charge inputs live under
+`pdhd/input_data_7p8_new_coh_grouping/run<RUN6>/`:
+
+- `np04hd_raw_run<RUN6>_*.root` — the multi-event light file (`opflashana`,
+  `decoana` waveform snippets, `flashopdet`, `trigoff`);
+- `evt_<N>/` — per-event **charge** folders (`protodunehd-orig-frames-anode*.tar.bz2`,
+  and `protodunehd-sp-frames-*` where signal-processed).
+
+**Event numbering.** The `evt_<N>` folders and the `pdhd/work/<RUN6>_<N>` dirs use a
+**0-based index** `N`, but the light ROOT file selects by the **DAQ `EventID`**. The
+two are mapped by the charge frame ident inside `evt_<N>/...-orig-frames-anode0.tar.bz2`
+(member `frame_*_<DAQ>.npy`) — *not* a formula (e.g. run 27980's DAQ stride is
+non-uniform). So light reco passes the DAQ number while keeping the 0-based work-dir
+label:
+
+```
+./run_light_evt.sh -m reco -e <DAQ_EVENT> <run> <N>   # work/<RUN6>_<N>, selects DAQ
+./run_light_evt.sh -m reco <run> <evt>                # back-compat: label == DAQ
+```
+
+Caveats when batch-processing: (a) a run's light file may cover only a **subset** of
+the charge events (run 27305 has light for 24 of 34 events; the rest raise
+`no decoana/run_..._evt_N`); (b) electronics gain is **per run** (`META.json`: 27305 /
+28084 = 14, 27980 / 29107 = 7.8 mV/fC) — pass `-g 14` to `run_nf_sp_dnnroi_evt.sh`
+for the 14-runs, since its auto-gain wrongly reads "7p8" from the parent dir name.
+
+The curated `pdhd/work/` keeps only events with **both** charge
+(`mabc-all-apa.zip`) and light (`opflash_pdhd-wct.tar.gz`); events missing either are
+removed.
+
+---
+
 ## Appendix — files and reproduction
 
 | topic | location |
 |---|---|
-| raw + decon frames (this event) | `pdhd/work/027305_150/light-frames-wct.tar.bz2` |
-| LArSoft reference deconv | `pdhd/work/027305_150/light-frames.tar.bz2` |
+| raw + decon frames (this event) | `pdhd/work/027305_0/light-frames-wct.tar.bz2` |
+| LArSoft reference deconv | `pdhd/work/027305_0/light-frames.tar.bz2` |
 | SPE templates (per-channel v1) | `cfg/pgrapher/experiment/pdhd/pdhd-spe-templates.json` |
 | noise power spectra | `cfg/pgrapher/experiment/pdhd/pdhd-noise-templates.json` |
 | OpDet geometry (y/z, mm) | `cfg/pgrapher/experiment/pdhd/pdhd-opdet-geom.json` |

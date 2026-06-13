@@ -1,6 +1,6 @@
 # PDHD PDS: OpChannel vs OpDet — 256 vs 160 Explained
 
-Investigation based on `pdhd/example_light_data/onevent_run27305_final.root`
+Investigation based on `pdhd/input_data_7p8_new_coh_grouping/onevent_run27305_final.root`
 (`flashopdet/opdet_geo` and `flashopdet/opch_map` trees).
 
 ---
