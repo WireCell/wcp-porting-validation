@@ -161,6 +161,42 @@ ndf all inherit them. The `-calib` dump marks each channel's `auto_masked` flag
 > OpChannel — nothing to mask. `147` falls inside the 120–159 full-stream block,
 > already covered. The rest map 1:1 onto the static `ch_mask` above.
 
+### Per-run channel availability (measured from the WCT opflash)
+
+The instrumented/working channel set is **run-dependent**, so the static
+`ch_mask` is deliberately run-independent (only the 7 permanent dead + 120–159)
+and the per-event `auto_mask` absorbs the run-to-run differences. Counts below
+are from the 115 curated WCT opflash events; "available" = the channel produces
+a flash hit (PE > 0) in at least one event of that run ("union"), and "median/evt"
+is the typical number firing in a single event.
+
+**x > 0 side (OpDets 0–79):**
+
+| Run | condition | available (union) | which OpDets | median/evt |
+|---|---|---|---|---|
+| 27305 | beam | **79** | 0–79 (all, minus dead ch3) | 49 |
+| 27980 | cosmic | **68** | scattered across 0–78 | 29 |
+| 28084 | cosmic | **39** | **0–39 only** (minus ch3) | 18 |
+| 29107 | beam | **39** | **0–39 only** (minus ch3) | 12 |
+
+For the majority of runs only ~39 x>0 channels are available: 28084 and 29107
+read out **only OpDets 0–39** (the lower-z bar group). Only 27305 is essentially
+fully instrumented (79 of 80). In the 39-channel runs, OpDets 40–79 are **not
+dead** — just un-cabled that run; they sit active in the mask but measure 0 PE,
+which is precisely what `auto_mask` removes per event. ch3 is absent from every
+run's union, confirming it as genuinely dead (and correctly in the static mask).
+
+**x < 0 side (OpDets 80–159):** only **run 27980** carries x<0 light at all
+(see the caveat under "What is actually instrumented"). There the usable set is
+**34 channels** — `{80–85, 88–96, 98–106, 108–115, 118, 119}`, i.e. the whole
+snippet-mode block 80–119 except the six dead channels (86, 87, 97, 107, 116,
+117); none are ≥120. Of 27980's 31 events, **29 have x>0 light, 11 have x<0
+light, and 9 have both sides lit** (`27980_{2,9,14,18,20,21,25,27,30}`); two
+events (12, 13) are x<0-only. Per both-side event only 1–6 x<0 channels fire
+(except 27980_14 with 26), so the x<0 volume is sparsely sampled — adequate to
+exercise the masking, but too thin to calibrate x<0 light yield or validate
+cross-cathode Q/L matching statistically.
+
 ---
 
 ## Mapping chain summary
