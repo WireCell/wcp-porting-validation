@@ -37,9 +37,10 @@ from bokeh.plotting import figure
 TICK_NS = 500.0
 BLOB_PAD = 20.0   # cm padding around the displayed blob in the 2D view
 # Stepped sampling points sit exactly at x = time2drift(slice start), one x per
-# slice, 0.32 cm apart.  Match a point to a slice by |pts_x - x_start| < half
-# that spacing (an exact-boundary window test drops them on float noise).
-PTS_X_HALF = 0.16
+# slice, 0.313 cm apart (4 ticks x 500 ns x 1.565 mm/us).  Match a point to a
+# slice by |pts_x - x_start| < half that spacing (an exact-boundary window test
+# drops them on float noise).
+PTS_X_HALF = 0.156
 # A sliver blob's center-fallback point can land just outside the drawn
 # polygon (the sampler's re-derived ray-grid corners differ slightly from the
 # file's corners for degenerate slivers; observed offsets up to ~0.42 cm), so
@@ -437,7 +438,7 @@ def main(argv):
         # sampling points OF the displayed blobs: drift-side + same slice +
         # inside one of the displayed blob polygons.  A slice's stepped points
         # all sit exactly at x = time2drift(slice start), so match on that x
-        # within half the 0.32 cm point spacing -- an exact [x_lo,x_hi] window
+        # within half the 0.313 cm point spacing -- an exact [x_lo,x_hi] window
         # test drops boundary points on ~1e-14 float noise.
         xlo = float(b["blob_x_lo"][blob_idx].min())
         xhi = float(b["blob_x_hi"][blob_idx].max())

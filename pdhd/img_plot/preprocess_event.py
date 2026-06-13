@@ -21,7 +21,7 @@ blob slice time with the toolkit BlobSampler ``time2drift`` formula
 (BlobSampler.cxx):
     x = xorig + xsign*(t + time_offset)*drift_speed
 with time_offset = 0 (no preset T0; the clustering chain zeroed its -250 us
-readout-tick0 compensation), drift_speed = 1.6 mm/us, xorig = the collection-plane
+readout-tick0 compensation), drift_speed = 1.565 mm/us, xorig = the collection-plane
 (W) wire-center x of that (anode,face), and xsign = anodeface->dirx() (resolved
 empirically per (anode,face) against the points; +1 for APAs 0/2, -1 for 1/3).
 Geometry y,z are mm/10 (units.cm == 10).  Blob start/span are in ns.
@@ -48,7 +48,7 @@ import geom as G
 
 # BlobSampler time2drift constants (internal units: mm, ns), from
 # cfg/pgrapher/experiment/pdhd/clus.jsonnet
-DRIFT_MM_PER_NS = 1.6 / 1000.0       # 1.6 * mm/us
+DRIFT_MM_PER_NS = 1.565 / 1000.0     # 1.565 mm/us (PDHD A-C-crosser calibrated; was 1.6)
 TIME_OFFSET_NS = 0.0                 # no preset T0 (was -250 * us)
 TICK_NS = 500.0
 
@@ -229,7 +229,7 @@ def main():
     b_xhi = np.maximum(xa, xb)
     b_xc = 0.5 * (b_xlo + b_xhi)
     # x of the slice START -- the stepped sampler emits all of a slice's points
-    # exactly at this x (one x per slice, 0.32 cm apart), so the viewer matches
+    # exactly at this x (one x per slice, 0.313 cm apart), so the viewer matches
     # points to a slice by |pts_x - x_start| < half the spacing.
     b_xstart = xa
 
