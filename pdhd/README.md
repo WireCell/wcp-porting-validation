@@ -162,11 +162,29 @@ uniformly-sized trace vectors work transparently with both formats.
 ## Clustering
 
 ```bash
-./run_clus_evt.sh [-a ANODE] [-s SEL_TAG] <run> <evt|all> [subrun]
+./run_clus_evt.sh [-a ANODE] [-s SEL_TAG] [-q] [-calib] <run> <evt|all> [subrun]
 ```
 
 Reads cluster archives from `work/<run>_<evt>[_<SEL_TAG>]/` and runs the full
 clustering chain, producing output under the same work directory.
+
+| Flag | Meaning |
+|------|---------|
+| `-q` | Enable charge-light (Q/L) matching before the final all-TPC clustering (reads `opflash_pdhd-wct.tar.gz`).  Default off => historical no-matching chain, bit-identical. |
+| `-calib` | Also dump the per-drift-side Q/L hand-scan calibration JSONs (`work/<run6>_<evt>/calib-evt<EVT>-group{02,13}.json`) for the `ql_scan` viewer.  Implies `-q`; matched `mabc-*.zip` output is byte-identical with/without it. |
+
+## Q/L matching hand-scan display
+
+```bash
+./ql_scan/serve_ql_scan.sh 5015 --tag data work/*/calib-evt*-*.json
+# ssh -L 5015:localhost:5015 user@wcgpu1 ; browser: http://localhost:5015/ql_scan_viewer
+```
+
+Bokeh event display (port 5015) for reviewing/correcting the Q/L flash↔cluster
+matching by hand and saving labels. Reads the `-calib` dumps above; merges an
+event's two per-drift-side files into one two-panel view. Port of the SBND tool —
+see `ql_scan/README.md` and `docs/ql-scan-display.md`. (Machinery only: the PDHD
+chain is still being tuned, not yet ready for production hand-scanning.)
 
 ## Signal-processing frames → Magnify ROOT file
 
