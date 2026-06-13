@@ -239,7 +239,7 @@ plane.  The drift **x** is computed from the blob slice time with the toolkit
 x = xorig + xsign · (t + time_offset) · drift_speed
 ```
 
-* `time_offset = −250 µs`, `drift_speed = 1.6 mm/µs`  (from `pdvd/clus.jsonnet`);
+* `time_offset = −250 µs`, `drift_speed = 1.57 mm/µs`  (calibrated, was 1.6; from `pdvd/clus.jsonnet`);
 * `xorig` = the collection-plane (W) wire-center x of that (anode,face)
   (`±341.55 cm`);
 * `xsign` = `anodeface->dirx()` — resolved per (anode,face) by best agreement with

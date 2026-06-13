@@ -264,3 +264,72 @@ No C++ changes are needed: `ClusterFanout multiplicity=1` is legal (`img/src/Clu
 | `ClusteringExtend` / `num_dead_try` | `clus/src/clustering_extend.cxx` | 31-65, 401, 819 |
 
 All toolkit paths are relative to `/nfs/data/1/xqian/toolkit-dev/toolkit/`.
+
+## Drift-velocity calibration (anode→cathode crossers)
+
+The reconstruction maps slice time to drift-x with a fixed `drift_speed`; the
+chain was using the rounded **1.6 mm/µs**.  Calibrated directly from data, the
+same way as PDHD (`pdhd/docs/clustering-algorithm.md`).
+
+**Method.**  A clean anode→cathode crosser drifts a *known* distance, so its
+reconstructed drift x-span obeys `S = drift_speed · Δt = D · (v_reco / v_true)`,
+hence `v_true = v_reco · D / S`.  The x-span is offset-independent (`xorig`
+cancels), so only the two endpoints matter.
+
+**Geometry (`params.jsonnet` + `protodunevd-wires-larsoft-v5` store).**  Unlike
+PDHD, the U/V/W readout planes are **co-located** at |x| = 341.51 / 341.53 /
+341.55 cm (within 0.04 cm); the grid plane (`apa_plane`, ~5.7 cm in front) is a
+field grid the charge passes *through*, not a sensing plane.  `time2drift`
+anchors at the W collection plane, `xorig = 341.55 cm`, so the anode reference is
+unambiguous (no U-vs-W systematic as in PDHD).  The thick membrane cathode
+(`cpa_thick = 50.8 mm`, centred at x=0) has its drift-facing **surface** at |x| =
+2.54 cm.  So **D = 341.55 − 2.54 = 339.01 cm**.
+
+**Data.**  `pdvd/work/<run>_<evt>/mabc-all-apa.zip` → `0-clustering-group0123.json`
+(anodes 0-3, anode at −x) and `…-group4567.json` (anodes 4-7, anode at +x); 142
+events over runs 039252 / 039253 / 039324 / 039349 / 040475.  `x` is the drift
+coordinate (cm); cathode ≈ 0, anodes at ∓341.6.  Both drift volumes are used.
+
+**PDVD caveat — induction-plane SP gaps.**  PDVD induction-plane signal-processing
+failures leave gaps in prolonged (drift-aligned) tracks.  An *interior* gap does
+not change a cluster's x-span (max−min); an *end* gap or a mid-track break that
+splits a crosser into two clusters would, so full crossers are selected by
+requiring **both** ends extreme (a split crosser is dropped, not mis-measured),
+and the largest interior x-gap of the selected crossers is reported (median ~13
+cm — the gaps are real but interior, so they do not bias the span).
+
+**Selection** (`pdvd/drift_calib/calib_drift_velocity.py`): anode end at the
+kinematic edge (`anode_reach ≥ 330 cm`; the per-volume median anode-reach is 341
+cm ≈ `xorig`, confirming full crossers reach the collection plane) **and** the
+cathode end in a small window near the cathode (rejects CPA / cross-volume
+over-merges above and short tracks below).
+
+**Result** (N = 59 clean full crossers — many more than PDHD; stable across cuts,
+1.55–1.58):
+
+| quantity | group0123 | group4567 | all |
+|---|---|---|---|
+| full-crosser span S (median, cm) | 345.9 | 343.8 | 345.0 |
+| **v_true = 1.6·D/S (mm/µs)** | **1.568** | **1.578** | **1.572** |
+
+![A→C crosser x-span distribution](../drift_calib/drift_velocity_calib.png)
+
+The two drift volumes agree and the reco's 1.6 is ~1.8 % too high.  Consistent
+with the Walkowiak nominal at the PDVD field (`funcs.jsonnet drift_velocity`:
+1.56 at 0.48 kV/cm) and the `speed1d55` field-response label.
+
+**Config change.**  `drift_speed` set to **1.57 mm/µs** (data central):
+
+* `cfg/pgrapher/experiment/protodunevd/params.jsonnet` — PDVD-only `lar.drift_speed`
+  override (feeds `img.jsonnet` dump, sim drift via `params.lar.drift_speed`).
+* `cfg/pgrapher/experiment/protodunevd/clus.jsonnet` — `local drift_speed`
+  (BlobSampler / `DetectorVolumes`).
+* `pgrapher/common/params.jsonnet` is **not** touched (shared with SBND/PDHD).
+
+The imaging blobs (`clusters-apa-anode{N}-ms-*.tar.gz`) are in wire/time space and
+are velocity-independent; only the clustering step (which builds the point cloud
+with `drift_speed` and writes `mabc-all-apa.zip`) needs re-running to pick up the
+new velocity.
+
+Reproduce: `python pdvd/drift_calib/calib_drift_velocity.py` (prints per-volume
+velocities + writes `pdvd/drift_calib/drift_velocity_calib.png`).
