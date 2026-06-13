@@ -37,7 +37,7 @@ Every stage is one `MultiAlgBlobClustering` (MABC) node executing a configured
 | a0f0pA / a2f0pA | active face, drift −x: FV_x [−357.985, −2.54] cm |
 | a1f1pA / a3f1pA | active face, drift +x: FV_x [+2.54, +357.985] cm |
 | a0f1pA, a1f0pA, ... | wall-facing (degenerate) faces: FV_x pinned at ±357.985 cm |
-| per-face params | `drift_speed` 1.6 mm/µs, `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
+| per-face params | `drift_speed` 1.565 mm/µs (calibrated, see below; was 1.6), `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
 
 `detector_volumes(anodes, face)` builds the per-stage `DetectorVolumes`; the
 `face` argument scopes the instance NAME (the per-face and per-drift-group
@@ -168,7 +168,7 @@ imaging-stage `imaging-group02/13` instances (wirecell-img `bee-blobs` on the
 
 There is **no per-event T0 determination for PDHD**; the chain now uses
 `time_offset = 0` everywhere, so a blob's x is its apparent drift position in
-the readout frame (250 µs ≡ 40 cm at 1.6 mm/µs):
+the readout frame (250 µs ≡ 39 cm at 1.565 mm/µs):
 
 1. `cfg/pgrapher/experiment/pdhd/clus.jsonnet` — `time_offset` function
    parameter (default **0**; was −250 µs = readout-tick0-relative-to-trigger
@@ -187,3 +187,77 @@ the readout frame (250 µs ≡ 40 cm at 1.6 mm/µs):
 
 Restore a real value (clus jsonnet param + the bee `--t0`s, opposite signs)
 once a T0 measurement exists.
+
+## Drift-velocity calibration (anode→cathode crossers)
+
+The reconstruction maps slice time to drift-x with a fixed `drift_speed`.  DUNE
+software does **not** hard-code this: LArSoft computes it at run time from the
+Walkowiak parametrization at the configured field (500 V/cm) + LAr temperature,
+≈ **0.1565 cm/µs = 1.565 mm/µs**.  The PDHD Garfield field response is itself
+computed at that value (`dune-garfield-1d565.json.bz2`, see params `files.fields`).
+The clustering/imaging chain, however, was using the rounded **1.6 mm/µs**.  We
+calibrated it directly from data.
+
+**Method.**  A clean anode→cathode crosser drifts a *known* physical distance, so
+its reconstructed drift x-span obeys `S = drift_speed · Δt_drift = D · (v_reco /
+v_true)`, hence `v_true = v_reco · D / S`.  The x-span is offset-independent
+(`xorig` cancels in max−min), so only the two physical endpoints matter:
+
+* **anode end** — the U / first-induction plane (the cathode-facing wire plane a
+  crosser physically enters; the `apa_plane` cutoff in `params.jsonnet` is *defined*
+  to sit at the first induction wires).  Its |x| from the CPA = `apa_cpa − apa_plane
+  = 352.094 cm`.
+* **cathode end** — the cathode drift-facing **surface**, |x| = `½·cpa_thick = 0.159
+  cm` (thickness-corrected).
+
+So the reference distance is **D_U = 351.94 cm** (U-plane → cathode surface).  Note
+this is *smaller* than the W-collection-plane→cathode distance **D_W = 357.18 cm**:
+the U/first-induction plane sits ~5.2 cm cathode-side of the W collection plane
+(W is at the APA centerline), so a crosser enters at U, not at W.  D_W is kept only
+as a systematic.
+
+**Data.**  `pdhd/work/<run>_<evt>/mabc-all-apa.zip` → `0-clustering-group02.json`
+(APAs 0+2, TPC0/2, drift −x) and `…-group13.json` (APAs 1+3, TPC1/3, drift +x);
+115 events over runs 027305 / 027980 / 028084 / 029107.  `x` there is already the
+drift coordinate (cm); cathode ≈ 0, anodes at ∓352.  Both drift volumes are used.
+
+**Selection** (`pdhd/drift_calib/calib_drift_velocity.py`).  Per cluster compute the
+drift extent and the side-relative anode/cathode extremes.  A genuine full crosser
+must (a) reach the anode edge (`anode_reach ≥ 340 cm`) **and** (b) land its cathode
+end in a small window around the cathode (reached it, small overshoot — *not* a CPA /
+cross-volume over-merge shooting far past it).  This rejects both the over-cluster
+tail (span > D) and short/broken tracks (span < D), per the known failure modes.
+
+**Result** (N = 9 clean full crossers; stable across cut thresholds, 1.55–1.57):
+
+| quantity | TPC0/2 | TPC1/3 | all |
+|---|---|---|---|
+| full-crosser span S (median, cm) | 363.2 | 363.4 | 363.2 |
+| **v_true = 1.6·D_U/S (mm/µs)** | **1.550** | **1.550** | **1.550** |
+| cathode-overshoot cross-check (mm/µs) | 1.535 | 1.548 | 1.542 |
+| v_true with D_W (W-plane systematic) | 1.574 | 1.573 | 1.574 |
+
+![A→C crosser x-span distribution](../drift_calib/drift_velocity_calib.png)
+
+Two **independent** estimators (the full-drift span, and the cathode-end overshoot
+past x = 0) agree at **~1.55 mm/µs**, the two drift volumes agree, and the reco's
+1.6 is ~3.2 % too high.  The true value sits in ≈ [1.55, 1.57] (the U-vs-W reference
+is the dominant ~1.4 % systematic).
+
+**Config change.**  `drift_speed` is set to **1.565 mm/µs** — within the data
+uncertainty and equal to the value the Garfield field response and LArSoft/Walkowiak
+already use, so the whole sim/reco chain is self-consistent:
+
+* `cfg/pgrapher/experiment/pdhd/params.jsonnet` — PDHD-only `lar.drift_speed` override
+  (feeds `img.jsonnet`, `qlmatching.jsonnet`, sim drift via `params.lar.drift_speed`).
+* `cfg/pgrapher/experiment/pdhd/clus.jsonnet` — `local drift_speed` (BlobSampler /
+  `DetectorVolumes`).
+* `pgrapher/common/params.jsonnet` is **not** touched (shared with SBND/PDVD).
+
+Caveats: clean full A→C crossers with single-cluster reconstruction are rare (N≈9),
+so the statistical reach is modest; the `work/` imaging dumps remain at the
+as-reconstructed 1.6 mm/µs, and `pdhd/img_plot/preprocess_event.py` keeps
+`DRIFT_MM_PER_NS = 1.6/1000` to stay consistent with them — re-image to pick up 1.565.
+
+Reproduce: `python pdhd/drift_calib/calib_drift_velocity.py` (prints per-volume
+velocities + writes `pdhd/drift_calib/drift_velocity_calib.png`).
