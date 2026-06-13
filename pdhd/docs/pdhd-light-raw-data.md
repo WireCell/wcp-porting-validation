@@ -260,23 +260,91 @@ splitting.
 
 ---
 
-## 4. OpFlash assembly (brief) — `Flash::OpFlashFinder`
+## 4. Building OpFlashes from OpHits — `Flash::OpFlashFinder`
 
-OpHits across channels are then grouped in time into `recob::OpFlash`-equivalents
-(larana `OpFlashAlg`, `protodune_opflash` values):
+OpHits across channels are grouped in time into `recob::OpFlash`-equivalents
+(larana `OpFlashAlg::RunFlashFinder`, `protodune_opflash` values):
 
-- **double-offset 1 µs accumulators** (`bin_width = 1000 ns`) over hit peak time;
-  a bin becomes a flash candidate once its summed PE ≥ `FlashThreshold = 3.5 PE`;
-- hits are claimed largest-flash-first, then `RefineHitsInFlash`
-  (`width_tolerance = 0.5`) splits time-overlapping structure;
+- **double-offset 1 µs accumulators** (`bin_width = 1000 ns`) over hit peak time:
+  two binnings offset by half a bin, so a flash boundary falling on a bin edge in
+  one binning lands mid-bin in the other. A bin becomes a flash candidate once its
+  summed PE ≥ `FlashThreshold = 3.5 PE`;
+- hits are claimed **largest-flash-first** (`assign_hits_to_flash`), so the brightest
+  coincidence wins contested hits, then `RefineHitsInFlash` (`width_tolerance = 0.5`)
+  re-groups the claimed hits by peak-time proximity — this is what actually
+  resolves two flashes that share a 1 µs accumulator bin;
 - `ConstructFlash` builds the PE-weighted flash time, the **per-OpDet PE vector**
   (length `nchan = 160`, OpChannel order — directly QLMatching-ready), and the
   y/z centroid/width from `pdhd-opdet-geom.json`;
-- `RemoveLateLight` (Argon τ = 1.6 µs) drops flashes consistent with the late
-  light of an earlier one.
+- `RemoveLateLight` (Argon τ = 1.6 µs) drops a later flash whose PE is consistent
+  with the exponential late-light tail of an earlier one.
 
 The output is the opflash tensor set (`opflash`, `flash_summary`, `ophits`)
 consumed by `FlashTensorToOpticalPCs{nchan:160}` / `QLMatching{nchan:160}`.
+
+### 4.1 Comparison with the WCP prototype (`2dtoy/ToyLightReco`)
+
+The prototype builds flashes very differently, and the comparison motivated the
+choices below:
+
+| aspect | prototype `ToyLightReco` | toolkit `OpFlashFinder` |
+|---|---|---|
+| time binning | 93.75 ns (6×15.625 ns rebin) | 1 µs double-offset accumulators |
+| separating close flashes | **KS test on the per-PMT *spatial* PE profile** (rising-PE retrigger; "London's Patch" recovers flashes hidden in a prior tail) | largest-first claiming + `RefineHitsInFlash` peak-time regroup |
+| flash time | PE-weighted (cosmic) / peak-bin (beam) | PE-weighted hit time |
+| detector grouping | one flat 32-PMT namespace, split only by trigger type (beam/cosmic) | all 160 OpDets, or per cathode side (§4.3) |
+| late light | cosmic↔beam veto windows | `RemoveLateLight`, Ar τ = 1.6 µs |
+
+The prototype's KS retrigger is a *flash-level* tool: it has **no per-channel OpHit
+step**, so it separates pile-up by watching the spatial PE pattern change. The
+toolkit finds per-channel OpHits first, so the analogous "second pulse on a tail"
+problem is solved one layer earlier, in `OpHitFinder::split_pulse` (§3.4). At the
+flash level the larana double-offset + width-tolerance machinery is sufficient (next).
+
+### 4.2 The coincidence window is robust at 1 µs (data-checked)
+
+Measured over the four example events (`027305_150`, `027980_8`, `028084_74408`,
+`029107_983`):
+
+- the **time spread of the OpHits within a single reconstructed flash is always
+  < 1 µs** (max 0.96 µs) — a 1 µs accumulator bin never splits a genuine flash;
+- inter-flash gaps as small as **~0.1 µs are already resolved** into separate
+  flashes (the half-bin offset plus the `width_tolerance = 0.5` peak-time regroup),
+  so the 1 µs bin does not over-merge either.
+
+So `bin_width = 1 µs` and `width_tolerance = 0.5` (the larana/`protodune_opflash`
+defaults) are kept — the data shows no benefit to a finer window, and the prompt
+scintillation light that defines a flash time is contained well inside 1 µs.
+
+### 4.3 One flash per drift volume — `group_by_side` (PDHD on)
+
+**Physics.** PDHD has two drift volumes separated by a **solid HV cathode** at
+x ≈ 0; the photon detectors sit in the two APA walls at x ≈ ±3562 mm. The cathode
+is **opaque to the 128 nm VUV scintillation light**, so the two volumes are
+**optically independent** — a scintillation flash in one volume is seen only by that
+volume's OpDets. Light from the two sides is coincident **only** when a single track
+*crosses* the cathode and deposits in both volumes at the same t₀; two unrelated but
+time-coincident events (one per volume) are physically distinct flashes.
+
+**Consequence.** Assembling all 160 OpDets in one namespace would merge such a
+coincidence into a single flash whose PE pattern spans both sides — a contaminated
+spatial profile that QLMatching cannot associate to a single charge cluster (each
+flash belongs to one drift volume, and the drift/T₀ is per-volume). So
+`OpFlashFinder` gained a `group_by_side` knob: it partitions OpDets by the sign of
+their geometry x and runs the full flash-finding pipeline (including
+`RemoveLateLight`) **independently per drift volume**. The tensor schema is
+unchanged — the side is already implicit in the per-OpDet PE vector.
+
+`group_by_side` is **off by default** (all-OpDet, exactly the larana behaviour) and
+**on for PDHD** (`flash.jsonnet`). It is the physically correct grouping and mirrors
+SBND's per-APA flashes.
+
+**Current data caveat.** The 2024 readout instruments only the **+x** drift volume:
+in every example event 100 % of the PE is on OpDets 0–79 and the −x side is empty.
+So on today's data `group_by_side` ON is **byte-identical** to all-TPC (verified on
+all four events). Its effect only appears once both volumes are read out — confirmed
+with a synthetic two-side coincidence, where all-TPC produces one mixed flash and
+`group_by_side` produces two, one per side.
 
 ---
 
@@ -295,6 +363,7 @@ consumed by `FlashTensorToOpticalPCs{nchan:160}` / `QLMatching{nchan:160}`.
 | chain wiring | `cfg/pgrapher/experiment/pdhd/flash.jsonnet` |
 | plot script (§1–3) | `/home/xqian/tmp/pdhd_light_plots/make_plots.py` |
 | split plot script (§3.4) | `/home/xqian/tmp/split_demo/make_split_plot.py` |
+| per-side flash test (§4.3) | `/home/xqian/tmp/flash_side_test/` (`build_arch.py`, `job.jsonnet`) |
 
 Plots are regenerated with those scripts from the extracted `light-frames*` npy and
 the config JSONs; figures land in `pdhd/pics/light_*.png`.
