@@ -215,6 +215,49 @@ So the **time** is the PE-peak position mapped through the frame anchor, and the
 **NPE** is the integrated pulse area divided by the single-p.e. area (100 scaled
 units). In the example, area 108628 / 100 = **~1086 PE** — a very bright flash.
 
+### 3.4 Separating overlapping pulses (PDHD on by default)
+
+The §3.2 sliding window keeps a pulse open while the waveform stays above the
+**very low** tail/end threshold (`max(1, 1·σ)` scaled). When a second light pulse
+arrives before the first's slow LAr scintillation tail has fallen back, the valley
+between the two sub-peaks never reaches that threshold, so **the two pulses merge
+into one OpHit and the second pulse's PE is absorbed into the first** — exactly the
+"second flash lost" failure mode.
+
+The WCP prototype (`prototype_base/2dtoy`, `ToyLightReco.cxx`) handles this at the
+*flash* level, on the summed light across all PMTs, with a Kolmogorov–Smirnov test
+on the per-PMT **spatial** PE profile plus a rising-PE re-trigger (it has no
+per-channel OpHit step). In this toolkit the OpHits are found per channel *first*,
+so a merged per-channel hit can never be recovered downstream — the split must
+happen here. `OpHitFinder::split_pulse` therefore post-processes each pulse and
+splits it at prominent valleys between its sub-peaks (the per-channel analogue of
+the prototype's re-trigger), leaving the larana state machine untouched:
+
+- find the pulse's internal local maxima (`> split_min_peak`);
+- accept a split at the valley between two adjacent peaks only when the valley is
+  deep **both relatively** (≥ `split_min_prominence` = 0.4 of the smaller flanking
+  peak) **and absolutely** (≥ `split_min_prominence_abs` = 100 scaled = **1
+  PE/tick**, mirroring the prototype's absolute PE margin); shallow shoulders are
+  merged back, so a smooth scintillation tail is **not** fragmented;
+- recompute `area`/`peak`/`t_max`/`t_start`/`t_end` for each sub-pulse so all nine
+  ophit columns stay consistent.
+
+![overlapping-pulse splitting](../pics/light_ophit_split.png)
+
+The figure shows a real merged hit (OpChannel 20): **before**, one 204-PE OpHit
+spans both pulses; **after**, two OpHits (125.6 + 78.4 PE) are recovered at the two
+prompt peaks ~1.3 µs apart, split at the intervening valley. Across run 27305
+evt 150 the splitter turns **827 → 852 OpHits (+25)** and, after flash assembly,
+**55 → 60 OpFlashes (+5)** — five overlapping flashes recovered — with total PE
+conserved to 0.01 % (the absolute floor suppresses the ~400 spurious tail-ripple
+splits a relative-only criterion would produce).
+
+It is **gated by `split_enable`** (component default **off → bit-identical** to the
+larana output, verified by the OFF run reproducing the 827-hit baseline and by the
+`split disabled` doctest) and **enabled in PDHD's `flash.jsonnet`**. The four knobs
+live in the `algo` block; tune `split_min_prominence_abs` for more/less aggressive
+splitting.
+
 ---
 
 ## 4. OpFlash assembly (brief) — `Flash::OpFlashFinder`
@@ -250,7 +293,8 @@ consumed by `FlashTensorToOpticalPCs{nchan:160}` / `QLMatching{nchan:160}`.
 | hit finding | `flash/src/OpHitFinder.cxx`, `inc/WireCellFlash/OpHitFinder.h` |
 | flash finding | `flash/src/OpFlashFinder.cxx` |
 | chain wiring | `cfg/pgrapher/experiment/pdhd/flash.jsonnet` |
-| plot script | `/home/xqian/tmp/pdhd_light_plots/make_plots.py` |
+| plot script (§1–3) | `/home/xqian/tmp/pdhd_light_plots/make_plots.py` |
+| split plot script (§3.4) | `/home/xqian/tmp/split_demo/make_split_plot.py` |
 
-Plots are regenerated with that script from the extracted `light-frames*` npy and
+Plots are regenerated with those scripts from the extracted `light-frames*` npy and
 the config JSONs; figures land in `pdhd/pics/light_*.png`.
