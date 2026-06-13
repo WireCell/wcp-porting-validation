@@ -264,3 +264,25 @@ as-reconstructed 1.6 mm/µs, and `pdhd/img_plot/preprocess_event.py` keeps
 
 Reproduce: `python pdhd/drift_calib/calib_drift_velocity.py` (prints per-volume
 velocities + writes `pdhd/drift_calib/drift_velocity_calib.png`).
+
+## Closure check on the re-clustered (1.565) data — inconclusive
+
+Re-running the calibration on the 115 events after they were re-clustered at 1.565
+(`calib_drift_velocity.py --v-reco 1.565`) does **not** cleanly close, unlike PDVD:
+
+* Only **4** intact full crossers survive (all in TPC1/3; TPC0/2 has **none**), vs
+  9 in the original 1.6 data.
+* Of 23 long tracks that reach the cathode, **21 are anode-truncated** (do not reach
+  within ~320 cm of the anode) — the A-C crossers are being **fragmented**, almost
+  certainly by the group-stage clustering changes (connect1 / deghost / cathode_connect
+  / separate) that postdate the original-calibration dumps.
+* The few survivors are themselves truncated (3 of 4 stop ~15 cm short of the cathode),
+  shortening the span and biasing v_true **high**: the pile-up returns ~1.586 mm/µs
+  (~1.3 % above the input 1.565); the one fully-intact crosser (anode 350.5, cathode
+  0.6) gives 1.575.
+
+So the closure is statistics- and fragmentation-limited and should not be read as a
+re-measurement.  The original calibration (1.55 from the less-fragmented 1.6 dumps,
+N=9) remains the better estimate; the fragmentation of PDHD A-C crossers under the
+current clustering is a separate issue worth tracking.  (PDVD, with ~50 crossers,
+closes to ~0.4 % — see pdvd/docs/clus-workflow.md.)

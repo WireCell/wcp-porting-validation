@@ -44,20 +44,22 @@ import numpy as np
 # ----------------------------------------------------------------------------
 # constants
 # ----------------------------------------------------------------------------
-V_RECO = 1.6  # mm/us, current toolkit drift_speed (cfg/.../pdhd/clus.jsonnet)
+# Drift speed the INPUT mabc data was reconstructed with (NOT necessarily the
+# current config).  The original calibration ran on data made at 1.6 and yielded
+# ~1.55; the work/ dumps have since been re-clustered at 1.565, so to re-derive
+# from the current data pass `--v-reco 1.565` (closure / self-consistency check).
+V_RECO_DEFAULT = 1.6  # mm/us
 
-# Geometry (cm) from cfg/pgrapher/experiment/pdhd/params.jsonnet.
-APA_CPA = 357.34            # APA centerline <-> CPA centerline
-APA_W2W = 8.587            # wire-plane to wire-plane span
-PLANE_GAP = 0.476
+# Geometry (cm).  Plane x-positions read from the protodunehd-wires-larsoft-v1
+# store (NOT the apa_cpa centerline): the three WIRE planes sit one pitch
+# (~4.9 mm) apart, U/V/W at |x| = 352.22 / 352.71 / 353.20.  time2drift anchors
+# at the W collection plane.  Cathode drift-facing surface |x| = 0.5*cpa_thick.
 CPA_THICK = 0.3175         # 1/8"
-APA_G2G = APA_W2W + 6 * PLANE_GAP
-APA_PLANE = 0.5 * APA_G2G - PLANE_GAP        # U / first-induction plane offset from centerline
-X_U = APA_CPA - APA_PLANE                      # |x| of U (first-induction) plane = 352.094
-X_W = APA_CPA                                  # |x| of W (collection ~ centerline) = 357.34
-X_CATH_SURF = 0.5 * CPA_THICK                  # cathode drift-facing surface = 0.159
-D_U = X_U - X_CATH_SURF                         # 351.94 cm  (primary reference)
-D_W = X_W - X_CATH_SURF                         # 357.18 cm  (W-plane systematic)
+X_U = 352.22               # U (first-induction) plane, store
+X_W = 353.20               # W (collection) plane, store -- xorig anchor
+X_CATH_SURF = 0.5 * CPA_THICK                  # 0.159
+D_U = X_U - X_CATH_SURF                         # 352.06 cm  (primary reference)
+D_W = X_W - X_CATH_SURF                         # 353.04 cm  (W-plane systematic; U-W~0.98cm)
 
 
 def load_groups(zip_path):
@@ -97,41 +99,53 @@ def event_clusters(zip_path, min_pts):
     return rows
 
 
-def is_full_crosser(r, anode_reach_min, cath_lo, cath_hi):
+def is_full_crosser(r, anode_reach_min, cath_win):
     """A genuine anode->cathode crosser: the anode end sits at the kinematic edge
-    (anode_reach >= anode_reach_min) AND the cathode end lands in a small window
-    around the cathode (reached it; small drift-overshoot from v_reco != v_true;
-    NOT a CPA / cross-volume over-merge that shoots far past the cathode).
+    (anode_reach >= anode_reach_min) AND the cathode end lands within `cath_win`
+    cm of the cathode (x=0) on EITHER side -- a small drift-overshoot when
+    v_reco != v_true, in either direction.  A SYMMETRIC window (not the earlier
+    side-flipped one) so the selection is unbiased whether v_reco is above or
+    below v_true (e.g. the closure run on data re-clustered near v_true).  This
+    rejects near-anode fragments (|cath_coord| >> 0 on the anode side) and CPA /
+    cross-volume over-merges (|cath_coord| >> 0 past the cathode)."""
+    return r["anode_reach"] >= anode_reach_min and abs(r["cath_coord"]) <= cath_win
 
-    The cathode window is side-flipped: for group02 (anode at -x, drift toward +x)
-    v_reco>v_true overshoots the cathode to +x, so the cathode-end coord sits in
-    [cath_lo, cath_hi]; group13 mirrors it to [-cath_hi, -cath_lo].
+
+def span_pileup(sp, lo=340.0, hi=385.0, binw=3.0):
+    """Robust full-drift span = the PILE-UP (mode) of the span distribution.
+
+    All genuine full crossers share the same true drift extent, so their
+    reconstructed spans pile at one value; over-merged / large-overshoot tracks
+    add a HIGH tail that drags the *median* (so the median is NOT used here -- it
+    is tail-sensitive and shifts with cluster composition between reprocessings,
+    while the pile-up is stable).  Peak of a lightly-smoothed histogram.
     """
-    if r["anode_reach"] < anode_reach_min:
-        return False
-    cc = r["cath_coord"]
-    return (cath_lo <= cc <= cath_hi) if r["grp"] == 0 else (-cath_hi <= cc <= -cath_lo)
+    sp = np.asarray(sp)
+    edges = np.arange(lo, hi + binw, binw)
+    h, _ = np.histogram(sp, bins=edges)
+    if h.sum() == 0:
+        return float(np.median(sp))
+    hs = np.convolve(h, np.ones(3) / 3.0, mode="same")
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    return float(centers[int(np.argmax(hs))])
 
 
-def report(tag, full):
-    """Print span- and overshoot-based velocity for a set of full crossers."""
+def report(tag, full, v_reco):
+    """Print pile-up-based velocity for a set of full crossers."""
     if not full:
         print(f"[{tag}] no full crossers")
         return None
     sp = np.array([r["span"] for r in full])
     ov = np.array([(r["cath_coord"] if r["grp"] == 0 else -r["cath_coord"])
                    for r in full])           # signed cathode overshoot past x=0
-    S = float(np.median(sp))
-    o = float(np.median(ov))
-    v_span_DU = V_RECO * D_U / S
-    v_span_DW = V_RECO * D_W / S
-    v_over = V_RECO * D_W / (D_W + o)         # independent cross-check
-    print(f"[{tag}] N={len(full)}  span median={S:.1f} cm (mean={sp.mean():.1f})  "
-          f"cath-overshoot median={o:.1f} cm")
-    print(f"      v_true = {v_span_DU:.4f} mm/us   (span / D_U={D_U:.1f}, U-plane ref)")
-    print(f"             = {v_span_DW:.4f} mm/us   (span / D_W={D_W:.1f}, W systematic)")
-    print(f"             = {v_over:.4f} mm/us   (cathode-overshoot cross-check)")
-    return dict(sp=sp, S=S, o=o, v_span_DU=v_span_DU, v_span_DW=v_span_DW, v_over=v_over)
+    S = span_pileup(sp)                       # robust full-drift span (pile-up)
+    v_span_DU = v_reco * D_U / S
+    v_span_DW = v_reco * D_W / S
+    print(f"[{tag}] N={len(full)}  span pile-up={S:.1f} cm (median={np.median(sp):.1f}, "
+          f"tail-inflated)  cath-overshoot median={np.median(ov):.1f} cm")
+    print(f"      v_true = {v_span_DU:.4f} mm/us   (pile-up / D_U={D_U:.1f}, U-plane ref)")
+    print(f"             = {v_span_DW:.4f} mm/us   (pile-up / D_W={D_W:.1f}, W systematic)")
+    return dict(sp=sp, S=S, v_span_DU=v_span_DU, v_span_DW=v_span_DW)
 
 
 def main():
@@ -145,19 +159,22 @@ def main():
                     help="skip clusters with fewer stepped points")
     ap.add_argument("--anode-reach", type=float, default=340.0,
                     help="anode-most |x| (cm) must be >= this (full-drift reach)")
-    ap.add_argument("--cath-lo", type=float, default=-5.0,
-                    help="cathode-end window low edge (cm past the cathode)")
-    ap.add_argument("--cath-hi", type=float, default=25.0,
-                    help="cathode-end window high edge (cm past the cathode)")
+    ap.add_argument("--cath-win", type=float, default=25.0,
+                    help="cathode end must be within this many cm of x=0 (either side)")
+    ap.add_argument("--v-reco", type=float, default=V_RECO_DEFAULT,
+                    help="drift_speed the INPUT data was reconstructed with "
+                         "(1.6 for the original calibration; 1.565 for the "
+                         "re-clustered work/ dumps -> closure check)")
     ap.add_argument("--plot", default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "drift_velocity_calib.png"))
     args = ap.parse_args()
+    v_reco = args.v_reco
 
     zips = sorted(glob.glob(os.path.join(args.work, "*", "mabc-all-apa.zip")))
     if not zips:
         sys.exit(f"no mabc-all-apa.zip under {args.work}")
     print(f"[geom] D_U(U->cathode)={D_U:.3f} cm   D_W(W->cathode)={D_W:.3f} cm   "
-          f"v_reco={V_RECO} mm/us")
+          f"v_reco={v_reco} mm/us")
     print(f"[data] {len(zips)} events under {args.work}\n")
 
     all_rows = []
@@ -174,28 +191,26 @@ def main():
           f"{len(all_rows)} clusters (>= {args.min_pts} pts)\n")
 
     full = [r for r in all_rows
-            if is_full_crosser(r, args.anode_reach, args.cath_lo, args.cath_hi)]
+            if is_full_crosser(r, args.anode_reach, args.cath_win)]
     print(f"[select] {len(full)} full A-C crossers "
-          f"(anode_reach>={args.anode_reach} cm, cathode window "
-          f"[{args.cath_lo},{args.cath_hi}] cm)\n")
+          f"(anode_reach>={args.anode_reach} cm, |cathode-end|<={args.cath_win} cm)\n")
 
     g0 = [r for r in full if r["grp"] == 0]
     g1 = [r for r in full if r["grp"] == 1]
-    report("TPC0/2 (group02)", g0)
-    report("TPC1/3 (group13)", g1)
-    res = report("ALL", full)
+    report("TPC0/2 (group02)", g0, v_reco)
+    report("TPC1/3 (group13)", g1, v_reco)
+    res = report("ALL", full, v_reco)
 
     if res is not None:
         print(f"\n==> calibrated drift velocity v_true = {res['v_span_DU']:.4f} mm/us "
-              f"(U-plane span); cross-checks {res['v_over']:.4f} (overshoot), "
-              f"{res['v_span_DW']:.4f} (W systematic).")
-        print(f"==> reco currently {V_RECO} mm/us  ->  ~{100*(V_RECO/res['v_span_DU']-1):.1f}% high; "
-              f"consistent with the 1.565 field-response / LArSoft value.")
+              f"(U-plane pile-up); W systematic {res['v_span_DW']:.4f}.")
+        print(f"==> input data reconstructed at {v_reco} mm/us  ->  "
+              f"~{100*(v_reco/res['v_span_DU']-1):.1f}% off.")
         _make_plot(args.plot, np.array([r["span"] for r in g0]),
-                   np.array([r["span"] for r in g1]), res["S"])
+                   np.array([r["span"] for r in g1]), res["S"], v_reco)
 
 
-def _make_plot(path, g0, g1, S):
+def _make_plot(path, g0, g1, S, v_reco):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -213,10 +228,11 @@ def _make_plot(path, g0, g1, S):
     ax.hist(g1, bins=edges, histtype="step", label=f"TPC1/3 (N={g1.size})", color="C1")
     ax.axvline(D_U, ls="--", color="g", label=f"D_U={D_U:.1f} (U->cath)")
     ax.axvline(D_W, ls=":", color="m", label=f"D_W={D_W:.1f} (W->cath)")
-    ax.axvline(S, ls="-", color="r", lw=1.5, label=f"S(median)={S:.1f}")
+    ax.axvline(S, ls="-", color="r", lw=1.5, label=f"S(pile-up)={S:.1f}")
     ax.set_xlabel("full-crosser drift x-span [cm]")
     ax.set_ylabel("clusters")
-    ax.set_title(f"PDHD A-C crosser x-span  ->  v_true={V_RECO*D_U/S:.4f} mm/us")
+    ax.set_title(f"PDHD A-C crosser x-span (data @ {v_reco} mm/us)  ->  "
+                 f"v_true={v_reco*D_U/S:.4f} mm/us")
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(path, dpi=110)
