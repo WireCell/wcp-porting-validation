@@ -13,11 +13,13 @@ group4567 (anodes 4-7, anode at +x).
 Geometry (cm), from cfg/pgrapher/experiment/protodunevd/params.jsonnet + the
 protodunevd-wires-larsoft-v5 store:
 
-  * The U/V/W readout planes are CO-LOCATED at |x| = 341.51 / 341.53 / 341.55
-    (within 0.04 cm) -- unlike PDHD's ~5 cm U-W gap.  time2drift anchors at the
-    W collection plane (xorig, ident 2) = 341.55 cm, so the anode reference is
-    unambiguous; the grid plane (apa_plane, 5.7 cm in front) is a field grid the
-    charge passes THROUGH, not a sensing plane.
+  * The U/V/W readout layers are at |x| = 341.51 / 341.53 / 341.55 -- only 0.2 mm
+    apart in x, because the VD CRP is a PCB-strip anode (U/V/Z on stacked PCB
+    layers), not spaced wire planes.  (PDHD's wire planes are ~4.9 mm = one pitch
+    apart, U-W ~0.98 cm.)  time2drift anchors at the W collection layer (xorig,
+    ident 2) = 341.55 cm; the anode reference is unambiguous (U-vs-W moves D by
+    0.04 cm).  A shield grid (apa_plane, ~5.7 cm toward the drift) is a field grid
+    the charge passes THROUGH, not a sensing plane.
   * Thick membrane cathode: cpa_thick = 50.8 mm, centered at x=0, so the
     drift-facing cathode SURFACE is at |x| = 2.54 cm.
   * D = |xorig| - |cathode surface| = 341.55 - 2.54 = 339.01 cm.

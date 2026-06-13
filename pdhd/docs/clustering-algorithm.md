@@ -210,11 +210,14 @@ v_true)`, hence `v_true = v_reco · D / S`.  The x-span is offset-independent
 * **cathode end** — the cathode drift-facing **surface**, |x| = `½·cpa_thick = 0.159
   cm` (thickness-corrected).
 
-So the reference distance is **D_U = 351.94 cm** (U-plane → cathode surface).  Note
-this is *smaller* than the W-collection-plane→cathode distance **D_W = 357.18 cm**:
-the U/first-induction plane sits ~5.2 cm cathode-side of the W collection plane
-(W is at the APA centerline), so a crosser enters at U, not at W.  D_W is kept only
-as a systematic.
+So the reference distance is **D_U = 351.94 cm** (U-plane → cathode surface; the
+`apa_plane` cutoff coincides with the store's U plane at |x| = 352.22 cm).  The
+`protodunehd-wires-larsoft-v1` store puts the three wire planes at |x| =
+352.22 / 352.71 / 353.20 cm (U / V / W) — **one pitch (~4.9 mm) apart, U-W ≈
+0.98 cm**.  So the W collection plane is at 353.20 cm (NOT the APA centerline,
+357.34), and the W-plane→cathode distance is **D_W = 353.04 cm**.  The U-vs-W
+choice therefore moves D by only ~0.98 cm (~0.3 %), not the ~5 cm I first stated;
+either way the calibrated velocity is essentially unchanged.
 
 **Data.**  `pdhd/work/<run>_<evt>/mabc-all-apa.zip` → `0-clustering-group02.json`
 (APAs 0+2, TPC0/2, drift −x) and `…-group13.json` (APAs 1+3, TPC1/3, drift +x);
@@ -235,14 +238,14 @@ tail (span > D) and short/broken tracks (span < D), per the known failure modes.
 | full-crosser span S (median, cm) | 363.2 | 363.4 | 363.2 |
 | **v_true = 1.6·D_U/S (mm/µs)** | **1.550** | **1.550** | **1.550** |
 | cathode-overshoot cross-check (mm/µs) | 1.535 | 1.548 | 1.542 |
-| v_true with D_W (W-plane systematic) | 1.574 | 1.573 | 1.574 |
+| v_true with D_W=353.04 (W-plane systematic) | 1.555 | 1.554 | 1.555 |
 
 ![A→C crosser x-span distribution](../drift_calib/drift_velocity_calib.png)
 
 Two **independent** estimators (the full-drift span, and the cathode-end overshoot
 past x = 0) agree at **~1.55 mm/µs**, the two drift volumes agree, and the reco's
-1.6 is ~3.2 % too high.  The true value sits in ≈ [1.55, 1.57] (the U-vs-W reference
-is the dominant ~1.4 % systematic).
+1.6 is ~3.2 % too high.  The true value sits in ≈ [1.55, 1.555] (the U-vs-W
+reference, ~0.98 cm, is only a ~0.3 % effect).
 
 **Config change.**  `drift_speed` is set to **1.565 mm/µs** — within the data
 uncertainty and equal to the value the Garfield field response and LArSoft/Walkowiak

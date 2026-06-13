@@ -277,13 +277,17 @@ hence `v_true = v_reco · D / S`.  The x-span is offset-independent (`xorig`
 cancels), so only the two endpoints matter.
 
 **Geometry (`params.jsonnet` + `protodunevd-wires-larsoft-v5` store).**  Unlike
-PDHD, the U/V/W readout planes are **co-located** at |x| = 341.51 / 341.53 /
-341.55 cm (within 0.04 cm); the grid plane (`apa_plane`, ~5.7 cm in front) is a
-field grid the charge passes *through*, not a sensing plane.  `time2drift`
-anchors at the W collection plane, `xorig = 341.55 cm`, so the anode reference is
-unambiguous (no U-vs-W systematic as in PDHD).  The thick membrane cathode
-(`cpa_thick = 50.8 mm`, centred at x=0) has its drift-facing **surface** at |x| =
-2.54 cm.  So **D = 341.55 − 2.54 = 339.01 cm**.
+PDHD, the U/V/W readout layers are at |x| = 341.51 / 341.53 / 341.55 cm — only
+**0.2 mm apart** in x, because the VD CRP is a *PCB-strip* anode (U/V/Z etched on
+stacked PCB layers), not spaced wire planes.  (For contrast, PDHD's three *wire*
+planes sit ~4.9 mm = one pitch apart, U-W ≈ 0.98 cm — still only a ~0.3% effect on
+D.)  A shield grid (`apa_plane`, ~5.7 cm toward the drift volume) is a field grid
+the charge passes *through*, not a sensing plane.  `time2drift` anchors at the W
+collection layer, `xorig = 341.55 cm` (confirmed by the data: the per-volume
+anode-most reach is 341.6 cm), so the anode reference is unambiguous — the U-vs-W
+choice moves D by 0.04 cm, negligible.  The thick membrane cathode (`cpa_thick =
+50.8 mm`, centred at x=0) has its drift-facing **surface** at |x| = 2.54 cm.  So
+**D = 341.55 − 2.54 = 339.01 cm**.
 
 **Data.**  `pdvd/work/<run>_<evt>/mabc-all-apa.zip` → `0-clustering-group0123.json`
 (anodes 0-3, anode at −x) and `…-group4567.json` (anodes 4-7, anode at +x); 142
