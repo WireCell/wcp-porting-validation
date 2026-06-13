@@ -262,11 +262,43 @@ state = {
 
 
 # ----- coincidence-group helpers -------------------------------------------
+def flash_measured_on_side(evt, f):
+    """Total measured PE of flash f over its own drift side's ACTIVE OpDets. The
+    light panels mask to `od_active & (od_apa == side)`, so this is what a side
+    actually shows. Zero for an uninstrumented-side flash."""
+    am = evt.od_active & (evt.od_apa == f["apa"])
+    if not am.any():
+        return 0.0
+    return float(np.asarray(f["pe"])[am].sum())
+
+
 def event_groups(evt):
-    # Only groups that actually have a (contained) bundle to scan — after the
-    # contained-only dump many coincidence groups hold no candidate, and paging
-    # through empty stops would defeat the de-clutter goal.
+    # Only groups whose flash carries measured light on that side's active OpDets.
+    # In single-sided optical runs (e.g. 27305) group_by_side is a no-op, so every
+    # physical flash is duplicated into BOTH per-side nodes; the uninstrumented
+    # side's copies have 0 PE on their (dark) active OpDets and would page as empty
+    # measured panels (the duplicate "grp N" with the blank side). Skip them so the
+    # scan lists only real, light-carrying groups. (Also drops the contained-only
+    # dump's bundle-less groups, as before.) Falls back to all groups if the filter
+    # would hide everything, so a fully-dark event is never blanked silently.
+    lit = {evt.group_of(b["flash_gid"]) for b in evt.bundles
+           if flash_measured_on_side(evt, evt.flash_by_gid[b["flash_gid"]]) > 0}
+    if lit:
+        return sorted(lit)
     return sorted({evt.group_of(b["flash_gid"]) for b in evt.bundles})
+
+
+def lit_sides(evt):
+    """Drift side(s) (0/1) whose flashes carry measured PE on their active OpDets.
+    In single-sided optical runs (e.g. 27305) only the instrumented side qualifies;
+    clusters on the dark side cannot be Q/L matched, so the roster hides them.
+    Empty set ⇒ fully dark event (callers then fall back to showing all sides)."""
+    s = getattr(evt, "_lit_sides", None)
+    if s is None:
+        s = {f["apa"] for f in evt.flash_by_gid.values()
+             if flash_measured_on_side(evt, f) > 0}
+        evt._lit_sides = s
+    return s
 
 
 def group_label(evt, g):
@@ -930,11 +962,21 @@ def rebuild_clusters():
         b = evt.bundles[j]
         for u in [b["main_cluster"]] + b["other_clusters"]:
             matched[u] = b["flash_gid"]
+    # Only clusters on a lit drift side: the other side has no flash to match
+    # against (single-sided optical readout), so its clusters just clutter the
+    # roster. Fall back to all sides if the event is fully dark.
+    sides = lit_sides(evt)
+    uids = [u for u in evt.cluster_by_uid
+            if not sides or evt.cluster_by_uid[u]["apa"] in sides]
     # longest clusters first, then a stable tiebreak (TPC, ident)
-    uids = sorted(evt.cluster_by_uid, key=lambda u: (-evt.cluster_length(u),
-                                                     evt.cluster_by_uid[u]["apa"],
-                                                     evt.cluster_by_uid[u]["ident"]))
+    uids = sorted(uids, key=lambda u: (-evt.cluster_length(u),
+                                       evt.cluster_by_uid[u]["apa"],
+                                       evt.cluster_by_uid[u]["ident"]))
     state["clus_order"] = uids              # roster row index -> cluster uid (for Compare)
+    clus_title.text = (
+        "<b>clusters</b> (side %s only — lit side; ✓ = matched)"
+        % "/".join(str(s) for s in sorted(sides)) if sides
+        else "<b>clusters</b> (✓ = matched)")
     cols = defaultdict(list)
     for u in uids:
         c = evt.cluster_by_uid[u]
