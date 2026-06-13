@@ -288,7 +288,7 @@ The drift speed and x-offset sign differ by TPC half:
 
 | Anodes 0–3 (bottom drift) | Anodes 4–7 (top drift) |
 |---|---|
-| `--speed "-1.56*mm/us"` | `--speed "1.56*mm/us"` |
+| `--speed "-1.57*mm/us"` | `--speed "1.57*mm/us"` |
 | `--x0 "-341.5*cm"` | `--x0 "341.5*cm"` |
 
 After conversion: `zip -r upload data`, then `./upload-to-bee.sh upload.zip`.

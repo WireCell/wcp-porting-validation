@@ -156,8 +156,8 @@ Verification: `mabc-*.zip` appear in `work/<RUN_PADDED>_<EVT>/`.
    `pdhd/old/`.
 2. Preserve PDHD's Bee geometry (`-g protodunehd`) and existing
    drift-speed / `t0` / `x0` values:
-   - apa 0 and 2: `--speed "-1.6*mm/us" --t0 "250*us" --x0 "-358*cm"`
-   - apa 1 and 3: `--speed "1.6*mm/us" --t0 "250*us" --x0 "358*cm"`
+   - apa 0 and 2: `--speed "-1.565*mm/us" --t0 "0*us" --x0 "-353.2*cm"`
+   - apa 1 and 3: `--speed "1.565*mm/us" --t0 "0*us" --x0 "353.2*cm"`
    (Confirm pattern from the current `pdhd/wct-img-2-bee.py` when
    doing the refactor — different faces of PDHD alternate drift
    direction rather than being split top/bottom the way PDVD anodes

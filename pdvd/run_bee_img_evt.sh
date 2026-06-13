@@ -134,9 +134,9 @@ fi
 bee_anode_args() {
     local idx=$1
     if [ "$idx" -le 3 ]; then
-        echo '--speed "-1.56*mm/us" --t0 "0*us" --x0 "-341.5*cm"'
+        echo '--speed "-1.57*mm/us" --t0 "0*us" --x0 "-341.5*cm"'
     else
-        echo '--speed "1.56*mm/us" --t0 "0*us" --x0 "341.5*cm"'
+        echo '--speed "1.57*mm/us" --t0 "0*us" --x0 "341.5*cm"'
     fi
 }
 

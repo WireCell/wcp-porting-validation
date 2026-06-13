@@ -23,10 +23,12 @@ keep `stepped` (not `charge_stepped`) for the clustering stage.
   `ctpc_*` (charge), `scalar` (per-blob summary), `dead_winds_*`, and optional
   `steiner_pc`. See the table below.
 
-PDHD and PDVD use identical sampling configuration (`stepped` for live, `center`
-for dead, `drift_speed = 1.6 mm/µs`, `time_offset = -250 µs`). They differ only
-in geometry: PDHD has 4 APAs in 2 drift groups `{0,2}`/`{1,3}`; PDVD has 8 CRPs in
-2 drift groups `{0,1,2,3}` (bottom) / `{4,5,6,7}` (top).
+PDHD and PDVD use identical sampling strategy (`stepped` for live, `center`
+for dead, `time_offset = -250 µs`) and detector-specific calibrated
+`drift_speed` (1.565 mm/µs PDHD, 1.57 mm/µs PDVD; both were 1.6 before
+calibration). They also differ in geometry: PDHD has 4 APAs in 2 drift groups
+`{0,2}`/`{1,3}`; PDVD has 8 CRPs in 2 drift groups `{0,1,2,3}` (bottom) /
+`{4,5,6,7}` (top).
 
 ---
 
@@ -152,7 +154,8 @@ The number of x-samples per blob is set by the time binning `(tbins, tmin, tmax)
 default `(1, 0.0, 1.0)` → **one** sample taken at the blob's start time
 (`BlobSampler.h:147-165`). PDHD/PDVD use the default, so each transverse point
 yields one 3-D point at the slice start. `time_offset = -250 µs`,
-`drift_speed = 1.6 mm/µs` (`clus.jsonnet:7-8,113-114`).
+`drift_speed = 1.565 mm/µs` (PDHD; PDVD 1.57; calibrated from A–C crossers, was
+1.6) (`clus.jsonnet:7-8,113-114`).
 
 ---
 
@@ -305,7 +308,7 @@ Identical sampling configuration:
 |-------------------|----------------------------|-----------------------------------|
 | live strategy     | `stepped`                  | `stepped`                         |
 | dead strategy     | `center`                   | `center`                          |
-| `drift_speed`     | 1.6 mm/µs                  | 1.6 mm/µs                         |
+| `drift_speed`     | 1.565 mm/µs (calib, was 1.6) | 1.57 mm/µs (calib, was 1.6)     |
 | `time_offset`     | −250 µs                    | −250 µs                          |
 | `bee_detector`    | `protodunehd`              | `protodunevd`                     |
 | anodes / groups   | 4 APAs, `{0,2}` / `{1,3}`  | 8 CRPs, `{0,1,2,3}` / `{4,5,6,7}` |

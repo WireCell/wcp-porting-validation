@@ -34,9 +34,9 @@ RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
 # wct-img-2-bee.py / run_bee_img_evt.sh.
 bee_anode_args() {
     if [ "$1" -le 3 ]; then
-        echo '--speed "-1.56*mm/us" --t0 "0*us" --x0 "-341.5*cm"'
+        echo '--speed "-1.57*mm/us" --t0 "0*us" --x0 "-341.5*cm"'
     else
-        echo '--speed "1.56*mm/us" --t0 "0*us" --x0 "341.5*cm"'
+        echo '--speed "1.57*mm/us" --t0 "0*us" --x0 "341.5*cm"'
     fi
 }
 
