@@ -37,7 +37,7 @@ Every stage is one `MultiAlgBlobClustering` (MABC) node executing a configured
 | a0f0pA / a2f0pA | active face, drift −x: FV_x [−357.985, −2.54] cm |
 | a1f1pA / a3f1pA | active face, drift +x: FV_x [+2.54, +357.985] cm |
 | a0f1pA, a1f0pA, ... | wall-facing (degenerate) faces: FV_x pinned at ±357.985 cm |
-| per-face params | `drift_speed` 1.565 mm/µs (calibrated, see below; was 1.6), `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
+| per-face params | `drift_speed` 1.55 mm/µs (calibrated, see below; was 1.6), `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
 
 `detector_volumes(anodes, face)` builds the per-stage `DetectorVolumes`; the
 `face` argument scopes the instance NAME (the per-face and per-drift-group
@@ -168,7 +168,7 @@ imaging-stage `imaging-group02/13` instances (wirecell-img `bee-blobs` on the
 
 There is **no per-event T0 determination for PDHD**; the chain now uses
 `time_offset = 0` everywhere, so a blob's x is its apparent drift position in
-the readout frame (250 µs ≡ 39 cm at 1.565 mm/µs):
+the readout frame (250 µs ≡ 38.75 cm at 1.55 mm/µs):
 
 1. `cfg/pgrapher/experiment/pdhd/clus.jsonnet` — `time_offset` function
    parameter (default **0**; was −250 µs = readout-tick0-relative-to-trigger
@@ -240,16 +240,15 @@ tail (span > D) and short/broken tracks (span < D), per the known failure modes.
 | cathode-overshoot cross-check (mm/µs) | 1.535 | 1.548 | 1.542 |
 | v_true with D_W=353.04 (W-plane systematic) | 1.555 | 1.554 | 1.555 |
 
-![A→C crosser x-span distribution](../drift_calib/drift_velocity_calib.png)
+(Figure: see the re-clustered-at-1.55 closure distribution below.)
 
-Two **independent** estimators (the full-drift span, and the cathode-end overshoot
-past x = 0) agree at **~1.55 mm/µs**, the two drift volumes agree, and the reco's
-1.6 is ~3.2 % too high.  The true value sits in ≈ [1.55, 1.555] (the U-vs-W
-reference, ~0.98 cm, is only a ~0.3 % effect).
+The full-drift span gave **~1.55 mm/µs**, the two drift volumes agreed on the
+original 1.6 dumps, and the reco's 1.6 was ~3.2 % too high.  The data-central value
+is ~1.55 (the field-response/LArSoft value is 1.565, ~1 % higher).
 
-**Config change.**  `drift_speed` is set to **1.565 mm/µs** — within the data
-uncertainty and equal to the value the Garfield field response and LArSoft/Walkowiak
-already use, so the whole sim/reco chain is self-consistent:
+**Config change.**  `drift_speed` is set to the **data-central 1.55 mm/µs** (the
+Garfield field response / LArSoft-Walkowiak value is 1.565, ~1 % higher; we keep the
+data value):
 
 * `cfg/pgrapher/experiment/pdhd/params.jsonnet` — PDHD-only `lar.drift_speed` override
   (feeds `img.jsonnet`, `qlmatching.jsonnet`, sim drift via `params.lar.drift_speed`).
@@ -257,32 +256,40 @@ already use, so the whole sim/reco chain is self-consistent:
   `DetectorVolumes`).
 * `pgrapher/common/params.jsonnet` is **not** touched (shared with SBND/PDVD).
 
-Caveats: clean full A→C crossers with single-cluster reconstruction are rare (N≈9),
-so the statistical reach is modest; the `work/` imaging dumps remain at the
-as-reconstructed 1.6 mm/µs, and `pdhd/img_plot/preprocess_event.py` keeps
-`DRIFT_MM_PER_NS = 1.6/1000` to stay consistent with them — re-image to pick up 1.565.
+The 115 events were re-clustered at 1.55 (`run_clus_evt.sh <run> all`); imaging
+`clusters-apa-*.tar.gz` is drift-independent so only clustering re-ran.  Caveat:
+clean full A→C crossers with single-cluster reconstruction are rare (N≈9) and are
+fragmented further by the current group-stage clustering (see the closure note
+below), so the statistical reach is modest.  `pdhd/img_plot/preprocess_event.py`'s
+viewer `DRIFT_MM_PER_NS` should be set to `1.55/1000` to match the re-clustered dumps.
 
-Reproduce: `python pdhd/drift_calib/calib_drift_velocity.py` (prints per-volume
-velocities + writes `pdhd/drift_calib/drift_velocity_calib.png`).
+Reproduce (the `work/` dumps are now re-clustered at 1.55, so pass the matching
+`--v-reco`): `python pdhd/drift_calib/calib_drift_velocity.py --v-reco 1.55`
+(prints per-volume velocities + writes `pdhd/drift_calib/drift_velocity_calib.png`).
 
-## Closure check on the re-clustered (1.565) data — inconclusive
+## Closure check on the re-clustered (1.55) data — does not close cleanly
 
-Re-running the calibration on the 115 events after they were re-clustered at 1.565
-(`calib_drift_velocity.py --v-reco 1.565`) does **not** cleanly close, unlike PDVD:
+Re-running the calibration on the 115 events after re-clustering them at the adopted
+1.55 (`calib_drift_velocity.py --v-reco 1.55`):
 
-* Only **4** intact full crossers survive (all in TPC1/3; TPC0/2 has **none**), vs
-  9 in the original 1.6 data.
-* Of 23 long tracks that reach the cathode, **21 are anode-truncated** (do not reach
-  within ~320 cm of the anode) — the A-C crossers are being **fragmented**, almost
-  certainly by the group-stage clustering changes (connect1 / deghost / cathode_connect
-  / separate) that postdate the original-calibration dumps.
-* The few survivors are themselves truncated (3 of 4 stop ~15 cm short of the cathode),
-  shortening the span and biasing v_true **high**: the pile-up returns ~1.586 mm/µs
-  (~1.3 % above the input 1.565); the one fully-intact crosser (anode 350.5, cathode
-  0.6) gives 1.575.
+![A→C crosser x-span distribution, re-clustered @ 1.55](../drift_calib/drift_velocity_calib.png)
 
-So the closure is statistics- and fragmentation-limited and should not be read as a
-re-measurement.  The original calibration (1.55 from the less-fragmented 1.6 dumps,
-N=9) remains the better estimate; the fragmentation of PDHD A-C crossers under the
-current clustering is a separate issue worth tracking.  (PDVD, with ~50 crossers,
-closes to ~0.4 % — see pdvd/docs/clus-workflow.md.)
+* **N = 22** intact full crossers (13 TPC0/2 + 9 TPC1/3) — more than at 1.565 (N=4),
+  but the span pile-up **recovers v_true ≈ 1.570 mm/µs, ~1.3 % ABOVE the input 1.55**:
+  the loop does **not** close.  And the two volumes disagree (TPC0/2 → 1.584,
+  TPC1/3 → 1.557).
+* The cause is **crosser fragmentation/truncation**: many A-C crossers are split by
+  the group-stage clustering (connect1 / deghost / cathode_connect / separate, which
+  postdate the original-calibration dumps), and the surviving clusters are themselves
+  truncated (cathode or anode end clipped), which **shortens the span and biases the
+  span-based velocity HIGH**.  The bias is roughly velocity-independent — the pile-up
+  recovers ~1.57 whether the data is at 1.55 or 1.565 — so it is a real systematic of
+  this dataset, not a sign that 1.55 is wrong.
+
+**Bottom line.**  The reclustered data is fragmentation-limited and biases the
+span-based estimate ~1.3 % high (to ~1.57), so it cannot confirm 1.55 by closure the
+way PDVD does (~0.4 %, ~50 un-fragmented crossers — see pdvd/docs/clus-workflow.md).
+The data-central value is bracketed in ≈ [1.55, 1.57]; **1.55** (the original,
+less-fragmented N=9 measurement) is adopted as the low/clean end.  Fixing the PDHD
+A-C-crosser fragmentation under the current clustering would let a clean closure pin
+the value down — it is worth tracking separately.
