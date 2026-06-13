@@ -123,9 +123,10 @@ is **~5× too high** (median 0.19), the extra factor being the diffuse tail of
 spread is fixed; the direct-PMT scale (~0.36, i.e. ~2.8× reduction) is the most
 defensible first cut.
 
-Current config (`cfg/pgrapher/experiment/pdhd/qlmatching.jsonnet`):
-`QtoL = 1.0`, `vuv_eff = 0.03` (both flagged placeholders). The light yield
-enters linearly, so the first-cut normalization handle is `QtoL × vuv_eff`.
+Config at the time of this diagnosis (`cfg/pgrapher/experiment/pdhd/qlmatching.jsonnet`):
+`QtoL = 1.0`, `vuv_eff = 0.03` placeholders, with `vuv_absorption_length = 2000` cm
+(attenuation off) in the model. The light yield enters linearly, so the normalization
+handle is `QtoL × vuv_eff`. **These were tuned in the update below.**
 
 ![crosser patterns](../pics/ql_norm_crosser_patterns.png)
 
@@ -134,6 +135,9 @@ measured total, so colour = shape only) | per-PMT bars sorted by measured. The
 bright regions co-locate, but the prediction always carries a wider skirt.
 
 ## Conclusions / next steps
+
+*(These were the recommendations from the diagnosis; steps 1–2 were since carried
+out — see "Update: λ + normalization tuned" below. Step 3 still stands.)*
 
 1. **Fix the visibility spread first.** The semi-analytical PDHD model
    (`pdhd/photodet/semi-analytical-pdhd.json`) puts ~half the light on PMTs that
@@ -160,3 +164,65 @@ Per-bundle fields used: `at_x_boundary`, `two_boundary`, `main_cluster`,
 `flash_gid`, `ks_dis`, `ndf`, `pred_pe[160]`; flash `pe[160]`; opdet
 `{x,y,z,ch,active,auto_masked}`. See `qlmatching-chain.md` for the matching
 chain and tunables.
+
+---
+
+## Update (2026-06-13): λ + normalization tuned and data reprocessed
+
+Following the diagnosis above, the visibility **spread** and the **normalization**
+were tuned jointly and the 27305 study events reprocessed.
+
+### Method — offline re-predictor, validated against the C++
+
+λ enters the prediction only through `exp(−d/λ)`
+(`SemiAnalyticalModel.cxx`), so the whole per-PMT pattern can be recomputed at any λ
+directly from the charge points and the model JSON, with **no chain re-run**, by
+porting `VUVVisibility` (rectangle solid angle + Gaisser–Hillas + border corrections)
+to Python. The port was **validated to machine precision**: at λ=2000 it reproduces
+the dumped C++ `pred_pe` on every predicted channel (per-channel ratio = 1.0000,
+stdev 0). λ was then swept continuously over the crosser anchors and the result
+applied to the real config + reprocessed (the reprocess is the end-to-end check).
+
+### Result — λ ≈ 100 cm, vuv_eff 0.03 → 0.023
+
+On the cleanest, brightest anchor (evt158, ks=0.158, 8052 PE — the one fully
+trustworthy crosser) the predicted concentration `N90` falls monotonically with λ
+and matches the data at λ≈100–150 cm; the directly-lit-PMT over-prediction largely
+**dissolves once the spread is fixed** (it was mostly the diffuse tail, exactly as
+predicted above). Chosen values (PDHD-only config):
+
+- `vuv_absorption_length`: **2000 → 100 cm** (`wire-cell-data/pdhd/photodet/semi-analytical-pdhd.json`) — the canonical LAr 128 nm value; an *effective* spread correction (mildly double-counts the GH fit).
+- `vuv_eff`: **0.03 → 0.023** (`cfg/.../pdhd/qlmatching.jsonnet`) — the ~0.77 direct-PMT scale at λ=100.
+
+End-to-end reprocess of the cleanest anchor (real C++, λ=100, eff=0.023):
+
+| metric | before (λ=2000) | after (λ=100, eff=0.023) | measured |
+|---|---:|---:|---:|
+| `N90` predicted | 17 | **6** | 7 |
+| direct-PMT scale (top-3 meas/pred) | 0.54 | **1.00** | 1.0 |
+| integral scale (meas/pred) | 0.46 | **0.78** | 1.0 |
+| predicted light on dark PMTs | 49 % | **39 %** | 0 |
+| predicted total PE | 24552 | **10331** | 8052 |
+
+Aggregate over the (noisier) auto-selected anchor set, before → after:
+direct-PMT scale median **0.36 → 0.83**; integral scale **0.19 → 0.58**; dark-PMT
+fraction **47 % → 39 %**.
+
+### What is fixed, and what is not
+
+- **Normalization: fixed.** The directly-lit-PMT scale is now ≈1 on the clean
+  crosser (0.83 median on the noisy set); the absolute light scale is calibrated.
+- **Spread: fixed for clean single-track crossers, residual otherwise.** λ=100
+  shrinks every anchor's `N90`, but the longer / multi-track anchors (e.g. evt150's
+  29k-point blob, evt162) shrink from ~25 to ~14–16 without reaching their very low
+  measured `N90`, so the aggregate `N90` ratio stays ~2.6×. A single global λ cannot
+  capture this; the next-order correction is the **angular Gaisser–Hillas terms** (or
+  the voxel photon library), and **more clean crossers** (run 27980, more 27305
+  events) to pin it.
+- **Provisional.** The fit rests mainly on one bright crosser; `ks_dis` on that
+  bundle rose 0.158→0.256 (a different CDF metric than the physical concentration —
+  the pattern agreement clearly improved). Treat λ and `vuv_eff` as first-calibration,
+  not final.
+
+Analysis scripts: `pdhd/ql_light_calib/` (`repredict.py` validated re-predictor,
+`fit.py` λ sweep, `after_metrics.py` reprocessed-dump metrics).
