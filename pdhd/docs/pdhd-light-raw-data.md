@@ -377,26 +377,41 @@ The merge **cascades**: `j`'s hits are added to `i`, `i` is recomputed
 tested against the **grown** `i` — so three close fragments collapse 1←2, then
 1←3 against the merged pair. It runs **per cathode side** (inside `find_flashes`,
 which is already called once per side), so a merge never crosses the opaque
-cathode.
+cathode. (Implementation note: the inner scan keeps `i` fixed and advances `j`,
+so `i` can absorb a satellite *past* an intervening non-merged flash — in ~4.7 %
+of merges a brighter non-merged flash sits between `i` and `j`. The spatial +
+ratio gates make this benign, but it is a slight deviation from a strictly
+"merge 1+2, then test 3" reading.)
 
-**Knob tuning (data-driven, run 27305).** Over the 23 events, among same-side,
-within-8 µs, adjacency-passing ordered pairs the later flash is overwhelmingly a
-single lit OpDet at a few PE against a 7 000–18 000 PE parent — clear
-over-splits. The PE-ratio population sits well below the "comparable flash"
-regime (which only appears at ratio ≳ 0.7), so `refine_pe_ratio = 0.5` stays
-clear of it; `refine_max_fired = 2` also catches the ~6 % of satellites whose
-light spreads onto a second adjacent window. The cascade then merges **1440 →
-718 flashes (−49 %)** with **total PE conserved to 0.0000 %** (a merge only moves
-hits between flashes). The merge Δt is *not* concentrated at ~1 µs — it is spread
-continuously across the window (median **3.1 µs**, 90th pct 6.3 µs), i.e. the
-8 µs window deliberately recaptures slow-scintillation/afterpulse fragments out
-to several µs, not just the nearest splits.
+**Knob tuning (data-driven, run 27305).** Over the 23 events the merge population
+is **dominated by** dim single-OpDet satellites — among the 718 actual merges the
+absorbed flash's PE is **62 % < 10 PE, 84 % < 30 PE** (median 7.3 PE) against a
+7 000–18 000 PE parent: clear over-splits riding the prompt flash's tail. But the
+gate is `pe_j ≤ 0.5·pe_i` and `≤ 2` lit OpDets, **not** "tiny only", so the tail
+extends up: ~11 % of merges are 50–500 PE, the brightest a **495 PE** 2-OpDet
+flash folded into a 4 042 PE parent (ratio 0.12). These are bright *localized*
+fragments (≤ 2 adjacent windows, < half their parent, same region within 8 µs) —
+the splitter breaking one bright flash, not independent sources. `refine_pe_ratio
+= 0.5` keeps the cut below the "comparable flash" regime (which appears at ratio
+≳ 0.7); `refine_max_fired = 2` also catches satellites whose light spreads onto a
+second adjacent window. The cascade merges **1440 → 718 flashes (−49 %)** with
+**total PE conserved to 0.0000 %** (a merge only moves hits between flashes). The
+merge Δt is *not* concentrated at ~1 µs — it is spread continuously across the
+window (median **3.1 µs**, 90th pct 6.3 µs): the 8 µs window deliberately
+recaptures slow-scintillation/afterpulse fragments out to several µs, not just the
+nearest splits.
 
-**Q/L impact.** Matching is stable: the bright prompt flashes (which carry the
-real matches) are always merge *targets* and persist with sub-0.1 µs time shifts;
-`auto_selected` match counts barely move (event 0: group02 26→27, group13 40→38),
-and the only matches that fold are dim satellites absorbed into their parent — the
-intended behaviour.
+**Q/L impact (checked refine-off vs -on).** Matching stays broadly stable on the
+**lit** drift side: bright prompt flashes are always merge *targets* and persist
+with sub-0.1 µs time shifts, and `auto_selected` match counts move by only ≤ 2 per
+event (e.g. evt16 group13 55→53, evt12 group13 56→58, evt3 group13 47→46). Merges
+**consolidate** rather than drop matches — the matched-flash PE just shifts up as
+satellites are absorbed into their parent, and the few hundred-PE fragments that
+were separately matched re-match the merged parent. (The *dark* side, group02 on
+the +x-only 2024 readout, can swing more, e.g. evt3 23→0, but those are the known
+single-sided dark-side dupe matches, not physical — see the ql_scan lit-side
+filter.) So no real matched flash is lost; the trade is folding a few bright
+localized fragments into their parent, which is the intended behaviour.
 
 `flash_refine` is **off by default** (component reproduces the larana output
 byte-for-byte — verified: default-off opflash tensors are `array_equal` to the
