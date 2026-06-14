@@ -69,7 +69,7 @@ with these PDHD specifics:
 | key | PDHD value / meaning |
 |-----|----------------------|
 | `nchan` | optical-channel count (**160**, all flat X-ARAPUCAs — no PMTs) |
-| `drift_speed` | cm/µs; a bundle's T0 x-shift is `dx = sign_offset · flash_time_us · drift_speed` |
+| `drift_speed` | cm/µs; a bundle's T0 x-shift is `dx = sign_offset · flash_time_us · drift_speed`. `flash_time_us` **already includes** the per-event readout-vs-trigger offset (folded in by QLMatching), so the charge lands on the raw-`x` reference the dump uses; the top-level `trigger_offset` is `0` and must **not** be re-added |
 | `geometry[apa]` | fixed detector box per drift volume: `anode_x`, `cathode_x` (central cathode ≈ 0), `sign_offset`, `y_lo/y_hi`, `z_lo/z_hi` |
 | `opdets[]` | per channel `{ch, x, y, z, type, apa, active}`; `type` 0 = X-ARAPUCA |
 | `flashes[]`, `clusters[]`, `bundles[]` | as SBND; per-file only one drift side is populated |
