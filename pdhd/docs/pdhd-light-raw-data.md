@@ -347,6 +347,63 @@ all four events). Its effect only appears once both volumes are read out — con
 with a synthetic two-side coincidence, where all-TPC produces one mixed flash and
 `group_by_side` produces two, one per side.
 
+### 4.4 Flash refinement — merging over-split flashes (`flash_refine`, PDHD on)
+
+**The problem.** The per-channel OpHit splitter (§3.4) plus the 1 µs accumulators
+sometimes **fragment one real flash into several**: a bright prompt flash is
+accompanied by small, few-PD satellites sitting on its slow scintillation tail
+(and its afterpulsing), each just crossing the `FlashThreshold = 3.5 PE` to
+register as its own flash. `RemoveLateLight` only drops the satellites whose PE
+*magnitude* is consistent with a simple exponential tail; a 3.5–6 PE fragment
+several µs out is not, so it survives as a spurious extra flash.
+
+**The fix.** After `ConstructFlash`/`RemoveLateLight`, `refine_flashes` walks the
+flashes of one drift side in time order and merges a **later** flash `j` into an
+**earlier** flash `i` when ALL of:
+
+1. **time window** — `t_j − t_i ≤ refine_window_us` (**8 µs**), sliding;
+2. **dim** — `total_pe(j) ≤ refine_pe_ratio × total_pe(i)` (**0.5**);
+3. **few PDs** — `j` lights `1 … refine_max_fired` (**2**) OpDets, an OpDet
+   counting as lit when `pe ≥ refine_fired_pe` (**0.5 PE**);
+4. **spatially adjacent** — every lit OpDet of `j` is the same as, or an
+   **8-neighbour (Chebyshev ≤ 1)** of, a lit OpDet of `i`, on the **same side**.
+   Each side is a regular 10-row(y) × 8-col(z) OpDet grid (built once in
+   `configure()` by ranking the distinct y/z per side); adjacency is the grid
+   `max(|Δrow|, |Δcol|) ≤ 1` test. The spatial gate is the real discriminator —
+   a genuinely independent flash elsewhere in the volume is never adjacent.
+
+The merge **cascades**: `j`'s hits are added to `i`, `i` is recomputed
+(`construct_flash`, so its time/PE/per-OpDet vector grow), then the next flash is
+tested against the **grown** `i` — so three close fragments collapse 1←2, then
+1←3 against the merged pair. It runs **per cathode side** (inside `find_flashes`,
+which is already called once per side), so a merge never crosses the opaque
+cathode.
+
+**Knob tuning (data-driven, run 27305).** Over the 23 events, among same-side,
+within-8 µs, adjacency-passing ordered pairs the later flash is overwhelmingly a
+single lit OpDet at a few PE against a 7 000–18 000 PE parent — clear
+over-splits. The PE-ratio population sits well below the "comparable flash"
+regime (which only appears at ratio ≳ 0.7), so `refine_pe_ratio = 0.5` stays
+clear of it; `refine_max_fired = 2` also catches the ~6 % of satellites whose
+light spreads onto a second adjacent window. The cascade then merges **1440 →
+718 flashes (−49 %)** with **total PE conserved to 0.0000 %** (a merge only moves
+hits between flashes). The merge Δt is *not* concentrated at ~1 µs — it is spread
+continuously across the window (median **3.1 µs**, 90th pct 6.3 µs), i.e. the
+8 µs window deliberately recaptures slow-scintillation/afterpulse fragments out
+to several µs, not just the nearest splits.
+
+**Q/L impact.** Matching is stable: the bright prompt flashes (which carry the
+real matches) are always merge *targets* and persist with sub-0.1 µs time shifts;
+`auto_selected` match counts barely move (event 0: group02 26→27, group13 40→38),
+and the only matches that fold are dim satellites absorbed into their parent — the
+intended behaviour.
+
+`flash_refine` is **off by default** (component reproduces the larana output
+byte-for-byte — verified: default-off opflash tensors are `array_equal` to the
+pre-change output) and **on for PDHD** in `flash.jsonnet`. The four knobs live in
+the `opflash_finder` builder. (Effect is per drift side, so it also mirrors
+SBND's per-APA flashes if ever enabled there.)
+
 ---
 
 ## 5. Data layout and running
