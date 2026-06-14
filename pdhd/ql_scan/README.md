@@ -66,8 +66,10 @@ Instead of building a match from scratch:
 - In the bundle, compare, and cluster tables the **side / flash / cluster** columns are
   kept adjacent for quick reading.
 - Pick a cluster in the **clusters** roster, then click **Compare cluster's flashes**
-  to list that cluster's candidate flashes in the second table (focusing a bundle row
-  still works too; the most recent of the two wins).
+  to list that cluster's candidate flashes **in the current coincidence group** in the
+  second table (focusing a bundle row still works too; the most recent of the two wins).
+  The list is restricted to the selected group, so flashes from neighbouring groups
+  (e.g. a coincident flash 1–2 µs away in the adjacent group) are not shown.
 
 ## Saved label schema
 

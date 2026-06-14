@@ -441,9 +441,9 @@ table = DataTable(source=table_src, columns=table_cols, width=900, height=300,
                   selectable=True, index_position=None)
 
 # Second table (request 4): every bundle whose main cluster matches the focused
-# bundle's, across all flashes/groups, so one cluster's candidate flashes can be
-# compared side by side. Populated on demand by the "Compare" button; click a row
-# to jump the whole view (focus + group) to that candidate flash.
+# bundle's, restricted to the current coincidence group, so one cluster's candidate
+# flashes within that group can be compared side by side. Populated on demand by the
+# "Compare" button; click a row to focus that candidate flash.
 compare_src = ColumnDataSource(data=dict())
 compare_cols = [
     TableColumn(field="sel", title="✓", width=34, formatter=check_fmt),
@@ -889,8 +889,8 @@ def render_summary():
 
 def rebuild_compare():
     """Fill the compare table with every bundle sharing the focused cluster's uid
-    (one cluster -> naturally one TPC), across all flashes/groups. Empty when no
-    cluster is being compared."""
+    (one cluster -> naturally one TPC), restricted to the CURRENT coincidence group
+    (state["group"]). Empty when no cluster is being compared."""
     evt = state["evt"]
     cu = state["compare_cluster"]
     empty = dict(sel=[], auto=[], apa=[], flash_gid=[], cluster=[], t_us=[], grp=[],
@@ -899,10 +899,13 @@ def rebuild_compare():
         compare_src.data = empty
         state["compare_order"] = []
         compare_div.text = ("<i>focus a bundle, then 'Compare cluster's flashes' to "
-                            "list every flash this cluster could match.</i>")
+                            "list this cluster's candidate flashes in the current group.</i>")
         compare_src.selected.indices = []
         return
-    rows = [i for i in range(len(evt.bundles)) if evt.bundles[i]["main_cluster"] == cu]
+    g = state["group"]
+    rows = [i for i in range(len(evt.bundles))
+            if evt.bundles[i]["main_cluster"] == cu
+            and evt.group_of(evt.bundles[i]["flash_gid"]) == g]
     rows.sort(key=lambda i: evt.flash_by_gid[evt.bundles[i]["flash_gid"]]["time"])
     state["compare_order"] = rows
     cols = defaultdict(list)
