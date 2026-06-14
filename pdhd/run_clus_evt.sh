@@ -170,8 +170,50 @@ with tarfile.open(sys.argv[1]) as tf:
 print(off)
 PY
             echo "Trigger offset: ${TRIGGER_OFFSET_US} us (from $(basename "$OPFLASH_TAR"))"
+            # Guard: charge and light are paired only by sharing this work dir,
+            # nothing downstream checks it.  Both products independently carry the
+            # DAQ/art event number (charge: cluster_<N>_ filename -> EVENT_NO;
+            # light: opflash tensorset metadata 'event'), so assert they agree
+            # before matching a flash to charge from a different event.
+            OPFLASH_EVENT=$(python3 - "$OPFLASH_TAR" <<'PY' || echo "")
+import sys, json, tarfile
+with tarfile.open(sys.argv[1]) as tf:
+    for m in tf.getmembers():
+        if m.name.endswith("_metadata.json"):
+            md = json.loads(tf.extractfile(m).read())
+            if "event" in md:
+                print(int(md["event"])); break
+PY
+            if [ -z "$OPFLASH_EVENT" ]; then
+                echo "[warn] could not read event number from $(basename "$OPFLASH_TAR"); skipping charge/light event-number guard" >&2
+            elif [ "$OPFLASH_EVENT" != "$EVENT_NO" ]; then
+                echo "ERROR: charge/light event mismatch in $CLUS_INPUT: charge art_event=$EVENT_NO but opflash event=$OPFLASH_EVENT." >&2
+                echo "       Refusing to Q/L-match charge and light from different events. Re-run light reco for this event (run_light_evt.sh -e $EVENT_NO ...)." >&2
+                return 1
+            fi
         else
             echo "[warn] $OPFLASH_TAR not found; trigger_offset_us=0" >&2
+        fi
+    fi
+
+    # Post-resample readout-window length (ticks) for the Q/L window-truncation
+    # flag.  Read the real SP frame length (~5999) from one SP frame archive so the
+    # flag uses PDHD's true window rather than the C++ SBND default (3427, which
+    # sits below the PDHD cathode and would falsely flag mid-drift clusters).
+    # Falls back to 6000 (the jsonnet default) if no frame is found / unreadable.
+    READOUT_NTICKS=6000
+    if [ "$QLMATCH" = 1 ]; then
+        _SPF=$(ls "$CLUS_INPUT"/protodunehd-sp-dnnroi-frames-anode*.tar.bz2 2>/dev/null | head -1)
+        if [ -n "$_SPF" ]; then
+            _NT=$(python3 - "$_SPF" <<'PY'
+import sys, tarfile, io, numpy as np
+with tarfile.open(sys.argv[1]) as tf:
+    name = next(m.name for m in tf.getmembers() if m.name.startswith("frame_"))
+    print(np.load(io.BytesIO(tf.extractfile(name).read())).shape[1])
+PY
+)
+            READOUT_NTICKS=${_NT:-6000}
+            echo "Readout window: ${READOUT_NTICKS} ticks (from $(basename "$_SPF"))"
         fi
     fi
 
@@ -187,6 +229,7 @@ PY
         -S "calib=$([ "$CALIB" = 1 ] && echo true || echo false)" \
         -S "save_opflash=$([ "$OPDUMP" = 1 ] && echo true || echo false)" \
         -S "trigger_offset_us=${TRIGGER_OFFSET_US}" \
+        -S "readout_window_ticks=${READOUT_NTICKS}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

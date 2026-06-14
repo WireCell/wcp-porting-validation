@@ -48,6 +48,10 @@ function(
     // Needs do_qlmatch (the QLMatching "opflash" root PC); no-op otherwise.
     // Default false => bit-identical.  run_clus_evt.sh -op sets this (+do_qlmatch).
     save_opflash = false,
+    // Post-resample readout-window length (ticks) for the Q/L window-truncation
+    // flag.  run_clus_evt.sh reads the real value from the SP frame (~5999) and
+    // passes it here; 6000 is a sane PDHD fallback.  See qlmatching.jsonnet.
+    readout_window_ticks = 6000,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -105,7 +109,7 @@ local clus_all_tpc = clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=sa
 // its output is the matched cluster tree.  A representative anode of the group
 // (gd.anodes[0]) carries the shared drift-side geometry / per-TPC OpDet mask.
 local qlm = import 'pgrapher/experiment/pdhd/qlmatching.jsonnet';
-local qlm_maker = qlm(params, trigger_offset);
+local qlm_maker = qlm(params, trigger_offset, readout_window_ticks);
 // Per-drift-side hand-scan calibration dump path (empty unless `calib`).  Lands in
 // the event workspace beside mabc-*.zip, one file per group (the ql_scan viewer
 // merges group02 + group13 of an event into one two-side view).

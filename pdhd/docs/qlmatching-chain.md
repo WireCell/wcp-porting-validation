@@ -163,6 +163,39 @@ Y/Z extent. X is identical across same-side APAs, so the drift math (`anode_x`,
 union reduces to the single representative anode → **byte-identical** for SBND and
 every other existing config.
 
+### Readout-window truncation flag (`wtrunc`) — fixed
+
+`compute_endpoint_flags` (`QLMatching.cxx:2249`) marks a bundle `window_truncated`
+(the `wtrunc` label in `ql_scan`) when its earliest/latest time slice sits within
+`window_edge_ticks` of the readout window `[0, readout_window_ticks]`. The slice
+indices are raw post-resample ticks (`slice_index = islice->start()/tick`,
+`tick = 0.5 µs`).
+
+> **The bug.** `readout_window_ticks` defaulted to the C++ value **3427** — an SBND
+> number (`daq.nticks`). PDHD's post-resample SP frame is **5999** ticks (raw data
+> **5859** @ 512 ns → 5999 @ 500 ns; the full drift reaches only ~**4498** ticks, so
+> the readout window is ~1500 ticks longer than the drift). 3427 sits *below* the
+> cathode, so every normal cluster with charge past tick 3427 was falsely flagged
+> `wtrunc`.
+
+**Fix — read the window from the data, not a literal.** PDHD's `run_clus_evt.sh`
+reads the real frame length (`shape[1]`) from the per-event SP frame archive
+(`protodunehd-sp-dnnroi-frames-anode*.tar.bz2`, still in each work dir) and passes it
+through `wct-clustering.jsonnet` → `qlmatching.jsonnet` → `QLMatching` via
+`readout_window_ticks` (`-S readout_window_ticks=5999`). The value auto-tracks the
+real per-run window; the compiled config and the `calib-evt*.json` `readout_nticks`
+field both show **5999**.
+
+> *Why not stamp it into the cluster tree?* The clustering chain reads the imaging
+> tarballs through `ClusterFileSource`, which rebuilds each slice's frame as a stub
+> (`SimpleFrame(ident, start)` — no traces), so the frame length is **not** present
+> in the tree at `PointTreeBuilding`/`QLMatching` time. The SP frame (which *does*
+> carry it) is read by the run script instead.
+
+**SBND-safe.** `readout_window_ticks` is only set by PDHD's run script; SBND/PDVD keep
+their own `qlmatching.jsonnet` value (SBND `3428 ≈ daq.nticks`) untouched →
+**bit-identical**.
+
 ---
 
 ## 3. Light model — what to tune next (point 2)
