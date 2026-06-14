@@ -259,6 +259,12 @@ reads ~0 PE (run 27980 is the exception — both sides lit). This is handled cle
 - **Same-side visibility.** The photon model returns 0 visibility across the cathode
   (a `−x` cluster predicts 0 PE on `+x` OpDets and vice-versa), and the per-side OpDet
   mask zeroes the other side's channels. A dark-side cluster gets pred≈0, meas≈0.
+- **No flash time cut.** `flash_mintime / flash_maxtime` are set to ±1 s
+  (`QLMatching.cxx:682`), wider than any PDHD readout, so **every** flash in the
+  event reaches matching — the readout-clipping C++ default (±1.5 ms) and even a
+  full-readout window are both bypassed. Bit-identical on the run-27305 sample (0
+  of 707 flashes ever fell outside the full-readout window); the change only
+  guards against a flash landing outside it in some future event/run.
 - **Dark flashes dropped.** `flash_minPE = 50` discards near-zero flashes, so dark-side
   clusters simply get **no flash / no T0** (rather than a spurious match).
 - **Dead-channel masking** (see [`pds-opchannel-opdet-mapping.md`](pds-opchannel-opdet-mapping.md)):
