@@ -129,7 +129,29 @@ has exactly one populated group and they are not wired.  Coordinates: raw
 | 10 | `examine_x_boundary()` | ClusteringExamineXBoundary | split clusters at the drift-x fiducial boundary (newly enabled; the C++ accepts multi-wpid groupings only when the wpids form one drift volume: same face AND identical FV_x metadata — mixed faces or differing x ranges raise) |
 | 11 | `neutrino()` | ClusteringNeutrino | neutrino-candidate tagging/merge |
 | 12 | `isolated()` | ClusteringIsolated | small→big isolated-cluster absorption |
-| 13 | `examine_bundles()` | ClusteringExamineBundles | bundle examination/final merge |
+| 13 | ~~`examine_bundles()`~~ | ClusteringExamineBundles | **DISABLED 2026-06-14** (commented out) — see note below |
+
+**`examine_bundles()` disabled at this stage (2026-06-14).** It rewrites the
+`isolated/perblob` array, re-deriving each cluster's connectivity components
+(`connected_blobs("relaxed")`) and tagging the longest component as the main
+(−1) and the rest as associated sub-clusters (≥0). For a cosmic that crosses
+another track, `separate` (step 7) carves out the crosser and leaves a small
+connectivity gap; `examine_bundles` then split the cluster there into a short
+main spine + associated continuation. Downstream `QLMatching` matches and
+computes its boundary flags on the **main** sub-cluster only, so a track whose
+anode end sits in an associated sub-cluster (e.g. run 27305 evt 150 cluster 386)
+was never flagged `at_x_boundary`/`close_to_PMT` even though the full track
+reaches the anode. With this step removed the `perblob` comes from `isolated`
+(step 12), which carries **no −1 main**, so `QLMatching` leaves the cluster
+whole (`decompose_cluster_groups`: a `perblob` with no −1 is a single component
+→ no split) and computes the flags over the full track. This is a
+flag/matching-input change only: at this stage `examine_bundles` (run with
+`use_flash_t0=false`) **only rewrites `perblob`, never cluster membership**, so
+the cluster grouping is byte-identical — verified on run 27305 evt 150
+(all-TPC: 163 clusters → 163, point sets identical; 34 Q/L matches → 34, same
+flash/χ²; only cluster 386 flips to `at_x_boundary`/`close_to_PMT=True`).
+Re-enable later in the all-TPC stage if the main/associated structure is needed
+there.
 
 Dump (when standalone): `mabc-group02.zip` / `mabc-group13.zip`.
 

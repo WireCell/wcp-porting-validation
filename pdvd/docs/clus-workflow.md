@@ -84,7 +84,7 @@ dead ──► ClusterScopeFilter(face_index=N) ──► BlobSampler "dead" (ce
 
 - `PointTreeMerging multiplicity=nanodes` unions all per-APA trees.
 - Coordinate system switches from `(x,y,z)` to `(x_t0cor,y,z)` for the all-APA algorithms.
-- Algorithm pipeline: `switch_scope → extend → regular×2 → parallel_prolong → close → extend_loop(×3) → separate → neutrino → isolated → examine_bundles`.
+- Algorithm pipeline: `switch_scope → extend → regular×2 → parallel_prolong → close → extend_loop(×3) → separate → neutrino → isolated` (`examine_bundles` disabled 2026-06-14 — it only rewrote the unused `perblob` array; see `clustering-scope.md` §Stage 3).
 - Output: `mabc-all-apa.zip`.
 
 ---

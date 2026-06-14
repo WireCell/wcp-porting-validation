@@ -67,6 +67,25 @@ tags blobs with an `isolated/perblob` array (−1 = main, ≥0 = sub-clusters).
 **whole** group, and anchors the bundle on the main. The matched T0 is written to
 the main and copied to its associated clusters.
 
+> **PDHD: the −1 main tag is no longer produced (2026-06-14).** `examine_bundles()`
+> — the only stage-3 pass that writes a `−1` main into `isolated/perblob` — is now
+> **commented out** of the PDHD per-drift-group pipeline (`cfg/.../pdhd/clus.jsonnet`;
+> see `clustering-algorithm.md` §Stage 3). The `perblob` then comes from `isolated()`,
+> which carries **no −1**, so `decompose_cluster_groups` treats every cluster as a
+> single component and does **no** main/associated split: each cluster is matched and
+> flagged **whole**. Motivation: the boundary flags (`compute_endpoint_flags`) walk the
+> **main** sub-cluster only, so when `examine_bundles` split a crossing-cosmic track
+> into a short main spine + an associated continuation, a track whose anode end lived
+> in the *associated* piece was never flagged `at_x_boundary`/`close_to_PMT` even though
+> the full track reached the anode (run 27305 evt 150 cluster 386: main spine stopped
+> ~63 cm short). With the whole track as the main, the flag fires correctly. This
+> changes **flags only** — at stage 3 `examine_bundles` (run `use_flash_t0=false`)
+> rewrites `perblob` but never cluster membership, and the predicted light was already
+> summed over the whole group either way — so matching is unchanged (verified evt 150:
+> 163→163 clusters point-for-point, 34→34 Q/L matches with identical flash/χ²; only
+> cluster 386 flips its boundary flags to `True`). The main/associated machinery below
+> still applies to any detector that keeps `examine_bundles` (e.g. SBND).
+
 > **The split is matching-INTERNAL and is undone before output.** After the fit,
 > `recompose_cluster_groups` (`QLMatching.cxx`, called in `operator()` after the
 > per-APA fit loop) merges each group's associated sub-clusters back into their

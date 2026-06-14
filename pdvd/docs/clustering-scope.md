@@ -75,7 +75,19 @@ with no per-event T0, `x_t0cor == x`, so running the merge family before
 | 10 | `examine_x_boundary` | multi-wpid since toolkit `f68e5f6a` (all wpids must share FV_x — true within one drift side) |
 | 11 | `neutrino` | neutrino-interaction pattern recognition |
 | 12 | `isolated` | isolated small-cluster classification/merge |
-| 13 | `examine_bundles` | graph-based bundle re-examination |
+| 13 | ~~`examine_bundles`~~ | **DISABLED 2026-06-14** (commented out) — see note below |
+
+**`examine_bundles` disabled at this stage (2026-06-14).** It only rewrites the
+`isolated`/`perblob` array (never cluster membership at this stage,
+`use_flash_t0=false`), and PDVD runs no Q/L matching, so that array has no
+consumer — it is dropped at `switch_scope` (stage 4, see note in §Stage 4) either
+way. Removing the pass therefore leaves the cluster grouping **byte-identical**
+(verified A/B on run 039252 evt 0: `mabc-all-apa.zip` member content unchanged).
+This mirrors the PDHD change, where the same pass was disabled to fix a Q/L
+boundary-flag bug (it split crossing-cosmic tracks into a main spine + associated
+continuation, and `QLMatching` flagged the main only); see
+`cfg/.../pdhd/clus.jsonnet` and `pdhd/docs/clustering-algorithm.md`. Re-enable in
+the all-TPC stage if the main/associated structure is ever needed downstream.
 
 Bee output: `mabc-group0123.zip` / `mabc-group4567.zip`.
 
@@ -104,9 +116,11 @@ held.)  Stage-3 prerequisite: `examine_x_boundary(allow_mixed_faces=true)` —
 the same-face check added for PDHD drift-side groups (9a41546a) would
 otherwise raise on PDVD's per-group groupings, whose 8 wpids legitimately
 mix faces (an anode's faces are the y-halves of one CRP, identical FV_x).  Note: `switch_scope` destroys and recreates every cluster,
-which drops the per-cluster `isolated`/`perblob` arrays produced by stage
-3's `isolated`/`examine_bundles` (accepted; SBND re-runs `examine_bundles`
-after `switch_scope` when those are needed downstream).
+which drops the per-cluster `isolated`/`perblob` array produced by stage
+3's `isolated` (since 2026-06-14 `examine_bundles` is disabled at stage 3, so
+the array is `isolated`'s, with no `-1` main) — accepted, as nothing in the
+PDVD chain reads it; SBND re-runs `examine_bundles` after `switch_scope` when
+that array is needed downstream.
 
 Bee output: `mabc-all-apa.zip` containing `clustering-group0123` /
 `clustering-group4567` (the **stage-3 per-drift-group output**, dumped from
