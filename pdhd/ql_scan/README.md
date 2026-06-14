@@ -66,10 +66,13 @@ Instead of building a match from scratch:
 - In the bundle, compare, and cluster tables the **side / flash / cluster** columns are
   kept adjacent for quick reading.
 - Pick a cluster in the **clusters** roster, then click **Compare cluster's flashes**
-  to list that cluster's candidate flashes **in the current coincidence group** in the
+  to list **all** of that cluster's candidate flashes (across coincidence groups) in the
   second table (focusing a bundle row still works too; the most recent of the two wins).
-  The list is restricted to the selected group, so flashes from neighbouring groups
-  (e.g. a coincident flash 1–2 µs away in the adjacent group) are not shown.
+  The calib dump only emits TPC-contained bundles, so this list is already the
+  physically-feasible candidate set — the cluster lands inside the drift box at each
+  listed flash's T0. Clicking a row jumps the whole view (focus + group) to that flash,
+  so a candidate in another group is reachable. (A cathode-hugging cluster can be
+  compatible with many flash times, since a later T0 just shifts it toward the anode.)
 
 ## Saved label schema
 

@@ -441,9 +441,11 @@ table = DataTable(source=table_src, columns=table_cols, width=900, height=300,
                   selectable=True, index_position=None)
 
 # Second table (request 4): every bundle whose main cluster matches the focused
-# bundle's, restricted to the current coincidence group, so one cluster's candidate
-# flashes within that group can be compared side by side. Populated on demand by the
-# "Compare" button; click a row to focus that candidate flash.
+# bundle's, across all flashes/groups, so one cluster's candidate flashes can be
+# compared side by side. The dump only emits TPC-contained bundles, so the list is
+# already the physically-feasible candidate set (cluster inside the box at that
+# flash's T0). Populated on demand by the "Compare" button; click a row to jump the
+# whole view (focus + group) to that candidate flash.
 compare_src = ColumnDataSource(data=dict())
 compare_cols = [
     TableColumn(field="sel", title="✓", width=34, formatter=check_fmt),
@@ -889,8 +891,9 @@ def render_summary():
 
 def rebuild_compare():
     """Fill the compare table with every bundle sharing the focused cluster's uid
-    (one cluster -> naturally one TPC), restricted to the CURRENT coincidence group
-    (state["group"]). Empty when no cluster is being compared."""
+    (one cluster -> naturally one TPC), across all flashes/groups. The dump only
+    emits TPC-contained bundles, so these are exactly the cluster's physically
+    feasible candidate flashes. Empty when no cluster is being compared."""
     evt = state["evt"]
     cu = state["compare_cluster"]
     empty = dict(sel=[], auto=[], apa=[], flash_gid=[], cluster=[], t_us=[], grp=[],
@@ -899,13 +902,11 @@ def rebuild_compare():
         compare_src.data = empty
         state["compare_order"] = []
         compare_div.text = ("<i>focus a bundle, then 'Compare cluster's flashes' to "
-                            "list this cluster's candidate flashes in the current group.</i>")
+                            "list every flash this cluster could match.</i>")
         compare_src.selected.indices = []
         return
-    g = state["group"]
     rows = [i for i in range(len(evt.bundles))
-            if evt.bundles[i]["main_cluster"] == cu
-            and evt.group_of(evt.bundles[i]["flash_gid"]) == g]
+            if evt.bundles[i]["main_cluster"] == cu]
     rows.sort(key=lambda i: evt.flash_by_gid[evt.bundles[i]["flash_gid"]]["time"])
     state["compare_order"] = rows
     cols = defaultdict(list)
