@@ -364,7 +364,10 @@ flashes of one drift side in time order and merges a **later** flash `j` into an
 1. **time window** — `t_j − t_i ≤ refine_window_us` (**8 µs**), sliding;
 2. **dim** — `total_pe(j) ≤ refine_pe_ratio × total_pe(i)` (**0.5**);
 3. **few PDs** — `j` lights `1 … refine_max_fired` (**2**) OpDets, an OpDet
-   counting as lit when `pe ≥ refine_fired_pe` (**0.5 PE**);
+   counting as lit when `pe ≥ refine_fired_pe` (**0.5 PE**); **OR**, with
+   `refine_subset_merge` on (PDHD), `j` lights only OpDets that `i` already
+   lights — the *subset escape* (§ below), which bypasses the few-PD cap for the
+   tail of a bright, spatially-extended parent;
 4. **spatially adjacent** — every lit OpDet of `j` is the same as, or an
    **8-neighbour (Chebyshev ≤ 1)** of, a lit OpDet of `i`, on the **same side**.
    Each side is a regular 10-row(y) × 8-col(z) OpDet grid (built once in
@@ -401,6 +404,27 @@ window (median **3.1 µs**, 90th pct 6.3 µs): the 8 µs window deliberately
 recaptures slow-scintillation/afterpulse fragments out to several µs, not just the
 nearest splits.
 
+**Subset escape (`refine_subset_merge`, PDHD on).** The absolute `refine_max_fired
+= 2` cap was tuned for *localized* 1–2-OpDet satellites, but it is the wrong axis
+for a **bright, spatially-extended parent**: when the prompt flash itself lights ~10
+OpDets, its scintillation tail/afterpulsing spreads over *several of those same*
+OpDets, so a tail fragment can fire 5–6 PDs and fail the few-PD cap even though it
+is unambiguously the same flash. The fix adds an **OR** to gate (3): merge `j` into
+`i` regardless of fired-PD count when **every lit OpDet of `j` is also lit in `i`**
+(a strict subset — the tail fires only PMTs the prompt already fired). This is
+**strictly additive** — every existing merge still happens (a subset trivially
+satisfies the adjacency gate at distance 0), it only *adds* the blocked
+extended-tail cases — and carries very low over-merge risk (a < ½-PE flash lighting
+only the parent's PMTs within 8 µs is not an independent source). The canonical case
+is **evt150 (DAQ 150)** group13: a 2543 PE / 10-PD prompt at 818 µs with two tail
+fragments at +5.0 µs (165 PE, 6 PDs) and +6.3 µs (88 PE, 5 PDs), each lighting a
+strict subset of the parent's 10 PDs (`pe_j/pe_i` = 0.065 / 0.035) — all three now
+collapse into one 2801 PE / 10-PD flash at 818.15 µs. Across the 23-event run-27305
+sample the subset escape adds **9 further merges** beyond the few-PD cap (the trio
+above counts as 2), each an extended-tail subset; all bright prompt flashes remain
+separate merge *targets*. Component default **off** (so larana/SBND stay
+bit-identical); on for PDHD in `flash.jsonnet`.
+
 **Q/L impact (checked refine-off vs -on).** Matching stays broadly stable on the
 **lit** drift side: bright prompt flashes are always merge *targets* and persist
 with sub-0.1 µs time shifts, and `auto_selected` match counts move by only ≤ 2 per
@@ -415,8 +439,9 @@ localized fragments into their parent, which is the intended behaviour.
 
 `flash_refine` is **off by default** (component reproduces the larana output
 byte-for-byte — verified: default-off opflash tensors are `array_equal` to the
-pre-change output) and **on for PDHD** in `flash.jsonnet`. The four knobs live in
-the `opflash_finder` builder. (Effect is per drift side, so it also mirrors
+pre-change output) and **on for PDHD** in `flash.jsonnet`. The five knobs
+(`refine_window_us`, `refine_pe_ratio`, `refine_max_fired`, `refine_fired_pe`,
+`refine_subset_merge`) live in the `opflash_finder` builder. (Effect is per drift side, so it also mirrors
 SBND's per-APA flashes if ever enabled there.)
 
 ---
