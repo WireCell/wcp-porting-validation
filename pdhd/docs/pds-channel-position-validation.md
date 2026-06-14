@@ -30,15 +30,19 @@ Source file: `/nfs/data/1/xning/wirecell-working/data/hd/onevent_run27305_final.
    *independent* quantity (not one of the position columns), so it rules out any
    relabeling between the PE-carrying `opdet` and its geometry — the exact thing
    a "mapping problem" would be.
-3. **Confirmed in dunecore source.** `protodunehd` uses `ChannelsPerOpDet: 1`
-   (`OpChannel == OpDet`, identity numbering, no PD-map tool). The 4 × 40
-   (10 y × 4 z) layout, x = ±356 cm and the z-window pattern match the GDML
-   generators and are stable across versions v2–v8.
-4. **Versions *do* differ — in the X-ARAPUCA Y pitch.** run-27305's data uses
-   pitch `APAphys_y/10 = 60.75 cm`; current dunecore `develop` uses 58.72 cm and
-   v8 (Jul 2025) 59.2 cm — up to ~18 cm apart at the top window. The toolkit is
-   safe **because it takes geometry from the data's own `opdet_geo`**, not a
-   standalone GDML. Do not pair these flashes with a current dunecore PDHD GDML.
+3. **Confirmed against DUNE code on a GPVM (gold standard).** Loading the actual
+   PDHD GDML (`protodunehd_v4`, dated 2024-05-09) into `TGeoManager`, **all 160
+   OpDet centres match the data/toolkit `opdet_geo` exactly** (set difference 0).
+   The release `geometry_dune.fcl` sets `ChannelsPerOpDet: 1` ⇒ `OpChannel ==
+   OpDet`, identity numbering, no PD-map tool.
+4. **Versions: the data matches the whole v1–v7 GDML lineage.** Committed GDML
+   v4/v5/v6/v7 all place the X-ARAPUCAs at the data's positions (y pitch
+   60.75 cm). Only **v8** (Jul 2025) shifts them (59.2 cm, ~14 cm at the top
+   window) and post-dates the data. (The `develop` *generator script* computes
+   58.72 cm but is out of sync with its own committed GDMLs — a latent dunecore
+   inconsistency, not the geometry in use.) The toolkit is safe because it takes
+   geometry from the data's own `opdet_geo`; only avoid pairing these flashes
+   with the v8 GDML.
 
 The earlier Bee3 within-block ordering fix (z-window outer descending, y-bar
 inner descending) is **independently confirmed** by the raw `opdet_geo` ordering.
@@ -136,9 +140,8 @@ about — using a quantity outside the self-consistent (x,y,z) columns.
 ## Leg 3 — DUNE geometry sanity
 
 `opdet_geo` is the LArSoft geometry-service output on the PDHD GDML, so
-"ROOT == DUNE geometry" holds **by construction** (not independently re-derived
-here). What is independently checkable is that the resulting layout matches the
-known detector:
+"ROOT == DUNE geometry" holds **by construction** (and is re-derived directly on
+a GPVM in Leg 3b). The resulting layout also matches the known detector:
 
 - **160 OpDets = 4 APAs × 40**, each APA a regular **10 (y) × 4 (z)** grid —
   matches the ProtoDUNE PDS design (40 X-ARAPUCA windows behind each APA;
@@ -167,58 +170,65 @@ below.
 
 ---
 
-## Leg 3b — Direct check against dunecore source (and versions)
+## Leg 3b — Direct check against dunecore (GPVM, gold standard)
 
-Checked against [`DUNE/dunecore`](https://github.com/DUNE/dunecore) `develop`
-(the geometry GDML generators + `geometry_dune.fcl`), to answer "could a
-different DUNE geometry version remap channels?".
+Verified on a DUNE GPVM (`dunegpvm01`) against `DUNE/dunecore` releases — the
+GDML files actually used by DUNE plus `geometry_dune.fcl`.
 
-**OpChannel == OpDet is in the source, not just assumed.** In
-`dunecore/Geometry/geometry_dune.fcl`, protodunehd resolves to
-`dune_wire_readout` which sets **`ChannelsPerOpDet: 1`**. (The `ChannelsPerOpDet:
-12` values in the same file belong to the legacy `dune35t` detector, not PDHD;
-PDVD also uses 1 but with an explicit `PDVDPDMapAlg` + `PDVD_PDS_Mapping_*.json`
-— PDHD has **no** offline PD-map tool, so its offline OpChannel is the
-identity-sorted OpDet.) So the offline channel↔detector numbering is the
-identity map, by construction.
+**OpChannel == OpDet is in the source.** In the release
+`fcl/geometry_dune.fcl`, every `protodunehd*_geo` block sets
+**`SortingParameters: {ChannelsPerOpDet: 1}`** — so the offline channel↔detector
+numbering is the identity map. (The `ChannelsPerOpDet: 12` values in the same
+file are the legacy `dune35t` detector, not PDHD; PDVD also uses 1, but with an
+explicit `PDVDPDMapAlg` + `PDVD_PDS_Mapping_*.json` — PDHD has **no** offline
+PD-map tool.)
 
-**The numbering convention and z/x layout are version-stable.** The X-ARAPUCA
-constants in `generate_protodunehd_v*_refactored.pl` are identical across
-**v2–v8**: window 10 cm (y) × 47.75 cm (z), 4 windows/bar at z-offsets
-±79.775 / ±30.625 cm about the bar centre (→ 427.1 / 377.9 / 316.7 / 267.5 cm),
-10 bars/APA. These reproduce `opdet_geo`'s z-windows and x = ±356 cm exactly.
+**All 160 OpDet positions match the data exactly.** Loaded the actual PDHD GDML
+(`protodunehd_v4_refactored.gdml`, **dated 2024-05-09 — the run-27305 vintage**)
+into ROOT's `TGeoManager` and dumped the global centre of every
+`volOpDetSensitive` node (the geometry-service OpDet positions). Compared the
+full 160-position set to `pdhd-opdet-geom.json`:
 
-**One real version difference — the X-ARAPUCA Y pitch.** This is the thing that
-*does* drift between geometry generations:
+```
+DUNE geometry (TGeoManager, protodunehd_v4)  : 160 OpDet centres
+toolkit/data opdet_geo                        : 160 OpDet positions
+positions in DUNE-not-data : 0
+positions in data-not-DUNE : 0
+SET MATCH (all 160 identical to 3 decimals)  : True     # x=±356.246/356.446, y 32.16–578.91
+```
 
-| Geometry | `PaddleYInterval` (y pitch) | value | matches run-27305 data? |
-|---|---|---|---|
-| **run-27305 `opdet_geo`** | `APAphys_y / 10` | **60.7499 cm** (uniform, std 0) | — (this is the data) |
-| dunecore v2–v7 (`develop`) | `(APAphys_y − 2·APAFrameZSide_y) / 10` | 58.7179 cm | **no** |
-| dunecore v8 (Jul 2025) | hardcoded `59.2` | 59.2 cm | **no** |
+So the data's `opdet_geo` **is** the DUNE geometry-service output for
+protodunehd_v4, and the toolkit uses it verbatim. End of the chain confirmed
+against DUNE code itself, not just the data's self-consistency.
 
-`APAphys_y = 607.49875 cm` (same `APAFrame_y = 606`, `G10 = 0.335`,
-`WrapCover = inch/16` in all versions), so the data's pitch is **exactly**
-`APAphys_y/10` — an *older* placement that did not inset by the two frame sides.
-Current `develop` (and v8) would place the same OpDets up to
-`9 × (60.75 − 58.72) ≈ 18 cm` lower at the top window. So **yes, the absolute
-OpDet Y positions are version-dependent**; x and the z-window pattern are not.
+**Versions — what actually ships vs the generator script.** The X-ARAPUCA Y
+pitch is the only quantity that changes between geometry generations, and the
+*committed GDML* (what DUNE actually runs) is stable across the whole 2024
+lineage:
 
-**Why this does not break the toolkit.** The toolkit reads geometry from the
-**same ROOT file** that carries the flash PE (`opdet_geo` and `flash_opdet`,
-both keyed by `opdet`, same production). So it automatically matches whatever
-geometry version the data was reconstructed with — verified by the 0 mm copy
-and the 0.00 cm centroid test above. A mapping error would only appear if these
-flashes were paired with a **different standalone GDML** (e.g. the current
-dunecore v7/v8), which would shift Y by up to ~18 cm.
+| Geometry (committed GDML) | X-ARAPUCA y pitch | matches run-27305 data? |
+|---|---|---|
+| `protodunehd_v4`/`v5`/`v6`/`v7` | **60.7499 cm** | **yes (exact)** |
+| `protodunehd_v8` (Jul 2025) | 59.2 cm | no (post-dates the data) |
 
-> **Practice:** keep using the data's embedded `opdet_geo` (as
-> `extract_pdhd_light_maps.py` / `pdhd-opdet-geom.json` do). Do **not** substitute
-> a current dunecore PDHD GDML for these 2024 flashes. Pinning the exact
-> production geometry tag (which generator emitted the `APAphys_y/10` pitch)
-> would require dumping the geometry from the dunesw release used for run 27305
-> on a DUNE GPVM — not needed for correctness here, since the data carries its
-> own positions.
+So v1–v7 — including whatever the 2024 production used — place the OpDets at the
+data's positions. Only **v8** (July 2025, "X-ARAPUCA positions in Y updated")
+shifts them, by `9 × (60.75 − 59.2) ≈ 14 cm` at the top window; it post-dates
+run 27305 and is irrelevant to it.
+
+> **Caveat (a dunecore script/artifact mismatch, not a data problem).** The
+> current `develop` generator `generate_protodunehd_v*_refactored.pl` computes
+> `PaddleYInterval = (APAphys_y − 2·APAFrameZSide_y)/10 = 58.72 cm`, which does
+> **not** match its own committed v1–v7 GDMLs (60.75 cm = `APAphys_y/10`). The
+> committed GDML is what gets simulated/reconstructed, so this is a latent
+> inconsistency in the generator script, not in the geometry DUNE uses. It would
+> only bite if someone *regenerated* a v1–v7 GDML from the current perl.
+
+**Why the toolkit is safe.** It reads geometry from the **same ROOT file** that
+carries the flash PE (`opdet_geo` + `flash_opdet`, both keyed by `opdet`), so it
+always matches the production geometry — now confirmed identical to the v4 GDML.
+The only hazard is pairing these 2024 flashes with the **v8** GDML (Y off by up
+to ~14 cm); keep using the embedded `opdet_geo`.
 
 ---
 
@@ -269,6 +279,21 @@ for fid,yc,zc in zip(pf["FlashID"],pf["YCenter"],pf["ZCenter"]):
     assert abs(gy-yc)<1e-2 and abs(gz-zc)<1e-2          # holds for every flash
 ```
 
+Leg 3b (on a DUNE GPVM, e.g. `dunegpvm01`) — dump the geometry-service OpDet
+centres from the actual GDML and compare the full set to `opdet_geo`:
+
+```bash
+source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+# old e26 builds need an SL7 container on AlmaLinux 9 hosts:
+apptainer exec -B /cvmfs /cvmfs/singularity.opensciencegrid.org/fermilab/fnal-wn-sl7:latest bash -lc '
+  source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+  setup dunesw v09_90_00d00 -q e26:prof
+  export GDMLFILE=$DUNECORE_DIR/gdml/protodunehd_v4_refactored.gdml   # dated 2024-05-09
+  root -b -l -q dump_opdet.C'   # TGeoIterator over volOpDetSensitive -> global centres
+# grep ChannelsPerOpDet in $DUNECORE_DIR/fcl/geometry_dune.fcl -> protodunehd blocks = 1
+```
+
+
 ---
 
 ## Conclusion
@@ -278,11 +303,14 @@ copies the ROOT geometry exactly and indexes PE on the same `opdet` key; the
 ROOT's PE↔position join is itself unscrambled, proven by the flash finder's
 independent centroid matching the PE-weighted geometry centroid to 0.00 cm;
 `ChannelsPerOpDet = 1` (`OpChannel == OpDet`) is confirmed in dunecore source;
-and the 4×40 layout matches the DUNE PDS design. No relabeling bug exists at any
-stage. The within-block ordering used by the wire-cell-bee3 viewer (z-window
-outer / y-bar inner, both descending) matches the raw `opdet_geo` index order.
+and — the gold-standard check — **all 160 OpDet centres from the actual DUNE
+geometry service (protodunehd_v4 GDML, 2024-05-09) match the data `opdet_geo`
+exactly**. No relabeling bug exists at any stage. The within-block ordering used
+by the wire-cell-bee3 viewer (z-window outer / y-bar inner, both descending)
+matches the raw `opdet_geo` index order.
 
-The one genuine version sensitivity is the X-ARAPUCA **Y pitch** (data 60.75 cm
-vs current dunecore 58.72 / v8 59.2 cm). It does not affect the toolkit because
-geometry travels with the data in `opdet_geo`; the only hazard is substituting a
-mismatched standalone GDML, which this validation explicitly warns against.
+The only version sensitivity is the X-ARAPUCA **Y pitch**, and the data matches
+the entire shipped v1–v7 GDML lineage (60.75 cm); only the July-2025 v8 GDML
+differs (59.2 cm) and post-dates the data. It does not affect the toolkit because
+geometry travels with the data in `opdet_geo`; the only hazard is substituting
+the v8 GDML, which this validation explicitly warns against.
