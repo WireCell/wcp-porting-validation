@@ -146,11 +146,49 @@ detector fault. It confirms the §3–5 picture is not specific to 27980: +x dro
 | 27980 | **104, 112, 120, 128** | +x readout dropout | +x self-trigger snippet stream not recorded (DAQ), localized to the +x upper APA over a 4-event block; trigger metadata identical, −x unaffected |
 | 29107 | **1015** | bright outlier | very high-PE, −x-dominated (−x self 1.53 M vs +x 0.57 M, ~2.7×) physics event; the −x light is spread across all 34 −x PDs (brightest = 5 %), so spatially-extended real light, not single-channel saturation or a detector fault |
 
+## 8. −x full-stream reconstruction (event dependence)
+
+Sections 3–4 showed the −x **self-trigger** APA (80–119) is the most uniform side. The
+other −x APA, the **full-stream** PDs (120–159, continuous 343 808-sample readout), was
+previously unreconstructed; it is now reconstructed with the same WCT chain and a fixed
+Wiener filter (see `pdhd-fullstream-light-reco.md` for the method and the single-event
+validation). Running it over 6 events of run 27980 (including the +x-dropout events
+104/120, where the −x side is rich) tests whether the full-stream −x APA reconstructs
+**consistently event-to-event** — the same cosmic-driven event-independence expected of
+the self-trigger side:
+
+![full-stream event dependence](../pics/pd_fullstream_27980_event_dependence.png)
+
+| evt | full-stream flashes | >800 PE | coincidence excess (>800 PE) |
+|---|---|---|---|
+| 8   | 1650 | 187 | ×6.7 |
+| 16  | 1810 | 544 | ×3.0 |
+| 24  | 1826 | 166 | ×13.3 |
+| 104 | 1626 | 348 | ×2.9 |
+| 120 | 1674 | 118 | ×20.6 |
+| 152 | 1640 |  38 | ×33.3 |
+
+The full-stream flash count is **event-independent** (1626–1826 across all six, including
+the +x-dropout events) — the −x full-stream readout, like the −x self-stream, does not
+fluctuate event-to-event. And in **every** event the bright full-stream flashes
+(>800 PE) coincide with the bright self-trigger −x cosmics well above the time-shuffled
+random rate (×2.9 to ×33.3), i.e. the full-stream −x APA reconstructs real cosmic light
+consistently. This extends §3–5's conclusion: **both** −x APAs — the self-stream (80–119)
+and the full-stream (120–159) — are well-behaved and uniform; the only 27980 anomaly
+remains the +x readout dropout. (The dim full-stream flashes are not coincidence-validated;
+see `pdhd-fullstream-light-reco.md` §4.)
+
 ## Reproduce
 
 ```
 python pdhd/pd_plot/pd_activity.py     # run 27980 (primary) + 29107 (cross-check)
 # prints the per-event table + dropout diagnosis; writes pd_activity_*.png to pdhd/pics/
+
+# -x full-stream reco + event-dependence (section 8):
+cd pdhd
+for e in 8 16 24 104 120 152; do ./run_light_fullstream_evt.sh 27980 $e; done
+python pd_plot/fullstream_compare.py 27980 8 16 24 104 120 152
+# writes pd_fullstream_27980_evt8_coincidence.png + _event_dependence.png to pics/
 ```
 
 ---

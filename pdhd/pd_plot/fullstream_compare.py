@@ -174,9 +174,11 @@ def make_cycle1_figure(run, evt):
               % (lo, hi, len(fsm), 100 * o, 100 * r, o / max(r, 1e-9)))
 
 
-def event_table(run, evts):
-    print("\n# event-dependence (full-stream -x-lower vs self-trigger -x cosmics)")
-    print("evt | fs_flash sn_flash brightRef | coinc%% rand%% excess | fsPE_tot snPE(-xup)")
+def event_table(run, evts, pe_cut=800):
+    """Per-event coincidence of bright (>pe_cut) full-stream flashes with the
+    self-trigger -x cosmics, vs random.  Returns rows and writes a figure."""
+    print("\n# event-dependence (full-stream -x-lower >%d PE vs self-trigger -x cosmics)" % pe_cut)
+    print("evt | fs_flash fs>cut sn_flash ref | coinc%% rand%% excess | fsPE_tot")
     rows = []
     for e in evts:
         try:
@@ -184,13 +186,33 @@ def event_table(run, evts):
         except FileNotFoundError:
             print("%4d | (missing reco)" % e); continue
         ref = bright_xup_ref(d)
-        fsm = d["fs_t"][d["fs_pe"] > 300]
+        fsm = d["fs_t"][d["fs_pe"] > pe_cut]
         o = coinc_fraction(ref, fsm); r = random_fraction(len(ref), fsm) if len(ref) else np.nan
-        xup_pe = d["sn_opf"][:, 80:120].sum()
-        print("%4d | %8d %8d %9d | %5.0f %5.0f  x%.1f | %.2e %.2e"
-              % (e, len(d["fs_t"]), len(d["sn_t"]), len(ref), 100 * o, 100 * r,
-                 o / max(r, 1e-9), d["fs_pe"].sum(), xup_pe))
-        rows.append((e, len(ref), o, r, d["fs_pe"].sum(), xup_pe))
+        print("%4d | %8d %6d %8d %3d | %5.0f %5.0f  x%.1f | %.2e"
+              % (e, len(d["fs_t"]), len(fsm), len(d["sn_t"]), len(ref), 100 * o, 100 * r,
+                 o / max(r, 1e-9), d["fs_pe"].sum()))
+        rows.append(dict(evt=e, nfs=len(d["fs_t"]), nbright=len(fsm), nref=len(ref),
+                         obs=o, rnd=r, fspe=d["fs_pe"].sum()))
+
+    ev = [r["evt"] for r in rows]
+    x = np.arange(len(ev))
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+    exc = [r["obs"] / max(r["rnd"], 1e-9) for r in rows]
+    ax[0].bar(x, exc, color=["gray" if v < 1.3 else "#d62728" for v in exc])
+    ax[0].axhline(1.0, ls="--", c="green", label="random floor")
+    ax[0].set_xticks(x); ax[0].set_xticklabels(ev)
+    ax[0].set(xlabel="run 27980 event", ylabel="coincidence excess (>%d PE)" % pe_cut,
+              title="Bright full-stream flashes coincide with -x cosmics, every event")
+    ax[0].legend(fontsize=8)
+    ax[1].bar(x - 0.2, [r["nfs"] for r in rows], 0.4, color="#d62728", label="full-stream flashes")
+    ax[1].bar(x + 0.2, [r["nbright"] for r in rows], 0.4, color="#ff9896", label=">%d PE" % pe_cut)
+    ax[1].set_xticks(x); ax[1].set_xticklabels(ev)
+    ax[1].set(xlabel="run 27980 event", ylabel="flashes",
+              title="Full-stream flash count is event-independent")
+    ax[1].legend(fontsize=8)
+    fig.tight_layout()
+    out = "%s/pd_fullstream_%d_event_dependence.png" % (PICS, run)
+    fig.savefig(out, dpi=95); print("wrote", out)
     return rows
 
 
