@@ -36,9 +36,14 @@ use +x and the −x snippet side; full-stream 120–159 is a separate go/no-go t
 
 ## 3. Per-event −x snippet coverage
 
-The −x snippet PDs self-trigger only in **11 of 31 events**; 3 are rich. Per-event
-−x snippet channel count and the reconstructed +x / −x total PE (from the QL calib
-dumps, `group02` = −x side):
+`decoana` carries the −x snippet PDs in only **11 of 31 events** (3 rich). Note this is
+a **`decoana` coverage gap, not a property of the −x data**: the −x self-stream PDs
+actually self-trigger and reconstruct in **all 31 events** in the raw stream
+(`rawdump/raw_waveform`) and the LArSoft OpHit reco — see
+`pdhd-pd-activity-per-event.md`, where −x is the *most uniform* side of the detector.
+`decoana` simply did not deconvolve/store those −x snippets. Per-event −x snippet
+channel count and the reconstructed +x / −x total PE (from the QL calib dumps,
+`group02` = −x side):
 
 | work idx | art evt | −x snippet ch | +x PE | −x PE |
 |---|---|---|---|---|
@@ -54,9 +59,15 @@ dumps, `group02` = −x side):
 | 27 | 224 | 2  | — | — |
 | 30 | 256 | 1  | — | — |
 
-art 104 and 112 are genuinely −x-**dominated** (their `decoana` has 0 +x channels),
-not artifacts. The remaining 20 events are +x-only in `decoana` (the −x PDs did not
-self-trigger). `work_idx → art`: idx 0–28 = art 8…232 (step 8), idx 29 = art 248
+art 104 and 112 show 0 +x **not** because they are −x-dominated, but because the **+x
+self-trigger readout dropped out** for those events — a DAQ artifact. Confirmed in
+`pdhd-pd-activity-per-event.md` §5: the raw `rawdump/raw_waveform` has **zero** +x
+channels in evt 104/112 (the +x dropout spans the contiguous block 104/112/120/128),
+while the trigger metadata is identical to normal events. That same +x readout dropout
+is why `decoana` has 0 +x channels there — one root cause. The remaining 20 events are
++x-only **in `decoana`** even though the raw stream and OpHit reco carry the −x
+self-stream for them too (the `decoana` coverage gap above), **not** because the −x PDs
+were dark. `work_idx → art`: idx 0–28 = art 8…232 (step 8), idx 29 = art 248
 (gap at 240), idx 30 = art 256.
 
 ## 4. Deliverable A — 10-event Bee link
