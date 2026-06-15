@@ -22,12 +22,17 @@ files — specifically `flashopdet/flash_opdet`, which holds one row per
 flash_total_pe, opdet, x/y/z, pe`. A flash's total PE is rebuilt as the sum of
 its per-opdet `pe`.
 
-We use the LArSoft trees, **not** the toolkit's WCT-native reco, for one
-decisive reason: the WCT reco is **+x-only** today (it processes the
-self-triggered snippet channels 0–79; −x is the deferred full-stream path — see
-`pdhd-light-raw-data.md` §7), so it cannot speak to the −x wall at all. The
-LArSoft trees are the **only** source that carries −x flashes, and they are
-present in every run, so they give a consistent basis for a +x-vs-−x comparison.
+We use the LArSoft trees, **not** the toolkit's WCT-native reco, because they
+are the **uniform** cross-run source. The toolkit reco is **not** +x-only: it
+reconstructs whatever self-triggered snippets `decoana` carries, on **both**
+walls (ch 0–79 and the −x snippet PDs 80–119 — verified in run 27980, where −x
+events reconstruct with full −x PE, e.g. art 104 → 34646 PE on ch 80–119; see
+`run27980-processing-status.md`). But that −x coverage is **event-sparse and
+run-dependent** (the −x snippet PDs are dark in run 27305 and present in only
+11/31 events of 27980), and the toolkit never covers the −x **full-stream** PDs
+120–159 (deferred — `pdhd-light-raw-data.md` §7.4). The LArSoft `flash_opdet`
+trees, by contrast, carry −x snippet flashes uniformly in every −x-instrumented
+run, so they give a consistent basis for the cross-run +x-vs-−x comparison here.
 
 **Side mapping** (verified against `flashopdet/opdet_geo`, x in mm):
 
@@ -158,7 +163,9 @@ higher-PE flash population.
   `pdhd-light-raw-data.md` §7.4), so the −x wall is under-counted relative to its
   full instrumentation.
 - These are **LArSoft** flashes, the upstream reco. The toolkit's WCT-native
-  flashes (+x only) are not used here.
+  flashes (which cover +x **and** the −x snippet PDs 80–119 where `decoana`
+  provides them, but not uniformly across runs — see
+  `run27980-processing-status.md`) are not used here.
 
 ---
 

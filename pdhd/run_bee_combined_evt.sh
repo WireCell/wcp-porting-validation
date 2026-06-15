@@ -12,13 +12,27 @@
 # Clustering + dead instances are taken from work/<run>_<evt>/mabc-all-apa.zip,
 # so run ./run_clus_evt.sh <run> all first.
 #
-# Usage: ./run_bee_combined_evt.sh <run> [subrun]
+# Usage: ./run_bee_combined_evt.sh [-e evt,evt,...] <run> [subrun]
 #        ./run_bee_combined_evt.sh            # list available runs
+#
+# -e: restrict the link to a comma-separated subset of event indices (in the
+#     order they appear); default (no -e) uploads every discovered event.
 
 set -e
 
 PDHD_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$PDHD_DIR/_runlib.sh"
+
+EVT_SUBSET=""
+_args=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -e) EVT_SUBSET="$2"; shift 2 ;;
+        -e*) EVT_SUBSET="${1#-e}"; shift ;;
+        *) _args+=("$1"); shift ;;
+    esac
+done
+set -- "${_args[@]}"
 
 if [ $# -eq 0 ]; then
     list_runs; exit 0
@@ -62,6 +76,18 @@ find_clus_input() {
 mapfile -t _events < <(discover_events "$RUN" "$RUN_PADDED")
 if [ ${#_events[@]} -eq 0 ]; then
     echo "no events found for run=$RUN under input_data/ or work/" >&2; exit 1
+fi
+if [ -n "$EVT_SUBSET" ]; then
+    # keep only the requested indices, in the order given on -e
+    _want=$(echo "$EVT_SUBSET" | tr ',' ' ')
+    _sel=()
+    for _w in $_want; do
+        for _e in "${_events[@]}"; do
+            [ "$_e" = "$_w" ] && { _sel+=("$_w"); break; }
+        done
+    done
+    [ ${#_sel[@]} -gt 0 ] || { echo "no requested events (-e $EVT_SUBSET) found for run=$RUN" >&2; exit 1; }
+    _events=("${_sel[@]}")
 fi
 echo "Found ${#_events[@]} event(s) for run=$RUN: ${_events[*]}"
 
