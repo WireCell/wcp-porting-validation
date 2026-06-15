@@ -480,6 +480,110 @@ removed.
 
 ---
 
+## 6. Case study: run 27305 evt 150 — "why so few PDs, so spiky?"
+
+A recurring question from the hand-scan display: the **34.6 µs flash** of run 27305
+evt 150 lights only **9 photon detectors**, all on the **+x** wall, with a spiky
+pattern (one PD ~1000 PE next to near-zero neighbours), while the *predicted* light
+pattern is smooth and broader, and the colleague's whole-run plot shows **79/160
+OpDets lit**. This section resolves it. Every number below is cross-checked against
+the LArSoft reference trees in the **updated** light file (the 432 MB
+`...run027305_..._final.root`, which adds `rawhist`/`rawdump` full-readout
+histograms for all APAs plus `flashopdet` and `opflashana/{PerOpHitTree,
+FlashHitMatchTree}` — the toolkit reco still reads only `decoana`, unchanged at
+**59 ch** for this event).
+
+### 6.1 The flash has 9 PDs — both recos agree, −x is genuinely dark
+
+The toolkit flash0 and the LArSoft `flashopdet` agree on the **same 9 opdets**
+`{7, 27, 36, 38, 45, 47, 55, 56, 63}`, all +x. There is **no channel-mapping or
+scramble bug**. The −x wall is dark because **no light reaches it from this +x
+flash**, not because of masking: in `rawhist`, at the flash tick (≈73 of the
+1024-tick window, where +x ch36 has a clean −1544 ADC pulse) the −x channels are
+**flat at noise (4–33 ADC)**, even though those same −x channels show large pulses
+at *other* ticks. Across the whole run LArSoft reconstructs **0/80 −x OpDets ever
+lit** (`PerOpHitTree`, PE>0) — so −x-dark is a real detector/run condition seen by
+*both* recos, consistent with the "−x dark, likely detector configuration" note.
+
+### 6.2 "9 PDs out of ~59 raw waveforms" — snippet self-centering, not loss
+
+This is the key trap, and it is exactly the **self-triggered, not common-triggered**
+readout of §1.2. evt150 has **30 flashes spanning 172 µs**; the ~59 fired channels
+are spread across *all* of them, not stacked at 34.6 µs. Because each `rawhist`
+`waveform_0` is a self-triggered snippet on a placeholder 0–16 µs axis (each trigger
+sits ~mid-window), **overlaying channels by tick index fakes a ~58-PD coincidence at
+tick ~67**. The LArSoft `FlashHitMatchTree` absolute times disprove it — the big
+pulses belong to *different* flashes:
+
+| channel | biggest pulse | flash | time vs fid0 |
+|---|---|---|---|
+| ch61, ch1, ch11 | 4.7–5.5 k PE | fid15 | **+91.7 µs** |
+| ch41 | 3336 PE | fid3 | +0.6 µs |
+| ch59 | 3848 PE | fid27 | +159 µs |
+| ch39 | 545 PE | fid9 | +48.9 µs |
+| **ch36,38,45,47,7,27,55,56,63** | — | **fid0** | **0 (the 34.6 µs flash)** |
+
+So at 34.6 µs there really are only **9** PDs. The reco is correct precisely because
+`PDHDOpWaveformSource` recovers each snippet's absolute `t_first` from the
+`PerOpHitTree` peak times and places it on a common clock **before** forming flashes
+(§1.2). The OpHit/OpFlash threshold exists but is *not* why the other ~50 channels
+are absent from fid0 — their light is at a different **time**.
+See `pics/evt150_hits_vs_time_by_flash.png` (every OpHit by flash-time × channel,
+size ∝ PE, colour = flash id; only the 9 black-edged points sit at fid0).
+
+> **Display rule.** Any per-flash light map must select hits by **absolute time**
+> (the recovered snippet `t0`, or LArSoft `PeakTimeAbs`), never by raw snippet tick
+> index — otherwise it will look "messed up early vs late" and show far too many PDs.
+
+### 6.3 "4122 PE vs 1186 PE, spiky vs smooth" — LArSoft over-splits the flash
+
+The toolkit reports flash0 = **4122 PE**; the colleague's `flashopdet` fid0 reports
+**1186 PE** for the same 9 opdets. The difference is **not** gain (LArSoft's per-hit
+`Area/PE = 100` for *every* channel = the toolkit's flat `m_spe_area = 100`, §3.3).
+It is **flash splitting**: `FlashHitMatchTree` shows LArSoft splits the prompt 34.6 µs
+activity into **fid0…fid4 within 640 ns** (fid0 +0, fid2 +32, fid1 +48, fid3 +576,
+fid4 +640 ns). ch38's big prompt pulse (963 PE) lands in **fid2**, leaving only
+116 PE in fid0. The toolkit groups the prompt activity into **one** flash, so
+toolkit flash0 ≈ LArSoft **fid0 ⊕ fid2** = 1186 + 3068 = **4254 PE** (per-opdet too:
+ch38 toolkit 1140 ≈ 116 + 963). The user compared the toolkit's *merged* flash
+against LArSoft's fid0 *subset* — hence the apparent "spiky vs smooth" mismatch.
+With the over-split pieces summed the two maps are essentially identical
+(`pics/evt150_flash0_toolkit_vs_larsoft_merged.png`). The toolkit's single-flash
+grouping is the physically sensible one (same direction as `flash_refine`, §4.4).
+
+The spiky pattern itself is **faithful to the raw ADC**: at the flash tick ch38/ch47
+genuinely have ~3× larger raw pulses than ch36 (`rawArea/toolkitPE` ≈ const ~160
+across the 9 channels), and neither reco corrects per-PD detector response. The
+*prediction* is smooth/broad by optical-model construction; the *measurement* is the
+thresholded subset — the gap is normal and is what Q/L matching reconciles.
+
+A **secondary** (~5–10 % per-channel) difference is the SPE response: the toolkit
+OpDecon (HPK-2024) leaves a small **positive** scintillation tail while the LArSoft
+v1 deconvolution swings **negative** (`pics/light_deconvolution.png`), shifting
+integrated OpHit area by tail sign. This is the residual after splitting (toolkit
+4122 vs LArSoft fid0⊕fid2 4254) — real, but small next to the splitting, and logged
+here as a known difference, not a fix in this pass.
+
+### 6.4 "79 good channels" vs "~59 present" — run-union vs per-event
+
+Different metrics, no conflict. The optical readout is self-triggered/zero-suppressed
+**per event**, so a channel writes a waveform only in an event where it crossed
+threshold. Per-event +x counts vary widely (evt150 = 59, evt154 = 48, evt158 = 64,
+evt170 = **31**) — all *subsets* of the run-wide union. The colleague's "79/80 good"
+is the **run union** of +x channels that fire in *any* flash (`PerOpHitTree`, all but
+ch3); −x = 0/80. So "79 good" (run) and "~59 present" (this event) are consistent.
+
+### 6.5 Bottom line
+
+For run 27305 evt 150 the toolkit light reco is behaving correctly: 9 PDs at 34.6 µs
+(confirmed against LArSoft), −x genuinely dark, the apparent sparsity/spikiness is a
+mix of (a) the self-triggered-snippet display trap, (b) LArSoft over-splitting that
+one flash, and (c) a small SPE-tail difference. Reprocessing evt150 from the new
+432 MB file reproduces flash0 **byte-identically** (9 PDs, 4121.9 PE, same opdets).
+No toolkit code change is warranted.
+
+---
+
 ## Appendix — files and reproduction
 
 | topic | location |
@@ -496,6 +600,8 @@ removed.
 | plot script (§1–3) | `/home/xqian/tmp/pdhd_light_plots/make_plots.py` |
 | split plot script (§3.4) | `/home/xqian/tmp/split_demo/make_split_plot.py` |
 | per-side flash test (§4.3) | `/home/xqian/tmp/flash_side_test/` (`build_arch.py`, `job.jsonnet`) |
+| case-study plots (§6) | `/home/xqian/tmp/flashcmp/make_plots.py` → `pics/evt150_flash0_toolkit_vs_larsoft_merged.png`, `pics/evt150_hits_vs_time_by_flash.png` |
+| LArSoft per-(flash,opdet) PE | `flashopdet/flash_opdet`; hit→flash match `opflashana/FlashHitMatchTree` |
 
 Plots are regenerated with those scripts from the extracted `light-frames*` npy and
 the config JSONs; figures land in `pdhd/pics/light_*.png`.
