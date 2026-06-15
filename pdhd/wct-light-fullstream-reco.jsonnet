@@ -26,7 +26,7 @@ local flash = import 'pgrapher/experiment/pdhd/flash.jsonnet';
 // Full-stream record length (rawdump/raw_waveform nsamples for opch 120-159).
 local FULLSTREAM_SAMPLES = 343808;
 
-function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=-1)
+function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=-1, spe_file='')
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -34,9 +34,11 @@ function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=
   local snr = if std.type(fixed_snr) == 'string' then std.parseJson(fixed_snr) else fixed_snr;
   // Single node instances reused below so all references share identity.
   // fixed_snr<=0 keeps flash.jsonnet's PDHD default (0.005); pass >0 to sweep.
+  // spe_file='' keeps the default 2024 averages; pass pdhd-spe-templates-tuned.json
+  // for the per-channel tuned FBK templates (pdhd/docs/pdhd-spe-template-tuning.md).
   local source = flash.opwaveform_source(input_file, run_n, evt_n);
-  local decon = if snr > 0 then flash.opdecon(samples=FULLSTREAM_SAMPLES, fixed_snr=snr)
-                else flash.opdecon(samples=FULLSTREAM_SAMPLES);
+  local decon = if snr > 0 then flash.opdecon(samples=FULLSTREAM_SAMPLES, fixed_snr=snr, spe_file=spe_file)
+                else flash.opdecon(samples=FULLSTREAM_SAMPLES, spe_file=spe_file);
   // Raised hit threshold (~5 sigma of the decon noise floor): the full-stream
   // scans 5.5 ms continuously, so a snippet-mode 3.0 threshold (~1.3 sigma here)
   // would integrate noise into ~thousands of spurious flashes.
