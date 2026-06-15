@@ -584,6 +584,141 @@ No toolkit code change is warranted.
 
 ---
 
+## 7. The −x photon detectors: SPE coverage and the full-stream readout
+
+The colleague's updated 432 MB run-27305 file now ships raw histograms
+(`rawhist`/`rawdump`) **for all APAs**, including the **−x** wall (OpDet 80–159,
+geometry x = −356 mm). A natural question follows: the −x PDs were dark in the
+old reco — can we now run OpHit/OpFlash on them, and is there an SPE template for
+them? (A colleague reported "there is **no SPE template** for the −x PDs.") The
+short answer: **the toolkit already has a template for every −x channel**, the
+"no template" statement is a **LArSoft-v1** limitation, and the −x data actually
+present in run 27305 is a **different readout mode** (full-stream) that the
+current snippet pipeline does not decode.
+
+### 7.1 The SPE template covers all 160 channels — including −x
+
+The toolkit runs its **own** deconvolution (`OpDecon`, §2) from raw ADC; it does
+**not** depend on LArSoft's deconv. Its default kernel set,
+`cfg/pgrapher/experiment/pdhd/pdhd-spe-templates.json` (the 2024 NP04 averages),
+carries parallel `channels` / `template_index` arrays that map **all 160 OpChannels,
+including −x 80–159**, to a template. So `OpDecon` would deconvolve a −x raw
+waveform today, with no new template and no calibration.
+
+The "no SPE template for −x" report refers to the **LArSoft v1** per-channel set
+(`pdhd-spe-templates-v1.json`): 113 per-channel templates for ch **0–119 only**,
+with 120–159 and six dead channels dropped as LArSoft `IgnoreChannels`. That gap
+binds LArSoft's deconvolution, not ours.
+
+`OpDecon` looks each trace's channel up in `m_chan2tmpl` (`flash/src/OpDecon.cxx:82`)
+and **silently skips** any channel with no entry, warning
+`"skipped N traces with no SPE template"` (`OpDecon.cxx:236,250`). So a −x channel
+deconvolves **precisely because it is in the 2024 map** — and it is.
+
+### 7.2 The SPE shape is per *type* (FBK/HPK), not per channel, not channel-free
+
+The 2024 set is **two** templates — `SPE_NP04_FBK_2024` and `SPE_NP04_HPK_2024` —
+and each channel is assigned to one of them by **SiPM manufacturer/type**. So the
+deconvolution shape is **not** a single channel-independent kernel, and **not**
+per-channel: it depends on whether the channel is an FBK or an HPK detector, and
+within a type all channels share one average shape. The −x channels 80–159 are
+typed FBK/HPK exactly like the +x channels (ch120–159 carry a mix of both indices).
+This is the opposite granularity from the **v1** set, which *is* fully per-channel
+(113 distinct templates) — and which is the one that omits −x. Reusing the 2024
+template for −x is therefore the right call: same SiPM + DAPHNE front-end as +x, so
+the single-PE shape is the same; only the data-saving mode differs (next).
+
+### 7.3 The −x data in run 27305 is full-stream, not snippets
+
+The −x channels are **not** all the same readout. In run 27305 evt150 the −x
+content of `rawhist` is:
+
+| −x group | present in rawhist (evt150) | readout | tick length |
+|---|---|---|---|
+| **80–119** (self-triggered PDs) | only ch82 (pure noise) + ch117 (dead) — the rest **absent/dark** | 1024-tick snippets | 1024 (16.4 µs) |
+| **120–159** | **all 40, with real cosmic scintillation pulses** | **full-stream, continuous** | **187 520 (3.0 ms)** |
+
+The 120–159 waveforms are the **entire 3 ms readout** sampled continuously at 16 ns
+(e.g. ch129 shows a clean −7900 ADC sharp fall + slow scintillation tail; ch142
+carries six such flashes across the 3 ms). These are genuine −x light — but they are
+a **streaming** readout, fundamentally different from the **self-triggered 1024-tick
+snippets** that the rest of this document (and the whole `root/` → `flash/` chain)
+is built around. The self-triggered −x PDs (80–119) that *would* land in the snippet
+path are simply **dark in run 27305**; they light up in **run 27980** (the −x
+instrumentation is run-dependent), where they already reconstruct through the
+existing pipeline with the existing templates and are **not** statically masked.
+
+### 7.4 What it would take to add −x to the reco (deferred)
+
+Adding the full-stream −x light is therefore **not** a template problem — it is a
+**readout-mode** problem in the source:
+
+- `root/src/PDHDOpWaveformSource.cxx` reads `decoana` and expects **snippets**: it
+  places each at its own `tbin` and recovers the absolute `t0` by voting OpHit↔decon
+  peaks from `opflashana/PerOpHitTree` (§1.2). The 120–159 full-stream waveforms are
+  in `rawhist`, have no snippet `tbin`, and have **no LArSoft OpHits** to vote with.
+  Reconstructing them needs a **full-stream decode/window path** — a software
+  self-trigger over the 3 ms stream that emits snippet-equivalents with their
+  **real** absolute time (full-stream actually *removes* the `t0`-anchoring problem,
+  since the stream carries a true time axis). The downstream
+  `OpDecon → OpHitFinder → OpFlashFinder` would then run **unchanged** (the 2024
+  template already covers these channels).
+- The 120–159 channels are also statically masked downstream
+  (`qlmatching.jsonnet` `ch_mask` includes `std.range(120,159)` because they have
+  always been zero); they would need **un-masking** once reconstructed.
+
+This is a code task and is **deferred** — the present pass only documents the
+findings. The takeaway: the −x PDs are **not** blocked by a missing SPE template
+(the toolkit templates them by FBK/HPK type); the work to "add −x to the flash reco"
+is the full-stream readout decode plus downstream un-masking.
+
+### 7.5 v1 vs 2024 SPE kernels — shape, normalization, channel dependence
+
+To make §7.1–7.2 concrete, the two template sets compared directly (both 1024
+samples at 16 ns; v1 = `pdhd-spe-templates-v1.json`, run28368, **113 per-channel**
+templates ch0–119; 2024 = `pdhd-spe-templates.json`, **2 type-averaged** templates
+FBK/HPK, all 160 ch). The v1 peak sits at tick 11, the 2024 peak at tick 9 — the
+curves below are peak-aligned for shape comparison.
+
+![SPE kernels v1 vs 2024 — shape](../pics/spe_v1_vs_2024_shape.png)
+
+**Shape (panels a, b).** The *prompt* lobe is the same family — a fast rise to a
+sharp peak (~150–200 ns wide) then an undershoot below zero — for both sets and all
+channels. The difference is the **slow tail**: each v1 per-channel kernel keeps a
+small **positive** excess out to the end of the 1024-tick record, whereas the 2024
+averages return to (and oscillate around) zero.
+
+**Normalization (panels c, d, and figure below).** The two sets are **not**
+normalized the same way:
+
+- *Absolute amplitude (d):* v1 peaks run **9.7–16.4 ADC** (median 14.4); the 2024
+  FBK average peaks at **8.7 ADC**, HPK at **13.8 ADC**. (Absolute scale is not what
+  sets the PE — `OpDecon` AutoScales the filtered SPE response to unit area, §2.1 —
+  so this difference is absorbed; the **shape/DC balance** is what matters.)
+- *Net integral / DC balance (c):* this is the operative difference. Summing each
+  kernel, the **2024 averages are DC-balanced** (∫ ≈ 0: FBK +7, HPK −3), so they
+  deconvolve to a **flat** tail. The **v1 kernels are net positive** (∫ ranges
+  **+5…+250 ADC·tick, median +65**), an unbalanced positive area that the Wiener
+  deconvolution turns into **over-subtraction of the slow scintillation tail below
+  zero** — the v1 "weird negative tail" seen in `light_deconvolution.png` and the
+  reason `flash/` defaults to the 2024 averages (see `pics/pd/` study).
+
+![SPE kernels v1 vs 2024 — normalization & channel dependence](../pics/spe_v1_vs_2024_norm_chdep.png)
+
+**Channel dependence (figure above).** This is the crux for −x. The v1 set encodes
+**genuine per-channel variation** — 113 distinct shapes (panel 3, faint), with
+per-channel peak (panel 1) and net-area (panel 2) scatter — but **only for ch0–119**;
+it has **nothing for 120–159**. The 2024 set collapses that to **two** shapes
+selected by SiPM type (FBK vs HPK): channel dependence enters **only** through the
+FBK/HPK assignment, and it is defined for **all 160 channels**. So for the −x PDs the
+2024 averages are the *only* set that provides a kernel at all (for 120–159), and
+they provide it at type granularity — which, given the front-end is the same as +x,
+is the sensible choice (§7.2). The price is that the 2024 averages do **not** carry
+any −x-specific per-channel shape; that finer correction would need v1-style
+per-channel −x templates, which do not exist today.
+
+---
+
 ## Appendix — files and reproduction
 
 | topic | location |
@@ -602,6 +737,10 @@ No toolkit code change is warranted.
 | per-side flash test (§4.3) | `/home/xqian/tmp/flash_side_test/` (`build_arch.py`, `job.jsonnet`) |
 | case-study plots (§6) | `/home/xqian/tmp/flashcmp/make_plots.py` → `pics/evt150_flash0_toolkit_vs_larsoft_merged.png`, `pics/evt150_hits_vs_time_by_flash.png` |
 | LArSoft per-(flash,opdet) PE | `flashopdet/flash_opdet`; hit→flash match `opflashana/FlashHitMatchTree` |
+| SPE template map (§7, 2 FBK/HPK by type, all 160 ch) | `cfg/pgrapher/experiment/pdhd/pdhd-spe-templates.json` (`channels`/`template_index`); v1 per-channel ch0–119 in `pdhd-spe-templates-v1.json` |
+| OpDecon channel→template lookup + skip (§7) | `flash/src/OpDecon.cxx:82` (`m_chan2tmpl`), `:236,250` (skip + warn) |
+| −x full-stream waveforms (§7, 120–159 = 187 520 ticks/3 ms) | `rawhist/run_27305_evt_150/ch{120..159}/waveform_0`; geom `flashopdet/opdet_geo` (x=−356 mm) |
+| SPE v1-vs-2024 comparison plots (§7.5) | `/home/xqian/tmp/spe_compare/make_spe_compare.py` → `pics/spe_v1_vs_2024_shape.png`, `pics/spe_v1_vs_2024_norm_chdep.png` |
 
 Plots are regenerated with those scripts from the extracted `light-frames*` npy and
 the config JSONs; figures land in `pdhd/pics/light_*.png`.
