@@ -1,0 +1,172 @@
+# PDHD light data: flash-statistics comparison across runs (+x vs −x)
+
+A cross-run comparison of the **optical-flash content** of the PDHD light-data
+files we currently have, separating the **+x** wall from the **−x** wall. It
+answers the practical questions: how many events per run, how many flashes per
+event per side, how many photon detectors (PDs) light up per flash, and what the
+total-PE and per-PD PE distributions look like.
+
+> Companion docs: `pdhd-light-raw-data.md` (raw waveforms, SPE kernels, OpHit
+> formation — see its **§7** for the −x PD coverage and the full-stream readout),
+> `which-pd-side-lights.md`, `photon-detector-chain.md`. Plots live in
+> `pdhd/pics/` (git-ignored); regenerate them with
+> `/home/xqian/tmp/flashstats/make_flash_stats.py`.
+
+---
+
+## 1. Data source and why
+
+The numbers below come from the **LArSoft flash trees** stored in the raw light
+files — specifically `flashopdet/flash_opdet`, which holds one row per
+`(event, flash_id, opdet)` with branches `event, flash_id, flash_time,
+flash_total_pe, opdet, x/y/z, pe`. A flash's total PE is rebuilt as the sum of
+its per-opdet `pe`.
+
+We use the LArSoft trees, **not** the toolkit's WCT-native reco, for one
+decisive reason: the WCT reco is **+x-only** today (it processes the
+self-triggered snippet channels 0–79; −x is the deferred full-stream path — see
+`pdhd-light-raw-data.md` §7), so it cannot speak to the −x wall at all. The
+LArSoft trees are the **only** source that carries −x flashes, and they are
+present in every run, so they give a consistent basis for a +x-vs-−x comparison.
+
+**Side mapping** (verified against `flashopdet/opdet_geo`, x in mm):
+
+| opdet range | wall | x position | in flash trees? |
+|---|---|---|---|
+| 0–79 | **+x** | ≈ +356 mm | yes (all runs) |
+| 80–119 | **−x** (snippet PDs) | ≈ −356 mm | yes (27980, 29107 only) |
+| 120–159 | **−x** (full-stream PDs) | ≈ −356 mm | **never** — no flashes in any source (reco deferred) |
+
+So throughout this doc the **"−x" side means channels 80–119**. The full-stream
+−x PDs 120–159 are absent by construction; reconstructing them is the deferred
+code task documented in `pdhd-light-raw-data.md` §7.4.
+
+---
+
+## 2. Runs available
+
+| run | light ROOT file | events | −x present |
+|---|---|---|---|
+| **27305** | `run027305/np04hd_raw_run027305_0001_…_final.root` | 24 | **no** (+x only; −x dark this run) |
+| **27980** | `run027980/np04hd_raw_run027980_0000_…_final.root` | 31 | yes (ch 80–119) |
+| **29107** | `run029107/np04hd_raw_run029107_0004_…_final.root` | 30 | yes (ch 80–119) |
+| ~~28084~~ | `run028084/np04hd_raw_run028084_0300_…_final.root` | — | **excluded** |
+
+**Run 28084 is excluded:** its light ROOT is truncated/corrupt (723 MB, uproot
+read error mid-file). The 31 `evt_*` subdirectories under `run028084/` hold
+**charge** data (orig/SP wire frames per anode), not optical data, so the run
+contributes no flash statistics. If the file is re-extracted intact it slots
+straight into the comparison.
+
+The −x wall is **run-dependent**: it is dark in 27305 and lit (snippet PDs) in
+27980 and 29107. This matches `which-pd-side-lights.md`.
+
+---
+
+## 3. Method
+
+For each run we read `flashopdet/flash_opdet`, group rows into flashes by
+`(event, flash_id)`, and for every flash compute its PD count, total PE, and the
+PE on each wall. **Side assignment:** a flash is `+x` if all its PE sits on
+ch 0–79, `−x` if all on ch 80–119, and `mixed` if both walls have PE.
+
+Flashes are mostly **wall-pure**: mixed flashes are only **11.1 %** in 27980
+(1067 / 9593) and **12.6 %** in 29107 (1641 / 13027). We keep `mixed` as its own
+category rather than forcing a side, and report it alongside +x and −x.
+
+---
+
+## 4. Comparisons
+
+### 4.1 Summary table
+
+| run | events | flashes | flashes/evt | +x | −x | mixed | tot-PE med | tot-PE p90 | tot-PE max | nPD med | nPD p90 | nPD max |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 27305 | 24 | 683 | **28.5** | 683 | 0 | 0 | 399 | 4177 | 72299 | 3 | 9 | 15 |
+| 27980 | 31 | 9593 | **309.5** | 5446 | 3080 | 1067 | 17 | 573 | 21755 | 1 | 14 | 52 |
+| 29107 | 30 | 13027 | **434.2** | 7211 | 4175 | 1641 | 34 | 855 | 415688 | 1 | 26 | 113 |
+
+*(tot-PE = total PE per flash; nPD = photon detectors per flash; p90 = 90th
+percentile.)*
+
+### 4.2 Events per run, and flashes per event by wall
+
+![flashes per event](../pics/light_runcmp_flashes_per_event.png)
+![overview](../pics/light_runcmp_summary.png)
+
+Mean flashes/event by side:
+
+| run | +x | −x | mixed | all |
+|---|---|---|---|---|
+| 27305 | 28.5 | 0.0 | 0.0 | 28.5 |
+| 27980 | 175.7 | 99.4 | 34.4 | 309.5 |
+| 29107 | 240.4 | 139.2 | 54.7 | 434.2 |
+
+The +x baseline (run 27305) sits at ~28 flashes/event — a number that
+independently matches the hand-checked **event 150 → 30 flashes** in
+`pdhd-light-raw-data.md`. The two −x-instrumented runs have **~10× more flashes
+per event**, with the −x wall contributing roughly a third of them.
+
+### 4.3 Photon detectors per flash
+
+![PDs per flash](../pics/light_runcmp_pds_per_flash.png)
+
+Most flashes are small: median PD count is **3** for 27305 and **1** for
+27980/29107, with a tail reaching 15 / 52 / 113 PDs. In 29107 the **mixed**
+flashes pile up around ~20 PDs — these are the genuinely large, cross-wall
+events. The +x and −x snippet walls have very similar single-wall PD shapes.
+
+### 4.4 Total PE per flash
+
+![total PE per flash](../pics/light_runcmp_total_pe.png)
+
+Run 27305 is distinctly **bimodal** (a small ~5-PE bump plus a main population
+spanning ~10²–10⁴ PE, median 399), whereas 27980/29107 are dominated by **many
+low-PE flashes** (median 17 and 34). The +x and −x distributions overlay closely
+within a run; `mixed` flashes carry more PE by construction (they sum both
+walls).
+
+### 4.5 Per-PD PE
+
+![per-PD PE](../pics/light_runcmp_pe_per_pd.png)
+
+Per-PD PE (median / p90 / max):
+
+| run | +x | −x |
+|---|---|---|
+| 27305 | 150 / 543 / 71052 | — |
+| 27980 | 15 / 120 / 18743 | 14 / 134 / 12441 |
+| 29107 | 14 / 123 / 29257 | 14 / 119 / 58070 |
+
+The per-PD PE spectrum is **bimodal** — a low ~1-PE (SPE-scale) bump plus a
+broader high-PE population — and the **+x and −x walls track each other closely**
+(medians within ~1 PE). The +x wall sits marginally higher in normalization. The
+27305 per-PD spectrum is shifted up (median ~150 PE) consistent with its
+higher-PE flash population.
+
+---
+
+## 5. Caveats
+
+- The **~10× spread in flashes/event** and **~20× spread in PE scale** between
+  27305 and 27980/29107 most likely reflect different **trigger / readout
+  configuration** (and the presence of −x instrumentation), not a physics
+  difference between the runs. Treat cross-run absolute rates with care; the
+  +x-vs-−x *within-run* comparison is the robust part.
+- "−x" here is the **snippet PDs 80–119 only**. The full-stream PDs 120–159 are
+  not reconstructed into flashes anywhere yet (deferred — see
+  `pdhd-light-raw-data.md` §7.4), so the −x wall is under-counted relative to its
+  full instrumentation.
+- These are **LArSoft** flashes, the upstream reco. The toolkit's WCT-native
+  flashes (+x only) are not used here.
+
+---
+
+## Appendix — provenance
+
+| item | source |
+|---|---|
+| flash records | `flashopdet/flash_opdet` (event, flash_id, opdet, pe, flash_total_pe) |
+| side / geometry | `flashopdet/opdet_geo` (x sign: 0–79 = +x, 80–159 = −x) |
+| analysis + plots | `/home/xqian/tmp/flashstats/make_flash_stats.py` |
+| run 28084 status | light ROOT truncated (723 MB, uproot read error); `evt_*` dirs are charge frames |
