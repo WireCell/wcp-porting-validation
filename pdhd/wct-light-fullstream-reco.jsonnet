@@ -42,7 +42,12 @@ function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=
   // Raised hit threshold (~5 sigma of the decon noise floor): the full-stream
   // scans 5.5 ms continuously, so a snippet-mode 3.0 threshold (~1.3 sigma here)
   // would integrate noise into ~thousands of spurious flashes.
-  local hit = flash.ophit(hit_threshold=11.0);
+  // robust_baseline: per-channel median/MAD pedestal (the head-pedestal is
+  // meaningless on the continuous stream) -- removes the opch 121 DC offset and
+  // vetoes the opch 147 ringing channel that otherwise over-produce flashes
+  // (pdhd-fullstream-light-reco.md s6).  Self-trigger snippets keep the head
+  // method (wct-light-reco.jsonnet, robust_baseline default false).
+  local hit = flash.ophit(hit_threshold=11.0, robust_baseline=true);
   local opflash_finder = flash.opflash_finder(offset_us=off_us);
   local wf_sink = flash.waveform_sink('%s/light-frames-fullstream-wct.tar.bz2' % output_dir,
                                       tags=['raw', 'decon'], name='fswct');

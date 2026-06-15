@@ -193,17 +193,58 @@ These artefacts survive because the **OpHitFinder pedestal is estimated from 3 s
 (`m_ped_nsamples=3`) — meaningless on a 343 808-sample continuous stream, so it cannot
 track a per-channel DC offset or a high-RMS channel — and the **effective threshold is
 low and absolute** (`hit_threshold` 11 / `scale` 100 = 0.11 decon units ≈ 4.8σ of a
-*clean* channel, but ≪ the swing of a ringing one).
+*clean* channel, but ≪ the swing of a ringing one). **This is now fixed for the full
+stream — see §6.1.**
 
-**Improving the full-stream chain (next task, not done here).** The diagnosis points at
-concrete fixes, in priority order: (a) **per-channel data-quality masking/repair** — flag
-ringing (high-RMS) and DC-offset channels like opch 147 / 121 and exclude or correct them
-before OpHit finding (this alone removes ~97 % of the over-production here); (b) a
-**stream-wide robust per-channel pedestal/noise** estimate instead of the 3-sample head
-method, feeding a **per-channel (n·σ) threshold**; (c) a **pulse shape / area-consistency
-cut** in `OpHitFinder` to reject ringing lobes; (d) a higher **`flash_threshold`** to drop
-the residual noise floor. (A global Wiener/post-filter rework is *not* indicated — 38/40
-channels deconvolve cleanly.) These are SP-chain changes deferred to a follow-on.
+### 6.1 Fix — a robust per-channel baseline for the full stream (`robust_baseline`)
+
+The fix is a **stream-wide robust per-channel pedestal/noise** estimate in `OpHitFinder`,
+replacing the 3-sample head method **only for the continuous full stream** (the self-trigger
+snippet path keeps the head method — its window genuinely starts quiet). It is the
+charge-SP idea (mode/median + MAD, à la `Waveform::most_frequent` / `median_binned` /
+`Microboone::RawAdapativeBaselineAlg`) applied to light: because real pulses are *sparse* on
+the stream, the **per-channel median is the baseline** and the **MAD is the noise σ**. When
+`robust_baseline` is on, `OpHitFinder`:
+
+- sets `ped_mean = ` per-channel **median** over the whole waveform → removes a per-channel
+  **DC offset** (opch 121: a flat +0.19 at 98.5 % duty → median +0.19 subtracted, so it no
+  longer fires continuously; its residual hits then match a clean channel's, i.e. real light);
+- sets `ped_sigma = 1.4826·`**MAD** and raises the sliding-window start gate to
+  `robust_nsigma · σ` (high for noisy channels, ≈ unchanged for clean ones — clean σ ≈ 0.02
+  decon, so `n·σ` stays below the 0.11 emission threshold and **real ~1-PE hits are kept**);
+- **vetoes** a channel whose MAD ≥ `robust_veto_sigma` (default 0.1 decon, the same cut that
+  defines the *ringing* class) → opch 147 (σ ≈ 3.0 decon, 150× a clean channel) emits **no
+  hits**. A `n·σ` threshold alone cannot kill it without also cutting clean small pulses (its
+  extreme lobes survive any clean-safe `n`), so σ itself is used as the veto signal — the
+  data-quality "mask" the diagnosis called for, derived from the robust noise estimate.
+
+The default for the start gate is `robust_nsigma = 3` (the prototype's `n`-sweep shows
+`n ∈ [2, 3.5]` all retain the clean-channel hits identically; `n ≥ 4` starts to clip the
+smallest real pulses). All three are jsonnet knobs; `robust_baseline` defaults **off**, so
+every existing config and the self-trigger path are **bit-identical**.
+
+![robust-baseline OpHit prototype](../pics/pd_fullstream_27980_evt8_baseline_proto.png)
+
+**Validated (evt 8, the actual C++ chain).** Prototyped first in NumPy
+(`pd_plot/fullstream_baseline_proto.py`: per-channel OpHit count vs `n`), then implemented
+and run end-to-end:
+
+| metric | head (before) | robust (after) |
+|---|---|---|
+| full-stream flashes | 1650 | **463** (−72 %) |
+| non-coincident **mid-PE** flashes (the artefact band) | 609 | **39** (−94 %) |
+| …of those, on the 2 bad channels | 593 (147: 558, 121: 35) | **1** (147: 0, 121: 1) |
+| …on clean channels (real untriggered cosmics) | 16 | **38** |
+| full-stream OpHits (NumPy proto) | 12 865 | **5 143** (bad-channel 7808→152, clean 5057→4991) |
+| self-trigger reco (snippet path) | — | **byte-identical** (opflash + 12 084 ophits, `array_equal`) |
+
+The remaining 463 flashes are dominated by **real** light (clean-channel mid-PE flashes rise
+16→38 as the artefacts clear), consistent with the full stream's ~25× live-time exposure.
+Not done (lower priority, not needed here): a pulse shape / area-consistency cut (c) and a
+windowed (per-sample) baseline — a global median sufficed because opch 121's offset is
+high-duty within the event; escalate to windowed only if a future event shows intra-stream
+*wander*. A global Wiener/post-filter rework is *not* indicated — 38/40 channels deconvolve
+cleanly.
 
 ## Reproduce
 
@@ -213,11 +254,14 @@ cd pdhd
                                              # (0-119, from raw) reco for one event
 python pd_plot/fullstream_compare.py 27980 8 # coincidence figure -> pics/, prints stats
 python pd_plot/fullstream_diagnose.py 27980 8 # §6 diagnosis + waveform figures -> pics/
+python pd_plot/fullstream_baseline_proto.py 27980 8  # §6.1 robust-baseline OpHit prototype
+                                             #   (NumPy n-sweep; -> pics/..._baseline_proto.png)
 ```
 
 `run_light_fullstream_evt.sh` runs the converter, the full-stream chain
 (`wct-light-fullstream-reco.jsonnet`, `OpDecon samples=343808`, fixed filter,
-`hit_threshold=11`), and the self-trigger-from-raw baseline (`wct-light-reco.jsonnet`).
+`hit_threshold=11`, `robust_baseline=true` — §6.1), and the self-trigger-from-raw baseline
+(`wct-light-reco.jsonnet`, `robust_baseline` default off → head pedestal).
 
 ---
 
