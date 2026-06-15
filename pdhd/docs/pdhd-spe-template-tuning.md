@@ -82,6 +82,44 @@ class/baseline/RMS/saturation flags. Examples:
 | `spe_ch129.png` | clean **−6.5 % over-subtraction** (small pulse dips to −0.1 and stays negative) |
 | `spe_ch147.png` | ringing data-quality channel (RMS ≈ 2.9) — not template-fixable |
 
+### 2a. Raw-vs-decon example waveforms (all 160 channels)
+
+A companion per-channel figure `pics/pd/wf_ch<NNN>.png` (one per OpChannel,
+`pd_plot/spe_waveform_examples.py`) is a direct visual cross-check of the
+deconvolution across the dynamic range: it picks **three representative pulses —
+small, medium, large** (by decon peak height) and shows, for each, the **raw ADC**
+next to the **decon** in a 3×2 grid (rows small/medium/large, columns raw / decon).
+Each pulse is selected for a **flat pre-peak baseline** (no preceding-pulse tail or
+ramp), **unsaturated** when an unsaturated example exists, and **maximal in-window
+coverage**; saturating/ramp-shoulder "peaks" near giant cosmics are rejected.
+
+The two readout modes are treated differently, matching how the data is taken:
+
+- **self-trigger channels (0–119)** — pulses live in 1024-sample (**16 µs**)
+  snippets, the *actual readout window*. Both axes are limited to that snippet and
+  the decon is taken **from the toolkit directly** (`f["decon"]`, the software
+  OpDecon over the snippet) — no python re-deconvolution.
+- **full-stream channels (120–159)** — continuous readout. The decon is computed
+  **locally**: only the isolated raw window around the pulse is deconvolved
+  (flat-padded with the local pedestal, the validated `OpDecon` NumPy port), so it
+  carries **no bias from other pulses** elsewhere in the frame and spans the full
+  **−5 … +20 µs**. It reproduces the software full-frame decon to **<0.005 PE/tick**
+  (baseline-subtracted).
+
+These show the AC-coupled SiPM raw pulse (fast dip + slow recovery) collapsing to a
+decon spike, and make the per-channel tail behaviour directly visible: the **FBK
+over-subtraction undershoot** (e.g. `wf_ch137.png`, `wf_ch130.png` — decon dips
+below zero ~3–5 µs after the large/medium spikes), the **real scintillation tail**
+on bright cosmics (e.g. `wf_ch088.png`, `wf_ch118.png`), and **ADC saturation** on
+the very brightest pulses (e.g. `wf_ch145.png` — no unsaturated >5 PE pulse exists,
+so the raw clips the rail). The 6 dead channels (3, 86, 87, 97, 107, 116) have no
+figure. Regenerate with:
+
+```
+python pd_plot/spe_waveform_examples.py 27980 8 16 24 104 120 152
+#  -> pics/pd/wf_ch<NNN>.png  (154 live channels)
+```
+
 ## 3. opch 145 and the nonlinearity question
 
 The tail seen on opch 145 in `pd_fullstream_27980_evt8_waveform_coinc.png` is **real
