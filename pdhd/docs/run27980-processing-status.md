@@ -178,6 +178,37 @@ genuinely localized bright flash concentrated on ≤ 4 PDs (e.g. a single-PD 54 
 afterpulse-like hit) is also dropped — the same philosophy as the prototype's
 `mult ≥ 3`.
 
+### PE-vs-nPD density and where to put the cut
+
+![flash PE vs nPD, both walls](../pics/pd/light_pe_vs_npd_27980.png)
+
+`pics/pd/light_pe_vs_npd_27980.png` (git-ignored; regenerate with
+`/home/xqian/tmp/plot_27980_pe_npd.py`). Two populations are visible on both walls:
+a dense **junk corner** at low nPD (1–3) **and** low PE (3.5–30) — much heavier on
+−x, where it bleeds rightward (the full-stream contribution) — and a **physical
+diagonal band** where PE rises with nPD (real flashes). A vertical stripe at
+nPD = 1–2 reaches high PE: localized single-/few-PD flashes that are bright but
+position-poor; a pure nPD cut removes these too. The proposed `nPD>4 & PE>30` box
+(dashed) sits right at the corner of the junk blob on both sides.
+
+Flashes/event surviving each `(nPD>, PE>)` threshold (the nPD cut does most of the
+work; on −x the big drop is 0→4, i.e. the full-stream junk is nearly all ≤ 4 PD):
+
+```
+        PE>10  PE>20  PE>30  PE>50  PE>100
++x  nPD>2  77.8   58.3   47.0   38.1   30.3
+    nPD>4  66.5   50.7   41.4   34.6   28.6
+    nPD>6  52.8   43.1   35.5   30.6   26.6
+-x  nPD>2  94.1   71.7   63.5   54.6   43.9
+    nPD>4  62.4   54.2   49.0   43.2   36.2
+    nPD>6  46.7   44.9   42.3   38.4   33.0
+```
+
+Past `nPD>4 / PE>30` the returns flatten — tighter cuts eat into the real diagonal
+band. A gentler `nPD>2 & PE>20` (+x 58/evt, −x 72/evt) keeps more low-light real
+flashes; the two walls need not share thresholds (−x carries the full-stream excess
+and can run tighter).
+
 ### Recommendation (not yet implemented)
 
 Add the cut as a **togglable knob** on `OpFlashFinder` (e.g. `min_fired_pds`,
