@@ -6,16 +6,20 @@ overview), but every flash here is reconstructed by our own chain.
 
 Per-run source (one opflash tar.gz per event; matrix tensor [nflash, 1+160],
 col 0 = time ns, cols 1..160 = PE per opdet):
-  27980  work/027980_allpd*/opflash_pdhd-allpd-wct.tar.gz   ALL-PD, full -x wall
-                                                            (snippet 0-119 + full
-                                                            stream 120-159 merged)
-  27305  work/027305_<n>/opflash_pdhd-wct.tar.gz            +x only (-x dark this run)
-  29107  work/029107_<n>/opflash_pdhd-wct.tar.gz            sparse self-trigger; this
-                                                            file has NO full-stream
-                                                            (no rawdump) and a sparse
-                                                            decoana (ch ~0-39 only),
-                                                            so it is NOT comparable --
-                                                            shown with a heavy caveat.
+  27980  work/027980_allpd*/opflash_pdhd-allpd-wct.tar.gz   WCT-native ALL-PD, full
+                                                            -x wall (snippet 0-119 +
+                                                            full stream 120-159 merged)
+  27305  work/027305_<n>/opflash_pdhd-wct.tar.gz            WCT-native +x (−x dark)
+  29107  work/029107_<n>/opflash_pdhd-wct.tar.gz            WCT-native sparse self-trig
+                                                            (ch 0-39 only): this file
+                                                            has no full-stream (no
+                                                            rawdump) and a sparse
+                                                            decoana, so its -x WAVEFORMS
+                                                            cannot be WCT-reconstructed.
+                                                            (29107's -x exists only as
+                                                            LArSoft reconstructed
+                                                            flashes -- see the §5 LArSoft
+                                                            reference in the doc.)
 
 Side mapping: opdet 0-79 = +x, 80-159 = -x.  Plots -> pdhd/pics/ (gitignored).
 """

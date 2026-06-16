@@ -28,13 +28,19 @@ chain:
   events → −x flashes over the **full 80–159 wall**.
 - **27305** — +x self-trigger (the −x wall is dark this run; its raw file has the
   full-stream channels but no −x light).
-- **29107** — sparse self-trigger only: 29107 **does** have −x self-trigger data
-  (LArSoft's `flash_opdet` reconstructs ch 80–119 — see §5), but the only 29107
-  file we have (`np04hd_raw_run029107_…_final.root`, 89 MB) is a reduced extract
-  whose `decoana` carries only **ch 0–39** (APA0) and has **no `rawdump`**. So our
-  toolkit chain can reconstruct only ch 0–39 from it — neither the −x wall nor +x
-  40–79. It is **not comparable** and is shown with a heavy caveat; reconstructing
-  29107's −x would need its full raw file (not on disk).
+- **29107** — sparse self-trigger only. 29107 **does** have −x light, but only as
+  LArSoft *reconstructed flashes*, not as waveforms our chain can re-reconstruct.
+  Proof: for event 1007 LArSoft fired **113 OpChannels spanning 0–119** (incl. −x
+  80–119), but the only 29107 file we have (`np04hd_raw_run029107_…_final.root`,
+  89 MB) carries a `decoana` of just **12 sparse channels {4,9,…,39}** and **no
+  `rawdump`** — i.e. the −x (and most +x) **waveforms were never written to the
+  file**. So WCT-native reco (decon→ophit→flash, like 27980) yields only ch 0–39;
+  the 27980 all-PD chain literally aborts on 29107 with `not found: 'rawdump'`.
+  The −x **can** be put into a toolkit opflash via the **convert path**
+  (`PDHDOpFlashSource` reads LArSoft's `flash_opdet` → 0–119 incl. −x), but that is
+  **LArSoft's flash reco**, not WCT-native, so it is left in the §5 LArSoft
+  reference rather than mixed into the WCT §4. Recovering 29107's −x *waveforms*
+  for WCT reco would need its full raw file (not on disk).
 
 **LArSoft (§5, reference).** `flashopdet/flash_opdet` (one row per
 `(event, flash_id, opdet)`). We keep it because it is the **uniform** cross-run
