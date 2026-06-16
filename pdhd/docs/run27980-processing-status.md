@@ -165,31 +165,19 @@ of all single-PD −x flashes live in 120–159. Full-stream-dominated flashes a
 a uniform PE/nPD cut will tame it, but the root cause sits in the full-stream path and
 may warrant OpRoi/OpHit-level tuning too (the snippet −x sub-range behaves like +x).
 
-### Proposed cut: nPD > 4 AND PE > 30
+### Where to put the cut — PE-vs-nPD density
 
-| wall | before | after cut | /event after |
-|---|---|---|---|
-| **+x** | 6 263 (202/evt) | **1 282** (20.5 %) | **41** |
-| **−x** | 18 013 (581/evt) | **1 518** (8.4 %) | **49** |
-
-The bright real flashes are untouched — e.g. event 160 +x keeps its 1411 / 3002 /
-14352 / 5378 / 2631 PE flashes; the cut removes the 1-PD, few-PE tail. Tradeoff: a
-genuinely localized bright flash concentrated on ≤ 4 PDs (e.g. a single-PD 54 PE
-afterpulse-like hit) is also dropped — the same philosophy as the prototype's
-`mult ≥ 3`.
-
-### PE-vs-nPD density and where to put the cut
-
-![flash PE vs nPD, both walls](../pics/pd/light_pe_vs_npd_27980.png)
+![flash PE vs nPD, both walls, after the cut](../pics/pd/light_pe_vs_npd_27980.png)
 
 `pics/pd/light_pe_vs_npd_27980.png` (git-ignored; regenerate with
-`/home/xqian/tmp/plot_27980_pe_npd.py`). Two populations are visible on both walls:
-a dense **junk corner** at low nPD (1–3) **and** low PE (3.5–30) — much heavier on
-−x, where it bleeds rightward (the full-stream contribution) — and a **physical
-diagonal band** where PE rises with nPD (real flashes). A vertical stripe at
-nPD = 1–2 reaches high PE: localized single-/few-PD flashes that are bright but
-position-poor; a pure nPD cut removes these too. The proposed `nPD>4 & PE>30` box
-(dashed) sits right at the corner of the junk blob on both sides.
+`/home/xqian/tmp/plot_27980_pe_npd.py`; this copy shows the **post-cut** sample).
+Before the cut, two populations were visible on both walls: a dense **junk corner**
+at low nPD (1–3) **and** low PE (3.5–30) — much heavier on −x, where it bled
+rightward (the full-stream contribution) — and a **physical diagonal band** where PE
+rises with nPD (real flashes). A vertical stripe at nPD = 1–2 reached high PE:
+localized single-/few-PD flashes, bright but position-poor; a pure nPD cut removes
+these too (the prototype's `mult ≥ 3` philosophy). The dashed lines mark the applied
+`nPD≥5 & PE≥20` boundary; the diagonal band is kept intact.
 
 Flashes/event surviving each `(nPD>, PE>)` threshold (the nPD cut does most of the
 work; on −x the big drop is 0→4, i.e. the full-stream junk is nearly all ≤ 4 PD):
@@ -205,17 +193,32 @@ work; on −x the big drop is 0→4, i.e. the full-stream junk is nearly all ≤
 ```
 
 Past `nPD>4 / PE>30` the returns flatten — tighter cuts eat into the real diagonal
-band. A gentler `nPD>2 & PE>20` (+x 58/evt, −x 72/evt) keeps more low-light real
-flashes; the two walls need not share thresholds (−x carries the full-stream excess
-and can run tighter).
+band. The chosen working point is **`nPD≥5 & PE≥20`** (the `nPD>4 & PE>20` row); the
+two walls share thresholds for now (−x carries the full-stream excess and could run
+tighter later).
 
-### Recommendation (not yet implemented)
+### Implemented — `OpFlashFinder` quality cut (`min_fired_pds` / `min_total_pe`)
 
-Add the cut as a **togglable knob** on `OpFlashFinder` (e.g. `min_fired_pds`,
-`min_total_pe`, with the 0.5 PE fired threshold reusing `refine_fired_pe`),
-**default OFF so existing configs stay byte-identical**, and enable it for PDHD via
-`flash.jsonnet` — per the project's toggleable-behavior convention. Numbers above
-are the expected reduction at `min_fired_pds = 4` (nPD > 4) and `min_total_pe = 30`.
+`OpFlashFinder` now drops any flash with fewer than `min_fired_pds` lit OpDets
+(`pes[od] ≥ refine_fired_pe = 0.5 PE`) **or** less than `min_total_pe` total PE. Both
+default to **0 ⇒ no cut ⇒ bit-identical to larana (and SBND)**; PDHD sets
+`min_fired_pds = 5`, `min_total_pe = 20.0` in `cfg/pgrapher/experiment/pdhd/flash.jsonnet`
+(`opflash_finder()` builder), so it applies to every PDHD flash chain (snippet, full
+stream, all-PD). The cut runs after construction + `flash_refine` + `remove_late_light`.
+
+**Reprocessed run 27980 (all 31 events, `run_light_allpd_evt.sh`):**
+
+| wall | before | after `nPD≥5 & PE≥20` | reduction |
+|---|---|---|---|
+| **+x** | 6 263 (202/evt) | **1 572 (50.7/evt)** | −75 % |
+| **−x** | 18 013 (581/evt) | **1 679 (54.2/evt)** | −91 % |
+| both | 24 276 (783/evt) | **3 251 (104.9/evt)** | −87 % |
+
+Surviving flashes now have median nPD 12 (+x) / 21 (−x) and median PE 159 (+x) /
+265 (−x) — the physical diagonal band. Bright real flashes are untouched (event 160
++x keeps its 1411 / 3002 / 14352 / 5378 / 2631 PE flashes; 807 → 113 flashes that
+event). The single-/few-PD low-PE flood is gone. Toggle off (or retune per wall)
+via the two jsonnet knobs.
 
 ---
 
