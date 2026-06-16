@@ -113,7 +113,16 @@ below zero ~3–5 µs after the large/medium spikes), the **real scintillation t
 on bright cosmics (e.g. `wf_ch088.png`, `wf_ch118.png`), and **ADC saturation** on
 the very brightest pulses (e.g. `wf_ch145.png` — no unsaturated >5 PE pulse exists,
 so the raw clips the rail). The 6 dead channels (3, 86, 87, 97, 107, 116) have no
-figure. Regenerate with:
+figure.
+
+A hand scan of all 154 figures (`pdhd/wf_scan/`, results in `pics/pd/scan_results.json`)
+flags **opch 40** as the one self-trigger channel whose decon shape could still benefit
+from SPE-template tuning — noted here for the record; it is **low priority** (the decon
+is usable as-is, no action taken). The scan also flagged the two bad full-stream channels
+**opch 135 and 147**, now hard-vetoed in the full-stream chain (see
+`pdhd-fullstream-light-reco.md` §7).
+
+Regenerate with:
 
 ```
 python pd_plot/spe_waveform_examples.py 27980 8 16 24 104 120 152
