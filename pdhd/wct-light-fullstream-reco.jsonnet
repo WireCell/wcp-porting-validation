@@ -44,7 +44,10 @@ function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=
   // ROIs and linear-baseline each ROI to start/end at zero; ringing channels are
   // zeroed.  This SUPERSEDES the robust_baseline DC/ringing handling below (it
   // owns both); see pdhd-fullstream-light-reco.md.
-  local roi = flash.oproi();
+  // opch 135 and 147 are bad data-quality PDs (hand-scan of pdhd/pics/pd/wf_ch*.png;
+  // see pdhd-fullstream-light-reco.md): zero them outright so they raise no OpHits,
+  // independent of the per-event MAD ringing veto.
+  local roi = flash.oproi(veto_channels=[135, 147]);
   // Raised hit threshold (~5 sigma of the decon noise floor): the full-stream
   // scans 5.5 ms continuously, so a snippet-mode 3.0 threshold (~1.3 sigma here)
   // would integrate noise into ~thousands of spurious flashes.

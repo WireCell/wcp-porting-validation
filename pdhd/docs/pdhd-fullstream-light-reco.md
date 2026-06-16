@@ -272,7 +272,18 @@ traces and emits cleaned `decon_roi` traces. Per channel:
    This is the **ROI-finding** waveform `h`.
 2. **Baseline**: subtract `median(h)`.
 3. **Noise + veto**: `rms = 1.4826·MAD(h)`; if `rms > veto_sigma` (0.1 decon) the channel is
-   ringing and is **zeroed entirely** (carries over the §6.1 opch-147 veto).
+   ringing and is **zeroed entirely** (carries over the §6.1 opch-147 veto). A second,
+   data-quality veto runs first: any channel listed in **`veto_channels`** is zeroed
+   unconditionally (independent of its MAD). This is for known-bad PDs a hand scan flags
+   but whose MAD does not always clear `veto_sigma`. The full-stream chain sets
+   `veto_channels = [135, 147]` — opch 147 is the standing ringing defect (already above the
+   MAD cut) and opch 135 is a bad channel identified in the per-channel waveform hand scan
+   (`pdhd/pics/pd/wf_ch*.png` via `pdhd/wf_scan/`); both are now hard-vetoed so they raise no
+   OpHits. Default `[]` → bit-identical (MAD veto only). (The other bad channel studied in
+   §6, opch 121, is **not** in the list: its sporadic DC offset is already removed by the
+   per-ROI linear baseline — the §6.1 table shows it drops 35 → 1 flashes — so it needs no hard
+   veto. opch 135, by contrast, is a defect found in the hand scan that is not in the 6-event
+   §6 study, so the MAD veto alone is not relied on for it.)
 4. **ROIs (hysteresis)**: contiguous runs of `h > roi_ext_nsigma·rms` (**low/extend**,
    `roi_ext_nsigma = 3` → ~0.06 decon) that reach `roi_seed_nsigma·rms` (**high/seed**,
    `roi_seed_nsigma = 5` → ~0.10 decon ≈ the 0.11 OpHit threshold) somewhere inside; runs that
