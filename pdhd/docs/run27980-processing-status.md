@@ -108,6 +108,86 @@ cd pdhd
 
 ---
 
+## 6. Flash multiplicity & PE audit — "too many flashes" and why
+
+Run with the **all-PD** chain (`work/027980_allpd<idx>/opflash_pdhd-allpd-wct.tar.gz`,
+31 events; this reconstructs **both** walls including the −x full-stream 120–159, so
+it supersedes the "deferred" note in §2). Per flash we read the `opflash` matrix
+(col 0 = time, cols 1–160 = PE per opdet) and `group_by_side` puts every flash on
+one wall: **+x = ch 0–79, −x = ch 80–159**. "nPD" = opdets with **≥ 0.5 PE**
+(matches `refine_fired_pe`). Script: `/home/xqian/tmp/analyze_27980_flashes.py`
+(+ `analyze_27980_neg_split.py`).
+
+### What cuts exist today
+
+The toolkit `OpFlashFinder` (larana port, `flash/src/OpFlashFinder.cxx`) applies
+**only** `flash_threshold = 3.5 PE` (`OpFlashFinder.h:39`) to total flash PE, plus
+the already-on `flash_refine` 8 µs satellite merge and `remove_late_light`. There is
+**no minimum-channel (multiplicity / nPD) cut at all.** The MicroBooNE prototype
+(`prototype_base/2dtoy/src/ToyLightReco.cxx:765`) by contrast forms a flash only on
+`pe >= 6 && mult >= 3` — total PE ≥ 6 **and** ≥ 3 fired channels (a per-channel
+"fired" = content > 1.5 PE, `prototype_base/data/src/Opflash.cxx:77`). The missing
+multiplicity cut is the headline gap.
+
+### Per-side counts (31 events, after `flash_refine`)
+
+| wall | flashes | /event | median PE | median nPD | single-PD | nPD≤2 | PE≤5 |
+|---|---|---|---|---|---|---|---|
+| **+x** (0–79, all snippet) | 6 263 | **202** | 12.4 | 2 | 42.0 % | 51.5 % | 18 % |
+| **−x** (80–159, snippet+full-stream) | 18 013 | **581** | 5.4 | 2 | 48.9 % | 77.6 % | 44 % |
+
+### Diagnosis (the three hypotheses)
+
+1. **PE threshold too low — YES.** 3.5 PE is barely above noise; on −x **44 %** of
+   flashes are ≤ 5 PE, on +x 18 %.
+2. **nPD as low as 1–2 — YES, dominant.** With *no* multiplicity cut, **42 % (+x) /
+   49 % (−x)** of flashes fire a **single** PD; over half are ≤ 2 PD. This is the
+   biggest single driver of the flood.
+3. **Nearby-in-time not merged — NO (minor).** `flash_refine` (8 µs) already ran;
+   the residual consecutive-flash time gaps are median **10.9 µs (+x) / 6.8 µs (−x)**,
+   with only ~1 % (+x) / ~2 % (−x) under 0.5 µs. The flood is genuinely many
+   distinct low-nPD/low-PE flashes, not un-merged duplicates.
+
+### Why −x is 3× +x: it is a full-stream characteristic, not a threshold problem
+
+Splitting the −x flashes by which sub-range carries their PE:
+
+| −x flash lights… | flashes | % of −x |
+|---|---|---|
+| **only** ch 120–159 (full-stream) | 13 327 | **74.0 %** |
+| only ch 80–119 (snippet) | 1 493 | 8.3 % |
+| both | 3 193 | 17.7 % |
+
+**83.9 %** of −x flashes are PE-dominated by the full-stream sub-range, and **89.5 %**
+of all single-PD −x flashes live in 120–159. Full-stream-dominated flashes are dimmer
+(median 5.1 PE vs 9.4) and lower-nPD (median 1 vs 2) than the −x snippet ones. So the
+−x flood is overwhelmingly a **full-stream (OpRoi) reconstruction characteristic** —
+a uniform PE/nPD cut will tame it, but the root cause sits in the full-stream path and
+may warrant OpRoi/OpHit-level tuning too (the snippet −x sub-range behaves like +x).
+
+### Proposed cut: nPD > 4 AND PE > 30
+
+| wall | before | after cut | /event after |
+|---|---|---|---|
+| **+x** | 6 263 (202/evt) | **1 282** (20.5 %) | **41** |
+| **−x** | 18 013 (581/evt) | **1 518** (8.4 %) | **49** |
+
+The bright real flashes are untouched — e.g. event 160 +x keeps its 1411 / 3002 /
+14352 / 5378 / 2631 PE flashes; the cut removes the 1-PD, few-PE tail. Tradeoff: a
+genuinely localized bright flash concentrated on ≤ 4 PDs (e.g. a single-PD 54 PE
+afterpulse-like hit) is also dropped — the same philosophy as the prototype's
+`mult ≥ 3`.
+
+### Recommendation (not yet implemented)
+
+Add the cut as a **togglable knob** on `OpFlashFinder` (e.g. `min_fired_pds`,
+`min_total_pe`, with the 0.5 PE fired threshold reusing `refine_fired_pe`),
+**default OFF so existing configs stay byte-identical**, and enable it for PDHD via
+`flash.jsonnet` — per the project's toggleable-behavior convention. Numbers above
+are the expected reduction at `min_fired_pds = 4` (nPD > 4) and `min_total_pe = 30`.
+
+---
+
 ## Appendix — provenance
 
 | item | source |
