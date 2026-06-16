@@ -105,28 +105,80 @@ consequence of the bright-burst PE:
 - The excess flashes are overwhelmingly **−x-dominant** (939 vs 250 outside the burst;
   a normal event is +x-dominant, 294 vs 107) and elevated in **every** PE bin (≈3×).
 
-Mechanism: deconvolving 33 clipped/ringing flat-top snippets produces many fragmented,
-over-threshold crossings spread in time across the readout → many spurious OpHits →
-inflated flash multiplicity. So:
+The PE inflation and the flash-count inflation are therefore **two largely separate
+effects**, confirmed by the fix below:
 
-- **PE inflation** = over-integration of each clipped pulse (one giant hit/channel).
-- **Flash inflation** = fragmentation/ringing of the same clipped pulses (many small hits).
+- **PE inflation** = over-integration of each clipped pulse into a few giant wide hits.
+  Removing the saturated hits drops the event's total PE by ~76 % (§9), so the PE is
+  almost entirely this artifact.
+- **Flash inflation** = many *small* hits spread across the readout (post-saturation
+  baseline recovery on the saturated channels plus a genuinely busier event). These are
+  **not** the saturated/over-integrated hits: removing the latter leaves the flash count
+  essentially unchanged (793 → 787, §9). The flash count is high because the event is
+  genuinely active on the −x wall, not because of the clipping per se.
 
-These are two faces of the one saturation event; the bright-burst PE term alone accounts
-for only ~12 % of the extra flashes.
+## 7. The fix — saturation detect + veto in the WCT light chain
 
-## 7. Why the charge looks normal
+A toggle-able, default-OFF saturation veto was added to the WCT light chain so saturated
+snippets stop over-integrating. Default off → every existing config is bit-identical.
 
-Saturation here is a **light-readout dynamic-range** effect — the photon-detector ADC
-clips at 16383 — and is independent of the TPC charge ADC. A track passing close to the
-−x PD plane dumps locally intense light (∝ 1/r²) that overflows the PD range, while the
-total ionization (charge) it deposits stays ordinary and unsaturated. Hence huge light,
-normal charge.
+**`OpDecon`** (`flash/src/OpDecon.cxx`, knobs `detect_saturation`, `saturation_adc=16383`,
+`saturation_min_samples=1`, `saturation_pad`): when enabled, it scans each input snippet's
+**raw** ADC (the only place the un-pedestal-subtracted 0–16383 values are visible) and, for
+every contiguous run of ≥ `saturation_min_samples` samples at/above `saturation_adc`, adds
+`[tbin+run−pad, tbin+run+pad)` to a `"saturation"` `ChannelMaskMap` on the output frame.
+Marking the *run* (padded), not the whole trace, lets a 343808-sample full-stream channel
+lose only its clipped region, not the whole 5.5 ms.
 
-## 8. Recommendation (follow-up, not done here)
+**`OpHitFinder`** (`flash/src/OpHitFinder.cxx`, knob `veto_saturation`): when enabled, it
+drops any reconstructed hit whose tick span overlaps a saturated range for that channel —
+i.e. the broad over-integrated pulse around the clip — while real narrow light elsewhere on
+the trace survives. `OpRoi` was patched to forward `in->masks()` so the full-stream branch
+carries the flag through ROI cleaning.
 
-This is real detector behaviour; nothing is miscomputed given the clipped input. To stop
-saturated events from inflating PE/flash counts, the light chain could **detect clipped
-snippets** (raw at/near 16383) and either flag them, cap/skip the over-integration, or
-veto hits from saturated records. That is a separate change to the OpDecon/OpHitFinder
-chain and is out of scope for this diagnosis.
+**Config** (`cfg/.../pdhd/flash.jsonnet` builders; enabled in
+`pdhd/wct-light-allpd-reco.jsonnet` on both branches): PDHD uses `saturation_pad=1024`
+(≈ one snippet record / the over-integration window). The pad is the lever that determines
+how much of the over-integration plateau around each clip is removed.
+
+## 8. Validation (all-PD WCT chain, run 29107)
+
+Reprocessed with the veto on (`saturation_pad=1024`) vs off, reusing the existing decoana
+inputs. The veto flags ~72 saturated runs on the snippet branch and ~78 on the full-stream
+branch in evt 1015; ~0–2 in a normal event.
+
+| quantity (evt 1015) | OFF | ON (pad 1024) | change |
+|---|---|---|---|
+| total PE | 3.31 M | **0.81 M** | **−76 %** |
+| −x full-stream PE (120–159) | 1.73 M | **0.15 M** | −91 % (→ ~normal 0.08 M) |
+| −x snippet PE (80–119) | 1.19 M | 0.39 M | −67 % |
+| +x PE (0–79) | 0.32 M | 0.23 M | −28 % |
+| brightest flash at the burst | 1.33 M PE | **0.21 M PE** | de-inflated, **not deleted** |
+| n flashes | 793 | 787 | ≈unchanged |
+| n ophits | 58 548 | 58 057 | −491 (the giant hits) |
+
+- The real bright flash **survives** at the burst time (built from the +x and unsaturated
+  −x channels), just with a physically sane PE instead of the over-integrated value.
+- **Normal events are untouched:** evts 1047/1031/999/1191 change by ≤0.5 % total PE and
+  0 flashes (their handful of saturated samples carry negligible PE).
+- The fix removes the **PE inflation** (the clear artifact). It does **not** reduce the
+  flash count (§6): only ~491 of 58 548 hits are removed, so the flash multiplicity — which
+  reflects genuine −x activity / post-saturation recovery — is essentially unchanged.
+
+## 9. Why the charge looks normal
+
+Saturation here is a **light-readout dynamic-range** effect — the photon-detector ADC clips
+at 16383 — and is independent of the TPC charge ADC. A track passing close to the −x PD
+plane dumps locally intense light (∝ 1/r²) that overflows the PD range, while the total
+ionization (charge) it deposits stays ordinary and unsaturated. Hence huge light, normal
+charge.
+
+## 10. Known residual / follow-up
+
+- **Flash count** for this event stays ~3.7× a normal event after the fix (789 vs ~210),
+  driven by spread-out small hits (post-saturation baseline recovery on the saturated
+  channels + a genuinely busier −x wall), which are not over-integration artifacts. Reducing
+  it would need a recovery-window or baseline-aware veto that risks removing real light — left
+  as follow-up.
+- **Residual −x snippet PE** (0.39 M, ~7× normal) is the same post-saturation activity, not
+  clipping; left in place for the same reason.

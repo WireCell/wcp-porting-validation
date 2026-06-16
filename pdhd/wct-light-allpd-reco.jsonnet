@@ -32,7 +32,7 @@ local flash = import 'pgrapher/experiment/pdhd/flash.jsonnet';
 // Full-stream record length (rawdump/raw_waveform nsamples for opch 120-159).
 local FULLSTREAM_SAMPLES = 343808;
 
-function(snip_file, fs_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=-1, spe_file='')
+function(snip_file, fs_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=-1, spe_file='', sat_pad=1024)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -40,16 +40,23 @@ function(snip_file, fs_file, output_dir='.', run=27980, event=8, offset_us=0, fi
   local snr = if std.type(fixed_snr) == 'string' then std.parseJson(fixed_snr) else fixed_snr;
 
   // --- snippet branch (opch 0-119), identical to wct-light-reco.jsonnet ---
+  // detect_saturation/veto_saturation drop snippets whose raw ADC railed at the
+  // 14-bit ceiling (16383); a clipped flat-top would otherwise over-integrate
+  // and fragment into spurious flashes.  See run29107-evt1015-light-anomaly.md.
   local snip_src = flash.opwaveform_source(snip_file, run_n, evt_n, name='snip');
-  local snip_decon = flash.opdecon(name='snip');
-  local snip_hit = flash.ophit(name='snip');
+  local sat_pad_n = if std.type(sat_pad) == 'string' then std.parseInt(sat_pad) else sat_pad;
+  local snip_decon = flash.opdecon(name='snip', detect_saturation=true, saturation_pad=sat_pad_n);
+  local snip_hit = flash.ophit(name='snip', veto_saturation=true);
 
   // --- full-stream branch (opch 120-159), identical to wct-light-fullstream-reco.jsonnet ---
+  // Saturation veto is sub-range granular (OpDecon flags contiguous railed
+  // runs; OpHitFinder drops only hits overlapping them), so a clipped region in
+  // the 343808-sample stream is removed without losing the rest of the channel.
   local fs_src = flash.opwaveform_source(fs_file, run_n, evt_n, name='fs');
-  local fs_decon = if snr > 0 then flash.opdecon(name='fs', samples=FULLSTREAM_SAMPLES, fixed_snr=snr, spe_file=spe_file)
-                   else flash.opdecon(name='fs', samples=FULLSTREAM_SAMPLES, spe_file=spe_file);
+  local fs_decon = if snr > 0 then flash.opdecon(name='fs', samples=FULLSTREAM_SAMPLES, fixed_snr=snr, spe_file=spe_file, detect_saturation=true, saturation_pad=sat_pad_n)
+                   else flash.opdecon(name='fs', samples=FULLSTREAM_SAMPLES, spe_file=spe_file, detect_saturation=true, saturation_pad=sat_pad_n);
   local fs_roi = flash.oproi(name='fs', veto_channels=[135, 147]);
-  local fs_hit = flash.ophit(name='fs', hit_threshold=11.0, intag='decon_roi', fixed_ped_sigma=2.0);
+  local fs_hit = flash.ophit(name='fs', hit_threshold=11.0, intag='decon_roi', fixed_ped_sigma=2.0, veto_saturation=true);
 
   // --- merge OpHits and build flashes once over all 160 PDs ---
   local merge = flash.ophit_merge(name='allpd', multiplicity=2, meta_port=0);

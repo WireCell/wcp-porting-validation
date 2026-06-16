@@ -477,6 +477,27 @@ with a high-PD bump near 50 (wall-spanning cosmics lighting most of the −x wal
 unchanged.  This is the product to feed Q/L matching.  *(The flash construction may still be
 lightly tuned — the per-stream `OpHitFinder`/`OpFlashFinder` settings carry over unchanged here.)*
 
+### 9.1 ADC-saturation veto (`detect_saturation` / `veto_saturation` / `saturation_pad`)
+
+A very bright flash can rail the 14-bit DAPHNE ADC (16383); the clipped flat-top deconvolves
+into a broad plateau that `OpHitFinder` over-integrates into giant ~16 µs hits, inflating the
+event PE by ~10× (run 29107 evt 1015 — see `run29107-evt1015-light-anomaly.md`).  Three knobs,
+**default off (every existing config bit-identical)**, handle it and are enabled in the all-PD
+chain on **both** branches:
+
+- `OpDecon.detect_saturation` — scans the **raw** ADC and marks each contiguous railed run
+  (≥ `saturation_min_samples` at ≥ `saturation_adc`=16383), padded by `saturation_pad` ticks,
+  as a `"saturation"` `ChannelMaskMap` range on the output frame.  Marking the *run* (not the
+  whole trace) is essential for the full stream: a single railed sample must not veto the whole
+  343808-sample channel.
+- `OpHitFinder.veto_saturation` — drops hits whose tick span overlaps a saturated range, i.e.
+  the over-integrated pulse around the clip, keeping real narrow light elsewhere.  `OpRoi`
+  forwards `in->masks()` so the full-stream branch carries the flag through ROI cleaning.
+- PDHD uses `saturation_pad=1024` (≈ one snippet record / the over-integration window).  On
+  evt 1015 this cuts total PE 3.31 M → 0.81 M (−76 %, full stream 1.73 M → 0.15 M) while the
+  real bright flash survives (de-inflated, not deleted) and normal events change by ≤0.5 %.
+  It removes the **PE** artifact, not the flash count (that residual is genuine activity).
+
 ## Reproduce
 
 ```
