@@ -110,7 +110,9 @@ below in §5 as a cross-check.
 | 29107 | 30 | 3403 | **113.4** | 3403 | 0 | 0 | 10 | 336 | 14654 | 2 | 9 | 14 | sparse (ch 0–39) |
 
 *(tot-PE = total PE per flash; nPD = photon detectors per flash; p90 = 90th
-percentile.)* 27980's flashes/event is high because the all-PD count is dominated
+percentile. 27305 shows 23 events here vs 24 in the LArSoft §5 — the toolkit script
+counts one opflash per clean numeric work dir and drops a duplicate `…jjo` variant
+dir; not a missing event.)* 27980's flashes/event is high because the all-PD count is dominated
 by the **full-stream** −x PDs, which scan the continuous 5.5 ms stream and
 legitimately catch ~25× the live-time of the self-trigger snippets (see
 `pdhd-fullstream-light-reco.md` §8). 27980 here is the only run with the full −x
