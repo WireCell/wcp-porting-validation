@@ -48,13 +48,13 @@ function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=
   // Raised hit threshold (~5 sigma of the decon noise floor): the full-stream
   // scans 5.5 ms continuously, so a snippet-mode 3.0 threshold (~1.3 sigma here)
   // would integrate noise into ~thousands of spurious flashes.
-  // The OpHit finder reads the ROI-cleaned 'decon_roi' traces.  robust_baseline
-  // with nonzero_baseline: take the median/MAD over the non-zero (in-ROI)
-  // samples only -- the ROI chain zeroes the inter-pulse record, so a
-  // whole-waveform MAD would collapse to 0 and the finder would go noise-blind.
-  // (Self-trigger snippets keep the head method, wct-light-reco.jsonnet.)
-  local hit = flash.ophit(hit_threshold=11.0, robust_baseline=true,
-                          intag='decon_roi', nonzero_baseline=true);
+  // The OpHit finder reads the ROI-cleaned 'decon_roi' traces.  The hysteresis
+  // ROIs hug each pulse, so the in-ROI samples are signal-dominated and a robust
+  // median/MAD over them would close the start gate -- use the known clean noise
+  // floor (fixed_ped_sigma ~ the HPF rms 0.02 decon -> 2 scaled) with ped_mean=0
+  // (the ROIs are endpoint-zeroed).  OpRoi already zeroes ringing channels, so no
+  // robust_baseline veto is needed.  (Snippets keep the head method, wct-light-reco.jsonnet.)
+  local hit = flash.ophit(hit_threshold=11.0, intag='decon_roi', fixed_ped_sigma=2.0);
   local opflash_finder = flash.opflash_finder(offset_us=off_us);
   local wf_sink = flash.waveform_sink('%s/light-frames-fullstream-wct.tar.bz2' % output_dir,
                                       tags=['raw', 'decon', 'decon_roi'], name='fswct');

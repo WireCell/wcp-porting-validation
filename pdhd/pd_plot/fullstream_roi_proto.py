@@ -16,10 +16,16 @@ component) a ROI chain that cleans the decon waveform fed to OpHitFinder:
   2. BASELINE: subtract median(h) (HPF already ~kills DC; belt-and-suspenders).
   3. NOISE + VETO: rms = 1.4826*MAD(h); if rms > veto_cap -> zero whole channel
      (the opch-147 ringing veto, carried over from robust_baseline).
-  4. ROI: contiguous runs of h > roi_nsigma*rms (low but > electronic noise).
-  5. PAD + MERGE: extend each ROI by roi_pad_pre / roi_pad_post ticks, merge
-     overlaps.  The post-pad must reach true baseline so the slow scintillation
-     tail is inside the ROI (else step 6 slopes a line through real tail light).
+  4. ROI (HYSTERESIS): contiguous runs of h > ext_nsigma*rms (low/extend) that
+     reach seed_nsigma*rms somewhere inside (high/seed, ~ the hit threshold so a
+     real pulse is required; runs that never reach it are dropped).  The run
+     already spans down to the low threshold on both sides, so the ROI hugs the
+     pulse and ends where the tail actually returns to noise -- bright pulses get
+     ROIs comparable to dim ones instead of ballooning.
+  5. PAD + MERGE: small symmetric pad (roi_pad ticks each side), merge overlaps.
+     Replaces the old +700-tick blanket post-pad, which glued separate pulses
+     (and their HPF ringing wings) into one 60-75 us block on bright channels and
+     ramped the linear baseline (step 6) across the whole thing, destroying PE.
   6. APPLY to the ORIGINAL decon d: zero outside all ROIs; per ROI [s,e] subtract
      the line through (s,d[s]),(e,d[e]) so d[s]->0, d[e]->0.
 
@@ -51,12 +57,14 @@ SCALE = 100.0                   # OpHitFinder m_scale: decon -> scaled short uni
 HIT_THRESHOLD = 11.0            # m_hit_threshold on pulse peak (scaled) = 0.11 decon
 
 # --- ROI chain defaults (tuned here, become the C++ OpRoi defaults) ---
-HPF_TAU_MHZ = 0.05              # 1 - exp(-(f/tau)^2) corner ~ 1/20us
-ROI_NSIGMA = 5.0               # threshold = nsigma * MAD-rms (0.1 decon @ rms 0.02)
-ROI_PAD_PRE = 50               # ticks before each ROI (0.8 us)
-ROI_PAD_POST = 700             # ticks after  each ROI (~11 us; cover the slow tail)
-VETO_SIGMA = 0.1               # decon-unit MAD cap -> zero ringing channel (opch147)
-ROI_HIT_NSIGMA = 3.0           # OpHitFinder start gate (robust_nsigma) on in-ROI noise
+HPF_TAU_MHZ = 0.05             # 1 - exp(-(f/tau)^2) corner ~ 1/20us
+ROI_SEED_NSIGMA = 5.0          # HIGH/seed: a run must reach this to be a real ROI (~hit thr, 0.1 decon)
+ROI_EXT_NSIGMA = 3.0           # LOW/extend: ROI spans the contiguous run down to this (~0.06 decon)
+ROI_PAD_PRE = 50               # pad before each run (ticks, 0.8 us) -- no early-side extension
+ROI_POST_PEAK = 300            # ROI reaches >= this many ticks past the seed PEAK (4.8 us ~
+                               # 3x the 1.6us late-light tau); a brighter tail above ext extends further
+VETO_SIGMA = 0.1              # decon-unit MAD cap -> zero ringing channel (opch147)
+ROI_HIT_NSIGMA = 3.0          # OpHitFinder start gate (robust_nsigma) on the noise floor
 
 # AlgoSlidingWindow defaults (dune_ophit_finder_deco), scaled units.
 ALGO = dict(adc_threshold=3.0, nsigma_threshold=1.0,
@@ -79,9 +87,13 @@ def hpf_spectrum(n, tau_mhz):
     return 1.0 - np.exp(-(f / tau_mhz) ** 2)
 
 
-def find_rois(h, thr, pad_pre, pad_post, n):
-    """Contiguous runs of h > thr, padded by (pad_pre, pad_post) and merged."""
-    above = h > thr
+def find_rois(h, d, ext_thr, seed_thr, pad_pre, post_peak, n):
+    """HYSTERESIS ROIs: contiguous runs of h > ext_thr (low) that reach seed_thr
+    (high) somewhere inside.  Each ROI is padded pad_pre before the run start and
+    extended to at least post_peak ticks past the DECON pulse PEAK (the late-light
+    window ~3x the 1.6us tau) -- a brighter tail that stays above ext extends
+    further on its own.  Overlapping windows merge adjacent pulses."""
+    above = h > ext_thr
     if not above.any():
         return []
     # run starts/ends of the boolean mask
@@ -94,8 +106,11 @@ def find_rois(h, thr, pad_pre, pad_post, n):
         ends.append(n - 1)
     rois = []
     for s, e in zip(starts, ends):
+        if h[s:e + 1].max() < seed_thr:   # no real seed inside the run -> drop
+            continue
+        peak = s + int(np.argmax(d[s:e + 1]))   # the decon pulse peak
         ps = max(0, s - pad_pre)
-        pe = min(n - 1, e + pad_post)
+        pe = min(n - 1, max(e, peak + post_peak))
         if rois and ps <= rois[-1][1]:
             rois[-1] = (rois[-1][0], max(rois[-1][1], pe))
         else:
@@ -103,7 +118,7 @@ def find_rois(h, thr, pad_pre, pad_post, n):
     return rois
 
 
-def roi_clean(d, tau_mhz, nsigma, pad_pre, pad_post, veto_cap):
+def roi_clean(d, tau_mhz, seed_nsigma, ext_nsigma, pad_pre, post_peak, veto_cap):
     """Return (cleaned decon, rois, rms, vetoed) for one channel."""
     n = len(d)
     H = hpf_spectrum(n, tau_mhz)
@@ -112,8 +127,7 @@ def roi_clean(d, tau_mhz, nsigma, pad_pre, pad_post, veto_cap):
     rms = 1.4826 * np.median(np.abs(h - np.median(h)))
     if rms > veto_cap:
         return np.zeros_like(d), [], rms, True
-    thr = nsigma * rms
-    rois = find_rois(h, thr, pad_pre, pad_post, n)
+    rois = find_rois(h, d, ext_nsigma * rms, seed_nsigma * rms, pad_pre, post_peak, n)
     out = np.zeros_like(d)
     for (s, e) in rois:
         seg = d[s:e + 1].astype(float)
@@ -185,20 +199,15 @@ def count_hits(decon_wf, ped_mean, ped_sigma, nsigma_start):
                if pk >= HIT_THRESHOLD)
 
 
-def count_hits_roi(cleaned, nsigma_start):
-    """OpHit count on a ROI-cleaned waveform with a NON-ZERO-sample pedestal.
-    Zeroing outside ROIs makes a whole-record median/MAD collapse to 0 (>50%
-    of samples are exactly 0) -> ped_sigma=0 -> the start gate falls to its
-    absolute floor and OpHitFinder goes noise-blind.  The C++ OpHitFinder gets
-    a nonzero_baseline knob that estimates median/MAD over the non-zero (in-ROI)
-    samples only; emulate that here so the noise floor is the real in-ROI noise."""
+def count_hits_roi(cleaned, ped_sigma_scaled, nsigma_start):
+    """OpHit count on a ROI-cleaned waveform using the KNOWN clean noise floor.
+    With tight (hysteresis) ROIs the in-ROI non-zero samples are signal-dominated,
+    so estimating median/MAD from them biases ped_sigma high and the start gate
+    closes (clean-channel hits crater to ~45%).  Feed the noise floor carried from
+    the ROI step (the HPF rms, scaled) instead; the C++ OpHitFinder gets the same
+    via a fixed pedestal-sigma knob.  Pedestal mean is 0 (ROI-cleaned baseline)."""
     wf = (SCALE * cleaned).astype(np.int16).astype(float)
-    nz = wf[wf != 0.0]
-    if not len(nz):
-        return 0
-    ped_mean = float(np.median(nz))
-    ped_sigma = 1.4826 * float(np.median(np.abs(nz - ped_mean)))
-    return sum(1 for (_, _, _, pk) in sliding_window(wf, ped_mean, ped_sigma, nsigma_start)
+    return sum(1 for (_, _, _, pk) in sliding_window(wf, 0.0, ped_sigma_scaled, nsigma_start)
                if pk >= HIT_THRESHOLD)
 
 
@@ -208,8 +217,8 @@ def main():
     bz2 = "%s/%06d_fs%d/light-frames-fullstream-wct.tar.bz2" % (WORK, run, evt)
     decon, ch, ti = load_frames(bz2, evt)
     n = decon.shape[1]
-    print("run %d evt %d: decon %s, tau=%.3f MHz, nsigma=%.1f, pad=(%d,%d), veto=%.2f"
-          % (run, evt, decon.shape, HPF_TAU_MHZ, ROI_NSIGMA, ROI_PAD_PRE, ROI_PAD_POST, VETO_SIGMA))
+    print("run %d evt %d: decon %s, tau=%.3f MHz, seed=%.1f ext=%.1f sigma, pad_pre=%d post_peak=%d, veto=%.2f"
+          % (run, evt, decon.shape, HPF_TAU_MHZ, ROI_SEED_NSIGMA, ROI_EXT_NSIGMA, ROI_PAD_PRE, ROI_POST_PEAK, VETO_SIGMA))
 
     rows = {}
     for opch in range(120, 160):
@@ -218,14 +227,14 @@ def main():
             continue
         d = decon[int(idx[0])].astype(float)
         med = float(np.median(d)); mad = float(np.median(np.abs(d - med)) * 1.4826)
-        cleaned, rois, rms, vetoed = roi_clean(d, HPF_TAU_MHZ, ROI_NSIGMA,
-                                               ROI_PAD_PRE, ROI_PAD_POST, VETO_SIGMA)
+        cleaned, rois, rms, vetoed = roi_clean(d, HPF_TAU_MHZ, ROI_SEED_NSIGMA,
+                                               ROI_EXT_NSIGMA, ROI_PAD_PRE, ROI_POST_PEAK, VETO_SIGMA)
         # OpHit counts: current robust_baseline (median ped + MAD on raw decon) vs
-        # ROI-cleaned (head method, ped ~0 because outside-ROI is exactly 0).
+        # ROI-cleaned (ped 0, noise floor = the HPF rms carried from the ROI step).
         rob_mean = SCALE * med
         rob_sigma = SCALE * mad
         n_rob = count_hits(d, rob_mean, rob_sigma, 3.0)         # robust path
-        n_roi = count_hits_roi(cleaned, ROI_HIT_NSIGMA)        # ROI-cleaned, in-ROI ped
+        n_roi = count_hits_roi(cleaned, rms * SCALE, ROI_HIT_NSIGMA)   # ROI-cleaned
         retained = float(np.count_nonzero(cleaned)) / len(cleaned)
         cls = ("vetoed" if vetoed else
                "ring" if mad >= VETO_SIGMA else
@@ -306,8 +315,10 @@ def main():
         ax.plot(us[lo:hi], r["d"][lo:hi], lw=0.5, color="0.6", label="decon")
         ax.plot(us[lo:hi], h[lo:hi], lw=0.5, color="tab:orange", label="HPF (find)")
         ax.plot(us[lo:hi], r["cleaned"][lo:hi], lw=0.7, color="tab:blue", label="cleaned")
-        ax.axhline(ROI_NSIGMA * r["rms"], ls=":", color="tab:green", lw=0.8,
-                   label="thr=%.3f" % (ROI_NSIGMA * r["rms"]))
+        ax.axhline(ROI_SEED_NSIGMA * r["rms"], ls=":", color="tab:green", lw=0.8,
+                   label="seed=%.3f" % (ROI_SEED_NSIGMA * r["rms"]))
+        ax.axhline(ROI_EXT_NSIGMA * r["rms"], ls=":", color="tab:olive", lw=0.6,
+                   label="ext=%.3f" % (ROI_EXT_NSIGMA * r["rms"]))
         for (s, e) in r["rois"]:
             if e >= lo and s <= hi:
                 ax.axvspan(us[max(s, lo)], us[min(e, hi - 1)], color="tab:blue", alpha=0.08)
