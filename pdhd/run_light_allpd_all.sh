@@ -8,9 +8,10 @@
 # docs/run29107-evt1015-light-anomaly.md.
 #
 # "Selected events" of a run = its numeric charge work dirs work/<padded>_<N>.
-# The dir suffix is NOT always the event number (some runs index dirs 0,1,2..);
-# the real event number is read from each dir's calib-evt<N>-*.json products,
-# falling back to the dir suffix.  Output goes to work/<padded>_allpd<event>/.
+# The dir suffix is NOT the event number (runs index dirs 0,1,2..); the real
+# event number is read from each dir's light-reco.log ("run R event N"), or its
+# calib-evt<N>-*.json products.  Dirs with neither (empty/unprocessed stubs) are
+# skipped.  Output goes to work/<padded>_allpd<event>/.
 #
 # Usage:
 #   ./run_light_allpd_all.sh [-n] [run ...]
@@ -33,8 +34,9 @@ for RUN in "${RUNS[@]}"; do
     mapfile -t EVENTS < <(
         for d in "$PDHD_DIR/work/${RUN_PADDED}_"[0-9]*; do
             b=$(basename "$d"); [[ "$b" =~ ^${RUN_PADDED}_[0-9]+$ ]] || continue
-            ev=$(ls "$d"/calib-evt*-*.json 2>/dev/null | head -1 | sed -nE 's#.*calib-evt([0-9]+)-.*#\1#p')
-            [ -z "$ev" ] && ev=${b#${RUN_PADDED}_}
+            ev=$(sed -nE 's/.*[Ee]vent[ =:]+([0-9]+).*/\1/p' "$d"/light-reco.log 2>/dev/null | head -1)
+            [ -z "$ev" ] && ev=$(ls "$d"/calib-evt*-*.json 2>/dev/null | head -1 | sed -nE 's#.*calib-evt([0-9]+)-.*#\1#p')
+            [ -z "$ev" ] && continue   # no reliable event number -> skip stub dir
             echo "$ev"
         done | sort -n -u)
     echo "=== run $RUN: ${#EVENTS[@]} selected events ==="
