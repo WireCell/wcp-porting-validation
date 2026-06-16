@@ -8,33 +8,40 @@ total-PE and per-PD PE distributions look like.
 
 > Companion docs: `pdhd-light-raw-data.md` (raw waveforms, SPE kernels, OpHit
 > formation — see its **§7** for the −x PD coverage and the full-stream readout),
-> `which-pd-side-lights.md`, `photon-detector-chain.md`. Plots live in
-> `pdhd/pics/` (git-ignored); regenerate them with
-> `/home/xqian/tmp/flashstats/make_flash_stats.py`.
+> `pdhd-fullstream-light-reco.md` (the all-PD WCT chain), `which-pd-side-lights.md`,
+> `photon-detector-chain.md`. Plots live in `pdhd/pics/` (git-ignored); regenerate
+> the toolkit plots (§4) with `pdhd/pd_plot/make_flash_stats_wct.py` and the LArSoft
+> reference plots (§5) with `/home/xqian/tmp/flashstats/make_flash_stats.py`.
 
 ---
 
-## 1. Data source and why
+## 1. Data sources
 
-The numbers below come from the **LArSoft flash trees** stored in the raw light
-files — specifically `flashopdet/flash_opdet`, which holds one row per
-`(event, flash_id, opdet)` with branches `event, flash_id, flash_time,
-flash_total_pe, opdet, x/y/z, pe`. A flash's total PE is rebuilt as the sum of
-its per-opdet `pe`.
+This doc now leads with the **toolkit (WCT-native) flashes** — our own reco — in
+**§4**, and keeps the **LArSoft flash trees** as the uniform cross-run reference in
+**§5**.
 
-We use the LArSoft trees, **not** the toolkit's WCT-native reco, because they
-are the **uniform** cross-run source. The toolkit reco is **not** +x-only: it
-reconstructs whatever self-triggered snippets `decoana` carries, on **both**
-walls (ch 0–79 and the −x snippet PDs 80–119 — verified in run 27980, where −x
-events reconstruct with full −x PE, e.g. art 104 → 34646 PE on ch 80–119; see
-`run27980-processing-status.md`). But that −x coverage is **event-sparse and
-run-dependent** (the −x snippet PDs are dark in run 27305 and present in only
-11/31 events of 27980). The −x **full-stream** PDs 120–159 are now reconstructed
-WCT-natively (the new OpDecon → OpRoi → OpHit → OpFlash chain — see
-`pdhd-fullstream-light-reco.md`, validated comparable to the self-trigger in its
-§8), but they are **absent from the LArSoft `flash_opdet` trees** used here. Those
-trees carry −x snippet flashes uniformly in every −x-instrumented run, so they give
-a consistent basis for the cross-run +x-vs-−x comparison here.
+**Toolkit (§4, primary).** Our reconstructed opflash products, by run-appropriate
+chain:
+- **27980** — the **all-PD** chain (`pdhd-fullstream-light-reco.md` §9: self-trigger
+  snippets 0–119 + full-stream 120–159 merged into one `OpFlashFinder`), all 31
+  events → −x flashes over the **full 80–159 wall**.
+- **27305** — +x self-trigger (the −x wall is dark this run; its raw file has the
+  full-stream channels but no −x light).
+- **29107** — sparse self-trigger only: 29107 **does** have −x self-trigger data
+  (LArSoft's `flash_opdet` reconstructs ch 80–119 — see §5), but the only 29107
+  file we have (`np04hd_raw_run029107_…_final.root`, 89 MB) is a reduced extract
+  whose `decoana` carries only **ch 0–39** (APA0) and has **no `rawdump`**. So our
+  toolkit chain can reconstruct only ch 0–39 from it — neither the −x wall nor +x
+  40–79. It is **not comparable** and is shown with a heavy caveat; reconstructing
+  29107's −x would need its full raw file (not on disk).
+
+**LArSoft (§5, reference).** `flashopdet/flash_opdet` (one row per
+`(event, flash_id, opdet)`). We keep it because it is the **uniform** cross-run
+source — in particular it carries 29107's full +x/−x snippet flashes, which the
+toolkit cannot reconstruct from the file we have. In the LArSoft trees "−x" means
+the snippet PDs 80–119 only (the full-stream 120–159 are absent), so a −x flash
+there caps at one half-wall; the full −x wall appears only in the toolkit §4.
 
 **Side mapping** (verified against `flashopdet/opdet_geo`, x in mm):
 
@@ -84,9 +91,93 @@ category rather than forcing a side, and report it alongside +x and −x.
 
 ---
 
-## 4. Comparisons
+## 4. Comparisons — toolkit (WCT-native) flashes
 
-### 4.1 Summary table
+These are **our own** reconstructed flashes, by run-appropriate chain (see §1):
+**27980** all-PD (full −x wall, all 31 events), **27305** +x self-trigger (−x
+dark this run), **29107** sparse self-trigger (ch 0–39 only — this run's file
+has no full-stream and a sparse `decoana`, so it is **not comparable**; shown
+with a caveat). Regenerate with `pd_plot/make_flash_stats_wct.py`. The LArSoft
+cross-run tables (the uniform source, including 29107's full +x/−x) are kept
+below in §5 as a cross-check.
+
+### 4.1 Summary table (toolkit)
+
+| run | events | flashes | flashes/evt | +x | −x | mixed | tot-PE med | tot-PE p90 | tot-PE max | nPD med | nPD p90 | nPD max | source |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 27305 | 23 | 707 | **30.7** | 707 | 0 | 0 | 178 | 4071 | 30357 | 3 | 10 | 18 | +x only (−x dark) |
+| 27980 | 31 | 24276 | **783.1** | 6263 | 18013 | 0 | 6 | 130 | 27605 | 2 | 12 | **58** | all-PD (full −x wall) |
+| 29107 | 30 | 3403 | **113.4** | 3403 | 0 | 0 | 10 | 336 | 14654 | 2 | 9 | 14 | sparse (ch 0–39) |
+
+*(tot-PE = total PE per flash; nPD = photon detectors per flash; p90 = 90th
+percentile.)* 27980's flashes/event is high because the all-PD count is dominated
+by the **full-stream** −x PDs, which scan the continuous 5.5 ms stream and
+legitimately catch ~25× the live-time of the self-trigger snippets (see
+`pdhd-fullstream-light-reco.md` §8). 27980 here is the only run with the full −x
+wall; 27305 has no −x light and 29107's file cannot reconstruct beyond ch 0–39.
+
+### 4.2 Flashes per event by wall (toolkit)
+
+![flashes per event (WCT)](../pics/light_runcmp_wct_flashes_per_event.png)
+
+In 27980 the −x wall (now the **full** 80–159) carries the bulk of the flashes —
+expected, since the full-stream half reads continuously. 27305 is +x-only; 29107
+is the sparse 0–39 self-trigger (no −x at all in this file).
+
+### 4.3 Photon detectors per flash (toolkit) — the full −x wall
+
+![PDs per flash (WCT)](../pics/light_runcmp_wct_pds_per_flash.png)
+
+This panel is the toolkit answer to "why did −x top out at half of +x". With the
+all-PD chain, run 27980's −x flashes now span the **whole 80-PD wall** and reach
+**~58 PDs** — with a high-PD bump near 50 (wall-spanning cosmics) that the
+half-wall snippet view could never show — comparable to (here above) the +x
+ceiling of ~40. 27305 +x reaches ~18 (dim +x light this run); 29107 only ~14
+(sparse 0–39).
+
+**Background — why −x looked like ~half of +x.** Both walls physically have **80
+PDs** (8 z-rows × 10); on −x they are split by **readout** into two half-walls
+tiling **disjoint z-halves**: snippet 80–119 (z ≈ 267–427) and full-stream
+120–159 (z ≈ 35–195). The LArSoft `flash_opdet` trees and the per-stream WCT reco
+both see only one half per −x flash (~20 PDs), while +x is one 80-PD wall. The
+all-PD single processing (`pdhd-fullstream-light-reco.md` §9: snippet +
+full-stream OpHits merged into one `OpFlashFinder`) restores the full −x wall;
++x is byte-identical to the per-stream reco.
+
+### 4.4 Total PE per flash (toolkit)
+
+![total PE per flash (WCT)](../pics/light_runcmp_wct_total_pe.png)
+
+27305 keeps its bright, bimodal +x population (median ~178 PE). 27980 is
+dominated by many low-PE flashes (median ~6) — the full-stream −x adds a large
+population of small flashes; the bright tail extends to ~28k PE. 29107's sparse
++x sits in between (median ~10).
+
+### 4.5 Per-PD PE (toolkit)
+
+![per-PD PE (WCT)](../pics/light_runcmp_wct_pe_per_pd.png)
+
+Per-PD PE (median / p90 / max):
+
+| run | +x | −x |
+|---|---|---|
+| 27305 | 138 / 488 / 30357 | — (dark) |
+| 27980 | 5 / 87 / 14314 | 6 / 97 / 12166 |
+| 29107 | 13 / 115 / 8878 | — (no −x in file) |
+
+In 27980 the +x and full −x walls track each other closely (medians within ~1 PE,
+p90 87 vs 97) — the full −x wall behaves like +x, no anomaly. 27305's +x spectrum
+sits much higher (median ~138), consistent with its bright bimodal flash
+population.
+
+## 5. LArSoft cross-run reference (uniform source)
+
+Kept for the **uniform** cross-run picture — in particular 29107's full +x/−x,
+which the toolkit cannot reconstruct from the file we have (§1). Source:
+`flashopdet/flash_opdet`; "−x" here = snippet PDs 80–119 only. Regenerate with
+`/home/xqian/tmp/flashstats/make_flash_stats.py`.
+
+### 5.1 LArSoft summary table
 
 | run | events | flashes | flashes/evt | +x | −x | mixed | tot-PE med | tot-PE p90 | tot-PE max | nPD med | nPD p90 | nPD max |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -94,72 +185,16 @@ category rather than forcing a side, and report it alongside +x and −x.
 | 27980 | 31 | 9593 | **309.5** | 5446 | 3080 | 1067 | 17 | 573 | 21755 | 1 | 14 | 52 |
 | 29107 | 30 | 13027 | **434.2** | 7211 | 4175 | 1641 | 34 | 855 | 415688 | 1 | 26 | 113 |
 
-*(tot-PE = total PE per flash; nPD = photon detectors per flash; p90 = 90th
-percentile.)*
-
-### 4.2 Events per run, and flashes per event by wall
-
 ![flashes per event](../pics/light_runcmp_flashes_per_event.png)
 ![overview](../pics/light_runcmp_summary.png)
-
-Mean flashes/event by side:
-
-| run | +x | −x | mixed | all |
-|---|---|---|---|---|
-| 27305 | 28.5 | 0.0 | 0.0 | 28.5 |
-| 27980 | 175.7 | 99.4 | 34.4 | 309.5 |
-| 29107 | 240.4 | 139.2 | 54.7 | 434.2 |
-
-The +x baseline (run 27305) sits at ~28 flashes/event — a number that
-independently matches the hand-checked **event 150 → 30 flashes** in
-`pdhd-light-raw-data.md`. The two −x-instrumented runs have **~10× more flashes
-per event**, with the −x wall contributing roughly a third of them.
-
-### 4.3 Photon detectors per flash
-
 ![PDs per flash](../pics/light_runcmp_pds_per_flash.png)
-
-Most flashes are small: median PD count is **3** for 27305 and **1** for
-27980/29107, with a tail reaching 15 / 52 / 113 PDs. In 29107 the **mixed**
-flashes pile up around ~20 PDs — these are the genuinely large, cross-wall
-events. The +x and −x snippet walls have very similar single-wall PD shapes.
-
-**Why a −x flash tops out at ~half the +x ceiling here, and how the all-PD reco
-fixes it.** A +x flash can reach ~40 PDs but a −x flash only ~20 — *not* a bug.
-Both walls physically have **80 PDs** (8 z-rows × 10), but on −x they are split by
-**readout** into two distinct half-walls tiling **disjoint z-halves**: the
-**snippet** PDs 80–119 (z ≈ 267–427) and the **full-stream** PDs 120–159
-(z ≈ 35–195). These LArSoft `flash_opdet` trees carry only the snippet half, and
-even the WCT per-stream reco keeps the two halves in **separate** flash files, so a
-−x flash can light only one 40-PD half (~20 in practice) while +x sees its whole
-80-PD wall. Roughly half a wall lights per flash, so the maxima track the channel
-count almost exactly 2:1. Reconstructing **all 160 PDs in one processing**
-(`pdhd-fullstream-light-reco.md` §9: snippet + full-stream OpHits merged into one
-`OpFlashFinder`) restores the full −x wall — a −x flash then reaches ~55 PDs (of 78
-usable), comparable to +x, while +x stays byte-identical. The cross-run tables here
-are LArSoft trees and unchanged; the all-PD product is the separate WCT source.
-
-### 4.4 Total PE per flash
-
 ![total PE per flash](../pics/light_runcmp_total_pe.png)
-
-Run 27305 is distinctly **bimodal** (a small ~5-PE bump plus a main population
-spanning ~10²–10⁴ PE, median 399), whereas 27980/29107 are dominated by **many
-low-PE flashes** (median 17 and 34). The +x and −x distributions overlay closely
-within a run; `mixed` flashes carry more PE by construction (they sum both
-walls).
-
-### 4.5 Per-PD PE
-
 ![per-PD PE](../pics/light_runcmp_pe_per_pd.png)
 
-Per-PD PE (median / p90 / max):
-
-| run | +x | −x |
-|---|---|---|
-| 27305 | 150 / 543 / 71052 | — |
-| 27980 | 15 / 120 / 18743 | 14 / 134 / 12441 |
-| 29107 | 14 / 123 / 29257 | 14 / 119 / 58070 |
+In the LArSoft view a −x flash tops out at ~20 PDs (half the +x ceiling) because
+only the snippet half (80–119) is in these trees — see §4.3 for the full-wall
+toolkit result. 29107's much larger mixed/PE tail (max 113 PDs, 415k PE) is a
+run-condition difference (bigger events / trigger config), not a reco effect.
 
 The per-PD PE spectrum is **bimodal** — a low ~1-PE (SPE-scale) bump plus a
 broader high-PE population — and the **+x and −x walls track each other closely**
@@ -169,22 +204,24 @@ higher-PE flash population.
 
 ---
 
-## 5. Caveats
+## 6. Caveats
 
+- **Methodology is not uniform across runs in the toolkit §4** (it can't be — the
+  data differ): 27980 is all-PD (full −x wall, from `rawdump`), 27305 is +x
+  self-trigger (−x dark), 29107 is sparse self-trigger (ch 0–39; its file has no
+  `rawdump` and a sparse `decoana`). Cross-run *absolute* rates are therefore not
+  directly comparable; the robust statements are within-run (e.g. 27980 +x vs full
+  −x in §4.3/§4.5). The LArSoft §5 is the uniform cross-run cross-check.
 - The **~10× spread in flashes/event** and **~20× spread in PE scale** between
   27305 and 27980/29107 most likely reflect different **trigger / readout
   configuration** (and the presence of −x instrumentation), not a physics
-  difference between the runs. Treat cross-run absolute rates with care; the
-  +x-vs-−x *within-run* comparison is the robust part.
-- "−x" here is the **snippet PDs 80–119 only**, so the −x wall is under-counted in
-  these LArSoft-tree tables relative to its full instrumentation. The full-stream
-  PDs 120–159 are now reconstructed WCT-natively (and validated comparable to the
-  self-trigger — `pdhd-fullstream-light-reco.md` §8), but that is a separate source
-  not present in the LArSoft `flash_opdet` trees, so it is not folded in here.
-- These are **LArSoft** flashes, the upstream reco. The toolkit's WCT-native
-  flashes (which cover +x **and** the −x snippet PDs 80–119 where `decoana`
-  provides them, but not uniformly across runs — see
-  `run27980-processing-status.md`) are not used here.
+  difference between the runs.
+- 27980's high toolkit flashes/event (~783) is dominated by the **full-stream** −x
+  PDs scanning the continuous 5.5 ms stream (~25× the snippet live-time); it is not
+  comparable to the snippet-only LArSoft 309/evt.
+- In the **LArSoft §5** tables "−x" is the snippet PDs 80–119 only, so the −x wall
+  is under-counted there relative to its full instrumentation; the full −x wall
+  appears only in the toolkit all-PD §4.
 
 ---
 

@@ -34,6 +34,11 @@ The +x-dropout cause (§5) is then read directly from the raw streams
 `rawdump/raw_waveform` (per-`(event, opch)` ADC, with `nsamples`) and
 `trigoff/trigger_offset` (per-event trigger metadata).
 
+**Toolkit update.** §3 now *leads* with the same two quantities computed from our
+own **WCT OpHits** (the all-PD opflash `ophits` tensor; `pd_plot/pd_activity_wct.py`),
+which — unlike `PerOpHitTree` — include the −x **full-stream** block 120–159. The
+LArSoft `PerOpHitTree` plots are kept below as the reference.
+
 ## 2. Geometry — four 40-PD APA blocks, and the z-matched pair
 
 Verified via `flashopdet/opdet_geo` (x, z in mm):
@@ -56,6 +61,24 @@ same every event: +x up **39/40**, +x lo **40/40**, −x self **34/40** — i.e.
 −x self PDs are consistently dead/disabled in the channel map. That static 34/40 is
 *not* the per-event story below and is not itself a sign of −x weirdness; it just sets
 the per-event ceiling for the −x self block.
+
+**Toolkit (WCT-native) version — now including the −x full block (120–159).** The
+plots below are from **our own** OpHits (the all-PD opflash `ophits` tensor, all 31
+events; `pd_plot/pd_activity_wct.py`), so unlike the LArSoft `PerOpHitTree` they
+also carry the −x **full-stream** block 120–159 that was previously invisible:
+
+![per-event total PE (WCT)](../pics/pd_activity_wct_27980_total_pe.png)
+![per-event fired PDs (WCT)](../pics/pd_activity_wct_27980_nfired.png)
+
+- The toolkit **reproduces the +x dropout** (events 104/112/120/128 fall to ~0 on
+  +x up/lo) and shows **both −x blocks are uniformly active** every event: −x self
+  (80–119) at 34–35/40 fired, −x full (120–159) at a flat **38/40** (2 vetoed
+  data-quality PDs). The full −x wall behaves exactly like +x — no −x anomaly.
+- −x full carries the **largest per-event PE** of any block (it integrates the
+  continuous 5.5 ms stream), but its *fired-PD count* is flat, the same
+  event-independence the cosmic-dominated premise predicts.
+
+LArSoft `PerOpHitTree` reference (snippet PDs only, no −x full):
 
 ![per-event total PE](../pics/pd_activity_27980_total_pe.png)
 ![per-event fired PDs](../pics/pd_activity_27980_nfired.png)
@@ -181,7 +204,10 @@ see `pdhd-fullstream-light-reco.md` §4.)
 ## Reproduce
 
 ```
-python pdhd/pd_plot/pd_activity.py     # run 27980 (primary) + 29107 (cross-check)
+python pdhd/pd_plot/pd_activity_wct.py # TOOLKIT WCT OpHits (all-PD, incl -x full 120-159)
+# -> pd_activity_wct_27980_{total_pe,nfired}.png  (the primary §3 plots)
+
+python pdhd/pd_plot/pd_activity.py     # LArSoft reference: 27980 + 29107 (cross-check)
 # prints the per-event table + dropout diagnosis; writes pd_activity_*.png to pdhd/pics/
 
 # -x full-stream reco + event-dependence (section 8):
