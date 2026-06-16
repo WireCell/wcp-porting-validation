@@ -9,9 +9,11 @@ The full-stream sees the whole ~5.5 ms continuously; the self-trigger APAs see
 only triggered windows.  The physics check is therefore TIME-COINCIDENCE in the
 overlapping window (a real cosmic lights both the full-stream -x-lower APA and a
 self-trigger APA at the same time), measured as the EXCESS over a time-shuffled
-random baseline -- not a raw flash count.  Only the BRIGHT full-stream flashes
-(total PE > ~800) show a coincidence excess; the large dim-flash population sits at
-the random/noise floor and is NOT validated as real light here (see panel C).
+random baseline -- not a raw flash count.  With the OpRoi cleaning
+(pdhd-fullstream-light-reco.md §7) the artefact/noise-floor flashes are removed, so
+the surviving flashes are coincidence-validated across the PE spectrum (every bin
+above ~50 PE), and the full-stream PE spectrum overlays the self-trigger (panel D).
+The remaining dim 0-50 PE bin sits below the random floor (scattered sub-pulses).
 
 Geometry (opch -> wall / z):
   0-39   +x z267-427 (+x upper)      80-119  -x z267-427 (-x upper, self-trig)
@@ -140,7 +142,7 @@ def make_cycle1_figure(run, evt):
     ax[1, 0].bar(plabels, exc, color=colors)
     ax[1, 0].axhline(1.0, ls="--", c="green", label="random floor")
     ax[1, 0].set(xlabel="full-stream flash PE bin", ylabel="coincidence excess over random",
-                 title="C. Only bright (>800 PE) flashes are coincidence-validated")
+                 title="C. Flashes coincidence-validated across the PE spectrum (post-§7 cleaning)")
     ax[1, 0].legend(fontsize=8)
     for i, e in enumerate(exc):
         ax[1, 0].annotate("x%.1f" % e, (i, e), ha="center", va="bottom", fontsize=8)
@@ -151,9 +153,9 @@ def make_cycle1_figure(run, evt):
                   label="full-stream 120-159")
     ax[1, 1].hist(np.log10(np.clip(d["sn_pe"], 1, None)), bins=40, histtype="step", lw=1.4,
                   color="#1f77b4", label="self-trigger 0-119")
-    ax[1, 1].axvline(np.log10(800), ls="--", c="green", lw=0.9, label="PE=800 (validated above)")
+    ax[1, 1].axvline(np.log10(50), ls="--", c="green", lw=0.9, label="PE=50 (validated above)")
     ax[1, 1].set(xlabel="log10(flash total PE)", ylabel="flashes",
-                 title="D. Flash PE spectra; only the >800 tail is validated")
+                 title="D. Flash PE spectra now overlay the self-trigger")
     ax[1, 1].legend(fontsize=8)
 
     fig.suptitle("PDHD run %d evt %d: -x full-stream (120-159) light reco vs self-trigger APAs"

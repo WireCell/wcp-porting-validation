@@ -29,10 +29,12 @@ walls (ch 0–79 and the −x snippet PDs 80–119 — verified in run 27980, wh
 events reconstruct with full −x PE, e.g. art 104 → 34646 PE on ch 80–119; see
 `run27980-processing-status.md`). But that −x coverage is **event-sparse and
 run-dependent** (the −x snippet PDs are dark in run 27305 and present in only
-11/31 events of 27980), and the toolkit never covers the −x **full-stream** PDs
-120–159 (deferred — `pdhd-light-raw-data.md` §7.4). The LArSoft `flash_opdet`
-trees, by contrast, carry −x snippet flashes uniformly in every −x-instrumented
-run, so they give a consistent basis for the cross-run +x-vs-−x comparison here.
+11/31 events of 27980). The −x **full-stream** PDs 120–159 are now reconstructed
+WCT-natively (the new OpDecon → OpRoi → OpHit → OpFlash chain — see
+`pdhd-fullstream-light-reco.md`, validated comparable to the self-trigger in its
+§8), but they are **absent from the LArSoft `flash_opdet` trees** used here. Those
+trees carry −x snippet flashes uniformly in every −x-instrumented run, so they give
+a consistent basis for the cross-run +x-vs-−x comparison here.
 
 **Side mapping** (verified against `flashopdet/opdet_geo`, x in mm):
 
@@ -40,11 +42,12 @@ run, so they give a consistent basis for the cross-run +x-vs-−x comparison her
 |---|---|---|---|
 | 0–79 | **+x** | ≈ +356 mm | yes (all runs) |
 | 80–119 | **−x** (snippet PDs) | ≈ −356 mm | yes (27980, 29107 only) |
-| 120–159 | **−x** (full-stream PDs) | ≈ −356 mm | **never** — no flashes in any source (reco deferred) |
+| 120–159 | **−x** (full-stream PDs) | ≈ −356 mm | **not in the LArSoft trees** (reconstructed WCT-natively — see `pdhd-fullstream-light-reco.md` §8) |
 
 So throughout this doc the **"−x" side means channels 80–119**. The full-stream
-−x PDs 120–159 are absent by construction; reconstructing them is the deferred
-code task documented in `pdhd-light-raw-data.md` §7.4.
+−x PDs 120–159 are absent **from these LArSoft trees** by construction; they are
+now reconstructed WCT-natively (`pdhd-fullstream-light-reco.md`), but that is a
+different source and is not mixed into the LArSoft cross-run tables below.
 
 ---
 
@@ -158,10 +161,11 @@ higher-PE flash population.
   configuration** (and the presence of −x instrumentation), not a physics
   difference between the runs. Treat cross-run absolute rates with care; the
   +x-vs-−x *within-run* comparison is the robust part.
-- "−x" here is the **snippet PDs 80–119 only**. The full-stream PDs 120–159 are
-  not reconstructed into flashes anywhere yet (deferred — see
-  `pdhd-light-raw-data.md` §7.4), so the −x wall is under-counted relative to its
-  full instrumentation.
+- "−x" here is the **snippet PDs 80–119 only**, so the −x wall is under-counted in
+  these LArSoft-tree tables relative to its full instrumentation. The full-stream
+  PDs 120–159 are now reconstructed WCT-natively (and validated comparable to the
+  self-trigger — `pdhd-fullstream-light-reco.md` §8), but that is a separate source
+  not present in the LArSoft `flash_opdet` trees, so it is not folded in here.
 - These are **LArSoft** flashes, the upstream reco. The toolkit's WCT-native
   flashes (which cover +x **and** the −x snippet PDs 80–119 where `decoana`
   provides them, but not uniformly across runs — see

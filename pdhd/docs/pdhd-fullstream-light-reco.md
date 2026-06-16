@@ -80,15 +80,18 @@ integrate that noise into thousands of spurious flashes at 3.0 (~1.3σ), so it r
 `hit_threshold` to **11 (~5σ ≈ a 1-PE peak)** — set absolutely from the measured
 noise, since the 3-sample `ped_sigma` estimate is meaningless on a continuous stream.
 
-## 4. One-event result — run 27980, evt 8
+## 4. One-event result — run 27980, evt 8 (pre-cleaning, motivates §6–§7)
 
-![full-stream vs self-trigger coincidence](../pics/pd_fullstream_27980_evt8_coincidence.png)
+> This section is the **raw chain** (OpDecon → OpHitFinder, no ROI cleaning) that
+> first exposed the over-production. The diagnosis is §6 and the fix is §7; the
+> **after-cleaning** comparison — the actual "is the full stream good enough?" answer —
+> is **§8**.
 
-The full-stream chain reconstructs flashes on 120–159 across the full 5.5 ms window,
-and the **bright** ones are real cosmic light. The test (panel C, the key result):
-take the bright self-trigger −x cosmics (−x-upper-dominated, real through-going muons;
-N=22) as the reference and ask, **per full-stream PE bin** (non-cumulative), whether a
-full-stream −x-lower flash sits within ±1 µs, versus a time-shuffled random baseline:
+The raw full-stream chain reconstructs flashes on 120–159 across the full 5.5 ms
+window, and the **bright** ones are real cosmic light. The test: take the bright
+self-trigger −x cosmics (−x-upper-dominated, real through-going muons; N=22) as the
+reference and ask, **per full-stream PE bin** (non-cumulative), whether a full-stream
+−x-lower flash sits within ±1 µs, versus a time-shuffled random baseline:
 
 | full-stream PE bin | N | coincidence | random | excess |
 |---|---|---|---|---|
@@ -97,17 +100,15 @@ full-stream −x-lower flash sits within ±1 µs, versus a time-shuffled random 
 | 200–800 | 317 |  9% |  9% | ×1.0 |
 | **>800** | **187** | **50%** | **8%** | **×6.7** |
 
-Only the **bright (>800 PE) flashes show a coincidence excess** — ×6.7 over random,
-i.e. they reconstruct the same physical cosmic light. The ~50% (not 100%) is geometric:
-the two −x APAs are adjacent in z (35–195 vs 267–427), so only cosmics spanning the
-wall light both. The **dim flashes sit at the random/noise floor** (excess ≈1, even
-<1 for 50–200 PE) and are **not** validated as real light here — at `hit_threshold=11`
-(~5σ) the OpFlash stage still assembles residual noise-floor coincidences into many dim
-flashes, which a brightness cut (≳800 PE) removes. So full-stream flash forming is
-**reasonable for the real (bright) flashes**; isolating them from the dim noise-floor
-population (e.g. a higher `flash_threshold`) is a natural follow-up — **§6 diagnoses
-where that population comes from**. Panel A shows both modes populate the same time
-window (timing aligned); panel B shows the bright −x cosmics peak at Δt≈0.
+Pre-cleaning, only the **bright (>800 PE) flashes show a coincidence excess** — ×6.7
+over random, i.e. they reconstruct the same physical cosmic light. The ~50% (not 100%)
+is geometric: the two −x APAs are adjacent in z (35–195 vs 267–427), so only cosmics
+spanning the wall light both. The **dim/mid flashes sit at the random/noise floor**
+(excess ≈1, even <1 for 50–200 PE) and are **not** validated as real light — at
+`hit_threshold=11` (~5σ) the OpFlash stage still assembles residual noise-floor
+coincidences into many dim flashes. So the raw chain is **reasonable for the bright
+flashes** but buries them under an artefact population — **§6 diagnoses where that
+population comes from, §7 removes it, and §8 shows the cleaned result**.
 
 The self-trigger baseline here is reconstructed for **all 0–119 directly from the raw
 stream** (same chain, same fixed filter), not from `decoana`: the LArSoft `decoana`
@@ -348,19 +349,78 @@ at `robust_nsigma · ped_sigma`. Ringing channels are already zeroed by `OpRoi`,
   exactly at zero, not a shape distortion of the pulse.
 - **Flashes** (4 events, fair 3-way on the same converted inputs):
 
-  | evt | head (no cleaning) | `robust_baseline` | `OpRoi` (hysteresis) + `fixed_ped_sigma` |
+  | evt | head (no cleaning) | `robust_baseline` | `OpRoi` (hysteresis) + `fixed_ped_sigma` + veto 135/147 |
   |---|---|---|---|
-  | 8   |  463 / 96 k PE | 463 / 96 k | **517 / 90 k** |
-  | 16  | 1810 / 2.4 M PE | 516 / 76 k | **553 / 81 k** |
-  | 152 | 1640 / 243 k PE | 494 / 77 k | **528 / 88 k** |
-  | 24  | 1826 / 469 k PE | 420 / 87 k | **471 / 81 k** |
+  | 8   |  463 / 96 k PE | 463 / 96 k | **488 / 84 k** |
+  | 16  | 1810 / 2.4 M PE | 516 / 76 k | **533 / 75 k** |
+  | 152 | 1640 / 243 k PE | 494 / 77 k | **508 / 83 k** |
+  | 24  | 1826 / 469 k PE | 420 / 87 k | **440 / 77 k** |
 
-  Both robust and OpRoi tame the head-method runaway (evt 16: 2.4 M → ~73 k PE). Against
+  Both robust and OpRoi tame the head-method runaway (evt 16: 2.4 M → ~75 k PE). Against
   `robust_baseline` the flash count is **comparable (±10 %)**; the added value is the cleaning
   itself — outside-ROI zeroing and a per-ROI linear baseline give baseline-corrected,
   PE-conserving pulses (start/end exactly at zero) intended for the downstream PE and Q-L
-  matching, which `robust_baseline` does not provide. (The downstream effect itself was not
-  measured here.)
+  matching, which `robust_baseline` does not provide. The production chain also hard-vetoes the
+  two known-bad data-quality channels opch 135 + 147 (`oproi(veto_channels=[135,147])`); §8
+  uses this full production chain for the self-trigger comparison.
+
+## 8. Full-stream vs self-trigger after the §7 cleaning — is it good enough?
+
+Repeating the §4 coincidence study with the **full production chain** (OpDecon → §7 OpRoi
+cleaning + veto 135/147 → OpHitFinder `fixed_ped_sigma` → OpFlash) answers the practical
+question: is the full-stream −x-lower readout (120–159) now comparable to the self-trigger
+APAs? **Yes.** Same test, same `fullstream_compare.py`, same N=22 bright self-trigger −x
+reference (run 27980 evt 8):
+
+![full-stream vs self-trigger coincidence, after §7 cleaning](../pics/pd_fullstream_27980_evt8_coincidence.png)
+
+| full-stream PE bin | N (pre-clean → after) | coincidence | random floor | excess |
+|---|---|---|---|---|
+| 0–50    | 453 → **426** |  5% | 15% | ×0.3 |
+| 50–200  | 693 → **21**  |  9% |  1% | **×13** |
+| 200–800 | 317 → **25**  | 36% |  1% | **×53** |
+| >800    | 187 → **16**  | 59% |  1% | **×65** |
+
+Three things changed, and together they say the chain is sound:
+
+1. **The artefact/noise-floor population collapsed.** The mid-PE bulge that §6 traced to the
+   bad channels is gone: 50–200 PE went **693 → 21** flashes, 200–800 went **317 → 25**. Total
+   full-stream flashes **1650 → 488** (vs 335 self-trigger), i.e. from ~5× down to ~1.5×.
+2. **The surviving flashes are coincidence-validated across the PE spectrum, not just the
+   bright tail.** Pre-cleaning only the >800 PE bin showed an excess (×6.7); now every bin
+   above ~50 PE does (×13 / ×53 / ×65). The bright count itself dropped **187 → 16** — the 187
+   were inflated by the opch-147 ringing "flashes"; 16 is the physical number of bright cosmics
+   in 5.5 ms. **The higher excess is not more signal but less background:** the *observed*
+   coincidence rate is essentially unchanged (~50 → 59 %), while the *random floor* collapsed
+   (8 % → 1 %) because there are far fewer flashes to accidentally coincide with — so removing
+   the fake flashes makes the real signal stand out ~10× more sharply.
+3. **The PE spectra now overlay** (panel D): the full-stream and self-trigger flash-PE
+   distributions track each other, where before the full stream had a large excess dim/mid
+   population.
+
+**Every event shows the same** (run 27980, the full production chain):
+
+| evt | full-stream flashes | >800 PE | self-trig flashes | ref −x cosmics | bright coinc / random |
+|---|---|---|---|---|---|
+| 8   | 488 | 16 | 335 | 22 | 59% / 1% |
+| 16  | 533 | 14 | 337 | 12 | 67% / 0% |
+| 24  | 440 | 15 | 329 | 12 | 83% / 0% |
+| 104 | 527 | 16 | 128 | 16 | 50% / 1% |
+| 120 | 506 | 18 | 161 | 21 | 62% / 1% |
+| 152 | 508 | 17 | 357 | 18 | 67% / 1% |
+
+![event dependence](../pics/pd_fullstream_27980_event_dependence.png)
+
+**Verdict.** The full-stream readout is **good enough**: its bad-channel artefact population is
+removed, its surviving flashes (≳50 PE) reconstruct the same physical cosmic light as the
+self-trigger APAs (50–67 % geometric coincidence — the two −x APAs are adjacent in z, so only
+wall-spanning cosmics light both), and its flash-PE spectrum matches the self-trigger.
+**Honest residual:** the full stream still finds somewhat more flashes than the self-trigger
+(440–533 vs 128–357 — expected, it reads ~25× the live-time and legitimately catches cosmics
+the snippets missed), and a low-PE population remains: the 0–50 PE bin (426 of evt 8's 488
+flashes) sits **below** the random floor (×0.3) — scattered sub-pulses / late-light fragments,
+not coincident with the bright reference. A brightness cut (≳50 PE) isolates the validated set;
+the diagnostic §6 figures are kept as the *pre-fix* picture and are deliberately not regenerated.
 
 ## Reproduce
 
@@ -368,7 +428,9 @@ at `robust_nsigma · ped_sigma`. Ringing channels are already zeroed by `OpRoi`,
 cd pdhd
 ./run_light_fullstream_evt.sh 27980 8        # full-stream (120-159) + self-trigger
                                              # (0-119, from raw) reco for one event
-python pd_plot/fullstream_compare.py 27980 8 # coincidence figure -> pics/, prints stats
+python pd_plot/fullstream_compare.py 27980 8 16 24 104 120 152  # §8 self-trigger
+                                             #   comparison: coincidence + event-dependence
+                                             #   figures -> pics/, prints the per-PE-bin + event tables
 python pd_plot/fullstream_diagnose.py 27980 8 # §6 diagnosis + waveform figures -> pics/
 python pd_plot/fullstream_baseline_proto.py 27980 8  # §6.1 robust-baseline OpHit prototype
                                              #   (NumPy n-sweep; -> pics/..._baseline_proto.png)
