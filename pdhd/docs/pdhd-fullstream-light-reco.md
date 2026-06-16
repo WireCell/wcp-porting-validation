@@ -422,6 +422,61 @@ flashes) sits **below** the random floor (×0.3) — scattered sub-pulses / late
 not coincident with the bright reference. A brightness cut (≳50 PE) isolates the validated set;
 the diagnostic §6 figures are kept as the *pre-fix* picture and are deliberately not regenerated.
 
+## 9. All-PD single-processing reconstruction (snippet + full stream → one flash collection)
+
+§8 keeps the two readout streams in **separate** flash files (self-trigger 0–119, full
+stream 120–159).  That is fine for the validation above but wrong for anything that needs a
+**flash over the whole −x wall**: opch 80–119 (snippet) and 120–159 (full stream) are *distinct*
+PDs tiling *disjoint z-halves* of the same −x wall (80–119 at z≈267–427, 120–159 at z≈35–195;
+see `pdhd-light-flash-run-comparison.md` §4.3).  With the two streams reconstructed separately a
+−x flash can only ever light one half-wall (≤40 PDs, ~20 in practice), whereas a +x flash sees
+its full 80-PD wall.  Q/L matching wants the full −x wall in one flash.
+
+**Single processing, merge at the OpHit level.**  Rather than post-hoc merging two opflash
+files (fragile, and it imposes an arbitrary Δt window), the all-PD chain runs **one** wire-cell
+graph that reconstructs both streams and fuses their **OpHits** before a single flash step:
+
+```
+snippet branch:     PDHDOpWaveformSource(snip decoana 0-119)
+                    → OpDecon(samples=1024)  → OpHitFinder(head pedestal)        ┐
+                                                                                 ├ OpHitMerge → OpFlashFinder → opflash_pdhd-allpd-wct.tar.gz
+full-stream branch: PDHDOpWaveformSource(fs decoana 120-159)                     │
+                    → OpDecon(samples=343808) → OpRoi(veto 135/147) → OpHitFinder(decon_roi, fixed_ped_sigma=2) ┘
+```
+
+`OpHitMerge` (`flash/src/OpHitMerge.cxx`, an `ITensorSetFanin`) row-concatenates the two
+branches' `ophits` tensors `[nhit,9]` into one.  Both branches use the **same fixed Wiener
+filter** and emit OpHit `peak_time_ns` on the **same trigger-relative clock** (same `tc_time`),
+so `OpFlashFinder`'s own **1 µs accumulator** does the cross-stream grouping — there is no Δt
+window to choose.  `group_by_side` then keeps +x (0–79) and −x (80–159) as independent flash
+populations.  The output is the standard opflash tensor-set schema (the metadata `offset_us`
+comes from the snippet branch via `meta_port=0`), i.e. directly Q/L-consumable.
+
+**Validation (run 27980, 6 events).**  +x is **byte-identical** to the per-stream reco (sides
+are independent in `find_flashes`, and the full stream contributes nothing to side A) — proof
+the plumbing is correct.  The −x nPD ceiling moves from one half-wall to the full wall:
+
+| evt | −x max PDs (snippet only) | −x max PDs (full stream only) | **−x max PDs (all-PD)** | +x max PDs (unchanged) | all-PD flashes |
+|----:|----:|----:|----:|----:|----:|
+| 8   | 17 | 38 | **55** | 36 | 767 |
+| 16  | 16 | 38 | **54** | 37 | 822 |
+| 24  | 16 | 38 | **54** | 39 | 725 |
+| 104 | 17 | 38 | **55** |  – | 596 |
+| 120 | 16 | 38 | **54** |  4 | 609 |
+| 152 | 18 | 38 | **56** | 36 | 808 |
+
+A −x flash now reaches ~55 of the 78 usable −x PDs (80 − 2 vetoed), comparable to (here above)
+the +x wall — exactly the half-wall→full-wall gain expected.  The all-PD −x flash count is
+**below** the sum of the two streams' −x flashes (evt 8: 568 vs 136+488=624), i.e. ~56
+cross-half coincident pulses correctly fused into single flashes by the 1 µs accumulator.
+
+![all-PD vs per-stream](../pics/light_allpd_pds_per_flash.png)
+
+The −x **all-PD** distribution (red) extends past the snippet-only cutoff at ~18 PDs to ~55,
+with a high-PD bump near 50 (wall-spanning cosmics lighting most of the −x wall); +x (blue) is
+unchanged.  This is the product to feed Q/L matching.  *(The flash construction may still be
+lightly tuned — the per-stream `OpHitFinder`/`OpFlashFinder` settings carry over unchanged here.)*
+
 ## Reproduce
 
 ```
@@ -436,6 +491,12 @@ python pd_plot/fullstream_baseline_proto.py 27980 8  # §6.1 robust-baseline OpH
                                              #   (NumPy n-sweep; -> pics/..._baseline_proto.png)
 python pd_plot/fullstream_roi_proto.py 27980 8  # §7 ROI cleaning prototype + acceptance
                                              #   checks (-> pics/..._roi_proto.png)
+
+./run_light_allpd_evt.sh 27980 8             # §9 all-PD single processing (snippet+full
+                                             #   stream -> OpHitMerge -> one OpFlashFinder)
+                                             #   -> work/027980_allpd8/opflash_pdhd-allpd-wct.tar.gz
+python pd_plot/allpd_compare.py 27980 8 16 24 104 120 152  # §9 +x-unchanged / -x-full-wall
+                                             #   figure -> pics/light_allpd_pds_per_flash.png
 ```
 
 `run_light_fullstream_evt.sh` runs the converter, the full-stream chain
@@ -456,6 +517,7 @@ reading the `decon_roi` traces), and the self-trigger-from-raw baseline
 | fixed Wiener filter | `flash/src/OpDecon.cxx` `fixed_snr` (R = S2/N²), `flash.jsonnet` `opdecon`/`ophit` |
 | ROI cleaning (§7) | `flash/src/OpRoi.cxx` (HPF `1−exp(−(f/τ)²)` + hysteresis ROI + per-ROI linear baseline), `flash.jsonnet` `oproi`; `OpHitFinder` `fixed_ped_sigma`; proto `pd_plot/fullstream_roi_proto.py` |
 | full-stream chain | `pdhd/wct-light-fullstream-reco.jsonnet`, `pdhd/run_light_fullstream_evt.sh` |
+| all-PD chain (§9) | `flash/src/OpHitMerge.cxx` + `flash.jsonnet` `ophit_merge`; `pdhd/wct-light-allpd-reco.jsonnet`, `pdhd/run_light_allpd_evt.sh`; plot `pdhd/pd_plot/allpd_compare.py` |
 | converter | `pdhd/pd_plot/fullstream_to_decoana.py` (raw → decoana layout, tbin from timestamp) |
 | comparison + plots | `pdhd/pd_plot/fullstream_compare.py` |
 | run 27980 raw ROOT | `…/data/hd/run027980/np04hd_raw_run027980_0000_…_final.root` |

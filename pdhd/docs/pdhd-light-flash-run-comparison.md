@@ -124,6 +124,21 @@ Most flashes are small: median PD count is **3** for 27305 and **1** for
 flashes pile up around ~20 PDs — these are the genuinely large, cross-wall
 events. The +x and −x snippet walls have very similar single-wall PD shapes.
 
+**Why a −x flash tops out at ~half the +x ceiling here, and how the all-PD reco
+fixes it.** A +x flash can reach ~40 PDs but a −x flash only ~20 — *not* a bug.
+Both walls physically have **80 PDs** (8 z-rows × 10), but on −x they are split by
+**readout** into two distinct half-walls tiling **disjoint z-halves**: the
+**snippet** PDs 80–119 (z ≈ 267–427) and the **full-stream** PDs 120–159
+(z ≈ 35–195). These LArSoft `flash_opdet` trees carry only the snippet half, and
+even the WCT per-stream reco keeps the two halves in **separate** flash files, so a
+−x flash can light only one 40-PD half (~20 in practice) while +x sees its whole
+80-PD wall. Roughly half a wall lights per flash, so the maxima track the channel
+count almost exactly 2:1. Reconstructing **all 160 PDs in one processing**
+(`pdhd-fullstream-light-reco.md` §9: snippet + full-stream OpHits merged into one
+`OpFlashFinder`) restores the full −x wall — a −x flash then reaches ~55 PDs (of 78
+usable), comparable to +x, while +x stays byte-identical. The cross-run tables here
+are LArSoft trees and unchanged; the all-PD product is the separate WCT source.
+
 ### 4.4 Total PE per flash
 
 ![total PE per flash](../pics/light_runcmp_total_pe.png)
