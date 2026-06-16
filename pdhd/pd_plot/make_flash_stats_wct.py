@@ -4,22 +4,25 @@ toolkit analogue of make_flash_stats.py (which reads the LArSoft flash_opdet
 trees).  Same five views (flashes/event, PDs/flash, total-PE/flash, per-PD PE,
 overview), but every flash here is reconstructed by our own chain.
 
+All flashes here are the NO-CUT population (OpFlashFinder min_fired_pds/
+min_total_pe disabled) so the full per-flash multiplicity/PE spectrum is
+visible -- the production config restores the 5-PD / 20-PE quality cut.
+
 Per-run source (one opflash tar.gz per event; matrix tensor [nflash, 1+160],
 col 0 = time ns, cols 1..160 = PE per opdet):
-  27980  work/027980_allpd*/opflash_pdhd-allpd-wct.tar.gz   WCT-native ALL-PD, full
-                                                            -x wall (snippet 0-119 +
-                                                            full stream 120-159 merged)
-  27305  work/027305_<n>/opflash_pdhd-wct.tar.gz            WCT-native +x (−x dark)
-  29107  work/029107_<n>/opflash_pdhd-wct.tar.gz            WCT-native sparse self-trig
-                                                            (ch 0-39 only): this file
-                                                            has no full-stream (no
-                                                            rawdump) and a sparse
-                                                            decoana, so its -x WAVEFORMS
-                                                            cannot be WCT-reconstructed.
-                                                            (29107's -x exists only as
-                                                            LArSoft reconstructed
-                                                            flashes -- see the §5 LArSoft
-                                                            reference in the doc.)
+  27980  work/027980_allpd*_nocut/opflash_pdhd-allpd-wct.tar.gz  WCT-native ALL-PD,
+                                                            full -x wall (snippet 0-119
+                                                            + full stream 120-159 merged)
+  27305  work/027305_<n>/opflash_pdhd-wct.tar.gz            WCT-native +x (−x dark);
+                                                            its dirs predate the cut
+                                                            (already no-cut)
+  29107  work/029107_allpd*_nocut/opflash_pdhd-allpd-wct.tar.gz  WCT-native ALL-PD,
+                                                            full -x wall.  The file was
+                                                            re-extracted with a full
+                                                            rawdump (160 ch), so 29107 is
+                                                            now reconstructed end-to-end
+                                                            like 27980 (was previously
+                                                            sparse ch 0-39 / no rawdump).
 
 Side mapping: opdet 0-79 = +x, 80-159 = -x.  Plots -> pdhd/pics/ (gitignored).
 """
@@ -34,9 +37,9 @@ PICS = '/nfs/data/1/xqian/toolkit-dev/toolkit/pdhd/pics'
 
 # run -> (glob of per-event opflash files, short note)
 SRC = {
-    27980: (f'{WORK}/027980_allpd*/opflash_pdhd-allpd-wct.tar.gz', 'all-PD (full -x wall)'),
-    27305: (f'{WORK}/027305_*/opflash_pdhd-wct.tar.gz',            '+x only (-x dark)'),
-    29107: (f'{WORK}/029107_*/opflash_pdhd-wct.tar.gz',            'sparse self-trig (ch 0-39, no full-stream)'),
+    27980: (f'{WORK}/027980_allpd*_nocut/opflash_pdhd-allpd-wct.tar.gz', 'all-PD (full -x wall)'),
+    27305: (f'{WORK}/027305_*/opflash_pdhd-wct.tar.gz',                  '+x only (-x dark)'),
+    29107: (f'{WORK}/029107_allpd*_nocut/opflash_pdhd-allpd-wct.tar.gz', 'all-PD (full -x wall)'),
 }
 COL = {27305: '#1f77b4', 27980: '#ff7f0e', 29107: '#2ca02c'}
 PX, MX, MIXED = '+x (0-79)', '-x (80-159)', 'mixed'
@@ -55,9 +58,9 @@ def numeric_event_dirs(pattern, run):
     rp = '%06d' % run
     out = []
     for f in sorted(glob.glob(pattern)):
-        d = f.split('/')[-2]                       # e.g. 027980_allpd32 or 027305_14
+        d = f.split('/')[-2]                       # e.g. 027980_allpd32_nocut or 027305_14
         tail = d[len(rp) + 1:]                      # after "027980_"
-        if re.fullmatch(r'(allpd)?\d+', tail):     # numeric (optionally allpd-prefixed)
+        if re.fullmatch(r'(allpd)?\d+(_nocut)?', tail):  # numeric (optionally allpd-/nocut-tagged)
             out.append(f)
     return out
 
@@ -134,8 +137,8 @@ for i, r in enumerate(runs):
     ax.text(i, tot + max(pxm) * 0.02, f'{tot:.0f}/evt\n{D[r]["nev"]} evt', ha='center', va='bottom', fontsize=9)
 ax.set_xticks(x); ax.set_xticklabels([f'run {r}\n{D[r]["note"]}' for r in runs], fontsize=8)
 ax.set_ylabel('mean flashes per event')
-ax.set_title('PDHD light (TOOLKIT WCT): flashes per event by wall\n'
-             '27980 = all-PD full -x wall; 27305 +x only; 29107 sparse (no full-stream)')
+ax.set_title('PDHD light (TOOLKIT WCT, NO-CUT): flashes per event by wall\n'
+             '27980 & 29107 = all-PD full -x wall; 27305 +x only (-x dark)')
 ax.legend(); fig.tight_layout()
 fig.savefig(f'{PICS}/light_runcmp_wct_flashes_per_event.png', dpi=110)
 print('\nwrote light_runcmp_wct_flashes_per_event.png')

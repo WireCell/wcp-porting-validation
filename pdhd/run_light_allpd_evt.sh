@@ -6,9 +6,12 @@
 # -x flashes then cover the whole 80-159 wall (both readout halves) -- the
 # product Q/L matching consumes.
 #
-# Usage: ./run_light_allpd_evt.sh [-f RAW_FILE] <run> <event>
+# Usage: ./run_light_allpd_evt.sh [-f RAW_FILE] [-s SUFFIX] <run> <event>
 #   default RAW_FILE: /nfs/data/1/xning/wirecell-working/data/hd/run<PAD>/np04hd_raw_run<PAD>_*.root
-#   Output: work/<RUN_PADDED>_allpd<EVENT>/opflash_pdhd-allpd-wct.tar.gz
+#   -s SUFFIX appends to the work-dir name (default empty); e.g. -s _nocut writes to
+#             work/<RUN_PADDED>_allpd<EVENT>_nocut so an alternate config (e.g. with the
+#             flash quality cut disabled) does not clobber the production archives.
+#   Output: work/<RUN_PADDED>_allpd<EVENT><SUFFIX>/opflash_pdhd-allpd-wct.tar.gz
 #
 # The two inputs are the decoana files produced by fullstream_to_decoana.py
 # (ch 0-120 for the snippet branch, ch 120-160 for the full stream).  If the
@@ -21,14 +24,16 @@ WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
 
 RAW_FILE=""
-while getopts "f:" opt; do
+SUFFIX=""
+while getopts "f:s:" opt; do
     case $opt in
         f) RAW_FILE="$OPTARG" ;;
-        *) echo "usage: $0 [-f RAW_FILE] <run> <event>" >&2; exit 1 ;;
+        s) SUFFIX="$OPTARG" ;;
+        *) echo "usage: $0 [-f RAW_FILE] [-s SUFFIX] <run> <event>" >&2; exit 1 ;;
     esac
 done
 shift $((OPTIND-1))
-if [ $# -lt 2 ]; then echo "usage: $0 [-f RAW_FILE] <run> <event>" >&2; exit 1; fi
+if [ $# -lt 2 ]; then echo "usage: $0 [-f RAW_FILE] [-s SUFFIX] <run> <event>" >&2; exit 1; fi
 
 RUN=$1
 EVENT=$2
@@ -40,7 +45,7 @@ if [ -z "$RAW_FILE" ] || [ ! -f "$RAW_FILE" ]; then
     echo "ERROR: no raw file for run $RUN (use -f RAW_FILE)" >&2; exit 1
 fi
 
-WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_allpd${EVENT}"
+WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_allpd${EVENT}${SUFFIX}"
 mkdir -p "$WORKDIR"
 echo "raw:    $RAW_FILE"
 echo "output: $WORKDIR"

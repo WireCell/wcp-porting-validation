@@ -146,20 +146,35 @@ artifact**, fully decoupled from the (healthy, uniform) −x detector data shown
 
 ## 6. Cross-check — run 29107
 
+Run 29107 was **re-extracted with a full 160-channel `rawdump`** (the earlier file
+had only a sparse `decoana` of ch 0–39), so it is now reconstructed end-to-end by the
+**same all-PD chain as 27980** — including the −x **full-stream** block 120–159 that
+the LArSoft `PerOpHitTree` lacks.
+
+**Toolkit (WCT-native) — all four APA blocks, all 30 events:**
+
+![29107 per-event total PE (WCT)](../pics/pd_activity_wct_29107_total_pe.png)
+![29107 per-event fired PDs (WCT)](../pics/pd_activity_wct_29107_nfired.png)
+
+Every event lights all four blocks at a flat **+x up 40/40, +x lo 40/40, −x self
+34–35/40, −x full 38/40** (2 vetoed data-quality PDs) — **no +x dropout** anywhere in
+this run, and the fired-PD count is a constant line across all 30 events. This is the
+cleanest demonstration that PD coverage is event-independent and that **both** −x APAs
+(self 80–119 and full-stream 120–159) are as uniform as in 27980. The one abnormal
+event is **evt 1015**, a **bright outlier**: in the toolkit OpHits its −x side carries
+≈ 1.49 M (self) + 2.07 M (full) ≈ **3.6 M PE** against ≈ 0.53 M on the entire +x side
+(up 0.37 M + lo 0.16 M) — strongly −x-dominated, but spread across the whole −x wall
+(no single PD dominates), i.e. a **genuine spatially-extended high-light physics
+event**, not single-channel saturation and not a detector fault.
+
+**LArSoft `PerOpHitTree` reference** (snippet PDs only, no −x full 120–159):
+
 ![29107 cross-check](../pics/pd_activity_29107_crosscheck.png)
 
-30 events, same APA structure (+x up 39/40, +x lo 40/40, −x self 34/40). **No +x
-dropout** occurs in this run, and the fired-PD count is a flat 39/40/34 line across all
-30 events — the cleanest possible demonstration that PD coverage is event-independent
-and the −x self-stream is uniform across runs. The one abnormal event is **evt 1015**, a
-**bright outlier**: −x self ≈ 1.53 M PE vs the entire +x side ≈ 0.57 M PE (+x up 0.42 M
-+ +x lo 0.14 M), i.e. **strongly −x-dominated** (~2.7×), not a proportional rise.
-Investigating the cause (as for the 27980 anomalies): the 1.53 M is **spread broadly
-across all 34 −x self PDs** — the brightest single PD carries only 5 % of it (top-3
-14 %), *more* distributed than a normal event (evt 999: top-1 10 %, top-3 25 %). So this
-is a **genuine spatially-extended high-light event** (a large shower / coincident
-cosmics illuminating the whole −x wall), **not single-channel saturation** and not a
-detector fault. It confirms the §3–5 picture is not specific to 27980: +x dropout is a
+30 events, same APA structure (+x up 39/40, +x lo 40/40, −x self 34/40). The LArSoft
+view shows the same flat fired-PD line and the same evt-1015 outlier (there −x self
+≈ 1.53 M vs the +x side ≈ 0.57 M, ~2.7×; the toolkit adds the −x full block on top of
+that). It confirms the §3–5 picture is not specific to 27980: the +x dropout is a
 27980-only DAQ event; the −x wall remains the well-behaved one.
 
 ## 7. Abnormal-event summary
@@ -167,7 +182,7 @@ detector fault. It confirms the §3–5 picture is not specific to 27980: +x dro
 | run | abnormal events | type | cause |
 |---|---|---|---|
 | 27980 | **104, 112, 120, 128** | +x readout dropout | +x self-trigger snippet stream not recorded (DAQ), localized to the +x upper APA over a 4-event block; trigger metadata identical, −x unaffected |
-| 29107 | **1015** | bright outlier | very high-PE, −x-dominated (−x self 1.53 M vs +x 0.57 M, ~2.7×) physics event; the −x light is spread across all 34 −x PDs (brightest = 5 %), so spatially-extended real light, not single-channel saturation or a detector fault |
+| 29107 | **1015** | bright outlier | very high-PE, −x-dominated physics event; toolkit OpHits −x self 1.49 M + −x full 2.07 M ≈ 3.6 M vs +x 0.53 M; the light is spread across the whole −x wall (no single PD dominates), so spatially-extended real light, not single-channel saturation or a detector fault |
 
 ## 8. −x full-stream reconstruction (event dependence)
 
@@ -205,7 +220,7 @@ see `pdhd-fullstream-light-reco.md` §4.)
 
 ```
 python pdhd/pd_plot/pd_activity_wct.py # TOOLKIT WCT OpHits (all-PD, incl -x full 120-159)
-# -> pd_activity_wct_27980_{total_pe,nfired}.png  (the primary §3 plots)
+# -> pd_activity_wct_{27980,29107}_{total_pe,nfired}.png  (the §3 and §6 toolkit plots)
 
 python pdhd/pd_plot/pd_activity.py     # LArSoft reference: 27980 + 29107 (cross-check)
 # prints the per-event table + dropout diagnosis; writes pd_activity_*.png to pdhd/pics/
@@ -228,5 +243,5 @@ python pd_plot/fullstream_compare.py 27980 8 16 24 104 120 152
 | +x-dropout (recorded channels, nsamples) | `rawdump/raw_waveform` (event, opch, nsamples) |
 | trigger metadata | `trigoff/trigger_offset` (tc_type, offset_us) |
 | run 27980 light ROOT | `…/data/hd/run027980/np04hd_raw_run027980_0000_…_final.root` |
-| run 29107 light ROOT | `…/data/hd/run029107/np04hd_raw_run029107_0004_…_final.root` |
-| analysis + plots | `pdhd/pd_plot/pd_activity.py` |
+| run 29107 light ROOT | `…/data/hd/run029107/np04hd_raw_run029107_0004_…_final.root` (re-extracted, full 160-ch `rawdump`; → `/nfs/data/1/jjo/data/PDHD/…`) |
+| analysis + plots | `pdhd/pd_plot/pd_activity.py` (LArSoft) + `pd_activity_wct.py` (toolkit WCT, incl −x full 120–159) |

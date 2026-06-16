@@ -23,12 +23,14 @@ LIGHT_DIR="$PDHD_DIR/input_data_7p8_new_coh_grouping"
 INPUT_FILE=""
 MODE="both"
 DAQ_EVT=""   # DAQ event number in the ROOT file; defaults to the positional <evt>
-while getopts "f:m:e:" opt; do
+SUFFIX=""    # appended to the work-dir name (e.g. -s _nocut) to avoid clobbering production
+while getopts "f:m:e:s:" opt; do
     case $opt in
         f) INPUT_FILE="$OPTARG" ;;
         m) MODE="$OPTARG" ;;
         e) DAQ_EVT="$OPTARG" ;;
-        *) echo "usage: $0 [-f FILE] [-m convert|reco|both] [-e DAQ_EVT] <run> <evt>" >&2; exit 1 ;;
+        s) SUFFIX="$OPTARG" ;;
+        *) echo "usage: $0 [-f FILE] [-m convert|reco|both] [-e DAQ_EVT] [-s SUFFIX] <run> <evt>" >&2; exit 1 ;;
     esac
 done
 shift $((OPTIND-1))
@@ -57,7 +59,7 @@ if [ -z "$INPUT_FILE" ] || [ ! -f "$INPUT_FILE" ]; then
     exit 1
 fi
 
-WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}"
+WORKDIR="$PDHD_DIR/work/${RUN_PADDED}_${EVT}${SUFFIX}"
 mkdir -p "$WORKDIR"
 
 echo "input:  $INPUT_FILE"

@@ -4,13 +4,17 @@ toolkit analogue of pd_activity.py (which reads the LArSoft PerOpHitTree and
 therefore CANNOT see the -x full-stream PDs 120-159).
 
 Source: the per-event all-PD opflash files
-  work/027980_allpd<evt>/opflash_pdhd-allpd-wct.tar.gz
+  work/0<run>_allpd<evt>/opflash_pdhd-allpd-wct.tar.gz
 whose "ophits" tensor [nhit,9] carries every OpHit (col 0 = channel, col 5 = PE)
 across all 160 PDs.  We bin by the four 40-PD APA blocks and plot, per event, the
 total PE and the number of fired PDs per block -- now including the -x full
-block that the LArSoft OpHit tree lacks.
+block that the LArSoft OpHit tree lacks.  (OpHits are pre-flash, so this view is
+independent of the OpFlashFinder quality cut.)
 
-Plots -> pdhd/pics/ : pd_activity_wct_27980_total_pe.png, _nfired.png
+Runs 27980 and 29107 (both re-extracted with a full 160-ch rawdump and processed
+by the all-PD chain).
+
+Plots -> pdhd/pics/ : pd_activity_wct_<run>_total_pe.png, _nfired.png
 """
 import glob, io, re, tarfile
 import numpy as np
@@ -48,8 +52,11 @@ def ophits(path):
 
 
 def load(run):
-    files = sorted(glob.glob(f'{WORK}/{run:06d}_allpd*/opflash_pdhd-allpd-wct.tar.gz'),
-                   key=lambda p: int(re.search(r'_allpd(\d+)/', p).group(1)))
+    # standard (cut-on) all-PD dirs only; exclude _nocut/other-suffixed variants.
+    rp = '%06d' % run
+    files = [p for p in glob.glob(f'{WORK}/{rp}_allpd*/opflash_pdhd-allpd-wct.tar.gz')
+             if re.fullmatch(rf'{rp}_allpd\d+', p.split('/')[-2])]
+    files = sorted(files, key=lambda p: int(re.search(r'_allpd(\d+)/', p).group(1)))
     evs = [int(re.search(r'_allpd(\d+)/', p).group(1)) for p in files]
     out = {'events': np.array(evs)}
     for lbl, lo, hi, _ in BLOCKS:
@@ -64,37 +71,42 @@ def load(run):
     return out
 
 
-d = load(27980)
-x = np.arange(len(d['events']))
-xt = [str(e) for e in d['events']]
+def make_plots(run):
+    d = load(run)
+    x = np.arange(len(d['events']))
+    xt = [str(e) for e in d['events']]
 
-# total PE per event by block
-fig, ax = plt.subplots(figsize=(13, 5))
-for lbl, lo, hi, col in BLOCKS:
-    ax.plot(x, d[lbl]['pe'], 'o-', color=col, lw=1.5, ms=4, label=lbl)
-ax.set_yscale('log'); ax.set_xticks(x); ax.set_xticklabels(xt, rotation=90, fontsize=7)
-ax.set_xlabel('event'); ax.set_ylabel('total PE in block (log)')
-ax.set_title('PDHD run 27980 per-event total PE by APA block (TOOLKIT WCT OpHits)\n'
-             'now includes the -x full-stream block (120-159) absent from the LArSoft OpHit tree')
-ax.legend(); fig.tight_layout()
-fig.savefig(f'{PICS}/pd_activity_wct_27980_total_pe.png', dpi=110)
-print('wrote pd_activity_wct_27980_total_pe.png')
+    # total PE per event by block
+    fig, ax = plt.subplots(figsize=(13, 5))
+    for lbl, lo, hi, col in BLOCKS:
+        ax.plot(x, d[lbl]['pe'], 'o-', color=col, lw=1.5, ms=4, label=lbl)
+    ax.set_yscale('log'); ax.set_xticks(x); ax.set_xticklabels(xt, rotation=90, fontsize=7)
+    ax.set_xlabel('event'); ax.set_ylabel('total PE in block (log)')
+    ax.set_title(f'PDHD run {run} per-event total PE by APA block (TOOLKIT WCT OpHits)\n'
+                 'now includes the -x full-stream block (120-159) absent from the LArSoft OpHit tree')
+    ax.legend(); fig.tight_layout()
+    fig.savefig(f'{PICS}/pd_activity_wct_{run}_total_pe.png', dpi=110)
+    print(f'wrote pd_activity_wct_{run}_total_pe.png')
 
-# number of fired PDs per event by block
-fig, ax = plt.subplots(figsize=(13, 5))
-for lbl, lo, hi, col in BLOCKS:
-    ax.plot(x, d[lbl]['nfired'], 'o-', color=col, lw=1.5, ms=4, label=f'{lbl} (max 40)')
-ax.set_xticks(x); ax.set_xticklabels(xt, rotation=90, fontsize=7)
-ax.set_xlabel('event'); ax.set_ylabel('# fired PDs in block')
-ax.axhline(40, color='gray', ls=':', lw=1)
-ax.set_title('PDHD run 27980 per-event fired-PD count by APA block (TOOLKIT WCT OpHits)\n'
-             '-x full (120-159) is uniformly active -- the -x wall is not anomalous')
-ax.legend(); fig.tight_layout()
-fig.savefig(f'{PICS}/pd_activity_wct_27980_nfired.png', dpi=110)
-print('wrote pd_activity_wct_27980_nfired.png')
+    # number of fired PDs per event by block
+    fig, ax = plt.subplots(figsize=(13, 5))
+    for lbl, lo, hi, col in BLOCKS:
+        ax.plot(x, d[lbl]['nfired'], 'o-', color=col, lw=1.5, ms=4, label=f'{lbl} (max 40)')
+    ax.set_xticks(x); ax.set_xticklabels(xt, rotation=90, fontsize=7)
+    ax.set_xlabel('event'); ax.set_ylabel('# fired PDs in block')
+    ax.axhline(40, color='gray', ls=':', lw=1)
+    ax.set_title(f'PDHD run {run} per-event fired-PD count by APA block (TOOLKIT WCT OpHits)\n'
+                 '-x full (120-159) is uniformly active -- the -x wall is not anomalous')
+    ax.legend(); fig.tight_layout()
+    fig.savefig(f'{PICS}/pd_activity_wct_{run}_nfired.png', dpi=110)
+    print(f'wrote pd_activity_wct_{run}_nfired.png')
 
-# brief table
-print(f"\n{'evt':>5} " + ' '.join(f'{lbl.split()[0]+lbl.split()[1]:>10}' for lbl, *_ in BLOCKS))
-for i, e in enumerate(d['events']):
-    print(f'{e:>5} ' + ' '.join(f"{d[lbl]['pe'][i]:7.0f}/{d[lbl]['nfired'][i]:02d}" for lbl, *_ in BLOCKS))
+    # brief table
+    print(f"\nrun {run}: {'evt':>5} " + ' '.join(f'{lbl.split()[0]+lbl.split()[1]:>10}' for lbl, *_ in BLOCKS))
+    for i, e in enumerate(d['events']):
+        print(f'{e:>5} ' + ' '.join(f"{d[lbl]['pe'][i]:7.0f}/{d[lbl]['nfired'][i]:02d}" for lbl, *_ in BLOCKS))
+
+
+for run in (27980, 29107):
+    make_plots(run)
 print('DONE.')
