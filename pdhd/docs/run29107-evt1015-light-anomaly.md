@@ -173,12 +173,32 @@ plane dumps locally intense light (∝ 1/r²) that overflows the PD range, while
 ionization (charge) it deposits stays ordinary and unsaturated. Hence huge light, normal
 charge.
 
-## 10. Known residual / follow-up
+## 10. Per-PD "fired" threshold for the flash multiplicity cut (`min_fired_pe`)
 
-- **Flash count** for this event stays ~3.7× a normal event after the fix (789 vs ~210),
+The `min_fired_pds` quality cut counted a PD as "fired" if its PE ≥ `refine_fired_pe` = **0.5
+PE** — sub-single-photoelectron (noise level). A new `OpFlashFinder` knob **`min_fired_pe`**
+(member default −1 = use `refine_fired_pe` ⇒ bit-identical; PDHD sets **1.0**) raises that to
+one detected photoelectron, so a PD must really fire to count. It is decoupled from the
+refinement-merge logic, which still uses `refine_fired_pe`.
+
+This was motivated by evt 1015's high flash count, but a scan showed it is a **general quality
+improvement, not a 1015 fix**: the per-PD PE spectrum is a smoothly falling continuum (no
+noise/signal valley) and raising the threshold tightens *normal* events more than 1015 (whose
+extra flashes have a *higher* median 5th-PD PE, 3.2 vs 2.1 — i.e. genuine activity, §6). At
+1.0 PE the effect is small: evt 1015 **787 → 768** flashes (−2 %), normal events ≈ −7 %
+(1047 237→220, 1031 207→191, 999 240→226, 1191 223→209), matching the post-hoc scan exactly.
+
+> Flash counts above are **after** all three cuts: `min_total_pe ≥ 20`, `min_fired_pds ≥ 5`,
+> and now per-PD `min_fired_pe ≥ 1.0`.
+
+## 11. Known residual / follow-up
+
+- **Flash count** for this event stays ~3.5× a normal event after the fixes (768 vs ~210),
   driven by spread-out small hits (post-saturation baseline recovery on the saturated
   channels + a genuinely busier −x wall), which are not over-integration artifacts. Reducing
   it would need a recovery-window or baseline-aware veto that risks removing real light — left
   as follow-up.
 - **Residual −x snippet PE** (0.39 M, ~7× normal) is the same post-saturation activity, not
   clipping; left in place for the same reason.
+- A **mean-PE-per-fired-PD** cut (the nPD–totPE diagonal in the 2D distribution) would be a
+  sharper signal/noise discriminator than the flat per-PD floor, if ever needed.
