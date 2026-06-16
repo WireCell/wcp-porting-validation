@@ -38,6 +38,7 @@ cover 120–159 (FBK 2024 template).
 rawdump/raw_waveform (120-159, 343808-sample stream)
   └─ fullstream_to_decoana.py  →  decoana-format ROOT (one long TH1D/channel)
        └─ PDHDOpWaveformSource  →  OpDecon (samples=343808, FIXED filter)
+            →  OpRoi (high-pass ROIs → zero outside + per-ROI linear baseline; §7)
             →  OpHitFinder (SlidingWindow, raised threshold)  →  OpFlashFinder
                  →  opflash_pdhd-fullstream-wct.tar.gz
 ```
@@ -246,6 +247,79 @@ high-duty within the event; escalate to windowed only if a future event shows in
 *wander*. A global Wiener/post-filter rework is *not* indicated — 38/40 channels deconvolve
 cleanly.
 
+## 7. ROI identification + ROI-based decon cleaning (`OpRoi`)
+
+The robust baseline (§6.1) removes the per-channel DC offset and vetoes the ringing
+channel, but it does not *clean the waveform*: between the sparse scintillation pulses
+the continuous stream still carries its full noise and any slow baseline wander, and the
+pulses sit on whatever local pedestal the decon left. The next step builds **ROIs** and
+uses them to clean the deconvolved waveform fed to `OpHitFinder`, mirroring the WCT
+**charge** signal-processing **induction** ROI chain (`sigproc/src/ROI_formation.cxx`:
+high-pass `LfFilter` → threshold ROI → padding → per-ROI linear endpoint-zeroing).
+
+New component **`OpRoi`** (`flash/src/OpRoi.cxx`, an `IFrameFilter`) consumes the `decon`
+traces and emits cleaned `decon_roi` traces. Per channel:
+
+1. **High-pass** the decon with `H(f) = 1 − exp(−(f/τ)²)` — the same functional form as the
+   sigproc induction `LfFilter` (`util/src/Response.cxx`). Scintillation is < 20 µs, so a
+   corner `τ = 0.05 MHz` (≈ 1/20 µs) passes the pulses and removes slower baseline wander.
+   This is the **ROI-finding** waveform `h`.
+2. **Baseline**: subtract `median(h)`.
+3. **Noise + veto**: `rms = 1.4826·MAD(h)`; if `rms > veto_sigma` (0.1 decon) the channel is
+   ringing and is **zeroed entirely** (carries over the §6.1 opch-147 veto).
+4. **ROIs**: contiguous runs of `h > roi_nsigma·rms` (`roi_nsigma = 5` → ~0.10 decon at the
+   ~0.02 clean noise floor: low, but above the electronic noise and ≈ the 0.11 OpHit
+   threshold), each padded by `(roi_pad_pre, roi_pad_post) = (50, 700)` ticks (≈ 0.8 µs
+   before, ≈ 11 µs after — long enough that the ROI end lands on true baseline past the
+   slow scintillation tail) and merged.
+5. **Apply to the ORIGINAL decon**: zero everything outside ROIs; per ROI `[s,e]` subtract the
+   line through `(s, d[s])`, `(e, d[e])` so the ROI starts and ends exactly at zero (linear
+   baseline correction).
+
+All five are jsonnet knobs; only the full-stream chain instantiates `OpRoi` (between `OpDecon`
+and `OpHitFinder`), so every other config is untouched.
+
+**Supersede, not stack.** `OpRoi` owns DC removal (per-ROI baseline) and the ringing veto, so
+this chain *supersedes* `robust_baseline`'s DC/ringing role. But zeroing outside ROIs collapses
+*any* whole-record pedestal estimator (>50 % of samples are exactly 0 → median = MAD = 0 →
+`ped_sigma = 0` → the OpHit start gate drops to its absolute floor and the finder goes
+noise-blind). The fix is a new `OpHitFinder` knob **`nonzero_baseline`** (default off,
+bit-identical): with it on, the robust median/MAD are taken over the **non-zero (in-ROI)**
+samples only, so `ped_sigma` is the real in-ROI noise. The full-stream chain therefore runs
+`ophit(intag='decon_roi', robust_baseline=true, nonzero_baseline=true)`.
+
+![C++ OpRoi output (decon vs decon_roi)](../pics/pd_fullstream_27980_evt8_roi_cpp.png)
+
+**Validated (the actual C++ chain).** Prototyped first in NumPy
+(`pd_plot/fullstream_roi_proto.py`), then implemented and run end-to-end:
+
+- **C++ ↔ NumPy closure** (evt 8, decon_roi vs the prototype on the same decon): worst
+  per-channel correlation **0.99993**, differences ≤ 0.1 decon (vs 42 peak), confined to ROIs
+  whose threshold boundary shifted by ~1 sample under FFTW-vs-NumPy rounding (which recomputes
+  that one ROI's linear baseline ramp) — a faithful port, not a logic difference.
+- **Cleaning** (evt 8): opch 147 (ringing) **fully zeroed**; opch 121 DC offset removed; opch
+  123's ~15 µs slow scintillation tail **shape preserved** (peak 39.7 → 39.7); 68–77 % of each
+  clean channel's record (the inter-pulse baseline) zeroed. The endpoint-zeroing has an
+  inherent, quantified cost: where the decon has a *negative* pre-pulse undershoot, forcing the
+  ROI endpoints to zero subtracts a small rising baseline ramp that slightly **deepens** that
+  pre-existing undershoot (~0.1 decon) and trims a few PE from the tail (NumPy ACCEPT-1:
+  undershoot −0.33 → −0.42, tail −2.5…−5.5 PE across evts 8/16/152) — the price of forcing
+  ROI start/end exactly to zero, not a shape distortion of the pulse.
+- **Flashes** (4 events, fair 3-way on the same converted inputs):
+
+  | evt | head (no cleaning) | `robust_baseline` | `OpRoi` + `nonzero_baseline` |
+  |---|---|---|---|
+  | 8   |  463 / 96 k PE | 463 / 96 k | **434 / 86 k** |
+  | 16  | 1810 / 2.4 M PE | 516 / 76 k | **541 / 83 k** |
+  | 152 | 1640 / 243 k PE | 494 / 77 k | **521 / 89 k** |
+  | 24  | 1826 / 469 k PE | 420 / 87 k | **444 / 72 k** |
+
+  Both robust and OpRoi tame the head-method runaway (evt 16: 2.4 M → ~80 k PE). Against
+  `robust_baseline` the flash count is **comparable (±6 %)**; the added value is the cleaning
+  itself — outside-ROI zeroing and a per-ROI linear baseline give baseline-corrected pulses
+  (start/end exactly at zero) intended for the downstream PE and Q-L matching, which
+  `robust_baseline` does not provide. (The downstream effect itself was not measured here.)
+
 ## Reproduce
 
 ```
@@ -256,11 +330,14 @@ python pd_plot/fullstream_compare.py 27980 8 # coincidence figure -> pics/, prin
 python pd_plot/fullstream_diagnose.py 27980 8 # §6 diagnosis + waveform figures -> pics/
 python pd_plot/fullstream_baseline_proto.py 27980 8  # §6.1 robust-baseline OpHit prototype
                                              #   (NumPy n-sweep; -> pics/..._baseline_proto.png)
+python pd_plot/fullstream_roi_proto.py 27980 8  # §7 ROI cleaning prototype + acceptance
+                                             #   checks (-> pics/..._roi_proto.png)
 ```
 
 `run_light_fullstream_evt.sh` runs the converter, the full-stream chain
-(`wct-light-fullstream-reco.jsonnet`, `OpDecon samples=343808`, fixed filter,
-`hit_threshold=11`, `robust_baseline=true` — §6.1), and the self-trigger-from-raw baseline
+(`wct-light-fullstream-reco.jsonnet`, `OpDecon samples=343808`, fixed filter, `OpRoi` ROI
+cleaning — §7, `OpHitFinder hit_threshold=11`, `robust_baseline=true`, `nonzero_baseline=true`,
+reading the `decon_roi` traces), and the self-trigger-from-raw baseline
 (`wct-light-reco.jsonnet`, `robust_baseline` default off → head pedestal).
 
 ---
@@ -273,6 +350,7 @@ python pd_plot/fullstream_baseline_proto.py 27980 8  # §6.1 robust-baseline OpH
 | trigger (rd_timestamp, tc) | `trigoff/trigger_offset` |
 | SPE template / geometry | `pgrapher/experiment/pdhd/pdhd-spe-templates.json` (FBK idx 0), `pdhd-opdet-geom.json` |
 | fixed Wiener filter | `flash/src/OpDecon.cxx` `fixed_snr` (R = S2/N²), `flash.jsonnet` `opdecon`/`ophit` |
+| ROI cleaning (§7) | `flash/src/OpRoi.cxx` (HPF `1−exp(−(f/τ)²)` + ROI + per-ROI linear baseline), `flash.jsonnet` `oproi`; `OpHitFinder` `nonzero_baseline`; proto `pd_plot/fullstream_roi_proto.py` |
 | full-stream chain | `pdhd/wct-light-fullstream-reco.jsonnet`, `pdhd/run_light_fullstream_evt.sh` |
 | converter | `pdhd/pd_plot/fullstream_to_decoana.py` (raw → decoana layout, tbin from timestamp) |
 | comparison + plots | `pdhd/pd_plot/fullstream_compare.py` |

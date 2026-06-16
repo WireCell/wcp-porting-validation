@@ -39,18 +39,25 @@ function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=
   local source = flash.opwaveform_source(input_file, run_n, evt_n);
   local decon = if snr > 0 then flash.opdecon(samples=FULLSTREAM_SAMPLES, fixed_snr=snr, spe_file=spe_file)
                 else flash.opdecon(samples=FULLSTREAM_SAMPLES, spe_file=spe_file);
+  // ROI cleaning of the decon ("decon" -> "decon_roi"): high-pass to find ROIs
+  // above ~5 sigma (padded), then on the ORIGINAL decon zero everything outside
+  // ROIs and linear-baseline each ROI to start/end at zero; ringing channels are
+  // zeroed.  This SUPERSEDES the robust_baseline DC/ringing handling below (it
+  // owns both); see pdhd-fullstream-light-reco.md.
+  local roi = flash.oproi();
   // Raised hit threshold (~5 sigma of the decon noise floor): the full-stream
   // scans 5.5 ms continuously, so a snippet-mode 3.0 threshold (~1.3 sigma here)
   // would integrate noise into ~thousands of spurious flashes.
-  // robust_baseline: per-channel median/MAD pedestal (the head-pedestal is
-  // meaningless on the continuous stream) -- removes the opch 121 DC offset and
-  // vetoes the opch 147 ringing channel that otherwise over-produce flashes
-  // (pdhd-fullstream-light-reco.md s6).  Self-trigger snippets keep the head
-  // method (wct-light-reco.jsonnet, robust_baseline default false).
-  local hit = flash.ophit(hit_threshold=11.0, robust_baseline=true);
+  // The OpHit finder reads the ROI-cleaned 'decon_roi' traces.  robust_baseline
+  // with nonzero_baseline: take the median/MAD over the non-zero (in-ROI)
+  // samples only -- the ROI chain zeroes the inter-pulse record, so a
+  // whole-waveform MAD would collapse to 0 and the finder would go noise-blind.
+  // (Self-trigger snippets keep the head method, wct-light-reco.jsonnet.)
+  local hit = flash.ophit(hit_threshold=11.0, robust_baseline=true,
+                          intag='decon_roi', nonzero_baseline=true);
   local opflash_finder = flash.opflash_finder(offset_us=off_us);
   local wf_sink = flash.waveform_sink('%s/light-frames-fullstream-wct.tar.bz2' % output_dir,
-                                      tags=['raw', 'decon'], name='fswct');
+                                      tags=['raw', 'decon', 'decon_roi'], name='fswct');
   local fl_sink = flash.opflash_sink('%s/opflash_pdhd-fullstream-wct.tar.gz' % output_dir, name='fswct');
 
   local fanout = g.pnode({
@@ -61,11 +68,12 @@ function(input_file, output_dir='.', run=27980, event=8, offset_us=0, fixed_snr=
 
   local graph = g.intern(
     innodes=[source],
-    centernodes=[decon, fanout, hit, opflash_finder],
+    centernodes=[decon, roi, fanout, hit, opflash_finder],
     outnodes=[wf_sink, fl_sink],
     edges=[
       g.edge(source, decon),
-      g.edge(decon, fanout),
+      g.edge(decon, roi),
+      g.edge(roi, fanout),
       g.edge(fanout, wf_sink, 0, 0),
       g.edge(fanout, hit, 1, 0),
       g.edge(hit, opflash_finder),
