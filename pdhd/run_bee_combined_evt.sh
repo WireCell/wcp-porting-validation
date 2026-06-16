@@ -12,11 +12,16 @@
 # Clustering + dead instances are taken from work/<run>_<evt>/mabc-all-apa.zip,
 # so run ./run_clus_evt.sh <run> all first.
 #
-# Usage: ./run_bee_combined_evt.sh [-e evt,evt,...] <run> [subrun]
+# Usage: ./run_bee_combined_evt.sh [-e evt,evt,...] [-noimg] <run> [subrun]
 #        ./run_bee_combined_evt.sh            # list available runs
 #
 # -e: restrict the link to a comma-separated subset of event indices (in the
 #     order they appear); default (no -e) uploads every discovered event.
+# -noimg: skip the pre-clustering imaging-group02/13 instances (the only ones
+#     built with wirecell-img bee-blobs).  The clustered points, dead area and
+#     optical (op) instances are dumped by MultiAlgBlobClustering and just
+#     copied from mabc-all-apa.zip, so -noimg builds in seconds with the full
+#     clustering + flash view (drops only the raw imaging-stage blobs).
 
 set -e
 
@@ -24,11 +29,13 @@ PDHD_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$PDHD_DIR/_runlib.sh"
 
 EVT_SUBSET=""
+NOIMG=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -e) EVT_SUBSET="$2"; shift 2 ;;
         -e*) EVT_SUBSET="${1#-e}"; shift ;;
+        -noimg|--noimg) NOIMG=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -106,6 +113,9 @@ for _e in "${_events[@]}"; do
     mkdir -p "data/$_idx"
 
     # --- imaging instances (active blobs, merged by drift side) ---
+    # Skipped with -noimg: these are the only instances rebuilt via wirecell-img
+    # (MABC does not dump the pre-clustering imaging stage).
+    if [ "$NOIMG" != 1 ]; then
     for _spec in "imaging-group02 0 0 2" "imaging-group13 1 1 3"; do
         # shellcheck disable=SC2086
         set -- $_spec
@@ -123,6 +133,7 @@ for _e in "${_events[@]}"; do
             -o "data/${_idx}/${_idx}-${_gname}.json" \
             "${_files[@]}"
     done
+    fi
 
     # --- clustering + dead instances (from mabc-all-apa.zip, re-indexed) ---
     _mabc="$PDHD_DIR/work/${RUN_PADDED}_${_e}/mabc-all-apa.zip"

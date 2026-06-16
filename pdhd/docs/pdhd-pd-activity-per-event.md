@@ -177,6 +177,19 @@ view shows the same flat fired-PD line and the same evt-1015 outlier (there −x
 that). It confirms the §3–5 picture is not specific to 27980: the +x dropout is a
 27980-only DAQ event; the −x wall remains the well-behaved one.
 
+**Charge–light Q/L cross-check (all 30 events).** Running the full all-PD charge+light
+chain end-to-end (clustering + `QLMatching -calib -op` for the `ql_scan` viewer and a
+combined Bee link) **corroborates evt 1015 as the single problematic event** from the
+charge side too: it carries **454 reconstructed flashes** (vs ~100–160 for the other 29)
+and a **1.33 M-PE** brightest flash (vs ~20–48 k), and is the only event whose clustering
+blows up in time/memory (≈15 min / ≈12 GB vs ~1 min / ~1.3 GB) — see
+[`pdhd-pipeline-resource-profile.md`](pdhd-pipeline-resource-profile.md). The uniform
+~50 % flash-match rate and the ~50–75 unmatched bright flashes seen in **every** event are
+*not* per-event anomalies — they reflect the still-placeholder absolute light
+normalization (`QtoL`×`VUVEfficiency`, see
+[`qlmatching-chain.md`](qlmatching-chain.md) §3), which under-predicts many real cosmic
+flashes uniformly. No new problematic event emerges beyond evt 1015.
+
 ## 7. Abnormal-event summary
 
 | run | abnormal events | type | cause |
