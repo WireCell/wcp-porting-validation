@@ -37,7 +37,7 @@ Every stage is one `MultiAlgBlobClustering` (MABC) node executing a configured
 | a0f0pA / a2f0pA | active face, drift −x: FV_x [−357.985, −2.54] cm |
 | a1f1pA / a3f1pA | active face, drift +x: FV_x [+2.54, +357.985] cm |
 | a0f1pA, a1f0pA, ... | wall-facing (degenerate) faces: FV_x pinned at ±357.985 cm |
-| per-face params | `drift_speed` 1.580 mm/µs (calibrated, see below; was 1.585, 1.565, 1.6), `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
+| per-face params | `drift_speed` 1.576 mm/µs (calibrated, see below; was 1.580, 1.585, 1.565, 1.6), `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
 
 `detector_volumes(anodes, face)` builds the per-stage `DetectorVolumes`; the
 `face` argument scopes the instance NAME (the per-face and per-drift-group
@@ -190,7 +190,7 @@ imaging-stage `imaging-group02/13` instances (wirecell-img `bee-blobs` on the
 
 There is **no per-event T0 determination for PDHD**; the chain now uses
 `time_offset = 0` everywhere, so a blob's x is its apparent drift position in
-the readout frame (250 µs ≡ 40 cm at 1.580 mm/µs):
+the readout frame (250 µs ≡ 39.4 cm at 1.576 mm/µs):
 
 1. `cfg/pgrapher/experiment/pdhd/clus.jsonnet` — `time_offset` function
    parameter (default **0**; was −250 µs = readout-tick0-relative-to-trigger
@@ -273,8 +273,8 @@ U-vs-W reference, ~0.98 cm, is a sub-dominant ~0.3 %).
 **Config change.**  `drift_speed` was first set to **1.565 mm/µs** — the **midpoint of
 the [1.55, 1.57] two-bias bracket**, equal to the Garfield field response
 (`dune-garfield-1d565`) and LArSoft/Walkowiak at 500 V/cm, and consistent with the
-PDVD data (~1.57).  It was later **refined to 1.580 mm/µs** by the cathode-end
-registration below (via an intermediate 1.585); the two config sites are:
+PDVD data (~1.57).  It was later **refined to 1.576 mm/µs** by the cathode-end
+registration below (via intermediates 1.585 then 1.580); the two config sites are:
 
 * `cfg/pgrapher/experiment/pdhd/params.jsonnet` — PDHD-only `lar.drift_speed` override
   (feeds `img.jsonnet`, `qlmatching.jsonnet`, sim drift via `params.lar.drift_speed`).
@@ -318,7 +318,7 @@ Adopted.  (PDVD, with ~50 un-fragmented crossers, closes more tightly, ~0.4 % fr
 single run — see pdvd/docs/clus-workflow.md.)  Reducing the PDHD A-C-crosser
 fragmentation under the current clustering would tighten the per-TPC agreement further.
 
-## Cathode-end registration → 1.580 + cathode window (run 29107 evt 983)
+## Cathode-end registration → 1.576 + cathode window (run 29107 evt 983)
 
 The A-C **x-span** method above is dominated by crosser fragmentation and weights both
 endpoints equally, so it under-constrains the **cathode end** specifically.  A cleaner,
@@ -346,21 +346,32 @@ to pull the over-shooters in just pushes clus 96 out the other (anode) side.  Th
 spread of the cathode ends is the documented **±1.5–2 cm degenerate t0/velocity/SCE drift
 residual** (`project_cathode_crossing_offset`), which a *global* velocity cannot remove.
 
-So the calibration splits across two levers:
+So the calibration splits across three levers.  Because v only **slides the fixed ~3.5 cm
+spread** along the cathode coordinate, the design choice is *where to put it*: 1.576 places
+the most-overshooting crosser **just inside** the cathode, so containment reverts to ~the
+C++ default and the irreducible undershoot residual lands entirely on the benign flag-only
+window.
 
-- **`drift_speed = 1.580 mm/µs`** — centers the four (mean per-cluster v = 1.579), so the
-  extreme pair sits symmetric at ±1.75 cm rather than biased positive.  This is below the
-  over-shooting 1.585 and back toward the A-C-span bracket [1.55, 1.57] / fixed point
-  (~1.561); the two methods now agree to ~1 %.
-- **`cathode_ext1 = 2.5 cm`** (QLMatching, `pdhd/qlmatching.jsonnet`; C++ default 1.2 cm)
-  — the containment / `flag_at_x_boundary` window edge *past* the cathode.  At 1.580 the
-  genuine crossers end up to +1.75 cm past the cathode, so the default 1.2 cm dropped
-  clus 44 / clus 62 as *uncontained* (no bundle emitted → unselectable).  2.5 cm ≈ the
-  drift residual + ~0.75 cm margin restores them without over-relaxing the cut.
+- **`drift_speed = 1.576 mm/µs`** — puts the top crosser (clus 62) at +0.84 cm, *inside*
+  the cathode, rather than past it.  This biases global drift-x ~−0.6 cm vs the 4-crosser
+  mean (1.579), well within the ±2 cm degenerate band, and stays in the A-C-span bracket
+  [1.55, 1.57] / fixed point (~1.561).  (Earlier passes: 1.585 over-shot the cathode;
+  1.580 centred the mean but still left clus 44 / clus 62 at +1.2 / +1.7 cm past it.)
+- **`cathode_ext1 = 1.5 cm`** (QLMatching, `pdhd/qlmatching.jsonnet`; C++ default 1.2 cm)
+  — the containment / PE-inclusion edge *past* the cathode (`QLMatching.cxx:2474,1082`).
+  Since 1.576 keeps every genuine crosser ≤ +0.84 cm, this reverts to ~the C++ default
+  +0.3 cm noise cushion (clus 62 keeps 0.66 cm margin), vs the 2.5 cm needed at 1.580.
+- **`cathode_ext2 = −3.0 cm`** (QLMatching; C++ default −2.0 cm) — the **flag-only** lower
+  edge for `flag_at_x_boundary` (`QLMatching.cxx:2506`; touches neither containment nor PE
+  inclusion).  Lowering v pushes the undershoot residual down (clus 96 → −2.61 cm), so this
+  benign window widens to −3.0 cm (0.4 cm margin) to keep flagging it.  Widening it only
+  labels more near-cathode ends as boundary crossers; it cannot drop a bundle.
 
-Verified by reprocessing evt 983 at 1.580 / 2.5 cm: all four are now
-`contained = True, at_x_boundary = True` with a bundle emitted (cathode ends −0.21 /
-−1.73 / +1.22 / +1.74 cm).  n = 4 still — widen the sample to firm up the velocity.
+Verified by reprocessing evt 983 at 1.576 / ext1 1.5 / ext2 −3.0: all four are now
+`contained = True, at_x_boundary = True` with a bundle emitted (cathode ends −1.11 /
+−2.62 / +0.33 / +0.84 cm), and **3 of 4 now auto-match** (clus 96 / 44 / 62; only Clus 23
+stays contained-but-not-auto — a separate matching-quality question).  n = 4 still — widen
+the sample to firm up the velocity.
 
 The viewer const `pdhd/img_plot/preprocess_event.py` `DRIFT_MM_PER_NS`, the img_viewer
 `PTS_X_HALF`, and the Bee3 cfg `wire-cell-bee3/.../experiment.js` `driftVelocity`

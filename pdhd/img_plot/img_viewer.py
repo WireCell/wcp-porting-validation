@@ -37,10 +37,10 @@ from bokeh.plotting import figure
 TICK_NS = 500.0
 BLOB_PAD = 20.0   # cm padding around the displayed blob in the 2D view
 # Stepped sampling points sit exactly at x = time2drift(slice start), one x per
-# slice, 0.316 cm apart (4 ticks x 500 ns x 1.580 mm/us).  Match a point to a
+# slice, 0.315 cm apart (4 ticks x 500 ns x 1.576 mm/us).  Match a point to a
 # slice by |pts_x - x_start| < half that spacing (an exact-boundary window test
 # drops them on float noise).
-PTS_X_HALF = 0.158
+PTS_X_HALF = 0.1576
 # A sliver blob's center-fallback point can land just outside the drawn
 # polygon (the sampler's re-derived ray-grid corners differ slightly from the
 # file's corners for degenerate slivers; observed offsets up to ~0.42 cm), so

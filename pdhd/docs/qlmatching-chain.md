@@ -230,14 +230,16 @@ reject_overpred: true,  overpred_total_ratio: 5.0,  overpred_maxch_ratio: 25.0,
   applied. The box is the **two-APA union** from `compute_geometry` (the same box that
   feeds the `at_x_boundary`/`two_boundary` flag walk — see *Combined two-APA box*
   above), so on each ∓x drift side it spans both APAs (z ≈ 0…4.6 m). The cathode-side
-  window edge **`cathode_ext1` is widened 1.2 → 2.5 cm** for PDHD: at the centered
-  `drift_speed = 1.580`, genuine cathode-crossers end up to ~1.75 cm *past* the cathode
-  (the ±1.5–2 cm t0/velocity/SCE drift residual), so the C++ default 1.2 cm dropped real
-  crossers as uncontained (run 29107 evt 983 clus 44 / clus 62). An earlier "0 of 2414
-  winners fail at 1.2 cm" check was **survivorship-biased** — it counted only clusters
-  that already formed a bundle, so the dropped crossers were invisible to it. 2.5 cm ≈
-  the drift residual + margin, sized *not* to over-relax the cut. See the drift-velocity
-  / cathode-window calibration in `clustering-algorithm.md`.
+  window edge **`cathode_ext1` is 1.5 cm** (C++ default 1.2 cm) and the flag-only lower
+  edge **`cathode_ext2` is −3.0 cm** (C++ default −2.0 cm). The genuine cathode-crossers
+  scatter ±~1.75 cm around the cathode (the ±1.5–2 cm t0/velocity/SCE drift residual), an
+  irreducible spread; `drift_speed = 1.576` is chosen so the most-overshooting crosser
+  sits *just inside* the cathode (run 29107 evt 983 clus 62 +0.84 cm), which lets `ext1`
+  revert to ~the C++ default (+0.3 cm noise cushion) instead of the 2.5 cm a centered
+  1.580 required, and pushes the undershoot residual onto the benign `ext2` flag window
+  (clus 96 −2.61 cm → ext2 −3.0). `ext1` is the biting lever (containment + PE inclusion);
+  `ext2` only flags more near-cathode ends `at_x_boundary` and cannot drop a bundle. See
+  the drift-velocity / cathode-window calibration in `clustering-algorithm.md`.
 - **`reject_overpred`** (`QLMatching.cxx:1140`) drops a bundle, before the χ² fit, when
   its predicted light hugely exceeds the measured light over the masked PMT set —
   `Σpred/Σmeas > overpred_total_ratio` **or** `pred/meas` at the brightest predicted
