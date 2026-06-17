@@ -131,6 +131,26 @@ and read back by `fill_bee_flashes`, so Bee tags each flash **TPC0 (−x, APAs 0
 **TPC1 (+x, APAs 1,3)** consistently with this viewer. (Older dumps without the `apa`
 column fall back to the legacy gid encoding.)
 
+### Phantom flash collapse — keeps the two tables consistent
+
+Each per-side dump carries the **full global flash list**, so after the merge every
+physical flash appears **twice**: a *canonical* copy (file side == lit side) and a
+*phantom* copy (file side != lit side — the one referenced by the **other** drift
+side's clusters). A cross-side bundle (a cluster matched to a flash on the opposite
+volume) points at a phantom, whose coincidence group is never navigable (it carries no
+measured light on its file side). Left alone, a kept **cross-side cathode-crosser** bundle
+(the `cross_side_filter` survivor — see [`qlmatching-chain.md`](qlmatching-chain.md)) would
+appear in the per-cluster **Compare** table yet be **unreachable** in the **navigation**
+table — the exact inconsistency this collapse fixes.
+
+On load the viewer **re-points every bundle to the canonical flash copy** — matched by
+`(lit side, time, total PE)`, unique per physical flash — and **drops the phantoms**. A
+cross-side crosser bundle then lands in its flash's real, navigable group, so it shows in
+**both** tables. This also subsumes the older single-sided-run dark-duplicate skip (the
+dark copy *is* the phantom). The navigation table still applies the cluster-**length**
+cut, so short fragments stay hidden there (Compare lists them regardless, as it does for
+every candidate flash of a focused cluster).
+
 ### Group order follows flash time
 
 Coincidence groups are **ranked by ascending flash time**, so paging the scan walks the

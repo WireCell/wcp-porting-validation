@@ -282,6 +282,48 @@ containment culls **0 winners directly**.
 > prefilters change the matching that future calib dumps reflect; the anchor set grew
 > (3 → 14), so the calibration is not invalidated, but it was derived pre-filter.
 
+### Cross-side mismatched-candidate filter (enabled for PDHD)
+
+```jsonnet
+cross_side_filter: true,
+```
+
+A contained bundle can still pair a cluster with a flash lit on the **opposite** drift
+side (`require_containment` is a geometry-only box test; the cluster fits the box at that
+flash's T0 even though the flash lit the other volume). With the opaque cathode this is
+non-physical — a `+x` cluster predicts ~0 PE on the `−x` OpDets the flash measured, and
+vice-versa — so the bundle clutters the candidate pool and the hand-scan with light it
+can never match. The **one** physical exception is a genuine **cathode-crosser**: at that
+flash's T0 the cluster's drift-corrected end sits at the cathode (`at_x_boundary`), so its
+far half *can* be the source of the lit side's light (its own-side flash may be missing or
+below threshold — note the `−x` full-stream gaps). **`cross_side_filter`** (`QLMatching.cxx`,
+`cross_side_mismatch_drop`) therefore **keeps same-side bundles and cross-side
+cathode-crossers, and drops every other cross-side bundle.** Brightness is *not* the test
+(a bright crosser is as valid as a dim one; a mid-drift cluster merely contained at some
+opposite flash's T0 is a coincidence). The flash's lit side is read from where its measured
+PE sits (OpDet x vs the cathode plane — the same rule the merged-root opflash PC uses).
+
+- The test is applied at **bundle creation** (`build_bundles`, removed from the pre-LASSO
+  pool) *and* in **`dump_calib`**, so the fit candidate set and the hand-scan candidate
+  tables show the identical universe. C++ default **OFF** → bit-identical for SBND/ICARUS.
+- Matching-neutral in practice: cross-side bundles never won the LASSO (no light overlap
+  on the measured side), so dropping them changes no winner; they only cluttered the pool.
+  Run 29107 evt 983: of 4911 contained candidates the **2467 same-side and 115 cross-side
+  cathode-crossers are kept**, the **2329 non-crosser cross-side are dropped**. The kept
+  crossers stay as hand-scan candidates — there is **no auto-T0**, the human assigns their
+  flash (cross-side light cannot adjudicate the T0). (`check_dim_crossside.py`,
+  `verify_filter.py`.)
+- A worked case: run 29107 evt 983 Bee cluster 22 (= dump ident **70**, side 0) is a
+  cathode-crosser whose `−x` half made no flash; at the −1807.1 µs S1 flash's T0 it
+  drift-corrects to the cathode (`at_x_boundary`), so its cross-side bundle is **kept** and
+  it appears as a candidate in that S1 group (an earlier `total_pred_light < 10` PE rule
+  wrongly dropped it as "bright"). The same cluster's mid-drift non-crosser candidates at
+  other flash T0s are dropped.
+- The viewer collapses the duplicate "phantom" flash copies so a kept cross-side crosser
+  bundle is reachable in **both** the navigation table and the per-cluster Compare table —
+  see [`ql-scan-display.md`](ql-scan-display.md). The cluster-**length** cut still gates
+  the navigation table, so short fragments stay hidden there.
+
 ### What the SBND Q/L chain still does that PDHD does not
 
 PDHD now runs containment + over-prediction; the SBND `qlmatching.jsonnet` enables a
@@ -405,7 +447,7 @@ whose type is `1`).
   the MC-only saturation channel mask.
 - **Off by default:** cross-TPC cathode-crossing matching (`xtpc_flag`, needs both
   sides lit) is off; the cathode 3-D fiducial is empty (flat-cathode window).
-  (`require_containment` and `reject_overpred` are now **on** — see §2 bundle prefilters.)
+  (`require_containment`, `cross_side_filter` and `reject_overpred` are now **on** — see §2 bundle prefilters.)
 - **Hand-scan coincidence view.** The `ql_scan` viewer re-pairs the two same-time
   one-sided flashes of a cathode-crosser into one cross-side coincidence group (PDHD's
   opaque cathode means no flash lights both volumes); see `pdhd/ql_scan/README.md`.

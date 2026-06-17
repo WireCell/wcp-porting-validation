@@ -207,10 +207,32 @@ class Event:
                 b["main_cluster"] += off
                 b["other_clusters"] = [u + off for u in b["other_clusters"]]
                 bundles.append(b)
-        self.flash_by_gid = {f["gid"]: f for f in flashes}
         self.cluster_by_uid = {c["uid"]: c for c in clusters}
         self.bundles = bundles
         self._clen = {}                       # cached cluster lengths
+        # --- collapse phantom flash copies -----------------------------------
+        # Each per-side dump carries the FULL global flash list, so after the merge
+        # every physical flash appears TWICE: once "canonical" (file side == lit side)
+        # and once "phantom" (file side != lit side -- the copy referenced by the OTHER
+        # drift side's clusters).  A cross-side bundle therefore points at a phantom,
+        # whose coincidence group is never navigable (it carries no measured light on
+        # its file side), so a kept dim cross-side cluster (cross_side_filter in
+        # QLMatching) would show in the per-cluster Compare table yet be unreachable in
+        # the main/navigation table.  Re-point every bundle to the canonical copy --
+        # matched by (lit side, time, total PE), which is unique per physical flash --
+        # and drop the phantoms, so a dim cross-side bundle lands in its flash's real,
+        # navigable group.  This keeps the two tables consistent and also subsumes the
+        # single-sided-run dark-duplicate skip (the dark copy IS the phantom here).
+        _lit = lambda f: 0 if sum(f["pe"][80:]) >= sum(f["pe"][:80]) else 1
+        _sig = lambda f: (_lit(f), round(f["time"], 4), round(f["total_PE"], 3))
+        canon_gid = {_sig(f): f["gid"] for f in flashes if f["apa"] == _lit(f)}
+        remap_flash = {f["gid"]: canon_gid[_sig(f)]
+                       for f in flashes
+                       if f["apa"] != _lit(f) and _sig(f) in canon_gid}
+        for b in bundles:
+            b["flash_gid"] = remap_flash.get(b["flash_gid"], b["flash_gid"])
+        flashes = [f for f in flashes if f["gid"] not in remap_flash]
+        self.flash_by_gid = {f["gid"]: f for f in flashes}
         # --- cross-side coincidence grouping ---------------------------------
         # Pair an S0-LIT flash with an S1-LIT flash within COINC_WIN into ONE
         # coincidence group (the scan unit shown on both sides).  PDHD's opaque
@@ -750,7 +772,23 @@ def rebuild_table():
         labels.append("%d: S%d fl%d c%d  ks%.2f pr%.0f%s"
                       % (r, b["apa"], disp_id(b["flash_gid"]), cu_id, b["ks_dis"],
                          b["total_pred_light"], "  🔒" if locked else ""))
-    table_src.data = dict(cols)
+    # Bokeh's DataTable (SlickGrid) repaints only when the row COUNT changes: replacing
+    # source.data with the SAME number of rows leaves the old cells on screen (e.g.
+    # grp 37 -> 38, both 6 bundles, kept showing grp 37's rows). Force a count change --
+    # blank the source now (length -> 0, flushed at the end of this callback) and refill
+    # on the next tick (0 -> N) -- so the grid always re-renders. (The CheckboxGroup
+    # below needs no workaround: its labels list is replaced wholesale and always
+    # re-renders.)
+    new_data = dict(cols)
+    sel_idx = ([order.index(state["focus"])]
+               if state["focus"] is not None and state["focus"] in order else [])
+    table_src.data = {k: [] for k in new_data}
+
+    def _fill_table(data=new_data, idx=sel_idx):
+        table_src.data = data
+        table_src.selected.indices = idx
+    curdoc().add_next_tick_callback(_fill_table)
+
     # the CheckboxGroup is the clickable selector: labels in table-row order, the
     # checked boxes = the selected bundles of this group. Guard the programmatic
     # `active` write so it does not re-fire on_sel_group.
@@ -759,11 +797,6 @@ def rebuild_table():
     sel_group.labels = labels
     sel_group.active = active
     state["suppress_edit"] = False
-    # keep focus row highlighted
-    if state["focus"] is not None and state["focus"] in order:
-        table_src.selected.indices = [order.index(state["focus"])]
-    else:
-        table_src.selected.indices = []
 
 
 def cluster_points(uid, apa, dx):
