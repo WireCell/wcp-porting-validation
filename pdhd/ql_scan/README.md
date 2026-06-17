@@ -25,10 +25,17 @@ drift −x → side 0; group13 = APAs 1+3, drift +x → side 1):
 or without it. The dump is written at the end of matching, so each bundle already
 carries the matcher's final decision in its `auto_selected` flag.
 
-The central cathode is opaque to VUV, so the two drift sides are independent; today
-usually only one side carries light and only one file is produced. The viewer **merges
-the 1–2 group files of an event** into one two-panel (side 0 / side 1) view and simply
-leaves the unlit side blank.
+The central cathode is opaque to VUV, so **no single flash lights both drift volumes** —
+every flash is one-sided. A cathode-crossing cosmic therefore appears as **two
+same-time one-sided flashes** (one per side). The viewer **merges the two group files**
+and re-pairs these into **cross-side coincidence groups**: an S0-lit and an S1-lit flash
+within `COINC_WIN` (1 µs, set from the run-29107 cross-side Δt distribution; one constant
+at the top of `ql_scan_viewer.py`) share one group, shown across both panels; flashes
+with no opposite-side partner stay single-sided (one panel lit, the other blank). On
+run 29107 this is ~11–13 two-sided groups/event. The pairing is by each flash's **lit
+side** (from its PE), not its file side — the per-side matcher runs against one global
+flash list, so a flash is referenced by clusters on both sides and file-side would
+mis-pair every flash with its own copy.
 
 ## 2. Serve
 
@@ -73,6 +80,15 @@ Instead of building a match from scratch:
   listed flash's T0. Clicking a row jumps the whole view (focus + group) to that flash,
   so a candidate in another group is reachable. (A cathode-hugging cluster can be
   compatible with many flash times, since a later T0 just shifts it toward the anode.)
+
+## Light panels (measured / predicted, per side)
+
+Each side's panel draws the **full physical PMT array**: live OpDets as grey circles
+(filled/colour-scaled by PE for the group's flash), and **masked OpDets as faint red ×**
+(static dead + per-event `auto_mask`). The red × matter on side 0 (−x): channels 120–159
+are the DAPHNE full-stream PDs covering the z<250 half — masked when the light reco lacks
+the full stream, live (and so charge-scaled) when it has it. So a side-0 panel that looks
+half-empty is the mask, not missing data. Panel y/z ranges are pinned to the two-APA box.
 
 ## Saved label schema
 

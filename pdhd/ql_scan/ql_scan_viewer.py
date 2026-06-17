@@ -141,6 +141,13 @@ for f in FILES:
 # the two drift-side files never collide when merged. Larger than any apa*1e6+ident.
 SIDE_OFF = 1_000_000_000
 
+# Cross-side coincidence window (us): an S0 flash and an S1 flash within this of
+# each other are paired into ONE coincidence group (the scan unit shown on both
+# sides).  PDHD's opaque cathode means no single flash lights both volumes, so a
+# cathode-crosser appears as two same-time one-sided flashes -- this re-pairs them
+# (cf. SBND).  Set from the 29107 cross-side |dt| distribution.
+COINC_WIN = 1.0
+
 
 def disp_id(v):
     """Strip the per-side merge offset for display, so gid/group ids read exactly as
@@ -181,7 +188,9 @@ class Event:
             # union the side's per-APA boxes into one drift-side box
             self.geom[s] = self._merge_geom(d["geometry"])
             for f in d["flashes"]:
-                f["gid"] += off; f["group"] += off; f["apa"] = s
+                # gid offset keeps the two files' flashes distinct; group is NOT
+                # offset here -- it is replaced below by a cross-side coincidence id.
+                f["gid"] += off; f["apa"] = s
                 flashes.append(f)
             for c in d["clusters"]:
                 c["uid"] += off; c["apa"] = s
@@ -196,6 +205,46 @@ class Event:
         self.cluster_by_uid = {c["uid"]: c for c in clusters}
         self.bundles = bundles
         self._clen = {}                       # cached cluster lengths
+        # --- cross-side coincidence grouping ---------------------------------
+        # Pair an S0-LIT flash with an S1-LIT flash within COINC_WIN into ONE
+        # coincidence group (the scan unit shown on both sides).  PDHD's opaque
+        # cathode means every flash is lit on exactly one volume, so a cathode
+        # crosser is two same-time one-sided flashes -- this re-pairs them (cf.
+        # SBND).  Pairing is by the flash's LIT side (from PE), NOT its file side:
+        # the per-side matcher runs against one global flash list, so a flash is
+        # referenced by clusters on both sides; file side would mis-pair every
+        # flash with its own copy.  Only bundle-referenced flashes are paired;
+        # unpaired (single-volume) flashes stay one-sided.  Window = COINC_WIN.
+        ref = {b["flash_gid"] for b in bundles}
+        lit = lambda f: 0 if sum(f["pe"][80:]) >= sum(f["pe"][:80]) else 1
+        s0 = sorted((f for f in flashes
+                     if f["apa"] == 0 and f["gid"] in ref and lit(f) == 0),
+                    key=lambda f: f["time"])
+        s1 = sorted((f for f in flashes
+                     if f["apa"] == 1 and f["gid"] in ref and lit(f) == 1),
+                    key=lambda f: f["time"])
+        for f in flashes:
+            f["group"] = None
+        used = [False] * len(s1)
+        cg = 0
+        for f0 in s0:
+            cg += 1
+            f0["group"] = cg
+            best, bd = None, COINC_WIN
+            for j, f1 in enumerate(s1):
+                if not used[j] and abs(f1["time"] - f0["time"]) < bd:
+                    bd, best = abs(f1["time"] - f0["time"]), j
+            if best is not None:
+                used[best] = True
+                s1[best]["group"] = cg
+        for j, f1 in enumerate(s1):
+            if not used[j]:
+                cg += 1
+                f1["group"] = cg
+        for f in flashes:            # phantom dup / unmatched copies: unique ids
+            if f["group"] is None:
+                cg += 1
+                f["group"] = cg
         # opdet arrays (numpy) for fast light-pattern drawing. od_apa is the drift
         # SIDE (APA ident parity): APAs 0,2 -> side 0; APAs 1,3 -> side 1.
         self.od_x = np.array([o["x"] for o in od0])
@@ -499,9 +548,15 @@ def make_light_fig(title):
     f.xaxis.axis_label = "z (cm)"
     f.yaxis.axis_label = "y (cm)"
     base = ColumnDataSource(data=dict(z=[], y=[]))
+    dead = ColumnDataSource(data=dict(z=[], y=[]))
     src = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[]))
-    f.scatter("z", "y", source=base, marker="circle", size=6,
-              fill_color=None, line_color="#cccccc")
+    # masked / dead OpDets of this side (static ch_mask + auto_mask), drawn first as
+    # faint red x so the live array reads against the FULL physical PMT layout -- e.g.
+    # the -x full-stream half (ch 120-159), masked today, shows as x's, not as a gap.
+    f.scatter("z", "y", source=dead, marker="x", size=8,
+              line_color="#e0a0a0", line_width=1.3)
+    f.scatter("z", "y", source=base, marker="circle", size=8,
+              fill_color=None, line_color="#8a8a8a")
     g = f.circle("z", "y", source=src, radius="r",
                  fill_color=linear_cmap("pe", "Viridis256", 0, 1),
                  line_color="#333333", fill_alpha=0.85)
@@ -513,7 +568,7 @@ def make_light_fig(title):
                     major_label_text_font_size="10px")
     f.add_layout(cbar, "right")
     f.add_tools(HoverTool(renderers=[g], tooltips=[("PE", "@pe{0,0.0}")]))
-    return dict(fig=f, base=base, src=src, glyph=g)
+    return dict(fig=f, base=base, dead=dead, src=src, glyph=g)
 
 
 # LIGHT[apa] = {"meas": panel, "pred": panel}  (apa is the drift side, 0 or 1)
@@ -697,10 +752,13 @@ def render_light():
         mp, pp = LIGHT[apa]["meas"], LIGHT[apa]["pred"]
         ho, hr = HIST[apa]["overlay"], HIST[apa]["ratio"]
         am = evt.od_active & (evt.od_apa == apa)
+        dm = (~evt.od_active) & (evt.od_apa == apa)
         chans = np.nonzero(am)[0]
-        # faint outline of this side's active OpDets
+        # faint outline of this side's active OpDets; red x for the masked ones
         mp["base"].data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
         pp["base"].data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
+        mp["dead"].data = dict(z=evt.od_z[dm].tolist(), y=evt.od_y[dm].tolist())
+        pp["dead"].data = dict(z=evt.od_z[dm].tolist(), y=evt.od_y[dm].tolist())
 
         gid = group_flash_gid(apa)
         if gid is None:

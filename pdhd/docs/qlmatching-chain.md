@@ -362,13 +362,20 @@ reads ~0 PE (run 27980 is the exception — both sides lit). This is handled cle
 - **Dark flashes dropped.** `flash_minPE = 50` discards near-zero flashes, so dark-side
   clusters simply get **no flash / no T0** (rather than a spurious match).
 - **Dead-channel masking** (see [`pds-opchannel-opdet-mapping.md`](pds-opchannel-opdet-mapping.md)):
-  - static **`ch_mask`** = `[3, 86, 87, 97, 107, 116, 117] + 120..159` — noisy + LArSoft
-    dead + the DAPHNE full-stream channels (always 0 PE, never in the opflash);
+  - static **`ch_mask`** = `[3, 86, 87, 97, 107, 116, 117]` — noisy + LArSoft dead only.
+    Channels **120..159** (the DAPHNE full-stream PDs = the entire −x / side-0 z<250 half)
+    are **no longer statically masked**: the full-160 re-extraction (all-PD light reco)
+    now decodes them with real light (run 29107: ~38/40 fire, ~70 k PE/evt), so masking
+    them threw away half of side 0. Runs whose light reco lacks the full stream leave
+    120..159 at 0 PE; those are caught per-event by `auto_mask`. **Effect on 29107:**
+    side 0 went from 34 → ~72 live OpDets/evt (incl. the y=154 row, previously all dead).
   - **`auto_mask: true`** (`pe_low=10`, `pe_bright=50`, `neighbors=4`, `min_contrast=1`,
     `min_flash=3`) — per-event drop of a channel that never fires while its live
     neighbours do, catching the **run-dependent** `x<0` dead channels absent from the
-    static list. Verified: group13 `nopdet=79` (healthy side, no false masks),
-    group02 `nopdet=28` (run 27980, after static+auto mask).
+    static list, and the 2/40 genuinely-dead full-stream channels on 29107.
+    *Caveat:* on a run with the whole 120..159 block dark, `auto_mask` has no live
+    neighbour to contrast against, so re-mask of that block is not guaranteed — verify
+    per run.
 
 `active_opdet_types = [0]` selects the flat X-ARAPUCAs (PDHD has no SBND-style PMTs,
 whose type is `1`).
@@ -390,8 +397,11 @@ whose type is `1`).
 - **MC vs data:** `data: true` (auto-set `false` when `params.reality == 'sim'`) gates
   the MC-only saturation channel mask.
 - **Off by default:** cross-TPC cathode-crossing matching (`xtpc_flag`, needs both
-  sides lit) and `require_containment` are both off; the cathode 3-D fiducial is empty
-  (flat-cathode window).
+  sides lit) is off; the cathode 3-D fiducial is empty (flat-cathode window).
+  (`require_containment` and `reject_overpred` are now **on** — see §2 bundle prefilters.)
+- **Hand-scan coincidence view.** The `ql_scan` viewer re-pairs the two same-time
+  one-sided flashes of a cathode-crosser into one cross-side coincidence group (PDHD's
+  opaque cathode means no flash lights both volumes); see `pdhd/ql_scan/README.md`.
 - **Semi-analytical JSON lives in `wire-cell-data`**, not this repo
   (`pdhd/photodet/semi-analytical-pdhd.json`); it carries `cathode_x`, the GH tables
   and absorption length.
@@ -436,8 +446,19 @@ predicted light ≥ 100 PE contribute a prediction (same cut as the legacy
 **Build a combined link.** `run_bee_combined_evt.sh` already copies every
 `data/0/0-*.json` out of `mabc-all-apa.zip`, so once the events are clustered with
 `-op` the `0-op.json` is folded into the upload automatically — no builder change
-needed. Select the **op** instance in Bee to step through flashes and compare
-`op_pes` vs `op_pes_pred`.
+needed. Use `-noimg` to take the imaging/clustering layers straight from the mabc zip
+(no separate `wirecell-img bee-blobs` pass). Select the **op** instance in Bee to step
+through flashes and compare `op_pes` vs `op_pes_pred`.
+
+**Bee charge layers — `img-global` + `clustering-global`.** The all-TPC MABC's
+`bee_points_sets` (in `clus.jsonnet`) emit two global charge layers: `img-global` (the
+raw imaged charge, dumped from the live grouping *before* the all-TPC clustering
+pipeline — the C++ `"img"`-named pre-pipeline hook, now `algorithm: "img"`,
+`individual:false`, no `apa_groups`, matching SBND) and `clustering-global` (the
+full-detector clustered result, post-pipeline). The pre-pipeline hook can host only one
+set, so emitting `img-global` here **replaces** the former per-drift-side stage-3
+`clustering-group02/13` dump. A combined bee thus carries `img-global` + `clustering-global`
++ `op` + `channel-deadarea-group02/13`.
 
 ---
 
