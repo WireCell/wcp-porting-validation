@@ -70,6 +70,11 @@ Instead of building a match from scratch:
 - Controls are on two rows: event/group navigation on top, action buttons below.
 - **Filter selected bundles** defaults ON — once a cluster is matched to a flash it is
   locked (🔒) from being selected for another. Toggle it off to override.
+- **Hide clusters ≤5cm** defaults ON — short fragments (bbox-diagonal length ≤ 5 cm,
+  `MIN_CLUS_LEN` in `ql_scan_viewer.py`) are dropped from the clusters roster and the
+  bundle table, since an event has many tiny ones that swamp the display. A coincidence
+  group whose clusters are *all* this short is also skipped from the group navigation /
+  dropdown (an all-short group has nothing worth scanning). Toggle off to show everything.
 - In the bundle, compare, and cluster tables the **side / flash / cluster** columns are
   kept adjacent for quick reading.
 - Pick a cluster in the **clusters** roster, then click **Compare cluster's flashes**

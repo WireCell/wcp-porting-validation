@@ -63,6 +63,12 @@ from bokeh.plotting import figure
 # Max charge points drawn per projection panel (stride-downsample above this).
 MAX_DRAW_PTS = 5000
 
+# Cluster length cutoff (cm, bbox-diagonal proxy): with the length filter on (default)
+# clusters at or below this are hidden from the roster + bundle table, and a coincidence
+# group whose every cluster is this short is dropped from the scan navigation. An event
+# has many tiny fragments that otherwise swamp the display.
+MIN_CLUS_LEN = 5.0
+
 # ---------------------------------------------------------------------------
 # Inputs: calib JSON paths from --args (globs already expanded by the shell).
 # ---------------------------------------------------------------------------
@@ -316,6 +322,7 @@ state = {
     "compare_cluster": None,  # uid of the cluster shown in the compare table, or None
     "compare_order": [],      # bundle indices listed in the compare table
     "filter_on": True,        # lock: forbid selecting a cluster already matched (default ON)
+    "len_filter_on": True,    # hide clusters <= MIN_CLUS_LEN (and all-short groups); default ON
     "clus_pick": None,        # uid of the cluster clicked in the roster (drives Compare)
     "clus_order": [],         # roster row order (row index -> cluster uid)
     "sel_snapshot": [],       # last pushed checkbox column (to detect user edits)
@@ -427,11 +434,28 @@ def toggle_select(idx):
     return set_selected(idx, idx not in state["selected"])
 
 
-def visible_count(g):
-    """Bundles shown for group g (the whole group — rivals are no longer hidden).
-    Groups with at least one bundle stay in the navigation."""
+def bundle_long_enough(i):
+    """True if bundle i's main cluster passes the length filter (or it is off). The
+    length is the cluster bbox-diagonal proxy (Event.cluster_length)."""
+    if not state["len_filter_on"]:
+        return True
     evt = state["evt"]
-    return sum(1 for b in evt.bundles if evt.group_of(b["flash_gid"]) == g)
+    return evt.cluster_length(evt.bundles[i]["main_cluster"]) > MIN_CLUS_LEN
+
+
+def group_visible_bundles(g):
+    """Indices of the bundles shown for coincidence group g under the active filters
+    (currently the >MIN_CLUS_LEN length filter). Drives both the bundle table and the
+    group navigation, so a group whose clusters are all short shows/navigates as empty."""
+    evt = state["evt"]
+    return [i for i in range(len(evt.bundles))
+            if evt.group_of(evt.bundles[i]["flash_gid"]) == g and bundle_long_enough(i)]
+
+
+def visible_count(g):
+    """Bundles shown for group g under the active filters (length filter). A group with
+    no length-passing bundle counts 0, so navigation + dropdown skip it (request 2)."""
+    return len(group_visible_bundles(g))
 
 
 # ---------------------------------------------------------------------------
@@ -451,6 +475,8 @@ save_btn = Button(label="Save labels", button_type="success", width=120)
 compare_btn = Button(label="Compare cluster's flashes", width=200)
 filter_btn = Toggle(label="Filter selected bundles: ON", width=220,
                     active=True, button_type="warning")
+len_filter_btn = Toggle(label="Hide clusters ≤5cm: ON", width=190,
+                        active=True, button_type="warning")
 status = Div(text="", width=1100)
 metrics = Div(text="", width=560)
 selsummary = Div(text="", width=380)
@@ -683,11 +709,10 @@ def fmt_flags(b):
 def rebuild_table():
     evt = state["evt"]
     g = state["group"]
-    # Show every bundle of the current coincidence group (rivals are no longer
-    # hidden); when the filter is on, those whose cluster is already matched get a
-    # lock glyph and their checkbox is refused.
-    visible = [i for i in range(len(evt.bundles))
-               if evt.group_of(evt.bundles[i]["flash_gid"]) == g]
+    # Show the current group's bundles that pass the length filter (clusters <=
+    # MIN_CLUS_LEN are hidden when it is on); when the match filter is on, those whose
+    # cluster is already matched get a lock glyph and their checkbox is refused.
+    visible = group_visible_bundles(g)
     # longest tracks first (by the main cluster's extent), then a stable tiebreak
     order = sorted(visible,
                    key=lambda i: (-evt.cluster_length(evt.bundles[i]["main_cluster"]),
@@ -1044,6 +1069,9 @@ def rebuild_clusters():
     sides = lit_sides(evt)
     uids = [u for u in evt.cluster_by_uid
             if not sides or evt.cluster_by_uid[u]["apa"] in sides]
+    # length filter (default on): hide the many short fragments (<= MIN_CLUS_LEN cm)
+    if state["len_filter_on"]:
+        uids = [u for u in uids if evt.cluster_length(u) > MIN_CLUS_LEN]
     # longest clusters first, then a stable tiebreak (TPC, ident)
     uids = sorted(uids, key=lambda u: (-evt.cluster_length(u),
                                        evt.cluster_by_uid[u]["apa"],
@@ -1167,12 +1195,16 @@ def load_event(label):
     state["clus_pick"] = None
     groups = event_groups(evt)
     state["groups"] = groups
-    state["group"] = groups[0] if groups else None
+    # With the length filter on (default) open on the first group that still has a
+    # cluster longer than the cutoff, so the scan doesn't land on an all-short group.
+    vis = [g for g in groups if visible_count(g) > 0]
+    g0 = vis[0] if vis else (groups[0] if groups else None)
+    state["group"] = g0
     set_light_ranges(evt)
     # Populate the group selector (setting .value may re-fire on_group_change,
     # which just re-refreshes — harmless).
     group_select.options = [(str(g), group_label(evt, g)) for g in groups]
-    group_select.value = str(groups[0]) if groups else ""
+    group_select.value = str(g0) if g0 is not None else ""
     n = len(evt.bundles)
     nsel = sum(b["auto_selected"] for b in evt.bundles)
     summary = ("Loaded <b>%s</b>: %d contained bundles, %d flashes, %d clusters, "
@@ -1290,6 +1322,25 @@ def on_filter(attr, old, new):
                    "(🔒) and cannot be selected." if new else
                    "Filter OFF — any bundle can be selected.")
     refresh()
+
+
+def on_len_filter(attr, old, new):
+    """Toggle the cluster-length filter. ON (default) hides clusters <= MIN_CLUS_LEN
+    from the roster + bundle table and drops coincidence groups whose every cluster is
+    that short from the navigation. If the current group just emptied, jump to the
+    first group that still has a long-enough cluster."""
+    state["len_filter_on"] = bool(new)
+    len_filter_btn.label = "Hide clusters ≤5cm: %s" % ("ON" if new else "OFF")
+    len_filter_btn.button_type = "warning" if new else "default"
+    status.text = (("Length filter ON — clusters ≤ %g cm are hidden, and coincidence "
+                    "groups with no longer cluster are skipped." % MIN_CLUS_LEN)
+                   if new else "Length filter OFF — all clusters shown.")
+    if state["evt"] is None:
+        return
+    refresh()                         # re-trims roster, table and the group navigation
+    nav = state["nav_groups"]
+    if nav and state["group"] not in nav:
+        group_select.value = str(nav[0])    # current group emptied -> jump (fires refresh)
 
 
 def on_load_auto():
@@ -1414,6 +1465,7 @@ clear_btn.on_click(on_clear)
 save_btn.on_click(on_save)
 compare_btn.on_click(on_compare)
 filter_btn.on_change("active", on_filter)
+len_filter_btn.on_change("active", on_len_filter)
 
 
 # ---------------------------------------------------------------------------
@@ -1423,7 +1475,8 @@ filter_btn.on_change("active", on_filter)
 # overflowing a narrow window).
 controls_nav = row(event_select, prev_evt_btn, next_evt_btn,
                    group_select, prev_grp_btn, next_grp_btn)
-controls_act = row(select_btn, loadauto_btn, clear_btn, save_btn, compare_btn, filter_btn)
+controls_act = row(select_btn, loadauto_btn, clear_btn, save_btn, compare_btn,
+                   filter_btn, len_filter_btn)
 controls = column(controls_nav, controls_act)
 header = Div(text="<h2>PDHD Q/L matching hand-scan</h2>", width=1100)
 layout = column(
