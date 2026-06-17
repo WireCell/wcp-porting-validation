@@ -62,9 +62,9 @@ the same zip is the *post*-clustering cloud — don't use it for the overlay.)
   pre-clustering (`pdhd/wct-clustering.jsonnet`) — so blobs and points are
   matched at source.
 * A slice's points all sit at exactly `x = time2drift(slice start)` (one x per
-  slice, 0.313 cm apart — 4 ticks × 500 ns × 1.565 mm/µs); the
+  slice, 0.317 cm apart — 4 ticks × 500 ns × 1.585 mm/µs); the
   viewer matches points to the displayed slice by
-  `|pts_x − blob_x_start| < 0.156 cm`, then keeps points in-polygon **or within
+  `|pts_x − blob_x_start| < 0.158 cm`, then keeps points in-polygon **or within
   0.5 cm of a displayed blob's edge** (sliver-blob tolerance).
 * Tiny (≈1-wire) blobs can get **no** stepped points (the single wire-crossing
   candidate falls outside the third plane's strip window).  The toolkit
@@ -143,7 +143,7 @@ x = xorig + xsign · (t + time_offset) · drift_speed
 ```
 
 * `time_offset = 0` (no preset T0; was −250 µs before the chain zeroed it),
-  `drift_speed = 1.565 mm/µs` (`cfg/pgrapher/experiment/pdhd/clus.jsonnet`);
+  `drift_speed = 1.585 mm/µs` (`cfg/pgrapher/experiment/pdhd/clus.jsonnet`);
 * `xorig` = W-plane wire-center x of that (anode,face): the cathode-facing
   (active) faces are at **−353.20 cm** (APAs 0/2, face 0) and **+353.00 cm**
   (APAs 1/3, face 1); the wall-facing faces at −361.79 / +361.59 cm;
