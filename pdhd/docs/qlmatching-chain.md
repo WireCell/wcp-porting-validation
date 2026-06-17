@@ -229,10 +229,15 @@ reject_overpred: true,  overpred_total_ratio: 5.0,  overpred_maxch_ratio: 25.0,
   whose cluster is not contained in the TPC drift box once the flash-T0 x-offset is
   applied. The box is the **two-APA union** from `compute_geometry` (the same box that
   feeds the `at_x_boundary`/`two_boundary` flag walk — see *Combined two-APA box*
-  above), so on each ∓x drift side it spans both APAs (z ≈ 0…4.6 m). Measured on the
-  29107 calib dumps: **0 of 2414** matched winners (and 0 of the two-boundary anchors)
-  fail containment at the default `cathode_ext1 = 1.2 cm` — PDHD's cathode-crossers do
-  not extend past it — so **no cushion widening is needed**.
+  above), so on each ∓x drift side it spans both APAs (z ≈ 0…4.6 m). The cathode-side
+  window edge **`cathode_ext1` is widened 1.2 → 2.5 cm** for PDHD: at the centered
+  `drift_speed = 1.580`, genuine cathode-crossers end up to ~1.75 cm *past* the cathode
+  (the ±1.5–2 cm t0/velocity/SCE drift residual), so the C++ default 1.2 cm dropped real
+  crossers as uncontained (run 29107 evt 983 clus 44 / clus 62). An earlier "0 of 2414
+  winners fail at 1.2 cm" check was **survivorship-biased** — it counted only clusters
+  that already formed a bundle, so the dropped crossers were invisible to it. 2.5 cm ≈
+  the drift residual + margin, sized *not* to over-relax the cut. See the drift-velocity
+  / cathode-window calibration in `clustering-algorithm.md`.
 - **`reject_overpred`** (`QLMatching.cxx:1140`) drops a bundle, before the χ² fit, when
   its predicted light hugely exceeds the measured light over the masked PMT set —
   `Σpred/Σmeas > overpred_total_ratio` **or** `pred/meas` at the brightest predicted

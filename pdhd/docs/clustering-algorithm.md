@@ -37,7 +37,7 @@ Every stage is one `MultiAlgBlobClustering` (MABC) node executing a configured
 | a0f0pA / a2f0pA | active face, drift −x: FV_x [−357.985, −2.54] cm |
 | a1f1pA / a3f1pA | active face, drift +x: FV_x [+2.54, +357.985] cm |
 | a0f1pA, a1f0pA, ... | wall-facing (degenerate) faces: FV_x pinned at ±357.985 cm |
-| per-face params | `drift_speed` 1.585 mm/µs (calibrated, see below; was 1.565, 1.6), `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
+| per-face params | `drift_speed` 1.580 mm/µs (calibrated, see below; was 1.585, 1.565, 1.6), `tick` 0.5 µs, `nticks_live_slice` 4, `time_offset` (see T0 below) |
 
 `detector_volumes(anodes, face)` builds the per-stage `DetectorVolumes`; the
 `face` argument scopes the instance NAME (the per-face and per-drift-group
@@ -190,7 +190,7 @@ imaging-stage `imaging-group02/13` instances (wirecell-img `bee-blobs` on the
 
 There is **no per-event T0 determination for PDHD**; the chain now uses
 `time_offset = 0` everywhere, so a blob's x is its apparent drift position in
-the readout frame (250 µs ≡ 40 cm at 1.585 mm/µs):
+the readout frame (250 µs ≡ 40 cm at 1.580 mm/µs):
 
 1. `cfg/pgrapher/experiment/pdhd/clus.jsonnet` — `time_offset` function
    parameter (default **0**; was −250 µs = readout-tick0-relative-to-trigger
@@ -273,8 +273,8 @@ U-vs-W reference, ~0.98 cm, is a sub-dominant ~0.3 %).
 **Config change.**  `drift_speed` was first set to **1.565 mm/µs** — the **midpoint of
 the [1.55, 1.57] two-bias bracket**, equal to the Garfield field response
 (`dune-garfield-1d565`) and LArSoft/Walkowiak at 500 V/cm, and consistent with the
-PDVD data (~1.57).  It was later **refined to 1.585 mm/µs** by the cathode-end
-registration below; the two config sites are:
+PDVD data (~1.57).  It was later **refined to 1.580 mm/µs** by the cathode-end
+registration below (via an intermediate 1.585); the two config sites are:
 
 * `cfg/pgrapher/experiment/pdhd/params.jsonnet` — PDHD-only `lar.drift_speed` override
   (feeds `img.jsonnet`, `qlmatching.jsonnet`, sim drift via `params.lar.drift_speed`).
@@ -318,34 +318,50 @@ Adopted.  (PDVD, with ~50 un-fragmented crossers, closes more tightly, ~0.4 % fr
 single run — see pdvd/docs/clus-workflow.md.)  Reducing the PDHD A-C-crosser
 fragmentation under the current clustering would tighten the per-TPC agreement further.
 
-## Cathode-end refinement → 1.585 (run 29107 evt 983)
+## Cathode-end registration → 1.580 + cathode window (run 29107 evt 983)
 
 The A-C **x-span** method above is dominated by crosser fragmentation and weights both
 endpoints equally, so it under-constrains the **cathode end** specifically.  A cleaner,
 single-ended probe is a *cathode-anchored* crosser carrying a **flash T0**: with the
-T0 known, the reconstructed cathode end must land on the cathode surface
-(`u_cathode = 351.94 cm`, thickness-corrected).  Any shortfall is a direct
-`v_reco/v_true` deficit on the cathode arm — independent of the anode end and of the
-span estimator's fragmentation bias.
+T0 known, the reconstructed cathode end should land on the cathode surface
+(`u_cathode = 351.94 cm`, thickness-corrected — `cpa_thick = 3.175 mm`, ½ = 0.159 cm, is
+already folded into `u_cathode`).  Its signed offset is a direct `v_reco/v_true` probe on
+the cathode arm, independent of the anode end and the span estimator's fragmentation bias.
 
-Two hand-scanned cathode crossers in run 29107 evt 983 (Q/L flashes −465.094 µs and
-−1452.25 µs):
+A first pass on **two** evt-983 crossers gave 1.585.  Extending to **four** hand-scanned
+evt-983 crossers (two cathode-crossing cosmics, each lighting both drift volumes) shows
+1.585 systematically **over-shoots**: 3 of the 4 cathode ends land *past* the cathode.
 
-| cluster | `last_u` @1.565 | shortfall vs surface | v to reach surface |
+| cluster (side) | Q/L flash | cathode-end `u − u_cathode` @1.585 | per-cluster v to surface |
 |---|---|---|---|
-| Clus 23 (TPC0) | 348.37 cm | 3.56 cm | 1.5810 mm/µs |
-| Clus 96 (TPC1) | 346.87 cm | 5.06 cm | 1.5878 mm/µs |
+| Clus 23 (TPC0) | −465.094 µs | +0.90 cm | 1.5809 |
+| clus 96 (TPC1) | −1452.25 µs | −0.62 cm | 1.5878 |
+| clus 44 (TPC0) | −1780.2 µs | +2.34 cm | 1.5745 |
+| clus 62 (TPC1) | −1780.2 µs | +2.87 cm | 1.5722 |
 
-Both cathode ends fell **3.5–5 cm short** of the cathode at 1.565, so neither tripped
-`flag_at_x_boundary` (the cathode boundary tag QLMatching uses).  The cathode thickness
-(`cpa_thick = 3.175 mm`, ½ = 0.159 cm) is already folded into `u_cathode`, so it does
-**not** account for the gap.  **`drift_speed` adopted = 1.585 mm/µs** (≈ the mean of the
-two per-cluster solutions): it lands Clus 23 +0.9 cm and Clus 96 −0.6 cm of the surface
-— both within ~1 cm, inside the `cathode_ext2 = −2 cm` flag window — so both flag.
+The per-cluster solutions span **1.572–1.588**, and **no single velocity** puts all four
+on the cathode: containing clus 62 needs `v ≤ 1.578`, while keeping clus 96 above the
+`cathode_ext2 = −2 cm` flag floor needs `v ≥ 1.579` — an empty intersection.  Lowering v
+to pull the over-shooters in just pushes clus 96 out the other (anode) side.  The ~3.5 cm
+spread of the cathode ends is the documented **±1.5–2 cm degenerate t0/velocity/SCE drift
+residual** (`project_cathode_crossing_offset`), which a *global* velocity cannot remove.
 
-**Caveat.**  1.585 is ~1.5 % above the A-C-span bracket [1.55, 1.57] / fixed point
-(~1.561).  The two methods disagree at the ~1.5 % level; the cathode-end probe is taken
-as the more direct constraint for the cathode boundary flag.  n = 2 here — widen the
-sample (more flash-matched cathode crossers) to firm up the value.  The viewer const
-`pdhd/img_plot/preprocess_event.py` `DRIFT_MM_PER_NS` and the Bee3 cfg
-`wire-cell-bee3/.../experiment.js` `driftVelocity` (0.1585 cm/µs) are kept in sync.
+So the calibration splits across two levers:
+
+- **`drift_speed = 1.580 mm/µs`** — centers the four (mean per-cluster v = 1.579), so the
+  extreme pair sits symmetric at ±1.75 cm rather than biased positive.  This is below the
+  over-shooting 1.585 and back toward the A-C-span bracket [1.55, 1.57] / fixed point
+  (~1.561); the two methods now agree to ~1 %.
+- **`cathode_ext1 = 2.5 cm`** (QLMatching, `pdhd/qlmatching.jsonnet`; C++ default 1.2 cm)
+  — the containment / `flag_at_x_boundary` window edge *past* the cathode.  At 1.580 the
+  genuine crossers end up to +1.75 cm past the cathode, so the default 1.2 cm dropped
+  clus 44 / clus 62 as *uncontained* (no bundle emitted → unselectable).  2.5 cm ≈ the
+  drift residual + ~0.75 cm margin restores them without over-relaxing the cut.
+
+Verified by reprocessing evt 983 at 1.580 / 2.5 cm: all four are now
+`contained = True, at_x_boundary = True` with a bundle emitted (cathode ends −0.21 /
+−1.73 / +1.22 / +1.74 cm).  n = 4 still — widen the sample to firm up the velocity.
+
+The viewer const `pdhd/img_plot/preprocess_event.py` `DRIFT_MM_PER_NS`, the img_viewer
+`PTS_X_HALF`, and the Bee3 cfg `wire-cell-bee3/.../experiment.js` `driftVelocity`
+(0.1580 cm/µs) are kept in sync.
