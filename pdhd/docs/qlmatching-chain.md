@@ -417,11 +417,15 @@ clusters, with measured vs predicted light — the all-TPC `MultiAlgBlobClusteri
 can dump an optical `op` instance alongside the usual `imaging` / `clustering` /
 `channel-deadarea` ones.
 
-**Toggle (default OFF → bit-identical).** `save_opflash` is plumbed
-`run_clus_evt.sh -op` → `wct-clustering.jsonnet` (TLA `save_opflash`) →
+**Toggle (PDHD default ON; C++ default OFF → bit-identical).** `save_opflash` is
+plumbed `run_clus_evt.sh` → `wct-clustering.jsonnet` (TLA `save_opflash`) →
 `clus.jsonnet` (`all_tpc(..., save_opflash)`) → the `clus_all_tpc` MABC node. It
 only does anything with `do_qlmatch` on (it reads QLMatching's `opflash` root PC),
-so `-op` implies `-q`; with it off the clustering output is unchanged.
+so the dump implies `-q`; with `do_qlmatch` off it is a no-op and the clustering
+output is unchanged. **`run_clus_evt.sh` now dumps `op` by default** (so the Bee
+combined link carries the flash overlay without extra flags); pass `-noop` (or
+`PDHD_OPDUMP=0`) to suppress it. The `wct-clustering.jsonnet` TLA itself still
+defaults `save_opflash=false`, so every non-PDHD config stays bit-identical.
 
 **What it dumps** (`MultiAlgBlobClustering::fill_bee_flashes`, written at the same
 *pre-pipeline* point as the `img` charge dump, where the per-APA matched clusters'
@@ -444,11 +448,12 @@ predicted light ≥ 100 PE contribute a prediction (same cut as the legacy
 `dump_light`).
 
 **Build a combined link.** `run_bee_combined_evt.sh` already copies every
-`data/0/0-*.json` out of `mabc-all-apa.zip`, so once the events are clustered with
-`-op` the `0-op.json` is folded into the upload automatically — no builder change
-needed. Use `-noimg` to take the imaging/clustering layers straight from the mabc zip
-(no separate `wirecell-img bee-blobs` pass). Select the **op** instance in Bee to step
-through flashes and compare `op_pes` vs `op_pes_pred`.
+`data/0/0-*.json` out of `mabc-all-apa.zip`, so once the events are clustered (op is
+dumped by default) the `0-op.json` is folded into the upload automatically — no
+builder change needed. The builder takes **every** layer (img-global, clustering-global,
+op, dead area) straight from the mabc zip — there is no separate `wirecell-img bee-blobs`
+pass. Select the **op** instance in Bee to step through flashes and compare `op_pes` vs
+`op_pes_pred`.
 
 **Bee charge layers — `img-global` + `clustering-global`.** The all-TPC MABC's
 `bee_points_sets` (in `clus.jsonnet`) emit two global charge layers: `img-global` (the
@@ -468,10 +473,10 @@ set, so emitting `img-global` here **replaces** the former per-drift-side stage-
 # from pdhd/ (this repo)
 ./run_clus_evt.sh -q  <run> <evt>     # -q / PDHD_QLMATCH=1 enables Q/L matching
 ./run_clus_evt.sh -calib <run> <evt>  # + dump candidate bundles for ql_scan viewer
-./run_clus_evt.sh -op <run> <evt>     # + dump the optical "op" Bee instance (§6); implies -q
+./run_clus_evt.sh -noop <run> <evt>   # suppress the optical "op" Bee instance (on by default)
 ```
 
-Output `mabc-all-apa.zip` carries the matched flash/T0 per cluster (and the `op`
-instance when `-op`). The [`ql_scan`](ql-scan-display.md) viewer merges an event's
-group02 + group13 dumps into one two-side view; for the Bee event display use `-op`
-+ `run_bee_combined_evt.sh` (§6).
+Output `mabc-all-apa.zip` carries the matched flash/T0 per cluster and the `op`
+instance (dumped by default; suppress with `-noop`). The [`ql_scan`](ql-scan-display.md)
+viewer merges an event's group02 + group13 dumps into one two-side view; for the Bee
+event display just run `run_bee_combined_evt.sh` (§6) on the clustered events.

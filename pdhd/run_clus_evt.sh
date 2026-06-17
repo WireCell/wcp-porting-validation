@@ -43,7 +43,7 @@ QLMATCH=${PDHD_QLMATCH:-1}
 # (work/<run6>_<evt>/calib-evt<EVT>-group{02,13}.json) for the pdhd/ql_scan viewer.
 # Implies Q/L matching; the matched mabc-*.zip output is byte-identical with/without it.
 CALIB=0
-OPDUMP=${PDHD_OPDUMP:-0}   # -op: dump the optical "op" bee instance (light + Q/L pred)
+OPDUMP=${PDHD_OPDUMP:-1}   # optical "op" bee instance (light + Q/L pred); default ON, -noop to disable
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -55,6 +55,7 @@ while [ $# -gt 0 ]; do
         -noq|--no-qlmatch) QLMATCH=0; shift ;;
         -calib|--calib) CALIB=1; QLMATCH=1; shift ;;
         -op|--op) OPDUMP=1; QLMATCH=1; shift ;;
+        -noop|--no-op) OPDUMP=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -65,7 +66,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] [-op] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps; -op: + optical bee instance)" >&2
+    echo "Usage: $0 [-a anode] [-s sel_tag] [-q] [-calib] [-noop] <run> <evt|all> [subrun]   (-q: Q/L matching; -calib: + hand-scan dumps; optical bee instance ON by default, -noop to disable)" >&2
     exit 1
 fi
 RUN=$1

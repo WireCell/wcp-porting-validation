@@ -1,27 +1,19 @@
 #!/bin/bash
-# Combined imaging + clustering Bee upload for one run (all events), one link.
+# Combined Bee upload for one run (all events), one link.
 #
-# Per event, the Bee instance set is:
-#   imaging-group02 / imaging-group13     after imaging step      (bee-blobs)
-#   clustering-group02 / clustering-group13  after per-APA clustering
-#   clustering-global                     after all-APA clustering
+# Every Bee instance is taken straight from work/<run>_<evt>/mabc-all-apa.zip,
+# which MultiAlgBlobClustering dumps with all charge points already in it:
+#   img-global                            raw imaged charge (pre-pipeline)
+#   clustering-global                     all-APA clustered result
+#   op                                    optical flashes + Q/L predicted PE
 #   channel-deadarea-group02 / -group13   dead area
+# so just run ./run_clus_evt.sh <run> all first (no separate imaging pass).
 #
-# Imaging instances come from clusters-apa-apa<N>-ms-active.tar.gz via
-# wirecell-img bee-blobs (APA0+APA2 and APA1+APA3 merged by drift side).
-# Clustering + dead instances are taken from work/<run>_<evt>/mabc-all-apa.zip,
-# so run ./run_clus_evt.sh <run> all first.
-#
-# Usage: ./run_bee_combined_evt.sh [-e evt,evt,...] [-noimg] <run> [subrun]
+# Usage: ./run_bee_combined_evt.sh [-e evt,evt,...] <run>
 #        ./run_bee_combined_evt.sh            # list available runs
 #
 # -e: restrict the link to a comma-separated subset of event indices (in the
 #     order they appear); default (no -e) uploads every discovered event.
-# -noimg: skip the pre-clustering imaging-group02/13 instances (the only ones
-#     built with wirecell-img bee-blobs).  The clustered points, dead area and
-#     optical (op) instances are dumped by MultiAlgBlobClustering and just
-#     copied from mabc-all-apa.zip, so -noimg builds in seconds with the full
-#     clustering + flash view (drops only the raw imaging-stage blobs).
 
 set -e
 
@@ -29,13 +21,11 @@ PDHD_DIR=$(cd "$(dirname "$0")" && pwd)
 . "$PDHD_DIR/_runlib.sh"
 
 EVT_SUBSET=""
-NOIMG=0
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
         -e) EVT_SUBSET="$2"; shift 2 ;;
         -e*) EVT_SUBSET="${1#-e}"; shift ;;
-        -noimg|--noimg) NOIMG=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -45,40 +35,10 @@ if [ $# -eq 0 ]; then
     list_runs; exit 0
 fi
 RUN=$1
-SUBRUN=${2:-0}
 
 RUN_STRIPPED=$(echo "$RUN" | sed 's/^0*//')
 [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
 RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
-
-# Even APAs (0,2) drift -x; odd APAs (1,3) drift +x.  Must match
-# wct-img-2-bee.py / run_bee_img_evt.sh.
-bee_anode_args() {
-    if [ $(($1 % 2)) -eq 0 ]; then
-        echo '--speed "-1.565*mm/us" --t0 "0*us" --x0 "-353.2*cm"'
-    else
-        echo '--speed "1.565*mm/us" --t0 "0*us" --x0 "353.2*cm"'
-    fi
-}
-
-find_clus_input() {
-    local evt=$1
-    local wd="$PDHD_DIR/work/${RUN_PADDED}_${evt}"
-    if ls "$wd/clusters-apa-apa"*"-ms-active.tar.gz" >/dev/null 2>&1; then
-        echo "$wd"; return 0
-    fi
-    for rn in "run${RUN}" "run${RUN_PADDED}" "run${RUN_STRIPPED}"; do
-        local rdir="$PDHD_DIR/input_data/$rn"
-        [ -d "$rdir" ] || continue
-        for en in "evt${evt}" "evt_${evt}"; do
-            local c="$rdir/$en"
-            if [ -d "$c" ] && ls "$c/clusters-apa-apa"*"-ms-active.tar.gz" >/dev/null 2>&1; then
-                echo "$c"; return 0
-            fi
-        done
-    done
-    return 1
-}
 
 mapfile -t _events < <(discover_events "$RUN" "$RUN_PADDED")
 if [ ${#_events[@]} -eq 0 ]; then
@@ -104,51 +64,25 @@ mkdir -p data
 
 _idx=0
 for _e in "${_events[@]}"; do
-    _clus_input=$(find_clus_input "$_e") || { echo "[skip] evt=$_e: no active tarballs" >&2; continue; }
-    _apa0=$(ls "$_clus_input/clusters-apa-apa"*"-ms-active.tar.gz" 2>/dev/null | head -1)
-    _event_no=$(tar tzf "$_apa0" | head -1 | sed -E 's/.*cluster_([0-9]+)_.*/\1/')
-    echo "$_event_no" | grep -qE '^[0-9]+$' || { echo "[skip] evt=$_e: cannot parse art event" >&2; continue; }
+    # All Bee instances (img-global, clustering-global, op, dead area) come from
+    # the all-TPC MABC dump; just re-index its data/0/0-*.json to this event.
+    _mabc="$PDHD_DIR/work/${RUN_PADDED}_${_e}/mabc-all-apa.zip"
+    if [ ! -s "$_mabc" ]; then
+        echo "[skip] evt=$_e: no mabc-all-apa.zip (run run_clus_evt.sh first)" >&2
+        continue
+    fi
 
-    echo "  [evt $_e -> bee index $_idx]  art_event=$_event_no  clus: $_clus_input"
+    echo "  [evt $_e -> bee index $_idx]  mabc: $_mabc"
     mkdir -p "data/$_idx"
 
-    # --- imaging instances (active blobs, merged by drift side) ---
-    # Skipped with -noimg: these are the only instances rebuilt via wirecell-img
-    # (MABC does not dump the pre-clustering imaging stage).
-    if [ "$NOIMG" != 1 ]; then
-    for _spec in "imaging-group02 0 0 2" "imaging-group13 1 1 3"; do
-        # shellcheck disable=SC2086
-        set -- $_spec
-        _gname=$1; _geoidx=$2; shift 2
-        _files=()
-        for _j in "$@"; do
-            _f="$_clus_input/clusters-apa-apa${_j}-ms-active.tar.gz"
-            [ -s "$_f" ] && _files+=("$_f")
-        done
-        [ ${#_files[@]} -gt 0 ] || continue
-        # shellcheck disable=SC2046
-        eval wirecell-img bee-blobs -g protodunehd -s uniform -d 1 \
-            --rse "$RUN_STRIPPED" "$SUBRUN" "$_event_no" \
-            $(bee_anode_args "$_geoidx") \
-            -o "data/${_idx}/${_idx}-${_gname}.json" \
-            "${_files[@]}"
+    _tmp=$(mktemp -d /home/xqian/tmp/beecomb.XXXXXX)
+    unzip -q -o "$_mabc" -d "$_tmp"
+    for _f in "$_tmp"/data/0/0-*.json; do
+        [ -e "$_f" ] || continue
+        _suffix=$(basename "$_f"); _suffix=${_suffix#0-}   # strip leading "0-"
+        cp "$_f" "data/${_idx}/${_idx}-${_suffix}"
     done
-    fi
-
-    # --- clustering + dead instances (from mabc-all-apa.zip, re-indexed) ---
-    _mabc="$PDHD_DIR/work/${RUN_PADDED}_${_e}/mabc-all-apa.zip"
-    if [ -s "$_mabc" ]; then
-        _tmp=$(mktemp -d /home/xqian/tmp/beecomb.XXXXXX)
-        unzip -q -o "$_mabc" -d "$_tmp"
-        for _f in "$_tmp"/data/0/0-*.json; do
-            [ -e "$_f" ] || continue
-            _suffix=$(basename "$_f"); _suffix=${_suffix#0-}   # strip leading "0-"
-            cp "$_f" "data/${_idx}/${_idx}-${_suffix}"
-        done
-        rm -rf "$_tmp"
-    else
-        echo "  [warn] evt=$_e: no mabc-all-apa.zip (run run_clus_evt.sh first) -> no clustering/dead" >&2
-    fi
+    rm -rf "$_tmp"
 
     _idx=$((_idx + 1))
 done

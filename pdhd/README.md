@@ -229,26 +229,26 @@ back to the legacy one-instance-per-APA output (`<i>-apa<N>.json`).
 Note `wirecell-img bee-blobs` has no dead-area code path, so the imaging-only
 link never carries a dead layer (the dead layer comes from clustering).
 
-### Combined link (imaging + clustering + dead)
+### Combined link (charge + flash + dead)
 
 ```bash
-./run_bee_combined_evt.sh <run> [subrun]      # runs run_clus_evt.sh first
+./run_bee_combined_evt.sh <run>               # run run_clus_evt.sh <run> all first
 ```
 
 Produces one `upload-combined-run<RUN_PADDED>.zip` / Bee link whose every event
-carries the full per-stage instance set, all grouped by drift side:
+carries the full instance set, taken straight from each event's
+`mabc-all-apa.zip` (no separate `wirecell-img bee-blobs` pass):
 
 | Instances | Stage |
 |---|---|
-| `imaging-group02` / `imaging-group13` | after imaging (`bee-blobs` active blobs) |
-| `clustering-group02` / `clustering-group13` | after **per-APA** clustering (MABC `img` pre-pipeline dump) |
+| `img-global` | raw imaged charge (MABC `img` pre-pipeline dump) |
 | `clustering-global` | after **all-APA** clustering (MABC end dump) |
+| `op` | optical flashes + Q/L predicted PE (dumped by default; `-noop` to suppress) |
 | `channel-deadarea-group02` / `-group13` | dead area (v2 wrapper) |
 
-Imaging instances come from the active cluster tarballs; the clustering and
-dead instances are taken from each event's `mabc-all-apa.zip` (so run
-`run_clus_evt.sh <run> all` first).  See `clus/docs/bee_output.md`
-(APA grouping) for how the per-APA vs full-detector dumps are configured.
+All layers (including all charge points) are already in `mabc-all-apa.zip`, so the
+builder just re-indexes them per event — run `run_clus_evt.sh <run> all` first.  See
+`clus/docs/bee_output.md` (APA grouping) for how the global dumps are configured.
 
 A standing inventory of the processed runs and their combined Bee links lives in
 [docs/pdhd-standalone-run-bee-links.md](docs/pdhd-standalone-run-bee-links.md).
