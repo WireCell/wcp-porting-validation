@@ -354,9 +354,13 @@ window.
 
 - **`drift_speed = 1.576 mm/µs`** — puts the top crosser (clus 62) at +0.84 cm, *inside*
   the cathode, rather than past it.  This biases global drift-x ~−0.6 cm vs the 4-crosser
-  mean (1.579), well within the ±2 cm degenerate band, and stays in the A-C-span bracket
-  [1.55, 1.57] / fixed point (~1.561).  (Earlier passes: 1.585 over-shot the cathode;
-  1.580 centred the mean but still left clus 44 / clus 62 at +1.2 / +1.7 cm past it.)
+  mean (1.579), well within the ±2 cm degenerate band.  **Caveat:** 1.576 is *just above*
+  the multi-event A-C-span bracket [1.55, 1.57] / fixed point (~1.561) — the cathode-end
+  method (n = 4, one event) and the A-C-span method disagree by ~1 %, with cathode-end
+  adopted as the more direct cathode-flag constraint.  Note the placement logic resists
+  going *lower* (toward the A-C value): a smaller v deepens the undershoot and forces a
+  wider `cathode_ext2`.  (Earlier passes: 1.585 over-shot the cathode; 1.580 centred the
+  mean but still left clus 44 / clus 62 at +1.2 / +1.7 cm past it.)
 - **`cathode_ext1 = 1.5 cm`** (QLMatching, `pdhd/qlmatching.jsonnet`; C++ default 1.2 cm)
   — the containment / PE-inclusion edge *past* the cathode (`QLMatching.cxx:2474,1082`).
   Since 1.576 keeps every genuine crosser ≤ +0.84 cm, this reverts to ~the C++ default
