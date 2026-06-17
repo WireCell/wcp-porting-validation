@@ -182,7 +182,69 @@ especially common there, so the same failure class applies.
 * Production `work/027409_6` / `_7` frames + magnify regenerated with the fix
   ON (pre-fix outputs preserved in `bak-pre-wfix/`).
 
-## 6. Related
+## 6. Third root cause (upstream): `rebase_waveform` baseline over-subtraction
+
+**Symptom** (reported 2026-06-16, `pics/Screenshot 2026-06-16 at 10.32.03 PM.png`):
+run 029107 evt 983, **APA3 ch 9348 (W)** — same prolonged-W class, but seen on
+the **DNN-ROI** output (where W is always the gauss passthrough,
+`dnnroi_pp.jsonnet`: `dnnspNw = standard SP gauss`). The §3/§4 fixes were
+already ON, yet the deconvolved signal kept only the bright head (ticks 0–500)
+and the two sharp out-of-track spikes, dropping the prolonged tail entirely.
+
+This is **upstream of §1–§4**: the kill happens in `OmnibusSigProc::load_data`,
+*before* deconvolution and ROI, in `rebase_waveform` (`OmnibusSigProc.cxx`).
+Rebasing is on for all planes by default (`m_rebase_planes{0,1,2}`, since
+`0c1d9f72`, Sep 2025) and subtracts a per-channel linear baseline tied to
+front/back `rebase_nbins=200`-tick window anchors.
+
+### Mechanism
+
+The `sigmask` anchor (default since `97f9d233`, Jun 2026) masks window samples
+with `|x − p50| > rebase_nsigma·σ`, `σ` from the 16/50/84 percentiles. ch9348's
+prolonged bright signal sits **in the front window and occupies ~25 % of the
+readout**, so the 84th percentile is pulled *into the signal* (p84≈214 vs
+p50≈−0.1, p16≈−8.7). The symmetric `σ = √((p84−p50)²+(p50−p16)²)/2)` is then
+inflated to ~151 → cut `4σ≈606 ADC`, wide enough that **197/200 front-window
+signal samples pass the mask**. The front anchor is biased high (≈365) while the
+clean back anchor ≈−2.4, so the subtracted baseline tilts down (−371 @t0 →
+−276 @t1500) and drives the prolonged tail **negative before decon** — ROI can
+never see it. (Same trigger condition as §3: a track on one W channel for
+≳16 % of the readout. `cal_RMS` and `rebase` are two independent percentile-σ
+estimators that both break at the same high-occupancy regime; §3 fixed the
+post-decon one, this fixes the pre-decon one.)
+
+Confirmed by disabling W rebase (`rebase_planes:[0,1]`) on a one-off rerun:
+ch9348 gauss charge **0.91M → 6.49M (7.1×)**, tail t1000–1500 **0 → 985k**.
+
+### The fix — robust `sigmask` σ (toolkit C++, replaces the old formula)
+
+`rebase_waveform`'s `RB_SIGMASK` σ is changed from the symmetric RMS of the two
+half-spreads to the **cleaner (smaller) half-spread**:
+
+```
+sigma = min(p84 − p50, p50 − p16);   // was sqrt(((p84-p50)^2 + (p50-p16)^2)/2)
+```
+
+One-sided signal inflates only *its own* half-spread, so `min()` stays a
+noise-only scale (here 8.6 not 151 → cut≈34), the front-window signal is masked,
+the window-widen loop finds no clean samples and falls back to the row median
+(≈0) → no tilt → tail preserved. This **replaces** the buggy symmetric σ (it is
+not a toggle): the symmetric form is biased low-or-high by any one-sided pulse
+and the robust form is never worse. `rebase_method=median` is unchanged;
+`mean` remains removed. Limitation: this does **not** help symmetric/bipolar
+high-occupancy windows, where both half-spreads inflate.
+
+### Verification
+
+* ch9348 with the new σ reproduces the rebase-OFF result: gauss **6.47M** vs
+  6.49M, `max|Δ|=17 ADC` — the over-subtraction is gone.
+* Do-no-harm: over all 2560 anode3 channels, only the prolonged-track cluster
+  (ch9346–9349) changes substantially (correct recovery); induction U/V are
+  untouched apart from ≤~2 % on 9 channels (the slightly tighter, better σ).
+* The `sigmask` string and default are unchanged — `sigmask` *is* the robust
+  method now.
+
+## 7. Related
 
 * `sp-apa0-plane2.md` §7 — the sibling APA0 W tune (induction-path
   refinement erosion; different mechanism, same "prolonged W signal" theme).
