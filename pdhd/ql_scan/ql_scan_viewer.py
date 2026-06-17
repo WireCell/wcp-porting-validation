@@ -245,6 +245,20 @@ class Event:
             if f["group"] is None:
                 cg += 1
                 f["group"] = cg
+        # Rank the coincidence groups by flash time (earliest first) so the scan's
+        # group order matches Bee's time-ordered flash list.  The pairing loop
+        # above numbers every S0-paired group before the appended S1-only ones, so
+        # an early-time S1-only flash would otherwise get a late group id (e.g. a
+        # -1452 us flash landing in "grp 66").  Remap ids to ascending earliest
+        # flash time; paired S0+S1 flashes keep their shared id.
+        gtime = {}
+        for f in flashes:
+            g = f["group"]
+            if g not in gtime or f["time"] < gtime[g]:
+                gtime[g] = f["time"]
+        remap = {g: i + 1 for i, g in enumerate(sorted(gtime, key=lambda g: gtime[g]))}
+        for f in flashes:
+            f["group"] = remap[f["group"]]
         # opdet arrays (numpy) for fast light-pattern drawing. od_apa is the drift
         # SIDE (APA ident parity): APAs 0,2 -> side 0; APAs 1,3 -> side 1.
         self.od_x = np.array([o["x"] for o in od0])

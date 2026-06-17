@@ -1,7 +1,11 @@
 #!/bin/bash
 # Run clustering for one event.
-# Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <run> <evt|all> [subrun]
+# Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] [-noq] <run> <evt|all> [subrun]
 #        ./run_clus_evt.sh               # list available runs
+#
+# Q/L (charge-light) matching runs by DEFAULT; -noq (or PDHD_QLMATCH=0) disables it.
+# An event with no converted light (opflash_pdhd-wct.tar.gz) auto-falls back to the
+# no-matching chain, so 'evt all' never fails on a light-less event.
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDHD_MAX_JOBS=N).  Events with missing inputs are skipped.
@@ -30,9 +34,11 @@ fi
 
 ANODE=""
 SEL_TAG=""
-# Charge-light (Q/L) matching before the final all-TPC clustering: opt-in
-# (-q or PDHD_QLMATCH=1).  Default off => historical no-matching chain.
-QLMATCH=${PDHD_QLMATCH:-0}
+# Charge-light (Q/L) matching before the final all-TPC clustering: ON by default
+# now that the PDHD light + matching chain is tuned (-noq or PDHD_QLMATCH=0 forces
+# the historical no-matching chain).  Per-event, matching auto-disables when the
+# converted light is absent (see QLMATCH_EVT below).
+QLMATCH=${PDHD_QLMATCH:-1}
 # -calib: also dump the per-drift-side Q/L hand-scan calibration JSONs
 # (work/<run6>_<evt>/calib-evt<EVT>-group{02,13}.json) for the pdhd/ql_scan viewer.
 # Implies Q/L matching; the matched mabc-*.zip output is byte-identical with/without it.
@@ -46,6 +52,7 @@ while [ $# -gt 0 ]; do
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
         -q) QLMATCH=1; shift ;;
+        -noq|--no-qlmatch) QLMATCH=0; shift ;;
         -calib|--calib) CALIB=1; QLMATCH=1; shift ;;
         -op|--op) OPDUMP=1; QLMATCH=1; shift ;;
         *) _args+=("$1"); shift ;;
@@ -127,6 +134,16 @@ process_event() {
     fi
     echo "Art event number: $EVENT_NO"
 
+    # Q/L matching is on by default but needs this event's converted light; if it
+    # is absent fall back to the no-matching chain for THIS event only, so an
+    # 'evt all' over a run with some light-less events doesn't fail.  Everything
+    # below keys off the per-event QLMATCH_EVT rather than the global QLMATCH.
+    local QLMATCH_EVT=$QLMATCH
+    if [ "$QLMATCH_EVT" = 1 ] && [ ! -f "$CLUS_INPUT/opflash_pdhd-wct.tar.gz" ]; then
+        echo "[note] no opflash_pdhd-wct.tar.gz in $CLUS_INPUT -> skipping Q/L matching for this event" >&2
+        QLMATCH_EVT=0
+    fi
+
     if [ -n "$ANODE" ]; then
         ANODE_CODE="[$ANODE]"
         TAG_SUFFIX="_a${ANODE}"
@@ -154,7 +171,7 @@ process_event() {
     # + T0Correction x_t0cor).  Imaging stays offset-free (time_offset=0).  Stays 0
     # when not matching or when the archive/metadata is absent (bit-identical).
     TRIGGER_OFFSET_US=0
-    if [ "$QLMATCH" = 1 ]; then
+    if [ "$QLMATCH_EVT" = 1 ]; then
         OPFLASH_TAR="$CLUS_INPUT/opflash_pdhd-wct.tar.gz"
         if [ -f "$OPFLASH_TAR" ]; then
             TRIGGER_OFFSET_US=$(python3 - "$OPFLASH_TAR" <<'PY' || echo 0)
@@ -202,7 +219,7 @@ PY
     # sits below the PDHD cathode and would falsely flag mid-drift clusters).
     # Falls back to 6000 (the jsonnet default) if no frame is found / unreadable.
     READOUT_NTICKS=6000
-    if [ "$QLMATCH" = 1 ]; then
+    if [ "$QLMATCH_EVT" = 1 ]; then
         _SPF=$(ls "$CLUS_INPUT"/protodunehd-sp-dnnroi-frames-anode*.tar.bz2 2>/dev/null | head -1)
         if [ -n "$_SPF" ]; then
             _NT=$(python3 - "$_SPF" <<'PY'
@@ -225,7 +242,7 @@ PY
         -S "run=${RUN_STRIPPED}" \
         -S "subrun=${SUBRUN}" \
         -S "event=${EVENT_NO}" \
-        -S "do_qlmatch=$([ "$QLMATCH" = 1 ] && echo true || echo false)" \
+        -S "do_qlmatch=$([ "$QLMATCH_EVT" = 1 ] && echo true || echo false)" \
         -S "calib=$([ "$CALIB" = 1 ] && echo true || echo false)" \
         -S "save_opflash=$([ "$OPDUMP" = 1 ] && echo true || echo false)" \
         -S "trigger_offset_us=${TRIGGER_OFFSET_US}" \
@@ -270,7 +287,7 @@ PY
     local _peak_kb=0
     [ -f "$RES_CSV" ] && _peak_kb=$(awk -F, 'NR>1 && $4>m{m=$4}END{print m+0}' "$RES_CSV")
     awk -v r="$RUN_PADDED" -v e="$EVT" -v w="$_wall" -v p="$_peak_kb" \
-        -v q="$QLMATCH" -v c="$CALIB" -v o="$OPDUMP" 'BEGIN{
+        -v q="$QLMATCH_EVT" -v c="$CALIB" -v o="$OPDUMP" 'BEGIN{
         printf "run=%s evt=%s wall_s=%d peak_rss_gb=%.2f flags=q%s,calib%s,op%s\n",
                r,e,w,p/1048576,q,c,o}' | tee "$RES_TXT"
     if [ "$_rc" -ne 0 ]; then

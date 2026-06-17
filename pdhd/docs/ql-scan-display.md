@@ -110,6 +110,36 @@ The ±80 ns coincidence-group machinery is inherited from SBND. Because PDHD's
 cathode is opaque, groups are single-side in practice (a group's side-1 flash time
 shows "-" when only side 0 has light).
 
+### Drift side is the *lit* side, not the file side
+
+A flash's drift side is taken from **where its measured light is** — the OpDets that
+carry its PE — never from which per-group file referenced it. PDHD's cathode is
+opaque to 128 nm VUV, so a flash lights OpDets on exactly **one** volume: light on
+the **−x** array (APAs 0,2) ⇒ **side 0**, on the **+x** array (APAs 1,3) ⇒ **side 1**.
+The per-side matcher runs against one global flash list, so the *same* flash is
+referenced by clusters on both sides; using the file/node side would put a flash on
+the wrong panel and double-count it. So a flash whose light is on the +x OpDets is
+shown on the **S1** panel even though it also appears in the `group02` file, and its
+−x copy (zero measured PE on side 0) is dropped as an empty phantom.
+
+This is the same rule the Bee **op** display now uses. The optical-flash dump in
+`MultiAlgBlobClustering` previously labelled every flash `apa=0` (it derived the side
+from the flash *gid*, which encodes the processing node's anode, not the lit volume).
+`QLMatching::write_opflash_pc` now emits a per-flash physical side from the PE pattern
+(`m_opdets[ch].center.x()` vs the cathode), carried through the per-APA→all-APA merge
+and read back by `fill_bee_flashes`, so Bee tags each flash **TPC0 (−x, APAs 0,2)** or
+**TPC1 (+x, APAs 1,3)** consistently with this viewer. (Older dumps without the `apa`
+column fall back to the legacy gid encoding.)
+
+### Group order follows flash time
+
+Coincidence groups are **ranked by ascending flash time**, so paging the scan walks the
+flashes earliest-first and the group order matches Bee's time-ordered flash list. The
+cross-side pairing numbers every S0-paired group before the appended S1-only ones, so
+without this an early-time S1-only flash would land on a late group id (e.g. a −1452 µs
+flash showing up as "grp 66"); the viewer remaps ids to time order after pairing
+(paired S0+S1 flashes keep their shared id).
+
 ### Selection rules, persistence, save
 
 Identical to SBND:
