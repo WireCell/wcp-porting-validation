@@ -18,29 +18,28 @@ It has two parts:
 2. a **Bokeh server viewer** (`ql_scan/`) that renders the bundles, lets you pick
    the correct matches under the physical selection rules, and writes a labels JSON.
 
-## What differs from SBND: two drift sides, two files
+## Two drift sides in one joint node, one combined file
 
-SBND runs one **joint** QLMatching node (both TPCs → one calib JSON). PDHD images
-through two drift volumes either side of a central cathode, and wires **one
-QLMatching node per drift side** (`pdhd/wct-clustering.jsonnet`):
+Like SBND, PDHD now runs **one joint** QLMatching node taking **both** drift volumes
+(`matching_joint`, `pdhd/wct-clustering.jsonnet`) and writes a **single** calib JSON per
+event, with both sides tagged by `apa`:
 
-| group | APAs | imaging face | drift | merged side |
-|-------|------|--------------|-------|-------------|
-| `group02` | 0, 2 | 0 | −x | **0** |
-| `group13` | 1, 3 | 1 | +x | **1** |
+| `apa` | APAs | imaging face | drift | side |
+|-------|------|--------------|-------|------|
+| `0` | 0, 2 | 0 | −x | **0** |
+| `1` | 1, 3 | 1 | +x | **1** |
 
-Each node writes **its own** calib JSON, so an event has up to **two** per-group
-files. The central cathode is **opaque to 128 nm VUV**, so the two drift sides are
-physically independent — a flash on one side never sees charge on the other, and
-there is no cross-side light coincidence. Today usually only one drift side carries
-a light signal, so usually only **one** file is produced.
+The central cathode is **opaque to 128 nm VUV**, so each drift side is matched
+**independently**; the joint node adds only a cross-cathode (xTPC) consistency pass that
+pairs a cathode-crosser's two halves (see [`qlmatching-chain.md`](qlmatching-chain.md)).
 
-The viewer **merges the 1–2 per-group files of an event** into one two-panel
-(side 0 / side 1) view: it groups files by event id (stripping the `-group02` /
-`-group13` suffix), maps `group02`→side 0 and `group13`→side 1, tags every
-flash/cluster/bundle with its side, id-offsets them so the two files never collide,
-unions the per-side detector boxes, and ORs the OpDet active masks. A missing side
-simply leaves that side's panels **blank**.
+The viewer renders the one file as a two-panel (side 0 / side 1) view: it reads each
+flash/cluster/bundle's own `apa` field (the node already tags it and makes gid/uid
+globally unique via the `apa·10⁶` stride), takes each side's detector box from the
+`geometry["0"]`/`geometry["1"]` entries, and ORs the OpDet active masks. A side with no
+light leaves its panels **blank**. (A legacy pair of per-side
+`calib-evt<ID>-group02/group13.json` files still loads — each carries one distinct
+`apa` — so old dumps keep working.)
 
 ---
 
@@ -51,8 +50,7 @@ The dump is emitted by the clustering chain (`run_clus_evt.sh`) with `-calib`:
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/pdhd
 ./run_clus_evt.sh -calib <run> <evt|all>
-# -> work/<run6>_<evt>/calib-evt<ID>-group02.json
-#    work/<run6>_<evt>/calib-evt<ID>-group13.json   (only for populated sides)
+# -> work/<run6>_<evt>/calib-evt<ID>.json   (one combined file, both drift sides)
 ```
 
 `-calib` implies Q/L matching (it forces `do_qlmatch`). The flag is **off by
@@ -72,12 +70,11 @@ with these PDHD specifics:
 | `drift_speed` | cm/µs; a bundle's T0 x-shift is `dx = sign_offset · flash_time_us · drift_speed`. `flash_time_us` **already includes** the per-event readout-vs-trigger offset (folded in by QLMatching), so the charge lands on the raw-`x` reference the dump uses; the top-level `trigger_offset` is `0` and must **not** be re-added |
 | `geometry[apa]` | fixed detector box per drift volume: `anode_x`, `cathode_x` (central cathode ≈ 0), `sign_offset`, `y_lo/y_hi`, `z_lo/z_hi` |
 | `opdets[]` | per channel `{ch, x, y, z, type, apa, active}`; `type` 0 = X-ARAPUCA |
-| `flashes[]`, `clusters[]`, `bundles[]` | as SBND; per-file only one drift side is populated |
+| `flashes[]`, `clusters[]`, `bundles[]` | as SBND; both drift sides populated, each entry tagged by `apa` (0/1) |
 
-Each per-group file holds only its own drift side, so within a file `apa` is the
-side's representative APA ident. After the viewer merges the two files, the in-app
-`apa` field is the **drift side (0 or 1)**, and the flash gid / group ids shown in
-the UI are the per-side dump values (the merge offset is stripped for display).
+The combined file carries both drift sides; each flash/cluster/bundle's `apa` field is
+its **drift side (0 or 1)** and its `gid`/`uid` is globally unique via the `apa·10⁶`
+stride (so the viewer reads them as-is, no per-side offset).
 
 ---
 
@@ -86,7 +83,7 @@ the UI are the per-side dump values (the merge offset is stripped for display).
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/pdhd
 # default port 5015 (img_plot owns 5013, pd_plot 5014)
-./ql_scan/serve_ql_scan.sh 5015 --tag data work/*/calib-evt*-*.json
+./ql_scan/serve_ql_scan.sh 5015 --tag data work/*/calib-evt*.json
 ```
 
 From a laptop, forward the port and open the app:
@@ -133,8 +130,8 @@ column fall back to the legacy gid encoding.)
 
 ### Phantom flash collapse — keeps the two tables consistent
 
-Each per-side dump carries the **full global flash list**, so after the merge every
-physical flash appears **twice**: a *canonical* copy (file side == lit side) and a
+Each drift side's run dumps the **full global flash list**, so the combined file lists
+every physical flash **twice**: a *canonical* copy (file/run side == lit side) and a
 *phantom* copy (file side != lit side — the one referenced by the **other** drift
 side's clusters). A cross-side bundle (a cluster matched to a flash on the opposite
 volume) points at a phantom, whose coincidence group is never navigable (it carries no
@@ -182,6 +179,13 @@ Identical to SBND:
 - `work/ql_labels/` is a sibling of the per-event `work/<run6>_<evt>/` workspace, so
   reprocessing an event cannot delete saved scan results. `--tag` subdirs separate
   displays' labels.
+
+> **Migrating pre-joint-node scans.** Scans saved by the *old* two-file viewer keyed
+> their `.scan_state` / `labels` ids on a per-side `SIDE_OFF = 1e9` merge offset the joint
+> viewer no longer adds, so they would not restore against the new combined dump. Convert
+> them once with `ql_scan/convert_scan_prejoint.py` (strips the offset, `v % 1e9`); it
+> preserves the originals as `<name>.prejoint` and is idempotent. Verified on run 29107 evt
+> 983: all 31 saved picks restore, including the cluster-70 cross-side cathode-crosser.
 
 ---
 

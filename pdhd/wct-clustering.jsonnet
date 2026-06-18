@@ -101,45 +101,48 @@ local group_pipe(gd) =
     );
 
 local group_pipes = [group_pipe(gd) for gd in groups];
-local clus_all_tpc = clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=save_opflash);
+// With Q/L matching on, ONE joint QLMatching node emits a single pre-merged tree, so the
+// all-TPC stage skips its input PointTreeMerging (premerged).  Without matching the two
+// per-side clustering outputs still fan into the ngroups-way merge.
+local clus_all_tpc = if do_qlmatch
+    then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash)
+    else clus_maker.all_tpc(anodes, ngroups=ngroups, save_opflash=save_opflash);
 
-// Q/L matching for one drift-side group: opflash source -> flash_attach (2->1
-// fan-in: port0 = group cluster tree, port1 = opflash matrix) -> QLMatching.
-// The subgraph's free input is flash_attach port0 (port1 is wired internally),
-// its output is the matched cluster tree.  A representative anode of the group
-// (gd.anodes[0]) carries the shared drift-side geometry / per-TPC OpDet mask.
+// JOINT Q/L matching: both drift sides enter ONE QLMatching node (like SBND) so the
+// cross-cathode (xTPC) consistency pass can pair a cathode-crosser's two halves.  Per
+// side: opflash source -> flash_attach (2->1 fan-in: port0 = group cluster tree, port1 =
+// opflash matrix); flash_attach[i] feeds the joint node's input port i.  The joint node
+// emits one merged tree (-> premerged clus_all_tpc).  grouping_anodes / tpc_faces are
+// per-side, so each run keeps its own drift-volume geometry and imaging face.
 local qlm = import 'pgrapher/experiment/pdhd/qlmatching.jsonnet';
 local qlm_maker = qlm(params, trigger_offset, readout_window_ticks);
-// Per-drift-side hand-scan calibration dump path (empty unless `calib`).  Lands in
-// the event workspace beside mabc-*.zip, one file per group (the ql_scan viewer
-// merges group02 + group13 of an event into one two-side view).
-local calib_dump(gd) =
-    if calib then '%s/calib-evt%s-%s.json' % [output_dir, std.toString(event), gd.name]
+// One combined hand-scan calibration dump (empty unless `calib`); both sides land in the
+// single file (the ql_scan viewer reads one file with apa=0/1 bundles tagged by lit side).
+local calib_dump_joint =
+    if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';
-local ql_chain(gd) =
-    local src = qlm_maker.opflash_source(gd.name, "%s/opflash_pdhd-wct.tar.gz" % input);
-    local att = qlm_maker.flash_attach(gd.name);
-    local dv  = clus_maker.detector_volumes(gd.anodes, gd.face);
-    local mat = qlm_maker.matching(gd.anodes, dv, gd.name, gd.face, calib_dump(gd));
-    g.intern(
-        innodes=[att],
-        centernodes=[src],
-        outnodes=[mat],
-        edges=[
-            g.edge(src, att, 0, 1),
-            g.edge(att, mat, 0, 0),
-        ]
-    );
 
 local graph = if do_qlmatch then
-    local ql_pipes = [ql_chain(groups[i]) for i in std.range(0, ngroups - 1)];
+    local srcs = [qlm_maker.opflash_source(groups[i].name, "%s/opflash_pdhd-wct.tar.gz" % input)
+                  for i in std.range(0, ngroups - 1)];
+    local atts = [qlm_maker.flash_attach(groups[i].name) for i in std.range(0, ngroups - 1)];
+    // Joint node sees ALL APAs through ONE DetectorVolumes (both faces registered); the
+    // per-side anode lists + faces drive the per-run box union and wire face.
+    local dv_all = clus_maker.detector_volumes(anodes);
+    local sides  = [gd.anodes for gd in groups];
+    local faces  = [gd.face for gd in groups];
+    local mat = qlm_maker.matching_joint(sides, dv_all, faces, calib_dump_joint);
+    // Flat fan-in: per side i, group cluster tree -> flash_attach[i] port 0, opflash ->
+    // port 1; flash_attach[i] -> joint node input port i; joint output -> clus_all_tpc.
     g.intern(
         innodes=group_pipes,
-        centernodes=ql_pipes,
+        centernodes=srcs + atts + [mat],
         outnodes=[clus_all_tpc],
         edges=
-            [g.edge(group_pipes[i], ql_pipes[i], 0, 0) for i in std.range(0, ngroups - 1)] +
-            [g.edge(ql_pipes[i], clus_all_tpc, 0, i) for i in std.range(0, ngroups - 1)]
+            [g.edge(srcs[i], atts[i], 0, 1) for i in std.range(0, ngroups - 1)] +
+            [g.edge(group_pipes[i], atts[i], 0, 0) for i in std.range(0, ngroups - 1)] +
+            [g.edge(atts[i], mat, 0, i) for i in std.range(0, ngroups - 1)] +
+            [g.edge(mat, clus_all_tpc, 0, 0)]
     )
 else g.intern(
     innodes=group_pipes,

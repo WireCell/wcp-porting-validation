@@ -41,7 +41,7 @@ mis-pair every flash with its own copy.
 
 ```bash
 # default port 5015 (img_plot owns 5013, pd_plot 5014)
-./serve_ql_scan.sh 5015 --tag data work/*/calib-evt*-*.json
+./serve_ql_scan.sh 5015 --tag data work/*/calib-evt*.json
 ```
 
 From a workstation:

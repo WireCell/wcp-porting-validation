@@ -5,14 +5,14 @@
 #   port        (optional, default 5015; img_plot owns 5013, pd_plot 5014)
 #   --tag NAME  (optional) namespace saved scan results into work/ql_labels/NAME/
 #               so separate displays keep their labels apart, e.g.
-#                 ./serve_ql_scan.sh 5015 --tag data work/*/calib-evt*-*.json
+#                 ./serve_ql_scan.sh 5015 --tag data work/*/calib-evt*.json
 #   calib-glob  (optional) one or more globs/paths of per-event calib JSONs
-#               (default: ../work/*/calib-evt*-*.json)
+#               (default: ../work/*/calib-evt*.json)
 #
 # Produce the calib JSONs first with the clustering chain + -calib, e.g.
 #   ./run_clus_evt.sh -calib <run> all
-# which writes work/<run6>_<evt>/calib-evt<ID>-group02.json and -group13.json (one
-# file per populated drift side; the viewer merges the two into one event view).
+# which writes work/<run6>_<evt>/calib-evt<ID>.json (one combined file per event, both
+# drift sides; the joint QLMatching node tags each entry with its drift side).
 #
 # To view from a remote laptop, set up SSH port forwarding first:
 #   ssh -L 5015:localhost:5015 user@wcgpu1
@@ -33,7 +33,7 @@ fi
 if [ "$#" -gt 0 ]; then
     SPECS=("$@")
 else
-    SPECS=("$HERE/../work/"*"/calib-evt"*"-"*".json")
+    SPECS=("$HERE/../work/"*"/calib-evt"*".json")
 fi
 
 BOKEH=/nfs/data/1/xqian/toolkit-dev/.direnv/python-3.11.9/bin/bokeh

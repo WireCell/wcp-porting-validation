@@ -35,29 +35,37 @@ Each volume contains **two APAs offset along Z (beam)**:
 | group13 | 1, 3 | `x > 0`   | `tpc_face=1` | APA1 z[0,230] + APA3 z[232,463] cm |
 
 Q/L matching is inserted **between clustering stage 3 (per-drift-group) and stage 4
-(all-TPC)** — `pdhd/wct-clustering.jsonnet`, function `ql_chain(gd)` under the
-`do_qlmatch` switch (default off → historical no-matching chain). Per drift-side
-group:
+(all-TPC)** — `pdhd/wct-clustering.jsonnet` under the `do_qlmatch` switch (default off →
+historical no-matching chain). Both drift sides enter **ONE joint QLMatching node**
+(`matching_joint`, `nin=2`, like SBND) so the cross-cathode consistency pass can see both:
 
 ```
-opflash_pdhd-wct.tar.gz ─▶ TensorFileSource ─┐
-                                              ├▶ FlashTensorToOpticalPCs ─▶ QLMatching ─▶ all-TPC
-   stage-3 group cluster tree ────────────────┘   (nchan=160, 2→1 fan-in)    (per group)
+opflash (group02) ─▶ TensorFileSource ─▶ FlashTensorToOpticalPCs ─┐ (port 0, side 0)
+   stage-3 group02 cluster tree ──────────────────────────────────┘
+                                                                    ├▶ QLMatching ─▶ all-TPC
+opflash (group13) ─▶ TensorFileSource ─▶ FlashTensorToOpticalPCs ─┐ (port 1, side 1)  (premerged)
+   stage-3 group13 cluster tree ──────────────────────────────────┘   (nchan=160, joint)
 ```
 
-- **`TensorFileSource`** (`opflash_source`) reads the per-event opflash archive
-  produced by the light chain.
+- **`TensorFileSource`** (`opflash_source`) reads the per-event opflash archive.
 - **`FlashTensorToOpticalPCs`** (`flash_attach`, `nchan=160`, `correct_flash_time:false`)
-  expands the opflash matrix into the canonical flash / light / flashlight point
-  clouds on the cluster root. Port 0 = cluster tree, port 1 = opflash matrix.
-- **`QLMatching`** (`matching`) reads those flash PCs, predicts light from the
-  cluster charge, fits flash↔cluster, and writes a per-cluster matched-flash scalar
-  (`Cluster::get_flash()`), T0, and `matched_flash_gid` — propagated to every cluster
-  of a group so the T0 survives the all-TPC re-merge (see
-  [group-aware matching](#group-aware-matching)).
+  expands the opflash matrix into the canonical flash / light / flashlight PCs on the
+  cluster root. Port 0 = cluster tree, port 1 = opflash matrix; one per drift side.
+- **`QLMatching`** (`matching_joint`) takes both sides on input ports 0 (side 0) and 1
+  (side 1). Each side is still matched **independently** in its own `ApaRun` — `anodes`,
+  `grouping_anodes` and `tpc_faces` are **per input**, so each run keeps its own drift
+  geometry, two-APA box and imaging face. The node then runs the cross-cathode (xTPC)
+  pass over both sides (below), emits **one** merged tree (the all-TPC stage is
+  `premerged` → no PointTreeMerging), and writes the per-cluster matched-flash scalar
+  (`Cluster::get_flash()`), T0, `matched_flash_gid`, and `xtpc_consistent`.
 
-`group02 → clus_all_tpc` port 0, `group13 → port 1`. The two groups are matched
-**independently**, each in its own `ApaRun` (`QLMatching.cxx:478`).
+Earlier PDHD wired **two** separate per-side nodes (one input each); the central cathode
+is opaque so the two volumes are physically independent and matched separately. They were
+merged into one node solely so the cross-cathode pass has both halves co-resident — a
+cathode-crosser is imaged as **two clusters, one per volume**, which two separate nodes
+never see together (`xtpc_flag` was therefore inert). The per-side fits are unchanged by
+the merge: with `xtpc_flag` off, the joint node's side-0 output is **byte-identical** to
+the old separate `group02` dump (run 29107 evt 983, 1098/1098 bundles).
 
 <a name="group-aware-matching"></a>
 **Group-aware (main + associated), then recomposed.** Stage-3 per-group clustering
@@ -324,11 +332,46 @@ PE sits (OpDet x vs the cathode plane — the same rule the merged-root opflash 
   see [`ql-scan-display.md`](ql-scan-display.md). The cluster-**length** cut still gates
   the navigation table, so short fragments stay hidden there.
 
+### Cross-cathode (xTPC) cathode-crossing pairing (enabled for PDHD)
+
+With both drift sides in the joint node, the cross-cathode pass (`cull_cross_tpc`,
+`xtpc_flag:true`) pairs a cathode-crosser's two halves across the central cathode. It
+gathers the cathode-relevant candidates of each side (`at_x_boundary` cathode-end or
+`window_truncated`), and for every **coincident** (Δt < `flash_group_window`) pair of a
+**side-0** and a **side-1** candidate tests geometric consistency: **scenario 1** —
+closest approach < `xtpc_dmax` (5 cm, both cathode ends present, tight/self-vetoing; sets
+`xtpc_scenario1`); **scenario 2** — a truncated half whose connecting vector is collinear
+(< `xtpc_angle_max` = 20°) with both Hough directions and within `xtpc_dmax2` (300 cm). A
+passing pair stamps `xtpc_consistent` on **both** halves.
+
+The pairing is on **drift side** (low-x volume = 0 / high-x volume = 1, from the run's
+anode-vs-cathode position), **not** the raw APA ident — so the same code is bit-identical
+for SBND (its two APAs already are the two sides) and works for PDHD (side 0 = APAs 0,2;
+side 1 = APAs 1,3). The C++ knobs `tpc_faces` (per-input face list) and a per-input
+`grouping_anodes` make the joint multi-face node possible; both default to the single-node
+behaviour so every other config stays bit-identical (SBND joint output verified
+byte-identical before/after).
+
+> **This is NOT observation-only for PDHD.** `xtpc_flag:true` also activates the
+> **xtpc-priority cull** in `cull_inconsistent`: a cluster with a scenario-1 xTPC bundle
+> keeps that bundle and drops its rivals, which re-steers matching and ripples through the
+> per-side LASSO. On run 29107 evt 983 this **reassigned 53 / 1098 side-0 bundles** and
+> raised agreement with the 30 hand-scan labels (`auto_selected` reproduced 3 → **5** of
+> them, **+2 gained, 0 lost**). The flag count went **0 → 17** consistent bundles, pairing
+> e.g. side-0 cluster 70 with the side-1 flash at −1807 µs (scenario 1).
+>
+> **The no-flash-on-one-side crosser** (the user's case) is paired and flagged, but its
+> cross-side bundle stays `auto_selected=false`: a side-0 cluster predicts ≈0 light on the
+> side-1 OpDets (opaque cathode), so it can never win the light fit — xTPC *annotates* the
+> pair rather than forcing an impossible light-match. The hand-scan viewer surfaces it
+> (navigable, with the flag) so a human can confirm it.
+
 ### What the SBND Q/L chain still does that PDHD does not
 
-PDHD now runs containment + over-prediction; the SBND `qlmatching.jsonnet` enables a
-larger tuned suite. The rest are **recommended, not enabled** — each needs PDHD
-hand-scan GT (the bee link) before its thresholds can be set:
+PDHD now runs containment + over-prediction + cross-cathode xTPC; the SBND
+`qlmatching.jsonnet` enables a larger tuned suite. The rest are **recommended, not
+enabled** — each needs PDHD hand-scan GT (the bee link) before its thresholds can be set;
+the xTPC cuts above are **SBND-seeded and themselves still pending PDHD tuning**:
 
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
@@ -337,7 +380,6 @@ hand-scan GT (the bee link) before its thresholds can be set:
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles | deferred |
 | `chi2_relax` | inflates χ² denom for measured excess at close-to-PMT PMTs | deferred — PDHD X-ARAPUCA response differs |
 | `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | deferred — PDHD PE-error model is the C++ default, untuned |
-| `xtpc_flag` (+`xtpc_*`) | cross-cathode-crossing consistency stamp between the two TPC halves | **candidate** — PDHD's two drift groups straddle the central cathode, so cross-cathode tracks exist; observation-only, worth enabling next |
 
 ---
 

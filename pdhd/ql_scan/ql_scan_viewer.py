@@ -2,18 +2,19 @@
 """PDHD Q/L matching hand-scan event display (Bokeh server).
 
 PDHD counterpart of sbnd_xin/ql_scan/ql_scan_viewer.py (faithful port). Reads the
-per-event calibration dumps written by QLMatching (run_clus_evt.sh -calib). Unlike
-SBND's single joint dump, PDHD wires one QLMatching node per drift side, so each
-event has up to TWO per-group files:
-    work/<run6>_<evt>/calib-evt<ID>-group02.json   (APAs 0+2, drift -x  -> side 0)
-    work/<run6>_<evt>/calib-evt<ID>-group13.json   (APAs 1+3, drift +x  -> side 1)
-The central cathode is opaque to VUV, so the two drift sides are physically
-independent (no cross-side light coincidence). The viewer MERGES the 1-2 group
-files of an event into one two-panel (side 0 / side 1) view; today usually only one
-side carries light, and the unlit side's panels simply stay blank. Each file holds
-every candidate (flash, cluster) bundle with its predicted vs measured light, the
-matching metrics (ks/chi2/ndf/strength) and flags, the cluster geometry and the
-detector box.
+per-event calibration dump written by QLMatching (run_clus_evt.sh -calib). Like SBND,
+PDHD now wires ONE JOINT QLMatching node taking both drift sides, so each event has a
+single combined file:
+    work/<run6>_<evt>/calib-evt<ID>.json   (apa=0 = drift -x / APAs 0,2;
+                                            apa=1 = drift +x / APAs 1,3)
+The central cathode is opaque to VUV, so the two drift volumes match independently;
+the joint node adds only a cross-cathode (xTPC) consistency pass that pairs a
+cathode-crosser's two halves.  The viewer renders the file as a two-panel (side 0 /
+side 1) view keyed off each entry's `apa`; an unlit side's panels stay blank.  The
+file holds every candidate (flash, cluster) bundle with its predicted vs measured
+light, the matching metrics (ks/chi2/ndf/strength) and flags (incl. xtpc_consistent),
+the cluster geometry and the detector box.  (A legacy pair of per-side
+calib-evt<ID>-group02/group13.json files still loads -- each carries one distinct apa.)
 
 The tool lets a human pick the correct flash<->cluster match per cluster and saves
 those labels (Save -> work/ql_labels/<tag>/labels-evt<ID>.json) for later tuning of
@@ -177,9 +178,13 @@ class Event:
         active_any = None
         self.nchan = self.drift_speed = None
         self.qp = {}
+        # One combined calib file now carries BOTH drift sides (apa=0 and apa=1
+        # bundles/flashes/clusters): the joint QLMatching node tags each entry with its
+        # own drift side and makes gid/uid globally unique via the apa*1e6 stride, so we
+        # concatenate as-is, keyed off each entry's own `apa` -- no per-file side offset.
+        # A legacy pair of per-side files still loads (each carries a single, already
+        # distinct apa); the offset is therefore retired.
         for p in self.paths:
-            s = side_of(p)
-            off = s * SIDE_OFF
             with open(p) as fh:
                 d = json.load(fh)
             if self.nchan is None:
@@ -191,22 +196,13 @@ class Event:
             # side's OpDets active); positions/apa come from the first file.
             act = np.array([o["active"] for o in d["opdets"]], dtype=bool)
             active_any = act if active_any is None else (active_any | act)
-            # union the side's per-APA boxes into one drift-side box
-            self.geom[s] = self._merge_geom(d["geometry"])
-            for f in d["flashes"]:
-                # gid offset keeps the two files' flashes distinct; group is NOT
-                # offset here -- it is replaced below by a cross-side coincidence id.
-                f["gid"] += off; f["apa"] = s
-                flashes.append(f)
-            for c in d["clusters"]:
-                c["uid"] += off; c["apa"] = s
-                clusters.append(c)
-            for b in d["bundles"]:
-                b["apa"] = s
-                b["flash_gid"] += off
-                b["main_cluster"] += off
-                b["other_clusters"] = [u + off for u in b["other_clusters"]]
-                bundles.append(b)
+            # geometry is keyed by drift side ("0"/"1"); each value is already that
+            # side's (two-APA-union) box.
+            for k, gobj in d["geometry"].items():
+                self.geom[int(k)] = dict(gobj)
+            flashes.extend(d["flashes"])
+            clusters.extend(d["clusters"])
+            bundles.extend(d["bundles"])
         self.cluster_by_uid = {c["uid"]: c for c in clusters}
         self.bundles = bundles
         self._clen = {}                       # cached cluster lengths
@@ -1564,5 +1560,5 @@ if LABELS:
 else:
     status.text = ("<b>No calib JSONs found.</b> Produce them with "
                    "run_clus_evt.sh -calib &lt;run&gt; &lt;evt&gt;, then pass the "
-                   "work/&lt;run6&gt;_&lt;evt&gt;/calib-evt*-*.json glob to "
+                   "work/&lt;run6&gt;_&lt;evt&gt;/calib-evt*.json glob to "
                    "serve_ql_scan.sh.")
