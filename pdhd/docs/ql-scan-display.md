@@ -165,8 +165,18 @@ flash showing up as "grp 66"); the viewer remaps ids to time order after pairing
 Identical to SBND:
 
 - **one flash per cluster** (the **Filter selected bundles** toggle, default ON,
-  locks 🔒 a cluster already matched elsewhere); **many clusters per flash** (ticked
-  bundles sharing a flash sum their predicted light).
+  **hides** every other bundle reusing a cluster already matched elsewhere — from the
+  bundle table *and* the group navigation, so an all-reused group drops out of the
+  prev/next + dropdown, mirroring the length filter); **many clusters per flash**
+  (ticked bundles sharing a flash sum their predicted light).
+- The per-cluster **Compare** table is **pinned**: it shows the cluster from the last
+  *Compare cluster's flashes* click and does not follow main-table focus changes (so it
+  no longer jumps when a different-cluster bundle is clicked); re-click Compare to move
+  it.
+- **Cross-side bundles** (cluster on one drift side, flash measured on the other — the
+  `cross_side_filter` cathode-crosser survivors) are tinted light orange and tagged
+  `XSIDE` in the flags column, marking them as low-priority context rather than primary
+  scan targets. (Table label only — not written to the saved labels JSON.)
 - Picks **autosave** to `work/ql_labels/<tag>/.scan_state-evt<ID>.json` and restore
   on load; **Save labels** writes `work/ql_labels/<tag>/labels-evt<ID>.json`.
 - `work/ql_labels/` is a sibling of the per-event `work/<run6>_<evt>/` workspace, so

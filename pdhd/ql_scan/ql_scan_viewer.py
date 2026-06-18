@@ -439,7 +439,8 @@ def cluster_ident(idx):
 def set_selected(idx, want):
     """Add/remove bundle idx from the global selection. Returns (changed, message).
     When the filter is on, a bundle whose cluster is already claimed by *another*
-    selected bundle is locked — it cannot be turned on (but stays visible)."""
+    selected bundle is locked — it cannot be turned on (and is hidden from the table;
+    this is the safety net for the focus/toggle path)."""
     if want and idx not in state["selected"]:
         if state["filter_on"] and cluster_eliminated(idx):
             return False, ("cluster %d is locked by the filter (already matched to "
@@ -465,13 +466,24 @@ def bundle_long_enough(i):
     return evt.cluster_length(evt.bundles[i]["main_cluster"]) > MIN_CLUS_LEN
 
 
+def bundle_locked(i):
+    """True if the match filter is on and bundle i's cluster is already claimed by a
+    *different* selected bundle, so it is HIDDEN (not merely lock-glyphed) from the
+    table and group navigation."""
+    return (state["filter_on"] and i not in state["selected"]
+            and cluster_eliminated(i))
+
+
 def group_visible_bundles(g):
     """Indices of the bundles shown for coincidence group g under the active filters
-    (currently the >MIN_CLUS_LEN length filter). Drives both the bundle table and the
-    group navigation, so a group whose clusters are all short shows/navigates as empty."""
+    (the >MIN_CLUS_LEN length filter and, when the match filter is on, the lock that
+    hides bundles whose cluster is already matched elsewhere). Drives both the bundle
+    table and the group navigation, so a group whose clusters are all short, or all
+    locked, shows/navigates as empty."""
     evt = state["evt"]
     return [i for i in range(len(evt.bundles))
-            if evt.group_of(evt.bundles[i]["flash_gid"]) == g and bundle_long_enough(i)]
+            if evt.group_of(evt.bundles[i]["flash_gid"]) == g
+            and bundle_long_enough(i) and not bundle_locked(i)]
 
 
 def visible_count(g):
@@ -523,11 +535,12 @@ def cell_fmt(align):
 fmt_l = cell_fmt("left")
 fmt_r = cell_fmt("right")
 SEL_BG = "#cde6cd"   # light green for selected rows
+XSIDE_BG = "#f6e0c0"  # light orange for cross-side bundles (cluster vs other-side flash)
 
 # Selection is driven by a real CheckboxGroup (reliable clickable boxes) beside the
 # table — one box per current-group bundle, in table-row order. Ticking a box adds the
 # bundle to the selection (its predicted light joins the per-flash sum); tick several
-# to combine clusters. A 🔒 in the label marks a bundle the filter forbids selecting.
+# to combine clusters. With the filter on, bundles reusing a matched cluster are hidden.
 sel_group = CheckboxGroup(labels=[], active=[], width=380)
 sel_group_title = Div(text="<b>select matches</b> (tick to add to predicted sum)", width=380)
 
@@ -715,6 +728,15 @@ for f, hx, hy in ((f_xy, "x", "y"), (f_yz, "z", "y"), (f_xz, "x", "z")):
 # ---------------------------------------------------------------------------
 # Rendering.
 # ---------------------------------------------------------------------------
+def cross_side(b):
+    """Cluster on one TPC drift side, flash measured on the OTHER — a cross-cathode
+    candidate (kept by QLMatching's cross_side_filter). Low priority to scan, so the
+    table flags and tints it. `b["apa"]` is the cluster's side (set with main_cluster
+    from the same per-side file); the flash's apa is the lit/measured side."""
+    evt = state["evt"]
+    return bool(evt) and b["apa"] != evt.flash_by_gid[b["flash_gid"]]["apa"]
+
+
 def fmt_flags(b):
     parts = []
     if b["consistent"]:          parts.append("consist")
@@ -725,15 +747,16 @@ def fmt_flags(b):
     if b["window_truncated"]:    parts.append("wtrunc")
     if b.get("two_boundary"):    parts.append("2bnd")
     if not b["contained"]:       parts.append("UNCONTAINED")
+    if cross_side(b):            parts.append("XSIDE")
     return ",".join(parts)
 
 
 def rebuild_table():
     evt = state["evt"]
     g = state["group"]
-    # Show the current group's bundles that pass the length filter (clusters <=
-    # MIN_CLUS_LEN are hidden when it is on); when the match filter is on, those whose
-    # cluster is already matched get a lock glyph and their checkbox is refused.
+    # Show the current group's bundles that pass the active filters (length filter
+    # hides clusters <= MIN_CLUS_LEN; when the match filter is on, bundles whose cluster
+    # is already matched elsewhere are hidden entirely — see group_visible_bundles).
     visible = group_visible_bundles(g)
     # longest tracks first (by the main cluster's extent), then a stable tiebreak
     order = sorted(visible,
@@ -765,13 +788,13 @@ def rebuild_table():
         cols["meas"].append("%.0f" % b["total_PE"])
         cols["pred"].append("%.1f" % b["total_pred_light"])
         cols["flags"].append(fmt_flags(b))
-        # green tint persists for selected bundles (distinct from blue click-focus)
-        cols["sel_bg"].append(SEL_BG if i in state["selected"] else "transparent")
-        locked = (state["filter_on"] and i not in state["selected"]
-                  and cluster_eliminated(i))
-        labels.append("%d: S%d fl%d c%d  ks%.2f pr%.0f%s"
+        # green tint persists for selected bundles (distinct from blue click-focus);
+        # else a light-orange tint marks cross-side (cross-cathode) candidates.
+        cols["sel_bg"].append(SEL_BG if i in state["selected"]
+                              else XSIDE_BG if cross_side(b) else "transparent")
+        labels.append("%d: S%d fl%d c%d  ks%.2f pr%.0f"
                       % (r, b["apa"], disp_id(b["flash_gid"]), cu_id, b["ks_dis"],
-                         b["total_pred_light"], "  🔒" if locked else ""))
+                         b["total_pred_light"]))
     # Bokeh's DataTable (SlickGrid) repaints only when the row COUNT changes: replacing
     # source.data with the SAME number of rows leaves the old cells on screen (e.g.
     # grp 37 -> 38, both 6 bundles, kept showing grp 37's rows). Force a count change --
@@ -1243,7 +1266,7 @@ def load_event(label):
     summary = ("Loaded <b>%s</b>: %d contained bundles, %d flashes, %d clusters, "
                "%d coincidence groups; %d auto-selected. Pick a group; tick the ✓ box "
                "to select bundles (several per side add up in the predicted pattern); "
-               "'Filter selected bundles' locks reused clusters."
+               "'Filter selected bundles' hides bundles reusing a matched cluster."
                % (label, n, len(evt.flash_by_gid), len(evt.cluster_by_uid),
                   len(groups), nsel))
     status.text = summary
@@ -1299,11 +1322,9 @@ def on_row_select(attr, old, new):
         render_light()
         render_projections()
         render_metrics()
-        # once the compare table is open, follow the focused cluster so re-focusing a
-        # different bundle refreshes it (no need to re-click Compare).
-        if state["compare_cluster"] is not None:
-            state["compare_cluster"] = state["evt"].bundles[state["focus"]]["main_cluster"]
-            rebuild_compare()
+        # The compare table stays pinned to the cluster from the last 'Compare cluster's
+        # flashes' click — focusing a different bundle does NOT re-point it (request:
+        # the second table must not jump when clicking around the main table).
 
 
 def on_toggle():
@@ -1351,10 +1372,15 @@ def on_filter(attr, old, new):
     state["filter_on"] = bool(new)
     filter_btn.label = "Filter selected bundles: %s" % ("ON" if new else "OFF")
     filter_btn.button_type = "warning" if new else "default"
-    status.text = ("Filter ON — bundles reusing an already-matched cluster are locked "
-                   "(🔒) and cannot be selected." if new else
-                   "Filter OFF — any bundle can be selected.")
-    refresh()
+    status.text = ("Filter ON — bundles reusing an already-matched cluster are hidden "
+                   "from the table and navigation." if new else
+                   "Filter OFF — all bundles shown; any can be selected.")
+    if state["evt"] is None:
+        return
+    refresh()                         # re-trims the table and the group navigation
+    nav = state["nav_groups"]
+    if nav and state["group"] not in nav:
+        group_select.value = str(nav[0])    # current group emptied -> jump (fires refresh)
 
 
 def on_len_filter(attr, old, new):

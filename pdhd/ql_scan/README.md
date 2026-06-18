@@ -68,8 +68,11 @@ Instead of building a match from scratch:
 ## Display layout
 
 - Controls are on two rows: event/group navigation on top, action buttons below.
-- **Filter selected bundles** defaults ON — once a cluster is matched to a flash it is
-  locked (🔒) from being selected for another. Toggle it off to override.
+- **Filter selected bundles** defaults ON — once a cluster is matched to a flash, every
+  other bundle reusing that cluster is **hidden** from the bundle table and the group
+  navigation (a coincidence group whose bundles are *all* hidden this way drops out of
+  the dropdown / prev-next, and toggling the filter on off the current group jumps to a
+  populated one). Toggle it off to show — and be able to re-select — all bundles.
 - **Hide clusters ≤5cm** defaults ON — short fragments (bbox-diagonal length ≤ 5 cm,
   `MIN_CLUS_LEN` in `ql_scan_viewer.py`) are dropped from the clusters roster and the
   bundle table, since an event has many tiny ones that swamp the display. A coincidence
@@ -79,12 +82,18 @@ Instead of building a match from scratch:
   kept adjacent for quick reading.
 - Pick a cluster in the **clusters** roster, then click **Compare cluster's flashes**
   to list **all** of that cluster's candidate flashes (across coincidence groups) in the
-  second table (focusing a bundle row still works too; the most recent of the two wins).
-  The calib dump only emits TPC-contained bundles, so this list is already the
+  second table (focusing a bundle row then clicking Compare works too). The second table
+  is **pinned** to the cluster from the most recent **Compare** click — clicking around
+  the main table afterwards does *not* re-point it, so it stays put until you Compare
+  again. The calib dump only emits TPC-contained bundles, so this list is already the
   physically-feasible candidate set — the cluster lands inside the drift box at each
   listed flash's T0. Clicking a row jumps the whole view (focus + group) to that flash,
   so a candidate in another group is reachable. (A cathode-hugging cluster can be
   compatible with many flash times, since a later T0 just shifts it toward the anode.)
+- **Cross-side bundles** — where the cluster is on one drift side but the matched flash
+  is measured on the *other* side (the `cross_side_filter` cathode-crosser survivors) —
+  are tinted **light orange** and carry an `XSIDE` tag in the **flags** column, so they
+  are easy to spot and skip (they are kept for context, not primary scan targets).
 
 ## Light panels (measured / predicted, per side)
 
