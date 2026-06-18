@@ -289,6 +289,8 @@ containment culls **0 winners directly**.
 > (`ql-light-normalization-study.md`) were tuned on the **no-cut** dumps. These
 > prefilters change the matching that future calib dumps reflect; the anchor set grew
 > (3 → 14), so the calibration is not invalidated, but it was derived pre-filter.
+> A later **hand-scan label retune** (run 29107 evt 983) moved `vuv_eff` to **0.01254**
+> and added a per-channel `measured_pe_scale` + `pe_err_frac` retune — see **§3c**.
 
 ### Cross-side mismatched-candidate filter (enabled for PDHD)
 
@@ -379,7 +381,7 @@ the xTPC cuts above are **SBND-seeded and themselves still pending PDHD tuning**
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) | deferred — branch cuts need GT |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles | deferred |
 | `chi2_relax` | inflates χ² denom for measured excess at close-to-PMT PMTs | deferred — PDHD X-ARAPUCA response differs |
-| `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | deferred — PDHD PE-error model is the C++ default, untuned |
+| `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **partly done** — `pe_err_frac` retuned to 0.44 from evt-983 labels (§3c); `pe_err_on_pred` still default `false` |
 
 ---
 
@@ -427,10 +429,52 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:210`): `denom = pe + perr²`,
 | `lasso_flag_weight` | `false` | down-weight LASSO penalty for boundary/truncated bundles |
 | `pmt_nonlinearity` (+ `pmt_nl_knee/beta/gamma`) | `false` | per-PMT saturation map (study-grade, off) |
 
-None of these are set in `pdhd/qlmatching.jsonnet` today (all C++ defaults). For
-tuning: decide the error source (`pe_err_on_pred`), set the PDHD relative light error
-(`pe_err_frac`, the ~30 % core in SBND), and re-scale `chi2_pmt_excess` to PDHD's PE
+Of these, only **`pe_err_frac`** is now set in `pdhd/qlmatching.jsonnet` (→ `0.44`,
+the evt-983 label retune, **§3c**); the rest are C++ defaults. For further tuning:
+decide the error source (`pe_err_on_pred`) and re-scale `chi2_pmt_excess` to PDHD's PE
 scale if `chi2_relax` is enabled.
+
+### 3c. Per-channel measured-PE gain correction + evt-983 label retune (enabled for PDHD)
+
+A hand scan of run 29107 evt 983 (31 labeled flash↔cluster matches; viewer
+`ql_scan/`) drove a first label-driven retune of the common optical model, fit from the
+labels' per-channel `op_pes`/`pred_pes` on the **sizable (`total_PE>3000`) + low-ks
+(`ks_dis<0.2`)** subset (n=12 matches). Script: `ql_light_calib/fit_labels.py`.
+
+```jsonnet
+local vuv_eff = 0.01254,                          // was 0.0145
+measured_pe_scale: std.makeArray(160, function(i) if i >= 120 then 1.57 else 1.0),
+pe_err_frac: 0.44,                                // was C++ default 0.3
+```
+
+- **`measured_pe_scale`** — a NEW per-channel multiplicative gain correction on the
+  **measured** flash PE (C++ knob, length `nchan`; empty/unset = identity =
+  byte-identical for SBND/ICARUS). Applied in `Opflash::init` **before** `PE_err` is
+  synthesized, so `(PE, PE_err, total, fired)` all stay self-consistent with the
+  corrected measurement — and it flows to **everything** the matcher emits (χ² fit,
+  calib dump, *and* the persisted Bee opflash PC), because a genuinely gain-biased
+  measurement is wrong everywhere, not just in the fit. The **−x full-data-stream half
+  ("APA0", optical ch 120-159)** under-reports PE; it is scaled **×1.57** to match the
+  recalibrated prediction. (1.57 = g·median(pred_old/meas|APA0) = 0.865·1.814, where g
+  is the vuv_eff factor below. The brighter ~2.3 tail the scan first showed is high-ks
+  **saturation**, excluded by the low-ks cut.)
+- **`vuv_eff` 0.0145 → 0.01254** — the **+x side-1 anchor** (the well-calibrated side)
+  over-predicted by ~16% (meas/pred 0.865), so the common light yield drops by that
+  factor: `0.0145 × 0.865`. `QtoL` stays 1 (degenerate with `vuv_eff`).
+- **`pe_err_frac` 0.3 → 0.44** — intrinsic per-PMT scatter, method-of-moments fit
+  `E[(pred−meas)²]=meas+a·pred²` (a=frac²) on the **corrected** model over the
+  calibrated channels (side 1 + APA0). APA2's systematic over-prediction is **excluded**
+  from this fit (it would wrongly inflate the global error).
+
+**Caveats.** (1) One event, n=12 matches / a few points per block — these are *seeds*,
+to be cross-checked against the run-wide auto-anchor fit (`fit.py`, n=37) which gave the
+higher `vuv_eff` 0.0145; the label value is higher-purity but lower-statistics.
+(2) **APA2 (ch80-119)** shows the **same ~1.7 elevation** as APA0 but, per the
+APA0-only scope, gets no measured scale — so the common model leaves it ~1.4× over-
+predicted, a known residual. (3) The brightness-dependence (2.3 on bright APA0/APA2) is
+the **saturation/nonlinearity** signature; a per-channel `pmt_nonlinearity` round is the
+proper next step, deferred here. (4) `frac=0.44` is a non-robust moment estimate on one
+event; refine with more hand-scanned events.
 
 ---
 

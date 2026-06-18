@@ -107,6 +107,36 @@ secondary PMTs the data actually lit and lowers the over-bright peaks.*
 *2-D PMT maps (y vs z), colour = normalized PE. Right column (after) spreads the
 predicted light toward the measured pattern (left).*
 
+## Label-driven retune (run 29107 evt 983 hand scan)
+
+The auto-anchor study above sets the light yield from 37 *auto-selected* two-boundary
+crossers. A later **hand-scan** of evt 983 (31 human-verified flash↔cluster matches,
+`ql_scan/` viewer) re-derived the optical model directly from the labels, on the
+**sizable (`total_PE>3000`) + low-ks (`ks_dis<0.2`)** subset (n=12). Script:
+`ql_light_calib/fit_labels.py`. It tunes three things **self-consistently**:
+
+| knob | before | after | basis |
+|---|---:|---:|---|
+| `measured_pe_scale` (ch120-159, "APA0") | 1.0 | **1.57** | g·median(pred_old/meas\|APA0)=0.865·1.814 — the −x full-stream half under-reports PE; scale the **measurement** up |
+| `vuv_eff` (global) | 0.0145 | **0.01254** | +x side-1 anchor over-predicts by ~16% (meas/pred g=0.865); 0.0145·g |
+| `pe_err_frac` (global) | 0.3 | **0.44** | moment fit `E[(pred−meas)²]=meas+a·pred²` on the corrected model, calibrated channels only |
+
+The blocks (verified from the dump `opdets`): ch120-159 = −x full-data-stream half
+("APA0", z<250, the maskable block); ch80-119 = −x APA2; ch0-79 = +x (side 1, the
+calibrated anchor). The APA0 measured scale is a NEW per-channel C++ knob
+(`measured_pe_scale`, default empty = byte-identical), applied in `Opflash::init` before
+`PE_err` synthesis so it flows consistently to the χ² fit, the calib dump, and the
+persisted Bee opflash PC.
+
+**Caveats.** (1) One event, n=12 — *seeds*, not a population calibration; the run-wide
+auto-anchor `vuv_eff` (0.0145) is the cross-check, and the label value (0.01254, ~13%
+lower) is higher-purity but lower-statistics. (2) **APA2 shows the same ~1.7 elevation
+as APA0** but, per the APA0-only scope, gets no measured scale → ~1.4× over-predicted
+residual under the common model. (3) The 2.3 factor on the *brightest* APA0 flashes is
+high-ks **saturation** (excluded by the low-ks cut) — a per-channel `pmt_nonlinearity`
+round is the proper fix, deferred. Reproduce: `cd pdhd/ql_light_calib && python3
+fit_labels.py`; then reprocess `run_clus_evt.sh -calib 029107 0`.
+
 ## What changed from 27305, and why a 3× λ shift is expected
 
 The move λ 100 → 300 and `vuv_eff` 0.023 → 0.0145 is large but coherent. λ here is

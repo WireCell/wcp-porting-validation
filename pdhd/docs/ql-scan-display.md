@@ -186,6 +186,18 @@ Identical to SBND:
 > them once with `ql_scan/convert_scan_prejoint.py` (strips the offset, `v % 1e9`); it
 > preserves the originals as `<name>.prejoint` and is idempotent. Verified on run 29107 evt
 > 983: all 31 saved picks restore, including the cluster-70 cross-side cathode-crosser.
+>
+> **Re-keying a scan after REPROCESSING.** `flash_gid` is a positional enumeration index
+> (`anode·stride + index-in-run.flashes`), so any reprocess that changes which flashes pass
+> `flash_minPE` — e.g. the `measured_pe_scale` optical retune, which raises APA0 `total_PE`
+> — renumbers the flashes and **breaks the saved gids** (the clusters are unchanged; only
+> the flash index moves). Re-key the saved `.scan_state` to the fresh dump with
+> `ql_scan/remap_scan_after_reprocess.py <scan_state> <labels> <new_calib.json>`: it matches
+> each pick by the stable `(main_cluster, flash_time)` (old gid→time recovered from the
+> labels file) and emits the **collapsed** gid the viewer keys on — it reproduces
+> `Event.__init__`'s phantom-flash collapse so cross-side picks re-key too. Preserves the
+> original as `<name>.prereprocess`, idempotent. Verified on evt 983 after the optical
+> retune: all 31 gids shifted, all 31 re-key and restore via the viewer's `load_state`.
 
 ---
 
