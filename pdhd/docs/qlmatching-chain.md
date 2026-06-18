@@ -230,7 +230,7 @@ PDHD now enables the two geometry/light bundle prefilters in `qlmatching.jsonnet
 
 ```jsonnet
 require_containment: true,
-reject_overpred: true,  overpred_total_ratio: 5.0,  overpred_maxch_ratio: 25.0,
+reject_overpred: true,  overpred_total_ratio: 3.0,  overpred_maxch_ratio: 10.0,
 ```
 
 - **`require_containment`** (`QLMatching.cxx:1056`) drops a (flash, cluster) bundle
@@ -254,14 +254,19 @@ reject_overpred: true,  overpred_total_ratio: 5.0,  overpred_maxch_ratio: 25.0,
   PMT `> overpred_maxch_ratio`. Boundary/window-truncated bundles (including every
   `at_x_boundary` two-boundary light anchor) are **exempt**.
 
-**The ceilings are PROVISIONAL and deliberately loose.** SBND tuned 2.9/4.3 on 10 Q/L
-hand-scan ground-truth events; PDHD has **no hand-scan GT yet** (the run-29107 bee link
-is what will create it). So the ceilings are sized *above* the rough optical model's own
-over-prediction range — on 29107 the matched winners have `R_total` p99 = 2.9 and
-`R_max` p99 = 21, and **(5.0, 25.0)** fires only on egregious >p99 over-prediction (plus
-~60 degenerate zero-measured-light junk matches). This keeps headroom while the optical
-model is still being calibrated; tighten once PDHD hand scans exist.
-(`ql_light_calib/containment_overpred_check.py` reproduces these distributions.)
+**The ceilings are now GT-tightened to (3.0, 10.0)** (from the earlier deliberately-loose
+provisional 5.0 / 25.0). The run-29107 **evt-983 hand scan** provides PDHD ground truth:
+of its 31 labeled matches, **24 are boundary/window-truncated (overpred-exempt)** and only
+**7 are subject** to this cut; their worst values are `R_total` = 1.90 and `R_max` = 5.04
+(`mc 1000020`, a genuine match that over-predicts one channel 5×). The optical-model retune
+(`vuv_eff` 0.0145→0.01254 + the APA0 measured scale) also tightened genuine over-prediction,
+so the loose ceilings are no longer needed. **(3.0, 10.0)** keeps every GT match with
+~1.6× / 2.0× margin while culling the egregious tail (auto-selected winners run out to
+`R_max` ≈ 18). `R_max` is held ≥ 8 because `mc 1000020` legitimately over-predicts one
+channel 5× and this is single-event GT. **Verified on evt 983: all 31 GT matches survive;
+auto-selected 92→94** (pre-LASSO pruning let two cleaner matches win). SBND keeps its own
+(2.9 / 4.3, 10 GT events). (`ql_light_calib/containment_overpred_check.py` reproduces the
+run-wide distributions.)
 
 **Both cuts are PRE-LASSO** — they prune candidates and trigger a global re-solve, so
 their effect is *not* the per-bundle cull count. Reprocessing all 30 events of run 29107
@@ -370,17 +375,18 @@ byte-identical before/after).
 
 ### What the SBND Q/L chain still does that PDHD does not
 
-PDHD now runs containment + over-prediction + cross-cathode xTPC; the SBND
-`qlmatching.jsonnet` enables a larger tuned suite. The rest are **recommended, not
-enabled** — each needs PDHD hand-scan GT (the bee link) before its thresholds can be set;
-the xTPC cuts above are **SBND-seeded and themselves still pending PDHD tuning**:
+PDHD now runs containment + over-prediction + cross-cathode xTPC **and the flag
+fit-advantage levers** (`lasso_flag_weight` + `chi2_relax`, enabled from the evt-983 GT —
+see below); the SBND `qlmatching.jsonnet` enables a larger tuned suite. The rest are
+**recommended, not enabled** — each needs more PDHD hand-scan GT before its thresholds can
+be set:
 
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
 | `empty_rescue` (+`rescue_metric_max`) | a flash emptied by LASSO adopts its best light-quality orphan cluster | deferred — `rescue_metric_max` needs GT |
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) | deferred — branch cuts need GT |
-| `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles | deferred |
-| `chi2_relax` | inflates χ² denom for measured excess at close-to-PMT PMTs | deferred — PDHD X-ARAPUCA response differs |
+| `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — enabled, `lasso_boundary_weight` 0.2 (= SBND). Evt-983 GT: +4 boundary/crosser GT matches auto-select (18→22), 0 lost |
+| `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; the excess-widening (`chi2_pmt_excess` 350 PE) is SBND-scale, largely inert at PDHD ARAPUCA levels, so the dead-PD worst-channel drop is the active part; excess thresholds left for a later PDHD retune |
 | `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **partly done** — `pe_err_frac` retuned to 0.44 from evt-983 labels (§3c); `pe_err_on_pred` still default `false` |
 
 ---
@@ -429,10 +435,13 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:210`): `denom = pe + perr²`,
 | `lasso_flag_weight` | `false` | down-weight LASSO penalty for boundary/truncated bundles |
 | `pmt_nonlinearity` (+ `pmt_nl_knee/beta/gamma`) | `false` | per-PMT saturation map (study-grade, off) |
 
-Of these, only **`pe_err_frac`** is now set in `pdhd/qlmatching.jsonnet` (→ `0.44`,
-the evt-983 label retune, **§3c**); the rest are C++ defaults. For further tuning:
-decide the error source (`pe_err_on_pred`) and re-scale `chi2_pmt_excess` to PDHD's PE
-scale if `chi2_relax` is enabled.
+Of these, **`pe_err_frac`** (→ `0.44`, the evt-983 label retune, **§3c**),
+**`chi2_relax`** (→ `true`) and **`lasso_flag_weight`** (→ `true`, `lasso_boundary_weight`
+0.2) are now set in `pdhd/qlmatching.jsonnet`; the rest are C++ defaults. `chi2_relax`'s
+excess-widening term (`chi2_pmt_excess` 350 PE) is SBND-PMT-scaled and largely inert at
+PDHD ARAPUCA PE levels, so its active effect here is the dead-PD worst-channel drop — the
+excess thresholds still want a PDHD re-scale. For further tuning: decide the error source
+(`pe_err_on_pred`) and re-scale `chi2_pmt_excess`.
 
 ### 3c. Per-channel measured-PE gain correction + evt-983 label retune (enabled for PDHD)
 
