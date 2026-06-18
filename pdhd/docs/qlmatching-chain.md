@@ -71,7 +71,7 @@ the old separate `group02` dump (run 29107 evt 983, 1098/1098 bundles).
 **Group-aware (main + associated), then recomposed.** Stage-3 per-group clustering
 tags blobs with an `isolated/perblob` array (−1 = main, ≥0 = sub-clusters).
 `QLMatching` splits each group into a main + associated clusters
-(`decompose_cluster_groups`, `QLMatching.cxx:694`), predicts light over the
+(`decompose_cluster_groups`, `QLMatching.cxx:750`), predicts light over the
 **whole** group, and anchors the bundle on the main. The matched T0 is written to
 the main and copied to its associated clusters.
 
@@ -125,16 +125,16 @@ the main and copied to its associated clusters.
 ## 2. Geometry: side / cathode / anode flags (point 1)
 
 All per-TPC geometry is computed in `QLMatching::compute_geometry()`
-(`QLMatching.cxx:773`) from the `DetectorVolumes` service — nothing is hard-coded to
+(`QLMatching.cxx:857`) from the `DetectorVolumes` service — nothing is hard-coded to
 SBND.
 
 **Representative anode → side.** Each `ApaRun` is keyed by a representative anode
 (`anodes[0]`: APA0 for group02, APA1 for group13). Its ident (0 or 1) sets:
 
 - `run.sign_offset = (tpc==0) ? −1 : +1` — the drift-direction sign
-  (`QLMatching.cxx:776`).
+  (`QLMatching.cxx:860`).
 - the **per-side OpDet mask**: an OpDet at `x < cathode_x` belongs to TPC 0, else
-  TPC 1 (`QLMatching.cxx:831`). `cathode_x = 0` comes from the semi-analytical model
+  TPC 1 (`QLMatching.cxx:936`). `cathode_x = 0` comes from the semi-analytical model
   JSON (`Geometry.cathode_x`), matching the PDHD central cathode.
 
 **`tpc_face`** (`qlmatching.jsonnet`, `0` for group02 / `1` for group13) selects which
@@ -151,10 +151,10 @@ coordinate `u = s·(x − anode_x)` (0 at anode, `u_cathode` at cathode).
 flash_x_offset = sign_offset · (flash_time + trigger_offset) · drift_speed
 ```
 
-(`QLMatching.cxx:955`; `drift_speed = 1.565 mm/µs`, see
+(`QLMatching.cxx:1081`; `drift_speed = 1.576 mm/µs`, see
 [`clustering-algorithm.md`](clustering-algorithm.md) drift-velocity calibration).
 Each cluster point is shifted by `flash_x_offset` before the light prediction and the
-**PE-inclusion gate** (`QLMatching.cxx:1024`):
+**PE-inclusion gate** (`QLMatching.cxx:1150`):
 
 ```
 u  in [anode_ext1, u_cathode + cathode_ext1]      (drift)
@@ -169,12 +169,12 @@ every APA in the group** (`m_grouping_anodes`), not just the representative anod
 > **Why this matters.** PDHD's two same-side APAs are offset in **Z**, not X (APA0
 > z[0,230] cm, APA2 z[232,463] cm). `inner_bounds()` returns one
 > `IAnodeFace::sensitive()` box, so the old single-anode query covered only the
-> upstream half; the transverse gate at `QLMatching.cxx:1026` then **dropped all
+> upstream half; the transverse gate at `QLMatching.cxx:1151` then **dropped all
 > charge in the downstream APA** (APA2/APA3) from the predicted-light sum — half of
 > each drift volume produced no predicted light, so a cluster in that half could not
 > be matched (and a track spanning both APAs under-predicted).
 
-The fix (`QLMatching.cxx:778`) unions `inner_bounds` over the group's anodes for the
+The fix (`QLMatching.cxx:881`) unions `inner_bounds` over the group's anodes for the
 Y/Z extent. X is identical across same-side APAs, so the drift math (`anode_x`,
 `u_cathode`, `s`) and the per-side OpDet mask are unchanged. Verified in the debug log
 (run 27980 evt 12):
@@ -192,7 +192,7 @@ every other existing config.
 
 ### Readout-window truncation flag (`wtrunc`) — fixed
 
-`compute_endpoint_flags` (`QLMatching.cxx:2249`) marks a bundle `window_truncated`
+`compute_endpoint_flags` (`QLMatching.cxx:2426`) marks a bundle `window_truncated`
 (the `wtrunc` label in `ql_scan`) when its earliest/latest time slice sits within
 `window_edge_ticks` of the readout window `[0, readout_window_ticks]`. The slice
 indices are raw post-resample ticks (`slice_index = islice->start()/tick`,
@@ -233,7 +233,7 @@ require_containment: true,
 reject_overpred: true,  overpred_total_ratio: 3.0,  overpred_maxch_ratio: 10.0,
 ```
 
-- **`require_containment`** (`QLMatching.cxx:1056`) drops a (flash, cluster) bundle
+- **`require_containment`** (`QLMatching.cxx:1124`) drops a (flash, cluster) bundle
   whose cluster is not contained in the TPC drift box once the flash-T0 x-offset is
   applied. The box is the **two-APA union** from `compute_geometry` (the same box that
   feeds the `at_x_boundary`/`two_boundary` flag walk — see *Combined two-APA box*
@@ -248,7 +248,7 @@ reject_overpred: true,  overpred_total_ratio: 3.0,  overpred_maxch_ratio: 10.0,
   (clus 96 −2.61 cm → ext2 −3.0). `ext1` is the biting lever (containment + PE inclusion);
   `ext2` only flags more near-cathode ends `at_x_boundary` and cannot drop a bundle. See
   the drift-velocity / cathode-window calibration in `clustering-algorithm.md`.
-- **`reject_overpred`** (`QLMatching.cxx:1140`) drops a bundle, before the χ² fit, when
+- **`reject_overpred`** (`QLMatching.cxx:1208`) drops a bundle, before the χ² fit, when
   its predicted light hugely exceeds the measured light over the masked PMT set —
   `Σpred/Σmeas > overpred_total_ratio` **or** `pred/meas` at the brightest predicted
   PMT `> overpred_maxch_ratio`. Boundary/window-truncated bundles (including every
@@ -360,12 +360,18 @@ behaviour so every other config stays bit-identical (SBND joint output verified
 byte-identical before/after).
 
 > **This is NOT observation-only for PDHD.** `xtpc_flag:true` also activates the
-> **xtpc-priority cull** in `cull_inconsistent`: a cluster with a scenario-1 xTPC bundle
-> keeps that bundle and drops its rivals, which re-steers matching and ripples through the
-> per-side LASSO. On run 29107 evt 983 this **reassigned 53 / 1098 side-0 bundles** and
-> raised agreement with the 30 hand-scan labels (`auto_selected` reproduced 3 → **5** of
-> them, **+2 gained, 0 lost**). The flag count went **0 → 17** consistent bundles, pairing
-> e.g. side-0 cluster 70 with the side-1 flash at −1807 µs (scenario 1).
+> **xtpc-priority cull** in `cull_inconsistent` (`QLMatching.cxx:1313`): a cluster with a
+> scenario-1 xTPC bundle keeps that bundle and drops its rivals, which re-steers matching
+> and ripples through the per-side LASSO. On the **current** config the combined joint dump
+> for run 29107 evt 983 carries **20 `xtpc_consistent` bundles forming 6 cross-cathode
+> crosser pairs** (5 scenario-1 + 1 scenario-2), e.g. side-0 cluster 70 ↔ the side-1 flash
+> at −1807 µs (scenario 1); all are `contained` (none spill past the cathode), and
+> `cull_cross_tpc` is confirmed firing (349 coincident cross-side pairs).
+> *(An earlier pre-fit-advantage measurement — against the 30-label scan and before
+> `lasso_flag_weight`/`chi2_relax`/the overpred tighten — found the cull alone reassigned
+> 53/1098 side-0 bundles and raised `auto_selected` agreement 3 → 5. The current combined
+> auto-selection gain from the boundary/crosser fit-advantage is the +4 (18 → 22) in the
+> `lasso_flag_weight` row above.)*
 >
 > **The no-flash-on-one-side crosser** (the user's case) is paired and flagged, but its
 > cross-side bundle stays `auto_selected=false`: a side-0 cluster predicts ≈0 light on the
@@ -393,7 +399,7 @@ be set:
 
 ## 3. Light model — what to tune next (point 2)
 
-Predicted PE per channel (`QLMatching.cxx:1043`), summed over every charge point of
+Predicted PE per channel (`QLMatching.cxx:1169`), summed over every charge point of
 the group:
 
 ```
@@ -408,7 +414,7 @@ parametrization), loaded from `wire-cell-data/pdhd/photodet/semi-analytical-pdhd
 | knob | PDHD value | role | status |
 |------|-----------|------|--------|
 | `QtoL` | `1.0` | global charge→light scale | **placeholder** |
-| `VUVEfficiency[]` | uniform `0.03` (×160) | per-OpDet VUV detection eff | **placeholder** |
+| `VUVEfficiency[]` | uniform `0.01254` (×160, `= vuv_eff`) | per-OpDet VUV detection eff | **evt-983 label retune (§3c)** — was `0.03` placeholder |
 | `VISEfficiency[]` | all `0.0` | per-OpDet reflected (VIS) eff | intentional — no reflected light |
 | `doReflectedLight` | `false` | compute VIS term | intentional (PDHD has no cathode WLS foils) |
 | GH params, `vuv_absorption_length`, `MaxPDDistance` | in `semi-analytical-pdhd.json` | angular/distance corrections | from duneopdet; not a jsonnet knob |
@@ -416,11 +422,12 @@ parametrization), loaded from `wire-cell-data/pdhd/photodet/semi-analytical-pdhd
 `QtoL` and `VUVEfficiency` are **degenerate** (only their product sets the absolute
 PE scale). Calibrate the product against PDHD data/MC — a single global scale to first
 order, then per-channel `VUVEfficiency` if needed. SBND uses a non-uniform
-`VUVEfficiency` (`{0, 0.01752, 0.0392}`); PDHD's uniform `0.03` is a stand-in.
+`VUVEfficiency` (`{0, 0.01752, 0.0392}`); PDHD's `VUVEfficiency` is uniform `0.01254`
+(`= vuv_eff`, the evt-983 label retune — §3c; was a `0.03` stand-in).
 
 ### 3b. Light uncertainty (the χ² error model) — **SBND/MicroBooNE values, re-tune**
 
-Per-PMT error feeding χ² (`TimingTPCBundle.cxx:210`): `denom = pe + perr²`,
+Per-PMT error feeding χ² (`TimingTPCBundle.cxx:117`): `denom = pe + perr²`,
 `χ² += (pred − pe)² / denom`.
 
 | knob | default | role |
@@ -493,12 +500,12 @@ In most runs only the `+x` volume (group13) is instrumented; the `−x` side (gr
 reads ~0 PE (run 27980 is the exception — both sides lit). This is handled cleanly:
 
 - **Independent per-group matching.** Each group is a separate `ApaRun`
-  (`QLMatching.cxx:478`), so a dark side **cannot pollute** the live side's fit.
+  (`QLMatching.cxx:486`), so a dark side **cannot pollute** the live side's fit.
 - **Same-side visibility.** The photon model returns 0 visibility across the cathode
   (a `−x` cluster predicts 0 PE on `+x` OpDets and vice-versa), and the per-side OpDet
   mask zeroes the other side's channels. A dark-side cluster gets pred≈0, meas≈0.
 - **No flash time cut.** `flash_mintime / flash_maxtime` are set to ±1 s
-  (`QLMatching.cxx:682`), wider than any PDHD readout, so **every** flash in the
+  (`QLMatching.cxx:726`), wider than any PDHD readout, so **every** flash in the
   event reaches matching — the readout-clipping C++ default (±1.5 ms) and even a
   full-readout window are both bypassed. Bit-identical on the run-27305 sample (0
   of 707 flashes ever fell outside the full-readout window); the change only
@@ -536,13 +543,15 @@ whose type is `1`).
   consistency (both consumers same sign, 40 cm magnitude) is verified; the **absolute**
   sign (does `+offset` move x toward truth) is still pending physics validation on a
   known in-time track. Default `0` ⇒ bit-identical.
-- **`drift_speed = 1.565 mm/µs`** (`params.lar.drift_speed`), the data-calibrated value
-  — see [`clustering-algorithm.md`](clustering-algorithm.md).
+- **`drift_speed = 1.576 mm/µs`** (`params.lar.drift_speed`, `params.jsonnet:122`), the
+  data-calibrated value — see [`clustering-algorithm.md`](clustering-algorithm.md).
 - **MC vs data:** `data: true` (auto-set `false` when `params.reality == 'sim'`) gates
   the MC-only saturation channel mask.
-- **Off by default:** cross-TPC cathode-crossing matching (`xtpc_flag`, needs both
-  sides lit) is off; the cathode 3-D fiducial is empty (flat-cathode window).
-  (`require_containment`, `cross_side_filter` and `reject_overpred` are now **on** — see §2 bundle prefilters.)
+- **Now ON for PDHD (see §2):** `require_containment`, `cross_side_filter`,
+  `reject_overpred` (3.0/10.0), the cross-cathode `xtpc_flag` matching (consumed by the
+  `cull_inconsistent` xtpc-priority cull, not observation-only), and the flag
+  fit-advantage levers `lasso_flag_weight` + `chi2_relax`. The cathode 3-D fiducial is
+  still empty (flat-cathode window).
 - **Hand-scan coincidence view.** The `ql_scan` viewer re-pairs the two same-time
   one-sided flashes of a cathode-crosser into one cross-side coincidence group (PDHD's
   opaque cathode means no flash lights both volumes); see `pdhd/ql_scan/README.md`.
