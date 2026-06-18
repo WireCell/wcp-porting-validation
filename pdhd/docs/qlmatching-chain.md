@@ -248,6 +248,38 @@ reject_overpred: true,  overpred_total_ratio: 3.0,  overpred_maxch_ratio: 10.0,
   (clus 96 −2.61 cm → ext2 −3.0). `ext1` is the biting lever (containment + PE inclusion);
   `ext2` only flags more near-cathode ends `at_x_boundary` and cannot drop a bundle. See
   the drift-velocity / cathode-window calibration in `clustering-algorithm.md`.
+  - **Robust-endpoint trim before the box test** (`compute_endpoint_flags`,
+    `robust_endpoint_trim: true`). Before containment is tested, the cluster's two drift
+    endpoints (shallowest `first_u` at the anode, deepest `last_u` at the cathode) are
+    snapped inward past thin **outer straggle** so a few stray points cannot veto an
+    otherwise-contained track. The original judge is **point count**: trim the outer
+    slices if their points `≤ max(robust_endpoint_frac·N, robust_endpoint_count)`
+    (`0.01·N`, floor 15). This misses **overclustered satellites** — detached low-charge
+    material wrongly attached to a cluster — that carry *many* points yet negligible
+    charge: run 29107 evt 991 cluster ident-31 (`uid 1000031`, +x side) has **91 points
+    past the anode tolerance** (≫ the 15-pt floor, so the count judge keeps them and
+    `require_containment` vetoes the bundle), but those 91 are **~0.1 % of cluster charge**
+    and **~50× lower per-point charge** than the real track body, which ends *just inside*
+    the anode. Two charge knobs (both C++-default `0` ⇒ disabled ⇒ byte-identical) add a
+    charge-aware path, **OR**'d with the point-count judge so the original rescue is never
+    weakened:
+    - **`robust_endpoint_charge_frac`** (PDHD **0.005**): also trim the outer straggle when
+      its charge `≤ frac · Q_cluster`. A dense genuine track-end exceeds this and is left to
+      fail the box test.
+    - **`robust_endpoint_charge_abs`** (PDHD **1500**): a **size-independent** per-point
+      charge-**density** ceiling that gates *only* the charge-fraction path — trim the outer
+      material only if it is charge-*sparse* (`q_out/pts_out < 1500`, diffuse overclustered
+      satellites ≈ 150 q/pt here), **never** a charge-*dense* real track tip running into the
+      boundary (≈ 2500–8800 q/pt). Because it is per-point density, not an aggregate fraction,
+      it does not scale with cluster size or tail length — it cleanly separates a satellite
+      from a genuine boundary-piercing tail regardless of how large the cluster is.
+
+    Validated bundle-level on 10 events of run 29107 (the reliable metric while the chain is
+    tuned): **0 bundles lost** (the point-count path is preserved byte-identically), every
+    contiguous real-track-tail case correctly **left to fail** (so the density gate adds no
+    forced matches), and only genuine low-density satellites rescued — including the evt 991
+    target `uid 1000031` (165 q/pt). Passing containment only makes a bundle *eligible*; the
+    χ²/KS fit still decides selection.
 - **`reject_overpred`** (`QLMatching.cxx:1208`) drops a bundle, before the χ² fit, when
   its predicted light hugely exceeds the measured light over the masked PMT set —
   `Σpred/Σmeas > overpred_total_ratio` **or** `pred/meas` at the brightest predicted
