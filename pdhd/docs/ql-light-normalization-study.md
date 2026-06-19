@@ -182,6 +182,68 @@ gids are positional, so this renumbers the dump (286→274) — re-key saved han
 export). Reproduce: `cd pdhd/ql_light_calib && python3 fit_labels_multi.py`; reprocess
 `run_clus_evt.sh -calib 29107 {0,1,2,3}`.
 
+## Per-channel (per-PD) gain calibration + chi2 recalibration (run 29107 hand scan)
+
+The retunes above correct the optical model **globally** (`vuv_eff`, λ) and at the
+**block** level (`measured_pe_scale` APA0). But the SP chain deconvolves all 160 PDs
+with only **two** SPE templates — FBK (68 ch) / HPK (92 ch), one shape per *type* —
+so residual per-channel SiPM gain is not removed and biases the bundle chi2/KS. This
+absorbs it into the (already per-channel, already plumbed) `measured_pe_scale` knob.
+Fit: `ql_light_calib/fit_perchannel_scale.py` on the **54** cleanest matches (low-ks,
+no flag_PMT/flag_wtrunc; `at_x_boundary` kept this time). Dumps carry `pred_pe` at the
+current model, so the per-channel ratio is read straight from `op_pes`/`pred_pes` — no
+re-prediction. Granularity (user-confirmed): grouped **block × type** base + individual
+breakout only for the few well-sampled, tight-scatter outliers — the prior per-channel
+SPE-*shape* study overfit (`pdhd-spe-template-tuning.md`: shifted PE scale +14% out-of-
+sample); a per-*type* correction generalised.
+
+**The dominant effect is per-TYPE.** FBK reads ~12–21% low in every block — the same
+sign as the documented FBK tail over-subtraction (over-subtracted tail ⇒ less integrated
+PE ⇒ reads low ⇒ scaled up). The old uniform APA0 (ch120-159) **1.14 splits into FBK
+1.20 / HPK 1.00** — the block average conflated an FBK-only defect with HPK that needs no
+boost.
+
+| `measured_pe_scale` group (block × type) | scale | note |
+|---|---:|---|
+| +x (ch0-79) FBK / HPK | **1.12 / 0.98** | meas-weighted-mean renormalised (k=1.128) so the +x integral — hence `vuv_eff` — is **held fixed** |
+| APA2 (ch80-119) FBK / HPK | **0.98 / 0.96** | ≈1.0 (within scatter) |
+| APA0 (ch120-159) FBK / HPK | **1.20 / 1.00** | splits the old uniform 1.14 |
+
+Plus **12 individual overrides** (N≥12, MAD<0.25, >3 SE and >0.20 off group): mostly
+high-gain HPK PDs reading ~1.5–2× high → scaled **down** to 0.53–0.73 (ch25/88/98/118
+the tightest, MAD≈0.1); ch23 a low-gain HPK scaled **up** 1.47. The raw fit wanted
+3–5× on **ch40/50/60/70**, but those are statistical artifacts (N≤5, MAD up to 12) →
+**left at group default, not scaled** (a large gain just amplifies noise into chi2).
+
+**Two findings, decomposed (don't conflate them):**
+
+1. **Per-PD gain** is marginal for the *bundle* chi2 (median chi2/ndf 1.59→1.56 at fixed
+   `pe_err_frac`) — the per-channel scatter swamps it at the bundle level — but real for
+   *per-channel* closure: outlier channels meas/pred **0.566→0.878**, APA0 HPK
+   **0.729→0.831**; +x integral held (0.888→0.889). So it is a per-PD **closure fix**,
+   GT-safe, not itself a chi2 fix.
+2. **`pe_err_frac` 0.43 → 0.60** is where the chi2 win lives, and it is *independent* of
+   the gain work (the old dumps already sat at chi2/ndf 1.59 with frac 0.43 — the per-PMT
+   error was too **tight**). frac is **calibrated**, not minimised: 0.60 brings the median
+   bundle chi2/ndf on good matches to **~1.0** (54/54 anchors lower), making chi2/ndf a
+   well-scaled goodness-of-fit. The high-PE method-of-moments gives ~0.40 but only sees
+   the bright tail; the full bundle statistic, dominated by mid-PE channels + the low-PE
+   inflation, needs the larger frac. floor/knee + the low-PE inflation are unchanged.
+
+**`pe_err_frac` is a MATCHING knob** (chi2 drives `auto_selected`), so 0.60 was set by
+**reprocessing** at the candidate value, not offline. Real-C++ validation (per-channel
+gain + frac 0.60 vs production, `validate_perchannel.py`): median chi2/ndf **1.59→1.06**,
+KS flat (0.061→0.060); GT accepted matches **57→57** (net preserved), human-rejected
+re-selections **328→259** (−21%, purity *improved* — the looser error did **not**
+re-inflate it; the gain correction, not frac, drives purity), **0** new false positives.
+A small 6-lost/6-gained reshuffle among accepted matches is the gain change re-solving a
+few flashes (identical at frac 0.40; the lost flashes are won by neutral/other-accepted
+candidates or drop below `flash_minPE` — no silent mismatch). Hand-scan labels re-keyed
+to the new dumps by (apa, ident, flash-time within 0.5 µs): all **125** picks preserved
+(the per-channel PE change shifts a couple of flash times sub-µs). Reproduce: `cd
+pdhd/ql_light_calib && python3 fit_perchannel_scale.py`; reprocess `run_clus_evt.sh
+-calib 29107 {0,1,2,3}`; validate `python3 validate_perchannel.py`.
+
 ## What changed from 27305, and why a 3× λ shift is expected
 
 The move λ 100 → 300 and `vuv_eff` 0.023 → 0.0145 is large but coherent. λ here is

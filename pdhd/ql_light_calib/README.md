@@ -22,6 +22,15 @@ needed for the λ/eff sweep.
   Pass a dump dir to compare BEFORE vs AFTER.
 - **`plot_norm.py`** — before/after figures (`../pics/ql_norm_*.png`) from the
   λ=100 (backed-up) and λ=300 (reprocessed) dumps.
+- **`fit_labels_multi.py`** — 4-event hand-scan label retune (evts 983/991/999/1007):
+  `vuv_eff`, APA0 `measured_pe_scale`, `pe_err_frac` from the flag-clean labels.
+- **`fit_perchannel_scale.py`** — per-channel (per-PD) gain calibration: builds the
+  **block × type** (FBK/HPK) `measured_pe_scale` array + tight-outlier overrides from the
+  54 cleanest labels, holds the +x integral (⇒ `vuv_eff` fixed), and refits `pe_err_frac`.
+  Writes `perchannel_scale.json` + the jsonnet snippet. `--drop-xb` for the robustness check.
+- **`validate_perchannel.py`** — real-C++ validation of the per-channel retune: closure
+  (+x integral held, APA0 FBK/HPK + outlier channels → ~1.0) and the GT-preservation
+  winner-diff (accept preserved, no new false positives) against the pre-retune dumps.
 
 Tuned values applied (run 29107, 37 clean two-boundary crossers): `vuv_absorption_length`
 100→300 cm (`wire-cell-data/pdhd/photodet/semi-analytical-pdhd.json`), `vuv_eff`

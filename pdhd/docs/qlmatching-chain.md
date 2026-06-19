@@ -345,9 +345,14 @@ containment culls **0 winners directly**.
 > A later **hand-scan label retune** (run 29107 evt 983) moved `vuv_eff` to 0.01254
 > and added a per-channel `measured_pe_scale` + `pe_err_frac` retune — see **§3c**.
 > The **4-event** retune (evts 983/991/999/1007) supersedes it: `vuv_eff` **0.01281**,
-> APA0 `measured_pe_scale` **1.14** (was 1.57, over-scaled on the single event),
-> `pe_err_frac` **0.43**, λ kept **300** (KS degenerate; N90+integral pin 300). See
-> `ql-light-normalization-study.md` §"4-event hand-scan label retune".
+> APA0 `measured_pe_scale` **1.14** (was 1.57, over-scaled on the single event), λ kept
+> **300** (KS degenerate; N90+integral pin 300). A subsequent **per-channel (per-PD) gain
+> calibration** then replaces the uniform APA0 1.14 with a **block × type** array (FBK/HPK
+> SPE-template types) + 12 outlier overrides — the APA0 1.14 splits into FBK **1.20** /
+> HPK **1.00** — and recalibrates **`pe_err_frac` 0.43 → 0.60** so the median bundle
+> chi2/ndf on good matches lands at ~1.0 (was 1.59, error too tight). See
+> `ql-light-normalization-study.md` §"4-event hand-scan label retune" and §"Per-channel
+> (per-PD) gain calibration".
 
 ### Cross-side mismatched-candidate filter (enabled for PDHD)
 
@@ -486,7 +491,7 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:117`): `denom = pe + perr²`,
 |------|---------|------|
 | `pe_err_on_pred` | `false` (**PDHD `true`**) | `false` → use measured opflash `get_PE_err`; `true` → predicted-based `perr` |
 | `pe_err_floor` | `0.3` | min error (pred mode) |
-| `pe_err_frac` | `0.3` (**PDHD `0.44`**) | high-pred fractional error of predicted PE |
+| `pe_err_frac` | `0.3` (**PDHD `0.60`**) | high-pred fractional error of predicted PE (0.60 calibrates median bundle chi2/ndf→1.0 on good matches; was 0.44 evt-983 / 0.43 4-event — error was too tight) |
 | `pe_err_knee` | `1.0` | floor↔fractional transition (unused when low-PE inflation on) |
 | `pe_err_lowpe_frac` / `pe_err_lowpe_knee` | `-1`(off) / `4.0` (**PDHD `1.55` / `5.5`**) | low-PE detection-inefficiency error inflation: `rel = frac + (lowpe_frac−frac)·exp(−pred/knee)`, `perr = √((rel·pred)²+floor²)`. See `ql-lowpe-efficiency-study.md` |
 | `chi2_relax` | `false` | near-PMT / one-dead-PMT χ² relaxations |
@@ -495,7 +500,7 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:117`): `denom = pe + perr²`,
 | `lasso_flag_weight` | `false` | down-weight LASSO penalty for boundary/truncated bundles |
 | `pmt_nonlinearity` (+ `pmt_nl_knee/beta/gamma`) | `false` | per-PMT saturation map (study-grade, off) |
 
-Of these, **`pe_err_frac`** (→ `0.44`, the evt-983 label retune, **§3c**),
+Of these, **`pe_err_frac`** (→ `0.60`, chi2/ndf recalibration; **§3c**),
 **`chi2_relax`** (→ `true`) and **`lasso_flag_weight`** (→ `true`, `lasso_boundary_weight`
 0.2) are now set in `pdhd/qlmatching.jsonnet`; the rest are C++ defaults. `chi2_relax`'s
 excess-widening term (`chi2_pmt_excess` 350 PE) is SBND-PMT-scaled and largely inert at
@@ -505,12 +510,21 @@ excess thresholds still want a PDHD re-scale. For further tuning: decide the err
 
 ### 3c. Per-channel measured-PE gain correction + evt-983 label retune (enabled for PDHD)
 
+> **Superseded values.** This section documents the *first* (evt-983) retune for
+> provenance. The shipping values are the **4-event** retune (`vuv_eff` 0.01281, λ 300)
+> and the **per-channel (per-PD) gain calibration** that replaces the uniform APA0 1.57
+> with a block × type `measured_pe_scale` array (APA0 → FBK 1.20 / HPK 1.00) + 12 outlier
+> overrides, and recalibrates `pe_err_frac` → **0.60**. See
+> `ql-light-normalization-study.md` §"4-event …" and §"Per-channel (per-PD) gain
+> calibration"; scripts `ql_light_calib/fit_labels_multi.py` + `fit_perchannel_scale.py`.
+
 A hand scan of run 29107 evt 983 (31 labeled flash↔cluster matches; viewer
 `ql_scan/`) drove a first label-driven retune of the common optical model, fit from the
 labels' per-channel `op_pes`/`pred_pes` on the **sizable (`total_PE>3000`) + low-ks
 (`ks_dis<0.2`)** subset (n=12 matches). Script: `ql_light_calib/fit_labels.py`.
 
 ```jsonnet
+// FIRST (evt-983) values — see the Superseded note above for what ships now.
 local vuv_eff = 0.01254,                          // was 0.0145
 measured_pe_scale: std.makeArray(160, function(i) if i >= 120 then 1.57 else 1.0),
 pe_err_frac: 0.44,                                // was C++ default 0.3
