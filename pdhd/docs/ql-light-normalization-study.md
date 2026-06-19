@@ -137,6 +137,51 @@ high-ks **saturation** (excluded by the low-ks cut) — a per-channel `pmt_nonli
 round is the proper fix, deferred. Reproduce: `cd pdhd/ql_light_calib && python3
 fit_labels.py`; then reprocess `run_clus_evt.sh -calib 029107 0`.
 
+## 4-event hand-scan label retune (run 29107 evts 983/991/999/1007)
+
+The single-event evt-983 retune above is **superseded** by a 4-event flag-clean label
+fit (`ql_light_calib/fit_labels_multi.py`). Hand scans of evts 983/991/999/1007 give
+125 matches; dropping the **missing-charge** flags the user flagged
+(`close_to_PMT`/`at_x_boundary`/`window_truncated` = flag_PMT/flag_xboundary/flag_wtrunc
+— incomplete charge ⇒ unreliable predicted light) and the sizable (`total_PE>3000`) +
+low-ks (`ks_dis<0.2`) cut leaves **25 anchors** (+x/apa1 = 10 norm anchors, −x/apa0 = 15
+APA0 anchors — far better powered than the single-event n≈12).
+
+| knob | evt-983 | 4-event | basis |
+|---|---:|---:|---|
+| `vuv_absorption_length` λ | 300 | **300** (kept) | KS is degenerate on the non-crosser anchors (no valley; rides to the grid edge); N90 concentration (1.00@250, 1.02@300) + +x integral (1.022) pin ~300 |
+| `vuv_eff` | 0.01254 | **0.01281** | +x/apa1 **integral** meas/pred g=1.022 at λ=300, 0.01254×1.022 |
+| `measured_pe_scale` APA0 | 1.57 | **1.14** | −x/apa0 ch120-159 self-consistency 1.57×g×median(pred/meas)=1.57×1.022×0.713 (dump-direct cross-check 0.677 ⇒ ~1.09); the evt-983-only 1.57 over-scaled on the smaller sample |
+| `pe_err_frac` | 0.44 | **0.43** | method-of-moments on the corrected-model residuals |
+
+**λ is degenerate, not 500.** A naive KS-min refit on the flag-clean (crosser-excluded)
+anchors rides to the grid ceiling (medKS 0.076@350 → 0.072@2000) because a too-diffuse
+model games the index-order CDF; the **physical** criteria turn over at ~300 — N90
+concentration ratio 1.00@250 / 1.02@300 / 1.07@500 / 1.14@2000, and the +x integral goes
+from 1.0@300 to over-predicting 20–50% above. λ kept at 300 (`fit_lambda_diag.py`).
+
+**Direct vs integral norm handle.** At λ=300 the +x top-3 direct-PMT scale (1.296) and
+the integral scale (1.022) differ by a fixed ~1.27 — a Gaisser–Hillas shape residual,
+**constant in λ**, not a spread error. With the spread N90-matched the integral is the
+clean handle (and is what the evt-983 fit used); `vuv_eff` is set from it. The direct
+handle would be +30% and then over-predict the integral everywhere else.
+
+**Real-C++ closure** (reprocess the 4 events; flag-clean anchors; labels re-keyed by
+flash *time* since gids reindex): +x integral meas/pred 1.022→**1.000**, −x APA0
+pred/meas 0.677→**0.952** (the ~0.95 residual = the repredict-vs-C++ 5% gap on the dim
+APA0 channels; the exact-closure scale is ~1.09). Hand-scan GT: accepted matches
+**57→57** (net preserved), human-rejected re-selections **337→243** (−28%), **0** new
+false positives.
+
+**Side effect — 6 dim −x flashes drop.** `measured_pe_scale` is a *measured*-PE gain
+(not the light model — `vuv_eff`/λ never touch flashes); scaling −x APA0 PE by 1.14/1.57
+pushes six dim side-0 flashes (~51–58 PE, APA0-dominated) below the `flash_minPE=50`
+floor (`QLMatching.cxx:739`), so they are culled (none were hand-scan matches). Flash
+gids are positional, so this renumbers the dump (286→274) — re-key saved hand scans with
+`ql_scan/remap_scan_after_reprocess.py` (scan_state) + `ql_scan/regen_labels.py` (labels
+export). Reproduce: `cd pdhd/ql_light_calib && python3 fit_labels_multi.py`; reprocess
+`run_clus_evt.sh -calib 29107 {0,1,2,3}`.
+
 ## What changed from 27305, and why a 3× λ shift is expected
 
 The move λ 100 → 300 and `vuv_eff` 0.023 → 0.0145 is large but coherent. λ here is

@@ -342,8 +342,12 @@ containment culls **0 winners directly**.
 > (`ql-light-normalization-study.md`) were tuned on the **no-cut** dumps. These
 > prefilters change the matching that future calib dumps reflect; the anchor set grew
 > (3 → 14), so the calibration is not invalidated, but it was derived pre-filter.
-> A later **hand-scan label retune** (run 29107 evt 983) moved `vuv_eff` to **0.01254**
+> A later **hand-scan label retune** (run 29107 evt 983) moved `vuv_eff` to 0.01254
 > and added a per-channel `measured_pe_scale` + `pe_err_frac` retune — see **§3c**.
+> The **4-event** retune (evts 983/991/999/1007) supersedes it: `vuv_eff` **0.01281**,
+> APA0 `measured_pe_scale` **1.14** (was 1.57, over-scaled on the single event),
+> `pe_err_frac` **0.43**, λ kept **300** (KS degenerate; N90+integral pin 300). See
+> `ql-light-normalization-study.md` §"4-event hand-scan label retune".
 
 ### Cross-side mismatched-candidate filter (enabled for PDHD)
 
@@ -441,7 +445,7 @@ be set:
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) | deferred — branch cuts need GT |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — enabled, `lasso_boundary_weight` 0.2 (= SBND). Evt-983 GT: +4 boundary/crosser GT matches auto-select (18→22), 0 lost |
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; the excess-widening (`chi2_pmt_excess` 350 PE) is SBND-scale, largely inert at PDHD ARAPUCA levels, so the dead-PD worst-channel drop is the active part; excess thresholds left for a later PDHD retune |
-| `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **partly done** — `pe_err_frac` retuned to 0.44 from evt-983 labels (§3c); `pe_err_on_pred` still default `false` |
+| `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **partly done** — `pe_err_frac` retuned to 0.43 from the 4-event labels (was 0.44 evt-983; §3c); `pe_err_on_pred` still default `false` |
 
 ---
 
@@ -462,7 +466,7 @@ parametrization), loaded from `wire-cell-data/pdhd/photodet/semi-analytical-pdhd
 | knob | PDHD value | role | status |
 |------|-----------|------|--------|
 | `QtoL` | `1.0` | global charge→light scale | **placeholder** |
-| `VUVEfficiency[]` | uniform `0.01254` (×160, `= vuv_eff`) | per-OpDet VUV detection eff | **evt-983 label retune (§3c)** — was `0.03` placeholder |
+| `VUVEfficiency[]` | uniform `0.01281` (×160, `= vuv_eff`) | per-OpDet VUV detection eff | **4-event label retune (§3c)** — 0.01254 evt-983, 0.03 placeholder |
 | `VISEfficiency[]` | all `0.0` | per-OpDet reflected (VIS) eff | intentional — no reflected light |
 | `doReflectedLight` | `false` | compute VIS term | intentional (PDHD has no cathode WLS foils) |
 | GH params, `vuv_absorption_length`, `MaxPDDistance` | in `semi-analytical-pdhd.json` | angular/distance corrections | from duneopdet; not a jsonnet knob |
@@ -470,7 +474,7 @@ parametrization), loaded from `wire-cell-data/pdhd/photodet/semi-analytical-pdhd
 `QtoL` and `VUVEfficiency` are **degenerate** (only their product sets the absolute
 PE scale). Calibrate the product against PDHD data/MC — a single global scale to first
 order, then per-channel `VUVEfficiency` if needed. SBND uses a non-uniform
-`VUVEfficiency` (`{0, 0.01752, 0.0392}`); PDHD's `VUVEfficiency` is uniform `0.01254`
+`VUVEfficiency` (`{0, 0.01752, 0.0392}`); PDHD's `VUVEfficiency` is uniform `0.01281`
 (`= vuv_eff`, the evt-983 label retune — §3c; was a `0.03` stand-in).
 
 ### 3b. Light uncertainty (the χ² error model) — **SBND/MicroBooNE values, re-tune**
