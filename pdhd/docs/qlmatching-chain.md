@@ -480,10 +480,11 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:117`): `denom = pe + perr²`,
 
 | knob | default | role |
 |------|---------|------|
-| `pe_err_on_pred` | `false` | `false` → use measured opflash `get_PE_err`; `true` → `perr = (pred<knee? floor : frac·pred)` |
+| `pe_err_on_pred` | `false` (**PDHD `true`**) | `false` → use measured opflash `get_PE_err`; `true` → predicted-based `perr` |
 | `pe_err_floor` | `0.3` | min error (pred mode) |
-| `pe_err_frac` | `0.3` | fractional error (~30 %) of predicted PE |
-| `pe_err_knee` | `1.0` | floor↔fractional transition |
+| `pe_err_frac` | `0.3` (**PDHD `0.44`**) | high-pred fractional error of predicted PE |
+| `pe_err_knee` | `1.0` | floor↔fractional transition (unused when low-PE inflation on) |
+| `pe_err_lowpe_frac` / `pe_err_lowpe_knee` | `-1`(off) / `4.0` (**PDHD `1.55` / `5.5`**) | low-PE detection-inefficiency error inflation: `rel = frac + (lowpe_frac−frac)·exp(−pred/knee)`, `perr = √((rel·pred)²+floor²)`. See `ql-lowpe-efficiency-study.md` |
 | `chi2_relax` | `false` | near-PMT / one-dead-PMT χ² relaxations |
 | `chi2_pmt_excess` | `350.0` | **MicroBooNE PE threshold — likely too high for PDHD light yield; re-tune** |
 | `chi2_pmt_ratio` / `chi2_pmt_inflate` | `1.3` / `0.5` | excess-relaxation ratio / denom inflation |
