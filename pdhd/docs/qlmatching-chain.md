@@ -447,6 +447,21 @@ fit-advantage levers (`lasso_flag_weight` + `chi2_relax`), `highconsist_ladder`,
 `empty_rescue`, `bundle_mask_ks`, and the per-channel `measured_pe_scale` + low-PE error
 model. Each remains C++-default-OFF, so SBND/PDVD/ICARUS stay byte-identical.
 
+> **One structural difference (optical-flash plumbing, not the matching): the Bee `op`
+> flash list.** SBND feeds each per-TPC side-run a **per-TPC** optical-flash archive
+> (`opflash_apa{0,1}`), so a physical flash is dumped **once** and the Bee op display shows
+> one box per flash. PDHD's all-PD light reco emits **one global** `opflash_pdhd-wct.tar.gz`
+> that **both** drift-side sub-runs of the joint node read, so each side-run's
+> `write_opflash_pc` dumped the **full** flash list keyed by its own anode ident → every
+> physical flash appeared on the merged Bee root **twice** (matching itself is unaffected —
+> each side still matches against its own clusters). Fixed by the `opflash_phys_gid` knob
+> (default OFF = legacy node-ident gid, **byte-identical for SBND**; **PDHD ON**): the Bee
+> flash gid and the cluster's `matched_flash_gid` are keyed by the flash's **physical side**,
+> so the two side-runs emit one gid per flash and `fill_bee_flashes` collapses the duplicate
+> while cross-side (xTPC) matches still resolve. 29107 evt 983: op rows **278 → 141**,
+> matched-cluster set **identical (0 lost/0 gained)**. See
+> [`ql-scan-display.md`](ql-scan-display.md) §"Bee op flash de-duplication".
+
 > **The LASSO penalty terms and bundle-merge thresholds are already SBND-identical — not a
 > tuning lever.** PDHD does not set `lasso_lambda`, `delta_charge`/`delta_light`/`delta_shape`,
 > `bkg_weight`, `pe_mismatch_knee`/`pe_mismatch_floor`, `bundle_ks_merge_max`,

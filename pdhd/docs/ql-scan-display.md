@@ -128,6 +128,32 @@ and read back by `fill_bee_flashes`, so Bee tags each flash **TPC0 (−x, APAs 0
 **TPC1 (+x, APAs 1,3)** consistently with this viewer. (Older dumps without the `apa`
 column fall back to the legacy gid encoding.)
 
+#### Bee op flash de-duplication (`opflash_phys_gid`)
+
+PDHD's all-PD light reconstruction emits **one global** `opflash_pdhd-wct.tar.gz`,
+and the joint `QLMatching` node feeds **both** drift-side sub-runs from it (the same
+archive on each input port, `wct-clustering.jsonnet`). Each side-run's
+`write_opflash_pc` therefore dumps the **full** flash list keyed by its own anode
+ident, so after the per-APA→all-APA merge **every physical flash lands on the root
+twice** and the Bee **op** display drew each flash as two overlapping red boxes. This
+is the structural counterpart to the viewer's phantom collapse, but on the Bee side.
+(SBND differs only here: its two side-runs read **per-TPC** `opflash_apa{0,1}`
+archives, so each flash is dumped once — no duplication — which is why the SBND op
+display already shows one box per flash.)
+
+The fix is the `opflash_phys_gid` knob (`QLMatching`, **default off** = legacy
+node-ident gid, byte-identical for SBND / single-source-per-node configs; **PDHD on**).
+With it on, the Bee flash gid — and the cluster's `matched_flash_gid` — is keyed by the
+flash's **physical side** (`flash_phys_side`, the same PE-pattern rule as the `apa`
+tag) instead of the processing node's anode ident. Both side-runs then emit the **same
+gid** for one physical flash, so `fill_bee_flashes` collapses the duplicate, **and** a
+cross-side (xTPC) `matched_flash_gid` still resolves to the surviving flash. Verified
+on run 29107 evt 983: op rows **278 → 141** (138 distinct flashes; the residual rows
+are legitimate one-flash-multiple-cluster matches), matched-cluster set **identical**
+(36 → 36, **0 lost / 0 gained**) — the dedup does not touch which clusters are matched.
+The calib-dump gid path (`dump_calib`) is **unchanged** (still node-ident encoded), so
+this viewer's phantom collapse and saved scans are unaffected.
+
 ### Phantom flash collapse — keeps the two tables consistent
 
 Each drift side's run dumps the **full global flash list**, so the combined file lists
