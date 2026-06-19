@@ -16,11 +16,13 @@ Code: `match/src/QLMatching.cxx` + `match/inc/WireCellMatch/QLMatching.h` (toolk
 Config: `cfg/pgrapher/experiment/pdhd/qlmatching.jsonnet`,
 `.../pdhd/clus.jsonnet`, `pdhd/wct-clustering.jsonnet` (this repo).
 
-> **One-line status.** The chain runs end-to-end and produces matched flashes/T0s.
-> The geometry is correct (combined two-APA box, fixed below). The remaining work is
-> **light calibration**: the absolute charge→PE normalization (`QtoL`×`VUVEfficiency`)
-> and the per-PMT light uncertainty are still placeholders/SBND values and must be
-> tuned against PDHD data/MC before the matched flashes are physics-grade.
+> **One-line status.** The chain runs end-to-end and produces matched flashes/T0s, the
+> geometry is correct (combined two-APA box), and the **full SBND-derived feature suite is
+> now enabled and tuned** against the run-29107 4-event hand scan (light model + per-channel
+> gain + the `highconsist_ladder` / `empty_rescue` / `chi2_pmt_excess` features — see §"Parity
+> with the SBND Q/L chain"). The light **uncertainty** model is calibrated (`pe_err`); the
+> remaining open item is the **absolute** charge→PE normalization (`QtoL`×`VUVEfficiency`),
+> which sets matched-flash PE *agreement* — matched-flash *identity/T0* is usable now.
 
 ---
 
@@ -437,13 +439,17 @@ byte-identical before/after).
 > pair rather than forcing an impossible light-match. The hand-scan viewer surfaces it
 > (navigable, with the flag) so a human can confirm it.
 
-### What the SBND Q/L chain still does that PDHD does not
+### Parity with the SBND Q/L chain — now complete
 
-PDHD now runs containment + over-prediction + cross-cathode xTPC **and the flag
-fit-advantage levers** (`lasso_flag_weight` + `chi2_relax`, enabled from the evt-983 GT —
-see below); the SBND `qlmatching.jsonnet` enables a larger tuned suite. The rest are
-**recommended, not enabled** — each needs more PDHD hand-scan GT before its thresholds can
-be set:
+PDHD now runs the **full SBND-derived Q/L suite**: containment + over-prediction +
+cross-side filter + cross-cathode xTPC, the flag fit-advantage levers (`lasso_flag_weight`
++ `chi2_relax`), the per-channel `measured_pe_scale` + low-PE error model, and — as of the
+run-29107 4-event hand-scan tuning (June 2026) — the three previously-deferred features:
+`highconsist_ladder`, `empty_rescue`, and the PDHD-rescaled `chi2_pmt_excess`. Every knob
+below is now **enabled and tuned** against the hand scan (each remains C++-default-OFF, so
+SBND/PDVD/ICARUS stay byte-identical). The cumulative effect on the 4 events (vs the
+ladder-off frac=0.4 baseline): **GT-accept 53 → 72** (xTPC 12 → 14, non-xTPC 41 → 58),
+**human-rejected re-selections 219 → 165**, **0 baseline xTPC winners lost**.
 
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
@@ -452,6 +458,23 @@ be set:
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — `lasso_boundary_weight` **0.2** (= SBND), confirmed optimal by a 4-event sweep {0.1, 0.2, 0.3}: **0.1 FAILS the xTPC hard gate** (over-protection admits boundary noise that displaces a crosser, 14→13); **0.3** costs 2 confirmed-GT boundary matches for only −4 reject; **0.2** maximizes GT-accept (xTPC 14 + non-xTPC 58) with xTPC intact |
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; `chi2_pmt_excess` re-scaled **350 → 100 PE** for PDHD's lower ARAPUCA yield (genuine near-PD excess: median ~22 PE, p90 ~165, saturation tail ~10k). It IS active (softens ~27 close_to_PMT bundle χ²/event) but **selection-neutral** (the KS-led ladder with loose c2n=35 ceilings absorbs it) — live-but-benign, like SBND. `ratio`/`inflate` kept 1.3/0.5 |
 | `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **DONE** — `pe_err_on_pred` enabled (PDHD `true`) + low-PE inflation; `pe_err_frac` `0.40` (§3c) |
+
+**Round-by-round 4-event progression** (run 29107 evts 983/991/999/1007; primary FOM is the
+hand-scan-independent GT delta — the global winner-KS shift is *not* independent, the ladder
+mechanically culls high-KS bundles. `validate_chain.py`):
+
+| round | change | GT-accept (xTPC + non-xTPC) | xTPC (HARD) | human-rejected re-selected |
+|---|---|---:|---:|---:|
+| 0 | `pe_err_frac` 0.60 → 0.40 (baseline) | 53 (12+41) | 12/12 kept | 219 |
+| 1 | `highconsist_ladder` (KS=SBND, c2n→35) | 58 (14+44) | **14** | 171 |
+| 2 | `chi2_pmt_excess` 350 → 100 | 58 (14+44) | 14 | 171 (neutral) |
+| 3 | `empty_rescue` (`rescue_metric_max` 0.20) | **72** (14+58) | 14 | 165 |
+| 4 | `lasso_boundary_weight` sweep → keep 0.2 | 72 (14+58) | 14 | 165 |
+
+Net (full chain vs frac=0.4 ladder-off baseline): **GT-accept 53 → 72** (+19; ~9 recovered by
+the ladder net of 4 displacements, +14 by `empty_rescue`), **xTPC 12 → 14 with 0 baseline
+xTPC winners lost**, **human-rejected re-selections 219 → 165** (−54). The 70 off-scan new
+winners (rule 2: small clusters were not exhaustively hand-scanned) are neutral.
 
 ---
 
