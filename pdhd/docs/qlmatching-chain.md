@@ -490,6 +490,30 @@ the ladder net of 4 displacements, +14 by `empty_rescue`), **xTPC 12 → 14 with
 xTPC winners lost**, **human-rejected re-selections 219 → 165** (−54). The 70 off-scan new
 winners (rule 2: small clusters were not exhaustively hand-scanned) are neutral.
 
+**Final shipped selection vs the hand scan (absolute, not a baseline delta).** Of the **125**
+hand-scan matches across the 4 events, **16 are xTPC annotation-only crossers** (no flash on one
+side → not light-selectable by design; they stay annotated), leaving **109 auto-selectable**.
+How the shipped config selects them (cluster matched to the *same* flash = reproduced; to a
+*different* flash = reassigned, better/worse by the final model's KS for the two flash options):
+
+| hand-scan match outcome | count | of 109 |
+|---|---:|---:|
+| **reproduced** (same cluster↔flash) | **82** | 75% |
+| reassigned to a **better**-KS flash (code improved on the pick) | 15 | 14% |
+| reassigned to a **worse**-KS flash | 10 | 9% |
+| genuinely **dropped** (cluster unmatched) | 2 | 2% |
+
+So **good (reproduced or improved) = 97/109 (89%)**; changed-for-worse = 10; dropped = 2 (the
+documented displacement cost — see §3d). "Better/worse" is by light-agreement KS, not a
+physics-truth claim.
+
+**Additional matches** (final winners on clusters the human did *not* hand-scan): **268** across
+the 4 events. These are **not** all good — the matcher assigns a best-effort cluster to every
+flash above threshold, including noise flashes: only **~38 are plausibly real** (22 at ks<0.10
+clean + 16 at ks 0.10–0.20), 74 are marginal, and **156 are the noise-flash tail** (ks>0.5).
+So beyond the hand scan the chain adds ~38 credible new matches per the 4 events; the rest is the
+expected noise-flash assignment continuum (rule 2 — these were never reviewed).
+
 > **Known remaining SBND/PDHD difference — `bundle_mask_ks` (deliberate, not an oversight).**
 > SBND sets `bundle_mask_ks: true` (apply `ch_mask` + the saturation mask to the **KS** shape
 > metric, not just χ²/LASSO); PDHD leaves it at the C++ default **`false`**, so PDHD's KS is
