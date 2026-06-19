@@ -447,7 +447,7 @@ be set:
 
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
-| `empty_rescue` (+`rescue_metric_max`) | a flash emptied by LASSO adopts its best light-quality orphan cluster | deferred — `rescue_metric_max` needs GT |
+| `empty_rescue` (+`rescue_metric_max`) | a flash emptied by LASSO adopts its best light-quality orphan cluster | **DONE** — enabled, `rescue_metric_max` **0.20** (exponent/boundary_weight 0.8/0.8 = SBND). Unlike SBND (misses timing-degenerate, ~1/5 recoverable) PDHD strands clean GT on LASSO-emptied flashes: **+14 GT-accept (44→58), 0 steals, 0 GT lost, 0 xTPC lost**, reject-reselected −6. See §3e |
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) gating the pre-LASSO `cull_inconsistent` purity cull | **DONE** — enabled. **KS ceilings = SBND** (KS is the purity lever: on the 4-event hand scan ks<0.10 is 88% pure, 57 GT vs 8 junk); **chi2/ndf ceilings RAISED 6/4/8 → 35/35/35** (PDHD's rougher light model runs a clean-KS GT match to chi2/ndf~32 vs SBND ~1–2; the SBND ceilings amputated clean-KS GT). 4-event GT (vs ladder-off, frac=0.4): **+5 net GT-accept (53→58), xTPC 12→14 (0 baseline xTPC lost), human-rejected re-selected −48 (219→171)**; cost = 4 displaced clean GT (§3d) |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — enabled, `lasso_boundary_weight` 0.2 (= SBND). Evt-983 GT: +4 boundary/crosser GT matches auto-select (18→22), 0 lost |
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; `chi2_pmt_excess` re-scaled **350 → 100 PE** for PDHD's lower ARAPUCA yield (genuine near-PD excess: median ~22 PE, p90 ~165, saturation tail ~10k). It IS active (softens ~27 close_to_PMT bundle χ²/event) but **selection-neutral** (the KS-led ladder with loose c2n=35 ceilings absorbs it) — live-but-benign, like SBND. `ratio`/`inflate` kept 1.3/0.5 |
@@ -606,6 +606,29 @@ circular):
   better→worse displacement. clu4/clu56 are distinct ~6644/2401-pt tracks 92 cm apart (not a
   clustering split), both ladder-consistent, so this is a **LASSO selection** between two
   consistent clusters — no ladder ceiling touches it. Documented as a known displacement.
+
+### 3e. Empty-flash light rescue — run-29107 4-event tuning (enabled for PDHD)
+
+`empty_rescue` is now ON. After the LASSO, a flash left empty (no winner above the
+strength cutoff) adopts its best light-quality candidate from the pre-fit snapshot if
+`metric = ks·(chi2/ndf)^rescue_exponent` (× `rescue_boundary_weight` per `at_x_boundary`
+then `close_to_PMT`) `< rescue_metric_max`; one-flash-per-cluster is enforced by
+reassignment only when the empty flash is a strictly better light match.
+
+> **PDHD differs from SBND.** SBND found its hand-scan misses **timing/drift-degenerate**
+> (the correct cluster fit a wrong flash as well as the right one), so only ~1/5 were
+> light-recoverable and it shipped a conservative `rescue_metric_max` 0.5. PDHD instead
+> strands **clean** GT matches on LASSO-emptied flashes: on the 4-event scan **16 empty
+> flashes have a GT-accept best candidate at metric < 0.16**, with a clear gap before the
+> `ks=1.0` cross-side no-flash crossers (metric > 0.8 — those are xTPC-annotation cases that
+> must NOT be light-rescued). The lowest non-GT candidate is at 0.057 (off-scan, neutral) and
+> **no human-rejected match** appears at low metric. **`rescue_metric_max` = 0.20** captures
+> the clean recoveries, excludes the crossers, and admits only neutral off-scan adoptions.
+
+**Result (4 events, vs the ladder+chi2 state).** **+14 GT-accept (44→58)**, **0 reassignment
+steals**, **0 GT winners lost**, **0 xTPC lost**, reject-reselected −6 (171→165); total
+auto-selected winners 385→395. Not pushed higher than 0.20 (the 3 remaining marginal GT
+recoveries sit at metric 0.26–0.38, into off-scan/steal-risk territory — diminishing returns).
 
 ---
 
