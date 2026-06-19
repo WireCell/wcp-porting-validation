@@ -459,9 +459,18 @@ ladder-off frac=0.4 baseline): **GT-accept 53 → 72** (xTPC 12 → 14, non-xTPC
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; `chi2_pmt_excess` re-scaled **350 → 100 PE** for PDHD's lower ARAPUCA yield (genuine near-PD excess: median ~22 PE, p90 ~165, saturation tail ~10k). It IS active (softens ~27 close_to_PMT bundle χ²/event) but **selection-neutral** (the KS-led ladder with loose c2n=35 ceilings absorbs it) — live-but-benign, like SBND. `ratio`/`inflate` kept 1.3/0.5 |
 | `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **DONE** — `pe_err_on_pred` enabled (PDHD `true`) + low-PE inflation; `pe_err_frac` `0.40` (§3c) |
 
-**Round-by-round 4-event progression** (run 29107 evts 983/991/999/1007; primary FOM is the
-hand-scan-independent GT delta — the global winner-KS shift is *not* independent, the ladder
-mechanically culls high-KS bundles. `validate_chain.py`):
+**Round-by-round 4-event progression** (run 29107 evts 983/991/999/1007; `validate_chain.py`).
+Primary FOM is the **hand-scan GT delta** (GT-accept + reject-reselected) — chosen because it is
+**independent of the ladder's own KS-cull mechanism**, unlike the global winner-KS shift (the
+ladder mechanically culls high-KS bundles, so "more low-KS winners" would be circular):
+
+> **In-sample caveat.** These 4 events are the *only* labeled PDHD hand scans, so every moved
+> threshold (`hc_*_c2`=35, `rescue_metric_max`=0.20, the lasso choice) was both **tuned and
+> validated on the same events** — there is no held-out set, so **+19 GT-accept is an in-sample
+> number, not a generalization claim**; out-of-sample behavior is unverified (revisit as more
+> events are scanned). Likewise the −54 "reject re-selected" is **purity on the reviewed set
+> only**: it tracks the 228 originally-reviewed matches, while the 70 new off-scan winners are
+> *un*reviewed and some are surely junk (rule 2 — small clusters were not exhaustively scanned).
 
 | round | change | GT-accept (xTPC + non-xTPC) | xTPC (HARD) | human-rejected re-selected |
 |---|---|---:|---:|---:|
@@ -475,6 +484,16 @@ Net (full chain vs frac=0.4 ladder-off baseline): **GT-accept 53 → 72** (+19; 
 the ladder net of 4 displacements, +14 by `empty_rescue`), **xTPC 12 → 14 with 0 baseline
 xTPC winners lost**, **human-rejected re-selections 219 → 165** (−54). The 70 off-scan new
 winners (rule 2: small clusters were not exhaustively hand-scanned) are neutral.
+
+> **Known remaining SBND/PDHD difference — `bundle_mask_ks` (deliberate, not an oversight).**
+> SBND sets `bundle_mask_ks: true` (apply `ch_mask` + the saturation mask to the **KS** shape
+> metric, not just χ²/LASSO); PDHD leaves it at the C++ default **`false`**, so PDHD's KS is
+> computed over all 160 channels including its 7 dead PDs (3/86/87/97/107/116/117) and any
+> unfired full-stream PDs. This **touches the KS lever the ladder is now keyed on** — masking
+> those channels would *lower* KS for matches near a dead PD. It is left off **on purpose**:
+> the ladder's KS ceilings and the `rescue_metric_max` were tuned on the **unmasked** KS in
+> these dumps, so enabling it shifts every KS and would require re-checking `hc_*_ks` and the
+> c2n=35 ceilings. Candidate refinement for a future round (with re-tuning), not a silent flip.
 
 ---
 
