@@ -31,6 +31,15 @@ needed for the λ/eff sweep.
 - **`validate_perchannel.py`** — real-C++ validation of the per-channel retune: closure
   (+x integral held, APA0 FBK/HPK + outlier channels → ~1.0) and the GT-preservation
   winner-diff (accept preserved, no new false positives) against the pre-retune dumps.
+- **`validate_chain.py`** — round-by-round chain-tuning validator (enabling the remaining
+  SBND features: `highconsist_ladder`, `chi2_pmt_excess` re-scale, `empty_rescue`, the
+  `lasso_boundary_weight` sweep). Winner-diff between a BASELINE and a NEW dump set,
+  **bucketed by the user's 3 hand-scan rules**: xTPC accepts are a HARD gate (must not
+  regress), non-xTPC accepts are soft, hand-`rejected_auto` re-selection should fall, and
+  auto-matches absent from the hand scan are neutral (flagged only when they steal a GT
+  flash). `validate_chain.py BASELINE_DIR NEW_DIR`; the frac=0.4 reference lives in
+  `baseline_frac04/` (gitignored — durable on disk, regenerate by reverting the round's
+  jsonnet + reprocessing).
 
 Tuned values applied (run 29107, 37 clean two-boundary crossers): `vuv_absorption_length`
 100→300 cm (`wire-cell-data/pdhd/photodet/semi-analytical-pdhd.json`), `vuv_eff`

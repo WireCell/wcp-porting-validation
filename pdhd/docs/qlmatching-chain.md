@@ -349,8 +349,9 @@ containment culls **0 winners directly**.
 > **300** (KS degenerate; N90+integral pin 300). A subsequent **per-channel (per-PD) gain
 > calibration** then replaces the uniform APA0 1.14 with a **block × type** array (FBK/HPK
 > SPE-template types) + 12 outlier overrides — the APA0 1.14 splits into FBK **1.20** /
-> HPK **1.00** — and recalibrates **`pe_err_frac` 0.43 → 0.60** so the median bundle
-> chi2/ndf on good matches lands at ~1.0 (was 1.59, error too tight). See
+> HPK **1.00** — and keeps **`pe_err_frac` 0.40** (the high-PE method-of-moments value;
+> an interim 0.60 that calibrated chi2/ndf→1 was reverted — chi2/ndf≈1 is not required and
+> the larger frac is a looser, mismatch-tolerant matching error). See
 > `ql-light-normalization-study.md` §"4-event hand-scan label retune" and §"Per-channel
 > (per-PD) gain calibration".
 
@@ -450,7 +451,7 @@ be set:
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) | deferred — branch cuts need GT |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — enabled, `lasso_boundary_weight` 0.2 (= SBND). Evt-983 GT: +4 boundary/crosser GT matches auto-select (18→22), 0 lost |
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; the excess-widening (`chi2_pmt_excess` 350 PE) is SBND-scale, largely inert at PDHD ARAPUCA levels, so the dead-PD worst-channel drop is the active part; excess thresholds left for a later PDHD retune |
-| `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **partly done** — `pe_err_frac` retuned to 0.43 from the 4-event labels (was 0.44 evt-983; §3c); `pe_err_on_pred` still default `false` |
+| `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **DONE** — `pe_err_on_pred` enabled (PDHD `true`) + low-PE inflation; `pe_err_frac` `0.40` (§3c) |
 
 ---
 
@@ -491,7 +492,7 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:117`): `denom = pe + perr²`,
 |------|---------|------|
 | `pe_err_on_pred` | `false` (**PDHD `true`**) | `false` → use measured opflash `get_PE_err`; `true` → predicted-based `perr` |
 | `pe_err_floor` | `0.3` | min error (pred mode) |
-| `pe_err_frac` | `0.3` (**PDHD `0.60`**) | high-pred fractional error of predicted PE (0.60 calibrates median bundle chi2/ndf→1.0 on good matches; was 0.44 evt-983 / 0.43 4-event — error was too tight) |
+| `pe_err_frac` | `0.3` (**PDHD `0.40`**) | high-pred fractional error of predicted PE (0.40 = high-PE method-of-moments on the hand-scan matches; an interim 0.60 calibrating chi2/ndf→1 was reverted — chi2/ndf≈1 not required, 0.60 over-tolerated mismatch) |
 | `pe_err_knee` | `1.0` | floor↔fractional transition (unused when low-PE inflation on) |
 | `pe_err_lowpe_frac` / `pe_err_lowpe_knee` | `-1`(off) / `4.0` (**PDHD `1.55` / `5.5`**) | low-PE detection-inefficiency error inflation: `rel = frac + (lowpe_frac−frac)·exp(−pred/knee)`, `perr = √((rel·pred)²+floor²)`. See `ql-lowpe-efficiency-study.md` |
 | `chi2_relax` | `false` | near-PMT / one-dead-PMT χ² relaxations |
@@ -500,7 +501,7 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:117`): `denom = pe + perr²`,
 | `lasso_flag_weight` | `false` | down-weight LASSO penalty for boundary/truncated bundles |
 | `pmt_nonlinearity` (+ `pmt_nl_knee/beta/gamma`) | `false` | per-PMT saturation map (study-grade, off) |
 
-Of these, **`pe_err_frac`** (→ `0.60`, chi2/ndf recalibration; **§3c**),
+Of these, **`pe_err_frac`** (→ `0.40`, high-PE method-of-moments; **§3c**),
 **`chi2_relax`** (→ `true`) and **`lasso_flag_weight`** (→ `true`, `lasso_boundary_weight`
 0.2) are now set in `pdhd/qlmatching.jsonnet`; the rest are C++ defaults. `chi2_relax`'s
 excess-widening term (`chi2_pmt_excess` 350 PE) is SBND-PMT-scaled and largely inert at
@@ -514,7 +515,7 @@ excess thresholds still want a PDHD re-scale. For further tuning: decide the err
 > provenance. The shipping values are the **4-event** retune (`vuv_eff` 0.01281, λ 300)
 > and the **per-channel (per-PD) gain calibration** that replaces the uniform APA0 1.57
 > with a block × type `measured_pe_scale` array (APA0 → FBK 1.20 / HPK 1.00) + 12 outlier
-> overrides, and recalibrates `pe_err_frac` → **0.60**. See
+> overrides, and keeps `pe_err_frac` **0.40**. See
 > `ql-light-normalization-study.md` §"4-event …" and §"Per-channel (per-PD) gain
 > calibration"; scripts `ql_light_calib/fit_labels_multi.py` + `fit_perchannel_scale.py`.
 
