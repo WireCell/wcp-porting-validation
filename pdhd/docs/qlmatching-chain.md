@@ -439,17 +439,32 @@ byte-identical before/after).
 > pair rather than forcing an impossible light-match. The hand-scan viewer surfaces it
 > (navigable, with the flag) so a human can confirm it.
 
-### Parity with the SBND Q/L chain — now complete
+### Parity with the SBND Q/L chain — complete (functional identity)
 
-PDHD now runs the **full SBND-derived Q/L suite**: containment + over-prediction +
-cross-side filter + cross-cathode xTPC, the flag fit-advantage levers (`lasso_flag_weight`
-+ `chi2_relax`), the per-channel `measured_pe_scale` + low-PE error model, and — as of the
-run-29107 4-event hand-scan tuning (June 2026) — the three previously-deferred features:
-`highconsist_ladder`, `empty_rescue`, and the PDHD-rescaled `chi2_pmt_excess`. Every knob
-below is now **enabled and tuned** against the hand scan (each remains C++-default-OFF, so
-SBND/PDVD/ICARUS stay byte-identical). The cumulative effect on the 4 events (vs the
-ladder-off frac=0.4 baseline): **GT-accept 53 → 72** (xTPC 12 → 14, non-xTPC 41 → 58),
-**human-rejected re-selections 219 → 165**, **0 baseline xTPC winners lost**.
+PDHD now runs the **full SBND-derived Q/L suite and is functionally identical to SBND**:
+containment + over-prediction + cross-side filter + cross-cathode xTPC, the flag
+fit-advantage levers (`lasso_flag_weight` + `chi2_relax`), `highconsist_ladder`,
+`empty_rescue`, `bundle_mask_ks`, and the per-channel `measured_pe_scale` + low-PE error
+model. Each remains C++-default-OFF, so SBND/PDVD/ICARUS stay byte-identical.
+
+> **The LASSO penalty terms and bundle-merge thresholds are already SBND-identical — not a
+> tuning lever.** PDHD does not set `lasso_lambda`, `delta_charge`/`delta_light`/`delta_shape`,
+> `bkg_weight`, `pe_mismatch_knee`/`pe_mismatch_floor`, `bundle_ks_merge_max`,
+> `bundle_chi2ndf_merge_max`, `bundle_addmerge_exponent`, `bundle_pe_ndf_knee`, or
+> `anode_ext1`/`anode_ext2`. The **C++ member-initializer defaults equal SBND's tuned values
+> exactly** (`lasso_lambda` 0.1, `delta` 0.01/0.025/0.01, `bkg_weight` 0.5, `pe_mismatch` 0.3/0.3,
+> merge 0.2/20/0.8, `pe_ndf_knee` 1.0, `anode_ext` −2/+4 cm) — confirmed from a live dump's
+> `quality_params` — so omitting them runs PDHD at SBND's penalty/merge values. The only
+> PDHD-specific *cut* values are the ones a demonstrated PDHD effect justified: the `pe_err`
+> model (§3b/c), the ladder chi²/ndf ceilings (PDHD's rougher light model, §3d), `chi2_pmt_excess`
+> (§3.b), `rescue_metric_max` (§3e), and the geometry edges. `bundle_chi2ndf_merge_max`=35 was
+> tested (PDHD chi² scale) and is **inert** (0 selection change), so it stays at SBND's 20.
+> The only remaining functional gap, `pmt_nonlinearity`, is intentionally deferred (optical —
+> needs per-PMT params PDHD lacks; not a matching cut).
+
+The cumulative effect on the 4 events (vs the ladder-off frac=0.4 baseline): **GT-accept
+53 → 66** (xTPC 12 → 14, non-xTPC 41 → 52), **human-rejected re-selections 219 → 149**,
+**0 baseline xTPC winners lost**.
 
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
@@ -484,45 +499,60 @@ ladder mechanically culls high-KS bundles, so "more low-KS winners" would be cir
 | 2 | `chi2_pmt_excess` 350 → 100 | 58 (14+44) | 14 | 171 (neutral) |
 | 3 | `empty_rescue` (`rescue_metric_max` 0.20) | **72** (14+58) | 14 | 165 |
 | 4 | `lasso_boundary_weight` sweep → keep 0.2 | 72 (14+58) | 14 | 165 |
+| 6 | `bundle_mask_ks` true (SBND functional parity) | 66 (14+52) | 14 | **149** |
 
-Net (full chain vs frac=0.4 ladder-off baseline): **GT-accept 53 → 72** (+19; ~9 recovered by
-the ladder net of 4 displacements, +14 by `empty_rescue`), **xTPC 12 → 14 with 0 baseline
-xTPC winners lost**, **human-rejected re-selections 219 → 165** (−54). The 70 off-scan new
-winners (rule 2: small clusters were not exhaustively hand-scanned) are neutral.
+(Round 5 = all-on re-validation; no config change. Round 6 trades −6 clean GT recall for −16
+purity — a global KS re-normalization reshuffle, accepted for functional SBND identity; see the
+`bundle_mask_ks` note below and §3f.)
+
+Net (full chain vs frac=0.4 ladder-off baseline): **GT-accept 53 → 66** (+13), **xTPC 12 → 14
+with 0 baseline xTPC winners lost**, **human-rejected re-selections 219 → 149** (−70). The
+off-scan new winners (rule 2: small clusters were not exhaustively hand-scanned) are neutral.
 
 **Final shipped selection vs the hand scan (absolute, not a baseline delta).** Of the **125**
-hand-scan matches across the 4 events, **16 are xTPC annotation-only crossers** (no flash on one
-side → not light-selectable by design; they stay annotated), leaving **109 auto-selectable**.
-How the shipped config selects them (cluster matched to the *same* flash = reproduced; to a
-*different* flash = reassigned, better/worse by the final model's KS for the two flash options):
+hand-scan matches across the 4 events, **~16 are xTPC annotation-only crossers** (no flash on one
+side → not light-selectable by design; they stay annotated), leaving **~109 auto-selectable**.
+How the shipped config (`bundle_mask_ks`=true) selects them (cluster matched to the *same* flash =
+reproduced; to a *different* flash = reassigned, better/worse by the final model's KS):
 
-| hand-scan match outcome | count | of 109 |
+| hand-scan match outcome | count | of ~109 |
 |---|---:|---:|
-| **reproduced** (same cluster↔flash) | **82** | 75% |
-| reassigned to a **better**-KS flash (code improved on the pick) | 15 | 14% |
-| reassigned to a **worse**-KS flash | 10 | 9% |
-| genuinely **dropped** (cluster unmatched) | 2 | 2% |
+| **reproduced** (same cluster↔flash) | **76** | 70% |
+| reassigned to a **better**-KS flash (code improved on the pick) | 14 | 13% |
+| reassigned to a **worse**-KS flash | 13 | 12% |
+| genuinely **dropped** (cluster unmatched) | ~3 | 3% |
 
-So **good (reproduced or improved) = 97/109 (89%)**; changed-for-worse = 10; dropped = 2 (the
-documented displacement cost — see §3d). "Better/worse" is by light-agreement KS, not a
-physics-truth claim.
+So **good (reproduced or improved) = 90/109 (≈83%)**; changed-for-worse = 13; dropped ≈ 3. (At
+`bundle_mask_ks`=false these were 82 / 97-good / 89%; enabling the KS mask for SBND parity shifts
+~6 clean GT into worse/dropped via the global reshuffle while culling 16 more human-rejected
+junk.) "Better/worse" is by light-agreement KS, not a physics-truth claim.
 
 **Additional matches** (final winners on clusters the human did *not* hand-scan): **268** across
 the 4 events. These are **not** all good — the matcher assigns a best-effort cluster to every
-flash above threshold, including noise flashes: only **~38 are plausibly real** (22 at ks<0.10
-clean + 16 at ks 0.10–0.20), 74 are marginal, and **156 are the noise-flash tail** (ks>0.5).
+flash above threshold, including noise flashes: only **~38 are plausibly real** (23 at ks<0.10
+clean + 15 at ks 0.10–0.20), ~70 are marginal, and **~160 are the noise-flash tail** (ks>0.5).
 So beyond the hand scan the chain adds ~38 credible new matches per the 4 events; the rest is the
 expected noise-flash assignment continuum (rule 2 — these were never reviewed).
 
-> **Known remaining SBND/PDHD difference — `bundle_mask_ks` (deliberate, not an oversight).**
-> SBND sets `bundle_mask_ks: true` (apply `ch_mask` + the saturation mask to the **KS** shape
-> metric, not just χ²/LASSO); PDHD leaves it at the C++ default **`false`**, so PDHD's KS is
-> computed over all 160 channels including its 7 dead PDs (3/86/87/97/107/116/117) and any
-> unfired full-stream PDs. This **touches the KS lever the ladder is now keyed on** — masking
-> those channels would *lower* KS for matches near a dead PD. It is left off **on purpose**:
-> the ladder's KS ceilings and the `rescue_metric_max` were tuned on the **unmasked** KS in
-> these dumps, so enabling it shifts every KS and would require re-checking `hc_*_ks` and the
-> c2n=35 ceilings. Candidate refinement for a future round (with re-tuning), not a silent flip.
+### 3f. `bundle_mask_ks` — enabled for SBND functional parity (Round 6)
+
+SBND sets `bundle_mask_ks: true` (apply `ch_mask` + the saturation mask to the **KS** shape
+metric, not just χ²/LASSO); PDHD originally left it at the C++ default `false`. It is now
+**enabled** to be functionally identical to SBND. A dead PD reading 0 where the model predicts
+light should not be charged to a match's KS, so this is the *correct* behaviour; it is the last
+boolean feature flag that differed from SBND.
+
+> **It is a measured purity-for-recall trade, not free.** Enabling the mask **re-normalizes KS
+> for every bundle**, which reshuffles the KS-led ladder + LASSO globally. On the 4-event scan
+> it culls **16 more human-rejected matches** (reject-reselected 165 → 149) but **displaces 6
+> clean GT matches** (non-xTPC 58 → 52; xTPC 14/14 held). Crucially the 6 displaced matches'
+> *own* KS is unchanged (they have ~0 predicted light on the dead channels) — they lose the
+> LASSO to *rivals* whose KS dropped under masking, so they are **not** recoverable by moving a
+> ceiling (the ladder ceilings are held; refitting them to mask this would be overfitting these
+> 4 events). Net human-agreement +10 (−16 wrong, −6 right). Shipped at the user's direction
+> (functional SBND identity + the historical purity-first preference); the −6 clean-GT cost is
+> recorded here, not buried. `bundle_chi2ndf_merge_max`=35 was also tested (PDHD chi² scale) and
+> is **inert** — kept at SBND's 20.
 
 ---
 
