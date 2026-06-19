@@ -450,7 +450,7 @@ be set:
 | `empty_rescue` (+`rescue_metric_max`) | a flash emptied by LASSO adopts its best light-quality orphan cluster | deferred — `rescue_metric_max` needs GT |
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) gating the pre-LASSO `cull_inconsistent` purity cull | **DONE** — enabled. **KS ceilings = SBND** (KS is the purity lever: on the 4-event hand scan ks<0.10 is 88% pure, 57 GT vs 8 junk); **chi2/ndf ceilings RAISED 6/4/8 → 35/35/35** (PDHD's rougher light model runs a clean-KS GT match to chi2/ndf~32 vs SBND ~1–2; the SBND ceilings amputated clean-KS GT). 4-event GT (vs ladder-off, frac=0.4): **+5 net GT-accept (53→58), xTPC 12→14 (0 baseline xTPC lost), human-rejected re-selected −48 (219→171)**; cost = 4 displaced clean GT (§3d) |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — enabled, `lasso_boundary_weight` 0.2 (= SBND). Evt-983 GT: +4 boundary/crosser GT matches auto-select (18→22), 0 lost |
-| `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; the excess-widening (`chi2_pmt_excess` 350 PE) is SBND-scale, largely inert at PDHD ARAPUCA levels, so the dead-PD worst-channel drop is the active part; excess thresholds left for a later PDHD retune |
+| `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; `chi2_pmt_excess` re-scaled **350 → 100 PE** for PDHD's lower ARAPUCA yield (genuine near-PD excess: median ~22 PE, p90 ~165, saturation tail ~10k). It IS active (softens ~27 close_to_PMT bundle χ²/event) but **selection-neutral** (the KS-led ladder with loose c2n=35 ceilings absorbs it) — live-but-benign, like SBND. `ratio`/`inflate` kept 1.3/0.5 |
 | `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **DONE** — `pe_err_on_pred` enabled (PDHD `true`) + low-PE inflation; `pe_err_frac` `0.40` (§3c) |
 
 ---
@@ -496,7 +496,7 @@ Per-PMT error feeding χ² (`TimingTPCBundle.cxx:117`): `denom = pe + perr²`,
 | `pe_err_knee` | `1.0` | floor↔fractional transition (unused when low-PE inflation on) |
 | `pe_err_lowpe_frac` / `pe_err_lowpe_knee` | `-1`(off) / `4.0` (**PDHD `1.55` / `5.5`**) | low-PE detection-inefficiency error inflation: `rel = frac + (lowpe_frac−frac)·exp(−pred/knee)`, `perr = √((rel·pred)²+floor²)`. See `ql-lowpe-efficiency-study.md` |
 | `chi2_relax` | `false` | near-PMT / one-dead-PMT χ² relaxations |
-| `chi2_pmt_excess` | `350.0` | **MicroBooNE PE threshold — likely too high for PDHD light yield; re-tune** |
+| `chi2_pmt_excess` | `350.0` (**PDHD `100.0`**) | near-PD measured-excess PE threshold; re-scaled to PDHD ARAPUCA yield (active but selection-neutral) |
 | `chi2_pmt_ratio` / `chi2_pmt_inflate` | `1.3` / `0.5` | excess-relaxation ratio / denom inflation |
 | `lasso_flag_weight` | `false` | down-weight LASSO penalty for boundary/truncated bundles |
 | `pmt_nonlinearity` (+ `pmt_nl_knee/beta/gamma`) | `false` | per-PMT saturation map (study-grade, off) |
