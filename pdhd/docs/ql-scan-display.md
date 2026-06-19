@@ -154,6 +154,33 @@ are legitimate one-flash-multiple-cluster matches), matched-cluster set **identi
 The calib-dump gid path (`dump_calib`) is **unchanged** (still node-ident encoded), so
 this viewer's phantom collapse and saved scans are unaffected.
 
+#### Cross-side coincidence grouping (`flash_group_window` + `bee_flash_per_flash`)
+
+De-duplication leaves the genuine **cathode-crosser** case: PDHD's opaque cathode makes a
+track crossing the central cathode scintillate **independently** in each drift volume, so
+the all-PD OpFlashFinder reconstructs **two coincident per-side flashes** — a bright
+near-PD flash and its faint far-side partner a few tens of ns apart (the anti-correlated
+PE signature; cf. SBND `flash-coincidence.md`), each matched to its own per-side cluster.
+SBND shows one box here only because its light reco produces **one OpFlash spanning both
+TPCs**; PDHD's two flashes are physically distinct objects.
+
+Two MABC settings on the all-TPC `clus_all_tpc` node (now **set for PDHD, = SBND**) make
+the Bee op display present these as one physical event:
+
+- **`flash_group_window: 80*ns`** — `store_flash_groups` tags each flash with an
+  `op_flash_group` id (greedy ±80 ns time-gap grouping, same as SBND). The Bee viewer
+  renders a whole group **together** when the column is present (one box per physical
+  event), instead of one flash at a time (`wire-cell-bee3` `op.js`); absent ⇒ ungrouped,
+  bit-identical. So the crosser's two flashes — e.g. 29107 evt 983 `(−2044.92 µs, 8505
+  PE, TPC1, cluster 89)` + `(−2044.86 µs, 581 PE, TPC0, cluster 36)`, both `group 12` —
+  show as one with **both** clusters.
+- **`bee_flash_per_flash: true`** — a flash matched to several clusters emits **one** op
+  row carrying all of them (summed predicted PE) instead of one row per cluster. On the 10
+  29107 events this collapses the matched rows to exactly one per distinct flash.
+
+Both are config-only (the C++ already supports them); they affect only PDHD's op dump and
+only when `save_opflash` (`-op`) is on. SBND/PDVD/ICARUS keep their own configs.
+
 ### Phantom flash collapse — keeps the two tables consistent
 
 Each drift side's run dumps the **full global flash list**, so the combined file lists
