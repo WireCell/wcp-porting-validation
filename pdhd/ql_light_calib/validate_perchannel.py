@@ -3,7 +3,9 @@
 
 OLD = pre-retune dumps (/home/xqian/tmp/ql_perch_before, the current production
 model); NEW = work/029107_{0..3}/calib-evt*.json after reprocessing with the
-per-channel scales.  Labels (work/ql_labels) are still the pre-reprocess hand scan;
+per-channel scales.  NOTE: OLD is an EPHEMERAL /home/xqian/tmp backup of the
+production dumps made before the retune -- to re-run this after tmp is cleared, first
+re-back-up the production-model dumps (revert qlmatching.jsonnet, reprocess, copy).  Labels (work/ql_labels) are still the pre-reprocess hand scan;
 everything is keyed by (apa, round(flash_time,2), cluster_ident) so it survives the
 flash-gid renumbering that any measured-PE change causes.
 

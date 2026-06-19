@@ -225,15 +225,18 @@ the tightest, MAD≈0.1); ch23 a low-gain HPK scaled **up** 1.47. The raw fit wa
 2. **`pe_err_frac` 0.43 → 0.60** is where the chi2 win lives, and it is *independent* of
    the gain work (the old dumps already sat at chi2/ndf 1.59 with frac 0.43 — the per-PMT
    error was too **tight**). frac is **calibrated**, not minimised: 0.60 brings the median
-   bundle chi2/ndf on good matches to **~1.0** (54/54 anchors lower), making chi2/ndf a
-   well-scaled goodness-of-fit. The high-PE method-of-moments gives ~0.40 but only sees
+   real-C++ bundle chi2/ndf (dump `chi2`/`ndf`) on good matches from **1.66 → 1.13**
+   (53/53 anchors lower), making chi2/ndf a well-scaled goodness-of-fit. frac=0.60 sits
+   above the ~39% physical per-PMT estimate (`ql-pe-error-study`) — it absorbs model/
+   geometry scatter into the measurement term; verified it does **not** dull the matcher
+   (reject held at fixed gain), so it is not masking bad matches. The method-of-moments gives ~0.40 but only sees
    the bright tail; the full bundle statistic, dominated by mid-PE channels + the low-PE
    inflation, needs the larger frac. floor/knee + the low-PE inflation are unchanged.
 
 **`pe_err_frac` is a MATCHING knob** (chi2 drives `auto_selected`), so 0.60 was set by
 **reprocessing** at the candidate value, not offline. Real-C++ validation (per-channel
-gain + frac 0.60 vs production, `validate_perchannel.py`): median chi2/ndf **1.59→1.06**,
-KS flat (0.061→0.060); GT accepted matches **57→57** (net preserved), human-rejected
+gain + frac 0.60 vs production, `validate_perchannel.py`): real-C++ median chi2/ndf
+**1.66→1.13**, KS flat (0.061→0.060); GT accepted matches **57→57** (net preserved), human-rejected
 re-selections **328→259** (−21%, purity *improved* — the looser error did **not**
 re-inflate it; the gain correction, not frac, drives purity), **0** new false positives.
 A small 6-lost/6-gained reshuffle among accepted matches is the gain change re-solving a
