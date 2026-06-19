@@ -448,7 +448,7 @@ be set:
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
 | `empty_rescue` (+`rescue_metric_max`) | a flash emptied by LASSO adopts its best light-quality orphan cluster | deferred — `rescue_metric_max` needs GT |
-| `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) | deferred — branch cuts need GT |
+| `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) gating the pre-LASSO `cull_inconsistent` purity cull | **DONE** — enabled. **KS ceilings = SBND** (KS is the purity lever: on the 4-event hand scan ks<0.10 is 88% pure, 57 GT vs 8 junk); **chi2/ndf ceilings RAISED 6/4/8 → 35/35/35** (PDHD's rougher light model runs a clean-KS GT match to chi2/ndf~32 vs SBND ~1–2; the SBND ceilings amputated clean-KS GT). 4-event GT (vs ladder-off, frac=0.4): **+5 net GT-accept (53→58), xTPC 12→14 (0 baseline xTPC lost), human-rejected re-selected −48 (219→171)**; cost = 4 displaced clean GT (§3d) |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — enabled, `lasso_boundary_weight` 0.2 (= SBND). Evt-983 GT: +4 boundary/crosser GT matches auto-select (18→22), 0 lost |
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; the excess-widening (`chi2_pmt_excess` 350 PE) is SBND-scale, largely inert at PDHD ARAPUCA levels, so the dead-PD worst-channel drop is the active part; excess thresholds left for a later PDHD retune |
 | `pe_err_on_pred` + retuned `pe_err_floor/frac/knee` | χ² error from predicted (not measured) PE, SBND-tuned magnitudes | **DONE** — `pe_err_on_pred` enabled (PDHD `true`) + low-PE inflation; `pe_err_frac` `0.40` (§3c) |
@@ -559,6 +559,53 @@ predicted, a known residual. (3) The brightness-dependence (2.3 on bright APA0/A
 the **saturation/nonlinearity** signature; a per-channel `pmt_nonlinearity` round is the
 proper next step, deferred here. (4) `frac=0.44` is a non-robust moment estimate on one
 event; refine with more hand-scanned events.
+
+### 3d. High-consistency ladder — run-29107 4-event tuning (enabled for PDHD)
+
+`highconsist_ladder` is now ON. The ladder (`TimingTPCBundle::examine_bundle`) sets
+`flag_high_consistent`, which gates the pre-LASSO `cull_inconsistent` purity cull: a
+cluster with a consistent bundle (ladder-flagged or xtpc) drops its non-consistent rivals
+before the fit (an xtpc scenario-1 bundle takes absolute priority). It is **KS-led** — a
+true match has low KS, a wrong one high KS; chi2/ndf only fences the tail.
+
+> **Two PDHD-specific calibrations vs the SBND seeds** (`ql_light_calib/validate_chain.py`,
+> evts 983/991/999/1007):
+> 1. **KS ceilings = SBND** (`hc_clean_ks` 0.06, `hc_good_ks` 0.09→**0.10**, `hc_tb_ks`
+>    0.10, `hc_miss_ks` 0.08). KS is the purity lever: on the 4-event scan **ks<0.10 is 88%
+>    pure** (57 GT vs 8 junk), and the few low-KS junk sit at chi2/ndf ≥ 40.
+> 2. **chi2/ndf ceilings RAISED to PDHD scale** (`hc_clean_c2`/`hc_good_c2`/`hc_tb_c2`
+>    6/4/8 → **35/35/35**; `hc_miss_c2` 60 kept). PDHD's semi-analytical light model is
+>    rougher than SBND's, so a *clean-KS* GT match runs chi2/ndf up to ~32 (vs SBND ~1–2).
+>    At the SBND ceilings six clean-KS GT matches (e.g. evt991 clu11 ks=0.033 c2n=6.4,
+>    evt1007 clu87 ks=0.051 c2n=29) fell non-consistent and were culled when their cluster
+>    had another ladder-passing bundle. c2n<35 keeps every clean-KS GT (max ~32) and still
+>    fences the low-KS junk (c2n≥40). High-KS boundary matches (missing charge, ks 0.15–0.40)
+>    can't be separated from junk by KS, so the ladder leaves them to the LASSO + boundary
+>    down-weight (cull case-3 keep-all) rather than flagging them consistent.
+
+**Result (4 events, vs ladder-off frac=0.4 baseline).** Primary FOM is the
+**hand-scan-independent GT delta** (the global winner-KS shift is *not* independent — the
+ladder mechanically culls high-KS bundles, so reporting "more low-KS winners" would be
+circular):
+
+| metric (hand scan) | baseline | ladder on |
+|---|---:|---:|
+| GT-accept winners (xTPC + non-xTPC) | 53 | **58** (+5) |
+| of which xTPC (HARD — must not regress) | 12 | **14** (0 baseline xTPC lost) |
+| human-rejected auto-matches re-selected | 219 | **171** (−48) |
+
+**Honest cost — 4 displaced clean GT matches** (gains ~9 GT recovered, nets +5):
+- evt1007 clu116 (ks=0.078) → clu120 (ks=0.071): lost to a **better**-KS off-scan cluster —
+  an improvement, not a regression.
+- evt999 clu130 (ks=0.108): missed `hc_good_ks`=0.10 by 0.008, culled, reassigned to a wrong
+  flash. A KS-gate-boundary casualty; **not** worth moving the ceiling to 0.11 (that fits one
+  event and admits the [0.10,0.11) junk band).
+- evt999 clu171 (ks=0.252): a marginal GT pick (the hand scan is non-exhaustive; some small
+  picks are sub-optimal).
+- evt991 clu4 (ks=0.026) → **unmatched** (clu56 ks=0.099 won its flash): the one genuine
+  better→worse displacement. clu4/clu56 are distinct ~6644/2401-pt tracks 92 cm apart (not a
+  clustering split), both ladder-consistent, so this is a **LASSO selection** between two
+  consistent clusters — no ladder ceiling touches it. Documented as a known displacement.
 
 ---
 
