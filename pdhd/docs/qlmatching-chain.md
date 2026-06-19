@@ -464,6 +464,11 @@ Primary FOM is the **hand-scan GT delta** (GT-accept + reject-reselected) — ch
 **independent of the ladder's own KS-cull mechanism**, unlike the global winner-KS shift (the
 ladder mechanically culls high-KS bundles, so "more low-KS winners" would be circular):
 
+> **Production smoke.** The final config (now the `run_clus_evt.sh` default, not a branch
+> experiment) was run on the pathological **evt 1015** (~900 flashes, the resource cliff):
+> clean exit, **233 s wall, 1.06 GB peak RSS** — the per-empty-flash `empty_rescue` and
+> per-cluster ladder cull add negligible overhead.
+>
 > **In-sample caveat.** These 4 events are the *only* labeled PDHD hand scans, so every moved
 > threshold (`hc_*_c2`=35, `rescue_metric_max`=0.20, the lasso choice) was both **tuned and
 > validated on the same events** — there is no held-out set, so **+19 GT-accept is an in-sample
