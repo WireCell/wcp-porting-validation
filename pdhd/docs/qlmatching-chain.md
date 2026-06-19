@@ -273,13 +273,29 @@ reject_overpred: true,  overpred_total_ratio: 3.0,  overpred_maxch_ratio: 10.0,
       boundary (≈ 2500–8800 q/pt). Because it is per-point density, not an aggregate fraction,
       it does not scale with cluster size or tail length — it cleanly separates a satellite
       from a genuine boundary-piercing tail regardless of how large the cluster is.
+    - **`robust_endpoint_gap`** (PDHD **3.0 cm**) + **`robust_endpoint_gap_charge_frac`**
+      (PDHD **0.01**): a **density-blind detachment-gap** path (anode end only) for
+      **moderately-dense overclustered junk** that the charge-density gate above cannot
+      catch. Run 29107 evt 1007 cluster `uid 126` (a real ~106 cm track, GT-matched to flash
+      gid 72 @ 850 µs) carries 7 gap-separated junk groups marching from `u ≈ −111 cm` up to
+      the body at **~2000 q/pt** — ~10× the diffuse satellites the `charge_abs` gate was tuned
+      on, and *overlapping* the genuine track-end band (~2500 q/pt), so raising `charge_abs`
+      would amputate real anode-crossers. The robust discriminator here is **detachment, not
+      density**: junk sits in groups separated from the contiguous body by large drift gaps,
+      whereas a real anode-piercing tip is continuous (~0.08 cm tick spacing). Trim the
+      sub-anode material iff it contains a drift gap **> `robust_endpoint_gap`** AND carries
+      **< `robust_endpoint_gap_charge_frac · Q_cluster`**. This path is also OR'd with the
+      others, so no existing rescue is weakened; C++ default `0` ⇒ disabled ⇒ byte-identical.
 
     Validated bundle-level on 10 events of run 29107 (the reliable metric while the chain is
     tuned): **0 bundles lost** (the point-count path is preserved byte-identically), every
     contiguous real-track-tail case correctly **left to fail** (so the density gate adds no
     forced matches), and only genuine low-density satellites rescued — including the evt 991
     target `uid 1000031` (165 q/pt). Passing containment only makes a bundle *eligible*; the
-    χ²/KS fit still decides selection.
+    χ²/KS fit still decides selection. The **gap path** was A/B'd (gap=0 vs gap=3) across all
+    30 events of run 29107: **28 bundles enabled, 0 removed**, exactly **1 new correct match**
+    (the evt 1007 `uid 126 ↔ gid 72` rescue), 2 benign t0-flips of ~0-PE noise clusters, and
+    **zero fake matches / zero GT regression**; cluster `uid→npoints` identical across passes.
 - **`reject_overpred`** (`QLMatching.cxx:1208`) drops a bundle, before the χ² fit, when
   its predicted light hugely exceeds the measured light over the masked PMT set —
   `Σpred/Σmeas > overpred_total_ratio` **or** `pred/meas` at the brightest predicted
