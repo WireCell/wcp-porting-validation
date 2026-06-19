@@ -170,6 +170,16 @@ Identical to SBND:
   *Compare cluster's flashes* click and does not follow main-table focus changes (so it
   no longer jumps when a different-cluster bundle is clicked); re-click Compare to move
   it.
+- **All tables are non-sortable** (`sortable=False` on every column). A row click reports
+  a row *index*, which the callbacks map through a build-order list (`clus_order` for the
+  roster, `compare_order` / `order` for the bundle tables) back to the bundle/cluster.
+  User-sorting a column reorders only the on-screen view, **not** that list, so the index
+  would resolve to the wrong row — e.g. sorting the cluster roster by `clus` to find
+  cluster 90, then clicking it, would actually pick the neighbouring (often cross-side,
+  other-drift-side) cluster, and *Compare* would then list **that** cluster's flashes
+  (symptom: the Compare table fills with a different `clus`, on the opposite side).
+  Disabling sort keeps the index ↔ row mapping exact; navigate via the fixed
+  longest-cluster-first order.
 - **Cross-side bundles** (cluster on one drift side, flash measured on the other — the
   `cross_side_filter` cathode-crosser survivors) are tinted light orange and tagged
   `XSIDE` in the flags column, marking them as low-priority context rather than primary

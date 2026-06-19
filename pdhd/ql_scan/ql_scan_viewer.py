@@ -567,23 +567,29 @@ table = DataTable(source=table_src, columns=table_cols, width=900, height=300,
 # flash's T0). Populated on demand by the "Compare" button; click a row to jump the
 # whole view (focus + group) to that candidate flash.
 compare_src = ColumnDataSource(data=dict())
+# sortable=False on every column (as the main table): a click reports a row index that
+# we map through state["compare_order"] (build order). User-sorting a column reorders the
+# view without reordering compare_order, so the index would resolve to the wrong bundle.
 compare_cols = [
-    TableColumn(field="sel", title="✓", width=34, formatter=check_fmt),
-    TableColumn(field="auto", title="auto", width=45),
-    TableColumn(field="apa", title="apa", width=35),
-    TableColumn(field="flash_gid", title="flash", width=70),
-    TableColumn(field="cluster", title="clus", width=50),
+    TableColumn(field="sel", title="✓", width=34, formatter=check_fmt, sortable=False),
+    TableColumn(field="auto", title="auto", width=45, sortable=False),
+    TableColumn(field="apa", title="apa", width=35, sortable=False),
+    TableColumn(field="flash_gid", title="flash", width=70, sortable=False),
+    TableColumn(field="cluster", title="clus", width=50, sortable=False),
     TableColumn(field="t_us", title="t(us)", width=70,
-                formatter=NumberFormatter(format="0.0")),
-    TableColumn(field="grp", title="grp", width=40),
-    TableColumn(field="ks", title="ks", width=55, formatter=NumberFormatter(format="0.000")),
+                formatter=NumberFormatter(format="0.0"), sortable=False),
+    TableColumn(field="grp", title="grp", width=40, sortable=False),
+    TableColumn(field="ks", title="ks", width=55,
+                formatter=NumberFormatter(format="0.000"), sortable=False),
     TableColumn(field="chi2ndf", title="chi2/ndf", width=70,
-                formatter=NumberFormatter(format="0.0")),
+                formatter=NumberFormatter(format="0.0"), sortable=False),
     TableColumn(field="strength", title="strength", width=70,
-                formatter=NumberFormatter(format="0.000")),
-    TableColumn(field="meas", title="measPE", width=70, formatter=NumberFormatter(format="0")),
-    TableColumn(field="pred", title="predPE", width=70, formatter=NumberFormatter(format="0.0")),
-    TableColumn(field="flags", title="flags", width=150),
+                formatter=NumberFormatter(format="0.000"), sortable=False),
+    TableColumn(field="meas", title="measPE", width=70,
+                formatter=NumberFormatter(format="0"), sortable=False),
+    TableColumn(field="pred", title="predPE", width=70,
+                formatter=NumberFormatter(format="0.0"), sortable=False),
+    TableColumn(field="flags", title="flags", width=150, sortable=False),
 ]
 compare_table = DataTable(source=compare_src, columns=compare_cols, width=1000,
                           height=200, selectable=True, index_position=None)
@@ -593,14 +599,19 @@ compare_table = DataTable(source=compare_src, columns=compare_cols, width=1000,
 # so you can see at a glance which clusters are still unassigned.
 clus_title = Div(text="<b>clusters</b> (✓ = matched)", width=330)
 clus_src = ColumnDataSource(data=dict())
+# sortable=False on every column (as the main table): on_clus_select maps the clicked
+# row index through state["clus_order"] (build order, longest-first). User-sorting a
+# column (e.g. the "clus" header to find a cluster) reorders only the view, so the index
+# would resolve to a neighbouring cluster -- e.g. picking "clus 90" selecting the
+# adjacent cross-side cluster, then Compare listing the wrong cluster's flashes.
 clus_cols = [
-    TableColumn(field="sel", title="✓", width=30, formatter=check_fmt),
-    TableColumn(field="cluster", title="clus", width=50),
-    TableColumn(field="apa", title="side", width=40),
-    TableColumn(field="flash_gid", title="→flash", width=60),
-    TableColumn(field="npts", title="npts", width=55),
+    TableColumn(field="sel", title="✓", width=30, formatter=check_fmt, sortable=False),
+    TableColumn(field="cluster", title="clus", width=50, sortable=False),
+    TableColumn(field="apa", title="side", width=40, sortable=False),
+    TableColumn(field="flash_gid", title="→flash", width=60, sortable=False),
+    TableColumn(field="npts", title="npts", width=55, sortable=False),
     TableColumn(field="length", title="len(cm)", width=65,
-                formatter=NumberFormatter(format="0.0")),
+                formatter=NumberFormatter(format="0.0"), sortable=False),
 ]
 clus_table = DataTable(source=clus_src, columns=clus_cols, width=330, height=300,
                        selectable=True, index_position=None)
