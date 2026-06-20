@@ -437,7 +437,39 @@ byte-identical before/after).
 > cross-side bundle stays `auto_selected=false`: a side-0 cluster predicts ≈0 light on the
 > side-1 OpDets (opaque cathode), so it can never win the light fit — xTPC *annotates* the
 > pair rather than forcing an impossible light-match. The hand-scan viewer surfaces it
-> (navigable, with the flag) so a human can confirm it.
+> (navigable, with the flag) so a human can confirm it. **`xtpc_joint_pin` (below) now forces
+> these matches** when the pair is direction-confirmed.
+
+### Cross-cathode (xTPC) joint-flash pin — `xtpc_joint_pin` (enabled for PDHD)
+
+The scenario-1 priority cull above is applied to each cluster **independently**: it keeps all of a
+cluster's scenario-1 bundles, so a crosser half with several coincident scenario-1 partners drifts to
+whichever flash the light prefers — **splitting a true crosser across two flashes**. Run-29107
+examples: evt999 cluster22↔cluster83 (the bright 3442-pt half won the 1259 pe flash; the dim 1700-pt
+half sat alone on the 99 pe flash, 15 µs away), evt991 cl40↔ident194 (split 4 µs), and the
+no-flash-on-one-side partner (one half unmatched).
+
+`xtpc_joint_pin:true` binds a **direction-confirmed** scenario-1 pair to ONE coincident flash. The
+greedy pass at the end of `cull_cross_tpc` confirms the pair by **track-axis collinearity** —
+`min(folded local-vhough a01, folded global-PCA a01) < xtpc_pin_angle (20°)`. Both estimates matter:
+the local `vhough_transform` (15 cm at the cathode-end closest point) reads a **spurious end-curl
+kink** on straight crossers (evt999 7↔2 vhough 37° but global **2°**; evt1007 116↔131 43° vs 1.7°),
+while a global PCA axis is meaningless on bent/messy clusters — the OR passes a genuine crosser via
+either. The **connector** angles (a0c/a1c) are NOT used: a ~1 cm inter-TPC transverse misalignment
+makes the closest-point connector ~⊥ to the (collinear) tracks even for true crossers. The flash is
+chosen by **best combined light** (min ks-sum) among the coincident pairings — geometry already holds,
+so light only picks which same-time wall, never pulling the match off the crosser time.
+
+The chosen bundle gets `flag_xtpc_pin`; `cull_inconsistent` keeps ONLY pinned bundles for a pinned
+cluster (top priority), the pinned bundle is **exempt from the strength-cutoff prune** and pinned
+clusters are **excluded from both rescues**, so it survives to `flash_bundles_map` and
+`apply_matched_t0s` matches it **regardless of LASSO strength** ("ignore light, geometry wins" — also
+rescues the low-light/no-light partner). Validation (4 hand-scan events): **all 6 split/unmatched
+scenario-1 pairs become co-flashed, the 6 already-together stay put**; A/B footprint = 10 clusters
+changed (6 intended + 4 ripples ≤261 pts); off ⇒ no `flag_xtpc_pin` ⇒ byte-identical. 30-event scan:
+93 pins / 36 events, tight geometry (d mostly <3 cm); ~5 % of large pins sit at ks≈1.0 — the
+intentionally-forced low-light partners. Knobs in `qlmatching.jsonnet`: `xtpc_joint_pin`,
+`xtpc_pin_angle`. Code detail: `match/docs/qlmatching-code.md` §4.4c.
 
 ### Parity with the SBND Q/L chain — complete (functional identity)
 
