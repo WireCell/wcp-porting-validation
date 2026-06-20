@@ -484,7 +484,7 @@ The cumulative effect on the 4 events (vs the ladder-off frac=0.4 baseline): **G
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
 | `empty_rescue` (+`rescue_metric_max`) | a flash emptied by LASSO adopts its best light-quality orphan cluster | **DONE** — enabled, `rescue_metric_max` **0.20** (exponent/boundary_weight 0.8/0.8 = SBND). Unlike SBND (misses timing-degenerate, ~1/5 recoverable) PDHD strands clean GT on LASSO-emptied flashes: **+14 GT-accept (44→58), 0 steals, 0 GT lost, 0 xTPC lost**, reject-reselected −6. See §3e |
-| `cluster_rescue` (PDHD-only; `cluster_rescue_ks_max/chi2ndf_max/ratio_lo/ratio_hi`) | a big cluster the LASSO stranded at strength 0 (its flash won by a rival) adopts its best PE-scale-consistent candidate, even onto a **non-empty** flash | **DONE** — enabled **0.20 / 8.0 / 0.4–2.5**. The §3e empty rescue can't reach these (their flash is non-empty). 4-event scan (end-to-end C++): **15 of 22 stranded GT recovered to the exact flash (16 matched), 0 `rejected_auto` re-introduced**; loosening costs purity with no recall gain. See §3g |
+| `cluster_rescue` (PDHD-only; `cluster_rescue_ks_max/chi2ndf_max/ratio_lo/ratio_hi`, `cluster_rescue_precull`) | a big cluster the LASSO stranded at strength 0 (its flash won by a rival) adopts its best PE-scale-consistent candidate, even onto a **non-empty** flash; `precull` widens the pool to pre-`cull_inconsistent` candidates | **DONE** — enabled **0.20 / 8.0 / 0.4–2.5**, `precull` ON. The §3e empty rescue can't reach these (their flash is non-empty); `precull` also reaches cull-victims. 4-event scan (end-to-end C++): **19 of 22 stranded GT recovered to the exact flash, +4 matched-clusters total (0 spurious), 0 `rejected_auto` re-introduced**. `delta_charge` investigated and rejected (the 4 cull-victims are not in the LASSO). See §3g |
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) gating the pre-LASSO `cull_inconsistent` purity cull | **DONE** — enabled. **KS ceilings = SBND** (KS is the purity lever: on the 4-event hand scan ks<0.10 is 88% pure, 57 GT vs 8 junk); **chi2/ndf ceilings RAISED 6/4/8 → 35/35/35** (PDHD's rougher light model runs a clean-KS GT match to chi2/ndf~32 vs SBND ~1–2; the SBND ceilings amputated clean-KS GT). 4-event GT (vs ladder-off, frac=0.4): **+5 net GT-accept (53→58), xTPC 12→14 (0 baseline xTPC lost), human-rejected re-selected −48 (219→171)**; cost = 4 displaced clean GT (§3d) |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — `lasso_boundary_weight` **0.2** (= SBND), confirmed optimal by a 4-event sweep {0.1, 0.2, 0.3}: **0.1 FAILS the xTPC hard gate** (over-protection admits boundary noise that displaces a crosser, 14→13); **0.3** costs 2 confirmed-GT boundary matches for only −4 reject; **0.2** maximizes GT-accept (xTPC 14 + non-xTPC 58) with xTPC intact |
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; `chi2_pmt_excess` re-scaled **350 → 100 PE** for PDHD's lower ARAPUCA yield (genuine near-PD excess: median ~22 PE, p90 ~165, saturation tail ~10k). It IS active (softens ~27 close_to_PMT bundle χ²/event) but **selection-neutral** (the KS-led ladder with loose c2n=35 ceilings absorbs it) — live-but-benign, like SBND. `ratio`/`inflate` kept 1.3/0.5 |
@@ -776,21 +776,46 @@ score (lower=better) = ks · sqrt(max(chi2/ndf,1)) + |ln ratio|     (tie-break: 
 > cluster-centric pass handles both: it keys on the *cluster*, not the flash, and attaches to
 > taken flashes.
 
-**Tuning (sweep over the 4-event scan, scored vs `matches` and `rejected_auto`).** The
-0.20 / 8.0 / 0.4–2.5 bar, run end-to-end through the C++ chain, recovers **15 of 22** strands
-to their **exact** hand-scan flash (**16 of 22 now matched**; 1 lands on a non-GT but
-**non-rejected** flash, near-degenerate timing — evt1007 uid 1000030), with **0
-`rejected_auto` matches re-introduced**. (A standalone Python sweep on the *full* candidate
-dump recovered 19; the C++ pass draws from the post-`cull_inconsistent` `prefit_snapshot`,
-which is narrower, so 4 strands whose best candidate the consistency cull removed are not
-reachable here — a deliberate purity boundary, not a regression.) Loosening to
-0.25 / 10 / 0.35–3.0 *costs* purity (a `rejected_auto` pair reappears) with **no recall
-gain**, so 0.20 / 8.0 is the edge. The 6 residual strands are low-quality candidates
-(ks > 0.17 or chi2/ndf > 7) or cull-removed — likely a clustering (over-merge) question, not
-a matching one. Default OFF in C++ (`ks_max`=0 makes the gate vacuously false → no-op, doubly
-inert with the bool guard), so SBND/ICARUS stay byte-identical. Implemented as
+**Candidate pool — `cluster_rescue_precull` (PDHD ON).** The pass can draw candidates from
+two pools. The default is the post-`cull_inconsistent` `prefit_snapshot` (the §3e source),
+which recovers **15 of 22** strands. But `cull_inconsistent` drops a cluster's *non-consistent
+rivals* when it has a consistent bundle, and that can remove the cluster's **only good light
+match** before the fit *or* the snapshot — so four clean strands (evt983 uid 50 ks 0.108 /
+ratio 1.45 on a **free** flash; evt991 uid 1000041 ks 0.108 / ratio 1.00; evt999 uid 1000002
+ks 0.133 / ratio 0.89; evt1007 uid 1000131 ks 0.067 / ratio 0.65, `consist=1`) are
+unreachable from the snapshot. With `cluster_rescue_precull` ON the pool becomes the **pre-cull**
+universe (`run.all_bundles` minus build-prefilter rejects, == `pre_bundles` *before* the cull),
+so those cull-victims are reachable again — still gated by the same PE-scale bar.
+
+**Result (end-to-end C++, clean A/B at fixed binary, scored vs `matches`/`rejected_auto`).**
+
+| pool | strands → exact GT flash | wrong-flash | unmatched | total matched clusters | `rejected_auto` in output |
+|---|---:|---:|---:|---:|---:|
+| snapshot (precull OFF) | 15 | 1 | 6 | 387 | 192 |
+| **pre-cull (precull ON)** | **19** | 1 | 2 | **391** | **192** |
+
+The +4 recoveries (uid 50 / 1000041 / 1000002 / 1000131) are the **only** new matches — total
+matched rose by exactly 4, and `rejected_auto`-in-output is unchanged — so the wider pool adds
+**zero spurious and zero scanner-rejected** matches. The 3 remaining strands are genuinely
+hard: uid 3 (ks 0.347), uid 38 (ks 0.168, χ²/ndf 32.5, flash owned), and uid 1000030 (its
+best-scoring candidate sits on a near-degenerate neighbour flash, GT 1000063 vs picked 1000066).
+
+> **Why not `delta_charge`?** The LASSO charge block penalises `(Σ cluster strength − 1)²` with
+> weight `(1/delta_charge)²`, pulling each cluster's total strength toward 1 — the natural lever
+> to stop the LASSO zeroing a cluster. A sweep (δ 0.01→0.005→0.002, **config-only**) confirmed
+> the mechanism *works for clusters in the fit* (evt991 uid 3 moved strength 0.000→0.884 at δ
+> 0.002) but the four clean residuals stayed **exactly 0.000 at every δ** — proof they are not
+> in the LASSO at all (cull-removed), so δ cannot reach them. Tightening δ globally also shuffled
+> correct matches onto wrong flashes (wrong-flash 1→5) — a purity cliff. So the pool widening,
+> not δ, is the right fix; δ is left at its 0.01 default.
+
+The 0.20 / 8.0 / 0.4–2.5 bar is the purity edge: loosening to 0.25 / 10 / 0.35–3.0 *costs*
+purity (a `rejected_auto` pair reappears) with **no recall gain**. Default OFF in C++
+(`ks_max`=0 makes the gate vacuously false → no-op, doubly inert with the bool guard;
+`cluster_rescue_precull` defaults OFF too), so SBND/ICARUS stay byte-identical. Implemented as
 `rescue_unmatched_clusters` in `QLMatching.cxx`, called right after `rescue_empty_flashes`;
-both draw the same `prefit_snapshot` (now captured when *either* rescue is on).
+the snapshot is captured when *either* rescue is on, and the pre-cull pool (when
+`cluster_rescue_precull` is set) is read from `run.all_bundles`.
 
 ---
 
