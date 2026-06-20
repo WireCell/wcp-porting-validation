@@ -162,13 +162,15 @@ Dump (when standalone): `mabc-group02.zip` / `mabc-group13.zip`.
 | # | method | component | coords | role |
 |---|---|---|---|---|
 | 1 | `switch_scope()` | ClusteringSwitchScope (T0Correction) | x→x_t0cor | computes the T0-corrected coordinate set (`["x_t0cor","y","z"]`) and applies a containment scope filter per (apa,face) volume |
-| 2 | `cathode_connect(...)` | ClusteringCathodeConnect | x_t0cor | **enabled 2026-06-09**: cathode-crossing connector with the SBND-tuned parameter set (cathode_x_cut=5cm, drift_cut=8cm, min_length_short=2cm, short_dir_len=25cm, conn_short_cut=30) as placeholder, plus `use_flash_t0=false` because PDHD has no flash matching (the default flash-coincidence gate would veto every pair).  PDHD's cathode is central at x=0 (the C++ default `cathode_x` — a config knob, not hardcoded).  Without a per-event T0 only near-trigger-time crossers qualify (a crosser's apparent cathode tips sit at \|x\| ≈ t0·v_drift on opposite sides of x=0); on run 027409 evt 0 the pass fires zero times and the output is content-identical to the pre-enable chain. |
+| 2 | `cathode_connect(...)` | ClusteringCathodeConnect | x_t0cor | **enabled 2026-06-09**: cathode-crossing connector with the SBND-tuned parameter set (cathode_x_cut=5cm, drift_cut=8cm, min_length_short=2cm, short_dir_len=25cm, conn_short_cut=30) as placeholder, plus `use_flash_t0=false`: the connector runs on the corrected scope but does NOT gate pairs on flash-time coincidence (a clustering-topology choice, independent of the `x_t0cor` display correction; flipping it is a separate tuning question).  PDHD's cathode is central at x=0 (the C++ default `cathode_x` — a config knob, not hardcoded). |
 
 A `retile` block (ClusteringRetile with per-face stepped samplers) is present
 but commented out — the designated hook for re-tiling-based refinement.
 
-Without a flash/T0 association, `x_t0cor` equals the (time_offset-shifted)
-apparent x.
+For a cluster with no flash match, `cluster_t0` is unset (QLMatching pre-init
+−1e12) and the containment filter drops it from the corrected scope; matched
+clusters carry the flash-derived `cluster_t0` and are placed at their true drift
+x.
 
 ## Bee output (`mabc-all-apa.zip`)
 
@@ -181,16 +183,31 @@ eventNo come from the `run_clus_evt.sh` TLAs):
 | `clustering-global` | `name:"clustering"`: the **end** dump after the full all-APA pipeline |
 | `channel-deadarea-group02/13` | `save_deadarea` with `dead_area_version: 2` (tpc=apa wrapper), grouped by `dead_apa_groups` |
 
-Coordinates dumped are the uncorrected `["x","y","z"]` (x_t0cor would need a
-flash-associated T0).  `run_bee_combined_evt.sh` merges these with the
-imaging-stage `imaging-group02/13` instances (wirecell-img `bee-blobs` on the
-`-ms-active` tarballs) into one upload.
+The `img-global` (and `img-group`) sets dump the uncorrected `["x","y","z"]`.
+The **`clustering-global`** set dumps the **T0-corrected** `common_corr_coords =
+["x_t0cor","y","z"]` (SBND parity — `sbnd/clus.jsonnet` `clus_all_apa` does the
+same).  `x_t0cor = x_raw − dirx·(cluster_t0 + trigger_offset)·drift_speed` is
+materialised by `switch_scope()` from the QLMatching `cluster_t0`, so a **matched**
+cluster is drawn at its flash drift position; an **unmatched** cluster
+(`cluster_t0 = −1e12`) lands far outside the volume, fails the containment scope
+filter and is **dropped from `clustering-global`** — it still appears in
+`img-global` (raw).  Verified on run 29107 evt 983 (cluster 86 / uid 1000025,
+matched flash t ≈ −90.35 µs): the displayed x shifts −14.24 cm = the expected
+90.35 µs × 0.1576 cm/µs, and the corrected set has 109 221 pts (vs 109 896 raw,
+the unmatched dropped) spanning a sane x ∈ [−352, 352] cm.
+`run_bee_combined_evt.sh` merges these with the imaging-stage `imaging-group02/13`
+instances (wirecell-img `bee-blobs` on the `-ms-active` tarballs) into one upload.
 
-## Where T0 enters (all zeroed as of 2026-06)
+## Where T0 enters (imaging offset-free; per-cluster flash T0 applied downstream)
 
-There is **no per-event T0 determination for PDHD**; the chain now uses
-`time_offset = 0` everywhere, so a blob's x is its apparent drift position in
-the readout frame (250 µs ≡ 39.4 cm at 1.576 mm/µs):
+PDHD now has a **per-cluster flash T0** from QLMatching (`cluster_t0`), applied
+**downstream** in the corrected (`x_t0cor`) scope — the `clustering-global` Bee
+dump and the `cathode_connect` scope read it (see above).  **Imaging stays
+offset-free**: `time_offset = 0` everywhere, so a blob's *raw* x is its apparent
+drift position in the readout frame (250 µs ≡ 39.4 cm at 1.576 mm/µs), and the
+per-event readout-vs-trigger offset is carried as `trigger_offset` in the
+DetectorVolumes metadata (applied alongside `cluster_t0` by T0Correction, not
+baked into the raw x):
 
 1. `cfg/pgrapher/experiment/pdhd/clus.jsonnet` — `time_offset` function
    parameter (default **0**; was −250 µs = readout-tick0-relative-to-trigger
