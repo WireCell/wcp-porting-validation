@@ -817,6 +817,31 @@ purity (a `rejected_auto` pair reappears) with **no recall gain**. Default OFF i
 the snapshot is captured when *either* rescue is on, and the pre-cull pool (when
 `cluster_rescue_precull` is set) is read from `run.all_bundles`.
 
+**30-event scan (run 29107, idx 0–29; fresh `-calib` dumps, current rescue code).** Re-processing
+all 30 events with the shipped rescue (`cluster_rescue` + `precull` ON) leaves only **35 of 3034
+clusters unmatched among the large ones** (npoints ≥ 2000) — **2973/3034 = 98 % of all clusters
+matched**. The headline reduction is the rescue working as designed on fresh dumps: a scan of the
+*pre-rescue* dumps had **124** unmatched-large; rescue takes that to **35**, with **0** clusters
+that have an unflagged bar-passing candidate left unmatched (no eligibility bug). On the four
+hand-scanned events, **92 of 93 GT cluster-matches are recovered** — only evt991 uid 3 (ks 0.11,
+χ²/ndf 14) and evt1007 uid 38 (ks 0.16, χ²/ndf 9.1) miss, both **below the χ²/ndf bar** and both
+confirmed unrecoverable by the bar sweep above (loosening reintroduces a `rejected_auto` with no
+net gain). The original complaint event (evt983) is now **32/32 GT, 0 unmatched-large**.
+
+The 35-cluster residual breaks down as: **17** with a best candidate just outside the bar
+(ks 0.2–0.29 or χ²/ndf 8–10), **12** genuinely far from it (χ²/ndf 14–59 or ks 0.35–0.44), and
+**6** that *pass* the error-model bar but were vetoed by the over-prediction prefilter
+(`potential_bad_match`, so excluded from the rescue pool). The 6 are **correctly left unmatched**
+under the conservative policy and were *not* force-rescued by widening the pool, because: (i) all 6
+over-predict on **11–24 of ~72 lit channels** (50–160 PE predicted where ~0 was measured) — broad
+physical inconsistency, not an isolated dead PD; (ii) using the accept bar to overrule the overpred
+veto is circular — the χ² model deliberately discounts exactly those channels (`chi2_pmt_excess`
+inflation), so good ks/χ² is *expected* despite the over-prediction; and (iii) **3 of the 6 are
+evt1015**, the DAPHNE ADC-saturation event where the measured light is known-corrupted (flash
+fragmentation), so light-quality cannot arbitrate a match there. Recovering the 6 (or the 17
+just-outside) would require relaxing the bar / pool past the validated purity edge — a deliberate
+choice left to the operator, not a default.
+
 ---
 
 ## 4. One side with no light (point 3)
