@@ -170,7 +170,16 @@ class Event:
         id-offset so the merge is unambiguous, then concatenated."""
         if isinstance(paths, str):
             paths = [paths]
-        self.paths = list(paths)
+        paths = list(paths)
+        # Combined file (no -group02/-group13 suffix) and legacy per-side files use
+        # independent gid numbering and cannot be merged — same gid maps to different
+        # physical flashes. Prefer the combined file when both are present.
+        combined = [p for p in paths
+                    if "-group02" not in os.path.basename(p)
+                    and "-group13" not in os.path.basename(p)]
+        if combined:
+            paths = combined
+        self.paths = paths
         self.path = self.paths[0]
         flashes, clusters, bundles = [], [], []
         self.geom = {}
@@ -222,13 +231,22 @@ class Event:
         _lit = lambda f: 0 if sum(f["pe"][80:]) >= sum(f["pe"][:80]) else 1
         _sig = lambda f: (_lit(f), round(f["time"], 4), round(f["total_PE"], 3))
         canon_gid = {_sig(f): f["gid"] for f in flashes if f["apa"] == _lit(f)}
+        # Skip phantoms whose gid == canonical gid (same flash in two per-side files);
+        # removing them would also delete the canonical, causing a KeyError on load.
         remap_flash = {f["gid"]: canon_gid[_sig(f)]
                        for f in flashes
-                       if f["apa"] != _lit(f) and _sig(f) in canon_gid}
+                       if f["apa"] != _lit(f) and _sig(f) in canon_gid
+                       and f["gid"] != canon_gid[_sig(f)]}
         for b in bundles:
             b["flash_gid"] = remap_flash.get(b["flash_gid"], b["flash_gid"])
         flashes = [f for f in flashes if f["gid"] not in remap_flash]
-        self.flash_by_gid = {f["gid"]: f for f in flashes}
+        # For same-gid duplicates (canonical + phantom with same gid in different files),
+        # prefer the canonical version (apa == lit side) regardless of file load order.
+        flash_by_gid = {}
+        for f in flashes:
+            if f["gid"] not in flash_by_gid or f["apa"] == _lit(f):
+                flash_by_gid[f["gid"]] = f
+        self.flash_by_gid = flash_by_gid
         # --- cross-side coincidence grouping ---------------------------------
         # Pair an S0-LIT flash with an S1-LIT flash within COINC_WIN into ONE
         # coincidence group (the scan unit shown on both sides).  PDHD's opaque
