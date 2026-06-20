@@ -484,6 +484,7 @@ The cumulative effect on the 4 events (vs the ladder-off frac=0.4 baseline): **G
 | SBND knob | what it does | PDHD status / why deferred |
 |---|---|---|
 | `empty_rescue` (+`rescue_metric_max`) | a flash emptied by LASSO adopts its best light-quality orphan cluster | **DONE** — enabled, `rescue_metric_max` **0.20** (exponent/boundary_weight 0.8/0.8 = SBND). Unlike SBND (misses timing-degenerate, ~1/5 recoverable) PDHD strands clean GT on LASSO-emptied flashes: **+14 GT-accept (44→58), 0 steals, 0 GT lost, 0 xTPC lost**, reject-reselected −6. See §3e |
+| `cluster_rescue` (PDHD-only; `cluster_rescue_ks_max/chi2ndf_max/ratio_lo/ratio_hi`) | a big cluster the LASSO stranded at strength 0 (its flash won by a rival) adopts its best PE-scale-consistent candidate, even onto a **non-empty** flash | **DONE** — enabled **0.20 / 8.0 / 0.4–2.5**. The §3e empty rescue can't reach these (their flash is non-empty). 4-event scan (end-to-end C++): **15 of 22 stranded GT recovered to the exact flash (16 matched), 0 `rejected_auto` re-introduced**; loosening costs purity with no recall gain. See §3g |
 | `highconsist_ladder` (`flag_high_consistent`) | multi-branch KS/χ² quality ladder (clean / good / two-boundary / miss) gating the pre-LASSO `cull_inconsistent` purity cull | **DONE** — enabled. **KS ceilings = SBND** (KS is the purity lever: on the 4-event hand scan ks<0.10 is 88% pure, 57 GT vs 8 junk); **chi2/ndf ceilings RAISED 6/4/8 → 35/35/35** (PDHD's rougher light model runs a clean-KS GT match to chi2/ndf~32 vs SBND ~1–2; the SBND ceilings amputated clean-KS GT). 4-event GT (vs ladder-off, frac=0.4): **+5 net GT-accept (53→58), xTPC 12→14 (0 baseline xTPC lost), human-rejected re-selected −48 (219→171)**; cost = 4 displaced clean GT (§3d) |
 | `lasso_flag_weight` | down-weights L1 for boundary/truncated bundles (incl. xTPC crossers) so they survive the strength cutoff | **DONE** — `lasso_boundary_weight` **0.2** (= SBND), confirmed optimal by a 4-event sweep {0.1, 0.2, 0.3}: **0.1 FAILS the xTPC hard gate** (over-protection admits boundary noise that displaces a crosser, 14→13); **0.3** costs 2 confirmed-GT boundary matches for only −4 reject; **0.2** maximizes GT-accept (xTPC 14 + non-xTPC 58) with xTPC intact |
 | `chi2_relax` | widens χ² denom for measured excess at near-PD channels + drops a dead-PD worst channel | **DONE** — enabled; `chi2_pmt_excess` re-scaled **350 → 100 PE** for PDHD's lower ARAPUCA yield (genuine near-PD excess: median ~22 PE, p90 ~165, saturation tail ~10k). It IS active (softens ~27 close_to_PMT bundle χ²/event) but **selection-neutral** (the KS-led ladder with loose c2n=35 ceilings absorbs it) — live-but-benign, like SBND. `ratio`/`inflate` kept 1.3/0.5 |
@@ -745,6 +746,51 @@ reassignment only when the empty flash is a strictly better light match.
 steals**, **0 GT winners lost**, **0 xTPC lost**, reject-reselected −6 (171→165); total
 auto-selected winners 385→395. Not pushed higher than 0.20 (the 3 remaining marginal GT
 recoveries sit at metric 0.26–0.38, into off-scan/steal-risk territory — diminishing returns).
+
+### 3g. Cluster-centric rescue — big clusters the LASSO strands (enabled for PDHD)
+
+`cluster_rescue` is now ON. The empty-flash rescue (§3e) only fills flashes left **wholly
+empty**. It does **not** recover a big charge cluster whose correct flash is **non-empty** —
+a rival cluster already won that flash on strength, so the L1 sparsity drives the big
+cluster's own strength to 0 and the `strength_cutoff` prune drops it. On the 4-event hand
+scan this strands **22 GT matches** (1350–22 500-pt clusters; e.g. evt 983 cluster 86 /
+calib uid 1000025: ks 0.043, chi2/ndf 1.2, pred 6077 vs meas 6051 — essentially perfect, yet
+strength 0 because cluster 1000031 took the same flash). The hand-scan labels list **several
+`cluster_idents` per flash**, so multiple clusters sharing one flash is physical and GT-endorsed.
+
+After §3e, for each cluster **still unmatched**, this pass adopts its best **accepted**
+candidate from the same pre-fit snapshot and attaches it **even onto an already-non-empty
+flash**. The acceptance bar is **PE-scale-aware** (unlike §3e's ks-only metric, which a 22×
+over-predicting `at_x_boundary` candidate would sail through):
+
+```
+accept  iff  ks < cluster_rescue_ks_max        (0.20)
+        AND  chi2/ndf < cluster_rescue_chi2ndf_max   (8.0)
+        AND  ratio_lo < pred/meas < ratio_hi    (0.4 … 2.5)   ratio = total_pred_light / flash_total_PE
+score (lower=better) = ks · sqrt(max(chi2/ndf,1)) + |ln ratio|     (tie-break: flash_id, then cluster_index_id)
+```
+
+> **Two failure modes, both recovered by one pass.** Of the 22 strands, **14 have their GT
+> flash already taken** by another cluster (Mode A — the §3e empty rescue can never see them),
+> **8 have a free flash** the single-best-candidate empty rescue skipped (Mode B). The
+> cluster-centric pass handles both: it keys on the *cluster*, not the flash, and attaches to
+> taken flashes.
+
+**Tuning (sweep over the 4-event scan, scored vs `matches` and `rejected_auto`).** The
+0.20 / 8.0 / 0.4–2.5 bar, run end-to-end through the C++ chain, recovers **15 of 22** strands
+to their **exact** hand-scan flash (**16 of 22 now matched**; 1 lands on a non-GT but
+**non-rejected** flash, near-degenerate timing — evt1007 uid 1000030), with **0
+`rejected_auto` matches re-introduced**. (A standalone Python sweep on the *full* candidate
+dump recovered 19; the C++ pass draws from the post-`cull_inconsistent` `prefit_snapshot`,
+which is narrower, so 4 strands whose best candidate the consistency cull removed are not
+reachable here — a deliberate purity boundary, not a regression.) Loosening to
+0.25 / 10 / 0.35–3.0 *costs* purity (a `rejected_auto` pair reappears) with **no recall
+gain**, so 0.20 / 8.0 is the edge. The 6 residual strands are low-quality candidates
+(ks > 0.17 or chi2/ndf > 7) or cull-removed — likely a clustering (over-merge) question, not
+a matching one. Default OFF in C++ (`ks_max`=0 makes the gate vacuously false → no-op, doubly
+inert with the bool guard), so SBND/ICARUS stay byte-identical. Implemented as
+`rescue_unmatched_clusters` in `QLMatching.cxx`, called right after `rescue_empty_flashes`;
+both draw the same `prefit_snapshot` (now captured when *either* rescue is on).
 
 ---
 
