@@ -42,7 +42,7 @@ def _palette_color(clid):
 def run_app():
     from bokeh.io import curdoc
     from bokeh.layouts import column, row
-    from bokeh.models import ColumnDataSource, Select, Div, CheckboxGroup, BoxAnnotation
+    from bokeh.models import ColumnDataSource, Select, Div, BoxAnnotation, Range1d
     from bokeh.plotting import figure
 
     path = sys.argv[1] if len(sys.argv) > 1 else "tgm-validation/tgm_points.npz"
@@ -53,62 +53,59 @@ def run_app():
     evt_options = ["all"] + [str(int(e)) for e in events]
 
     sel_evt = Select(title="event", value="all", options=evt_options, width=120)
-    chk = CheckboxGroup(labels=["show track body"], active=[0], width=160)
     info = Div(text="", width=600)
 
-    # one ColumnDataSource for endpoints and one for body, per projection
+    # endpoints only (q=10000); no body points
     src_end = ColumnDataSource(data=dict(x=[], y=[], z=[], clid=[], col=[]))
-    src_body = ColumnDataSource(data=dict(x=[], y=[], z=[], clid=[], col=[]))
 
-    def make_panel(ax, ay, alo, ahi, blo, bhi, alabel, blabel):
+    pad = 12.0  # cm padding around a zoom window
+
+    def make_panel(ax, ay, alo, ahi, blo, bhi, alabel, blabel, view_x=None, view_y=None):
+        # view_x / view_y: (lo, hi) display window; default = FV box + padding.
+        vx = view_x if view_x is not None else (alo - pad, ahi + pad)
+        vy = view_y if view_y is not None else (blo - pad, bhi + pad)
         fig = figure(width=520, height=520, title="%s vs %s" % (blabel, alabel),
                      x_axis_label="%s [cm]" % alabel, y_axis_label="%s [cm]" % blabel,
-                     match_aspect=True, tools="pan,box_zoom,wheel_zoom,reset,hover,tap",
+                     x_range=Range1d(*vx), y_range=Range1d(*vy),
+                     tools="pan,box_zoom,wheel_zoom,reset,hover,tap",
                      tooltips=[("clid", "@clid"), (alabel, "@" + ax), (blabel, "@" + ay)])
         fig.add_layout(BoxAnnotation(left=alo, right=ahi, bottom=blo, top=bhi,
                                      fill_alpha=0.0, line_color="navy", line_dash="dashed",
                                      line_width=2))
-        fig.scatter(ax, ay, source=src_body, size=2, color="col", alpha=0.25)
         fig.scatter(ax, ay, source=src_end, size=8, color="crimson",
                     line_color="black", line_width=0.5, alpha=0.9)
         return fig
 
-    fig_xy = make_panel("x", "y", FV["xlo"], FV["xhi"], FV["ylo"], FV["yhi"], "x", "y")
-    fig_xz = make_panel("x", "z", FV["xlo"], FV["xhi"], FV["zlo"], FV["zhi"], "x", "z")
+    # YX: zoom the y-axis around the top Y boundary (~200 cm).
+    fig_xy = make_panel("x", "y", FV["xlo"], FV["xhi"], FV["ylo"], FV["yhi"], "x", "y",
+                        view_y=(FV["yhi"] - 30, FV["yhi"] + 15))
+    # ZX: zoom the z-axis around the (top) Z boundary (~500 cm).
+    fig_xz = make_panel("x", "z", FV["xlo"], FV["xhi"], FV["zlo"], FV["zhi"], "x", "z",
+                        view_y=(FV["zhi"] - 30, FV["zhi"] + 15))
+    # ZY: full box view.
     fig_yz = make_panel("y", "z", FV["ylo"], FV["yhi"], FV["zlo"], FV["zhi"], "y", "z")
 
     def refresh():
         ev = sel_evt.value
-        show_body = 0 in chk.active
-
         if ev == "all":
             em = np.ones(data["end_evt"].shape, dtype=bool)
-            bm = np.ones(data["body_evt"].shape, dtype=bool)
         else:
-            evi = int(ev)
-            em = data["end_evt"] == evi
-            bm = data["body_evt"] == evi
+            em = data["end_evt"] == int(ev)
 
         src_end.data = dict(
             x=data["end_x"][em], y=data["end_y"][em], z=data["end_z"][em],
             clid=data["end_clid"][em], col=_palette_color(data["end_clid"][em]))
 
-        if show_body:
-            src_body.data = dict(
-                x=data["body_x"][bm], y=data["body_y"][bm], z=data["body_z"][bm],
-                clid=data["body_clid"][bm], col=_palette_color(data["body_clid"][bm]))
-        else:
-            src_body.data = dict(x=[], y=[], z=[], clid=[], col=[])
-
         ntrk = len(np.unique(data["end_clid"][em])) if em.any() else 0
-        info.text = ("<b>event %s</b> &mdash; %d endpoints, %d tagged tracks, "
-                     "%d body pts" % (ev, int(em.sum()), ntrk, int(bm.sum())))
+        info.text = ("<b>event %s</b> &mdash; %d endpoints, %d tagged tracks "
+                     "(endpoints only; YX zoomed to top y≈%.0f, "
+                     "ZX zoomed to z≈%.0f)"
+                     % (ev, int(em.sum()), ntrk, FV["yhi"], FV["zhi"]))
 
     sel_evt.on_change("value", lambda a, o, n: refresh())
-    chk.on_change("active", lambda a, o, n: refresh())
     refresh()
 
-    layout = column(row(sel_evt, chk), info, row(fig_xy, fig_xz, fig_yz))
+    layout = column(row(sel_evt), info, row(fig_xy, fig_xz, fig_yz))
     curdoc().add_root(layout)
     curdoc().title = "TGM tagged tracks"
 
