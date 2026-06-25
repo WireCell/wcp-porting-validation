@@ -49,6 +49,35 @@ All under `/exp/sbnd/app/users/yuhw/wire-cell-toolkit`:
      at the top of `visit()` — it kept dangling Facade::Cluster*/Blob* into the
      previous event's destroyed pctree -> sync_from_graph segfault.
 
+## TGM tagger (ported from WCP, validated 2026-06-23)
+
+WCP `pid/src/Cosmic_tagger.h::check_tgm` ported to
+`wire-cell-toolkit/clus/src/TaggerCheckTGM.cxx` (apply-pointcloud, NOT committed).
+- Faithful CASE A (both-ends-exit + 3-point through check + flag_check_again
+  fallback) + CASE B (Hough push-out, prolonged-track→`check_signal_processing`,
+  dead-region→`check_dead_volume`) over `get_extreme_wcps()`. NOT ported:
+  `check_neutrino_candidate` (all flashes treated as type != 2; see file header).
+- Tags ALL live clusters. Endpoints SCE-corrected via
+  `SCECorrection::forward(p, t0=0, face, apa)` then box-tested against the overall
+  FV box (no-op SCE today: no `sce_field` in DetectorVolumes metadata).
+- Debug mode writes per-point charge (`tgm_charge` in `tgm_debug` PC; endpoints
+  10000, body 100). Generic MABC support added:
+  `bee_points_sets[].charge_array`/`charge_pcname` — dump only clusters carrying
+  that array, charge read from it (in `MultiAlgBlobClustering.{h,cxx}`).
+- Wired in `clus_all_apa` (always-on): pipeline tail
+  `examine_bundles -> MakeFiducialUtils -> TaggerCheckTGM(debug=true)`, with a
+  `BoxFiducial:all-overall-fv` (dvm.overall shrunk by margins) and a `tgm` Bee set
+  (visitor=`TaggerCheckTGM:all`). Helper `tagger_check_tgm` added to
+  `pgrapher/common/clus.jsonnet`.
+- Validation: `sbnd/tgm-validation/` (summarize→npz, analyze XY/XZ/YZ + box,
+  Bokeh `tgm_viewer.py`/`serve_tgm_viewer.sh`, README). 100-event corsika run
+  (`mc_paths-10files.lst`): 966 tagged tracks, 1861 endpoints; **86.7% within
+  5 cm of an FV box face (median 2.7 cm)** — endpoints outline the FV box as
+  expected. Plots: `tgm-validation/tgm_views_100evt*.png`.
+- Caveat: ~1% of endpoints (18, in 2 events) have absurd `x_t0cor` (±1e8 cm) from
+  a bad-t0 flash match upstream (Q/L matching), not a TGM bug; filtered with
+  `|x|<300` in the analysis.
+
 ## Known-good results (uploaded to BEE)
 
 - Matching-only, 10 events (enable_downstream_pr=false): clean, valid zip.

@@ -1,0 +1,4 @@
+# Large / regenerable artifacts -- keep scripts, README and result plots only.
+*.zip
+*.npz
+*.log
