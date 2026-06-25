@@ -3,6 +3,7 @@
 - in sl7, use a setup sript to setup ups products, LD_LIBRARY_PATH, WIRECELL_PATH etc.
 - local WCT: /exp/sbnd/app/users/yuhw/wire-cell-toolkit (branch `apply-pointcloud`; do NOT commit/push on my own — keep edits local for review)
 - local larwirecell: /exp/sbnd/app/users/yuhw/larsoft-wct036/v10_14_02/srcs/larwirecell (MRB tree; the ONLY larwirecell tree to use — do NOT use /exp/sbnd/app/users/yuhw/larwirecell)
+- delete transient "status marker" files (e.g. `SMOKE_STATUS`, exit-code/lar-exit stamps) after a run unless they contain important debug information; do not leave them in the tree.
 
 ## Running in SL7
 
