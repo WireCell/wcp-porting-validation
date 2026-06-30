@@ -1,0 +1,17 @@
+# Real-data variant of wcls-img-clus-matching-xin.fcl.
+# Overrides reality + the recob::Wire / summary / badmask product tags to the
+# data (sptpc2d) instances; everything else (graph, opflash labels, img_config)
+# is inherited.  reality="data" turns ON the per-TPC pos_offset calibration in
+# the toolkit clus maker (data-only).  use_sce stays true (entry jsonnet default).
+#
+# Run inside the SL7 container after `source sbnd/setup-ap.sh`, from sbnd/ with
+# this dir on FHICL_FILE_PATH:
+#   export FHICL_FILE_PATH=$PWD:$FHICL_FILE_PATH
+#   lar -n 100 -S <data_paths.lst> -c wcls-img-clus-matching-xin-data.fcl --no-output
+
+#include "wcls-img-clus-matching-xin.fcl"
+
+physics.producers.sig2img.wcls_main.params.reality: "data"
+physics.producers.sig2img.wcls_main.structs.recobwire_tags:  "[\"sptpc2d:dnnsp\", \"sptpc2d:dnnsp\"]"
+physics.producers.sig2img.wcls_main.structs.summary_tags:    "[\"\", \"sptpc2d:wienersummary\"]"
+physics.producers.sig2img.wcls_main.structs.input_mask_tags: "[\"sptpc2d:badmasks\"]"
