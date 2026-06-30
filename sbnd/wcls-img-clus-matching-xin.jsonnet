@@ -26,6 +26,11 @@ local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local reality = std.extVar('reality');
 
+// use_sce toggle (default true): run the all-APA clustering + TGM + Bee in
+// SCE-corrected true space (x_sce).  false -> T0-corrected reco scope (x_t0cor).
+// Threaded into the toolkit clus maker below.
+local use_sce = true;
+
 // Canonical SBND simparams (toolkit).  drift_speed (1.563 mm/us) flows into
 // QLMatching from here; no DL/DT/lifetime/driftSpeed extVars are needed.
 local params = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
@@ -97,7 +102,7 @@ local img_pipes = [
 local clus = import 'pgrapher/experiment/sbnd/clus.jsonnet';
 // rse_from_ident: each frame's tensor ident carries the real event id, so the
 // Bee display is labelled with the true event number (matches Xin's chain).
-local clus_maker = clus(rse_from_ident=true);
+local clus_maker = clus(rse_from_ident=true, use_sce=use_sce, reality=reality);
 // Single shared Bee sink: every MABC node (per-APA + all-APA) writes into this
 // one zip instead of one zip per node.
 local bee_shared = {
