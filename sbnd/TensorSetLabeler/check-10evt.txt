@@ -1,0 +1,34 @@
+=== Bee zip: mabc.zip
+data/0/0-truth_trackid.json: rse=('32', '10', '6') npts=22067 labeled=64.8% ntracks=9 NN-coherence=100.0% top5=[(20000098, 3568), (20000036, 3482), (20000029, 2335), (20000114, 2284), (20000119, 1825)]
+data/1/1-truth_trackid.json: rse=('32', '10', '10') npts=18340 labeled=44.2% ntracks=8 NN-coherence=99.9% top5=[(20000022, 3891), (20000132, 2048), (20000078, 720), (20488309, 585), (20000120, 418)]
+data/2/2-truth_trackid.json: rse=('32', '10', '13') npts=55013 labeled=46.5% ntracks=9 NN-coherence=100.0% top5=[(10000003, 6586), (20000084, 4884), (20000014, 4691), (20000039, 3316), (20000168, 2195)]
+data/3/3-truth_trackid.json: rse=('32', '10', '14') npts=23145 labeled=53.6% ntracks=10 NN-coherence=100.0% top5=[(20000124, 2667), (20000006, 1932), (20000046, 1574), (20000084, 1427), (20000037, 1359)]
+data/4/4-truth_trackid.json: rse=('32', '10', '16') npts=31144 labeled=70.9% ntracks=15 NN-coherence=100.0% top5=[(20000055, 3940), (20000059, 3628), (20000144, 2370), (20000025, 2337), (20000094, 2236)]
+data/5/5-truth_trackid.json: rse=('32', '10', '21') npts=16270 labeled=65.1% ntracks=14 NN-coherence=99.7% top5=[(20000106, 3168), (10000001, 1883), (20047192, 1871), (20000161, 1195), (20000128, 1051)]
+data/6/6-truth_trackid.json: rse=('32', '10', '39') npts=21564 labeled=67.3% ntracks=10 NN-coherence=99.9% top5=[(20000059, 4361), (20000007, 2544), (20000042, 2208), (20000078, 1913), (20000004, 1203)]
+data/7/7-truth_trackid.json: rse=('32', '10', '43') npts=44629 labeled=52.6% ntracks=15 NN-coherence=99.9% top5=[(20000169, 4808), (20000083, 4736), (20000138, 2402), (20000177, 2149), (20000142, 1619)]
+data/8/8-truth_trackid.json: rse=('31', '88', '5') npts=20012 labeled=68.8% ntracks=8 NN-coherence=100.0% top5=[(20000075, 4076), (10000002, 2319), (20000021, 2118), (20000108, 2118), (20000067, 1762)]
+data/9/9-truth_trackid.json: rse=('31', '88', '12') npts=34681 labeled=58.0% ntracks=13 NN-coherence=100.0% top5=[(20000128, 4899), (20000187, 4564), (10000001, 2039), (20000152, 1922), (20000113, 1358)]
+BEE CHECK: PASS
+=== Tensor dump: trash-all-apa.tar.gz
+members=3194 truth_per_track tensors=10
+truthtracks/6: shape=(7611, 21)
+  columns: ['trackid', 'pdg', 'mother_trackid', 'mother_pdg', 'status', 'start_x', 'start_y', 'start_z', 'start_t', 'start_px', 'start_py', 'start_pz', 'start_E', 'end_x', 'end_y', 'end_z', 'end_t', 'end_px', 'end_py', 'end_pz', 'end_E']
+  first row: {'trackid': 10000001.0, 'pdg': 14.0, 'mother_trackid': 10000000.0, 'mother_pdg': 0.0, 'status': 1.0, 'start_x': 17.081537001466977, 'start_y': -139.91532233180308, 'start_z': 16.246386763258837, 'start_t': 668.3698495919897, 'start_px': -0.12719870161024496, 'start_py': 0.07721645300337605, 'start_pz': 0.7360364501410828, 'start_E': 0.7509271244548578, 'end_x': -8620.899041258526, 'end_y': 5103.803465058447, 'end_z': 50000.0, 'end_t': 2369.3789376973255, 'end_px': -0.12719870161024496, 'end_py': 0.07721645300337605, 'end_pz': 0.7360364501410828, 'end_E': 0.7509271244548578}
+truthtracks/10: shape=(9251, 21)
+  columns: ['trackid', 'pdg', 'mother_trackid', 'mother_pdg', 'status', 'start_x', 'start_y', 'start_z', 'start_t', 'start_px', 'start_py', 'start_pz', 'start_E', 'end_x', 'end_y', 'end_z', 'end_t', 'end_px', 'end_py', 'end_pz', 'end_E']
+  first row: {'trackid': 10000001.0, 'pdg': 13.0, 'mother_trackid': 10000000.0, 'mother_pdg': 0.0, 'status': 1.0, 'start_x': -125.28958310738115, 'start_y': -528.3466102078379, 'start_z': -624.1289815527475, 'start_t': 532.2107437833112, 'start_px': 0.09211248974878658, 'start_py': 0.8334474877462913, 'start_pz': 2.080341044817493, 'start_E': 2.245462531377154, 'end_x': 47.00526063562502, 'end_y': -189.45130261973816, 'end_z': 225.71464475077534, 'end_t': 564.4688146834203, 'end_px': 0.0, 'end_py': 0.0, 'end_pz': 0.0, 'end_E': 0.1056583715}
+clustering_tensorset_6_metadata.json {"eventNo": 6, "nu_ccnc": 1, "nu_energy": 0.791973111023745, "nu_flavor": "nc", "nu_int_type": 1002, "nu_pdg": 14, "nu_vtx_x": 17.081537001466977, "nu_vtx_y": -139.91532233180308, "nu_vtx_z": 16.246386763258837, "runNo": 32, "subRunNo": 10}
+clustering_tensorset_10_metadata.json {"eventNo": 10, "nu_ccnc": 0, "nu_energy": 3.030843878151524, "nu_flavor": "numu", "nu_int_type": 1001, "nu_pdg": 14, "nu_vtx_x": -125.28958310738115, "nu_vtx_y": -528.3466102078379, "nu_vtx_z": -624.1289815527475, "runNo": 32, "subRunNo": 10}
+live scalar trackid arrays: 10
+  pointtrees/6/live/pointclouds/namedpcs/scalar/arrays/trackid: 4031 blobs labeled=58.2%, unique tracks=9
+  pointtrees/10/live/pointclouds/namedpcs/scalar/arrays/trackid: 2454 blobs labeled=35.0%, unique tracks=8
+  pointtrees/13/live/pointclouds/namedpcs/scalar/arrays/trackid: 5584 blobs labeled=27.0%, unique tracks=9
+  pointtrees/14/live/pointclouds/namedpcs/scalar/arrays/trackid: 4438 blobs labeled=46.9%, unique tracks=10
+  pointtrees/16/live/pointclouds/namedpcs/scalar/arrays/trackid: 5832 blobs labeled=62.7%, unique tracks=15
+  pointtrees/21/live/pointclouds/namedpcs/scalar/arrays/trackid: 2120 blobs labeled=50.8%, unique tracks=14
+  pointtrees/39/live/pointclouds/namedpcs/scalar/arrays/trackid: 3405 blobs labeled=50.0%, unique tracks=10
+  pointtrees/43/live/pointclouds/namedpcs/scalar/arrays/trackid: 6284 blobs labeled=37.2%, unique tracks=15
+  pointtrees/5/live/pointclouds/namedpcs/scalar/arrays/trackid: 2167 blobs labeled=43.0%, unique tracks=8
+  pointtrees/12/live/pointclouds/namedpcs/scalar/arrays/trackid: 5903 blobs labeled=52.2%, unique tracks=13
+TAR CHECK: PASS

@@ -46,12 +46,16 @@ physics :{
             loglevels: ["debug"]
 
             # WireCellAux: FlashTensorToOpticalPCs; WireCellMatch: QLMatching.
-            plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellQLMatch", "WireCellAux", "WireCellMatch"]
+            # WireCellAIML: wclsTensorSetLabeler (truth labeling, MC only).
+            plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellQLMatch", "WireCellAux", "WireCellMatch", "WireCellAIML"]
 
+            # wclsTensorSetLabeler reads MCTruth/MCParticle/SimEnergyDeposit from
+            # the art event (MC only; the data fcl overrides inputers without it).
             inputers: [
                 "wclsCookedFrameSource:sigs"
                 , "wclsOpFlashSource:tpc0"
                 , "wclsOpFlashSource:tpc1"
+                , "wclsTensorSetLabeler:clus_all_apa"
                       ]
 
             # outputers: ["wclsNumpyFrameSaver:signal"]

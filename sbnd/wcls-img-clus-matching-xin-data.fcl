@@ -15,3 +15,11 @@ physics.producers.sig2img.wcls_main.params.reality: "data"
 physics.producers.sig2img.wcls_main.structs.recobwire_tags:  "[\"sptpc2d:dnnsp\", \"sptpc2d:dnnsp\"]"
 physics.producers.sig2img.wcls_main.structs.summary_tags:    "[\"\", \"sptpc2d:wienersummary\"]"
 physics.producers.sig2img.wcls_main.structs.input_mask_tags: "[\"sptpc2d:badmasks\"]"
+
+# No truth on data: drop the wclsTensorSetLabeler inputer (the jsonnet also
+# disables the labeler node when reality != "sim").
+physics.producers.sig2img.wcls_main.inputers: [
+    "wclsCookedFrameSource:sigs"
+    , "wclsOpFlashSource:tpc0"
+    , "wclsOpFlashSource:tpc1"
+]

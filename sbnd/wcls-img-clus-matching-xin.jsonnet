@@ -31,6 +31,14 @@ local reality = std.extVar('reality');
 // Threaded into the toolkit clus maker below.
 local use_sce = true;
 
+// truth_labeler (MC only): append wclsTensorSetLabeler after the all-APA MABC
+// to attach run/subrun/event + nu truth metadata, a truth_per_track tensor
+// and per-blob "trackid" (scalar PC) from SimEnergyDeposits; also dumps the
+// "truth_trackid" Bee set (raw x,y,z; cluster_id = trackid) into the shared
+// mabc.zip.  Requires the "WireCellAIML" plugin + "wclsTensorSetLabeler"
+// inputer in the fcl (both present in wcls-img-clus-matching-xin.fcl).
+local truth_labeler = reality == 'sim';
+
 // Canonical SBND simparams (toolkit).  drift_speed (1.563 mm/us) flows into
 // QLMatching from here; no DL/DT/lifetime/driftSpeed extVars are needed.
 local params = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
@@ -102,7 +110,7 @@ local img_pipes = [
 local clus = import 'pgrapher/experiment/sbnd/clus.jsonnet';
 // rse_from_ident: each frame's tensor ident carries the real event id, so the
 // Bee display is labelled with the true event number (matches Xin's chain).
-local clus_maker = clus(rse_from_ident=true, use_sce=use_sce, reality=reality);
+local clus_maker = clus(rse_from_ident=true, use_sce=use_sce, reality=reality, truth_labeler=truth_labeler);
 // Single shared Bee sink: every MABC node (per-APA + all-APA) writes into this
 // one zip instead of one zip per node.
 local bee_shared = {
