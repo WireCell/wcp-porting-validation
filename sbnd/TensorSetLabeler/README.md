@@ -93,6 +93,12 @@ Event 1 comparison (blobs labeled / points labeled):
   https://www.phy.bnl.gov/twister/bee/set/c98b73cd-a5cb-4f0d-9af1-7cca11b6231e/event/list/
 - with SCE: 2690/4031 (67%) / 76.7% of points, NN-coherence 99.9% —
   https://www.phy.bnl.gov/twister/bee/set/8fcc50ca-1889-4b0d-9f44-5b02dbd495f2/event/list/
+- with SCE + diffusion smearing (drift DL/DT + SP filter, see
+  `sbnd/docs/depo-blob-smearing.md`): 3287/4031 (82%) / 84.1% of points,
+  NN-coherence 100% — remaining unlabeled are real ghosts (mostly
+  isochronous tracks); `truth_depo_sce` drawn at drifted positions,
+  sampled from the diffusion balls (`n_sample_truth_depo_sce`) —
+  https://www.phy.bnl.gov/twister/bee/set/01ff0ce1-dd15-47f4-8d5f-929c3632b7e7/event/list/
 
 Debug Bee sets (both uploads): `truth_unlabeled` shows only the points of
 unlabeled blobs (cluster_id = reco cluster ident); `data/{i}/{i}-mc.json`
