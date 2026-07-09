@@ -126,17 +126,54 @@ Two conventions adopted (both matter for the C++ chain):
 
 ## 5. Cathode XA: the open PE-scale question
 
-The cathode amplitude spectrum is a smooth threshold-limited continuum (seed = 5σ ≈ 10 ADC);
-the apparent mode ~16–28 ADC is a turn-on artifact, not a resolved 1-PE peak. Possibilities:
-the true 1-PE amplitude is below/near the noise (lower effective gain of the double-window
-supercells), or pileup fills the valley (the cathode sees both volumes continuously). The
-current templates therefore have the **shape** right (2.8 % held-out residual) but an
-**uncertain absolute scale** on these 16 channels.
+**Shape is measured; gain is not.** The full stream gives ample statistics for the pulse
+*shape* (2.8 % held-out residual), but the PE *scale* is a **gain** number — ADC per
+photo-electron — and measuring it data-drivenly needs a **resolved single-PE feature**: a
+1-PE bump separated from the noise below and the 2-PE bump above. More data does not create
+that feature; the detector either resolves it or it does not. On the cathode it is buried, so
+the templates have the **shape** right but an **uncertain absolute scale** on these 16
+channels. (This is why the full stream, despite its length, does not settle the scale — a
+common point of confusion.)
 
-Planned anchors (milestone-2/3 work): (a) decon-area spectrum of isolated stream pulses — the
-Wiener decon is a near-matched filter, so PE quantization may emerge in area where amplitude
-fails; (b) gain transfer from the membrane XAs if the hardware settings (OV, DAPHNE gain) are
-confirmed equal; (c) ask the PDS group for the DAPHNE gain settings of the cathode modules.
+Why it is buried (the amplitude spectrum is a smooth threshold-limited continuum; apparent
+mode ~16–28 ADC is a turn-on artifact, not a peak):
+
+- **Pile-up** — the cathode sits between the two drift volumes and sees light from **both**
+  continuously, so overlapping sub-PE pulses fill in the valley that would define a 1-PE peak;
+- **Threshold turn-on** — the pulse finder seeds at 5σ ≈ 10 ADC over the baseline wander; if
+  the true 1-PE amplitude is at or below that, we only ever harvest pulses above threshold, so
+  the spectrum climbs to the seed rather than showing a peak.
+
+### Can we just use the membrane XA scale?
+
+It is the same **sensor** (X-ARAPUCA / SiPM), so borrowing the membrane 1-PE scale is a
+reasonable **interim default** — but *not* a free transfer, because the cathode PDs use a
+**different signal path**. They sit on the HV cathode and (in the VD design) are powered and
+read out over fiber (power-/signal-over-fiber) rather than the directly-cabled membrane
+modules — a different front-end gain. The measured pulse shape is the fingerprint of this:
+the cathode is **AC-coupled** (fast peak + long negative recovery), while the membrane is a
+clean unipolar decay. Same photons, different electronics ⇒ ADC-per-PE almost certainly
+differs (this is also the likely origin of the "lower effective gain").
+
+Consequences if you do transfer:
+
+- Transfer the 1-PE **area, not the amplitude** — the AC shape lowers the peak for a given
+  charge, so matching peak heights would be wrong.
+- Even area transfer is only approximate: AC differentiation pushes some of the SPE charge out
+  of the fast lobe into the slow recovery tail, so equal *total* charge ≠ equal charge inside
+  the AutoScale integration window. And it is valid only if the cathode SoF/DAPHNE gain and OV
+  are confirmed equal to the membrane's.
+
+### Anchors, in order of effort
+
+1. **Decon-area spectrum** of isolated stream pulses (cleanest data-driven shot, not yet
+   exhausted): the Wiener decon is a near-matched filter, so PE quantization may emerge in
+   *area* where amplitude fails.
+2. **Lower the finder threshold** (e.g. 3σ) on the HPF'd cathode trace and check whether a
+   1-PE bump is hiding just under the current 5σ seed — cheap, but risks noise-triggered fakes.
+3. **Area gain-transfer from the membrane XAs** — the interim number above, flagged
+   ±(SoF gain unknown), valid only if the hardware settings match.
+4. **Ask the PDS group** for the cathode SoF/DAPHNE gain settings — the authoritative answer.
 
 A second cathode caveat: the AC recovery is **longer than the 6.4 µs template window** (the
 negative tail has not returned to zero at the window end). Isolated-medium-pulse probes of the
