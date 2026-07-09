@@ -1,0 +1,734 @@
+{
+ "comment": "PDVD v4 photon-library/G4 channel -> detector mapping. channel = library OpChannel = official PDS-map geometry channel; x/y/z = v4 GDML world position [mm] of the sensitive volume; wct_opdet = OpDet index of our flash chain (pdvd-opch-map.json), null for dead channels; eff_* = official sim efficiencies (PDVD_PDS_Mapping_v04152025). NOTE: the raw-data positions (pdvd-opdet-geom.json) match the v5 as-built GDML exactly (v5_vs_data_mm ~ 0); relative to v4 the Arapuca layout is y-mirrored (v4_vs_data_ymirror_mm << v4_vs_data_mm) and several PMTs moved up to ~370 mm.",
+ "sources": {
+  "gdml": "pdvd-v4-gdml-opdets.json",
+  "pds_mapping": "/cvmfs/dune.opensciencegrid.org/products/dune/duneprototypes/v10_09_00d00/config_data/PDVD_PDS_Mapping_v04152025.json",
+  "opch_map": "/nfs/data/1/xqian/toolkit-dev/toolkit/cfg/pgrapher/experiment/protodunevd/pdvd-opch-map.json"
+ },
+ "channels": [
+  {
+   "channel": 0,
+   "pd_type": "Membrane",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    2030,
+    2031
+   ],
+   "wct_opdet": 1,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-4_0",
+   "x": 3021.8,
+   "y": 4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.3,
+   "v4_vs_data_ymirror_mm": 34.2,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 1,
+   "pd_type": "Membrane",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    2010,
+    2011
+   ],
+   "wct_opdet": 0,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-0_0",
+   "x": 3021.8,
+   "y": -4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.3,
+   "v4_vs_data_ymirror_mm": 34.2,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 2,
+   "pd_type": "Membrane",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    2040,
+    2041
+   ],
+   "wct_opdet": 3,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-5_0",
+   "x": 2263.8,
+   "y": 4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.2,
+   "v4_vs_data_ymirror_mm": 26.2,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 3,
+   "pd_type": "Membrane",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    2020,
+    2021
+   ],
+   "wct_opdet": 2,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-1_0",
+   "x": 2263.8,
+   "y": -4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.2,
+   "v4_vs_data_ymirror_mm": 26.2,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 4,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1060,
+    1061
+   ],
+   "wct_opdet": 5,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_1-0-2_0",
+   "x": 0.0,
+   "y": 2056.5,
+   "z": 2585.25,
+   "v4_vs_data_mm": 4188.0,
+   "v4_vs_data_ymirror_mm": 75.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 5,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1020,
+    1021
+   ],
+   "wct_opdet": 4,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_0-0-2_0",
+   "x": 0.0,
+   "y": -1313.5,
+   "z": 2585.25,
+   "v4_vs_data_mm": 2552.0,
+   "v4_vs_data_ymirror_mm": 75.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 6,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1050,
+    1051
+   ],
+   "wct_opdet": 7,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_1-0-0_0",
+   "x": 0.0,
+   "y": 391.5,
+   "z": 1872.75,
+   "v4_vs_data_mm": 858.0,
+   "v4_vs_data_ymirror_mm": 75.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 7,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1010,
+    1011
+   ],
+   "wct_opdet": 6,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_0-0-0_0",
+   "x": 0.0,
+   "y": -2978.5,
+   "z": 1872.75,
+   "v4_vs_data_mm": 5882.0,
+   "v4_vs_data_ymirror_mm": 75.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 8,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1070,
+    1071
+   ],
+   "wct_opdet": 9,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_1-0-3_0",
+   "x": 0.0,
+   "y": 2056.5,
+   "z": 1120.25,
+   "v4_vs_data_mm": 4188.0,
+   "v4_vs_data_ymirror_mm": 75.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 9,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1030,
+    1031
+   ],
+   "wct_opdet": 8,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_0-0-3_0",
+   "x": 0.0,
+   "y": -391.5,
+   "z": 1120.25,
+   "v4_vs_data_mm": 817.5,
+   "v4_vs_data_ymirror_mm": 34.5,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 10,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1080,
+    1081
+   ],
+   "wct_opdet": 11,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_1-0-1_0",
+   "x": 0.0,
+   "y": 1313.5,
+   "z": 407.75,
+   "v4_vs_data_mm": 2592.5,
+   "v4_vs_data_ymirror_mm": 34.5,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 11,
+   "pd_type": "Cathode",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    1040,
+    1041
+   ],
+   "wct_opdet": 10,
+   "gdml_node": "volOpDetSensitive_ArapucaDouble_0-0-1_0",
+   "x": 0.0,
+   "y": -2056.5,
+   "z": 407.75,
+   "v4_vs_data_mm": 4147.5,
+   "v4_vs_data_ymirror_mm": 34.5,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 12,
+   "pd_type": "PMT",
+   "wls": "TPB",
+   "eff_Ar": 0.12,
+   "eff_Xe": 0.12,
+   "offline": [
+    3010
+   ],
+   "wct_opdet": 14,
+   "gdml_node": "volOpDetSensitive_CoatedPMT",
+   "x": -2059.0,
+   "y": 2210.0,
+   "z": 3809.88,
+   "v4_vs_data_mm": 280.0,
+   "v4_vs_data_ymirror_mm": 4428.9,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 13,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3020
+   ],
+   "wct_opdet": 15,
+   "gdml_node": "volOpDetSensitive_CoatedPMT",
+   "x": -2059.0,
+   "y": -2210.0,
+   "z": 3809.88,
+   "v4_vs_data_mm": 280.0,
+   "v4_vs_data_ymirror_mm": 4428.9,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 14,
+   "pd_type": "PMT",
+   "wls": "TPB",
+   "eff_Ar": 0.12,
+   "eff_Xe": 0.12,
+   "offline": [
+    3030
+   ],
+   "wct_opdet": 16,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -2059.0,
+   "y": 2210.0,
+   "z": -681.24,
+   "v4_vs_data_mm": 448.2,
+   "v4_vs_data_ymirror_mm": 4778.2,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 15,
+   "pd_type": "PMT",
+   "wls": "TPB",
+   "eff_Ar": 0.12,
+   "eff_Xe": 0.12,
+   "offline": [
+    3040
+   ],
+   "wct_opdet": 17,
+   "gdml_node": "volOpDetSensitive_CoatedPMT",
+   "x": -2059.0,
+   "y": -2210.0,
+   "z": -816.88,
+   "v4_vs_data_mm": 280.0,
+   "v4_vs_data_ymirror_mm": 4428.9,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 16,
+   "pd_type": "Membrane",
+   "wls": "None",
+   "eff_Ar": 0.0,
+   "eff_Xe": 0.03,
+   "offline": [
+    2070,
+    2071
+   ],
+   "wct_opdet": 13,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-7_0",
+   "x": -2072.3,
+   "y": 4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.4,
+   "v4_vs_data_ymirror_mm": 61.3,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 17,
+   "pd_type": "Membrane",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    2050,
+    2051
+   ],
+   "wct_opdet": 12,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-3_0",
+   "x": -2072.3,
+   "y": -4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.4,
+   "v4_vs_data_ymirror_mm": 61.3,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 18,
+   "pd_type": "PMT",
+   "wls": "TPB",
+   "eff_Ar": 0.12,
+   "eff_Xe": 0.12,
+   "offline": [
+    3050
+   ],
+   "wct_opdet": 20,
+   "gdml_node": "volOpDetSensitive_CoatedPMT",
+   "x": -2817.0,
+   "y": 2210.0,
+   "z": 3809.88,
+   "v4_vs_data_mm": 280.0,
+   "v4_vs_data_ymirror_mm": 4428.9,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 19,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3060
+   ],
+   "wct_opdet": 21,
+   "gdml_node": "volOpDetSensitive_CoatedPMT",
+   "x": -2817.0,
+   "y": -2210.0,
+   "z": 3809.88,
+   "v4_vs_data_mm": 280.0,
+   "v4_vs_data_ymirror_mm": 4428.9,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 20,
+   "pd_type": "PMT",
+   "wls": "TPB",
+   "eff_Ar": 0.12,
+   "eff_Xe": 0.12,
+   "offline": [
+    3070
+   ],
+   "wct_opdet": 22,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -2817.0,
+   "y": 2210.0,
+   "z": -681.24,
+   "v4_vs_data_mm": 448.2,
+   "v4_vs_data_ymirror_mm": 4778.2,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 21,
+   "pd_type": "PMT",
+   "wls": "TPB",
+   "eff_Ar": 0.12,
+   "eff_Xe": 0.12,
+   "offline": [
+    3080
+   ],
+   "wct_opdet": 23,
+   "gdml_node": "volOpDetSensitive_CoatedPMT",
+   "x": -2817.0,
+   "y": -2210.0,
+   "z": -816.88,
+   "v4_vs_data_mm": 280.0,
+   "v4_vs_data_ymirror_mm": 4428.9,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 22,
+   "pd_type": "Membrane",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    2080,
+    2081
+   ],
+   "wct_opdet": 19,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-6_0",
+   "x": -2830.3,
+   "y": 4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.4,
+   "v4_vs_data_ymirror_mm": 53.3,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 23,
+   "pd_type": "Membrane",
+   "wls": "PTP",
+   "eff_Ar": 0.03,
+   "eff_Xe": 0.03,
+   "offline": [
+    2060,
+    2061
+   ],
+   "wct_opdet": 18,
+   "gdml_node": "volOpDetSensitive_ArapucaLat_0-2_0",
+   "x": -2830.3,
+   "y": -4176.1,
+   "z": 1496.5,
+   "v4_vs_data_mm": 8352.4,
+   "v4_vs_data_ymirror_mm": 53.3,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 24,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3090
+   ],
+   "wct_opdet": null,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": 4556.5
+  },
+  {
+   "channel": 25,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3100
+   ],
+   "wct_opdet": 25,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": 4556.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 0.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 26,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3110
+   ],
+   "wct_opdet": 26,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": 4556.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 3400.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 27,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3120
+   ],
+   "wct_opdet": null,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": 3536.5
+  },
+  {
+   "channel": 28,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3130
+   ],
+   "wct_opdet": null,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": 3536.5
+  },
+  {
+   "channel": 29,
+   "pd_type": "PMT",
+   "wls": "PEN+Q",
+   "eff_Ar": 0.0,
+   "eff_Xe": 0.036,
+   "offline": [
+    3140
+   ],
+   "wct_opdet": 29,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": 3536.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 3400.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 30,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3150
+   ],
+   "wct_opdet": 30,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 4053.0,
+   "z": 2177.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 8106.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 31,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3160
+   ],
+   "wct_opdet": 31,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": -4053.0,
+   "z": 2177.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 8106.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 32,
+   "pd_type": "PMT",
+   "wls": "None",
+   "eff_Ar": 0.0,
+   "eff_Xe": 0.0,
+   "offline": [
+    3170
+   ],
+   "wct_opdet": 32,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 4053.0,
+   "z": 1496.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 8106.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 33,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3180
+   ],
+   "wct_opdet": 33,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": -4053.0,
+   "z": 1496.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 8106.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 34,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3190
+   ],
+   "wct_opdet": null,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": -543.5
+  },
+  {
+   "channel": 35,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3200
+   ],
+   "wct_opdet": 35,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": -543.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 0.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 36,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3210
+   ],
+   "wct_opdet": 36,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": -543.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 3400.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 37,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3220
+   ],
+   "wct_opdet": 37,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": -1563.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 3400.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 38,
+   "pd_type": "PMT",
+   "wls": "PEN",
+   "eff_Ar": 0.036,
+   "eff_Xe": 0.036,
+   "offline": [
+    3230
+   ],
+   "wct_opdet": 38,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": -1563.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 0.0,
+   "v5_vs_data_mm": 0.0
+  },
+  {
+   "channel": 39,
+   "pd_type": "PMT",
+   "wls": "PEN+Q",
+   "eff_Ar": 0.0,
+   "eff_Xe": 0.036,
+   "offline": [
+    3240
+   ],
+   "wct_opdet": 39,
+   "gdml_node": "volOpDetSensitive_FoilPMT",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": -1563.5,
+   "v4_vs_data_mm": 0.0,
+   "v4_vs_data_ymirror_mm": 3400.0,
+   "v5_vs_data_mm": 0.0
+  }
+ ]
+}
