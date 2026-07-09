@@ -1,6 +1,12 @@
 # PDVD Light Reconstruction — Plan
 
-Status: **planning** (2026-07-08). No code yet. This doc records the input-data
+Status: **C++ chain DONE up to OpFlash** (2026-07-08): milestones 1–3 as python
+studies (`pdvd-spe-template.md`, `pdvd-light-filter.md`, `pdvd-flash-dt.md`) and
+the WCT chain assembled + validated in **`pdvd-light-chain.md`**
+(PDVDOpWaveformSource, wiener-inspired OpDecon, 3-branch OpHit, all-PD
+OpFlashFinder with DAPHNE→OpDet ganging; all 120 events of runs
+039252/039253/039349 processed). Remaining: light↔charge `offset_us`, cathode
+PE anchor, Q/L matching. The rest of this doc records the original input-data
 survey, the detector layout, the signal-processing plan, the SPE-template
 strategy, the OpHit/OpFlash (flash-formation) brainstorm, and the phased
 implementation roadmap. The reference implementation is the PDHD light chain
