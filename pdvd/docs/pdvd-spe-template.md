@@ -12,7 +12,7 @@ post-filter as the starting point — the dedicated filter scan is milestone 2).
 > Figures: `pdvd/docs/pds/` — `pd_ch<CCCC>.png` (one per DAPHNE channel: template |
 > amplitude spectrum | raw and deconvolved small/medium/large example pulses),
 > `spe_amplitude_spectra.png`, `spe_templates_by_population.png`, `spe_template_compare.png`,
-> `spe_summary.json` (per-channel numbers).
+> `spe_summary.json` (per-channel numbers). **Which `pd_ch*.png` is which physical PD: §7.**
 
 ---
 
@@ -157,7 +157,82 @@ together with the OpRoi settings for the 7.5 ms stream.
 | ch3020 (OpDet 15) | anomalous ~30 % slow tail in the template + large noise-trigger population — needs a dedicated re-selection |
 | OpDet 24/27/28/34 | dead PMTs, absent from the data |
 
-## 7. Reproduce
+## 7. Channel ↔ physical PD map (which `pd_ch*.png` is which)
+
+Each `pd_ch<CCCC>.png` is one DAPHNE channel `CCCC` (= the `opchannel` branch). Coordinates
+are the PD-centre `(x, y, z)` in cm from the data file. In this frame **x is the drift
+coordinate**: the cathode plane is at `x ≈ 0`, the **top** drift volume is `x > 0` and the
+**bottom** drift volume is `x < 0`; the two long cryostat **membrane walls** are at
+`y = ±417.6`, and the **bottom PMT array** sits below the bottom volume at `x ≤ −206`.
+Cathode and most membrane OpDets read out through **two** DAPHNE channels (two supercells);
+PMTs use one. (Mapping v09162025, cross-checked against the `x/y/z` branches of run 039252.)
+
+### Cathode XA — on the cathode plane (`x ≈ 0`), 8 OpDets × 2 ch, full-stream
+
+Tile a 4(z) × 2(y) grid across the cathode:
+
+| OpDet | ch A (`.png`) | ch B (`.png`) | y (cm) | z (cm) | note |
+|---|---|---|---|---|---|
+| 4  | 1020 | 1021 | +123.8 | +258.5 | |
+| 5  | 1060 | 1061 | −213.2 | +258.5 | |
+| 6  | 1010 | 1011 | +290.4 | +187.3 | |
+| 7  | 1050 | 1051 | −46.6  | +187.3 | noisy pair; ch1051 mode is a threshold artifact |
+| 8  | 1030 | 1031 | +42.6  | +112.0 | |
+| 9  | 1070 | 1071 | −213.2 | +112.0 | noisy pair |
+| 10 | 1040 | 1041 | +209.1 | +40.8  | |
+| 11 | 1080 | 1081 | −127.9 | +40.8  | |
+
+(All 16 cathode channels use the population-average shape scaled to the channel; the PE
+scale is provisional — §5.)
+
+### Membrane XA — on the ±y cryostat walls (`|y| = 417.6`, `z = 149.7`)
+
+Top volume (`x > 0`) and bottom volume (`x < 0`), each wall carrying two OpDets stacked along x:
+
+| volume | wall | OpDet | ch A (`.png`) | ch B (`.png`) | x (cm) | note |
+|---|---|---|---|---|---|---|
+| top    | +y | 0  | 2010 | 2011 | +305.6 | ch2010 no clean 1-PE → fallback template; noisy |
+| top    | +y | 2  | 2020 | 2021 | +229.0 | ch2020 distorted template (flagged) |
+| top    | −y | 1  | 2030 | —    | +305.6 | ch2031 **absent** from the data |
+| top    | −y | 3  | 2040 | 2041 | +229.0 | |
+| bottom | +y | 12 | 2050 | 2051 | −201.1 | |
+| bottom | +y | 18 | 2060 | 2061 | −277.7 | |
+| bottom | −y | 13 | 2070 | 2071 | −201.1 | |
+| bottom | −y | 19 | 2080 | 2081 | −277.7 | |
+
+(The top-wall membrane — the `x > 0` rows — are the systematically noisier ones, RMS 5–10 vs
+2–3 on the bottom wall.)
+
+### PMT — bottom PMT array, one ch each, in three x-planes
+
+| OpDet | ch (`.png`) | x (cm) | y (cm) | z (cm) | note |
+|---|---|---|---|---|---|
+| 14 | 3010 | −205.9 | +221.0 | +409.0 | near-dead (exclude) |
+| 15 | 3020 | −205.9 | −221.0 | +409.0 | anomalous slow tail |
+| 16 | 3030 | −205.9 | +256.0 | −96.1  | |
+| 17 | 3040 | −205.9 | −221.0 | −109.7 | |
+| 20 | 3050 | −281.7 | +221.0 | +409.0 | |
+| 21 | 3060 | −281.7 | −221.0 | +409.0 | |
+| 22 | 3070 | −281.7 | +256.0 | −96.1  | |
+| 23 | 3080 | −281.7 | −221.0 | −109.7 | |
+| 25 | 3100 | −336.5 | +0.0   | +455.6 | |
+| 26 | 3110 | −336.5 | −170.0 | +455.6 | |
+| 29 | 3140 | −336.5 | −170.0 | +353.6 | |
+| 30 | 3150 | −336.5 | +405.3 | +217.8 | |
+| 31 | 3160 | −336.5 | −405.3 | +217.8 | |
+| 32 | 3170 | −336.5 | +405.3 | +149.7 | |
+| 33 | 3180 | −336.5 | −405.3 | +149.7 | |
+| 35 | 3200 | −336.5 | +0.0   | −54.4  | |
+| 36 | 3210 | −336.5 | −170.0 | −54.4  | |
+| 37 | 3220 | −336.5 | +170.0 | −156.3 | |
+| 38 | 3230 | −336.5 | +0.0   | −156.3 | |
+| 39 | 3240 | −336.5 | −170.0 | −156.3 | |
+
+(Dead PMTs OpDet 24/27/28/34 are absent from the data — no `.png`. PMTs occupy three
+x-planes: −205.9 and −281.7 carry OpDet 14–17 and 20–23; the deepest floor plane −336.5
+carries the rest.)
+
+## 8. Reproduce
 
 ```bash
 cd pdvd
@@ -165,7 +240,7 @@ python3 pd_plot/spe_build.py 0          # harvest run 039252 -> work/light_spe/h
 python3 pd_plot/spe_compare.py 39252    # comparison + all docs/pds figures + spe_summary.json
 ```
 
-## 8. Open items
+## 9. Open items
 
 - Cathode PE-scale anchor (§5) and AC-recovery tail beyond 6.4 µs.
 - ch3020 / ch2020 template re-selection; ch2010 needs a quieter run or longer statistics.
