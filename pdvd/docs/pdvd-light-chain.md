@@ -88,6 +88,11 @@ Downstream: `FlashTensorToOpticalPCs{nchan: 40}` → QLMatching (future).
   charge and light events match 1:1 but the readout-window relation is not yet
   measured). Flash `t` + charge-drift consistency on A/C-crossers is the
   natural calibration.
+- **Q/L light model ready** (`pdvd-photon-model.md`): the official sim optical
+  model (PDFastSimANN v5 computable graph) is sampled into a gridded library
+  wired into QLMatching (`light_model: 'library'`), plus a fitted
+  semi-analytical fallback; see that doc for the v4-mirror geometry finding
+  and the DAPHNE↔module pairing check still owed from data.
 - **Cathode PE scale provisional** (`pdvd-spe-template.md` §5): cathode columns
   of the PE matrix carry a common scale uncertainty relative to membrane/PMT;
   `min_fired_pe`/PE-balance-sensitive downstream cuts inherit it.
