@@ -1,5 +1,18 @@
 # PDVD TPC geometry & QLMatching fiducial volume
 
+> **Update 2026-07 — cathode correction applied.** The toolkit's legacy cathode
+> thickness (`cpa_thick = 50.8 mm`, a DocDB 203 / ProtoDUNE-SP copy — see §3) has
+> been **corrected to the GDML value `60.0 mm`**. Drift-facing cathode surface
+> 2.54 → **3.0 cm**; drift distance `cpa_plane` 339.01 → **338.55 cm** (≈ GDML
+> CRMActive 338.5); `dvm` FV cathode edges ±25.4 → **±30.0 mm**; reco drift speed
+> rescaled `v ∝ D`: 1.57 → **1.568 mm/µs**. `apa_cpa = 341.55 cm` (position) was
+> already correct and is unchanged. Files: `params.jsonnet`, `clus.jsonnet`,
+> `drift_calib/calib_drift_velocity.py`. **Data not yet reprocessed** — the new
+> velocity applies on the next reprocessing pass; the ~0.15 % / ≤0.5 cm change is
+> within the calibration's pile-up bin resolution. The comparison below is written
+> as of the pre-correction state to show the reconciliation; corrected toolkit
+> values are flagged inline.
+
 Cross-source comparison of the ProtoDUNE-VD (PDVD) TPC geometry, and the
 definition of the fiducial volume (FV) that charge–light matching (QLMatching)
 uses **per drift-TPC region**. Written to prepare PDVD for QLMatching, which is
@@ -59,10 +72,10 @@ All distances are |x| from the cathode centre (x = 0 in the WCT frame) unless no
 | W collection plane \|x\| | **341.55 cm** (`apa_cpa`, `params.jsonnet:29`) | **341.55 cm** (box X edge, `experiment.js:795-803`) | **341.55 cm** from cathode (collection Z-plane local +169.27, CRP center ±341.55−cathode; verified via −20 cm offset) |
 | Anode grid / field plane \|x\| | **335.835 cm** (`apa_plane`=0.5·`apa_g2g`=57.15 mm inside W, `params.jsonnet:33,35,66`) | 335.835 cm (FV anode-band edge) | `AnodePlate` 0.01 cm thin (GDML L12772), y=337, z=299.3 cm |
 | Response plane \|x\| | **319.164 cm** (`res_plane`=0.5·`apa_w2w`+18.1 cm, `params.jsonnet:41,43`) | — (n/a) | — (n/a) |
-| Cathode surface \|x\| (drift stop) | **2.54 cm** (`cpa_plane`=`apa_cpa`−0.5·`cpa_thick`⇒ surface at 2.54, `params.jsonnet:47`) | 2.54 cm (FV gap edge) | **~2.94–3.0 cm** (mesh at ±2.937/±2.975 about −20; `CathodeBlock` = 6 cm thick, GDML L12778) |
-| Cathode thickness | **5.08 cm** (`cpa_thick`=50.8 mm, `params.jsonnet:30`) | 5.08 cm | **6.0 cm** (`CathodeBlock` x, GDML L12778-79) |
-| Effective drift distance (W → cathode surface) | **339.01 cm** (341.55−2.54) | 339.01 cm | **338.5 cm** (`CRMActive` box x, GDML L1201; ≈341.55−3.0) |
-| Drift speed | reco **1.57 mm/µs** (`params.jsonnet:112`, calibrated from A–C crossers) | 0.16 cm/µs base default | sim **1.473 mm/µs** (`simparams.jsonnet:12`); Efield **500 V/cm** (GDML `volTPCActive` aux) |
+| Cathode surface \|x\| (drift stop) | 2.54 cm (legacy) → **3.0 cm** (corrected, `cpa_plane`=`apa_cpa`−0.5·`cpa_thick`) | 2.54 cm (FV gap edge) | **~2.94–3.0 cm** (mesh at ±2.937/±2.975 about −20; `CathodeBlock` = 6 cm thick, GDML L12778) |
+| Cathode thickness | 5.08 cm (legacy) → **6.0 cm** (corrected, `cpa_thick`=60 mm) | 5.08 cm | **6.0 cm** (`CathodeBlock` x, GDML L12778-79) |
+| Effective drift distance (W → cathode surface) | 339.01 cm (legacy) → **338.55 cm** (corrected) | 339.01 cm | **338.5 cm** (`CRMActive` box x, GDML L1201; ≈341.55−3.0) |
+| Drift speed | reco 1.57 → **1.568 mm/µs** (corrected, `v ∝ D`; A–C crossers) | 0.16 cm/µs base default | sim **1.473 mm/µs** (`simparams.jsonnet:12`); Efield **500 V/cm** (GDML `volTPCActive` aux) |
 | U / V / W plane x-stacking | W at 341.55, V 341.53, U 341.51 (0.2 mm steps; PCB strips) | — | `CRMUPlane/VPlane/ZPlane` 0.02 cm thick (GDML L1206-1224) |
 | Y extent | y ∈ [−342, 342] cm rough box (`bounds`, `params.jsonnet:100-103`); wire y ±336.4 | y ±336.4 cm, per-CRP split at \|y\|=0.6 cm | CRM module y = 168.5 cm; 4 rows at y = ±252.75, ±84.25 (GDML posTPC) → full ±337 |
 | Z extent | z ∈ [0, 304] cm rough box | bottom [0.855, 298.445], top [−0.36, 300.0] cm | CRM module z = 149.65 cm; 2 columns at z = ±74.825 |
@@ -73,8 +86,8 @@ All distances are |x| from the cathode centre (x = 0 in the WCT frame) unless no
 
 | Drift volume | Anodes | Centerline (W) x | Anode/grid face x | Response plane x | Cathode surface x | Drift dir |
 |---|---|---|---|---|---|---|
-| Bottom CRP | 0–3 | −341.55 | −335.835 | −319.164 | −2.54 | +x (→ cathode) |
-| Top CRP | 4–7 | +341.55 | +335.835 | +319.164 | +2.54 | −x (→ cathode) |
+| Bottom CRP | 0–3 | −341.55 | −335.835 | −319.164 | −3.0 (was −2.54) | +x (→ cathode) |
+| Top CRP | 4–7 | +341.55 | +335.835 | +319.164 | +3.0 (was +2.54) | −x (→ cathode) |
 
 ---
 
@@ -82,63 +95,70 @@ All distances are |x| from the cathode centre (x = 0 in the WCT frame) unless no
 
 The three sources **agree on the load-bearing number**: the W collection plane
 sits **341.55 cm from the cathode centre** in every source (once the GDML −20 cm
-frame offset is removed). The remaining differences all trace to the **cathode
-thickness** and to sim-vs-reco parameter choices:
+frame offset is removed). The one real geometry discrepancy was the **cathode
+thickness**, now corrected (see banner + provenance below); the rest are sim-vs-reco
+parameter choices:
 
-- **Cathode thickness / surface:** WCT `cpa_thick` = 5.08 cm (surface at |x|=2.54)
-  vs GDML `CathodeBlock` = 6.0 cm (surface at |x|≈3.0). The ~0.46 cm/side
-  difference in where the drift stops is the *entire* cause of the drift-distance
-  gap below.
-- **Effective drift distance:** WCT 339.01 cm (341.55−2.54) vs GDML `CRMActive`
-  338.5 cm (≈341.55−3.0). Same 341.55 anchor; difference = the cathode
-  half-thickness discrepancy. **This ~0.5 cm directly moves the cathode-end FV
-  edge** and should be kept in mind when setting QLMatching's `cathode_ext1/2`.
-- **Drift speed:** sim uses **1.473 mm/µs** (`simparams.jsonnet`), whereas data
-  reconstruction uses the **1.57 mm/µs** value calibrated from anode→cathode
-  crossers (`params.jsonnet:112`; see `pdvd/docs/clus-workflow.md` drift-velocity
-  calibration). A cluster's apparent drift-x therefore differs between MC-truth
-  and reco frames — relevant to any MC-based FV/velocity residual study.
+- **Cathode thickness / surface — RESOLVED.** The toolkit carried `cpa_thick` =
+  5.08 cm (surface |x|=2.54) vs the GDML `CathodeBlock` = 6.0 cm (surface |x|≈3.0).
+  **Corrected 2026-07 to 6.0 cm** so the surface is at |x|=3.0 cm and the drift
+  distance `cpa_plane` = 338.55 cm (≈ GDML `CRMActive` 338.5). The ~0.5 cm shift
+  directly moves the cathode-end FV edge — hence it feeds into QLMatching's
+  `cathode_ext1/2`.
+- **Effective drift distance:** now WCT 338.55 cm (341.55−3.0) vs GDML `CRMActive`
+  338.5 cm — agree to 0.05 cm (the collection-plane vs active-volume-edge offset).
+- **Drift speed:** sim uses **1.473 mm/µs** (`simparams.jsonnet`, the true MC
+  velocity — left unchanged), whereas data reconstruction uses the calibrated value
+  **1.568 mm/µs** (rescaled from 1.57 by `v ∝ D`; `params.jsonnet`; see
+  `pdvd/docs/clus-workflow.md`). A cluster's apparent drift-x therefore differs
+  between MC-truth and reco frames — relevant to any MC-based FV/velocity residual
+  study.
 - **Readout window:** 6000 ticks (data) vs 6400 ticks (sim).
 
 ### Where do the toolkit cathode numbers come from?
 
-The two cathode constants have **different provenance** — this matters because one
-is trustworthy and the other is a legacy copy:
+The two cathode constants had **different provenance** — this is *why* one was
+correct and the other needed the 2026-07 fix:
 
 - **`apa_cpa = 341.55 cm` (cathode *position* / W-plane→cathode-centre) — from
   LArSoft.** `params.jsonnet:25` derives it from `protodune-wires-larsoft-v3.json.bz2`,
   and it matches the v4 GDML directly (W plane 341.55 cm from cathode, verified
   §1). Trustworthy.
 
-- **`cpa_thick = 50.8 mm` (cathode *thickness*) — NOT from any PDVD GDML.** Every
-  PDVD GDML version (v1–v4) models the cathode as a **6 cm `CathodeBlock`**; none
-  is 5.08 cm. 50.8 mm = exactly 2.00 inches, a **pre-GDML nominal from DocDB 203 /
-  the ProtoDUNE-SP template**. The whole PDVD `det` block (`apa_w2w=85.725`,
-  `apa_g2g=114.3`, `cpa_thick=50.8`) was copied from `pdsp/params.jsonnet`, whose
-  comment reads `apa_w2w = 85.725*wc.mm, // DocDB 203 calls "W" as "X"`. The proof
-  it is stale: `dune10kt-1x2x6/params.jsonnet:16-17` keeps
-  `// cpa_thick = 50.8*wc.mm, // DocDB 203` commented out and replaces it with
-  `3.175*wc.mm, // 1/8", from Bo Yu (BNL) and confirmed with LArSoft`. **PDHD
-  (`pdhd/params.jsonnet:31`) and iceberg use the corrected 3.175 mm; PDVD was never
-  updated** and still carries the 2-inch legacy value.
+- **`cpa_thick` was `50.8 mm` (cathode *thickness*) — NOT from any PDVD GDML;
+  corrected to 60 mm.** Every PDVD GDML version (v1–v4) models the cathode as a
+  **6 cm `CathodeBlock`**; none is 5.08 cm. 50.8 mm = exactly 2.00 inches, a
+  **pre-GDML nominal from DocDB 203 / the ProtoDUNE-SP template**. The whole PDVD
+  `det` block (`apa_w2w=85.725`, `apa_g2g=114.3`, `cpa_thick=50.8`) was copied from
+  `pdsp/params.jsonnet`, whose comment reads
+  `apa_w2w = 85.725*wc.mm, // DocDB 203 calls "W" as "X"`. The proof it was stale:
+  `dune10kt-1x2x6/params.jsonnet:16-17` keeps `// cpa_thick = 50.8*wc.mm, // DocDB 203`
+  commented out and replaces it with `3.175*wc.mm, // 1/8", from Bo Yu (BNL) and
+  confirmed with LArSoft`. **PDHD (`pdhd/params.jsonnet:31`) and iceberg had already
+  moved to the corrected value; PDVD had never been updated** and still carried the
+  2-inch legacy value until this fix.
 
-**So the 5.08 vs 6.0 cm cathode difference is not a version mismatch** — no GDML
-version has 5.08 cm. The toolkit value is an inherited ProtoDUNE-SP/DocDB constant
-that sidesteps the GDML entirely. Note that several sibling constants copied in the
-same block (`apa_w2w`, `apa_g2g` — the ProtoDUNE-SP *wire-plane-stack* spacings)
-do not physically apply to a PDVD PCB-strip CRP (U/V/W are 0.2 mm apart, not tens
-of mm), so `apa_plane`/`res_plane`-derived faces are template constructs, not
-measured PDVD planes.
+**So the 5.08 vs 6.0 cm cathode difference was not a version mismatch** — no GDML
+version has 5.08 cm; the toolkit value was an inherited ProtoDUNE-SP/DocDB constant
+that sidestepped the GDML entirely. The fix adopts the GDML `CathodeBlock` = 60 mm.
+Note that other sibling constants copied in the same block (`apa_w2w`, `apa_g2g` —
+the ProtoDUNE-SP *wire-plane-stack* spacings) still do not physically apply to a
+PDVD PCB-strip CRP (U/V/W are 0.2 mm apart, not tens of mm), so the
+`apa_plane`/`res_plane`-derived faces remain template constructs, not measured PDVD
+planes — a separate, unaddressed issue.
 
-> **Impact.** `cpa_thick` sets `cpa_plane = apa_cpa − 0.5·cpa_thick = 339.01 cm`,
-> which is both the FV cathode edge (|x|=2.54 cm) and the collection→cathode-surface
-> distance the drift-velocity calibration used to obtain v=1.57 mm/µs. That
-> calibration is internally self-consistent (crossers matched to D=339.01), but the
-> absolute cathode edge and drift-distance anchor rest on a non-PDVD constant; the
-> GDML would put the surface at ~3.0 cm (D=338.5), a ~0.5 cm shift comparable to the
-> QLMatching cathode cushions. Unlike PDHD — whose geometry we verified end-to-end
-> against the official GDML on dunegpvm — PDVD's cathode thickness has never been
-> reconciled with an authoritative source.
+> **Impact & why re-calibration is a rescale.** `cpa_thick` sets
+> `cpa_plane = apa_cpa − 0.5·cpa_thick`, which is both the FV cathode edge and the
+> collection→cathode-surface distance `D` the drift-velocity calibration uses. The
+> calibration is `v_true = v_reco · D / S` (S = measured crosser reco x-span, from
+> data, *independent of D*), so **v is exactly proportional to D** — the data does
+> not independently measure v. Moving the cathode surface 2.54 → 3.0 cm changes
+> D 339.01 → 338.55 cm, so v rescales 1.57 → **1.568 mm/µs** (−0.15 %). The
+> re-run closure (`calib_drift_velocity.py`, 142 evts, 51 A–C crossers) gives a
+> point estimate of 1.561 at the new D — consistent with 1.568 within the pile-up
+> bin resolution (~0.9 %/bin). Net reco effect: absolute x ≤0.5 cm at full drift;
+> clustering/matching behaviour is essentially unchanged — the value is corrected
+> for geometric honesty and QLMatching-edge accuracy, not to fix a reco defect.
 
 ---
 
@@ -147,9 +167,10 @@ measured PDVD planes.
 ### Two distinct FV consumers — do not conflate
 
 1. **`clus.jsonnet` `dvm`** (per drift region) — bottom-drift `a0f0pA` x ∈
-   [−3358.35, −25.4] mm, top-drift `a4f0pA` x ∈ [25.4, 3358.35] mm, y/z with
-   15 cm insets (`clus.jsonnet:56-104`). This feeds **`clustering_separate` /
-   `clustering_neutrino`** via `select_scope_fv`. It is **not** the QLMatching FV.
+   [−3358.35, −30.0] mm, top-drift `a4f0pA` x ∈ [30.0, 3358.35] mm (cathode edge
+   corrected from ±25.4), y/z with 15 cm insets (`clus.jsonnet:56-104`). This feeds
+   **`clustering_separate` / `clustering_neutrino`** via `select_scope_fv`. It is
+   **not** the QLMatching FV.
 
 2. **QLMatching FV** (`match/src/QLMatching.cxx::compute_geometry`, ~L890-989) —
    the box comes from **`IDetectorVolumes::inner_bounds(wpid)` =
@@ -208,34 +229,32 @@ For when QLMatching is wired into PDVD, the geometry inputs are:
 
 - `anode_x = ±341.55 cm` (W collection plane; blob `xorig`), sign per drift side.
 - `cathode_x = 0` (central cathode).
-- `u_cathode ≈ 339.01 cm` (WCT drift distance; **338.5 cm** if anchored to the
-  GDML `CRMActive` active volume — the ~0.5 cm gap is the cathode-thickness
-  difference, §3).
+- `u_cathode ≈ 338.55 cm` (corrected WCT drift distance; = GDML `CRMActive` 338.5
+  to 0.05 cm — the cathode surface now sits at |x|=3.0 cm, §3).
 - Per-side drift box from `inner_bounds` unioned over the 4 CRP quadrants on that
   side; y ≈ ±336.4 cm, z ≈ [0, 300] cm.
-- Drift speed: **1.57 mm/µs** for data reco (sim MC is 1.473).
+- Drift speed: **1.568 mm/µs** for data reco (sim MC is 1.473).
 
 Suggested starting `cathode_ext1 / cathode_ext2` **by analogy to PDHD (1.5 / −3.0
 cm)** — but flagged **provisional**: PDHD's values were tuned to its ±1.75 cm
 cathode-crossing residual at its calibrated velocity, and PDVD's velocity /
 t0 / SCE residual spread is not yet characterised. Do a PDVD-specific
-crosser-residual study before freezing these. The ~0.5 cm cathode-surface
-discrepancy (§3) is comparable to these cushions, so pin down whether PDVD reco
-anchors the cathode at 2.54 or ~3.0 cm before setting the containment edge.
+crosser-residual study before freezing these. The cathode surface is now anchored
+at 3.0 cm (§3), so tune the cushions against that edge.
 
 ---
 
 ## 6. Open items / limitations
 
+- **Cathode thickness — DONE (2026-07).** Corrected from the legacy 5.08 cm to the
+  GDML 6.0 cm (surface 3.0 cm, D=338.55, v 1.57→1.568). Config + calib updated;
+  **data not yet reprocessed** — v=1.568 applies on the next reprocessing pass.
 - GDML cross-check done against **v4** (`protodunevd_v4_refactored.gdml`, the
   version the DNN_ROI_SP sim uses). Newer `v5_ggd` GDMLs exist in `dunecore` and
   were not compared; confirm the production reco geometry version before freezing.
-- The 5.08 cm cathode thickness is a **legacy DocDB 203 / ProtoDUNE-SP copy**, not
-  a PDVD-derived or GDML value (GDML = 6 cm; see §3 "Where do the toolkit cathode
-  numbers come from?"). PDHD/dune10kt already corrected the analogous value to
-  3.175 mm ("confirmed with LArSoft"); PDVD should be reconciled the same way —
-  decide whether reco stops the drift at 2.54 or ~3.0 cm, then re-check the
-  velocity calibration (v=1.57 was tied to D=339.01).
+- The sibling `apa_w2w`/`apa_g2g` ProtoDUNE-SP wire-stack spacings copied into the
+  PDVD `det` block are still non-physical for a PCB-strip CRP (§3) — the
+  `apa_plane`/`res_plane` faces remain template constructs; not addressed here.
 - PDVD light-side (`cross_side_filter` replacement for cathode-mounted PDs) is a
   design task, not just a parameter — the single double-sided flash means a PDVD
   bundle's light model must sum contributions from both drift volumes.
