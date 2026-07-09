@@ -110,11 +110,36 @@ and of the same order as PDHD, whose light events have the identical multi-ms
 multi-flash structure. The count is reduced
 not by the finder cut but by a **match-side PE floor** (PDHD `flash_minPE = 50`)
 plus **per-event time-windowing** and the matching **ranking/prefilters** — all
-of which live in QLMatching. On PDVD a `flash_minPE` analog scaled by ¼ ≈ **12–15
-PE** would take ~217 → ~145–171 per window (PE≥50 → ~89); the exact value must be
-tuned against matching purity once QL is wired, since the cathode-mounted,
-double-sided X-ARAPUCAs put PDVD on a different absolute-PE scale
-(`pdvd-spe-template.md` §5). **Also note `offset_us = 0.0`** in the PDVD opflash
+of which live in QLMatching.
+
+A dedicated before/after study of the `flash_minPE` floor for **both** detectors
+(script `pd_plot/flash_pe_cut_compare.py`, figure below; 35 PDHD `allpd` events +
+205 PDVD events) sharpens the earlier ¼-scale guess. `flash_minPE` cuts on a
+flash's **total PE** (`QLMatching.cxx:782`, `get_total_PE()`); the on-disk opflash
+is post-finder but pre-floor, so masking `total_PE ≥ floor` gives the real "with
+cut" for PDHD (`flash_minPE = 50`) and a hypothetical sweep for PDVD (no floor yet).
+The QL-relevant window is one charge readout = `nticks × tick` = PDHD 6000 × 0.512 =
+**3072 µs**, PDVD 6000 × 0.5 = **3000 µs** (≈ equal → flashes/window is a fair
+cross-detector metric; absolute PE is **not** comparable — PDVD's cathode PE scale
+is provisional, `pdvd-spe-template.md` §5).
+
+![PDHD vs PDVD flash rate & PE before/after the flash_minPE floor: per-flash PE
+distribution + floor line, flashes/drift-window before vs after, summed-PE(t) of the
+busiest event, and flashes/window vs floor](pds/flash_pe_cut_compare.png)
+
+Findings: (1) **the floor removes count, not light** — the summed-PE-per-time curve
+barely moves under the cut for both detectors, i.e. it discards genuinely dim junk,
+so raising it for count control is safe. (2) **PDHD `flash_minPE = 50` is
+well-placed** — it sits at the knee of the flashes/window-vs-floor curve (160 → 93
+per window) and just past the per-flash PE peak; no change. (3) **The naïve ¼-scale
+(12–15 PE) is too loose for PDVD**: it leaves ~145–171 per window, still ~1.5× PDHD's
+93, and sits on the *steep* part of PDVD's own sensitivity curve, not its knee (which
+is ~20–30). Placed by PDVD's own distribution structure (a low-PE junk spike at
+10–15, a valley, then the bright-cosmic bump) **and** by flashes/window parity with
+PDHD, **`flash_minPE ≈ 20–30 PE`** (→ ~103–121 per window) is the better starting
+floor. Still tune against matching purity once QL is wired — the cathode-mounted,
+double-sided X-ARAPUCAs are on their own absolute-PE scale. **Also note
+`offset_us = 0.0`** in the PDVD opflash
 (vs PDHD's 249.84): QL uses the trigger-relative `get_time()`, so the light↔charge
 offset must be set when QL is wired (see Caveats).
 
@@ -132,6 +157,43 @@ PDVD-scaled parameters (PDHD uses `pe_low 10`, `pe_bright 50`, `neighbors 4`,
 use **fewer neighbours (~2–3)** and a `pe_bright` rescaled to PDVD's per-flash
 brightness. The (Y,Z) geometry the algorithm needs is already in
 `pdvd-opdet-geom.json`.
+
+**3. Per-side (PDHD) vs single-all-PD flash (PDVD) — and why per-region cuts don't
+help PDVD.** PDHD sets `group_by_side: true`: `OpFlashFinder` splits hits into the
+two drift volumes (ch 0–79 at x≥0, ch 80–159 at x<0), builds flashes independently
+per side, and applies **both** the finder cut (`5/20`) and the QL `flash_minPE`
+**per side** — a flash belongs to exactly one optically-independent volume (the
+opaque cathode separates them; verified in data: 100 % of PDHD flashes are one-sided,
+median other-side PE = 0 %). PDVD sets `group_by_side: false` — a single all-PD flash
+— *because its dominant PDs (the cathode X-ARAPUCAs at x≈0) are double-sided and see
+both drift volumes*, so a per-volume split is not meaningful.
+
+PDVD's PDs do fall in four regions (cathode XA `4–11` at x≈0; membrane-wall XA
+`0–3/12/13/18/19` at y=±4176; PMTs on the faces), so one could imagine **per-region
+cuts**. The data says it isn't worth it — for either the PE floor or the `min_fired_pds`
+(nPD) count — because **both light and firing are cathode-dominated**:
+
+| region | live PDs | mean fired PDs/flash | share of flash PE |
+|---|---|---|---|
+| cathode | 8 | **4.4** | **89 %** |
+| wall (membrane) | 8 | 0.8 | 10 % |
+| PMT | 20 | 1.0 | 1 % |
+
+- A **per-region PE floor** is redundant: total PE ≈ cathode PE (89 %), and PMTs at
+  1 % never decide whether a flash passes.
+- A **per-region nPD cut** is redundant too: 98.8 % of flashes already have ≥1 cathode
+  PD fired, so "require cathode ≥1" removes only ~1 %; "PMT-only" flashes (the junk a
+  region gate would target) are just 0.3 %. The flashes at the nPD floor (total = 2
+  fired, 18 % of all) are 80 % `cathode=2, wall=0, PMT=0` — real, dim, cathode-anchored
+  flashes, not region blips. Because firing is cathode-led, a **global** `min_fired_pds`
+  already acts as a cathode-PD count.
+
+So the two count-limiting levers are both single, global knobs (per-region machinery
+adds calibration burden for ~zero gain): a **`flash_minPE ≈ 20–30 PE`** floor (§ above),
+and/or **raising the global `min_fired_pds` 2 → 3/4** (mean fired is 6.2/36, so this
+trims the dim-cathode tail). Region physics stays where it belongs: the per-region
+*hit* thresholds (cathode 3.7 / membrane 4.0 / PMT 2.2) and the per-region
+dead-channel `auto_mask` deferred to QL (§2). Study script `pd_plot/flash_pe_cut_compare.py`.
 
 ## Caveats / next
 
