@@ -23,7 +23,8 @@ import numpy as np
 def check_bee(zpath):
     print(f"=== Bee zip: {zpath}")
     zf = zipfile.ZipFile(zpath)
-    names = [n for n in zf.namelist() if n.endswith("-truth_trackid.json")]
+    names = [n for n in zf.namelist()
+             if n.endswith("-truth_trackid.json") or n.endswith("-truth_trackid_labeled.json")]
     if not names:
         print("FAIL: no truth_trackid bee sets found")
         return False
@@ -61,11 +62,10 @@ def check_bee(zpath):
             coher = float(np.mean(same))
         print(f"{n}: rse={rse} npts={npts} labeled={frac_lab:.1%} "
               f"ntracks={uniq} NN-coherence={coher:.1%} top5={top}")
-        # Unlabeled blobs are dominated by ghosts (2-view recovery /
-        # deghosting leftovers with no true energy deposit), so the labeled
-        # fraction sits around 45-70% on corsika MC; coherence is the real
-        # quality signal.
-        if frac_lab < 1.0 / 3.0 or (coher == coher and coher < 0.8):
+        # truth_trackid_labeled carries only labeled points (frac_lab==1 by
+        # construction; unlabeled points live in truth_unlabeled).  Coherence
+        # is the real quality signal.
+        if npts == 0 or (coher == coher and coher < 0.8):
             ok = False
     print("BEE CHECK:", "PASS" if ok else "FAIL")
     return ok
