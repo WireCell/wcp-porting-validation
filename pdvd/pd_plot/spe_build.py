@@ -27,6 +27,7 @@ import sys
 
 import numpy as np
 from scipy.signal import find_peaks
+from scipy.optimize import curve_fit
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -45,6 +46,9 @@ MIN_PULSES = 10              # min accepted pulses to keep a channel template
 
 # full-stream small-pulse search
 FS_SEED_NSIGMA = 5.0
+
+# cathode template tail repair: start of the fitted region (ticks after peak)
+REPAIR_T0 = 20
 
 
 def one_pe_mode(amps, lo=10, hi=250, bins=60):
@@ -165,6 +169,48 @@ def fullstream_harvest(f, max_events=None):
     return out
 
 
+def repair_fs_tail(tmpl):
+    """Cathode template tail repair.
+
+    The local pre-peak baselines of the 1-PE harvest windows sit on slowly
+    falling tails of earlier activity in the busy stream, biasing the whole
+    extracted window low by a near-constant (~-3 ADC).  That spurious
+    negative tail (~-14% of the 1-PE peak, per sample, over 6 us) corrupts
+    the decon kernel at low frequency: bright pulses deconvolve to a
+    non-decaying positive plateau (~12% of the prompt spike) instead of
+    returning to baseline like the membrane XA.
+
+    Bright-pulse medians (n~800-1100/ch, amplitude-normalized, 50 us
+    windows) show the TRUE response: a positive slow component (tau ~1.2 us)
+    and NO measurable undershoot (<5e-4 of prompt beyond 25 us) -- the AC
+    coupling is invisible on these timescales.
+
+    Repair: fit a*exp(-t/tau)+c beyond +REPAIR_T0 ticks and keep only the
+    exponential (c = the baseline bias).  Validated on ch1010: decon
+    tail/peak of >=8 PE pulses drops 0.115 -> 0.020, at/below the membrane
+    late-light benchmark (0.026-0.075), flat vs amplitude.
+    -> (repaired template, fit params (a, tau_ticks, c) or None)"""
+    if tmpl is None:
+        return None, None
+    x = np.arange(len(tmpl), dtype=float) - PRE
+    xi, yi = x[PRE + REPAIR_T0:], tmpl[PRE + REPAIR_T0:]
+
+    def f(t, a, tau, c):
+        return a * np.exp(-t / tau) + c
+
+    try:
+        popt, _ = curve_fit(f, xi, yi,
+                            p0=(max(float(yi[:20].mean()), 1.0), 60.0,
+                                float(yi[-60:].mean())),
+                            bounds=([0, 5, -np.inf], [np.inf, 500, np.inf]),
+                            maxfev=20000)
+    except Exception:
+        return tmpl, None
+    out = tmpl.copy()
+    out[PRE + REPAIR_T0:] = popt[0] * np.exp(-xi / popt[1])
+    return out, popt
+
+
 def fs_select_and_average(d, mode, rms):
     stack = []
     pk = PRE + 50
@@ -225,11 +271,20 @@ def main():
                 print(f"  ch{ch}: no usable 1-PE mode (n={len(amps)})")
                 continue
             tmpl, npass, ta, tb = fs_select_and_average(fs[ch], mode, rms)
+            tmpl, tailfit = repair_fs_tail(tmpl)
+            ta, _ = repair_fs_tail(ta)
+            tb, _ = repair_fs_tail(tb)
             results[ch] = dict(amps=amps, mode=mode, rms=rms,
                                tmpl=tmpl, npass=npass, tmpl_a=ta, tmpl_b=tb)
+            if tailfit is not None:
+                results[ch]["tailfit"] = np.asarray(tailfit)
             status = "OK" if tmpl is not None else "TOO FEW"
+            fitmsg = ("" if tailfit is None else
+                      f"  tail fit a={tailfit[0]:.2f} "
+                      f"tau={tailfit[1] * pl.TICK_NS / 1000:.2f}us "
+                      f"bias c={tailfit[2]:+.2f}")
             print(f"  ch{ch}: mode={mode:6.1f} rms={rms:5.2f} "
-                  f"selected={npass:4d} {status}")
+                  f"selected={npass:4d} {status}{fitmsg}")
 
         np.savez_compressed(
             os.path.join(WORK, f"harvest_r{f.run:06d}.npz"),
