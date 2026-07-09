@@ -169,6 +169,10 @@ QLMatching, unchanged schema.
 
 ## 4. SPE template strategy (key open item — plan is try-and-compare)
 
+> **RESULT (2026-07-08): see `pdvd-spe-template.md`** — data-driven per-channel templates
+> win (0.4–2.8 % held-out decon-tail residual vs 18–41 % for the PDHD NP04 templates);
+> all 51 live channels demonstrated in `docs/pds/pd_ch*.png`; cathode PE scale provisional.
+
 **larsoft has no measured PDVD SPE calibration.** The VD digitizer fcl
 (`opticaldetectormodules_dune.fcl`, `protodunevd_opdigi`) uses:
 
