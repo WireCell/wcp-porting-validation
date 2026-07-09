@@ -225,6 +225,10 @@ QLMatching, unchanged schema.
 
 ## 5. OpHit / OpFlash plan — flash formation
 
+> **RESULT (2026-07-08): see `pdvd-flash-dt.md`** — all four PD groups coincide at the
+> tick level (68 % cores ≤ ±0.6 µs, per-type offsets ≤ 64 ns); keep `bin_width = 1000 ns`
+> (PDHD value) and the single all-PD flash. Filter settings: see `pdvd-light-filter.md`.
+
 Constraints particular to PDVD: three PD populations, two optically-coupled
 drift volumes (double-sided cathode XAs see both), very different per-PD
 response (XA slow/PMT fast, different gains), and the flash output feeds
@@ -271,6 +275,11 @@ Supporting decisions:
   reconstruction.
 
 ## 6. Timing / trigger reference
+
+> **RESULT (2026-07-08)**: the `timestamp` branch is in **microseconds** on one common
+> clock (16 ns quantization); the full-stream record starts at its timestamp and the
+> snippet timestamps are trigger times on the same clock, spanning the same 7.5 ms window
+> (`pdvd-flash-dt.md`). Remaining open: absolute light↔charge offset (`offset_us` analog).
 
 - All WCT light times should be trigger-relative ns, like PDHD (`offset_us`
   convention in `OpFlashFinder`).
