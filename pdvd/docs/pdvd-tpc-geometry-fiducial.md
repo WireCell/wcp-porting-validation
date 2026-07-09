@@ -100,11 +100,45 @@ thickness** and to sim-vs-reco parameter choices:
   and reco frames — relevant to any MC-based FV/velocity residual study.
 - **Readout window:** 6000 ticks (data) vs 6400 ticks (sim).
 
-> **Provenance note.** Unlike PDHD — whose op-detector geometry we verified
-> end-to-end against the official GDML on dunegpvm (see the bee3 geometry memory)
-> — the PDVD physical constants (`cpa_thick`, `apa_cpa`) are hand-set in
-> `params.jsonnet` and derived from the v5 wire dump; the GDML cross-check here is
-> the first direct comparison and it exposes the 5.08 vs 6.0 cm cathode difference.
+### Where do the toolkit cathode numbers come from?
+
+The two cathode constants have **different provenance** — this matters because one
+is trustworthy and the other is a legacy copy:
+
+- **`apa_cpa = 341.55 cm` (cathode *position* / W-plane→cathode-centre) — from
+  LArSoft.** `params.jsonnet:25` derives it from `protodune-wires-larsoft-v3.json.bz2`,
+  and it matches the v4 GDML directly (W plane 341.55 cm from cathode, verified
+  §1). Trustworthy.
+
+- **`cpa_thick = 50.8 mm` (cathode *thickness*) — NOT from any PDVD GDML.** Every
+  PDVD GDML version (v1–v4) models the cathode as a **6 cm `CathodeBlock`**; none
+  is 5.08 cm. 50.8 mm = exactly 2.00 inches, a **pre-GDML nominal from DocDB 203 /
+  the ProtoDUNE-SP template**. The whole PDVD `det` block (`apa_w2w=85.725`,
+  `apa_g2g=114.3`, `cpa_thick=50.8`) was copied from `pdsp/params.jsonnet`, whose
+  comment reads `apa_w2w = 85.725*wc.mm, // DocDB 203 calls "W" as "X"`. The proof
+  it is stale: `dune10kt-1x2x6/params.jsonnet:16-17` keeps
+  `// cpa_thick = 50.8*wc.mm, // DocDB 203` commented out and replaces it with
+  `3.175*wc.mm, // 1/8", from Bo Yu (BNL) and confirmed with LArSoft`. **PDHD
+  (`pdhd/params.jsonnet:31`) and iceberg use the corrected 3.175 mm; PDVD was never
+  updated** and still carries the 2-inch legacy value.
+
+**So the 5.08 vs 6.0 cm cathode difference is not a version mismatch** — no GDML
+version has 5.08 cm. The toolkit value is an inherited ProtoDUNE-SP/DocDB constant
+that sidesteps the GDML entirely. Note that several sibling constants copied in the
+same block (`apa_w2w`, `apa_g2g` — the ProtoDUNE-SP *wire-plane-stack* spacings)
+do not physically apply to a PDVD PCB-strip CRP (U/V/W are 0.2 mm apart, not tens
+of mm), so `apa_plane`/`res_plane`-derived faces are template constructs, not
+measured PDVD planes.
+
+> **Impact.** `cpa_thick` sets `cpa_plane = apa_cpa − 0.5·cpa_thick = 339.01 cm`,
+> which is both the FV cathode edge (|x|=2.54 cm) and the collection→cathode-surface
+> distance the drift-velocity calibration used to obtain v=1.57 mm/µs. That
+> calibration is internally self-consistent (crossers matched to D=339.01), but the
+> absolute cathode edge and drift-distance anchor rest on a non-PDVD constant; the
+> GDML would put the surface at ~3.0 cm (D=338.5), a ~0.5 cm shift comparable to the
+> QLMatching cathode cushions. Unlike PDHD — whose geometry we verified end-to-end
+> against the official GDML on dunegpvm — PDVD's cathode thickness has never been
+> reconciled with an authoritative source.
 
 ---
 
@@ -196,10 +230,12 @@ anchors the cathode at 2.54 or ~3.0 cm before setting the containment edge.
 - GDML cross-check done against **v4** (`protodunevd_v4_refactored.gdml`, the
   version the DNN_ROI_SP sim uses). Newer `v5_ggd` GDMLs exist in `dunecore` and
   were not compared; confirm the production reco geometry version before freezing.
-- The 5.08 vs 6.0 cm cathode-thickness difference is unresolved here — it is a
-  real geometry-definition mismatch between WCT config and the GDML, worth
-  reconciling with the PDVD geometry owners (does reco expect the drift to stop at
-  2.54 or ~3.0 cm?).
+- The 5.08 cm cathode thickness is a **legacy DocDB 203 / ProtoDUNE-SP copy**, not
+  a PDVD-derived or GDML value (GDML = 6 cm; see §3 "Where do the toolkit cathode
+  numbers come from?"). PDHD/dune10kt already corrected the analogous value to
+  3.175 mm ("confirmed with LArSoft"); PDVD should be reconciled the same way —
+  decide whether reco stops the drift at 2.54 or ~3.0 cm, then re-check the
+  velocity calibration (v=1.57 was tied to D=339.01).
 - PDVD light-side (`cross_side_filter` replacement for cathode-mounted PDs) is a
   design task, not just a parameter — the single double-sided flash means a PDVD
   bundle's light model must sum contributions from both drift volumes.
