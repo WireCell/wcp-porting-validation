@@ -213,7 +213,7 @@ out of the transfer question entirely.)
 |---|---|
 | ch2031 (OpDet 1, 2nd ch) | absent from the data entirely |
 | ch2010 (OpDet 0) | no clean 1-PE peak, 0 selected pulses → fallback template; noisy (RMS 8.9) |
-| ch2020 (OpDet 2) | distorted template (oscillating undershoot, only 15 pulses) — keep flagged |
+| ch2020 (OpDet 2) | **nonlinear undershoot — no linear kernel fix.** The decon shows the same positive-plateau symptom as the (repaired) cathode channels, but the cause differs: the undershoot is real electronics AND its relative depth shrinks with amplitude (−0.24…−0.30 of peak at 1 PE from n=192 dark counts, −0.18 at 2–5 PE, −0.14 at 7.5 PE, ≈−0.05 at 5–10 PE), so any single kernel is wrong at some amplitude — kernels matching the 1-PE response leave a ~0.2·peak plateau on 3–8 PE pulses; shallow-tail kernels only "win" the tail metric by absorbing mean late light. Recommend **masking this channel in the C++ chain** (top membrane is noisy anyway); if kept, PE from it carries an amplitude-dependent bias |
 | membrane-top group (20xx, x>0) | systematically noisier (RMS 5–10 vs 2–3 bottom) |
 | ch1050/1051 (OpDet 7), ch1070/1071 (OpDet 9) | noisy cathode pairs (RMS 3.2/12.6, 3.2/2.1); ch1051 1-PE mode (82) is a threshold artifact |
 | ch3010 (OpDet 14) | near-dead PMT (matches hand-over note); "template" is garbage, exclude |
@@ -308,7 +308,9 @@ python3 pd_plot/spe_longtail.py 0       # cathode bright-pulse long-window media
 
 - Cathode PE-scale anchor (§5). (The former "AC-recovery tail beyond 6.4 µs" item is
   resolved: it was the harvest baseline bias, repaired in §2 step 4 — no undershoot exists.)
-- ch3020 / ch2020 template re-selection; ch2010 needs a quieter run or longer statistics.
+- ch3020 template re-selection; ch2010 needs a quieter run or longer statistics. (ch2020
+  re-selection was attempted and is a dead end — amplitude-nonlinear undershoot, §6; decide
+  mask-vs-keep at chain assembly.)
 - Cross-run stability: repeat on 039253 / 039349 before freezing `pdvd-spe-templates.json`.
 - SiPM vendor (FBK vs HPK) per module still unknown — now moot for the template choice
   (data-driven), but useful metadata.
