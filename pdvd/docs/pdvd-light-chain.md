@@ -81,6 +81,58 @@ flash/docs/design.md §3.4 schema with nchan=40: `opflash` f8 [nflash, 1+40]
 [nflash, 8], `ophits` [nhit, 9] (channel = DAPHNE opch, flash_id filled).
 Downstream: `FlashTensorToOpticalPCs{nchan: 40}` → QLMatching (future).
 
+## Flash multiplicity & dead-PMT handling (QLMatching prep)
+
+Two questions for feeding QLMatching a small, clean flash set. Study script
+`pd_plot/flash_multiplicity.py`, figure `docs/pds/flash_multiplicity.png`, over
+the 205 reconstructed events (runs 039252/039253/039349).
+
+![PDVD flash multiplicity: flashes/event vs peak per QL drift window, inter-flash
+time gaps, PE-vs-nPD density, and the PE-floor count-limiting lever](pds/flash_multiplicity.png)
+
+**1. Flash quality cut — already present and correctly scaled; not the count
+limiter.** `OpFlashFinder` already applies `min_fired_pds 2`, `min_total_pe 10`,
+`min_fired_pe 1.0` — the ¼-rescale of PDHD's `5/20/1.0` on 160 PDs (relative to
+36 live OpDets it is if anything slightly *stricter*: 2/36 ≈ 5.6 % of PDs vs
+PDHD 5/160 = 3.1 %). Keep it as a loose quality floor. Tightening it does **not**
+solve the QL count problem (below) and would risk dropping real dim flashes that
+QL ranking handles — so it is left unchanged, mirroring PDHD (which also keeps a
+loose finder cut and limits at match time).
+
+**The count problem is real but it is a QLMatching-time job, not a finder-cut
+job.** A PDVD light "event" is the **~6 ms cathode full-stream readout**
+(468864 × 16 ns), holding a mean of **384 flashes** (331–457). Those are
+**genuine, well-separated cosmic flashes**, not scintillation fragments:
+inter-flash gaps have median **11 µs** and only ~7 % fall within 2 µs (≈ one
+scintillation). The QL-relevant number is the peak flashes in one **3000 µs
+charge drift window** (6000 ticks × 0.5 µs), which is **~217** (max 259) — large,
+and of the same order as PDHD, whose light events have the identical multi-ms
+multi-flash structure. The count is reduced
+not by the finder cut but by a **match-side PE floor** (PDHD `flash_minPE = 50`)
+plus **per-event time-windowing** and the matching **ranking/prefilters** — all
+of which live in QLMatching. On PDVD a `flash_minPE` analog scaled by ¼ ≈ **12–15
+PE** would take ~217 → ~145–171 per window (PE≥50 → ~89); the exact value must be
+tuned against matching purity once QL is wired, since the cathode-mounted,
+double-sided X-ARAPUCAs put PDVD on a different absolute-PE scale
+(`pdvd-spe-template.md` §5). **Also note `offset_us = 0.0`** in the PDVD opflash
+(vs PDHD's 249.84): QL uses the trigger-relative `get_time()`, so the light↔charge
+offset must be set when QL is wired (see Caveats).
+
+**2. Dead-PMT self-identification — PDVD has none yet; deferred to QL.** PDHD
+self-identifies run-dependent dead PMTs *per event* inside QLMatching
+(`QLMatching::compute_dynamic_opdet_mask`, the `auto_mask` knobs): a channel that
+stays silent while its nearest live neighbours are bright is masked. **PDVD runs
+no QLMatching, so nothing consumes such a mask today** — implementing it now would
+be a stage with no consumer. PDVD currently handles dead PDs only *statically*:
+the four known-dead OpDets **24/27/28/34** are omitted from `pdvd-opdet-geom.json`
+/ `pdvd-opch-map.json` (36 live of 40), and `OpRoi.veto_channels` is an unused
+per-channel hook. When PDVD QLMatching is created, enable `auto_mask` with
+PDVD-scaled parameters (PDHD uses `pe_low 10`, `pe_bright 50`, `neighbors 4`,
+`min_contrast 1`, `min_flash 3`): with only 36 widely-spaced cathode/membrane PDs,
+use **fewer neighbours (~2–3)** and a `pe_bright` rescaled to PDVD's per-flash
+brightness. The (Y,Z) geometry the algorithm needs is already in
+`pdvd-opdet-geom.json`.
+
 ## Caveats / next
 
 - **`offset_us = 0`**: the light↔charge time association must be calibrated at

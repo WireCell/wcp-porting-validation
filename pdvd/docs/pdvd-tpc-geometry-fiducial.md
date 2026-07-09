@@ -235,6 +235,16 @@ For when QLMatching is wired into PDVD, the geometry inputs are:
   side; y ≈ ±336.4 cm, z ≈ [0, 300] cm.
 - Drift speed: **1.568 mm/µs** for data reco (sim MC is 1.473).
 
+Flash-side inputs (from the light-chain multiplicity study, `pdvd-light-chain.md`
+§ "Flash multiplicity"): a PDVD light event is the ~6 ms readout with ~384 genuine
+cosmic flashes, ~**217 per 3000 µs drift window** — so QL needs a match-side
+`flash_minPE` floor (~**12–15 PE**, ¼ of PDHD's 50, tune vs purity), per-event
+flash **time-windowing**, and `offset_us` set (PDVD opflash carries 0.0 vs PDHD
+249.84; QL uses the trigger-relative `get_time()`). Enable per-event dead-PD
+self-identification `auto_mask` here too (PDVD has none today — only the static
+drop of dead OpDets 24/27/28/34); scale PDHD's `neighbors 4` down to ~2–3 for the
+36 widely-spaced cathode/membrane PDs.
+
 Suggested starting `cathode_ext1 / cathode_ext2` **by analogy to PDHD (1.5 / −3.0
 cm)** — but flagged **provisional**: PDHD's values were tuned to its ±1.75 cm
 cathode-crossing residual at its calibrated velocity, and PDVD's velocity /
@@ -260,6 +270,11 @@ at 3.0 cm (§3), so tune the cushions against that edge.
   bundle's light model must sum contributions from both drift volumes.
 - No PDVD-specific `cathode_fiducial` (CPA structure-exclusion) exists; SBND-only
   today.
+- **Flash count & dead-PD self-id are QL-time work** (`pdvd-light-chain.md`): the
+  finder quality cut (2/10) is correctly scaled but is not the count limiter; the
+  ~217 flashes/drift-window are cut down by a `flash_minPE` floor + time-windowing
+  + ranking, and run-dependent dead PDs by `auto_mask` — none of which exist until
+  PDVD QLMatching is wired.
 
 ## References (read-only sources)
 
