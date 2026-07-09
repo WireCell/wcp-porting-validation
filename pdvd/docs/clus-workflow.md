@@ -285,9 +285,17 @@ D.)  A shield grid (`apa_plane`, ~5.7 cm toward the drift volume) is a field gri
 the charge passes *through*, not a sensing plane.  `time2drift` anchors at the W
 collection layer, `xorig = 341.55 cm` (confirmed by the data: the per-volume
 anode-most reach is 341.6 cm), so the anode reference is unambiguous — the U-vs-W
-choice moves D by 0.04 cm, negligible.  The thick membrane cathode (`cpa_thick =
-50.8 mm`, centred at x=0) has its drift-facing **surface** at |x| = 2.54 cm.  So
-**D = 341.55 − 2.54 = 339.01 cm**.
+choice moves D by 0.04 cm, negligible.  The membrane cathode (`cpa_thick`, centred
+at x=0) has its drift-facing **surface** at |x| = 0.5·`cpa_thick`.  So
+**D = 341.55 − 0.5·cpa_thick**.
+
+> **Update 2026-07 — cathode corrected.**  `cpa_thick` was the legacy 50.8 mm
+> (surface 2.54 cm ⇒ D = 339.01 cm), a DocDB 203 / ProtoDUNE-SP copy that no PDVD
+> GDML uses.  Corrected to the GDML `CathodeBlock` **60 mm** (surface 3.0 cm ⇒
+> **D = 338.55 cm** ≈ GDML `CRMActive` 338.5).  Since v ∝ D, `drift_speed`
+> rescales **1.57 → 1.568 mm/µs**.  The narrative below is the original 339.01-cm
+> calibration; multiply its v by 338.55/339.01 for the corrected values.  See
+> `pdvd/docs/pdvd-tpc-geometry-fiducial.md`.
 
 **Data.**  `pdvd/work/<run>_<evt>/mabc-all-apa.zip` → `0-clustering-group0123.json`
 (anodes 0-3, anode at −x) and `…-group4567.json` (anodes 4-7, anode at +x); 142
@@ -331,8 +339,28 @@ closes.
 
 ![A→C crosser x-span distribution (re-clustered @ 1.57; pile-up at D)](../drift_calib/drift_velocity_calib.png)
 
-**Config change.**  `drift_speed` set to **1.57 mm/µs** (within the ~0.3–0.5 %
-estimator/statistics spread of the robust value):
+**Per-TPC cross-check (top vs bottom).**  The two drift volumes are calibrated
+separately — group0123 (bottom, anodes 0–3) and group4567 (top, anodes 4–7).  At
+the *loose* cathode window `[-5,25] cm` they appear to disagree (bottom v=1.561 vs
+top v=1.495), but this is a **cross-cathode overshoot artifact, not a real
+asymmetry**: the top full-crosser sample is contaminated by tracks overshooting the
+cathode by ~11 cm median (cross-TPC merges) that inflate the span.  Tightening the
+cathode window collapses the difference — at `[-5,8] cm` (crossers that actually
+stop at the cathode) **both TPCs give v=1.561**, both span histograms peaking at
+338–341 cm.  The clean-crosser mode (span ≈339 cm → v=1.57·D/339=**1.568**) sits
+right at the adopted config value, so the loose-window 1.561 was merely dragged
+~0.5 % low by that tail.  There is **no genuine top/bottom velocity difference**
+(as expected — same LAr, same drift field).  A useful invariant: the x-span calib
+*is* the maximal-drift-time method, since `time2drift` is a plain linear tick→x map
+(`clus.jsonnet` `x=xorig+dirx*(t_slice+time_offset)*drift_speed`), so
+`v_true = v_reco·D/S = D/Δt` with `v_reco` cancelling; the max drift time
+`Δt = D/v ≈ 2159 µs ≈ 4318 ticks` at 0.5 µs/tick sits well inside the 6000-tick
+readout.  (Reproduce: `--cath-hi 8`, or see the two-window comparison below.)
+
+![top vs bottom TPC span, loose vs clean cathode window](../drift_calib/drift_velocity_tpc_split.png)
+
+**Config change.**  `drift_speed` set to **1.568 mm/µs** (corrected D=338.55;
+originally 1.57 at D=339.01, within the ~0.3–0.5 % estimator/statistics spread):
 
 * `cfg/pgrapher/experiment/protodunevd/params.jsonnet` — PDVD-only `lar.drift_speed`
   override (feeds `img.jsonnet` dump, sim drift via `params.lar.drift_speed`).

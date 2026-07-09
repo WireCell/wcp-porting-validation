@@ -1,0 +1,286 @@
+{
+ "comment": "PDVD v4 GDML volOpDetSensitive_* world positions [mm], TGeo traversal order (NOT the LArSoft OpDet channel order -- see extract_photlib.py for the channel assignment)",
+ "gdml": "/cvmfs/dune.opensciencegrid.org/products/dune/dunecore/v10_05_00d00/gdml/protodunevd_v4_refactored.gdml",
+ "opdets": [
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": -4053.0,
+   "z": 2177.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": -4053.0,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 4053.0,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 4053.0,
+   "z": 2177.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": 3536.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": 3536.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": 3536.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": 4556.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": 4556.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": 4556.5
+  },
+  {
+   "node": "volOpDetSensitive_CoatedPMT",
+   "volume": "pmtCoatVol",
+   "x": -2059.0,
+   "y": 2210.0,
+   "z": 3809.88
+  },
+  {
+   "node": "volOpDetSensitive_CoatedPMT",
+   "volume": "pmtCoatVol",
+   "x": -2817.0,
+   "y": 2210.0,
+   "z": 3809.88
+  },
+  {
+   "node": "volOpDetSensitive_CoatedPMT",
+   "volume": "pmtCoatVol",
+   "x": -2059.0,
+   "y": -2210.0,
+   "z": 3809.88
+  },
+  {
+   "node": "volOpDetSensitive_CoatedPMT",
+   "volume": "pmtCoatVol",
+   "x": -2817.0,
+   "y": -2210.0,
+   "z": 3809.88
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": -543.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": -543.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": -543.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": -1563.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": -1563.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": -1563.5
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -2059.0,
+   "y": 2210.0,
+   "z": -681.24
+  },
+  {
+   "node": "volOpDetSensitive_FoilPMT",
+   "volume": "pmtFoilVol",
+   "x": -2817.0,
+   "y": 2210.0,
+   "z": -681.24
+  },
+  {
+   "node": "volOpDetSensitive_CoatedPMT",
+   "volume": "pmtCoatVol",
+   "x": -2059.0,
+   "y": -2210.0,
+   "z": -816.88
+  },
+  {
+   "node": "volOpDetSensitive_CoatedPMT",
+   "volume": "pmtCoatVol",
+   "x": -2817.0,
+   "y": -2210.0,
+   "z": -816.88
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_0-0-0_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_0-0-0",
+   "x": 0.0,
+   "y": -2978.5,
+   "z": 1872.75
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_0-0-1_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_0-0-1",
+   "x": 0.0,
+   "y": -2056.5,
+   "z": 407.75
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_0-0-2_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_0-0-2",
+   "x": 0.0,
+   "y": -1313.5,
+   "z": 2585.25
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_0-0-3_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_0-0-3",
+   "x": 0.0,
+   "y": -391.5,
+   "z": 1120.25
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_1-0-0_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_1-0-0",
+   "x": 0.0,
+   "y": 391.5,
+   "z": 1872.75
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_1-0-1_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_1-0-1",
+   "x": 0.0,
+   "y": 1313.5,
+   "z": 407.75
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_1-0-2_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_1-0-2",
+   "x": 0.0,
+   "y": 2056.5,
+   "z": 2585.25
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaDouble_1-0-3_0",
+   "volume": "volOpDetSensitive_ArapucaDouble_1-0-3",
+   "x": 0.0,
+   "y": 2056.5,
+   "z": 1120.25
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-0_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-0",
+   "x": 3021.8,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-1_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-1",
+   "x": 2263.8,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-2_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-2",
+   "x": -2830.3,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-3_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-3",
+   "x": -2072.3,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-4_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-4",
+   "x": 3021.8,
+   "y": 4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-5_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-5",
+   "x": 2263.8,
+   "y": 4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-6_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-6",
+   "x": -2830.3,
+   "y": 4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_ArapucaLat_0-7_0",
+   "volume": "volOpDetSensitive_ArapucaLat_0-7",
+   "x": -2072.3,
+   "y": 4176.1,
+   "z": 1496.5
+  }
+ ]
+}

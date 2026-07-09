@@ -20,9 +20,13 @@ protodunevd-wires-larsoft-v5 store:
     ident 2) = 341.55 cm; the anode reference is unambiguous (U-vs-W moves D by
     0.04 cm).  A shield grid (apa_plane, ~5.7 cm toward the drift) is a field grid
     the charge passes THROUGH, not a sensing plane.
-  * Thick membrane cathode: cpa_thick = 50.8 mm, centered at x=0, so the
-    drift-facing cathode SURFACE is at |x| = 2.54 cm.
-  * D = |xorig| - |cathode surface| = 341.55 - 2.54 = 339.01 cm.
+  * Membrane cathode: cpa_thick = 6.0 cm (GDML CathodeBlock; corrected 2026-07
+    from the legacy 50.8 mm = DocDB 203 / ProtoDUNE-SP nominal, which no PDVD GDML
+    uses -- see pdvd/docs/pdvd-tpc-geometry-fiducial.md), centered at x=0, so the
+    drift-facing cathode SURFACE is at |x| = 3.0 cm.
+  * D = |xorig| - |cathode surface| = 341.55 - 3.0 = 338.55 cm (~ the GDML
+    CRMActive active drift depth 338.5; the 0.05 cm is the collection-plane vs
+    active-volume-edge offset).
 
 PDVD caution (per request): induction-plane signal-processing failures leave GAPS
 in prolonged (drift-aligned) tracks.  An *interior* gap does not change a cluster's
@@ -52,9 +56,9 @@ V_RECO_DEFAULT = 1.6  # mm/us
 
 # Geometry (cm) -- params.jsonnet + protodunevd-wires-larsoft-v5 store.
 X_W = 341.55              # W collection plane (xorig in time2drift; = apa_cpa)
-CPA_THICK = 5.08          # thick membrane cathode (50.8 mm)
-X_CATH_SURF = 0.5 * CPA_THICK   # cathode drift-facing surface |x| = 2.54
-D = X_W - X_CATH_SURF     # 339.01 cm  (collection -> cathode surface)
+CPA_THICK = 6.0           # GDML CathodeBlock (60 mm); was legacy 50.8 (DocDB 203)
+X_CATH_SURF = 0.5 * CPA_THICK   # cathode drift-facing surface |x| = 3.0
+D = X_W - X_CATH_SURF     # 338.55 cm ~ GDML CRMActive 338.5 (collection -> cathode surface)
 
 
 def load_groups(zip_path):

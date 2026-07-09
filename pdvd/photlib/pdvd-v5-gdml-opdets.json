@@ -1,0 +1,286 @@
+{
+ "comment": "PDVD v5 GDML volOpDetSensitive_* world positions [mm], TGeo traversal order (NOT the LArSoft OpDet channel order -- see extract_photlib.py for the channel assignment)",
+ "gdml": "/cvmfs/dune.opensciencegrid.org/products/dune/dunecore/v10_21_02d00/gdml/protodunevd_v5_ggd.gdml",
+ "opdets": [
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": -2131.5,
+   "z": 1120.25
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": -1279.0,
+   "z": 407.75
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": -2131.5,
+   "z": 2585.25
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": -466.5,
+   "z": 1872.75
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": 426.0,
+   "z": 1120.25
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": 2091.0,
+   "z": 407.75
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": 1238.5,
+   "z": 2585.25
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCADoubleWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCADoubleWindow",
+   "x": -0.0,
+   "y": 2903.5,
+   "z": 1872.75
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": 3056.0,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": 2290.0,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": -2777.0,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": -2011.0,
+   "y": -4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": 3056.0,
+   "y": 4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": 2290.0,
+   "y": 4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": -2777.0,
+   "y": 4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_XARAPUCAWindow_0",
+   "volume": "volOpDetSensitive_XARAPUCAWindow",
+   "x": -2011.0,
+   "y": 4176.1,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": -4053.0,
+   "z": 2177.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": -4053.0,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 4053.0,
+   "z": 1496.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 4053.0,
+   "z": 2177.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": 3536.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": 3536.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": 3536.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": 4556.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": 4556.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": 4556.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtCoatVol_0",
+   "volume": "volOpDetSensitive_pmtCoatVol",
+   "x": -2059.0,
+   "y": 2210.0,
+   "z": 4089.88
+  },
+  {
+   "node": "volOpDetSensitive_pmtCoatVol_0",
+   "volume": "volOpDetSensitive_pmtCoatVol",
+   "x": -2817.0,
+   "y": 2210.0,
+   "z": 4089.88
+  },
+  {
+   "node": "volOpDetSensitive_pmtCoatVol_0",
+   "volume": "volOpDetSensitive_pmtCoatVol",
+   "x": -2059.0,
+   "y": -2210.0,
+   "z": 4089.88
+  },
+  {
+   "node": "volOpDetSensitive_pmtCoatVol_0",
+   "volume": "volOpDetSensitive_pmtCoatVol",
+   "x": -2817.0,
+   "y": -2210.0,
+   "z": 4089.88
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": -543.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": -543.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": -543.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 1700.0,
+   "z": -1563.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": 0.0,
+   "z": -1563.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -3364.74,
+   "y": -1700.0,
+   "z": -1563.5
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -2059.0,
+   "y": 2560.0,
+   "z": -961.24
+  },
+  {
+   "node": "volOpDetSensitive_pmtFoilVol_0",
+   "volume": "volOpDetSensitive_pmtFoilVol",
+   "x": -2817.0,
+   "y": 2560.0,
+   "z": -961.24
+  },
+  {
+   "node": "volOpDetSensitive_pmtCoatVol_0",
+   "volume": "volOpDetSensitive_pmtCoatVol",
+   "x": -2059.0,
+   "y": -2210.0,
+   "z": -1096.88
+  },
+  {
+   "node": "volOpDetSensitive_pmtCoatVol_0",
+   "volume": "volOpDetSensitive_pmtCoatVol",
+   "x": -2817.0,
+   "y": -2210.0,
+   "z": -1096.88
+  }
+ ]
+}
