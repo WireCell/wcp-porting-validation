@@ -100,6 +100,17 @@ Downstream: `FlashTensorToOpticalPCs{nchan: 40}` → QLMatching (future).
 - Watch the 468800→468864 zero-pad step: no spurious end-of-record hits seen in
   the 120-event batch (OpRoi absorbs the step), but it is a known artifact site.
 
+## Performance
+
+Perf round 1 (2026-07-08, `flash/docs/light-perf-round1.md`): wall
+2.4 → 1.7 s/event, peak RSS 0.63 → 0.35 GB (lazy per-channel template
+spectra; real-FFT knob `use_real_dft` ON in the protodunevd cfg —
+decon re-validated ≤ 1e-6 vs the python mirror, flash output identical
+to round-off).  Drivers carry a `/proc` RSS sampler
+(`PDVD_RESMON=off` to disable; `light_resource_*.txt` /
+`light_rss_*.csv` in each workdir); `profile_light.sh` CPU/heap-profiles
+one event to scratch.
+
 ## Reproduce
 
 ```bash
