@@ -37,7 +37,12 @@ function(
     driftSpeed     = 1.563,
     // PR visitors to run, by name (see clus_pr's cm_by_name in
     // cfg/pgrapher/experiment/sbnd/clus.jsonnet). [] = pass-through (identity gate).
+    // Full STM demo: ['switch_scope','steiner','fiducialutils','tagger_check_stm'].
     pipeline_names = [],
+    // TrackFitting parameter JSON (absolute path; plain ifstream, not
+    // WIRECELL_PATH-resolved).  Required when tagger_check_stm is in the
+    // pipeline -- the C++ preset defaults are uBooNE-hard-coded.
+    trackfitting_config = '',
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -70,9 +75,14 @@ function(
         eventNo=event,
         reality=reality,
     );
+    // dE/dx + range LinterpFunctions (detector-agnostic NIST/PDG tables).
+    local pds = (import '../particle_dataset.jsonnet')();
     local pr = clus_maker.pr(anodes, dump=true,
                              pipeline_names=pipeline_names,
-                             tensor_outname=save_tensors);
+                             tensor_outname=save_tensors,
+                             trackfitting_config_file=trackfitting_config,
+                             particle_dataset=pds.particle_dataset,
+                             extra_uses=pds.all);
 
     local graph = g.intern(
         innodes=[source],

@@ -39,6 +39,9 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             pipeline = round-trip identity gate). Names resolve in clus_pr's
             cm_by_name (cfg/pgrapher/experiment/sbnd/clus.jsonnet),
             e.g. -p switch_scope
+  -stm      shorthand for the STM tagger chain:
+            -p switch_scope,steiner,fiducialutils,tagger_check_stm
+            (uses sbnd_track_fitting.json; grep TaggerCheckSTM in the log)
 
 Requires: run_ql_evt.sh <mode> -save-pctree <idx> first
           (work/ql_evt<ID>/pctree-evt<ID>.tar.gz).
@@ -56,6 +59,7 @@ while [ $# -gt 0 ]; do
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -p) PIPELINE="$2"; shift 2 ;;
+        -stm|--stm) PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_stm"; shift ;;
         -p*) PIPELINE="${1#-p}"; shift ;;
         *) _args+=("$1"); shift ;;
     esac
@@ -115,6 +119,7 @@ process_event() {
         --tla-code "DL=$DL" --tla-code "DT=$DT" \
         --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
         --tla-code "pipeline_names=$PIPELINE_CODE" \
+        --tla-str  "trackfitting_config=$SBND_DIR/sbnd_track_fitting.json" \
         --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $PRDIR/mabc-pr.zip"

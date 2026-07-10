@@ -247,6 +247,46 @@ Success criteria: PR job completes on the 2-TPC geometry for one sim + one
 data event; STM/TGM flags appear on plausible clusters (log + Bee eyeball of
 stopped-muon candidates); the existing Q/L chain outputs remain untouched.
 
+**Done (2026-07-10).** `./run_pr_evt.sh <mode> -stm <idx>` runs
+`switch_scope → steiner (retiler = ImproveCluster_2, SBND stepped samplers)
+→ fiducialutils → tagger_check_stm` on the loaded tarball, with
+`sbnd_track_fitting.json` (§6.2) and the SBND `BoxRecombination`
+(E-field 0.5 kV/cm) + the shared `particle_dataset.jsonnet`.  Ran on sim
+evt12 + data evt686/1258/1302/1346/1698/1720 — completes on the 2-TPC
+geometry everywhere, every matched main cluster (up to ~13/event) gets its
+own STM/TGM evaluation.
+
+**First SBND STM tag: data evt1346 cluster 5** — a ~145 cm track entering
+at the TPC1 anode boundary (x = 201.4 cm, outside the FV) and terminating
+mid-detector at (105, 29, 281) cm; the full forward/backward dQ/dx
+(Bragg-peak) fit ran (~0.5 s).  Small mains exit early as fully-contained
+("Mid Point: A") or lacking a steiner graph (steiner warns and skips
+clusters yielding < 2 terminals — graceful).  `grep "TaggerCheckSTM:
+cluster" work/pr_evt<ID>/wct_pr_evt<ID>.log` shows the per-main verdicts.
+
+Three toolkit changes were needed (all default-preserving; uBooNE qlport
+2-event smoke byte-identical, SBND Q/L zip hashes unchanged):
+1. `TaggerCheckSTM::visit` now loops over **all** flagged main clusters,
+   associating each with the sub-clusters sharing its `matched_flash_gid`
+   (absent gid → all associated clusters, i.e. the uBooNE single-bundle
+   behavior).  Also completed the removal of the `if(false)` dev-stub block
+   that referenced the old single-main variable.
+2. `CreateSteinerGraph` gained `require_beam_flash` (default true =
+   uBooNE-only behavior).  SBND sets it false: QLMatching sets
+   `main/associated_cluster`, never uBooNE's WCP-derived `beam_flash`, so
+   with the default the steiner stage silently processed **nothing** —
+   the flag-provenance gotcha materialized.
+3. `ImproveCluster_1::remove_bad_blobs` no longer `.at()`-crashes when a
+   cathode-crossing (two-APA) cluster retiles to a shadow cluster with
+   blobs on only one APA (`std::out_of_range` on the (apa,face) lookup —
+   a topology uBooNE could never produce).
+
+Observation to revisit: TGM (through-going muon) fired on none of the ~50
+mains scanned.  Likely real: the Q/L containment prefilter
+(`require_containment`/`reject_overpred`) biases matched bundles against
+full crossers, and TGM needs both boundary ends outside the FV.  Check
+against hand-scanned crossers once a labeled sample exists.
+
 Known 2-TPC risk points inside TaggerCheckSTM (audit if results look wrong):
 - `dist_to_anode` falls back to `|x|` for points outside all volumes
   ("preserves UBooNE behaviour") — wrong side for TPC0 (−x drift) corners.
@@ -383,5 +423,5 @@ SBND MC route documented in `PR_integration.md` §7.
 | 0 | This document (format spec + roadmap) | DONE 2026-07-10 | (this commit) |
 | 1 | Save: real `TensorFileSink` after all-APA MABC (`-save-pctree`) | DONE 2026-07-10 (sim evt12 + data evt1258, 10/10 inventory, Bee zips byte-identical) | toolkit + validation, see below |
 | 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | DONE 2026-07-10 (tar members identical; Bee y/z/q/id exact, x within flash-merge bound) | toolkit + validation, see below |
-| 3 | STM tagger on loaded sim + data events | — | |
+| 3 | STM tagger on loaded sim + data events | DONE 2026-07-10 (7 events; first STM tag: data evt1346 cluster 5, anode-entering stopped-muon candidate) | toolkit + validation, see below |
 | 4 | Roadmap finalized for neutrino PR / BDT stages | — | |
