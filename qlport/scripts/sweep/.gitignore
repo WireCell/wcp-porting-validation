@@ -1,0 +1,7 @@
+# Sweep run directories are bulky scratch output (per-event zips, root files,
+# logs, profiles). Only the per-label summary records are kept in git.
+*
+!.gitignore
+!*/
+!results.tsv
+!hashes.txt
