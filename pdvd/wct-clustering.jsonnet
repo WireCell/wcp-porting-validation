@@ -48,10 +48,14 @@ function(
     // Dump the optical "op" bee instance (measured flash PE + Q/L predicted PE
     // per matched cluster) from the all-TPC MABC.  Needs do_qlmatch.
     save_opflash = false,
-    // Per-event light-vs-charge time-base offset in MICROSECONDS (calibrated
-    // constant + opflash metadata offset_us; see run_clus_evt.sh).  Applied
-    // DOWNSTREAM (matching geometry + T0Correction x_t0cor).  Default 0.
-    trigger_offset_us = 0,
+    // Per-event light-vs-charge time-base offsets in MICROSECONDS, PER CRATE
+    // (opflash metadata offset_bot_us/offset_top_us + the per-run residual;
+    // see run_clus_evt.sh).  The BDE (bottom volume, anodes 0-3) and TDE (top
+    // volume, anodes 4-7) charge windows open up to ~32 us apart, hence two
+    // values.  Applied DOWNSTREAM (matching geometry + T0Correction x_t0cor).
+    // Defaults 0.
+    trigger_offset_bot_us = 0,
+    trigger_offset_top_us = 0,
     // Post-resample readout-window length (ticks) for the Q/L window-truncation
     // flag.  run_clus_evt.sh reads the real value from the SP frame (10000).
     readout_window_ticks = 10000,
@@ -76,11 +80,12 @@ local cluster_source(fname) = g.pnode({
     }
 }, nin=0, nout=1, uses=anodes);
 
-local trigger_offset = trigger_offset_us * wc.us;
+local trigger_offset_bot = trigger_offset_bot_us * wc.us;
+local trigger_offset_top = trigger_offset_top_us * wc.us;
 local clus = import 'pgrapher/experiment/protodunevd/clus.jsonnet';
 local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event, stepped_center_fallback=stepped_center_fallback,
                         time_offset=time_offset, relax_containment_filter=relax_containment_filter,
-                        trigger_offset=trigger_offset);
+                        trigger_offset=trigger_offset_bot, trigger_offset_top=trigger_offset_top);
 
 // Drift-side groups: anodes 0-3 (bottom drift) and anodes 4-7 (top drift).
 // With a subset anode_indices only non-empty groups are built and the final
@@ -125,8 +130,9 @@ local clus_all_tpc = if do_qlmatch
 // emits one merged tree (-> premerged clus_all_tpc).  PDVD imaging face is 0 for
 // both drift sides (the two faces of a CRP share x-bounds).
 local qlm = import 'pgrapher/experiment/protodunevd/qlmatching.jsonnet';
-local qlm_maker = qlm(params, trigger_offset, readout_window_ticks, light_model,
-                      ql_require_containment, ql_flash_minpe);
+local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_model,
+                      ql_require_containment, ql_flash_minpe,
+                      trigger_offsets=[trigger_offset_bot, trigger_offset_top]);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

@@ -14,9 +14,16 @@
 #     clobber the production archives.
 #   Output: work/<RUN_PADDED>_light<EVENT><SUFFIX>/opflash_pdvd-wct.tar.gz
 #
-# The light<->charge offset is not yet calibrated: offset_us=0 is
-# stamped (provisional; flash times are relative to the event's earliest
-# light record).
+# Per-event light<->charge offsets are measured from the rawwf trigoff
+# tree (per CRATE: the TDE/BDE charge windows open up to ~32 us apart,
+# each jittering ~+-15 us vs the trigger while the light full-stream
+# window is trigger-locked to +-0.3 us) and stamped into the archive
+# metadata as offset_bot_us/offset_top_us:
+#     offset = chain_light_t0 - charge_window_start   (us, negative)
+# where chain_light_t0 replicates PDVDOpWaveformSource's tick origin
+# (min over ALL records of ts - 64 samples for self-trigger snippets).
+# ADD the offset to a flash time to land on that crate's charge axis.
+# The legacy offset_us key stays 0 (inert).
 
 set -e
 PDVD_DIR=$(cd "$(dirname "$0")" && pwd)
@@ -58,11 +65,53 @@ echo "== run $RUN event $EVENT"
 echo "   input:  $RAW_FILE"
 echo "   output: $WORKDIR/opflash_pdvd-wct.tar.gz"
 
+# Per-crate light<->charge offsets from the trigoff tree in the SAME rawwf
+# file (see header comment).  Hard error if the tree/event row is missing --
+# archives without offsets are useless for Q/L matching.
+OFFSETS=$(python3 - "$RAW_FILE" "$RUN" "$EVENT" <<'PY'
+import sys, uproot, numpy as np
+fn, run, event = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+PERIOD_US = (1 << 40) * 0.016          # 40-bit DTS rollover period in us (~17592.19 s)
+def wrap(d):                           # difference -> [-P/2, P/2)
+    return (d + PERIOD_US / 2) % PERIOD_US - PERIOD_US / 2
+f = uproot.open(fn)
+try:
+    to = f["trigoff/trigger_offset"].arrays(library="np")
+except Exception:
+    sys.exit("ERROR: no trigoff/trigger_offset tree in %s" % fn)
+sel = (to["run"] == run) & (to["event"] == event)
+if not sel.any():
+    sys.exit("ERROR: no trigoff row for run %d event %d in %s" % (run, event, fn))
+i = int(np.flatnonzero(sel)[0])
+# Chain tick origin: replicate PDVDOpWaveformSource exactly -- min over ALL
+# records of round(ts*62.5) - 64 ticks for self-trigger snippets (nsamp<=1024).
+try:
+    rw = f["rawdump/raw_waveform"]
+except Exception:
+    rw = f["raw_waveform"]
+a = rw.arrays(["run", "event", "nsamp", "timestamp"], library="np")
+m = (a["run"] == run) & (a["event"] == event)
+ticks = np.round(a["timestamp"][m] * 62.5) - np.where(a["nsamp"][m] <= 1024, 64, 0)
+t0_us = ticks.min() * 0.016
+d_tree = t0_us - float(to["light_t0_us"][i])   # 0 or -1.024 (snippet earliest)
+if not -2.0 < d_tree <= 0.0:
+    sys.exit("ERROR: chain t0 %.3f vs tree light_t0 %.3f (d=%.3f us)"
+             % (t0_us, to["light_t0_us"][i], d_tree))
+bot = wrap(t0_us - float(to["charge_bde_us"][i]))
+top = wrap(t0_us - float(to["charge_tde_us"][i]))
+print("%.6f %.6f %.3f" % (bot, top, d_tree))
+PY
+)
+read -r OFFSET_BOT_US OFFSET_TOP_US T0_VS_TREE <<< "$OFFSETS"
+echo "   offsets (us, add to flash time): bot=$OFFSET_BOT_US top=$OFFSET_TOP_US (chain t0 - tree light_t0 = $T0_VS_TREE us)"
+
 wcsonnet \
     -A input_file="$RAW_FILE" \
     -A output_dir="$WORKDIR" \
     -S run="$RUN" \
     -S event="$EVENT" \
+    -S offset_bot_us="$OFFSET_BOT_US" \
+    -S offset_top_us="$OFFSET_TOP_US" \
     -o "$WORKDIR/.wct-light.json" \
     "$PDVD_DIR/wct-light-reco.jsonnet"
 

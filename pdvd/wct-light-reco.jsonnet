@@ -34,12 +34,18 @@ local flash = import 'pgrapher/experiment/protodunevd/flash.jsonnet';
 local FULLSTREAM_SAMPLES = 468864;
 
 function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
+         offset_bot_us=null, offset_top_us=null,
          cath_thresh=3.7, mem_thresh=4.0, pmt_thresh=2.2,
          cath_ped_sigma=0.75, sat_pad=1024)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
   local off_us = if std.type(offset_us) == 'string' then std.parseJson(offset_us) else offset_us;
+  // Per-crate light<->charge offsets from the rawwf trigoff tree (see
+  // run_light_evt.sh): chain_light_t0 - charge_{bde,tde}_window_start, us.
+  // Stamped verbatim into the archive metadata for downstream Q/L matching.
+  local off_bot_us = if std.type(offset_bot_us) == 'string' then std.parseJson(offset_bot_us) else offset_bot_us;
+  local off_top_us = if std.type(offset_top_us) == 'string' then std.parseJson(offset_top_us) else offset_top_us;
   local sat_pad_n = if std.type(sat_pad) == 'string' then std.parseInt(sat_pad) else sat_pad;
   local cath_th = if std.type(cath_thresh) == 'string' then std.parseJson(cath_thresh) else cath_thresh;
   local mem_th = if std.type(mem_thresh) == 'string' then std.parseJson(mem_thresh) else mem_thresh;
@@ -69,7 +75,9 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
 
   // --- merge OpHits and build flashes once over all 40 OpDets ---
   local merge = flash.ophit_merge(name='allpd', multiplicity=3, meta_port=0);
-  local opflash_finder = flash.opflash_finder(offset_us=off_us);
+  local opflash_finder = flash.opflash_finder(offset_us=off_us,
+                                              offset_bot_us=off_bot_us,
+                                              offset_top_us=off_top_us);
   local fl_sink = flash.opflash_sink('%s/opflash_pdvd-wct.tar.gz' % output_dir, name='allpd');
 
   local graph = g.intern(

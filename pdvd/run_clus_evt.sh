@@ -12,11 +12,16 @@
 #   -op / -noop     optical "op" bee instance (default ON when matching)
 #   PDVD_LIGHT_MODEL=semi        semi-analytical visibility backend (default library)
 #   PDVD_TRIGGER_OFFSET_US=<us>  override the light<->charge time-base offset
+#                                (BOTH crates; diagnostics only)
 #   PDVD_QL_DIAG=1               offset-calibration diagnostic mode: containment off,
-#                                flash_minPE=100, trigger offset forced 0
-# The light<->charge offset = opflash metadata offset_us + the per-run calibrated
-# constant from data/ql_trigger_offset.txt ("<run> <offset_us>" lines), unless
-# overridden by PDVD_TRIGGER_OFFSET_US.
+#                                flash_minPE=100, trigger offsets forced 0
+#   PDVD_QL_DIAG=2               same loosened knobs but KEEP the measured offsets
+#                                (closure validation)
+# The light<->charge offsets are PER CRATE and PER EVENT: opflash metadata
+# offset_bot_us (BDE, bottom volume) / offset_top_us (TDE, top volume), measured
+# from the rawwf trigoff tree by run_light_evt.sh, + the per-run residual from
+# data/ql_trigger_offset.txt ("<run> <offset_us>" lines, applied to both).
+# Legacy archives without the per-crate keys fall back to metadata offset_us.
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDVD_MAX_JOBS=N).  Events with missing inputs are skipped.
@@ -152,33 +157,42 @@ process_event() {
         QLMATCH_EVT=0
     fi
 
-    # Light<->charge time-base offset: opflash metadata offset_us (0 until the
-    # light chain bakes a calibrated value) + the per-run constant from
-    # data/ql_trigger_offset.txt; PDVD_TRIGGER_OFFSET_US overrides everything;
-    # the diagnostic mode (PDVD_QL_DIAG=1) forces 0.  Also guard that the
-    # opflash metadata 'event' matches the charge EVENT_NO.
-    TRIGGER_OFFSET_US=0
+    # Light<->charge time-base offsets, PER CRATE: opflash metadata
+    # offset_bot_us/offset_top_us (measured per event from the rawwf trigoff
+    # tree by run_light_evt.sh; the BDE/TDE charge windows open up to ~32 us
+    # apart) + the per-run residual constant from data/ql_trigger_offset.txt
+    # (applied to both).  Old archives without the per-crate keys fall back to
+    # the legacy scalar offset_us for both sides.  PDVD_TRIGGER_OFFSET_US
+    # overrides everything (both sides); the diagnostic mode (PDVD_QL_DIAG=1)
+    # forces 0.  Also guard that the opflash metadata 'event' matches the
+    # charge EVENT_NO.
+    TRIGGER_OFFSET_BOT_US=0
+    TRIGGER_OFFSET_TOP_US=0
     READOUT_NTICKS=10000
     if [ "$QLMATCH_EVT" = 1 ]; then
-        local META_OFF OPFLASH_EVENT
-        META_OFF=$(python3 - "$OPFLASH_TAR" <<'PY' || echo 0
+        local META_LINE META_BOT META_TOP OPFLASH_EVENT
+        META_LINE=$(python3 - "$OPFLASH_TAR" <<'PY' || echo "0 0"
 import sys, json, tarfile
-off = 0.0
+bot = top = 0.0
 evt = ""
 with tarfile.open(sys.argv[1]) as tf:
     for m in tf.getmembers():
         if m.name.endswith("_metadata.json"):
             md = json.loads(tf.extractfile(m).read())
-            if "offset_us" in md:
-                off = float(md["offset_us"])
+            if "offset_bot_us" in md and "offset_top_us" in md:
+                bot = float(md["offset_bot_us"])
+                top = float(md["offset_top_us"])
+            elif "offset_us" in md:
+                bot = top = float(md["offset_us"])
             if "event" in md:
                 evt = int(md["event"])
             break
-print(off, evt)
+print(bot, top, evt)
 PY
 )
-        OPFLASH_EVENT=$(echo "$META_OFF" | awk '{print $2}')
-        META_OFF=$(echo "$META_OFF" | awk '{print $1}')
+        META_BOT=$(echo "$META_LINE" | awk '{print $1}')
+        META_TOP=$(echo "$META_LINE" | awk '{print $2}')
+        OPFLASH_EVENT=$(echo "$META_LINE" | awk '{print $3}')
         if [ -n "$OPFLASH_EVENT" ] && [ "$OPFLASH_EVENT" != "$EVENT_NO" ]; then
             echo "ERROR: charge/light event mismatch: charge art_event=$EVENT_NO but opflash event=$OPFLASH_EVENT ($OPFLASH_TAR)." >&2
             return 1
@@ -188,14 +202,20 @@ PY
             RUN_OFF=$(awk -v r="$RUN_STRIPPED" '$1+0==r+0{print $2}' "$PDVD_DIR/data/ql_trigger_offset.txt" | head -1)
             RUN_OFF=${RUN_OFF:-0}
         fi
-        TRIGGER_OFFSET_US=$(python3 -c "print(${META_OFF:-0} + ${RUN_OFF:-0})")
+        TRIGGER_OFFSET_BOT_US=$(python3 -c "print(${META_BOT:-0} + ${RUN_OFF:-0})")
+        TRIGGER_OFFSET_TOP_US=$(python3 -c "print(${META_TOP:-0} + ${RUN_OFF:-0})")
         if [ -n "${PDVD_TRIGGER_OFFSET_US:-}" ]; then
-            TRIGGER_OFFSET_US="$PDVD_TRIGGER_OFFSET_US"
+            TRIGGER_OFFSET_BOT_US="$PDVD_TRIGGER_OFFSET_US"
+            TRIGGER_OFFSET_TOP_US="$PDVD_TRIGGER_OFFSET_US"
         fi
+        # PDVD_QL_DIAG=1: loosened knobs AND offsets forced 0 (the historical
+        # offset-hunt mode).  PDVD_QL_DIAG=2: loosened knobs but KEEP the
+        # measured offsets (closure validation against the =1 dumps).
         if [ "${PDVD_QL_DIAG:-0}" = 1 ]; then
-            TRIGGER_OFFSET_US=0
+            TRIGGER_OFFSET_BOT_US=0
+            TRIGGER_OFFSET_TOP_US=0
         fi
-        echo "Trigger offset: ${TRIGGER_OFFSET_US} us (metadata ${META_OFF} + run table ${RUN_OFF})"
+        echo "Trigger offsets: bot=${TRIGGER_OFFSET_BOT_US} top=${TRIGGER_OFFSET_TOP_US} us (metadata ${META_BOT}/${META_TOP} + run table ${RUN_OFF})"
 
         # Real readout window (post-resample SP frame length, 10000 ticks x
         # 0.5 us = 5 ms) for the window-truncation flag.
@@ -238,11 +258,11 @@ PY
     # periodic forced GC that is the crash vector.  Config is identical
     # (same pattern as imaging -P).
     local CFG_JSON="$WORKDIR/.wct-clus${TAG_SUFFIX}.json"
-    # Q/L diagnostic mode (offset calibration): containment off (meaningless
-    # until the time base is measured) + a higher PE floor to bound the
-    # un-pruned bundle count.
+    # Q/L diagnostic modes: containment off + a higher PE floor to bound the
+    # un-pruned bundle count.  =1 also forces offsets 0 (offset hunt);
+    # =2 keeps the measured offsets (closure validation).
     local QL_CONTAIN=true QL_MINPE=25
-    if [ "${PDVD_QL_DIAG:-0}" = 1 ]; then
+    if [ "${PDVD_QL_DIAG:-0}" = 1 ] || [ "${PDVD_QL_DIAG:-0}" = 2 ]; then
         QL_CONTAIN=false; QL_MINPE=100
     fi
     wcsonnet \
@@ -257,7 +277,8 @@ PY
         -A "opflash_input=${OPFLASH_TAR}" \
         -S "calib=$([ "$CALIB" = 1 ] && echo true || echo false)" \
         -S "save_opflash=$([ "$OPDUMP" = 1 ] && [ "$QLMATCH_EVT" = 1 ] && echo true || echo false)" \
-        -S "trigger_offset_us=${TRIGGER_OFFSET_US:-0}" \
+        -S "trigger_offset_bot_us=${TRIGGER_OFFSET_BOT_US:-0}" \
+        -S "trigger_offset_top_us=${TRIGGER_OFFSET_TOP_US:-0}" \
         -S "readout_window_ticks=${READOUT_NTICKS:-10000}" \
         -A "light_model=${PDVD_LIGHT_MODEL:-library}" \
         -S "ql_require_containment=${QL_CONTAIN}" \
@@ -272,7 +293,7 @@ PY
         -l "${LOG}:debug" \
         -L debug \
         -c "$CFG_JSON"
-    rm -f "$CFG_JSON"
+    [ "${PDVD_KEEP_CFG:-0}" = 1 ] || rm -f "$CFG_JSON"
 
     echo "Clustering done -> $WORKDIR"
 }

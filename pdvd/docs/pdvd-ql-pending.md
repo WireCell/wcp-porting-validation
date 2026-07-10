@@ -1,12 +1,70 @@
 # PDVD Q/L matching — pending work after the trigger offset is determined
 
-Status 2026-07. The PDVD Q/L machinery is **built and wired end-to-end**
+Status 2026-07-10. The PDVD Q/L machinery is **built and wired end-to-end**
 (joint shared-flash QLMatching, cfg, driver, calib dumps, hand-scan viewer —
-see `pdvd-qlmatching.md`), but **production tuning is blocked on one number**:
-the light-vs-charge trigger offset. This file records exactly what is known,
-what is needed from outside, and the ordered checklist to run once it lands.
+see `pdvd-qlmatching.md`), and **the trigger-offset blocker is RESOLVED**
+(§1 below records how). The remaining work is the §2 tuning checklist.
 
-## 1. The blocker: light↔charge trigger offset
+## 1. RESOLVED: light↔charge trigger offset (2026-07-10)
+
+The external ask was answered: jjo reprocessed the light extraction and the
+`*_rawwf.root` files now carry a PDHD-style **`trigoff/trigger_offset` tree**
+with per-event DAQ timestamps (tc_us, charge_tde_us, charge_bde_us, fs_t0_us,
+light_t0_us, …), plus a per-event text table
+(`pdvd/data/jjo_triglight_offsets.txt`, summary `jjo_triglight_summary.txt`).
+
+**Measured answer to the constancy question (§1 step 4 of the old plan):**
+
+- The **light full-stream window is trigger-locked to ±0.3 µs** (trigger −
+  fs_start = 5000.4 / 5000.6 / 2500.5 µs for 039252/039253/039349 — per-run
+  DAQ constants). The old "is the light window at a fixed offset?" question:
+  yes, it was the **charge** window that floats.
+- The **charge windows float per event (±15 µs, σ 9–12 µs)** and **per
+  CRATE**: the TDE (top CRPs) and BDE (bottom CRPs) windows each open on
+  their own 64-sample frame boundary, up to **32 µs apart** (≈5 cm of
+  drift). So the offset is per event AND per drift volume — a per-run
+  constant can never beat ±15 µs; the old statistical fit stalled exactly
+  as expected. (The 039349 evt-19549 "4 ms outlier" was an artifact of the
+  statistical method; its measured offset is dead-center of the run band.)
+- Timing units caveat: the raw BDE charge is sampled at 512 ns and the TDE
+  at 500 ns, but the **first step of charge signal processing resamples BDE
+  512→500 ns**, so the processed charge frames (what clustering consumes)
+  are uniformly **500 ns/tick with tick 0 = that crate's window start** —
+  the stamped offsets refer to the window START, which resampling preserves.
+  (jjo's "divide by 0.512 for BDE" recipe step applies to RAW RawDigits
+  only, not to our SP frames.)
+
+**Implementation (all in `./work`, no dependency on jjo's files downstream):**
+
+1. `run_light_evt.sh` reads the trigoff tree from the SAME rawwf file it
+   already opens, replicates the chain's tick origin exactly
+   (min over ALL records of `round(ts·62.5) − 64 ticks` for self-trigger
+   snippets — `PDVDOpWaveformSource`'s rule; the earliest record is often a
+   snippet, hence a −1.024 µs shift vs the raw min timestamp), and stamps
+
+       offset_bot_us = chain_t0 − charge_bde_us   (bottom volume, BDE)
+       offset_top_us = chain_t0 − charge_tde_us   (top volume, TDE)
+
+   (negative, ≈ −2.1..−2.5 ms; ADD to a flash time to land on that crate's
+   charge axis) into the opflash archive metadata. 40-bit DTS rollover
+   (17 592.19 s) is wrapped. All 120 events regenerated and verified
+   consistent with jjo's independent table (120/120; crate skew and anchor
+   agree to float precision).
+2. `run_clus_evt.sh` reads `offset_bot_us`/`offset_top_us` (legacy archives
+   fall back to scalar `offset_us`), adds the per-run residual from
+   `data/ql_trigger_offset.txt` (still empty), and passes both to
+   `wct-clustering.jsonnet` → QLMatching `trigger_offsets=[bot, top]` and
+   clus.jsonnet `trigger_offset(_top)` (per-volume x_t0cor).
+   `PDVD_QL_DIAG=1` still forces 0 (offset-hunt mode); **`PDVD_QL_DIAG=2`**
+   keeps the measured offsets with the loosened diagnostic knobs (closure).
+3. Byte-identity: PDHD 29107 evt0 (15/15 archives), SBND data evt686, PDVD
+   no-QL, and PDVD QL `trigger_offsets=[0,0]` vs scalar — all identical.
+   Toolkit commit `8a765d5e`.
+
+The subsections below are kept for the record of HOW the blocker was
+diagnosed (the statistical route and its limits).
+
+### The old blocker, for the record: light↔charge trigger offset
 
 Every drift-position correction in the matcher is
 `x_true = x_raw + sign_offset · (t_flash + T) · v`. With `T` unknown, absolute
@@ -35,7 +93,7 @@ wrong by `sign · T · v` — at 1 ms of offset that is ~1.6 m, i.e. everything.
   raw extraction carried a per-event `trigoff/trigger_offset` tree from DAQ
   timestamps (`pdhd/run_light_evt.sh:76-86`); the constancy was *measured*.
 
-### What is needed (external ask — full question list: `pdvd-questions-dune.md`)
+### What was needed (external ask — DELIVERED 2026-07-10, see top of §1)
 
 Per-event DAQ timestamps on the charge side. Either of:
 
@@ -49,22 +107,32 @@ The light side needs nothing: `ql_light_calib/dump_light_t0.py` already dumps
 the per-event light t0 (absolute µs, 16 ns DTS clock) from the `timestamp`
 branch.
 
-### Once the timestamps exist
+### Once the timestamps exist (all done 2026-07-10, per-crate variant)
 
-1. `offset_us(event) = charge_window_start_us − light_t0_us` — pure arithmetic.
-2. Plumb it: per-event values belong in the **opflash metadata `offset_us`**
-   (regenerate the light archives, or patch metadata); any residual per-run
-   constant goes in `pdvd/data/ql_trigger_offset.txt` (already read by
-   `run_clus_evt.sh`; `PDVD_TRIGGER_OFFSET_US` env overrides for tests).
-3. Cross-check with physics: rerun `ql_light_calib/fit_trigger_offset.py` on
-   the diagnostic dumps — matched full-drift crossers must now land with edges
-   at anode/cathode (residual ≈ 0, well inside ±20 µs · v ≈ 3 mm…3 cm).
-4. Answer the constancy question for the record (per-run constant vs per-event
-   jitter) and note it here and in `pdvd-qlmatching.md`.
+1. ✓ `offset_{bot,top}_us(event) = charge_{bde,tde}_us − chain_t0_us` (sign
+   flipped into "add to flash time" convention when stamped).
+2. ✓ Plumbed into the opflash metadata (`offset_bot_us`/`offset_top_us`;
+   the scalar `offset_us` stays 0/legacy); the per-run residual table
+   `pdvd/data/ql_trigger_offset.txt` remains, empty.
+3. ✓ Physics cross-check — but NOT via the crosser fit: at ~50 µs flash
+   spacing the crosser-anchor scan is accidental-dominated even after the
+   offsets (its peak survives event-mixing → meaningless, as its docstring
+   always warned). The decisive closure is the **beam-trigger flash test**
+   (`ql_light_calib/check_trigger_flash.py`): these are CTB beam-triggered
+   runs, so each event must show a flash at the trigger position
+   `tc_us − charge_bde_us` on the folded axis. Result: **99/120 events have
+   a ~2000 PE flash within ±5 µs of it, residual median −0.9 µs** (inside
+   the 1 µs OpFlash binning; ~4%/event accidental probability). The mapping
+   is validated end-to-end at the sub-µs level. Gold two-volume pairs are
+   consistent within their ±20 µs anchor resolution (6 clean pairs — too
+   few to resolve the 15 µs mean crate skew, which rests on the DAQ
+   timestamps like everything else).
+4. ✓ Constancy answered: light window trigger-locked per run; charge windows
+   float per event and per crate (top of §1).
 
 ## 2. Post-offset checklist (in order)
 
-These are Phases 6–7 of the integration plan, currently parked:
+These are Phases 6–7 of the integration plan, **UNBLOCKED as of 2026-07-10**:
 
 1. **Flip diagnostics off**: `require_containment=true`, production
    `flash_minPE` (≈25), drop `PDVD_QL_DIAG`.
@@ -110,11 +178,13 @@ These are Phases 6–7 of the integration plan, currently parked:
 
 | What | Where |
 |---|---|
-| Questions for Jay / DUNE (T0, cathode SPE, Xe/Ar library, …) | `pdvd/docs/pdvd-questions-dune.md` |
-| Offset fit (statistical cross-check) | `pdvd/ql_light_calib/fit_trigger_offset.py` |
-| Light t0 dump (per event, DTS µs) | `pdvd/ql_light_calib/dump_light_t0.py` |
-| Per-run offset table (empty on purpose) | `pdvd/data/ql_trigger_offset.txt` |
-| Driver offset plumbing | `pdvd/run_clus_evt.sh` (TRIGGER_OFFSET_US block) |
+| Questions for Jay / DUNE (T0 ANSWERED; cathode SPE, Xe/Ar library, …) | `pdvd/docs/pdvd-questions-dune.md` |
+| Offset closure check (statistical cross-check) | `pdvd/ql_light_calib/fit_trigger_offset.py` |
+| Chain light-t0 dump (per event, DTS µs) | `pdvd/ql_light_calib/dump_light_t0.py` |
+| Per-run RESIDUAL offset table (empty; per-event values live in the opflash metadata) | `pdvd/data/ql_trigger_offset.txt` |
+| jjo's per-event timestamp table + summary | `pdvd/data/jjo_triglight_offsets.txt`, `jjo_triglight_summary.txt` |
+| Driver offset plumbing (per-crate) | `pdvd/run_clus_evt.sh` (TRIGGER_OFFSET_{BOT,TOP}_US block) |
+| Light-pass offset stamping | `pdvd/run_light_evt.sh` (trigoff block) |
 | Matching chain + knobs | `pdvd/docs/pdvd-qlmatching.md` |
 | Hand-scan viewer | `pdvd/ql_scan/` (README there) |
 | Diagnostic dumps used for the fit | `pdvd/work/0392*_*/calib-evt*.json`, `PDVD_QL_DIAG=1` |

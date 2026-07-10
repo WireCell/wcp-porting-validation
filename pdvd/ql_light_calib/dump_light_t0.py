@@ -1,27 +1,31 @@
 #!/usr/bin/env python3
 """Dump the per-event light time zero from PDVD raw light ROOT files.
 
-The PDVD light chain (pdvd/wct-light.jsonnet via PDVDOpWaveformSource)
+The PDVD light chain (pdvd/wct-light-reco.jsonnet via PDVDOpWaveformSource)
 anchors flash time t=0 to the EARLIEST record start over all channels of
-the event -- the `timestamp` branch of the rawwf `raw_waveform` tree, in
-microseconds on the DAQ 16 ns DTS clock (absolute). This script dumps that
-anchor per event so it can be combined with the charge readout-window
-start (same clock; NOT yet available -- the charge frame extraction writes
-tickinfo time=0) into the deterministic per-event trigger offset:
+the event, where a self-trigger snippet (nsamp <= 1024) STARTS 64 samples
+(1.024 us) before its `timestamp` (the timestamp marks the trigger sample):
 
-    offset_us(event) = charge_window_start_us - light_t0_us
+    start_us = timestamp - (1.024 if snippet else 0)
+    chain_t0_us = min over all records
 
-which is the PDVD analogue of PDHD's trigoff/trigger_offset tree
-(offset_us = 249.808 constant there, measured per event from DAQ
-timestamps). See fit_trigger_offset.py's docstring and
-pdvd/docs/pdvd-ql-pending.md for why the statistical route is not enough.
+in microseconds on the DAQ 16 ns DTS clock (absolute, 40-bit masked).
+This script dumps that anchor per event.  RESOLVED 2026-07-10: the charge
+window starts are now available per event (and per CRATE -- TDE/BDE open up
+to ~32 us apart) in the rawwf trigoff/trigger_offset tree, and
+run_light_evt.sh computes and stamps
+
+    offset_{bot,top}_us(event) = chain_t0_us - charge_{bde,tde}_us
+
+into the opflash archive metadata.  This script remains as an independent
+cross-check of the chain_t0 half.  See pdvd/docs/pdvd-ql-pending.md.
 
 Also prints, per event, the spread of the 16 cathode full-stream record
 starts (expected 0.00 us -- they share one window) and the record length,
 as coherence checks on the light DAQ.
 
 Usage:
-    python3 dump_light_t0.py /nfs/data/1/jjo/data/PDVD/*rawwf.root \
+    python3 dump_light_t0.py ../input_data_light/*rawwf.root \
         [--csv light_t0.csv]
 """
 import argparse
@@ -40,13 +44,21 @@ def main():
 
     rows = []
     for fn in args.files:
-        t = uproot.open(fn)['raw_waveform']
+        f = uproot.open(fn)
+        try:
+            t = f['rawdump/raw_waveform']   # newer nested extraction layout
+        except KeyError:
+            t = f['raw_waveform']
         a = t.arrays(['run', 'event', 'opchannel', 'nsamp', 'timestamp'],
                      library='np')
         for evt in np.unique(a['event']):
             sel = a['event'] == evt
             ts = a['timestamp'][sel]
-            t0 = float(ts.min())
+            # chain anchor: snippet records start 64 samples before their
+            # timestamp (PDVDOpWaveformSource tick rule, exact in ticks)
+            ticks = (np.round(ts * 62.5)
+                     - np.where(a['nsamp'][sel] <= 1024, 64, 0))
+            t0 = float(ticks.min() * 0.016)
             # cathode full streams: the longest records of the event
             nsamp = a['nsamp'][sel]
             full = nsamp == nsamp.max()

@@ -40,7 +40,11 @@ fi
 
 EVENTS=$(python3 -c "
 import uproot
-t = uproot.open('$RAW_FILE')['raw_waveform']
+f = uproot.open('$RAW_FILE')
+try:
+    t = f['rawdump/raw_waveform']   # newer nested extraction layout
+except KeyError:
+    t = f['raw_waveform']
 print(' '.join(str(e) for e in sorted(set(t['event'].array(library='np')))))
 ")
 NEV=$(echo "$EVENTS" | wc -w)

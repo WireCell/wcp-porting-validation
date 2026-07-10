@@ -1,0 +1,32 @@
+wrote /nfs/data/1/jjo/tmp/pdvd_flash_validation/out/triglight/ql_trigger_offset.txt (120 events)
+
+run 39252 (18 evts)  trigger - light_fs_start                   mean=    5000.428 us  std=   0.292  min=    5000.032  max=    5000.848
+run 39252 (18 evts)  trigger - charge_start                     mean=    2517.758 us  std=   8.827  min=    2501.136  max=    2529.360
+run 39252 (18 evts)  charge_start - light_fs_start  (THE offset) mean=    2482.670 us  std=   8.813  min=    2470.880  max=    2499.040
+run 39252  fs_nsamp values: [468800, 468864]  (['7.501 ms', '7.502 ms'])
+run 39252  charge RawDigit nsamp values: [9766, 10000, 10048]  (at 512 ns/sample: ['5.000 ms', '5.120 ms', '5.145 ms']; at 500 ns: ['4.883 ms', '5.000 ms', '5.024 ms'])
+run 39252  TC types (all TCs): {29: 1, 22: 15, 20: 7}   n_tc per event: [1, 2]
+run 39252  RDTimeStamp families: TDE(ns-stored) n=[6144] BDE(tick-stored) n=[6144]
+run 39252  within-family window-start spread: BDE max 0.000 us, TDE max 0.000 us
+run 39252  TDE_start - BDE_start: mean=-17.826 us  std=8.892  min=-29.360  max=-1.200
+
+run 39253 (18 evts)  trigger - light_fs_start                   mean=    5000.553 us  std=   0.308  min=    5000.000  max=    5001.008
+run 39253 (18 evts)  trigger - charge_start                     mean=    2512.391 us  std=  12.059  min=    2500.096  max=    2531.264
+run 39253 (18 evts)  charge_start - light_fs_start  (THE offset) mean=    2488.162 us  std=  12.079  min=    2469.360  max=    2500.848
+run 39253  fs_nsamp values: [468800, 468864]  (['7.501 ms', '7.502 ms'])
+run 39253  charge RawDigit nsamp values: [9766, 10000, 10048]  (at 512 ns/sample: ['5.000 ms', '5.120 ms', '5.145 ms']; at 500 ns: ['4.883 ms', '5.000 ms', '5.024 ms'])
+run 39253  TC types (all TCs): {20: 6, 22: 10, 29: 3}   n_tc per event: [1, 2]
+run 39253  RDTimeStamp families: TDE(ns-stored) n=[6144] BDE(tick-stored) n=[6144]
+run 39253  within-family window-start spread: BDE max 0.000 us, TDE max 0.000 us
+run 39253  TDE_start - BDE_start: mean=-12.436 us  std=12.007  min=-31.152  max=-0.176
+
+run 39349 (84 evts)  trigger - light_fs_start                   mean=    2500.536 us  std=   0.310  min=    2500.016  max=    2501.008
+run 39349 (84 evts)  trigger - charge_start                     mean=     416.794 us  std=   9.232  min=     400.768  max=     431.920
+run 39349 (84 evts)  charge_start - light_fs_start  (THE offset) mean=    2083.742 us  std=   9.185  min=    2068.160  max=    2099.648
+run 39349  fs_nsamp values: [331264, 331328]  (['5.300 ms', '5.301 ms'])
+run 39349  charge RawDigit nsamp values: [6250, 6400]  (at 512 ns/sample: ['3.200 ms', '3.277 ms']; at 500 ns: ['3.125 ms', '3.200 ms'])
+run 39349  TC types (all TCs): {15: 95, 22: 4, 20: 2}   n_tc per event: [1, 2, 3]
+run 39349  RDTimeStamp families: TDE(ns-stored) n=[6144] BDE(tick-stored) n=[6144]
+run 39349  within-family window-start spread: BDE max 0.000 us, TDE max 0.000 us
+run 39349  TDE_start - BDE_start: mean=-16.850 us  std=9.256  min=-31.920  max=-0.688
+

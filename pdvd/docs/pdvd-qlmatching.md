@@ -1,10 +1,11 @@
 # PDVD charge–light (Q/L) matching
 
-Status 2026-07: **built, wired, byte-identity verified; production tuning
-blocked on the light↔charge trigger offset** — see `pdvd-ql-pending.md` for
-the follow-up list. Companion docs: `pdvd-light-chain.md` (raw→OpFlash),
-`pdvd-photon-model.md` (visibility library), and (toolkit repo)
-`match/docs/qlmatching-code.md` §2a for the C++ knob reference.
+Status 2026-07-10: **built, wired, byte-identity verified; trigger offset
+RESOLVED** (per-event per-crate DAQ timestamps, `pdvd-ql-pending.md` §1) —
+remaining work is the tuning checklist (`pdvd-ql-pending.md` §2). Companion
+docs: `pdvd-light-chain.md` (raw→OpFlash), `pdvd-photon-model.md` (visibility
+library), and (toolkit repo) `match/docs/qlmatching-code.md` §2a for the C++
+knob reference.
 
 ## 1. Why PDVD needed matcher changes
 
@@ -59,13 +60,23 @@ Driver `pdvd/run_clus_evt.sh`:
   the cluster tarball, and hard-errors if the opflash metadata `event`
   disagrees. Missing light archive → automatic fallback to no-QL (e.g. run
   039324 until its raw light is staged).
-- `TRIGGER_OFFSET_US` = opflash metadata `offset_us` + the per-run constant
-  from `data/ql_trigger_offset.txt` (currently empty on purpose);
-  `PDVD_TRIGGER_OFFSET_US` overrides; `PDVD_QL_DIAG=1` forces 0 **and**
-  loosens `require_containment=false`, `flash_minPE=100` for the offset
-  diagnostic runs.
-- `READOUT_NTICKS` read from the SP frame (10000 ticks × 0.5 µs = 5 ms;
-  fallback 10000) for the window-truncation flag.
+- Trigger offsets are PER CRATE and PER EVENT (2026-07-10):
+  `TRIGGER_OFFSET_{BOT,TOP}_US` = opflash metadata `offset_bot_us` (BDE,
+  bottom volume) / `offset_top_us` (TDE, top volume — the two crates open
+  their windows up to ~32 µs apart), stamped by `run_light_evt.sh` from the
+  rawwf `trigoff/trigger_offset` tree, + the per-run residual from
+  `data/ql_trigger_offset.txt` (empty). They feed QLMatching
+  `trigger_offsets=[bot, top]` and clus.jsonnet's per-volume x_t0cor
+  (`trigger_offset`/`trigger_offset_top`). Legacy archives fall back to the
+  scalar metadata `offset_us`. `PDVD_TRIGGER_OFFSET_US` overrides both;
+  `PDVD_QL_DIAG=1` forces 0 **and** loosens `require_containment=false`,
+  `flash_minPE=100` (offset-hunt mode); `PDVD_QL_DIAG=2` keeps the measured
+  offsets with the loosened knobs (closure validation).
+- `READOUT_NTICKS` read from the SP frame (10000 ticks × 0.5 µs = 5 ms in
+  039252/3; the charge window is per-run DAQ config — 039349 is 3.2 ms;
+  fallback 10000) for the window-truncation flag. Note the raw BDE 512 ns
+  sampling is resampled to 500 ns as the first SP step, so processed frames
+  are uniformly 500 ns/tick with tick 0 = that crate's window start.
 
 ## 3. Outputs
 
@@ -92,8 +103,11 @@ Static `ch_mask` = [13,24,27,28,29,32,34,39] (data-dead + Ar-blind).
 
 ## 5. Caveats
 
-- **Trigger offset unknown** — everything quantitative is blocked on it;
-  status, evidence, and the external timestamp ask: `pdvd-ql-pending.md` §1.
+- **Trigger offset RESOLVED 2026-07-10** (per-event per-crate values from the
+  rawwf trigoff tree; mechanism and constancy verdict: `pdvd-ql-pending.md`
+  §1). The calib-dump/Bee flash `time` folds the input-0 (BDE) offset; a
+  top-volume anchor read from the dump display therefore carries the ~17–32 µs
+  crate skew (the matching geometry itself uses the correct per-side value).
 - **QtoL / absolute PE scale uncalibrated** — KS leads round 1; chi2-based
   branches are loosened accordingly.
 - z-wall PMTs not in `pd_walls` (~1% of PE); rescues off; `flag_at_cathode`

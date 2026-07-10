@@ -50,7 +50,7 @@ flash times are ns relative to t0.
 | flash | `bin_width` 1000 ns, `group_by_side=false`, `flash_refine=false`, `remove_late_light` on | single all-PD flash (`pdvd-flash-dt.md`); side split + refine y/z grid are PDHD horizontal-drift assumptions |
 | quality cuts | `min_fired_pds 2`, `min_total_pe 10`, `min_fired_pe 1.0` | 40-PD rescale of PDHD's 5/20/1.0 on 160 |
 | saturation | detect+veto on, rail 16383, pad 1024 | DAPHNE 14-bit, PDHD-identical machinery |
-| `offset_us` | **0 (provisional)** | light↔charge offset not yet calibrated; flash times are relative to the event's earliest light record |
+| `offset_us` | 0 (legacy, inert) | flash times stay relative to the event's earliest light record; the real light↔charge offsets are the per-event per-crate metadata `offset_bot_us`/`offset_top_us` from the rawwf trigoff tree (2026-07-10; see Caveats) |
 
 ## Validation (all against the standalone python chain)
 
@@ -138,10 +138,9 @@ is ~20–30). Placed by PDVD's own distribution structure (a low-PE junk spike a
 10–15, a valley, then the bright-cosmic bump) **and** by flashes/window parity with
 PDHD, **`flash_minPE ≈ 20–30 PE`** (→ ~103–121 per window) is the better starting
 floor. Still tune against matching purity once QL is wired — the cathode-mounted,
-double-sided X-ARAPUCAs are on their own absolute-PE scale. **Also note
-`offset_us = 0.0`** in the PDVD opflash
-(vs PDHD's 249.84): QL uses the trigger-relative `get_time()`, so the light↔charge
-offset must be set when QL is wired (see Caveats).
+double-sided X-ARAPUCAs are on their own absolute-PE scale. The light↔charge
+offsets are now stamped per event as `offset_bot_us`/`offset_top_us` metadata
+(the PDVD analogue of PDHD's 249.84 µs `offset_us`; see Caveats).
 
 **2. Dead-PMT self-identification — PDVD has none yet; deferred to QL.** PDHD
 self-identifies run-dependent dead PMTs *per event* inside QLMatching
@@ -197,14 +196,15 @@ dead-channel `auto_mask` deferred to QL (§2). Study script `pd_plot/flash_pe_cu
 
 ## Caveats / next
 
-- **`offset_us = 0`**: the light↔charge time association is still open. The
-  A/C-crosser statistical calibration was attempted (76 diagnostic QL events,
-  `ql_light_calib/fit_trigger_offset.py`) and is **inconclusive at this flash
-  density** (~150 flashes/window → 2-3 σ even for a true constant); the
-  decisive route is per-event DAQ timestamps, PDHD-trigoff style:
-  light record start (`ql_light_calib/dump_light_t0.py`) minus the charge
-  readout-window start, which the charge extraction does not yet record.
-  Full status and follow-ups: `pdvd-ql-pending.md`.
+- **Light↔charge offsets RESOLVED (2026-07-10)**: the reprocessed rawwf files
+  carry a PDHD-style `trigoff/trigger_offset` tree; `run_light_evt.sh` now
+  stamps per-event PER-CRATE offsets (`offset_bot_us` = BDE, `offset_top_us`
+  = TDE — the two charge crates open up to ~32 µs apart and float ±15 µs vs
+  the trigger-locked light window) into the archive metadata. Validated by
+  the beam-trigger flash closure (`ql_light_calib/check_trigger_flash.py`,
+  residual −0.9 µs, 99/120 events); the A/C-crosser statistical route stays
+  accidental-blind as always documented. The legacy scalar `offset_us` stays
+  0/inert. Mechanism + constancy verdict: `pdvd-ql-pending.md` §1.
 - **Q/L light model ready** (`pdvd-photon-model.md`): the official sim optical
   model (PDFastSimANN v5 computable graph) is sampled into a gridded library
   wired into QLMatching (`light_model: 'library'`), plus a fitted

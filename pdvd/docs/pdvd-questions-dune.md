@@ -5,7 +5,39 @@ need, why, and what we will do with the answer. Companion docs:
 `pdvd-ql-pending.md` (blocked-work checklist), `pdvd-qlmatching.md`,
 `pdvd-spe-template.md`, `pdvd-photon-model.md`, `pdvd-light-chain.md`.
 
-## 1. Trigger T0: per-event light↔charge time-base offset (THE blocker)
+## 1. Trigger T0: per-event light↔charge time-base offset — **ANSWERED 2026-07-10**
+
+**Resolution (jjo):** reprocessed rawwf files
+(`/nfs/data/1/jjo/tmp/pdvd_flash_validation/out/rawwf_trigoff/`) carry a
+`trigoff/trigger_offset` tree (per-event tc_us, charge_tde_us, charge_bde_us,
+fs_t0_us, light_t0_us, offsets) extracted straight from the raw HDF5 DAQ
+records; per-event table archived at `pdvd/data/jjo_triglight_offsets.txt`.
+Now consumed by `run_light_evt.sh` → opflash metadata → Q/L matching
+(`pdvd-ql-pending.md` §1). Sub-answers, for the record:
+
+- **Window placement:** the light full-stream start is trigger-locked
+  (±0.3 µs, per-run constant: −5.0 ms in 039252/3, −2.5 ms in 039349); the
+  CHARGE windows float ±15 µs event-to-event and PER CRATE (TDE vs BDE up to
+  32 µs apart, each on its own 64-sample frame boundary). The "4 ms outlier"
+  event was an artifact of the statistical method.
+- **Record lengths:** per-run DAQ configuration. Light 7.501 ms (039252/3)
+  vs 5.301 ms (039349); charge 5.000 ms (039252/3) vs **3.200 ms (039349)**
+  — the charge window is NOT always 5 ms. Raw sampling: TDE 500 ns, BDE
+  512 ns (our SP resamples BDE 512→500 ns as its first step, so processed
+  frames are uniformly 500 ns; window STARTS are what the offsets refer to).
+- **Beam trigger:** yes — the TriggerCandidates are CTB beam triggers
+  (types 15/20/22 = kCTBBeamChkvHL/HLx/HxLx, occasional 29 =
+  kCTBOffSpillSnapshot); `tc_us` is in the table (16 ns DTS clock).
+- **Gotchas (upstream-worthy):** `raw::RDTimeStamp` units are inconsistent in
+  the PDVD decoder (TDE ns-since-epoch, BDE 16-ns DTS ticks); DAPHNE
+  timestamps are 40-bit-masked (rollover ~4.9 h); the stock dunesw
+  `OpFlashFinderVerticalDrift` produces corrupted single-PD flashes on PDVD
+  (jjo has a validated patched module) — irrelevant to our WCT chain but any
+  future comparison against art `recob::OpFlash` must use the patched finder.
+
+The original ask is kept below for the record.
+
+### (original ask) Trigger T0: per-event light↔charge time-base offset (was: THE blocker)
 
 **Ask:** per-event DAQ timestamps that relate the charge readout window to
 the light readout window. Concretely, either of:

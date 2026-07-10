@@ -22,7 +22,20 @@ Method (two stages):
 Also reports per-event coverage and OUTLIER events (>= 2 crossers, no flash
 within the acceptance).
 
-*** STATUS 2026-07 (18+18+40 diagnostic events, 47/47/55 crosser anchors): ***
+*** STATUS 2026-07-10: SUPERSEDED as a calibrator AND as a validator.       ***
+The offsets are now MEASURED per event and per crate from the rawwf
+trigoff/trigger_offset tree (stamped into the opflash metadata by
+run_light_evt.sh; see pdvd/docs/pdvd-ql-pending.md sec 1) and VALIDATED by
+the beam-trigger flash closure (check_trigger_flash.py: 99/120 events show
+a ~2000 PE flash within +-5 us of tc_us - charge_bde_us on the folded axis,
+residual median -0.9 us).  This script's scan CANNOT confirm or refute the
+offsets: on offset-folded PDVD_QL_DIAG=2 dumps it reports T = +2031/+2328 us
+(039252/039253) with a deceptively tight MAD -- but the peak height equals
+the event-mixed accidental maximum at every T, i.e. it is pure accidental
+structure, exactly the trap the paragraph below documents.  Kept for the
+method record and for detectors with sparse flash lists.
+
+*** ORIGINAL STATUS 2026-07 (18+18+40 diag events, 47/47/55 anchors):       ***
 *** a per-run constant is NEITHER CONFIRMED NOR EXCLUDED by this sample.    ***
 The anchor resolution is ~ +-20 us (measured from bottom-vs-top t_mid of
 gold two-volume through-goers) while flashes >=150 PE are ~50 us apart, so
