@@ -271,6 +271,50 @@ multi-event jobs, not code changes.
   residual (the round1 sweep ran alongside a heap-profiler job), not an
   effect of the code change; watch for recurrence.
 
+## Round 3 — perf: BFS flag array + BlobSampler regex memoization (DONE)
+
+**Re-profile** (round-2 binary, idx12/ev6604): total samples 6525 → 5625
+(−14 %, matching the wall win); `connect_graph_closely_pid` down 1346 → 554
+samples (−59 %).  New ranking: `find_proto_vertex` 20 %, `do_multi_tracking`
+19.5 % (`form_map_graph` 12.5 %, `form_point_association` 12.3 %),
+TMVA startup 19.5 % (structural floor), `UbooneClusterSource::flush` 10 %,
+`find_neighbors_nlevel` 9.8 %.
+
+**Changes** (both byte-identical by construction):
+1. `clus/src/Graphs.cxx` `Weighted::GraphAlgorithms::find_neighbors_nlevel`
+   — the BFS `visited` bookkeeping was a `std::set<vertex_type>`;
+   74.5 % of the function's samples were `std::set::find`.  Replaced with a
+   flat `std::vector<char>` flag array indexed by the vecS vertex
+   descriptor.  Result content (a vertex_set of all vertices within nlevel
+   hops) is bookkeeping-independent.  All calls come from
+   `TrackFitting::form_point_association`.
+2. `clus/src/BlobSampler.cxx` `Sampler::is_extra` — matched a handful of
+   fixed array-suffix names against the configured regex list once per
+   sampled blob (`std::regex_match` was 18 % of UbooneClusterSource).
+   Added a member `unordered_map<string,bool>` memo (same thread-safety
+   caveat as the existing `plane_ident2index` cache).
+
+**Gate — PASSED** (sweep `round3`, 6-way, vs gate3):
+- Bee zips: 35/35 byte-identical.
+- Tagger population mismatched-branches total: 20589
+  (gate3 20591, same-binary noise ±1); nue_score per-event max|diff|:
+  0 flips (identical values).
+
+**Result** (cumulative over rounds 2+3, un-preloaded sweeps):
+
+| metric | gate3 | round3 | delta |
+|---|---|---|---|
+| wall_s median / mean / max | 14 / 17 / 33 | 13 / 14 / 24 | −7 % / −18 % / −27 % |
+| node_exec_s median / mean / max | 12.15 / 14.51 / 30.91 | 11.12 / 12.46 / 22.36 | −8 % / −14 % / −28 % |
+| peak RSS MB median / max | 1980 / 2358 | 1985 / 2355 | — |
+
+**Remaining hotspots** (idx12, round-2 binary): deeper set/map churn inside
+`dQ_dx_multi_fit` (lower_bound-heavy charge maps), `break_segments`,
+`init_first_segment`; `UbooneClusterSource` sampling (`ChargeStepped::sample`
+36 % of the node); the 4.4 s/job TMVA XML startup floor.  Live memory at
+peak is dominated by ROOT read caches (234 MB), the booked TMVA forest
+(182 MB) and ROOT I/O buffers — structural, little surgical headroom.
+
 ## Result-changing ideas (not applied)
 
 - Multi-event wire-cell jobs (amortize the 4.4 s TMVA XML parse and ~7 s
@@ -283,3 +327,6 @@ multi-event jobs, not code changes.
   current binary emits 7 (adds `data/0/0-channel-deadarea-apa0-face0.json`).
   Old in-place outputs are stale — baselines are regenerated, never compared
   against April artifacts.
+- check_tagger_5384.pl backgrounds its 35 compare processes and returns
+  before they finish — compute metrics on its logs only after the compare
+  processes exit, or the logs read as empty.
