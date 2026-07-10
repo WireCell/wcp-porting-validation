@@ -297,6 +297,21 @@ Known 2-TPC risk points inside TaggerCheckSTM (audit if results look wrong):
 Any toolkit C++ change made here must keep the uBooNE qlport smoke
 byte-identical (events 6604/6821 vs the gate3 reference, `hash_archive.py`).
 
+## 5.1 Runbook (per event)
+
+```
+./run_img_evt.sh  <mc|data> <idx>              # per-event imaging (existing)
+./run_ql_evt.sh   <mc|data> -save-pctree <idx> # Q/L matching + pctree tarball
+./run_pr_evt.sh   <mc|data> -stm <idx>         # PR job: STM tagger
+# verdicts:  grep "TaggerCheckSTM: cluster" work/pr_evt<ID>/wct_pr_evt<ID>.log
+# display:   work/pr_evt<ID>/mabc-pr.zip (clustering + dead layers)
+# gates:     ./run_pr_evt.sh <mode> <idx> && python3 compare_pr_roundtrip.py <ID> tar
+#            ./run_pr_evt.sh <mode> -p switch_scope <idx> && python3 compare_pr_roundtrip.py <ID> bee
+```
+
+The pctree tarball is deleted whenever `run_ql_evt.sh` reruns without
+`-save-pctree` (the Q/L job wipes its work dir) — regenerate before PR runs.
+
 ## 6. Later stages (written down; NOT executed yet)
 
 ### 6.1 Neutrino pattern recognition (`tagger_check_neutrino`)
@@ -304,7 +319,19 @@ byte-identical (events 6604/6821 vs the gate3 reference, `hash_archive.py`).
 Runs the full ported NeutrinoID on the main cluster + associated clusters:
 `find_proto_vertex → clustering_points → separate_track_shower →
 determine_direction → shower clustering → determine_main_vertex → deghost →
-improve_vertex → cosmic/numu/nue taggers`.  SBND prerequisites beyond §5:
+improve_vertex → cosmic/numu/nue taggers`.
+
+Concrete wiring (mirrors the STM path, now proven): add
+`tagger_check_neutrino: cm.tagger_check_neutrino(trackfitting_config_file=…,
+particle_dataset=…, recombination_model=…, dl_weights='')` to `clus_pr`'s
+`cm_by_name` and run
+`-p switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino`.
+Like TaggerCheckSTM before M3, `TaggerCheckNeutrino::visit` picks a single
+main cluster — it needs the same multi-main + `matched_flash_gid` loop, plus
+a beam-window gate (only the beam-coincident bundle should get neutrino PR,
+unlike STM which legitimately runs on every matched bundle).
+
+SBND prerequisites beyond §5:
 - run with `dl_weights=''` (the SCN vertex network is uBooNE-trained);
 - audit of hard-coded axes: ~56 literal `(1,0,0)`/`(0,0,1)` direction vectors
   across `NeutrinoTagger{Cosmic,NuMu,NuE,SSM,SinglePhoton}.cxx`,
@@ -418,10 +445,13 @@ SBND MC route documented in `PR_integration.md` §7.
 
 ## 8. Milestone log
 
-| # | milestone | status | commits |
+| # | milestone | status | commits (toolkit / validation) |
 |---|---|---|---|
-| 0 | This document (format spec + roadmap) | DONE 2026-07-10 | (this commit) |
-| 1 | Save: real `TensorFileSink` after all-APA MABC (`-save-pctree`) | DONE 2026-07-10 (sim evt12 + data evt1258, 10/10 inventory, Bee zips byte-identical) | toolkit + validation, see below |
-| 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | DONE 2026-07-10 (tar members identical; Bee y/z/q/id exact, x within flash-merge bound) | toolkit + validation, see below |
-| 3 | STM tagger on loaded sim + data events | DONE 2026-07-10 (7 events; first STM tag: data evt1346 cluster 5, anode-entering stopped-muon candidate) | toolkit + validation, see below |
-| 4 | Roadmap finalized for neutrino PR / BDT stages | — | |
+| 0 | This document (format spec + roadmap) | DONE 2026-07-10 | — / 30f513f |
+| 1 | Save: real `TensorFileSink` after all-APA MABC (`-save-pctree`) | DONE 2026-07-10 (sim evt12 + data evt1258, 10/10 inventory, Bee zips byte-identical) | 490b1b9a / a270eb6 |
+| 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | DONE 2026-07-10 (tar members identical; Bee y/z/q/id exact, x within flash-merge bound) | fd1522bf / bd601ed |
+| 3 | STM tagger on loaded sim + data events | DONE 2026-07-10 (7 events; first STM tag: data evt1346 cluster 5, anode-entering stopped-muon candidate) | 2b3d50df / 5535214 |
+| 4 | Roadmap finalized for neutrino PR / BDT stages (§6) | DONE 2026-07-10 | — / (this commit) |
+
+Next up (§6.1): multi-main + beam-window gate for `TaggerCheckNeutrino`,
+then wire it as the fifth `clus_pr` pipeline entry.
