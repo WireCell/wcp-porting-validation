@@ -175,6 +175,46 @@ Open items to confirm during implementation: MABC accepting an empty
 re-derived rather than inherited (re-run `switch_scope` if needed for gate 1 —
 it recomputes deterministically from `cluster_t0`).
 
+**Done (2026-07-10).** Implemented as `clus_pr` in the toolkit SBND clus
+module (constructor `clus_maker.pr(anodes, pipeline_names, tensor_outname)`)
+plus `sbnd_xin/{wct-pr-perevt.jsonnet, run_pr_evt.sh, compare_pr_roundtrip.py}`.
+The gate needs **two runs** (both verified on sim evt12 + data evt1258):
+
+- *Pass-through* (`./run_pr_evt.sh <mode> <idx>`, empty pipeline): re-saved
+  tarball **member-content-identical to the input** (309 / 311 members) —
+  the TensorDM serialization round trip is lossless.  (MABC accepts an empty
+  pipeline fine.)  The Bee clustering layer is empty in this run — see the
+  scope-filter finding below.
+- *switch_scope* (`./run_pr_evt.sh <mode> -p switch_scope <idx>`): Bee
+  clustering layer vs the Q/L job's `mabc-all-apa.zip`: `y/z/q/cluster_id`
+  **exact** on all 18376 / 15903 points, dead-area layers byte-identical.
+  `x` (= `x_t0cor`) differs on 819 / 176 points by ≤ 0.0084 / 0.0032 cm —
+  only on flash-merged clusters, where the file carries the per-sub-cluster
+  t0 correction from before `examine_bundles`' flash merge while the re-run
+  applies the merged cluster's single t0.  Bounded by `flash_group_window` ×
+  drift speed (80 ns × 1.563 mm/µs ≈ 0.013 cm); benign vs the 3 mm pitch.
+
+Findings baked into the design:
+1. **The per-cluster scope-filter flag is runtime-only.** The Bee dump's
+   default `filter:1` keys on it, so a pass-through job dumps nothing; the
+   PR pipeline must start with `switch_scope`, which re-establishes the
+   corrected scope, the filter flags, and the default scope used by the
+   per-point charge lookup (with the raw scope active, the dumped `q` values
+   are wrong — nearest-neighbour lookups mix corrected coordinates with the
+   raw-scope KD-tree).
+2. **`Cluster::add_corrected_points` made idempotent** (toolkit
+   `Facade_Cluster.cxx`: erase-before-add): on a reloaded tree the corrected
+   arrays already exist and the plain `add()` threw.  No behavior change for
+   any existing chain (the arrays never pre-exist there); gated by the
+   uBooNE qlport byte-identity smoke.
+3. **Only uniform per-cluster arrays survive serialization.** The
+   concatenated named-PC encoding drops arrays present on only some clusters:
+   `real_cluster_id` (written by `examine_bundles` on flash-merged clusters
+   only, used by the Bee dump for pre-merge ids) is lost — the PR job's Bee
+   layer shows `real_cluster_id == cluster_id` for merged clusters.  Display
+   cosmetics only; no PR algorithm consumes it.  This is also why QLMatching
+   materializes its flags on *every* cluster.
+
 ## 5. Stage 3 — first tagger: STM (Milestone 3)
 
 `TaggerCheckSTM` (`clus/src/TaggerCheckSTM.cxx`) is functional on the toolkit
@@ -303,6 +343,15 @@ SBND MC route documented in `PR_integration.md` §7.
   carry `/dead`, and the PR job must load both trees.
 - **Scope does not persist.** Re-run `switch_scope` at the head of the PR
   pipeline; it recomputes `x_t0cor` deterministically from `cluster_t0`.
+  (Verified at M2: without it the Bee dump is empty — filter flags — and
+  per-point charges resolve against the wrong KD scope.  On flash-merged
+  clusters the recompute shifts `x_t0cor` by ≤ `flash_group_window` × drift
+  ≈ 0.013 cm vs the saved per-sub-cluster values.)
+- **Only uniform per-cluster PC arrays survive serialization** — an array
+  present on some clusters only (e.g. `real_cluster_id` on flash-merged
+  ones) is dropped by the named-PC concatenation.  Anything the PR job needs
+  per cluster must be written on every cluster (QLMatching already does this
+  for its flags).
 - **Flag provenance.** `flag_*` scalars persist through serialization.  SBND
   QLMatching sets `main_cluster`/`associated_cluster`; it does **not** set
   uBooNE's WCP-derived event-type flags (`beam_flash`, `light_mismatch`, …).
@@ -333,6 +382,6 @@ SBND MC route documented in `PR_integration.md` §7.
 |---|---|---|---|
 | 0 | This document (format spec + roadmap) | DONE 2026-07-10 | (this commit) |
 | 1 | Save: real `TensorFileSink` after all-APA MABC (`-save-pctree`) | DONE 2026-07-10 (sim evt12 + data evt1258, 10/10 inventory, Bee zips byte-identical) | toolkit + validation, see below |
-| 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | — | |
+| 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | DONE 2026-07-10 (tar members identical; Bee y/z/q/id exact, x within flash-merge bound) | toolkit + validation, see below |
 | 3 | STM tagger on loaded sim + data events | — | |
 | 4 | Roadmap finalized for neutrino PR / BDT stages | — | |
