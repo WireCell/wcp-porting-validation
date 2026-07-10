@@ -197,11 +197,14 @@ dead-channel `auto_mask` deferred to QL (§2). Study script `pd_plot/flash_pe_cu
 
 ## Caveats / next
 
-- **`offset_us = 0`**: the light↔charge time association must be calibrated at
-  Q/L-matching time (PDHD's analogue was ~250 µs from the trigoff tree; PDVD's
-  charge and light events match 1:1 but the readout-window relation is not yet
-  measured). Flash `t` + charge-drift consistency on A/C-crossers is the
-  natural calibration.
+- **`offset_us = 0`**: the light↔charge time association is still open. The
+  A/C-crosser statistical calibration was attempted (76 diagnostic QL events,
+  `ql_light_calib/fit_trigger_offset.py`) and is **inconclusive at this flash
+  density** (~150 flashes/window → 2-3 σ even for a true constant); the
+  decisive route is per-event DAQ timestamps, PDHD-trigoff style:
+  light record start (`ql_light_calib/dump_light_t0.py`) minus the charge
+  readout-window start, which the charge extraction does not yet record.
+  Full status and follow-ups: `pdvd-ql-pending.md`.
 - **Q/L light model ready** (`pdvd-photon-model.md`): the official sim optical
   model (PDFastSimANN v5 computable graph) is sampled into a gridded library
   wired into QLMatching (`light_model: 'library'`), plus a fitted

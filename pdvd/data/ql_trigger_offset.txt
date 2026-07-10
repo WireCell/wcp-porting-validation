@@ -1,0 +1,17 @@
+# run  trigger_offset_us  (light-vs-charge time base per run)
+#
+# EMPTY ON PURPOSE (2026-07): a per-run constant is neither confirmed nor
+# excluded by the 039252/039253/039349 diagnostic sample -- at ~150 flashes
+# per readout window the crosser-anchor method saturates at 2-3 sigma even
+# for a true constant (see ql_light_calib/fit_trigger_offset.py docstring;
+# best gold-anchor candidate: 039252 T ~ -2855 us at 3.2 sigma, suggestive
+# only). The decisive route is per-event DAQ timestamps: light record start
+# (rawwf `timestamp` branch, see ql_light_calib/dump_light_t0.py) MINUS the
+# charge readout-window start on the same DTS clock, which the charge frame
+# extraction does not currently record (tickinfo time=0). Once per-event
+# offsets exist they belong in the opflash metadata offset_us (light chain);
+# this per-run table remains for any residual constant on top.
+# Follow-ups: pdvd/docs/pdvd-ql-pending.md
+#
+# Format: "<run> <offset_us>" per line, e.g.
+# 039252 -250.0
