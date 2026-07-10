@@ -315,6 +315,46 @@ TMVA startup 19.5 % (structural floor), `UbooneClusterSource::flush` 10 %,
 peak is dominated by ROOT read caches (234 MB), the booked TMVA forest
 (182 MB) and ROOT I/O buffers — structural, little surgical headroom.
 
+## Round 4 — re-profile: diminishing returns (campaign wrap-up)
+
+Re-profile of idx12/ev6604 with the round-3 binary: 4938 samples
+(baseline profile 6525, −24 %, tracking the wall win).  The remaining
+spend has no more large surgical targets:
+
+- **TMVA XML startup 22 %** — now the single largest block; a hard
+  per-process floor (see round 2's rejected lazy-booking experiment).
+  84 % of the visible `__dynamic_cast` and iostream cost is inside
+  TMVA/ROOT XML parsing, not our code.
+- **CreateSteinerGraph 21.7 %** — roughly half is the remaining
+  `connect_graph_closely_pid` cost, which is now intrinsic work
+  (distance loop, one std::sort per point, per-wire map range scans).
+  Flattening the wire maps to indexed arrays could shave more but is a
+  step change in invasiveness for ≲1 s/event.
+- **PR + track fitting ~25 %** spread thinly across many small set/map
+  sites (`dQ_dx_multi_fit` charge maps, `break_segments`,
+  `init_first_segment`) — each individually <5 %.
+- **UbooneClusterSource 9.3 %** — ROOT reading plus BlobSampler
+  point-cloud assembly (`ChargeStepped::sample`); Dataset/TensorDM
+  assembly, no single hotspot.
+- Live memory at peak is ROOT read caches + the booked TMVA forest +
+  ROOT buffers (~500 MB structural); the clus-side allocation churn that
+  dominated the heap profile was removed by rounds 2–3.
+
+**Campaign result** (35-event population, un-preloaded 6-way sweeps,
+identical outputs throughout — 35/35 Bee-zip hashes vs gate3, tagger
+population within same-binary noise, per-event nue_score identical):
+
+| metric | round-0 baseline | after round 3 | delta |
+|---|---|---|---|
+| wall_s median / mean / max | 14 / 17 / 33 | 13 / 14 / 24 | −7 % / −18 % / −27 % |
+| node_exec_s median / mean / max | 12.15 / 14.51 / 30.91 | 11.12 / 12.46 / 22.36 | −8 % / −14 % / −28 % |
+| peak RSS MB median / max | 1980 / 2358 | 1985 / 2355 | unchanged |
+
+Toolkit commits: d81f9cc8 (round 2), a2923ee4 (round 3), on top of the
+round-1 determinism fix 309d41c7.  Further wall reduction requires either
+invasive rewrites of the remaining warm paths or the result-changing
+ideas below.
+
 ## Result-changing ideas (not applied)
 
 - Multi-event wire-cell jobs (amortize the 4.4 s TMVA XML parse and ~7 s
