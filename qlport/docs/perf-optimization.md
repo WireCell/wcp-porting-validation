@@ -200,9 +200,82 @@ baselines (a canonical iteration order replaces a run-random one) — the
 det1/base1 hashes are superseded; **gate3 is the reference for all
 subsequent perf rounds**.
 
+## Round 2 — perf: connect_graph_closely_pid set→vector (DONE)
+
+**Profiles** (gperftools CPU, 250 Hz; wcsonnet-precompiled config):
+- idx24/ev6821 (median): 40 % of the whole process is `Main::initialize`,
+  dominated by `UbooneNueBDTScorer::init_readers` → `TMVA::Reader::BookMVA`
+  XML parsing (38 % ≈ 4.4 s, paid by every per-event job).
+- idx12/ev6604 (worst): ~23 % of flat samples are `std::_Rb_tree`
+  operations plus ~7 % allocator traffic, concentrated under
+  `Graphs::connect_graph_closely_pid` (20.6 % cum; 87 % of its calls from
+  CreateSteinerGraph, 45 % via ImproveCluster_2::mutate, plus
+  `Facade::Cluster::find_graph`/`make_graph_ctpc_pid` for the PR stage).
+  The heap run corroborates: >20 GB cumulative allocations for a
+  ~1.5 GB-live event.
+
+**Change** (toolkit `clus/src/connect_graph_closely.cxx`,
+`connect_graph_closely_pid` only): the per-wire buckets
+`std::map<int, std::set<int>>` become `std::map<int, std::vector<int>>`.
+Within one plane a point index lands in exactly one wire bucket, so bucket
+contents are disjoint and the former set-union of a bucket range is
+reproduced exactly by concatenate + `std::sort` (sorted-unique, identical
+iteration order).  The per-point union/intersection sets become reused
+`std::vector` buffers with `std::set_intersection` → `back_inserter`.
+Candidate content, edge insertion order and FP arithmetic are unchanged —
+byte-identical by construction, just without ~10⁶ red-black-tree node
+allocations per event.
+
+**Gate — PASSED** (sweep `round1b`, 6-way, vs gate3):
+- Bee zips: 35/35 byte-identical.
+- Tagger population mismatched-branches total (vs prototype):
+  gate3 20591, gate4 20590 (same-binary rerun noise ±1), round1b 20589.
+- Per-event nue_score max|diff| identical to gate3 for all 35 events.
+
+**Result** (un-preloaded sweeps, node_exec_s over 35 events):
+
+| metric | gate3 | round1b | delta |
+|---|---|---|---|
+| wall_s median / max | 14 / 33 | 14 / 28 | — / −15 % |
+| node_exec_s median / mean / max | 12.15 / 14.51 / 30.91 | 11.73 / 13.38 / 25.42 | −3 % / −8 % / −18 % |
+| peak RSS MB median / max | 1980 / 2358 | 1984 / 2382 | — |
+
+The win concentrates in the busy tail (idx12/30/33: −5 s wall each).
+Median-event stage timings: CreateSteinerGraph 1057 → 716 ms,
+TaggerCheckNeutrino 2954 → 2637 ms.
+
+**Tried and rejected: lazy TMVA BookMVA.**  Deferring the 16 BookMVA calls
+(15 vector sub-BDTs + xgboost) from configure time to first
+EvaluateMVA produced byte-identical output and removed the 4.4 s from
+startup — but every event in this workload evaluates essentially all
+sub-BDTs, so the parse simply moved into the first `visit()`
+(UbooneNueBDTScorer node 3 ms → 4550 ms) for zero net wall change, and
+peak RSS **rose ~300 MB** (the parse transients no longer overlap the
+startup arena; they stack on top of the mid-event working set).  Reverted;
+diff preserved in the session scratchpad.  The 4.4 s/job XML parse is a
+hard floor of the one-event-per-process job model — amortizing it needs
+multi-event jobs, not code changes.
+
+**Gate methodology corrections** (learned this round):
+- Tagger-compare logs are NOT byte-stable even between two sweeps of the
+  identical binary (gate4 vs gate3: 35/35 logs differ) — the ROOT vector
+  branches inherit the residual cosmetic segment-index relabeling that the
+  canonical Bee dumps hide, and full-precision values expose sub-mm FP
+  noise.  The tagger gate is therefore the population mismatch total plus
+  per-event nue_score, not log identity.
+- One sweep (`round1`) produced a divergent hash for idx21/ev6804 in
+  `shower_track-global.json` only (329/11613 points re-drawn in one
+  region).  Four sequential reruns with the same binary all reproduce the
+  gate3 hash exactly, under two different work-dir path lengths; a full
+  re-sweep (`round1b`) passed 35/35.  A rare load/timing-sensitive
+  residual (the round1 sweep ran alongside a heap-profiler job), not an
+  effect of the code change; watch for recurrence.
+
 ## Result-changing ideas (not applied)
 
-TBD.
+- Multi-event wire-cell jobs (amortize the 4.4 s TMVA XML parse and ~7 s
+  config/geometry startup across events) — changes the validation job
+  structure, not the code; revisit only if batch throughput matters.
 
 ## Gotchas encountered
 
