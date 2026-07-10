@@ -87,9 +87,14 @@ spec is the *inventory that must survive the round trip*:
 | `cluster_t0` (ns), `flash` (row idx), `matched_flash_gid` | `cluster_scalar` PC per cluster (written by QLMatching) | switch_scope, taggers, Bee op layer |
 | `flag_main_cluster`, `flag_associated_cluster` | `cluster_scalar` (`set_flag` → `flag_*` scalar; QLMatching sets both) | STM/neutrino taggers pick the main cluster |
 | other `flag_*` scalars (e.g. xtpc consistency) | `cluster_scalar` | tagger flag transfer / diagnostics |
-| `flashpred` (per-PMT predicted PE) | per-cluster pcarray | light-mismatch style checks, displays |
 | `opflash` PC (one row per flash×channel: gid, time, ch, pe) | root-node PC of the tree | Bee op layer, any light-aware tagger |
 | run/subrun/event | tensor-set `ident` (event) + job TLAs (run/subrun) | Bee labeling, bookkeeping |
+
+NOT in the file (verified at Milestone 1): the `flashpred` pcarray (per-PMT
+predicted PE written by QLMatching on cluster nodes) is consumed by the
+all-APA MABC's pre-pipeline Bee op dump and does not survive the T0-corrected
+re-clustering.  Nothing downstream needs it; if a future tagger does, it must
+be recomputed or carried explicitly.
 
 Facade **flags are persistent by construction**: `set_flag(name)` writes a
 `flag_<name>` entry into the cluster's scalar PC
@@ -125,6 +130,25 @@ Verification: run one **sim** and one **data** event with the flag on;
   `opflash` PC present;
 - `mabc-all-apa.zip` content-identical to a run without the flag
   (`abtest/hash_archive.py`).
+
+**Done (2026-07-10).** Implemented exactly as designed (`tensor_outname` in the
+toolkit `clus_all_apa`, `save_tensors` TLA, `-save-pctree` flag).  Results on
+sim evt12 (`run_ql_evt.sh mc -save-pctree 4`, joint) and data evt1258
+(`data -save-pctree 2`):
+- compiled config with the knob off is identical to before the change; with
+  the knob on, only the sink block changes (`dump_mode:false`, real
+  `outname`);
+- `mabc-all-apa.zip` content hashes unchanged with the flag on
+  (sim `bcd75f66…`, data `1426a3fc…`);
+- tarballs `pctree-evt{12,1258}.tar.gz` (~1.3–1.4 MB): inventory checker
+  `sbnd_xin/inspect_pctree.py` passes 10/10 on both — live+dead trees,
+  `3d` x/y/z (18431 / 15981 points; data carries the extra `y_cor`/`z_cor`
+  pos-offset arrays), `cluster_scalar` with `cluster_t0` (15/15 and 13/13
+  clusters carrying a t0), `flash`, `matched_flash_gid`,
+  `flag_main_cluster` (10 / 2 mains), `flag_associated_cluster`, root
+  `opflash` PC (gid/time/ch/pe/apa/group).  Also carried: `ctpc_*`,
+  `dead_winds_*` / `dead_gap_*`, `light`/`flash`/`flashlight`, `perblob`,
+  `grouping_scalar` — i.e. the dead-region and optical context PR needs.
 
 ## 4. Stage 2 — loading + round-trip gate (Milestone 2)
 
@@ -308,7 +332,7 @@ SBND MC route documented in `PR_integration.md` §7.
 | # | milestone | status | commits |
 |---|---|---|---|
 | 0 | This document (format spec + roadmap) | DONE 2026-07-10 | (this commit) |
-| 1 | Save: real `TensorFileSink` after all-APA MABC (`-save-pctree`) | — | |
+| 1 | Save: real `TensorFileSink` after all-APA MABC (`-save-pctree`) | DONE 2026-07-10 (sim evt12 + data evt1258, 10/10 inventory, Bee zips byte-identical) | toolkit + validation, see below |
 | 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | — | |
 | 3 | STM tagger on loaded sim + data events | — | |
 | 4 | Roadmap finalized for neutrino PR / BDT stages | — | |

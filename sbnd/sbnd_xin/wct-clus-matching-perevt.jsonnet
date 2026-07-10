@@ -63,6 +63,13 @@ function(
     // true masks, per event, a PMT that never fires while its live neighbours do (a
     // run-dead channel absent from the static ch_mask). run_ql_evt.sh -auto-mask enables it.
     auto_mask      = false,
+    // Persistent post-QL intermediate output. '' (default) = off, production-identical
+    // (the terminal TensorFileSink stays a dump_mode no-op). When set to a path, the
+    // all-APA MABC output point-cloud tree (live+dead, cluster_t0/flash annotations,
+    // opflash PC) is written there as a TensorDM tar.gz -- the input of the
+    // downstream pattern-recognition job (sbnd/docs/sbnd-pattern-recognition.md).
+    // run_ql_evt.sh -save-pctree points it at work/ql_evt<ID>/pctree-evt<ID>.tar.gz.
+    save_tensors   = '',
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -136,7 +143,7 @@ function(
                                                calib_dump=calib_dump, cathode_diag=cathode_diag,
                                                pmt_nl=pmt_nl, auto_mask=auto_mask);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
-            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors);
             local per_apa_pre = [g.intern(
                 innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
                 centernodes=[clus_pipes[n]],
@@ -171,7 +178,7 @@ function(
                     g.edge(flash_attach[n], matching_pipes[n], 0, 0),
                 ]
             ) for n in std.range(0, nanodes - 1)];
-            local clus_all = clus_maker.all_apa(anodes, dump=true);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors);
             g.intern(
                 innodes=per_apa,
                 outnodes=[clus_all],

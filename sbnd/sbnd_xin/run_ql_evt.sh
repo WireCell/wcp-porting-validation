@@ -53,6 +53,9 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   -auto-mask  enable the per-event dynamic dead-PMT auto-mask (masks a PMT
             that is dead in THIS event while its live neighbours fire; off
             by default => byte-identical; grep QLAUTOMASK in the run log)
+  -save-pctree  also write the post-QL point-cloud tree to
+            work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
+            pattern-recognition job; off by default => byte-identical)
 
 Requires: run_img_evt.sh first (work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz).
 Opflash comes from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz (keyed
@@ -86,6 +89,13 @@ PMT_NL="${PMT_NL:-true}"
 # -cathode-diag: log the cathode-crossing TPC0/TPC1 offset three-vector diagnostic
 # (grep "QLCATHODE" in the run log). Off by default; matched output is unchanged.
 CATHODE=""
+# -save-pctree: also write the post-QL point-cloud tree (all-APA MABC output:
+# live+dead trees, cluster_t0/flash annotations, opflash PC) to
+# work/ql_evt<ID>/pctree-evt<ID>.tar.gz -- the persistent intermediate format
+# consumed by the downstream pattern-recognition job (run_pr_evt.sh).  Off by
+# default (production byte-identical; the sink stays a dump_mode no-op).
+# See sbnd/docs/sbnd-pattern-recognition.md.
+SAVEPCT=""
 # -auto-mask: enable the per-event dynamic dead-PMT auto-mask (QLMatching auto_mask).
 # Off by default (production byte-identical); masks a PMT that is dead in THIS event
 # while its live neighbours fire (a run-dead channel absent from the static ch_mask).
@@ -103,6 +113,7 @@ while [ $# -gt 0 ]; do
         -s|--per-apa|--separate) JOINT=false; shift ;;
         -calib|--calib) CALIB=1; shift ;;
         -cathode-diag|--cathode-diag) CATHODE=1; shift ;;
+        -save-pctree|--save-pctree) SAVEPCT=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -185,8 +196,11 @@ process_event() {
     # Optional cathode-crossing offset diagnostic (logs QLCATHODE lines to $LOG).
     local CATHODE_TLA=()
     [ -n "$CATHODE" ] && CATHODE_TLA=(--tla-str "cathode_diag=on")
+    # Optional persistent post-QL point-cloud tree (PR-job intermediate file).
+    local SAVEPCT_TLA=()
+    [ -n "$SAVEPCT" ] && SAVEPCT_TLA=(--tla-str "save_tensors=$QLDIR/pctree-evt${EVT_ID}.tar.gz")
 
-    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}) -> $QLDIR/mabc-all-apa.zip"
+    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
@@ -203,6 +217,7 @@ process_event() {
         --tla-code "auto_mask=$AUTOMASK" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
+        "${SAVEPCT_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
