@@ -35,7 +35,7 @@ wrong by `sign · T · v` — at 1 ms of offset that is ~1.6 m, i.e. everything.
   raw extraction carried a per-event `trigoff/trigger_offset` tree from DAQ
   timestamps (`pdhd/run_light_evt.sh:76-86`); the constancy was *measured*.
 
-### What is needed (external ask)
+### What is needed (external ask — full question list: `pdvd-questions-dune.md`)
 
 Per-event DAQ timestamps on the charge side. Either of:
 
@@ -110,6 +110,7 @@ These are Phases 6–7 of the integration plan, currently parked:
 
 | What | Where |
 |---|---|
+| Questions for Jay / DUNE (T0, cathode SPE, Xe/Ar library, …) | `pdvd/docs/pdvd-questions-dune.md` |
 | Offset fit (statistical cross-check) | `pdvd/ql_light_calib/fit_trigger_offset.py` |
 | Light t0 dump (per event, DTS µs) | `pdvd/ql_light_calib/dump_light_t0.py` |
 | Per-run offset table (empty on purpose) | `pdvd/data/ql_trigger_offset.txt` |
