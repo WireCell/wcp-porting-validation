@@ -1,7 +1,22 @@
 #!/bin/bash
 # Run clustering for one event.
-# Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] <run> <evt|all> [subrun]
+# Usage: ./run_clus_evt.sh [-a anode] [-s sel_tag] [-noq] [-calib] [-op] <run> <evt|all> [subrun]
 #        ./run_clus_evt.sh               # list available runs
+#
+# Q/L (charge-light) matching runs by DEFAULT; -noq (or PDVD_QLMATCH=0) disables it.
+# An event with no converted light (work/<RUN6>_light<EVENTNO>/opflash_pdvd-wct.tar.gz,
+# looked up by the ART EVENT NUMBER parsed from the cluster tarball — the charge work
+# dirs are INDEX-named) auto-falls back to the no-matching chain, so 'evt all' never
+# fails on a light-less event (e.g. run 039324, no raw light staged).
+#   -calib          also dump the hand-scan calib JSON (calib-evt<EVENTNO>.json)
+#   -op / -noop     optical "op" bee instance (default ON when matching)
+#   PDVD_LIGHT_MODEL=semi        semi-analytical visibility backend (default library)
+#   PDVD_TRIGGER_OFFSET_US=<us>  override the light<->charge time-base offset
+#   PDVD_QL_DIAG=1               offset-calibration diagnostic mode: containment off,
+#                                flash_minPE=100, trigger offset forced 0
+# The light<->charge offset = opflash metadata offset_us + the per-run calibrated
+# constant from data/ql_trigger_offset.txt ("<run> <offset_us>" lines), unless
+# overridden by PDVD_TRIGGER_OFFSET_US.
 #
 # EVT may be 'all' to run every discovered event in parallel (capped at nproc,
 # override with PDVD_MAX_JOBS=N).  Events with missing inputs are skipped.
@@ -30,6 +45,12 @@ fi
 
 ANODE=""
 SEL_TAG=""
+# Charge-light (Q/L) matching before the final all-TPC clustering: ON by default
+# (-noq or PDVD_QLMATCH=0 forces the historical no-matching chain).  Per-event,
+# matching auto-disables when the converted light is absent (see QLMATCH_EVT).
+QLMATCH=${PDVD_QLMATCH:-1}
+CALIB=0
+OPDUMP=${PDVD_OPDUMP:-1}   # optical "op" bee instance; default ON, -noop to disable
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -37,6 +58,11 @@ while [ $# -gt 0 ]; do
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
+        -q) QLMATCH=1; shift ;;
+        -noq|--no-qlmatch) QLMATCH=0; shift ;;
+        -calib|--calib) CALIB=1; QLMATCH=1; shift ;;
+        -op|--op) OPDUMP=1; QLMATCH=1; shift ;;
+        -noop|--no-op) OPDUMP=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -47,7 +73,7 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 [-a anode] [-s sel_tag] <run> <evt|all> [subrun]" >&2
+    echo "Usage: $0 [-a anode] [-s sel_tag] [-noq] [-calib] [-noop] <run> <evt|all> [subrun]" >&2
     exit 1
 fi
 RUN=$1
@@ -116,6 +142,79 @@ process_event() {
     fi
     echo "Art event number: $EVENT_NO"
 
+    # Q/L matching needs this event's converted light.  The charge work dirs are
+    # INDEX-named (work/<RUN6>_<idx>) but the light chain's dirs are keyed by the
+    # ART EVENT NUMBER (work/<RUN6>_light<EVENTNO>) — bridge via EVENT_NO above.
+    local QLMATCH_EVT=$QLMATCH
+    local OPFLASH_TAR="$PDVD_DIR/work/${RUN_PADDED}_light${EVENT_NO}/opflash_pdvd-wct.tar.gz"
+    if [ "$QLMATCH_EVT" = 1 ] && [ ! -f "$OPFLASH_TAR" ]; then
+        echo "[note] no $OPFLASH_TAR -> skipping Q/L matching for this event" >&2
+        QLMATCH_EVT=0
+    fi
+
+    # Light<->charge time-base offset: opflash metadata offset_us (0 until the
+    # light chain bakes a calibrated value) + the per-run constant from
+    # data/ql_trigger_offset.txt; PDVD_TRIGGER_OFFSET_US overrides everything;
+    # the diagnostic mode (PDVD_QL_DIAG=1) forces 0.  Also guard that the
+    # opflash metadata 'event' matches the charge EVENT_NO.
+    TRIGGER_OFFSET_US=0
+    READOUT_NTICKS=10000
+    if [ "$QLMATCH_EVT" = 1 ]; then
+        local META_OFF OPFLASH_EVENT
+        META_OFF=$(python3 - "$OPFLASH_TAR" <<'PY' || echo 0
+import sys, json, tarfile
+off = 0.0
+evt = ""
+with tarfile.open(sys.argv[1]) as tf:
+    for m in tf.getmembers():
+        if m.name.endswith("_metadata.json"):
+            md = json.loads(tf.extractfile(m).read())
+            if "offset_us" in md:
+                off = float(md["offset_us"])
+            if "event" in md:
+                evt = int(md["event"])
+            break
+print(off, evt)
+PY
+)
+        OPFLASH_EVENT=$(echo "$META_OFF" | awk '{print $2}')
+        META_OFF=$(echo "$META_OFF" | awk '{print $1}')
+        if [ -n "$OPFLASH_EVENT" ] && [ "$OPFLASH_EVENT" != "$EVENT_NO" ]; then
+            echo "ERROR: charge/light event mismatch: charge art_event=$EVENT_NO but opflash event=$OPFLASH_EVENT ($OPFLASH_TAR)." >&2
+            return 1
+        fi
+        local RUN_OFF=0
+        if [ -f "$PDVD_DIR/data/ql_trigger_offset.txt" ]; then
+            RUN_OFF=$(awk -v r="$RUN_STRIPPED" '$1+0==r+0{print $2}' "$PDVD_DIR/data/ql_trigger_offset.txt" | head -1)
+            RUN_OFF=${RUN_OFF:-0}
+        fi
+        TRIGGER_OFFSET_US=$(python3 -c "print(${META_OFF:-0} + ${RUN_OFF:-0})")
+        if [ -n "${PDVD_TRIGGER_OFFSET_US:-}" ]; then
+            TRIGGER_OFFSET_US="$PDVD_TRIGGER_OFFSET_US"
+        fi
+        if [ "${PDVD_QL_DIAG:-0}" = 1 ]; then
+            TRIGGER_OFFSET_US=0
+        fi
+        echo "Trigger offset: ${TRIGGER_OFFSET_US} us (metadata ${META_OFF} + run table ${RUN_OFF})"
+
+        # Real readout window (post-resample SP frame length, 10000 ticks x
+        # 0.5 us = 5 ms) for the window-truncation flag.
+        local _SPF
+        _SPF=$(ls "$CLUS_INPUT"/protodune-sp-dnnroi-frames-anode*.tar.bz2 2>/dev/null | head -1)
+        if [ -n "$_SPF" ]; then
+            local _NT
+            _NT=$(python3 - "$_SPF" <<'PY'
+import sys, tarfile, io, numpy as np
+with tarfile.open(sys.argv[1]) as tf:
+    name = next(m.name for m in tf.getmembers() if m.name.startswith("frame_"))
+    print(np.load(io.BytesIO(tf.extractfile(name).read())).shape[1])
+PY
+)
+            READOUT_NTICKS=${_NT:-10000}
+            echo "Readout window: ${READOUT_NTICKS} ticks (from $(basename "$_SPF"))"
+        fi
+    fi
+
     if [ -n "$ANODE" ]; then
         ANODE_CODE="[$ANODE]"
         TAG_SUFFIX="_a${ANODE}"
@@ -139,6 +238,13 @@ process_event() {
     # periodic forced GC that is the crash vector.  Config is identical
     # (same pattern as imaging -P).
     local CFG_JSON="$WORKDIR/.wct-clus${TAG_SUFFIX}.json"
+    # Q/L diagnostic mode (offset calibration): containment off (meaningless
+    # until the time base is measured) + a higher PE floor to bound the
+    # un-pruned bundle count.
+    local QL_CONTAIN=true QL_MINPE=25
+    if [ "${PDVD_QL_DIAG:-0}" = 1 ]; then
+        QL_CONTAIN=false; QL_MINPE=100
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \
@@ -147,6 +253,15 @@ process_event() {
         -S "subrun=${SUBRUN}" \
         -S "event=${EVENT_NO}" \
         -S "stepped_center_fallback=${PDVD_STEPPED_CENTER_FALLBACK:-false}" \
+        -S "do_qlmatch=$([ "$QLMATCH_EVT" = 1 ] && echo true || echo false)" \
+        -A "opflash_input=${OPFLASH_TAR}" \
+        -S "calib=$([ "$CALIB" = 1 ] && echo true || echo false)" \
+        -S "save_opflash=$([ "$OPDUMP" = 1 ] && [ "$QLMATCH_EVT" = 1 ] && echo true || echo false)" \
+        -S "trigger_offset_us=${TRIGGER_OFFSET_US:-0}" \
+        -S "readout_window_ticks=${READOUT_NTICKS:-10000}" \
+        -A "light_model=${PDVD_LIGHT_MODEL:-library}" \
+        -S "ql_require_containment=${QL_CONTAIN}" \
+        -S "ql_flash_minpe=${QL_MINPE}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
