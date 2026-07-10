@@ -131,7 +131,11 @@ needed (prompt Ar + shifted Xe component)?
 2. **Dead channels** — we observe ch 24, 27, 28, 34 absent from the DAPHNE
    readout and OpDet14 (ch3010 PMT) with no usable gain. Expected? Is there
    a per-run official bad-channel list we should consume instead of a
-   static mask?
+   static mask?  *Data point (2026-07-10, 120 events of 039252/039253/039349):*
+   **ch16 and ch33 are alive but ~50x dimmer than their peers** (per-event
+   max PE median ≈ 5.6 vs 25–265 for neighbouring PMTs of the same type;
+   below 5 PE in ~45% of events).  Known low-gain/low-HV channels, or a
+   miscalibrated SPE scale on our side?
 3. **Run 039324 light data** — the raw light file was never staged
    (`/nfs/data/1/jjo/data/PDVD/` has only 039252/039253/039349); can it be
    provided so 039324 gets Q/L matching too?

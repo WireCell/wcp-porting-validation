@@ -130,27 +130,50 @@ branch.
 4. ✓ Constancy answered: light window trigger-locked per run; charge windows
    float per event and per crate (top of §1).
 
-## 2. Post-offset checklist (in order)
+## 2. Post-offset checklist — Phase 6 DONE 2026-07-10, Phase 7 batch running
 
-These are Phases 6–7 of the integration plan, **UNBLOCKED as of 2026-07-10**:
-
-1. **Flip diagnostics off**: `require_containment=true`, production
-   `flash_minPE` (≈25), drop `PDVD_QL_DIAG`.
-2. **Renormalize QtoL** (now 1.0 placeholder): median pred/meas PE over
-   good-KS (`ks_dis` small) auto-selected bundles from fresh `-calib` dumps of
-   a few events; set in `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet`.
-3. **Enable `reject_overpred`** (loose) only after QtoL is sane.
-4. **Retune the chi2/PE-error knobs** (`chi2_pmt_excess`, later
-   `pe_err_on_pred`/`pe_err_lowpe_*`) — PDHD values are placeholders; PDVD's
-   89%-cathode PE topology differs.
-5. **Validate the dead-PD self-check** (`auto_mask`, `auto_mask_same_type`):
-   drop known-dead ch24 from the static `ch_mask` on one event — auto-mask must
-   catch it; then `grep QLAUTOMASK` over the batch for false positives.
-6. **Batch**: all 120 events of 039252/039253/039349 with `-calib -op`
-   (039324 stays charge-only until its light raw is staged). Watch wall/RSS of
-   the joint LASSO.
-7. **Hand scan** with `pdvd/ql_scan` (ready; port 5016) → labels → metric/
-   PE-error tuning, PDHD-style.
+1. ✓ **Diagnostics off**: production = `require_containment=true`,
+   `flash_minPE=25` (the cfg defaults; production mode is simply running
+   without `PDVD_QL_DIAG`).  Containment is inert in practice (all bundles of
+   the smoke event contained at the measured offsets).
+2. ✓ **QtoL renormalized — but NOT by the recipe above.**  The planned
+   "median over good-KS auto-selected bundles" gave QtoL≈40 and is **WRONG by
+   ~350x**: with a mis-scaled QtoL the LASSO is amplitude-inert (bundle
+   strengths sit at their ~1.0 initial value; the per-flash background column
+   absorbs the fit), so the auto-selection it feeds on is dominated by
+   accidentals whose flash is ~40x brighter than the prediction.  The correct
+   anchor is external ground truth: the **beam-trigger gold pairs** (flash at
+   `tc_us − charge_bde_us`, cluster = largest-pred bundle on it; 80 pairs) give
+   **QtoL = 0.11** ([16,84]=[0.03,0.25]) — the library+official-eff model
+   OVER-predicts ~10x, flat across PD groups (so the efficiencies are not
+   double-counted).  `ql_light_calib/fit_qtol_gold.py`.  With QtoL=0.11 the
+   smoke event goes from 15 junk matches to 90 LASSO-driven matches, 19/27
+   big clusters.
+3. **`reject_overpred` stays OFF** (revised decision): the gold-pair scatter
+   is still ~x3 around the scale and the per-channel PE calibration is raw;
+   data-tuned ceilings need hand-scan GT (SBND 2.9/4.3, PDHD 3/10 for
+   reference).
+4. ✓ **chi2/PE-error retuned on the gold pairs**: `pe_err_on_pred=true` with
+   floor/frac/lowpe_frac/lowpe_knee = 2.0/0.60/2.0/10.0 (wider than PDHD's
+   0.3/0.40/1.55/5.5 because the per-channel PE scale is uncalibrated — the
+   gold per-channel meas/pred spans x13 WITHIN the cathode-XA group alone).
+   Gold median chi2/ndf 9.7, 71% under the hc ladder ceiling.  NOTE: gold-pair
+   KS median is 0.45 with 0% under the ladder KS ceilings — on PDVD round 1
+   the KS ladder cannot pass true matches; selection is LASSO-amplitude-driven.
+5. ✓ **Dead-PD self-check validated**: with ch24 dropped from the static mask
+   QLAUTOMASK catches it (after retuning `auto_mask_pe_bright` 20→10 and
+   `min_contrast` 2→3 — bottom-PMT neighbour medians almost never reached 20;
+   emulation over the 120 dumps: ch24 caught in 91/120 events, healthy
+   channels <6%).  Side finding: **ch16 and ch33 are genuinely dim** (event-max
+   PE median ~5.6, ~50x below peers; auto-masked when quiet — safe direction);
+   added to the per-run bad-channel question in `pdvd-questions-dune.md`.
+6. **Batch (RUNNING)**: all 120 events of 039252/039253/039349 with
+   `-calib -op` production knobs (039324 stays charge-only until its light
+   raw is staged).  Then `grep QLAUTOMASK` over the batch logs.
+7. **Hand scan** with `pdvd/ql_scan` (ready; port 5016) → labels → then the
+   deferred items: per-channel `measured_pe_scale` refit (beam-gold fit exists
+   but is single-topology), reject_overpred ceilings, chi2/KS ceilings, QtoL
+   refinement.
 
 ## 3. Deferred by design (independent of the offset)
 

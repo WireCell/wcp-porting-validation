@@ -90,16 +90,64 @@ Driver `pdvd/run_clus_evt.sh`:
 ## 4. Round-1 knob summary (what's ON/OFF and why)
 
 ON: shared_flash, opdet_all_volumes, vd_surface_flags (cushion 10 cm),
-auto_mask(+same_type, 5/20/3/2/3), sparse_lasso, lasso_flag_weight (0.2),
-bundle_mask_ks, chi2_relax (pmt_excess 100 — placeholder), highconsist_ladder
-(PDHD KS ceilings, loose c2n), require_containment (production only),
-flash_minPE 25, light_model 'library'.
+auto_mask(+same_type, 5/10/3/3/3 — pe_bright/min_contrast retuned 2026-07-10,
+see §4a), sparse_lasso, lasso_flag_weight (0.2), bundle_mask_ks, chi2_relax
+(pmt_excess 100 — placeholder), highconsist_ladder (PDHD KS ceilings, loose
+c2n — NOTE: true PDVD matches do not pass the KS ceilings yet, see §4a),
+require_containment (production only), flash_minPE 25, light_model 'library',
+**QtoL 0.11** + pred-based pe_err (floor/frac/lowpe_frac/knee =
+2.0/0.60/2.0/10.0) — both calibrated on the beam-flash gold pairs (§4a).
 
-OFF (deliberate): reject_overpred (until QtoL renormalized — QtoL is 1.0
-placeholder), empty_rescue/cluster_rescue (not shared-flash-aware), all
-cross_side/xtpc machinery (single flash — the joint fit handles crossers
-natively), robust_endpoint_trim, pe_err_on_pred/lowpe, pmt_nonlinearity.
+OFF (deliberate): reject_overpred (gold scatter still ~x3 and per-channel PE
+scale uncalibrated; enable with hand-scan-tuned ceilings),
+empty_rescue/cluster_rescue (not shared-flash-aware), all cross_side/xtpc
+machinery (single flash — the joint fit handles crossers natively),
+robust_endpoint_trim, pmt_nonlinearity, measured_pe_scale (beam-gold fit
+exists but single-topology — refit on hand-scan GT).
 Static `ch_mask` = [13,24,27,28,29,32,34,39] (data-dead + Ar-blind).
+
+## 4a. Knob finalization from the beam-flash gold pairs (2026-07-10)
+
+Ground truth without a hand scan: in the CTB beam runs the beam flash's
+folded time is KNOWN per event (`tc_us − charge_bde_us`; the anchor
+`check_trigger_flash.py` validated to −0.9 µs) and its charge partner is the
+largest-predicted-light bundle on that flash → 80 true (cluster, flash) pairs
+from the 120 QtoL=1 DIAG=2 dumps.  `ql_light_calib/fit_qtol_gold.py`.
+
+- **QtoL = 0.11** ([16,84] = [0.03,0.25]): the library + official-eff model
+  OVER-predicts ~10x, flat across PD groups (cathXA 0.13 / botPMT 0.16 /
+  zPMT 0.12 / top memXA 0.10 ⇒ efficiencies not double-counted; one global
+  normalization).  **TRAP (cost us a smoke-run round): fitting QtoL from
+  auto-selected "good-KS" bundles gives 40 — wrong by ~350x.**  With a
+  mis-scaled QtoL the LASSO is amplitude-inert (bundle strengths sit at their
+  initial ~1.0; the per-flash background column, whose entries equal the
+  measured vector, absorbs the fit), so auto-selection is accidental-dominated
+  (flashes ~40x brighter than pred).  Same lesson as the crosser-scan offset
+  fit: only anchor calibrations on external ground truth.
+- **Regime change at the correct scale**: with QtoL=0.11 the LASSO amplitudes
+  become physical and selection is amplitude-driven — smoke event 039252_0
+  went from 15 junk matches (KS-accidentals) to 90 matches / 61 flashes,
+  19/27 big (>1000 pt) clusters.
+- **Gold-pair KS median is 0.45 (0% under the 0.06–0.10 ladder ceilings)**:
+  the KS ladder passes ~no true matches on PDVD round 1.  Cause is at least
+  partly the raw per-channel PE calibration — the gold per-channel meas/pred
+  spans **x13 within the cathode-XA group alone** (ch10 0.68 vs ch7 0.05; the
+  known "no 1-PE peak" cathode SPE question, §2 of pdvd-questions-dune.md).
+  A per-channel `measured_pe_scale` fitted on half the gold sample improves
+  the other half's KS only 0.43→0.33 median, so shape mismatch is NOT just
+  channel gains (bright-beam-shower topology; possible saturation) — the
+  per-channel correction is documented but NOT baked in.
+- **pe_err retune on gold**: measured-based errors give chi2/ndf ~10³–10⁴ on
+  true matches (catastrophic "predicted light, measured ~0" channels);
+  pred-based 2.0/0.60/2.0/10.0 gives median 9.7 with 71% under the c2n=35
+  ceiling.  Wider than PDHD's 0.3/0.40/1.55/5.5 deliberately (uncalibrated
+  per-channel scale).
+- **auto_mask retune + validation**: with ch24 dropped from the static mask,
+  QLAUTOMASK catches it only after pe_bright 20→10 + min_contrast 2→3
+  (bottom-PMT neighbour medians almost never reach 20; emulation over 120
+  dumps: ch24 caught 91/120, healthy channels <6%).  Live-but-dim ch16/ch33
+  (event-max median ~5.6 PE, ~50x below peers) get per-event masked when
+  quiet — safe direction, flagged to DUNE (questions doc §4.2).
 
 ## 5. Caveats
 
@@ -108,7 +156,8 @@ Static `ch_mask` = [13,24,27,28,29,32,34,39] (data-dead + Ar-blind).
   §1). The calib-dump/Bee flash `time` folds the input-0 (BDE) offset; a
   top-volume anchor read from the dump display therefore carries the ~17–32 µs
   crate skew (the matching geometry itself uses the correct per-side value).
-- **QtoL / absolute PE scale uncalibrated** — KS leads round 1; chi2-based
-  branches are loosened accordingly.
+- **QtoL calibrated (0.11, §4a) but the per-channel PE scale is not** — the
+  LASSO amplitude leads round-1 selection (NOT KS: true matches fail the KS
+  ladder ceilings, §4a); chi2-based branches are loosened accordingly.
 - z-wall PMTs not in `pd_walls` (~1% of PE); rescues off; `flag_at_cathode`
   inert — all revisited after the first hand scan (`pdvd-ql-pending.md` §2-3).
