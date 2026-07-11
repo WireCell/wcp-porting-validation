@@ -304,9 +304,12 @@ byte-identical (events 6604/6821 vs the gate3 reference, `hash_archive.py`).
 ```
 ./run_img_evt.sh  <mc|data> <idx>              # per-event imaging (existing)
 ./run_ql_evt.sh   <mc|data> -save-pctree <idx> # Q/L matching + pctree tarball
-./run_pr_evt.sh   <mc|data> -stm <idx>         # PR job: STM tagger
-./run_pr_evt.sh   <mc|data> -nu  <idx>         # PR job: STM + neutrino PR (M5)
-# verdicts:  grep "TaggerCheckSTM: cluster" work/pr_evt<ID>/wct_pr_evt<ID>.log
+./run_pr_evt.sh   <mc|data> -stm <idx>         # PR job: STM tagger only (M3 gate)
+./run_pr_evt.sh   <mc|data> -tgm <idx>         # PR job: TGM -> STM (M7)
+./run_pr_evt.sh   <mc|data> -nu  <idx>         # PR job: TGM -> STM -> neutrino PR
+./run_pr_evt.sh   <mc|data> -dnn <idx>         # -nu + SCN DL vertex (uBooNE wts)
+# verdicts:  grep "TaggerCheckTGM: cluster" work/pr_evt<ID>/wct_pr_evt<ID>.log
+#            grep "TaggerCheckSTM: cluster" work/pr_evt<ID>/wct_pr_evt<ID>.log
 #            grep "TaggerCheckNeutrino:" work/pr_evt<ID>/wct_pr_evt<ID>.log
 # display:   work/pr_evt<ID>/mabc-pr.zip (clustering + dead layers; with -nu also
 #            track_fit / shower_track / vertices layers + the "mc" particle flow)
@@ -502,6 +505,83 @@ the SBND PR job loads no ROOT, so python C-extensions (`_ctypes`) fail with
 `undefined symbol: PyTuple_Type`.  `run_pr_evt.sh` preloads
 `libpython3.11.so.1.0` (from `sysconfig LIBDIR`) whenever DL is requested.
 
+### 6.5 TGM tagger port (`tagger_check_tgm`) — DONE (M7, 2026-07-10)
+
+The toolkit had **no dedicated through-going-muon tagger** — only the reduced
+front/back-endpoint TGM branch inside `TaggerCheckSTM` (which, using the
+no-inset `fiducial=dv`, misses crossers whose ends sit exactly on the active
+boundary).  New component `clus/src/TaggerCheckTGM.cxx` ports the prototype
+`WCPPID::ToyFiducial::check_tgm` (`prototype_base/pid/src/Cosmic_tagger.h:1331`,
+walkthrough in `clus/docs/tgm/check_tgm.html`): pairwise extreme-point groups
+(`get_extreme_wcps`), first-outside-FV point per group; CASE A both-ends-out
+with ¼/½/¾ interior sampling (+ other-group waypoint re-check); CASE B
+one-end-in with PCA gate, 30 cm local Hough direction, prolonged-signal
+angles (<10°/10°/5° to U/V/W in the drift metric → `check_signal_processing`)
+and `check_dead_volume`.  Pipeline entry `tagger_check_tgm`, placed
+**after fiducialutils, before tagger_check_stm**; `TaggerCheckSTM` now skips
+mains already flagged TGM (inert in all pre-existing pipelines).
+
+Port decisions (all documented in the source header):
+- **Both-TPC fiducial (the tricky bit).**  The FV in/out tests use a
+  dedicated `BoxFiducial` `sbnd_pr_fv` spanning BOTH TPCs (the overall FV
+  bounds, x −201.05..+201.05 cm) so a cathode-crossing track is not an
+  "exiter" at x=0.  `fiducial=dv` is unusable here: `DetectorVolumes::
+  contained()` is the union of per-face **sensitive** volumes, which excludes
+  the CPA slab (|x| < 0.45 cm) and has no inset.  The metadata margins
+  (2/2/2.5/2.5/3/3 cm) are applied via the tagger's `fv_tolerance`
+  (FiducialUtils tolerance-vec convention, negative = inset).  Dead-region /
+  signal-processing checks still use the grouping's FiducialUtils
+  (per-(apa,face) logic, unchanged).
+- `offset_x = 0`: runs post-`switch_scope`, coordinates already T0-corrected.
+- The prototype's `main_flash->get_type()==2` beam protection → beam-window
+  test on `cluster_t0` (same per-mode windows as §6.1).  The protected
+  branches require the **unported** `check_neutrino_candidate()` → v1 never
+  tags an in-beam-window bundle (conservative; port is a follow-up).
+- U/V/W directions from `compute_wireplane_params` per (apa,face) — not the
+  prototype's hard-coded ±60°; drift angle test uses |dir·x| so both SBND
+  drift signs are handled.
+- Multi-main loop from day one; `WCT_TGM_DEBUG=1` dumps per-pair CASE-A data.
+
+**M7 results** (`./run_pr_evt.sh <mode> -tgm <idx>`; `-nu`/`-dnn` now run the
+full chain `…,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino`):
+
+| event | TGM / mains | notes |
+|---|---|---|
+| mc 12 | 5/10 | nu bundle (cluster 4, in-window) protected; vertex from `-nu` identical to M5 |
+| data 686 | 4/6 | |
+| data 1258 | 0/2 | the 253-cm in-window cosmic is beam-protected (expected v1) |
+| data 1302 | 7/13 | incl. 366-cm top→TPC0-anode and 370-cm top→bottom crossers |
+| data 1346 | 4/6 | |
+| data 1698 | 5/8 | |
+| data 1720 | 7/10 | textbook 399-cm top→bottom crossers in both TPCs (clusters at x<0 and x>0) |
+
+**The M3 "first STM tag" is reclassified.**  evt1302 cluster 5 — STM-tagged
+in the STM-only pipeline — is per the TGM analysis a **366-cm through-going
+track** entering at the top (y = 199.8 cm) and exiting at the TPC0 anode
+(x = −201.3 cm), midpoint well inside.  `TaggerCheckSTM`'s own reduced TGM
+check missed it because the no-inset `fiducial=dv` reads boundary points as
+inside.  With M7's pipeline order the TGM stage vetoes it and STM correctly
+does not fire — this is exactly why the prototype runs the cosmic tagger
+before STM.  (The M3 §5 geometry description of this cluster could not be
+reproduced from the surviving logs and should be disregarded.)  Across all 7
+events the `-tgm` pipeline currently yields no STM tags; a genuine SBND
+stopped-muon example awaits a larger sample.
+
+Known v1 behaviors (prototype-faithful, revisit if they matter):
+- Tiny anode fragments (0–12 cm mains whose few points all sit past the
+  margin, e.g. from small t0 residuals) are tagged via the prototype's
+  `ngroups==2 && both-ends-out && no-interior-point` branch.  Harmless for
+  neutrino selection; a `min-length` knob would deviate from the prototype.
+- No in-window TGM possible until `check_neutrino_candidate`
+  (`2dtoy/src/ToyFiducial.cxx:1284`, Dijkstra + kink topology) is ported.
+- No cathode-crossing main appeared among the 7 events' TGM candidates; the
+  box-FV x=0 behavior is by construction but untested on a real crosser.
+
+Gates: uBooNE 2-event smoke (m7smoke, DL-off) byte-identical to gate3; SBND
+`-stm` pipeline reproduces the M3 verdicts exactly (incl. evt1302 cluster 5
+STM=1 — the reclassification only happens when `tagger_check_tgm` is in the
+pipeline).
+
 ## 7. Attention points (gotchas)
 
 - **`dump_mode:true` writes nothing.** The `trash-*.tar.gz` `TensorFileSink`s
@@ -558,8 +638,9 @@ the SBND PR job loads no ROOT, so python C-extensions (`_ctypes`) fail with
 | 3 | STM tagger on loaded sim + data events | DONE 2026-07-10 (7 events; first STM tag: data evt1302 cluster 5 — corrected from evt1346 at M5 — anode-entering stopped-muon candidate) | 2b3d50df / 5535214 |
 | 4 | Roadmap finalized for neutrino PR / BDT stages (§6) | DONE 2026-07-10 | — / eb3ea44 |
 | 5 | `tagger_check_neutrino` wired (beam-bundle selection, geometric vertex, Bee PR layers) | DONE 2026-07-10 (7 events; §6.1 results table; all identity gates green) | 12e68f34 / 3a565f0 |
-| 6 | DNN (SCN) vertex demo with uBooNE weights (§6.4) | DONE 2026-07-10 (sparseconvnet rebuilt; DL-off gate policy locked to gate3; evt12 + evt1258 DL-vs-geometric table; retraining required for physics) | — / (this commit) |
+| 6 | DNN (SCN) vertex demo with uBooNE weights (§6.4) | DONE 2026-07-10 (sparseconvnet rebuilt; DL-off gate policy locked to gate3; evt12 + evt1258 DL-vs-geometric table; retraining required for physics) | — / d7f71c2 |
+| 7 | TGM tagger port (`TaggerCheckTGM`, both-TPC box FV) (§6.5) | DONE 2026-07-10 (7 events; crossers tagged, beam bundles protected; M3 STM tag reclassified TGM; gates green) | (this commit) / (this commit) |
 
-Next up: the TGM tagger port from the prototype (`check_tgm`) with a
-both-TPC box fiducial, then the doc-only closeout (PID retune comments,
-BDT/retraining roadmap).
+Next up: doc-only closeout (PID retune comments, BDT/retraining roadmap,
+axis-audit status), then beyond this campaign: `check_neutrino_candidate`
+port, SBND SCN retraining, beam-window calibration on a larger sample.

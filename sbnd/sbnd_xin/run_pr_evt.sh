@@ -48,8 +48,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
   -stm      shorthand for the STM tagger chain:
             -p switch_scope,steiner,fiducialutils,tagger_check_stm
             (uses sbnd_track_fitting.json; grep TaggerCheckSTM in the log)
-  -nu       shorthand for the neutrino-PR chain:
-            -p switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino
+  -tgm      shorthand for the cosmic-tagger chain (TGM then STM):
+            -p switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm
+            with the per-mode beam window (in-window bundles are never TGM-tagged;
+            grep TaggerCheckTGM in the log)
+  -nu       shorthand for the full PR chain:
+            -p switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino
             with the per-mode beam window (grep TaggerCheckNeutrino in the log;
             Bee layers track_fit/shower_track/vertices + mc particle flow)
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
@@ -86,8 +90,9 @@ while [ $# -gt 0 ]; do
         mc|data) MODE="$1"; shift ;;
         -p) PIPELINE="$2"; shift 2 ;;
         -stm|--stm) PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_stm"; shift ;;
-        -nu|--nu) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino"; shift ;;
-        -dnn|--dnn) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino"
+        -tgm|--tgm) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm"; shift ;;
+        -nu|--nu) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"; shift ;;
+        -dnn|--dnn) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"
                     DL_WEIGHTS="uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth"; shift ;;
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -p*) PIPELINE="${1#-p}"; shift ;;
