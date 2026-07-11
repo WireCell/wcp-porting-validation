@@ -17,6 +17,13 @@
 # pointer-order dependent (track_fit/vertices/shower_track outputs vary
 # run-to-run with ASLR on), and the byte-identity A/B gate needs stable
 # addresses.  Set ASLR=1 to run with normal randomization.
+#
+# The DL (SCN) vertex is disabled by default (-A dl_weights=): the gate3
+# reference was produced while the python env was broken (SCN import failed,
+# silent geometric fallback), so byte-identity gates are defined DL-off —
+# and SCN/GPU inference is not guaranteed bit-stable anyway.  Set
+# DL_WEIGHTS=uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth for a DL-on
+# (functional, non-gate) run.
 set -eu
 SCRIPTS=$(cd "$(dirname "$0")" && pwd)
 QLPORT=$(dirname "$SCRIPTS")
@@ -45,6 +52,7 @@ python3 "$ABTEST/timecmd.py" meta.txt \
     $NOASLR wire-cell -l stderr -l "wct_${RUN}_${EV}.log:debug" -L clus:debug \
     -A kind=both -A "beezip=mabc_${IDX}.zip" -A "initial_index=$IDX" \
     -A "initial_runNo=$RUN" -A "initial_subRunNo=$SR" -A "initial_eventNo=$EV" \
+    -A "dl_weights=${DL_WEIGHTS:-}" \
     -A "infiles=$FILE" "$QLPORT/uboone-mabc.jsonnet" \
     > stdout.log 2>&1 || true
 

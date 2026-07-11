@@ -448,6 +448,60 @@ MC, then (b) retrain BDTs on SBND simulation and fork `Sbnd*` output visitors
 (fork-by-duplication, not shared helpers).  Truth-level validation needs the
 SBND MC route documented in `PR_integration.md` §7.
 
+### 6.4 DNN neutrino vertex (SCN) — demo DONE (M6, 2026-07-10)
+
+The DL vertex path (`determine_overall_main_vertex_DL` →
+`pyutil/python/SCN_Vertex.py`: torch state-dict `.pth`, sparseconvnet
+`DeepVtx`, python embedded in the wire-cell process) needed **no C++ change**
+for SBND: voxelization is min-subtracted at 0.5 cm resolution, so the network
+input is translation-invariant and TPC0's negative x is harmless.  Only the
+*charge* feature is detector-tuned (`dQdx_scale` 0.1 / `dQdx_offset` −1000,
+uBooNE values).
+
+**Environment repair.**  `import sparseconvnet` had rotted (built against an
+older torch ABI; `undefined symbol: _ZNK3c1010TensorImpl15incref_pyobjectEv`
+vs torch 2.5.1+cu121) — every DL-configured run since had silently fallen
+back to the geometric vertex via the try/catch (`W ... DL vertex failed:
+SCN_Vertex: import failed` in the logs).  Fixed by rebuilding from source:
+`pip install --no-build-isolation -e /nfs/data/1/xqian/toolkit-dev/SparseConvNet`.
+If torch is ever upgraded, sparseconvnet must be rebuilt again (ABI pin).
+
+**Byte-identity gate policy (important).**  The gate3 uBooNE reference was
+produced while the import was broken, i.e. **gate3 is defined DL-off** — and
+SCN/GPU inference is not guaranteed bit-stable anyway.  Therefore:
+`qlport/uboone-mabc.jsonnet` now exposes `dl_weights` as a TLA (default = the
+production uBooNE path; compiled config verified identical when unset), and
+`scripts/run_one.sh` passes `-A dl_weights=` **empty by default** — gate
+smokes stay DL-off and byte-comparable to gate3 forever (verified: m6smoke ==
+gate3 with the working python env).  DL-on runs are functional demos:
+`DL_WEIGHTS=uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth ./run_one.sh …`.
+
+**uBooNE DL-on sanity** (evt 6604): SCN inference ran in-process (1119.7 ms,
+matching the April `dl_vtx_optimization` timings; no failure warning) and the
+re-ranked DL vertex agreed with the geometric one — Bee zip content hash
+unchanged (`a17dd831`).
+
+**SBND demo** (`./run_pr_evt.sh <mode> -dnn <idx>` = `-nu` + uBooNE weights):
+
+| event | geometric main vertex (cm) | DL main vertex (cm) | note |
+|---|---|---|---|
+| mc 12 | (−65.2, 141.9, 464.8) | (−42.0, 136.4, 477.8) | DL accepted by re-rank; shifted ~27 cm within the PR graph |
+| data 1258 | (−126.0, 158.4, 238.2) | (−35.6, 45.1, 328.4) | in-window 253-cm cosmic: DL picks a different spot ~180 cm along the track |
+
+Both runs: SCN inference ~1.1 s, no import/inference failures.  **The
+weights are uBooNE-trained and untuned on SBND — these vertex choices are a
+plumbing demo, not physics.**  Production use needs: (a) SCN retraining on
+SBND MC with truth vertices (route: `PR_integration.md` §7); (b)
+`dQdx_scale`/`dQdx_offset` recalibrated to SBND charge scale; (c)
+`dl_vtx_min_accept_score` revalidated.  Until then keep `dl_weights=''`
+(geometric) as the SBND default — `-nu` does exactly that.
+
+**LD_PRELOAD gotcha (SBND-only).**  The uBooNE qlport job loads
+`WireCellRoot`, and ROOT pulls libpython in with global symbol visibility;
+the SBND PR job loads no ROOT, so python C-extensions (`_ctypes`) fail with
+`undefined symbol: PyTuple_Type`.  `run_pr_evt.sh` preloads
+`libpython3.11.so.1.0` (from `sysconfig LIBDIR`) whenever DL is requested.
+
 ## 7. Attention points (gotchas)
 
 - **`dump_mode:true` writes nothing.** The `trash-*.tar.gz` `TensorFileSink`s
@@ -503,7 +557,9 @@ SBND MC route documented in `PR_integration.md` §7.
 | 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | DONE 2026-07-10 (tar members identical; Bee y/z/q/id exact, x within flash-merge bound) | fd1522bf / bd601ed |
 | 3 | STM tagger on loaded sim + data events | DONE 2026-07-10 (7 events; first STM tag: data evt1302 cluster 5 — corrected from evt1346 at M5 — anode-entering stopped-muon candidate) | 2b3d50df / 5535214 |
 | 4 | Roadmap finalized for neutrino PR / BDT stages (§6) | DONE 2026-07-10 | — / eb3ea44 |
-| 5 | `tagger_check_neutrino` wired (beam-bundle selection, geometric vertex, Bee PR layers) | DONE 2026-07-10 (7 events; §6.1 results table; all identity gates green) | (this commit) / (this commit) |
+| 5 | `tagger_check_neutrino` wired (beam-bundle selection, geometric vertex, Bee PR layers) | DONE 2026-07-10 (7 events; §6.1 results table; all identity gates green) | 12e68f34 / 3a565f0 |
+| 6 | DNN (SCN) vertex demo with uBooNE weights (§6.4) | DONE 2026-07-10 (sparseconvnet rebuilt; DL-off gate policy locked to gate3; evt12 + evt1258 DL-vs-geometric table; retraining required for physics) | — / (this commit) |
 
-Next up: DNN vertex demo (SparseConvNet env repair + `-dnn`), then the TGM
-tagger port from the prototype with a both-TPC box fiducial.
+Next up: the TGM tagger port from the prototype (`check_tgm`) with a
+both-TPC box fiducial, then the doc-only closeout (PID retune comments,
+BDT/retraining roadmap).

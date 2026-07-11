@@ -26,6 +26,12 @@ local anode = tools.anodes[0];
 local anodes = tools.anodes;
 local clus = import "pgrapher/common/clus.jsonnet";
 
+// SCN vertex weights; production default.  Override with -A dl_weights=''
+// (empty) for byte-identity gate runs, which are defined DL-off (the gate3
+// reference predates the working python env -- see
+// sbnd/docs/sbnd-pattern-recognition.md gate policy).
+local default_dl_weights = "uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth";
+
 
 
 
@@ -1419,11 +1425,11 @@ local ingraph_dead(infiles, datapath=pointtree_datapath) = pg.pipeline([
     ub.multiplex_blob_views(infiles, 'dead', ["uv","vw","wu"]),
     ub.UbooneClusterSource(infiles, datapath=datapath, sampler=ub.bs_dead, kind='dead', optical=false)
 ]);
-local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1, eventNo=1) =
+local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights) =
     local tracking_output = "track_com_%d_%d.root" % [runNo, eventNo];
     pg.pipeline([
         ub.MultiAlgBlobClustering(beezip, datapath=datapath, index=index, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, trackfitting_config="uboone_track_fitting.json", tracking_output=tracking_output,
-                                  dl_weights="uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth",  // set to path of t48k-m16-l5-lr5d-res0.5-CP24.pth to enable DL vertex
+                                  dl_weights=dl_weights,  // '' disables the DL vertex (geometric fallback)
                                   numu_weights_dir="uboone/weights",
                                   nue_weights_dir="uboone/weights"),
         ub.ClusterFlashDump(datapath=datapath)
@@ -1435,18 +1441,18 @@ local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1
 
 
 local graphs = {
-    live :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1) 
-        pg.pipeline([ingraph_live(infiles, datapath), 
-                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo)]),
+    live :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights)
+        pg.pipeline([ingraph_live(infiles, datapath),
+                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights)]),
 
-    dead :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1)
-        pg.pipeline([ingraph_dead(infiles, datapath), 
-                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo)]),
+    dead :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights)
+        pg.pipeline([ingraph_dead(infiles, datapath),
+                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights)]),
 
-    both :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1)
+    both :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights)
         local live = ingraph_live(infiles, datapath);
         local dead = ingraph_dead(infiles, datapath);
-        local out = outgraph(beezip, datapath, index, runNo, subRunNo, eventNo);
+        local out = outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights);
         local fanin = ub.TensorSetFanin();
         pg.intern(innodes=[live,dead], outnodes=[out], centernodes=[fanin],
                   edges=[
@@ -1477,17 +1483,18 @@ local graphs = {
 local extra_plugins = ["WireCellAux", "WireCellRoot", "WireCellClus"];
 
 // kind can be "live", "dead" or "both".
-function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath, 
-         initial_index="0", initial_runNo="1", initial_subRunNo="1", initial_eventNo="1")
-    
+function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath,
+         initial_index="0", initial_runNo="1", initial_subRunNo="1", initial_eventNo="1",
+         dl_weights=default_dl_weights)  // -A dl_weights= disables the DL vertex (byte-identity gate runs)
+
     // Parse the integer values from strings
     local index = std.parseInt(initial_index);
     local runNo = std.parseInt(initial_runNo);
     local subRunNo = std.parseInt(initial_subRunNo);
     local eventNo = std.parseInt(initial_eventNo);
-    
+
     // Use these parameters in the main graph
-    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo), 
+    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights),
             "Pgrapher", extra_plugins)
 
 //function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath)
