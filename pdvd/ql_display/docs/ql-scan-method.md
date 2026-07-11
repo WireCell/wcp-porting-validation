@@ -81,6 +81,26 @@ to correct it and Save under the same tag (or work in your own tag and diff
 the `labels-*.json`). The per-decision reasons live in
 `ql_display/decisions/decisions-evt<ID>.jsonl`.
 
+## Xe/175 nm re-scan round (2026-07-11)
+
+After the data-driven library verdict (`../../docs/pdvd-questions-dune.md`
+§3) the QL default switched to the Xe/175 nm library (toolkit `0adb15fa`:
+175 nm grid, `eff_Xe`, ch 13/29/39 unmasked, QtoL 0.082) and the 10 events
+were reprocessed (the 128 nm dumps are kept as
+`work/039252_*/128nm-calib-evt*.json`). The scan was REDONE from scratch on
+the new dumps with the same rubric:
+
+- evidence: `png-xe/evt<ID>/` + `context-xe/context-evt<ID>.jsonl`
+- decisions: `decisions-xe/decisions-evt<ID>.jsonl`
+- labels: tag **`claude-xe`** (the 128 nm round stays under tag `claude`,
+  meaningful only against the archived 128 nm dumps)
+- scanner deltas vs round 1: ch 13/29/39 now appear in the light maps and
+  channel panels; the auto set differs (~+5-10 bundles/event at the new
+  QtoL); amplitude bands, nearPD logic and duplicate resolution unchanged.
+
+Review:
+`./ql_scan/serve_ql_scan.sh 5017 --tag claude-xe work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json`
+
 ## Commands (reproduce)
 
 ```bash

@@ -148,6 +148,27 @@ in Python, validated exact vs the C++ matcher):
   as the gain. An external ADC-per-PE number for the cathode DAPHNE path is
   still what's needed.
 
+**Status confirmed (2026-07-11, local dunesw inspection):** the ask is real —
+there is **no per-channel DAPHNE gain/SPE calibration anywhere in dunesw
+v10_21_00d00**; the only PE scale in the official reco chain is the flat
+`SPEArea` in the OpHit config (one number for all 40 OpDets), and the
+official channel map (`dunecore/config_data/PDVD_PDS_Mapping_v09162025.json`)
+carries `eff_Ar`/`eff_Xe` but **no gain fields**. The hardware asymmetry is
+also real by design: the cathode modules sit on the HV plane and are read
+out via Power-over-Fiber + analog-signal-over-fiber, while the membrane
+modules use conventional copper readout to DAPHNE — different front-end,
+different bandwidth (our shape measurement, cathode FWHM ≈ 0.2 µs vs
+membrane 0.35–0.9 µs, is the data-level proof). Transferring the membrane
+1-PE **amplitude** is NOT safe; the area-based transfer stays the interim.
+**Sharpened asks for the PDS consortium / DAPHNE team:**
+(a) SPE fit results for the cathode PoF channels for the Aug–Sep 2025 runs;
+(b) whether dedicated low-light / LED calibration runs exist where the
+cathode 1-PE peak is resolved (the DAPHNE self-trigger threshold in physics
+runs sits at/above 1 PE on these channels, so physics data alone cannot
+resolve it);
+(c) the PoF front-end transimpedance/gain numbers, for an electronics-based
+scale estimate even without an SPE peak.
+
 ## 3. Photon library: Argon (128 nm) or Xenon (175 nm)?
 
 **Ask:** were runs **039252 / 039253 / 039349** (2025-08/09) pure argon or
@@ -197,10 +218,19 @@ blessed 175 nm per-OpDet efficiencies). Evidence, all three runs identical
 Caveats: the A/B used the 128 nm efficiencies for both (no blessed 175 nm
 set yet), and the per-channel PE scale is uncalibrated (§2) — this limits
 the KS discrimination; the Ar-blind liveness (items 1–2) is the robust part.
-**Planned action:** switch `photon_library_file` to
-`pdvd-photlib-vis-v5-175nm` and unmask 13/29/39 (32 pending its true 175 nm
-efficiency) once the official efficiencies arrive; QtoL and the §2 scale
-work then redo under the new library.
+
+**ADOPTED as default (2026-07-11, toolkit `0adb15fa`):**
+`photon_library_file` → `pdvd-photlib-vis-v5-175nm`, `VUVEfficiency` →
+the official `eff_Xe` column (only 13/29/39 change), `ch_mask` →
+`[24,27,28,32,34]` (13/29/39 unmasked), QtoL refit 0.11 → **0.082** on the
+80 gold pairs under the new model. ch 32 stays masked because the official
+map has `eff_Xe = 0` for it — even though our data show it responding at
+its PEN peers' level (see above); if an official nonzero 175 nm efficiency
+for the uncoated PMT appears, unmask it. The 10 hand-scan events of 039252
+were reprocessed under the new default (the 128 nm calib dumps are kept as
+`work/039252_*/128nm-calib-evt*.json`). Still wanted from DUNE: official
+doping confirmation (level + run history) and blessing of the 175 nm
+efficiencies (`PDVD_PDS_Mapping_v09162025`).
 
 ## 4. Other items (smaller, please confirm)
 
