@@ -165,3 +165,82 @@ three-way flash ambiguities — all flagged low/med with the alternatives
 named in `reason`. Disagreements found during the human review are exactly
 the interesting sample: they localize where the rubric (or the round-1
 calibration) misleads.
+
+## 7. Xe/175 nm re-scan round (2026-07-11)
+
+After the library switch (toolkit `0adb15fa`: 175 nm grid, `eff_Xe`,
+ch 13/29/39 unmasked, QtoL 0.082) the 10 events were reprocessed and the scan
+REDONE from scratch (independent agents, same rubric; old `claude` tag =
+128 nm round, valid only against the archived `128nm-calib-evt*.json` dumps).
+Decisions: `../decisions-xe/`; labels tag **`claude-xe`**.
+
+| event | judged | keep | reject | add | agree w/ auto |
+|---|---|---|---|---|---|
+| evt298567 (idx 0) | 60 | 25 | 35 | 6 | 42% |
+| evt298581 (1) | 61 | 27 | 34 | 3 | 44% |
+| evt298595 (2) | 76 | 37 | 39 | 6 | 49% |
+| evt298609 (3) | 68 | 38 | 30 | 0 | 56% |
+| evt298623 (4) | 82 | 39 | 43 | 2 | 48% |
+| evt298637 (5) | 79 | 43 | 36 | 2 | 54% |
+| evt298651 (6) | 75 | 34 | 41 | 3 | 45% |
+| evt298665 (7) | 83 | 35 | 48 | 2 | 42% |
+| evt298679 (8) | 55 | 27 | 28 | 3 | 49% |
+| evt298693 (9) | 71 | 35 | 36 | 2 | 49% |
+| **total** | **710** | **340** | **370** | **29** | **48%** |
+
+Confidence: 174 high / 429 med / 136 low. Metric profile:
+
+| | ks q25/50/75 | chi2/ndf | pred/meas |
+|---|---|---|---|
+| keep (340) | 0.20/0.28/0.38 | 1.8/4.2/9.4 | 0.64/**0.90**/1.19 |
+| reject (370) | 0.27/0.39/0.53 | 4.3/14/48 | 0.07/**0.34**/0.93 |
+
+3/340 keeps vs 109/370 rejects outside pred/meas [0.1, 10].
+
+Deltas vs the 128 nm round (§1-§5):
+
+1. **The calibrated QtoL turned amplitude into a sharp knife.** Keep
+   pred/meas tightened from 0.56/0.79/1.11 to 0.64/0.90/1.19 (median ~0.9);
+   every scan agent independently reported the r ∈ [0.3, 3] band as the
+   decisive criterion, with rejects bimodal: amplitude-starved
+   strength≈0.95 stubs (r < 0.1 — the LASSO's high-strength accidental
+   riders on bright flashes) and a few x5-10 over-predictors whose true
+   flash is window-truncated.
+2. **The auto set grew (662 → 710 judged) and the additions hurt purity.**
+   Agreement dropped 53% → 48%; the growth is mostly (a) small marginal
+   bundles admitted at the new QtoL and (b) more one-cluster-many-flashes
+   duplicates (~85 arbitration rejects across 10 events, several clusters
+   auto-kept on 3-5 flashes). Cross-flash exclusivity remains the single
+   largest available improvement, unchanged from §5.
+3. **More adds (8 → 29), now including genuine rescues.** With amplitude
+   discriminating, agents confidently re-homed greedy wrong-flash autos
+   (e.g. evt298567 c18/c73/c139/c141) and rescued LASSO-stranded big
+   tracks onto bright unowned flashes (evt298679: 620 cm track → 15.3 kPE
+   flash at r 1.09; evt298637: 448 cm track → 9.8 kPE flash at r 1.10;
+   evt298651: 318 cm never-auto cluster at r 0.87).
+4. **Newly-live ch 13/29/39 are unremarkable** — populated in bottom-volume
+   maps/panels, consistent with predictions in keeps, and NO verdict hinged
+   on them; ch32 correctly absent everywhere. The unmasking added ndf
+   without adding pathology.
+5. **Cathode in-group gain spread is still the visible residual**: multi-
+   bundle bright-flash sums of ~2x were tolerated (known x2.5-3 spread),
+   single-cathode-XA channels occasionally carry x8-12 per-channel
+   mispredictions with a clean total, and KS stays relative-only (keep
+   median ks 0.28 ≈ round 1's 0.27 — the library switch did not move KS,
+   consistent with the gold-pair A/B where 175 nm won only marginally).
+6. **Bright-flash orphans persist** (7-15 kPE flashes with no amplitude-
+   sane candidate in several events) — charge partner truncated or outside
+   the readout; deliberately left unmatched rather than force-fitted.
+
+Tooling note: evt298595 exposed a uid collision (two distinct ident=-1
+clusters share uid 3999999 under one flash). `make_labels.py` now accepts an
+optional `bundle_idx` in a decision line to disambiguate, and the round-trip
+check downgrades the inherent scan-state ambiguity (the viewer keys ticks by
+(flash, uid)) to a WARNING. The labels JSON remains the exact record.
+
+Review:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+./ql_scan/serve_ql_scan.sh 5017 --tag claude-xe work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json
+```

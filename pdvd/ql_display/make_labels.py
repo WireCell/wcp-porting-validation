@@ -87,6 +87,7 @@ def main():
         by_key.setdefault((b["flash_gid"], b["main_cluster"]), []).append(j)
 
     decisions = {}
+    decisions_idx = {}   # bundle_idx-keyed, for uid-collision disambiguation
     with open(args.decisions) as fh:
         for ln in fh:
             ln = ln.strip()
@@ -98,6 +99,14 @@ def main():
             key = (r["flash_gid"], r["main_cluster_uid"])
             if key not in by_key:
                 raise SystemExit("decision key %s not in calib bundles" % (key,))
+            if "bundle_idx" in r:
+                j = r["bundle_idx"]
+                if j not in by_key[key]:
+                    raise SystemExit("bundle_idx %d not under key %s" % (j, key))
+                if j in decisions_idx:
+                    raise SystemExit("duplicate decision for bundle %d" % j)
+                decisions_idx[j] = r["verdict"]
+                continue
             if key in decisions:
                 raise SystemExit("duplicate decision for %s" % (key,))
             decisions[key] = r["verdict"]
@@ -105,7 +114,7 @@ def main():
     selected, implicit_keep = set(), 0
     for j, b in enumerate(d["bundles"]):
         key = (b["flash_gid"], b["main_cluster"])
-        verdict = decisions.get(key)
+        verdict = decisions_idx.get(j, decisions.get(key))
         if b["auto_selected"]:
             if verdict == "keep":
                 selected.add(j)
@@ -173,7 +182,17 @@ def main():
             want = {tuple(k) for k in json.load(fh)["selected"]}
         sel2 = {j for j, b in enumerate(d["bundles"])
                 if (b["flash_gid"], b["main_cluster"]) in want}
-        assert sel2 == selected, "scan_state does not round-trip"
+        if sel2 != selected:
+            # scan_state keys by (flash_gid, uid); a uid collision (two
+            # clusters sharing a uid under one flash) restores ambiguously
+            # in the viewer. The labels file remains the exact record.
+            extra = sel2 - selected
+            assert selected <= sel2, "scan_state does not round-trip"
+            for j in sorted(extra):
+                b = d["bundles"][j]
+                print("WARNING: scan_state key (%d, %d) is ambiguous — viewer "
+                      "restore also ticks bundle %d"
+                      % (b["flash_gid"], b["main_cluster"], j))
         print("check OK: labels + scan_state round-trip")
 
 
