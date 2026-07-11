@@ -81,8 +81,16 @@ Same as PDHD:
     square-x = cathode/bottom).
   - The wall/cathode (or wall/bottom) z-ranges overlap spatially in the 2-D
     maps (e.g. z-wall vs bottom PMTs), so the marker shape — not position — is
-    what tells them apart there; same-position x-stacked PDs (e.g. membrane XA
-    behind a z-wall PMT) still overlap on the scatter, use hover for the PE.
+    what tells them apart there.
+  - Within a sub-block, several PDs project onto the exact same (y,z) point and
+    differ only in x (depth): the 4 membrane XAs of a drift volume come in
+    front/back pairs at each of 2 (y,z) spots, and the 8 z-wall PMTs come in
+    front/back pairs at each of 4 spots. Drawn at their true position these
+    would stack exactly on top of each other and only the last-drawn channel
+    would be visible. The viewer spreads same-position channels (ordered by x)
+    onto a small ring around the true point so all of them stay visible —
+    hover shows the channel number (`ch`) to identify which is which. Bottom
+    PMTs and cathode XAs each have a unique (y,z) already and are undisturbed.
 - Bundles with the new `flag_at_cathode` (cluster end within the cathode
   cushion) are tinted **light orange** with an `atCATH` tag in the flags column
   — the PDVD analogue of attention-worthy proximity flags (89% of light is

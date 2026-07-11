@@ -152,6 +152,32 @@ for f in FILES:
 # ---------------------------------------------------------------------------
 # Per-event model: load one calib JSON and build lookup indexes.
 # ---------------------------------------------------------------------------
+def od_jitter(x, y, z, scale=14.0):
+    """Several PDs project onto the SAME (y,z) point in the z-y light maps --
+    membrane XAs come in front/back pairs per drift volume (4-way stack at one
+    (y,z)), z-wall PMTs come in front/back pairs (2-way) -- differing only in x
+    (depth), which the 2-D scatter doesn't show. Without this they'd draw one
+    marker on top of another and only the last-drawn channel would be visible.
+    Spread same-(y,z) channels (ordered by x, so front/back stays a consistent
+    left/right or ring layout run to run) onto a small ring around the true
+    point; channels with a unique (y,z) get zero offset."""
+    groups = defaultdict(list)
+    for i in range(len(y)):
+        groups[(round(y[i], 1), round(z[i], 1))].append(i)
+    dz = np.zeros(len(z))
+    dy = np.zeros(len(y))
+    for idxs in groups.values():
+        n = len(idxs)
+        if n <= 1:
+            continue
+        idxs = sorted(idxs, key=lambda i: x[i])
+        for k, i in enumerate(idxs):
+            ang = 2 * math.pi * k / n
+            dz[i] = scale * math.cos(ang)
+            dy[i] = scale * math.sin(ang)
+    return dz, dy
+
+
 class Event:
     def __init__(self, path):
         """One combined calib file carries BOTH drift volumes (apa=0 and apa=4
@@ -188,6 +214,9 @@ class Event:
         self.od_active = np.array([o["active"] for o in od0], dtype=bool)
         self.od_auto_masked = np.array([o.get("auto_masked", False) for o in od0],
                                        dtype=bool)
+        # z-y display offsets for PDs that share a projected position (see
+        # od_jitter docstring); fixed detector geometry -> computed once.
+        self.od_jitter_z, self.od_jitter_y = od_jitter(self.od_x, self.od_y, self.od_z)
 
     def group_mask(self, group):
         """(wall_mask, inner_mask) over all 40 opdets for a PD-type GROUPS key
@@ -485,23 +514,23 @@ def make_light_fig(title):
     f = figure(title=title, height=280, width=430, tools="pan,reset,save")
     f.xaxis.axis_label = "z (cm)"
     f.yaxis.axis_label = "y (cm)"
-    base_wall = ColumnDataSource(data=dict(z=[], y=[]))
-    base_inner = ColumnDataSource(data=dict(z=[], y=[]))
-    dead_wall = ColumnDataSource(data=dict(z=[], y=[]))
-    dead_inner = ColumnDataSource(data=dict(z=[], y=[]))
-    src_wall = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[]))
-    src_inner = ColumnDataSource(data=dict(z=[], y=[], pe=[], d=[]))
+    base_wall = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    base_inner = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    dead_wall = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    dead_inner = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    src_wall = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[], ch=[]))
+    src_inner = ColumnDataSource(data=dict(z=[], y=[], pe=[], d=[], ch=[]))
     # masked / dead OpDets of this group (static ch_mask + auto_mask), drawn first as
     # faint red x/+ marks so the live array reads against the FULL physical PD layout
     # (PDVD's static mask: no-WLS XA 13, dead PMTs 24/27/28/34, Ar-blind PMTs 29/32/39).
-    f.scatter("z", "y", source=dead_wall, marker="circle_x", size=8,
-              line_color="#e0a0a0", line_width=1.3)
-    f.scatter("z", "y", source=dead_inner, marker="square_x", size=8,
-              line_color="#e0a0a0", line_width=1.3)
-    f.scatter("z", "y", source=base_wall, marker="circle", size=8,
-              fill_color=None, line_color="#8a8a8a")
-    f.scatter("z", "y", source=base_inner, marker="square", size=7,
-              fill_color=None, line_color="#8a8a8a")
+    b_dead_wall = f.scatter("z", "y", source=dead_wall, marker="circle_x", size=8,
+                            line_color="#e0a0a0", line_width=1.3)
+    b_dead_inner = f.scatter("z", "y", source=dead_inner, marker="square_x", size=8,
+                             line_color="#e0a0a0", line_width=1.3)
+    b_base_wall = f.scatter("z", "y", source=base_wall, marker="circle", size=8,
+                            fill_color=None, line_color="#8a8a8a")
+    b_base_inner = f.scatter("z", "y", source=base_inner, marker="square", size=7,
+                             fill_color=None, line_color="#8a8a8a")
     cmapper = LinearColorMapper(palette="Viridis256", low=0, high=1)
     g_wall = f.circle("z", "y", source=src_wall, radius="r",
                       fill_color={"field": "pe", "transform": cmapper},
@@ -516,7 +545,14 @@ def make_light_fig(title):
                     title_text_font_size="11px", title_standoff=6,
                     major_label_text_font_size="10px")
     f.add_layout(cbar, "right")
-    f.add_tools(HoverTool(renderers=[g_wall, g_inner], tooltips=[("PE", "@pe{0,0.0}")]))
+    # channels sharing a projected position (see od_jitter) are spread into a
+    # small ring around the true point -- "ch" in the tooltip is what actually
+    # tells them apart there.
+    f.add_tools(HoverTool(renderers=[g_wall, g_inner],
+                          tooltips=[("ch", "@ch"), ("PE", "@pe{0,0.0}")]))
+    f.add_tools(HoverTool(renderers=[b_base_wall, b_base_inner,
+                                     b_dead_wall, b_dead_inner],
+                          tooltips=[("ch", "@ch")]))
     return dict(fig=f, base_wall=base_wall, base_inner=base_inner,
                dead_wall=dead_wall, dead_inner=dead_inner,
                src_wall=src_wall, src_inner=src_inner, cmapper=cmapper)
@@ -728,15 +764,19 @@ def downsample(x, y, z):
 
 def fill_group_2d(panel, evt, chans, boundary, vals, hi):
     """Split a group's active-channel values into the wall/inner sub-blocks and
-    write the two ColumnDataSources (circle=wall, rect=cathode/bottom)."""
+    write the two ColumnDataSources (circle=wall, rect=cathode/bottom). Positions
+    are jittered (od_jitter) so same-(y,z) channels (front/back XA or PMT rows)
+    don't draw on top of each other."""
     wi, ii = chans[:boundary], chans[boundary:]
     rw = radii(vals[:boundary], hi)
     ri = radii(vals[boundary:], hi)
-    panel["src_wall"].data = dict(z=evt.od_z[wi].tolist(), y=evt.od_y[wi].tolist(),
-                                  pe=vals[:boundary].tolist(), r=rw)
-    panel["src_inner"].data = dict(z=evt.od_z[ii].tolist(), y=evt.od_y[ii].tolist(),
+    panel["src_wall"].data = dict(z=(evt.od_z[wi] + evt.od_jitter_z[wi]).tolist(),
+                                  y=(evt.od_y[wi] + evt.od_jitter_y[wi]).tolist(),
+                                  pe=vals[:boundary].tolist(), r=rw, ch=wi.tolist())
+    panel["src_inner"].data = dict(z=(evt.od_z[ii] + evt.od_jitter_z[ii]).tolist(),
+                                   y=(evt.od_y[ii] + evt.od_jitter_y[ii]).tolist(),
                                    pe=vals[boundary:].tolist(),
-                                   d=(np.array(ri) * 2.0).tolist())
+                                   d=(np.array(ri) * 2.0).tolist(), ch=ii.tolist())
 
 
 def set_subblock_sep(hpanel, group, boundary, n):
@@ -800,18 +840,27 @@ def render_light():
         aw, ai = evt.od_active & wall_m, evt.od_active & inner_m
         dw, di = (~evt.od_active) & wall_m, (~evt.od_active) & inner_m
         # faint outline of this group's active OpDets; red x/+ for the masked ones
+        # (jittered, same as the live markers, so the outline lines up with them).
         for panel in (mp, pp):
-            panel["base_wall"].data = dict(z=evt.od_z[aw].tolist(), y=evt.od_y[aw].tolist())
-            panel["base_inner"].data = dict(z=evt.od_z[ai].tolist(), y=evt.od_y[ai].tolist())
-            panel["dead_wall"].data = dict(z=evt.od_z[dw].tolist(), y=evt.od_y[dw].tolist())
-            panel["dead_inner"].data = dict(z=evt.od_z[di].tolist(), y=evt.od_y[di].tolist())
+            panel["base_wall"].data = dict(
+                z=(evt.od_z[aw] + evt.od_jitter_z[aw]).tolist(),
+                y=(evt.od_y[aw] + evt.od_jitter_y[aw]).tolist(), ch=np.nonzero(aw)[0].tolist())
+            panel["base_inner"].data = dict(
+                z=(evt.od_z[ai] + evt.od_jitter_z[ai]).tolist(),
+                y=(evt.od_y[ai] + evt.od_jitter_y[ai]).tolist(), ch=np.nonzero(ai)[0].tolist())
+            panel["dead_wall"].data = dict(
+                z=(evt.od_z[dw] + evt.od_jitter_z[dw]).tolist(),
+                y=(evt.od_y[dw] + evt.od_jitter_y[dw]).tolist(), ch=np.nonzero(dw)[0].tolist())
+            panel["dead_inner"].data = dict(
+                z=(evt.od_z[di] + evt.od_jitter_z[di]).tolist(),
+                y=(evt.od_y[di] + evt.od_jitter_y[di]).tolist(), ch=np.nonzero(di)[0].tolist())
 
         chans, boundary = evt.group_channels(group)
 
         if gid is None:
             for panel in (mp, pp):
-                panel["src_wall"].data = dict(z=[], y=[], pe=[], r=[])
-                panel["src_inner"].data = dict(z=[], y=[], pe=[], d=[])
+                panel["src_wall"].data = dict(z=[], y=[], pe=[], r=[], ch=[])
+                panel["src_inner"].data = dict(z=[], y=[], pe=[], d=[], ch=[])
             mp["fig"].title.text = "%s measured  (no flash in group)" % GROUP_NAME[group]
             pp["fig"].title.text = "%s predicted" % GROUP_NAME[group]
             ho["meas"].data = dict(x=[], pe=[])
