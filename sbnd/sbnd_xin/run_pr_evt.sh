@@ -42,6 +42,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
   -stm      shorthand for the STM tagger chain:
             -p switch_scope,steiner,fiducialutils,tagger_check_stm
             (uses sbnd_track_fitting.json; grep TaggerCheckSTM in the log)
+  -nu       shorthand for the neutrino-PR chain:
+            -p switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino
+            with the per-mode beam window (grep TaggerCheckNeutrino in the log;
+            Bee layers track_fit/shower_track/vertices + mc particle flow)
+  -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
+            the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} -- placeholders,
+            see the md for calibration provenance)
 
 Requires: run_ql_evt.sh <mode> -save-pctree <idx> first
           (work/ql_evt<ID>/pctree-evt<ID>.tar.gz).
@@ -51,6 +58,16 @@ EOF
 
 MODE=mc
 PIPELINE=""
+NU=0
+BEAM_WINDOW=""
+DL_WEIGHTS=""
+# Per-mode beam-window defaults in us on cluster_t0 (= matched flash time,
+# trigger-offset-corrected -- NOT the raw opflash time convention of
+# flash_t0_lan_reco2.py).  Calibrated from the 7 saved pctrees: MC BNB bundle
+# +1.257 us (evt12); data in-time matched bundles +1.38/+1.69/+1.77 us
+# (evts 686/1698/1258).  See the md for provenance.
+BEAM_WINDOW_MC="0.5,2.0"
+BEAM_WINDOW_DATA="0.5,2.5"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -60,11 +77,21 @@ while [ $# -gt 0 ]; do
         mc|data) MODE="$1"; shift ;;
         -p) PIPELINE="$2"; shift 2 ;;
         -stm|--stm) PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_stm"; shift ;;
+        -nu|--nu) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino"; shift ;;
+        -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -p*) PIPELINE="${1#-p}"; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+if [ "$NU" = 1 ] && [ -z "$BEAM_WINDOW" ]; then
+    case "$MODE" in
+        mc)   BEAM_WINDOW="$BEAM_WINDOW_MC" ;;
+        data) BEAM_WINDOW="$BEAM_WINDOW_DATA" ;;
+    esac
+fi
+BEAM_WINDOW_CODE="[${BEAM_WINDOW:-0,0}]"
 
 case "$MODE" in
     mc)   REALITY=sim ;;
@@ -121,6 +148,8 @@ process_event() {
         --tla-code "pipeline_names=$PIPELINE_CODE" \
         --tla-str  "trackfitting_config=$SBND_DIR/sbnd_track_fitting.json" \
         --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
+        --tla-str  "dl_weights=$DL_WEIGHTS" \
+        --tla-code "beam_window_us=$BEAM_WINDOW_CODE" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $PRDIR/mabc-pr.zip"
 }

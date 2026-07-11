@@ -256,10 +256,12 @@ evt12 + data evt686/1258/1302/1346/1698/1720 — completes on the 2-TPC
 geometry everywhere, every matched main cluster (up to ~13/event) gets its
 own STM/TGM evaluation.
 
-**First SBND STM tag: data evt1346 cluster 5** — a ~145 cm track entering
+**First SBND STM tag: data evt1302 cluster 5** — a ~145 cm track entering
 at the TPC1 anode boundary (x = 201.4 cm, outside the FV) and terminating
 mid-detector at (105, 29, 281) cm; the full forward/backward dQ/dx
-(Bragg-peak) fit ran (~0.5 s).  Small mains exit early as fully-contained
+(Bragg-peak) fit ran (~0.5 s).  *(Correction at M5: originally recorded as
+evt1346 — an idx↔event mix-up (data idx 3 = evt1302, idx 4 = evt1346); the
+M5 re-runs reproduce the identical tag on evt1302 cluster 5.)*  Small mains exit early as fully-contained
 ("Mid Point: A") or lacking a steiner graph (steiner warns and skips
 clusters yielding < 2 terminals — graceful).  `grep "TaggerCheckSTM:
 cluster" work/pr_evt<ID>/wct_pr_evt<ID>.log` shows the per-main verdicts.
@@ -303,8 +305,11 @@ byte-identical (events 6604/6821 vs the gate3 reference, `hash_archive.py`).
 ./run_img_evt.sh  <mc|data> <idx>              # per-event imaging (existing)
 ./run_ql_evt.sh   <mc|data> -save-pctree <idx> # Q/L matching + pctree tarball
 ./run_pr_evt.sh   <mc|data> -stm <idx>         # PR job: STM tagger
+./run_pr_evt.sh   <mc|data> -nu  <idx>         # PR job: STM + neutrino PR (M5)
 # verdicts:  grep "TaggerCheckSTM: cluster" work/pr_evt<ID>/wct_pr_evt<ID>.log
-# display:   work/pr_evt<ID>/mabc-pr.zip (clustering + dead layers)
+#            grep "TaggerCheckNeutrino:" work/pr_evt<ID>/wct_pr_evt<ID>.log
+# display:   work/pr_evt<ID>/mabc-pr.zip (clustering + dead layers; with -nu also
+#            track_fit / shower_track / vertices layers + the "mc" particle flow)
 # gates:     ./run_pr_evt.sh <mode> <idx> && python3 compare_pr_roundtrip.py <ID> tar
 #            ./run_pr_evt.sh <mode> -p switch_scope <idx> && python3 compare_pr_roundtrip.py <ID> bee
 ```
@@ -312,38 +317,84 @@ byte-identical (events 6604/6821 vs the gate3 reference, `hash_archive.py`).
 The pctree tarball is deleted whenever `run_ql_evt.sh` reruns without
 `-save-pctree` (the Q/L job wipes its work dir) — regenerate before PR runs.
 
-## 6. Later stages (written down; NOT executed yet)
+## 6. Later stages
 
-### 6.1 Neutrino pattern recognition (`tagger_check_neutrino`)
+### 6.1 Neutrino pattern recognition (`tagger_check_neutrino`) — DONE (M5, 2026-07-10)
 
-Runs the full ported NeutrinoID on the main cluster + associated clusters:
+Runs the full ported NeutrinoID on the beam-coincident bundle:
 `find_proto_vertex → clustering_points → separate_track_shower →
 determine_direction → shower clustering → determine_main_vertex → deghost →
-improve_vertex → cosmic/numu/nue taggers`.
+improve_vertex → cosmic/numu/ssm/nue/singlephoton tagger features → FC check
+→ track-fit charge assembly`.
 
-Concrete wiring (mirrors the STM path, now proven): add
-`tagger_check_neutrino: cm.tagger_check_neutrino(trackfitting_config_file=…,
-particle_dataset=…, recombination_model=…, dl_weights='')` to `clus_pr`'s
-`cm_by_name` and run
-`-p switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino`.
-Like TaggerCheckSTM before M3, `TaggerCheckNeutrino::visit` picks a single
-main cluster — it needs the same multi-main + `matched_flash_gid` loop, plus
-a beam-window gate (only the beam-coincident bundle should get neutrino PR,
-unlike STM which legitimately runs on every matched bundle).
+**Wiring (M5).**  `clus_pr`'s `cm_by_name` gained `tagger_check_neutrino`
+(sbnd_box_recomb, the shared particle dataset, `sbnd_track_fitting.json`,
+`dl_weights=''`), plus the uBooNE-style Bee outputs keyed to the visitor's
+full `type:name` (`'TaggerCheckNeutrino:pr'` — MABC matches the complete
+pipeline-entry name, and clus_pr uses prefix `pr`): `track_fit`,
+`shower_track`, `vertices` layers and the `mc` particle-flow JSON.  Driver:
+`./run_pr_evt.sh <mode> -nu <idx>`
+(= `-p switch_scope,steiner,fiducialutils,tagger_check_stm,tagger_check_neutrino`).
 
-SBND prerequisites beyond §5:
-- run with `dl_weights=''` (the SCN vertex network is uBooNE-trained);
+**Beam-bundle selection, not a multi-main loop.**  Unlike STM (independent
+per-bundle verdicts), TaggerCheckNeutrino's downstream state is single-bundle
+by construction (one PRGraph, one TrackFitting stored on the grouping, one
+particle-flow tree).  The SBND generalization is therefore a *selection*:
+new config `beam_window_low/high` (defaults 0/0 = gate disabled = uBooNE
+single-main behavior, byte-identical).  Gate enabled: pick the flagged main
+whose `cluster_t0` (= matched flash time) falls in the window — several →
+longest wins, losers logged at INFO — and take as companions the associated
+clusters sharing its `matched_flash_gid`.  No in-window bundle → clean skip
+(logged).  The uBooNE `Flags::beam_flash` companion lookup is untouched.
+
+**Beam window (empirical, from the 7 saved pctrees).**  `cluster_t0` is the
+trigger-offset-corrected matched-flash time — NOT the raw opflash-npy
+convention of `flash_t0_lan_reco2.py` (whose in-time peak sits at (−1.2, 0)
+µs).  In-time matched bundles: MC evt12 +1.257 µs; data +1.38 / +1.69 /
++1.77 µs (evts 686/1698/1258).  Defaults in `run_pr_evt.sh`: **mc 0.5–2.0
+µs, data 0.5–2.5 µs** (`-bw l,h` overrides).  Calibrate properly on a larger
+sample before production; the multi-bundle "longest wins" rule is also an
+open item (evt1698 exercises it: two mains share in-window gid 9).
+
+**M5 results** (evt12 + 6 data events, all rc=0, no crashes on the 2-TPC
+geometry; STM verdicts in the `-nu` pipeline unchanged, incl. the evt1302
+cluster-5 tag):
+
+| event | in-window bundle | outcome |
+|---|---|---|
+| mc 12 | cluster 4 (t0 1.257 µs, 5.7 cm) | full PR; 3 PR vertices, main vertex (−65.2, 141.9, 464.8) cm — in TPC0 (−x), machinery handles the negative-drift side |
+| data 686 | cluster 7 (1.380 µs, 1.6 cm) | full PR on tiny in-time activity |
+| data 1258 | cluster 8 (1.769 µs, 253.6 cm) | full PR on an in-window cosmic (expected: no topology gate) |
+| data 1302 | none (13 mains) | clean skip |
+| data 1346 | none (6 mains) | clean skip |
+| data 1698 | cluster 3 (1.687 µs, 42 cm); cluster 2 (1.3 cm) logged as not selected | longest-wins rule exercised |
+| data 1720 | none (10 mains) | clean skip |
+
+Note evt12's beam bundle is small (5.7 cm, 0 associated) — its Q/L match was
+already flagged as marginal (the xtpc-crosser mis-match study); vertex-truth
+comparison belongs to the DNN/retraining milestone.
+
+Gates: uBooNE 2-event smoke byte-identical vs gate3 (`m5smoke`); SBND Q/L
+zip hash unchanged (`bcd75f66` sim); PR identity gates (tar member hashes
+309/309, switch_scope Bee gate) pass; `-stm` verdicts identical to M3.
+
+**Remaining opens for neutrino PR on SBND** (unchanged by M5):
+- `dl_weights=''` for now (the SCN vertex network is uBooNE-trained; DNN
+  demo + retraining plan = next milestones);
 - audit of hard-coded axes: ~56 literal `(1,0,0)`/`(0,0,1)` direction vectors
   across `NeutrinoTagger{Cosmic,NuMu,NuE,SSM,SinglePhoton}.cxx`,
   `NeutrinoTrackShowerSep.cxx`, `NeutrinoVertexFinder.cxx`,
   `NeutrinoStructureExaminer.cxx`, `NeutrinoShowerClustering.cxx`,
   `NeutrinoOtherSegments.cxx`, `PRSegmentFunctions.cxx`.  Beam = +z holds for
   SBND; drift = +x does **not** (TPC0 drifts −x) — each use needs a per-wpid
-  `face_dirx` replacement or a demonstration that only |projection| matters;
-- beam-window definition for SBND (BNB window on the flash time) so the
-  "beam-flash-matched" gate selects the right bundles;
+  `face_dirx` replacement or a demonstration that only |projection| matters.
+  Policy: fix per observed wrong verdict (M5 saw none), not wholesale;
+- tagger *feature values* (numu/nue/ssm TaggerInfo) embed uBooNE-tuned
+  constants (PID retune section, added at closeout) — they are filled but
+  not quantitatively trustworthy yet;
 - vertices near the cathode / cross-TPC clusters: the PR graph must not break
-  at the x=0 seam (steiner bridging, dead-region handling at the CPA).
+  at the x=0 seam (steiner bridging, dead-region handling at the CPA) — no
+  in-window cathode-crosser appeared in the 7-event sample; test when one does.
 
 ### 6.2 Track-fitting smearing parameters (`sbnd_track_fitting.json`)
 
@@ -450,8 +501,9 @@ SBND MC route documented in `PR_integration.md` §7.
 | 0 | This document (format spec + roadmap) | DONE 2026-07-10 | — / 30f513f |
 | 1 | Save: real `TensorFileSink` after all-APA MABC (`-save-pctree`) | DONE 2026-07-10 (sim evt12 + data evt1258, 10/10 inventory, Bee zips byte-identical) | 490b1b9a / a270eb6 |
 | 2 | Load: `wct-pr-perevt.jsonnet` + round-trip identity gate | DONE 2026-07-10 (tar members identical; Bee y/z/q/id exact, x within flash-merge bound) | fd1522bf / bd601ed |
-| 3 | STM tagger on loaded sim + data events | DONE 2026-07-10 (7 events; first STM tag: data evt1346 cluster 5, anode-entering stopped-muon candidate) | 2b3d50df / 5535214 |
-| 4 | Roadmap finalized for neutrino PR / BDT stages (§6) | DONE 2026-07-10 | — / (this commit) |
+| 3 | STM tagger on loaded sim + data events | DONE 2026-07-10 (7 events; first STM tag: data evt1302 cluster 5 — corrected from evt1346 at M5 — anode-entering stopped-muon candidate) | 2b3d50df / 5535214 |
+| 4 | Roadmap finalized for neutrino PR / BDT stages (§6) | DONE 2026-07-10 | — / eb3ea44 |
+| 5 | `tagger_check_neutrino` wired (beam-bundle selection, geometric vertex, Bee PR layers) | DONE 2026-07-10 (7 events; §6.1 results table; all identity gates green) | (this commit) / (this commit) |
 
-Next up (§6.1): multi-main + beam-window gate for `TaggerCheckNeutrino`,
-then wire it as the fifth `clus_pr` pipeline entry.
+Next up: DNN vertex demo (SparseConvNet env repair + `-dnn`), then the TGM
+tagger port from the prototype with a both-TPC box fiducial.

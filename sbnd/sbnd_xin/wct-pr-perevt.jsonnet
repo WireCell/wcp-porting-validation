@@ -47,6 +47,15 @@ function(
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
     save_tensors   = '',
+    // SCN vertex weights (WIRECELL_PATH-resolved, e.g.
+    // 'uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth').  '' = geometric vertex.
+    // NOTE: only uBooNE-trained weights exist; SBND use is an untuned demo.
+    dl_weights     = '',
+    // Beam window [low, high) in us on cluster_t0 (= matched flash time) selecting
+    // the bundle that gets neutrino PR.  [0,0] disables the gate (then
+    // tagger_check_neutrino falls back to uBooNE single-main selection, which on
+    // SBND picks an arbitrary main -- always set a window with tagger_check_neutrino).
+    beam_window_us = [0, 0],
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -82,7 +91,9 @@ function(
                              tensor_outname=save_tensors,
                              trackfitting_config_file=trackfitting_config,
                              particle_dataset=pds.particle_dataset,
-                             extra_uses=pds.all);
+                             extra_uses=pds.all,
+                             dl_weights=dl_weights,
+                             beam_window=[t * wc.us for t in beam_window_us]);
 
     local graph = g.intern(
         innodes=[source],
