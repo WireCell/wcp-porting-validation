@@ -37,10 +37,13 @@ Selection rules (enforced live):
   * each cluster matches at most one flash (selecting a bundle drops the
     cluster's other candidate bundles);
   * one flash may match several clusters -> the predicted light shown for that
-    flash is the element-wise SUM of the selected bundles' predictions per
-    volume (measured is the flash's own, unchanged);
-  * both drift volumes are shown together; a cathode-crossing cosmic is two
-    bundles (one per volume) on the SAME flash -- tick both.
+    flash is the element-wise SUM of ALL selected bundles' predictions across
+    BOTH volumes (measured is the flash's own, unchanged) -- the light panels
+    are grouped by PD type (X-ARAPUCA / PMT), not drift volume, since the
+    flash is one all-PD set;
+  * both drift volumes are shown together in the charge-projection panels; a
+    cathode-crossing cosmic is two bundles (one per volume) on the SAME flash
+    -- tick both.
 
 Launched by serve_ql_scan.sh (default port 5016); mirrors
 pdhd/ql_scan/ql_scan_viewer.py (server-side callbacks, ColumnDataSource per
@@ -59,9 +62,8 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, DataTable, TableColumn, Select, Button,
                           Div, ColorBar, HoverTool, NumberFormatter, BasicTicker,
-                          NumeralTickFormatter, Span, HTMLTemplateFormatter,
-                          CheckboxGroup, Toggle)
-from bokeh.transform import linear_cmap
+                          NumeralTickFormatter, Span, Label, HTMLTemplateFormatter,
+                          CheckboxGroup, Toggle, LinearColorMapper)
 from bokeh.plotting import figure
 
 # Max charge points drawn per projection panel (stride-downsample above this).
@@ -75,9 +77,22 @@ MIN_CLUS_LEN = 5.0
 
 # The two drift volumes, keyed by the representative anode ident used as `apa` in
 # the dump: 0 = bottom volume (anodes 0-3, anode at x=-335.8), 4 = top volume
-# (anodes 4-7, anode at +335.8). The cathode sits at x~0 between them.
+# (anodes 4-7, anode at +335.8). The cathode sits at x~0 between them. Used for
+# the cluster/bundle roster (a cluster belongs to one drift volume).
 SIDES = (0, 4)
 SIDE_NAME = {0: "bottom", 4: "top"}
+
+# The light panels (2-D maps + 1-D histograms below) are grouped by PD TYPE, not
+# drift volume: the flash is a single all-PD set (cathode X-ARAPUCAs are double-
+# sided and belong to both volumes at once), so a bottom/top split either dupes
+# or under-predicts them. Each type further splits into two spatially-disjoint
+# sub-blocks (`type` = 0/1 in the dump's `opdets`):
+#   XA  : wall/membrane XAs (|x| > 10)  |  cathode XAs (|x| <= 10)
+#   PMT : z-wall PMTs (x > -320)        |  bottom/floor PMTs (x <= -320, all
+#         PMTs live in the bottom volume; bottom-anode plane is x~-335.8)
+GROUPS = ("XA", "PMT")
+GROUP_NAME = {"XA": "X-ARAPUCA", "PMT": "PMT"}
+SUBNAME = {"XA": ("wall", "cathode"), "PMT": ("wall", "bottom")}
 
 # ---------------------------------------------------------------------------
 # Inputs: calib JSON paths from --args (globs already expanded by the shell).
@@ -162,20 +177,34 @@ class Event:
         for g, f in enumerate(sorted(flashes, key=lambda f: f["time"]), start=1):
             f["group"] = g
         self.flash_by_gid = {f["gid"]: f for f in flashes}
-        # opdet arrays (numpy) for fast light-pattern drawing. Panel membership is
-        # by the OpDet's x (the vertical drift coordinate): bottom volume shows
-        # everything at x < cathode (bottom membrane XAs, z-wall PMTs, bottom
-        # PMTs), the top volume the x > cathode PDs (top membrane XAs); the
-        # double-sided cathode XAs (x ~ 0) appear on BOTH panels.
+        # opdet arrays (numpy) for fast light-pattern drawing. `type` (0 = XA,
+        # 1 = PMT) drives the light-panel grouping (see GROUPS above); the
+        # double-sided cathode XAs (x ~ 0) belong to the XA group's "cathode"
+        # sub-block same as the wall XAs belong to its "wall" sub-block.
         self.od_x = np.array([o["x"] for o in od0])
         self.od_y = np.array([o["y"] for o in od0])
         self.od_z = np.array([o["z"] for o in od0])
+        self.od_type = np.array([o["type"] for o in od0])
         self.od_active = np.array([o["active"] for o in od0], dtype=bool)
         self.od_auto_masked = np.array([o.get("auto_masked", False) for o in od0],
                                        dtype=bool)
-        cath = np.abs(self.od_x) <= 10.0
-        self.od_side = {0: cath | (self.od_x < -10.0),
-                        4: cath | (self.od_x > 10.0)}
+
+    def group_mask(self, group):
+        """(wall_mask, inner_mask) over all 40 opdets for a PD-type GROUPS key
+        ("XA"/"PMT"), split into its two spatially-disjoint sub-blocks (see
+        GROUPS comment for the boundaries)."""
+        typ = self.od_type == (0 if group == "XA" else 1)
+        if group == "XA":
+            return typ & (np.abs(self.od_x) > 10.0), typ & (np.abs(self.od_x) <= 10.0)
+        return typ & (self.od_x > -320.0), typ & (self.od_x <= -320.0)
+
+    def group_channels(self, group):
+        """Active channel idx for a PD-type group, ordered [wall..., inner...],
+        and the boundary index between the two sub-blocks (for the separator)."""
+        wall, inner = self.group_mask(group)
+        aw = np.nonzero(self.od_active & wall)[0]
+        ai = np.nonzero(self.od_active & inner)[0]
+        return np.concatenate([aw, ai]), len(aw)
 
     def group_of(self, gid):
         return self.flash_by_gid[gid]["group"]
@@ -441,10 +470,12 @@ clus_table = DataTable(source=clus_src, columns=clus_cols, width=330, height=300
                        selectable=True, index_position=None)
 
 # Light-pattern figures (Y vertical, Z horizontal): a 2x2 grid of measured vs
-# predicted for the bottom and top drift volumes. The SAME shared flash lights both
-# panels; the cathode XAs (ch 4-11) are drawn on both. Positions are fixed, so the
-# ranges are pinned to the PD envelope (no zoom). Active OpDets of the panel's
-# volume are faint outlines; the flash OpDets are sized by sqrt(PE).
+# predicted for the XA and PMT PD-type groups. The SAME shared flash lights every
+# panel. Positions are fixed, so the ranges are pinned to the PD envelope (no zoom).
+# Each group's two sub-blocks (see GROUPS comment) do not separate spatially (e.g.
+# PMT wall/bottom z-ranges overlap), so they are drawn with distinct marker families
+# instead: circle = wall sub-block, square = cathode/bottom sub-block. Flash OpDets
+# are sized by sqrt(PE); a shared LinearColorMapper keeps both markers on one scale.
 def radii(vals, hi):
     # circle radius in cm, scaled by sqrt(PE/hi); 0-PE channels get a small dot
     return (2.5 + 9.0 * np.sqrt(np.clip(vals, 0, None) / hi)).tolist()
@@ -454,38 +485,53 @@ def make_light_fig(title):
     f = figure(title=title, height=280, width=430, tools="pan,reset,save")
     f.xaxis.axis_label = "z (cm)"
     f.yaxis.axis_label = "y (cm)"
-    base = ColumnDataSource(data=dict(z=[], y=[]))
-    dead = ColumnDataSource(data=dict(z=[], y=[]))
-    src = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[]))
-    # masked / dead OpDets of this volume (static ch_mask + auto_mask), drawn first as
-    # faint red x so the live array reads against the FULL physical PD layout (PDVD's
-    # static mask: no-WLS XA 13, dead PMTs 24/27/28/34, Ar-blind PMTs 29/32/39).
-    f.scatter("z", "y", source=dead, marker="x", size=8,
+    base_wall = ColumnDataSource(data=dict(z=[], y=[]))
+    base_inner = ColumnDataSource(data=dict(z=[], y=[]))
+    dead_wall = ColumnDataSource(data=dict(z=[], y=[]))
+    dead_inner = ColumnDataSource(data=dict(z=[], y=[]))
+    src_wall = ColumnDataSource(data=dict(z=[], y=[], pe=[], r=[]))
+    src_inner = ColumnDataSource(data=dict(z=[], y=[], pe=[], d=[]))
+    # masked / dead OpDets of this group (static ch_mask + auto_mask), drawn first as
+    # faint red x/+ marks so the live array reads against the FULL physical PD layout
+    # (PDVD's static mask: no-WLS XA 13, dead PMTs 24/27/28/34, Ar-blind PMTs 29/32/39).
+    f.scatter("z", "y", source=dead_wall, marker="circle_x", size=8,
               line_color="#e0a0a0", line_width=1.3)
-    f.scatter("z", "y", source=base, marker="circle", size=8,
+    f.scatter("z", "y", source=dead_inner, marker="square_x", size=8,
+              line_color="#e0a0a0", line_width=1.3)
+    f.scatter("z", "y", source=base_wall, marker="circle", size=8,
               fill_color=None, line_color="#8a8a8a")
-    g = f.circle("z", "y", source=src, radius="r",
-                 fill_color=linear_cmap("pe", "Viridis256", 0, 1),
-                 line_color="#333333", fill_alpha=0.85)
-    cbar = ColorBar(color_mapper=g.glyph.fill_color["transform"], title="PE",
+    f.scatter("z", "y", source=base_inner, marker="square", size=7,
+              fill_color=None, line_color="#8a8a8a")
+    cmapper = LinearColorMapper(palette="Viridis256", low=0, high=1)
+    g_wall = f.circle("z", "y", source=src_wall, radius="r",
+                      fill_color={"field": "pe", "transform": cmapper},
+                      line_color="#333333", fill_alpha=0.85)
+    g_inner = f.rect("z", "y", source=src_inner, width="d", height="d",
+                     fill_color={"field": "pe", "transform": cmapper},
+                     line_color="#333333", fill_alpha=0.85)
+    cbar = ColorBar(color_mapper=cmapper, title="PE",
                     ticker=BasicTicker(desired_num_ticks=6),
                     formatter=NumeralTickFormatter(format="0,0"),
                     width=14, padding=4, label_standoff=6,
                     title_text_font_size="11px", title_standoff=6,
                     major_label_text_font_size="10px")
     f.add_layout(cbar, "right")
-    f.add_tools(HoverTool(renderers=[g], tooltips=[("PE", "@pe{0,0.0}")]))
-    return dict(fig=f, base=base, dead=dead, src=src, glyph=g)
+    f.add_tools(HoverTool(renderers=[g_wall, g_inner], tooltips=[("PE", "@pe{0,0.0}")]))
+    return dict(fig=f, base_wall=base_wall, base_inner=base_inner,
+               dead_wall=dead_wall, dead_inner=dead_inner,
+               src_wall=src_wall, src_inner=src_inner, cmapper=cmapper)
 
 
-# LIGHT[apa] = {"meas": panel, "pred": panel}  (apa = drift volume, 0 bottom / 4 top)
-LIGHT = {apa: {"meas": make_light_fig("%s measured" % SIDE_NAME[apa]),
-               "pred": make_light_fig("%s predicted" % SIDE_NAME[apa])}
-         for apa in SIDES}
+# LIGHT[group] = {"meas": panel, "pred": panel}  (group = "XA" / "PMT")
+LIGHT = {group: {"meas": make_light_fig("%s measured" % GROUP_NAME[group]),
+                 "pred": make_light_fig("%s predicted" % GROUP_NAME[group])}
+         for group in GROUPS}
 
 
-# 1-D per-channel comparison below the 2x2 light grid: for each volume an overlay of
-# measured vs predicted PE over that volume's active OpDets, and the pred/meas ratio.
+# 1-D per-channel comparison below the 2x2 light grid: for each PD-type group an
+# overlay of measured vs predicted PE over that group's active OpDets (wall
+# sub-block first, then cathode/bottom, with a dashed separator + labels between
+# them), and the pred/meas ratio.
 def make_hist_fig(title):
     f = figure(title=title, height=220, width=430,
                tools="pan,box_zoom,wheel_zoom,reset,save")
@@ -504,7 +550,25 @@ def make_hist_fig(title):
     f.legend.padding = 2
     f.legend.location = "top_right"
     f.legend.background_fill_alpha = 0.6
-    return dict(fig=f, meas=meas_src, pred=pred_src)
+    sep, lbl_wall, lbl_inner = make_subblock_sep(f)
+    return dict(fig=f, meas=meas_src, pred=pred_src,
+               sep=sep, lbl_wall=lbl_wall, lbl_inner=lbl_inner)
+
+
+def make_subblock_sep(f):
+    """Dashed vertical separator + wall/inner sub-block labels, shared by the
+    overlay and ratio figs; hidden until render_light positions them (the
+    boundary is event-dependent -- it counts *active* wall channels)."""
+    sep = Span(location=-1, dimension="height", line_color="#666666",
+              line_dash="dashed", line_width=1.3, visible=False)
+    f.add_layout(sep)
+    lbl_wall = Label(x=0, y=203, y_units="screen", text="", text_font_size="9px",
+                     text_color="#666666", visible=False)
+    lbl_inner = Label(x=0, y=203, y_units="screen", text="", text_font_size="9px",
+                      text_color="#666666", visible=False)
+    f.add_layout(lbl_wall)
+    f.add_layout(lbl_inner)
+    return sep, lbl_wall, lbl_inner
 
 
 def make_ratio_fig(title):
@@ -517,13 +581,14 @@ def make_ratio_fig(title):
               fill_color="#2ca02c", line_color=None, fill_alpha=0.8)
     f.add_layout(Span(location=1.0, dimension="width", line_color="#888888",
                       line_dash="dashed", line_width=1))
-    return dict(fig=f, src=src)
+    sep, lbl_wall, lbl_inner = make_subblock_sep(f)
+    return dict(fig=f, src=src, sep=sep, lbl_wall=lbl_wall, lbl_inner=lbl_inner)
 
 
-# HIST[apa] = {"overlay": panel, "ratio": panel}
-HIST = {apa: {"overlay": make_hist_fig("%s meas vs pred" % SIDE_NAME[apa]),
-              "ratio": make_ratio_fig("%s pred/meas" % SIDE_NAME[apa])}
-        for apa in SIDES}
+# HIST[group] = {"overlay": panel, "ratio": panel}
+HIST = {group: {"overlay": make_hist_fig("%s meas vs pred" % GROUP_NAME[group]),
+               "ratio": make_ratio_fig("%s pred/meas" % GROUP_NAME[group])}
+        for group in GROUPS}
 
 # Charge-projection figures (focused bundle's clusters, T0-shifted, in the fixed
 # detector box; both volume boxes drawn). XY, YZ (z horiz, y vert), XZ (x horiz, z
@@ -661,81 +726,124 @@ def downsample(x, y, z):
     return x, y, z
 
 
+def fill_group_2d(panel, evt, chans, boundary, vals, hi):
+    """Split a group's active-channel values into the wall/inner sub-blocks and
+    write the two ColumnDataSources (circle=wall, rect=cathode/bottom)."""
+    wi, ii = chans[:boundary], chans[boundary:]
+    rw = radii(vals[:boundary], hi)
+    ri = radii(vals[boundary:], hi)
+    panel["src_wall"].data = dict(z=evt.od_z[wi].tolist(), y=evt.od_y[wi].tolist(),
+                                  pe=vals[:boundary].tolist(), r=rw)
+    panel["src_inner"].data = dict(z=evt.od_z[ii].tolist(), y=evt.od_y[ii].tolist(),
+                                   pe=vals[boundary:].tolist(),
+                                   d=(np.array(ri) * 2.0).tolist())
+
+
+def set_subblock_sep(hpanel, group, boundary, n):
+    """Position/show the dashed separator + wall/inner labels on a histogram
+    panel, or hide them where a sub-block has no active channels (edge case:
+    boundary == 0 or == n)."""
+    wname, iname = SUBNAME[group]
+    if 0 < boundary < n:
+        hpanel["sep"].location = boundary - 0.5
+        hpanel["sep"].visible = True
+    else:
+        hpanel["sep"].visible = False
+    if boundary > 0:
+        hpanel["lbl_wall"].x = (boundary - 1) / 2.0
+        hpanel["lbl_wall"].text = wname
+        hpanel["lbl_wall"].visible = True
+    else:
+        hpanel["lbl_wall"].visible = False
+    if boundary < n:
+        hpanel["lbl_inner"].x = boundary + (n - boundary - 1) / 2.0
+        hpanel["lbl_inner"].text = iname
+        hpanel["lbl_inner"].visible = True
+    else:
+        hpanel["lbl_inner"].visible = False
+
+
 def render_light():
-    """Four panels: measured + predicted for the bottom and top drift volumes. The
-    SAME shared flash lights both (measured is the flash's PE over the volume's PDs,
-    cathode XAs on both); predicted sums the selected bundles of THAT volume on the
-    group flash (or previews focus)."""
+    """Two PD-type panels (X-ARAPUCA, PMT), each measured + predicted: the SAME
+    shared flash lights every channel, so predicted is the sum of ALL selected
+    bundles on the group flash across BOTH drift volumes (a cathode X-ARAPUCA's
+    predicted light is not confined to one volume's clusters -- summing only one
+    volume, as a bottom/top split would, under-counts it). Each group's wall and
+    cathode/bottom sub-blocks (see GROUPS) are marked distinctly in the 2-D maps
+    (circle vs square) and divided by a dashed separator + labels in the 1-D
+    histograms."""
     evt = state["evt"]
     gid = group_flash_gid()
-    for apa in SIDES:
-        mp, pp = LIGHT[apa]["meas"], LIGHT[apa]["pred"]
-        ho, hr = HIST[apa]["overlay"], HIST[apa]["ratio"]
-        sm = evt.od_side[apa]
-        am = evt.od_active & sm
-        dm = (~evt.od_active) & sm
-        chans = np.nonzero(am)[0]
-        # faint outline of this volume's active OpDets; red x for the masked ones
-        mp["base"].data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
-        pp["base"].data = dict(z=evt.od_z[am].tolist(), y=evt.od_y[am].tolist())
-        mp["dead"].data = dict(z=evt.od_z[dm].tolist(), y=evt.od_y[dm].tolist())
-        pp["dead"].data = dict(z=evt.od_z[dm].tolist(), y=evt.od_y[dm].tolist())
 
-        if gid is None:
-            mp["src"].data = dict(z=[], y=[], pe=[], r=[])
-            pp["src"].data = dict(z=[], y=[], pe=[], r=[])
-            mp["fig"].title.text = "%s measured  (no flash in group)" % SIDE_NAME[apa]
-            pp["fig"].title.text = "%s predicted" % SIDE_NAME[apa]
-            ho["meas"].data = dict(x=[], pe=[])
-            ho["pred"].data = dict(x=[], pe=[])
-            hr["src"].data = dict(x=[], ratio=[])
-            ho["fig"].title.text = "%s meas vs pred  (no flash)" % SIDE_NAME[apa]
-            hr["fig"].title.text = "%s pred/meas" % SIDE_NAME[apa]
-            continue
-        flash = evt.flash_by_gid[gid]
-        meas = np.array(flash["pe"])[chans]
-
-        # predicted = sum over SELECTED bundles of THIS volume on the group flash; if
-        # none, preview the focused bundle when it sits on this volume's flash.
-        share = [j for j in state["selected"]
-                 if evt.bundles[j]["apa"] == apa and evt.bundles[j]["flash_gid"] == gid]
+    pred_full = np.zeros(evt.nchan)
+    lab = "none selected"
+    if gid is not None:
+        share = [j for j in state["selected"] if evt.bundles[j]["flash_gid"] == gid]
         previewed = False
         if not share:
             idx = state["focus"]
-            if (idx is not None and evt.bundles[idx]["apa"] == apa
-                    and evt.bundles[idx]["flash_gid"] == gid):
+            if idx is not None and evt.bundles[idx]["flash_gid"] == gid:
                 share = [idx]
                 previewed = True
-        pred_full = np.zeros(evt.nchan)
         for j in share:
             pj = evt.bundles[j]["pred_pe"]
             if pj:
                 pred_full += np.array(pj)
+        if share:
+            lab = ("preview: focused bundle" if previewed
+                   else "sum of %d selected cluster(s)" % len(share))
+
+    for group in GROUPS:
+        mp, pp = LIGHT[group]["meas"], LIGHT[group]["pred"]
+        ho, hr = HIST[group]["overlay"], HIST[group]["ratio"]
+        wall_m, inner_m = evt.group_mask(group)
+        aw, ai = evt.od_active & wall_m, evt.od_active & inner_m
+        dw, di = (~evt.od_active) & wall_m, (~evt.od_active) & inner_m
+        # faint outline of this group's active OpDets; red x/+ for the masked ones
+        for panel in (mp, pp):
+            panel["base_wall"].data = dict(z=evt.od_z[aw].tolist(), y=evt.od_y[aw].tolist())
+            panel["base_inner"].data = dict(z=evt.od_z[ai].tolist(), y=evt.od_y[ai].tolist())
+            panel["dead_wall"].data = dict(z=evt.od_z[dw].tolist(), y=evt.od_y[dw].tolist())
+            panel["dead_inner"].data = dict(z=evt.od_z[di].tolist(), y=evt.od_y[di].tolist())
+
+        chans, boundary = evt.group_channels(group)
+
+        if gid is None:
+            for panel in (mp, pp):
+                panel["src_wall"].data = dict(z=[], y=[], pe=[], r=[])
+                panel["src_inner"].data = dict(z=[], y=[], pe=[], d=[])
+            mp["fig"].title.text = "%s measured  (no flash in group)" % GROUP_NAME[group]
+            pp["fig"].title.text = "%s predicted" % GROUP_NAME[group]
+            ho["meas"].data = dict(x=[], pe=[])
+            ho["pred"].data = dict(x=[], pe=[])
+            hr["src"].data = dict(x=[], ratio=[])
+            ho["fig"].title.text = "%s meas vs pred  (no flash)" % GROUP_NAME[group]
+            hr["fig"].title.text = "%s pred/meas" % GROUP_NAME[group]
+            for hpanel in (ho, hr):
+                hpanel["sep"].visible = False
+                hpanel["lbl_wall"].visible = False
+                hpanel["lbl_inner"].visible = False
+            continue
+        flash = evt.flash_by_gid[gid]
+        meas = np.array(flash["pe"])[chans]
         pred = pred_full[chans]
 
         # Independent per-panel scales so the predicted *shape* stays readable even
         # when its absolute PE is tiny next to a bright measured flash.
         hi_meas = max(1.0, float(meas.max() if meas.size else 0))
         hi_pred = max(1.0, float(pred.max() if pred.size else 0))
-        mp["glyph"].glyph.fill_color["transform"].high = hi_meas
-        pp["glyph"].glyph.fill_color["transform"].high = hi_pred
+        mp["cmapper"].high = hi_meas
+        pp["cmapper"].high = hi_pred
 
-        z = evt.od_z[chans].tolist()
-        y = evt.od_y[chans].tolist()
-        mp["src"].data = dict(z=z, y=y, pe=meas.tolist(), r=radii(meas, hi_meas))
-        pp["src"].data = dict(z=z, y=y, pe=pred.tolist(), r=radii(pred, hi_pred))
+        fill_group_2d(mp, evt, chans, boundary, meas, hi_meas)
+        fill_group_2d(pp, evt, chans, boundary, pred, hi_pred)
         mp["fig"].title.text = ("%s measured  gid %d (id %d)  t=%.1f us  totPE=%.0f"
-                                % (SIDE_NAME[apa], gid, flash["id"], flash["time"],
+                                % (GROUP_NAME[group], gid, flash["id"], flash["time"],
                                    flash["total_PE"]))
-        if not share:
-            lab = "none selected"
-        elif previewed:
-            lab = "preview: focused bundle"
-        else:
-            lab = "sum of %d selected cluster(s)" % len(share)
-        pp["fig"].title.text = "%s predicted  (%s)" % (SIDE_NAME[apa], lab)
+        pp["fig"].title.text = "%s predicted  (%s)" % (GROUP_NAME[group], lab)
 
-        # 1-D per-channel comparison (same meas/pred over the active PDs).
+        # 1-D per-channel comparison (same meas/pred over the active PDs, wall block
+        # first then cathode/bottom, separator between).
         xidx = np.arange(meas.size)
         ho["meas"].data = dict(x=xidx.tolist(), pe=meas.tolist())
         ho["pred"].data = dict(x=xidx.tolist(), pe=pred.tolist())
@@ -743,9 +851,11 @@ def render_light():
         hr["src"].data = dict(x=xidx[mask].tolist(),
                               ratio=(pred[mask] / meas[mask]).tolist())
         ho["fig"].title.text = ("%s meas vs pred  (gid %d, t=%.1f us)"
-                                % (SIDE_NAME[apa], gid, flash["time"]))
+                                % (GROUP_NAME[group], gid, flash["time"]))
         hr["fig"].title.text = ("%s pred/meas  (%d/%d chans meas>0)"
-                                % (SIDE_NAME[apa], int(mask.sum()), meas.size))
+                                % (GROUP_NAME[group], int(mask.sum()), meas.size))
+        for hpanel in (ho, hr):
+            set_subblock_sep(hpanel, group, boundary, meas.size)
 
 
 def box_lines(g):
@@ -998,23 +1108,24 @@ def refresh():
 # Callbacks.
 # ---------------------------------------------------------------------------
 def set_light_ranges(evt):
-    """Pin each light panel to its volume's PD envelope (fixed, no zoom). PDVD's
+    """Pin each light panel to its PD-type group's envelope (fixed, no zoom). PDVD's
     wall PDs sit OUTSIDE the drift box footprint (membrane XAs at y=±417.6, bottom
     PMTs out to z=455/-156), so the range is the PD-position envelope of the
-    panel's channels, padded."""
-    for apa in SIDES:
-        sm = evt.od_side[apa]
+    panel's channels, unioned with both drift boxes (the group may span both
+    volumes), padded."""
+    for group in GROUPS:
+        wall_m, inner_m = evt.group_mask(group)
+        sm = wall_m | inner_m
         if not sm.any():
             continue
         zlo, zhi = float(evt.od_z[sm].min()), float(evt.od_z[sm].max())
         ylo, yhi = float(evt.od_y[sm].min()), float(evt.od_y[sm].max())
-        g = evt.geom.get(apa)
-        if g:
+        for g in evt.geom.values():
             zlo, zhi = min(zlo, g["z_lo"]), max(zhi, g["z_hi"])
             ylo, yhi = min(ylo, g["y_lo"]), max(yhi, g["y_hi"])
         pz = 0.06 * (zhi - zlo)
         py = 0.06 * (yhi - ylo)
-        for panel in (LIGHT[apa]["meas"], LIGHT[apa]["pred"]):
+        for panel in (LIGHT[group]["meas"], LIGHT[group]["pred"]):
             f = panel["fig"]
             f.x_range.start, f.x_range.end = zlo - pz, zhi + pz
             f.y_range.start, f.y_range.end = ylo - py, yhi + py
@@ -1377,10 +1488,10 @@ layout = column(
         column(clus_title, clus_table)),
     compare_div,
     compare_table,
-    row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
-        LIGHT[4]["meas"]["fig"], LIGHT[4]["pred"]["fig"]),
-    row(HIST[0]["overlay"]["fig"], HIST[0]["ratio"]["fig"],
-        HIST[4]["overlay"]["fig"], HIST[4]["ratio"]["fig"]),
+    row(LIGHT["XA"]["meas"]["fig"], LIGHT["XA"]["pred"]["fig"],
+        LIGHT["PMT"]["meas"]["fig"], LIGHT["PMT"]["pred"]["fig"]),
+    row(HIST["XA"]["overlay"]["fig"], HIST["XA"]["ratio"]["fig"],
+        HIST["PMT"]["overlay"]["fig"], HIST["PMT"]["ratio"]["fig"]),
 )
 
 curdoc().add_root(layout)

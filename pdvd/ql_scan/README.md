@@ -59,16 +59,30 @@ Same as PDHD:
 
 ## PDVD-specific display notes
 
-- Panels are **bottom** (volume 0, drift −x…cathode) and **top** (volume 4);
-  each shows the y–z projection of its volume's clusters plus the PDs assigned
-  to it. The **8 cathode X-ARAPUCAs (ch 4–11, x≈0) are drawn on BOTH panels** —
-  they are double-sided and belong to both volumes.
-- PD assignment: bottom panel = cathode XAs + everything at x < −10 cm
-  (bottom-membrane XAs ch 12,13,18,19; z-wall PMTs ch 14–17, 20–23; the 16
-  bottom PMTs ch 24–39 behind the bottom anode); top panel = cathode XAs +
-  x > +10 cm (top-membrane XAs ch 0–3). Panel y/z ranges are the PD-position
-  envelope ∪ the drift box, since the membrane/bottom PDs sit outside the TPC
-  box. Masked OpDets (static `ch_mask` + per-event `auto_mask`) are faint red ×.
+- Charge-projection panels (top of the page) always draw **both** drift
+  volumes' boxes together; a cathode-crossing cosmic is two bundles (one per
+  volume) on the SAME flash — tick both.
+- The **light panels** (2-D maps + 1-D histograms, bottom of the page) are
+  grouped by **PD type**, not drift volume — the flash is one all-PD set (the
+  cathode X-ARAPUCAs are double-sided and belong to both volumes at once, so a
+  bottom/top split either dupes or under-predicts them):
+  - **X-ARAPUCA** panel — wall/membrane XAs (ch 0–3, 12,13, 18,19; |x| > 10)
+    and the 8 cathode XAs (ch 4–11, x≈0), separated by a dashed line
+    (1-D) / marker shape (2-D: circle = wall, square = cathode).
+  - **PMT** panel — z-wall PMTs (ch 14–17, 20–23) and the 16 bottom/floor PMTs
+    (ch 24–39, behind the bottom anode), same wall/inner split. All PMTs live
+    in the bottom drift volume.
+  - Predicted light = the element-wise sum of **all** selected bundles on the
+    group flash across **both** volumes (not just one volume's clusters), so a
+    cathode-crosser's or shared cathode-XA's predicted PE is counted whole.
+  - Panel y/z ranges are the PD-position envelope ∪ both drift boxes, since the
+    membrane/bottom PDs sit outside the TPC box. Masked OpDets (static
+    `ch_mask` + per-event `auto_mask`) are faint red ×/+ (circle-x = wall,
+    square-x = cathode/bottom).
+  - The wall/cathode (or wall/bottom) z-ranges overlap spatially in the 2-D
+    maps (e.g. z-wall vs bottom PMTs), so the marker shape — not position — is
+    what tells them apart there; same-position x-stacked PDs (e.g. membrane XA
+    behind a z-wall PMT) still overlap on the scatter, use hover for the PE.
 - Bundles with the new `flag_at_cathode` (cluster end within the cathode
   cushion) are tinted **light orange** with an `atCATH` tag in the flags column
   — the PDVD analogue of attention-worthy proximity flags (89% of light is
