@@ -194,6 +194,20 @@ flashes, predictions re-validated exact against the Xe dumps:
   matcher gains nothing from the correction. The ×2–4 number is a useful
   cross-check target for asks (a)/(c) above, nothing more.
 
+**Re-verified after the active-volume geometry fix (2026-07-11, toolkit
+`565ccd62`)** — `QLMatching::compute_geometry` was truncating PDVD's Y
+extent to roughly half the true range (a PDVD-specific two-face wire-plane
+issue found while reviewing the hand-scan display; PDHD/SBND unaffected),
+silently zeroing predicted light for charge below y≈−168 cm. All dumps were
+reprocessed, QtoL refit (0.082→0.070), and the fit above rerun on the
+corrected geometry: R ≈ 2.9 (scan), 4.2 / 2.1 / 23.4 (039252 / 039253 /
+039349 gold — the 039349 beam-topology anomaly persists essentially
+unchanged), held-out KS still neutral-to-worse in 2 of 3 cross-checks
+(scan→gold 0.421→0.418; scan-half→scan-rest 0.369→0.379 *worse*;
+gold→scan 0.370→0.444 *worse*). **Same conclusion holds**: not deployable.
+The geometry bug changed which clusters got matched, not the underlying
+verdict on this question.
+
 ## 3. Photon library: Argon (128 nm) or Xenon (175 nm)?
 
 **Ask:** were runs **039252 / 039253 / 039349** (2025-08/09) pure argon or

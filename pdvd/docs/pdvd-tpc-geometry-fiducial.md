@@ -200,6 +200,25 @@ OpDet set masked to that side by comparing each OpDet's x to `m_cathode_x`
 crosser's two halves across the two sides. Confirms the intended definition:
 **the fiducial volume is defined for each drift TPC region separately.**
 
+### Addendum: active-volume Y-truncation bug — FIXED (2026-07-11, toolkit `565ccd62`)
+
+`inner_bounds(wpid)` is keyed by (anode, **face**), and `compute_geometry`
+queried only one configured face per anode (`m_tpc_face`/`m_tpc_faces`, the
+imaging face). On PDHD/SBND each anode's two faces cover the full Y/Z and
+differ only slightly in X, so a single face is a safe proxy for the whole
+box. **PDVD instead splits each anode's Y range across its two faces**
+(adjacent, disjoint halves — confirmed via `wirecell-util wires-info`: anode
+0 face 0 = Y[-168.5,-0.6] cm, face 1 = Y[-336.4,-168.5] cm, same X/Z), so
+using one face left the box (and the PE-inclusion gate) covering only
+Y=[-168.5,+336.4] cm instead of the true ±336.4 cm — asymmetric, missing the
+bottom third of the module. Real physics impact, not just display: any
+charge below y≈-168 cm got zero predicted light. Fixed with a new
+`tpc_extra_faces` per-input knob (mirrors `tpc_faces`) that unions a second
+face's box in; empty by default so PDHD/SBND are byte-identical, set to
+`[1,1]` in PDVD's `qlmatching.jsonnet`. All 120 PDVD `-calib` dumps
+reprocessed, QtoL refit 0.082→0.070 (`ql-scan-findings.md` §8,
+`pdvd-questions-dune.md` §2).
+
 ### PDHD vs PDVD
 
 | Aspect | PDHD (`cfg/.../pdhd/qlmatching.jsonnet`) | PDVD (target) |

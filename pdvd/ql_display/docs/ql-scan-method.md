@@ -101,6 +101,24 @@ the new dumps with the same rubric:
 Review:
 `./ql_scan/serve_ql_scan.sh 5017 --tag claude-xe work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json`
 
+## Geometry-fix round (2026-07-11)
+
+A PDVD-specific active-volume Y-truncation bug in `QLMatching::compute_geometry`
+(toolkit `565ccd62`, see `pdvd-tpc-geometry-fiducial.md` and
+`ql-scan-findings.md` §8) was found and fixed while reviewing the display's
+detector-box drawing. It affected both the drawn box and the light-
+prediction inclusion gate, so all 120 PDVD `-calib` dumps were reprocessed
+and QtoL refit (0.082 -> 0.070, `cfg/.../protodunevd/qlmatching.jsonnet`).
+The 10 scan events were rescanned from scratch on the corrected dumps:
+
+- evidence: `png-geomfix/evt<ID>/` + `context-geomfix/context-evt<ID>.jsonl`
+- decisions: `decisions-geomfix/decisions-evt<ID>.jsonl`
+- labels: tag **`claude-geomfix`** (both `claude` and `claude-xe` stay valid
+  only against their own archived pre-fix dumps)
+
+Review:
+`./ql_scan/serve_ql_scan.sh 5017 --tag claude-geomfix work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json`
+
 ## Commands (reproduce)
 
 ```bash

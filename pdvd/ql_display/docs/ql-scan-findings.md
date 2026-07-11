@@ -244,3 +244,74 @@ Review:
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
 ./ql_scan/serve_ql_scan.sh 5017 --tag claude-xe work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json
 ```
+
+## 8. Geometry-fix round (2026-07-11, tag `claude-geomfix`)
+
+**Root cause found while reviewing the display**: PDVD's active-volume box
+in `QLMatching::compute_geometry` was built from only ONE of an anode's two
+wire "faces". On PDHD/SBND the two faces of an anode cover the full Y/Z and
+differ only slightly in X, so a single face is a safe proxy for the whole
+box. PDVD instead splits each anode's Y range across its two faces (adjacent,
+disjoint halves), so using one face left the drawn box (and the light-
+prediction inclusion gate at `QLMatching.cxx:~1340`) covering only
+Y=[-168.5,+336.4] cm instead of the true +-336.4 cm — any charge below
+y~-168 cm was silently excluded from predicted light. Fixed in toolkit
+`565ccd62` (new `tpc_extra_faces` knob, PDVD-only, empty/no-op for
+PDHD/SBND — byte-identical there) by unioning face 1's box in. Impact check
+on evt0: 990/3795 bundles with non-trivial predicted light changed by >5%,
+several clusters going from 0 predicted PE (unmatchable) to thousands.
+
+All 120 PDVD `-calib` dumps (039252/039253/039349, all idx) were
+reprocessed under the fix; QtoL was refit on the same 80 beam-flash gold
+pairs: **0.082 -> 0.070** (fixing the Y truncation raised predicted light
+overall, so QtoL moved down to compensate). The 10 scan events were
+reprocessed again at the new QtoL and rescanned FROM SCRATCH (independent of
+both the 128nm round and the pre-geometry-fix Xe round) — evidence under
+`png-geomfix/` + `context-geomfix/`, decisions under
+`decisions-geomfix/decisions-evt*.jsonl`, labels tag `claude-geomfix`.
+
+| event | groups w/auto | auto bundles | keep | reject | add |
+|---|---|---|---|---|---|
+| 298567 | 56 | 75 | 39 | 36 | 1 |
+| 298581 | 62 | 73 | 40 | 33 | 6 |
+| 298595 | 64 | 87 | 55 | 32 | 1 |
+| 298609 | 64 | 82 | 54 | 28 | 0 |
+| 298623 | 75 | 98 | 58 | 40 | 0 |
+| 298637 | 61 | 89 | 57 | 32 | 0 |
+| 298651 | 78 | 104 | 55 | 49 | 0 |
+| 298665 | 65 | 92 | 48 | 44 | 1 |
+| 298679 | 48 | 64 | 39 | 25 | 0 |
+| 298693 | 64 | 81 | 51 | 30 | 2 |
+| **total** | | **845** | **496** | **349** | **11** |
+
+Agreement with auto = 496/845 = **58.7%** (up from 48% in the pre-fix Xe
+round) — consistent with the matcher now actually seeing the charge it
+predicts light for, rather than padding the auto set with amplitude-starved
+accidentals from the truncated box. Confidence-weighted evidence and
+per-bundle reasons are in the `decisions-geomfix/*.jsonl` files.
+
+Deltas vs the pre-fix Xe round:
+1. The dominant auto-matcher error is still **one-cluster-many-flashes**
+   duplicates (every event has 1-15 clusters auto-selected on 2-5 flashes
+   simultaneously); resolved via the compare-table (`competing_flashes`)
+   exactly as before — amplitude/chi2 first, KS relative-only.
+2. **evt298651 is notably messier post-fix**: only 47/78 auto-having groups
+   retain any kept cluster, and the scanning agent explicitly flagged the
+   matcher as unreliable there (many auto picks a few x10^-4 to 10^-2 of
+   the measured light) — a genuine event, not a scan artifact; worth a
+   closer look if this event matters downstream.
+3. The evt298595 uid=3999999 collision (two distinct ident=-1 clusters
+   sharing a uid under one flash) is confirmed to persist post-fix; handled
+   the same way (`bundle_idx` disambiguation, WARNING not error).
+4. amplitude-starved rejects (pred/meas << 0.1, flat/near-zero predicted
+   line against real measured bars) remain the majority failure mode among
+   rejects, same as every prior round — the truncation bug affected WHICH
+   clusters got nonzero predicted light, not the shape-matching logic
+   itself.
+
+Review:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+./ql_scan/serve_ql_scan.sh 5017 --tag claude-geomfix work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json
+```
