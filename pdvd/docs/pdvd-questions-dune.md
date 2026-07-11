@@ -169,6 +169,31 @@ resolve it);
 (c) the PoF front-end transimpedance/gain numbers, for an electronics-based
 scale estimate even without an SPE peak.
 
+**Uniform-constant follow-up (2026-07-11, `ql_light_calib/fit_uniform_gain.py`)**
+— after the 175 nm switch and the Xe re-scan we asked the weaker question the
+PoF asymmetry actually implies: can ONE gain constant for the cathode group
+(ch 4–11 vs the membrane XA anchor) be fitted, instead of the rejected
+per-channel vector? Per-sample ratio R = (meas/pred)_cath / (meas/pred)_mem
+(QtoL and global model scale cancel), 80 gold pairs + 600 claude-xe-vetted
+flashes, predictions re-validated exact against the Xe dumps:
+
+- **A central value exists and is stable across topology-diverse samples**:
+  R ≈ 3.6 (scan keeps, n=163), 2.6 / 2.1 (039252 / 039253 gold) — i.e. the
+  cathode PoF path reads ~×2–4 high relative to membrane under the 175 nm
+  model, the right ballpark for a front-end gain difference.
+- **But it is not a detector constant at useful precision**: the per-flash
+  [16,84]% spread is [0.9, 29], and single-topology gold in 039349 gives
+  R ≈ 20 — its beam flashes leave the membranes essentially dark (meas ~1 PE
+  vs pred ~390) while the membranes are demonstrably live event-wide, so the
+  ratio there measures beam-topology visibility-model error, not gain.
+- **Held-out validation says do not deploy**: scaling ch 4–11 measured PE by
+  1/R is KS-neutral or worse in all three cross-checks (fit scan → test gold
+  0.429→0.424; fit half the scan events → test the rest 0.332→0.341; fit
+  gold → test scan 0.344→0.426). Same conclusion as the per-channel fit: the
+  visibility-model topology error is larger than the gain signal, so the
+  matcher gains nothing from the correction. The ×2–4 number is a useful
+  cross-check target for asks (a)/(c) above, nothing more.
+
 ## 3. Photon library: Argon (128 nm) or Xenon (175 nm)?
 
 **Ask:** were runs **039252 / 039253 / 039349** (2025-08/09) pure argon or
