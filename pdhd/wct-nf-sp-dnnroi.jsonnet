@@ -133,6 +133,21 @@ function(
   // so the SP frame must reach the sink directly.  See
   // docs/sp-w-collection-breakroi.md.
   sp_roi_debug_sink = false,
+
+  // Route OmnibusSigProc's real<->complex time-axis FFTs through the
+  // native r2c/c2r transforms (about half the flops).  Results agree
+  // with the legacy widened-complex path only up to float round-off,
+  // so default false = bit-identical.  See
+  // sigproc/docs/nfsp-dnnroi-perf-round0.md lever 1.
+  sp_use_real_dft = false,
+
+  // Output archive codec, selected by file extension (custard).
+  // Default 'tar.bz2' = legacy.  'tar.zst' compresses this frame data
+  // ~25x faster at slightly better ratio (round-0 lever 2); payload
+  // bytes are identical, only the container changes.  Downstream WCT
+  // FrameFileSource auto-detects by name; python tooling needs the
+  // zstandard module for .zst.
+  sp_sink_ext = 'tar.bz2',
 )
 
   local tools = tools_all;
@@ -161,7 +176,9 @@ function(
   local sp_override = { sparse: false }
                       + (if use_dnnroi || sp_roi_debug_sink
                          then { use_roi_debug_mode: true, use_multi_plane_protection: true }
-                         else {});
+                         else {})
+                      // Key omitted when off => compiled config byte-identical.
+                      + (if sp_use_real_dft then { use_real_dft: true } else {});
   local sp = sp_maker(params, tools, sp_override);
   // When DNN-ROI is in the chain, sp_pipes must NOT include an
   // L1SPFilterPD node: L1SP belongs strictly AFTER DNN-ROI, inside the
@@ -244,7 +261,7 @@ function(
       type: 'FrameFileSink',
       name: 'dnnroiframesink%d' % n,
       data: {
-        outname: '%s-anode%d.tar.bz2' % [sp_prefix, n],
+        outname: '%s-anode%d.%s' % [sp_prefix, n, sp_sink_ext],
         tags: (if use_dnnroi
                then (if use_l1sp_dnn
                      then ['gauss%d' % n, 'wiener%d' % n, 'raw%d' % n]
