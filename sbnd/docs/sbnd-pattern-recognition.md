@@ -582,6 +582,52 @@ Gates: uBooNE 2-event smoke (m7smoke, DL-off) byte-identical to gate3; SBND
 STM=1 — the reclassification only happens when `tagger_check_tgm` is in the
 pipeline).
 
+### 6.6 PID retuning — DEFERRED (comments only, per request)
+
+The PR/tagger code is functionally detector-generic but its **quantitative**
+verdict thresholds and feature normalizations embed uBooNE calibrations as
+literals.  Left as-is for now (M5–M7 demonstrate the machinery); retune when
+SBND calibrated dQ/dx is available.  Inventory:
+
+| constant | meaning | where (clus/src) |
+|---|---|---|
+| `43e3/units::cm` | MIP dQ/dx reference (uBooNE gain/E-field) | NeutrinoVertexFinder, PRSegmentFunctions, PRShower, NeutrinoTrackShowerSep, NeutrinoTagger{NuMu,NuE,SSM,Cosmic,SinglePhoton}, NeutrinoDeghoster, NeutrinoStructureExaminer, NeutrinoOtherSegments (~10 files, many sites each) |
+| `50e3` | dQ/dx normalization in the STM kink finder | TaggerCheckSTM.cxx:827-836 |
+| `0.8866 + 0.9533·(18 cm/L)^0.4234` | effective recombination-vs-length correction | NeutrinoTaggerNuE (4), NeutrinoTaggerNuMu (2), NeutrinoVertexFinder, NeutrinoTaggerSSM, NeutrinoTaggerCosmic |
+| tagger feature cuts | numu/nue/ssm/cosmic TaggerInfo features feed uBooNE-trained BDTs | NeutrinoTagger*.cxx throughout |
+
+What is already SBND-correct: `BoxRecombination` (Efield 0.5 kV/cm) for
+charge→energy in track fitting; the SP-filter-derived smearing JSON (§6.2);
+the particle dE/dx + range tables (detector-agnostic NIST/PDG).  The retune
+plan: derive the SBND MIP dQ/dx scale from calibrated cosmics (ideally
+expose `43e3`/`50e3` as one configurable scale), re-fit the length
+correction, and only then trust the tagger features quantitatively (§6.3
+BDT retraining depends on this).
+
+**Hard-coded axis audit (status).**  ~56 literal `(1,0,0)`/`(0,0,1)` vectors
+remain in the PR layer (files listed in §6.1).  Beam +z is correct for SBND.
+Drift ±x: most uses are |projection| angle tests (sign-agnostic); the
+per-cluster `face_dirx` pattern (`TaggerCheckSTM.cxx:1885`) is the fix
+template where sign matters.  Policy: fix on observed wrong verdict — M5–M7
+runs on both TPCs (vertices and TGM tags at x<0 and x>0) surfaced none.
+
+### 6.7 Consolidated open items
+
+1. `check_neutrino_candidate` port (Dijkstra path + kink topology,
+   `2dtoy/src/ToyFiducial.cxx:1284`) — unlocks in-beam-window TGM tags.
+2. Beam-window calibration on a larger sample (current values from 7 events;
+   §6.1 provenance) + the multi-bundle "longest wins" selection rule.
+3. SBND SCN vertex retraining + `dQdx_scale`/`dQdx_offset` recalibration
+   (§6.4); SparseConvNet/torch ABI pin.
+4. PID constants retune + BDT retraining + `Sbnd*` output visitors
+   (fork-by-duplication) — §6.3/§6.6.
+5. Cathode-crossing PR validation: a real x=0-spanning main through steiner/
+   TGM/neutrino PR (none in the 7-event sample).
+6. STM validation: find a genuine SBND stopped muon (the only tag so far
+   reclassified as TGM).
+7. Per-event Q/L match quality for MC evt12 (5.7 cm beam bundle) — affects
+   any truth-vertex comparison.
+
 ## 7. Attention points (gotchas)
 
 - **`dump_mode:true` writes nothing.** The `trash-*.tar.gz` `TensorFileSink`s
@@ -639,8 +685,10 @@ pipeline).
 | 4 | Roadmap finalized for neutrino PR / BDT stages (§6) | DONE 2026-07-10 | — / eb3ea44 |
 | 5 | `tagger_check_neutrino` wired (beam-bundle selection, geometric vertex, Bee PR layers) | DONE 2026-07-10 (7 events; §6.1 results table; all identity gates green) | 12e68f34 / 3a565f0 |
 | 6 | DNN (SCN) vertex demo with uBooNE weights (§6.4) | DONE 2026-07-10 (sparseconvnet rebuilt; DL-off gate policy locked to gate3; evt12 + evt1258 DL-vs-geometric table; retraining required for physics) | — / d7f71c2 |
-| 7 | TGM tagger port (`TaggerCheckTGM`, both-TPC box FV) (§6.5) | DONE 2026-07-10 (7 events; crossers tagged, beam bundles protected; M3 STM tag reclassified TGM; gates green) | (this commit) / (this commit) |
+| 7 | TGM tagger port (`TaggerCheckTGM`, both-TPC box FV) (§6.5) | DONE 2026-07-10 (7 events; crossers tagged, beam bundles protected; M3 STM tag reclassified TGM; gates green) | 79edf84b / be0fa42 |
+| 8 | Closeout: PID retune inventory (§6.6), axis-audit status, open items (§6.7) | DONE 2026-07-10 | — / (this commit) |
 
-Next up: doc-only closeout (PID retune comments, BDT/retraining roadmap,
-axis-audit status), then beyond this campaign: `check_neutrino_candidate`
-port, SBND SCN retraining, beam-window calibration on a larger sample.
+The full uBooNE chain now runs on SBND: pctree load → switch_scope →
+steiner (retiled imaging) → fiducialutils → TGM → STM → neutrino PR
+(geometric or DL vertex).  Remaining work is calibration/retraining, not
+plumbing — see §6.7.
