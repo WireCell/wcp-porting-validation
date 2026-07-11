@@ -15,6 +15,28 @@ records; per-event table archived at `pdvd/data/jjo_triglight_offsets.txt`.
 Now consumed by `run_light_evt.sh` → opflash metadata → Q/L matching
 (`pdvd-ql-pending.md` §1). Sub-answers, for the record:
 
+**How it was dealt with on our side (full record `pdvd-ql-pending.md` §1):**
+
+1. `run_light_evt.sh` reads the trigoff tree from the same rawwf file it
+   already opens, replicates the light chain's tick origin exactly
+   (`PDVDOpWaveformSource` rule: min over all records of
+   `round(ts·62.5) − 64` ticks for self-trigger snippets), and stamps
+   **per-crate** offsets into the opflash archive metadata:
+   `offset_bot_us = chain_t0 − charge_bde_us`,
+   `offset_top_us = chain_t0 − charge_tde_us` (≈ −2.1..−2.5 ms; ADD to a
+   flash time to land on that crate's charge axis). All 120 events
+   regenerated; 120/120 consistent with jjo's independent table.
+2. `run_clus_evt.sh` passes both to QLMatching `trigger_offsets=[bot, top]`
+   and `clus.jsonnet` per-volume `trigger_offset(_top)` for x_t0cor
+   (toolkit commit `8a765d5e`; byte-identical for PDHD/SBND and for
+   `[0,0]` vs legacy scalar).
+3. **Closure (decisive):** beam-trigger flash test
+   (`ql_light_calib/check_trigger_flash.py`) — on CTB beam runs a ~2000 PE
+   flash must sit at `tc_us − charge_bde_us` on the folded axis; 99/120
+   events show it within ±5 µs, **residual median −0.9 µs** (the flash
+   time bin is 1 µs). The light↔charge time base is calibrated at the
+   ~1 µs level, i.e. ~0.16 cm of drift.
+
 - **Window placement:** the light full-stream start is trigger-locked
   (±0.3 µs, per-run constant: −5.0 ms in 039252/3, −2.5 ms in 039349); the
   CHARGE windows float ±15 µs event-to-event and PER CRATE (TDE vs BDE up to
@@ -100,6 +122,32 @@ by 1-PE **area**, not amplitude). Details: `pdvd-spe-template.md` §5.
 flash PE scale (cathode carries ~89% of collected light) → QtoL and the
 chi2/PE-error model in Q/L matching stop being placeholders.
 
+**Interim data-driven attempt (2026-07-11, `ql_light_calib/fit_channel_scale.py`)**
+— we tried to calibrate the scale from our own data while the official gains
+are pending, using 657 vetted charge→light pairs (80 selection-free
+beam-flash gold pairs across all three runs + 577 hand-scan-vetted matched
+flashes from the 10 scanned 039252 events; per-channel prediction recomputed
+in Python, validated exact vs the C++ matcher):
+
+- **Relative in-group cathode gains ARE measurable**: median meas/pred per
+  cathode channel, normalized to the group, spans only ×3.2 (128 nm library)
+  / ×2.5 (175 nm) — the "×13 spread" seen earlier on gold pairs alone was
+  mostly topology-driven model error, not gain. ch 7 is the dimmest (~0.5×
+  group), ch 5/9 the hottest (~1.4–1.5×).
+- **A static per-channel `measured_pe_scale` is NOT deployable yet**:
+  fitting on even events and applying to odd leaves the held-out KS
+  unchanged at best (0.363→0.363 at 128 nm, 0.351→0.351 at 175 nm with a
+  conservative n≥100 fit) and degrades it when all channels are fitted —
+  the per-channel scatter is dominated by position/topology-dependent
+  visibility-model error, not by fixed gains. The knob stays empty.
+- **The absolute transfer is still blocked on this question**: the membrane
+  anchor is internally inconsistent (top vs bottom membrane XA group
+  medians differ ×1.6, and per-channel gold-only vs all-sample medians
+  disagree strongly), and the cathode/membrane group ratio flips from 0.62
+  (128 nm library) to 2.8 (175 nm) — i.e. it measures the library as much
+  as the gain. An external ADC-per-PE number for the cathode DAPHNE path is
+  still what's needed.
+
 ## 3. Photon library: Argon (128 nm) or Xenon (175 nm)?
 
 **Ask:** were runs **039252 / 039253 / 039349** (2025-08/09) pure argon or
@@ -121,6 +169,39 @@ Xe-doped? And which optical model does DUNE bless for them —
 **Related check:** if partially doped or transitioning, is a mixed model
 needed (prompt Ar + shifted Xe component)?
 
+**Data-side answer (2026-07-11): the data strongly favor Xe-doped / 175 nm.**
+Still please confirm officially (doping level, run-by-run history, and the
+blessed 175 nm per-OpDet efficiencies). Evidence, all three runs identical
+(`ql_light_calib/check_arblind_channels.py` + `ablib_gold.py`):
+
+1. **The Ar-blind channels are live in data.** In the raw opflash archives
+   (no QL mask) ch 13/29/32/39 respond to big (≥1 kPE) flashes at the SAME
+   level as their live same-type peers (e.g. ch 32, the uncoated PMT: mean
+   1.0 PE/big-flash vs 0.6–1.3 for its PEN neighbours; ch 13 fires >5 PE in
+   20% of big flashes — the same fraction as the live membrane XAs). The
+   truly-absent controls (24/27/28/34) are identically zero. At 128 nm with
+   eff_Ar = 0 this light shouldn't exist.
+2. **Quantitative closure under the 175 nm grid:** recomputing the gold-pair
+   predictions with the 175 nm library and type-nominal efficiencies, the
+   Ar-blind channels' meas/pred medians land at 0.55–1.85× their live
+   peers' — i.e. inside the general per-channel scatter. Under pure Ar
+   (reflected-light-only) they should sit orders of magnitude low.
+3. **Shape A/B on the 80 gold pairs**: KS median 0.429 (175 nm) vs 0.447
+   (128 nm), 175 nm better in 56/80 paired; on the 657 vetted hand-scan
+   flashes 0.351 vs 0.363 — even though that sample was *selected by* the
+   128 nm matcher. Within-group per-channel ratio spreads also shrink under
+   175 nm (cathode ×13.3→×11.5 gold-only; memXA-top σ(log10) 0.48→0.36).
+4. **No mixed model needed at current precision**: the shape-only KS of
+   α·128 + (1−α)·175 is monotonic in α — pure 175 nm is the minimum.
+
+Caveats: the A/B used the 128 nm efficiencies for both (no blessed 175 nm
+set yet), and the per-channel PE scale is uncalibrated (§2) — this limits
+the KS discrimination; the Ar-blind liveness (items 1–2) is the robust part.
+**Planned action:** switch `photon_library_file` to
+`pdvd-photlib-vis-v5-175nm` and unmask 13/29/39 (32 pending its true 175 nm
+efficiency) once the official efficiencies arrive; QtoL and the §2 scale
+work then redo under the new library.
+
 ## 4. Other items (smaller, please confirm)
 
 1. **DAPHNE↔module pairing of the Arapucas** — jjo's DAPHNE→module
@@ -135,7 +216,13 @@ needed (prompt Ar + shifted Xe component)?
    **ch16 and ch33 are alive but ~50x dimmer than their peers** (per-event
    max PE median ≈ 5.6 vs 25–265 for neighbouring PMTs of the same type;
    below 5 PE in ~45% of events).  Known low-gain/low-HV channels, or a
-   miscalibrated SPE scale on our side?
+   miscalibrated SPE scale on our side?  *Additional data point (2026-07-11,
+   657 vetted charge→light pairs):* **ch2 (membrane XA, top, y=+417.6)
+   measures ~10x below prediction** (meas/pred median 0.12 vs 0.7–3.3 for
+   the other top membrane XAs, same sign under both libraries) — another
+   low-gain candidate.  In the meantime our per-event dead/dim self-check
+   (`auto_mask` 10/3, same-type neighbours) is ON in production and
+   per-event masks ch16/33-class channels when they are quiet.
 3. **Run 039324 light data** — the raw light file was never staged
    (`/nfs/data/1/jjo/data/PDVD/` has only 039252/039253/039349); can it be
    provided so 039324 gets Q/L matching too?
