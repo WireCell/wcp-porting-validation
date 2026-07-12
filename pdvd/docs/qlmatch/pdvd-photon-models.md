@@ -80,13 +80,71 @@ Yes — a classic, precomputed photon-library table exists for PDVD, in the same
   pure-Ar training variant of the g4 stage-2 fcl, not the nominal chain.
 
 We extracted and used this table for exactly one purpose: **validating the ANN**.
-At the library's 15,000 filled voxel centers, the v4 128 nm ANN and the v4 Ar
-voxel library agree with log-visibility correlation **0.991**, ratio
-16/50/84% = 0.78/0.99/1.17 — the ANN is a faithful smooth of the (MC-noisy)
-voxel table, confirming units (cm), world frame, and channel order all line up.
 Ar↔Xe libraries correlate at 0.944 in log-visibility. **The voxel table itself
 was never wired into QLMatching** — it is v4-only (mirrored geometry, wrong for
 data) and far coarser than what we built from the ANN instead.
+
+#### Row 3a — which doping does the voxel library match: Ar/128 nm or Xe/175 nm?
+
+Both the voxel library and the ANN exist in **both** dopings for v4, so this is
+answerable directly as a 2×2 consistency check, not just the single Ar-lib
+vs 128nm-ANN number quoted above. `pdvd/photlib/compare_lib_ann.py` evaluates
+all four v4 ANN/library combinations at the library's own 15,625 voxel centers
+(600k (voxel,channel) entries per pair on the shared support where both sides
+are nonzero):
+
+| library | vs 128 nm ANN | vs 175 nm ANN |
+|---|---|---|
+| **Ar** | corr **0.991**, ratio 16/50/84% = 0.78/0.99/**1.17**, log-ratio RMS **0.33** | corr 0.929, ratio 16/50/84% = 1.28/3.30/9.38, log-ratio RMS 1.59 |
+| **Xe** | corr 0.934, ratio 16/50/84% = 0.10/0.30/0.77, log-ratio RMS 1.65 | corr **0.986**, ratio 16/50/84% = 0.84/0.99/**1.16**, log-ratio RMS **0.27** |
+
+**Answer: each voxel library matches its own-doping ANN, cleanly, and matches
+the other doping's ANN poorly.** The Ar library is closer to the 128 nm ANN
+(higher correlation, median ratio ≈1, ~3× smaller log-ratio scatter); the Xe
+library is closer to the 175 nm ANN. The off-diagonal pairs are not a subtle
+effect — the Xe-lib/128nm-ANN median ratio is 0.30 (the ANN systematically
+predicts ~3× less visibility than the "wrong" library), and the Ar-lib/175nm-ANN
+median ratio is 3.30 (ANN predicts ~3× more). A per-entry discriminator (which
+ANN flavor is closer in |log-ratio|, on the support common to all four pairs)
+confirms this isn't a tail artifact: **95.8%** of Ar-library entries sit closer
+to the 128 nm ANN, and **94.1%** of Xe-library entries sit closer to the 175 nm
+ANN. This is a strong internal-consistency result: two independently-built
+official artifacts (a Geant4 photon-transport voxel table and a trained neural
+net) agree with each other at the ~15-20% level (16-84% band) when compared
+doping-to-doping, and disagree by factors of 3-9× when cross-compared — so
+"which ANN is the library consistent with" has an unambiguous answer, not a
+close call.
+
+**One caveat, found rather than assumed**: the per-channel breakdown (native
+channel index, `pdvd/photlib/pics/lib_ann_perchannel.png`) shows the diagonal
+ratio (Ar/128, Xe/175) sitting flat at ≈1.0 across *all 40 channels*, including
+the three official "Ar-blind" channels (16, 29, 39 — `eff_Ar=0`, `eff_Xe>0` in
+`pdvd-photlib-chanmap.json`). The raw visibility tables do **not** hard-zero
+those channels under Ar — they carry ordinary nonzero geometric visibility in
+both the Ar library and the 128 nm ANN. This means the `eff_Ar=0` figure is a
+**downstream wavelength-dependent detection-efficiency factor** (WLS/coating
+response), applied on top of the visibility (same split as `VUVEfficiency` in
+§6 of `match/docs/semi-analytical-model.md`), not something baked into the
+transport-only visibility numbers compared here. So the Ar-blind channels are
+*not* usable as an extra doping discriminator at this (visibility-only) level
+— the global corr/ratio/RMS table above is the actual evidence.
+
+Plots (`pdvd/photlib/pics/`):
+- `lib_vs_ann_scatter.png` — 2×2 log-log hexbin grid, one panel per (library,
+  ANN) pair; the two diagonal panels (Ar-vs-128nm, Xe-vs-175nm) hug `y=x`
+  tightly, the off-diagonal panels show a clear, systematic offset/curvature.
+- `lib_vs_ann_ratio.png` — log10(ANN/library) histograms per library; each
+  library's own-doping curve is a narrow peak centered at 0, the other-doping
+  curve is a wide, offset hump.
+- `lib_ann_perchannel.png` — median ANN/library ratio vs. native channel index;
+  the two diagonal curves sit flat at 1 across all 40 channels while the
+  off-diagonal curves run 2-6× away, with no distinguishing feature at the
+  Ar-blind channels (dashed lines) beyond ordinary channel-to-channel scatter.
+
+Reproduce: `/home/xqian/tmp/tfvenv/bin/python pdvd/photlib/compare_lib_ann.py`
+(reuses `work/photlib_vis_{Ar,Xe}.npy` and `work/ann_v4_at_voxels.npy` from the
+existing pipeline; only samples the v4 175 nm ANN fresh, caching it to
+`work/ann_v4_175nm_at_voxels.npy`). Full numbers: `work/lib_ann_compare.json`.
 
 ---
 
@@ -211,6 +269,12 @@ model is used.
 - **"Is there also a table-based library from original LArSoft?"** Yes — the
   disabled `PDFastSimPVS` voxel library, v4-only, 25³ voxels (§1, row 3). It
   was used only to cross-check the ANN and is not wired into `QLMatching`.
+  Each doping's library is quantitatively consistent with the matching ANN
+  doping and inconsistent with the other one (corr 0.99 vs 0.93, ratio≈1 vs
+  0.3-3.3×, 94-96% of entries closer to their own doping — §1 row 3a) — the two
+  independent official artifacts agree with each other, which is a useful
+  cross-check of the whole Ar/Xe modeling but does not by itself say anything
+  about which doping matches *data* (that call is made in §3 from data tests).
 - **"What about the semi-analytical calibration?"** Done, exists as the
   configured fallback (`semi-analytical-pdvd.json`), fit against the ANN, but
   has known gaps (membrane XAs, PMT spread) that keep it second-best to the
