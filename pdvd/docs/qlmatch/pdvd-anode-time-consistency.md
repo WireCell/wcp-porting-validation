@@ -65,8 +65,10 @@ is unaffected (it uses per-side offsets internally).
 **bee3 event display** (§7): geometrically consistent — its TPC boxes use the
 *physical* convention (cathode ±3.0 → collection ±341.55), drift speed and
 per-volume drift signs match the toolkit exactly (both display frames are
-duals of `x_t0cor`) — with one inherited defect: it applies the BDE-folded op
-time to the top volume too (up to 4.6 cm skew this run, §7.3).
+duals of `x_t0cor`). Its one inherited defect — applying the BDE-folded op
+time to the top volume (up to 4.6 cm skew this run) — is **fixed** as of
+2026-07-12: the toolkit now emits per-side times (`op_t1`) and bee3 consumes
+them per TPC (§3.4/§7.3, toolkit `e587f357` + bee3 `40c3629`).
 
 **Quantified residuals** (details §5): after per-side time re-basing, anode-end
 pile-ups sit at u ≈ **+3.2 cm (bottom)** / **−0.1 cm (top)** relative to the
@@ -336,6 +338,20 @@ Any *top-volume* drift arithmetic done from dump times must therefore re-base:
 t_top = f["time"] + (off_top − off_bot)
 ```
 
+**FIXED 2026-07-12** (toolkit `e587f357` + bee3 `40c3629`): when `shared_flash`
++ per-input `trigger_offsets` are configured (PDVD only), the dumps now carry
+the top-clock time explicitly — per-flash `time1` (µs) in the calib dump, a
+`time1` column in the opflash PC, and a parallel `op_t1` array in the Bee
+op JSON — and bee3 consumes `op_t1` for TPC 4–7 via a new per-TPC
+`flashTimeForTPC` hook (base class unchanged). Keys are absent when
+`trigger_offsets` is empty, so PDHD/SBND outputs are byte-identical (gate:
+PDHD 29107 evt0 full QL rerun, all 15 `mabc-*.zip` member-identical to
+production, `work/029107_0_qlt`; PDVD 039252 evt0 calib+op identical after
+stripping the new keys, `time1 − time == Δ` on all 197 flashes,
+`work/039252_0_qlt`). Dumps produced before this fix still need the manual
+re-basing above; the ql_scan viewer and `find_boundary.py` still read
+`f["time"]` and can adopt `time1` as a follow-up.
+
 Per-event offsets for run 039252 (µs, from `trigger_offsets_us`; Δ·v in cm at
 v = 0.1568 cm/µs):
 
@@ -540,11 +556,13 @@ the dumps.
    push reconstruction cathode-ward. If sub-cm absolute-x fidelity is ever
    needed, recompute `ctoffset` against the calibrated drift speed (a
    config-only, knob-gated change).
-3. **Dump/display top-volume time skew** (§3.4): consumers keep inheriting
-   this (ql_scan viewer, find_boundary.py, and bee3's box/charge shifts §7.3).
-   Per-side times in the calib and op dumps (+ a per-TPC `t` in bee3) would
-   remove the trap; until then, every dump consumer doing top-volume drift
-   math must re-base by `Δ = trigger_offsets_us[1] − trigger_offsets_us[0]`.
+3. **Dump/display top-volume time skew** (§3.4): **RESOLVED 2026-07-12** —
+   toolkit `e587f357` emits per-side times (calib `time1`, opflash-PC
+   `time1`, Bee `op_t1`; keys gated on per-input `trigger_offsets` ⇒
+   PDHD/SBND byte-identical, gates in §3.4) and bee3 `40c3629` consumes
+   `op_t1` for the top volume. Remaining follow-ups: ql_scan viewer and
+   `find_boundary.py` still read `f["time"]` (should adopt `time1`), and
+   dumps generated before the fix need the manual Δ re-basing.
 4. **Top cathode ends 1.6 cm short** (§5.3): consistent with the crosser-gap
    observation; fold into the same follow-up as item 1.
 
@@ -595,10 +613,15 @@ bee3's `t` is `op_t` from the Bee op dump, which the toolkit writes as
 applies this single time to top-volume boxes/charge too, so its top-volume
 drift alignment carries the per-event Δ = off_top − off_bot skew: **up to
 4.6 cm (29 µs) in run 039252** (§3.4 table). Bottom-volume alignment is
-exact. This is the same trap as the calib dump (open item 3): the clean fix
-is per-side times in the op dump, consumed by a per-TPC `t` in bee3; until
-then, expect top-volume charge/box misalignment at the few-cm level on
-high-Δ events.
+exact.
+
+**FIXED 2026-07-12** (bee3 `40c3629`, consuming toolkit `e587f357`'s new
+`op_t1`): `Experiment.flashTimeForTPC(op, iTPC)` (base = `op_t`, so
+PDHD/SBND behavior unchanged) is overridden by `ProtoDUNEVD` to return
+`op_t1[currentFlash]` for TPC 4–7 when the op dump carries it; both display
+frames (op.js box/PD shift, sst.js detector-frame charge shift) now use the
+per-TPC time. Older op dumps without `op_t1` fall back to the previous
+behavior — regenerate an event's mabc zips to get the aligned display.
 
 ### 7.4 Photon detectors (display-only)
 
