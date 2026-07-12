@@ -857,6 +857,64 @@ to the diagnostic margin, or an |distance| + span-sanity fix to
 re-enter the flagged population and the u ≈ 0 junk would lose its
 monopoly on the advantages.
 
+### 8.6 The cathode side is the velocity meter — v = 1.568 provenance revisited
+
+The anode-side residuals (§8.3/§8.5) are essentially **velocity-blind**: the
+imaging x anchor is at the collection plane, so a velocity error δv/v scales
+an end's distance *from that plane* — ~0.05 cm at an anode end sitting 5 cm
+away, but **D·δv/v ≈ 3.4 cm per 1 % at the cathode end**.  Conversely the
+cathode-side residuals are exactly where a velocity error would show.  So
+the three observables separate cleanly:
+
+| observable | measures | current value (anodefix, decisions-pinned) |
+|---|---|---|
+| beam-flash closure | absolute (BDE) time base | −0.9 µs (§3.5) |
+| anode-end u of validated tracks | near-anode charge loss g | +2..+8 cm (§8.3/§8.5) |
+| cathode-end residual | c_loss − D·(δv/v) — **degenerate combination** | core median **+1.0 (bot, n=4) / +0.3 (top, n=4)** cm short (check B); crosser pair gap median **+9.25** vs 6.0 cm = ~1.6 cm short per half (check D, n=43) |
+
+Repro: `python3 check_anode_time_consistency.py --tag anodefix`, checks
+B/C/D.
+
+**Span closure decomposes the deficit onto the anode end.**  The validated
+anode→cathode tracks' T0-free u-spans (check C, dropping the over-merged
++15..+32 tail) run **−1.7 to −9.2 cm short of D** (median −7.7).  Per track,
+`(anode-end u) + (cathode shortfall) = span deficit` gives cathode
+shortfalls of **−2.2..+2.8 cm** while anode ends carry +2..+8 — the missing
+span lives at the anode, and the cathode ends sit on the surface to ~±2 cm
+*at v = 1.568*.
+
+**This breaks the stated provenance of v = 1.568.**  The calibration
+(`pdvd/drift_calib/calib_drift_velocity.py`) assumed genuine full crossers
+span the whole `D = 338.55` (collection → cathode surface) and solved
+`v = v_reco·D/S` from the span pile-up.  We now know genuine crossers span
+`D − g − c` = 329..337 cm — the assumption is wrong by the anode gap.  The
+closure plot (`drift_velocity_calib.png`, N=51 @1.57 → 1.561) is in fact
+double-bumped, with its pile-up (340.5) *above* the genuine validated-span
+population (329..337): the estimator keyed at least partly on the
+over-merged/overshooting population that happens to sit near D.  So the
+span method does not anchor v to better than ~1–2 %.
+
+**What actually supports v = 1.568 now** is the cathode-side agreement
+above: if the true cathode-side reconstruction loss is 0..2 cm (SCE +
+imaging threshold), then D·(δv/v) = c_loss − c′ ≈ −1..+2 cm, i.e.
+**v correct to ~±0.5 % (±0.008 mm/µs)** — but c_loss is not independently
+measured, and a coherent (c_loss, δv) trade-off along that line cannot be
+excluded from this data.  Note the earlier calibrations self-consistently
+land in this band (1.568 config, 1.561 closure re-run ≈ −0.45 %).
+
+**Independent handles that would break the (c_loss, v) degeneracy** (open,
+none implemented):
+1. Expectation at the PDVD field: Walkowiak-style v(E, T) at the nominal
+   drift field — a ±0.5 % band prediction, no reco input.
+2. Sim closure: reconstruct simulated full crossers (known v_sim = 1.473
+   convention) and measure the *reconstruction-induced* cathode shortfall
+   c_loss and anode gap g directly; then data cathode residuals convert to
+   a v measurement.
+3. Angle dependence: charge-loss gaps should depend on track angle to the
+   drift axis; a velocity error would not.  The validated-track span
+   deficits already spread −1.7..−9.2, hinting angle/topology dependence
+   (loss-like, not velocity-like).
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry
