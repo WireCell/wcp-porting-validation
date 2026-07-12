@@ -1136,6 +1136,48 @@ folded) flash time itself.
    reconstruct to the CRP, and try to reproduce the drift-aligned imaging
    loss (case 298791-type).
 
+### 8.9 Ensemble demonstration: signal stops at the anode across 10 tracks, both volumes
+
+Extension of §8.8 per owner request: more track-end cases demonstrating the
+anode position and T0 are good.  Ten validated tracks (8 new + the 2 gold)
+whose imaging ends sit near the new u = 0, each with its own independently
+measured flash time (folded times spanning ticks ~150 to ~4150 across the
+readout), traced through the W-plane corridor from 5 cm on-track to u = −4.
+`u_stop` = the last u (contiguous with the track end, gaps ≤ 1.1 cm) where
+the gauss / raw signal exceeds threshold.  Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_anode_t0_ensemble.py    # writes prof_<evt>_<uid>.png profiles
+```
+
+| evt | uid | side | img end u | gauss stop | raw stop |
+|---|---|---|---|---|---|
+| 298581 | 4000161 | top | +0.15 | −0.85 | −0.85 |
+| 298763 | 4000244 | top | +0.71 | −1.29 | −1.79 |
+| 298567 | 4000058 | top | +1.39 | +0.39 | −0.11 |
+| 298637 | 4000172 | top | +1.83 | +1.33 | +1.33 |
+| 298595 | 167 | bot | +2.01 | +1.51 | +1.01 |
+| 298581 | 9 | bot | +2.21 | +1.21 | +1.21 |
+| 298567 | 132 | bot | +2.85 | +1.85 | +1.35 |
+| 298749 | 88 | bot | +2.93 | +2.43 | +2.43 |
+| 298777 | 181 (gold) | bot | +1.66 | +1.66 | +1.16 |
+| 298749 | 3 (gold) | bot | +0.70 | +0.20 | −0.30 |
+
+**Summary: gauss-stop u — bottom (n=6): +0.2..+2.4, median +1.6; top
+(n=4): −1.3..+1.3, median −0.2.**  All ten independent flash times place
+the raw-signal termination within 2.4 cm of the U-plane anode.  This
+simultaneously validates the anode position, the per-crate trigger
+offsets, the flash times, the drift-sign conventions, and the
+collection-plane time anchor at the ~1–2 cm level.  Secondary
+observations: (i) the raw signal extends ~0.5–1 cm beyond the imaging end
+in nearly every case (imaging-threshold clipping of the last blob);
+(ii) top stops straddle u = 0 (response-smearing width) while bottom stops
+sit ~+1.6 cm inside — the same ~1.5–2 cm bottom−top asymmetry as
+§5.2/§8.7, now isolated as the one remaining sub-2 cm per-side systematic
+(candidates: per-side SP intrinsic-shift difference between the BDE/TDE
+electronics chains, or a small BDE time-base bias).
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry
