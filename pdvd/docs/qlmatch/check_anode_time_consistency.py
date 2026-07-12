@@ -39,6 +39,7 @@ import argparse
 import glob
 import json
 import os
+import re
 
 import numpy as np
 
@@ -128,10 +129,20 @@ def main():
     ap.add_argument("--raw-top", action="store_true",
                     help="do NOT re-base top-volume flash times (reproduces the "
                          "BDE-folded dump-time convention used by find_boundary.py)")
+    ap.add_argument("--tag", default="",
+                    help="work-dir tag: read work/039252_<N>_<TAG>/ instead of "
+                         "the untagged work/039252_<N>/ (e.g. --tag anodefix "
+                         "for the 2026-07-12 U-plane FV reprocessing)")
     args = ap.parse_args()
 
+    # strict dir match so tagged reprocessings (e.g. _anodefix) and the
+    # original production dirs are never mixed in one scan
+    pat = re.compile(r"^039252_\d+%s$" %
+                     (re.escape("_" + args.tag) if args.tag else ""))
     cals = {}
     for f in sorted(glob.glob(os.path.join(WORK, "039252_*", "calib-evt*.json"))):
+        if not pat.match(os.path.basename(os.path.dirname(f))):
+            continue
         base = os.path.basename(f)
         if base.startswith("calib-"):
             cals[base[len("calib-"):-len(".json")]] = f
@@ -159,7 +170,11 @@ def main():
             return t_dump
 
         def ends_of(uid, gid):
-            c = d["cluster_by_uid"][uid]
+            # tolerate uids/gids absent from a tagged reprocessing (the
+            # decisions files reference the ORIGINAL clustering's idents)
+            c = d["cluster_by_uid"].get(uid)
+            if c is None or gid not in d["flash_by_gid"]:
+                return None
             P = np.column_stack([np.asarray(c["x"], float),
                                  np.asarray(c["y"], float),
                                  np.asarray(c["z"], float)])

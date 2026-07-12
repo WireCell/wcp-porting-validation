@@ -17,6 +17,12 @@ Two questions are examined:
 
 No code is changed by this examination.
 
+> **Update 2026-07-12**: following the PDHD companion exam
+> (`pdhd-anode-time-consistency.md`), the FV anode convention was corrected
+> to the U strip plane (toolkit `b8f7f3d6`) and the 18 events reprocessed —
+> results, and a new selection-side finding, in **§8**.  Sections 1–7 below
+> describe the pre-correction (grid-plane) production.
+
 ## 0. Repro
 
 ```bash
@@ -638,6 +644,88 @@ positions. No reconstruction quantity depends on them.
 **Verdict**: bee3 is geometrically consistent with the toolkit — physical
 boxes, matched drift speed, sign-correct dual of `x_t0cor` — with exactly one
 inherited defect, the §3.4 BDE-folded time applied to the top volume.
+
+## 8. 2026-07-12 — FV anode moved to the U plane (PDHD convention) and first reprocessing
+
+### 8.1 The change
+
+Toolkit `b8f7f3d6` (owner-directed, follows the PDHD companion exam):
+
+- `params.jsonnet`: xregions `anode` moved from the DocDB-203 grid plane
+  (`apa_plane = 0.5·apa_g2g = 57.15 mm` → ±335.835 cm, no physical
+  counterpart, §2.2) to the **first-induction (U) strip plane**
+  (`apa_plane = 2 × 0.2 mm` → **±341.51 cm** ≈ the GDML active edge 341.50).
+- `clus.jsonnet` `dvm` per-drift `FV_x` moved to match (∓3358.35 →
+  **∓3415.1 mm**).
+
+Everything derived follows: QLMatching `anode_x = ±341.51`,
+`u_cathode = 338.51` (was 332.835); u = 0 is now the physical CRP active
+edge.  **NOT byte-identical** — containment, boundary flags, and hence
+matching change.  PDHD/SBND untouched.
+
+### 8.2 Reprocessing
+
+```bash
+cd pdvd && PDVD_MAX_JOBS=6 ./run_clus_evt.sh -s anodefix -calib 039252 all
+cd docs/qlmatch && python3 check_anode_time_consistency.py --tag anodefix
+```
+
+18/18 events OK into fresh `work/039252_{0..17}_anodefix/` (cluster tarballs
+symlinked from the production dirs; imaging NOT re-run — the anode xregion
+does not enter tiling/sampling).  Dumps verified to carry the new geometry
+block.  The check script gained `--tag` (strict dir match, so the original
+Repro never mixes tagged and untagged dirs) and tolerates decisions-file
+uids absent from a reprocessing.
+
+### 8.3 Results — geometry right, selection now biased at the anode
+
+In the new frame (u = 0 = U plane; old u = new u − 5.675):
+
+- **Validated boundary tracks (check A, same cluster+flash pairs as
+  production, 53 bot + 55 top survive):** anode-end u = **+5.68 (bot) /
+  +4.19 (top)**.  This is the §2.4 near-anode missing-charge gap, now
+  expressed against the physical edge: real reconstructable ends stop
+  4–6 cm short of u = 0.  Expected, and the honest picture.
+- **Unbiased auto-bundle scan (A′): peak +0.5 on both sides** (core-median
+  +0.22 bot / +0.90 top).  This is **not** charge reaching the edge — a
+  decomposition against the production selections proves it:
+
+  | subset (span ≥ 30 cm ends within ±12 cm) | bot | top |
+  |---|---|---|
+  | selections **unchanged** vs production (89% of all autos) | peak +3.5, median +3.49 (n = 21) | peak +3.5, median +3.99 (n = 31) |
+  | selections **changed** (242 clusters swapped flash, ~10%) | **peak +0.5, median +0.14 (n = 47)** | **peak +0.5, median +0.59 (n = 58)** |
+
+  The pile-up at the new edge is composed almost entirely of *newly swapped*
+  flash choices whose T0 places the track end inside the anode flag window.
+- **Cathode cross-check (B′): bottom regressed +0.41 → +5.23** (top +1.58,
+  unchanged).  The swapped bottom matches are mis-T0'd wholesale by ~5 cm —
+  their cathode ends now also fall 5 cm short, where production had them on
+  the surface to 4 mm.  (Crosser midpoints, check D, are decisions-pinned
+  and unchanged at −0.27 — the underlying physics/time chain is untouched.)
+
+### 8.4 Interpretation and recommendation
+
+The anode boundary window `[anode_ext1, anode_ext2] = [−2, +4] cm` about
+u = 0 grants match advantages (at_x_boundary: LASSO down-weight, overpred
+exemption, relaxed-chi2 ladder branch).  Under the old convention u = 0 sat,
+by coincidence, at the *reconstructable-charge* edge, so this window
+captured genuine truncated ends.  With u = 0 now at the *physical* edge —
+which reconstructed charge never reaches (the 4–6 cm FR-domain gap) — the
+window covers a band where true ends essentially cannot be, and the
+advantage instead attracts flashes ~30 µs off that slide some other end
+into the window.  Net: the FV geometry is now correct, but the
+boundary-flag *cushions* still encode the old coincidence.
+
+**Recommended next step (not implemented here — owner's call):** retune the
+PDVD anode cushions to the measured reconstructable band, e.g.
+`anode_ext2: +4 → ~+10 cm` (so genuine truncated ends at +4..+9 keep their
+boundary flags and the true flash regains its advantage) and consider
+raising `anode_ext1` toward ~+1 cm (ends cannot physically reconstruct at
+u < 0 by more than the §5.2 scatter, so the sub-zero window only ever
+admits wrong-flash ends).  Then revalidate against the run-039252 hand-scan
+labels (auto/manual agreement rate) before adopting.  Alternatively, once
+the near-anode charge loss itself is fixed (open item 1), the cushions
+revert to PDHD-like values.
 
 ## References
 
