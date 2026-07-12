@@ -315,3 +315,34 @@ Review:
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
 ./ql_scan/serve_ql_scan.sh 5017 --tag claude-geomfix work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json
 ```
+
+## 9. Cathode-crosser standard-candle scan (2026-07-11, tag `crossers`)
+
+The owner hand-picked 4 cathode-crossing pairs in evt298567 (trimmed
+`claude-geomfix` scan state, gids 24/47/61/83). Those picks were quantified
+and generalized into a five-criterion recipe + finder
+(`find_crossers.py`, method and all numbers in
+`docs/ql-cathode-crosser-recipe.md`): same-flash top+bottom pair, spans
+>=50 cm, yz-continuity <=25 cm, min(global-PCA, local-end) axis angle
+<=10 deg, full-cluster closest approach <=25 cm with meeting midpoint
+|x_mid| <=10 cm (this last cut kills the overlapping-halves fake), flash =
+min-d with brighter-flash tie-break.
+
+- Self-check: recovers the 4 owner picks at exactly the picked flashes.
+- New finds (all render-verified): evt298567 +2 (gid42, gid96), evt298581
+  6 (incl. gid173: a 4 m + 3.6 m pair collinear to 1.3 deg on a 59 PE
+  flash), evt298595 5. Total 17 pairs / 3 events.
+- Key negative lesson: distance+collinearity alone is NOT enough — the
+  dominant fake is a same-flash pair whose x-extents overlap across the
+  cathode at that T0 (d ~ 8 cm, aG ~ 1 deg, but meets 48 cm inside a
+  volume). The |x_mid| cut removes it.
+- Dim-flash candles are real: 3 of 17 picks sit on 41-59 PE flashes with
+  ~10x overprediction (the owner's own gid24 pick among them) — candidates
+  for saturation-veto / remove_late_light investigations, not scan errors.
+- Labels: `work/ql_labels/crossers/` (crossers-only: all other auto bundles
+  rejected). Decisions record: `ql_display/decisions-crossers/`.
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd
+./ql_scan/serve_ql_scan.sh 5018 --tag crossers work/039252_{0,1,2}/calib-evt*.json
+```

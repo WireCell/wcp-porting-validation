@@ -161,3 +161,24 @@ from the 120 QtoL=1 DIAG=2 dumps.  `ql_light_calib/fit_qtol_gold.py`.
   ladder ceilings, §4a); chi2-based branches are loosened accordingly.
 - z-wall PMTs not in `pd_walls` (~1% of PE); rescues off; `flag_at_cathode`
   inert — all revisited after the first hand scan (`pdvd-ql-pending.md` §2-3).
+
+## 6. Cathode-crosser standard candles + xTPC enable (2026-07-11)
+
+Cathode-crossing pairs (one cluster per drift volume meeting at x~0 with
+aligned axes) pin the T0 to a single flash and are the primary light-model
+probes. 17 pairs were identified in evts 298567/298581/298595 (4 owner
+hand picks + 13 found) — finder, five-criterion recipe and per-pair numbers
+in `ql_display/docs/ql-cathode-crosser-recipe.md`; viewer tag `crossers`.
+
+On the toolkit side the SBND/PDHD xTPC machinery is now ENABLED for PDVD
+(`cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet`): it works under
+`shared_flash` because pairing is by flash-TIME coincidence (trivially
+satisfied) and sides split by anode_x vs cathode. PDVD-specific values:
+`xtpc_dmax: 25 cm` (NOT the PDHD/SBND 5 cm — each PDVD volume's active edge
+sits ~3 cm from x=0 and the top/bottom crate skew adds a few cm: the true
+pairs meet at 10-22 cm) and `cathode_ext2: -12 cm` (widened at-cathode
+window so clean untruncated cathode-touching halves acquire
+`at_x_boundary` and enter the xtpc candidate pool; side effect: they also
+get the lasso_flag_weight down-weight, which keeps them alive through the
+LASSO — desirable for crossers). `xtpc_joint_pin: true` binds each
+direction-confirmed pair to ONE flash, exempt from the strength prune.
