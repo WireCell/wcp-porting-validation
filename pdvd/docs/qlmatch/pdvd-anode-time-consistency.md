@@ -1069,6 +1069,73 @@ waveform-level check: for one validated track, inspect the SP (and pre-ROI
 decon) frames at the strips/ticks where the missing 5 cm should sit — is
 there sub-threshold charge?
 
+### 8.8 Chain trace to the raw waveforms — the "uniform 4–6 cm gap" is REVISED
+
+Per owner direction (2026-07-12, before any simulation): check imaging vs
+deconvolution (gauss) vs raw signal (W plane, post-NF `frame_raw0`) for
+individual cases.  Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_chain_consistency.py     # 5 cases; writes chain_<evt>_<uid>.png
+```
+
+Method: map (y, z, x_raw) → (W channel, tick) via the wires store
+(`img_plot/geom.py`; per-side tick = (x_raw − plane_x)·dirx/v/0.5 µs);
+validate on each cluster's actual points (gauss ridge found at 100 % of
+mapped points, tick offset ≤ ~10); then probe the extrapolated corridor
+beyond the imaging end down to u = −3 with a windowed ridge search, in both
+`gauss` and `raw0`.  The anode-crossing point in time is the (per-side
+folded) flash time itself.
+
+**Case results:**
+
+| case | topology | imaging end u | gauss/raw along corridor | verdict |
+|---|---|---|---|---|
+| 298749 uid 3 (GOLD full-drift) | drift-aligned | +0.70 | signal **through u = 0** (raw pk 468 at +0.2, tail to −0.8) | track reaches the anode; chain records it |
+| 298777 uid 181 (GOLD full-drift) | steep | +1.66 | signal to +1.2, noise below | ~1 cm true gap |
+| 298693 uid 4000003 | **V-topology** (two legs meet at min-u apex) | +4.46 | raw band ends AT the apex; nothing below in gauss OR raw | apex is a scatter/kink mid-volume — this track never reaches the CRP; no charge is missing |
+| 298791 uid 259 | drift-aligned, weak | +3.89 | patchy gauss+raw charge continues to u ≈ −1 | **imaging dropped ~5 cm of real SP charge** (3-view/threshold/DNNROI) |
+| 298609 uid 38 | — | +3.95 | end is a satellite blob 60 cm (in z) from the track body | cluster end ≠ track end (clustering artifact); case unusable |
+
+**What this revises:**
+
+1. **Raw–decon–imaging are mutually consistent at track ends** in 4/5 cases
+   — where imaging stops, the deconvolved charge and the raw waveform stop
+   too.  There is no generic several-cm data loss inside the SP→imaging
+   chain at the anode.
+2. **Where a track verifiably crosses the CRP** (the two gold full-drift
+   closures), charge is recorded and reconstructed to **+1.2 / −0.8 cm** of
+   the U plane.  The true near-anode loss is **~0–2 cm**, PDHD-like — not
+   4–6 cm.
+3. **The +4–6 cm pile-ups of §8.3/§8.7 are therefore reinterpreted**: the
+   `boundary` sample inherits the finder's ±3 cm window around the OLD
+   grid-plane edge (= +2.7..+8.7 cm in the new frame), and that band is
+   populated by tracks whose minimum-u point genuinely lies there —
+   V-topology scatter apexes (case 298693: straight-line entry-extrapolation
+   is invalid across a kink, so the "guaranteed anode crossing" argument of
+   §8.7 fails for them), side-wall entries, and fragments.  §8.7's
+   imaging-level probe result ("no img points beyond cluster ends") stands,
+   but it means the cluster ends are real signal ends — not that charge is
+   lost.
+4. **One real chain loss found, distinct and topology-specific**: for the
+   drift-aligned weak case, imaging fails to convert ~5 cm of existing SP
+   charge near the anode (candidate: induction-view ROI/coincidence or
+   thresholds for near-vertical tracks).  Actionable separately.
+5. Knock-ons: §8.4/§8.5's cushion-retune recommendation (`anode_ext2 → +10`)
+   loses its main premise — the physical [−2, +4] window at the U plane is
+   defensible since genuine crossers DO reconstruct near u = 0.  (The §8.3
+   bottom cathode-edge regression remains evidence that many of the
+   *specific* swapped selections are mis-T0'd; auto-match purity vs the
+   hand labels still needs its own assessment.)  §8.6's "validated span
+   deficit −7.7 median" sample likewise contains non-crossers; the clean
+   full-drift deficits are the gold pair's −2.0/−3.6 cm (≈ 1–2 cm per end),
+   which *strengthens* v = 1.568 (cathode residual ≈ 0 needs no big
+   c_loss).
+6. The sim closure is still worthwhile but re-targeted: confirm sim tracks
+   reconstruct to the CRP, and try to reproduce the drift-aligned imaging
+   loss (case 298791-type).
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry
