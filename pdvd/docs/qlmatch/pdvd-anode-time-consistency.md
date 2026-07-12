@@ -41,12 +41,13 @@ that output time ≈ charge arrival at the wires, which is exactly the conventio
 under which the collection-plane anchor is correct; a deposit at the grid plane
 then reconstructs at the grid plane, i.e. at the FV edge (§2). The caveat: the
 57.15 mm grid-plane setback is a **ProtoDUNE-SP wire-stack constant (DocDB
-203)** that does not describe the PDVD PCB-CRP (whose U/V/W planes are 0.2 mm
-apart in the wires file); the physical active volume extends ~5.7 cm beyond the
-FV anode edge (GDML `CRMActive` = 338.5 cm from the cathode surface ≈ the
-collection plane). Empirically, reconstructed track ends pile up *inside* the
-FV (bottom) or *at* its edge (top), so the FV does not clip real activity —
-see §5.2.
+203)** with **no physical counterpart in PDVD** — GDML-verified in §2.2: the
+CRP's U/V/Z planes are 0.2 mm apart and the active LAr reaches to 0.5 mm below
+them (physical active edge |x| = 341.50), so the physical volume extends
+~5.7 cm beyond the FV anode edge. After T0 correction an anode-crossing track
+*actually* starts at **|x| ≈ 335.9 (top) / 332.6 (bottom)** — near the FV
+convention only by coincidence; the ~5–8 cm shortfall vs the physical edge is
+near-anode reconstruction loss (§2.4, §5.2).
 
 **Q2 (times): consistently applied in the reconstruction; one asymmetric
 convention in the outputs.** The per-crate trigger offsets (BDE/bottom vs
@@ -115,12 +116,33 @@ The `dirx` signs are derived, not hand-set: `dirx = (response_x > anode_x) ?
 +1 : −1` (`gen/src/AnodePlane.cxx:186`) → +1 bottom, −1 top, matching the
 xregions layout (`params.jsonnet:54-97`).
 
-### 2.2 The grid plane is a convention, not the physical active edge
+### 2.2 The "grid plane" does not exist physically — GDML verification
 
-Because `apa_plane = 57.15 mm` is a PDSP wire-stack number, the FV anode edge
-sits **5.7 cm inside** the physical CRP face. The GDML active volume
-(`CRMActive`, 338.5 cm from the cathode surface) extends essentially to the
-collection plane. Consequences:
+Because the 5.7 cm collection↔"grid" separation looks suspicious for a PCB
+CRP, it was checked directly against the LArSoft geometry
+(`dunecore/dunecore/Geometry/gdml/protodunevd_v4_refactored_nowires.gdml`):
+
+- Inside `volTPC0` (`CRM` box, x = 338.56 cm) the three strip planes sit at
+  local x = **169.23 (U), 169.25 (V), 169.27 (Z/collection)** — 0.2 mm apart,
+  0.2 mm thick. **There is no plane of any kind 5.7 cm below them.**
+- `volTPCActive` (`CRMActive`, x = 338.5 cm) is centered at local x = −0.03,
+  so the active LAr extends to local x = +169.22 — **0.5 mm below the U
+  plane**. The active volume reaches the strip planes.
+- Global placement: `volTPC0` at x = −192.28 (rotated 180° about Y) puts the
+  collection plane at −361.55; the cathode volume is centered at GDML x = −20
+  (mesh surfaces at ±2.975 about it) → in the cathode-centered reco frame the
+  collection plane is at **−341.55** ✓ (= `apa_cpa`, = the wires-file W x)
+  and the physical active edge at **−341.50**.
+
+So: **341.55 cm is real** (GDML + wires file agree); **335.835 cm is a pure
+toolkit convention** — `centerline ∓ apa_plane` with
+`apa_plane = 0.5·apa_g2g = 57.15 mm`, where `apa_g2g = 114.3 mm` is the
+ProtoDUNE-SP DocDB-203 *wire-stack* spacing copied into the PDVD `det` block
+(the same provenance as the wrong `cpa_thick = 50.8 mm` fixed on 2026-07-08).
+In PDSP an APA really has a grid plane ~57 mm before the collection plane; in
+the PDVD CRP nothing is there. The number survives only as the xregions
+`anode` value, i.e. as **the FV/sensitive-boundary convention**, sitting
+5.7 cm inside the physical active edge. Consequences:
 
 - Real anode-touching track ends can legitimately reconstruct at **u < 0**
   (between the FV edge and the collection plane). QLMatching absorbs 2 cm of
@@ -156,6 +178,37 @@ anode-edge positions (§5.2) are of this order but not symmetric, so §6 keeps
 it as an open calibration item rather than a confirmed explanation. (Note the
 drift-velocity calibration from crosser spans is insensitive to any such
 additive offset — offsets cancel in spans.)
+
+### 2.4 So where does an anode-crossing track start after T0 correction?
+
+Three different answers, and the distinction matters:
+
+| layer | anode-end |x| (cm) | u (grid-plane frame) |
+|---|---|---|
+| **physical** (GDML active edge) | 341.50 | −5.66 |
+| **bookkeeping** (SP shift + collection anchor + T0 correction, §2.1/§2.3: a deposit at the active edge reconstructs 1.0 cm deeper) | ≈ 340.5 | ≈ −4.6 |
+| **measured** (unbiased candle edge scans, §5.2) | **≈ 335.9 (top)** / **≈ 332.6 (bottom)** | −0.1 / +3.2 |
+
+So in the current reconstruction an anode-crossing track, after T0
+correction, starts **near |x| ≈ 335.9 in the top volume and ≈ 332.6 in the
+bottom volume** — i.e. close to the 335.835 FV convention, but **not because
+335.835 is a physical plane**. The bookkeeping says the track *should*
+reconstruct out to ≈ 340.5; the missing 4.6 cm (top) / 7.9 cm (bottom) is
+**near-anode reconstruction loss**: the last several cm of drift sit inside
+the 18.1 cm field-response region, where the deconvolution model (which
+assumes every signal drifted in from the response plane) is increasingly
+wrong and the charge fails ROI/imaging. The rough coincidence of the measured
+edge with the DocDB-203 grid-plane convention is just that — a coincidence
+(and only holds for the top volume; the bottom edge is 3.2 cm further in, the
+§5.2 open asymmetry).
+
+Practical implications: (a) the FV edge at 335.835 happens to track the
+*reconstructable* volume better than the physical volume, which is why the
+boundary-track finder works at all with a ±3 cm margin; (b) any efficiency or
+length computed against the *physical* active volume must budget ~5–8 cm of
+invisible track at the anode; (c) if near-anode reconstruction ever improves
+(e.g. a short-drift response model), track ends would move to u < 0 and the
+FV/two_boundary margins would need revisiting.
 
 ## 3. Time relations — the full clock chain
 
