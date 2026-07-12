@@ -193,6 +193,64 @@ it as an open calibration item rather than a confirmed explanation. (Note the
 drift-velocity calibration from crosser spans is insensitive to any such
 additive offset — offsets cancel in spans.)
 
+### 2.3.1 Which piece is data-only, and the PDHD comparison
+
+Splitting the two contributions further, and asking which survives in
+simulation:
+
+- **Velocity-mismatch piece (+4.5 mm): cancels exactly in simulation.**
+  `detsim` convolves truth charge with this same FR file, and
+  `OmnibusSigProc` deconvolves with it, both using the FR's own internal
+  `speed = 1.53` (`m_intrinsic_time_offset = fr.origin/fr.speed`,
+  `sigproc/src/OmnibusSigProc.cxx:937`). Forward and backward share the
+  identical kernel, so whatever time/position mapping it implies is applied
+  and then exactly undone — MC never sees the independently-calibrated
+  1.568 mm/µs value at all. The 1.53-vs-1.568 discrepancy is a
+  model-vs-real-detector mismatch; it only exists when the "real detector"
+  side of the comparison is actual data.
+- **`ctoffset` piece (+6.3 mm): sim status unresolved.** `ctoffset` only
+  appears on the deconvolution side (`OmnibusSigProc.cxx:80,1321,1357`) —
+  there is no matching step in `detsim`'s forward convolution, so it is not
+  part of a self-cancelling forward/backward pair the way the FR kernel is.
+  PDVD has one `sp.jsonnet` for both data and MC (checked: no `pdvd_sim`
+  override), so the identical `ctoffset = 4 µs` is applied to simulated
+  frames too. Whether that is neutral (a purely algorithmic re-centering
+  constant intrinsic to this FR file's kernel, applying the same way to any
+  input) or a data-tuned patch (its own comment reads `//consistent with FR:
+  protodunevd_FR_imbalance3p_260501.json.bz2`, and a superseded value is
+  commented out alongside it, `sp.jsonnet:117-118`) is not resolved by
+  inspection — if the latter, it would introduce a bias specific to MC
+  rather than to data, the opposite of the naive expectation.
+- This is exactly what the §2.4 "simulation closure" follow-up below would
+  settle: inject truth deposits at known x near the CRP through the
+  identical NF/SP/imaging chain; if the predicted gap reproduces in MC, it
+  is not explained by the velocity-mismatch piece alone (which is provably
+  zero there) — pointing at `ctoffset` or the FR/ROI model itself.
+
+**PDHD comparison** (`pdhd-anode-time-consistency.md` §2.3: `speed = 1.565`
+vs calibrated `drift_speed = 1.576`, `fr.origin = 100 mm`, `ctoffset = 1.0 µs`):
+
+| | PDVD | PDHD | ratio |
+|---|---|---|---|
+| FR speed vs calibrated | 1.53 vs 1.568 (2.4% off) | 1.565 vs 1.576 (0.7% off) | 3.4× |
+| `fr.origin` | 181 mm | 100 mm | 1.8× |
+| **velocity-mismatch piece** | **≈4.5 mm** | **≈0.70 mm** | **≈6.4×** |
+| `ctoffset` | 4 µs | 1.0 µs | 4× |
+| **ctoffset piece** | **≈6.3 mm** | **≈1.58 mm** | **≈4×** |
+| tick-floor loss | ≈0.47 mm | ≈0.63 mm | — |
+| **net predicted excess** | **+1.03 cm** | **+0.165 cm** | **≈6.2×** |
+
+Both pieces scale as expected: PDVD's larger `fr.origin` (thicker FR domain)
+amplifies both contributions on top of PDVD's larger velocity mismatch and
+larger `ctoffset`; the velocity-mismatch ratio (≈6.4×) tracks
+`%mismatch × fr.origin` (3.4×1.8 ≈ 6.2) and the `ctoffset` ratio tracks the
+`ctoffset` ratio itself (4×) almost exactly, since the two detectors'
+calibrated speeds are within 0.5% of each other. Practically, PDHD's total
+(+0.165 cm) sits well inside its own measured cross-check agreement of
+~4 mm (PDHD doc §2.4) — invisible at PDHD's residual level — whereas PDVD's
+(+1.03 cm) is large enough to be a real candidate contributor to the
+measured, still-unexplained asymmetric anode-edge gap (§5.2).
+
 ### 2.4 So where does an anode-crossing track start after T0 correction?
 
 Three different answers, and the distinction matters:

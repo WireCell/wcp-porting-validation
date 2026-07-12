@@ -171,6 +171,11 @@ PDVD's +1.03 cm — the FR speed (1.565) is only 0.7% off the calibrated 1.576
 (PDVD: 2.4%), and `ctoffset` is 1 µs, not 4.  At the current residual level
 this is invisible.
 
+Decomposed the same way as PDVD (velocity-mismatch piece ≈0.70 mm, `ctoffset`
+piece ≈1.58 mm, tick-floor loss ≈0.63 mm) with the full side-by-side
+comparison table and the simulation-cancellation argument for each piece:
+`pdvd-anode-time-consistency.md` §2.3.1.
+
 ### 2.4 So where does an anode-crossing track start after T0 correction?
 
 | layer | u (FV-anode frame) | |x| side 0 / side 1 (cm) |
