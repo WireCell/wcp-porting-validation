@@ -182,3 +182,28 @@ window so clean untruncated cathode-touching halves acquire
 get the lasso_flag_weight down-weight, which keeps them alive through the
 LASSO — desirable for crossers). `xtpc_joint_pin: true` binds each
 direction-confirmed pair to ONE flash, exempt from the strength prune.
+
+### 6a. xTPC validation on run 039252 (18 events, 2026-07-11)
+
+Repro: archive `work/039252_*/{calib-evt*.json,mabc-all-apa.zip}` as
+`prextpc-*`, then `PDVD_MAX_JOBS=6 ./run_clus_evt.sh -calib 039252 all`
+(18/18 ok) with toolkit 0017de8e.
+
+- The 17 validated candle pairs: auto-matched together 4/17 -> **17/17**;
+  on the exact hand-scan flash 1/17 -> **9/17**; the other 8 are pinned one
+  neighboring flash away (3.5-43 us, 6/8 later). Cause: the joint pin picks
+  the flash by min ks-sum among the scenario-1-confirmed flashes and uses
+  geometry only as tie-break — with PDVD's single flash stream the
+  confirmed flashes differ in TIME, so a marginal ks preference can move
+  the pinned T0 (worst case evt298581 c183+c4000360: pinned at the
+  d=19.8 cm flash over the d=3.8 cm one). Follow-up candidate: a
+  min-d/ks-tie-break pin flash choice knob (toolkit qlmatching-code.md
+  sec 2a). The `crossers` viewer tag keeps the geometric picks as ground
+  truth.
+- Per event: xtpc_consistent on 18-140 bundles, scenario-1 18-84, pins
+  6-28 (pin count = 2x pinned pairs). Total auto matches 2457 -> 2391;
+  ~100-130 auto entries per event differ from the prextpc dumps (the sc1
+  priority in cull_inconsistent + the cathode_ext2 boundary down-weight
+  reshuffle low-confidence matches; PDVD auto agreement was 58.7% at the
+  geomfix scan, so churn in that population is expected — re-scan to
+  re-grade).

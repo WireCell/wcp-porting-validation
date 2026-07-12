@@ -156,3 +156,11 @@ C++ pairs by flash-time coincidence and distance only at each flash — it
 does not apply the x_mid cut per flash and its flash pick is light-driven
 (min ks-sum among coincident pairings) — so still verify visually. The
 `crossers` tag itself was built with the python finder above.
+
+Validation after the enable (run 039252 reprocessed, toolkit 0017de8e):
+the 17 pairs went from 4/17 auto-matched together (1/17 correct flash) to
+17/17 together, 9/17 on the exact hand-scan flash; the other 8 pinned one
+neighboring flash away (3.5-43 us) because the C++ pin flash choice is
+ks-led (geometry only tie-breaks). When scanning with these flags, treat a
+pinned pair on flash g as covering g +- ~2 flashes and verify the meeting
+distance yourself.
