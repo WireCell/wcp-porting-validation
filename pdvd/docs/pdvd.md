@@ -34,7 +34,7 @@ pdvd/
 ├── run_sp_to_magnify_evt.sh ← SP frames → per-anode Magnify ROOT files
 ├── run_select_evt.sh        ← interactive Woodpecker region-of-interest crop
 ├── run_bee_img_evt.sh       ← Bee conversion + upload, from IMAGING output (no clustering)
-├── run_bee_combined_evt.sh  ← combined Bee link: imaging + clustering + dead, grouped by drift side
+├── run_bee_combined_evt.sh  ← combined Bee link: img-global + clustering-global + op + dead, all from mabc-all-apa.zip
 ├── run_img.sh               ← original manual recipe (commented examples)
 ├── wct-img-2-bee.py         ← convert cluster tarballs → Bee JSON
 ├── wct-img-2-bee-only.py    ← single-anode debug variant
@@ -305,35 +305,47 @@ tarballs and produces `mabc-anode{N}.zip` / `mabc-all-apa.zip` via
 ./zip-upload.sh   # rezips data/ → upload.zip, calls ../upload-to-bee.sh
 ```
 
-The all-anode `mabc-all-apa.zip` is grouped by drift side (anodes 0–3 vs 4–7):
-`clustering-group0123` / `clustering-group4567` (the **per-anode** clustering,
-dumped pre-pipeline via the `name:"img"` bee points set), `clustering-global`
-(the **all-anode** clustering, end dump), and `channel-deadarea-group0123` /
-`-group4567` (dead area, `dead_apa_groups`).  See
+The all-anode `mabc-all-apa.zip` carries (2026-07 update, PDHD/SBND parity):
+`img-global` (the raw imaged charge, dumped **pre-pipeline** via the
+`name:"img"` bee points set — its cluster ids are the same enumeration the
+`op` dump writes into each flash's `op_cluster_ids`, so the flash↔cluster
+pairing is checked against this instance), `clustering-global` (the
+**all-anode** clustering, end dump, re-enumerated ids), `op` (when Q/L
+matching ran), and `channel-deadarea-group0123` / `-group4567` (dead area,
+`dead_apa_groups`).  The pre-pipeline hook hosts only one set, so `img-global`
+replaced the former per-drift-side `clustering-group0123/4567` dump.  See
 [../../clus/docs/bee_output.md](../../clus/docs/bee_output.md) for the grouping
 mechanism (routing is per-anode via `wpid.apa()`, so each anode's two faces fold
 into its drift-side group automatically).
 
-### Path C — combined link (imaging + clustering + dead)
+### Path C — combined link (imaging + clustering + op + dead)
 
 ```sh
-./run_bee_combined_evt.sh <run> [subrun]      # run run_clus_evt.sh <run> all first
+./run_bee_combined_evt.sh [-e evt,evt,...] <run>   # run run_clus_evt.sh <run> all first
 ```
 
-Produces one `upload-combined-run<RUN_PADDED>.zip` / Bee link whose every event
-carries the full per-stage instance set (the "7-image situation"), all grouped
-by drift side:
+Produces one `upload-combined-run<RUN_PADDED>.zip` / Bee link.  Every instance
+is taken straight from each event's `mabc-all-apa.zip` (2026-07 update — no
+separate `bee-blobs` imaging pass, PDHD parity):
 
 | Instances | Stage |
 |---|---|
-| `imaging-group0123` / `imaging-group4567` | after imaging (`bee-blobs` active blobs) |
-| `clustering-group0123` / `clustering-group4567` | after **per-anode** clustering (MABC `img` pre-pipeline dump) |
+| `img-global` | raw imaged charge (MABC `img` pre-pipeline dump) |
 | `clustering-global` | after **all-anode** clustering (MABC end dump) |
+| `op` | optical flashes, measured + Q/L-predicted PE (when matching ran) |
 | `channel-deadarea-group0123` / `-group4567` | dead area (v2 wrapper) |
 
-Imaging instances come from the active cluster tarballs; the clustering and dead
-instances are taken from each event's `mabc-all-apa.zip` (so run
-`run_clus_evt.sh <run> all` first).
+**Checking a matched pair in Bee:** step through the `op` instance flashes and
+read each flash's matched cluster id(s), then look the ids up in the
+`img-global` charge layer — those two are dumped at the same pre-pipeline
+point and share the cluster-id enumeration.  `clustering-global` ids are
+re-enumerated post-pipeline and do **not** correspond, and the former
+`bee-blobs` `imaging-group0123/4567` instances carried their own unrelated
+numbering (the pre-2026-07 combined link mixed these, which made the
+flash↔cluster pairing look mismatched).
+
+`-e 0,1,...` restricts the link to a subset of event indices (e.g. the ten
+hand-scan events of run 039252).
 
 ### Upload mechanism
 

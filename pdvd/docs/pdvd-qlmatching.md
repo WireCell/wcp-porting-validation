@@ -82,6 +82,12 @@ Driver `pdvd/run_clus_evt.sh`:
 
 - Matched `mabc-*.zip` (T0-corrected clusters; byte-identical with/without
   `-calib`), optional Bee `op.json` (`-op`, single all-PD flash display).
+  The `op` dump's `op_cluster_ids` use the pre-pipeline cluster enumeration,
+  which is exactly the `img-global` instance of `mabc-all-apa.zip` (dumped at
+  the same point; 2026-07 change — was `clustering-group0123/4567`).  In Bee,
+  check a flash↔cluster pair against `img-global`, not `clustering-global`
+  (post-pipeline, re-enumerated) and not a `bee-blobs` imaging instance (own
+  numbering).  See `docs/pdvd.md` "Bee upload / Path C".
 - `-calib` → `work/<RUN6>_<idx>/calib-evt<ID>.json`: single per-event dump
   (no per-side files), `geometry` keyed '0'/'4' (bottom/top volume), one
   shared `flashes` array, bundles tagged `apa` 0/4 with the new `at_cathode`
