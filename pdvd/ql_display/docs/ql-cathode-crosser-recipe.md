@@ -176,3 +176,51 @@ neighboring flash away (3.5-43 us) because the C++ pin flash choice is
 ks-led (geometry only tie-breaks). When scanning with these flags, treat a
 pinned pair on flash g as covering g +- ~2 flashes and verify the meeting
 distance yourself.
+
+## Companion candle: boundary (anode-piercing) tracks
+
+A **boundary track** is the single-cluster cousin of the crosser: one physical
+track reconstructed as ONE cluster that, at the true flash T0, enters through
+the **anode plane** (drift coord u = 0, i.e. readout time) and exits through a
+*different* face — ideally the cathode (u = u_cathode ≈ 333 cm, a full
+anode→cathode crossing track, the tightest single-volume candle) but possibly a
+transverse face (top/bottom/upstream/downstream). The anode end alone pins T0
+(charge at the anode arrives at t = 0), so these constrain ONE drift volume the
+way a crosser constrains both. The premium tracks are those that are also a
+crosser half (a top→cathode→bottom full-detector muon) — e.g. evt298609
+c102 + c4000003 appears in both the `crossers` and `boundary` scans.
+
+`find_boundary.py` builds them. It does NOT re-derive the geometry test: it
+gates on the matcher's own per-bundle diagnostic **`flag_two_boundary`**
+(`QLMatching::compute_two_boundary_flag`, dumped as `two_boundary`: both
+main-PCA ends within `two_boundary_margin` = 3 cm of a face, at two *different*
+faces, ≥1 an x-face). It then recomputes the two end faces (same signed
+u = s·(x + sign_offset·t·drift − anode_x) convention) only to (a) require one
+end at the anode (face 0) with a clean touch `|u| ≤ --anode-margin` (3 cm), and
+(b) name the other end's face. Per cluster it keeps the flash whose anode end is
+closest to u = 0 — the best T0 — collapsing the one-cluster-many-flashes
+degeneracy to one selection.
+
+Result on run 039252 (all 18 events, tag `boundary`): **108 tracks** (14
+anode→cathode full-drift, 94 anode→transverse), 2–11 per event. Caveats:
+
+- Faithful to `two_boundary`, which uses *signed* face distances, so the OTHER
+  end can be an overclustered tail poking past its face (e.g. evt298609
+  c4000081: clean anode end u = 0.5 cm but the cathode-labelled far end sits
+  37 cm *past* the cathode). The anode end still pins T0; treat the far-end
+  label as advisory. The `--anode-margin` cut only guards the *anode* end.
+- Most tracks are `add` (non-auto): the light matcher rarely auto-selects the
+  anode-piercer's best-T0 flash, which is exactly why they need a scan.
+- `--cathode-only` restricts to the 14 full-drift anode→cathode tracks.
+
+Repro:
+```bash
+cd pdvd/ql_display
+python3 find_boundary.py ../work/039252_N/calib-evt<ID>.json \
+    --emit decisions-boundary/decisions-evt<ID>.jsonl
+python3 make_labels.py ../work/039252_N/calib-evt<ID>.json \
+    decisions-boundary/decisions-evt<ID>.jsonl --tag boundary --check
+# serve all 18 events:
+../ql_scan/serve_ql_scan.sh 5019 --tag boundary \
+    ../work/039252_{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}/calib-evt*.json
+```
