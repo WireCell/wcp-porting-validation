@@ -208,24 +208,32 @@ simulation:
   1.568 mm/µs value at all. The 1.53-vs-1.568 discrepancy is a
   model-vs-real-detector mismatch; it only exists when the "real detector"
   side of the comparison is actual data.
-- **`ctoffset` piece (+6.3 mm): sim status unresolved.** `ctoffset` only
-  appears on the deconvolution side (`OmnibusSigProc.cxx:80,1321,1357`) —
-  there is no matching step in `detsim`'s forward convolution, so it is not
-  part of a self-cancelling forward/backward pair the way the FR kernel is.
-  PDVD has one `sp.jsonnet` for both data and MC (checked: no `pdvd_sim`
-  override), so the identical `ctoffset = 4 µs` is applied to simulated
-  frames too. Whether that is neutral (a purely algorithmic re-centering
-  constant intrinsic to this FR file's kernel, applying the same way to any
-  input) or a data-tuned patch (its own comment reads `//consistent with FR:
-  protodunevd_FR_imbalance3p_260501.json.bz2`, and a superseded value is
-  commented out alongside it, `sp.jsonnet:117-118`) is not resolved by
-  inspection — if the latter, it would introduce a bias specific to MC
-  rather than to data, the opposite of the naive expectation.
-- This is exactly what the §2.4 "simulation closure" follow-up below would
-  settle: inject truth deposits at known x near the CRP through the
-  identical NF/SP/imaging chain; if the predicted gap reproduces in MC, it
-  is not explained by the velocity-mismatch piece alone (which is provably
-  zero there) — pointing at `ctoffset` or the FR/ROI model itself.
+- **`ctoffset` piece (+6.3 mm): does not cancel in simulation either.**
+  `ctoffset` only appears on the deconvolution side
+  (`OmnibusSigProc.cxx:80,1321,1357`) — confirmed by direct search, there is
+  no matching step anywhere in the forward chain (`gen/src/Drifter.cxx`,
+  `gen/src/DepoTransform.cxx`, `gen/src/DepoFluxSplat.cxx`). Unlike
+  `intrinsic` above, which is a *formula* (`fr.origin/fr.speed`) tied to the
+  same field-response object the forward convolution also uses — hence
+  self-cancelling — `ctoffset` is a free-standing, hand-tuned scalar with no
+  analytic tie to the FR at all (its own comment reads `//consistent with
+  FR: protodunevd_FR_imbalance3p_260501.json.bz2` — picked *alongside* a
+  specific FR file, not derived from it; a superseded value is commented out
+  next to it, `sp.jsonnet:117-118`). With nothing on the forward side to
+  remove it, `ctoffset`'s value shows up as a real offset between truth and
+  SP output in MC exactly as in data. This is corroborated directly, not
+  just argued from code structure: DNN-ROI-SP measured a real, nonzero
+  truth-vs-reco tick lag in simulation (7 ticks pre-fix on PDVD, 0 on the
+  PDHD control) by cross-correlating truth against actual SP output (§2.3.2)
+  — hard evidence this piece does not cancel on its own and needed an
+  explicit, empirically-measured correction.
+- The §2.4 "simulation closure" follow-up below (inject truth deposits at
+  known x through the identical NF/SP/imaging chain) remains the direct test
+  of the *position-space* consequence for imaging. The *tick-space*
+  consequence is no longer hypothetical, per the point above — what that
+  closure test would still add is a clean decomposition of how much of the
+  measured MC lag is `ctoffset` alone vs. smearing/electronics-response
+  differences between the simplified truth splat and the full SP chain.
 
 **PDHD comparison** (`pdhd-anode-time-consistency.md` §2.3: `speed = 1.565`
 vs calibrated `drift_speed = 1.576`, `fr.origin = 100 mm`, `ctoffset = 1.0 µs`):
@@ -290,14 +298,18 @@ data-inference jsonnets alike (`wct-depo-sim-deposplat.jsonnet:74-86`,
 model learned in training transfers to inference on both simulation and
 data.
 
-**Reconciling §2.3.1's "cancels" with "doesn't cancel"**: both statements are
-correct, about different stages. Sim↔SP self-consistency (§2.3.1's
-velocity-mismatch piece, provably zero in MC) governs the tick-space world
-DNN-ROI-SP lives in entirely — the calibrated 1.568 mm/µs never enters the
-sim or the SP deconvolution at all. The non-cancellation is specific to
-`BlobSampler::time2drift` converting reco tick to absolute x *on data*,
-which is a separate, later stage the DNN-ROI-SP training and validation
-never touch. Practical note for future re-validation: the V-plane SP fix
+**Reconciling §2.3.1's two pieces with what DNN-ROI-SP actually needed to
+correct**: the velocity-mismatch piece (provably zero in MC) is specific to
+`BlobSampler::time2drift` converting reco tick to absolute x *on data* — a
+stage DNN-ROI-SP never reaches, so it simply isn't part of this story. The
+`ctoffset` piece is different: it does **not** cancel in MC either
+(§2.3.1, revised), and DNN-ROI-SP's own +7-tick empirical correction is
+direct evidence of exactly that — a real, MC-internal tick-space offset it
+had to measure and remove, not something simulation's self-consistency
+spared it from. DNN-ROI-SP works correctly despite this not because the
+offset is absent in MC, but because it was *measured* empirically (point 2
+above) rather than assumed away. Practical note for future re-validation:
+the V-plane SP fix
 (`vplane_low_freq_pole.md`) shifted reco +200 ns and its own doc flags that
 downstream tick-alignment calibration may need re-checking — exactly why
 the empirical cross-correlation approach (re-measure the lag, don't assume
