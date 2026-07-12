@@ -62,6 +62,12 @@ drift arithmetic done from dump times is off by Δ·v (up to 4.6 cm here) unless
 re-based; `find_boundary.py` inherited this (§3.4, §5.2). The matching itself
 is unaffected (it uses per-side offsets internally).
 
+**bee3 event display** (§7): geometrically consistent — its TPC boxes use the
+*physical* convention (cathode ±3.0 → collection ±341.55), drift speed and
+per-volume drift signs match the toolkit exactly (both display frames are
+duals of `x_t0cor`) — with one inherited defect: it applies the BDE-folded op
+time to the top volume too (up to 4.6 cm skew this run, §7.3).
+
 **Quantified residuals** (details §5): after per-side time re-basing, anode-end
 pile-ups sit at u ≈ **+3.2 cm (bottom)** / **−0.1 cm (top)** relative to the
 grid-plane FV edge; cathode ends sit at **+0.4 cm (bottom)** / **+1.6 cm
@@ -534,13 +540,81 @@ the dumps.
    push reconstruction cathode-ward. If sub-cm absolute-x fidelity is ever
    needed, recompute `ctoffset` against the calibrated drift speed (a
    config-only, knob-gated change).
-3. **Dump/display top-volume time skew** (§3.4): consumers keep re-deriving
-   this (viewer, find_boundary.py). A per-flash `time_top` (or per-side times)
-   in the calib dump would remove the trap; until then, every dump consumer
-   doing top-volume drift math must re-base by `Δ = trigger_offsets_us[1] −
-   trigger_offsets_us[0]`.
+3. **Dump/display top-volume time skew** (§3.4): consumers keep inheriting
+   this (ql_scan viewer, find_boundary.py, and bee3's box/charge shifts §7.3).
+   Per-side times in the calib and op dumps (+ a per-TPC `t` in bee3) would
+   remove the trap; until then, every dump consumer doing top-volume drift
+   math must re-base by `Δ = trigger_offsets_us[1] − trigger_offsets_us[0]`.
 4. **Top cathode ends 1.6 cm short** (§5.3): consistent with the crosser-gap
    observation; fold into the same follow-up as item 1.
+
+## 7. The bee3 event display — PDVD anode/cathode audit
+
+`wire-cell-bee3/events/static/js/bee/physics/experiment.js`, class
+`ProtoDUNEVD` (bee3 commit a8d216e "update the PDVD geometry in Bee"). bee3 is
+a *fourth* consumer of the anode/cathode geometry, and it deliberately uses
+the **physical** convention, not the FV convention:
+
+### 7.1 TPC boxes — physical volume, collection-plane edge
+
+Eight boxes, one per WCT anode 0–7: x ∈ **[−341.55, −3.0]** (bottom four) and
+**[+3.0, +341.55]** (top four) — cathode drift-facing surface → **collection
+wire plane**; y ∈ ±336.4 (matches the post-`tpc_extra_faces`-fix QL bounds);
+z split at the per-drift-side gap midpoints. Against the GDML (§2.2: active
+LAr 3.06 → 341.50) the box edges are correct to ≤ 6 mm. So:
+
+- bee3 box anode edge = **341.55** (physical), toolkit FV anode edge =
+  **335.835** (grid-plane convention) — an *intentional* 5.7 cm difference.
+  The box shows the volume; the FV gates the matching.
+- Expected visual consequence (not a bee3 misalignment): a T0-corrected
+  anode-crossing track ends **~5–7 cm short of the box's anode face** — the
+  §2.4 near-anode reconstruction gap. Its cathode end, by contrast, should
+  touch the box's cathode face (verified, §5.3).
+
+### 7.2 Drift arithmetic — signs and speed consistent with the toolkit
+
+- `driftVelocity = 0.1568 cm/µs` = toolkit `drift_speed` 1.568 mm/µs ✓.
+- `driftDir(i) = i < 4 ? +1 : −1` (PDVD override; the base class's
+  alternating-index formula would be wrong for the grouped 8-anode layout) =
+  WCT `face_dirx` ✓.
+- Two display frames, exact duals of the toolkit's §3.3 convention:
+  - *reco frame* (`op.js buildGroup`): charge stays at raw x; the **boxes and
+    PDs** are shifted by `+driftV·t·driftDir(iTPC)` to where the detector
+    lies on the raw-x axis at flash time t.
+  - *detector frame* (`sst.js drawDetectorFrame`): boxes fixed; the **charge**
+    is shifted by `gx − driftV·t·driftDir(tpc)` — literally the toolkit's
+    `x_t0cor` formula. The TPC for the shift comes from the matched flash's
+    `apa` (position-free), with box-containment `tpcOf()` as fallback.
+- `drawSpaceChargeBoundary` is uboone-only (early return) — inert for PDVD.
+
+### 7.3 The one inherited inconsistency — op time is BDE-folded
+
+bee3's `t` is `op_t` from the Bee op dump, which the toolkit writes as
+`flash->get_time() + trigger_offset_for(input 0)` (§3.4,
+`QLMatching.cxx:2538`) — the **bottom/BDE offset for both volumes**. bee3
+applies this single time to top-volume boxes/charge too, so its top-volume
+drift alignment carries the per-event Δ = off_top − off_bot skew: **up to
+4.6 cm (29 µs) in run 039252** (§3.4 table). Bottom-volume alignment is
+exact. This is the same trap as the calib dump (open item 3): the clean fix
+is per-side times in the op dump, consumed by a per-TPC `t` in bee3; until
+then, expect top-volume charge/box misalignment at the few-cm level on
+high-Δ events.
+
+### 7.4 Photon detectors (display-only)
+
+40 channels in WCT flash-chain order from
+`cfg/.../protodunevd/pdvd-opdet-geom.json` (data-derived, raw_waveform
+x/y/z): cathode X-ARAPUCAs at x = 0 (the physical cathode center plane; the
+GDML mesh surfaces are at ±2.975), membrane XAs on the walls, and the bottom
+PMT grid at x = −336.474 — i.e. drawn ~5.1 cm above the bottom collection
+plane, inside the drift volume. These positions are as-recorded in the
+detector data and are cosmetic (light-panel drawing and `opTPC()` box
+assignment); four dead PMTs (24/27/28/34) hold mirrored placeholder
+positions. No reconstruction quantity depends on them.
+
+**Verdict**: bee3 is geometrically consistent with the toolkit — physical
+boxes, matched drift speed, sign-correct dual of `x_t0cor` — with exactly one
+inherited defect, the §3.4 BDE-folded time applied to the top volume.
 
 ## References
 
