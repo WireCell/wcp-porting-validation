@@ -1282,6 +1282,41 @@ provenance break declared in §8.6: the measurement now rests on
 hand-validated flash times, the §8.9 anode anchor, and the deconvolved
 W-plane signal — none of which the criticized span pile-up used.
 
+**Endpoint-distance-to-cathode metric (owner-requested validation form).**
+Instead of quoting v, quote the distance of the cathode-end signal stop to
+the cathode surface under a velocity hypothesis (median ± MAD, cm;
++ = short of the cathode; per-track values in
+`cathode_velocity_tracks.json`).  Two variants: *direct* = `D_c − u_stop`,
+and *anchored* = `D_c − (u_stop − b_side)` with the §8.9 time-base anchor
+removed — at the true velocity the anchored residual must be **≥ 0** (it
+is the endpoint detection shortfall δ_a+δ_c; charge cannot be detected
+beyond the cathode) and **equal for the two sides** (same argon, same
+field ⇒ same loss physics up to per-crate threshold details).  A stop
+measured at `u_stop` in the 1.568 frame sits at `u_stop·(v′/1.568)` under
+hypothesis v′ (b_side, at ~zero drift time, is scale-invariant).
+
+| walk | side | v = 1.568: direct | anchored | best v (bot 1.570 / top 1.561): direct | anchored |
+|---|---|---|---|---|---|
+| gauss | bot | +1.70 ± 2.33 | +3.30 | +1.27 | **+2.87** |
+| gauss | top | +1.44 ± 2.00 | +1.24 | +2.95 | **+2.75** |
+| raw | bot | +1.58 ± 2.68 | +2.77 | +1.15 | **+2.34** |
+| raw | top | +0.44 ± 2.13 | −0.04 | +1.95 | **+1.47** |
+
+Reading: at v = 1.568 the anchored residuals are **asymmetric** — bottom
+shows ~2.8–3.3 cm of apparent cathode-side loss while the top shows
+~0–1.2 cm, with the raw-walk top at −0.04 sitting right on the physicality
+boundary (zero loss — marginal for a threshold-limited measurement at full
+drift, where diffusion is maximal).  At the per-side best velocities both
+sides show a **common positive residual** (+2.8/+2.8 gauss, +2.3/+1.5
+raw), consistent between sides and with the gold-span shortfall band
+(2.0–3.6 cm gauss) — the configuration the loss physics actually predicts.
+This is the distance-space restatement of the velocity result: 1.568 is
+within errors on either side individually, but the side-symmetry of the
+endpoint loss mildly favors the corrected per-side estimates (the bot−top
+anchored difference at 1.568 is 2.1 ± 0.9 cm, ~2.4σ — suggestive, not
+conclusive, and equally attributable to the n = 4 b_top anchor or
+per-crate threshold differences).
+
 Remaining structure and caveats:
 
 - The corrected **bot−top split ~0.6 %** is not evidence of a physical

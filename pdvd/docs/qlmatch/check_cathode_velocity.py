@@ -356,6 +356,45 @@ def main():
                    10 * v, 10 * dv_stat))
             print("      sorted stops: %s" %
                   " ".join("%.1f" % u for u in sorted(us)))
+    # persist per-track results for downstream metrics
+    with open("cathode_velocity_tracks.json", "w") as f:
+        json.dump([{k: (float(v) if isinstance(v, (float, np.floating))
+                        else v) for k, v in x.items()} for x in res],
+                  f, indent=1)
+
+    # endpoint-distance metric: distance of the cathode-end signal stop to
+    # the cathode surface, under velocity hypotheses.  A stop measured at
+    # u_stop in the v_assumed frame has drift time u_stop/V, so under a
+    # hypothesis v' it sits at u_stop*(v'/V); the anode anchor b_side sits
+    # at ~zero drift time and is scale-invariant to < 0.01 cm.
+    #   d_direct   = D_c - u_stop'            (+ = short of the cathode)
+    #   d_anchored = D_c - (u_stop' - b_side) (time-base removed; at the
+    #                true velocity this equals the endpoint detection
+    #                shortfall delta_c + delta_a > 0)
+    VBEST = {"bot": 0.1570, "top": 0.1561}   # sec 8.10 corrected estimates
+    print("\n== endpoint-distance-to-cathode metric (median +- MAD, cm; "
+          "+ = short of the cathode surface) ==")
+    for kind in ("gauss", "raw"):
+        for side in ("bot", "top"):
+            us = np.array([x["u_%s" % kind] for x in res
+                           if x["side"] == side
+                           and np.isfinite(x["u_%s" % kind])])
+            if not len(us):
+                continue
+            b = B_ANODE[kind][side]
+            row = ["  %-5s %s:" % (kind, side)]
+            for label, vh in (("v=1.568", V), ("v_best", VBEST[side])):
+                sc = us * vh / V
+                dd = Dc - sc
+                da = Dc - (sc - b)
+                row.append("%s[%.4f]: direct %+5.2f+-%4.2f anchored "
+                           "%+5.2f+-%4.2f" %
+                           (label, 10 * vh, np.median(dd),
+                            np.median(np.abs(dd - np.median(dd))),
+                            np.median(da),
+                            np.median(np.abs(da - np.median(da)))))
+            print("  ".join(row))
+
     # angle cross-check on the gauss stops (threshold loss is angle-
     # dependent; a velocity error is not)
     print("\n== angle cross-check (gauss stop vs |dir_x| at the cathode "
