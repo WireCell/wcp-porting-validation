@@ -991,6 +991,67 @@ none implemented):
    deficits already spread −1.7..−9.2, hinting angle/topology dependence
    (loss-like, not velocity-like).
 
+### 8.7 The anode gap is at the imaging level, and angle-independent
+
+Question posed (2026-07-12): with the time offsets verified end-to-end, the
+FV anode at the physical U plane, and imaging anchored so that zero drift
+time reconstructs at the anode — do anode-crossing tracks in data actually
+reconstruct to the anode?  **No.**  Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_anode_gap_imglevel.py
+```
+
+Method: for every validated boundary/crosser track (decisions-pinned flash),
+take the cluster's anode-most end u; fit the local track direction from the
+last 150 cm; extend the line toward u = 0 and search the event's ENTIRE
+imaging point cloud (`0-img-global.json`, all clusters, q > 0; verified to
+share the calib dump's raw-x frame point-by-point, Δx = 0.00) for points
+beyond the cluster end within a 4 cm tube.  Only tracks whose extrapolated
+entry point at u = 0 lies ≥ 10 cm interior in y/z count — those *must*
+physically cross the CRP (a cosmic cannot begin mid-volume).
+
+Results (76 interior-entry tracks with end u in [0, 12] cm):
+
+- Cluster anode ends stop at **median +4.7 cm** (bottom **+5.7**, top
+  **+4.2**), and for the overwhelming majority the imaging cloud contains
+  **no points beyond the cluster end at all** — the gap is NOT clustering
+  fragmentation, NOT flash selection, NOT the FV: **the points are absent
+  at the NF/SP/imaging level**.  (The few apparent line hits at
+  u = −400..−10 are unrelated tracks crossing the extrapolated line; a
+  track's T0 applied to another track's points is meaningless.)
+- The gap is **angle-independent**: medians +4.2 / +5.3 / +4.5 / +4.9 cm
+  across dip bins 0–25 / 25–45 / 45–60 / 60–90°, corr(dip, gap) = +0.20.
+  This argues against a track-topology mechanism (prolonged-ROI failures
+  would scale with drift alignment) and for a *uniform position-dependent*
+  loss over the last ~5 cm before the CRP.  (It also weakens §8.6 handle 3
+  as stated: the span-deficit spread is not obviously angular.)
+- Crosser halves cannot test this directly — their matched clusters are
+  fragments (anode-side ends anywhere at u = +8..+300); the line probe is
+  what restores the test.
+
+Candidate mechanisms for the ~5 cm loss (open; PDHD with the same toolkit
+machinery shows −0.35 cm, so the cause is PDVD-specific — FR model, CRP
+strip response, DNNROI model, or noise):
+
+1. **FR-domain truncation**: charge born within the 18.1 cm response region
+   induces a truncated version of the assumed full-path kernel; the
+   deconvolved amplitude drops as the path shortens, falling below
+   ROI/imaging thresholds in the last few cm.  Angle-independence is
+   consistent (the loss depends on birth distance, not direction).
+2. DNNROI training coverage of very-early-drift (near-CRP) signals.
+3. A real detector-field effect near the perforated CRP (charge funneling /
+   collection loss within the last few cm).
+
+**Decisive next test — sim closure**: push simulated CRP-crossing tracks
+(truth known) through the identical NF/SP/DNNROI/imaging chain and measure
+the reconstructed gap.  Sim reproduces +4..+6 cm → inherent to the FR/SP
+model; no gap in sim → data-specific (noise/DNNROI).  Complementary
+waveform-level check: for one validated track, inspect the SP (and pre-ROI
+decon) frames at the strips/ticks where the missing 5 cm should sit — is
+there sub-threshold charge?
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry
