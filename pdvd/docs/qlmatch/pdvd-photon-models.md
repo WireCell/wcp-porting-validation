@@ -372,16 +372,10 @@ index**:
   (`QLMatching.cxx:843`), not `.at()` — an out-of-range value in a config's
   `ch_mask` array is an out-of-bounds write, not a caught error.
 
-**Bottom line**: today's PDVD channel mapping is correct, verified four
-independent ways above — but it is correct *by convention across
-independently-authored files*, not because the code enforces it. If this
-becomes a maintained/re-derived pipeline (new ANN version, regenerated
-`pdvd-opch-map.json`, a manually-edited efficiency array), nothing would flag
-a silent transposition. If it's ever worth hardening: embed per-channel
-position/id in the exported library meta JSON and cross-check it against
-`m_opdets` at load time, and give `VUVEfficiency`/`VISEfficiency` the same
-length check `measured_pe_scale` already has. Not implemented here — this
-section is diagnosis only.
+**Bottom line at the time of this audit**: today's PDVD channel mapping was
+correct, verified four independent ways above — but only *by convention
+across independently-authored files*, not because the code enforced it. §5.4
+below records the three guards added afterward to close that gap.
 
 ### 5.3 The "visibility" semantics question — resolved, and it's a consistent design
 
@@ -405,6 +399,53 @@ x-sign gate (`QLMatching.cxx:1357-1362`), because the ANN grid already
 encodes total photon arrival including the detector's own shadowing
 (double-sided cathode XAs, cathode opacity for membrane/PMT channels). No
 counter-evidence to that design choice turned up in this audit.
+
+### 5.4 Fixes implemented (2026-07-12)
+
+The three §5.2 gaps were closed in `match/src/QLMatching.cxx`,
+`match/src/PhotonLibraryModel.cxx`, `match/inc/WireCellMatch/{QLMatching,
+PhotonLibraryModel}.h`, `match/test/doctest_photonlibrarymodel.cxx`, and
+`pdvd/photlib/export_wct_photlib.py`:
+
+1. **Library-vs-`m_opdets` position cross-check.** The library meta JSON
+   format gained an optional `chan_pos_cm` field (per-channel position, from
+   the same `chan_pos_mm` the exporter already computed via the ANN-to-GDML
+   assignment — `export_wct_photlib.py`). `PhotonLibraryModel` parses it if
+   present (`has_positions()`/`position(ch)`, no-op if absent — old-format
+   files keep working unchanged). `QLMatching::configure()`, right after the
+   existing `nchan==nopdets` count check, now compares `m_opdets[i].center`
+   against the library's declared position for every channel and **raises**
+   on a mismatch beyond a tolerance (`photon_library_pos_tol`, default 5 cm —
+   loose relative to the <1 mm agreement measured in §5.1, tight relative to
+   the tens-of-cm to meters of actual inter-channel spacing, so it catches a
+   real transposition without ever firing on a correct file). This is the
+   thing the bare count check in §5.2 explicitly could not do. Both shipped
+   PDVD library files (`pdvd-photlib-vis-v5-{128,175}nm.json`) were
+   regenerated with `chan_pos_cm` — `.npy` content is unchanged (md5
+   verified before/after) so this is metadata-only.
+2. **`VUVEfficiency`/`VISEfficiency` length guard.** Added right after
+   `m_opdets` is built: `size() < m_opdets.size()` raises (checked "too
+   short", not "!= nopdets" — a longer array is harmless, its tail is simply
+   unused, so that is not treated as an error; PDHD/PDVD's arrays are exactly
+   `nopdets` length and SBND's default is exactly 312 == its `nopdets`, so
+   this never fires on any current detector config).
+3. **`ch_mask` bounds guard.** Added at the same point: any `ch_mask` entry
+   outside `[0, m_opdets.size())` now raises with the offending value and the
+   valid range, instead of the previous raw `operator[]` out-of-bounds write
+   in `build_opdet_mask` (`QLMatching.cxx:843`).
+
+All three are validation-only — no prediction-affecting code changed.
+Verification: `match/wcdoctest-match` (3 test cases incl. 2 new for
+`chan_pos_cm`: present-and-matching, length-mismatch-throws,
+absent-is-a-no-op); then a live A/B on real events with the newly-installed
+binary, comparing `hash_archive.py` content hashes and the calib-dump JSON
+byte-for-byte: PDVD run 039252 evt 0 (`light_model:'library'`, so the new
+position check actually engaged and logged `nopdets=40` with no error) and
+PDHD run 29107 evt 0 (`light_model:'semi'`, exercising the shared
+`ch_mask`/`VUVEfficiency` guards) — both **byte-identical** before/after.
+SBND's guard exposure was checked statically only (its `VUVEfficiency`
+default array length and `semi-analytical-sbnd.json`'s `OpDets` count both
+independently confirmed to be exactly 312), not with a live run.
 
 ---
 

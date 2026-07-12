@@ -4,14 +4,20 @@ sample_ann.py) into the WCT PhotonLibraryModel format:
 
   pdvd-photlib-vis-v5-<tag>.npy    float32 C-order [nx, ny, nz, 40]
   pdvd-photlib-vis-v5-<tag>.json   meta: origin_cm/step_cm/n/nchan/vis_npy
-                                   + provenance + "selfcheck" block (random
-                                   points with python-side trilinear values,
-                                   verified by the env-gated doctest in
+                                   + chan_pos_cm + provenance + "selfcheck"
+                                   block (random points with python-side
+                                   trilinear values, verified by the
+                                   env-gated doctest in
                                    match/test/doctest_photonlibrarymodel.cxx)
 
 Channel order: v5 ANN channel == WCT flash-chain OpDet (identity, verified in
 sample_ann.py; dead channels 24/27/28/34 carry model visibilities and are
-masked in the QLMatching cfg).
+masked in the QLMatching cfg). chan_pos_cm records that same per-channel
+position (from the npz's chan_pos_mm, i.e. the GDML sensitive-volume position
+sample_ann.py assigned to this ANN channel) so QLMatching can cross-check the
+library's channel order against its own OpDet table at load time
+(match/src/QLMatching.cxx, PhotonLibraryModel::has_positions()) instead of
+relying on this identity purely by convention.
 
 Also installs copies into wire-cell-data/pdvd/photodet/ if that directory
 exists (the cfg default path 'pdvd/photodet/...' resolves through
@@ -48,6 +54,7 @@ def export(tag):
     d = np.load(src, allow_pickle=True)
     vis = np.ascontiguousarray(d["vis"].astype(np.float32))
     origin, step, n = d["origin_cm"].astype(float), d["step_cm"].astype(float), d["n"]
+    chan_pos_cm = (d["chan_pos_mm"].astype(float) / 10.0).tolist()
 
     npy_name = f"pdvd-photlib-vis-v5-{tag}.npy"
     np.save(os.path.join(HERE, npy_name), vis)
@@ -66,6 +73,7 @@ def export(tag):
         "n": [int(x) for x in n],
         "nchan": int(vis.shape[-1]),
         "vis_npy": npy_name,
+        "chan_pos_cm": chan_pos_cm,
         "selfcheck": [
             {"p_cm": pts[k].round(4).tolist(), "ch": int(chs[k]),
              "vis": float(exp[k, chs[k]])} for k in range(NSELF)
