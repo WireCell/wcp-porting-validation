@@ -727,6 +727,78 @@ labels (auto/manual agreement rate) before adopting.  Alternatively, once
 the near-anode charge loss itself is fixed (open item 1), the cushions
 revert to PDHD-like values.
 
+### 8.5 Self-consistency of the current result's own boundary flags (no external truth)
+
+During QLMatch tuning the correct T0 is unknown, so the §8.3 decomposition
+against production selections (and the hand/finder-validated pairs) cannot
+arbitrate which selection is right.  This check therefore uses **only the
+current auto result**: for auto-selected bundles that QLMatching itself
+flagged (`two_boundary`, `QLMatching.cxx:3722`; anode-window
+`at_x_boundary`, `:3639`), where do the anode-facing PCA ends sit relative
+to u = 0 at each bundle's *own selected flash* T0?
+
+Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_flagged_boundary.py --tag anodefix   # current U-plane result
+python3 check_flagged_boundary.py                  # production baseline
+```
+
+(Per-side flash times: apa 0 = `f["time"]`, apa 4 = `f["time1"]`.  PCA ends
+are an SVD proxy for `get_extreme_wcps` — see the script docstring.)
+
+**Anode-facing-end u (cm), current `anodefix` result** (18 events, 2371
+auto bundles, 123 two_boundary, 1853 at_x_boundary of which 175 anode-only):
+
+| group | circularity | bot | top |
+|---|---|---|---|
+| two_boundary | forced: 3 cm flag margin | n=25, med **−0.29**, MAD 1.7 | n=12, med **+0.16**, MAD 2.2 |
+| at_x_boundary anode-only | forced: [−2,+4] window | n=100, med +1.14, rms 18.2 | n=122, med +2.90, rms 24.1 |
+| all auto (no flag gate) | none | n=160, med **+2.94** | n=202, med **+6.61** |
+
+So at face value: **yes, the flagged ends are consistent with the new anode
+(u ≈ 0 within ~±0.3 cm median)** — but rows 1–2 are consistent *by
+construction*: the flags are only granted when an end falls in the window
+at that flash's T0, so the flagged population self-selects flashes that put
+an end at u ≈ 0.  The unforced bulk (row 3) piles several cm inside, as
+§8.3 found.
+
+**The non-circular test — span closure.**  For the 13 two_boundary bundles
+whose two faces are anode+cathode, the u-span is T0-independent (a drift
+shift moves both ends equally), so `span ≈ u_cathode = 338.51` is a
+physical closure no flash choice can fake:
+
+- **Only 2/13 close physically** (closures −2.0, −3.6 cm): evt 298777
+  uid 181 and evt 298749 uid 3, both bottom.  These keep the *same flash*
+  as production (gids 130, 105) and their anode ends genuinely reach
+  **+1.7 / +0.7 cm** of the physical U-plane edge — evidence the 4–6 cm
+  FR-domain gap of §8.3 is a *median*, with a leading tail that does reach
+  the physical edge.
+- **11/13 are impossible** — spans exceed the full drift by +7 to +91 cm
+  (pileup-merged clusters / wrong flash).  They carry the flag because
+  `compute_two_boundary_flag`'s nearest-face test uses **signed** distance
+  ≤ margin, so an end arbitrarily far *outside* the anode (u = −89 cm)
+  still counts as "at the edge", and nothing vetoes span > drift.
+  Pre-existing diagnostic-flag limitation, reported not fixed.
+- Production baseline had **6/13 physical**.  The 4 that disappeared are
+  precisely the honest full-drift tracks whose anode ends sit at
+  **+6.6..+8.1 cm** in the new frame (old-frame +1.0..+2.4) — the FR gap
+  pushed them outside the 3 cm two_boundary margin, so under the new
+  convention the flag keeps mostly junk plus the rare tracks that truly
+  reach the edge.
+
+**Conclusion:** the current selected boundary-flag clusters agree with the
+anode position, but that agreement is what the flag *enforces*, not
+evidence the selections are right; the T0-free span closure shows most of
+the flagged full-drift candidates are unphysical.  This is the §8.4
+mechanism seen from inside the current result alone, and it reinforces the
+cushion retune: with `anode_ext2 → ~+10 cm` (and the same widening applied
+to the diagnostic margin, or an |distance| + span-sanity fix to
+`compute_two_boundary_flag`), the genuine +4..+8 cm truncated ends would
+re-enter the flagged population and the u ≈ 0 junk would lose its
+monopoly on the advantages.
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry
