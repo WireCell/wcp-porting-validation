@@ -1178,6 +1178,29 @@ sit ~+1.6 cm inside — the same ~1.5–2 cm bottom−top asymmetry as
 (candidates: per-side SP intrinsic-shift difference between the BDE/TDE
 electronics chains, or a small BDE time-base bias).
 
+**Applying the §2.3 predicted common-mode SP excess (+1.03 cm cathode-ward,
+same FR file and ctoffset for both crates)** — i.e. true stop = measured −
+1.03 cm:
+
+| | measured gauss-stop median | after −1.03 cm |
+|---|---|---|
+| bottom (n=6) | +1.6 | **+0.55** |
+| top (n=4) | −0.2 | **−1.26** |
+| two-side mean | +0.7 | **−0.35** |
+
+The common-mode agreement becomes essentially exact: the two-side mean lands
+at zero within the per-track spread (~±1 cm) and the deconvolved-signal
+smearing/threshold systematics (~±1 cm).  The bottom individually lands on
+the plane (+0.55).  The top nominally overshoots to −1.3 — more than the
+smearing width allows for real charge — which says the *top's* effective SP
+excess is ~1–1.5 cm smaller than the common prediction while the bottom's
+is close to it.  Combined with the beam-flash closure pinning the BDE time
+base to −0.9 µs, the residual ~1.8 cm bottom−top split most plausibly lives
+in the per-crate SP time-shift / electronics-latency modeling (not in the
+geometry, the trigger offsets, or the flash times), and both sides are now
+sharply enough bounded to be absorbed by per-side effective time-offset
+calibration knobs (default-off) if desired.
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry
