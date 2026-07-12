@@ -193,14 +193,41 @@ So in the current reconstruction an anode-crossing track, after T0
 correction, starts **near |x| ≈ 335.9 in the top volume and ≈ 332.6 in the
 bottom volume** — i.e. close to the 335.835 FV convention, but **not because
 335.835 is a physical plane**. The bookkeeping says the track *should*
-reconstruct out to ≈ 340.5; the missing 4.6 cm (top) / 7.9 cm (bottom) is
-**near-anode reconstruction loss**: the last several cm of drift sit inside
-the 18.1 cm field-response region, where the deconvolution model (which
-assumes every signal drifted in from the response plane) is increasingly
-wrong and the charge fails ROI/imaging. The rough coincidence of the measured
-edge with the DocDB-203 grid-plane convention is just that — a coincidence
-(and only holds for the top volume; the bottom edge is 3.2 cm further in, the
-§5.2 open asymmetry).
+reconstruct out to ≈ 340.5. The gap is **missing charge, not mis-timed
+charge**, demonstrated point-by-point on the T0-pinned full-drift crosser
+evt298609 gid172 (c102 bottom + c4000003 top):
+
+- Its **cathode ends land at u = 332.97 / 332.78 vs u_cathode = 332.835** —
+  the T0 is verified to ~1 mm, so no time-chain error can be invoked.
+- At that same verified T0, the **anode-end point density is flat (~uniform
+  per cm) up to u = +2.4 (bottom) / +1.9 (top) and then simply stops** — no
+  straggler points below, no pile-up of displaced charge. Each half is
+  missing the last **~6.5–7.0 cm** of drift before the physical edge at
+  u = −4.6.
+- Not a wall exit: both anode ends sit > 15 cm from every y/z boundary and
+  the extrapolated CRP crossing stays inside (bottom end (y,z) ≈ (135, 173),
+  top ≈ (−8, 17); the tracks are drift-steep, du/d(yz) ≈ 3, as crossers must
+  be).
+
+The missing region is the inner ~⅓ of the **18.1 cm field-response domain**
+(FR `origin` = 181 mm). Charge deposited there did not drift in from the
+response plane, so the deconvolution model is wrong for it: the U/V induction
+responses in particular lose their leading lobe and phase, ROI finding fails
+on the induction views, and the 3-view tiling then drops the charge entirely
+(collection alone cannot form blobs). This mechanism predicts W-plane signal
+with absent U/V ROIs at those ticks — directly checkable (below). The rough
+coincidence of the measured edge with the DocDB-203 grid-plane convention is
+just that — a coincidence. (The verified pair loses ~7 cm in *both* volumes,
+suggesting the §5.2 bottom-vs-top pile-up difference is at least partly
+sample scatter.)
+
+**Decisive follow-ups** (not done here): (i) simulation closure — MC depos at
+known x near the CRP through the same NF/SP/imaging chain; if the ~5–7 cm gap
+reproduces, it is inherent to the FR/ROI model, and its size becomes a
+calibratable constant; (ii) magnify inspection of the U/V/W traces at a
+validated anode-crossing end (e.g. evt298609 c102, channels around
+(y,z) ≈ (135, 173), last ~45 µs of the track) to confirm the
+induction-ROI-failure mechanism.
 
 Practical implications: (a) the FV edge at 335.835 happens to track the
 *reconstructable* volume better than the physical volume, which is why the
@@ -492,12 +519,16 @@ the dumps.
 
 **Open items** (findings, deliberately not "fixed" here):
 
-1. **Bottom-vs-top anode-edge asymmetry ~3.3 cm** (§5.2): bottom track ends
-   pile 3.2 cm inside the FV edge, top at the edge. Candidate causes: BDE/TDE
-   electronics-response (group-delay) residuals in SP, near-CRP reconstruction
-   differences, sample systematics. A dedicated study with hand-validated
-   anode-touching tracks per volume (and, ideally, horizontal cathode-parallel
-   tracks) would separate a time-type from a charge-loss-type cause.
+1. **Near-anode reconstruction gap ~5–7 cm** (§2.4): with T0 verified at the
+   millimeter level (crosser cathode ends), the last ~6.5–7 cm of drift
+   before the physical CRP face carry no reconstructed points, in both
+   volumes. Leading hypothesis: induction-view ROI failure inside the 18.1 cm
+   field-response domain → 3-view tiling drops the charge. Decisive tests:
+   simulation closure and magnify U/V/W inspection at a validated end
+   (§2.4). The residual bottom-vs-top pile-up difference in the unbiased
+   scans (bot +3.2 vs top −0.1, §5.2) is at least partly sample scatter — the
+   verified pair is symmetric (+2.4/+1.9) — but per-crate response residuals
+   are not excluded; fold into the same study.
 2. **SP time-shift excess +6.6 µs ≈ +1.0 cm** (§2.3): the `ctoffset = 4 µs`
    choice and the FR-file speed (1.53) vs reconstruction speed (1.568) both
    push reconstruction cathode-ward. If sub-cm absolute-x fidelity is ever
