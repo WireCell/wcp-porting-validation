@@ -288,6 +288,126 @@ model is used.
 
 ---
 
+## 5. Implementation audit: channel mapping and visibility correctness in QLMatching
+
+Question: does `QLMatching`'s gridded-library backend correctly line up
+**channel index** with **physical OpDet position**, and is the **visibility**
+semantics (what a raw library value means, and how it becomes predicted PE)
+sound? Checked directly against the code (`match/src/QLMatching.cxx`,
+`match/inc/WireCellMatch/PhotonLibraryModel.h`) and against the actual data
+files, not just the design docs.
+
+### 5.1 Is there a channel-mapping bug in the shipped PDVD config? — No, by four independent cross-checks
+
+| # | check | result |
+|---|---|---|
+| 1 | ANN npz self-map: `wct_opdet[k]` in `work/ann_vis_v5_175nm.npz` vs identity | **36/36 live channels** `wct_opdet[k]==k`; dead = exactly {24,27,28,34} |
+| 2 | `semi-analytical-pdvd.json`'s `OpDets[k]` position vs the ANN's `chan_pos_mm[k]` | **40/40 channels** agree to <1 mm (exact after cm/mm conversion) |
+| 3 | cfg `VUVEfficiency[k]` (`qlmatching.jsonnet`) vs official `eff_Xe` (`pdvd-photlib-chanmap.json`, keyed by `wct_opdet`) | **40/40 channels** agree exactly |
+| 4 | `OpDets[k].type` (XA=0/PMT=1) vs ANN node name vs chanmap `pd_type` | **40/40 channels** agree |
+
+`export_wct_photlib.py` copies the sampled ANN array to the shipped `.npy`
+**verbatim** — it never even reads the npz's `wct_opdet`/`chan_node`/
+`chan_pos_mm` fields, so there is no reindexing step to get wrong. The reason
+check #1 comes out identity is that `sample_ann.py`'s v5 channel-to-GDML
+assignment (bijective `linear_sum_assignment` against the raw-data opdet
+table) already produces that order at generation time. **Conclusion: no
+channel-mapping bug exists in the currently shipped PDVD library/config.**
+
+### 5.2 But the code has no way to *catch* one — a structural fragility worth flagging
+
+Reading `QLMatching.cxx`'s indexing directly: the library channel axis,
+`m_opdets`, `VUVEfficiency`/`VISEfficiency`, the opflash measured-PE vector,
+and `ch_mask`/`opdet_mask` are all addressed by **one shared, unchecked 0..39
+index**:
+
+- The prediction loop uses a single loop variable for everything:
+  ```cpp
+  // QLMatching.cxx:1373-1381
+  for (std::size_t idet = 0; idet < nopdets; ++idet) {
+      if (flash_opdet_mask.at(idet) == 0) continue;
+      const auto dir_vis = direct_visibilities.at(idet);   // library channel idet
+      const auto ref_vis = reflected_visibilities.at(idet);
+      const auto dir_eff = m_VUVEfficiency.at(idet);        // config array idet
+      const auto ref_eff = m_VISEfficiency.at(idet);
+      pred_flash.at(idet) += qw * m_QtoL * dir_vis * dir_eff + qw * m_QtoL * ref_vis * ref_eff;
+  }
+  ```
+- The fit step pairs measured and predicted PE the same way:
+  ```cpp
+  // QLMatching.cxx:1634-1647 (paraphrased indices)
+  const int opdet_idx = run.opdet_idx_v.at(j);
+  const double pe      = flash->get_PE(opdet_idx);       // opflash channel opdet_idx
+  const double pred_pe = pred_flash.at(opdet_idx);        // same idx into pred_flash
+  ```
+- `m_opdets` itself is loaded in pure JSON-array order with **no id field
+  read** (`QLMatching.cxx:414-424`) — position `i` in the `OpDets` array of
+  `semimodel_file` *is* "OpDet `i`", by convention only.
+- **The only cross-check anywhere is a scalar count**, `QLMatching.cxx:438-441`:
+  ```cpp
+  if (m_lib_model->nchan() != m_opdets.size())
+      raise<ValueError>("QLMatching: photon library nchan %d != nopdets %d", ...);
+  ```
+  This catches a *length* mismatch. It cannot catch an *order* mismatch (e.g.
+  two channels transposed, or a future re-export using a different channel
+  convention) — the file would load, the count would match, and QLMatching
+  would silently mispredict with no error and no log line.
+- This isn't a trivial oversight to fix, either: `PhotonLibraryModel`'s file
+  format (`PhotonLibraryModel.h:8-12`: meta = `origin_cm`/`step_cm`/`n`/
+  `nchan`/`vis_npy`; the `.npy` itself is a bare `[nx,ny,nz,nchan]` float
+  grid) carries **no per-channel position or id at all**. There is nothing in
+  the shipped file for a loader to cross-check `m_opdets` against, even in
+  principle — the export script would need to start embedding one.
+
+**Two smaller, pre-existing findings** (noted, not fixed, per the usual
+"report don't fix in this pass" rule):
+- `VUVEfficiency`/`VISEfficiency` get **no config-time length check**
+  (`QLMatching.cxx:368-374`), unlike `measured_pe_scale`, which explicitly
+  validates `size == nchan` and raises (`QLMatching.cxx:301-306`). A
+  wrong-length efficiency array either throws later at `.at(idet)` (loud
+  failure) or, if merely long enough, silently mispairs values (quiet
+  failure) — the two length-checked and unchecked config arrays sit right
+  next to each other in the same file with different rigor.
+- `ch_mask` entries index `run.opdet_mask` via a raw `operator[]`
+  (`QLMatching.cxx:843`), not `.at()` — an out-of-range value in a config's
+  `ch_mask` array is an out-of-bounds write, not a caught error.
+
+**Bottom line**: today's PDVD channel mapping is correct, verified four
+independent ways above — but it is correct *by convention across
+independently-authored files*, not because the code enforces it. If this
+becomes a maintained/re-derived pipeline (new ANN version, regenerated
+`pdvd-opch-map.json`, a manually-edited efficiency array), nothing would flag
+a silent transposition. If it's ever worth hardening: embed per-channel
+position/id in the exported library meta JSON and cross-check it against
+`m_opdets` at load time, and give `VUVEfficiency`/`VISEfficiency` the same
+length check `measured_pe_scale` already has. Not implemented here — this
+section is diagnosis only.
+
+### 5.3 The "visibility" semantics question — resolved, and it's a consistent design
+
+The doping-consistency check in §1 row 3a left an unexplained caveat: the
+official "Ar-blind" channels (16/29/39 — `eff_Ar=0`, `eff_Xe>0`) showed
+*ordinary*, unremarkable ratios in the raw ANN/library comparison instead of
+a hard zero under Ar. That now has a clean explanation worth stating
+explicitly: **the raw library/ANN value is pure optical/geometric transport
+visibility**; the wavelength/coating-dependent detection response is a
+*separate* multiplicative factor, applied downstream by
+`VUVEfficiency`/`VISEfficiency` in the same accumulation line quoted above
+(`QLMatching.cxx:1379-1380`). That is architecturally identical to the
+semi-analytical model's own visibility × efficiency split (`match/docs/
+semi-analytical-model.md` §6). So this isn't a bug — it's confirmation that
+the library and semi backends compose visibility and detection efficiency the
+same way, resolving the earlier open caveat rather than leaving it dangling.
+
+One more visibility-handling point re-verified, not just re-asserted: in
+library mode `doReflectedLight` is forced to 0 and there is no same-TPC
+x-sign gate (`QLMatching.cxx:1357-1362`), because the ANN grid already
+encodes total photon arrival including the detector's own shadowing
+(double-sided cathode XAs, cathode opacity for membrane/PMT channels). No
+counter-evidence to that design choice turned up in this audit.
+
+---
+
 ## Cross-references
 
 - `pdvd/docs/pdvd-photon-model.md` — the original investigation (2026-07-09):
