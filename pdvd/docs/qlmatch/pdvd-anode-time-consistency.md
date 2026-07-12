@@ -251,6 +251,59 @@ calibrated speeds are within 0.5% of each other. Practically, PDHD's total
 (+1.03 cm) is large enough to be a real candidate contributor to the
 measured, still-unexplained asymmetric anode-edge gap (§5.2).
 
+### 2.3.2 How the DNN-ROI-SP training avoided this
+
+The PDVD DNN-ROI-SP training pipeline (`DNN_ROI_SP/` — truth-labeled ROI
+masks generated from simulation, per `DNN_ROI_SP/docs/truth_labeling_algorithm.md`)
+never has to reason about either piece above, for two independent reasons:
+
+1. **It lives entirely in tick space, never tick→x.** Truth ROI masks are
+   built by `DepoFluxSplat` (`gen/src/DepoFluxSplat.cxx`) directly from
+   drifted depos on the `(channel, tick)` grid, and training/validation
+   compare truth vs. reco waveforms on that same grid
+   (`DNN_ROI_SP/scripts/utils/h5_utils.py`'s `get_masks`,
+   `DNN_ROI_SP/scripts/measure_truth_reco_offset.py`). The §2.3.1
+   velocity-mismatch bias only exists at `BlobSampler::time2drift`'s tick→x
+   conversion, which uses the calibrated 1.568 mm/µs on data — a stage
+   downstream of, and never reached by, DNN-ROI-SP.
+2. **The truth/reco tick alignment is measured empirically, not derived
+   from a formula**, so it doesn't matter whether the derivation would have
+   included `ctoffset` or not. `DepoFluxSplat.reference_time = -3500 ns`
+   (`DNN_ROI_SP/simulation/stageB/wct-depo-sim-deposplat.jsonnet:125`,
+   subtracted from the truth frame's t0 at `DepoFluxSplat.cxx:410`) is a
+   +7-tick shift determined by cross-correlating truth against reco
+   waveforms (`measure_truth_reco_offset.py`): PDHD (control) = 0 ticks,
+   PDVD = 7 ticks pre-fix, **0 ticks post-fix on both drift halves**
+   (`DNN_ROI_SP/docs/pdvd_truth_corrections.md` §2). That single measured
+   number absorbs the *entire* net truth-vs-reco lag — response-plane
+   placement, FR shape, `ctoffset`, smearing — whatever it is, by
+   construction. (It is a small residual on top of a separate ~246-tick
+   tickinfo auto-alignment, and is not the same 8-tick quantity as
+   `ctoffset` itself.)
+
+Consistency check: `ctoffset = 4 µs` is inherited unmodified — never
+overridden — by the training-data generation, sim-inference, and
+data-inference jsonnets alike (`wct-depo-sim-deposplat.jsonnet:74-86`,
+`DNN_ROI_SP/simulation/stageB_pdvd/wct-sim-nf-sp-dnnroi-pdvd.jsonnet:102-107`,
+`wcp-porting-img/pdvd/wct-nf-sp-dnnroi.jsonnet:121-126` all pull
+`protodunevd/sp.jsonnet:118` with no override), so the tick placement the
+model learned in training transfers to inference on both simulation and
+data.
+
+**Reconciling §2.3.1's "cancels" with "doesn't cancel"**: both statements are
+correct, about different stages. Sim↔SP self-consistency (§2.3.1's
+velocity-mismatch piece, provably zero in MC) governs the tick-space world
+DNN-ROI-SP lives in entirely — the calibrated 1.568 mm/µs never enters the
+sim or the SP deconvolution at all. The non-cancellation is specific to
+`BlobSampler::time2drift` converting reco tick to absolute x *on data*,
+which is a separate, later stage the DNN-ROI-SP training and validation
+never touch. Practical note for future re-validation: the V-plane SP fix
+(`vplane_low_freq_pole.md`) shifted reco +200 ns and its own doc flags that
+downstream tick-alignment calibration may need re-checking — exactly why
+the empirical cross-correlation approach (re-measure the lag, don't assume
+a formula) is the robust choice here, rather than deriving the shift from
+`ctoffset` and `fr.speed` by hand.
+
 ### 2.4 So where does an anode-crossing track start after T0 correction?
 
 Three different answers, and the distinction matters:
