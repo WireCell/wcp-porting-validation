@@ -991,6 +991,11 @@ none implemented):
    deficits already spread −1.7..−9.2, hinting angle/topology dependence
    (loss-like, not velocity-like).
 
+(2026-07-12 follow-up: with the anode/T0 anchor established in §8.9, the
+recalibration was carried out on the validated cathode crossers at the
+W-plane signal level — see **§8.10**; it confirms 1.568 at the ±0.4–0.5 %
+level with a provenance independent of the span pile-up criticized above.)
+
 ### 8.7 The anode gap is at the imaging level, and angle-independent
 
 Question posed (2026-07-12): with the time offsets verified end-to-end, the
@@ -1200,6 +1205,100 @@ in the per-crate SP time-shift / electronics-latency modeling (not in the
 geometry, the trigger offsets, or the flash times), and both sides are now
 sharply enough bounded to be absorbed by per-side effective time-offset
 calibration knobs (default-off) if desired.
+
+### 8.10 Drift-velocity recalibration from validated cathode crossers (W-plane signal)
+
+With the anode position and the per-side time bases calibrated (§8.9), the
+one remaining free scale in the drift direction is the velocity, and the
+cathode end of a cathode-crossing track is its meter (D·δv/v ≈ 3.4 cm per
+1 %).  Owner request (2026-07-12): recalibrate v from the cathode crossers,
+reading the **W-plane deconvolved (gauss) signal directly** — more reliable
+than the 3-D imaging, whose endpoint clipping/topology artifacts §8.7–8.8
+exposed.  Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_cathode_velocity.py     # writes cathode_velocity_stops.png
+```
+
+**Method.**  Sample = the 45 hand-validated xTPC crosser pairs
+(`ql_display/decisions-crossers/`, verdict keep/add) = 90 half-tracks in 10
+events of run 039252 (anodefix dumps + production frame tarballs).  Per
+half: fold the pair's validated flash time per side (`time`/`time1`), take
+the cluster's cathode-side end (max u), calibrate the constant tick offset
+dt0 on actual track points, march the W-plane corridor (windowed ridge
+search, ±4 ch / ±8 ticks) through and past the imaging end, and
+contiguity-walk (gaps ≤ 1.1 cm) up in u to the signal stop `u_stop`
+(gauss > 1500; raw peak > 40).  The velocity follows from the **§8.9
+anode-stop medians as per-side time-base anchors** (b_gauss = +1.60 bot /
+−0.20 top; b_raw = +1.19 / −0.48):
+
+    v = v_assumed · D_c / (u_stop − b_side),   D_c = u_cathode = 338.51 cm
+
+Any common time-base error — including the §2.3 SP intrinsic-shift excess —
+shifts `u_stop` and `b_side` identically and **cancels exactly** in the
+difference; this is the anchor the old span calibration never had.
+
+**Cleaning (physicality only, counts reported).**  55/90 halves survive:
+19 excluded for imaging ends beyond the full drift (u up to 401 cm —
+cross-T0 over-merged clusters, the same tail that corrupted the §8.6 span
+pile-up; notably top-heavy), 7 for contiguous signal walking past
+D_c + 5 cm (corridor contamination by overlapping charge), 2 for dt0
+saturating its ±20-tick scan, 1 with no gauss stop, and 6 skipped upstream
+for cathode ticks truncated by the readout window.
+
+**Results** (`cathode_velocity_stops.png`; medians, sem from MAD):
+
+| walk | side | n | u_stop median | span (−b) | v [mm/µs] |
+|---|---|---|---|---|---|
+| gauss | bot | 32 | 336.81 (MAD 2.33) | 335.21 | 1.5834 ± 0.0029 |
+| gauss | top | 23 | 337.07 (MAD 2.00) | 337.27 | 1.5738 ± 0.0029 |
+| raw | bot | 32 | 336.93 (MAD 2.68) | 335.74 | 1.5809 ± 0.0033 |
+| raw | top | 23 | 338.07 (MAD 2.13) | 338.55 | 1.5678 ± 0.0031 |
+
+**Endpoint-loss bias and its correction.**  Both ends of the measured span
+are signal-threshold stops, so v is biased HIGH by (δ_a+δ_c)/D where δ are
+the per-end detection shortfalls.  The internal consistency checks behave
+exactly as this predicts: (i) the raw walk (lower threshold, extends
+0.5–1 cm further per end) gives systematically **lower** v than the gauss
+walk on the same tracks; (ii) the bottom gauss stops correlate with track
+angle to the drift axis (corr −0.25; more drift-aligned ⇒ stops ~1 cm
+earlier) — loss-like, not velocity-like (a velocity error is
+angle-independent; top shows no correlation, +0.05).  Bounding δ_a+δ_c
+from the §8.8 gold-crosser signal-to-signal span deficits (2.0–3.6 cm for
+gauss; 0.5–2.5 cm for raw) and dividing out:
+
+| | corrected v [mm/µs] |
+|---|---|
+| bot (gauss/raw overlap) | ≈ 1.570 ± 0.004 |
+| top (gauss/raw overlap) | ≈ 1.561 ± 0.005 |
+| **two-side mean** | **1.566 ± 0.006** |
+
+**Verdict: the configured v = 1.568 mm/µs is confirmed at the ±0.4–0.5 %
+level — no recalibration warranted** (the point estimate sits 0.13 % below
+1.568, far inside the uncertainty; changing the constant would be an
+unconditional behavior change and is not justified).  This repairs the
+provenance break declared in §8.6: the measurement now rests on
+hand-validated flash times, the §8.9 anode anchor, and the deconvolved
+W-plane signal — none of which the criticized span pile-up used.
+
+Remaining structure and caveats:
+
+- The corrected **bot−top split ~0.6 %** is not evidence of a physical
+  velocity difference (same field, same argon).  It is within the top
+  anchor's uncertainty (b_top rests on n = 4 anode tracks, sem ~0.65 cm ⇒
+  ±0.3 % on v) plus per-crate differences in the cathode-end detection
+  shortfall (TDE vs BDE noise/threshold).  More anode-ensemble statistics
+  for b_top is the cheapest improvement.
+- **Selection circularity (owner-stated, quantified):** the crosser pairs
+  and their flashes were validated at v = 1.568; a 1 % velocity error moves
+  the pair meeting point x_mid by ~1.7 cm per half — well inside the
+  validation tolerance (pair gaps of ±5–10 cm were accepted) — so the
+  selection does not pin v at the precision measured here, but a >3 % error
+  could have demoted genuine pairs.
+- The endpoint-loss band (δ_a+δ_c) remains the dominant systematic; the
+  sim closure (§8.6 handle 2) would measure δ directly and take the
+  precision to ~±0.2 %.
 
 ## References
 
