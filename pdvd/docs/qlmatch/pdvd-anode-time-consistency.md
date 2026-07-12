@@ -894,6 +894,17 @@ population (329..337): the estimator keyed at least partly on the
 over-merged/overshooting population that happens to sit near D.  So the
 span method does not anchor v to better than ~1–2 %.
 
+(Recorded tension, stated for completeness: the 2026-07-08 per-TPC
+recheck — `plot_tpc_split.py`, 142-event sample — found both TPCs' span
+histograms peaking at 338–341 even in its "tight" cathode window.  But that
+window, `cath_coord ∈ [−5,+8]` about x = 0, still admits up to ~11 cm of
+overshoot past the −3 cm cathode *surface*, so mildly mis-T0'd/merged
+tracks populate the peak; the decisions-pinned validated crossers here
+(hand-scanned flash, n = 8 after dropping the merged tail) are the
+higher-purity sample and pile 2–9 cm lower.  n = 8 is small — re-running
+the validated-span measurement on the full 142-event sample with hand-scan
+labels would settle it.)
+
 **What actually supports v = 1.568 now** is the cathode-side agreement
 above: if the true cathode-side reconstruction loss is 0..2 cm (SCE +
 imaging threshold), then D·(δv/v) = c_loss − c′ ≈ −1..+2 cm, i.e.
