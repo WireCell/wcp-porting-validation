@@ -1031,6 +1031,23 @@ Results (76 interior-entry tracks with end u in [0, 12] cm):
   fragments (anode-side ends anywhere at u = +8..+300); the line probe is
   what restores the test.
 
+**Per-side numbers with stopping-muon discrimination**
+(`check_anode_gap_perside.py`; a bottom-volume anode end is an *exit* point,
+so a ranging-out muon could in principle fake a gap there — the Bragg check
+(track-end dQ over 0–15 cm vs mid-track 30–120 cm) rules this out):
+
+| volume | n | gap median | MAD | Bragg ratio median | stopping-like (>1.5) | MIP-only gap |
+|---|---|---|---|---|---|---|
+| bottom (interior exit) | 37 | **+5.6** | 1.2 | 0.98 | 4/29 | **+5.5** (n=25) |
+| top (interior entry) | 37 | **+4.2** | 1.2 | 1.01 | 5/33 | **+4.1** (n=28) |
+
+Both pile-ups are sharp (MAD ~1.2 cm; bottom histogram peaks in the 4–6 cm
+bins, top in 3–5) and the ends are charge-flat (MIP-like) — a stopping
+population would be broad and Bragg-rising, so the bottom gap is as real as
+the top one.  The **~1.4 cm bottom−top difference** is a per-side (BDE vs
+TDE electronics / SP chain / FR usage) effect and matches the §5.2
+asymmetry direction.
+
 Candidate mechanisms for the ~5 cm loss (open; PDHD with the same toolkit
 machinery shows −0.35 cm, so the cause is PDVD-specific — FR model, CRP
 strip response, DNNROI model, or noise):
