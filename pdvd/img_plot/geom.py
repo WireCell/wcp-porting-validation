@@ -6,7 +6,7 @@ writes into the Bee JSON (``arr/units.cm`` with units.cm == 10).  This lets the
 2D blob view overlay the existing Bee sampling points without a re-sample.
 
 Frame facts established by live inspection of
-``protodunevd-wires-larsoft-v5.json.bz2`` and ``wirecell.img`` (see
+``protodunevd-wires-larsoft-v6.json.bz2`` and ``wirecell.img`` (see
 pdvd/img_plot/README.md):
   * store.anodes[i].ident == i ; each anode has 2 faces ; each face has
     3 planes ordered U(ident0)/V(ident1)/W(ident2).

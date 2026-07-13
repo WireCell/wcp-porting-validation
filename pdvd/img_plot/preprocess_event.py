@@ -2,7 +2,7 @@
 """Consolidate one PDVD event's imaging results into a compact viewer artifact.
 
 Inputs (per event):
-  * wire geometry         protodunevd-wires-larsoft-v5.json.bz2
+  * wire geometry         protodunevd-wires-larsoft-v6.json.bz2
   * imaging cluster files clusters-apa-anode{0..7}-ms-active.tar.gz   (blob bounds)
   * stepped Bee points    mabc-all-apa.zip : 0-clustering-group0123/4567.json
 
@@ -89,7 +89,7 @@ def main():
     here = os.path.dirname(os.path.abspath(__file__))
     ap.add_argument("--wires",
                     default="/nfs/data/1/xqian/toolkit-dev/wire-cell-data/"
-                            "protodunevd-wires-larsoft-v5.json.bz2")
+                            "protodunevd-wires-larsoft-v6.json.bz2")
     ap.add_argument("--clusters-dir",
                     default="/home/xqian/work/scratch_wcgpu1/toolkit-dev/toolkit/"
                             "pdvd/work/039324_0",

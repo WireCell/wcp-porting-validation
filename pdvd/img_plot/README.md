@@ -29,7 +29,7 @@ Pick a free port (5005–5011 are often taken by other viewers; 5012+ is usually
 
 | view / quantity | input file | read by |
 |---|---|---|
-| wire geometry (all views) | `wire-cell-data/protodunevd-wires-larsoft-v5.json.bz2` | `geom.py` |
+| wire geometry (all views) | `wire-cell-data/protodunevd-wires-larsoft-v6.json.bz2` | `geom.py` |
 | blob outlines + fired wires (view 1) | `<work>/clusters-apa-anode{0..7}-ms-active.tar.gz` | `wirecell.img.tap.load` |
 | stepped sampling points (view 1 orange, view 2 dots) | `<work>/mabc-all-apa.zip` → `0-clustering-group0123.json` / `0-clustering-group4567.json` | `preprocess_event.py` (zip + JSON) |
 | 1-D / 2-D waveforms (view 3) | `<work>/magnify-run<run>-evt<evt>-anode{0..7}-dnnroi.root` (TH2 `h{u,v,w}_<frame><N>`) | `img_viewer.py` (uproot, lazy) |
