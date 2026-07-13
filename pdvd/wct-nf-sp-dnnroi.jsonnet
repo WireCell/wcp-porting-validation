@@ -125,18 +125,20 @@ function(
                          else {});
   local sp = sp_maker(params, tools, sp_override);
   // L1SP OFF (l1sp_pd_mode='') so the DNN-ROI debug input tags survive.
-  // ctoffset calibration (run 039252, both crates common shift): the W-plane
-  // deconvolved anode signal of genuine anode-touching tracks reconstructs
-  // +1.5 cm into the volume from the grid plane (§8.11 of docs/qlmatch/
-  // pdvd-anode-time-consistency.md; §2.3 predicts the common-mode SP excess).
-  // A common -9.5 us shift (4 -> -5.5 us) pins the reconstructed anode edge to
-  // u=0 as the absolute-x reference.  Common (no per-crate split): the high-stat
-  // bottom-top anode split is only +0.37 cm.  NOTE this de-calibrates the
-  // cathode end by the same ~1.5 cm (rigid time slide); adopted as an
-  // absolute-x/FV convention, drift velocity unaffected (cancels in the span).
+  // ctoffset = +4 us (= the toolkit sp.jsonnet default; per-side knob left at
+  // its legacy value).  REVERTED 2026-07-13 from the -5.5 us of §8.11 back to
+  // +4 us: the raw-vs-deconvolved W-plane rising-edge alignment (§8.13 of
+  // docs/qlmatch/pdvd-anode-time-consistency.md) is the primary, per-hit clock
+  // reference, and it favours +4 us -- the deconvolved (gauss) peak sits on the
+  // raw collection rising edge (charge arrival) at +4 us, whereas -5.5 us places
+  // it ~9.5 us (19 ticks) too early.  The §8.11 -5.5 us was an endpoint-geometry
+  // shift that folded the ~+1.5 cm near-anode DETECTION LOSS into the clock (its
+  // own "competing reading"); that reading is now adopted -- the +1.5 cm is real
+  // physics, not a clock error, so ctoffset is restored to its FR-consistent +4 us.
+  // (Velocity / §8.12 convention re-evaluation deferred.)
   local sp_pipes = [sp.make_sigproc(a, l1sp_pd_mode='',
-                                    ctoffset_b=-5.5*wc.microsecond,
-                                    ctoffset_t=-5.5*wc.microsecond)
+                                    ctoffset_b=4*wc.microsecond,
+                                    ctoffset_t=4*wc.microsecond)
                     for a in tools.anodes];
 
   // TorchService instance shared by all per-anode DNN-ROI nodes.
