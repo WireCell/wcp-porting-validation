@@ -39,6 +39,8 @@ DEC = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/ql_display"
 STORE = geom.load_store(
     "/nfs/data/1/xqian/toolkit-dev/wire-cell-data/protodunevd-wires-larsoft-v5.json.bz2")
 
+RUN = "039252"  # run prefix for work-dir/decisions globs; override with --run
+
 PG = {}
 
 
@@ -99,7 +101,7 @@ def load_frames(pdir, anode, ev):
 
 
 def find_dirs(ev, tag):
-    for d in sorted(glob.glob(os.path.join(WORK, "039252_*_%s" % tag))):
+    for d in sorted(glob.glob(os.path.join(WORK, "%s_*_%s" % (RUN, tag)))):
         if os.path.isfile(os.path.join(d, "calib-evt%s.json" % ev)):
             # Frames live in the tagged dir when it regenerated them (e.g.
             # the ctoffset reprocess); the QL-only _anodefix pass reused the
@@ -245,6 +247,7 @@ def stats(a):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--run", default="039252")
     ap.add_argument("--tag", default="anodefix")
     ap.add_argument("--margin", type=float, default=12.0,
                     help="keep tracks whose imaging anode end u <= margin (cm)")
@@ -258,10 +261,12 @@ def main():
                          "dump (uid-independent -- use for RE-CLUSTERED passes "
                          "like _ctoff whose uids differ from the decisions).")
     args = ap.parse_args()
+    global RUN
+    RUN = args.run
 
     events = sorted({os.path.basename(f)[len("calib-evt"):-len(".json")]
                      for f in glob.glob(os.path.join(
-                         WORK, "039252_*_%s" % args.tag, "calib-evt*.json"))})
+                         WORK, "%s_*_%s" % (RUN, args.tag), "calib-evt*.json"))})
 
     def pairs_for(ev):
         """Yield (uid, gid) track seeds for one event per --sample mode."""

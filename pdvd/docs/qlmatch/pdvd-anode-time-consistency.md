@@ -1463,9 +1463,34 @@ populations (re-QLMatching re-selects flashes on the shifted charge); on the
 together by −1.3 cm.  So the A′ swing is benign population churn in the
 auto-matcher, not a decalibration of the bottom endpoint.
 
-**Net:** the reconstructed anode edge is centred at u ≈ 0 on both volumes; the
-cathode ends move ~1.3–1.5 cm further short of the surface (the accepted
-convention cost); the drift velocity is unchanged (§8.10 span invariance).
+*(4) Run-wide generalization (039253, 039349).*  Checks 1–3 were on 039252
+only; the common shift must also hold for 039253 (18 evt) and 039349 (84 evt,
+a different 3.2 ms DAQ window whose flashes were never hand-validated).  The
+post-shift toucher-gated (≤ 4.5 cm) W-plane anode stop, per side, absolute
+position at corrected flash T0:
+
+| run | evt | gauss bot median (n) | gauss top median (n) | bot−top split |
+|---|---|---|---|---|
+| 039252 | 18 | +0.08 (matched, n=4) | +0.09 (n=11) | ~0 |
+| 039253 | 18 | +0.49 (37) | −0.91 (55) | +1.40 |
+| 039349 | 84 | −0.53 (88) | −1.47 (174) | +0.94 |
+
+Every run centres within ~1.5 cm of u = 0 (down from the pre-shift touchers
+bot +1.68 / top +1.31), so the common −5.5 µs offset generalizes past the
+hand-validated run.  A **mild residual asymmetry survives** — the top volume
+sits ~1 cm more negative than the bottom (split +0.9 to +1.4 cm), and 039349's
+top median (−1.47) is the largest single magnitude, though its mean (−0.78) and
+raw-signal median (−0.63) are inside ~1.5·MAD (1.2) of zero.  This residual is
+within the per-track spread and is the same order as the §8.9 asymmetry that
+the high-statistics §8.11 sample showed does not survive as a robust per-side
+effect; it is left uncorrected, consistent with the common-shift-only decision
+(a separate per-side offset of ~1 cm would be below the ~1.9 cm MAD noise floor).
+Command: `check_anode_stop_ensemble.py --run 039349 --tag ctoff --sample bundles --margin 4.5`.
+
+**Net:** the reconstructed anode edge is centred at u ≈ 0 on both volumes across
+all three runs; the cathode ends move ~1.3–1.5 cm further short of the surface
+(the accepted convention cost); the drift velocity is unchanged (§8.10 span
+invariance).
 
 *(Repro note: the pre-shift `_anodefix` and untagged production dirs were
 removed in the 2026-07-12 `work/` cleanup, so the `--tag anodefix` / before
