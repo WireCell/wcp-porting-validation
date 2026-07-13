@@ -22,24 +22,34 @@ Method, per validated crosser half (decisions-crossers, verdict keep/add,
      ridge search +-4 ch, +-8 ticks; 13-tick gauss sums, 21-tick raw
      windows) and contiguity-walk (gaps <= 1.1 cm) UP in u to the last
      sample above threshold: u_stop (gauss > 1500; raw peak > 40);
-  4. velocity: the per-side ANODE stop median b_side from the sec 8.9
-     ensemble anchors the time base (b_gauss = +1.60 bot / -0.20 top;
-     b_raw = +1.19 / -0.48).  Any common time-base error -- including the
-     sec 2.3 SP intrinsic-shift excess -- shifts u_stop_cathode and b_side
-     identically and CANCELS in the difference, so
+  4. velocity: the per-side ANODE stop median b_side (per tag, see
+     B_ANODE_BY_TAG) anchors the time base.  Any common time-base error --
+     including the sec 2.3 SP intrinsic-shift excess -- shifts
+     u_stop_cathode and b_side identically and CANCELS in the difference, so
 
          v_true = v_assumed * D_c / (u_stop_cathode - b_side),
          D_c = u_cathode = 338.51 cm (U plane -> cathode surface).
 
-Known bias (stated, not hidden): the signal-threshold shortfall at each
-end (delta_a at the anode is inside b_side; delta_c at the cathode shortens
-u_stop) biases v HIGH by ~(delta_a+delta_c)/D.  The gold full-crosser span
-deficits (sec 8.8) bound delta_a+delta_c at 2.0-3.6 cm for the gauss walk
-=> +0.6..+1.1% -- quoted as the dominant systematic; the raw walk (lower
-threshold, extends 0.5-1 cm further) gives the less-biased primary number.
-Angle cross-check: a velocity error is angle-independent while threshold
-loss grows toward drift-aligned tracks; the per-track u_stop vs |dir_x|
-correlation is reported.
+Sec 8.12 update (--tag ctoff, now the default): the ctoffset = -5.5 us
+reprocess pins the anode edge at u ~ 0 on both sides (sec 8.11), so the
+anchored and DIRECT metrics coincide and the owner-chosen calibration
+target is the DIRECT distance:
+
+    choose v so that median(D_c - u_stop * v/V) = 0  per side
+    =>  v_pin(side) = V * D_c / median(u_stop, side).
+
+This deliberately absorbs the cathode-end detection shortfall delta_c into
+v as a convention -- the exact cathode-side analogue of sec 8.11 absorbing
+the anode-end shortfall into ctoffset.  The gauss walk is primary (same
+walk that set the anode pin); the raw walk is the cross-check.
+
+uid bridge (re-clustered tags): the decisions-file uids belong to the OLD
+production clustering; on a re-clustered tag (_ctoff) they no longer map.
+Each decisions row is bridged by its validated (flash_gid, apa): candidate
+clusters are the calib bundles' main_cluster on the same flash and side,
+tried in (auto_selected, npoints) order until one passes the trace's
+physicality cuts.  Flash gids are verified stable across the reprocess
+(sec 8.11: 197/197 identical times, light chain untouched).
 
 Circularity caveat (owner-stated): the crosser sample and its flash
 assignments were selected at v = 1.568; a ~1% velocity error moves the
@@ -47,10 +57,16 @@ meeting point x_mid by ~1.7 cm per half -- well inside the validation
 tolerance -- so the selection does not pin v and the measurement is not
 vacuous, but a large (>3%) error could have demoted genuine pairs.
 
-Usage (from this directory; needs the anodefix work dirs + production
-frame tarballs):
-  python3 check_cathode_velocity.py
+Usage (from this directory):
+  python3 check_cathode_velocity.py                       # _ctoff (sec 8.12)
+  python3 check_cathode_velocity.py --tag anodefix        # historical sec 8.10
+                                                          # (inputs deleted in the
+                                                          # 2026-07-12 work/ cleanup;
+                                                          # numbers frozen in the doc)
+Outputs are tag-suffixed (cathode_velocity_stops_<tag>.png / _tracks_<tag>.json);
+the frozen sec 8.10 outputs (no suffix) are never overwritten.
 """
+import argparse
 import glob
 import io
 import json
@@ -72,16 +88,39 @@ DEC = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/ql_display/decisions-c
 STORE = geom.load_store(
     "/nfs/data/1/xqian/toolkit-dev/wire-cell-data/protodunevd-wires-larsoft-v5.json.bz2")
 
-# per-side anode signal-stop medians (time-base anchors), sec 8.9 ensemble
-B_ANODE = {"gauss": {"bot": +1.60, "top": -0.20},
-           "raw":   {"bot": +1.19, "top": -0.48}}
+RUN = "039252"   # set from --run
+TAG = "ctoff"    # set from --tag
+
+# Per-side anode signal-stop medians (time-base anchors), per tag:
+#  - anodefix: the sec 8.9 ensemble (10 hand-picked tracks + boundary scan).
+#  - ctoff: the sec 8.11 check-2 same-track/validated-flash medians (gauss
+#    bot n=4 / top n=11) -- the ctoffset calibration pins these at ~0 by
+#    construction.  The post-shift raw-walk anchors were not separately
+#    re-measured (the _anodefix inputs the bridge needed are gone); raw
+#    anchors are set 0, so anchored-raw is indicative only.  NOTE the
+#    auto-bundle ensemble on ctoff (--sample bundles --margin 3) sits at
+#    gauss -1.18/-1.42 instead -- that population uses AUTO-matched flashes
+#    and inherits the sec 8.11 check-3 re-matching churn; the validated
+#    numbers are the calibration reference.
+B_ANODE_BY_TAG = {
+    "anodefix": {"gauss": {"bot": +1.60, "top": -0.20},
+                 "raw":   {"bot": +1.19, "top": -0.48}},
+    "ctoff":    {"gauss": {"bot": +0.09, "top": +0.08},
+                 "raw":   {"bot": 0.0, "top": 0.0}},
+}
 GAUSS_THR, RAW_THR = 1500.0, 40.0
 
 
 def find_dirs(ev):
-    for d in sorted(glob.glob(os.path.join(WORK, "039252_*_anodefix"))):
+    for d in sorted(glob.glob(os.path.join(WORK, "%s_*_%s" % (RUN, TAG)))):
         if os.path.isfile(os.path.join(d, "calib-evt%s.json" % ev)):
-            return d, d[:-len("_anodefix")]
+            # Frames live in the tagged dir when the tag regenerated them
+            # (e.g. _ctoff); the QL-only _anodefix pass reused the production
+            # dir's frames, so fall back to the stripped dir.
+            if glob.glob(os.path.join(
+                    d, "protodune-sp-dnnroi-frames-anode*.tar.bz2")):
+                return d, d
+            return d, d[:-len("_%s" % TAG)]
     return None, None
 
 
@@ -142,6 +181,21 @@ def load_frames(pdir, anode, ev):
     return out
 
 
+CAL = {}
+
+
+def load_calib(ev):
+    if ev in CAL:
+        return CAL[ev]
+    adir, pdir = find_dirs(ev)
+    if adir is None:
+        CAL[ev] = (None, None, None)
+    else:
+        d = json.load(open(os.path.join(adir, "calib-evt%s.json" % ev)))
+        CAL[ev] = (d, adir, pdir)
+    return CAL[ev]
+
+
 def load_rows():
     rows, seen = [], set()
     for p in sorted(glob.glob(os.path.join(DEC, "decisions-evt*.jsonl"))):
@@ -160,12 +214,31 @@ def load_rows():
     return rows
 
 
+def bridge_candidates(d, gid, apa):
+    """Candidate cluster uids on a re-clustered tag for a validated
+    (flash_gid, apa): the calib bundles' main_cluster on the same flash and
+    side, auto-selected first, then by descending size."""
+    cb = {c["uid"]: c for c in d["clusters"]}
+    cands = {}
+    for b in d.get("bundles", []):
+        if b.get("flash_gid") != gid:
+            continue
+        uid = b.get("main_cluster")
+        if uid in (None, 3999999) or uid not in cb:
+            continue
+        if cb[uid]["apa"] != apa:
+            continue
+        auto = bool(b.get("auto_selected"))
+        cands[uid] = max(cands.get(uid, False), auto)
+    return sorted(cands,
+                  key=lambda u: (not cands[u], -cb[u]["npoints"]))
+
+
 def trace(ev, uid, gid):
     """Return dict with u_end (imaging cathode end), u_stop gauss/raw, etc."""
-    adir, pdir = find_dirs(ev)
-    if adir is None:
+    d, adir, pdir = load_calib(ev)
+    if d is None:
         return dict(skip="no-workdir")
-    d = json.load(open(os.path.join(adir, "calib-evt%s.json" % ev)))
     V = d["drift_speed"]
     fb = {x["gid"]: x for x in d["flashes"]}
     cb = {c["uid"]: c for c in d["clusters"]}
@@ -300,18 +373,50 @@ def clean_flag(out):
 
 
 def main():
+    global RUN, TAG
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--run", default="039252")
+    ap.add_argument("--tag", default="ctoff",
+                    help="work-dir tag (calib + frames); decisions uids are "
+                         "bridged via (flash_gid, apa) when the tag was "
+                         "re-clustered")
+    args = ap.parse_args()
+    RUN, TAG = args.run, args.tag
+    if TAG not in B_ANODE_BY_TAG:
+        sys.exit("no B_ANODE anchors defined for tag %r -- add them from "
+                 "check_anode_stop_ensemble.py --tag %s" % (TAG, TAG))
+    B_ANODE = B_ANODE_BY_TAG[TAG]
+
     rows = load_rows()
     print("validated crosser halves (keep/add, deduped): %d" % len(rows))
     res, skips = [], {}
+    used_ct = set()
     for r in rows:
         ev = r["event"][len("evt"):]
-        out = trace(ev, r["main_cluster_uid"], r["flash_gid"])
+        d, adir, pdir = load_calib(ev)
+        if d is None:
+            skips["no-workdir"] = skips.get("no-workdir", 0) + 1
+            continue
+        gid = r["flash_gid"]
+        out, uid_used = None, None
+        for uid in bridge_candidates(d, gid, r["apa"]):
+            if (ev, uid) in used_ct:
+                continue
+            o = trace(ev, uid, gid)
+            if "skip" not in o:
+                out, uid_used = o, uid
+                break
+            out = o    # remember last skip reason
+        if out is None:
+            out = dict(skip="bridge-no-candidate")
         if "skip" in out:
             skips[out["skip"]] = skips.get(out["skip"], 0) + 1
-            print("  skip %-38s evt%s uid %d" %
-                  (out["skip"], ev, r["main_cluster_uid"]))
+            print("  skip %-38s evt%s dec-uid %d gid %d" %
+                  (out["skip"], ev, r["main_cluster_uid"], gid))
             continue
-        out.update(ev=ev, uid=r["main_cluster_uid"], gid=r["flash_gid"])
+        used_ct.add((ev, uid_used))
+        out.update(ev=ev, uid=uid_used, dec_uid=r["main_cluster_uid"],
+                   gid=gid)
         out["flag"] = clean_flag(out)
         res.append(out)
         print("evt%s uid %-8d %s gid %3d t %+9.2f | img end %7.2f | "
@@ -356,8 +461,21 @@ def main():
                    10 * v, 10 * dv_stat))
             print("      sorted stops: %s" %
                   " ".join("%.1f" % u for u in sorted(us)))
+        # pooled two-side value (the single-velocity candidate)
+        us_all = np.array([x["u_%s" % kind] for x in res
+                           if np.isfinite(x["u_%s" % kind])])
+        if len(us_all):
+            med = np.median(us_all)
+            mad = np.median(np.abs(us_all - med))
+            sem = 1.4826 * mad / np.sqrt(len(us_all))
+            v = V * Dc / med          # direct pin: b ~ 0 by construction
+            dv = v * sem / med
+            summary[(kind, "all")] = (len(us_all), med, mad, 0.0, med, v, dv)
+            print("  ALL: n=%2d  u_stop median %7.2f (MAD %.2f, sem %.2f)  "
+                  "->  v_pin(direct) = %.4f +- %.4f mm/us" %
+                  (len(us_all), med, mad, sem, 10 * v, 10 * dv))
     # persist per-track results for downstream metrics
-    with open("cathode_velocity_tracks.json", "w") as f:
+    with open("cathode_velocity_tracks_%s.json" % TAG, "w") as f:
         json.dump([{k: (float(v) if isinstance(v, (float, np.floating))
                         else v) for k, v in x.items()} for x in res],
                   f, indent=1)
@@ -368,10 +486,18 @@ def main():
     # hypothesis v' it sits at u_stop*(v'/V); the anode anchor b_side sits
     # at ~zero drift time and is scale-invariant to < 0.01 cm.
     #   d_direct   = D_c - u_stop'            (+ = short of the cathode)
-    #   d_anchored = D_c - (u_stop' - b_side) (time-base removed; at the
-    #                true velocity this equals the endpoint detection
-    #                shortfall delta_c + delta_a > 0)
-    VBEST = {"bot": 0.1570, "top": 0.1561}   # sec 8.10 corrected estimates
+    #   d_anchored = D_c - (u_stop' - b_side) (time-base removed; equals
+    #                d_direct when the anode is pinned at u ~ 0)
+    # v_pin per side: the velocity that zeroes the DIRECT median (owner
+    # calibration target, sec 8.12) -- computed from the gauss walk.
+    VBEST = {}
+    for side in ("bot", "top"):
+        if ("gauss", side) in summary:
+            med = summary[("gauss", side)][1]
+            VBEST[side] = V * Dc / med
+    print("\n== per-side v_pin(direct, gauss): %s ==" %
+          "  ".join("%s %.4f mm/us" % (s, 10 * vv)
+                    for s, vv in VBEST.items()))
     print("\n== endpoint-distance-to-cathode metric (median +- MAD, cm; "
           "+ = short of the cathode surface) ==")
     for kind in ("gauss", "raw"):
@@ -379,11 +505,12 @@ def main():
             us = np.array([x["u_%s" % kind] for x in res
                            if x["side"] == side
                            and np.isfinite(x["u_%s" % kind])])
-            if not len(us):
+            if not len(us) or side not in VBEST:
                 continue
             b = B_ANODE[kind][side]
             row = ["  %-5s %s:" % (kind, side)]
-            for label, vh in (("v=1.568", V), ("v_best", VBEST[side])):
+            for label, vh in (("v=%.3f" % (10 * V), V),
+                              ("v_pin", VBEST[side])):
                 sc = us * vh / V
                 dd = Dc - sc
                 da = Dc - (sc - b)
@@ -427,11 +554,11 @@ def main():
         ax.set_ylabel("halves")
         ax.legend(fontsize=8)
         ax.set_title("%s walk" % kind, fontsize=10)
-    fig.suptitle("validated xTPC crossers, run 039252 (anodefix), "
-                 "v_assumed = %.3f mm/us" % (10 * V), fontsize=10)
+    fig.suptitle("validated xTPC crossers, run %s (%s), "
+                 "v_assumed = %.3f mm/us" % (RUN, TAG, 10 * V), fontsize=10)
     fig.tight_layout()
-    fig.savefig("cathode_velocity_stops.png", dpi=110)
-    print("\nwrote cathode_velocity_stops.png")
+    fig.savefig("cathode_velocity_stops_%s.png" % TAG, dpi=110)
+    print("\nwrote cathode_velocity_stops_%s.png" % TAG)
     return summary
 
 

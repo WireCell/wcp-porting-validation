@@ -1497,6 +1497,110 @@ removed in the 2026-07-12 `work/` cleanup, so the `--tag anodefix` / before
 half of the commands above is historical — the numbers are frozen in the tables.
 The post-shift `--tag ctoff --sample bundles` path still reproduces.)*
 
+### 8.12 Cathode-pinned drift velocity from the _ctoff direct residuals
+
+With §8.11's common `ctoffset = −5.5 µs` pinning the reconstructed anode edge
+at u ≈ 0 on both volumes, the drift direction has exactly one free scale left
+and one uncalibrated landmark: the cathode-end signal stop, sitting
+~3 cm short of the surface.  Owner request (2026-07-12): re-measure the
+velocity on the reprocessed `_ctoff` sample using the **direct**
+endpoint-distance-to-cathode metric of §8.10 (the anchored variant collapses
+onto it now that b_side ≈ +0.08/+0.09 ≈ 0), and **choose v to zero the direct
+distance** — deliberately absorbing the cathode-end detection shortfall into
+v as a convention, the exact cathode-side analogue of §8.11 absorbing the
+anode-end shortfall into ctoffset.  A single velocity is preferred; a
+per-side split is accepted only if the data demand it.  Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_cathode_velocity.py --tag ctoff   # (now the default tag)
+# outputs: cathode_velocity_stops_ctoff.png, cathode_velocity_tracks_ctoff.json
+```
+
+**Method deltas vs §8.10** (same W-plane corridor, thresholds, cleaning):
+
+- *Inputs*: the self-contained `work/039252_*_ctoff/` dirs (calib + frames
+  co-located; the §8.10 `_anodefix`+production inputs are gone).
+- *uid bridge*: the decisions-file uids predate the `_ctoff` re-clustering, so
+  each validated row is bridged by its **(flash_gid, apa)** — candidate
+  clusters are the calib bundles' `main_cluster` on the same flash and side,
+  tried in (auto_selected, npoints) order until one passes the trace's
+  physicality cuts.  Flash gids are stable across the reprocess (§8.11,
+  197/197).
+- *Anchors*: gauss b_side = the §8.11 check-2 same-track/validated-flash
+  medians (+0.09 bot / +0.08 top ≈ 0 by construction).  The auto-bundle
+  ensemble on `_ctoff` (`--sample bundles --margin 3`) instead sits at
+  −1.18/−1.42 — that population uses auto-matched flashes and inherits the
+  §8.11 check-3 re-matching churn; the validated numbers are the reference.
+  Post-shift raw anchors were not separately re-measurable (bridge inputs
+  gone); raw is quoted with b = 0 (direct only).
+
+**Sample**: 90 validated crosser halves → 85 bridged and traced (5
+tiny-cluster) → **56 clean (30 bot / 26 top)** after the §8.10 physicality
+cuts (20 img-end-beyond-full-drift over-merges, 6 stop-beyond, 2
+dt0-saturated, 1 no-gauss-stop).
+
+**Results** (medians, sem from MAD; v_pin = 1.568·D_c/median(u_stop), the
+velocity that zeroes the side's median direct distance):
+
+| walk | side | n | u_stop median | direct @1.568 | v_pin [mm/µs] |
+|---|---|---|---|---|---|
+| gauss | bot | 30 | 335.50 (MAD 2.21) | +3.01 | 1.5821 ± 0.0028 |
+| gauss | top | 26 | 334.31 (MAD 3.02) | +4.20 | 1.5877 ± 0.0042 |
+| gauss | ALL | 56 | 334.66 (MAD 2.85) | +3.85 | **1.5861 ± 0.0027** |
+| raw | bot | 30 | 335.56 (MAD 2.36) | +2.95 | 1.5818 ± 0.0030 |
+| raw | top | 24 | 335.09 (MAD 2.68) | +3.42 | 1.5840 ± 0.0038 |
+| raw | ALL | 54 | 335.19 (MAD 2.12) | +3.35 | 1.5835 ± 0.0020 |
+
+(The +3.0/+4.2 cm direct residuals at 1.568 are the §8.10 +1.7/+1.4 cathode
+shortfalls plus the ~1.5 cm §8.11 convention cost, as predicted.)
+
+**Single vs per-side.**  The gauss bot–top v_pin split is 0.0056 ± 0.0050
+(**1.1σ**) and the raw split 0.0022 ± 0.0048 (**0.45σ**) — neither
+significant, and three independent strikes argue against splitting: (i) the
+raw walk (lower threshold, less loss-biased) sees the two sides nearly
+identical; (ii) the top gauss sample carries a strong **anomalous** angle
+correlation (corr(|dirx|, u_stop) = +0.63, opposite sign to threshold-loss
+expectation; bot is −0.17 as usual), flagging its higher pin as sample
+composition rather than velocity; (iii) same argon, same field (§8.10).
+**Decision (per the pre-agreed rule): ONE common velocity**
+
+    v_pin = 1.586 mm/µs   (pooled gauss direct-pin, ± 0.003)
+
+which leaves per-side direct medians gauss **bot −0.84 / top +0.36 cm**
+(raw −0.90/−0.43) — all well inside the per-track spread (MAD 2.1–3.0 cm)
+and comparable to their sem (0.6–0.9 cm).
+
+**What this v is (and is not).**  1.586 is a **convention (effective)
+velocity**: it maps the *gauss signal stop* onto the cathode surface, exactly
+as ctoffset = −5.5 µs maps the gauss anode stop onto u = 0, so reconstructed
+track extents span the full anode→cathode geometry.  The best *physical*
+velocity estimate remains §8.10's loss-corrected 1.566 ± 0.006 (with 1.568
+inside errors): the ~0.020 mm/µs difference is the cathode+anode detection
+shortfall (δ_a+δ_c ≈ 3.5 cm over 338.51 cm) deliberately folded in.  Any
+physics that needs the physical drift time per cm — not endpoint geometry —
+should keep that distinction in mind (the sim closure, §8.6 handle 2, would
+separate the two cleanly).
+
+**Implementation** (knobs byte-identical when off; toolkit commit
+`15a7b3bf`): QLMatching gains a per-input `drift_speeds` array
+(`drift_speed_for(run.input_idx)`, mirroring `trigger_offsets`; used in
+`build_bundles`, `cull_cross_tpc`, `dump_cathode_diag`; calib dump exports
+`drift_speeds` + per-geometry `drift_speed` only when set) and
+`protodunevd/{clus,qlmatching}.jsonnet` gain `drift_speed_b/_t` /
+`drift_speed`/`drift_speeds` args threading ONE resolved per-side value into
+BlobSampler (x_raw), the dvm blocks (x_t0cor) and the matcher.  The driver
+`wct-clustering.jsonnet` + `run_clus_evt.sh` expose
+`PDVD_DRIFT_SPEED_BOT_MMUS`/`_TOP_MMUS` (equal values collapse to the scalar
+path so `d["drift_speed"]` stays the single source for readers).  Gates:
+knob-off compiled JSON byte-identical; knob-off full chain content-identical
+on evt 298567 (label `abgate1` vs `_ctoff`, 27 mabc zips + calib); top-only
+knob-on smoke (`abgate2`) changes only top-side + global outputs; uboone
+qlport smoke zips identical to `m7smoke`.
+
+The `_vcal` reprocess with v = 1.586 and its two-point closure validation
+(anode stays ≈ 0 by scale invariance; cathode direct → ≈ 0) follow below.
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry
