@@ -1335,6 +1335,143 @@ Remaining structure and caveats:
   sim closure (§8.6 handle 2) would measure δ directly and take the
   precision to ~±0.2 %.
 
+### 8.11 High-statistics anode-stop spread and the common ctoffset calibration
+
+Owner request (2026-07-12): (1) increase the §8.9 anode-stop statistics to
+see the top-vs-bottom spread, W-plane only; (2) if the general behaviour
+holds, apply a per-side `ctoffset` so the mean anode signal reconstructs at
+u = 0.  Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_anode_stop_ensemble.py --tag anodefix --sample decisions   # pre-shift (§8.9 method, all validated boundary+crosser)
+python3 check_anode_stop_ensemble.py --tag ctoff --sample bundles --margin 4.5   # post-shift (re-clustered => bundle scan)
+python3 check_anode_stop_verify.py --gate 3   # endpoint A/B: same tracks anodefix->ctoff, same flash (historical, needs _anodefix)
+python3 check_anode_time_consistency.py --tag anodefix   # A' unbiased 3-D imaging edge (all-plane, contrast)
+```
+
+**Method.**  Extends §8.9's W-plane corridor (constant-tick dt0 calibration,
+±4 ch / ±8 tick ridge march, contiguity walk to gauss > 1500 / raw > 40) from
+10 hand-picked tracks to every hand-validated boundary/crosser track in the 18
+events, W (collection) plane only.  "Genuine anode-touchers" are gated by the
+imaging anode-end depth (img-end ≤ gate); looser gates admit tracks that end
+mid-volume and drag the median up, exactly as the A′ unbiased 3-D scan
+(`check_anode_time_consistency.py`) needed a histogram peak rather than a mean.
+
+**Result 1 — the §8.9 top/bottom asymmetry does not survive higher stats.**
+As the sample tightens to genuine anode-touchers, both sides converge to
+~+1.5 cm and the split collapses:
+
+| img-end gate | bot gauss-stop | top gauss-stop | split | n(bot/top) |
+|---|---|---|---|---|
+| ≤ 3 cm (genuine touchers) | **+1.68** | **+1.31** | +0.37 | 4/13 |
+| ≤ 4.5 cm | +2.43 | +1.76 | +0.67 | 15/21 |
+| ≤ 12 cm (loose) | +4.08 | +2.98 | +1.11 | 46/33 |
+
+§8.9's headline 1.8 cm asymmetry (bot +1.6 / top −0.2) was a small-sample
+artifact: its top −0.2 rested on n = 4; at n = 13 the top sits at +1.31,
+alongside the bottom.  The 3-D imaging unbiased edge (A′, n ≈ 40/42) agrees the
+split is small and both edges are near the grid plane: bot +0.22 / top +0.90.
+The dominant signal is a **common ~+1.5 cm** offset into the volume, matching
+the §2.3 predicted common-mode SP excess (+1.03 cm) plus ~0.5 cm anode
+detection loss — not a per-crate time difference.
+
+**Result 2 — `ctoffset` cannot zero the anode without de-calibrating the
+cathode (the decisive constraint).**  `ctoffset` is a rigid per-side time
+slide: it moves a track's anode end and cathode end by the same Δu in the same
+direction.  But both ends are pulled *inward* — bottom anode +1.6 (§8.9) and
+bottom cathode 336.81 = D_c − 1.70 (§8.10) — so the track reconstructs ~3.3 cm
+shorter than anode-to-cathode.  A clock slide cannot pull both ends in; the
+anode offset is therefore end-localized **detection loss** (anode FR-gap, §8.6;
+cathode diffusion+threshold), not a clock error.  Zeroing the anode drags the
+cathode off-surface by the same amount:
+
+| side | Δu | anode now→post | cathode short now→post |
+|---|---|---|---|
+| bot | −1.60 | +1.60 → 0.00 | 1.70 → 3.30 |
+| top | +0.20 | −0.20 → 0.00 | 1.44 → 1.24 |
+
+**Owner decision (2026-07-12): apply a *common* shift** (no per-crate split,
+since the split is only +0.37 cm), pinning the reconstructed anode edge to
+u = 0 as the **absolute-x / FV-cushion convention**, with eyes open that the
+cathode ends move ~1.5 cm further short of the surface.  Two facts make this
+benign for the physics that matters: the drift **velocity is unaffected**
+(a common additive shift cancels in the §8.10 span ratio), and the anode is
+the natural absolute-x reference (charge deposited at the wire plane at
+t ≈ 0).  The competing reading — that the +1.5 cm is pure detection loss and
+should not be removed at all — is recorded; the sim closure (§8.6 handle 2)
+would separate the SP-excess and detection components and let the shift target
+only the former.
+
+**Implementation.**
+- *Mechanism (byte-identical when off).*  `sp.jsonnet make_sigproc` gains
+  `ctoffset_b` / `ctoffset_t`, both defaulting to `4*wc.microsecond`, selected
+  by `anode.data.ident < 4` (toolkit `apply-pointcloud`).  Full compiled-JSON
+  diff of the default config vs. pre-edit: **identical**; passing distinct
+  values splits anodes 0–3 vs 4–7 as expected.
+- *Value (data scope).*  The common shift is set at the **data caller**
+  `pdvd/wct-nf-sp-dnnroi.jsonnet`:
+  `ctoffset_b = ctoffset_t = -5.5*wc.microsecond` (= 4 − 9.5 µs; the −9.5 µs
+  shift centres the +1.5 cm genuine-toucher offset at v = 1.568 mm/µs).
+  Compiled data config: all 8 anodes `ctoffset = -5500`.  Kept out of the
+  toolkit `sp.jsonnet` default so simulation and official productions are
+  untouched — promoting it detector-wide is a separate owner decision.
+
+**Reprocess.**  `ctoffset` changes the SP frames, so this is a full
+SP+DNN-ROI → imaging → clustering → calib-dump reprocess (unlike the QL-only
+`_anodefix` pass), under a fresh `_ctoff` tag (records preserved, M13).
+`run_img_evt.sh` gained an `-O <suffix>` plain-work-dir flag mirroring
+`run_nf_sp_dnnroi_evt.sh -O` so imaging reads the tagged frames without the
+selection-dir workflow; `run_clus_evt.sh -s ctoff` already lands in the tagged
+dir.  All 18 events reprocessed (`work/039252_<idx>_ctoff/`).
+
+**Verification.**  Three independent checks, escalating from "the shift
+applied" to "the reconstructed endpoint centres" (`check_anode_stop_verify.py`).
+
+*(1) Frame level (flash-independent, decisive on sign/size).*  The same
+physical W-plane channel's gauss peak moves by exactly **−19 ticks = −9.5 µs =
+−1.49 cm, identical on a BDE (anode 0) and a TDE (anode 4) channel** (evt
+298567: tick 5050→5031 and 9677→9658).  Earlier tick = toward the collection
+plane = toward u = 0, uniform on both crates — the intended shift, applied
+correctly.
+
+*(2) Endpoint A/B, same tracks, same flash.*  The frame shift proves the
+*input* moved −1.49 cm but not that the *endpoint* centres, since re-clustering
+the shifted signal is nonlinear at the threshold blobs that define the anode
+end.  So each hand-validated (cluster, flash) from the `_anodefix` decisions is
+spatially matched to its `_ctoff` counterpart (centroid; the 1.5 cm drift shift
+≪ inter-cluster spacing) and re-measured with the **same flash gid** (gids are
+verified stable across the reprocess — 197/197 identical times, light chain
+untouched).  Genuine anode-touchers (gate ≤ 3 cm):
+
+| side | anodefix | → ctoff | per-track shift (MAD) |
+|---|---|---|---|
+| bot (n=4) | +1.68 | **+0.09** | −1.57 (0.09) |
+| top (n=11) | +1.31 | **+0.08** | −1.25 (0.31) |
+
+Both crates land on the grid plane (u ≈ +0.08).  The broader gate ≤ 4.5 cm
+sample (n=30) gives a symmetric per-track shift **bot −1.31 / top −1.25**
+(ALL −1.28); the endpoint shift is ~0.05–0.2 cm smaller than the −1.49 cm input
+shift, the re-clustering nonlinearity anticipated above.
+
+*(3) The A′ imaging-edge apparent antisymmetry is a re-matching artefact, not a
+per-crate effect.*  The auto-selected-bundle 3-D edge appears to move the wrong
+way for the bottom (+0.22 → +1.37) while the top moves −1.13, which looked like
+a bottom-only regression.  But that scan compares two *different* auto-flash
+populations (re-QLMatching re-selects flashes on the shifted charge); on the
+*same* tracks with the *same* validated flash (check 2) both crates move
+together by −1.3 cm.  So the A′ swing is benign population churn in the
+auto-matcher, not a decalibration of the bottom endpoint.
+
+**Net:** the reconstructed anode edge is centred at u ≈ 0 on both volumes; the
+cathode ends move ~1.3–1.5 cm further short of the surface (the accepted
+convention cost); the drift velocity is unchanged (§8.10 span invariance).
+
+*(Repro note: the pre-shift `_anodefix` and untagged production dirs were
+removed in the 2026-07-12 `work/` cleanup, so the `--tag anodefix` / before
+half of the commands above is historical — the numbers are frozen in the tables.
+The post-shift `--tag ctoff --sample bundles` path still reproduces.)*
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry

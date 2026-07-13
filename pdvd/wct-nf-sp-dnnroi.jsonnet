@@ -125,7 +125,19 @@ function(
                          else {});
   local sp = sp_maker(params, tools, sp_override);
   // L1SP OFF (l1sp_pd_mode='') so the DNN-ROI debug input tags survive.
-  local sp_pipes = [sp.make_sigproc(a, l1sp_pd_mode='') for a in tools.anodes];
+  // ctoffset calibration (run 039252, both crates common shift): the W-plane
+  // deconvolved anode signal of genuine anode-touching tracks reconstructs
+  // +1.5 cm into the volume from the grid plane (§8.11 of docs/qlmatch/
+  // pdvd-anode-time-consistency.md; §2.3 predicts the common-mode SP excess).
+  // A common -9.5 us shift (4 -> -5.5 us) pins the reconstructed anode edge to
+  // u=0 as the absolute-x reference.  Common (no per-crate split): the high-stat
+  // bottom-top anode split is only +0.37 cm.  NOTE this de-calibrates the
+  // cathode end by the same ~1.5 cm (rigid time slide); adopted as an
+  // absolute-x/FV convention, drift velocity unaffected (cancels in the span).
+  local sp_pipes = [sp.make_sigproc(a, l1sp_pd_mode='',
+                                    ctoffset_b=-5.5*wc.microsecond,
+                                    ctoffset_t=-5.5*wc.microsecond)
+                    for a in tools.anodes];
 
   // TorchService instance shared by all per-anode DNN-ROI nodes.
   local ts = {

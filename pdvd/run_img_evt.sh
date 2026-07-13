@@ -64,6 +64,8 @@ while [ $# -gt 0 ]; do
         -a*) ANODE="${1#-a}"; shift ;;
         -s) SEL_TAG="$2"; shift 2 ;;
         -s*) SEL_TAG="${1#-s}"; shift ;;
+        -O) WORK_SUFFIX="$2"; shift 2 ;;   # plain work-dir tag (mirrors run_nf_sp_dnnroi_evt.sh -O);
+        -O*) WORK_SUFFIX="${1#-O}"; shift ;;  # image the DNN-ROI frames already in work/<RUN>_<EVT><suffix>
         -d) USE_DNNROI="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
@@ -120,7 +122,12 @@ process_event() {
     [ -z "$RUN_STRIPPED" ] && RUN_STRIPPED=0
     RUN_PADDED=$(printf '%06d' "$RUN_STRIPPED")
 
-    if [ -n "$SEL_TAG" ]; then
+    if [ -n "$WORK_SUFFIX" ]; then
+        # Plain tagged work dir (e.g. _ctoff reprocess): image the DNN-ROI
+        # frames already written there by run_nf_sp_dnnroi_evt.sh -O.
+        WORKDIR="$PDVD_DIR/work/${RUN_PADDED}_${EVT}${WORK_SUFFIX}"
+        EVTDIR=$(find_evtdir) || EVTDIR=""
+    elif [ -n "$SEL_TAG" ]; then
         WORKDIR="$PDVD_DIR/work/${RUN_PADDED}_${EVT}_${SEL_TAG}"
         EVTDIR="$WORKDIR/input"
         if [ ! -d "$EVTDIR" ]; then
