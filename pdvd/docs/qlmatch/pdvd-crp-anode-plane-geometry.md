@@ -136,9 +136,14 @@ needs a cushion retune before physics acceptance.
   63 vs 87 (evt0, −28%), 61 vs 99 (evt10, −38%). This is the predicted effect of
   the u=0 origin moving 16.4 mm against the `anode_ext1`=−2 cm / `anode_ext2`=+4 cm
   windows (anode-touching charge now at u≈−1.6 cm instead of ≈0).
-- Note: `_ctoff` also differs in wire file (v5) *and* FV (U-plane), so a
-  difference is expected; the signal here is the *boundary-flag population*, not
-  bit-equality.
+- **Attribution caveat (important):** the −30% is NOT cleanly the shield effect.
+  `_shieldfv` used **traditional loose-ROI SP** (`-d off`), while `_ctoff` used
+  the **DNNROI SP** chain — different ROIs right at the anode boundary, probably
+  the *dominant* driver of a boundary-flag delta — on top of the wire-file (v5)
+  and FV (U-plane) differences, and a possible ctoffset difference (the `_ctoff`
+  dirs may predate the current +4 µs setting). Clean isolation of the shield/FV
+  effect requires **same-SP, same-ctoffset, geometry-only** — which is exactly
+  the deferred full reprocess. Do not read −30% as the shield's contribution.
 - Corollary (FR worry): evt0 cluster count is identical and evt10 only −3%, i.e.
   the U/V wire-x move is **nearly inert** for WCT reco (which anchors on the
   collection plane + field response, not induction-wire x). Good news for the
@@ -166,9 +171,17 @@ the full reprocess + hand scan. Sanity outputs kept under
 
 ## 5. Open items
 
-- **`anode_ext1/2` cushion retune** after the FV move (data-driven,
-  post-reprocess): the u=0 origin moved 16.4 mm and the `at_x_boundary` flagged
-  population shifted ~−30% (§ Step 4). Retune then hand-scan revalidate.
+- **The u=0 pin itself moved — decide before retuning.** `run.anode_x`
+  (QLMatching.cxx:1093) = the `inner_bounds` edge, so u=0 is now the **shield**,
+  16.4 mm inside the former U-plane origin. The ctoffset (memory §8.11) was
+  calibrated to pin touchers at u=0 *with `anode_x` at U*. So the retune is a
+  decision, not just a tweak: **(a)** accept u=0 at the shield → widen
+  `anode_ext1` from −2 to ~−3.5 cm (ctoffset value stays fine), or **(b)** keep
+  u=0 at the collection/U → the FV containment boundary and `anode_x` must be
+  **decoupled in C++** (`compute_geometry`), a code change. Pick (a)/(b) before
+  the retune campaign.
+- **`anode_ext1/2` cushion retune** after choosing (a)/(b), data-driven and
+  hand-scan revalidated.
 - **Full reprocess + hand scan** to validate match *quality* at the boundary
   (the 2-event sanity checked plumbing only).
 - **Field-response regeneration** (`protodunevd_FR_*`) for the new U/V geometry —
