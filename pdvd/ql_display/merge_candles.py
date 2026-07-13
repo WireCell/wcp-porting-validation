@@ -21,13 +21,19 @@ neighbouring flash is selected on BOTH (make_labels prints a non-fatal WARNING) 
 that surfaces where the two candle definitions disagree on T0 by a flash or two."""
 import json, os, sys, glob
 
-XDIR = "decisions-crossers"
-BDIR = "decisions-boundary"
-ODIR = "decisions-candles"
+# Optional work-dir/tag suffix (e.g. `merge_candles.py vcal` reads
+# decisions-{crossers,boundary}-vcal/ + ../work/039252_*_vcal/ dumps and
+# writes decisions-candles-vcal/). No arg = the original untagged round.
+SUFFIX = sys.argv[1] if len(sys.argv) > 1 else ""
+SFX = "-%s" % SUFFIX if SUFFIX else ""
+XDIR = "decisions-crossers" + SFX
+BDIR = "decisions-boundary" + SFX
+ODIR = "decisions-candles" + SFX
 os.makedirs(ODIR, exist_ok=True)
 
 CAL = {}
-for f in glob.glob("../work/039252_*/calib-evt*.json"):
+_glob = "../work/039252_*%s/calib-evt*.json" % ("_%s" % SUFFIX if SUFFIX else "")
+for f in glob.glob(_glob):
     if "prextpc" in f or "light" in f:
         continue
     ev = os.path.basename(f)[len("calib-"):-len(".json")]
