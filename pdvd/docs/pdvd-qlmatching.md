@@ -101,7 +101,8 @@ see §4a), sparse_lasso, lasso_flag_weight (0.2), bundle_mask_ks, chi2_relax
 (pmt_excess 100 — placeholder), highconsist_ladder (PDHD KS ceilings, loose
 c2n — NOTE: true PDVD matches do not pass the KS ceilings yet, see §4a),
 require_containment (production only), flash_minPE 25, light_model 'library',
-**QtoL 0.11** + pred-based pe_err (floor/frac/lowpe_frac/knee =
+**QtoL 0.094** (current geometry; 0.11 was the pre-Y-truncation value —
+see the §4a 2026-07-13 note) + pred-based pe_err (floor/frac/lowpe_frac/knee =
 2.0/0.60/2.0/10.0) — both calibrated on the beam-flash gold pairs (§4a).
 
 OFF (deliberate): reject_overpred (gold scatter still ~x3 and per-channel PE
@@ -155,6 +156,19 @@ from the 120 QtoL=1 DIAG=2 dumps.  `ql_light_calib/fit_qtol_gold.py`.
   (event-max median ~5.6 PE, ~50x below peers) get per-event masked when
   quiet — safe direction, flagged to DUNE (questions doc §4.2).
 
+**Update 2026-07-13 — QtoL 0.11 → 0.094 (Argon, current geometry).** The
+0.11 above was fit pre-Y-truncation. The 565ccd62 active-volume Y-truncation
+fix raised predicted light (it did the same to the Xe value, 0.082→0.070).
+The `jjo` beam-flash table needed to re-run `fit_qtol_gold.py` has since been
+removed (raw files also changed schema — `triglight`, no `charge_bde_us`), so
+this is an **estimate, not a fresh 80-pair refit**: 0.094 = 0.11·(0.070/0.082)
+= 0.0939, corroborated by the current-geometry library pred-ratio S175/S128 on
+beam-like bundles (brightest-flash-per-event median 1.29 → 0.070·1.29 = 0.090).
+A proper 128 nm gold-pair refit is a follow-up once the trigger table is
+restored. This is the value in the toolkit default after the 2026-07-13 revert
+to Argon (see `pdvd-questions-dune.md` §3); run 039252 reprocessed at v=0.1523
+under it (tag `_ar1523`).
+
 ## 5. Caveats
 
 - **Trigger offset RESOLVED 2026-07-10** (per-event per-crate values from the
@@ -162,7 +176,7 @@ from the 120 QtoL=1 DIAG=2 dumps.  `ql_light_calib/fit_qtol_gold.py`.
   §1). The calib-dump/Bee flash `time` folds the input-0 (BDE) offset; a
   top-volume anchor read from the dump display therefore carries the ~17–32 µs
   crate skew (the matching geometry itself uses the correct per-side value).
-- **QtoL calibrated (0.11, §4a) but the per-channel PE scale is not** — the
+- **QtoL calibrated (0.094, §4a; est. — table removed) but the per-channel PE scale is not** — the
   LASSO amplitude leads round-1 selection (NOT KS: true matches fail the KS
   ladder ceilings, §4a); chi2-based branches are loosened accordingly.
 - z-wall PMTs not in `pd_walls` (~1% of PE); rescues off; `flag_at_cathode`

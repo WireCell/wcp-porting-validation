@@ -271,6 +271,30 @@ were reprocessed under the new default (the 128 nm calib dumps are kept as
 doping confirmation (level + run history) and blessing of the 175 nm
 efficiencies (`PDVD_PDS_Mapping_v09162025`).
 
+**REVERTED to Argon/128 nm (2026-07-13), by owner decision.** New external
+input: the runs are to be treated as **pure Argon** (128 nm), not Xe-doped,
+at the 0.1523 cm/µs field-response drift velocity. This undoes the physics of
+`0adb15fa` (the data A/B above is *kept as a record* — it argued the other
+way and stands as written; the reversal is a domain-expert call on the
+external doping question, not a refutation of items 1–2). Toolkit
+`cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet` restored to the
+Argon coherent set: `photon_library_file` → `pdvd-photlib-vis-v5-128nm`,
+`VUVEfficiency` → `eff_Ar` (13/29/39 back to 0), `ch_mask` →
+`[13,24,27,28,29,32,34,39]` (Ar-blind 13/29/39 re-masked), semi-mask →
+`base+[0,1,2,3,12,18,19]`.  **QtoL → 0.094 (ESTIMATE, not a fresh gold-pair
+refit).** The 80-pair anchor cannot be rebuilt right now: the `jjo`
+beam-flash timestamp table (`data/jjo_triglight_offsets.txt`) needed by
+`fit_qtol_gold.py`/`ablib_gold.py` has been removed and the raw files changed
+schema (`triglight`, no `charge_bde_us`). 0.094 = the recorded
+pre-Y-truncation gold-pair Ar value 0.11 scaled by the Xe truncation factor
+0.070/0.082 (= 0.0939); the current-geometry library pred-ratio S175/S128 on
+beam-like bundles corroborates (brightest-flash-per-event median 1.29 →
+0.070·1.29 = 0.090, trending into 0.094 as the population is made more
+beam/cathode-like). **Follow-up:** a proper 128 nm gold-pair QtoL refit once
+the `jjo` trigger table is restored. Run 039252 (18 evts) reprocessed at
+v=0.1523 under this Argon config (tag `_ar1523`); the Xe try-out `_v1523`
+dumps are kept alongside.
+
 ## 4. Other items (smaller, please confirm)
 
 1. **DAPHNE↔module pairing of the Arapucas** — jjo's DAPHNE→module
