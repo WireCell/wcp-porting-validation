@@ -67,6 +67,13 @@ function(
     // calibrated, and a higher PE floor bounds the un-pruned bundle count.
     ql_require_containment = true,
     ql_flash_minpe = 25,
+    // Per-side calibrated drift speeds in MM/US (bottom volume = anodes 0-3,
+    // top = anodes 4-7), sec 8.12 of pdvd-anode-time-consistency.md.  null =>
+    // the common legacy 1.568 everywhere -- compiled config byte-identical.
+    // When set, BOTH clustering (BlobSampler x_raw + dvm x_t0cor) and the
+    // joint QLMatching (per-input drift_speeds) get the same per-side values.
+    drift_speed_bot_mmus = null,
+    drift_speed_top_mmus = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -82,10 +89,17 @@ local cluster_source(fname) = g.pnode({
 
 local trigger_offset_bot = trigger_offset_bot_us * wc.us;
 local trigger_offset_top = trigger_offset_top_us * wc.us;
+// Per-side drift speeds (null => legacy common 1.568 inside clus.jsonnet /
+// scalar drift_speed inside QLMatching; keys/args omitted => byte-identical).
+local drift_speed_bot = if drift_speed_bot_mmus == null then null
+                        else drift_speed_bot_mmus * wc.mm / wc.us;
+local drift_speed_top = if drift_speed_top_mmus == null then null
+                        else drift_speed_top_mmus * wc.mm / wc.us;
 local clus = import 'pgrapher/experiment/protodunevd/clus.jsonnet';
 local clus_maker = clus(output_dir=output_dir, runNo=run, subRunNo=subrun, eventNo=event, stepped_center_fallback=stepped_center_fallback,
                         time_offset=time_offset, relax_containment_filter=relax_containment_filter,
-                        trigger_offset=trigger_offset_bot, trigger_offset_top=trigger_offset_top);
+                        trigger_offset=trigger_offset_bot, trigger_offset_top=trigger_offset_top,
+                        drift_speed_b=drift_speed_bot, drift_speed_t=drift_speed_top);
 
 // Drift-side groups: anodes 0-3 (bottom drift) and anodes 4-7 (top drift).
 // With a subset anode_indices only non-empty groups are built and the final
@@ -132,7 +146,19 @@ local clus_all_tpc = if do_qlmatch
 local qlm = import 'pgrapher/experiment/protodunevd/qlmatching.jsonnet';
 local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_model,
                       ql_require_containment, ql_flash_minpe,
-                      trigger_offsets=[trigger_offset_bot, trigger_offset_top]);
+                      trigger_offsets=[trigger_offset_bot, trigger_offset_top],
+                      // Single recalibrated velocity => scalar override (the
+                      // calib dump's d["drift_speed"] then carries it for the
+                      // viewers/scripts); genuinely split values => per-input
+                      // array [bottom, top] (readers use per-geometry speeds).
+                      drift_speed=if drift_speed_bot != null
+                                     && drift_speed_bot == drift_speed_top
+                                  then drift_speed_bot else null,
+                      drift_speeds=if drift_speed_bot == null
+                                      || drift_speed_top == null
+                                      || drift_speed_bot == drift_speed_top
+                                   then null
+                                   else [drift_speed_bot, drift_speed_top]);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

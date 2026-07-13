@@ -1601,6 +1601,70 @@ qlport smoke zips identical to `m7smoke`.
 The `_vcal` reprocess with v = 1.586 and its two-point closure validation
 (anode stays ≈ 0 by scale invariance; cathode direct → ≈ 0) follow below.
 
+#### Verification: the `_vcal` reprocess and two-point closure
+
+Repro:
+
+```bash
+cd pdvd   # velocity now defaults to 1.586 in run_clus_evt.sh
+PDVD_MAX_JOBS=6 OMP_NUM_THREADS=8 ./run_clus_evt.sh -calib -s vcal 039252 all
+#   likewise 039253 (18 evts) and 039349 (84 evts)
+cd docs/qlmatch
+python3 check_cathode_velocity.py  --tag vcal            # cathode closure
+python3 check_anode_stop_ensemble.py --tag vcal --sample bundles --margin 3
+```
+
+All 120 events of runs 039252/039253/039349 reprocessed under tag `_vcal`
+(18+18+84, zero failures; clustering + QL only — the SP frames and imaging
+cluster tensors are velocity-independent, symlinked from `_ctoff`).  Each
+calib dump now carries `drift_speed = 0.1586` cm/µs via the scalar path (no
+`drift_speeds` array — single common velocity), so every downstream reader
+picks the calibrated value up automatically.
+
+**Cathode point (the one being pinned).**  `check_cathode_velocity.py --tag
+vcal` (48 clean halves, 27 bot / 21 top; vs 56 = 30/26 on `_ctoff` —
+population churn from re-matching under the new velocity):
+
+| metric (median ± MAD, cm; + = short of cathode) | bot | top |
+|---|---|---|
+| gauss direct @ v=1.586 | **+0.19 ± 2.77** | **+0.37 ± 1.90** |
+| … was @ v=1.568 (§8.12 table) | +3.01 | +4.20 |
+| raw direct @ v=1.586 | +0.95 ± 2.01 | +0.19 ± 2.48 |
+| self-measured v_pin(direct, gauss) | 1.5869 ± 0.0037 | 1.5877 ± 0.0029 |
+
+The pooled self-measurement returns **v_pin = 1.5869 ± 0.0022** — the fixed
+point is reached (measuring v on the sample processed at 1.586 gives 1.586
+back within 0.4σ).  The residual direct medians (+0.19/+0.37) match the
+§8.12 prediction (−0.84/+0.36) within the per-side sem (0.6–0.8 cm).
+
+**Anode point (scale invariance).**  `check_anode_stop_ensemble.py --tag
+vcal --sample bundles --margin 3` vs the same scan on `_ctoff`:
+
+| gauss W-stop (median, cm) | bot | top |
+|---|---|---|
+| `_ctoff` (v = 1.568) | −1.18 (n=32) | −1.42 (n=38) |
+| `_vcal` (v = 1.586) | −1.72 (n=34) | −1.30 (n=44) |
+
+Shifts of −0.54/+0.12 cm with changed sample sizes — pure auto-match
+population churn (§8.11 check-3), an order of magnitude below the ~3–4 cm
+the cathode end moved, and well inside MAD ≈ 1.4.  The anode pin survives
+the velocity change, as the u ≈ 0 scale-invariance argument requires.  (The
+per-track detail is in `anode_stop_ensemble_vcal.json`; the summary of the
+ctoff reference scan is preserved in §8.11 and
+`/home/xqian/tmp/anode_ensemble_ctoff_m3.log`.)
+
+Two-point closure achieved: anode ≈ 0 (unchanged) AND cathode direct ≈ 0.
+Reconstructed candle tracks now span the full anode→cathode geometry.
+
+Downstream refresh on `_vcal` (run 039252, the candle run): the candle
+finders re-emit `ql_display/decisions-{crossers,boundary,candles}-vcal/`
+(crossers keep/add 198 vs 90-over-10-evts before ≈ 11.0 vs 9.0 per event;
+boundary 127 vs 108 on the same 18 events — more candles pass because the
+cathode ends now reach the cathode); `merge_candles.py vcal` +
+`make_labels.py --tag candles_vcal` feed the ql_scan viewer on port 5017;
+combined Bee zips `upload-combined-run{039252,039253,039349}-vcal.zip`
+repackaged from the `_vcal` `mabc-all-apa.zip` dumps.
+
 ## References
 
 - `pdvd/docs/pdvd-tpc-geometry-fiducial.md` — three-source geometry

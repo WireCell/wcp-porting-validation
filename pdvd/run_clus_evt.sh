@@ -11,6 +11,14 @@
 #   -calib          also dump the hand-scan calib JSON (calib-evt<EVENTNO>.json)
 #   -op / -noop     optical "op" bee instance (default ON when matching)
 #   PDVD_LIGHT_MODEL=semi        semi-analytical visibility backend (default library)
+#   PDVD_DRIFT_SPEED_BOT_MMUS / PDVD_DRIFT_SPEED_TOP_MMUS
+#                                per-side drift speeds in mm/us (bottom =
+#                                anodes 0-3, top = 4-7).  Unset => the
+#                                CALIBRATED default 1.586 (cathode-pinned
+#                                convention velocity, docs/qlmatch/
+#                                pdvd-anode-time-consistency.md 8.12; the
+#                                toolkit default stays the legacy 1.568).
+#                                Set to 'null' for the legacy value.
 #   PDVD_TRIGGER_OFFSET_US=<us>  override the light<->charge time-base offset
 #                                (BOTH crates; diagnostics only)
 #   PDVD_QL_DIAG=1               offset-calibration diagnostic mode: containment off,
@@ -283,6 +291,8 @@ PY
         -A "light_model=${PDVD_LIGHT_MODEL:-library}" \
         -S "ql_require_containment=${QL_CONTAIN}" \
         -S "ql_flash_minpe=${QL_MINPE}" \
+        -S "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.586}" \
+        -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.586}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

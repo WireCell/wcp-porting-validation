@@ -107,6 +107,10 @@ B_ANODE_BY_TAG = {
                  "raw":   {"bot": +1.19, "top": -0.48}},
     "ctoff":    {"gauss": {"bot": +0.09, "top": +0.08},
                  "raw":   {"bot": 0.0, "top": 0.0}},
+    # vcal = ctoff + drift speed 1.568->1.586 (sec 8.12).  The anode pin is
+    # scale-invariant (u ~ 0), so the ctoff anchors carry over unchanged.
+    "vcal":     {"gauss": {"bot": +0.09, "top": +0.08},
+                 "raw":   {"bot": 0.0, "top": 0.0}},
 }
 GAUSS_THR, RAW_THR = 1500.0, 40.0
 
