@@ -1,5 +1,13 @@
 # PDVD wire geometry: U/V vs W, top vs bottom, v3 vs v4
 
+> **Update 2026-07-13 — physical U/V spacing added in v6.** The v3/v4/v5 files
+> below stack U/V/W 0.2 mm apart (LArSoft convention). The confirmed physical CRP
+> stack is W −3.2 mm→ V −10 mm→ U (and a shield 3.2 mm beyond U, no wires). A new
+> `protodunevd-wires-larsoft-v6.json.bz2` moves U/V to the physical positions
+> (U at |x|=340.23, V 341.23, W 341.55 cm; W fixed), now the toolkit default. The
+> "0.2 mm apart" statements below describe v3–v5. See
+> `qlmatch/pdvd-crp-anode-plane-geometry.md`.
+
 Measured directly from the shipped wire files (read-only inspection, 2026-06-07):
 
 - `wire-cell-data/protodunevd-wires-larsoft-v3.json.bz2` (production, Apr 21 2025, 193 082 B)

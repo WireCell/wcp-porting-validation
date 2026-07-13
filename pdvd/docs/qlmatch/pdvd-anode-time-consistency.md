@@ -1,5 +1,14 @@
 # PDVD anode-position & time-chain consistency examination
 
+> **SUPERSEDED IN PART (2026-07-13).** This doc's §2.2 ("the grid plane does not
+> exist"; U/V/Z 0.2 mm apart) and the §7 proposal to set the FV anode edge at the
+> U plane (±341.51 cm) predate the confirmed physical CRP geometry. The CRP planes
+> are physically W −3.2 mm→ V −10 mm→ U −3.2 mm→ **Shield** (shield 16.4 mm below
+> W). The wire file now carries physical U/V spacing (v6) and the FV anode edge is
+> the **shield ±339.91 cm**, not the U plane. See
+> `pdvd-crp-anode-plane-geometry.md` for the current record. The examination logic
+> below (anode/time consistency method) still holds; only the plane x-numbers move.
+
 **Date**: 2026-07-12.  **Toolkit**: branch `apply-pointcloud` @ `1bc0b025`.
 **Data**: run 039252, 18 events (`pdvd/work/039252_{0..17}/calib-evt*.json`,
 Xe/175nm + geometry-fix + xTPC reprocessing of 2026-07-11).
@@ -1664,6 +1673,79 @@ cathode ends now reach the cathode); `merge_candles.py vcal` +
 `make_labels.py --tag candles_vcal` feed the ql_scan viewer on port 5017;
 combined Bee zips `upload-combined-run{039252,039253,039349}-vcal.zip`
 repackaged from the `_vcal` `mabc-all-apa.zip` dumps.
+
+### 8.13 Raw-vs-deconvolved W-plane alignment resolves the ctoffset choice → revert to +4 µs
+
+The §8.11 `ctoffset = −5.5 µs` was an *endpoint-geometry* calibration: it slid
+both crates −9.5 µs so the reconstructed **anode edge** sits at u = 0, and §8.11
+itself flagged the "competing reading" that the +1.5 cm it removes is real
+near-anode **detection loss**, not a clock error. A colleague pointed out a more
+fundamental, **per-hit** clock reference that §8.11 never applied: overlay the
+**raw** W-plane (collection) waveform and the **deconvolved (gauss)** W-plane
+waveform — the deconvolved peak should sit on the raw pulse's **rising edge**
+(the charge-arrival time; on a collection wire the raw pulse rises as charge
+arrives and *peaks* ~1–2 µs later, from cold-electronics shaping). That
+alignment holds at **+4 µs**, not −5.5 µs. Repro:
+
+```
+cd pdvd/docs/qlmatch
+python3 check_raw_decon_alignment.py   # writes raw_decon_align_*.png + the table below
+```
+
+Method: `ctoffset` shifts only the deconvolution, never the raw, and −5.5 → +4 µs
+is an **exact rigid +19-tick (+9.5 µs) roll** of the gauss array. This was
+verified against a *real* +4 µs reprocess (a one-event checkpoint, tag `_ct4`,
+039252 evt0): the real `_ct4` gauss peak is exactly **+19 ticks** from the
+`_ctoff` (−5.5 µs) peak, and `roll(_ctoff, +19)` reproduces the real `_ct4`
+gauss to **≤ 1 ADC-charge unit** out of ~20 000 (DNN-ROI is shift-equivariant
+here). So the +4 µs gauss is obtained by rolling the stored `_ctoff` gauss and
+plotted alongside the raw. For each isolated high-SNR W hit we report
+`d = (gauss_peak − raw_50%_rising_edge) × 0.5 µs`.
+
+**Result — 12 isolated W hits, 3 runs, both crates:**
+
+| run | evt | anode | side | d(+4 µs) | d(−5.5 µs) |
+|---|---|---|---|---|---|
+| 039252 | 298567 | 0 | BDE | +1.57 | −7.93 |
+| 039252 | 298567 | 0 | BDE | +1.45 | −8.05 |
+| 039252 | 298567 | 4 | TDE | +2.93 | −6.57 |
+| 039252 | 298567 | 4 | TDE | +4.06 | −5.44 |
+| 039253 | 49686 | 1 | BDE | +1.70 | −7.80 |
+| 039253 | 49686 | 1 | BDE | +1.48 | −8.02 |
+| 039253 | 49686 | 5 | TDE | +2.21 | −7.29 |
+| 039253 | 49686 | 5 | TDE | +2.44 | −7.06 |
+| 039349 | 19409 | 2 | BDE | +1.86 | −7.64 |
+| 039349 | 19409 | 2 | BDE | +2.06 | −7.44 |
+| 039349 | 19409 | 6 | TDE | +2.09 | −7.41 |
+| 039349 | 19409 | 6 | TDE | +2.77 | −6.73 |
+| **median** | | | | **+2.07 µs** | **−7.43 µs** |
+
+(µs; the two columns differ by exactly 9.5 µs by construction.) The plots
+(`raw_decon_align_<evt>_a<anode>_ch<chan>.png`) are decisive: at **+4 µs** the
+gauss peak lands *on* the raw collection pulse — coincident with its rising edge
+and peak, and the real `_ct4` markers sit exactly on the rolled +4 µs curve — while
+at **−5.5 µs** the gauss peaks ~9.5 µs earlier, in **flat pre-pulse baseline where
+there is no raw signal at all**. A deconvolved charge that fires ~10 µs before its
+own raw pulse begins is unphysical; +4 µs is the correct clock.
+
+**Verdict — revert ctoffset to +4 µs.** This **adopts the "competing reading"
+§8.11 recorded**: the residual `d(+4 µs) ≈ +2 µs` (the gauss peak trailing the raw
+50 % edge, ≈ the raw peak) is the small, real SP time-shift excess / near-anode
+detection effect already discussed in §2.3 (~+1 cm cathode-ward) — it is *not* a
+clock error and must **not** be removed by the gross −9.5 µs slide. `ctoffset`
+is restored to its FR-consistent legacy **+4 µs** (the toolkit `sp.jsonnet`
+default; the data caller `pdvd/wct-nf-sp-dnnroi.jsonnet` reverted 2026-07-13).
+§8.11/§8.12 above are left intact as the record of the superseded −5.5 µs
+reasoning.
+
+**Reprocess (SP frames only).** `ctoffset` changes the SP frames, so all 120
+events of runs 039252/039253/039349 were re-run through **NF + SP + DNN-ROI only**
+into a fresh tag **`_ct4`** (M13; `_ctoff`/`_vcal` untouched). Imaging,
+clustering, Q/L and calib dumps are **deliberately not re-run yet** — those, and
+whether the §8.12 convention drift velocity (1.586) should likewise revert toward
+the physical value (§8.10, 1.566–1.568) now that the anode is no longer clock-pinned,
+are **open, pending a separate velocity decision**. The `_ct4` dirs therefore hold
+only `protodune-sp-dnnroi-frames-anode{0..7}.tar.bz2` (gauss + raw + wiener).
 
 ## References
 

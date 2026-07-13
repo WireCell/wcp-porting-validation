@@ -1,5 +1,17 @@
 # PDVD TPC geometry & QLMatching fiducial volume
 
+> **Update 2026-07-13 — CRP anode plane geometry corrected + FV moved to the
+> shield plane.** The confirmed physical CRP stack (W collection fixed) is
+> W −3.2 mm→ V −10 mm→ U −3.2 mm→ **Shield** (shield 16.4 mm below W, the
+> drift-facing boundary of the active LAr). The wire file now carries the
+> physical U/V spacing (new `protodunevd-wires-larsoft-v6.json.bz2`: U at
+> 340.23, V at 341.23, W 341.55 cm) and the QLMatching/clustering fiducial
+> anode edge is the **shield at ±339.91 cm** (`apa_plane` 0.4 mm → 16.4 mm),
+> superseding the 2026-07-12 U-plane (±341.51) choice below. NOT byte-identical;
+> see the dedicated `pdvd/docs/qlmatch/pdvd-crp-anode-plane-geometry.md` for the
+> full record, derivation, and the sanity reprocess. Numbers in the tables below
+> that read "0.2 mm steps / U-plane 341.51" are the pre-2026-07-13 state.
+
 > **Update 2026-07 — cathode correction applied.** The toolkit's legacy cathode
 > thickness (`cpa_thick = 50.8 mm`, a DocDB 203 / ProtoDUNE-SP copy — see §3) has
 > been **corrected to the GDML value `60.0 mm`**. Drift-facing cathode surface
@@ -76,7 +88,7 @@ All distances are |x| from the cathode centre (x = 0 in the WCT frame) unless no
 | Cathode thickness | 5.08 cm (legacy) → **6.0 cm** (corrected, `cpa_thick`=60 mm) | 5.08 cm | **6.0 cm** (`CathodeBlock` x, GDML L12778-79) |
 | Effective drift distance (W → cathode surface) | 339.01 cm (legacy) → **338.55 cm** (corrected) | 339.01 cm | **338.5 cm** (`CRMActive` box x, GDML L1201; ≈341.55−3.0) |
 | Drift speed | reco 1.57 → **1.568 mm/µs** (corrected, `v ∝ D`; A–C crossers) | 0.16 cm/µs base default | sim **1.473 mm/µs** (`simparams.jsonnet:12`); Efield **500 V/cm** (GDML `volTPCActive` aux) |
-| U / V / W plane x-stacking | W at 341.55, V 341.53, U 341.51 (0.2 mm steps; PCB strips) | — | `CRMUPlane/VPlane/ZPlane` 0.02 cm thick (GDML L1206-1224) |
+| U / V / W plane x-stacking | **PHYSICAL (2026-07-13, wires v6):** W 341.55 (fixed), V 341.23 (W−3.2 mm), U 340.23 (W−13.2 mm), Shield 339.91 (W−16.4 mm, no wires). *Pre-fix v5 was W/V/U at 341.55/341.53/341.51, 0.2 mm steps.* | — | `CRMUPlane/VPlane/ZPlane` 0.02 cm thick (GDML L1206-1224); GDML physical-spacing update deferred (see qlmatch/pdvd-crp-anode-plane-geometry.md) |
 | Y extent | y ∈ [−342, 342] cm rough box (`bounds`, `params.jsonnet:100-103`); wire y ±336.4 | y ±336.4 cm, per-CRP split at \|y\|=0.6 cm | CRM module y = 168.5 cm; 4 rows at y = ±252.75, ±84.25 (GDML posTPC) → full ±337 |
 | Z extent | z ∈ [0, 304] cm rough box | bottom [0.855, 298.445], top [−0.36, 300.0] cm | CRM module z = 149.65 cm; 2 columns at z = ±74.825 |
 | nticks (readout) | **6000** (data, `params.jsonnet:117`) | — | **6400** (sim, `simparams.jsonnet:22`) |
@@ -246,7 +258,12 @@ reprocessed, QtoL refit 0.082→0.070 (`ql-scan-findings.md` §8,
 
 For when QLMatching is wired into PDVD, the geometry inputs are:
 
-- `anode_x = ±341.55 cm` (W collection plane; blob `xorig`), sign per drift side.
+- `anode_x` = the QLMatching u=0 origin = `inner_bounds` box anode edge (NOT the
+  blob `xorig`). As of 2026-07-13 this is the **shield plane, ±339.91 cm**
+  (`apa_plane` = 16.4 mm); pre-fix it was the U plane ±341.51 cm. The blob
+  `xorig` (collection W, ±341.55 cm) is the imaging x-anchor and is a separate
+  quantity — so anode-touching charge reconstructs at u = −16.4 mm relative to
+  the shield origin. Sign per drift side.
 - `cathode_x = 0` (central cathode).
 - `u_cathode ≈ 338.55 cm` (corrected WCT drift distance; = GDML `CRMActive` 338.5
   to 0.05 cm — the cathode surface now sits at |x|=3.0 cm, §3).

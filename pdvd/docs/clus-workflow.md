@@ -276,7 +276,15 @@ reconstructed drift x-span obeys `S = drift_speed · Δt = D · (v_reco / v_true
 hence `v_true = v_reco · D / S`.  The x-span is offset-independent (`xorig`
 cancels), so only the two endpoints matter.
 
-**Geometry (`params.jsonnet` + `protodunevd-wires-larsoft-v5` store).**  Unlike
+**Geometry (`params.jsonnet` + `protodunevd-wires-larsoft-v6` store).**
+> **2026-07-13:** the U/V readout layers were moved to their **physical** CRP
+> spacing (v6 wire file): |x| = **340.23 / 341.23 / 341.55 cm** (U / V / W;
+> W fixed), i.e. U−V 10 mm and V−W 3.2 mm, plus a shield plane 3.2 mm beyond U at
+> 339.91 cm (no wires) now used as the FV anode edge. The "0.2 mm apart" text
+> below is the pre-fix v5 description. See
+> `qlmatch/pdvd-crp-anode-plane-geometry.md`.
+
+Unlike
 PDHD, the U/V/W readout layers are at |x| = 341.51 / 341.53 / 341.55 cm — only
 **0.2 mm apart** in x, because the VD CRP is a *PCB-strip* anode (U/V/Z etched on
 stacked PCB layers), not spaced wire planes.  (For contrast, PDHD's three *wire*
