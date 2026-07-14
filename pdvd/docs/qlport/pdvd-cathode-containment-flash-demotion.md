@@ -276,13 +276,18 @@ owner's call (this doc does not propose one). To isolate/confirm the effect:
 
 ## 10. Applied study: 2 cm anode pull + cathode cushion 1.2 → 2.0 cm
 
-> **Status: TRIAL values, NOT byte-identical.** The two knobs below are passed
-> ONLY for this tagged study (tag `pull2c2`); the committed defaults are
-> unchanged (extra offset 0, `cathode_ext1` null → C++ +1.2 cm) and the
-> knob-OFF compiled config is byte-identical (proof below). These values were
-> chosen to fit the two hand labels of §1 — they are **not** validated for
-> production and must not become a default without the census (§9.2) and a
-> full-manifest A/B.
+> **Status: adopted as PDVD processing default 2026-07-14 (owner decision);
+> NOT byte-identical; census + A/B still OPEN.** The two knobs were first run
+> ONLY for the tagged study (tag `pull2c2`, knob-OFF compiled config proven
+> byte-identical). On 2026-07-14 the owner made both the **runner** production
+> default for **all** PDVD runs (`run_clus_evt.sh`: `PDVD_QL_EXTRA_OFFSET_US`
+> defaults 13.507 µs, `PDVD_QL_CATHODE_EXT1_CM` defaults 2.0 cm — set to 0 /
+> 1.2 to recover the pre-study path). The toolkit `qlmatching.jsonnet` default
+> stays null (byte-identical) — the runner is where PDVD processing turns them
+> on. **These remain TRIAL values fit to the two hand labels of §1, not
+> census-pinned**: the pull magnitude should ultimately equal the
+> census-measured offset (§9.2), and the wider cushion + global pull still owe
+> a full-manifest A/B. Revisit the default once the census lands.
 
 ### 10.1 What was changed (two default-OFF knobs)
 

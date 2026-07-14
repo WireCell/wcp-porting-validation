@@ -217,8 +217,13 @@ PY
         # (preserving the per-crate BDE/TDE metadata skew, unlike the absolute
         # PDVD_TRIGGER_OFFSET_US override).  Larger trigger_offset => smaller u
         # (du/dtrig = -v), i.e. a toward-ANODE charge-placement pull; +13.507 us
-        # = 2.0 cm at v=0.148073.  Default 0 => unchanged offsets.
-        local QL_EXTRA_OFF=${PDVD_QL_EXTRA_OFFSET_US:-0}
+        # = 2.0 cm at v=0.148073.
+        # PRODUCTION DEFAULT 13.507 us (2 cm) as of 2026-07-14 for ALL PDVD runs
+        # (run 039252 evt298567 cathode-crosser study, docs/qlport/
+        # pdvd-cathode-containment-flash-demotion.md §10).  TRIAL value fit to two
+        # hand labels, NOT census-pinned -- set PDVD_QL_EXTRA_OFFSET_US=0 to
+        # recover the pre-study (metadata-only) offsets.
+        local QL_EXTRA_OFF=${PDVD_QL_EXTRA_OFFSET_US:-13.507}
         TRIGGER_OFFSET_BOT_US=$(python3 -c "print(${META_BOT:-0} + ${RUN_OFF:-0} + ${QL_EXTRA_OFF:-0})")
         TRIGGER_OFFSET_TOP_US=$(python3 -c "print(${META_TOP:-0} + ${RUN_OFF:-0} + ${QL_EXTRA_OFF:-0})")
         if [ -n "${PDVD_TRIGGER_OFFSET_US:-}" ]; then
@@ -283,12 +288,13 @@ PY
         QL_CONTAIN=false; QL_MINPE=100
     fi
     # PDVD_QL_CATHODE_EXT1_CM: cathode-side containment tolerance (cm) past the
-    # cathode.  Unset => -S omitted => wct-clustering/qlmatching keep the C++
-    # default +1.2 cm and the compiled config is byte-identical.
-    local QL_CATHEXT1_ARG=()
-    if [ -n "${PDVD_QL_CATHODE_EXT1_CM:-}" ]; then
-        QL_CATHEXT1_ARG=(-S "ql_cathode_ext1_cm=${PDVD_QL_CATHODE_EXT1_CM}")
-    fi
+    # cathode.  PRODUCTION DEFAULT 2.0 cm as of 2026-07-14 for ALL PDVD runs
+    # (widened from the C++ +1.2 cm; run 039252 evt298567 study, docs/qlport/
+    # pdvd-cathode-containment-flash-demotion.md §10).  Set
+    # PDVD_QL_CATHODE_EXT1_CM=1.2 to recover the pre-study C++ tolerance.  The
+    # toolkit qlmatching.jsonnet default stays null (byte-identical) -- this
+    # runner is where PDVD processing turns the wider cushion on.
+    local QL_CATHEXT1_ARG=(-S "ql_cathode_ext1_cm=${PDVD_QL_CATHODE_EXT1_CM:-2.0}")
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \
