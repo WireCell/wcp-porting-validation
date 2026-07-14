@@ -8,6 +8,13 @@
 > the **shield ±339.91 cm**, not the U plane. See
 > `pdvd-crp-anode-plane-geometry.md` for the current record. The examination logic
 > below (anode/time consistency method) still holds; only the plane x-numbers move.
+>
+> **CURRENT RESULT: §8.14 (2026-07-13)** redoes the anode/W-signal examination
+> under *both* current config changes — `ctoffset` reverted to **+4 µs** (§8.13)
+> and the FV anode edge at the **shield plane ±339.91 cm** (v6). Headline: the
+> W-plane collection signal reconstructs to ≈ the shield boundary (symmetric
+> BDE/TDE), the 3-D imaging endpoint trails it by ~1 cm (threshold clipping).
+> Read §8.14 first; §8.11/§8.12 (ctoffset −5.5 µs, U-plane FV) are superseded.
 
 **Date**: 2026-07-12.  **Toolkit**: branch `apply-pointcloud` @ `1bc0b025`.
 **Data**: run 039252, 18 events (`pdvd/work/039252_{0..17}/calib-evt*.json`,
@@ -1746,6 +1753,199 @@ whether the §8.12 convention drift velocity (1.586) should likewise revert towa
 the physical value (§8.10, 1.566–1.568) now that the anode is no longer clock-pinned,
 are **open, pending a separate velocity decision**. The `_ct4` dirs therefore hold
 only `protodune-sp-dnnroi-frames-anode{0..7}.tar.bz2` (gauss + raw + wiener).
+
+## 8.14 — 2026-07-13: redo under the reverted ctoffset +4 µs AND the shield FV
+
+Owner request: with **both** current config changes in place — (a) `ctoffset`
+reverted to **+4 µs** (§8.13) and (b) the FV anode boundary at the CRP **shield
+plane ±339.91 cm** (v6 wire file; `params.jsonnet` `apa_plane=16.4 mm`,
+`clus.jsonnet` `FV_x=∓3399.1`) — redo the anode examination: **compare the
+W-plane (collection) signal stop to the anode FV boundary, and report the 3-D
+imaging endpoint of the same tracks alongside it.**
+
+**Frame.** All u below are cm with **u = 0 at the shield FV anode boundary**
+(`geometry.anode_x = ±339.91`, read from each dump — so the whole scan
+auto-adopts the shield edge). On this axis the **W collection wire plane**
+(imaging x-anchor) sits at **u = −1.64** and the cathode surface at
+**u = +336.91**. Positive u = into the drift volume (toward cathode).
+
+**Data — no reprocess needed for run 039252.** The current `_v153` tag (18 evts,
+run 039252) already *is* this configuration and carries calib dumps: its
+DNN-ROI frames are the **+4 µs** production (verified directly, not by mtime —
+the gauss peak sits on the raw collection-pulse rising edge, `d ≈ +1.3 µs` BDE /
++2.6 µs TDE, the +4 signature of §8.13's `raw_decon_alignment_plots.md`), and
+its imaging/clustering carry the shield FV (`anode_x=±339.91`), v6 wires and
+v = 1.53. (The 14:2x frame mtimes predate the 15:08 revert *commit* but were
+written from the already-+4 working tree — mtime-vs-commit is not a reliable
+ctoffset probe; the `d`-measurement is.) Runs 039253 (18) / 039349 (84) had only
++4 frames → imaged + clustered onto them here (`_v153`, no SP regen; §8.14.4).
+
+### Repro
+
+```bash
+cd pdvd/docs/qlmatch
+python3 check_anode_stop_ensemble.py --tag v153 --sample bundles --margin 3    # tight toucher gate
+python3 check_anode_stop_ensemble.py --tag v153 --sample bundles --margin 4.5
+python3 check_anode_stop_ensemble.py --tag v153 --sample bundles --margin 12   # unbiased; take histogram PEAK
+python3 check_anode_time_consistency.py --tag v153                             # A' unbiased 3-D imaging edge
+
+# §8.14.4 run-independence: image+cluster the existing +4 frames for 039253/039349
+# (no SP/DNN regen), then the same ensemble per run:
+cd ../../../pdvd    # wcp-porting-img/pdvd
+PDVD_MAX_JOBS=6 OMP_NUM_THREADS=8 ./run_img_evt.sh  -d on -O v153 039253 all
+PDVD_MAX_JOBS=6 OMP_NUM_THREADS=8 ./run_clus_evt.sh -s v153 -calib   039253 all
+#   (repeat for 039349); then
+cd docs/qlmatch
+python3 check_anode_stop_ensemble.py --run 039253 --tag v153 --sample bundles --margin 12
+python3 check_anode_stop_ensemble.py --run 039349 --tag v153 --sample bundles --margin 12
+```
+
+`--sample bundles` (auto-selected span≥30 bundles, uid-independent) is mandatory:
+the `_v153` re-clustering renumbers uids, so the `decisions-*` files are stale —
+**the decisions-based checks A/B/C/D in `check_anode_time_consistency.py` are
+invalid here (they mis-key clusters → nonsense +60…+680 cm medians); only the
+uid-independent A′/B′ scans and the bundle-scan ensemble are used.** The
+"same tracks" comparison is satisfied per-bundle (the ensemble measures the
+3-D imaging endpoint and the W signal stop on the *same* cluster).
+`check_anode_stop_ensemble.py` gained an `img` (3-D endpoint) summary column
+alongside `gauss`/`raw`, and its stale "0 = grid plane" label now reads shield.
+
+### 8.14.1 Per-side numbers (run 039252, `_v153`)
+
+W-plane signal stop and 3-D imaging endpoint, per side, vs the shield boundary.
+The absolute median **slides with the toucher gate** (looser gate admits deeper
+ends — the §5.1/§8.11 selection circularity), so three gates are shown; the
+gate-free number is the **paired per-track difference** in §8.14.2.
+
+| gate (img-end ≤) | quantity | bot median | top median | bot–top |
+|---|---|---|---|---|
+| 3 cm | 3-D imaging endpoint | +0.32 | +0.35 | −0.02 |
+|      | W gauss signal stop  | −0.50 | −0.72 | +0.22 |
+|      | W raw signal stop    | −0.83 | −1.14 | +0.31 |
+| 4.5 cm | 3-D imaging endpoint | +1.45 | +1.24 | +0.21 |
+|        | W gauss signal stop  | +0.34 | +0.40 | −0.06 |
+|        | W raw signal stop    | +0.26 | +0.26 | −0.01 |
+| 12 cm | 3-D imaging endpoint | +1.62 | +1.49 | +0.13 |
+|       | W gauss signal stop  | +0.49 | +0.79 | −0.30 |
+|       | W raw signal stop    | +0.49 | +0.66 | −0.17 |
+
+**Reading.** Across gates the **W-plane collection signal reconstructs to
+essentially the shield FV boundary** — the gauss stop sits within ~0.5–0.8 cm of
+u = 0 (i.e. ~1 cm cathode-ward of the W wire plane at u = −1.64, ~at the shield),
+**symmetric across BDE/TDE** (all median splits ≤ 0.3 cm). The 3-D imaging
+endpoint median sits ~1–1.5 cm into the volume, also symmetric.
+
+### 8.14.2 The gate-independent result — imaging clips ~1 cm of anode-ward signal
+
+The paired per-track difference (same cluster, W gauss/raw stop vs its own 3-D
+imaging endpoint) does **not** depend on the toucher gate (margin 12, n = 197):
+
+| | bot | top | both |
+|---|---|---|---|
+| median(img_end − gauss_stop) | +0.50 | +0.50 | **+0.50** |
+| median(img_end − raw_stop)   | +1.00 | +1.00 | **+1.00** |
+
+The **3-D imaging endpoint sits ~0.5 cm (vs gauss) / ~1.0 cm (vs raw)
+cathode-ward of the W-plane signal stop**: imaging drops the last ~1 cm of
+anode-ward collection charge (threshold clipping of the final blob), identically
+on both crates. This is the direct answer to "W signal vs imaging endpoint" and
+the §8.9 observation ("raw extends ~0.5–1 cm beyond the imaging end") now
+quantified run-wide.
+
+### 8.14.3 A′ vs the ensemble — the imaging-endpoint MODE is per-side asymmetric
+
+The unbiased A′ 3-D imaging edge (histogram peak, ±12 cm window) and the
+trace-cleaned ensemble **peak** agree exactly:
+
+| | A′ peak / core-median | ensemble peak / core-median |
+|---|---|---|
+| img bot | +3.5 / +2.62 | +3.5 / +2.64 |
+| img top | −1.5 / −0.96 | −1.5 / −0.99 |
+
+So the ~5 cm bot–top split in the imaging-endpoint **mode is real** (it survives
+corridor-trace cleaning — not an A′ window artefact). Yet three things say it is
+an **imaging-level** effect, not a signal/time/geometry one:
+
+1. the **W signal stop is symmetric** (gauss median bot +0.49 / top +0.79;
+   §8.14.1) — the underlying charge reconstructs the same on both crates;
+2. the imaging-endpoint **median is symmetric** (+1.62 / +1.49) — the asymmetry
+   lives in the distribution shape (bot peaked deep with an anode tail; top
+   peaked shallow with a cathode tail), i.e. in where the 3-view tiling / PCA end
+   lands, not in a bulk shift;
+3. common-mode check: the −5.5 µs/U-plane A′ (§8.11: bot +0.22 / top +0.90),
+   shifted for +4 µs (signal moves **deeper**, +1.49 cm) and the U→shield reframe
+   (−1.60 cm), predicts +4/shield ≈ **bot +0.11 / top +0.79**; measured A′
+   core-medians are **bot +2.62 / top −0.96** — bot +2.5 cm deeper, top −1.8 cm
+   shallower than common-mode. Since `_v153` is the **only v6 dataset** (the −5.5
+   runs were v5), v6 imaging is the prime suspect for the bottom-deep/top-shallow
+   endpoint-mode split. **Open** — an imaging-endpoint study, not a timing/FV
+   issue (the W signal it is built from is symmetric).
+
+### 8.14.4 Run-independence — 039253 (18) + 039349 (84)
+
+Runs 039253 (18 evts) and 039349 (84 evts) had only the +4 µs DNN-ROI frames;
+they were imaged + clustered onto those existing frames into `039253_*_v153` /
+`039349_*_v153` (v6 wires, shield FV, v = 1.53, `-calib`; **no SP/DNN regen** —
+same +4 frames), then run through the identical `--sample bundles --margin 12`
+ensemble. (Re-clustering is deterministic: re-running clustering on run 039252
+reproduced its medians to the last digit, so the pooled numbers are stable.)
+
+**Ensemble medians, per side, vs the shield FV boundary (u = 0):**
+
+| run (n bot/top) | gauss bot | gauss top | raw bot | raw top | img bot | img top |
+|---|---|---|---|---|---|---|
+| 039252 (82/115) | +0.49 | +0.79 | +0.49 | +0.66 | +1.62 | +1.49 |
+| 039253 (77/112) | +0.24 | +0.30 | −0.06 | +0.02 | +1.16 | +1.40 |
+| 039349 (274/367) | −0.02 | −0.34 | −0.17 | −0.57 | +0.96 | +0.76 |
+
+**Paired per-track clip, median(img_end − gauss_stop):**
+
+| run | bot | top |
+|---|---|---|
+| 039252 | +0.50 | +0.50 |
+| 039253 | +1.00 | +0.50 |
+| 039349 | +0.50 | +0.50 |
+
+**Two results reproduce cleanly; one does not.**
+
+1. **The W collection signal stops at the shield FV boundary, on both crates,
+   in every run.** All gauss medians lie within ~0.8 cm of u = 0; the largest,
+   statistically-strongest run 039349 (n = 641) centers essentially *on* the
+   boundary (bot −0.02 / top −0.34). BDE–TDE splits stay ≤ 0.4 cm throughout.
+   The §8.14.1/§8.14.5 headline — shield edge = reconstructable collection edge
+   — is **run-independent**.
+2. **Imaging trails the signal by ~0.5–1 cm**, run-independently (paired
+   median(img − gauss) = +0.50 to +1.00 cm across all three runs, both sides).
+   The §8.14.2 clip is not a run-039252 accident.
+3. **The imaging-endpoint per-side *mode* asymmetry (§8.14.3) does NOT reproduce
+   with a consistent sign.** The histogram peak of the 3-D endpoint is bot-deep
+   / top-shallow in 039252 (bot +3.5 / top −1.5) and 039349 (bot +3.5 /
+   top −1.5) but **flips** in 039253 (bot +0.5 / top +3.5). A physical
+   timing/geometry offset would be run-independent *and* same-signed; a
+   sign-flipping mode is a distribution-shape (imaging-level) effect, exactly as
+   §8.14.3 argued from the symmetric medians and symmetric W signal. This
+   **strengthens** the §8.14.3 conclusion: the endpoint-mode split is a v6-era
+   3-view-tiling artefact, not an anode/time/FV problem.
+
+### 8.14.5 Verdict
+
+Basis: **120 events across 3 runs** (039252/039253/039349), auto-selected
+span ≥ 30 cm anode-toucher bundles, `--sample bundles` (uid-independent).
+
+- **The FV anode edge (shield ±339.91) is well-placed**: the reconstructed
+  W-plane collection signal for genuine anode-touchers stops right at it (within
+  ~0.5–0.8 cm), on both crates, **in every run** (§8.14.4) — the largest run
+  039349 centers on u = 0 to −0.3 cm. The 3-D imaging endpoint trails it by
+  ~0.5–1 cm (threshold clipping), also symmetric and run-independent.
+- **`anode_ext1/2 = [−2, +4] cm` about u = 0 still bracket the reconstructable
+  anode band sensibly** (signal at ≈0, imaging at ≈+1). No cushion change is made
+  here — retune remains an **open owner decision** (§8.4/§8.8), now with less
+  motivation since u = 0 tracks the reconstructable edge under +4 µs.
+- One **open imaging-level item**: the per-side asymmetry of the imaging-endpoint
+  *mode* (§8.14.3), a v6-era effect on the 3-view endpoint distribution, not on
+  the (symmetric) W signal, times, or geometry. The multi-run scan (§8.14.4)
+  reinforces this: the mode's per-side sign is **not stable across runs** (it
+  flips in 039253), which a physical offset could not do.
 
 ## References
 

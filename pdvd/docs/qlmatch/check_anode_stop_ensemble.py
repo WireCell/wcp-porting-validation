@@ -291,7 +291,8 @@ def main():
             if span >= 30.0:
                 yield uid, gid
 
-    acc = {"gauss": {"bot": [], "top": []}, "raw": {"bot": [], "top": []}}
+    acc = {"gauss": {"bot": [], "top": []}, "raw": {"bot": [], "top": []},
+           "img": {"bot": [], "top": []}}
     excl = {}
     rows = []
     seen = set()
@@ -317,23 +318,25 @@ def main():
                     continue
                 acc["gauss"][out["side"]].append(out["u_gauss"])
                 acc["raw"][out["side"]].append(out["u_raw"])
+                acc["img"][out["side"]].append(out["end_u"])
                 rows.append((ev, uid, out["side"], out["end_u"],
                              out["u_gauss"], out["u_raw"], out["dt0"]))
 
-    print("== per-track W-plane anode signal stops (u cm; 0 = grid plane, "
-          "+ = into volume) ==")
+    print("== per-track anode ends (u cm; 0 = shield FV anode boundary "
+          "|x|=339.91cm, + = into volume toward cathode) ==")
     for ev, uid, side, eu, ug, ur, dt0 in rows:
         print("  evt%s uid %-8d %s | img end %+5.2f | gauss %+5.2f | raw %+5.2f "
               "| dt0 %+d" % (ev, uid, side, eu, ug, ur, dt0))
     print("\n== exclusions ==")
     for k, v in sorted(excl.items()):
         print("  %-28s %d" % (k, v))
-    print("\n== SUMMARY: W-plane-only anode signal stop, per side ==")
-    for kind in ("gauss", "raw"):
+    print("\n== SUMMARY: anode ends per side (u=0 = shield FV boundary) ==")
+    print("   img = 3-D imaging endpoint; gauss/raw = W-plane signal stop")
+    for kind in ("img", "gauss", "raw"):
         for side in ("bot", "top"):
             print("  %-5s %s : %s" % (kind, side, stats(acc[kind][side])))
     print("  --")
-    for kind in ("gauss", "raw"):
+    for kind in ("img", "gauss", "raw"):
         d = acc[kind]["bot"] and acc[kind]["top"]
         if d:
             mb = np.median([x for x in acc[kind]["bot"] if np.isfinite(x)])
@@ -341,7 +344,7 @@ def main():
             print("  %-5s bot-top median split : %+.2f cm" % (kind, mb - mt))
 
     json.dump({kind: {s: acc[kind][s] for s in ("bot", "top")}
-               for kind in ("gauss", "raw")},
+               for kind in ("img", "gauss", "raw")},
               open(os.path.join(HERE, "anode_stop_ensemble.json"), "w"), indent=1)
 
 

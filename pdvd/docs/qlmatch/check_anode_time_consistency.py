@@ -272,15 +272,15 @@ def main():
         print("  %s  %9.3f %9.3f  %7.3f  %5.2f" % (ev, ob, ot, dl, dx))
     print("\n# mode: %s\n" % mode)
 
-    print("== A. boundary-track anode-end u (cm; 0 = grid-plane anode edge, "
-          "+ = into volume) ==")
+    print("== A. boundary-track anode-end u (cm; 0 = FV anode edge = dump "
+          "anode_x [shield +-339.91 for _v153], + = into volume) ==")
     for side in ("bot", "top"):
         print("  %s corrected: %s" % (side, stats(anode_u[side])))
         print("  %s dump-time: %s" % (side, stats(anode_u_raw[side])))
     print("  all corrected: %s" % stats(anode_u["bot"] + anode_u["top"]))
 
     print("\n== A'. UNBIASED edge scan: all auto bundles span>=30cm, PCA-end u "
-          "within +-12 cm of the anode face (0 = grid plane) ==")
+          "within +-12 cm of the anode face (0 = FV anode edge = dump anode_x) ==")
     for side in ("bot", "top"):
         print("  %s: %s" % (side, hist_line(edge_anode[side])))
 
