@@ -3,13 +3,16 @@
 **Repro**
 ```
 cd pdvd/docs/qlmatch
-OMP_NUM_THREADS=4 python3 crosser_drifttime_298651.py
-# writes track_298651_xyz.png, wdecon_298651_bot34.png,
-#        wdecon_298651_top169.png, driftprofile_298651.png and prints the table below
+OMP_NUM_THREADS=4 python3 crosser_drifttime_298651.py   # projections + W streaks + profiles
+python3 fit_endpoints_298651.py                         # erf endpoint fits (sanity check)
+# writes track_298651_xyz.png, wdecon_298651_{bot34,top169}.png,
+#        driftprofile_298651.png, endpoint_fits_298651.png
 ```
-Inputs: `pdvd/work/039252_6_v153/calib-evt298651.json` (Q/L calib dump, `drift_speed=0.153`)
-and the deconvolved SP frames `pdvd/work/039252_6/protodune-sp-dnnroi-frames-anode{0..7}.tar.bz2`
-(member `frame_gauss<N>_298651.npy`, 1536×10000, tick = 0.5 µs). Wire geometry
+Inputs: `pdvd/work/039252_6_v153/calib-evt298651.json` (Q/L calib dump, `drift_speed=0.153`),
+the deconvolved SP frames `pdvd/work/039252_6/protodune-sp-dnnroi-frames-anode{0..7}.tar.bz2`
+(member `frame_gauss<N>_298651.npy`, 1536×10000, tick = 0.5 µs), and — for the erf
+fits — the Magnify ROOT files `pdvd/work/039252_6/magnify-run039252-evt6-anode{1,4,5}-dnnroi.root`
+(`hw_gauss<N>`, from `run_sp_to_magnify_evt.sh -d 039252 6`). Wire geometry
 `protodunevd-wires-larsoft-v5.json.bz2`.
 
 ## Summary
@@ -123,6 +126,54 @@ failure the W-waveform read is meant to avoid.
 ![drift-time profiles](driftprofile_298651.png)
 
 The two W-corridor charge profiles: dashed = t_anode, dotted = t_cathode.
+
+## Endpoint fits (error-function edge model — sanity check)
+
+Repro: `python3 fit_endpoints_298651.py` → `endpoint_fits_298651.png`.
+
+To back the by-eye endpoint reads with a quantitative estimate, each start/end
+edge of the W gauss trace is fit with an **error function** — a charge step
+convolved with the smearing kernels, `S(t) = base + A/2 (1 ± erf((t−t0)/(√2 σ)))`
+— whose midpoint `t0` is the arrival tick of the end charge. The smearing is:
+
+- **software filter** (all edges): the gauss output uses HfFilter `Gaus_wide` =
+  exp(−½(f/σ_f)²), σ_f = 0.12 MHz (`sp-filters.jsonnet`), whose time kernel has
+  **σ_sw = 1/(2π σ_f) ≈ 2.64 ticks**;
+- **+ longitudinal diffusion** (cathode/end edges only — the anode-end charge has
+  ~zero drift): σ_x = √(D·t_drift), D = 6.5782 cm²/s → time via v →
+  **σ_diff ≈ 1.66 ticks**, so **σ_end = √(σ_sw²+σ_diff²) ≈ 3.12 ticks**.
+
+Channels (Magnify `hw_gauss`): bottom anode1 ch2674 (start) / ch2667 (end); top
+anode5 ch8874 (start) / ch8820 (end). Note the top anode-end charge sits on
+ch8874, wires the 3-D imaging did not assign — the same imaging-truncation the
+corridor method had to recover.
+
+![erf endpoint fits](endpoint_fits_298651.png)
+
+| edge | fitted t0 | fitted σ (free) | expected σ |
+|---|---|---|---|
+| bot start (ch2674) | 579.8 | 2.4 | 2.64 (sw) |
+| bot end (ch2667)   | 5160 (σ fixed) / 5170 (free) | 16 | 3.12 (sw⊕diff) |
+| top start (ch8874) | 592.2 | 1.8 | 2.64 (sw) |
+| top end (ch8820)   | 5157.5 | 4.3 | 3.12 (sw⊕diff) |
+
+The three sharp edges (both starts, top end) fit clean error functions with widths
+matching the expected **software** (starts, ~2.6 ticks) and **software⊕diffusion**
+(top end, ~3 ticks) smearing — validating both the model and the endpoint reads.
+The **bottom cathode edge** is instead a broad, roughly linear ramp (σ≈16) — an
+intrinsic drift-parallel track segment near the cathode, not a pure smeared step —
+so its end tick carries a ~10-tick ambiguity (5160–5170).
+
+Velocity from the fits (DFULL = 338.55 cm):
+
+- software/diffusion **fixed-σ** (as specified): bot 0.14783, top 0.14831 →
+  **mean 0.14807 cm/µs**;
+- **free-σ** (data-driven): bot 0.14752, top 0.14829 → mean 0.14791 cm/µs.
+
+Both agree with the by-eye **0.14777 cm/µs** to within ~0.3 %, confirming the
+hand-scanned endpoints (the fits nudge each start slightly later and each end
+slightly earlier — the smearing-corrected midpoints sit just inside the eyeball's
+baseline-crossing points — with near-cancelling effect on Δt).
 
 ## Validity checks
 
