@@ -10,10 +10,18 @@ our own pipeline products.
 
 ```bash
 cd pdvd
-# the numbers + figure in this doc (reads one calib dump, no wire-cell run):
+# §1-9 numbers + figure (reads one calib dump, no wire-cell run):
 python3 docs/qlport/analyze_cathode_containment.py
 #   input: work/039252_0/calib-evt298567.json   (Xe/175nm production dump)
 #   figure: docs/qlport/cathode_containment_298567.png
+
+# §10 applied study (2 cm anode pull + cathode cushion 2.0 cm), tag pull2c2.
+# Produce the 18 tagged variant dumps (canonical dumps untouched):
+for i in $(seq 0 17); do
+  PDVD_QL_EXTRA_OFFSET_US=13.507 PDVD_QL_CATHODE_EXT1_CM=2.0 \
+    ./run_clus_evt.sh -calib -s pull2c2 39252 $i
+done
+python3 docs/qlport/compare_pull2c2.py     # 18-event before/after census
 ```
 
 Companion: `docs/qlmatch/pdvd-light-charge-time-chain.md` (the light↔charge time
@@ -265,3 +273,99 @@ owner's call (this doc does not propose one). To isolate/confirm the effect:
 3. Only if (2) shows the overshoot is genuinely geometric slack (not a T0 error)
    would loosening `cathode_ext1` toward the 3 cm face be on the table — and that
    is a stop-and-ask, gated change, not something to tune here.
+
+## 10. Applied study: 2 cm anode pull + cathode cushion 1.2 → 2.0 cm
+
+> **Status: TRIAL values, NOT byte-identical.** The two knobs below are passed
+> ONLY for this tagged study (tag `pull2c2`); the committed defaults are
+> unchanged (extra offset 0, `cathode_ext1` null → C++ +1.2 cm) and the
+> knob-OFF compiled config is byte-identical (proof below). These values were
+> chosen to fit the two hand labels of §1 — they are **not** validated for
+> production and must not become a default without the census (§9.2) and a
+> full-manifest A/B.
+
+### 10.1 What was changed (two default-OFF knobs)
+
+Both levers already existed in the flash-placement term
+`flash_x_offset = sign·(flash_time + trigger_offset)·drift_speed`
+and the containment cut `last_u < u_cathode + cathode_ext1`:
+
+- **2 cm toward-anode pull** — an *additive* `+13.507 µs` on **both** crate
+  trigger offsets (`2.0 / 0.148073`). `du/d(trigger) = −v` on both volumes, so a
+  larger offset lowers `u` (toward the anode). Additive preserves the per-crate
+  BDE/TDE skew (unlike the absolute `PDVD_TRIGGER_OFFSET_US`). New runner knob
+  `PDVD_QL_EXTRA_OFFSET_US` (default 0).
+- **cathode cushion 1.2 → 2.0 cm** — `cathode_ext1 = 2.0 cm`, moving the
+  containment ceiling `u_cathode + cathode_ext1` from 338.11 → **338.91 cm**.
+  New toolkit knob `cathode_ext1` in `qlmatching.jsonnet` (default null → key
+  omitted → C++ +1.2), threaded through `wct-clustering.jsonnet`
+  (`ql_cathode_ext1_cm`) and the runner (`PDVD_QL_CATHODE_EXT1_CM`).
+
+**Byte-identical-OFF proof.** Compiled PDVD config (`do_qlmatch=true`, evt298567)
+with both knobs off, new code vs pre-change code: `diff` empty. `cathode_ext1`
+absent from the OFF config; present as `20` (2.0·wc.cm) only when on, with
+`trigger_offsets = [−2503821, −2483677]` ns (both pulled +13.507 µs, the
+~20.14 µs crate skew preserved) and `anode_ext*` still at C++ defaults.
+
+### 10.2 The two target crossers are fixed
+
+Re-running evt298567 with the knobs on, `bot:50`'s cathode end drops exactly
+340.60 → **338.60 cm** (−2.0 cm), now inside the widened 338.91 ceiling (the
+other three halves were already inside once pulled). All four bright-flash
+halves are now **contained**, and QLMatching's own final selection
+(`auto_selected`, the field the ql_scan viewer renders) converges both halves of
+each crosser onto its single bright coincident flash:
+
+| cluster | OFF `auto_selected` | ON `auto_selected` |
+|---|---|---|
+| `bot:50` | gid79  t=+666.3 PE=123  | **gid37  t=−1123.8 PE=5466** |
+| `top:60` | gid55  t=−436.9 PE=864  | **gid37  t=−1123.8 PE=5466** |
+| `bot:8`  | gid47  t=−813.4 PE=1688 | **gid41  t=−980.5 PE=5679** |
+| `top:63` | gid70  t=+260.7 PE=5860 | **gid41  t=−980.5 PE=5679** |
+
+(Note: the *current* canonical dump matched these halves to scattered flashes
+79/55/47/70 — not the 38/42 seen in an earlier display state; the canonical set
+was regenerated in the §8.14 shield-FV redo since. Either way the OFF matching
+split each crosser across two flashes; the ON matching pairs both halves on one
+bright flash — the physically-correct outcome for a cathode crosser.)
+
+### 10.3 The global cost is large — this is a case-check, not a validation
+
+The pull is a **global** registration change: shifting every cluster's x by
+2 cm re-optimizes the coupled LASSO, so it re-matches far more than the two
+targets. Across all 18 candle events (`compare_pull2c2.py`):
+
+- **1152 of ~2100 auto_selected clusters (~55%) change their matched flash**;
+  only **532** move to a *brighter* flash (brightness is not the quality metric
+  — chi2/KS shape is — so this neither confirms nor refutes the re-matches).
+- Total matched-bundle count and contained-bundle count barely move
+  (sel ±3/event; contained ±20 of ~7000): the knobs **reshuffle** assignments,
+  they don't add/remove many matches. The cushion's own effect on containment is
+  small; the **pull dominates the churn**.
+
+So the 18-event `pull2c2` display shows whether the *target* crossers land
+correctly (they do) — but it does **not** establish that the other ~55% of
+re-matches are improvements. That verdict needs the hand-scan of the display
+plus the two things this study deliberately does not do:
+
+1. **Disentangle** pull-only vs cushion-only (two more tagged runs) — is the
+   churn the geometric cushion or the time pull?
+2. The **census** (§9.2) to pin the *true* offset (the pull magnitude should
+   equal it, not be sized to `bot:50`), the per-crate velocity split, and the
+   residual cushion; then a **full-manifest byte-identical A/B** before any
+   default changes. A pull larger than the true offset pushes anode-touching
+   tracks past the −3.0 cm anode floor (up to ~19–26 clusters/event sit within
+   3 cm of the anode), trading cathode-side gains for anode-side losses.
+
+### 10.4 How to view
+
+Canonical shield-FV dumps are untouched (`work/039252_<idx>/`); the variant is a
+separate tagged set (`work/039252_<idx>_pull2c2/`, symlinked imaging inputs).
+Serve it as its own display instance so its labels stay apart:
+
+```
+cd wcp-porting-img/pdvd
+./ql_scan/serve_ql_scan.sh 5019 --tag pull2c2 work/039252_*_pull2c2/calib-evt*.json
+# then from the laptop:  ssh -L 5019:localhost:5019 user@wcgpu1
+#                        http://localhost:5019/ql_scan_viewer
+```

@@ -74,6 +74,11 @@ function(
     // joint QLMatching (per-input drift_speeds) get the same per-side values.
     drift_speed_bot_mmus = null,
     drift_speed_top_mmus = null,
+    // Q/L cathode-side containment tolerance in CM (how far past the cathode a
+    // drift end may reach and still count contained; C++ default +1.2 cm).
+    // null => key omitted => C++ default => compiled config byte-identical.
+    // Set only for the anode-pull / cushion study (run 039252 evt298567).
+    ql_cathode_ext1_cm = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -158,7 +163,10 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                                       || drift_speed_top == null
                                       || drift_speed_bot == drift_speed_top
                                    then null
-                                   else [drift_speed_bot, drift_speed_top]);
+                                   else [drift_speed_bot, drift_speed_top],
+                      // null => qlmatching omits the key => C++ default +1.2 cm.
+                      cathode_ext1=if ql_cathode_ext1_cm == null then null
+                                   else ql_cathode_ext1_cm * wc.cm);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

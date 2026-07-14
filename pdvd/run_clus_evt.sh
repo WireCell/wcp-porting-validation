@@ -14,10 +14,13 @@
 #   PDVD_DRIFT_SPEED_BOT_MMUS / PDVD_DRIFT_SPEED_TOP_MMUS
 #                                per-side drift speeds in mm/us (bottom =
 #                                anodes 0-3, top = 4-7).  Unset => the
-#                                CALIBRATED default 1.586 (cathode-pinned
-#                                convention velocity, docs/qlmatch/
-#                                pdvd-anode-time-consistency.md 8.12; the
-#                                toolkit default stays the legacy 1.568).
+#                                default 1.48073 (= 0.148073 cm/us, the A<->C
+#                                crosser W-decon measurement, run 039252
+#                                evt 298651, docs/qlmatch/
+#                                pdvd-drift-crosser-298651.md, 2026-07-13;
+#                                superseded 1.53 FR-Argon which superseded the
+#                                1.586 cathode-pinned convention; the toolkit
+#                                default stays the legacy 1.568).
 #                                Set to 'null' for the legacy value.
 #   PDVD_TRIGGER_OFFSET_US=<us>  override the light<->charge time-base offset
 #                                (BOTH crates; diagnostics only)
@@ -210,8 +213,14 @@ PY
             RUN_OFF=$(awk -v r="$RUN_STRIPPED" '$1+0==r+0{print $2}' "$PDVD_DIR/data/ql_trigger_offset.txt" | head -1)
             RUN_OFF=${RUN_OFF:-0}
         fi
-        TRIGGER_OFFSET_BOT_US=$(python3 -c "print(${META_BOT:-0} + ${RUN_OFF:-0})")
-        TRIGGER_OFFSET_TOP_US=$(python3 -c "print(${META_TOP:-0} + ${RUN_OFF:-0})")
+        # PDVD_QL_EXTRA_OFFSET_US: an ADDITIVE common pull applied to BOTH crates
+        # (preserving the per-crate BDE/TDE metadata skew, unlike the absolute
+        # PDVD_TRIGGER_OFFSET_US override).  Larger trigger_offset => smaller u
+        # (du/dtrig = -v), i.e. a toward-ANODE charge-placement pull; +13.507 us
+        # = 2.0 cm at v=0.148073.  Default 0 => unchanged offsets.
+        local QL_EXTRA_OFF=${PDVD_QL_EXTRA_OFFSET_US:-0}
+        TRIGGER_OFFSET_BOT_US=$(python3 -c "print(${META_BOT:-0} + ${RUN_OFF:-0} + ${QL_EXTRA_OFF:-0})")
+        TRIGGER_OFFSET_TOP_US=$(python3 -c "print(${META_TOP:-0} + ${RUN_OFF:-0} + ${QL_EXTRA_OFF:-0})")
         if [ -n "${PDVD_TRIGGER_OFFSET_US:-}" ]; then
             TRIGGER_OFFSET_BOT_US="$PDVD_TRIGGER_OFFSET_US"
             TRIGGER_OFFSET_TOP_US="$PDVD_TRIGGER_OFFSET_US"
@@ -223,7 +232,7 @@ PY
             TRIGGER_OFFSET_BOT_US=0
             TRIGGER_OFFSET_TOP_US=0
         fi
-        echo "Trigger offsets: bot=${TRIGGER_OFFSET_BOT_US} top=${TRIGGER_OFFSET_TOP_US} us (metadata ${META_BOT}/${META_TOP} + run table ${RUN_OFF})"
+        echo "Trigger offsets: bot=${TRIGGER_OFFSET_BOT_US} top=${TRIGGER_OFFSET_TOP_US} us (metadata ${META_BOT}/${META_TOP} + run table ${RUN_OFF} + extra ${QL_EXTRA_OFF})"
 
         # Real readout window (post-resample SP frame length, 10000 ticks x
         # 0.5 us = 5 ms) for the window-truncation flag.
@@ -273,6 +282,13 @@ PY
     if [ "${PDVD_QL_DIAG:-0}" = 1 ] || [ "${PDVD_QL_DIAG:-0}" = 2 ]; then
         QL_CONTAIN=false; QL_MINPE=100
     fi
+    # PDVD_QL_CATHODE_EXT1_CM: cathode-side containment tolerance (cm) past the
+    # cathode.  Unset => -S omitted => wct-clustering/qlmatching keep the C++
+    # default +1.2 cm and the compiled config is byte-identical.
+    local QL_CATHEXT1_ARG=()
+    if [ -n "${PDVD_QL_CATHODE_EXT1_CM:-}" ]; then
+        QL_CATHEXT1_ARG=(-S "ql_cathode_ext1_cm=${PDVD_QL_CATHODE_EXT1_CM}")
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \
@@ -291,8 +307,9 @@ PY
         -A "light_model=${PDVD_LIGHT_MODEL:-library}" \
         -S "ql_require_containment=${QL_CONTAIN}" \
         -S "ql_flash_minpe=${QL_MINPE}" \
-        -S "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.586}" \
-        -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.586}" \
+        -S "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.48073}" \
+        -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.48073}" \
+        "${QL_CATHEXT1_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
