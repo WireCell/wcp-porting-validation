@@ -36,7 +36,14 @@ local FULLSTREAM_SAMPLES = 468864;
 function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
          offset_bot_us=null, offset_top_us=null,
          cath_thresh=3.7, mem_thresh=4.0, pmt_thresh=2.2,
-         cath_ped_sigma=0.75, sat_pad=1024)
+         cath_ped_sigma=0.75, sat_pad=1024,
+         // Drop OpHits overlapping a DAPHNE 14-bit rail (+- sat_pad).
+         // Default true = legacy behavior, compiled config byte-identical.
+         // false keeps hits from railed pulses (clipped => PE underestimated
+         // instead of exactly 0).  See docs/qlmatch/
+         // pdvd-pd-mapping-investigation.md sec.6-7 (42% of bright flashes
+         // lose >=1 cathode channel to the veto).
+         veto_saturation=true)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -51,6 +58,7 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local mem_th = if std.type(mem_thresh) == 'string' then std.parseJson(mem_thresh) else mem_thresh;
   local pmt_th = if std.type(pmt_thresh) == 'string' then std.parseJson(pmt_thresh) else pmt_thresh;
   local cath_ps = if std.type(cath_ped_sigma) == 'string' then std.parseJson(cath_ped_sigma) else cath_ped_sigma;
+  local veto_sat = if std.type(veto_saturation) == 'string' then std.parseJson(veto_saturation) else veto_saturation;
 
   // --- cathode branch (opch 10xx, continuous full streams) ---
   local cath_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=1000, opch_hi=1999, name='cath');
@@ -58,20 +66,20 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
                                    detect_saturation=true, saturation_pad=sat_pad_n);
   local cath_roi = flash.oproi(name='cath');
   local cath_hit = flash.ophit(name='cath', hit_threshold=cath_th, intag='decon_roi',
-                               fixed_ped_sigma=cath_ps, veto_saturation=true);
+                               fixed_ped_sigma=cath_ps, veto_saturation=veto_sat);
 
   // --- membrane XA branch (opch 20xx, snippets; top+bottom walls share
   //     sigma=1.0, the top-wall pickup sets the threshold) ---
   local mem_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=2000, opch_hi=2999, name='mem');
   local mem_decon = flash.opdecon(name='mem', wi_sigma=1.0,
                                   detect_saturation=true, saturation_pad=sat_pad_n);
-  local mem_hit = flash.ophit(name='mem', hit_threshold=mem_th, veto_saturation=true);
+  local mem_hit = flash.ophit(name='mem', hit_threshold=mem_th, veto_saturation=veto_sat);
 
   // --- PMT branch (opch 30xx, snippets) ---
   local pmt_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=3000, opch_hi=3999, name='pmt');
   local pmt_decon = flash.opdecon(name='pmt', wi_sigma=3.5,
                                   detect_saturation=true, saturation_pad=sat_pad_n);
-  local pmt_hit = flash.ophit(name='pmt', hit_threshold=pmt_th, veto_saturation=true);
+  local pmt_hit = flash.ophit(name='pmt', hit_threshold=pmt_th, veto_saturation=veto_sat);
 
   // --- merge OpHits and build flashes once over all 40 OpDets ---
   local merge = flash.ophit_merge(name='allpd', multiplicity=3, meta_port=0);

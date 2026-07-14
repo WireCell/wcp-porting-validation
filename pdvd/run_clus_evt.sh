@@ -162,7 +162,10 @@ process_event() {
     # INDEX-named (work/<RUN6>_<idx>) but the light chain's dirs are keyed by the
     # ART EVENT NUMBER (work/<RUN6>_light<EVENTNO>) — bridge via EVENT_NO above.
     local QLMATCH_EVT=$QLMATCH
-    local OPFLASH_TAR="$PDVD_DIR/work/${RUN_PADDED}_light${EVENT_NO}/opflash_pdvd-wct.tar.gz"
+    # PDVD_LIGHT_SUFFIX selects a tagged light-chain variant dir
+    # (work/<RUN6>_light<EVENTNO><SUFFIX>, cf. run_light_evt.sh -s), e.g.
+    # "_satoff" for the saturation-veto-off study.  Default empty = canonical.
+    local OPFLASH_TAR="$PDVD_DIR/work/${RUN_PADDED}_light${EVENT_NO}${PDVD_LIGHT_SUFFIX:-}/opflash_pdvd-wct.tar.gz"
     if [ "$QLMATCH_EVT" = 1 ] && [ ! -f "$OPFLASH_TAR" ]; then
         echo "[note] no $OPFLASH_TAR -> skipping Q/L matching for this event" >&2
         QLMATCH_EVT=0

@@ -105,6 +105,15 @@ PY
 read -r OFFSET_BOT_US OFFSET_TOP_US T0_VS_TREE <<< "$OFFSETS"
 echo "   offsets (us, add to flash time): bot=$OFFSET_BOT_US top=$OFFSET_TOP_US (chain t0 - tree light_t0 = $T0_VS_TREE us)"
 
+# PDVD_VETO_SATURATION=0 disables the DAPHNE-rail OpHit veto (see
+# docs/qlmatch/pdvd-pd-mapping-investigation.md sec.6-7: the veto zeroes
+# railed cathode channels in 42% of bright flashes).  Default (unset/1) =
+# legacy veto ON, compiled config byte-identical.
+VETO_SAT_ARG=()
+if [ "${PDVD_VETO_SATURATION:-1}" = 0 ]; then
+    VETO_SAT_ARG=(-S "veto_saturation=false")
+fi
+
 wcsonnet \
     -A input_file="$RAW_FILE" \
     -A output_dir="$WORKDIR" \
@@ -112,6 +121,7 @@ wcsonnet \
     -S event="$EVENT" \
     -S offset_bot_us="$OFFSET_BOT_US" \
     -S offset_top_us="$OFFSET_TOP_US" \
+    "${VETO_SAT_ARG[@]}" \
     -o "$WORKDIR/.wct-light.json" \
     "$PDVD_DIR/wct-light-reco.jsonnet"
 

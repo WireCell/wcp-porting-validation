@@ -199,6 +199,40 @@ and effort:
 Any of these changes light-reco output ⇒ **not byte-identical** ⇒ default-OFF
 knob + revalidation per the house rules.
 
+### 7.1 Option-1 probe on evt298567 (done, tags `_satoff`/`satoff`)
+
+Knobs added (all default = legacy, compiled configs byte-identical when off —
+`cmp` proof done):
+
+- `wct-light-reco.jsonnet` tla `veto_saturation=true`; runner env
+  `PDVD_VETO_SATURATION=0` (run_light_evt.sh) disables the veto.
+- `run_clus_evt.sh` env `PDVD_LIGHT_SUFFIX` points Q-L matching at a tagged
+  light variant dir (`work/<RUN6>_light<EVENTNO><SUFFIX>`).
+
+Repro:
+
+```
+PDVD_VETO_SATURATION=0 ./run_light_evt.sh -s _satoff 39252 298567
+# imaging symlinked from work/039252_0 into work/039252_0_satoff, then
+PDVD_LIGHT_SUFFIX=_satoff ./run_clus_evt.sh -s satoff -calib 039252 0
+```
+
+Result on the three hand-scanned flashes (old = pull2c2 record):
+
+| flash | total PE old→new | restored channels (old 0 → new PE) | match kept? | KS |
+|---|---|---|---|---|
+| gid37 | 5466 → 13924 | C5 2468, C6 3546, C7 2444 | yes (both halves) | 0.19/0.23 |
+| gid41 | 5679 → 17327 | C5 2380, C6 6047, C7 3221 | yes | 0.17/0.23 |
+| gid57 | 6485 → 25327 | C1 3761, C2 7933, C3 5157, C5 1992 | yes | 0.10/0.25 |
+
+The measured **shapes** now agree with the predictions (the previously
+zero/predicted-bright contradiction is gone; the restored PE are clipped
+underestimates of the raw areas, as expected for railed pulses). Absolute
+chi2 remains large and even grows — that is the separate global
+normalization (QtoL / provisional cathode PE scale) issue now acting on
+more bright channels, not a shape problem. Visual check: ql_scan on port
+5020, tag `satoff-check` (5019/`candles-pull2c2` untouched).
+
 ## 8. What was checked and cleared along the way
 
 - jjo trees ≡ toolkit maps ≡ colleague names/pictures (this doc §2).
