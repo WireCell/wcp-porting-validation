@@ -34,6 +34,10 @@ Everything runs inside the apptainer; non-interactive shells need `.bashrc` firs
 
 ## Where details live
 
+- `docs/0-build-wct-larwirecell-sl7-sbnd.md` — HOW TO BUILD wire-cell-toolkit + larwirecell and install to
+  `/exp/sbnd/app/users/yuhw/opt` (SL7 recipe, hand-copy step, landmines). Read before building either.
+- `docs/1-run-tests-sl7-local-builds-sbnd.md` — HOW TO RUN `wcls-img-clus-matching-xin.fcl` (MC + data) with
+  the local builds: env, commands, toggles, log greps, validation, BEE upload, wcsonnet check.
 - `cm-2606/STATUS-xin-chain.md` — full status: chains, toggle, all local WCT edits, known issues, BEE uploads.
 - Quick CPU/mem profiling: `/exp/sbnd/app/users/yuhw/activity_logger/top.sh <pattern>` (run concurrently); plot example in `cm-2606/activity/`.
 - w-gap study (SP rebaseline, DNNROI truncation, charge bias): `standalone-sample/w-gap/W-GAP-STUDY.md`.
