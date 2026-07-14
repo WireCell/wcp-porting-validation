@@ -37,7 +37,11 @@ CALIB = os.path.join(WORK, "039252_6_v153", "calib-evt%s.json" % EV)
 PDIR = os.path.join(WORK, "039252_6")                 # real SP-frame tarballs
 STORE = geom.load_store("/nfs/data/1/xqian/toolkit-dev/wire-cell-data/protodunevd-wires-larsoft-v5.json.bz2")
 OUTDIR = os.path.dirname(os.path.abspath(__file__))
-DFULL = 336.91          # cm, anode->cathode full drift (u_cathode, v6 shield FV)
+# Full drift traversed by charge collected at the W plane = cathode -> W collection
+# plane.  u_cathode (336.91 cm) is cathode -> shield-plane anode edge (v6 shield FV);
+# the W collection plane sits 1.64 cm deeper (W |x|=341.55 vs shield 339.91), and the
+# gauss pulse we time is the arrival at W, so the relevant distance is 336.91+1.64.
+DFULL = 338.55          # cm  (= 336.91 u_cathode + 1.64 shield->W)
 TICK_US = 0.5
 # endpoint-read parameters
 WIN = 60                # +-tick window around each imaging-predicted tick (corridor)

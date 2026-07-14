@@ -17,8 +17,8 @@ and the deconvolved SP frames `pdvd/work/039252_6/protodune-sp-dnnroi-frames-ano
 A single golden anode-to-cathode crossing cosmic in evt 298651 gives an
 **imaging-independent** drift-velocity measurement of
 
-> **v = 0.14706 cm/µs = 1.471 mm/µs**
-> (bot half 0.14680, top half 0.14732 cm/µs)
+> **v = 0.14777 cm/µs = 1.478 mm/µs**
+> (bot half 0.14752, top half 0.14803 cm/µs)
 
 read directly off the deconvolved **W (collection)** waveform. The endpoint ticks
 are the **owner's by-eye hand-scan of the Magnify decon** (`hw_gauss1`,
@@ -26,6 +26,10 @@ are the **owner's by-eye hand-scan of the Magnify decon** (`hw_gauss1`,
 `work/039252_6/magnify-run039252-evt6-anode{1,5}-dnnroi.root`), which is the
 authoritative read here; the analysis script's automated corridor reads
 (614→5148, 606→5149) are kept only as provenance and agree to within a few ticks.
+The drift distance is **DFULL = 338.55 cm** — the charge is timed at the **W
+collection plane**, so the relevant distance is cathode→W = `u_cathode` (336.91,
+cathode→shield-plane anode edge) **+ 1.64 cm** (shield→W: W |x|=341.55 vs shield
+339.91). Using 336.91 instead would give 0.14706 cm/µs.
 
 This sits **below** the current data-chain default (0.153), the toolkit default
 (0.1568) and the old cathode-pinned convention (0.1586) — all in cm/µs. It is a
@@ -41,8 +45,9 @@ both bundles flagged `at_cathode`. `bot:34` = calib `apa=0` (bottom crate,
 anode 1), 2494 pts; `top:169` = `apa=4` (top crate, anode 5), 1149 pts. The two
 clusters are the bottom and top halves of one cosmic that enters the bottom
 anode, crosses the full bottom drift, passes the shared cathode, and exits the
-top anode — so **each half spans one full drift distance, DFULL = 336.91 cm**
-(`u_cathode`, v6 shield-FV geometry).
+top anode — so **each half spans one full drift, cathode→W collection plane =
+DFULL = 338.55 cm** (`u_cathode` 336.91 cathode→shield-anode, + 1.64 shield→W;
+v6 shield-FV geometry).
 
 ![XY/YZ/XZ projections](track_298651_xyz.png)
 
@@ -77,16 +82,16 @@ broad, track-like collection charge.
 
 ## Endpoint reads
 
-Owner Magnify hand-scan of the deconvolved W (`hw_gauss<N>`), DFULL = 336.91 cm,
-tick = 0.5 µs:
+Owner Magnify hand-scan of the deconvolved W (`hw_gauss<N>`), DFULL = 338.55 cm
+(cathode→W collection plane), tick = 0.5 µs:
 
 ```
 half     anode |  t_anode  t_cathode |  dt(ticks)  dt(us)   v(cm/us)  v(mm/us) | auto-read (provenance)
 ------------------------------------------------------------------------------------------------------
-bot:34       1 |     576      5166    |    4590     2295.0   0.14680    1.468   | 614 -> 5148
-top:169      5 |     590      5164    |    4574     2287.0   0.14732    1.473   | 606 -> 5164 (anode recovered)
+bot:34       1 |     576      5166    |    4590     2295.0   0.14752    1.475   | 614 -> 5148
+top:169      5 |     590      5164    |    4574     2287.0   0.14803    1.480   | 606 -> 5164 (anode recovered)
 ------------------------------------------------------------------------------------------------------
-                                                    mean v = 0.14706 cm/us = 1.471 mm/us
+                                                    mean v = 0.14777 cm/us = 1.478 mm/us
 ```
 
 The automated script read the same ends from the W charge to within a few ticks
@@ -101,7 +106,7 @@ The band runs edge-to-edge from the hand-scan t_anode=576 (cyan) to t_cathode=51
 (magenta); the anode-end zoom shows the charge onset right at the cyan line, with
 the automated corridor read (614, grey dotted) sitting a few ticks inside. Thin
 diagonals crossing the band are other cosmics (rejected by the corridor).
-Δt = 4590 ticks → **v = 0.14680 cm/µs (1.468 mm/µs)**.
+Δt = 4590 ticks → **v = 0.14752 cm/µs (1.475 mm/µs)** (DFULL = 338.55 cm).
 
 ### top:169 — the anode end is truncated by imaging, recovered from the W charge
 ![top:169 W deconvolved streak](wdecon_298651_top169.png)
@@ -110,8 +115,8 @@ The imaging corridor (red dots) stops at tick 961 (grey dotted), but the W
 collection charge continues to the hand-scan t_anode=590 — the magenta stars mark
 the extra charge on wires **8873, 8874** that the induction-gapped imaging never
 assigned to the cluster. Using the imaging corridor alone would give a spuriously
-short Δt (v ≈ 0.161 cm/µs); the true charge terminus gives Δt = 4574 ticks →
-**v = 0.14732 cm/µs (1.473 mm/µs)**. This is a direct demonstration of exactly the
+short Δt (v ≈ 0.162 cm/µs); the true charge terminus gives Δt = 4574 ticks →
+**v = 0.14803 cm/µs (1.480 mm/µs)**. This is a direct demonstration of exactly the
 failure the W-waveform read is meant to avoid.
 
 ### Both halves together
@@ -129,7 +134,7 @@ The two W-corridor charge profiles: dashed = t_anode, dotted = t_cathode.
   crate **trigger-offset** difference, `trigger_offsets_us = [-2515.34, -2507.74]`
   → 7.6 µs = 15.2 ticks; the observed 14 ticks matches. Both halves reach their
   anodes.
-- **Per-half agreement: v_bot=0.14680, v_top=0.14732 cm/µs** — 0.35 %. The two
+- **Per-half agreement: v_bot=0.14752, v_top=0.14803 cm/µs** — 0.35 %. The two
   halves are independent drift volumes (different crates, different wires) and give
   the same velocity, which is the strongest internal check that the endpoints are
   the true track ends and DFULL is the right distance for both.
@@ -138,9 +143,9 @@ The two W-corridor charge profiles: dashed = t_anode, dotted = t_cathode.
 
 The dominant uncertainty is the endpoint tick read (the steep, diffuse track
 ends): a ±30-tick read moves v by ≈ ±0.002 cm/µs. Taking this with the 0.35 %
-bot/top spread, **v = 0.1471 ± ~0.003 cm/µs (1.471 ± 0.03 mm/µs)** from this
-event. The measurement has real discriminating power — full drift is ~4590 ticks
-at 0.1468 vs ~4250 at 0.1586 cm/µs (340 ticks), far larger than the read
+bot/top spread, **v = 0.1478 ± ~0.003 cm/µs (1.478 ± 0.03 mm/µs)** from this
+event. The measurement has real discriminating power — full drift is ~4582 ticks
+at 0.1478 vs ~4269 at 0.1586 cm/µs (~310 ticks), far larger than the read
 precision — but it is one track. Reported as measured; no parameter was tuned
 toward any candidate value (CLAUDE.md §5.7).
 
