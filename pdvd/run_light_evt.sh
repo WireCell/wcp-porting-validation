@@ -139,6 +139,14 @@ fi
 if [ "${PDVD_EMIT_COVERAGE:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "emit_coverage=true")
 fi
+# PDVD_SPE_V2: validated SPE templates v2 (pd_plot/spe_v2.py) -- repairs the
+# v1 templates whose area corrupts the channel PE scale (ch2020 negative,
+# ch1051 multi-PE mode latch, ch3010/3020 contaminated).  PRODUCTION DEFAULT
+# ON since 2026-07-14; set PDVD_SPE_V2=0 for the v1 file.  Toolkit default
+# stays v1 (byte-identical).
+if [ "${PDVD_SPE_V2:-1}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "spe_v2=true")
+fi
 
 wcsonnet \
     -A input_file="$RAW_FILE" \

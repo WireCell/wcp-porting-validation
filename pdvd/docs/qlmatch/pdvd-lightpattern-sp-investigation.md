@@ -153,10 +153,35 @@ These match the anchor table: od7 low with a *tight* band (0.77 [0.63,
    an OpDet counts covered only when ALL its ganged DAPHNE sub-channels
    cover the window (od12's half-covered pair is masked); dead-RO OpDets
    24/27/28/34 have no mapped raw channel ⇒ cov 0 (already static-masked).
-3. **SPE templates v2**: validated re-harvest (positivity, per-type area
-   band, sibling-transfer for channels without a clean 1-PE peak);
-   `pdvd-spe-templates-v2.json` behind a `spe_file` selector defaulting to
-   v1; runner selects v2.
+3. **SPE templates v2**: validated re-harvest (`pd_plot/spe_v2.py`);
+   `pdvd-spe-templates-v2.json` behind the `flash.jsonnet` `spe_file`
+   selector defaulting to v1; runner env `PDVD_SPE_V2` (default ON) selects
+   v2.  **DONE — toolkit commit (v2 json + OpDecon DC≤0 warn) + wcp commit
+   (builder, `spe_v2` TLA, runner env).**  Two-tier validation:
+   - *shape* (area>0, area/amp within 2.5× the population median) flags
+     ch2020 (−21.7), ch3010 (310), ch3020 (84);
+   - *ganged-pair amplitude* (harvest 1-PE mode ratio vs the coincident
+     bright-pulse gain ratio, n=44–2205 pulses/pair, only the HIGH-side
+     member is the latch) flags ch1051 (mode 82 vs sibling-implied 28.9)
+     and **ch2011** (mode 64 vs implied 39.5 — the ×2.6 area split of od0
+     is a mode latch, not a real gain difference: the pair's bright pulses
+     match at ratio 0.912).
+   Repairs = population-average shape (valid channels only) × validated
+   1-PE amplitude (sibling transfer for 1051/2011; own mode for
+   2020/3010/3020).  Areas: 1051 8557→1042, 2011 3132→1510, 2020
+   −1595→1836, 3010 15935→612, 3020 8479→1092; the other 46 channels are
+   bit-for-bit == v1.  Gates: compiled-config knob-off byte-identical
+   (HEAD-compiled vs new, knob-on flips exactly the three OpDecon
+   `spe_file` keys); light knob-off hash PASS
+   (`work/039252_light298567_p3off` == `_p2off`, member hash e3729ae8);
+   wcdoctest-flash 31/31; the new OpDecon warn fires on v1 (template 18 =
+   ch2020, all three branches) and is silent on v2.  Knob-on smoke
+   (`_p3v2`): bright crosser flash od7 2462→6546 (×2.66; meas/unmasked-pred
+   0.50→1.34, type factors to be refit in Phase 4), od0 51.9→73.2 (×1.41),
+   every other opdet identical; flash census 405→415 — all movers are
+   ~10–16 PE threshold-hoppers rescaled across the flash minPE cut, plus
+   one fake 260-PE flash dominated by od2=225 (ch2020 negative-template
+   artifact) that correctly disappears.
 4. **Reprocess + refit**: 120-event reprocess at the new operating point,
    coverage-aware refit of the per-type efficiency factors (owner gate before
    adoption), fresh candle round on port 5019.
@@ -176,7 +201,7 @@ These match the anchor table: od7 low with a *tight* band (0.77 [0.63,
   - `lightpattern_fig5_pattern.png` — measured vs masked vs unmasked
     prediction for flash 57.
 - Smoke case for all fixes: evt 298567 flash gid 57 (od4/6/7/8 sat-marked
-  with full pred shown; od1/od3 coverage-masked; od7 ×~1.9 after template
+  with full pred shown; od1/od3 coverage-masked; od7 ×2.66 after template
   v2).
 - Status: knobs-off paths must stay **byte-identical** (hash_archive gates
   per detector); the knob-on operating point is **NOT bit-identical** by

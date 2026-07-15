@@ -27,7 +27,7 @@
 //   wire-cell -l stderr -L debug -c cfg.json
 
 local g = import 'pgraph.jsonnet';
-local flash = import 'pgrapher/experiment/protodunevd/flash.jsonnet';
+local flash_v1 = import 'pgrapher/experiment/protodunevd/flash.jsonnet';
 
 // Cathode full-stream record length: 468864 = max(nsamp); the shorter
 // 468800-sample records are zero-padded by OpDecon.
@@ -59,7 +59,12 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
          // for all three populations (partial emission would zero the
          // others' coverage).  C++ default false, key suppressed =>
          // byte-identical when off.
-         emit_coverage=false)
+         emit_coverage=false,
+         // Validated SPE templates v2 (pd_plot/spe_v2.py): repairs the
+         // broken v1 templates (ch2020 negative area, ch1051 multi-PE mode
+         // latch, ch3010/3020 contaminated tails) that corrupt those
+         // channels' measured-PE scale.  false => the v1 file, byte-identical.
+         spe_v2=false)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -77,6 +82,12 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local veto_sat = if std.type(veto_saturation) == 'string' then std.parseJson(veto_saturation) else veto_saturation;
   local flag_sat = if std.type(flag_saturation) == 'string' then std.parseJson(flag_saturation) else flag_saturation;
   local emit_cov = if std.type(emit_coverage) == 'string' then std.parseJson(emit_coverage) else emit_coverage;
+  local spe_v2b = if std.type(spe_v2) == 'string' then std.parseJson(spe_v2) else spe_v2;
+  // spe_v2 swaps the OpDecon template file for the validated v2 set; the
+  // toolkit flash.jsonnet default stays the v1 file (byte-identical off).
+  local flash = flash_v1 + (if spe_v2b then {
+      spe_file:: 'pgrapher/experiment/protodunevd/pdvd-spe-templates-v2.json',
+  } else {});
   local sat_rep = if std.type(saturation_repair) == 'string' then std.parseJson(saturation_repair) else saturation_repair;
 
   // --- cathode branch (opch 10xx, continuous full streams) ---
