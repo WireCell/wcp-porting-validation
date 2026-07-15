@@ -84,6 +84,12 @@ function(
     // PDVD_FLAG_SATURATION=1).  C++ default false; key suppressed when off =>
     // compiled config byte-identical.  docs/qlmatch/pdvd-saturation-recovery.md.
     ql_use_saturation_flag = false,
+    // Per-flash readout-coverage masking in QLMatching.  Needs a light
+    // archive made with emit_coverage (run_light_evt.sh
+    // PDVD_EMIT_COVERAGE=1).  C++ default false; key suppressed when off =>
+    // compiled config byte-identical.
+    // docs/qlmatch/pdvd-lightpattern-sp-investigation.md.
+    ql_use_coverage_flag = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -172,7 +178,8 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       // null => qlmatching omits the key => C++ default +1.2 cm.
                       cathode_ext1=if ql_cathode_ext1_cm == null then null
                                    else ql_cathode_ext1_cm * wc.cm,
-                      use_saturation_flag=ql_use_saturation_flag);
+                      use_saturation_flag=ql_use_saturation_flag,
+                      use_coverage_flag=ql_use_coverage_flag);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

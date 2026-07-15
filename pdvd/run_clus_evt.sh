@@ -308,6 +308,15 @@ PY
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
         QL_SATFLAG_ARG=(-S "ql_use_saturation_flag=true")
     fi
+    # PDVD_QL_USE_COV_FLAG: per-flash readout-coverage masking in QLMatching
+    # (self-trigger channels with no snippet over the flash window carry NO
+    # data).  PRODUCTION DEFAULT ON since 2026-07-14
+    # (docs/qlmatch/pdvd-lightpattern-sp-investigation.md) -- graceful no-op
+    # on archives without the flash_cov tensor (get_cov == 1 everywhere).
+    # Toolkit C++/jsonnet defaults stay OFF (byte-identical).
+    if [ "${PDVD_QL_USE_COV_FLAG:-1}" = 1 ]; then
+        QL_SATFLAG_ARG+=(-S "ql_use_coverage_flag=true")
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \

@@ -136,6 +136,23 @@ These match the anchor table: od7 low with a *tight* band (0.77 [0.63,
    optical PCs → `Opflash::get_cov` → QLMatching `use_coverage_flag` /
    `coverage_min` masking + dump `cov` array; viewer "no data" marker.  All
    default-OFF, byte-identical off; PDVD runners turn them on.
+   **DONE — toolkit commit (flash/aux/clus/match) + wcp runner/viewer
+   commit.**  Gates: compiled-config knob-off byte-identical for
+   `wct-light-reco` and `wct-clustering` (keys present on);  PDVD light
+   knob-off hash PASS vs the pre-change `_satrep` archive
+   (`work/039252_light298567_p2off`); PDVD QL knob-off dump byte-identical
+   vs the Phase-1 binary (`039252_0_p2qloff` == `039252_0_p1onnew`); PDHD
+   all-PD light hash PASS (`029107_allpd1015_p2covgate` vs reference);
+   wcdoctest flash/match/aux/clus.  Knob-on smoke (`_p2cov` /
+   `039252_0_p2qlcov`): `flash_cov` for gid57 reproduces the raw snippet
+   coverage channel-by-channel (od1/od3/od12 = 0, min-over-subchannel
+   rule); the true crosser bundle (57, top:56) chi2 drops **459.6 → 91.8**
+   (ndf 18→13, KS 0.120→0.088) once the fake zeros leave the fit; every
+   flash carries some uncovered channel; 54/108 auto-selections move
+   (intended knob-on physics change → Phase-4 refit).  Coverage semantic:
+   an OpDet counts covered only when ALL its ganged DAPHNE sub-channels
+   cover the window (od12's half-covered pair is masked); dead-RO OpDets
+   24/27/28/34 have no mapped raw channel ⇒ cov 0 (already static-masked).
 3. **SPE templates v2**: validated re-harvest (positivity, per-type area
    band, sibling-transfer for channels without a clean 1-PE peak);
    `pdvd-spe-templates-v2.json` behind a `spe_file` selector defaulting to

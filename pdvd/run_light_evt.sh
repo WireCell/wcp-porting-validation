@@ -129,6 +129,16 @@ fi
 if [ "${PDVD_SAT_REPAIR:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "saturation_repair=true")
 fi
+# PDVD_EMIT_COVERAGE: per-trace livetime rows -> OpFlashFinder flash_cov
+# tensor, so QLMatching can mask self-trigger channels (membrane XA / PMT
+# 16.4-us snippets) with no waveform over a flash's window instead of
+# scoring them measured = 0.  PRODUCTION DEFAULT ON since 2026-07-14
+# (docs/qlmatch/pdvd-lightpattern-sp-investigation.md); set
+# PDVD_EMIT_COVERAGE=0 for the legacy archive layout.  Toolkit C++/jsonnet
+# defaults stay OFF (byte-identical).
+if [ "${PDVD_EMIT_COVERAGE:-1}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "emit_coverage=true")
+fi
 
 wcsonnet \
     -A input_file="$RAW_FILE" \

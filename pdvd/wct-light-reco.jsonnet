@@ -51,7 +51,15 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
          // fills railed runs with the two-sided exp bridge before decon
          // (better flash totals; the mask still applies).  Both C++-default
          // false, keys suppressed => byte-identical when off.
-         flag_saturation=false, saturation_repair=false)
+         flag_saturation=false, saturation_repair=false,
+         // Per-trace livetime rows -> OpFlashFinder flash_cov tensor ->
+         // QLMatching use_coverage_flag masks self-trigger channels with no
+         // snippet over a flash's window (membrane XA / PMT, duty ~5-30%;
+         // docs/qlmatch/pdvd-lightpattern-sp-investigation.md).  Single knob
+         // for all three populations (partial emission would zero the
+         // others' coverage).  C++ default false, key suppressed =>
+         // byte-identical when off.
+         emit_coverage=false)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -68,6 +76,7 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local cath_ps = if std.type(cath_ped_sigma) == 'string' then std.parseJson(cath_ped_sigma) else cath_ped_sigma;
   local veto_sat = if std.type(veto_saturation) == 'string' then std.parseJson(veto_saturation) else veto_saturation;
   local flag_sat = if std.type(flag_saturation) == 'string' then std.parseJson(flag_saturation) else flag_saturation;
+  local emit_cov = if std.type(emit_coverage) == 'string' then std.parseJson(emit_coverage) else emit_coverage;
   local sat_rep = if std.type(saturation_repair) == 'string' then std.parseJson(saturation_repair) else saturation_repair;
 
   // --- cathode branch (opch 10xx, continuous full streams) ---
@@ -78,7 +87,7 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local cath_roi = flash.oproi(name='cath');
   local cath_hit = flash.ophit(name='cath', hit_threshold=cath_th, intag='decon_roi',
                                fixed_ped_sigma=cath_ps, veto_saturation=veto_sat,
-                               flag_saturation=flag_sat);
+                               flag_saturation=flag_sat, emit_coverage=emit_cov);
 
   // --- membrane XA branch (opch 20xx, snippets; top+bottom walls share
   //     sigma=1.0, the top-wall pickup sets the threshold) ---
@@ -87,7 +96,7 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
                                   detect_saturation=true, saturation_pad=sat_pad_n,
                                   saturation_repair=sat_rep);
   local mem_hit = flash.ophit(name='mem', hit_threshold=mem_th, veto_saturation=veto_sat,
-                              flag_saturation=flag_sat);
+                              flag_saturation=flag_sat, emit_coverage=emit_cov);
 
   // --- PMT branch (opch 30xx, snippets) ---
   local pmt_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=3000, opch_hi=3999, name='pmt');
@@ -95,7 +104,7 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
                                   detect_saturation=true, saturation_pad=sat_pad_n,
                                   saturation_repair=sat_rep);
   local pmt_hit = flash.ophit(name='pmt', hit_threshold=pmt_th, veto_saturation=veto_sat,
-                              flag_saturation=flag_sat);
+                              flag_saturation=flag_sat, emit_coverage=emit_cov);
 
   // --- merge OpHits and build flashes once over all 40 OpDets ---
   local merge = flash.ophit_merge(name='allpd', multiplicity=3, meta_port=0);

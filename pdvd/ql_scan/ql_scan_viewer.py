@@ -548,6 +548,15 @@ def make_light_fig(title):
               fill_color=None, line_color="#ff7f0e", line_width=2.2)
     f.scatter("z", "y", source=sat_inner, marker="square", size=15,
               fill_color=None, line_color="#ff7f0e", line_width=2.2)
+    # readout-uncovered OpDets of the current flash (self-trigger channels
+    # with no snippet over the flash window): NO DATA -- the measured 0 is
+    # not a measurement and the channel is excluded from the fit.
+    cov_wall = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    cov_inner = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    f.scatter("z", "y", source=cov_wall, marker="circle_x", size=16,
+              fill_color=None, line_color="#7f7f7f", line_width=1.8)
+    f.scatter("z", "y", source=cov_inner, marker="square_x", size=15,
+              fill_color=None, line_color="#7f7f7f", line_width=1.8)
     cbar = ColorBar(color_mapper=cmapper, title="PE",
                     ticker=BasicTicker(desired_num_ticks=6),
                     formatter=NumeralTickFormatter(format="0,0"),
@@ -566,7 +575,8 @@ def make_light_fig(title):
     return dict(fig=f, base_wall=base_wall, base_inner=base_inner,
                dead_wall=dead_wall, dead_inner=dead_inner,
                src_wall=src_wall, src_inner=src_inner, cmapper=cmapper,
-               sat_wall=sat_wall, sat_inner=sat_inner)
+               sat_wall=sat_wall, sat_inner=sat_inner,
+               cov_wall=cov_wall, cov_inner=cov_inner)
 
 
 # LIGHT[group] = {"meas": panel, "pred": panel}  (group = "XA" / "PMT")
@@ -599,12 +609,18 @@ def make_hist_fig(title):
     f.scatter("x", "pe", source=sat_src, marker="triangle", size=9,
               fill_color="#ff7f0e", line_color=None,
               legend_label="saturated (excl. fit)")
+    # readout-uncovered channels: no snippet over the flash window, the 0 is
+    # NOT a measurement; marker drawn at the predicted PE.
+    cov_src = ColumnDataSource(data=dict(x=[], pe=[]))
+    f.scatter("x", "pe", source=cov_src, marker="circle_x", size=9,
+              fill_color=None, line_color="#7f7f7f", line_width=1.5,
+              legend_label="no data (excl. fit)")
     f.legend.label_text_font_size = "9px"
     f.legend.padding = 2
     f.legend.location = "top_right"
     f.legend.background_fill_alpha = 0.6
     sep, lbl_wall, lbl_inner = make_subblock_sep(f)
-    return dict(fig=f, meas=meas_src, pred=pred_src, sat=sat_src,
+    return dict(fig=f, meas=meas_src, pred=pred_src, sat=sat_src, cov=cov_src,
                sep=sep, lbl_wall=lbl_wall, lbl_inner=lbl_inner)
 
 
@@ -880,7 +896,10 @@ def render_light():
                 panel["src_inner"].data = dict(z=[], y=[], pe=[], d=[], ch=[])
                 panel["sat_wall"].data = dict(z=[], y=[], ch=[])
                 panel["sat_inner"].data = dict(z=[], y=[], ch=[])
+                panel["cov_wall"].data = dict(z=[], y=[], ch=[])
+                panel["cov_inner"].data = dict(z=[], y=[], ch=[])
             ho["sat"].data = dict(x=[], pe=[])
+            ho["cov"].data = dict(x=[], pe=[])
             mp["fig"].title.text = "%s measured  (no flash in group)" % GROUP_NAME[group]
             pp["fig"].title.text = "%s predicted" % GROUP_NAME[group]
             ho["meas"].data = dict(x=[], pe=[])
@@ -901,6 +920,11 @@ def render_light():
         # prediction -- the flag only removes the channel from chi2/KS.
         sat = (np.array(flash["sat"])[chans].astype(bool)
                if flash.get("sat") else np.zeros(meas.size, bool))
+        # readout-coverage fractions (dump "cov" array; absent on archives
+        # without the emit_coverage chain): cov < 1 = the channel had no
+        # (full) snippet over the flash window -- its 0 is NOT a measurement.
+        nodata = (np.array(flash["cov"])[chans] < 1.0
+                  if flash.get("cov") else np.zeros(meas.size, bool))
 
         # Independent per-panel scales so the predicted *shape* stays readable even
         # when its absolute PE is tiny next to a bright measured flash.
@@ -913,6 +937,8 @@ def render_light():
         fill_group_2d(pp, evt, chans, boundary, pred, hi_pred)
         sw = chans[:boundary][sat[:boundary]]
         si = chans[boundary:][sat[boundary:]]
+        cw = chans[:boundary][nodata[:boundary]]
+        ci = chans[boundary:][nodata[boundary:]]
         for panel in (mp, pp):
             panel["sat_wall"].data = dict(
                 z=(evt.od_z[sw] + evt.od_jitter_z[sw]).tolist(),
@@ -920,6 +946,12 @@ def render_light():
             panel["sat_inner"].data = dict(
                 z=(evt.od_z[si] + evt.od_jitter_z[si]).tolist(),
                 y=(evt.od_y[si] + evt.od_jitter_y[si]).tolist(), ch=si.tolist())
+            panel["cov_wall"].data = dict(
+                z=(evt.od_z[cw] + evt.od_jitter_z[cw]).tolist(),
+                y=(evt.od_y[cw] + evt.od_jitter_y[cw]).tolist(), ch=cw.tolist())
+            panel["cov_inner"].data = dict(
+                z=(evt.od_z[ci] + evt.od_jitter_z[ci]).tolist(),
+                y=(evt.od_y[ci] + evt.od_jitter_y[ci]).tolist(), ch=ci.tolist())
         mp["fig"].title.text = ("%s measured  gid %d (id %d)  t=%.1f us  totPE=%.0f"
                                 % (GROUP_NAME[group], gid, flash["id"], flash["time"],
                                    flash["total_PE"]))
@@ -931,17 +963,21 @@ def render_light():
         ho["meas"].data = dict(x=xidx.tolist(), pe=meas.tolist())
         ho["pred"].data = dict(x=xidx.tolist(), pe=pred.tolist())
         ho["sat"].data = dict(x=xidx[sat].tolist(), pe=meas[sat].tolist())
-        # ratio undefined where measured PE is 0; rail-flagged channels are
-        # excluded from the fit, so drop them from the ratio panel too.
-        mask = (meas > 0) & ~sat
+        # no-data marker drawn at the PREDICTED PE (measured is a fake 0)
+        ho["cov"].data = dict(x=xidx[nodata].tolist(), pe=pred[nodata].tolist())
+        # ratio undefined where measured PE is 0; rail-flagged and uncovered
+        # channels are excluded from the fit, so drop them here too.
+        mask = (meas > 0) & ~sat & ~nodata
         hr["src"].data = dict(x=xidx[mask].tolist(),
                               ratio=(pred[mask] / meas[mask]).tolist())
         ho["fig"].title.text = ("%s meas vs pred  (gid %d, t=%.1f us)"
                                 % (GROUP_NAME[group], gid, flash["time"]))
-        hr["fig"].title.text = ("%s pred/meas  (%d/%d chans meas>0%s)"
+        hr["fig"].title.text = ("%s pred/meas  (%d/%d chans meas>0%s%s)"
                                 % (GROUP_NAME[group], int(mask.sum()), meas.size,
                                    ", %d sat excl." % int(sat.sum())
-                                   if sat.any() else ""))
+                                   if sat.any() else "",
+                                   ", %d no-data" % int(nodata.sum())
+                                   if nodata.any() else ""))
         for hpanel in (ho, hr):
             set_subblock_sep(hpanel, group, boundary, meas.size)
 
