@@ -538,6 +538,16 @@ def make_light_fig(title):
     g_inner = f.rect("z", "y", source=src_inner, width="d", height="d",
                      fill_color={"field": "pe", "transform": cmapper},
                      line_color="#333333", fill_alpha=0.85)
+    # saturation-flagged OpDets of the current flash (DAPHNE rail): orange ring
+    # drawn on top of the live marker. The measured PE there is the REPAIRED
+    # value and the prediction is shown in full -- the flag only means the
+    # channel is excluded from the chi2/KS fit.
+    sat_wall = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    sat_inner = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
+    f.scatter("z", "y", source=sat_wall, marker="circle", size=16,
+              fill_color=None, line_color="#ff7f0e", line_width=2.2)
+    f.scatter("z", "y", source=sat_inner, marker="square", size=15,
+              fill_color=None, line_color="#ff7f0e", line_width=2.2)
     cbar = ColorBar(color_mapper=cmapper, title="PE",
                     ticker=BasicTicker(desired_num_ticks=6),
                     formatter=NumeralTickFormatter(format="0,0"),
@@ -555,7 +565,8 @@ def make_light_fig(title):
                           tooltips=[("ch", "@ch")]))
     return dict(fig=f, base_wall=base_wall, base_inner=base_inner,
                dead_wall=dead_wall, dead_inner=dead_inner,
-               src_wall=src_wall, src_inner=src_inner, cmapper=cmapper)
+               src_wall=src_wall, src_inner=src_inner, cmapper=cmapper,
+               sat_wall=sat_wall, sat_inner=sat_inner)
 
 
 # LIGHT[group] = {"meas": panel, "pred": panel}  (group = "XA" / "PMT")
@@ -575,6 +586,7 @@ def make_hist_fig(title):
     f.yaxis.axis_label = "PE"
     meas_src = ColumnDataSource(data=dict(x=[], pe=[]))
     pred_src = ColumnDataSource(data=dict(x=[], pe=[]))
+    sat_src = ColumnDataSource(data=dict(x=[], pe=[]))
     f.vbar(x="x", top="pe", width=0.9, source=meas_src,
            fill_color="#6baed6", line_color=None, fill_alpha=0.6,
            legend_label="measured")
@@ -582,12 +594,17 @@ def make_hist_fig(title):
            legend_label="predicted")
     f.scatter("x", "pe", source=pred_src, marker="circle", size=4,
               fill_color="#d62728", line_color=None, legend_label="predicted")
+    # rail-flagged channels: repaired measured PE, shown but excluded from
+    # the chi2/KS fit (and from the pred/meas ratio panel).
+    f.scatter("x", "pe", source=sat_src, marker="triangle", size=9,
+              fill_color="#ff7f0e", line_color=None,
+              legend_label="saturated (excl. fit)")
     f.legend.label_text_font_size = "9px"
     f.legend.padding = 2
     f.legend.location = "top_right"
     f.legend.background_fill_alpha = 0.6
     sep, lbl_wall, lbl_inner = make_subblock_sep(f)
-    return dict(fig=f, meas=meas_src, pred=pred_src,
+    return dict(fig=f, meas=meas_src, pred=pred_src, sat=sat_src,
                sep=sep, lbl_wall=lbl_wall, lbl_inner=lbl_inner)
 
 
@@ -861,6 +878,9 @@ def render_light():
             for panel in (mp, pp):
                 panel["src_wall"].data = dict(z=[], y=[], pe=[], r=[], ch=[])
                 panel["src_inner"].data = dict(z=[], y=[], pe=[], d=[], ch=[])
+                panel["sat_wall"].data = dict(z=[], y=[], ch=[])
+                panel["sat_inner"].data = dict(z=[], y=[], ch=[])
+            ho["sat"].data = dict(x=[], pe=[])
             mp["fig"].title.text = "%s measured  (no flash in group)" % GROUP_NAME[group]
             pp["fig"].title.text = "%s predicted" % GROUP_NAME[group]
             ho["meas"].data = dict(x=[], pe=[])
@@ -876,6 +896,11 @@ def render_light():
         flash = evt.flash_by_gid[gid]
         meas = np.array(flash["pe"])[chans]
         pred = pred_full[chans]
+        # per-flash DAPHNE-rail flags (dump "sat" array; absent on pre-flag
+        # dumps): measured is the repaired value, prediction is the FULL
+        # prediction -- the flag only removes the channel from chi2/KS.
+        sat = (np.array(flash["sat"])[chans].astype(bool)
+               if flash.get("sat") else np.zeros(meas.size, bool))
 
         # Independent per-panel scales so the predicted *shape* stays readable even
         # when its absolute PE is tiny next to a bright measured flash.
@@ -886,6 +911,15 @@ def render_light():
 
         fill_group_2d(mp, evt, chans, boundary, meas, hi_meas)
         fill_group_2d(pp, evt, chans, boundary, pred, hi_pred)
+        sw = chans[:boundary][sat[:boundary]]
+        si = chans[boundary:][sat[boundary:]]
+        for panel in (mp, pp):
+            panel["sat_wall"].data = dict(
+                z=(evt.od_z[sw] + evt.od_jitter_z[sw]).tolist(),
+                y=(evt.od_y[sw] + evt.od_jitter_y[sw]).tolist(), ch=sw.tolist())
+            panel["sat_inner"].data = dict(
+                z=(evt.od_z[si] + evt.od_jitter_z[si]).tolist(),
+                y=(evt.od_y[si] + evt.od_jitter_y[si]).tolist(), ch=si.tolist())
         mp["fig"].title.text = ("%s measured  gid %d (id %d)  t=%.1f us  totPE=%.0f"
                                 % (GROUP_NAME[group], gid, flash["id"], flash["time"],
                                    flash["total_PE"]))
@@ -896,13 +930,18 @@ def render_light():
         xidx = np.arange(meas.size)
         ho["meas"].data = dict(x=xidx.tolist(), pe=meas.tolist())
         ho["pred"].data = dict(x=xidx.tolist(), pe=pred.tolist())
-        mask = meas > 0     # ratio undefined where measured PE is 0 -> drop
+        ho["sat"].data = dict(x=xidx[sat].tolist(), pe=meas[sat].tolist())
+        # ratio undefined where measured PE is 0; rail-flagged channels are
+        # excluded from the fit, so drop them from the ratio panel too.
+        mask = (meas > 0) & ~sat
         hr["src"].data = dict(x=xidx[mask].tolist(),
                               ratio=(pred[mask] / meas[mask]).tolist())
         ho["fig"].title.text = ("%s meas vs pred  (gid %d, t=%.1f us)"
                                 % (GROUP_NAME[group], gid, flash["time"]))
-        hr["fig"].title.text = ("%s pred/meas  (%d/%d chans meas>0)"
-                                % (GROUP_NAME[group], int(mask.sum()), meas.size))
+        hr["fig"].title.text = ("%s pred/meas  (%d/%d chans meas>0%s)"
+                                % (GROUP_NAME[group], int(mask.sum()), meas.size,
+                                   ", %d sat excl." % int(sat.sum())
+                                   if sat.any() else ""))
         for hpanel in (ho, hr):
             set_subblock_sep(hpanel, group, boundary, meas.size)
 

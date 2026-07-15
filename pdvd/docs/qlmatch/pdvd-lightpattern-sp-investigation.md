@@ -121,6 +121,16 @@ These match the anchor table: od7 low with a *tight* band (0.77 [0.63,
 1. **Dump/viewer**: QLMatching dumps the *unmasked* prediction (`pred_pe`)
    while chi2/KS/LASSO keep the masked one; ql_scan viewer marks sat-flagged
    channels and excludes them from the ratio panel (toolkit + wcp commits).
+   **DONE — toolkit af0a0284** (knob-off dumps proven identical field-by-field
+   old-vs-new code, 198 flashes / 5171 bundles, setarch -R, reference tags
+   `work/039252_0_p1{on,off}{old,new}`; knob-on: fit metrics identical,
+   pred_pe gains the full prediction on exactly the 2303 sat-flagged
+   entries — flash 57 ods 4/6/7/8 now dump 15570/4825/4887/6728) **+ wcp
+   viewer commit** (orange rings/triangles for sat channels, ratio panel
+   excludes them; session-tested on port 5021 scratch).  NOTE for A/B
+   bookkeeping: owner commit 3c30cf58 (static ch_mask += {2,16,17,33})
+   landed between the `arcal` round and these gates — dumps produced before
+   it carry small nonzero pred on ch 2/17/33; not a code effect.
 2. **Coverage chain**: OpHitFinder `emit_coverage` → coverage tensor →
    OpHitMerge passthrough → OpFlashFinder `flash_cov` companion tensor →
    optical PCs → `Opflash::get_cov` → QLMatching `use_coverage_flag` /
