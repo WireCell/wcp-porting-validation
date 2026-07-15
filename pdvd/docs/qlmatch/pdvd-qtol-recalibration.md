@@ -91,7 +91,7 @@ plane, or (less likely after the SPE comparison) a cathode PE-scale error.
 PMTs measure ×5 below membrane on the same anchors — an eff_TPB/PEN-level
 question.
 
-## 3. Recommendation (owner decisions — no defaults changed)
+## 3. Recommendation as first reported (superseded by the §4 owner ruling)
 
 1. **Do not adopt a global QtoL from these numbers under Ar/128 nm** — the
    model's distance shape makes any single value topology-dependent. For the
@@ -107,7 +107,41 @@ question.
 4. The chi2/KS ladder + `flash_minPE` retune should follow whichever model is
    blessed (flash totals grew ×2-4 with the veto off).
 
-## 4. Files
+## 4. Adopted calibration (owner decision, 2026-07-14)
+
+The owner ruled: **these data are Argon-only — keep the 128 nm library**, run
+the keep-and-mark saturation chain as the production signal processing, and
+absorb the per-type residuals as data scale factors.  Applied as:
+
+- **Toolkit `f7c66ab8`** (`cfg/.../protodunevd/qlmatching.jsonnet`): the
+  official eff_Ar values are multiplied by the fitted per-type factors —
+  cathode XA **x10.116** (0.03 → 0.3035), membrane XA **x1.655** (0.03 →
+  0.0497), PMT **x0.352** (TPB 0.12 → 0.0422, PEN 0.036 → 0.0127; official
+  relative weighting kept).  QtoL stays 0.094; Ar-blind zeros kept.  NOT
+  byte-identical by construction (PDVD predictions change).
+- **wcp `4d398d5`**: the keep-and-mark chain becomes the PDVD **runner
+  default** — `PDVD_VETO_SATURATION=0`, `PDVD_FLAG_SATURATION=1`,
+  `PDVD_SAT_REPAIR=1`, `PDVD_QL_USE_SAT_FLAG=1` (toolkit C++/jsonnet
+  defaults stay legacy/OFF, byte-identical for other consumers).
+
+**Closure** (repro: `python3 fit_qtol_crossers.py --tag arcal`): rerunning QL
+on the 18 candle events (run 039252, `_satrep` light, tag `arcal`) and
+refitting the strict-crosser anchors gives global median Σmeas/Σpred =
+**1.011** [0.67, 3.54] n=42 and cathode **1.027** (was 10.1) — the dominant
+group closes at the calibration point.  On this single-run subset membrane =
+0.445 (n=24) and PMT = 0.704 (n=31) with wide bands — run-to-run spread
+around the 3-run medians the factors were fitted on (the 128 nm far-channel
+distance slope also remains, §2.2); per-channel work stays an open item.
+
+**Candle round `arcal`** (`ql_display/decisions-*-arcal/`): find_crossers
+280 keep/add + find_boundary 155 over the 18 events (vcal round: 198/127);
+labels `work/ql_labels/candles-arcal/`.  The ql_scan viewer on **port 5019**
+now serves this round (`serve_ql_scan.sh 5019 --tag candles-arcal
+work/039252_*_arcal/calib-evt*.json`), showing the cathode-crosser pairs and
+anode boundary tracks together, replacing the `candles-pull2c2` display
+(those work dirs and decisions are untouched).
+
+## 5. Files
 
 - `ql_light_calib/fit_qtol_crossers.py` — harvest + estimator + per-type /
   per-brightness / library-swap diagnostics (this doc's tables).
