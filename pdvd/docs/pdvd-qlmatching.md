@@ -169,6 +169,18 @@ restored. This is the value in the toolkit default after the 2026-07-13 revert
 to Argon (see `pdvd-questions-dune.md` §3); run 039252 reprocessed at v=0.1523
 under it (tag `_ar1523`).
 
+**Update 2026-07-14 — crosser-anchor refit on saturation-fixed dumps
+(`docs/qlmatch/pdvd-qtol-recalibration.md`).** The DAPHNE saturation veto had
+been hiding a ×5 cathode bias in every previous calibration (railed = nearest
+channels contributed exactly 0 to Σmeas). On the 120-event `_satrep`
+reprocess with 192 geometric crosser anchors: under the current Ar/128 nm
+default a single QtoL does not exist (per-type spread ×30, distance-dependent
+per-channel slope); under the 175 nm library the membrane-XA reference group
+is consistent with **QtoL 0.094 as-is** (flat, ratio ≈ 1), with the residual
+work being per-type efficiency corrections (cathode ×~7, PMT ×~0.2 vs
+membrane). No defaults changed — model choice + efficiency retune are the
+owner's call; see the doc's §3.
+
 ## 5. Caveats
 
 - **Trigger offset RESOLVED 2026-07-10** (per-event per-crate values from the
