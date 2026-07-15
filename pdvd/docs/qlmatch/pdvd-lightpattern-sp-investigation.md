@@ -184,7 +184,17 @@ These match the anchor table: od7 low with a *tight* band (0.77 [0.63,
    artifact) that correctly disappears.
 4. **Reprocess + refit**: 120-event reprocess at the new operating point,
    coverage-aware refit of the per-type efficiency factors (owner gate before
-   adoption), fresh candle round on port 5019.
+   adoption), fresh candle round on port 5019.  **DONE (factors deliberately
+   NOT changed — owner gate open)** — light `_spcov` 120/120 + QL `spcov`
+   120/120; fit_qtol_crossers.py now drops `cov<1` channels from both sums.
+   Cathode closes at unity (per-group 1.006, global 1.078, od7 healed to
+   1.14); membrane/PMT show a bimodal residual no scalar factor can absorb
+   (5/6 membrane opdets: median meas/pred = 0.00 with 54–66% zeros in
+   covered flashes vs ×4–10 overshoots at dim predictions — the 128 nm
+   wall-channel shape problem, plus self-trigger selection bias at dim
+   pred).  Recommendation to owner: keep the f7c66ab8 factors; details +
+   per-opdet census in `pdvd-qtol-recalibration.md` §5.  Candle round
+   `candles-spcov` (222 keep / 203 add) now serves port 5019.
 
 ## Verification
 

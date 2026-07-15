@@ -136,11 +136,19 @@ def harvest(paths, lib=None):
                     pr = (np.asarray(pb if pb is not None else [0.0] * 40, float)
                           + np.asarray(pt if pt is not None else [0.0] * 40, float))
                     sat = np.asarray(f.get("sat", [0] * 40), bool)
+                    # per-flash readout coverage (knob-on dumps; 1.0 when the
+                    # key is absent): self-trigger channels with no snippet
+                    # over the flash window measured NOTHING -- exclude them
+                    # from both sums instead of scoring fake zeros
+                    # (docs/qlmatch/pdvd-lightpattern-sp-investigation.md).
+                    cov = np.asarray(f.get("cov", [1.0] * 40), float)
                     out.append(dict(
                         run=os.path.basename(path).split("calib")[0] or path,
                         path=path, evt=d["charge_ident"], gid=f["gid"],
                         meas=np.asarray(f["pe"], float), pred=pr,
-                        keep=keep_static & ~sat, sat_n=int(sat.sum()),
+                        keep=keep_static & ~sat & (cov >= 1.0),
+                        sat_n=int(sat.sum()),
+                        cov_n=int((cov < 1.0).sum()),
                         total=f["total_PE"], qtol=qtol,
                         half_bundles=(pb is not None) + (pt is not None)))
     return out
@@ -175,7 +183,8 @@ def main():
         anchors = [a for a in anchors if a["half_bundles"] == 2]
     print(f"strict crosser anchors: {len(anchors)} "
           f"({sum(1 for a in anchors if a['half_bundles'] == 2)} with both halves bundled, "
-          f"{sum(1 for a in anchors if a['sat_n'])} with >=1 saturated channel)")
+          f"{sum(1 for a in anchors if a['sat_n'])} with >=1 saturated channel, "
+          f"{sum(1 for a in anchors if a.get('cov_n'))} with >=1 uncovered channel)")
 
     qtols = {a["qtol"] for a in anchors}
     if len(qtols) > 1:

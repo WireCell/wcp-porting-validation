@@ -141,7 +141,76 @@ work/039252_*_arcal/calib-evt*.json`), showing the cathode-crosser pairs and
 anode boundary tracks together, replacing the `candles-pull2c2` display
 (those work dirs and decisions are untouched).
 
-## 5. Files
+## 5. Coverage-aware re-examination on the `spcov` round (2026-07-14, SP-fix reprocess)
+
+**Repro:**
+```
+# 120-event light reprocess at the SP-fixed operating point (keep-and-mark +
+# coverage + SPE templates v2 -- all run_light_evt.sh defaults):
+cd pdvd && PDVD_MAX_JOBS=6 ./run_light_all.sh -s _spcov 39252   # + 039253, + 039349 x3 files
+# QL rerun (imaging symlink farms from the plain dirs):
+export OMP_NUM_THREADS=8 PDVD_MAX_JOBS=6 PDVD_LIGHT_SUFFIX=_spcov
+./run_clus_evt.sh -s spcov -calib 039252 all   # + 039253, 039349
+cd ql_light_calib && python3 fit_qtol_crossers.py --tag spcov
+```
+
+After the three light-pattern SP fixes
+(`pdvd-lightpattern-sp-investigation.md`: unmasked dump prediction, per-flash
+readout-coverage masking, SPE templates v2), the fitter now also drops
+channels with dump `cov < 1` from both sums.  195 strict-crosser anchors
+(154 both-halves; every anchor has ≥1 uncovered channel).
+
+**Global / cathode: the adopted calibration closes.**  Global median
+Σmeas/Σpred = **1.078** [0.77, 2.66] n=195 (per-run 1.057/1.088/1.070);
+cathode-restricted **1.006** [0.77, 2.45].  Per-cathode-opdet bright-end
+medians (pred ≥ 5 PE, covered+unsat) are 0.89–1.48 with ~0 zero-fraction,
+and od7 — pinned at ~0.5 by the ch1051 template latch before v2 — now sits
+at 1.14.  QtoL 0.094 and the cathode ×10.116 factor need no change.
+
+**Membrane / PMT: the previous ×1.655 / ×0.352 factors were fit on ~70%
+fake zeros, and honest coverage does NOT yield a replacement single factor.**
+Anchor-level medians move to 3.85 (membrane) / 2.31 (PMT), but these carry a
+self-trigger selection bias: a snippet channel is only covered when it
+triggered, so at dim predictions the covered sample is exactly the
+upward-fluctuating tail (per-channel ratio slope 10.8 → 2.4 from dim to
+bright prediction).  At the unbiased bright end the picture inverts —
+per-opdet medians over covered, unsaturated entries with pred ≥ 5 PE:
+
+| od (membrane) | n | med m/p | frac meas=0 |
+|---|---|---|---|
+| 0 (repaired pair) | 83 | 1.43 | 0.42 |
+| 1 | 65 | 0.00 | 0.55 |
+| 3 | 61 | 0.00 | 0.54 |
+| 12 | 60 | 0.00 | 0.65 |
+| 18 | 60 | 0.00 | 0.55 |
+| 19 | 71 | 0.00 | 0.66 |
+
+i.e. 5 of 6 membrane walls measure NOTHING in most covered flashes against
+12–25 PE predictions while other entries overshoot ×4–10; PMTs scatter
+0.02–3.3 per tube.  No scalar rescale fixes a bimodal residual — this is the
+128 nm-library wall-channel shape problem (§2.2 distance slope, §3 type
+spread) now visible per channel with fake zeros removed.
+
+**Recommendation (owner gate — factors NOT changed):** keep the adopted
+f7c66ab8 factors as-is.  The cathode group (which closes at unity and
+dominates every fit) plus coverage masking now carry the matching; the
+membrane/PMT factors only shape chi2 on the minority of covered wall
+channels.  Refitting them from this data would launder the selection bias
+into the calibration.  The per-channel census (fit log
+/home/xqian/tmp/perod_spcov.log, regenerate per Repro) is the starting point
+if the owner instead wants to revisit the Xe/175 nm wall-channel question or
+per-channel efficiencies.
+
+**Candle round `spcov`** (`ql_display/decisions-*-spcov/`): find_crossers
+204 keep + 76 add, candles union 222 keep + 203 add + 1911 reject over the
+18 run-039252 events; labels `work/ql_labels/candles-spcov/`; port **5019**
+now serves this round (`serve_ql_scan.sh 5019 --tag candles-spcov
+work/039252_*_spcov/calib-evt*.json`), replacing the `candles-arcal` display
+(arcal work dirs, decisions, and labels untouched).  The viewer shows sat
+channels as orange rings (full prediction visible) and uncovered channels as
+grey no-data markers.
+
+## 6. Files
 
 - `ql_light_calib/fit_qtol_crossers.py` — harvest + estimator + per-type /
   per-brightness / library-swap diagnostics (this doc's tables).
