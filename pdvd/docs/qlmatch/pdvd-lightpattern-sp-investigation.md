@@ -195,6 +195,12 @@ These match the anchor table: od7 low with a *tight* band (0.77 [0.63,
    pred).  Recommendation to owner: keep the f7c66ab8 factors; details +
    per-opdet census in `pdvd-qtol-recalibration.md` §5.  Candle round
    `candles-spcov` (222 keep / 203 add) now serves port 5019.
+   **Owner ruling 2026-07-15 (gate CLOSED):** factors kept as-is; the
+   `candles-spcov` round accepted; the spcov operating point (keep-and-mark
+   + repair + coverage chain + QL sat/cov masking + SPE templates v2)
+   promoted to PDVD production default — the runner env defaults are
+   ratified, `_spcov` supersedes `_satrep` as the canonical dump record.
+   Toolkit defaults stay OFF (byte-identical).
 
 ## Verification
 

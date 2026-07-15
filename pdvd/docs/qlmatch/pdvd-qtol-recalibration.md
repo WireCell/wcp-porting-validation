@@ -191,15 +191,28 @@ i.e. 5 of 6 membrane walls measure NOTHING in most covered flashes against
 128 nm-library wall-channel shape problem (§2.2 distance slope, §3 type
 spread) now visible per channel with fake zeros removed.
 
-**Recommendation (owner gate — factors NOT changed):** keep the adopted
-f7c66ab8 factors as-is.  The cathode group (which closes at unity and
-dominates every fit) plus coverage masking now carry the matching; the
-membrane/PMT factors only shape chi2 on the minority of covered wall
-channels.  Refitting them from this data would launder the selection bias
-into the calibration.  The per-channel census (fit log
-/home/xqian/tmp/perod_spcov.log, regenerate per Repro) is the starting point
-if the owner instead wants to revisit the Xe/175 nm wall-channel question or
-per-channel efficiencies.
+**Recommendation (as reported):** keep the adopted f7c66ab8 factors as-is.
+The cathode group (which closes at unity and dominates every fit) plus
+coverage masking now carry the matching; the membrane/PMT factors only shape
+chi2 on the minority of covered wall channels.  Refitting them from this data
+would launder the selection bias into the calibration.  The per-channel
+census (fit log /home/xqian/tmp/perod_spcov.log, regenerate per Repro) is the
+starting point if the Xe/175 nm wall-channel question or per-channel
+efficiencies are ever revisited.
+
+**Owner ruling (2026-07-15): factors kept as-is.**  The f7c66ab8 values
+(QtoL 0.094, cathode ×10.116, membrane ×1.655, PMT ×0.352) remain the
+adopted calibration; no change to `qlmatching.jsonnet`.  In the same ruling
+the owner accepted the `candles-spcov` hand-scan round as reasonable and
+promoted the **spcov operating point to the PDVD production default**
+(saturation keep-and-mark + repair, coverage flag chain, QL sat/cov masking,
+**SPE templates v2**) — i.e. the runner env defaults already in
+`run_light_evt.sh` (`PDVD_FLAG_SATURATION=1 PDVD_SAT_REPAIR=1
+PDVD_EMIT_COVERAGE=1 PDVD_SPE_V2=1`, veto off) and `run_clus_evt.sh`
+(`PDVD_QL_USE_SAT_FLAG=1 PDVD_QL_USE_COV_FLAG=1`) are ratified as the
+standing operating point, and the `_spcov` dumps supersede `_satrep` as the
+canonical 120-event record.  Toolkit C++/jsonnet defaults stay OFF
+(byte-identical) as always.
 
 **Candle round `spcov`** (`ql_display/decisions-*-spcov/`): find_crossers
 204 keep + 76 add, candles union 222 keep + 203 add + 1911 reject over the
@@ -214,7 +227,10 @@ grey no-data markers.
 
 - `ql_light_calib/fit_qtol_crossers.py` — harvest + estimator + per-type /
   per-brightness / library-swap diagnostics (this doc's tables).
-- Dumps: `work/<run6>_<idx>_satrep/calib-evt*.json` (120; operating point
-  veto-off + flag + twoside repair + QL per-flash masking).
+- Dumps: `work/<run6>_<idx>_spcov/calib-evt*.json` (120; CANONICAL since the
+  2026-07-15 ruling: veto-off + flag + twoside repair + coverage chain + QL
+  sat/cov masking + SPE v2).  Previous round
+  `work/<run6>_<idx>_satrep/calib-evt*.json` (no coverage/SPE-v2) kept as
+  record.
 - Fit logs: /home/xqian/tmp/satstudy/fit-relib{128,175}.log (scratch;
   regenerate via the Repro block).
