@@ -227,10 +227,12 @@ grey no-data markers.
 
 - `ql_light_calib/fit_qtol_crossers.py` — harvest + estimator + per-type /
   per-brightness / library-swap diagnostics (this doc's tables).
-- Dumps: `work/<run6>_<idx>_spcov/calib-evt*.json` (120; CANONICAL since the
-  2026-07-15 ruling: veto-off + flag + twoside repair + coverage chain + QL
-  sat/cov masking + SPE v2).  Previous round
-  `work/<run6>_<idx>_satrep/calib-evt*.json` (no coverage/SPE-v2) kept as
-  record.
+- Dumps: `work/<run6>_<idx>_spcov/calib-evt*.json` (120; SOLE CANONICAL
+  record since the 2026-07-15 ruling: veto-off + flag + twoside repair +
+  coverage chain + QL sat/cov masking + SPE v2).  The previous
+  `_satrep` reprocess (no coverage/SPE-v2) was **removed in the 2026-07-15
+  disk cleanup** now that `_spcov` is canonical; its numbers survive in this
+  doc's §4 tables and Repro block, and it is fully regenerable via that block
+  (`run_light_all.sh -s _satrep …`) should it ever be needed again.
 - Fit logs: /home/xqian/tmp/satstudy/fit-relib{128,175}.log (scratch;
   regenerate via the Repro block).
