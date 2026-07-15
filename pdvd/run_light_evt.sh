@@ -105,24 +105,28 @@ PY
 read -r OFFSET_BOT_US OFFSET_TOP_US T0_VS_TREE <<< "$OFFSETS"
 echo "   offsets (us, add to flash time): bot=$OFFSET_BOT_US top=$OFFSET_TOP_US (chain t0 - tree light_t0 = $T0_VS_TREE us)"
 
-# PDVD_VETO_SATURATION=0 disables the DAPHNE-rail OpHit veto (see
-# docs/qlmatch/pdvd-pd-mapping-investigation.md sec.6-7: the veto zeroes
-# railed cathode channels in 42% of bright flashes).  Default (unset/1) =
-# legacy veto ON, compiled config byte-identical.
-# PDVD_FLAG_SATURATION=1 keeps-and-marks railed hits (10th ophit column ->
-# flash_sat tensor -> QLMatching per-flash mask) and PDVD_SAT_REPAIR=1
-# additionally bridges railed runs before decon -- the keep-and-mark chain of
-# docs/qlmatch/pdvd-saturation-recovery.md.  Operating point for the _satrep
-# reprocess: PDVD_VETO_SATURATION=0 PDVD_FLAG_SATURATION=1 PDVD_SAT_REPAIR=1.
-# All default off, compiled config byte-identical.
+# DAPHNE-rail (saturation) handling.  PRODUCTION DEFAULT since 2026-07-14 is
+# the keep-and-mark chain of docs/qlmatch/pdvd-saturation-recovery.md:
+#   veto OFF   (PDVD_VETO_SATURATION=0; the legacy veto zeroed railed cathode
+#               channels in 42% of bright flashes and biased every cathode
+#               calibration x5 low -- pdvd-pd-mapping-investigation.md sec.6-7)
+#   flag ON    (PDVD_FLAG_SATURATION=1: 10th ophit column -> flash_sat tensor
+#               -> QLMatching per-flash mask)
+#   repair ON  (PDVD_SAT_REPAIR=1: two-sided exponential bridge over railed
+#               runs before decon)
+# Owner-adopted with the per-type VUVEfficiency scale factors (toolkit
+# qlmatching.jsonnet).  Set PDVD_VETO_SATURATION=1 PDVD_FLAG_SATURATION=0
+# PDVD_SAT_REPAIR=0 to recover the legacy veto-ON chain; the toolkit C++ and
+# jsonnet defaults stay legacy/OFF (byte-identical) -- this runner is where
+# PDVD processing turns the operating point on.
 VETO_SAT_ARG=()
-if [ "${PDVD_VETO_SATURATION:-1}" = 0 ]; then
+if [ "${PDVD_VETO_SATURATION:-0}" = 0 ]; then
     VETO_SAT_ARG=(-S "veto_saturation=false")
 fi
-if [ "${PDVD_FLAG_SATURATION:-0}" = 1 ]; then
+if [ "${PDVD_FLAG_SATURATION:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "flag_saturation=true")
 fi
-if [ "${PDVD_SAT_REPAIR:-0}" = 1 ]; then
+if [ "${PDVD_SAT_REPAIR:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "saturation_repair=true")
 fi
 
