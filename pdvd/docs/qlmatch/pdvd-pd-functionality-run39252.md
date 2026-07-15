@@ -196,14 +196,75 @@ reconstructed light here cannot make.
   `[13,24,27,28,29,32,34,39]` + per-event `auto_mask`), and an unresolved
   absolute PMT-yield question — all identical in the two adjacent runs.
 
-## Config implications (note only — no change made)
+## Recommendation — mask the confirmed-faulty channels
 
-The already-deployed masking (`ch_mask_base = [13,24,27,28,29,32,34,39]` plus the
-dynamic same-type `auto_mask`) already removes the hard-dead PMTs and Ar-blind
-channels. ch2 (dim top-XA), ch16/17 (dim z-wall PMT) and ch33 (dim bottom PMT)
-are caught per-event by the dynamic auto-mask rather than statically. If the
-owner wants ch2/16/17/33 permanently excluded, that would be a one-line addition
-to `ch_mask_base` in `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet` —
-but it changes reconstruction output and must go in as a default-OFF knob with a
-byte-identical gate, so it is **not** done here. This note is a data observation
-only.
+The poorly-working channels this audit isolates should be removed from the
+QLMatching chain so their biased light does not distort the per-flash χ²/KS and
+LASSO amplitudes. Below is *which* channels, and *how* (hard-coded vs
+self-determined, as raised).
+
+### What is already masked
+- **Static** `ch_mask_base = [13, 24, 27, 28, 29, 32, 34, 39]`
+  (`cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet:71`) — the 4 hard-dead
+  bottom PMTs (24/27/28/34) + the 4 Ar-blind channels (13/29/32/39). Masked
+  channels are inert in the fit.
+- **Dynamic** per-event `auto_mask` (same-type neighbour, 10/3 contrast;
+  `qlmatching.jsonnet:232`) — masks a channel in an event when it is ≫ dimmer
+  than its same-type peers. Its comment already names ch16 and ch33 as the
+  "genuinely DIM channels" it removes per-event *when quiet*.
+
+### What this audit says to add
+Permanently poorly-working across **all three** runs, biasing the fit but **not**
+statically removed:
+
+| ch | type / position | peerR (252/253/349) | meas/pred (cur) | note |
+|---|---|---|---|---|
+| **2** | wall XA, TOP (+x) | 0.12 / 0.23 / 0.10 | 0.24 | ~8× low, all runs; not in either mask today |
+| **16** | z-wall PMT | 0.05 / 0.05 / 0.05 | 0.007 | ~20× low; only per-event auto-masked |
+| **17** | z-wall PMT | 0.18 / 0.14 / 0.30 | 0.020 | meas/pred ~50× under; not named in auto_mask |
+| **33** | bottom PMT | 0.08 / 0.10 / 0.13 | 0.015 | ~10× low; only per-event auto-masked |
+
+→ **Recommend masking `[2, 16, 17, 33]`.** These are stable hardware faults, not
+run-39252 events.
+
+**Do NOT mask** (would discard usable light):
+- **ch0** — low peerR (0.36) only because its top-side peers ch1/ch3 are very
+  bright; its own meas/pred is 0.83, i.e. functional.
+- **The PMT system as a whole** — the audit's central result is that the *live*
+  PMTs respond *in proportion* to the library (§Results — PMTs). They carry <2 %
+  of PE by geometry, but it is real light; blanket-masking the PMTs would throw
+  away the only −x-volume coverage away from the walls. Mask individual
+  confirmed-dead/dim channels only.
+
+### Mechanism: added to the static mask (not a toggle)
+
+These four are permanent hardware faults (stable across every run examined), so
+they belong in the **same place as the existing dead-channel list** — the static
+`ch_mask_base` in the PDVD config — rather than behind a run-time toggle. A
+dead/dim-channel list is detector-configuration data, exactly like the 24/27/28/34
+(dead) and 13/29/32/39 (Ar-blind) entries already hard-coded there; it is not a
+behavioural option to switch on and off.
+
+**Implemented** in `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet`
+(toolkit commit `3c30cf58`):
+
+```
+local ch_mask_base = [2, 13, 16, 17, 24, 27, 28, 29, 32, 33, 34, 39],
+//                    ^^      ^^  ^^                  ^^   added: 2,16,17,33
+```
+
+so their biased light never enters the LASSO / χ² / KS. The per-event
+`auto_mask` stays on as the safety net for anything transient or new. This
+**changes PDVD Q/L output by design** (it is not byte-identical — that is the
+point); it is a PDVD-specific configuration edit and touches no other detector.
+Already-processed dumps must be **reprocessed** to pick up the new mask
+(`run_clus_evt.sh` — a separate operational step, not done in this study).
+
+**Not masked** (kept live): **ch0** (dimmer than its bright top-wall peers but
+meas/pred ~0.83, i.e. functional) and the remaining live PMTs (they respond in
+proportion to the library and carry the only −x light away from the walls —
+blanket-masking the PMT system would discard usable information).
+
+If a *future* run's PD state differs, re-run `pd_functionality_audit.py` on that
+run and update `ch_mask_base` accordingly — the list is derived from the data,
+not frozen.
