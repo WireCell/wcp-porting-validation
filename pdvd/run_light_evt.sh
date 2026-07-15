@@ -109,9 +109,21 @@ echo "   offsets (us, add to flash time): bot=$OFFSET_BOT_US top=$OFFSET_TOP_US 
 # docs/qlmatch/pdvd-pd-mapping-investigation.md sec.6-7: the veto zeroes
 # railed cathode channels in 42% of bright flashes).  Default (unset/1) =
 # legacy veto ON, compiled config byte-identical.
+# PDVD_FLAG_SATURATION=1 keeps-and-marks railed hits (10th ophit column ->
+# flash_sat tensor -> QLMatching per-flash mask) and PDVD_SAT_REPAIR=1
+# additionally bridges railed runs before decon -- the keep-and-mark chain of
+# docs/qlmatch/pdvd-saturation-recovery.md.  Operating point for the _satrep
+# reprocess: PDVD_VETO_SATURATION=0 PDVD_FLAG_SATURATION=1 PDVD_SAT_REPAIR=1.
+# All default off, compiled config byte-identical.
 VETO_SAT_ARG=()
 if [ "${PDVD_VETO_SATURATION:-1}" = 0 ]; then
     VETO_SAT_ARG=(-S "veto_saturation=false")
+fi
+if [ "${PDVD_FLAG_SATURATION:-0}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "flag_saturation=true")
+fi
+if [ "${PDVD_SAT_REPAIR:-0}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "saturation_repair=true")
 fi
 
 wcsonnet \

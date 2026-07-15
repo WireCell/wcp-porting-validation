@@ -298,6 +298,14 @@ PY
     # toolkit qlmatching.jsonnet default stays null (byte-identical) -- this
     # runner is where PDVD processing turns the wider cushion on.
     local QL_CATHEXT1_ARG=(-S "ql_cathode_ext1_cm=${PDVD_QL_CATHODE_EXT1_CM:-2.0}")
+    # PDVD_QL_USE_SAT_FLAG=1: per-flash DAPHNE-rail channel masking in
+    # QLMatching (needs a flag_saturation light archive, see run_light_evt.sh
+    # and docs/qlmatch/pdvd-saturation-recovery.md).  Default off =>
+    # compiled config byte-identical.
+    local QL_SATFLAG_ARG=()
+    if [ "${PDVD_QL_USE_SAT_FLAG:-0}" = 1 ]; then
+        QL_SATFLAG_ARG=(-S "ql_use_saturation_flag=true")
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \
@@ -319,6 +327,7 @@ PY
         -S "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.48073}" \
         -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.48073}" \
         "${QL_CATHEXT1_ARG[@]}" \
+        "${QL_SATFLAG_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

@@ -137,3 +137,46 @@ the quantitative verdict rests on §2.1-2.2.
 - `saturation_recovery_bias.png` — §2.1 figure.
 - Logs quoted above: /home/xqian/tmp/satstudy/{study2,realrail}.log
   (scratch; regenerate via the Repro block).
+
+## 5. Implementation (toolkit d29d5f67, all default-OFF)
+
+The keep-and-mark chain:
+- `OpHitFinder.flag_saturation` — keep saturated hits, append a 10th ophit
+  column with the rail-overlap flag (9 cols / bit-identical off).
+- `OpFlashFinder` — with a 10-col input, emit the per-flash per-OpDet
+  `flash_sat` tensor (4th archive member; absent otherwise).
+- `Aux::FlashTensorToOpticalPCs` — carries `flash_sat` on the light-PC
+  `error` field (previously unconsumed, always 0). Data-driven, no knob.
+- `Match::Opflash::get_sat(ch)`; `QLMatching.use_saturation_flag` — flagged
+  channels leave that flash's opdet mask (pred/chi2/KS via the existing
+  `bundle_mask_ks: true`) and their LASSO rows are zeroed (round1/round2/
+  joint fills). Calib dump gains a per-flash `sat` array (knob-on only).
+- `OpDecon.saturation_repair` (+`repair_fit_samples`, default 8) — the
+  `twoside` bridge of §2.1 before decon; mask emission unchanged.
+
+Config/runner plumbing (wcp repo): `wct-light-reco.jsonnet` tla args
+`flag_saturation` / `saturation_repair` (env `PDVD_FLAG_SATURATION=1` /
+`PDVD_SAT_REPAIR=1` in `run_light_evt.sh`); `wct-clustering.jsonnet` arg
+`ql_use_saturation_flag` (env `PDVD_QL_USE_SAT_FLAG=1` in
+`run_clus_evt.sh`); key-suppression in `cfg/.../protodunevd/
+{flash,qlmatching}.jsonnet`.
+
+**Gates (all PASS):**
+- Compiled configs knobs-off byte-identical: light vs the stored
+  `work/039252_light298567{,_satoff}/.wct-light.json`; clustering old-vs-new
+  jsonnet (git-stash diff). Knob-on keys present (3 branches / QLMatching).
+- `hash_archive.py` member-identical knobs-off: PDVD light evt298567 vs
+  canonical (`work/039252_light298567_abflag`), PDHD allpd 29107 evt1015 vs
+  canonical (`work/029107_allpd1015_abflag`).
+- QL knobs-off calib dump **byte-identical**: `work/039252_0_satoffab/`
+  vs `work/039252_0_satoff/` (covers the FlashTensorToOpticalPCs / Opflash /
+  QLMatching code paths shared with SBND/uboone).
+- `wcdoctest-{flash,match,aux}` pass.
+
+**Knob-on smoke (evt298567, operating point veto-off + flag + repair
+= `_satrep`):** `flash_sat` flags exactly the railed cathode OpDets
+({5,7,9} for gid37, {4,6,7,8} for gid57); C++ repair od7 2468 → 4843
+(Python `twoside` prototype 5124, −5% from estimator details); gid37 total
+13924 → 16330. Full QL with `PDVD_QL_USE_SAT_FLAG=1`
+(`work/039252_0_satrep/`): 32/198 flashes carry sat flags, the three hand
+crossers keep their matches (KS 0.15–0.25).
