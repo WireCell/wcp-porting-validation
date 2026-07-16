@@ -839,6 +839,23 @@ base dirs (charge-SP imaging + base light waveforms — inputs for future
 rounds), all `_keep` dirs, every `ql_display/decisions-*` dir and
 `work/ql_labels/` tag (scan records, all rounds).
 
+**Second-stage consolidation (same day, owner-directed): base dirs folded
+into `_keep`.**  Everything of value was **moved** (not copied) from the 240
+untagged base dirs into the corresponding `_keep` dirs, then the base dirs
+were deleted: the 16 imaging tarballs per event (replacing the `_keep`
+symlinks with the real files), the 8 charge-SP frame tarballs per event
+(`protodune-sp-dnnroi-frames-anode*.tar.bz2`, ~40 GB — the SP record,
+deliberately preserved: regenerating it would need a full NF/SP/DNNROI
+rerun and the raw charge inputs sit in a colleague's active area), the
+SP/imaging logs + gpu/time provenance, the evt298567 magnify ROOT dumps,
+and the evt298567 `light-frames-*.tar.bz2`.  Dropped with the base dirs:
+only the superseded base-round `wct_clus_*.log` and empty
+`trash-all-apa.tar.gz` (old base light opflash archives too — 3-tensor,
+superseded).  `work/` is now a single tree: 240 `_keep` dirs + `ql_labels/`
+(46 GB).  **Workflow consequence: future `run_clus_evt.sh -s <tag>` symlink
+farms must link `clusters-apa-*` from the `_keep` dirs** (the plain-dir
+farms in older Repro blocks no longer resolve).
+
 ## Verification
 
 - This doc's script regenerates every table/figure from the existing dumps
