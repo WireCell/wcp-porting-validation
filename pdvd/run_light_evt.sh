@@ -147,6 +147,18 @@ fi
 if [ "${PDVD_SPE_V2:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "spe_v2=true")
 fi
+# PDVD_OVERFLOW_TO_RAIL: remap floor-pinned OVERFLOW runs to the DAPHNE rail
+# before OpDecon's rail scan, so the existing detect/flag/repair chain sees the
+# membrane self-trigger snippets whose over-range pulses pin at ADC 0 instead of
+# clamping at the ceiling (detect_saturation cannot see them: those snippets
+# peak BELOW 16383).  DEFAULT OFF -- unlike the spcov knobs above this is NOT a
+# production default: the encoding mechanism is still unconfirmed and the
+# discriminator is tuned on 6 runs in one event.  Enabling it is gated on
+# PDS/DAPHNE expert confirmation.  See
+# docs/qlmatch/14_pdvd-lightpattern-sp-investigation.md ("The zero-run").
+if [ "${PDVD_OVERFLOW_TO_RAIL:-0}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "overflow_to_rail=true")
+fi
 
 wcsonnet \
     -A input_file="$RAW_FILE" \

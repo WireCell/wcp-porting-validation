@@ -155,11 +155,11 @@ consequences matter downstream:
 
 ### The zero-run: membrane snippets that jump to a flat "negative" — OPEN
 
-**Status: newly found 2026-07-16, mechanism unconfirmed, NOT yet handled by the
-chain. Reported to the owner; no code changed.** Found by looking for the
-signature the owner recalled ("positive signal, then suddenly negative and flat
-there") — the cathode-only scan above had missed it because it only looks at
-10xx channels.
+**Status: found 2026-07-16. Mechanism still unconfirmed; a default-OFF fix
+exists (`overflow_to_rail`, below) but is NOT enabled in production.** Found by
+looking for the signature the owner recalled ("positive signal, then suddenly
+negative and flat there") — the cathode-only scan above had missed it because
+it only looks at 10xx channels.
 
 On **membrane XA snippets** the raw ADC drops to **exactly 0** and stays pinned
 there for tens to hundreds of consecutive samples. In the pedestal-subtracted
@@ -205,22 +205,96 @@ therefore deconvolves a waveform with a −2500-ADC notch at the pulse peak as i
 it were valid data. A positive-threshold hit finder is very unlikely to
 recover a sensible PE from that.
 
-**Consequences to check (not yet established):**
-- This is *unflagged* saturation on exactly the PD types whose calibration is
-  unresolved. It is a candidate explanation for the open Phase-4 puzzle
-  (`12_pdvd-qtol-recalibration.md` §5): membrane/PMT median meas/pred = 0.00
-  with 54–66% zeros **in covered flashes** — i.e. measured ≈ 0 where the
-  prediction is *bright*, which is what an unhandled peak-overflow would do.
-  The coverage chain cannot explain those: coverage says the channel *was*
-  reading out.
-- The prevalence beyond evt298567, and whether the affected snippets coincide
-  with bright flashes, is not yet measured.
+**Does it explain the Phase-4 membrane/PMT puzzle? On this event, no.** It was
+an attractive hypothesis — unflagged saturation on exactly the PD types whose
+calibration never closed, and `12_pdvd-qtol-recalibration.md` §5 reports
+membrane/PMT median meas/pred = 0.00 with 54–66% zeros **in covered flashes**,
+i.e. measured ≈ 0 where the prediction is bright, which is what an unhandled
+peak-overflow would produce (coverage cannot explain those: coverage says the
+channel *was* reading out). But the measured scale does not support it as the
+dominant cause: only **5 of 1471** membrane snippets in evt298567 overflow
+(**0.34%**), and knob-on changes **3 of 415** flashes. That is orders of
+magnitude short of a 54–66% zero rate. Overflow is real and worth fixing, but
+on this evidence it is not the Phase-4 explanation. Prevalence across the 120
+events remains unmeasured; treat the link as **not supported** rather than
+open.
 
 **Open question for the PDS/DAPHNE experts (do not guess):** why does the
 self-trigger path report overflow as 0 while the cathode full stream clamps
 hard at 16383? The two populations demonstrably behave differently in the same
-event. Until that is answered the correct detector predicate for these channels
-is unknown, so no knob is proposed here.
+event. The knob below is justified by the *bracketing evidence* alone (the true
+signal was above the ceiling ⇒ treat it as ≥ rail and flag it), which is
+conservative and mechanism-independent — but **enabling it in production is
+gated on this question being answered.**
+
+### The fix: `overflow_to_rail` (toolkit, default OFF)
+
+The owner's proposal — detect them, move 0 to the maximal saturation value,
+then let the existing chain run — is implemented as `OpDecon.overflow_to_rail`.
+It composes with everything already built: once a run reads `saturation_adc`,
+`detect_saturation` flags it, `saturation_repair` bridges it, `flag_saturation`
+marks the hit, `OpFlashFinder` emits it in `flash_sat`, and `QLMatching`
+excludes the channel from chi2/KS/LASSO. No new downstream code.
+
+**Algorithm** (`OpDecon::unclip_overflow`, run on a copy *before* the rail scan):
+
+```
+for each maximal run [i,j) with adc[t] <= overflow_adc (default 1):
+    if (j - i) < overflow_min_samples        (default 5)    -> skip
+    if i == 0 or j == n                                     -> skip  (no neighbour pair)
+    if i < pre_trigger - pedestal_buffer                    -> skip  (pedestal window)
+    if adc[i-1] >= overflow_min_neighbor                    (default 8000)
+       and adc[j] >= overflow_min_neighbor:
+           adc[i..j) = saturation_adc                       (16383)
+```
+
+**Why both immediate neighbours.** The floor pin has *two* causes and only one
+is overflow:
+
+| run | bracketing (before, after) | truth | action |
+|---|---|---|---|
+| ch2011 [122,156) | 14029, 16352 | signal above ceiling | remap |
+| ch2021 [122,298) | 12109, 15266 | signal above ceiling | remap |
+| ch2021 [301,326) | **345, 3595** | deep undershoot pinned at the floor | **leave** |
+
+Requiring *both* sides to reach 8000 separates them with a 35× margin (lowest
+overflow 12109 vs 345). This matters because a false positive is the dangerous
+direction: the saturation flag protects the *fit*, but the measured PE still
+enters flash totals and the display, so mis-remapping an undershoot would
+fabricate a rail-height pulse in a flash total. Immediate neighbours only —
+widening to 3 samples lets a one-sample spike beside the undershoot run
+masquerade as an overflow exit (12156 vs 12109, margin gone).
+
+Repair accuracy is deliberately *not* the goal: a 176-sample overflow is far
+past the depth ≈3 where `11_pdvd-saturation-recovery.md` §2 shows no estimator
+is reliable. The flag is the point; the bridged value only improves the flash
+total over an un-repaired −2500 notch.
+
+**Limitations:** the threshold is tuned on 6 runs in one event; a run touching
+a snippet edge, or reaching into the 20-sample pedestal window, is
+conservatively left alone; floor-clipped *undershoot* is a separate phenomenon
+this does not address (it cannot be recovered by mapping to the rail).
+
+**Gates (all PASS, toolkit `flash`):**
+- Compiled config knob-off byte-identical to pre-change (`wct-light-reco`,
+  production op point); knob-on adds exactly the three `overflow_to_rail` keys.
+- PDVD light knob-off member-hash identical to the pre-change binary:
+  `work/039252_light298567_ovfoff` == `_spcov` (`39cf8227…`, 11 members).
+- PDHD all-PD light knob-off identical: `work/029107_allpd1015_ovfgate` ==
+  `_p2covgate` (`e8731138…`, 7 members).
+- **False-positive guard:** knob-*on* on an event with no overflow runs
+  (evt298609) is byte-identical to knob-off (`36b544b6…`) — the knob is inert
+  when there is nothing to remap.
+- `wcdoctest-flash` 31/31.
+
+**Knob-on smoke (evt298567, `work/039252_light298567_ovfon2`):** membrane goes
+**0 → 5** flagged tick-runs ("5 floor-pinned overflow runs remapped"); cathode
+unchanged at 111 flagged / 0 remapped; PMT 0/0. 6 qualifying runs exist and
+**5** are remapped — the ch2021 undershoot run is correctly rejected. Downstream
+the effect reaches `flash_sat`: membrane **OpDet 2** gains a flag (cathode
+OpDets 4–11 counts identical), 412 of 415 flashes are bit-unchanged, and 3
+flashes near t ≈ 4.9 ms re-form. Toolkit and runner defaults are **OFF**
+(`PDVD_OVERFLOW_TO_RAIL=1` to enable) pending the mechanism question above.
 
 ### Does the deconvolution go negative inside the rail? No (cathode)
 

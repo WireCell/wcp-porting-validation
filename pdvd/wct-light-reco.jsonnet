@@ -64,7 +64,17 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
          // broken v1 templates (ch2020 negative area, ch1051 multi-PE mode
          // latch, ch3010/3020 contaminated tails) that corrupt those
          // channels' measured-PE scale.  false => the v1 file, byte-identical.
-         spe_v2=false)
+         spe_v2=false,
+         // Remap floor-pinned OVERFLOW runs to the rail before OpDecon's rail
+         // scan, so the existing detect/flag/repair chain sees the membrane
+         // self-trigger snippets whose over-range pulses pin at ADC 0 rather
+         // than clamping at the ceiling (invisible to detect_saturation as-is).
+         // Requires detect_saturation (already on for all three branches).
+         // C++ default false, key suppressed => byte-identical when off.
+         // NOT a production default: the encoding mechanism is unconfirmed --
+         // docs/qlmatch/14_pdvd-lightpattern-sp-investigation.md ("The
+         // zero-run").
+         overflow_to_rail=false)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -89,12 +99,13 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
       spe_file:: 'pgrapher/experiment/protodunevd/pdvd-spe-templates-v2.json',
   } else {});
   local sat_rep = if std.type(saturation_repair) == 'string' then std.parseJson(saturation_repair) else saturation_repair;
+  local ovf_rail = if std.type(overflow_to_rail) == 'string' then std.parseJson(overflow_to_rail) else overflow_to_rail;
 
   // --- cathode branch (opch 10xx, continuous full streams) ---
   local cath_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=1000, opch_hi=1999, name='cath');
   local cath_decon = flash.opdecon(name='cath', samples=FULLSTREAM_SAMPLES, wi_sigma=1.25,
                                    detect_saturation=true, saturation_pad=sat_pad_n,
-                                   saturation_repair=sat_rep);
+                                   saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
   local cath_roi = flash.oproi(name='cath');
   local cath_hit = flash.ophit(name='cath', hit_threshold=cath_th, intag='decon_roi',
                                fixed_ped_sigma=cath_ps, veto_saturation=veto_sat,
@@ -105,7 +116,7 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local mem_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=2000, opch_hi=2999, name='mem');
   local mem_decon = flash.opdecon(name='mem', wi_sigma=1.0,
                                   detect_saturation=true, saturation_pad=sat_pad_n,
-                                  saturation_repair=sat_rep);
+                                  saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
   local mem_hit = flash.ophit(name='mem', hit_threshold=mem_th, veto_saturation=veto_sat,
                               flag_saturation=flag_sat, emit_coverage=emit_cov);
 
@@ -113,7 +124,7 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local pmt_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=3000, opch_hi=3999, name='pmt');
   local pmt_decon = flash.opdecon(name='pmt', wi_sigma=3.5,
                                   detect_saturation=true, saturation_pad=sat_pad_n,
-                                  saturation_repair=sat_rep);
+                                  saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
   local pmt_hit = flash.ophit(name='pmt', hit_threshold=pmt_th, veto_saturation=veto_sat,
                               flag_saturation=flag_sat, emit_coverage=emit_cov);
 
