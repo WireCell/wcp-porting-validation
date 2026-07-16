@@ -62,17 +62,26 @@ decomposes into three real, independent defects:
 Because the four railed OpDets above are exactly the ones the display got
 wrong, this section spells out the saturation signature and the current
 processing. Numbers/figure: `scripts/saturation_signature.py` (fig 6),
-run-039252 evt298567, all 16 cathode channels. Depth statistics and the
-estimator comparison are **not** repeated here — they are
-`11_pdvd-saturation-recovery.md` §2.
+run-039252 evt298567. Depth statistics and the estimator comparison are
+**not** repeated here — they are `11_pdvd-saturation-recovery.md` §2.
+
+**Scope warning.** §§(a)-(c) below are measured on the **16 cathode
+channels**. They do **not** generalize to the membrane XA / PMT snippets,
+where the membrane snippets show a different and currently unhandled
+failure — see §"The zero-run".
 
 ![fig 6 — (a) the positive flat-top clip at 16383; (b) the AC-coupling undershoot after the pulse — the real "signal goes negative"; (c) the decon plateau, positive throughout the rail](pics/lightpattern_fig6_saturation_signature.png)
 
-The three answers in one line each: **(a)** saturation is a positive flat-top
-at the upper 14-bit rail; **(b)** the negative excursion your colleague
-remembers is real but it is the AC-coupling undershoot *after* the pulse, not
+The answers in one line each, **on the cathode**: **(a)** saturation is a
+positive flat-top at the upper 14-bit rail; **(b)** the slow negative
+excursion after a bright pulse is real, but it is AC-coupling undershoot, not
 the clip; **(c)** the deconvolution never goes negative inside the rail — it
 produces a positive plateau, and that plateau is the actual pathology.
+
+**On the membrane snippets there is a fourth, different answer** — the raw
+ADC jumps to a flat 0 (= −pedestal once subtracted) at the pulse peak, unflagged
+by `detect_saturation`. That is the sharp "goes negative and stays flat"
+signature, and it is an open issue: §"The zero-run".
 
 ### The signature is a positive flat-top — there is no negative clip
 
@@ -83,10 +92,16 @@ ceiling **16383**. The signature is a run of consecutive samples at exactly
 This is precisely what `OpDecon` tests for — `q[i] >= m_saturation_adc`
 (`OpDecon.cxx:494`, `saturation_adc` default 16383).
 
-The lower rail is never reached. Across all 16 cathode channels of evt298567
-the minimum ADC is 1592–5326 against pedestals of ~1800–5300, and the count of
-samples at ADC ≤ 0 is **0**. So saturation itself never drives the signal
-negative.
+**On the cathode**, the lower rail is never reached: across all 16 cathode
+channels of evt298567 the minimum ADC is 1592–5326 against pedestals of
+~1800–5300, and the count of samples at ADC ≤ 0 is **0**. On the cathode,
+saturation never drives the signal negative.
+
+**The membrane XA snippets are a different story — see
+§"The zero-run" below.** There the ADC does reach the bottom of its range, and
+the pedestal-subtracted waveform shows exactly the "goes negative and stays
+flat" signature. That case is *not* covered by the paragraph above, and it is
+*not* caught by `detect_saturation`.
 
 Note that the rail test is applied to the **raw** trace (`trace->charge()`,
 `OpDecon.cxx:489`) *before* `input_polarity` is used — polarity only enters
@@ -138,10 +153,80 @@ consequences matter downstream:
   3's ch2020 (area −1595): a *harvest* artifact, not a per-event decon
   behavior.
 
-### Does the deconvolution go negative inside the rail? No
+### The zero-run: membrane snippets that jump to a flat "negative" — OPEN
+
+**Status: newly found 2026-07-16, mechanism unconfirmed, NOT yet handled by the
+chain. Reported to the owner; no code changed.** Found by looking for the
+signature the owner recalled ("positive signal, then suddenly negative and flat
+there") — the cathode-only scan above had missed it because it only looks at
+10xx channels.
+
+On **membrane XA snippets** the raw ADC drops to **exactly 0** and stays pinned
+there for tens to hundreds of consecutive samples. In the pedestal-subtracted
+waveform the chain actually deconvolves, that is a flat plateau at
+**−pedestal** (≈ −2500 ADC) — i.e. precisely "suddenly negative, then flat".
+No sample is ever `< 0`: the raw is unsigned and floored at 0.
+
+evt298567, pins of ≥5 consecutive samples at ADC ≤ 1 (§E of the script):
+
+| ch | snippets | pinned samples | longest run | max ADC | flagged by `detect_saturation`? |
+|---|---|---|---|---|---|
+| 2010 | 1 | 32 | 32 | 16280 | **NO** |
+| 2011 | 1 | 34 | 34 | 16352 | **NO** |
+| 2021 | 1 | 201 | 176 | 15266 | **NO** |
+| 2040 | 1 | 105 | 105 | 16299 | **NO** |
+| 2041 | 1 | 77 | 77 | 16368 | **NO** |
+
+449 pinned samples on 5 channels, **none flagged**. All five are membrane; the
+PMT channels carry only isolated single samples at 0 (no run ≥5) — not, on this
+evidence, the same phenomenon.
+
+The zero-run sits exactly where the pulse **peak** should be, and is bracketed
+by near-ceiling values. Full resolution, ch2011 entry 1030 (pedestal 2488):
+
+| t | 118 | 119 | 120 | 121 | 122…155 | 156 | 157 | 158 | … |
+|---|---|---|---|---|---|---|---|---|---|
+| ADC | 2612 | 4096 | 8376 | 14029 | **0** (34 samples) | 16352 | 16286 | 16213 | decays |
+
+The pulse rises steeply (≈+5000/sample), the ADC reads 0 for 34 samples, then
+reappears at 16352 — just **below** the 16383 ceiling — and decays normally at
+≈−70/sample. The bracketing values say the true signal was *above* the ceiling
+throughout the zero-run: this reads as an **overflow reported as 0 rather than
+clamped at 16383**. ch2021 entry 337 shows the same, plus a second flat run
+pinned at exactly **1** (25 samples) during the post-pulse undershoot — an
+analog signal does not sit at 1 ADC for 25 samples, so both are digital pins.
+
+**Why this matters — `detect_saturation` misses all of it.** The detector tests
+`q[i] >= 16383` (`OpDecon.cxx:494`). These snippets never reach 16383 — their
+maxima are *below* it (ch2011 16352, ch2040 16299, ch2021 15266) — so **not one
+is flagged**, even though the membrane/PMT branches do run
+`detect_saturation=true` (`wct-light-reco.jsonnet:106-118`). The chain
+therefore deconvolves a waveform with a −2500-ADC notch at the pulse peak as if
+it were valid data. A positive-threshold hit finder is very unlikely to
+recover a sensible PE from that.
+
+**Consequences to check (not yet established):**
+- This is *unflagged* saturation on exactly the PD types whose calibration is
+  unresolved. It is a candidate explanation for the open Phase-4 puzzle
+  (`12_pdvd-qtol-recalibration.md` §5): membrane/PMT median meas/pred = 0.00
+  with 54–66% zeros **in covered flashes** — i.e. measured ≈ 0 where the
+  prediction is *bright*, which is what an unhandled peak-overflow would do.
+  The coverage chain cannot explain those: coverage says the channel *was*
+  reading out.
+- The prevalence beyond evt298567, and whether the affected snippets coincide
+  with bright flashes, is not yet measured.
+
+**Open question for the PDS/DAPHNE experts (do not guess):** why does the
+self-trigger path report overflow as 0 while the cathode full stream clamps
+hard at 16383? The two populations demonstrably behave differently in the same
+event. Until that is answered the correct detector predicate for these channels
+is unknown, so no knob is proposed here.
+
+### Does the deconvolution go negative inside the rail? No (cathode)
 
 A clipped flat-top deconvolves to a sustained **positive plateau** — checked on
-four channels (fig 6c), never a single negative sample inside the railed run:
+four cathode channels (fig 6c), never a single negative sample inside the
+railed run:
 
 | ch | rail len | decon inside rail: min | max | mean | n(<0) |
 |---|---|---|---|---|---|

@@ -18,6 +18,16 @@ questions of `14_pdvd-lightpattern-sp-investigation.md` §"Saturation: signature
      -> bright UNRAILED pulses undershoot too, at the same undershoot/amplitude
      ratio as railed ones, i.e. it is linear AC coupling, not a saturation
      recovery artifact.
+  E. THE ZERO-RUN (membrane XA / PMT only, OPEN issue): the raw ADC pins at
+     exactly 0 for tens-to-hundreds of samples where the pulse PEAK should be,
+     bracketed by near-ceiling values -- an overflow reported as 0 instead of
+     clamped at 16383.  Pedestal-subtracted, that is a flat plateau at
+     -pedestal: the "signal suddenly goes negative and stays flat" signature.
+     detect_saturation (q >= 16383) does NOT catch it: these snippets peak
+     BELOW the rail.  Mechanism unconfirmed -- see the doc section.
+
+A-D are cathode (10xx); E is membrane/PMT (20xx/30xx).  Do not generalize A-D
+across populations: E is the counter-example.
 
 Only channels whose pre-band is genuinely quiet (std < QUIET_SIG) enter the
 §B summary; on the rest the "quiet" band contains another pulse and the local
@@ -55,6 +65,74 @@ def local_base(w, i0):
     """Median/std of the quiet band 250..50 ticks before the rail run."""
     pre = w[max(0, i0 - 250):max(0, i0 - 50)]
     return float(np.median(pre)), float(pre.std())
+
+
+def pinned_runs(w, maxval=1.0, min_len=5):
+    """Runs of >= min_len consecutive samples pinned at/below maxval (the
+    bottom of the ADC range).  An analog signal does not sit at 0 or 1 ADC
+    for tens of samples -- these are digital pins."""
+    out = []
+    n = len(w)
+    i = 0
+    while i < n:
+        if w[i] <= maxval:
+            j = i
+            while j < n and w[j] <= maxval:
+                j += 1
+            if j - i >= min_len:
+                out.append((i, j))
+            i = j
+        else:
+            i += 1
+    return out
+
+
+def zero_run_census(rfile, event=EVENT):
+    """E. Scan EVERY channel of the event (not just the cathode) for zero-runs,
+    and ask whether detect_saturation (q >= RAIL) would have flagged them."""
+    import uproot
+    t = uproot.open(rfile)["rawdump/raw_waveform"]
+    arr = t.arrays(["event", "opchannel"], library="np")
+    sel = np.where(arr["event"] == event)[0]
+
+    print("\nE. The ZERO-RUN scan (all populations, not just cathode)")
+    print("   pin = >=5 consecutive samples at ADC <= 1")
+    per_ch = {}
+    nneg = 0
+    for i in sel:
+        c = int(arr["opchannel"][i])
+        w = np.asarray(t["adc"].array(entry_start=i, entry_stop=i + 1,
+                                      library="np")[0], np.float64)
+        nneg += int((w < 0).sum())
+        runs = pinned_runs(w)
+        if not runs:
+            continue
+        d = per_ch.setdefault(c, dict(nsnip=0, nsamp=0, longest=0, railed=0, peak=0.0))
+        d["nsnip"] += 1
+        d["nsamp"] += sum(j - i2 for i2, j in runs)
+        d["longest"] = max(d["longest"], max(j - i2 for i2, j in runs))
+        d["peak"] = max(d["peak"], float(w.max()))
+        if (w >= RAIL).any():
+            d["railed"] += 1
+
+    print("   samples with ADC < 0 anywhere in the event: %d (raw is unsigned)" % nneg)
+    if not per_ch:
+        print("   no zero-runs found.")
+        return
+    print("   %-7s %6s %8s %8s %9s %11s" %
+          ("ch", "snips", "samples", "longest", "max ADC", "flagged?"))
+    tot = 0
+    for c in sorted(per_ch):
+        d = per_ch[c]
+        tot += d["nsamp"]
+        print("   ch%-5d %6d %8d %8d %9.0f %11s"
+              % (c, d["nsnip"], d["nsamp"], d["longest"], d["peak"],
+                 "yes" if d["railed"] else "NO"))
+    print("   -> %d zero-run samples on %d channels; the ones marked NO never reach"
+          % (tot, len(per_ch)))
+    print("      ADC %d, so detect_saturation does not flag them at all." % RAIL)
+    print("      Pedestal-subtracted these are a FLAT plateau at -pedestal, i.e.")
+    print("      the 'suddenly negative and flat' signature.  OPEN -- see the doc.")
 
 
 def main():
@@ -167,6 +245,9 @@ def main():
                   % (13600, np.median(rr)))
         print("   -> same ratio railed vs unrailed => LINEAR AC coupling, not a")
         print("      saturation-recovery artifact.")
+
+    # ---------------- E. the zero-run (membrane/PMT) ----------------
+    zero_run_census(rf)
 
     # ---------------- figure ----------------
     w = waves[FIG_CH].astype(np.float64)
