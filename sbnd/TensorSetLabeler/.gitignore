@@ -2,3 +2,4 @@
 *.tar.gz
 *.log
 *.npz
+*.h5
