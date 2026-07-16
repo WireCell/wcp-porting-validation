@@ -350,6 +350,37 @@ PY
     if [ "${PDVD_QL_COV_MASK_FIT:-0}" = 0 ]; then
         QL_SATFLAG_ARG+=(-S "ql_coverage_mask_fit=false")
     fi
+    # PDVD_QL_SAT_MASK_FIT: whether a DAPHNE-rail-flagged channel is also
+    # DROPPED from the chi2/KS, or kept there at its clipped PE and merely
+    # labelled "sat".  PRODUCTION DEFAULT 0 (keep) since 2026-07-16, for the
+    # same reason as COV_MASK_FIT above: the clipped PE is a LOWER BOUND on the
+    # true light (doc 11 section 2.1: `clip` is a tight deterministic
+    # underestimate, and this chain also repairs it via PDVD_SAT_REPAIR=1), not
+    # a missing measurement -- dropping it makes a WRONG prediction free on
+    # exactly the bright cathode channels that anchor Q/L matching.  The LASSO
+    # rows stay zeroed either way (a lower bound must not pull fitted charge
+    # down).  Set PDVD_QL_SAT_MASK_FIT=1 for the 2026-07-14..16 (_spcov / _am2)
+    # behaviour.  Toolkit C++/jsonnet defaults stay at the drop
+    # (byte-identical).  See doc 11 section 6.
+    #
+    # M1 DEPLOY GATE (as above; old lib has no m_saturation_mask_fit):
+    #   grep 'saturation_mask_fit=false => railed channels stay in the chi2/KS' \
+    #        work/<tag>/wct_clus_*.log
+    if [ "${PDVD_QL_SAT_MASK_FIT:-0}" = 0 ]; then
+        QL_SATFLAG_ARG+=(-S "ql_saturation_mask_fit=false")
+        # PDVD_QL_CHI2_SAT_INFLATE: extra chi2 width on a railed channel,
+        # denom += (pe*inflate)^2 -- the chi2_pmt_inflate form the near-PMT
+        # over-response already uses, gated on the rail flag alone.  REQUIRED
+        # whenever the channel is kept: measured PE on a railed channel of a
+        # SELECTED match runs ~3.7x the prediction (evt298567: 100 railed
+        # terms, median meas 4179 vs pred 1212), because the repair
+        # over-recovers AND the photon model under-predicts the bright cathode
+        # -- at inflate 0 those terms are median 19 / p90 4008 / max 14601 and
+        # would brand good matches inconsistent, i.e. WORSE than the masking
+        # this replaces.  0.5 (the chi2_pmt_inflate default) puts them at
+        # median 1.9 / p90 4.0.  See doc 11 section 6.
+        QL_SATFLAG_ARG+=(-S "ql_chi2_sat_inflate=${PDVD_QL_CHI2_SAT_INFLATE:-0.5}")
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \

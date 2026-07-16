@@ -90,6 +90,22 @@ function(
     // PDVD_FLAG_SATURATION=1).  C++ default false; key suppressed when off =>
     // compiled config byte-identical.  docs/qlmatch/pdvd-saturation-recovery.md.
     ql_use_saturation_flag = false,
+    // Whether a rail-flagged channel is also DROPPED from the chi2/KS (the
+    // 2026-07-14..16 operating point) or kept there at its clipped PE.
+    // Keeping it is right -- the clipped PE is a LOWER BOUND on the true
+    // light, not a missing measurement, and the production chain additionally
+    // repairs it (PDVD_SAT_REPAIR=1); dropping it makes a wrong prediction
+    // free on the bright cathode channels that anchor Q/L matching
+    // (docs/qlmatch/11_pdvd-saturation-recovery.md section 6).  The LASSO rows
+    // stay zeroed either way.  C++ default true = drop; key suppressed then =>
+    // compiled config byte-identical.
+    ql_saturation_mask_fit = true,
+    // Extra chi2 width on a railed channel: denom += (pe*inflate)^2 (the
+    // chi2_pmt_inflate form, gated on the rail flag alone).  null => key
+    // suppressed => C++ default 0 = none.  PDVD's pe_err_on_pred/pe_err_frac
+    // 0.60 already puts a ~60%-of-predicted sigma on these channels (doc 11
+    // section 6), so this is a spare lever, not a requirement.
+    ql_chi2_sat_inflate = null,
     // Per-flash readout-coverage tracking in QLMatching.  Needs a light
     // archive made with emit_coverage (run_light_evt.sh
     // PDVD_EMIT_COVERAGE=1).  C++ default false; key suppressed when off =>
@@ -202,6 +218,8 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       anode_ext1_margin=if ql_anode_margin_cm == null then null
                                         else ql_anode_margin_cm * wc.cm,
                       use_saturation_flag=ql_use_saturation_flag,
+                      saturation_mask_fit=ql_saturation_mask_fit,
+                      chi2_sat_inflate=ql_chi2_sat_inflate,
                       use_coverage_flag=ql_use_coverage_flag,
                       coverage_mask_fit=ql_coverage_mask_fit,
                       pe_err_nodata=ql_pe_err_nodata);
