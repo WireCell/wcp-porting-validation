@@ -27,7 +27,7 @@
 //   wire-cell -l stderr -L debug -c cfg.json
 
 local g = import 'pgraph.jsonnet';
-local flash = import 'pgrapher/experiment/protodunevd/flash.jsonnet';
+local flash_v1 = import 'pgrapher/experiment/protodunevd/flash.jsonnet';
 
 // Cathode full-stream record length: 468864 = max(nsamp); the shorter
 // 468800-sample records are zero-padded by OpDecon.
@@ -36,7 +36,45 @@ local FULLSTREAM_SAMPLES = 468864;
 function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
          offset_bot_us=null, offset_top_us=null,
          cath_thresh=3.7, mem_thresh=4.0, pmt_thresh=2.2,
-         cath_ped_sigma=0.75, sat_pad=1024)
+         cath_ped_sigma=0.75, sat_pad=1024,
+         // Drop OpHits overlapping a DAPHNE 14-bit rail (+- sat_pad).
+         // Default true = legacy behavior, compiled config byte-identical.
+         // false keeps hits from railed pulses (clipped => PE underestimated
+         // instead of exactly 0).  See docs/qlmatch/
+         // pdvd-pd-mapping-investigation.md sec.6-7 (42% of bright flashes
+         // lose >=1 cathode channel to the veto).
+         veto_saturation=true,
+         // Keep-and-mark chain (docs/qlmatch/pdvd-saturation-recovery.md):
+         // flag_saturation appends the ophit rail flag -> OpFlashFinder emits
+         // the per-flash flash_sat tensor -> QLMatching use_saturation_flag
+         // masks those channels per flash.  saturation_repair additionally
+         // fills railed runs with the two-sided exp bridge before decon
+         // (better flash totals; the mask still applies).  Both C++-default
+         // false, keys suppressed => byte-identical when off.
+         flag_saturation=false, saturation_repair=false,
+         // Per-trace livetime rows -> OpFlashFinder flash_cov tensor ->
+         // QLMatching use_coverage_flag masks self-trigger channels with no
+         // snippet over a flash's window (membrane XA / PMT, duty ~5-30%;
+         // docs/qlmatch/pdvd-lightpattern-sp-investigation.md).  Single knob
+         // for all three populations (partial emission would zero the
+         // others' coverage).  C++ default false, key suppressed =>
+         // byte-identical when off.
+         emit_coverage=false,
+         // Validated SPE templates v2 (pd_plot/spe_v2.py): repairs the
+         // broken v1 templates (ch2020 negative area, ch1051 multi-PE mode
+         // latch, ch3010/3020 contaminated tails) that corrupt those
+         // channels' measured-PE scale.  false => the v1 file, byte-identical.
+         spe_v2=false,
+         // Remap floor-pinned OVERFLOW runs to the rail before OpDecon's rail
+         // scan, so the existing detect/flag/repair chain sees the membrane
+         // self-trigger snippets whose over-range pulses pin at ADC 0 rather
+         // than clamping at the ceiling (invisible to detect_saturation as-is).
+         // Requires detect_saturation (already on for all three branches).
+         // C++ default false, key suppressed => byte-identical when off.
+         // NOT a production default: the encoding mechanism is unconfirmed --
+         // docs/qlmatch/14_pdvd-lightpattern-sp-investigation.md ("The
+         // zero-run").
+         overflow_to_rail=false)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -51,27 +89,44 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local mem_th = if std.type(mem_thresh) == 'string' then std.parseJson(mem_thresh) else mem_thresh;
   local pmt_th = if std.type(pmt_thresh) == 'string' then std.parseJson(pmt_thresh) else pmt_thresh;
   local cath_ps = if std.type(cath_ped_sigma) == 'string' then std.parseJson(cath_ped_sigma) else cath_ped_sigma;
+  local veto_sat = if std.type(veto_saturation) == 'string' then std.parseJson(veto_saturation) else veto_saturation;
+  local flag_sat = if std.type(flag_saturation) == 'string' then std.parseJson(flag_saturation) else flag_saturation;
+  local emit_cov = if std.type(emit_coverage) == 'string' then std.parseJson(emit_coverage) else emit_coverage;
+  local spe_v2b = if std.type(spe_v2) == 'string' then std.parseJson(spe_v2) else spe_v2;
+  // spe_v2 swaps the OpDecon template file for the validated v2 set; the
+  // toolkit flash.jsonnet default stays the v1 file (byte-identical off).
+  local flash = flash_v1 + (if spe_v2b then {
+      spe_file:: 'pgrapher/experiment/protodunevd/pdvd-spe-templates-v2.json',
+  } else {});
+  local sat_rep = if std.type(saturation_repair) == 'string' then std.parseJson(saturation_repair) else saturation_repair;
+  local ovf_rail = if std.type(overflow_to_rail) == 'string' then std.parseJson(overflow_to_rail) else overflow_to_rail;
 
   // --- cathode branch (opch 10xx, continuous full streams) ---
   local cath_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=1000, opch_hi=1999, name='cath');
   local cath_decon = flash.opdecon(name='cath', samples=FULLSTREAM_SAMPLES, wi_sigma=1.25,
-                                   detect_saturation=true, saturation_pad=sat_pad_n);
+                                   detect_saturation=true, saturation_pad=sat_pad_n,
+                                   saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
   local cath_roi = flash.oproi(name='cath');
   local cath_hit = flash.ophit(name='cath', hit_threshold=cath_th, intag='decon_roi',
-                               fixed_ped_sigma=cath_ps, veto_saturation=true);
+                               fixed_ped_sigma=cath_ps, veto_saturation=veto_sat,
+                               flag_saturation=flag_sat, emit_coverage=emit_cov);
 
   // --- membrane XA branch (opch 20xx, snippets; top+bottom walls share
   //     sigma=1.0, the top-wall pickup sets the threshold) ---
   local mem_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=2000, opch_hi=2999, name='mem');
   local mem_decon = flash.opdecon(name='mem', wi_sigma=1.0,
-                                  detect_saturation=true, saturation_pad=sat_pad_n);
-  local mem_hit = flash.ophit(name='mem', hit_threshold=mem_th, veto_saturation=true);
+                                  detect_saturation=true, saturation_pad=sat_pad_n,
+                                  saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
+  local mem_hit = flash.ophit(name='mem', hit_threshold=mem_th, veto_saturation=veto_sat,
+                              flag_saturation=flag_sat, emit_coverage=emit_cov);
 
   // --- PMT branch (opch 30xx, snippets) ---
   local pmt_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=3000, opch_hi=3999, name='pmt');
   local pmt_decon = flash.opdecon(name='pmt', wi_sigma=3.5,
-                                  detect_saturation=true, saturation_pad=sat_pad_n);
-  local pmt_hit = flash.ophit(name='pmt', hit_threshold=pmt_th, veto_saturation=true);
+                                  detect_saturation=true, saturation_pad=sat_pad_n,
+                                  saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
+  local pmt_hit = flash.ophit(name='pmt', hit_threshold=pmt_th, veto_saturation=veto_sat,
+                              flag_saturation=flag_sat, emit_coverage=emit_cov);
 
   // --- merge OpHits and build flashes once over all 40 OpDets ---
   local merge = flash.ophit_merge(name='allpd', multiplicity=3, meta_port=0);

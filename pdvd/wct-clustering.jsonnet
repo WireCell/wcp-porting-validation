@@ -74,6 +74,28 @@ function(
     // joint QLMatching (per-input drift_speeds) get the same per-side values.
     drift_speed_bot_mmus = null,
     drift_speed_top_mmus = null,
+    // Q/L cathode-side containment tolerance in CM (how far past the cathode a
+    // drift end may reach and still count contained; C++ default +1.2 cm).
+    // null => key omitted => C++ default => compiled config byte-identical.
+    // Set only for the anode-pull / cushion study (run 039252 evt298567).
+    ql_cathode_ext1_cm = null,
+    // Q/L anode-side containment slack in CM: extra tolerance below anode_ext1,
+    // forming the anode floor (anode_ext1 - margin) for BOTH the containment gate
+    // and the at_x_boundary / close_to_PMT flag window.  C++ default 1.0 cm
+    // (floor -3 cm); null => key omitted => compiled config byte-identical.
+    // run_clus_evt.sh passes 2.0 cm (floor -4 cm) for PDVD production.
+    ql_anode_margin_cm = null,
+    // Per-flash DAPHNE-rail channel masking in QLMatching.  Needs a light
+    // archive made with flag_saturation (run_light_evt.sh
+    // PDVD_FLAG_SATURATION=1).  C++ default false; key suppressed when off =>
+    // compiled config byte-identical.  docs/qlmatch/pdvd-saturation-recovery.md.
+    ql_use_saturation_flag = false,
+    // Per-flash readout-coverage masking in QLMatching.  Needs a light
+    // archive made with emit_coverage (run_light_evt.sh
+    // PDVD_EMIT_COVERAGE=1).  C++ default false; key suppressed when off =>
+    // compiled config byte-identical.
+    // docs/qlmatch/pdvd-lightpattern-sp-investigation.md.
+    ql_use_coverage_flag = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -158,7 +180,15 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                                       || drift_speed_top == null
                                       || drift_speed_bot == drift_speed_top
                                    then null
-                                   else [drift_speed_bot, drift_speed_top]);
+                                   else [drift_speed_bot, drift_speed_top],
+                      // null => qlmatching omits the key => C++ default +1.2 cm.
+                      cathode_ext1=if ql_cathode_ext1_cm == null then null
+                                   else ql_cathode_ext1_cm * wc.cm,
+                      // null => qlmatching omits the key => C++ default 1.0 cm.
+                      anode_ext1_margin=if ql_anode_margin_cm == null then null
+                                        else ql_anode_margin_cm * wc.cm,
+                      use_saturation_flag=ql_use_saturation_flag,
+                      use_coverage_flag=ql_use_coverage_flag);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

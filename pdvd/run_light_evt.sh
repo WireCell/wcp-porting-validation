@@ -105,6 +105,61 @@ PY
 read -r OFFSET_BOT_US OFFSET_TOP_US T0_VS_TREE <<< "$OFFSETS"
 echo "   offsets (us, add to flash time): bot=$OFFSET_BOT_US top=$OFFSET_TOP_US (chain t0 - tree light_t0 = $T0_VS_TREE us)"
 
+# DAPHNE-rail (saturation) handling.  PRODUCTION DEFAULT since 2026-07-14 is
+# the keep-and-mark chain of docs/qlmatch/pdvd-saturation-recovery.md:
+#   veto OFF   (PDVD_VETO_SATURATION=0; the legacy veto zeroed railed cathode
+#               channels in 42% of bright flashes and biased every cathode
+#               calibration x5 low -- pdvd-pd-mapping-investigation.md sec.6-7)
+#   flag ON    (PDVD_FLAG_SATURATION=1: 10th ophit column -> flash_sat tensor
+#               -> QLMatching per-flash mask)
+#   repair ON  (PDVD_SAT_REPAIR=1: two-sided exponential bridge over railed
+#               runs before decon)
+# Owner-adopted with the per-type VUVEfficiency scale factors (toolkit
+# qlmatching.jsonnet).  Set PDVD_VETO_SATURATION=1 PDVD_FLAG_SATURATION=0
+# PDVD_SAT_REPAIR=0 to recover the legacy veto-ON chain; the toolkit C++ and
+# jsonnet defaults stay legacy/OFF (byte-identical) -- this runner is where
+# PDVD processing turns the operating point on.
+VETO_SAT_ARG=()
+if [ "${PDVD_VETO_SATURATION:-0}" = 0 ]; then
+    VETO_SAT_ARG=(-S "veto_saturation=false")
+fi
+if [ "${PDVD_FLAG_SATURATION:-1}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "flag_saturation=true")
+fi
+if [ "${PDVD_SAT_REPAIR:-1}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "saturation_repair=true")
+fi
+# PDVD_EMIT_COVERAGE: per-trace livetime rows -> OpFlashFinder flash_cov
+# tensor, so QLMatching can mask self-trigger channels (membrane XA / PMT
+# 16.4-us snippets) with no waveform over a flash's window instead of
+# scoring them measured = 0.  PRODUCTION DEFAULT ON since 2026-07-14
+# (docs/qlmatch/pdvd-lightpattern-sp-investigation.md); set
+# PDVD_EMIT_COVERAGE=0 for the legacy archive layout.  Toolkit C++/jsonnet
+# defaults stay OFF (byte-identical).
+if [ "${PDVD_EMIT_COVERAGE:-1}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "emit_coverage=true")
+fi
+# PDVD_SPE_V2: validated SPE templates v2 (pd_plot/spe_v2.py) -- repairs the
+# v1 templates whose area corrupts the channel PE scale (ch2020 negative,
+# ch1051 multi-PE mode latch, ch3010/3020 contaminated).  PRODUCTION DEFAULT
+# ON since 2026-07-14; set PDVD_SPE_V2=0 for the v1 file.  Toolkit default
+# stays v1 (byte-identical).
+if [ "${PDVD_SPE_V2:-1}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "spe_v2=true")
+fi
+# PDVD_OVERFLOW_TO_RAIL: remap floor-pinned OVERFLOW runs to the DAPHNE rail
+# before OpDecon's rail scan, so the existing detect/flag/repair chain sees the
+# membrane self-trigger snippets whose over-range pulses pin at ADC 0 instead of
+# clamping at the ceiling (detect_saturation cannot see them: those snippets
+# peak BELOW 16383).  DEFAULT OFF -- unlike the spcov knobs above this is NOT a
+# production default: the encoding mechanism is still unconfirmed and the
+# discriminator is tuned on 6 runs in one event.  Enabling it is gated on
+# PDS/DAPHNE expert confirmation.  See
+# docs/qlmatch/14_pdvd-lightpattern-sp-investigation.md ("The zero-run").
+if [ "${PDVD_OVERFLOW_TO_RAIL:-0}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "overflow_to_rail=true")
+fi
+
 wcsonnet \
     -A input_file="$RAW_FILE" \
     -A output_dir="$WORKDIR" \
@@ -112,6 +167,7 @@ wcsonnet \
     -S event="$EVENT" \
     -S offset_bot_us="$OFFSET_BOT_US" \
     -S offset_top_us="$OFFSET_TOP_US" \
+    "${VETO_SAT_ARG[@]}" \
     -o "$WORKDIR/.wct-light.json" \
     "$PDVD_DIR/wct-light-reco.jsonnet"
 

@@ -32,9 +32,20 @@ ODIR = "decisions-candles" + SFX
 os.makedirs(ODIR, exist_ok=True)
 
 CAL = {}
-_glob = "../work/039252_*%s/calib-evt*.json" % ("_%s" % SUFFIX if SUFFIX else "")
+# MERGE_CALIB_GLOB (optional) overrides the calib source glob so the decisions
+# tag (SUFFIX) can differ from the work-dir suffix -- e.g. read the base/untagged
+# reprocess dirs while writing decisions-*-v1481/.  Unset => legacy behavior
+# (work-dir suffix == decisions suffix).  MERGE_BASE_ONLY (optional) keeps only
+# ".../039252_<int>/" dirs, excluding tagged siblings (_v153, _vcal, ...) that
+# the plain base glob would otherwise pull in.
+import re as _re
+_glob = os.environ.get("MERGE_CALIB_GLOB") or (
+    "../work/039252_*%s/calib-evt*.json" % ("_%s" % SUFFIX if SUFFIX else ""))
+_base_only = os.environ.get("MERGE_BASE_ONLY")
 for f in glob.glob(_glob):
     if "prextpc" in f or "light" in f:
+        continue
+    if _base_only and not _re.search(r"/039252_[0-9]+/", f):
         continue
     ev = os.path.basename(f)[len("calib-"):-len(".json")]
     CAL[ev] = f
