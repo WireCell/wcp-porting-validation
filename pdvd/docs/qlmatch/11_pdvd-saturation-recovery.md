@@ -306,8 +306,13 @@ constraining it. (The 13 moved matches arise indirectly: unmasking changes the
 - `QLMatching`: `saturation_mask_fit` gates only the `flash_opdet_mask` drop;
   `chi2_sat_inflate` is forwarded via `BundleQualityParams`.
 - `TimingTPCBundle::examine_bundle`: the widening, next to the `close_to_PMT`
-  one and in the same form. `examine_merge_bundle` is left alone (it carries no
-  `close_to_PMT` widening either).
+  one and in the same form. `examine_merge_bundle` carries it **too**: it has no
+  `close_to_PMT` widening, but that analogy does not transfer — close_to_PMT's
+  un-widened merge population is narrow (the excess/ratio gate) while *every*
+  railed channel lands in the merge metric, where an un-widened O(1e4) term can
+  only suppress a merge. Null on evt298567 (bundle count 5215 either way, 0
+  bundles changed), added for consistency before `overflow_to_rail` widens the
+  railed population.
 - Runner: `PDVD_QL_SAT_MASK_FIT` (default 0 = keep) and
   `PDVD_QL_CHI2_SAT_INFLATE` (default 0.5). `PDVD_QL_SAT_MASK_FIT=1` restores
   the 2026-07-14..16 (`_spcov` / `_am2`) behaviour.
