@@ -66,9 +66,9 @@ run-039252 evt298567. Depth statistics and the estimator comparison are
 **not** repeated here — they are `11_pdvd-saturation-recovery.md` §2.
 
 **Scope warning.** §§(a)-(c) below are measured on the **16 cathode
-channels**. They do **not** generalize to the membrane XA / PMT snippets,
-where the membrane snippets show a different and currently unhandled
-failure — see §"The zero-run".
+channels**, which are read out as full streams. They do **not** generalize to
+the self-triggered snippets (membrane XA *and* PMT), which show a different and
+currently unhandled failure — see §"The zero-run".
 
 ![fig 6 — (a) the positive flat-top clip at 16383; (b) the AC-coupling undershoot after the pulse — the real "signal goes negative"; (c) the decon plateau, positive throughout the rail](pics/lightpattern_fig6_saturation_signature.png)
 
@@ -78,10 +78,11 @@ excursion after a bright pulse is real, but it is AC-coupling undershoot, not
 the clip; **(c)** the deconvolution never goes negative inside the rail — it
 produces a positive plateau, and that plateau is the actual pathology.
 
-**On the membrane snippets there is a fourth, different answer** — the raw
-ADC jumps to a flat 0 (= −pedestal once subtracted) at the pulse peak, unflagged
-by `detect_saturation`. That is the sharp "goes negative and stays flat"
-signature, and it is an open issue: §"The zero-run".
+**On the self-triggered snippets (membrane XA and PMT) there is a fourth,
+different answer** — the raw ADC jumps to a flat 0 (= −pedestal once
+subtracted) at the pulse peak, unflagged by `detect_saturation`. That is the
+sharp "goes negative and stays flat" signature, and it is an open issue:
+§"The zero-run".
 
 ### The signature is a positive flat-top — there is no negative clip
 
@@ -97,8 +98,8 @@ channels of evt298567 the minimum ADC is 1592–5326 against pedestals of
 ~1800–5300, and the count of samples at ADC ≤ 0 is **0**. On the cathode,
 saturation never drives the signal negative.
 
-**The membrane XA snippets are a different story — see
-§"The zero-run" below.** There the ADC does reach the bottom of its range, and
+**The self-triggered snippets (membrane XA and PMT) are a different story —
+see §"The zero-run" below.** There the ADC does reach the bottom of its range, and
 the pedestal-subtracted waveform shows exactly the "goes negative and stays
 flat" signature. That case is *not* covered by the paragraph above, and it is
 *not* caught by `detect_saturation`.
@@ -153,16 +154,19 @@ consequences matter downstream:
   3's ch2020 (area −1595): a *harvest* artifact, not a per-event decon
   behavior.
 
-### The zero-run: membrane snippets that jump to a flat "negative" — OPEN
+### The zero-run: self-trigger snippets that jump to a flat "negative" — OPEN
 
-**Status: found 2026-07-16. Mechanism still unconfirmed; a default-OFF fix
-exists (`overflow_to_rail`, below) but is NOT enabled in production.** Found by
+**Status: found 2026-07-16. Fix `overflow_to_rail` implemented and, by owner
+ruling 2026-07-16, **ON as the PDVD production default** (toolkit defaults stay
+OFF/byte-identical; the runner enables it). The DAPHNE encoding mechanism
+remains unconfirmed — see the open question below.** Found by
 looking for the signature the owner recalled ("positive signal, then suddenly
 negative and flat there") — the cathode-only scan above had missed it because
 it only looks at 10xx channels.
 
-On **membrane XA snippets** the raw ADC drops to **exactly 0** and stays pinned
-there for tens to hundreds of consecutive samples. In the pedestal-subtracted
+On **self-triggered snippets** (membrane XA and PMT — see the population scan
+below) the raw ADC drops to **exactly 0** and stays pinned there for tens to
+hundreds of consecutive samples. In the pedestal-subtracted
 waveform the chain actually deconvolves, that is a flat plateau at
 **−pedestal** (≈ −2500 ADC) — i.e. precisely "suddenly negative, then flat".
 No sample is ever `< 0`: the raw is unsigned and floored at 0.
@@ -177,9 +181,10 @@ evt298567, pins of ≥5 consecutive samples at ADC ≤ 1 (§E of the script):
 | 2040 | 1 | 105 | 105 | 16299 | **NO** |
 | 2041 | 1 | 77 | 77 | 16368 | **NO** |
 
-449 pinned samples on 5 channels, **none flagged**. All five are membrane; the
-PMT channels carry only isolated single samples at 0 (no run ≥5) — not, on this
-evidence, the same phenomenon.
+449 pinned samples on 5 channels, **none flagged**. All five are membrane in
+this event; the PMT channels here carry only isolated single samples at 0 — but
+that is a sampling artifact of one event, **not** a property of PMTs: see the
+population scan below, where PMTs do zero-encode.
 
 The zero-run sits exactly where the pulse **peak** should be, and is bracketed
 by near-ceiling values. Full resolution, ch2011 entry 1030 (pedestal 2488):
@@ -205,6 +210,41 @@ therefore deconvolves a waveform with a −2500-ADC notch at the pulse peak as i
 it were valid data. A positive-threshold hit finder is very unlikely to
 recover a sensible PE from that.
 
+### Which populations does it affect? Self-trigger — both XA and PMT
+
+Scan of **all 18 events / 43 808 traces** in the run-039252 file (§F of the
+script, `--populations`). The comparison must be conditioned on traces that
+actually **saturate** (clamp OR overflow): a channel that never approaches the
+ceiling cannot say which encoding it would use.
+
+| population | readout | traces | max ADC | clamp @16383 | overflow→0 | encoding *when saturating* |
+|---|---|---|---|---|---|---|
+| **cathode XA** | full stream | 288 | 16383 | **288** | **0** | **100% clamp** |
+| **membrane XA** | self-trigger | 30211 | 16383 | 10 | **80** | **91% overflow→0** |
+| **PMT** | self-trigger | 13309 | **16374** | **0** | **14** | **100% overflow→0** |
+
+Readings:
+
+- **It tracks the READOUT PATH, not the sensor type.** Cathode XA and membrane
+  XA are the *same sensor* differing only in readout, and they encode
+  **oppositely**: full-stream always clamps (288/288), self-trigger almost
+  always zero-encodes (80/88). That comparison removes the sensor as the
+  variable.
+- **PMTs are affected too** — 14 traces on 7 channels (3050/3060/3100/3140/
+  3200/3210/3220). This corrects the evt298567-only reading above: PMTs looked
+  clean there only because none of their snippets overflowed in that one event.
+- **PMTs never clamp at all**: max ADC = 16374 over 13 309 traces, i.e. no PMT
+  sample ever reaches 16383. Every PMT saturation is zero-encoded.
+- **The self-trigger path is not exclusively zero-encoding**: 10 membrane traces
+  clamp normally and 2 show *both* encodings in one trace. So the two encodings
+  coexist on the same readout path — another reason the mechanism needs an
+  expert answer rather than a guess (a plausible but unverified reading is that
+  the encoding depends on how far above the ceiling the pulse goes).
+- **Saturation is rare in self-trigger snippets** (88/30211 membrane, 14/13309
+  PMT) but universal in cathode full streams (288/288) — unsurprising, since a
+  7.5 ms stream almost always contains some saturating pulse while a 16.4 µs
+  snippet rarely does.
+
 **Does it explain the Phase-4 membrane/PMT puzzle? On this event, no.** It was
 an attractive hypothesis — unflagged saturation on exactly the PD types whose
 calibration never closed, and `12_pdvd-qtol-recalibration.md` §5 reports
@@ -222,12 +262,14 @@ open.
 **Open question for the PDS/DAPHNE experts (do not guess):** why does the
 self-trigger path report overflow as 0 while the cathode full stream clamps
 hard at 16383? The two populations demonstrably behave differently in the same
-event. The knob below is justified by the *bracketing evidence* alone (the true
-signal was above the ceiling ⇒ treat it as ≥ rail and flag it), which is
-conservative and mechanism-independent — but **enabling it in production is
-gated on this question being answered.**
+event. The fix below is justified by the *bracketing evidence* alone (the true signal
+was demonstrably above the ceiling ⇒ treat it as ≥ rail and flag it), which is
+conservative and mechanism-independent — which is why the owner ruled it on for
+production (2026-07-16) without waiting. But the question stays open and could
+still change the predicate: if the encoding turns out to mean something other
+than "over range", this needs revisiting.
 
-### The fix: `overflow_to_rail` (toolkit, default OFF)
+### The fix: `overflow_to_rail` (toolkit default OFF; PDVD production ON)
 
 The owner's proposal — detect them, move 0 to the maximal saturation value,
 then let the existing chain run — is implemented as `OpDecon.overflow_to_rail`.
@@ -270,10 +312,32 @@ past the depth ≈3 where `11_pdvd-saturation-recovery.md` §2 shows no estimato
 is reliable. The flag is the point; the bridged value only improves the flash
 total over an un-repaired −2500 notch.
 
-**Limitations:** the threshold is tuned on 6 runs in one event; a run touching
-a snippet edge, or reaching into the 20-sample pedestal window, is
-conservatively left alone; floor-clipped *undershoot* is a separate phenomenon
-this does not address (it cannot be recovered by mapping to the rail).
+**Discriminator validated on the whole file** (18 events, every floor-pinned
+run — not just the 6 that motivated it). For each run, `m = min(before, after)`,
+the quantity the predicate thresholds:
+
+| | runs | m |
+|---|---|---|
+| **accepted** (remapped) | 97 | min **8522**, p05 9669, median 14445 |
+| **rejected** (undershoot) | 34 | max **2918**, p95 2778, median 738 |
+| edge-touching (skipped, no neighbour pair) | 12 | — |
+
+143 runs total. The distribution is **cleanly bimodal — the bin [4000, 8000) is
+empty** — so the threshold sits *inside* a gap of [2918, 8522] with no run
+anywhere near it. Note 8000 sits at the *top* of that gap, which biases toward
+false **negatives** (a missed overflow, which just leaves today's behavior) over
+false **positives** (a fabricated rail-height pulse, which would corrupt a flash
+total). That is the safe direction, and the reason not to lower it.
+
+Per population, accepted/total-with-pair: **PMT 15/15**, **membrane 82/116**.
+The 34 rejects are all membrane (ch2030/2040/2041, lengths 42–306) — the
+post-pulse undershoot pins, exactly what must be left alone.
+
+**Limitations:** a run touching a snippet edge, or reaching into the 20-sample
+pedestal window, is conservatively left alone (12 such runs here); floor-clipped
+*undershoot* is a separate phenomenon this does not address (it cannot be
+recovered by mapping to the rail); and the threshold, while validated on 143
+runs of one run-039252 file, has not been checked on other runs.
 
 **Gates (all PASS, toolkit `flash`):**
 - Compiled config knob-off byte-identical to pre-change (`wct-light-reco`,
@@ -293,8 +357,16 @@ unchanged at 111 flagged / 0 remapped; PMT 0/0. 6 qualifying runs exist and
 **5** are remapped — the ch2021 undershoot run is correctly rejected. Downstream
 the effect reaches `flash_sat`: membrane **OpDet 2** gains a flag (cathode
 OpDets 4–11 counts identical), 412 of 415 flashes are bit-unchanged, and 3
-flashes near t ≈ 4.9 ms re-form. Toolkit and runner defaults are **OFF**
-(`PDVD_OVERFLOW_TO_RAIL=1` to enable) pending the mechanism question above.
+flashes near t ≈ 4.9 ms re-form.
+
+**Production status (owner ruling 2026-07-16):** ON for PDVD light processing —
+`run_light_evt.sh` defaults `PDVD_OVERFLOW_TO_RAIL=1`, the same pattern as the
+spcov knobs (toolkit C++/jsonnet defaults stay OFF and byte-identical; the
+runner is where PDVD turns the operating point on). `PDVD_OVERFLOW_TO_RAIL=0`
+restores the legacy unflagged behavior. This makes light output **NOT
+bit-identical** to the `_spcov` canonical dumps: the affected flashes are few
+(3/415 on evt298567, ~0.3% of membrane snippets) but any reprocess at this
+operating point needs a fresh tag, never an overwrite of `_spcov` (M13).
 
 ### Does the deconvolution go negative inside the rail? No (cathode)
 

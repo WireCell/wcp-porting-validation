@@ -26,8 +26,15 @@ questions of `14_pdvd-lightpattern-sp-investigation.md` §"Saturation: signature
      detect_saturation (q >= 16383) does NOT catch it: these snippets peak
      BELOW the rail.  Mechanism unconfirmed -- see the doc section.
 
-A-D are cathode (10xx); E is membrane/PMT (20xx/30xx).  Do not generalize A-D
-across populations: E is the counter-example.
+  F. WHICH POPULATION zero-encodes?  (--populations; every trace of every event
+     in the file, ~10 min).  Conditioned on traces that actually saturate:
+     cathode XA full streams clamp 100% and NEVER zero-encode; both
+     self-triggered populations zero-encode (membrane XA 91%, PMT 100%).
+     Cathode XA and membrane XA are the SAME sensor read out differently and
+     they encode oppositely => it tracks the READOUT PATH, not the sensor type.
+
+A-D are cathode (10xx); E is membrane/PMT (20xx/30xx); F is all three.  Do not
+generalize A-D across populations: E/F are the counter-example.
 
 Only channels whose pre-band is genuinely quiet (std < QUIET_SIG) enter the
 §B summary; on the rest the "quiet" band contains another pulse and the local
@@ -36,7 +43,8 @@ baseline is meaningless.  ch1081 is such a case (pre-band std ~4300).
 Companion doc: 14_pdvd-lightpattern-sp-investigation.md
 Repro:
     cd wcp-porting-img/pdvd
-    python3 docs/qlmatch/scripts/saturation_signature.py
+    python3 docs/qlmatch/scripts/saturation_signature.py                # A-E, one event
+    python3 docs/qlmatch/scripts/saturation_signature.py --populations  # + F (~10 min)
 """
 import os
 import sys
@@ -56,6 +64,10 @@ EVENT = 298567
 SEG = 16384          # decon segment length (study convention)
 QUIET_SIG = 15.0     # ADC; pre-band std above this => not a clean local baseline
 MIN_AMP = 2000.0     # ADC; "bright" for the unrailed-pulse comparison (D)
+# The OpDecon overflow_to_rail predicate (kept in step with the C++ defaults).
+OVF_ADC = 1          # samples <= this are floor-pinned
+OVF_MIN_LEN = 5      # run length to qualify
+OVF_NEIGH = 8000     # BOTH immediate neighbours must reach this
 FIG_CH = 1010        # figure channel: deep rail AND a quiet pre-band
 DECON_CHS = (1010, 1050, 1021, 1040)
 OUT_PNG = os.path.join(HERE, "..", "pics", "lightpattern_fig6_saturation_signature.png")
@@ -133,6 +145,91 @@ def zero_run_census(rfile, event=EVENT):
     print("      ADC %d, so detect_saturation does not flag them at all." % RAIL)
     print("      Pedestal-subtracted these are a FLAT plateau at -pedestal, i.e.")
     print("      the 'suddenly negative and flat' signature.  OPEN -- see the doc.")
+
+
+def has_overflow_run(w):
+    """True if `w` carries a floor-pinned run that the OpDecon overflow_to_rail
+    predicate would remap (>=OVF_MIN_LEN samples <= OVF_ADC, BOTH immediate
+    neighbours >= OVF_NEIGH).  Mirrors Flash::OpDecon::unclip_overflow."""
+    idx = np.where(w <= OVF_ADC)[0]
+    if len(idx) < OVF_MIN_LEN:
+        return False
+    n = len(w)
+    for g in np.split(idx, np.where(np.diff(idx) != 1)[0] + 1):
+        if len(g) < OVF_MIN_LEN:
+            continue
+        i, j = int(g[0]), int(g[-1]) + 1
+        if i == 0 or j >= n:
+            continue
+        if w[i - 1] >= OVF_NEIGH and w[j] >= OVF_NEIGH:
+            return True
+    return False
+
+
+def population_scan(rfile):
+    """F. Which population reports over-range as 0, and which clamps at the rail?
+
+    The confound: cathode XA is read out as a full stream, membrane XA and PMT
+    as self-trigger snippets.  So 'readout mode' and 'sensor type' are partly
+    entangled -- EXCEPT that cathode XA and membrane XA are the same sensor.
+    Conditioning on traces that actually saturate (clamp OR overflow) is what
+    makes the comparison meaningful: a channel that never approaches the
+    ceiling cannot tell us which encoding it would use.
+    """
+    import uproot
+    t = uproot.open(rfile)["rawdump/raw_waveform"]
+    meta = t.arrays(["event", "opchannel"], library="np")
+    n = t.num_entries
+
+    def popname(c):
+        return {1: "cathode XA (full stream)",
+                2: "membrane XA (self-trig)",
+                3: "PMT (self-trig)"}.get(c // 1000, "other")
+
+    print("\nF. Which population zero-encodes?  file=%s  traces=%d  events=%d"
+          % (os.path.basename(rfile), n, len(set(meta["event"].tolist()))))
+    stats = {}
+    STEP = 400
+    for start in range(0, n, STEP):
+        stop = min(start + STEP, n)
+        adc = t["adc"].array(entry_start=start, entry_stop=stop, library="np")
+        for k in range(stop - start):
+            c = int(meta["opchannel"][start + k])
+            w = np.asarray(adc[k], np.float64)
+            s = stats.setdefault(popname(c), dict(n=0, clamp=0, ovf=0, both=0,
+                                                  maxadc=0.0, ch_ovf=set()))
+            s["n"] += 1
+            s["maxadc"] = max(s["maxadc"], float(w.max()))
+            cl = bool((w >= RAIL).any())
+            ov = has_overflow_run(w)
+            if cl:
+                s["clamp"] += 1
+            if ov:
+                s["ovf"] += 1
+                s["ch_ovf"].add(c)
+            if cl and ov:
+                s["both"] += 1
+        sys.stderr.write("\r   %d/%d" % (stop, n))
+        sys.stderr.flush()
+    sys.stderr.write("\n")
+
+    print("   %-26s %7s %8s %7s %7s %6s   %s" %
+          ("population", "traces", "max ADC", "clamp", "ovf->0", "both",
+           "encoding when saturating"))
+    for p in sorted(stats):
+        s = stats[p]
+        sat = s["clamp"] + s["ovf"] - s["both"]
+        verdict = ("%.0f%% clamp / %.0f%% ovf->0" % (100.0 * s["clamp"] / sat,
+                                                     100.0 * s["ovf"] / sat)
+                   if sat else "(never saturates)")
+        print("   %-26s %7d %8.0f %7d %7d %6d   %s"
+              % (p, s["n"], s["maxadc"], s["clamp"], s["ovf"], s["both"], verdict))
+    for p in sorted(stats):
+        if stats[p]["ch_ovf"]:
+            print("   %s zero-encoding channels: %s" % (p, sorted(stats[p]["ch_ovf"])))
+    print("   -> cathode XA and membrane XA are the SAME sensor with different")
+    print("      readout and encode OPPOSITELY, and the PMTs (also self-trigger)")
+    print("      zero-encode too => this tracks the READOUT PATH, not the sensor.")
 
 
 def main():
@@ -248,6 +345,12 @@ def main():
 
     # ---------------- E. the zero-run (membrane/PMT) ----------------
     zero_run_census(rf)
+
+    # ---------------- F. which population? (opt-in: whole file) ----------------
+    if "--populations" in sys.argv:
+        population_scan(rf)
+    else:
+        print("\n(F) population scan skipped -- pass --populations (~10 min) to run it.")
 
     # ---------------- figure ----------------
     w = waves[FIG_CH].astype(np.float64)
