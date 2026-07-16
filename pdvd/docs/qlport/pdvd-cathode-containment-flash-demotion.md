@@ -374,3 +374,119 @@ cd wcp-porting-img/pdvd
 # then from the laptop:  ssh -L 5019:localhost:5019 user@wcgpu1
 #                        http://localhost:5019/ql_scan_viewer
 ```
+
+---
+
+## 11. The anode-side counterpart: `anode_ext1_margin` (2026-07-16)
+
+**Status: toolkit knob added + PDVD runner default changed. Knob OFF is
+byte-identical (gate below); the PDVD production default is NOT bit-identical to
+the pre-2026-07-16 chain and needs revalidation.**
+
+### Repro
+
+```bash
+cd wcp-porting-img/pdvd
+# all sec 11 numbers (read-only, one calib dump; carries a self-validation gate --
+# flash 70 must come out contained, else the offset convention is misapplied):
+python3 docs/qlport/scripts/analyze_anode_containment.py
+#   input: work/039252_0_spcov/calib-evt298567.json  (canonical spcov dump)
+
+# knob-OFF byte-identical gate (new code forced to the C++ floor) vs canonical spcov:
+PDVD_LIGHT_SUFFIX=_spcov PDVD_QL_ANODE_MARGIN_CM=1.0 ./run_clus_evt.sh -calib -s knoboff3 39252 0
+# knob-ON (new PDVD default 2.0 cm):
+PDVD_LIGHT_SUFFIX=_spcov ./run_clus_evt.sh -calib -s am2 39252 0
+```
+
+### 11.1 The symptom (hand scan, evt 298567)
+
+Flash **t=274.4 µs, 19900 PE** looks like the physical match for the top-volume
+cathode-crosser `top:22` (uid 4000022), but `top:22` is matched to **t=244.0 µs,
+21316 PE** instead — and the 274.4 µs flash ends up with **zero** auto-selected
+clusters despite being bright.
+
+### 11.2 Mechanism — same prefilter as §2, opposite wall
+
+`top:22` spans **337.01 cm of drift = 100% of the 336.91 cm gap**. The containment
+window `[anode_ext1 − 1.0, u_cathode + cathode_ext1] = [−3.0, 338.91]` is 341.91 cm
+wide, so the whole admissible flash-time range is **4.90 cm ≈ 33 µs**:
+
+| flash | first_u | last_u | verdict |
+|---|---|---|---|
+| 70 — t=244.0, 21316 PE | +1.006 | 338.020 | contained (only **0.89 cm** of cathode headroom) |
+| 71 — t=274.4, 19900 PE | **−3.501** | 333.513 | **DROPPED — anode by 0.501 cm** |
+
+Flash 71 is 30.44 µs later = 4.507 cm of drift, overshooting the 4.006 cm of anode
+headroom by **0.501 cm**. The anode end-trim cannot rescue it: the end is dense (max
+slice gap 0.592 cm < the 0.75 cm detachment threshold), so the walk overruns its
+36/60-slice budget and no trim applies. Independent confirmation from the code
+itself: the dump writes a bundle only if contained, and flash 71 × 4000022 is absent.
+
+### 11.3 The 2 cm anode pull is the cause, and it is a genuine trade
+
+The pull (`PDVD_QL_EXTRA_OFFSET_US=13.507` = exactly 2.000 cm toward the anode) is
+baked into the canonical `_spcov` dumps — metadata offsets −2517.328/−2497.184 plus
+13.507 reproduce the dump's −2503.821/−2483.677 exactly. It **flips which flash is
+admissible**:
+
+| | first_u | last_u | verdict |
+|---|---|---|---|
+| flash 71, pull **ON** | −3.501 | 333.5 | DROPPED (anode by 0.501 cm) |
+| flash 71, pull **OFF** | −1.501 | 335.5 | contained |
+| flash 70, pull **ON** | +1.006 | 338.0 | contained |
+| flash 70, pull **OFF** | +3.006 | 340.0 | DROPPED (cathode by 1.110 cm) |
+
+The pull was adopted in §10 to rescue two *cathode*-limited crossers in this same
+event; `top:22` is *anode*-limited, so the same pull pushes it the wrong way. This
+is the cost side of a knob fit to two hand labels and never census-pinned.
+
+### 11.4 The fix
+
+New `QLMatching` knob **`anode_ext1_margin`** (C++ default `1.0 cm` = the prototype
+literal at `ProtectOverClustering.cxx:296`, so an omitted key is byte-identical). It
+replaces the hard-coded `1.0 cm` at BOTH coupled sites — the containment gate and the
+anode flag-window inner edge — so a cluster admitted by the slack still acquires
+`at_x_boundary`/`close_to_PMT` and keeps its T0-crosser constraint. `anode_ext1`
+itself was deliberately NOT moved: it also drives the PE-inclusion window and the
+end-trim walk, which must not change.
+
+PDVD production default **2.0 cm** (floor −3 → **−4 cm**), set in `run_clus_evt.sh`
+(`PDVD_QL_ANODE_MARGIN_CM`); the toolkit jsonnet default stays null.
+
+### 11.5 Effect (evt 298567, tag `am2`)
+
+| | cluster 4000022 → | flash 244.0 gets | flash 274.4 gets |
+|---|---|---|---|
+| before (floor −3.0, `_spcov`) | flash **244.0** | [15, 4000022] | **[]** (orphaned) |
+| after (floor −4.0, `am2`) | flash **274.4** | [15] | **[4000022]** |
+
+Both flashes are now candidates for `top:22` and the fit chooses — the geometric
+prefilter no longer decides the match.
+
+### 11.6 Verification
+
+- **Knob OFF byte-identical**: new binary with `PDVD_QL_ANODE_MARGIN_CM=1.0` vs the
+  canonical `_spcov` (built by the pre-change binary), run 039252 evt 0 / 298567 —
+  **27/27 `mabc-*.zip` PASS, 16/16 `clusters-apa-*.tar.gz` PASS, `calib-evt298567.json`
+  sha256 identical** (`hash_archive.py` member-content hashes; tags `knoboff3`).
+- **Compiled-config**: knob off ⇒ `diff` vs pre-change compiled JSON empty; knob on
+  ⇒ exactly one new key `"anode_ext1_margin": 20`.
+- **Knob ON smoke**: sentinel `QLMatching anode_ext1_margin=2 cm => anode
+  containment/flag floor -4 cm`; effect table in §11.5.
+- `wcdoctest-match`: 4/4 passed. Freshness: `libWireCellMatch.so` 06:43 > edit 06:40.
+- Determinism: same binary re-run (`knoboff`/`knoboff2`) reproduced an identical
+  `mabc-all-apa` hash — the §11 diffs are real, not FP/pointer drift.
+
+**Gate gotcha worth remembering:** `run_clus_evt.sh -s <tag>` does NOT select the
+light archive — that is `PDVD_LIGHT_SUFFIX`. A first gate attempt silently consumed
+the Jul-10 untagged light instead of the `_spcov` light and showed a spurious
+`mabc-all-apa` FAIL (`0-op.json` + `0-clustering-global.json`) while the per-group
+archives passed.
+
+### 11.7 Open
+
+- **Census not run.** The floor moves for *every* PDVD cluster, so the 18-event
+  auto-selected-count delta (the `compare_pull2c2.py` pattern) is still needed to
+  price the change. §11.5 is a single-event case-check, not a validation.
+- The pull/margin pair now carries two hand-fit constants pulling opposite ways
+  (§11.3). A census-pinned joint retune would be the principled replacement.

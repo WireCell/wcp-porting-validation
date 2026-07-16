@@ -298,6 +298,18 @@ PY
     # toolkit qlmatching.jsonnet default stays null (byte-identical) -- this
     # runner is where PDVD processing turns the wider cushion on.
     local QL_CATHEXT1_ARG=(-S "ql_cathode_ext1_cm=${PDVD_QL_CATHODE_EXT1_CM:-2.0}")
+    # PDVD_QL_ANODE_MARGIN_CM: anode-side containment slack (cm) below anode_ext1.
+    # The anode floor is anode_ext1 - margin, gating BOTH containment and the
+    # at_x_boundary / close_to_PMT flag window.  PRODUCTION DEFAULT 2.0 cm
+    # (floor -4 cm) as of 2026-07-16, widened from the C++/prototype 1.0 cm
+    # (floor -3 cm): the 2 cm anode pull above pushes a full-gap cathode-crosser's
+    # anode end past the old floor, prefiltering the correct (bright) flash out of
+    # its candidate pool -- run 039252 evt298567 cluster top:22 missed by 0.501 cm
+    # and was demoted to the 244.0 us flash instead of 274.4 us.  Set
+    # PDVD_QL_ANODE_MARGIN_CM=1.0 to recover the pre-study C++ floor.  The toolkit
+    # qlmatching.jsonnet default stays null (byte-identical) -- this runner is
+    # where PDVD processing turns the wider floor on.
+    local QL_ANODEMARGIN_ARG=(-S "ql_anode_margin_cm=${PDVD_QL_ANODE_MARGIN_CM:-2.0}")
     # PDVD_QL_USE_SAT_FLAG: per-flash DAPHNE-rail channel masking in
     # QLMatching.  PRODUCTION DEFAULT ON since 2026-07-14 (keep-and-mark
     # operating point, docs/qlmatch/pdvd-saturation-recovery.md) -- needs a
@@ -338,6 +350,7 @@ PY
         -S "drift_speed_bot_mmus=${PDVD_DRIFT_SPEED_BOT_MMUS:-1.48073}" \
         -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.48073}" \
         "${QL_CATHEXT1_ARG[@]}" \
+        "${QL_ANODEMARGIN_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
