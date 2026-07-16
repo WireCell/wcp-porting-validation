@@ -219,6 +219,67 @@ def main():
         print(f"           uid={u}: {sorted(sb.get(u,set())) or 'UNMATCHED'} -> "
               f"{sorted(sn.get(u,set())) or 'UNMATCHED'}")
 
+    geometric_check(new, clusters, geom)
+    sibling_check(base, new)
+
+
+def geometric_check(new, clusters, geom):
+    """Is gid 91 the right flash?  Answered WITHOUT the fit (chi2/KS would be
+    circular -- the matcher picked gid 91 by them).  A full-drift track pins its own
+    T0 to ~1 cm, so ask which flashes place it inside the box at all."""
+    print("\n--- independent geometric check of the clus 34 match ---")
+    c = clusters[UID]
+    body = np.sort(np.array(c["x"]))[8:]          # the 8 trimmed points removed
+    v = new["drift_speed"]
+    lo_u, hi_u = -4.0, geom["u_cathode"] + 2.0    # anode floor, cathode_ext1 2.0
+    off_min = lo_u + geom["anode_x"] - body.min()
+    off_max = hi_u + geom["anode_x"] - body.max()
+    print(f"  required flash_x_offset window: [{off_min:.2f}, {off_max:.2f}] cm "
+          f"(width {off_max - off_min:.2f} cm, out of ~800 cm possible)")
+    hits = []
+    for f in new["flashes"]:
+        off = -f["time"] * v                      # sign_offset -1 for apa 0
+        if off_min <= off <= off_max:
+            hits.append(f["gid"])
+            print(f"  gid {f['gid']} t={f['time']:.2f} us PE={f['total_PE']:.1f} "
+                  f"-> offset {off:.2f} cm  INSIDE")
+    print(f"  flashes of {len(new['flashes'])} that geometrically contain the track: {hits}")
+
+
+def sibling_check(base, new):
+    """The trim does NOT fix apa-4 ident 1 vs flash gid 120.  Shows why: the walk's
+    break threshold (anode_in = -2.0) is 2 cm stricter than the containment floor
+    (-4.0), so a body starting in that dead band drags real track charge into the
+    'outside' pile and every judge then correctly refuses."""
+    print("\n--- sibling case: apa-4 ident 1 (uid 4000001) vs flash gid 120 ---")
+    for tag, d in (("trim off", base), ("trim on", new)):
+        pool = sorted(b["flash_gid"] for b in d["bundles"]
+                      if b["main_cluster"] == 4000001)
+        print(f"  {tag:9s}: pool {len(pool)} gids {pool[:3]}...{pool[-1] if pool else '-'}"
+              f"  (stops short of 120 either way)")
+    g = new["geometry"]["4"]
+    v = new["drift_speed"]
+    c = {cc["uid"]: cc for cc in new["clusters"]}[4000001]
+    x = np.array(c["x"])
+    q = np.array(c["q"])
+    fl = {f["gid"]: f for f in new["flashes"]}
+    anode_in, floor = -2.0, -4.0
+    allow = max(0.01 * len(x), 15)
+    for gid in (119, 120):
+        f = fl[gid]
+        off = g["sign_offset"] * f["time1"] * v   # top volume uses time1
+        u = g["s"] * (x + off - g["anode_x"])
+        o = np.argsort(u)
+        us, qs = u[o], q[o]
+        brk = int(np.searchsorted(us, anode_in, side="right"))
+        q_out = qs[:brk].sum()
+        fires = (brk <= allow) or (q_out <= 0.01 * q.sum())
+        first_u = us[brk] if fires and brk < len(us) else us.min()
+        print(f"  gid {gid} (t1={f['time1']:.1f}): first_u={us.min():.2f}, walk swallows "
+              f"{brk} pts / {q_out/q.sum()*100:.2f}% of q "
+              f"({q_out/max(brk,1):.0f} q/pt) -> trim fires={fires}, "
+              f"first_u->{first_u:.2f}, contained={first_u > floor}")
+
 
 if __name__ == "__main__":
     main()

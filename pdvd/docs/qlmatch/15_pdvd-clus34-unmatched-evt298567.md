@@ -144,10 +144,28 @@ operating point. Config proof from that run's own `.wct-clus.json`:
 | clus 34 match | **none** | **flash gid 91, t = 1134.84 µs, 18821.3 PE** |
 | | | chi2/ndf **0.47**, KS **0.060** |
 
-Clus 34 is matched, and matched *well* — chi2/ndf 0.47 and KS 0.060 are high-consistent
-numbers. The pool is 1 because the cluster is so long that only a narrow T0 range
-contains it at all; that single survivor is an excellent fit, which is itself evidence
-the trim recovered a real object rather than manufacturing a match.
+### Is gid 91 actually the RIGHT flash? (independent of the fit)
+
+chi2/ndf 0.47 and KS 0.060 look excellent, but quoting them as proof would be
+**circular** — the matcher selected gid 91 *by* those numbers, and under PDVD's 60%
+error model (`pe_err_frac 0.6`) a low chi2 is cheap. The demo itself shows this trim
+producing consistent-but-wrong pairings elsewhere (§ below: three clusters gain a
+spurious extra flash).
+
+The non-circular test is geometric, and it is decisive. The trimmed track is 342.05 cm
+long in a ~343 cm window, so the T0 that contains it is pinned to a **0.86 cm** window:
+
+```
+required flash_x_offset to contain the trimmed body: [-168.20, -167.34] cm   (width 0.86 cm)
+gid 91 (t = 1134.84 us, 18821 PE)          ->  offset -168.04 cm   INSIDE
+flashes of all 198 whose T0 geometrically contains the track:  [91]
+```
+
+Out of ~800 cm of possible offsets, exactly one flash of 198 lands in a 0.86 cm slot —
+and it is a bright, real 18.8 kPE flash. That is a ~0.1 % coincidence arrived at without
+consulting the light pattern at all. **The match is physically right**; the fit
+agreeing is a consequence, not the evidence. (This tightness is the flip side of §8: a
+full-drift track pins its own T0 to a centimetre.)
 
 ### This is NOT a free fix
 
@@ -220,7 +238,72 @@ That tuning is an **existing open item** (`cathode_ext1` 2.0 cm + 2 cm anode pul
 the runner defaults; the census + A/B are open), cross-referenced here deliberately and
 **not** investigated — this doc is scoped to clus 34.
 
-## 9. Knob wiring added by this work (all default-OFF)
+## 9. The trim does NOT fix the sibling case — apa-4 ident 1 vs flash gid 120
+
+Checked on request: top-volume cluster ident 1 (uid 4000001, 1375 pts) has a
+*contiguous* bundle pool, flash gids 95…119, that stops dead at 120 (t1 = 2609.3 µs,
+6228.1 PE). **Turning the trim on changes nothing** — the pool is 25 bundles, gids
+95…119, in both `_keep` and `_gaptrim`. The contiguity is the signature of a geometric
+cut, and it is the same containment gate as §3, but the trim cannot rescue it.
+
+First, two facts confirmed numerically (`geometry["4"]`: anode_x 339.91, s −1,
+sign_offset +1, u_cathode 336.91; v = 0.148073):
+
+| gid | clock | t [µs] | first_u |
+|---|---|---|---|
+| 119 | time1 | 2584.9 | **−10.95** |
+| 120 | time1 | 2609.3 | **−14.56** |
+
+The −14.56 reproduces only with **`time1`**, confirming the matcher uses the top
+volume's own clock (the viewer's `dx_cm()` reads `time` for both volumes — a
+display-only ~3 cm shift for top clusters, noted, not touched here).
+
+### Why the trim refuses
+
+`anode_in = m_anode_ext1 = −2.0 cm` (`QLMatching.cxx:3647`), but the containment floor
+is `anode_in − m_anode_ext1_margin = −4.0 cm` (log: "anode containment/flag floor -4
+cm"). **The trim's walk breaks at `sl.u > anode_in` (−2.0), which is 2 cm stricter than
+the floor it is trying to satisfy (−4.0).** Simulating the walk:
+
+| | gid 119 | gid 120 |
+|---|---|---|
+| body's leading slice | u = **+0.01** (above −2.0) | u = **−3.60** (in the −4.0…−2.0 dead band) |
+| walk breaks at | 5 pts — the stub only | 20 pts — the stub **plus real track body** |
+| material called "outside" | 0.08 % of charge | **1.20 %** of charge, at 8595 q/pt |
+| point-count judge (≤ max(1%·1375, 15) = 15) | 5 ≤ 15 → **fires** | 20 > 15 → refuses |
+| gap judge (detached ∧ q ≤ 1 %) | **fires** | 1.20 % > 1 % → refuses |
+| density judge (q ≤ 0.5 % ∧ < 1500 q/pt) | — | 8595 q/pt → refuses |
+| result | first_u → +0.01, **contained** | first_u stays **−14.56**, 10.6 cm below floor |
+
+At gid 120 the extra 3.6 cm of drift shift drops the body's leading slices *below*
+`anode_in`, so the walk marches past the 5-point stub into the track itself and hands
+the judges 15 points of dense, real charge. All three then refuse — **correctly**: that
+material is a genuine track end, and refusing to shave it is exactly what the density
+ceiling exists for. The stub survives, and containment fails on it.
+
+So this is a **structural gap, not a tuning miss**:
+
+- Widening `anode_ext1_margin` does not help (it moves the floor, not the walk's break).
+- The trim as written cannot help, at any threshold: loosening the judges enough to
+  swallow 15 dense track points would also let them shave real track tips everywhere.
+- An earlier reading predicted the trim *would* fix this ("20 of 1375 is far under the
+  5 % allowance"). That is wrong twice over: PDHD sets `robust_endpoint_frac` to **1 %**,
+  not the C++ default 5 %, so the allowance is `max(0.01·1375, 15) = 15` and 20 exceeds
+  it; and the charge judges refuse regardless.
+
+### The candidate fix (NOT implemented — C++ behavior change, needs a decision)
+
+The gap judge conflates two things: *detecting* detached junk (the 9.77 cm gap) and
+*choosing* the new endpoint (first slice above `anode_in`). Once detachment is
+established, the physically right endpoint is **the far side of the gap** — the body's
+true start at u = −3.60 — not the first slice above `anode_in`. Snapping there would
+give pts_out = 5, q_out = 0.08 %, the gap judge fires, first_u = −3.60 > −4.0 →
+**contained**, with no loosening of any judge and no risk to genuine track tips.
+
+This changes `compute_endpoint_flags` in C++ and would need its own default-OFF knob,
+an A/B, and a census. Not done here.
+
+## 10. Knob wiring added by this work (all default-OFF)
 
 - `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet` — the 7 `robust_endpoint_*`
   args, null/false-defaulted with the key-suppression idiom.
