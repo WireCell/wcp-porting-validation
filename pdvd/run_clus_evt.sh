@@ -316,6 +316,30 @@ PY
     # flag_saturation light archive, which run_light_evt.sh now produces by
     # default.  Set PDVD_QL_USE_SAT_FLAG=0 for legacy (veto-era) archives;
     # the toolkit C++/jsonnet defaults stay OFF (byte-identical).
+    # PDVD_QL_ROBUST_TRIM=1: robust-endpoint trim -- snap a drift endpoint back
+    # inside the detector edge when the outer material is overclustered junk rather
+    # than a real track end, before the containment gate reads it.  DEFAULT OFF:
+    # unlike the cathode cushion / anode pull above, this has NOT been A/B'd or
+    # censused on PDVD, so it is opt-in only.  The defaults below are PDHD's proven
+    # operating point (cfg/.../pdhd/qlmatching.jsonnet:306-332); each is overridable.
+    #
+    # Reproduces the evt298567 clus 34 demo: 8 points carrying 0.08% of that
+    # cluster's charge sit 28.4 cm off its anode end and stretch its drift extent to
+    # 371.7 cm, past the 336.9 cm drift depth, so no flash T0 can contain it and
+    # every candidate bundle is dropped before the fit.  Only the GAP judge trims
+    # them -- they are detached, not diffuse, so the density judge (CHARGE_ABS)
+    # protects them like a genuine track tip.
+    # See docs/qlmatch/15_pdvd-clus34-unmatched-evt298567.md.
+    local QL_ROBUSTGAP_ARG=()
+    if [ "${PDVD_QL_ROBUST_TRIM:-0}" = 1 ]; then
+        QL_ROBUSTGAP_ARG=(-S "ql_robust_trim=true"
+                          -S "ql_robust_frac=${PDVD_QL_ROBUST_FRAC:-0.01}"
+                          -S "ql_robust_count=${PDVD_QL_ROBUST_COUNT:-15}"
+                          -S "ql_robust_charge_frac=${PDVD_QL_ROBUST_CHARGE_FRAC:-0.005}"
+                          -S "ql_robust_charge_abs=${PDVD_QL_ROBUST_CHARGE_ABS:-1500}"
+                          -S "ql_robust_gap_cm=${PDVD_QL_ROBUST_GAP_CM:-3.0}"
+                          -S "ql_robust_gap_charge_frac=${PDVD_QL_ROBUST_GAP_FRAC:-0.01}")
+    fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
         QL_SATFLAG_ARG=(-S "ql_use_saturation_flag=true")
@@ -403,6 +427,7 @@ PY
         -S "drift_speed_top_mmus=${PDVD_DRIFT_SPEED_TOP_MMUS:-1.48073}" \
         "${QL_CATHEXT1_ARG[@]}" \
         "${QL_ANODEMARGIN_ARG[@]}" \
+        "${QL_ROBUSTGAP_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then

@@ -126,6 +126,22 @@ function(
     // the C++ default 1.0, so a measured 0 carries +-2 PE (~2x the ~1 PE
     // threshold).  null => key suppressed => C++ default -1 = disabled.
     ql_pe_err_nodata = null,
+    // Robust-endpoint trim: snap a drift endpoint back inside the detector edge
+    // when the outer material is overclustered junk rather than a real track end,
+    // before the containment gate reads the endpoints.  ql_robust_trim is the
+    // MASTER switch -- the judges below are inert while it is false.  OFF => key
+    // suppressed => compiled config byte-identical.  PDVD has not A/B'd or censused
+    // this; run_clus_evt.sh turns it on only for the evt298567 clus 34 demo (see
+    // docs/qlmatch/15_pdvd-clus34-unmatched-evt298567.md).  Pure pass-through: null
+    // => qlmatching omits the key => C++ default.
+    ql_robust_trim = false,
+    ql_robust_frac = null,
+    ql_robust_count = null,
+    ql_robust_charge_frac = null,
+    ql_robust_charge_abs = null,
+    // Gap (detachment) judge, anode end only, in CM.
+    ql_robust_gap_cm = null,
+    ql_robust_gap_charge_frac = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -222,7 +238,17 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       chi2_sat_inflate=ql_chi2_sat_inflate,
                       use_coverage_flag=ql_use_coverage_flag,
                       coverage_mask_fit=ql_coverage_mask_fit,
-                      pe_err_nodata=ql_pe_err_nodata);
+                      pe_err_nodata=ql_pe_err_nodata,
+                      // Master switch off => qlmatching suppresses the key and the
+                      // whole trim block stays inert whatever the judges say.
+                      robust_endpoint_trim=ql_robust_trim,
+                      robust_endpoint_frac=ql_robust_frac,
+                      robust_endpoint_count=ql_robust_count,
+                      robust_endpoint_charge_frac=ql_robust_charge_frac,
+                      robust_endpoint_charge_abs=ql_robust_charge_abs,
+                      robust_endpoint_gap=if ql_robust_gap_cm == null then null
+                                          else ql_robust_gap_cm * wc.cm,
+                      robust_endpoint_gap_charge_frac=ql_robust_gap_charge_frac);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';
