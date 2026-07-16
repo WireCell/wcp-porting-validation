@@ -339,6 +339,14 @@ PY
     # docs/qlmatch/scripts/analyze_coverage_deadtime.py.  Set
     # PDVD_QL_COV_MASK_FIT=1 for the 2026-07-14..16 (_spcov / _am2) behaviour.
     # Toolkit C++/jsonnet defaults stay at the drop (byte-identical).
+    #
+    # M1 DEPLOY GATE: a toolkit that is pulled but NOT rebuilt compiles this
+    # key into the config and then ignores it (old lib has no
+    # m_coverage_mask_fit) => the masking silently stays ON and the run looks
+    # fine.  On the first event of any reprocess, confirm the sentinel:
+    #   grep 'coverage_mask_fit=false => uncovered channels stay in the fit' \
+    #        work/<tag>/wct_clus_*.log
+    # No line => the new libWireCellMatch.so is not live; wcbuild first.
     if [ "${PDVD_QL_COV_MASK_FIT:-0}" = 0 ]; then
         QL_SATFLAG_ARG+=(-S "ql_coverage_mask_fit=false")
     fi

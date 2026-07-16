@@ -636,13 +636,25 @@ keeps tracking coverage (dump `cov` array → ql_scan `nodata` label);
 | `QLMatching` | `pe_err_nodata` | −1 (disabled) | unset — not needed, see below |
 | runner | `PDVD_QL_COV_MASK_FIT` | — | **0** (= keep) |
 
-**The error is already right for PDVD.**  A kept no-data channel must carry
-the threshold band, not a tight zero: at the C++ `pe_err_floor` default 0.3 a
-5 PE over-prediction would cost chi2 ≈ 278 — over-punishing the true match
-exactly as the pre-coverage path did.  PDVD's `qlmatching.jsonnet` already
-sets `pe_err_floor: 2.0` with `pe_err_knee` at the C++ default 1.0, so a
-measured 0 carries **±2 PE**, ≈2× the measured ~1 PE threshold.  `pe_err_nodata`
-exists for detectors with a tighter floor; PDVD leaves it unset.
+**The error is already right for PDVD — on both paths, for two different
+reasons.**  A kept no-data channel must carry the threshold band, not a tight
+zero.  The two consumers price it independently:
+
+- **LASSO** uses the measured-based `pe_err = sqrt(PE + PE_err²)`.  PDVD's
+  `qlmatching.jsonnet` sets `pe_err_floor: 2.0` with `pe_err_knee` at the C++
+  default 1.0, so a measured 0 carries **±2 PE** (≈2× the ~1 PE threshold) and
+  a 28 PE prediction on a silent channel enters as a residual of 14 — a strong
+  but honest contradiction.  At the C++ default floor 0.3 it would be 93.
+- **bundle chi2/KS** does *not* see that error at all: PDVD sets
+  `pe_err_on_pred: true`, and `per_opdet_perr` (`TimingTPCBundle.cxx:39-45`)
+  derives the error from the **predicted** pe via the lowpe model, ignoring the
+  measured one.  With PDVD's 0.60/2.0/10.0/2.0 a no-data channel predicted at
+  5/28/100 PE costs chi2 **0.4/2.1/2.8** — gently and fractionally capped.
+
+So `pe_err_nodata` (which sets `Opflash::PE_err`) would be **inert for PDVD**:
+the LASSO floor already equals it and the chi2 bypasses it.  It is retained for
+detectors with a tighter `pe_err_floor` *and* `pe_err_on_pred` off, where a
+no-data channel would otherwise be scored as a hard zero.  PDVD leaves it unset.
 
 Gates: compiled config with the knob at default is **byte-identical** to HEAD
 (`wct-clustering`, sat+cov on; diff of the compiled JSON is empty), key
@@ -658,6 +670,27 @@ top:22 stays on the bright 274.4 µs flash.
 Also collapsed three exact-duplicate `coverage_min` guard lines (differing only
 in indentation, from the Phase-2 patch) while rewriting them — provable no-ops.
 
+### Deploying this (M1 — read before reprocessing)
+
+`wct-clustering.jsonnet` now passes `coverage_mask_fit=` unconditionally, so
+there are two ways a reprocess can fail to reflect this change:
+
+- **toolkit not pulled** → `qlmatching.jsonnet` has no such parameter → hard
+  `RUNTIME ERROR: function has no parameter coverage_mask_fit`.  Loud, safe.
+- **toolkit pulled but `libWireCellMatch.so` not rebuilt/installed** → the
+  compiled config carries `coverage_mask_fit: false`, but an old lib has no
+  `m_coverage_mask_fit`, so `get()` never reads the key and **the masking
+  silently stays ON**.  The run looks fine and reproduces the old result.
+
+Gate every reprocess on the sentinel — on the first event:
+
+```
+grep 'coverage_mask_fit=false => uncovered channels stay in the fit' work/<tag>/wct_clus_*.log
+```
+
+No line ⇒ the new lib is not live (`wcbuild`, then check
+`local/lib/libWireCellMatch.so` is newer than `match/src/QLMatching.cxx`).
+
 ### Open items
 
 - **`_am2` / `_spcov` dumps and the `candles-am2` round on port 5019 carry the
@@ -667,9 +700,11 @@ in indentation, from the Phase-2 patch) while rewriting them — provable no-ops
   value, but such a channel saw only part of the flash window, so its measured
   PE is biased **low**.  Not addressed; the population is small.  A coverage-
   weighted error would be the principled treatment.
-- **`pe_err_nodata` has no consumer today** (PDVD's `pe_err_floor` already
-  supplies the band).  Retained as the explicit home for the threshold band so
-  a future `pe_err_floor` retune cannot silently over-punish no-data channels.
+- **`pe_err_nodata` has no consumer today** and is inert for PDVD on both
+  paths (see above).  Retained as the explicit home for the threshold band so a
+  future `pe_err_floor` retune, or turning `pe_err_on_pred` off, cannot
+  silently over-punish no-data channels.  Note it can never fix the chi2 while
+  `pe_err_on_pred` is on — that path would need its own no-data branch.
 - **The ~1 PE threshold is measured from snippet decon PE, not from the DAPHNE
   trigger configuration.**  Worth confirming against the run's actual threshold
   registers.
