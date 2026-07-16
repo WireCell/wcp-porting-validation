@@ -520,10 +520,18 @@ simply stopped selecting it. Trading a 2× over-prediction for a 4.5×
 under-prediction is worse, not better. The other loss (evt idx 15, cluster 183) was a
 poor match to begin with (pred 15908 vs 1718 measured) and is not obviously a loss.
 
-Per CLAUDE.md rule 7 this is **reported, not tuned around**. It does not look like a
-property of the anode floor (the floor only added candidates); it looks like LASSO
-selection instability that the floor exposed. Treat 2/2044 = 0.1% as the current
-price of the knob.
+**Attribution is pinned, not assumed.** The drop is on evt idx 1, whereas the §11.6
+byte-identical gate was on evt idx 0 — so "new binary" and "margin 1.0 → 2.0" were
+initially confounded. Re-running evt 1 with the new binary forced to margin=1.0
+(tag `am1chk`) reproduces `_spcov` **byte-identically** (27/27 `mabc-*.zip`,
+`calib-evt298581.json` sha256 identical). The binary is therefore a no-op on evt 1
+as well, and **margin=2.0 is definitively what drops cluster 156** — this is a real,
+knob-caused regression, not run-to-run drift or a porting artefact.
+
+Per CLAUDE.md rule 7 this is **reported, not tuned around** — no margin value was
+searched to make it disappear. It is not a property of the anode floor as such (the
+floor only *adds* candidates); it is LASSO selection instability that the added
+candidates expose. Treat 2/2044 = 0.1% as the current price of the knob.
 
 ### 11.8 Open
 
