@@ -329,6 +329,19 @@ PY
     if [ "${PDVD_QL_USE_COV_FLAG:-1}" = 1 ]; then
         QL_SATFLAG_ARG+=(-S "ql_use_coverage_flag=true")
     fi
+    # PDVD_QL_COV_MASK_FIT: whether an uncovered channel is also DROPPED from
+    # the fit, or kept at its measured 0 and merely labelled "nodata".
+    # PRODUCTION DEFAULT 0 (keep) since 2026-07-16: the drop assumed silence
+    # meant "no measurement", but DAPHNE has no dead time (min inter-snippet
+    # gap 0.336 us over 18 evts of run 039252) and the self-trigger threshold
+    # is ~1 PE, so silence measures "< ~1 PE" -- dropping it lets a prediction
+    # over-shoot a blind channel for free.  See doc 14 section 12 and
+    # docs/qlmatch/scripts/analyze_coverage_deadtime.py.  Set
+    # PDVD_QL_COV_MASK_FIT=1 for the 2026-07-14..16 (_spcov / _am2) behaviour.
+    # Toolkit C++/jsonnet defaults stay at the drop (byte-identical).
+    if [ "${PDVD_QL_COV_MASK_FIT:-0}" = 0 ]; then
+        QL_SATFLAG_ARG+=(-S "ql_coverage_mask_fit=false")
+    fi
     wcsonnet \
         -A "input=${CLUS_INPUT}" \
         -S "anode_indices=${ANODE_CODE}" \

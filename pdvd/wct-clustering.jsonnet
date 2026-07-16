@@ -90,12 +90,26 @@ function(
     // PDVD_FLAG_SATURATION=1).  C++ default false; key suppressed when off =>
     // compiled config byte-identical.  docs/qlmatch/pdvd-saturation-recovery.md.
     ql_use_saturation_flag = false,
-    // Per-flash readout-coverage masking in QLMatching.  Needs a light
+    // Per-flash readout-coverage tracking in QLMatching.  Needs a light
     // archive made with emit_coverage (run_light_evt.sh
     // PDVD_EMIT_COVERAGE=1).  C++ default false; key suppressed when off =>
     // compiled config byte-identical.
-    // docs/qlmatch/pdvd-lightpattern-sp-investigation.md.
+    // docs/qlmatch/14_pdvd-lightpattern-sp-investigation.md.
     ql_use_coverage_flag = false,
+    // Whether a readout-uncovered channel is also DROPPED from the fit (the
+    // 2026-07-14..16 operating point) or kept at its measured 0.  Keeping it
+    // is right -- DAPHNE has no dead time (min inter-snippet gap 0.336 us)
+    // and the self-trigger threshold is ~1 PE, so the silence measures
+    // "< ~1 PE" rather than nothing (doc 14 section 12;
+    // docs/qlmatch/scripts/analyze_coverage_deadtime.py).  The channel is
+    // labelled "nodata" in the dump / ql_scan either way.  C++ default true
+    // = drop; key suppressed then => compiled config byte-identical.
+    ql_coverage_mask_fit = true,
+    // PE_err floor (PE) for kept no-data channels.  PDVD does not need it:
+    // qlmatching.jsonnet already sets pe_err_floor 2.0 with pe_err_knee at
+    // the C++ default 1.0, so a measured 0 carries +-2 PE (~2x the ~1 PE
+    // threshold).  null => key suppressed => C++ default -1 = disabled.
+    ql_pe_err_nodata = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -188,7 +202,9 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       anode_ext1_margin=if ql_anode_margin_cm == null then null
                                         else ql_anode_margin_cm * wc.cm,
                       use_saturation_flag=ql_use_saturation_flag,
-                      use_coverage_flag=ql_use_coverage_flag);
+                      use_coverage_flag=ql_use_coverage_flag,
+                      coverage_mask_fit=ql_coverage_mask_fit,
+                      pe_err_nodata=ql_pe_err_nodata);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

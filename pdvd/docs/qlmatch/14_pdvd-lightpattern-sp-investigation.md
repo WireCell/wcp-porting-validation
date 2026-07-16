@@ -377,6 +377,15 @@ saturation flag should only exclude channels from chi2/KS/LASSO.
 
 ## Root cause 2 — self-trigger coverage blindness (membrane XA + PMTs)
 
+> **SUPERSEDED 2026-07-16 — see §12.**  The *observations* below stand (the
+> snippet structure, the duty cycle, the exact covered ⇔ meas>0
+> correspondence).  The *inference* — that the zeros are "fake" and must leave
+> the fit — does not: the brightness scan bins by flash total PE rather than
+> per-channel PE, DAPHNE has no dead time, and the self-trigger threshold is
+> ~1 PE, so a zero is a real upper limit.  The zeros are kept in the fit and
+> merely labelled as of §12.  Read this section as the coverage *measurement*,
+> not as its interpretation.
+
 Cathode 10xx channels are full 468800-sample (7.5 ms) streams.  Membrane
 20xx / PMT 30xx channels are **self-triggered 1024-sample (16.4 µs)
 snippets** — each channel is live only ~5–30% of the readout (fig 4).  When
@@ -390,8 +399,9 @@ covering snippet has nonzero dump PE; every one without reads 0.0 — e.g. od1
 while covered od12 (ch2050) reads 438 vs 370 predicted.
 
 Brightness scan over the 18-event round (T4): P(meas>0) for membrane opdets
-is 0.27/0.32/0.32 for flashes of 1–3k/3–10k/>10k PE — **flat in brightness**
-⇒ the zeros are readout duty cycle, not dim light.  ~70% of membrane/PMT
+is 0.27/0.32/0.32 for flashes of 1–3k/3–10k/>10k PE — flat in *flash* PE.
+(**§12: this does not imply duty cycle** — flash PE is a cathode-dominated
+total; binned by per-*channel* predicted PE, coverage runs 0.58 → 0.98.)  ~70% of membrane/PMT
 entries entering chi2/KS — and the 2026-07-14 per-type efficiency fits — are
 fake zeros.  The adopted membrane ×1.655 and PMT ×0.352 scale factors are
 therefore contaminated and must be refit once coverage is handled.
@@ -522,6 +532,150 @@ repaired drags the template area down, and here past zero.
    promoted to PDVD production default — the runner env defaults are
    ratified, `_spcov` supersedes `_satrep` as the canonical dump record.
    Toolkit defaults stay OFF (byte-identical).
+
+## 12 — Root cause 2 revisited: the silence is a measurement (2026-07-16)
+
+> Repro (read-only):
+> ```
+> cd wcp-porting-img/pdvd
+> python3 docs/qlmatch/scripts/analyze_coverage_deadtime.py            # 18 evts
+> python3 docs/qlmatch/scripts/analyze_coverage_deadtime.py 298567     # one evt
+> ```
+
+Owner question: *"when there is no data (due to self trigger threshold), the
+PE is treated to be zero in the flash. I believe this is a correct treatment?
+… it is OK to label things in the qlport as no data, but we should not
+exclude them from the fit."*
+
+**The owner is right, and Root cause 2 above is wrong on its central claim.**
+
+### The one question that decides it
+
+An uncovered self-trigger channel is in one of two worlds:
+
+- **World A — armed and silent.** Powered, listening, light arrived below
+  threshold, never fired.  The silence *is* a measurement: "the light here was
+  < threshold."  PE ≈ 0 is correct, and it constrains the fit.
+- **World B — not listening.** Busy reading out an earlier trigger / buffer
+  full / not recording.  The silence says nothing about the light, and scoring
+  0 invents a datum.
+
+Excluding is right only in World B.  §"Root cause 2" asserted World B on the
+strength of one scan: `P(meas>0)` for membrane opdets is 0.27/0.32/0.32 for
+flashes of 1–3k/3–10k/>10k PE — *flat in brightness*, therefore duty cycle.
+
+### That scan bins on the wrong variable
+
+It bins by **flash total PE**, which the cathode XAs dominate.  What decides
+whether *this* channel self-triggers is the light **on this channel**.  Binned
+by per-channel predicted PE over the same 18 events (auto-selected bundles):
+
+| pred PE on channel | 0–1 | 1–5 | 5–20 | 20–100 | 100–500 | >500 |
+|---|---|---|---|---|---|---|
+| P(cov=1), Arapucas | 0.576 | 0.771 | 0.766 | 0.817 | 0.868 | **0.984** |
+| P(cov=1), PMTs | 0.252 | 0.601 | 0.682 | 0.550 | — | — |
+
+Not flat.  It survives controlling for flash brightness: within the 1–3k
+flash band alone, Arapuca coverage climbs 0.617 → 0.911 from pred <1 PE to
+pred >100 PE.  Coverage is **downstream of the light**.
+
+### Three measurements that close it
+
+`analyze_coverage_deadtime.py` rebuilds each snippet's live interval from the
+rawwf `timestamp`/`nsamp` in the chain's own tick base
+(`PDVDOpWaveformSource.cxx:123-124`) and reproduces `OpFlashFinder`'s coverage
+(`:711-763`) — **validation gate: 266071/266071 (100%)** (flash, opdet) cells
+match the chain's own `flash_cov`.  Then:
+
+1. **There is no dead time.**  Minimum gap between consecutive snippets on a
+   channel = **0.336 µs** (1%ile 0.768 µs; 1.6% of gaps < 1 µs).  A channel
+   re-arms essentially the instant a snippet ends — it is never busy when a
+   flash arrives.  **World B has no mechanism.**
+2. **Uncovered channels are quieter, not busier.**  Gap since their last
+   snippet: median **93.8 µs** vs **54.2 µs** for covered ones, and 5.4% vs
+   0.7% have seen nothing for >1 ms.  The opposite of the busy prediction.
+3. **The threshold is ~1 PE.**  Over 43520 self-trigger snippets the total
+   deconvolved PE inside the snippet has 25%ile **0.96 PE**, median **3.29
+   PE**; 59% of triggers carry <5 PE.  A channel that did not fire really did
+   see ~nothing.
+
+The ~12% duty cycle (median 55 snippets × 16.384 µs / 7500 µs) is real, but it
+is an **effect** of there being no light most of the time, not an independent
+blindness.  Root cause 2 read "channel is rarely live" as "channel is randomly
+deaf"; those are different statements.
+
+### Consequences
+
+- Dropping an uncovered channel discards the upper limit "< ~1 PE", so a
+  prediction may over-shoot a silent channel for free — a one-directional bias
+  toward over-prediction, the same direction as this doc's opening symptom.
+- **969** uncovered Arapuca entries predict >20 PE (465 predict >100).  Under
+  World A these are the model contradicting the hardware, not missing data.
+- The Phase-2 chi2 win (**459.6 → 91.8**, ndf 18→13) is the warning, not the
+  result: 5 channels carried ~370 of that chi2 because the prediction was
+  wrong on them, and masking made the wrongness free.
+- `coverage_min` = 1.0 with the min-over-ganged-sub-channels rule masked
+  **551 entries that had measured light** (median 31 PE, max 3608) — data
+  deleted because a ganged partner was quiet or the window overhung a snippet
+  edge.  Indefensible under either world; fixed for free by keeping them.
+- **The Phase-4 per-type refit is predicated on the falsified premise.**  Its
+  premise is that membrane/PMT zeros are fake; they are real.  The f7c66ab8
+  factors (kept by the 2026-07-15 ruling) were fit with those zeros IN, i.e.
+  under the now-correct treatment.  A refit under coverage masking would be
+  the biased one.
+
+### Fix — the `coverage_mask_fit` op point (2026-07-16)
+
+Labelling and masking were one knob; they are now two.  `use_coverage_flag`
+keeps tracking coverage (dump `cov` array → ql_scan `nodata` label);
+`coverage_mask_fit` decides whether an uncovered channel *also* leaves the fit.
+
+| layer | knob | default | PDVD production |
+|---|---|---|---|
+| `QLMatching` | `coverage_mask_fit` | **true** (legacy drop ⇒ byte-identical) | **false** — keep at measured 0 |
+| `QLMatching` | `pe_err_nodata` | −1 (disabled) | unset — not needed, see below |
+| runner | `PDVD_QL_COV_MASK_FIT` | — | **0** (= keep) |
+
+**The error is already right for PDVD.**  A kept no-data channel must carry
+the threshold band, not a tight zero: at the C++ `pe_err_floor` default 0.3 a
+5 PE over-prediction would cost chi2 ≈ 278 — over-punishing the true match
+exactly as the pre-coverage path did.  PDVD's `qlmatching.jsonnet` already
+sets `pe_err_floor: 2.0` with `pe_err_knee` at the C++ default 1.0, so a
+measured 0 carries **±2 PE**, ≈2× the measured ~1 PE threshold.  `pe_err_nodata`
+exists for detectors with a tighter floor; PDVD leaves it unset.
+
+Gates: compiled config with the knob at default is **byte-identical** to HEAD
+(`wct-clustering`, sat+cov on; diff of the compiled JSON is empty), key
+present when on; `wcdoctest-match` 23/23; freshness proof
+`local/lib/libWireCellMatch.so` 08:00 > `QLMatching.cxx` 07:58.  Knob-on smoke
+(`work/039252_0_keepcov`, light `_spcov`, evt 298567): sentinel fires, and vs
+`_am2` the **median ndf of auto-selected bundles rises 8 → 10** (the no-data
+channels are back), contained bundles unchanged (5215 — containment is
+geometry, not coverage), median chi2/ndf 5.02 → 5.59 (expected: the fit is now
+held to more data), 23 clusters change flash, 3 lost, 0 gained; the §11 crosser
+top:22 stays on the bright 274.4 µs flash.
+
+Also collapsed three exact-duplicate `coverage_min` guard lines (differing only
+in indentation, from the Phase-2 patch) while rewriting them — provable no-ops.
+
+### Open items
+
+- **`_am2` / `_spcov` dumps and the `candles-am2` round on port 5019 carry the
+  masking** — they predate this ruling.  Needs a reprocess (owner is holding
+  for other parts).
+- **Partial coverage** (`0 < cov < 1`, 2.46% of cells) is now kept at face
+  value, but such a channel saw only part of the flash window, so its measured
+  PE is biased **low**.  Not addressed; the population is small.  A coverage-
+  weighted error would be the principled treatment.
+- **`pe_err_nodata` has no consumer today** (PDVD's `pe_err_floor` already
+  supplies the band).  Retained as the explicit home for the threshold band so
+  a future `pe_err_floor` retune cannot silently over-punish no-data channels.
+- **The ~1 PE threshold is measured from snippet decon PE, not from the DAPHNE
+  trigger configuration.**  Worth confirming against the run's actual threshold
+  registers.
+- The 6893 uncovered channel-flash entries with **no snippet anywhere in the
+  event** (3.9% of uncovered) may be genuinely dead rather than quiet — the
+  only real World-B population, identifiable per channel per event.
 
 ## Verification
 
