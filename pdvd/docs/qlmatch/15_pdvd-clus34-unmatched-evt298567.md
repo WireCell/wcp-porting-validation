@@ -291,31 +291,143 @@ So this is a **structural gap, not a tuning miss**:
   not the C++ default 5 %, so the allowance is `max(0.01·1375, 15) = 15` and 20 exceeds
   it; and the charge judges refuse regardless.
 
-### The candidate fix (NOT implemented — C++ behavior change, needs a decision)
+### The size-dependence this exposes
 
-The gap judge conflates two things: *detecting* detached junk (the 9.77 cm gap) and
-*choosing* the new endpoint (first slice above `anode_in`). Once detachment is
-established, the physically right endpoint is **the far side of the gap** — the body's
-true start at u = −3.60 — not the first slice above `anode_in`. Snapping there would
-give pts_out = 5, q_out = 0.08 %, the gap judge fires, first_u = −3.60 > −4.0 →
-**contained**, with no loosening of any judge and no risk to genuine track tips.
+The deeper problem is that whether the rescue works at all depends on **cluster size**,
+which is not physics. Both clusters have the walk swallow ~20 points; the allowance is
+`max(frac·npoints, count)`:
 
-This changes `compute_endpoint_flags` in C++ and would need its own default-OFF knob,
-an A/B, and a census. Not done here.
+| cluster | npoints | allowance | swallowed | verdict |
+|---|---|---|---|---|
+| apa-0 ident 34 | 2649 | max(26.5, 15) = **26.5** | 20 | 20 ≤ 26.5 → rescued |
+| apa-4 ident 1 | 1375 | max(13.8, 15) = **15** | 20 | 20 > 15 → **not** rescued |
+
+Same defect, same swallowed material, opposite outcome — decided by how big the rest of
+the cluster happens to be.
+
+## 10. The fix — `robust_endpoint_walk_to_floor` (implemented, default OFF)
+
+`anode_in` is the wrong threshold for the walk. The walk exists to serve the containment
+gate, and that gate's floor is `anode_in − m_anode_ext1_margin`. Breaking the walk at
+`anode_in` makes it count material as "outside" that the gate would have **accepted** —
+which is how real track charge ends up in front of the judges.
+
+The fix is one threshold (`QLMatching.cxx`, anode-end block):
+
+```cpp
+const double walk_in = m_robust_endpoint_walk_to_floor
+                       ? anode_in - m_anode_ext1_margin   // -4.0, the gate it serves
+                       : anode_in;                        // -2.0, today
+for (const auto& sl : sv) {
+    if (sl.u > walk_in) { in_u = sl.u; reached = true; break; }
+    ...
+```
+
+The judges are untouched, so a body starting **below** the floor still exceeds them and
+still fails containment — which is correct. The cathode end needs no counterpart: its
+gate (`last_u < cathode_in`) and its walk already share one threshold.
+
+Chosen over the alternative of snapping the gap path to the far side of the detachment
+gap: both give first_u = −3.60 on every known case, but this one is one line, reuses the
+existing judges, needs no gap to be present, and removes the size-dependence above at
+its root.
+
+### Verification
+
+**A/B gate — knob OFF is byte-identical.** New binary, production config (trim off),
+`work/039252_0_abcheck/` vs the canonical `work/039252_0_keep/`:
+
+```
+calib-evt298567.json md5:  61040ceefbb3792983f7d2e6bad3216a   (both)
+mabc-all-apa.zip     5 members  IDENTICAL   (member-content hashes, not archive md5)
+mabc-group0123.zip   9 members  IDENTICAL
+mabc-group4567.zip   9 members  IDENTICAL
+```
+
+`./build/match/wcdoctest-match`: 4 test cases, 23 assertions, all pass. Freshness proof
+done (libWireCellMatch.so 95 s newer than the last source edit).
+
+**Knob ON** — `work/039252_0_walkfloor/`, `PDVD_QL_ROBUST_TRIM=1
+PDVD_QL_ROBUST_WALK_FLOOR=1`:
+
+| | keep (production) | gaptrim (trim only) | **walkfloor** |
+|---|---|---|---|
+| dumped (contained) bundles | 5179 | 5277 | **5295** |
+| auto-selected bundles | 113 | 115 | **117** |
+| apa-4 ident 1 pool | 25 (95…119) | 25 (95…119) | **26 (95…120)** |
+| apa-4 ident 1 selection | gid 111 | gid 111 | **gid 120** |
+| apa-0 clus 34 | UNMATCHED | gid 91 | **gid 91** (unchanged) |
+
+Both targets land: ident 1 gains flash 120 **and selects it**, while clus 34 keeps its
+gid 91 match at the same chi2/ndf 0.47, KS 0.060.
+
+**Is ident 1's new selection better, or just different?** Better, on grounds independent
+of the fit:
+
+| | flash | PE | **at_x_boundary** | strength | KS | chi2/ndf |
+|---|---|---|---|---|---|---|
+| keep | gid 111 | 2152.2 | **False** | 0.709 | 0.069 | 0.99 |
+| walkfloor | **gid 120** | 6228.1 | **True** | **0.955** | **0.059** | 1.05 |
+
+`at_x_boundary=True` is the load-bearing one: it is geometric, not fitted. The new T0
+places the track's anode end **on the anode plane**, which pins its T0; the old match
+left the track floating mid-drift with no boundary anchor. LASSO strength also rises
+0.709 → 0.955 and KS improves. This is the flash the hand scan expected (2589.1 µs on
+the bottom clock, 6228 PE).
+
+**Bonus rescue**: uid 4000078 (3006 pts — the largest previously-unmatched cluster in
+the event) now matches gid 126, also with `at_x_boundary=True`.
+
+### Still not free
+
+11 of 104 clusters change selection vs production:
+
+| uid | keep | walkfloor | reading |
+|---|---|---|---|
+| 34 | UNMATCHED | [91] | rescue (T0 pinned to 0.86 cm) |
+| 4000078 | UNMATCHED | [126] | rescue, anode-anchored |
+| 4000001 | [111] | [120] | **better** — floating → anode-anchored |
+| 18 | [125] | [125, 146] | **worse** — gains a second flash |
+| 131 | [66, 74] | [63, 66, 74] | **worse** — gains a third flash |
+| 1, 16, 38, 128, 4000014, 4000101 | | | flash swaps |
+
+Two clusters still gain a spurious extra flash (the one-cluster-many-flashes pattern of
+doc 13 finding 7). **Adoption still needs the 120-event census + hand scan of the
+movers.** Both knobs stay OFF.
+
+## 11. Knob wiring added by this work (all default-OFF)
 
 ## 10. Knob wiring added by this work (all default-OFF)
 
+- `match/inc/WireCellMatch/QLMatching.h` + `match/src/QLMatching.cxx` — new
+  `m_robust_endpoint_walk_to_floor{false}`, read in `configure()`, round-tripped in
+  `default_configuration()`, used for the anode-end walk threshold (§10).
 - `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet` — the 7 `robust_endpoint_*`
-  args, null/false-defaulted with the key-suppression idiom.
-- `pdvd/wct-clustering.jsonnet` — `ql_robust_trim` (master) + 6 pass-through TLAs.
+  args plus `robust_endpoint_walk_to_floor`, null/false-defaulted with the
+  key-suppression idiom.
+- `pdvd/wct-clustering.jsonnet` — `ql_robust_trim` (master), `ql_robust_walk_to_floor`,
+  + pass-through TLAs.
 - `pdvd/run_clus_evt.sh` — `PDVD_QL_ROBUST_TRIM=1` enables the family at PDHD's
-  operating point; each value overridable (`PDVD_QL_ROBUST_GAP_CM`, …).
+  operating point (each value overridable); `PDVD_QL_ROBUST_WALK_FLOOR=1` adds §10.
 
 Proofs:
 
-- **Byte-identical when off**: compiled `wct-clustering.jsonnet` with the knob unset is
-  byte-identical to the pre-change compile — md5 `fd91614b50cdc42851addb8bc6a72350` both
-  sides, `cmp` clean.
-- **Compiled-config proof when on**: the diff against the pre-change compile is exactly
-  the 7 added keys, nothing else.
-- No C++ was touched, so no rebuild and no imaging/clustering gate is involved.
+- **Compiled config byte-identical when off**: md5 `fd91614b50cdc42851addb8bc6a72350`
+  both sides of the jsonnet change; knob-on diff is exactly the added keys.
+- **Reconstruction byte-identical when off** (the C++ gate): `work/039252_0_abcheck/`
+  vs `work/039252_0_keep/` — calib dump md5 `61040ceefbb3792983f7d2e6bad3216a` both
+  sides, all Bee zip member contents identical.
+- `./build/match/wcdoctest-match` passes (4 cases / 23 assertions); freshness proof done.
+
+## 12. Provenance of the work dirs
+
+| dir | config | role |
+|---|---|---|
+| `work/039252_0_keep` | production, trim off | **canonical record — never written to** |
+| `work/039252_0_abcheck` | production, trim off, new binary | the byte-identical A/B gate |
+| `work/039252_0_gaptrim` | trim on, walk at `anode_in` | isolates the trim alone |
+| `work/039252_0_walkfloor` | trim on + walk to floor | **the full fix; what 5019 now serves** |
+
+All three scratch tags link their imaging inputs from `_keep`; none writes into it.
+The 5019 viewer serves `_walkfloor` for evt298567 and `_keep` for the other 17 events,
+tag `candles-keep` — so the existing hand-scan labels and decisions stay loaded.

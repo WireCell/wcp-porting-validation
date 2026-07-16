@@ -142,6 +142,14 @@ function(
     // Gap (detachment) judge, anode end only, in CM.
     ql_robust_gap_cm = null,
     ql_robust_gap_charge_frac = null,
+    // Break the anode-end walk at the floor the containment gate actually uses
+    // (anode_ext1 - anode_ext1_margin) instead of anode_ext1, so the walk stops
+    // counting material the gate would have accepted as "outside".  Fixes the case
+    // where a body starting in that dead band drags real track charge into the
+    // judges' pile and the trim then correctly refuses (evt298567 apa-4 ident 1 vs
+    // flash 120).  Needs ql_robust_trim to do anything.  OFF => key suppressed =>
+    // compiled config byte-identical.
+    ql_robust_walk_to_floor = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -248,7 +256,8 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       robust_endpoint_charge_abs=ql_robust_charge_abs,
                       robust_endpoint_gap=if ql_robust_gap_cm == null then null
                                           else ql_robust_gap_cm * wc.cm,
-                      robust_endpoint_gap_charge_frac=ql_robust_gap_charge_frac);
+                      robust_endpoint_gap_charge_frac=ql_robust_gap_charge_frac,
+                      robust_endpoint_walk_to_floor=ql_robust_walk_to_floor);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

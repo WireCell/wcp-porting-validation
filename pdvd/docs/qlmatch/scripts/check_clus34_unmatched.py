@@ -28,6 +28,7 @@ PDVD = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))))
 KEEP = os.path.join(PDVD, "work", "039252_0_keep")
 GAPTRIM = os.path.join(PDVD, "work", "039252_0_gaptrim")
+WALKFLOOR = os.path.join(PDVD, "work", "039252_0_walkfloor")
 PICS = os.path.join(PDVD, "docs", "qlmatch", "pics")
 UID = 34            # ql-display "clus 34" == calib ident 34, apa 0 (uid 34)
 GAP_CM = 3.0        # robust_endpoint_gap used by the demo (PDHD's value)
@@ -221,6 +222,7 @@ def main():
 
     geometric_check(new, clusters, geom)
     sibling_check(base, new)
+    walkfloor_check(base)
 
 
 def geometric_check(new, clusters, geom):
@@ -279,6 +281,42 @@ def sibling_check(base, new):
               f"{brk} pts / {q_out/q.sum()*100:.2f}% of q "
               f"({q_out/max(brk,1):.0f} q/pt) -> trim fires={fires}, "
               f"first_u->{first_u:.2f}, contained={first_u > floor}")
+
+
+def walkfloor_check(base):
+    """robust_endpoint_walk_to_floor: break the anode-end walk at the floor the
+    containment gate actually uses, so it stops counting material the gate would have
+    accepted.  Fixes apa-4 ident 1 without disturbing clus 34."""
+    path = os.path.join(WALKFLOOR, "calib-evt298567.json")
+    if not os.path.exists(path):
+        print("\n(no walkfloor dump; run with PDVD_QL_ROBUST_TRIM=1 "
+              "PDVD_QL_ROBUST_WALK_FLOOR=1 -s walkfloor)")
+        return
+    w = load(path)
+    sb, sw = selections(base), selections(w)
+    pb, pw = pool_sizes(base), pool_sizes(w)
+    fl = {f["gid"]: f for f in w["flashes"]}
+    print("\n--- robust_endpoint_walk_to_floor ON ---")
+    print(f"  dumped bundles {len(base['bundles'])} -> {len(w['bundles'])}; "
+          f"auto-selected {sum(len(v) for v in sb.values())} -> "
+          f"{sum(len(v) for v in sw.values())}")
+    for uid, label in ((4000001, "apa-4 ident 1"), (UID, "apa-0 clus 34")):
+        print(f"  {label}: pool {pb.get(uid,0)} -> {pw.get(uid,0)}, "
+              f"selection {sorted(sb.get(uid,set())) or 'UNMATCHED'} -> "
+              f"{sorted(sw.get(uid,set())) or 'UNMATCHED'}")
+    # is ident 1's new pick better on non-fit grounds?
+    for d, tag in ((base, "keep"), (w, "walkfloor")):
+        for b in d["bundles"]:
+            if b["main_cluster"] == 4000001 and b.get("auto_selected"):
+                f = {x["gid"]: x for x in d["flashes"]}[b["flash_gid"]]
+                print(f"    {tag:9s} ident 1 -> gid {b['flash_gid']}: PE={f['total_PE']:.1f} "
+                      f"at_x_boundary={b['at_x_boundary']} strength={b['strength']:.3f} "
+                      f"ks={b['ks_dis']:.3f}   (at_x_boundary is GEOMETRIC, not fitted)")
+    changed = [u for u in sorted(set(sb) | set(sw)) if sb.get(u, set()) != sw.get(u, set())]
+    print(f"  side effects: {len(changed)} of {len(set(sb)|set(sw))} clusters change")
+    for u in changed:
+        print(f"    uid={u}: {sorted(sb.get(u,set())) or 'UNMATCHED'} -> "
+              f"{sorted(sw.get(u,set())) or 'UNMATCHED'}")
 
 
 if __name__ == "__main__":

@@ -330,9 +330,17 @@ PY
     # them -- they are detached, not diffuse, so the density judge (CHARGE_ABS)
     # protects them like a genuine track tip.
     # See docs/qlmatch/15_pdvd-clus34-unmatched-evt298567.md.
+    #
+    # PDVD_QL_ROBUST_WALK_FLOOR=1 (needs PDVD_QL_ROBUST_TRIM=1): break the anode-end
+    # walk at the floor the containment gate actually uses (anode_ext1 - margin, -4 cm)
+    # instead of anode_ext1 (-2 cm), so it stops counting material the gate would have
+    # accepted as "outside".  Without it the rescue depends on cluster SIZE -- evt298567
+    # apa-0 ident 34 (2649 pts, allowance 26.5) is rescued but apa-4 ident 1 (1375 pts,
+    # allowance 15) is not, on the same 20 swallowed body points.  DEFAULT OFF.
     local QL_ROBUSTGAP_ARG=()
     if [ "${PDVD_QL_ROBUST_TRIM:-0}" = 1 ]; then
         QL_ROBUSTGAP_ARG=(-S "ql_robust_trim=true"
+                          -S "ql_robust_walk_to_floor=$([ "${PDVD_QL_ROBUST_WALK_FLOOR:-0}" = 1 ] && echo true || echo false)"
                           -S "ql_robust_frac=${PDVD_QL_ROBUST_FRAC:-0.01}"
                           -S "ql_robust_count=${PDVD_QL_ROBUST_COUNT:-15}"
                           -S "ql_robust_charge_frac=${PDVD_QL_ROBUST_CHARGE_FRAC:-0.005}"
