@@ -765,9 +765,11 @@ No line ⇒ the new lib is not live (`wcbuild`, then check
 
 ### Open items
 
-- **`_am2` / `_spcov` dumps and the `candles-am2` round on port 5019 carry the
+- ~~**`_am2` / `_spcov` dumps and the `candles-am2` round on port 5019 carry the
   masking** — they predate this ruling.  Needs a reprocess (owner is holding
-  for other parts).
+  for other parts).~~ **RESOLVED 2026-07-16** — the `keep` round (next section)
+  is that reprocess; `_spcov`/`_am2` work dirs were removed in the same-day
+  consolidation (decisions/labels survive).
 - **Partial coverage** (`0 < cov < 1`, 2.46% of cells) is now kept at face
   value, but such a channel saw only part of the flash window, so its measured
   PE is biased **low**.  Not addressed; the population is small.  A coverage-
@@ -783,6 +785,59 @@ No line ⇒ the new lib is not live (`wcbuild`, then check
 - The 6893 uncovered channel-flash entries with **no snippet anywhere in the
   event** (3.9% of uncovered) may be genuinely dead rather than quiet — the
   only real World-B population, identifiable per channel per event.
+
+## The `keep` round — full 120-event reprocess at the keep-in-fit operating point (2026-07-16)
+
+**Repro:**
+```
+# freshness: wcbuild, then local/lib/libWireCellFlash.so + libWireCellMatch.so
+# newer than toolkit commits 024027f5 / d5a213c7 (verified 09:13/09:14 > 07:43/08:57)
+cd pdvd
+PDVD_MAX_JOBS=6 ./run_light_all.sh -s _keep 39252            # + 39253, + 039349 x3 -f files
+# imaging symlink farm: work/<run6>_<idx>_keep/ links ../<run6>_<idx>/clusters-apa-*.tar.gz
+export OMP_NUM_THREADS=8 PDVD_MAX_JOBS=6 PDVD_LIGHT_SUFFIX=_keep
+./run_clus_evt.sh -s keep -calib 039252 all                  # + 039253, 039349
+cd ql_display
+for f in ../work/039252_*_keep/calib-evt*.json; do id=$(basename $f | sed 's/calib-evt//;s/.json//');
+  python3 find_crossers.py $f --emit decisions-crossers-keep/decisions-evt$id.jsonl;
+  python3 find_boundary.py $f --emit decisions-boundary-keep/decisions-evt$id.jsonl; done
+python3 merge_candles.py keep
+for f in ../work/039252_*_keep/calib-evt*.json; do id=$(basename $f | sed 's/calib-evt//;s/.json//');
+  python3 make_labels.py $f decisions-candles-keep/decisions-evt$id.jsonl --tag candles-keep; done
+./ql_scan/serve_ql_scan.sh 5019 --tag candles-keep work/039252_*_keep/calib-evt*.json
+```
+
+**Operating point** (all runner env defaults — no overrides): saturation
+keep-and-mark + two-side repair, `overflow_to_rail` (self-trigger 0-pinned
+overflow → rail, first round to carry it), coverage chain, SPE templates v2,
+and QL **keep-in-fit** semantics — `saturation_mask_fit=false` (railed
+channels stay in chi2/KS at repaired PE, `chi2_sat_inflate=0.5`, LASSO rows
+still zeroed) and `coverage_mask_fit=false` (uncovered channels stay in
+chi2/KS **and** LASSO at measured 0).  Compiled-config proofs done on both
+jobs before running.
+
+**Results:** 120/120 light tarballs and calib dumps, 0 log errors; both
+keep-in-fit sentinels present in 120/120 clustering logs.  evt298567
+overflow sentinel: membrane remapped 5 floor-pinned overflow runs, cathode
+111 rail-clamped runs flagged (0 remapped — full stream clamps properly),
+PMT 0.  Flash gid57 smoke: sat opdets [4,6,7,8] at repaired PE
+12764/3773/6546/4738 with unmasked dump predictions; 17 uncovered opdets
+kept at measured 0; the crosser pair (bot c134 + top c4000056) auto-selects
+the flash; median ndf of auto-selected bundles = 10 (the doc'd 8→10
+keep-in-fit shift).  Candle round `keep` vs `am2`: 469 candles in both
+(crosser keeps 249→238, boundary adds 220→231, rejects 1908→1944) — a
+reshuffle, not a collapse.  Port **5019** now serves `candles-keep`
+(labels `work/ql_labels/candles-keep/`); the `candles-am2` display and the
+orphaned 5020 `satoff-check` viewer were stopped.
+
+**`_keep` supersedes `_spcov` as the canonical 120-event record.**
+Same-day consolidation (owner-directed): deleted the superseded
+`work/*_spcov` (240 dirs) + `work/*_am2` (18) and 17 one-off knob-test dirs
+(`_keepsat*`, `_knoboff*`, `_keepcov`, `_am1chk`, light `_defon/_defoff/
+_ovfon/_ovfon2/_ovfoff/_novf_on/_novf_off`), ~2.9 GB.  KEPT: the untagged
+base dirs (charge-SP imaging + base light waveforms — inputs for future
+rounds), all `_keep` dirs, every `ql_display/decisions-*` dir and
+`work/ql_labels/` tag (scan records, all rounds).
 
 ## Verification
 

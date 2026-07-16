@@ -229,7 +229,14 @@ grey no-data markers.
   per-brightness / library-swap diagnostics (this doc's tables).
 - Dumps: `work/<run6>_<idx>_spcov/calib-evt*.json` (120; SOLE CANONICAL
   record since the 2026-07-15 ruling: veto-off + flag + twoside repair +
-  coverage chain + QL sat/cov masking + SPE v2).  The previous
+  coverage chain + QL sat/cov masking + SPE v2).
+  **SUPERSEDED 2026-07-16 by `work/<run6>_<idx>_keep/`** (adds
+  `overflow_to_rail` + keep-in-fit `saturation_mask_fit=false` /
+  `coverage_mask_fit=false`; see
+  `14_pdvd-lightpattern-sp-investigation.md` "The `keep` round"); the
+  `_spcov` work dirs were removed in the 2026-07-16 consolidation
+  (decisions-*-spcov and ql_labels/candles-spcov survive; regenerable via
+  this doc's Repro with `PDVD_QL_SAT_MASK_FIT=1 PDVD_QL_COV_MASK_FIT=1`).  The previous
   `_satrep` reprocess (no coverage/SPE-v2) was **removed in the 2026-07-15
   disk cleanup** now that `_spcov` is canonical; its numbers survive in this
   doc's §4 tables and Repro block, and it is fully regenerable via that block
