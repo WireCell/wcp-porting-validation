@@ -483,10 +483,69 @@ the Jul-10 untagged light instead of the `_spcov` light and showed a spurious
 `mabc-all-apa` FAIL (`0-op.json` + `0-clustering-global.json`) while the per-group
 archives passed.
 
-### 11.7 Open
+### 11.7 The 18-event census (run 2026-07-16)
 
-- **Census not run.** The floor moves for *every* PDVD cluster, so the 18-event
-  auto-selected-count delta (the `compare_pull2c2.py` pattern) is still needed to
-  price the change. §11.5 is a single-event case-check, not a validation.
+`python3 docs/qlport/scripts/compare_am2.py` — `_spcov` (floor −3.0) vs `_am2`
+(floor −4.0), everything else held identical (same pull, same `cathode_ext1`, same
+`_spcov` light archives, same imaging):
+
+| | off (`_spcov`) | on (`_am2`) | Δ |
+|---|---|---|---|
+| contained candidate bundles | 127908 | 128271 | **+363 (+0.3%)** |
+| auto-selected clusters | 2044 | 2072 | **+28** |
+| clusters that changed flash | — | — | **107** (51 to a *brighter* flash) |
+| clusters gained a match | — | — | 30 |
+| clusters **lost** their match | — | — | **2** |
+
+The `contained` delta is small and one-directional (+0.3%; widening the floor can
+only admit, never remove — the invariant holds), so the knob is not bulk-admitting
+junk. Net matching improves (+28), and the target crosser converges (§11.5).
+
+**But the change is not free, and it is not purely additive.** 107 clusters (5.2%)
+changed flash — only 51 of them toward a brighter flash — and **2 clusters lost their
+match entirely**. These are LASSO reassignments: new candidates perturb the sparse
+solution well away from the widened floor itself.
+
+**One of the two losses is a genuine regression** (evt idx 1 / 298581, flash
+t=−36.4 µs, 10401 PE):
+
+| | auto-selected on that flash | summed pred vs measured 10401 |
+|---|---|---|
+| off | `156` (χ²=8.0/18, pred 10631), `4000207` (pred 2285), `4000348` (pred 8378) | 21294 — over by 2.0× |
+| on | `4000207` (pred 2285) only | 2285 — under by 4.5× |
+
+Cluster 156 alone explains that flash almost exactly (pred 10631 vs 10401 measured,
+χ²=8.0/18) and its own bundle is *unchanged and still contained* in `_am2` — the fit
+simply stopped selecting it. Trading a 2× over-prediction for a 4.5×
+under-prediction is worse, not better. The other loss (evt idx 15, cluster 183) was a
+poor match to begin with (pred 15908 vs 1718 measured) and is not obviously a loss.
+
+Per CLAUDE.md rule 7 this is **reported, not tuned around**. It does not look like a
+property of the anode floor (the floor only added candidates); it looks like LASSO
+selection instability that the floor exposed. Treat 2/2044 = 0.1% as the current
+price of the knob.
+
+### 11.8 Open
+
+- The evt298581 cluster-156 drop above — is it LASSO instability generally (i.e.
+  already present, merely re-rolled), or specific to the added candidates? A
+  `fit_round*` trace on that flash would settle it.
+- 56 of 107 flash changes are toward a *dimmer* flash. Unpriced: no ground truth
+  without a hand scan. The `candles-am2` round (port 5021) is where that gets
+  decided.
 - The pull/margin pair now carries two hand-fit constants pulling opposite ways
-  (§11.3). A census-pinned joint retune would be the principled replacement.
+  (§11.3), neither census-pinned. A joint retune is the principled replacement; the
+  2.0 cm margin is an interim.
+
+### 11.9 How to view the `_am2` round
+
+The `candles-spcov` round on 5019 (and its 18 label files under
+`work/ql_labels/candles-spcov/`) is left running and untouched; the `_am2` round is a
+separate instance with its own label namespace, so the two scans cannot collide:
+
+```
+cd wcp-porting-img/pdvd
+./ql_scan/serve_ql_scan.sh 5021 --tag candles-am2 work/039252_*_am2/calib-evt*.json
+# then from the laptop:  ssh -L 5021:localhost:5021 user@wcgpu1
+#                        http://localhost:5021/ql_scan_viewer
+```
