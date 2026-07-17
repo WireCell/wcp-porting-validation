@@ -363,6 +363,53 @@ PY
         QL_XTPCRESCUE_ARG=(-S "ql_xtpc_cathode_tol_cm=${PDVD_QL_XTPC_CATHODE_TOL_CM}"
                            -S "ql_xtpc_cathode_qfrac=${PDVD_QL_XTPC_CATHODE_QFRAC:-0.05}")
     fi
+    # ---- Cathode-XA-anchored operating point (2026-07-16, docs/qlmatch/18_*.md).
+    # Motivated by the evt298567 hand-scan PD-family study (doc 17): the cathode
+    # XAs are the only PD family with full-stream readout and proportional
+    # response; the wall XAs are bimodal (zero in 9/15 predicted-bright matches).
+    # Toolkit C++/jsonnet defaults all stay OFF (byte-identical); this runner is
+    # where PDVD production turns them on.  Each is individually revertible.
+    #
+    # PDVD_QL_MASK_WALL_XA (default 1): mask live membrane/wall XAs 0,1,3,12,18,19
+    # out of the chi2/LASSO/KS (mask_ks already on).  =0 for the pre-study fit set.
+    # M1 DEPLOY GATE: the wall channels must show pred_pe=0 in the calib dump
+    # (dump prediction loop skips masked channels).
+    local QL_CATHOP_ARG=()
+    if [ "${PDVD_QL_MASK_WALL_XA:-1}" = 1 ]; then
+        QL_CATHOP_ARG+=(-S "ql_mask_wall_xa=true")
+    fi
+    # PDVD_QL_WALL_FLAGS (default 0 = disabled): the +-y wall proximity flag
+    # (vd_surface_flags wall component).  With the wall XAs masked the wall relax
+    # channels protect nothing, and the flag only exempted wall-hugging junk from
+    # the overpred prefilter; the hand scan showed it helped only marginally on
+    # the (subdominant) wall PMTs.  =1 restores the wall flags.  The bottom-anode
+    # proximity flag is untouched either way.
+    if [ "${PDVD_QL_WALL_FLAGS:-0}" = 0 ]; then
+        QL_CATHOP_ARG+=(-S "ql_wall_flags=false")
+    fi
+    # PDVD_QL_FLASH_SEL (default 1): cathode-scoped flash admission on top of the
+    # all-PD ql_flash_minpe floor: sum(cathode PE) >= MINPE and >= MINFIRED cathode
+    # channels at >= FIRED_PE PE.  Operating point 5/2/1.0 keeps 289/297 (97.3%)
+    # of the keep-round confirmed candle flashes and cuts ~7% of admitted flashes
+    # (the 8 lost candles are dim <=160 PE wall-huggers, two with zero cathode
+    # signal).  M1 DEPLOY GATE:
+    #   grep 'QLMatching flash_sel: admission over' work/<tag>/wct_clus_*.log
+    if [ "${PDVD_QL_FLASH_SEL:-1}" = 1 ]; then
+        QL_CATHOP_ARG+=(-S "ql_flash_sel_cathode=true"
+                        -S "ql_flash_sel_minpe=${PDVD_QL_FLASH_SEL_MINPE:-5}"
+                        -S "ql_flash_sel_min_fired=${PDVD_QL_FLASH_SEL_MINFIRED:-2}"
+                        -S "ql_flash_sel_fired_pe=${PDVD_QL_FLASH_SEL_FIRED_PE:-1.0}")
+    fi
+    # PDVD_QL_REJECT_OVERPRED (default 1): cathode-scoped over-prediction prefilter,
+    # R_total <= 15 / R_max <= 50 (18-event keep-round tuning: keeps every evt298567
+    # full-scan match, max R 1.43/4.97; culls ~16% of non-exempt candidate bundles).
+    # M1 DEPLOY GATE:
+    #   grep 'QLMatching reject_overpred scoped to' work/<tag>/wct_clus_*.log
+    if [ "${PDVD_QL_REJECT_OVERPRED:-1}" = 1 ]; then
+        QL_CATHOP_ARG+=(-S "ql_reject_overpred=true"
+                        -S "ql_overpred_total_ratio=${PDVD_QL_OVERPRED_TOTAL:-15}"
+                        -S "ql_overpred_maxch_ratio=${PDVD_QL_OVERPRED_MAXCH:-50}")
+    fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
         QL_SATFLAG_ARG=(-S "ql_use_saturation_flag=true")
@@ -452,6 +499,7 @@ PY
         "${QL_ANODEMARGIN_ARG[@]}" \
         "${QL_ROBUSTGAP_ARG[@]}" \
         "${QL_XTPCRESCUE_ARG[@]}" \
+        "${QL_CATHOP_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then

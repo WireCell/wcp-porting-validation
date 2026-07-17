@@ -160,6 +160,28 @@ function(
     // is run_clus_evt.sh PDVD_QL_XTPC_CATHODE_TOL_CM / _QFRAC (evt298567 clus 97).
     ql_xtpc_cathode_tol_cm = null,
     ql_xtpc_cathode_qfrac = null,
+    // Cathode-XA-anchored operating point (docs/qlmatch/18_*.md; toolkit knobs in
+    // cfg/.../protodunevd/qlmatching.jsonnet).  All four default to the LEGACY
+    // behaviour here => compiled config byte-identical when the runner does not
+    // pass them; run_clus_evt.sh turns them ON for PDVD production.
+    // Mask the live membrane/wall XAs (0,1,3,12,18,19) out of the chi2/LASSO/KS
+    // (bimodal response, doc 17).
+    ql_mask_wall_xa = false,
+    // +-y wall proximity flag (vd_surface_flags wall component): false empties the
+    // wall channel lists => no wall flag_close_to_PMT / relax channels.  With the
+    // wall XAs masked the relaxation protected nothing and only exempted junk from
+    // the overpred prefilter.
+    ql_wall_flags = true,
+    // Cathode-scoped flash admission on top of ql_flash_minpe: sum(PE over cathode
+    // XAs) >= minpe AND >= min_fired cathode channels at >= fired_pe PE.
+    ql_flash_sel_cathode = false,
+    ql_flash_sel_minpe = null,
+    ql_flash_sel_min_fired = null,
+    ql_flash_sel_fired_pe = null,
+    // Cathode-scoped over-prediction prefilter (R_total / R_max ceilings).
+    ql_reject_overpred = false,
+    ql_overpred_total_ratio = null,
+    ql_overpred_maxch_ratio = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -271,7 +293,18 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       robust_endpoint_gap_cathode=ql_robust_gap_cathode,
                       xtpc_cathode_tol=if ql_xtpc_cathode_tol_cm == null then null
                                        else ql_xtpc_cathode_tol_cm * wc.cm,
-                      xtpc_cathode_qfrac=ql_xtpc_cathode_qfrac);
+                      xtpc_cathode_qfrac=ql_xtpc_cathode_qfrac,
+                      // Cathode-XA operating point (docs/qlmatch/18_*.md); all
+                      // legacy-default here, turned on by run_clus_evt.sh.
+                      mask_wall_xa=ql_mask_wall_xa,
+                      wall_flags=ql_wall_flags,
+                      flash_sel_cathode=ql_flash_sel_cathode,
+                      flash_sel_minPE=ql_flash_sel_minpe,
+                      flash_sel_min_fired=ql_flash_sel_min_fired,
+                      flash_sel_fired_pe=ql_flash_sel_fired_pe,
+                      reject_overpred=ql_reject_overpred,
+                      overpred_total_ratio=ql_overpred_total_ratio,
+                      overpred_maxch_ratio=ql_overpred_maxch_ratio);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';
