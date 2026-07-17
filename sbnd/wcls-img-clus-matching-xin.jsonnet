@@ -26,18 +26,16 @@ local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local reality = std.extVar('reality');
 
-// use_sce toggle (default true): run the all-APA clustering + TGM + Bee in
-// SCE-corrected true space (x_sce).  false -> T0-corrected reco scope (x_t0cor).
-// Threaded into the toolkit clus maker below.
-local use_sce = true;
+// The reco chain's reality config (use_sce, pos_offset_on) is grouped inside
+// the toolkit clus maker keyed by `reality` -- see clus.jsonnet `reco` local.
 
-// truth_labeler (MC only): append wclsTensorSetLabeler after the all-APA MABC
-// to attach run/subrun/event + nu truth metadata, a truth_per_track tensor
-// and per-blob "trackid" (scalar PC) from SimEnergyDeposits; also dumps the
-// "truth_trackid" Bee set (raw x,y,z; cluster_id = trackid) into the shared
-// mabc.zip.  Requires the "WireCellAIML" plugin + "wclsTensorSetLabeler"
-// inputer in the fcl (both present in wcls-img-clus-matching-xin.fcl).
-local truth_labeler = reality == 'sim';
+// run_labeler: append wclsTensorSetLabeler after the all-APA MABC.  Runs in
+// BOTH realities: sim attaches run/subrun/event + nu truth metadata, a
+// truth_per_track tensor, per-blob "trackid", the truth Bee sets, and a
+// nugraph HDF5 WITH truth; data attaches only run/subrun/event metadata and
+// an input-only nugraph HDF5 (no truth, no Bee).  Requires the "WireCellAIML"
+// plugin + "wclsTensorSetLabeler" inputer in the fcl (both fcls have them).
+local run_labeler = true;
 
 // Canonical SBND simparams (toolkit).  drift_speed (1.563 mm/us) flows into
 // QLMatching from here; no DL/DT/lifetime/driftSpeed extVars are needed.
@@ -110,7 +108,7 @@ local img_pipes = [
 local clus = import 'pgrapher/experiment/sbnd/clus.jsonnet';
 // rse_from_ident: each frame's tensor ident carries the real event id, so the
 // Bee display is labelled with the true event number (matches Xin's chain).
-local clus_maker = clus(rse_from_ident=true, use_sce=use_sce, reality=reality, truth_labeler=truth_labeler);
+local clus_maker = clus(rse_from_ident=true, reality=reality, run_labeler=run_labeler);
 // Single shared Bee sink: every MABC node (per-APA + all-APA) writes into this
 // one zip instead of one zip per node.
 local bee_shared = {

@@ -78,3 +78,78 @@ Totals: **1905 nu / 33036 cosmic / 7277 ghost** blobs.
 Note evt 32/10/43 has 0 nu blobs — its in-detector interaction deposits
 only ~2.8 MeV and its `nu_idx 0` interaction is out-of-TPC rock (see the
 `nu_edep` array in the event metadata).
+
+---
+
+## v2 — sim + data ("reality" mode), 10 events each (2026-07-16)
+
+First test of the `wclsTensorSetLabeler` `reality="data"` mode (input-only
+HDF5 for inference on real data) alongside the unchanged sim path.  Workdir
+`sbnd/TensorSetLabeler/nugraph-sample-v2/`.
+
+### Files
+
+| | HDF5 | events |
+|---|---|---|
+| MC (sim) | `nugraph-sample-v2/nugraph-mc-10evt.h5` (14 MB) | 10 |
+| data     | `nugraph-sample-v2/nugraph-data-10evt.h5` (17.7 MB) | 10 |
+
+(1-event smokes also kept: `nugraph-{mc,data}-1evt.h5`.)
+
+### BEE
+
+| view | MC | data |
+|---|---|---|
+| reco Bee (clus.jsonnet `mabc.zip`) | https://www.phy.bnl.gov/twister/bee/set/f2040249-8afc-4c2a-a083-63191f8ddfd6/event/list/ | https://www.phy.bnl.gov/twister/bee/set/cc83735e-2b23-47b4-8735-e931cc0bca65/event/list/ |
+| nugraph HDF5 `sp` nodes (`h5_sp_to_bee.py`) | https://www.phy.bnl.gov/twister/bee/set/f8e30646-edc0-4907-954b-17e0e6b69717/event/list/ | https://www.phy.bnl.gov/twister/bee/set/d3c0b9b1-8acd-4579-b81f-9ac130768d98/event/list/ |
+
+- reco Bee MC has the truth sets (`truth_trackid_labeled`/`truth_unlabeled`/
+  `sed-*`/`mc`) + reco sets; data has ONLY the reco sets (labeler adds no Bee
+  in data mode) — the gating check.
+- nugraph `sp` MC coloured by truth (q = 1 nu/0 cosmic/-1 ghost, cluster_id =
+  trackid); data coloured by reco (q = charge, cluster_id = reco_cluster_id)
+  since there is no truth.
+
+### How it was produced
+
+```bash
+cd sbnd/TensorSetLabeler/nugraph-sample-v2
+# MC (truth):
+lar -n 10 -c wcls-img-clus-matching-xin.fcl \
+    -S /exp/sbnd/app/users/yuhw/2025-fall-prod-sample/mc_paths-10files.lst --no-output
+# data (input-only, reality=data):
+lar -n 10 -c wcls-img-clus-matching-xin-data.fcl \
+    -s /exp/sbnd/app/users/yuhw/wcp-porting-img/sbnd/samples/filtered-reco1/\
+data_filtered_decoded_reco1-fe6033f3-07a0-4971-cea5-16ce59269fba_eventidfiltered.root --no-output
+# BEE from the HDF5 sp nodes (auto: truth colours for sim, reco-cluster for data):
+python3 ../h5_sp_to_bee.py nugraph-mc-10evt.h5   nugraph-mc-bee.zip
+python3 ../h5_sp_to_bee.py nugraph-data-10evt.h5 nugraph-data-bee.zip
+```
+
+### What's new vs v1 (the `reality` option)
+
+- **wclsTensorSetLabeler `reality`** (default "sim"): "data" writes ONLY the
+  RSE into the ITensorSet metadata, NO Bee sets, NO `truth_per_track`, and an
+  INPUT-ONLY HDF5 (same 32-field schema; reco features real, truth fields =
+  sentinels `y_semantic=-1`/`y_instance=-1`/`vtx_*=-1/0`/`edge_y=labelable=0`).
+- **Reco-reality grouping** in `clus.jsonnet` (`reco` local keyed by reality):
+  sim → use_sce=true, pos_offset_on=false; data → use_sce=false,
+  pos_offset_on=true.  The labeler pseudo-sim is independent of this.
+- The data fcl keeps the `wclsTensorSetLabeler` inputer (reads RSE only).
+
+### Verification
+
+- MC: 10 records, keys 31/88/12 … 32/10/6, truth totals 1905 nu / 33036
+  cosmic / 7277 ghost.  Same as v1 (grouping didn't change sim).
+- data: 10 records, real data keys 18253/1/172230 … 18255/1/90055, all
+  `y_semantic=-1`, `evt/y=0`, real reco features (charge, reco_cluster_id),
+  both TPCs (u/v/y ≈ per-event hundreds), edges present & unlabelable.
+  Identical 32-field schema to MC, no `{p}_plane_{p}` edges.
+
+### Build state (commits; none pushed)
+
+| repo | branch | commit |
+|---|---|---|
+| larwirecell | `dev-v10_14_02_02` | reality sim/data mode |
+| wire-cell-toolkit | `tgm` | reco-reality grouping + labeler-both + reality thread |
+| wcp-porting-img | `main` | entry jsonnet + data fcl + h5_sp_to_bee data mode + this record |
