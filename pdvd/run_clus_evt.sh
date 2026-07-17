@@ -378,9 +378,14 @@ PY
     # cc_pca connection-alignment term and ANGLE (deg) accepts on the local
     # charge-weighted Hough even if a curved half inflates the global PCA above
     # angle_cut.  Only meaningful with QL matching (needs the matched cluster_t0).
-    # DEFAULT OFF (empty => keys omitted => compiled config byte-identical) pending
-    # the PDVD crosser census; set PDVD_CC_TIP_TOUCH_CUT=3.0 PDVD_CC_TIP_TOUCH_ANGLE=12.0
-    # to enable.  See clus/docs/cathode-crossing-clustering.md section 6.
+    # PRODUCTION DEFAULT 3.0 cm / 12 deg since 2026-07-17: the 28-event census
+    # (039252 x18 + 039349 x10, QL-matched) recovered a genuine cathode crosser in
+    # 039252 evt298707 (halves touching at the cathode, 0.32 cm tip gap, 4.4 deg
+    # collinear) with ZERO spurious merges in 28 events, matching PDHD's values.
+    # NOT byte-identical (flips evt298707).  Export PDVD_CC_TIP_TOUCH_CUT= (empty)
+    # to disable (keys omitted => legacy split).  Toolkit C++/jsonnet defaults stay
+    # OFF.  See clus/docs/cathode-crossing-clustering.md section 6.1.
+    : "${PDVD_CC_TIP_TOUCH_CUT=3.0}"
     local CC_TIPTOUCH_ARG=()
     if [ -n "${PDVD_CC_TIP_TOUCH_CUT:-}" ]; then
         CC_TIPTOUCH_ARG=(-S "cc_tip_touch_cut_cm=${PDVD_CC_TIP_TOUCH_CUT}"
