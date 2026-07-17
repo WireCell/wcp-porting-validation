@@ -155,3 +155,128 @@ per-flash opdet-mask copies and the `prefit_snapshot` map copy do not appear
 in the top-100 lines of either QL profile — closed as negligible.
 `SemiAnalyticalModel` micro-opts: not a PDVD lever (library model in
 production); deferred.
+
+## Round 1 — implemented (toolkit d3c6975d + c56a44af)
+
+Both changes are **bit-identical with no knob**: same values, same FP
+operation order, verified by full-manifest hash gates against the round-0
+snapshot. Round-1 timing tags double as the gate runs (equal 6-way batch
+conditions vs round 0).
+
+### QL-1 — endpoint-flags slice cache + vis-loop point cache with AABB
+pre-gate (`match` d3c6975d)
+
+- `compute_endpoint_flags`: the `time_blob_map` walk (window-truncation tick
+  bounds; per-slice first-point x, blob/point/charge tallies) is scanned once
+  per cluster into `m_endpoint_slice_cache` (cleared per event alongside the
+  sibling caches) instead of once per (flash × group). The per-flash drift
+  coordinate is rebuilt with the identical FP ops (`u = s*((x0 + off) −
+  anode_x)`) and the per-call `std::sort` is kept, so rounding-tie ordering
+  matches the legacy per-call behavior exactly.
+- `build_bundles`: each cluster's blob coordinates are fetched once per
+  ApaRun into contiguous arrays (same values, same blob/point order),
+  killing the per-(flash × group × blob) `Blob::points()` string-keyed
+  fetch. A conservative per-blob AABB pre-gate skips whole blobs outside the
+  PE-inclusion box at the flash's offset: every per-coordinate op (add
+  constant, subtract constant, multiply by ±s) is monotone in FP, so the
+  cached bounds bracket every point's `u` exactly and a box strictly outside
+  on one axis fails the identical per-point compare for all points. Skipped
+  blobs replay only the `total_charge_point` accumulation (it never touched
+  coordinates), keeping even the debug-log totals FP-identical.
+
+**Gate**: 120-event manifest, tag `ql1gate` vs
+`abtest/snap/pdvd-lightql-perf-r0/ql-hashes.txt` — **3360/3360 archives
+PASS** (plus a 5-event smoke at 140/140). `wcdoctest-match` 23/23;
+freshness proof done.
+
+**Effect** (n=120, equal batch conditions; TSV `perf/ql_ql1gate.tsv`):
+
+| metric (ms) | r0 med | r1 med | r0 p90 | r1 p90 | r0 max | r1 max |
+|---|---|---|---|---|---|---|
+| QLMatching total | 6792 | 2178 | 9099 | 3355 | 10939 | 4216 |
+| build_bundles | 5698 | 1064 | 7583 | 1814 | 9202 | 2615 |
+| vis_loop | 1549 | 788 | 2470 | 1398 | 3386 | 2206 |
+
+**QLMatching 3.1× at the median, 3.0× on the population sum**; clus-job
+wall median 32 → 27 s; peak RSS unchanged (the point cache costs a few MB
+per ApaRun, freed at end of build_bundles).
+
+### L-1/L-2/L-3 — flash dead-work hygiene (`flash` c56a44af)
+
+Under `use_real_dft` the inverse transform ignores bins above Nyquist by
+contract (`iface/inc/WireCellIface/IDFT.h`; both the widening default in
+`iface/src/IDFT.cxx` and FftwDFT's native c2r enforce Hermitian symmetry).
+OpDecon's spectral k-loop + `auto_scale` fill and OpRoi's HPF multiply are
+halved when no full-spectrum consumer (the folded-postfilter pedestal
+accumulator) is active; the `xG` buffer now exists only for the not-cached
+AutoScale path; `overflow_to_rail` scans const-first and copies the trace
+only when a floor-pinned sample exists.
+
+**Gate**: 120-event light rerun, suffix `_l1gate` vs
+`.../light-hashes.txt` — **120/120 opflash archives PASS**;
+`wcdoctest-flash` 31/31. **Effect**: small, as round 0 predicted (light CPU
+is ~0.4 s of a ~2 s solo wall, FFTW-planning/I/O bound): solo evt 298567
+wall 1.72–1.97 → 1.67–1.72 s; batch populations statistically unchanged
+(median 5.07 → 5.43 s is 6-way contention noise, TSV `perf/light_l1gate.tsv`).
+Shipped as bit-identical hygiene; the round-1 headline is QL-1.
+
+### Profile-contingent items — closed with evidence
+
+- **QL-2** (`examine_bundle` per-call vector scratch): 3 samples / 11617
+  (0.03%) in the round-0 worst-event profile — far below the 1% bar.
+  **Rejected**, not implemented.
+- **QL-3** (opdet-mask copies, `prefit_snapshot` map copy): absent from the
+  profile top-100 (`set_opdet_mask` = 1 sample). **Rejected.**
+- OpDecon/OpRoi member-scratch DFT buffers: allocation is not hot in the
+  light profile (FFTW planning + execution dominate; tc_new absent from the
+  light top lines). **Rejected** — would add mutable-state churn for no
+  measurable win.
+- QL memory: worst-event heap profile shows 226 MB live dominated by the
+  point-cloud tree itself (strings/vectors from `as_pctree`), peak RSS
+  0.3–1.2 GB — no QLMatching-specific memory lever; memory is a non-issue
+  for this chain.
+
+## Round-2 decision — declined, campaign closed
+
+Re-profile of the worst event (039253 idx 8, round-1 SHA, 10165 samples):
+
+```
+round 0  ->  round 1
+2447 21.1%   949  9.3%   QLMatching::operator()
+1966 16.9%   477  4.7%     build_bundles
+1300 11.2%    62  0.6%     compute_endpoint_flags   (the round-1 kill)
+1417 12.2%   134  1.3%     Blob::points (total)
+ 264  2.3%   247  2.4%     PhotonLibraryModel::visibilities
+```
+
+The largest remaining single QLMatching item is
+`PhotonLibraryModel::visibilities` at 2.4% of job CPU — the trilinear
+photon-library gather, i.e. the physics kernel itself; no bit-identical
+speedup is on offer (the only lever is `vis_sample_stride` coarsening,
+which changes results and stays a default-OFF owner decision). Everything
+else in QLMatching is now sub-2%. On the light side the CPU is ~0.4 s/job
+dominated by FFTW planning; importing FFTW wisdom would switch plan
+algorithms and change round-off — not bit-identical, rejected. Per the
+round-2 criterion (a remaining ≥10%-of-chain hotspot with a plausible
+bit-identical lever) there is nothing left in scope: **campaign closed
+after round 1.**
+
+Base clustering (out of scope here) is now 68% of the clus-job CPU on the
+worst event — the natural target of any future round, under the existing
+imgclus optimization campaign rather than this doc.
+
+## Final state
+
+| chain | metric | before | after |
+|---|---|---|---|
+| QLMatching | median / p90 / max (s) | 6.79 / 9.10 / 10.94 | 2.18 / 3.36 / 4.22 |
+| clus job (incl. clustering) | median wall (s, batch) | 32 | 27 |
+| light | solo wall evt 298567 (s) | 1.72–1.97 | 1.67–1.72 |
+| both | peak RSS | unchanged | unchanged |
+
+Commits: toolkit `d3c6975d` (match QL-1), `c56a44af` (flash L-1/2/3);
+wcp-porting-img `a1fef6f` (instrumentation), `b027021` (round-0 doc),
+this commit (round-1/close). Gate labels: `abtest/snap/pdvd-lightql-perf-r0`
+(reference), tags `ql1smoke`/`ql1gate`/`_l1gate` (comparisons, all PASS).
+All changes are knob-free bit-identical; no revalidation of physics results
+is required.
