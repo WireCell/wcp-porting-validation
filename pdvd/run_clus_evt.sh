@@ -341,12 +341,27 @@ PY
     if [ "${PDVD_QL_ROBUST_TRIM:-0}" = 1 ]; then
         QL_ROBUSTGAP_ARG=(-S "ql_robust_trim=true"
                           -S "ql_robust_walk_to_floor=$([ "${PDVD_QL_ROBUST_WALK_FLOOR:-0}" = 1 ] && echo true || echo false)"
+                          -S "ql_robust_gap_cathode=$([ "${PDVD_QL_ROBUST_GAP_CATHODE:-0}" = 1 ] && echo true || echo false)"
                           -S "ql_robust_frac=${PDVD_QL_ROBUST_FRAC:-0.01}"
                           -S "ql_robust_count=${PDVD_QL_ROBUST_COUNT:-15}"
                           -S "ql_robust_charge_frac=${PDVD_QL_ROBUST_CHARGE_FRAC:-0.005}"
                           -S "ql_robust_charge_abs=${PDVD_QL_ROBUST_CHARGE_ABS:-1500}"
                           -S "ql_robust_gap_cm=${PDVD_QL_ROBUST_GAP_CM:-3.0}"
                           -S "ql_robust_gap_charge_frac=${PDVD_QL_ROBUST_GAP_FRAC:-0.01}")
+    fi
+    # PDVD_QL_XTPC_CATHODE_TOL_CM (+ optional _QFRAC): xtpc cathode rescue -- admit
+    # a cathode-crosser half that overshoots the containment gate (or falls short of
+    # the at_cathode window) by up to TOL cm FOR XTPC PAIRING ONLY; kept only if
+    # cull_cross_tpc confirms the pair (scenario 1, one half contained), purged
+    # pre-fit otherwise.  QFRAC = charge fraction discardable as overclustered junk
+    # when measuring the overshoot (evt298567 clus 97: 2.6% junk drags the raw
+    # extreme 47 cm past the gate; the real end is 3.3 cm past).  Independent of
+    # PDVD_QL_ROBUST_TRIM.  Unset => keys omitted => byte-identical.  NOT censused;
+    # demo values 10 / 0.05 (docs/qlmatch/16_pdvd-clus97-crosser-evt298567.md §10).
+    local QL_XTPCRESCUE_ARG=()
+    if [ -n "${PDVD_QL_XTPC_CATHODE_TOL_CM:-}" ]; then
+        QL_XTPCRESCUE_ARG=(-S "ql_xtpc_cathode_tol_cm=${PDVD_QL_XTPC_CATHODE_TOL_CM}"
+                           -S "ql_xtpc_cathode_qfrac=${PDVD_QL_XTPC_CATHODE_QFRAC:-0.05}")
     fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
@@ -436,6 +451,7 @@ PY
         "${QL_CATHEXT1_ARG[@]}" \
         "${QL_ANODEMARGIN_ARG[@]}" \
         "${QL_ROBUSTGAP_ARG[@]}" \
+        "${QL_XTPCRESCUE_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then

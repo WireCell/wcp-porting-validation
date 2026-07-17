@@ -150,6 +150,16 @@ function(
     // flash 120).  Needs ql_robust_trim to do anything.  OFF => key suppressed =>
     // compiled config byte-identical.
     ql_robust_walk_to_floor = false,
+    ql_robust_gap_cathode = false,
+    // xtpc cathode rescue (doc 16 §10): tolerance in CM past the containment gate /
+    // below the at_cathode window granted FOR XTPC CANDIDACY ONLY; a provisionally
+    // kept uncontained crosser half is purged pre-fit unless cull_cross_tpc confirms
+    // it (scenario 1, one half contained).  qfrac = charge fraction discardable as
+    // overclustered junk when measuring the overshoot.  null => keys suppressed =>
+    // compiled config byte-identical (C++ default 0 = OFF).  NOT censused; the demo
+    // is run_clus_evt.sh PDVD_QL_XTPC_CATHODE_TOL_CM / _QFRAC (evt298567 clus 97).
+    ql_xtpc_cathode_tol_cm = null,
+    ql_xtpc_cathode_qfrac = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -257,7 +267,11 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       robust_endpoint_gap=if ql_robust_gap_cm == null then null
                                           else ql_robust_gap_cm * wc.cm,
                       robust_endpoint_gap_charge_frac=ql_robust_gap_charge_frac,
-                      robust_endpoint_walk_to_floor=ql_robust_walk_to_floor);
+                      robust_endpoint_walk_to_floor=ql_robust_walk_to_floor,
+                      robust_endpoint_gap_cathode=ql_robust_gap_cathode,
+                      xtpc_cathode_tol=if ql_xtpc_cathode_tol_cm == null then null
+                                       else ql_xtpc_cathode_tol_cm * wc.cm,
+                      xtpc_cathode_qfrac=ql_xtpc_cathode_qfrac);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';
