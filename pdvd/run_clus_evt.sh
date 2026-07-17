@@ -647,12 +647,50 @@ PY
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
         return 1
     fi
+    # Resource recording (additive; does not change reco output, disable with
+    # PDVD_RESMON=off): run wire-cell in the background and sample its
+    # /proc/<pid>/status every 2 s.  Writes a per-event summary
+    # (clus_resource_<run>_<evt>.txt: wall_s + peak_rss_gb) and the full
+    # RSS-vs-wallclock trace (clus_rss_<run>_<evt>.csv), whose timestamps align
+    # with the debug-log stage markers so the peak can be attributed to a stage.
+    # Ported from pdhd/run_clus_evt.sh (PDHD_RESMON).
+    local RES_TXT="$WORKDIR/clus_resource_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.txt"
+    local RES_CSV="$WORKDIR/clus_rss_${RUN_PADDED}_${EVT}${TAG_SUFFIX}.csv"
+    local _t0=$SECONDS _smpid=""
     env $WC_PRELOAD GOGC=off wire-cell \
         -l stderr \
         -l "${LOG}:debug" \
         -L debug \
-        -c "$CFG_JSON"
+        -c "$CFG_JSON" &
+    local _wcpid=$!
+    if [ "${PDVD_RESMON:-on}" != "off" ]; then
+        echo "epoch_s,clock,vmrss_kb,vmhwm_kb" > "$RES_CSV"
+        ( while kill -0 "$_wcpid" 2>/dev/null; do
+            _line=$(awk '/^VmRSS:/{r=$2}/^VmHWM:/{h=$2}END{print r","h}' \
+                    "/proc/$_wcpid/status" 2>/dev/null)
+            [ -n "$_line" ] && echo "$(date +%s),$(date +%H:%M:%S.%2N),$_line" >> "$RES_CSV"
+            sleep 2
+          done ) &
+        _smpid=$!
+    fi
+    local _rc=0
+    wait "$_wcpid" || _rc=$?
+    if [ -n "$_smpid" ]; then
+        kill "$_smpid" 2>/dev/null || true
+        wait "$_smpid" 2>/dev/null || true
+    fi
+    local _wall=$((SECONDS - _t0))
+    local _peak_kb=0
+    [ -f "$RES_CSV" ] && _peak_kb=$(awk -F, 'NR>1 && $4>m{m=$4}END{print m+0}' "$RES_CSV")
+    awk -v r="$RUN_PADDED" -v e="$EVT" -v w="$_wall" -v p="$_peak_kb" \
+        -v q="$QLMATCH_EVT" -v c="$CALIB" -v o="$OPDUMP" 'BEGIN{
+        printf "run=%s evt=%s wall_s=%d peak_rss_gb=%.2f flags=q%s,calib%s,op%s\n",
+               r,e,w,p/1048576,q,c,o}' | tee "$RES_TXT"
     [ "${PDVD_KEEP_CFG:-0}" = 1 ] || rm -f "$CFG_JSON"
+    if [ "$_rc" -ne 0 ]; then
+        echo "ERROR: wire-cell exited with status $_rc" >&2
+        return "$_rc"
+    fi
 
     echo "Clustering done -> $WORKDIR"
 }
