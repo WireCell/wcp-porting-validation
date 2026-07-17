@@ -371,6 +371,21 @@ PY
         QL_XTPCRESCUE_ARG=(-S "ql_xtpc_cathode_tol_cm=${PDVD_QL_XTPC_CATHODE_TOL_CM}"
                            -S "ql_xtpc_cathode_qfrac=${PDVD_QL_XTPC_CATHODE_QFRAC:-0.05}")
     fi
+    # PDVD_CC_TIP_TOUCH_CUT (+ optional _ANGLE): post-QLMatching cathode-crossing
+    # STITCH tip-touch relaxation in the stage-4 ClusteringCathodeConnect (ports the
+    # PDHD tip-touch branch, cfg/.../pdhd/clus.jsonnet).  When a genuine crosser's two
+    # halves reach the cathode and nearly touch (~1cm gap), CUT (cm) drops the
+    # cc_pca connection-alignment term and ANGLE (deg) accepts on the local
+    # charge-weighted Hough even if a curved half inflates the global PCA above
+    # angle_cut.  Only meaningful with QL matching (needs the matched cluster_t0).
+    # DEFAULT OFF (empty => keys omitted => compiled config byte-identical) pending
+    # the PDVD crosser census; set PDVD_CC_TIP_TOUCH_CUT=3.0 PDVD_CC_TIP_TOUCH_ANGLE=12.0
+    # to enable.  See clus/docs/cathode-crossing-clustering.md section 6.
+    local CC_TIPTOUCH_ARG=()
+    if [ -n "${PDVD_CC_TIP_TOUCH_CUT:-}" ]; then
+        CC_TIPTOUCH_ARG=(-S "cc_tip_touch_cut_cm=${PDVD_CC_TIP_TOUCH_CUT}"
+                         -S "cc_tip_touch_angle_cut=${PDVD_CC_TIP_TOUCH_ANGLE:-12.0}")
+    fi
     # ---- Cathode-XA-anchored operating point (2026-07-16, docs/qlmatch/18_*.md).
     # Motivated by the evt298567 hand-scan PD-family study (doc 17): the cathode
     # XAs are the only PD family with full-stream readout and proportional
@@ -621,6 +636,7 @@ PY
         "${QL_SWEEP_ARG[@]}" \
         "${QL_RESCUE_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
+        "${CC_TIPTOUCH_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

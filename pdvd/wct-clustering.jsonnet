@@ -222,6 +222,19 @@ function(
     ql_cluster_rescue_c2n_max = null,
     ql_cluster_rescue_ratio_lo = null,
     ql_cluster_rescue_ratio_hi = null,
+    // Post-QLMatching cathode-crossing STITCH tip-touch relaxation (stage-4
+    // ClusteringCathodeConnect, cfg/.../protodunevd/clus.jsonnet).  Ports the
+    // PDHD tip-touch branch to PDVD: when a genuine crosser's two halves reach
+    // the cathode and nearly touch (~1cm gap), cc_tip_touch_cut (CM) drops the
+    // uninformative cc_pca connection-alignment term and cc_tip_touch_angle_cut
+    // (DEG) accepts on the local charge-weighted Hough even when a curved half
+    // inflates the global PCA above angle_cut.  null => keys suppressed => C++
+    // defaults tip_touch_cut=0 / tip_touch_angle_cut=angle_cut (OFF) =>
+    // compiled config byte-identical.  run_clus_evt.sh sets the PDVD operating
+    // point.  Only meaningful with do_qlmatch (needs the matched cluster_t0).
+    // _cm is converted to internal units below; _angle_cut is in DEGREES.
+    cc_tip_touch_cut_cm = null,
+    cc_tip_touch_angle_cut = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -280,9 +293,14 @@ local group_pipes = [group_pipe(gd) for gd in groups];
 // With Q/L matching on, ONE joint QLMatching node emits a single pre-merged tree, so
 // the all-TPC stage skips its input PointTreeMerging (premerged).  Without matching
 // the two per-side clustering outputs still fan into the ngroups-way merge.
+// null => byte-identical (key suppressed in clus.jsonnet); else cm -> internal.
+local cc_tip_touch_cut = if cc_tip_touch_cut_cm == null then null
+                         else cc_tip_touch_cut_cm * wc.cm;
 local clus_all_tpc = if do_qlmatch
-    then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash)
-    else clus_maker.all_tpc(anodes, ngroups=ngroups);
+    then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash,
+                            cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut)
+    else clus_maker.all_tpc(anodes, ngroups=ngroups,
+                            cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut);
 
 // JOINT Q/L matching (shared-flash): both drift sides enter ONE QLMatching node and
 // each reads the SAME all-PD opflash archive.  Per side: opflash source ->
