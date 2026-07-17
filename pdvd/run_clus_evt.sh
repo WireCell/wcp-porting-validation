@@ -545,6 +545,11 @@ PY
                         -S "ql_cluster_rescue_c2n_max=${PDVD_QL_CRESCUE_C2N:-15}"
                         -S "ql_cluster_rescue_ratio_lo=${PDVD_QL_CRESCUE_RLO:-0.3}"
                         -S "ql_cluster_rescue_ratio_hi=${PDVD_QL_CRESCUE_RHI:-3.0}")
+        # PDVD_QL_CRESCUE_PRECULL=1: draw the rescue pool from the pre-cull
+        # all_bundles universe so cull_inconsistent victims become reachable
+        # (doc 20).  Default OFF (0) => toolkit key omitted => byte-identical.
+        [ "${PDVD_QL_CRESCUE_PRECULL:-0}" = 1 ] \
+            && QL_RESCUE_ARG+=(-S "ql_cluster_rescue_precull=true")
     fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
