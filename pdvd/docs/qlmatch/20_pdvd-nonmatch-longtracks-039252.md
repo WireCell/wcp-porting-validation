@@ -1,6 +1,8 @@
 # 20 — Long UNMATCHED clusters (Bee "non-match" long tracks), PDVD run 039252
 
-Status: IN PROGRESS (Phase 0–1 complete: baseline + census; rescue runs next).
+Status: COMPLETE (baseline + census + rescue frontier + additive knob).
+Recommendation in §6; toolkit/runner knobs shipped default OFF, adoption is the
+owner's call pending a rescan.
 
 Goal: reduce the number of LONG tracks (>= 25 cm or >= 100 pts) that QLMatch
 leaves with **no matched flash** — the tracks the owner sees under the Bee
@@ -107,19 +109,100 @@ A larger, non-byte-identical lever — not culling the correct-time bundle in
 `cull_inconsistent` before the LASSO can place it — is noted for the owner but
 NOT built here.
 
-## 5. Plan for the rescue runs (next)
+## 5. Rescue runs — full scorecards (real output, not the what-if)
 
-- Thread `cluster_rescue_precull` into PDVD jsonnet + runner, default OFF,
-  byte-identical when off (standard knob recipe).
-- `nm1` = precull ON + **unchanged** base gates: validates the census tool
-  against real output (expect the base-row pattern: ~+22 recovered / +1
-  phantom / wf~24 in the full scorecard).
-- `nm2*` = precull ON + tight gates along the frontier above.
-- Score every tag vs the frozen truth; report the full agree/phantom/missed
-  scorecard (not the incremental deltas) since tightening moves the baseline.
+Every tag is a full matching-only reprocess of the 18 events, scored vs the
+frozen truth. `recov`/`regr` are computed against `nm0`'s missed set (clusters
+`nm0` matched that a tag now misses = regressions). `adopt` = QLclusrescue log
+adoptions.
 
-Because the rescue adds matches the frozen truth cannot judge, and because
-the non-match / wrong-match trade is a physics call (escalation rule 7), the
-**operating point is the owner's to pick** from the frontier, with a rescan of
-the chosen tag before adoption — this section presents the frontier, it does
-not bake a point.
+| tag | rescue config | agree | phantom | missed | unknown | recov | regr | adopt |
+|---|---|---|---|---|---|---|---|---|
+| nm0 | baseline (snapshot pool, .25/15/.3-3) | 733 | 137 | 109 | 98 | – | – | 15 |
+| nm1 | precull, base .25/15/.3-3 | 746 | 137 | 96 | 147 | 18 | 5 | 82 |
+| nm2a | precull, tight .15/3/.5-2 | 746 | 137 | 96 | 118 | 18 | 5 | 50 |
+| nm2b | precull, tight .12/2/.6-1.7 | 740 | 136 | 102 | 110 | 14 | 7 | 34 |
+| **nm3** | **precull+additive, tight .15/3/.5-2** | **747** | **137** | **95** | **117** | **18** | **4** | 50 |
+
+Reading the frontier:
+
+- **Precull works and recovers ~18 real non-matches** (the cull_inconsistent
+  victims the census predicted), phantom flat throughout.
+- **Base gates (nm1) are imprecise**: 82 adoptions, unknown +49 — the
+  many-flash score adopts many clusters at unlabeled/wrong flashes.
+- **Tightening (nm2a) keeps the full recovery at far higher precision**:
+  same missed 96, unknown 118 vs 147, adopt 50 vs 82. Tighter still (nm2b) is
+  over-tight — it drops genuine recoveries (missed back to 102).
+- **Census-tool faithfulness (advisor reconciliation)**: the what-if predicted
+  +22 recovered for base-gate precull; the real run recovered **18** and
+  **regressed 5**, net −13 missed. The gap is the incremental sim not modelling
+  the full rescue re-run; direction and magnitude hold, and the relative
+  ordering of gate sets (which drives the sweep) is faithful.
+
+### The wrong-flash regressions and the additive fix
+
+Pure precull replaces the rescue pool wholesale, so it re-decides clusters the
+shipped snapshot rescue already matched. In PDVD's many-flash regime the
+per-bundle score cannot always tell a track's true flash from a rival, so a few
+correctly-rescued tracks get **switched to the wrong flash** — e.g. nm2a evt298777
+uid67 (truth 49.9 µs) → 676 µs, and uid4000103 (truth −1799 µs) → −366 µs. These
+are physically wrong yet invisible to the scorer (they land in `unknown`).
+
+`cluster_rescue_precull_additive` (new default-OFF C++ knob) fixes this: the
+snapshot pool is the PRIMARY (its decisions are kept exactly), and the pre-cull
+pool is a per-cluster FALLBACK only for clusters the snapshot cannot rescue — so
+precull can add, never re-switch. **nm3** = additive + tight is the best point:
+missed **95** (−14 vs nm0, −13 %), phantom flat, and it eliminates the worst
+switch (uid4000103's 1432 µs error). Its 4 residual regressions are 1 cosmetic
+(1.3 µs, same flash-coincidence group), 2 losses where the tight gate drops a
+rescue nm0 made only under the looser base gates (a recall/precision tradeoff),
+and 1 irreducible wrong-flash (uid67: the wrong flash has ks 0.07, genuinely
+better light than the true flash — no light gate can separate it).
+
+### Ceiling reached
+
+nm3 leaves **95** long positives missed. Of the original 109, ~14 were cleanly
+recoverable; the rest are flash-ambiguous (the true flash is not the
+light-best) or class-D photon-model. Emptying the non-match button further
+would require an upstream, non-byte-identical change (not culling the
+correct-time bundle in `cull_inconsistent` before the LASSO can place it) —
+noted for the owner, not built here.
+
+## 6. Recommendation and adoption (owner decision)
+
+Recommended operating point: **precull + additive + tight gates** (the `nm3`
+config), enabled in the runner by
+```bash
+PDVD_QL_CRESCUE_PRECULL=1 PDVD_QL_CRESCUE_PRECULL_ADD=1 \
+  PDVD_QL_CRESCUE_KS=0.15 PDVD_QL_CRESCUE_C2N=3 \
+  PDVD_QL_CRESCUE_RLO=0.5 PDVD_QL_CRESCUE_RHI=2.0
+```
+Effect on 039252: **13 fewer non-matched long tracks** (missed 109→95, −13 %),
+phantom flat, at the cost of **+19 new long matches the frozen truth cannot
+judge** (unknown 98→117) and 4 minor regressions (1 cosmetic, 2 gate-tradeoff,
+1 irreducible wrong-flash).
+
+This is a production behavior change (NOT byte-identical), so per escalation
+rules 1 & 7 **the toolkit/runner defaults stay OFF and adoption is the owner's
+call**, gated on a rescan of the +19 new matches (the doc-19 empty-rescue
+lesson: rescue-added bundles without a truth verdict must be eyeballed before
+trust). The `nm3` Bee zips (`work/039252_*_nm3/mabc-all-apa.zip`) are ready for
+that rescan.
+
+## Repro (rescue runs)
+
+```bash
+cd pdvd
+for tag_env in \
+  "nm1 PDVD_QL_CRESCUE_PRECULL=1" \
+  "nm2a PDVD_QL_CRESCUE_PRECULL=1 PDVD_QL_CRESCUE_KS=0.15 PDVD_QL_CRESCUE_C2N=3 PDVD_QL_CRESCUE_RLO=0.5 PDVD_QL_CRESCUE_RHI=2.0" \
+  "nm3 PDVD_QL_CRESCUE_PRECULL=1 PDVD_QL_CRESCUE_PRECULL_ADD=1 PDVD_QL_CRESCUE_KS=0.15 PDVD_QL_CRESCUE_C2N=3 PDVD_QL_CRESCUE_RLO=0.5 PDVD_QL_CRESCUE_RHI=2.0"; do
+  set -- $tag_env; tag=$1; shift
+  for i in $(seq 0 17); do ./scripts/stage_ql_tag.sh 39252 $i $tag; done
+  env PDVD_LIGHT_SUFFIX=_keep PDVD_MAX_JOBS=6 "$@" ./run_clus_evt.sh -calib 39252 all -s $tag
+  python ql_display/ql_agree_score.py --tag $tag
+done
+```
+nm3 needs the additive C++ knob (toolkit `cluster_rescue_precull_additive`,
+built + installed). Byte-identical-off verified: precull-OFF and pure-precull
+calib dumps + mabc hashes identical to the pre-rebuild lib on idx 0/5/15.
