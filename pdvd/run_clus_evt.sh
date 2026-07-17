@@ -318,10 +318,13 @@ PY
     # the toolkit C++/jsonnet defaults stay OFF (byte-identical).
     # PDVD_QL_ROBUST_TRIM=1: robust-endpoint trim -- snap a drift endpoint back
     # inside the detector edge when the outer material is overclustered junk rather
-    # than a real track end, before the containment gate reads it.  DEFAULT OFF:
-    # unlike the cathode cushion / anode pull above, this has NOT been A/B'd or
-    # censused on PDVD, so it is opt-in only.  The defaults below are PDHD's proven
-    # operating point (cfg/.../pdhd/qlmatching.jsonnet:306-332); each is overridable.
+    # than a real track end, before the containment gate reads it.  PRODUCTION
+    # DEFAULT ON since 2026-07-17 (with WALK_FLOOR): the entire doc-19 scan-tuning
+    # campaign (cathxa reference + tune_c2_cr operating point, 18 evts x ~20 tags)
+    # ran with it, so the tuned defaults assume it.  PDVD_QL_ROBUST_TRIM=0
+    # reverts (also disables WALK_FLOOR).  The trim thresholds below are PDHD's
+    # proven operating point (cfg/.../pdhd/qlmatching.jsonnet:306-332); each is
+    # overridable.
     #
     # Reproduces the evt298567 clus 34 demo: 8 points carrying 0.08% of that
     # cluster's charge sit 28.4 cm off its anode end and stretch its drift extent to
@@ -336,11 +339,12 @@ PY
     # instead of anode_ext1 (-2 cm), so it stops counting material the gate would have
     # accepted as "outside".  Without it the rescue depends on cluster SIZE -- evt298567
     # apa-0 ident 34 (2649 pts, allowance 26.5) is rescued but apa-4 ident 1 (1375 pts,
-    # allowance 15) is not, on the same 20 swallowed body points.  DEFAULT OFF.
+    # allowance 15) is not, on the same 20 swallowed body points.  DEFAULT ON
+    # since 2026-07-17 (doc 19; PDVD_QL_ROBUST_WALK_FLOOR=0 reverts).
     local QL_ROBUSTGAP_ARG=()
-    if [ "${PDVD_QL_ROBUST_TRIM:-0}" = 1 ]; then
+    if [ "${PDVD_QL_ROBUST_TRIM:-1}" = 1 ]; then
         QL_ROBUSTGAP_ARG=(-S "ql_robust_trim=true"
-                          -S "ql_robust_walk_to_floor=$([ "${PDVD_QL_ROBUST_WALK_FLOOR:-0}" = 1 ] && echo true || echo false)"
+                          -S "ql_robust_walk_to_floor=$([ "${PDVD_QL_ROBUST_WALK_FLOOR:-1}" = 1 ] && echo true || echo false)"
                           -S "ql_robust_gap_cathode=$([ "${PDVD_QL_ROBUST_GAP_CATHODE:-0}" = 1 ] && echo true || echo false)"
                           -S "ql_robust_frac=${PDVD_QL_ROBUST_FRAC:-0.01}"
                           -S "ql_robust_count=${PDVD_QL_ROBUST_COUNT:-15}"
@@ -356,8 +360,12 @@ PY
     # pre-fit otherwise.  QFRAC = charge fraction discardable as overclustered junk
     # when measuring the overshoot (evt298567 clus 97: 2.6% junk drags the raw
     # extreme 47 cm past the gate; the real end is 3.3 cm past).  Independent of
-    # PDVD_QL_ROBUST_TRIM.  Unset => keys omitted => byte-identical.  NOT censused;
-    # demo values 10 / 0.05 (docs/qlmatch/16_pdvd-clus97-crosser-evt298567.md §10).
+    # PDVD_QL_ROBUST_TRIM.  PRODUCTION DEFAULT 10 / 0.05 since 2026-07-17 (part
+    # of the doc-19 tune_c2_cr operating point baseline; the phase-3
+    # xtpc_cathode_ks_max=0.32 gate now guards its phantom mode, rescue-survivor
+    # phantom rate 69%->9%).  Export PDVD_QL_XTPC_CATHODE_TOL_CM= (empty) to
+    # disable (keys omitted).  Demo derivation doc 16 §10.
+    : "${PDVD_QL_XTPC_CATHODE_TOL_CM=10}"
     local QL_XTPCRESCUE_ARG=()
     if [ -n "${PDVD_QL_XTPC_CATHODE_TOL_CM:-}" ]; then
         QL_XTPCRESCUE_ARG=(-S "ql_xtpc_cathode_tol_cm=${PDVD_QL_XTPC_CATHODE_TOL_CM}"
@@ -415,7 +423,14 @@ PY
     # global pe_err model per family (cathode XAs 4-11 / PMTs) in BOTH error
     # paths (LASSO floor/frac + bundle-chi2 incl. lowpe branch).  Any set env
     # activates the family knob; unset members fall back to the global values.
-    # All unset (default) => keys omitted => byte-identical.
+    # PRODUCTION DEFAULTS since 2026-07-17 (doc 19 phase 2 pull calibration,
+    # tune_c2_cr operating point): cathode-XA frac 0.55 / lowpe_frac 2.6 @
+    # knee 80, PMT frac 0.75.  Export a member EMPTY (PDVD_QL_PEERR_CATH_FRAC=)
+    # to fall back to the global model; toolkit defaults stay OFF.
+    : "${PDVD_QL_PEERR_CATH_FRAC=0.55}"
+    : "${PDVD_QL_PEERR_CATH_LOWPE_FRAC=2.6}"
+    : "${PDVD_QL_PEERR_CATH_LOWPE_KNEE=80}"
+    : "${PDVD_QL_PEERR_PMT_FRAC=0.75}"
     local QL_PEERR_ARG=()
     local _pe_env _pe_var
     for _pe_env in CATH_FLOOR CATH_FRAC CATH_LOWPE_FRAC CATH_LOWPE_KNEE \
@@ -432,12 +447,19 @@ PY
     #   bundle's own light to pass (ks/c2n ceilings PDVD_QL_SC1_KS/_C2N).
     # PDVD_QL_CATHODE_KS_MAX: cathode-rescue survivors additionally need ks <= this.
     # PDVD_QL_POSTCULL=1: post-fit cull of unflagged selections failing
-    #   PDVD_QL_POSTCULL_KS/_C2N.  All unset (default) => byte-identical.
+    #   PDVD_QL_POSTCULL_KS/_C2N.
+    # PRODUCTION DEFAULTS since 2026-07-17 (doc 19 phase 3, tune_c2_cr
+    # operating point): pin floor 0.02, sc1 light gate ON (C++ ks 0.3 /
+    # c2n 50), cathode ks ceiling 0.32, postcull ON (C++ 0.30/20).  Revert:
+    # PDVD_QL_PIN_MIN_STRENGTH= PDVD_QL_CATHODE_KS_MAX= (empty) and
+    # PDVD_QL_SC1_LIGHT_GATE=0 PDVD_QL_POSTCULL=0.  Toolkit defaults stay OFF.
+    : "${PDVD_QL_PIN_MIN_STRENGTH=0.02}"
+    : "${PDVD_QL_CATHODE_KS_MAX=0.32}"
     local QL_QGATE_ARG=()
     if [ -n "${PDVD_QL_PIN_MIN_STRENGTH:-}" ]; then
         QL_QGATE_ARG+=(-S "ql_xtpc_pin_min_strength=${PDVD_QL_PIN_MIN_STRENGTH}")
     fi
-    if [ "${PDVD_QL_SC1_LIGHT_GATE:-0}" = 1 ]; then
+    if [ "${PDVD_QL_SC1_LIGHT_GATE:-1}" = 1 ]; then
         QL_QGATE_ARG+=(-S "ql_xtpc_sc1_light_gate=true")
         [ -n "${PDVD_QL_SC1_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_xtpc_sc1_ks_max=${PDVD_QL_SC1_KS}")
         [ -n "${PDVD_QL_SC1_C2N:-}" ] && QL_QGATE_ARG+=(-S "ql_xtpc_sc1_c2n_max=${PDVD_QL_SC1_C2N}")
@@ -445,7 +467,7 @@ PY
     if [ -n "${PDVD_QL_CATHODE_KS_MAX:-}" ]; then
         QL_QGATE_ARG+=(-S "ql_xtpc_cathode_ks_max=${PDVD_QL_CATHODE_KS_MAX}")
     fi
-    if [ "${PDVD_QL_POSTCULL:-0}" = 1 ]; then
+    if [ "${PDVD_QL_POSTCULL:-1}" = 1 ]; then
         QL_QGATE_ARG+=(-S "ql_postcull_unflagged=true")
         [ -n "${PDVD_QL_POSTCULL_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_ks_max=${PDVD_QL_POSTCULL_KS}")
         [ -n "${PDVD_QL_POSTCULL_C2N:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_c2n_max=${PDVD_QL_POSTCULL_C2N}")
@@ -454,7 +476,17 @@ PY
     # PDVD_QL_HC_{CLEAN,GOOD,TB,MISS}_{KS,C2N}, PDVD_QL_HC_MISS_MIN_NDF,
     # PDVD_QL_LASSO_LAMBDA, PDVD_QL_DELTA_{CHARGE,LIGHT,SHAPE},
     # PDVD_QL_BKG_WEIGHT, PDVD_QL_STRENGTH_CUTOFF, PDVD_QL_LASSO_BWEIGHT.
-    # Unset (default) => operating literals / C++ defaults, config unchanged.
+    # PRODUCTION DEFAULTS since 2026-07-17 (doc 19 phase 4 sweep, tune_c2_cr
+    # operating point): high-consistent chi2/ndf ceilings 12 (miss branch 30)
+    # retightened to the phase-2 recalibrated chi2 scale, LASSO lambda 0.2
+    # (sparser solutions, best phantom kill).  Export EMPTY (e.g.
+    # PDVD_QL_LASSO_LAMBDA=) to recover the pre-tuning literals (35/60, 0.1).
+    # Other members unset => operating literals / C++ defaults unchanged.
+    : "${PDVD_QL_HC_CLEAN_C2N=12}"
+    : "${PDVD_QL_HC_GOOD_C2N=12}"
+    : "${PDVD_QL_HC_TB_C2N=12}"
+    : "${PDVD_QL_HC_MISS_C2N=30}"
+    : "${PDVD_QL_LASSO_LAMBDA=0.2}"
     local QL_SWEEP_ARG=()
     [ -n "${PDVD_QL_HC_CLEAN_KS:-}" ]  && QL_SWEEP_ARG+=(-S "ql_hc_clean_ks=${PDVD_QL_HC_CLEAN_KS}")
     [ -n "${PDVD_QL_HC_CLEAN_C2N:-}" ] && QL_SWEEP_ARG+=(-S "ql_hc_clean_c2=${PDVD_QL_HC_CLEAN_C2N}")
@@ -477,13 +509,17 @@ PY
     #   empty-flash rescue across drift sides.
     # PDVD_QL_CLUSTER_RESCUE=1 (+PDVD_QL_CRESCUE_{KS,C2N,RLO,RHI}): per-run
     #   cluster-centric adoption (gates REQUIRED — C++ 0 gates are inert).
-    # All unset (default) => keys omitted => byte-identical.
+    # CLUSTER RESCUE = PRODUCTION DEFAULT since 2026-07-17 (doc 19 phase 5,
+    # tune_c2_cr: missed 120->109 at +1 phantom); PDVD_QL_CLUSTER_RESCUE=0
+    # reverts.  EMPTY RESCUE stays opt-in: on 039252 it force-fills
+    # legitimately-empty flashes and steals correct matches at metric 0.5
+    # AND 0.1 (doc 19 phase 5 verdict) — do not enable without a rescan.
     local QL_RESCUE_ARG=()
     if [ "${PDVD_QL_EMPTY_RESCUE:-0}" = 1 ]; then
         QL_RESCUE_ARG+=(-S "ql_empty_rescue_shared=true")
         [ -n "${PDVD_QL_RESCUE_METRIC_MAX:-}" ] && QL_RESCUE_ARG+=(-S "ql_rescue_metric_max=${PDVD_QL_RESCUE_METRIC_MAX}")
     fi
-    if [ "${PDVD_QL_CLUSTER_RESCUE:-0}" = 1 ]; then
+    if [ "${PDVD_QL_CLUSTER_RESCUE:-1}" = 1 ]; then
         QL_RESCUE_ARG+=(-S "ql_cluster_rescue_shared=true"
                         -S "ql_cluster_rescue_ks_max=${PDVD_QL_CRESCUE_KS:-0.25}"
                         -S "ql_cluster_rescue_c2n_max=${PDVD_QL_CRESCUE_C2N:-15}"

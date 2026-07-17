@@ -303,6 +303,12 @@ extra "matches" were 70%+ phantoms in every flagged family.
 
 ### Operating-point knob inventory (runner env => active value; toolkit default OFF)
 
+BAKED as `run_clus_evt.sh` defaults 2026-07-17 (each env individually
+revertible — export empty or =0 per the in-script comments; the robust-trim
+/ xtpc-cathode-tol baseline is baked ON too since the tuned values assume
+it).  Verified: bare-env runs (only `PDVD_LIGHT_SUFFIX=_keep`) on idx{0,12}
+reproduce `tune_c2_cr` byte-identically (label `p6bake`, 88 archives).
+
 | env (run_clus_evt.sh) | value | knob | phase |
 |---|---|---|---|
 | PDVD_QL_PEERR_CATH_FRAC | 0.55 | pe_err_family_frac[cath] | 2 |
