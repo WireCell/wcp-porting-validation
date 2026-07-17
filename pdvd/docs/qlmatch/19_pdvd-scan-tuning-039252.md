@@ -142,6 +142,61 @@ Phase order implications: the top phantom buckets are `strength_only` (103)
 and the loose xtpc paths `scenario1`+`cathode_rescued` (72 combined, ~69%
 phantom each); `xtpc_pin` itself is comparatively healthy (13.7%).
 
+## Phase 2 — Per-family PE-error knob + calibration runs
+
+Toolkit knob (commit 787a5da8, byte-identical gate PASS 44 archives x
+idx{0,12} vs cathxa, non-vacuous via the new `pe_err_lowpe_*` dump keys):
+`pe_err_family_channels/floor/frac/lowpe_frac/lowpe_knee` — family-scoped
+override of the global PE-error model in BOTH paths (Opflash LASSO
+floor/frac; bundle-chi2 `per_opdet_perr` incl. lowpe branch).  PDVD jsonnet
+params `pe_err_{cath,pmt}_*`, runner envs `PDVD_QL_PEERR_{CATH,PMT}_*`.
+Families: cathode XAs (4-11), PMTs (14-17, 20-39).
+
+Calibration runs (fresh tags, matching-only reprocess; baseline row repeated):
+
+| tag | cath frac/lowpe_frac@knee | pmt frac | agree% | phantom | missed | unknown |
+|---|---|---|---|---|---|---|
+| cathxa (base) | 0.60 / 2.0@10 | 0.60 | 68.4% | 347 | 91 | 8 |
+| tune_pe1 | 0.55 / 2.6@80 | 0.75 | **69.9%** | 319 | 102 | 51 |
+| tune_pe2 | 0.60 / 3.0@120 | 0.90 | 70.0% | 316 | 104 | 57 |
+| tune_pe3 | 0.55 / 2.2@50 | 0.65 | 69.2% | 331 | 98 | 36 |
+
+Reading: the rescale trades ~30 phantoms for ~10 misses; pe1/pe2 equivalent
+within noise — **pe1 chosen** (milder).  The full benefit is gated on
+re-tightening the ladder chi2 ceilings to the new chi2 scale (Phase 4; the
+current hc ceilings 35/60 were set for the old inflated scale).
+chi2_sat_inflate stays 0.5 (Phase 1 showed the saturated subset already
+calibrated).  Cross-check `tune_sat035` (chi2_sat_inflate 0.35, all else
+baseline): 1693/6525 bundle chi2 values move on evt298637 but NO selection,
+flag, or score changes anywhere — every headline number identical to
+baseline.  Verdict: the current saturated-PD widening is neither too big nor
+too small to matter in [0.35, 0.5]; keep 0.5.
+
+## Phase 3 — xtpc / selection quality gates
+
+Audit findings (code): the joint-pin gate is purely geometric (d < dmax +
+axis collinearity; light only picks WHICH coincident flash, never whether
+the pair deserves a pin), pinned bundles are exempt from the strength
+cutoff and monopolize `cull_inconsistent`; scenario-1 flags are granted at
+EVERY coincident flash whose T0 offset makes the halves touch.
+`two_boundary` audited healthy (16.7% phantom, no B3 excess) — no knob.
+
+Toolkit knobs (commit 4004c546, all default OFF; gate 44 archives x
+idx{0,12} byte-identical; runner envs in 428ae41):
+
+| knob | cut (from scan separations) | attacks |
+|---|---|---|
+| `xtpc_pin_min_strength` 0.02 | pinned bundle loses strength-cutoff exemption at/below floor | phantom pins (strength p50 0.00 vs agree p10 0.88) |
+| `xtpc_sc1_light_gate` (ks 0.3 / c2n 50) | sc1/xtpc-consistent flags need own light | sc1 phantoms (ks p50 0.40, c2n p50 76) |
+| `xtpc_cathode_ks_max` 0.32 | rescue survivors need ks too | rescue phantoms (69%) |
+| `postcull_unflagged` (ks 0.30 / c2n 20) | post-fit cull of strength-only picks | largest bucket (103 @ 70%) |
+
+`tune_qg1` (gates ON, baseline error model): **agree 81.5%** (from 68.4%),
+phantom **167** (from 347), missed 108 (from 91), unknown 89. Flag splits:
+xtpc_pin 15.1→6.3%, scenario1 25.4→4.5%, cathode_rescued 68.9→10.0%.
+The +17 missed are phantom-kills leaving their cluster unmatched —
+Phase 5 rescue territory.
+
 ## Campaign plan
 
 - Phase 0: this scorer + baseline. DONE.
