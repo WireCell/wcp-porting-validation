@@ -119,6 +119,33 @@ The 10 scan events were rescanned from scratch on the corrected dumps:
 Review:
 `./ql_scan/serve_ql_scan.sh 5017 --tag claude-geomfix work/039252_{0,1,2,3,4,5,6,7,8,9}/calib-evt*.json`
 
+## Cathode-XA operating-point round (2026-07-16/17) — full 18-event set
+
+After the cathode-XA operating point was adopted (doc 18: wall-XA mask,
+cathode flash admission 5PE/2ch, wall flags off, cathode-scoped
+reject_overpred) and all 18 events reprocessed into
+`work/039252_<idx>_cathxa/`, the scan was extended to the FULL event set:
+idx 1-17 scanned from scratch with the same rubric (idx 0 = evt298567 keeps
+the owner's doc-17 gold scan, remapped into tag `cathxa`; evt298581 was
+scanned blind and cross-checked against the owner's same-day save — 94%
+cluster-level agreement).
+
+- evidence: `png-cathxa/evt<ID>/` + `context-cathxa/context-evt<ID>.jsonl`
+- decisions: `decisions-cathxa/decisions-evt<ID>.jsonl` (17 events)
+- labels: tag **`claude-cathxa`** (valid against the cathxa dumps only)
+- findings: `docs/ql-scan-findings-cathxa.md`
+- scanner deltas vs the geomfix round: one scanner agent per event (6 in
+  parallel); pins/rescues (`xtpc_pin`/`xtpc_cathode_rescued`) explicitly
+  verified by cathode-meeting distance + unsaturated-channel amplitude;
+  amplitude judged on unsaturated, unmasked channels throughout.
+- harness note: a killed 21:37 render batch left idx 0-6 context/PNGs
+  truncated mid-event; scanners fell back to calib-dump enumeration
+  (`make_labels --check` enforces verdict completeness) and the evidence
+  files were re-rendered to full length afterwards.
+
+Review:
+`./ql_scan/serve_ql_scan.sh 5021 --tag claude-cathxa work/039252_*_cathxa/calib-evt*.json`
+
 ## Commands (reproduce)
 
 ```bash
