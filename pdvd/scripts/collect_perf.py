@@ -27,7 +27,7 @@ import sys
 PDVD_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORK = os.path.join(PDVD_DIR, "work")
 
-RE_RES = re.compile(r"run=(\S+) evt=(\S+) wall_s=(\d+) peak_rss_gb=([\d.]+)")
+RE_RES = re.compile(r"run=(\S+) evt=(\S+) wall_s=([\d.]+) peak_rss_gb=([\d.]+)")
 RE_TOOK = re.compile(r"QLMatching timing: ident \S+ took (\d+) ms")
 RE_OP = re.compile(
     r"QLtiming operator: ident \S+ prefit ([\d.]+) xtpc_cull ([\d.]+) "
