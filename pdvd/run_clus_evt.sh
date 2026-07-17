@@ -539,21 +539,35 @@ PY
         QL_RESCUE_ARG+=(-S "ql_empty_rescue_shared=true")
         [ -n "${PDVD_QL_RESCUE_METRIC_MAX:-}" ] && QL_RESCUE_ARG+=(-S "ql_rescue_metric_max=${PDVD_QL_RESCUE_METRIC_MAX}")
     fi
+    # CLUSTER-RESCUE OPERATING POINT (nm3), PRODUCTION DEFAULT since 2026-07-17
+    # (doc 20, run 039252 non-match census): additive precull + TIGHT gates.
+    # Effect vs the pre-nm3 baseline (snapshot pool, loose .25/15/.3-3): 36 fewer
+    # non-matched long tracks in Bee (missed 109->95 on the scanned set, -13 %),
+    # phantom flat 137, +19 unlabeled new matches (rescan-gated).  Adopted by owner
+    # request 2026-07-17 after the nm0-vs-nm3 decision-number comparison (doc 20 §7).
+    # NOT byte-identical (flips output); the toolkit C++/jsonnet defaults stay OFF.
+    # Revert to the pre-nm3 baseline point:
+    #   PDVD_QL_CRESCUE_PRECULL=0 PDVD_QL_CRESCUE_KS=0.25 PDVD_QL_CRESCUE_C2N=15 \
+    #   PDVD_QL_CRESCUE_RLO=0.3 PDVD_QL_CRESCUE_RHI=3.0
+    # Config-only fallback (no additive C++ lib): PDVD_QL_CRESCUE_PRECULL_ADD=0
+    # (= nm2a, one cluster worse, keeps the two gross wrong-flash switches).
     if [ "${PDVD_QL_CLUSTER_RESCUE:-1}" = 1 ]; then
         QL_RESCUE_ARG+=(-S "ql_cluster_rescue_shared=true"
-                        -S "ql_cluster_rescue_ks_max=${PDVD_QL_CRESCUE_KS:-0.25}"
-                        -S "ql_cluster_rescue_c2n_max=${PDVD_QL_CRESCUE_C2N:-15}"
-                        -S "ql_cluster_rescue_ratio_lo=${PDVD_QL_CRESCUE_RLO:-0.3}"
-                        -S "ql_cluster_rescue_ratio_hi=${PDVD_QL_CRESCUE_RHI:-3.0}")
-        # PDVD_QL_CRESCUE_PRECULL=1: draw the rescue pool from the pre-cull
+                        -S "ql_cluster_rescue_ks_max=${PDVD_QL_CRESCUE_KS:-0.15}"
+                        -S "ql_cluster_rescue_c2n_max=${PDVD_QL_CRESCUE_C2N:-3}"
+                        -S "ql_cluster_rescue_ratio_lo=${PDVD_QL_CRESCUE_RLO:-0.5}"
+                        -S "ql_cluster_rescue_ratio_hi=${PDVD_QL_CRESCUE_RHI:-2.0}")
+        # PDVD_QL_CRESCUE_PRECULL: draw the rescue pool from the pre-cull
         # all_bundles universe so cull_inconsistent victims become reachable
-        # (doc 20).  Default OFF (0) => toolkit key omitted => byte-identical.
-        [ "${PDVD_QL_CRESCUE_PRECULL:-0}" = 1 ] \
+        # (doc 20).  PRODUCTION DEFAULT 1 as of nm3 adoption (2026-07-17); the
+        # toolkit jsonnet default stays false (key omitted when off => byte-identical).
+        [ "${PDVD_QL_CRESCUE_PRECULL:-1}" = 1 ] \
             && QL_RESCUE_ARG+=(-S "ql_cluster_rescue_precull=true")
-        # PDVD_QL_CRESCUE_PRECULL_ADD=1: additive precull -- snapshot pool primary,
+        # PDVD_QL_CRESCUE_PRECULL_ADD: additive precull -- snapshot pool primary,
         # pre-cull pool fallback-only, so precull adds without re-deciding/mis-switching
-        # already-rescued clusters (doc 20).  Default OFF => key omitted => byte-identical.
-        [ "${PDVD_QL_CRESCUE_PRECULL:-0}" = 1 ] && [ "${PDVD_QL_CRESCUE_PRECULL_ADD:-0}" = 1 ] \
+        # already-rescued clusters (doc 20).  PRODUCTION DEFAULT 1 as of nm3 adoption
+        # (2026-07-17); toolkit C++ default stays false (key omitted => byte-identical).
+        [ "${PDVD_QL_CRESCUE_PRECULL:-1}" = 1 ] && [ "${PDVD_QL_CRESCUE_PRECULL_ADD:-1}" = 1 ] \
             && QL_RESCUE_ARG+=(-S "ql_cluster_rescue_precull_additive=true")
     fi
     local QL_SATFLAG_ARG=()

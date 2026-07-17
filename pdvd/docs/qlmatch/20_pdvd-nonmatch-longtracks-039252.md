@@ -1,8 +1,9 @@
 # 20 — Long UNMATCHED clusters (Bee "non-match" long tracks), PDVD run 039252
 
-Status: COMPLETE (baseline + census + rescue frontier + additive knob).
-Recommendation in §6; toolkit/runner knobs shipped default OFF, adoption is the
-owner's call pending a rescan.
+Status: COMPLETE + **ADOPTED** (baseline + census + rescue frontier + additive
+knob + owner adoption 2026-07-17).  The `nm3` operating point is now the PDVD
+runner default (§6); the toolkit C++/jsonnet knobs still ship default OFF
+(byte-identical).  §8 characterises the tracks that remain non-matched after nm3.
 
 Goal: reduce the number of LONG tracks (>= 25 cm or >= 100 pts) that QLMatch
 leaves with **no matched flash** — the tracks the owner sees under the Bee
@@ -182,12 +183,22 @@ phantom flat, at the cost of **+19 new long matches the frozen truth cannot
 judge** (unknown 98→117) and 4 minor regressions (1 cosmetic, 2 gate-tradeoff,
 1 irreducible wrong-flash).
 
-This is a production behavior change (NOT byte-identical), so per escalation
-rules 1 & 7 **the toolkit/runner defaults stay OFF and adoption is the owner's
-call**, gated on a rescan of the +19 new matches (the doc-19 empty-rescue
-lesson: rescue-added bundles without a truth verdict must be eyeballed before
-trust). The `nm3` Bee zips (`work/039252_*_nm3/mabc-all-apa.zip`) are ready for
-that rescan.
+This is a production behavior change (NOT byte-identical). Per escalation rules
+1 & 7 the toolkit C++/jsonnet defaults stay OFF (byte-identical), and the owner
+made the adoption call.
+
+**ADOPTED 2026-07-17 (owner request).** The `nm3` operating point is now the
+PDVD **runner default** in `run_clus_evt.sh` (the `PDVD_QL_CLUSTER_RESCUE`
+block): `PDVD_QL_CRESCUE_PRECULL=1`, `PDVD_QL_CRESCUE_PRECULL_ADD=1`, gate
+defaults `KS=0.15 / C2N=3 / RLO=0.5 / RHI=2.0`. Verified the flip reproduces
+`nm3` exactly: a default run (no rescue env) with `PDVD_KEEP_CFG=1` on idx 0
+emits the six rescue keys at the nm3 values in the compiled config, and its
+`calib-evt298567.json` is **byte-identical** to the explicit-`nm3` dump. Revert
+to the pre-nm3 baseline with `PDVD_QL_CRESCUE_PRECULL=0 PDVD_QL_CRESCUE_KS=0.25
+PDVD_QL_CRESCUE_C2N=15 PDVD_QL_CRESCUE_RLO=0.3 PDVD_QL_CRESCUE_RHI=3.0`; the
+config-only fallback (no additive C++ lib) is `PDVD_QL_CRESCUE_PRECULL_ADD=0`
+(= nm2a). The `nm3` Bee zips (`work/039252_*_nm3/mabc-all-apa.zip`) remain
+available for the rescan of the +19 unverified new matches.
 
 **Config-only fallback (`nm2a`, no C++ needed):** `nm2a` is one cluster worse
 (missed 96 vs 95) and keeps the two gross wrong-flash switches the additive knob
@@ -256,6 +267,66 @@ Net: **−36 non-matched long tracks in Bee at flat phantom**, of which ~14 are
 already scan-verified and ~19 await the owner's rescan. If the rescan confirms
 most of the 19, the effective non-match reduction stands; if many are wrong,
 fall back to the more conservative gates or to `nm2a`.
+
+## 8. What remains non-matched after nm3 — ambiguity, not absence
+
+Re-running the census on the **nm3** dumps
+(`ql_display/unmatched_census.py --tag nm3`,
+`work/ql_scores/nm3/unmatched_census.md`) classifies the 95 long positives that
+are still non-matched:
+
+| class | count | meaning |
+|---|---|---|
+| A anchored-elsewhere | 0 | rides a matched anchor — not a real non-match |
+| B no-bundle (containment) | 0 | robust-trim already handles this |
+| **C rescue-reachable but ambiguous** | **91** | a contained candidate bundle exists AT the true flash time |
+| D wrong-time-only (photon-model) | 4 | many bundles (16–71) but NONE within tol of the true time |
+
+**So the answer is: these tracks are almost all "cannot find a *reliable*
+match", not "no match exists at all."**
+
+- **91 of 95 (class C) DO have a candidate at the right flash.** For each, a
+  contained, light-examined bundle sits within tolerance of the track's true
+  flash time — the match is physically present. What's missing is
+  *distinguishability*: in PDVD's ~190-flash-per-event shared-flash regime the
+  light metrics (ks, chi²/ndf, pred/meas ratio) of the correct candidate are
+  not separable from those of rival flashes at other times. The nm3 what-if
+  makes this quantitative — pulling more of these 91 from the precull pool:
+
+  | gate set | recovered | wrong-flash | unlabeled | precision |
+  |---|---|---|---|---|
+  | loose base .25/15/.3-3 | 8 | **13** | 91 | 0.36 |
+  | tight .15/3/.5-2 (nm3) | 3 | 3 | 19 | 0.50 |
+  | tighter .12/2 | 2 | 0 | 5 | 1.00 |
+
+  At every operating point the wrong-flash count is ≈ the real-recovery count.
+  That is the signature of **too many plausible matches**: the true flash is not
+  the light-best one (e.g. evt298777 uid67 — the wrong flash has ks 0.07,
+  genuinely better light than the true 49.9 µs flash). No acceptance gate on the
+  per-bundle light score can separate them; loosening buys a wrong flash for
+  every right one, tightening just leaves them unmatched. nm3 is essentially at
+  the per-bundle-score recall ceiling.
+
+- **4 of 95 (class D) are the genuine "no good match" case.** Bundles exist
+  (16, 49, 66, 71 of them for the four) but *none* lands within tolerance of the
+  true flash time — the correct-time light prediction is systematically off
+  (photon-model / geometry), so there is no candidate at the right place to
+  accept. This is the small minority.
+
+**Why the lever is exhausted here.** Both residual causes are physics/instrument
+limits, not matcher bugs: (C) the light yield + flash pileup make the true flash
+un-rankable by per-bundle light alone, and (D) the photon model mis-predicts a
+handful of true-time patterns. Reducing them further needs an *upstream* change,
+not a rescue-gate change:
+  1. **Don't cull the correct-time bundle in `cull_inconsistent` before the
+     LASSO** — let the joint LASSO (which sees all flashes together) arbitrate
+     instead of the per-bundle rescue score. Non-byte-identical, not built here.
+  2. **Cut flash multiplicity / improve the photon model** so the true flash is
+     genuinely the light-best — this attacks class C at its source and is also
+     the only lever for class D.
+
+Both are larger, non-byte-identical efforts scoped for a future round; nm3 is
+the ceiling of the rescue-gate lever.
 
 ## Repro (rescue runs)
 
