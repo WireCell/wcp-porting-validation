@@ -237,6 +237,100 @@ cost of +7 missed. `bkg_weight`, `flash_sel_minPE` are null;
 inflates the unknown (low-confidence) pool. Next: combine hc12+lam02, and
 let Phase 5 rescues attack the missed pool.
 
+## Phase 5 — shared-flash-aware rescues
+
+PDVD runs `shared_flash=true`, so the per-run `empty_rescue`/`cluster_rescue`
+were skipped by construction (configure() warning).  New toolkit knobs
+(commit 6bb43db5, default OFF; runner plumbing wcp 555836f):
+
+- `empty_rescue_shared`: joint emptiness — a physical flash (by flash id,
+  identical across ports) is empty only when NO drift side holds a
+  surviving bundle; the best pre-LASSO snapshot candidate ACROSS sides is
+  adopted under the `rescue_metric_max` bar (pin-locked,
+  reassign-only-if-strictly-better, deterministic tie-breaks).
+- `cluster_rescue_shared`: the existing per-run cluster-centric ADD-only
+  adoption (ks/c2n/ratio gates), run from the shared rounds per side.
+
+Byte-identity gate: 88 archives x idx{0,12} knobs-off vs cathxa, label
+`p5gatef`, wcdoctest-match 23/23.  GOTCHA (cost a 5-run false-FAIL hunt):
+gates vs cathxa must run WITH the cathxa generation env
+(`PDVD_QL_ROBUST_TRIM=1 PDVD_QL_ROBUST_WALK_FLOOR=1
+PDVD_QL_XTPC_CATHODE_TOL_CM=10`) — a bare knobs-off run legitimately
+differs (containment admits ~11% fewer vis candidate-points).
+
+Results on top of `tune_c2` (= tune_c1 + hc12 + lam02, the phase-4 winner
+combination):
+
+| tag | rescues | agree% | phantom | missed | unknown |
+|---|---|---|---|---|---|
+| tune_c2 | none | 84.1% | 136 | 120 | 97 |
+| tune_c2_cr | cluster (0.25/15/0.3–3.0) | **84.3%** | 137 | **109** | 98 |
+| tune_c2_er | empty @0.5 | 85.5% | 115 | 162 | 257 |
+| tune_c2_er01 | empty @0.1 | 85.2% | 120 | 151 | 201 |
+| tune_c2_ercr | both | 85.7% | 115 | 154 | 259 |
+
+Verdict: **cluster rescue adopted** (missed 120→109 at +1 phantom; ADD-only,
+sentinel `QLclusrescue: rescued N` fires on 11/36 sides).  **Empty rescue
+rejected at both thresholds**: with 184 flashes and ~105 clusters most
+flashes are LEGITIMATELY empty, so joint-emptiness adoption force-fills
+them — it floods the output with never-scanned pairings (unknown 97→257)
+and steals correct matches via reassignment (missed 120→162; 34-47
+rescues/event at 0.5).  The knob stays available (default OFF) for
+detectors with higher cluster/flash ratios.
+
+## Phase 6 — combined operating point
+
+Final = `tune_c2_cr`.  Before/after on the 18-event objective (long
+tracks, gold + high/med AI verdicts):
+
+| | cathxa (baseline) | tune_c2_cr (final) |
+|---|---|---|
+| agree% (kept-auto) | 68.4% | **84.3%** |
+| phantoms | 347 | **137** |
+| missed | 91 (10.8%) | 109 (12.9%) |
+| per-event agree% range | 53.9–78.2% | 72.5–97.9% |
+
+Flag-split phantom rates, baseline → final: xtpc_pin 15.1→5.6%,
+scenario1 25.4→5.1%, cathode_rescued 68.9→9.1%, consistent 21.4→17.2%,
+two_boundary 16.7→4.4%, at_cathode 31.2→7.8%, window_truncated
+31.7→17.0%, sat_flash 19.8→7.2%.
+
+The +18 missed vs baseline is the price of killing 210 phantoms: the
+quality gates remove some true matches whose light evidence is genuinely
+poor (window-truncated / saturated candles), and cluster rescue claws
+back 11.  Precision-recall trade accepted — the scan showed the baseline's
+extra "matches" were 70%+ phantoms in every flagged family.
+
+### Operating-point knob inventory (runner env => active value; toolkit default OFF)
+
+| env (run_clus_evt.sh) | value | knob | phase |
+|---|---|---|---|
+| PDVD_QL_PEERR_CATH_FRAC | 0.55 | pe_err_family_frac[cath] | 2 |
+| PDVD_QL_PEERR_CATH_LOWPE_FRAC | 2.6 | pe_err_family_lowpe_frac[cath] | 2 |
+| PDVD_QL_PEERR_CATH_LOWPE_KNEE | 80 | pe_err_family_lowpe_knee[cath] | 2 |
+| PDVD_QL_PEERR_PMT_FRAC | 0.75 | pe_err_family_frac[pmt] | 2 |
+| PDVD_QL_PIN_MIN_STRENGTH | 0.02 | xtpc_pin_min_strength | 3 |
+| PDVD_QL_SC1_LIGHT_GATE | 1 (ks 0.3 / c2n 50) | xtpc_sc1_light_gate | 3 |
+| PDVD_QL_CATHODE_KS_MAX | 0.32 | xtpc_cathode_ks_max | 3 |
+| PDVD_QL_POSTCULL | 1 (ks 0.30 / c2n 20) | postcull_unflagged | 3 |
+| PDVD_QL_HC_{CLEAN,GOOD,TB}_C2N | 12 | hc_*_c2 ladder ceilings | 4 |
+| PDVD_QL_HC_MISS_C2N | 30 | hc_miss_c2 | 4 |
+| PDVD_QL_LASSO_LAMBDA | 0.2 | lasso_lambda | 4 |
+| PDVD_QL_CLUSTER_RESCUE | 1 (0.25/15/0.3–3.0) | cluster_rescue_shared | 5 |
+| (pre-existing baseline) | ROBUST_TRIM=1 WALK_FLOOR=1 XTPC_CATHODE_TOL_CM=10 | robust trim + xtpc cathode rescue | docs 15/16 |
+
+### Caveats
+
+- **No holdout**: all 18 events of run 039252 were used for tuning (user
+  decision); these numbers are in-sample and WILL be optimistic on new
+  runs.  The next processed run is the real validation.
+- Reference circularity: the AI scan judged the cathxa auto output;
+  low-confidence AI verdicts are excluded from the objective (reported as
+  "unknown").
+- Every toolkit knob defaults OFF; gates p2gate/p3gate/p5gatef (88
+  archives x idx{0,12} each) prove byte-identity vs cathxa knobs-off at
+  787a5da8 / 4004c546 / 6bb43db5.
+
 ## Campaign plan
 
 - Phase 0: this scorer + baseline. DONE.
