@@ -472,6 +472,24 @@ PY
     [ -n "${PDVD_QL_BKG_WEIGHT:-}" ]    && QL_SWEEP_ARG+=(-S "ql_bkg_weight=${PDVD_QL_BKG_WEIGHT}")
     [ -n "${PDVD_QL_STRENGTH_CUTOFF:-}" ] && QL_SWEEP_ARG+=(-S "ql_strength_cutoff=${PDVD_QL_STRENGTH_CUTOFF}")
     [ -n "${PDVD_QL_LASSO_BWEIGHT:-}" ] && QL_SWEEP_ARG+=(-S "ql_lasso_boundary_weight=${PDVD_QL_LASSO_BWEIGHT}")
+    # ---- Shared-flash-aware rescues (doc 19 phase 5).
+    # PDVD_QL_EMPTY_RESCUE=1 (+PDVD_QL_RESCUE_METRIC_MAX): joint-emptiness
+    #   empty-flash rescue across drift sides.
+    # PDVD_QL_CLUSTER_RESCUE=1 (+PDVD_QL_CRESCUE_{KS,C2N,RLO,RHI}): per-run
+    #   cluster-centric adoption (gates REQUIRED — C++ 0 gates are inert).
+    # All unset (default) => keys omitted => byte-identical.
+    local QL_RESCUE_ARG=()
+    if [ "${PDVD_QL_EMPTY_RESCUE:-0}" = 1 ]; then
+        QL_RESCUE_ARG+=(-S "ql_empty_rescue_shared=true")
+        [ -n "${PDVD_QL_RESCUE_METRIC_MAX:-}" ] && QL_RESCUE_ARG+=(-S "ql_rescue_metric_max=${PDVD_QL_RESCUE_METRIC_MAX}")
+    fi
+    if [ "${PDVD_QL_CLUSTER_RESCUE:-0}" = 1 ]; then
+        QL_RESCUE_ARG+=(-S "ql_cluster_rescue_shared=true"
+                        -S "ql_cluster_rescue_ks_max=${PDVD_QL_CRESCUE_KS:-0.25}"
+                        -S "ql_cluster_rescue_c2n_max=${PDVD_QL_CRESCUE_C2N:-15}"
+                        -S "ql_cluster_rescue_ratio_lo=${PDVD_QL_CRESCUE_RLO:-0.3}"
+                        -S "ql_cluster_rescue_ratio_hi=${PDVD_QL_CRESCUE_RHI:-3.0}")
+    fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
         QL_SATFLAG_ARG=(-S "ql_use_saturation_flag=true")
@@ -565,6 +583,7 @@ PY
         "${QL_PEERR_ARG[@]}" \
         "${QL_QGATE_ARG[@]}" \
         "${QL_SWEEP_ARG[@]}" \
+        "${QL_RESCUE_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then

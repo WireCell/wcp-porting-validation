@@ -213,6 +213,15 @@ function(
     ql_lasso_lambda = null, ql_delta_charge = null, ql_delta_light = null,
     ql_delta_shape = null, ql_bkg_weight = null, ql_strength_cutoff = null,
     ql_lasso_boundary_weight = null,
+    // Shared-flash-aware rescues (doc 19 phase 5); false/null => keys
+    // suppressed => byte-identical.
+    ql_empty_rescue_shared = false,
+    ql_rescue_metric_max = null,
+    ql_cluster_rescue_shared = false,
+    ql_cluster_rescue_ks_max = null,
+    ql_cluster_rescue_c2n_max = null,
+    ql_cluster_rescue_ratio_lo = null,
+    ql_cluster_rescue_ratio_hi = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -367,7 +376,15 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       delta_shape=ql_delta_shape,
                       bkg_weight=ql_bkg_weight,
                       strength_cutoff=ql_strength_cutoff,
-                      lasso_boundary_weight=ql_lasso_boundary_weight);
+                      lasso_boundary_weight=ql_lasso_boundary_weight,
+                      // Shared-flash-aware rescues (doc 19 phase 5).
+                      empty_rescue_shared=ql_empty_rescue_shared,
+                      rescue_metric_max=ql_rescue_metric_max,
+                      cluster_rescue_shared=ql_cluster_rescue_shared,
+                      cluster_rescue_ks_max=ql_cluster_rescue_ks_max,
+                      cluster_rescue_chi2ndf_max=ql_cluster_rescue_c2n_max,
+                      cluster_rescue_ratio_lo=ql_cluster_rescue_ratio_lo,
+                      cluster_rescue_ratio_hi=ql_cluster_rescue_ratio_hi);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';
