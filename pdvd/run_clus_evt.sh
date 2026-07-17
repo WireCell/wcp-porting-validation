@@ -569,6 +569,22 @@ PY
         # (2026-07-17); toolkit C++ default stays false (key omitted => byte-identical).
         [ "${PDVD_QL_CRESCUE_PRECULL:-1}" = 1 ] && [ "${PDVD_QL_CRESCUE_PRECULL_ADD:-1}" = 1 ] \
             && QL_RESCUE_ARG+=(-S "ql_cluster_rescue_precull_additive=true")
+        # PDVD_QL_CRESCUE_RELAX=1 (+PDVD_QL_CRESCUE_RELAX_{KS,C2N,RLO,RHI,MINLEN_CM}):
+        # relaxed SECOND-CHANCE tier (doc 21) -- clusters the tight gates above
+        # leave unmatched get one more accept() with these relaxed gates,
+        # restricted to LONG clusters (>= MINLEN_CM).  Additive-only (existing
+        # matches can never change); adoptions carry the low-confidence
+        # `cluster_rescue_relaxed` dump flag.  DEFAULT OFF pending the nm4*
+        # sweep + owner op-point decision; expect ~1 wrong-flash adoption per
+        # real recovery at loose gates (relaxed_whatif on nm3).
+        if [ "${PDVD_QL_CRESCUE_RELAX:-0}" = 1 ]; then
+            QL_RESCUE_ARG+=(-S "ql_cluster_rescue_relaxed=true"
+                            -S "ql_cluster_rescue_relaxed_ks_max=${PDVD_QL_CRESCUE_RELAX_KS:-0.20}"
+                            -S "ql_cluster_rescue_relaxed_c2n_max=${PDVD_QL_CRESCUE_RELAX_C2N:-8}"
+                            -S "ql_cluster_rescue_relaxed_ratio_lo=${PDVD_QL_CRESCUE_RELAX_RLO:-0.4}"
+                            -S "ql_cluster_rescue_relaxed_ratio_hi=${PDVD_QL_CRESCUE_RELAX_RHI:-2.5}"
+                            -S "ql_cluster_rescue_relaxed_minlen_cm=${PDVD_QL_CRESCUE_RELAX_MINLEN_CM:-50}")
+        fi
     fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then

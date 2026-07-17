@@ -224,6 +224,15 @@ function(
     ql_cluster_rescue_ratio_hi = null,
     ql_cluster_rescue_precull = false,
     ql_cluster_rescue_precull_additive = false,
+    // Relaxed second-chance rescue tier (doc 21); false/null => keys
+    // suppressed => byte-identical.  min_len in CM (converted to native
+    // units here).
+    ql_cluster_rescue_relaxed = false,
+    ql_cluster_rescue_relaxed_ks_max = null,
+    ql_cluster_rescue_relaxed_c2n_max = null,
+    ql_cluster_rescue_relaxed_ratio_lo = null,
+    ql_cluster_rescue_relaxed_ratio_hi = null,
+    ql_cluster_rescue_relaxed_minlen_cm = null,
     // Post-QLMatching cathode-crossing STITCH tip-touch relaxation (stage-4
     // ClusteringCathodeConnect, cfg/.../protodunevd/clus.jsonnet).  Ports the
     // PDHD tip-touch branch to PDVD: when a genuine crosser's two halves reach
@@ -406,7 +415,16 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       cluster_rescue_ratio_lo=ql_cluster_rescue_ratio_lo,
                       cluster_rescue_ratio_hi=ql_cluster_rescue_ratio_hi,
                       cluster_rescue_precull=ql_cluster_rescue_precull,
-                      cluster_rescue_precull_additive=ql_cluster_rescue_precull_additive);
+                      cluster_rescue_precull_additive=ql_cluster_rescue_precull_additive,
+                      // Relaxed second-chance tier (doc 21).
+                      cluster_rescue_relaxed=ql_cluster_rescue_relaxed,
+                      cluster_rescue_relaxed_ks_max=ql_cluster_rescue_relaxed_ks_max,
+                      cluster_rescue_relaxed_chi2ndf_max=ql_cluster_rescue_relaxed_c2n_max,
+                      cluster_rescue_relaxed_ratio_lo=ql_cluster_rescue_relaxed_ratio_lo,
+                      cluster_rescue_relaxed_ratio_hi=ql_cluster_rescue_relaxed_ratio_hi,
+                      cluster_rescue_relaxed_min_length=
+                          if ql_cluster_rescue_relaxed_minlen_cm == null then null
+                          else ql_cluster_rescue_relaxed_minlen_cm * wc.cm);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

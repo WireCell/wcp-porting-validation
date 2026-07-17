@@ -72,6 +72,20 @@ SWEEP_GATES = {
     "t_.10/2/.6-1.6":    dict(ks_max=0.10, c2ndf_max=2.0,  ratio_lo=0.6, ratio_hi=1.6),
 }
 
+# --relaxed-whatif (round 2, doc 21): simulate a RELAXED second-chance rescue
+# tier atop the tag's real decisions (on nm3 dumps the tight tier's adoptions
+# are already inside auto_selected/matched, so whatif_event with these gates IS
+# the incremental second tier).  Eligibility is additionally sub-gated on
+# cluster length only (mirrors the planned C++ get_length() gate; the npoints
+# escape of the scorer's long definition deliberately does NOT apply here).
+# "pdhd" = PDHD's production cluster_rescue gates (pdhd/qlmatching.jsonnet).
+RELAX_GATES = {
+    "pdhd_.20/8/.4-2.5": dict(ks_max=0.20, c2ndf_max=8.0,  ratio_lo=0.4, ratio_hi=2.5),
+    "base_.25/15/.3-3":  dict(ks_max=0.25, c2ndf_max=15.0, ratio_lo=0.3, ratio_hi=3.0),
+    "t_.18/4/.5-2":      dict(ks_max=0.18, c2ndf_max=4.0,  ratio_lo=0.5, ratio_hi=2.0),
+}
+RELAX_MINLEN_CM = [0.0, 50.0, 100.0]
+
 
 def bundle_ratio(b):
     meas = b.get("total_PE", 0.0)
@@ -193,7 +207,7 @@ def census_event(calib, truth_entries, tol, min_len, min_npts):
 
 
 def whatif_event(clusters, by_main, matched_main, entries_by_uid, tol,
-                 min_len, min_npts, gates):
+                 min_len, min_npts, gates, relax_min_len=0.0):
     """Simulate precull rescue with `gates` on top of the current matched set.
     Returns 4 lists for LONG clusters:
       recovered  = adopted at a truth-positive flash time (a genuine win)
@@ -216,6 +230,8 @@ def whatif_event(clusters, by_main, matched_main, entries_by_uid, tol,
     for uid, bl in by_main.items():
         if uid in matched_main or not is_long(uid):
             continue
+        if relax_min_len and cluster_len_cm(clusters[uid]) < relax_min_len:
+            continue
         pool = [b for b in bl if not b.get("potential_bad_match")]
         cand = [b for b in pool if accepts(b, gates)]
         if not cand:
@@ -236,6 +252,91 @@ def whatif_event(clusters, by_main, matched_main, entries_by_uid, tol,
     return recovered, phantom, wrongflash, unlabeled
 
 
+def run_relaxed_whatif(args, truth):
+    """Round-2 (doc 21) grid RELAX_GATES x RELAX_MINLEN_CM atop the tag's real
+    decisions.  Writes relaxed_whatif.{md,json} beside the tag's census -- NEW
+    files, the census outputs are never touched."""
+    out_dir = os.path.join(args.out_root, args.tag)
+    os.makedirs(out_dir, exist_ok=True)
+    out_json = os.path.join(out_dir, "relaxed_whatif.json")
+    if os.path.exists(out_json) and not args.force:
+        sys.exit(f"refusing to overwrite {out_json} (M13); use --force")
+
+    keys = ("recovered", "phantom", "wrongflash", "unlabeled")
+    cells = {(g, ml): {k: [] for k in keys}
+             for g in RELAX_GATES for ml in RELAX_MINLEN_CM}
+    for idx in range(NEVT):
+        evt = evt_of_idx(idx)
+        try:
+            calib, _ = load_calib(args.work_root, args.tag, idx)
+        except FileNotFoundError:
+            print(f"WARN: no calib for idx {idx} (evt {evt})", file=sys.stderr)
+            continue
+        _, clusters, by_main, matched, entries_by_uid = census_event(
+            calib, truth[evt], args.tol, args.min_len_cm, args.min_npoints)
+        for gname, g in RELAX_GATES.items():
+            for ml in RELAX_MINLEN_CM:
+                out = whatif_event(clusters, by_main, matched, entries_by_uid,
+                                   args.tol, args.min_len_cm, args.min_npoints,
+                                   g, relax_min_len=ml)
+                for k, items in zip(keys, out):
+                    cells[(gname, ml)][k] += [
+                        dict(evt=evt, uid=uid, t_us=t,
+                             len_cm=round(cluster_len_cm(clusters[uid]), 1))
+                        for uid, t in items]
+
+    def prec(c):
+        known = sum(len(c[k]) for k in ("recovered", "phantom", "wrongflash"))
+        return f"{len(c['recovered'])/known:.2f}" if known else "n/a"
+
+    lines = [f"# Relaxed second-chance rescue what-if — tag `{args.tag}`", "",
+             "Simulated ON TOP of the tag's real decisions (tight tier already "
+             "inside `auto_selected`), precull pool, additive-only.  "
+             "Eligibility: scorer-long AND `len_cm >= min_len` (length only, "
+             "mirroring the planned C++ `get_length()` gate).  Column meanings "
+             "as in the census what-if; precision = recovered / "
+             "(recovered+phantom+wrongflash).", "",
+             "| gate set | min_len_cm | recovered | phantom | wrongflash | "
+             "unlabeled | precision |", "|---|---|---|---|---|---|---|"]
+    for gname in RELAX_GATES:
+        for ml in RELAX_MINLEN_CM:
+            c = cells[(gname, ml)]
+            lines.append(f"| {gname} | {ml:g} | {len(c['recovered'])} | "
+                         f"{len(c['phantom'])} | {len(c['wrongflash'])} | "
+                         f"{len(c['unlabeled'])} | {prec(c)} |")
+    lines += ["", "## Adoption details (recovered / phantom / wrongflash only)", ""]
+    for gname in RELAX_GATES:
+        for ml in RELAX_MINLEN_CM:
+            c = cells[(gname, ml)]
+            det = [(k, it) for k in ("recovered", "phantom", "wrongflash")
+                   for it in c[k]]
+            if not det:
+                continue
+            lines.append(f"### {gname} @ min_len {ml:g} cm")
+            lines.append("| verdict | evt | uid | len_cm | adopted t_us |")
+            lines.append("|---|---|---|---|---|")
+            for k, it in det:
+                lines.append(f"| {k} | {it['evt']} | {it['uid']} | "
+                             f"{it['len_cm']} | {it['t_us']} |")
+            lines.append("")
+    with open(os.path.join(out_dir, "relaxed_whatif.md"), "w") as fh:
+        fh.write("\n".join(lines) + "\n")
+    with open(out_json, "w") as fh:
+        json.dump(dict(tag=args.tag, relax_gates=RELAX_GATES,
+                       relax_minlen_cm=RELAX_MINLEN_CM,
+                       cells={f"{g}@{ml:g}": c for (g, ml), c in cells.items()}),
+                  fh, indent=1)
+
+    for gname in RELAX_GATES:
+        print(f"[relaxed {gname}] " + "; ".join(
+            f"len>={ml:g}: +{len(cells[(gname, ml)]['recovered'])} "
+            f"(ph {len(cells[(gname, ml)]['phantom'])}, "
+            f"wf {len(cells[(gname, ml)]['wrongflash'])}, "
+            f"unl {len(cells[(gname, ml)]['unlabeled'])})"
+            for ml in RELAX_MINLEN_CM))
+    print(f"wrote {out_dir}/relaxed_whatif.{{md,json}}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--tag", required=True)
@@ -247,9 +348,15 @@ def main():
     ap.add_argument("--min-npoints", type=int, default=100)
     ap.add_argument("--out-root", default="work/ql_scores")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--relaxed-whatif", action="store_true",
+                    help="run the round-2 relaxed-tier grid only "
+                         "(writes relaxed_whatif.{md,json}, census untouched)")
     args = ap.parse_args()
 
     truth = load_truth(args.gold, args.decisions_dir)
+    if args.relaxed_whatif:
+        run_relaxed_whatif(args, truth)
+        return
     out_dir = os.path.join(args.out_root, args.tag)
     os.makedirs(out_dir, exist_ok=True)
     if os.path.exists(os.path.join(out_dir, "unmatched_census.json")) and not args.force:
