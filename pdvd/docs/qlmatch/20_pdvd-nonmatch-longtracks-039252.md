@@ -209,6 +209,54 @@ PDVD idx 0/5/15 (precull-off and pure-precull) and **PDHD run 029107 evt
 all calib dumps + every mabc zip content-hash identical. The refactor changes
 output only when `cluster_rescue_precull_additive` is explicitly on.
 
+## 7. Decision numbers — baseline vs recommended (all 18 events)
+
+Two complementary views of `nm0` (baseline) vs `nm3` (recommended), computed
+from the calib dumps (`ql_display/ql_agree_score.py` + a direct long-cluster
+count). The Bee non-match button is the *second* table (all long clusters);
+the scan-agreement table is the subset the hand scan judged.
+
+**A. Scan agreement — long tracks judged against the frozen hand scan**
+
+| metric | baseline nm0 | recommended nm3 | change |
+|---|---|---|---|
+| scan positives (long) | 842 | 842 | — |
+| matched (agree) | 733 | 747 | **+14** |
+| **missed** | **109** | **95** | **−14** |
+| missed % | 12.9 % | 11.3 % | −1.7 pt |
+| phantom (scan-rejected) | 137 | 137 | **0** |
+| agree % (agree / judged) | 84.3 % | 84.5 % | +0.2 pt |
+| unlabeled new matches | 98 | 117 | +19 |
+
+**B. Bee non-match button — ALL long tracks, not just the scanned subset**
+
+| quantity | baseline nm0 | recommended nm3 | change |
+|---|---|---|---|
+| total long tracks (≥25 cm or ≥100 pts) | 1233 | 1233 | — |
+| **left non-matched (no flash)** | **193** | **157** | **−36** |
+| non-match fraction | 15.7 % | 12.7 % | −3.0 pt |
+
+**How to read this for the decision.**
+
+- The non-match button drops by **36 long tracks** (193 → 157). That is the
+  number the owner sees directly in Bee, and it is larger than the scan
+  table's −14 because the scan judged only ~840 of the 1233 long clusters.
+- Of those 36 newly-matched tracks, **~14 are confirmed correct** against the
+  hand scan (agree +14) and **~19 are new matches the scan never judged**
+  (unknown +19) — physically plausible but unverified, hence the rescan
+  requirement before adoption.
+- **Purity does not degrade**: phantom (scan-confirmed wrong matches) stays at
+  137, and agree % is unchanged (84.3 → 84.5 %). The gain is recall, not a
+  precision trade against the scanned set.
+- The residual cost is 4 regressions inside the −36 (1 cosmetic, 2 tracks the
+  tight gate drops, 1 wrong-flash) — small next to the 36 recovered, but the
+  reason the rescan matters.
+
+Net: **−36 non-matched long tracks in Bee at flat phantom**, of which ~14 are
+already scan-verified and ~19 await the owner's rescan. If the rescan confirms
+most of the 19, the effective non-match reduction stands; if many are wrong,
+fall back to the more conservative gates or to `nm2a`.
+
 ## Repro (rescue runs)
 
 ```bash
