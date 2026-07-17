@@ -182,6 +182,37 @@ function(
     ql_reject_overpred = false,
     ql_overpred_total_ratio = null,
     ql_overpred_maxch_ratio = null,
+    // Per-PD-family PE-error overrides (scan-tuning doc 19; C++
+    // pe_err_family_* knob, families [cathode XAs 4-11, PMTs]).  All null
+    // (default) => keys suppressed => byte-identical global error model.
+    ql_peerr_cath_floor = null,
+    ql_peerr_cath_frac = null,
+    ql_peerr_cath_lowpe_frac = null,
+    ql_peerr_cath_lowpe_knee = null,
+    ql_peerr_pmt_floor = null,
+    ql_peerr_pmt_frac = null,
+    ql_peerr_pmt_lowpe_frac = null,
+    ql_peerr_pmt_lowpe_knee = null,
+    // xtpc / selection quality gates (scan-tuning doc 19); null/false =>
+    // keys suppressed => byte-identical legacy behaviour.
+    ql_xtpc_pin_min_strength = null,
+    ql_xtpc_sc1_light_gate = false,
+    ql_xtpc_sc1_ks_max = null,
+    ql_xtpc_sc1_c2n_max = null,
+    ql_xtpc_cathode_ks_max = null,
+    ql_postcull_unflagged = false,
+    ql_postcull_ks_max = null,
+    ql_postcull_c2n_max = null,
+    // Sweepable ladder ceilings + LASSO regularization (doc 19 phase 4);
+    // null => the operating literals / C++ defaults, compiled JSON unchanged.
+    ql_hc_clean_ks = null, ql_hc_clean_c2 = null,
+    ql_hc_good_ks = null, ql_hc_good_c2 = null,
+    ql_hc_tb_ks = null, ql_hc_tb_c2 = null,
+    ql_hc_miss_ks = null, ql_hc_miss_c2 = null,
+    ql_hc_miss_min_ndf = null,
+    ql_lasso_lambda = null, ql_delta_charge = null, ql_delta_light = null,
+    ql_delta_shape = null, ql_bkg_weight = null, ql_strength_cutoff = null,
+    ql_lasso_boundary_weight = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -304,7 +335,39 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       flash_sel_fired_pe=ql_flash_sel_fired_pe,
                       reject_overpred=ql_reject_overpred,
                       overpred_total_ratio=ql_overpred_total_ratio,
-                      overpred_maxch_ratio=ql_overpred_maxch_ratio);
+                      overpred_maxch_ratio=ql_overpred_maxch_ratio,
+                      // Per-PD-family PE-error overrides (doc 19); all null
+                      // => qlmatching suppresses the family keys.
+                      pe_err_cath_floor=ql_peerr_cath_floor,
+                      pe_err_cath_frac=ql_peerr_cath_frac,
+                      pe_err_cath_lowpe_frac=ql_peerr_cath_lowpe_frac,
+                      pe_err_cath_lowpe_knee=ql_peerr_cath_lowpe_knee,
+                      pe_err_pmt_floor=ql_peerr_pmt_floor,
+                      pe_err_pmt_frac=ql_peerr_pmt_frac,
+                      pe_err_pmt_lowpe_frac=ql_peerr_pmt_lowpe_frac,
+                      pe_err_pmt_lowpe_knee=ql_peerr_pmt_lowpe_knee,
+                      // xtpc / selection quality gates (doc 19).
+                      xtpc_pin_min_strength=ql_xtpc_pin_min_strength,
+                      xtpc_sc1_light_gate=ql_xtpc_sc1_light_gate,
+                      xtpc_sc1_ks_max=ql_xtpc_sc1_ks_max,
+                      xtpc_sc1_c2n_max=ql_xtpc_sc1_c2n_max,
+                      xtpc_cathode_ks_max=ql_xtpc_cathode_ks_max,
+                      postcull_unflagged=ql_postcull_unflagged,
+                      postcull_ks_max=ql_postcull_ks_max,
+                      postcull_c2n_max=ql_postcull_c2n_max,
+                      // Sweepable ladder + LASSO regularization (doc 19).
+                      hc_clean_ks=ql_hc_clean_ks, hc_clean_c2=ql_hc_clean_c2,
+                      hc_good_ks=ql_hc_good_ks, hc_good_c2=ql_hc_good_c2,
+                      hc_tb_ks=ql_hc_tb_ks, hc_tb_c2=ql_hc_tb_c2,
+                      hc_miss_ks=ql_hc_miss_ks, hc_miss_c2=ql_hc_miss_c2,
+                      hc_miss_min_ndf=ql_hc_miss_min_ndf,
+                      lasso_lambda=ql_lasso_lambda,
+                      delta_charge=ql_delta_charge,
+                      delta_light=ql_delta_light,
+                      delta_shape=ql_delta_shape,
+                      bkg_weight=ql_bkg_weight,
+                      strength_cutoff=ql_strength_cutoff,
+                      lasso_boundary_weight=ql_lasso_boundary_weight);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

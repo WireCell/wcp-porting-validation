@@ -286,7 +286,7 @@ PY
     # Q/L diagnostic modes: containment off + a higher PE floor to bound the
     # un-pruned bundle count.  =1 also forces offsets 0 (offset hunt);
     # =2 keeps the measured offsets (closure validation).
-    local QL_CONTAIN=true QL_MINPE=25
+    local QL_CONTAIN=true QL_MINPE=${PDVD_QL_FLASH_MINPE:-25}
     if [ "${PDVD_QL_DIAG:-0}" = 1 ] || [ "${PDVD_QL_DIAG:-0}" = 2 ]; then
         QL_CONTAIN=false; QL_MINPE=100
     fi
@@ -410,6 +410,68 @@ PY
                         -S "ql_overpred_total_ratio=${PDVD_QL_OVERPRED_TOTAL:-15}"
                         -S "ql_overpred_maxch_ratio=${PDVD_QL_OVERPRED_MAXCH:-50}")
     fi
+    # ---- Per-PD-family PE-error overrides (scan-tuning docs/qlmatch/19_*.md).
+    # PDVD_QL_PEERR_{CATH,PMT}_{FLOOR,FRAC,LOWPE_FRAC,LOWPE_KNEE}: override the
+    # global pe_err model per family (cathode XAs 4-11 / PMTs) in BOTH error
+    # paths (LASSO floor/frac + bundle-chi2 incl. lowpe branch).  Any set env
+    # activates the family knob; unset members fall back to the global values.
+    # All unset (default) => keys omitted => byte-identical.
+    local QL_PEERR_ARG=()
+    local _pe_env _pe_var
+    for _pe_env in CATH_FLOOR CATH_FRAC CATH_LOWPE_FRAC CATH_LOWPE_KNEE \
+                   PMT_FLOOR PMT_FRAC PMT_LOWPE_FRAC PMT_LOWPE_KNEE; do
+        _pe_var="PDVD_QL_PEERR_${_pe_env}"
+        if [ -n "${!_pe_var:-}" ]; then
+            QL_PEERR_ARG+=(-S "ql_peerr_$(echo "$_pe_env" | tr '[:upper:]' '[:lower:]')=${!_pe_var}")
+        fi
+    done
+    # ---- xtpc / selection quality gates (scan-tuning docs/qlmatch/19_*.md).
+    # PDVD_QL_PIN_MIN_STRENGTH: pinned bundle loses the strength-cutoff exemption
+    #   below this LASSO solution (scan: phantom pins strength p50 0.00).
+    # PDVD_QL_SC1_LIGHT_GATE=1: xtpc consistent/scenario1 flags require the
+    #   bundle's own light to pass (ks/c2n ceilings PDVD_QL_SC1_KS/_C2N).
+    # PDVD_QL_CATHODE_KS_MAX: cathode-rescue survivors additionally need ks <= this.
+    # PDVD_QL_POSTCULL=1: post-fit cull of unflagged selections failing
+    #   PDVD_QL_POSTCULL_KS/_C2N.  All unset (default) => byte-identical.
+    local QL_QGATE_ARG=()
+    if [ -n "${PDVD_QL_PIN_MIN_STRENGTH:-}" ]; then
+        QL_QGATE_ARG+=(-S "ql_xtpc_pin_min_strength=${PDVD_QL_PIN_MIN_STRENGTH}")
+    fi
+    if [ "${PDVD_QL_SC1_LIGHT_GATE:-0}" = 1 ]; then
+        QL_QGATE_ARG+=(-S "ql_xtpc_sc1_light_gate=true")
+        [ -n "${PDVD_QL_SC1_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_xtpc_sc1_ks_max=${PDVD_QL_SC1_KS}")
+        [ -n "${PDVD_QL_SC1_C2N:-}" ] && QL_QGATE_ARG+=(-S "ql_xtpc_sc1_c2n_max=${PDVD_QL_SC1_C2N}")
+    fi
+    if [ -n "${PDVD_QL_CATHODE_KS_MAX:-}" ]; then
+        QL_QGATE_ARG+=(-S "ql_xtpc_cathode_ks_max=${PDVD_QL_CATHODE_KS_MAX}")
+    fi
+    if [ "${PDVD_QL_POSTCULL:-0}" = 1 ]; then
+        QL_QGATE_ARG+=(-S "ql_postcull_unflagged=true")
+        [ -n "${PDVD_QL_POSTCULL_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_ks_max=${PDVD_QL_POSTCULL_KS}")
+        [ -n "${PDVD_QL_POSTCULL_C2N:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_c2n_max=${PDVD_QL_POSTCULL_C2N}")
+    fi
+    # ---- Sweepable ladder ceilings + LASSO regularization (doc 19 phase 4).
+    # PDVD_QL_HC_{CLEAN,GOOD,TB,MISS}_{KS,C2N}, PDVD_QL_HC_MISS_MIN_NDF,
+    # PDVD_QL_LASSO_LAMBDA, PDVD_QL_DELTA_{CHARGE,LIGHT,SHAPE},
+    # PDVD_QL_BKG_WEIGHT, PDVD_QL_STRENGTH_CUTOFF, PDVD_QL_LASSO_BWEIGHT.
+    # Unset (default) => operating literals / C++ defaults, config unchanged.
+    local QL_SWEEP_ARG=()
+    [ -n "${PDVD_QL_HC_CLEAN_KS:-}" ]  && QL_SWEEP_ARG+=(-S "ql_hc_clean_ks=${PDVD_QL_HC_CLEAN_KS}")
+    [ -n "${PDVD_QL_HC_CLEAN_C2N:-}" ] && QL_SWEEP_ARG+=(-S "ql_hc_clean_c2=${PDVD_QL_HC_CLEAN_C2N}")
+    [ -n "${PDVD_QL_HC_GOOD_KS:-}" ]   && QL_SWEEP_ARG+=(-S "ql_hc_good_ks=${PDVD_QL_HC_GOOD_KS}")
+    [ -n "${PDVD_QL_HC_GOOD_C2N:-}" ]  && QL_SWEEP_ARG+=(-S "ql_hc_good_c2=${PDVD_QL_HC_GOOD_C2N}")
+    [ -n "${PDVD_QL_HC_TB_KS:-}" ]     && QL_SWEEP_ARG+=(-S "ql_hc_tb_ks=${PDVD_QL_HC_TB_KS}")
+    [ -n "${PDVD_QL_HC_TB_C2N:-}" ]    && QL_SWEEP_ARG+=(-S "ql_hc_tb_c2=${PDVD_QL_HC_TB_C2N}")
+    [ -n "${PDVD_QL_HC_MISS_KS:-}" ]   && QL_SWEEP_ARG+=(-S "ql_hc_miss_ks=${PDVD_QL_HC_MISS_KS}")
+    [ -n "${PDVD_QL_HC_MISS_C2N:-}" ]  && QL_SWEEP_ARG+=(-S "ql_hc_miss_c2=${PDVD_QL_HC_MISS_C2N}")
+    [ -n "${PDVD_QL_HC_MISS_MIN_NDF:-}" ] && QL_SWEEP_ARG+=(-S "ql_hc_miss_min_ndf=${PDVD_QL_HC_MISS_MIN_NDF}")
+    [ -n "${PDVD_QL_LASSO_LAMBDA:-}" ]  && QL_SWEEP_ARG+=(-S "ql_lasso_lambda=${PDVD_QL_LASSO_LAMBDA}")
+    [ -n "${PDVD_QL_DELTA_CHARGE:-}" ]  && QL_SWEEP_ARG+=(-S "ql_delta_charge=${PDVD_QL_DELTA_CHARGE}")
+    [ -n "${PDVD_QL_DELTA_LIGHT:-}" ]   && QL_SWEEP_ARG+=(-S "ql_delta_light=${PDVD_QL_DELTA_LIGHT}")
+    [ -n "${PDVD_QL_DELTA_SHAPE:-}" ]   && QL_SWEEP_ARG+=(-S "ql_delta_shape=${PDVD_QL_DELTA_SHAPE}")
+    [ -n "${PDVD_QL_BKG_WEIGHT:-}" ]    && QL_SWEEP_ARG+=(-S "ql_bkg_weight=${PDVD_QL_BKG_WEIGHT}")
+    [ -n "${PDVD_QL_STRENGTH_CUTOFF:-}" ] && QL_SWEEP_ARG+=(-S "ql_strength_cutoff=${PDVD_QL_STRENGTH_CUTOFF}")
+    [ -n "${PDVD_QL_LASSO_BWEIGHT:-}" ] && QL_SWEEP_ARG+=(-S "ql_lasso_boundary_weight=${PDVD_QL_LASSO_BWEIGHT}")
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
         QL_SATFLAG_ARG=(-S "ql_use_saturation_flag=true")
@@ -500,6 +562,9 @@ PY
         "${QL_ROBUSTGAP_ARG[@]}" \
         "${QL_XTPCRESCUE_ARG[@]}" \
         "${QL_CATHOP_ARG[@]}" \
+        "${QL_PEERR_ARG[@]}" \
+        "${QL_QGATE_ARG[@]}" \
+        "${QL_SWEEP_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
