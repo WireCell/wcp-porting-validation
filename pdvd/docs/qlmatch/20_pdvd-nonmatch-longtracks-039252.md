@@ -189,6 +189,26 @@ lesson: rescue-added bundles without a truth verdict must be eyeballed before
 trust). The `nm3` Bee zips (`work/039252_*_nm3/mabc-all-apa.zip`) are ready for
 that rescan.
 
+**Config-only fallback (`nm2a`, no C++ needed):** `nm2a` is one cluster worse
+(missed 96 vs 95) and keeps the two gross wrong-flash switches the additive knob
+removes, but it needs ONLY the pre-existing `cluster_rescue_precull` threading
+(`PDVD_QL_CRESCUE_PRECULL=1` + the tight gates) — no new C++ lib. If the owner
+prefers the zero-cross-detector-risk path, `nm2a` is the clean choice.
+
+**What the owner will see in Bee:** the `missed` metric counts only the
+*scanned* long positives; the non-match button shows *all* non-matched
+clusters. Net there is ≈ −13 long tracks visible as newly matched, but the
+rescan will also see the 2 tight-gate losses become non-matches and 1 track
+(uid67) hidden behind a wrong-flash match — so eyeball those, not just the wins.
+
+**Byte-identity of the shared C++ (both affected detectors):** the additive
+commit edits `rescue_unmatched_clusters`, which **PDHD** runs in production
+(`cluster_rescue_precull` hard-ON = the pure-precull branch). Gated on BOTH:
+PDVD idx 0/5/15 (precull-off and pure-precull) and **PDHD run 029107 evt
+983/991** (precull-ON, actively rescuing) — new lib vs the pre-additive lib,
+all calib dumps + every mabc zip content-hash identical. The refactor changes
+output only when `cluster_rescue_precull_additive` is explicitly on.
+
 ## Repro (rescue runs)
 
 ```bash
