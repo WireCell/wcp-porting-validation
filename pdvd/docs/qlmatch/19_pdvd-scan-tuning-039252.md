@@ -197,6 +197,46 @@ xtpc_pin 15.1→6.3%, scenario1 25.4→4.5%, cathode_rescued 68.9→10.0%.
 The +17 missed are phantom-kills leaving their cluster unmatched —
 Phase 5 rescue territory.
 
+## Phase 4 — ladder ceilings + LASSO regularization sweep
+
+Combined base `tune_c1` = pe1 error model + all four Phase 3 gates:
+**agree 81.8%**, phantom 161, missed 119, unknown 127 — slightly better
+than gates-alone on agree/phantom, worse on missed (the tighter errors
+kill a few more borderline true matches; rescue territory).
+
+Config plumbing (commit e869109c toolkit, 1167907 runner envs): PDVD
+jsonnet null-default params for the ladder ceilings
+(`hc_{clean,good,tb,miss}_{ks,c2n}`, `hc_miss_min_ndf`) and the LASSO
+regularization terms (`lasso_lambda`, `delta_{charge,light,shape}`,
+`bkg_weight`, `strength_cutoff`, `lasso_boundary_weight`), all
+key-suppressed — compiled JSON byte-identical when unset.
+
+One-at-a-time sweep on top of the `tune_c1` env (9 tags, matching-only
+reprocess, all 18 events each):
+
+| tag | knob change | agree% | phantom | missed | unknown |
+|---|---|---|---|---|---|
+| tune_c1 (base) | — | 81.8% | 161 | 119 | 127 |
+| tune_c1_hc12 | hc c2n ceilings 12 (miss 30) | **82.7%** | **152** | **113** | 98 |
+| tune_c1_hc20 | hc c2n ceilings 20 (miss 45) | 82.1% | 158 | 115 | 109 |
+| tune_c1_sc08 | strength_cutoff 0.08 | 82.0% | 158 | 121 | 129 |
+| tune_c1_lam02 | lasso_lambda 0.2 | **83.2%** | **145** | 126 | 127 |
+| tune_c1_lam005 | lasso_lambda 0.05 | 82.5% | 153 | 119 | 162 |
+| tune_c1_bkg03 | bkg_weight 0.3 | 81.9% | 160 | 119 | 127 |
+| tune_c1_bkg08 | bkg_weight 0.8 | 81.8% | 161 | 120 | 127 |
+| tune_c1_fm15 | flash_minPE 15 | 82.0% | 157 | 127 | 130 |
+| tune_c1_fs8 | flash_sel_minPE 8 | 81.7% | 162 | 119 | 128 |
+
+Reading: two winners. `hc12` — tightening the high-consistent chi2/ndf
+ceilings from 35/60 to 12/30 (matching the recalibrated chi2 scale from
+Phase 2, where chi2/ndf of true matches sits at ~1-3) improves all three
+metrics at once. `lam02` — doubling the LASSO L1 strength kills the most
+phantoms (161→145, sparser solutions drop weak double-assignments) at the
+cost of +7 missed. `bkg_weight`, `flash_sel_minPE` are null;
+`strength_cutoff` 0.08 and `flash_minPE` 15 slightly negative; `lam005`
+inflates the unknown (low-confidence) pool. Next: combine hc12+lam02, and
+let Phase 5 rescues attack the missed pool.
+
 ## Campaign plan
 
 - Phase 0: this scorer + baseline. DONE.
