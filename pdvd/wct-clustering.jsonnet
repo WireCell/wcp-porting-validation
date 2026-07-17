@@ -223,6 +223,7 @@ function(
     ql_cluster_rescue_ratio_lo = null,
     ql_cluster_rescue_ratio_hi = null,
     ql_cluster_rescue_precull = false,
+    ql_cluster_rescue_precull_additive = false,
     // Post-QLMatching cathode-crossing STITCH tip-touch relaxation (stage-4
     // ClusteringCathodeConnect, cfg/.../protodunevd/clus.jsonnet).  Ports the
     // PDHD tip-touch branch to PDVD: when a genuine crosser's two halves reach
@@ -404,7 +405,8 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       cluster_rescue_chi2ndf_max=ql_cluster_rescue_c2n_max,
                       cluster_rescue_ratio_lo=ql_cluster_rescue_ratio_lo,
                       cluster_rescue_ratio_hi=ql_cluster_rescue_ratio_hi,
-                      cluster_rescue_precull=ql_cluster_rescue_precull);
+                      cluster_rescue_precull=ql_cluster_rescue_precull,
+                      cluster_rescue_precull_additive=ql_cluster_rescue_precull_additive);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';

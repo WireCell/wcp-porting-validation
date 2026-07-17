@@ -550,6 +550,11 @@ PY
         # (doc 20).  Default OFF (0) => toolkit key omitted => byte-identical.
         [ "${PDVD_QL_CRESCUE_PRECULL:-0}" = 1 ] \
             && QL_RESCUE_ARG+=(-S "ql_cluster_rescue_precull=true")
+        # PDVD_QL_CRESCUE_PRECULL_ADD=1: additive precull -- snapshot pool primary,
+        # pre-cull pool fallback-only, so precull adds without re-deciding/mis-switching
+        # already-rescued clusters (doc 20).  Default OFF => key omitted => byte-identical.
+        [ "${PDVD_QL_CRESCUE_PRECULL:-0}" = 1 ] && [ "${PDVD_QL_CRESCUE_PRECULL_ADD:-0}" = 1 ] \
+            && QL_RESCUE_ARG+=(-S "ql_cluster_rescue_precull_additive=true")
     fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then
