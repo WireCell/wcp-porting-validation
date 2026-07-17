@@ -569,20 +569,25 @@ PY
         # (2026-07-17); toolkit C++ default stays false (key omitted => byte-identical).
         [ "${PDVD_QL_CRESCUE_PRECULL:-1}" = 1 ] && [ "${PDVD_QL_CRESCUE_PRECULL_ADD:-1}" = 1 ] \
             && QL_RESCUE_ARG+=(-S "ql_cluster_rescue_precull_additive=true")
-        # PDVD_QL_CRESCUE_RELAX=1 (+PDVD_QL_CRESCUE_RELAX_{KS,C2N,RLO,RHI,MINLEN_CM}):
+        # PDVD_QL_CRESCUE_RELAX (+PDVD_QL_CRESCUE_RELAX_{KS,C2N,RLO,RHI,MINLEN_CM}):
         # relaxed SECOND-CHANCE tier (doc 21) -- clusters the tight gates above
         # leave unmatched get one more accept() with these relaxed gates,
         # restricted to LONG clusters (>= MINLEN_CM).  Additive-only (existing
-        # matches can never change); adoptions carry the low-confidence
-        # `cluster_rescue_relaxed` dump flag.  DEFAULT OFF pending the nm4*
-        # sweep + owner op-point decision; expect ~1 wrong-flash adoption per
-        # real recovery at loose gates (relaxed_whatif on nm3).
-        if [ "${PDVD_QL_CRESCUE_RELAX:-0}" = 1 ]; then
+        # matches can never change, verified empirically on all nm4* tags);
+        # adoptions carry the low-confidence `cluster_rescue_relaxed` dump flag.
+        # RELAXED TIER (nm4b) = PRODUCTION DEFAULT since 2026-07-17 (doc 21 §5,
+        # owner adoption): gates .25/15/.3-3.0 @ 50 cm = the nm4b sweep winner
+        # (missed 95->91 on the scanned 18-evt set; 26 adoptions = 4 provably
+        # right / 7 provably wrong / 15 rescan-only, ALL flagged in the dump).
+        # NOT byte-identical (adds matches); toolkit C++/jsonnet defaults stay
+        # OFF.  Revert: PDVD_QL_CRESCUE_RELAX=0.  The nm4a PDHD-gate point
+        # (.20/8/.4-2.5) underperformed (1 recovered / 5 wrong) -- see doc 21.
+        if [ "${PDVD_QL_CRESCUE_RELAX:-1}" = 1 ]; then
             QL_RESCUE_ARG+=(-S "ql_cluster_rescue_relaxed=true"
-                            -S "ql_cluster_rescue_relaxed_ks_max=${PDVD_QL_CRESCUE_RELAX_KS:-0.20}"
-                            -S "ql_cluster_rescue_relaxed_c2n_max=${PDVD_QL_CRESCUE_RELAX_C2N:-8}"
-                            -S "ql_cluster_rescue_relaxed_ratio_lo=${PDVD_QL_CRESCUE_RELAX_RLO:-0.4}"
-                            -S "ql_cluster_rescue_relaxed_ratio_hi=${PDVD_QL_CRESCUE_RELAX_RHI:-2.5}"
+                            -S "ql_cluster_rescue_relaxed_ks_max=${PDVD_QL_CRESCUE_RELAX_KS:-0.25}"
+                            -S "ql_cluster_rescue_relaxed_c2n_max=${PDVD_QL_CRESCUE_RELAX_C2N:-15}"
+                            -S "ql_cluster_rescue_relaxed_ratio_lo=${PDVD_QL_CRESCUE_RELAX_RLO:-0.3}"
+                            -S "ql_cluster_rescue_relaxed_ratio_hi=${PDVD_QL_CRESCUE_RELAX_RHI:-3.0}"
                             -S "ql_cluster_rescue_relaxed_minlen_cm=${PDVD_QL_CRESCUE_RELAX_MINLEN_CM:-50}")
         fi
     fi

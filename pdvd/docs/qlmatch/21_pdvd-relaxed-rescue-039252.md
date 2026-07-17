@@ -1,6 +1,7 @@
 # 21 — Relaxed second-chance rescue for long unmatched clusters (039252, round 2)
 
-Status: sweep COMPLETE, defaults OFF — **awaiting owner operating-point decision**.
+Status: COMPLETE — **nm4b ADOPTED as PDVD runner default 2026-07-17 (owner
+ruling)**; toolkit C++/jsonnet knobs stay OFF byte-identical.
 Follows doc 20 (nm3 adoption). Toolkit commits `3c90eae8` (C++ knob family) +
 `717e12f5` (PDVD cfg threading); wcp `994accc` (runner envs + census extension).
 
