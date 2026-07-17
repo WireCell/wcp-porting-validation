@@ -540,8 +540,10 @@ def make_light_fig(title):
                      line_color="#333333", fill_alpha=0.85)
     # saturation-flagged OpDets of the current flash (DAPHNE rail): orange ring
     # drawn on top of the live marker. The measured PE there is the REPAIRED
-    # value and the prediction is shown in full -- the flag only means the
-    # channel is excluded from the chi2/KS fit.
+    # value and the prediction is shown in full. Since the keep round the
+    # channel STAYS in the chi2/KS fit with an inflated error
+    # (chi2_sat_inflate); only the LASSO amplitude solve still drops it
+    # (a railed value is a lower bound and must not constrain the solve).
     sat_wall = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
     sat_inner = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
     f.scatter("z", "y", source=sat_wall, marker="circle", size=16,
@@ -549,8 +551,9 @@ def make_light_fig(title):
     f.scatter("z", "y", source=sat_inner, marker="square", size=15,
               fill_color=None, line_color="#ff7f0e", line_width=2.2)
     # readout-uncovered OpDets of the current flash (self-trigger channels
-    # with no snippet over the flash window): NO DATA -- the measured 0 is
-    # not a measurement and the channel is excluded from the fit.
+    # with no snippet over the flash window): the self-trigger did not fire.
+    # Since the keep round the channel STAYS in the fit at measured 0 PE
+    # (no self-trigger => consistent with ~0, an informative zero).
     cov_wall = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
     cov_inner = ColumnDataSource(data=dict(z=[], y=[], ch=[]))
     f.scatter("z", "y", source=cov_wall, marker="circle_x", size=16,
@@ -604,17 +607,18 @@ def make_hist_fig(title):
            legend_label="predicted")
     f.scatter("x", "pe", source=pred_src, marker="circle", size=4,
               fill_color="#d62728", line_color=None, legend_label="predicted")
-    # rail-flagged channels: repaired measured PE, shown but excluded from
-    # the chi2/KS fit (and from the pred/meas ratio panel).
+    # rail-flagged channels: repaired measured PE, kept in the chi2/KS fit
+    # with an inflated error since the keep round (LASSO still drops them).
     f.scatter("x", "pe", source=sat_src, marker="triangle", size=9,
               fill_color="#ff7f0e", line_color=None,
-              legend_label="saturated (excl. fit)")
-    # readout-uncovered channels: no snippet over the flash window, the 0 is
-    # NOT a measurement; marker drawn at the predicted PE.
+              legend_label="saturated (repaired, in fit)")
+    # readout-uncovered channels: no snippet over the flash window; the
+    # measured 0 stays in the fit since the keep round. Marker drawn at the
+    # predicted PE so the pull of that zero is visible.
     cov_src = ColumnDataSource(data=dict(x=[], pe=[]))
     f.scatter("x", "pe", source=cov_src, marker="circle_x", size=9,
               fill_color=None, line_color="#7f7f7f", line_width=1.5,
-              legend_label="no data (excl. fit)")
+              legend_label="no readout (0 in fit)")
     f.legend.label_text_font_size = "9px"
     f.legend.padding = 2
     f.legend.location = "top_right"
@@ -660,31 +664,39 @@ HIST = {group: {"overlay": make_hist_fig("%s meas vs pred" % GROUP_NAME[group]),
         for group in GROUPS}
 
 # Charge-projection figures (focused bundle's clusters, T0-shifted, in the fixed
-# detector box; both volume boxes drawn). XY, YZ (z horiz, y vert), XZ (x horiz, z
-# vert). In PDVD x is the VERTICAL drift coordinate (bottom anode -335.8, cathode ~0,
-# top anode +335.8).
+# detector box; both volume boxes drawn). In PDVD x is the VERTICAL drift coordinate
+# (bottom anode -335.8, cathode ~0, top anode +335.8), so the two panels carrying x
+# put it on the VERTICAL axis, matching the physical detector and the Bee display:
+# Y-X (y horiz, x vert), Y-Z (z horiz, y vert), Z-X (z horiz, x vert).
 proj_kw = dict(height=320, tools="pan,wheel_zoom,box_zoom,reset,save",
                active_scroll="wheel_zoom")
-f_xy = figure(title="X-Y", width=380, **proj_kw)
+f_yx = figure(title="Y-X", width=380, **proj_kw)
 f_yz = figure(title="Y-Z", width=380, **proj_kw)
-f_xz = figure(title="X-Z", width=380, **proj_kw)
-f_xy.xaxis.axis_label, f_xy.yaxis.axis_label = "x (cm)", "y (cm)"
+f_zx = figure(title="Z-X", width=380, **proj_kw)
+f_yx.xaxis.axis_label, f_yx.yaxis.axis_label = "y (cm)", "x (cm)"
 f_yz.xaxis.axis_label, f_yz.yaxis.axis_label = "z (cm)", "y (cm)"
-f_xz.xaxis.axis_label, f_xz.yaxis.axis_label = "x (cm)", "z (cm)"
+f_zx.xaxis.axis_label, f_zx.yaxis.axis_label = "z (cm)", "x (cm)"
+# Bee's VD scene is a pure +90 deg rotation about z (reverseDrift off => no mirror),
+# which puts +y to the LEFT in its front view ('z' key, x-y) and DOWNWARD in its top
+# view ('y' key). Flip the y direction here so both panels carrying y read the same way
+# round as Bee; x (vertical) and z (horizontal) already agree. Range-flip, not
+# coordinate negation, so the tick labels keep the true y values and autorange survives.
+f_yx.x_range.flipped = True   # y is horizontal in Y-X
+f_yz.y_range.flipped = True   # y is vertical in Y-Z
 
 # focus cluster points (blue), all selected clusters as context (gray), the selected
 # clusters in the current group (green, on top of gray), plus the box outlines.
 foc_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))
 ctx_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))
 ctxg_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))
-box_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
-                                     xs_xz=[], ys_xz=[]))
-f_xy.multi_line(xs="xs_xy", ys="ys_xy", source=box_src, line_color="#cc4444", line_width=1)
+box_src = ColumnDataSource(data=dict(xs_yx=[], ys_yx=[], xs_yz=[], ys_yz=[],
+                                     xs_zx=[], ys_zx=[]))
+f_yx.multi_line(xs="xs_yx", ys="ys_yx", source=box_src, line_color="#cc4444", line_width=1)
 f_yz.multi_line(xs="xs_yz", ys="ys_yz", source=box_src, line_color="#cc4444", line_width=1)
-f_xz.multi_line(xs="xs_xz", ys="ys_xz", source=box_src, line_color="#cc4444", line_width=1)
+f_zx.multi_line(xs="xs_zx", ys="ys_zx", source=box_src, line_color="#cc4444", line_width=1)
 # gray = all SELECTED tracks (any group) as context; green = selected tracks IN THE
 # CURRENT group (overlaid on gray); blue = the focused (clicked) bundle, on top.
-for f, hx, hy in ((f_xy, "x", "y"), (f_yz, "z", "y"), (f_xz, "x", "z")):
+for f, hx, hy in ((f_yx, "y", "x"), (f_yz, "z", "y"), (f_zx, "z", "x")):
     f.scatter(hx, hy, source=ctx_src, marker="circle", size=2,
               fill_color="#bbbbbb", line_color=None, fill_alpha=0.4)
     f.scatter(hx, hy, source=ctxg_src, marker="circle", size=3,
@@ -917,12 +929,14 @@ def render_light():
         pred = pred_full[chans]
         # per-flash DAPHNE-rail flags (dump "sat" array; absent on pre-flag
         # dumps): measured is the repaired value, prediction is the FULL
-        # prediction -- the flag only removes the channel from chi2/KS.
+        # prediction. Keep round: the channel stays in chi2/KS with an
+        # inflated error; only the LASSO amplitude solve drops it.
         sat = (np.array(flash["sat"])[chans].astype(bool)
                if flash.get("sat") else np.zeros(meas.size, bool))
         # readout-coverage fractions (dump "cov" array; absent on archives
         # without the emit_coverage chain): cov < 1 = the channel had no
-        # (full) snippet over the flash window -- its 0 is NOT a measurement.
+        # (full) snippet over the flash window. Keep round: the measured 0
+        # stays in the fit (informative zero).
         nodata = (np.array(flash["cov"])[chans] < 1.0
                   if flash.get("cov") else np.zeros(meas.size, bool))
 
@@ -965,18 +979,19 @@ def render_light():
         ho["sat"].data = dict(x=xidx[sat].tolist(), pe=meas[sat].tolist())
         # no-data marker drawn at the PREDICTED PE (measured is a fake 0)
         ho["cov"].data = dict(x=xidx[nodata].tolist(), pe=pred[nodata].tolist())
-        # ratio undefined where measured PE is 0; rail-flagged and uncovered
-        # channels are excluded from the fit, so drop them here too.
-        mask = (meas > 0) & ~sat & ~nodata
+        # ratio undefined where measured PE is 0. Keep round: rail-flagged and
+        # uncovered channels stay in the fit, so keep them in the ratio too
+        # (uncovered channels drop out naturally via their measured 0).
+        mask = meas > 0
         hr["src"].data = dict(x=xidx[mask].tolist(),
                               ratio=(pred[mask] / meas[mask]).tolist())
         ho["fig"].title.text = ("%s meas vs pred  (gid %d, t=%.1f us)"
                                 % (GROUP_NAME[group], gid, flash["time"]))
         hr["fig"].title.text = ("%s pred/meas  (%d/%d chans meas>0%s%s)"
                                 % (GROUP_NAME[group], int(mask.sum()), meas.size,
-                                   ", %d sat excl." % int(sat.sum())
+                                   ", %d sat in fit" % int(sat.sum())
                                    if sat.any() else "",
-                                   ", %d no-data" % int(nodata.sum())
+                                   ", %d no-readout in fit" % int(nodata.sum())
                                    if nodata.any() else ""))
         for hpanel in (ho, hr):
             set_subblock_sep(hpanel, group, boundary, meas.size)
@@ -986,23 +1001,23 @@ def box_lines(g):
     """Return the rectangle polylines for one drift box in the three projections."""
     ax, cx = g["anode_x"], g["cathode_x"]
     ylo, yhi, zlo, zhi = g["y_lo"], g["y_hi"], g["z_lo"], g["z_hi"]
-    xy = ([ax, cx, cx, ax, ax], [ylo, ylo, yhi, yhi, ylo])      # x-y
-    yz = ([zlo, zhi, zhi, zlo, zlo], [ylo, ylo, yhi, yhi, ylo])  # z-y
-    xz = ([ax, cx, cx, ax, ax], [zlo, zlo, zhi, zhi, zlo])       # x-z
-    return xy, yz, xz
+    yx = ([ylo, ylo, yhi, yhi, ylo], [ax, cx, cx, ax, ax])       # y horiz, x vert
+    yz = ([zlo, zhi, zhi, zlo, zlo], [ylo, ylo, yhi, yhi, ylo])  # z horiz, y vert
+    zx = ([zlo, zlo, zhi, zhi, zlo], [ax, cx, cx, ax, ax])       # z horiz, x vert
+    return yx, yz, zx
 
 
 def render_projections():
     evt = state["evt"]
     # both drift boxes always drawn (the fixed detector frame)
-    xs_xy, ys_xy, xs_yz, ys_yz, xs_xz, ys_xz = [], [], [], [], [], []
+    xs_yx, ys_yx, xs_yz, ys_yz, xs_zx, ys_zx = [], [], [], [], [], []
     for apa in sorted(evt.geom):
-        xy, yz, xz = box_lines(evt.geom[apa])
-        xs_xy.append(xy[0]); ys_xy.append(xy[1])
+        yx, yz, zx = box_lines(evt.geom[apa])
+        xs_yx.append(yx[0]); ys_yx.append(yx[1])
         xs_yz.append(yz[0]); ys_yz.append(yz[1])
-        xs_xz.append(xz[0]); ys_xz.append(xz[1])
-    box_src.data = dict(xs_xy=xs_xy, ys_xy=ys_xy, xs_yz=xs_yz, ys_yz=ys_yz,
-                        xs_xz=xs_xz, ys_xz=ys_xz)
+        xs_zx.append(zx[0]); ys_zx.append(zx[1])
+    box_src.data = dict(xs_yx=xs_yx, ys_yx=ys_yx, xs_yz=xs_yz, ys_yz=ys_yz,
+                        xs_zx=xs_zx, ys_zx=ys_zx)
 
     # context: ALL selected matches (any group, both volumes), T0-shifted, drawn gray;
     # the selected matches IN THE CURRENT group are additionally drawn green on top.
@@ -1603,7 +1618,7 @@ header = Div(text="<h2>PDVD Q/L matching hand-scan</h2>", width=1100)
 layout = column(
     # Charge-projection views first so a small monitor shows the plots up top; all the
     # controls / tables / light panels follow below (top half = plots, bottom = operate).
-    row(f_xy, f_yz, f_xz),
+    row(f_yx, f_yz, f_zx),
     proj_info,
     header,
     controls,
