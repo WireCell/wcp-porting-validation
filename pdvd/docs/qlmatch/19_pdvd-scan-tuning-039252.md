@@ -94,10 +94,58 @@ as the top target (Phase 3). Missed rate is dominated by non-flash-cut misses
 (0 of 91 are flash-cut), i.e. the flash survives but no auto bundle picks it —
 LASSO/ladder/rescue territory, not flash admission.
 
+## Phase 1 — Pull analysis + disagreement taxonomy (`ql_display/ql_pull_diag.py`)
+
+Repro: `python ql_display/ql_pull_diag.py --tag cathxa --out work/ql_scores/cathxa/pull_diag.json`
+
+Pulls (pe−pred)/σ, σ rebuilt exactly as `TimingTPCBundle::examine_bundle`
+(verified by 2%-level chi2 reproduction on 700/751 confirmed matches; the 51
+excluded are merged/xtpc-joint dumps). Note: `quality_params` in the calib
+dump omits `pe_err_lowpe_frac/knee` (active 2.0/10.0 verified by the
+reproduction guard) — dump gap to close in Phase 2.
+
+| family | subset | n | mean | rms | median | mad |
+|---|---|---|---|---|---|---|
+| cath_xa | nom | 4129 | 2.08 | 4.79 | 0.62 | 1.50 |
+| cath_xa | sat | 1458 | 0.53 | 1.03 | 0.55 | 1.08 |
+| pmt | nom | 3930 | 0.53 | 1.75 | 0.15 | 0.85 |
+
+Readings:
+- **Saturated cathode-XA channels are already calibrated** (RMS 1.03):
+  `chi2_sat_inflate 0.5` is NOT too big — keep it.
+- **Nominal cathode-XA errors are far too small** in the 10–500 pred-PE range
+  (per-bin mean pulls +2.8…+4.0, RMS 5–7.7, MAD 2.1–2.9): systematic
+  underprediction (measured ≫ predicted) that the current frac 0.60 does not
+  cover. Target: family-scoped larger frac / lowpe params (Phase 2).
+- PMTs mildly under-inflated (RMS 1.75), slight overprediction at high pred
+  (mean −1.1 at 20–50 PE).
+
+Exclusive admission-path taxonomy of objective long-track judged autos:
+
+| path | agree | phantom | phantom% |
+|---|---|---|---|
+| strength_only | 44 | 103 | 70.1% |
+| ladder_B2_good | 182 | 85 | 31.8% |
+| xtpc_pin | 335 | 53 | 13.7% |
+| xtpc_scenario1 | 18 | 41 | 69.5% |
+| xtpc_cathode_rescued | 14 | 31 | 68.9% |
+| ladder_B1_clean | 155 | 30 | 16.2% |
+| ladder_B4_miss | 3 | 4 | 57.1% |
+
+Missed-positive diagnosis: 73/91 = cluster matched to the WRONG flash
+(candidate for the right flash exists but lost), 18/91 = cluster left
+unmatched with a candidate present, 0 = no candidate. Misses are an
+assignment problem, not an admission problem — each wrong-flash fix removes
+a phantom and a miss together.
+
+Phase order implications: the top phantom buckets are `strength_only` (103)
+and the loose xtpc paths `scenario1`+`cathode_rescued` (72 combined, ~69%
+phantom each); `xtpc_pin` itself is comparatively healthy (13.7%).
+
 ## Campaign plan
 
 - Phase 0: this scorer + baseline. DONE.
-- Phase 1: pull analysis (PE-error calibration data) + phantom taxonomy.
+- Phase 1: pull analysis (PE-error calibration data) + phantom taxonomy. DONE.
 - Phase 2: per-family PE error knob (cathode XA vs PMT) + chi2_sat_inflate scan.
 - Phase 3: xtpc pin / cull_inconsistent / two_boundary correctness knobs.
 - Phase 4: ladder + flash_minPE + LASSO regularization sweep.
