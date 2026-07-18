@@ -522,6 +522,14 @@ PY
         QL_QGATE_ARG+=(-S "ql_postcull_unflagged=true")
         [ -n "${PDVD_QL_POSTCULL_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_ks_max=${PDVD_QL_POSTCULL_KS}")
         [ -n "${PDVD_QL_POSTCULL_C2N:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_c2n_max=${PDVD_QL_POSTCULL_C2N}")
+        # PDVD_QL_POSTCULL_EARLY=1: rescue blind-spot fix (doc 23 phase 1a) --
+        # run the unflagged cull BEFORE the cluster rescues too, so a
+        # postcull-doomed selection cannot hide its cluster from the rescue.
+        # ADOPTED as default 2026-07-17 (tag ac1: agree 751->755, missed
+        # 91->87, phantom flat 138, 0 pairs moved/removed, +74 additive
+        # adoptions).  Revert: PDVD_QL_POSTCULL_EARLY=0.
+        [ "${PDVD_QL_POSTCULL_EARLY:-1}" = 1 ] \
+            && QL_QGATE_ARG+=(-S "ql_postcull_before_rescue=true")
     fi
     # ---- Sweepable ladder ceilings + LASSO regularization (doc 19 phase 4).
     # PDVD_QL_HC_{CLEAN,GOOD,TB,MISS}_{KS,C2N}, PDVD_QL_HC_MISS_MIN_NDF,

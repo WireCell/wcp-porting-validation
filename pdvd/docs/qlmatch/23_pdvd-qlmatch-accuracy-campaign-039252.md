@@ -33,8 +33,8 @@ existing tag is rewritten.
 
 | phase | lever | status |
 |---|---|---|
-| 0 | bookkeeping: doc 22 artifacts + this skeleton committed | in progress |
-| 1a | rescue blind-spot fix (4 PASSES_UNADOPTED clusters) | pending |
+| 0 | bookkeeping: doc 22 artifacts + this skeleton committed | done |
+| 1a | rescue blind-spot fix (4 PASSES_UNADOPTED clusters) | **done — ADOPTED** (agree +4, missed −4, phantom flat) |
 | 1b | clean-channel rescue ratio (saturation-inflated ratios, e.g. uid33) | pending |
 | 2 | phantom-side precision gates (xtpc pin, wtrunc overpred, flash twins) | pending |
 | 3 | amplitude-model residual fit on 751 agreed GT pairs (+ optional knob) | pending |
@@ -57,5 +57,95 @@ Committed the doc-22 deliverables (analysis only, no code):
 The PNGs themselves (18 renders, 4 events, ~25 MB) follow repo convention
 (`*.png` gitignored) and stay untracked — regenerable from the nm4b dumps
 with `ql_display/render_groups.py` per the doc-22 Repro block.
+
+---
+
+## Phase 1a — rescue blind-spot fix (`postcull_before_rescue`)
+
+### Symptom
+
+4 of the 91 nm4b misses are `PASSES_UNADOPTED` (doc 22 §4): a gate-passing
+candidate exists at the truth flash, both rescue tiers are enabled, yet the
+cluster was never rescued and ends the event unmatched.
+
+### Root cause (traced, corrected from doc 22's reading)
+
+Ordering, not flag bookkeeping. In `fit_round2_shared` the pipeline is
+`rescue_unmatched_clusters` (QLMatching.cxx:2784) →
+`cull_unflagged_lowquality` (:2788). PDVD runs the postcull ON in production
+(`PDVD_QL_POSTCULL=1`, gates ks 0.30 / c2n 20). A bundle the LASSO selected
+(strength ≈ 0.9) but that carries no quality flag and FAILS the postcull
+gates is therefore still live in `flash_bundles_map` while the rescues run —
+its main cluster lands in the off-limits `matched` set (:2927) — and is then
+removed minutes later by the postcull, leaving the cluster with nothing. The
+dump shows the blocker as `auto_selected=false` because `auto_selected` is
+derived from the post-cull map (:3542-3605), which is why doc 22 initially
+read it as a flag mismatch.
+
+All 4 cases verified against the nm4b dumps (blocker = unflagged,
+`POSTCULL victim` = fails ks>0.30 or c2n>20; truth candidate gates shown):
+
+| evt | uid | blocker (fgid, t, str, ks, c2n) | victim | truth cand (fgid, t, PE, ks, c2n, ratio) | passes |
+|---|---|---|---|---|---|
+| 298693 | 4000076 | 148, 2551.4µs, 0.900, 0.321, 1.4 | yes | 117, 1630.9µs, 39266, 0.105, 1.3, 0.90 | tight |
+| 298735 | 163 | 47, −1199.3µs, 0.913, 0.505, 4.5 | yes | 48, −1172.2µs, —, 0.163, 0.8, 1.56 | relaxed |
+| 298735 | 94 | 166, 2847.7µs, 0.924, 0.370, 34.3 | yes | 192, 3833.1µs, —, 0.110, 0.3, 1.25 | tight |
+| 298777 | 4000245 | 102, 1195.8µs, 0.926, 0.377, 27.3 | yes | 89, 523.1µs, —, 0.118, 2.3, 0.86 | tight |
+
+### Fix
+
+New knob `postcull_before_rescue` (C++ default false — byte-identical off):
+when ON (and `postcull_unflagged` is on), run `cull_unflagged_lowquality`
+once more BEFORE the §I/§J rescues, in both the per-run (`fit_round2`) and
+shared (`fit_round2_shared`) tails. The legacy post-rescue call is untouched,
+so rescue adoptions stay subject to the same quality bar as before. The cull
+decision is per-bundle (no cross-bundle interaction), so the early pass
+removes exactly the bundles the late pass would have.
+
+Threading: `qlmatching.jsonnet` key-suppressed arg → `wct-clustering.jsonnet`
+`ql_postcull_before_rescue` → runner env `PDVD_QL_POSTCULL_EARLY` (default 0).
+Config-warn if set without `postcull_unflagged` (inert). Doctest round-trip
+added (`doctest_qlmatching_config.cxx`).
+
+### Verification
+
+- Build + install rc=0; freshness proof: `local/lib/libWireCellMatch.so`
+  mtime 2026-07-17 20:43 > last source edit. `wcdoctest-match`: 25/25 pass.
+- Compiled-config proof: knob ON emits `"postcull_before_rescue": true`
+  (once); OFF compiled JSON byte-identical to the pre-change config
+  (`cmp` PASS, stash-baseline method).
+- Knob-off A/B: tag `ac1off` (idx 0/5/15, default env, new binary) vs `nm4b`
+  — see scorecard below.
+- Knob-on run: tag `ac1` (18 evts, `PDVD_QL_POSTCULL_EARLY=1`) — scorecard
+  below.
+
+### Scorecard (tags `ac0`/`ac1off`/`ac1`/`ac1def`)
+
+Off-gate: `ac1off` (new lib, knob off, idx 0/5/15) vs `ac0` (pre-change lib
+rebuilt from stash, same runner state): calib `cmp` identical + every mabc
+zip member-hash identical ⇒ **byte-identical off, PASS**. (First attempt
+compared against the `nm4b` dirs and flagged `mabc-all-apa.zip` — that diff
+is the cc3a stage-4 runner-default adoption (wcp `c255930`, post-nm4b), not
+this change; matching-level outputs vs nm4b were already identical.)
+
+Knob-on (`ac1`, 18 evts, `PDVD_QL_POSTCULL_EARLY=1`) vs `nm4b`:
+
+| metric | nm4b | ac1 | Δ |
+|---|---|---|---|
+| agree (scan consistency) | 751 (84.3%) | **755 (84.5%)** | +4 |
+| missed long tracks | 91 | **87** | −4 |
+| phantom | 138 | 138 | 0 |
+| unknown | 137 | 173 | +36 |
+
+Pair-level regression diff: **0 moved, 0 removed, +74 added** (purely
+additive). The 4 agree gains are exactly the 4 blind-spot clusters, each
+adopted at its truth flash (uid163 via the relaxed tier, the others tight).
+The +36 long unknowns are new low-confidence adoptions with no scan verdict
+— same rescan queue category as the 15 nm4b relaxed adoptions. No new
+phantom: none of the 74 landed on a scan-rejected time.
+
+**ADOPTED as runner default** (`PDVD_QL_POSTCULL_EARLY:-1`); flip-verified:
+default-env idx-0 calib `cmp`-identical to `ac1` (tag `ac1def`). Toolkit
+knob stays default OFF. Revert: `PDVD_QL_POSTCULL_EARLY=0`.
 
 <!-- phase sections appended as the campaign proceeds -->

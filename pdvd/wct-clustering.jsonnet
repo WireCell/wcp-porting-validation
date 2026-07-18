@@ -203,6 +203,9 @@ function(
     ql_postcull_unflagged = false,
     ql_postcull_ks_max = null,
     ql_postcull_c2n_max = null,
+    // Rescue blind-spot fix (doc 23 phase 1a): early postcull pass before the
+    // rescues. C++ default false; key omitted when off => byte-identical.
+    ql_postcull_before_rescue = false,
     // Sweepable ladder ceilings + LASSO regularization (doc 19 phase 4);
     // null => the operating literals / C++ defaults, compiled JSON unchanged.
     ql_hc_clean_ks = null, ql_hc_clean_c2 = null,
@@ -424,6 +427,7 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       postcull_unflagged=ql_postcull_unflagged,
                       postcull_ks_max=ql_postcull_ks_max,
                       postcull_c2n_max=ql_postcull_c2n_max,
+                      postcull_before_rescue=ql_postcull_before_rescue,
                       // Sweepable ladder + LASSO regularization (doc 19).
                       hc_clean_ks=ql_hc_clean_ks, hc_clean_c2=ql_hc_clean_c2,
                       hc_good_ks=ql_hc_good_ks, hc_good_c2=ql_hc_good_c2,
