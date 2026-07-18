@@ -35,7 +35,7 @@ existing tag is rewritten.
 |---|---|---|
 | 0 | bookkeeping: doc 22 artifacts + this skeleton committed | done |
 | 1a | rescue blind-spot fix (4 PASSES_UNADOPTED clusters) | **done — ADOPTED** (agree +4, missed −4, phantom flat) |
-| 1b | clean-channel rescue ratio (saturation-inflated ratios, e.g. uid33) | pending |
+| 1b | saturation-aware rescue ratio-high (clean-channel ratio REJECTED) | **done — ADOPTED** (agree +6, missed −6, phantom flat) |
 | 2 | phantom-side precision gates (xtpc pin, wtrunc overpred, flash twins) | pending |
 | 3 | amplitude-model residual fit on 751 agreed GT pairs (+ optional knob) | pending |
 | 4 | joint-fit levers (cull keep-quality, cross-flash exclusivity) — contingent | pending |
@@ -147,5 +147,75 @@ phantom: none of the 74 landed on a scan-rejected time.
 **ADOPTED as runner default** (`PDVD_QL_POSTCULL_EARLY:-1`); flip-verified:
 default-env idx-0 calib `cmp`-identical to `ac1` (tag `ac1def`). Toolkit
 knob stays default OFF. Revert: `PDVD_QL_POSTCULL_EARLY=0`.
+
+---
+
+## Phase 1b — saturation-aware rescue ratio-high extension
+
+### Negative result first: the clean-channel ratio is NOT viable
+
+The doc-22 recommendation "compute the rescue ratio over clean (unsaturated,
+covered) channels" fails on contact with data: on the uid33 truth flash
+(evt298651, 7382 PE) the 3 railed channels carry 7364 PE of the measurement
+and 24k of the 25.9k predicted; the "clean" remainder is 18 PE measured vs
+1891 predicted → clean ratio ≈ 106 (whole-flash 3.51). Excluding partially-
+covered channels (cov < 1) is even worse (13 channels, ratio 106 with
+14 PE). **On bright PDVD flashes the light lives on the railed channels** —
+exclusion throws away the measurement instead of the bias.
+
+### The viable form: railed PE is a lower bound ⇒ extend the HIGH gate
+
+If a fraction `satfrac` of a flash's measured PE is on saturation-flagged
+channels, the true PE is ≥ measured, so pred/meas is an OVERESTIMATE — the
+ratio-high gate rejects honest candidates, while ratio-low and ks/chi2 stay
+meaningful. 8 of the 87 missed clusters' truth candidates fail ONLY
+ratio-high; 7 of those sit on flashes with satfrac ≥ 0.77.
+
+Offline rescue-replay sim on the nm4b dumps (directional only): variants
+grid over (satfrac_min, ks cap, ratio-high multiplier). Full skip of the
+high gate trades 1:1 (+2 right / +2 wrong); the capped form
+**satfrac > 0.5, ratio < ratio_hi × 2.0: +3 right / +0 wrong / +0 unknown**
+(recovers uid33 golden crosser, uid32, uid4000006 — the wrong rivals all
+have extreme ratios that the ×2 cap excludes).
+
+### Knob
+
+`cluster_rescue_sat_ratio_relax` (+ `cluster_rescue_sat_frac_min`=0.5,
+`cluster_rescue_sat_ratio_mult`=2.0), C++ default OFF ⇒ byte-identical.
+Applied in both rescue tiers' accept via a shared `sat_ratio_hi_ok` helper
+(ratio-low, ks, chi2 untouched). Threaded: `qlmatching.jsonnet`
+(key-suppressed, needs `cluster_rescue_shared`) → `wct-clustering.jsonnet`
+`ql_cluster_rescue_sat_relax/_sat_frac_min/_sat_ratio_mult` → runner env
+`PDVD_QL_CRESCUE_SATRELAX` (+`_SAT_FRAC`, `_SAT_MULT`), default 0 pending
+scorecard. Doctest round-trips (29/29 pass).
+
+### Scorecard (tags `ac2off`/`ac2`/`ac2def`)
+
+Off-gate: `ac2off` (new lib, knob off, idx 0/5/15) vs `ac1`: calib `cmp`
+identical + all mabc member-hashes identical ⇒ **byte-identical off, PASS**.
+
+Knob-on (`ac2`, 18 evts, `PDVD_QL_CRESCUE_SATRELAX=1`, frac 0.5 / mult 2.0)
+vs `ac1`:
+
+| metric | ac1 | ac2 | Δ |
+|---|---|---|---|
+| agree | 755 (84.5%) | **761 (85.1%)** | +6 |
+| missed long tracks | 87 | **81** | −6 |
+| phantom | 138 | 138 | 0 |
+| unknown | 173 | 170 | −3 |
+
+Pair diff: 3 added + 3 moved, 0 removed. All 6 changed pairs verified at the
+scan truth times (uid32, uid4000006, uid33 added; uid4000016, uid77,
+uid4000033 moved). The "moves" are legitimate: all 3 were ac1 RESCUE
+adoptions (strength 0.000) sitting at a wrong flash; once the sat-relax
+admits the truth candidate it wins the rescue score argmin. Better than the
+sim's +3/0 because the sim scored candidates against a fixed adoption set.
+
+**ADOPTED as runner default** (`PDVD_QL_CRESCUE_SATRELAX:-1`); flip-verified
+(`ac2def` idx-0 calib == `ac2`). Toolkit knobs stay OFF. Revert:
+`PDVD_QL_CRESCUE_SATRELAX=0`.
+
+Cumulative since nm4b: agree 751→761 (84.3→85.1%), missed 91→81, phantom
+flat 138.
 
 <!-- phase sections appended as the campaign proceeds -->

@@ -629,6 +629,19 @@ PY
                             -S "ql_cluster_rescue_relaxed_ratio_hi=${PDVD_QL_CRESCUE_RELAX_RHI:-3.0}"
                             -S "ql_cluster_rescue_relaxed_minlen_cm=${PDVD_QL_CRESCUE_RELAX_MINLEN_CM:-50}")
         fi
+        # PDVD_QL_CRESCUE_SATRELAX=1: saturation-aware ratio-high extension
+        # (doc 23 phase 1b).  On a flash whose railed channels carry more than
+        # PDVD_QL_CRESCUE_SAT_FRAC of the measured PE the measurement is a
+        # lower bound, so both rescue tiers accept pred/meas up to
+        # ratio_hi * PDVD_QL_CRESCUE_SAT_MULT.  ADOPTED as default 2026-07-17
+        # (tag ac2 vs ac1: agree 755->761, missed 87->81, phantom flat 138;
+        # all 6 changed pairs verified at scan truth times).  Revert:
+        # PDVD_QL_CRESCUE_SATRELAX=0.
+        if [ "${PDVD_QL_CRESCUE_SATRELAX:-1}" = 1 ]; then
+            QL_RESCUE_ARG+=(-S "ql_cluster_rescue_sat_relax=true"
+                            -S "ql_cluster_rescue_sat_frac_min=${PDVD_QL_CRESCUE_SAT_FRAC:-0.5}"
+                            -S "ql_cluster_rescue_sat_ratio_mult=${PDVD_QL_CRESCUE_SAT_MULT:-2.0}")
+        fi
     fi
     local QL_SATFLAG_ARG=()
     if [ "${PDVD_QL_USE_SAT_FLAG:-1}" = 1 ]; then

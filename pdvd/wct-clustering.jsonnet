@@ -236,6 +236,11 @@ function(
     ql_cluster_rescue_relaxed_ratio_lo = null,
     ql_cluster_rescue_relaxed_ratio_hi = null,
     ql_cluster_rescue_relaxed_minlen_cm = null,
+    // Saturation-aware rescue ratio-high extension (doc 23 phase 1b);
+    // false/null => keys suppressed => byte-identical.
+    ql_cluster_rescue_sat_relax = false,
+    ql_cluster_rescue_sat_frac_min = null,
+    ql_cluster_rescue_sat_ratio_mult = null,
     // Post-QLMatching cathode-crossing STITCH tip-touch relaxation (stage-4
     // ClusteringCathodeConnect, cfg/.../protodunevd/clus.jsonnet).  Ports the
     // PDHD tip-touch branch to PDVD: when a genuine crosser's two halves reach
@@ -459,7 +464,11 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       cluster_rescue_relaxed_ratio_hi=ql_cluster_rescue_relaxed_ratio_hi,
                       cluster_rescue_relaxed_min_length=
                           if ql_cluster_rescue_relaxed_minlen_cm == null then null
-                          else ql_cluster_rescue_relaxed_minlen_cm * wc.cm);
+                          else ql_cluster_rescue_relaxed_minlen_cm * wc.cm,
+                      // Saturation-aware rescue ratio-high extension (doc 23 phase 1b).
+                      cluster_rescue_sat_ratio_relax=ql_cluster_rescue_sat_relax,
+                      cluster_rescue_sat_frac_min=ql_cluster_rescue_sat_frac_min,
+                      cluster_rescue_sat_ratio_mult=ql_cluster_rescue_sat_ratio_mult);
 local calib_dump_joint =
     if calib then '%s/calib-evt%s.json' % [output_dir, std.toString(event)]
     else '';
