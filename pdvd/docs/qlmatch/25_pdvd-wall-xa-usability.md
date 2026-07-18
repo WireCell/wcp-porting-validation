@@ -51,6 +51,12 @@ for f in input_data_light/np02vd_raw_run039349_*_rawwf.root; do
 cd docs/qlmatch/scripts
 python3 wall_xa_whfix_join.py   # -> wall_xa_whfix_join.tsv (matched flashes x 40 ch)
 python3 wall_xa_whfix_figs.py   # -> pics/25_wallxa_whfix.png + §7 numbers
+
+# §8 -- wall-XA-in-QLMatching evaluation (matching-only, 039252 x18):
+python3 wall_xa_ql_calib.py     # per-channel gains + PDVD_QL_MEASURED_PE_SCALE line
+./wall_xa_ql_variants.sh        # wx0/wx1/wx2/wx3 tags (fresh only, M13)
+cd ../../.. && for t in wx0 wx1 wx2 wx3; do python ql_display/ql_agree_score.py --tag $t; done
+python3 docs/qlmatch/scripts/wall_xa_ql_forensics.py   # churn + gate forensics + non-match counts
 ```
 
 ## 1. Method
@@ -338,6 +344,117 @@ integrals teleported into bright flashes), not for detection.
 - Wall XAs stay masked in Q/L matching for now (unchanged), but the path to
   "usable as coverage-masked cross-check channels" is concrete.
 
+## 8. Can the wall XAs improve QLMatching? (2026-07-18 owner follow-up)
+
+Owner question: with the reconstruction fixed, do the wall XAs *help* the
+matching if we put them back into the fit (after recalibrating the overall
+gain)?  Metrics fixed by the owner: (1) agreement with the frozen human+AI
+scan truth (`ql_agree_score.py`, doc 19 reference: gold 298567 hand scan +
+17-event cathxa AI scan), (2) the number of non-matched long clusters.
+
+### 8.1 Design
+
+Matching-only reruns of the 18 scanned 039252 events from the canonical
+`_keep` clustering (`stage_ql_tag.sh`), with the §7 `_whfix` light (booking
+fixed — without it 74% of wall PE is on the wrong flash or none, §3, and
+inclusion would be meaningless).  All current production runner defaults on
+top; only the wall handling varies:
+
+| tag | wall XAs | calibration | wall pe_err family |
+|---|---|---|---|
+| `wx0` | masked (production) | — | — |
+| `wx1` | **in the fit** | measured_pe_scale | frac 1.5 / lowpe 3.0 @ 10 |
+| `wx2` | in the fit | none | none (global model) |
+| `wx3` | in the fit | measured_pe_scale | frac 3.0 / lowpe 5.0 @ 10 |
+
+Two new default-OFF knobs carry the study (no C++ change; compiled config
+byte-identical when unset, proof: stash-diff empty vs pre-edit HEAD; ON
+adds exactly the new keys):
+
+- `measured_pe_scale` (toolkit `protodunevd/qlmatching.jsonnet`, runner env
+  `PDVD_QL_MEASURED_PE_SCALE`): length-40 multiplier on the *measured* PE at
+  the Opflash read (C++ knob existed, previously unthreaded).  Gains from
+  the §7 sample, scale = 1/median(meas/exp), responding cases exp ≥ 10
+  (`wall_xa_ql_calib.py`): ch0 0.787, ch1 0.751, ch3 0.393, ch12 0.585,
+  ch18 0.518, ch19 0.457 — the fixed booking runs *hot* against the
+  pre-fix-fitted `eff_scale_membrane = 1.655`.  Residual per-channel scatter
+  p16–p84 = 0.28–2.16.
+- third `pe_err_family` for the live wall XAs (0,1,3,12,18,19) (envs
+  `PDVD_QL_PEERR_WALL_{FLOOR,FRAC,LOWPE_FRAC,LOWPE_KNEE}`): family arrays
+  keep exactly two members unless a wall member is set.
+  Sentinel: `pe_err_family override active: 3 families, 38 channels`.
+
+### 8.2 Result: inclusion loses on both metrics
+
+Overall rows (18 events, objective tiers, long tracks; `work/ql_scores/<tag>/`
++ `wall_xa_ql_forensics.py`):
+
+| tag | agree | phantom | agree% | missed | missed% | non-matched long |
+|---|---|---|---|---|---|---|
+| `ac3` (adopted, default light) | 764 | 118 | 86.6% | 78 | 9.3% | 94 |
+| `wx0` (whfix light, walls masked) | 748 | 103 | 87.9% | 94 | 11.2% | **88** |
+| `wx1` (walls in, calibrated) | 636 | 69 | 90.2% | **206** | 24.5% | 119 |
+| `wx2` (walls in, uncalibrated) | 624 | 68 | 90.2% | 218 | 25.9% | 127 |
+| `wx3` (walls in, wide errors) | 637 | 70 | 90.1% | 205 | 24.3% | 119 |
+
+- **Scan agreement**: putting the walls in the fit nearly *triples* the
+  missed scan positives (94 → 206) and drops absolute agreement 748 → 636.
+  The headline agree% *rises* to 90.2% only because the judged set shrinks —
+  the pairs that survive are cleaner, but far fewer scanner-confirmed pairs
+  survive.  The one genuine gain: phantoms drop 103 → 69 (the walls do have
+  veto power against predicted-bright-but-dark pairings).
+- **Non-matched long clusters**: 88 → 119 (+35%).  Worse, not better.
+- Calibration matters but is not the story: uncalibrated `wx2` is worse than
+  `wx1` on every count, yet `wx1` is still far behind `wx0`.
+- The `wx0` control shows the light fix alone is roughly neutral-to-positive
+  for matching with walls masked: phantoms 118 → 103 and raw non-match
+  94 → 88 vs `ac3`, at +16 missed against a scan truth whose flash times
+  come from the *old* light (re-scoring at tol 1.0 µs moves only 2, so this
+  is mostly genuine re-segmentation, not a join artifact).
+
+### 8.3 Why: the damage is structural, not a tuning problem
+
+Churn wx0 → wx1 over the 1583 selected pairs: 1075 unchanged, 324 moved to
+a different flash, 184 lost selection entirely (all 184 still have candidate
+bundles — gate-fail, not containment).  For the 179 traceable losses, the
+wx1 bundle at the same flash time vs the wx0 selected bundle:
+
+- KS median 0.093 → 0.199; **118/179 cross the 0.10 ladder ceiling**.
+- chi2/ndf median 4.5 → 5.6; only 2/179 cross the ceiling 35.
+- LASSO strength median 0.81 → 0.00 (145 collapse below the 0.05 cutoff) —
+  largely the *downstream signature* of the KS cull, which removes bundles
+  before the fit.
+
+The KS shape test has no error weighting, so the wall channels enter it at
+full weight, and their flash-pattern correlation is far too weak (log-log
+corr 0.27 vs cathode 0.9, §7.3: ×3 monotone distance shape error + ×3–5
+in-bin scatter + 53% readout-coverage holes read as zeros).  `wx3` proves
+the saturation: tripling the wall error widths — which *does* soften chi2
+and the LASSO weights — changes nothing (637/205/119 vs 636/206/119),
+because the error-weighted paths were never the binding constraint.
+
+### 8.4 Verdict and the remaining levers
+
+**As-is, the wall XAs must stay out of the Q/L fit** — an overall gain
+recalibration (the owner's proposed lever) is not sufficient: it helps at
+the margin (wx1 vs wx2) but the inclusion still loses on both owner metrics.
+`mask_wall_xa` remains the right production setting.  What *could* change
+the answer, in order of leverage:
+
+1. **A walls-out-of-KS/ladder mode** (new C++ knob: wall channels in the
+   error-weighted chi2/LASSO only, with the wide wall family errors, out of
+   the un-weighted KS and the highconsist ladder).  The phantom-veto power
+   (103 → 69) suggests a real payoff if the KS poisoning is removed; the
+   184 losses were ladder/KS kills, not chi2 kills.
+2. **Coverage-aware per-flash wall masking** (drop a wall channel only for
+   flashes where its self-trigger coverage is partial), removing the
+   47-points-of-53 coverage holes from the comparison.
+3. **Distance-dependent library recalibration** (§7.3's ×0.69 → ×2.10 shape
+   error) — an overall gain cannot fix a shape error; this would also
+   shrink the KS damage if (1) is not taken.
+
+These are all new-knob rounds needing their own censuses — owner-gated.
+
 ## Appendix: sample and files
 
 - 1885 gated matched flashes (of the 120-event `_keep` dumps), 131 gold.
@@ -351,3 +468,8 @@ integrals teleported into bright flashes), not for detection.
 - §7: `scripts/wall_xa_whfix_join.{py,tsv}`, `scripts/wall_xa_whfix_figs.py`;
   120 `work/*_light*_whfix/` archives (mem+pmt `wide_hit_mode='start'`);
   toolkit knob commit noted in the wcp commit message.
+- §8: `scripts/wall_xa_ql_{calib.py,variants.sh,forensics.py}`; score records
+  `work/ql_scores/{wx0,wx1,wx2,wx3}/`; matching-only tags
+  `work/039252_<idx>_{wx0,wx1,wx2,wx3}/`; knobs in toolkit
+  `protodunevd/qlmatching.jsonnet` (`measured_pe_scale`, `pe_err_wall_*`) +
+  `wct-clustering.jsonnet`/`run_clus_evt.sh` threading, all default-OFF.

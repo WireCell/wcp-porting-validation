@@ -193,6 +193,17 @@ function(
     ql_peerr_pmt_frac = null,
     ql_peerr_pmt_lowpe_frac = null,
     ql_peerr_pmt_lowpe_knee = null,
+    // Optional third pe_err family: the live membrane/wall XAs
+    // (0,1,3,12,18,19), wall-XA inclusion study (docs/qlmatch/25_*.md sec 8;
+    // meaningful with ql_mask_wall_xa=false).  All null => two-family (or
+    // no-family) arrays unchanged => byte-identical.
+    ql_peerr_wall_floor = null,
+    ql_peerr_wall_frac = null,
+    ql_peerr_wall_lowpe_frac = null,
+    ql_peerr_wall_lowpe_knee = null,
+    // Per-channel multiplier on the MEASURED PE (length-40 array; Opflash
+    // read).  null => key suppressed => byte-identical (C++ empty = identity).
+    ql_measured_pe_scale = null,
     // xtpc / selection quality gates (scan-tuning doc 19); null/false =>
     // keys suppressed => byte-identical legacy behaviour.
     ql_xtpc_pin_min_strength = null,
@@ -436,6 +447,11 @@ local qlm_maker = qlm(params, trigger_offset_bot, readout_window_ticks, light_mo
                       pe_err_pmt_frac=ql_peerr_pmt_frac,
                       pe_err_pmt_lowpe_frac=ql_peerr_pmt_lowpe_frac,
                       pe_err_pmt_lowpe_knee=ql_peerr_pmt_lowpe_knee,
+                      pe_err_wall_floor=ql_peerr_wall_floor,
+                      pe_err_wall_frac=ql_peerr_wall_frac,
+                      pe_err_wall_lowpe_frac=ql_peerr_wall_lowpe_frac,
+                      pe_err_wall_lowpe_knee=ql_peerr_wall_lowpe_knee,
+                      measured_pe_scale=ql_measured_pe_scale,
                       // xtpc / selection quality gates (doc 19).
                       xtpc_pin_min_strength=ql_xtpc_pin_min_strength,
                       xtpc_sc1_light_gate=ql_xtpc_sc1_light_gate,

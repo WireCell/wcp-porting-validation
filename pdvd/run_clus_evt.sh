@@ -488,13 +488,23 @@ PY
     : "${PDVD_QL_PEERR_PMT_FRAC=0.75}"
     local QL_PEERR_ARG=()
     local _pe_env _pe_var
+    # WALL_* members drive the optional third (live membrane/wall XA) family
+    # for the wall-XA inclusion study (docs/qlmatch/25_*.md sec 8) -- no
+    # production defaults, unset => two-family arrays unchanged.
     for _pe_env in CATH_FLOOR CATH_FRAC CATH_LOWPE_FRAC CATH_LOWPE_KNEE \
-                   PMT_FLOOR PMT_FRAC PMT_LOWPE_FRAC PMT_LOWPE_KNEE; do
+                   PMT_FLOOR PMT_FRAC PMT_LOWPE_FRAC PMT_LOWPE_KNEE \
+                   WALL_FLOOR WALL_FRAC WALL_LOWPE_FRAC WALL_LOWPE_KNEE; do
         _pe_var="PDVD_QL_PEERR_${_pe_env}"
         if [ -n "${!_pe_var:-}" ]; then
             QL_PEERR_ARG+=(-S "ql_peerr_$(echo "$_pe_env" | tr '[:upper:]' '[:lower:]')=${!_pe_var}")
         fi
     done
+    # PDVD_QL_MEASURED_PE_SCALE: length-40 JSON array multiplying the MEASURED
+    # PE per channel at the Opflash read (wall-XA recalibration, docs/qlmatch/
+    # 25_*.md sec 8).  Unset => arg omitted => compiled config byte-identical.
+    if [ -n "${PDVD_QL_MEASURED_PE_SCALE:-}" ]; then
+        QL_PEERR_ARG+=(-S "ql_measured_pe_scale=${PDVD_QL_MEASURED_PE_SCALE}")
+    fi
     # ---- xtpc / selection quality gates (scan-tuning docs/qlmatch/19_*.md).
     # PDVD_QL_PIN_MIN_STRENGTH: pinned bundle loses the strength-cutoff exemption
     #   below this LASSO solution (scan: phantom pins strength p50 0.00).
