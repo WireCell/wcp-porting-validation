@@ -391,3 +391,52 @@ analysis session. New artifacts: `pics/24_cathode_merge_before_after_evt298567.p
 Owner decisions outstanding: item 6 out-of-sample scan (whether to scan
 039349), item 7 official-drawing preference, item 8 camera convention,
 item 9 authors/references/acknowledgment.
+
+---
+
+## Drafting-session consumption log (2026-07-18, paper side)
+
+All nine answers were incorporated into the technote (sections rewritten:
+post-matching refinements in full; drift-velocity story; limitations;
+appendix tables + trigger-offset note; SPE-scale cross-check text; per-type
+factors labeled as effective weights). Findings and corrections from the
+drafting side:
+
+1. **Item 1 velocity aside is stale — production is v = 1.48073 mm/µs, not
+   1.586.** The item-1 answer states "PDVD data reco uses the cathode-pinned
+   convention velocity v = 1.586", but `run_clus_evt.sh` has defaulted
+   `PDVD_DRIFT_SPEED_*_MMUS` to **1.48073** (the doc-06 golden-crosser W-decon
+   measurement) since commit `2aebbfa` (2026-07-14, "superseded 1.53 FR-Argon
+   which superseded the 1.586 cathode-pinned convention"), so every production
+   result consumed by the paper (cc3a, doc-23 accuracy campaign) ran at
+   1.48073. The paper now presents the three-generation story (ensemble 1.568
+   → anchored physical 1.566 ± 0.006 → adopted golden-crosser 1.481 ± 0.02)
+   and lists the 1.48–1.59 endpoint-definition spread as a limitation.
+   **[NEEDS OWNER — confirm]:** 1.481 rests on ONE track and sits ~5 % below
+   the anchored ensemble physical value; doc 06 itself called it "a
+   cross-check, not a recalibration". Please confirm 1.48073 is the intended
+   final production value for the paper (or schedule the doc-06 population
+   follow-up before submission).
+2. **Item 6:** the `work/ql_labels/` hand-scan records are not on the drafting
+   machine, so the evt298581 blind double-scan agreement (~94 %, session
+   memory) could not be recomputed locally. The paper states the in-sample
+   caveat plainly, plus the "039349 outputs exist, scanning is effort-only"
+   softener. Re-running `ql_agree_score.py` on cathxa vs claude-cathxa needs
+   the data machine → still open if a quotable number is wanted.
+3. **Item 8:** the live local set `eec93799…` is NOT the combined 18-event
+   upload — it holds a SINGLE event (bee index 0 = **evt298581**) with four
+   instances (`clustering-global` [x uncalibrated, ~1.5e8], `img-global`,
+   `img-side-bot/top`) and no `op` instance. A headless Playwright capture
+   (bee-video pattern) of the cluster-colored `img-global` view is now the
+   paper's clustered-event figure (`figs/bee_clustered_evt298581.png`).
+   **[NEEDS OWNER]:** upload `upload-combined-run039252.zip` (with the `op`
+   instance) to the drafting machine's Bee and share the set UUID so the
+   matched-PE overlay screenshot — the paper's ONE remaining \todofig — can
+   be captured.
+4. **Item 9:** a literature search (2026-07-18) found no ProtoDUNE-VD
+   detector/installation paper beyond the VD TDR (arXiv:2312.03130), matching
+   the answer above; the X-ARAPUCA PDE papers (arXiv:2502.05042 →
+   `MantheyCorchado:2025ist`, arXiv:2511.12328 → `Botogoske:2025sxz`) are now
+   fetched and cited. Author list still **[NEEDS OWNER]**.
+5. Camera-orientation (item 8 sub-question) is moot for now: the single
+   default reset-camera view was used.
