@@ -422,6 +422,10 @@ PY
     CC_DIST_ARG+=(-S "cc_crosser_pca_angle=${PDVD_CC_CROSSER_PCA_ANGLE:-15}")
     # near-cathode closest-approach retry (cm); empty => OFF (validated null lever)
     [ -n "${PDVD_CC_CATHODE_BAND_DIS:-}" ] && CC_DIST_ARG+=(-S "cc_cathode_band_dis=${PDVD_CC_CATHODE_BAND_DIS}")
+    # Per-drift-side raw-imaging Bee split (img-side-bot / img-side-top alongside
+    # img-global), for making per-side video frames.  PDVD_BEE_IMG_PER_SIDE=1 =>
+    # add the set; unset/0 => arg omitted => compiled config byte-identical.
+    [ "${PDVD_BEE_IMG_PER_SIDE:-0}" = 1 ] && CC_DIST_ARG+=(-S "bee_img_per_side=true")
     # ---- Cathode-XA-anchored operating point (2026-07-16, docs/qlmatch/18_*.md).
     # Motivated by the evt298567 hand-scan PD-family study (doc 17): the cathode
     # XAs are the only PD family with full-stream readout and proportional
@@ -766,6 +770,12 @@ PY
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2
         return 1
+    fi
+    # Compile-only mode (compiled-config proofs): write CFG_JSON and stop before
+    # running wire-cell.  Default unset => full run.
+    if [ "${PDVD_CLUS_COMPILE_ONLY:-0}" = 1 ]; then
+        echo "[compile-only] wrote $CFG_JSON"
+        return 0
     fi
     # Resource recording (additive; does not change reco output, disable with
     # PDVD_RESMON=off): run wire-cell in the background and sample its

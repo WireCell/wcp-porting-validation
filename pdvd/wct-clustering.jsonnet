@@ -284,6 +284,10 @@ function(
     // 6cm-cathode near-cathode closest-approach retry (cm). null => clus.jsonnet keeps
     // C++ default 0 (retry OFF) => byte-identical. Census operating point ~10 cm.
     cc_cathode_band_dis = null,
+    // Emit a second pre-pipeline raw-imaging Bee set split by drift side
+    // (img-side-bot / img-side-top) alongside img-global, for per-side video
+    // frames.  false => bee_points_sets unchanged in clus.jsonnet => byte-identical.
+    bee_img_per_side = false,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -354,12 +358,12 @@ local clus_all_tpc = if do_qlmatch
                             cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut,
                             cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
                             cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
-                            cc_cathode_band_dis=cc_cathode_band_dis)
+                            cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side)
     else clus_maker.all_tpc(anodes, ngroups=ngroups,
                             cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut,
                             cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
                             cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
-                            cc_cathode_band_dis=cc_cathode_band_dis);
+                            cc_cathode_band_dis=cc_cathode_band_dis, bee_img_per_side=bee_img_per_side);
 
 // JOINT Q/L matching (shared-flash): both drift sides enter ONE QLMatching node and
 // each reads the SAME all-PD opflash archive.  Per side: opflash source ->
