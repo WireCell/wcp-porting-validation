@@ -36,8 +36,8 @@ existing tag is rewritten.
 | 0 | bookkeeping: doc 22 artifacts + this skeleton committed | done |
 | 1a | rescue blind-spot fix (4 PASSES_UNADOPTED clusters) | **done — ADOPTED** (agree +4, missed −4, phantom flat) |
 | 1b | saturation-aware rescue ratio-high (clean-channel ratio REJECTED) | **done — ADOPTED** (agree +6, missed −6, phantom flat) |
-| 2 | phantom-side precision gates (xtpc pin, wtrunc overpred, flash twins) | pending |
-| 3 | amplitude-model residual fit on 751 agreed GT pairs (+ optional knob) | pending |
+| 2 | phantom-side overpred culls (wtrunc + pin; twins DEAD) | **done — ADOPTED** (phantom −20, agree +3, missed −3) |
+| 3 | amplitude-model residual study | **done — NEGATIVE** (model unbiased on clean flashes; no correction knob) |
 | 4 | joint-fit levers (cull keep-quality, cross-flash exclusivity) — contingent | pending |
 | 5 | final validation + Bee sets for rescan | pending |
 
@@ -217,5 +217,103 @@ sim's +3/0 because the sim scored candidates against a fixed adoption set.
 
 Cumulative since nm4b: agree 751→761 (84.3→85.1%), missed 91→81, phantom
 flat 138.
+
+---
+
+## Phase 2 — phantom-side overprediction culls (wtrunc + xtpc-pin)
+
+### Sim survey on the ac2 dumps (directional)
+
+- **Flash-twin channel is DEAD** at the current op point: 1/144 phantoms has
+  a truth-positive for the same cluster within 0.5–8 µs. The cathxa-era twin
+  problem no longer exists post-tune_c2_cr; twin handling NOT implemented.
+- **Ratio-low cull is a dead end**: the under-predicted phantom bulk
+  (non-wtrunc phantoms ratio p50 0.31) cannot be separated — every useful
+  threshold kills tens of agreed matches (best safe point only −5 phantoms).
+- **wtrunc overpred is the clean signature**: wtrunc phantoms ratio
+  p50 1.44 / p90 11.3 vs agreed wtrunc matches 0.68 / 1.51. Gate
+  `wtrunc && !pin && !sc1 && ratio>2.0` (sat-dominated flashes exempt):
+  **−14 phantoms / −0 agreed / −4 unknown** in replay. Per-channel max
+  overpred adds agree cost — ratio-only chosen.
+- **pin overpred (ratio-only)**: phantom pins ratio p50 1.98 vs agreed 0.69.
+  `pin && ratio>2.0` (sat-exempt): **−6 phantoms / −0 agreed**. A ks gate on
+  pins is catastrophic (−22..−65 agreed): geometric pins legitimately carry
+  bad ks — that is why they were pinned.
+
+### Knobs (both default OFF ⇒ byte-identical)
+
+Second and third branches in `cull_unflagged_lowquality` (now
+`postcull_*`-family): `postcull_wtrunc_overpred` + `postcull_wtrunc_ratio_hi`
+(2.0) + `postcull_wtrunc_sat_frac` (0.5, shared sat exemption), and
+`postcull_pin_overpred` + `postcull_pin_ratio_hi` (2.0). Both apply
+regardless of the high-consistent flag; wtrunc branch protects
+pin/scenario-1. With 1a's early-cull default, culled clusters immediately
+become rescue-eligible in the same pass. Interaction check: none of the 6
+phase-1b gains is wtrunc-flagged, and the sat exemption protects railed-
+flash adoptions by construction. Runner envs `PDVD_QL_POSTCULL_WTRUNC`,
+`PDVD_QL_POSTCULL_PIN` (+ `_RATIO`s), defaults 0 pending scorecard.
+Doctests 36/36.
+
+### Scorecard (tags `ac3off`/`ac3off2`/`ac3`/`ac3def`)
+
+Off-gates: `ac3off` (wtrunc-only build) and `ac3off2` (final build with both
+culls), knobs off, idx 0/5/15 — calib + all mabc member-hashes identical to
+`ac2` ⇒ **byte-identical off, PASS** (both builds).
+
+Knob-on (`ac3`, 18 evts, `PDVD_QL_POSTCULL_WTRUNC=1 PDVD_QL_POSTCULL_PIN=1`)
+vs `ac2`:
+
+| metric | ac2 | ac3 | Δ |
+|---|---|---|---|
+| agree | 761 (85.1%) | **764 (85.4%)** | +3 |
+| missed long tracks | 81 | **78** | −3 |
+| phantom | 138 | **118** | −20 |
+| unknown | 170 | 180 | +10 |
+
+Phantom −20 lands exactly on the sim (−14 wtrunc, −6 pin). Pair diff:
+**zero agreed pairs removed or moved**; 16 phantoms culled outright (3
+removed, 13 re-adopted by the rescue at unscanned times), **3 phantoms
+converted to agree** (cull frees the cluster, the 1a early-cull + rescue
+then re-match it at the truth flash — the +3 agree / −3 missed), 6 unknown
+cleanups.
+
+**ADOPTED as runner defaults** (`PDVD_QL_POSTCULL_WTRUNC:-1`,
+`PDVD_QL_POSTCULL_PIN:-1`); flip-verified (`ac3def` idx-0 calib == `ac3`).
+Toolkit knobs stay OFF. Revert: `PDVD_QL_POSTCULL_WTRUNC=0
+PDVD_QL_POSTCULL_PIN=0`.
+
+Cumulative since nm4b: **agree 751→764 (84.3→85.4%), missed 91→78,
+phantom 138→118**.
+
+---
+
+## Phase 3 — amplitude-model residual study (NEGATIVE: no correction knob)
+
+Script `ql_display/amp_residual_fit.py` (outputs
+`work/ql_scores/ac2_amp/amp_residual.{md,json}`); residual = log(meas/pred)
+on scan-agreed matches — the GT sample the doc-22 follow-up proposed
+fitting on.
+
+- **Clean flashes (satfrac<0.2), flash level:** residual p50 within ±0.11 of
+  zero in every brightness decile (one noisy 30-entry bin at +0.35). The
+  photon model is **unbiased on clean flashes at every brightness** — there
+  is no brightness-dependent under-prediction to fit. The doc-22
+  "bright-flash under-prediction" is the saturation censoring plus tail
+  variance, not a model bias curve.
+- **Saturated flashes (satfrac≥0.2):** p50 ≈ −0.25 at all brightnesses —
+  the DAPHNE rail reports a lower bound. This is a measurement property,
+  already handled gate-side by the phase-1b/2 sat exemptions; "correcting"
+  pred for it would double-count.
+- **Topology (clean single-bundle):** boundary +0.34, two_boundary +0.52,
+  close_to_PMT +0.66, wtrunc +0.40 — real charge-truncation biases, but
+  within-class scatter stays sd ≈ 0.5 (a factor 1.6) everywhere, while the
+  doc-22 wrong-flash truth candidates sit at residual +0.8..+3.0. A
+  multiplicative correction shifts the bulk without separating the tail —
+  and re-scaling predictions by ~e^0.3 would perturb the gate/LASSO balance
+  of all 761 agreed matches for no ranking gain.
+
+**Phase 3b (correction knob) NOT built** per the plan's contingency: no
+clean functional form exists. The productive amplitude-side levers were the
+gate-side saturation handling (phases 1b/2), both adopted.
 
 <!-- phase sections appended as the campaign proceeds -->

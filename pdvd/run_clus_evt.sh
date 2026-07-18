@@ -522,6 +522,28 @@ PY
         QL_QGATE_ARG+=(-S "ql_postcull_unflagged=true")
         [ -n "${PDVD_QL_POSTCULL_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_ks_max=${PDVD_QL_POSTCULL_KS}")
         [ -n "${PDVD_QL_POSTCULL_C2N:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_c2n_max=${PDVD_QL_POSTCULL_C2N}")
+        # PDVD_QL_POSTCULL_WTRUNC=1: window-truncated overprediction cull
+        # (doc 23 phase 2) -- drop a selected window-truncated bundle whose
+        # total pred/meas exceeds PDVD_QL_POSTCULL_WTRUNC_RATIO (xtpc pairs
+        # protected; sat-dominated flashes exempt).  ADOPTED as default
+        # 2026-07-17 (tag ac3, with the pin cull: agree 761->764, phantom
+        # 138->118, missed 81->78, 0 agreed pairs touched).  Revert:
+        # PDVD_QL_POSTCULL_WTRUNC=0.
+        if [ "${PDVD_QL_POSTCULL_WTRUNC:-1}" = 1 ]; then
+            QL_QGATE_ARG+=(-S "ql_postcull_wtrunc=true"
+                           -S "ql_postcull_wtrunc_ratio_hi=${PDVD_QL_POSTCULL_WTRUNC_RATIO:-2.0}"
+                           -S "ql_postcull_wtrunc_sat_frac=${PDVD_QL_POSTCULL_WTRUNC_SATFRAC:-0.5}")
+        fi
+        # PDVD_QL_POSTCULL_PIN=1: xtpc-pin overprediction cull (doc 23 phase
+        # 2) -- drop a pinned selection whose total pred/meas exceeds
+        # PDVD_QL_POSTCULL_PIN_RATIO (ratio-ONLY; ks gates on pins kill
+        # legitimate geometric matches; sat-dominated flashes exempt).
+        # ADOPTED as default 2026-07-17 (tag ac3, see wtrunc cull above).
+        # Revert: PDVD_QL_POSTCULL_PIN=0.
+        if [ "${PDVD_QL_POSTCULL_PIN:-1}" = 1 ]; then
+            QL_QGATE_ARG+=(-S "ql_postcull_pin=true"
+                           -S "ql_postcull_pin_ratio_hi=${PDVD_QL_POSTCULL_PIN_RATIO:-2.0}")
+        fi
         # PDVD_QL_POSTCULL_EARLY=1: rescue blind-spot fix (doc 23 phase 1a) --
         # run the unflagged cull BEFORE the cluster rescues too, so a
         # postcull-doomed selection cannot hide its cluster from the rescue.
