@@ -412,11 +412,13 @@ drafting side:
    1.48073. The paper now presents the three-generation story (ensemble 1.568
    → anchored physical 1.566 ± 0.006 → adopted golden-crosser 1.481 ± 0.02)
    and lists the 1.48–1.59 endpoint-definition spread as a limitation.
-   **[NEEDS OWNER — confirm]:** 1.481 rests on ONE track and sits ~5 % below
-   the anchored ensemble physical value; doc 06 itself called it "a
-   cross-check, not a recalibration". Please confirm 1.48073 is the intended
-   final production value for the paper (or schedule the doc-06 population
-   follow-up before submission).
+   ~~[NEEDS OWNER — confirm]~~ **CONFIRMED by owner (2026-07-18):** 1.481 is
+   the production value — single-track but "very reliable", geometrically
+   consistent with the as-built geometry and between the two TPCs. The paper's
+   velocity paragraph now carries the doc-06 internal-consistency checks, and
+   a new Appendix B discusses the related empirical 2 cm containment offset
+   (pull +13.507 µs + widened cushions; origin unclear, census pending). The
+   doc-06 population follow-up remains an A-item.
 2. **Item 6:** the `work/ql_labels/` hand-scan records are not on the drafting
    machine, so the evt298581 blind double-scan agreement (~94 %, session
    memory) could not be recomputed locally. The paper states the in-sample
