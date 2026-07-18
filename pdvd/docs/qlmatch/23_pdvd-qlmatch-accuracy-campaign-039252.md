@@ -38,8 +38,8 @@ existing tag is rewritten.
 | 1b | saturation-aware rescue ratio-high (clean-channel ratio REJECTED) | **done — ADOPTED** (agree +6, missed −6, phantom flat) |
 | 2 | phantom-side overpred culls (wtrunc + pin; twins DEAD) | **done — ADOPTED** (phantom −20, agree +3, missed −3) |
 | 3 | amplitude-model residual study | **done — NEGATIVE** (model unbiased on clean flashes; no correction knob) |
-| 4 | joint-fit levers (cull keep-quality, cross-flash exclusivity) — contingent | pending |
-| 5 | final validation + Bee sets for rescan | pending |
+| 4 | joint-fit levers (cull keep-quality, cross-flash exclusivity) | PROPOSED — owner scope gate (§ phase 4) |
+| 5 | wrap-up: cumulative +13 agree / −13 missed / −20 phantom vs nm4b | done |
 
 Background evidence: doc 20 (census + precull), doc 21 (relaxed tier sweep),
 doc 22 (scan comparison; wrong-flash reframe; rescue blind spot), and the
@@ -316,4 +316,63 @@ fitting on.
 clean functional form exists. The productive amplitude-side levers were the
 gate-side saturation handling (phases 1b/2), both adopted.
 
-<!-- phase sections appended as the campaign proceeds -->
+---
+
+## Phase 4 — joint-fit levers: PROPOSED, NOT BUILT (owner scope gate)
+
+The remaining 78 misses are dominated by wrong-flash LASSO picks (the doc-22
+66-case class, now smaller): the truth candidate is culled or out-competed
+before/inside the joint fit. Two levers remain, both deeper surgery than a
+postcull branch, and both explicitly gated on an owner go-ahead (plan §4):
+
+1. `cull_keep_quality` — let gate-passing rival bundles surVIVE
+   `cull_inconsistent` (QLMatching.cxx:2032-2083) so the joint LASSO
+   arbitrates them (doc-20 lever 1). Cannot be sized offline (needs the
+   LASSO), and the doc-20 census showed pure precull loosening mis-switches
+   without a competition mechanism — expect real A/B iterations.
+2. Cross-flash exclusivity (one T0 per cluster) inside the joint solve —
+   would address the displacement cascades directly; largest build, highest
+   risk to the 764 agreed matches.
+
+Recommendation: run the next-run validation (below) first; if the wrong-
+flash class replicates off-sample, lever 1 is the next round's experiment.
+
+---
+
+## Phase 5 — wrap-up and records
+
+**Final operating point** (all runner defaults; toolkit knobs all OFF):
+nm4b + `PDVD_QL_POSTCULL_EARLY=1` (1a) + `PDVD_QL_CRESCUE_SATRELAX=1`
+(1b, 0.5/2.0) + `PDVD_QL_POSTCULL_WTRUNC=1` + `PDVD_QL_POSTCULL_PIN=1`
+(2, ratio 2.0, sat-frac 0.5).
+
+| metric | nm4b baseline | final (ac3) | Δ |
+|---|---|---|---|
+| agree (scan consistency) | 751 (84.3%) | **764 (85.4%)** | +13 |
+| missed long tracks | 91 | **78** | −13 |
+| phantom | 138 | **118** | −20 |
+
+Cumulative pair diff nm4b→ac3: +77 adoptions (7 scan-verified agree, 36
+long rescan-only, 17 carrying the low-confidence `cluster_rescue_relaxed`
+flag), 21 moves and 7 removals — every one accounted for in the per-phase
+diffs with **zero scan-agreed pairs removed or moved** anywhere in the
+campaign.
+
+**Rescan queue**: the 36 new long unknown adoptions (plus the 15 pending
+nm4b ones) want a hand/AI scan pass; `ac3` mabc zips
+(`work/039252_<idx>_ac3/mabc-all-apa.zip`) are the display material. Not
+uploaded to Bee (outward-facing — owner action).
+
+**Validation caveat (unchanged from doc 19/21)**: every number above is
+in-sample on the 039252 18-evt truth. Before further tuning, score this op
+point on the next scanned run (039349 idx 0-9 Bee set exists but has no
+truth labels yet).
+
+**Gate labels**: `ac0/ac1off` (1a off-gate), `ac1/ac1def` (1a on+flip),
+`ac2off` (1b off-gate), `ac2/ac2def` (1b on+flip), `ac3off/ac3off2` (2
+off-gates), `ac3/ac3def` (2 on+flip); scorecards under
+`work/ql_scores/ac{1,2,3}/`, amp study `work/ql_scores/ac2_amp/`.
+
+**Commits**: toolkit `18bfb555` (1a) / `cf303fad` (1b) / `d26bb84d` (2);
+wcp `204e1e8` (doc 22+23 skeleton) / `43816e0` (1a) / `7864b7e` (1b) /
+`f58f1e2` (2+3). All pushed.
