@@ -779,6 +779,46 @@ overlay the tail (y,z) positions on the cathode mechanical drawing (frame member
 bus, XA window cutouts — docs 07/18 have the module map) to test the
 cathode-structure hypothesis directly.
 
+#### The mesh-cathode reading (owner hypothesis, 2026-07-18)
+
+The PDVD cathode is a **mesh / open-frame structure, not a solid plane**. That single
+hardware fact is the most economical explanation of the full census pattern:
+
+- **It makes "activity inside the cathode" possible at all.** With a solid plane there
+  is no LAr in the 6 cm slab and a crossing muon deposits nothing between the faces.
+  With a mesh, the interior is live argon: the track *does* ionize those ~6 cm, and
+  the anomaly reframes from "impossible charge" to "when does that charge get out".
+- **Delayed extraction fits quantitatively.** The interior of a double-surface mesh
+  electrode is largely field-shielded; what remains is the leakage field through the
+  openings — some fraction of the nominal drift field. At low field v ≈ µE, so an
+  effective 10–50 % of nominal over the last few cm gives ~0.15–0.7 mm/µs, i.e.
+  3–10 cm of apparent displacement in tens of µs. That brackets exactly the measured
+  delays: 20–73 µs (contiguous tails), 31–151 µs (detached clumps). The clumps are
+  then charge born deeper in the structure — weaker leakage field, longer extraction —
+  which is why they detach from the body instead of forming a continuous pile.
+- **One-sidedness follows.** Charge born inside a shielded interior drains toward
+  whichever face the local leakage field favors — all of it goes one way. A bulk
+  field-calibration effect would act symmetrically; the census sees strictly
+  one-sided tails (§11.3 Q&A).
+- **No 6 cm scale follows.** The delay depends on where inside the structure the
+  charge was born and on the local mesh geometry, not on the slab thickness — hence
+  the smooth ~1.8 cm-scale falling depth distribution, and the >6 cm cases being
+  time-delay displacements rather than geometric positions.
+- **Edge enhancement follows.** The cathode's solid members (frame, HV bus, mechanical
+  supports) concentrate at module peripheries and the detector edge, where shielding
+  is stronger and the leakage field weaker → longer delays, more tails (60 % of tails
+  within 30 cm of an edge vs 13 % baseline).
+- **Charge density agrees.** §4.1/§10.2 already measured the pile's q/pt (~5850) equal
+  to the track body's — the tail is MIP-scale ionization of the crossing itself, not a
+  coincident deposit.
+
+Not explained yet: the mild bottom lean of the contiguous class (7 T / 13 B) vs the
+strong top lean of the detached class (12 T / 2 B). If the two cathode surfaces differ
+(mesh on one side only, XA window layout, panel construction), that asymmetry should
+follow from the drawings — same overlay follow-up as above, which is also the decisive
+test of this reading: tails should track the structure (suppressed on solid XA
+windows, enhanced near frame members/edges).
+
 ### 11.7 Implications
 
 - **§10.6 rescue is validated in scope and scale.** The real tail population reaches
