@@ -167,7 +167,90 @@ def attribution(tag0="wx0", tag1="wx1"):
               f"bundles {100*np.mean(pa >= 0.5*m):.0f}%")
 
 
+
+
+def orphan_origin(tag0="wx0", tag1="wx1"):
+    """Doc 25 §8.3 owner follow-up: origin of the 'unpredicted light' term.
+
+    (a) For each unpredicted wall case on a lost pair, find the best covering
+        candidate bundle on the same flash and classify its cluster: selected
+        on the SAME flash / selected on a DIFFERENT flash (+ time gap) /
+        unmatched.  (b) Generic floor: fraction of ALL matched flashes with
+        wall charge-orphan light (meas >= 2, flash-level selected pred < 2).
+    """
+    WALL = [0, 1, 3, 12, 18, 19]
+    cls = dict(sel_same=0, sel_other=0, unmatched=0, unexplained=0)
+    dts = []
+    nfl = orphan_fl = 0
+    orphan_pe = wall_pe = 0.0
+    for idx in range(18):
+        d0, d1 = dump(idx, tag0), dump(idx, tag1)
+        f0 = {f["gid"]: f["time"] for f in d0["flashes"]}
+        fl1 = {f["gid"]: f for f in d1["flashes"]}
+        sel0 = {}
+        for b in d0["bundles"]:
+            if b.get("auto_selected"):
+                sel0.setdefault(b["main_cluster"], b)
+        sel1, predsum = {}, {}
+        by1, byflash = {}, {}
+        for b in d1["bundles"]:
+            by1.setdefault(b["main_cluster"], []).append(b)
+            byflash.setdefault(b["flash_gid"], []).append(b)
+            if b.get("auto_selected"):
+                sel1[b["main_cluster"]] = b["flash_gid"]
+                predsum[b["flash_gid"]] = (predsum.get(b["flash_gid"], np.zeros(40))
+                                           + np.array(b["pred_pe"], float))
+        for g in predsum:
+            meas = np.array(fl1[g]["pe"], float)
+            nfl += 1
+            w = sum(meas[c] for c in WALL if meas[c] >= 2 and predsum[g][c] < 2)
+            wall_pe += sum(meas[c] for c in WALL)
+            if w > 0:
+                orphan_fl += 1
+                orphan_pe += w
+        for uid, b0 in sel0.items():
+            if uid in sel1:
+                continue
+            t0 = f0[b0["flash_gid"]]
+            cands = [b for b in by1.get(uid, [])
+                     if abs(fl1[b["flash_gid"]]["time"] - t0) < 0.5]
+            if not cands:
+                continue
+            b1 = cands[0]
+            g = b1["flash_gid"]
+            pred = np.array(b1["pred_pe"], float)
+            meas = np.array(fl1[g]["pe"], float)
+            for c in WALL:
+                if not (pred[c] < 2 and meas[c] >= 2):
+                    continue
+                best, bp = None, 0.0
+                for b in byflash.get(g, []):
+                    if b["main_cluster"] == uid:
+                        continue
+                    if b["pred_pe"][c] > bp:
+                        bp, best = b["pred_pe"][c], b
+                if best is None or bp < 0.5 * meas[c]:
+                    cls["unexplained"] += 1
+                elif best["main_cluster"] not in sel1:
+                    cls["unmatched"] += 1
+                elif sel1[best["main_cluster"]] == g:
+                    cls["sel_same"] += 1
+                else:
+                    cls["sel_other"] += 1
+                    dts.append(abs(fl1[sel1[best["main_cluster"]]]["time"]
+                                   - fl1[g]["time"]))
+    print(f"unpredicted-case covering-cluster status: {cls}")
+    if dts:
+        print(f"sel_other time gap: median {np.median(dts):.0f} us, "
+              f"within 2us: {int((np.array(dts) < 2).sum())} "
+              f"=> geometric coincidences, NOT true owners")
+    print(f"generic floor: {orphan_fl}/{nfl} matched flashes "
+          f"({100*orphan_fl/nfl:.0f}%) carry wall charge-orphan light; "
+          f"{100*orphan_pe/wall_pe:.0f}% of total wall PE")
+
+
 if __name__ == "__main__":
     churn()
     attribution()
+    orphan_origin()
     nonmatch(sys.argv[1:] or ["ac3", "wx0", "wx1", "wx2", "wx3"])

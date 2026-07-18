@@ -444,16 +444,31 @@ Splitting the wall-channel |pred − meas| budget over the 179 lost pairs
 | **dark** (pred ≥ 2, meas < 0.5 — "inefficiency") | 24% | dominant in 21/114 |
 | **responding-off** (pred ≥ 2, meas > 0 — library/gain) | 12% | dominant in 10/114 |
 
-- The *unpredicted light* is real and correctly predicted — by **other
-  candidate bundles on the same flash** (96% of the cases; only 1% of the
-  PE is covered by other *selected* bundles; median case: channel measures
-  19 PE, the lost bundle predicts 0.03).  The wall response is hyper-local
-  (steep distance fall-off): on a shared flash only the near-wall cluster
-  lights a wall channel, but the per-bundle KS compares this bundle's pred
-  against the *whole-flash* measurement.  On broad cathode patterns that
-  approximation is tolerable; on the walls it reads as an unpredictable
-  spike.  (The joint LASSO models this correctly — it is specifically the
-  per-bundle KS/chi2 that cannot.)
+- The *unpredicted light* is **charge-orphan light: real, time-matched
+  light with no time-correct charge counterpart in the fit** (owner
+  follow-up 2).  First-pass accounting looked reassuring — 96% of the
+  cases are geometrically covered by *some* candidate bundle on the same
+  flash (median case: channel measures 19 PE, the lost bundle predicts
+  0.03) — but tracing the covering clusters kills that reading: 87% of
+  them are **selected on a different flash, median 416 µs away** (0 cases
+  within 2 µs) — distinct cosmics whose candidacy on this flash is a
+  geometric coincidence enabled by the no-T0 x-ambiguity, not the true
+  light owners.  The directly-measured owners are: 12% unmatched clusters
+  (charge reconstructed, match missing), plus 11 cases no contained
+  candidate explains at all (up to 5064 PE).  The floor is generic, not
+  lost-pair-specific: **33% of ALL matched flashes carry wall
+  charge-orphan light (meas ≥ 2, flash-level selected pred < 2), 10% of
+  the total wall PE** (cathode-channel control: 20% of flashes, mostly
+  unselected-cluster light).  Consistent sources, all real: (a) track
+  segments in the **uninstrumented LAr outside the field cage / behind
+  the cathode** — it scintillates but never drifts charge, and the
+  membrane-mounted wall XAs are precisely the channels that see it;
+  (b) reconstructed but unmatched/containment-culled clusters (the dump
+  hides uncontained candidates); (c) charge lost to the shorter BDE
+  readout window / dead zones (§6 gotcha).  The cathode XAs are
+  comparatively immune because in-volume charge dominates their solid
+  angle — which is exactly why the cathode-anchored operating point
+  (doc 18) works.
 - The *dark* term is readout, not optics: 47/53 of the dark wall channels
   are coverage holes (cov < 1); only 6 are covered-but-dark — the §7.2
   83%-flat detection-given-coverage again.
@@ -472,12 +487,15 @@ the answer, in order of leverage:
    error-weighted chi2/LASSO only, with the wide wall family errors, out of
    the un-weighted KS and the highconsist ladder).  The phantom-veto power
    (103 → 69) suggests a real payoff if the KS poisoning is removed; the
-   184 losses were ladder/KS kills, not chi2 kills.  Per the attribution
-   above, the ideal variant subtracts the *other* candidate bundles'
-   predictions from the flash measurement before any per-bundle wall
-   comparison (residual-aware KS) — the dominant 63% term is exactly the
-   per-bundle-vs-whole-flash approximation breaking on hyper-local wall
-   response.
+   184 losses were ladder/KS kills, not chi2 kills.  The charge-orphan
+   finding constrains the design: since the dominant excess has **no
+   time-correct charge owner in the fit at all**, residual subtraction of
+   co-bundle predictions cannot remove it.  The robust wall usage is
+   **one-sided**: penalize only *over*-prediction (predicted bright,
+   measured dark — the direction charge-orphan light cannot fake, and
+   the direction behind the phantom veto), never under-prediction
+   (measured > predicted, which is contaminated by light from outside
+   the instrumented volume).
 2. **Coverage-aware per-flash wall masking** (drop a wall channel only for
    flashes where its self-trigger coverage is partial), removing the
    47-points-of-53 coverage holes from the comparison.
