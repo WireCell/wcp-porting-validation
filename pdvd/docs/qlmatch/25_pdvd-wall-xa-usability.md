@@ -1,0 +1,234 @@
+# 25 — Are the PDVD wall (membrane) X-ARAPUCAs usable? A matched-pair autopsy
+
+2026-07-18.  Status: **analysis only — no code or config change.**  The wall
+XAs stay excluded from the Q/L fit (`mask_wall_xa`, doc 18); this study asks
+*why* they fail and whether they are recoverable, using the matched Q/L pairs
+as the probe.  Follow-up to doc 17 (single-event hand-scan verdict "bimodal,
+no scale factor fixes it") at 120-event statistics, now with a mechanism.
+
+**Headline: the wall XAs are much better hardware than the flash arrays make
+them look.  The single biggest loss is a light-reconstruction artifact — the
+membrane self-trigger snippets produce one broad OpHit stamped at its *peak*
+time, and the flash finder books the whole snippet's PE to the wrong flash
+(32%) or to no flash at all (42%); only 26% lands on the matched flash.  The
+second loss is self-trigger readout coverage (~40% at ≥20 PE expected, and
+*anti*-correlated with brightness).  The photon library contributes a real
+but secondary ~×2–4 distance-dependent shape error.  After a reconstruction
+fix + re-calibration the live wall XAs are plausibly usable as coverage-aware
+cross-check channels; ch 2 (dim) is hardware-dead, ch 1 runs on half its
+SiPM ganging, and ch 13 has no WLS but demonstrably reads out.**
+
+## Repro
+
+```bash
+# inputs: the 120 canonical `_keep` dumps (039252 x18 + 039253 x18 + 039349 x84)
+# -- the last round where the wall XAs still receive photon-library predictions
+# (the cathxa round masks them; doc 18) -- and the `_light<evt>_keep` opflash
+# archives (ophits tensor).
+cd pdvd/docs/qlmatch/scripts
+python3 wall_xa_study.py        # -> wall_xa_flash_channel.tsv  (1885 gated flashes x 40 ch)
+python3 wall_xa_ophit_join.py   # -> wall_xa_ophit_join.tsv     (2873 wall cases, exp>=10)
+python3 wall_xa_figs.py         # -> pics/25_wallxa_*.png + headline numbers
+
+# membrane-frame waveform probe (7 events; 298567 kept frames, the other 6
+# regenerated with the standalone validation job -- output to scratch, never
+# into work/):
+#   wcsonnet -A input_file=input_data_light/<rawwf.root> \
+#            -A output_file=$WALLXA_DIR/membrane-frames-<run>-<evt>.tar.bz2 \
+#            -A run=<run> -A event=<evt> -A branch=membrane -o cfg.json \
+#            wct-light-frames.jsonnet   &&   wire-cell -c cfg.json
+python3 wall_xa_wf_probe.py     # FLAT / LIGHT-AT-FLASH-TIME / NO-SNIPPET classes
+```
+
+## 1. Method
+
+- **Sample**: every flash with ≥1 `auto_selected` bundle in the 120 `_keep`
+  dumps, quality-gated by the cathode-XA ruler (doc 17 conventions): ≥4 good
+  cathode channels (`cov==1`, unsaturated, predicted), Σpred_cath ≥ 50 PE,
+  ruler `R_cath = Σmeas/Σpred ∈ [0.5, 2]`, no `window_truncated` bundle.
+  **1885 matched flashes** survive (131 of them gold `xtpc_pin` crossers).
+- **Expected PE** per channel: `exp = pred × R_cath` — the v5-library
+  prediction summed over the flash's selected bundles, normalized by that
+  flash's own cathode response, so per-flash QtoL/attenuation scale drops out
+  and channel response is isolated.
+- Channels: live wall XAs {0, 1, 3} (top wall, x +229…+306 cm) and
+  {12, 18, 19} (bottom wall, x −201…−278 cm), all on the ±y = 417.6 cm
+  membrane walls at mid-z; masked wall XAs 2 (dim) and 13 (no WLS) observed
+  measured-only; cathode XAs 4–11 as control.
+- Three probing depths: **flash arrays** (`pe/cov/sat`, what the Q/L fit
+  sees) → **ophits tensor** in the production `opflash_pdvd-wct.tar.gz`
+  (col 0 opch, 1 hit time ns, 2 width ns, 4 peak amplitude, 5 PE,
+  6 start time ns, 7 assigned flash row, −1 = none) → **deconvolved membrane
+  waveforms** (7 events; time base verified `light-frame µs = dump.time −
+  trigger_offsets_us[0]`, and decon integral closes to flash PE ~1:1 on
+  moderate-PE fired cases).
+
+## 2. The flash-level picture: a family that never turns on
+
+![turn-on](pics/25_wallxa_turnon.png)
+
+At exp ≥ 20 PE (2200 wall cases): readout coverage **38%**, PE booked on the
+matched flash **19–28%**, and neither improves with brightness — the cathode
+control reaches ~100% detection by 20 PE, the wall XAs are *flat at ~20–28%
+out to ≥300 PE expected*.  There is no threshold turn-on; this alone says the
+failure is not "small signals below threshold".
+
+Response when they do fire is the doc-17 bimodality at scale
+(pics/25_wallxa_ratio.png, left): a zero spike (49–72% of covered channels at
+exp ≥ 20 read < 0.25×exp) next to a broad **over-unity** lobe (median
+meas/exp 1.2–3.2 per channel, 16–84% spanning ×0.5–×6; cathode control:
+0.84–1.22 with ×1.7 spread).  The failure fraction is **flat vs source
+distance to the wall (63–64% over 0–350 cm), flat vs drift offset, and
+identical in all three runs** (62/61/60%) — not a geometry error, not a
+run condition.
+
+Coverage *anti*-correlates with brightness: 63% at exp ~5–10 falling to ~29%
+at ≥100, and 51%→38% vs flash total PE at fixed exp — the self-trigger is
+*more* likely silent in bright, busy windows (open question for DAPHNE
+config; §6).
+
+## 3. The mechanism: snippet-wide OpHits booked at peak time
+
+The production ophits tensor resolves the bimodality.  Membrane channels are
+1024-tick (16.4 µs) self-trigger snippets; slow/diffuse light fills the whole
+snippet, the hit finder merges it into **one wide OpHit** (widths up to the
+full 16.4 µs) whose *time* is the **peak** of the pulse, while its *start*
+(col 6) sits exactly at the matched flash.  The flash finder then books the
+entire snippet integral to whichever 1 µs flash bin contains the peak:
+
+```
+evt49746 flash 91 (opdet 12): ophits 2050/2051 = 450 + 360 PE, start AT the
+  flash, peak +0.9 us  -> assigned flash -1 (NONE); flash pe[12] = 0.0
+evt49746 flash 81 (opdet 18): ophit 2060/2061 = 1451 + 1186 PE, start AT the
+  flash, peak +14.2 us -> booked to flash 165 (14 us later); flash pe[18] = 0
+evt49746 flash 104 (opdet 3): 1064 PE ophit, start -15 us, peak +0.8 us ->
+  booked to flash 215, 0.8 us from the matched flash 214
+```
+
+![booking](pics/25_wallxa_booking.png)
+
+Population-scale (ophit start within [−1, +6] µs of the matched flash,
+exp ≥ 20, 294k PE in 1144 cases): **26% of the reconstructed wall-XA PE is
+booked to the matched flash, 32% to another flash, 42% to no flash at all.**
+Detection doubles when scored at ophit level instead of flash level: 28% →
+**52%**.  This also explains the over-unity lobe: when a snippet *is* booked
+to the right flash it carries the full 16.4 µs integral, including late and
+neighboring-flash light.
+
+The 7-event waveform probe closes the loop at exp ≥ 50: of 45 covered "dead"
+cases, **21 have the light sitting in the deconvolved waveform at the flash
+time** (flat slow pulses, integrals up to ~800 PE) and 24 are genuinely flat;
+of 91 uncovered cases, 18 have light in the (partially-covering) snippets,
+38 have snippets elsewhere only, 35 have no snippet within ±30 µs.  All 5
+responding controls show in-window light, as they should.
+
+## 4. The owner's four questions
+
+**(1) Is "top wall worse than bottom wall" supported?  No — if anything the
+reverse, and per-channel personality dominates.**
+
+![per channel](pics/25_wallxa_per_channel.png)
+
+| ch | wall | cov% (exp≥20) | ophit-det% | flash-det% | dead-if-cov% | med ratio (resp.) |
+|---:|------|----:|----:|----:|----:|----:|
+| 0  | top    | 50.5 | **67.9** | 30.6 | 49.3 | 1.26 |
+| 1  | top ⚠ half-ganged | 39.5 | 35.5 | 17.4 | 65.8 | 1.21 |
+| 3  | top    | 37.6 | 55.6 | 19.2 | 60.2 | 3.17 |
+| 12 | bottom | 32.6 | 53.2 | 16.4 | 65.3 | 2.28 |
+| 18 | bottom | 27.4 | 46.3 | 15.1 | 66.2 | 2.16 |
+| 19 | bottom | 36.3 | 50.0 | 12.6 | 71.7 | 2.34 |
+
+Top-wall coverage and detection are slightly *better* than bottom on average;
+the gold (`xtpc_pin`) subsample agrees (dead-mode 47–59% top vs 64–73%
+bottom).  The credible source of the "top is worse" impression is two
+specific top channels, not the family: **ch 2 is hardware-dim** (14% coverage
+at peer-exp ≥ 20, fires 7% of the time — the doc-13 ~8–50× deficit; masked)
+and **ch 1 runs on half its SiPM ganging** — the DAPHNE map has only opch
+2030; its pair 2031 is absent from the readout, and ch 1 is correspondingly
+the worst *live* channel (ophit-det 35.5% vs ch 0's 67.9%).  Meanwhile
+bottom's ch 13 (no WLS, masked, Ar-blind by design) demonstrably *reads out*
+(76% coverage, fires 39% with median 14 PE on bright flashes) — whatever
+residual sensitivity that is, the electronics chain works.
+
+**(2) Worse efficiency — not firing when it should?  Yes, but in three
+separable layers**, none of which is a sharp threshold: (i) self-trigger
+coverage ~38–40% (readout, §4.3); (ii) among covered channels, the booking
+artifact of §3 (recoverable in software); (iii) a genuinely-flat remainder
+(~half of the covered dead cases at waveform level) — diffuse light below
+the DAPHNE trigger in a covered-by-another-snippet window, plus any real
+optical deficit.
+
+**(3) Is the mismatch from the photon library?  Partly — a real ×2–4 shape
+error, but it is the *smallest* of the three effects.**  At flash level the
+pattern correlation is destroyed by the booking artifact (log-log Pearson
+0.0–0.28 vs 0.89–0.92 for cathode channels).  At ophit level (booking-
+independent) the response is centered near unity — `avail/exp` median 1.35,
+16–84% 0.24–3.25 — but with a clean monotone distance trend: median ~0.5
+when the source charge barycenter is < 150 cm from the XA's wall, rising to
+~2 beyond 350 cm (pics/25_wallxa_ratio.png, right).  The v5 library falls
+off too fast for the y-normal wall XAs: over-predicts near field, under-
+predicts far field.  Correctable with a distance- (or ANN-input-) dependent
+recalibration once the reconstruction is fixed — but even then the per-flash
+scatter (×3 at 16–84%) is far wider than the cathode's ×1.7.
+
+**(4) Readout as the photon-efficiency culprit?  Yes, two distinct readout
+losses** on top of the reco artifact: (a) the DAPHNE self-trigger is simply
+silent — no snippet within ±30 µs — for ~⅓ of the probed uncovered cases,
+and coverage *drops* with brightness (§2), suggesting rate/hold-off behavior
+in busy windows rather than a plain threshold; (b) partial-coverage snippets
+(cov fractional < 1) that the fit scores as "no data".  Plus the ch 1
+half-ganging and ch 2 dimness above.  **Any other reason?** — §3 *is* the
+other reason, and it is the biggest one.
+
+## 5. Verdict on usability
+
+- The hardware is substantially healthier than the Q/L arrays suggest: in
+  52% of ≥20 PE-expected cases the light is reconstructed *somewhere*, at
+  amplitudes commensurate (×0.5–3) with the library expectation, and the
+  waveform probe finds real multi-hundred-PE pulses at exactly the matched
+  flash times.  "Bimodal wall XAs" (doc 17) was the right description of the
+  arrays and the wrong description of the detectors.
+- Keeping them **out of the Q/L fit today is still correct** — flash-level
+  PE on these channels is untrustworthy in both directions (zeros from
+  misbooking, over-unity from snippet-integral pile-up).
+- Recovery path, in order: (1) **light-reco fix** — split/re-time membrane
+  snippet hits (book PE by pulse start, or spread the snippet integral
+  across flash bins; alternatively integrate the decon directly over each
+  flash window as done for full streams).  This alone roughly doubles usable
+  detection and removes both failure lobes.  (2) **DAPHNE config review** of
+  the membrane self-trigger (the brightness anti-correlation of §2 is the
+  test case).  (3) **Re-derive the per-channel calibration and the
+  distance-dependent library correction** on the then-clean sample.
+  (4) Channel dispositions: ch 2 stays masked (hardware-dim); ch 1 usable
+  with its own half-ganging calibration; ch 13 stays out for Ar running
+  (no WLS) though its electronics are fine.
+- Even fully recovered they will remain ~40–60%-duty, coverage-masked
+  channels — cross-check/veto material and Q/L tie-breakers, not core fit
+  channels like the cathode XAs.
+
+## 6. Open questions
+
+1. Why does self-trigger coverage fall with brightness (63% → 29%)?  DAPHNE
+   rate limiting / hold-off / event-builder truncation are candidates —
+   needs the DAPHNE configuration, outside this dataset.
+2. The genuinely-flat covered dead cases (~half of the probed DEAD class):
+   diffuse light below trigger inside another snippet's coverage, or a real
+   optical loss?  Needs a reco-fixed sample to re-measure.
+3. The ophit-level `avail` window ([−1, +6] µs on hit start) can scoop
+   neighboring-snippet light in busy events; the ×3 scatter in §4.3 is an
+   upper bound on the true response spread.
+4. Auto-matched pairs at the keep operating point carry ~15–30% wrong
+   matches; the cathode-ruler gate and the gold-crosser cross-checks bound
+   the contamination (gold reproduces every conclusion), but a post-cathxa
+   re-run with hand-confirmed pairs would tighten the ratios.
+
+## Appendix: sample and files
+
+- 1885 gated matched flashes (of the 120-event `_keep` dumps), 131 gold.
+- `scripts/wall_xa_flash_channel.tsv` — 75 400 rows: per (gated flash,
+  channel) pred/meas/cov/sat + ruler + charge barycenter.
+- `scripts/wall_xa_ophit_join.tsv` — 2873 rows: per (flash, wall channel,
+  exp ≥ 10) booked vs available PE and booking destination.
+- `pics/25_wallxa_{turnon,per_channel,booking,ratio}.png`.
+- Membrane-frame probe events: 298567/298777 (039252), 49746/49806/49966
+  (039253), 19709/55826 (039349).
