@@ -168,6 +168,23 @@ fi
 if [ "${PDVD_OVERFLOW_TO_RAIL:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "overflow_to_rail=true")
 fi
+# PDVD_MEM_WIDE_HIT_MODE: handling of over-wide membrane OpHits (a slow pulse
+# spanning a 16.4-us snippet otherwise books its whole PE at its PEAK time's
+# flash bin; 74% of wall-XA PE lands on the wrong or no flash --
+# docs/qlmatch/25_pdvd-wall-xa-usability.md §3/§7).  Values: 'start' (book the
+# full integral at the pulse onset -- total-light convention) or 'slice' (book
+# per 1-us slice).  DEFAULT empty = legacy: study knob, not a production
+# operating point (the wall XAs stay masked in Q/L either way).  Toolkit
+# C++/jsonnet defaults stay OFF (byte-identical).
+if [ -n "${PDVD_MEM_WIDE_HIT_MODE:-}" ]; then
+    VETO_SAT_ARG+=(-A "mem_wide_hit_mode=${PDVD_MEM_WIDE_HIT_MODE}")
+fi
+# PDVD_PMT_WIDE_HIT_MODE: same for the PMT branch (also 16.4-us self-trigger
+# snippets; 1% of PMT hits are wide but carry 22% of the PMT PE, 46% of it
+# unassigned).  Same values/default as PDVD_MEM_WIDE_HIT_MODE.
+if [ -n "${PDVD_PMT_WIDE_HIT_MODE:-}" ]; then
+    VETO_SAT_ARG+=(-A "pmt_wide_hit_mode=${PDVD_PMT_WIDE_HIT_MODE}")
+fi
 
 wcsonnet \
     -A input_file="$RAW_FILE" \

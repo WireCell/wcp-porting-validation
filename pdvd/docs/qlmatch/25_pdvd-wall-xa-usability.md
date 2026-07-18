@@ -1,10 +1,12 @@
 # 25 — Are the PDVD wall (membrane) X-ARAPUCAs usable? A matched-pair autopsy
 
-2026-07-18.  Status: **analysis only — no code or config change.**  The wall
-XAs stay excluded from the Q/L fit (`mask_wall_xa`, doc 18); this study asks
-*why* they fail and whether they are recoverable, using the matched Q/L pairs
-as the probe.  Follow-up to doc 17 (single-event hand-scan verdict "bimodal,
-no scale factor fixes it") at 120-event statistics, now with a mechanism.
+2026-07-18.  Status: **analysis + one default-OFF light-reco knob (§7).**  The
+wall XAs stay excluded from the Q/L fit (`mask_wall_xa`, doc 18); this study
+asks *why* they fail and whether they are recoverable, using the matched Q/L
+pairs as the probe.  Follow-up to doc 17 (single-event hand-scan verdict
+"bimodal, no scale factor fixes it") at 120-event statistics, now with a
+mechanism — and, in §7, with the reconstruction fixed and the efficiency and
+photon-library questions re-measured on the fixed sample.
 
 **Headline: the wall XAs are much better hardware than the flash arrays make
 them look.  The single biggest loss is a light-reconstruction artifact — the
@@ -38,6 +40,17 @@ python3 wall_xa_figs.py         # -> pics/25_wallxa_*.png + headline numbers
 #            -A run=<run> -A event=<evt> -A branch=membrane -o cfg.json \
 #            wct-light-frames.jsonnet   &&   wire-cell -c cfg.json
 python3 wall_xa_wf_probe.py     # FLAT / LIGHT-AT-FLASH-TIME / NO-SNIPPET classes
+
+# §7 -- reprocess all 120 events' light with the wide-hit booking fixed
+# (toolkit OpHitFinder wide_hit_mode knob, default OFF; runner env turns it
+# on for this STUDY round only; fresh _whfix tags, _keep untouched):
+cd pdvd && export PDVD_MEM_WIDE_HIT_MODE=start PDVD_PMT_WIDE_HIT_MODE=start PDVD_MAX_JOBS=6
+./run_light_all.sh -s _whfix 39252 ; ./run_light_all.sh -s _whfix 39253
+for f in input_data_light/np02vd_raw_run039349_*_rawwf.root; do
+  ./run_light_all.sh -f "$f" -s _whfix 39349; done
+cd docs/qlmatch/scripts
+python3 wall_xa_whfix_join.py   # -> wall_xa_whfix_join.tsv (matched flashes x 40 ch)
+python3 wall_xa_whfix_figs.py   # -> pics/25_wallxa_whfix.png + §7 numbers
 ```
 
 ## 1. Method
@@ -222,6 +235,109 @@ other reason, and it is the biggest one.
    the contamination (gold reproduces every conclusion), but a post-cathxa
    re-run with hand-confirmed pairs would tighten the ratios.
 
+## 7. The reconstruction fixed: wide_hit_mode='start' (2026-07-18 follow-up)
+
+Owner follow-up: fix the light-reconstruction booking, keep the wall XAs out
+of Q/L, and re-measure efficiency and photon-library matching on the fixed
+sample.  Also: the PMTs ride the same 16.4-µs snippets — audit them too.
+
+### 7.1 The knob
+
+`OpHitFinder` gains **`wide_hit_mode`** (toolkit, C++ default `""` = legacy,
+byte-identical): for hits wider than `wide_hit_min_width` (2 µs),
+
+- **`"start"`** re-times the hit to its pulse **onset**, so `OpFlashFinder`
+  books the full integral to the flash that produced it.  This is the
+  cathode full-stream convention and the only booking comparable to a
+  *total-light* photon-library prediction — the mode used below.
+- **`"slice"`** cuts the pulse into 1 µs sub-hits (`slice_width`), each with
+  its own area and peak time.  Time-faithful, but a flash then carries only
+  its prompt window's share: on the evt298567 test the crosser flash's wall
+  PE *dropped* (306 → 40 on ch 3) and the unassigned fraction *rose*
+  (61% → 80%, tail slices below flash threshold) — implemented, kept for
+  timing studies, **not** the mode for Q/L-style comparisons.
+
+Wiring: `protodunevd/flash.jsonnet` `ophit(wide_hit_mode=,
+wide_hit_min_width_us=, slice_width_us=)` (key-suppressed);
+`pdvd/wct-light-reco.jsonnet` TLAs `mem_wide_hit_mode` / `pmt_wide_hit_mode`;
+runner envs `PDVD_MEM_WIDE_HIT_MODE` / `PDVD_PMT_WIDE_HIT_MODE` (default
+empty = off — **study knob, not a production operating point**).
+
+Proofs: compiled config knob-off diff vs pre-change EMPTY; knob-on adds
+exactly `wide_hit_mode/wide_hit_min_width/slice_width` on the mem+pmt
+`OpHitFinder` nodes (cathode untouched); runtime knob-off `opflash` archive
+member-content hash `027c16c6…` **identical** to the production
+`_light298567_keep` archive; `wcdoctest-flash` 31/31; sentinel
+`wide_hit_mode 'start' on: min_width=2000 ns` on both branches.  PE is
+conserved exactly in `start` mode (hits only re-timed: 1575 membrane hits,
+56 462 PE before and after on evt298567).
+
+### 7.2 Efficiency with the booking fixed (120 events, `_whfix`)
+
+![whfix](pics/25_wallxa_whfix.png)
+
+Same 1885-flash matched sample, new flash arrays matched by time (|Δt| <
+0.6 µs; 9/1885 flashes lost to re-segmentation).  At exp ≥ 20 PE:
+
+| | BEFORE (peak booking) | AFTER (start booking) |
+|---|---:|---:|
+| detection, all | 27.9% | **46.7%** |
+| detection, gold crossers | 20% | 39% |
+| detection given cov = 1 | ~50% | **83%** |
+| covered-but-dark share of misses | ~half | **6 of 53 pts** |
+| responding ratio med (16–84%) | 1.21 (0.16–3.75) | 1.36 (0.31–3.16) |
+| log-log corr (meas vs exp) | 0.17 | 0.27 |
+
+Per channel (detection at exp ≥ 20): ch 0 40→61%, ch 1 18→31%, ch 3 30→51%,
+ch 12 28→48%, ch 18 29→42%, ch 19 20→44%.  The cathode control is untouched
+(99.6/99.3% and identical ratios — the knob re-times only mem/pmt hits).
+
+**The efficiency question is now closed**: detection-given-readout is **flat
+at 81–84% from 5 to 1000 expected PE** — no brightness dependence, no
+threshold wall.  The remaining inefficiency is almost entirely the
+**self-trigger coverage** (38% at exp ≥ 20; 47 of the 53 missed points have
+cov < 1, only 6 are covered-but-dark).  The §2 "genuinely flat covered"
+class was mostly mis-booking too.  What remains is a DAPHNE
+trigger/coverage question, not an optics one.
+
+### 7.3 Photon-library matching with the booking fixed
+
+The responding-mode ratio is now a clean, monotone **distance shape error**:
+median meas/exp = 0.69 at source–wall distance < 150 cm, 1.10 (150–250),
+1.43 (250–350), 1.80 (350–500), 2.10 (> 500 cm) — the v5 library falls off
+too fast with distance for the y-normal wall XAs (over-predicts near field
+×1.4, under-predicts far field ×2).  A distance-dependent (or ANN-input)
+recalibration is now well-defined; doc 01's membrane treatment is the place
+to revisit.  The in-bin 16–84% spread remains ×3–5 near / ×2 far, so even
+recalibrated the wall XAs would carry per-flash errors several times the
+cathode's ×1.7 — consistent with their §5 role as cross-check channels, not
+core fit channels.
+
+### 7.4 The PMT side (owner follow-up: same disease?)
+
+Yes, in milder form: only ~1% of PMT hits exceed 2 µs, but they carry **22%
+of the PMT PE**, 46% of it unassigned to any flash.  The same knob now
+covers the PMT branch (`pmt_wide_hit_mode`).  Effect on the matched sample
+(exp ≥ 20): z-wall PMT detection 43→40%, bottom PMT 54→50% — essentially
+unchanged, because narrow hits dominate PMT detections; the small *decreases*
+are removed false positives (wide late-light blobs that peak-booking had
+credited to the matched flash).  Bottom-PMT responding median moves 0.13 →
+0.31.  The PMT fix matters mainly for *PE-scale honesty* (no more 16-µs
+integrals teleported into bright flashes), not for detection.
+
+### 7.5 Updated verdict
+
+- Hardware efficiency is **not** the wall XAs' problem: given readout, they
+  fire at 83% independent of brightness and geometry.
+- The recovery ladder of §5 is now: (1) ~~light-reco fix~~ **done** (this
+  knob; owner decision pending on making `start` a production default — it
+  changes flash PE/segmentation for *all* self-trigger channels, so it needs
+  its own validation round); (2) DAPHNE self-trigger coverage (the 38%
+  ceiling and its brightness anti-correlation) — hardware/config domain;
+  (3) the ×3 distance recalibration of the v5 library for wall geometry.
+- Wall XAs stay masked in Q/L matching for now (unchanged), but the path to
+  "usable as coverage-masked cross-check channels" is concrete.
+
 ## Appendix: sample and files
 
 - 1885 gated matched flashes (of the 120-event `_keep` dumps), 131 gold.
@@ -229,6 +345,9 @@ other reason, and it is the biggest one.
   channel) pred/meas/cov/sat + ruler + charge barycenter.
 - `scripts/wall_xa_ophit_join.tsv` — 2873 rows: per (flash, wall channel,
   exp ≥ 10) booked vs available PE and booking destination.
-- `pics/25_wallxa_{turnon,per_channel,booking,ratio}.png`.
+- `pics/25_wallxa_{turnon,per_channel,booking,ratio,whfix}.png`.
 - Membrane-frame probe events: 298567/298777 (039252), 49746/49806/49966
   (039253), 19709/55826 (039349).
+- §7: `scripts/wall_xa_whfix_join.{py,tsv}`, `scripts/wall_xa_whfix_figs.py`;
+  120 `work/*_light*_whfix/` archives (mem+pmt `wide_hit_mode='start'`);
+  toolkit knob commit noted in the wcp commit message.
