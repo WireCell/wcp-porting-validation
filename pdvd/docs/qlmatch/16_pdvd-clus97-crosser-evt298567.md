@@ -673,6 +673,42 @@ T0-free R backs the flash-based penetration with the right sign and magnitude
 wrong-flash artifact. Expressed as delay rather than distance, 3–11 cm ≡ **20–73 µs of
 late arrival** at v = 1.48 mm/µs.
 
+#### Side occupancy and depth distribution (owner follow-up, 2026-07-18)
+
+**Q1 — bottom TPC only, or split between the two?** Split — both drift volumes show
+the effect, at every depth threshold, with a mild and threshold-stable bottom lean
+(~60/40) in the contiguous class:
+
+| contiguous pen > | top | bottom | bottom frac |
+|---|---|---|---|
+| 1 cm | 54 | 81 | 60 % |
+| 2 cm | 16 | 21 | 57 % |
+| 3 cm | 7 | 13 | 65 % |
+| 5 cm | 3 | 4 | 57 % |
+| 6 cm | 1 | 3 | 75 % |
+
+(ADC-supported halves only — the §11.5 pad-artifact exclusion matters here, since all
+4 fakes were bottom-side; the 13 supported bottom tails have their cathode ends at
+ticks 427–7279, far from any readout edge.) The detached class leans the *opposite*
+way (12 top / 2 bottom, not understood). And the tail is **always one-sided per
+crosser**: no pair has both halves past 3 cm; exactly one pair in the whole census has
+both marginally past 2 cm (039253 idx 11: 2.7 / 2.1 cm). Whatever delays the charge
+acts on one side of a given crossing, not symmetrically on both.
+
+**Q2 — is the in-cathode part always ~6 cm, or does the length vary?** It varies
+continuously — there is **no preferred ~6 cm (slab-thickness) scale**. The supported
+>3 cm depths are 3.2, 3.3, 3.4, 3.5, 3.5, 3.7, 3.9, 4.1, 4.2, 4.3, 4.3, 4.5, 4.6,
+5.3, 5.5, 5.7, 6.1, 7.0, 10.3, 10.8 cm: binned 3–4 cm: 7, 4–5 cm: 6, 5–6 cm: 3,
+> 6 cm: 4. The population falls smoothly (roughly exponentially, ~1.8 cm scale above
+the ~2 cm normal endpoint spread; whole-population p50 is −0.9 cm short of the face,
+p99 ≈ +6 cm); the tails are the extreme of a continuum, not a discrete "crossed the
+slab" class. Two readings follow: (i) the 4 cases past 6 cm end **beyond the opposite
+cathode face**, which no geometric position inside the slab can produce — so at least
+the deep end of the distribution is an *apparent* (time-delay) displacement, 41–73 µs
+of late arrival, not literal charge location; (ii) the detached clumps continue the
+same trend deeper (4.6–22.3 cm ≡ 31–151 µs), consistent with one mechanism whose delay
+spans a wide range rather than a fixed slab-geometry offset.
+
 A separate **detached** class: 14 halves have a compact past-face clump beyond a
 > 2.5 cm drift gap from the body, penetrations 4.6–22.3 cm (31–151 µs). **12 of 14 sit
 within 9 cm of the crossing point in (y,z)** — random merged-in deposits (§4's 80 cm
