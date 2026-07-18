@@ -391,6 +391,37 @@ PY
         CC_TIPTOUCH_ARG=(-S "cc_tip_touch_cut_cm=${PDVD_CC_TIP_TOUCH_CUT}"
                          -S "cc_tip_touch_angle_cut=${PDVD_CC_TIP_TOUCH_ANGLE:-12.0}")
     fi
+    # PDVD_CC_DIS_CUT / _DRIFT_CUT / _CATHODE_X_CUT (all cm): enlarge the stage-4
+    # ClusteringCathodeConnect distance gates for PDVD's ~6 cm-thick cathode.  A
+    # genuine crosser's two halves stop at their own cathode face (~+-3 cm) and
+    # meet 6-15 cm apart -- past the SBND-tuned dis_cut=5 / drift_cut=8 /
+    # cathode_x_cut=5, so they land in the far regime whose connection-vector test
+    # the SCE offset corrupts (owner: directions consistent, closest-point vector
+    # offset).  Data-driven from the 151 QL-confirmed xtpc_pin pairs across 28
+    # evts (dis p95=15, dX p95=12, tip|x| p95=6.6): dis_cut=16 makes 95% of
+    # confirmed crossers CLOSE-regime, where the pass accepts on track collinearity
+    # ALONE (no connection-vector test).  Empty => clus.jsonnet keeps 5/8/5 =>
+    # byte-identical.  Toolkit C++/jsonnet defaults stay OFF.  Census tags cc1*.
+    # ---- Cathode-crossing merge operating point cc3a (ADOPTED 2026-07-17).
+    # Data-driven from the QL-confirmed cross-cathode crossers (120-event feature
+    # study, docs/qlmatch/): PDVD's 6cm-thick cathode leaves each crosser half at
+    # its own cathode face, so the SBND-tuned gates cannot span the gap.  The four
+    # merge knobs recover cross-cathode crossers 76%->89% at ~0 spurious.  Runner
+    # DEFAULTS them ON (override via env); the toolkit C++/jsonnet defaults stay OFF
+    # so the compiled config is byte-identical when these are unset there.
+    #   dis_cut 16 / drift_cut 14 / cathode_x_cut 8   (span the 6cm cathode)
+    #   crosser_conn_relax 75   (SCE-noisy tip connection; relax not drop)
+    #   crosser_pca_angle 15    (admit bent crossers on the reliable PCA direction)
+    # cathode_band_dis stays OFF (near-cathode retry; validated NULL -- the band
+    # tips' connection is ~perpendicular, indistinguishable from coincidences).
+    local CC_DIST_ARG=()
+    CC_DIST_ARG+=(-S "cc_dis_cut_cm=${PDVD_CC_DIS_CUT:-16}")
+    CC_DIST_ARG+=(-S "cc_drift_cut_cm=${PDVD_CC_DRIFT_CUT:-14}")
+    CC_DIST_ARG+=(-S "cc_cathode_x_cut_cm=${PDVD_CC_CATHODE_X_CUT:-8}")
+    CC_DIST_ARG+=(-S "cc_crosser_conn_relax=${PDVD_CC_CROSSER_CONN_RELAX:-75}")
+    CC_DIST_ARG+=(-S "cc_crosser_pca_angle=${PDVD_CC_CROSSER_PCA_ANGLE:-15}")
+    # near-cathode closest-approach retry (cm); empty => OFF (validated null lever)
+    [ -n "${PDVD_CC_CATHODE_BAND_DIS:-}" ] && CC_DIST_ARG+=(-S "cc_cathode_band_dis=${PDVD_CC_CATHODE_BAND_DIS}")
     # ---- Cathode-XA-anchored operating point (2026-07-16, docs/qlmatch/18_*.md).
     # Motivated by the evt298567 hand-scan PD-family study (doc 17): the cathode
     # XAs are the only PD family with full-stream readout and proportional
@@ -687,6 +718,7 @@ PY
         "${QL_RESCUE_ARG[@]}" \
         "${QL_SATFLAG_ARG[@]}" \
         "${CC_TIPTOUCH_ARG[@]}" \
+        "${CC_DIST_ARG[@]}" \
         -o "$CFG_JSON" wct-clustering.jsonnet
     if [ ! -s "$CFG_JSON" ]; then
         echo "ERROR: wcsonnet failed to compile wct-clustering.jsonnet" >&2

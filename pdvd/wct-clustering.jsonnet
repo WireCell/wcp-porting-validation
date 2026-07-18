@@ -246,6 +246,27 @@ function(
     // _cm is converted to internal units below; _angle_cut is in DEGREES.
     cc_tip_touch_cut_cm = null,
     cc_tip_touch_angle_cut = null,
+    // Post-QLMatching cathode-crossing STITCH distance gates (stage-4
+    // ClusteringCathodeConnect).  PDVD's cathode is ~6 cm thick, so a genuine
+    // crosser's two halves stop at their own cathode face (~+-3 cm) and meet
+    // 6-15 cm apart -- past the SBND-tuned dis_cut=5 / drift_cut=8 /
+    // cathode_x_cut=5.  Data-driven from the 151 QL-confirmed xtpc_pin pairs
+    // (28 evts): dis p95=15, dX p95=12, tip|x| p95=6.6.  null => clus.jsonnet
+    // keeps 5/8/5 => byte-identical.  Set in CM by run_clus_evt.sh census point.
+    cc_cathode_x_cut_cm = null,
+    cc_drift_cut_cm = null,
+    cc_dis_cut_cm = null,
+    // 6cm-cathode crosser cc_pca relaxation (degrees): loose connection-vector
+    // bound for drift-gated crossers.  null => clus.jsonnet keeps C++ default 0
+    // (relaxation OFF) => byte-identical.  Census operating point ~65 deg.
+    cc_crosser_conn_relax = null,
+    // 6cm-cathode crosser tt_pca bound (degrees): admit bent crossers. null =>
+    // clus.jsonnet keeps C++ default 0 (bound stays angle_cut) => byte-identical.
+    // Census operating point ~15 deg.
+    cc_crosser_pca_angle = null,
+    // 6cm-cathode near-cathode closest-approach retry (cm). null => clus.jsonnet keeps
+    // C++ default 0 (retry OFF) => byte-identical. Census operating point ~10 cm.
+    cc_cathode_band_dis = null,
 )
 
 local anodes = [tools_all.anodes[i] for i in anode_indices];
@@ -307,11 +328,21 @@ local group_pipes = [group_pipe(gd) for gd in groups];
 // null => byte-identical (key suppressed in clus.jsonnet); else cm -> internal.
 local cc_tip_touch_cut = if cc_tip_touch_cut_cm == null then null
                          else cc_tip_touch_cut_cm * wc.cm;
+// Distance gates: null => the clus.jsonnet defaults (5/8/5 cm) => byte-identical.
+local cc_cathode_x_cut = if cc_cathode_x_cut_cm == null then 5*wc.cm else cc_cathode_x_cut_cm * wc.cm;
+local cc_drift_cut = if cc_drift_cut_cm == null then 8*wc.cm else cc_drift_cut_cm * wc.cm;
+local cc_dis_cut = if cc_dis_cut_cm == null then 5*wc.cm else cc_dis_cut_cm * wc.cm;
 local clus_all_tpc = if do_qlmatch
     then clus_maker.all_tpc(anodes, premerged=true, save_opflash=save_opflash,
-                            cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut)
+                            cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut,
+                            cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
+                            cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
+                            cc_cathode_band_dis=cc_cathode_band_dis)
     else clus_maker.all_tpc(anodes, ngroups=ngroups,
-                            cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut);
+                            cc_tip_touch_cut=cc_tip_touch_cut, cc_tip_touch_angle_cut=cc_tip_touch_angle_cut,
+                            cc_cathode_x_cut=cc_cathode_x_cut, cc_drift_cut=cc_drift_cut, cc_dis_cut=cc_dis_cut,
+                            cc_crosser_conn_relax=cc_crosser_conn_relax, cc_crosser_pca_angle=cc_crosser_pca_angle,
+                            cc_cathode_band_dis=cc_cathode_band_dis);
 
 // JOINT Q/L matching (shared-flash): both drift sides enter ONE QLMatching node and
 // each reads the SAME all-PD opflash archive.  Per side: opflash source ->
