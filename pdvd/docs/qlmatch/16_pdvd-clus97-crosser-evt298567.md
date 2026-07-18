@@ -6,6 +6,14 @@ NOT adopted: §6.1 `robust_endpoint_gap_cathode` (cathode gap trim) and §10.6
 event's pair end-to-end in the demo). **No production behavior is changed.** Adoption
 needs the §10.5 crosser census. §10 (follow-up) corrects the §3/§5.1 point attribution
 and answers "can the bundle be saved?" — yes, demonstrated.
+**Update 2026-07-18 (§11):** the 120-event census exists. The in-cathode tail is **not
+an accident**: 20 waveform-era-supported crosser halves (in 20 different events) carry
+contiguous charge >3 cm past their cathode face, 4 of them through-slab (>6 cm), plus a
+distinct detached-late-charge class; occurrence is 4-5× enhanced near the field-cage
+edges. The §7 question is answered: **per-event spread, no global systematic** (sum-test
+residual median +0.2 cm, rms 3.9 cm over 746 pairs). One instrumental artifact class was
+found en route: the bottom (BDE) readout is shorter than the top and SP pads it, so
+imaging can place blobs in a no-ADC zone (§11.5) — 4 fake "tails" excluded.
 
 ## Repro
 
@@ -21,6 +29,15 @@ PDVD_LIGHT_SUFFIX=_keep PDVD_QL_ROBUST_TRIM=1 PDVD_QL_ROBUST_WALK_FLOOR=1 \
 # §10.6 crosser-scoped rescue demo (production-like: trim OFF):
 PDVD_LIGHT_SUFFIX=_keep PDVD_QL_XTPC_CATHODE_TOL_CM=10 \
   ./run_clus_evt.sh -s xtpcresc -calib 039252 0
+# §11 census (120 events, reads the _keep calib dumps read-only; ~1 min with 6 workers;
+# writes cathode_tail_pairs.tsv + cathode_tail_anatomy.tsv next to the scripts and the
+# 16_census_*.png figures):
+OMP_NUM_THREADS=1 python3 docs/qlmatch/scripts/cathode_tail_census.py
+OMP_NUM_THREADS=1 python3 docs/qlmatch/scripts/cathode_tail_anatomy.py
+python3 docs/qlmatch/scripts/cathode_tail_census_figs.py
+# §11.4 waveform checks (RUN IDX UID GID OUT.png):
+OMP_NUM_THREADS=4 python3 docs/qlmatch/scripts/cathode_tail_waveform_check.py 039252 1 4000032 83 /home/xqian/tmp/wf_298581.png
+OMP_NUM_THREADS=4 python3 docs/qlmatch/scripts/cathode_tail_waveform_check.py 039349 15 4000092 4 /home/xqian/tmp/wf_19709.png
 # §10.6 composed demo (trim + walk_to_floor + rescue; the ql_scan A/B pair vs the
 # walkfloor dump -- rescue-only diffs, since 5019 serves the TRIM-ON dump for this
 # event.  Gotcha: comparing xtpcresc (trim OFF) against walkfloor (trim ON) mixes
@@ -581,3 +598,174 @@ crosser census (§10.5) sizes the tolerance and validates the moves.
 **Status: implemented default-OFF; nothing adopted.** `work/039252_0_gapcath4`,
 `work/039252_0_abxtpc`, `work/039252_0_xtpcresc` are scratch demo tags; production
 configs and defaults are untouched.
+
+## 11. 120-event census (2026-07-18): the in-cathode tail is a real, repeating phenomenon
+
+Question asked (owner): physically there should be no activity inside the 6-cm-thick
+cathode, yet this event clearly shows a tail of signal there (§10.2/§10.3). Is that a
+coincidence, or a systematic effect — possibly hardware — visible in other
+cathode-crossing tracks? This section is the §10.5 census, run over **all 120 `_keep`
+events** (039252×18 + 039253×18 + 039349×84).
+
+### 11.1 Method (scripts committed next to this doc)
+
+`scripts/cathode_tail_census.py` finds cathode-crossing pairs in every `_keep` calib
+dump **geometrically**, so pairs that Q/L missed (like this event's 97+139) are
+included:
+
+- **Junk-robust per-cluster geometry.** Clipped 2-D PCA line in the drift-free (y,z)
+  projection (§2's lesson), a clipped u-vs-along-track fit, and a tube cut: ⊥ < 12 cm
+  to the (y,z) line **and** < 10 cm 3-D residual to the track line. The 12 cm tube
+  keeps the crossing pile (⊥ 6–9 cm here) while the 3-D residual rejects merged-in
+  clumps sitting on the line's *extension* (a failure mode found and fixed on
+  039349 evt19769: a 4-pt clump 13 cm from the junction faked a 22 cm penetration).
+- **T0-free pairing.** For a top end and a bottom end, the sum-test residual
+  `R = X_top_end + X_bot_end` is independent of T0 *and* of any common trigger offset
+  (`time1 − time = Δclk` cancels; ideal crosser ⇒ (+3) + (−3) = 0). Pair acceptance:
+  end-to-end (y,z) ≤ 35 cm, perpendicular line-offset ≤ 8 cm, 3-D collinearity ≤ 25°,
+  |R| ≤ 25 cm. Note `R = pen_bot − pen_top`: it measures the *asymmetry* of the two
+  face penetrations, exactly, with no flash needed.
+- **T0 sources** for absolute (per-side) penetration: `pin` (both halves xtpc-pinned to
+  one flash), `cosel` (co-selected), else `geo` — the two face conditions bracket the
+  true T0, and the brightest flash inside the bracket ±15 µs is taken
+  (light-anchored but Q/L-independent; it recovers flash 96 exactly for 97+139).
+- **`scripts/cathode_tail_anatomy.py`** splits each half's past-face material into
+  **contiguous** penetration (drift-connected to the face-most body point, steps
+  ≤ 2.5 cm — the §10.2 signature) vs **detached** clumps (gap > 2.5 cm), and computes
+  each end's SP tick against the *actual raw readout length* (§11.5).
+
+Result: **746 pairs** (539 pin / 35 cosel / 154 geo / 18 unplaceable), consistent with
+the cc-campaign's 748 QL-pinned count on the same events. All 8 crossers of evt298567
+are found, including 97+139 (recovered with flash 96, pen 5.33 cm, 23-pt pile at
+yz-rms 0.32 cm) and the second QL-missed pair 4000189+34.
+
+### 11.2 No global systematic — §7 is answered
+
+![sum test](pics/16_census_sumtest_R.png)
+
+Over 746 pairs: **R median +0.17 cm, rms 3.9 cm**, per-run medians +0.11 / +0.26 /
++0.17 (039252/039253/039349). The drift-velocity/trigger/geometry chain has **no
+global cathode-side bias**; evt298567's R = −8.3 sits at ~2σ of a zero-centered
+distribution. The §7/§10.5 fork is resolved: the displacement is a **per-event spread**,
+so the right mechanism is the crosser-scoped tolerance (§10.6), not a calibration shift
+of the cathode windows.
+
+### 11.3 The tail population
+
+![penetration](pics/16_census_penetration.png)
+
+Junk-robust, drift-connected, **ADC-supported** (§11.5 discipline) penetrations past a
+half's own cathode face:
+
+| contiguous penetration | halves | events |
+|---|---|---|
+| > 3 cm (past slab center) | **20** | 20 |
+| > 5 cm | 7 | 7 |
+| > 6 cm (through the whole slab) | 4 | 4 |
+
+evt298567's 5.33 cm is **mid-pack** — 6 supported cases are deeper. The four
+through-slab cases: 039252 evt298581 top 10.8 cm, 039349 evt56226 bottom 10.3 cm,
+evt55766 bottom 7.0 cm, evt19849 bottom 6.1 cm. Both drift volumes participate
+(7 top / 13 bottom); all track inclinations (drift-cos 0.39–1.0); flashes are bright
+(median 15k PE); per-run: 11 (039252) / 2 (039253) / 7 (039349). In every deep case the
+T0-free R backs the flash-based penetration with the right sign and magnitude
+(e.g. 298581: pen 10.8 vs R −11.4; 56226: pen 10.3 vs R +10.4) — the tails are not a
+wrong-flash artifact. Expressed as delay rather than distance, 3–11 cm ≡ **20–73 µs of
+late arrival** at v = 1.48 mm/µs.
+
+A separate **detached** class: 14 halves have a compact past-face clump beyond a
+> 2.5 cm drift gap from the body, penetrations 4.6–22.3 cm (31–151 µs). **12 of 14 sit
+within 9 cm of the crossing point in (y,z)** — random merged-in deposits (§4's 80 cm
+isolated rule) would scatter over tens of cm, so most of these look like the same
+late-charge phenomenon in a stronger, gap-forming regime. Oddly this class is
+top-dominated (12 T / 2 B) while the contiguous class leans bottom (7 T / 13 B) — not
+understood. The two off-junction cases (evt19769 at 13 cm, evt19409 at 10 cm) stay in
+the ambiguous/junk bin.
+
+### 11.4 Waveform verification — the charge is real
+
+Four cases were taken to the raw ADC + decon waveforms
+(`scripts/cathode_tail_waveform_check.py`, loaders and gotchas from the §4.1 script):
+
+- **039252 evt298581 top 4000032, contiguous 10.8 cm**
+  (![wf](pics/16_census_wf_evt298581_contig_top.png)): at the mid past-face point a
+  textbook unipolar W collection pulse (raw 357 ADC) and bipolar U/V at the predicted
+  tick. Real charge ≥ 6 cm past the face; the extreme tip (x = −42.6) is weaker (W
+  silent, U/V slightly late) so the last ~2 cm are less certain.
+- **039349 evt56226 bottom 106, contiguous 10.3 cm**
+  (![wf](pics/16_census_wf_evt56226_contig_bottom.png)): strong pulses (raw up to
+  475 ADC) tracking the predicted ticks through the slab.
+- **039349 evt19709 top 4000092, detached 12.0 cm at d_junc 1.2 cm**
+  (![wf](pics/16_census_wf_evt19709_detached_late.png)): the cleanest demonstration —
+  the same W channel fires twice: the track's own passage, then a second, isolated
+  pulse **~85 µs later** at exactly the crossing-point wires, on all three planes.
+  Late charge from the crossing region, unambiguous.
+- **039349 evt19769 top 4000047 (the 13-cm-off-junction control)**: the clump is real
+  charge too (W raw 149) but, as in §4, "real" does not mean "belongs to the track" —
+  off-junction detached clumps stay unattributed.
+
+### 11.5 Instrumental artifact found en route: the BDE readout-padding zone
+
+The bottom-volume (BDE, anodes 0–3) raw readout is **shorter** than the top (TDE):
+9766 vs 10000 ticks in 039252/039253, 6250 vs 6400 in 039349 (same duration — the
+bottom tick is 512 ns, the top 500 ns — but in the SP chain's common tick-index space
+the bottom ends earlier). SP pads the bottom frames to the top length, so ticks
+9766–10000 / 6250–6400 contain **deconvolution output with no ADC behind it**, and
+imaging happily builds charged blobs there (039349 evt23097: a 101-pt, 11.7 cm
+"tail" entirely at ticks 6290–6380, beyond the 6250-tick readout —
+![wf](pics/16_census_wf_evt23097_pad_artifact.png)). For a flash at t ≳ 800 µs in
+039349 the *bottom cathode region itself* maps into this zone.
+
+4 of the naive 24 bottom "tails" were this artifact and are excluded above (2 more are
+partially in the zone and kept out of the headline numbers). **Actionable, separate
+issue:** SP/imaging should not produce charge beyond the raw readout end of the bottom
+planes — mask the padded ticks or bound imaging's slice range; this affects any
+bottom-volume track end under a late flash, not just crossers. Reported here, not fixed.
+
+### 11.6 Position correlation — edges, and a hardware reading
+
+![junction map](pics/16_census_junction_map.png)
+
+The crossing points of the supported >3 cm tails cluster toward the detector boundary:
+**60% lie within 30 cm of a field-cage edge (|y| > 306 or z < 32 or z > 268) vs 13% of
+all 728 crosser junctions**; median distance-to-edge 22 cm vs 72 cm. The tail is
+therefore **not a random coincidence** — it correlates with position in exactly the
+region where the drift field is least uniform (field-cage / cathode-frame proximity).
+
+Consistent physical reading (hypotheses, not conclusions): ionization deposited by the
+crossing track in or near the cathode plane's low/distorted-field region is extracted
+slowly, arriving tens of µs late and reconstructing "inside" or "beyond" the cathode;
+near the field-cage edges the distorted region is larger, and detached
+clumps (§11.3) are the long-delay tail of the same mechanism. What the census rules
+out: a velocity/offset calibration bias (§11.2), reconstruction junk (waveform-backed,
+§11.4), and readout artifacts (§11.5 discipline applied). A follow-up worth doing:
+overlay the tail (y,z) positions on the cathode mechanical drawing (frame members, HV
+bus, XA window cutouts — docs 07/18 have the module map) to test the
+cathode-structure hypothesis directly.
+
+### 11.7 Implications
+
+- **§10.6 rescue is validated in scope and scale.** The real tail population reaches
+  10.8 cm; `xtpc_cathode_tol = 10 cm` covers 19/20 supported cases (and the sum-test
+  guard means the pinning logic sees the right partners). Adoption still needs the
+  §10.6 blast-radius hand-scan, but the tolerance is no longer sized on one event.
+- **cc3a cathode merging is consistent**: the tails inflate tip-to-tip drift
+  separation; the census-tuned `drift_cut = 14 cm` (cc1a table: confirmed-crosser dX
+  p90 = 10.6) already absorbs the common cases.
+- The **BDE padding zone** (§11.5) needs an upstream mask — filed as its own issue.
+- Hand-scan note: a two-color crosser whose halves *appear* to overlap or interpenetrate
+  a few cm at the cathode is expected physics-of-the-apparatus, not a reconstruction
+  bug: the deep side is late charge, not wrong geometry.
+
+### 11.8 Verification
+
+- Census reproduces the §10 anatomy of this event blindly: pair (4000097, 139) found
+  with junction (175.6, 219.0), flash 96 recovered by the geo bracket, pen 5.33 cm =
+  §10.1's 3.33 cm past the gate + the 2 cm `cathode_ext1`, 23-pt pile at yz-rms
+  0.32 cm.
+- 746 pairs vs the cc-campaign's independent 748 QL-pin count on the same 120 events.
+- R sidebands: 683/746 pairs at |R| < 5, only 10 at 15–25 — random-collinear
+  contamination of the tail sample is at the few-pair level.
+- All numbers regenerate from the Repro block; inputs are read-only (`_keep` dumps,
+  `input_data` raw frames); the two TSVs next to the scripts are the committed record.
+  No `work/`, `ql_labels/`, `decisions-*`, or snapshot directory is touched.
