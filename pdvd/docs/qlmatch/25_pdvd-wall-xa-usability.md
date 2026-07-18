@@ -433,6 +433,33 @@ the saturation: tripling the wall error widths — which *does* soften chi2
 and the LASSO weights — changes nothing (637/205/119 vs 636/206/119),
 because the error-weighted paths were never the binding constraint.
 
+**Attribution (owner follow-up: inefficiency or prediction–measurement
+mismatch?).  Both contribute, but the dominant term is a third mechanism.**
+Splitting the wall-channel |pred − meas| budget over the 179 lost pairs
+(threshold 2 PE; `wall_xa_ql_forensics.py`):
+
+| source | PE share | of the pairs w/ wall discrepancy |
+|---|---|---|
+| **unpredicted light** (this bundle pred < 2, meas ≥ 2) | **63%** | dominant in 83/114 |
+| **dark** (pred ≥ 2, meas < 0.5 — "inefficiency") | 24% | dominant in 21/114 |
+| **responding-off** (pred ≥ 2, meas > 0 — library/gain) | 12% | dominant in 10/114 |
+
+- The *unpredicted light* is real and correctly predicted — by **other
+  candidate bundles on the same flash** (96% of the cases; only 1% of the
+  PE is covered by other *selected* bundles; median case: channel measures
+  19 PE, the lost bundle predicts 0.03).  The wall response is hyper-local
+  (steep distance fall-off): on a shared flash only the near-wall cluster
+  lights a wall channel, but the per-bundle KS compares this bundle's pred
+  against the *whole-flash* measurement.  On broad cathode patterns that
+  approximation is tolerable; on the walls it reads as an unpredictable
+  spike.  (The joint LASSO models this correctly — it is specifically the
+  per-bundle KS/chi2 that cannot.)
+- The *dark* term is readout, not optics: 47/53 of the dark wall channels
+  are coverage holes (cov < 1); only 6 are covered-but-dark — the §7.2
+  83%-flat detection-given-coverage again.
+- The *responding-off* term (the owner's "mismatch" candidate) is the
+  smallest — the overall-gain recalibration already absorbed most of it.
+
 ### 8.4 Verdict and the remaining levers
 
 **As-is, the wall XAs must stay out of the Q/L fit** — an overall gain
@@ -445,7 +472,12 @@ the answer, in order of leverage:
    error-weighted chi2/LASSO only, with the wide wall family errors, out of
    the un-weighted KS and the highconsist ladder).  The phantom-veto power
    (103 → 69) suggests a real payoff if the KS poisoning is removed; the
-   184 losses were ladder/KS kills, not chi2 kills.
+   184 losses were ladder/KS kills, not chi2 kills.  Per the attribution
+   above, the ideal variant subtracts the *other* candidate bundles'
+   predictions from the flash measurement before any per-bundle wall
+   comparison (residual-aware KS) — the dominant 63% term is exactly the
+   per-bundle-vs-whole-flash approximation breaking on hyper-local wall
+   response.
 2. **Coverage-aware per-flash wall masking** (drop a wall channel only for
    flashes where its self-trigger coverage is partial), removing the
    47-points-of-53 coverage holes from the comparison.

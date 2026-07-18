@@ -95,6 +95,79 @@ def nonmatch(tags):
         print(f"{tag}\t{nev}\t{tl}\t{tm}\t{tl - tm}")
 
 
+
+
+def attribution(tag0="wx0", tag1="wx1"):
+    """Doc 25 §8.3 attribution: split the wall |pred-meas| budget of the lost
+    pairs into unpredicted-light / dark / responding-off, and check how much
+    of the unpredicted light other candidate bundles on the same flash
+    predict."""
+    WALL = [0, 1, 3, 12, 18, 19]
+    budget = np.zeros(3)  # dark, responding-off, unpredicted
+    dom = np.zeros(3, int)
+    dark_cov = [0, 0]     # covered, total
+    unpred = []           # (meas, pred_this, pred_flash_sel, pred_flash_all)
+    for idx in range(18):
+        d0, d1 = dump(idx, tag0), dump(idx, tag1)
+        f0 = {f["gid"]: f["time"] for f in d0["flashes"]}
+        fl1 = {f["gid"]: f for f in d1["flashes"]}
+        sel0 = {}
+        for b in d0["bundles"]:
+            if b.get("auto_selected"):
+                sel0.setdefault(b["main_cluster"], b)
+        sel1uid = {b["main_cluster"] for b in d1["bundles"] if b.get("auto_selected")}
+        by1, pfs, pfa = {}, {}, {}
+        for b in d1["bundles"]:
+            by1.setdefault(b["main_cluster"], []).append(b)
+            pp = np.array(b["pred_pe"], float)
+            pfa[b["flash_gid"]] = pfa.get(b["flash_gid"], np.zeros(40)) + pp
+            if b.get("auto_selected"):
+                pfs[b["flash_gid"]] = pfs.get(b["flash_gid"], np.zeros(40)) + pp
+        for uid, b0 in sel0.items():
+            if uid in sel1uid:
+                continue
+            t0 = f0[b0["flash_gid"]]
+            cands = [b for b in by1.get(uid, [])
+                     if abs(fl1[b["flash_gid"]]["time"] - t0) < 0.5]
+            if not cands:
+                continue
+            b1 = cands[0]
+            g = b1["flash_gid"]
+            pred = np.array(b1["pred_pe"], float)
+            meas = np.array(fl1[g]["pe"], float)
+            cov = np.array(fl1[g].get("cov", [1] * 40), float)
+            here = np.zeros(3)
+            for c in WALL:
+                p, m = pred[c], meas[c]
+                if p >= 2 and m < 0.5:
+                    here[0] += p - m
+                    dark_cov[0] += cov[c] >= 1
+                    dark_cov[1] += 1
+                elif p >= 2:
+                    here[1] += abs(p - m)
+                elif m >= 2:
+                    here[2] += m - p
+                    unpred.append((m, p,
+                                   pfs.get(g, np.zeros(40))[c],
+                                   pfa.get(g, np.zeros(40))[c]))
+            budget += here
+            if here.sum() > 0:
+                dom[np.argmax(here)] += 1
+    tot = budget.sum()
+    for i, lab in enumerate(["dark(pred>=2,meas<0.5)", "responding-off",
+                             "unpredicted(pred<2,meas>=2)"]):
+        print(f"{lab}: {budget[i]:.0f} PE ({100*budget[i]/tot:.0f}%), "
+              f"dominant in {dom[i]} pairs")
+    print(f"dark wall channels: {dark_cov[1]}, fully covered: {dark_cov[0]}")
+    U = np.array(unpred)
+    if len(U):
+        m, ps, pa = U[:, 0], U[:, 2], U[:, 3]
+        print(f"unpredicted cases n={len(U)}: covered by other SELECTED "
+              f"bundles {100*np.mean(ps >= 0.5*m):.0f}%, by ALL candidate "
+              f"bundles {100*np.mean(pa >= 0.5*m):.0f}%")
+
+
 if __name__ == "__main__":
     churn()
+    attribution()
     nonmatch(sys.argv[1:] or ["ac3", "wx0", "wx1", "wx2", "wx3"])
