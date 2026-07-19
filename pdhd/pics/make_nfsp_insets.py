@@ -172,7 +172,7 @@ def make_sp_waveform():
     ax2.plot(t, wg, lw=1.1, color=C_OUT, label="deconvolved charge (gauss)")
     mg = wg[(t >= t0) & (t <= t1)].max()
     ax2.set_ylim(-1.5 * mg, 1.5 * mg)
-    ax2.set_ylabel("deconvolved charge", color=C_OUT, fontsize=9)
+    ax2.set_ylabel("decon charge", color=C_OUT, fontsize=9)
     ax2.tick_params(axis="y", labelcolor=C_OUT, labelsize=8)
     ax.set_title("ch %d (V) — bipolar ADC → unipolar charge" % CH, fontsize=8.5)
     l1, la1 = ax.get_legend_handles_labels()
@@ -180,7 +180,7 @@ def make_sp_waveform():
     ax.legend(l1 + l2, la1 + la2, fontsize=7, loc="upper right", framealpha=0.9)
     fig.tight_layout()
     out = os.path.join(SRC, "sp_waveform.png")
-    fig.savefig(out, dpi=200)
+    fig.savefig(out, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print("wrote", out)
 

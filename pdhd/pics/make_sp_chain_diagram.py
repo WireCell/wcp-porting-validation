@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-"""ProtoDUNE-HD Signal-Processing algorithm diagram (wide 16:9, for slides).
+"""ProtoDUNE-HD Signal-Processing algorithm diagram — DNN-ROI chain (wide 16:9).
 
-Draws the live OmnibusSigProc -> L1SPFilterPD cascade as the toolkit runs it on
-PDHD (sp.jsonnet / sp-filters.jsonnet / wct-nf-sp.jsonnet):
+Draws the live production DNN-ROI signal-processing cascade
+(wct-nf-sp-dnnroi.jsonnet / dnnroi_pp.jsonnet):
 
   raw{N} NF frame
-   -> OmnibusSigProc:
-        1 2D deconvolution   (remove field+elec response, apply SP filters)
-        2 ROI finding        (tight/loose ROI + refinement cascade)
-        3 charge extraction  (gauss{N}, wiener{N})
-   -> L1SPFilterPD           (per-ROI LASSO unipolar-induction correction)
+   -> ① 2D deconvolution  (OmnibusSigProc: remove field+elec response, SP
+        filters; also emits the ROI feature frames loose/tight LF, MP2/MP3)
+   -> ② DNN-ROI           (DNNROIFinding + TorchService: a 6-channel CNN ROI
+        finder; per-pixel score -> binary mask x decon_charge -> dnnsp)
+   -> L1SPFilterPD        (per-ROI LASSO unipolar-induction correction, after DNN)
    -> SP frame (gauss{N}, wiener{N}) -> imaging
 
-Four real insets sit below: the 2D field-response kernel, the analytic SP
-frequency filters, a data raw->deconvolved single-channel waveform, and the
-L1SP bipolar/unipolar response bases.
+The DNN consumes the traditional SP ROI products as its input channels — it does
+not delete the ROI finder, it makes the final ROI decision from those features.
+MP2/MP3 protection is therefore ON in this chain.
+
+Insets: 2D field-response kernel and a data raw->deconvolved waveform (both under
+deconvolution), the real DNN-ROI event display (deconvolved charge -> CNN score),
+and the L1SP bipolar/unipolar bases.
 
 Output: pdhd/pics/pdhd_sp_chain.{png,pdf}
 """
@@ -24,8 +28,10 @@ from diagram_helpers import Canvas
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, "nfsp_src")
 
-C_SP = "#1f4e9b"      # signal-processing algorithms
+C_SP = "#1f4e9b"      # deconvolution
 BG_SP = "#e8f0fb"
+C_DNN = "#0f8a8a"     # DNN-ROI
+BG_DNN = "#e2f3f3"
 C_L1 = "#7a3fb0"      # L1SP correction
 BG_L1 = "#f1eafa"
 C_IN = "#4a4a4a"      # input
@@ -37,91 +43,83 @@ BG_OUT = "#eaf5ee"
 def main():
     c = Canvas()
     c.title("ProtoDUNE-HD Wire-Cell Signal Processing  ·  "
-            "OmnibusSigProc → L1SPFilterPD (per APA)",
-            r"$\mathrm{charge}(t)=\mathrm{IFFT}\{\,\mathrm{FFT}[\mathrm{raw}]"
-            r"\cdot G_{\rm filter}(\omega)\,/\,[\mathrm{FR}\ast E](\omega)\,\}"
-            r"\ \rightarrow\ $ROI gating $\rightarrow$ L1SP unipolar fit")
+            "OmnibusSigProc → DNN-ROI → L1SPFilterPD (per APA)",
+            r"$\mathrm{deconvolve}\ \frac{\mathrm{FFT}[\mathrm{raw}]\cdot "
+            r"G_{\rm filter}(\omega)}{[\mathrm{FR}\ast E](\omega)}\ \rightarrow\ $"
+            r"neural-network ROI $\rightarrow$ L1SP unipolar fit")
 
-    ys = 6.55
+    ys = 6.30
     # ---- input ----------------------------------------------------------
-    c.box(1.05, ys, 1.6, 1.15, "raw{N}\nNF frame", BG_IN, C_IN, fs=11.5)
+    c.box(1.05, ys, 1.65, 1.2, "raw{N}\nNF frame", BG_IN, C_IN, fs=11.5)
 
-    # ---- OmnibusSigProc group -------------------------------------------
-    gx0, gy0, gw, gh = 2.05, 5.15, 8.55, 2.90
-    c.group_bg(gx0, gy0, gw, gh, C_SP, BG_SP,
-               label="OmnibusSigProc", ly=gy0 + gh - 0.24, fs=13)
-
-    yb = 6.35
-    c.algobox(3.45, yb, 2.55, 2.45,
+    yb = 6.30
+    # ---- ① 2D deconvolution --------------------------------------------
+    c.algobox(4.00, yb, 3.40, 2.60,
               "① 2D deconvolution", [
+                  "OmnibusSigProc:",
                   "• FFT(raw)  ÷  [FR ⊛ ColdElec](ω)",
-                  "   remove detector response",
-                  "• × Wiener / Gaus filter (ω)",
-                  "• × wire-domain filter",
-                  "  → deconvolved charge",
-              ], "white", C_SP, title_fs=11.5, bullet_fs=9.0)
-    c.algobox(6.20, yb, 2.65, 2.45,
-              "② ROI finding", [
-                  "• tight ROI  (col 5σ / ind 3σ)",
-                  "• loose ROI  (rebin 6; LF filters)",
-                  "• refine: CleanupROI,",
-                  "   BreakROI×2, Shrink/Extend ROI",
-                  "• fake-signal rejection",
-              ], "white", C_SP, title_fs=11.5, bullet_fs=9.0)
-    c.algobox(9.00, yb, 2.40, 2.45,
-              "③ charge extract", [
-                  "two filtered",
-                  "estimates:",
-                  "• gauss{N}",
-                  "   (Gaussian)",
-                  "• wiener{N}",
-                  "   (Wiener SNR)",
-              ], "white", C_SP, title_fs=11.5, bullet_fs=9.3)
+                  "• × Wiener / Gaus & wire filter",
+                  "• IFFT → decon charge + gauss",
+                  "• + ROI feature frames",
+                  "   (loose / tight LF, MP2 / MP3)",
+              ], "white", C_SP, title_fs=12.5, bullet_fs=9.3)
 
-    # ---- L1SPFilterPD (downstream) --------------------------------------
-    c.algobox(12.55, yb, 3.05, 2.45,
+    # ---- ② DNN-ROI ------------------------------------------------------
+    c.algobox(8.55, yb, 4.35, 2.60,
+              "② DNN-ROI", [
+                  "DNNROIFinding + TorchService:",
+                  "• inputs: 6 SP channels (loose / tight",
+                  "   LF, MP2 / MP3 ROI, decon_charge, gauss)",
+                  "• CNN ROI finder — TorchScript .ts model",
+                  "• per-pixel score → binary mask",
+                  "• mask × decon_charge → dnnsp",
+                  "• U+V via model · W = gauss · APA0: U only",
+              ], BG_DNN, C_DNN, title_fs=13, bullet_fs=9.0, dy=0.285)
+
+    # ---- L1SPFilterPD ---------------------------------------------------
+    c.algobox(12.85, yb, 3.05, 2.60,
               "L1SPFilterPD", [
-                  "induction U/V, per ROI:",
-                  "• LASSO fit — bipolar +",
-                  "   unipolar response bases",
-                  "• cross-channel adjacency (≤3 hops)",
-                  "• 5-arm trigger gate",
-                  "  → replace gauss/wiener",
-              ], BG_L1, C_L1, title_fs=12, bullet_fs=9.0)
+                  "after DNN-ROI, induction U/V:",
+                  "• per-ROI LASSO fit —",
+                  "   bipolar + unipolar bases",
+                  "• adjacency expansion (≤3 hops)",
+                  "• refine → gauss / wiener",
+              ], BG_L1, C_L1, title_fs=12, bullet_fs=8.9)
 
     # ---- output ---------------------------------------------------------
     c.box(15.15, ys, 1.55, 1.35, "SP frame\ngauss/wiener\n→ imaging", BG_OUT,
           C_OUT, fs=10.5, tc=C_OUT)
 
     # ---- spine arrows ----------------------------------------------------
-    c.arrow((1.85, ys), (2.175, ys), C_IN)          # input -> group
-    c.arrow((4.725, yb), (4.875, yb), C_SP)         # 1 -> 2
-    c.arrow((7.525, yb), (7.80, yb), C_SP)          # 2 -> 3
-    c.arrow((10.20, yb), (11.025, yb), C_L1)        # 3 -> L1SP
-    c.arrow((14.075, yb), (14.375, ys), C_OUT)      # L1SP -> output
+    c.arrow((1.875, ys), (2.30, ys), C_IN)          # input -> ①
+    c.arrow((5.70, yb), (6.375, yb), C_DNN)         # ① -> ②
+    c.arrow((10.725, yb), (11.325, yb), C_L1)       # ② -> L1SP
+    c.arrow((14.375, yb), (14.375, ys), C_OUT)      # L1SP -> output
 
-    # ---- OFF / APA0 note -------------------------------------------------
-    c.ov.text(6.30, 4.74,
-              "OFF in this build: multi-plane protection (MP3/MP2).     "
-              "APA0 specials: own field-response file · U↔V plane2layer swap · "
-              "L1SP on U only.", ha="center", va="center", fontsize=10,
+    # ---- per-APA / plane note (no MP-off: MP is ON in the DNN chain) -----
+    c.ov.text(8.0, 4.74,
+              "W plane: standard SP gauss (no DNN).      APA0 specials: own "
+              "field-response file · U↔V plane2layer swap · DNN-ROI on U only "
+              "(V anomalous).", ha="center", va="center", fontsize=10,
               color="#8a8a8a", style="italic")
 
     # ---- insets (bottom row) --------------------------------------------
-    ybi = 1.25
-    c.place_image(os.path.join(SRC, "sp_decon_kernel_2d.png"), 2.55, 3.55, ybi,
-                  "field response kernel (V)", (3.45, 5.15), C_SP)
-    c.place_image(os.path.join(SRC, "sp_filters.png"), 6.30, 3.55, ybi,
-                  "SP deconvolution filters", (3.75, 5.15), C_SP)
-    c.place_image(os.path.join(SRC, "sp_waveform.png"), 10.05, 3.55, ybi,
-                  "raw ADC → deconvolved charge (data)", (9.00, 5.15), C_OUT)
-    c.place_image(os.path.join(SRC, "l1sp_kernel.png"), 13.75, 4.35, ybi,
+    ybi = 1.20
+    c.place_image(os.path.join(SRC, "sp_decon_kernel_2d.png"), 2.30, 3.40, ybi,
+                  "field-response kernel (V)", (3.40, 5.00), C_SP)
+    c.place_image(os.path.join(SRC, "sp_waveform.png"), 6.00, 3.40, ybi,
+                  "raw ADC → deconvolved charge (data)", (4.60, 5.00), C_OUT)
+    c.place_image(os.path.join(SRC, "dnn_roi.png"), 9.95, 4.25, ybi,
+                  "DNN-ROI: deconvolved charge → CNN score (data)",
+                  (8.55, 5.00), C_DNN)
+    c.place_image(os.path.join(SRC, "l1sp_kernel.png"), 14.00, 3.45, ybi,
                   "L1SP response bases (V bipolar / W unipolar)",
-                  (12.55, 5.15), C_L1)
+                  (12.85, 5.00), C_L1)
 
-    c.footer("Wire-Cell Toolkit  ·  cfg/pgrapher/experiment/pdhd/{sp,sp-filters}."
-             "jsonnet + wct-nf-sp.jsonnet  ·  impl sigproc/src/{OmnibusSigProc,"
-             "L1SPFilterPD}.cxx  ·  data insets: ProtoDUNE-HD run 027409 evt 0, APA1 V")
+    c.footer("Wire-Cell Toolkit  ·  cfg/pgrapher/experiment/pdhd/{sp,sp-filters,"
+             "dnnroi_pp}.jsonnet + wct-nf-sp-dnnroi.jsonnet  ·  model "
+             "wire-cell-data/dnnroi/pdhd/*.ts  ·  data insets: ProtoDUNE-HD run "
+             "027409 evt 0 (APA1 V; DNN-ROI panel APA0 U)")
     c.save(os.path.join(HERE, "pdhd_sp_chain"))
 
 
