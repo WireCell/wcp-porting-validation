@@ -150,25 +150,21 @@ def main():
                    lw=1.3, ls=(0, (4, 2)), zorder=3))
 
     # ================= deghost ⇄ solve ladder band ======================
-    lx0, lx1, lyb, lyt = 2.45, 14.30, 4.30, 5.62
+    lx0, lx1, lyb, lyt = 2.45, 14.30, 4.16, 5.74
     c.ov.add_patch(FancyBboxPatch(
         (lx0, lyb), lx1 - lx0, lyt - lyb,
         boxstyle="round,pad=0.02,rounding_size=0.08",
         linewidth=1.8, edgecolor=C_DEGHOST, facecolor=BG_LADDER, zorder=2))
-    c.ov.text(lx0 + 0.16, lyt - 0.19,
+    c.ov.text(lx0 + 0.16, lyt - 0.20,
               "inside ③  ·  charge-solve ⇄ deghost ladder  (uboone-solving) — "
               "note the asymmetry:  ProjectionDeghosting ×2,  ChargeSolving ×3,  "
               "InSliceDeghosting ×3",
               ha="left", va="center", fontsize=9.2, fontweight="bold",
               color=C_DEGHOST, zorder=3)
-    # leader from spine box ③ down to the band
-    c.ov.add_patch(FancyArrowPatch((11.55, ys - 0.78), (11.55, lyt + 0.01),
-                   arrowstyle="-|>", mutation_scale=12, color=C_DEGHOST,
-                   lw=1.6, zorder=3))
 
     # the exact asymmetric sequence, ending on the pipeline's own gc node:
     #   bc gd1 CS ld1 gd2 CS ld2 CS ld3 gc   (solving "full")
-    cy = 5.02
+    cy = 5.10
     steps = [
         ("BC", C_BC), ("PD", C_PD), ("CS", C_SOLVE), ("ID₁", C_ID),
         ("PD", C_PD), ("CS", C_SOLVE), ("ID₂", C_ID), ("CS", C_SOLVE),
@@ -186,40 +182,41 @@ def main():
                 lw=1.4, zorder=7))
         pill(c, xs[i], cy, pw, 0.42, lab, fc, fc, fs=9.6, tc="white")
 
-    # three-column legend for the pills
+    # single-row legend for the pill keys, well below the pills
     leg = [
-        ("BC", C_BC, "BlobClustering (stack across slices)"),
-        ("CS", C_SOLVE, "ChargeSolving ×3 (grp→unif→lclus→ubn)"),
+        ("BC", C_BC, "BlobClustering"),
+        ("CS", C_SOLVE, "ChargeSolving ×3"),
         ("PD", C_PD, "ProjectionDeghosting ×2 (global)"),
-        ("ID", C_ID, "InSliceDeghosting ×3 (local, th300)"),
-        ("GGC", C_CLUS, "GlobalGeomClustering (final node)"),
+        ("ID", C_ID, "InSliceDeghosting ×3 (local)"),
+        ("GGC", C_CLUS, "GlobalGeomClustering"),
     ]
-    col_x = [lx0 + 0.30, lx0 + 4.30, lx0 + 8.30]
-    for i, (ab, col, txt) in enumerate(leg):
-        cxl = col_x[i % 3]
-        cyl = lyb + 0.46 - (i // 3) * 0.28
-        pill(c, cxl + 0.18, cyl, 0.46, 0.23, ab, col, col, fs=6.8)
-        c.ov.text(cxl + 0.48, cyl, txt, ha="left", va="center", fontsize=7.5,
+    lgx = [2.75, 4.55, 6.55, 9.75, 12.10]
+    for (ab, col, txt), xx in zip(leg, lgx):
+        pill(c, xx, 4.46, 0.46, 0.24, ab, col, col, fs=7.0)
+        c.ov.text(xx + 0.30, 4.46, txt, ha="left", va="center", fontsize=7.6,
                   color=INK)
 
     # ================= insets (bottom row) ==============================
-    ybi = 1.02
-    c.place_image(os.path.join(SRC, "img_slice_blobs.png"), 2.75, 2.95, ybi,
+    # leaders would have to cross the full-width ladder band, so the insets
+    # are captioned and positioned under their stage instead (only the 3-D
+    # result keeps a clean leader to the output box on the far right).
+    ybi = 0.92
+    c.place_image(os.path.join(SRC, "img_slice_blobs.png"), 2.70, 2.90, ybi,
                   "one time slice — real blobs (navy) & flagged ghosts (magenta)",
-                  (7.70, 6.20), C_TILE)
-    draw_3d_stack(c, 8.05, 2.30, "#9ec0e8")
-    c.ov.text(8.05, 0.82, "stack 2-D blobs along drift → 3-D image",
-              ha="center", va="top", fontsize=10, color=C_TILE,
+                  None, C_TILE)
+    c.ov.text(2.70, 3.62, "② tiling + ③ deghost", ha="center", va="bottom",
+              fontsize=8.5, color=C_TILE, style="italic")
+    draw_3d_stack(c, 7.55, 2.25, "#9ec0e8")
+    c.ov.text(7.55, 0.78, "stack 2-D blobs along drift → 3-D image",
+              ha="center", va="top", fontsize=9.6, color=C_TILE,
               fontweight="bold")
-    c.ov.add_patch(FancyArrowPatch((8.05, 3.35), (8.55, 6.28), arrowstyle="-",
-                   color=C_TILE, lw=1.3, alpha=0.8, ls=(0, (5, 3)), zorder=3))
-    c.place_image(os.path.join(SRC, "img_event_zy.png"), 13.10, 3.80, ybi,
-                  "full event, Z-Y — deghosted, charge-solved result",
-                  (14.95, 6.30), C_OUT)
+    c.place_image(os.path.join(SRC, "img_event_3d.png"), 12.55, 4.30, ybi,
+                  "full event 3-D charge display (Bee) — deghosted result",
+                  (14.95, 6.35), C_OUT, box=(0.04, 0.10, 1.0, 0.99))
 
     c.footer("Wire-Cell Toolkit  ·  cfg/pgrapher/experiment/pdhd/img.jsonnet + "
-             "pdhd/wct-img-all.jsonnet  ·  data insets: ProtoDUNE-HD run 27305 "
-             "evt 150 (img_plot cache)")
+             "pdhd/wct-img-all.jsonnet  ·  insets: slice = data run 27305 evt 150 "
+             "(img_plot cache);  3-D = data run 29107 evt 1199 (Bee img cloud)")
     c.save(os.path.join(HERE, "pdhd_imaging_chain"))
 
 

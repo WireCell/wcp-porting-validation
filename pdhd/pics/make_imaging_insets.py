@@ -14,14 +14,17 @@ Outputs (into imaging_src/):
                          triple-overlaps.  Solid navy = charge-solved real blobs;
                          dashed magenta = surviving zero-charge ghost blobs (false
                          triple-coincidences the deghosting flagged).
-  img_event_zy.png     - the whole event, Z-Y projection of the sampled blob
-                         points coloured by charge (x-conversion independent) --
-                         the deghosted, charge-solved imaging result.
+                         (from the img_plot cache, run 27305 evt 150.)
+  img_event_3d.png     - a full-event 3-D charge display (X drift, Y, Z) coloured
+                         by charge -- a real Bee event, the deghosted imaging
+                         result.  Built from a committed slim npz extracted from
+                         our own Bee zip (mabc-all-apa.zip, run 29107 evt 1199),
+                         which is exactly the point cloud uploaded to the Bee
+                         viewer -- "only charge, no clustering colour".
 
-(An X-Z / drift projection is deliberately NOT made from this cache: two of the
-four APAs have a broken slice-time->x calibration on this event -- sidecar
-residuals 382 / 252 cm vs 0.3 / 0.9 cm -- which smears the drift axis.  The
-diagram draws the drift ("3-D") build-up as a clean synthetic schematic instead.)
+The 27305 cache is kept only for the single-slice tomography inset (it carries
+the per-slice blob polygons + fired-wire bands the Bee zip does not); the 3-D
+event display uses the clean 29107 Bee cloud.
 """
 import os
 import numpy as np
@@ -104,32 +107,42 @@ def make_slice_blobs(d, anode=1, face=1, sl=278,
     print("wrote", out, "real", len(real), "ghost", len(ghost))
 
 
-def make_event_zy(d, out="img_event_zy.png"):
-    x, y, z, q = d["pts_x"], d["pts_y"], d["pts_z"], d["pts_q"]
-    fig, ax = plt.subplots(figsize=(6.2, 4.4))
-    qc = np.clip(q, 1, None)
-    sc = ax.scatter(z, y, c=qc, s=0.4, cmap="viridis",
-                    norm=LogNorm(vmin=200, vmax=np.percentile(qc, 99.5)),
-                    linewidths=0, rasterized=True)
-    ax.set_xlabel("Z  [cm]", fontsize=11)
-    ax.set_ylabel("Y  [cm]", fontsize=11)
-    ax.set_title("full event — sampled blob points, Z-Y (colour = charge)",
-                 fontsize=10.5)
-    ax.tick_params(labelsize=9)
-    cb = fig.colorbar(sc, ax=ax, pad=0.01, fraction=0.046)
-    cb.set_label("blob-point charge", fontsize=9)
+def make_event_3d(out="img_event_3d.png",
+                  npz="event3d_029107_1199.npz"):
+    """A full-event 3-D charge display (a real Bee event) from our own
+    mabc-all-apa.zip img cloud, coloured by charge only."""
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers '3d')
+    d = np.load(os.path.join(OUT, npz))
+    x, y, z, q = d["x"], d["y"], d["z"], np.clip(d["q"], 1, None)
+    # subsample only if very dense (deterministic seed -> reproducible)
+    if len(x) > 110000:
+        i = np.random.default_rng(0).choice(len(x), 110000, replace=False)
+        x, y, z, q = x[i], y[i], z[i], q[i]
+
+    fig = plt.figure(figsize=(6.6, 5.6))
+    ax = fig.add_subplot(111, projection="3d")
+    sc = ax.scatter(z, x, y, c=q, s=0.28, cmap="viridis",
+                    norm=LogNorm(vmin=200, vmax=np.percentile(q, 99.5)),
+                    linewidths=0, depthshade=False, rasterized=True)
+    ax.set_xlabel("Z  [cm]", fontsize=10, labelpad=2)
+    ax.set_ylabel("X  drift  [cm]", fontsize=10, labelpad=2)
+    ax.set_zlabel("Y  [cm]", fontsize=10, labelpad=2)
+    ax.tick_params(labelsize=8)
+    ax.view_init(elev=20, azim=-68)
+    cb = fig.colorbar(sc, ax=ax, pad=0.02, fraction=0.028, shrink=0.62)
+    cb.set_label("charge", fontsize=9)
     cb.ax.tick_params(labelsize=8)
     fig.tight_layout()
     fig.savefig(os.path.join(OUT, out), dpi=200)
     plt.close(fig)
-    print("wrote", out, "npts", len(x))
+    print("wrote", out, "npts", len(x),
+          "run", int(d["run"]), "evt", int(d["event"]))
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    d = _load()
-    make_slice_blobs(d)
-    make_event_zy(d)
+    make_slice_blobs(_load())
+    make_event_3d()
 
 
 if __name__ == "__main__":
