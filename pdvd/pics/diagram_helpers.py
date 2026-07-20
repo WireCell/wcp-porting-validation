@@ -76,18 +76,19 @@ class Canvas:
             alpha=0.85, linestyle=(0, (5, 3)), zorder=3))
         self.ov.add_patch(Circle(p_to, 0.055, color=color, zorder=6))
 
-    def title(self, main, sub):
-        self.ov.text(W / 2, 8.62, main, ha="center", va="center",
-                     fontsize=22, fontweight="bold", color=INK)
-        self.ov.text(W / 2, 8.06, sub, ha="center", va="center",
-                     fontsize=14.5, color="#444")
+    def title(self, main, sub, my=8.62, sy=8.06, mfs=22, sfs=14.5):
+        self.ov.text(W / 2, my, main, ha="center", va="center",
+                     fontsize=mfs, fontweight="bold", color=INK)
+        self.ov.text(W / 2, sy, sub, ha="center", va="center",
+                     fontsize=sfs, color="#444")
 
     def footer(self, text):
         self.ov.text(W / 2, 0.32, text, ha="center", va="center",
                      fontsize=9, color="#8a8a8a")
 
     # -- image inset -------------------------------------------------------
-    def place_image(self, path, cx, wd, yb, caption, target, color, box=None):
+    def place_image(self, path, cx, wd, yb, caption, target, color, box=None,
+                    cap_fs=11):
         im = Image.open(path).convert("RGB")
         if box:
             w, h = im.size
@@ -103,7 +104,7 @@ class Canvas:
             s.set_edgecolor(color)
             s.set_linewidth(1.8)
         self.ov.text(cx, yb - 0.20, caption, ha="center", va="top",
-                     fontsize=11, color=color, fontweight="bold")
+                     fontsize=cap_fs, color=color, fontweight="bold")
         if target is not None:
             self.leader((cx, yb + hd + 0.04), target, color)
         return hd

@@ -9,6 +9,11 @@ charge (`blob_val`; a kept `val==0` blob is a flagged zero-charge ghost), and th
 downstream stepped sample points (`pts_*`).
 
 Outputs (into imaging_src/):
+  raygrid_fig8_ghost.png - the ghost concept, illustrated with Fig. 8 of the
+                         Wire-Cell imaging note (B. Viren, 2019): a toy 3-plane
+                         detector where blobs tiled at strip triple-overlaps
+                         either surround points (real) or none (ghosts).  Two
+                         leaders (real / ghost) overlaid for slide legibility.
   img_slice_blobs.png  - one time slice, zoomed to a busy blob cluster, Z-Y:
                          fired U/V/W wire strips + the blobs tiled at their
                          triple-overlaps.  Solid navy = charge-solved real blobs;
@@ -33,6 +38,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
 from matplotlib.colors import LogNorm
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "imaging_src")
@@ -139,8 +145,52 @@ def make_event_3d(out="img_event_3d.png",
           "run", int(d["run"]), "evt", int(d["event"]))
 
 
+def make_ghost_concept(out="raygrid_fig8_ghost.png",
+                       page="raygrid_fig8_page.png"):
+    """The ghost concept, illustrated with Fig. 8 of the Wire-Cell imaging note
+    (B. Viren, "Wire-Cell Toolkit Imaging", 2019).  A *toy* 3-plane detector:
+    the pastel diagonal bands are the fired activity strips of the three views;
+    grey polygons are the blobs tiled at strip triple-overlaps.  Some blobs
+    surround the generated points (real); others surround none — these false
+    triple-coincidences are the ghost blobs the deghosting ladder removes.
+
+    We overlay two leaders (real vs ghost) so the concept is self-evident on a
+    slide.  `raygrid_fig8_page.png` is the plot region of page 11 of the note,
+    rendered with `pdftoppm -r 300 -f 11 -l 11` and cropped (see the doc repro
+    block); nothing of the original figure is altered."""
+    im = np.asarray(Image.open(os.path.join(OUT, page)).convert("RGB"))
+    H, W = im.shape[:2]
+    fig, ax = plt.subplots(figsize=(6.2, 6.2))
+    ax.imshow(im)
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    def frac(fx, fy):
+        return fx * W, (1 - fy) * H
+
+    # ghost: an empty grey blob (no points inside), centre-right triangle
+    ax.annotate("ghost blob\n(no points inside)", xy=frac(0.63, 0.55),
+                xytext=(0.60 * W, 0.30 * H), fontsize=13, fontweight="bold",
+                color="#b00020", ha="center",
+                arrowprops=dict(arrowstyle="-|>", color="#b00020", lw=2.4),
+                bbox=dict(boxstyle="round,pad=0.28", fc="white", ec="#b00020",
+                          alpha=0.94))
+    # real: a point-filled blob, top-left parallelogram
+    ax.annotate("real blob\n(points inside)", xy=frac(0.30, 0.72),
+                xytext=(0.14 * W, 0.40 * H), fontsize=13, fontweight="bold",
+                color="#0d3b66", ha="center",
+                arrowprops=dict(arrowstyle="-|>", color="#0d3b66", lw=2.4),
+                bbox=dict(boxstyle="round,pad=0.28", fc="white", ec="#0d3b66",
+                          alpha=0.94))
+    fig.tight_layout(pad=0.2)
+    fig.savefig(os.path.join(OUT, out), dpi=200)
+    plt.close(fig)
+    print("wrote", out)
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
+    make_ghost_concept()
     make_slice_blobs(_load())
     make_event_3d()
 

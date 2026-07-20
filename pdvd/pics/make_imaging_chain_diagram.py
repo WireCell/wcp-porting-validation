@@ -1,33 +1,38 @@
 #!/usr/bin/env python3
-"""ProtoDUNE-HD 3-D imaging + deghosting algorithm diagram (wide 16:9).
+"""ProtoDUNE-VD 3-D imaging + deghosting algorithm diagram (wide 16:9).
 
-Draws the live per-APA imaging pipeline traced from
-`cfg/pgrapher/experiment/pdhd/img.jsonnet` (driven by `pdhd/wct-img-all.jsonnet`):
+Counterpart of pdhd/pics/make_imaging_chain_diagram.py.  Draws the live per-CRP
+imaging pipeline traced from
+`cfg/pgrapher/experiment/protodunevd/img.jsonnet` (driven by
+`pdvd/wct-img-all.jsonnet`, which forces `per_anode(anode, "multi")` with the
+charge>0 slicing threshold nthreshold=1e-6):
 
-  SP frame (gauss/wiener, per APA)
+  SP frame (gauss/wiener, per CRP; 8 CRPs image independently)
    -> pre-proc (CMMModifier . FrameMasking . ChargeErrorFrameEstimator)
-   -> ① Slice   (MaskSlices: time-slice per plane, threshold on charge)
-   -> ② Tile    (GridTiling / RayGrid, per face: fired U/V/W strips' triple
-                 overlap -> 2-D blob per slice, incl. FALSE crossings = ghosts)
-   -> ③ Solve & Deghost  (the centerpiece: BlobClustering stacks blobs across
-                 slices into 3-D, then the asymmetric ladder
-                   bc -> gd1 -> solve -> ld1 -> gd2 -> solve -> ld2 -> solve -> ld3
-                 ProjectionDeghosting x2 (global, cross-view) +
-                 InSliceDeghosting x3 (local, charge-based) +
-                 ChargeSolving x3)
-   -> ④ Global cluster / write (GlobalGeomClustering -> ClusterFileSink)
-   -> clusters-apa-*-ms-active.tar.gz  (3-view live blobs, post-deghosting)
-
-A subordinate dead/masked fork tiles 2-view blobs over dead regions (geometry
-only, coarse span) -> clusters-apa-*-ms-masked.tar.gz.
+   -> FrameFanout {active fork, masked fork}
+   active fork:
+     -> ① Slice   (MaskSlices: time-slice per plane, threshold on charge)
+     -> ② Tile    (GridTiling / RayGrid, per face: fired U/V/W strips' triple
+                   overlap -> 2-D blob per slice, incl. FALSE crossings = ghosts)
+     -> ③ Solve & Deghost  (the centerpiece: BlobClustering stacks blobs across
+                   slices into 3-D, then the asymmetric ladder
+                     bc -> gd1 -> solve -> ld1 -> gd2 -> solve -> ld2 -> solve -> ld3 -> gc
+                   ProjectionDeghosting x2 (global, cross-view) +
+                   InSliceDeghosting x3 (local, charge-based) +
+                   ChargeSolving x3)
+     -> ④ ClusterFileSink -> clusters-apa-*-ms-active.tar.gz  (3-view live
+                   blobs, post-deghosting)
+  masked fork:
+     -> 2-view blobs over dead regions (dummy plane, coarse span 1500),
+        geometry only -> clusters-apa-*-ms-masked.tar.gz
 
 Insets: the ghost concept illustrated with Fig. 8 of the WCT imaging note
 (B. Viren, 2019) -- a toy 3-plane tiling where blobs at strip triple-overlaps
 either surround points (real) or none (ghosts); a synthetic "slices stacked
 along drift -> 3-D" schematic; and the full-event 3-D charge display (Bee,
-deghosted result).
+deghosted result) for PDVD data run 039252 evt 298567.
 
-Output: pdhd/pics/pdhd_imaging_chain.{png,pdf}
+Output: pdvd/pics/pdvd_imaging_chain.{png,pdf}
 """
 import os
 import numpy as np
@@ -95,19 +100,19 @@ def draw_3d_stack(c, cx, cy, color, s=1.0):
 
 def main():
     c = Canvas()
-    c.title("ProtoDUNE-HD Wire-Cell 3-D Imaging & Deghosting  ·  per APA",
+    c.title("ProtoDUNE-VD Wire-Cell 3-D Imaging & Deghosting  ·  per CRP",
             "tomographic tiling: fired U/V/W wire strips coincide → blobs "
             "(+ false crossings) → charge-solve & deghost → 3-D clusters",
             my=8.62, sy=8.02, mfs=27, sfs=17.5)
 
     # ================= spine (high-level flow) ==========================
     ys = 6.95
-    c.box(1.15, ys, 1.95, 1.55, "SP frames\nper APA\ngauss / wiener",
-          BG_IN, C_IN, fs=13, tc=C_IN)
+    c.box(1.15, ys, 1.95, 1.55, "SP frames\nper CRP\ngauss / wiener\n(×8 CRPs)",
+          BG_IN, C_IN, fs=12, tc=C_IN)
 
     c.algobox(4.45, ys, 3.35, 1.88, "① Slice", [
         "MaskSlices — time-slice",
-        "per plane, threshold charge",
+        "per plane, charge > 0 (1e-6)",
         "→ fired U/V/W activity / slice",
         "multi-pass: UVW · UV · VW · UW",
     ], BG_SLICE, C_SLICE, title_fs=16, bullet_fs=11.8, dy=0.345)
@@ -141,10 +146,10 @@ def main():
     c.ov.text(1.15, ys - 1.30, "FrameMasking · ChargeError", ha="center",
               va="center", fontsize=9.2, color="#8a8a8a", style="italic")
 
-    # dead/masked subordinate fork — one compact readable line off ① Slice
+    # dead/masked subordinate fork (FrameFanout) — one compact readable line
     c.ov.text(8.55, 5.72,
-              "⊕ dead / masked fork:  2-view blobs (dummy plane, span 1500), "
-              "geometry only → clusters-apa-*-ms-masked.tar.gz",
+              "⊕ FrameFanout → dead / masked fork:  2-view blobs (dummy plane, "
+              "span 1500), geometry only → clusters-apa-*-ms-masked.tar.gz",
               ha="center", va="center", fontsize=10, color="#6e747c",
               style="italic")
     c.ov.add_patch(FancyArrowPatch((4.45, ys - 0.94), (5.55, 5.86),
@@ -218,12 +223,12 @@ def main():
                   (15.15, 6.10), C_OUT, box=(0.04, 0.10, 1.0, 0.99),
                   cap_fs=13.5)
 
-    c.ov.text(8.0, 0.14, "Wire-Cell Toolkit  ·  cfg/pgrapher/experiment/pdhd/"
-              "img.jsonnet + pdhd/wct-img-all.jsonnet  ·  ghost = B. Viren, "
-              "Wire-Cell Toolkit Imaging (2019), Fig. 8;  3-D = data run 29107 "
-              "evt 1199 (Bee img cloud)", ha="center", va="center",
-              fontsize=9.5, color="#8a8a8a")
-    c.save(os.path.join(HERE, "pdhd_imaging_chain"))
+    c.ov.text(8.0, 0.14, "Wire-Cell Toolkit  ·  cfg/pgrapher/experiment/"
+              "protodunevd/img.jsonnet + pdvd/wct-img-all.jsonnet  ·  ghost = "
+              "B. Viren, Wire-Cell Toolkit Imaging (2019), Fig. 8;  3-D = data "
+              "run 039252 evt 298567 (Bee img cloud)", ha="center",
+              va="center", fontsize=9.5, color="#8a8a8a")
+    c.save(os.path.join(HERE, "pdvd_imaging_chain"))
 
 
 if __name__ == "__main__":
