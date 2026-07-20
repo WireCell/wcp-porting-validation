@@ -73,6 +73,10 @@ frame); the other three insets are APA1 V.  All are ProtoDUNE-HD **data**, run
   isolates the diagonal track and rejects the horizontal artifacts.
 - `make_sp_chain_diagram.py` runs clean → 3840×2160 PNG + PDF; three algorithm
   boxes, arrows, leader lines and four insets legible at slide scale, 16:9, no
-  text overflow.
+  text overflow.  Fonts (box titles, bullets, captions, and the inset-internal
+  axis/legend/title text baked in `make_nfsp_insets.py`) were enlarged for slide
+  legibility in response to review feedback, and the four insets are placed
+  larger.  The input box carries the same `raw{N}` WCT-tag convention as the NF
+  slide's output box (WCT "raw" = NF-cleaned, i.e. "cooked").
 - No toolkit C++/cfg touched — docs/figure deliverable only; nothing in the
   reconstruction path changes, so no build or A/B gate is required.

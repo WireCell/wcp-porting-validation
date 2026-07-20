@@ -32,6 +32,14 @@ Traced from `cfg/pgrapher/experiment/pdhd/nf.jsonnet` and
 `wct-nf-sp.jsonnet`.  The `OmnibusNoiseFilter` applies one `channel_filters`
 entry then two `multigroup_chanfilters` entries, **in this order**:
 
+The input and output boxes carry the **physical** name big (raw ADC in / cleaned
+ADC out) with the WCT frame tag as a small secondary line, because the WCT tag
+convention is a known source of confusion: WCT tags the *as-digitized* raw ADC
+`orig`, and tags the NF-*cleaned* output `raw{N}` — i.e. what WCT calls "raw" is
+what everyone else would call "cooked".  The raw-ADC box also notes its two
+possible origins (DAQ or WCT sim).  The `Resampler` is drawn as an active,
+colored WC-domain driver stage (not greyed) — it *is* live code, just data-only.
+
 | stage | node type | scope | what it does (live path) |
 |---|---|---|---|
 | pre | `Resampler` | per anode, **data only** | 512 → 500 ns; a driver stage before NF (`reality='data'`), outside `OmnibusNoiseFilter`. |
@@ -67,6 +75,9 @@ APA0 V-plane is anomalous), V plane.
   NF output) shows clear coherent stripes pre-NF that visibly flatten post-NF.
 - `make_nf_chain_diagram.py` runs clean → 3840×2160 PNG + PDF; cascade boxes,
   arrows, leader lines and the greyed OFF panel all legible at slide scale, 16:9,
-  no overflow.
+  no overflow.  Fonts (box titles, bullets, captions, and the inset-internal
+  axis/legend/title text baked in `make_nfsp_insets.py`) were enlarged for
+  slide legibility in response to review feedback; the two data insets are
+  placed larger and no longer overlap or clip.
 - No toolkit C++/cfg touched — docs/figure deliverable only; nothing in the
   reconstruction path changes, so no build or A/B gate is required.

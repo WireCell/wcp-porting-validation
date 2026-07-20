@@ -37,6 +37,20 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 
+# Insets are baked rasters placed onto a 3840-px master canvas, so their
+# internal text must be large enough to survive downscaling.  Raise the base
+# font sizes here (the master font bumps in make_*_diagram.py do NOT touch the
+# text inside these rasters) and render at higher dpi for more native pixels.
+plt.rcParams.update({
+    "font.size": 15,
+    "axes.titlesize": 15,
+    "axes.labelsize": 15,
+    "xtick.labelsize": 13,
+    "ytick.labelsize": 13,
+    "legend.fontsize": 12.5,
+})
+DPI = 240
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 PDHD = os.path.dirname(HERE)
 SRC = os.path.join(HERE, "nfsp_src")
@@ -81,22 +95,20 @@ def make_noise_rms():
     x = np.arange(len(r_post))
     ok = (r_post > 0) & (r_pre > 0)      # drop masked/dead channels (rms=0)
 
-    fig, ax = plt.subplots(figsize=(5.0, 2.7))
-    ax.plot(x[ok], r_pre[ok], lw=0.7, color=C_RAW, label="pre-NF  (median %.1f ADC)"
+    fig, ax = plt.subplots(figsize=(5.4, 3.0))
+    ax.plot(x[ok], r_pre[ok], lw=1.0, color=C_RAW, label="pre-NF  (median %.1f ADC)"
             % np.median(r_pre[ok]))
-    ax.plot(x[ok], r_post[ok], lw=0.7, color=C_NF, label="post-NF (median %.1f ADC)"
+    ax.plot(x[ok], r_post[ok], lw=1.0, color=C_NF, label="post-NF (median %.1f ADC)"
             % np.median(r_post[ok]))
-    ax.set_xlabel("V-plane channel index", fontsize=9)
-    ax.set_ylabel("noise RMS [ADC]", fontsize=9)
-    ax.set_title("per-channel noise RMS  —  APA1 V plane  (run 027409 data)",
-                 fontsize=8.5)
+    ax.set_xlabel("V-plane channel index")
+    ax.set_ylabel("noise RMS [ADC]")
+    ax.set_title("per-channel noise RMS  ·  APA1 V  (run 027409)")
     ax.set_ylim(0, np.percentile(r_pre[ok], 99) * 1.15)
-    ax.legend(fontsize=7.5, loc="upper right", framealpha=0.9)
+    ax.legend(loc="upper right", framealpha=0.9)
     ax.margins(x=0)
-    ax.tick_params(labelsize=8)
     fig.tight_layout()
     out = os.path.join(SRC, "nf_noise_rms.png")
-    fig.savefig(out, dpi=200)
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print("wrote", out, "pre med %.2f post med %.2f"
           % (np.median(r_pre[ok]), np.median(r_post[ok])))
@@ -130,22 +142,19 @@ def make_nf_coherent_2d():
     rv = rb[:, bt:bt + nwin]
     vmax = np.percentile(np.abs(np.concatenate([ov, rv], axis=1)), 97.0)
 
-    fig, axes = plt.subplots(1, 2, figsize=(5.2, 2.7), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(5.6, 3.0), sharey=True)
     for ax, blk, ttl in ((axes[0], ov, "pre-NF"), (axes[1], rv, "post-NF")):
         im = ax.imshow(blk, origin="lower", aspect="auto", cmap="RdBu_r",
                        vmin=-vmax, vmax=vmax, interpolation="nearest",
                        extent=(bt * NF_TICK_US, (bt + nwin) * NF_TICK_US, lo, hi))
-        ax.set_title(ttl, fontsize=9)
-        ax.set_xlabel("time [µs]", fontsize=8.5)
-        ax.tick_params(labelsize=7.5)
-    axes[0].set_ylabel("V-plane channel", fontsize=8.5)
+        ax.set_title(ttl)
+        ax.set_xlabel("time [µs]")
+    axes[0].set_ylabel("V-plane channel")
     cb = fig.colorbar(im, ax=axes, fraction=0.045, pad=0.03)
-    cb.set_label("ADC", fontsize=8)
-    cb.ax.tick_params(labelsize=7)
-    fig.suptitle("coherent-noise subtraction  —  APA1 V block (quiet window)",
-                 fontsize=8.5)
+    cb.set_label("ADC")
+    fig.suptitle("APA1 V block  ·  signal-free window", y=1.02, fontsize=14)
     out = os.path.join(SRC, "nf_coherent_2d.png")
-    fig.savefig(out, dpi=200, bbox_inches="tight")
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print("wrote", out, "window tick %d vmax %.1f" % (bt, vmax))
 
@@ -158,29 +167,28 @@ def make_sp_waveform():
     p = int(wg.argmax())
     t0, t1 = t[p] - 120 * NF_TICK_US, t[p] + 160 * NF_TICK_US
 
-    fig, ax = plt.subplots(figsize=(5.0, 2.7))
-    ax.plot(t, wr, lw=0.8, color=C_SP, label="NF-cleaned ADC (bipolar induction)")
-    ax.axhline(0, color="0.6", lw=0.5)
+    fig, ax = plt.subplots(figsize=(5.4, 3.0))
+    ax.plot(t, wr, lw=1.1, color=C_SP, label="NF-cleaned ADC (bipolar induction)")
+    ax.axhline(0, color="0.6", lw=0.6)
     ax.set_xlim(t0, t1)
     mr = np.abs(wr[(t >= t0) & (t <= t1)]).max()
     ax.set_ylim(-1.5 * mr, 1.5 * mr)
-    ax.set_xlabel("time [µs]", fontsize=9)
-    ax.set_ylabel("ADC", color=C_SP, fontsize=9)
-    ax.tick_params(axis="y", labelcolor=C_SP, labelsize=8)
-    ax.tick_params(axis="x", labelsize=8)
+    ax.set_xlabel("time [µs]")
+    ax.set_ylabel("ADC", color=C_SP)
+    ax.tick_params(axis="y", labelcolor=C_SP)
     ax2 = ax.twinx()
-    ax2.plot(t, wg, lw=1.1, color=C_OUT, label="deconvolved charge (gauss)")
+    ax2.plot(t, wg, lw=1.4, color=C_OUT, label="deconvolved charge (gauss)")
     mg = wg[(t >= t0) & (t <= t1)].max()
     ax2.set_ylim(-1.5 * mg, 1.5 * mg)
-    ax2.set_ylabel("decon charge", color=C_OUT, fontsize=9)
-    ax2.tick_params(axis="y", labelcolor=C_OUT, labelsize=8)
-    ax.set_title("ch %d (V) — bipolar ADC → unipolar charge" % CH, fontsize=8.5)
+    ax2.set_ylabel("decon charge", color=C_OUT)
+    ax2.tick_params(axis="y", labelcolor=C_OUT)
+    ax.set_title("ch %d (V) — bipolar ADC → unipolar charge" % CH)
     l1, la1 = ax.get_legend_handles_labels()
     l2, la2 = ax2.get_legend_handles_labels()
-    ax.legend(l1 + l2, la1 + la2, fontsize=7, loc="upper right", framealpha=0.9)
+    ax.legend(l1 + l2, la1 + la2, loc="upper right", framealpha=0.9)
     fig.tight_layout()
     out = os.path.join(SRC, "sp_waveform.png")
-    fig.savefig(out, dpi=200, bbox_inches="tight")
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print("wrote", out)
 
@@ -198,24 +206,23 @@ def make_sp_filters():
               "W": (0.225567, 3.47846)}
     gaus_wide = (0.12, 2)
     f = np.linspace(0, 0.5, 1200)     # MHz (SP grid max_freq = 1 MHz -> Nyquist 1)
-    fig, ax = plt.subplots(figsize=(5.0, 2.7))
+    fig, ax = plt.subplots(figsize=(5.4, 3.0))
     for pl, col in zip("UVW", [C_SP, "#3d78c9", C_OUT]):
         s, p = wiener[pl]
-        ax.plot(f, hf_filter(f, s, p), lw=1.3, color=col,
+        ax.plot(f, hf_filter(f, s, p), lw=1.6, color=col,
                 label="Wiener_tight_%s" % pl)
-    ax.plot(f, hf_filter(f, *gaus_wide), lw=1.4, ls="--", color="#b0413e",
+    ax.plot(f, hf_filter(f, *gaus_wide), lw=1.7, ls="--", color="#b0413e",
             label="Gaus_wide (charge)")
-    ax.set_xlabel("frequency [MHz]", fontsize=9)
-    ax.set_ylabel("filter gain", fontsize=9)
-    ax.set_title("SP deconvolution filters  —  APA1–3", fontsize=8.5)
+    ax.set_xlabel("frequency [MHz]")
+    ax.set_ylabel("filter gain")
+    ax.set_title("SP deconvolution filters  —  APA1–3")
     ax.set_xlim(0, 0.5)
     ax.set_ylim(0, 1.05)
-    ax.legend(fontsize=7.5, loc="upper right", framealpha=0.9)
-    ax.tick_params(labelsize=8)
+    ax.legend(loc="upper right", framealpha=0.9)
     ax.grid(True, alpha=0.25)
     fig.tight_layout()
     out = os.path.join(SRC, "sp_filters.png")
-    fig.savefig(out, dpi=200)
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print("wrote", out)
 
@@ -252,19 +259,65 @@ def make_decon_kernel_2d():
     norm = TwoSlopeNorm(vcenter=0.0, vmin=-vmax, vmax=vmax)
     extent = (t[t0], t[t1 - 1], wire_off[0] - 0.5, wire_off[-1] + 0.5)
 
-    fig, ax = plt.subplots(figsize=(5.0, 2.7))
+    fig, ax = plt.subplots(figsize=(5.4, 3.0))
     im = ax.imshow(disp, origin="lower", aspect="auto", extent=extent,
                    cmap="RdBu_r", norm=norm, interpolation="nearest")
-    ax.set_xlabel("time [µs]", fontsize=9)
-    ax.set_ylabel("wire offset", fontsize=9)
-    ax.set_title("field response — V plane  (deconvolution kernel)", fontsize=8.5)
-    ax.tick_params(labelsize=8)
+    ax.set_xlabel("time [µs]")
+    ax.set_ylabel("wire offset")
+    ax.set_title("field response — V plane")
     cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
-    cb.set_label("induced current [a.u.]", fontsize=8)
-    cb.ax.tick_params(labelsize=7)
+    cb.set_label("induced current [a.u.]")
     fig.tight_layout()
     out = os.path.join(SRC, "sp_decon_kernel_2d.png")
-    fig.savefig(out, dpi=200)
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
+    plt.close(fig)
+    print("wrote", out)
+
+
+def make_l1sp_bases():
+    """L1SP response bases inset (PDHD V, positive ROI), rendered fresh with
+    large fonts for slide legibility.
+
+    Re-renders the single positive-ROI panel of
+    nf_plot/track_response_l1sp_kernels.py (V-plane bipolar + W-plane unipolar
+    response bases the L1SP LASSO fits per ROI) instead of downscaling that
+    script's tiny-font 2-panel crop.  Kernel-build logic is the shared
+    wirecell.sigproc.l1sp code, so the curves are identical.
+    """
+    from wirecell import units
+    from wirecell.sigproc.l1sp import build_l1sp_kernels
+    # PDHD APA1/2/3 electronics calibration (track_response_l1sp_kernels.py).
+    kd = build_l1sp_kernels(
+        fr_file="dune-garfield-1d565.json.bz2",
+        gain=14.0 * units.mV / units.fC, shaping=2.2 * units.us,
+        postgain=1.0, adc_per_mv=16384 / 1400.0,
+        coarse_time_offset_us=-8.0, fine_time_offset_us=0.0)
+    m = kd["meta"]
+    n = m["n_samples"]
+    t = m["t0_us"] + np.arange(n) * (m["period_ns"] / 1000.0)
+    by = {p["plane_index"]: p for p in kd["planes"]}
+    kV = np.asarray(by[1]["positive"]["bipolar"])
+    kW = np.asarray(by[0]["positive"]["unipolar"])
+    n_mip = (1.8e6 * 0.471 * 0.7) / 23.6          # MIP e-/pitch
+    t_zc_V = by[1]["zero_crossing_us"]
+    shift_W = by[1]["positive"]["unipolar_time_offset_us"]
+    tp = t - t_zc_V
+
+    fig, ax = plt.subplots(figsize=(6.2, 2.9))
+    ax.plot(tp, kV * n_mip, color="steelblue", lw=2.0,
+            label="V-plane bipolar (induction)")
+    ax.plot(tp + shift_W, kW * n_mip, color="darkorange", lw=2.0,
+            label="W-plane unipolar (collection)")
+    ax.axhline(0, color="gray", lw=0.7, ls=":")
+    ax.set_xlim(-8, 10)
+    ax.set_xlabel("time [µs, rel. V zero-crossing]")
+    ax.set_ylabel("ADC (× N_MIP)")
+    ax.set_title("L1SP response bases  —  PDHD V (positive ROI)")
+    ax.legend(loc="upper right", framealpha=0.9)
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    out = os.path.join(SRC, "l1sp_kernel.png")
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print("wrote", out)
 
@@ -276,6 +329,7 @@ def main():
     make_sp_waveform()
     make_sp_filters()
     make_decon_kernel_2d()
+    make_l1sp_bases()
 
 
 if __name__ == "__main__":
