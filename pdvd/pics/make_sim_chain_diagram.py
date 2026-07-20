@@ -3,11 +3,12 @@
 
 Wide 16:9 figure for pptx.  Draws the per-anode simulation dataflow
 (DepoFileSource -> Drifter -> Fanout -> DepoTransform [signal] -> Reframer
--> AddNoise [noise] -> Digitizer -> raw ADC) with the signal path in blue and
-the noise path in orange, and embeds five physics "inset" panels (field
-response, cold-electronics impulse, noise input spectra, a real data raw-ADC
-waveform, and a raw-waveform FFT sim-vs-data check) with leader lines to the
-node each explains.
+-> AddNoise [noise] -> Digitizer -> raw ADC).  Drifter + Fanout are boxed as a
+"DRIFT SIMULATION" group (Wire-Cell stages — only the G4 deposits are external
+LArSoft input); the signal path is blue, the noise path orange.  Embeds five
+physics "inset" panels (drift+diffusion, field response, cold-electronics
+impulse, noise input spectra, a real data raw-ADC waveform) with leader lines
+to the node each explains.
 
 Inset sources live in sim_chain_src/ (committed).  Multi-panel sources are
 cropped to one clean panel.  Output: pdvd/pics/pdvd_sim_chain.{png,pdf}.
@@ -27,10 +28,12 @@ OUT = os.path.join(HERE, "pdvd_sim_chain")
 # ---- palette -------------------------------------------------------------
 C_SIG = "#1f4e9b"      # signal path
 C_NOI = "#d3781f"      # noise path
-C_IN = "#4a4a4a"       # input / passthrough
+C_DRF = "#6a3d9a"      # drift simulation (Wire-Cell)
+C_IN = "#4a4a4a"       # external input (LArSoft/G4)
 C_OUT = "#2e7d4f"      # output
 BG_SIG = "#e8f0fb"
 BG_NOI = "#fbeede"
+BG_DRF = "#efe8f7"
 INK = "#20242b"
 
 # 16 x 9 world; figure is 19.2x10.8in => exactly 1.2 in per world-unit on
@@ -49,6 +52,7 @@ def crop(name, box):
 
 # V plane illustrates throughout.  Single clean panel from multi-panel sources.
 INSETS = {
+    "drift": crop("drifter_arrival.png", (0.0, 0.0, 1.0, 1.0)),
     "field": crop("field_response_2d_time_V.png", (0.0, 0.0, 1.0, 1.0)),
     "elec": crop("elec_response.png", (0.0, 0.10, 0.52, 0.55)),
     "noise": crop("noise_input_spectra.png", (0.495, 0.085, 0.985, 0.53)),
@@ -97,6 +101,14 @@ def main():
 
     # ---- group backgrounds ----------------------------------------------
     yspine = 6.35
+    # Drift simulation groups Drifter + Fanout: these ARE Wire-Cell stages
+    # (the reviewer's point — only the G4 deposits are external LArSoft input).
+    ov.add_patch(FancyBboxPatch((2.30, yspine - 0.95), 3.05, 1.9,
+                 boxstyle="round,pad=0.02,rounding_size=0.16",
+                 linewidth=1.6, edgecolor=C_DRF, facecolor=BG_DRF,
+                 alpha=0.9, zorder=1))
+    ov.text(3.83, yspine + 1.18, "DRIFT SIMULATION", ha="center",
+            fontsize=13, fontweight="bold", color=C_DRF)
     ov.add_patch(FancyBboxPatch((5.72, yspine - 0.95), 3.86, 1.9,
                  boxstyle="round,pad=0.02,rounding_size=0.16",
                  linewidth=1.6, edgecolor=C_SIG, facecolor=BG_SIG,
@@ -123,9 +135,9 @@ def main():
 
     box(*n_depos, 1.7, 1.15, "G4 energy\ndeposits\n(LArSoft)", "#eef1f5",
         C_IN, fs=12)
-    box(*n_drift, 1.5, 1.15, "Drifter\n$v_d$=1.473\nmm/µs", "#eef1f5",
-        C_IN, fs=12)
-    box(*n_fan, 1.4, 1.05, "Fanout\n×8 CRPs", "#eef1f5", C_IN, fs=12)
+    box(*n_drift, 1.5, 1.2, "Drifter\n$v_d$=1.473\nmm/µs\n+ diffusion",
+        BG_DRF, C_DRF, fs=11.5, tc=C_DRF)
+    box(*n_fan, 1.4, 1.05, "Fanout\n×8 CRPs", BG_DRF, C_DRF, fs=12, tc=C_DRF)
     box(*n_depotr, 2.5, 1.5, "DepoTransform\n\nfield response\n∗ "
         "electronics", "white", C_SIG, fs=12.5, tc=C_SIG)
     box(*n_refr, 1.45, 1.1, "Reframer\n6400 tick", "white", C_SIG, fs=11.5,
@@ -153,8 +165,8 @@ def main():
         return (node[0] - w / 2, node[1])
 
     arrow(rt(n_depos, 1.7), lf(n_drift, 1.5), C_IN)
-    arrow(rt(n_drift, 1.5), lf(n_fan, 1.4), C_IN)
-    arrow(rt(n_fan, 1.4), lf(n_depotr, 2.5), C_IN)
+    arrow(rt(n_drift, 1.5), lf(n_fan, 1.4), C_DRF)
+    arrow(rt(n_fan, 1.4), lf(n_depotr, 2.5), C_DRF)
     arrow(rt(n_depotr, 2.5), lf(n_refr, 1.45), C_SIG)
     arrow(rt(n_refr, 1.45), (n_add[0] - 0.42, n_add[1]), C_SIG)
     arrow((n_noise[0], n_noise[1] + 0.675), (n_add[0], n_add[1] - 0.42), C_NOI)
@@ -162,10 +174,11 @@ def main():
     arrow(rt(n_digi, 1.7), lf(n_raw, 1.7), C_OUT)
 
     # ---- legend (top-left margin, clear of the flow band) ---------------
-    lx, ly, dy = 0.55, 8.02, 0.30
+    lx, ly, dy = 0.55, 8.10, 0.275
     for i, (col, lab) in enumerate([
-            (C_IN, "depo / drift"), (C_SIG, "signal path"),
-            (C_NOI, "noise path"), (C_OUT, "digitized output")]):
+            (C_IN, "G4 input (LArSoft)"), (C_DRF, "drift sim"),
+            (C_SIG, "signal path"), (C_NOI, "noise path"),
+            (C_OUT, "digitized output")]):
         ov.add_patch(FancyArrowPatch((lx, ly - i * dy),
                      (lx + 0.5, ly - i * dy), arrowstyle="-|>",
                      mutation_scale=13, lw=2.4, color=col, zorder=6))
@@ -190,19 +203,22 @@ def main():
                 fontsize=11.5, color=color, fontweight="bold")
         leader((cx, YB + hd + 0.04), target, color)
 
-    place("field", 2.35, 3.5, "field response — V plane  (time domain)",
+    place("drift", 1.90, 2.85, "drift + longitudinal diffusion",
+          (n_drift[0], n_drift[1] - 0.6), C_DRF)
+    place("field", 5.05, 2.85, "field response — V plane",
           (n_depotr[0] - 0.55, n_depotr[1] - 0.75), C_SIG)
-    place("elec", 6.15, 3.5, "cold-electronics impulse  $e(t)$",
+    place("elec", 8.05, 2.85, "cold-electronics impulse  $e(t)$",
           (n_depotr[0] + 0.55, n_depotr[1] - 0.75), C_SIG)
-    place("noise", 9.95, 3.5, "noise input spectra — V plane",
+    place("noise", 11.05, 2.85, "noise input spectra — V plane",
           (n_noise[0] - 0.5, n_noise[1] - 0.675), C_NOI)
-    place("adc", 13.75, 3.5, "raw-ADC waveform — V plane  (data)",
+    place("adc", 14.10, 2.85, "raw-ADC waveform — V plane  (data)",
           (n_raw[0] - 0.15, n_raw[1] - 0.575), C_OUT)
 
     # ---- provenance footer ----------------------------------------------
     ov.text(W / 2, 0.42,
             "Wire-Cell Toolkit  ·  cfg/pgrapher/experiment/protodunevd/"
-            "sim.jsonnet  (per-CRP signal+noise)  ·  FR "
+            "sim.jsonnet  (per-CRP signal+noise)  ·  Drifter "
+            "$D_L$=4.0 / $D_T$=8.8 cm²/s  ·  FR "
             "protodunevd_FR_imbalance3p_260501  ·  ColdElec 7.8 mV/fC, "
             "2.2 µs  ·  noise pdvd-{bottom,top}-noise-spectra  ·  "
             "waveform: ProtoDUNE-VD data run 41189",
