@@ -49,7 +49,7 @@ def main():
 
     ys = 6.40
     # ---- input (raw ADC, either DAQ or WCT sim) -------------------------
-    c.stack_box(1.55, ys, 2.30, 1.85, [
+    c.stack_box(1.35, ys, 2.20, 1.85, [
         ("raw ADC frame", 15, True, INK, False),
         ("(per APA)", 11.5, False, INK, False),
         ("source: DAQ or WCT sim", 11.5, False, C_IN, False),
@@ -57,20 +57,20 @@ def main():
     ], BG_IN, C_IN, gap=0.42)
 
     # ---- data-only resampler (a WC-domain driver stage — colored) -------
-    c.stack_box(4.15, ys, 1.95, 1.55, [
+    c.stack_box(3.55, ys, 1.90, 1.55, [
         ("Resampler", 14, True, C_WC, False),
         ("512 → 500 ns", 12, False, INK, False),
         ("data only", 11, False, C_WC, True),
     ], BG_WC, C_WC, gap=0.44)
 
     # ---- OmnibusNoiseFilter group ---------------------------------------
-    gx0, gy0, gw, gh = 5.35, 4.55, 9.05, 3.30
+    gx0, gy0, gw, gh = 4.70, 4.55, 9.00, 3.30
     c.group_bg(gx0, gy0, gw, gh, C_NF, BG_NF,
                label="OmnibusNoiseFilter   (one per APA)", ly=gy0 + gh - 0.30,
                fs=15.5)
 
     yb = 5.95
-    c.algobox(6.75, yb, 2.55, 2.62,
+    c.algobox(6.05, yb, 2.50, 2.62,
               "① OneChannelNoise", [
                   "per channel:",
                   "• FFT → zero DC bin → IFFT",
@@ -78,7 +78,7 @@ def main():
                   "   clip ±6σ, subtract",
                   "   binned median",
               ], "white", C_NF, title_fs=14, bullet_fs=11, dy=0.36)
-    c.algobox(9.55, yb, 2.55, 2.62,
+    c.algobox(8.75, yb, 2.50, 2.62,
               "② FEMBNoiseSub", [
                   "per FEMB (multigroup):",
                   "• detect coherent",
@@ -86,7 +86,7 @@ def main():
                   "• width 50, 3.5σ",
                   "   → restore baseline",
               ], "white", C_NF, title_fs=14, bullet_fs=11, dy=0.36)
-    c.algobox(12.55, yb, 3.35, 2.62,
+    c.algobox(11.80, yb, 3.35, 2.62,
               "③ CoherentNoiseSub", [
                   "per FEMB group (40 ch U/V, 48 ch W):",
                   "• A  CalcMedian — per-tick group median",
@@ -97,18 +97,18 @@ def main():
               ], "white", C_NF, title_fs=14, bullet_fs=10.3, dy=0.365)
 
     # ---- output ---------------------------------------------------------
-    c.stack_box(15.15, ys, 1.75, 1.7, [
+    c.stack_box(14.85, ys, 1.90, 1.7, [
         ("cleaned ADC", 14, True, C_OUT, False),
         ("frame (per APA)", 12, False, INK, False),
         ("WCT tag: raw{N}", 11, False, "#5f8f72", True),
     ], BG_OUT, C_OUT, gap=0.44)
 
     # ---- spine arrows ----------------------------------------------------
-    c.arrow((2.70, ys), (3.175, ys), C_IN)          # input -> resampler
-    c.arrow((5.125, ys), (5.62, yb + 0.4), C_WC)    # resampler -> group/box1
-    c.arrow((8.025, yb), (8.275, yb), C_NF)         # box1 -> box2
-    c.arrow((10.825, yb), (11.075, yb), C_NF)       # box2 -> box3
-    c.arrow((14.225, yb + 0.4), (14.275, ys), C_OUT)  # box3 -> output
+    c.arrow((2.45, ys), (2.60, ys), C_IN)            # input -> resampler
+    c.arrow((4.50, ys), (4.80, yb + 0.4), C_WC)      # resampler -> group/box1
+    c.arrow((7.30, yb), (7.50, yb), C_NF)            # box1 -> box2
+    c.arrow((10.00, yb), (10.125, yb), C_NF)         # box2 -> box3
+    c.arrow((13.475, yb + 0.4), (13.90, ys), C_OUT)  # box3 -> output
 
     # ---- OFF-in-this-build panel (bottom-left) --------------------------
     ox0, oy0, ow, oh = 0.45, 1.05, 3.55, 3.00
@@ -135,9 +135,9 @@ def main():
     # ---- insets (bottom) -------------------------------------------------
     ybi = 1.05
     c.place_image(os.path.join(SRC, "nf_coherent_2d.png"), 7.30, 5.20, ybi,
-                  "coherent-noise subtraction (data)", (12.55, 4.60), C_NF)
+                  "coherent-noise subtraction (data)", (11.80, 4.60), C_NF)
     c.place_image(os.path.join(SRC, "nf_noise_rms.png"), 13.10, 5.30, ybi,
-                  "noise RMS: pre-NF → post-NF (data)", (15.15, 5.55), C_OUT)
+                  "noise RMS: pre-NF → post-NF (data)", (14.85, 5.55), C_OUT)
 
     c.footer("Wire-Cell Toolkit  ·  cfg/pgrapher/experiment/pdhd/{nf,chndb-base,"
              "chndb-resp}.jsonnet + wct-nf-sp.jsonnet  ·  impl sigproc/src/"

@@ -104,7 +104,8 @@ def make_noise_rms():
     ax.set_ylabel("noise RMS [ADC]")
     ax.set_title("per-channel noise RMS  ·  APA1 V  (run 027409)")
     ax.set_ylim(0, np.percentile(r_pre[ok], 99) * 1.15)
-    ax.legend(loc="upper right", framealpha=0.9)
+    # RMS traces sit high (~13-20 ADC); park the legend in the empty lower band.
+    ax.legend(loc="lower right", framealpha=0.9)
     ax.margins(x=0)
     fig.tight_layout()
     out = os.path.join(SRC, "nf_noise_rms.png")
@@ -168,7 +169,7 @@ def make_sp_waveform():
     t0, t1 = t[p] - 120 * NF_TICK_US, t[p] + 160 * NF_TICK_US
 
     fig, ax = plt.subplots(figsize=(5.4, 3.0))
-    ax.plot(t, wr, lw=1.1, color=C_SP, label="NF-cleaned ADC (bipolar induction)")
+    ax.plot(t, wr, lw=1.1, color=C_SP, label="NF ADC (bipolar)")
     ax.axhline(0, color="0.6", lw=0.6)
     ax.set_xlim(t0, t1)
     mr = np.abs(wr[(t >= t0) & (t <= t1)]).max()
@@ -177,7 +178,7 @@ def make_sp_waveform():
     ax.set_ylabel("ADC", color=C_SP)
     ax.tick_params(axis="y", labelcolor=C_SP)
     ax2 = ax.twinx()
-    ax2.plot(t, wg, lw=1.4, color=C_OUT, label="deconvolved charge (gauss)")
+    ax2.plot(t, wg, lw=1.4, color=C_OUT, label="decon (gauss)")
     mg = wg[(t >= t0) & (t <= t1)].max()
     ax2.set_ylim(-1.5 * mg, 1.5 * mg)
     ax2.set_ylabel("decon charge", color=C_OUT)
@@ -185,7 +186,10 @@ def make_sp_waveform():
     ax.set_title("ch %d (V) — bipolar ADC → unipolar charge" % CH)
     l1, la1 = ax.get_legend_handles_labels()
     l2, la2 = ax2.get_legend_handles_labels()
-    ax.legend(l1 + l2, la1 + la2, loc="upper right", framealpha=0.9)
+    # signal is a single central-left spike; the bottom-right quadrant is empty
+    # (both traces flat at 0 for t > ~500 µs) — anchor a compact legend there so
+    # it clears the pulse.
+    ax.legend(l1 + l2, la1 + la2, loc="lower right", framealpha=0.9, fontsize=10.5)
     fig.tight_layout()
     out = os.path.join(SRC, "sp_waveform.png")
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
@@ -313,7 +317,9 @@ def make_l1sp_bases():
     ax.set_xlabel("time [µs, rel. V zero-crossing]")
     ax.set_ylabel("ADC (× N_MIP)")
     ax.set_title("L1SP response bases  —  PDHD V (positive ROI)")
-    ax.legend(loc="upper right", framealpha=0.9)
+    # both bases rise from ~0 on the left; the upper-left corner is empty while
+    # upper-right overlaps the W-plane peak.
+    ax.legend(loc="upper left", framealpha=0.9)
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
     out = os.path.join(SRC, "l1sp_kernel.png")
