@@ -66,9 +66,9 @@ run-039252 evt298567. Depth statistics and the estimator comparison are
 **not** repeated here — they are `11_pdvd-saturation-recovery.md` §2.
 
 **Scope warning.** §§(a)-(c) below are measured on the **16 cathode
-channels**. They do **not** generalize to the membrane XA / PMT snippets,
-where the membrane snippets show a different and currently unhandled
-failure — see §"The zero-run".
+channels**, which are read out as full streams. They do **not** generalize to
+the self-triggered snippets (membrane XA *and* PMT), which show a different and
+currently unhandled failure — see §"The zero-run".
 
 ![fig 6 — (a) the positive flat-top clip at 16383; (b) the AC-coupling undershoot after the pulse — the real "signal goes negative"; (c) the decon plateau, positive throughout the rail](pics/lightpattern_fig6_saturation_signature.png)
 
@@ -78,10 +78,11 @@ excursion after a bright pulse is real, but it is AC-coupling undershoot, not
 the clip; **(c)** the deconvolution never goes negative inside the rail — it
 produces a positive plateau, and that plateau is the actual pathology.
 
-**On the membrane snippets there is a fourth, different answer** — the raw
-ADC jumps to a flat 0 (= −pedestal once subtracted) at the pulse peak, unflagged
-by `detect_saturation`. That is the sharp "goes negative and stays flat"
-signature, and it is an open issue: §"The zero-run".
+**On the self-triggered snippets (membrane XA and PMT) there is a fourth,
+different answer** — the raw ADC jumps to a flat 0 (= −pedestal once
+subtracted) at the pulse peak, unflagged by `detect_saturation`. That is the
+sharp "goes negative and stays flat" signature, and it is an open issue:
+§"The zero-run".
 
 ### The signature is a positive flat-top — there is no negative clip
 
@@ -97,8 +98,8 @@ channels of evt298567 the minimum ADC is 1592–5326 against pedestals of
 ~1800–5300, and the count of samples at ADC ≤ 0 is **0**. On the cathode,
 saturation never drives the signal negative.
 
-**The membrane XA snippets are a different story — see
-§"The zero-run" below.** There the ADC does reach the bottom of its range, and
+**The self-triggered snippets (membrane XA and PMT) are a different story —
+see §"The zero-run" below.** There the ADC does reach the bottom of its range, and
 the pedestal-subtracted waveform shows exactly the "goes negative and stays
 flat" signature. That case is *not* covered by the paragraph above, and it is
 *not* caught by `detect_saturation`.
@@ -153,16 +154,19 @@ consequences matter downstream:
   3's ch2020 (area −1595): a *harvest* artifact, not a per-event decon
   behavior.
 
-### The zero-run: membrane snippets that jump to a flat "negative" — OPEN
+### The zero-run: self-trigger snippets that jump to a flat "negative" — OPEN
 
-**Status: found 2026-07-16. Mechanism still unconfirmed; a default-OFF fix
-exists (`overflow_to_rail`, below) but is NOT enabled in production.** Found by
+**Status: found 2026-07-16. Fix `overflow_to_rail` implemented and, by owner
+ruling 2026-07-16, **ON as the PDVD production default** (toolkit defaults stay
+OFF/byte-identical; the runner enables it). The DAPHNE encoding mechanism
+remains unconfirmed — see the open question below.** Found by
 looking for the signature the owner recalled ("positive signal, then suddenly
 negative and flat there") — the cathode-only scan above had missed it because
 it only looks at 10xx channels.
 
-On **membrane XA snippets** the raw ADC drops to **exactly 0** and stays pinned
-there for tens to hundreds of consecutive samples. In the pedestal-subtracted
+On **self-triggered snippets** (membrane XA and PMT — see the population scan
+below) the raw ADC drops to **exactly 0** and stays pinned there for tens to
+hundreds of consecutive samples. In the pedestal-subtracted
 waveform the chain actually deconvolves, that is a flat plateau at
 **−pedestal** (≈ −2500 ADC) — i.e. precisely "suddenly negative, then flat".
 No sample is ever `< 0`: the raw is unsigned and floored at 0.
@@ -177,9 +181,10 @@ evt298567, pins of ≥5 consecutive samples at ADC ≤ 1 (§E of the script):
 | 2040 | 1 | 105 | 105 | 16299 | **NO** |
 | 2041 | 1 | 77 | 77 | 16368 | **NO** |
 
-449 pinned samples on 5 channels, **none flagged**. All five are membrane; the
-PMT channels carry only isolated single samples at 0 (no run ≥5) — not, on this
-evidence, the same phenomenon.
+449 pinned samples on 5 channels, **none flagged**. All five are membrane in
+this event; the PMT channels here carry only isolated single samples at 0 — but
+that is a sampling artifact of one event, **not** a property of PMTs: see the
+population scan below, where PMTs do zero-encode.
 
 The zero-run sits exactly where the pulse **peak** should be, and is bracketed
 by near-ceiling values. Full resolution, ch2011 entry 1030 (pedestal 2488):
@@ -205,6 +210,41 @@ therefore deconvolves a waveform with a −2500-ADC notch at the pulse peak as i
 it were valid data. A positive-threshold hit finder is very unlikely to
 recover a sensible PE from that.
 
+### Which populations does it affect? Self-trigger — both XA and PMT
+
+Scan of **all 18 events / 43 808 traces** in the run-039252 file (§F of the
+script, `--populations`). The comparison must be conditioned on traces that
+actually **saturate** (clamp OR overflow): a channel that never approaches the
+ceiling cannot say which encoding it would use.
+
+| population | readout | traces | max ADC | clamp @16383 | overflow→0 | encoding *when saturating* |
+|---|---|---|---|---|---|---|
+| **cathode XA** | full stream | 288 | 16383 | **288** | **0** | **100% clamp** |
+| **membrane XA** | self-trigger | 30211 | 16383 | 10 | **80** | **91% overflow→0** |
+| **PMT** | self-trigger | 13309 | **16374** | **0** | **14** | **100% overflow→0** |
+
+Readings:
+
+- **It tracks the READOUT PATH, not the sensor type.** Cathode XA and membrane
+  XA are the *same sensor* differing only in readout, and they encode
+  **oppositely**: full-stream always clamps (288/288), self-trigger almost
+  always zero-encodes (80/88). That comparison removes the sensor as the
+  variable.
+- **PMTs are affected too** — 14 traces on 7 channels (3050/3060/3100/3140/
+  3200/3210/3220). This corrects the evt298567-only reading above: PMTs looked
+  clean there only because none of their snippets overflowed in that one event.
+- **PMTs never clamp at all**: max ADC = 16374 over 13 309 traces, i.e. no PMT
+  sample ever reaches 16383. Every PMT saturation is zero-encoded.
+- **The self-trigger path is not exclusively zero-encoding**: 10 membrane traces
+  clamp normally and 2 show *both* encodings in one trace. So the two encodings
+  coexist on the same readout path — another reason the mechanism needs an
+  expert answer rather than a guess (a plausible but unverified reading is that
+  the encoding depends on how far above the ceiling the pulse goes).
+- **Saturation is rare in self-trigger snippets** (88/30211 membrane, 14/13309
+  PMT) but universal in cathode full streams (288/288) — unsurprising, since a
+  7.5 ms stream almost always contains some saturating pulse while a 16.4 µs
+  snippet rarely does.
+
 **Does it explain the Phase-4 membrane/PMT puzzle? On this event, no.** It was
 an attractive hypothesis — unflagged saturation on exactly the PD types whose
 calibration never closed, and `12_pdvd-qtol-recalibration.md` §5 reports
@@ -222,12 +262,14 @@ open.
 **Open question for the PDS/DAPHNE experts (do not guess):** why does the
 self-trigger path report overflow as 0 while the cathode full stream clamps
 hard at 16383? The two populations demonstrably behave differently in the same
-event. The knob below is justified by the *bracketing evidence* alone (the true
-signal was above the ceiling ⇒ treat it as ≥ rail and flag it), which is
-conservative and mechanism-independent — but **enabling it in production is
-gated on this question being answered.**
+event. The fix below is justified by the *bracketing evidence* alone (the true signal
+was demonstrably above the ceiling ⇒ treat it as ≥ rail and flag it), which is
+conservative and mechanism-independent — which is why the owner ruled it on for
+production (2026-07-16) without waiting. But the question stays open and could
+still change the predicate: if the encoding turns out to mean something other
+than "over range", this needs revisiting.
 
-### The fix: `overflow_to_rail` (toolkit, default OFF)
+### The fix: `overflow_to_rail` (toolkit default OFF; PDVD production ON)
 
 The owner's proposal — detect them, move 0 to the maximal saturation value,
 then let the existing chain run — is implemented as `OpDecon.overflow_to_rail`.
@@ -270,10 +312,32 @@ past the depth ≈3 where `11_pdvd-saturation-recovery.md` §2 shows no estimato
 is reliable. The flag is the point; the bridged value only improves the flash
 total over an un-repaired −2500 notch.
 
-**Limitations:** the threshold is tuned on 6 runs in one event; a run touching
-a snippet edge, or reaching into the 20-sample pedestal window, is
-conservatively left alone; floor-clipped *undershoot* is a separate phenomenon
-this does not address (it cannot be recovered by mapping to the rail).
+**Discriminator validated on the whole file** (18 events, every floor-pinned
+run — not just the 6 that motivated it). For each run, `m = min(before, after)`,
+the quantity the predicate thresholds:
+
+| | runs | m |
+|---|---|---|
+| **accepted** (remapped) | 97 | min **8522**, p05 9669, median 14445 |
+| **rejected** (undershoot) | 34 | max **2918**, p95 2778, median 738 |
+| edge-touching (skipped, no neighbour pair) | 12 | — |
+
+143 runs total. The distribution is **cleanly bimodal — the bin [4000, 8000) is
+empty** — so the threshold sits *inside* a gap of [2918, 8522] with no run
+anywhere near it. Note 8000 sits at the *top* of that gap, which biases toward
+false **negatives** (a missed overflow, which just leaves today's behavior) over
+false **positives** (a fabricated rail-height pulse, which would corrupt a flash
+total). That is the safe direction, and the reason not to lower it.
+
+Per population, accepted/total-with-pair: **PMT 15/15**, **membrane 82/116**.
+The 34 rejects are all membrane (ch2030/2040/2041, lengths 42–306) — the
+post-pulse undershoot pins, exactly what must be left alone.
+
+**Limitations:** a run touching a snippet edge, or reaching into the 20-sample
+pedestal window, is conservatively left alone (12 such runs here); floor-clipped
+*undershoot* is a separate phenomenon this does not address (it cannot be
+recovered by mapping to the rail); and the threshold, while validated on 143
+runs of one run-039252 file, has not been checked on other runs.
 
 **Gates (all PASS, toolkit `flash`):**
 - Compiled config knob-off byte-identical to pre-change (`wct-light-reco`,
@@ -293,8 +357,16 @@ unchanged at 111 flagged / 0 remapped; PMT 0/0. 6 qualifying runs exist and
 **5** are remapped — the ch2021 undershoot run is correctly rejected. Downstream
 the effect reaches `flash_sat`: membrane **OpDet 2** gains a flag (cathode
 OpDets 4–11 counts identical), 412 of 415 flashes are bit-unchanged, and 3
-flashes near t ≈ 4.9 ms re-form. Toolkit and runner defaults are **OFF**
-(`PDVD_OVERFLOW_TO_RAIL=1` to enable) pending the mechanism question above.
+flashes near t ≈ 4.9 ms re-form.
+
+**Production status (owner ruling 2026-07-16):** ON for PDVD light processing —
+`run_light_evt.sh` defaults `PDVD_OVERFLOW_TO_RAIL=1`, the same pattern as the
+spcov knobs (toolkit C++/jsonnet defaults stay OFF and byte-identical; the
+runner is where PDVD turns the operating point on). `PDVD_OVERFLOW_TO_RAIL=0`
+restores the legacy unflagged behavior. This makes light output **NOT
+bit-identical** to the `_spcov` canonical dumps: the affected flashes are few
+(3/415 on evt298567, ~0.3% of membrane snippets) but any reprocess at this
+operating point needs a fresh tag, never an overwrite of `_spcov` (M13).
 
 ### Does the deconvolution go negative inside the rail? No (cathode)
 
@@ -377,6 +449,15 @@ saturation flag should only exclude channels from chi2/KS/LASSO.
 
 ## Root cause 2 — self-trigger coverage blindness (membrane XA + PMTs)
 
+> **SUPERSEDED 2026-07-16 — see §12.**  The *observations* below stand (the
+> snippet structure, the duty cycle, the exact covered ⇔ meas>0
+> correspondence).  The *inference* — that the zeros are "fake" and must leave
+> the fit — does not: the brightness scan bins by flash total PE rather than
+> per-channel PE, DAPHNE has no dead time, and the self-trigger threshold is
+> ~1 PE, so a zero is a real upper limit.  The zeros are kept in the fit and
+> merely labelled as of §12.  Read this section as the coverage *measurement*,
+> not as its interpretation.
+
 Cathode 10xx channels are full 468800-sample (7.5 ms) streams.  Membrane
 20xx / PMT 30xx channels are **self-triggered 1024-sample (16.4 µs)
 snippets** — each channel is live only ~5–30% of the readout (fig 4).  When
@@ -390,8 +471,9 @@ covering snippet has nonzero dump PE; every one without reads 0.0 — e.g. od1
 while covered od12 (ch2050) reads 438 vs 370 predicted.
 
 Brightness scan over the 18-event round (T4): P(meas>0) for membrane opdets
-is 0.27/0.32/0.32 for flashes of 1–3k/3–10k/>10k PE — **flat in brightness**
-⇒ the zeros are readout duty cycle, not dim light.  ~70% of membrane/PMT
+is 0.27/0.32/0.32 for flashes of 1–3k/3–10k/>10k PE — flat in *flash* PE.
+(**§12: this does not imply duty cycle** — flash PE is a cathode-dominated
+total; binned by per-*channel* predicted PE, coverage runs 0.58 → 0.98.)  ~70% of membrane/PMT
 entries entering chi2/KS — and the 2026-07-14 per-type efficiency fits — are
 fake zeros.  The adopted membrane ×1.655 and PMT ×0.352 scale factors are
 therefore contaminated and must be refit once coverage is handled.
@@ -522,6 +604,257 @@ repaired drags the template area down, and here past zero.
    promoted to PDVD production default — the runner env defaults are
    ratified, `_spcov` supersedes `_satrep` as the canonical dump record.
    Toolkit defaults stay OFF (byte-identical).
+
+## 12 — Root cause 2 revisited: the silence is a measurement (2026-07-16)
+
+> Repro (read-only):
+> ```
+> cd wcp-porting-img/pdvd
+> python3 docs/qlmatch/scripts/analyze_coverage_deadtime.py            # 18 evts
+> python3 docs/qlmatch/scripts/analyze_coverage_deadtime.py 298567     # one evt
+> ```
+
+Owner question: *"when there is no data (due to self trigger threshold), the
+PE is treated to be zero in the flash. I believe this is a correct treatment?
+… it is OK to label things in the qlport as no data, but we should not
+exclude them from the fit."*
+
+**The owner is right, and Root cause 2 above is wrong on its central claim.**
+
+### The one question that decides it
+
+An uncovered self-trigger channel is in one of two worlds:
+
+- **World A — armed and silent.** Powered, listening, light arrived below
+  threshold, never fired.  The silence *is* a measurement: "the light here was
+  < threshold."  PE ≈ 0 is correct, and it constrains the fit.
+- **World B — not listening.** Busy reading out an earlier trigger / buffer
+  full / not recording.  The silence says nothing about the light, and scoring
+  0 invents a datum.
+
+Excluding is right only in World B.  §"Root cause 2" asserted World B on the
+strength of one scan: `P(meas>0)` for membrane opdets is 0.27/0.32/0.32 for
+flashes of 1–3k/3–10k/>10k PE — *flat in brightness*, therefore duty cycle.
+
+### That scan bins on the wrong variable
+
+It bins by **flash total PE**, which the cathode XAs dominate.  What decides
+whether *this* channel self-triggers is the light **on this channel**.  Binned
+by per-channel predicted PE over the same 18 events (auto-selected bundles):
+
+| pred PE on channel | 0–1 | 1–5 | 5–20 | 20–100 | 100–500 | >500 |
+|---|---|---|---|---|---|---|
+| P(cov=1), Arapucas | 0.576 | 0.771 | 0.766 | 0.817 | 0.868 | **0.984** |
+| P(cov=1), PMTs | 0.252 | 0.601 | 0.682 | 0.550 | — | — |
+
+Not flat.  It survives controlling for flash brightness: within the 1–3k
+flash band alone, Arapuca coverage climbs 0.617 → 0.911 from pred <1 PE to
+pred >100 PE.  Coverage is **downstream of the light**.
+
+### Three measurements that close it
+
+`analyze_coverage_deadtime.py` rebuilds each snippet's live interval from the
+rawwf `timestamp`/`nsamp` in the chain's own tick base
+(`PDVDOpWaveformSource.cxx:123-124`) and reproduces `OpFlashFinder`'s coverage
+(`:711-763`) — **validation gate: 266071/266071 (100%)** (flash, opdet) cells
+match the chain's own `flash_cov`.  Then:
+
+1. **There is no dead time.**  Minimum gap between consecutive snippets on a
+   channel = **0.336 µs** (1%ile 0.768 µs; 1.6% of gaps < 1 µs).  A channel
+   re-arms essentially the instant a snippet ends — it is never busy when a
+   flash arrives.  **World B has no mechanism.**
+2. **Uncovered channels are quieter, not busier.**  Gap since their last
+   snippet: median **93.8 µs** vs **54.2 µs** for covered ones, and 5.4% vs
+   0.7% have seen nothing for >1 ms.  The opposite of the busy prediction.
+3. **The threshold is ~1 PE.**  Over 43520 self-trigger snippets the total
+   deconvolved PE inside the snippet has 25%ile **0.96 PE**, median **3.29
+   PE**; 59% of triggers carry <5 PE.  A channel that did not fire really did
+   see ~nothing.
+
+The ~12% duty cycle (median 55 snippets × 16.384 µs / 7500 µs) is real, but it
+is an **effect** of there being no light most of the time, not an independent
+blindness.  Root cause 2 read "channel is rarely live" as "channel is randomly
+deaf"; those are different statements.
+
+### Consequences
+
+- Dropping an uncovered channel discards the upper limit "< ~1 PE", so a
+  prediction may over-shoot a silent channel for free — a one-directional bias
+  toward over-prediction, the same direction as this doc's opening symptom.
+- **969** uncovered Arapuca entries predict >20 PE (465 predict >100).  Under
+  World A these are the model contradicting the hardware, not missing data.
+- The Phase-2 chi2 win (**459.6 → 91.8**, ndf 18→13) is the warning, not the
+  result: 5 channels carried ~370 of that chi2 because the prediction was
+  wrong on them, and masking made the wrongness free.
+- `coverage_min` = 1.0 with the min-over-ganged-sub-channels rule masked
+  **551 entries that had measured light** (median 31 PE, max 3608) — data
+  deleted because a ganged partner was quiet or the window overhung a snippet
+  edge.  Indefensible under either world; fixed for free by keeping them.
+- **The Phase-4 per-type refit is predicated on the falsified premise.**  Its
+  premise is that membrane/PMT zeros are fake; they are real.  The f7c66ab8
+  factors (kept by the 2026-07-15 ruling) were fit with those zeros IN, i.e.
+  under the now-correct treatment.  A refit under coverage masking would be
+  the biased one.
+
+### Fix — the `coverage_mask_fit` op point (2026-07-16)
+
+Labelling and masking were one knob; they are now two.  `use_coverage_flag`
+keeps tracking coverage (dump `cov` array → ql_scan `nodata` label);
+`coverage_mask_fit` decides whether an uncovered channel *also* leaves the fit.
+
+| layer | knob | default | PDVD production |
+|---|---|---|---|
+| `QLMatching` | `coverage_mask_fit` | **true** (legacy drop ⇒ byte-identical) | **false** — keep at measured 0 |
+| `QLMatching` | `pe_err_nodata` | −1 (disabled) | unset — not needed, see below |
+| runner | `PDVD_QL_COV_MASK_FIT` | — | **0** (= keep) |
+
+**The error is already right for PDVD — on both paths, for two different
+reasons.**  A kept no-data channel must carry the threshold band, not a tight
+zero.  The two consumers price it independently:
+
+- **LASSO** uses the measured-based `pe_err = sqrt(PE + PE_err²)`.  PDVD's
+  `qlmatching.jsonnet` sets `pe_err_floor: 2.0` with `pe_err_knee` at the C++
+  default 1.0, so a measured 0 carries **±2 PE** (≈2× the ~1 PE threshold) and
+  a 28 PE prediction on a silent channel enters as a residual of 14 — a strong
+  but honest contradiction.  At the C++ default floor 0.3 it would be 93.
+- **bundle chi2/KS** does *not* see that error at all: PDVD sets
+  `pe_err_on_pred: true`, and `per_opdet_perr` (`TimingTPCBundle.cxx:39-45`)
+  derives the error from the **predicted** pe via the lowpe model, ignoring the
+  measured one.  With PDVD's 0.60/2.0/10.0/2.0 a no-data channel predicted at
+  5/28/100 PE costs chi2 **0.4/2.1/2.8** — gently and fractionally capped.
+
+So `pe_err_nodata` (which sets `Opflash::PE_err`) would be **inert for PDVD**:
+the LASSO floor already equals it and the chi2 bypasses it.  It is retained for
+detectors with a tighter `pe_err_floor` *and* `pe_err_on_pred` off, where a
+no-data channel would otherwise be scored as a hard zero.  PDVD leaves it unset.
+
+Gates: compiled config with the knob at default is **byte-identical** to HEAD
+(`wct-clustering`, sat+cov on; diff of the compiled JSON is empty), key
+present when on; `wcdoctest-match` 23/23; freshness proof
+`local/lib/libWireCellMatch.so` 08:00 > `QLMatching.cxx` 07:58.  Knob-on smoke
+(`work/039252_0_keepcov`, light `_spcov`, evt 298567): sentinel fires, and vs
+`_am2` the **median ndf of auto-selected bundles rises 8 → 10** (the no-data
+channels are back), contained bundles unchanged (5215 — containment is
+geometry, not coverage), median chi2/ndf 5.02 → 5.59 (expected: the fit is now
+held to more data), 23 clusters change flash, 3 lost, 0 gained; the §11 crosser
+top:22 stays on the bright 274.4 µs flash.
+
+Also collapsed three exact-duplicate `coverage_min` guard lines (differing only
+in indentation, from the Phase-2 patch) while rewriting them — provable no-ops.
+
+### Deploying this (M1 — read before reprocessing)
+
+`wct-clustering.jsonnet` now passes `coverage_mask_fit=` unconditionally, so
+there are two ways a reprocess can fail to reflect this change:
+
+- **toolkit not pulled** → `qlmatching.jsonnet` has no such parameter → hard
+  `RUNTIME ERROR: function has no parameter coverage_mask_fit`.  Loud, safe.
+- **toolkit pulled but `libWireCellMatch.so` not rebuilt/installed** → the
+  compiled config carries `coverage_mask_fit: false`, but an old lib has no
+  `m_coverage_mask_fit`, so `get()` never reads the key and **the masking
+  silently stays ON**.  The run looks fine and reproduces the old result.
+
+Gate every reprocess on the sentinel — on the first event:
+
+```
+grep 'coverage_mask_fit=false => uncovered channels stay in the fit' work/<tag>/wct_clus_*.log
+```
+
+No line ⇒ the new lib is not live (`wcbuild`, then check
+`local/lib/libWireCellMatch.so` is newer than `match/src/QLMatching.cxx`).
+
+### Open items
+
+- ~~**`_am2` / `_spcov` dumps and the `candles-am2` round on port 5019 carry the
+  masking** — they predate this ruling.  Needs a reprocess (owner is holding
+  for other parts).~~ **RESOLVED 2026-07-16** — the `keep` round (next section)
+  is that reprocess; `_spcov`/`_am2` work dirs were removed in the same-day
+  consolidation (decisions/labels survive).
+- **Partial coverage** (`0 < cov < 1`, 2.46% of cells) is now kept at face
+  value, but such a channel saw only part of the flash window, so its measured
+  PE is biased **low**.  Not addressed; the population is small.  A coverage-
+  weighted error would be the principled treatment.
+- **`pe_err_nodata` has no consumer today** and is inert for PDVD on both
+  paths (see above).  Retained as the explicit home for the threshold band so a
+  future `pe_err_floor` retune, or turning `pe_err_on_pred` off, cannot
+  silently over-punish no-data channels.  Note it can never fix the chi2 while
+  `pe_err_on_pred` is on — that path would need its own no-data branch.
+- **The ~1 PE threshold is measured from snippet decon PE, not from the DAPHNE
+  trigger configuration.**  Worth confirming against the run's actual threshold
+  registers.
+- The 6893 uncovered channel-flash entries with **no snippet anywhere in the
+  event** (3.9% of uncovered) may be genuinely dead rather than quiet — the
+  only real World-B population, identifiable per channel per event.
+
+## The `keep` round — full 120-event reprocess at the keep-in-fit operating point (2026-07-16)
+
+**Repro:**
+```
+# freshness: wcbuild, then local/lib/libWireCellFlash.so + libWireCellMatch.so
+# newer than toolkit commits 024027f5 / d5a213c7 (verified 09:13/09:14 > 07:43/08:57)
+cd pdvd
+PDVD_MAX_JOBS=6 ./run_light_all.sh -s _keep 39252            # + 39253, + 039349 x3 -f files
+# imaging symlink farm: work/<run6>_<idx>_keep/ links ../<run6>_<idx>/clusters-apa-*.tar.gz
+export OMP_NUM_THREADS=8 PDVD_MAX_JOBS=6 PDVD_LIGHT_SUFFIX=_keep
+./run_clus_evt.sh -s keep -calib 039252 all                  # + 039253, 039349
+cd ql_display
+for f in ../work/039252_*_keep/calib-evt*.json; do id=$(basename $f | sed 's/calib-evt//;s/.json//');
+  python3 find_crossers.py $f --emit decisions-crossers-keep/decisions-evt$id.jsonl;
+  python3 find_boundary.py $f --emit decisions-boundary-keep/decisions-evt$id.jsonl; done
+python3 merge_candles.py keep
+for f in ../work/039252_*_keep/calib-evt*.json; do id=$(basename $f | sed 's/calib-evt//;s/.json//');
+  python3 make_labels.py $f decisions-candles-keep/decisions-evt$id.jsonl --tag candles-keep; done
+./ql_scan/serve_ql_scan.sh 5019 --tag candles-keep work/039252_*_keep/calib-evt*.json
+```
+
+**Operating point** (all runner env defaults — no overrides): saturation
+keep-and-mark + two-side repair, `overflow_to_rail` (self-trigger 0-pinned
+overflow → rail, first round to carry it), coverage chain, SPE templates v2,
+and QL **keep-in-fit** semantics — `saturation_mask_fit=false` (railed
+channels stay in chi2/KS at repaired PE, `chi2_sat_inflate=0.5`, LASSO rows
+still zeroed) and `coverage_mask_fit=false` (uncovered channels stay in
+chi2/KS **and** LASSO at measured 0).  Compiled-config proofs done on both
+jobs before running.
+
+**Results:** 120/120 light tarballs and calib dumps, 0 log errors; both
+keep-in-fit sentinels present in 120/120 clustering logs.  evt298567
+overflow sentinel: membrane remapped 5 floor-pinned overflow runs, cathode
+111 rail-clamped runs flagged (0 remapped — full stream clamps properly),
+PMT 0.  Flash gid57 smoke: sat opdets [4,6,7,8] at repaired PE
+12764/3773/6546/4738 with unmasked dump predictions; 17 uncovered opdets
+kept at measured 0; the crosser pair (bot c134 + top c4000056) auto-selects
+the flash; median ndf of auto-selected bundles = 10 (the doc'd 8→10
+keep-in-fit shift).  Candle round `keep` vs `am2`: 469 candles in both
+(crosser keeps 249→238, boundary adds 220→231, rejects 1908→1944) — a
+reshuffle, not a collapse.  Port **5019** now serves `candles-keep`
+(labels `work/ql_labels/candles-keep/`); the `candles-am2` display and the
+orphaned 5020 `satoff-check` viewer were stopped.
+
+**`_keep` supersedes `_spcov` as the canonical 120-event record.**
+Same-day consolidation (owner-directed): deleted the superseded
+`work/*_spcov` (240 dirs) + `work/*_am2` (18) and 17 one-off knob-test dirs
+(`_keepsat*`, `_knoboff*`, `_keepcov`, `_am1chk`, light `_defon/_defoff/
+_ovfon/_ovfon2/_ovfoff/_novf_on/_novf_off`), ~2.9 GB.  KEPT: the untagged
+base dirs (charge-SP imaging + base light waveforms — inputs for future
+rounds), all `_keep` dirs, every `ql_display/decisions-*` dir and
+`work/ql_labels/` tag (scan records, all rounds).
+
+**Second-stage consolidation (same day, owner-directed): base dirs folded
+into `_keep`.**  Everything of value was **moved** (not copied) from the 240
+untagged base dirs into the corresponding `_keep` dirs, then the base dirs
+were deleted: the 16 imaging tarballs per event (replacing the `_keep`
+symlinks with the real files), the 8 charge-SP frame tarballs per event
+(`protodune-sp-dnnroi-frames-anode*.tar.bz2`, ~40 GB — the SP record,
+deliberately preserved: regenerating it would need a full NF/SP/DNNROI
+rerun and the raw charge inputs sit in a colleague's active area), the
+SP/imaging logs + gpu/time provenance, the evt298567 magnify ROOT dumps,
+and the evt298567 `light-frames-*.tar.bz2`.  Dropped with the base dirs:
+only the superseded base-round `wct_clus_*.log` and empty
+`trash-all-apa.tar.gz` (old base light opflash archives too — 3-tensor,
+superseded).  `work/` is now a single tree: 240 `_keep` dirs + `ql_labels/`
+(46 GB).  **Workflow consequence: future `run_clus_evt.sh -s <tag>` symlink
+farms must link `clusters-apa-*` from the `_keep` dirs** (the plain-dir
+farms in older Repro blocks no longer resolve).
 
 ## Verification
 

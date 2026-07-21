@@ -74,7 +74,22 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
          // NOT a production default: the encoding mechanism is unconfirmed --
          // docs/qlmatch/14_pdvd-lightpattern-sp-investigation.md ("The
          // zero-run").
-         overflow_to_rail=false)
+         overflow_to_rail=false,
+         // Membrane wide-hit handling (docs/qlmatch/25_pdvd-wall-xa-usability.md
+         // §3/§7): a slow pulse spanning a 16.4-us membrane snippet becomes ONE
+         // OpHit at its PEAK time and OpFlashFinder books the whole snippet PE
+         // to that peak's 1-us bin (74% of wall-XA PE lands on the wrong or no
+         // flash).  'start' books the full integral at the pulse onset (the
+         // cathode/total-light convention, comparable to a photon-library
+         // prediction); 'slice' books per 1-us slice (time-faithful, but a
+         // flash then carries only its prompt share).  C++/toolkit defaults ''
+         // = off (byte-identical); STUDY knob, not a production default -- the
+         // wall XAs stay masked in Q/L either way.
+         mem_wide_hit_mode='', mem_wide_hit_min_width_us=2.0, mem_slice_width_us=1.0,
+         // Same handling for the PMT branch (also 16.4-us self-trigger
+         // snippets: 1% of PMT hits are wide but they carry 22% of the PMT
+         // PE, 46% of it unassigned).  Same C++ knob, same default off.
+         pmt_wide_hit_mode='')
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -93,6 +108,8 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local flag_sat = if std.type(flag_saturation) == 'string' then std.parseJson(flag_saturation) else flag_saturation;
   local emit_cov = if std.type(emit_coverage) == 'string' then std.parseJson(emit_coverage) else emit_coverage;
   local spe_v2b = if std.type(spe_v2) == 'string' then std.parseJson(spe_v2) else spe_v2;
+  local mem_wh_minw = if std.type(mem_wide_hit_min_width_us) == 'string' then std.parseJson(mem_wide_hit_min_width_us) else mem_wide_hit_min_width_us;
+  local mem_slice_w = if std.type(mem_slice_width_us) == 'string' then std.parseJson(mem_slice_width_us) else mem_slice_width_us;
   // spe_v2 swaps the OpDecon template file for the validated v2 set; the
   // toolkit flash.jsonnet default stays the v1 file (byte-identical off).
   local flash = flash_v1 + (if spe_v2b then {
@@ -118,7 +135,10 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
                                   detect_saturation=true, saturation_pad=sat_pad_n,
                                   saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
   local mem_hit = flash.ophit(name='mem', hit_threshold=mem_th, veto_saturation=veto_sat,
-                              flag_saturation=flag_sat, emit_coverage=emit_cov);
+                              flag_saturation=flag_sat, emit_coverage=emit_cov,
+                              wide_hit_mode=mem_wide_hit_mode,
+                              wide_hit_min_width_us=mem_wh_minw,
+                              slice_width_us=mem_slice_w);
 
   // --- PMT branch (opch 30xx, snippets) ---
   local pmt_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=3000, opch_hi=3999, name='pmt');
@@ -126,7 +146,10 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
                                   detect_saturation=true, saturation_pad=sat_pad_n,
                                   saturation_repair=sat_rep, overflow_to_rail=ovf_rail);
   local pmt_hit = flash.ophit(name='pmt', hit_threshold=pmt_th, veto_saturation=veto_sat,
-                              flag_saturation=flag_sat, emit_coverage=emit_cov);
+                              flag_saturation=flag_sat, emit_coverage=emit_cov,
+                              wide_hit_mode=pmt_wide_hit_mode,
+                              wide_hit_min_width_us=mem_wh_minw,
+                              slice_width_us=mem_slice_w);
 
   // --- merge OpHits and build flashes once over all 40 OpDets ---
   local merge = flash.ophit_merge(name='allpd', multiplicity=3, meta_port=0);

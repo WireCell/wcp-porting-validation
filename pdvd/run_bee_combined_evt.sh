@@ -68,6 +68,22 @@ cd "$PDVD_DIR"
 rm -rf data
 mkdir -p data
 
+# ── Optional per-CRP imaging instances (PDVD_BEE_PER_CRP=1) ───────────────────
+# Default OFF => output byte-identical to legacy (global instances only).
+# When on, each event additionally carries img-crp0..img-crp7 (raw per-CRP
+# imaged charge via `wirecell-img bee-blobs`, same geometry as run_bee_img_evt.sh),
+# so the one Bee viewer holds the global instances plus a per-CRP breakdown.
+# Geometry must stay in sync with run_bee_img_evt.sh:bee_anode_args / wct-img-2-bee.py.
+PER_CRP="${PDVD_BEE_PER_CRP:-0}"
+bee_anode_args() {
+    local idx=$1
+    if [ "$idx" -le 3 ]; then
+        echo '--speed "-1.57*mm/us" --t0 "0*us" --x0 "-341.5*cm"'
+    else
+        echo '--speed "1.57*mm/us" --t0 "0*us" --x0 "341.5*cm"'
+    fi
+}
+
 _idx=0
 for _e in "${_events[@]}"; do
     # All Bee instances (img-global, clustering-global, op, dead area) come from
@@ -89,6 +105,35 @@ for _e in "${_events[@]}"; do
         cp "$_f" "data/${_idx}/${_idx}-${_suffix}"
     done
     rm -rf "$_tmp"
+
+    # Per-CRP imaging instances (raw charge per anode/CRP), from the same
+    # clustering-input tarballs the workdir was built from.
+    if [ "$PER_CRP" = 1 ]; then
+        _wd="$PDVD_DIR/work/${RUN_PADDED}_${_e}"
+        _a0=$(ls "$_wd"/clusters-apa-anode*-ms-active.tar.gz 2>/dev/null | head -1)
+        if [ -z "$_a0" ]; then
+            echo "  [evt $_e] PER_CRP: no clusters-apa tarballs in $_wd; skipping per-CRP" >&2
+        else
+            _evno=$(tar tzf "$_a0" 2>/dev/null | head -1 | sed -E 's/.*cluster_([0-9]+)_.*/\1/')
+            if echo "$_evno" | grep -qE '^[0-9]+$'; then
+                for _n in 0 1 2 3 4 5 6 7; do
+                    _ct="$_wd/clusters-apa-anode${_n}-ms-active.tar.gz"
+                    [ -s "$_ct" ] || continue
+                    _ga=$(bee_anode_args "$_n")
+                    # shellcheck disable=SC2086
+                    eval wirecell-img bee-blobs \
+                        -g protodunevd -s uniform -d 1 \
+                        --rse "$RUN_STRIPPED" 0 "$_evno" \
+                        $_ga \
+                        -o "data/${_idx}/${_idx}-img-crp${_n}.json" \
+                        "$_ct" \
+                        || echo "  [evt $_e] PER_CRP: bee-blobs failed for crp${_n}" >&2
+                done
+            else
+                echo "  [evt $_e] PER_CRP: cannot parse event number from $_a0" >&2
+            fi
+        fi
+    fi
 
     _idx=$((_idx + 1))
 done

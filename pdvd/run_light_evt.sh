@@ -149,15 +149,41 @@ if [ "${PDVD_SPE_V2:-1}" = 1 ]; then
 fi
 # PDVD_OVERFLOW_TO_RAIL: remap floor-pinned OVERFLOW runs to the DAPHNE rail
 # before OpDecon's rail scan, so the existing detect/flag/repair chain sees the
-# membrane self-trigger snippets whose over-range pulses pin at ADC 0 instead of
-# clamping at the ceiling (detect_saturation cannot see them: those snippets
-# peak BELOW 16383).  DEFAULT OFF -- unlike the spcov knobs above this is NOT a
-# production default: the encoding mechanism is still unconfirmed and the
-# discriminator is tuned on 6 runs in one event.  Enabling it is gated on
-# PDS/DAPHNE expert confirmation.  See
+# SELF-TRIGGER snippets (membrane XA and PMT) whose over-range pulses pin at
+# ADC 0 instead of clamping at the ceiling -- detect_saturation cannot see them
+# (they peak BELOW 16383), so without this the chain deconvolves a -pedestal
+# notch at the pulse peak as valid data.  Full-stream cathode XA is unaffected
+# (it clamps properly: 288/288 traces over 18 events).
+# PRODUCTION DEFAULT ON since 2026-07-16 (owner ruling).  The remap is a
+# conservative, mechanism-independent reading of the bracketing evidence -- the
+# signal demonstrably WAS above the ceiling, so treat it as >= rail and flag it
+# -- and its purpose is to get the channel EXCLUDED from the Q/L fit, not to
+# trust the repaired value.  The DAPHNE encoding mechanism itself is still
+# unconfirmed (why the self-trigger path reports overflow as 0 while the full
+# stream clamps); that question stays open and could still change the predicate.
+# Set PDVD_OVERFLOW_TO_RAIL=0 for the legacy (unflagged) behavior.  Toolkit C++
+# and jsonnet defaults stay OFF (byte-identical) -- this runner is where PDVD
+# processing turns the operating point on.  See
 # docs/qlmatch/14_pdvd-lightpattern-sp-investigation.md ("The zero-run").
-if [ "${PDVD_OVERFLOW_TO_RAIL:-0}" = 1 ]; then
+if [ "${PDVD_OVERFLOW_TO_RAIL:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "overflow_to_rail=true")
+fi
+# PDVD_MEM_WIDE_HIT_MODE: handling of over-wide membrane OpHits (a slow pulse
+# spanning a 16.4-us snippet otherwise books its whole PE at its PEAK time's
+# flash bin; 74% of wall-XA PE lands on the wrong or no flash --
+# docs/qlmatch/25_pdvd-wall-xa-usability.md §3/§7).  Values: 'start' (book the
+# full integral at the pulse onset -- total-light convention) or 'slice' (book
+# per 1-us slice).  DEFAULT empty = legacy: study knob, not a production
+# operating point (the wall XAs stay masked in Q/L either way).  Toolkit
+# C++/jsonnet defaults stay OFF (byte-identical).
+if [ -n "${PDVD_MEM_WIDE_HIT_MODE:-}" ]; then
+    VETO_SAT_ARG+=(-A "mem_wide_hit_mode=${PDVD_MEM_WIDE_HIT_MODE}")
+fi
+# PDVD_PMT_WIDE_HIT_MODE: same for the PMT branch (also 16.4-us self-trigger
+# snippets; 1% of PMT hits are wide but carry 22% of the PMT PE, 46% of it
+# unassigned).  Same values/default as PDVD_MEM_WIDE_HIT_MODE.
+if [ -n "${PDVD_PMT_WIDE_HIT_MODE:-}" ]; then
+    VETO_SAT_ARG+=(-A "pmt_wide_hit_mode=${PDVD_PMT_WIDE_HIT_MODE}")
 fi
 
 wcsonnet \

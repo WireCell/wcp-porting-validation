@@ -107,6 +107,13 @@ the quantitative verdict rests on §2.1-2.2.
 
 ## 3. Conclusions — the chosen scheme
 
+> **PARTIALLY SUPERSEDED 2026-07-16 — see §6.** Conclusions 1 and 2 stand.
+> Conclusion 3 ("exclude flagged channels from the chi2/KS/LASSO terms") is
+> **overturned for the chi2/KS**: a railed channel is kept in them, with an
+> enlarged per-channel error (`chi2_sat_inflate`). It remains correct for the
+> **LASSO**. The measurements below are unaffected; only the downstream ruling
+> changed.
+
 1. **Keep the deconvolution.** Raw-waveform hits (the official-keepup mode)
    have no saturation advantage and lose pileup separation. Deconvolving
    through the rail (`veto_saturation=false`) is a well-behaved, tightly
@@ -135,6 +142,9 @@ the quantitative verdict rests on §2.1-2.2.
 - `saturation_recovery_study.py` — this study (validate / study / realrail /
   prevalence parts); `wct-decon-dump.jsonnet` — pipeline decon dump job.
 - `saturation_recovery_bias.png` — §2.1 figure.
+- `analyze_sat_maskfit.py` — §6.4 before/after (ndf, chi2/ndf, consistent,
+  match churn) between two calib dumps; `analyze_sat_terms.py` — §6.2-6.3
+  railed chi2 terms split by selected / non-selected, and the inflate scan.
 - Logs quoted above: /home/xqian/tmp/satstudy/{study2,realrail}.log
   (scratch; regenerate via the Repro block).
 
@@ -180,3 +190,159 @@ Config/runner plumbing (wcp repo): `wct-light-reco.jsonnet` tla args
 13924 → 16330. Full QL with `PDVD_QL_USE_SAT_FLAG=1`
 (`work/039252_0_satrep/`): 32/198 flashes carry sat flags, the three hand
 crossers keep their matches (KS 0.15–0.25).
+
+## 6. Railed channels belong in the chi2/KS — with a wider error (2026-07-16)
+
+**Repro** (baseline `_keepcov` = the same chain with the railed channels still
+masked; both use the 5-tensor `_spcov` light archive):
+```
+cd pdvd
+PDVD_LIGHT_SUFFIX=_spcov ./run_clus_evt.sh -s keepsat_i05 -calib 039252 0
+python3 docs/qlmatch/scripts/analyze_sat_maskfit.py \
+        work/039252_0_keepcov/calib-evt298567.json \
+        work/039252_0_keepsat_i05/calib-evt298567.json
+python3 docs/qlmatch/scripts/analyze_sat_terms.py \
+        work/039252_0_keepsat_i05/calib-evt298567.json
+```
+
+### 6.1 What was wrong
+
+§3 conclusion 3 masked a rail-flagged channel out of the chi2/KS *and* the
+LASSO, reasoning that the clipped PE "cannot mislead the matching". But the
+clipped PE is **not a missing measurement** — §2.1 shows `clip` is a *tight
+deterministic underestimate* (a lower bound, ±2% band), and the production
+chain additionally repairs it (`saturation_repair`, PDVD_SAT_REPAIR=1). The
+channel carries real information. Masking it did two bad things at once:
+
+1. it discarded that information, and
+2. it made a **wrong prediction free** on exactly the brightest cathode
+   channels — the ones that anchor Q/L matching (§2.2).
+
+The same error as the readout-coverage masking overturned the same week
+(`14_pdvd-lightpattern-sp-investigation.md` §12): silence and clipping were
+both read as "no data" when both are measurements.
+
+### 6.2 The direction is the opposite of what "saturation" suggests
+
+Saturation clips *low*, so the natural expectation is `pred > meas` on a railed
+channel. **The data says the reverse.** evt298567, 199 flashes, 31 with rail
+flags, 80 railed (flash,channel) cells:
+
+| population | n terms | median meas | median pred | meas > pred | median meas/pred |
+|---|---|---|---|---|---|
+| **selected** matches | 100 | 4178.5 | 1212.3 | **85.0%** | **3.66** |
+| non-selected candidates | 2170 | 3378.5 | 1.4 | 93.4% | 1589 |
+
+On a *correct* match the railed channel measures ~3.7× the prediction. Two
+effects push the same way: the `twoside` repair over-recovers (§2.1: +23% median
+at d=4, band up to ×2), and the photon model under-predicts the bright cathode
+(the `12_pdvd-qtol-recalibration.md` per-type residuals). So a railed channel
+sits in the **measured ≫ predicted** regime — the *same* regime the prototype's
+`close_to_PMT` widening exists for, which is why the owner's instinct to reuse
+that enlargement is right.
+
+It is also why the widening must be gated on **the rail flag alone**: the
+`close_to_PMT` firing test (`pe-pred > chi2_pmt_excess && pe > chi2_pmt_ratio*pred`)
+plus `flag_close_to_PMT` would not fire on most of these, and reusing it
+verbatim would have been a silent no-op.
+
+### 6.3 The enlargement is mandatory, not optional
+
+Railed chi2 terms on **selected** matches (n=100), by `chi2_sat_inflate`
+(`denom += (pe*inflate)^2`):
+
+| inflate | median | p90 | max |
+|---|---|---|---|
+| **0** (keep, no widening) | 18.96 | **4007.95** | **14601.26** |
+| **0.5** (adopted) | 1.91 | 3.99 | 4.00 |
+| 1.0 | 0.56 | 1.00 | 2.51 |
+| 2.0 | 0.15 | 0.25 | 2.47 |
+
+Keeping the channel *without* widening is **worse than the masking it
+replaces**: a single railed channel would contribute up to 1.5e4 chi2 and brand
+good matches inconsistent. `inflate` caps a term at ~1/inflate² (as pred → 0),
+so 0.5 bounds it at 4.0 — small next to the ladder's chi2/ndf ceilings
+(`hc_clean_c2` 6.0 / `hc_good_c2` 4.0) at the typical ndf ≈ 10.
+
+### 6.4 Effect (evt298567, vs the masked `_keepcov` baseline)
+
+| | masked (legacy) | kept, inflate 0 | **kept, inflate 0.5** |
+|---|---|---|---|
+| median ndf | 9 | 10 | 10 |
+| median chi2/ndf | 15.54 | 16.42 | **15.31** |
+| `consistent` bundles | 69 | 71 | **72** |
+| selected `at_cathode` | 28 | — | **31** |
+| matches lost / gained | — | 1 / 1 | 1 / 1 |
+
+`contained` is unchanged at 5215 (containment is geometry, not light). The one
+lost match is uid 4000078 (3006 pts, `at_x_boundary`, chi2/ndf 10.1) — **not** a
+cathode crosser, so no gold anchor is lost; the gained one is uid 4000012
+(13 pts). Cathode-crosser matches rise 28 → 31.
+
+**The KS gains discrimination** (the concern was that KS takes no error term, so
+a 4×-off channel could distort the shape). Measured over the 938 bundles on
+railed flashes, it separates rather than blurs:
+
+- **selected** matches: ks_dis median 0.1810 → **0.1545** (mean −0.0276) — better
+- all candidates: 0.3461 → **0.3731** (mean +0.0104) — wrong pairs pushed away
+
+### 6.5 The LASSO stays out — deliberately
+
+`saturation_mask_fit=false` re-opens the chi2/KS **only**. The rail-flagged
+LASSO rows stay zeroed at all six fit sites, because a lower-bound measurement
+in a least-squares solve biases the fitted charge **down**. The railed channel
+therefore acts as a *check* on the charge-derived prediction without
+constraining it. (The 13 moved matches arise indirectly: unmasking changes the
+`reject_overpred` prefilter's channel set, hence which bundles reach the LASSO.)
+
+### 6.6 Implementation (toolkit, all default-OFF / legacy-preserving)
+
+| knob | C++ default | PDVD | meaning |
+|---|---|---|---|
+| `use_saturation_flag` | false | true | track + label rail flags (unchanged) |
+| `saturation_mask_fit` | **true** = legacy drop | **false** | keep railed channels in chi2/KS |
+| `chi2_sat_inflate` | **0.0** = none | **0.5** | `denom += (pe*inflate)^2`, rail-flag-gated |
+
+- `QLMatching`: `saturation_mask_fit` gates only the `flash_opdet_mask` drop;
+  `chi2_sat_inflate` is forwarded via `BundleQualityParams`.
+- `TimingTPCBundle::examine_bundle`: the widening, next to the `close_to_PMT`
+  one and in the same form. `examine_merge_bundle` carries it **too**: it has no
+  `close_to_PMT` widening, but that analogy does not transfer — close_to_PMT's
+  un-widened merge population is narrow (the excess/ratio gate) while *every*
+  railed channel lands in the merge metric, where an un-widened O(1e4) term can
+  only suppress a merge. Null on evt298567 (bundle count 5215 either way, 0
+  bundles changed), added for consistency before `overflow_to_rail` widens the
+  railed population.
+- Runner: `PDVD_QL_SAT_MASK_FIT` (default 0 = keep) and
+  `PDVD_QL_CHI2_SAT_INFLATE` (default 0.5). `PDVD_QL_SAT_MASK_FIT=1` restores
+  the 2026-07-14..16 (`_spcov` / `_am2`) behaviour.
+
+Gates: compiled config **byte-identical** to HEAD with knobs at default
+(197381 B, empty diff); keys appear when on; `wcdoctest-match` 23/23;
+freshness proof done.
+
+**M1 DEPLOY GATE.** `wct-clustering.jsonnet` now passes `saturation_mask_fit=`
+unconditionally, so a toolkit that is *pulled but not rebuilt* compiles the key
+and silently ignores it (the old lib has no `m_saturation_mask_fit`) — the
+masking stays ON and the run looks fine. On the first event of any reprocess:
+```
+grep 'saturation_mask_fit=false => railed channels stay in the chi2/KS' \
+     work/<tag>/wct_clus_*.log
+```
+No line ⇒ the new `libWireCellMatch.so` is not live; `wcbuild` first.
+
+### 6.7 Open
+
+- **`inflate = 0.5` is the `chi2_pmt_inflate` default, not a fit.** §6.3 shows
+  0.5–2.0 all tame the terms; the choice among them wants hand-scan GT, not this
+  one event.
+- The measured/predicted ratio of **3.66 on selected matches is itself a model
+  statement** — a widened error hides it rather than fixing it. The honest fix
+  lives in the photon model / QtoL per-type calibration (doc 12), and the
+  ×2-band repair (§2.1). This knob buys correct *matching* in the meantime; it
+  does not make the prediction right.
+- Two cathode crossers (uid 18 / 38) **swapped flashes** (320↔284) under the
+  change. Clean exchange, plausible either way — wants a hand scan.
+- Measured on **one** event, and on a `_spcov` light archive predating
+  `overflow_to_rail=true` (wcp b014f16), which flags *more* channels (membrane
+  overflow). Re-measure after the reprocess: the railed population grows.
