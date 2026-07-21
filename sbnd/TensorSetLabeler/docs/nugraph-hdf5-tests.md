@@ -153,3 +153,46 @@ python3 ../h5_sp_to_bee.py nugraph-data-10evt.h5 nugraph-data-bee.zip
 | larwirecell | `dev-v10_14_02_02` | reality sim/data mode |
 | wire-cell-toolkit | `tgm` | reco-reality grouping + labeler-both + reality thread |
 | wcp-porting-img | `main` | entry jsonnet + data fcl + h5_sp_to_bee data mode + this record |
+
+---
+
+## v3 — real data + frameshift, 48 events (2026-07-21)
+
+Full real-data run: first the sbndcode FrameShift job, then the WCT data
+chain (`reality=data`) on the `_frameshift.root`.  Workdir
+`sbnd/TensorSetLabeler/data-frameshift/`.
+
+### Files
+
+- Frameshift input file (48 events):
+  `sbnd/samples/filtered-reco1/data_filtered_decoded_reco1-fe6033f3-07a0-4971-cea5-16ce59269fba_eventidfiltered_frameshift.root`
+  (produced by `run_frameshift.fcl`; see `sbnd/samples/docs/gen2-data-frameshift.md`).
+- HDF5 (input-only, data mode): `data-frameshift/nugraph-data-frameshift-48evt.h5` (92 MB, 48 records).
+
+### BEE
+
+reco Bee (clus.jsonnet `mabc.zip`, 48 events):
+https://www.phy.bnl.gov/twister/bee/set/93907c09-4d67-4cd1-902c-4246b8e18820/event/list/
+
+### How it was produced
+
+```bash
+# 1) frameshift (sbndcode; SL7 + setup-local-opt.sh):
+lar -c run_frameshift.fcl -s <..._eventidfiltered>.root      # -> ..._frameshift.root
+# 2) WCT data chain on the frameshift file (SL7 + setup-ap.sh), 48 events:
+cd sbnd/TensorSetLabeler/data-frameshift
+lar -n 48 -c wcls-img-clus-matching-xin-data.fcl -s <..._frameshift>.root --no-output
+BROWSER=echo bash ../../sbnd_xin/upload-to-bee.sh TensorSetLabeler/data-frameshift/mabc-data-frameshift-48evt.zip
+```
+
+### Verification
+
+- **Gen2 data frameshift**: for all Gen2 real data, run `run_frameshift.fcl`
+  first (reminder: `sbnd/samples/docs/gen2-data-frameshift.md`).
+- **reality=data reco config confirmed** (compiled with wcsonnet):
+  `ClusteringSwitchScope` correction = **T0Correction**, scope **x_t0cor**
+  (`use_sce=false`); **`pos_offset_on=true`** (nonzero `[0,±1.1,∓6.7]` shifts).
+- Labeler in DATA mode all 48 events (RSE-only metadata, no Bee, input-only
+  HDF5).  The WCT chain reads the same sptpc2d/opflash products (copied
+  through by the frameshift RootOutput); it does not itself consume the new
+  frameshift product (persisted for downstream timing use).
