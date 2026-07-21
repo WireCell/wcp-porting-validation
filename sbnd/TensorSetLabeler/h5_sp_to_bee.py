@@ -41,25 +41,34 @@ def main():
         sem = np.asarray(r["sp/y_semantic"]).astype(int)
         inst = np.asarray(r["sp/y_instance"]).astype(int)
 
-        # q: nu -> 1, cosmic -> 0, ghost -> -1
-        q = np.where(sem == 0, 1.0, np.where(sem == 1, 0.0, -1.0))
+        feat = np.asarray(r["sp/features"], dtype=float)  # [charge, reco_cluster_id, ...]
         x = (pos[:, 0] / 10.0).tolist()   # mm -> cm
         y = (pos[:, 1] / 10.0).tolist()
         z = (pos[:, 2] / 10.0).tolist()
 
-        n_nu = int((sem == 0).sum())
-        n_cos = int((sem == 1).sum())
-        n_gh = int((sem == -1).sum())
-        print("  [%d] rse=(%d,%d,%d): %d sp  (nu=%d cosmic=%d ghost=%d)"
-              % (idx, run, sub, evt, len(x), n_nu, n_cos, n_gh))
+        # Truth present (sim) -> colour by trackid, q = nu(1)/cosmic(0)/ghost(-1).
+        # Truth absent (data, all y_instance == -1) -> input-only graph: colour
+        # by reco_cluster_id and use charge for q, for reco hand-scan.
+        has_truth = not bool(np.all(inst == -1))
+        if has_truth:
+            q = np.where(sem == 0, 1.0, np.where(sem == 1, 0.0, -1.0))
+            cid = inst
+            mode = "truth (nu=%d cosmic=%d ghost=%d)" % (
+                int((sem == 0).sum()), int((sem == 1).sum()), int((sem == -1).sum()))
+        else:
+            q = feat[:, 0]                 # charge
+            cid = feat[:, 1].astype(int)   # reco_cluster_id
+            mode = "data/input-only (colour = reco_cluster_id; %d reco clusters)" % (
+                len(set(cid.tolist())))
+        print("  [%d] rse=(%d,%d,%d): %d sp  %s" % (idx, run, sub, evt, len(x), mode))
 
         obj = {
             "runNo": str(run), "subRunNo": str(sub), "eventNo": str(evt),
             "geom": "sbnd", "type": "nugraph_sp",
             "x": x, "y": y, "z": z,
             "q": q.tolist(),
-            "cluster_id": inst.tolist(),
-            "real_cluster_id": inst.tolist(),
+            "cluster_id": cid.tolist(),
+            "real_cluster_id": cid.tolist(),
         }
         zf.writestr("data/%d/%d-nugraph_sp.json" % (idx, idx), json.dumps(obj))
 

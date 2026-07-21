@@ -1,8 +1,9 @@
 # Real-data variant of wcls-img-clus-matching-xin.fcl.
 # Overrides reality + the recob::Wire / summary / badmask product tags to the
 # data (sptpc2d) instances; everything else (graph, opflash labels, img_config)
-# is inherited.  reality="data" turns ON the per-TPC pos_offset calibration in
-# the toolkit clus maker (data-only).  use_sce stays true (entry jsonnet default).
+# is inherited.  reality="data" selects the grouped reco config in the toolkit
+# clus maker: use_sce=false (T0-corrected reco scope) + pos_offset_on=true
+# (per-TPC calibration).  The labeler runs in data mode (RSE + input-only HDF5).
 #
 # Run inside the SL7 container after `source sbnd/setup-ap.sh`, from sbnd/ with
 # this dir on FHICL_FILE_PATH:
@@ -16,10 +17,14 @@ physics.producers.sig2img.wcls_main.structs.recobwire_tags:  "[\"sptpc2d:dnnsp\"
 physics.producers.sig2img.wcls_main.structs.summary_tags:    "[\"\", \"sptpc2d:wienersummary\"]"
 physics.producers.sig2img.wcls_main.structs.input_mask_tags: "[\"sptpc2d:badmasks\"]"
 
-# No truth on data: drop the wclsTensorSetLabeler inputer (the jsonnet also
-# disables the labeler node when reality != "sim").
+# Data keeps the wclsTensorSetLabeler inputer: in data mode it reads only
+# run/subrun/event from the art::Event (no MCTruth/MCParticle/SimEnergyDeposit)
+# and produces the input-only nugraph HDF5 (no truth, no Bee).  The jsonnet
+# passes reality="data" to the labeler, which gates all truth outputs off.
+# (Inherited from the sim fcl -- listed here only for clarity.)
 physics.producers.sig2img.wcls_main.inputers: [
     "wclsCookedFrameSource:sigs"
     , "wclsOpFlashSource:tpc0"
     , "wclsOpFlashSource:tpc1"
+    , "wclsTensorSetLabeler:clus_all_apa"
 ]
