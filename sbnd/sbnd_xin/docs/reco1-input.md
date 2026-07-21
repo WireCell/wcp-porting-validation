@@ -71,7 +71,8 @@ answer differs.
 ## Validation snapshot (2026-07-21)
 
 - Extraction determinism: two independent 48-event extractions member-hash
-  identical (`abtest/hash_archive.py`).
+  identical (`abtest/hash_archive.py`): `frames-dnn.tar.bz2` `46ff819f…`
+  (240 members), `opflash_apa{0,1}.tar.gz` `554c6924…`/`307de3f6…`.
 - Format identity vs `input-1file-data-v10_14_02_02`: same member scheme,
   shapes, dtypes; same first bad channel (546).
 - End-to-end smoke: evt 256587 imaging (46 s) + joint QL (32 s) through the
