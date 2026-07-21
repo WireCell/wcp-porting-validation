@@ -190,6 +190,22 @@ process_event() {
         rm -rf "$stage"
     done
 
+    # Bee run/subrun numbers.  The reco1 extractions (run_reco1_dump.sh) carry the
+    # art run/subrun alongside the event in each opflash tensor-set metadata, so
+    # the Bee JSONs can show the full (run, subrun, event) triplet instead of
+    # 0/0/<evt>.  Read them here rather than plumbing them through the cluster
+    # files: this is the minimal, default-inert layer.  Samples whose metadata
+    # lacks the keys (yuhw's larsoft dumps: only frame_apply_at_caf) keep the
+    # historical run=0 subrun=0 => unchanged Bee output for every older sample.
+    local RUN_NO=0 SUBRUN_NO=0 _md
+    _md=$(tar xzOf "$QLDIR/opflash_apa0.tar.gz" "opflash_tensorset_${EVT_ID}_metadata.json" 2>/dev/null) || _md=''
+    if [ -n "$_md" ]; then
+        local _rse
+        _rse=$(printf '%s' "$_md" | python3 -c \
+            'import json,sys; d=json.load(sys.stdin); print(int(d.get("run",0)), int(d.get("subrun",0)))' \
+            2>/dev/null) && [ -n "$_rse" ] && read -r RUN_NO SUBRUN_NO <<< "$_rse"
+    fi
+
     # Optional hand-scan calibration dump (one per-event JSON, both TPCs).
     local CALIB_TLA=()
     [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}${CALIB_SUFFIX}.json")
@@ -200,6 +216,7 @@ process_event() {
     local SAVEPCT_TLA=()
     [ -n "$SAVEPCT" ] && SAVEPCT_TLA=(--tla-str "save_tensors=$QLDIR/pctree-evt${EVT_ID}.tar.gz")
 
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
@@ -207,7 +224,7 @@ process_event() {
         --tla-str  "input=$QLDIR" \
         --tla-code "anode_indices=${ANODE_CODE}" \
         --tla-str  "output_dir=$QLDIR" \
-        --tla-code "run=0" --tla-code "subrun=0" --tla-code "event=${EVT_ID}" \
+        --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
         --tla-str  "reality=$REALITY" \
         --tla-str  "semimodel_file=$SEMIMODEL" \
         --tla-code "DL=$DL" --tla-code "DT=$DT" \

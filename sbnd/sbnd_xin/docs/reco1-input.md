@@ -30,6 +30,7 @@ exactly as to the older samples.
 | `run_reco1_dump.sh` | `sbnd_xin/` | runner; writes `input_files_reco1/extracted-<tag>/` (refuses to overwrite an existing tag); `-caf product` for `*_frameshift.root` inputs |
 | `SBND_WORK_ROOT` | `_runlib.sh` (+ img/ql runners) | work-tree root override (default `work/`); land a reprocessing campaign in a fresh tree instead of overwriting an old one |
 | `merge_mabc_bee.py` | `sbnd_xin/` | re-keys N per-event `ql_evt<ID>/mabc-all-apa.zip` Bee dumps into one multi-event upload zip (`data/<i>/<i>-*.json`) |
+| Bee run/subrun numbers | `run_ql_evt.sh` | reads `run`/`subrun` from the staged opflash tensor-set metadata and passes them as the `run`/`subrun` TLAs, so every Bee layer shows the full `(runNo, subRunNo, eventNo)` triplet; samples without those metadata keys (yuhw's dumps) keep `run=0 subrun=0` unchanged |
 
 The extraction is the toolkit-only counterpart of yuhw's LArSoft dumps
 (`input_files/wcls-frame-dump.*`, `wcls-flash-dump.*`); output formats are
@@ -111,15 +112,41 @@ python3 merge_mabc_bee.py -w work-fsprod -o upload-fsprod-48evt.zip $EVTS
   reprocessing differs from the first campaign **only** in the flash-time
   offsets.
 - **Bee (48 events, layers `clustering-global` + `img-global` + per-APA
-  dead area + op):**
-  <https://www.phy.bnl.gov/twister/bee/set/c3254159-03d1-41e0-9a24-e8580c7702b3/event/list/>
+  dead area + op) — current set, labelled `run-subrun-event`:**
+  <https://www.phy.bnl.gov/twister/bee/set/0fbcecd1-23ff-4103-8a58-cd9a23551d80/event/list/>
   (Bee event index 0..47 in frames-archive order = the `run_*_evt.sh`
-  idx−1; the set page lists 48 events.)
+  idx−1; the set page lists 48 events.)  Supersedes the first upload
+  `c3254159-…`, whose events carried only the event number (`0-0-<evt>`).
 - Existing-chain A/B re-gate after the toolkit additions (FrameShiftInfo/
   TimingInfo mirrors + `caf_offset_mode=product`): data evt 686 joint QL
   rerun under `setarch -R` into fresh `work-abfs1/`, `mabc-all-apa.zip`
   member-hash `4b006453…` (5 members) — identical to the recorded
   baseline.  PASS.
+
+### Bee run/subrun numbers (2026-07-21, second pass)
+
+The first upload showed `0-0-<event>` because `run_ql_evt.sh` hardcoded
+`run=0 subrun=0`.  The art run/subrun are already in each extracted opflash
+tensor-set metadata (`{"run": 18253, "subrun": 1, "event": 172230, …}`), so the
+runner now reads them from the staged per-event opflash and passes them as the
+`run`/`subrun` TLAs; `clus.jsonnet` already forwards them into every
+`MultiAlgBlobClustering` (`use_config_rse: true`), so all five Bee layers carry
+the triplet.  The lookup is in the *runner*, not the cluster files — minimal and
+default-inert: the older samples (`input_files/…`) have no `run`/`subrun` keys
+in their opflash metadata, so they still get `run=0 subrun=0` and their Bee
+output is unchanged.  No C++ change, no rebuild.
+
+```sh
+cd sbnd_xin
+export SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod
+export SBND_WORK_ROOT=$PWD/work-fsprod-rse    # evt<ID> symlinked to work-fsprod
+SBND_MAX_JOBS=6 ./run_ql_evt.sh data all      # 48/48 ok; logs "[evt <ID>] rse=(run, subrun, evt)"
+python3 merge_mabc_bee.py -w work-fsprod-rse -o upload-fsprod-48evt-rse.zip $EVTS
+./upload-to-bee.sh upload-fsprod-48evt-rse.zip
+```
+
+Verified: 240/240 Bee layer JSONs have non-zero `runNo`, 12 distinct runs
+(18253..18409); the Bee set page labels events `18253-1-172230` etc.
 
 ## Validation snapshot (2026-07-21)
 
