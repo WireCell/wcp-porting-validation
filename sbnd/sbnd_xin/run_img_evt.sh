@@ -71,7 +71,7 @@ process_event() {
     EVT_ID=$(lookup_evt_id "$IDX") || return 1
 
     if [ -n "$SEL_TAG" ]; then
-        WORKDIR="$SBND_DIR/work/evt${EVT_ID}_${SEL_TAG}"
+        WORKDIR="$SBND_WORK_ROOT/evt${EVT_ID}_${SEL_TAG}"
         SP_ARCHIVE="$WORKDIR/input/sp-frames.tar.bz2"
         if [ ! -s "$SP_ARCHIVE" ]; then
             echo "[skip] idx=$IDX evt=$EVT_ID: selection archive not found: $SP_ARCHIVE" >&2
@@ -79,7 +79,7 @@ process_event() {
             return 2
         fi
     else
-        WORKDIR="$SBND_DIR/work/evt${EVT_ID}"
+        WORKDIR="$SBND_WORK_ROOT/evt${EVT_ID}"
         SP_ARCHIVE="$WORKDIR/sp-frames.tar.bz2"
         # Self-extract this event's SP frames from the mode archive (fresh each run).
         mkdir -p "$WORKDIR"
@@ -117,13 +117,13 @@ process_event() {
     echo "Imaging done -> $WORKDIR"
 }
 
-mkdir -p "$SBND_DIR/work"
+mkdir -p "$SBND_WORK_ROOT"
 if [ "$IDX" = "all" ]; then
     batch_init
     echo "Found ${#SBND_EVENTS[@]} event(s). Parallel jobs: $BATCH_MAX"
     for _i in $(discover_event_indices); do
         _evtid="${SBND_EVENTS[$((_i-1))]}"
-        _blogfile="$SBND_DIR/work/.batch_img_evt${_evtid}.log"
+        _blogfile="$SBND_WORK_ROOT/.batch_img_evt${_evtid}.log"
         batch_wait_slot
         ( process_event "$_i" ) > "$_blogfile" 2>&1 &
         BATCH_PIDS[$!]=$_i

@@ -149,8 +149,8 @@ process_event() {
     local EVT_ID="${EVENT_IDS[$((IDX - 1))]}"
     [ -n "$EVT_ID" ] || { echo "ERROR: invalid idx $IDX (1..${#EVENT_IDS[@]})" >&2; return 1; }
 
-    local IMGDIR="$SBND_DIR/work/evt${EVT_ID}"     # per-event imaging output (run_img_evt.sh)
-    local QLDIR="$SBND_DIR/work/ql_evt${EVT_ID}"    # isolated Q/L workspace + output
+    local IMGDIR="$SBND_WORK_ROOT/evt${EVT_ID}"     # per-event imaging output (run_img_evt.sh)
+    local QLDIR="$SBND_WORK_ROOT/ql_evt${EVT_ID}"    # isolated Q/L workspace + output
     local LOG="$QLDIR/wct_ql_evt${EVT_ID}.log"
 
     # Require the toolkit's per-event imaging output (active + masked, both anodes).
@@ -222,14 +222,14 @@ process_event() {
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
 
-mkdir -p "$SBND_DIR/work"
+mkdir -p "$SBND_WORK_ROOT"
 IDX="$1"
 if [ "$IDX" = "all" ]; then
     batch_init
     echo "Mode $MODE: ${#EVENT_IDS[@]} events. Parallel jobs: $BATCH_MAX"
     for i in $(seq 1 "${#EVENT_IDS[@]}"); do
         _evtid="${EVENT_IDS[$((i - 1))]}"
-        _blog="$SBND_DIR/work/.batch_ql_evt${_evtid}.log"
+        _blog="$SBND_WORK_ROOT/.batch_ql_evt${_evtid}.log"
         batch_wait_slot
         ( process_event "$i" ) > "$_blog" 2>&1 &
         BATCH_PIDS[$!]=$_evtid

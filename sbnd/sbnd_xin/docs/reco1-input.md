@@ -27,7 +27,9 @@ exactly as to the older samples.
 |---|---|---|
 | `SBNDReco1FrameSource` / `SBNDReco1OpFlashSource` | toolkit `root/` | bare-ROOT art-file readers; see `toolkit/root/docs/sbnd-reco1-source.md` for internals, gotchas, verification |
 | `wct-reco1-dump.jsonnet` | `sbnd_xin/` | reco1 → `frames-dnn.tar.bz2` + `opflash_apa{0,1}.tar.gz` (all events streamed in one process; `entry` TLA for one event) |
-| `run_reco1_dump.sh` | `sbnd_xin/` | runner; writes `input_files_reco1/extracted-<tag>/` (refuses to overwrite an existing tag) |
+| `run_reco1_dump.sh` | `sbnd_xin/` | runner; writes `input_files_reco1/extracted-<tag>/` (refuses to overwrite an existing tag); `-caf product` for `*_frameshift.root` inputs |
+| `SBND_WORK_ROOT` | `_runlib.sh` (+ img/ql runners) | work-tree root override (default `work/`); land a reprocessing campaign in a fresh tree instead of overwriting an old one |
+| `merge_mabc_bee.py` | `sbnd_xin/` | re-keys N per-event `ql_evt<ID>/mabc-all-apa.zip` Bee dumps into one multi-event upload zip (`data/<i>/<i>-*.json`) |
 
 The extraction is the toolkit-only counterpart of yuhw's LArSoft dumps
 (`input_files/wcls-frame-dump.*`, `wcls-flash-dump.*`); output formats are
@@ -40,33 +42,84 @@ derivation into the opflash source (below), so the plain reco1 file
 ## The development sample
 
 `data_filtered_decoded_reco1-fe6033f3-…_eventidfiltered.root`: 48 real-data
-events, runs 18306 (1) / 18255 (47), 2025 fall production, BNBLight stream
-(all 48 events classify as beam stream in the FrameShift port).  Contents
-relevant to us: `sptpc2d` post-SP DNN wires + badmasks + wienersummary,
-`opflashtpc{0,1}` + `ophitpmt` light reco, PTB/TDC/DAQ-header timing.  **No**
-`raw::RawDigits` (NF/SP cannot be re-run) and **no** MC truth.
+**neutrino-candidate** events across 12 runs 18253..18409 (30 of them run
+18255), 2025 fall production, BNBLight stream (all 48 classify as beam stream
+in the FrameShift port; `fTimingType = 0` in the FRAMESHIFT product).
+Contents relevant to us: `sptpc2d` post-SP DNN wires + badmasks +
+wienersummary, `opflashtpc{0,1}` + `ophitpmt` light reco, PTB/TDC/DAQ-header
+timing.  **No** `raw::RawDigits` (NF/SP cannot be re-run) and **no** MC truth.
+
+`…_eventidfiltered_frameshift.root`: the same 48 events after the sbndcode
+`FrameShift` producer (process `FRAMESHIFT`), adding
+`sbnd::timing::FrameShiftInfo` (with the authoritative per-event
+`fFrameApplyAtCaf`) and `TimingInfo`.  This is the preferred input:
+extract it with `-caf product`.
 
 ## Flash-time correction (`frame_apply_at_caf`)
 
-The extracted opflash tensor-sets carry `frame_apply_at_caf` (ns) computed by
-the ported sbndcode FrameShift derivation (`run_reco1_dump.sh` default
-`-caf auto`; `-caf none` omits the key; `-caf override:<ns>` forces a value).
-The reduction is `frame_etrig − frame_default` — fixed empirically, since the
-sbnobj `FrameApplyAtCaf()` accessor is a local (non-public) modification:
+The extracted opflash tensor-sets carry `frame_apply_at_caf` (ns).  Two
+sources, chosen by `run_reco1_dump.sh -caf`:
 
-- raw in-time flash (min |t|, both APAs): median **−0.715 µs** on 48/48
-  events, matching the −0.71 µs signature of the older samples
-  ([flash-coincidence.md](flash-coincidence.md));
-- offsets 0–2560 ns, median 1536 ns (same scale as the lan-reco2 dumps'
-  342–2110 ns);
-- corrected in-time flash: median **+0.98 µs**, **42/48 inside the
-  +0.3–1.9 µs beam window** (the documented validation signature; the
-  remainder mirror lan-reco2's off-time tail).
+- **`-caf product`** (preferred, needs the `*_frameshift.root` input): the
+  authoritative `FrameShiftInfo::fFrameApplyAtCaf` written by the sbndcode
+  FrameShift producer.  The FRAMESHIFT product answered the previously-open
+  reduction question: on all 48 events it equals **`fFrameTdcRwm`** — the
+  decoded-frame → SPEC-TDC RWM (per-spill beam arrival) shift, 247–2757 ns,
+  *not* 256-ns quantized.
+- **`-caf auto`** (pre-FrameShift files): the ported derivation
+  `frame_etrig − frame_default` (0–2560 ns, 256-ns quanta).  Now known to
+  sit **43–482 ns (mean 262) below** the product value — right scale, wrong
+  formula; the exact decoded-frame reference needs PMT-decoder products the
+  extraction does not read, so `auto` cannot be made exact.  Keep it as the
+  fallback only.
 
-The opposite sign pushes flashes out of the window.  **Pending confirmation
-with the SBND timing authors / yuhw** ("does `FrameApplyAtCaf()` return
-`frame_etrig − frame_default`?"); revisit `SBNDReco1OpFlashSource.cxx` if the
-answer differs.
+Validation on the product offsets (all 48 events are neutrino candidates):
+
+- raw in-time flash (min |t|, both APAs): median **−0.715 µs**, matching the
+  −0.71 µs signature ([flash-coincidence.md](flash-coincidence.md));
+- corrected in-time flash: median **+1.28 µs**, **45/48 inside the
+  +0.3–1.9 µs beam window** (vs 42/48 with `auto`); 214469/111412 sit at
+  1.94/2.04 µs just outside, 131357's min-|t| flash (−0.40 µs) is likely a
+  cosmic.
+
+## Full-chain reprocessing with product offsets (2026-07-21)
+
+Tag `extracted-2025fall-48evt-fsprod` (from the `*_frameshift.root` input,
+`-caf product`), landed in a fresh work tree so the earlier campaign's
+`work/` stays intact:
+
+```sh
+cd sbnd_xin
+./run_reco1_dump.sh -caf product -t 2025fall-48evt-fsprod \
+    input_files_reco1/*_eventidfiltered_frameshift.root
+export SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod
+export SBND_WORK_ROOT=$PWD/work-fsprod
+SBND_MAX_JOBS=8 ./run_img_evt.sh data all      # 48/48 ok
+SBND_MAX_JOBS=6 ./run_ql_evt.sh  data all      # 48/48 ok
+EVTS=$(tar tjf $SBND_INPUT_DIR/frames-dnn.tar.bz2 \
+       | sed -n 's/^frame_dnnsp_\([0-9]*\)\.npy$/\1/p' | awk '!seen[$0]++')
+python3 merge_mabc_bee.py -w work-fsprod -o upload-fsprod-48evt.zip $EVTS
+./upload-to-bee.sh upload-fsprod-48evt.zip
+```
+
+- Extraction `frame_apply_at_caf` == product `fFrameApplyAtCaf` on 48/48
+  events (both APAs); QL logs show the exact per-event value applied
+  (e.g. evt 256587: 2217 ns, evt 10550: 255 ns).
+- Cross-file frame consistency: the fsprod `frames-dnn.tar.bz2` member-hashes
+  to the same `46ff819f…` (240 members) as the original-file extraction —
+  the FrameShift producer touches nothing but the timing products, so the
+  reprocessing differs from the first campaign **only** in the flash-time
+  offsets.
+- **Bee (48 events, layers `clustering-global` + `img-global` + per-APA
+  dead area + op):**
+  <https://www.phy.bnl.gov/twister/bee/set/c3254159-03d1-41e0-9a24-e8580c7702b3/event/list/>
+  (Bee event index 0..47 in frames-archive order = the `run_*_evt.sh`
+  idx−1; the set page lists 48 events.)
+- Existing-chain A/B re-gate after the toolkit additions (FrameShiftInfo/
+  TimingInfo mirrors + `caf_offset_mode=product`): data evt 686 joint QL
+  rerun under `setarch -R` into fresh `work-abfs1/`, `mabc-all-apa.zip`
+  member-hash `4b006453…` (5 members) — identical to the recorded
+  baseline.  PASS.
 
 ## Validation snapshot (2026-07-21)
 

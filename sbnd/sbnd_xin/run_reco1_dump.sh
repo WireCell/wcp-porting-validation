@@ -2,10 +2,12 @@
 # Extract an SBND reco1 art/LArSoft ROOT file into a standalone-chain
 # sample dir -- directly with the toolkit, no LArSoft.  Run with -h for help.
 #
-# Usage: ./run_reco1_dump.sh [-caf none|auto|override:<ns>] [-t tag] [reco1.root]
+# Usage: ./run_reco1_dump.sh [-caf none|product|auto|override:<ns>] [-t tag] [reco1.root]
 #   reco1.root  input art file; default: the single .root under input_files_reco1/
 #   -caf        frame_apply_at_caf mode for the opflash tensor-set metadata
-#               (default auto = ported FrameShift derivation; none = omit key;
+#               (default auto = ported FrameShift derivation, ~0.26 us low;
+#                product = authoritative FrameShiftInfo::fFrameApplyAtCaf,
+#                needs a *_frameshift.root input; none = omit key;
 #                override:<ns> = fixed value)
 #   -t          output tag; sample dir becomes input_files_reco1/extracted-<tag>/
 #               (default: input file basename up to the first '-')
@@ -45,8 +47,8 @@ done
 
 case "$CAF_MODE" in
     override:*) CAF_OVERRIDE="${CAF_MODE#override:}"; CAF_MODE=override ;;
-    none|auto) ;;
-    *) echo "ERROR: bad -caf mode '$CAF_MODE' (none|auto|override:<ns>)" >&2; exit 1 ;;
+    none|product|auto) ;;
+    *) echo "ERROR: bad -caf mode '$CAF_MODE' (none|product|auto|override:<ns>)" >&2; exit 1 ;;
 esac
 
 if [ -z "$INPUT" ]; then

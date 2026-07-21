@@ -9,12 +9,15 @@
 // By default ALL events in the art file are streamed into the combined
 // archives (yuhw sample-dir layout); pass entry >= 0 to dump one event.
 //
-// caf_offset_mode ('none'|'auto'|'override'): whether the opflash
-// tensor-set metadata carries the per-event frame_apply_at_caf (ns)
-// flash-time re-reference derived by the ported sbndcode FrameShift
-// computation.  'none' omits the key => FlashTensorToOpticalPCs no-op,
-// byte-identical semantics to the older 10-event dumps.  See
-// toolkit/root/docs/sbnd-reco1-source.md.
+// caf_offset_mode ('none'|'product'|'auto'|'override'): whether the
+// opflash tensor-set metadata carries the per-event frame_apply_at_caf
+// (ns) flash-time re-reference.  'product' reads the authoritative
+// FrameShiftInfo::fFrameApplyAtCaf written by the sbndcode FrameShift
+// producer (requires a *_frameshift.root input); 'auto' approximates it
+// from the ported FrameShift derivation (pre-FrameShift files; low by
+// ~0.26 us on the dev sample); 'none' omits the key =>
+// FlashTensorToOpticalPCs no-op, byte-identical semantics to the older
+// 10-event dumps.  See toolkit/root/docs/sbnd-reco1-source.md.
 //
 // Run (from sbnd_xin/): see run_reco1_dump.sh, or directly:
 //   wire-cell -l stderr -L info \
@@ -22,6 +25,7 @@
 //     -c wct-reco1-dump.jsonnet
 
 function(input, output_dir='.', entry='-1', caf_offset_mode='none', caf_offset_override='0')
+// caf_offset_mode: none | product | auto | override (validated in C++)
 
 local g = import 'pgraph.jsonnet';
 
