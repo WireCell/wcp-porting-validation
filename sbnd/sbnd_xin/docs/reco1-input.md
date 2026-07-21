@@ -80,6 +80,11 @@ answer differs.
 - Existing-chain A/B gate PASS (toolkit side): data evt 686 joint QL,
   baseline vs new `libWireCellRoot` under `setarch -R`, `mabc-all-apa.zip`
   member-hash identical (`4b006453…`).
+- Full-sample batch (`SBND_MAX_JOBS=6`): imaging 48/48 ok →
+  `work/evt<ID>/icluster-*.npz`; joint QL 48/48 ok →
+  `work/ql_evt<ID>/mabc-all-apa.zip`.  Per-event `frame_apply_at_caf`
+  applied in every run (0–2560 ns in 256 ns quanta); 22–41 in-scope matched
+  clusters per event collapsing to ~10 flash-time groups.
 
 ## Caveats
 
