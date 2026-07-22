@@ -1,143 +1,135 @@
-// Standalone wire-cell-toolkit config that exercises the new
-// WireCell::Match::QLMatching component (ported from larwirecell). No
-// larsoft/WCLS runtime dependency.
+// Standalone (no LArSoft/WCLS) wire-cell config that reproduces the 1-step
+// wcls-img-clus-matching-xin.jsonnet clustering + Q/L matching, reading the
+// DUMPED image clusters + opflash instead of art products.  Kept in sync with
+// sbnd/wcls-img-clus-matching-xin.jsonnet: same toolkit clustering
+// (pgrapher/experiment/sbnd/clus.jsonnet) and the SAME joint QLMatching
+// (FlashTensorToOpticalPCs + qlmatching.jsonnet matching_joint, premerged
+// all-APA MABC).  Only the sources differ (file sources here vs art sources
+// in the wcls chain), and there is no wclsTensorSetLabeler (larwirecell-only,
+// needs the art event).
 //
-// Inputs:
-//   icluster-apa{0,1}-active.npz / icluster-apa{0,1}-masked.npz
-//   opflash_apa{0,1}.tar.gz
+// Inputs (produced by the step-1 dumps, see docs_for_xin/2-*.md):
+//   <input>/icluster-apa{0,1}-active.npz  (wcls-img-dump[-data].fcl)
+//   <input>/icluster-apa{0,1}-masked.npz
+//   <input>/opflash_apa{0,1}.tar.gz       (wcls-flash-dump[-data].fcl)
 //
-// Run with:
-//   wire-cell -V reality=sim \
-//             -V DL=6.2 -V DT=9.8 -V lifetime=6 -V driftSpeed=1.565 \
-//             -V input=. \
-//             -V semimodel_file=semi-analytical-sbnd.json \
-//             -c wct-clus-matching-standalone.jsonnet
+// Run (SL7 + setup-ap.sh so the toolkit cfg + photodet semimodel resolve):
+//   wire-cell -l stdout -L info \
+//     -V reality=data \
+//     -V input=<dir with icluster/opflash> \
+//     -c wct-clus-matching-standalone.jsonnet
 //
-// `semimodel_file` must resolve via WIRECELL_PATH; assemble it once with
-// build-semi-analytical-data/build_semi_analytical_sbnd_json.py.
+// reality picks the SAME grouped reco config as the 1-step (sim -> use_sce=true,
+// pos_offset_on=false; data -> use_sce=false, pos_offset_on=true).
 
 local g = import "pgraph.jsonnet";
-local f = import "pgrapher/common/funcs.jsonnet";
 local wc = import "wirecell.jsonnet";
-
 local tools_maker = import 'pgrapher/common/tools.jsonnet';
 
 local reality = std.extVar('reality');
-local semimodel_file = std.extVar('semimodel_file');
+local input = std.extVar('input');
 
-local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
-local params = base {
-  lar: super.lar {
-    DL: std.extVar('DL') * wc.cm2 / wc.s,
-    DT: std.extVar('DT') * wc.cm2 / wc.s,
-    lifetime: std.extVar('lifetime') * wc.ms,
-    drift_speed: std.extVar('driftSpeed') * wc.mm / wc.us,
-  },
-};
+// Canonical SBND simparams -- NO DL/DT/lifetime/driftSpeed overrides, so the
+// charge/light model matches the 1-step chain exactly.
+local params = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
 
 local tools_all = tools_maker(params);
 local tools = tools_all { anodes: [tools_all.anodes[n] for n in [0, 1]] };
+local nanode = std.length(tools.anodes);
 
-local input = std.extVar('input');
+// ---- clustering: toolkit clus maker, SAME as the 1-step ----
+local clus = import 'pgrapher/experiment/sbnd/clus.jsonnet';
+// run_labeler=false: the labeler is a larwirecell (wcls) component and cannot
+// run standalone (no art event); the 1-step's reco Bee sets are unaffected.
+local clus_maker = clus(rse_from_ident=true, reality=reality, run_labeler=false);
 
-// --- Sources ---
+// Single shared Bee sink -> one mabc.zip (per-APA + all-APA), as the 1-step.
+local bee_shared = {
+    type: 'BeeSink',
+    name: 'mabc_shared',
+    data: { outname: 'mabc.zip', initial_index: 0 },
+};
+
+// ---- sources: dumped image clusters (active/masked) + dumped opflash ----
 local ClusterFileSource(fname) = g.pnode({
     type: "ClusterFileSource",
     name: fname,
-    data: {
-        inname: fname,
-        anodes: [wc.tn(a) for a in tools.anodes],
-    }
+    data: { inname: fname, anodes: [wc.tn(a) for a in tools.anodes] },
 }, nin=0, nout=1, uses=tools.anodes);
 
 local active_clusters = [
     ClusterFileSource("%s/icluster-apa%d-active.npz" % [input, tools.anodes[n].data.ident])
-    for n in std.range(0, std.length(tools.anodes) - 1)
+    for n in std.range(0, nanode - 1)
 ];
 local masked_clusters = [
     ClusterFileSource("%s/icluster-apa%d-masked.npz" % [input, tools.anodes[n].data.ident])
-    for n in std.range(0, std.length(tools.anodes) - 1)
+    for n in std.range(0, nanode - 1)
 ];
-
 local opflash_sources = [
     g.pnode({
         type: "TensorFileSource",
         name: "opflash_src_apa%d" % n,
-        data: {
-            inname: "%s/opflash_apa%d.tar.gz" % [input, n],
-            prefix: "opflash_",
-        }
+        data: { inname: "%s/opflash_apa%d.tar.gz" % [input, n], prefix: "opflash_" },
     }, nin=0, nout=1)
-    for n in std.range(0, std.length(tools.anodes) - 1)
+    for n in std.range(0, nanode - 1)
 ];
 
-// --- Per-APA clustering ---
-local clus = import '../clus.jsonnet';
-local clus_maker = clus();
 local clus_pipes = [
-    clus_maker.per_apa(tools.anodes[n], dump=false)
-    for n in std.range(0, std.length(tools.anodes) - 1)
+    clus_maker.per_apa(tools.anodes[n], dump=false, bee_sink=bee_shared)
+    for n in std.range(0, nanode - 1)
 ];
 
-// --- QL Matching (now WCT-native) ---
-local matching_pipes = [
-    g.pnode({
-        type: 'QLMatching',
-        name: 'matching%d' % n,
-        local dv = clus_maker.detector_volumes([tools.anodes[n]]),
-        data: {
-            anode: wc.tn(tools.anodes[n]),
-            detector_volumes: wc.tn(dv),
-            bee_dir: "data-sep",
-            beamonly: false,
-            data: if reality == 'data' then true else false,
-            QtoL: 1.0,
-            ch_mask: [39, 64, 66, 71, 85, 86, 87, 115, 138, 141, 197, 217, 221,
-                      222, 223, 226, 245, 249, 302],
-            flash_minPE: 50,
-            saturation_threshold: 5000,
-            semimodel_file: semimodel_file,
-        },
-    }, nin=2, nout=1)
-    for n in std.range(0, std.length(tools.anodes) - 1)
-];
+// ---- Q/L matching: canonical FlashTensorToOpticalPCs + joint QLMatching,
+// IDENTICAL to the 1-step chain. ----
+local semimodel_file = 'semi-analytical-sbnd.json';
+local pmt_nl = true;
+local qlm = (import 'pgrapher/experiment/sbnd/qlmatching.jsonnet')(params);
+local cathode_fv = (import 'pgrapher/experiment/sbnd/cathode_fiducial.jsonnet')(
+    cx=0.5*wc.cm, cy=0.5*wc.cm, cz=0.5*wc.cm);
+local flash_attach = [qlm.flash_attach(n) for n in std.range(0, nanode - 1)];
+local matching_joint = qlm.matching_joint(
+    tools.anodes, clus_maker.detector_volumes(tools.anodes),
+    reality, semimodel_file, cathode_fiducial=cathode_fv.tn, pmt_nl=pmt_nl);
 
-// --- Per-APA subgraphs ---
-local per_apa = [g.intern(
-    innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
-    centernodes=[clus_pipes[n]],
-    outnodes=[matching_pipes[n]],
-    edges=[
-        g.edge(active_clusters[n], clus_pipes[n], 0, 0),
-        g.edge(masked_clusters[n], clus_pipes[n], 0, 1),
-        g.edge(clus_pipes[n], matching_pipes[n], 0, 0),
-        g.edge(opflash_sources[n], matching_pipes[n], 0, 1),
-    ]
-) for n in std.range(0, std.length(tools.anodes) - 1)];
+// all-APA clustering: joint matcher already merged -> premerged=true.
+local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true,
+                                        bee_sink=bee_shared, premerged=true);
 
-// --- All-APA clustering ---
-local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true);
-
+// ---- assemble the graph (mirror of the 1-step, file sources in place of art):
+//  icluster-active[n] ─(port0)─┐
+//  icluster-masked[n] ─(port1)─┴ clus[n] ─(port0)─ flash_attach[n] ─┐
+//  opflash[n] ────────────────────────────(port1) flash_attach[n]  │
+//        flash_attach[n] ─(port n)─ matching_joint ─ clus_all_apa (MABC)
 local graph = g.intern(
-    innodes=per_apa,
+    innodes=active_clusters + masked_clusters + opflash_sources,
+    centernodes=clus_pipes + flash_attach + [matching_joint],
     outnodes=[clus_all_apa],
-    edges=[g.edge(per_apa[i], clus_all_apa, 0, i)
-           for i in std.range(0, std.length(tools.anodes) - 1)]
+    edges=
+        [g.edge(active_clusters[n], clus_pipes[n], 0, 0) for n in std.range(0, nanode - 1)]
+        + [g.edge(masked_clusters[n], clus_pipes[n], 0, 1) for n in std.range(0, nanode - 1)]
+        + [g.edge(clus_pipes[n], flash_attach[n], 0, 0) for n in std.range(0, nanode - 1)]
+        + [g.edge(opflash_sources[n], flash_attach[n], 0, 1) for n in std.range(0, nanode - 1)]
+        + [g.edge(flash_attach[n], matching_joint, 0, n) for n in std.range(0, nanode - 1)]
+        + [g.edge(matching_joint, clus_all_apa, 0, 0)]
 );
 
 local app = {
-  type: 'Pgrapher',
-  data: { edges: g.edges(graph) },
+    type: 'Pgrapher',
+    data: { edges: g.edges(graph) },
 };
 
 local cmdline = {
     type: "wire-cell",
     data: {
+        // WireCellAux: FlashTensorToOpticalPCs; WireCellMatch: QLMatching.
         plugins: ["WireCellGen", "WireCellPgraph", "WireCellSio", "WireCellSigProc",
                   "WireCellImg", "WireCellRoot", "WireCellTbb", "WireCellClus",
-                  "WireCellMatch"],
+                  "WireCellMatch", "WireCellAux"],
         apps: ["Pgrapher"]
     }
 };
 
-[cmdline] + g.uses(graph) + [app]
+// cathode_fv.configs: the cpa-exclusion CompositeFiducial + BoxFiducials are
+// referenced by tn (not via graph `uses`), so append them explicitly -- same
+// as the 1-step entry jsonnet's final line.
+[cmdline] + g.uses(graph) + cathode_fv.configs + [app]

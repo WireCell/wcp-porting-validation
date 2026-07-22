@@ -35,9 +35,12 @@ local wcls_input = g.pnode({
     },
 }, nin=0, nout=1);
 
+// Imaging kept in SYNC with wcls-img-clus-matching-xin.jsonnet (the 1-step):
+// toolkit multi-3view + full_deghost, so the dumped icluster is byte-for-byte
+// the same blobs the 1-step feeds to clustering.
 local img = import 'pgrapher/experiment/sbnd/img.jsonnet';
 local img_maker = img();
-local img_pipes = [img_maker.per_anode(a, "active3view+masked1view", add_dump = false) for a in tools.anodes];
+local img_pipes = [img_maker.per_anode(a, "multi-3view", add_dump = false, full_deghost=true) for a in tools.anodes];
 
 local ClusterFileSink(fname) = g.pnode({
     type: 'ClusterFileSink',
