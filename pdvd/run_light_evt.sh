@@ -185,6 +185,21 @@ fi
 if [ -n "${PDVD_PMT_WIDE_HIT_MODE:-}" ]; then
     VETO_SAT_ARG+=(-A "pmt_wide_hit_mode=${PDVD_PMT_WIDE_HIT_MODE}")
 fi
+# PDVD_FLASH_TAIL_MERGE: absorb the split-off LAr slow-tail flash into its
+# seed (docs/qlmatch/26; pdvd docs 23 §7d: the "two reconstructed flashes" at
+# a matched time are ONE physical flash -- the late member is 97-99.9% wide
+# cathode-XA slow-tail PE on the seed's own lit PDs, dt 1.2-1.3 us).  The
+# merged flash keeps the seed (fast-peak) time.  DEFAULT 0 = legacy split
+# (byte-identical); toolkit C++/jsonnet defaults stay OFF -- this runner is
+# where a PDVD operating point would turn it on.  Sub-knobs (jsonnet defaults
+# = C++ defaults): PDVD_TAIL_WINDOW_US 3.0, PDVD_TAIL_MIN_WIDTH_US 1.0,
+# PDVD_TAIL_PE_FRAC 0.7.
+if [ "${PDVD_FLASH_TAIL_MERGE:-0}" = 1 ]; then
+    VETO_SAT_ARG+=(-S "tail_merge=true")
+    [ -n "${PDVD_TAIL_WINDOW_US:-}" ]    && VETO_SAT_ARG+=(-S "tail_window_us=${PDVD_TAIL_WINDOW_US}")
+    [ -n "${PDVD_TAIL_MIN_WIDTH_US:-}" ] && VETO_SAT_ARG+=(-S "tail_min_width_us=${PDVD_TAIL_MIN_WIDTH_US}")
+    [ -n "${PDVD_TAIL_PE_FRAC:-}" ]      && VETO_SAT_ARG+=(-S "tail_pe_frac=${PDVD_TAIL_PE_FRAC}")
+fi
 
 wcsonnet \
     -A input_file="$RAW_FILE" \

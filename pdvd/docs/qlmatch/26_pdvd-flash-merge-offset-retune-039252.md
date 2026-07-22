@@ -161,6 +161,54 @@ Each step lands as its own commit (+push). New work/label tags only; existing
 `_keep` light dirs, `ql_labels/`, `decisions-*`, `ql_scores/` are never
 touched.
 
+## Step log
+
+### Step 2 (2026-07-22): `flash_tail_merge` knob landed — gates PASS
+
+Toolkit: `flash/{src,inc}/OpFlashFinder.*` new keys `flash_tail_merge`
+(false) / `tail_window_us` (3.0) / `tail_min_width_us` (1.0) / `tail_pe_frac`
+(0.7) / `tail_pe_ratio` (1.0); `refine_flashes` runs when
+`flash_refine || flash_tail_merge`, criteria OR-ed, tail-only merges restore
+the seed time; new `flash/test/doctest_opflashfinder.cxx` (6 cases / 40+
+assertions incl. PDHD-legacy-unchanged and not-merged pile-up variants);
+PDVD `flash.jsonnet` `opflash_finder()` key-suppressed args. Runner:
+`wct-light-reco.jsonnet` args + `run_light_evt.sh` env `PDVD_FLASH_TAIL_MERGE`
+(default 0) with `PDVD_TAIL_{WINDOW_US,MIN_WIDTH_US,PE_FRAC}` overrides.
+
+Verification (all after `wcbuild` + freshness proof on
+`local/lib/libWireCellFlash.so`):
+
+- `./build/flash/wcdoctest-flash`: 12/12 cases, 82 assertions PASS.
+- Compiled-config proof: HEAD-vs-new `wct-light-reco.jsonnet` knob-off
+  compile byte-identical (diff empty); knob-on adds exactly the five tail
+  keys.
+- Knob-off A/B, PDVD (`flash_refine:false` path): tag
+  `work/039252_light298609_abtailoff` vs production
+  `039252_light298609_keep` — `hash_archive.py` member hash
+  `36b544b6…` (11 members) IDENTICAL; compiled configs identical modulo tag.
+- Knob-off A/B, PDHD (`flash_refine:true, subset_merge:true` legacy path):
+  tag `pdhd/work/029107_allpd1007_abtailoff` vs `029107_allpd1007` —
+  member hash `6cb7bd09…` (7 members) IDENTICAL.
+
+Knob-on smoke (`work/039252_light298609_tmerge`, evt 298609): 431 → 433
+flashes.
+
+- 3 tail merges: track B pair 5399.991 (24384) + 5401.156 (19942) → ONE
+  flash 5399.991 / 44326 PE (seed time kept); 2602.180 absorbed
+  2603.426/2422; 6659.292 absorbed 6662.108/1918. Track A (3519.753 /
+  22117 PE) untouched.
+- 5 "new" flashes (10–14 PE) are RESCUED dim flashes: each was split by the
+  same defect into two sub-10 PE fragments that both failed the
+  `min_total_pe=10` quality cut in the legacy run (their hits all carry
+  `flash_id=-1` there); the merge runs before the quality cut, reunites
+  fragment + wide (1.0–1.2 µs) tail hit on the seed's own lit channel, and
+  the combined flash passes. Physically correct recovery of dropped light;
+  per-hit provenance verified for all five.
+
+### Step 3 (started): merge-ON light tags `_tmerge`
+
+Evt 298609 done (above). Remaining scan-set + crosser events pending.
+
 ## Files
 
 - `scripts/aca_flash_split.py`, `scripts/aca_flash_wf.py`,

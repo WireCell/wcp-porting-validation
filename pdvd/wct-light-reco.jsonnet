@@ -89,7 +89,13 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
          // Same handling for the PMT branch (also 16.4-us self-trigger
          // snippets: 1% of PMT hits are wide but they carry 22% of the PMT
          // PE, 46% of it unassigned).  Same C++ knob, same default off.
-         pmt_wide_hit_mode='')
+         pmt_wide_hit_mode='',
+         // Slow-tail flash merge (docs/qlmatch/26, pdvd doc 23 §7d): absorb
+         // the late flash member made of wide cathode-XA slow-tail hits on
+         // the seed's own lit PDs; merged flash keeps the seed (fast-peak)
+         // time.  C++ default false, keys suppressed => byte-identical off.
+         tail_merge=false, tail_window_us=3.0, tail_min_width_us=1.0,
+         tail_pe_frac=0.7)
 
   local run_n = if std.type(run) == 'string' then std.parseInt(run) else run;
   local evt_n = if std.type(event) == 'string' then std.parseInt(event) else event;
@@ -117,6 +123,10 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   } else {});
   local sat_rep = if std.type(saturation_repair) == 'string' then std.parseJson(saturation_repair) else saturation_repair;
   local ovf_rail = if std.type(overflow_to_rail) == 'string' then std.parseJson(overflow_to_rail) else overflow_to_rail;
+  local tmerge = if std.type(tail_merge) == 'string' then std.parseJson(tail_merge) else tail_merge;
+  local twin = if std.type(tail_window_us) == 'string' then std.parseJson(tail_window_us) else tail_window_us;
+  local tminw = if std.type(tail_min_width_us) == 'string' then std.parseJson(tail_min_width_us) else tail_min_width_us;
+  local tfrac = if std.type(tail_pe_frac) == 'string' then std.parseJson(tail_pe_frac) else tail_pe_frac;
 
   // --- cathode branch (opch 10xx, continuous full streams) ---
   local cath_src = flash.opwaveform_source(input_file, run_n, evt_n, opch_lo=1000, opch_hi=1999, name='cath');
@@ -155,7 +165,11 @@ function(input_file, output_dir='.', run=39252, event=298567, offset_us=0,
   local merge = flash.ophit_merge(name='allpd', multiplicity=3, meta_port=0);
   local opflash_finder = flash.opflash_finder(offset_us=off_us,
                                               offset_bot_us=off_bot_us,
-                                              offset_top_us=off_top_us);
+                                              offset_top_us=off_top_us,
+                                              tail_merge=tmerge,
+                                              tail_window_us=twin,
+                                              tail_min_width_us=tminw,
+                                              tail_pe_frac=tfrac);
   local fl_sink = flash.opflash_sink('%s/opflash_pdvd-wct.tar.gz' % output_dir, name='allpd');
 
   local graph = g.intern(
