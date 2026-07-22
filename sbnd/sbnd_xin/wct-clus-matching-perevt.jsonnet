@@ -63,6 +63,13 @@ function(
     // true masks, per event, a PMT that never fires while its live neighbours do (a
     // run-dead channel absent from the static ch_mask). run_ql_evt.sh -auto-mask enables it.
     auto_mask      = false,
+    // Beam-window flash preference. false (default) = off, production-identical.
+    // true prefers flashes in the (0.2, 2.2) us BNB window when they compete with
+    // cosmic flashes for a cluster (cull_inconsistent exemption + LASSO L1
+    // down-weight x0.5 + rescue steal guard x0.2; qlmatching.jsonnet shim ->
+    // QLMatching beam_pref knobs; docs/22_ql-beam-flash-preference.md).
+    // run_ql_evt.sh -beam-pref enables it.
+    beam_pref      = false,
     // Persistent post-QL intermediate output. '' (default) = off, production-identical
     // (the terminal TensorFileSink stays a dump_mode no-op). When set to a path, the
     // all-APA MABC output point-cloud tree (live+dead, cluster_t0/flash annotations,
@@ -127,7 +134,7 @@ function(
                                          n, reality, semimodel_file,
                                          cathode_fiducial=cathode_fv.tn,
                                          calib_dump=calib_dump, cathode_diag=cathode_diag,
-                                         pmt_nl=pmt_nl, auto_mask=auto_mask)
+                                         pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Graph: per-APA matching (default) or joint multi-APA matching ---
@@ -141,7 +148,7 @@ function(
                                                reality, semimodel_file,
                                                cathode_fiducial=cathode_fv.tn,
                                                calib_dump=calib_dump, cathode_diag=cathode_diag,
-                                               pmt_nl=pmt_nl, auto_mask=auto_mask);
+                                               pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
             local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors);
             local per_apa_pre = [g.intern(

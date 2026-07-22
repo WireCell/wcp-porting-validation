@@ -77,7 +77,7 @@ sources, chosen by `run_reco1_dump.sh -caf`:
 Validation on the product offsets (all 48 events are neutrino candidates):
 
 - raw in-time flash (min |t|, both APAs): median **−0.715 µs**, matching the
-  −0.71 µs signature ([flash-coincidence.md](flash-coincidence.md));
+  −0.71 µs signature ([10_flash-coincidence.md](10_flash-coincidence.md));
 - corrected in-time flash: median **+1.28 µs**, **45/48 inside the
   +0.3–1.9 µs beam window** (vs 42/48 with `auto`); 214469/111412 sit at
   1.94/2.04 µs just outside, 131357's min-|t| flash (−0.40 µs) is likely a

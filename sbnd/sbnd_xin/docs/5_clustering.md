@@ -1,9 +1,9 @@
 # Blob Clustering (`run_clus_evt.sh`)
 
-> For pipeline overview see **[sbnd.md](sbnd.md)**.
-> For per-script CLI reference see **[scripts.md](scripts.md)**.
-> For geometry / timing constants see **[geometry-and-timing.md](geometry-and-timing.md)**.
-> For the upstream imaging stage see **[imaging.md](imaging.md)**.
+> For pipeline overview see **[1_sbnd.md](1_sbnd.md)**.
+> For per-script CLI reference see **[3_scripts.md](3_scripts.md)**.
+> For geometry / timing constants see **[2_geometry-and-timing.md](2_geometry-and-timing.md)**.
+> For the upstream imaging stage see **[4_imaging.md](4_imaging.md)**.
 
 ## Scope
 
@@ -162,7 +162,7 @@ into 3D point clouds before clustering begins.
 `drift_speed = 1.563 mm/µs` and `time_offset = -205 µs` (`clus.jsonnet`)
 drive the t→x conversion inside `bs_live_face`. These values are
 **hard-coded in `clus.jsonnet`** and are not overridden by the `driftSpeed`
-TLA — see [geometry-and-timing.md § "Drift speed"](geometry-and-timing.md)
+TLA — see [2_geometry-and-timing.md § "Drift speed"](2_geometry-and-timing.md)
 for the three-value discrepancy story.
 
 ### `PointTreeBuilding` (`clus.jsonnet`)
@@ -293,7 +293,7 @@ significantly (both span ≈ 0..201 cm in magnitude). `x_t0cor` applies the
 T0 correction so that the two APAs occupy non-overlapping global x ranges
 (APA0: negative-x volume, APA1: positive-x volume), enabling cross-APA
 distance metrics to be physically meaningful. See
-[geometry-and-timing.md § "BEE undrift convention"](geometry-and-timing.md)
+[2_geometry-and-timing.md § "BEE undrift convention"](2_geometry-and-timing.md)
 for the sign derivation.
 
 **Critical**: `switch_scope` must use `cm_old` (the `x` factory) because
@@ -390,7 +390,7 @@ to decide whether a cluster is near a detector boundary.
 `BlobSampler` for t→x in point-cloud construction and is **not** overridden
 by the `driftSpeed` TLA. The 0.3 % discrepancy produces ≈ 0.6 mm position
 error at 201 cm drift — documented in
-[geometry-and-timing.md § "Drift speed"](geometry-and-timing.md).
+[2_geometry-and-timing.md § "Drift speed"](2_geometry-and-timing.md).
 
 ---
 
@@ -398,7 +398,7 @@ error at 201 cm drift — documented in
 
 Each `.npz` is a flattened ICluster graph dump written by `ClusterFileSink`
 in the imaging stage. For schema details see
-[imaging.md § "Output format"](imaging.md). Key points here:
+[4_imaging.md § "Output format"](4_imaging.md). Key points here:
 
 - Read by `ClusterFileSource` (`sio/src/ClusterFileSource.cxx`), which
   reconstructs the ICluster graph by reading per-cluster `cluster_<i>_nodes.npy`
@@ -458,7 +458,7 @@ Zips are uploaded to the Bee event display via:
 - **`trash-*.tar.gz` placeholders** — `TensorFileSink` with `dump_mode=true`
   drains the `ITensorSet` output of MABC into a small gzip archive where the
   data is discarded. The resulting file is ~29 bytes. See also
-  [sbnd.md § "Known gotchas"](sbnd.md).
+  [1_sbnd.md § "Known gotchas"](1_sbnd.md).
 
 - **`face=0` hard-wired** — `clus.jsonnet` calls `clus_per_face` with
   `face=0` for SBND; the `per_face` wrapper (`clus.jsonnet`) exists for

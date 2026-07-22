@@ -4,7 +4,7 @@ All scripts are run from `sbnd_xin/`. Each sets `WIRECELL_PATH` to include
 `toolkit/cfg` and `wire-cell-data` — no manual export needed.
 
 > For the end-to-end pipeline overview, quick start, and common conventions
-> (no-arg listing, `IDX=all` parallel mode, `SBND_MAX_JOBS`) see **[sbnd.md](sbnd.md)**.
+> (no-arg listing, `IDX=all` parallel mode, `SBND_MAX_JOBS`) see **[1_sbnd.md](1_sbnd.md)**.
 
 ---
 
@@ -222,7 +222,7 @@ event list and the `reality` flag.
 toolkit's own imaging output + that event's opflash, runs per-APA clustering +
 `QLMatching` + all-APA `MultiAlgBlobClustering`, and writes one Bee zip with the
 img / clustering / 2-view dead-area / op (flash + Q/L match) layers. The recommended
-matcher driver; see also `docs/ql-chain.md` §8. (The legacy all-10 single-run variant
+matcher driver; see also `docs/8_ql-chain.md` §8. (The legacy all-10 single-run variant
 is `run_clust_QL_evt.sh`.)
 
 ```
@@ -404,7 +404,7 @@ per-APA, and all-APA clustering subgraphs.  Imported by `wct-clustering.jsonnet`
 
 Key locals (in the canonical `cfg/pgrapher/experiment/sbnd/clus.jsonnet`):
 `time_offset = -205 us`, `drift_speed = 1.563 mm/us`.
-See [geometry-and-timing.md](geometry-and-timing.md).
+See [2_geometry-and-timing.md](2_geometry-and-timing.md).
 
 ### `magnify-sinks.jsonnet`
 
@@ -435,7 +435,7 @@ Geometry arguments passed to `wirecell-img bee-blobs`:
 | 1 (x=+201.45 cm) | `201.45*cm` | `+1.563*mm/us` | `205*us` |
 
 Note `--t0 "205*us"` is the **positive** value even though `clus.jsonnet`
-defines `time_offset = -205*us`. See [geometry-and-timing.md](geometry-and-timing.md).
+defines `time_offset = -205*us`. See [2_geometry-and-timing.md](2_geometry-and-timing.md).
 
 **Output:** `data/0/0-apa<N>.json` (one per anode), then `upload.zip`. Used only
 by the single-event path of `run_bee_img_evt.sh`; the `all`-mode path calls
@@ -516,7 +516,7 @@ Measures the per-PMT light-error fraction `a` from the hand-scanned matches (the
 selected clusters on a flash, meas once), drops `window_truncated`/`close_to_PMT` flashes, keeps
 PMTs (`opdet type==1`) in the flash's TPC. Writes 4-panel figures
 `pics/ql_pe_error_<mode>{,_nloff,_consistent}.png` (pred-vs-meas; local `a` vs pred; Y vs pred²;
-pull). Full writeup + findings in `docs/pe-error-study.md`. Default runs both modes:
+pull). Full writeup + findings in `docs/17_pe-error-study.md`. Default runs both modes:
 
 ```
 python3 ql_pe_error.py            # data + mc
@@ -529,7 +529,7 @@ Compares data vs MC Q/L **match quality** (χ²/ndf, ks, meas/pred) on the hand-
 SBND data recipe (data `QtoL=0.86` + the PE-dependent error `σ²=meas+max(5 PE,0.25·pred)²`). Reads
 the regenerated recipe calib dumps from `work/ql_recipe/`. Finding: χ²/ndf drops from ~5 to ~1–2
 (data 1.72, MC 1.04), data normalization fixed (meas/pred → 1.01), ks ~unchanged (shape-invariant).
-Writes `pics/ql_recipe_data_vs_mc.png`. Full writeup in `docs/pe-error-study.md`.
+Writes `pics/ql_recipe_data_vs_mc.png`. Full writeup in `docs/17_pe-error-study.md`.
 
 ```
 python3 ql_recipe_compare.py

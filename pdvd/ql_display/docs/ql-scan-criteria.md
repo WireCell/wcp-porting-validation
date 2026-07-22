@@ -4,8 +4,8 @@ Prepared for the AI-performed hand scan of the first 10 PDVD events (run
 039252, idx 0-9). Sources: the saved human labels
 (`pdhd/work/ql_labels/labels-evt{983,991,999,1007}.json`,
 `sbnd/sbnd_xin/work/ql_labels/{mc,data}/labels-evt*.json`), the viewer docs
-(`sbnd_xin/docs/ql-scan-display.md`, `pdhd/docs/ql-scan-display.md`), and the
-written cuts in `sbnd_xin/docs/pe-error-study.md` §Selection. Numbers below
+(`sbnd_xin/docs/12_ql-scan-display.md`, `pdhd/docs/ql-scan-display.md`), and the
+written cuts in `sbnd_xin/docs/17_pe-error-study.md` §Selection. Numbers below
 come from `../analyze_labels.py` (run it to reproduce).
 
 ## 1. What the human labels contain

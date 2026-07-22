@@ -3,7 +3,7 @@
 An interactive tool to examine PDHD charge–light (Q/L) matching one event at a
 time, override the matcher's auto-selection by hand, and save the human-picked
 flash↔cluster matches as labels for later parameter tuning. Faithful port of the
-SBND tool (`sbnd_xin/ql_scan/`, `sbnd_xin/docs/ql-scan-display.md`); this page
+SBND tool (`sbnd_xin/ql_scan/`, `sbnd_xin/docs/12_ql-scan-display.md`); this page
 documents only what differs for ProtoDUNE-HD.
 
 > **Status:** machinery only. The PDHD light reconstruction and Q/L matching chain
@@ -61,7 +61,7 @@ never perturbs the matching.
 
 ### Calib JSON schema
 
-Identical to SBND (see `sbnd_xin/docs/ql-scan-display.md` §1 for the full table),
+Identical to SBND (see `sbnd_xin/docs/12_ql-scan-display.md` §1 for the full table),
 with these PDHD specifics:
 
 | key | PDHD value / meaning |

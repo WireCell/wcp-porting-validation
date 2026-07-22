@@ -53,6 +53,10 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   -auto-mask  enable the per-event dynamic dead-PMT auto-mask (masks a PMT
             that is dead in THIS event while its live neighbours fire; off
             by default => byte-identical; grep QLAUTOMASK in the run log)
+  -beam-pref  prefer beam-window flashes (0.2-2.2 us, post frame_apply_at_caf)
+            when they compete with cosmic flashes for a cluster: cull
+            exemption + LASSO down-weight (QLMatching beam_pref knob; off by
+            default => byte-identical; grep "beam-window" in the run log)
   -save-pctree  also write the post-QL point-cloud tree to
             work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
             pattern-recognition job; off by default => byte-identical)
@@ -100,6 +104,12 @@ SAVEPCT=""
 # Off by default (production byte-identical); masks a PMT that is dead in THIS event
 # while its live neighbours fire (a run-dead channel absent from the static ch_mask).
 AUTOMASK="false"
+# -beam-pref: beam-window flash preference (QLMatching beam_pref). Off by default
+# (production byte-identical); when on, a flash in the (0.2, 2.2) us BNB window is
+# exempt from the rival-consistent cull and its LASSO columns are shrunk less, so
+# the beam flash competes for (and tends to win) its clusters. See
+# docs/22_ql-beam-flash-preference.md (reco1 evts 246579/116962 case study).
+BEAMPREF="false"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -108,6 +118,7 @@ while [ $# -gt 0 ]; do
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -auto-mask|--auto-mask) AUTOMASK="true"; shift ;;   # before -a* (it starts with -a)
+        -beam-pref|--beam-pref) BEAMPREF="true"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s|--per-apa|--separate) JOINT=false; shift ;;
@@ -232,6 +243,7 @@ process_event() {
         --tla-code "joint=$JOINT" \
         --tla-code "pmt_nl=$PMT_NL" \
         --tla-code "auto_mask=$AUTOMASK" \
+        --tla-code "beam_pref=$BEAMPREF" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \

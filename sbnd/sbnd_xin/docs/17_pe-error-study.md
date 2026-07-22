@@ -80,7 +80,7 @@ panel 4 = pull).
    the **raw** prediction, not scaled by `strength` — so matching is unaffected, but it flags a
    **light-yield / `QtoL` (or charge-scale) data-vs-MC tuning question**, separate from the
    per-PMT error knob. (This is the aggregate normalization; for the bright-end-only trend see
-   `ql-light-compare.md` and the non-linearity section of `sbnd-opdetsim-chain.md`.)
+   `11_ql-light-compare.md` and the non-linearity section of `sbnd-opdetsim-chain.md`.)
 
 ## Reproduce
 

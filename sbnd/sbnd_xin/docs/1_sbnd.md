@@ -1,9 +1,9 @@
 # SBND Standalone Imaging, Clustering, and Bee (`sbnd_xin/`)
 
-> For per-script details see **[scripts.md](scripts.md)**.
-> For geometry / timing constants see **[geometry-and-timing.md](geometry-and-timing.md)**.
-> For the imaging algorithm deep-dive see **[imaging.md](imaging.md)**.
-> For the clustering algorithm deep-dive see **[clustering.md](clustering.md)**.
+> For per-script details see **[3_scripts.md](3_scripts.md)**.
+> For geometry / timing constants see **[2_geometry-and-timing.md](2_geometry-and-timing.md)**.
+> For the imaging algorithm deep-dive see **[4_imaging.md](4_imaging.md)**.
+> For the clustering algorithm deep-dive see **[5_clustering.md](5_clustering.md)**.
 
 ## Common conventions
 
@@ -84,7 +84,7 @@ sbnd_xin/
 ├── run_select_evt.sh          # stage 1b (optional): Woodpecker GUI tick/channel selection
 ├── run_img_evt.sh             # stage 2: SP frames → imaging cluster .npz files
 ├── run_clus_evt.sh            # stage 3: imaging clusters → blob clustering .zip files
-├── run_ql_evt.sh             # stage 3b: imaging clusters + opflash → charge-light (Q/L) matching .zip (self-contained, per-event; see docs/ql-chain.md)
+├── run_ql_evt.sh             # stage 3b: imaging clusters + opflash → charge-light (Q/L) matching .zip (self-contained, per-event; see docs/8_ql-chain.md)
 ├── run_bee_img_evt.sh         # stage 4: imaging clusters → Bee display upload
 │
 ├── wct-sp-to-magnify.jsonnet  # wire-cell config: stage 1 pipeline
@@ -188,7 +188,7 @@ work/evt<ID>/sp-frames.tar.bz2
    ├─ (charge–light) run_ql_evt.sh  →  wct-clus-matching-perevt.jsonnet
    │     + input-10evt-<mode>/opflash_apa{0,1}.tar.gz
    │     work/ql_evt<ID>/mabc-all-apa.zip  (img + clustering + 2-view dead + op/Q-L)
-   │     self-contained per-event matching; see docs/ql-chain.md
+   │     self-contained per-event matching; see docs/8_ql-chain.md
    │
    ▼  run_bee_img_evt.sh  →  wct-img-2-bee.py  →  wirecell-img bee-blobs
          data/0/0-apa{0,1}.json
@@ -292,7 +292,7 @@ to Bee manually or via `upload-to-bee.sh <zipfile>`.
 - **Bee x0 / speed / t0 sign** — `wct-img-2-bee.py` uses `--t0 "205*us"` (positive)
   even though `clus.jsonnet` defines `time_offset = -205*us`. The sign flip is
   intentional: `BlobSampler` (C++) **adds** `time_offset` while `wirecell-img bee-blobs`
-  (Python) **subtracts** `--t0`. See [geometry-and-timing.md](geometry-and-timing.md)
+  (Python) **subtracts** `--t0`. See [2_geometry-and-timing.md](2_geometry-and-timing.md)
   for the full derivation.
 
 - **Empty-cluster .npz files** — a run with no active blobs produces a 22-byte

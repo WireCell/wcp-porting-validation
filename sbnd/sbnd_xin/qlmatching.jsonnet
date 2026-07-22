@@ -19,16 +19,36 @@ local diag_on(cathode_diag) = (if cathode_diag != '' then { cathode_diag: cathod
 // with zero false positives. See match/docs/qlmatching-code.md.
 local automask_on(auto_mask) = (if auto_mask then { auto_mask: true } else {});
 
+// beam_pref: beam-window flash preference (QLMatching beam_pref knob; C++ default off =>
+// production byte-identical, keys suppressed here when false). true enables the two
+// beam-window mechanisms on flashes inside the C++ default window (0.2, 2.2) us — the
+// SBND BNB window after the frame_apply_at_caf correction:
+//   1. cull_inconsistent exemption (a beam-window bundle survives the rival-consistent
+//      drop and competes in the LASSO), and
+//   2. per-column L1 down-weight x0.5 (the 0.2 scan point over-collects: see the doc's
+//      population table -- 0.5 fixes both reported cases with less collateral churn), and
+//   3. empty-flash rescue steal guard x0.2 (a non-beam flash must beat a beam-window
+//      match by 5x on the light metric to re-steal its cluster).
+// Case study: sbnd_xin/docs/22_ql-beam-flash-preference.md (reco1 evts 246579 / 116962,
+// beam flash lost to cosmics).
+local beampref_on(beam_pref) = (if beam_pref then {
+    beam_pref: true,
+    beam_pref_lasso_weight: 0.5,
+    beam_pref_rescue_scale: 0.2,
+} else {});
+
 function(params)
     local base = canonical(params);
     base {
         matching(anode, dv, n, reality, semimodel_file, cathode_fiducial='', calib_dump='',
-                 pmt_nl=true, cathode_diag='', auto_mask=false)::
+                 pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false)::
             base.matching(anode, dv, n, reality, semimodel_file, cathode_fiducial, calib_dump,
-                          pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)),
+                          pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)
+                                               + beampref_on(beam_pref)),
 
         matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial='', calib_dump='',
-                       pmt_nl=true, cathode_diag='', auto_mask=false)::
+                       pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false)::
             base.matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial, calib_dump,
-                                pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)),
+                                pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)
+                                                     + beampref_on(beam_pref)),
     }
