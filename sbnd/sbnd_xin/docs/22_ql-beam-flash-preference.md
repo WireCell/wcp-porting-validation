@@ -266,17 +266,25 @@ Operating-point conclusions:
 
 ## Status & caveats
 
-- Default OFF everywhere; enabled only per-run via `-beam-pref` (operating
-  point weight 0.5, rescue 0.2, gate ks ≤ 0.3 / pred ≥ 2%; scannable via
-  `BEAMPREF_WEIGHT`/`BEAMPREF_RESCUE`). **Not** adopted in the SBND
-  production config — but round 2 replaces round 1's "needs a hand-scan"
-  caveat with actual hand-scan evidence: zero regression on 20 labeled
-  events (10 off-beam data + 10 nu MC), 48/48 sane beam budgets on the
-  nueCC sample, and the churn is down to ~1 pair/event, essentially one-way
-  onto beam flashes. Remaining before default-on: a spot hand-scan of the
-  21 changed reco1 events (diff `work-fsprod-bpv-off` vs
-  `work-fsprod-bpv2-w050`) and a decision on whether the MC production
-  chain wants the same window.
+- **ADOPTED as the SBND production operating point** (owner decision,
+  2026-07-21, on the round-2 evidence): the canonical config
+  `cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet` now sets `beam_pref:
+  true` with weight 0.5, rescue 0.2, gate ks ≤ 0.3 / pred ≥ 2%, and the
+  window **explicitly** as `beam_pref_tlow/thigh = 0.2/2.2 µs` — the window
+  is the *experiment's* beam gate on corrected flash time; other experiments
+  must set their own in their config rather than inherit the C++ default
+  (which merely happens to equal SBND's BNB window). This adoption is **NOT
+  byte-identical** to the pre-adoption output — the delta is exactly the
+  validated one: every `mabc-all-apa.zip` of the flag-free rerun
+  (`work-fsprod-bpprod`, `work-bpprod`) is member-hash identical to the
+  gated-w0.5 validation roots (`work-fsprod-bpv2-w050`,
+  `work-bpval2-w050`), 48+20/68. C++ defaults remain OFF/inert (other
+  detectors byte-identical).
+- `run_ql_evt.sh -beam-pref` is now an override overlay: it only matters
+  together with `BEAMPREF_WEIGHT`/`BEAMPREF_RESCUE` to scan a different
+  operating point on top of production.
+- Optional follow-up: a spot hand-scan of the 21 changed reco1 events
+  (diff `work-fsprod-bpv-off` vs `work-fsprod-bpv2-w050`).
 - The knob presumes a *corrected* flash time base (`frame_apply_at_caf`,
   [21_reco1-input.md](21_reco1-input.md)); on uncorrected samples the window
   must be widened or the times fixed first.

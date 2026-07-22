@@ -53,10 +53,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   -auto-mask  enable the per-event dynamic dead-PMT auto-mask (masks a PMT
             that is dead in THIS event while its live neighbours fire; off
             by default => byte-identical; grep QLAUTOMASK in the run log)
-  -beam-pref  prefer beam-window flashes (0.2-2.2 us, post frame_apply_at_caf)
-            when they compete with cosmic flashes for a cluster: cull
-            exemption + LASSO down-weight (QLMatching beam_pref knob; off by
-            default => byte-identical; grep "beam-window" in the run log)
+  -beam-pref  re-assert the beam-window flash preference overlay. The
+            preference is ON in the production config since the round-2
+            adoption (weight 0.5, rescue 0.2, gate ks 0.3 / pred 2%; doc 22),
+            so this flag only matters together with BEAMPREF_WEIGHT /
+            BEAMPREF_RESCUE env overrides to scan a different operating point
   -save-pctree  also write the post-QL point-cloud tree to
             work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
             pattern-recognition job; off by default => byte-identical)

@@ -63,12 +63,14 @@ function(
     // true masks, per event, a PMT that never fires while its live neighbours do (a
     // run-dead channel absent from the static ch_mask). run_ql_evt.sh -auto-mask enables it.
     auto_mask      = false,
-    // Beam-window flash preference. false (default) = off, production-identical.
-    // true prefers flashes in the (0.2, 2.2) us BNB window when they compete with
-    // cosmic flashes for a cluster (cull_inconsistent exemption + LASSO L1
-    // down-weight x0.5 + rescue steal guard x0.2; qlmatching.jsonnet shim ->
-    // QLMatching beam_pref knobs; docs/22_ql-beam-flash-preference.md).
-    // run_ql_evt.sh -beam-pref enables it.
+    // Beam-window flash preference OVERRIDE overlay. Since the validation-round-2
+    // adoption the preference is ON in the production config
+    // (cfg/.../sbnd/qlmatching.jsonnet: weight 0.5, rescue 0.2, gate ks 0.3 /
+    // pred 2%; docs/22_ql-beam-flash-preference.md), so false (default) here
+    // simply inherits production. true re-asserts the same keys via the shim
+    // overlay -- useful only with beam_pref_weight/beam_pref_rescue below to
+    // scan a different operating point (run_ql_evt.sh -beam-pref +
+    // BEAMPREF_WEIGHT/BEAMPREF_RESCUE).
     beam_pref      = false,
     // Beam-preference operating point (inert while beam_pref=false; keys are
     // suppressed then, so the compiled config stays byte-identical). weight =

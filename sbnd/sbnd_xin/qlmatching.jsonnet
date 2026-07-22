@@ -19,9 +19,12 @@ local diag_on(cathode_diag) = (if cathode_diag != '' then { cathode_diag: cathod
 // with zero false positives. See match/docs/qlmatching-code.md.
 local automask_on(auto_mask) = (if auto_mask then { auto_mask: true } else {});
 
-// beam_pref: beam-window flash preference (QLMatching beam_pref knob; C++ default off =>
-// production byte-identical, keys suppressed here when false). true enables the
-// beam-window mechanisms on flashes inside the C++ default window (0.2, 2.2) us — the
+// beam_pref: beam-window flash preference OVERRIDE overlay. The preference itself is
+// now ON in the canonical SBND config (validation-round-2 adoption: weight 0.5,
+// rescue 0.2, gate ks 0.3 / pred-frac 0.02), so beam_pref=false here just inherits
+// production; beam_pref=true re-asserts the keys with the w/r args, which is how
+// BEAMPREF_WEIGHT/BEAMPREF_RESCUE scans override the production operating point.
+// The mechanisms, on flashes inside the C++ default window (0.2, 2.2) us — the
 // SBND BNB window after the frame_apply_at_caf correction:
 //   1. cull_inconsistent exemption (a beam-window bundle survives the rival-consistent
 //      drop and competes in the LASSO), and
