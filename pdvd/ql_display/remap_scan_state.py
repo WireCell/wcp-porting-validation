@@ -72,6 +72,10 @@ def main():
     ap.add_argument("--labels", action="append", default=[])
     ap.add_argument("--decisions", action="append", default=[])
     ap.add_argument("--tol", type=float, default=0.5, help="flash-time match tolerance (us)")
+    ap.add_argument("--time-map", default=None,
+                    help="tmerge_time_map.py JSON: translate pick times "
+                         "recorded at merged-away flash members to the "
+                         "surviving seed's time (doc 26)")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
@@ -88,6 +92,19 @@ def main():
         picks += picks_from_labels(p)
     for p in args.decisions:
         picks += picks_from_decisions(p)
+
+    if args.time_map:
+        with open(args.time_map) as fh:
+            m = json.load(fh)
+        pairs = m["events"].get(event.replace("evt", ""), [])
+        moved = 0
+        for i, (t, uid, src) in enumerate(picks):
+            for t_old, t_new in pairs:
+                if abs(t - t_old) <= args.tol:
+                    picks[i] = (t_new, uid, src)
+                    moved += 1
+                    break
+        print("[time-map] %s: %d pick times translated" % (event, moved))
 
     selected, seen = [], set()
     lost_flash, lost_bundle = [], []

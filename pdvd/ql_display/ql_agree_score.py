@@ -96,6 +96,51 @@ def load_truth(gold_path, decisions_dir):
     return truth
 
 
+def apply_time_map(truth, map_path, tol):
+    """Translate truth flash times across a tail-merge reprocess (doc 26).
+
+    map_path: tmerge_time_map.py output {events: {evt: [[t_old, t_new], ...]}}.
+    A truth entry recorded at a merged-away LATE member's time is moved to the
+    surviving seed's time.  If the same (uid, seed time) then carries both a
+    positive and a negative verdict (scanner kept the late member and rejected
+    the fast one, or vice versa), the positive wins -- post-merge there is one
+    flash and the scanner did endorse this cluster-flash pairing; the dropped
+    negative is reported, never silent.  No-op when map_path is None.
+    """
+    if not map_path:
+        return truth
+    with open(map_path) as fh:
+        m = json.load(fh)
+    n_moved = 0
+    for evt, entries in truth.items():
+        pairs = m["events"].get(str(evt), [])
+        if not pairs:
+            continue
+        for e in entries:
+            for t_old, t_new in pairs:
+                if abs(e["time"] - t_old) <= tol:
+                    e["time"] = t_new
+                    n_moved += 1
+                    break
+        # positive-wins collision resolution at translated times
+        drop = []
+        for i, e in enumerate(entries):
+            if e["positive"]:
+                continue
+            for p in entries:
+                if (p["positive"] and p["uid"] == e["uid"]
+                        and abs(p["time"] - e["time"]) <= tol):
+                    drop.append(i)
+                    print(f"[time-map] evt{evt}: dropping negative verdict "
+                          f"uid={e['uid']} t={e['time']:.2f} colliding with a "
+                          f"positive after merge translation")
+                    break
+        for i in reversed(drop):
+            entries.pop(i)
+    print(f"[time-map] translated {n_moved} truth times using {map_path}")
+    return truth
+
+
 def find_truth(entries_by_uid, uid, time, tol):
     """Best truth entry for (uid, time) within tol, else None."""
     best, best_dt = None, tol
@@ -248,10 +293,14 @@ def main():
     ap.add_argument("--out-root", default="work/ql_scores")
     ap.add_argument("--self-check", action="store_true",
                     help="also reproduce the unfiltered 67.2%% baseline join")
+    ap.add_argument("--truth-time-map", default=None,
+                    help="tmerge_time_map.py JSON: translate truth flash "
+                         "times across a tail-merge reprocess (doc 26)")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
     truth = load_truth(args.gold, args.decisions_dir)
+    truth = apply_time_map(truth, args.truth_time_map, args.tol)
 
     out_dir = os.path.join(args.out_root, args.tag)
     if os.path.exists(os.path.join(out_dir, "scores.json")) and not args.force:

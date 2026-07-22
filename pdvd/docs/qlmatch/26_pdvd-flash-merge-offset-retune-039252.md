@@ -227,6 +227,47 @@ All 18 scan-set events (298567..298805 step 14, includes crossers
   `[-1, id]` hit provenance). No genuine pile-up absorbed anywhere: narrow
   second onsets and unlit-channel flashes all left alone.
 
+### Step 4 (2026-07-22): merge-aware scan remap — flash change is
+### agreement-neutral
+
+Repro:
+```
+./scripts/stage_ql_tag.sh 39252 <idx> tm0k   # + tm0, idx 0..17
+PDVD_MAX_JOBS=6 PDVD_LIGHT_SUFFIX=_keep   ./run_clus_evt.sh -calib -s tm0k 39252 all
+PDVD_MAX_JOBS=6 PDVD_LIGHT_SUFFIX=_tmerge ./run_clus_evt.sh -calib -s tm0  39252 all
+python3 ql_display/tmerge_time_map.py --old-tag tm0k --new-tag tm0 --out work/ql_scores/tm0/time_map.json
+python3 ql_display/ql_agree_score.py --tag tm0k
+python3 ql_display/ql_agree_score.py --tag tm0 --truth-time-map work/ql_scores/tm0/time_map.json
+```
+
+Tooling: new `ql_display/tmerge_time_map.py` (per-event old→new flash-time
+pairs: a gone flash maps to the nearest earlier flash surviving in BOTH
+dumps within 3.5 µs — 59 pairs across the 18 events, 0 unmapped; 86
+light-level merges → 59 because QL flash admission never admitted the small
+ones); `ql_agree_score.py --truth-time-map` and `remap_scan_state.py
+--time-map` (both default-off, byte-identical behavior without the flag)
+translate truth/pick times recorded at merged-away members to the seed time,
+with reported positive-wins collision resolution.
+
+Scores (objective tiers, long tracks, tol 0.5 µs; both arms at TODAY's
+production runner defaults, only the light tag differs):
+
+| arm | agree | phantom | agree% | missed | missed% | unknown |
+|---|---|---|---|---|---|---|
+| `tm0k` (_keep light) | 764 | 118 | 86.6% | 78 | 9.3% | 180 |
+| `tm0` (_tmerge light) | 763 | 118 | 86.6% | 79 | 9.4% | 182 |
+
+`tm0k` reproduces the documented ac3 op point exactly (764/118/78) —
+baseline confirmed. The merge arm moves 16 truth times (2 negative verdicts
+dropped by positive-wins at evt298749 t=60.65 — a split pair whose two
+scanner verdicts reunite as agrees). Redistribution detail: gains
+298595 (+1 agree/−1 missed), 298749 (+2/−2), phantoms −1 at
+298567/298609/298665; losses are single marginal pairs at
+298735/298763/298777/298609/298805 whose LASSO pick shifted when the merged
+flashes changed the candidate set. Net −1 agree / +1 missed / +0 phantom out
+of 842 positives: **the tail merge is agreement-neutral at the current op
+point** — the doc-23 pathology fix costs nothing on the scan set.
+
 ## Files
 
 - `scripts/aca_flash_split.py`, `scripts/aca_flash_wf.py`,
