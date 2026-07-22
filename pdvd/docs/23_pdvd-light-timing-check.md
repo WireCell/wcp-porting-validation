@@ -395,6 +395,76 @@ self-trigger populations still sit +0.75/+0.82 µs off the cathode stream),
 but the *charge* side is now demonstrated to be the valid external reference
 proposed there.
 
+### §7b Follow-ups (2026-07-22, same day): the pull vs the lag, and the estimator conventions
+
+Repro: `python3 scripts/aca_A_conventions.py` → the one-axis figure below;
+the residual table is printed by the snippet in that script's header /
+recomputed in this section.
+
+![track A conventions](pics/pdvd_light_timing_aca_A_conventions.png)
+
+**(a) Would absorbing the +13.507 µs pull into the flash time improve the
+light↔charge consistency?  No — it makes it ~3× worse and flips the sign.**
+Charge (anode-touch erf midpoint, frame axis) minus flash time under the two
+conventions, all six half-measurements:
+
+| trk/half | flash = raw+metadata | flash = raw+metadata+13.507 (current Bee/calib `time`) |
+|---|---|---|
+| A bot / A top | +3.51 / +3.50 | −10.00 / −10.00 |
+| B bot / B top | +8.47 / +2.67 | −5.04 / −10.84 |
+| C bot / C top | +3.29 / +1.89 | −10.21 / −11.61 |
+| **mean ± rms** | **+3.89 ± 2.12** | **−9.62 ± 2.12** |
+
+With metadata-only folding the residual is **+3.9 ± 2.1 µs — numerically the
+configured collection-plane SP time offset `ctoffset_b/_t = +4 µs`**
+(`cfg/.../protodunevd/sp.jsonnet:59-60,127`, "consistent with FR"), i.e. the
+closure is complete: light and charge agree at the ≲2 µs level once the known
+SP convention is accounted.  Folding the pull in puts the flash ~10 µs *after*
+the anode-touch charge — charge preceding its own light, unphysical as a time
+statement.  The 13.507 µs pull is a *matcher x-containment margin* (2 cm,
+tuned on cathode-crosser hand labels, demotion doc §10); its timing-equivalent
+content is ~3× the true lag.  If the *displayed* time should equal the
+physical charge-clock flash time, the right constant is ≈ ctoffset (+4 µs),
+or display `raw + metadata` and keep the pull internal to the matcher gates —
+an owner decision, nothing changed here.
+
+**(b) The reconstructed flash time IS the pulse peak.**  On the raw axis the
+reco flash sits at the peak (track A: 3519.75 vs 20%-rise 3519.65), as the
+accumulator-bin construction intends.  The woodpecker track-A figure
+(`pics/image.png` copy; `plot_light_hist2d_charge_acacrosser2.py`) shows its
+"matched golden flash gid129 → −1480.5 µs" line ~12 µs after the light and
+annotates it "flash time is PE-wtd mean, sits in-tail" — that line is the
+**calib `time` (1019.45), which carries the +13.507 pull**: converting the
+*raw* flash instead lands at −1493.99, exactly on the bright band.  The ~12 µs
+is (a) of this section, not a property of the flash reconstruction.
+
+**(c) Reconciliation with the woodpecker follow-up analysis — full agreement
+on the physics, differences are estimator conventions.**  The Jul-22
+woodpecker scripts (`plot_light_hist2d_charge*.py`) independently adopt
+low-tick = anode, verify the raw light at the charge-derived times for both
+evt-3 crossers, and note the calib-stored flash for track B is wrong —
+all matching §7.  Two conventions differ:
+
+* *Charge estimator*: woodpecker uses the first-sample-above-threshold
+  (by-eye) tick — for a smeared edge that sits ~2σ ≈ 2–3 ticks *before* the
+  erf midpoint (track A: ticks 2016/2017 vs erf 2018.9/2021.3).  The erf
+  midpoint is the unbiased arrival of the tip charge; the threshold onset
+  partially cancels the ctoffset by construction.
+* *Light reference*: woodpecker compares to the pulse *peak* (~0.5–1 µs after
+  the 20%-rise).
+
+Hence their track-A "charge ≈ light peak (≲1 µs)" and our "erf-mid = rise
++3.6 µs" are the same configuration.  For track B, their "the two charge
+times (383.6 / 390.9 µs rel-trigger) bound the flash (386.1–386.4)" is the
+onset-estimator version: the BDE (bottom) anode edge of that track is
+genuinely soft (grazing entry, erf σ = 4.0 ticks; low-level charge from tick
+~5767 while the erf midpoint is 5789.3), so its threshold onset lands early.
+With erf midpoints both charge times sit *after* the flash (+2.7 / +8.5 µs)
+— as they physically must — and the two analyses agree within the stated
+per-edge read uncertainty.  The Jul-21 `ANALYSIS_aca_crosser.md` numbers
+(geometric t0 ≈ 435 µs → gid106) are superseded by the woodpecker Jul-22
+scripts themselves.
+
 ## Summary
 
 | claim | evidence |
@@ -410,6 +480,8 @@ proposed there.
 | light↔charge **absolute** bookkeeping closes to ≈ +4 µs (SP edge lag) | §7: 3 anode-crossing cosmics, 6 half-measurements, charge-derived time lands on a raw cathode pulse every time |
 | the +13.507 µs (2 cm) production pull is a charge-placement/matcher offset, **not** a light-time shift | §7 time bases; `run_clus_evt.sh` `PDVD_QL_EXTRA_OFFSET_US`; raw opflash times untouched, Bee `op_t` = raw + (metadata + 13.507) |
 | W-streak low tick = anode touch (crate-skew coincidence 2.4 ticks; light pulse there) | §7 finding 3 |
+| charge−flash = +3.9 ± 2.1 µs = the configured SP `ctoffset` (+4 µs); absorbing the 13.507 pull into the flash time would flip the sign and triple the residual | §7b (a), 6 half-measurements |
+| reco flash time = pulse peak; the "~12 µs late flash" in the woodpecker charge-clock figure is the pull in the calib `time`, not a PE-weighted-mean tail | §7b (b), conventions figure |
 
 ## Files
 
@@ -419,6 +491,8 @@ proposed there.
   `docs/qlmatch/scripts/fit_endpoints_298609.py`,
   `docs/qlmatch/scripts/aca_light_check.py` — §7 (charge-side W corridors +
   erf edges; raw-light closure figures `pics/pdvd_light_timing_aca_{A,B,C}.png`).
+* `docs/qlmatch/scripts/aca_A_conventions.py` — §7b one-axis conventions
+  figure `pics/pdvd_light_timing_aca_A_conventions.png`.
 * `docs/pics/pdvd_light_timing_overview.png`
 * `docs/pics/pdvd_light_timing_zoom.png`
 * `docs/pics/pdvd_light_timing_residual.png`

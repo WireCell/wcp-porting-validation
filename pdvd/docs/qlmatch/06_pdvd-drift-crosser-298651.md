@@ -298,3 +298,49 @@ result is
 still below the 0.153 data-chain value in use when doc 06 was first written and
 below the 0.1568 toolkit default; the ccprod chain has since moved to 0.148073,
 which these two tracks support.  Population follow-up beyond n=2 remains open.
+
+### Velocity consistency across the two tracks, and why track A renders "longer than the max drift" in Bee
+
+**Added 2026-07-22 (owner question).**  The two tracks use the *identical*
+calculation (erf midpoints both ends, same σ model, same DFULL); the four
+halves and their apparent spans at the display velocity 0.148073 are:
+
+| half | t_start | t_end | Δt (µs) | span = Δt·v (cm) | v (cm/µs) |
+|---|---|---|---|---|---|
+| 298609 bot:37 | 2018.9 | 6615.5 | 2298.3 | **340.32** | 0.14731 |
+| 298609 top:79 | 2021.3 | 6578.3 | 2278.5 | 337.38 | 0.14858 |
+| 298651 bot:35 | 579.8 | 5160.0 | 2290.1 | 339.10 | 0.14783 |
+| 298651 top:95 | 592.2 | 5157.5 | 2282.7 | 338.00 | 0.14831 |
+
+DFULL = 338.55 cm, so any half with span > 338.55 draws *longer than the
+cathode→W distance* in a v = 0.148073 display.  That is the 298609 bottom
+half (+1.8 cm; the raw imaging extent, which reaches a few ticks beyond the
+erf midpoints, renders ~341–342 cm — clearly visible).  The 298651 halves sit
+within ±0.6 cm — "fits well".  A second, common effect: the T0-corrected
+(clustering-global) display shifts by the *folded* flash time, which includes
+the +13.507 µs pull, so **both** tracks' anode tips render ~1.4 cm beyond the
+W plane (~3 cm beyond the shield FV) — a constant overhang, not a span error.
+
+Where the A-bottom excess lives — the **cathode edge**, quantified by the
+coincidence audit (the two halves meet at the cathode at one spacetime point,
+so after removing the crate skew the two cathode reads must agree):
+
+| track | anode edges bot−top (expect = skew) | cathode edges bot−top (expect = skew) | BDE cathode late excess |
+|---|---|---|---|
+| 298609 | −2.4 ticks (expect −2.4) ✓ exact | +37.2 (expect −2.4) | **+39.6 ticks = 19.8 µs = 2.9 cm** |
+| 298651 | −12.4 (expect −15.2), +2.8 residual | +2.5 (expect −15.2) | **+17.7 ticks = 8.9 µs = 1.3 cm** |
+
+The anode edges are consistent to ≲3 ticks in both tracks; all of the
+disagreement is late charge on the **bottom-crate (BDE) cathode edge** — the
+same drift-parallel soft ramp flagged for the 298651 bot end (σ≈16) and the
+real in/near-cathode late charge of the evt 298567 census.  Cross-check:
+pinning each bottom half's cathode arrival to its (clean, TDE) partner's read
+via the crate skew gives bot 298609 → 0.14858 and bot 298651 → 0.14841, i.e.
+a coincidence-pinned two-track set of **0.14831–0.14858 (~0.1484)**, agreeing
+to 0.15 %.  So: (1) the two tracks' velocity measurements are consistent —
+the per-half spread is one systematic (BDE cathode-tail read), not two
+different velocities; (2) the headline mean 0.1480 treats the raw erf ends as
+the track termini and is therefore a *lower* bound flavor, while the
+coincidence-pinned 0.1484 discounts the BDE tail entirely — the truth sits in
+that ±0.002 band, which is the uncertainty already quoted.  No default is
+moved by this note.
