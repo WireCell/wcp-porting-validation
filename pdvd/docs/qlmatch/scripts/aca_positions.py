@@ -74,6 +74,52 @@ for trk, (evt, tag, raw, halves) in TRACKS.items():
             print(line)
     print()
 
+def on_track(P, cut=8.0):
+    """PCA line fit (two-pass) keeping points within `cut` cm perpendicular
+    residual. A-C-A crossers are straight and nearly drift-parallel, so this
+    separates off-track blobs merged into the cluster from the real track
+    (including its collinear in-cathode tail). Endpoints are stable for
+    cut = 4..20 cm on all six clusters."""
+    ctr = P.mean(0)
+    keep = np.ones(len(P), bool)
+    for _ in range(2):
+        Q = P - ctr
+        _, _, vt = np.linalg.svd(Q, full_matrices=False)
+        axis = vt[0]
+        r = np.linalg.norm(Q - np.outer(Q @ axis, axis), axis=1)
+        keep = r < cut
+        ctr = P[keep].mean(0)
+    return keep, r
+
+
+print("3D imaged point-cloud endpoints (on-track = PCA line residual < 8 cm):")
+for trk, (evt, tag, raw, halves) in TRACKS.items():
+    zf = zipfile.ZipFile(os.path.join(WORK, tag, "mabc-all-apa.zip"))
+    d = json.loads(zf.read("data/0/0-img-global.json"))
+    cid_all = np.asarray(d["cluster_id"])
+    XYZ = np.c_[np.asarray(d["x"]), np.asarray(d["y"]), np.asarray(d["z"])]
+    for half, (cid, ta, tc) in halves.items():
+        P = XYZ[cid_all == cid]
+        keep, resid = on_track(P)
+        xs_app = P[keep, 0]
+        for pull in (False, True):
+            lab = "pull" if pull else "meta"
+            fold = raw + OFF[evt][half] + (PULL_US if pull else 0.0)
+            xc = xs_app - fold * V if half == "bot" else xs_app + fold * V
+            if half == "bot":
+                tip, far = xc.min(), xc.max()
+            else:
+                tip, far = xc.max(), xc.min()
+            print(f"{trk} {half} c{cid} [{lab:4s}] anode-tip {tip:8.2f} u={u_of(half, tip):7.2f}"
+                  f" (vs W {abs(tip) - W:+.2f}) | cath-end {far:8.2f} u={u_of(half, far):7.2f}"
+                  f" (past surface {CSURF - abs(far):+.2f})")
+        n_off = (~keep).sum()
+        if n_off:
+            xo = P[~keep, 0]
+            print(f"      off-track dropped: {n_off} pts, apparent x[{xo.min():.1f},{xo.max():.1f}],"
+                  f" residual up to {resid[~keep].max():.0f} cm")
+    print()
+
 print("Bee img-global + flash-shift (true flash, WITH pull) -- displayed endpoints:")
 for trk, (evt, tag, raw, halves) in TRACKS.items():
     zf = zipfile.ZipFile(os.path.join(WORK, tag, "mabc-all-apa.zip"))

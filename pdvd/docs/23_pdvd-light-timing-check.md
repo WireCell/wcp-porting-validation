@@ -491,8 +491,9 @@ So the Bee red box spans exactly [cathode surface, W plane] = [3.00, 341.55];
 the containment gates sit **outside** the box on both ends (2.36 cm beyond the
 anode face, 2.00 cm beyond the cathode face).
 
-**Track-end positions (erf midpoints, true flash), T0 = raw+metadata ("meta")
-vs +13.507 µs pull (current production placement):**
+**Track-end positions — 2D W-plane collection signal (erf midpoints of the
+`hw_gauss` corridor edges, no 3D reconstruction involved), true flash, T0 =
+raw+metadata ("meta") vs +13.507 µs pull (current production placement):**
 
 | trk/half | anode end meta | anode end pull | cathode end meta | cathode end pull |
 |---|---|---|---|---|
@@ -502,6 +503,34 @@ vs +13.507 µs pull (current production placement):**
 | B top (c83) | +341.16 (0.39 short) | +343.16 (1.61 past, margin 0.75) | window-truncated | window-truncated |
 | C bot (c35) | −341.06 (0.49 short) | −343.06 (1.51 past, margin 0.85) | −1.96 (1.04 past surface, ceiling margin 0.96) | −3.96 (0.96 short of surface) |
 | C top (c95) | +341.27 (0.28 short) | +343.27 (1.72 past, margin 0.64) | +3.27 (0.27 short of surface) | +5.27 (2.27 short) |
+
+**The same endpoints from the 3D imaged point cloud** (img-global points of
+the six clusters, restricted to the track line: two-pass PCA fit, perpendicular
+residual < 8 cm — endpoints stable for any cut 4–20 cm; this drops the
+off-track blobs merged into the clusters, e.g. c37's 43 stray points at
+apparent x ±223 and c95's 10-point clump ~70 cm away in (y,z)):
+
+| trk/half | anode tip meta | anode tip pull | cathode end meta | cathode end pull | vs the 2D erf read |
+|---|---|---|---|---|---|
+| A bot (c37) | −340.95 | −342.95 | +0.51 | −1.49 | anode agrees to 0.1; imaged cathode end 1.2 deeper (falling-edge tail is imaged) |
+| A top (c79) | +340.83 | +342.83 | +3.52 | +5.52 | agrees to 0.1–0.2 |
+| B bot (c50) | −340.98 | −342.98 | −28.85 (window edge) | −30.85 (window edge) | anode 0.7 deeper than erf (soft grazing edge: rising tail imaged); cathode truncated |
+| B top (c83) | +341.46 | +343.46 | +29.02 (window edge) | +31.02 (window edge) | anode 0.3 past erf; cathode truncated |
+| C bot (c35) | −334.83 | −336.83 | −1.66 | −3.66 | **anode 6.2 cm short of erf** (corridor misses the earliest charge); cathode agrees to 0.3 |
+| C top (c95) | +309.89 | +311.89 | +2.79 (+ tail to −17.7) | +4.79 (+ tail to −15.7) | **anode 31 cm short of erf** (doc-06 sparse half, corridor stops ≈ tick 961); cathode agrees to 0.5, plus the collinear in-cathode tail |
+
+The two measurements are the same drift-time axis (a 3D point's x *is* its
+slice tick), so wherever the imaging solved the corridor they agree to
+0.1–0.7 cm — the differences are ticks the imaging did not solve (C's
+anode-end gaps, B's readout truncation) plus edge-tail points extending
+slightly past the erf midpoint. One display caveat found doing this: the
+raw min/max of c95 suggests an anode tip at +326.4, but those 10 points sit
+~70 cm off the track line in (y,z) — an unrelated blob merged into the
+cluster, not the track; the true on-track imaged tip is +311.9 (pull).
+Likewise c95's cathode-side points continue past the on-track end as the
+**in-cathode late-charge tail** (61 points, apparent x −35 → −63, drifting up
+to ~30 cm off-line laterally — distorted late charge, the "C cathode outside"
+appearance below).
 
 Readings:
 
@@ -532,7 +561,7 @@ Readings:
 | B bot c50 | −343.0 (1.4 past face) | −30.9 = readout-window edge | cathode side truncated |
 | B top c83 | +343.5 (1.9 past face) | +31.0 = window edge | |
 | C bot c35 | **−336.8 (4.7 INSIDE face)** | −3.7…−4.0 (just inside face) | corridor misses the first ~5 cm of anode-end charge |
-| C top c95 | **+326.4 (15.2 INSIDE face)** | −15.9…−17.7 (13-pt tail past x=0) | doc-06 "sparser top half": corridor misses ~15 cm at the anode; imaged in-cathode late tail |
+| C top c95 | **+311.9 on-track (29.7 INSIDE face)** | −15.9…−17.7 (tail past x=0) | doc-06 "sparser top half": corridor misses ~30 cm at the anode; raw max +326.4 is a 10-pt off-track blob (Δ(y,z) ≈ 70 cm), not the track; imaged in-cathode late tail |
 
 This reconciles the three Bee observations exactly:
 
@@ -542,7 +571,7 @@ This reconciles the three Bee observations exactly:
   *inside* the face.
 * **"Track C looks consistent with the box at the anode"** — an imaging
   artifact, not better timing: both C corridors miss the earliest anode-end
-  charge (bot starts 4.7 cm in; the sparse top half 15.2 cm in — doc 06 noted
+  charge (bot starts 4.7 cm in; the sparse top half ~30 cm in — doc 06 noted
   its imaging stops at tick 961 while the W charge continues to 592), so the
   1.5–1.7 cm overhang that *would* show (erf row above) is simply not in the
   point cloud.
@@ -593,7 +622,8 @@ re-optimizes the global LASSO like any registration change (demotion doc
 | position ladder: shield 339.91 < W 341.55 (= Bee anode face) < containment floor 343.91; cathode surface 3.00 (= Bee cathode face) > containment ceiling 1.00 | §7c table |
 | meta-only track ends sit 0.3–0.5 cm inside W (the SP lag); the pull pushes them 0.8–1.7 cm past W with 0.6–0.9 cm to the anode gate | §7c, 6 half-measurements |
 | the pull is containment work, not timing: without it the BDE in-cathode late charge (1.3–2.9 cm) breaks the cathode gate (A bot 0.29 cm past ceiling) | §7c; demotion doc §10 |
-| Bee observations reconciled: A/B anode overhang 1.3–1.9 cm = the pull; C's "clean" anode = imaging misses the first 5–15 cm; C's cathode spill = imaged in-cathode late tail (13 pts to −17.7) | §7c displayed-endpoint table |
+| Bee observations reconciled: A/B anode overhang 1.3–1.9 cm = the pull; C's "clean" anode = imaging misses the first 5–30 cm; C's cathode spill = imaged in-cathode late tail (to −17.7) | §7c displayed-endpoint table |
+| 2D W-signal (erf) and 3D on-track imaged endpoints agree to 0.1–0.7 cm wherever the corridor is solved; 3D-only gaps: C anode ends (6 / 31 cm unimaged), B cathode (truncated); c95 raw max is a 70-cm-off-line blob | §7c 3D table (PCA line filter) |
 
 ## Files
 
