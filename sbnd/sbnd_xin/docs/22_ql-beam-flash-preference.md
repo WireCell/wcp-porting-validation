@@ -21,6 +21,18 @@ export SBND_WORK_ROOT=$PWD/work-fsprod-bpw05          # fresh tree, evt<ID> syml
 SBND_MAX_JOBS=6 ./run_ql_evt.sh data all -beam-pref   # population scan
 # knob-off A/B (fresh SBND_WORK_ROOT=work-fsprod-bpAB2, no -beam-pref):
 # member-hash every mabc-all-apa.zip against work-fsprod-rse with abtest/hash_archive.py
+
+# Validation round 2 (hand-scan + nueCC tuning; see §Validation round 2):
+# hand-scan roots (evt<ID> symlinked from work/, both modes, per operating point):
+SBND_WORK_ROOT=$PWD/work-bpval2-w050 SBND_MAX_JOBS=6 ./run_ql_evt.sh data all -calib -beam-pref
+SBND_WORK_ROOT=$PWD/work-bpval2-w050 SBND_MAX_JOBS=6 ./run_ql_evt.sh mc   all -calib -beam-pref
+# reco1 roots (evt<ID> symlinked from work-fsprod), BEAMPREF_WEIGHT scans the L1 weight:
+SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod \
+SBND_WORK_ROOT=$PWD/work-fsprod-bpv2-w050 BEAMPREF_WEIGHT=0.5 \
+SBND_MAX_JOBS=6 ./run_ql_evt.sh data all -calib -beam-pref
+# scoring:
+./ql_beam_pref_score.py work-bpval-off work-bpval2-w050    # vs work/ql_labels/{data,mc}
+./ql_beam_pref_tune.py  work-fsprod-bpv-off work-fsprod-bpv2-w050
 ```
 
 Reading the numbers below: Bee flash indices/times are from the baseline
@@ -110,6 +122,8 @@ byte-identical when off:
 | `beam_pref_tlow` / `beam_pref_thigh` | 0.2 / 2.2 µs | (default) | window on **corrected** flash time |
 | `beam_pref_lasso_weight` | 1.0 (inert) | 0.5 | per-column L1 weight multiplier for beam-window bundles in both LASSO rounds (`lasso_flag_factor`, composes with `lasso_boundary_weight`) — the beam bundle is shrunk less, tilting marginal competitions (fixes case 2, and case 1's reassignment) |
 | `beam_pref_rescue_scale` | 1.0 (inert) | 0.2 | empty-flash rescue steal guard: a NON-beam flash re-stealing a cluster FROM a beam-window flash must beat it by `mF < mX·scale`, not just strictly |
+| `beam_pref_max_ks` | 1e9 (inert) | 0.3 | bundle-quality gate (round 2): only a bundle with `ks_dis ≤ max_ks` receives the preference |
+| `beam_pref_min_pred_frac` | 0.0 (inert) | 0.02 | bundle-quality gate (round 2): only a bundle predicting ≥ this fraction of the flash's measured PE receives the preference |
 | (no knob) | — | — | `cull_inconsistent` exemption: a beam-window bundle survives the "rival kept a high/xtpc-consistent bundle" drop and competes in the LASSO (fixes case 1's pre-fit kill); xtpc scenario-1/joint-pin culls are NOT relaxed |
 
 Design choice: the user's "adjust the chisquare" is implemented as the LASSO
@@ -120,10 +134,11 @@ beyond the two competition points, and the chi2/ks numbers in the calib dumps
 stay honest.
 
 Threading: `QLMatching.{h,cxx}` (toolkit) → `sbnd_xin/qlmatching.jsonnet`
-shim overlay `beampref_on` (sets weight 0.5 / scale 0.2) →
-`wct-clus-matching-perevt.jsonnet` TLA `beam_pref` → `run_ql_evt.sh
--beam-pref`. The production config `cfg/pgrapher/experiment/sbnd/
-qlmatching.jsonnet` is untouched.
+shim overlay `beampref_on` (sets weight 0.5 / scale 0.2 / gate 0.3 / 0.02) →
+`wct-clus-matching-perevt.jsonnet` TLAs `beam_pref` /
+`beam_pref_weight` / `beam_pref_rescue` → `run_ql_evt.sh -beam-pref`
+(+ `BEAMPREF_WEIGHT` / `BEAMPREF_RESCUE` env for scans). The production
+config `cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet` is untouched.
 
 The rescue guard matters: with the aggressive weight 0.2 the LASSO gave the
 beam flash both big clusters of case 1, the emptied cosmic flash then
@@ -144,6 +159,12 @@ Knob-off gates (all with the final library, `local/lib` freshness checked):
   jsonnet (wcsonnet diff vs git HEAD); knob-on JSON carries
   `beam_pref/beam_pref_lasso_weight/beam_pref_rescue_scale` in the
   QLMatching node. `wcdoctest-match` 36/36.
+- Round-2 library (quality gate + weight/rescue TLAs), knob-off regression
+  gates re-run: all 48 reco1 `mabc-all-apa.zip` member-hash identical to
+  `work-fsprod-rse` (tree `work-fsprod-bpv2-off`), and all 20 hand-scan
+  events identical to the round-1-library off run (`work-bpval2-off` vs
+  `work-bpval-off`). Compiled off-config still byte-identical to git HEAD;
+  `wcdoctest-match` 36/36 again.
 
 Knob-on, the two reported cases (weight 0.5, work tree `work-fsprod-bpw05`):
 
@@ -156,29 +177,106 @@ Knob-on, the two reported cases (weight 0.5, work tree `work-fsprod-bpw05`):
   correctly matched on the APA1 side (101.433 µs ← big TPC1 cluster,
   unchanged).
 
-Population scan over all 48 events (final `flash_bundles_map` diff, knob-off
-vs knob-on):
+Round-1 population scan over all 48 events (final `flash_bundles_map` diff,
+knob-off vs ungated knob-on): weight 0.2 changed 46/48 events (173 moves onto
+beam flashes), weight 0.5 changed 44/48 (149 moves). Both case events fixed
+at either weight; this breadth motivated validation round 2 below, which
+added the bundle-quality gate and cut the churn by ~5× at the same fix rate.
 
-| lasso weight | events changed | cluster moves → beam | ← beam | other churn |
+## Validation round 2 — hand-scan truth + the 48-evt nueCC criterion
+
+Two independent ground-truth sets (owner's suggestion), both scored per
+operating point:
+
+1. **Hand-scan labels** — the 10 data + 10 MC events scanned with the
+   `ql_scan` viewer ([12_ql-scan-display.md](12_ql-scan-display.md)); truth =
+   the `selected` `(flash_gid, main_cluster)` pairs in
+   `work/ql_labels/{data,mc}/.scan_state-evt*.json`, the same convention as
+   the ladder tuning in [16_highconsist-ladder.md](16_highconsist-ladder.md)
+   (93/100 data, 92/113 MC at ladder adoption). Scorer:
+   `ql_beam_pref_score.py`. The data sample is off-beam cosmics, so any
+   0.2–2.2 µs flash there is a random cosmic — this set measures *harm*.
+2. **The 48-evt reco1 nueCC criterion** — every event carries a neutrino, so
+   the dominant in-window flash should hold a light-consistent charge budget.
+   Grade per event (scorer `ql_beam_pref_tune.py`): GOOD = matched with
+   0.33 ≤ Σpred/meas ≤ 3, WEAK = matched outside that band, ORPHAN = no
+   cluster.
+
+**Round-2a finding (ungated weight scan 0.7/0.5/0.35/0.2).** The 48-evt side
+liked every weight ≤ 0.5 (48/48 GOOD), but the hand scans exposed a real
+failure mode: the down-weighted beam flash **sweeps up junk bundles** — tiny
+predictions (8–300 PE) at ks 0.4–0.8 and chi2/ndf 250–470 become near-free
+LASSO columns that mop up the beam flash's PE residual, and occasionally
+steal a hand-tagged true match (MC evt 18 cluster 1 at ks 0.679; MC evt 41 a
+pred-8-PE bundle on a 3431-PE flash; data evt 1258 cluster 9 at ks 0.433).
+Agreement dropped 101→99 (MC) / 95→94 (data, w0.5). Meanwhile every genuine
+beam match across all cases sits at **ks ≤ 0.27 and pred ≥ 17% of the flash
+PE** — a clean separation.
+
+**Round-2b fix: bundle-quality gate.** `beam_pref_max_ks` = 0.3 and
+`beam_pref_min_pred_frac` = 0.02: a bundle only receives the preference
+(cull exemption, L1 down-weight, rescue guard) if it could plausibly *be*
+the beam match; junk bundles keep the un-preferred behavior.
+
+Hand-scan agreement (higher = better; "extra" = matcher selections the scan
+did not tag, beam-window subset in parentheses):
+
+| config | data agree /100 | data extra (beam) | MC agree /112 | MC extra (beam) |
 |---|---|---|---|---|
-| 0.2 | 46/48 | 173 | 2 | 47 |
-| 0.5 (adopted for the runner) | 44/48 | 149 | 2 | 42 |
+| knob OFF | 95 | 80 (10) | 101 | 67 (5) |
+| ungated w0.5 | 94 | 81 (26) | 99 | 69 (20) |
+| **gated w0.5 (adopted)** | **95** | 80 (14) | **101** | 67 (7) |
+| gated w0.7 | 95 | 81 (14) | 101 | 67 (7) |
+| gated w0.35 | 95 | 80 (14) | 100 | 68 (8) |
 
-Both case events are fixed at either weight; 0.5 is preferred because case 1
-resolves inside the LASSO (the cosmic keeps its own cluster instead of going
-charge-orphan) and the collateral churn is smaller.
+48-evt nueCC criterion + churn (moved pairs = symmetric diff of all selected
+`(flash, cluster)` pairs vs knob-off):
+
+| config | GOOD | WEAK | events changed | pairs → beam | ← beam | other churn |
+|---|---|---|---|---|---|---|
+| knob OFF | 47 | 1 (evt 246579) | — | — | — | — |
+| ungated w0.5 | 48 | 0 | 42/48 | 155 | 0 | 188 |
+| **gated w0.5 (adopted)** | **48** | **0** | **21/48** | **30** | 1 | 42 |
+| gated w0.7 | 47 | 1 (evt 246579) | 15/48 | 22 | 1 | 37 |
+| gated w0.35 | 48 | 0 | 22/48 | 32 | 1 | 44 |
+
+Operating-point conclusions:
+
+- **Weight 0.5 + gate (0.3 / 0.02) is the adopted point** (now the shim/runner
+  default): zero hand-scan regression on either sample, both reported cases
+  fixed, 48/48 GOOD beam budgets, and 5× less churn than ungated.
+- 0.7 is too weak (case 1's ident-7 recovery needs ≤ 0.5); 0.35 loses one MC
+  hand-scan match; 0.2 (round 1) over-collects (case 1's beam flash also
+  grabs ident 8, orphaning the cosmic).
+- Both cases at gated w0.5: evt 246579 beam ← ident 7 only (pred 27948);
+  evt 116962 beam ← idents 4+9+13 (pred 18037/15287) — identical to the
+  round-1 fixes, without the junk riders (`(1,3)` at ks 0.57–0.66 on case 1,
+  `(2,3)` at ks 0.31–0.40 on case 2 are gone).
+- The 7 knob-added hand-scan pairs that survive the gate are small
+  (5–143 pred PE), light-consistent (chi2/ndf 0.5–4.1) pickups by small
+  (120–391 PE) in-window flashes — plausible small activity the scan never
+  tagged, not steals. 6 of 7 sit at ks ≤ 0.27; one (MC evt 31, ks 0.53)
+  arrives second-order via the standard empty-flash rescue, not via the
+  preference itself.
+- Two MC beam-window true pairs stay missed at every config *including
+  knob-off* (evt 9 pair (1,8): ks 0.607, chi2/ndf 257; evt 18 pair (2,7):
+  ks 0.283, chi2/ndf 433, pred 3.4% of the flash): the light model flatly
+  disagrees with the hand tag there, and the gate correctly refuses to force
+  the first. Pre-existing, not a knob effect.
 
 ## Status & caveats
 
-- Default OFF everywhere; enabled only per-run via `-beam-pref`. **Not**
-  adopted in the SBND production config: the direction of the moves is right
-  (essentially one-way traffic onto beam flashes, ~3 clusters/event) but only
-  the two reported cases have ground truth. Before adopting as default, a
-  hand-scan of a changed-event sample (44 of 48 events change; diff the
-  `flash_bundles_map` blocks of `work-fsprod-bpAB2` vs `work-fsprod-bpw05`)
-  should confirm the moved clusters really are in-time — the aggressive tail risk
-  is dragging a genuine cosmic to the beam T0 (~±25 cm x-shift for the
-  ±150 µs flashes, worse for ms-scale ones).
+- Default OFF everywhere; enabled only per-run via `-beam-pref` (operating
+  point weight 0.5, rescue 0.2, gate ks ≤ 0.3 / pred ≥ 2%; scannable via
+  `BEAMPREF_WEIGHT`/`BEAMPREF_RESCUE`). **Not** adopted in the SBND
+  production config — but round 2 replaces round 1's "needs a hand-scan"
+  caveat with actual hand-scan evidence: zero regression on 20 labeled
+  events (10 off-beam data + 10 nu MC), 48/48 sane beam budgets on the
+  nueCC sample, and the churn is down to ~1 pair/event, essentially one-way
+  onto beam flashes. Remaining before default-on: a spot hand-scan of the
+  21 changed reco1 events (diff `work-fsprod-bpv-off` vs
+  `work-fsprod-bpv2-w050`) and a decision on whether the MC production
+  chain wants the same window.
 - The knob presumes a *corrected* flash time base (`frame_apply_at_caf`,
   [21_reco1-input.md](21_reco1-input.md)); on uncorrected samples the window
   must be widened or the times fixed first.

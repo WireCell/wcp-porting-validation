@@ -110,6 +110,12 @@ AUTOMASK="false"
 # the beam flash competes for (and tends to win) its clusters. See
 # docs/22_ql-beam-flash-preference.md (reco1 evts 246579/116962 case study).
 BEAMPREF="false"
+# BEAMPREF_WEIGHT / BEAMPREF_RESCUE: beam-preference operating point (inert unless
+# -beam-pref). weight = LASSO L1 multiplier for beam-window bundles (validated 0.5;
+# 0.2 over-collects), rescue = empty-flash rescue steal guard scale. Env-overridable
+# for scans, e.g. BEAMPREF_WEIGHT=0.35 ./run_ql_evt.sh data all -beam-pref -calib.
+BEAMPREF_WEIGHT="${BEAMPREF_WEIGHT:-0.5}"
+BEAMPREF_RESCUE="${BEAMPREF_RESCUE:-0.2}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -244,6 +250,8 @@ process_event() {
         --tla-code "pmt_nl=$PMT_NL" \
         --tla-code "auto_mask=$AUTOMASK" \
         --tla-code "beam_pref=$BEAMPREF" \
+        --tla-code "beam_pref_weight=$BEAMPREF_WEIGHT" \
+        --tla-code "beam_pref_rescue=$BEAMPREF_RESCUE" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \
