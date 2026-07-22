@@ -29,3 +29,6 @@ __pycache__
 input-*
 temp
 rebase-scan
+*.h5
+*.bz2
+*.out
