@@ -644,6 +644,25 @@ self-trigger lateness is why the wall/PMT channels appear only in the second
 flash — but the PE-dominant driver of the split is the **cathode-XA slow
 scintillation component**.
 
+The channel-vs-time maps make the cut visible directly (repro:
+`python3 scripts/aca_flash_wf.py`; left raw ped-sub ADC, right the
+wiener-inspired decon with the production templates and cathode
+`wi_sigma = 1.25 MHz`, log color):
+
+![track B raw vs decon](pics/pdvd_flash_split_wf_B.png)
+![track C raw vs decon](pics/pdvd_flash_split_wf_C.png)
+
+Reading the maps: all 16 cathode channels light up together at the fast-member
+line (white) and the *same* pulse continues smoothly through the late-member
+line (red) — there is no second onset at the red line, on any channel, in
+either raw or decon. The red line sits in the middle of the one pulse's tail;
+everything above it is the slow-component light that the finder booked as the
+"second flash" (plus, off this plot, the late-stamped self-trigger hits). This
+is the picture to keep in mind for a fix: any assembly that keeps integrating
+a seed while its own lit channels still carry contiguous signal (or that
+merges a later flash whose hits are wide late-tail hits on the seed's own
+channels) would reunite the pair.
+
 **Track A is the control that shows the split is bin-phase luck, not
 topology.** Same A-C-A geometry, one flash: its accumulator bins happened to
 stay contiguous, so the flash (hits 3519.63–3520.50) absorbed the late
@@ -729,6 +748,9 @@ tracks):
 * `docs/qlmatch/scripts/aca_flash_split.py` — §7d flash-pair anatomy
   (family-resolved PE, slow-tail hits, unassigned light, raw per-family
   peaks).
+* `docs/qlmatch/scripts/aca_flash_wf.py` — §7d channel-vs-time raw/decon maps
+  `pics/pdvd_flash_split_wf_{B,C}.png` (WI decon python port + production
+  templates).
 * `docs/pics/pdvd_light_timing_overview.png`
 * `docs/pics/pdvd_light_timing_zoom.png`
 * `docs/pics/pdvd_light_timing_residual.png`
