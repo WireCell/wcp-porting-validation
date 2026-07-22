@@ -465,6 +465,114 @@ per-edge read uncertainty.  The Jul-21 `ANALYSIS_aca_crosser.md` numbers
 (geometric t0 ≈ 435 µs → gid106) are superseded by the woodpecker Jul-22
 scripts themselves.
 
+### §7c Position ladder at the anode and cathode: planes, gates, track ends, Bee boxes (2026-07-22)
+
+Repro: `cd pdvd/docs/qlmatch && python3 scripts/aca_positions.py` — prints every
+number in this section (erf-based endpoints under both T0 conventions, the
+containment-gate margins, and the Bee-displayed imaged endpoints from the
+ccprod `mabc-all-apa.zip` img-global dumps).
+
+**The ladder, per drift side (both crates are mirror-symmetric in |x|; the
+drift coordinate `u = s·(x − anode_x)` has u = 0 at the shield):**
+
+| position | \|x\| (cm) | u (cm) | what it is |
+|---|---|---|---|
+| anode flag-window outer edge | 335.91 | +4.00 | `anode_ext2` (flag_at_x_boundary window) |
+| **shield plane** (= FV "anode") | **339.91** | 0 | DetectorVolumes inner bound; QLMatching `anode_x` |
+| **W collection plane** | **341.55** | −1.64 | charge-placement reference (tick 0 ⇒ W); **Bee box anode face** |
+| **anode containment floor** | **343.91** | −4.00 | `first_u > anode_ext1(−2) − margin(2)` — production gate |
+| … | | | |
+| cathode flag-window inner edge | 5.00 | 334.91 | `cathode_ext2` (−2 cm from FV cathode) |
+| **cathode surface** (= FV "cathode") | **3.00** | 336.91 | drift-facing face of the 6 cm slab; **Bee box cathode face** |
+| **cathode containment ceiling** | **1.00** | 338.91 | `last_u < u_cathode + cathode_ext1(2.0)` — production gate |
+| cathode plane center | 0.00 | 339.91 | GDML CathodeBlock mid-plane |
+
+So the Bee red box spans exactly [cathode surface, W plane] = [3.00, 341.55];
+the containment gates sit **outside** the box on both ends (2.36 cm beyond the
+anode face, 2.00 cm beyond the cathode face).
+
+**Track-end positions (erf midpoints, true flash), T0 = raw+metadata ("meta")
+vs +13.507 µs pull (current production placement):**
+
+| trk/half | anode end meta | anode end pull | cathode end meta | cathode end pull |
+|---|---|---|---|---|
+| A bot (c37) | −341.03 (0.52 short of W) | −343.03 (**1.48 past W**, floor margin 0.88) | −0.71 (2.29 past surface, **0.29 past ceiling → uncontained**) | −2.71 (0.29 past surface, ceiling margin 1.71) |
+| A top (c79) | +341.03 (0.52 short) | +343.03 (1.48 past, margin 0.88) | +3.65 (0.65 short of surface) | +5.65 (2.65 short; past the 5.00 flag edge) |
+| B bot (c50) | −340.30 (1.25 short; soft grazing edge) | −342.30 (0.75 past, margin 1.61) | window-truncated (arrival ≈ tick 10360) | window-truncated |
+| B top (c83) | +341.16 (0.39 short) | +343.16 (1.61 past, margin 0.75) | window-truncated | window-truncated |
+| C bot (c35) | −341.06 (0.49 short) | −343.06 (1.51 past, margin 0.85) | −1.96 (1.04 past surface, ceiling margin 0.96) | −3.96 (0.96 short of surface) |
+| C top (c95) | +341.27 (0.28 short) | +343.27 (1.72 past, margin 0.64) | +3.27 (0.27 short of surface) | +5.27 (2.27 short) |
+
+Readings:
+
+1. **Meta-only placement is the physical one.** Every anode-touch end lands
+   0.3–0.5 cm *inside* the W plane (B bot 1.25, its edge is a grazing soft
+   ramp) — exactly the +4 µs SP `ctoffset` lag (0.59 cm) of §7b within the
+   per-edge read error. Ordering: shield < track end (meta) < W.
+2. **The pull pushes every anode tip past the W plane** by 0.75–1.72 cm
+   (2.00 cm minus the SP lag), leaving only **0.64–0.88 cm** of margin to the
+   343.91 containment floor. Ordering: W < track end (pull) < floor — barely.
+3. **At the cathode the pull is what keeps BDE halves contained.** The bottom
+   (BDE) cathode ends carry *real in-cathode late charge* (A: +39.6 ticks =
+   2.93 cm deeper than the top end after crate-skew correction; C: +17.7
+   ticks = 1.31 cm — the evt298567 tail census effect), so meta-only they sink
+   2.3 / 1.0 cm past the ±3 surface: **A bot lands 0.29 cm past the 338.91
+   containment ceiling → its true-flash bundle would be culled**, C bot
+   survives with 0.96 cm. With the pull both sit comfortably inside. Top (TDE)
+   ends stop 0.3–0.7 cm short of the surface either way (their late tail is
+   what B's truncation removed and C's crosses into the bot volume, below).
+
+**Bee-displayed endpoints (img-global points + flash-shift by the folded
+`op_t`, i.e. WITH the pull) — this is what the display comparison sees:**
+
+| trk/half | displayed anode tip | displayed cathode end | notes |
+|---|---|---|---|
+| A bot c37 | −343.1 | −1.5…−1.8 (18 pts past surface) | +11 stray pts to −374, 5 to +74 (outliers, not track) |
+| A top c79 | +342.8 (1.3 past face) | +4.3 | |
+| B bot c50 | −343.0 (1.4 past face) | −30.9 = readout-window edge | cathode side truncated |
+| B top c83 | +343.5 (1.9 past face) | +31.0 = window edge | |
+| C bot c35 | **−336.8 (4.7 INSIDE face)** | −3.7…−4.0 (just inside face) | corridor misses the first ~5 cm of anode-end charge |
+| C top c95 | **+326.4 (15.2 INSIDE face)** | −15.9…−17.7 (13-pt tail past x=0) | doc-06 "sparser top half": corridor misses ~15 cm at the anode; imaged in-cathode late tail |
+
+This reconciles the three Bee observations exactly:
+
+* **"A and B anode tips sit outside the Bee anode box"** — yes, by 1.3–1.9 cm
+  = the 2.0 cm pull minus the small true drift of the first imaged charge.
+  It is the pull, not a velocity error: meta-only the same tips are 0.3–1.3 cm
+  *inside* the face.
+* **"Track C looks consistent with the box at the anode"** — an imaging
+  artifact, not better timing: both C corridors miss the earliest anode-end
+  charge (bot starts 4.7 cm in; the sparse top half 15.2 cm in — doc 06 noted
+  its imaging stops at tick 961 while the W charge continues to 592), so the
+  1.5–1.7 cm overhang that *would* show (erf row above) is simply not in the
+  point cloud.
+* **"Track C cathode end a bit outside the cathode boundary"** — the top
+  half's imaged **in-cathode late-charge tail**: 13 points continue past the
+  +3 face through x = 0 down to −17.7 (the same real-late-charge effect as the
+  evt298567 census), while the bot half stops at −3.7, just inside its face.
+
+**Should the 13.507 µs pull be removed? Not alone — the naive expectation is
+right.** The closure (§7b) shows 13.507 µs is ~3× the true timing constant
+(+4 µs ctoffset), but the pull is doing *containment* work, not timing work:
+
+* remove it and the BDE cathode-touch ends move 2.0 cm deeper — A bot goes
+  0.29 cm past the containment ceiling (and the demotion-doc §10 crossers went
+  up to 1.7 cm past even with the 2.0 cushion), so true-flash bundles get
+  culled and crossers re-split across scattered flashes — the exact §1 failure
+  mode the pull was adopted to fix. **QLMatching would get worse.**
+* what it costs today: anode tips ~1.5 cm past the W plane with only 0.6–0.9
+  cm left to the anode floor (a slightly softer SP edge would start failing
+  the *anode* gate), and displayed Bee/calib times 13.5 µs late (§7b).
+
+The principled operating point suggested by this study — **owner-gated, not
+changed here**: replace the pull by its physical part (≈ +4 µs = 0.59 cm,
+the SP ctoffset) and move the containment work to the cathode cushion where
+it belongs (`cathode_ext1` ≈ 4–5 cm, absorbing the measured in-cathode late
+charge of up to ~2.9 cm + SP lag). That keeps cathode crossers contained,
+restores ~2 cm of anode-gate margin, and makes displayed times physical. It
+re-optimizes the global LASSO like any registration change (demotion doc
+§10.3), so it needs the hand-scan census A/B before adoption.
+
 ## Summary
 
 | claim | evidence |
@@ -482,6 +590,10 @@ scripts themselves.
 | W-streak low tick = anode touch (crate-skew coincidence 2.4 ticks; light pulse there) | §7 finding 3 |
 | charge−flash = +3.9 ± 2.1 µs = the configured SP `ctoffset` (+4 µs); absorbing the 13.507 pull into the flash time would flip the sign and triple the residual | §7b (a), 6 half-measurements |
 | reco flash time = pulse peak; the "~12 µs late flash" in the woodpecker charge-clock figure is the pull in the calib `time`, not a PE-weighted-mean tail | §7b (b), conventions figure |
+| position ladder: shield 339.91 < W 341.55 (= Bee anode face) < containment floor 343.91; cathode surface 3.00 (= Bee cathode face) > containment ceiling 1.00 | §7c table |
+| meta-only track ends sit 0.3–0.5 cm inside W (the SP lag); the pull pushes them 0.8–1.7 cm past W with 0.6–0.9 cm to the anode gate | §7c, 6 half-measurements |
+| the pull is containment work, not timing: without it the BDE in-cathode late charge (1.3–2.9 cm) breaks the cathode gate (A bot 0.29 cm past ceiling) | §7c; demotion doc §10 |
+| Bee observations reconciled: A/B anode overhang 1.3–1.9 cm = the pull; C's "clean" anode = imaging misses the first 5–15 cm; C's cathode spill = imaged in-cathode late tail (13 pts to −17.7) | §7c displayed-endpoint table |
 
 ## Files
 
@@ -493,6 +605,8 @@ scripts themselves.
   erf edges; raw-light closure figures `pics/pdvd_light_timing_aca_{A,B,C}.png`).
 * `docs/qlmatch/scripts/aca_A_conventions.py` — §7b one-axis conventions
   figure `pics/pdvd_light_timing_aca_A_conventions.png`.
+* `docs/qlmatch/scripts/aca_positions.py` — §7c position ladder, gate margins,
+  Bee-displayed endpoints.
 * `docs/pics/pdvd_light_timing_overview.png`
 * `docs/pics/pdvd_light_timing_zoom.png`
 * `docs/pics/pdvd_light_timing_residual.png`
