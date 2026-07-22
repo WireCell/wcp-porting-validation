@@ -279,6 +279,122 @@ Before implementing, two things should be settled:
    1.586 mm/µs — negligible for Q/L T0. The case for fixing it is hit
    *booking* (§5), not T0 accuracy.
 
+## 7. Light↔charge absolute closure: anode-crossing cosmics (evts 298609 / 298651)
+
+**Added 2026-07-22.** The caveat of §4/§5 — "the light stream contains no
+absolute reference; resolving absolute placement needs the charge" — is
+closed here with the method proposed by Xin Ning
+(`/nfs/data/1/xning/wirecell-working/wcp-porting-img/pdvd/woodpecker_data_evt3_acacrosser/`):
+cosmics that cross **both anodes** (anode–cathode–anode) pin their own T0 from
+the charge alone — the W **(collection-plane only; induction SP has gaps)**
+streak begins, in each crate, at the instant the muon passes, so the earliest
+W-gauss tick is an absolute charge-side clock that can be put on the raw light
+axis and compared with the raw cathode waveform and the reconstructed flashes.
+
+Repro:
+
+```bash
+cd pdvd/docs/qlmatch
+OMP_NUM_THREADS=4 python3 scripts/aca_crossers_298609.py   # W corridors, evt 298609
+python3 scripts/fit_endpoints_298609.py                    # erf edges + velocity (doc 06)
+python3 scripts/aca_light_check.py                         # raw-light closure figures
+```
+
+Inputs: ccprod calib dumps (`work/039252_{3,6}_ccprod/`), evt-3 magnify
+(`work/039252_3_magnify/`), raw light ROOT
+(`input_data_light/np02vd_raw_run039252_*_rawwf.root`), opflash archives
+(`work/039252_light2986{09,51}_keep/`).  Doc-06 erf endpoints reused for
+evt 298651.
+
+### Time bases, stated once
+
+* **raw light axis** = §"one time axis" above (PDVDOpWaveformSource `t0`).
+  Opflash npy times live here.  *Untouched by any offset knob.*
+* **charge frame (per crate)** : `frame_us = raw_us + offset_crate`, with the
+  measured metadata offsets `offset_bot_us/offset_top_us` (evt 298609:
+  −2513.808/−2512.608; evt 298651: −2515.344/−2507.744).
+* **folded (Bee/calib) flash time** = `raw_us + trigger_offset` where
+  `trigger_offset = metadata + 13.507 µs`.  The **+13.507 µs (= 2.0 cm at
+  v=0.148073) `PDVD_QL_EXTRA_OFFSET_US`** production pull
+  (`run_clus_evt.sh`, adopted 2026-07-14, docs/qlport/
+  pdvd-cathode-containment-flash-demotion.md §10) is therefore **not applied
+  to the light-domain flash time**: raw opflash times never move.  It enters
+  (a) QLMatching's `trigger_offsets`, i.e. the *charge-placement* x-shift
+  `flash_x_offset = sign·(t_flash + trig)·v` used for containment/matching,
+  and (b) — by construction of the dump — the *displayed* Bee `op_t`/calib
+  `time` values, which are raw + (metadata + 13.507).
+
+### The three tracks
+
+Bee ids from the ccprod `mabc-all-apa.zip` img-global displays; anode-touch
+ticks are erf edge midpoints on the first W channel of each half
+(`fit_endpoints_298609.py`; doc-06 values for evt 298651).
+
+| track | evt | Bee clusters (calib) | half | anode-touch W tick | → raw light (µs) | raw 20%-rise (µs) | Δ(charge−rise) |
+|---|---|---|---|---|---|---|---|
+| A | 298609 | 37=(0,5) bot, 79=(4,3) top | bot | 2018.9 | 3523.26 | 3519.65 | +3.6 µs |
+| | | | top | 2021.3 | 3523.26 | 3519.65 | +3.6 µs |
+| B | 298609 | 50=(0,102) bot, 83=(4,21) top | bot | 5789.3 | 5408.46 | 5399.89 | +8.6 µs |
+| | | | top | 5780.1 | 5402.66 | 5399.89 | +2.8 µs |
+| C | 298651 | 35=(0,33) bot, 95=(4,166) top | bot | 579.8 | 2805.24 | 2800.54 | +4.7 µs |
+| | | (= doc-06 crosser, renumbered) | top | 592.2 | 2803.84 | 2800.54 | +3.3 µs |
+
+![track A](pics/pdvd_light_timing_aca_A.png)
+![track B](pics/pdvd_light_timing_aca_B.png)
+![track C](pics/pdvd_light_timing_aca_C.png)
+
+### Findings
+
+1. **The light↔charge absolute bookkeeping closes.**  In all six
+   half-measurements a bright raw cathode pulse sits exactly at the
+   charge-predicted time: the W-gauss anode-touch edge lags the raw 20%-rise
+   by **+2.8 … +8.6 µs (median ≈ +3.6 µs)**, the same on both crates of the
+   same track once each crate's own metadata offset is used.  There is no
+   unaccounted large (≥ tens of µs) light↔charge offset; the ~2.5 ms
+   per-crate window offsets and the chain `t0` replication are correct.
+2. **The residual ≈ +4 µs is an SP absolute-timing property** (deconvolved
+   charge-edge placement vs true arrival: field-response origin plus filter
+   conventions), not a light-side error — the reconstructed flash times
+   themselves sit on the raw rises to ≤ 0.1–1.4 µs (#117: 3519.753 vs rise
+   3519.65; #163: 5399.991 vs 5399.89; #84 pair 2800.64/2801.95 vs 2800.54),
+   re-confirming §3 on two more events.  It is a *difference-of-conventions*
+   constant, ~3× smaller than the +13.507 µs matcher pull and in the same
+   direction.
+3. **Tick↔drift convention settled empirically** (this contradicts the
+   convention adopted in the woodpecker `ANALYSIS_aca_crosser.md`): the
+   **low-tick** end of a full-drift W streak is the **anode touch** and the
+   high-tick end is the cathode.  Two independent proofs: (i) the two anode
+   edges of track A differ by 2.4 ticks with the bottom crate earlier —
+   *exactly* the 1.2 µs crate trigger-offset skew for simultaneous touches;
+   (ii) the raw light pulse sits at the low-tick-derived time for all three
+   tracks (a cathode reading would put it a full drift, ~2.29 ms, away —
+   nothing is there).  Consequently the woodpecker geometric t0 ≈ 435 µs
+   (flash gid106, 424 µs) for track B is not supported: the true flash is
+   the bright one its matcher scored numerically closest, **#163
+   (folded 2899.69 µs = raw 5399.99, 24384 PE)**.
+4. **Matcher outcomes on the three tracks (ccprod):**
+   * **A: correct.**  #117 → clusters [37, 79], strength 0.976, ks 0.041,
+     `two_boundary` set — the A-C-A topology *is* recognised here.
+   * **B: wrong flash.**  Both halves auto-selected to **#160 (folded
+     2693.0 µs, 18967 PE), 206.7 µs (30.6 cm) early**; the true #163 bundle
+     was scored (ks 0.169, best of the seven candidates) but got strength 0.
+     Both halves are `window_truncated` (cathode-side charge runs past the
+     10000-tick readout end, arrival ≈ tick 10360), which removes the
+     far-end containment evidence — the truncated-crosser topology is what
+     the matcher still mishandles.
+   * **C: half-matched.**  Top 95 → #84 (folded 300.11 µs) — the correct
+     flash (it is the 7382-PE component of the raw 2800.64+2801.95 pair);
+     bottom 35 left unmatched although its gid-84 bundle has ks 0.041 and
+     `consistent`.  The v153-era match of this same track to gid88
+     (364.7 µs folded, raw 2880.0, 1982 PE — doc 06 "The track" section)
+     was **wrong by ≈ +78 µs**; the ccprod chain (v=0.148073 + the 13.507
+     pull) now picks the right flash.
+
+The §6 sign question stays open (this closure is cathode-stream↔charge; the
+self-trigger populations still sit +0.75/+0.82 µs off the cathode stream),
+but the *charge* side is now demonstrated to be the valid external reference
+proposed there.
+
 ## Summary
 
 | claim | evidence |
@@ -291,11 +407,18 @@ Before implementing, two things should be settled:
 | the offset is a DAQ readout-mode property, not late light or the decon | flat in PE over 2 decades; measured on raw samples; splits by readout mode not by device |
 | doc 05's "offsets ≤ 64 ns" does not contradict this | its nearest-neighbour estimator is blind to a common offset (66 % of cathode hit gaps < 800 ns); reproduced: −64 ns vs +744 ns leading-edge |
 | a light↔charge offset cannot be seen in these figures | §5 |
+| light↔charge **absolute** bookkeeping closes to ≈ +4 µs (SP edge lag) | §7: 3 anode-crossing cosmics, 6 half-measurements, charge-derived time lands on a raw cathode pulse every time |
+| the +13.507 µs (2 cm) production pull is a charge-placement/matcher offset, **not** a light-time shift | §7 time bases; `run_clus_evt.sh` `PDVD_QL_EXTRA_OFFSET_US`; raw opflash times untouched, Bee `op_t` = raw + (metadata + 13.507) |
+| W-streak low tick = anode touch (crate-skew coincidence 2.4 ticks; light pulse there) | §7 finding 3 |
 
 ## Files
 
 * `pd_plot/light_timing_check.py` — produces all five figures and prints
-  every number quoted above.
+  every number quoted above (§1–§4).
+* `docs/qlmatch/scripts/aca_crossers_298609.py`,
+  `docs/qlmatch/scripts/fit_endpoints_298609.py`,
+  `docs/qlmatch/scripts/aca_light_check.py` — §7 (charge-side W corridors +
+  erf edges; raw-light closure figures `pics/pdvd_light_timing_aca_{A,B,C}.png`).
 * `docs/pics/pdvd_light_timing_overview.png`
 * `docs/pics/pdvd_light_timing_zoom.png`
 * `docs/pics/pdvd_light_timing_residual.png`

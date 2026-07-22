@@ -1,0 +1,60 @@
+{
+ "A_bot37": {
+  "track": "A",
+  "side": "bot",
+  "apa": 0,
+  "ident": 5,
+  "anodes": [
+   0,
+   2
+  ],
+  "t_lo": 2005.0,
+  "t_hi": 6468.0
+ },
+ "A_top79": {
+  "track": "A",
+  "side": "top",
+  "apa": 4,
+  "ident": 3,
+  "anodes": [
+   4,
+   6
+  ],
+  "t_lo": 2042.0,
+  "t_hi": 6566.0
+ },
+ "B_top83": {
+  "track": "B",
+  "side": "top",
+  "apa": 4,
+  "ident": 21,
+  "anodes": [
+   4,
+   6
+  ],
+  "t_lo": 5774.0,
+  "t_hi": 9991.0
+ },
+ "B_bot50": {
+  "track": "B",
+  "side": "bot",
+  "apa": 0,
+  "ident": 102,
+  "anodes": [
+   2,
+   3
+  ],
+  "t_lo": 5782.0,
+  "t_hi": 9997.0
+ },
+ "_meta": {
+  "event": 298609,
+  "calib": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/pdvd/work/039252_3_ccprod/calib-evt298609.json",
+  "drift_speed": 0.148073,
+  "trigger_offsets_us": [
+   -2500.301001,
+   -2499.101
+  ],
+  "tick_us": 0.5
+ }
+}
