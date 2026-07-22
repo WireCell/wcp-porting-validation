@@ -205,9 +205,27 @@ flashes.
   the combined flash passes. Physically correct recovery of dropped light;
   per-hit provenance verified for all five.
 
-### Step 3 (started): merge-ON light tags `_tmerge`
+### Step 3 (2026-07-22): merge-ON light tags `_tmerge` + census — CLEAN
 
-Evt 298609 done (above). Remaining scan-set + crosser events pending.
+All 18 scan-set events (298567..298805 step 14, includes crossers
+298609/298651) rerun with `PDVD_FLASH_TAIL_MERGE=1` into
+`work/039252_light<evt>_tmerge/` (production `_keep` untouched). Census
+(`scripts/tmerge_census.py`, compares `_keep` vs `_tmerge` per event):
+
+- **86 merges, 72 rescues, ~1% of ~400 flashes/event touched; zero
+  gate-inconsistent merges** (every merge has 0 < Δt ≤ 3 µs, PE ratio ≤ 1,
+  wide+seed-lit PE fraction ≥ 0.7 — min observed 0.735).
+- Track B: 5401.156/19942 → seed 5399.991, merged 44326 PE. Track C:
+  2801.947/7382 → seed 2800.636 (Δt 1.311 µs, ratio 0.53, wide-lit 0.802) —
+  the doc-23 §7d pairs are gone. Track A untouched.
+- The 72 rescues are the same defect at small scale: fragment pairs that
+  BOTH fell below `min_total_pe=10` in `_keep` (hits all `flash_id=-1`
+  there) reunite pre-quality-cut and survive as one 10–15 PE flash —
+  previously dropped light recovered.
+- 2 "anomalies" inspected by hand: benign merge+rescue cascades (a seed
+  absorbing both a surviving small flash and sub-cut fragments, mixed
+  `[-1, id]` hit provenance). No genuine pile-up absorbed anywhere: narrow
+  second onsets and unlit-channel flashes all left alone.
 
 ## Files
 
