@@ -7,7 +7,7 @@ after Q/L matching, the save/load wiring, and the step-by-step application of th
 PR stages, and is updated (commit + push) at every milestone.
 
 Companion docs (this doc is the working plan; those are background):
-- `sbnd_xin/docs/PR_integration.md` — the 7-section survey of what needs porting.
+- `sbnd_xin/docs/19_PR_integration.md` — the 7-section survey of what needs porting.
 - `sbnd/docs/qlport-to-sbnd-downstream-plan.md` — earlier v1 checklist for the
   downstream port; superseded where it disagrees with this doc.
 - toolkit `clus/docs/pipeline_stages.md`, `clus/docs/pattern_recognition.md`,

@@ -76,7 +76,7 @@ adds it to **every** flash/light time so downstream code (matching, `cluster_t0`
 drift-x) sees only the corrected time. This re-references the raw optical clock to
 the CAF/trigger frame: an in-time beam flash that reads ≈ −0.7 µs raw lands in the
 **0.3–1.9 µs** window after correction (validation signature — see
-[`flash-coincidence.md`](flash-coincidence.md)). Controlled by the
+[`10_flash-coincidence.md`](10_flash-coincidence.md)). Controlled by the
 `correct_flash_time` knob on `flash_attach` in
 `cfg/pgrapher/experiment/sbnd/qlmatching.jsonnet` (default **on**):
 

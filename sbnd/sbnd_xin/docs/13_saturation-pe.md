@@ -87,7 +87,7 @@ Per-flash `n_zero` (active set, `ch_mask` excluded), 100-evt:
 | data   | 2.52 / 2 / 6                      | 5.40 / 4                  |
 
 Dim flashes have **far more** zeros than bright ones in both modes (mc more so, because
-its low-PE flash population is larger — see `flash-coincidence.md`).
+its low-PE flash population is larger — see `10_flash-coincidence.md`).
 
 **The bright-flash "live-zero" tail (the user's exact scenario).** Subtracting the
 permanently-dead floor (4 PMTs on apa0, 1 on apa1 — the {67,92,170,218,248} set below)

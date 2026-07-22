@@ -5,7 +5,7 @@ Things that are easy to forget when picking the work back up later.
 ## LAr parameters in reco (DL / DT / lifetime)
 
 The three LAr parameters synced to `DL=4.0 cm²/s`, `DT=8.8 cm²/s`,
-`lifetime=35 ms` (see [geometry-and-timing.md](geometry-and-timing.md))
+`lifetime=35 ms` (see [2_geometry-and-timing.md](2_geometry-and-timing.md))
 are simulation inputs. Their role in the reco chain is much smaller than
 in sim:
 

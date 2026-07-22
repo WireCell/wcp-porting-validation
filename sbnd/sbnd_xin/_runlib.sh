@@ -12,6 +12,11 @@ SBND_EVENTS=(2 9 11 12 14 18 31 35 41 42)
 # SBND_SAMPLE before calling load_events) or by exporting SBND_SAMPLE=<n>.
 : "${SBND_SAMPLE:=10}"
 
+# Root of the per-event work tree (work/evt<ID>, work/ql_evt<ID>, ...).
+# Default work/.  Export SBND_WORK_ROOT to land a reprocessing campaign in a
+# fresh tree instead of overwriting an existing one (e.g. work-fsprod).
+SBND_WORK_ROOT="${SBND_WORK_ROOT:-$SBND_DIR/work}"
+
 # input_files directory for a given mode, honoring SBND_SAMPLE.
 # data: the production sample lives in a fixed, versioned directory (the old
 # input-<N>evt-data sets are no longer usable). Override with SBND_DATA_DIR.

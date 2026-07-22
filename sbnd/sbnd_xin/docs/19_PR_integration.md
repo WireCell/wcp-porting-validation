@@ -1,9 +1,9 @@
-# SBND Pattern-Recognition Integration Plan (`PR_integration.md`)
+# SBND Pattern-Recognition Integration Plan (`19_PR_integration.md`)
 
 > Status: living document — guidance for the next phase of SBND Wire-Cell work.
-> For the already-integrated chain see **[sbnd.md](sbnd.md)** (imaging),
-> **[clustering.md](clustering.md)** and **[ql-chain.md](ql-chain.md)** (charge-light matching).
-> For geometry / timing constants see **[geometry-and-timing.md](geometry-and-timing.md)**.
+> For the already-integrated chain see **[1_sbnd.md](1_sbnd.md)** (imaging),
+> **[5_clustering.md](5_clustering.md)** and **[8_ql-chain.md](8_ql-chain.md)** (charge-light matching).
+> For geometry / timing constants see **[2_geometry-and-timing.md](2_geometry-and-timing.md)**.
 
 ## Scope and context
 
@@ -139,7 +139,7 @@ sampler `{apa: 0, face: 0}`. SBND must register one per live face:
 `{apa: 0, face: 0}` and `{apa: 1, face: 0}` (one drift face per APA in WCT's
 SBND wires file). The sampler's `time_offset`/`drift_speed` must be the SBND
 values already used by `ctpointcloud`/imaging: `drift_speed = 1.563 mm/us`,
-`time_offset = -205 us` (see `geometry-and-timing.md`). Any mismatch shifts
+`time_offset = -205 us` (see `2_geometry-and-timing.md`). Any mismatch shifts
 retiled points in x relative to the original point cloud — the same class of
 bug as the PDVD "behind the anode" T0 artifacts.
 
@@ -168,7 +168,7 @@ there has a single beam flash assumption with fixed `time_offset`.
 
 **Dead channels.** Retiling consults the anode's channel masks. SBND-specific
 dead regions (the W-defect band handled by the dead-gap registry, see
-`dead_blob.md`) must be visible to the retiler the same way they are to
+`6_dead_blob.md`) must be visible to the retiler the same way they are to
 imaging, or retiled blobs will "heal" across truly-dead wires and create fake
 charge. Use the same `chndb`/masks input as `wct-img-all.jsonnet`.
 
@@ -904,7 +904,7 @@ Adapt `stageA_pdhd/` one-to-one:
      Stage A, and convert the recob::OpFlash products into the
      `opflash_apa{N}.tar.gz` tensor format our flash loader reads
      (timestamp + per-PMT PE matrix + `frame_apply_at_caf` metadata; see
-     `ql-chain.md`). This converter is new, small, and the only missing
+     `8_ql-chain.md`). This converter is new, small, and the only missing
      piece for MC flash matching.
 4. Known Stage-A gotchas that will recur (all documented in
    `pdhd-sim-setup.md`): CORSIKA OSDF pre-warm **and** `ShowerInputFiles`

@@ -1,7 +1,7 @@
 # Clustering Algorithms in the SBND Chain
 
-> For the clustering *stage* / driver scripts see **[clustering.md](clustering.md)**.
-> For the QL (charge–light) matching chain see **[ql-chain.md](ql-chain.md)**.
+> For the clustering *stage* / driver scripts see **[5_clustering.md](5_clustering.md)**.
+> For the QL (charge–light) matching chain see **[8_ql-chain.md](8_ql-chain.md)**.
 
 ## Scope
 

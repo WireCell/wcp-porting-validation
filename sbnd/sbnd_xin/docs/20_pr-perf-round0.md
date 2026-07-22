@@ -1,7 +1,7 @@
 # SBND pattern-recognition chain — perf round 0 (measurement + verdict)
 
 Campaign Tier-5 (2026-07-10): first resource profile of the per-event PR tail
-(M0–8 of `PR_integration.md`: pctree → switch_scope → steiner → fiducialutils
+(M0–8 of `19_PR_integration.md`: pctree → switch_scope → steiner → fiducialutils
 → TGM → STM → neutrino), now that the full chain runs on SBND.  Methodology:
 `run_pr_evt.sh <mode> -nu <idx>` solo per event, wall + wire-cell `VmHWM`
 sampled by a wrapper (`/home/xqian/tmp/img_t3_prof/sbnd_pr_r0.sh`, tables

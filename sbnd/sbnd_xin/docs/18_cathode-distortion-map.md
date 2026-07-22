@@ -9,7 +9,7 @@ drift position, so the reconstructed geometry near the central cathode
 (x = `cathode_x` ≈ ±0.45 cm) can be used to **map** the distortion across the
 (Y, Z) plane (Y vertical, Z beam) and localise the problem.
 
-This extends [`cathode-crossing-diagnostic.md`](cathode-crossing-diagnostic.md),
+This extends [`14_cathode-crossing-diagnostic.md`](14_cathode-crossing-diagnostic.md),
 which measured the *aggregate* TPC0/TPC1 cathode offset (data ≈ 1.4 cm vs
 MC ≈ 0.5 cm transverse), into a **spatially resolved** field over the cathode plane.
 

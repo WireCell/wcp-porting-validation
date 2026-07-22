@@ -53,6 +53,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   -auto-mask  enable the per-event dynamic dead-PMT auto-mask (masks a PMT
             that is dead in THIS event while its live neighbours fire; off
             by default => byte-identical; grep QLAUTOMASK in the run log)
+  -beam-pref  re-assert the beam-window flash preference overlay. The
+            preference is ON in the production config since the round-2
+            adoption (weight 0.5, rescue 0.2, gate ks 0.3 / pred 2%; doc 22),
+            so this flag only matters together with BEAMPREF_WEIGHT /
+            BEAMPREF_RESCUE env overrides to scan a different operating point
   -save-pctree  also write the post-QL point-cloud tree to
             work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
             pattern-recognition job; off by default => byte-identical)
@@ -100,6 +105,18 @@ SAVEPCT=""
 # Off by default (production byte-identical); masks a PMT that is dead in THIS event
 # while its live neighbours fire (a run-dead channel absent from the static ch_mask).
 AUTOMASK="false"
+# -beam-pref: beam-window flash preference (QLMatching beam_pref). Off by default
+# (production byte-identical); when on, a flash in the (0.2, 2.2) us BNB window is
+# exempt from the rival-consistent cull and its LASSO columns are shrunk less, so
+# the beam flash competes for (and tends to win) its clusters. See
+# docs/22_ql-beam-flash-preference.md (reco1 evts 246579/116962 case study).
+BEAMPREF="false"
+# BEAMPREF_WEIGHT / BEAMPREF_RESCUE: beam-preference operating point (inert unless
+# -beam-pref). weight = LASSO L1 multiplier for beam-window bundles (validated 0.5;
+# 0.2 over-collects), rescue = empty-flash rescue steal guard scale. Env-overridable
+# for scans, e.g. BEAMPREF_WEIGHT=0.35 ./run_ql_evt.sh data all -beam-pref -calib.
+BEAMPREF_WEIGHT="${BEAMPREF_WEIGHT:-0.5}"
+BEAMPREF_RESCUE="${BEAMPREF_RESCUE:-0.2}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -108,6 +125,7 @@ while [ $# -gt 0 ]; do
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -auto-mask|--auto-mask) AUTOMASK="true"; shift ;;   # before -a* (it starts with -a)
+        -beam-pref|--beam-pref) BEAMPREF="true"; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
         -s|--per-apa|--separate) JOINT=false; shift ;;
@@ -149,8 +167,8 @@ process_event() {
     local EVT_ID="${EVENT_IDS[$((IDX - 1))]}"
     [ -n "$EVT_ID" ] || { echo "ERROR: invalid idx $IDX (1..${#EVENT_IDS[@]})" >&2; return 1; }
 
-    local IMGDIR="$SBND_DIR/work/evt${EVT_ID}"     # per-event imaging output (run_img_evt.sh)
-    local QLDIR="$SBND_DIR/work/ql_evt${EVT_ID}"    # isolated Q/L workspace + output
+    local IMGDIR="$SBND_WORK_ROOT/evt${EVT_ID}"     # per-event imaging output (run_img_evt.sh)
+    local QLDIR="$SBND_WORK_ROOT/ql_evt${EVT_ID}"    # isolated Q/L workspace + output
     local LOG="$QLDIR/wct_ql_evt${EVT_ID}.log"
 
     # Require the toolkit's per-event imaging output (active + masked, both anodes).
@@ -190,6 +208,22 @@ process_event() {
         rm -rf "$stage"
     done
 
+    # Bee run/subrun numbers.  The reco1 extractions (run_reco1_dump.sh) carry the
+    # art run/subrun alongside the event in each opflash tensor-set metadata, so
+    # the Bee JSONs can show the full (run, subrun, event) triplet instead of
+    # 0/0/<evt>.  Read them here rather than plumbing them through the cluster
+    # files: this is the minimal, default-inert layer.  Samples whose metadata
+    # lacks the keys (yuhw's larsoft dumps: only frame_apply_at_caf) keep the
+    # historical run=0 subrun=0 => unchanged Bee output for every older sample.
+    local RUN_NO=0 SUBRUN_NO=0 _md
+    _md=$(tar xzOf "$QLDIR/opflash_apa0.tar.gz" "opflash_tensorset_${EVT_ID}_metadata.json" 2>/dev/null) || _md=''
+    if [ -n "$_md" ]; then
+        local _rse
+        _rse=$(printf '%s' "$_md" | python3 -c \
+            'import json,sys; d=json.load(sys.stdin); print(int(d.get("run",0)), int(d.get("subrun",0)))' \
+            2>/dev/null) && [ -n "$_rse" ] && read -r RUN_NO SUBRUN_NO <<< "$_rse"
+    fi
+
     # Optional hand-scan calibration dump (one per-event JSON, both TPCs).
     local CALIB_TLA=()
     [ -n "$CALIB" ] && CALIB_TLA=(--tla-str "calib_dump=$QLDIR/calib-evt${EVT_ID}${CALIB_SUFFIX}.json")
@@ -200,6 +234,7 @@ process_event() {
     local SAVEPCT_TLA=()
     [ -n "$SAVEPCT" ] && SAVEPCT_TLA=(--tla-str "save_tensors=$QLDIR/pctree-evt${EVT_ID}.tar.gz")
 
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
@@ -207,7 +242,7 @@ process_event() {
         --tla-str  "input=$QLDIR" \
         --tla-code "anode_indices=${ANODE_CODE}" \
         --tla-str  "output_dir=$QLDIR" \
-        --tla-code "run=0" --tla-code "subrun=0" --tla-code "event=${EVT_ID}" \
+        --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
         --tla-str  "reality=$REALITY" \
         --tla-str  "semimodel_file=$SEMIMODEL" \
         --tla-code "DL=$DL" --tla-code "DT=$DT" \
@@ -215,6 +250,9 @@ process_event() {
         --tla-code "joint=$JOINT" \
         --tla-code "pmt_nl=$PMT_NL" \
         --tla-code "auto_mask=$AUTOMASK" \
+        --tla-code "beam_pref=$BEAMPREF" \
+        --tla-code "beam_pref_weight=$BEAMPREF_WEIGHT" \
+        --tla-code "beam_pref_rescue=$BEAMPREF_RESCUE" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \
@@ -222,14 +260,14 @@ process_event() {
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
 
-mkdir -p "$SBND_DIR/work"
+mkdir -p "$SBND_WORK_ROOT"
 IDX="$1"
 if [ "$IDX" = "all" ]; then
     batch_init
     echo "Mode $MODE: ${#EVENT_IDS[@]} events. Parallel jobs: $BATCH_MAX"
     for i in $(seq 1 "${#EVENT_IDS[@]}"); do
         _evtid="${EVENT_IDS[$((i - 1))]}"
-        _blog="$SBND_DIR/work/.batch_ql_evt${_evtid}.log"
+        _blog="$SBND_WORK_ROOT/.batch_ql_evt${_evtid}.log"
         batch_wait_slot
         ( process_event "$i" ) > "$_blog" 2>&1 &
         BATCH_PIDS[$!]=$_evtid

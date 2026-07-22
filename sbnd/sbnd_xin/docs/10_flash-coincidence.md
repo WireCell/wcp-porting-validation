@@ -178,7 +178,7 @@ Reproduce with `python3 flash_t0_lan_reco2.py` (run from `sbnd_xin/`).
 dumps carry a per-frame `frame_apply_at_caf` offset (ns) in the opflash tensor-set
 metadata that re-references this raw clock to the CAF/trigger frame. With the
 `FlashTensorToOpticalPCs` correction enabled (default; see
-[`ql-chain.md`](ql-chain.md)), the in-time flash moves into the **0.3–1.9 µs** beam
+[`8_ql-chain.md`](8_ql-chain.md)), the in-time flash moves into the **0.3–1.9 µs** beam
 window — e.g. on event 58667 the −0.755/−0.763 µs in-time flash (offset 1.613 µs)
 becomes **+0.857/+0.850 µs**. So the negative raw values here are *expected* and are
 exactly what the correction fixes; the older 10-event sample has no

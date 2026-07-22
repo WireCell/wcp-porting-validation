@@ -103,7 +103,7 @@ is **51.35 cm < 80 cm**, and it is merged.
    "isolated")` (line 520) physically merges each group into one cluster while
    writing the per-blob `"isolated"/"perblob"` array (main blobs tagged with the
    longest sub-cluster's parent id). This is the MicroBooNE-style tail consumed by
-   group-aware QLMatching (see `docs/clustering.md`, `ClusteringRecoveringBundle`).
+   group-aware QLMatching (see `docs/5_clustering.md`, `ClusteringRecoveringBundle`).
 
 ### Why the gamma triggers it
 - It is geometrically **small** (16 cm, 250 pts) → enters the small pool.

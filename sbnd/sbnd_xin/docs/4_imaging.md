@@ -1,8 +1,8 @@
 # 3D Imaging Stage — `run_img_evt.sh` (`sbnd_xin/`)
 
-> For per-script CLI options see **[scripts.md](scripts.md)**.
-> For geometry / timing constants see **[geometry-and-timing.md](geometry-and-timing.md)**.
-> For the full pipeline overview see **[sbnd.md](sbnd.md)**.
+> For per-script CLI options see **[3_scripts.md](3_scripts.md)**.
+> For geometry / timing constants see **[2_geometry-and-timing.md](2_geometry-and-timing.md)**.
+> For the full pipeline overview see **[1_sbnd.md](1_sbnd.md)**.
 
 This document explains the imaging stage of the SBND standalone pipeline:
 what algorithm runs, how the configuration drives it, and what the output
@@ -156,7 +156,7 @@ channels: std.range(5638 * anode.data.ident, 5638 * (anode.data.ident + 1) - 1),
 tags: ['gauss<N>', 'wiener<N>'],
 ```
 
-See [geometry-and-timing.md §"Per-APA channel count"](geometry-and-timing.md)
+See [2_geometry-and-timing.md §"Per-APA channel count"](2_geometry-and-timing.md)
 for the history of the 5632 production bug.
 
 **2. `CMMModifier`** (`img.jsonnet:67–91`)
@@ -339,7 +339,7 @@ consumes both files together.
 ## Input format — `sp-frames.tar.bz2`
 
 `FrameFileSource` reads the archive directly (no prior extraction needed).
-See [sbnd.md §"Input"](sbnd.md#input) for the canonical table; summary:
+See [1_sbnd.md §"Input"](1_sbnd.md#input) for the canonical table; summary:
 
 | File inside archive | Shape | Tag |
 |---|---|---|
@@ -396,7 +396,7 @@ print(list(d.keys())[:10])   # e.g. ['cluster_0_nodes', 'cluster_0_edges', ...]
 
 > **Empty file**: a run with no blobs produces a 22-byte `.npz` (zip header
 > only, no arrays). Downstream scripts detect and skip these.
-> See [sbnd.md §"Known gotchas"](sbnd.md#known-gotchas).
+> See [1_sbnd.md §"Known gotchas"](1_sbnd.md#known-gotchas).
 
 ---
 
@@ -437,7 +437,7 @@ print(list(d.keys())[:10])   # e.g. ['cluster_0_nodes', 'cluster_0_edges', ...]
 - **Geometry constants** — 5638 channels per APA and 3427-tick frame
   length were both production bugs in the shared configs that have been
   fixed on this branch. See
-  [geometry-and-timing.md](geometry-and-timing.md) for details.
+  [2_geometry-and-timing.md](2_geometry-and-timing.md) for details.
 
 - **2-plane active tiling was silently disabled** (`img.jsonnet:342`,
   fixed 2026-04-25) — `imgpipe()` in the shared SBND config contained
@@ -547,7 +547,7 @@ cleans up the bulk of pixelation-induced ghost blobs. The current SBND
 chain therefore likely overstates active blob count and total reconstructed
 charge in busy events. Switching SBND to `uboone-solving` is a one-line
 flip in `img.jsonnet`; per the project convention
-([CLAUDE.md / toggleable behavior changes](notes.md)), that change should
+([CLAUDE.md / toggleable behavior changes](7_notes.md)), that change should
 be exposed as a jsonnet toggle defaulting OFF so existing production
 configs remain bit-identical until validated.
 
