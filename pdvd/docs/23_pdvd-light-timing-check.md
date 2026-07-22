@@ -343,6 +343,9 @@ ticks are erf edge midpoints on the first W channel of each half
 ![track B](pics/pdvd_light_timing_aca_B.png)
 ![track C](pics/pdvd_light_timing_aca_C.png)
 
+(The two green reconstructed flashes at the matched time in the B and C
+panels are one physical flash split by the finder — analysed in §7d.)
+
 ### Findings
 
 1. **The light↔charge absolute bookkeeping closes.**  In all six
@@ -602,6 +605,89 @@ restores ~2 cm of anode-gate margin, and makes displayed times physical. It
 re-optimizes the global LASSO like any registration change (demotion doc
 §10.3), so it needs the hand-scan census A/B before adoption.
 
+### §7d The two reconstructed flashes at the matched time (tracks B, C): one physical flash, split by the finder (2026-07-22)
+
+Repro: `cd docs/qlmatch && python3 scripts/aca_flash_split.py --raw`
+(prints every number below; `--raw` adds the per-family raw-waveform peaks).
+
+The B and C panels above show **two** green reconstructed flashes at the
+matched time: B raw 5399.991 (24384 PE) + 5401.156 (19942 PE), Δt = 1.17 µs;
+C raw 2800.636 (13858 PE) + 2801.947 (7382 PE, the matched #84), Δt = 1.31 µs.
+
+**They are the same physical flash.** Three independent pieces of evidence:
+
+1. **The raw cathode stream has a single fast pulse.** Per-family summed raw
+   waveforms: C has exactly one cathode peak (2800.736) in the window — there
+   is no second light pulse for the second flash to be. (B's cathode family
+   has small trailing structures at 5402.9/5403.8, *after* both members.)
+2. **The second member is 97–99.9 % cathode-XA PE, and its hits are the slow
+   (triplet) tail of the same pulse.** Its largest hits are 1.6–1.7 µs-wide
+   cathode-XA hits sitting 1.2–1.9 µs after the fast peak (C: ch1061
+   4307 PE, w = 1.63 µs at 2801.95; B: ch1031 8881 PE + ch1030 5069 PE,
+   w ≈ 1.7 µs at 5401.3–5401.4). The pair separation (1.17/1.31 µs) is the
+   LAr triplet timescale, and the PE split (fast:slow ≈ 55:45 for B,
+   65:35 for C) is the expected order for a muon flash once thresholds and
+   unassigned hits are counted. The split-pulse hit finder books the slow
+   component as separate late hits; the 1 µs dual-grid flash binning then
+   seeds a second flash from them.
+3. **The wall XAs and PMTs supply the channel breadth of the second member,
+   but almost none of its PE** — this is the §4 self-trigger record lateness,
+   not a second flash. Their raw snippet peaks sit +0.7–0.9 µs after the
+   cathode fast peak (C: PMT 2801.42, membrane 2801.63 vs cathode 2800.74;
+   B: PMT 5400.77, membrane 5400.85 vs 5400.03), so their hits land past the
+   fast-flash bins and attach to the late member (B: 524 PE membrane + 83 PE
+   PMT of its 19942) or fall in the inter-flash gap unassigned (C: the
+   *entire* membrane bulk, ~811 PE, has `flash_id = -1`).
+
+So the user-facing answer to "is it the wall PDs and PMTs?": **partly** — the
+self-trigger lateness is why the wall/PMT channels appear only in the second
+flash — but the PE-dominant driver of the split is the **cathode-XA slow
+scintillation component**.
+
+**Track A is the control that shows the split is bin-phase luck, not
+topology.** Same A-C-A geometry, one flash: its accumulator bins happened to
+stay contiguous, so the flash (hits 3519.63–3520.50) absorbed the late
+self-trigger hits (membrane 503 PE at 3520.34–3520.50), while its slow tail
+was left *unassigned* entirely (2283 PE dropped). Between the three tracks the
+same physics is booked three different ways: merged (A), split (B, C), or
+partly dropped (all three: unassigned positive-PE hits in the pair window are
+B 822 PE, C 5092 PE — for C that is ~20 % of the true flash).
+
+**Does this hurt QLMatching? Yes, in three ways** (all visible on these very
+tracks):
+
+1. **Family-biased, halved patterns.** The light model predicts the *full*
+   flash pattern over all 40 PDs; the fast member carries cathode-only light
+   (zero wall/PMT), the slow member carries 35–45 % of the PE with the
+   wall/PMT traces attached. Either candidate mis-shapes KS and
+   under-predicts `pred_frac`-type gates; the unassigned PE is invisible to
+   both.
+2. **Duplicate candidates compete.** Two flashes 1.2–1.3 µs apart imply x
+   positions only 0.17–0.19 cm apart — LASSO sees two near-degenerate
+   candidates for the same clusters and can split a bundle across them or
+   strand one half. Track C is the live example: top 95 matched the *late*
+   member #84 while the brighter fast member (13858 PE) went unmatched, and
+   bot 35 was left stranded — the §7 finding-4 half-match is plausibly a
+   casualty of the split, not only of topology.
+3. **Timing bookkeeping.** A closure or calibration quoted against the late
+   member's time is 1.3 µs smaller than against the true light arrival
+   (#84 = 2801.95 vs fast 2800.64); T0 itself moves only 0.19 cm, negligible
+   for containment but real for timing studies.
+
+**Fix directions (owner-gated, nothing changed here):**
+
+* the §6 self-trigger record correction (+0.75/0.82 µs) restores the wall/PMT
+  hits to the fast bin — it removes the family split (and the C membrane
+  drop) but *not* the slow-tail split;
+* a slow-tail-aware flash assembly: the existing `flash_refine` satellite
+  merge **cannot** absorb these pairs (the late member is 0.53–0.82× the PE
+  of the fast one — fails the ≤ 0.5 dim ratio — lights non-subset PDs, and
+  fires 12–23 PDs ≫ `max_fired` 2). Merging a later flash whose PE is
+  dominated by wide late-tail hits on already-lit cathode PDs within ~2–3 µs
+  of a bright seed (or extending the seed's integration window) would; either
+  changes flash output for every event ⇒ new knob, default OFF, and a
+  hand-scan census A/B before adoption.
+
 ## Summary
 
 | claim | evidence |
@@ -624,6 +710,9 @@ re-optimizes the global LASSO like any registration change (demotion doc
 | the pull is containment work, not timing: without it the BDE in-cathode late charge (1.3–2.9 cm) breaks the cathode gate (A bot 0.29 cm past ceiling) | §7c; demotion doc §10 |
 | Bee observations reconciled: A/B anode overhang 1.3–1.9 cm = the pull; C's "clean" anode = imaging misses the first 5–30 cm; C's cathode spill = imaged in-cathode late tail (to −17.7) | §7c displayed-endpoint table |
 | 2D W-signal (erf) and 3D on-track imaged endpoints agree to 0.1–0.7 cm wherever the corridor is solved; 3D-only gaps: C anode ends (6 / 31 cm unimaged), B cathode (truncated); c95 raw max is a 70-cm-off-line blob | §7c 3D table (PCA line filter) |
+| the "two flashes" at the matched time (B, C) are ONE physical flash: the late member (Δt 1.17/1.31 µs) is 97–99.9 % cathode-XA slow-tail PE; the wall-XA/PMT channels attach to it only because their records are +0.7–0.9 µs late (§4) | §7d; single raw cathode peak; `aca_flash_split.py` |
+| the split costs the matcher: each candidate carries 35–65 % of the PE with a family-biased pattern, LASSO sees near-degenerate duplicates (C matched the late member, the brighter fast one went unmatched, bot 35 stranded), and B 822 / C 5092 PE is unassigned to any flash | §7d |
+| fixes are owner-gated: §6 record correction removes the family split only; `flash_refine` cannot merge these (fails dim/subset/max_fired); a slow-tail-aware merge would ⇒ new knob + census A/B | §7d |
 
 ## Files
 
@@ -637,6 +726,9 @@ re-optimizes the global LASSO like any registration change (demotion doc
   figure `pics/pdvd_light_timing_aca_A_conventions.png`.
 * `docs/qlmatch/scripts/aca_positions.py` — §7c position ladder, gate margins,
   Bee-displayed endpoints.
+* `docs/qlmatch/scripts/aca_flash_split.py` — §7d flash-pair anatomy
+  (family-resolved PE, slow-tail hits, unassigned light, raw per-family
+  peaks).
 * `docs/pics/pdvd_light_timing_overview.png`
 * `docs/pics/pdvd_light_timing_zoom.png`
 * `docs/pics/pdvd_light_timing_residual.png`
