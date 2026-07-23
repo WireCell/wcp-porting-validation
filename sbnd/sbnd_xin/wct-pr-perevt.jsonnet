@@ -56,6 +56,10 @@ function(
     // tagger_check_neutrino falls back to uBooNE single-main selection, which on
     // SBND picks an arbitrary main -- always set a window with tagger_check_neutrino).
     beam_window_us = [0, 0],
+    // Enable the ported check_neutrino_candidate veto in tagger_check_tgm so
+    // in-beam-window bundles may be tagged TGM (C++ default false; key
+    // omitted when off => byte-identical pre-port config).
+    tgm_neutrino_candidate = false,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -93,7 +97,8 @@ function(
                              particle_dataset=pds.particle_dataset,
                              extra_uses=pds.all,
                              dl_weights=dl_weights,
-                             beam_window=[t * wc.us for t in beam_window_us]);
+                             beam_window=[t * wc.us for t in beam_window_us],
+                             tgm_neutrino_candidate=tgm_neutrino_candidate);
 
     local graph = g.intern(
         innodes=[source],

@@ -56,6 +56,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -bw l,h       beam window [l,h) in us on cluster_t0 (= matched flash time,
                 trigger-referenced).  Default ${BEAM_WINDOW}.  Used for the TGM
                 beam protection AND the table's in_beam / label columns.
+  -nucand       enable the ported check_neutrino_candidate veto in
+                tagger_check_tgm: in-beam-window bundles may then be tagged
+                TGM when the Dijkstra path-topology veto clears them.
+                Default off = conservative never-tag-in-beam.  Env:
+                SBND_TGM_NUCAND=1.
   -save-pr-tree also re-save the post-PR tree to
                 work/nusel_evt<ID>/pctree-pr-evt<ID>.tar.gz (NB: tagger flags
                 set on only some clusters do NOT survive re-serialization; the
@@ -81,6 +86,10 @@ EOF
 MODE=mc
 BEAM_WINDOW="0.2,2.2"
 SAVEPRT=""
+# -nucand: enable the ported check_neutrino_candidate veto in tagger_check_tgm
+# (in-beam-window bundles may then be tagged TGM).  Default off = pre-port
+# conservative behavior; also honors SBND_TGM_NUCAND=1.
+NUCAND="${SBND_TGM_NUCAND:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -90,6 +99,7 @@ while [ $# -gt 0 ]; do
         mc|data) MODE="$1"; shift ;;
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -save-pr-tree|--save-pr-tree) SAVEPRT=1; shift ;;
+        -nucand|--nucand) NUCAND=1; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -168,6 +178,7 @@ process_event() {
             --tla-str  "save_tensors=$SAVEPRT_TLA" \
             --tla-str  "dl_weights=" \
             --tla-code "beam_window_us=[$BEAM_WINDOW]" \
+            --tla-code "tgm_neutrino_candidate=$([ "$NUCAND" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
