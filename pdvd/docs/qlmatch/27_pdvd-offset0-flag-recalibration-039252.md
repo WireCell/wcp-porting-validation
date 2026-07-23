@@ -62,4 +62,103 @@ mechanism (18 evts each, tags rc1..rc4):
 | rc3 | `PDVD_QL_HC_GOOD_KS=0.12 PDVD_QL_HC_MISS_KS=0.10` | highconsist tier edges |
 | rc4 | `PDVD_QL_POSTCULL=0` | post-fit cull share (diagnostic only) |
 
-Results: pending.
+Results (recovery counter `scripts/rc_recovery.py`, target = the 58
+uid-mapped pairs missed at rtp1 but not at tm0):
+
+| tag | agree | agree% | phantom | missed | recovered | new-missed | new-phantom |
+|---|---|---|---|---|---|---|---|
+| rc1 xtpc tol 14 | 716 | 88.3% | 95 | 127 | 0 | 2 | 0 |
+| rc2 ext1 2.5 | 716 | 88.0% | 98 | 127 | 0 | 2 | 2 |
+| rc3 hc tiers loose | 686 | 88.7% | 87 | 157 | 6 | 38 | 9 |
+| rc4 postcull off | 718 | 82.5% | 152 | 125 | 1 | 7 | 56 |
+
+**All four mechanisms are nulls** (rc3/rc4 net-destructive). The blockers sit
+in bundle FORMATION, not in the windows swept.
+
+## Phase 2 — log forensics: the sc1 light gate is the root cause
+
+Case study evt298581 uid 182 (GONE class), traced through the QL debug logs
+of both frames (`work/039252_1_{tm0,rtp1}/wct_clus_039252_1.log`):
+
+1. The truth flash (dump gid 15, internal flash 37, raw t=797.037 µs)
+   survives with identical PE; cluster 182 is an xtpc side-0 candidate at it
+   in BOTH frames.
+2. The pair test vs its top-half partner is IDENTICAL in both frames:
+   `d=3.13 cm, sc1=true, pin=true` (`QLXTPC pair 0/182 1/361`), and the
+   greedy pin binds the pair to the truth flash in both
+   (`QLXTPCPIN pair 0/182 (flash 37) ... d=3.13cm`).
+3. tm0: the bundle is genuinely contained (cathode end inside the
+   `at_cathode` window) → never provisional → `purge_unconfirmed_
+   cathode_rescue` doesn't apply → JOINT-PIN survives, `cull_inconsistent`
+   drops all rivals, truth wins (strength 0.96).
+4. rtp1: the same cathode end sits ~1.7 cm deeper → past `cathode_in` → the
+   bundle forms via the provisional rescue. The purge keeps a provisional
+   only if it carries `flag_xtpc_scenario1` (`QLMatching.cxx:2088`) — and
+   that flag is denied by the **scenario-1 light gate**
+   (`xtpc_sc1_light_gate`: ks ≤ 0.3, c2n ≤ 50; production ON since doc 19
+   phase 3). The genuine crosser half has ks = 0.39 (truncated half-pattern,
+   unchanged between frames) → flag denied → `cathode-rescue DROP ...
+   flash 37 (no cross-volume confirmation)` **despite the pin** → the pin
+   evaporates with the bundle → rivals return → LASSO picks a ks-0.16
+   wrong flash.
+
+Confirmed by elimination: rc5/rc6 (purge's own `cathode_ks_max` 0.6/off)
+change nothing — the DROP persists with the gate value visibly active in the
+log — because the keep-branch requires the scenario-1 flag *first*; the ks
+ceiling is downstream of it.
+
+Why it hid at the pulled frame: the sc1 light gate was tuned (doc 19) as a
+junk-steering quality control for bundles that were ALREADY contained — the
+purge only ever saw genuinely-overshooting junk. At offset 0 the whole
+formerly-contained cathode-toucher population routes through the provisional
+path and meets a gate never meant for it.
+
+## Phase 3 — sc1 light-gate recalibration
+
+| tag | change vs rtp1 | agree | phantom | missed | recovered | new-phantom |
+|---|---|---|---|---|---|---|
+| rc7 `SC1_KS=0.45` | ks ceiling up | 719 | 109 | 124 | 0 | 14 |
+| rc8 gate OFF | diagnostic | 718 | 130 | 125 | 1 | 34 |
+
+**Both null AND phantom-inflating** — the gate does real protective work, and
+relaxing it also grants sc1 to rival pairings (uid 182: with ks 0.45 the
+d=6.08 rival at another coincident flash gets sc1 + is contained, while the
+pinned truth bundle is STILL purged — the partner half's ks 0.58 blocks its
+sc1 flag; `DROP … flash 37` persists with the gate visibly at 0.45).
+
+The pin is the discriminator the purge ignores: `QLXTPCPIN` binds the pair to
+the truth flash by best combined light in BOTH frames, but
+`purge_unconfirmed_cathode_rescue` (:2085-2102) consults only
+`flag_xtpc_scenario1`. The joint-pin post-dates the purge's doc-19 design.
+
+## Phase 4 — `xtpc_pin_confirms_rescue` knob (C++, default OFF)
+
+A greedy-pinned bundle (direction-confirmed collinear pair, d < dmax, chosen
+by min ks-sum over coincident flashes) counts as cross-volume confirmation in
+the purge, exempt from the sc1 light gate and the cathode ks ceiling. New key
+`xtpc_pin_confirms_rescue` (C++ default false) in `QLMatching`, key-suppressed
+jsonnet arg, runner env `PDVD_QL_PIN_CONFIRMS_RESCUE` (default 0).
+
+Gates: `wcdoctest-match` 4/4; knob-off byte-identical vs the pre-change
+binary at the rtp1 frame (tag `039252_1_rcoff` vs `039252_1_rtp1`:
+calib-evt298581.json diff EMPTY, mabc-all-apa.zip member hashes IDENTICAL);
+compiled config carries the key only when on (tag rc9 work dir).
+
+**rc9 = rtp1 frame + pin-confirms-rescue ON:**
+
+| tag | agree | agree% | phantom | missed | recovered | new-missed | new-phantom |
+|---|---|---|---|---|---|---|---|
+| rc9 | 723 | 87.8% | 100 | 120 | **5** | 0 | 4 |
+
+First real recovery; the traced case lands exactly (uid 182 auto → truth
+flash −1710.7, ks 0.39, pinned). The 4 new phantoms are all pin-confirmed
+rescued bundles at ks 0.38–0.55 (scanner-rejected) — the price of the class,
+possibly trimmable with a pin-specific ks ceiling later. Remaining 54 lost:
+42 mis-picks / 10 no-bundle / 2 unmatched — dominated by SINGLE-VOLUME
+cathode-touchers, which have no cross-volume partner and hence NO rescue
+path at all: pushed past the ceiling they simply drop from candidacy.
+
+## Phase 5 — single-volume cathode-toucher containment (pending)
+
+rc10 = rc9 + `PDVD_QL_CATHODE_EXT1_CM=3.5` (ceiling diagnostic with the pin
+fix in place). Results: pending.

@@ -532,6 +532,16 @@ PY
     if [ -n "${PDVD_QL_CATHODE_KS_MAX:-}" ]; then
         QL_QGATE_ARG+=(-S "ql_xtpc_cathode_ks_max=${PDVD_QL_CATHODE_KS_MAX}")
     fi
+    # PDVD_QL_PIN_CONFIRMS_RESCUE: a joint-pinned bundle counts as cross-volume
+    # confirmation in the cathode-rescue purge, exempt from the ks ceilings
+    # (docs/qlmatch/27: at offset 0 formerly-contained cathode-touching crosser
+    # halves route through the provisional rescue and the sc1 light gate
+    # guillotines their truncated patterns despite a d<dmax collinear pin;
+    # evt298581 cluster 182).  DEFAULT 0 = legacy purge (byte-identical);
+    # toolkit C++/jsonnet defaults stay OFF.
+    if [ "${PDVD_QL_PIN_CONFIRMS_RESCUE:-0}" = 1 ]; then
+        QL_QGATE_ARG+=(-S "ql_xtpc_pin_confirms_rescue=true")
+    fi
     if [ "${PDVD_QL_POSTCULL:-1}" = 1 ]; then
         QL_QGATE_ARG+=(-S "ql_postcull_unflagged=true")
         [ -n "${PDVD_QL_POSTCULL_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_ks_max=${PDVD_QL_POSTCULL_KS}")
