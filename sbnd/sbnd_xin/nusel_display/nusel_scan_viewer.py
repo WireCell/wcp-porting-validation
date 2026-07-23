@@ -369,7 +369,7 @@ table_cols = [
     TableColumn(field="npts", title="npts", width=55, formatter=fmt_r, sortable=False),
     TableColumn(field="len", title="len(cm)", width=65, formatter=fmt_r, sortable=False),
     TableColumn(field="verdicts", title="tgm/stm/fc", width=80, formatter=fmt_l, sortable=False),
-    TableColumn(field="auto", title="auto label", width=95, formatter=fmt_l, sortable=False),
+    TableColumn(field="auto", title="auto label (+FC)", width=120, formatter=fmt_l, sortable=False),
     TableColumn(field="scan", title="scan", width=95, formatter=fmt_l, sortable=False),
     TableColumn(field="cmt", title="✎", width=25, formatter=fmt_l, sortable=False),
 ]
@@ -538,7 +538,15 @@ def rebuild_table():
         cols["npts"].append(str(r["npts_bundle"]))
         cols["len"].append(f"{r['len_cm']:.1f}")
         cols["verdicts"].append(f"{r['tgm']}/{r['stm']}/{r['fc']}")
-        cols["auto"].append(r["auto_label"])
+        # FC is orthogonal to the TGM/STM/nu-candidate label (it never enters
+        # nusel_extract's 'label'), so badge it explicitly onto the auto cell:
+        # a fully-contained bundle -- especially an in-beam nu-candidate -- is
+        # a neutrino-like signature worth seeing at a glance.  fmt_l is an
+        # HTMLTemplateFormatter (<%= %>, unescaped), so inline HTML renders.
+        auto = r["auto_label"]
+        if r["fc"] == 1:
+            auto += " <b style='color:#2ca02c'>FC</b>"
+        cols["auto"].append(auto)
         cols["scan"].append("+".join(labs))
         cols["cmt"].append("✎" if state["comments"].get(key) else "")
         cols["sel_bg"].append(SEL_BG if (labs or state["comments"].get(key))
@@ -708,8 +716,11 @@ def render_metrics():
         ("main cluster makeup", comp_txt),
         ("TGM", verdict(r["tgm"])),
         ("STM", verdict(r["stm"])),
-        ("FC", verdict(r["fc"])),
-        ("auto label", f"<b>{r['auto_label']}</b>"),
+        ("FC (fully-contained)",
+         "<span style='color:#2ca02c'>YES</span>" if r["fc"] == 1
+         else verdict(r["fc"])),
+        ("auto label", f"<b>{r['auto_label']}</b>"
+         + ("  <span style='color:#2ca02c'>+FC</span>" if r["fc"] == 1 else "")),
         ("scan labels", "+".join(state["labels"].get(key, [])) or "-"),
         ("comment", state["comments"].get(key, "") or "-"),
     ]
@@ -736,7 +747,9 @@ def render_proj_info():
                + (f" (<span style='color:#ff7f0e'>+{len(parts) - 1} merge "
                   f"fragment(s), squares</span>)" if len(parts) > 1 else "")
                + (f" + companions <span style='color:#1f77b4'><b>"
-                  f"{','.join(str(c) for c in comps)}</b></span>" if comps else ""))
+                  f"{','.join(str(c) for c in comps)}</b></span>" if comps else "")
+               + (" &mdash; <b style='color:#2ca02c'>FC (fully-contained)</b>"
+                  if r["fc"] == 1 else ""))
     nlab = sum(1 for r in evt.rows if state["labels"].get(row_key(r)))
     proj_info.text = (f"<b>{evt.label}</b> ({rse}) &mdash; "
                       f"{len(state['order'])} bundle(s) shown "
