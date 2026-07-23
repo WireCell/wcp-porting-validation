@@ -542,6 +542,24 @@ PY
     if [ "${PDVD_QL_PIN_CONFIRMS_RESCUE:-0}" = 1 ]; then
         QL_QGATE_ARG+=(-S "ql_xtpc_pin_confirms_rescue=true")
     fi
+    # PDVD_QL_CATHODE_SOLO_KS / _C2N: solo (single-volume) light-quality
+    # cathode rescue -- keep a provisional overshoot bundle with no xtpc
+    # partner when ks <= KS (and chi2/ndf <= C2N if set).  docs/qlmatch/27:
+    # at offset 0 single-volume cathode touchers have NO rescue path; scan
+    # forensics separates them from junk by light quality (recovered ks
+    # 0.03-0.29 vs phantom c2n 48-377).  DEFAULT empty = OFF (byte-identical).
+    if [ -n "${PDVD_QL_CATHODE_SOLO_KS:-}" ]; then
+        QL_QGATE_ARG+=(-S "ql_cathode_rescue_solo_ks=${PDVD_QL_CATHODE_SOLO_KS}")
+        [ -n "${PDVD_QL_CATHODE_SOLO_C2N:-}" ] && QL_QGATE_ARG+=(-S "ql_cathode_rescue_solo_c2n=${PDVD_QL_CATHODE_SOLO_C2N}")
+    fi
+    # PDVD_QL_SC1_EVICT_KS_MARGIN: cull_inconsistent's sc1-priority branch
+    # spares a high-consistent rival whose ks beats the cluster's best sc1 ks
+    # by more than the margin (LASSO arbitrates; docs/qlmatch/27: spurious
+    # offset-0 sc1 pairings ks 0.12-0.24 were evicting scan-endorsed
+    # consistent matches ks 0.03-0.09).  DEFAULT empty = OFF (byte-identical).
+    if [ -n "${PDVD_QL_SC1_EVICT_KS_MARGIN:-}" ]; then
+        QL_QGATE_ARG+=(-S "ql_sc1_evict_ks_margin=${PDVD_QL_SC1_EVICT_KS_MARGIN}")
+    fi
     if [ "${PDVD_QL_POSTCULL:-1}" = 1 ]; then
         QL_QGATE_ARG+=(-S "ql_postcull_unflagged=true")
         [ -n "${PDVD_QL_POSTCULL_KS:-}" ] && QL_QGATE_ARG+=(-S "ql_postcull_ks_max=${PDVD_QL_POSTCULL_KS}")

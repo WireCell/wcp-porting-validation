@@ -158,7 +158,91 @@ possibly trimmable with a pin-specific ks ceiling later. Remaining 54 lost:
 cathode-touchers, which have no cross-volume partner and hence NO rescue
 path at all: pushed past the ceiling they simply drop from candidacy.
 
-## Phase 5 — single-volume cathode-toucher containment (pending)
+## Phase 5 — solo (single-volume) light-quality cathode rescue
 
-rc10 = rc9 + `PDVD_QL_CATHODE_EXT1_CM=3.5` (ceiling diagnostic with the pin
-fix in place). Results: pending.
+rc10 (= rc9 + ceiling 3.5, diagnostic) recovered 10 but traded ~1:1 (4
+new-missed, 7 new-phantom). Its genuine recoveries separate cleanly from its
+junk by light quality: recovered ks 0.03–0.29 (c2n 0.3–38) vs new phantoms
+c2n 48.7/376.5 and ks 0.41. Hence the principled knob instead of the blunt
+ceiling: **`cathode_rescue_solo_ks/_c2n`** (C++ defaults 0/0 = off) — a
+third keep-branch in the purge for provisional bundles with NO cross-volume
+partner, kept on their own light (ks ≤ solo_ks AND chi2/ndf ≤ solo_c2n).
+Runner envs `PDVD_QL_CATHODE_SOLO_KS/_C2N`. Gates: `wcdoctest-match` 4/4;
+knob-off byte-identical vs the rc9-era binary (tag `039252_1_rcoff2` vs
+`039252_1_rc9`: calib diff empty, mabc hashes identical).
+
+## Phase 6 — sc1 rival hijack and the eviction ks margin
+
+Remaining-class forensics (3 pure mis-picks, truth bundle metrics unchanged,
+strength 0.9→0.00): the WRONG pick **gained `xtpc_scenario1`** at the new
+frame (spurious cathode pairing within dmax 25 cm) and `cull_inconsistent`'s
+sc1-priority branch then evicted the scan-endorsed high-consistent truth
+(truth ks 0.03/0.09 evicted by sc1 rivals ks 0.12/0.24; third case = a
+ladder-edge `consistent` flip at ks 0.10). The sc1 priority was the designed
+"steering fix" (a tight crosser overrides an accidental high-consistent
+match) — its assumption that sc1 = genuine crosser breaks at the offset-0
+frame. With the pin now honored in the purge, two remedies tested:
+sc1-gate tightening (rc12/rc13: recovers 15/12 but collateral 13/6 — the
+0.10–0.3 sc1 truths lose protection) and the surgical
+**`sc1_evict_ks_margin`** knob (C++ default −1 = off): a high-consistent
+rival whose ks beats the cluster's best sc1 ks by more than the margin is
+spared the eviction and competes in the LASSO (scenario-2 precedent).
+Gates: `wcdoctest-match` 4/4; knob-off byte-identical vs the rc11-era binary
+(tag `039252_1_rcoff3` vs `039252_1_rc11`: calib diff empty, mabc hashes
+identical).
+
+## Phase 7 — combined results and the campaign op point
+
+All at the doc-26 rtp1 frame, scored vs mapped truth (58 target pairs):
+
+| tag | knobs | agree | agree% | phantom | missed | recov | new-miss | new-phm |
+|---|---|---|---|---|---|---|---|---|
+| rtp1 | (doc 26 best) | 718 | 88.2% | 96 | 125 | — | — | — |
+| rc9 | pin | 723 | 87.8% | 100 | 120 | 5 | 0 | 4 |
+| rc10 | pin + ceiling 3.5 | 724 | 87.8% | 101 | 119 | 10 | 4 | 7 |
+| rc11 | pin + solo .30/40 | 724 | 88.2% | 97 | 119 | 7 | 1 | 4 |
+| rc12 | rc11 + sc1 ks .10 | 722 | 88.5% | 94 | 121 | 15 | 13 | 4 |
+| rc13 | rc11 + sc1 ks .20 | 726 | 88.6% | 93 | 117 | 12 | 6 | 4 |
+| **rc14** | **rc11 + margin .05** | **728** | **88.6%** | **94** | **115** | **11** | **3** | **4** |
+| rc15 | rc14 + sc1 ks .20 | 725 | 88.6% | 93 | 118 | 13 | 8 | 4 |
+
+**Campaign op point: rc14** = rtp1 frame + `PDVD_QL_PIN_CONFIRMS_RESCUE=1`
+`PDVD_QL_CATHODE_SOLO_KS=0.30` `PDVD_QL_CATHODE_SOLO_C2N=40`
+`PDVD_QL_SC1_EVICT_KS_MARGIN=0.05`.
+
+| metric | tm0 (production) | rtp1 | rc14 | rc14 vs production |
+|---|---|---|---|---|
+| agree | 752 (86.6%) | 718 | 728 (88.6%) | −24 (rate +2.0) |
+| phantom | 116 | 96 | 94 | **−22** |
+| missed | 91 (10.8%) | 125 | 115 (13.6%) | +24 |
+
+The recalibration recovers 10 of the 34 net agrees the offset removal cost
+(and 11/58 of the target-pair list, with the rc12 diagnostic showing ~15
+reachable at higher collateral). The remaining ~24 net losses are
+heterogeneous single-pair LASSO re-equilibrations (candidate-set ripples
+with no flag or metric change on the truth bundle) — recovering them means
+re-deriving the doc-19 LASSO/ladder economy (strength cutoff, boundary
+weights, hc tiers) at the new frame, a full retuning campaign of its own;
+the rc3/rc4/rc7/rc8/rc12 diagnostics all show those knobs re-trade along a
+phantom↔missed frontier rather than dominating.
+
+**Adoption status: owner-gated, nothing flipped.** Against the no-regression
+rule rc14 still fails on agree/missed (−24/+24) while winning phantoms (−22)
+and rate (+2.0). Decision points: (1) adopt the tail merge alone (doc 26,
+agreement-neutral) and stay at offset 13.507; (2) adopt rc14 as the new
+production frame, taking the coverage cost for physical positions, −22
+phantoms and +2.0% rate; (3) commission the LASSO-economy retune on top of
+rc14. All knobs are default-OFF in the toolkit; the rc14 op point lives
+purely in runner envs.
+
+## Files
+
+- toolkit `match/{src,inc}/QLMatching.*`: `xtpc_pin_confirms_rescue`,
+  `cathode_rescue_solo_ks/_c2n`, `sc1_evict_ks_margin` (all default OFF);
+  `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet` key-suppressed
+  args.
+- `pdvd/wct-clustering.jsonnet` + `pdvd/run_clus_evt.sh`: env threading
+  (`PDVD_QL_PIN_CONFIRMS_RESCUE`, `PDVD_QL_CATHODE_SOLO_KS/_C2N`,
+  `PDVD_QL_SC1_EVICT_KS_MARGIN`).
+- `scripts/rc_recovery.py` — target-pair recovery counter; sweep tags
+  `work/039252_<idx>_{rc1..rc15,rcoff,rcoff2,rcoff3}` (records, keep).
