@@ -186,11 +186,22 @@ long gone. The observables `check_LM` needs live on `TimingTPCBundle`
 (`match/inc/WireCellMatch/TimingTPCBundle.h`: `get_ks_dis():152`,
 `get_chi2():148`, `get_flag_close_to_PMT():109`,
 `get_flag_at_x_boundary():110`, plus predicted/measured PE) and exist only
-during the `QLMatching` visit. What `QLMatching` actually persists onto
-clusters is just the association: `set_flag("main_cluster")` /
+during the `QLMatching` visit. What `QLMatching` actually persists **onto
+clusters** is just the association: `set_flag("main_cluster")` /
 `set_flag("associated_cluster")` (`match/src/QLMatching.cxx:1243,1248`) and the
 scalars `flash` / `matched_flash_gid` (`:3405-3412`), plus `cluster_t0`
-(`clus/src/Facade_Cluster.cxx:188`). None of the LM inputs survive.
+(`clus/src/Facade_Cluster.cxx:188`). None of the LM inputs are on the tree the
+PR job reloads.
+
+They are not lost, though — they go out a **side channel**. The `calib_dump`
+mode (`QLMatching.cxx:163`, the hand-scan JSON of doc 12) writes per bundle
+exactly the LM input set: `ks_dis`, `chi2`, `ndf`, `total_pred_light`,
+`total_PE`, `close_to_PMT`, `at_x_boundary` and the full `pred_pe` array
+(`:3767-3808`). So the precise statement is: the observables exist, in a JSON
+that the PR job never reads, keyed by bundle rather than attached to the
+cluster. Surfacing LM as a per-bundle label therefore means persisting these
+from `QLMatching` onto the tree (or computing LM inside `QLMatching`, where the
+prototype computes it) — not adding a tagger downstream of the pctree.
 
 So the prototype's home for LM — the matched-bundle loop of the matching app —
 maps to `QLMatching`, not to a pctree-based PR visitor. That is a statement of
@@ -221,8 +232,9 @@ where the information is, not a proposal; no design work is done here.
   and the FC definition would be the steiner/no-offset toolkit one, not
   bit-comparable to the prototype (§2).
 - **LM is a genuine porting gap** at the Q/L layer, not the PR layer. The three
-  prototype implementations are all absent, and the inputs they need are not
-  persisted past `QLMatching`. Adding it downstream of the pctree is not
-  possible without first persisting the bundle-quality observables.
+  prototype implementations are all absent. Its inputs do exist at match time
+  and are already written to the `calib_dump` JSON, but they never reach the
+  pctree the PR job reloads — so LM belongs in `QLMatching` (where the
+  prototype computes it), not in a tagger downstream of the pctree.
 
 No changes were made. Next step is the owner's call.
