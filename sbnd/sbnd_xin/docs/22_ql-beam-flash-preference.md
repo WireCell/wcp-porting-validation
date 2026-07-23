@@ -284,7 +284,8 @@ Operating-point conclusions:
   together with `BEAMPREF_WEIGHT`/`BEAMPREF_RESCUE` to scan a different
   operating point on top of production.
 - Optional follow-up: a spot hand-scan of the 21 changed reco1 events
-  (diff `work-fsprod-bpv-off` vs `work-fsprod-bpv2-w050`).
+  (diff `work-fsprod-bpv2-off` vs `work-fsprod-bpv2-w050` — same round, same
+  `-calib` basis).
 - The knob presumes a *corrected* flash time base (`frame_apply_at_caf`,
   [21_reco1-input.md](21_reco1-input.md)); on uncorrected samples the window
   must be widened or the times fixed first.
@@ -294,3 +295,23 @@ Operating-point conclusions:
   unattributable in the per-side model (case 2's 101.33 µs flash) — a
   cross-side coincidence discount would address it more physically than a
   time prior.
+
+## Work trees retained on disk (2026-07-23 cleanup)
+
+The campaign's one-off A/B trees and the superseded weight scans were deleted
+(~2.0 GB); their results are the tables above. Trees named in this doc but no
+longer on disk: `work-fsprod-bpAB`/`-bpAB2`, `work-fsprod-bpon`,
+`work-fsprod-bpw05`, `work-fsprod-bptw`, `work-bpAB686`, `work-abfs1`, and the
+round-1 scan roots `work-bpval-{off,w020,w035,w050,w070}` /
+`work-fsprod-bpv-{off,w020,w035,w050,w070}` plus the non-adopted round-2 points
+`{work-bpval2,work-fsprod-bpv2}-{w035,w070}`. Rebuild any of them with the
+repro block above.
+
+| tree | role |
+|---|---|
+| `work/`, `work-fsprod/` | imaging/label **bases** — every tree below symlinks `evt<ID>` into these; do not delete |
+| `work-bpprod/`, `work-fsprod-bpprod/` | **production** flag-free rerun (adopted op point) |
+| `work-bpval2-w050/`, `work-fsprod-bpv2-w050/` | gated-w0.5 validation roots, member-hash identical to production (68/68) |
+| `work-bpval2-off/`, `work-fsprod-bpv2-off/` | round-2 knob-off regression + churn-diff baseline |
+| `work-fsprod-rse/` | member-hash baseline of record for the 48 reco1 events |
+| `work-bpAB686b/` | evt-686 joint-QL reproducibility gate (`4b006453…`) |
