@@ -1,5 +1,9 @@
 # 25 — An FC (fully-contained) flag alongside TGM/STM, and the 10-event retable
 
+> **Superseded in part by docs 26 and 27.** Doc 27 closes the §5 open
+> question: FC now uses TGM's fiducial, so the TGM∧FC overlap is 0 and the FC
+> counts are 3 / 71, not 27 / 47.
+>
 > **Superseded in part by doc 26.** The label counts in §2 (TGM 33 / STM 1) were
 > taken with `check_neutrino_candidate` OFF, which is no longer this chain's
 > default; the current counts are TGM 34 / STM 0. The FC counts (27/47), the

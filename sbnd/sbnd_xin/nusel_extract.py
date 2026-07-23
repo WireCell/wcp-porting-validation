@@ -175,8 +175,30 @@ def group_flashes(flashes):
     return grp
 
 
-RE_TGM = re.compile(r'TaggerCheckTGM: cluster (\d+) \S+ TGM=(\w+)')
-RE_STM = re.compile(r'TaggerCheckSTM: cluster (\d+) \S+ STM=(\w+) TGM=(\w+)')
+# The verdict token is matched STRICTLY as true|false, never as \w+.  Log lines
+# can be torn mid-word by interleaved writes (doc 23/25), and a torn "FC=false"
+# leaves the fragment "FC=fal": with \w+ that fragment MATCHES and then blows up
+# the int conversion (crashed evt285999).  Requiring the whole word means a torn
+# line simply fails to match, the verdict stays -1, and the caller's
+# "no tagger verdict" warning reports it instead of the run dying.
+# The verdict token is captured as its FIRST CHARACTER only, for two reasons:
+#
+#  1. The taggers spell it differently -- TaggerCheckTGM/FC log a plain bool
+#     ("TGM=false") while TaggerCheckSTM logs the flag getter as an int
+#     ("STM=0 TGM=0") -- and t/f/1/0 covers every spelling.
+#  2. Log lines get torn mid-word by interleaved writes, and the tear is
+#     DETERMINISTIC (a write-buffer boundary, not a race): evt285999's
+#     "FC=fal[09:33:15.265] D [ clus ] <Mul..." reproduces byte-for-byte on a
+#     re-run, so re-running does NOT recover it.  Since the only possible
+#     values are true/false/1/0, the leading character disambiguates all four,
+#     and a fragment like "fal" is read losslessly.
+#
+# A tear landing before any value character ("FC=") still fails to match, which
+# is the correct outcome: the verdict stays -1 and the caller warns.
+VERDICT = r'([tf01])\w*'
+RE_TGM = re.compile(r'TaggerCheckTGM: cluster (\d+) \S+ TGM=' + VERDICT + r'\b')
+RE_STM = re.compile(r'TaggerCheckSTM: cluster (\d+) \S+ STM=' + VERDICT
+                    + r' TGM=' + VERDICT + r'\b')
 # NB: matches the message PREFIX only.  Log lines can be torn by interleaved
 # writes (doc 23; seen again on evt285185 cluster 5, where another line was
 # spliced in mid-word after "...already TGM; ski").  This message carries its
@@ -184,11 +206,11 @@ RE_STM = re.compile(r'TaggerCheckSTM: cluster (\d+) \S+ STM=(\w+) TGM=(\w+)')
 # recovers it losslessly.  The verdict regexes above cannot do the same: their
 # information is the trailing =true/=false, which a tear destroys.
 RE_SKIP = re.compile(r'TaggerCheckSTM: cluster (\d+) already TGM')
-RE_FC = re.compile(r'TaggerCheckFC: cluster (\d+) \S+ FC=(\w+)')
+RE_FC = re.compile(r'TaggerCheckFC: cluster (\d+) \S+ FC=' + VERDICT + r'\b')
 
 
 def parse_prlog(fname):
-    verdicts, as_int = {}, {'true': 1, 'false': 0, '1': 1, '0': 0}
+    verdicts, as_int = {}, {'t': 1, 'f': 0, '1': 1, '0': 0}
     with open(fname, errors='replace') as f:
         for line in f:
             m = RE_TGM.search(line)
