@@ -1,5 +1,10 @@
 # 25 — An FC (fully-contained) flag alongside TGM/STM, and the 10-event retable
 
+> **Superseded in part by doc 26.** The label counts in §2 (TGM 33 / STM 1) were
+> taken with `check_neutrino_candidate` OFF, which is no longer this chain's
+> default; the current counts are TGM 34 / STM 0. The FC counts (27/47), the
+> in-beam FC column, all gates in §3 and the open question in §5 are unaffected.
+
 **What was added.** A `TaggerCheckFC` visitor that records the fully-contained
 verdict as the cluster flag **`FC`** — the tagger-computed sibling of `TGM` and
 `STM`. This closes the FC half of the gap found in doc 24: the verdict was

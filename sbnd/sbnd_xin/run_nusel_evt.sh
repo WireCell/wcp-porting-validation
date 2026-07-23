@@ -10,7 +10,8 @@
 #   2. the PR tagger job on the loaded tree:
 #      switch_scope -> steiner -> fiducialutils -> tagger_check_tgm ->
 #      tagger_check_stm -> tagger_check_fc
-#      (wct-pr-perevt.jsonnet, beam window on cluster_t0);
+#      (wct-pr-perevt.jsonnet, beam window on cluster_t0;
+#       check_neutrino_candidate ON by default -- see -no-nucand);
 #   3. the per-bundle label table (nusel_extract.py): one row per matched
 #      bundle (= main cluster) with flash time / PE, bundle size, TGM/STM/FC
 #      verdicts and a label, plus a row per beam-window flash that matched
@@ -65,8 +66,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -nucand       enable the ported check_neutrino_candidate veto in
                 tagger_check_tgm: in-beam-window bundles may then be tagged
                 TGM when the Dijkstra path-topology veto clears them.
-                Default off = conservative never-tag-in-beam.  Env:
-                SBND_TGM_NUCAND=1.
+                ON BY DEFAULT for this chain since doc 26.
+  -no-nucand    disable it (pre-doc-26 conservative never-tag-in-beam).
+                Env: SBND_TGM_NUCAND=0.
+                NB: the C++/jsonnet default stays FALSE -- only this runner
+                opts in, so every other config and detector is unaffected.
   -save-pr-tree also re-save the post-PR tree to
                 work/nusel_evt<ID>/pctree-pr-evt<ID>.tar.gz (NB: tagger flags
                 set on only some clusters do NOT survive re-serialization; the
@@ -95,10 +99,13 @@ EOF
 MODE=mc
 BEAM_WINDOW="0.2,2.2"
 SAVEPRT=""
-# -nucand: enable the ported check_neutrino_candidate veto in tagger_check_tgm
-# (in-beam-window bundles may then be tagged TGM).  Default off = pre-port
-# conservative behavior; also honors SBND_TGM_NUCAND=1.
-NUCAND="${SBND_TGM_NUCAND:-0}"
+# check_neutrino_candidate veto in tagger_check_tgm (in-beam-window bundles may
+# then be tagged TGM).  DEFAULT ON for this chain as of doc 26 -- the knob-off
+# path left in-beam bundles untaggable by construction, which is not the
+# behavior we want from the selection.  The C++ and jsonnet defaults are still
+# false; this runner passes tgm_neutrino_candidate=true explicitly, so nothing
+# outside this chain changes.  -no-nucand / SBND_TGM_NUCAND=0 restores it.
+NUCAND="${SBND_TGM_NUCAND:-1}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -109,6 +116,7 @@ while [ $# -gt 0 ]; do
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -save-pr-tree|--save-pr-tree) SAVEPRT=1; shift ;;
         -nucand|--nucand) NUCAND=1; shift ;;
+        -no-nucand|--no-nucand) NUCAND=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done

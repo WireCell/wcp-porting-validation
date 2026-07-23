@@ -270,6 +270,35 @@ def parse_prbee(fname):
     return set(int(c) for c in d['cluster_id'])
 
 
+def write_table(fh, header, rows):
+    """Write a column-ALIGNED table: each field space-padded to its column width.
+
+    The files are still trivially machine-readable -- no field ever contains a
+    space (ids and counts are numeric, labels are hyphenated: nu-candidate,
+    no-bundle, not-tagged, cosmic-tagged, no-beam-flash), so any consumer can
+    split on runs of whitespace: awk, `sort -k`, str.split(), or pandas with
+    sep=r'\s+'.  read_table() below accepts both this layout and the older
+    tab-separated one.
+    """
+    grid = [list(header)] + [[str(v) for v in r] for r in rows]
+    width = [max(len(g[c]) for g in grid) for c in range(len(header))]
+    for g in grid:
+        # rstrip so the last column carries no trailing padding
+        print('  '.join(f'{v:<{w}}' for v, w in zip(g, width)).rstrip(), file=fh)
+
+
+def read_table(fname, first_col):
+    """(header, rows) from an aligned OR tab-separated table; header may be absent."""
+    with open(fname) as f:
+        lines = [ln.rstrip('\n') for ln in f if ln.strip()]
+    if not lines:
+        return None, []
+    header = None
+    if lines[0].split() and lines[0].split()[0] == first_col:
+        header, lines = lines[0].split(), lines[1:]
+    return header, [ln.split() for ln in lines]
+
+
 def label_of(tgm, stm, in_beam):
     if tgm == 1:
         return 'TGM'
@@ -334,10 +363,13 @@ def one_event(args):
                      1, 0, 0, 0, '0.0', 0, -1, -1, -1, 'no-bundle'])
 
     with open(args.out, 'w') if args.out else sys.stdout as fh:
-        if not args.no_header:
-            print('\t'.join(COLUMNS), file=fh)
-        for r in rows:
-            print('\t'.join(str(v) for v in r), file=fh)
+        if args.no_header:
+            # Headerless output is meant for concatenation; column widths would
+            # be per-file and would not line up, so keep it tab-separated.
+            for r in rows:
+                print('\t'.join(str(v) for v in r), file=fh)
+        else:
+            write_table(fh, COLUMNS, rows)
     if dropped:
         print(f'[evt {event}] {len(dropped)} main-flagged cluster(s) dropped as '
               f'out-of-scope (idents {sorted(c["ident"] for c in dropped)})',
@@ -347,21 +379,16 @@ def one_event(args):
 def merge(args):
     rows, header = [], None
     for fname in args.merge:
-        with open(fname) as f:
-            lines = [ln.rstrip('\n') for ln in f if ln.strip()]
-        if not lines:
-            continue
-        if lines[0].startswith(COLUMNS[0] + '\t'):
-            header, lines = lines[0], lines[1:]
-        rows += [ln.split('\t') for ln in lines]
+        hdr, rs = read_table(fname, COLUMNS[0])
+        if hdr:
+            header = hdr
+        rows += rs
 
     i = {c: n for n, c in enumerate(COLUMNS)}
     rows.sort(key=lambda r: (int(r[i['run']]), int(r[i['subrun']]),
                              int(r[i['event']]), float(r[i['flash_time_us']])))
     with open(args.out, 'w') if args.out else sys.stdout as fh:
-        print(header or '\t'.join(COLUMNS), file=fh)
-        for r in rows:
-            print('\t'.join(r), file=fh)
+        write_table(fh, header or COLUMNS, rows)
 
     if not args.events_out:
         return
@@ -377,22 +404,24 @@ def merge(args):
             e['inbeam_grps'].add(r[i['flash_grp']])
             if is_bundle:
                 e['inbeam_bundles'].append(r[i['label']])
+    ev_cols = ['run', 'subrun', 'event', 'n_bundles', 'n_inbeam_flash',
+               'n_inbeam_bundle', 'event_label']
+    ev_rows = []
+    for key in sorted(ev, key=lambda k: tuple(int(v) for v in k)):
+        e = ev[key]
+        labels = e['inbeam_bundles']
+        if any(l not in ('TGM', 'STM') for l in labels):
+            elabel = 'nu-candidate'      # an in-window bundle survived both taggers
+        elif labels:
+            elabel = 'cosmic-tagged'     # every in-window bundle is TGM/STM
+        elif e['inbeam_grps']:
+            elabel = 'no-bundle'
+        else:
+            elabel = 'no-beam-flash'
+        ev_rows.append([*key, e['bundles'], len(e['inbeam_grps']),
+                        len(labels), elabel])
     with open(args.events_out, 'w') as fh:
-        print('run\tsubrun\tevent\tn_bundles\tn_inbeam_flash\tn_inbeam_bundle\t'
-              'event_label', file=fh)
-        for key in sorted(ev, key=lambda k: tuple(int(v) for v in k)):
-            e = ev[key]
-            labels = e['inbeam_bundles']
-            if any(l not in ('TGM', 'STM') for l in labels):
-                elabel = 'nu-candidate'      # an in-window bundle survived both taggers
-            elif labels:
-                elabel = 'cosmic-tagged'     # every in-window bundle is TGM/STM
-            elif e['inbeam_grps']:
-                elabel = 'no-bundle'
-            else:
-                elabel = 'no-beam-flash'
-            print('\t'.join([*key, str(e['bundles']), str(len(e['inbeam_grps'])),
-                             str(len(labels)), elabel]), file=fh)
+        write_table(fh, ev_cols, ev_rows)
 
 
 def main():
