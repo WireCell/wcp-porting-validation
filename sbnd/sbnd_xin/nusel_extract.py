@@ -12,7 +12,8 @@ Inputs (driven by run_nusel_evt.sh):
             and is NOT persisted in the pctree, so this zip is the only way to
             recover it (and it is more robust than the log, whose lines can be
             torn by interleaved writes -- seen on evt286329).
-  --prlog   the PR-job log: TaggerCheckTGM / TaggerCheckSTM verdicts.
+  --prlog   the PR-job log: TaggerCheckTGM / TaggerCheckSTM / TaggerCheckFC
+            verdicts.
 
 A row is emitted per QUALIFYING BUNDLE, defined as a cluster that is
   (a) flagged flag_main_cluster  -- QLMatching's matched main, and
@@ -29,6 +30,12 @@ flash and are counted once -- otherwise a bright beam flash double-counts.
 Labels: TGM | STM | nu-candidate (in-window, untagged) | not-tagged
         (out-of-window, untagged) | no-bundle (in-window physical flash with no
         qualifying bundle).
+
+The 'fc' column is the fully-contained verdict (TaggerCheckFC -> cluster flag
+"FC"), the toolkit counterpart of the prototype's event_type bit 2 / match_isFC.
+It is an ORTHOGONAL property, not a cosmic veto: like the prototype (where FC is
+an independent eval-tree variable feeding the BDTs) it does NOT enter 'label'.
+-1 = no verdict in the log (tagger_check_fc absent from the pipeline).
 
 Usage:
   nusel_extract.py --pctree QL.tar.gz --prbee mabc-pr.zip --prlog PR.log \
@@ -51,7 +58,7 @@ FLASH_GROUP_NS = 80.0  # cross-APA coincidence window (= MABC flash_group_window
 
 COLUMNS = ['run', 'subrun', 'event', 'main_id', 'flash_gid', 'flash_apa', 'flash_grp',
            'flash_time_us', 'flash_pe', 'flash_pe_grp', 'in_beam', 'n_bundle',
-           'npts_main', 'npts_bundle', 'len_main_cm', 'n_frag', 'tgm', 'stm', 'label']
+           'npts_main', 'npts_bundle', 'len_main_cm', 'n_frag', 'tgm', 'stm', 'fc', 'label']
 
 
 def load_pctree(fname):
@@ -170,7 +177,14 @@ def group_flashes(flashes):
 
 RE_TGM = re.compile(r'TaggerCheckTGM: cluster (\d+) \S+ TGM=(\w+)')
 RE_STM = re.compile(r'TaggerCheckSTM: cluster (\d+) \S+ STM=(\w+) TGM=(\w+)')
-RE_SKIP = re.compile(r'TaggerCheckSTM: cluster (\d+) already TGM; skipping')
+# NB: matches the message PREFIX only.  Log lines can be torn by interleaved
+# writes (doc 23; seen again on evt285185 cluster 5, where another line was
+# spliced in mid-word after "...already TGM; ski").  This message carries its
+# whole meaning before the tear point -- tgm=1, stm=0 -- so a prefix match
+# recovers it losslessly.  The verdict regexes above cannot do the same: their
+# information is the trailing =true/=false, which a tear destroys.
+RE_SKIP = re.compile(r'TaggerCheckSTM: cluster (\d+) already TGM')
+RE_FC = re.compile(r'TaggerCheckFC: cluster (\d+) \S+ FC=(\w+)')
 
 
 def parse_prlog(fname):
@@ -185,6 +199,10 @@ def parse_prlog(fname):
             if m:
                 v = verdicts.setdefault(int(m.group(1)), {})
                 v['stm'], v['tgm'] = as_int[m.group(2)], as_int[m.group(3)]
+                continue
+            m = RE_FC.search(line)
+            if m:
+                verdicts.setdefault(int(m.group(1)), {})['fc'] = as_int[m.group(2)]
                 continue
             m = RE_SKIP.search(line)
             if m:
@@ -288,7 +306,7 @@ def one_event(args):
     for c in sorted(bundles, key=lambda c: c['t0_us']):
         peers = [o for o in clusters if o['gid'] == c['gid'] and o is not c]
         v = verdicts.get(c['ident'], {})
-        tgm, stm = v.get('tgm', -1), v.get('stm', -1)
+        tgm, stm, fc = v.get('tgm', -1), v.get('stm', -1), v.get('fc', -1)
         in_beam = int(lo <= c['t0_us'] < hi)
         fl = flashes.get(c['gid'])
         g = fgrp.get(c['gid'], -1)
@@ -298,7 +316,7 @@ def one_event(args):
                      f'{c["t0_us"]:.3f}', f'{fl["pe"]:.1f}' if fl else '-1',
                      f'{pe_grp.get(g, 0.0):.1f}', in_beam, 1 + len(peers),
                      c['npts'], c['npts'] + sum(o['npts'] for o in peers),
-                     f'{glen:.1f}', nfrag, tgm, stm,
+                     f'{glen:.1f}', nfrag, tgm, stm, fc,
                      label_of(tgm, stm, in_beam)])
 
     # In-window PHYSICAL flashes (deduped) with no qualifying bundle.
@@ -313,7 +331,7 @@ def one_event(args):
         seen.add(gr)
         rows.append([args.run, args.subrun, event, -1, g, f['apa'], gr,
                      f'{f["t_us"]:.3f}', f'{f["pe"]:.1f}', f'{pe_grp[gr]:.1f}',
-                     1, 0, 0, 0, '0.0', 0, -1, -1, 'no-bundle'])
+                     1, 0, 0, 0, '0.0', 0, -1, -1, -1, 'no-bundle'])
 
     with open(args.out, 'w') if args.out else sys.stdout as fh:
         if not args.no_header:

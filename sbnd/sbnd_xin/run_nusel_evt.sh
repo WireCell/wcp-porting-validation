@@ -9,9 +9,10 @@
 #      work/ql_evt<ID>/pctree-evt<ID>.tar.gz already exists);
 #   2. the PR tagger job on the loaded tree:
 #      switch_scope -> steiner -> fiducialutils -> tagger_check_tgm ->
-#      tagger_check_stm   (wct-pr-perevt.jsonnet, beam window on cluster_t0);
+#      tagger_check_stm -> tagger_check_fc
+#      (wct-pr-perevt.jsonnet, beam window on cluster_t0);
 #   3. the per-bundle label table (nusel_extract.py): one row per matched
-#      bundle (= main cluster) with flash time / PE, bundle size, TGM/STM
+#      bundle (= main cluster) with flash time / PE, bundle size, TGM/STM/FC
 #      verdicts and a label, plus a row per beam-window flash that matched
 #      no bundle.
 #
@@ -41,7 +42,12 @@ JSONNET="$SBND_DIR/wct-pr-perevt.jsonnet"
 DL=6.2; DT=9.8; LIFETIME=6; DRIFTSPEED=1.563
 # The tagger pipeline.  fiducialutils MUST precede the taggers (they silently
 # no-op without it); TGM before STM (STM skips TGM-flagged mains).
-PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm"
+# tagger_check_fc is LAST: it evaluates every in-scope main regardless of the
+# TGM/STM verdicts (so position does not change its coverage), and running it
+# after them keeps their inputs free of the PCA/hough/steiner-boundary caches
+# cluster_fc_check populates.  Verified: TGM/STM verdicts on the 10-event
+# MCP2025C sample are identical with and without it (docs/25_fc-flag.md).
+PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc"
 
 usage() {
     cat <<EOF
@@ -74,7 +80,10 @@ deduplicated across APAs first (one physical flash is reconstructed once per
 TPC), so a beam flash seen in both TPCs counts once.
   run subrun event main_id flash_gid flash_apa flash_grp flash_time_us
   flash_pe flash_pe_grp in_beam n_bundle npts_main npts_bundle len_main_cm
-  tgm stm label
+  tgm stm fc label
+  fc: fully-contained verdict (TaggerCheckFC).  Orthogonal to the cosmic
+      taggers -- it does NOT enter 'label', matching the prototype where FC is
+      an independent eval variable, not a veto.
   label: TGM | STM | nu-candidate (in-window, untagged) | not-tagged | no-bundle
 
 Requires per-event imaging (./run_img_evt.sh) in \$SBND_WORK_ROOT/evt<ID>/.
