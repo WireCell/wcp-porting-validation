@@ -189,12 +189,16 @@ fi
 # seed (docs/qlmatch/26; pdvd docs 23 §7d: the "two reconstructed flashes" at
 # a matched time are ONE physical flash -- the late member is 97-99.9% wide
 # cathode-XA slow-tail PE on the seed's own lit PDs, dt 1.2-1.3 us).  The
-# merged flash keeps the seed (fast-peak) time.  DEFAULT 0 = legacy split
-# (byte-identical); toolkit C++/jsonnet defaults stay OFF -- this runner is
-# where a PDVD operating point would turn it on.  Sub-knobs (jsonnet defaults
-# = C++ defaults): PDVD_TAIL_WINDOW_US 3.0, PDVD_TAIL_MIN_WIDTH_US 1.0,
-# PDVD_TAIL_PE_FRAC 0.7.
-if [ "${PDVD_FLASH_TAIL_MERGE:-0}" = 1 ]; then
+# merged flash keeps the seed (fast-peak) time.  PRODUCTION DEFAULT 1 since
+# 2026-07-22 (owner adoption, docs/qlmatch/26+28: agreement-neutral at the
+# production op point, fixes the doc-23 track-C split-match defect; validated
+# 18-evt scan set + crossers, gates 36b544b6/6cb7bd09).  The pulled frame
+# (PDVD_QL_EXTRA_OFFSET_US=13.507, v 1.48073) stays production; the offset-0
+# rc14 point remains opt-in (doc 28 adoption section).
+# PDVD_FLASH_TAIL_MERGE=0 reverts to the legacy split; toolkit C++/jsonnet
+# defaults stay OFF.  Sub-knobs (jsonnet defaults = C++ defaults):
+# PDVD_TAIL_WINDOW_US 3.0, PDVD_TAIL_MIN_WIDTH_US 1.0, PDVD_TAIL_PE_FRAC 0.7.
+if [ "${PDVD_FLASH_TAIL_MERGE:-1}" = 1 ]; then
     VETO_SAT_ARG+=(-S "tail_merge=true")
     [ -n "${PDVD_TAIL_WINDOW_US:-}" ]    && VETO_SAT_ARG+=(-S "tail_window_us=${PDVD_TAIL_WINDOW_US}")
     [ -n "${PDVD_TAIL_MIN_WIDTH_US:-}" ] && VETO_SAT_ARG+=(-S "tail_min_width_us=${PDVD_TAIL_MIN_WIDTH_US}")

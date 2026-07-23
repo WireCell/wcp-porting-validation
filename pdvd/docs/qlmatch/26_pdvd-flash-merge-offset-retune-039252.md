@@ -1,6 +1,19 @@
 # 26 — Flash tail-merge + QL offset removal / cut+velocity retune campaign (run 039252)
 
-Status: **IN PROGRESS** (2026-07-22). Owner-directed follow-up to doc 23
+Status: **COMPLETE** (2026-07-22). **ADOPTION (owner, 2026-07-22): the flash
+tail merge is the PDVD production default** (`run_light_evt.sh`
+`PDVD_FLASH_TAIL_MERGE` 0→1; option (a) of the doc-28 comparison —
+agreement-neutral, fixes the track-C split-match defect, keeps the pulled
+frame/velocity/cuts). The offset-0 retune (steps 5-6) was NOT adopted; the
+rc14 point stays opt-in (docs 27-28).
+
+Adoption Bee sets (run 039252 scan set, 18 evts; bee idx = charge idx 0-17,
+crossers at idx 3 = evt 298609 tracks A/B, idx 6 = evt 298651 track C):
+
+- **adopted production (tail merge ON, tag tm0)**:
+  <https://www.phy.bnl.gov/twister/bee/set/a6c3d73c-ddda-4945-8dfe-3bee459b3f6f/event/list/>
+- pre-merge baseline (tag tm0k):
+  <https://www.phy.bnl.gov/twister/bee/set/8e180ef8-be2a-43ac-86bf-aaec657fcce2/event/list/> Owner-directed follow-up to doc 23
 (`pdvd/docs/23_pdvd-light-timing-check.md`, §4/§6/§7): fix the split-flash
 defect in the light reconstruction, remove the 13.507 µs production QL pull,
 retune the anode/cathode containment cuts and the drift velocity, and carry

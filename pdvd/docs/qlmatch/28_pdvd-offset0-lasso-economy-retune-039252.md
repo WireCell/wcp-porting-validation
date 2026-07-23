@@ -235,6 +235,16 @@ frame (adopting the doc-26 tail merge alone); (b) adopt rc14 accepting the
 coverage trade — this campaign establishes no dial closes it; (c) commission
 one of the three out-of-scope reworks above.
 
+**DECISION (owner, 2026-07-22): option (a) adopted** — tail merge becomes
+the production default (`run_light_evt.sh` `PDVD_FLASH_TAIL_MERGE:-1`),
+pulled frame/velocity/cuts unchanged. rc14 and the offset-0 frame remain
+opt-in via the runner envs; decision (c) reworks stay open. Doc-23 track
+scoreboard at (a): A correct, C fixed (both halves on the 21.2k-PE merged
+flash, strength 0.96/0.97), B still mis-picked (wrong flash 207 µs early in
+every configuration — an independent single-cluster LASSO mis-pick, its
+bot half also carries the doc-23 +8.6 µs charge anomaly). Bee links: see
+doc 26 adoption note.
+
 ## Files
 
 - toolkit `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet`: dead
