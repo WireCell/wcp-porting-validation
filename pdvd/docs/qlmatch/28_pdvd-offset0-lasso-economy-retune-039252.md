@@ -1,6 +1,6 @@
 # 28 — Offset-0 LASSO-economy retune campaign (run 039252)
 
-Status: **IN PROGRESS** (2026-07-22). Owner-commissioned follow-up to doc 27
+Status: **COMPLETE** (2026-07-22). Verdict: the doc-19 economy transfers; no dial closes the residual class (phase 4). Owner-commissioned follow-up to doc 27
 (decision point 3): re-derive the doc-19 LASSO/ladder economy at the physical
 (offset-0) frame, on top of the doc-27 rc14 op point, to close the residual
 ~24 net scan-agreed losses that the flag-window recalibration could not reach.
@@ -175,4 +175,71 @@ the current op point.
 | rl14 | `CATHODE_EXT1=2.5` | cathode window (differs from doc-27 rc2: doc-27 knobs now on) |
 | rl15 | `ANODE_MARGIN=2.0` + `CATHODE_EXT1=2.5` | combined |
 
-(Results table follows.)
+| tag | recov | new-miss | new-phm |
+|---|---|---|---|
+| rl12 | 0 | 1 | 0 |
+| rl13 | 0 | 1 | 0 |
+| rl14 | 0 | 1 | 3 |
+| rl15 | 0 | 2 | 3 |
+
+**All null.** Restoring the production anode margin re-acquires nothing: the
+13.507 µs shift moves endpoints ~2 cm, past any tested window extension, and
+doc 27 already showed the deeper cathode extensions (rc2 ext1 2.5, rc10
+ceiling 3.5, rc1 xtpc tol 14) null or trade ~1:1.
+
+## Phase 4 — flag-transition census and campaign verdict
+
+Flag transitions on the 45 residual truth bundles present in both frames
+(tm0 → rc14):
+
+| transition | n | reading |
+|---|---|---|
+| −xtpc_pin | 10 | pins that never FORM at offset 0 (admission geometry, distinct from the doc-27 purge fix, which needs a formed pin) |
+| −at_x_boundary | 7 | boundary L1 privilege lost (phase-2 case study) |
+| −consistent | 6 | hc-ladder edge flips (doc 27 rc3 showed tier loosening is net-destructive) |
+| −xtpc_consistent / −xtpc_scenario1 | 3 / 3 | crosser candidacy lost with the boundary flag (`:4123`) |
+| +at_x_boundary / +at_cathode / +xtpc_cathode_rescued | 3 / 2 / 3 | gains on the wrong side of the ledger |
+
+**Verdict: the doc-19 LASSO economy transfers to the physical frame as-is.**
+Fifteen sweep points (rl1–rl15) covering regularization (λ 0.05–0.3), the
+strength cutoff, the boundary L1 privilege scale in both directions, the
+background column weight, both chi2 error floors, the rescue system, and the
+boundary-flag windows themselves recover at most 2 of the 50 residual pairs,
+always at larger collateral; rc14 dominates every point on agree. The
+residual class is not a solver or regularization artifact: it is
+boundary-flag acquisition (pin formation, `at_x_boundary`, hc edges) at
+physical charge placement, where the flag windows sit ~2 cm short of the
+populations the pulled frame used to catch — plus ~23 scan-vs-metric
+disagreements the light metrics alone cannot arbitrate.
+
+What WOULD reach the residual class (out of scope, each a campaign of its
+own):
+1. **Flag geometry rework** — acquire boundary flags from detachment-aware
+   endpoints (doc-23 `robust_endpoint_*` machinery) rather than raw extremal
+   points, so physical placement stops moving bundles out of the windows.
+2. **Pin-formation admission** at offset 0 (the −xtpc_pin ×10): re-derive
+   the xtpc candidate admission (`:4123`) so a crosser pair whose boundary
+   flags are lost can still pair; the doc-27 pin knob then protects it.
+3. **A rescan at the physical frame** — the 23 winner-ks-better pairs are
+   scan verdicts recorded at the pulled frame; some may simply be correct
+   matches whose truth changed with the geometry.
+
+## Adoption status
+
+Unchanged from doc 27, now with the economy axis exhausted: **rc14 stands as
+the best offset-0 operating point** at 728 agree (88.6%) / 94 phantom / 115
+missed vs production tm0 752 (86.6%) / 116 / 91. Against the no-regression
+rule it still fails on agree/missed (−24/+24) while winning phantoms (−22)
+and rate (+2.0). The owner's options are now sharper: (a) stay at the pulled
+frame (adopting the doc-26 tail merge alone); (b) adopt rc14 accepting the
+coverage trade — this campaign establishes no dial closes it; (c) commission
+one of the three out-of-scope reworks above.
+
+## Files
+
+- toolkit `cfg/pgrapher/experiment/protodunevd/qlmatching.jsonnet`: dead
+  `PDVD_QL_LASSO_BWEIGHT` fix (duplicate-field crash; knob-off byte-identical).
+- `scripts/rl_forensics.py` (phase-0/case-study classifier),
+  `scripts/rl_recovery.py` (residual-pair recovery counter).
+- Sweep tags `work/039252_<idx>_{rl1..rl15}` + `work/ql_scores/rl*`
+  (records, keep).
