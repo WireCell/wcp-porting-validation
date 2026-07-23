@@ -227,6 +227,37 @@ class Event:
                  if c["gid"] == r["flash_gid"] and c["ident"] != r["main_id"]]
         return r["main_id"], sorted(comps)
 
+    def components(self, ident):
+        """Merge components of cluster `ident`, biggest first:
+        [{rid, n, len_cm}].
+
+        QLMatching's examine_bundles flash merge can fuse several physically
+        separate clusters into ONE cluster object when they share a flash; the
+        Bee clustering layer records each point's pre-merge identity in
+        real_cluster_id (it is written only on merged clusters, and does not
+        survive into the pctree).  The taggers run on the MERGED object, so all
+        components are in their scope -- but the table's len_main_cm is the
+        DOMINANT (most-points) component's length, matching
+        nusel_extract.parse_qlbee.  Distinguishing them is what makes a
+        multi-piece red blob readable during a scan.
+        """
+        out = []
+        if self.pts is None or ident is None:
+            return out
+        m = self.pts["cid"] == ident
+        for r in sorted(set(self.pts["rid"][m].tolist())):
+            s = m & (self.pts["rid"] == r)
+            P = np.c_[self.pts["x"][s], self.pts["y"][s], self.pts["z"][s]]
+            if len(P) > 1:
+                a = int(np.argmax(((P - P[0]) ** 2).sum(1)))
+                b = int(np.argmax(((P - P[a]) ** 2).sum(1)))
+                length = float(np.linalg.norm(P[a] - P[b]))
+            else:
+                length = 0.0
+            out.append(dict(rid=int(r), n=int(s.sum()), len_cm=length))
+        out.sort(key=lambda c: -c["n"])
+        return out
+
     def partner_gid(self, gid):
         """The opposite-APA flash gid in the same physical-flash group, if any."""
         g = self.fgrp.get(gid)
@@ -356,8 +387,10 @@ f_yz.xaxis.axis_label, f_yz.yaxis.axis_label = "z (cm)", "y (cm)"
 f_xz.xaxis.axis_label, f_xz.yaxis.axis_label = "x (cm)", "z (cm)"
 
 ctx_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))       # gray: whole event
-comp_src = ColumnDataSource(data=dict(x=[], y=[], z=[], c=[]))  # companions
-main_src = ColumnDataSource(data=dict(x=[], y=[], z=[], c=[]))  # main cluster
+EMPTY_PTS = dict(x=[], y=[], z=[], c=[], cid=[], rid=[], q=[])
+comp_src = ColumnDataSource(data=dict(EMPTY_PTS))   # companion clusters (blue)
+frag_src = ColumnDataSource(data=dict(EMPTY_PTS))   # main's other merge comps (orange)
+main_src = ColumnDataSource(data=dict(EMPTY_PTS))   # main's dominant comp (red)
 det_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
                                      xs_xz=[], ys_xz=[]))
 fv_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
@@ -370,10 +403,17 @@ for f, sx, sy in ((f_xy, "xs_xy", "ys_xy"), (f_yz, "xs_yz", "ys_yz"),
 for f, hx, hy in ((f_xy, "x", "y"), (f_yz, "z", "y"), (f_xz, "x", "z")):
     f.scatter(hx, hy, source=ctx_src, marker="circle", size=2,
               fill_color="#c8c8c8", line_color=None, fill_alpha=0.45)
-    f.scatter(hx, hy, source=comp_src, marker="circle", size=3,
-              fill_color="c", line_color=None, fill_alpha=0.8)
-    f.scatter(hx, hy, source=main_src, marker="circle", size=3,
-              fill_color="c", line_color=None, fill_alpha=0.9)
+    rs = [f.scatter(hx, hy, source=comp_src, marker="circle", size=3,
+                    fill_color="c", line_color=None, fill_alpha=0.8),
+          # merge fragments of the MAIN cluster: same tagger scope as the
+          # dominant piece, drawn distinctly (orange squares) so a multi-piece
+          # main cluster is not misread as two separate clusters.
+          f.scatter(hx, hy, source=frag_src, marker="square", size=3,
+                    fill_color="c", line_color=None, fill_alpha=0.85),
+          f.scatter(hx, hy, source=main_src, marker="circle", size=3,
+                    fill_color="c", line_color=None, fill_alpha=0.9)]
+    f.add_tools(HoverTool(renderers=rs, tooltips=[
+        ("cluster", "@cid"), ("merge comp.", "@rid"), ("q", "@q{0,0}")]))
 
 
 def box_polys(box, cathode=False):
@@ -529,29 +569,41 @@ def render_projections():
     else:
         ctx_src.data = dict(x=[], y=[], z=[])
 
-    empty = dict(x=[], y=[], z=[], c=[])
     i = state["focus"]
+    blank = lambda: (main_src.update(data=dict(EMPTY_PTS)),
+                     frag_src.update(data=dict(EMPTY_PTS)),
+                     comp_src.update(data=dict(EMPTY_PTS)))
     if i is None or evt.pts is None:
-        main_src.data = dict(empty)
-        comp_src.data = dict(empty)
+        blank()
         return
     r = evt.rows[i]
     main, comps = evt.bundle_cluster_ids(r)
     if main is None:
-        main_src.data = dict(empty)
-        comp_src.data = dict(empty)
+        blank()
         return
-    cid = evt.pts["cid"]
+    cid, rid = evt.pts["cid"], evt.pts["rid"]
     mm = cid == main
+    # Split the main cluster into its merge components: the dominant one (red)
+    # vs the grafted fragments (orange).  Both are inside the SAME cluster
+    # object the taggers evaluated -- this is a provenance distinction, not a
+    # scope one (see Event.components).
+    parts = evt.components(main)
+    dom_rid = parts[0]["rid"] if parts else None
+    dm = mm & (rid == dom_rid) if dom_rid is not None else mm
+    fm = mm & ~dm
     cm = np.isin(cid, comps) if comps else np.zeros_like(mm)
-    for src, mask, role_color in ((main_src, mm, "#d62728"),
+    for src, mask, role_color in ((main_src, dm, "#d62728"),
+                                  (frag_src, fm, "#ff7f0e"),
                                   (comp_src, cm, "#1f77b4")):
         x, y, z = evt.pts["x"][mask], evt.pts["y"][mask], evt.pts["z"][mask]
+        q = evt.pts["q"][mask]
         if state["color_mode"] == "charge":
-            c = charge_colors(evt.pts["q"][mask])
+            c = charge_colors(q)
         else:
             c = [role_color] * len(x)
-        src.data = dict(x=x.tolist(), y=y.tolist(), z=z.tolist(), c=c)
+        src.data = dict(x=x.tolist(), y=y.tolist(), z=z.tolist(), c=c,
+                        cid=cid[mask].tolist(), rid=rid[mask].tolist(),
+                        q=q.tolist())
 
 
 def render_light():
@@ -629,6 +681,21 @@ def render_metrics():
     ptxt = (f"gid {partner} (t={evt.flashes[partner]['t_us']:.3f} us)"
             if partner is not None else "-")
     verdict = lambda v: {1: "YES", 0: "no", -1: "n/a"}.get(v, str(v))
+    # Merge-component breakdown of the main cluster: the taggers ran ONCE on
+    # the whole merged object, so several disconnected pieces on screen can all
+    # belong to the single main cluster.
+    parts = evt.components(main)
+    if len(parts) > 1:
+        chips = []
+        for n_, p in enumerate(parts):
+            col = "#d62728" if n_ == 0 else "#ff7f0e"
+            role = "dominant" if n_ == 0 else "grafted"
+            chips.append(f"<span style='color:{col}'>#{p['rid']} {role}: "
+                         f"{p['n']} pts, {p['len_cm']:.1f} cm</span>")
+        comp_txt = ("<b>%d merge components</b> (one cluster, tagged once)<br>"
+                    % len(parts)) + "<br>".join(chips)
+    else:
+        comp_txt = "single component (no flash merge)"
     rows_ = [
         ("flash", f"gid {r['flash_gid']} / TPC {r['flash_apa']} / grp {r['flash_grp']}"),
         ("flash time", f"{r['t_us']:.3f} us" + ("  (IN BEAM)" if r["in_beam"] else "")),
@@ -637,7 +704,8 @@ def render_metrics():
         ("main cluster", str(main) if main is not None else "(no bundle)"),
         ("companions", ", ".join(str(c) for c in comps) or "-"),
         ("npts main / bundle", f"{r['npts_main']} / {r['npts_bundle']}"),
-        ("len (main comp.)", f"{r['len_cm']:.1f} cm  ({r['n_frag']} merged frag.)"),
+        ("len (dominant comp.)", f"{r['len_cm']:.1f} cm"),
+        ("main cluster makeup", comp_txt),
         ("TGM", verdict(r["tgm"])),
         ("STM", verdict(r["stm"])),
         ("FC", verdict(r["fc"])),
@@ -662,8 +730,11 @@ def render_proj_info():
     if i is not None:
         r = evt.rows[i]
         main, comps = evt.bundle_cluster_ids(r)
+        parts = evt.components(main)
         foc = (f" &nbsp;&nbsp; <b>bundle</b> grp {r['flash_grp']} t={r['t_us']:.3f} us"
                f" main <span style='color:#d62728'><b>{main}</b></span>"
+               + (f" (<span style='color:#ff7f0e'>+{len(parts) - 1} merge "
+                  f"fragment(s), squares</span>)" if len(parts) > 1 else "")
                + (f" + companions <span style='color:#1f77b4'><b>"
                   f"{','.join(str(c) for c in comps)}</b></span>" if comps else ""))
     nlab = sum(1 for r in evt.rows if state["labels"].get(row_key(r)))
