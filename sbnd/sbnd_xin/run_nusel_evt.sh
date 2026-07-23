@@ -61,9 +61,15 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 set on only some clusters do NOT survive re-serialization; the
                 table always takes verdicts from the log)
 
-Table columns (work/nusel_evt<ID>/nusel-evt<ID>.tsv, merged: work/nusel-table.tsv):
-  run subrun event main_id flash_gid flash_apa flash_time_us flash_pe in_beam
-  n_bundle n_assoc npts_main npts_bundle len_main_cm tgm stm label
+Table: one row per QUALIFYING BUNDLE = a cluster that is (a) flagged
+flag_main_cluster and (b) in scope (passes switch_scope's active-volume
+filter) -- exactly the population the taggers evaluate.  Main-flagged
+out-of-volume shards are reported on stderr, not tabulated.  Flashes are
+deduplicated across APAs first (one physical flash is reconstructed once per
+TPC), so a beam flash seen in both TPCs counts once.
+  run subrun event main_id flash_gid flash_apa flash_grp flash_time_us
+  flash_pe flash_pe_grp in_beam n_bundle npts_main npts_bundle len_main_cm
+  tgm stm label
   label: TGM | STM | nu-candidate (in-window, untagged) | not-tagged | no-bundle
 
 Requires per-event imaging (./run_img_evt.sh) in \$SBND_WORK_ROOT/evt<ID>/.
@@ -168,7 +174,8 @@ process_event() {
 
     # 3. Per-bundle label table.
     python3 "$SBND_DIR/nusel_extract.py" \
-        --pctree "$PCT" --prlog "$LOG" \
+        --pctree "$PCT" --prbee "$NUDIR/mabc-pr.zip" --prlog "$LOG" \
+        --qlbee "$QLDIR/mabc-all-apa.zip" \
         --beam-window "$BEAM_WINDOW" \
         --run "$RUN_NO" --subrun "$SUBRUN_NO" \
         --out "$NUDIR/nusel-evt${EVT_ID}.tsv" || return 1

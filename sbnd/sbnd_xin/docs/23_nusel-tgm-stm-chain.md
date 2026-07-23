@@ -4,180 +4,236 @@
 and labels every beam-coincident bundle, as the first stage of a neutrino
 selection: run the cosmic taggers (TGM = through-going muon, then STM = stopped
 muon) on every matched bundle and extract a per-bundle table — flash time/PE,
-main-cluster id, bundle size, tagger flags, label.  The beam light flash sits
-in **(0.2, 2.2) µs**; several flashes can fall in that window, so labels are
-per *bundle* (one row per matched main cluster), not per event.
+main-cluster id, bundle size, tagger flags, label.  The beam light flash sits in
+**(0.2, 2.2) µs**; several flashes can fall in that window, so labels are per
+*bundle*, not per event.
 
-First exercised on the MCP2025C reco1 data sample (`work-mcp10`, 10 events,
-run 18255; doc 21/22 lineage).  Scripts: `run_nusel_evt.sh` (driver) +
-`nusel_extract.py` (table), both in `sbnd_xin/`.  Chain machinery: the PR
-milestones M1–M8 of `sbnd/docs/sbnd-pattern-recognition.md` (all pre-existing;
-**no toolkit C++ or cfg change was needed for this chain**).
+Scripts: `run_nusel_evt.sh` (driver) + `nusel_extract.py` (table).  Chain
+machinery: PR milestones M1–M8 of `sbnd/docs/sbnd-pattern-recognition.md`.
+Sample: MCP2025C reco1 data, `work-mcp10`, 10 events, run 18255 (doc 21/22).
+
+> **Round 1 (2026-07-23) exposed two reconstruction defects, both now fixed**
+> (§4).  All results below are post-fix; the round-1 numbers are kept only as
+> the before column, because they were dominated by the defects.
 
 ## 1. The chain
 
 ```
 work/evt<ID>/icluster-*.npz ──run_ql_evt.sh -save-pctree──▶ work/ql_evt<ID>/
-    (imaging, prerequisite)        (Q/L matching, prod. defaults)   ├─ mabc-all-apa.zip
-                                                                    └─ pctree-evt<ID>.tar.gz
-work/ql_evt<ID>/pctree-evt<ID>.tar.gz
-    ──wct-pr-perevt.jsonnet──▶  switch_scope → steiner → fiducialutils
-                                → tagger_check_tgm → tagger_check_stm
-                                ──▶ work/nusel_evt<ID>/{wct_nusel_evt<ID>.log, mabc-pr.zip}
-{pctree, PR log} ──nusel_extract.py──▶ work/nusel_evt<ID>/nusel-evt<ID>.tsv
+    (imaging, prerequisite)                                 ├─ mabc-all-apa.zip
+                                                            └─ pctree-evt<ID>.tar.gz
+pctree ──wct-pr-perevt.jsonnet──▶ switch_scope → steiner → fiducialutils
+                                  → tagger_check_tgm → tagger_check_stm
+                                  ──▶ work/nusel_evt<ID>/{log, mabc-pr.zip}
+{pctree, mabc-pr.zip, mabc-all-apa.zip, PR log} ──nusel_extract.py──▶ nusel-evt<ID>.tsv
     'all' merge ──▶ work/nusel-table.tsv (per bundle) + work/nusel-events.tsv (per event)
 ```
 
-- Step 1 is **skipped when the pctree tarball already exists**; when missing
-  (e.g. a work tree produced without `-save-pctree`, like the original
-  `work-mcp10`/`work-mcp1000` runs) the driver reruns `run_ql_evt.sh
-  <mode> -save-pctree <idx>` — the Q/L job is deterministic, so this
-  reproduces the same matching and only adds the tarball.
-- Pipeline order is load-bearing: `fiducialutils` must precede the taggers
-  (they silently no-op without it) and TGM must precede STM
-  (`TaggerCheckSTM` skips TGM-flagged mains; a through-going muon is never a
-  stopped muon).  The neutrino-PR stage (`tagger_check_neutrino`) is
-  deliberately NOT in this pipeline — this chain is the tagger/label stage.
+Pipeline order is load-bearing: `fiducialutils` must precede the taggers (they
+silently no-op without it) and TGM must precede STM (`TaggerCheckSTM` skips
+TGM-flagged mains).  `tagger_check_neutrino` is deliberately NOT in this
+pipeline — this is the tagger/label stage.
+
+The Q/L step is skipped when the pctree exists.  **After any toolkit change
+affecting the QL job, delete `ql_evt*/pctree-*.tar.gz` first** or the rerun
+silently reuses stale trees.
 
 ### Usage
 
 ```
-# one event / all events of the default sample tree (work/):
-./run_nusel_evt.sh data 2
-./run_nusel_evt.sh data all
-
-# the MCP2025C reco1 10-event tree used here:
 SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-mcp2025c-10evt \
 SBND_WORK_ROOT=$PWD/work-mcp10 ./run_nusel_evt.sh data all
-
-# knobs: -bw l,h   beam window in µs (default 0.2,2.2)
-#        -save-pr-tree   also persist the post-PR tree
+#   -bw l,h        beam window in µs (default 0.2,2.2)
+#   -save-pr-tree  also persist the post-PR tree
 ```
-
-For the 1000-event tree (`work-mcp1000`, staged per-entry under
-`input_files_reco1/staged-mcp2025c-1000evt/e<i>/`), run per entry with
-`SBND_INPUT_DIR=…/e<i>` the same way the imaging/QL fan-out did (doc 21);
-each single-event input dir has exactly one idx (1).
 
 ## 2. Table definition
 
-One row per **matched bundle** (= main cluster; QLMatching sets
-`flag_main_cluster` per matched flash bundle) plus one row per **beam-window
-flash that matched no bundle** (`label=no-bundle` — beam light with no
-associated charge is itself selection-relevant).  Columns:
+A row is one **qualifying bundle**: a cluster that is
+
+1. flagged `flag_main_cluster` — QLMatching's matched main, **and**
+2. **in scope** — passes `switch_scope`'s active-volume filter,
+
+i.e. exactly the population the taggers evaluate.  Main-flagged clusters
+failing (2) are non-physical shards (§4.2); they are counted on stderr, not
+tabulated.  Plus one `no-bundle` row per in-window physical flash with no
+qualifying bundle.
+
+**Flashes are deduplicated across APAs first.**  SBND reconstructs light per
+TPC, so one physical flash yields one flash object per APA (APA1 gids offset
++1000000).  Flashes within 80 ns on opposite sides are one physical flash
+(`flash_grp`) and count once — without this a bright beam flash double-counts,
+which is what made `n_inbeam` read 2 for evt284349 in round 1.
 
 | column | meaning |
 |---|---|
-| `run subrun event` | RSE (run/subrun read from the reco1 opflash tensor metadata) |
-| `main_id` | main-cluster ident (= `cluster N` in the tagger log lines); −1 for no-bundle rows |
-| `flash_gid` | matched flash gid (APA1 gids offset +1000000, per-APA matching) |
-| `flash_apa` | APA of the matched flash |
-| `flash_time_us` | `cluster_t0` in µs = matched flash time, trigger-referenced (CAF frame-shift applied at extraction for MCP2025C; doc 21) |
-| `flash_pe` | summed PE of the matched flash (root opflash PC) |
-| `in_beam` | 1 if `flash_time_us` ∈ [bw_low, bw_high) |
-| `n_bundle` | clusters sharing this `matched_flash_gid` (incl. the main) |
-| `n_assoc` | of those, clusters carrying `flag_associated_cluster` |
-| `npts_main`, `npts_bundle` | 3d points of the main / of the whole bundle |
-| `len_main_cm` | main-cluster bounding-box diagonal (corrected coords) |
-| `tgm`, `stm` | tagger verdicts (−1 = no verdict found in the log) |
-| `label` | `TGM` \| `STM` \| `nu-candidate` (in-window, untagged) \| `not-tagged` (out-of-window, untagged) \| `no-bundle` |
+| `run subrun event` | RSE (from the reco1 opflash tensor metadata) |
+| `main_id` | main-cluster ident = the **Bee clustering-layer `cluster_id`** (verified point-by-point); −1 for no-bundle rows |
+| `flash_gid`, `flash_apa` | matched flash and its TPC |
+| `flash_grp` | deduplicated physical-flash id (both TPCs) |
+| `flash_time_us` | `cluster_t0` in µs = matched flash time, trigger-referenced |
+| `flash_pe`, `flash_pe_grp` | this flash's PE; summed over the physical flash |
+| `in_beam` | 1 if in [bw_low, bw_high) |
+| `n_bundle` | clusters sharing this `matched_flash_gid` |
+| `npts_main`, `npts_bundle` | 3d points of the main / whole bundle |
+| `len_main_cm` | end-to-end length of the **dominant merge component** (see below) |
+| `n_frag` | how many pre-merge clusters were flash-merged into this one |
+| `tgm`, `stm`, `label` | verdicts; `TGM`/`STM`/`nu-candidate`/`not-tagged`/`no-bundle` |
 
-Per-event summary (`nusel-events.tsv`): `nu-candidate` if any in-window bundle
-is untagged; else `cosmic-tagged` if every in-window bundle is TGM/STM; else
-`no-bundle` if the window has only unmatched flashes; else `no-beam-flash`.
+`len_main_cm` must be measured **within one merge component**.
+`examine_bundles` can graft a distant fragment onto a cluster, and then any
+whole-cluster extent reports the gap rather than the track: evt284349 cluster 11
+reads 447 cm (bbox) or 426 cm (farthest pair) across a 3-point speck in the
+other TPC, while the actual track is **202 cm**.  The per-point
+`real_cluster_id` in the Bee clustering layer gives the pre-merge component, so
+the extractor measures the dominant one — hence `--qlbee`.  Note Bee coordinates
+are in cm while pctree arrays are in WCT internal units (mm).
 
-**Verdicts come from the PR log, not from a re-saved tree** — `set_flag`
-writes the scalar PC only on *tagged* clusters, and non-uniform per-cluster
-arrays do not survive TensorDM serialization
-(`sbnd-pattern-recognition.md` §2.2/§7).  The log lines are stable:
-`TaggerCheckTGM: cluster N → TGM=…`, `TaggerCheckSTM: cluster N → STM=… TGM=…`,
-`TaggerCheckSTM: cluster N already TGM; skipping`.
+Verdicts come from the PR log; the in-scope set comes from `mabc-pr.zip` (its
+clustering layer *is* the in-scope set), because `scope_filter` is runtime state
+and is not persisted.  The zip is also more robust than the log, whose lines can
+be **torn by interleaved writes** (observed on evt286329, where a TGM verdict
+line was split across 98 lines).
 
-Bundle structure (idents, `cluster_t0`, `matched_flash_gid`, main/associated
-flags, per-cluster point slices via the `lpcmaps` node→row-count arrays, and
-the root opflash PC) comes from the **input** (post-QL) pctree — QLMatching
-materializes these on every cluster precisely so they persist.
+## 3. Results — MCP2025C reco1, 10 events (run 18255)
 
-## 3. First results — MCP2025C reco1, 10 events (run 18255)
+**74 qualifying bundles**; 45 main-flagged out-of-volume shards dropped.
+Bee: `https://www.phy.bnl.gov/twister/bee/set/83cba0f2-3c3d-47a2-992e-69476a749911/event/list/`
+(bee idx 0–9 = events 284349, 284657, 285185, 285999, 286021, 286065, 286197,
+286241, 286329, 286527).
 
-All 10 events completed (PR job 2–5 s/event on top of the Q/L rerun;
-zero crashes, steiner gracefully skips <2-terminal mains).  116 rows:
-108 bundles + 8 unmatched beam-window flashes.
+| label | bundles | in-window | round 1 (buggy) |
+|---|---|---|---|
+| TGM | 33 | **0** | 67 / 6 in-window |
+| not-tagged (out-of-window) | 33 | — | 35 |
+| nu-candidate | 7 | 7 | 6 |
+| **STM** | **1** | **1** | 0 |
+| no-bundle | 2 | 2 | 8 |
 
-| label | bundles | of which in-window |
-|---|---|---|
-| TGM | 67 | 6 |
-| not-tagged (out-of-window) | 35 | — |
-| nu-candidate | 6 | 6 |
-| STM | 0 | 0 |
+Per event: **7 nu-candidate**, **1 cosmic-tagged** (284349), **2 no-bundle**
+(286021, 286197).  `n_inbeam_flash` is now exactly 1 for every event.
 
-Per-event: **6 nu-candidate** (284657, 285185, 286065, 286241, 286329,
-286527), **2 cosmic-tagged** (284349, 285999), **2 no-bundle** (286021,
-286197).
+**Every in-window bundle now gets a physics-meaningful verdict.**  Round 1's six
+in-window TGM tags were *all* out-of-volume shards; with those excluded the
+in-window TGM count is zero, and the surviving in-window objects are substantial
+clusters (97–304 cm, 0.3–4.4 k points).
 
-The six nu-candidates are all substantial in-time clusters —
-124.7/381.4/269.4/310.4/145.1/139.5 cm with 0.4–4.4 k points, flash times
-0.58–2.00 µs.  (Whether they are neutrinos or in-time cosmics is the next
-stage's question — this chain only establishes the cosmic-tagger labels;
-`check_neutrino_candidate`, FC/LM-type flags and the neutrino PR come later.)
+**First genuine SBND STM tag: evt284349 cluster 11** — the 202 cm, 2176-point
+beam-window track in TPC0 (t0 = 1.555 µs).  This is the cluster that round 1
+mislabeled: its `flag_main_cluster` had been lost to a 3-point speck, so the
+taggers never saw it, and the event's label came from a 0.8 cm shard tagged TGM.
+It closes open item 6 of `sbnd-pattern-recognition.md` §6.7 ("find a genuine SBND
+stopped muon").  It should be hand-scanned before being trusted.
 
-### Observations (feed the follow-ups)
+35 of 74 bundles have `n_frag > 1`, i.e. flash-merging is the norm, not the
+exception — which is why the flag-provenance fix (§4.1) matters at this scale.
 
-1. **In-window TGM tags are dominated by sparse boundary fragments.**  All six:
-   3–28 points, 0.5–100 cm, e.g. 284349 main 6 = a 4-point, 0.8 cm sliver at
-   the TPC0 anode face (x = −201.5 cm).  They are tagged through the
-   prototype-faithful CASE-A branch `ngroups==2 && both-ends-out &&
-   no-interior-point`, which is **not** beam-protected — in the prototype
-   (`Cosmic_tagger.h:1441`) exactly as in the port.  All other TGM branches
-   are conservative for in-window bundles (never tag) until
-   `check_neutrino_candidate` is ported.
-2. **The beam flash frequently carries two mains: a fragment and the real
-   cluster.**  In 285185, 286065, 286329, 286527 the same in-window flash has
-   a tiny TGM-tagged main *and* a large nu-candidate main.  The per-bundle
-   table (rather than a per-flash or per-event flag) is what keeps these
-   separable; a per-flash selection would take the surviving main.  The
-   fragment mains are the doc-22 residual class (boundary-fragment
-   acquisition) seen from the other side.
-3. **A matched cluster can carry neither flag.**  284349's in-window flash
-   (gid 4) has main 6 (4 pts) plus a 2176-point cluster with the same gid but
-   `flag_main_cluster=0`, `flag_associated_cluster=0` — it therefore gets no
-   tagger verdict at all.  It is counted in `n_bundle`/`npts_bundle` (2180
-   pts), which is how such rows remain visible.  Check QLMatching's flag
-   semantics for multi-cluster bundles if this matters for the selection.
-4. **No STM tag in 108 mains** — consistent with the M7 observation; a
-   genuine SBND stopped-muon example still awaits a larger sample (the
-   1000-event tree is the natural place to look).
-5. **Out-of-window bundles labeled `not-tagged` (35) are mostly large
-   cosmics whose TGM evaluation failed the geometric tests** (single-end
-   exiters etc.) — STM=0, TGM=0.  They are irrelevant to the beam selection
-   but kept in the table for tagger-efficiency studies.
+## 4. The two defects found and fixed
 
-## 4. Gotchas
+Both C++ changes are **opt-in, default false**, so every non-SBND config is
+byte-identical by construction and the uBooNE qlport gate is unaffected.
+Verified: the SBND production `mabc-all-apa.zip` content hash is **unchanged**
+on 3 events (`c0bdbdec…`, `97cd3968…`, `25364ce6…`) — the flags live in the
+pctree `cluster_scalar`, not in any dumped Bee layer, so production output is
+untouched.
 
-- **Invoke from anywhere, but the real path matters**: `sbnd_xin` is also
-  reachable through the `toolkit/sbnd_xin` symlink; the PR jsonnet's relative
-  `import '../particle_dataset.jsonnet'` only resolves from the real location
-  (`wcp-porting-img/sbnd/`).  `run_nusel_evt.sh` canonicalizes with `pwd -P`
-  (note: `run_pr_evt.sh` has the same latent issue — it uses the logical
-  path and fails when invoked via the symlink).
-- The beam window feeds BOTH the TGM beam protection (in the C++ config, via
-  the `beam_window_us` TLA) and the table's `in_beam`/label columns — the
-  driver passes the same `-bw` value to both, keep it that way.
-- The `-save-pr-tree` option exists for display/round-trip work, but do not
-  read tagger flags from that tarball (see §2 on flag serialization).
-- `work/nusel-table.tsv` is regenerated by every `all` run from the
-  *current* sample's per-event TSVs only (stale `nusel_evt*` dirs from other
-  samples in the same work root are not merged).
+### 4.1 Flag provenance lost on the flash merge
 
-## 5. Follow-ups
+`merge_clusters` (`clus/src/ClusteringFuncs.cxx`) calls `Cluster::from()` once
+per member, and `flags_from()` copies the donor's flag *values including zeros*
+— so the merged cluster's flags are whichever member was visited last.  A
+matched main that absorbs a tiny co-merged fragment therefore **loses
+`flag_main_cluster` to it**.  The code already recognised this hazard for the
+flash annotation ("override from()'s arbitrary first-wins flash with the longest
+flash-bearing member") but never applied it to the flags.
 
-1. Port `check_neutrino_candidate` (2dtoy `ToyFiducial.cxx:1284`) — unlocks
-   real TGM decisions on in-window bundles and closes the unprotected
-   fragment branch (§3.1).
-2. Run the chain over `work-mcp1000` (1000 events): beam-window calibration
-   with statistics, STM search, and the in-window TGM fragment rate.
-3. Main-cluster selection for beam flashes: the fragment-vs-real-cluster
-   split (§3.2) and the unflagged-companion case (§3.3) live in QLMatching's
-   bundle/flag assignment — revisit together with doc 22's residual class.
-4. Add the LM (light-mismatch) style flags and fully-contained check to the
-   label set when their ports land.
+Fix: `flags_from_longest` (new arg on `merge_clusters`, config key on
+`ClusteringExamineBundles`) re-applies the flags of the *same* representative
+member that donates the flash.  Enabled in SBND's `clus_all_apa` — note this is
+the **QL** job, so the pctree must be regenerated for it to take effect.
+
+Effect on the 10 events: main-flagged clusters **108 → 121**, matched-but-
+unflagged **71 → 58**.  (Some events lose a main — the rule is deterministic, so
+a flag spuriously inherited by the wrong member is now correctly *not* set.)
+
+### 4.2 Taggers ignored the active-volume filter
+
+`switch_scope` **separates** rather than deletes: blobs whose T0-corrected
+points fall outside the active volume become their own cluster that stays in the
+grouping, carrying `scope_filter = false` and an inherited `flag_main_cluster`.
+The Bee writer (`filter:1`) and `clustering_examine_bundles` both honor that
+flag; `TaggerCheckTGM`/`TaggerCheckSTM` did not — they selected on
+`flag_main_cluster` alone.
+
+This is not benign: an out-of-volume cluster is outside the FV *by
+construction*, so the TGM CASE-A test is satisfied almost automatically.  Round-1
+measurement: **46 of 107 evaluated mains (43%) were such shards, tagged TGM at
+85% vs 44% for real clusters.**  This — not prototype fidelity — is the real
+source of the "tiny anode fragments get tagged" behavior recorded at M7.
+
+Fix: `require_in_scope` (new config on both taggers), on in SBND's `clus_pr`.
+The taggers now log `skipped N out-of-scope main cluster(s)`.
+
+## 5. Gotchas
+
+- **Invoke via the real path.** `sbnd_xin` is also reachable through the
+  `toolkit/sbnd_xin` symlink; the PR jsonnet's relative
+  `import '../particle_dataset.jsonnet'` only resolves from the real location.
+  `run_nusel_evt.sh` canonicalizes with `pwd -P` (`run_pr_evt.sh` still has this
+  latent bug).
+- **Regenerate pctrees after any QL-side toolkit change** (§1).
+- The beam window feeds both the TGM beam protection and the table's
+  `in_beam`/label columns — the driver passes one `-bw` to both; keep it so.
+- Do not read tagger flags from a `-save-pr-tree` tarball: flags set on only
+  some clusters do not survive serialization.
+
+## 6. Bee display: op-layer ids are not clustering-layer ids
+
+Two independent traps when hand-scanning:
+
+1. **The op layer's cluster ids are the *pre-pipeline* numbering** (the code
+   comment says it "runs at the same pre-pipeline point" as the img dump), while
+   the clustering layer shows post-pipeline ids, and `real_cluster_id` is a
+   *third* generation (pre-*merge*).  In evt284349 the beam flash shows
+   `cluster 7`, the object is clustering-layer cluster **11**, and the tree
+   *does* contain a different cluster 7 (a 10-point TPC1 shard) — so a naive
+   op→clustering lookup lands on the wrong object.  Ids 12/13/14 appear in the
+   op layer and exist in no other layer at all.
+2. **The op layer hides dim matches.**  `fill_bee_flashes` drops any match whose
+   predicted light is < 100 PE, emitting an empty `cluster_id` list — visually
+   identical to an unmatched flash.  In evt284349, 11 flashes matched but Bee
+   displays only 8; the APA1 beam flash (7.0 PE predicted vs 317 measured) is
+   one of the hidden three.  The same threshold gates `store_flash_groups`, so
+   those flashes also never pair across the cathode.  Both consumers are
+   display-facing — the reconstruction is unaffected — but **the Bee op layer is
+   not a reliable answer to "did this flash match?"**
+
+**Workaround now:** cross-reference by flash **time**, not cluster id — and use
+`nusel-table.tsv`, which carries `(flash_gid, flash_time_us, main_id)` with
+`main_id` being the clustering-layer id, as the explicit join.
+
+**Proposed proper fix (deferred, not implemented).**  Stamp a per-blob
+`orig_cluster_id` at the pre-pipeline dump point and have the Bee clustering
+writer emit it, so the op layer's ids become joinable regardless of how many
+times a cluster is later split or merged.  `merge_clusters` already has the
+per-blob `orig_id_aname` machinery (it writes `real_cluster_id`), but it
+overwrites rather than preserves, and the array would also have to survive
+`separate()`.  This changes `real_cluster_id`'s current semantics and is visible
+in uBooNE Bee output, so it needs the qlport gate — hence deferred rather than
+folded into this round.  Separately, the 100 PE display cut should either be
+lowered or the hidden matches marked, so a dim match is distinguishable from no
+match.
+
+## 7. Follow-ups
+
+1. Hand-scan the evt284349 STM tag (§3) — first of its kind on SBND.
+2. Port `check_neutrino_candidate` (2dtoy `ToyFiducial.cxx:1284`): still the
+   blocker for real TGM decisions on in-window bundles.
+3. Run the chain over `work-mcp1000`: beam-window calibration with statistics,
+   STM rate, and whether the 7/10 nu-candidate rate survives.
+4. Implement §6 (op↔clustering id join) behind the uBooNE gate.
+5. Check whether `cathode_connect` (also `use_flash_t0`, 800 ns window) drops
+   flags the same way §4.1 did — it calls `merge_clusters` but writes no
+   `real_cluster_id`, so its merges leave no trace in the Bee output.
+6. Add LM (light-mismatch) and fully-contained flags to the label set when
+   their ports land.
