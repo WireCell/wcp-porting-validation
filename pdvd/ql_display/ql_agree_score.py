@@ -141,6 +141,46 @@ def apply_time_map(truth, map_path, tol):
     return truth
 
 
+CELL_CM = 3.0  # y/z occupancy cell for the geometric uid map
+
+
+def _cells(c):
+    """Set of occupied (y,z) grid cells of a calib cluster (v-independent)."""
+    return {(int(y // CELL_CM), int(z // CELL_CM))
+            for y, z in zip(c["y"], c["z"])}
+
+
+def build_uid_map(old_calib, new_calib, min_frac=0.5):
+    """old cluster uid -> new cluster uid by y/z cell overlap (doc 26 step 5).
+
+    Drift-velocity changes move cluster x positions, altering clustering
+    merge decisions and renumbering idents wholesale; y/z shapes are
+    v-independent, so an old cluster maps to the same-apa new cluster
+    covering the largest fraction (>= min_frac) of its occupied 3 cm y/z
+    cells.  Unmapped old uids are left out (callers count them).
+    """
+    with open(old_calib) as fh:
+        old = json.load(fh)["clusters"]
+    with open(new_calib) as fh:
+        new = json.load(fh)["clusters"]
+    new_by_apa = defaultdict(list)
+    for c in new:
+        new_by_apa[c["apa"]].append((c["uid"], _cells(c)))
+    m = {}
+    for c in old:
+        cells = _cells(c)
+        if not cells:
+            continue
+        best_uid, best_frac = None, min_frac
+        for uid, ncells in new_by_apa.get(c["apa"], ()):
+            frac = len(cells & ncells) / len(cells)
+            if frac > best_frac or (frac == best_frac and best_uid is None):
+                best_uid, best_frac = uid, frac
+        if best_uid is not None:
+            m[c["uid"]] = best_uid
+    return m
+
+
 def find_truth(entries_by_uid, uid, time, tol):
     """Best truth entry for (uid, time) within tol, else None."""
     best, best_dt = None, tol
@@ -296,11 +336,28 @@ def main():
     ap.add_argument("--truth-time-map", default=None,
                     help="tmerge_time_map.py JSON: translate truth flash "
                          "times across a tail-merge reprocess (doc 26)")
+    ap.add_argument("--truth-uid-map-tag", default=None,
+                    help="OLD calib tag (e.g. tm0k): per event, remap truth "
+                         "cluster uids onto the scored run's clustering by "
+                         "y/z cell overlap (doc 26 step 5 -- drift-velocity "
+                         "changes renumber cluster idents). Default off = "
+                         "byte-identical scoring.")
+    ap.add_argument("--truth-time-shift", type=float, default=0.0,
+                    help="us ADDED to every truth time after the map: scores "
+                         "a run whose trigger-offset frame differs from the "
+                         "truth's (doc 26 step 5: offset-0 sweep vs truth "
+                         "recorded at PDVD_QL_EXTRA_OFFSET_US=13.507 => "
+                         "-13.507). Default 0 = byte-identical scoring.")
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
     truth = load_truth(args.gold, args.decisions_dir)
     truth = apply_time_map(truth, args.truth_time_map, args.tol)
+    if args.truth_time_shift:
+        for entries in truth.values():
+            for e in entries:
+                e["time"] += args.truth_time_shift
+        print(f"[time-shift] all truth times {args.truth_time_shift:+.3f} us")
 
     out_dir = os.path.join(args.out_root, args.tag)
     if os.path.exists(os.path.join(out_dir, "scores.json")) and not args.force:
@@ -326,7 +383,18 @@ def main():
         if not os.path.exists(calib):
             print(f"[warn] missing {calib}; skipping evt{evt}")
             continue
-        r = score_event(calib, truth[evt], args.tol, args.min_len_cm,
+        truth_evt = truth[evt]
+        if args.truth_uid_map_tag:
+            old_calib = os.path.join(args.work_root,
+                                     f"{RUN}_{idx}_{args.truth_uid_map_tag}",
+                                     f"calib-evt{evt}.json")
+            umap = build_uid_map(old_calib, calib)
+            unmapped = sum(1 for e in truth_evt if e["uid"] not in umap)
+            truth_evt = [dict(e, uid=umap[e["uid"]])
+                         for e in truth_evt if e["uid"] in umap]
+            print(f"[uid-map] evt{evt}: {len(umap)} clusters mapped, "
+                  f"{unmapped} truth entries unmapped")
+        r = score_event(calib, truth_evt, args.tol, args.min_len_cm,
                         args.min_npoints, OBJECTIVE_TIERS)
         judged = r["agree"] + r["phantom"]
         npos = r["covered"] + r["missed"]

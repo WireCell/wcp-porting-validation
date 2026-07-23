@@ -268,6 +268,93 @@ flashes changed the candidate set. Net −1 agree / +1 missed / +0 phantom out
 of 842 positives: **the tail merge is agreement-neutral at the current op
 point** — the doc-23 pathology fix costs nothing on the scan set.
 
+### Step 5 (2026-07-22): offset-0 retune sweep — best point rtp1
+
+Repro:
+```
+python3 docs/qlmatch/scripts/retune_positions.py            # crosser closure vs v
+# per point: stage_ql_tag.sh ... ; then e.g. (best point rtp1)
+PDVD_MAX_JOBS=6 PDVD_LIGHT_SUFFIX=_tmerge PDVD_QL_EXTRA_OFFSET_US=0 \
+  PDVD_DRIFT_SPEED_BOT_MMUS=1.4794 PDVD_DRIFT_SPEED_TOP_MMUS=1.4794 \
+  PDVD_QL_ANODE_MARGIN_CM=1.0 ./run_clus_evt.sh -calib -s rtp1 39252 all
+python3 ql_display/ql_agree_score.py --tag rtp1 \
+  --truth-time-map work/ql_scores/tm0/time_map.json \
+  --truth-time-shift -13.507 --truth-uid-map-tag tm0k
+```
+
+Scoring machinery grew two more default-off options (both needed to score an
+offset-0 / velocity-changed run against the frozen truth): `ql_agree_score.py
+--truth-time-shift` (uniform frame shift; the truth was recorded at
+`PDVD_QL_EXTRA_OFFSET_US=13.507`, the sweep dumps sit at 0 ⇒ −13.507) and
+`--truth-uid-map-tag` (geometric old→new cluster uid map by 3 cm y/z cell
+overlap; velocity changes renumber cluster idents wholesale — without it the
+sweep loses 164–349 of 842 truth positives to `cluster-missing`; with it, 0
+lost at every point). Reference re-scored under the identical machinery:
+`tm0` (offset 13.507, v 1.48073, cuts 2.0/2.0) = **752 agree (86.6%) / 116
+phantom / 91 missed (10.8%)**.
+
+**Crosser closure at offset 0** (`retune_positions.py`, W-erf endpoints of
+the doc-23 A-C-A tracks, no pull): the anode side is v-insensitive — all six
+ends land at u −0.39..−1.36, i.e. *between the shield and the W plane*
+(physical; with the pull they sat 1.5 cm beyond the W plane) — so the anode
+floor can tighten from −4 to −3 (margin 2.0→1.0) with ≥1.6 cm slack. The
+cathode side sets the v band: v=1.48073 needs cathode_ext1 ≥ 2.29 (track A
+bot escapes the current 2.0 ceiling), v=1.4794 needs ≥ 1.98 (just fits 2.0),
+v=1.47 pulls track A 3.1 cm short of the cathode it physically touches
+(vetoed — its good-looking score below is a containment artifact of
+over-shrinking, not physics).
+
+Sweep (all offset 0, `_tmerge` light, scored vs mapped truth):
+
+| tag | v (mm/µs) | margin | ext1 | agree | agree% | phantom | missed | missed% |
+|---|---|---|---|---|---|---|---|---|
+| rtv0 | 1.48073 | 2.0 | 2.0 | 713 | 88.0% | 97 | 130 | 15.4% |
+| rtv1 | 1.4794 | 2.0 | 2.0 | 717 | 88.2% | 96 | 126 | 14.9% |
+| rtv2 | 1.4764 | 2.0 | 2.0 | 708 | 87.4% | 102 | 134 | 15.9% |
+| rtv3 | 1.47 (vetoed) | 2.0 | 2.0 | 731 | 88.2% | 98 | 111 | 13.2% |
+| **rtp1** | **1.4794** | **1.0** | **2.0** | **718** | **88.2%** | **96** | **125** | **14.8%** |
+| rtp2 | 1.4794 | 2.0 | 1.5 | 710 | 88.1% | 96 | 133 | 15.8% |
+| rtp3 | 1.4794 | 1.0 | 1.5 | 711 | 88.2% | 95 | 132 | 15.7% |
+| rtp4 | 1.4764 | 2.0 | 1.5 | 709 | 87.3% | 103 | 133 | 15.8% |
+
+Reading: anode margin 1.0 is free; REDUCING cathode_ext1 below 2.0 costs 7
+agrees (it cuts real cathode-touching matches — matches the ladder's
+"A bot needs ≥ 1.98"); the in-band velocity optimum is 1.4794 (the second
+crosser's own W-decon measurement). **Best physical point: rtp1 = offset 0,
+v 1.4794, anode margin 1.0, cathode ext1 2.0.**
+
+### Step 6 (2026-07-22): acceptance bar NOT met — no defaults flipped
+
+rtp1 vs the identically-scored baseline: agree% 88.2 vs 86.6 (better),
+phantom 96 vs 116 (better), but **agree 718 vs 752 and missed 125 vs 91
+(10.8→14.8%) — coverage regresses**, failing the owner's historical
+adoption rule (flip only if a metric improves and none regresses). Per the
+campaign plan, production runner defaults are left UNTOUCHED
+(`PDVD_QL_EXTRA_OFFSET_US=13.507`, v 1.48073, margin 2.0, ext1 2.0,
+`PDVD_FLASH_TAIL_MERGE=0`).
+
+Where the 34 net losses live (rtv0 shows ~all of the +39 missed appear from
+the offset removal ALONE, before any retune): of 60 newly-missed pairs at
+rtv1, 44 still have a CONTAINED candidate bundle at the truth flash that the
+matcher no longer auto-selects, 16 lose the bundle entirely — i.e. the
+blocker is not containment but the flag windows and quality gates
+(`at_cathode`/boundary flags, prefilter, high-consistent ladder, rescue
+gates) that docs 18/19/23 tuned AT the pulled position; moving every track
+2 cm re-lands them on the wrong side of those tuned thresholds.
+
+**Owner decision points (nothing changed pending your call):**
+1. *Adopt the tail merge alone* (`PDVD_FLASH_TAIL_MERGE=1`, offset kept):
+   step 4 showed it agreement-neutral (763/118/79 vs 764/118/78) while
+   fixing the doc-23 split-flash pathology and recovering dropped light —
+   separable, low-risk adoption.
+2. *Full offset-0 adoption* (physics-correct charge placement, doc 23 §7)
+   needs a flag-window recalibration campaign at the new frame (re-derive
+   the doc-18/19 operating points with offset 0) — rtp1 is the starting
+   point; expected to recover most of the 44 contained-but-unselected
+   losses since their bundles survive all containment gates.
+3. *Accept rtp1 as-is*, trading 34 agrees / +34 missed for physical
+   positions, −20 phantoms and +1.6% agreement rate.
+
 ## Files
 
 - `scripts/aca_flash_split.py`, `scripts/aca_flash_wf.py`,
@@ -277,5 +364,10 @@ point** — the doc-23 pathology fix costs nothing on the scan set.
   `flash/test/doctest_opflashfinder.cxx`,
   `cfg/pgrapher/experiment/protodunevd/flash.jsonnet`;
   `pdvd/wct-light-reco.jsonnet`, `pdvd/run_light_evt.sh`.
-- (step 4+) `ql_display/remap_scan_state.py` extension, scoring outputs under
-  fresh `work/ql_scores/<tag>/`.
+- (step 4+) `ql_display/tmerge_time_map.py` (new), `ql_display/
+  ql_agree_score.py` (`--truth-time-map`, `--truth-time-shift`,
+  `--truth-uid-map-tag`, all default-off), `ql_display/remap_scan_state.py`
+  (`--time-map`); scores under `work/ql_scores/{tm0,tm0k,rtv0..3,rtp1..4}/`.
+- (step 5) `scripts/retune_positions.py` (crosser closure vs v at offset 0);
+  QL sweep tags `work/039252_<idx>_{tm0k,tm0,rtv0-3,rtp1-4}/` (staged from
+  `_keep` clustering, matching-only).
