@@ -105,6 +105,16 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -fvz <cm>     downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial
                 box in cm (default 3 = legacy).  Shared by tagger_check_tgm
                 and tagger_check_fc.  Env: SBND_TGM_FVZ_MARGIN=<cm>.
+  -lm           LM (light-mismatch) tagger in the Q/L step (QLMatching
+                lm_tagger, doc 34): per-drift-side KS shape + pred/meas
+                normalization verdict on every final matched bundle, stamped
+                as cluster scalar "lm_flag" -> the table's lm column, with a
+                label demotion nu-candidate -> LM for an in-beam bundle whose
+                matched flash its charge cannot explain (evt286021 main 8).
+                Passes -lm -calib to run_ql_evt.sh when the Q/L step runs;
+                an EXISTING pctree is reused untouched, so use a fresh work
+                root for an LM pass.  Off by default => byte-identical.
+                Env: SBND_QL_LM=1.
   -no-nucand    disable it (pre-doc-26 conservative never-tag-in-beam).
                 Env: SBND_TGM_NUCAND=0.
                 NB: the C++/jsonnet default stays FALSE -- only this runner
@@ -159,6 +169,11 @@ RESCUE="${SBND_TGM_RESCUE:-0}"
 RESCUE_CHORD="${SBND_TGM_RESCUE_CHORD:-0}"
 # Downstream-z inset of the TGM/FC fiducial box, cm.  DEFAULT 3 = legacy.
 FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-3}"
+# LM (light-mismatch) tagger in the Q/L step (QLMatching lm_tagger, doc 34).
+# DEFAULT OFF: opt in with -lm / SBND_QL_LM=1.  Only affects a Q/L step this
+# runner LAUNCHES (pctree missing); an existing pctree is reused as-is, so mix
+# -lm with pre-LM trees deliberately or start a fresh work root.
+QL_LM="${SBND_QL_LM:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -177,6 +192,8 @@ while [ $# -gt 0 ]; do
         -rescue-chord|--rescue-chord) RESCUE_CHORD=1; shift ;;
         -no-rescue-chord|--no-rescue-chord) RESCUE_CHORD=0; shift ;;
         -fvz|--fvz) FVZ_MARGIN="$2"; shift 2 ;;
+        -lm|--lm) QL_LM=1; shift ;;
+        -no-lm|--no-lm) QL_LM=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -214,8 +231,12 @@ process_event() {
     # pctree; run_ql_evt.sh is deterministic so a rerun reproduces the same
     # matching, only adding the tarball).
     if [ ! -s "$PCT" ]; then
-        echo "[evt $EVT_ID] pctree missing — running Q/L step (-save-pctree)"
-        "$SBND_DIR/run_ql_evt.sh" "$MODE" -save-pctree "$IDX" || return 1
+        local QL_FLAGS=(-save-pctree)
+        # -lm: LM tagger + calib dump in the Q/L step (the dump carries the
+        # per-bundle lm* metrics the tuning/hand-scan read; doc 34).
+        [ "$QL_LM" = 1 ] && QL_FLAGS+=(-lm -calib)
+        echo "[evt $EVT_ID] pctree missing — running Q/L step (${QL_FLAGS[*]})"
+        "$SBND_DIR/run_ql_evt.sh" "$MODE" "${QL_FLAGS[@]}" "$IDX" || return 1
         [ -s "$PCT" ] || { echo "ERROR: Q/L step did not produce $PCT" >&2; return 1; }
     fi
 
@@ -237,7 +258,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD fvz=$FVZ_MARGIN)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD fvz=$FVZ_MARGIN lm=$QL_LM)"
     rm -f "$LOG"
     (
         cd "$NUDIR"

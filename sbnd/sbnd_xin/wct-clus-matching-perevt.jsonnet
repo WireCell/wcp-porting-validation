@@ -88,6 +88,15 @@ function(
     // key is omitted when off => compiled config byte-identical to pre-fix.
     // run_ql_evt.sh threads MAINFLAG / --tla-code main_flag (ON by default there).
     main_flag      = false,
+    // LM (light-mismatch) tagger (QLMatching lm_tagger). false (default) = off,
+    // production-identical (C++ default false; key omitted when off => compiled
+    // config byte-identical to pre-LM).  When on, every FINAL matched bundle is
+    // judged by per-drift-side KS shape + pred/meas normalization; the verdict
+    // (0 pass / 1 low-energy / 2 light mismatch) is stamped as cluster scalar
+    // "lm_flag" (read by nusel_extract.py's lm column) and dumped per bundle
+    // into the calib JSON (lm, lm_ks, lm_pred, lm_meas, lm_length_cm).
+    // run_ql_evt.sh threads QL_LM / --tla-code lm (-lm flag).
+    lm             = false,
     // Persistent post-QL intermediate output. '' (default) = off, production-identical
     // (the terminal TensorFileSink stays a dump_mode no-op). When set to a path, the
     // all-APA MABC output point-cloud tree (live+dead, cluster_t0/flash annotations,
@@ -154,7 +163,7 @@ function(
                                          calib_dump=calib_dump, cathode_diag=cathode_diag,
                                          pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref,
                                          beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
-                                         main_flag=main_flag)
+                                         main_flag=main_flag, lm=lm)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Graph: per-APA matching (default) or joint multi-APA matching ---
@@ -170,7 +179,7 @@ function(
                                                calib_dump=calib_dump, cathode_diag=cathode_diag,
                                                pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref,
                                                beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
-                                               main_flag=main_flag);
+                                               main_flag=main_flag, lm=lm);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
             local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors);
             local per_apa_pre = [g.intern(

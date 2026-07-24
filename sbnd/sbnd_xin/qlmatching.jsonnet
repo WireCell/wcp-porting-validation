@@ -62,19 +62,29 @@ local beampref_on(beam_pref, w=0.5, r=0.2) = (if beam_pref then {
 function(params)
     local base = canonical(params);
     base {
+        // lm: LM (light-mismatch) tagger (canonical lm arg -> QLMatching lm_tagger;
+        // C++ default false, key omitted when off => compiled config byte-identical
+        // to pre-LM).  Judges each FINAL matched bundle by per-drift-side KS +
+        // pred/meas normalization, stamps cluster scalar "lm_flag" (0 pass /
+        // 1 low-energy / 2 light mismatch) and per-bundle lm* calib-dump keys.
+        // run_ql_evt.sh threads QL_LM / --tla-code lm.  Cut overrides go through
+        // the canonical lm_params (not exposed here; retune via C++/canonical
+        // defaults or an lm_params plumb-through when a scan needs it).
         matching(anode, dv, n, reality, semimodel_file, cathode_fiducial='', calib_dump='',
                  pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false,
-                 beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false)::
+                 beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false, lm=false)::
             base.matching(anode, dv, n, reality, semimodel_file, cathode_fiducial, calib_dump,
-                          pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)
-                                               + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)
-                                               + mainflag_on(main_flag)),
+                          pmt_nl=pmt_nl, lm=lm,
+                          extra=diag_on(cathode_diag) + automask_on(auto_mask)
+                                + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)
+                                + mainflag_on(main_flag)),
 
         matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial='', calib_dump='',
                        pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false,
-                       beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false)::
+                       beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false, lm=false)::
             base.matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial, calib_dump,
-                                pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)
-                                                     + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)
-                                                     + mainflag_on(main_flag)),
+                                pmt_nl=pmt_nl, lm=lm,
+                                extra=diag_on(cathode_diag) + automask_on(auto_mask)
+                                      + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)
+                                      + mainflag_on(main_flag)),
     }

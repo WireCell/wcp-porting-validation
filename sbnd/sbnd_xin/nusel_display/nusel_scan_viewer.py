@@ -169,7 +169,11 @@ class PrevScan:
                              npts=int(r[i["npts_bundle"]]),
                              len_cm=float(r[i["len_main_cm"]]),
                              tgm=int(r[i["tgm"]]), stm=int(r[i["stm"]]),
-                             fc=int(r[i["fc"]]), auto_label=r[i["label"]])
+                             fc=int(r[i["fc"]]),
+                             # lm column exists only on doc-34+ tables; -1 =
+                             # no verdict, matching nusel_extract's convention.
+                             lm=int(r[i["lm"]]) if "lm" in i else -1,
+                             auto_label=r[i["label"]])
                         for r in raw]
                 labels, comments, evtc = {}, {}, ""
                 if self.tag:
@@ -247,8 +251,12 @@ def build_previnfo(evt):
                 pi["name"] = pv.name
                 pi["row"] = p
                 r = evt.rows[ci]
-                pi["changed"] = ((p["tgm"], p["stm"], p["fc"])
-                                 != (r["tgm"], r["stm"], r["fc"]))
+                # auto_label included so an LM demotion (nu-candidate -> LM,
+                # same tgm/stm/fc) still tints amber; raw lm codes are NOT
+                # compared (a pre-LM baseline reads -1 everywhere and would
+                # flag every row).
+                pi["changed"] = ((p["tgm"], p["stm"], p["fc"], p["auto_label"])
+                                 != (r["tgm"], r["stm"], r["fc"], r["auto_label"]))
             pkey = f"{p['main_id']}:{p['flash_gid']}"
             if not pi["labels"] and d["labels"].get(pkey):
                 pi["labels"] = list(d["labels"][pkey])
@@ -312,6 +320,7 @@ class Event:
                 npts_bundle=int(r[i["npts_bundle"]]),
                 len_cm=float(r[i["len_main_cm"]]), n_frag=int(r[i["n_frag"]]),
                 tgm=int(r[i["tgm"]]), stm=int(r[i["stm"]]), fc=int(r[i["fc"]]),
+                lm=int(r[i["lm"]]) if "lm" in i else -1,
                 auto_label=r[i["label"]]))
         self.rows.sort(key=lambda r: r["t_us"])
 
@@ -518,7 +527,7 @@ table_cols = [
     TableColumn(field="clusters", title="clusters", width=95, formatter=fmt_l, sortable=False),
     TableColumn(field="npts", title="npts", width=55, formatter=fmt_r, sortable=False),
     TableColumn(field="len", title="len(cm)", width=65, formatter=fmt_r, sortable=False),
-    TableColumn(field="verdicts", title="tgm/stm/fc", width=80, formatter=fmt_l, sortable=False),
+    TableColumn(field="verdicts", title="tgm/stm/fc[/lm]", width=95, formatter=fmt_l, sortable=False),
     TableColumn(field="prev", title="prev", width=80, formatter=fmt_l, sortable=False),
     TableColumn(field="auto", title="auto label (+FC)", width=120, formatter=fmt_l, sortable=False),
     TableColumn(field="scan", title="scan", width=95, formatter=fmt_l, sortable=False),
@@ -688,7 +697,8 @@ def rebuild_table():
                                 if main is not None else "-")
         cols["npts"].append(str(r["npts_bundle"]))
         cols["len"].append(f"{r['len_cm']:.1f}")
-        cols["verdicts"].append(f"{r['tgm']}/{r['stm']}/{r['fc']}")
+        cols["verdicts"].append(f"{r['tgm']}/{r['stm']}/{r['fc']}"
+                                + (f"/{r['lm']}" if r["lm"] >= 0 else ""))
         # FC is orthogonal to the TGM/STM/nu-candidate label (it never enters
         # nusel_extract's 'label'), so badge it explicitly onto the auto cell:
         # a fully-contained bundle -- especially an in-beam nu-candidate -- is
@@ -697,6 +707,10 @@ def rebuild_table():
         auto = r["auto_label"]
         if r["fc"] == 1:
             auto += " <b style='color:#2ca02c'>FC</b>"
+        # An out-of-beam light mismatch never enters 'label' (only in-beam LM
+        # demotes nu-candidate), so badge it here like FC.
+        if r["lm"] == 2 and r["auto_label"] != "LM":
+            auto += " <b style='color:#b06000'>lm</b>"
         cols["auto"].append(auto)
         # prev column: baseline verdicts from the first --prev with this
         # event ('=' same, 'a/b/c→' changed, 'new' unmatched); ✓ = re-scanned.
@@ -896,6 +910,9 @@ def render_metrics():
         ("FC (fully-contained)",
          "<span style='color:#2ca02c'>YES</span>" if r["fc"] == 1
          else verdict(r["fc"])),
+        ("LM (light-mismatch)",
+         {2: "<span style='color:#b06000'>LIGHT MISMATCH</span>",
+          1: "low-energy (unjudgeable)", 0: "pass"}.get(r["lm"], "-")),
         ("auto label", f"<b>{r['auto_label']}</b>"
          + ("  <span style='color:#2ca02c'>+FC</span>" if r["fc"] == 1 else "")),
         ("scan labels", "+".join(state["labels"].get(key, [])) or "-"),
@@ -948,7 +965,9 @@ def render_proj_info():
                + (f" + companions <span style='color:#1f77b4'><b>"
                   f"{','.join(str(c) for c in comps)}</b></span>" if comps else "")
                + (" &mdash; <b style='color:#2ca02c'>FC (fully-contained)</b>"
-                  if r["fc"] == 1 else ""))
+                  if r["fc"] == 1 else "")
+               + (" &mdash; <b style='color:#b06000'>LM (light mismatch)</b>"
+                  if r["lm"] == 2 else ""))
     nlab = sum(1 for r in evt.rows if state["labels"].get(row_key(r)))
     ptxt = ""
     if evt.previnfo:
@@ -1084,7 +1103,7 @@ def on_save():
             "in_beam": r["in_beam"],
             "clusters": ([main] + comps) if main is not None else [],
             "auto": {"tgm": r["tgm"], "stm": r["stm"], "fc": r["fc"],
-                     "label": r["auto_label"]},
+                     "lm": r["lm"], "label": r["auto_label"]},
             "scan_labels": state["labels"].get(key, []),
             "comment": state["comments"].get(key, ""),
         }
@@ -1093,7 +1112,7 @@ def on_save():
                          if pi["row"] is None else
                          {"tag": pi["name"], "matched": True,
                           "tgm": pi["row"]["tgm"], "stm": pi["row"]["stm"],
-                          "fc": pi["row"]["fc"],
+                          "fc": pi["row"]["fc"], "lm": pi["row"]["lm"],
                           "label": pi["row"]["auto_label"],
                           "changed": pi["changed"],
                           "scan_labels": pi["labels"],
