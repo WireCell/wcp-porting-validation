@@ -58,6 +58,15 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             adoption (weight 0.5, rescue 0.2, gate ks 0.3 / pred 2%; doc 22),
             so this flag only matters together with BEAMPREF_WEIGHT /
             BEAMPREF_RESCUE env overrides to scan a different operating point
+  -no-main-flag  do NOT stamp flag_main_cluster on every matched bundle main
+            (QLMatching flag_matched_mains).  ON BY DEFAULT for this chain:
+            without it only the mains that decompose_cluster_groups SPLIT carry
+            the flag, so a compact single-component match is skipped by
+            TaggerCheckTGM/STM/FC and reads "no-bundle" in the nusel table
+            (evt286021, 1.158 us beam flash -> 141-pt cluster, 437 PE predicted).
+            The C++/jsonnet defaults stay FALSE -- only this runner opts in, so
+            every other config and detector is unaffected.
+            Env: SBND_QL_MAIN_FLAG=0.
   -save-pctree  also write the post-QL point-cloud tree to
             work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
             pattern-recognition job; off by default => byte-identical)
@@ -117,6 +126,14 @@ BEAMPREF="false"
 # for scans, e.g. BEAMPREF_WEIGHT=0.35 ./run_ql_evt.sh data all -beam-pref -calib.
 BEAMPREF_WEIGHT="${BEAMPREF_WEIGHT:-0.5}"
 BEAMPREF_RESCUE="${BEAMPREF_RESCUE:-0.2}"
+# flag_matched_mains (QLMatching): stamp flag_main_cluster on EVERY matched bundle
+# main, not only on the ones decompose_cluster_groups split.  DEFAULT ON for this
+# chain -- the knob-off path leaves compact single-component matches unflagged and
+# therefore invisible to TaggerCheckTGM/STM/FC and to the nusel bundle table, which
+# is not the behavior we want from the selection.  The C++ and jsonnet defaults are
+# still false; this runner passes main_flag=true explicitly, so nothing outside this
+# chain changes.  -no-main-flag / SBND_QL_MAIN_FLAG=0 restores the legacy set.
+MAINFLAG="${SBND_QL_MAIN_FLAG:-1}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -132,6 +149,7 @@ while [ $# -gt 0 ]; do
         -calib|--calib) CALIB=1; shift ;;
         -cathode-diag|--cathode-diag) CATHODE=1; shift ;;
         -save-pctree|--save-pctree) SAVEPCT=1; shift ;;
+        -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -253,6 +271,7 @@ process_event() {
         --tla-code "beam_pref=$BEAMPREF" \
         --tla-code "beam_pref_weight=$BEAMPREF_WEIGHT" \
         --tla-code "beam_pref_rescue=$BEAMPREF_RESCUE" \
+        --tla-code "main_flag=$([ "$MAINFLAG" = 1 ] && echo true || echo false)" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \
