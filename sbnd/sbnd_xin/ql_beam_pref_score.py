@@ -22,6 +22,7 @@ Repro (doc 22): roots produced by
   (BEAMPREF_WEIGHT=<w> for the weight scan; evt<ID> symlinked from work/)
 """
 import glob
+import gzip
 import json
 import os
 import re
@@ -29,6 +30,17 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TLOW_US, THIGH_US = 0.2, 2.2
+
+
+def calib_open(path):
+    """Open a calib dump, transparently accepting a gzipped `<path>.gz` sibling.
+
+    The 2026-07-24 work-tree consolidation gzipped the archived dumps (~6x);
+    fresh -calib runs still write plain .json, so both names must resolve.
+    """
+    if not os.path.exists(path) and os.path.exists(path + ".gz"):
+        return gzip.open(path + ".gz", "rt")
+    return open(path)
 
 
 def load_truth(mode):
@@ -46,10 +58,10 @@ def score_root(root, truth):
     detail = []
     for ev, want in sorted(truth.items()):
         cpath = os.path.join(root, "ql_evt%d" % ev, "calib-evt%d.json" % ev)
-        if not os.path.exists(cpath):
+        if not (os.path.exists(cpath) or os.path.exists(cpath + ".gz")):
             detail.append("evt%d: MISSING calib dump" % ev)
             continue
-        c = json.load(open(cpath))
+        c = json.load(calib_open(cpath))
         ftime = {f["gid"]: f["time"] for f in c["flashes"]}  # us
         got = {(b["flash_gid"], b["main_cluster"])
                for b in c["bundles"] if b["auto_selected"]}

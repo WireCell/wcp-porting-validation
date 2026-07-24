@@ -34,7 +34,7 @@ def check_mode(mode):
     for ev in events:
         state = os.path.join(HERE, "work", "ql_labels", mode, ".scan_state-evt%d.json" % ev)
         want = {tuple(k) for k in json.load(open(state))["selected"]}
-        cal = json.load(open(new_dump(ev)))
+        cal = json.load(T.calib_open(new_dump(ev)))
         ch_apa = np.array([o["apa"] for o in cal["opdets"]])
         ch_type = np.array([o["type"] for o in cal["opdets"]])
         ch_active = np.array([bool(o["active"]) for o in cal["opdets"]])

@@ -33,7 +33,9 @@ fi
 if [ "$#" -gt 0 ]; then
     SPECS=("$@")
 else
-    SPECS=("$HERE/../work/ql_evt"*"/calib-evt"*".json")
+    # .json.gz too: the 2026-07-24 consolidation gzipped archived dumps.
+    SPECS=("$HERE/../work/ql_evt"*"/calib-evt"*".json" \
+           "$HERE/../work/ql_evt"*"/calib-evt"*".json.gz")
 fi
 
 BOKEH=/nfs/data/1/xqian/toolkit-dev/.direnv/python-3.11.9/bin/bokeh

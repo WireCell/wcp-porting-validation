@@ -11,8 +11,22 @@ Only currently-active type-1 PMTs (not in the static ch_mask) are candidates/nei
 Validated on: lan-reco2 (150 evt, ch69 dead) and the original 10 data events (ch69 healthy)
 and a few MC events. Goal: flag ch69 in lan-reco2, NEVER in the original, no healthy FPs.
 """
-import json, glob, os, tarfile, tempfile, math, statistics
+import json, glob, gzip, os, tarfile, tempfile, math, statistics
 import numpy as np
+
+
+def calib_open(path):
+    """Open a calib dump; `.json.gz` archived by the 2026-07-24 consolidation too."""
+    if path.endswith(".gz"):
+        return gzip.open(path, "rt")
+    if not os.path.exists(path) and os.path.exists(path + ".gz"):
+        return gzip.open(path + ".gz", "rt")
+    return open(path)
+
+
+def calib_glob(pattern):
+    """Glob calib dumps, matching both the plain and the gzipped name."""
+    return sorted(glob.glob(pattern) + glob.glob(pattern + ".gz"))
 
 SX = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin"
 CALIB0 = SX + "/work/ql_evt58667/calib-evt58667.json"
@@ -21,7 +35,7 @@ CH_MASK = {39,64,66,67,71,85,86,87,92,115,138,141,170,197,217,218,221,222,223,22
 # params
 PE_LOW, K, PE_BRIGHT, N_CONTRAST, MIN_FLASH = 5.0, 4, 50.0, 2, 3
 
-opd = {o["ch"]: o for o in json.load(open(CALIB0))["opdets"]}
+opd = {o["ch"]: o for o in json.load(calib_open(CALIB0))["opdets"]}
 # precompute, per TPC, the candidate PMTs and their K nearest live (active, non-static-mask) PMTs
 def tpc_pmts(apa):
     return [ch for ch,o in opd.items() if o["apa"]==apa and o["type"]==1 and ch not in CH_MASK]
@@ -53,7 +67,7 @@ def automask(pe_by_flash, apa):
 
 # ---- data loaders: per event -> {apa: [ {ch:pe} per flash ]} ----
 def from_calib(path):
-    d=json.load(open(path)); out={0:[],1:[]}
+    d=json.load(calib_open(path)); out={0:[],1:[]}
     for f in d["flashes"]:
         out[f["apa"]].append({ch:f["pe"][ch] for ch in opd})
     return out
@@ -97,7 +111,7 @@ print("channels auto-masked (ch: #events):", dict(sorted(masked_counter.items(),
 print("\n=== original data events 686..2050 ===")
 orig=(686,1258,1302,1346,1698,1720,1808,1852,2028,2050)
 cnt=Counter()
-for fp in sorted(glob.glob(SX+"/work/ql_evt*/calib-evt*.json")):
+for fp in calib_glob(SX+"/work/ql_evt*/calib-evt*.json"):
     eid=int(''.join(c for c in os.path.basename(fp) if c.isdigit()))
     if eid not in orig: continue
     pa=from_calib(fp)
@@ -110,7 +124,7 @@ print("original-data auto-mask tally:", dict(cnt), " (ch69 should be ABSENT)")
 print("\n=== mc events ===")
 mc=(2,9,11,12,14,18,31,35,41,42)
 cntm=Counter()
-for fp in sorted(glob.glob(SX+"/work/ql_evt*/calib-evt*.json")):
+for fp in calib_glob(SX+"/work/ql_evt*/calib-evt*.json"):
     eid=int(''.join(c for c in os.path.basename(fp) if c.isdigit()))
     if eid not in mc: continue
     pa=from_calib(fp)

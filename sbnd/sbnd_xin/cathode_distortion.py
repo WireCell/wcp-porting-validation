@@ -37,6 +37,7 @@ Usage:  python3 cathode_distortion.py [-j NPROC]
 """
 import argparse
 import glob
+import gzip
 import json
 import os
 import re
@@ -87,7 +88,8 @@ OZEDGES = np.linspace(Z_LO, Z_HI, OZ + 1)
 # Per-event extraction (run in a worker process)
 # ---------------------------------------------------------------------------
 def evt_id_of(path):
-    m = re.search(r"calib-evt(\d+)\.json$", path)
+    # `.json` or `.json.gz` -- the 2026-07-24 consolidation gzipped archived dumps.
+    m = re.search(r"calib-evt(\d+)\.json(\.gz)?$", path)
     return int(m.group(1)) if m else -1
 
 
@@ -112,7 +114,7 @@ def process_event(path):
     occ = np.zeros((OY, OZ))
     mind = {0: np.full((OY, OZ), np.inf), 1: np.full((OY, OZ), np.inf)}
     try:
-        d = json.load(open(path))
+        d = json.load(gzip.open(path, "rt") if path.endswith(".gz") else open(path))
     except Exception:
         return [], [], [], occ, mind
     drift = d["drift_speed"]                                   # cm/us
@@ -464,7 +466,7 @@ def main():
     args = ap.parse_args()
     os.makedirs(PICS, exist_ok=True)
 
-    paths = sorted(glob.glob(CALIB_GLOB))
+    paths = sorted(glob.glob(CALIB_GLOB) + glob.glob(CALIB_GLOB + ".gz"))
     print(f"calib files: {len(paths)}  (nproc={args.nproc})")
     with Pool(args.nproc) as pool:
         results = pool.map(process_event, paths)

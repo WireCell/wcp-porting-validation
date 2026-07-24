@@ -32,10 +32,22 @@ Usage:  python3 ql_prefilter_tune.py            # data + mc
         python3 ql_prefilter_tune.py data
 """
 import glob
+import gzip
 import json
 import os
 import re
 import sys
+
+
+def calib_open(path):
+    """Open a calib dump, transparently accepting a gzipped `<path>.gz` sibling.
+
+    The 2026-07-24 work-tree consolidation gzipped the archived dumps (~6x);
+    fresh -calib runs still write plain .json, so both names must resolve.
+    """
+    if not os.path.exists(path) and os.path.exists(path + ".gz"):
+        return gzip.open(path + ".gz", "rt")
+    return open(path)
 
 import numpy as np
 import matplotlib
@@ -83,7 +95,7 @@ def load_event(ev, mode):
     """Per-bundle records for one event: metrics + GT flag + boundary flag."""
     state = os.path.join(HERE, "work", "ql_labels", mode, ".scan_state-evt%d.json" % ev)
     want = {tuple(k) for k in json.load(open(state))["selected"]}
-    cal = json.load(open(calib_path(ev)))
+    cal = json.load(calib_open(calib_path(ev)))
     ch_apa = np.array([o["apa"] for o in cal["opdets"]])
     ch_type = np.array([o["type"] for o in cal["opdets"]])
     ch_active = np.array([bool(o["active"]) for o in cal["opdets"]])

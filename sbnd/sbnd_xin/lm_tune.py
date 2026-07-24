@@ -22,6 +22,7 @@ Repro (doc 34):
 """
 import argparse
 import glob
+import gzip
 import json
 import math
 import os
@@ -36,8 +37,10 @@ def load_bundles(roots):
     """One record per candidate bundle across every calib dump under roots."""
     recs = []
     for root in roots:
-        for fn in sorted(glob.glob(os.path.join(root, 'ql_evt*', 'calib-evt*.json'))):
-            with open(fn) as fh:
+        pat = os.path.join(root, 'ql_evt*', 'calib-evt*.json')
+        # .json.gz too: the 2026-07-24 consolidation gzipped archived dumps.
+        for fn in sorted(glob.glob(pat) + glob.glob(pat + '.gz')):
+            with (gzip.open(fn, 'rt') if fn.endswith('.gz') else open(fn)) as fh:
                 d = json.load(fh)
             evt = os.path.basename(fn).split('-evt')[1].split('.')[0]
             cuts = d.get('quality_params', {}).get('lm')
