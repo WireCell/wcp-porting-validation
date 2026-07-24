@@ -93,6 +93,15 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 detached merge-grafted specks stay dropped (path-disconnected).
                 Requires -chord (uses its component decomposition).
                 Env: SBND_TGM_RESCUE=1.
+  -rescue-chord rescued-end pairs must ALSO pass the straight-chord support
+                test even in path mode.  Rescue's target -- a genuine track
+                end fragmented behind small gaps -- lies ON the straight line
+                to the track's other end and passes; but path mode alone lets
+                a rescued wall-touching speck pair across TWO merged cosmics
+                through an L-shaped charge detour (evt288727 cluster 6: two
+                touching cosmics, one entering downstream + one entering the
+                bottom, faked a TGM -- doc 33).  Requires -rescue.
+                Env: SBND_TGM_RESCUE_CHORD=1.
   -fvz <cm>     downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial
                 box in cm (default 3 = legacy).  Shared by tagger_check_tgm
                 and tagger_check_fc.  Env: SBND_TGM_FVZ_MARGIN=<cm>.
@@ -145,6 +154,9 @@ CHORD_MODE="${SBND_TGM_CHORD_MODE:-path}"
 # Component rescue in tagger_check_tgm (path-connected short components keep
 # their extremes).  DEFAULT OFF: opt in with -rescue / SBND_TGM_RESCUE=1.
 RESCUE="${SBND_TGM_RESCUE:-0}"
+# Straight-chord check on rescued-end pairs (doc 33).  DEFAULT OFF: opt in
+# with -rescue-chord / SBND_TGM_RESCUE_CHORD=1.
+RESCUE_CHORD="${SBND_TGM_RESCUE_CHORD:-0}"
 # Downstream-z inset of the TGM/FC fiducial box, cm.  DEFAULT 3 = legacy.
 FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-3}"
 _args=()
@@ -162,6 +174,8 @@ while [ $# -gt 0 ]; do
         -no-chord|--no-chord) CHORD=0; shift ;;
         -rescue|--rescue) RESCUE=1; shift ;;
         -no-rescue|--no-rescue) RESCUE=0; shift ;;
+        -rescue-chord|--rescue-chord) RESCUE_CHORD=1; shift ;;
+        -no-rescue-chord|--no-rescue-chord) RESCUE_CHORD=0; shift ;;
         -fvz|--fvz) FVZ_MARGIN="$2"; shift 2 ;;
         *) _args+=("$1"); shift ;;
     esac
@@ -223,7 +237,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE fvz=$FVZ_MARGIN)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD fvz=$FVZ_MARGIN)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -246,6 +260,7 @@ process_event() {
             --tla-str  "tgm_chord_mode=$CHORD_MODE" \
             --tla-code "tgm_component_extremes=$([ "$CHORD" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_component_rescue=$([ "$RESCUE" = 1 ] && echo true || echo false)" \
+            --tla-code "tgm_rescue_chord=$([ "$RESCUE_CHORD" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_fv_zmax_margin=$FVZ_MARGIN" \
             -c "$JSONNET"
     ) || return 1

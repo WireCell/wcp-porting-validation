@@ -86,6 +86,13 @@ function(
     // dropped (C++ default false; key omitted when off => byte-identical).
     // Only meaningful WITH tgm_component_extremes.  Runner flag: -rescue.
     tgm_component_rescue = false,
+    // Rescued-end pairs must ALSO pass the straight-chord support test even
+    // in path mode (C++ default false; key omitted when off => byte-identical
+    // doc-32 rescue behavior).  Path mode alone lets a rescued speck pair
+    // across TWO merged cosmics through an L-shaped charge detour (evt288727
+    // cluster 6, doc 33).  Only meaningful WITH tgm_component_rescue.
+    // Runner flag: -rescue-chord.
+    tgm_rescue_chord = false,
     // Downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial box, in cm
     // (default 3 = byte-identical legacy margin).  Shared by tagger_check_tgm
     // and tagger_check_fc so containment keeps one meaning.  Runner flag:
@@ -134,6 +141,7 @@ function(
                              tgm_chord_mode=tgm_chord_mode,
                              tgm_component_extremes=tgm_component_extremes,
                              tgm_component_rescue=tgm_component_rescue,
+                             tgm_rescue_chord=tgm_rescue_chord,
                              tgm_fv_zmax_margin=tgm_fv_zmax_margin);
 
     local graph = g.intern(
