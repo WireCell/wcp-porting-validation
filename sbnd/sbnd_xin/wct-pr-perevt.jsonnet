@@ -60,6 +60,17 @@ function(
     // in-beam-window bundles may be tagged TGM (C++ default false; key
     // omitted when off => byte-identical pre-port config).
     tgm_neutrino_candidate = false,
+    // Require charge along the chord between the two extreme points before a
+    // pair may tag TGM (C++ default false; key omitted when off =>
+    // byte-identical pre-fix config).  Guards against the QL flash-time merge
+    // grafting a detached fragment into the tagged cluster -- see
+    // docs/29_tgm-chord-charge.md.
+    tgm_chord_charge = false,
+    // Find the extreme points PER connected component and union them, instead
+    // of 8 global extremes over the whole flash-merged cluster (C++ default
+    // false; key omitted when off).  Must be used WITH tgm_chord_charge -- see
+    // docs/29_tgm-chord-charge.md.  The -chord runner flag sets both.
+    tgm_component_extremes = false,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -98,7 +109,9 @@ function(
                              extra_uses=pds.all,
                              dl_weights=dl_weights,
                              beam_window=[t * wc.us for t in beam_window_us],
-                             tgm_neutrino_candidate=tgm_neutrino_candidate);
+                             tgm_neutrino_candidate=tgm_neutrino_candidate,
+                             tgm_chord_charge=tgm_chord_charge,
+                             tgm_component_extremes=tgm_component_extremes);
 
     local graph = g.intern(
         innodes=[source],

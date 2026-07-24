@@ -67,6 +67,16 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 tagger_check_tgm: in-beam-window bundles may then be tagged
                 TGM when the Dijkstra path-topology veto clears them.
                 ON BY DEFAULT for this chain since doc 26.
+  -chord        merge-aware TGM: sets BOTH tgm_chord_charge (require charge
+                along the chord between the two extreme points) AND
+                tgm_component_extremes (find the extremes per connected
+                component and union them, so a real through-goer inside a
+                merged bundle can still form its own pair).  Guards
+                against the QL flash-time merge grafting a detached fragment
+                into the tagged cluster (evt285185 clus 20: a 14-pt speck 608 cm
+                away made a 173 cm track look through-going).  C++/jsonnet
+                default stays FALSE; only this flag opts in.
+                Env: SBND_TGM_CHORD=1.
   -no-nucand    disable it (pre-doc-26 conservative never-tag-in-beam).
                 Env: SBND_TGM_NUCAND=0.
                 NB: the C++/jsonnet default stays FALSE -- only this runner
@@ -106,6 +116,9 @@ SAVEPRT=""
 # false; this runner passes tgm_neutrino_candidate=true explicitly, so nothing
 # outside this chain changes.  -no-nucand / SBND_TGM_NUCAND=0 restores it.
 NUCAND="${SBND_TGM_NUCAND:-1}"
+# Chord-charge guard in tagger_check_tgm.  DEFAULT OFF: opt in with -chord /
+# SBND_TGM_CHORD=1 until the flipped verdicts are hand-scanned.
+CHORD="${SBND_TGM_CHORD:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -117,6 +130,8 @@ while [ $# -gt 0 ]; do
         -save-pr-tree|--save-pr-tree) SAVEPRT=1; shift ;;
         -nucand|--nucand) NUCAND=1; shift ;;
         -no-nucand|--no-nucand) NUCAND=0; shift ;;
+        -chord|--chord) CHORD=1; shift ;;
+        -no-chord|--no-chord) CHORD=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
@@ -177,7 +192,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -196,6 +211,8 @@ process_event() {
             --tla-str  "dl_weights=" \
             --tla-code "beam_window_us=[$BEAM_WINDOW]" \
             --tla-code "tgm_neutrino_candidate=$([ "$NUCAND" = 1 ] && echo true || echo false)" \
+            --tla-code "tgm_chord_charge=$([ "$CHORD" = 1 ] && echo true || echo false)" \
+            --tla-code "tgm_component_extremes=$([ "$CHORD" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
