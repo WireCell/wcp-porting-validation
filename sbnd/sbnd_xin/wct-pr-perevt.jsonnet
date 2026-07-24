@@ -123,6 +123,12 @@ function(
     // evt287517 cluster 16 / evt289805 cluster 9).  TGM only; FC untouched.
     // Runner flag: -fvzi <cm>.
     tgm_fv_zmax_margin_interior = 0,
+    // Drift-x and vertical-y insets of the TGM/FC fiducial box, in cm, both
+    // faces symmetric (defaults 2 / 2.5 = byte-identical legacy margins).
+    // Shared by tagger_check_tgm and tagger_check_fc, same as
+    // tgm_fv_zmax_margin.  Runner flags: -fvx <cm> / -fvy <cm>.
+    tgm_fv_x_margin = 2,
+    tgm_fv_y_margin = 2.5,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -170,7 +176,9 @@ function(
                              tgm_main_pair=tgm_main_pair,
                              tgm_main_pair_mode=tgm_main_pair_mode,
                              tgm_fv_zmax_margin=tgm_fv_zmax_margin,
-                             tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior);
+                             tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior,
+                             tgm_fv_x_margin=tgm_fv_x_margin,
+                             tgm_fv_y_margin=tgm_fv_y_margin);
 
     local graph = g.intern(
         innodes=[source],

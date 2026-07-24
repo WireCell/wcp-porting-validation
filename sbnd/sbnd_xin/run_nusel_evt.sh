@@ -113,6 +113,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 midpoint support (evt287517 cluster 16 / evt289805 cluster 9
                 -- doc 35).  TGM only; FC and the endpoint exit tests keep
                 -fvz.  Env: SBND_TGM_FVZ_INTERIOR=<cm>.
+  -fvx <cm>     drift-x (|x| ~ 200 cm faces) inset of the TGM/FC fiducial
+                box in cm, both faces symmetric (default 2 = legacy).
+                Shared by tagger_check_tgm and tagger_check_fc.
+                Env: SBND_TGM_FVX_MARGIN=<cm>.
+  -fvy <cm>     vertical-y (|y| ~ 200 cm faces) inset, both faces symmetric
+                (default 2.5 = legacy).  Shared by tagger_check_tgm and
+                tagger_check_fc.  Env: SBND_TGM_FVY_MARGIN=<cm>.
   -main-pair-real  like -main-pair, but identify the main EXACTLY via the
                 per-blob real_cluster_main flash-merge provenance instead of
                 the largest-component proxy (doc 38).  Needs a pctree saved
@@ -197,6 +204,10 @@ FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-3}"
 # Interior-support downstream-z inset for check_tgm CASE-A, cm.  DEFAULT 0 =
 # off (interior tests share FVZ_MARGIN).
 FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-0}"
+# Drift-x / vertical-y insets of the TGM/FC fiducial box, cm, both faces
+# symmetric.  DEFAULTS 2 / 2.5 = legacy.
+FVX_MARGIN="${SBND_TGM_FVX_MARGIN:-2}"
+FVY_MARGIN="${SBND_TGM_FVY_MARGIN:-2.5}"
 # TGM pairs must touch the cluster's main charge component (doc 36).
 # DEFAULT OFF: opt in with -main-pair / SBND_TGM_MAIN_PAIR=1.
 MAIN_PAIR="${SBND_TGM_MAIN_PAIR:-0}"
@@ -228,6 +239,8 @@ while [ $# -gt 0 ]; do
         -no-rescue-chord|--no-rescue-chord) RESCUE_CHORD=0; shift ;;
         -fvz|--fvz) FVZ_MARGIN="$2"; shift 2 ;;
         -fvzi|--fvzi) FVZ_INTERIOR="$2"; shift 2 ;;
+        -fvx|--fvx) FVX_MARGIN="$2"; shift 2 ;;
+        -fvy|--fvy) FVY_MARGIN="$2"; shift 2 ;;
         -main-pair|--main-pair) MAIN_PAIR=1; shift ;;
         -main-pair-real|--main-pair-real) MAIN_PAIR=1; MAIN_PAIR_MODE=real; shift ;;
         -no-main-pair|--no-main-pair) MAIN_PAIR=0; MAIN_PAIR_MODE=path; shift ;;
@@ -299,7 +312,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR lm=$QL_LM)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -327,6 +340,8 @@ process_event() {
             --tla-str  "tgm_main_pair_mode=$MAIN_PAIR_MODE" \
             --tla-code "tgm_fv_zmax_margin=$FVZ_MARGIN" \
             --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
+            --tla-code "tgm_fv_x_margin=$FVX_MARGIN" \
+            --tla-code "tgm_fv_y_margin=$FVY_MARGIN" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
