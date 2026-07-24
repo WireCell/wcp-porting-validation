@@ -70,6 +70,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
   -save-pctree  also write the post-QL point-cloud tree to
             work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
             pattern-recognition job; off by default => byte-identical)
+  -save-rcid  persist the flash-merge per-blob provenance (real_cluster_id /
+            real_cluster_main perblob arrays) through the pctree tarball, so
+            the PR job can tell which points were the bundle's main cluster
+            (TaggerCheckTGM main mode "real", doc 38).  Only meaningful WITH
+            -save-pctree.  Off by default => byte-identical tarball.
+            Env: SBND_QL_SAVE_RCID=1.
   -lm       LM (light-mismatch) tagger (QLMatching lm_tagger).  Judges every
             FINAL matched bundle by per-drift-side KS shape + pred/meas
             normalization (the photon library's unmodeled cathode leakage
@@ -148,6 +154,9 @@ MAINFLAG="${SBND_QL_MAIN_FLAG:-1}"
 # scalar "lm_flag" + calib-dump lm* keys.  OFF by default (C++/jsonnet defaults
 # false => byte-identical); -lm / SBND_QL_LM=1 opts in.  See docs/34_lm-tagger.md.
 QL_LM="${SBND_QL_LM:-0}"
+# Persist flash-merge per-blob provenance through the pctree tarball (doc 38).
+# OFF by default: opt in with -save-rcid / SBND_QL_SAVE_RCID=1.
+SAVE_RCID="${SBND_QL_SAVE_RCID:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -163,6 +172,7 @@ while [ $# -gt 0 ]; do
         -calib|--calib) CALIB=1; shift ;;
         -cathode-diag|--cathode-diag) CATHODE=1; shift ;;
         -save-pctree|--save-pctree) SAVEPCT=1; shift ;;
+        -save-rcid|--save-rcid) SAVE_RCID=1; shift ;;
         -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         *) _args+=("$1"); shift ;;
@@ -288,6 +298,7 @@ process_event() {
         --tla-code "beam_pref_rescue=$BEAMPREF_RESCUE" \
         --tla-code "main_flag=$([ "$MAINFLAG" = 1 ] && echo true || echo false)" \
         --tla-code "lm=$([ "$QL_LM" = 1 ] && echo true || echo false)" \
+        --tla-code "save_rcid=$([ "$SAVE_RCID" = 1 ] && echo true || echo false)" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \

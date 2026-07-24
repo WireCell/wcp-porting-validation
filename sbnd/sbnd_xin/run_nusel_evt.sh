@@ -113,6 +113,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 midpoint support (evt287517 cluster 16 / evt289805 cluster 9
                 -- doc 35).  TGM only; FC and the endpoint exit tests keep
                 -fvz.  Env: SBND_TGM_FVZ_INTERIOR=<cm>.
+  -main-pair-real  like -main-pair, but identify the main EXACTLY via the
+                per-blob real_cluster_main flash-merge provenance instead of
+                the largest-component proxy (doc 38).  Needs a pctree saved
+                with run_ql_evt.sh -save-rcid (this runner passes -save-rcid
+                to a Q/L step it launches when this flag is on); falls back
+                to the proxy on old tarballs.
+                Env: SBND_TGM_MAIN_PAIR_MODE=real.
   -main-pair    a pair may tag TGM only when at least one end lies in the
                 cluster's MAIN charge component (largest 30 cm path
                 component; a cathode crosser is one component).  A merged-in
@@ -193,6 +200,10 @@ FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-0}"
 # TGM pairs must touch the cluster's main charge component (doc 36).
 # DEFAULT OFF: opt in with -main-pair / SBND_TGM_MAIN_PAIR=1.
 MAIN_PAIR="${SBND_TGM_MAIN_PAIR:-0}"
+# How -main-pair identifies the main: "path" = largest-component proxy
+# (doc 36), "real" = per-blob flash-merge provenance (doc 38, needs a
+# -save-rcid pctree).  -main-pair-real sets both.
+MAIN_PAIR_MODE="${SBND_TGM_MAIN_PAIR_MODE:-path}"
 # LM (light-mismatch) tagger in the Q/L step (QLMatching lm_tagger, doc 34).
 # DEFAULT OFF: opt in with -lm / SBND_QL_LM=1.  Only affects a Q/L step this
 # runner LAUNCHES (pctree missing); an existing pctree is reused as-is, so mix
@@ -218,7 +229,8 @@ while [ $# -gt 0 ]; do
         -fvz|--fvz) FVZ_MARGIN="$2"; shift 2 ;;
         -fvzi|--fvzi) FVZ_INTERIOR="$2"; shift 2 ;;
         -main-pair|--main-pair) MAIN_PAIR=1; shift ;;
-        -no-main-pair|--no-main-pair) MAIN_PAIR=0; shift ;;
+        -main-pair-real|--main-pair-real) MAIN_PAIR=1; MAIN_PAIR_MODE=real; shift ;;
+        -no-main-pair|--no-main-pair) MAIN_PAIR=0; MAIN_PAIR_MODE=path; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         -no-lm|--no-lm) QL_LM=0; shift ;;
         *) _args+=("$1"); shift ;;
@@ -262,6 +274,8 @@ process_event() {
         # -lm: LM tagger + calib dump in the Q/L step (the dump carries the
         # per-bundle lm* metrics the tuning/hand-scan read; doc 34).
         [ "$QL_LM" = 1 ] && QL_FLAGS+=(-lm -calib)
+        # -main-pair-real needs the per-blob provenance in the pctree (doc 38).
+        [ "$MAIN_PAIR_MODE" = real ] && QL_FLAGS+=(-save-rcid)
         echo "[evt $EVT_ID] pctree missing — running Q/L step (${QL_FLAGS[*]})"
         "$SBND_DIR/run_ql_evt.sh" "$MODE" "${QL_FLAGS[@]}" "$IDX" || return 1
         [ -s "$PCT" ] || { echo "ERROR: Q/L step did not produce $PCT" >&2; return 1; }
@@ -285,7 +299,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR lm=$QL_LM)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR lm=$QL_LM)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -310,6 +324,7 @@ process_event() {
             --tla-code "tgm_component_rescue=$([ "$RESCUE" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_rescue_chord=$([ "$RESCUE_CHORD" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_main_pair=$([ "$MAIN_PAIR" = 1 ] && echo true || echo false)" \
+            --tla-str  "tgm_main_pair_mode=$MAIN_PAIR_MODE" \
             --tla-code "tgm_fv_zmax_margin=$FVZ_MARGIN" \
             --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
             -c "$JSONNET"

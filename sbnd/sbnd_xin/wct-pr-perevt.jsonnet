@@ -103,6 +103,13 @@ function(
     // in-beam bundle tagged TGM by a 26 cm corner-clipping cosmic fragment
     // 450 cm from the main track (doc 36).  Runner flag: -main-pair.
     tgm_main_pair = false,
+    // How tgm_main_pair identifies the main (C++ default "path"; key omitted
+    // then => byte-identical doc-36 behavior).  "path" = largest 30 cm path
+    // component (proxy; wrong if a merged-in cosmic outweighs the main).
+    // "real" = per-blob real_cluster_main flash-merge provenance -- exact,
+    // needs a pctree saved with run_ql_evt.sh -save-rcid; falls back to the
+    // proxy on old tarballs (doc 38).  Runner flag: -main-pair-real.
+    tgm_main_pair_mode = 'path',
     // Downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial box, in cm
     // (default 3 = byte-identical legacy margin).  Shared by tagger_check_tgm
     // and tagger_check_fc so containment keeps one meaning.  Runner flag:
@@ -161,6 +168,7 @@ function(
                              tgm_component_rescue=tgm_component_rescue,
                              tgm_rescue_chord=tgm_rescue_chord,
                              tgm_main_pair=tgm_main_pair,
+                             tgm_main_pair_mode=tgm_main_pair_mode,
                              tgm_fv_zmax_margin=tgm_fv_zmax_margin,
                              tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior);
 

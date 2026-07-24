@@ -104,6 +104,14 @@ function(
     // downstream pattern-recognition job (sbnd/docs/sbnd-pattern-recognition.md).
     // run_ql_evt.sh -save-pctree points it at work/ql_evt<ID>/pctree-evt<ID>.tar.gz.
     save_tensors   = '',
+    // Persist the flash-merge per-blob provenance (real_cluster_id /
+    // real_cluster_main "perblob" arrays) through the save_tensors tarball:
+    // the tensor serializer drops heterogeneous PC keys, so without this the
+    // arrays exist only in-memory and the PR job cannot tell which points
+    // were the bundle's main cluster (doc 38).  Only meaningful WITH
+    // save_tensors.  false (default) = byte-identical legacy tarball (C++
+    // default false; key omitted when off).  Runner flag: -save-rcid.
+    save_rcid      = false,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -181,7 +189,7 @@ function(
                                                beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
                                                main_flag=main_flag, lm=lm);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
-            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid);
             local per_apa_pre = [g.intern(
                 innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
                 centernodes=[clus_pipes[n]],
@@ -216,7 +224,7 @@ function(
                     g.edge(flash_attach[n], matching_pipes[n], 0, 0),
                 ]
             ) for n in std.range(0, nanodes - 1)];
-            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid);
             g.intern(
                 innodes=per_apa,
                 outnodes=[clus_all],
