@@ -5,6 +5,11 @@ observable end-to-end.  Everything below is inert (byte-identical outputs)
 unless opted in with `run_nusel_evt.sh -stm-fit` / `run_pr_evt.sh -stm-fit`
 (env `SBND_STM_FIT=1`).
 
+**Commits** (all pushed 2026-07-24): toolkit `3db191e9` on `apply-pointcloud`
+(knob + `SbndMagnifyTrackingVisitor` + jsonnet, 10 files); wcp-porting-validation
+`6099ed0` on `main` (runner flags, viewer panel, `stm_ref_dqdx.json`, docs
+40–41); Magnify-tracking-SBND `b78b255` on `master` (GUI geometry).
+
 ## What the knob does (toolkit side)
 
 `TaggerCheckSTM` config key `save_stm_fit` (C++ default false; jsonnet
@@ -87,11 +92,13 @@ tagger_check_stm(save_stm_fit=)` → `sbnd/clus.jsonnet clus_pr/pr()` →
    TSV columns are unchanged (verdict schema untouched); decision scalars
    live in the ROOT file.
 4. **Magnify-tracking-SBND GUI** (separate repo,
-   `~/work/scratch_wcgpu1/toolkit-dev/Magnify-tracking-SBND`): geometry
-   constants ported off MicroBooNE — `Data.cc` nChannel U/V/W =
-   3968/3968/3340, nTime = 857, `DrawBadCh` splits now use the nChannel
-   variables; `ControlWindow.cc` ranges updated.  NOT yet committed there;
-   visual validation pending (needs X/VNC session).
+   `~/work/scratch_wcgpu1/toolkit-dev/Magnify-tracking-SBND`, also reachable
+   as `sbnd_xin/Magnify-tracking-SBND`): geometry constants ported off
+   MicroBooNE — `Data.cc` nChannel U/V/W = 3968/3968/3340, nTime = 857,
+   `DrawBadCh` splits now use the nChannel variables; `ControlWindow.cc`
+   ranges `{0,0,3968,7936}` / `{857,3968,7936,11276}`.  `rebin` stays 4 (the
+   uBooNE value is already the SBND one).  Committed `b78b255` on `master`
+   and pushed; visual validation still pending (needs an X/VNC session).
 
 ## Verification
 
@@ -164,6 +171,12 @@ STM fit inventory (`/home/xqian/tmp/stmfit/stmon_stats.py`):
 - Two-TPC coverage: 18 fits span both TPCs, 13 TPC1-only, 5 TPC0-only —
   both TPCs well populated (per-point TPC from drift-x sign).
 - dx: median 0.60 cm (p10 0.56, p90 0.70); reduced_chi2 p90 2.7, max 18.8.
+- **x frame check** (doc 40 §2 left this as a CONFIRM): all 18561 fitted
+  points fall in x ∈ [−201.3, +198.2] cm against SBND's 200 cm half-drift
+  (0.17 % marginally past 200, fit overshoot at the anode).  The fits are
+  therefore in the T0-corrected frame that `switch_scope` installs, not the
+  raw one — a raw frame would spread over the ~2.7 m readout window.  The
+  per-point TPC assignment by `sign(x)` used here and in the viewer is sound.
 - **MIP plateau flag (hand-scan/calibration item, NOT tuned here)**:
   median fitted dQ/dx for rr > 40 cm on accepted-STM tracks is
   TPC0 59.5 ke/cm (p25–p75 50.5–82.8), TPC1 55.8 ke/cm (48.2–72.1) vs the
@@ -176,6 +189,13 @@ STM fit inventory (`/home/xqian/tmp/stmfit/stmon_stats.py`):
   real calibration-scale offset feeding the eval_stm ratio cuts.
 
 Final unit tests on the shipped binary: `wcdoctest-clus` 518/518 pass.
+
+**Still open in phase 4** (doc 40 §Phase 4 has the per-check table): the
+Magnify/Bee trajectory hand-scan and the viewer dQ/dx scan (both need an
+X/VNC session, owner-side), the Bragg-shape review per stopping candidate,
+the determinism repeat check under `setarch -R`, and MC truth pairing — the
+last blocked until the converter's `-f1` mode gets a pass-through
+x-transform flag (its current transform is hard-coded uBooNE).
 
 ## Repro
 
