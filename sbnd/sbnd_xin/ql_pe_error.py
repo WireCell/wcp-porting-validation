@@ -35,9 +35,21 @@ coherent +30% normalization offset, not random per-PMT scatter, is most of what 
 Usage:  python3 ql_pe_error.py
 """
 import glob
+import gzip
 import json
 import os
 import re
+
+
+def calib_open(path):
+    """Open a calib dump, transparently accepting a gzipped `<path>.gz` sibling.
+
+    The 2026-07-24 work-tree consolidation gzipped the archived dumps (~6x);
+    fresh -calib runs still write plain .json, so both names must resolve.
+    """
+    if not os.path.exists(path) and os.path.exists(path + ".gz"):
+        return gzip.open(path + ".gz", "rt")
+    return open(path)
 import sys
 
 import numpy as np
@@ -71,7 +83,7 @@ def load_event(ev, nl, consistent, state_dir):
     """Per-PMT (pred, meas) arrays for one event's surviving hand-scan flashes."""
     want = {tuple(k) for k in json.load(open(
         os.path.join(state_dir, ".scan_state-evt%d.json" % ev)))["selected"]}
-    cal = json.load(open(calib_path(ev, nl)))
+    cal = json.load(calib_open(calib_path(ev, nl)))
     ch_apa = np.array([o["apa"] for o in cal["opdets"]])
     ch_type = np.array([o["type"] for o in cal["opdets"]])
     flash_pe = {f["gid"]: np.asarray(f["pe"], float) for f in cal["flashes"]}

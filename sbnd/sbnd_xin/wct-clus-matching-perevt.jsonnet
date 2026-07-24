@@ -88,6 +88,15 @@ function(
     // key is omitted when off => compiled config byte-identical to pre-fix.
     // run_ql_evt.sh threads MAINFLAG / --tla-code main_flag (ON by default there).
     main_flag      = false,
+    // LM (light-mismatch) tagger (QLMatching lm_tagger). false (default) = off,
+    // production-identical (C++ default false; key omitted when off => compiled
+    // config byte-identical to pre-LM).  When on, every FINAL matched bundle is
+    // judged by per-drift-side KS shape + pred/meas normalization; the verdict
+    // (0 pass / 1 low-energy / 2 light mismatch) is stamped as cluster scalar
+    // "lm_flag" (read by nusel_extract.py's lm column) and dumped per bundle
+    // into the calib JSON (lm, lm_ks, lm_pred, lm_meas, lm_length_cm).
+    // run_ql_evt.sh threads QL_LM / --tla-code lm (-lm flag).
+    lm             = false,
     // Persistent post-QL intermediate output. '' (default) = off, production-identical
     // (the terminal TensorFileSink stays a dump_mode no-op). When set to a path, the
     // all-APA MABC output point-cloud tree (live+dead, cluster_t0/flash annotations,
@@ -95,6 +104,14 @@ function(
     // downstream pattern-recognition job (sbnd/docs/sbnd-pattern-recognition.md).
     // run_ql_evt.sh -save-pctree points it at work/ql_evt<ID>/pctree-evt<ID>.tar.gz.
     save_tensors   = '',
+    // Persist the flash-merge per-blob provenance (real_cluster_id /
+    // real_cluster_main "perblob" arrays) through the save_tensors tarball:
+    // the tensor serializer drops heterogeneous PC keys, so without this the
+    // arrays exist only in-memory and the PR job cannot tell which points
+    // were the bundle's main cluster (doc 38).  Only meaningful WITH
+    // save_tensors.  false (default) = byte-identical legacy tarball (C++
+    // default false; key omitted when off).  Runner flag: -save-rcid.
+    save_rcid      = false,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -154,7 +171,7 @@ function(
                                          calib_dump=calib_dump, cathode_diag=cathode_diag,
                                          pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref,
                                          beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
-                                         main_flag=main_flag)
+                                         main_flag=main_flag, lm=lm)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Graph: per-APA matching (default) or joint multi-APA matching ---
@@ -170,9 +187,9 @@ function(
                                                calib_dump=calib_dump, cathode_diag=cathode_diag,
                                                pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref,
                                                beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
-                                               main_flag=main_flag);
+                                               main_flag=main_flag, lm=lm);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
-            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid);
             local per_apa_pre = [g.intern(
                 innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
                 centernodes=[clus_pipes[n]],
@@ -207,7 +224,7 @@ function(
                     g.edge(flash_attach[n], matching_pipes[n], 0, 0),
                 ]
             ) for n in std.range(0, nanodes - 1)];
-            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid);
             g.intern(
                 innodes=per_apa,
                 outnodes=[clus_all],

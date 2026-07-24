@@ -39,6 +39,7 @@ Launched by serve_ql_scan.sh; mirrors pdvd/sp_plot/filter_tune_viewer.py
 import sys
 import os
 import glob
+import gzip
 import json
 import math
 from collections import defaultdict
@@ -63,7 +64,9 @@ def discover_files(argv):
     files = []
     for a in argv:
         if os.path.isdir(a):
-            files += glob.glob(os.path.join(a, "calib-evt*.json"))
+            pat = os.path.join(a, "calib-evt*.json")
+            # .json.gz too: the 2026-07-24 consolidation gzipped archived dumps.
+            files += glob.glob(pat) + glob.glob(pat + ".gz")
         elif any(ch in a for ch in "*?[") :
             files += glob.glob(a)
         elif os.path.isfile(a):
@@ -79,7 +82,9 @@ def discover_files(argv):
 
 def event_label(path):
     base = os.path.basename(path)
-    # calib-evt<ID>.json -> evt<ID>
+    # calib-evt<ID>.json[.gz] -> evt<ID>
+    if base.endswith(".gz"):
+        base = base[:-len(".gz")]
     if base.startswith("calib-") and base.endswith(".json"):
         return base[len("calib-"):-len(".json")]
     return base
@@ -110,7 +115,7 @@ FILE_OF = dict(zip(LABELS, FILES))
 # ---------------------------------------------------------------------------
 class Event:
     def __init__(self, path):
-        with open(path) as fh:
+        with (gzip.open(path, "rt") if path.endswith(".gz") else open(path)) as fh:
             self.d = json.load(fh)
         self.path = path
         self.nchan = self.d["nchan"]

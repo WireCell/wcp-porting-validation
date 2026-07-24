@@ -25,17 +25,34 @@ Repro (doc 22): roots produced by
   SBND_MAX_JOBS=6 ./run_ql_evt.sh data all -calib [-beam-pref]
 """
 import glob
+import gzip
 import json
 import os
 import re
 import sys
+
+
+def calib_open(path):
+    """Open a calib dump, transparently accepting a gzipped `<path>.gz` sibling.
+
+    The 2026-07-24 work-tree consolidation gzipped the archived dumps (~6x);
+    fresh -calib runs still write plain .json, so both names must resolve.
+    """
+    if not os.path.exists(path) and os.path.exists(path + ".gz"):
+        return gzip.open(path + ".gz", "rt")
+    return open(path)
+
+
+def calib_glob(pattern):
+    """Glob calib dumps, matching both the plain and the gzipped name."""
+    return sorted(glob.glob(pattern) + glob.glob(pattern + ".gz"))
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TLOW_US, THIGH_US = 0.2, 2.2
 
 
 def read_event(cpath):
-    c = json.load(open(cpath))
+    c = json.load(calib_open(cpath))
     beam = [f for f in c["flashes"] if TLOW_US < f["time"] < THIGH_US]
     out = []
     sel_all = {(b["flash_gid"], b["main_cluster"])
@@ -56,7 +73,7 @@ def read_event(cpath):
 
 def collect(root):
     evs = {}
-    for p in sorted(glob.glob(os.path.join(root, "ql_evt*", "calib-evt*.json"))):
+    for p in calib_glob(os.path.join(root, "ql_evt*", "calib-evt*.json")):
         ev = int(re.search(r"calib-evt(\d+)\.json", p).group(1))
         evs[ev] = read_event(p)
     return evs

@@ -12,7 +12,20 @@ in the flash TPC.
 
 Output: pics/ql_recipe_data_vs_mc.png  + a printed summary.
 """
-import glob, json, os, re
+import glob, gzip, json, os, re
+
+
+def calib_open(path):
+    """Open a calib dump, transparently accepting a gzipped `<path>.gz` sibling.
+
+    The 2026-07-24 work-tree consolidation gzipped the archived dumps (~6x);
+    fresh -calib runs still write plain .json, so both names must resolve.
+    """
+    if not os.path.exists(path) and os.path.exists(path + ".gz"):
+        return gzip.open(path + ".gz", "rt")
+    return open(path)
+
+
 import numpy as np
 import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
 
@@ -28,7 +41,7 @@ def collect(mode):
     chi2ndf, ks, mp, totpe = [], [], [], []
     for ev in evs:
         want = {tuple(k) for k in json.load(open("%s/.scan_state-evt%d.json" % (sd, ev)))["selected"]}
-        c = json.load(open(os.path.join(RECIPE_DIR, "calib-evt%d.json" % ev)))
+        c = json.load(calib_open(os.path.join(RECIPE_DIR, "calib-evt%d.json" % ev)))
         fpe = {f["gid"]: np.asarray(f["pe"], float) for f in c["flashes"]}
         fap = {f["gid"]: f["apa"] for f in c["flashes"]}
         ca = np.array([o["apa"] for o in c["opdets"]]); ct = np.array([o["type"] for o in c["opdets"]])

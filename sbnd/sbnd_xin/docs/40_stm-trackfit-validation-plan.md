@@ -1,0 +1,352 @@
+# Validating the STM tagger's track trajectory + dQ/dx fitting on SBND — plan (doc 40)
+
+Status: **PLAN ONLY — no code touched yet.**  Owner request 2026-07-24: before
+validating the STM tagger verdicts themselves, validate the track-trajectory +
+dQ/dx fitting that the tagger is built on, via (1) a dedicated
+Magnify-tracking file, (2) wire-cell-bee display, and (3) new panels in
+`nusel_display` (dQ/dx near the track end vs stopping-particle expectation),
+with explicit two-TPC coverage.  This doc records the investigation findings
+and the detailed plan.
+
+## Repro (current state)
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# STM-only PR pipeline on one event (fit runs, but persists NOTHING except flags):
+./run_pr_evt.sh -stm data <evt>       # pipeline=switch_scope,steiner,fiducialutils,tagger_check_stm
+# full nusel chain (TGM+STM+FC) as used for the 30-event scans:
+./run_nusel_evt.sh data 1 <op-point flags>   # op point per docs/39
+# TrackFitting parameters actually used by SBND:
+cat sbnd_track_fitting.json           # sigmas coupled to cfg/.../sbnd/sp-filters.jsonnet
+```
+
+## 1. Findings (what exists today)
+
+### 1.1 The STM tagger persists nothing about its fit
+
+`clus/src/TaggerCheckSTM.cxx` (2265 lines, single-file component):
+
+- `check_stm_conditions()` (`:1879`) drives, per main cluster:
+  `cluster_fc_check` → endpoint choice → `run_pass` lambda (`:1989-2183`)
+  executed **forward, and backward when double-ended** (`:2186-2191`).  Each
+  pass does **two fitting rounds**: `do_rough_path` (Steiner shortest path) +
+  `do_single_tracking` round 1, then `adjust_rough_path` (mid-track break
+  detection + Steiner crawl re-route) + round-2 `do_single_tracking`
+  (`:2001-2016`).  Then `find_first_kink`, exit/left split, TGM short-circuit,
+  `eval_stm_core` KS tests, `search_other_tracks`/`check_other_tracks`,
+  `detect_proton`.
+- **Outputs today: only `Flags::STM` / `Flags::TGM` cluster flags** (`:165`,
+  `:2073/:2086`) plus one INFO line per cluster and trace-level diagnostics
+  (kink table `:852/:951`, `eval_stm` KS values `:1375`, proton detection
+  `:1193/:1207`, exit/left summary `:2045`).
+- The fit results (`fits()` = per-point x,y,z, dQ, dx, pu/pv/pw/pt, paf,
+  reduced_chi2) live on **transient** `PR::Segment` objects;
+  `m_track_fitter.clear_segments()` runs between rounds and the private
+  fitter is dropped on return.  **STM never calls
+  `grouping.set_track_fitting()`** — only `TaggerCheckNeutrino.cxx:555` does.
+- A commented-out dump harness at `:186-227` and `:2201-2259` marks the
+  intended hook: `create_segment_fit_point_cloud(segment, m_dv, "fit")` →
+  `segment->dpcloud("fit")`.
+
+Everything we need is reachable from `TrackFitting`
+(`clus/inc/WireCellClus/TrackFitting.h`):
+
+| Quantity | Accessor |
+|---|---|
+| fitted trajectory | `get_fine_tracking_path()` |
+| per-point dQ, dx | `get_dQ()`, `get_dx()` |
+| per-point wire/tick projections | `get_pu/pv/pw/pt()`, `get_paf()` (apa/face) |
+| per-point fit quality | `get_reduced_chi2()` |
+| measured 2D charge | `get_charge_data()` keyed `(apa,time,channel)` |
+| predicted vs measured 2D charge | `get_fitted_charge_2d()` keyed `(apa,face,plane)→(wire,time)`, `FittedCharge2D{charge, charge_err, pred_charge, flag}` |
+| 3D↔2D hit association | `m_3d_to_2d` (`Point3DInfo`, per-plane associated `Coord2D` sets) |
+
+The trajectory fit and dQ/dx fit are BiCGSTAB sparse solves with Gaussian
+charge division (`div_sigma`) and Tikhonov regularization (`lambda`), ported
+from prototype `PR3DCluster_trajectory_fit.h` / `PR3DCluster_dQ_dx_fit.h`.
+SBND parameters: `sbnd_xin/sbnd_track_fitting.json` (smearing sigmas MUST
+match `sbnd/sp-filters.jsonnet`; derivation in
+`sbnd/docs/sbnd-pattern-recognition.md §6.2`), threaded via
+`--tla-str trackfitting_config=...` → `tagger_check_stm` in
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet:522-526`, with
+`sbnd_box_recomb` (Box A=1.0, B=0.255, Efield 0.5) and the NIST/PDG
+`particle_dataset` for the muon dE/dx reference.
+
+### 1.2 The uBooNE Magnify-tracking dump chain (the model to follow)
+
+- `root/src/UbooneMagnifyTrackingVisitor.cxx` reads
+  `grouping.get_track_fitting()` (i.e. the **neutrino** tagger's persisted
+  fitter) and writes per event: `T_rec_charge` (flat, per fitted point:
+  `x,y,z` cm, `q = dQ*dQdx_scale + dQdx_offset`, `nq = dx/cm`,
+  `ndf` = cluster id, `pu,pv,pw` with uBooNE plane offsets 0/2400/4800, `pt`
+  in time slices, `reduced_chi2`, PR-stage extras `flag_vertex, flag_shower,
+  rr, sub_cluster_id, particle_id`), `T_proj_data` (per cluster:
+  `channel, time_slice, charge, charge_err, charge_pred` from
+  `FittedCharge2D`), `T_bad_ch`, `Trun` (`dQdx_scale/dQdx_offset`).
+  Documented in `clus/docs/magnify_tracking_output.md`.
+- `root/apps/wire-cell-uboone-magnify-tracking-convert.cxx` regroups
+  `T_rec_charge` by `ndf` into the nested-vector `T_rec`
+  (`rec_x/y/z/dQ/dx/L/u/v/w/t`, `rec_cluster_id`, optional
+  `reduced_chi2/sub_cluster_id/flag_vertex`, MC truth pairing
+  `com_dis/com_dtheta/stat_*`) and clones `T_proj_data`/`T_bad_ch` — exactly
+  the five-tree format the Magnify-tracking GUI reads.  **Caveat:** its MC
+  mode (`-f1`) applies a hard-coded uBooNE x transform
+  (`(x+0.6)/1.098*1.1009999-0.1101`, lines 148/183) — SBND must run data mode
+  (`-f2`) or add a pass-through flag.
+
+### 1.3 Magnify-tracking-SBND is not yet SBND
+
+`/home/xqian/work/scratch_wcgpu1/toolkit-dev/Magnify-tracking-SBND` is a fork
+of BNLIF/Magnify-tracking with feature/cleanup commits only — **geometry is
+still pure MicroBooNE**:
+
+- `event/Data.cc:93-96`: `nChannel_u=2400, nChannel_v=2400, nChannel_w=3456,
+  nTime=2400` (8256 global channels, single TPC).  Plane routing is by global
+  channel range (`Data.cc:497-510`, `:995-1022`); `DrawBadCh` uses literal
+  2400/4800 splits (`:850-853`); `ControlWindow.cc:80-81` hard-codes the same
+  ranges; `LoadBadCh` hard-codes `rebin=4`.
+- Input = one ROOT file with `T_true` (optional; absence = data mode),
+  `T_rec` (nested-vector), `T_proj_data`, `T_bad_ch` (`T_proj` loaded but
+  unused).  Channels are **globally concatenated**, not per-plane/per-TPC.
+- Panel inventory (3×3 canvas): dQ/dx vs L (pad 1), MC-compare (pad 2), 3D
+  (pad 3), per-plane measured channel×time with fit points (pads 4-6),
+  per-plane `(pred−meas)/meas` residual (pads 7-9).  The **generic
+  trajectory/dQ/dx panels are exactly what STM validation needs**; the
+  PR-stage extras (sub-cluster coloring, all-cluster overlay, vertex flags)
+  can be left dormant — STM emits one track per pass with no
+  `sub_cluster_id`/`flag_vertex` branches, and the reader already guards on
+  branch existence.
+- No two-TPC concept anywhere.  This port is the largest new work item of
+  avenue 1.
+
+### 1.4 Bee (bee3) display capabilities and the SBND wiring
+
+- Bee3's layer schema (`wire-cell-bee3/events/static/js/bee/physics/sst.js:42-79`)
+  is exactly `{x,y,z,q,cluster_id,real_cluster_id}` + RSE; coloring by
+  cluster id or by a `q` HSL ramp.  **No polylines, no dQ/dx axis, no
+  track/shower or residual-range concepts** — the uBooNE chain smuggles
+  semantics into `q`: `track_fit` layer `q = dQ*0.1 - 1000` (fitted dQ/dx),
+  `shower_track` layer `q = 15000` shower / `0` track, `vertices` layer main
+  vertex `q=15000`.  `events/models.py:76-84` filters out filenames
+  containing `-track` — layer names must avoid that substring.
+- SBND already declares these three PR layers + `bee_pf` "mc" tree in
+  `cfg/pgrapher/experiment/sbnd/clus.jsonnet:633-696`, but all keyed
+  `visitor: 'TaggerCheckNeutrino:pr'` — **inert in the STM-only pipeline**.
+  The `mabc-pr.zip` mechanism (MultiAlgBlobClustering `bee_points_sets`,
+  visitor-keyed dump-after) is the ready-made transport; we need an
+  STM-keyed variant.
+
+### 1.5 nusel_display plug-in points
+
+`nusel_display/nusel_scan_viewer.py` (1317 lines): per event it reads the
+verdict TSV, the pctree tarball (`parse_pctree`), and
+`ql_evt*/mabc-all-apa.zip` `*-clustering-global.json`
+(`x,y,z,q,cid,rid` — the only per-point source; `mabc-pr.zip` is currently
+**never opened**).  A dQ/dx panel plugs in as: extra read in
+`Event.__init__` (`:341-367` mirror), a new `render_dqdx()` fanned out from
+`refresh()` (`:1005-1011`), a new figure in the `layout` (`:1296-1314`);
+focus plumbing (`bundle_cluster_ids`, `:371-378`) already exists.  Residual
+range is not stored anywhere today — it must be dumped or computed as arc
+length from the tagged end.
+
+### 1.6 Prototype reference for A/B of the physics
+
+`prototype_base/pid/src/ToyFiducial.cxx`: `check_stm` (`:405`), `eval_stm`
+(same `(peak_range, offset_length, com_range)` combos as the toolkit),
+`find_first_kink` (`:1024`), `detect_proton` (`:1268`), with per-function
+docs under `prototype_base/pid/docs/ToyFiducial/`.  Standalone apps
+`wire-cell-prod-stm{,-port}.cxx` exist for the uBooNE chain, and the qlport
+harness already gates that chain byte-identically — giving us a
+**cross-detector sanity anchor**: the same toolkit fitting code validated
+against the prototype on uBooNE events.
+
+## 2. The central design decision: one dump, three consumers
+
+All three validation avenues need the same data, which today dies inside the
+tagger.  So the backbone is a single **default-OFF dump knob on
+`TaggerCheckSTM`** (working name `save_stm_fit`), and three thin consumers.
+
+What to record, per main cluster and per pass (fwd / bwd):
+
+- **Per fitted point**: x, y, z (fitter output; already T0-corrected —
+  confirm against `switch_scope`'s `x_t0cor` convention), dQ, dx, cumulative
+  L, residual range from the identified track end, pu, pv, pw, pt, apa/face
+  (`get_paf`), reduced_chi2, cluster_id, pass index, round index (keep only
+  the final round-2 fit per pass; the round-1 rough fit is diagnostic noise).
+- **Per plane 2D**: measured + predicted charge (`get_fitted_charge_2d`),
+  i.e. `T_proj_data` content, keyed (apa, face, plane, wire/channel, time).
+- **Per cluster scalars** (the tagger's decision inputs, today trace-only):
+  kink position/index, exit_L/left_L, exit and left dQ/dx, `eval_stm` KS
+  values (ks1 vs muon, ks2 vs flat) and ratios per tested combo, michel
+  `res_length`/`ave_res_dQ_dx`, `detect_proton` verdict, FC-check exit
+  points, and the final STM/TGM outcome — so the display can say *why*.
+
+Persistence targets (both behind the same knob):
+
+1. **Grouping hand-off** for the ROOT visitor: after the passes, before
+   clearing, snapshot the accepted segments into the grouping the same way
+   `TaggerCheckNeutrino.cxx:555` does (or a dedicated
+   `set_track_fitting("stm")` slot to avoid colliding with the neutrino
+   tagger when both run — to be settled at implementation review).
+2. **pctree point clouds + cluster scalars** via the commented
+   `create_segment_fit_point_cloud` harness (`TaggerCheckSTM.cxx:186-227`):
+   an `stm_fit` PC on the cluster node (columns above) plus scalar entries.
+   These survive the TensorDM tarball → `nusel_extract`/viewer and the Bee
+   dump can both feed from it.  GOTCHA from doc 38 applies: TensorDM
+   `as_tensors` drops heterogeneous same-named PC keys and
+   `separate()/from()` drops node-local PCs — the doc-38
+   `save_real_cluster_id` plumbing is the template for doing this right.
+
+Knob-off must be byte-identical (standard gate on the 30-event manifests +
+pdhd/pdvd abtest since TaggerCheckSTM is shared code — any change must be
+additive-only under the knob).
+
+## 3. Phase plan
+
+### Phase 0 — dump backbone (prerequisite)
+
+- [ ] `save_stm_fit` knob in `TaggerCheckSTM` implementing §2 (C++ +
+      key-suppressed jsonnet threading + runner flag `-stm-fit`).
+- [ ] Residual-range definition fixed here once: arc length from the
+      candidate stopping end (the end `eval_stm` tests), recorded per point.
+- [ ] Gates: knob-off byte-identical (SBND 30-event roots + abtest
+      pdhd/pdvd + qlport, since clus/ is shared); knob-on smoke on 1 event
+      per TPC with sentinel log.
+
+### Phase 1 — Magnify-tracking file + GUI (avenue 1)
+
+- [ ] **`SbndMagnifyTrackingVisitor`** — fork-by-duplication (M10) of
+      `UbooneMagnifyTrackingVisitor`; production uBooNE file untouched.
+      Reads the STM fitter snapshot; writes `T_rec_charge` (no
+      `flag_vertex`/`sub_cluster_id`/`particle_id` — STM stage has none;
+      `rr` filled), `T_proj_data`, `T_bad_ch`, `Trun`.
+- [ ] **Two-TPC channel convention** (the key SBND decision): globally
+      concatenated channels `U = [0, 2·N_u)`, `V`, `W` with TPC1 offset by
+      the per-plane TPC0 count — i.e. within each plane pad, TPC0 and TPC1
+      appear side by side, satisfying "data in both TPCs" in one view.
+      Channel counts to be read from the SBND wires file at implementation
+      (expected 1984/1984/1664 per TPC → 5632 per TPC, 11264 total —
+      CONFIRM, do not trust this line).  Time axis: SBND readout ticks /
+      rebin (confirm slice count from the SP config; uBooNE's `rebin=4` and
+      `nTime=2400` are both hard-coded in the GUI and must become SBND
+      values).
+- [ ] **Converter**: reuse `wire-cell-uboone-magnify-tracking-convert` in
+      data mode (`-f2`) initially (MC-truth pairing needs the uBooNE x
+      transform neutralized — small follow-up flag, or an SBND copy).
+- [ ] **Magnify-tracking-SBND GUI port** (in that repo, not the toolkit):
+      `nChannel_u/v/w`, `nTime`, `ControlWindow` ranges, `DrawBadCh` splits,
+      `rebin` — all currently MicroBooNE literals (`Data.cc:93-96`,
+      `:850-853`, `ControlWindow.cc:80-81`).  Follow `Magnify-PDVD/docs/`
+      (input_format.md, porting notes) as the template.  PR-stage panels
+      (sub-clusters, all-cluster overlay) left dormant.
+- [ ] Validation use: hand-scan fit-vs-charge overlay per plane per TPC,
+      pred/meas residual panels, dQ/dx vs L with Bragg rise.
+
+### Phase 2 — Bee display (avenue 2)
+
+**wire-cell-bee3 itself is NOT modified** (owner directive): we only save
+results in the Bee JSON format it already reads
+(`{x,y,z,q,cluster_id,real_cluster_id}` layers inside the mabc zip), exactly
+as the MicroBooNE chain does.
+
+- [ ] Add STM-keyed `bee_points_sets` entries in
+      `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (visitor key
+      `TaggerCheckSTM:<name>`, dump-after mechanism already generic):
+      - `stm_fit` layer: fit points, `q = dQ·0.1 − 1000` (same
+        scale/offset convention as the PR `track_fit` layer);
+      - optionally `stm_marks`: kink + endpoints (`q` flag values), the
+        cheapest way to see the tagger's decision geometry.
+      Names must avoid the substring `-track` (bee3 `models.py:76-84`
+      filters it).  Layers inert unless `tagger_check_stm` in pipeline AND
+      knob on (key-suppression keeps `mabc-pr.zip` byte-identical
+      otherwise).
+- [ ] Accept Bee's limits knowingly: points-only (no polyline), no residual
+      range, `q`-ramp coloring — good for trajectory sanity + Bragg-peak
+      visibility, mirroring how MicroBooNE used `WireCell-charge` vs
+      tracking layers.  Track-vs-shower / subcluster layers are PR-stage;
+      deferred until the PR campaign.
+- [ ] Any upload to the public Bee server stays owner-gated
+      (`upload-to-bee.sh`, escalation rule 6); local bee3 serving is the
+      default.
+
+### Phase 3 — nusel_display panels (avenue 3)
+
+- [ ] `nusel_extract.py`: parse the `stm_fit` PC + STM scalar set from the
+      pctree tarball; add TSV columns for the headline scalars (ks1, ks2,
+      kink L, exit/left dQ/dx, proton flag) so the table can sort/filter on
+      them.
+- [ ] Viewer: new bottom panel `render_dqdx()` for the focused bundle —
+      dQ/dx vs residual range of the main cluster's STM fit, overlaid with
+      (a) the stopping-muon expectation from the same `particle_dataset`
+      dE/dx table pushed through `sbnd_box_recomb` (precomputed into a small
+      static JSON/npz so the viewer stays self-contained), (b) the flat
+      50 ke/cm MIP reference used by `eval_stm_core`; annotate kink
+      position, KS values, and the per-point TPC (apa) via marker shape so
+      two-TPC coverage is visible per track.  Fit trajectory also overlaid
+      on the existing 2D projections (distinct glyph on `f_xy/f_yz/f_xz`).
+- [ ] `--prev` chain untouched; new panel is read-only decoration, labels
+      schema unchanged.
+
+### Phase 4 — physics validation protocol (what "validated" means)
+
+Sample: the standard 30-event roots (mcp10/mcp1000/mcp1000b) at the doc-39
+op point, plus a **stopping-track-enriched selection** (clusters whose FC
+check passes with one end well inside the FV).  Explicit two-TPC coverage
+requirement: the summary must count fitted tracks per apa and include
+TPC0-only, TPC1-only, and cathode-crossing cases (doc-38/xtpc machinery
+gives us known crossers, e.g. the evt298567-class events on PDVD have SBND
+analogues in the scan set).
+
+Checks, in order of increasing physics content:
+
+1. **Trajectory sanity** (Magnify + Bee): fit follows the charge in all
+   three planes, both TPCs; no plane-flipping or dead-region derailments;
+   pred/meas residual panels structureless along healthy track sections.
+2. **Fit quality distributions**: reduced_chi2 per point/track; dx
+   distribution vs `low_dis_limit`; fraction of points with dead-plane
+   flags.
+3. **dQ/dx absolute scale**: MIP plateau of long through-going muons per
+   TPC and per plane-combination vs the ~50 ke/cm reference used by
+   `eval_stm_core` — a TPC-asymmetric plateau would invalidate the shared
+   cut values.
+4. **Stopping-particle shape**: dQ/dx vs residual range for hand-confirmed
+   stopping muons vs the muon dE/dx+recombination expectation (the exact
+   curve `eval_stm` uses); Michel-tail cases inspected; `detect_proton`
+   spot-checked on any proton-like enders.
+5. **Determinism**: repeat-run identity of the fit output (the solvers are
+   deterministic BiCGSTAB; verify under `setarch -R` like the qlport gate).
+6. **Cross-detector anchor**: the identical fitting code path already
+   passes prototype-vs-toolkit gates on uBooNE (qlport); any SBND-only
+   anomaly therefore points at SBND config (sigmas vs `sp-filters`,
+   recombination, geometry), not the fitter core — check
+   `sbnd_track_fitting.json` couplings first.
+
+Verdict-level STM validation (labels, efficiency vs hand scan) is the
+follow-on campaign once the fitting is trusted; this doc deliberately stops
+at the fitting.
+
+## 4. Open questions for the owner
+
+1. **Two-TPC display convention** for Magnify-tracking-SBND: side-by-side
+   concatenated channels per plane pad (recommended above) vs per-TPC files/
+   canvases?
+2. **Grouping slot**: reuse `grouping.set_track_fitting()` (collides if
+   `tagger_check_neutrino` later runs in the same job) or add a named slot?
+   Recommendation: named slot, keeps the PR stage untouched.
+3. Which stopping-muon sample anchors check 4 — MC (truth-tagged stoppers,
+   enables the converter's truth-pairing panels) or data in-time cosmics?
+   Recommendation: MC first (truth available), data second.
+4. Does the STM dump also record the **rejected** passes (fits that failed
+   eval_stm) — useful for false-negative debugging, at ~2× output size?
+   Recommendation: yes, with a pass-status column, since STM events are the
+   minority.
+
+## 5. Effort/ordering summary
+
+Phase 0 is the gate for everything and touches shared clus/ code (full
+multi-detector byte-identical gates).  Phase 1 (ROOT visitor + converter
+reuse) and Phase 2 (Bee layers) are independent consumers and can proceed in
+parallel once 0 lands; the Magnify GUI geometry port is the one piece of
+work outside this repo pair.  Phase 3 rides on the same pctree products and
+is pure python.  Phase 4 is the actual campaign and produces the numbered
+follow-up docs (41+: per-check results with Repro blocks).

@@ -70,6 +70,30 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))          # sbnd_xin/ for nusel_extract
 from nusel_extract import parse_pctree, group_flashes, read_table, COLUMNS  # noqa: E402
 
+# uproot is optional: only needed for the STM dQ/dx panel (tracking-stm.root
+# written by run_nusel_evt.sh -stm-fit, doc 40).  Without it the panel just
+# stays empty.
+try:
+    import uproot  # noqa: E402
+except Exception:
+    uproot = None
+
+# Reference dQ/dx-vs-residual-range curves (e/cm) extracted from the compiled
+# WCT config's LinterpFunctions -- the EXACT muon table TaggerCheckSTM's
+# eval_stm compares against (plateau ~49 ke/cm), plus the flat 50 ke/cm MIP
+# reference.  See docs/40_stm-trackfit-validation-plan.md.
+STM_REF = {}
+try:
+    with open(os.path.join(HERE, "stm_ref_dqdx.json")) as _f:
+        STM_REF = json.load(_f)
+except Exception:
+    pass
+
+# TaggerCheckSTM save_stm_fit pass-status codes (clus/src/TaggerCheckSTM.cxx).
+STM_STATUS = {0: "accepted (STM)", 1: "TGM", 2: "rej: long leftover",
+              3: "rej: dQ/dx eval", 4: "rej: extra tracks",
+              5: "rej: proton end", 6: "fitted, no decision"}
+
 # Max charge points drawn for the gray full-event context (stride-downsampled).
 MAX_CTX_PTS = 8000
 
@@ -169,7 +193,11 @@ class PrevScan:
                              npts=int(r[i["npts_bundle"]]),
                              len_cm=float(r[i["len_main_cm"]]),
                              tgm=int(r[i["tgm"]]), stm=int(r[i["stm"]]),
-                             fc=int(r[i["fc"]]), auto_label=r[i["label"]])
+                             fc=int(r[i["fc"]]),
+                             # lm column exists only on doc-34+ tables; -1 =
+                             # no verdict, matching nusel_extract's convention.
+                             lm=int(r[i["lm"]]) if "lm" in i else -1,
+                             auto_label=r[i["label"]])
                         for r in raw]
                 labels, comments, evtc = {}, {}, ""
                 if self.tag:
@@ -247,8 +275,12 @@ def build_previnfo(evt):
                 pi["name"] = pv.name
                 pi["row"] = p
                 r = evt.rows[ci]
-                pi["changed"] = ((p["tgm"], p["stm"], p["fc"])
-                                 != (r["tgm"], r["stm"], r["fc"]))
+                # auto_label included so an LM demotion (nu-candidate -> LM,
+                # same tgm/stm/fc) still tints amber; raw lm codes are NOT
+                # compared (a pre-LM baseline reads -1 everywhere and would
+                # flag every row).
+                pi["changed"] = ((p["tgm"], p["stm"], p["fc"], p["auto_label"])
+                                 != (r["tgm"], r["stm"], r["fc"], r["auto_label"]))
             pkey = f"{p['main_id']}:{p['flash_gid']}"
             if not pi["labels"] and d["labels"].get(pkey):
                 pi["labels"] = list(d["labels"][pkey])
@@ -312,6 +344,7 @@ class Event:
                 npts_bundle=int(r[i["npts_bundle"]]),
                 len_cm=float(r[i["len_main_cm"]]), n_frag=int(r[i["n_frag"]]),
                 tgm=int(r[i["tgm"]]), stm=int(r[i["stm"]]), fc=int(r[i["fc"]]),
+                lm=int(r[i["lm"]]) if "lm" in i else -1,
                 auto_label=r[i["label"]]))
         self.rows.sort(key=lambda r: r["t_us"])
 
@@ -357,6 +390,34 @@ class Event:
                 self.problems.append(f"{qlzip}: {e}")
         else:
             self.problems.append(f"missing {qlzip}")
+
+        # --- STM track-fit dump (run_nusel_evt.sh -stm-fit, doc 40) ----------
+        # Absent on knob-off rounds -- the dQ/dx panel then stays empty.
+        self.stm = None
+        stmroot = os.path.join(work_root, "nusel_evt" + evtid, "tracking-stm.root")
+        if uproot is not None and os.path.isfile(stmroot):
+            try:
+                f = uproot.open(stmroot)
+                trun = f["Trun"].arrays(library="np")
+                scale = float(trun["dQdx_scale"][0])
+                offset = float(trun["dQdx_offset"][0])
+                rec = f["T_rec_charge"].arrays(
+                    ["x", "y", "z", "q", "nq", "rr", "cluster_id", "pass",
+                     "status", "reduced_chi2"], library="np")
+                dQ = (rec["q"] - offset) / scale            # raw electrons
+                with np.errstate(divide="ignore", invalid="ignore"):
+                    dqdx = np.where(rec["nq"] > 0, dQ / rec["nq"], 0.0)  # e/cm
+                self.stm = dict(
+                    cid=rec["cluster_id"].astype(int),
+                    x=rec["x"], y=rec["y"], z=rec["z"],
+                    rr=rec["rr"], dqdx=dqdx, dQ=dQ, dx=rec["nq"],
+                    passno=rec["pass"].astype(int),
+                    status=rec["status"].astype(int),
+                    chi2=rec["reduced_chi2"],
+                    passes=f["T_stm_pass"].arrays(library="np"),
+                    evals=f["T_stm_eval"].arrays(library="np"))
+            except Exception as e:
+                self.problems.append(f"{stmroot}: {e}")
 
     # --- bundle helpers -----------------------------------------------------
     def bundle_cluster_ids(self, r):
@@ -518,7 +579,7 @@ table_cols = [
     TableColumn(field="clusters", title="clusters", width=95, formatter=fmt_l, sortable=False),
     TableColumn(field="npts", title="npts", width=55, formatter=fmt_r, sortable=False),
     TableColumn(field="len", title="len(cm)", width=65, formatter=fmt_r, sortable=False),
-    TableColumn(field="verdicts", title="tgm/stm/fc", width=80, formatter=fmt_l, sortable=False),
+    TableColumn(field="verdicts", title="tgm/stm/fc[/lm]", width=95, formatter=fmt_l, sortable=False),
     TableColumn(field="prev", title="prev", width=80, formatter=fmt_l, sortable=False),
     TableColumn(field="auto", title="auto label (+FC)", width=120, formatter=fmt_l, sortable=False),
     TableColumn(field="scan", title="scan", width=95, formatter=fmt_l, sortable=False),
@@ -565,6 +626,43 @@ for f, hx, hy in ((f_xy, "x", "y"), (f_yz, "z", "y"), (f_xz, "x", "z")):
                     fill_color="c", line_color=None, fill_alpha=0.9)]
     f.add_tools(HoverTool(renderers=rs, tooltips=[
         ("cluster", "@cid"), ("merge comp.", "@rid"), ("q", "@q{0,0}")]))
+
+# STM fitted trajectory overlaid on the projections (black crosses; only
+# populated when tracking-stm.root exists for the event -- doc 40).
+stmtraj_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))
+for f, hx, hy in ((f_xy, "x", "y"), (f_yz, "z", "y"), (f_xz, "x", "z")):
+    f.scatter(hx, hy, source=stmtraj_src, marker="cross", size=5,
+              line_color="black", line_width=1.2, fill_color=None)
+
+# --- STM dQ/dx panel (doc 40) ----------------------------------------------
+# Measured fitted dQ/dx vs residual range for the focused bundle's main
+# cluster, against the muon stopping expectation (the exact eval_stm reference
+# table) and the flat 50 ke/cm MIP line.  Marker: TPC0 circle / TPC1 triangle
+# (from the point's drift-x sign); color: forward pass blue / backward red.
+f_dqdx = figure(title="STM fit: dQ/dx vs residual range (main cluster)",
+                width=640, height=300,
+                tools="pan,wheel_zoom,box_zoom,reset,save",
+                active_scroll="wheel_zoom")
+f_dqdx.xaxis.axis_label = "residual range (cm)"
+f_dqdx.yaxis.axis_label = "dQ/dx (e/cm)"
+f_dqdx.yaxis.formatter = NumeralTickFormatter(format="0a")
+stmdqdx_src = ColumnDataSource(data=dict(rr=[], dqdx=[], color=[], marker=[],
+                                         passno=[], apa=[], chi2=[]))
+stmref_src = ColumnDataSource(data=dict(rr=[], mu=[]))
+stmflat_src = ColumnDataSource(data=dict(rr=[], flat=[]))
+f_dqdx.line("rr", "mu", source=stmref_src, line_color="#2ca02c", line_width=2,
+            legend_label="muon expectation")
+f_dqdx.line("rr", "flat", source=stmflat_src, line_color="#888888",
+            line_dash="dashed", legend_label="flat 50 ke/cm")
+r_dqdx = f_dqdx.scatter("rr", "dqdx", source=stmdqdx_src, marker="marker",
+                        size=5, fill_color="color", line_color=None,
+                        fill_alpha=0.85)
+f_dqdx.add_tools(HoverTool(renderers=[r_dqdx], tooltips=[
+    ("rr", "@rr{0.0} cm"), ("dQ/dx", "@dqdx{0,0} e/cm"),
+    ("pass", "@passno"), ("TPC", "@apa"), ("chi2", "@chi2{0.00}")]))
+f_dqdx.legend.location = "top_right"
+f_dqdx.legend.label_text_font_size = "8pt"
+stm_info = Div(text="", width=520, height=300)
 
 
 def box_polys(box, cathode=False):
@@ -688,7 +786,8 @@ def rebuild_table():
                                 if main is not None else "-")
         cols["npts"].append(str(r["npts_bundle"]))
         cols["len"].append(f"{r['len_cm']:.1f}")
-        cols["verdicts"].append(f"{r['tgm']}/{r['stm']}/{r['fc']}")
+        cols["verdicts"].append(f"{r['tgm']}/{r['stm']}/{r['fc']}"
+                                + (f"/{r['lm']}" if r["lm"] >= 0 else ""))
         # FC is orthogonal to the TGM/STM/nu-candidate label (it never enters
         # nusel_extract's 'label'), so badge it explicitly onto the auto cell:
         # a fully-contained bundle -- especially an in-beam nu-candidate -- is
@@ -697,6 +796,10 @@ def rebuild_table():
         auto = r["auto_label"]
         if r["fc"] == 1:
             auto += " <b style='color:#2ca02c'>FC</b>"
+        # An out-of-beam light mismatch never enters 'label' (only in-beam LM
+        # demotes nu-candidate), so badge it here like FC.
+        if r["lm"] == 2 and r["auto_label"] != "LM":
+            auto += " <b style='color:#b06000'>lm</b>"
         cols["auto"].append(auto)
         # prev column: baseline verdicts from the first --prev with this
         # event ('=' same, 'a/b/c→' changed, 'new' unmatched); ✓ = re-scanned.
@@ -896,6 +999,9 @@ def render_metrics():
         ("FC (fully-contained)",
          "<span style='color:#2ca02c'>YES</span>" if r["fc"] == 1
          else verdict(r["fc"])),
+        ("LM (light-mismatch)",
+         {2: "<span style='color:#b06000'>LIGHT MISMATCH</span>",
+          1: "low-energy (unjudgeable)", 0: "pass"}.get(r["lm"], "-")),
         ("auto label", f"<b>{r['auto_label']}</b>"
          + ("  <span style='color:#2ca02c'>+FC</span>" if r["fc"] == 1 else "")),
         ("scan labels", "+".join(state["labels"].get(key, [])) or "-"),
@@ -948,7 +1054,9 @@ def render_proj_info():
                + (f" + companions <span style='color:#1f77b4'><b>"
                   f"{','.join(str(c) for c in comps)}</b></span>" if comps else "")
                + (" &mdash; <b style='color:#2ca02c'>FC (fully-contained)</b>"
-                  if r["fc"] == 1 else ""))
+                  if r["fc"] == 1 else "")
+               + (" &mdash; <b style='color:#b06000'>LM (light mismatch)</b>"
+                  if r["lm"] == 2 else ""))
     nlab = sum(1 for r in evt.rows if state["labels"].get(row_key(r)))
     ptxt = ""
     if evt.previnfo:
@@ -983,11 +1091,91 @@ def sync_label_widgets():
     state["suppress"] = False
 
 
+def render_dqdx():
+    """STM dQ/dx-vs-residual-range panel for the focused bundle's main cluster
+    (tracking-stm.root from run_nusel_evt.sh -stm-fit; empty otherwise)."""
+    evt = state["evt"]
+    i = state["focus"]
+
+    def blank(msg):
+        stmdqdx_src.data = dict(rr=[], dqdx=[], color=[], marker=[],
+                                passno=[], apa=[], chi2=[])
+        stmref_src.data = dict(rr=[], mu=[])
+        stmflat_src.data = dict(rr=[], flat=[])
+        stmtraj_src.data = dict(x=[], y=[], z=[])
+        stm_info.text = f"<i>{msg}</i>"
+
+    if evt.stm is None:
+        blank("no STM fit dump (rerun with -stm-fit; needs uproot)" if uproot
+              else "python env lacks uproot — STM panel disabled")
+        return
+    if i is None:
+        blank("no bundle focused")
+        return
+    main, _ = evt.bundle_cluster_ids(evt.rows[i])
+    if main is None:
+        blank("row has no main cluster")
+        return
+    s = evt.stm
+    m = s["cid"] == main
+    if not m.any():
+        blank(f"cluster {main}: no STM fit recorded "
+              "(FC-check contained, already TGM, or &le;3 fit points)")
+        return
+
+    # TPC from drift-x sign (SBND: x<0 TPC0, x>0 TPC1).
+    apa = (s["x"][m] > 0).astype(int)
+    passno = s["passno"][m]
+    stmdqdx_src.data = dict(
+        rr=s["rr"][m].tolist(), dqdx=s["dqdx"][m].tolist(),
+        color=["#1f77b4" if p == 0 else "#d62728" for p in passno],
+        marker=["circle" if a == 0 else "triangle" for a in apa],
+        passno=passno.tolist(), apa=apa.tolist(), chi2=s["chi2"][m].tolist())
+    stmtraj_src.data = dict(x=s["x"][m].tolist(), y=s["y"][m].tolist(),
+                            z=s["z"][m].tolist())
+
+    rr_max = float(max(1.0, s["rr"][m].max()))
+    if "MuonDeDx" in STM_REF:
+        t = STM_REF["MuonDeDx"]
+        rr = [t["start"] + k * t["step"] for k in range(len(t["values"]))]
+        keep = [k for k, v in enumerate(rr) if v <= rr_max + 5]
+        stmref_src.data = dict(rr=[rr[k] for k in keep],
+                               mu=[t["values"][k] for k in keep])
+    stmflat_src.data = dict(rr=[0, rr_max + 5], flat=[50e3, 50e3])
+
+    # Scalar summary: per-pass verdicts + best eval rows for this cluster.
+    P, E = s["passes"], s["evals"]
+    lines = []
+    pm = P["cluster_id"] == main
+    for k in np.nonzero(pm)[0]:
+        lines.append(
+            f"pass {int(P['pass'][k])} ({'fwd' if P['pass'][k]==0 else 'bwd'}): "
+            f"<b>{STM_STATUS.get(int(P['status'][k]), P['status'][k])}</b>, "
+            f"kink@{int(P['kink_num'][k])}, exit_L={P['exit_L'][k]:.1f} cm, "
+            f"left_L={P['left_L'][k]:.1f} cm, "
+            f"left dQ/dx={P['left_dqdx'][k]/50e3:.2f} MIP")
+    em = E["cluster_id"] == main
+    for k in np.nonzero(em)[0]:
+        lines.append(
+            f"eval p{int(E['pass'][k])} "
+            f"[peak {E['peak_range'][k]:.0f}/off {E['offset_length'][k]:.0f}"
+            f"/com {E['com_range'][k]:.0f} cm{', strong' if E['strong'][k] else ''}]: "
+            f"ks1={E['ks1'][k]:.3f} ks2={E['ks2'][k]:.3f} "
+            f"r1={E['ratio1'][k]:.2f} r2={E['ratio2'][k]:.2f} "
+            f"res_L={E['res_length'][k]:.1f} cm "
+            f"&rarr; <b>{'PASS' if E['verdict'][k]==1 else 'fail'}</b>")
+    npts = int(m.sum())
+    n0, n1 = int((apa == 0).sum()), int((apa == 1).sum())
+    stm_info.text = ("<b>STM fit, cluster %d</b> — %d pts (TPC0 %d ○ / TPC1 %d △)<br>"
+                     % (main, npts, n0, n1) + "<br>".join(lines))
+
+
 def refresh():
     rebuild_table()
     render_projections()
     render_light()
     render_metrics()
+    render_dqdx()
     render_proj_info()
     sync_label_widgets()
 
@@ -1084,7 +1272,7 @@ def on_save():
             "in_beam": r["in_beam"],
             "clusters": ([main] + comps) if main is not None else [],
             "auto": {"tgm": r["tgm"], "stm": r["stm"], "fc": r["fc"],
-                     "label": r["auto_label"]},
+                     "lm": r["lm"], "label": r["auto_label"]},
             "scan_labels": state["labels"].get(key, []),
             "comment": state["comments"].get(key, ""),
         }
@@ -1093,7 +1281,7 @@ def on_save():
                          if pi["row"] is None else
                          {"tag": pi["name"], "matched": True,
                           "tgm": pi["row"]["tgm"], "stm": pi["row"]["stm"],
-                          "fc": pi["row"]["fc"],
+                          "fc": pi["row"]["fc"], "lm": pi["row"]["lm"],
                           "label": pi["row"]["auto_label"],
                           "changed": pi["changed"],
                           "scan_labels": pi["labels"],
@@ -1289,6 +1477,7 @@ layout = column(
     row(table, column(label_title, label_group,
                       row(clear_lbl_btn, confirm_btn), comment_in,
                       evt_comment_in), metrics),
+    row(f_dqdx, stm_info),
     row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
         LIGHT[1]["meas"]["fig"], LIGHT[1]["pred"]["fig"]),
     row(OVERLAY[0]["fig"], OVERLAY[1]["fig"]),

@@ -93,11 +93,48 @@ function(
     // cluster 6, doc 33).  Only meaningful WITH tgm_component_rescue.
     // Runner flag: -rescue-chord.
     tgm_rescue_chord = false,
+    // A pair may tag TGM only when at least one end lies in the cluster's
+    // MAIN charge component -- the largest 30 cm path component; a cathode
+    // crosser is ONE such component (C++ default false; key omitted when off
+    // => byte-identical).  A merged-in fragment that is itself through-going
+    // otherwise tags the whole bundle on its own within-component pair,
+    // which the chord guard deliberately allows and the nu-candidate veto
+    // cannot protect (it walks the pair's own path): evt289343 cluster 9,
+    // in-beam bundle tagged TGM by a 26 cm corner-clipping cosmic fragment
+    // 450 cm from the main track (doc 36).  Runner flag: -main-pair.
+    tgm_main_pair = false,
+    // How tgm_main_pair identifies the main (C++ default "path"; key omitted
+    // then => byte-identical doc-36 behavior).  "path" = largest 30 cm path
+    // component (proxy; wrong if a merged-in cosmic outweighs the main).
+    // "real" = per-blob real_cluster_main flash-merge provenance -- exact,
+    // needs a pctree saved with run_ql_evt.sh -save-rcid; falls back to the
+    // proxy on old tarballs (doc 38).  Runner flag: -main-pair-real.
+    tgm_main_pair_mode = 'path',
     // Downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial box, in cm
     // (default 3 = byte-identical legacy margin).  Shared by tagger_check_tgm
     // and tagger_check_fc so containment keeps one meaning.  Runner flag:
     // -fvz <cm>.
     tgm_fv_zmax_margin = 3,
+    // Downstream-z inset used by check_tgm's CASE-A INTERIOR-support tests
+    // (chord midpoints + waypoint re-check) when > 0, in cm (default 0 =
+    // OFF, key omitted => byte-identical; the interior tests then share
+    // tgm_fv_zmax_margin).  Makes the doc-32 widening endpoint-only so a
+    // wall-hugging corner clipper keeps its midpoint support (doc 35,
+    // evt287517 cluster 16 / evt289805 cluster 9).  TGM only; FC untouched.
+    // Runner flag: -fvzi <cm>.
+    tgm_fv_zmax_margin_interior = 0,
+    // Drift-x and vertical-y insets of the TGM/FC fiducial box, in cm, both
+    // faces symmetric (defaults 2 / 2.5 = byte-identical legacy margins).
+    // Shared by tagger_check_tgm and tagger_check_fc, same as
+    // tgm_fv_zmax_margin.  Runner flags: -fvx <cm> / -fvy <cm>.
+    tgm_fv_x_margin = 2,
+    tgm_fv_y_margin = 2.5,
+    // Persist the per-pass STM track fits (C++ default false; key omitted
+    // when off => byte-identical): cluster PCs stm_fit/stm_pass/stm_eval, a
+    // Bee 'stm_fit' layer in mabc-pr.zip, and (when 'stm_magnify' is added
+    // to pipeline_names) tracking-stm.root for Magnify-tracking-SBND.  Also
+    // gates loading the WireCellRoot plugin.  Runner flag: -stm-fit.
+    save_stm_fit = false,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -142,7 +179,13 @@ function(
                              tgm_component_extremes=tgm_component_extremes,
                              tgm_component_rescue=tgm_component_rescue,
                              tgm_rescue_chord=tgm_rescue_chord,
-                             tgm_fv_zmax_margin=tgm_fv_zmax_margin);
+                             tgm_main_pair=tgm_main_pair,
+                             tgm_main_pair_mode=tgm_main_pair_mode,
+                             tgm_fv_zmax_margin=tgm_fv_zmax_margin,
+                             tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior,
+                             tgm_fv_x_margin=tgm_fv_x_margin,
+                             tgm_fv_y_margin=tgm_fv_y_margin,
+                             save_stm_fit=save_stm_fit);
 
     local graph = g.intern(
         innodes=[source],
@@ -159,7 +202,11 @@ function(
         type: 'wire-cell',
         data: {
             plugins: ['WireCellGen', 'WireCellPgraph', 'WireCellAux', 'WireCellSio',
-                      'WireCellSigProc', 'WireCellImg', 'WireCellClus'],
+                      'WireCellSigProc', 'WireCellImg', 'WireCellClus']
+                     // WireCellRoot hosts SbndMagnifyTrackingVisitor; loaded
+                     // only with the knob so the compiled config stays
+                     // byte-identical when off.
+                     + (if save_stm_fit then ['WireCellRoot'] else []),
             apps: ['Pgrapher'],
         },
     };

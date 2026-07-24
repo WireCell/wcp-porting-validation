@@ -27,9 +27,16 @@ one physical flash yields one flash object per APA (APA1 gids offset +1000000).
 Flashes within FLASH_GROUP_NS of each other on opposite sides are one physical
 flash and are counted once -- otherwise a bright beam flash double-counts.
 
-Labels: TGM | STM | nu-candidate (in-window, untagged) | not-tagged
-        (out-of-window, untagged) | no-bundle (in-window physical flash with no
-        qualifying bundle).
+Labels: TGM | STM | LM (in-window, light mismatch: the bundle's charge cannot
+        explain its matched flash -- QLMatching lm_tagger, doc 34) |
+        nu-candidate (in-window, untagged) | not-tagged (out-of-window,
+        untagged) | no-bundle (in-window physical flash with no qualifying
+        bundle).
+
+The 'lm' column is the raw LM verdict from the cluster scalar "lm_flag" the
+Q/L step stamps when run with -lm (0 pass / 1 low-energy / 2 light mismatch;
+-1 = scalar absent, i.e. a pre-LM tree or a knob-off run).  Unlike fc it DOES
+enter 'label', with priority TGM > STM > LM, and only for in-beam bundles.
 
 The 'fc' column is the fully-contained verdict (TaggerCheckFC -> cluster flag
 "FC"), the toolkit counterpart of the prototype's event_type bit 2 / match_isFC.
@@ -58,7 +65,8 @@ FLASH_GROUP_NS = 80.0  # cross-APA coincidence window (= MABC flash_group_window
 
 COLUMNS = ['run', 'subrun', 'event', 'main_id', 'flash_gid', 'flash_apa', 'flash_grp',
            'flash_time_us', 'flash_pe', 'flash_pe_grp', 'in_beam', 'n_bundle',
-           'npts_main', 'npts_bundle', 'len_main_cm', 'n_frag', 'tgm', 'stm', 'fc', 'label']
+           'npts_main', 'npts_bundle', 'len_main_cm', 'n_frag', 'tgm', 'stm', 'fc',
+           'lm', 'label']
 
 
 def load_pctree(fname):
@@ -99,6 +107,11 @@ def parse_pctree(fname):
     main = arr('cluster_scalar', 'flag_main_cluster').astype(int)
     assoc = (arr('cluster_scalar', 'flag_associated_cluster').astype(int)
              if 'flag_associated_cluster' in cs else np.zeros_like(ident))
+    # LM (light-mismatch) verdict, stamped by QLMatching's lm_tagger knob
+    # (doc 34): 0 pass / 1 low-energy / 2 light mismatch.  Absent on pre-LM
+    # trees and knob-off runs => every cluster reads -1 (no verdict).
+    lm = (arr('cluster_scalar', 'lm_flag').astype(int)
+          if 'lm_flag' in cs else np.full_like(ident, -1))
 
     # Per-cluster point slices: the lpcmaps arrays give, per tree node in
     # serialization order, how many rows that node contributed to each named PC.
@@ -137,7 +150,8 @@ def parse_pctree(fname):
             length_cm = float(np.linalg.norm(P[a] - P[b])) / MM
         clusters.append(dict(ident=int(ident[i]), t0_us=float(t0[i]) / US,
                              gid=int(gid[i]), main=int(main[i]),
-                             assoc=int(assoc[i]), npts=int(n), len_cm=length_cm))
+                             assoc=int(assoc[i]), lm=int(lm[i]),
+                             npts=int(n), len_cm=length_cm))
 
     fl_gid = arr('opflash', 'gid').astype(int)
     fl_t, fl_pe = arr('opflash', 'time'), arr('opflash', 'pe')
@@ -321,11 +335,17 @@ def read_table(fname, first_col):
     return header, [ln.split() for ln in lines]
 
 
-def label_of(tgm, stm, in_beam):
+def label_of(tgm, stm, in_beam, lm=-1):
     if tgm == 1:
         return 'TGM'
     if stm == 1:
         return 'STM'
+    # LM demotes an otherwise-untagged IN-BEAM bundle (owner decision, doc 34):
+    # a beam-window bundle whose matched flash its charge cannot explain is a
+    # cosmic-flash accidental, not a nu-candidate (evt286021 main 8).  Priority
+    # TGM > STM > LM; out-of-beam labels are unchanged by LM.
+    if in_beam and lm == 2:
+        return 'LM'
     return 'nu-candidate' if in_beam else 'not-tagged'
 
 
@@ -367,8 +387,8 @@ def one_event(args):
                      f'{c["t0_us"]:.3f}', f'{fl["pe"]:.1f}' if fl else '-1',
                      f'{pe_grp.get(g, 0.0):.1f}', in_beam, 1 + len(peers),
                      c['npts'], c['npts'] + sum(o['npts'] for o in peers),
-                     f'{glen:.1f}', nfrag, tgm, stm, fc,
-                     label_of(tgm, stm, in_beam)])
+                     f'{glen:.1f}', nfrag, tgm, stm, fc, c['lm'],
+                     label_of(tgm, stm, in_beam, c['lm'])])
 
     # In-window PHYSICAL flashes (deduped) with no qualifying bundle.
     bundle_grps = {fgrp.get(c['gid'], -1) for c in bundles
@@ -382,7 +402,7 @@ def one_event(args):
         seen.add(gr)
         rows.append([args.run, args.subrun, event, -1, g, f['apa'], gr,
                      f'{f["t_us"]:.3f}', f'{f["pe"]:.1f}', f'{pe_grp[gr]:.1f}',
-                     1, 0, 0, 0, '0.0', 0, -1, -1, -1, 'no-bundle'])
+                     1, 0, 0, 0, '0.0', 0, -1, -1, -1, -1, 'no-bundle'])
 
     with open(args.out, 'w') if args.out else sys.stdout as fh:
         if args.no_header:
@@ -432,10 +452,10 @@ def merge(args):
     for key in sorted(ev, key=lambda k: tuple(int(v) for v in k)):
         e = ev[key]
         labels = e['inbeam_bundles']
-        if any(l not in ('TGM', 'STM') for l in labels):
-            elabel = 'nu-candidate'      # an in-window bundle survived both taggers
+        if any(l not in ('TGM', 'STM', 'LM') for l in labels):
+            elabel = 'nu-candidate'      # an in-window bundle survived all taggers
         elif labels:
-            elabel = 'cosmic-tagged'     # every in-window bundle is TGM/STM
+            elabel = 'cosmic-tagged'     # every in-window bundle is TGM/STM/LM
         elif e['inbeam_grps']:
             elabel = 'no-bundle'
         else:

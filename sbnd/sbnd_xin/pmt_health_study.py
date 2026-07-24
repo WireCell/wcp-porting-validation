@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Per-PMT PE health across the 150-event lan-reco2 data sample, read straight from
 the opflash tensors (channel `ch` -> array column ch+1; col0 = flash time)."""
-import numpy as np, json, glob, os, tarfile, tempfile, statistics
+import numpy as np, json, glob, gzip, os, tarfile, tempfile, statistics
 
 BASE = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/input_files/input-3files-lan-reco2"
 SUBDIRS = ["1", "2", "3"]
@@ -9,7 +9,10 @@ CALIB = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work/ql_evt
 CH_MASK = {39,64,66,67,71,85,86,87,92,115,138,141,170,197,217,218,221,222,223,226,245,248,249,302}
 
 # channel -> (apa, type) from the calib opdet table (same detector)
-opd = {o["ch"]: o for o in json.load(open(CALIB))["opdets"]}
+# .json.gz too: the 2026-07-24 consolidation gzipped archived dumps.
+_cal = CALIB if os.path.exists(CALIB) else CALIB + ".gz"
+opd = {o["ch"]: o for o in json.load(
+    gzip.open(_cal, "rt") if _cal.endswith(".gz") else open(_cal))["opdets"]}
 
 # accumulate per-channel PE across all flashes in the sample (only for the channel's own apa)
 pe_vals = {ch: [] for ch in opd}

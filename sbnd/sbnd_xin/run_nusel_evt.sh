@@ -105,6 +105,54 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -fvz <cm>     downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial
                 box in cm (default 3 = legacy).  Shared by tagger_check_tgm
                 and tagger_check_fc.  Env: SBND_TGM_FVZ_MARGIN=<cm>.
+  -fvzi <cm>    downstream-z inset used by check_tgm's CASE-A INTERIOR
+                support tests (chord midpoints + waypoint re-check) when > 0
+                (default 0 = off; interior tests then share -fvz).  Makes
+                the -fvz widening endpoint-only so a corner clipper running
+                ALONG the downstream wall inside the widened band keeps its
+                midpoint support (evt287517 cluster 16 / evt289805 cluster 9
+                -- doc 35).  TGM only; FC and the endpoint exit tests keep
+                -fvz.  Env: SBND_TGM_FVZ_INTERIOR=<cm>.
+  -fvx <cm>     drift-x (|x| ~ 200 cm faces) inset of the TGM/FC fiducial
+                box in cm, both faces symmetric (default 2 = legacy).
+                Shared by tagger_check_tgm and tagger_check_fc.
+                Env: SBND_TGM_FVX_MARGIN=<cm>.
+  -fvy <cm>     vertical-y (|y| ~ 200 cm faces) inset, both faces symmetric
+                (default 2.5 = legacy).  Shared by tagger_check_tgm and
+                tagger_check_fc.  Env: SBND_TGM_FVY_MARGIN=<cm>.
+  -stm-fit      persist the per-pass STM track fits (doc 40): cluster PCs
+                stm_fit/stm_pass/stm_eval, a Bee 'stm_fit' layer in
+                mabc-pr.zip, and tracking-stm.root (SbndMagnifyTrackingVisitor
+                appended to the pipeline) for Magnify-tracking-SBND.
+                DEFAULT OFF = byte-identical legacy outputs.
+                Env: SBND_STM_FIT=1.
+  -main-pair-real  like -main-pair, but identify the main EXACTLY via the
+                per-blob real_cluster_main flash-merge provenance instead of
+                the largest-component proxy (doc 38).  Needs a pctree saved
+                with run_ql_evt.sh -save-rcid (this runner passes -save-rcid
+                to a Q/L step it launches when this flag is on); falls back
+                to the proxy on old tarballs.
+                Env: SBND_TGM_MAIN_PAIR_MODE=real.
+  -main-pair    a pair may tag TGM only when at least one end lies in the
+                cluster's MAIN charge component (largest 30 cm path
+                component; a cathode crosser is one component).  A merged-in
+                fragment that is itself through-going otherwise tags the
+                whole bundle on its own pair, which the chord guard
+                deliberately allows and the -nucand veto cannot protect
+                (it walks the pair's own path): evt289343 main 9, in-beam
+                bundle tagged TGM by a 26 cm corner-clipping cosmic fragment
+                450 cm from the main track (doc 36).  Off by default =>
+                byte-identical.  Env: SBND_TGM_MAIN_PAIR=1.
+  -lm           LM (light-mismatch) tagger in the Q/L step (QLMatching
+                lm_tagger, doc 34): per-drift-side KS shape + pred/meas
+                normalization verdict on every final matched bundle, stamped
+                as cluster scalar "lm_flag" -> the table's lm column, with a
+                label demotion nu-candidate -> LM for an in-beam bundle whose
+                matched flash its charge cannot explain (evt286021 main 8).
+                Passes -lm -calib to run_ql_evt.sh when the Q/L step runs;
+                an EXISTING pctree is reused untouched, so use a fresh work
+                root for an LM pass.  Off by default => byte-identical.
+                Env: SBND_QL_LM=1.
   -no-nucand    disable it (pre-doc-26 conservative never-tag-in-beam).
                 Env: SBND_TGM_NUCAND=0.
                 NB: the C++/jsonnet default stays FALSE -- only this runner
@@ -159,6 +207,28 @@ RESCUE="${SBND_TGM_RESCUE:-0}"
 RESCUE_CHORD="${SBND_TGM_RESCUE_CHORD:-0}"
 # Downstream-z inset of the TGM/FC fiducial box, cm.  DEFAULT 3 = legacy.
 FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-3}"
+# Interior-support downstream-z inset for check_tgm CASE-A, cm.  DEFAULT 0 =
+# off (interior tests share FVZ_MARGIN).
+FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-0}"
+# Drift-x / vertical-y insets of the TGM/FC fiducial box, cm, both faces
+# symmetric.  DEFAULTS 2 / 2.5 = legacy.
+FVX_MARGIN="${SBND_TGM_FVX_MARGIN:-2}"
+FVY_MARGIN="${SBND_TGM_FVY_MARGIN:-2.5}"
+# TGM pairs must touch the cluster's main charge component (doc 36).
+# DEFAULT OFF: opt in with -main-pair / SBND_TGM_MAIN_PAIR=1.
+MAIN_PAIR="${SBND_TGM_MAIN_PAIR:-0}"
+# How -main-pair identifies the main: "path" = largest-component proxy
+# (doc 36), "real" = per-blob flash-merge provenance (doc 38, needs a
+# -save-rcid pctree).  -main-pair-real sets both.
+MAIN_PAIR_MODE="${SBND_TGM_MAIN_PAIR_MODE:-path}"
+# LM (light-mismatch) tagger in the Q/L step (QLMatching lm_tagger, doc 34).
+# DEFAULT OFF: opt in with -lm / SBND_QL_LM=1.  Only affects a Q/L step this
+# runner LAUNCHES (pctree missing); an existing pctree is reused as-is, so mix
+# -lm with pre-LM trees deliberately or start a fresh work root.
+QL_LM="${SBND_QL_LM:-0}"
+# Persist per-pass STM track fits + tracking-stm.root (doc 40).
+# DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
+STM_FIT="${SBND_STM_FIT:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -177,10 +247,25 @@ while [ $# -gt 0 ]; do
         -rescue-chord|--rescue-chord) RESCUE_CHORD=1; shift ;;
         -no-rescue-chord|--no-rescue-chord) RESCUE_CHORD=0; shift ;;
         -fvz|--fvz) FVZ_MARGIN="$2"; shift 2 ;;
+        -fvzi|--fvzi) FVZ_INTERIOR="$2"; shift 2 ;;
+        -fvx|--fvx) FVX_MARGIN="$2"; shift 2 ;;
+        -fvy|--fvy) FVY_MARGIN="$2"; shift 2 ;;
+        -main-pair|--main-pair) MAIN_PAIR=1; shift ;;
+        -main-pair-real|--main-pair-real) MAIN_PAIR=1; MAIN_PAIR_MODE=real; shift ;;
+        -no-main-pair|--no-main-pair) MAIN_PAIR=0; MAIN_PAIR_MODE=path; shift ;;
+        -lm|--lm) QL_LM=1; shift ;;
+        -no-lm|--no-lm) QL_LM=0; shift ;;
+        -stm-fit|--stm-fit) STM_FIT=1; shift ;;
+        -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+# -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
+if [ "$STM_FIT" = 1 ]; then
+    PIPELINE="$PIPELINE,stm_magnify"
+fi
 
 case "$MODE" in
     mc)   REALITY=sim ;;
@@ -214,8 +299,14 @@ process_event() {
     # pctree; run_ql_evt.sh is deterministic so a rerun reproduces the same
     # matching, only adding the tarball).
     if [ ! -s "$PCT" ]; then
-        echo "[evt $EVT_ID] pctree missing — running Q/L step (-save-pctree)"
-        "$SBND_DIR/run_ql_evt.sh" "$MODE" -save-pctree "$IDX" || return 1
+        local QL_FLAGS=(-save-pctree)
+        # -lm: LM tagger + calib dump in the Q/L step (the dump carries the
+        # per-bundle lm* metrics the tuning/hand-scan read; doc 34).
+        [ "$QL_LM" = 1 ] && QL_FLAGS+=(-lm -calib)
+        # -main-pair-real needs the per-blob provenance in the pctree (doc 38).
+        [ "$MAIN_PAIR_MODE" = real ] && QL_FLAGS+=(-save-rcid)
+        echo "[evt $EVT_ID] pctree missing — running Q/L step (${QL_FLAGS[*]})"
+        "$SBND_DIR/run_ql_evt.sh" "$MODE" "${QL_FLAGS[@]}" "$IDX" || return 1
         [ -s "$PCT" ] || { echo "ERROR: Q/L step did not produce $PCT" >&2; return 1; }
     fi
 
@@ -237,7 +328,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD fvz=$FVZ_MARGIN)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -261,7 +352,13 @@ process_event() {
             --tla-code "tgm_component_extremes=$([ "$CHORD" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_component_rescue=$([ "$RESCUE" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_rescue_chord=$([ "$RESCUE_CHORD" = 1 ] && echo true || echo false)" \
+            --tla-code "tgm_main_pair=$([ "$MAIN_PAIR" = 1 ] && echo true || echo false)" \
+            --tla-str  "tgm_main_pair_mode=$MAIN_PAIR_MODE" \
             --tla-code "tgm_fv_zmax_margin=$FVZ_MARGIN" \
+            --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
+            --tla-code "tgm_fv_x_margin=$FVX_MARGIN" \
+            --tla-code "tgm_fv_y_margin=$FVY_MARGIN" \
+            --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
