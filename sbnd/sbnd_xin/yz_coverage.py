@@ -8,10 +8,16 @@ each anode/side separately:
   - charge  : sum of blob signal ('val', bnodes col 2) at the blob's
               corner-mean (y, z)
   - nblob   : blob count at the corner-mean (y, z)
-  - ncorner : every valid blob corner filled individually (finer coverage
-              proxy near edges/holes than the center alone)
+  - ncorner : every valid blob corner filled individually (biased toward
+              blob BOUNDARIES -- kept for comparison)
   - dead    : same corner fill for the *masked* (dead-channel) graph, i.e.
               where imaging placed dead-region blobs
+  - cover   : blob-interior fill -- every 1 cm bin whose center lies inside
+              the blob's convex (y, z) polygon gets +1 (uniform sampling of
+              the blob area; the unbiased coverage-density measure)
+  - qspread : blob 'val' spread uniformly over its covered bins
+  - deadcover : same interior fill for the masked graph = footprint of the
+              declared (>=2-plane) dead volume
 
 Blob-node array layout (aux/docs/ClusterArrays.org "Blob"):
   col 2 = val (signal), col 14 = ncorners, cols 15.. = up to 12 (y, z)
@@ -62,6 +68,62 @@ def blob_yz(bn):
             cy / 10.0, cz / 10.0)
 
 
+def blob_polys(bn):
+    """Yield (poly_yz_cm, val) per blob: corners angle-ordered around the
+    centroid (blob polygons are convex intersections of wire half-planes)."""
+    val = bn[:, 2]
+    nc = np.clip(bn[:, 14].astype(int), 0, 12)
+    corners = bn[:, 15:39].reshape(len(bn), 12, 2) / 10.0  # (y, z) cm
+    for i in range(len(bn)):
+        k = nc[i]
+        if k < 3:
+            continue
+        p = corners[i, :k]
+        c = p.mean(axis=0)
+        order = np.argsort(np.arctan2(p[:, 0] - c[0], p[:, 1] - c[1]))
+        yield p[order], val[i]
+
+
+def rasterize(bn, hist_cover, hist_q=None):
+    """Fill hist[z, y] bins whose centers lie inside each blob polygon.
+
+    Convex point-in-polygon by half-plane cross products.  A blob covering
+    no bin center falls back to its centroid bin.
+    """
+    z0, y0 = Z_EDGES[0], Y_EDGES[0]
+    nz, ny = hist_cover.shape
+    for poly, val in blob_polys(bn):
+        py, pz = poly[:, 0], poly[:, 1]
+        iz0 = max(int(np.floor(pz.min() - z0)), 0)
+        iz1 = min(int(np.ceil(pz.max() - z0)), nz - 1)
+        iy0 = max(int(np.floor(py.min() - y0)), 0)
+        iy1 = min(int(np.ceil(py.max() - y0)), ny - 1)
+        if iz1 < iz0 or iy1 < iy0:
+            continue
+        zg = z0 + np.arange(iz0, iz1 + 1) + 0.5
+        yg = y0 + np.arange(iy0, iy1 + 1) + 0.5
+        ZZ, YY = np.meshgrid(zg, yg, indexing='ij')
+        inside = np.ones(ZZ.shape, dtype=bool)
+        for a in range(len(poly)):
+            b = (a + 1) % len(poly)
+            # cross((zb-za, yb-ya), (Z-za, Y-ya)) >= 0 for all edges (CCW)
+            cr = ((pz[b] - pz[a]) * (YY - py[a])
+                  - (py[b] - py[a]) * (ZZ - pz[a]))
+            inside &= cr >= 0
+        if not inside.any():
+            cy = int(py.mean() - y0)
+            cz = int(pz.mean() - z0)
+            if 0 <= cz < nz and 0 <= cy < ny:
+                hist_cover[cz, cy] += 1
+                if hist_q is not None:
+                    hist_q[cz, cy] += val
+            continue
+        sub = hist_cover[iz0:iz1 + 1, iy0:iy1 + 1]
+        sub[inside] += 1
+        if hist_q is not None:
+            hist_q[iz0:iz1 + 1, iy0:iy1 + 1][inside] += val / inside.sum()
+
+
 def load_bnodes(path):
     """bnodes array from an icluster npz, or None if absent/empty."""
     try:
@@ -83,7 +145,8 @@ def accumulate(args):
     nz, ny = len(Z_EDGES) - 1, len(Y_EDGES) - 1
     H = {}
     for apa in (0, 1):
-        for key in ('charge', 'nblob', 'ncorner', 'dead'):
+        for key in ('charge', 'nblob', 'ncorner', 'dead',
+                    'cover', 'qspread', 'deadcover'):
             H[f'{key}_apa{apa}'] = np.zeros((nz, ny))
     nevt_used = 0
     missing = []
@@ -104,6 +167,7 @@ def accumulate(args):
                     zc, yc, bins=(Z_EDGES, Y_EDGES))[0]
                 H[f'ncorner_apa{apa}'] += np.histogram2d(
                     cz, cy, bins=(Z_EDGES, Y_EDGES))[0]
+                rasterize(bn, H[f'cover_apa{apa}'], H[f'qspread_apa{apa}'])
                 used = True
             msk = os.path.join(d, f'icluster-apa{apa}-masked.npz')
             bn = load_bnodes(msk) if os.path.exists(msk) else None
@@ -111,6 +175,7 @@ def accumulate(args):
                 _, _, _, cy, cz = blob_yz(bn)
                 H[f'dead_apa{apa}'] += np.histogram2d(
                     cz, cy, bins=(Z_EDGES, Y_EDGES))[0]
+                rasterize(bn, H[f'deadcover_apa{apa}'])
         nevt_used += used
         if (i + 1) % 100 == 0:
             print(f'  {i + 1}/{len(evt_dirs)} events scanned')
@@ -222,6 +287,79 @@ def plot(args):
     fig.savefig(p, dpi=140)
     plt.close(fig)
     print('wrote', p)
+
+    # 4b) blob-interior coverage density (unbiased area sampling)
+    if 'cover_apa0' in f:
+        fig, axes = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
+        for apa, ax in zip((0, 1), axes):
+            im = heat(ax, f[f'cover_apa{apa}'],
+                      f'APA{apa} {SIDES[apa]} — blob-interior coverage '
+                      f'density, {nevt} events')
+            fig.colorbar(im, ax=ax, pad=0.01)
+        fig.tight_layout()
+        p = os.path.join(args.out_dir, 'yz-cover.png')
+        fig.savefig(p, dpi=140)
+        plt.close(fig)
+        print('wrote', p)
+
+        # seam-density answer figure: is there low density BEYOND the
+        # declared (masked, >=2-plane) dead footprint?
+        seam = (zc >= 248) & (zc <= 253)
+        side = ((zc >= 230) & (zc <= 245)) | ((zc >= 256) & (zc <= 271))
+        fig, axes = plt.subplots(3, 2, figsize=(14, 13))
+        for col, apa in enumerate((0, 1)):
+            cov = f[f'cover_apa{apa}']
+            dcov = f[f'deadcover_apa{apa}']
+            zz = (zc >= 230) & (zc <= 271)
+            ax = axes[0][col]
+            prof = cov.sum(axis=1)
+            ax.step(zc[zz], prof[zz] / np.median(prof[side]), where='mid',
+                    label='interior coverage density')
+            qs = f[f'qspread_apa{apa}'].sum(axis=1)
+            ax.step(zc[zz], qs[zz] / np.median(qs[side]), where='mid',
+                    label='charge density (spread)')
+            dp = dcov.sum(axis=1)
+            ax.step(zc[zz], dp[zz] / max(dp[zz].max(), 1), where='mid',
+                    label='declared-dead footprint (a.u.)', alpha=0.6)
+            ax.axvspan(248, 253, color='r', alpha=0.08)
+            ax.axhline(1, color='k', lw=0.5)
+            ax.set_title(f'APA{apa} {SIDES[apa]} — density at the seam')
+            ax.set_xlabel('z [cm]')
+            ax.legend(fontsize=8)
+            ax.grid(alpha=0.3)
+            # y-resolved seam ratio + dead fraction
+            ax = axes[1][col]
+            s = cov[seam].sum(axis=0) / seam.sum()
+            b = cov[side].sum(axis=0) / side.sum()
+            r = np.where(b > 0, s / b, np.nan)
+            ax.step(yc, r, where='mid', lw=0.8, label='seam/sideband density')
+            dfrac = (dcov[seam] > 0).mean(axis=0)
+            ax.step(yc, dfrac, where='mid', lw=0.8, color='r', alpha=0.6,
+                    label='fraction of seam bins declared dead')
+            ax.axhline(1, color='k', lw=0.5)
+            ax.set_title(f'APA{apa} — seam(248-253) density ratio vs y')
+            ax.set_xlabel('y [cm]')
+            ax.set_ylim(0, 2.5)
+            ax.legend(fontsize=8)
+            ax.grid(alpha=0.3)
+            # 2D density zoom with declared-dead contour
+            ax = axes[2][col]
+            zz2 = (zc >= 240) & (zc <= 261)
+            hp = np.ma.masked_where(cov[zz2] <= 0, cov[zz2])
+            im = ax.pcolormesh(ze[np.append(zz2, False) | np.append(False, zz2)],
+                               ye, hp.T, cmap='viridis', rasterized=True)
+            dd = (dcov[zz2] > 0).astype(float)
+            ax.contour(zc[zz2], yc, dd.T, levels=[0.5], colors='r',
+                       linewidths=0.6)
+            ax.set_title(f'APA{apa} — density zoom, declared dead in red')
+            ax.set_xlabel('z [cm]')
+            ax.set_ylabel('y [cm]')
+            fig.colorbar(im, ax=ax, pad=0.01)
+        fig.tight_layout()
+        p = os.path.join(args.out_dir, 'yz-seam-density.png')
+        fig.savefig(p, dpi=140)
+        plt.close(fig)
+        print('wrote', p)
 
     # 5) middle-region zoom (chosen from the full map; override via args)
     z0, z1, y0, y1 = args.zoom

@@ -18,10 +18,14 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 #         (1000 events, 0 missing; from run_img_evt.sh on
 #          input_files_reco1/staged-mcp2025c-1000evt SP frames)
 python3 yz_coverage.py accumulate --work-root work-mcp1000 \
-    --out pics/yz_coverage/yz-hist-mcp1000.npz
-python3 yz_coverage.py plot --hist pics/yz_coverage/yz-hist-mcp1000.npz \
+    --out pics/yz_coverage/yz-hist-mcp1000-v2.npz
+python3 yz_coverage.py plot --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz \
     --out-dir pics/yz_coverage
 ```
+
+(The round-1 numbers below were made from the corner/center-fill histograms
+of `yz-hist-mcp1000.npz`; the v2 file is a superset adding the
+blob-interior fills of Round 2 with identical corner/center content.)
 
 ## Method
 
@@ -41,7 +45,18 @@ Figures (`pics/yz_coverage/`): `yz-ncorner.png`, `yz-charge.png` (full-face
 maps), `yz-contour.png` (smoothed contour view), `yz-dead.png` (dead-region
 maps), `yz-profiles.png` (1D y/z projections), `yz-middle-zoom.png`
 (z 180–320, |y| < 60 with contours), `yz-seam-quant.png` (quantitative seam
-panels).
+panels).  Round 2 (below) adds `yz-cover.png` and `yz-seam-density.png`
+from the blob-interior fill.
+
+![full-face corner occupancy](../pics/yz_coverage/yz-ncorner.png)
+
+![smoothed occupancy contours](../pics/yz_coverage/yz-contour.png)
+
+![dead-region maps](../pics/yz_coverage/yz-dead.png)
+
+![middle-region zoom](../pics/yz_coverage/yz-middle-zoom.png)
+
+![quantitative seam panels](../pics/yz_coverage/yz-seam-quant.png)
 
 ## Findings
 
@@ -99,6 +114,52 @@ fill artifact of the discrete blob-corner lattice (wire-crossing positions),
 not detector structure; it is absent from the blob-center fill at the same
 scale.  The overall y-trend (occupancy rising toward y = +200) is the cosmic
 illumination, not efficiency.
+
+## Round 2 — blob-interior density: is there dead volume beyond the declared dead area?
+
+Owner follow-up: the corner fill is biased exactly where the question lives —
+blobs *end* at the dead-channel boundary, so their corners pile up there and
+can hide (or fake) density structure.  Round 2 rasterizes every blob's convex
+(y, z) polygon instead: each 1 cm bin whose center lies inside the polygon
+gets +1 (`cover`), blob charge is spread uniformly over its covered bins
+(`qspread`), and the masked graph gets the same interior fill (`deadcover`
+= footprint of the declared ≥2-plane dead volume).  Charge is conserved by
+construction (checked: raster sum = Σval to 4 digits).
+
+![blob-interior coverage density](../pics/yz_coverage/yz-cover.png)
+
+![seam density vs declared dead](../pics/yz_coverage/yz-seam-density.png)
+
+**Answer: no additional dead-volume structure in the middle region.**
+With unbiased area sampling the seam band (z 248–253, |y| ≤ 199) has
+coverage density **×1.016 (APA0) / ×1.041 (APA1)** of the sidebands — the
+round-1 ×1.8 "excess" was pure corner pile-up, and there is no deficit
+either: the two-view blobs formed over the dead collection columns fully
+tile the seam (slightly over-covering, since 2-view blobs are fatter than
+the true activity).  Band-integrated charge density is ×0.95/×0.94, the
+loss localized to the two 1 cm dead-W columns (per-bin dips to ×0.79–0.84).
+
+Census of genuinely low-density seam bins (density < 0.25× the sideband
+y-expectation):
+
+| | low bins | of which declared dead | zero-coverage bins | all declared? |
+|---|---|---|---|---|
+| APA0 east | 14 | 13 | 10 (z 249.5–251.5, y 90–98) | yes — all 10 |
+| APA1 west | 1 | 1 | 1 (y ≈ −198) | yes |
+
+The only real hole is the APA0 patch at (z 249.5–251.5, y 90–98 cm) — and it
+sits entirely inside the `deadcover` footprint, i.e. it is exactly the
+expected ≥2-plane dead volume where the seam's dead collection columns cross
+declared-dead induction channels (the white patch bordered red in the
+`yz-seam-density.png` zoom).  The single undeclared low bin (APA0 z 250.5,
+y −190.5, ×0.24) is one isolated bin at the edge of the dense declared-dead
+dashing near the bottom corner — statistics, not structure.
+
+Note the inversion between the fills: regions that are *bright* in the
+corner/count maps (dead-channel columns and the APA0 broad diagonal band)
+become *flat or slightly bright* in interior density — dead-plane areas are
+covered by inflated 2-view blobs, so they cost charge accuracy and blob
+quality, not geometric coverage.
 
 ## Interpretation / follow-ups
 
