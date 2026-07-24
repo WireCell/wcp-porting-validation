@@ -79,6 +79,18 @@ function(
     // false; key omitted when off).  Must be used WITH tgm_chord_charge -- see
     // docs/29_tgm-chord-charge.md.  The -chord runner flag sets both.
     tgm_component_extremes = false,
+    // Let a component shorter than component_min_length still donate its
+    // extremes when it is path-connected (30 cm-step charge path) to a
+    // component that passed the length cut, so a fragmented genuine track END
+    // keeps its wall exit (evt286681 cluster 7) while detached specks stay
+    // dropped (C++ default false; key omitted when off => byte-identical).
+    // Only meaningful WITH tgm_component_extremes.  Runner flag: -rescue.
+    tgm_component_rescue = false,
+    // Downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial box, in cm
+    // (default 3 = byte-identical legacy margin).  Shared by tagger_check_tgm
+    // and tagger_check_fc so containment keeps one meaning.  Runner flag:
+    // -fvz <cm>.
+    tgm_fv_zmax_margin = 3,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -120,7 +132,9 @@ function(
                              tgm_neutrino_candidate=tgm_neutrino_candidate,
                              tgm_chord_charge=tgm_chord_charge,
                              tgm_chord_mode=tgm_chord_mode,
-                             tgm_component_extremes=tgm_component_extremes);
+                             tgm_component_extremes=tgm_component_extremes,
+                             tgm_component_rescue=tgm_component_rescue,
+                             tgm_fv_zmax_margin=tgm_fv_zmax_margin);
 
     local graph = g.intern(
         innodes=[source],
