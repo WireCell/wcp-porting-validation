@@ -382,9 +382,9 @@ round `work-mcp{10,1000,1000b}-stmon`, inventory in doc 41; 36 fitted
 | # | Check | Status |
 |---|---|---|
 | 1 | Trajectory sanity (Magnify + Bee hand-scan) | **OPEN** — products exist (`tracking-stm.root`, converter `-f2`, `stm_fit` Bee layer, GUI ported); the scan itself needs an X/VNC session ⇒ owner-side |
-| 2 | Fit-quality distributions | **DONE** — dx median 0.60 cm (p10 0.56, p90 0.70), reduced_chi2 p90 2.7 / max 18.8 (doc 41) |
+| 2 | Fit-quality distributions | **DONE, with an open finding** — dx median 0.60 cm (p10 0.56, p90 0.70), reduced_chi2 p90 2.7 / max 18.8 (doc 41); **12.8 % of all 18561 fitted points have negative dQ/dx** (doc 42 §5), status 4 worst at 20.9 %, one accepted track 56 % negative |
 | 3 | dQ/dx absolute scale per TPC | **DONE, with an open finding** — rr > 40 cm median on accepted-STM tracks TPC0 59.5 / TPC1 55.8 ke/cm vs the ~50 reference; p25 sits at the reference, high tail pulls the median ~10–20 % up, ~6 % TPC asymmetry.  Reported, **not tuned** (escalation rule 7) |
-| 4 | Stopping-particle shape vs expectation | **OPEN** — the viewer panel overlays the exact `eval_stm` muon curve; per-candidate Bragg review is a hand-scan item |
+| 4 | Stopping-particle shape vs expectation | **STARTED, doc 42** — one accepted-STM track (evt286241 c8) reproduces the Bragg rise in shape, +10–25 % in normalization; but **only 1 of 11 accepted-STM long tracks shows any rise at all**.  Per-candidate hand scan still open |
 | 5 | Determinism (repeat identity under `setarch -R`) | **NOT RUN** |
 | 6 | Cross-detector anchor (uBooNE) | **PARTIAL** — qlport gate 1 35/35 zips identical, so the shared fitting path is unperturbed; gate 2 is currently insensitive at recompile granularity (pre-existing finding, doc 41) |
 

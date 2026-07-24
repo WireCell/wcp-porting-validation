@@ -65,15 +65,28 @@ def main():
           f"median reduced_chi2={np.median(t['reduced_chi2'][m]):.2f}")
 
     rx, rv = ref_curve(args.ref)
-    exp = np.interp(rr, rx, rv)          # muon expectation at each point's rr
+    # The muon table is tabulated on a finite rr range (0.5..59.5 cm for the
+    # 60-entry MuonDeDx set).  np.interp CLAMPS outside it, so beyond rx.max()
+    # the "expectation" would just be the last table value repeated -- report
+    # those bins as out of domain instead of quoting a fake ratio.
+    exp = np.interp(rr, rx, rv)
+    rr_max_tab = rx.max()
+    print(f"  muon table domain: rr {rx.min():.1f} - {rr_max_tab:.1f} cm")
     print(f"  {'rr bin (cm)':>14s} {'n':>4s} {'fit ke/cm':>10s} {'exp ke/cm':>10s} {'ratio':>7s}")
     for lo, hi in BINS:
         s = (rr >= lo) & (rr < hi)
         if not s.sum():
             continue
-        fit, ex = np.median(dqdx[s]) / 1e3, np.median(exp[s]) / 1e3
+        fit = np.median(dqdx[s]) / 1e3
         hi_s = "inf" if hi > 1e8 else f"{hi:.0f}"
-        print(f"  {lo:6.0f} - {hi_s:>5s} {s.sum():4d} {fit:10.1f} {ex:10.1f} {fit/ex:7.2f}")
+        if lo >= rr_max_tab:
+            print(f"  {lo:6.0f} - {hi_s:>5s} {s.sum():4d} {fit:10.1f} "
+                  f"{'(no table)':>10s} {'-':>7s}")
+            continue
+        ex = np.median(exp[s]) / 1e3
+        flag = " *partly beyond table" if hi > rr_max_tab else ""
+        print(f"  {lo:6.0f} - {hi_s:>5s} {s.sum():4d} {fit:10.1f} {ex:10.1f} "
+              f"{fit/ex:7.2f}{flag}")
     far = rr > 40
     if far.sum():
         print(f"  plateau (rr>40cm): fit {np.median(dqdx[far])/1e3:.1f} ke/cm "

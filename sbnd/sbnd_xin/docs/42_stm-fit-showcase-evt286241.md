@@ -12,7 +12,8 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 # 0. the fit itself (already produced; op point of doc 39 + -stm-fit):
 F="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit"
 SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-mcp2025c-10evt \
-  SBND_WORK_ROOT=$PWD/work-mcp10-stmon ./run_nusel_evt.sh data 7 $F   # evt 286241
+  SBND_WORK_ROOT=$PWD/work-mcp10-stmon ./run_nusel_evt.sh data 8 $F   # idx 8 = evt 286241
+# (run the driver with no idx to print the idx -> EVT_ID map for the sample)
 
 # 1. Magnify-tracking file (NEW SBND app, not the uBooNE one):
 wire-cell-sbnd-magnify-tracking-convert \
@@ -144,9 +145,16 @@ the compiled config's `MuonDeDx` `LinterpFunction`, i.e. the exact curve
 | 15 – 20 | 8 | 67.3 | 55.8 | 1.21 |
 | 20 – 30 | 16 | 56.5 | 52.9 | 1.07 |
 | 30 – 40 | 15 | 57.5 | 50.8 | 1.13 |
-| 40 – 60 | 31 | 54.9 | 49.7 | 1.10 |
-| 60 – 100 | 62 | 57.1 | 48.9 | 1.17 |
-| > 100 | 94 | 52.9 | 48.9 | 1.08 |
+| 40 – 60 | 31 | 54.9 | 49.7 * | 1.10 * |
+| 60 – 100 | 62 | 57.1 | — (no table) | — |
+| > 100 | 94 | 52.9 | — (no table) | — |
+
+The `MuonDeDx` table is tabulated on **rr = 0.5 – 59.5 cm** only (60 entries,
+step 1 cm).  Rows beyond it have no expectation to compare against —
+interpolation would silently clamp to the last table value and manufacture a
+ratio, so those cells are left empty; the 40–60 row (*) is partly beyond the
+domain.  Past ~60 cm the flat 50 ke/cm MIP line is the only reference, and
+the plateau ratio below uses it.
 
 Reading:
 
@@ -154,8 +162,10 @@ Reading:
   ~53 ke/cm plateau to 151 ke/cm in the last 2 cm — a factor ~2.9, against
   the expectation's ~2.4 over the same span.  This is the qualitative
   statement the trajectory + dQ/dx fit had to pass, and it passes here.
-- **Normalization is high by ~10–25 %**, roughly uniformly in rr (plateau
-  ratio 1.08 against the flat 50 ke/cm line).  Since this is uncalibrated
+- **Normalization is high by ~10–25 %** across the whole rr range the muon
+  table covers (0–60 cm), with no trend that would single out the stopping
+  end; beyond the table, the plateau sits 8 % above the flat 50 ke/cm line.
+  Since this is uncalibrated
   data (no lifetime or gain calibration applied downstream of the fit), an
   offset of this size is expected and is **not** evidence about the fitter.
 - The excess is not concentrated at the stopping end, so it does not look
@@ -186,7 +196,10 @@ the first things the fitted-vs-truth comparison should settle.
 ## 6. Status
 
 - New app + this doc: committed (see git log for hashes).
-- Products under `showcase-stmfit-286241/` (Magnify ROOT, Bee zip, PNG).
+- Products under `showcase-stmfit-286241/`: the Magnify ROOT and the PNG are
+  committed (`git add -f`, both under 90 kB).  `upload_286241.zip` (378 kB)
+  is deliberately **not** committed — the Bee set is hosted and the zip
+  regenerates from `make_stmfit_bee.py` in one command.
 - Bee set uploaded to the public BNL server with owner approval:
   `d11b087c-f8a3-4781-96ac-dc3a08f82a87` (link in §3).  It contains
   reconstruction points only — no raw waveforms.
