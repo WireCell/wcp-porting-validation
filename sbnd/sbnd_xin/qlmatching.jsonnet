@@ -19,6 +19,16 @@ local diag_on(cathode_diag) = (if cathode_diag != '' then { cathode_diag: cathod
 // with zero false positives. See match/docs/qlmatching-code.md.
 local automask_on(auto_mask) = (if auto_mask then { auto_mask: true } else {});
 
+// main_flag: stamp flag_main_cluster on every matched bundle main (QLMatching
+// flag_matched_mains knob; C++ default false => key omitted when off, so the
+// compiled config is byte-identical to the pre-fix one).  Without it only the
+// mains that decompose_cluster_groups SPLIT carry the flag, so a compact
+// single-component match is invisible to TaggerCheckTGM/STM/FC and to the nusel
+// bundle table (SBND evt286021: the 1.158 us beam flash matched a 141-point
+// cluster no tagger ever evaluated).  run_ql_evt.sh threads MAINFLAG /
+// --tla-code main_flag into this.
+local mainflag_on(main_flag) = (if main_flag then { flag_matched_mains: true } else {});
+
 // beam_pref: beam-window flash preference OVERRIDE overlay. The preference itself is
 // now ON in the canonical SBND config (validation-round-2 adoption: weight 0.5,
 // rescue 0.2, gate ks 0.3 / pred-frac 0.02), so beam_pref=false here just inherits
@@ -54,15 +64,17 @@ function(params)
     base {
         matching(anode, dv, n, reality, semimodel_file, cathode_fiducial='', calib_dump='',
                  pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false,
-                 beam_pref_weight=0.5, beam_pref_rescue=0.2)::
+                 beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false)::
             base.matching(anode, dv, n, reality, semimodel_file, cathode_fiducial, calib_dump,
                           pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)
-                                               + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)),
+                                               + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)
+                                               + mainflag_on(main_flag)),
 
         matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial='', calib_dump='',
                        pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false,
-                       beam_pref_weight=0.5, beam_pref_rescue=0.2)::
+                       beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false)::
             base.matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial, calib_dump,
                                 pmt_nl=pmt_nl, extra=diag_on(cathode_diag) + automask_on(auto_mask)
-                                                     + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)),
+                                                     + beampref_on(beam_pref, beam_pref_weight, beam_pref_rescue)
+                                                     + mainflag_on(main_flag)),
     }

@@ -44,7 +44,12 @@ by itself move the default.
 ## The track
 
 Q/L match `flash gid=88 (t=364.7 µs, group=89) ← clusters [bot:34, top:169]`,
-both bundles flagged `at_cathode`. `bot:34` = calib `apa=0` (bottom crate,
+both bundles flagged `at_cathode`.
+**[2026-07-22 correction: gid88 was the *wrong flash* — the raw-light closure
+of `23_pdvd-light-timing-check.md` §7 (track C) shows the true flash is the
+raw 2800.6/2802.0 µs pair, ≈78 µs earlier; the ccprod chain (v=0.148073 +
+13.507 µs pull, clusters renumbered 35/95) now picks it (#84, folded
+300.11 µs).  The velocity below is unaffected — it never used the flash.]** `bot:34` = calib `apa=0` (bottom crate,
 anode 1), 2494 pts; `top:169` = `apa=4` (top crate, anode 5), 1149 pts. The two
 clusters are the bottom and top halves of one cosmic that enters the bottom
 anode, crosses the full bottom drift, passes the shared cathode, and exits the
@@ -222,3 +227,120 @@ into a population with a real mean and spread before considering any change to t
 1.53 data default. The drift-velocity decision and the SP-side response velocity
 remain as recorded in `02_pdvd-anode-time-consistency.md` §8.12 and the
 `project_pdvd_drift_velocity_calib` notes.
+
+---
+
+## Second A–C–A crosser: run 039252 evt 298609, ccprod clusters 37+79 → v = 0.14794 cm/µs
+
+**Added 2026-07-22.** The follow-up above is started: the same measurement on a
+second, independent full-drift crosser — the evt 298609 track matched (correctly,
+`two_boundary` set, strength 0.976) to flash #117 (folded 1019.45 µs, 22117 PE);
+Bee ccprod cluster 37 = calib (apa0, ident5) bottom half, 79 = (apa4, ident3) top
+half.  This track crosses anode-to-anode, so **both** halves span the full
+cathode→W drift.  It is steeper (nearly drift-parallel: ~30 W channels per half
+vs ~150 for the doc-06 track), so each tip channel carries a long streak whose
+onset/end is the track terminus.
+
+**Repro**
+```
+cd pdvd/docs/qlmatch
+OMP_NUM_THREADS=4 python3 scripts/aca_crossers_298609.py   # corridors + streak/profile figures
+python3 scripts/fit_endpoints_298609.py                    # erf edge fits + velocity
+```
+Inputs: `work/039252_3_ccprod/calib-evt298609.json` (drift_speed=0.148073,
+trigger_offsets_us = [−2500.301, −2499.101]), magnify
+`work/039252_3_magnify/magnify-run039252-evt3-anode{0,2,6}-dnnroi_magnify.root`
+(`hw_gauss<N>`), wires v5.
+
+Adopted endpoints = erf edge fits (same model and σ's as the first crosser:
+σ_sw = 2.64 ticks for the anode edges, σ_sw⊕diff = 3.12 for the cathode edges;
+fixed-σ midpoints adopted), DFULL = 338.55 cm, tick = 0.5 µs:
+
+```
+half     tip chans (anode) |  t_start   t_end  |  dt(ticks)  dt(us)   v(cm/us)
+------------------------------------------------------------------------------
+bot:37   a0 ch2202 / a2 ch5050 |  2018.9   6615.5 |  4596.6   2298.3   0.14731
+top:79   a6 ch11177 / ch11198  |  2021.3   6578.3 |  4557.0   2278.5   0.14858
+------------------------------------------------------------------------------
+                                        mean v = 0.14794 cm/us  (free-σ: 0.14813)
+```
+
+![erf endpoint fits](pics/endpoint_fits_298609.png)
+![track A projections](pics/track_298609_A_xyz.png)
+![drift profiles](pics/driftprofile_298609_A.png)
+
+Validity checks:
+
+- **Anode-edge coincidence: 2.4 ticks — exactly the crate skew.**  The two
+  anode touches are simultaneous (one muon); the crates' trigger offsets differ
+  by 1.2 µs = 2.4 ticks with the bottom window opening later ⇒ bottom edge at
+  the *lower* tick.  Observed: bot 2018.9 vs top 2021.3.  This is also the
+  empirical proof (with the raw-light closure, doc 23 §7) that the low-tick end
+  of the streak is the anode.
+- **Light closure:** both anode edges map to raw light 3523.26 µs, sitting
+  +3.6 µs after the 20%-rise of the (bright, 22117 PE) raw cathode pulse at
+  flash #117 — the matched flash is the physical one.
+- **Cathode edges are the soft side**, as in the first crosser: fitted σ 12.1
+  (bot) / 6.7 (top) vs 3.12 expected — the near-cathode segment of this
+  drift-parallel track trails charge, so the end reads carry a ~5–10-tick
+  ambiguity that dominates the bot/top v spread (0.86 %).
+- **Truncation-free:** unlike the third crosser of these events (evt 298609
+  clusters 83+50, whose cathode arrivals fall ≈360 ticks past the 10000-tick
+  readout and which therefore yields no velocity), both cathode arrivals here
+  (ticks 6578/6616) are well inside the window.
+
+Combined with the first crosser (0.14807, halves 0.14783/0.14831) the two-track
+result is
+
+> **v = 0.1480 ± 0.002 cm/µs**  (4 half-measurements: 0.14731, 0.14783,
+> 0.14831, 0.14858)
+
+still below the 0.153 data-chain value in use when doc 06 was first written and
+below the 0.1568 toolkit default; the ccprod chain has since moved to 0.148073,
+which these two tracks support.  Population follow-up beyond n=2 remains open.
+
+### Velocity consistency across the two tracks, and why track A renders "longer than the max drift" in Bee
+
+**Added 2026-07-22 (owner question).**  The two tracks use the *identical*
+calculation (erf midpoints both ends, same σ model, same DFULL); the four
+halves and their apparent spans at the display velocity 0.148073 are:
+
+| half | t_start | t_end | Δt (µs) | span = Δt·v (cm) | v (cm/µs) |
+|---|---|---|---|---|---|
+| 298609 bot:37 | 2018.9 | 6615.5 | 2298.3 | **340.32** | 0.14731 |
+| 298609 top:79 | 2021.3 | 6578.3 | 2278.5 | 337.38 | 0.14858 |
+| 298651 bot:35 | 579.8 | 5160.0 | 2290.1 | 339.10 | 0.14783 |
+| 298651 top:95 | 592.2 | 5157.5 | 2282.7 | 338.00 | 0.14831 |
+
+DFULL = 338.55 cm, so any half with span > 338.55 draws *longer than the
+cathode→W distance* in a v = 0.148073 display.  That is the 298609 bottom
+half (+1.8 cm; the raw imaging extent, which reaches a few ticks beyond the
+erf midpoints, renders ~341–342 cm — clearly visible).  The 298651 halves sit
+within ±0.6 cm — "fits well".  A second, common effect: the T0-corrected
+(clustering-global) display shifts by the *folded* flash time, which includes
+the +13.507 µs pull, so **both** tracks' anode tips render ~1.4 cm beyond the
+W plane (~3 cm beyond the shield FV) — a constant overhang, not a span error.
+
+Where the A-bottom excess lives — the **cathode edge**, quantified by the
+coincidence audit (the two halves meet at the cathode at one spacetime point,
+so after removing the crate skew the two cathode reads must agree):
+
+| track | anode edges bot−top (expect = skew) | cathode edges bot−top (expect = skew) | BDE cathode late excess |
+|---|---|---|---|
+| 298609 | −2.4 ticks (expect −2.4) ✓ exact | +37.2 (expect −2.4) | **+39.6 ticks = 19.8 µs = 2.9 cm** |
+| 298651 | −12.4 (expect −15.2), +2.8 residual | +2.5 (expect −15.2) | **+17.7 ticks = 8.9 µs = 1.3 cm** |
+
+The anode edges are consistent to ≲3 ticks in both tracks; all of the
+disagreement is late charge on the **bottom-crate (BDE) cathode edge** — the
+same drift-parallel soft ramp flagged for the 298651 bot end (σ≈16) and the
+real in/near-cathode late charge of the evt 298567 census.  Cross-check:
+pinning each bottom half's cathode arrival to its (clean, TDE) partner's read
+via the crate skew gives bot 298609 → 0.14858 and bot 298651 → 0.14841, i.e.
+a coincidence-pinned two-track set of **0.14831–0.14858 (~0.1484)**, agreeing
+to 0.15 %.  So: (1) the two tracks' velocity measurements are consistent —
+the per-half spread is one systematic (BDE cathode-tail read), not two
+different velocities; (2) the headline mean 0.1480 treats the raw erf ends as
+the track termini and is therefore a *lower* bound flavor, while the
+coincidence-pinned 0.1484 discounts the BDE tail entirely — the truth sits in
+that ±0.002 band, which is the uncertainty already quoted.  No default is
+moved by this note.

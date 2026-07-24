@@ -56,6 +56,48 @@ function(
     // tagger_check_neutrino falls back to uBooNE single-main selection, which on
     // SBND picks an arbitrary main -- always set a window with tagger_check_neutrino).
     beam_window_us = [0, 0],
+    // Enable the ported check_neutrino_candidate veto in tagger_check_tgm so
+    // in-beam-window bundles may be tagged TGM (C++ default false; key
+    // omitted when off => byte-identical pre-port config).
+    tgm_neutrino_candidate = false,
+    // Require charge along the chord between the two extreme points before a
+    // pair may tag TGM (C++ default false; key omitted when off =>
+    // byte-identical pre-fix config).  Guards against the QL flash-time merge
+    // grafting a detached fragment into the tagged cluster -- see
+    // docs/29_tgm-chord-charge.md.
+    tgm_chord_charge = false,
+    // How the chord-charge guard measures support (C++ default "chord"; key
+    // omitted then => byte-identical).  "chord" samples the STRAIGHT segment
+    // between the extremes -- it falsely rejects curved tracks (evt285185
+    // cluster 16: a continuous 480 cm top->anode crosser bows 10 cm off its
+    // chord and lost a real TGM, doc 31).  "path" requires a piecewise charge
+    // path through the cluster's own points with no jump > chord_max_gap.
+    // The -chord runner flag passes "path" (SBND_TGM_CHORD_MODE overrides).
+    tgm_chord_mode = 'chord',
+    // Find the extreme points PER connected component and union them, instead
+    // of 8 global extremes over the whole flash-merged cluster (C++ default
+    // false; key omitted when off).  Must be used WITH tgm_chord_charge -- see
+    // docs/29_tgm-chord-charge.md.  The -chord runner flag sets both.
+    tgm_component_extremes = false,
+    // Let a component shorter than component_min_length still donate its
+    // extremes when it is path-connected (30 cm-step charge path) to a
+    // component that passed the length cut, so a fragmented genuine track END
+    // keeps its wall exit (evt286681 cluster 7) while detached specks stay
+    // dropped (C++ default false; key omitted when off => byte-identical).
+    // Only meaningful WITH tgm_component_extremes.  Runner flag: -rescue.
+    tgm_component_rescue = false,
+    // Rescued-end pairs must ALSO pass the straight-chord support test even
+    // in path mode (C++ default false; key omitted when off => byte-identical
+    // doc-32 rescue behavior).  Path mode alone lets a rescued speck pair
+    // across TWO merged cosmics through an L-shaped charge detour (evt288727
+    // cluster 6, doc 33).  Only meaningful WITH tgm_component_rescue.
+    // Runner flag: -rescue-chord.
+    tgm_rescue_chord = false,
+    // Downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial box, in cm
+    // (default 3 = byte-identical legacy margin).  Shared by tagger_check_tgm
+    // and tagger_check_fc so containment keeps one meaning.  Runner flag:
+    // -fvz <cm>.
+    tgm_fv_zmax_margin = 3,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -93,7 +135,14 @@ function(
                              particle_dataset=pds.particle_dataset,
                              extra_uses=pds.all,
                              dl_weights=dl_weights,
-                             beam_window=[t * wc.us for t in beam_window_us]);
+                             beam_window=[t * wc.us for t in beam_window_us],
+                             tgm_neutrino_candidate=tgm_neutrino_candidate,
+                             tgm_chord_charge=tgm_chord_charge,
+                             tgm_chord_mode=tgm_chord_mode,
+                             tgm_component_extremes=tgm_component_extremes,
+                             tgm_component_rescue=tgm_component_rescue,
+                             tgm_rescue_chord=tgm_rescue_chord,
+                             tgm_fv_zmax_margin=tgm_fv_zmax_margin);
 
     local graph = g.intern(
         innodes=[source],
