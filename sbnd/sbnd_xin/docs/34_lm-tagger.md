@@ -229,11 +229,66 @@ population, deliberately NOT called LM.
 Viewer: :5010 tag `mcp10-lm`, `--prev` reschord → tgmfv → ctpcfix (the LM
 demotion tints amber via the auto-label compare).
 
+## Round 2: good-shape guard (`lm_shape_ks_max` / `lm_shape_lograt_min`)
+
+**Symptom** (owner hand-scan of the round-1 badges): two out-of-beam LM
+badges are NOT mismatches — `evt285999 m17` (t = 524.8 µs, ks₁ 0.200,
+lograt −0.92) and `evt286021 m7` (t = 1485.5 µs, `close_to_PMT`, ks₁ 0.082,
+lograt −1.42).  Both have activity very close to the PMTs: the light
+*pattern* agrees (excellent judged-side KS) but the *strength* is
+under-predicted — the library's missing near-field/leakage response — and
+the SMALL regime applies no `close_to_PMT` relaxation, so the −0.55
+normalization floor alone condemned them.
+
+**Fix** (owner-chosen cuts): a normalization-ONLY failure is rescued when
+every norm-failing judged side has `ks < lm_shape_ks_max` (0.25) AND
+`lograt ≥ lm_shape_lograt_min` (−1.8).  A KS failure anywhere disables the
+guard; over-prediction (`lograt > lograt_max`) and the totals-fallback
+(no judged side ⇒ no shape to trust) are never rescued.  Both regimes.
+The genuine-mismatch class keeps bad shape (the evt286021 main 8 target:
+ks₁ 0.482) or an absurd deficit (specks at lograt −2 … −3.4), so the guard
+is orthogonal to it.
+
+**Verification** (tags `work-mcp10-lm2` / `work-mcp1000-lm2`, imaging
+symlinked from ctpcfix, same `-chord -rescue -rescue-chord -fvz 5 -lm`
+chain; fresh off-gate `work-mcp10-lm2-offgate`):
+
+- Knob-off end-to-end: evt286021 no `-lm` with the round-2
+  `libWireCellMatch.so` — `mabc-all-apa.zip` `d4eef908…` and
+  `pctree-evt286021.tar.gz` `7f334bad…` identical to `work-mcp10-ctpcfix`
+  (same digests as the round-1 gate).  `wcdoctest-match` 4/4 (36
+  assertions).  The shape knobs are C++ defaults under the OFF `lm_tagger`
+  — no jsonnet change.
+- All 214 table rows: `tgm/stm/fc` identical to round 1; **0 label flips**;
+  the target `evt286021 main 8` stays `lm=2 / LM`.
+- Per-bundle verdicts 46 → 34 lm=2 (12 rescued, low-E count unchanged).
+  Flash-group badges flipped 2→0 on exactly 5 rows, all out-of-beam: the
+  two owner-flagged ones plus `288397 m2` (ks 0.051, −0.68), `288639 m9`
+  (ks 0.229, −0.69), `288727 m7` (ks 0.141, −1.46) — the same
+  good-shape/weak-strength signature.  Badges retained: dominant-pred
+  specks (`284657 m3`, `286065 m6`, `286681 m9`), `286241 m7` (lograt
+  −1.82, just past the floor) and `288727 m9` (ks 0.472 — bad shape).
+
+Repro delta:
+
+```bash
+mkdir -p work-mcp10-lm2 work-mcp1000-lm2
+for d in work-mcp10-ctpcfix/evt*/;   do ln -sfn $PWD/${d%/} work-mcp10-lm2/$(basename $d); done
+for d in work-mcp1000-ctpcfix/evt*/; do ln -sfn $PWD/${d%/} work-mcp1000-lm2/$(basename $d); done
+# then the same two run_nusel_evt.sh invocations as above with the lm2 roots
+nusel_display/serve_nusel_scan.sh 5010 --tag mcp10-lm2 \
+  --prev ../work-mcp10-lm:mcp10-lm --prev ../work-mcp10-reschord:mcp10-reschord \
+  --prev ../work-mcp10-tgmfv:mcp10-tgmfv --prev ../work-mcp10-ctpcfix:mcp10-ctpcfix \
+  ../work-mcp10-lm2 ../work-mcp1000-lm2
+```
+
 ## Caveats
 
 - The LONG-regime floors (−1.3 / −1.6) sit just past the observed healthy
-  minimum (−1.11); a genuinely dim but real long match beyond that would tag.
-  All cuts are config keys (`lm_*`), so retuning is config-only.
+  minimum (−1.11); a genuinely dim but real long match beyond that would tag
+  — unless its shape qualifies for the round-2 good-shape guard (ks < 0.25,
+  lograt ≥ −1.8).  All cuts are config keys (`lm_*`), so retuning is
+  config-only.
 - The leakage-light protection is one-sided: a side is only judged when its
   own prediction ≥ 25 PE; no explicit leakage fraction is modeled.
 - The per-APA (non-joint) node resolves flash groups per side only; SBND

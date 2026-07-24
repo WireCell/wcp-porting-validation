@@ -76,16 +76,25 @@ def verdict(r, cuts):
     else:
         ks_max = cuts['ks_max_relax'] if r['relax'] else cuts['ks_max']
         lograt_min = cuts['lograt_min_relax'] if r['relax'] else cuts['lograt_min']
-    any_judged, fail = False, False
+    # Good-shape guard defaults (round 2): pre-guard dumps carry no shape_*
+    # keys, so absent keys reproduce the round-1 verdicts (guard disabled).
+    shape_ks_max = cuts.get('shape_ks_max', -1.0)
+    shape_lograt_min = cuts.get('shape_lograt_min', 0.0)
+    any_judged, fail_shape, fail_norm, guardable = False, False, False, True
     for s in range(2):
         if r['pred'][s] < cuts['side_pred_min']:
             continue
         any_judged = True
         lograt = math.log10(max(r['pred'][s], 1e-6) / max(r['meas'][s], 1e-6))
         if r['ks'][s] >= 0 and r['ks'][s] > ks_max:
-            fail = True
+            fail_shape = True
         if lograt < lograt_min or lograt > cuts['lograt_max']:
-            fail = True
+            fail_norm = True
+            if not (lograt < lograt_min and lograt <= cuts['lograt_max']
+                    and r['ks'][s] >= 0 and r['ks'][s] < shape_ks_max
+                    and lograt >= shape_lograt_min):
+                guardable = False
+    fail = fail_shape or (fail_norm and not guardable)
     if not any_judged:
         lograt = math.log10(max(total_pred, 1e-6) / max(total_meas, 1e-6))
         if lograt < lograt_min or lograt > cuts['lograt_max']:
@@ -107,7 +116,8 @@ def main():
                     help='cut override key=val (repeatable), re-evaluated offline; '
                          'keys: pred_pe_min length_min_cm flash_pe_bright '
                          'side_pred_min ks_max ks_max_relax lograt_min '
-                         'lograt_min_relax lograt_max small_ks_max small_lograt_min')
+                         'lograt_min_relax lograt_max small_ks_max small_lograt_min '
+                         'shape_ks_max shape_lograt_min')
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
