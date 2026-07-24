@@ -1,12 +1,19 @@
 #!/bin/bash
 # Serve the SBND nusel (TGM/STM/FC) hand-scan event display over HTTP.
 #
-# Usage: ./serve_nusel_scan.sh [port] [--tag NAME] [work_root ...]
-#   port        (optional, default 5010)
+# Usage: ./serve_nusel_scan.sh [port] [--tag NAME] [--prev ROOT[:TAG] ...] [work_root ...]
+#   port        (optional, default 5010; must come first if given)
 #   --tag NAME  (optional) namespace saved scan results into
 #               <work_root>/nusel_labels/NAME/ so different scan campaigns
 #               keep their labels apart, e.g.
 #                 ./serve_nusel_scan.sh 5010 --tag mcp10 ../work-mcp10
+#   --prev ROOT[:TAG]  (optional, repeatable, priority = given order) an
+#               OLDER work root and the label tag scanned there, used as a
+#               read-only baseline: its scan labels/comments are carried
+#               into the current tag, and bundles whose tgm/stm/fc verdicts
+#               changed are tinted amber until re-scanned, e.g.
+#                 ./serve_nusel_scan.sh 5010 --tag mcp10-merge \
+#                   --prev ../work-mcp10:mcp10 ../work-mcp10-merge2
 #   work_root   (optional) one or more work roots holding
 #               nusel_evt<ID>/nusel-evt<ID>.tsv + ql_evt<ID>/mabc-all-apa.zip
 #               + ql_evt<ID>/pctree-evt<ID>.tar.gz
@@ -23,19 +30,23 @@
 
 set -e
 HERE=$(cd "$(dirname "$0")" && pwd)
-PORT=${1:-5010}
-shift || true
 
-# Optional --tag NAME (forwarded to the viewer; subdirs the saved labels).
-TAG_ARGS=()
-if [ "$1" = "--tag" ] || [ "$1" = "-t" ]; then
-    TAG_ARGS=(--tag "$2"); shift 2 || true
-fi
+# Optional leading port, then any mix of --tag NAME / --prev SPEC / work roots
+# (--tag and --prev are forwarded to the viewer).
+PORT=5010
+case "$1" in ''|*[!0-9]*) : ;; *) PORT=$1; shift ;; esac
+FWD_ARGS=()
+SPECS=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --tag|-t) FWD_ARGS+=(--tag "$2"); shift 2 ;;
+        --prev)   FWD_ARGS+=(--prev "$2"); shift 2 ;;
+        *)        SPECS+=("$1"); shift ;;
+    esac
+done
 
 # Work roots to scan (default: the MCP2025C 10-event sample).
-if [ "$#" -gt 0 ]; then
-    SPECS=("$@")
-else
+if [ "${#SPECS[@]}" -eq 0 ]; then
     SPECS=("$HERE/../work-mcp10")
 fi
 
@@ -46,4 +57,4 @@ exec "$BOKEH" serve --port "$PORT" \
     --allow-websocket-origin="127.0.0.1:${PORT}" \
     --allow-websocket-origin="wcgpu1.phy.bnl.gov:${PORT}" \
     --allow-websocket-origin="wcgpu1:${PORT}" \
-    "$HERE/nusel_scan_viewer.py" --args "${TAG_ARGS[@]}" "${SPECS[@]}"
+    "$HERE/nusel_scan_viewer.py" --args "${FWD_ARGS[@]}" "${SPECS[@]}"

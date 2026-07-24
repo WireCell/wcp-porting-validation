@@ -32,6 +32,18 @@ free-text comment per bundle and per event.  Everything autosaves to
 "Save labels" writes the actionable per-event JSON
 <work_root>/nusel_labels/<tag>/nusel-labels-evt<ID>.json.
 
+Previous-scan baselines (--prev ROOT[:TAG], repeatable, priority = given
+order): each names an OLDER work root and the label tag scanned there.  They
+are READ-ONLY (M13: old records are never touched).  Bundles are matched
+across runs by flash APA + time (cluster idents/gids may relabel), and:
+  * carry-over: on first load of an event under the CURRENT tag, the previous
+    scan labels / comments / event comment are copied in (per key, first prev
+    that has one wins) so a scan never has to be redone from scratch.  Carried
+    keys are remembered; clearing one does not resurrect it on reload.
+  * change flag: the "prev" column shows the baseline verdicts (first prev
+    with the event); a row whose tgm/stm/fc changed is tinted amber until it
+    is re-scanned (any label/comment edit, or the "re-scan OK" button).
+
 Launched by serve_nusel_scan.sh; mirrors ql_scan/ql_scan_viewer.py.
 """
 
@@ -78,15 +90,19 @@ OP_MATCH_TOL_US = 0.02
 # ---------------------------------------------------------------------------
 # Inputs: work roots (dirs holding nusel_evt*/ + ql_evt*/) from --args.
 # ---------------------------------------------------------------------------
-def extract_tag(argv):
-    out, tag = [], ""
+def extract_args(argv):
+    out, tag, prevs = [], "", []
     it = iter(argv)
     for a in it:
         if a in ("--tag", "-t"):
             tag = next(it, "")
+        elif a == "--prev":
+            s = next(it, "")
+            if s:
+                prevs.append(s)
         else:
             out.append(a)
-    return tag, out
+    return tag, prevs, out
 
 
 def discover_events(argv):
@@ -114,10 +130,135 @@ def discover_events(argv):
     return sorted(out, key=keyf)
 
 
-SCAN_TAG, _ARGS = extract_tag(sys.argv[1:])
+SCAN_TAG, _PREV_SPECS, _ARGS = extract_args(sys.argv[1:])
 EVENTS = discover_events(_ARGS)
 LABELS = [e[0] for e in EVENTS]
 EVENT_OF = {e[0]: e for e in EVENTS}
+
+
+# ---------------------------------------------------------------------------
+# Previous-scan baselines (read-only).
+# ---------------------------------------------------------------------------
+class PrevScan:
+    """One earlier run + hand scan: work root and (optional) label tag.
+    Spec 'ROOT[:TAG]'.  Without TAG only the auto verdicts are compared."""
+
+    def __init__(self, spec):
+        root, _, tag = spec.partition(":")
+        self.root = os.path.abspath(root)
+        self.tag = tag
+        self.name = tag if tag else os.path.basename(self.root)
+        self._cache = {}
+
+    def event(self, label):
+        """{'rows', 'labels', 'comments', 'event_comment'} or None if this
+        prev has no nusel table for the event."""
+        if label in self._cache:
+            return self._cache[label]
+        evtid = label[len("evt"):]
+        tsv = os.path.join(self.root, "nusel_evt" + evtid, f"nusel-{label}.tsv")
+        res = None
+        if os.path.isfile(tsv):
+            try:
+                header, raw = read_table(tsv, COLUMNS[0])
+                i = {c: n for n, c in enumerate(header or COLUMNS)}
+                rows = [dict(main_id=int(r[i["main_id"]]),
+                             flash_gid=int(r[i["flash_gid"]]),
+                             flash_apa=int(r[i["flash_apa"]]),
+                             t_us=float(r[i["flash_time_us"]]),
+                             npts=int(r[i["npts_bundle"]]),
+                             len_cm=float(r[i["len_main_cm"]]),
+                             tgm=int(r[i["tgm"]]), stm=int(r[i["stm"]]),
+                             fc=int(r[i["fc"]]), auto_label=r[i["label"]])
+                        for r in raw]
+                labels, comments, evtc = {}, {}, ""
+                if self.tag:
+                    p = os.path.join(self.root, "nusel_labels", self.tag,
+                                     f".scan_state-{label}.json")
+                    if os.path.isfile(p):
+                        with open(p) as fh:
+                            d = json.load(fh)
+                        labels = d.get("labels", {})
+                        comments = d.get("comments", {})
+                        evtc = d.get("event_comment", "")
+                res = dict(rows=rows, labels=labels, comments=comments,
+                           event_comment=evtc)
+            except (OSError, ValueError, KeyError, IndexError):
+                res = None
+        self._cache[label] = res
+        return res
+
+
+PREVS = [PrevScan(s) for s in _PREV_SPECS]
+
+# Bundle identity ACROSS runs: flash APA + time (cluster idents and flash
+# gids can relabel between runs; flash times survive any charge-side change).
+PREV_MATCH_TOL_US = 0.5
+
+
+def match_prev_rows(cur_rows, prev_rows):
+    """{current row index -> prev row dict}, greedy 1-1 by |dt| within the
+    same APA; equal main_id breaks ties (helps two flashes < tol apart)."""
+    cands = []
+    for ci, r in enumerate(cur_rows):
+        for pj, p in enumerate(prev_rows):
+            if p["flash_apa"] != r["flash_apa"]:
+                continue
+            dt = abs(p["t_us"] - r["t_us"])
+            if dt > PREV_MATCH_TOL_US:
+                continue
+            cands.append((dt, 0 if p["main_id"] == r["main_id"] else 1, ci, pj))
+    cands.sort()
+    used_c, used_p, out = set(), set(), {}
+    for _, _, ci, pj in cands:
+        if ci in used_c or pj in used_p:
+            continue
+        used_c.add(ci)
+        used_p.add(pj)
+        out[ci] = prev_rows[pj]
+    return out
+
+
+def build_previnfo(evt):
+    """Attach evt.previnfo / evt.prev_event_comment.
+
+    previnfo: None when no --prev covers this event, else
+    {row index: {'name','row','changed','labels','lab_from','comment',
+                 'cmt_from'}} for every current row.  Verdict baseline = the
+    FIRST prev that has the event; labels/comments each come from the first
+    prev that annotated the matched bundle (priority = --prev order)."""
+    if getattr(evt, "previnfo", "unset") != "unset":
+        return
+    evt.previnfo, evt.prev_event_comment = None, ""
+    base_done = False
+    for pv in PREVS:
+        d = pv.event(evt.label)
+        if d is None:
+            continue
+        if evt.previnfo is None:
+            evt.previnfo = {i: dict(name=pv.name, row=None, changed=False,
+                                    labels=[], lab_from="", comment="",
+                                    cmt_from="")
+                            for i in range(len(evt.rows))}
+        matched = match_prev_rows(evt.rows, d["rows"])
+        for ci, p in matched.items():
+            pi = evt.previnfo[ci]
+            if not base_done:
+                pi["name"] = pv.name
+                pi["row"] = p
+                r = evt.rows[ci]
+                pi["changed"] = ((p["tgm"], p["stm"], p["fc"])
+                                 != (r["tgm"], r["stm"], r["fc"]))
+            pkey = f"{p['main_id']}:{p['flash_gid']}"
+            if not pi["labels"] and d["labels"].get(pkey):
+                pi["labels"] = list(d["labels"][pkey])
+                pi["lab_from"] = pv.name
+            if not pi["comment"] and d["comments"].get(pkey):
+                pi["comment"] = d["comments"][pkey]
+                pi["cmt_from"] = pv.name
+        if not evt.prev_event_comment and d["event_comment"]:
+            evt.prev_event_comment = d["event_comment"]
+        base_done = True
 
 
 def find_opdets():
@@ -313,6 +454,12 @@ state = {
     "labels": {},         # row key -> [scan labels]
     "comments": {},       # row key -> str
     "event_comment": "",
+    "seeded": set(),      # keys whose annotation was carried from a --prev
+                          # and not yet touched under the current tag
+    "seen": set(),        # keys ever seeded (never re-seed: a cleared
+                          # carry-over must not resurrect on reload)
+    "confirmed": set(),   # keys re-scanned under the current tag (any
+                          # label/comment edit, or the re-scan OK button)
     "suppress": False,    # guard programmatic widget writes
 }
 
@@ -343,6 +490,8 @@ label_title = Div(text="<b>scan labels</b> (click to tag the focused bundle; "
                        "multi-select; LM = light mismatch)", width=380)
 label_group = CheckboxButtonGroup(labels=SCAN_LABELS, active=[], width=340)
 clear_lbl_btn = Button(label="Clear labels (focused)", width=170)
+confirm_btn = Button(label="✓ re-scan OK (focused)", width=170,
+                     button_type="primary")
 comment_in = TextAreaInput(title="bundle comment (focused)", value="", rows=3,
                            width=380, max_length=2000)
 evt_comment_in = TextAreaInput(title="event comment", value="", rows=3,
@@ -356,6 +505,7 @@ def cell_fmt(align):
         + ';margin:-2px -5px;padding:2px 5px"><%= value %></div>'))
 fmt_l, fmt_r = cell_fmt("left"), cell_fmt("right")
 SEL_BG = "#cde6cd"
+CHG_BG = "#f7d8a8"   # amber: verdicts changed vs --prev, not yet re-scanned
 
 table_src = ColumnDataSource(data=dict())
 table_cols = [
@@ -369,11 +519,12 @@ table_cols = [
     TableColumn(field="npts", title="npts", width=55, formatter=fmt_r, sortable=False),
     TableColumn(field="len", title="len(cm)", width=65, formatter=fmt_r, sortable=False),
     TableColumn(field="verdicts", title="tgm/stm/fc", width=80, formatter=fmt_l, sortable=False),
+    TableColumn(field="prev", title="prev", width=80, formatter=fmt_l, sortable=False),
     TableColumn(field="auto", title="auto label (+FC)", width=120, formatter=fmt_l, sortable=False),
     TableColumn(field="scan", title="scan", width=95, formatter=fmt_l, sortable=False),
     TableColumn(field="cmt", title="✎", width=25, formatter=fmt_l, sortable=False),
 ]
-table = DataTable(source=table_src, columns=table_cols, width=900, height=290,
+table = DataTable(source=table_src, columns=table_cols, width=980, height=290,
                   selectable=True, index_position=None)
 
 # --- charge projections -----------------------------------------------------
@@ -547,11 +698,37 @@ def rebuild_table():
         if r["fc"] == 1:
             auto += " <b style='color:#2ca02c'>FC</b>"
         cols["auto"].append(auto)
-        cols["scan"].append("+".join(labs))
+        # prev column: baseline verdicts from the first --prev with this
+        # event ('=' same, 'a/b/c→' changed, 'new' unmatched); ✓ = re-scanned.
+        pi = evt.previnfo.get(i) if evt.previnfo else None
+        pending = False
+        if pi is None:
+            ptxt = ""
+        elif pi["row"] is None:
+            ptxt = "new"
+        elif pi["changed"]:
+            p = pi["row"]
+            ptxt = f"<b>{p['tgm']}/{p['stm']}/{p['fc']}→</b>"
+            pending = key not in state["confirmed"]
+        else:
+            ptxt = "="
+        if pi is not None and key in state["confirmed"]:
+            ptxt += " ✓"
+        cols["prev"].append(ptxt)
+        cols["scan"].append("+".join(labs)
+                            + (" ◦" if key in state["seeded"] else ""))
         cols["cmt"].append("✎" if state["comments"].get(key) else "")
-        cols["sel_bg"].append(SEL_BG if (labs or state["comments"].get(key))
+        cols["sel_bg"].append(CHG_BG if pending
+                              else SEL_BG if (labs or state["comments"].get(key))
                               else "transparent")
-    table_src.data = dict(cols)
+    new_data = dict(cols)
+    # Bokeh 3.9 DataTable does not redraw when the replacement data has the
+    # SAME row count (the client CDS updates but the slick-grid keeps the
+    # stale cells; verified headless-chromium 2026-07-23, evt286065->286197).
+    # Force a row-count change so the grid invalidates.
+    if len(new_data.get("row", [])) == len(table_src.data.get("row", [])):
+        table_src.data = {k: [] for k in new_data} if new_data else {}
+    table_src.data = new_data
     if state["focus"] is not None and state["focus"] in order:
         table_src.selected.indices = [order.index(state["focus"])]
     else:
@@ -724,6 +901,28 @@ def render_metrics():
         ("scan labels", "+".join(state["labels"].get(key, [])) or "-"),
         ("comment", state["comments"].get(key, "") or "-"),
     ]
+    pi = evt.previnfo.get(i) if evt.previnfo else None
+    if pi is not None:
+        if pi["row"] is None:
+            rows_.append((f"prev run ({pi['name']})", "no matching bundle"))
+        else:
+            p = pi["row"]
+            cmp_txt = ("<span style='color:#b06000'>CHANGED</span>"
+                       if pi["changed"] else "same")
+            if key in state["confirmed"]:
+                cmp_txt += "  ✓ re-scanned"
+            rows_.append((f"prev verdicts ({pi['name']})",
+                          f"{p['tgm']}/{p['stm']}/{p['fc']}"
+                          f" [{p['auto_label']}] — {cmp_txt}"))
+        if pi["labels"]:
+            rows_.append((f"prev scan labels ({pi['lab_from']})",
+                          "+".join(pi["labels"])))
+        if pi["comment"]:
+            rows_.append((f"prev comment ({pi['cmt_from']})", pi["comment"]))
+        if key in state["seeded"]:
+            rows_.append(("carry-over",
+                          "<i>labels/comment above copied from the previous "
+                          "scan (edit or ✓ to adopt)</i>"))
     metrics.text = ("<table style='font-size:12px'>" + "".join(
         f"<tr><td style='color:#555;padding-right:8px'>{a}</td><td><b>{b}</b></td></tr>"
         for a, b in rows_) + "</table>")
@@ -751,10 +950,19 @@ def render_proj_info():
                + (" &mdash; <b style='color:#2ca02c'>FC (fully-contained)</b>"
                   if r["fc"] == 1 else ""))
     nlab = sum(1 for r in evt.rows if state["labels"].get(row_key(r)))
+    ptxt = ""
+    if evt.previnfo:
+        chg = [i2 for i2, pi in evt.previnfo.items() if pi["changed"]]
+        pend = [i2 for i2 in chg
+                if row_key(evt.rows[i2]) not in state["confirmed"]]
+        base = evt.previnfo[0]["name"]
+        ptxt = (f", <span style='color:#b06000'><b>{len(chg)} changed</b> vs "
+                f"{base}, {len(pend)} pending re-scan</span>" if chg
+                else f", no verdict change vs {base}")
     proj_info.text = (f"<b>{evt.label}</b> ({rse}) &mdash; "
                       f"{len(state['order'])} bundle(s) shown "
                       f"[{'IN-BEAM ONLY' if state['inbeam_only'] else 'all'}], "
-                      f"{nlab} scanned{foc}"
+                      f"{nlab} scanned{ptxt}{foc}"
                       + (f"<br><span style='color:#b00'>{'; '.join(evt.problems)}"
                          "</span>" if evt.problems else ""))
 
@@ -804,7 +1012,10 @@ def save_state():
     try:
         with open(state_file(evt), "w") as fh:
             json.dump({"labels": state["labels"], "comments": state["comments"],
-                       "event_comment": state["event_comment"]}, fh)
+                       "event_comment": state["event_comment"],
+                       "seeded": sorted(state["seeded"]),
+                       "seen": sorted(state["seen"]),
+                       "confirmed": sorted(state["confirmed"])}, fh)
     except OSError:
         pass
 
@@ -812,14 +1023,48 @@ def save_state():
 def load_state(evt):
     p = state_file(evt)
     if not os.path.isfile(p):
-        return {}, {}, ""
+        return {}, {}, "", set(), set(), set()
     try:
         with open(p) as fh:
             d = json.load(fh)
         return (d.get("labels", {}), d.get("comments", {}),
-                d.get("event_comment", ""))
+                d.get("event_comment", ""),
+                set(d.get("seeded", [])), set(d.get("seen", [])),
+                set(d.get("confirmed", [])))
     except (OSError, ValueError):
-        return {}, {}, ""
+        return {}, {}, "", set(), set(), set()
+
+
+def seed_from_prev(evt):
+    """Copy the previous scan's labels/comments onto matched bundles of the
+    current tag -- once per key ('seen' persists, so a cleared carry-over is
+    not resurrected on reload).  Old label dirs are never written (M13)."""
+    if not evt.previnfo:
+        return
+    changed = False
+    for i, r in enumerate(evt.rows):
+        pi = evt.previnfo[i]
+        if not (pi["labels"] or pi["comment"]):
+            continue
+        key = row_key(r)
+        if key in state["seen"]:
+            continue
+        state["seen"].add(key)
+        took = False
+        if pi["labels"] and key not in state["labels"]:
+            state["labels"][key] = list(pi["labels"])
+            took = True
+        if pi["comment"] and key not in state["comments"]:
+            state["comments"][key] = pi["comment"]
+            took = True
+        if took:
+            state["seeded"].add(key)
+        changed = True
+    if not state["event_comment"] and evt.prev_event_comment:
+        state["event_comment"] = evt.prev_event_comment
+        changed = True
+    if changed:
+        save_state()
 
 
 def on_save():
@@ -828,10 +1073,11 @@ def on_save():
         return
     r0 = evt.rows[0] if evt.rows else {}
     bundles = []
-    for r in evt.rows:
+    for n, r in enumerate(evt.rows):
         key = row_key(r)
         main, comps = evt.bundle_cluster_ids(r)
-        bundles.append({
+        pi = evt.previnfo.get(n) if evt.previnfo else None
+        b = {
             "main_id": r["main_id"], "flash_gid": r["flash_gid"],
             "flash_grp": r["flash_grp"], "flash_apa": r["flash_apa"],
             "flash_time_us": r["t_us"], "flash_pe_grp": r["pe_grp"],
@@ -841,7 +1087,20 @@ def on_save():
                      "label": r["auto_label"]},
             "scan_labels": state["labels"].get(key, []),
             "comment": state["comments"].get(key, ""),
-        })
+        }
+        if pi is not None:
+            b["prev"] = ({"tag": pi["name"], "matched": False}
+                         if pi["row"] is None else
+                         {"tag": pi["name"], "matched": True,
+                          "tgm": pi["row"]["tgm"], "stm": pi["row"]["stm"],
+                          "fc": pi["row"]["fc"],
+                          "label": pi["row"]["auto_label"],
+                          "changed": pi["changed"],
+                          "scan_labels": pi["labels"],
+                          "comment": pi["comment"]})
+            b["carried_over"] = key in state["seeded"]
+            b["rescan_confirmed"] = key in state["confirmed"]
+        bundles.append(b)
     out = {"event": evt.label, "run": r0.get("run"), "subrun": r0.get("subrun"),
            "event_no": r0.get("event"), "source": os.path.basename(evt.tsv),
            "work_root": evt.work_root, "tag": SCAN_TAG,
@@ -858,14 +1117,20 @@ def on_save():
 # ---------------------------------------------------------------------------
 def load_event(label):
     evt = get_event(label)
+    build_previnfo(evt)
     state["evt"] = evt
-    state["labels"], state["comments"], state["event_comment"] = load_state(evt)
+    (state["labels"], state["comments"], state["event_comment"],
+     state["seeded"], state["seen"], state["confirmed"]) = load_state(evt)
+    seed_from_prev(evt)
     order = visible_rows(evt)
     state["focus"] = order[0] if order else None
     n_in = sum(1 for r in evt.rows if r["in_beam"])
+    ptxt = (" Baselines: " + ", ".join(pv.name for pv in PREVS)
+            + " (amber rows = verdict changed, re-scan them)." if PREVS else "")
     status.text = (f"Loaded <b>{label}</b>: {len(evt.rows)} bundle row(s), "
                    f"{n_in} in-beam; charge/light from the Bee mabc-all-apa.zip "
-                   "layers. Click a row, tag with the label buttons, Save when done.")
+                   "layers. Click a row, tag with the label buttons, Save when "
+                   "done." + ptxt)
     refresh()
 
 
@@ -924,6 +1189,13 @@ def on_color(attr, old, new):
     render_projections()
 
 
+def mark_touched(key):
+    """Any hand edit under the current tag = this bundle was (re)scanned."""
+    state["seeded"].discard(key)
+    state["confirmed"].add(key)
+    state["seen"].add(key)
+
+
 def on_labels(attr, old, new):
     if state["suppress"] or state["focus"] is None:
         return
@@ -934,6 +1206,7 @@ def on_labels(attr, old, new):
         state["labels"][key] = labs
     else:
         state["labels"].pop(key, None)
+    mark_touched(key)
     save_state()
     rebuild_table()
     render_metrics()
@@ -946,8 +1219,20 @@ def on_clear_labels():
     key = row_key(state["evt"].rows[state["focus"]])
     state["labels"].pop(key, None)
     state["comments"].pop(key, None)
+    mark_touched(key)
     save_state()
     refresh()
+
+
+def on_confirm():
+    if state["focus"] is None:
+        return
+    key = row_key(state["evt"].rows[state["focus"]])
+    mark_touched(key)
+    save_state()
+    rebuild_table()
+    render_metrics()
+    render_proj_info()
 
 
 def on_comment(attr, old, new):
@@ -958,6 +1243,7 @@ def on_comment(attr, old, new):
         state["comments"][key] = new
     else:
         state["comments"].pop(key, None)
+    mark_touched(key)
     save_state()
     rebuild_table()
     render_metrics()
@@ -980,6 +1266,7 @@ mode_btn.on_change("active", on_mode)
 color_select.on_change("value", on_color)
 label_group.on_change("active", on_labels)
 clear_lbl_btn.on_click(on_clear_labels)
+confirm_btn.on_click(on_confirm)
 comment_in.on_change("value", on_comment)
 evt_comment_in.on_change("value", on_evt_comment)
 save_btn.on_click(on_save)
@@ -999,7 +1286,8 @@ layout = column(
     header,
     controls,
     status,
-    row(table, column(label_title, label_group, clear_lbl_btn, comment_in,
+    row(table, column(label_title, label_group,
+                      row(clear_lbl_btn, confirm_btn), comment_in,
                       evt_comment_in), metrics),
     row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
         LIGHT[1]["meas"]["fig"], LIGHT[1]["pred"]["fig"]),

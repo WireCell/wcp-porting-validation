@@ -71,6 +71,39 @@ ssh -L 5010:localhost:5010 <host>
    per-event comment.  Everything autosaves on each change.
 7. **Save labels** writes the actionable JSON.
 
+## 3b. Re-scans after a fix (`--prev`)
+
+When the chain is re-run after a code change, serve the NEW work root under a
+NEW tag and name the previous run(s) as read-only baselines:
+
+```bash
+./serve_nusel_scan.sh 5010 --tag mcp10-merge \
+    --prev ../work-mcp10:mcp10 --prev ../work-mcp10-chord:mcp10-chord \
+    ../work-mcp10-merge2
+```
+
+Each `--prev ROOT[:TAG]` is an older work root plus the label tag scanned
+there (repeatable; priority = given order; old dirs are never written).
+Bundles are matched across runs by flash APA + time (±0.5 µs; cluster idents
+and flash gids may relabel between runs), then:
+
+* **Comments/labels survive.**  On first load of an event under the current
+  tag, the previous scan labels, comments, and event comment are copied in
+  (per field, the first `--prev` that has one wins).  Carried rows show a
+  small `◦` in the scan column and a "carry-over" note in the metrics panel;
+  editing them (or pressing **✓ re-scan OK**) adopts them as your own.
+  A carried annotation you clear stays cleared on reload.
+* **Changes are flagged.**  The `prev` table column shows the baseline
+  verdicts of the first `--prev` covering the event: `=` unchanged,
+  `t/s/f→` changed, `new` for a bundle with no baseline match.  A row whose
+  tgm/stm/fc changed is tinted **amber** until re-scanned — any label or
+  comment edit, or the **✓ re-scan OK** button, clears it (and appends ✓).
+  The event header counts `N changed vs <tag>, M pending re-scan`, so the
+  events needing attention are visible without stepping through rows.
+* The metrics panel shows the baseline verdicts and your previous scan
+  labels/comment with their source tag, so old and new can be compared in
+  place while going back and forth between fixes.
+
 ## Saved label schema
 
 `<work_root>/nusel_labels/<tag>/nusel-labels-evt<ID>.json`:
@@ -85,7 +118,12 @@ ssh -L 5010:localhost:5010 <host>
       "flash_time_us": 1.555, "flash_pe_grp": 12772.8, "in_beam": 1,
       "clusters": [11, 7],
       "auto": { "tgm": 1, "stm": 0, "fc": 0, "label": "TGM" },
-      "scan_labels": ["TGM"], "comment": "" }
+      "scan_labels": ["TGM"], "comment": "",
+      // present only when serving with --prev:
+      "prev": { "tag": "mcp10", "matched": true, "tgm": 1, "stm": 0, "fc": 0,
+                "label": "TGM", "changed": false,
+                "scan_labels": ["TGM"], "comment": "" },
+      "carried_over": false, "rescan_confirmed": true }
   ]
 }
 ```
