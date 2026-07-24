@@ -4,7 +4,7 @@ Doc 42 shipped `showcase-stmfit-286241/track_com_286241.root` and told the
 reader to open it with `Magnify-tracking-SBND/magnify.sh`.  **Nobody had ever
 done that** — the geometry port (`b78b255`) was committed with "visual check
 pending (needs X)".  This doc is that check.  The GUI could not compile in
-this environment, and once it compiled it aborted on the file; five further
+this environment, once it compiled it aborted on the file, and seven further
 defects showed up in the pictures.  All are fixed here.
 
 ## Repro
@@ -67,8 +67,18 @@ zero warnings.
 
 `Grouping::get_all_dead_chs` converts a dead region's **x range** to ticks, so
 a region with unbounded x extent comes back as ±1.3e9.  **84 of 94** T_bad_ch
-entries in evt 286241 (93 of 93 in evt 284657) were such values.  With "bad
-ch" enabled the GUI drew `TLine(chid, ±3e8, ...)` on every projection pad.
+entries in evt 286241 (93 of 93 in evt 284657) were such values — i.e. the
+tree said nothing usable about *when* those channels are dead.
+
+The rendered damage is milder than the numbers suggest, and worth stating
+precisely because it was checked rather than assumed: ROOT clips a
+`TLine(chid, ±3e8, ...)` to the pad, so a garbage range still draws as a
+full-height vertical line.  Rendering the unclamped file (with the
+`Data.cc` clamp disabled) against the clamped one, the only visible
+difference is that unclamped lines **overrun the frame into the title
+band** of the W pad.  The defect is therefore primarily in the data: any
+consumer reading `start_time`/`end_time` gets a meaningless integer, and
+the drawn extent is accidental rather than intended.
 
 Fixed on both sides:
 - visitor clamps to `[0, nticks)` with a new `nticks` config key (C++ default
@@ -77,7 +87,12 @@ Fixed on both sides:
 - `Data.cc::LoadBadCh` clamps as well and prints how many it clamped, so the
   **already-written** files display correctly.
 
-**Verification.** Re-ran the doc-42 event into a fresh tag `work-stmbadch`
+**Verification (render).**  With "bad ch" enabled and the projections
+unzoomed, the 94 dead channels draw as gray full-height lines, each on the
+correct pad (`DrawBadCh` splits them by `chid` against
+`nChannel_u/v/w` = 3968/3968/3340) and none overrunning the frame.
+
+**Verification (data).** Re-ran the doc-42 event into a fresh tag `work-stmbadch`
 (M13: no existing work root touched; the QL products were symlinked in, so
 only the PR step re-ran).  `T_bad_ch` start/end now span `[0, 3427]`;
 `T_rec_charge` is unchanged (251 points, identical q sum and rr max) and
@@ -115,8 +130,7 @@ Now cloned.  The GUI does not read it.
 the sentinel entry (`sub_id[0] = -1`), so every real sub-cluster started one
 point late and the **last slot of each TGraph/TPolyLine3D kept its default
 (0,0)**.  With a single-segment STM fit the result is a magenta line straight
-across the pad from the track to (0,0) — see the difference between the first
-two figures below.  Now each sub-cluster is filled from its own recorded
+across the pad from the track to (0,0).  Now each sub-cluster is filled from its own recorded
 `[start, end]` range.  This was inherited from the uBooNE original and affects
 multi-segment PR tracks there too.
 
@@ -146,7 +160,12 @@ with `SetTextSize(0.04)`.
 and silently clamped.  Now clamped explicitly; a full GUI session is
 warning-free.
 
-### C6. Control limits too small for real ids
+### C6. MC-mode legend also filled its pad
+
+Same defect as C4 on the `!isData` branch, which puts the sub-cluster legend
+on the 3D pad.  Only visible once MC mode was exercised (below).
+
+### C7. Control limits too small for real ids
 
 `clusterIdEntry` capped at 1000, but block ids are `cluster_id*10 + pass`
 (cluster 100 ⇒ 1000); `pointIndexEntry` capped at 1000 with 554-point tracks
@@ -199,7 +218,28 @@ runs for every evaluated cluster, but only clusters that actually began a pass
 have records.  Across 30 events: 36 blocks in 26 events (4 events have none),
 8 events multi-block.  Nothing is being dropped.
 
-## E. Gates
+## E. MC mode (`-f1`) exercised
+
+Every file in this chain so far has been data (`T_true` absent), so the
+GUI's whole MC half — `LoadTruth`, `DrawMCCompare`, `Draw3D`'s truth
+polyline, the truth dQ/dx overlay, `stat_beg_dis`/`stat_end_dis` — had never
+run, and that is precisely the path doc 40 phase 4's fitted-vs-truth
+comparison needs and the reason the SBND converter exists.
+
+Exercised with a synthetic truth track built from evt 286241's own fitted
+points (every 5th point, shifted +0.3 cm in y, `mk_truth2.C` in
+`/home/xqian/tmp/magtest/mc/`), converted with `-f1`.  The GUI reports
+`loading data? 0`, `Starting/Ending point displacement: 0.3 cm` — exactly
+the injected offset — pad 2 switches to "Difference to MC" with the angle
+and distance curves, pad 1 overlays the truth dQ/dx in red, and pad 3 draws
+the truth polyline with the blue start marker.  Only defect found: C6.
+
+This does **not** validate truth *pairing* physics; it validates that the MC
+code paths run and report the offset they were given.  A real MC sample
+still needs a dumper writing SimEnergyDeposits into the converter's
+`(N, x, y, z, Q)` tree (doc 42 §0).
+
+## F. Gates
 
 - **Compiled-config proof**: knob-off compiled JSON is `cmp`-identical to the
   pre-change tree (`/home/xqian/tmp/magtest/cfg/off_base.json` vs
@@ -207,12 +247,18 @@ have records.  Across 30 events: 36 blocks in 26 events (4 events have none),
   the `SbndMagnifyTrackingVisitor` node.
 - **Physics unchanged**: doc-42 event re-run, `mabc-pr.zip` content hash
   identical to the `work-mcp10-stmon` record, `T_rec_charge` array-identical.
+- **Still unexercised**: the GUI's signal/slot connections (the headless
+  driver calls `ClusterChanged`/`ToggleAllCluster`/`ToggleBadChannel`
+  directly, not through the widgets) and click-to-select in
+  `ProcessCanvasEvent`.  Also `ToggleBadChannel` followed by a cluster
+  change re-adds the same `TLine` primitives (pre-existing, cosmetic, not
+  fixed).
 - **Not run, and why**: no abtest/qlport A/B.  The converter app and the
   Magnify GUI are outside every pipeline; the visitor edit only executes under
   `save_stm_fit`, which is default-OFF and absent from the compiled config
   when off (proven above).  `wcdoctest` has no `root` package target.
 
-## F. Figures
+## G. Figures
 
 `showcase-stmfit-286241/magnify_286241_blk80.png` — the GUI on the showcase
 file after all fixes: dQ/dx vs L with the Bragg rise (pad 1), the 3D
