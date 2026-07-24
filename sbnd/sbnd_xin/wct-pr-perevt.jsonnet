@@ -93,6 +93,16 @@ function(
     // cluster 6, doc 33).  Only meaningful WITH tgm_component_rescue.
     // Runner flag: -rescue-chord.
     tgm_rescue_chord = false,
+    // A pair may tag TGM only when at least one end lies in the cluster's
+    // MAIN charge component -- the largest 30 cm path component; a cathode
+    // crosser is ONE such component (C++ default false; key omitted when off
+    // => byte-identical).  A merged-in fragment that is itself through-going
+    // otherwise tags the whole bundle on its own within-component pair,
+    // which the chord guard deliberately allows and the nu-candidate veto
+    // cannot protect (it walks the pair's own path): evt289343 cluster 9,
+    // in-beam bundle tagged TGM by a 26 cm corner-clipping cosmic fragment
+    // 450 cm from the main track (doc 36).  Runner flag: -main-pair.
+    tgm_main_pair = false,
     // Downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial box, in cm
     // (default 3 = byte-identical legacy margin).  Shared by tagger_check_tgm
     // and tagger_check_fc so containment keeps one meaning.  Runner flag:
@@ -150,6 +160,7 @@ function(
                              tgm_component_extremes=tgm_component_extremes,
                              tgm_component_rescue=tgm_component_rescue,
                              tgm_rescue_chord=tgm_rescue_chord,
+                             tgm_main_pair=tgm_main_pair,
                              tgm_fv_zmax_margin=tgm_fv_zmax_margin,
                              tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior);
 

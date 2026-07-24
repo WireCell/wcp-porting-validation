@@ -113,6 +113,16 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 midpoint support (evt287517 cluster 16 / evt289805 cluster 9
                 -- doc 35).  TGM only; FC and the endpoint exit tests keep
                 -fvz.  Env: SBND_TGM_FVZ_INTERIOR=<cm>.
+  -main-pair    a pair may tag TGM only when at least one end lies in the
+                cluster's MAIN charge component (largest 30 cm path
+                component; a cathode crosser is one component).  A merged-in
+                fragment that is itself through-going otherwise tags the
+                whole bundle on its own pair, which the chord guard
+                deliberately allows and the -nucand veto cannot protect
+                (it walks the pair's own path): evt289343 main 9, in-beam
+                bundle tagged TGM by a 26 cm corner-clipping cosmic fragment
+                450 cm from the main track (doc 36).  Off by default =>
+                byte-identical.  Env: SBND_TGM_MAIN_PAIR=1.
   -lm           LM (light-mismatch) tagger in the Q/L step (QLMatching
                 lm_tagger, doc 34): per-drift-side KS shape + pred/meas
                 normalization verdict on every final matched bundle, stamped
@@ -180,6 +190,9 @@ FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-3}"
 # Interior-support downstream-z inset for check_tgm CASE-A, cm.  DEFAULT 0 =
 # off (interior tests share FVZ_MARGIN).
 FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-0}"
+# TGM pairs must touch the cluster's main charge component (doc 36).
+# DEFAULT OFF: opt in with -main-pair / SBND_TGM_MAIN_PAIR=1.
+MAIN_PAIR="${SBND_TGM_MAIN_PAIR:-0}"
 # LM (light-mismatch) tagger in the Q/L step (QLMatching lm_tagger, doc 34).
 # DEFAULT OFF: opt in with -lm / SBND_QL_LM=1.  Only affects a Q/L step this
 # runner LAUNCHES (pctree missing); an existing pctree is reused as-is, so mix
@@ -204,6 +217,8 @@ while [ $# -gt 0 ]; do
         -no-rescue-chord|--no-rescue-chord) RESCUE_CHORD=0; shift ;;
         -fvz|--fvz) FVZ_MARGIN="$2"; shift 2 ;;
         -fvzi|--fvzi) FVZ_INTERIOR="$2"; shift 2 ;;
+        -main-pair|--main-pair) MAIN_PAIR=1; shift ;;
+        -no-main-pair|--no-main-pair) MAIN_PAIR=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         -no-lm|--no-lm) QL_LM=0; shift ;;
         *) _args+=("$1"); shift ;;
@@ -270,7 +285,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR lm=$QL_LM)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR lm=$QL_LM)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -294,6 +309,7 @@ process_event() {
             --tla-code "tgm_component_extremes=$([ "$CHORD" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_component_rescue=$([ "$RESCUE" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_rescue_chord=$([ "$RESCUE_CHORD" = 1 ] && echo true || echo false)" \
+            --tla-code "tgm_main_pair=$([ "$MAIN_PAIR" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_fv_zmax_margin=$FVZ_MARGIN" \
             --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
             -c "$JSONNET"
