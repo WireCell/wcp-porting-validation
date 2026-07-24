@@ -105,6 +105,14 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -fvz <cm>     downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial
                 box in cm (default 3 = legacy).  Shared by tagger_check_tgm
                 and tagger_check_fc.  Env: SBND_TGM_FVZ_MARGIN=<cm>.
+  -fvzi <cm>    downstream-z inset used by check_tgm's CASE-A INTERIOR
+                support tests (chord midpoints + waypoint re-check) when > 0
+                (default 0 = off; interior tests then share -fvz).  Makes
+                the -fvz widening endpoint-only so a corner clipper running
+                ALONG the downstream wall inside the widened band keeps its
+                midpoint support (evt287517 cluster 16 / evt289805 cluster 9
+                -- doc 35).  TGM only; FC and the endpoint exit tests keep
+                -fvz.  Env: SBND_TGM_FVZ_INTERIOR=<cm>.
   -lm           LM (light-mismatch) tagger in the Q/L step (QLMatching
                 lm_tagger, doc 34): per-drift-side KS shape + pred/meas
                 normalization verdict on every final matched bundle, stamped
@@ -169,6 +177,9 @@ RESCUE="${SBND_TGM_RESCUE:-0}"
 RESCUE_CHORD="${SBND_TGM_RESCUE_CHORD:-0}"
 # Downstream-z inset of the TGM/FC fiducial box, cm.  DEFAULT 3 = legacy.
 FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-3}"
+# Interior-support downstream-z inset for check_tgm CASE-A, cm.  DEFAULT 0 =
+# off (interior tests share FVZ_MARGIN).
+FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-0}"
 # LM (light-mismatch) tagger in the Q/L step (QLMatching lm_tagger, doc 34).
 # DEFAULT OFF: opt in with -lm / SBND_QL_LM=1.  Only affects a Q/L step this
 # runner LAUNCHES (pctree missing); an existing pctree is reused as-is, so mix
@@ -192,6 +203,7 @@ while [ $# -gt 0 ]; do
         -rescue-chord|--rescue-chord) RESCUE_CHORD=1; shift ;;
         -no-rescue-chord|--no-rescue-chord) RESCUE_CHORD=0; shift ;;
         -fvz|--fvz) FVZ_MARGIN="$2"; shift 2 ;;
+        -fvzi|--fvzi) FVZ_INTERIOR="$2"; shift 2 ;;
         -lm|--lm) QL_LM=1; shift ;;
         -no-lm|--no-lm) QL_LM=0; shift ;;
         *) _args+=("$1"); shift ;;
@@ -258,7 +270,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD fvz=$FVZ_MARGIN lm=$QL_LM)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR lm=$QL_LM)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -283,6 +295,7 @@ process_event() {
             --tla-code "tgm_component_rescue=$([ "$RESCUE" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_rescue_chord=$([ "$RESCUE_CHORD" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_fv_zmax_margin=$FVZ_MARGIN" \
+            --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"

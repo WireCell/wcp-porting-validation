@@ -98,6 +98,14 @@ function(
     // and tagger_check_fc so containment keeps one meaning.  Runner flag:
     // -fvz <cm>.
     tgm_fv_zmax_margin = 3,
+    // Downstream-z inset used by check_tgm's CASE-A INTERIOR-support tests
+    // (chord midpoints + waypoint re-check) when > 0, in cm (default 0 =
+    // OFF, key omitted => byte-identical; the interior tests then share
+    // tgm_fv_zmax_margin).  Makes the doc-32 widening endpoint-only so a
+    // wall-hugging corner clipper keeps its midpoint support (doc 35,
+    // evt287517 cluster 16 / evt289805 cluster 9).  TGM only; FC untouched.
+    // Runner flag: -fvzi <cm>.
+    tgm_fv_zmax_margin_interior = 0,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -142,7 +150,8 @@ function(
                              tgm_component_extremes=tgm_component_extremes,
                              tgm_component_rescue=tgm_component_rescue,
                              tgm_rescue_chord=tgm_rescue_chord,
-                             tgm_fv_zmax_margin=tgm_fv_zmax_margin);
+                             tgm_fv_zmax_margin=tgm_fv_zmax_margin,
+                             tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior);
 
     local graph = g.intern(
         innodes=[source],
