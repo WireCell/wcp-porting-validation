@@ -45,8 +45,13 @@ Figures (`pics/yz_coverage/`): `yz-ncorner.png`, `yz-charge.png` (full-face
 maps), `yz-contour.png` (smoothed contour view), `yz-dead.png` (dead-region
 maps), `yz-profiles.png` (1D y/z projections), `yz-middle-zoom.png`
 (z 180–320, |y| < 60 with contours), `yz-seam-quant.png` (quantitative seam
-panels).  Round 2 (below) adds `yz-cover.png` and `yz-seam-density.png`
-from the blob-interior fill.
+panels).  Round 2 adds `yz-cover.png` and `yz-seam-density.png` from the
+blob-interior fill; round 3 adds `yz-overlay-middle.png` (density + dead
+overlay, middle region, full Y) and `yz-coherence.png`.
+
+**Read rounds 2 and 3 first if you only want the physics answer** — round 1
+below fills blob *corners*, which is biased toward blob boundaries and
+inflates apparent occupancy at dead-channel columns.
 
 ![full-face corner occupancy](../pics/yz_coverage/yz-ncorner.png)
 
@@ -161,6 +166,105 @@ become *flat or slightly bright* in interior density — dead-plane areas are
 covered by inflated 2-view blobs, so they cost charge accuracy and blob
 quality, not geometric coverage.
 
+## Round 3 — overlay density with the dead footprint; what is left low?
+
+Owner follow-up: overlay the two sets of information and inspect the
+*remaining* pieces — low-density regions that the dead blobs (2-plane dead)
+cannot explain — and do the middle region over the **entire Y range,
+top vs bottom**.  Run with
+
+```bash
+python3 yz_coverage.py plot   --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz \
+                              --out-dir pics/yz_coverage
+python3 yz_coverage.py census --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz
+```
+
+**"Declared dead" is thresholded, not boolean-ever.**  Summed over 1000
+events the masked-graph footprint is sharply bimodal: a bin is either hit by
+a dead blob in essentially *every* event (`deadcover` ≈ 7000 = 7 slices ×
+1000 events) or in a handful (≤ 35).  Counting "dead blob ever seen here" as
+explained would let a single-event dead blob mask a real hole — the wrong
+direction for a hunt like this.  A bin is therefore called **persistent
+2-plane dead** only when a dead blob sits there in ≥ 50% of events:
+77 bins on APA0, 22 on APA1.  Transient dead blobs are drawn separately
+(thin white) so nothing is hidden.
+
+![middle region overlay, full Y](../pics/yz_coverage/yz-overlay-middle.png)
+
+**The cosmic-texture floor must be measured before any deficit is claimed.**
+The density map is dominated by individual bright cosmic tracks, so bin
+counts are *not* Poisson: measured per-bin scatter of density/expectation is
+σ = 0.246 (APA0) / 0.230 (APA1) against a Poisson expectation of 0.141 /
+0.137 — over-dispersed by ×1.7.  A naive Poisson cut (R < 0.7, −3σ) flags
+~3100 bins in ~1260 "regions" per side; that is track texture, not
+structure, and reporting it would have been meaningless.
+
+The discriminator that does work is **coherence across y**: a detector
+structure is a *column* — deficient in most y-bands at the same z — while
+texture is not.  Splitting the face into 20 y-bands of 20 cm and taking each
+band's local z-ratio against its own ±22 cm sidebands gives a texture floor
+of 11/20 (APA0) and 10/20 (APA1) deficient bands at the 99th percentile.
+
+![coherence map and readout](../pics/yz_coverage/yz-coherence.png)
+
+### Middle region, full Y range — no unexplained deficit
+
+Seam band z 248–253, coverage density relative to sidebands:
+
+| | all y | TOP (y > 0) | BOTTOM (y < 0) |
+|---|---|---|---|
+| APA0 east | 1.020 | 1.002 | 1.040 |
+| APA1 west | 1.039 | 1.102 | 0.981 |
+
+Per 40 cm y-slice the ratio wanders between 0.86 and 1.23 on both sides with
+no systematic trend — that spread is the texture floor, and top and bottom
+are statistically indistinguishable.  **There is no y-region of the seam,
+top or bottom, where coverage is suppressed.**  Zero-coverage bins in the
+seam over the full y range: 10 on APA0, **all 10 inside the persistent dead
+footprint** (z 250.5, y 90–98); 1 on APA1, at y = −198.5, i.e. the last
+live bin at the bottom edge, carrying only a transient dead blob — an edge
+effect, not a volume.
+
+### The remaining pieces, whole face
+
+Dead-plane columns show up as coherent **excess**, never deficit — the
+2-view blobs formed over a dead collection plane over-tile the region:
+
+| side | z [cm] | y-bands in excess | mean ratio |
+|---|---|---|---|
+| APA0 | 379.5 / 327.5 / 121.5 | 20/20, 19/20, 18/20 | 1.44 / 1.38 / 1.44 |
+| APA0 | 59.5–66.5 (dead cluster) | 16–18/20 | 1.45–1.67 |
+| APA1 | 121.5 / 379.5 / 462.5 | 20/20, 20/20, 11/20 | 1.49 / 1.58 / 1.24 |
+
+**One coherent deficit survives, and it is not in the middle region:**
+
+| side | z [cm] | y-bands deficient | coverage ratio (all y / top / bottom) | charge ratio | persistent-dead bins inside |
+|---|---|---|---|---|---|
+| **APA0** | **68.5–74.5** | **14/20** (floor 11) | **0.812 / 0.848 / 0.762** | 0.919 | **0** |
+
+A ~7 cm-wide column running the full height of the east TPC with ~19% less
+coverage than its surroundings, containing no declared 2-plane dead volume.
+It sits immediately downstream of APA0's largest dead-channel cluster
+(z ≈ 57–67, the +60% excess above), i.e. the two are almost certainly the
+same electronics problem seen from both sides — but the deficit itself is
+*not* accounted for by any dead blob and is the one place in either TPC
+where imaging genuinely loses coverage.
+
+Marginal candidates sitting essentially at the texture floor, listed for
+completeness and **not** claimed as structure: APA1 z 464–466 (0.939, 12/20,
+adjacent to the dead column at 462.5), APA1 z 365–367 (0.926, 12/20),
+APA0 z 125–127 (0.930, 11/20, adjacent to the dead column at 121.5).
+
+### What this does and does not say
+
+The overlay classifies a deficit as "explained" only if it coincides with
+the persistent 2-plane dead footprint — nothing else is subtracted.  A
+region with a *single* dead plane produces no dead blob and would therefore
+appear here as "unexplained"; that is the most likely reading of the APA0
+z 68–75 column, and it is a prose explanation, not part of the
+classification.  Confirming it needs the per-plane channel-status list,
+which this analysis does not use.
+
 ## Interpretation / follow-ups
 
 - The user-suspected "local structure in the middle region" is confirmed and
@@ -173,9 +277,16 @@ quality, not geometric coverage.
   (`docs/…dead-gap` knob, default OFF) was built for; z ≈ 250 (and the
   quarter-point columns at 122/378) are natural entries if that knob is ever
   enabled for trajectory/containment logic.
-- The APA0 broad diagonal dead-induction band is the largest single coverage
-  defect in the sample and worth remembering when hand-scanning east-side
-  events with apparently broken tracks between z ≈ 230–505 cm.
+- The APA0 broad diagonal dead-induction band is prominent in the raw
+  corner/count maps and worth remembering when hand-scanning east-side
+  events with apparently broken tracks between z ≈ 230–505 cm — though
+  round 3 shows it does not cost geometric *coverage*.
+- **The only genuinely under-covered region in either TPC is APA0
+  z ≈ 68–75 cm** (~19% low, full height, no declared dead volume inside).
+  Everything else that looks structural in the raw maps is either a
+  dead-plane column — which *over*-covers via 2-view blobs — or cosmic-track
+  texture.  Worth a per-plane channel-status check on the east APA around
+  z ≈ 57–77 cm.
 
 ## Caveats
 

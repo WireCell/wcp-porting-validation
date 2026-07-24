@@ -361,6 +361,102 @@ def plot(args):
         plt.close(fig)
         print('wrote', p)
 
+    # 4c) LITERAL OVERLAY: coverage density + declared 2-plane-dead footprint,
+    #     middle region, FULL y range -- "what is left low after the dead
+    #     blobs are accounted for?"
+    if 'deadcover_apa0' in f:
+        pers = args.dead_persist * 7 * nevt  # dead blob in >=frac of events
+        z0, z1 = args.mid_z
+        zz = (zc >= z0) & (zc <= z1)
+        fig, axes = plt.subplots(1, 2, figsize=(15, 9))
+        for apa, ax in zip((0, 1), axes):
+            cov = f[f'cover_apa{apa}']
+            dc = f[f'deadcover_apa{apa}']
+            hp = np.ma.masked_where(cov[zz] <= 0, cov[zz])
+            im = ax.pcolormesh(ze[np.append(zz, False) | np.append(False, zz)],
+                               ye, hp.T, cmap='viridis', rasterized=True)
+            # declared dead: persistent (red) and transient (thin white)
+            yy, xx = np.meshgrid(yc, zc[zz], indexing='ij')
+            pm = (dc[zz] >= pers).T
+            tm = ((dc[zz] > 0) & (dc[zz] < pers)).T
+            ax.scatter(xx[tm], yy[tm], s=1.2, c='w', alpha=0.35, marker='s',
+                       linewidths=0)
+            ax.scatter(xx[pm], yy[pm], s=6, c='red', marker='s',
+                       linewidths=0,
+                       label=f'persistent 2-plane dead (>{args.dead_persist:.0%} evts)')
+            ax.scatter([], [], s=6, c='w', marker='s',
+                       label='transient dead blob')
+            ax.set_title(f'APA{apa} {SIDES[apa]} — coverage density + dead '
+                         f'overlay')
+            ax.set_xlabel('z [cm]')
+            ax.set_ylabel('y [cm]')
+            ax.set_ylim(ye[0], ye[-1])
+            ax.legend(loc='upper right', fontsize=7, framealpha=0.8)
+            fig.colorbar(im, ax=ax, pad=0.01)
+        fig.suptitle('Middle region, full Y range: is any low-density area '
+                     'NOT covered by the declared dead footprint?')
+        fig.tight_layout()
+        p = os.path.join(args.out_dir, 'yz-overlay-middle.png')
+        fig.savefig(p, dpi=140)
+        plt.close(fig)
+        print('wrote', p)
+
+        # 4d) coherence map: per-y-band local z-ratio.  Detector structure is
+        # COHERENT across y (a column); cosmic-track texture is not.
+        BAND = 20
+        bands = [(y, y + BAND) for y in range(int(ye[0]) + 5,
+                                              int(ye[-1]) - 5, BAND)]
+        fig, axes = plt.subplots(4, 1, figsize=(15, 13),
+                                 gridspec_kw={'height_ratios': [3, 1, 3, 1]})
+        for apa in (0, 1):
+            axm, axc = axes[2 * apa], axes[2 * apa + 1]
+            cov = f[f'cover_apa{apa}']
+            dc = f[f'deadcover_apa{apa}']
+            R = np.full((len(zc), len(bands)), np.nan)
+            for ib, (y0, y1) in enumerate(bands):
+                sel = (yc >= y0) & (yc < y1)
+                prof = cov[:, sel].sum(axis=1)
+                for iz in range(25, len(zc) - 25):
+                    loc = np.concatenate([prof[iz - 22:iz - 3],
+                                          prof[iz + 4:iz + 23]])
+                    e = np.median(loc)
+                    if e > 0:
+                        R[iz, ib] = prof[iz] / e
+            im = axm.pcolormesh(ze, [b[0] for b in bands] + [bands[-1][1]],
+                                R.T, cmap='RdBu_r', vmin=0.7, vmax=1.3,
+                                rasterized=True)
+            zd = zc[(dc >= pers).sum(axis=1) > 0]
+            for z in zd:
+                axm.axvline(z, color='k', lw=0.8, alpha=0.5)
+            axm.set_title(f'APA{apa} {SIDES[apa]} — local z-ratio per {BAND} cm'
+                          f' y-band (black lines = persistent 2-plane dead)')
+            axm.set_ylabel('y [cm]')
+            fig.colorbar(im, ax=axm, pad=0.01,
+                         label='density / local sideband')
+            # coherence readout: how many y-bands agree at each z
+            nd = np.nansum(R < 0.90, axis=1)
+            ne = np.nansum(R > 1.15, axis=1)
+            inner = (zc >= 2) & (zc <= 499)
+            axc.fill_between(zc, 0, ne, step='mid', color='firebrick',
+                             alpha=0.8, label='# y-bands in EXCESS (>1.15)')
+            axc.fill_between(zc, 0, -nd, step='mid', color='steelblue',
+                             alpha=0.8, label='# y-bands DEFICIENT (<0.90)')
+            thr = np.percentile(nd[inner], 99)
+            axc.axhline(-thr, color='k', ls=':', lw=0.8)
+            axc.axhline(thr, color='k', ls=':', lw=0.8)
+            for z in zd:
+                axc.axvline(z, color='k', lw=0.8, alpha=0.5)
+            axc.set_ylabel('coherence')
+            axc.set_xlabel('z [cm]')
+            axc.set_ylim(-len(bands), len(bands))
+            axc.legend(fontsize=7, loc='upper right', ncol=2)
+            axc.grid(alpha=0.3)
+        fig.tight_layout()
+        p = os.path.join(args.out_dir, 'yz-coherence.png')
+        fig.savefig(p, dpi=140)
+        plt.close(fig)
+        print('wrote', p)
+
     # 5) middle-region zoom (chosen from the full map; override via args)
     z0, z1, y0, y1 = args.zoom
     iz = (zc >= z0) & (zc <= z1)
@@ -387,6 +483,104 @@ def plot(args):
     print('wrote', p)
 
 
+def census(args):
+    """Quantify structure vs cosmic texture and list deficits that the
+    declared 2-plane dead footprint does NOT explain."""
+    f = np.load(args.hist)
+    ze, ye = f['z_edges'], f['y_edges']
+    zc = 0.5 * (ze[:-1] + ze[1:])
+    yc = 0.5 * (ye[:-1] + ye[1:])
+    nevt = int(f['nevt'])
+    pers = args.dead_persist * 7 * nevt
+    BAND = 20
+    bands = [(y, y + BAND) for y in range(int(ye[0]) + 5,
+                                          int(ye[-1]) - 5, BAND)]
+
+    def band_ratio(h, z0, z1, y0, y1):
+        zs = (zc >= z0) & (zc <= z1)
+        ys = (yc >= y0) & (yc < y1)
+        sb = (((zc >= z0 - 22) & (zc <= z0 - 4))
+              | ((zc >= z1 + 4) & (zc <= z1 + 22)))
+        a = h[np.ix_(zs, ys)].sum() / zs.sum()
+        b = h[np.ix_(sb, ys)].sum() / sb.sum()
+        return a / b if b > 0 else float('nan')
+
+    for apa in (0, 1):
+        cov = f[f'cover_apa{apa}']
+        dc = f[f'deadcover_apa{apa}']
+        print(f'===== APA{apa} {SIDES[apa]} =====')
+        # cosmic-texture floor: per-bin scatter vs Poisson
+        n = int(3 * 12)
+        x = np.arange(-n, n + 1)
+        k = np.exp(-0.5 * (x / 12.0) ** 2)
+        k /= k.sum()
+        g = lambda a: np.apply_along_axis(
+            lambda r: np.convolve(r, k, 'same'), 1,
+            np.apply_along_axis(lambda r: np.convolve(r, k, 'same'), 0, a))
+        exp = g(cov) / g(np.ones_like(cov))
+        R = cov / np.maximum(exp, 1e-9)
+        m = (zc >= 2) & (zc <= 499)
+        q = (yc >= -198) & (yc <= 198)
+        print('  per-bin texture: sigma(R)=%.3f vs Poisson %.3f '
+              '(over-dispersion x%.2f)'
+              % (R[np.ix_(m, q)].std(),
+                 1 / np.sqrt(np.median(cov[cov > 0])),
+                 R[np.ix_(m, q)].std() * np.sqrt(np.median(cov[cov > 0]))))
+        # coherence across y bands
+        Rm = np.full((len(zc), len(bands)), np.nan)
+        for ib, (y0, y1) in enumerate(bands):
+            sel = (yc >= y0) & (yc < y1)
+            prof = cov[:, sel].sum(axis=1)
+            for iz in range(25, len(zc) - 25):
+                loc = np.concatenate([prof[iz - 22:iz - 3],
+                                      prof[iz + 4:iz + 23]])
+                e = np.median(loc)
+                if e > 0:
+                    Rm[iz, ib] = prof[iz] / e
+        nd = np.nansum(Rm < 0.90, axis=1)
+        ne = np.nansum(Rm > 1.15, axis=1)
+        deadz = (dc >= pers).sum(axis=1)
+        inner = (zc >= 2) & (zc <= 499)
+        print('  y-band coherence floor: median %d/%d bands deficient, '
+              '99th pct %d' % (np.median(nd[inner]), len(bands),
+                               np.percentile(nd[inner], 99)))
+        print('  -- coherent EXCESS columns (dead-plane 2-view inflation) --')
+        for iz in np.argsort(-ne)[:8]:
+            if ne[iz] < 10 or not inner[iz]:
+                continue
+            print('     z=%6.1f  %2d/%d bands  meanR=%.2f  '
+                  'persistent-dead bins: %d'
+                  % (zc[iz], ne[iz], len(bands), np.nanmean(Rm[iz]),
+                     deadz[iz]))
+        print('  -- coherent DEFICIT columns (candidate unexplained) --')
+        for iz in np.argsort(-nd)[:8]:
+            if nd[iz] < 10 or not inner[iz]:
+                continue
+            print('     z=%6.1f  %2d/%d bands  meanR=%.2f  '
+                  'persistent-dead bins: %d'
+                  % (zc[iz], nd[iz], len(bands), np.nanmean(Rm[iz]),
+                     deadz[iz]))
+        print('  -- middle region (seam z 248-253), FULL y --')
+        print('     all-y %.3f   TOP(y>0) %.3f   BOTTOM(y<0) %.3f'
+              % (band_ratio(cov, 248, 253, -200, 200),
+                 band_ratio(cov, 248, 253, 0, 200),
+                 band_ratio(cov, 248, 253, -200, 0)))
+        for y0 in range(-200, 200, 40):
+            print('       y[%5d,%5d] %.3f'
+                  % (y0, y0 + 40, band_ratio(cov, 248, 253, y0, y0 + 40)))
+        # zero-coverage census in the seam, full y
+        seam = (zc >= 248) & (zc <= 253)
+        inb = np.abs(yc) <= 199
+        zero = [(zc[iz], yc[iy], dc[iz, iy] >= pers)
+                for iz in np.where(seam)[0] for iy in np.where(inb)[0]
+                if cov[iz, iy] == 0]
+        print('     zero-coverage seam bins: %d, of which persistent-dead: %d'
+              % (len(zero), sum(1 for *_x, d in zero if d)))
+        for z, y, d in zero:
+            if not d:
+                print('       UNEXPLAINED zero bin z=%.1f y=%.1f' % (z, y))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -401,7 +595,19 @@ def main():
     p.add_argument('--zoom', type=float, nargs=4,
                    default=[180.0, 320.0, -60.0, 60.0],
                    metavar=('Z0', 'Z1', 'Y0', 'Y1'))
+    p.add_argument('--mid-z', type=float, nargs=2, default=[225.0, 276.0],
+                   metavar=('Z0', 'Z1'),
+                   help='middle-region z window for the dead overlay '
+                        '(full y range is always shown)')
+    p.add_argument('--dead-persist', type=float, default=0.5,
+                   help='a bin counts as declared dead when a dead blob sits '
+                        'there in >= this fraction of events (guards against '
+                        'a single-event dead blob masking a real deficit)')
     p.set_defaults(func=plot)
+    c = sub.add_parser('census')
+    c.add_argument('--hist', default='pics/yz_coverage/yz-hist-mcp1000-v2.npz')
+    c.add_argument('--dead-persist', type=float, default=0.5)
+    c.set_defaults(func=census)
     args = ap.parse_args()
     args.func(args)
 
