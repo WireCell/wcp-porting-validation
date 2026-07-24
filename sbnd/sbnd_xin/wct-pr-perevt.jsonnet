@@ -129,6 +129,12 @@ function(
     // tgm_fv_zmax_margin.  Runner flags: -fvx <cm> / -fvy <cm>.
     tgm_fv_x_margin = 2,
     tgm_fv_y_margin = 2.5,
+    // Persist the per-pass STM track fits (C++ default false; key omitted
+    // when off => byte-identical): cluster PCs stm_fit/stm_pass/stm_eval, a
+    // Bee 'stm_fit' layer in mabc-pr.zip, and (when 'stm_magnify' is added
+    // to pipeline_names) tracking-stm.root for Magnify-tracking-SBND.  Also
+    // gates loading the WireCellRoot plugin.  Runner flag: -stm-fit.
+    save_stm_fit = false,
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -178,7 +184,8 @@ function(
                              tgm_fv_zmax_margin=tgm_fv_zmax_margin,
                              tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior,
                              tgm_fv_x_margin=tgm_fv_x_margin,
-                             tgm_fv_y_margin=tgm_fv_y_margin);
+                             tgm_fv_y_margin=tgm_fv_y_margin,
+                             save_stm_fit=save_stm_fit);
 
     local graph = g.intern(
         innodes=[source],
@@ -195,7 +202,11 @@ function(
         type: 'wire-cell',
         data: {
             plugins: ['WireCellGen', 'WireCellPgraph', 'WireCellAux', 'WireCellSio',
-                      'WireCellSigProc', 'WireCellImg', 'WireCellClus'],
+                      'WireCellSigProc', 'WireCellImg', 'WireCellClus']
+                     // WireCellRoot hosts SbndMagnifyTrackingVisitor; loaded
+                     // only with the knob so the compiled config stays
+                     // byte-identical when off.
+                     + (if save_stm_fit then ['WireCellRoot'] else []),
             apps: ['Pgrapher'],
         },
     };

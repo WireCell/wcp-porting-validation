@@ -48,6 +48,10 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
   -stm      shorthand for the STM tagger chain:
             -p switch_scope,steiner,fiducialutils,tagger_check_stm
             (uses sbnd_track_fitting.json; grep TaggerCheckSTM in the log)
+  -stm-fit  persist the per-pass STM track fits (doc 40): cluster PCs
+            stm_fit/stm_pass/stm_eval, a Bee 'stm_fit' layer in mabc-pr.zip,
+            and tracking-stm.root (appends stm_magnify to the pipeline).
+            DEFAULT OFF = byte-identical legacy outputs.  Env: SBND_STM_FIT=1.
   -tgm      shorthand for the cosmic-tagger chain (TGM then STM):
             -p switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm
             with the per-mode beam window (in-window bundles are never TGM-tagged;
@@ -71,6 +75,9 @@ EOF
 
 MODE=mc
 PIPELINE=""
+# Persist per-pass STM track fits + tracking-stm.root (doc 40).
+# DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
+STM_FIT="${SBND_STM_FIT:-0}"
 NU=0
 BEAM_WINDOW=""
 DL_WEIGHTS=""
@@ -95,6 +102,8 @@ while [ $# -gt 0 ]; do
         -dnn|--dnn) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"
                     DL_WEIGHTS="uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth"; shift ;;
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
+        -stm-fit|--stm-fit) STM_FIT=1; shift ;;
+        -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
         -p*) PIPELINE="${1#-p}"; shift ;;
         *) _args+=("$1"); shift ;;
     esac
@@ -128,6 +137,11 @@ if [ $# -eq 0 ]; then
 fi
 
 # jsonnet list literal from the comma-separated -p value.
+# -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
+if [ "$STM_FIT" = 1 ] && [ -n "$PIPELINE" ]; then
+    PIPELINE="$PIPELINE,stm_magnify"
+fi
+
 PIPELINE_CODE="[]"
 if [ -n "$PIPELINE" ]; then
     PIPELINE_CODE="[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
@@ -167,6 +181,7 @@ process_event() {
         --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
         --tla-str  "dl_weights=$DL_WEIGHTS" \
         --tla-code "beam_window_us=$BEAM_WINDOW_CODE" \
+        --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $PRDIR/mabc-pr.zip"
 }

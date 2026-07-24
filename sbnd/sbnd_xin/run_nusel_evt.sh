@@ -120,6 +120,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -fvy <cm>     vertical-y (|y| ~ 200 cm faces) inset, both faces symmetric
                 (default 2.5 = legacy).  Shared by tagger_check_tgm and
                 tagger_check_fc.  Env: SBND_TGM_FVY_MARGIN=<cm>.
+  -stm-fit      persist the per-pass STM track fits (doc 40): cluster PCs
+                stm_fit/stm_pass/stm_eval, a Bee 'stm_fit' layer in
+                mabc-pr.zip, and tracking-stm.root (SbndMagnifyTrackingVisitor
+                appended to the pipeline) for Magnify-tracking-SBND.
+                DEFAULT OFF = byte-identical legacy outputs.
+                Env: SBND_STM_FIT=1.
   -main-pair-real  like -main-pair, but identify the main EXACTLY via the
                 per-blob real_cluster_main flash-merge provenance instead of
                 the largest-component proxy (doc 38).  Needs a pctree saved
@@ -220,6 +226,9 @@ MAIN_PAIR_MODE="${SBND_TGM_MAIN_PAIR_MODE:-path}"
 # runner LAUNCHES (pctree missing); an existing pctree is reused as-is, so mix
 # -lm with pre-LM trees deliberately or start a fresh work root.
 QL_LM="${SBND_QL_LM:-0}"
+# Persist per-pass STM track fits + tracking-stm.root (doc 40).
+# DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
+STM_FIT="${SBND_STM_FIT:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -246,10 +255,17 @@ while [ $# -gt 0 ]; do
         -no-main-pair|--no-main-pair) MAIN_PAIR=0; MAIN_PAIR_MODE=path; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         -no-lm|--no-lm) QL_LM=0; shift ;;
+        -stm-fit|--stm-fit) STM_FIT=1; shift ;;
+        -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+# -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
+if [ "$STM_FIT" = 1 ]; then
+    PIPELINE="$PIPELINE,stm_magnify"
+fi
 
 case "$MODE" in
     mc)   REALITY=sim ;;
@@ -312,7 +328,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -342,6 +358,7 @@ process_event() {
             --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
             --tla-code "tgm_fv_x_margin=$FVX_MARGIN" \
             --tla-code "tgm_fv_y_margin=$FVY_MARGIN" \
+            --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
