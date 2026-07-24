@@ -163,7 +163,9 @@ from `*-fvxy`).  TSV verdicts vs the knob-off round: **0 real differences**
 verified line-by-line against the raw logs).  Viewer re-served on :5010,
 tag `mcp10-stmfit`, prevs fvxy(×3) → mainreal → mainpair → fvzi → lm2.
 
-STM fit inventory (`/home/xqian/tmp/stmfit/stmon_stats.py`):
+STM fit inventory — `python3 stmon_stats.py` from `sbnd_xin/` (committed
+alongside these docs; it reads the three `*-stmon` roots and reprints every
+number in this section):
 
 - 36 fitted (cluster, pass) records over 30 events, all forward passes:
   11 accepted-STM, 13 rejected long-leftover, 5 rejected dQ/dx eval,
@@ -212,4 +214,6 @@ wire-cell-uboone-magnify-tracking-convert \
 # GUI: cd ~/work/scratch_wcgpu1/toolkit-dev/Magnify-tracking-SBND && ./magnify.sh /path/track_com_284657.root
 # viewer with the panel: nusel_display/serve_nusel_scan.sh ... (reads
 # nusel_evt*/tracking-stm.root automatically when present)
+# fit inventory / plateau / x-frame numbers quoted above:
+python3 stmon_stats.py
 ```
