@@ -340,11 +340,41 @@ fit lands on them: 111 ke and 258 ke against a 31 ke median).
 - **Median fitted dQ/dx 49.5 ke/cm vs. median true 49.5 ke/cm**; integrated
   over the 344 core points, fitted/true = **1.043**.  No negative dQ/dx point
   anywhere in this block.
-- **No drift trend.**  ⟨x⟩ runs from −16 to +162 cm — i.e. from ~1.9 m of
-  drift down to ~0.3 m — and the ratio stays in 0.93–1.18 with no monotonic
-  slope.  Since the truth `numElectrons` is charge *at the deposit*, an
-  uncorrected electron lifetime would have shown up here as a rising
-  fitted/true with drift distance; it does not.
+- **No drift trend — and that is a statement about attenuation.**  The truth
+  `numElectrons` is the charge *at the deposit*, before any drift, so
+  fitted/true is exactly the factor the chain applies between deposit and
+  fitted charge.  This track samples nearly the whole drift: it starts 26 cm
+  from the cathode in TPC0, crosses it, and ends 28 cm from the TPC1 anode,
+  so the drift distance (200 − |x|) runs 199 → 29 cm.
+
+  | drift distance [cm] | n | fitted/true (integral) | median point ratio |
+  |---|---|---|---|
+  | 0 – 40 | 20 | 0.895 | 0.873 |
+  | 40 – 80 | 67 | 1.009 | 0.966 |
+  | 80 – 120 | 68 | 1.111 | 1.032 |
+  | 120 – 160 | 68 | 1.080 | 1.061 |
+  | 160 – 200 | 117 | 0.998 | 0.999 |
+
+  The ratio is flat to ~±10 % and **non-monotonic** — it peaks in the middle
+  of the drift, not at either end.  A straight line through the binned
+  integral ratios has slope +0.00065 per cm, i.e. +0.11 across the 171 cm of
+  drift sampled; that slope is bin-edge dependent (+0.02 with 40 cm bins
+  shifted by 20 cm) and its sign is *opposite* to attenuation, so read it as
+  "no trend at this precision", not as a measured slope.  (Theil–Sen on the
+  340 individual points agrees: +0.00063 per cm.  An OLS slope on the point
+  ratios is not usable — their distribution has mean 1.26 against median
+  0.99.)
+
+  An **uncorrected** electron lifetime would have gone the other way and been
+  larger than the scatter: with the runner's `LIFETIME=6` ms and
+  `DRIFTSPEED=1.563` mm/µs, exp(−t/τ) is 0.809 at 199 cm of drift against
+  0.970 at 29 cm, so fitted/true would **fall by ~17 %** from the near-anode
+  end to the near-cathode end.  It does not (the far end is the 0.998 bin,
+  the near end the 0.895 one — same size, wrong sign, and not monotonic in
+  between).  So either the attenuation is corrected
+  upstream of the fitted charge or the simulation carried an effectively
+  infinite lifetime — **this track does not distinguish the two**, and the
+  distinction matters before quoting an absolute charge scale on data.
 - Point-by-point the truth is noisy (0–116 ke/cm) while the fit is smooth.
   That is the pairing, not physics: each fitted point owns a Voronoi cell of
   the truth cloud and the cells hold unequal numbers of G4 steps.  The

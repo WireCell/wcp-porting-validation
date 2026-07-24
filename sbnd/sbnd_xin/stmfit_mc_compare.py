@@ -47,6 +47,13 @@ def main():
                     help="fitted points dropped at each end (pile-up guard)")
     ap.add_argument("--max-com-dis", type=float, default=5.0,
                     help="median pairing distance above which nothing is quoted")
+    ap.add_argument("--half-drift", type=float, default=200.0,
+                    help="SBND anode |x| in cm; drift distance is this minus |x|")
+    ap.add_argument("--lifetime-ms", type=float, default=6.0,
+                    help="electron lifetime for the reference attenuation only "
+                         "(the runner scripts' LIFETIME)")
+    ap.add_argument("--drift-speed", type=float, default=1.563,
+                    help="mm/us, the runner scripts' DRIFTSPEED (reference only)")
     args = ap.parse_args()
 
     d = uproot.open(args.file)["T_rec"].arrays(library="np")
@@ -98,6 +105,35 @@ def main():
             continue
         print(f" {lo:6.1f}-{hi:6.1f} {m.sum():4d}   {np.median(rq[m]):8.1f}      "
               f"{np.median(tq[m]):8.1f}     {rec[m].sum()/tru[m].sum():7.3f}   {np.mean(x[m]):7.1f}")
+
+    # Against drift distance, which is what an uncorrected electron lifetime
+    # would show up in: true dQ is the charge AT THE DEPOSIT, so fitted/true is
+    # the whole deposit-to-fitted-charge factor.  |x| is measured from the
+    # cathode at x = 0, the anodes sit at +-`--half-drift`.
+    drift = args.half_drift - np.abs(x)
+    print(f"\n drift [cm]   n   fitted/true (integral)  median point ratio")
+    cent, val = [], []
+    for lo in np.arange(0, args.half_drift, 40.0):
+        m = good & (tru > 0) & (drift >= lo) & (drift < lo + 40)
+        if m.sum() < 4:
+            continue
+        ratio = rec[m].sum() / tru[m].sum()
+        cent.append(np.mean(drift[m]))
+        val.append(ratio)
+        print(f" {lo:4.0f}-{lo+40:4.0f}  {m.sum():4d}      {ratio:8.3f}            "
+              f"{np.median(rec[m] / tru[m]):8.3f}")
+    if len(cent) > 2:
+        slope = np.polyfit(cent, val, 1)[0]
+        span = float(np.max(drift[good]) - np.min(drift[good]))
+        print(f"binned-ratio slope {slope:+.5f} per cm -> {slope*span:+.3f} over the "
+              f"{span:.0f} cm of drift sampled")
+        # what an uncorrected lifetime would look like, for comparison
+        t_us = drift[good] / (args.drift_speed / 10.0)     # mm/us -> cm/us
+        att = np.exp(-t_us / (args.lifetime_ms * 1e3))
+        print(f"for reference, uncorrected tau={args.lifetime_ms} ms at "
+              f"v={args.drift_speed} mm/us would give exp(-t/tau) = "
+              f"{att.min():.3f} at {drift[good].max():.0f} cm vs {att.max():.3f} at "
+              f"{drift[good].min():.0f} cm (far/near {att.min()/att.max():.3f})")
 
     if not args.output:
         return
