@@ -20,6 +20,7 @@ wire-cell-sbnd-magnify-tracking-convert \
   -bwork-mcp10-stmon/nusel_evt286241/tracking-stm.root -tT_rec_charge \
   -oshowcase-stmfit-286241/track_com_286241.root -f2
 cd Magnify-tracking-SBND && ./magnify.sh ../showcase-stmfit-286241/track_com_286241.root
+# (needs $DISPLAY; headless recipe + the bug fixes that made this work: doc 43)
 
 # 2. Bee upload zip (QL layers + the stm_fit dQ/dx layer), then upload:
 python3 make_stmfit_bee.py -w work-mcp10-stmon -o showcase-stmfit-286241/upload_286241.zip 286241
@@ -120,10 +121,16 @@ dump stores `rr = L_tot − L_i`, so `rr = 0` is the stopping end.
    the bright end.  wire-cell-bee3 itself is untouched (owner directive).
 2. **Magnify-tracking** — `showcase-stmfit-286241/track_com_286241.root`,
    1 track block / 251 points, opened with `Magnify-tracking-SBND`
-   (`b78b255`, SBND geometry: U/V/W 3968/3968/3340 channels, 857 time
-   slices).  Pads 4–6 show the fit points on the measured channel×time
-   maps per plane, pads 7–9 the `(pred−meas)/meas` residuals, pad 1 the
-   dQ/dx vs L curve.
+   (SBND geometry: U/V/W 3968/3968/3340 channels, 857 time slices).  Pads
+   4–6 show the fit points on the measured channel×time maps per plane,
+   pads 7–9 the `(pred−meas)/meas` residuals, pad 1 the dQ/dx vs L curve.
+   Screenshot: `showcase-stmfit-286241/magnify_286241_blk80.png`.
+   **Correction (doc 43):** as first written this display did not work at
+   all — the GUI could not compile here, and the converter dropped two
+   branches the dQ/dx panel indexes unconditionally, so it aborted on this
+   file.  Doc 43 has the eight fixes; the file above was regenerated after
+   them (from `work-stmbadch`, proven identical to the `work-mcp10-stmon`
+   record except for the repaired `T_bad_ch`).
 3. **nusel viewer** — `nusel_display/` on :5010 with the `-stmon` roots
    reads the same `tracking-stm.root` and draws the dQ/dx-vs-rr panel plus
    the trajectory crosses on the three projections (doc 41 §Consumers 3).
@@ -205,4 +212,6 @@ the first things the fitted-vs-truth comparison should settle.
   reconstruction points only — no raw waveforms.
 - Open items this doc raises, both unfixed and both hand-scan gated: the
   missing Bragg rise on 10 of 11 accepted-STM tracks, and the 12.8 %
-  negative-dQ/dx fraction (§5).
+  negative-dQ/dx fraction (§5).  Doc 43 §D adds a third of the same family:
+  rejected-pass blocks have almost no fitted 2D charge under their own
+  track (8–39 % coverage) while accepted ones are at 100 %.
