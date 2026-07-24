@@ -46,6 +46,30 @@ Y_EDGES = np.arange(-205.0, 205.0 + 1e-9, 1.0)
 
 SIDES = {0: 'east (x<0)', 1: 'west (x>0)'}
 
+# SBND fiducial geometry in Y-Z, from
+# cfg/pgrapher/experiment/sbnd/clus.jsonnet (read at doc-37 round 4):
+#   wire bbox            -> the physical active edge
+#   sbnd_pr_fv 'bounds'  -> BoxFiducial, bbox inset by 1 cm
+#   + sbnd_pr_fv_margins -> fv_tolerance: y +-2.5, z_min +3, z_max -tgm_fv_zmax_margin
+#     (production runs -fvz 5; legacy / doc-35 interior value is 3)
+WIRE_BBOX = dict(ymin=-200.312, ymax=200.312, zmin=-0.15, zmax=501.15)
+FV_BOX = dict(ymin=-199.312, ymax=199.312, zmin=0.85, zmax=500.15)
+FV_EFF = dict(ymin=-196.812, ymax=196.812, zmin=3.85, zmax=495.15)
+FV_EFF_ZMAX_INTERIOR = 497.15  # -fvzi 3 (doc 35) and the legacy -fvz 3 face
+
+
+def draw_fv(ax, which='all'):
+    """Overlay the three nested Y-Z boundaries on a (z, y) axes."""
+    kw_eff = dict(color='red', lw=1.4, ls='--')
+    kw_box = dict(color='white', lw=1.0, ls=':')
+    kw_bb = dict(color='0.7', lw=0.8, ls='-')
+    for d, kw in ((WIRE_BBOX, kw_bb), (FV_BOX, kw_box), (FV_EFF, kw_eff)):
+        ax.plot([d['zmin'], d['zmax'], d['zmax'], d['zmin'], d['zmin']],
+                [d['ymin'], d['ymin'], d['ymax'], d['ymax'], d['ymin']], **kw)
+    ax.plot([], [], **kw_eff, label='effective FV (box + margins, -fvz 5)')
+    ax.plot([], [], **kw_box, label='BoxFiducial bounds')
+    ax.plot([], [], **kw_bb, label='wire bbox (active edge)')
+
 
 def blob_yz(bn):
     """Return (yc, zc, val, corners_y, corners_z) from a bnodes array, cm."""
@@ -295,9 +319,112 @@ def plot(args):
             im = heat(ax, f[f'cover_apa{apa}'],
                       f'APA{apa} {SIDES[apa]} — blob-interior coverage '
                       f'density, {nevt} events')
+            draw_fv(ax)
+            ax.legend(loc='lower left', fontsize=7, framealpha=0.75)
             fig.colorbar(im, ax=ax, pad=0.01)
         fig.tight_layout()
         p = os.path.join(args.out_dir, 'yz-cover.png')
+        fig.savefig(p, dpi=140)
+        plt.close(fig)
+        print('wrote', p)
+
+        # FV edge check: 1D roll-off at each of the four Y-Z faces, each
+        # normalized to its OWN interior reference 10-30 cm inside (the
+        # cosmic illumination gradient makes a global plateau meaningless).
+        EDGES = [
+            ('z_min', 'z', +1, FV_EFF['zmin'], FV_BOX['zmin'],
+             WIRE_BBOX['zmin'], (-6, 22)),
+            ('z_max', 'z', -1, FV_EFF['zmax'], FV_BOX['zmax'],
+             WIRE_BBOX['zmax'], (478, 506)),
+            ('y_min', 'y', +1, FV_EFF['ymin'], FV_BOX['ymin'],
+             WIRE_BBOX['ymin'], (-206, -178)),
+            ('y_max', 'y', -1, FV_EFF['ymax'], FV_BOX['ymax'],
+             WIRE_BBOX['ymax'], (178, 206)),
+        ]
+        fig, axes = plt.subplots(2, 4, figsize=(19, 8))
+        for apa in (0, 1):
+            cov = f[f'cover_apa{apa}']
+            zin = (zc >= 20) & (zc <= 480)
+            yin = (yc >= -190) & (yc <= 190)
+            for ie, (nm, ax_, sgn, eff, box, bb, win) in enumerate(EDGES):
+                ax = axes[apa][ie]
+                if ax_ == 'z':
+                    coord, prof = zc, cov[:, yin].sum(axis=1) / yin.sum()
+                else:
+                    coord, prof = yc, cov[zin].sum(axis=0) / zin.sum()
+                # interior reference: 10-30 cm inside this face
+                ref_lo, ref_hi = sorted([bb + sgn * 10, bb + sgn * 30])
+                ref = np.median(prof[(coord >= ref_lo) & (coord <= ref_hi)])
+                r = prof / ref if ref > 0 else prof * 0
+                m = (coord >= win[0]) & (coord <= win[1])
+                ax.step(coord[m], r[m], where='mid', color='k', lw=1.1)
+                ax.axhline(1.0, color='k', lw=0.4, alpha=0.4)
+                ax.axhline(0.5, color='0.6', lw=0.6, ls=':')
+                ax.axvline(eff, color='red', ls='--', lw=1.3,
+                           label='effective FV')
+                ax.axvline(box, color='tab:blue', ls=':', lw=1.2,
+                           label='BoxFiducial')
+                ax.axvline(bb, color='0.4', lw=1.0, label='wire bbox')
+                if nm == 'z_max':
+                    ax.axvline(FV_EFF_ZMAX_INTERIOR, color='orange', ls='-.',
+                               lw=1.0, label='interior FV (-fvzi 3)')
+                # density fraction exactly at the FV face
+                fr = np.interp(eff, coord, r)
+                ax.plot([eff], [fr], 'ro', ms=4)
+                ax.annotate('%.0f%% at FV' % (100 * fr), (eff, fr),
+                            textcoords='offset points', xytext=(6, 8),
+                            fontsize=8, color='red')
+                ax.set_title(f'APA{apa} — {nm}', fontsize=10)
+                ax.set_xlabel(f'{ax_} [cm]')
+                ax.set_ylabel('density / interior')
+                ax.set_ylim(-0.05, 1.35)
+                ax.grid(alpha=0.3)
+                if apa == 0 and ie == 0:
+                    ax.legend(fontsize=7, loc='lower right')
+        fig.suptitle('FV faces vs where blob coverage actually ends '
+                     '(normalized to the interior 10-30 cm inside each face)')
+        fig.tight_layout()
+        p = os.path.join(args.out_dir, 'yz-fv-edges.png')
+        fig.savefig(p, dpi=140)
+        plt.close(fig)
+        print('wrote', p)
+
+        # 2D zoom strips along each face -- is the edge uniform, or does it
+        # have structure the single FV plane cannot follow?
+        fig, axes = plt.subplots(4, 2, figsize=(15, 14))
+        for ie, (nm, ax_, sgn, eff, box, bb, win) in enumerate(EDGES):
+            for apa in (0, 1):
+                ax = axes[ie][apa]
+                cov = f[f'cover_apa{apa}']
+                if ax_ == 'z':
+                    m = (zc >= win[0]) & (zc <= win[1])
+                    sub = cov[m]
+                    hp = np.ma.masked_where(sub <= 0, sub)
+                    im = ax.pcolormesh(
+                        ze[np.append(m, False) | np.append(False, m)], ye,
+                        hp.T, cmap='viridis', rasterized=True)
+                    ax.axvline(eff, color='red', ls='--', lw=1.2)
+                    ax.axvline(box, color='w', ls=':', lw=1.0)
+                    ax.axvline(bb, color='0.8', lw=0.9)
+                    ax.set_xlabel('z [cm]')
+                    ax.set_ylabel('y [cm]')
+                else:
+                    m = (yc >= win[0]) & (yc <= win[1])
+                    sub = cov[:, m]
+                    hp = np.ma.masked_where(sub <= 0, sub)
+                    im = ax.pcolormesh(
+                        ze, ye[np.append(m, False) | np.append(False, m)],
+                        hp.T, cmap='viridis', rasterized=True)
+                    ax.axhline(eff, color='red', ls='--', lw=1.2)
+                    ax.axhline(box, color='w', ls=':', lw=1.0)
+                    ax.axhline(bb, color='0.8', lw=0.9)
+                    ax.set_xlabel('z [cm]')
+                    ax.set_ylabel('y [cm]')
+                ax.set_title(f'APA{apa} {SIDES[apa]} — {nm} edge '
+                             f'(red dashed = effective FV)', fontsize=9)
+                fig.colorbar(im, ax=ax, pad=0.01)
+        fig.tight_layout()
+        p = os.path.join(args.out_dir, 'yz-fv-edge-maps.png')
         fig.savefig(p, dpi=140)
         plt.close(fig)
         print('wrote', p)

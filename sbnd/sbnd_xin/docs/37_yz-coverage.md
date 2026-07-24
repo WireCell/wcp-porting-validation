@@ -47,7 +47,9 @@ maps), `yz-profiles.png` (1D y/z projections), `yz-middle-zoom.png`
 (z 180–320, |y| < 60 with contours), `yz-seam-quant.png` (quantitative seam
 panels).  Round 2 adds `yz-cover.png` and `yz-seam-density.png` from the
 blob-interior fill; round 3 adds `yz-overlay-middle.png` (density + dead
-overlay, middle region, full Y) and `yz-coherence.png`.
+overlay, middle region, full Y) and `yz-coherence.png`; round 4 puts the FV
+boundaries on `yz-cover.png` and adds `yz-fv-edges.png` (1D roll-off at each
+of the four faces) and `yz-fv-edge-maps.png` (2D zoom per face).
 
 **Read rounds 2 and 3 first if you only want the physics answer** — round 1
 below fills blob *corners*, which is biased toward blob boundaries and
@@ -265,6 +267,79 @@ z 68–75 column, and it is a prose explanation, not part of the
 classification.  Confirming it needs the per-plane channel-status list,
 which this analysis does not use.
 
+## Round 4 — are the FV faces consistent with where coverage actually ends?
+
+Owner follow-up: draw the four Y-Z fiducial boundaries on the round-2
+density map and zoom each edge, to check the FV in the code against the
+measured point density.
+
+**FV geometry, read from `cfg/pgrapher/experiment/sbnd/clus.jsonnet`**
+(three nested levels, all drawn):
+
+| level | source | y [cm] | z [cm] |
+|---|---|---|---|
+| wire bbox (physical active edge) | comments at `overall.FV_*` | ±200.312 | −0.15 … 501.15 |
+| `sbnd_pr_fv` BoxFiducial bounds | bbox inset 1 cm | ±199.312 | 0.85 … 500.15 |
+| **effective FV** (box + `sbnd_pr_fv_margins`) | y ±2.5, z_min +3, z_max −`tgm_fv_zmax_margin` | **±196.812** | **3.85 … 495.15** |
+
+The effective z_max uses the production `-fvz 5`; the doc-35 interior face
+(`-fvzi 3`) sits at 497.15 and is drawn separately in the z_max panel.
+
+![coverage density with FV boundaries](../pics/yz_coverage/yz-cover.png)
+
+![FV faces vs measured edge](../pics/yz_coverage/yz-fv-edges.png)
+
+![per-edge 2D zooms](../pics/yz_coverage/yz-fv-edge-maps.png)
+
+### Result: every FV face sits inside live, fully-reconstructing volume
+
+Each face is normalized to its own interior reference 10–30 cm inside (a
+global plateau is meaningless — the cosmic illumination rises ~40% from
+bottom to top).  Three independent measures at the FV face:
+
+| face | effective FV | blob **area** @FV | blob **count** @FV | **charge** @FV | last live bin | FV → last live |
+|---|---|---|---|---|---|---|
+| z_min | 3.85 | 0.83 / 0.80 | 1.07 / 1.07 | 1.13 / 1.05 | ≤ 0.5 | ≥ 3.4 cm |
+| z_max | 495.15 | 0.95 / 0.98 | 1.06 / 1.04 | 0.98 / 1.07 | 500.5 | 5.4 cm |
+| y_min | −196.812 | 0.56 / 0.56 | 0.92 / 0.94 | 0.90 / 0.91 | −199.5 | 2.7 cm |
+| y_max | +196.812 | 0.68 / 0.68 | 0.98 / 0.94 | 0.97 / 1.02 | +199.5 | 2.7 cm |
+
+(values APA0 / APA1)
+
+**The y-face area dip is blob geometry, not lost coverage.**  Taken alone,
+the area-density curve at the y faces (0.56 / 0.68) looks like the FV cuts
+into a half-dead region.  It does not: blob **count** and **charge** are
+90–102% of interior at the same y.  What shrinks is the size of each blob —
+mean covered area falls from ~5.0 bins in the interior to 2.8 at y = +198
+and 1.8 at y = −198, because the three-plane wire overlap narrows toward the
+top and bottom of the frame.  Tracks there are still found, with full
+charge; their blobs are simply thinner.  Reading the area map alone would
+have produced the wrong conclusion.
+
+**Consistency verdict, face by face:**
+
+- **z_max (495.15)** — best matched and most conservative.  Area density is
+  flat at ~1.0 all the way to the face (0.95/0.98 *at* the cut), then rolls
+  off, reaching zero at 501.2 = the wire bbox.  5.4 cm of live margin, a
+  consequence of the doc-32 widening; the doc-35 interior face at 497.15
+  sits at ~85% area with full count.
+- **z_min (3.85)** — 0.83/0.80 area, count and charge slightly *above*
+  interior.  Coverage continues to the wire bbox; 3.4 cm of live margin
+  (the measured "last live" is limited by the histogram starting at z = 0,
+  not by the detector, so the true margin to the bbox is 4.0 cm).
+- **y_min / y_max (±196.812)** — 2.7 cm of live margin on each side, with
+  full reconstruction efficiency at the cut.  Symmetric in the code, and
+  the detector is symmetric in *efficiency*; only blob width is mildly
+  asymmetric (1.8 vs 2.8 bins at |y| = 198), which does not justify moving
+  either face.
+
+**No FV face is placed outside the active volume, and none cuts into a
+region that is already dead** — the current Y-Z fiducial boundaries are
+consistent with the measured coverage, with 2.7–5.4 cm of live margin
+everywhere.  The one place where an FV face abuts a genuinely dead region is
+the APA0 y_max edge at z ≈ 65–70 cm, the top end of the east dead-channel
+cluster from round 3 (visible as the notch in the y_max zoom).
+
 ## Interpretation / follow-ups
 
 - The user-suspected "local structure in the middle region" is confirmed and
@@ -292,8 +367,17 @@ which this analysis does not use.
 
 - Occupancy is cosmic-weighted, not an efficiency map; only *relative* local
   structure (stripes, bands, holes) is meaningful.
-- Blob footprints are filled at corners/centers, not rasterized polygons;
-  sub-cm effects near hole edges are smeared by the ~cm blob size.
+- Round-1 blob footprints are filled at corners/centers, not rasterized
+  polygons; sub-cm effects near hole edges are smeared by the ~cm blob size.
+  Rounds 2–4 use the rasterized interior instead.
+- The z histogram starts at z = 0 while the wire bbox reaches −0.15 cm, so
+  the very first bin is slightly clipped and the measured "last live bin" at
+  the z_min face is a histogram limit, not a detector limit.
+- Blob-**area** density and blob-**count** density answer different
+  questions.  Area is the right measure for "is this volume covered"; count
+  and charge are the right measures for "is reconstruction working here".
+  They diverge near the y faces (round 4) and near dead-plane columns
+  (round 2) — always check both before calling a dip a coverage loss.
 - The masked-graph "dead" maps show where dead-region *blobs* form (masked
   channels crossing in ≥2 planes), so the y-dashing along a dead-W column
   marks crossings with masked induction channels — it does not mean the W
