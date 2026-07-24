@@ -50,12 +50,27 @@ SIDES = {0: 'east (x<0)', 1: 'west (x>0)'}
 # cfg/pgrapher/experiment/sbnd/clus.jsonnet (read at doc-37 round 4):
 #   wire bbox            -> the physical active edge
 #   sbnd_pr_fv 'bounds'  -> BoxFiducial, bbox inset by 1 cm
-#   + sbnd_pr_fv_margins -> fv_tolerance: y +-2.5, z_min +3, z_max -tgm_fv_zmax_margin
-#     (production runs -fvz 5; legacy / doc-35 interior value is 3)
+#   + sbnd_pr_fv_margins -> fv_tolerance, the effective FV used by
+#     tagger_check_tgm / tagger_check_fc.
 WIRE_BBOX = dict(ymin=-200.312, ymax=200.312, zmin=-0.15, zmax=501.15)
 FV_BOX = dict(ymin=-199.312, ymax=199.312, zmin=0.85, zmax=500.15)
-FV_EFF = dict(ymin=-196.812, ymax=196.812, zmin=3.85, zmax=495.15)
-FV_EFF_ZMAX_INTERIOR = 497.15  # -fvzi 3 (doc 35) and the legacy -fvz 3 face
+
+# Production margins (cm).  The jsonnet knob DEFAULTS are the legacy values
+# tgm_fv_x_margin=2, tgm_fv_y_margin=2.5, tgm_fv_zmax_margin=3 (byte-identical);
+# production passes -fvx 2.5 -fvy 3 -fvz 5 -fvzi 3.  z_min is fixed at 3 cm.
+MARGIN_Y = 3.0        # -fvy  (legacy 2.5)
+MARGIN_ZMIN = 3.0     # not knob-parametrized
+MARGIN_ZMAX = 5.0     # -fvz  (legacy 3)
+MARGIN_ZMAX_INTERIOR = 3.0   # -fvzi, doc 35 (endpoint-only widening)
+MARGIN_X = 2.5        # -fvx  (legacy 2); not visible in a Y-Z projection,
+                      # effective |x| face = 201.05 - MARGIN_X = 198.55 cm
+LEGACY_MARGIN_Y = 2.5
+
+FV_EFF = dict(ymin=FV_BOX['ymin'] + MARGIN_Y, ymax=FV_BOX['ymax'] - MARGIN_Y,
+              zmin=FV_BOX['zmin'] + MARGIN_ZMIN,
+              zmax=FV_BOX['zmax'] - MARGIN_ZMAX)
+FV_EFF_ZMAX_INTERIOR = FV_BOX['zmax'] - MARGIN_ZMAX_INTERIOR   # 497.15
+FV_EFF_Y_LEGACY = FV_BOX['ymax'] - LEGACY_MARGIN_Y             # 196.812
 
 
 def draw_fv(ax, which='all'):
@@ -66,7 +81,8 @@ def draw_fv(ax, which='all'):
     for d, kw in ((WIRE_BBOX, kw_bb), (FV_BOX, kw_box), (FV_EFF, kw_eff)):
         ax.plot([d['zmin'], d['zmax'], d['zmax'], d['zmin'], d['zmin']],
                 [d['ymin'], d['ymin'], d['ymax'], d['ymax'], d['ymin']], **kw)
-    ax.plot([], [], **kw_eff, label='effective FV (box + margins, -fvz 5)')
+    ax.plot([], [], **kw_eff,
+            label='effective FV (-fvx 2.5 -fvy 3 -fvz 5)')
     ax.plot([], [], **kw_box, label='BoxFiducial bounds')
     ax.plot([], [], **kw_bb, label='wire bbox (active edge)')
 
@@ -368,6 +384,12 @@ def plot(args):
                 if nm == 'z_max':
                     ax.axvline(FV_EFF_ZMAX_INTERIOR, color='orange', ls='-.',
                                lw=1.0, label='interior FV (-fvzi 3)')
+                if nm in ('y_min', 'y_max'):
+                    leg = (FV_EFF_Y_LEGACY if nm == 'y_max'
+                           else -FV_EFF_Y_LEGACY)
+                    ax.axvline(leg, color='green', ls='-.', lw=1.0,
+                               label='legacy FV (-fvy 2.5)')
+                    ax.legend(fontsize=6.5, loc='lower right')
                 # density fraction exactly at the FV face
                 fr = np.interp(eff, coord, r)
                 ax.plot([eff], [fr], 'ro', ms=4)

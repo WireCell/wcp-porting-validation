@@ -280,10 +280,17 @@ measured point density.
 |---|---|---|---|
 | wire bbox (physical active edge) | comments at `overall.FV_*` | ±200.312 | −0.15 … 501.15 |
 | `sbnd_pr_fv` BoxFiducial bounds | bbox inset 1 cm | ±199.312 | 0.85 … 500.15 |
-| **effective FV** (box + `sbnd_pr_fv_margins`) | y ±2.5, z_min +3, z_max −`tgm_fv_zmax_margin` | **±196.812** | **3.85 … 495.15** |
+| **effective FV** (box + `sbnd_pr_fv_margins`) | y −`tgm_fv_y_margin`, z_min +3, z_max −`tgm_fv_zmax_margin` | **±196.312** | **3.85 … 495.15** |
 
-The effective z_max uses the production `-fvz 5`; the doc-35 interior face
-(`-fvzi 3`) sits at 497.15 and is drawn separately in the z_max panel.
+**Updated for the `tgm_fv_x_margin` / `tgm_fv_y_margin` knobs** (x 2.0 → 2.5,
+y 2.5 → 3.0 cm).  The jsonnet knob *defaults* remain the legacy 2 / 2.5
+(byte-identical); production passes `-fvx 2.5 -fvy 3 -fvz 5 -fvzi 3`.  In
+the Y-Z projection only the y faces move — ±196.812 → **±196.312**, 0.5 cm
+further inside — and they are drawn against the superseded legacy face
+(green dash-dot) in the edge panels.  The x face moves 199.05 → 198.55 cm,
+which does not appear in a Y-Z projection.  z_max uses the production
+`-fvz 5`; the doc-35 interior face (`-fvzi 3`) sits at 497.15 and is drawn
+separately in the z_max panel.
 
 ![coverage density with FV boundaries](../pics/yz_coverage/yz-cover.png)
 
@@ -301,20 +308,25 @@ bottom to top).  Three independent measures at the FV face:
 |---|---|---|---|---|---|---|
 | z_min | 3.85 | 0.83 / 0.80 | 1.07 / 1.07 | 1.13 / 1.05 | ≤ 0.5 | ≥ 3.4 cm |
 | z_max | 495.15 | 0.95 / 0.98 | 1.06 / 1.04 | 0.98 / 1.07 | 500.5 | 5.4 cm |
-| y_min | −196.812 | 0.56 / 0.56 | 0.92 / 0.94 | 0.90 / 0.91 | −199.5 | 2.7 cm |
-| y_max | +196.812 | 0.68 / 0.68 | 0.98 / 0.94 | 0.97 / 1.02 | +199.5 | 2.7 cm |
+| y_min | −196.312 | 0.61 / 0.60 | 0.93 / 0.92 | 0.94 / 0.93 | −199.5 | 3.2 cm |
+| y_max | +196.312 | 0.71 / 0.71 | 0.97 / 0.93 | 0.97 / 1.01 | +199.5 | 3.2 cm |
 
 (values APA0 / APA1)
 
+Moving the y faces in by 0.5 cm buys a little on every count: live margin
+2.7 → **3.2 cm**, and the area density at the cut rises 0.56 → 0.61 (bottom)
+and 0.68 → 0.71 (top).  The z faces are untouched.
+
 **The y-face area dip is blob geometry, not lost coverage.**  Taken alone,
-the area-density curve at the y faces (0.56 / 0.68) looks like the FV cuts
+the area-density curve at the y faces (0.61 / 0.71) looks like the FV cuts
 into a half-dead region.  It does not: blob **count** and **charge** are
-90–102% of interior at the same y.  What shrinks is the size of each blob —
+92–101% of interior at the same y.  What shrinks is the size of each blob —
 mean covered area falls from ~5.0 bins in the interior to 2.8 at y = +198
 and 1.8 at y = −198, because the three-plane wire overlap narrows toward the
 top and bottom of the frame.  Tracks there are still found, with full
 charge; their blobs are simply thinner.  Reading the area map alone would
-have produced the wrong conclusion.
+have produced the wrong conclusion — and would have argued for a much larger
+y margin than the 0.5 cm actually taken.
 
 **Consistency verdict, face by face:**
 
@@ -327,16 +339,19 @@ have produced the wrong conclusion.
   interior.  Coverage continues to the wire bbox; 3.4 cm of live margin
   (the measured "last live" is limited by the histogram starting at z = 0,
   not by the detector, so the true margin to the bbox is 4.0 cm).
-- **y_min / y_max (±196.812)** — 2.7 cm of live margin on each side, with
-  full reconstruction efficiency at the cut.  Symmetric in the code, and
-  the detector is symmetric in *efficiency*; only blob width is mildly
-  asymmetric (1.8 vs 2.8 bins at |y| = 198), which does not justify moving
-  either face.
+- **y_min / y_max (±196.312, `-fvy 3`)** — 3.2 cm of live margin on each
+  side, with full reconstruction efficiency at the cut.  Symmetric in the
+  code, and the detector is symmetric in *efficiency*; only blob width is
+  mildly asymmetric (1.8 vs 2.8 bins at |y| = 198).  The measured edge does
+  not by itself demand the extra 0.5 cm — the previous ±196.812 was already
+  inside live, fully-reconstructing volume — so the widening is a
+  conservatism choice, not a correction of a boundary that was wrong.
 
 **No FV face is placed outside the active volume, and none cuts into a
-region that is already dead** — the current Y-Z fiducial boundaries are
-consistent with the measured coverage, with 2.7–5.4 cm of live margin
-everywhere.  The one place where an FV face abuts a genuinely dead region is
+region that is already dead** — the Y-Z fiducial boundaries are consistent
+with the measured coverage at both the legacy and the new margins, with
+3.2–5.4 cm of live margin everywhere after the `-fvy 3` update (2.7 cm
+before).  The one place where an FV face abuts a genuinely dead region is
 the APA0 y_max edge at z ≈ 65–70 cm, the top end of the east dead-channel
 cluster from round 3 (visible as the notch in the y_max zoom).
 
