@@ -47,13 +47,11 @@ Consequences:
   the electron lifetime, and the field response.  A normalization offset
   here cannot be attributed to the trajectory or dQ/dx fit.
 - **Fitted vs. truth — the comparison that actually validates the fitter —
-  has not been done**, because the sample has no truth.  It needs an MC
-  sample and the truth pairing that the new SBND converter (§1) now permits.
-  Locally, `input_files/2025f-mc-resim.root` has the needed products
-  (`sim::SimEnergyDeposits`, `sim::SimChannels`, `simb::MCParticles`,
-  `sim::MCTracks`) but holds **1 event**; `input_files/2025f-mc.root` is a
-  dangling symlink into `/exp`.  Still missing: a dumper turning
-  SimEnergyDeposit into the converter's `(N, x, y, z, Q)` truth tree.
+  is not this event.**  It is **§7**, added later, on the 10-event MC sample
+  `input_files/input-10evt-mc/` and with the SimEnergyDeposit dumper
+  (`dump_truth_sed.C`) this section originally listed as missing.  Take any
+  statement about how well the fitter reproduces charge from §7; §2–§5 below
+  are a data event and can only compare against a model.
 
 ## 1. New app: `wire-cell-sbnd-magnify-tracking-convert`
 
@@ -215,3 +213,213 @@ the first things the fitted-vs-truth comparison should settle.
   negative-dQ/dx fraction (§5).  Doc 43 §D adds a third of the same family:
   rejected-pass blocks have almost no fitted 2D charge under their own
   track (8–39 % coverage) while accepted ones are at 100 %.
+
+---
+
+# 7. MC: fitted vs. **true** dQ/dx — run 228 event 18, block 150
+
+Everything above compares a fit with a *model*.  This section compares it with
+the *truth of the same event*, which is the only test that separates the
+trajectory + dQ/dx fit from the recombination model, the calibration scale and
+the electron lifetime.  It is a different event, in a different (simulated)
+sample, and it is the section to cite for fitter performance.
+
+## 7.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# 1. chain on the MC sample, doc-39 op point + the fit dump, fresh work root:
+F="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit"
+SBND_WORK_ROOT=$PWD/work-mcsim-stmon SBND_MAX_JOBS=6 ./run_img_evt.sh   mc all
+SBND_WORK_ROOT=$PWD/work-mcsim-stmon SBND_MAX_JOBS=4 ./run_nusel_evt.sh mc all $F
+
+# 2. truth: SimEnergyDeposit -> the converter's (N, x, y, z, Q) tree
+root -l -b -q 'dump_truth_sed.C("input_files/input-10evt-mc/2025f-mc.root",228,18,
+                                "work-mcsim-stmon/nusel_evt18/tracking-stm.root",
+                                150, 5.0,
+                                "showcase-stmfit-mc-evt18/truth-evt18-blk150.root")'
+
+# 3. Magnify-tracking file in MC mode (-f1 pairs fit points with truth):
+wire-cell-sbnd-magnify-tracking-convert \
+  -bwork-mcsim-stmon/nusel_evt18/tracking-stm.root -tT_rec_charge \
+  -ashowcase-stmfit-mc-evt18/truth-evt18-blk150.root -nT \
+  -oshowcase-stmfit-mc-evt18/track_com_18.root -f1
+cd Magnify-tracking-SBND && ./magnify.sh ../showcase-stmfit-mc-evt18/track_com_18.root
+# (headless recipe: doc 43 Repro; block 150 is cluster index 1 in the GUI)
+
+# 4. numbers + plot of this section, and the Bee zip:
+python3 stmfit_mc_compare.py -f showcase-stmfit-mc-evt18/track_com_18.root -b 150 \
+    -o showcase-stmfit-mc-evt18/dqdx_mc_evt18_blk150.png
+python3 make_stmfit_bee.py -w work-mcsim-stmon -o showcase-stmfit-mc-evt18/upload_mc18.zip 18
+./upload-to-bee.sh showcase-stmfit-mc-evt18/upload_mc18.zip
+```
+
+## 7.1 Sample and truth extraction
+
+`input_files/input-10evt-mc/2025f-mc.root` — the SBND 2025-fall production
+sample (GENIE ν + CORSIKA cosmics through G4 + detsim + reco1), run 228,
+13 art events of which the 10 with DNN-SP frames (2, 9, 11, 12, 14, 18, 31,
+35, 41, 42) are the standalone chain's `mc` mode.  Unlike the MCP2025C reco1
+data of §0 it carries `sim::SimEnergyDeposit`.
+
+`dump_truth_sed.C` (new) turns those deposits into the `(N, x, y, z, Q)` tree
+the converter's `-f1` reads.  Three decisions in it matter for reading any
+number below:
+
+1. **Bare-ROOT, no LArSoft.**  The product branch
+   `sim::SimEnergyDeposits_ionandscint_priorSCE_G4.obj` is unsplit, but the
+   file carries the StreamerInfo for `sim::SimEnergyDeposit` v20, so
+   `TTree::Draw` reads it through an emulated class.  As in
+   `SBNDReco1Reader.h`, only per-branch reads are safe on art files.
+   (Trap met and fixed: `SetEstimate(-1)` sizes the buffer to the tree's
+   *entry* count — 13 — and `GetVal()` then returns uninitialized memory past
+   the 13th deposit, which looked exactly like a truth/reco frame mismatch.)
+2. **The particle is elected by coverage, not by charge**: each fitted point
+   votes for the particle owning the deposit nearest to it.  Electing by
+   total charge instead picks a dense blob — on the first block tried, a 1 cm
+   vertex proton outvoted an 85 cm muon.
+3. **A 5 cm cut around the fitted track is applied to the dumped truth.**
+   The converter accumulates *every* truth point onto its nearest fitted
+   point with **no distance cut**, so anything outside the fit's extent piles
+   onto an endpoint and reads as a fake Bragg peak.  `Q` is `numElectrons`:
+   post-recombination ionization **at the deposit**, before drift.
+
+## 7.2 The block
+
+`work-mcsim-stmon/nusel_evt18/`, block 150 = **cluster 15, pass 0**,
+`status = 3` (STM evaluated it and *rejected* it).
+
+| quantity | value |
+|---|---|
+| fitted points | 346 |
+| track length (fit path) | 219.5 cm |
+| drift x covered | −26.2 → 172.0 cm (**crosses the cathode**) |
+| true particle | pdg 13, `origTrackID` 20000167 |
+| true path (full, uncut) | (−27.3, 203.7, 398.2) → (201.3, 126.0, 335.0) cm |
+| exit_L / exit_dqdx (STM) | 218.8 cm / 51.4 ke/cm |
+
+The muon enters through the top (y = 203.7) and leaves through the x = +201
+anode, i.e. **through-going, not stopping** — and STM rejecting it on a
+51.4 ke/cm exit dQ/dx is the tagger behaving correctly.  A through-goer is
+also the better first truth test: the true dQ/dx is a flat MIP over 220 cm,
+so any normalization or drift-dependent error in the fit has nowhere to hide.
+
+**Pairing quality first** (nothing below means anything without it):
+
+| | value |
+|---|---|
+| `com_dis` (fitted point → nearest truth point) | median **1.78 cm**, p90 3.45, max 3.94 |
+| fitted points whose nearest deposit is this muon | 289 / 346 = **83.5 %** |
+| charge within 5 cm of the fit belonging to it | 81.6 % |
+| muon charge dropped by the 5 cm cut | 10.6 % (the part beyond the fit's end) |
+
+A blind scan of a constant x shift prefers +3 cm (median 1.22 cm there vs.
+1.78 at zero) — small, one-sided, and consistent with the truth being
+`priorSCE` while the reco sits at the space-charge-distorted position.  It is
+**not** corrected here (`-s`/`-c` left at identity).
+
+## 7.3 Result
+
+Plot: `showcase-stmfit-mc-evt18/dqdx_mc_evt18_blk150.png`; first and last
+fitted point excluded everywhere below (§7.1 note 3 — the truth beyond the
+fit lands on them: 111 ke and 258 ke against a 31 ke median).
+
+| L [cm] | n | fitted [ke/cm] | true [ke/cm] | fitted/true | ⟨x⟩ [cm] |
+|---|---|---|---|---|---|
+| 0 – 22 | 36 | 49.1 | 49.7 | 1.050 | −16.1 |
+| 22 – 44 | 34 | 48.9 | 53.3 | 0.938 | 3.5 |
+| 44 – 66 | 35 | 51.7 | 47.5 | 1.024 | 23.4 |
+| 66 – 88 | 36 | 54.8 | 50.3 | 1.102 | 43.0 |
+| 88 – 110 | 35 | 49.6 | 48.8 | 1.042 | 63.5 |
+| 110 – 132 | 34 | 52.8 | 48.8 | 1.175 | 83.4 |
+| 132 – 154 | 34 | 50.1 | 48.4 | 1.027 | 102.9 |
+| 154 – 176 | 33 | 48.8 | 50.0 | 1.094 | 123.0 |
+| 176 – 198 | 34 | 46.4 | 50.2 | 1.038 | 142.1 |
+| 198 – 220 | 33 | 44.5 | 49.1 | 0.931 | 161.8 |
+
+- **Median fitted dQ/dx 49.5 ke/cm vs. median true 49.5 ke/cm**; integrated
+  over the 344 core points, fitted/true = **1.043**.  No negative dQ/dx point
+  anywhere in this block.
+- **No drift trend.**  ⟨x⟩ runs from −16 to +162 cm — i.e. from ~1.9 m of
+  drift down to ~0.3 m — and the ratio stays in 0.93–1.18 with no monotonic
+  slope.  Since the truth `numElectrons` is charge *at the deposit*, an
+  uncorrected electron lifetime would have shown up here as a rising
+  fitted/true with drift distance; it does not.
+- Point-by-point the truth is noisy (0–116 ke/cm) while the fit is smooth.
+  That is the pairing, not physics: each fitted point owns a Voronoi cell of
+  the truth cloud and the cells hold unequal numbers of G4 steps.  The
+  comparison is only meaningful in running medians / bins, which is what the
+  plot and the table show.
+- **What this does and does not establish.**  On this track the trajectory is
+  right to ~2 cm and the charge scale is right to a few per cent.  It is one
+  through-going muon in one event: it says nothing yet about the Bragg shape
+  (§5's open item), and no stopping muon in this MC sample survives §7.4.
+
+## 7.4 The other four fitted blocks in this sample — and a finding
+
+The 10 MC events yield only five STM fit blocks.  Running the same
+coverage/pairing test on all of them:
+
+| event | block | status | npts | nearest-deposit median | elected particle | verdict |
+|---|---|---|---|---|---|---|
+| 18 | 150 | 3 rejected | 346 | **1.78 cm** | μ (84 % coverage) | §7.3 |
+| 2 | 110 | 3 rejected | 378 | 1.17 cm (p90 33 cm) | μ⁺ (49 %) | follows a real muon, then strays |
+| 9 | 110 | 4 rejected | 515 | 11.3 cm | e⁻, 9 deposits (20 %) | no true particle |
+| 18 | 80 | **0 accepted** | 142 | 6.5 cm | Ar nucleus, 1 deposit (40 %) | no true particle |
+| 42 | 60 | **0 accepted** | 20 | 59.2 cm | e⁻, 1 deposit | see below |
+
+Both **accepted** (i.e. tagged stopping-muon) blocks fail the truth test,
+while the two best-paired blocks are ones STM rejected:
+
+- **evt 42 block 60** is a real muon at the wrong place: a constant shift of
+  **−80 cm in x** brings the median pairing distance to 0.42 cm.  80 cm is
+  ~0.5 ms of drift, so this is a flash-time / t0 error upstream of the fit,
+  not a fit error.  (No other block prefers a large shift: evt 2 +0 cm,
+  evt 18/150 +3 cm, evt 18/80 −2 cm, evt 9 +5 cm.)
+- **evt 18 block 80** is worse and is not a t0 effect — no shift in ±400 cm
+  gets it below 6 cm.  It is 85 cm long, **42 % of its 142 points have
+  negative fitted dQ/dx**, and its STM `exit_dqdx` is **−6.9 ke/cm** — a
+  negative charge per unit length, accepted as a stopping muon.
+
+This is the same family as §5 (missing Bragg rise on accepted-STM tracks;
+12.8 % negative dQ/dx) and doc 43 §D (rejected-pass blocks with 8–39 %
+charge coverage), now with truth attached: **on this sample the STM
+acceptance is not selecting tracks that a true stopping particle produced.**
+Nothing was tuned in response — the sample is 10 events and the next step is
+a larger MC round, not a parameter change.
+
+## 7.5 Displays
+
+1. **Bee** — <https://www.phy.bnl.gov/twister/bee/set/1b654c7c-9e41-4d07-88e5-dc9e65f6cae8/event/list/>
+   (uploaded 2026-07-24), from `showcase-stmfit-mc-evt18/upload_mc18.zip`,
+   the same six layers as §3 including `stm_fit-global` with the fitted
+   dQ/dx as `q = dQ*0.1 − 1000`.  **Reco only** — no truth layer was added
+   (the truth comparison lives in the Magnify file and in §7.3).
+2. **Magnify-tracking** — `showcase-stmfit-mc-evt18/track_com_18.root`,
+   opened in **MC mode** (it has `T_true`, so the GUI takes its `!isData`
+   branch): pad 1 draws the fitted dQ/dx in black and the **true dQ/dx in
+   red** on the same axes, pad 2 the fitted-vs-true angle and distance.
+   Screenshot: `showcase-stmfit-mc-evt18/magnify_mc_evt18_blk150.png`
+   (block 150 = cluster index 1; index 0 is block 80, whose truth curve is
+   flat zero by construction — the dumped truth is the block-150 muon).
+   This is the first time the GUI's MC branch has run on a real file.
+   **Display defect seen there, not fixed (unrelated to this work):** on the
+   projection pads a cathode-crossing track draws a spurious horizontal line
+   across the whole channel axis.  SBND concatenates the two TPCs onto one
+   channel axis, so consecutive fitted points either side of the cathode sit
+   ~3000 channels apart and the `"LP"` polyline joins them.  Cannot happen in
+   single-TPC uBooNE, which is where the drawing code comes from.
+
+## 7.6 Status
+
+- New: `dump_truth_sed.C`, `stmfit_mc_compare.py`, this section.  No C++ or
+  jsonnet change — the converter's `-f1` path and the GUI's MC branch already
+  existed (doc 42 §1, doc 43 §E); this is their first use on real truth, so
+  **no reconstruction output moves and no A/B gate applies**.
+- `work-mcsim-stmon/` is a fresh work root; no existing tree was touched.
+- Committed under `showcase-stmfit-mc-evt18/`: `track_com_18.root` (347 kB),
+  `truth-evt18-blk150.root` (210 kB) and the two PNGs.  `upload_mc18.zip`
+  (428 kB) is not committed — the Bee set is hosted and it regenerates in one
+  command, matching §6.
+- Open, unfixed, and now truth-backed: §7.4's accepted-STM blocks, the
+  evt 42 −80 cm t0 error, and the cathode-crosser display line of §7.5.
