@@ -77,6 +77,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 away made a 173 cm track look through-going).  C++/jsonnet
                 default stays FALSE; only this flag opts in.
                 Env: SBND_TGM_CHORD=1.
+                The guard measures support in "path" mode by default: the two
+                extremes must be joined by a piecewise charge path through the
+                cluster's own points with no jump > 30 cm.  The original
+                straight-chord sampling ("chord", docs 29) falsely rejected
+                curved tracks (evt285185 cluster 16: a continuous 480 cm
+                top->anode crosser bows 10 cm off its chord -- doc 31).
+                Env: SBND_TGM_CHORD_MODE=chord restores the doc-29 behavior.
   -no-nucand    disable it (pre-doc-26 conservative never-tag-in-beam).
                 Env: SBND_TGM_NUCAND=0.
                 NB: the C++/jsonnet default stays FALSE -- only this runner
@@ -119,6 +126,10 @@ NUCAND="${SBND_TGM_NUCAND:-1}"
 # Chord-charge guard in tagger_check_tgm.  DEFAULT OFF: opt in with -chord /
 # SBND_TGM_CHORD=1 until the flipped verdicts are hand-scanned.
 CHORD="${SBND_TGM_CHORD:-0}"
+# Support-measurement mode for the guard: "path" (piecewise charge path,
+# doc 31) or "chord" (straight-chord sampling, doc 29).  Only used when the
+# guard is on.
+CHORD_MODE="${SBND_TGM_CHORD_MODE:-path}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -192,7 +203,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -212,6 +223,7 @@ process_event() {
             --tla-code "beam_window_us=[$BEAM_WINDOW]" \
             --tla-code "tgm_neutrino_candidate=$([ "$NUCAND" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_chord_charge=$([ "$CHORD" = 1 ] && echo true || echo false)" \
+            --tla-str  "tgm_chord_mode=$CHORD_MODE" \
             --tla-code "tgm_component_extremes=$([ "$CHORD" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1

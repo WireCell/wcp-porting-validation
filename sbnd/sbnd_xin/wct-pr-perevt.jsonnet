@@ -66,6 +66,14 @@ function(
     // grafting a detached fragment into the tagged cluster -- see
     // docs/29_tgm-chord-charge.md.
     tgm_chord_charge = false,
+    // How the chord-charge guard measures support (C++ default "chord"; key
+    // omitted then => byte-identical).  "chord" samples the STRAIGHT segment
+    // between the extremes -- it falsely rejects curved tracks (evt285185
+    // cluster 16: a continuous 480 cm top->anode crosser bows 10 cm off its
+    // chord and lost a real TGM, doc 31).  "path" requires a piecewise charge
+    // path through the cluster's own points with no jump > chord_max_gap.
+    // The -chord runner flag passes "path" (SBND_TGM_CHORD_MODE overrides).
+    tgm_chord_mode = 'chord',
     // Find the extreme points PER connected component and union them, instead
     // of 8 global extremes over the whole flash-merged cluster (C++ default
     // false; key omitted when off).  Must be used WITH tgm_chord_charge -- see
@@ -111,6 +119,7 @@ function(
                              beam_window=[t * wc.us for t in beam_window_us],
                              tgm_neutrino_candidate=tgm_neutrino_candidate,
                              tgm_chord_charge=tgm_chord_charge,
+                             tgm_chord_mode=tgm_chord_mode,
                              tgm_component_extremes=tgm_component_extremes);
 
     local graph = g.intern(
