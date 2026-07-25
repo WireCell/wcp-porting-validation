@@ -182,6 +182,24 @@ flagged and this change does not resolve.
 
 ## 4. Scan A/B over 30 events — 4 of 11 STM tags lost
 
+> ### ⚠ RETRACTED as unestablished — 2026-07-25, see [49](49_stm-containment-fv-inconsistency.md) §4a
+>
+> **This section's headline is at the noise floor and must be re-measured.**
+> Doc 49's A/B discovered that this chain is **not run-to-run reproducible**
+> without `setarch x86_64 -R`: two invocations of the *identical* configuration
+> on *identical* input differ by **±7 STM tags**, ±3 TGM, ±2 FC, 13 `stmfit`
+> codes and 10 labels. The cause is upstream of every tagger — `CreateSteinerGraph`
+> emits different steiner graphs run to run (`SteinerGrapher.cxx:38,75`), which is
+> ASLR-keyed (M4): under `setarch -R` two runs are identical, without it they are
+> not.
+>
+> The 11 → 7 → 7 numbers below were measured **without** `setarch -R`, so a
+> 4-tag difference cannot be distinguished from noise. Nothing in §§1–3, 5, 6
+> is affected (those are table values and single-event evaluator numbers, not
+> scan counts), and the `mip_dqdx` = 56000 choice stands on §3's measured
+> scaling. But **"the table change costs 4 of 11 STM tags" is not established**
+> and should not be acted on until re-run under `setarch -R`.
+
 Same 30-event MCP2025C set as docs 36–39, same flags, three configurations. Baseline is a
 **fresh** run (not doc 39's `-fvxy` tag) because the DL/DT diffusion change of doc 47 §6a also
 moved the fit; comparing to `-fvxy` would conflate three things.

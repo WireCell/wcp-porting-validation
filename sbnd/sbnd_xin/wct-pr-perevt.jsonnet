@@ -48,6 +48,12 @@ function(
     // 50000 (the MicroBooNE value, and the C++ default) to isolate the
     // reference-table change from the MIP-scale change in an A/B.
     mip_dqdx       = 56000,
+    // TaggerCheckSTM's containment gate (cluster_fc_check) uses the same fiducial
+    // + margins as tagger_check_tgm / tagger_check_fc, so "contained" means one
+    // thing across all three verdicts.  true = SBND production (docs/49); false
+    // restores the pre-doc-49 FiducialUtils sensitive-volume fallback, which is
+    // what the A/B compares against.  Runner flag: -no-stm-fv.
+    stm_consistent_fv = true,
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -200,7 +206,8 @@ function(
                              tgm_fv_y_margin=tgm_fv_y_margin,
                              save_stm_fit=save_stm_fit,
                              unmerge_bundle_mode=unmerge_bundle_mode,
-                             mip_dqdx=mip_dqdx);
+                             mip_dqdx=mip_dqdx,
+                             stm_consistent_fv=stm_consistent_fv);
 
     local graph = g.intern(
         innodes=[source],

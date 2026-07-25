@@ -269,6 +269,15 @@ QL_LM="${SBND_QL_LM:-0}"
 # Persist per-pass STM track fits + tracking-stm.root (doc 40).
 # DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
 STM_FIT="${SBND_STM_FIT:-0}"
+# TaggerCheckSTM's containment gate uses the SAME fiducial + margins as
+# tagger_check_tgm / tagger_check_fc, so "contained" means one thing across all
+# three verdicts (doc 49).  DEFAULT ON: the pre-doc-49 fallback was
+# FiducialUtils' un-inset union of per-face sensitive volumes, which exceeds the
+# TGM/FC box at every wall -- 96 of 147 "contained" STM skips on the 30-event
+# sample were exiters to FC, and none of them ever got a dQ/dx fit.  The
+# prototype has no such split (one ToyFiducial shared by check_stm/check_tgm).
+# -no-stm-fv / SBND_STM_FV=0 restores the old volume for an A/B.
+STM_FV="${SBND_STM_FV:-1}"
 # Restore the prototype main+associated data product before the taggers by
 # splitting each flash-merged bundle back into its pre-merge members (doc 45).
 # DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
@@ -315,6 +324,8 @@ while [ $# -gt 0 ]; do
         -no-lm|--no-lm) QL_LM=0; shift ;;
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
+        -stm-fv|--stm-fv) STM_FV=1; shift ;;
+        -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
         -unmerge-comp|--unmerge-comp) UNMERGE=1; UNMERGE_MODE=component; shift ;;
         -no-unmerge|--no-unmerge) UNMERGE=0; UNMERGE_MODE=real; shift ;;
@@ -401,7 +412,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT unmerge=$UNMERGE/$UNMERGE_MODE)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -434,6 +445,7 @@ process_event() {
             --tla-code "mip_dqdx=$MIP_DQDX" \
             --tla-str  "unmerge_bundle_mode=$UNMERGE_MODE" \
             --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_consistent_fv=$([ "$STM_FV" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"

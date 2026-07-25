@@ -313,23 +313,50 @@ def parse_prtree_flags(fname):
 
 
 # "cluster N no STM fit: <reason>" -> a short column code for the scan table.
-# Order matters: first substring match wins.
+# Order matters: first match wins.  The first element of each entry is the
+# reason's LEADING text as check_stm_conditions writes it, which is what makes
+# the tear-tolerant prefix match below possible.
 STMFIT_CODES = [
     ('fully contained',      'contained'),   # Mid Point A: cluster_fc_check says no FV exit
-    ('Mid Point B',          'midkink'),     # 1 exit point + >120 deg mid-track kink
-    ('Mid Point C',          'nexits'),      # != 1 candidate exit point
+    ('single exit point',    'midkink'),     # Mid Point B: 1 exit + >120 deg mid-track kink
+    ('candidate exit points', 'nexits'),     # Mid Point C: != 1 candidate exit point
     ('no steiner_pc',        'nosteiner'),
     ('no fiducialutils',     'nofidu'),
     ('round-1 forward fit',  'shortfit'),    # <=3 fit points
-    ('no pass recorded',     'postfit'),     # exited after round-1, nothing persisted
+    ('evaluated but no pass recorded', 'postfit'),  # exited after round-1, nothing persisted
 ]
+
+# Minimum common-prefix length accepted when a reason line was TORN.  The seven
+# reasons above all diverge from each other within the first 6 characters
+# ("no ste" vs "no fid" already differ at index 3), so 6 is unambiguous.
+STMFIT_MIN_PREFIX = 6
 
 
 def stmfit_code(reason):
+    """Map a logged skip reason to a column code, tolerating a TORN line.
+
+    WCT writes long multi-line spdlog messages non-atomically, so a reason can
+    be cut mid-word and have another message's tail spliced onto it: evt285185
+    cluster 21 logged "no STM fit: fully co ms) ../clus/src/MultiAlgBlobClustering
+    .cxx:2082" for what the tagger actually wrote as "fully contained (Mid Point
+    A)".  A plain substring test misses that, and because parse_stm_skips keeps
+    the FIRST reason per cluster, the miss did not fall through to the generic
+    catch-all either -- the bundle was reported as an uninformative "skip" when
+    the specific reason was right there, truncated.  So match a substring first
+    (unchanged for intact lines) and only then fall back to a longest-common-
+    prefix test.  A reason too mangled to identify reads "torn", never "skip":
+    "skip" would read as a distinct tagger pathway, and there is no such thing.
+    """
     for frag, code in STMFIT_CODES:
         if frag in reason:
             return code
-    return 'skip'
+    for frag, code in STMFIT_CODES:
+        n = 0
+        while n < min(len(frag), len(reason)) and frag[n] == reason[n]:
+            n += 1
+        if n >= STMFIT_MIN_PREFIX:
+            return code
+    return 'torn' if reason else 'skip'
 
 
 def parse_stm_skips(fname):

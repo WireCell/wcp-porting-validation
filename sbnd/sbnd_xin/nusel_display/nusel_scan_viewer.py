@@ -1169,7 +1169,14 @@ def render_dqdx():
         why = {
             "contained": "cluster_fc_check says fully contained &rarr; no FV exit "
                          "point, so check_stm_conditions exits at Mid Point A "
-                         "before any fit",
+                         "before any fit.  NB TaggerCheckSTM is the only tagger "
+                         "given no fiducial/fv_tolerance, so this test uses the "
+                         "un-inset per-face SENSITIVE volume (|x|&le;201.45 cm) "
+                         "rather than TGM/FC's inset box (|x|&le;198.55) &mdash; "
+                         "check the 'fc' column, and see docs/49",
+            "torn": "the tagger DID log a reason but the log line was torn "
+                    "mid-word by an interleaved write, so it could not be "
+                    "identified (this is a logging artifact, not a verdict)",
             "midkink": "one exit point but a &gt;120&deg; mid-track kink with both "
                        "arms &gt;20 cm (Mid Point B)",
             "nexits": "not exactly one candidate exit point (Mid Point C)",
