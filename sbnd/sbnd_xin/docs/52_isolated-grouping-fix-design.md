@@ -227,11 +227,14 @@ evt288287 clus 13 reach the flash merge as plain clusters) and it would only
 surface at gate time. This is what makes §4a's "Stage 2's carry would fix it"
 actually follow.
 
-**(b) Two mains and nothing else short-circuits, it is not "retained as a
-union".** All blobs then have `rmain != 0` ⇒ `nmain == nb` ⇒ `Prov::no_split`
-(`:207`). Same outcome, different path — and it means the `no_split` branch is
-simultaneously the residual's deliberate exclusion (below) *and* the cathode
-crosser's protection. Nobody should later "fix" `nmain == nb` to force a split.
+**(b) The union at `:211-219` is the general protection; `nmain == nb` is only a
+special case of it.** When two mains are merged and *nothing* is associated to
+either, all blobs have `rmain != 0` ⇒ `nmain == nb` ⇒ `Prov::no_split` (`:207`),
+so the cluster is not even visited. But that short-circuit is **not** what keeps
+crossers whole — as soon as either half carries a delta ray, `nmain < nb` and the
+cluster *is* split, with both mains retained by the union. Do not reason about
+`nmain == nb` as load-bearing for crossers, and do not "fix" it to force a split:
+its actual job is the residual exclusion described below.
 
 **(c) `real_cluster_main` has other readers, and one is production.**
 `TaggerCheckTGM.cxx:790` (`main_component_mode="real"`, doc 36/38) reads it as a
@@ -350,6 +353,104 @@ junk. Stage 2's carry would actually fix it: with `assoc_cluster_main` carried
 through, the flash un-merge could refuse to demote a member that is itself a
 main. Worth treating as its own item — it affects production today, whereas
 everything else in this doc is about a knob that does not exist yet.
+
+## 4b. Readiness review: the two invariants, TGM, PDHD/PDVD
+
+Owner's two requirements, 2026-07-25:
+
+> 1. the associated cluster merged by ClusteringIsolated would not be actually
+>    merged to main cluster
+> 2. The cathode crossing tracks merged should stay merged (main + main, or
+>    main + associate) and not be separated after the Unmerge operation
+
+### The taxonomy that satisfies both at once
+
+Of the **12** `merge_clusters()` call sites in `clus/src/`, exactly one passes
+provenance arguments (`clustering_examine_bundles.cxx:153`). Split them by intent:
+
+| kind | call sites | prototype behavior | un-merge |
+|---|---|---|---|
+| **grouping** — bookkeeping, puts related objects in one bucket | `clustering_isolated.cxx:507`, `clustering_examine_bundles.cxx:153` (flash) | prototype does **not** merge: `Clustering_isolated` returns `main → [(assoc, dis)]` with `live_clusters` untouched; the flash grouping is ours | **undoable** |
+| **connection** — a physics claim that charge is one particle | `extend`, `regular:523`, `parallel_prolong:366`, `close:243`, `connect:737,833`, `deghost:805`, `live_dead:359`, `neutrino:1011`, `cathode_connect:607` | prototype keeps them inside **one** `PR3DCluster` | **permanent** |
+
+**The rule for a connection merge is: concatenate the members' existing roles,
+overwriting nothing.** Not "promote every member to main" — that was considered
+and is wrong: promoting would sweep up any delta ray that `clustering_isolated`
+had grouped onto either half, and the isolated un-merge would then never split it
+off. That is requirement 1 broken on exactly the cathode crossers, i.e. the
+original bug resurfacing. Carrying roles unchanged gives a crosser with delta rays
+on both halves `nmain < nb`: it **is** split, both mains are retained by the union
+at `ClusteringUnmergeBundle.cxx:211-219`, and only the delta rays leave. Both
+requirements hold simultaneously.
+
+| requirement | what guarantees it |
+|---|---|
+| 1 — associated never really merged | Stage 0 marks the main + Stage 2 carries the array + Stage 3 splits on it |
+| 2 — cross-cathode merge survives | "absent provenance ⇒ main" (rule (a) above) + the union at `:211-219`. A connection merge joins two clusters that are each a main-or-standalone, so both survive as main. |
+
+**The one way requirement 2 still fails**, stated as a known limit: the crossing
+tip on the far side was itself mis-grouped as *associated* to an unrelated main,
+`cathode_connect` bridged through that tip, and the un-merge splits it off — the
+retained main then keeps an unrelated cluster and loses the tip. This is a
+pre-existing `clustering_isolated` mis-grouping, not something the un-merge
+creates, and no provenance rule can repair it. Detectable by the same
+`stm_merge_attribution.py` route if it ever shows up in a scan.
+
+### TGM: no improvement needed — `mode="real"` goes inert by itself
+
+TGM already runs after the un-merge: SBND's `clus_pr` places `unmerge_bundle`
+between `switch_scope` and `steiner` (`cfg/.../sbnd/clus.jsonnet:574`), taggers
+after. So the interface is *already* unified in ordering; what is not unified is
+that TGM carries its own main-detection from before the un-merge existed.
+
+That resolves itself. `ClusteringUnmergeBundle.cxx:339` calls `carve(cluster, -1)`,
+which keeps exactly the rows with `groups[i] == -1`, i.e. exactly the `rmain != 0`
+rows (`:216-219`). So on the retained main **every** `real_cluster_main` entry is
+non-zero, and `TaggerCheckTGM.cxx:787-793`'s `end_in_main` returns 1 for every
+point ⇒ `main_pair_rejects` (`:795-806`) can never fire. `main_component_mode
+= "real"` is **inert by construction** after a correct un-merge, not merely
+relaxed.
+
+Recommendation: **do not extend TGM.** Once the un-merge is complete, retire
+`mode="real"` as redundant and keep `mode="component"` as the deliberate second
+layer for the internally-disconnected-single-member residual (§4, `nmain == nb`
+class) — the same second layer STM still lacks. One mechanism, one stated purpose,
+no duplicate notion of "main".
+
+### PDHD / PDVD: safer than SBND, and the reason is config-level
+
+`cm.isolated()` is **commented out at per-face** (`pdhd:250`, `protodunevd:295`)
+and active at **per-drift-group** scope (`pdhd:482`, `protodunevd:528`), where it
+is the **last** pass of stage 3 — after `extend`/`regular:1,2`/
+`parallel_prolong`/`close`/`extend_loop`/`separate`/`connect1`/`deghost`/
+`examine_x_boundary`/`neutrino`.
+
+The owner's specific worry — PDHD/PDVD also merge across TPCs on the **same** side
+of the cathode — is therefore answered structurally: the per-group scope *is* the
+same-side multi-APA scope, so **every same-side cross-APA merge happens upstream of
+the provenance write** and is invisible to it. At the moment the isolated array is
+written, a same-side crosser is already a single member. Nothing downstream can
+undo it. Downstream of `cm.isolated()` there is exactly **one** merge in either
+detector: `cathode_connect` in stage 4 (`pdhd:616`, `protodunevd:704`), preceded by
+`switch_scope` (a split, already carve-capable). That is a strictly simpler
+topology than SBND, where `isolated` runs per-APA and *all* cross-APA merging is
+downstream.
+
+Two caveats specific to these detectors:
+
+- **No consumer exists yet.** Neither `examine_bundles` nor `unmerge_bundle` nor
+  any tagger is active in `pdhd/clus.jsonnet` or `protodunevd/clus.jsonnet` (the
+  only active use is `cm.isolated()`; the per-group `examine_bundles` is
+  deliberately disabled, 2026-06-14). So defect D2 does not exist there — the
+  isolated array is never overwritten — and the fix is **representation-only**:
+  correct to land, but there is **no physics effect to validate**, and no gate
+  will show anything beyond the array contents. Do not claim otherwise.
+- **Byte-identicality needs a save knob.** Adding a perblob array changes the
+  pctree tarball, so the write must be gated per detector on the
+  `save_real_cluster_id` pattern (doc 38) to keep knob-off output identical.
+- **Ident collision applies here too**, with 2 drift groups instead of N APAs:
+  group-0 and group-1 idents collide, so the assoc id must encode the scope
+  (§4a).
 
 ## 5. Validation plan
 
