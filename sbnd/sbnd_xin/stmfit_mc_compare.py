@@ -123,12 +123,16 @@ def main():
     rq = rec / dx / 1e3          # ke/cm
     tq = tru / np.where(tdx > 0, tdx, np.nan) / 1e3
 
-    print(f"true path assigned: {tdx.sum():.2f} cm over {n} points "
-          f"(sum rec_dx {dx.sum():.2f} cm); "
-          f"{(tdx <= 0).sum()} points got no truth")
     okd = tdx > 0
-    print("true_dx / rec_dx: median {:.2f}, p90 {:.2f}, max {:.2f}"
-          .format(*np.percentile((tdx / dx)[okd], [50, 90, 100])))
+    if has_true_dx:
+        print(f"true path assigned: {tdx.sum():.2f} cm over {n} points "
+              f"(sum rec_dx {dx.sum():.2f} cm); "
+              f"{(tdx <= 0).sum()} points got no truth")
+        print("true_dx / rec_dx: median {:.2f}, p90 {:.2f}, max {:.2f}"
+              .format(*np.percentile((tdx / dx)[okd], [50, 90, 100])))
+    # In fallback mode tdx IS dx, so both lines above would only restate rec_dx
+    # and claim no point is missing truth -- which is exactly the information
+    # the file does not carry.
     if args.edge:
         print(f"edge points dropped: {args.edge} at each end")
     if args.max_dx_ratio is not None:

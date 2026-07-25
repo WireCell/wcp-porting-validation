@@ -226,6 +226,19 @@ sample, and it is the section to cite for fitter performance.
 
 ## 7.0 Repro
 
+> **Superseded in part by doc 44** (`44_stm-fit-truth-dqdx.md`).  The true
+> dQ/dx quoted in this section divides `true_dQ` by `rec_dx`, which is the
+> length of the *fitted* cell, not of the true track inside it.  Everything
+> aggregate here survives (median true 49.5 ke/cm, integral ratio 1.043, the
+> no-drift-trend conclusion; doc 44 reproduces 1.043 exactly by running the
+> compare script on this section's own `track_com_18.root`).  What is
+> superseded is the **per-point truth scatter**, the **endpoint values**, the
+> **true column of the §7.3 table**, and the rationale of note 3 below.  The
+> products in `showcase-stmfit-mc-evt18/` are kept unchanged as the record of
+> these pre-fix numbers; doc 44's live in
+> `showcase-stmfit-truedx-mc-evt18/`.
+
+
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 # 1. chain on the MC sample, doc-39 op point + the fit dump, fresh work root:
@@ -281,7 +294,11 @@ number below:
 3. **A 5 cm cut around the fitted track is applied to the dumped truth.**
    The converter accumulates *every* truth point onto its nearest fitted
    point with **no distance cut**, so anything outside the fit's extent piles
-   onto an endpoint and reads as a fake Bragg peak.  `Q` is `numElectrons`:
+   onto an endpoint and reads as a fake Bragg peak.
+   *(Doc 44: the fake peak came from dividing by `rec_dx` and is gone with
+   `true_dx` — those endpoints read 51.4 and 48.8 ke/cm, not 186.5 and 396.5.
+   The cut is still wanted, but to bound the end-cell length, not to hide the
+   artifact.)*  `Q` is `numElectrons`:
    post-recombination ionization **at the deposit**, before drift.
 
 ## 7.2 The block
@@ -323,6 +340,11 @@ A blind scan of a constant x shift prefers +3 cm (median 1.22 cm there vs.
 Plot: `showcase-stmfit-mc-evt18/dqdx_mc_evt18_blk150.png`; first and last
 fitted point excluded everywhere below (§7.1 note 3 — the truth beyond the
 fit lands on them: 111 ke and 258 ke against a 31 ke median).
+
+*(Doc 44 re-measures this table with the correct denominator: the fitted and
+ratio columns barely move, but the true column's spread across bins collapses
+from 5.8 ke/cm here to 2.3 ke/cm, and no point needs excluding.  The wobble
+this column shows is cell-occupancy noise, not the muon.)*
 
 | L [cm] | n | fitted [ke/cm] | true [ke/cm] | fitted/true | ⟨x⟩ [cm] |
 |---|---|---|---|---|---|

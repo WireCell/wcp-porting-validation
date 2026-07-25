@@ -71,6 +71,10 @@ Side effects of the same fix, all visible in the GUI pad
   the endpoints: 186.5 and 396.5 ke/cm, now 51.4 and 48.8.  The 5 cm `-R` cut
   in `dump_truth_sed.C` and `--edge 1` in `stmfit_mc_compare.py` existed only
   to hide this; `--edge` now defaults to 0 on files that carry `true_dx`.
+  The `-R` cut is **still wanted**, for a different reason: dropping it does
+  not bring the fake peak back, but it puts the whole far part of the muon
+  into the end cells, i.e. it maximises the `true_dx ≫ rec_dx` case discussed
+  below.  It bounds the end-cell length; it no longer hides an artifact.
 - Points to which no truth was assigned no longer read as **0 ke/cm**.  There
   are 4 of them in this block; in evt 2 block 110 there are 181 of 378, and
   their zeros dragged the published-style truth median from 50.1 down to 28.3.
@@ -157,6 +161,13 @@ Purely additive; `true_dQ` is bit-for-bit unchanged.
    denominators are different lengths); new `--max-dx-ratio` cut and a
    `true_dx/rec_dx` distribution line in the summary.
 
+**Multi-block files get more robust, not less.** `pcloud1` holds the fitted
+points of *every* block, so two nearly-coincident blocks — the forward and
+backward passes of one cluster, `cid*10+pass`, a path doc 43 notes is still
+untested — split the truth arbitrarily between them.  Under `/rec_dx` each
+would then read roughly half the true dQ/dx.  Under `/true_dx` the numerator
+and denominator halve together and the quotient survives.
+
 **`true_dx` is exported, not internal, on purpose.** A cell with
 `true_dx ≫ rec_dx` averages the truth over more track than the fitted point
 represents.  That is harmless on this MIP, but on a **stopping** muon — the
@@ -173,7 +184,11 @@ jsonnet knob and no `abtest`/`qlport` gate consumes it; confirmed by grep,
 the gates use the uBooNE app and the visitor's `T_rec_charge`):
 
 - **Freshness (M1):** `local/bin/wire-cell-sbnd-magnify-tracking-convert`
-  2026-07-25 07:00:50.878 vs source 07:00:25.838.
+  2026-07-25 07:08:49.645 vs source 07:08:31.481 (the shipped binary; an
+  earlier 07:00 pair built the same logic before a comment-only edit).
+- **The shipped binary reproduces the committed products:** re-running it on
+  `$D/truth-evt18-blk150.root` gives a `T_rec` array-identical to
+  `showcase-stmfit-truedx-mc-evt18/track_com_18.root` on every branch.
 - **All pre-existing output unchanged.** Re-ran the converter on
   `work-mcsim-stmon/nusel_evt18/tracking-stm.root` with the *old* truth file
   (no `dx` branch, exercising the fallback) and compared every branch of
@@ -192,6 +207,15 @@ the gates use the uBooNE app and the visitor's `T_rec_charge`):
 - **`dump_truth_sed.C`'s existing branches unchanged:** `x` and `Q` of the
   regenerated `truth-evt18-blk150.root` are array-identical to the doc-42 §7
   record.
+- **Both `stmfit_mc_compare.py` paths exercised.**  On the pre-fix
+  `showcase-stmfit-mc-evt18/track_com_18.root` it prints the fallback NOTE,
+  defaults `--edge` to 1, and reproduces doc 42 §7 exactly (true median
+  49.5 ke/cm, rms/median 0.376 over the 344 core points, mean-dQ/dx ratio
+  **1.043** — the published value).  The two lines that would only restate
+  `rec_dx` (`true path assigned`, `true_dx / rec_dx`) are suppressed in that
+  mode, since a file without the branch cannot say how much truth is missing.
+  `--max-dx-ratio 2` on the fixed file drops the 8 cells wider than twice
+  `rec_dx` and tightens the truth p5–p95 from 43.6–57.2 to 43.5–57.1.
 - No `wcdoctest` applies (no library changed); `./wcb build` + `install` rc=0.
 
 ### Re-measured numbers for doc 42 §7
