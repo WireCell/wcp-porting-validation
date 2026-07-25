@@ -52,6 +52,7 @@ namespace {
     struct Dep {
         double x, y, z;     // mid-point of the G4 step, cm
         double q;           // ionization electrons
+        double dl;          // |endPos - startPos|, the G4 step length, cm
         double t;           // start time, ns (orders the trajectory)
         int    orig;        // origTrackID: secondaries attributed to the parent
         int    pdg;
@@ -155,6 +156,15 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
         d.y = 0.5 * (events->GetVal(1)[i] + events->GetVal(4)[i]);
         d.z = 0.5 * (events->GetVal(2)[i] + events->GetVal(5)[i]);
         d.q = events->GetVal(6)[i];
+        // The step length is the denominator of the true dQ/dx: the converter
+        // sums dl over every deposit it assigns to a fitted point and divides
+        // the summed Q by that, NOT by rec_dx (which is the length of the
+        // *fitted* cell, not of the true path through it).  Taken from the
+        // endpoints rather than from consecutive-point spacing so it stays
+        // exact when the deposit list is not one ordered chain.
+        d.dl = std::sqrt(std::pow(events->GetVal(3)[i] - events->GetVal(0)[i], 2) +
+                         std::pow(events->GetVal(4)[i] - events->GetVal(1)[i], 2) +
+                         std::pow(events->GetVal(5)[i] - events->GetVal(2)[i], 2));
         d.orig = (int) events->GetVal(7)[i];
         d.pdg = (int) events->GetVal(8)[i];
         d.t = events->GetVal(9)[i];
@@ -278,23 +288,33 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
     TFile* fout = TFile::Open(out_file, "RECREATE");
     TTree* t = new TTree("T", "truth deposits for one MC particle");
     Int_t N = (Int_t) keep.size();
-    std::vector<double> ox, oy, oz, oq;
+    std::vector<double> ox, oy, oz, oq, odx;
+    double l_keep = 0;
     for (size_t i = 0; i < keep.size(); ++i) {
         ox.push_back(keep[i].x); oy.push_back(keep[i].y);
         oz.push_back(keep[i].z); oq.push_back(keep[i].q);
+        odx.push_back(keep[i].dl);
+        l_keep += keep[i].dl;
     }
     std::vector<double>* pox = &ox;
     std::vector<double>* poy = &oy;
     std::vector<double>* poz = &oz;
     std::vector<double>* poq = &oq;
+    std::vector<double>* podx = &odx;
     t->Branch("N", &N, "N/I");
     t->Branch("x", &pox);
     t->Branch("y", &poy);
     t->Branch("z", &poz);
     t->Branch("Q", &poq);
+    // Optional branch the converter uses when present.  Legacy truth files
+    // (the prototype's mcs-tracks.root) have no dx; the converter falls back
+    // to consecutive-point spacing there.
+    t->Branch("dx", &podx);
     t->Fill();
     fout->Write();
     fout->Close();
-    printf("wrote %s: %d truth points, %.4e e-\n", out_file, N, q_keep);
+    printf("wrote %s: %d truth points, %.4e e-, true path %.2f cm"
+           " (mean dQ/dx %.2f ke/cm)\n",
+           out_file, N, q_keep, l_keep, l_keep > 0 ? q_keep / 1000. / l_keep : 0.);
     return 0;
 }
