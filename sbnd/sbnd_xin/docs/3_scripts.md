@@ -251,7 +251,11 @@ events with no opflash in the sample are skipped with a clear message).
 **Jsonnet driven:** `wct-clus-matching-perevt.jsonnet`
 
 **TLAs forwarded:** like `run_clus_evt.sh` plus `semimodel_file` (photon model);
-Q/L drift/diffusion defaults `DL=6.2 DT=9.8 lifetime=6 driftSpeed=1.563`.
+Q/L drift/diffusion defaults `DL=6.5781 DT=13.1349 lifetime=6 driftSpeed=1.563`
+(the SBND physical diffusion coefficients since 2026-07-25, was 6.2/9.8; inert
+for the Q/L job itself — they only reach a `Drifter`, which it has none of — but
+the same numbers drive the PR track fit via `sbnd_track_fitting.json`, see
+`47_stm-bragg-reference-sbnd-retune.md` §6a).
 
 **Log:** `work/ql_evt<ID>/wct_ql_evt<ID>.log`; in `all` mode `work/.batch_ql_evt<ID>.log`
 

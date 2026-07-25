@@ -193,7 +193,7 @@ What it does:
    ```
    wire-cell -l stderr -l "$LOG:debug" -L debug \
      -V reality=<sim|data> -V input=. -V semimodel_file=semi-analytical-sbnd.json \
-     -C DL=6.2 -C DT=9.8 -C lifetime=6 \
+     -C DL=6.5781 -C DT=13.1349 -C lifetime=6 \
      -c <sbnd_xin>/wct-clus-matching-standalone.jsonnet
    ```
    **`-V` = ext-str (string), `-C` = ext-code (numeric)** — the jsonnet does

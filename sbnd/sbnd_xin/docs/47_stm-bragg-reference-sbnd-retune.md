@@ -1,9 +1,13 @@
 # 47 — The STM tagger's Bragg-peak reference, and what SBND has to retune
 
-**Status: inventory + analysis only. No code, config, or data was changed.**
-Nothing here is a tuning decision; the numbers that would change a physics
-verdict are presented as readings with the measurement that settles them
-(escalation rule 7), exactly as doc 41 did for the MIP plateau.
+**Status: inventory + analysis, plus ONE config change — §6a.** No C++ was
+touched. The diffusion coefficients `DL`/`DT` in `sbnd_xin/sbnd_track_fitting.json`
+were set to the SBND physical values on owner instruction (2026-07-25); that
+changes fitted `dQ`/`dx`, so it is **NOT bit-identical and needs revalidation**.
+Everything else here is read-only analysis: no tuning decision is taken, and the
+numbers that would change a physics verdict are presented as readings with the
+measurement that settles them (escalation rule 7), exactly as doc 41 did for the
+MIP plateau.
 
 ## Repro
 
@@ -45,12 +49,14 @@ Empirical numbers quoted from earlier docs: 41 §MIP-plateau (data), 42 §7 /
    `trackfitting_config_file`, `particle_dataset`, `recombination_model`) —
    none of them a dQ/dx scale.
 
-3. **Diffusion / smearing.** `DL = 6.2` and `DT = 9.8` cm²/s, entering as
-   σ = √(2·D·t_drift) with `t_drift` floored at `min_drift_time = 50 µs`,
-   added in quadrature to the SP software-filter widths, then divided by tick
-   width / wire pitch. The filter widths **were** re-derived for SBND from
-   `sbnd/sp-filters.jsonnet` (§6 below); `DT` was **not** — it is still
-   uBooNE's value.
+3. **Diffusion / smearing.** `DL` and `DT` enter as σ = √(2·D·t_drift) with
+   `t_drift` floored at `min_drift_time = 50 µs`, added in quadrature to the SP
+   software-filter widths, then divided by tick width / wire pitch. The filter
+   widths were re-derived for SBND from `sbnd/sp-filters.jsonnet` (§6). The
+   coefficients themselves were placeholders (6.2 / 9.8 cm²/s, the second one
+   uBooNE's) and are **now set to the SBND values DL = 6.5781, DT = 13.1349
+   cm²/s** — see §6a for the change, its ~15 % transverse effect, and the fact
+   that it is **not bit-identical**.
 
 The headline finding is §3: the reference curve is anchored to uBooNE's
 **0.273 kV/cm** drift field, SBND runs at **0.5 kV/cm**, and the required
@@ -336,8 +342,8 @@ DetectorVolumes/grouping at runtime, so it is already SBND's
 
 | key | uBooNE | SBND (in use) | derivation | status |
 |---|---|---|---|---|
-| `DL` | 6.4e-7 | **6.2e-7** (6.2 cm²/s) | longitudinal diffusion | changed for SBND; source = SBND Q/L chain value |
-| `DT` | 9.8e-7 | 9.8e-7 (9.8 cm²/s) | transverse diffusion | **inherited, unverified** — the correct SBND value lives in SBND's LArSoft `larproperties`, not in this tree |
+| `DL` | 6.4e-7 | **6.5781e-7** (6.5781 cm²/s) | longitudinal diffusion — physical, NOT filter-derived | **SBND value, set 2026-07-25** (was 6.2e-7) |
+| `DT` | 9.8e-7 | **1.31349e-6** (13.1349 cm²/s) | transverse diffusion — physical, NOT filter-derived | **SBND value, set 2026-07-25** (was 9.8e-7, the uBooNE number) |
 | `add_sigma_L` | 1.5699937 | **2.4876** mm | 1/(2π·σ_`Gaus_wide`) × v_drift = 1/(2π×0.10 MHz) × 1.563 mm/µs | derived from SBND SP filters |
 | `ind_sigma_u_T` | 0.3626937 | **0.48359** mm | [(1/√π)/`Wire_ind` 1.05] × 3 mm × 0.3 | derived |
 | `ind_sigma_v_T` | 0.6044895 | **0.80599** mm | same × 0.5 | derived |
@@ -356,6 +362,57 @@ per-plane factors **0.2 / 0.3 / 0.5** and the `min_drift_time` floor are
 empirical uBooNE tunings kept on purpose, to be revisited once SBND fit
 residuals exist (`reduced_chi2` is already dumped by `save_stm_fit`; doc 41
 measured p90 = 2.7, max 18.8, which is the handle).
+
+### 6a. Diffusion coefficients set to the SBND values (2026-07-25)
+
+`DL`/`DT` are the only two rows in the table that are **not** SP-filter-derived
+— they are physical LAr transport coefficients, and the previous entries
+(6.2 / 9.8 cm²/s) were placeholders carried over from the Q/L chain and uBooNE.
+Owner-supplied SBND values, now in `sbnd_xin/sbnd_track_fitting.json`:
+
+| | old | new |
+|---|---|---|
+| longitudinal `DL` | 6.2 cm²/s (`6.2e-07`) | **6.5781 cm²/s** (`6.5781e-07`) |
+| transverse `DT` | 9.8 cm²/s (`9.8e-07`) | **13.1349 cm²/s** (`1.31349e-06`) |
+
+Effect on the fit's predicted footprint σ (mm before dividing by pitch/tick;
+`v_drift` = 1.563 mm/µs, `t_drift` floored at 50 µs):
+
+| drift x [cm] | t_drift [µs] | σ_T,W old | σ_T,W new | ratio | σ_L old | σ_L new | ratio |
+|---|---|---|---|---|---|---|---|
+| 0 (floored) | 50.0 | 0.3269 | 0.3744 | 1.145 | 2.5000 | 2.5008 | 1.000 |
+| 50 | 319.9 | 0.7974 | 0.9215 | 1.156 | 2.5661 | 2.5708 | 1.002 |
+| 100 | 639.8 | 1.1238 | 1.2998 | 1.157 | 2.6423 | 2.6514 | 1.003 |
+| 200 (full) | 1279.6 | 1.5865 | 1.8358 | 1.157 | 2.7883 | 2.8056 | 1.006 |
+
+Per plane at full drift: U 1.6559 → 1.8961 mm (×1.145), V 1.7770 → 2.0028
+(×1.127), W 1.5865 → 1.8358 (×1.157) — in pitch units W goes 0.529 → 0.612.
+
+So **transverse smearing grows ~15 % at essentially every drift distance**
+(the diffusion term dominates the small per-plane filter widths, so the ratio is
+nearly flat in x), while **longitudinal moves ≤ 0.6 %** because `add_sigma_L` =
+2.4876 mm dominates √(2·DL·t) everywhere. A wider predicted footprint changes
+how charge is apportioned among fitted points, so **fitted `dQ` and `dx` change:
+this is NOT bit-identical and every STM/PR number in docs 41–46 predates it and
+needs revalidation.** It is a deliberate physics correction, not a tunable knob,
+so there is no default-OFF form of it.
+
+**MC caveat — the sim does not use these values.** SBND's official simulation
+drifts with **DL = 4.0, DT = 8.8 cm²/s** (`sbndcode/.../WireCell/wcsimsp_sbnd.fcl`
+and the `simparams.jsonnet` mirror in this tree, both unchanged). So on MC the
+smearing actually present in the waveforms is *narrower* than the fit now
+assumes — the fit is right for data and over-smears MC by roughly the same ~15 %
+transverse. Three different numbers are now in play (sim 4.0/8.8, physical
+6.5781/13.1349, and uBooNE's 6.4/9.8); reconciling sim with physical is an SBND
+production decision and was **not** touched here.
+
+Also updated for consistency, though **inert**: the `DL`/`DT` TLA defaults in
+`wct-pr-perevt.jsonnet`, `wct-clus-matching-perevt.jsonnet`,
+`ql_dump_scalar.jsonnet` and the four runner scripts. These feed `params.lar`,
+which only reaches a `Drifter` — and none of those jobs instantiates one.
+Verified: `wcsonnet` output with `--tla-code DL=6.2 --tla-code DT=9.8` is
+**byte-identical** to the new default compile for all three jsonnet jobs, i.e.
+no `DL`/`DT` key is emitted anywhere in their compiled configs.
 
 ## 7. Retune inventory
 
@@ -488,6 +545,9 @@ Two ordering notes:
   question, not the field).
 - The SP-filter-derived smearing sigmas (§6), still matching
   `sbnd/sp-filters.jsonnet` as of this doc.
+- The diffusion coefficients, **as of §6a**: `DL = 6.5781`, `DT = 13.1349` cm²/s.
+  (The *simulation* still drifts with 4.0 / 8.8 — that mismatch is open, see
+  §6a's MC caveat and §10 item 2.)
 - The muon/proton/… **range** tables (range ↔ kinetic energy): pure
   material-property CSDA, genuinely detector-agnostic, no field dependence.
   These are fine as inherited — and §3 uses them as the independent cross-check
@@ -501,7 +561,12 @@ Two ordering notes:
    plateau prediction is 52.9 or 57.1 ke/cm, and whether the toolkit's
    `sbnd_box_recomb` matches the simulation it is applied to. **Owner/SBND
    calibration question — not resolvable in this tree.**
-2. **SBND transverse diffusion `DT`** — same, lives in SBND LArSoft.
+2. ~~**SBND transverse diffusion `DT`**~~ — **RESOLVED** by §6a: DL = 6.5781,
+   DT = 13.1349 cm²/s (owner-supplied). What remains open is the *simulation*
+   mismatch: sbndcode drifts with DL = 4.0, DT = 8.8 cm²/s, so the fit and the
+   MC it is validated against no longer assume the same diffusion. Reconciling
+   them is an SBND production decision — untouched here, but it caps how well
+   any MC-based fit validation (docs 44/46) can close.
 3. **The table's restriction energy** — undocumented; determines whether the
    comparison should be against restricted truth (49.8) or δ-ray-inclusive
    truth (60.6) on MC. Doc 46's two-channel truth (`true_dQ` + `true_dQ_sec`)

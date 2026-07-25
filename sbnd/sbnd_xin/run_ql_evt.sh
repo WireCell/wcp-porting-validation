@@ -33,7 +33,7 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BA
 SEMIMODEL=semi-analytical-sbnd.json
 JSONNET="$SBND_DIR/wct-clus-matching-perevt.jsonnet"
 # Q/L drift / diffusion (documented values; same as run_clust_QL_evt.sh).
-DL=6.2; DT=9.8; LIFETIME=6; DRIFTSPEED=1.563
+DL=6.5781; DT=13.1349; LIFETIME=6; DRIFTSPEED=1.563   # DL/DT = SBND physical diffusion (cm^2/s)
 
 usage() {
     cat <<EOF

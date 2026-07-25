@@ -18,8 +18,8 @@ function(
     event          = 0,
     reality        = 'sim',
     semimodel_file = 'semi-analytical-sbnd.json',
-    DL             = 6.2,
-    DT             = 9.8,
+    DL             = 6.5781,
+    DT             = 13.1349,
     lifetime       = 6.0,
     driftSpeed     = 1.563,
 )

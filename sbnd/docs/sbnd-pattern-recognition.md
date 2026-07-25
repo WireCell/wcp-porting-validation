@@ -427,14 +427,28 @@ finalize + cross-check conventions against the prototype at Milestone 3):
 
 | key | uBooNE value | formula (SP-filter-driven) | SBND value (candidate) |
 |---|---|---|---|
-| `DL` | 6.4e-7 | longitudinal diffusion | 6.2e-7 (SBND Q/L chain value, DL = 6.2 cm²/s) |
-| `DT` | 9.8e-7 | transverse diffusion | 9.8e-7 |
+| `DL` | 6.4e-7 | longitudinal diffusion | **6.5781e-7** (SBND physical value, DL = 6.5781 cm²/s) |
+| `DT` | 9.8e-7 | transverse diffusion | **1.31349e-6** (SBND physical value, DT = 13.1349 cm²/s) |
 | `add_sigma_L` | 1.5699937 | [1/(2π·σ_Gaus_wide)] × drift_speed | 1/(2π×0.10 MHz) × 1.563 mm/µs = 1.59155 × 1.563 = **2.4876** |
 | `ind_sigma_u_T` | 0.3626937 | [(1/√π)/Wire_ind] × pitch_U × 0.3 | (0.564190/1.05) × 3 × 0.3 = **0.48359** |
 | `ind_sigma_v_T` | 0.6044895 | [(1/√π)/Wire_ind] × pitch_V × 0.5 | (0.564190/1.05) × 3 × 0.5 = **0.80599** |
 | `col_sigma_w_T` | 0.112836 | [(1/√π)/Wire_col] × pitch_W × 0.2 | (0.564190/3.60) × 3 × 0.2 = **0.09403** |
 | `div_sigma` | 6.0 (0.6 cm) | Gaussian charge-division width | start at 6.0, revisit with fits |
 | others (uncertainty/threshold/ratio knobs) | — | selection-tuned, not geometry | start with uBooNE values; retune on SBND fits |
+
+**Diffusion update (2026-07-25, owner-supplied).**  `DL` and `DT` are the only
+two rows above that are *not* SP-filter-derived — they are physical LAr
+transport coefficients.  The earlier entries (6.2 / 9.8 cm²/s) were placeholders
+inherited from the Q/L chain and uBooNE; the SBND values are **DL = 6.5781** and
+**DT = 13.1349 cm²/s**, now in `sbnd_xin/sbnd_track_fitting.json`.  Effect on the
+fit's predicted footprint (σ = hypot(√(2·D·t_drift), filter σ), drift speed
+1.563 mm/µs): transverse **+15 %** at essentially all drift distances (the
+diffusion term dominates the small per-plane filter widths), longitudinal
+**≤ +0.6 %** (there `add_sigma_L` = 2.4876 mm dominates).  This changes fitted
+`dQ`/`dx` — **NOT bit-identical, needs revalidation** — see
+`sbnd_xin/docs/47_stm-bragg-reference-sbnd-retune.md` §6 for the per-plane table
+and the MC caveat (SBND *simulation* drifts with 4.0/8.8, so on MC the smearing
+actually present in the waveforms is not what these values model).
 
 The trailing per-plane factors (0.2/0.3/0.5) are empirical uBooNE tunings on
 top of the filter width — keep them initially, revisit once SBND fit

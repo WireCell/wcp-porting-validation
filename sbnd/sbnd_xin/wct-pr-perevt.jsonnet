@@ -31,8 +31,8 @@ function(
     event          = 0,
     reality        = 'sim',
     // Same LAr TLAs as the Q/L job so the anode/params objects are identical.
-    DL             = 6.2,
-    DT             = 9.8,
+    DL             = 6.5781,
+    DT             = 13.1349,
     lifetime       = 6.0,
     driftSpeed     = 1.563,
     // PR visitors to run, by name (see clus_pr's cm_by_name in

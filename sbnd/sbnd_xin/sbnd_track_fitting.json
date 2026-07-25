@@ -1,7 +1,8 @@
 {
-    "_comment": "SBND TrackFitting configuration (from qlport/uboone_track_fitting.json). Smearing sigmas MUST match the SP software filters (cfg/pgrapher/experiment/sbnd/sp-filters.jsonnet): add_sigma_L = 1/(2*pi*Gaus_wide 0.10MHz) * drift 1.563mm/us = 2.4876 mm; ind_sigma = (1/sqrt(pi)/Wire_ind 1.05) * 3mm pitch * {0.3 U, 0.5 V}; col_sigma = (1/sqrt(pi)/Wire_col 3.60) * 3mm * 0.2. DL = SBND 6.2 cm^2/s. Derivation table: sbnd/docs/sbnd-pattern-recognition.md section 6.2.",
-    "DL": 6.2e-07,
-    "DT": 9.8e-07,
+    "_comment": "SBND TrackFitting configuration (from qlport/uboone_track_fitting.json). Smearing sigmas MUST match the SP software filters (cfg/pgrapher/experiment/sbnd/sp-filters.jsonnet): add_sigma_L = 1/(2*pi*Gaus_wide 0.10MHz) * drift 1.563mm/us = 2.4876 mm; ind_sigma = (1/sqrt(pi)/Wire_ind 1.05) * 3mm pitch * {0.3 U, 0.5 V}; col_sigma = (1/sqrt(pi)/Wire_col 3.60) * 3mm * 0.2. Derivation table: sbnd/docs/sbnd-pattern-recognition.md section 6.2.",
+    "_comment_diffusion": "DL/DT are the SBND physical diffusion coefficients: DL = 6.5781 cm^2/s, DT = 13.1349 cm^2/s (owner-supplied, 2026-07-25; supersede the earlier 6.2/9.8 placeholders inherited from the Q/L chain and uBooNE). Internal units: cm^2/s = 1e-7. NOTE the SBND *simulation* drifts with DL=4.0/DT=8.8 (sbndcode wcsimsp_sbnd.fcl and our simparams.jsonnet mirror), so on MC the waveform smearing present is NOT what these values model -- see sbnd_xin/docs/47 section 6.",
+    "DL": 6.5781e-07,
+    "DT": 1.31349e-06,
     "col_sigma_w_T": 0.09403,
     "ind_sigma_u_T": 0.48359,
     "ind_sigma_v_T": 0.80599,

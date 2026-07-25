@@ -40,7 +40,7 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BA
 
 JSONNET="$SBND_DIR/wct-pr-perevt.jsonnet"
 # Same LAr TLAs as run_ql_evt.sh / run_pr_evt.sh (identical anode/params objects).
-DL=6.2; DT=9.8; LIFETIME=6; DRIFTSPEED=1.563
+DL=6.5781; DT=13.1349; LIFETIME=6; DRIFTSPEED=1.563   # DL/DT = SBND physical diffusion (cm^2/s)
 # The tagger pipeline.  fiducialutils MUST precede the taggers (they silently
 # no-op without it); TGM before STM (STM skips TGM-flagged mains).
 # tagger_check_fc is LAST: it evaluates every in-scope main regardless of the
