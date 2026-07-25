@@ -175,6 +175,10 @@ A-vs-B choice:
 | **A** | the pre-merge member cluster | `assoc_cluster_id` (Stage 1) | prototype parity; **not guaranteed connected** |
 | **B** | the largest relaxed-connected component | `connected_blobs`, already used by TGM `main_component_pairs` (doc 36/38) | guaranteed connected; can cut a genuine track |
 
+(B ≡ `mode="component"` is an exact identity, not an approximation:
+`ClusteringUnmergeBundle.cxx:167` defaults `m_graph_name{"relaxed"}`, the same
+graph doc 51's `-unmerge-comp` probe used.)
+
 That framing was wrong. It came from asking "what should `TaggerCheckSTM` treat as
 the main", when the intended architecture is: **run `ClusteringUnmergeBundle`
 first, then STM/PR on the resulting main** — the prototype's layout, where
@@ -212,6 +216,33 @@ mains, one is marked, the other is indistinguishable from co-merged junk.
 
 ⇒ The fix is write-side only: **mark as main every member that is itself a main**,
 and carry that marking across subsequent merges.
+
+#### Three things that rule makes load-bearing
+
+**(a) Absent provenance ⇒ main.** A cluster arriving at all-APA may never have
+been through `clustering_isolated` and so carries no assoc arrays at all. The
+default must be "a standalone cluster is a main, not an associated fragment" —
+defaulted the other way, the crosser fix silently fails (both halves of
+evt288287 clus 13 reach the flash merge as plain clusters) and it would only
+surface at gate time. This is what makes §4a's "Stage 2's carry would fix it"
+actually follow.
+
+**(b) Two mains and nothing else short-circuits, it is not "retained as a
+union".** All blobs then have `rmain != 0` ⇒ `nmain == nb` ⇒ `Prov::no_split`
+(`:207`). Same outcome, different path — and it means the `no_split` branch is
+simultaneously the residual's deliberate exclusion (below) *and* the cathode
+crosser's protection. Nobody should later "fix" `nmain == nb` to force a split.
+
+**(c) `real_cluster_main` has other readers, and one is production.**
+`TaggerCheckTGM.cxx:790` (`main_component_mode="real"`, doc 36/38) reads it as a
+per-blob boolean — `real_main[bidx] != 0 ? 1 : 0` — so multi-marking cannot
+corrupt its semantics. But it is not inert: it *widens* "end is in the main", so
+TGM would stop rejecting endpoint pairs whose far end is a crosser's other half
+(`main_pair_rejects`, `:795-806`). That is the correct direction, and it is
+precisely the evt288287-class recovery — but it is a TGM behavior change and
+belongs in the A/B expectations, not discovered at gate time. The other two
+readers are presence-check / carve only
+(`MultiAlgBlobClustering.cxx:2381`, `clustering_switch_scope.cxx:93`).
 
 ### The one residual — and TGM already ships the guard for it
 
