@@ -1,5 +1,15 @@
 # 47 — The STM tagger's Bragg-peak reference, and what SBND has to retune
 
+> **SUPERSEDED IN PART by [48_sbnd-dqdx-tables-and-mip.md](48_sbnd-dqdx-tables-and-mip.md)**
+> (2026-07-25). Doc 48 implements §8's first two proposals: the five `*DeDx`
+> curves were regenerated at E = 0.5 kV/cm (keeping α/β, ρ, W_ion **and** the
+> ×0.85), the flat-MIP `50e3` became the `mip_dqdx` knob and is 56000 for SBND,
+> and the electron curve's hand-set end rise became a flat extension.
+> §4a's falsifiable `ratio1` prediction **came true and is measured**: the table
+> change costs 4 of 11 STM tags on the 30-event scan set, because the reference
+> is now on the true e/cm scale while the data is still uncalibrated. §5's three
+> confounds are all still open. Read 48 for what is now in the config.
+
 **Status: inventory + analysis, plus one config change — §6a.** No C++ was
 touched. The diffusion coefficients `DL`/`DT` were set to the SBND physical
 values on owner instruction (2026-07-25), on **both** the track-fit side

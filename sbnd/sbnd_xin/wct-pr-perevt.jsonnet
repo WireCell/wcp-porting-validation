@@ -43,6 +43,11 @@ function(
     // WIRECELL_PATH-resolved).  Required when tagger_check_stm is in the
     // pipeline -- the C++ preset defaults are uBooNE-hard-coded.
     trackfitting_config = '',
+    // MIP dQ/dx scale in e/cm handed to TaggerCheckSTM.  56000 = the SBND value
+    // (docs/48), matching the *DeDx tables now regenerated at 0.5 kV/cm.  Pass
+    // 50000 (the MicroBooNE value, and the C++ default) to isolate the
+    // reference-table change from the MIP-scale change in an A/B.
+    mip_dqdx       = 56000,
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -171,7 +176,7 @@ function(
         eventNo=event,
         reality=reality,
     );
-    // dE/dx + range LinterpFunctions (detector-agnostic NIST/PDG tables).
+    // dQ/dx (e/cm, SBND 0.5 kV/cm) + range (detector-agnostic) LinterpFunctions.
     local pds = (import '../particle_dataset.jsonnet')();
     local pr = clus_maker.pr(anodes, dump=true,
                              pipeline_names=pipeline_names,
@@ -194,7 +199,8 @@ function(
                              tgm_fv_x_margin=tgm_fv_x_margin,
                              tgm_fv_y_margin=tgm_fv_y_margin,
                              save_stm_fit=save_stm_fit,
-                             unmerge_bundle_mode=unmerge_bundle_mode);
+                             unmerge_bundle_mode=unmerge_bundle_mode,
+                             mip_dqdx=mip_dqdx);
 
     local graph = g.intern(
         innodes=[source],

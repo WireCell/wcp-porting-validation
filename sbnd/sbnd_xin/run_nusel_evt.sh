@@ -120,6 +120,10 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -fvy <cm>     vertical-y (|y| ~ 200 cm faces) inset, both faces symmetric
                 (default 2.5 = legacy).  Shared by tagger_check_tgm and
                 tagger_check_fc.  Env: SBND_TGM_FVY_MARGIN=<cm>.
+  -mip <e/cm>   MIP dQ/dx scale for TaggerCheckSTM (default 56000 = SBND,
+                docs/48).  Pass 50000 (MicroBooNE, the C++ default) to isolate
+                the *DeDx reference-table change from the MIP-scale change.
+                Env: SBND_MIP_DQDX=<e/cm>.
   -stm-fit      persist the per-pass STM track fits (doc 40): cluster PCs
                 stm_fit/stm_pass/stm_eval, a Bee 'stm_fit' layer in
                 mabc-pr.zip, and tracking-stm.root (SbndMagnifyTrackingVisitor
@@ -238,6 +242,10 @@ FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-0}"
 # symmetric.  DEFAULTS 2 / 2.5 = legacy.
 FVX_MARGIN="${SBND_TGM_FVX_MARGIN:-2}"
 FVY_MARGIN="${SBND_TGM_FVY_MARGIN:-2.5}"
+# MIP dQ/dx scale (e/cm) for TaggerCheckSTM.  56000 = SBND (docs/48, matches the
+# *DeDx tables regenerated at 0.5 kV/cm); 50000 = the inherited MicroBooNE value
+# and the C++ default, for isolating the table change from the MIP-scale change.
+MIP_DQDX="${SBND_MIP_DQDX:-56000}"
 # TGM pairs must touch the cluster's main charge component (doc 36).
 # DEFAULT OFF: opt in with -main-pair / SBND_TGM_MAIN_PAIR=1.
 MAIN_PAIR="${SBND_TGM_MAIN_PAIR:-0}"
@@ -283,6 +291,7 @@ while [ $# -gt 0 ]; do
         -fvzi|--fvzi) FVZ_INTERIOR="$2"; shift 2 ;;
         -fvx|--fvx) FVX_MARGIN="$2"; shift 2 ;;
         -fvy|--fvy) FVY_MARGIN="$2"; shift 2 ;;
+        -mip|--mip) MIP_DQDX="$2"; shift 2 ;;
         -main-pair|--main-pair) MAIN_PAIR=1; shift ;;
         -main-pair-real|--main-pair-real) MAIN_PAIR=1; MAIN_PAIR_MODE=real; shift ;;
         -no-main-pair|--no-main-pair) MAIN_PAIR=0; MAIN_PAIR_MODE=path; shift ;;
@@ -406,6 +415,7 @@ process_event() {
             --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
             --tla-code "tgm_fv_x_margin=$FVX_MARGIN" \
             --tla-code "tgm_fv_y_margin=$FVY_MARGIN" \
+            --tla-code "mip_dqdx=$MIP_DQDX" \
             --tla-str  "unmerge_bundle_mode=$UNMERGE_MODE" \
             --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
