@@ -827,3 +827,104 @@ doc 51 §2's attribution to `ClusteringIsolated`. Until that is resolved we do n
 actually know which pass creates the doc-50 population, and therefore cannot say
 whether any un-merge can remove it. `-trace-bee -save-assoc` on evt285185 and
 evt284657 answers it.
+
+## 11. The real bug: the provenance is corrupted in the per-APA → all-APA handoff
+
+**Owner was right and §10's reading was wrong.** §10 concluded the un-merge was
+stripping same-particle charge because `clustering_isolated` labels near-touching
+fragments "associated". That is not what happened. The owner's read of the two
+screenshots — *"it split a piece that is connected to the main cluster; the
+isolated piece was NOT un-merged but the tip of the main was removed"* — is
+exactly right, and it is a **data-corruption bug**, not a criterion problem.
+
+**Repro:**
+```bash
+cd sbnd_xin
+# per-step per-APA layers: where do the pieces live before the handoff?
+SBND_WORK_ROOT=$PWD/work-mcp10-d52trace ./run_ql_evt.sh data 1 \
+    -save-pctree -save-rcid -lm -save-assoc -trace-bee
+# then track the three pieces through tr00..tr15 of mabc-apa1-face0.zip
+```
+
+### 11.1 Ground truth, from the per-step trace (evt284349, apa1)
+
+| piece | tr00 … tr13 | tr14 `ClusteringIsolated` |
+|---|---|---|
+| trunk (130, −15, 478) | cluster 16→15→14→22→20→**19** | → 7 |
+| **tip** (136, +7, 498) | cluster 16→15→14→22→20→**19** | → 7 |
+| isolated piece (146, −8.5, 492) | cluster 17→16→15→13→12→**11** | → 7 |
+
+The tip is in the **same cluster as the trunk from the very first step**. Only
+the isolated piece is a separate cluster, and `ClusteringIsolated` is what joins
+it. So the correct marking is trunk+tip = main, isolated piece = associated.
+
+### 11.2 The write is correct; the array arrives corrupted
+
+Self-check inserted immediately after `merge_clusters` in `clustering_isolated`
+(every group must be a compact set of blobs — it is one pre-merge cluster):
+
+```
+[isoself] cluster 10 group 11 main=0 n=5 centroid=(53.72,-8.64,492.81) rmax=0.74cm   <- the isolated piece
+[isoself] cluster 10 group 19 main=1 n=311 centroid=(19.64,-84.64,402.07) rmax=171.51cm
+```
+
+Correct: the 5-blob isolated piece is `main=0`. But the same check at the **entry
+of the all-APA `switch_scope`**, before that pass does anything:
+
+```
+[ssentry] cluster  4 group  6 main=0 n=4  rmax=  0.49 cm     <- still fine
+[ssentry] cluster 13 group  6 main=0 n=3  rmax= 38.92 cm     <- scrambled
+[ssentry] cluster 13 group  8 main=0 n=4  rmax= 78.95 cm
+[ssentry] cluster 13 group  9 main=0 n=10 rmax=260.38 cm
+[ssentry] cluster 14 group 10 main=0 n=4  rmax= 37.81 cm
+```
+
+Early clusters are intact, later ones are progressively wrong — the signature of
+an **accumulating row offset**, i.e. the per-blob rows and the blob nodes are
+re-associated differently on the two sides of the per-APA → all-APA handoff
+(TensorDM concatenates each node's local PC and the reader re-splits by the
+lpcmaps row counts).
+
+Everything else was cleared by direct test:
+
+| suspect | verdict |
+|---|---|
+| `clustering_isolated`'s write | **correct** (§11.2 self-check) |
+| `merge_clusters`' carry ordering | **not the cause** — re-keying the placement by blob pointer instead of row position produced byte-identical output |
+| `clustering_switch_scope`'s carve | **not the cause** — already corrupt at its entry |
+| the analysis tooling | **not the cause** — `real_cluster_main`'s 7 zeros have max-radius 1.0 cm and `isolated` value 3 is the isolated piece at (146.3, −8.5, 492.1), both read with the same node walk |
+
+Why nothing caught this before: `orig_id` / `orig_main` (the flash pair) are
+**constant within a member**, so any permutation of a member's rows is a no-op
+for them. The assoc pair is the first per-blob array whose value *varies within a
+member*, so it is the first to expose the handoff. `TaggerCheckTGM`'s
+`main_component_mode="real"` reads an all-ones array after a correct un-merge
+(§4), so it could not see it either.
+
+### 11.3 Consequence for §9 and §10 — both are void
+
+- §9.2's "200 clusters split, 785 pieces" counted **corrupted** splits.
+- §9.4's "the showcase clumps are marked main, contradicting doc 51" was an
+  artifact: doc 51's attribution to `ClusteringIsolated` is **confirmed correct**
+  by the trace above.
+- §10's whole "associated conflates two populations" analysis measured the
+  corruption, not the criterion. The 41 %-within-3 cm number describes which
+  blobs the *scrambled* array happened to point at.
+- The 14 TGM losses are collateral of the corruption, not of a design choice.
+
+### 11.4 State of the code, and what is next
+
+`min_gap` (`ClusteringUnmergeBundle`, default 0 = off; SBND passes 3 cm to the
+assoc instance) is retained: it is a defensible guard in its own right and it
+demonstrably restores the lost TGM tags (evt284349 mains 8 and 10 back to TGM=1,
+all 7 companions of main 8 kept at 0.68-2.95 cm). **But it must not be mistaken
+for the fix** — it masks a corrupted array rather than repairing it.
+
+**`save_assoc` / `-unmerge-assoc` must not be used for physics until the handoff
+is repaired.** Everything remains default OFF, so production is untouched.
+
+The repair: carry the provenance on the **blob node** (a one-row local PC per
+blob) instead of on the cluster (an N-row array whose alignment depends on blob
+order surviving serialization). Then no concatenate/re-split, merge, separate or
+reorder can misalign it, and defect D4 is closed structurally rather than by
+convention. That is the next change.
