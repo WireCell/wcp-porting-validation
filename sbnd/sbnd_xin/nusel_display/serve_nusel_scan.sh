@@ -7,6 +7,13 @@
 #               <work_root>/nusel_labels/NAME/ so different scan campaigns
 #               keep their labels apart, e.g.
 #                 ./serve_nusel_scan.sh 5010 --tag mcp10 ../work-mcp10
+#   --charge-src ql|pr  (optional, default ql = historical) where the drawn
+#               charge comes from.  "ql" = the Q/L job's mabc-all-apa.zip, which
+#               is PRE-un-merge, so a merged bundle is drawn under a trajectory
+#               fitted on the POST-un-merge main (doc 50 Q1 -- this is what made
+#               fits look like they crossed empty space).  "pr" = the nusel job's
+#               own nusel_evt<ID>/mabc-pr.zip, i.e. exactly the cluster the
+#               taggers saw.  Light is read from the Q/L zip either way.
 #   --prev ROOT[:TAG]  (optional, repeatable, priority = given order) an
 #               OLDER work root and the label tag scanned there, used as a
 #               read-only baseline: its scan labels/comments are carried
@@ -41,6 +48,7 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
         --tag|-t) FWD_ARGS+=(--tag "$2"); shift 2 ;;
         --prev)   FWD_ARGS+=(--prev "$2"); shift 2 ;;
+        --charge-src) FWD_ARGS+=(--charge-src "$2"); shift 2 ;;
         *)        SPECS+=("$1"); shift ;;
     esac
 done

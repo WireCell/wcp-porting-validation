@@ -123,10 +123,17 @@ OP_MATCH_TOL_US = 0.02
 
 
 # ---------------------------------------------------------------------------
+# Charge source (doc 50 Q1 / doc 52).  "ql" (default, historical) reads the
+# Q/L job's mabc-all-apa.zip, which is PRE-un-merge: the drawn charge is the
+# merged bundle, while the STM trajectory over it came from the POST-un-merge
+# nusel job -- the mismatch that made fits look like they crossed empty space.
+# "pr" reads the nusel job's own mabc-pr.zip, so charge and fit are the same
+# epoch.  Light (the op layer) only exists in the Q/L zip, so it is read from
+# there either way.
 # Inputs: work roots (dirs holding nusel_evt*/ + ql_evt*/) from --args.
 # ---------------------------------------------------------------------------
 def extract_args(argv):
-    out, tag, prevs = [], "", []
+    out, tag, prevs, csrc = [], "", [], "ql"
     it = iter(argv)
     for a in it:
         if a in ("--tag", "-t"):
@@ -135,9 +142,13 @@ def extract_args(argv):
             s = next(it, "")
             if s:
                 prevs.append(s)
+        elif a == "--charge-src":
+            csrc = next(it, "ql")
         else:
             out.append(a)
-    return tag, prevs, out
+    if csrc not in ("ql", "pr"):
+        sys.exit(f"--charge-src must be 'ql' or 'pr', not {csrc!r}")
+    return tag, prevs, out, csrc
 
 
 def discover_events(argv):
@@ -165,7 +176,7 @@ def discover_events(argv):
     return sorted(out, key=keyf)
 
 
-SCAN_TAG, _PREV_SPECS, _ARGS = extract_args(sys.argv[1:])
+SCAN_TAG, _PREV_SPECS, _ARGS, CHARGE_SRC = extract_args(sys.argv[1:])
 EVENTS = discover_events(_ARGS)
 LABELS = [e[0] for e in EVENTS]
 EVENT_OF = {e[0]: e for e in EVENTS}
@@ -383,9 +394,15 @@ class Event:
         self.pts = None             # dict of numpy arrays x,y,z,q,cid,rid
         self.op = None              # dict of lists (op.json)
         qlzip = os.path.join(qldir, "mabc-all-apa.zip")
-        if os.path.isfile(qlzip):
+        # Charge from the requested epoch; light always from the Q/L zip.
+        przip = os.path.join(work_root, "nusel_evt" + evtid, "mabc-pr.zip")
+        chzip = przip if (CHARGE_SRC == "pr" and os.path.isfile(przip)) else qlzip
+        if CHARGE_SRC == "pr" and not os.path.isfile(przip):
+            self.problems.append("charge_src=pr but missing " + przip
+                                 + " -- falling back to the PRE-un-merge Q/L dump")
+        if os.path.isfile(chzip):
             try:
-                with zipfile.ZipFile(qlzip) as z:
+                with zipfile.ZipFile(chzip) as z:
                     names = z.namelist()
                     cg = [n for n in names if n.endswith("-clustering-global.json")]
                     opn = [n for n in names if n.endswith("-op.json")]
@@ -398,15 +415,24 @@ class Event:
                             rid=np.array(d.get("real_cluster_id",
                                                d["cluster_id"]), int))
                     else:
-                        self.problems.append("no clustering-global layer in " + qlzip)
+                        self.problems.append("no clustering-global layer in " + chzip)
+                    if opn:
+                        self.op = json.loads(z.read(opn[0]))
+            except Exception as e:
+                self.problems.append(f"{chzip}: {e}")
+        else:
+            self.problems.append(f"missing {chzip}")
+        # mabc-pr.zip carries no op layer, so read the light from the Q/L zip.
+        if self.op is None and os.path.isfile(qlzip):
+            try:
+                with zipfile.ZipFile(qlzip) as z:
+                    opn = [n for n in z.namelist() if n.endswith("-op.json")]
                     if opn:
                         self.op = json.loads(z.read(opn[0]))
                     else:
                         self.problems.append("no op layer in " + qlzip)
             except Exception as e:
                 self.problems.append(f"{qlzip}: {e}")
-        else:
-            self.problems.append(f"missing {qlzip}")
 
         # --- STM track-fit dump (run_nusel_evt.sh -stm-fit, doc 40) ----------
         # Absent on knob-off rounds -- the dQ/dx panel then stays empty.

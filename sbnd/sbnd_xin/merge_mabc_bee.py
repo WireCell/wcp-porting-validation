@@ -22,8 +22,17 @@ import zipfile
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('-w', '--work-root', required=True,
-                    help='work root holding ql_evt<ID>/mabc-all-apa.zip')
+    ap.add_argument('-w', '--work-root', required=True, action='append',
+                    help='work root holding the per-event Bee zips.  Repeatable: '
+                         'the 30-event scan lives in three roots '
+                         '(work-{mcp10,mcp1000,mcp1000b}-<tag>) and the first root '
+                         'that has the event wins.')
+    ap.add_argument('--src', default='ql_evt{evt}/mabc-all-apa.zip',
+                    help='per-event source zip, relative to a work root, with '
+                         '{evt} for the event id.  Default is the Q/L dump, which '
+                         'is PRE-un-merge; pass '
+                         '"nusel_evt{evt}/mabc-pr.zip" for the post-un-merge '
+                         'geometry the taggers actually saw (doc 50 Q1).')
     ap.add_argument('-o', '--output', required=True, help='output upload zip')
     ap.add_argument('events', nargs='+', help='event ids in Bee-index order')
     args = ap.parse_args()
@@ -34,9 +43,12 @@ def main():
     nlayers = 0
     with zipfile.ZipFile(args.output, 'w', zipfile.ZIP_DEFLATED) as out:
         for bee_idx, evt in enumerate(args.events):
-            src = os.path.join(args.work_root, f'ql_evt{evt}', 'mabc-all-apa.zip')
-            if not os.path.isfile(src):
-                sys.exit(f"ERROR: missing {src}")
+            rel = args.src.format(evt=evt)
+            src = next((c for c in (os.path.join(w, rel) for w in args.work_root)
+                        if os.path.isfile(c)), None)
+            if src is None:
+                sys.exit("ERROR: no work root has " + rel + " (tried: "
+                         + ", ".join(args.work_root) + ")")
             with zipfile.ZipFile(src) as zin:
                 for name in zin.namelist():
                     # data/0/0-<layer>.json -> data/<bee_idx>/<bee_idx>-<layer>.json

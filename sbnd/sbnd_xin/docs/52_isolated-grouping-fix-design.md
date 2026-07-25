@@ -548,10 +548,12 @@ Config: `cfg/pgrapher/common/clus.jsonnet` `isolated(save_assoc_id=false)` and
 | freshness proof (M1) | `local/lib/libWireCellClus.so` 14:00:58 > last source edit 13:59:49 |
 | QL compiled config, knob off vs pre-change `HEAD` | **byte-identical**, 50675 B |
 | PR compiled config, knob off vs pre-change `HEAD` | **byte-identical**, 250166 B |
+| knob-off **output**, 30 events, both stages | **210/210 archives identical** (§9.1) |
 
 Knob-on compiled-config proof: `save_assoc_id: true` appears **twice** (one
-`ClusteringIsolated` per APA) and `save_assoc_cluster_id: true` **once** (the
-all-APA MABC); the PR pipeline becomes
+`ClusteringIsolated` per APA) and `save_assoc_cluster_id: true` **three** times
+(both per-APA MABCs and the all-APA one -- see §9.3 for why the per-APA nodes
+need it); the PR pipeline becomes
 
 ```
 ClusteringSwitchScope:pr -> ClusteringUnmergeBundle:pr -> ClusteringUnmergeBundle:prassoc
@@ -565,3 +567,142 @@ One bug was caught by the knob-on proof and not by the knob-off one: `per_apa()`
 accepted `save_assoc_id` without forwarding it to `clus_per_face`, so the key
 never reached `ClusteringIsolated`. Byte-identicality when off is blind to that
 class of mistake — always run the on-side proof too (M6's cousin).
+
+## 9. Results on the 30-event MCP2025C scan
+
+**Repro:**
+```bash
+cd sbnd_xin
+./run_d52_campaign.sh both          # ~25 min; both arms under setarch x86_64 -R
+python3 d52_ab_report.py
+python3 stm_main_connectivity.py work-mcp10-d52on work-mcp1000-d52on work-mcp1000b-d52on
+```
+Tags: **`work-{mcp10,mcp1000,mcp1000b}-d52off`** and **`-d52on`**. Imaging is
+symlinked from `-d49son`, never regenerated.
+
+### 9.1 Knob-off gate — PASS
+
+**210/210** comparisons identical over all 30 events: per event the three
+`mabc-*.zip`, `pctree-evt<ID>.tar.gz`, `mabc-pr.zip`,
+`pctree-pr-evt<ID>.tar.gz` (member-content hash) and `nusel-evt<ID>.tsv` (text).
+Baselines are the products already on disk from the pre-change binary
+(`work-*-mainreal` for Q/L, `work-*-d49son` for nusel).
+
+One false alarm worth recording: the first attempt reported a pctree difference
+of exactly one tensor, `lm_flag`. That was **my invocation**, not the code — the
+baseline was produced with `-lm` and I had omitted it. Always diff the member
+*names* before believing a hash difference.
+
+### 9.2 Knob-on effect — the mechanism works
+
+| quantity | value |
+|---|---|
+| clusters split by the isolated un-merge | **200** |
+| associated pieces produced | **785** |
+| blobs moved out of a main | **4544** |
+| Q/L stage identical between arms | **90/90** ⇒ every delta below is attributable to the un-merge alone |
+| retained mains left with ≤3 blobs | 2 of 200 (evt285185 c12 `41 → 1 + 8`, evt286329 c6 `5 → 2 + 1`) |
+
+Both un-merges fire in the designed order, e.g. evt285185 cluster 21:
+`272 → 264 + 8` (flash, outer) then `264 → 255 + 9` (isolated, inner).
+
+Verdict movement (both arms `setarch -R`; the chain's ASLR noise floor is ±7 STM
+tags, doc 49 §4a, so the STM number is *at* that floor even though ASLR was
+pinned):
+
+| verdict | off | on | delta |
+|---|---|---|---|
+| tgm | 122 | 109 | **−13** |
+| stm | 44 | 37 | **−7** |
+| fc | 51 | 59 | **+8** |
+
+329 bundles in both arms — the un-merge does not change the bundle count, only
+what each bundle's main contains.
+
+### 9.3 A bug the knob-off gate structurally could not catch
+
+The first knob-on run split **nothing** — `unmerged 0 main cluster(s)`, with no
+warning, because `groups_from_provenance` saw `nmain == nb` (every blob marked
+main) and correctly returned `no_split`. Cause: the assoc pair is written at
+**per-APA** scope, and `MultiAlgBlobClustering`'s homogenization was wired only
+on the all-APA node. TensorDM drops a local-PC key absent from the first-seen
+node (doc 38's gotcha), so the real arrays died at the per-APA → all-APA handoff
+and the all-APA save-time fill-in then made every blob a main.
+
+Fixing that exposed a second, sharper problem: `Dataset::append`
+(`util/src/PointCloudDataset.cxx:261`) **raises** when an incoming per-blob
+dataset lacks a key the target has, and the whole job died with
+`missing keys in append: 3 missing: isolated real_cluster_id real_cluster_main`.
+The assoc pair exists *before* the all-APA `switch_scope`, so its carve puts it
+on the out-of-volume shards too — and `examine_bundles` then skips those (not in
+scope), so they never receive `isolated`. The invariant is therefore not "gate on
+`isolated`" (what the flash pair does) but **"any cluster that has a `perblob` PC
+must have the full key set"**, which is what the code now enforces.
+
+Neither failure is visible to a knob-off gate, and neither is visible to a
+compiled-config proof. The only thing that caught them was running knob-on and
+reading the visitor's own count.
+
+### 9.4 What did NOT improve, and it matters
+
+Doc 52 §5 step 5 set the success criterion: doc 50's "26 % of fits stray >5 cm
+from their own charge" should fall. It falls, modestly:
+
+| doc 50 metric | off | on |
+|---|---|---|
+| STM-fitted mains | 128 | 125 |
+| not connected post-un-merge (>1 component at 5 cm) | 88 (69 %) | 79 (**63 %**) |
+| fitted point >5 cm from own charge | 33 (26 %) | 29 (**23 %**) |
+| trajectory END inside a detached clump | 36 (28 %) | 32 (**26 %**) |
+
+**And the two showcase clumps are still there.** Measured directly:
+
+| event | cluster | components, off | components, on | clump gap | fit ends in clump? |
+|---|---|---|---|---|---|
+| 285185 | 21 | 1163 + 8 pts | 1128 + **8** pts | 18.27 cm | no (max stray 1.52 cm) |
+| 284657 | 27 | 279 + 21 pts | 245 + **21** pts | 22.55 cm | **yes**, 1 of 2 |
+
+The clump is verifiably still inside cluster 21 after both un-merges (8 points
+within 4 cm of its centroid, all `cluster_id == 21`). So those blobs carry
+`assoc_cluster_main != 0` — they belong to the **main** pre-merge member, not to
+an associated one.
+
+That **contradicts doc 51 §2's attribution**, which named `ClusteringIsolated`
+(tr14) as the pass that joined body and clump for exactly these two events. Both
+cannot be right. Either the attribution tool mis-identified the joining pass (its
+majority-id coordinate matching is approximate, and cluster ids are renumbered
+every step), or the clump is inside the same pre-merge member because an earlier
+pass merged it and `clustering_isolated` only re-merged the pair. Resolving it is
+the next step and it is cheap: re-run `run_ql_evt.sh -trace-bee -save-assoc` on
+these two events and check the assoc marking layer by layer.
+
+Read plainly: **the provenance mechanism is correct and does what it was designed
+to do (200 splits, 785 pieces, gate-clean), but the isolated grouping is not the
+dominant source of fragmented STM mains.** 63 % of fitted mains are still
+multi-component, which points at §4's residual — single pre-merge members that
+are internally disconnected, deliberately outside the un-merge's remit — as the
+bigger population.
+
+### 9.5 Requirement 2 is satisfied for the isolated merge only
+
+The owner's second requirement was that cathode crossers stay merged. For the
+isolated grouping that holds by the union rule. For the **flash** merge it does
+not, and this landing does not change that: evt288287 cluster 13 (PCA
+|cos| 0.997, §4a) is still split by the default-ON flash un-merge,
+`526 → 445 + 81`, and the isolated un-merge then trims 3 more blobs
+(`445 → 442 + 3`). Its bundle moved from `tgm/stm/fc = 0/0/0` to `0/0/1`.
+
+**§4a claimed Stage 2's carry would fix this. That claim was wrong and is
+withdrawn.** Two independent reasons:
+
+1. `assoc_cluster_main` cannot discriminate. It is ~all-ones by construction —
+   7614 of 7849 blobs in evt285185 — so "never demote a member that is itself an
+   assoc-main" would protect essentially every member and disable the flash
+   un-merge entirely.
+2. More fundamentally, the crosser's two halves are two *distinct* flash-merge
+   members **precisely because `cathode_connect` declined to join them**. No
+   provenance array can recover a merge decision that was never made.
+
+So the flash-merge crosser case needs either a `cathode_connect` that catches
+these (a tuning question, with its own gate) or an explicit geometric guard
+inside the un-merge. It is a separate item, and it affects production today.
