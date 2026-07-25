@@ -121,7 +121,9 @@ in two unrelated FHICL files, both consistent with the value being a stale
 default rather than a tuned non-nominal-field setting.
 
 **LAr parameter sync (DL / DT / lifetime).** Synced across all sites to
-`DL=4.0 cm²/s`, `DT=8.8 cm²/s`, `lifetime=35 ms`. Touches
+`DL=6.5781 cm²/s`, `DT=13.1349 cm²/s`, `lifetime=35 ms` (the diffusion pair was
+`4.0`/`8.8` before 2026-07-25 — see
+[47_stm-bragg-reference-sbnd-retune.md](47_stm-bragg-reference-sbnd-retune.md) §6a). Touches
 `cfg/.../sbnd/simparams.jsonnet`, all three `cfg/.../sbnd/fhicl/*.fcl`,
 `sbnd_xin/run_clus_evt.sh`, and `sbnd_xin/wct-clustering.jsonnet`
 (previously held the older `DL=6.2 DT=9.8 lifetime=10` tuning).
@@ -338,8 +340,8 @@ as an overlay on `simparams.lar`:
 
 | Knob | Value | Units | Description |
 |---|---|---|---|
-| `DL` | 4.0 | cm²/s | longitudinal diffusion coefficient |
-| `DT` | 8.8 | cm²/s | transverse diffusion coefficient |
+| `DL` | 6.5781 | cm²/s | longitudinal diffusion coefficient (SBND physical; was 4.0 before 2026-07-25) |
+| `DT` | 13.1349 | cm²/s | transverse diffusion coefficient (SBND physical; was 8.8) |
 | `lifetime` | 35 | ms | electron lifetime |
 | `driftSpeed` | 1.565 | mm/µs | overrides `simparams.lar.drift_speed` for clustering |
 | `reality` | `'sim'` | — | `'sim'` or `'data'`; controls dead-channel treatment |

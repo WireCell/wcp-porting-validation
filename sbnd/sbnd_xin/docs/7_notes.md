@@ -4,7 +4,7 @@ Things that are easy to forget when picking the work back up later.
 
 ## LAr parameters in reco (DL / DT / lifetime)
 
-The three LAr parameters synced to `DL=4.0 cm²/s`, `DT=8.8 cm²/s`,
+The three LAr parameters synced to `DL=6.5781 cm²/s`, `DT=13.1349 cm²/s`,
 `lifetime=35 ms` (see [2_geometry-and-timing.md](2_geometry-and-timing.md))
 are simulation inputs. Their role in the reco chain is much smaller than
 in sim:
@@ -32,39 +32,40 @@ Defaults in `clus/inc/WireCellClus/TrackFitting.h:37-38` are
 trajectory-fit smearing values that previously also appeared in
 `sbnd_xin/wct-clustering.jsonnet` and `run_clus_evt.sh`.
 
-**Important — the sim/reco DL/DT are not the same config knob.**
-`TrackFitting` does **not** read `params.lar.DL/DT`. It loads its own
-JSON via `TaggerCheckNeutrino::load_trackfitting_config()`
-(`clus/src/TaggerCheckNeutrino.cxx:493`). So the cfg/`sbnd_xin/` sync
-to `4.0 / 8.8` only affects **simulation diffusion**; the
-**trajectory-fit smearing model** still uses whatever the TrackFitting
-JSON holds. When you get to dQ/dx work later, decide whether the fit
-should use the same `(DL, DT)` as the sim and update that JSON too if
-so.
+**Important — the sim/reco DL/DT are still two separate config knobs**, even
+though they now hold the same numbers. `TrackFitting` does **not** read
+`params.lar.DL/DT`; it loads its own JSON via
+`TaggerCheckNeutrino::load_trackfitting_config()`
+(`clus/src/TaggerCheckNeutrino.cxx:493`). Changing one does not change the
+other — keep them in step by hand.
 
-**2026-07-25 — the fit's coefficients were set to the PHYSICAL values on owner
-instruction; the sim-vs-physical question above is STILL OPEN.**
-`sbnd_xin/sbnd_track_fitting.json` now carries `DL = 6.5781 cm²/s`
-(`6.5781e-07`) and `DT = 13.1349 cm²/s` (`1.31349e-06`), the SBND transport
-coefficients, replacing the 6.2 / 9.8 placeholders. The **simulation** was left
-at 4.0 / 8.8 (that mirrors sbndcode's own `wcsimsp_sbnd.fcl`, so changing it is
-an SBND production decision, not ours). Consequence: on MC the fit assumes ~15 %
-more transverse smearing than the waveforms actually contain. **Not
-bit-identical**: fitted `dQ`/`dx` change, so STM/PR numbers in docs 41–46
-predate it.
+**RESOLVED 2026-07-25 (owner decision): both sides use the SBND PHYSICAL
+values.** `DL = 6.5781 cm²/s` (`6.5781e-07`), `DT = 13.1349 cm²/s`
+(`1.31349e-06`), set in *both* places:
 
-Whether that MC divergence is acceptable is an **owner decision that has not
-been taken** — the instruction was to set the coefficients, not to decide this.
-The two readings, both defensible:
-- **A (what is in the tree now):** the fit models the *real detector*; MC
-  divergence is accepted and capped, and MC-based fit validation (docs 44/46)
-  inherits a known ~15 % transverse bias.
-- **B:** the fit should match whatever produced the waveforms it is fitting —
-  physical 6.5781/13.1349 for data, sim 4.0/8.8 for MC. Cheap to implement: the
-  runners and `wct-pr-perevt.jsonnet` already carry a `reality=sim|data` TLA, so
-  this is a second JSON or a reality-switched pair of values, not new machinery.
-Quantified per plane and per drift distance in
+| side | file(s) | was |
+|---|---|---|
+| trajectory fit | `sbnd_xin/sbnd_track_fitting.json` | 6.2 / 9.8 (Q/L-chain + uBooNE placeholders) |
+| simulation | `cfg/pgrapher/experiment/sbnd/simparams.jsonnet`, all three `cfg/.../sbnd/fhicl/*.fcl`, `sbnd_xin/run_clus_evt.sh`, `sbnd_xin/wct-clustering.jsonnet` | 4.0 / 8.8 (matching sbndcode's `wcsimsp_sbnd.fcl`) |
+
+So the fit and locally-generated simulation now share one diffusion model — the
+earlier A-vs-B fork (fit models the detector vs fit matches the waveforms) is
+moot because the two agree. **Not bit-identical on either side**: simulated
+waveforms change, and fitted `dQ`/`dx` change, so STM/PR numbers in docs 41–46
+predate this. Quantified per plane and per drift distance in
 `47_stm-bragg-reference-sbnd-retune.md` §6a.
+
+**Caveat that survives the fix — existing MC on disk.** The samples in flight
+(`input_files_reco1/extracted-mcp2025c-*`) come from official SBND production,
+which simulated with 4.0 / 8.8. Our change only affects sim *we* generate. So
+until a sample is re-simulated, the fit still assumes ~15 % more transverse
+smearing than those waveforms contain, and any MC-based fit validation on them
+(docs 44/46) carries that bias. Our own toolkit sim path is now self-consistent;
+the reco1-based MC route is not, and cannot be from this side.
+
+Also note our `cfg/.../sbnd/` diffusion values now **differ from sbndcode's**
+(which still has 4.0 / 8.8 in `wcsimsp_sbnd.fcl`). Propagating them upstream is
+an SBND production decision, not made here.
 
 ### `lifetime` — not in toolkit reco yet
 

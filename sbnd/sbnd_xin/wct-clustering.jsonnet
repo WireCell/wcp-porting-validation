@@ -10,7 +10,7 @@
 //     --tla-str  output_dir=work/evt2 \
 //     --tla-code run=0 --tla-code subrun=0 --tla-code event=2 \
 //     --tla-str  reality=sim \
-//     --tla-code DL=4.0 --tla-code DT=8.8 \
+//     --tla-code DL=6.5781 --tla-code DT=13.1349 \
 //     --tla-code lifetime=35 --tla-code driftSpeed=1.563 \
 //     -c wct-clustering.jsonnet
 
@@ -26,8 +26,8 @@ function(
     subrun        = 0,
     event         = 0,
     reality       = 'sim',
-    DL            = 4.0,
-    DT            = 8.8,
+    DL            = 6.5781,
+    DT            = 13.1349,
     lifetime      = 35.0,
     driftSpeed    = 1.563,
 )

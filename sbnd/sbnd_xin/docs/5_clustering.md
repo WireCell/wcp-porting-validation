@@ -381,8 +381,8 @@ to decide whether a cluster is near a detector boundary.
 | `output_dir` | `.` | – | passed to `clus_maker(...)` | Directory for `mabc-*.zip` outputs |
 | `run` / `subrun` / `event` | 0/0/0 | – | MABC RSE fields | Stamped into Bee zip metadata |
 | `reality` | `'sim'` | – | consumed by `Clustering*` | Dead-channel treatment: `'sim'` or `'data'` |
-| `DL` | 4.0 | cm²/s | `params.lar.DL` | Longitudinal diffusion coefficient |
-| `DT` | 8.8 | cm²/s | `params.lar.DT` | Transverse diffusion coefficient |
+| `DL` | 6.5781 | cm²/s | `params.lar.DL` | Longitudinal diffusion coefficient (SBND physical; was 4.0) |
+| `DT` | 13.1349 | cm²/s | `params.lar.DT` | Transverse diffusion coefficient (SBND physical; was 8.8) |
 | `lifetime` | 35 | ms | `params.lar.lifetime` | Electron lifetime |
 | `driftSpeed` | 1.565 | mm/µs | `params.lar.drift_speed` | Drift speed for MABC topology (not BlobSampler) |
 

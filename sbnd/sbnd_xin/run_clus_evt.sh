@@ -162,8 +162,8 @@ process_event() {
         -S "subrun=${SUBRUN_L}" \
         -S "event=${EVT_ID}" \
         -A "reality=${REALITY}" \
-        -S "DL=4.0" \
-        -S "DT=8.8" \
+        -S "DL=6.5781" \
+        -S "DT=13.1349" \
         -S "lifetime=35" \
         -S "driftSpeed=1.563" \
         -o "$CFG_JSON" wct-clustering.jsonnet

@@ -1,9 +1,13 @@
 # 47 — The STM tagger's Bragg-peak reference, and what SBND has to retune
 
-**Status: inventory + analysis, plus ONE config change — §6a.** No C++ was
-touched. The diffusion coefficients `DL`/`DT` in `sbnd_xin/sbnd_track_fitting.json`
-were set to the SBND physical values on owner instruction (2026-07-25); that
-changes fitted `dQ`/`dx`, so it is **NOT bit-identical and needs revalidation**.
+**Status: inventory + analysis, plus one config change — §6a.** No C++ was
+touched. The diffusion coefficients `DL`/`DT` were set to the SBND physical
+values on owner instruction (2026-07-25), on **both** the track-fit side
+(`sbnd_xin/sbnd_track_fitting.json`) and the **simulation** side
+(`cfg/pgrapher/experiment/sbnd/simparams.jsonnet`, the three
+`cfg/.../sbnd/fhicl/*.fcl`, `run_clus_evt.sh`, `wct-clustering.jsonnet`). That
+changes both simulated waveforms and fitted `dQ`/`dx`, so it is **NOT
+bit-identical and needs revalidation**.
 Everything else here is read-only analysis: no tuning decision is taken, and the
 numbers that would change a physics verdict are presented as readings with the
 measurement that settles them (escalation rule 7), exactly as doc 41 did for the
@@ -406,30 +410,37 @@ unchanged search window is exactly the shape of a silently truncated footprint,
 which would show up as rising `reduced_chi2` (doc 41 baseline: p90 = 2.7,
 max 18.8). See §6b for the measurement.
 
-**MC caveat — the sim does not use these values.** SBND's official simulation
-drifts with **DL = 4.0, DT = 8.8 cm²/s** (`sbndcode/.../WireCell/wcsimsp_sbnd.fcl`
-and the `simparams.jsonnet` mirror in this tree, both unchanged). So on MC the
-smearing actually present in the waveforms is *narrower* than the fit now
-assumes — the fit is right for data and over-smears MC by roughly the same ~15 %
-transverse. Three different numbers are now in play (sim 4.0/8.8, physical
-6.5781/13.1349, and uBooNE's 6.4/9.8).
+**The simulation was updated to match (owner decision, same day).** The SBND sim
+had been drifting with **DL = 4.0, DT = 8.8 cm²/s**, mirroring sbndcode's
+`wcsimsp_sbnd.fcl`. On instruction it now carries the same physical values as the
+fit, in all five sim-side sites:
 
-**This fork is an OPEN owner decision, not something settled here.** The
-instruction was to set the coefficients; whether the fit should diverge from the
-simulation it is validated against is a separate question — and docs 44/46 are
-MC-only validations of exactly this fit, while doc 41's `reduced_chi2` is fit
-quality on the same MC/data:
-- **A (what is in the tree now):** the fit models the real detector; the MC
-  divergence is accepted, and MC-based fit validation inherits a known ~15 %
-  transverse bias.
-- **B:** the fit matches whatever produced the waveforms it is fitting —
-  physical 6.5781/13.1349 for data, sim 4.0/8.8 for MC. Cheap to build: the
-  runners and `wct-pr-perevt.jsonnet` already carry a `reality=sim|data` TLA, so
-  it is a second JSON or a reality-switched pair, not new machinery.
+| file | role |
+|---|---|
+| `cfg/pgrapher/experiment/sbnd/simparams.jsonnet` | jsonnet default `lar.DL`/`lar.DT` → the `Drifter` |
+| `cfg/.../sbnd/fhicl/standard_detsim_sbnd.fcl` | LArSoft `structs.DL`/`DT` (wcls detsim) |
+| `cfg/.../sbnd/fhicl/wirecell_pgrapher_detsim_sbnd.fcl` | ditto |
+| `cfg/.../sbnd/fhicl/wirecell_tbb_deposet_detsim_sbnd.fcl` | ditto |
+| `sbnd_xin/run_clus_evt.sh` + `wct-clustering.jsonnet` | the sim-side clustering entry point's TLA defaults |
 
-Changing the *simulation* to the physical values is a third option and a genuine
-SBND production decision (it would diverge from `sbndcode`); it was **not**
-touched here.
+Compiled-config proof: `wcsonnet` on
+`cfg/.../sbnd/wcls-sim-drift-simchannel-nf-sp.jsonnet` emits
+`Drifter{DL: 6.5781e-07, DT: 1.31349e-06}`, and
+`simparams.lar.{DL,DT}` = `6.5781e-07` / `1.31349e-06` — bit-for-bit the same
+internal-unit values the fit's JSON now holds. So fit and locally-generated sim
+share **one** diffusion model, and the earlier "should the fit diverge from the
+sim?" fork is moot. **Not bit-identical on either side** — simulated waveforms
+change too.
+
+**Caveat that survives the fix — existing MC on disk.** The samples in flight
+(`input_files_reco1/extracted-mcp2025c-*`) are official SBND production,
+simulated with 4.0 / 8.8. Our change only affects sim *we* generate, so until a
+sample is re-simulated the fit still assumes ~15 % more transverse smearing than
+those waveforms contain, and docs 44/46's MC validation on them carries that
+bias. Two further consequences worth stating: our `cfg/.../sbnd/` diffusion now
+**differs from sbndcode's** (propagating upstream is an SBND production decision,
+not made here), and uBooNE's 6.4 / 9.8 remains untouched in
+`TrackFitting.h`'s C++ presets and `qlport/uboone_track_fitting.json`.
 
 ### 6b. Smoke check on MC evt18 — the fit converges; the deltas are NOT measured
 
@@ -626,11 +637,13 @@ Two ordering notes:
    `sbnd_box_recomb` matches the simulation it is applied to. **Owner/SBND
    calibration question — not resolvable in this tree.**
 2. ~~**SBND transverse diffusion `DT`**~~ — **RESOLVED** by §6a: DL = 6.5781,
-   DT = 13.1349 cm²/s (owner-supplied). What remains open is the *simulation*
-   mismatch: sbndcode drifts with DL = 4.0, DT = 8.8 cm²/s, so the fit and the
-   MC it is validated against no longer assume the same diffusion. Reconciling
-   them is an SBND production decision — untouched here, but it caps how well
-   any MC-based fit validation (docs 44/46) can close.
+   DT = 13.1349 cm²/s (owner-supplied), set on **both** the fit and the
+   simulation side, so they share one diffusion model. Two residues, neither
+   fixable from here: **(a)** official MC already on disk (mcp2025c reco1) was
+   simulated with 4.0 / 8.8, so the fit over-smears those waveforms by ~15 %
+   transverse until a sample is re-simulated — that is what caps docs 44/46's MC
+   fit validation; **(b)** our `cfg/.../sbnd/` values now differ from
+   sbndcode's, and propagating them upstream is an SBND production decision.
 3. **The table's restriction energy** — undocumented; determines whether the
    comparison should be against restricted truth (49.8) or δ-ray-inclusive
    truth (60.6) on MC. Doc 46's two-channel truth (`true_dQ` + `true_dQ_sec`)

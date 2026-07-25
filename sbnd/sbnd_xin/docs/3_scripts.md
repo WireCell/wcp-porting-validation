@@ -207,8 +207,8 @@ event list and the `reality` flag.
 | `output_dir` | str | — | output directory |
 | `run` / `subrun` / `event` | code | 0 / 0 / EVT_ID | Bee RSE metadata |
 | `reality` | str | `'sim'` | `'sim'` or `'data'` |
-| `DL` | code | 4.0 | longitudinal diffusion (cm²/s) |
-| `DT` | code | 8.8 | transverse diffusion (cm²/s) |
+| `DL` | code | 6.5781 | longitudinal diffusion (cm²/s; SBND physical, was 4.0) |
+| `DT` | code | 13.1349 | transverse diffusion (cm²/s; SBND physical, was 8.8) |
 | `lifetime` | code | 35 | electron lifetime (ms) |
 | `driftSpeed` | code | 1.565 | drift speed (mm/µs) |
 
