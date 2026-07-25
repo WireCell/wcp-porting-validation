@@ -70,15 +70,15 @@ function(params)
         // run_ql_evt.sh threads QL_LM / --tla-code lm.  Cut overrides go through
         // the canonical lm_params (not exposed here; retune via C++/canonical
         // defaults or an lm_params plumb-through when a scan needs it).
-        // realign_perblob (C++ default false; key omitted when off =>
-        // byte-identical): reorder each split main's "perblob" dataset rows to
-        // the recomposed blob order (doc 52 §11).  Threaded from
-        // wct-clus-matching-perevt.jsonnet's save_assoc TLA -- the assoc
-        // provenance is unusable without it.
+        // realign_perblob (C++ default TRUE since doc 52 §12.8; null here =
+        // inherit, key omitted): reorder each split main's "perblob" dataset
+        // rows to the recomposed blob order.  Pass false ONLY for A/B
+        // archaeology (reproduces the pre-fix misaligned behavior).  Threaded
+        // from wct-clus-matching-perevt.jsonnet's realign TLA.
         matching(anode, dv, n, reality, semimodel_file, cathode_fiducial='', calib_dump='',
                  pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false,
                  beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false, lm=false,
-                 realign_perblob=false)::
+                 realign_perblob=null)::
             base.matching(anode, dv, n, reality, semimodel_file, cathode_fiducial, calib_dump,
                           pmt_nl=pmt_nl, lm=lm, realign_perblob=realign_perblob,
                           extra=diag_on(cathode_diag) + automask_on(auto_mask)
@@ -88,7 +88,7 @@ function(params)
         matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial='', calib_dump='',
                        pmt_nl=true, cathode_diag='', auto_mask=false, beam_pref=false,
                        beam_pref_weight=0.5, beam_pref_rescue=0.2, main_flag=false, lm=false,
-                       realign_perblob=false)::
+                       realign_perblob=null)::
             base.matching_joint(anodes, dv, reality, semimodel_file, cathode_fiducial, calib_dump,
                                 pmt_nl=pmt_nl, lm=lm, realign_perblob=realign_perblob,
                                 extra=diag_on(cathode_diag) + automask_on(auto_mask)

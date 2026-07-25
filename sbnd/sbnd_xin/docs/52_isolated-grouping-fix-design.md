@@ -1043,4 +1043,80 @@ Both predate doc 52 and are independent of `save_assoc`. Turning
 default on (it would change production output). Flipping it on for production
 needs its own validation round.
 
-### 12.7 30-event A/B redo (tags d52roff / d52ron)
+### 12.7 30-event A/B redo (tags d52roff / d52ron) — replaces the VOID §9/§10 numbers
+
+**Repro:** `./run_d52_campaign.sh both d52r` then
+`python3 d52_ab_report.py --off-tag d52roff --on-tag d52ron`
+(both arms `setarch x86_64 -R`, imaging symlinked from `work-*-d49son`).
+
+- **GATE (knob-off): 210/210 archive comparisons identical → PASS** — the
+  realign fix, the min_gap removal and the checker leave the legacy path
+  byte-identical (member-content hashes vs `work-*-mainreal` / `work-*-d49son`).
+- **Q/L stage, on vs off: 90/90 identical** → every nusel delta is attributable
+  to the un-merge (realign changes no Q/L physics; the assoc arrays are the
+  only addition).
+- **Effect:** 200 clusters split into 786 associated pieces (4677 blobs moved);
+  **0 of 200** splits left a degenerate main (≤ 3 blobs).
+- **Verdicts (30 events):**
+
+  | verdict | off | on | delta |
+  |---|---|---|---|
+  | tgm | 122 | 121 | **−1** |
+  | stm | 44 | 52 | **+8** |
+  | fc  | 51 | 52 | +1 |
+
+  Compare the corrupt round (§10): tgm −13, stm −7. The TGM regression is
+  gone — with NO min_gap, the un-merge now removes only genuinely detached
+  pieces, so `rescue_chord_check` keeps its endpoint support.  The +8 STM is
+  the intended doc-50 effect: fits that used to walk into a detached clump
+  (and fail the stopping-muon shape test on garbage dQ/dx) now end on the real
+  track.  The single lost TGM is a hand-scan follow-up, not a blocker.
+- Hand-scan display: `serve_nusel_scan.sh 5011 --tag d52ron --charge-src pr
+  --prev ../work-*-d49son:d49son ../work-*-d52ron` (port 5011, amber = verdict
+  changed vs the d49son scan).
+
+### 12.8 Default flipped ON (owner decision, 2026-07-25)
+
+Owner: *"This fix once demonstrated should be on naturally"* and *"we should
+definitely fix the pre-existing bug you reported in 12.6."*  Both point at the
+same action, taken here: **`m_realign_perblob` C++ default = true.**
+
+Why this is safe per detector:
+
+- **PDHD / PDVD: structural no-op.** `decompose_cluster_groups()` only splits a
+  cluster whose "isolated" array contains a `-1` main marker, and only
+  `examine_bundles` writes `-1` — which is DISABLED in both configs
+  (`pdhd/clus.jsonnet:483`, `protodunevd/clus.jsonnet:529`; they run the bare
+  `cm.isolated()`, whose cc is 0,1,2,…).  No decompose ⇒ `others.empty()` ⇒ the
+  realign block is never reached.  The flip protects them for the day they
+  adopt the SBND-style chain.
+- **SBND: the intended change.** The recomposed "isolated" rows are now
+  aligned, so the all-APA `examine_bundles` main-overlap vote (§12.6 consumer
+  1) reads true rows.  Production output changes by design — quantified by the
+  production-delta arm below.
+
+Knob plumbing after the flip: jsonnet arg is a TRISTATE (`null` = inherit the
+C++ default = on; explicit `false` reproduces the pre-fix behavior).  Runner:
+`run_ql_evt.sh -no-realign` / `SBND_REALIGN=0` — A/B archaeology only.
+Compiled-config proof: default emits no key; `-no-realign` emits
+`"realign_perblob": false` on both QLMatching nodes.
+
+**Production-delta arm (tag d52rp):** `./run_d52_campaign.sh off d52rp` with
+the flipped default — same flags as d52roff, the ONLY difference is realign
+(work dirs `work-*-d52rpoff`; comparison script: session scratch
+`d52rp_delta.py`, member-content hashes + per-main verdict tuples).
+
+Result over the 30 events, d52rpoff (realign on) vs d52roff (old behavior):
+
+- **archives: 120/120 differ** — expected: every pctree/Bee product contains
+  the perblob arrays, whose rows are now truthful, and the all-APA
+  examine_bundles vote rewrites "isolated" from correctly-attributed inputs.
+- **nusel verdict tables: 30/30 row-for-row IDENTICAL** — per-main
+  (tgm, stm, fc, stmfit) tuples unchanged on every bundle; totals
+  tgm 121 / stm 43 / fc 50 in BOTH arms (per-main de-duplicated count).
+
+So on this manifest the default flip changes the *representation* (arrays now
+mean what they say) and not one physics verdict.  The verdict-visible effect
+of correct provenance arrives only through the opt-in assoc chain
+(`-save-assoc` / `-unmerge-assoc`, §12.7).  Doctests re-run after the flip:
+clus 518/518, match 36/36.

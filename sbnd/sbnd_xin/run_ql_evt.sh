@@ -82,6 +82,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
                 tarball, so the PR job can un-merge it (run_nusel_evt.sh
                 -unmerge-assoc) and fit the main alone.  Use with -save-pctree.
                 Env: SBND_SAVE_ASSOC=1.
+  -no-realign   A/B ARCHAEOLOGY ONLY: reproduce the pre-fix behavior where
+                QLMatching's decompose/recompose left every perblob array
+                misaligned with the permuted blob order (doc 52 §12; the fix
+                realign_perblob is ON by C++ default since §12.8).
+                Env: SBND_REALIGN=0.
   -trace-bee  DIAGNOSTIC: dump one Bee "clustering" layer per clustering step
             (tr<NN>_<Type>, per-APA zips AND mabc-all-apa.zip), so a merge can
             be attributed to the pass that made it.  Match pieces by point
@@ -178,6 +183,11 @@ TRACE_BEE="${SBND_TRACE_BEE:-0}"
 # grouping (run_nusel_evt.sh -unmerge-assoc) and fit the main alone.
 # Only meaningful together with -save-pctree.
 SAVE_ASSOC="${SBND_SAVE_ASSOC:-0}"
+# -no-realign: doc 52 §12.8, A/B archaeology ONLY.  QLMatching realign_perblob
+# is ON by C++ default (recompose keeps the perblob rows aligned with the
+# permuted blob order); this reproduces the pre-fix misaligned behavior.
+# Env: SBND_REALIGN=0.
+REALIGN="${SBND_REALIGN:-}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -196,6 +206,7 @@ while [ $# -gt 0 ]; do
         -save-rcid|--save-rcid) SAVE_RCID=1; shift ;;
         -trace-bee|--trace-bee) TRACE_BEE=1; shift ;;
         -save-assoc|--save-assoc) SAVE_ASSOC=1; shift ;;
+        -no-realign|--no-realign) REALIGN=0; shift ;;
         -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         *) _args+=("$1"); shift ;;
@@ -324,6 +335,7 @@ process_event() {
         --tla-code "save_rcid=$([ "$SAVE_RCID" = 1 ] && echo true || echo false)" \
         --tla-code "trace_bee=$([ "$TRACE_BEE" = 1 ] && echo true || echo false)" \
         --tla-code "save_assoc=$([ "$SAVE_ASSOC" = 1 ] && echo true || echo false)" \
+        --tla-code "realign=$([ "$REALIGN" = 0 ] && echo false || echo null)" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \

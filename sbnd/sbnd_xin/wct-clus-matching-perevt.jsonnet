@@ -131,6 +131,13 @@ function(
     // Only meaningful WITH save_tensors.  Off => both keys omitted => compiled
     // config byte-identical.  Runner flag: -save-assoc / SBND_SAVE_ASSOC=1.
     save_assoc     = false,
+    // realign (default null = inherit the C++ default, which is TRUE since
+    // doc 52 §12.8): QLMatching realign_perblob.  Pass false ONLY to
+    // reproduce the pre-fix misaligned behavior for A/B archaeology (the
+    // recomposed "isolated" rows then stay stale, changing the all-APA
+    // examine_bundles main-overlap vote inputs back to the old ones).
+    // Runner flag: -no-realign / SBND_REALIGN=0.
+    realign        = null,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -184,17 +191,13 @@ function(
         },
     }, nin=0, nout=1) for n in std.range(0, nanodes - 1)];
     local flash_attach   = [qlm.flash_attach(n) for n in std.range(0, nanodes - 1)];
-    // realign_perblob rides on save_assoc: the assoc_cluster_* provenance the
-    // per-face isolated stage writes is unusable unless QLMatching's
-    // decompose/recompose keeps the perblob rows aligned with the permuted
-    // blob order (doc 52 §11).  save_assoc=false => key omitted => byte-identical.
     local matching_pipes = [qlm.matching(anodes[n], clus_maker.detector_volumes([anodes[n]]),
                                          n, reality, semimodel_file,
                                          cathode_fiducial=cathode_fv.tn,
                                          calib_dump=calib_dump, cathode_diag=cathode_diag,
                                          pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref,
                                          beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
-                                         main_flag=main_flag, lm=lm, realign_perblob=save_assoc)
+                                         main_flag=main_flag, lm=lm, realign_perblob=realign)
                             for n in std.range(0, nanodes - 1)];
 
     // --- Graph: per-APA matching (default) or joint multi-APA matching ---
@@ -210,7 +213,7 @@ function(
                                                calib_dump=calib_dump, cathode_diag=cathode_diag,
                                                pmt_nl=pmt_nl, auto_mask=auto_mask, beam_pref=beam_pref,
                                                beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
-                                               main_flag=main_flag, lm=lm, realign_perblob=save_assoc);
+                                               main_flag=main_flag, lm=lm, realign_perblob=realign);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
             local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, save_assoc_cluster_id=save_assoc, trace_bee=trace_bee);
             local per_apa_pre = [g.intern(
