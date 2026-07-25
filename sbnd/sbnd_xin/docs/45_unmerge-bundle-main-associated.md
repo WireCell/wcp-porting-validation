@@ -1,6 +1,8 @@
 # 45 — Restoring the prototype "main cluster + associated clusters" data product
 
-`ClusteringUnmergeBundle` (new, default OFF), SBND MC 10-event sample.
+`ClusteringUnmergeBundle`, SBND MC 10-event sample. **Default flipped ON for
+SBND on 2026-07-25** on the strength of the 30-event DATA validation in the
+last section — see it for the evidence and for how to get the legacy path back.
 
 **Read the Root cause section before the Fix section.** The reported symptom
 (`showcase-stmfit-mc-evt18/track_com_18.root`, cluster id 80) turns out to
@@ -324,3 +326,121 @@ consequences above — companion counting is not yet demonstrated live.
   instruction, same decision as docs 44/46) by the `work-mcsim-unmon`
   regeneration.  Content-identical to the doc-46 file — see §(b) — so the
   doc-44/46 figures and `stmfit_mc_compare.py` numbers all still hold.
+
+---
+
+## 30-event DATA validation, and the default flip (2026-07-25)
+
+The sections above validated the knob on the 10-event MC sample. This section
+is the DATA evidence the owner asked for before making it the default, from the
+same 30-event sample the STM hand scan runs on.
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# ql_evt*/ and evt*/ symlinked from work-*-fvxy, exactly as dq48v3 did, so only
+# the PR tail reruns (~6 s/event).
+for suff in mcp10 mcp1000 mcp1000b; do
+  mkdir -p work-$suff-unm45
+  for d in work-$suff-fvxy/ql_evt* work-$suff-fvxy/evt*; do
+    ln -sfn $PWD/$d work-$suff-unm45/$(basename $d); done
+done
+F="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3"
+X="-mip 56000 -stm-fit -unmerge"
+S=$PWD/input_files_reco1/staged-mcp2025c-1000evt
+SBND_MAX_JOBS=5 SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-mcp2025c-10evt \
+  SBND_WORK_ROOT=$PWD/work-mcp10-unm45 ./run_nusel_evt.sh data all $F $X
+for e in $(seq 10 19); do SBND_INPUT_DIR=$S/e$e SBND_WORK_ROOT=$PWD/work-mcp1000-unm45  ./run_nusel_evt.sh data 1 $F $X; done
+for e in $(seq 20 29); do SBND_INPUT_DIR=$S/e$e SBND_WORK_ROOT=$PWD/work-mcp1000b-unm45 ./run_nusel_evt.sh data 1 $F $X; done
+```
+
+Tags: `work-{mcp10,mcp1000,mcp1000b}-unm45` (knob ON) against
+`work-{mcp10,mcp1000,mcp1000b}-dq48v3` (knob OFF, doc 48/49 scan point). Fresh
+tags; nothing pre-existing was written into (M13).
+
+**A/B validity.** The two runs differ in the unmerge visitor and nothing else:
+`libWireCellClus.so` was byte-identical before and after the batch (mtime
+10:13:24, size 344199776, checked either side of the run), and the doc-49
+`stm_consistent_fv` work landed in `clus.jsonnet` / `wct-pr-perevt.jsonnet` /
+`run_nusel_evt.sh` at 11:07, after the batch ended at 11:03. Corroborated from
+the output itself: the `contained` population is 148 here vs 147 for `dq48v3`,
+whereas the consistent-FV change moves ~96 of them (doc 49 §4). The `unm45`
+settings line carries no `stmfv=` field for the same reason.
+
+### The reported case: data evt284657, flash grp 5, main 27
+
+QL cluster 27 is a flash-merged bundle of two pieces on OPPOSITE sides of the
+cathode — `real_cluster_id` 32 (300 pts, 30.8 cm, x in [0.7, 11.9]) and 21
+(37 pts, 15.8 cm, x in [-18.8, -16.9]) — whose closest approach is 38.9 cm.
+`ClusteringUnmergeBundle` splits it `85 blobs -> main 69 + 1 associated
+holding 16` from exact provenance. What the STM fit does either side:
+
+|                 | knob OFF (`dq48v3`)              | knob ON (`unm45`)          |
+|-----------------|----------------------------------|----------------------------|
+| fit pts, extent | 139 pts, **71.8 cm**             | 55 pts, 29.5 cm            |
+| fit x range     | **-18.3 .. +6.9** (over cathode) | +1.2 .. +6.9 (one side)    |
+| pass status     | **2 = rej: long leftover**       | **0 = accepted (STM)**     |
+| exit_L / left_L | 23.9 / **61.0** cm               | 30.3 / 3.8 cm              |
+| eval_stm        | never reached (no rows)          | **verdict PASS**, res_L 7.9 cm |
+
+The 61 cm "leftover" that rejected it was the OTHER cathode-side cluster. This
+is the general failure the knob was written for, now shown on data rather than
+on the MC evt18 case (which §(b) established is a clustering-chain over-merge
+and remains unfixed by this knob).
+
+### Effect on the 30-event sample
+
+329 bundles, identical row set before and after (0 rows appear or disappear —
+the table is keyed on Q/L bundles, which the PR-stage split does not touch).
+**14 bundles change `tgm/stm/fc`:**
+
+```
++7 STM   eval->eval, fit now confined to one cluster
+         284657 g5, 286021 g4, 286527 g15, 288397 g4, 288639 g4, 289475 g5, 290201 g9
++3 TGM   286021 g3 (nosteiner->tgm), 286329 g4, 290135 g2 (contained->tgm)
++2 FC    287759 g9, 288287 g6 (eval->contained: the main alone IS contained)
+-2 FC    289343 g6, 289849 g18 (contained->nosteiner)
+```
+
+The two FC losses are benign and worth understanding rather than fixing: both
+are 22-blob bundles whose main shrinks to 8 and 11 blobs after the split, below
+what `steiner` needs, so the tagger no longer runs at all. The FC flag they
+lost had been computed on an object that was mostly other clusters' blobs —
+`289849 g18` is 2.1 cm long. No bundle with real charge lost a verdict.
+
+Splits are 100 % exact: every event logs `N exact/provenance, 0
+proxy/component`. The `-save-rcid` provenance is present in all three tags'
+pctrees (they descend from `work-*-mainreal`), so no cluster was left unsplit.
+
+`stmfit` census moves the way the mechanism predicts — fewer bundles reach a
+fit because the fit no longer has to explain a second cluster, and those that
+do reach it are cleaner:
+
+```
+              dq48v3        unm45
+  contained      147          148
+  tgm            118          122
+  eval            37           31
+  nosteiner       24           25
+  nexits           1            1
+  midkink          1            -
+  postfit          -            1
+  -                -            1
+```
+
+### The default
+
+`run_nusel_evt.sh`: `UNMERGE="${SBND_UNMERGE:-1}"` (was `:-0`). `-no-unmerge`
+or `SBND_UNMERGE=0` restores the legacy merged-bundle pipeline for an A/B.
+
+The jsonnet defaults are deliberately NOT touched. `pipeline_names` defaults to
+`[]` in both `clus.jsonnet` and `wct-pr-perevt.jsonnet`, and that empty list is
+the pass-through the PR round-trip identity gate depends on — the SBND PR
+pipeline is selected by the runner, so the runner is where "default" lives.
+`unmerge_bundle_mode` stays `real`: the component proxy is a probe (§Open 1),
+never a fallback.
+
+**This is a behavior change, not a byte-identical one** — 14 of 329 bundles
+move. The hand scan on the `unm45` tag is what confirms the 7 new STM and 3 new
+TGM tags are right; until it is done, treat those as proposed, not established.

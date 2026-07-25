@@ -145,8 +145,10 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 runner passes -save-rcid to a Q/L step it LAUNCHES, but an
                 EXISTING pctree is reused as-is -- point SBND_WORK_ROOT at a
                 root whose ql_evt*/ came from a -save-rcid run.
-                DEFAULT OFF = byte-identical legacy pipeline.
-                Env: SBND_UNMERGE=1.
+                DEFAULT ON (doc 45): 14 of 329 bundles on the 30-event
+                sample move, all toward the prototype's per-cluster view.
+                Env: SBND_UNMERGE=0, or -no-unmerge, for the legacy
+                merged-bundle pipeline.
   -unmerge-comp like -unmerge but pick the main from the longest RELAXED-GRAPH
                 CONNECTED COMPONENT instead of the flash-merge provenance.
                 That is a clustering decision, not bookkeeping (the relaxed
@@ -269,9 +271,16 @@ QL_LM="${SBND_QL_LM:-0}"
 STM_FIT="${SBND_STM_FIT:-0}"
 # Restore the prototype main+associated data product before the taggers by
 # splitting each flash-merged bundle back into its pre-merge members (doc 45).
-# DEFAULT OFF: opt in with -unmerge / SBND_UNMERGE=1.  The visitor is inserted
-# between switch_scope and steiner (it MUST precede steiner_pc creation).
-UNMERGE="${SBND_UNMERGE:-0}"
+# DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
+# cosmics as ONE track -- evt284657 cluster 27 was fitted across the cathode
+# (139 pts, 71.8 cm, x -18.3..+6.9) and rejected as "long leftover"; split, the
+# same cluster is a 29.5 cm one-sided stopping muon that PASSES eval_stm.  On
+# the 30-event dq48v3 sample the split moved 14 of 329 bundles (+7 STM, +3 TGM,
+# +2 FC, -2 FC on sub-steiner leftovers), every split from exact per-blob
+# provenance (0 proxy fallbacks).  The visitor is inserted between switch_scope
+# and steiner (it MUST precede steiner_pc creation).
+# -no-unmerge / SBND_UNMERGE=0 restores the legacy merged-bundle pipeline.
+UNMERGE="${SBND_UNMERGE:-1}"
 # How -unmerge identifies the main: "real" = per-blob flash-merge provenance
 # (exact, needs a -save-rcid pctree -- this runner passes it), "component" =
 # longest connected component (proxy).  -unmerge-comp selects the proxy.

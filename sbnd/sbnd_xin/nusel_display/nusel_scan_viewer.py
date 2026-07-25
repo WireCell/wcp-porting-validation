@@ -658,7 +658,7 @@ for f, hx, hy in ((f_xy, "x", "y"), (f_yz, "z", "y"), (f_xz, "x", "z")):
 # --- STM dQ/dx panel (doc 40) ----------------------------------------------
 # Measured fitted dQ/dx vs residual range for the focused bundle's main
 # cluster, against the muon stopping expectation (the exact eval_stm reference
-# table) and the flat 50 ke/cm MIP line.  Marker: TPC0 circle / TPC1 triangle
+# table) and the flat MIP line.  Marker: TPC0 circle / TPC1 triangle
 # (from the point's drift-x sign); color: forward pass blue / backward red.
 f_dqdx = figure(title="STM fit: dQ/dx vs residual range (main cluster)",
                 width=640, height=300,
@@ -674,7 +674,11 @@ stmflat_src = ColumnDataSource(data=dict(rr=[], flat=[]))
 f_dqdx.line("rr", "mu", source=stmref_src, line_color="#2ca02c", line_width=2,
             legend_label="muon expectation")
 f_dqdx.line("rr", "flat", source=stmflat_src, line_color="#888888",
-            line_dash="dashed", legend_label="flat 50 ke/cm")
+            line_dash="dashed",
+            # Label from MIP_DQDX, never a literal: the flat line IS the
+            # mip_dqdx knob (SBND 56000 e/cm, doc 48), and a hardcoded "50"
+            # mislabelled it as the inherited MicroBooNE value.
+            legend_label=f"flat {MIP_DQDX / 1e3:.0f} ke/cm (mip_dqdx)")
 r_dqdx = f_dqdx.scatter("rr", "dqdx", source=stmdqdx_src, marker="marker",
                         size=5, fill_color="color", line_color=None,
                         fill_alpha=0.85)
