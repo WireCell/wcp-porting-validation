@@ -52,6 +52,7 @@ Usage:
 import argparse
 import io
 import json
+import os
 import re
 import sys
 import tarfile
@@ -66,6 +67,7 @@ FLASH_GROUP_NS = 80.0  # cross-APA coincidence window (= MABC flash_group_window
 COLUMNS = ['run', 'subrun', 'event', 'main_id', 'flash_gid', 'flash_apa', 'flash_grp',
            'flash_time_us', 'flash_pe', 'flash_pe_grp', 'in_beam', 'n_bundle',
            'npts_main', 'npts_bundle', 'len_main_cm', 'n_frag', 'tgm', 'stm', 'fc',
+           'stmfit',
            'lm', 'label']
 
 
@@ -221,6 +223,8 @@ RE_STM = re.compile(r'TaggerCheckSTM: cluster (\d+) \S+ STM=' + VERDICT
 # information is the trailing =true/=false, which a tear destroys.
 RE_SKIP = re.compile(r'TaggerCheckSTM: cluster (\d+) already TGM')
 RE_FC = re.compile(r'TaggerCheckFC: cluster (\d+) \S+ FC=' + VERDICT + r'\b')
+# "cluster N no STM fit: <reason>" -- the pre-fit exits of check_stm_conditions.
+RE_STM_SKIP = re.compile(r'check_stm_conditions: cluster (\d+) no STM fit: (.+)')
 
 
 def parse_prlog(fname):
@@ -245,7 +249,111 @@ def parse_prlog(fname):
                 v = verdicts.setdefault(int(m.group(1)), {})
                 v.setdefault('tgm', 1)
                 v['stm'] = 0
+                v['stm_skip_tgm'] = 1
     return verdicts
+
+
+def parse_prtree_flags(fname):
+    """{cluster_ident: {'tgm','stm','fc'}} from a POST-PR pctree's cluster_scalar.
+
+    This is the authoritative verdict source and it exists because the taggers
+    stamp flag_TGM / flag_STM / flag_FC onto every cluster
+    (MultiAlgBlobClustering::normalize_cluster_flags), which the saved tree
+    carries.  Preferred over parse_prlog because a log line can be TORN by
+    interleaved writes and then simply fails to match: evt287517 cluster 8
+    logged "TaggerCheckSTM: c" on one line and "luster 8 -> STM=1 TGM=0"
+    seventy lines later, so the regex read no verdict and the bundle was
+    written out as not-tagged when the tagger had in fact said STM=1.  The tear
+    is deterministic (a write-buffer boundary), so re-running does not fix it,
+    and it moves when unrelated logging changes -- turning -stm-fit on was
+    enough to create it.  Flags cannot tear.
+
+    Requires run_nusel_evt.sh -save-pr-tree.  Returns {} if the file is absent
+    or predates the taggers (no flag_* arrays), and the caller falls back to
+    the log.
+    """
+    if not fname or not os.path.isfile(fname):
+        return {}
+    try:
+        bp = load_pctree(fname)
+    except Exception as e:
+        print(f'WARNING: cannot read {fname}: {e}', file=sys.stderr)
+        return {}
+    live = [q for q in bp if re.fullmatch(r'pointtrees/\d+/live', q)]
+    if len(live) != 1:
+        return {}
+    md = bp[live[0]][0]
+    items = bp[md['pointclouds']][0]['items']
+    if 'cluster_scalar' not in items:
+        return {}
+    cs = bp[items['cluster_scalar']][0]['arrays']
+    # MultiAlgBlobClustering::normalize_cluster_flags only normalizes flags that
+    # at least ONE cluster carries, and a tagger sets its flag only on a cluster
+    # it tagged.  So an ABSENT flag_X array on a post-tagger tree means "no
+    # cluster in this event got X", i.e. verdict 0 everywhere -- not unknown.
+    # (evt289145: all_flags=[TGM,...] with no STM and no FC, because nothing was
+    # tagged either way; evt287517 has all three.)  If none of the three are
+    # present we cannot tell a post-tagger tree from a pre-tagger one, so give
+    # up and let the caller fall back to the log.
+    present = {'flag_TGM', 'flag_STM', 'flag_FC'} & set(cs)
+    if not present:
+        return {}
+
+    def a(n):
+        return bp[cs[n]][1]
+
+    ident = a('ident').astype(int)
+    out = {}
+    for i, cid in enumerate(ident):
+        v = {}
+        for key, arrname in (('tgm', 'flag_TGM'), ('stm', 'flag_STM'), ('fc', 'flag_FC')):
+            v[key] = int(a(arrname)[i]) if arrname in cs else 0
+        out[int(cid)] = v
+    return out
+
+
+# "cluster N no STM fit: <reason>" -> a short column code for the scan table.
+# Order matters: first substring match wins.
+STMFIT_CODES = [
+    ('fully contained',      'contained'),   # Mid Point A: cluster_fc_check says no FV exit
+    ('Mid Point B',          'midkink'),     # 1 exit point + >120 deg mid-track kink
+    ('Mid Point C',          'nexits'),      # != 1 candidate exit point
+    ('no steiner_pc',        'nosteiner'),
+    ('no fiducialutils',     'nofidu'),
+    ('round-1 forward fit',  'shortfit'),    # <=3 fit points
+    ('no pass recorded',     'postfit'),     # exited after round-1, nothing persisted
+]
+
+
+def stmfit_code(reason):
+    for frag, code in STMFIT_CODES:
+        if frag in reason:
+            return code
+    return 'skip'
+
+
+def parse_stm_skips(fname):
+    """{cluster_ident: reason} for clusters the STM tagger exited before fitting.
+
+    Reads the "cluster N no STM fit: <reason>" DEBUG lines from
+    TaggerCheckSTM::check_stm_conditions.  Answers "why is there no dQ/dx fit
+    for this bundle?" -- previously only knowable from SPDLOG_LOGGER_TRACE
+    lines, which are compiled out of this build.
+    """
+    skips = {}
+    if not fname or not os.path.isfile(fname):
+        return skips
+    with open(fname, errors='replace') as f:
+        for line in f:
+            m = RE_STM_SKIP.search(line)
+            if m:
+                # FIRST reason wins: check_stm_conditions logs the specific
+                # pre-fit exit, and the visit loop then logs the generic
+                # "no pass recorded" catch-all for the same cluster.  Keeping
+                # the specific one is what makes the column diagnostic.
+                skips.setdefault(int(m.group(1)),
+                                 m.group(2).strip().split(' ../')[0])
+    return skips
 
 
 def parse_qlbee(fname):
@@ -373,11 +481,48 @@ def one_event(args):
             print(f'WARNING: evt{event} out-of-scope main {c["ident"]} WAS evaluated '
                   f'by the taggers -- is require_in_scope on?', file=sys.stderr)
 
+    # Verdicts: prefer the post-PR tree's flags, fall back to the log per key.
+    # See parse_prtree_flags for why the log alone is not trustworthy.
+    flagv = parse_prtree_flags(getattr(args, 'prtree', None))
+    if flagv:
+        # Only report on clusters the log DID mention: the log never logs a
+        # cluster the taggers skipped, so "log has no line" is normal and not
+        # worth a note.  A genuine contradiction (log says 0, flag says 1, or
+        # vice versa) means a torn line and is worth seeing.
+        bad = [(cid, k, verdicts[cid][k], fv[k])
+               for cid, fv in flagv.items() if cid in verdicts
+               for k in ('tgm', 'stm', 'fc')
+               if k in verdicts[cid] and k in fv and verdicts[cid][k] != fv[k]]
+        if bad:
+            print(f'NOTE: evt{event}: {len(bad)} log verdict(s) CONTRADICTED by '
+                  f'the post-PR tree flags (torn log line); flags win: '
+                  + ', '.join(f'cluster {c} {k} log={l} flag={f}'
+                              for c, k, l, f in bad), file=sys.stderr)
+
+    skips = parse_stm_skips(getattr(args, 'prlog', None))
+
     rows = []
     for c in sorted(bundles, key=lambda c: c['t0_us']):
         peers = [o for o in clusters if o['gid'] == c['gid'] and o is not c]
-        v = verdicts.get(c['ident'], {})
+        v = dict(verdicts.get(c['ident'], {}))
+        v.update({k: val for k, val in flagv.get(c['ident'], {}).items()})
         tgm, stm, fc = v.get('tgm', -1), v.get('stm', -1), v.get('fc', -1)
+        # stmfit: did this bundle's main cluster reach the STM trajectory fit,
+        # and if not, which pre-fit exit stopped it.  'fit' means a dQ/dx fit
+        # exists (the event display's STM panel will have curves); anything else
+        # names the reason there is none.
+        if c['ident'] in skips:
+            stmfit = stmfit_code(skips[c['ident']])
+        elif v.get('stm_skip_tgm'):
+            stmfit = 'tgm'          # already TGM, STM never ran
+        elif stm >= 0:
+            # Evaluated with no logged exit.  Called 'eval' rather than 'fit'
+            # because only the dQ/dx dump proves a trajectory was persisted --
+            # the event display upgrades this to 'fit' when tracking-stm.root
+            # actually has points for the cluster.
+            stmfit = 'eval'
+        else:
+            stmfit = '-'            # never evaluated
         in_beam = int(lo <= c['t0_us'] < hi)
         fl = flashes.get(c['gid'])
         g = fgrp.get(c['gid'], -1)
@@ -387,7 +532,7 @@ def one_event(args):
                      f'{c["t0_us"]:.3f}', f'{fl["pe"]:.1f}' if fl else '-1',
                      f'{pe_grp.get(g, 0.0):.1f}', in_beam, 1 + len(peers),
                      c['npts'], c['npts'] + sum(o['npts'] for o in peers),
-                     f'{glen:.1f}', nfrag, tgm, stm, fc, c['lm'],
+                     f'{glen:.1f}', nfrag, tgm, stm, fc, stmfit, c['lm'],
                      label_of(tgm, stm, in_beam, c['lm'])])
 
     # In-window PHYSICAL flashes (deduped) with no qualifying bundle.
@@ -402,7 +547,7 @@ def one_event(args):
         seen.add(gr)
         rows.append([args.run, args.subrun, event, -1, g, f['apa'], gr,
                      f'{f["t_us"]:.3f}', f'{f["pe"]:.1f}', f'{pe_grp[gr]:.1f}',
-                     1, 0, 0, 0, '0.0', 0, -1, -1, -1, -1, 'no-bundle'])
+                     1, 0, 0, 0, '0.0', 0, -1, -1, -1, '-', -1, 'no-bundle'])
 
     with open(args.out, 'w') if args.out else sys.stdout as fh:
         if args.no_header:
@@ -472,7 +617,11 @@ def main():
     ap.add_argument('--prbee', help="PR job's mabc-pr.zip (in-scope cluster set)")
     ap.add_argument('--qlbee', help="QL job's mabc-all-apa.zip (per-merge-component "
                                     "geometry via real_cluster_id)")
-    ap.add_argument('--prlog', help='PR-job log (tagger verdicts)')
+    ap.add_argument('--prlog', help='PR-job log (tagger verdict FALLBACK + '
+                                    'STM no-fit reasons)')
+    ap.add_argument('--prtree', help="post-PR pctree tarball (authoritative "
+                                     "tagger verdicts from flag_TGM/STM/FC; "
+                                     "needs run_nusel_evt.sh -save-pr-tree)")
     ap.add_argument('--beam-window', default='0.2,2.2',
                     help='low,high in us on cluster_t0 (default 0.2,2.2)')
     ap.add_argument('--run', type=int, default=0)

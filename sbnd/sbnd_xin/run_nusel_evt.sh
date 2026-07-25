@@ -212,7 +212,13 @@ EOF
 
 MODE=mc
 BEAM_WINDOW="0.2,2.2"
-SAVEPRT=""
+# Post-PR pctree.  DEFAULT ON: its cluster_scalar carries flag_TGM/flag_STM/
+# flag_FC, which is the authoritative tagger verdict source for nusel_extract.
+# The log-regex fallback is not trustworthy on its own -- a log line can be torn
+# by interleaved writes and then reads as "no verdict" (evt287517 cluster 8
+# logged STM=1 but the line split, and the bundle came out not-tagged).
+# Costs ~3.5 MB/event.  -no-save-pr-tree to skip it.
+SAVEPRT=1
 # check_neutrino_candidate veto in tagger_check_tgm (in-beam-window bundles may
 # then be tagged TGM).  DEFAULT ON for this chain as of doc 26 -- the knob-off
 # path left in-beam bundles untaggable by construction, which is not the
@@ -279,6 +285,7 @@ while [ $# -gt 0 ]; do
         mc|data) MODE="$1"; shift ;;
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -save-pr-tree|--save-pr-tree) SAVEPRT=1; shift ;;
+        -no-save-pr-tree|--no-save-pr-tree) SAVEPRT=""; shift ;;
         -nucand|--nucand) NUCAND=1; shift ;;
         -no-nucand|--no-nucand) NUCAND=0; shift ;;
         -chord|--chord) CHORD=1; shift ;;
@@ -425,6 +432,7 @@ process_event() {
     # 3. Per-bundle label table.
     python3 "$SBND_DIR/nusel_extract.py" \
         --pctree "$PCT" --prbee "$NUDIR/mabc-pr.zip" --prlog "$LOG" \
+        --prtree "$NUDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
         --qlbee "$QLDIR/mabc-all-apa.zip" \
         --beam-window "$BEAM_WINDOW" \
         --run "$RUN_NO" --subrun "$SUBRUN_NO" \

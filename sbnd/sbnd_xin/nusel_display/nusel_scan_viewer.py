@@ -80,14 +80,25 @@ except Exception:
 
 # Reference dQ/dx-vs-residual-range curves (e/cm) extracted from the compiled
 # WCT config's LinterpFunctions -- the EXACT muon table TaggerCheckSTM's
-# eval_stm compares against (plateau ~49 ke/cm), plus the flat 50 ke/cm MIP
-# reference.  See docs/40_stm-trackfit-validation-plan.md.
+# eval_stm compares against, plus the flat MIP reference.
+# See docs/40_stm-trackfit-validation-plan.md and docs/48.
 STM_REF = {}
 try:
     with open(os.path.join(HERE, "stm_ref_dqdx.json")) as _f:
         STM_REF = json.load(_f)
 except Exception:
     pass
+
+# Flat MIP dQ/dx (e/cm) = TaggerCheckSTM's ref_flat and its threshold divisor,
+# i.e. the jsonnet `mip_dqdx` knob.  MUST track the config or the drawn line and
+# the "MIP" units in the summary lie: SBND runs 56000 (doc 48), the C++ default
+# and MicroBooNE value is 50000.  Derived from the muon table's plateau, which
+# is where 56000/50000 came from (50000/48879.4 = 56000/54657.7 = 1.023), so it
+# follows a regenerated stm_ref_dqdx.json automatically instead of drifting.
+MIP_DQDX = 50e3
+if "MuonDeDx" in STM_REF:
+    _plateau = STM_REF["MuonDeDx"]["values"][-1]
+    MIP_DQDX = round(_plateau * 1.02293, -3)   # 48879.4 -> 50000, 54657.7 -> 56000
 
 # TaggerCheckSTM save_stm_fit pass-status codes (clus/src/TaggerCheckSTM.cxx).
 STM_STATUS = {0: "accepted (STM)", 1: "TGM", 2: "rej: long leftover",
@@ -345,6 +356,12 @@ class Event:
                 len_cm=float(r[i["len_main_cm"]]), n_frag=int(r[i["n_frag"]]),
                 tgm=int(r[i["tgm"]]), stm=int(r[i["stm"]]), fc=int(r[i["fc"]]),
                 lm=int(r[i["lm"]]) if "lm" in i else -1,
+                # stmfit: 'fit' = the STM trajectory fit ran (the dQ/dx panel
+                # will have curves); anything else names the pre-fit exit that
+                # stopped it ('contained', 'midkink', 'nexits', 'nosteiner',
+                # 'shortfit', 'nofidu', 'tgm', '-' = never evaluated).
+                # '' on TSVs written before the column existed.
+                stmfit=r[i["stmfit"]] if "stmfit" in i else "",
                 auto_label=r[i["label"]]))
         self.rows.sort(key=lambda r: r["t_us"])
 
@@ -580,6 +597,10 @@ table_cols = [
     TableColumn(field="npts", title="npts", width=55, formatter=fmt_r, sortable=False),
     TableColumn(field="len", title="len(cm)", width=65, formatter=fmt_r, sortable=False),
     TableColumn(field="verdicts", title="tgm/stm/fc[/lm]", width=95, formatter=fmt_l, sortable=False),
+    # Did the STM trajectory fit run for this bundle's main cluster?  "fit" =>
+    # the dQ/dx panel below has curves; any other value is the reason it does
+    # not (see the stmfit note in Evt.rows).
+    TableColumn(field="stmfit", title="stm fit", width=80, formatter=fmt_l, sortable=False),
     TableColumn(field="prev", title="prev", width=80, formatter=fmt_l, sortable=False),
     TableColumn(field="auto", title="auto label (+FC)", width=120, formatter=fmt_l, sortable=False),
     TableColumn(field="scan", title="scan", width=95, formatter=fmt_l, sortable=False),
@@ -788,6 +809,16 @@ def rebuild_table():
         cols["len"].append(f"{r['len_cm']:.1f}")
         cols["verdicts"].append(f"{r['tgm']}/{r['stm']}/{r['fc']}"
                                 + (f"/{r['lm']}" if r["lm"] >= 0 else ""))
+        # The TSV's 'eval' means "the tagger evaluated it with no logged exit";
+        # only the dQ/dx dump proves a trajectory was persisted, and that is
+        # exactly what decides whether the panel below has curves.  Upgrade to
+        # 'fit' (green) or demote to 'postfit' when the dump is loaded.
+        sf = r.get("stmfit", "")
+        if evt.stm is not None and main is not None and sf in ("eval", "fit"):
+            sf = "fit" if (evt.stm["cid"] == main).any() else "postfit"
+        cols["stmfit"].append(
+            "<b style='color:#1a7f37'>fit</b>" if sf == "fit"
+            else (f"<span style='color:#888'>{sf}</span>" if sf else "?"))
         # FC is orthogonal to the TGM/STM/nu-candidate label (it never enters
         # nusel_extract's 'label'), so badge it explicitly onto the auto cell:
         # a fully-contained bundle -- especially an in-beam nu-candidate -- is
@@ -1119,8 +1150,30 @@ def render_dqdx():
     s = evt.stm
     m = s["cid"] == main
     if not m.any():
-        blank(f"cluster {main}: no STM fit recorded "
-              "(FC-check contained, already TGM, or &le;3 fit points)")
+        # The 'stm fit' table column carries the reason, straight from
+        # TaggerCheckSTM's "no STM fit:" DEBUG lines -- report it here instead
+        # of guessing at a list of possibilities.
+        why = {
+            "contained": "cluster_fc_check says fully contained &rarr; no FV exit "
+                         "point, so check_stm_conditions exits at Mid Point A "
+                         "before any fit",
+            "midkink": "one exit point but a &gt;120&deg; mid-track kink with both "
+                       "arms &gt;20 cm (Mid Point B)",
+            "nexits": "not exactly one candidate exit point (Mid Point C)",
+            "nosteiner": "no steiner_pc on this cluster",
+            "nofidu": "no fiducialutils (MakeFiducialUtils missing from the pipeline)",
+            "shortfit": "round-1 forward fit gave &le;3 points",
+            "postfit": "the tagger evaluated this cluster but exited after the "
+                       "round-1 fit through a path that records no pass, so no "
+                       "trajectory was persisted",
+            "eval": "the tagger evaluated this cluster but no trajectory was "
+                    "persisted (exited after the round-1 fit)",
+            "tgm": "already tagged TGM &rarr; the STM tagger skipped it",
+            "-": "never evaluated by the STM tagger (out of scope?)",
+        }.get(evt.rows[i].get("stmfit", ""), None)
+        msg = f"cluster {main}: no STM fit"
+        blank(msg + (f" &mdash; {why}" if why else
+                     " recorded (rerun with -stm-fit for the reason)"))
         return
 
     # TPC from drift-x sign (SBND: x<0 TPC0, x>0 TPC1).
@@ -1141,7 +1194,7 @@ def render_dqdx():
         keep = [k for k, v in enumerate(rr) if v <= rr_max + 5]
         stmref_src.data = dict(rr=[rr[k] for k in keep],
                                mu=[t["values"][k] for k in keep])
-    stmflat_src.data = dict(rr=[0, rr_max + 5], flat=[50e3, 50e3])
+    stmflat_src.data = dict(rr=[0, rr_max + 5], flat=[MIP_DQDX, MIP_DQDX])
 
     # Scalar summary: per-pass verdicts + best eval rows for this cluster.
     P, E = s["passes"], s["evals"]
@@ -1153,7 +1206,7 @@ def render_dqdx():
             f"<b>{STM_STATUS.get(int(P['status'][k]), P['status'][k])}</b>, "
             f"kink@{int(P['kink_num'][k])}, exit_L={P['exit_L'][k]:.1f} cm, "
             f"left_L={P['left_L'][k]:.1f} cm, "
-            f"left dQ/dx={P['left_dqdx'][k]/50e3:.2f} MIP")
+            f"left dQ/dx={P['left_dqdx'][k]/MIP_DQDX:.2f} MIP")
     em = E["cluster_id"] == main
     for k in np.nonzero(em)[0]:
         lines.append(
