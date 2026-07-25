@@ -706,3 +706,124 @@ withdrawn.** Two independent reasons:
 So the flash-merge crosser case needs either a `cathode_connect` that catches
 these (a tuning question, with its own gate) or an explicit geometric guard
 inside the un-merge. It is a separate item, and it affects production today.
+
+## 10. REGRESSION: the un-merge strips near-touching track charge (owner report)
+
+**Status: knob-on is NET HARMFUL as it stands. Production is unaffected — every
+knob is default OFF and nothing was shipped on.** Reported by the owner from the
+scan: evt284349 bundle grp 6 (t = −238.770 µs, main 8) and grp 13
+(t = 592.196 µs, main 10) were TGM in the previous scan and now fall through to
+the STM fit.
+
+**Repro:**
+```bash
+cd sbnd_xin
+python3 d52_ab_report.py                     # verdict deltas
+grep "check_tgm: cluster 8 " work-mcp10-d52on/nusel_evt284349/wct_nusel_evt284349.log
+grep "prassoc> cluster 8:"   work-mcp10-d52on/nusel_evt284349/wct_nusel_evt284349.log
+```
+
+### 10.1 It is a real regression, and the mechanism is exact
+
+All **14** TGM losses (and the 1 gain) are clusters the isolated un-merge split.
+`len_main_cm` does not change — the main loses no *length*, only charge — so the
+verdict flip is not a geometry change. **10 of the 14** name one guard in the log:
+
+```
+check_tgm: cluster 8 CASE-B pair (0,3) rejected: rescued end,
+           straight chord 286.1 cm has an unsupported run > 30.0 cm
+```
+
+That is `rescue_chord_check` (docs 29-39). It walks the straight chord between two
+candidate endpoints and requires charge support along it — **charge belonging to
+the cluster it is given**. The un-merge takes charge out of the main, so the walk
+now finds gaps it did not find before, and every endpoint pair is rejected.
+
+| event | cid | len_cm | blobs main→main | logged rejection |
+|---|---|---|---|---|
+| 284349 | 10 | 310.6 | 324 → 311 (−13) | chord-unsupported |
+| 284349 | 8 | 424.9 | 682 → 649 (−33) | chord-unsupported |
+| 284657 | 22 | 313.8 | 562 → 476 (−86) | chord-unsupported |
+| 285185 | 15 | 476.8 | 1123 → 1058 (−65) | (none logged) |
+| 286021 | 10 | 114.6 | 317 → 283 (−34) | (none logged) |
+| 286197 | 10 | 451.4 | 890 → 852 (−38) | chord-unsupported |
+| 286329 | 18 | 217.4 | 385 → 321 (−64) | (none logged) |
+| 286527 | 11 | 238.4 | 504 → 455 (−49) | chord-unsupported |
+| 286527 | 20 | 292.3 | 599 → 471 (−128) | chord-unsupported |
+| 286681 | 15 | 424.9 | 725 → 676 (−49) | (none logged) |
+| 286681 | 16 | 459.4 | 593 → 543 (−50) | chord-unsupported |
+| 288067 | 13 | 142.5 | 1049 → 905 (−144) | chord-unsupported |
+| 288397 | 11 | 477.3 | 1313 → 1266 (−47) | chord-unsupported |
+| 290135 | 15 | 129.7 | 189 → 181 (−8) | chord-unsupported |
+
+### 10.2 Root cause: "associated" conflates two populations
+
+Distance from every removed point to the retained main, over all 200 split
+clusters (22455 points):
+
+| within | fraction |
+|---|---|
+| 1 cm | **18.2 %** |
+| 2 cm | 31.1 % |
+| 3 cm | **40.9 %** |
+| 5 cm | 55.4 % |
+| 10 cm | 74.1 % |
+| 20 cm | 90.3 % |
+
+median **4.07 cm**, 90th percentile 19.77 cm.
+
+So **~41 % of the stripped charge is within 3 cm of the main** and 18 % is within
+1 cm. That is not a detached clump — it is track charge broken up by
+signal-processing / dead-channel inefficiency, precisely what the chain's
+gap-jumping passes exist to bridge. Per-cluster examples:
+evt284349 c8 median 1.71 cm (75 % within 3 cm), evt288067 c13 median 2.61 cm with
+**max 5.31 cm** (the whole "associated" set is touching the main).
+
+The cause is in `clustering_isolated` itself: "small" (< `length_cut`, SBND 15 cm)
+merged to the nearest big cluster within `small_big_dis_cut = 80 cm`, **with no gap
+test at all** (doc 51 §3). One label therefore covers both
+(a) genuinely detached clumps 18-22 cm out — doc 50's problem, the thing we set
+out to remove — and (b) fragments 0.3-3 cm out that are the same particle. The
+provenance is faithful, so the un-merge removes **both**.
+
+Combined with §9.4 this is decisive: what the un-merge removes is mostly (b), and
+the (a) clumps of the two showcase events are **not** marked associated at all. The
+knob as it stands pays a real TGM cost for the wrong population.
+
+### 10.3 Why the prototype does not have this problem
+
+`wire-cell-prod-stm.cxx:816-828` hands `check_stm(main_cluster,
+additional_clusters, ...)` — the companions travel *with* the main and
+`check_other_clusters()` uses them. Our chord/rescue guards
+(`rescue_chord_check`, `tgm_chord_charge`, `component_rescue`,
+`main_component_pairs`) were invented for the *merged* main (docs 29-39) and only
+ever look at the one cluster they are handed. Splitting the main without also
+handing over the companions is faithful in representation and unfaithful in use.
+
+### 10.4 Options, for the owner to choose
+
+1. **Give the guards the companions** (prototype-faithful, my recommendation).
+   The chord/rescue charge-support tests search the main **plus** its associated
+   companions (`flag_associated_cluster` + shared `matched_flash_gid`, which the
+   un-merge already sets). Restores the 14 TGM tags without giving up the
+   un-merge, and is what the prototype does. Touches TGM, so it needs its own
+   knob and gate.
+2. **Only split what is actually detached** — a `min_gap` on the un-merge
+   (split a companion only when its closest approach to the retained main
+   exceeds, say, 5 cm). One knob, cheap, and it cuts the stripped-charge
+   population roughly in half by the table above. It does *not* fix §9.4, since
+   the showcase clumps are not marked associated.
+3. **Both** — 2 to stop stripping same-particle charge, 1 so that whatever is
+   still split cannot silently break a charge-support test.
+
+Not recommended: reverting Stages 1-3. The provenance mechanism is gate-clean and
+correct; what is wrong is the un-merge's *criterion* (2) and the guards'
+*inputs* (1).
+
+### 10.5 Still open from §9.4
+
+The two showcase clumps are marked `assoc_cluster_main != 0`, contradicting
+doc 51 §2's attribution to `ClusteringIsolated`. Until that is resolved we do not
+actually know which pass creates the doc-50 population, and therefore cannot say
+whether any un-merge can remove it. `-trace-bee -save-assoc` on evt285185 and
+evt284657 answers it.
