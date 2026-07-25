@@ -135,6 +135,13 @@ function(
     // to pipeline_names) tracking-stm.root for Magnify-tracking-SBND.  Also
     // gates loading the WireCellRoot plugin.  Runner flag: -stm-fit.
     save_stm_fit = false,
+    // How 'unmerge_bundle' (when named in pipeline_names) identifies the main
+    // sub-cluster of a flash-merged bundle (C++ default "real").  "real" =
+    // per-blob real_cluster_main/real_cluster_id provenance -- exact, needs a
+    // pctree saved with run_ql_evt.sh -save-rcid; falls back per cluster to
+    // the proxy on old tarballs.  "component" = longest connected component
+    // (proxy).  Runner flags: -unmerge / -unmerge-comp (doc 45).
+    unmerge_bundle_mode = 'real',
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';
     local params = base {
@@ -185,7 +192,8 @@ function(
                              tgm_fv_zmax_margin_interior=tgm_fv_zmax_margin_interior,
                              tgm_fv_x_margin=tgm_fv_x_margin,
                              tgm_fv_y_margin=tgm_fv_y_margin,
-                             save_stm_fit=save_stm_fit);
+                             save_stm_fit=save_stm_fit,
+                             unmerge_bundle_mode=unmerge_bundle_mode);
 
     local graph = g.intern(
         innodes=[source],

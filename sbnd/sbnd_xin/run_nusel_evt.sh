@@ -126,6 +126,22 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 appended to the pipeline) for Magnify-tracking-SBND.
                 DEFAULT OFF = byte-identical legacy outputs.
                 Env: SBND_STM_FIT=1.
+  -unmerge      restore the prototype "main cluster + associated clusters"
+                data product before the taggers (doc 45): split each
+                flash-merged bundle back into its pre-merge main (retained,
+                keeps flag_main_cluster and matched_flash_gid) and one
+                flag_associated_cluster cluster per co-merged member.  The
+                'unmerge_bundle' visitor is inserted between switch_scope and
+                steiner.  Without it TaggerCheckSTM fits a bundle of detached
+                cosmics as ONE track (showcase-stmfit-mc-evt18 cluster 80) and
+                check_other_clusters() has no companions left to count.  Uses
+                the exact per-blob provenance (this runner passes -save-rcid
+                to a Q/L step it launches); falls back per cluster to the
+                longest-component proxy on old tarballs.
+                DEFAULT OFF = byte-identical legacy pipeline.
+                Env: SBND_UNMERGE=1.
+  -unmerge-comp like -unmerge but always use the longest-connected-component
+                proxy to pick the main.  Env: SBND_UNMERGE_MODE=component.
   -main-pair-real  like -main-pair, but identify the main EXACTLY via the
                 per-blob real_cluster_main flash-merge provenance instead of
                 the largest-component proxy (doc 38).  Needs a pctree saved
@@ -229,6 +245,15 @@ QL_LM="${SBND_QL_LM:-0}"
 # Persist per-pass STM track fits + tracking-stm.root (doc 40).
 # DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
 STM_FIT="${SBND_STM_FIT:-0}"
+# Restore the prototype main+associated data product before the taggers by
+# splitting each flash-merged bundle back into its pre-merge members (doc 45).
+# DEFAULT OFF: opt in with -unmerge / SBND_UNMERGE=1.  The visitor is inserted
+# between switch_scope and steiner (it MUST precede steiner_pc creation).
+UNMERGE="${SBND_UNMERGE:-0}"
+# How -unmerge identifies the main: "real" = per-blob flash-merge provenance
+# (exact, needs a -save-rcid pctree -- this runner passes it), "component" =
+# longest connected component (proxy).  -unmerge-comp selects the proxy.
+UNMERGE_MODE="${SBND_UNMERGE_MODE:-real}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -257,11 +282,23 @@ while [ $# -gt 0 ]; do
         -no-lm|--no-lm) QL_LM=0; shift ;;
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
+        -unmerge|--unmerge) UNMERGE=1; shift ;;
+        -unmerge-comp|--unmerge-comp) UNMERGE=1; UNMERGE_MODE=component; shift ;;
+        -no-unmerge|--no-unmerge) UNMERGE=0; UNMERGE_MODE=real; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
 
+# -unmerge inserts the bundle un-merge between switch_scope and steiner.  The
+# order matters twice over: it must run AFTER switch_scope (which re-applies
+# the T0 correction and carves the out-of-volume shards, and carries the
+# per-blob provenance across that carve) and BEFORE steiner (separate() does
+# not carry node-local PCs, so a steiner_pc built from the pre-split blob set
+# would survive on the retained main).
+if [ "$UNMERGE" = 1 ]; then
+    PIPELINE="${PIPELINE/switch_scope,/switch_scope,unmerge_bundle,}"
+fi
 # -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
 if [ "$STM_FIT" = 1 ]; then
     PIPELINE="$PIPELINE,stm_magnify"
@@ -303,8 +340,11 @@ process_event() {
         # -lm: LM tagger + calib dump in the Q/L step (the dump carries the
         # per-bundle lm* metrics the tuning/hand-scan read; doc 34).
         [ "$QL_LM" = 1 ] && QL_FLAGS+=(-lm -calib)
-        # -main-pair-real needs the per-blob provenance in the pctree (doc 38).
-        [ "$MAIN_PAIR_MODE" = real ] && QL_FLAGS+=(-save-rcid)
+        # -main-pair-real (doc 38) and -unmerge in "real" mode (doc 45) both
+        # need the per-blob provenance in the pctree.
+        if [ "$MAIN_PAIR_MODE" = real ] || { [ "$UNMERGE" = 1 ] && [ "$UNMERGE_MODE" = real ]; }; then
+            QL_FLAGS+=(-save-rcid)
+        fi
         echo "[evt $EVT_ID] pctree missing — running Q/L step (${QL_FLAGS[*]})"
         "$SBND_DIR/run_ql_evt.sh" "$MODE" "${QL_FLAGS[@]}" "$IDX" || return 1
         [ -s "$PCT" ] || { echo "ERROR: Q/L step did not produce $PCT" >&2; return 1; }
@@ -328,7 +368,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -358,6 +398,7 @@ process_event() {
             --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
             --tla-code "tgm_fv_x_margin=$FVX_MARGIN" \
             --tla-code "tgm_fv_y_margin=$FVY_MARGIN" \
+            --tla-str  "unmerge_bundle_mode=$UNMERGE_MODE" \
             --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
