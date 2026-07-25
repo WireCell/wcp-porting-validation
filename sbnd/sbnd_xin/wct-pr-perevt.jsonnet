@@ -138,9 +138,10 @@ function(
     // How 'unmerge_bundle' (when named in pipeline_names) identifies the main
     // sub-cluster of a flash-merged bundle (C++ default "real").  "real" =
     // per-blob real_cluster_main/real_cluster_id provenance -- exact, needs a
-    // pctree saved with run_ql_evt.sh -save-rcid; falls back per cluster to
-    // the proxy on old tarballs.  "component" = longest connected component
-    // (proxy).  Runner flags: -unmerge / -unmerge-comp (doc 45).
+    // pctree saved with run_ql_evt.sh -save-rcid; a cluster without it is
+    // left UNSPLIT (warning), never proxied.  "component" = longest connected
+    // component -- a clustering decision (breaks cathode crossers), opt-in
+    // only.  Runner flags: -unmerge / -unmerge-comp (doc 45).
     unmerge_bundle_mode = 'real',
 )
     local base = import 'pgrapher/experiment/sbnd/simparams.jsonnet';

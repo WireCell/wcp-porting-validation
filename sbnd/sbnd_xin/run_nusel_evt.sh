@@ -135,13 +135,21 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 steiner.  Without it TaggerCheckSTM fits a bundle of detached
                 cosmics as ONE track (showcase-stmfit-mc-evt18 cluster 80) and
                 check_other_clusters() has no companions left to count.  Uses
-                the exact per-blob provenance (this runner passes -save-rcid
-                to a Q/L step it launches); falls back per cluster to the
-                longest-component proxy on old tarballs.
+                exact per-blob provenance ONLY: a pctree saved without
+                -save-rcid leaves every cluster unsplit (warning per cluster),
+                it does NOT silently fall back to a connectivity split.  This
+                runner passes -save-rcid to a Q/L step it LAUNCHES, but an
+                EXISTING pctree is reused as-is -- point SBND_WORK_ROOT at a
+                root whose ql_evt*/ came from a -save-rcid run.
                 DEFAULT OFF = byte-identical legacy pipeline.
                 Env: SBND_UNMERGE=1.
-  -unmerge-comp like -unmerge but always use the longest-connected-component
-                proxy to pick the main.  Env: SBND_UNMERGE_MODE=component.
+  -unmerge-comp like -unmerge but pick the main from the longest RELAXED-GRAPH
+                CONNECTED COMPONENT instead of the flash-merge provenance.
+                That is a clustering decision, not bookkeeping (the relaxed
+                graph does not join the two halves of a cathode crosser), so
+                plain -unmerge never falls back to it: a cluster with no
+                provenance is left alone with a warning.  Use this only as a
+                deliberate probe.  Env: SBND_UNMERGE_MODE=component.
   -main-pair-real  like -main-pair, but identify the main EXACTLY via the
                 per-blob real_cluster_main flash-merge provenance instead of
                 the largest-component proxy (doc 38).  Needs a pctree saved

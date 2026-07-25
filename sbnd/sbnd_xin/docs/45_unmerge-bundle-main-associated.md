@@ -127,9 +127,19 @@ Two modes (`unmerge_bundle_mode`, C++ default `"real"`):
   provenance says it was **never merged is left alone** (not a fallback case:
   splitting it would undo the clustering chain's own deliberate long-range
   merges, which the prototype keeps inside one `PR3DCluster`).
-* **`component`** (proxy) — relaxed-graph connected components, longest =
-  main.  Used automatically per cluster when the provenance arrays are absent
-  (old tarballs), or forced with `-unmerge-comp`.
+* **`component`** (proxy, **opt-in only**) — relaxed-graph connected
+  components, longest = main.  Mode `real` deliberately does **not** fall back
+  to this: undoing the flash merge is bookkeeping, but splitting on graph
+  connectivity is a clustering decision (the relaxed graph does not join the
+  two halves of a cathode crosser).  A cluster with no provenance is therefore
+  left **unsplit with a warning**, so running `-unmerge` against a pctree
+  saved before `-save-rcid` is a no-op rather than a silent re-clustering.
+  Ask for the proxy explicitly with `-unmerge-comp`.
+
+  Runner caveat: `run_nusel_evt.sh` only appends `-save-rcid` to a Q/L step it
+  *launches*; an existing `ql_evt*/pctree-*.tar.gz` is reused as-is.  Point
+  `SBND_WORK_ROOT` at a root whose pctrees came from a `-save-rcid` run (the
+  doc-42 `work-mcsim-stmon` trees do), or `-unmerge` will warn and do nothing.
 
 Placement: **between `switch_scope` and `steiner`**, enforced by the runner
 flag.  `separate()` does not carry node-local point clouds, so the split must
@@ -218,6 +228,21 @@ FC gate):
 Every other event's fit blocks are identical, **including evt18** (blocks 80
 and 150 unchanged: 142 pts / 83.3 cm and 346 pts / 215.9 cm).
 
+**`tagger_check_neutrino` exercised, companion list now non-empty.**  The
+production `PIPELINE` in `run_nusel_evt.sh` stops at `tagger_check_fc`, so the
+neutrino tagger was run by hand with `pipeline_names` extended
+(`beam_window_us=[0.2,2.2]`, `dl_weights=''`).  It completes in both modes.
+On evt9, whose in-beam main *is* one of the split mains:
+
+```
+off: TaggerCheckNeutrino: selected main cluster 11 (t0 0.656 us, L 31.8 cm, 0 associated)
+on : TaggerCheckNeutrino: selected main cluster 11 (t0 0.656 us, L 26.6 cm, 1 associated)
+```
+
+That is the prototype layout arriving at the PR code: a shorter main plus a
+companion.  On evt18 (whose in-beam mains 4 and 9 were not split) the tagger
+is unchanged, `0 associated` both ways, as expected.
+
 **`check_other_clusters()` still returns false everywhere.**  Trace-level runs
 over all 10 events in both modes: 5 (off) / 3 (on) mains reach the companion
 check at all (the rest exit at the FC gate), and `flag_other_clusters=false`
@@ -253,6 +278,10 @@ consequences above — companion counting is not yet demonstrated live.
   `real` mode fell through to the component proxy for clusters that were never
   flash-merged, so that run's "8/9 proxy" counts are superseded by the 100 %
   exact counts above.
+* The `work-mcsim-unmoff` / `work-mcsim-unmon` label pair predates the
+  no-fallback change below (`Prov::unusable` → skip instead of proxy).  It is
+  unaffected: every cluster in that sample carried the provenance, so zero
+  fallbacks were taken either way.
 * `work-mcsim-unmcomp` holds **evt18 only** — a probe for §Open item 1, not a
   label set.
 * All three roots symlink `ql_evt*/` and `evt*/` from `work-mcsim-stmon`;
