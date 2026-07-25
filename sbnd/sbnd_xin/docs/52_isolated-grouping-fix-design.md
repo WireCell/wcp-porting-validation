@@ -879,11 +879,12 @@ of the all-APA `switch_scope`**, before that pass does anything:
 [ssentry] cluster 14 group 10 main=0 n=4  rmax= 37.81 cm
 ```
 
-Early clusters are intact, later ones are progressively wrong — the signature of
-an **accumulating row offset**, i.e. the per-blob rows and the blob nodes are
-re-associated differently on the two sides of the per-APA → all-APA handoff
-(TensorDM concatenates each node's local PC and the reader re-splits by the
-lpcmaps row counts).
+Early clusters are intact, later ones are progressively wrong. At the time this
+was read as the signature of an accumulating row offset in the TensorDM
+concatenate/re-split. **That guess was wrong** — §12 pins the actual mechanism
+(QLMatching's decompose/recompose permutes the blobs, not the serializer; the
+serialize→deserialize round trip is row-faithful, proven by the §12.1 checker's
+`rtrip` checkpoints).
 
 Everything else was cleared by direct test:
 
@@ -912,19 +913,134 @@ member*, so it is the first to expose the handoff. `TaggerCheckTGM`'s
   blobs the *scrambled* array happened to point at.
 - The 14 TGM losses are collateral of the corruption, not of a design choice.
 
-### 11.4 State of the code, and what is next
+### 11.4 State of the code, and what is next — SUPERSEDED by §12
 
-`min_gap` (`ClusteringUnmergeBundle`, default 0 = off; SBND passes 3 cm to the
-assoc instance) is retained: it is a defensible guard in its own right and it
-demonstrably restores the lost TGM tags (evt284349 mains 8 and 10 back to TGM=1,
-all 7 companions of main 8 kept at 0.68-2.95 cm). **But it must not be mistaken
-for the fix** — it masks a corrupted array rather than repairing it.
+`min_gap` was shipped here as a stop-gap and is now **REMOVED** (owner
+directive): it masked the corruption rather than repairing it. The blob-node
+(one-row local PC per blob) repair floated below was also **not** taken — the
+owner judged it likely too slow, and §12 shows the cluster-level N-row array is
+fine once the one operation that breaks its alignment is fixed.
 
-**`save_assoc` / `-unmerge-assoc` must not be used for physics until the handoff
-is repaired.** Everything remains default OFF, so production is untouched.
+## 12. Root cause found and fixed: QLMatching's decompose/recompose permutes the blobs out from under the arrays
 
-The repair: carry the provenance on the **blob node** (a one-row local PC per
-blob) instead of on the cluster (an N-row array whose alignment depends on blob
-order surviving serialization). Then no concatenate/re-split, merge, separate or
-reorder can misalign it, and defect D4 is closed structurally rather than by
-convention. That is the next change.
+**Repro (all numbers below):**
+```bash
+cd sbnd_xin
+mkdir -p work-mcp10-d52chk && for d in work-mcp10-d49son/evt*; do \
+    ln -sfn "$(readlink -f "$d")" "work-mcp10-d52chk/$(basename "$d")"; done
+SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-mcp2025c-10evt \
+SBND_WORK_ROOT=$PWD/work-mcp10-d52chk WCT_PROV_CHECK=1 \
+    setarch x86_64 -R ./run_ql_evt.sh data 1 -save-pctree -save-rcid -lm -save-assoc
+SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-mcp2025c-10evt \
+SBND_WORK_ROOT=$PWD/work-mcp10-d52chk WCT_PROV_CHECK=1 \
+    setarch x86_64 -R ./run_nusel_evt.sh data 1 -chord -rescue -rescue-chord \
+    -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc
+grep provchk work-mcp10-d52chk/ql_evt284349/*.log
+```
+
+### 12.1 The instrument: WCT_PROV_CHECK
+
+New diagnostic-only checker `check_perblob_provenance()`
+(`clus/src/prov_check.cxx`, declared in `ClusteringFuncs.h`), enabled ONLY by
+env `WCT_PROV_CHECK=1` (a fast no-op otherwise). Per cluster with a "perblob"
+PC it validates (a) every array has exactly `nchildren` rows and (b) every
+`assoc_cluster_main==0` group is spatially compact (an associated group is one
+small pre-merge cluster, ≤ 20 cm by construction; rmax > 25 cm from its own
+centroid can only be rows attached to the wrong blobs). It runs at every
+boundary: MABC load, after **every** visitor, at save plus a
+serialize→deserialize **round-trip self-test**, and in PointTreeMerging
+(inputs / merged / round-trip). 107 checkpoints per QL run.
+
+### 12.2 The bracketing (evt284349, corrupt binary)
+
+| checkpoint | verdict |
+|---|---|
+| per-face apa1, `post:ClusteringIsolated` … `post:ClusteringExamineBundles` | clean (worst rmax 5.6 cm — a real compact group) |
+| per-face apa1/apa0 `save` AND `rtrip` (serialize→deserialize self-test) | **clean** — TensorDM is row-faithful; §11.2's handoff hypothesis is dead |
+| all-APA MABC `load` (the first look after QLMatching) | **4 problems, rmax 38.9 / 79.0 / 260.4 / 37.8 cm** |
+
+The corruption is born inside the one node between those two points:
+**QLMatching**.
+
+### 12.3 The mechanism
+
+`QLMatching::decompose_cluster_groups()` splits every grouped cluster on its
+"isolated" cc array via `Grouping::separate(cluster, cc)` — a matching-internal
+device so bundle geometry anchors on the main. `recompose_cluster_groups()`
+merges the pieces back (`grouping->merge` → `take_children`). The round trip
+**permutes the blob children**: `separate()` keeps the `cc<0` blobs in place
+(original relative order) and `merge()` appends each split's blobs at the END,
+in ascending-gid order. Meanwhile the main's node-local "perblob" arrays are
+untouched — full length, ORIGINAL row order. Blob count is restored, so every
+length check passes; but row *i* no longer describes child *i*.
+
+Why every earlier probe missed it:
+
+- "isolated" is misaligned too, but the all-APA `examine_bundles` **rewrites**
+  it from a fresh connected-components pass — so it always *reads* clean
+  downstream. (It is consumed BEFORE the rewrite by that visitor's own
+  main-overlap vote, and by `decompose` itself — see §12.6.)
+- `real_cluster_*` is written fresh at the all-APA flash merge — after the
+  permutation. Clean by luck of ordering.
+- The assoc pair is written per-face, BEFORE QLMatching — the first array that
+  actually has to *survive* the permutation, and the first whose value varies
+  within a member, making the scramble visible.
+- The accumulating-offset look of §11.2 was an artifact of which clusters had
+  more sub-groups, not a serializer offset.
+
+### 12.4 The fix: `realign_perblob` (QLMatching knob, default OFF)
+
+`recompose_cluster_groups()` now reorders each split main's **whole "perblob"
+dataset** by the same permutation the blobs underwent (`[rows cc<0, original
+order] ++ per gid ascending [rows cc==gid]` — `Dataset::subset(rows)`, all keys
+at once), restoring row *i* == child *i*. The cc used at `separate()` is saved
+at decompose (`ApaRun::decompose_cc`). Knob `realign_perblob`:
+
+- C++ default **false** ⇒ the historical (misaligned) behavior bit-for-bit.
+- jsonnet: `qlmatching.jsonnet` `matching()` / `matching_joint()` arg with the
+  key-suppression idiom; threaded from `wct-clus-matching-perevt.jsonnet`'s
+  `save_assoc` TLA (the assoc provenance is unusable without it), in both the
+  joint and per-APA+PointTreeMerging graph modes.
+
+This fixes the origin: the cluster-level N-row array representation is fine —
+the ONE operation that permuted blobs without their arrays now moves both
+together. No blob-node-per-row representation needed.
+
+`min_gap` (§11.4) is removed everywhere: `ClusteringUnmergeBundle`,
+`cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/clus.jsonnet`
+(`unmerge_assoc_min_gap` gone).
+
+### 12.5 Verification (evt284349)
+
+- **Checker**: with the fix on, **0 problems at all 107 checkpoints** of the QL
+  run (worst assoc-group rmax 5.6 cm = a genuine compact group) and 0 through
+  the whole PR run.
+- **The owner's screenshot case** (`mabc-pr.zip` clustering-global layer, raw
+  coords): tip (135.3, 6.9, 498.2) → stays in main cluster 10; trunk (130.3,
+  −14.3, 477.8) → main cluster 10; isolated piece (146.9, −8.6, 492.5) → its
+  own associated cluster. Exactly the doc-51 expectation — issue 1 fixed.
+- **The TGM regression** (§10): `bundle grp 6 t=-238.770 us main 8` and
+  `bundle grp 13 t=592.196 us main 10` are both **TGM=1 again** — with NO
+  min_gap. The un-merge now removes only genuinely-detached pieces, so the
+  chord-support walk keeps its endpoints — issue 2 fixed.
+- Gates: off-arm compiled configs byte-identical to the pre-change baseline
+  (QL and PR jobs, `wcsonnet` diff vs HEAD worktrees); knob-on emits
+  `realign_perblob: true` on every QLMatching node (compiled-config proof);
+  `wcdoctest-clus` 518/518, `wcdoctest-match` 36/36. 30-event A/B redo (tag
+  `d52roff`/`d52ron`, `./run_d52_campaign.sh both d52r`) — §12.7.
+
+### 12.6 Pre-existing bug, NOT fixed here (reported, default path unchanged)
+
+With `realign_perblob` off — i.e. **today's production** — the stale "isolated"
+rows are consumed in two places before the all-APA rewrite:
+
+1. `clustering_examine_bundles`' main-overlap vote (which new component
+   inherits "main") reads the scrambled `-1` rows;
+2. a hypothetical second decompose would split on scrambled rows.
+
+Both predate doc 52 and are independent of `save_assoc`. Turning
+`realign_perblob` on realigns "isolated" as well, which is why the knob cannot
+default on (it would change production output). Flipping it on for production
+needs its own validation round.
+
+### 12.7 30-event A/B redo (tags d52roff / d52ron)

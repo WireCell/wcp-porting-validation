@@ -12,9 +12,13 @@
 #
 # Imaging is SYMLINKED from work-*-d49son -- never regenerated (M11/M13).
 #
-# Usage:  ./run_d52_campaign.sh [off|on|both]        (default both)
+# Usage:  ./run_d52_campaign.sh [off|on|both] [tagbase]   (default both d52)
+#   tagbase names the work dirs work-<suff>-<tagbase><arm>.  Use a fresh
+#   tagbase for each campaign round (M13): "d52" was the pre-realign (VOID,
+#   doc 52 §9/§10) round; "d52r" is the post-realign_perblob redo.
 set -u
 cd "$(dirname "$0")"
+TAGBASE="${2:-d52}"
 
 QLF="-save-pctree -save-rcid -lm"
 NUF="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000"
@@ -27,7 +31,7 @@ ARMS="${1:-both}"
 [ "$ARMS" = both ] && ARMS="off on"
 
 for arm in $ARMS; do
-    tag="d52$arm"
+    tag="$TAGBASE$arm"
     QLX=""; NUX=""
     if [ "$arm" = on ]; then QLX="-save-assoc"; NUX="-unmerge-assoc"; fi
 
