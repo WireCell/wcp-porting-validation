@@ -193,6 +193,91 @@ the fit by a B-style path-component restriction — the STM analogue of
 fit. Doing only one leaves a known hole either way. This is the choice I would
 most want your call on before any code is written.
 
+## 4a. Interaction with cross-TPC (cathode-crosser) merging
+
+The isolated grouping and the cross-TPC merge never meet, which is what makes
+this safe — but only if the un-merge rule is stated correctly, and there is a
+name-collision trap plus a **pre-existing** problem in the same area.
+
+### Where each happens
+
+`cm.isolated()` appears **only** in the per-APA pipeline
+(`cfg/.../sbnd/clus.jsonnet:236`, `clus_per_face`); the all-APA pipeline
+(`:341` onward) has no isolated pass. Each per-APA MABC sees one TPC, so **the
+isolated grouping is intra-TPC by construction and can never group across the
+cathode.** Every cross-TPC merge happens later, at all-APA: the generic passes
+tr01-tr06 (`use_flash_t0=true`), `cathode_connect` at tr07, then the flash merge
+inside `examine_bundles` at tr08.
+
+### The rule that keeps crossers whole
+
+The two halves of a cathode crosser are each the **main** of their own per-APA
+isolated group. So after a cross-TPC merge the merged cluster carries **two
+main-marked members**. The un-merge rule must therefore be:
+
+> split off only members with `assoc_cluster_main == 0`; keep the union of all
+> main-marked members together as the retained main.
+
+| merged cluster contains | result |
+|---|---|
+| main (TPC0) + main (TPC1) — a crosser | stays whole ✓ |
+| main + associated — doc 51's showcase | clump split off ✓ |
+| main + main + associated | halves kept, clump split ✓ |
+
+This works *by construction*: a cross-TPC merge joins two mains, whereas the
+isolated merge joins a main to associated pieces. The distinction is already in
+the data — it does not need a geometric test.
+
+### Trap: per-APA idents collide across TPCs
+
+`assoc_cluster_id` would hold **per-APA** cluster idents, and each per-APA MABC
+renumbers 1..N independently (`cluster_id_order: 'tree'`). Doc 51's trace shows
+the collision directly: apa0's body carried cids 2,6,8 while apa1's carried 2,7.
+After a cross-TPC merge, TPC0's cluster 7 and TPC1's cluster 7 are
+indistinguishable and the un-merge would fuse two unrelated members. This is why
+`real_cluster_id` is unaffected — it is written at the all-APA stage, where idents
+are already global. **The assoc id must be made globally unique at write time**
+(encode the APA in the value, e.g. `apa*10000 + ident`), or the carry mechanism
+must offset each member's values as it concatenates.
+
+### Stage 2's carry must cover the cross-TPC merges, not just the flash merge
+
+`cathode_connect` calls `merge_clusters(g, live_grouping)` with **no provenance
+arguments at all** (`clustering_cathode_connect.cxx:607`), and so do the generic
+all-APA passes. Those merges happen *before* `examine_bundles`, so without carry
+the assoc arrays die at the first cross-TPC merge — earlier than doc 51 §4b's
+chain suggests. Carry has to be a property of `merge_clusters` itself (as
+designed in Stage 2), not something added at one call site.
+
+### Pre-existing: the flash-merge un-merge already splits a real crosser
+
+Measured over the 30-event manifest (328 bundles): **141 clusters are
+flash-merged, and 101 of those have substantial members on both cathode sides.**
+Filtering for a crosser signature — both members reaching |x| < 8 cm with a gap
+< 15 cm — leaves 2:
+
+| event | cluster | members | gap | \|x\|min | PCA \|cos\| |
+|---|---|---|---|---|---|
+| 288287 (mcp1000) | 13 | 1457 + 309 pts | 6.31 cm | 2.06 / 0.50 | **0.997** |
+| 289805 (mcp1000b) | 21 | 102 + 129 pts | 2.64 cm | 1.49 / 0.55 | 0.670 |
+
+The first is collinear to 0.997 with transverse continuity (dy 5.67, dz 1.06 cm)
+and both halves ending at the cathode: a genuine crosser that `cathode_connect`
+missed and only the flash merge joined. **`ClusteringUnmergeBundle` — default ON
+since doc 45 — splits it, 526 blobs → main 445 + 81**, and the bundle is
+currently tagged nothing at all (tgm/stm/fc = 0/0/0, out-of-beam, 159.8 cm main).
+A through-going cathode-crossing cosmic losing its far end is exactly how a TGM
+endpoint pair goes missing. Hand-scan candidate, not a proven mis-tag. The second
+is only 48° collinear and both halves are short — ambiguous.
+
+This is **not** introduced by anything above; it is the same two-mains issue in
+the *flash* merge, where `real_cluster_main` marks only ONE representative (the
+flash donor), so the other half of a crosser is indistinguishable from co-merged
+junk. Stage 2's carry would actually fix it: with `assoc_cluster_main` carried
+through, the flash un-merge could refuse to demote a member that is itself a
+main. Worth treating as its own item — it affects production today, whereas
+everything else in this doc is about a knob that does not exist yet.
+
 ## 5. Validation plan
 
 Per stage, in this order:
