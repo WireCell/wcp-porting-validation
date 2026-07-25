@@ -218,6 +218,43 @@ tagging stoppers, on top of the `ratio1`/`ratio2` normalization error. A single
 `MIP_dQdx`-style scale knob would fix `ratio*` and leave `ks*` wrong. **The
 reference curve itself has to be replaced**, which the jsonnet already allows.
 
+### 4a. The falsifiable version of §3, and what the data already says
+
+§3 is analytic. Its observable is the tagger's own `ratio` variables: with
+`ratio = sum(ref)/sum(test)`, a reference 8–17 % low must show up as
+**`ratio` systematically at 0.85–0.93, not near 1.0**.
+
+Partial confirmation is already in hand, indirectly. `ratio2 = 50e3·N/Σ(dQ/dx)`
+is just `50e3 / ⟨dQ/dx⟩` over the comparison window, so doc 41's measured
+plateau is the same quantity outside the window: 50.0/59.5 = **0.84** (TPC0) and
+50.0/55.8 = **0.90** (TPC1), against §3's predicted 0.85–0.93. The two agree.
+On MC evt18 block 150 the fitted 51.6 ke/cm gives 0.97 — nearer 1, consistent
+with that event's truth also sitting low (49.8 restricted).
+
+**The direct per-eval distribution is not recoverable from the existing runs.**
+`StmEvalRecord` does persist `ks1, ks2, ratio1, ratio2, res_length,
+ave_res_dQ_dx, verdict` per `eval_stm_core` call — into the cluster-local PC
+`stm_eval` (`TaggerCheckSTM.cxx:398-416`) — but the doc-41 runs
+(`work-mcp10-stmon/nusel_evt*/`) saved only `mabc-pr.zip`, `tracking-stm.root`
+and the TSV, with no pctree tarball, and the `eval_stm: KS value` line is
+`SPDLOG_LOGGER_TRACE` (0 occurrences in the shipped logs). Getting it needs a
+re-run with the pctree saved or the STM logger at trace — a **fresh** work tag,
+never writing into an existing one. That belongs in the doc-40 phase-4 scan, not
+here.
+
+Why it is worth doing: **both `flag_strong_check` accept branches require
+`fabs(ratio1-1) < 0.1`** (`TaggerCheckSTM.cxx:1598, 1600`). If `ratio1` really
+sits at ≈ 0.85 on SBND, the strong-check path — used for the no-kink topology
+(`:2381-2382`) — **cannot fire at all**, and every SBND STM tag to date must
+have come through the non-strong path. That is a sharp, falsifiable prediction:
+histogram `stm_eval/ratio1` and either
+- it centers near 0.87 ⇒ §3 confirmed empirically, and the strong path is
+  provably dead until the curve is replaced; or
+- it centers near 1.0 ⇒ something upstream already absorbs the field difference,
+  and §3 needs qualifying. That would add a **fourth confound** to §5: whether
+  SBND's SP/imaging chain delivers charge in the same absolute-electron
+  convention uBooNE's did. Nothing checked in this doc rules that out.
+
 ## 5. What we cannot decide from here (do not pick a scale)
 
 Three effects of comparable size are entangled, and the readings in hand do not
@@ -251,9 +288,23 @@ Confounds:
 3. **No electron-lifetime correction is applied anywhere.**
    `clus/src/PRSegmentFunctions.cxx:1194-1197` states plainly that for
    multi-APA detectors "callers must pre-apply lifetime corrections to dQ
-   before this function is called" — and nothing does. Doc 41's high-side tail
-   and ~6 % TPC0>TPC1 asymmetry are exactly what an uncorrected attenuation
-   would look like. This is a **prerequisite** to any absolute-scale claim.
+   before this function is called" — and nothing does. This is a
+   **prerequisite** to any absolute-scale claim: without it the plateau is a
+   function of drift x, so a single number for it is not well defined.
+
+   It does **not**, however, explain doc 41's high-side tail, and the earlier
+   draft of this doc got that backwards. Uncorrected attenuation multiplies the
+   measured charge by exp(−t_drift/τ) ≤ 1 — it pushes the distribution *down*,
+   not up, and it is symmetric between the two TPCs (equal drift length, equal
+   field), so it can produce neither a median 10–20 % **above** the reference,
+   nor p75 = 82.8 ke/cm (far above recombination's 57.1 ke/cm ceiling), nor a
+   TPC0>TPC1 asymmetry. Doc 41's own first-listed candidate is the right one:
+   **δ-rays and overlaps on the fit path**, which doc 46 then measured directly
+   (+22 % of local charge from secondaries; the fit recovers ~17 % of it). So
+   the high tail is the same finding as doc 46, not a separate calibration
+   mystery, and the TPC asymmetry wants a per-TPC gain or x-frame explanation
+   (doc 46 found a drift-dependent 3.3 → 0.2 cm truth-to-fit offset, which is
+   the natural place to look) — not a lifetime one.
 
 **The measurement that discriminates:** the fitted-vs-true dQ/dx plateau of
 long muons, binned in drift x, on SBND MC where the truth charge is known per
@@ -411,8 +462,24 @@ pitch mean most transfer, but the drift-length-scaled ones (40 cm windows on a
 4. **Retune `rel_uncer_*` / `add_*_uncer` to `reduced_chi2` ≈ 1** (§7c) — the
    one item that needs no external calibration input.
 
-Ordering matters: 3 → 1 → 2, with 4 in parallel. Doing 2 first would bake the
-current biased scale into a knob that then looks authoritative.
+Ordering, with the two zero-cost measurements first:
+
+**0a.** Dump `stm_eval/ratio1` on a fresh tag (§4a) — confirms or refutes §3
+empirically and tells us whether the strong-check path is dead. No code change.
+**0b.** Get SBND's `ModBoxA`/`ModBoxB` (confound 1) — one lookup, and it decides
+whether an interim rescaled curve is even meaningful.
+Then **1 → 2**, with **4** in parallel (it needs nothing external), and **3**
+scheduled on its own merits rather than as a blocker.
+
+Two ordering notes:
+
+- Doing **2 before 1** would bake the current biased scale into a knob that then
+  looks authoritative. Keep that order.
+- An earlier draft put **3 first**, on the theory that the missing lifetime
+  correction explained doc 41's high plateau tail. §5 confound 3 now shows it
+  cannot (wrong sign, wrong symmetry). It is still needed before anyone quotes a
+  single SBND plateau number — the plateau is x-dependent without it — but it no
+  longer gates the reference-curve work.
 
 ## 9. Already SBND-correct
 
@@ -442,6 +509,11 @@ current biased scale into a knob that then looks authoritative.
 4. **`stopping_ave_dQ_dx_v2.root`** — what it was and why it was abandoned;
    its softer peak is what a resolution-smeared curve would look like, which
    would matter for a *fitted* comparison. Prototype-history question.
+5. **Does SBND's SP/imaging chain deliver charge in the same absolute-electron
+   convention uBooNE's did?** Nothing in this doc checks it, and if it does not,
+   §3's conclusion needs qualifying. The §4a `ratio1` dump answers it as a
+   by-product: `ratio1 ≈ 1` would mean an upstream normalization is already
+   absorbing the field difference.
 
-Nothing in 1–4 blocks the doc-40 phase-4 hand scan; all four block quoting an
+Nothing in 1–5 blocks the doc-40 phase-4 hand scan; all of them block quoting an
 SBND STM efficiency.
