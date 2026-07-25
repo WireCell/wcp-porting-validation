@@ -165,33 +165,75 @@ count entering QLMatching, so it needs a full A/B and a check that
 `decompose_cluster_groups` still finds its groups. Worth doing only after Stages
 1-3 prove the physics is better.
 
-## 4. Which "main"? — a decision to make explicitly
+## 4. Which "main"? — RESOLVED: not a decision, two layers
 
-After doc 51's probe there are **two** definitions available at the PR stage, and
-they are different partitions:
+**Correction (owner, 2026-07-25).** An earlier version of this section posed an
+A-vs-B choice:
 
 | | definition | source | property |
 |---|---|---|---|
 | **A** | the pre-merge member cluster | `assoc_cluster_id` (Stage 1) | prototype parity; **not guaranteed connected** |
 | **B** | the largest relaxed-connected component | `connected_blobs`, already used by TGM `main_component_pairs` (doc 36/38) | guaranteed connected; can cut a genuine track |
 
-Measured: relaxed connectivity separates both showcase clumps — cluster 21
-272 → 255 + 4 components, cluster 27 85 → 63 + 3 (`-unmerge-comp` probe,
-`work-mcp10-trace51`). So B would fix these two events on its own.
+That framing was wrong. It came from asking "what should `TaggerCheckSTM` treat as
+the main", when the intended architecture is: **run `ClusteringUnmergeBundle`
+first, then STM/PR on the resulting main** — the prototype's layout, where
+`wire-cell-prod-stm.cxx:816-828` fits `main_cluster` and carries
+`additional_clusters` alongside. Under that architecture the representation is
+**A** by construction, and **B is nothing but `mode="component"`** — the proxy
+that doc 45 (`35f2b72a`) already demoted to opt-in precisely because relaxed
+connectivity breaks cathode crossers. There is no choice to make.
 
-But A is what the prototype fits, and A alone does **not** fix doc 45's evt18
-cluster 80: one `real_cluster_id`, four detached clumps with 52 and 32 cm gaps —
-a single pre-merge member that is internally disconnected. Conversely B is the
-partition doc 45 refused for the flash merge because relaxed connectivity breaks
-cathode crossers.
+(TGM's `main_component_pairs` predates the un-merge and is a *different* layer,
+see below — not the alternative representation.)
 
-Recommendation: **give STM definition A** (prototype parity, and it is the
-structure every other consumer wants), and treat the residual
-internally-disconnected mains as a separate, smaller problem to be handled inside
-the fit by a B-style path-component restriction — the STM analogue of
-`main_component_pairs` from doc 50 §7. A fixes the representation; B guards the
-fit. Doing only one leaves a known hole either way. This is the choice I would
-most want your call on before any code is written.
+### So the whole problem is missing write-side information
+
+Two pieces, and in both cases the **reader is already correct**:
+
+1. **The isolated grouping writes no main marker.** `clustering_isolated.cxx:507`
+   calls `merge_clusters(g, live_grouping, "isolated")` without `orig_main_aname`,
+   so `groups_from_provenance` has nothing to split on (Stage 0). Marking it is
+   necessary but not sufficient — the flash merge destroys the array before any
+   reader sees it, hence the carry in Stage 2.
+
+2. **`merge_clusters` marks exactly ONE main** — `ClusteringFuncs.cxx:227`,
+   `rep_ident = have_flash ? best_flash_ident : best_any_ident`, then
+   `orig_main[i] = (orig_id[i] == rep_ident)`. Every other member is therefore
+   "associated", including a second member that is itself a main.
+
+But `ClusteringUnmergeBundle` **already keeps the union of all main-marked
+members** (`:211-219`): `others` is built from `rmain[i] == 0` only, and every
+`rmain != 0` blob keeps `groups[i] = -1` and stays with the retained cluster. That
+is exactly the crosser-safe rule §4a derives. The split machinery needs **no
+change**; it is simply never handed more than one main to keep. This is the
+mechanical reason evt288287 cluster 13 is split today (§4a): both halves are real
+mains, one is marked, the other is indistinguishable from co-merged junk.
+
+⇒ The fix is write-side only: **mark as main every member that is itself a main**,
+and carry that marking across subsequent merges.
+
+### The one residual — and TGM already ships the guard for it
+
+`groups_from_provenance` returns `no_split` when `nmain == nb`
+(`ClusteringUnmergeBundle.cxx:207`), deliberately: an internally-disconnected
+*single* pre-merge member — doc 45's evt18 cluster 80, one `real_cluster_id`, four
+detached clumps with 52 and 32 cm gaps — was never "merged in", and splitting it
+on connectivity would undo the chain's intentional long-range merges
+(`extend`/`regular`/`parallel_prolong`), which the prototype keeps inside one
+`PR3DCluster`. So that class is out of the un-merge's remit **by design**, and no
+choice of main representation touches it. It has to be handled either
+
+- **upstream** — if the pass that merged it was not one of the deliberate
+  gap-jumpers, that is a separate bug; `stm_merge_attribution.py` can now name the
+  pass (doc 51 §8, unmeasured for evt18 clus 80), or
+- **inside the fit** — a path-component restriction, the STM analogue of TGM's
+  `main_component_pairs` (doc 36/38), which restricts endpoint pairs to a single
+  relaxed component.
+
+TGM's guard is therefore *not* redundant with the un-merge: it is the second
+layer, for exactly this residual class, and STM currently has no equivalent. Two
+layers, not two definitions.
 
 ## 4a. Interaction with cross-TPC (cathode-crosser) merging
 
@@ -312,7 +354,11 @@ Per stage, in this order:
 
 ## 7. Open
 
-- §4 is unresolved and is the gating decision.
+- §4 is **resolved** (representation = A, un-merge first, then STM/PR). What is
+  still open from it: whether the residual internally-disconnected-single-member
+  class needs an STM `main_component_pairs` analogue, or whether the pass that
+  merged evt18 cluster 80 is itself the bug — run `stm_merge_attribution.py` on
+  that event to decide.
 - Stage counts assume the SBND per-APA + all-APA layout. PDHD/PDVD run the same
   `clustering_isolated`, so Stage 0's diff will not be SBND-only — those
   detectors' gates have to run too before anything defaults on.
