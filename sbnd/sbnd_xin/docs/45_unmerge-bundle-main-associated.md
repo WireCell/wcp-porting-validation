@@ -103,6 +103,40 @@ passes would have merged these clumps too.  Whether the prototype's
 `create_steiner_graph` + `do_tracking` would likewise bridge 30–50 cm gaps is
 **an open question left to the owner** — see §Open.
 
+#### Showcase roots regenerated from the knob-ON run
+
+`showcase-stmfit-mc-evt18/track_com_18.root` has been re-made from
+`work-mcsim-unmon` (knob ON, `real` mode) so its provenance matches the fix:
+
+```bash
+D=showcase-stmfit-mc-evt18
+wire-cell-sbnd-magnify-tracking-convert \
+  -bwork-mcsim-unmon/nusel_evt18/tracking-stm.root -tT_rec_charge \
+  -a$D/truth-evt18-blk150.root -nT -o$D/track_com_18.root -f1
+```
+
+**Its content is identical to the pre-fix file** — this is the demonstration
+that the fix does not touch the reported symptom, not a new result.  On evt18
+`ClusteringUnmergeBundle` splits only clusters 17 (`21 → 16 + 1`) and 18
+(`40 → 39 + 1`); neither is STM-fitted.  Both fitted blocks are bit-identical:
+
+| block (`cid*10+pass`) | points | `exit_L` cm | off vs on |
+|---|---|---|---|
+| 80  (cid 8)  | 142 | 86.028 | identical |
+| 150 (cid 15) | 346 | 218.809 | identical |
+
+`T_stm_pass` (2 rows) and `T_stm_eval` (15 rows) are unchanged as well, so
+`truth-evt18-blk150.root` (keyed on block 150) needed no regeneration.
+
+`showcase-stmfit-mc-evt18/track_com_18_unmcomp.root` is **new**: the same
+conversion applied to the `component`-mode probe (`work-mcsim-unmcomp`).  It is
+the file that shows the symptom gone — cluster 8 is split `28 blobs → main 11 +
+4 associated`, the 11-blob main falls below the STM length gate, and **block 80
+disappears entirely** (1 track block instead of 2; only block 150 survives,
+itself unchanged).  It is a diagnostic for §Open item 1, **not** a production
+path: `component` mode splits on relaxed-graph connectivity, which breaks
+cathode crossers.
+
 ## Fix
 
 New `clus/src/ClusteringUnmergeBundle.cxx` — a fork of
@@ -286,3 +320,7 @@ consequences above — companion counting is not yet demonstrated live.
   label set.
 * All three roots symlink `ql_evt*/` and `evt*/` from `work-mcsim-stmon`;
   nothing under that doc-42/44 record was written to.
+* `showcase-stmfit-mc-evt18/track_com_18.root` was replaced in place (owner
+  instruction, same decision as docs 44/46) by the `work-mcsim-unmon`
+  regeneration.  Content-identical to the doc-46 file — see §(b) — so the
+  doc-44/46 figures and `stmfit_mc_compare.py` numbers all still hold.
