@@ -9,6 +9,14 @@ the treatment of the truth is not optimized"* — the blue truth curve of doc 42
 This is a **bug in the truth denominator**, not truth statistics.  Fixed; no
 reconstruction code is touched.
 
+> **Extended by doc 46** (`46_stm-fit-deltarays-and-gui.md`): the truth this doc
+> smooths was also *incomplete* — it grouped deposits by `origTrackID`, which
+> drops every delta ray (22.6 % of the charge).  Doc 46 adds them as a separate
+> `true_dQ_sec` branch and explains why summing them into `true_dQ` would undo
+> this doc's result (rms/median 0.087 → 0.681, mean fitted/true 1.036 → 0.852).
+> Every number below is unchanged and was re-verified array-identical after that
+> change.
+
 ## Repro
 
 ```bash

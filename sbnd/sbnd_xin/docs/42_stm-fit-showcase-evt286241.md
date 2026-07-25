@@ -240,6 +240,14 @@ sample, and it is the section to cite for fitter performance.
 > PNGs referenced below no longer reproduce this section's per-point numbers.
 > This text is the only remaining record of them.  `upload_mc18.zip` and the
 > Bee set are unaffected (they never read the truth file).
+>
+> **Doc 46** then found that the truth of this section captured only the muon:
+> grouping by `origTrackID` drops every delta ray, 22.6 % of the charge within
+> 5 cm.  §7.2's **"charge purity 81.58 %"** is exactly that — the missing 18.4 %
+> was this muon's own secondaries, and the number is 100 % once they are counted.
+> Coverage likewise rises from 83.5 % to 100 %.  The delta-ray charge is now a
+> separate branch (`true_dQ_sec`), never summed into `true_dQ`, so every
+> restricted-dQ/dx number in this section still stands.
 
 
 ```bash

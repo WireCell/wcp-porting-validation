@@ -17,6 +17,29 @@
 // SBNDReco1Reader.h, never call Events->GetEntry(): only per-branch reads are
 // safe on these files, and TTree::Draw touches only the branches named.
 //
+// Which deposits belong to the track: LArSoft encodes the parentage in the SIGN
+// of SimEnergyDeposit::trackID.  trackID > 0 means that particle made the step
+// itself; trackID < 0 means a SECONDARY of |trackID| made it (the shower
+// daughters largeant did not keep as separate MCParticles -- cf. the
+// simb::MCParticles_largeantdropped product).  origTrackID, by contrast, is the
+// true G4 id of whoever made the step, so a delta-ray electron carries its OWN
+// id there and grouping by origTrackID silently DROPS every delta ray: 22.6 %
+// of the charge within 5 cm of the first block measured, all of it pdg +-11.
+// So the family is |trackID| == elected, and each deposit is tagged:
+//
+//   sec = 0  the elected particle's own step   -> dx = the G4 step length
+//   sec = 1  a secondary of it (delta ray)     -> dx = 0
+//
+// dx = 0 on secondaries is deliberate and is the whole reason the two are
+// separated.  dQ/dx means charge per unit length OF THE PARENT TRACK; a delta
+// ray's own path is not parent path, so it must contribute charge without
+// contributing length.  The converter keeps the two charges in separate
+// branches (true_dQ / true_dQ_sec) over the one denominator true_dx, because
+// merging them is wrong in the other direction: the delta-ray charge lands on
+// ONE fitted point in truth while the reco spreads it over several, which turns
+// a 50 ke/cm MIP truth into 373 ke/cm spikes and drags the mean fitted/true
+// from 1.036 to 0.852.  Keep them apart and both numbers stay meaningful.
+//
 // Coordinates: SimEnergyDeposit positions are LArSoft world cm and are written
 // through unchanged.  numElectrons is the post-recombination ionization at the
 // deposit -- before drift attenuation, so the reco charge is expected LOWER.
@@ -27,7 +50,7 @@
 // Usage:
 //   root -l -b -q 'dump_truth_sed.C("<art.root>", <run>, <event>,
 //                                   "<tracking-stm.root>", <block|-1>,
-//                                   <R_cm>, "<out.root>")'
+//                                   <R_cm>, "<out.root>", <with_secondaries>)'
 // e.g.
 //   root -l -b -q 'dump_truth_sed.C("input_files/input-10evt-mc/2025f-mc.root",
 //                                   228, 11,
@@ -54,7 +77,9 @@ namespace {
         double q;           // ionization electrons
         double dl;          // |endPos - startPos|, the G4 step length, cm
         double t;           // start time, ns (orders the trajectory)
-        int    orig;        // origTrackID: secondaries attributed to the parent
+        int    orig;        // origTrackID: the true G4 id of whoever stepped
+        int    anc;         // |trackID|: the ancestor the step is charged to
+        bool   sec;         // trackID < 0, i.e. a secondary of anc
         int    pdg;
     };
 
@@ -75,6 +100,7 @@ namespace {
 int dump_truth_sed(const char* art_file, int run, int event, const char* track_file,
                    int block = -1, double radius_cm = 5.0,
                    const char* out_file = "truth.root",
+                   bool with_secondaries = true,
                    const char* product = "sim::SimEnergyDeposits_ionandscint_priorSCE_G4.obj")
 {
     // ---------------------------------------------------------------- fitted track
@@ -136,8 +162,9 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
     const char* v[] = {"startPos.fCoordinates.fX", "startPos.fCoordinates.fY",
                        "startPos.fCoordinates.fZ", "endPos.fCoordinates.fX",
                        "endPos.fCoordinates.fY",   "endPos.fCoordinates.fZ",
-                       "numElectrons", "origTrackID", "pdgCode", "startTime"};
-    for (int i = 0; i < 10; ++i) {
+                       "numElectrons", "origTrackID", "pdgCode", "startTime",
+                       "trackID"};
+    for (int i = 0; i < 11; ++i) {
         if (i) e += ":";
         e += TString::Format("%s.%s", product, v[i]);
     }
@@ -168,21 +195,28 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
         d.orig = (int) events->GetVal(7)[i];
         d.pdg = (int) events->GetVal(8)[i];
         d.t = events->GetVal(9)[i];
+        const int tid = (int) events->GetVal(10)[i];
+        d.anc = std::abs(tid);
+        d.sec = tid < 0;
         deps.push_back(d);
     }
     printf("deposits in event: %lld\n", nd);
 
     // ------------------------------------------- dominant particle near the track
+    // Grouping is by ANCESTOR (|trackID|), so a delta ray's charge counts for the
+    // muon that made it.  This is also what fixes the coverage statistic: on
+    // evt18 block 150 the elected particle owns 99 % of the fitted points this
+    // way against 88 % when every delta ray votes for itself.
     const double r2 = radius_cm * radius_cm;
     std::map<int, double> q_near;
     std::map<int, int> pdg_of;
     std::vector<char> near(deps.size(), 0);
     for (size_t i = 0; i < deps.size(); ++i) {
         if (deps[i].q <= 0) continue;
-        pdg_of[deps[i].orig] = deps[i].pdg;
+        if (!deps[i].sec) pdg_of[deps[i].anc] = deps[i].pdg;   // the ancestor's own pdg
         if (min_dist2(fx, fy, fz, deps[i].x, deps[i].y, deps[i].z) > r2) continue;
         near[i] = 1;
-        q_near[deps[i].orig] += deps[i].q;
+        q_near[deps[i].anc] += deps[i].q;
     }
     if (q_near.empty()) {
         printf("ERROR: no deposit within %.1f cm of the fitted track --"
@@ -206,12 +240,12 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
             const double d = (deps[i].x - fx[k]) * (deps[i].x - fx[k]) +
                              (deps[i].y - fy[k]) * (deps[i].y - fy[k]) +
                              (deps[i].z - fz[k]) * (deps[i].z - fz[k]);
-            if (d < best) { best = d; owner = deps[i].orig; }
+            if (d < best) { best = d; owner = deps[i].anc; }
         }
         pair_dist[k] = std::sqrt(best);
         if (owner >= 0) votes[owner]++;
     }
-    std::vector<std::pair<int, int> > rank;   // (votes, origTrackID)
+    std::vector<std::pair<int, int> > rank;   // (votes, ancestor |trackID|)
     for (std::map<int, int>::const_iterator it = votes.begin(); it != votes.end(); ++it)
         rank.push_back(std::make_pair(it->second, it->first));
     std::sort(rank.rbegin(), rank.rend());
@@ -234,19 +268,33 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
 
     // -------------------------------------------------------------- selection
     std::vector<Dep> keep;
-    double q_dom_all = 0, q_keep = 0;
+    double q_dom_all = 0, q_keep = 0, q_keep_sec = 0;
+    std::map<int, double> q_sec_pdg;
     for (size_t i = 0; i < deps.size(); ++i) {
-        if (deps[i].orig != dom || deps[i].q <= 0) continue;
+        if (deps[i].anc != dom || deps[i].q <= 0) continue;
+        if (deps[i].sec && !with_secondaries) continue;
         q_dom_all += deps[i].q;
         if (!near[i]) continue;
         q_keep += deps[i].q;
+        if (deps[i].sec) { q_keep_sec += deps[i].q; q_sec_pdg[deps[i].pdg] += deps[i].q; }
         keep.push_back(deps[i]);
     }
     std::sort(keep.begin(), keep.end(),
               [](const Dep& a, const Dep& b) { return a.t < b.t; });
 
-    printf("selected particle: origTrackID %d, pdg %d\n", dom, pdg_of[dom]);
+    printf("selected particle: trackID %d, pdg %d%s\n", dom, pdg_of[dom],
+           with_secondaries ? " (+ its secondaries)" : " (primary only)");
     printf("   deposits kept:  %zu\n", keep.size());
+    if (with_secondaries) {
+        printf("   secondary share: %.4e e- of %.4e e- kept (%.1f%%)"
+               " -- delta rays, invisible when grouping by origTrackID\n",
+               q_keep_sec, q_keep, q_keep > 0 ? 100. * q_keep_sec / q_keep : 0.);
+        printf("   secondary pdg:  ");
+        for (std::map<int, double>::const_iterator it = q_sec_pdg.begin();
+             it != q_sec_pdg.end(); ++it)
+            printf("%d:%.2e  ", it->first, it->second);
+        printf("\n");
+    }
     printf("   charge kept:    %.4e e- of %.4e e- for this particle"
            " (%.2f%%; %.2f%% dropped by the %.1f cm cut)\n",
            q_keep, q_dom_all, 100. * q_keep / q_dom_all,
@@ -258,7 +306,7 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
     {   // full extent of the particle, cut or not: does it stop in the detector?
         std::vector<Dep> all;
         for (size_t i = 0; i < deps.size(); ++i)
-            if (deps[i].orig == dom && deps[i].q > 0) all.push_back(deps[i]);
+            if (deps[i].anc == dom && !deps[i].sec && deps[i].q > 0) all.push_back(deps[i]);
         std::sort(all.begin(), all.end(),
                   [](const Dep& a, const Dep& b) { return a.t < b.t; });
         if (!all.empty())
@@ -289,18 +337,22 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
     TTree* t = new TTree("T", "truth deposits for one MC particle");
     Int_t N = (Int_t) keep.size();
     std::vector<double> ox, oy, oz, oq, odx;
+    std::vector<int> osec;
     double l_keep = 0;
     for (size_t i = 0; i < keep.size(); ++i) {
         ox.push_back(keep[i].x); oy.push_back(keep[i].y);
         oz.push_back(keep[i].z); oq.push_back(keep[i].q);
-        odx.push_back(keep[i].dl);
-        l_keep += keep[i].dl;
+        // Secondaries carry charge but NO length: dQ/dx is per unit PARENT path.
+        odx.push_back(keep[i].sec ? 0.0 : keep[i].dl);
+        osec.push_back(keep[i].sec ? 1 : 0);
+        if (!keep[i].sec) l_keep += keep[i].dl;
     }
     std::vector<double>* pox = &ox;
     std::vector<double>* poy = &oy;
     std::vector<double>* poz = &oz;
     std::vector<double>* poq = &oq;
     std::vector<double>* podx = &odx;
+    std::vector<int>* posec = &osec;
     t->Branch("N", &N, "N/I");
     t->Branch("x", &pox);
     t->Branch("y", &poy);
@@ -310,11 +362,19 @@ int dump_truth_sed(const char* art_file, int run, int event, const char* track_f
     // (the prototype's mcs-tracks.root) have no dx; the converter falls back
     // to consecutive-point spacing there.
     t->Branch("dx", &podx);
+    // 1 = secondary of the elected particle.  Absent in older files, where the
+    // converter treats every row as primary (the legacy meaning of true_dQ).
+    t->Branch("sec", &posec);
     t->Fill();
     fout->Write();
     fout->Close();
-    printf("wrote %s: %d truth points, %.4e e-, true path %.2f cm"
-           " (mean dQ/dx %.2f ke/cm)\n",
-           out_file, N, q_keep, l_keep, l_keep > 0 ? q_keep / 1000. / l_keep : 0.);
+    const int n_sec = (int) std::count(osec.begin(), osec.end(), 1);
+    printf("wrote %s: %d truth points (%d primary + %d secondary),"
+           " %.4e e- primary + %.4e e- secondary, true path %.2f cm"
+           " (mean dQ/dx %.2f ke/cm primary, %.2f ke/cm with secondaries)\n",
+           out_file, N, N - n_sec, n_sec,
+           q_keep - q_keep_sec, q_keep_sec, l_keep,
+           l_keep > 0 ? (q_keep - q_keep_sec) / 1000. / l_keep : 0.,
+           l_keep > 0 ? q_keep / 1000. / l_keep : 0.);
     return 0;
 }

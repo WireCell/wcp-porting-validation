@@ -20,6 +20,15 @@ The two dQ/dx are formed with DIFFERENT denominators, and that is the point:
     0.55 and made the truth beyond the fit's end read as a 396 ke/cm Bragg
     peak on a 50 ke/cm MIP.
 
+`true_dQ_sec`, when present, is the charge of the parent's SECONDARIES (delta
+rays) in the same cells, over the same `true_dx`.  It is reported separately and
+never added into `true_dQ`: the delta-ray charge lands on the one fitted point
+nearest it while the reco spreads the same charge over several wires and points,
+so summing them turns a flat 50 ke/cm MIP truth into 373 ke/cm spikes and drags
+the mean fitted/true from 1.036 to 0.852.  Two honest numbers instead of one
+wrong one: `true_dQ/true_dx` is the parent's restricted dQ/dx, and
+`(true_dQ+true_dQ_sec)/true_dx` is all the charge available near the trajectory.
+
 Three caveats this script enforces rather than hides:
 
   * true_dx == 0 means no truth point chose that fitted point; the true dQ/dx
@@ -94,6 +103,9 @@ def main():
     com = arr(d["com_dis"][0][k])
     n = len(L)
 
+    sec = arr(d["true_dQ_sec"][0][k]) if "true_dQ_sec" in d else np.zeros(n)
+    has_sec = "true_dQ_sec" in d and sec.sum() > 0
+
     has_true_dx = "true_dx" in d
     if has_true_dx:
         tdx = arr(d["true_dx"][0][k])
@@ -150,6 +162,32 @@ def main():
           f"true {tru[good].sum():.4e} e- / {tdx[good].sum():.2f} cm, "
           f"mean-dQ/dx ratio "
           f"{(rec[good].sum()/dx[good].sum())/(tru[good].sum()/tdx[good].sum()):.3f}")
+
+    if has_sec:
+        sq = sec / np.where(tdx > 0, tdx, np.nan) / 1e3
+        tot = (tru[good].sum() + sec[good].sum()) / tdx[good].sum() / 1e3
+        print(f"\nsecondaries (delta rays): {sec[good].sum():.4e} e- = "
+              f"{100*sec[good].sum()/tru[good].sum():.1f}% of the primary charge, "
+              f"on {int((sec[good] > 0).sum())} of {int(good.sum())} points "
+              f"({100*(sec[good] > 0).mean():.0f}%)")
+        print(f"  mean true dQ/dx: {tru[good].sum()/tdx[good].sum()/1e3:.2f} ke/cm restricted "
+              f"(parent only) vs {tot:.2f} ke/cm with secondaries; "
+              f"fitted {rec[good].sum()/dx[good].sum()/1e3:.2f}")
+        print(f"  => the fit recovers {100*(rec[good].sum()/dx[good].sum() - tru[good].sum()/tdx[good].sum())/(sec[good].sum()/tdx[good].sum()):.0f}% "
+              f"of the delta-ray charge (0% = restricted, 100% = all of it)")
+        # Are the reco's local bumps delta rays?  Association, not causation:
+        # the truth puts the charge on one point, the reco spreads it.
+        exc = rq - tq
+        hi = good & (rq > 1.3 * np.median(rq[good]))
+        print(f"  points with fitted dQ/dx > 1.3x median: {int(hi.sum())}; "
+              f"{100*(sec[hi] > 0).mean():.0f}% have delta-ray charge, "
+              f"against a {100*(sec[good] > 0).mean():.0f}% baseline")
+        for w in (0, 1, 2):
+            sw = np.array([sec[max(0, i-w):i+w+1].sum() for i in range(n)])
+            dw = np.array([dx[max(0, i-w):i+w+1].sum() for i in range(n)])
+            m = good & np.isfinite(exc)
+            print(f"  corr(fitted excess over restricted truth, delta-ray dQ/dx) "
+                  f"smeared +/-{w} points: {np.corrcoef(exc[m], (sw/dw)[m])[0, 1]:+.3f}")
 
     # profile along the path, and against |x| (drift distance) for attenuation
     print("\n L [cm]      n   fitted [ke/cm]  true [ke/cm]   rec/true   <x> [cm]")
@@ -214,6 +252,10 @@ def main():
                       "true (SimEnergyDeposit)/rec_dx") + ", running median")
     ax[0].plot(L[good], running(rq[good]), "-", lw=2, color="tab:red",
                label="fitted, running median")
+    if has_sec:
+        tot_q = (tru + sec) / np.where(tdx > 0, tdx, np.nan) / 1e3
+        ax[0].plot(L[good], tot_q[good], "-", lw=1, color="tab:purple", alpha=.7,
+                   label="true + delta rays (same denominator)")
     edge_m = (~good) & np.isfinite(tq)
     if edge_m.any():
         ax[0].plot(L[edge_m], tq[edge_m], "x", ms=7, color="grey",
@@ -222,6 +264,8 @@ def main():
     ax[0].axhline(50, ls="--", lw=1, color="k", label="50 ke/cm MIP")
     ax[0].set_ylabel("dQ/dx [ke/cm]")
     ax[0].set_ylim(0, max(120, np.percentile(rq[good], 99) * 1.2))
+    if has_sec:
+        ax[0].set_ylim(0, max(150, np.nanpercentile(tot_q[good], 99) * 1.15))
     ax[0].legend(fontsize=8)
     ax[0].set_title(f"{args.file.split('/')[-1]} block {args.block}: "
                     f"fitted vs true dQ/dx  (pairing median {med_com:.2f} cm)")
