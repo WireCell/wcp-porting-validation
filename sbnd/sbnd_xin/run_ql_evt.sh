@@ -76,6 +76,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             (TaggerCheckTGM main mode "real", doc 38).  Only meaningful WITH
             -save-pctree.  Off by default => byte-identical tarball.
             Env: SBND_QL_SAVE_RCID=1.
+  -trace-bee  DIAGNOSTIC: dump one Bee "clustering" layer per clustering step
+            (tr<NN>_<Type>, per-APA zips AND mabc-all-apa.zip), so a merge can
+            be attributed to the pass that made it.  Match pieces by point
+            coordinates -- cluster ids are renumbered after every step.  Adds
+            ~20 layers per zip; use a FRESH work root.  Off => byte-identical.
+            Env: SBND_TRACE_BEE=1.  See sbnd_xin/docs/51.
   -lm       LM (light-mismatch) tagger (QLMatching lm_tagger).  Judges every
             FINAL matched bundle by per-drift-side KS shape + pred/meas
             normalization (the photon library's unmodeled cathode leakage
@@ -157,6 +163,8 @@ QL_LM="${SBND_QL_LM:-0}"
 # Persist flash-merge per-blob provenance through the pctree tarball (doc 38).
 # OFF by default: opt in with -save-rcid / SBND_QL_SAVE_RCID=1.
 SAVE_RCID="${SBND_QL_SAVE_RCID:-0}"
+# Per-step Bee trace for merge attribution.  OFF by default (diagnostic only).
+TRACE_BEE="${SBND_TRACE_BEE:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -173,6 +181,7 @@ while [ $# -gt 0 ]; do
         -cathode-diag|--cathode-diag) CATHODE=1; shift ;;
         -save-pctree|--save-pctree) SAVEPCT=1; shift ;;
         -save-rcid|--save-rcid) SAVE_RCID=1; shift ;;
+        -trace-bee|--trace-bee) TRACE_BEE=1; shift ;;
         -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         *) _args+=("$1"); shift ;;
@@ -299,6 +308,7 @@ process_event() {
         --tla-code "main_flag=$([ "$MAINFLAG" = 1 ] && echo true || echo false)" \
         --tla-code "lm=$([ "$QL_LM" = 1 ] && echo true || echo false)" \
         --tla-code "save_rcid=$([ "$SAVE_RCID" = 1 ] && echo true || echo false)" \
+        --tla-code "trace_bee=$([ "$TRACE_BEE" = 1 ] && echo true || echo false)" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \

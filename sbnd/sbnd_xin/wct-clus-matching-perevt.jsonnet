@@ -112,6 +112,13 @@ function(
     // save_tensors.  false (default) = byte-identical legacy tarball (C++
     // default false; key omitted when off).  Runner flag: -save-rcid.
     save_rcid      = false,
+    // DIAGNOSTIC (default false): dump one Bee "clustering" layer per clustering
+    // step (per-APA AND all-APA), named tr<NN>_<Type>, so a merge can be
+    // attributed to the pass that made it instead of guessed.  See
+    // cfg/.../sbnd/clus.jsonnet trace_sets() and docs/51.  Off => the
+    // bee_points_sets lists are unchanged => compiled config byte-identical.
+    // run_ql_evt.sh -trace-bee / SBND_TRACE_BEE=1.
+    trace_bee      = false,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -147,7 +154,7 @@ function(
         subRunNo=subrun,
         eventNo=event,
         reality=reality);
-    local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false)
+    local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false, trace_bee=trace_bee)
                         for n in std.range(0, nanodes - 1)];
 
     // --- Q/L matching nodes ---
@@ -189,7 +196,7 @@ function(
                                                beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
                                                main_flag=main_flag, lm=lm);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
-            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, trace_bee=trace_bee);
             local per_apa_pre = [g.intern(
                 innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
                 centernodes=[clus_pipes[n]],
@@ -224,7 +231,7 @@ function(
                     g.edge(flash_attach[n], matching_pipes[n], 0, 0),
                 ]
             ) for n in std.range(0, nanodes - 1)];
-            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, trace_bee=trace_bee);
             g.intern(
                 innodes=per_apa,
                 outnodes=[clus_all],
