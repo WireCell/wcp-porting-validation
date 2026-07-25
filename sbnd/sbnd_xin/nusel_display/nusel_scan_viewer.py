@@ -1128,13 +1128,22 @@ def render_dqdx():
     evt = state["evt"]
     i = state["focus"]
 
+    # Name the bundle this panel is about, in both the title and the summary.
+    # Without it a panel that failed to refresh is indistinguishable from one
+    # reporting on the bundle you just clicked (which is exactly how the
+    # missing render_dqdx call in on_row_select hid for a whole scan round).
+    r = evt.rows[i] if (evt is not None and i is not None) else None
+    tag = (f"grp {r['flash_grp']} t={r['t_us']:.3f} us, main {r['main_id']}"
+           if r else "no bundle focused")
+    f_dqdx.title.text = f"STM fit: dQ/dx vs residual range — {tag}"
+
     def blank(msg):
         stmdqdx_src.data = dict(rr=[], dqdx=[], color=[], marker=[],
                                 passno=[], apa=[], chi2=[])
         stmref_src.data = dict(rr=[], mu=[])
         stmflat_src.data = dict(rr=[], flat=[])
         stmtraj_src.data = dict(x=[], y=[], z=[])
-        stm_info.text = f"<i>{msg}</i>"
+        stm_info.text = f"<b>{tag}</b><br><i>{msg}</i>"
 
     if evt.stm is None:
         blank("no STM fit dump (rerun with -stm-fit; needs uproot)" if uproot
@@ -1219,18 +1228,33 @@ def render_dqdx():
             f"&rarr; <b>{'PASS' if E['verdict'][k]==1 else 'fail'}</b>")
     npts = int(m.sum())
     n0, n1 = int((apa == 0).sum()), int((apa == 1).sum())
-    stm_info.text = ("<b>STM fit, cluster %d</b> — %d pts (TPC0 %d ○ / TPC1 %d △)<br>"
-                     % (main, npts, n0, n1) + "<br>".join(lines))
+    stm_info.text = ("<b>STM fit, cluster %d</b> [%s] — %d pts "
+                     "(TPC0 %d ○ / TPC1 %d △)<br>"
+                     % (main, tag, npts, n0, n1) + "<br>".join(lines))
 
 
-def refresh():
-    rebuild_table()
+def render_focus():
+    """Redraw everything that depends on state['focus'].
+
+    Deliberately excludes rebuild_table(): that writes table_src, whose
+    selected.on_change re-enters on_row_select, so folding it in here would
+    make every click a callback loop.  Every focus change must go through
+    THIS function -- on_row_select used to list the renderers by hand and
+    silently omitted render_dqdx, which left the STM panel (and the black
+    fit-trajectory crosses on the projections) showing whichever bundle was
+    focused at load time.
+    """
     render_projections()
     render_light()
     render_metrics()
     render_dqdx()
     render_proj_info()
     sync_label_widgets()
+
+
+def refresh():
+    rebuild_table()
+    render_focus()
 
 
 # ---------------------------------------------------------------------------
@@ -1404,11 +1428,7 @@ def on_row_select(attr, old, new):
     pos = new[0]
     if 0 <= pos < len(order):
         state["focus"] = order[pos]
-        render_projections()
-        render_light()
-        render_metrics()
-        render_proj_info()
-        sync_label_widgets()
+        render_focus()
 
 
 def on_mode(attr, old, new):

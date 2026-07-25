@@ -64,12 +64,23 @@ ssh -L 5010:localhost:5010 <host>
 4. The light row shows the flash's measured vs predicted pattern on both TPC
    sides (own-side flash + its 80 ns cross-APA partner), as PMT z-y bubble
    panels plus a per-channel overlay.
-5. Two modes: **ALL bundles** vs **IN-BEAM only** (0.2–2.2 µs window, the
+5. **STM dQ/dx panel** (needs `run_nusel_evt.sh -stm-fit` + `uproot`): the
+   fitted dQ/dx vs residual range of the focused bundle's **main cluster**,
+   over the muon stopping expectation (green, the exact `eval_stm` reference
+   table) and the flat MIP line (grey dashes, the `mip_dqdx` knob).  Forward
+   pass blue / backward red, TPC0 circles / TPC1 triangles; the same
+   trajectory is drawn on the projections as black crosses.  The title and
+   the summary next to it name the bundle being shown (`grp / t / main`) —
+   if that does not match the row you clicked, the panel is stale, which is
+   a bug.  A main cluster with no fit gets the reason the tagger stopped
+   (`contained`, `midkink`, `nexits`, `nosteiner`, `shortfit`, `tgm`, …),
+   which is also the table's `stm fit` column.
+6. Two modes: **ALL bundles** vs **IN-BEAM only** (0.2–2.2 µs window, the
    `in_beam` column of the table).
-6. Tag the focused bundle with the **TGM / STM / FC / LM** buttons
+7. Tag the focused bundle with the **TGM / STM / FC / LM** buttons
    (multi-select; LM = light mismatch), add a per-bundle comment and/or a
    per-event comment.  Everything autosaves on each change.
-7. **Save labels** writes the actionable JSON.
+8. **Save labels** writes the actionable JSON.
 
 ## 3b. Re-scans after a fix (`--prev`)
 
