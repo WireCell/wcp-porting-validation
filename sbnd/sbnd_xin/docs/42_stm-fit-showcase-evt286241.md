@@ -233,10 +233,13 @@ sample, and it is the section to cite for fitter performance.
 > no-drift-trend conclusion; doc 44 reproduces 1.043 exactly by running the
 > compare script on this section's own `track_com_18.root`).  What is
 > superseded is the **per-point truth scatter**, the **endpoint values**, the
-> **true column of the §7.3 table**, and the rationale of note 3 below.  The
-> products in `showcase-stmfit-mc-evt18/` are kept unchanged as the record of
-> these pre-fix numbers; doc 44's live in
-> `showcase-stmfit-truedx-mc-evt18/`.
+> **true column of the §7.3 table**, and the rationale of note 3 below.
+>
+> The products in `showcase-stmfit-mc-evt18/` were **regenerated in place** on
+> 2026-07-25 (owner decision) and now carry the fix — so the ROOT files and
+> PNGs referenced below no longer reproduce this section's per-point numbers.
+> This text is the only remaining record of them.  `upload_mc18.zip` and the
+> Bee set are unaffected (they never read the truth file).
 
 
 ```bash

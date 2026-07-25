@@ -13,7 +13,7 @@ reconstruction code is touched.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-D=showcase-stmfit-truedx-mc-evt18
+D=showcase-stmfit-mc-evt18
 
 # 1. truth dump -- now also writes the per-deposit path length as branch `dx`
 root -l -b -q "dump_truth_sed.C(\"input_files/input-10evt-mc/2025f-mc.root\",228,18,
@@ -31,10 +31,13 @@ python3 stmfit_mc_compare.py -f $D/track_com_18.root -b 150 \
 
 # 4. GUI (headless recipe of doc 43; block 150 is cluster index 1)
 cd /nfs/data/1/xqian/toolkit-dev/Magnify-tracking-SBND/scripts
+A=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/$D
 xvfb-run -a -s "-screen 0 1920x1080x24" root -l -q loadClasses.C \
-  '/home/xqian/tmp/drive2.C("<abs path>/track_com_18.root","/home/xqian/tmp/shot.png",1)'
+  "/home/xqian/tmp/drive2.C(\"$A/track_com_18.root\",\"$A/magnify_mc_evt18_blk150.png\",1)"
 # drive2.C = drive.C of doc 43 plus gc->SetCurrentCluster(clus);
-#            gc->data->DrawNewCluster(); before the SaveAs
+#            gc->data->DrawNewCluster(); before the SaveAs.
+# magnify_dqdx_{recdx,truedx}.png are the top-left pad of that canvas, cropped,
+# rendered from the pre-fix and post-fix track_com_18.root respectively.
 
 # generality check quoted in §5 (different event, different muon):
 root -l -b -q 'dump_truth_sed.C("input_files/input-10evt-mc/2025f-mc.root",228,2,
@@ -44,9 +47,17 @@ wire-cell-sbnd-magnify-tracking-convert -bwork-mcsim-stmon/nusel_evt2/tracking-s
 python3 stmfit_mc_compare.py -f /home/xqian/tmp/gen/tc_2.root -b 110
 ```
 
-Products in `showcase-stmfit-truedx-mc-evt18/` — a **new** directory; doc 42
-§7's `showcase-stmfit-mc-evt18/` is left byte-for-byte alone as the record of
-the pre-fix numbers (M13).
+Products **regenerated in place** in `showcase-stmfit-mc-evt18/` (owner
+decision, 2026-07-25): one showcase directory, so opening
+`track_com_18.root` in the GUI shows the corrected truth.  `truth-evt18-blk150.root`
+(now carries the `dx` branch), `track_com_18.root` (now carries `true_dx`),
+`dqdx_mc_evt18_blk150.png` and `magnify_mc_evt18_blk150.png` are overwritten;
+the pre-fix numbers survive only as text, in doc 42 §7 and in the tables below.
+`magnify_dqdx_recdx.png` / `magnify_dqdx_truedx.png` are the before/after
+renders of the GUI dQ/dx pad, kept in the same directory as the visual
+evidence.  `upload_mc18.zip` is untouched and still valid: `make_stmfit_bee.py`
+reads only the work dirs, never the truth or `track_com` file, so the Bee set
+**d11b087c… / 1b654c7c…** does not depend on this fix.
 
 ## Symptom
 
@@ -188,7 +199,7 @@ the gates use the uBooNE app and the visitor's `T_rec_charge`):
   earlier 07:00 pair built the same logic before a comment-only edit).
 - **The shipped binary reproduces the committed products:** re-running it on
   `$D/truth-evt18-blk150.root` gives a `T_rec` array-identical to
-  `showcase-stmfit-truedx-mc-evt18/track_com_18.root` on every branch.
+  `showcase-stmfit-mc-evt18/track_com_18.root` on every branch.
 - **All pre-existing output unchanged.** Re-ran the converter on
   `work-mcsim-stmon/nusel_evt18/tracking-stm.root` with the *old* truth file
   (no `dx` branch, exercising the fallback) and compared every branch of
