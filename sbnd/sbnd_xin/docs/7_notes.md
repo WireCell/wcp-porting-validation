@@ -42,16 +42,29 @@ JSON holds. When you get to dQ/dx work later, decide whether the fit
 should use the same `(DL, DT)` as the sim and update that JSON too if
 so.
 
-**Decided 2026-07-25 — the fit uses the PHYSICAL values, not the sim's.**
+**2026-07-25 — the fit's coefficients were set to the PHYSICAL values on owner
+instruction; the sim-vs-physical question above is STILL OPEN.**
 `sbnd_xin/sbnd_track_fitting.json` now carries `DL = 6.5781 cm²/s`
 (`6.5781e-07`) and `DT = 13.1349 cm²/s` (`1.31349e-06`), the SBND transport
 coefficients, replacing the 6.2 / 9.8 placeholders. The **simulation** was left
 at 4.0 / 8.8 (that mirrors sbndcode's own `wcsimsp_sbnd.fcl`, so changing it is
 an SBND production decision, not ours). Consequence: on MC the fit assumes ~15 %
-more transverse smearing than the waveforms actually contain — right for data,
-over-smeared for MC. Quantified per plane and per drift distance in
-`47_stm-bragg-reference-sbnd-retune.md` §6a. **Not bit-identical**: fitted
-`dQ`/`dx` change, so STM/PR numbers in docs 41–46 predate it.
+more transverse smearing than the waveforms actually contain. **Not
+bit-identical**: fitted `dQ`/`dx` change, so STM/PR numbers in docs 41–46
+predate it.
+
+Whether that MC divergence is acceptable is an **owner decision that has not
+been taken** — the instruction was to set the coefficients, not to decide this.
+The two readings, both defensible:
+- **A (what is in the tree now):** the fit models the *real detector*; MC
+  divergence is accepted and capped, and MC-based fit validation (docs 44/46)
+  inherits a known ~15 % transverse bias.
+- **B:** the fit should match whatever produced the waveforms it is fitting —
+  physical 6.5781/13.1349 for data, sim 4.0/8.8 for MC. Cheap to implement: the
+  runners and `wct-pr-perevt.jsonnet` already carry a `reality=sim|data` TLA, so
+  this is a second JSON or a reality-switched pair of values, not new machinery.
+Quantified per plane and per drift distance in
+`47_stm-bragg-reference-sbnd-retune.md` §6a.
 
 ### `lifetime` — not in toolkit reco yet
 

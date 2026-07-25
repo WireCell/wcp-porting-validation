@@ -397,14 +397,78 @@ this is NOT bit-identical and every STM/PR number in docs 41–46 predates it an
 needs revalidation.** It is a deliberate physics correction, not a tunable knob,
 so there is no default-OFF form of it.
 
+**These σ numbers are analytic.** They are the formula above evaluated at the
+two coefficient pairs — nothing here yet shows the fit still *converges* with a
+15 % wider transverse footprint. Two window parameters in the same JSON were
+sized against the old σ and did **not** move: `search_range = 10` (wires or time
+slices) and `time_tick_cut = 20` (ticks). A σ_T that grew 15 % against an
+unchanged search window is exactly the shape of a silently truncated footprint,
+which would show up as rising `reduced_chi2` (doc 41 baseline: p90 = 2.7,
+max 18.8). See §6b for the measurement.
+
 **MC caveat — the sim does not use these values.** SBND's official simulation
 drifts with **DL = 4.0, DT = 8.8 cm²/s** (`sbndcode/.../WireCell/wcsimsp_sbnd.fcl`
 and the `simparams.jsonnet` mirror in this tree, both unchanged). So on MC the
 smearing actually present in the waveforms is *narrower* than the fit now
 assumes — the fit is right for data and over-smears MC by roughly the same ~15 %
 transverse. Three different numbers are now in play (sim 4.0/8.8, physical
-6.5781/13.1349, and uBooNE's 6.4/9.8); reconciling sim with physical is an SBND
-production decision and was **not** touched here.
+6.5781/13.1349, and uBooNE's 6.4/9.8).
+
+**This fork is an OPEN owner decision, not something settled here.** The
+instruction was to set the coefficients; whether the fit should diverge from the
+simulation it is validated against is a separate question — and docs 44/46 are
+MC-only validations of exactly this fit, while doc 41's `reduced_chi2` is fit
+quality on the same MC/data:
+- **A (what is in the tree now):** the fit models the real detector; the MC
+  divergence is accepted, and MC-based fit validation inherits a known ~15 %
+  transverse bias.
+- **B:** the fit matches whatever produced the waveforms it is fitting —
+  physical 6.5781/13.1349 for data, sim 4.0/8.8 for MC. Cheap to build: the
+  runners and `wct-pr-perevt.jsonnet` already carry a `reality=sim|data` TLA, so
+  it is a second JSON or a reality-switched pair, not new machinery.
+
+Changing the *simulation* to the physical values is a third option and a genuine
+SBND production decision (it would diverge from `sbndcode`); it was **not**
+touched here.
+
+### 6b. Smoke check on MC evt18 — the fit converges; the deltas are NOT measured
+
+Same-event A/B, both runs from the identical input pctree
+(`work/ql_evt18/pctree-evt18.tar.gz`), pipeline
+`switch_scope,steiner,fiducialutils,tagger_check_stm`, `save_stm_fit=true`,
+differing **only** in the `trackfitting_config` JSON (old 6.2/9.8 vs new
+6.5781/13.1349), outputs written outside the work tree:
+
+```
+wire-cell --tla-str trackfitting_config=<old|new>.json ... -c wct-pr-perevt.jsonnet
+```
+
+**What is established:** both runs exit `rc=0`, and the STM stage produces the
+same fits with the same topology —
+
+| | old | new |
+|---|---|---|
+| cluster 8 | pass=0 status=0 kink=142 exit_L=86.0 cm npts=142 | identical |
+| cluster 15 | pass=0 status=3 kink=46 exit_L=28.1 cm npts=46 | identical |
+
+So the 15 % wider transverse footprint does **not** break convergence, and on
+this event it does not move the pass/status verdict or the kink location. The
+`search_range`/`time_tick_cut` truncation worry in §6a is not realised here (one
+event only — it is not ruled out in general).
+
+**What is NOT established: the per-point deltas.** An ad-hoc parse of the
+`stm_fit` / `stm_eval` arrays out of the saved tarball gave self-evidently wrong
+values — `ks1` up to 18.7, where a Kolmogorov statistic is bounded by 1 — so the
+array alignment in that parse is broken and **no dQ/dx, `reduced_chi2` or
+`ratio1` number from it is quoted here.** The likely cause is the known
+named-PC trap: serialization concatenates same-named cluster-local PCs across
+clusters, and this event has two clusters carrying `stm_eval`, so per-cluster
+alignment is lost on the way out. The instrument that is known to read these
+correctly is the Magnify-tracking converter path used in docs 41–46
+(`tracking-stm.root` → `wire-cell-sbnd-magnify-tracking-convert`), which needs
+`stm_magnify` in the pipeline. Quantifying the shift — and with it the §4a
+`ratio1` test, whose values live in the same PC — is left to the doc-40 phase-4
+scan on a fresh tag.
 
 Also updated for consistency, though **inert**: the `DL`/`DT` TLA defaults in
 `wct-pr-perevt.jsonnet`, `wct-clus-matching-perevt.jsonnet`,

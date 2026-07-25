@@ -61,7 +61,7 @@ standalone wct-matching:
 ```bash
 wire-cell -l stdout -L info \
 -V reality=sim \
--V DL=6.2 -V DT=9.8 -V lifetime=6 -V driftSpeed=1.565 \
+-V DL=6.5781 -V DT=13.1349 -V lifetime=6 -V driftSpeed=1.565 \
 -V input=input-10evt-data \
 -V semimodel_file=sbnd/photodet/semi-analytical-sbnd.json \
 -c wct-clus-matching-standalone.jsonnet
@@ -97,7 +97,7 @@ lar -n 1 -c standard_detsim_sbnd-dump.fcl -s 2025f-mc.root -o 2025f-mc-resim.roo
       -V input=. \
       -V frames=2025f-mc-sp-frames.tar.bz2 \
       -V semimodel_file=semi-analytical-sbnd.json \
-      -C DL=6.2 -C DT=9.8 -C lifetime=6 \
+      -C DL=6.5781 -C DT=13.1349 -C lifetime=6 \
       -C joint=true -C pmt_nl=true \
       -c ../sbnd_xin/wct-clus-matching-standalone.jsonnet
 
