@@ -149,6 +149,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 sample move, all toward the prototype's per-cluster view.
                 Env: SBND_UNMERGE=0, or -no-unmerge, for the legacy
                 merged-bundle pipeline.
+  -unmerge-assoc doc 52: ALSO un-merge the per-APA isolated GROUPING (the small
+                clusters clustering_isolated merged into each main without
+                requiring connectivity), so STM/PR fit the main alone as the
+                prototype does.  Implies -unmerge and inserts 'unmerge_assoc'
+                after 'unmerge_bundle'.  Requires a pctree written with
+                run_ql_evt.sh -save-assoc.  Env: SBND_UNMERGE_ASSOC=1.
   -unmerge-comp like -unmerge but pick the main from the longest RELAXED-GRAPH
                 CONNECTED COMPONENT instead of the flash-merge provenance.
                 That is a clustering decision, not bookkeeping (the relaxed
@@ -294,6 +300,11 @@ UNMERGE="${SBND_UNMERGE:-1}"
 # (exact, needs a -save-rcid pctree -- this runner passes it), "component" =
 # longest connected component (proxy).  -unmerge-comp selects the proxy.
 UNMERGE_MODE="${SBND_UNMERGE_MODE:-real}"
+# -unmerge-assoc (doc 52): ALSO undo the per-APA isolated GROUPING, which merged
+# each main cluster with the small clusters near but not connected to it.  Needs
+# a pctree saved with run_ql_evt.sh -save-assoc; without the arrays the visitor
+# is a no-op and warns.  Runs after unmerge_bundle (flash outer, isolated inner).
+UNMERGE_ASSOC="${SBND_UNMERGE_ASSOC:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -328,6 +339,7 @@ while [ $# -gt 0 ]; do
         -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
         -unmerge-comp|--unmerge-comp) UNMERGE=1; UNMERGE_MODE=component; shift ;;
+        -unmerge-assoc|--unmerge-assoc) UNMERGE=1; UNMERGE_ASSOC=1; shift ;;
         -no-unmerge|--no-unmerge) UNMERGE=0; UNMERGE_MODE=real; shift ;;
         *) _args+=("$1"); shift ;;
     esac
@@ -342,6 +354,12 @@ set -- "${_args[@]}"
 # would survive on the retained main).
 if [ "$UNMERGE" = 1 ]; then
     PIPELINE="${PIPELINE/switch_scope,/switch_scope,unmerge_bundle,}"
+fi
+# -unmerge-assoc adds the INNER un-merge (the isolated grouping) right after the
+# outer one, so the two together reproduce the prototype's main_cluster +
+# additional_clusters.  Still before steiner, for the same reason.
+if [ "$UNMERGE_ASSOC" = 1 ]; then
+    PIPELINE="${PIPELINE/unmerge_bundle,/unmerge_bundle,unmerge_assoc,}"
 fi
 # -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
 if [ "$STM_FIT" = 1 ]; then

@@ -119,6 +119,18 @@ function(
     // bee_points_sets lists are unchanged => compiled config byte-identical.
     // run_ql_evt.sh -trace-bee / SBND_TRACE_BEE=1.
     trace_bee      = false,
+    // save_assoc (default false): turn on doc 52's isolated-grouping provenance.
+    // clustering_isolated writes the per-blob pair assoc_cluster_id /
+    // assoc_cluster_main recording which pre-merge cluster each blob came from
+    // and which member was the MAIN; merge_clusters carries that pair across
+    // every later merge (including cathode_connect and the flash merge) and
+    // MABC homogenizes it into the save_tensors tarball.  The PR job then runs
+    // a second ClusteringUnmergeBundle (pipeline visitor 'unmerge_assoc') to
+    // undo the grouping, so TaggerCheckSTM / the PR chain fit the main alone --
+    // the prototype's main_cluster + additional_clusters layout.
+    // Only meaningful WITH save_tensors.  Off => both keys omitted => compiled
+    // config byte-identical.  Runner flag: -save-assoc / SBND_SAVE_ASSOC=1.
+    save_assoc     = false,
 )
     // Build params inside the function so all physics values are TLAs.  These
     // are the documented Q/L drift/diffusion values (matching run_clust_QL_evt.sh),
@@ -154,7 +166,7 @@ function(
         subRunNo=subrun,
         eventNo=event,
         reality=reality);
-    local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false, trace_bee=trace_bee)
+    local clus_pipes = [clus_maker.per_apa(anodes[n], dump=false, trace_bee=trace_bee, save_assoc_id=save_assoc)
                         for n in std.range(0, nanodes - 1)];
 
     // --- Q/L matching nodes ---
@@ -196,7 +208,7 @@ function(
                                                beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
                                                main_flag=main_flag, lm=lm);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
-            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, trace_bee=trace_bee);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, save_assoc_cluster_id=save_assoc, trace_bee=trace_bee);
             local per_apa_pre = [g.intern(
                 innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
                 centernodes=[clus_pipes[n]],
@@ -231,7 +243,7 @@ function(
                     g.edge(flash_attach[n], matching_pipes[n], 0, 0),
                 ]
             ) for n in std.range(0, nanodes - 1)];
-            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, trace_bee=trace_bee);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, save_assoc_cluster_id=save_assoc, trace_bee=trace_bee);
             g.intern(
                 innodes=per_apa,
                 outnodes=[clus_all],

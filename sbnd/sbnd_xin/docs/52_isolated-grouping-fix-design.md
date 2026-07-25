@@ -1,9 +1,17 @@
 # Doc 52 — Design: preserve the main + associated grouping end to end
 
-**Status: DESIGN ONLY. Nothing is implemented.** Every stage below changes what
-production emits, so each needs its own default-OFF knob and gate, and the last
-one is an owner decision (escalation rule 1). Follows doc 51, which located the
-defect, and doc 50, which measured its cost.
+**Status: Stages 1-3 IMPLEMENTED, default OFF — see §8.** Stage 0 was subsumed by
+Stage 1 (dedicated arrays are strictly safer than mutating the shared `isolated`
+array) and Stage 4 remains an owner decision (escalation rule 1). Follows doc 51,
+which located the defect, and doc 50, which measured its cost.
+
+**Repro (knob-off gate, all four checks in §8.3):**
+```
+cd /nfs/data/1/xqian/toolkit-dev/toolkit && wcbuild && ./build/clus/wcdoctest-clus
+mkdir -p /home/xqian/tmp/d52base && git archive HEAD~1 cfg | tar x -C /home/xqian/tmp/d52base
+# then the two wcsonnet compiles of sbnd_xin/wct-clus-matching-perevt.jsonnet and
+# wct-pr-perevt.jsonnet against $WIRECELL_PATH = baseline vs current cfg (§8.3)
+```
 
 ## 0. First, a correction — `switch_scope` does exactly what you described
 
@@ -497,3 +505,63 @@ Per stage, in this order:
 - Whether uBooNE's mains are as fragmented as ours is still unmeasured
   (doc 50 §6); that number would tell us how much of this is a porting artifact
   versus a real detector difference.
+
+## 8. Implementation (landed 2026-07-25, default OFF)
+
+### 8.1 Code map
+
+| stage | file:line | what |
+|---|---|---|
+| 1 | `clus/src/clustering_isolated.cxx` | `save_assoc_id` knob; the merge at the end of the pass becomes `merge_clusters(g, live_grouping, "isolated", "perblob", "assoc_cluster_id", false, "assoc_cluster_main")` when on, and the historical `merge_clusters(g, live_grouping, "isolated")` when off |
+| 2 | `clus/src/ClusteringFuncs.cxx` (`merge_clusters`) | a fixed registry `carry_pairs = {{"assoc_cluster_id","assoc_cluster_main"}}` carried across **every** merge: main concatenated verbatim, id rebased per member into a fresh dense range, member without the arrays ⇒ one fresh id + `main = 1` |
+| 2 | `clus/src/clustering_switch_scope.cxx` | the hardcoded two-name carve list became one `carry_anames[]` of four (defect D3), and the carve loops over it |
+| 2 | `clus/src/MultiAlgBlobClustering.cxx` + `.h` | `save_assoc_cluster_id` knob: the `save_real_cluster_id` homogenization, repeated for the assoc pair, in its own loop so either can be saved alone |
+| 3 | `clus/src/ClusteringUnmergeBundle.cxx` | `id_aname` / `main_aname` config (defaults `real_cluster_id` / `real_cluster_main`), threaded into `groups_from_provenance`; everything else — the union retain rule, the carve, the flag clearing, the no-proxy-fallback rule — is reused unchanged |
+
+Config: `cfg/pgrapher/common/clus.jsonnet` `isolated(save_assoc_id=false)` and
+`unmerge_bundle(id_aname=null, main_aname=null)`, both key-suppressed;
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet` threads `save_assoc_id` /
+`save_assoc_cluster_id` and adds the `unmerge_assoc` visitor after
+`unmerge_bundle`. Runners: `run_ql_evt.sh -save-assoc` (`SBND_SAVE_ASSOC=1`),
+`run_nusel_evt.sh -unmerge-assoc` (`SBND_UNMERGE_ASSOC=1`, implies `-unmerge`).
+
+### 8.2 Deliberate choices worth remembering
+
+- **The carry is a property of `merge_clusters`, not of any call site.** Of the 12
+  call sites only `examine_bundles:153` passes provenance arguments;
+  `cathode_connect` and the generic all-APA passes pass none. Per-call-site carry
+  would have missed them and would be re-missed by the next new pass.
+- **Roles are concatenated, never rewritten** (§4b). This is what keeps a cathode
+  crosser whole while its delta rays still split off.
+- **Ids are rebased per member**, ascending by original id, because per-APA /
+  per-drift-group idents collide across scopes (§4a trap).
+- **A member with no arrays is a main.** The same sentinel appears twice: in the
+  carry, and in MABC's save-time homogenization.
+- **`nmain == nb ⇒ no_split` is untouched**, so a cluster the grouping never
+  merged is left exactly alone.
+
+### 8.3 Knob-off gate — PASS
+
+| check | result |
+|---|---|
+| `./build/clus/wcdoctest-clus` | 41/41 cases, 518/518 assertions, rc=0 |
+| freshness proof (M1) | `local/lib/libWireCellClus.so` 14:00:58 > last source edit 13:59:49 |
+| QL compiled config, knob off vs pre-change `HEAD` | **byte-identical**, 50675 B |
+| PR compiled config, knob off vs pre-change `HEAD` | **byte-identical**, 250166 B |
+
+Knob-on compiled-config proof: `save_assoc_id: true` appears **twice** (one
+`ClusteringIsolated` per APA) and `save_assoc_cluster_id: true` **once** (the
+all-APA MABC); the PR pipeline becomes
+
+```
+ClusteringSwitchScope:pr -> ClusteringUnmergeBundle:pr -> ClusteringUnmergeBundle:prassoc
+  -> CreateSteinerGraph:pr -> MakeFiducialUtils:pr -> TaggerCheck{TGM,STM,FC}:pr
+```
+
+with `prassoc` carrying `id_aname=assoc_cluster_id`,
+`main_aname=assoc_cluster_main`.
+
+One bug was caught by the knob-on proof and not by the knob-off one: `per_apa()`
+accepted `save_assoc_id` without forwarding it to `clus_per_face`, so the key
+never reached `ClusteringIsolated`. Byte-identicality when off is blind to that
+class of mistake — always run the on-side proof too (M6's cousin).

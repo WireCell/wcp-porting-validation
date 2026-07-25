@@ -76,6 +76,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             (TaggerCheckTGM main mode "real", doc 38).  Only meaningful WITH
             -save-pctree.  Off by default => byte-identical tarball.
             Env: SBND_QL_SAVE_RCID=1.
+  -save-assoc   doc 52: also record the isolated grouping's main+associated
+                partition (assoc_cluster_id / assoc_cluster_main per blob),
+                carried across every later merge and saved into the pctree
+                tarball, so the PR job can un-merge it (run_nusel_evt.sh
+                -unmerge-assoc) and fit the main alone.  Use with -save-pctree.
+                Env: SBND_SAVE_ASSOC=1.
   -trace-bee  DIAGNOSTIC: dump one Bee "clustering" layer per clustering step
             (tr<NN>_<Type>, per-APA zips AND mabc-all-apa.zip), so a merge can
             be attributed to the pass that made it.  Match pieces by point
@@ -165,6 +171,13 @@ QL_LM="${SBND_QL_LM:-0}"
 SAVE_RCID="${SBND_QL_SAVE_RCID:-0}"
 # Per-step Bee trace for merge attribution.  OFF by default (diagnostic only).
 TRACE_BEE="${SBND_TRACE_BEE:-0}"
+# -save-assoc: doc 52.  clustering_isolated records the main + associated
+# partition it creates into the per-blob pair assoc_cluster_id /
+# assoc_cluster_main, merge_clusters carries it across every later merge, and
+# MABC homogenizes it into the pctree tarball, so the PR job can undo the
+# grouping (run_nusel_evt.sh -unmerge-assoc) and fit the main alone.
+# Only meaningful together with -save-pctree.
+SAVE_ASSOC="${SBND_SAVE_ASSOC:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -182,6 +195,7 @@ while [ $# -gt 0 ]; do
         -save-pctree|--save-pctree) SAVEPCT=1; shift ;;
         -save-rcid|--save-rcid) SAVE_RCID=1; shift ;;
         -trace-bee|--trace-bee) TRACE_BEE=1; shift ;;
+        -save-assoc|--save-assoc) SAVE_ASSOC=1; shift ;;
         -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
         *) _args+=("$1"); shift ;;
@@ -309,6 +323,7 @@ process_event() {
         --tla-code "lm=$([ "$QL_LM" = 1 ] && echo true || echo false)" \
         --tla-code "save_rcid=$([ "$SAVE_RCID" = 1 ] && echo true || echo false)" \
         --tla-code "trace_bee=$([ "$TRACE_BEE" = 1 ] && echo true || echo false)" \
+        --tla-code "save_assoc=$([ "$SAVE_ASSOC" = 1 ] && echo true || echo false)" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \
