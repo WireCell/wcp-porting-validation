@@ -1212,3 +1212,89 @@ audit table) and a pointer entry at the end of
 * The same corrected comparison re-run on §12.8's d52rpoff-vs-d52roff pair
   showed those 120 archives are ALSO identical — the earlier "120/120
   differ" was an artifact of the path-bearing hash line, corrected above.
+
+### 13.2a Tag collision and repair of the mcp10 third (2026-07-25 evening)
+
+A concurrent session independently chose the tag `d53off` and wrote
+`work-mcp10-d53off` starting 17:05, contesting the same directory this
+section's gate read at ~17:29.  The dir now holds that session's run (30/40
+archives differ vs d52rpoff — its rcid re-stamp signature), so the mcp10
+third of the §13.2 PASS cannot be attributed to the §13 binary with
+certainty and is VOID.  The mcp1000/mcp1000b thirds (80 archives) were
+never contested and stand.  **Repair**: a frozen git worktree at the §13
+commit `5e69191f` re-ran the campaign's mcp10 block under the fresh tag
+`d53r` (`work-mcp10-d53r`, imaging symlinked from d49son, `setarch x86_64
+-R`): **0/40 archives differ vs d52rpoff** — the §13.2 claim is restored,
+now 40/40 + 80/80 = 120/120 on uncontested runs.  Process rule adopted:
+`ls -d work-*` before choosing any tag.
+
+### 13.3 Option 2 shipped: the Grouping primitives enforce the invariant
+
+Owner directive: *"you can carefully do option 2, please pay attention to
+running speed. And careful validation."*
+
+**Design** (toolkit `clus/docs/perblob_invariant.md` has the full rules):
+
+* `Grouping::separate()` snapshots the cluster's "perblob" Dataset and
+  carves it across the survivor (kept cc<0 rows; entry erased when empty)
+  and every split (its own rows); stale-length input is dropped with a
+  warning.
+* New `Grouping::merge()` overloads (map + iterator, HIDING the
+  NaryTree::FacadeParent merges) concatenate the parts' Datasets onto the
+  target in adoption order; impossible concatenations (stale rows, a
+  child-bearing part without a Dataset, mismatched keys) drop the target's
+  Dataset with a warning.  cc return unchanged.
+* Dependent sites: QLMatching recompose's inline realign + its decompose_cc
+  bookkeeping REMOVED (the primitives produce byte-identical output —
+  kept-rows-then-ascending-gid; `realign_perblob` knob now vestigial, still
+  parsed, false can no longer reproduce the corruption);
+  `retile_cluster.cxx` realign call removed; `clustering_neutrino.cxx`
+  take-back loops replaced by `Grouping::merge` (same op sequence);
+  `clustering_switch_scope.cxx` erases the auto-carved Dataset per part
+  before re-attaching its 4-array carry list (preserving its deliberate
+  "isolated" drop byte-for-byte).  UnmergeBundle/RecoveringBundle keep
+  their carves (defense in depth, same values).
+* CORRECTION to §13/§13.1: ClusteringRecoveringBundle IS instantiated —
+  qlport `uboone-mabc.jsonnet:1247` (the audit had only grepped
+  `cfg/pgrapher/experiment/`).  It writes "isolated" itself (main = -1) and
+  separates on it, so the uBooNE chain also exercises decompose/recompose in
+  QLMatching.  Hence the uBooNE gate below.
+
+**Validation** (all runs from FROZEN git worktrees with private install
+prefixes and PATH/LD_LIBRARY_PATH redirection — the shared local/lib was
+never rebuilt, isolating from the concurrently-evolving working tree;
+plugin origin proven from /proc/<pid>/maps; cfg tree content hash identical
+before and after the whole gate window):
+
+* BASE = HEAD `64e4dfbc`, TEST = HEAD + the option-2 diff only.
+* Doctests: clus 565/565 (8 new tests in
+  `clus/test/doctest_perblob_primitives.cxx`: carve, both merge overloads,
+  total-separation round trip, remove=true, stale drop, foreign-part drop,
+  raw-primitive round trip + helper), match 36/36.
+* SBND 30-event, `setarch x86_64 -R`, tags d55b{off,on} vs d55t{off,on}:
+  **off arm 120/120 archives member-content identical, 30/30 nusel tables
+  identical** (tgm 121 / stm 43 / fc 50 both); **on (assoc) arm 120/120 +
+  30/30 identical** (tgm 120 / stm 51 / fc 51 both) — the assoc arm is the
+  critical equivalence: decompose/recompose + un-merge run with arrays
+  PRESENT, proving primitive carve/concat == the removed inline realign.
+* PDHD+PDVD abtest (`snap/d54base` vs `snap/d54opt2`, clus stage):
+  **OVERALL PASS** — pdhd 027305_0 (15 archives) + pdvd 039349_0/039252_5
+  (27 each) all content-identical.  3 pdhd manifest events (027409_0,
+  027980_3, 028084_18) failed IDENTICALLY in both arms ("no cluster
+  tarballs found" — pre-existing input rot, not this change).
+* uBooNE qlport sweep (35 events, labels d54base_ub vs d54opt2_ub,
+  `setarch` via run_one.sh): **ZIPS 35/35 content-identical**; tagger-log
+  residue 33 DIFF at exactly the historically accepted level (past accepted
+  campaigns pre/post_ctpcmerge: 32, pre/post_stmfit: 32; same signature —
+  PR pointer-order sensitivity across different binary layouts, multiset-
+  level feature drift, Bee zips unaffected).
+* WCT_PROV_CHECK smoke (1 assoc-chain event, QL -save-assoc + PR
+  -unmerge-assoc, TEST binary): 73 checkpoints, all "0 problem(s)".
+* Speed: uBooNE 35-event sweep wall 485s -> 484s, mean RSS 1664 -> 1667 MB
+  (no drift; the enforcement fast path is one local_pcs map lookup per
+  participant).  PDHD/PDVD re-timing on a quiet box: see gate log below.
+* PDHD/PDVD re-timing on a quiet box (labels d54base_t2/d54opt2_t2):
+  pdhd 027305_0 wall 167 s -> 164 s (RSS 1903 -> 1902 MB), pdvd 039349_0
+  11 s -> 11 s (490 -> 490 MB) — no measurable cost.  (The first-pass
+  +12-15% wall deltas were co-load contention from the concurrent SBND
+  campaign and a nice'd worktree build; discarded.)
