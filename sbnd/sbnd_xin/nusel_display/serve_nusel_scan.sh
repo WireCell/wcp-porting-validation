@@ -14,6 +14,14 @@
 #               fits look like they crossed empty space).  "pr" = the nusel job's
 #               own nusel_evt<ID>/mabc-pr.zip, i.e. exactly the cluster the
 #               taggers saw.  Light is read from the Q/L zip either way.
+#   --ai-scan FILE.tsv  (optional, repeatable) overlay somebody else's already-
+#               made per-bundle verdicts as an extra READ-ONLY "AI scan" column
+#               + reason line (doc 61).  Nothing is written to any
+#               nusel_labels/ tree from it, so the owner's own scan record stays
+#               separate.  TSV columns: event main_id flash_gid verdict
+#               [conf] [reason]; '#' lines skipped, e.g.
+#                 ./serve_nusel_scan.sh 5011 --tag s59k \
+#                   --ai-scan ../scan-d59k/handscan-first20.tsv ...
 #   --prev ROOT[:TAG]  (optional, repeatable, priority = given order) an
 #               OLDER work root and the label tag scanned there, used as a
 #               read-only baseline: its scan labels/comments are carried
@@ -49,6 +57,7 @@ while [ "$#" -gt 0 ]; do
         --tag|-t) FWD_ARGS+=(--tag "$2"); shift 2 ;;
         --prev)   FWD_ARGS+=(--prev "$2"); shift 2 ;;
         --charge-src) FWD_ARGS+=(--charge-src "$2"); shift 2 ;;
+        --ai-scan) FWD_ARGS+=(--ai-scan "$2"); shift 2 ;;
         *)        SPECS+=("$1"); shift ;;
     esac
 done

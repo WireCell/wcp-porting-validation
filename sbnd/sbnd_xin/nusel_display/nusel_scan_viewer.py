@@ -32,6 +32,12 @@ free-text comment per bundle and per event.  Everything autosaves to
 "Save labels" writes the actionable per-event JSON
 <work_root>/nusel_labels/<tag>/nusel-labels-evt<ID>.json.
 
+AI / pre-scan overlay (--ai-scan FILE.tsv, repeatable): a per-bundle verdict
+made elsewhere, shown as an extra read-only "AI scan" column plus a
+verdict/reason line in the metrics panel.  It is never merged into this scan's
+labels or comments and nothing is written back, so the two stay
+distinguishable; see docs/61_nusel-handscan-key.md.
+
 Previous-scan baselines (--prev ROOT[:TAG], repeatable, priority = given
 order): each names an OLDER work root and the label tag scanned there.  They
 are READ-ONLY (M13: old records are never touched).  Bundles are matched
@@ -148,7 +154,7 @@ OP_MATCH_TOL_US = 0.02
 # Inputs: work roots (dirs holding nusel_evt*/ + ql_evt*/) from --args.
 # ---------------------------------------------------------------------------
 def extract_args(argv):
-    out, tag, prevs, csrc = [], "", [], "ql"
+    out, tag, prevs, csrc, ai = [], "", [], "ql", []
     it = iter(argv)
     for a in it:
         if a in ("--tag", "-t"):
@@ -159,11 +165,15 @@ def extract_args(argv):
                 prevs.append(s)
         elif a == "--charge-src":
             csrc = next(it, "ql")
+        elif a == "--ai-scan":
+            s = next(it, "")
+            if s:
+                ai.append(s)
         else:
             out.append(a)
     if csrc not in ("ql", "pr"):
         sys.exit(f"--charge-src must be 'ql' or 'pr', not {csrc!r}")
-    return tag, prevs, out, csrc
+    return tag, prevs, out, csrc, ai
 
 
 def discover_events(argv):
@@ -191,8 +201,72 @@ def discover_events(argv):
     return sorted(out, key=keyf)
 
 
-SCAN_TAG, _PREV_SPECS, _ARGS, CHARGE_SRC = extract_args(sys.argv[1:])
+SCAN_TAG, _PREV_SPECS, _ARGS, CHARGE_SRC, _AI_FILES = extract_args(sys.argv[1:])
 EVENTS = discover_events(_ARGS)
+
+
+# --- read-only AI / pre-scan overlay (doc 61) --------------------------------
+# --ai-scan <file.tsv> (repeatable) shows somebody else's already-made call
+# next to the taggers', WITHOUT touching any nusel_labels/ tree: the owner's own
+# scan record stays the only thing this viewer writes (M13).  Columns by header
+# name: event, main_id, flash_gid, verdict, [conf], [reason]; '#' lines and
+# blank lines are skipped.  Keyed the same way as the scan state -- event label
+# plus "<main_id>:<flash_gid>" -- so a bundle is matched exactly, not by order.
+# With no --ai-scan the AI column is absent and the layout is unchanged.
+def load_ai_scan(paths):
+    out = {}
+    for p in paths:
+        try:
+            with open(p) as fh:
+                lines = [ln for ln in fh.read().splitlines()
+                         if ln.strip() and not ln.lstrip().startswith("#")]
+        except OSError as e:
+            print(f"--ai-scan: cannot read {p}: {e}", file=sys.stderr)
+            continue
+        if not lines:
+            continue
+        head = lines[0].split("\t")
+        idx = {k.strip(): i for i, k in enumerate(head)}
+        need = ("event", "main_id", "flash_gid", "verdict")
+        if any(k not in idx for k in need):
+            print(f"--ai-scan: {p} needs columns {need}, has {head}",
+                  file=sys.stderr)
+            continue
+        n = 0
+        for ln in lines[1:]:
+            f = ln.split("\t")
+            if len(f) < len(head):
+                continue
+            get = lambda k: f[idx[k]].strip() if k in idx else ""
+            ev = get("event")
+            ev = ev if ev.startswith("evt") else f"evt{ev}"
+            out[(ev, f"{get('main_id')}:{get('flash_gid')}")] = dict(
+                verdict=get("verdict"), quality=get("quality"),
+                conf=get("conf"), reason=get("reason"),
+                source=os.path.basename(p))
+            n += 1
+        print(f"--ai-scan: {n} bundle verdict(s) from {p}")
+    return out
+
+
+AI_SCAN = load_ai_scan(_AI_FILES)
+# The scan itself is two-valued -- STM or (still a) neutrino candidate: the scan
+# set has had TGM/LM events removed already, so "not a stopping muon" leaves a
+# bundle in the nu-candidate pool (owner, 2026-07-26).  Anything about *why*
+# lives in the separate `quality` column, never in the verdict.
+# verdict -> (short cell text, color).  Unknown verdicts still show, in grey.
+AI_STYLE = {
+    "STM": ("STM", "#c02020"),
+    "nu":  ("nu",  "#1a7f37"),
+}
+# quality -> color for the qualifier chip next to the verdict ("clean" is the
+# unremarkable case and is not drawn).
+AI_QUAL_STYLE = {
+    "weak":        "#4a9e5c",
+    "cosmic-like": "#666666",
+    "junk":        "#888888",
+    "unclear":     "#b06000",
+}
 LABELS = [e[0] for e in EVENTS]
 EVENT_OF = {e[0]: e for e in EVENTS}
 
@@ -568,7 +642,10 @@ state = {
     "evt": None,          # Event
     "focus": None,        # focused row index (into evt.rows), or None
     "order": [],          # visible row indices in table display order
-    "inbeam_only": False, # mode: in-beam flash bundles only
+    # Mode: in-beam flash bundles only.  DEFAULT ON (owner request 2026-07-26):
+    # the scan only ever judges in-beam bundles (doc 61), so opening on the full
+    # bundle list just meant one extra click per event.  Toggle off to see all.
+    "inbeam_only": True,
     "color_mode": "role", # 'role' (main red / companions blue) or 'charge'
     "labels": {},         # row key -> [scan labels]
     "comments": {},       # row key -> str
@@ -596,7 +673,11 @@ prev_evt_btn = Button(label="< prev evt", width=90)
 next_evt_btn = Button(label="next evt >", width=90)
 prev_bun_btn = Button(label="< prev bundle", width=110)
 next_bun_btn = Button(label="next bundle >", width=110)
-mode_btn = Toggle(label="Mode: ALL bundles", width=200, active=False)
+# Starts pressed, matching state["inbeam_only"]=True: on_mode is wired up after
+# this, so constructing it active fires no callback -- the label and button_type
+# have to be given the "on" appearance here or the widget would lie.
+mode_btn = Toggle(label="Mode: IN-BEAM only", width=200, active=True,
+                  button_type="warning")
 color_select = Select(title="point color", value="role",
                       options=[("role", "main=red / companions=blue"),
                                ("charge", "charge (viridis)")], width=220)
@@ -611,6 +692,12 @@ label_group = CheckboxButtonGroup(labels=SCAN_LABELS, active=[], width=340)
 clear_lbl_btn = Button(label="Clear labels (focused)", width=170)
 confirm_btn = Button(label="✓ re-scan OK (focused)", width=170,
                      button_type="primary")
+# Read-only AI comment box (--ai-scan only): the overlay's reasoning, shown
+# beside the scanner's own comment field so the two are never confused.  A Div,
+# not a TextAreaInput, precisely so it cannot be typed into or saved.
+AI_CMT_HEAD = ("<div style='color:#555;font-size:11px;margin-bottom:2px'>"
+               "AI comment (focused, read-only)</div>")
+ai_comment = Div(text=AI_CMT_HEAD, width=340)
 comment_in = TextAreaInput(title="bundle comment (focused)", value="", rows=3,
                            width=380, max_length=2000)
 evt_comment_in = TextAreaInput(title="event comment", value="", rows=3,
@@ -647,7 +734,13 @@ table_cols = [
     TableColumn(field="scan", title="scan", width=95, formatter=fmt_l, sortable=False),
     TableColumn(field="cmt", title="✎", width=25, formatter=fmt_l, sortable=False),
 ]
-table = DataTable(source=table_src, columns=table_cols, width=980, height=290,
+# The --ai-scan overlay is a column of its own, never merged into "scan" or the
+# comment: the owner's verdict and somebody else's have to stay distinguishable.
+if AI_SCAN:
+    table_cols.append(TableColumn(field="ai", title="AI scan", width=80,
+                                  formatter=fmt_l, sortable=False))
+table = DataTable(source=table_src, columns=table_cols,
+                  width=980 + (80 if AI_SCAN else 0), height=290,
                   selectable=True, index_position=None)
 # Every column the table writes, so rebuild_table() can emit them all even when
 # there is nothing to show (an empty data dict is a trap -- see rebuild_table).
@@ -930,6 +1023,17 @@ def rebuild_table():
         cols["scan"].append("+".join(labs)
                             + (" ◦" if key in state["seeded"] else ""))
         cols["cmt"].append("✎" if state["comments"].get(key) else "")
+        if AI_SCAN:
+            a = AI_SCAN.get((evt.label, key))
+            if a is None:
+                cols["ai"].append("")
+            else:
+                short, col = AI_STYLE.get(a["verdict"], (a["verdict"], "#888888"))
+                q = a.get("quality", "")
+                qcol = AI_QUAL_STYLE.get(q)
+                cols["ai"].append(
+                    f"<b style='color:{col}'>{short}</b>"
+                    + (f" <span style='color:{qcol}'>{q}</span>" if qcol else ""))
         cols["sel_bg"].append(CHG_BG if pending
                               else SEL_BG if (labs or state["comments"].get(key))
                               else "transparent")
@@ -1075,11 +1179,38 @@ def render_light():
         ov["fig"].title.text = f"TPC{apa} meas vs pred  (gid {gid}, t={f['t_us']:.3f} us)"
 
 
+def render_ai_comment(evt, key):
+    """The overlay's reasoning for the focused bundle, in its own read-only box
+    next to (never inside) this scan's comment field."""
+    if not AI_SCAN:
+        return
+    a = AI_SCAN.get((evt.label, key)) if (evt is not None and key) else None
+    if a is None:
+        ai_comment.text = (AI_CMT_HEAD + "<div style='color:#999'><i>no AI "
+                           "verdict for this bundle</i></div>")
+        return
+    short, col = AI_STYLE.get(a["verdict"], (a["verdict"], "#888888"))
+    q = a.get("quality", "")
+    ai_comment.text = (
+        AI_CMT_HEAD
+        + f"<div style='border:1px solid #ccc;border-radius:3px;padding:4px 6px;"
+          f"background:#fafafa;font-size:12px;line-height:1.35'>"
+          f"<b style='color:{col}'>{a['verdict']}</b>"
+        + (f" <span style='color:{AI_QUAL_STYLE.get(q, '#888')}'>[{q}]</span>"
+           if q else "")
+        + (f" <span style='color:#888'>(confidence {a['conf']})</span>"
+           if a["conf"] else "")
+        + f"<br>{a['reason'] or '<i>no reason recorded</i>'}"
+          f"<div style='color:#999;font-size:10px;margin-top:3px'>"
+          f"read-only, from {a['source']}</div></div>")
+
+
 def render_metrics():
     evt = state["evt"]
     i = state["focus"]
     if i is None:
         metrics.text = "<i>click a bundle row to inspect</i>"
+        render_ai_comment(None, None)
         return
     r = evt.rows[i]
     main, comps = evt.bundle_cluster_ids(r)
@@ -1148,6 +1279,18 @@ def render_metrics():
             rows_.append(("carry-over",
                           "<i>labels/comment above copied from the previous "
                           "scan (edit or ✓ to adopt)</i>"))
+    # The AI verdict and its reason, read-only, last so it can never be mistaken
+    # for something this scan recorded (doc 61).
+    a = AI_SCAN.get((evt.label, key)) if AI_SCAN else None
+    if a is not None:
+        short, col = AI_STYLE.get(a["verdict"], (a["verdict"], "#888888"))
+        rows_.append((f"AI scan ({a['source']})",
+                      f"<span style='color:{col}'>{a['verdict']}</span>"
+                      + (f"  [{a['quality']}]" if a.get("quality") else "")
+                      + (f"  (confidence {a['conf']})" if a["conf"] else "")))
+        if a["reason"]:
+            rows_.append(("AI reason", f"<i>{a['reason']}</i>"))
+    render_ai_comment(evt, key)
     metrics.text = ("<table style='font-size:12px'>" + "".join(
         f"<tr><td style='color:#555;padding-right:8px'>{a}</td><td><b>{b}</b></td></tr>"
         for a, b in rows_) + "</table>")
@@ -1644,9 +1787,10 @@ layout = column(
     header,
     controls,
     status,
-    row(table, column(label_title, label_group,
-                      row(clear_lbl_btn, confirm_btn), comment_in,
-                      evt_comment_in), metrics),
+    row(table, column(*([label_title, label_group,
+                         row(clear_lbl_btn, confirm_btn)]
+                        + ([ai_comment] if AI_SCAN else [])
+                        + [comment_in, evt_comment_in])), metrics),
     row(f_dqdx, stm_info),
     row(LIGHT[0]["meas"]["fig"], LIGHT[0]["pred"]["fig"],
         LIGHT[1]["meas"]["fig"], LIGHT[1]["pred"]["fig"]),

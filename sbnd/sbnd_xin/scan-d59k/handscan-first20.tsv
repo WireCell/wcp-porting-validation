@@ -1,0 +1,32 @@
+# doc 61 -- first 20 events of the d59k scan set, scanned by Claude 2026-07-26,
+# NOT yet validated by the owner.  Same verdicts are in nusel_labels/c59k/.
+# Overlay onto the display with:  serve_nusel_scan.sh ... --ai-scan <this file>
+#
+# verdict: STM | nu      <- the scan's decision, two values only.  The set has
+#   already had TGM- and LM-tagged events removed (doc 59), so a bundle that is
+#   not a stopping muon stays a NEUTRINO CANDIDATE (owner, 2026-07-26).
+# quality: clean | weak | cosmic-like | junk | unclear   <- why to trust it or
+#   not; NOT a verdict.  cosmic-like = topology reads as a cosmic (through-going
+#   or truncated with no Bragg) even though it is not STM; junk = the cluster is
+#   not one physical object; unclear = a reconstruction pathology dominates.
+event	main_id	flash_gid	t_us	len_cm	auto_label	verdict	quality	conf	reason
+48301	13	3	1.398	130.4	STM	STM	clean	high	single 130 cm track, enters upstream wall z~2 (outside FV), textbook Bragg to 165 ke/cm at rr=0 (ks1=0.010), charge spray at the stopping end = Michel candidate
+48367	19	1	1.098	172.2	nu-candidate	nu	cosmic-like	med	NOT STM: the end the fit calls stopping has FLAT MIP dQ/dx to rr=0, no Bragg -> it is truncated, not stopped. Exits the bottom wall y=-198 and carries several 10-20 cm side prongs along its length, no single vertex -- reads cosmic, but it is not a stopping muon
+48895	17	4	1.442	235.5	STM	nu	cosmic-like	high	the STM tag is wrong here: flat 50-55 ke/cm right down to rr=0, no Bragg; upper end just stops mid-detector, lower end exits the bottom wall. (Owner's own comment on this bundle: "Not STM")
+49951	16	1000003	1.983	94.8	nu-candidate	nu	cosmic-like	med	NOT STM: enters the top wall y=200 at (172,63), kinks at (191,173,22), and BOTH arms reach the anode plane x=201 -> through-going, nothing stops. (tgm=0, so TGM missed it)
+50303	12	1000001	1.704	65.0	nu-candidate	nu	clean	high	fully contained clean V: apex (132,56,180), two ~20 cm arms, dense high-charge blob at one end
+50743	17	1000012	1.658	69.5	nu-candidate	nu	junk	high	94 pts in ~8 disconnected blobs over 150 cm (1.4 pts/cm); no track to judge
+50765	15	6	0.626	300.7	STM	STM	clean	high	300 cm cathode crosser entering the upstream wall z~2, stops at (12,-190,234); textbook Bragg on the TPC1 side (ks1=0.018)
+50787	6	1000007	0.882	48.9	nu-candidate	nu	clean	high	vertex (126,-106,497) just inside the downstream wall, 3.4 cm stub toward the wall + 47 cm prong with a Bragg end; the wall contact is GRAZING (track parallel to the wall), not an entry. (Owner called this one a nu candidate, on its kinks)
+50831	14	1	1.904	90.2	nu-candidate	nu	junk	med	one 10 cm dense clump at (-137,-124,420) + ~10 stray dots over 90 cm + a fragment 200 cm away
+50919	11	7	0.735	2.2	nu-candidate	nu	junk	high	a single 2.2 cm blob at (-105,-191,64) plus 2 unrelated fragments at the downstream wall
+51051	19	1000005	1.101	304.0	nu-candidate	nu	clean	high	vertex (-19,-33,300): 10 cm stub at 3.24 MIP (dQ/dx spikes to 300 ke/cm at rr<2, well ABOVE the muon curve = proton-like) + 300 cm MIP prong exiting the downstream wall along +z (beam direction)
+51513	16	1000010	1.499	96.4	nu-candidate	nu	weak	low	single smooth 96 cm contained track, both ends inside, no vertex activity; no dQ/dx available (STM skipped it as contained)
+51865	11	1000012	1.330	87.4	nu-candidate	nu	junk	high	4 dots + fragments across the whole TPC; STM could not even build a steiner tree (stmfit=nosteiner)
+52085	6	1000003	1.643	157.2	nu-candidate	nu	unclear	low	157 cm contained cathode crosser, straight in X-Y but a clear slope break in z exactly at x=0 -> suspect a cathode-join / z artifact, not a physical kink. Pre-un-merge bundle also holds a top-wall blob at (8,195,73)
+52613	2	1	1.575	140.2	nu-candidate	nu	junk	high	dozens of disconnected short fragments hugging the anode plane x~-200 over 150 cm in z; only a 16 cm piece is fittable
+52657	23	5	1.594	164.6	nu-candidate	nu	unclear	low	165 cm near-vertical track at essentially constant z (dz=7 cm over 165 cm = prolonged w.r.t. the collection wires) with a T-branch at y=-74; contained but reads like a partly-reconstructed cosmic
+52723	7	1000004	1.125	88.2	nu-candidate	nu	clean	high	vertex (92,29,450): ~8 cm stub + 60 cm prong exiting the downstream wall; STM rejected on "extra tracks" -- correct. Event also has a 205 PE in-beam flash with no bundle
+53361	27	5	1.970	127.6	nu-candidate	nu	clean	med	128 cm contained, 5 cm hook at the upper end (y -168->-163) and a 2-prong fork at the lower end (-16,-193,236); cannot be a cosmic muon (crosses no boundary)
+53427	14	3	1.732	253.5	nu-candidate	nu	unclear	low	253 cm contained cathode crosser, y from -103 to +76 = near-vertical and nearly perpendicular to the beam, Y fork at the top end; no gray charge continues past either end, but a 180 cm vertical contained track is cosmic-shaped
+53713	15	8	0.882	55.7	nu-candidate	nu	junk	high	~8 dots in a 20 cm cloud + fragments 250 cm away (145 pts / 56 cm)
