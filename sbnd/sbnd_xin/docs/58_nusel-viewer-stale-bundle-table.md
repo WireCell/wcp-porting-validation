@@ -186,6 +186,21 @@ the filter alternating `p1816 / p1817`, `ncols=16` throughout (never 0).
 Nothing else changed: no verdict, no TSV, no `work/` product was touched — the
 30-event walk reproduces every table from the same TSVs the run produced.
 
+## Commits
+
+The fix, the test and this doc were **swept into `3c831f2`**
+("sbnd_xin/docs: 57 -- drop the A/B arm-location line from section 5a-bis"),
+which is a different session's doc-57 edit: two sessions share this repository's
+`.git` **and its index**, so their `git commit` picked up files this session had
+just staged, and it was pushed before that could be noticed.  The content is
+exactly what was intended and was verified byte-identical on `origin/main`; only
+the commit message is misleading.  It was NOT repaired -- `3c831f2` is public
+history (see doc 56 GOTCHA 4, which records the same trap in the other
+direction).
+
+Rule for this repository: stage explicit paths, check `git diff --cached --stat`
+immediately before committing, and expect the index to move under you.
+
 ## Notes / leftovers
 
 - The before arm was served from `git show HEAD:...` into a scratch directory,
