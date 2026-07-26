@@ -4,10 +4,15 @@ per-particle expectation curves.
 
 Companion to `stmfit_showcase.py`, which does ONE fit against the muon curve
 only.  This one takes several (work root, event, block) specs and overlays them
-all on every curve in the SBND reference json
-(`nusel_display/stm_ref_dqdx.json` -- muon + proton, regenerated for SBND's
-0.5 kV/cm field by doc 48), plus the flat `mip_dqdx` MIP line the STM tagger's
-not-stopping hypothesis uses (56000 e/cm for SBND, doc 48 section 6).
+all on curves from the SBND reference json (`nusel_display/stm_ref_dqdx.json`),
+plus the flat `mip_dqdx` MIP line the STM tagger's not-stopping hypothesis uses
+(56000 e/cm for SBND, doc 48 section 6).
+
+Since doc 55 section 10 that json holds TWO five-particle sets: the
+Modified-Box tables the running config actually contains (`*DeDxBox`, doc 48)
+and the free-power fit of doc 55 section 7g (`*DeDx`).  `--ref-set` picks;
+the default is `box` so every ratio doc 55 sections 2-3 quotes reproduces.
+`--particles` picks which of the five to draw (default muon + proton).
 
 `stmfit_showcase.py` is left untouched -- doc 42's Repro block cites it with
 specific arguments.
@@ -52,18 +57,52 @@ MARKERS = ["o", "s", "^"]
 # The reference curves wear ink, not a series hue, and are separated by dash
 # pattern as well as shade so identity is never colour-alone.
 REF_STYLE = {"MuonDeDx":   dict(color="#0b0b0b", ls="-",  lw=1.8),
-             "ProtonDeDx": dict(color="#52514e", ls="--", lw=1.8)}
+             "ProtonDeDx": dict(color="#52514e", ls="--", lw=1.8),
+             "PionDeDx":   dict(color="#7a7873", ls="-.", lw=1.5),
+             "KaonDeDx":   dict(color="#9b9892", ls=(0, (4, 1, 1, 1)), lw=1.5),
+             "ElectronDeDx": dict(color="#b8b5ae", ls=":", lw=1.5)}
 REF_LABEL = {"MuonDeDx": "muon expectation (SBND)",
-             "ProtonDeDx": "proton expectation (SBND)"}
+             "ProtonDeDx": "proton expectation (SBND)",
+             "PionDeDx": "pion expectation (SBND)",
+             "KaonDeDx": "kaon expectation (SBND)",
+             "ElectronDeDx": "electron expectation (SBND)"}
+
+# Which of the json's two five-curve sets to draw.  `box` is the DEFAULT and
+# must stay so: doc 55 sections 2-3 (and doc 42) quote every ratio in their
+# tables against the Modified-Box curves the running config holds, and a figure
+# that silently switched to the free-power fit would invalidate those numbers
+# without touching a single digit of them.  `fit` draws doc 55 section 7g's
+# free-power tables; `both` draws all ten.
+REF_SETS = {"box": lambda k: k.endswith("Box"),
+            "fit": lambda k: not k.endswith("Box"),
+            "both": lambda k: True}
 
 
-def load_refs(path):
-    """Return {key: (rr, dqdx)} for every LinterpFunction block in the json."""
-    d = json.load(open(path))
+def load_refs(path, which="box", only=None):
+    """Return {key: (rr, dqdx)} for the selected LinterpFunction blocks.
+
+    Keys beginning with `_` are metadata, not curves (the json's `_meta`
+    provenance block), and are skipped.  `*Box` keys are returned under their
+    canonical name so REF_STYLE/REF_LABEL and every caller keep working.
+    """
+    d = {k: v for k, v in json.load(open(path)).items() if not k.startswith("_")}
+    keep = REF_SETS[which]
+    if not any(k.endswith("Box") for k in d):
+        # a pre-doc-55 json carries one set under the canonical names; every
+        # --ref-set then means the same thing.  Keeps the section-4a repro
+        # (`--ref` at an old revision of the json) working.
+        keep = REF_SETS["both"]
     out = {}
     for k, v in d.items():
+        if not keep(k):
+            continue
+        if only and k.replace("Box", "") not in only:
+            continue
         x = v["start"] + v["step"] * np.arange(len(v["values"]))
-        out[k] = (x, np.array(v["values"], dtype=float))
+        out[k.replace("Box", "")] = (x, np.array(v["values"], dtype=float))
+    if not out:
+        raise SystemExit(f"no curves in {path} for --ref-set {which} "
+                         f"and --particles {sorted(only or [])}")
     return out
 
 
@@ -175,9 +214,16 @@ def main():
                          "the SBND mip_dqdx of doc 48)")
     ap.add_argument("--xmax", type=float, default=70.0,
                     help="x range of the combined panel in cm (default: %(default)s)")
+    ap.add_argument("--ref-set", choices=sorted(REF_SETS), default="box",
+                    help="which recombination model's curves to draw: `box` = "
+                         "the tables the config holds (default, and what doc 55 "
+                         "sections 2-3 quote), `fit` = doc 55 section 7g's "
+                         "free-power tables, `both`")
+    ap.add_argument("--particles", nargs="*", default=["MuonDeDx", "ProtonDeDx"],
+                    help="reference curves to draw (default: %(default)s)")
     args = ap.parse_args()
 
-    refs = load_refs(args.ref)
+    refs = load_refs(args.ref, args.ref_set, set(args.particles))
     tracks, labels = [], []
     for sp in args.specs:
         parts = sp.split(":")
@@ -187,7 +233,8 @@ def main():
         tracks.append(load_track(wr, ev, blk))
         labels.append(parts[3] if len(parts) > 3 else f"evt {ev} blk {blk}")
 
-    print(f"reference json: {args.ref}  curves: {', '.join(refs)}")
+    print(f"reference json: {args.ref}  set: {args.ref_set}  "
+          f"curves: {', '.join(refs)}")
     for tk in tracks:
         report(tk, refs, args.mip)
 

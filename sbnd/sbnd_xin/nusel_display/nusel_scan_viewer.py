@@ -78,16 +78,30 @@ try:
 except Exception:
     uproot = None
 
-# Reference dQ/dx-vs-residual-range curves (e/cm) extracted from the compiled
-# WCT config's LinterpFunctions -- the EXACT muon table TaggerCheckSTM's
-# eval_stm compares against, plus the flat MIP reference.
-# See docs/40_stm-trackfit-validation-plan.md and docs/48.
+# Reference dQ/dx-vs-residual-range curves (e/cm).  The json now carries TWO
+# sets of five (doc 55 sec 10), and the distinction matters here:
+#
+#   *DeDxBox  -- the Modified-Box tables the compiled WCT config actually holds
+#                (sbnd/particle_dataset.jsonnet), i.e. the EXACT curve
+#                TaggerCheckSTM's eval_stm compares against.  Anything on this
+#                panel that reports on a tagger DECISION must use these:  the
+#                drawn reference, and MIP_DQDX below.
+#   *DeDx     -- the free-power fit of doc 55 sec 7g, i.e. the best current
+#                description of real SBND stopping tracks.  Drawn alongside,
+#                dashed, so the gap between "what the tagger believes" and
+#                "what the data say" is visible rather than assumed away.
+#
+# See docs/40_stm-trackfit-validation-plan.md, docs/48 and docs/55.
 STM_REF = {}
 try:
     with open(os.path.join(HERE, "stm_ref_dqdx.json")) as _f:
         STM_REF = json.load(_f)
 except Exception:
     pass
+# Key of the curve the tagger uses.  Falls back to the canonical name for a
+# pre-doc-55 json, which held only the Box tables under those names.
+REF_TAGGER = "MuonDeDxBox" if "MuonDeDxBox" in STM_REF else "MuonDeDx"
+REF_FIT = "MuonDeDx" if "MuonDeDxBox" in STM_REF else None
 
 # Flat MIP dQ/dx (e/cm) = TaggerCheckSTM's ref_flat and its threshold divisor,
 # i.e. the jsonnet `mip_dqdx` knob.  MUST track the config or the drawn line and
@@ -96,8 +110,8 @@ except Exception:
 # is where 56000/50000 came from (50000/48879.4 = 56000/54657.7 = 1.023), so it
 # follows a regenerated stm_ref_dqdx.json automatically instead of drifting.
 MIP_DQDX = 50e3
-if "MuonDeDx" in STM_REF:
-    _plateau = STM_REF["MuonDeDx"]["values"][-1]
+if REF_TAGGER in STM_REF:
+    _plateau = STM_REF[REF_TAGGER]["values"][-1]
     MIP_DQDX = round(_plateau * 1.02293, -3)   # 48879.4 -> 50000, 54657.7 -> 56000
 
 # TaggerCheckSTM save_stm_fit pass-status codes (clus/src/TaggerCheckSTM.cxx).
@@ -695,10 +709,12 @@ f_dqdx.yaxis.axis_label = "dQ/dx (e/cm)"
 f_dqdx.yaxis.formatter = NumeralTickFormatter(format="0a")
 stmdqdx_src = ColumnDataSource(data=dict(rr=[], dqdx=[], color=[], marker=[],
                                          passno=[], apa=[], chi2=[]))
-stmref_src = ColumnDataSource(data=dict(rr=[], mu=[]))
+stmref_src = ColumnDataSource(data=dict(rr=[], mu=[], mu2=[]))
 stmflat_src = ColumnDataSource(data=dict(rr=[], flat=[]))
 f_dqdx.line("rr", "mu", source=stmref_src, line_color="#2ca02c", line_width=2,
-            legend_label="muon expectation")
+            legend_label="muon expectation (tagger's table)")
+f_dqdx.line("rr", "mu2", source=stmref_src, line_color="#2a78d6", line_width=2,
+            line_dash="dotted", legend_label="muon, free-power fit (doc 55)")
 f_dqdx.line("rr", "flat", source=stmflat_src, line_color="#888888",
             line_dash="dashed",
             # Label from MIP_DQDX, never a literal: the flat line IS the
@@ -1170,7 +1186,7 @@ def render_dqdx():
     def blank(msg):
         stmdqdx_src.data = dict(rr=[], dqdx=[], color=[], marker=[],
                                 passno=[], apa=[], chi2=[])
-        stmref_src.data = dict(rr=[], mu=[])
+        stmref_src.data = dict(rr=[], mu=[], mu2=[])
         stmflat_src.data = dict(rr=[], flat=[])
         stmtraj_src.data = dict(x=[], y=[], z=[])
         stm_info.text = f"<b>{tag}</b><br><i>{msg}</i>"
@@ -1234,12 +1250,14 @@ def render_dqdx():
                             z=s["z"][m].tolist())
 
     rr_max = float(max(1.0, s["rr"][m].max()))
-    if "MuonDeDx" in STM_REF:
-        t = STM_REF["MuonDeDx"]
+    if REF_TAGGER in STM_REF:
+        t = STM_REF[REF_TAGGER]
+        t2 = STM_REF[REF_FIT] if REF_FIT else t
         rr = [t["start"] + k * t["step"] for k in range(len(t["values"]))]
         keep = [k for k, v in enumerate(rr) if v <= rr_max + 5]
         stmref_src.data = dict(rr=[rr[k] for k in keep],
-                               mu=[t["values"][k] for k in keep])
+                               mu=[t["values"][k] for k in keep],
+                               mu2=[t2["values"][k] for k in keep])
     stmflat_src.data = dict(rr=[0, rr_max + 5], flat=[MIP_DQDX, MIP_DQDX])
 
     # Scalar summary: per-pass verdicts + best eval rows for this cluster.

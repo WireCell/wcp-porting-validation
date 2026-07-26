@@ -27,8 +27,18 @@ BINS = [(0, 2), (2, 5), (5, 10), (10, 15), (15, 20), (20, 30), (30, 40),
         (40, 60), (60, 100), (100, 1e9)]
 
 
-def ref_curve(path, key="MuonDeDx"):
-    d = json.load(open(path))[key]
+def ref_curve(path, key="MuonDeDxBox"):
+    """The muon curve TaggerCheckSTM actually compares against.
+
+    Pinned to the `*Box` key.  Since doc 55 sec 10 the json's canonical
+    `MuonDeDx` key carries the free-power FIT, not the shipped config table;
+    this script's numbers are quoted in doc 42 against the config table, so it
+    must not silently follow the fit -- that is exactly the failure doc 55
+    sec 4a had to write up for the uBooNE-era json.  Falls back for an older
+    json that has only the canonical name.
+    """
+    d = json.load(open(path))
+    d = d[key] if key in d else d["MuonDeDx"]
     x = d["start"] + d["step"] * np.arange(len(d["values"]))
     return x, np.array(d["values"], dtype=float)
 

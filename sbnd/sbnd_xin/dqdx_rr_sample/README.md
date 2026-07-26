@@ -21,6 +21,8 @@ Written up in [`../docs/55_dqdx-vs-rr-three-bundles.md`](../docs/55_dqdx-vs-rr-t
 | `recomb_fit.png` | the recombination curve and the residuals of the candidate models |
 | `plot_muon_proton_models.py` | the sample-average muon and the proton in the residual-range plane against the current expectation, the free-B fit and the free-power fit, with every normalisation printed on the figure |
 | `muon_proton_vs_models.png` | that figure (doc 55 §7f, §7g) |
+| `make_ref_tables.py` | builds all FIVE reference tables (muon/electron/pion/kaon/proton) under the free-power model on `convert_field.C`'s grid, regression-checks the Box versions against the shipped ROOT tables, and writes both sets into `../nusel_display/stm_ref_dqdx.json` (doc 55 §10) |
+| `ref_tables_free_power.png` | the five tables, current vs free power, with a ratio row (doc 55 §10.2) |
 
 `sample_points.tsv` is the reusable product — it needs no ROOT and no toolkit,
 just the two `dE/dx`-vs-residual-range graphs in
@@ -38,12 +40,19 @@ python3 dqdx_rr_sample/fit_recombination.py --zoo --min-in-bin 3   # model zoo, 
 python3 dqdx_rr_sample/fit_recombination.py --plane rr --zoo       # model zoo, rr plane
 python3 dqdx_rr_sample/plot_muon_proton_models.py \
     -o dqdx_rr_sample/muon_proton_vs_models.png
+python3 dqdx_rr_sample/make_ref_tables.py --dry-run             # print, write nothing
+python3 dqdx_rr_sample/make_ref_tables.py \
+    --json nusel_display/stm_ref_dqdx.json \
+    -o dqdx_rr_sample/ref_tables_free_power.png
 ```
 
 `plot_muon_proton_models.py` verifies its "current expectation" curve against
 `stopping_ave_dQ_dx_sbnd.root` (max relative deviation 8e-4) before it draws
 anything, and imports the best-fit parameters from `fit_recombination.py` rather
 than hard-coding them, so the two scripts cannot drift apart.
+`make_ref_tables.py` does the same for all five particles and *refuses to write*
+if any of the five misses, so a table set can never be published against a recipe
+that no longer reproduces the shipped one.
 
 Nothing is re-run from the reconstruction; every input `tracking-stm.root`
 already existed in the `d55ton` arms.

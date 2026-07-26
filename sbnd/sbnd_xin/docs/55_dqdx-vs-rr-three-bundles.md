@@ -21,6 +21,11 @@ dE/dx range, which it does for muons too. A single shape change (A = 0.93 kept,
 **B ≈ 0.13** instead of 0.212 at 0.5 kV/cm) halves the χ² and removes the proton
 offset; §7d says why that is a measured direction and not yet a recommendation.
 
+**§10 rebuilds all five expectation curves** — muon, electron, pion, kaon,
+proton — under the free-power form of §7g, with the electron held flat into the
+stopping end, and writes them into `nusel_display/stm_ref_dqdx.json` alongside
+the Modified-Box tables the running config still uses.
+
 *(Doc number: 54 is taken by the in-flight TGM/STM perf campaign,
 `run_perf54_nusel.sh`.)*
 
@@ -43,15 +48,24 @@ python3 stmfit_particle_overlay.py \
 git show 6099ed0:sbnd/sbnd_xin/nusel_display/stm_ref_dqdx.json > /tmp/ref_ub.json
 python3 stmfit_particle_overlay.py --ref /tmp/ref_ub.json --mip 50000 \
   "archive/stm-docs40-49/work-mcp10-stmon:286241:80:doc42 muon"
+
+# section 10 -- the five free-power tables and the json they are written into:
+python3 dqdx_rr_sample/make_ref_tables.py --dry-run          # print, write nothing
+python3 dqdx_rr_sample/make_ref_tables.py \
+    --json nusel_display/stm_ref_dqdx.json \
+    -o dqdx_rr_sample/ref_tables_free_power.png
 ```
 
 Nothing was re-run. All four `tracking-stm.root` files already existed; the
 `d55ton` arm is the one the live scan viewer on :5011 serves, which is where the
 three bundles were flagged.
 
-`stmfit_particle_overlay.py` is **new**. `stmfit_showcase.py` was deliberately
-left untouched — doc 42's Repro block cites it with specific arguments, and its
-hard-coded muon-only reference and flat-50 line are part of that record.
+`stmfit_particle_overlay.py` is **new**. `stmfit_showcase.py` keeps its
+hard-coded muon-only reference and flat-50 line — doc 42's Repro block cites it
+with specific arguments and those are part of that record; the one change §10
+had to make to it is that its reference key is now pinned to `MuonDeDxBox`, so
+that it goes on reading the same curve it always did after the json grew a
+second set (§10.4). Its numbers are unchanged.
 
 ---
 
@@ -913,11 +927,10 @@ recombination model can absorb by construction.
    end, which is the size of the effect doc 48 §8 item 3 is about.
 5. **The dE/dx side of the fit inherits `stopping.root`.** If those
    stopping-power graphs are wrong, β′ absorbs it. They were not re-derived here.
-6. **Extend `stm_ref_dqdx.json` to all five particles** (pion, kaon, electron
-   too). `docs/emit_jsonnet_dedx.py` in the `energy_loss` repo already emits all
-   five from `pion_travel/stopping_ave_dQ_dx_sbnd.root`; the json dump was only
-   ever muon + proton because that is what the viewer panel needed. A
-   proton/kaon separation question would need it.
+6. ~~**Extend `stm_ref_dqdx.json` to all five particles**~~ — **done in §10**,
+   and under both models: five `*DeDxBox` curves (the tables the config holds)
+   and five `*DeDx` curves (the free-power fit). The shipped tables themselves
+   are still untouched; item 1 above is the one that is still open.
 7. **Decide whether the non-strong accept path should see `ratio1`** (§5). Needs
    a population, not this one track: how many `d55ton` STM tags have
    `1/ratio1 > 1.5`? `T_stm_eval` is dumped for every `-stm-fit` event, so the
@@ -931,6 +944,147 @@ recombination model can absorb by construction.
 10. **Doc 42 §4's table** still quotes the uBooNE-referenced ratios (§4a). Left
    as the historical record; a reader who wants the SBND numbers has the Repro
    line above.
+
+---
+
+## 10. All five reference tables under the free-power model
+
+Asked for after §7g: rebuild the SBND dQ/dx-vs-residual-range expectation for
+**every** particle with the free-power form, keep the electron flat into the
+stopping end, and put the result in the json.
+
+Generator: [`../dqdx_rr_sample/make_ref_tables.py`](../dqdx_rr_sample/make_ref_tables.py).
+It does not hard-code the model parameters — it imports `fit_recombination.py`
+and re-fits in the residual-range plane at run time, so the tables cannot drift
+away from the fit they claim to come from. The values that went into the
+committed json are recorded in its `_meta` block:
+
+> **R = ln(A + u)/u,  u = k·(dE/dx / 2.1 MeV/cm)^p,  A = 0.93**
+> **k = 0.2824, p = 1.3622, C = 0.8552**,  χ²/ndf = 0.82, 20 bins from 13 tracks
+
+### 10.1 The recipe is `convert_field.C`'s, unchanged apart from R
+
+Same grid (60 bins, centres 0.5 … 59.5 cm), same 10-point average inside each
+bin, and the average is taken on the **dQ/dx** side — recombination applied
+pointwise on `stopping.root`'s 1000-point dE/dx graph *first*, then binned. R is
+concave, so the other order is a different number.
+
+The generator's first act is a regression: it rebuilds all five tables with the
+**published** Box parameters and checks them against the shipped
+`stopping_ave_dQ_dx_sbnd.root`, and refuses to write anything if any of the five
+misses. It does not miss:
+
+| | muon | electron | pion | kaon | proton |
+|---|---|---|---|---|---|
+| max relative deviation | 8.1e-4 | 5.1e-7 | 1.1e-3 | 1.8e-4 | 1.5e-4 |
+
+So the only thing that differs between the two sets of curves below is R.
+
+Electron, as asked and as in `convert_field.C`'s `electron_flat_end = true`:
+**no rise into the stopping end** — the 0.5 cm bin is held at the 1.5 cm value
+(50.3 ke/cm), so the curve goes flat into rr → 0 rather than spiking to the
+hand-set 100/180 ke/cm of `convert.C`. Everything above 15 cm is still the
+`ele1.dat` clamp, not electron physics.
+
+### 10.2 The figure
+
+![five reference tables, current vs free power](../dqdx_rr_sample/ref_tables_free_power.png)
+
+One panel per particle — dashed ink is the table the config holds today, solid
+blue is the free-power table, and the row below is the ratio. The muon and
+proton panels carry the curated sample's binned points (§6), the only two
+particles this sample constrains.
+
+### 10.3 What actually changes
+
+The free-power curve is **above** the current one between dE/dx ≈ 2.3 and
+≈ 21 MeV/cm, peaking at **+15 % near 6 MeV/cm**, and **below** it outside that
+window (−19 % at 50, −25 % at 66 MeV/cm). Every per-particle difference below
+follows from where that particle's dE/dx range sits relative to that window.
+
+| | rr = 0.5 cm | 2.5 | 4.5 | 9.5 | 19.5 | 39.5 | 59.5 | peak/plateau |
+|---|---|---|---|---|---|---|---|---|
+| **muon** current | 168.3 | 103.3 | 88.3 | 73.3 | 62.9 | 56.8 | 54.7 | 3.08 |
+| **muon** free power | 184.2 | 118.0 | 99.1 | 79.3 | 65.2 | 56.8 | 53.8 | 3.42 |
+| ratio | 1.094 | 1.142 | 1.122 | 1.081 | 1.036 | 1.000 | 0.985 | |
+| **pion** ratio | 1.079 | 1.148 | 1.133 | 1.098 | 1.054 | 1.012 | 0.996 | 3.19 → 3.46 |
+| **kaon** ratio | 0.989 | 1.133 | 1.148 | 1.147 | 1.125 | 1.089 | 1.063 | 3.39 → 3.15 |
+| **proton** ratio | 0.932 | 1.102 | 1.132 | 1.150 | 1.145 | 1.122 | 1.102 | 3.28 → 2.77 |
+| **electron** ratio | 0.965 | 0.988 | 1.015 | 1.047 | 1.063 | 1.063 | 1.063 | 0.76 → 0.69 |
+
+(values in ke/cm; peak/plateau is the 0.5 cm bin over the 59.5 cm bin.)
+
+Three things worth stating plainly:
+
+1. **The Bragg ends move in opposite directions.** Muon and pion rise
+   (+9 %, +8 %) because their innermost bin only reaches dE/dx ≈ 26–30 MeV/cm,
+   still inside the window where the new form is higher. Kaon and proton *fall*
+   (−1 %, −7 %) because theirs reach 50 and 66 MeV/cm, past the upper crossover.
+   The muon's peak/plateau contrast goes **3.08 → 3.42** and the proton's
+   **3.28 → 2.77** — doc 48 §4 already established that contrast is what changes
+   reconstruction, not the absolute scale, so this is not a cosmetic change.
+2. **The muon plateau barely moves** (54.7 → 53.8 ke/cm, −1.5 %). That is not
+   luck: the plateau bin is where most of the sample's muon points are, so it is
+   what fixes C. The overall scale is unchanged in the only place it was
+   measured — C = 0.8552 against the shipped 0.85, a 0.6 % difference.
+3. **Only muon and proton are constrained by data.** The pion, kaon and electron
+   tables are the *same* R applied to their own `stopping.root` dE/dx graphs.
+   Nothing in this sample tests them; they move because R moved.
+
+Extrapolation, honestly: the fit was constrained to dE/dx ≤ 30 MeV/cm. The top
+dE/dx each table's innermost bin actually samples (at rr = 0.05 cm) is muon 26,
+electron 3, pion 30, kaon 50, proton 66 MeV/cm — so **muon, pion and electron
+stay inside the fit domain everywhere**, and only the kaon and proton Bragg
+peaks extrapolate, by about a factor 2. That is where the −7 % on the proton's
+0.5 cm bin comes from, and it is the least trustworthy number in the table. The
+generator asserts every table is finite, positive, below 1e6 e/cm and monotone
+in rr rather than trusting the form to behave.
+
+### 10.4 The json now carries two sets of five, and that is deliberate
+
+[`nusel_display/stm_ref_dqdx.json`](../nusel_display/stm_ref_dqdx.json) went from
+2 curves to 10:
+
+| keys | model | what they are |
+|---|---|---|
+| `MuonDeDx`, `ElectronDeDx`, `PionDeDx`, `KaonDeDx`, `ProtonDeDx` | free power | the best current description of real SBND stopping tracks |
+| `…DeDxBox` (same five) | Modified Box, C = 0.85 | the tables `sbnd/particle_dataset.jsonnet` actually holds — what `TaggerCheckSTM` compares against |
+| `_meta` | — | provenance: parameters, χ²/ndf, fit domain, generator, caveats |
+
+The shipped tables were **not** rebuilt (§9 item 1 still gates that), so the
+tagger still runs on Box. Keeping both sets is what makes that survivable: a
+consumer that reports on a *tagger decision* needs the config's table, and a
+consumer that shows the *physics expectation* needs the fit. Three consumers were
+re-pointed accordingly:
+
+- `nusel_scan_viewer.py` — `MIP_DQDX` is derived from the muon plateau, and the
+  free-power plateau would have rounded it to **55000** while the config still
+  says 56000. It is now anchored on `MuonDeDxBox`, and still computes 56000
+  exactly. The STM panel draws the tagger's curve solid *and* the free-power
+  muon dotted, so the gap between what the tagger believes and what the data say
+  is visible on the panel rather than assumed away.
+- `stmfit_showcase.py` — reference key pinned to `MuonDeDxBox`. Doc 42 quotes its
+  numbers against the config table; letting it silently follow the fit would
+  repeat exactly the failure §4a had to write up.
+- `stmfit_particle_overlay.py` — new `--ref-set {box,fit,both}`, **default
+  `box`**, so every ratio in §§2–3 above reproduces unchanged (re-run and
+  checked: 1.91 vs muon / 1.14 vs proton for 289343 blk 90, and 1.14 for the
+  §4a doc-42 muon against the archived uBooNE json). `--particles` selects which
+  of the five to draw. Keys starting with `_` are skipped, and a pre-doc-55 json
+  with only one set still works under every `--ref-set`.
+
+### 10.5 What this is and is not
+
+It **is** a complete, reproducible set of five SBND expectation curves under the
+model that best describes the sample of §6, with the electron's stopping-end rise
+removed as asked, and with the curves the running config uses preserved beside
+them for comparison.
+
+It is **not** a recalibration. Everything in §7g.7 and §7d still holds: k and p
+are degenerate with the field, the sample is 12 muons and 1 proton of
+*uncalibrated* data, a dE/dx-dependent reconstruction bias would look identical
+to a change in R, and the pion/kaon/electron curves have no data behind them at
+all. Nothing in `energy_loss/` or `sbnd/particle_dataset.jsonnet` was modified.
 
 ---
 

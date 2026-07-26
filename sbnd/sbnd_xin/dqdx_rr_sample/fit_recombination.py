@@ -99,10 +99,15 @@ def read_tsv(path):
     return out
 
 
-def dedx_graphs():
+def dedx_graphs(names=("muon", "proton")):
+    """dE/dx (MeV/cm) vs residual range (cm), x-sorted, from stopping.root.
+
+    Defaults to the two particles this fit has data for; `make_ref_tables.py`
+    asks for all five to build the reference tables.
+    """
     f = uproot.open(STOPPING)
     out = {}
-    for n in ("muon", "proton"):
+    for n in names:
         g = f[n]
         x = np.asarray(g.values("x"), float)
         y = np.asarray(g.values("y"), float)
