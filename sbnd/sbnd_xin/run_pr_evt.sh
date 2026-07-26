@@ -62,7 +62,7 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             Bee layers track_fit/shower_track/vertices + mc particle flow)
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
             the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} = the
-            experiment window, same as SBND Q/L beam_pref).  Since doc 55 this
+            experiment window, same as SBND Q/L beam_pref).  Since doc 56 this
             window also GATES which bundles the taggers evaluate at all
             (beam_window_only, default on) -- not just TGM's beam protection.
   -dnn      -nu plus the SCN DL vertex with the uBooNE-trained weights
@@ -90,7 +90,7 @@ DL_WEIGHTS=""
 # us, evts 686/1698/1258) as placeholders 0.5,2.0 / 0.5,2.5.
 #
 # Now the EXPERIMENT window 0.2,2.2, the same value used by SBND Q/L matching
-# (beam_pref_tlow/thigh) and by run_nusel_evt.sh.  This matters since doc 55:
+# (beam_pref_tlow/thigh) and by run_nusel_evt.sh.  This matters since doc 56:
 # beam_window_only defaults ON, so the window no longer only tunes TGM's in-beam
 # protection -- it decides which bundles get a steiner graph and a tagger verdict
 # at all.  The old placeholders would have silently dropped every in-beam bundle

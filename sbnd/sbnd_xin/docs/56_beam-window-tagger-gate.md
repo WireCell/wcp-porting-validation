@@ -14,7 +14,7 @@ On the 30-event MCP2025C scan that is 27 in-window bundles out of **329**.
 **Change (owner request, 2026-07-26): the beam-window gate becomes the SBND
 default.**  New knob `beam_window_only` on `CreateSteinerGraph`,
 `TaggerCheckTGM`, `TaggerCheckSTM`, `TaggerCheckFC` — C++ default **false**
-(so the compiled config with the knob off is byte-identical to the pre-doc-55
+(so the compiled config with the knob off is byte-identical to the pre-doc-56
 one and every other detector is untouched), turned **on** in
 `cfg/pgrapher/experiment/sbnd/clus.jsonnet`, i.e. for SBND production.
 
@@ -92,7 +92,7 @@ CreateSteinerGraph: beam_window_only [0.200, 2.200) us: kept 4 of 24 cluster(s) 
 `tgm/stm/fc = -1` + `stmfit = '-'` for gated-out bundles: the post-PR tree's
 `flag_TGM/STM/FC` read 0 for them only because flags default to 0, and printing
 0 would claim "evaluated, clean" for a bundle no tagger ever looked at.  Their
-`label` stays `not-tagged`.  On an ungated (pre-doc-55) log `parse_bwonly`
+`label` stays `not-tagged`.  On an ungated (pre-doc-56) log `parse_bwonly`
 returns `None` and the extractor is inert — verified by reproducing the
 committed d55ton TSVs for evts 285185 and 287759 byte-for-byte.
 
@@ -208,7 +208,7 @@ not shift.
    read `fc = -1`.  The regexes now key on the `cluster N <arrow> KEY=` tail
    instead (the tagger name is never the distinguishing token, and \S+ still
    keeps the STM line from matching the TGM one).  Regression: all 30 d55ton
-   TSVs regenerate **byte-identically** with the new regexes, so pre-doc-55
+   TSVs regenerate **byte-identically** with the new regexes, so pre-doc-56
    tables are unaffected.
 
 ## Hand-scan display

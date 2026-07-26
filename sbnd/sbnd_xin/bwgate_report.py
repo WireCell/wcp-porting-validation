@@ -2,7 +2,7 @@
 """Doc 55 ON-path check: the beam-window gate must remove work, never change it.
 
 The knob-OFF gate (p54_ab_report.py --base-tag p55opt --opt-tag p56off) proves
-the pre-doc-55 path is byte-identical.  This script checks the ON path, which by
+the pre-doc-56 path is byte-identical.  This script checks the ON path, which by
 construction is NOT byte-identical (out-of-window bundles lose their verdicts):
 
   1. the bundle LIST per event is unchanged (the gate touches no clustering or
@@ -24,7 +24,7 @@ construction is NOT byte-identical (out-of-window bundles lose their verdicts):
   5. it reports what the gate removed (tags on out-of-window bundles).
 
 Usage: python3 bwgate_report.py [--base-tag d55ton] [--gated-tag d56bw]
-Full write-up: docs/55_beam-window-tagger-gate.md
+Full write-up: docs/56_beam-window-tagger-gate.md
 """
 import argparse
 import glob

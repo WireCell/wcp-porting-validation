@@ -70,9 +70,9 @@ function(
     // Run the PR tail (steiner + tagger_check_{tgm,stm,fc}) ONLY on the
     // beam-coincident bundle, i.e. the mains whose cluster_t0 is inside
     // beam_window_us (plus, for steiner, the companions sharing their
-    // matched_flash_gid).  TRUE = SBND production default as of docs/55;
+    // matched_flash_gid).  TRUE = SBND production default as of docs/56;
     // false restores the evaluate-every-bundle behavior with a compiled config
-    // byte-identical to the pre-doc-55 one.  Inert when beam_window_us is empty.
+    // byte-identical to the pre-doc-56 one.  Inert when beam_window_us is empty.
     // Runner flag: -no-bwonly.
     beam_window_only = true,
     // Enable the ported check_neutrino_candidate veto in tagger_check_tgm so

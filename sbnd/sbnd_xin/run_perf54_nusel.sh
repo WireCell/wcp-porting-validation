@@ -12,7 +12,7 @@
 # Usage: ./run_perf54_nusel.sh <arm> [tagbase] [extra run_nusel_evt.sh flags...]
 #   arm      names the work roots work-<suff>-<tagbase><arm>
 #   tagbase  default p54; use a fresh tagbase per campaign round (M13)
-#   extra    appended to the fixed flag set, e.g. -no-bwonly for the doc-55
+#   extra    appended to the fixed flag set, e.g. -no-bwonly for the doc-56
 #            knob-off gate arm.  Also selects events: pass nothing to run all 30.
 # Env: PERF54_EVENTS="i3 e13 e27" restricts the run to those labels (smoke tests).
 set -u

@@ -44,7 +44,7 @@ It is an ORTHOGONAL property, not a cosmic veto: like the prototype (where FC is
 an independent eval-tree variable feeding the BDTs) it does NOT enter 'label'.
 -1 = no verdict in the log (tagger_check_fc absent from the pipeline).
 
-tgm/stm/fc = -1 also means NOT EVALUATED under the doc-55 beam-window gate
+tgm/stm/fc = -1 also means NOT EVALUATED under the doc-56 beam-window gate
 (run_nusel_evt.sh default: only bundles whose cluster_t0 is inside --beam-window
 get a steiner graph and tagger verdicts).  Out-of-window bundles therefore read
 -1/-1/-1 and stmfit '-', and their label stays 'not-tagged' -- they are cosmics
@@ -219,7 +219,7 @@ def group_flashes(flashes):
 # is the correct outcome: the verdict stays -1 and the caller warns.
 VERDICT = r'([tf01])\w*'
 # The tagger NAME is deliberately NOT required.  A tear can also remove the
-# line's HEAD, which is exactly what the doc-55 beam-window gate exposed: with
+# line's HEAD, which is exactly what the doc-56 beam-window gate exposed: with
 # only one evaluated main per event the write-buffer boundary moved onto the FC
 # verdict line, and 7 of 26 events logged
 #     aggerCheckFC: cluster 5 -> FC=false
@@ -245,7 +245,7 @@ RE_FC = re.compile(r'cluster (\d+) \S+ FC=' + VERDICT + r'\b')
 RE_STM_SKIP = re.compile(r'check_stm_conditions: cluster (\d+) no STM fit: (.+)')
 
 
-# The PR job announces the doc-55 beam-window gate once per tagger, e.g.
+# The PR job announces the doc-56 beam-window gate once per tagger, e.g.
 #   visit: TaggerCheckSTM: beam_window_only [0.200, 2.200) us: 1 main(s) ...
 # When that gate was on, a main outside the window was NEVER EVALUATED, and the
 # post-PR tree's flag_TGM/STM/FC read 0 for it simply because the flags default
@@ -535,7 +535,7 @@ def one_event(args):
     for g, f in flashes.items():
         pe_grp[fgrp[g]] = pe_grp.get(fgrp[g], 0.0) + f['pe']
 
-    # doc-55 beam-window gate: when the PR job ran it, only the in-window mains
+    # doc-56 beam-window gate: when the PR job ran it, only the in-window mains
     # were evaluated at all, so their verdict columns must read -1 (unknown),
     # not 0 (evaluated, clean).  None => ungated run, every main was evaluated.
     gate = parse_bwonly(args.prlog)

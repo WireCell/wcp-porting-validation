@@ -64,11 +64,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 trigger-referenced).  Default ${BEAM_WINDOW}.  Used for the TGM
                 beam protection AND the table's in_beam / label columns.
   -no-bwonly    run steiner + the TGM/STM/FC taggers on EVERY matched bundle
-                (the pre-doc-55 behavior).  DEFAULT is beam-window-only: only
+                (the pre-doc-56 behavior).  DEFAULT is beam-window-only: only
                 the bundle(s) whose cluster_t0 is inside -bw get a steiner
                 graph and a tagger verdict; out-of-time bundles are cosmics by
                 construction.  Off => compiled config byte-identical to
-                pre-doc-55.  Env: SBND_BW_ONLY=0.
+                pre-doc-56.  Env: SBND_BW_ONLY=0.
   -nucand       enable the ported check_neutrino_candidate veto in
                 tagger_check_tgm: in-beam-window bundles may then be tagged
                 TGM when the Dijkstra path-topology veto clears them.
@@ -227,7 +227,7 @@ EOF
 MODE=mc
 BEAM_WINDOW="0.2,2.2"
 # Beam-window-only PR tail (steiner + TGM/STM/FC only for the bundle whose
-# cluster_t0 is inside BEAM_WINDOW).  DEFAULT ON as of doc 55: with the taggers
+# cluster_t0 is inside BEAM_WINDOW).  DEFAULT ON as of doc 56: with the taggers
 # validated, out-of-time bundles are cosmics by construction and evaluating them
 # cost ~10x the work for verdicts nothing consumes.  SBND_BW_ONLY=0 / -no-bwonly
 # restores the evaluate-every-bundle behavior (byte-identical compiled config).
