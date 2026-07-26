@@ -1,10 +1,14 @@
 # 61 — nusel hand-scan key: STM vs neutrino candidate (SBND d59k scan set)
 
-**Status.** Scan key + sub-agent operating instructions. First 20 events of the
-d59k scan set are scanned (`scan-d59k/handscan-first20.tsv`, tag `c59k`) and are
-**awaiting owner validation** — do not extend the scan until the owner has signed
-off on those 20, because every criterion below is calibrated on two of them.
-The set the display serves has since been narrowed to **393 events** (§5a: FC
+**Status.** Scan key + sub-agent operating instructions. The whole 393-event
+display set is now scanned and overlaid on **:5011**, and the 62 bundles where
+the scan contradicts the STM tagger are served on their own **:5012** for the
+owner's re-check (§5c). Two separately attributable batches — first 20 events (`scan-d59k/handscan-first20.tsv`, §4) and the
+remaining 383 by 10 sub-agents (`scan-d59k/handscan-batch2.tsv`, §5b). **Both are
+awaiting owner validation:** every criterion below is calibrated on *two*
+owner-judged bundles (evt48895, evt50787), and the ten agents agreeing 60/60 on
+the seeded controls shows the criteria are applied *consistently*, not that they
+are right. The set the display serves was narrowed to **393 events** in §5a (FC
 candidates dropped, the recovered crash event added, new Bee link), of which 10
 of the first 20 are no longer in it.
 
@@ -157,8 +161,9 @@ interaction stops too. STM needs Bragg **and** a boundary-crossing entry.
   `grab_scan_shots.py`'s `info.json` gives you the drawn count per bundle.
 * **Contained clusters have no dQ/dx panel at all** (`stmfit=contained` ⇒ the
   STM tagger skipped the fit, so `tracking-stm.root` has nothing). For those
-  the verdict rests on topology alone — say so, and prefer `nu-weak` over `nu`
-  when there is no vertex structure either.
+  the verdict rests on topology alone — say so, and use verdict `nu` with
+  quality `weak` when there is no vertex structure either. (`nu-weak` is **not**
+  a verdict: the verdict field takes `STM` or `nu` and nothing else, §1.)
 * **A slope break exactly at x=0 is suspect** (evt52085): that is the cathode,
   where two clusters get joined (`cathode_connect`) and where the ~1.5 cm
   TPC0/TPC1 offset lives. Do not score it as a physics kink.
@@ -337,6 +342,194 @@ and near-misses that the scan is actually about) and 5 more. §4's "half the nu
 pool is junk or unclear" was measured before this cut and should be re-measured
 on the new set — on the surviving 10 it is 2 `junk` and no `unclear`.
 
+## 5b. Batch 2: the remaining 383 events, scanned by 10 sub-agents (UNVALIDATED)
+
+Owner request, 2026-07-26: scan the rest of the 393-event set with 10 sub-agents,
+using the first-20 batch as the worked example, and put the result in the
+display. Record: **`scan-d59k/handscan-batch2.tsv`**, 402 in-beam bundles in 383
+events. Overlaid on 5011 as a second `--ai-scan` file, so the two batches stay
+separately attributable.
+
+```bash
+# 1. keyed skeletons + 10 slices (the join key flash_gid is NOT on screen, so
+#    the agents never type it -- they return event+main_id and it is joined back)
+# 2. one private viewer per slice (own --tag, ports 5062-5072), grabbers 5 at a time
+python3 nusel_display/grab_scan_shots.py --port 506X --out /home/xqian/tmp/nusel-b2/shots/sN
+# 3. one sub-agent per slice, images only; 4. merge + gate; 5. relaunch 5011
+```
+Working tree `/home/xqian/tmp/nusel-b2/` (skeletons, 1343 PNGs, per-slice
+verdicts, `merge_verdicts.py`, `AGENT_INSTRUCTIONS.md`, `regrab_verified.py`).
+
+**Result.** 125 `STM` / 277 `nu`.
+
+| quality | STM | nu | |
+|---|---|---|---|
+| `clean` | 104 | 58 | |
+| `cosmic-like` | — | 79 | |
+| `junk` | — | 69 | 17% of the batch |
+| `unclear` | 9 | 54 | |
+| `weak` | 12 | 17 | |
+
+Confidence: 208 high / 147 med / 47 low. Per-slice STM rate 25–40 %, no outlier
+slice. Coverage: **393 of 393 events** of the scan set now carry ≥1 overlaid
+verdict (383 from this batch, 10 from the first-20).
+
+**The scan disagrees with the STM tagger in both directions:**
+
+| tagger | scan | n |
+|---|---|---|
+| STM | STM | 107 |
+| STM | nu | **43** (29 % of the 150 STM tags) |
+| nu-candidate | STM | **18** |
+| nu-candidate | nu | 228 |
+| TGM / LM | nu | 5 / 1 (the mixed events' cosmic bundles, §5a) |
+
+18 of the 43 overturned STM tags are the evt48895 failure mode verbatim — flat
+MIP dQ/dx to rr=0, no Bragg. The 18 promotions are mostly wall entry + a clean
+Bragg that the fit rejected as "long leftover" / "extra tracks" on material away
+from the stopping end. **Neither number is validated; both are the owner's call.**
+
+**Inter-agent agreement: 60/60.** Six bundles were seeded into all ten slices and
+removed from the examples file the agents were given: three the criteria are
+calibrated on and named in §2 (48301, 48895, 50787), two **fully blind** (48367,
+52723 — cited nowhere), and 51865, which §3 does name in the pr-vs-ql point-count
+table though not with a verdict. All ten agents reproduced all six batch-1 calls
+on **verdict *and* quality**. Weight them accordingly: 48367 is the strongest of
+the six (a `cosmic-like` call on a track the tagger tagged STM), 51865 the weakest
+(19 drawn points, an obvious `junk`).
+
+This bounds *inconsistency*, and only that. Criteria calibrated on two
+owner-judged bundles could be systematically misread the same way by all ten
+agents and still give 60/60 — so it says the criteria were applied uniformly, not
+that they are right. Owner validation is still the gate.
+
+**A third owner data point turned up, and it backs a promotion.** The owner's
+d56bw-era label record (`work-mcp1000b-d56bw/nusel_labels/d56bw/`, carried onto
+5011 by `--prev`) holds one comment: evt290201 main 9, auto `nu-candidate` —
+*"probably a STM, but there is a kink ... likely large angle MCS"*. The batch-2
+scan independently promoted that exact bundle to **STM/clean/high** on "enters the
+top wall travelling across it (dy=98 over 115 cm), textbook Bragg to 175–193
+ke/cm at rr=0, dense blob at the stopping end = Michel candidate". So the one
+owner-judged case that exists in the *promotion* class agrees with the scan, and
+the owner's kink is explained as large-angle MCS in a stopping muon — the reading
+that also decides several §5b hard rows. One case, but it is the class most in
+need of validation.
+
+**Note on the owner's `s59k` record (M13).** Verifying the overlay clicks table
+rows on 5011, and that caused the viewer to persist a *state* file for one event:
+`nusel_labels/s59k/.scan_state-evt290201.json`, holding `seen`/`seeded` and a
+**seeded copy of the owner's own d56bw comment above** — no verdict of this
+scan's, and no existing file altered (evt48895's two files are byte-identical,
+md5 checked). Left in place rather than deleted, because deleting from that tree
+is exactly what M13 forbids; remove that one path if it is unwanted. Any future
+overlay check should run against a private instance instead of 5011.
+
+**Two harness bugs found and fixed, both caught by an agent refusing to invent a
+verdict rather than by the gate:**
+
+1. **`grab_scan_shots.py` could not run at all** since the IN-BEAM-only default
+   (§4a): it clicked `Mode: ALL bundles`, a button that no longer exists at
+   startup, so the click blocked to timeout and died before the first
+   screenshot. Now conditional. `info.json` is also rewritten after every event
+   so a grabber that dies mid-slice still leaves join data.
+2. **A row click can silently not take.** On evt62495 and evt400174 both rows'
+   screenshots show the *last* row's bundle (byte-identical PNG triples), i.e.
+   the display never focused row 0. 2 of 35 multi-row events. Detect it by
+   comparing the drawn payload (`bbox` + fit text) across an event's rows, not
+   the table row text — that differs even when the focus is wrong.
+   `nusel_display/../regrab_verified.py` (scratch) re-grabs a named
+   `evt:main_id` by clicking a *different* row first and asserting the info div
+   names the wanted main. Both bundles were re-grabbed and judged by the main
+   session; the two overrides are in `merge_verdicts.py`, not edited into an
+   agent's file. evt400174 main 8 is a textbook STM (Bragg on the muon curve to
+   190 ke/cm, top-wall entry, ks1=0.018) that would otherwise have been recorded
+   `nu`.
+   **Corrected en route:** the first reading of evt62495 — "draws no charge at
+   all in `pr` mode" — was this focus bug, not the un-merge. With verified focus
+   it draws 909 points in `pr` (1026 in `ql`).
+
+**Reconstruction pathologies the batch surfaced** (reported, not fixed — §5
+rule 6). The count is of *reasons that name it*, so it is a floor:
+
+* **dQ/dx fits returning negative charge**, 15 bundles across 8 of the 10 slices
+  (56243:9, 170808:14, 175896:17, 278794:7, 280598:15, 284200:6, 284657:5,
+  285443:7, 285929:13, 286655:19, 347085:4, 394532:8, 399052:15, 400504:6,
+  489327:19). Excursions reach −320 ke/cm. This is a fit bug, not physics, and
+  it is the most reproducible finding in the batch.
+* **Whole-track dQ/dx uniformly 1.5–2× the muon table with the correct shape**,
+  concentrated on cathode-hugging and isochronous bundles — a dx/normalisation
+  suspicion, and the discriminator two agents had to invent (does the far end
+  return to 56 ke/cm?) decides STM-vs-proton on several rows. Worth an explicit
+  owner ruling: 386838:16, 389962:5 were called STM on it, 389544:13 nu.
+* **Isochronous (near-constant drift-x) bundles** produce ghost fans that inflate
+  the point cloud: 18 bundles name it.
+* **len_main_cm ≫ the drawn extent** on 10 bundles (e.g. 291345:12, 140 cm quoted
+  vs 25 cm drawn) — the un-merge/`pr` effect of §3, but large enough to mislead
+  a density-based junk cut.
+* **Cosmic tags that leaked into the beam window**: 169598:2 is an unmistakable
+  anode→top-wall through-goer labelled TGM, 70562:10 is LM-labelled, 399382:15
+  carries "TGM lm" — all in-beam bundles of the 6 `mixed` events kept by §5a's
+  rule, so they are expected to be here, but 173498:6 and 280972:7 are
+  two-boundary crossers with **`tgm=0`**, i.e. TGM misses.
+* **Upward-going Bragg** on 4 near-bottom-wall stubs (290729:12, 291768:18,
+  291301:18, 68956:13): either a real sub-population or the fit mis-assigning
+  which end is the exit on short near-wall objects.
+
+**What the owner should re-check first.** Each agent returned its own hardest
+rows; the union is ~60 bundles, all with `conf` in the TSV. The 47 `low`-conf
+rows and the 18 promotions are the highest-value re-checks, then the 43
+overturned STM tags.
+
+## 5c. The claimed STM mistakes, on their own display (:5012)
+
+Owner request, 2026-07-26: *"For all these mistakes STM misidentified or missed,
+can you put them into a new display port in 5012? I want to check them myself."*
+
+**`scan-d59k/stm-disagreements.tsv`** — 62 bundles in 62 events, both batches,
+one row per claimed mistake with the tagger's label, the scan verdict, quality,
+confidence and the full reason:
+
+| direction | n | meaning |
+|---|---|---|
+| `misidentified` | 44 | tagger tagged **STM**, scan says not a stopping muon (43 from §5b + evt48895 from §4) |
+| `missed` | 18 | tagger left it **untagged**, scan says it **is** a stopping muon |
+
+Every one is in the 393-event set, so the Bee links of §5a cover them all.
+Confidence on the 18 `missed`: 2 high, 14 med, 2 low — i.e. the promotions are
+the *less* certain half, and 290201:9 (one of the two `high`) is the one the
+owner's own d56bw comment already backs.
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+S=$PWD
+nusel_display/serve_nusel_scan.sh 5012 --tag s61mis --charge-src pr \
+    --ai-scan $S/scan-d59k/handscan-first20.tsv \
+    --ai-scan $S/scan-d59k/handscan-batch2.tsv \
+    --prev $S/work-mcp1kall-d59k:s59k \
+    $(awk -F'\t' '!/^#/ && $1!="direction" {print $3}' scan-d59k/stm-disagreements.tsv \
+      | sort -un | sed "s|^|$S/work-mcp1kall-d59k/nusel_evt|; s|$|/nusel-evt&.tsv|")
+#   http://localhost:5012/nusel_scan_viewer      62 events
+```
+
+Two deliberate choices:
+
+* **Its own tag `s61mis`**, not `s59k` — two viewer instances writing the same
+  `nusel_labels/<tag>/` tree would race per event file, and this list is a
+  focused re-check, not the main scan record.
+* **`--prev …:s59k`** seeds the owner's existing `s59k` comments into the new tag
+  so nothing already recorded is invisible here. `--prev` only ever *reads* the
+  source tag (§1a), so `s59k` stays untouched.
+
+Verified: 62 events in the dropdown, the `AI scan` column live and matching the
+TSVs on sampled rows (48895 `nu cosmic-like`, 290201 `STM`, 62613 `STM`, 409458
+`nu weak`), the AI comment box populated, no JS errors.
+
+**Reading order suggestion.** The `missed` 18 are the cheaper check (each is a
+single claim: does it enter a boundary *and* stop with a Bragg?), and they are
+where the tagger would gain efficiency. Of the `misidentified` 44, the 18 that
+cite flat-MIP-to-rr=0 are the same failure the owner already confirmed on
+evt48895, so a spot-check of a few decides the class.
+
 ## 5. Instructions for a sub-agent extending this scan
 
 1. **Never write into `work-mcp1kall-d59k/nusel_labels/s59k/`.** That is the
@@ -367,9 +560,15 @@ on the new set — on the surviving 10 it is 2 `junk` and no `unclear`.
    displays, but in grey with no styling — that is a sign you invented one.
    Then hand the owner the relaunch line with every batch TSV passed as its own
    `--ai-scan` (§4a) so all batches show at once.
-5. Scan in batches of ~20 and stop for validation. The criteria in §2–3 are
-   calibrated on three events only; a systematic misreading would otherwise
-   propagate over hundreds.
+5. The criteria in §2–3 are calibrated on two owner-judged bundles, so a
+   systematic misreading propagates silently over hundreds of rows. Batch 1
+   stopped at 20 for validation; batch 2 (§5b, at the owner's request) covered
+   the remaining 383 in one pass and bought the missing check a different way:
+   **seed the same handful of already-scanned bundles into every slice**, at
+   least some of them cited nowhere in the criteria and cut out of the examples
+   file, then report the agreement. Do that in any future batch — it costs ~3
+   bundles per agent and it is the only number that distinguishes "the criteria
+   were applied" from "the criteria are right".
 6. Report, do not fix. Tagger bugs (49951's missed TGM), clustering
    pathologies (52085's cathode kink) and junk clusters belong in the notes
    column, not in a code change.
@@ -378,7 +577,11 @@ on the new set — on the surviving 10 it is 2 `junk` and no `unclear`.
 
 | path | what |
 |---|---|
-| `scan-d59k/handscan-first20.tsv` | the 20 verdicts + reasons (this round); the `--ai-scan` input now overlaid on 5011 |
+| `scan-d59k/handscan-first20.tsv` | the first 20 verdicts + reasons (§4); `--ai-scan` input on 5011 |
+| `scan-d59k/handscan-batch2.tsv` | **the other 402 bundles / 383 events (§5b)**, 10 sub-agents; second `--ai-scan` input on 5011 |
+| `scan-d59k/stm-disagreements.tsv` | the 62 claimed STM mistakes (44 misidentified + 18 missed), served on **:5012** (§5c) |
+| `scan-d59k/batch2/` | raw per-slice agent returns + the merge gate + the agents' manual; see its README (the slices still contain the seeded controls) |
+| `nusel_display/regrab_verified.py` | re-grab `evt:main_id` with focus verification (§5b bug 2) |
 | `nusel_display/nusel_scan_viewer.py` | `--ai-scan` overlay added (default off, §4a) + IN-BEAM-only is now the opening mode |
 | `nusel_display/serve_nusel_scan.sh` | forwards `--ai-scan` |
 | `nusel_display/grab_scan_shots.py` | headless evidence grabber (read-only) |

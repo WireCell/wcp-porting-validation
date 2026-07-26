@@ -116,9 +116,12 @@ with sync_playwright() as p:
     print(f'{len(labels)} events in dropdown; first={labels[0]} last={labels[-1]}')
     todo = args.events or labels
 
-    # IN-BEAM only mode (global viewer state, set once)
-    page.click("button:has-text('Mode: ALL bundles')")
-    page.wait_for_timeout(1500)
+    # IN-BEAM only mode (global viewer state, set once).  Since doc 61 §4a the
+    # viewer OPENS in that mode, so the ALL-bundles button may not exist -- only
+    # click when it does, and assert the end state either way.
+    if page.query_selector("button:has-text('Mode: ALL bundles')"):
+        page.click("button:has-text('Mode: ALL bundles')")
+        page.wait_for_timeout(1500)
     assert page.query_selector("button:has-text('Mode: IN-BEAM only')"), 'mode toggle failed'
 
     out = []
@@ -145,6 +148,10 @@ with sync_playwright() as p:
             out.append(dict(event=evt, row=i, table_row=rows_of(page)[i],
                             bbox=bbox, divs=divs))
             print(f'   r{i}: {rows[i][:6]} npts={bbox["n"]}')
+        # rewrite after every event: a grabber that dies mid-list still leaves
+        # usable join data for the PNGs it did write
+        with open(f'{args.out}/info.json', 'w') as f:
+            json.dump(dict(labels=labels, bundles=out), f, indent=1)
     with open(f'{args.out}/info.json', 'w') as f:
         json.dump(dict(labels=labels, bundles=out), f, indent=1)
     print('js errors:', errs[:5])
