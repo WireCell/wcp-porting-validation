@@ -1,0 +1,24 @@
+# stm_fit-global cluster_id remap for scan-d59k/bee/chunk-06.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+408534	1	9	17	flash-matched	17:1396
+409084	2	12	16	flash-matched	16:1073
+409458	3	8	4	flash-matched	4:69
+409546	4	8	11	flash-matched	11:176
+409942	7	17	16	flash-matched	16:1021
+411460	11	6	11	flash-matched	11:243
+411790	12	13	16	flash-matched	16:310
+412692	14	13	11	flash-matched	11:1372
+486049	15	13	9	flash-matched	9:2841
+486687	17	20	12	flash-matched	12:4388
+486907	18	16	8	flash-matched	8:3468
+487633	20	3	5	flash-matched	5:1467
+488139	22	14	9	flash-matched	9:1164, 27:261
+489327	24	19	3	flash-matched	3:4248, 5:466, 18:358
+489811	28	4	9	flash-matched	9:1582
+490361	29	20	11	flash-matched	11:1143
+490581	30	6	14	flash-matched	14:3220
+490977	32	17	18	flash-matched	18:608
+492649	34	20	20	flash-matched	20:665
+492891	36	13	24	flash-matched	24:4345
+492913	37	15	5	flash-matched	5:432, 13:193
+493243	38	13	19	flash-matched	19:1616

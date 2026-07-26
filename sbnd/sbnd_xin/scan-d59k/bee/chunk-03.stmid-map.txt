@@ -1,0 +1,61 @@
+# stm_fit-global cluster_id remap for scan-d59k/bee/chunk-03.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+283969	0	22	13	flash-matched	13:4601
+284103	3	8	12	flash-matched	12:1993
+284145	5	11	19	flash-matched	19:2841
+284200	7	6	11	flash-matched	11:1365
+284211	8	14	7	flash-matched	7:1620
+284367	12	4	8	flash-matched	8:777
+284637	14	23	13	flash-matched	13:349
+284657	15	5	6	flash-matched	6:1428
+284769	16	16	15	flash-matched	15:9063
+284791	17	4	11	flash-matched	11:788
+284794	18	12	10	flash-matched	10:7070
+285080	20	19	3	flash-matched	3:2497, 14:291
+285185	21	21	17	flash-matched	17:1084
+285201	22	2	2	flash-matched	2:83
+285366	25	13	21	flash-matched	21:527
+285443	26	7	11	flash-matched	11:2320
+285467	27	18	22	flash-matched	22:850
+285663	30	7	15	flash-matched	15:55
+285795	33	11	21	flash-matched	21:1110
+285929	34	13	9	flash-matched	9:2419, 20:138
+285999	36	22	11	flash-matched	11:202
+286065	37	3	2	flash-matched	2:4257
+286177	39	10	14	flash-matched	14:228
+286180	40	6	18	flash-matched	18:420
+286329	45	14	23	flash-matched	23:520
+286353	46	9	6	flash-matched	6:2515
+286527	48	16	24	flash-matched	24:247
+286631	49	7	21	flash-matched	21:1683
+286655	50	19	11	flash-matched	11:2072
+286681	51	3	4	flash-matched	4:12296
+286681	51	10	17	flash-matched	17:464
+286906	53	9	8	flash-matched	8:1374
+287007	54	12	15	flash-matched	15:816
+287181	55	14	18	flash-matched	18:462
+287599	60	6	9	flash-matched	9:643
+287654	62	12	5	flash-matched	5:1341, 17:401
+288067	67	7	10	flash-matched	10:404
+288287	68	10	2	flash-matched	2:4850
+288358	69	3	7	flash-matched	7:1158
+288358	69	7	20	flash-matched	20:3957
+288397	70	13	21	flash-matched	21:241
+288639	71	8	5	flash-matched	5:1308
+288859	74	9	14	flash-matched	14:7630
+288864	75	2	3	flash-matched	3:94
+288952	77	2	9	flash-matched	9:2907
+289251	78	12	5	flash-matched	5:2910
+289295	79	15	11	flash-matched	11:288
+289343	80	9	7	flash-matched	7:581
+289559	81	14	18	flash-matched	18:1658, 17:244, 6:176
+289647	82	9	15	flash-matched	15:1569
+289832	84	10	15	flash-matched	15:1697, 11:300
+290201	87	9	10	flash-matched	10:1056
+290294	88	12	16	flash-matched	16:262
+290316	89	10	6	flash-matched	6:1943
+290729	90	12	3	flash-matched	3:1418
+290844	91	3	5	flash-matched	5:1071, 11:585
+291301	95	18	10	flash-matched	10:172
+291345	96	12	13	flash-matched	13:211
+291499	98	12	19	flash-matched	19:344

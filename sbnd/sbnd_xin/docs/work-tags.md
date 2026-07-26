@@ -19,6 +19,7 @@ event manifests:
 | `work-mcp10-<tag>` | the 10/30-event hand-scan set (imaging from `work-mcp10`) |
 | `work-mcp1000-<tag>` | 30 events drawn from the 1000-event MC set (imaging from `work-mcp1000`) |
 | `work-mcp1000b-<tag>` | a second 30-event draw from the same 1000-event set |
+| `work-mcp1kall-<tag>` | **all 1000** events of that set, not a draw (doc 59; imaging from `work-mcp1000`) |
 | `work-mcsim-<tag>` | the MC-truth sim set (truth dQ/dx, delta rays) |
 
 **These arms are not reproducible.** A tag names a *config*, not a build. The
@@ -63,12 +64,16 @@ median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 | `work-mcp10` | 63 | 96M | — |
 | `work-mcp1000` | 2000 | 7136M | — |
 
-## LIVE — 6 dirs, 225 MB (top level)
+## LIVE — 7 dirs, 8.5 GB (top level)
 
 **wired into a running viewer** — the port-5011 `nusel_scan_viewer.py` command line names these as its current tag or as a `--prev` baseline. Deleting or moving one blanks the live scan.
 
+The doc-56 `work-*-d56bw` arms are also live as `--prev` baselines of the doc-59
+scan; they are listed under CURRENT below.
+
 | dir | entries | size | referenced by |
 |---|---|---|---|
+| `work-mcp1kall-d59k` | 2999 | 8.3G | `59_full1k-production-scan.md`, `nusel_scan_filter.py`, `run_full1k_nusel.sh`, `make_scan_bee.sh` — the port-5011 `s59k` scan (639 of its 999 tables) |
 | `work-mcp10-d49son` | 43 | 29M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `52_isolated-grouping-fix-design.md`, `d52_ab_report.py`, `stm_main_connectivity.py`, `stm_merge_attribution.py` |
 | `work-mcp10-d52ron` | 53 | 60M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
 | `work-mcp1000-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py`, `stm_main_connectivity.py` |

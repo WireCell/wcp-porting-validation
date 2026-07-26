@@ -1,0 +1,53 @@
+# stm_fit-global cluster_id remap for scan-d59k/bee/chunk-02.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+173146	2	15	11	flash-matched	11:1535
+173498	5	6	5	flash-matched	5:2616
+174224	10	20	10	flash-matched	10:4625
+174422	11	13	1	flash-matched	1:2073, 16:1979
+174488	12	3	2	flash-matched	2:203
+174576	13	5	9	flash-matched	9:2197
+174642	14	9	5	flash-matched	5:4744
+175428	18	17	5	flash-matched	5:451
+175808	19	18	7	flash-matched	7:1404
+175896	20	17	13	flash-matched	13:1090
+176022	21	9	13	flash-matched	13:2313
+176160	22	10	17	flash-matched	17:1180
+277276	24	8	6	flash-matched	6:1715
+277958	26	13	20	flash-matched	20:416
+278640	30	17	5	flash-matched	5:1074, 14:177
+278662	31	1	5	flash-matched	5:2139
+278684	32	10	22	flash-matched	22:1646
+279445	37	19	9	flash-matched	9:1033
+280092	41	6	14	flash-matched	14:471
+280598	42	15	7	flash-matched	7:1218
+280774	44	16	6	flash-matched	6:971
+280972	46	7	19	flash-matched	19:10446, 5:3513
+281095	48	20	7	flash-matched	7:4102, 10:1705
+281148	49	13	9	flash-matched	9:329
+281241	51	10	10	flash-matched	10:1864, 17:170
+281507	55	8	8	flash-matched	8:1036
+281527	56	14	15	flash-matched	15:1579
+281551	57	1	3	flash-matched	3:143
+281595	59	20	24	flash-matched	24:2357, 4:1162
+281632	60	8	10	flash-matched	10:468
+281837	64	13	17	flash-matched	17:3646
+281857	65	19	6	flash-matched	6:994
+281953	68	10	15	flash-matched	15:1366
+282033	69	13	11	flash-matched	11:3634
+282057	70	19	7	flash-matched	7:157
+282072	71	7	15	flash-matched	15:3598
+282217	74	9	15	flash-matched	15:4068
+282385	76	11	18	flash-matched	18:1439
+282459	77	10	22	flash-matched	22:983
+282666	78	10	10	flash-matched	10:1886
+282715	79	14	17	flash-matched	17:4844
+283009	84	23	13	flash-matched	13:3212
+283229	87	6	14	flash-matched	14:1766
+283463	88	14	12	flash-matched	12:373
+283485	89	15	6	flash-matched	6:1693
+283529	90	12	9	flash-matched	9:792
+283713	94	17	7	flash-matched	7:13225
+283771	95	21	18	flash-matched	18:3796
+283817	97	14	12	flash-matched	12:1393
+283839	98	16	12	flash-matched	12:147
+283905	99	4	4	flash-matched	4:985

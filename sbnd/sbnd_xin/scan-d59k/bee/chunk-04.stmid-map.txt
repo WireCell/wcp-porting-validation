@@ -1,0 +1,50 @@
+# stm_fit-global cluster_id remap for scan-d59k/bee/chunk-04.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+291768	2	18	19	flash-matched	19:355
+292005	4	18	12	flash-matched	12:2082
+292027	5	12	27	flash-matched	27:2825, 26:1030
+292406	7	6	14	flash-matched	14:359
+292450	8	8	8	flash-matched	8:4386
+292577	10	12	11	flash-matched	11:927
+292687	12	11	9	flash-matched	9:1319
+292797	13	27	26	flash-matched	26:1785, 7:550
+315167	22	8	15	flash-matched	15:5278
+315409	24	16	22	flash-matched	22:3514
+315497	25	16	12	flash-matched	12:6011
+315849	26	10	7	flash-matched	7:656
+316311	30	11	10	flash-matched	10:798
+316553	31	11	17	flash-matched	17:3224
+317543	35	15	4	flash-matched	4:1032
+317939	37	25	7	flash-matched	7:5617
+318335	38	6	9	flash-matched	9:114
+319611	41	2	3	flash-matched	3:1749
+319809	42	20	11	flash-matched	11:1271
+321107	48	13	3	flash-matched	3:7994
+321371	50	18	22	flash-matched	22:4522
+321525	51	5	14	flash-matched	14:1283
+321767	52	15	10	flash-matched	10:2615, 18:2483
+321789	53	7	13	flash-matched	13:224
+346293	56	5	2	flash-matched	2:2670
+347085	58	4	7	flash-matched	7:2225
+348471	60	12	6	flash-matched	6:3095
+348691	62	9	19	flash-matched	19:6829
+348713	63	7	20	flash-matched	20:1315
+348845	64	7	16	flash-matched	16:1038
+349241	66	15	8	flash-matched	8:606
+349879	71	17	17	flash-matched	17:2765
+349945	72	18	9	flash-matched	9:2255
+350099	73	15	19	flash-matched	19:1564
+350121	74	2	4	flash-matched	4:4247
+350781	76	8	17	flash-matched	17:1632
+351815	80	25	6	flash-matched	6:486
+352123	81	10	15	flash-matched	15:562
+352365	83	12	6	flash-matched	6:2426
+353223	85	15	6	flash-matched	6:526, 10:178
+353487	86	3	4	flash-matched	4:9002
+353729	87	23	11	flash-matched	11:1417
+386354	90	4	6	flash-matched	6:814
+386794	92	15	13	flash-matched	13:336
+386838	93	16	6	flash-matched	6:693
+387168	95	15	8	flash-matched	8:713
+387850	96	17	17	flash-matched	17:1167
+388884	99	2	1	flash-matched	1:1154
