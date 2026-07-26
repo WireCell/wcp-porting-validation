@@ -29,6 +29,11 @@ python3 stmfit_particle_overlay.py -o pics/stmfit_dqdx_particle_overlay.png \
 # the doc-42 muon re-read against the SBND table (section 4a):
 python3 stmfit_particle_overlay.py \
   "archive/stm-docs40-49/work-mcp10-stmon:286241:80:evt 286241 (doc 42 muon)"
+
+# and the proof that doc 42's table was against the uBooNE curves (section 4a):
+git show 6099ed0:sbnd/sbnd_xin/nusel_display/stm_ref_dqdx.json > /tmp/ref_ub.json
+python3 stmfit_particle_overlay.py --ref /tmp/ref_ub.json --mip 50000 \
+  "archive/stm-docs40-49/work-mcp10-stmon:286241:80:doc42 muon"
 ```
 
 Nothing was re-run. All four `tracking-stm.root` files already existed; the
@@ -222,6 +227,32 @@ at commit `6099ed0`, which held the MicroBooNE curves** (`MuonDeDx[0] = 123417`)
 doc 48's `0462fb2` replaced them with the SBND ones (`MuonDeDx[0] = 168151`,
 +12 % at plateau to +36 % at the peak). Re-read against the SBND table, that same
 fit gives **0.99** — the row in §3's summary table.
+
+**This is proven, not inferred from commit dates.** Feeding the `6099ed0`
+version of the json back in reproduces doc 42 §4's table *cell for cell* —
+every fitted value, every expectation, every ratio:
+
+| rr bin | doc 42 fit / exp / ratio | reproduced with the `6099ed0` json |
+|---|---|---|
+| 0 – 2 | 151.5 / 115.8 / 1.31 | 151.5 / 115.8 / 1.31 |
+| 2 – 5 | 95.6 / 77.4 / 1.24 | 95.6 / 77.4 / 1.24 |
+| 5 – 10 | 74.7 / 65.7 / 1.14 | 74.7 / 65.7 / 1.14 |
+| 10 – 15 | 74.3 / 59.3 / 1.25 | 74.3 / 59.3 / 1.25 |
+| 15 – 20 | 67.3 / 55.8 / 1.21 | 67.3 / 55.8 / 1.21 |
+| 20 – 30 | 56.5 / 52.9 / 1.07 | 56.5 / 52.9 / 1.07 |
+| 30 – 40 | 57.5 / 50.8 / 1.13 | 57.5 / 50.8 / 1.13 |
+| 40 – 60 | 54.9 / 49.7 / 1.10 | 54.9 / 49.7 / 1.10 |
+| 60 – 100 | 57.1 / — | 57.1 / — |
+| > 100 | 52.9 / — | 52.9 / — |
+
+The `expected` column is the fingerprint: doc 42's 20–30 cm expectation is
+**52.9** ke/cm, which is the uBooNE table there; the SBND table gives **60.4**
+(§3, 289343's 20–30 row). Median fit/muon over the domain is **1.14** against
+the uBooNE json and **0.99** against the SBND one — the ratio 1.15 is the table
+ratio over these residual ranges. `git log 0462fb2..HEAD` also shows doc 42
+untouched since the swap, so its §4 could not have been rewritten against the
+new tables. The cell-for-cell match doubles as a check of this doc's own decode
+against a committed independent record.
 
 So the ~15 % excess doc 42 reported was, to within its own precision, **the
 field difference between 0.273 and 0.5 kV/cm**, not a calibration offset. Two
