@@ -309,8 +309,6 @@ beam-window-only default. A null on 30 events is not a licence to skip the check
 on a production-scale run; it is evidence that this change does not move SBND's
 current STM answers.
 
-Arms kept at `work-{mcp10,mcp1000,mcp1000b}-d57mip{base,opt}` (66 MB each).
-
 ### 5b. Peak-over-MIP thresholds — the ones doc 55's table work moves
 
 All inside `detect_proton`, all of the form `dQ_dx[max_bin]/m_mip_dqdx > X`

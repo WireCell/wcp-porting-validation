@@ -61,7 +61,8 @@ from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, DataTable, TableColumn, Select, Button,
                           Div, ColorBar, HoverTool, BasicTicker,
                           NumeralTickFormatter, HTMLTemplateFormatter,
-                          CheckboxButtonGroup, Toggle, TextAreaInput)
+                          CheckboxButtonGroup, Toggle, TextAreaInput,
+                          CDSView, AllIndices)
 from bokeh.transform import linear_cmap
 from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
@@ -648,6 +649,31 @@ table_cols = [
 ]
 table = DataTable(source=table_src, columns=table_cols, width=980, height=290,
                   selectable=True, index_position=None)
+# Every column the table writes, so rebuild_table() can emit them all even when
+# there is nothing to show (an empty data dict is a trap -- see rebuild_table).
+TABLE_FIELDS = [c.field for c in table_cols] + ["sel_bg"]
+# Two interchangeable "keep every row" filters.  rebuild_table() alternates
+# between them, which is what actually makes the grid repaint (see there).  Two
+# fixed instances, not a fresh one per call: rebuild_table also runs on every
+# label click, and a new model per click would accumulate for the whole scan.
+ALL_FILTERS = (AllIndices(), AllIndices())
+table.view = CDSView(filter=ALL_FILTERS[0])
+
+
+def touch_table_view():
+    """Flip table.view.filter, so the DataTable is forced to re-read its source.
+
+    Bokeh 3.9's DataTable repaints ONLY on its CDSView's change signal
+    (data_table.ts connect_signals: `connect(this.model.view.change, () =>
+    this.updateGrid())` -- there is no direct source.data connection).  The view
+    recomputes `indices` when source.data changes, but that assignment goes
+    through the normal is_equal guard, so an all-rows-set Indices of the SAME
+    length is a no-op and no signal reaches the grid.  Flipping the filter
+    changes the CDSView itself, which always emits view.change.
+    """
+    cur = table.view.filter
+    table.view.filter = ALL_FILTERS[1] if cur is ALL_FILTERS[0] else ALL_FILTERS[0]
+
 
 # --- charge projections -----------------------------------------------------
 proj_kw = dict(height=330, tools="pan,wheel_zoom,box_zoom,reset,save",
@@ -901,14 +927,24 @@ def rebuild_table():
         cols["sel_bg"].append(CHG_BG if pending
                               else SEL_BG if (labs or state["comments"].get(key))
                               else "transparent")
-    new_data = dict(cols)
-    # Bokeh 3.9 DataTable does not redraw when the replacement data has the
-    # SAME row count (the client CDS updates but the slick-grid keeps the
-    # stale cells; verified headless-chromium 2026-07-23, evt286065->286197).
-    # Force a row-count change so the grid invalidates.
-    if len(new_data.get("row", [])) == len(table_src.data.get("row", [])):
-        table_src.data = {k: [] for k in new_data} if new_data else {}
+    # Always emit EVERY column, empty lists included.  `dict(cols)` is {} when
+    # no row is visible, and an empty data dict makes the client's
+    # source.get_length() return null, which CDSView.compute_indices reads as
+    # `?? 1` -- a phantom row of whatever the grid last drew.  In in-beam-only
+    # mode that showed evt287517's beam bundle on evt287759 (which has no
+    # in-beam bundle at all) and then again on evt287825, whose own single row
+    # had already arrived in the client's CDS: verified with a client-side probe
+    # (headless chromium 2026-07-26) reading CDS len=1 t_us=['1.410'] while the
+    # DOM still held t_us=2.011.
+    new_data = {k: cols.get(k, []) for k in TABLE_FIELDS}
     table_src.data = new_data
+    # ...and then force the repaint.  This must come after the data assignment:
+    # both land in one patch message, applied in order, so updateGrid() has to
+    # run second to see the new rows.  (The previous attempt here -- setting
+    # .data twice to fake a row-count change -- was inert: Document coalesces
+    # two sets of one property via ModelChangedEvent.combine(), which just
+    # overwrites `new`, so the client only ever saw the final value.)
+    touch_table_view()
     if state["focus"] is not None and state["focus"] in order:
         table_src.selected.indices = [order.index(state["focus"])]
     else:
