@@ -20,7 +20,12 @@ boolean.
 
 Events with BOTH a cosmic-tagged and a keepable in-beam bundle ("mixed") are
 DROPPED by rule (b) and counted separately, so the cut can be revisited if that
-class is ever large.
+class is ever large.  `--keep-mixed` keeps them instead (rule (b) becomes "at
+least one in-beam bundle is STM or untagged"), which is what the doc-59 scan
+runs with since the owner asked for those 9 events on 2026-07-26: a mixed event
+is exactly the case where a hand scan decides something the taggers cannot
+(evt280281 carries an STM and a TGM bundle in the same beam window).  The
+verdict column keeps saying `mixed`, so the census stays comparable either way.
 
 Usage:
   python3 nusel_scan_filter.py -w work-mcp1kall-d59k \\
@@ -85,6 +90,10 @@ def main():
                          'discover_events() takes explicit TSV paths and '
                          'derives each work root from the path)')
     ap.add_argument('--census-out', help='write the per-event census TSV')
+    ap.add_argument('--keep-mixed', action='store_true',
+                    help='also keep events that have a cosmic-tagged AND a '
+                         'keepable in-beam bundle (verdict "mixed"); they are '
+                         'dropped by default')
     ap.add_argument('--chunk', type=int,
                     help='also write the kept ids in chunks of this size '
                          '(for one Bee upload per chunk)')
@@ -108,7 +117,7 @@ def main():
         rows = read_tsv(seen[evt])
         verdict, inbeam = classify(rows)
         counts[verdict] = counts.get(verdict, 0) + 1
-        if verdict == 'keep':
+        if verdict == 'keep' or (verdict == 'mixed' and args.keep_mixed):
             kept.append(evt)
             if 'STM' in inbeam:
                 n_stm += 1
@@ -120,7 +129,8 @@ def main():
     print(f'events with a table: {tot}')
     for k in ('keep', 'tgm', 'lm', 'mixed', 'no-inbeam-bundle', 'empty'):
         if k in counts:
-            print(f'  {k:>17}: {counts[k]:5d}  ({100.0 * counts[k] / tot:.1f}%)')
+            tail = '  <- KEPT (--keep-mixed)' if (k == 'mixed' and args.keep_mixed) else ''
+            print(f'  {k:>17}: {counts[k]:5d}  ({100.0 * counts[k] / tot:.1f}%){tail}')
     print(f'kept: {len(kept)}  (with an STM-tagged in-beam bundle: {n_stm}; '
           f'all-untagged: {n_nucand})')
 

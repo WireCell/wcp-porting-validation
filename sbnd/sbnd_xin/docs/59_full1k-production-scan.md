@@ -7,9 +7,10 @@ sample: **999/1000 succeeded**, total wall **~17 min** (two phases, 8- then
 `TrackFitting::do_single_tracking` on evt 278794 (§6) — reported, not fixed here.
 
 Of the 999 tabulated events, **639 (64 %)** have an in-beam bundle that is
-STM-tagged or untagged: that is the hand-scan set served on **5011** (§4) and
-uploaded to Bee in 7 chunks (§5). The rest are 154 TGM, 10 LM, 9 mixed and 187
-with no in-beam bundle at all.
+STM-tagged or untagged, and **9 more are "mixed"** (a cosmic-tagged *and* a
+keepable in-beam bundle) which the owner chose to keep: the hand-scan set is
+those **648**, served on **5011** (§4) and uploaded to Bee as one 648-event set
+(§5). The rest are 154 TGM, 10 LM and 187 with no in-beam bundle at all.
 
 Nothing here is an A/B and nothing was tuned: no knob moved, no default changed,
 no C++ or jsonnet was touched. The gate that matters is that this chain
@@ -25,22 +26,26 @@ cd wcp-porting-img/sbnd/sbnd_xin
 # a partial or interrupted run resumes by entry list, e.g.
 # ENTRIES="373 374 ..." ./run_full1k_nusel.sh 0 24
 
-# 2. the hand-scan subset + the Bee-index maps
-python3 nusel_scan_filter.py -w work-mcp1kall-d59k \
+# 2. the hand-scan subset + the Bee-index maps.  --keep-mixed is what the scan
+#    runs with (owner request, sec 4): 648 events instead of 639.
+python3 nusel_scan_filter.py -w work-mcp1kall-d59k --keep-mixed \
     --census-out   scan-d59k/census.tsv \
-    --events-out   scan-d59k/events.txt \
-    --tsv-list-out scan-d59k/tsvs.txt \
-    --chunk 100 --chunk-prefix scan-d59k/chunk
+    --events-out   scan-d59k/events-withmixed.txt \
+    --tsv-list-out scan-d59k/tsvs-withmixed.txt
+# the original 639-event cut (no --keep-mixed) is scan-d59k/{events,tsvs}.txt
+# and its 100-event Bee chunks scan-d59k/chunk-*.txt
 
 # 3. serve the subset on 5011 (ABSOLUTE paths -- doc 56 GOTCHA 1)
 SB=$PWD
 nusel_display/serve_nusel_scan.sh 5011 --tag s59k --charge-src pr \
     --prev $SB/work-mcp10-d56bw:d56bw --prev $SB/work-mcp1000-d56bw:d56bw \
     --prev $SB/work-mcp1000b-d56bw:d56bw \
-    $(cat scan-d59k/tsvs.txt)
+    $(cat scan-d59k/tsvs-withmixed.txt)
 
-# 4. Bee: one upload per 100-event chunk (outward-facing -- owner asked for links)
-./make_scan_bee.sh scan-d59k/bee work-mcp1kall-d59k scan-d59k/chunk-*.txt
+# 4. Bee (outward-facing -- owner asked for links).  ONE set for the whole scan:
+cp scan-d59k/events-withmixed.txt scan-d59k/all648.txt
+./make_scan_bee.sh scan-d59k/bee work-mcp1kall-d59k scan-d59k/all648.txt
+# (the earlier 7x100-event chunk sets were built the same way from chunk-*.txt)
 ```
 
 Sample: `input_files_reco1/staged-mcp2025c-1000evt/e0..e999`, one single-event
@@ -191,10 +196,9 @@ Census over the 999 tabulated events (`scan-d59k/census.tsv`, one row per event)
 | mixed | 9 | 0.9 % | a cosmic-tagged **and** a keepable in-beam bundle — dropped by (b) |
 | no-inbeam-bundle | 187 | 18.7 % | no in-window bundle (in-window flash with no bundle, or no beam flash) |
 
-The 9 **mixed** events are listed here because they are the only place the cut is
-a judgement call — rule (b) drops an event if *any* in-beam bundle is
-cosmic-tagged, so these leave the scan even though each also has a keepable
-bundle. Say the word and they can be added back (they are 1.4 % of the kept set):
+The 9 **mixed** events were the one judgement call in the cut — rule (b) drops an
+event if *any* in-beam bundle is cosmic-tagged, so they would leave the scan even
+though each also has a keepable bundle:
 
 ```
 evt61681  TGM,nu-candidate      evt280281  STM,TGM
@@ -204,11 +208,22 @@ evt174928 nu-candidate,TGM      evt391854  TGM,nu-candidate
                                 evt399382  TGM,nu-candidate
 ```
 
+**Owner decision 2026-07-26: keep them.** The scan therefore runs with
+`--keep-mixed` and holds **648 events** (152 with an STM-tagged in-beam bundle,
+496 all-untagged); the census is unchanged, they are still classified `mixed`.
+The reason is that a mixed event is precisely where the taggers cannot settle the
+question and a human can — evt280281 has **two distinct beam-window flashes**
+(1.024 us / 1924 PE → the STM bundle, 1.641 us / 4806 PE → the TGM bundle), so
+"one object the bundling split" is testable by eye. The default in the script
+stays drop-mixed, so the 639-event cut in the table above stays reproducible.
+
 **Served on 5011**, scan tag **`s59k`** (a fresh tag — M13; the doc-56 `d56bw`
 labels are untouched and its scan can be re-served any time):
 
-- 639 events in the selector, `--charge-src pr` (the post-un-merge cluster the
-  taggers actually saw, doc 50 Q1).
+- **648** events in the selector, `--charge-src pr` (the post-un-merge cluster the
+  taggers actually saw, doc 50 Q1). Adding the 9 mixed events was a restart with
+  a longer TSV list under the **same** tag: `nusel_labels/s59k/` is keyed by
+  event, so nothing already scanned is disturbed.
 - The three `d56bw` roots are passed as `--prev` baselines: only ~20 of the 1000
   overlap the doc-56 draws, but for those the earlier scan labels carry over and
   a changed verdict is tinted amber.
@@ -222,8 +237,22 @@ derives each event's work root from the path.
 
 ## 5. Bee links
 
-7 uploads, 100 events each (39 in the last), built by `make_scan_bee.sh` →
-`make_stmfit_bee.py`. Per event the Bee tree carries
+**One set for the whole scan** — 648 events, 269 MB, HTTP 200, and the event list
+really does serve indices 0…647 (checked by counting `/event/<i>` entries on the
+list page; it takes ~6 s to load):
+
+> <https://www.phy.bnl.gov/twister/bee/set/56e80ae6-7c27-4aee-a8c9-475cd80f7e4c/event/list/>
+
+Bee index *i* = line *i+1* of `scan-d59k/bee/all648.index.txt`.
+
+**There is no per-set event limit** as far as this exercise shows; the original
+100-event chunking was a size precaution (the 48-event upload of doc 21 was the
+only precedent), not a constraint. 269 MB in one POST is accepted. The chunked
+sets below were built first and are left live — they remain valid links, and they
+are the fallback if a 648-event set ever proves too heavy for a browser.
+
+Both were built by `make_scan_bee.sh` → `make_stmfit_bee.py`. Per event the Bee
+tree carries
 
 - **`img-global`** — the per-APA post-Q/L clusters, raw x,
 - **`clustering-global`** — the T0-corrected merged bundles (from the **Q/L**
@@ -236,6 +265,8 @@ derives each event's work root from the path.
   its flash selects,
 - the `channel-deadarea-apa{0,1}-face0` layers.
 
+The 7 earlier chunk sets (the 639-event cut, i.e. without the 9 mixed events):
+
 | chunk | events | zip | link |
 |---|---:|---:|---|
 | 00 | 100 | 43 M | <https://www.phy.bnl.gov/twister/bee/set/69bea0cf-22fe-40d6-95cd-c0b0e87c7e25/event/list/> |
@@ -247,8 +278,8 @@ derives each event's work root from the path.
 | 06 | 39 | 16 M | <https://www.phy.bnl.gov/twister/bee/set/99560cb3-c650-403e-8872-a1f69d184057/event/list/> |
 
 All seven return HTTP 200. **Bee identifies events by directory index, not event
-id**, so each chunk ships its map: `scan-d59k/bee/chunk-NN.index.txt` — Bee
-event `i` is line `i+1`. `make_stmfit_bee.py` also drops
+id**, so every set ships its map: `scan-d59k/bee/{all648,chunk-NN}.index.txt` —
+Bee event `i` is line `i+1`. `make_stmfit_bee.py` also drops
 `chunk-NN.stmid-map.txt` (PR cluster id → img cluster id) next to each zip;
 that is the way back from a Bee color to the TSV / `tracking-stm.root` ids.
 
@@ -294,9 +325,11 @@ New in `sbnd_xin/`:
 | file | what |
 |---|---|
 | `run_full1k_nusel.sh` | the production driver (entry list, per-entry cwd, `.status/` rc+wall+RSS+assoc, resumable by `ENTRIES=`) |
-| `nusel_scan_filter.py` | the census + subset selector (`--census-out/--events-out/--tsv-list-out/--chunk`) |
+| `nusel_scan_filter.py` | the census + subset selector (`--census-out/--events-out/--tsv-list-out/--chunk/--keep-mixed`) |
 | `make_scan_bee.sh` | per-chunk Bee build + upload, with input pre-validation and the index map |
-| `scan-d59k/{census,events,tsvs}.*`, `scan-d59k/chunk-*.txt` | the census and the kept-event / Bee-index lists |
+| `scan-d59k/census.tsv` | per-event verdict for all 999 tabulated events |
+| `scan-d59k/{events,tsvs}.txt`, `chunk-*.txt` | the 639-event cut and its 7 Bee-index chunk maps |
+| `scan-d59k/{events,tsvs}-withmixed.txt`, `all648.txt` | the **served** 648-event set (`--keep-mixed`) and its single Bee set |
 | `docs/59_full1k-production-scan.md` | this doc |
 
 Outputs (untracked): `work-mcp1kall-d59k/` 8.3 GB — `evt<ID>` symlinks into

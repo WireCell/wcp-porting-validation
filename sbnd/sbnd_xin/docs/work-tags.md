@@ -73,7 +73,7 @@ scan; they are listed under CURRENT below.
 
 | dir | entries | size | referenced by |
 |---|---|---|---|
-| `work-mcp1kall-d59k` | 2999 | 8.3G | `59_full1k-production-scan.md`, `nusel_scan_filter.py`, `run_full1k_nusel.sh`, `make_scan_bee.sh` — the port-5011 `s59k` scan (639 of its 999 tables) |
+| `work-mcp1kall-d59k` | 2999 | 8.3G | `59_full1k-production-scan.md`, `nusel_scan_filter.py`, `run_full1k_nusel.sh`, `make_scan_bee.sh` — the port-5011 `s59k` scan (648 of its 999 tables) |
 | `work-mcp10-d49son` | 43 | 29M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `52_isolated-grouping-fix-design.md`, `d52_ab_report.py`, `stm_main_connectivity.py`, `stm_merge_attribution.py` |
 | `work-mcp10-d52ron` | 53 | 60M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
 | `work-mcp1000-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py`, `stm_main_connectivity.py` |
