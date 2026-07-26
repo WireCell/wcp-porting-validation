@@ -2,8 +2,8 @@
 
 **Status.** Scan key + sub-agent operating instructions. The whole 393-event
 display set is now scanned and overlaid on **:5011**, and **:5012** serves the
-88 events worth a second pair of eyes: the 62 bundles where the scan contradicts
-the STM tagger (§5c) plus the 38 pathology bundles (§5d). Two separately attributable batches — first 20 events (`scan-d59k/handscan-first20.tsv`, §4) and the
+93 events worth a second pair of eyes: the 62 bundles where the scan contradicts
+the STM tagger (§5c) plus the 44 pathology bundles (§5d). Two separately attributable batches — first 20 events (`scan-d59k/handscan-first20.tsv`, §4) and the
 remaining 383 by 10 sub-agents (`scan-d59k/handscan-batch2.tsv`, §5b). **Both are
 awaiting owner validation:** every criterion below is calibrated on *two*
 owner-judged bundles (evt48895, evt50787), and the ten agents agreeing 60/60 on
@@ -530,7 +530,7 @@ where the tagger would gain efficiency. Of the `misidentified` 44, the 18 that
 cite flat-MIP-to-rr=0 are the same failure the owner already confirmed on
 evt48895, so a spot-check of a few decides the class.
 
-## 5d. The pathologies are on :5012 too — 88 events
+## 5d. The pathologies are on :5012 too — 93 events
 
 Owner request, 2026-07-26: put the reconstruction/tagger pathologies of §5b on
 5012 as well. **`scan-d59k/stm-pathologies.tsv`**, 38 bundles in 4 classes:
@@ -552,15 +552,38 @@ together. That class is curated by hand from the reason texts, not by a regex �
 the file header says so; the other three classes are mechanical.
 
 12 of the 38 are also claimed STM mistakes (e.g. 285443:7, 285366:13, 174488:3),
-so 5012 now serves **88 events**: the 62 of §5c plus 26 new. Same command as §5c
+so those four classes took 5012 from the 62 of §5c to 88 events. Same command as §5c
 with the pathology events appended to the TSV list. Verified: 88 in the dropdown,
 `AI scan` matching on a sample from every class (489327 `nu unclear`, 386838
 `STM`, 291301 `nu weak`, 280972 / 173498 `nu cosmic-like`, 48895 `nu
 cosmic-like`), AI comment box populated, no JS errors.
 
-Not included, because they are *expected* rather than suspicious: the in-beam
-bundles carrying a cosmic tag (169598:2 TGM, 70562:10 LM, 399382:15 "TGM lm").
-Those belong to the 6 `mixed` events that §5a's keep rule deliberately retains.
+**Added on the owner's request (same day): the cosmic-tagged in-beam bundles too**
+— class `cosmic-tag-in-beam`, 6 bundles, taking 5012 to **93 events**. These are
+*expected*, not leaks: each is the one cosmic-tagged in-beam bundle of one of the
+6 `mixed` events that §5a's keep rule retains on purpose (an event stays if *any*
+in-beam bundle is keepable). Listing them lets the class be eyeballed instead of
+trusted.
+
+| event:main | tag | t (us) | len | scan |
+|---|---|---|---|---|
+| 70562:10 | LM | 1.724 | 8.3 | nu junk |
+| 169598:2 | TGM | 0.265 | 251.8 | nu cosmic-like |
+| 174928:5 | TGM | 1.358 | 48.0 | nu junk |
+| 280281:8 | TGM | 1.641 | 2.4 | nu junk |
+| 282952:7 | TGM | 0.206 | 5.6 | nu junk |
+| 399382:15 | TGM | 1.572 | 31.4 | nu junk |
+
+That is the **complete** class — one per mixed event, exactly the 6 `mixed` rows
+of `census-nofc.tsv` — not just the 3 the agents happened to name in their
+reports (399382's tag renders as "TGM lm" in the display; the label column is
+`TGM`). Five of the six events were new to 5012.
+
+Verified on 5012: 93 events, and all 12 in-beam rows of the six events match the
+overlay. The check incidentally shows the structure that makes these worth a look
+— every one of the six pairs a cosmic-tagged bundle with a keepable one in the
+same beam window, and two of those partners are the scan's own STM calls
+(169598:18 `STM unclear`, 280281:14 `STM clean`).
 
 **GOTCHA for anyone restarting these viewers:** `pkill -f 'tag s61mis'` matches
 the *launch command's own* shell, so it kills the caller before the relaunch
@@ -617,7 +640,7 @@ viewer by a pid obtained without the pattern appearing in your own command line.
 | `scan-d59k/handscan-first20.tsv` | the first 20 verdicts + reasons (§4); `--ai-scan` input on 5011 |
 | `scan-d59k/handscan-batch2.tsv` | **the other 402 bundles / 383 events (§5b)**, 10 sub-agents; second `--ai-scan` input on 5011 |
 | `scan-d59k/stm-disagreements.tsv` | the 62 claimed STM mistakes (44 misidentified + 18 missed), served on **:5012** (§5c) |
-| `scan-d59k/stm-pathologies.tsv` | the 38 pathology bundles in 4 classes, also on **:5012** (§5d) |
+| `scan-d59k/stm-pathologies.tsv` | the 44 pathology bundles in 5 classes, also on **:5012** (§5d) |
 | `scan-d59k/batch2/` | raw per-slice agent returns + the merge gate + the agents' manual; see its README (the slices still contain the seeded controls) |
 | `nusel_display/regrab_verified.py` | re-grab `evt:main_id` with focus verification (§5b bug 2) |
 | `nusel_display/nusel_scan_viewer.py` | `--ai-scan` overlay added (default off, §4a) + IN-BEAM-only is now the opening mode |

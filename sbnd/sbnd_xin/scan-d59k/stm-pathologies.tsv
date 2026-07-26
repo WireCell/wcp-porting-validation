@@ -14,6 +14,12 @@
 #   upward-going-bragg near-bottom-wall objects whose Bragg forces an UPWARD-going muon:
 #                      a real sub-population, or the fit mis-assigning which end exits
 #   tgm-miss           both ends on boundaries (through-going) but tgm=0
+#   cosmic-tag-in-beam an in-beam bundle that carries a TGM or LM tag.  These are NOT
+#                      leaks: they are the one cosmic-tagged in-beam bundle of each of
+#                      the 6 'mixed' events that sec 5a's keep rule retains on purpose
+#                      (an event stays if ANY in-beam bundle is keepable).  Listed at the
+#                      owner's request so the class can be eyeballed rather than trusted;
+#                      all 6 are the complete class, not just the 3 the agents named.
 class	batch	event	main_id	flash_gid	t_us	len_cm	tagger	verdict	quality	conf	reason
 negative-dqdx	batch2	56243	9	1000001	0.905	185.3	nu-candidate	nu	unclear	med	fit pathology: the dQ/dx panel carries a smooth arc of NEGATIVE values (0 to -40 ke/cm) over rr=25-55; at rr=0 the charge is only 25-70 ke/cm so no Bragg; topology is a kink at (136,-28,110) with one prong to the anode x=201 and two detached blobs at y=-28
 negative-dqdx	batch2	170808	14	1000003	1.008	112.7	nu-candidate	nu	clean	med	3-prong vertex at about (175,44,388): a 20 cm arm to (168,36,373), a 45 cm arm crossing the anode plane at (201,9,374) and a 60 cm arm ending at (190,70,440); dQ/dx at rr=0 is only 55-92 ke/cm so there is no Bragg and no stopping muon. Also note the fit's dQ/dx dives NEGATIVE (-35 ke/cm) over rr=62-72 and two dense filled blobs sit on the prongs
@@ -53,3 +59,9 @@ upward-going-bragg	batch2	399042	14	9	1.410	138.7	STM	STM	clean	med	33 cm crossi
 tgm-miss	batch1	49951	16	1000003	1.983	94.8	nu-candidate	nu	cosmic-like	med	NOT STM: enters the top wall y=200 at (172,63), kinks at (191,173,22), and BOTH arms reach the anode plane x=201 -> through-going, nothing stops. (tgm=0, so TGM missed it)
 tgm-miss	batch2	173498	6	6	0.671	182.5	nu-candidate	nu	cosmic-like	high	through-going: one arm crosses the anode plane at (-201,151,366), the other exits the downstream wall at (-146,145,501), with a kink at (-175,142,340); dQ/dx is flat 40-60 ke/cm to rr=0, no Bragg. tgm=0, so TGM missed this two-boundary crosser. Near-constant y (dy=12 cm over 182 cm) with a +/-3 cm smear, so y is poorly measured
 tgm-miss	batch2	280972	7	2	1.349	493.7	nu-candidate	nu	cosmic-like	high	494 cm cathode-crossing track with BOTH ends on boundaries - the downstream wall z=501 and a dense tangle at the bottom wall y=-199 near (25-70,z=90-190) - so it is through-going and nothing stopped; the rr<3 rise is inside that tangle (fit's own left dQ/dx=2.50 MIP). tgm=0, so TGM missed it
+cosmic-tag-in-beam	batch2	70562	10	1000000	1.724	8.3	LM	nu	junk	high	12 drawn points in one 0.6 cm dot at (183,-100,5) plus a detached grey fragment 6 cm away; not one physical object and no fit. NB auto_label LM leaked into a sample that was supposed to have LM removed
+cosmic-tag-in-beam	batch2	169598	2	3	0.265	251.8	TGM	nu	cosmic-like	high	straight 252 cm through-goer from the anode plane (-201,-2,356) to the top wall (-70,200,430) - crosses two boundaries, nothing stops. This is a TGM that leaked into a sample the doc-59 cut was supposed to have removed (auto_label TGM, no STM fit)
+cosmic-tag-in-beam	batch2	174928	5	14	1.358	48.0	TGM	nu	junk	high	only 7 drawn points in a 1 cm blob at (-98,197,111) just inside the top wall; no track to judge (tagger called it TGM so the STM fit was skipped)
+cosmic-tag-in-beam	batch2	280281	8	1000007	1.641	2.4	TGM	nu	junk	high	46 points in a 2 cm blob sitting on the upstream wall at (171,65,1); no track to judge (TGM-tagged so the STM fit was skipped)
+cosmic-tag-in-beam	batch2	282952	7	9	0.206	5.6	TGM	nu	cosmic-like	med	5.6 cm 35-point clump wedged in the anode/downstream corner (x=-201.3, z=497-501, y=19-22), straddling two boundaries with no track body; no dQ/dx (STM skipped it as TGM) -- the TGM tag looks right to me, it is certainly not a stopping muon
+cosmic-tag-in-beam	batch2	399382	15	1000005	1.572	31.4	TGM	nu	junk	high	15 drawn points in one 1x0.8x0.6 cm blob at (190,184,2.3) in the anode/upstream corner, no persisted trajectory and no dQ/dx; also note this row still carries auto_label "TGM lm" although the sample was meant to have TGM/LM removed
