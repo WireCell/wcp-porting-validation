@@ -111,10 +111,16 @@ def dedx_graphs():
     return out
 
 
-def dedx_samples(graphs, part, rr, dx, nsub=NSUB):
-    """(N, nsub) sub-samples of dE/dx across each point's own [rr-dx/2, rr+dx/2]."""
+def dedx_samples(graphs, part, rr, dx, nsub=NSUB, lo_clip=RR_MIN / 2.0):
+    """(N, nsub) sub-samples of dE/dx across each point's own [rr-dx/2, rr+dx/2].
+
+    `lo_clip` keeps the window off the rr -> 0 singularity of the dE/dx graph.
+    It is essentially inactive for the fit (the RR_MIN cut already means
+    lo >= 0.175 for a 0.65 cm dx), but a caller reproducing convert_field.C's
+    1 cm bin average must pass lo_clip = 0 to match that macro's sampling.
+    """
     gx, gy = graphs[part]
-    lo = np.maximum(rr - dx / 2.0, RR_MIN / 2.0)
+    lo = np.maximum(rr - dx / 2.0, lo_clip)
     hi = rr + dx / 2.0
     frac = (np.arange(nsub) + 0.5) / nsub
     return np.interp(lo[:, None] + (hi - lo)[:, None] * frac[None, :], gx, gy)

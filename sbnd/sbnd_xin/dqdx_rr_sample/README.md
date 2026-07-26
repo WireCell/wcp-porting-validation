@@ -19,6 +19,8 @@ Written up in [`../docs/55_dqdx-vs-rr-three-bundles.md`](../docs/55_dqdx-vs-rr-t
 | `sample_overlay.png` | all 13 tracks' binned medians on the SBND muon/proton curves, and their raw ratio to their own curve |
 | `fit_recombination.py` | the recombination-model study: measured dQ/dx vs dE/dx, Modified Box and Birks fits, the A–B degeneracy, the electron-lifetime check |
 | `recomb_fit.png` | the recombination curve and the residuals of the candidate models |
+| `plot_muon_proton_models.py` | the sample-average muon and the proton in the residual-range plane against the current expectation and the best fit, both normalisations printed on the figure |
+| `muon_proton_vs_models.png` | that figure (doc 55 §7f) |
 
 `sample_points.tsv` is the reusable product — it needs no ROOT and no toolkit,
 just the two `dE/dx`-vs-residual-range graphs in
@@ -32,7 +34,14 @@ python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --plot dqdx_rr_sample/sample_ov
 python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --verbose   # why each block was dropped
 python3 dqdx_rr_sample/fit_recombination.py -o dqdx_rr_sample/recomb_fit.png
 python3 dqdx_rr_sample/fit_recombination.py --rr-max 60       # robustness variant
+python3 dqdx_rr_sample/plot_muon_proton_models.py \
+    -o dqdx_rr_sample/muon_proton_vs_models.png
 ```
+
+`plot_muon_proton_models.py` verifies its "current expectation" curve against
+`stopping_ave_dQ_dx_sbnd.root` (max relative deviation 8e-4) before it draws
+anything, and imports the best-fit parameters from `fit_recombination.py` rather
+than hard-coding them, so the two scripts cannot drift apart.
 
 Nothing is re-run from the reconstruction; every input `tracking-stm.root`
 already existed in the `d55ton` arms.

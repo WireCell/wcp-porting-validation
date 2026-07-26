@@ -612,12 +612,105 @@ most attenuated corner of the whole sample. Applying a lifetime correction moves
 the proton **up**, not down. So attenuation is not the residual proton offset
 either — and after the B refit there is no offset left to explain.
 
+### 7f. The two models against the average muon and the proton
+
+The recombination question was answered in the dE/dx plane (§7b, §7c) because
+that is where a recombination model lives. This section puts the answer back in
+the plane the tables are written in, which is where it has to be read:
+
+```bash
+python3 dqdx_rr_sample/plot_muon_proton_models.py \
+    -o dqdx_rr_sample/muon_proton_vs_models.png
+```
+
+![Average muon and the proton vs both models](../dqdx_rr_sample/muon_proton_vs_models.png)
+
+Both curves are built with **`convert_field.C`'s own recipe** — recombination
+applied pointwise on the fine dE/dx grid, then averaged over the 1 cm bin, on
+centres 0.5 … 59.5 cm — so each is literally "what the `*DeDx` table would be".
+Curve 1 is checked against `stopping_ave_dQ_dx_sbnd.root` before anything is
+drawn: **max relative deviation 8.1e-4 (muon), 1.5e-4 (proton)**, so the black
+curves *are* the shipped tables, not a re-derivation of them.
+
+**Normalisations, since a curve is meaningless without one:**
+
+| | A | B | **C** | what C is |
+|---|---:|---:|---:|---|
+| current expectation | 0.93 | 0.212 | **0.85** | `convert_field.C`'s undocumented fudge — the *only* normalisation in the shipped tables |
+| best fit | 0.93 | **0.1263** | **0.8358** | fitted, and it lands **0.98×** the 0.85 |
+
+That C = 0.836 sits within 2 % of the fudge factor 0.85 is worth pausing on: the
+fit was free to put the normalisation anywhere and chose essentially the number
+already in the code. **All of the improvement is in B, none of it in the overall
+scale** — which also means the fit says nothing new about the ×0.85 and does not
+resolve doc 48 §8 item 2.
+
+Data: muon = the mean over the 12 tracks of each track's median dQ/dx in the rr
+bin (so no single 400 cm track dominates), error bar = s.e.m. across tracks;
+proton = its one track, error bar = s.e.m. of the points in the bin.
+
+| rr (cm) | ⟨dE/dx⟩ mu / p | muon (ke/cm) | / current | / best fit | proton (ke/cm) | / current | / best fit |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.8 | 7.8 / 20.1 | 167.4 ± 8.0 | 1.158 | 0.977 | 268.4 ± 28.4 | 1.148 | 0.889 \* |
+| 2.2 | 5.1 / 12.5 | 115.0 ± 5.5 | 1.082 | 0.965 | 197.3 ± 3.5 | 1.080 | 0.876 \* |
+| 4.0 | 4.1 / 9.7 | 100.8 ± 3.9 | 1.107 | 1.014 | 180.1 ± 5.8 | 1.129 | 0.938 |
+| 6.2 | 3.5 / 8.0 | 90.4 ± 3.2 | 1.112 | 1.039 | 170.2 ± 2.5 | 1.190 | 1.008 |
+| 8.8 | 3.1 / 7.0 | 76.9 ± 2.4 | 1.028 | 0.975 | 148.7 ± 8.7 | 1.128 | 0.969 |
+| 12.5 | 2.8 / 6.1 | 71.9 ± 1.2 | 1.044 | 1.004 | 135.6 ± 1.1 | 1.130 | 0.987 |
+| 17.5 | 2.6 / 5.3 | 67.9 ± 1.6 | 1.058 | 1.030 | 123.3 ± 1.8 | 1.123 | 0.996 |
+| 25.0 | 2.4 / 4.6 | 61.5 ± 0.9 | 1.021 | 1.006 | 115.6 ± 1.8 | 1.158 | 1.044 |
+| 35.0 | 2.3 / 4.1 | 58.0 ± 0.9 | 1.011 | 1.004 | 106.6 ± 1.2 | 1.167 | 1.069 |
+| 50.0 | 2.2 / 3.6 | 55.1 ± 0.9 | 0.991 | 0.989 | 103.6 ± 2.2 | 1.244 | 1.157 |
+| | | **median** | **1.051** | **1.004** | **median** | **1.139** | **0.992** |
+| | | **rms of ln ratio** | **7.5 %** | **2.3 %** | **rms of ln ratio** | **14.4 %** | **8.0 %** |
+
+The same rr means very different dE/dx for the two particles, hence the two
+⟨dE/dx⟩ columns. **\*** = above dE/dx 10.5 MeV/cm, the top of the range the fit
+actually constrained (open markers in the figure); those two bins are the
+proton's Bragg tip and both curves extrapolate there.
+
+Three things to take from it:
+
+1. **On the muon the improvement is large and clean.** rms of ln(data/model)
+   **7.5 % → 2.3 %**, and the residual stops trending: the current model runs
+   1.16 → 0.99 monotonically from the Bragg peak to the plateau, the best fit
+   scatters about 1.00 with no slope. Ten bins, 12 tracks, one free number.
+2. **On the proton the mean offset goes away but structure remains.** 1.139 →
+   0.992 in the median, 14.4 % → 8.0 % in rms — but the residual tilts from
+   0.89 at the Bragg tip to 1.16 at rr = 50 cm. Part of that is honest
+   extrapolation (the two starred bins); the far end, rr 25–50 cm, is
+   dE/dx 3.6–4.6 where the muon is *fine*. One track's worth of proton is
+   therefore still not fully described, and the tilt is the shape of what is
+   missing.
+3. **The current tables are within ~5 % of the average muon above rr ≈ 8 cm** and
+   10–16 % low across the Bragg region. That is the practical statement for the
+   STM tagger, whose `ratio1` accept gate is ±10 %.
+
+If the tables were rebuilt with the best fit they would move by:
+
+| rr (cm) | muon current | muon fit | ratio | proton current | proton fit | ratio |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0.5 | 168 287 | 205 571 | 1.222 | 261 628 | 344 905 | 1.318 |
+| 2.5 | 103 297 | 115 229 | 1.116 | 178 240 | 218 986 | 1.229 |
+| 5.5 | 83 854 | 90 232 | 1.076 | 147 607 | 175 298 | 1.188 |
+| 10.5 | 71 637 | 75 016 | 1.047 | 125 737 | 145 138 | 1.154 |
+| 20.5 | 62 330 | 63 692 | 1.022 | 105 130 | 117 621 | 1.119 |
+| 40.5 | 56 683 | 56 937 | 1.004 | 87 960 | 95 431 | 1.085 |
+| 59.5 | 54 658 | 54 536 | 0.998 | 79 877 | 85 236 | 1.067 |
+
+**Printed for scale, not proposed.** The muon plateau barely moves (0.2 %) while
+the Bragg peak moves +22 %, so the muon Bragg contrast rises 3.08 → 3.77 — and
+doc 48 §2–§3 showed contrast is exactly what `ks1` responds to. Changing these
+tables changes STM verdicts; §7d's β′↔E degeneracy has to be resolved first, and
+§9 item 1 is the gate.
+
 ---
 
 ## 8. Answer, in three sentences
 
-The muons are fine: 12 of them land at 0.98–1.11 of the SBND muon curve, and
-after the B refit at 0.988 with 5.3 % scatter. The proton is *not* high — at
+The muons are fine: 12 of them land at 0.98–1.11 of the SBND muon curve, and the
+sample-average muon goes from 7.5 % rms against the current tables to **2.3 %**
+against the refitted B, with the residual trend gone (§7f). The proton is *not* high — at
 matched dE/dx it agrees with the muons to 1.024 ± 0.07, and its apparent 14 %
 excess against its own table is the published Modified Box under-predicting the
 upper half of the dE/dx range, which it does for muons too. There **is** a better
