@@ -136,15 +136,90 @@ def R_birks(dedx, kB):
     return 1.0 / (1.0 + (kB / (RHO * E_FIELD)) * dedx)
 
 
+# --- the wider zoo.  All of these are written in terms of u = k*(dE/dx / X0)**p
+# so that k is dimensionless and O(0.1-1) whatever p does; at p = 1,
+# k = B/(rho E) * X0 for the box forms and kB/(rho E) * X0 for Birks.  X0 is the
+# MIP anchor, so k is "how much quenching at MIP".
+X0 = 2.1        # MeV/cm
+
+
+def _u(dedx, k, p):
+    return k * (dedx / X0) ** p
+
+
+def R_box_p(dedx, k, p):
+    """Modified Box with a free power on dE/dx (A held at the published 0.93)."""
+    u = _u(dedx, k, p)
+    return np.log(BOX_UB[0] + u) / u
+
+
+def R_box1_p(dedx, k, p):
+    """Thomas-Imel / Box with A = 1 and a free power.  Unlike A = 0.93 this has
+    the correct zero-density limit R -> 1 as dE/dx -> 0, so it is the physically
+    clean member of the family."""
+    u = _u(dedx, k, p)
+    return np.log1p(u) / u
+
+
+def R_box_Akp(dedx, A, k, p):
+    """Modified Box with A, the quenching strength and the power all free."""
+    u = _u(dedx, k, p)
+    return np.log(A + u) / u
+
+
+def R_birks_p(dedx, k, p):
+    """Birks with a free power on dE/dx."""
+    return 1.0 / (1.0 + _u(dedx, k, p))
+
+
+def R_power(dedx, b):
+    """Pure power law: R ~ (dE/dx)^-b, so dQ/dx ~ (dE/dx)^(1-b).  Scale into C."""
+    return (dedx / X0) ** (-b)
+
+
+def R_birks_esc(dedx, k, f):
+    """Birks plus a dE/dx-independent escape floor f (Doke-Birks in spirit):
+    quenching saturates instead of continuing to 0 at large dE/dx."""
+    return (1.0 - f) / (1.0 + _u(dedx, k, 1.0)) + f
+
+
+def R_birks_quad(dedx, k1, k2):
+    """Birks with a quadratic term -- quenches harder than 1/(dE/dx) at the top."""
+    z = dedx / X0
+    return 1.0 / (1.0 + k1 * z + k2 * z * z)
+
+
+def R_box_birks(dedx, k, w):
+    """Convex mix of the two families at a common quenching strength."""
+    u = _u(dedx, k, 1.0)
+    return w * np.log(BOX_UB[0] + u) / u + (1.0 - w) / (1.0 + u)
+
+
 # name -> (param names, p0, lo, hi, R(dedx, *p))
 MODELS = {
+    # --- the four of doc 55 section 7c; parameterisation frozen so those
+    # numbers stay reproducible
     "box_fixed": ([], [], [], [], lambda d: R_box(d, *BOX_UB)),
     "box_B":     (["B"], [0.212], [0.02], [2.0],
                   lambda d, B: R_box(d, BOX_UB[0], B)),
     "box_AB":    (["A", "B"], [0.93, 0.212], [0.60, 0.02], [1.20, 2.0],
                   lambda d, A, B: R_box(d, A, B)),
     "birks":     (["kB"], [BIRKS_ICARUS], [0.002], [1.0], R_birks),
+    # --- the wider zoo
+    "power":      (["b"], [0.25], [0.0], [1.0], R_power),
+    "box_p":      (["k", "p"], [0.645, 1.0], [0.02, 0.3], [30.0, 4.0], R_box_p),
+    "box1_p":     (["k", "p"], [0.900, 1.0], [0.02, 0.3], [30.0, 4.0], R_box1_p),
+    "box_Akp":    (["A", "k", "p"], [0.93, 0.645, 1.0], [0.30, 0.02, 0.3],
+                   [1.60, 30.0, 4.0], R_box_Akp),
+    "birks_p":    (["k", "p"], [0.102, 1.0], [0.005, 0.3], [30.0, 4.0], R_birks_p),
+    "birks_esc":  (["k", "f"], [0.102, 0.05], [0.005, 0.0], [8.0, 0.9],
+                   R_birks_esc),
+    "birks_quad": (["k1", "k2"], [0.10, 0.01], [0.0, 0.0], [5.0, 5.0],
+                   R_birks_quad),
+    "box_birks":  (["k", "w"], [0.5, 0.5], [0.02, 0.0], [8.0, 1.0], R_box_birks),
 }
+ZOO = ["box_fixed", "box_B", "box_AB", "birks", "power", "box_p", "box1_p",
+       "box_Akp", "birks_p", "birks_esc", "birks_quad", "box_birks"]
 DUMB = False      # set by --dumb-average: average dE/dx BEFORE applying R
 
 
@@ -185,6 +260,57 @@ def bin_data(part, dedx, dqdx, drift, sys_floor):
                              drift=float(np.median(drift[s])),
                              sig=float(np.hypot(np.std(ln) / np.sqrt(len(s)),
                                                 sys_floor))))
+    return rows
+
+
+RRB = [(0, 1.5), (1.5, 3), (3, 5), (5, 7.5), (7.5, 10), (10, 15), (15, 20),
+       (20, 30), (30, 40), (40, 60)]
+MIN_PTS_TRACK = 2       # points a track must have in an rr bin to contribute
+MIN_TRACKS = 4          # tracks an rr bin needs for the muon average
+
+
+def bin_data_rr(part, rr, dedx, dqdx, tid, sys_floor):
+    """The same row structure, binned in RESIDUAL RANGE instead of dE/dx.
+
+    This is the plane the reference tables are written in, and it weights the
+    data differently: rr 10-60 cm is four bins here but sits inside a single
+    dE/dx bin.  Which model "wins" depends on that weighting, so both planes are
+    fitted and compared (doc 55 section 7g).
+
+    The muon value is the geometric mean over TRACKS of each track's median in
+    the bin, so one 400 cm track cannot dominate, and the error is the s.e.m.
+    across tracks.  The proton has one track, so its value is that track's
+    median and the error is the s.e.m. of its points.
+    """
+    rows = []
+    for p in ("muon", "proton"):
+        for lo, hi in RRB:
+            per, idx = [], []
+            for t in sorted(set(tid[part == p])):
+                s = np.where((tid == t) & (rr >= lo) & (rr < hi) & (dqdx > 0))[0]
+                if len(s) >= MIN_PTS_TRACK:
+                    per.append(float(np.median(dqdx[s])))
+                    idx.append(s)
+            if len(per) < (MIN_TRACKS if p == "muon" else 1):
+                continue
+            allidx = np.concatenate(idx)
+            per = np.array(per)
+            if len(per) > 1:
+                sig = float(np.std(np.log(per), ddof=1) / np.sqrt(len(per)))
+            else:
+                sig = float(np.std(np.log(dqdx[allidx]), ddof=1)
+                            / np.sqrt(len(allidx)))
+            rows.append(dict(part=p, lo=float(lo), hi=float(hi), n=len(allidx),
+                             idx=allidx, ntrk=len(per),
+                             # the MEDIAN rr of the member points, not the bin
+                             # centre -- the wide outer bins are not uniformly
+                             # populated and a curve must be read where the data
+                             # actually is
+                             rr=float(np.median(rr[allidx])),
+                             dedx=float(np.median(dedx[allidx])),
+                             dqdx=float(np.exp(np.mean(np.log(per)))),
+                             drift=0.0,
+                             sig=float(np.hypot(sig, sys_floor))))
     return rows
 
 
@@ -267,6 +393,57 @@ def overlap_test(rows):
           f"(spread {np.std(np.log(rat))*100:.1f} %, {len(rat)} bins)")
     print("  A recombination model is a function of dE/dx alone, so it can only\n"
           "  describe both particles if this column is flat at 1.")
+
+
+def zoo(rows, sub):
+    """Fit every family jointly, and each particle alone, and report the
+    per-particle residual -- because "does it describe the PROTON shape" is a
+    different question from "does it minimise the joint chi2"."""
+    ismu = np.array([r["part"] == "muon" for r in rows])
+    print("\n=== model zoo: joint fit (muon + proton together) ===")
+    print("  rms columns are of ln(data/model) over that particle's bins; the\n"
+          "  proton column is the one the shape question is about")
+    print(f"  {'model':>11s} {'np':>3s} {'shape params':>28s} {'chi2/ndf':>9s} "
+          f"{'rms all':>8s} {'rms mu':>7s} {'rms p':>7s} {'p med':>6s}")
+    out = {}
+    for name in ZOO:
+        res = fit(name, rows, sub)
+        ra, _ = ratios(res, rows, sub)
+        rms = lambda m: float(np.sqrt(np.mean(np.log(ra[m]) ** 2))) * 100
+        out[name] = (res, rms(ismu), rms(~ismu))
+        print(f"  {name:>11s} {len(res['p']):3d} {pretty(name, res['p']):>28s} "
+              f"{res['chi2ndf']:9.2f} {rms(np.ones_like(ismu)):8.2f} "
+              f"{rms(ismu):7.2f} {rms(~ismu):7.2f} "
+              f"{np.median(ra[~ismu]):6.3f}")
+
+    print("\n=== the same families fitted to ONE particle at a time ===")
+    print("  the single-particle rms is the FLOOR: no joint model can beat the\n"
+          "  best a family does on that particle by itself")
+    print(f"  {'model':>11s} | {'muon-only params':>26s} {'rms mu':>7s} | "
+          f"{'proton-only params':>26s} {'rms p':>7s}")
+    for name in ZOO:
+        cells = []
+        for who, m in (("muon", ismu), ("proton", ~ismu)):
+            sel = [r for r in rows if r["part"] == who]
+            if len(sel) <= len(MODELS[name][1]) + 1:
+                cells.append((f"{'too few bins':>26s}", float("nan")))
+                continue
+            r1 = fit(name, rows, sub, use=(who,))
+            ra1, _ = ratios(r1, sel, sub)
+            cells.append((f"{pretty(name, r1['p']):>26s}",
+                          float(np.sqrt(np.mean(np.log(ra1) ** 2))) * 100))
+        print(f"  {name:>11s} | {cells[0][0]} {cells[0][1]:7.2f} | "
+              f"{cells[1][0]} {cells[1][1]:7.2f}")
+
+    print("\n  For reference, the intrinsic scatter of the data itself: the "
+          "quoted per-bin\n  errors are")
+    for who, m in (("muon", ismu), ("proton", ~ismu)):
+        e = np.array([r["sig"] for r in rows])[m]
+        print(f"    {who:>7s}: {e.min()*100:.1f} - {e.max()*100:.1f} %, "
+              f"rms {np.sqrt(np.mean(e**2))*100:.1f} %  ({m.sum()} bins)")
+    print("  A model whose per-particle rms is at or below that number is fitting\n"
+          "  noise, not shape.")
+    return out
 
 
 def a_scan(rows, sub):
@@ -389,7 +566,7 @@ def fixed_drift_shape(part, de, dq, drift):
 
 
 def main():
-    global DUMB
+    global DUMB, MIN_IN_BIN
     ap = argparse.ArgumentParser()
     ap.add_argument("-o", "--out", help="output PNG")
     ap.add_argument("--points", default=os.path.join(HERE, "sample_points.tsv"))
@@ -397,12 +574,23 @@ def main():
                     help="restrict to rr <= this (cm); 60 = the reference-table domain")
     ap.add_argument("--sys-floor", type=float, default=0.03,
                     help="per-bin systematic floor on ln(dQ/dx) (default %(default)s)")
+    ap.add_argument("--min-in-bin", type=int, default=None,
+                    help="minimum points per dE/dx bin (default %d; use 3 to let "
+                         "the proton's 10.5-14 MeV/cm Bragg-tip bin in)" % MIN_IN_BIN)
+    ap.add_argument("--plane", choices=("dedx", "rr"), default="dedx",
+                    help="bin (and therefore weight) the fit in dE/dx (default) "
+                         "or in residual range -- the two weightings do not "
+                         "prefer the same model, see doc 55 section 7g")
+    ap.add_argument("--zoo", action="store_true",
+                    help="fit the wider model zoo, jointly and per particle")
     ap.add_argument("--dumb-average", action="store_true",
                     help="apply R to the segment-averaged dE/dx instead of "
                          "averaging R*dE/dx across the segment (the WRONG side "
                          "of a concave R; for comparison only)")
     args = ap.parse_args()
     DUMB = args.dumb_average
+    if args.min_in_bin:
+        globals()["MIN_IN_BIN"] = args.min_in_bin
 
     d = read_tsv(args.points)
     graphs = dedx_graphs()
@@ -432,6 +620,27 @@ def main():
               f"{de[s].max():5.2f} MeV/cm   drift {drift[s].min():.0f} - "
               f"{drift[s].max():.0f} us")
 
+    if args.plane == "rr":
+        tid = np.array([f"{int(a)}_{int(b)}" for a, b in
+                        zip(d["event"][keep], d["block"][keep])])
+        rows = bin_data_rr(part, rr, de, dq, tid, args.sys_floor)
+        nmu = sum(1 for r in rows if r["part"] == "muon")
+        print(f"\n{len(rows)} residual-range bins ({nmu} muon, "
+              f"{len(rows)-nmu} proton), {args.sys_floor*100:.0f} % systematic "
+              f"floor")
+        print(f"  {'part':>7s} {'rr bin':>12s} {'ntrk':>5s} {'n':>5s} "
+              f"{'<dE/dx>':>8s} {'dQ/dx ke/cm':>12s} {'+-%':>5s}")
+        for r in rows:
+            print(f"  {r['part']:>7s} {r['lo']:5.1f} -{r['hi']:5.1f} "
+                  f"{r['ntrk']:5d} {r['n']:5d} {r['dedx']:8.2f} "
+                  f"{r['dqdx']/1e3:12.1f} {r['sig']*100:5.1f}")
+        if args.zoo:
+            zoo(rows, sub)
+        both = ("muon", "proton")
+        for name in ("box_fixed", "box_B", "box_p"):
+            show(fit(name, rows, sub, both), rows, sub, both, "rr-plane fit")
+        return
+
     rows = bin_data(part, de, dq, drift, args.sys_floor)
     nmu = sum(1 for r in rows if r["part"] == "muon")
     print(f"\n{len(rows)} dE/dx bins ({nmu} muon, {len(rows)-nmu} proton), "
@@ -446,6 +655,9 @@ def main():
                              "baseline")}
     for name in ("box_B", "box_AB", "birks"):
         res[name] = show(fit(name, rows, sub, both), rows, sub, both, "free shape")
+
+    if args.zoo:
+        zoo(rows, sub)
 
     a_scan(rows, sub)
 

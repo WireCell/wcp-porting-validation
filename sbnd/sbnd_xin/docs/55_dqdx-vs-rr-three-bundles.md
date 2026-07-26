@@ -704,6 +704,172 @@ doc 48 §2–§3 showed contrast is exactly what `ks1` responds to. Changing the
 tables changes STM verdicts; §7d's β′↔E degeneracy has to be resolved first, and
 §9 item 1 is the gate.
 
+§7f's free-B curve still leaves the proton mis-shaped — 0.88–0.93 across the
+rising edge and +12 % at rr = 50 cm. §7g goes after that.
+
+---
+
+### 7g. A wider model zoo, and one that follows the proton's shape
+
+Free-B Modified Box removes the proton's mean offset but not its *shape*: under
+it the proton reads 0.92 at the Bragg tip and 1.12 at rr = 45 cm (§7f). §7g asks
+whether any other recombination form does better, with Birks explicitly in scope.
+
+```bash
+python3 dqdx_rr_sample/fit_recombination.py --plane rr --zoo   # the table below
+python3 dqdx_rr_sample/fit_recombination.py --zoo --min-in-bin 3  # dE/dx plane
+python3 dqdx_rr_sample/plot_muon_proton_models.py \
+    -o dqdx_rr_sample/muon_proton_vs_models.png
+```
+
+### 7g.1 Which plane the fit is weighted in changes the answer
+
+§7c fitted in the **dE/dx plane** — the plane a recombination model lives in.
+But rr 10–60 cm is four bins in the residual-range plane and sits inside a
+*single* dE/dx bin, so the two weightings are genuinely different, and they do
+not prefer the same parameters. `--plane rr` was added for that reason; it uses
+the same machinery on rr-binned rows (muon = geometric mean over the 12 tracks
+of each track's median, error = s.e.m. across tracks; 10 bins per particle).
+
+Since the question is about the *shape of the curve as drawn*, §7g quotes the
+rr-plane fits, and reports the dE/dx-plane values alongside as the spread.
+
+### 7g.2 The zoo
+
+Twelve families, each with a free overall `C` on top of the shape parameters, all
+fitted to muon and proton together. `rms mu` / `rms p` are of ln(data/model) over
+that particle's own bins — `rms p` is the column the question is about. For scale,
+the per-bin errors are 4.4 % (muon) and 4.9 % (proton), so a model at or below
+those is describing the data as well as this sample can tell.
+
+| model | shape params | fitted | χ²/ndf | rms mu | rms p |
+|---|---|---|---:|---:|---:|
+| Modified Box, published | A = 0.93, B = 0.212 | — | 2.46 | 5.5 % | 5.2 % |
+| Modified Box, free B | B | 0.1567 | 1.65 | 3.1 % | 6.0 % |
+| Modified Box, free A and B | A, B | 0.600 (at bound), 0.333 | 0.87 | 3.0 % | 3.7 % |
+| **Modified Box, free power** | **k, p** | **0.2824, 1.362** | **0.82** | **3.3 %** | **4.1 %** |
+| Modified Box, A = 1, free power | k, p | 0.0435, 1.992 | 1.29 | 3.2 % | 6.1 % |
+| Modified Box, A + k + p | A, k, p | 0.719, 0.733, 1.120 | 0.84 | 3.4 % | 3.4 % |
+| **Birks** | k_B | 0.0440 | 2.06 | 3.9 % | 6.0 % |
+| **Birks, free power** | k, p | 0.0287, 1.751 | 1.36 | 3.3 % | 6.3 % |
+| **Birks + escape floor** | k, f | 0.134, **0.000** | 2.19 | 3.9 % | 6.0 % |
+| **Birks, quadratic** | k₁, k₂ | 0.0197, 0.0153 | 1.42 | 3.3 % | 7.1 % |
+| Box/Birks convex mix | k, w | 0.290, 0.532 | 1.71 | 3.2 % | 5.8 % |
+| pure power law | b | 0.2425 | 4.24 | 5.0 % | 11.1 % |
+
+### 7g.3 Birks, since it was asked for specifically
+
+**The Birks family does not fix the proton, in any variant tried.** Plain Birks
+(one shape parameter, like free-B Modified Box) is *worse* than free-B on the
+joint χ² (2.06 vs 1.65) and identical on the proton (6.0 %). Adding a second
+parameter does not help where it is needed:
+
+- **escape floor** — `R = (1−f)/(1+u) + f`, the Doke-Birks idea that a fraction
+  of the charge always escapes so quenching saturates: the fit drives **f → 0
+  exactly**, i.e. it collapses back to plain Birks. The data does not want a
+  floor.
+- **free power** — `R = 1/(1 + k(dE/dx/2.1)^p)`, p = 1.75: improves the joint χ²
+  to 1.36 but leaves the proton at **6.3 %**, no better than one-parameter Birks.
+- **quadratic** — `R = 1/(1 + k₁z + k₂z²)`: χ²/ndf 1.42, proton **7.1 %**, the
+  worst of the two-parameter set on the proton.
+
+The pattern is consistent: Birks' `1/(1+u)` falls too fast at large `u`, so
+every Birks variant buys muon agreement at the proton's expense. The proton
+needs a curve whose *logarithmic* saturation is retained while the quenching
+variable grows faster than linearly — which is exactly what the winner is.
+
+### 7g.4 The winner: Modified Box with a free power on dE/dx
+
+Keep the Modified Box logarithm and the published A = 0.93; make the quenching
+variable grow as a power of dE/dx instead of linearly:
+
+> **R = ln(A + u) / u,  u = k · (dE/dx / 2.1 MeV/cm)^p,  A = 0.93**
+>
+> **rr plane:  k = 0.2824, p = 1.362, C = 0.8552**  (χ²/ndf 0.82)
+> **dE/dx plane: k = 0.2348, p = 1.501, C = 0.8506**  (χ²/ndf 0.84)
+
+p = 1 recovers the standard form with k = (B/ρE)·2.1, so the published model is
+k = 0.645, p = 1. **The data wants a smaller quenching strength at MIP and a
+steeper growth with dE/dx**, and it wants that at χ²/ndf 0.82–0.84 — the best of
+every family tried, in both planes, with two shape parameters.
+
+Adding a third (A free as well) does **not** improve it: χ²/ndf 0.84, and A runs
+to 0.72 (rr plane) or 0.96 (dE/dx plane) depending on the weighting, i.e. A is
+unconstrained once p is free. Two parameters is where this sample stops.
+
+Note also that all three normalisations land within 2 % of the 0.85 fudge factor
+— C = 0.850 / 0.865 / 0.855 for current / free-B / free-power. The fit keeps
+choosing the number already in the code.
+
+![Average muon and the proton vs three models](../dqdx_rr_sample/muon_proton_vs_models.png)
+
+### 7g.5 What it fixes, in the two places that were wrong
+
+| rr (cm) | ⟨dE/dx⟩ p | proton data | / current | / free B | / **free power** |
+|---:|---:|---:|---:|---:|---:|
+| 0.9 | 19.7 | 245.8 | 1.101 | **0.922** | **1.078** \* |
+| 2.3 | 12.5 | 197.3 | 1.082 | **0.926** | **0.988** \* |
+| 3.8 | 9.9 | 180.1 | 1.117 | 0.967 | 0.993 |
+| 6.2 | 8.0 | 170.2 | 1.187 | 1.040 | 1.039 |
+| 8.7 | 7.0 | 148.7 | 1.126 | 0.996 | 0.981 |
+| 12.4 | 6.0 | 135.6 | 1.129 | 1.007 | 0.981 |
+| 17.4 | 5.3 | 123.3 | 1.122 | 1.009 | 0.977 |
+| 24.5 | 4.6 | 115.6 | 1.151 | 1.045 | 1.010 |
+| 35.0 | 4.1 | 106.6 | 1.167 | 1.069 | 1.035 |
+| 45.3 | 3.7 | 103.6 | **1.213** | **1.119** | **1.087** |
+| | | **median** | 1.128 | 1.008 | 1.001 |
+| | | **rms of ln ratio** | **13.4 %** | **5.9 %** | **4.1 %** |
+
+\* above dE/dx 10.5 MeV/cm, where only the proton constrains the curves.
+
+- **The rising edge is fixed.** Free-B sat at 0.92 on both of the two innermost
+  bins — the model 8 % high, which is what looked wrong. Free-power gives 1.078
+  and 0.988. The muon behaves the same way: 0.967 → 0.960 on the first bin, no
+  worse, while everything from rr = 15 cm out moves onto 1.00 (0.968–1.002 →
+  0.997–1.014).
+- **rr = 45 cm improves but does not close**: 1.213 → 1.119 → **1.087**. It is
+  the single worst point left, at 2.4 σ of its own error bar.
+- **Overall the proton rms falls 13.4 % → 4.1 %**, below the 4.9 % per-bin error.
+  On the muon, 6.3 % → 3.3 %.
+
+### 7g.6 Why the last 9 % at rr = 45 cm is probably not the model's fault
+
+At rr = 45 cm the proton is at dE/dx = 3.7 MeV/cm. The **muon** at its own
+rr = 4 cm is at dE/dx = 4.0 and reads 0.982 of the same curve, while the proton
+reads 1.087. That is a **9 % particle-dependent difference at essentially the
+same dE/dx** — and a recombination model is a function of dE/dx alone, so *no*
+`R(dE/dx)` can remove it, however many parameters it has. §7b saw the same thing
+from the other side (proton/muon = 1.155 ± 0.051 in the 3.5–4.0 MeV/cm bin, the
+one bin of six that is not consistent with 1).
+
+So the honest reading is that the remaining proton residual is not a missing
+term in the recombination model. It is either a fluctuation in a single track's
+outermost 16 points — that bin is the *entering* end of the track, next to the
+detector boundary — or something particle- or track-specific in the
+reconstruction. A second proton would settle it; §9 item 3.
+
+### 7g.7 Caveats on the free-power form
+
+1. **It is empirical.** p ≠ 1 has no derivation behind it here. A quenching
+   variable growing faster than linearly in dE/dx is what one would expect if the
+   effective ionisation-column density rises faster than dE/dx does, but this
+   sample cannot test that, and the form was chosen because it fits, not because
+   it was predicted.
+2. **The A < 1 pathology moves closer.** `ln(A+u)/u` with A = 0.93 goes negative
+   below u = 0.07 — a defect the *published* model already has, at
+   dE/dx = 0.23 MeV/cm. With p = 1.36 that zero moves up to **0.75 MeV/cm**
+   (p = 1.50 → 0.94). Still far below anything in liquid argon, where a MIP is
+   2.1 MeV/cm and nothing falls under ~1.5, but it is closer, and any generator
+   asked to extrapolate must be bounded. The A = 1 variant has no such defect and
+   is honest about the cost: χ²/ndf 1.29, proton 6.1 % — no better on the proton
+   than free-B.
+3. **p depends on the weighting**: 1.36 (rr plane) to 1.50 (dE/dx plane). Quote
+   it as **p ≈ 1.4 ± 0.1**, not to three digits.
+4. **Everything in §7d still applies.** k and p are degenerate with the field in
+   the same way B was, the sample is 12 muons and 1 proton of uncalibrated data,
+   and a dE/dx-dependent reconstruction bias would look identical to a change in
+   R. The shipped tables were **not** touched.
+
 ---
 
 ## 8. Answer, in three sentences
@@ -714,12 +880,17 @@ against the refitted B, with the residual trend gone (§7f). The proton is *not*
 matched dE/dx it agrees with the muons to 1.024 ± 0.07, and its apparent 14 %
 excess against its own table is the published Modified Box under-predicting the
 upper half of the dE/dx range, which it does for muons too. There **is** a better
-model within the same family: A = 0.93 with **B ≈ 0.13** rather than 0.212 at
-E = 0.5 kV/cm halves the χ² and removes the proton offset — but B is degenerate
-with the field (β′ = 0.183 ⇔ an effective 0.84 kV/cm), the sample is 13 tracks of
-uncalibrated data, and a dE/dx-dependent reconstruction bias would look
-identical, so this is a measured direction and a magnitude, **not** a
-recommendation to change the shipped tables.
+model, and freeing B is not it: keeping the Modified Box logarithm and A = 0.93
+but letting the quenching variable grow as **u = k·(dE/dx/2.1)^p with p ≈ 1.4**
+reaches χ²/ndf 0.82, fixes the proton's rising edge, and drops the proton
+residual from 13.4 % to 4.1 % — below the data's own per-bin error — while every
+Birks variant tried (plain, free power, escape floor, quadratic) leaves the
+proton at 6–7 % (§7g). None of it is a recommendation to change the shipped
+tables: k and p are degenerate with the field exactly as B was, the sample is
+12 muons and 1 proton of uncalibrated data, a dE/dx-dependent reconstruction bias
+would look identical, and the one residual that survives — the proton 9 % high at
+rr = 45 cm — is a *particle-dependent* difference at fixed dE/dx that no
+recombination model can absorb by construction.
 
 ---
 
