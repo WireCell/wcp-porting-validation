@@ -131,7 +131,7 @@ No JS exception, no server traceback — the update was simply never requested.
 
 ## Fix
 
-`nusel_display/nusel_scan_viewer.py`, +43/−8:
+`nusel_display/nusel_scan_viewer.py`, +44/−8:
 
 - `TABLE_FIELDS` = every column the table writes (`table_cols` fields + the
   `sel_bg` tint), and `rebuild_table()` now emits `{k: cols.get(k, []) for k in

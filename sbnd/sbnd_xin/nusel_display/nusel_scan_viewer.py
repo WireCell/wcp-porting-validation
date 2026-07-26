@@ -670,6 +670,12 @@ def touch_table_view():
     through the normal is_equal guard, so an all-rows-set Indices of the SAME
     length is a no-op and no signal reaches the grid.  Flipping the filter
     changes the CDSView itself, which always emits view.change.
+
+    So never call rebuild_table() twice within one callback: the second flip
+    lands back on the first filter, Document coalesces A->B->A into a single
+    "set filter = A", and the client sees no change at all.  Today no path does
+    (refresh() -> render_focus() -> sync_label_widgets() writes label_group /
+    comment_in, but their on_change handlers bail on state["suppress"]).
     """
     cur = table.view.filter
     table.view.filter = ALL_FILTERS[1] if cur is ALL_FILTERS[0] else ALL_FILTERS[0]
