@@ -131,6 +131,22 @@ function(
     // Only meaningful WITH save_tensors.  Off => both keys omitted => compiled
     // config byte-identical.  Runner flag: -save-assoc / SBND_SAVE_ASSOC=1.
     save_assoc     = false,
+    // rcid_global (default null = inherit the C++ default, which is TRUE since
+    // doc 53): re-stamp real_cluster_id at save time into ONE globally unique
+    // ident epoch.  Without it the array mixes the numbering examine_bundles
+    // recorded with the numbering enumerate_idents has installed since -- 31% of
+    // values name two clusters on the d52ron 30-event set -- which is harmless
+    // for the within-cluster consumers but wrong for anything that joins on the
+    // value.  Applies to the SAVED PCTREE only -- the re-stamp runs after every
+    // fill_bee_points(), so the mabc Bee zips are byte-identical either way
+    // (measured: 10/10 pctree tarballs change, 30/30 zips do not).
+    // Group membership is identical either way, so
+    // the un-merge and TGM are verdict-neutral (measured: 179 clusters, same
+    // partition; nusel verdict tables row-for-row identical).
+    // Only meaningful WITH save_tensors + save_rcid.  Pass false ONLY to
+    // reproduce the two-epoch values for A/B archaeology.
+    // Runner flag: -no-rcid-global / SBND_QL_RCID_GLOBAL=0.
+    rcid_global    = null,
     // realign (default null = inherit the C++ default, which is TRUE since
     // doc 52 §12.8): QLMatching realign_perblob.  Pass false ONLY to
     // reproduce the pre-fix misaligned behavior for A/B archaeology (the
@@ -215,7 +231,7 @@ function(
                                                beam_pref_weight=beam_pref_weight, beam_pref_rescue=beam_pref_rescue,
                                                main_flag=main_flag, lm=lm, realign_perblob=realign);
             // MABC takes the single pre-merged tree directly (no PointTreeMerging).
-            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, save_assoc_cluster_id=save_assoc, trace_bee=trace_bee);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, premerged=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, save_assoc_cluster_id=save_assoc, trace_bee=trace_bee, real_cluster_id_global=rcid_global);
             local per_apa_pre = [g.intern(
                 innodes=[active_clusters[n], masked_clusters[n], opflash_sources[n]],
                 centernodes=[clus_pipes[n]],
@@ -250,7 +266,7 @@ function(
                     g.edge(flash_attach[n], matching_pipes[n], 0, 0),
                 ]
             ) for n in std.range(0, nanodes - 1)];
-            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, save_assoc_cluster_id=save_assoc, trace_bee=trace_bee);
+            local clus_all = clus_maker.all_apa(anodes, dump=true, tensor_outname=save_tensors, save_real_cluster_id=save_rcid, save_assoc_cluster_id=save_assoc, trace_bee=trace_bee, real_cluster_id_global=rcid_global);
             g.intern(
                 innodes=per_apa,
                 outnodes=[clus_all],

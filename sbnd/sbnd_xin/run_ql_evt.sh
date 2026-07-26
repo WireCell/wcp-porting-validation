@@ -76,6 +76,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             (TaggerCheckTGM main mode "real", doc 38).  Only meaningful WITH
             -save-pctree.  Off by default => byte-identical tarball.
             Env: SBND_QL_SAVE_RCID=1.
+  -no-rcid-global  doc 53: DISABLE the real_cluster_id re-stamp, which is ON by
+                default (C++ default true).  On, real_cluster_id is one globally
+                unique ident epoch; off, it is a mix of two dense 1..N epochs and
+                31% of values name two clusters.  Group membership is unchanged
+                either way => the un-merge and TGM are verdict-neutral, so pass
+                this ONLY for A/B archaeology.  Env: SBND_QL_RCID_GLOBAL=0.
+                (-rcid-global is accepted and also implies -save-rcid.)
   -save-assoc   doc 52: also record the isolated grouping's main+associated
                 partition (assoc_cluster_id / assoc_cluster_main per blob),
                 carried across every later merge and saved into the pctree
@@ -174,6 +181,14 @@ QL_LM="${SBND_QL_LM:-0}"
 # Persist flash-merge per-blob provenance through the pctree tarball (doc 38).
 # OFF by default: opt in with -save-rcid / SBND_QL_SAVE_RCID=1.
 SAVE_RCID="${SBND_QL_SAVE_RCID:-0}"
+# -rcid-global (doc 53): re-stamp real_cluster_id into ONE globally unique ident
+# epoch at save time, instead of the legacy mix of the epoch examine_bundles
+# recorded and the epoch enumerate_idents has since installed (31% of values
+# name two clusters).  Group membership is unchanged, so the un-merge and TGM
+# are unaffected; what changes is that the value becomes a valid event-wide key.
+# Implies -save-rcid.  Env: SBND_QL_RCID_GLOBAL=1.
+RCID_GLOBAL="${SBND_QL_RCID_GLOBAL:-1}"
+if [ "$RCID_GLOBAL" = 1 ]; then SAVE_RCID=1; fi
 # Per-step Bee trace for merge attribution.  OFF by default (diagnostic only).
 TRACE_BEE="${SBND_TRACE_BEE:-0}"
 # -save-assoc: doc 52.  clustering_isolated records the main + associated
@@ -206,6 +221,8 @@ while [ $# -gt 0 ]; do
         -save-rcid|--save-rcid) SAVE_RCID=1; shift ;;
         -trace-bee|--trace-bee) TRACE_BEE=1; shift ;;
         -save-assoc|--save-assoc) SAVE_ASSOC=1; shift ;;
+        -rcid-global|--rcid-global) RCID_GLOBAL=1; SAVE_RCID=1; shift ;;
+        -no-rcid-global|--no-rcid-global) RCID_GLOBAL=0; shift ;;
         -no-realign|--no-realign) REALIGN=0; shift ;;
         -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
@@ -335,6 +352,7 @@ process_event() {
         --tla-code "save_rcid=$([ "$SAVE_RCID" = 1 ] && echo true || echo false)" \
         --tla-code "trace_bee=$([ "$TRACE_BEE" = 1 ] && echo true || echo false)" \
         --tla-code "save_assoc=$([ "$SAVE_ASSOC" = 1 ] && echo true || echo false)" \
+        --tla-code "rcid_global=$([ "$RCID_GLOBAL" = 0 ] && echo false || echo null)" \
         --tla-code "realign=$([ "$REALIGN" = 0 ] && echo false || echo null)" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \

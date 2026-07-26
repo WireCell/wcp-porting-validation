@@ -373,11 +373,60 @@ def audit_event(qlfile, prfile, verbose=False):
     return res
 
 
+def collide_census(dirs, verbose=False):
+    """How often does one real_cluster_id value name two different clusters?
+
+    A value is DEFAULT-FILLED when its cluster shows exactly one distinct rid,
+    equal to the cluster's own ident, with real_cluster_main all 1 -- that is
+    MultiAlgBlobClustering.cxx:2423 writing the POST-renumber ident.  Any other
+    value was RECORDED by merge_clusters (ClusteringFuncs.cxx:321) from the
+    PRE-renumber ident.  Splitting the collisions by that distinction shows
+    whether the two numbering epochs are the whole story.
+    """
+    tot = coll = with_default = rec_rec = 0
+    for d in dirs:
+        for f in sorted(glob.glob(os.path.join(d, 'ql_evt*', 'pctree-evt*.tar.gz'))):
+            event, cls = parse_clusters(f)
+            owner = defaultdict(list)          # rid -> [(cluster ident, is_default_fill)]
+            for c in cls:
+                if c['nblob'] == 0:
+                    continue
+                vals = np.unique(c['rid'])
+                isdef = (len(vals) == 1 and int(vals[0]) == c['ident']
+                         and bool((c['rmain'] != 0).all()))
+                for v in vals:
+                    owner[int(v)].append((c['ident'], isdef))
+            for v, holders in sorted(owner.items()):
+                tot += 1
+                if len(holders) < 2:
+                    continue
+                coll += 1
+                if any(isdef for _, isdef in holders):
+                    with_default += 1
+                else:
+                    rec_rec += 1
+                if verbose:
+                    print(f'  evt{event} rid={v} held by {holders}')
+    print(f'distinct real_cluster_id values (summed over events) : {tot}')
+    print(f'  naming more than one cluster                       : {coll}'
+          f'  ({100.0 * coll / tot if tot else 0:.0f}%)')
+    print(f'    recorded vs DEFAULT-FILLED (two epochs)          : {with_default}')
+    print(f'    recorded vs recorded                             : {rec_rec}'
+          f'   <-- 0 => the epoch mismatch is the whole story')
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('dirs', nargs='+', help='work-*-<tag> directories')
     ap.add_argument('-v', '--verbose', action='store_true')
+    ap.add_argument('--collide-census', action='store_true',
+                    help='instead of the audit, census how often one '
+                         'real_cluster_id value names two different clusters')
     args = ap.parse_args()
+
+    if args.collide_census:
+        return collide_census(args.dirs, args.verbose)
 
     grand = defaultdict(int)
     all_detail = []
