@@ -218,6 +218,14 @@ The `/units::cm` on the first and last rows is not decoration: `min_dQ_dx` at
 other site in this file compares a dQ/dx that has already been multiplied by
 `units::cm`. Getting that wrong would have been a factor 10.
 
+**Adopted as the default going forward (owner decision, 2026-07-26)**, on the
+strength of the A/B in §5a-bis: charge thresholds in these taggers are written
+`a * m_mip_dqdx`, and an absolute e/cm literal in a new or ported cut is a
+defect. The same rule is stated at the `m_mip_dqdx` declaration in the source so
+it is discoverable from the code, not only from here. It does **not** by itself
+settle the PR chain (§4), which has no such knob to hang the convention on —
+that is a separate decision.
+
 **This is a change of convention, not a re-tuning.** `1.45 * 50000`,
 `1.7 * 50000`, `1.85 * 50000`, `1.5 * 50000` and `0.2 * 50000 / units::cm` are
 each *exactly* representable and equal to the old literal in IEEE double
