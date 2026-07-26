@@ -1108,15 +1108,107 @@ the flipped default — same flags as d52roff, the ONLY difference is realign
 
 Result over the 30 events, d52rpoff (realign on) vs d52roff (old behavior):
 
-- **archives: 120/120 differ** — expected: every pctree/Bee product contains
-  the perblob arrays, whose rows are now truthful, and the all-APA
-  examine_bundles vote rewrites "isolated" from correctly-attributed inputs.
+- **archives: 120/120 member-content IDENTICAL** — CORRECTED §13.2: the
+  first pass of `d52rp_delta.py` compared `hash_archive.py`'s whole output
+  line, which embeds the FILE PATH, so all 120 pairs "differed" vacuously.
+  Re-run comparing only the hash field: 0/120 differ.  This is stronger than
+  first reported: without `-save-assoc` the assoc pair is never written, and
+  the one array realign touches at recompose ("isolated") is rewritten from
+  scratch by the all-APA examine_bundles flash merge before anything is
+  saved — so the flip is fully byte-identical on the off-arm manifest.
 - **nusel verdict tables: 30/30 row-for-row IDENTICAL** — per-main
   (tgm, stm, fc, stmfit) tuples unchanged on every bundle; totals
   tgm 121 / stm 43 / fc 50 in BOTH arms (per-main de-duplicated count).
 
-So on this manifest the default flip changes the *representation* (arrays now
-mean what they say) and not one physics verdict.  The verdict-visible effect
-of correct provenance arrives only through the opt-in assoc chain
-(`-save-assoc` / `-unmerge-assoc`, §12.7).  Doctests re-run after the flip:
-clus 518/518, match 36/36.
+So on this manifest the default flip is byte-identical end to end.  The
+verdict-visible effect of correct provenance arrives only through the opt-in
+assoc chain (`-save-assoc` / `-unmerge-assoc`, §12.7).  Doctests re-run
+after the flip: clus 518/518, match 36/36.
+
+## 13. Codebase audit: every other place that could repeat this bug (2026-07-25)
+
+Owner directive: *"check clustering, PR ... I want to make sure this would not
+show up again."*  Audited every site in the toolkit that can change a
+cluster's blob-children order or count (`separate()`, `merge()`,
+`take_children`, `sort_children`) against every writer/reader of the
+`"perblob"` N-row Dataset.
+
+**Repro (audit sweep):**
+```
+grep -rn "separate(\|take_children\|->merge(\|sort_children" clus/src match/src img/src
+grep -rn "perblob" clus/src match/src
+```
+plus manual reads of each hit.  Full classification table now lives in the
+toolkit at `clus/docs/perblob_invariant.md`; summary:
+
+* **Two raw `merge()` calls exist in the whole tree**: QLMatching (fixed,
+  §12.4) and `RetileCluster::mutate` (`clus/src/retile_cluster.cxx:584-714`)
+  — the latter was an exact replica of the §12 bug: separate on the
+  `isolated` cc, merge back (children re-appended in ascending-gid order),
+  fresh `isolated` written for the new order, **all other perblob arrays
+  left in the old row order** on the original cluster, which stays in the
+  live grouping.  Latent, not live: its only route (`cm.retile`) is commented
+  out in every config; production steiner is `CreateSteinerGraph` +
+  `ImproveCluster_2`, which retile a scratch COPY and never mutate the source
+  cluster's child set (verified — so `TaggerCheckTGM` mode "real" reads
+  `real_cluster_main` against an unpermuted cluster).
+* **Two more silent-permutation sites** in `clus/src/clustering_neutrino.cxx`
+  (cluster1 ~415→450, cluster2 ~593→627): `Separate_2` gives every blob a
+  non-negative component id, `separate(remove=false)` empties the cluster,
+  then a total take-back re-appends children grouped by component id —
+  length-preserving permutation.  Dormant: `neutrino` runs before
+  `isolated` (the first perblob writer) in SBND (clus.jsonnet 230 vs 240),
+  PDHD (481 vs 482), PDVD (527 vs 528), and is absent from the PR pipeline
+  and the uBooNE chain.
+* **Stale-length/loss sites** (would trip the WCT_PROV_CHECK length check,
+  or lose provenance): `ClusteringRecoveringBundle` (cfg-defined, never
+  instantiated), `GroupingHelper::process_groupings_helper` (dead code),
+  the absorb/pool sites in `clustering_separate.cxx`, and
+  `examine_x_boundary` / `protect_overclustering` (remove=true destroys the
+  arrays) — all run pre-`isolated` in the QL chain only.
+* **Safe by construction**: the 12 graph-merge visitors via
+  `merge_clusters()` (pointer-keyed carry, Stage 2), `switch_scope` (carve),
+  `ClusteringUnmergeBundle` (subset), QLMatching (fixed);
+  `sort_children` has zero callers.
+* Side finding (reported, not fixed): `protect_overclustering` would destroy
+  a zero-point blob (groupid stays −1) together with the original cluster —
+  silent blob loss, independent of perblob.
+
+### 13.1 Hardening shipped (owner-approved options 1+3)
+
+New shared helper `realign_perblob_after_regroup(cluster, cc)`
+(`clus/inc/WireCellClus/ClusteringFuncs.h`, `clus/src/prov_check.cxx`):
+re-applies the separate/merge-back permutation (kept `cc<0` rows first, then
+ascending gid) to the WHOLE perblob Dataset via `Dataset::subset`; fail-open
+no-op unless the Dataset exists and both its major size and the child count
+equal `cc.size()`.  Applied at the three latent sites:
+
+* `retile_cluster.cxx` — after the `merge()` restore, before the fresh
+  `isolated` write;
+* `clustering_neutrino.cxx` — after both take-back loops;
+* `ClusteringRecoveringBundle.cxx` — carve instead (pieces leave for good):
+  snapshot before `separate()`, `subset(rows)` per part, the
+  ClusteringUnmergeBundle idiom.
+
+No knobs: every call is a guarded no-op wherever the array does not exist,
+and today it does not exist on any of these paths in any production config
+(retile unreachable, recovering-bundle not instantiated, neutrino
+pre-`isolated` everywhere).  Docs: `clus/docs/perblob_invariant.md` (rules +
+audit table) and a pointer entry at the end of
+`clus/docs/porting/porting_dictionary.md`.
+
+### 13.2 Verification
+
+* `wcbuild` rc=0; freshness proof (`local/lib/libWireCellClus.so` 17:06 >
+  last source edit 17:04); `wcdoctest-clus` 518/518.
+* Gate: 30-event off-arm redo under fresh tag `d53`
+  (`./run_d52_campaign.sh off d53`, `setarch x86_64 -R`), compared with
+  member-content hashes against the current production baseline
+  `work-*-d52rpoff` (realign_perblob default ON).  **GATE PASS: 120/120
+  archives identical, 30/30 nusel verdict tables row-for-row identical
+  (totals tgm 121 / stm 43 / fc 50 both arms).**  Comparison script:
+  session scratch `d53_gate.py` (hash field only — see the §12.8
+  correction: never compare `hash_archive.py`'s path-bearing full line).
+* The same corrected comparison re-run on §12.8's d52rpoff-vs-d52roff pair
+  showed those 120 archives are ALSO identical — the earlier "120/120
+  differ" was an artifact of the path-bearing hash line, corrected above.
