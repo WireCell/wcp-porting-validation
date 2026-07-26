@@ -454,6 +454,49 @@ and that is out of scope. **Practical consequence: `setarch x86_64 -R` is no
 longer required for A/B work on this chain** — it remains harmless and the
 production driver still applies it.
 
+### 7a. The claimed mechanism, tested directly — and a trap that may explain it
+
+Doc 49 named a specific upstream cause: `CreateSteinerGraph` emitting different
+steiner graphs on identical input, so clusters lose `steiner_pc` and
+`check_stm_conditions` exits at `no steiner_pc`. Tested head-on across the
+un-pinned `d60bw1`/`d60bw2` pair (the `-no-bwonly` arms exercise it hardest:
+1112 `steiner terminal` + 1179 `no steiner_graph` lines):
+
+```bash
+extract() { grep -ao "create_steiner_tree: only [0-9]* steiner terminal[^,]*\|no steiner_graph for [a-z]* [0-9]*" "$1" | sort; }
+# per event, compare extract(arm1 log) vs extract(arm2 log)
+```
+
+**60/60 events identical.** Which cluster/assoc loses its graph, and why, does
+not move.
+
+**But getting there took three tries, and the two failures are the trap.**
+Comparing the raw log lines gave **60/60 "DIFF"**; stripping the `[hh:mm:ss.mmm]`
+prefix still gave **54/60 "DIFF"**. Every one of those was an artifact:
+
+* WCT log lines **tear** (non-atomic multi-line spdlog
+  writes), so a `MABC timing: ... took 23.003219 ms` line — whose wall-clock
+  number legitimately varies run to run — gets spliced *into the middle of* a
+  steiner warning. The tear position and the timing text then differ while the
+  warning itself is identical.
+* Even after the leading timestamp is stripped, a spliced-in `.189]` fragment
+  from another line survives inside the payload.
+
+**Rule: never conclude non-determinism from a log diff on this chain.** Compare
+the products (`hash_archive.py` over `mabc-pr.zip` / `pctree-pr-*.tar.gz`) or
+extract the semantic substring with `grep -ao`. Note also doc 59's GOTCHA 2 —
+`grep` without `-a` silently reports *nothing* on a log whose tear produced
+invalid UTF-8, so a torn arm can appear to have **fewer** warning lines than its
+twin.
+
+**Hypothesis, not a conclusion:** those two failure modes together could produce
+exactly doc 49's reported signature ("run A: no steiner_graph for main 1; run B:
+main 1, main 11, assoc 15, 16, 19") without any real non-determinism — a torn
+line in one arm hides whole entries from `grep`. That is worth checking before
+doc 48 §4's retraction is treated as settled, since the retraction rests on the
+±7 floor being real. Confirming it needs doc 49's arms re-measured at doc 49's
+commit; **not done here, and not something to assume either way.**
+
 **Caveat on `mabc-pr.zip`, worth knowing before trusting any Bee-zip diff.** The
 Bee JSON embeds `runNo` / `subRunNo` / `eventNo`. `run_nusel_evt.sh` reads those
 from the Q/L step's products, so an arm whose `ql_evt<ID>/` holds *only* the
