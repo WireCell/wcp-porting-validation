@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Doc 54 TGM/STM perf campaign: nusel-only rerun of the 30-event MCP2025C scan
+# with per-event wall/RSS metering (abtest/timecmd.py), SEQUENTIAL for timing
+# fidelity, under `setarch x86_64 -R` (this chain is ASLR-non-deterministic at
+# +/-7 STM tags, doc 49 4a -- every A/B here must disable ASLR).
+#
+# Imaging (evt*) and Q/L products (ql_evt*) are SYMLINKED from work-*-d55ton --
+# never regenerated (M11/M13); only nusel_evt* is made, in fresh
+# work-<suff>-<tagbase><arm> roots.  Tagger flags = the d55ton arm's exactly
+# (doc 53): the d52 NUF set + -unmerge-assoc.
+#
+# Usage: ./run_perf54_nusel.sh <arm> [tagbase]     e.g. ./run_perf54_nusel.sh base
+#   arm      names the work roots work-<suff>-<tagbase><arm>
+#   tagbase  default p54; use a fresh tagbase per campaign round (M13)
+set -u
+cd "$(dirname "$0")"
+ARM="${1:?arm (base|opt)}"
+TAGBASE="${2:-p54}"
+tag="$TAGBASE$ARM"
+
+NUF="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc"
+S=$PWD/input_files_reco1/staged-mcp2025c-1000evt
+TEN=$PWD/input_files_reco1/extracted-mcp2025c-10evt
+TC=$(cd ../../abtest && pwd)/timecmd.py
+
+for suff in mcp10 mcp1000 mcp1000b; do
+    mkdir -p "work-$suff-$tag"
+    for d in work-$suff-d55ton/evt* work-$suff-d55ton/ql_evt*; do
+        ln -sfn "$(readlink -f "$d")" "work-$suff-$tag/$(basename "$d")"
+    done
+done
+
+run1() {   # <suff> <input_dir> <idx> <label>
+    local suff=$1 inp=$2 idx=$3 lab=$4 rc
+    local root="$PWD/work-$suff-$tag"
+    SBND_INPUT_DIR=$inp SBND_WORK_ROOT=$root \
+        setarch x86_64 -R python3 "$TC" "$root/.time_${lab}.meta" \
+        ./run_nusel_evt.sh data $NUF "$idx" > "$root/.perf_${lab}.log" 2>&1
+    rc=$?
+    echo "[$tag $suff $lab] rc=$rc $(tr '\n' ' ' < "$root/.time_${lab}.meta" 2>/dev/null)"
+    return $rc
+}
+
+fail=0
+for i in $(seq 1 10);  do run1 mcp10    "$TEN"   "$i" "i$i" || fail=1; done
+for e in $(seq 10 19); do run1 mcp1000  "$S/e$e" 1   "e$e" || fail=1; done
+for e in $(seq 20 29); do run1 mcp1000b "$S/e$e" 1   "e$e" || fail=1; done
+echo "=== $tag done fail=$fail ==="
+exit $fail
