@@ -44,4 +44,4 @@ correction is applied anywhere upstream (doc 42 §0, doc 48 §8 item 3). Every
 absolute dQ/dx here carries one unknown common factor. What the sample is good
 for is *relative* statements: track against track, and particle against particle
 at matched dE/dx. Doc 55 §8 uses it that way and measures the lifetime
-(τ ≈ 9 ms) out of the sample itself.
+(τ of order 10 ms) out of the sample itself.

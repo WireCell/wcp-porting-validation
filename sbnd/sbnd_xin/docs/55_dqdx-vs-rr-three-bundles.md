@@ -411,7 +411,13 @@ a segment average, so the model must be too). Then
   dQ/dx = C · R(dE/dx) · (dE/dx)/W_ion,  W_ion = 23.6 eV, ρ = 1.38, E = 0.5 kV/cm
 
 with `C` free in every fit — it absorbs the gain, the mean lifetime attenuation
-and (for Modified Box) the ×0.85 fudge. Two families:
+and (for Modified Box) the ×0.85 fudge. The segment average is taken **inside**
+`R`: a measured point is dQ integrated over its own ~0.65 cm `dx` divided by
+`dx`, and `R` is concave, so ⟨R(dE/dx)·dE/dx⟩ ≠ R(⟨dE/dx⟩)·⟨dE/dx⟩ and Jensen
+puts the difference in the *same* direction as the excess measured below. It had
+to be checked rather than assumed: `--dumb-average` does it the wrong way and
+moves the fitted B by **0.2 %** (0.1263 → 0.1265), so on this sample the concern
+is real in principle and negligible in practice. Two families:
 
 | | R | shape params |
 |---|---|---|
@@ -426,7 +432,7 @@ ln(dQ/dx) added in quadrature with a 3 % systematic floor. Coverage:
 
 | | points | dE/dx (MeV/cm) | drift (µs) | bins |
 |---|---:|---|---|---:|
-| muon | 3304 | 2.12 – 9.44 | 5 – 1288 | 10 |
+| muon | 3304 | 2.12 – 9.45 | 5 – 1288 | 10 |
 | proton | 76 | 3.58 – 23.4 | 1106 – 1251 | 6 |
 
 The muon and proton ranges **overlap over 3.5–10.5 MeV/cm** — six shared bins.
@@ -468,26 +474,28 @@ higher than *its table*, not higher than a muon of the same dE/dx.
 
 | model | shape params | χ²/ndf | rms of ln(data/model) | muon median | proton median |
 |---|---|---:|---:|---:|---:|
-| Modified Box, published | A = 0.93, B = 0.212 | **3.82** | 6.78 % | 0.984 | **1.054** |
-| Modified Box, B free | A = 0.93, **B = 0.1285** | **2.03** | 5.45 % | 0.986 | **1.006** |
-| Birks, k_B free | **k_B = 0.0326** | 2.89 | 6.18 % | 0.986 | 1.016 |
-| Modified Box, A and B free | A = 0.600 (at the bound), B = 0.316 | 1.08 | 3.94 % | 0.992 | 1.007 |
+| Modified Box, published | A = 0.93, B = 0.212 | **4.09** | 6.98 % | 0.986 | **1.056** |
+| Modified Box, B free | A = 0.93, **B = 0.1263** | **2.18** | 5.69 % | 0.988 | **1.006** |
+| Birks, k_B free | **k_B = 0.0321** | 3.09 | 6.41 % | 0.988 | 1.017 |
+| Modified Box, A and B free | A = 0.600 (at the bound), B = 0.3115 | 1.17 | 4.13 % | 0.993 | 1.007 |
+
+16 bins (10 muon, 6 proton), one free normalisation, 3 % systematic floor.
 
 Four readings:
 
 1. **The published parameters at 0.5 kV/cm leave a real, structured residual.**
-   χ²/ndf = 3.8 on 16 bins with one free normalisation. The residual is not
+   χ²/ndf = 4.1 on 16 bins with one free normalisation. The residual is not
    noise: it runs from **0.87 at dE/dx = 2.15** up to ≈ 1.05–1.10 above
    4 MeV/cm, and the low end is the 2567-point bin whose error is the 3 %
    systematic floor. The measured dQ/dx rises with dE/dx *faster* than Modified
    Box(0.93, 0.212) at 0.5 kV/cm does.
 2. **One parameter fixes it, and fixes the proton with it.** Holding A at the
-   published 0.93 and freeing B gives **B = 0.129**, χ²/ndf 3.82 → 2.03, and the
-   proton's median residual 1.054 → **1.006**. Nothing was tuned *at* the proton
+   published 0.93 and freeing B gives **B = 0.126**, χ²/ndf 4.09 → 2.18, and the
+   proton's median residual 1.056 → **1.006**. Nothing was tuned *at* the proton
    — B was fitted to muons and proton together on equal footing, and the proton
    falling onto the curve is a consequence, not an input.
-3. **Birks is not the better family.** Its best k_B = 0.0326 (0.67 × ICARUS)
-   reaches χ²/ndf 2.89 — better than the published Modified Box, worse than
+3. **Birks is not the better family.** Its best k_B = 0.0321 (0.66 × ICARUS)
+   reaches χ²/ndf 3.09 — better than the published Modified Box, worse than
    Modified Box with the same number of free shape parameters. On this sample
    the choice of family matters less than the value of the one shape parameter.
 4. **A and B are strongly degenerate, so "A = 0.6" is not a measurement.** With
@@ -495,13 +503,13 @@ Four readings:
 
    | A | B | C | χ²/ndf |
    |---:|---:|---:|---:|
-   | 0.60 | 0.3161 | 1.2289 | 1.01 |
-   | 0.70 | 0.2648 | 1.1326 | 1.15 |
-   | 0.80 | 0.2101 | 1.0232 | 1.38 |
-   | 0.90 | 0.1491 | 0.8903 | 1.81 |
-   | **0.93** | **0.1285** | **0.8418** | **2.03** |
-   | 1.00 | 0.0731 | 0.6905 | 3.02 |
-   | 1.10 | 0.1089 | 0.6587 | 8.89 |
+   | 0.60 | 0.3115 | 1.2209 | 1.08 |
+   | 0.70 | 0.2609 | 1.1251 | 1.24 |
+   | 0.80 | 0.2068 | 1.0164 | 1.50 |
+   | 0.90 | 0.1466 | 0.8841 | 1.96 |
+   | **0.93** | **0.1263** | **0.8358** | **2.18** |
+   | 1.00 | 0.0719 | 0.6853 | 3.22 |
+   | 1.10 | 0.1082 | 0.6547 | 9.16 |
 
    χ²/ndf falls monotonically as A falls, with no minimum inside the range — the
    two-parameter fit runs to whatever lower bound it is given. And A well below
@@ -509,11 +517,36 @@ Four readings:
    has no zero-density limit. **The honest output is one number, B ≈ 0.13 at the
    published A = 0.93, not a new (A, B) pair.**
 
+### 7c-bis. The MIP bin does not drive it
+
+One bin — muon dE/dx 2.0–2.3 — holds 2567 of the 3380 points, and its error is
+the 3 % systematic floor rather than its 0.3 % statistical error, so it pulls
+harder than any other. That floor is a *choice*, and those points are almost all
+at rr > 60 cm — outside the reference-table domain, and mostly from three long
+tracks. So the free-B fit was repeated with every arm that could plausibly be
+carrying it:
+
+| arm | bins | B | χ²/ndf | muon median | proton median |
+|---|---:|---:|---:|---:|---:|
+| baseline (3 % floor) | 16 | **0.1263** | 2.18 | 0.988 | 1.006 |
+| 2 % floor | 16 | 0.1219 | 3.66 | 0.991 | 1.003 |
+| 5 % floor | 16 | 0.1314 | 1.02 | 0.985 | 1.010 |
+| 10 % floor | 16 | 0.1370 | 0.31 | 0.983 | 1.014 |
+| rr ≤ 60 cm (table domain) | 16 | 0.1403 | 1.73 | 0.978 | 1.010 |
+| rr ≤ 30 cm | 14 | 0.1504 | 0.92 | 0.980 | 1.009 |
+| **MIP muon bin dropped entirely** | 15 | **0.1431** | 1.98 | 0.979 | 1.011 |
+
+B moves over **0.122 – 0.150** across all seven arms — and **deleting the MIP bin
+outright still gives 0.143**, against the published 0.212. The systematic floor
+sets the χ² (as it must) but barely moves B. Every arm sits 29–42 % below 0.212
+and puts the proton within 1.4 % of the curve. The direction is not an artefact
+of the one dominant bin, of the floor choice, or of the out-of-domain plateau.
+
 ### 7d. B is degenerate with the field, and that is the uncomfortable part
 
-Only β′ = B/(ρE) enters. The fit gives β′ = **0.186 cm/MeV** where the tables
+Only β′ = B/(ρE) enters. The fit gives β′ = **0.183 cm/MeV** where the tables
 use 0.307 at 0.5 kV/cm. Equivalently, **keeping B = 0.212 the data prefers an
-effective field of 0.825 kV/cm — 1.65× SBND's nominal 0.5.**
+effective field of 0.84 kV/cm — 1.68× SBND's nominal 0.5.**
 
 That is not a plausible field error. SBND's 0.5 kV/cm is pinned independently by
 the drift velocity (`energy_loss/docs/efield_from_drift_velocity.md`; the
@@ -534,9 +567,8 @@ alternative explanations, which §7e does.
 
 **Not the Bragg peak.** The trend is present entirely away from the stopping end:
 the muon residual runs 0.87 → 0.90 → 0.95 → 0.99 over dE/dx 2.15 → 3.22, which
-for a muon is rr ≈ 100 cm → 10 cm. Restricting the whole fit to rr ≤ 60 cm
-(the reference-table domain) leaves it: χ²/ndf 3.82 → 5.94 rms, B = 0.129 →
-0.152.
+for a muon is rr ≈ 100 cm → 10 cm. And §7c-bis's `rr ≤ 30 cm` arm — nothing but
+the Bragg *approach*, no plateau at all — still gives B = 0.150.
 
 **Not the drift.** The dE/dx trend survives at fixed drift time, which a
 lifetime cannot fake. Each cell below is the median dQ/dx in that (dE/dx, drift)
@@ -553,9 +585,9 @@ attenuation both cancel and only the shape of R is left:
 | 4.6 – 6.5 | 2.038 | 2.318 | 2.776 | 1.981 |
 | 6.5 – 10.5 | 3.355 | — | — | 2.595 |
 
-The data column exceeds the model column in 15 of the 17 filled cells, in every
-drift band. Individual cells hold 6–90 points so any one is noisy; the sign is
-not.
+The `2.0 – 2.3` row is 1.000 by construction and carries no information. Of the
+**16 remaining filled cells the data exceeds the model in 15**, in every drift
+band. Individual cells hold 6–90 points so any one is noisy; the sign is not.
 
 **And the lifetime, measured, goes the wrong way for the proton.** Binning only
 the MIP band (dE/dx 2.0–2.5) by drift time — where recombination is constant, so
@@ -570,9 +602,12 @@ the drift dependence is clean:
 | 800 – 1000 | 726 | 51.56 |
 | 1000 – 1300 | 172 | 50.13 |
 
-An exponential gives **τ ≈ 9 ms**, i.e. 13 % attenuation over the full 1290 µs
-drift — a sensible LAr purity, and the first number this chain has produced for
-it. Note where that leaves the proton: it sits at drift **1106–1251 µs**, the
+An exponential through all six gives **τ = 9.2 ms** (13 % attenuation over the
+full 1290 µs drift); the 0–200 µs bin sits above the next two, and dropping it
+gives **τ = 13.1 ms** (9 %). The honest statement is **order 10 ms**, with the
+steeper of the two slopes leaning on one bin — a sensible LAr purity and the
+first number this chain has produced for it, not a calibration. Note where that
+leaves the proton: it sits at drift **1106–1251 µs**, the
 most attenuated corner of the whole sample. Applying a lifetime correction moves
 the proton **up**, not down. So attenuation is not the residual proton offset
 either — and after the B refit there is no offset left to explain.
@@ -582,13 +617,13 @@ either — and after the B refit there is no offset left to explain.
 ## 8. Answer, in three sentences
 
 The muons are fine: 12 of them land at 0.98–1.11 of the SBND muon curve, and
-after the B refit at 0.986 with 5.5 % scatter. The proton is *not* high — at
+after the B refit at 0.988 with 5.3 % scatter. The proton is *not* high — at
 matched dE/dx it agrees with the muons to 1.024 ± 0.07, and its apparent 14 %
 excess against its own table is the published Modified Box under-predicting the
 upper half of the dE/dx range, which it does for muons too. There **is** a better
 model within the same family: A = 0.93 with **B ≈ 0.13** rather than 0.212 at
 E = 0.5 kV/cm halves the χ² and removes the proton offset — but B is degenerate
-with the field (β′ = 0.186 ⇔ an effective 0.83 kV/cm), the sample is 13 tracks of
+with the field (β′ = 0.183 ⇔ an effective 0.84 kV/cm), the sample is 13 tracks of
 uncalibrated data, and a dE/dx-dependent reconstruction bias would look
 identical, so this is a measured direction and a magnitude, **not** a
 recommendation to change the shipped tables.
@@ -607,10 +642,11 @@ recommendation to change the shipped tables.
 3. **A proton population.** One track cannot separate "SBND's (A, B) differ" from
    "the reconstruction has a dE/dx-dependent bias". Protons at high dE/dx are the
    lever arm, and this sample has 5 points above 10.5 MeV/cm.
-4. **The τ ≈ 9 ms of §7e is a by-product, not a calibration.** It comes from 12
-   muons in one 30-event set, with no position dependence and no cross-check
-   against a purity monitor. It does say the missing lifetime correction is worth
-   ~13 % end to end, which is the size of the effect doc 48 §8 item 3 is about.
+4. **The τ of §7e is a by-product, not a calibration.** 9.2 ms over all six drift
+   bins, 13.1 ms without the 0–200 µs bin — order 10 ms, from 12 muons in one
+   30-event set, with no position dependence and no cross-check against a purity
+   monitor. It does say the missing lifetime correction is worth ~10 % end to
+   end, which is the size of the effect doc 48 §8 item 3 is about.
 5. **The dE/dx side of the fit inherits `stopping.root`.** If those
    stopping-power graphs are wrong, β′ absorbs it. They were not re-derived here.
 6. **Extend `stm_ref_dqdx.json` to all five particles** (pion, kaon, electron
