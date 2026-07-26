@@ -14,9 +14,12 @@ two specific ways.** `detect_proton` never consults the proton table (§3), and
 the PR chain has *no* MIP knob at all: `mip_dqdx = 56000` reaches
 `TaggerCheckSTM` and nothing else (§4).
 
-This document is a **survey only**. Nothing was changed. Every entry carries
-`file:line`, the number, and what would move it. Where provenance could not be
-established from the code it says so rather than inferring it from the value.
+Originally a **survey**. §5a has since become the record of an actual change:
+the seven absolute-e/cm literal sites in `TaggerCheckSTM.cxx` are now written
+`a x m_mip_dqdx`, bit-identical at MicroBooNE's 50000 and following the MIP
+scale at SBND's 56000. Everything else here is still survey — `file:line`, the
+number, and what would move it. Where provenance could not be established from
+the code it says so rather than inferring it from the value.
 
 ---
 
@@ -34,6 +37,15 @@ grep -rn "get_dEdx_function(" toolkit/clus/src toolkit/clus/inc
 # 3. the constants
 grep -nE "m_mip_dqdx *[<>]|/ *m_mip_dqdx *[<>]" toolkit/clus/src/TaggerCheckSTM.cxx
 grep -rn "43e3\|43000" toolkit/clus/src toolkit/clus/inc | wc -l     # -> 102
+
+# 4. the section 5a change, and the proof it is bit-identical at 50e3
+cd toolkit && git show efc2c281 --stat
+python3 -c "print([a*50000.0 for a in (1.45,1.7,1.85,1.5)], 0.2*50000.0/10.0)"
+#   -> [72500.0, 85000.0, 92500.0, 75000.0] 1000.0   exactly the old literals
+g++ -fsyntax-only -std=c++17 -DSPDLOG_COMPILED_LIB=1 -DSPDLOG_FMT_EXTERNAL=1 \
+    -DEIGEN_HAS_CXX11 -DEIGEN_FFTW_DEFAULT=1 -I. -Iclus/inc -Iutil/inc \
+    -Iiface/inc -Iaux/inc -Igen/inc -Iimg/inc -Ibuild/clus/inc \
+    -I../local/include -I../local/include/eigen3 clus/src/TaggerCheckSTM.cxx
 ```
 
 Line numbers are against the working tree as of 2026-07-26.
@@ -158,49 +170,75 @@ values coexist is not visible in this code.
 
 ## 5. Hardcoded constants inside `TaggerCheckSTM`, by what breaks them
 
-### 5a. Absolute e/cm literals that never got the SBND treatment
+### 5a. Absolute e/cm literals — **found, and converted to `a x MIP` (2026-07-26)**
 
-These are compared against a raw dQ/dx in e/cm, **not** normalised by
-`m_mip_dqdx`, so they did not move when doc 48 set 56000.
+`TaggerCheckSTM.cxx` had seven thresholds (five distinct values) compared
+against a raw dQ/dx in e/cm,
+**not** normalised by `m_mip_dqdx`, so they did not move when doc 48 set SBND's
+`mip_dqdx = 56000`. They sat alongside ~33 cuts that *are* written
+`.../m_mip_dqdx`, and in one case inside the *same* `if`.
 
-| line | expression | in MIP units at uBooNE 50000 | at SBND 56000 |
-|---|---|---|---|
-| `1722` | `res_length > 16 cm && ave_res_dQ_dx > 72500` | 1.45 | 1.29 |
-| `1723` | `res_length > 10 cm && ave_res_dQ_dx > 72500` | 1.45 | 1.29 |
-| `1725` | `res_length > 10 cm && ave_res_dQ_dx > 85000` | 1.70 | 1.52 |
-| `1726` | `res_length > 6 cm && ave_res_dQ_dx > 92500` | 1.85 | 1.65 |
-| `1727` | `res_length > 6 cm && ave_res_dQ_dx > 72500` | 1.45 | 1.29 |
-
-What makes this actionable rather than stylistic: **the very same conditional
-block mixes both conventions.** Lines `1720`, `1729`, `1731` in the identical
-`if` use `ave_res_dQ_dx/m_mip_dqdx > 1.2 / 1.4 / 4.5`. So half of this
-Michel-electron veto scaled to SBND and half of it did not, and the two halves
-have silently drifted 12 % apart relative to each other.
-
-The smoking gun for provenance is a few hundred lines later, in
-`check_other_tracks`:
+**What established the scale.** Every one of the five is an **exact** multiple of
+**50000 e/cm** — MicroBooNE's `MIP_dQdx`, and this class's own C++ default. Not
+of the 48879 e/cm muon-table plateau, and not of the 43000 the PR direction
+routines use. `energy_loss/docs/dqdx_consistency_check.md` §6.1 states the same
+convention from the other side: the MicroBooNE tables "define the **scale
+convention** the whole tagger is tuned on, and the hard-coded companions sit on
+the same scale". The clincher is `check_other_tracks:2240–2241` (was `2209–2210`), which
+spells the denominator out in source:
 
 ```cpp
-2209:  else if (track_length1 < 10  && track_medium_dQ_dx <  85/50.) continue;
-2210:  else if (track_length1 < 3.5 && track_medium_dQ_dx < 110/50.) continue;
+else if (track_length1 < 10  && track_medium_dQ_dx <  85/50.) continue;
+else if (track_length1 < 3.5 && track_medium_dQ_dx < 110/50.) continue;
 ```
 
-`track_medium_dQ_dx` is already `... / m_mip_dqdx` (`:2162`), i.e. in SBND MIP
-units — but the threshold literally spells "85000 e/cm over the **50000** MIP".
-The uBooNE denominator is written into the source. At SBND those become
-1.70 × 56000 = 95200 and 2.20 × 56000 = 123200 e/cm, not the 85000/110000 the
-expression was written to mean.
+`track_medium_dQ_dx` is already `measured / m_mip_dqdx`, so those two are
+**already** in the `a x MIP` form (a = 1.7 and 2.2) — they needed no change, and
+they are the direct evidence that the 50000 is what the absolute literals were
+written against. They are left as written fractions, with a comment, for exactly
+that reason.
 
-Two more of the same kind:
+**The conversion.** Each literal became `a * m_mip_dqdx` with
+`a = literal / 50000`:
 
-| line | expression | note |
-|---|---|---|
-| `749` | `min_dQ_dx < 1000` | raw dQ/dx, kink-finding low-charge break; units and provenance *not established here* |
-| `2163` | `segment_track_length_threshold(segment, 75000./units::cm)` | absolute e/cm, the only argument of its kind |
+| file:line (new) | was | now | a | at SBND 56000 |
+|---|---|---|---|---|
+| `:762` `adjust_rough_path` | `min_dQ_dx < 1000` | `< 0.2 * m_mip_dqdx / units::cm` | 0.20 | 10000 → **11200** e/cm |
+| `:1744` Michel veto | `ave_res_dQ_dx > 72500` | `> 1.45 * m_mip_dqdx` | 1.45 | 72500 → **81200** |
+| `:1745` | `> 72500` | `> 1.45 * m_mip_dqdx` | 1.45 | 72500 → **81200** |
+| `:1747` | `> 85000` | `> 1.7 * m_mip_dqdx` | 1.70 | 85000 → **95200** |
+| `:1748` | `> 92500` | `> 1.85 * m_mip_dqdx` | 1.85 | 92500 → **103600** |
+| `:1749` | `> 72500` | `> 1.45 * m_mip_dqdx` | 1.45 | 72500 → **81200** |
+| `:2187` `check_other_tracks` | `segment_track_length_threshold(segment, 75000./units::cm)` | `1.5 * m_mip_dqdx / units::cm` | 1.50 | 75000 → **84000** |
+
+The `/units::cm` on the first and last rows is not decoration: `min_dQ_dx` at
+`:762` is `dQ/dx` with `dx` in *internal* length units, and
+`segment_track_length_threshold` takes its threshold in the same units. Every
+other site in this file compares a dQ/dx that has already been multiplied by
+`units::cm`. Getting that wrong would have been a factor 10.
+
+**This is a change of convention, not a re-tuning.** `1.45 * 50000`,
+`1.7 * 50000`, `1.85 * 50000`, `1.5 * 50000` and `0.2 * 50000 / units::cm` are
+each *exactly* representable and equal to the old literal in IEEE double
+(checked). So for any configuration that leaves `mip_dqdx` unset — every
+MicroBooNE-scale config — the behaviour is **bit-identical to before**. Nothing
+was re-tuned; the numbers were only given the scale they were always written on.
+
+**It does change SBND.** All seven sites rise by 12 % (56000/50000). Five of
+them are Michel-electron *vetoes* (`return false`, i.e. reject the STM
+hypothesis), so raising them makes the veto slightly harder to trigger and STM
+acceptance slightly looser. `:2187` feeds a track-length gate and `:762` a
+kink-finding break. **This has not been A/B'd** — see §7 item 1.
+
+The mixed-convention defect this removes was real and quantified: lines `1742`, `1751`, `1753` of the same `if` use
+`ave_res_dQ_dx/m_mip_dqdx > 1.2 / 1.4 / 4.5` and have always followed `mip_dqdx`
+to 56000, while their neighbours on `1744`–`1749` stayed on 50000. The two halves of one
+veto had silently drifted 12 % apart relative to each other.
 
 ### 5b. Peak-over-MIP thresholds — the ones doc 55's table work moves
 
-All inside `detect_proton`, all of the form `dQ_dx[max_bin]/m_mip_dqdx > X`:
+All inside `detect_proton`, all of the form `dQ_dx[max_bin]/m_mip_dqdx > X`
+(line numbers as surveyed, before the §5a edit shifted them by ~+22):
 
 | line | thresholds |
 |---|---|
@@ -229,9 +267,11 @@ the *other* way. Nothing in this list has been re-tuned for either change.
 
 Correctly written against `m_mip_dqdx`, so they follow `mip_dqdx = 56000`
 automatically — listed because they are still *tuned* at uBooNE's contrast even
-though they are *scaled* correctly.
+though they are *scaled* correctly. **Untouched** by the §5a change; after it,
+these plus the seven converted sites are the whole charge-threshold surface of
+this file, all on one convention.
 
-| line(s) | what |
+| line(s), **pre-§5a-edit** | what |
 |---|---|
 | `1354`, `1389` | Michel/delta-ray guards: `seg_dQ_dx > 0.5`, `> 0.8` |
 | `1530`, `1533`, `1536` | `track_medium_dQ_dx < 1.0` |
@@ -265,11 +305,14 @@ one would silently pick up a default in the wrong unit system.
 Ordering is by *how much it changes and how cheaply it can be checked*, not by
 how wrong it is.
 
-1. **The `85/50.` / `110/50.` pair (`2209–2210`) and the five absolute literals
-   (`1722–1727`).** These are unambiguous: the same expression mixes uBooNE
-   absolute e/cm with SBND MIP-normalised ratios. Deciding what they were
-   *meant* to say is a one-line question per site; fixing them is mechanical.
-   No new physics needed.
+1. ~~**The absolute e/cm literals.**~~ **Done** (§5a, toolkit `efc2c281` on
+   `apply-pointcloud`): seven sites converted to `a * m_mip_dqdx`, bit-identical
+   at the MicroBooNE default, +12 % at SBND. `85/50.` and `110/50.` were already
+   correct and were only commented. **What remains is the A/B**: those seven now
+   move on SBND for the first time, and nothing here measured the effect on the
+   30-event `d55ton` set. That is the gate before this rides into a production
+   run — the harness is `p54_ab_report.py` and the `work-mcp10-d55t{on,off}`
+   arms (doc 54).
 2. **The PR chain's missing `mip_dqdx` knob (§4).** 102 sites and two different
    defaults. Deciding whether the PR chain should see 56000 at all is a design
    question worth answering before touching any of them — but the *inventory*
