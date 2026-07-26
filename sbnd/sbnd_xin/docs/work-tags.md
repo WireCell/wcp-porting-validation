@@ -76,9 +76,9 @@ median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 | `work-mcp1000b-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py` |
 | `work-mcp1000b-d52ron` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
 
-## CURRENT — 46 dirs, 1968 MB (top level)
+## CURRENT — 52 dirs, 2109 MB (top level)
 
-the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster_id`), plus the `d55b`/`d55t` arms of doc 52 §13 and the doc-54 perf A/B arms.
+the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster_id`), plus the `d55b`/`d55t` arms of doc 52 §13, the doc-54 perf A/B arms and the doc-55 beam-window-gate arms (`p56off` knob-off gate, `d56bw` = the new production default, served on :5011).
 
 | dir | entries | size | referenced by |
 |---|---|---|---|
@@ -102,6 +102,8 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp10-p54base` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp10-p54opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp10-p55opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
+| `work-mcp10-p56off` | 30 | 30M | `55_beam-window-tagger-gate.md`, `p54_ab_report.py` |
+| `work-mcp10-d56bw` | 30 | 25M | `55_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
 | `work-mcp10-trace51` | 6 | 36M | `51_clustering-merge-attribution.md`, `stm_merge_attribution.py` |
 | `work-mcp1000-d52off` | 30 | 47M | `d52_ab_report.py` |
 | `work-mcp1000-d52on` | 30 | 47M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
@@ -115,6 +117,8 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
+| `work-mcp1000-p56off` | 30 | 24M | `55_beam-window-tagger-gate.md`, `p54_ab_report.py` |
+| `work-mcp1000-d56bw` | 30 | 20M | `55_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
 | `work-mcp1000b-d52off` | 30 | 44M | `d52_ab_report.py` |
 | `work-mcp1000b-d52on` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
 | `work-mcp1000b-d52roff` | 30 | 44M | `52_isolated-grouping-fix-design.md` |
@@ -127,6 +131,8 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000b-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000b-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000b-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
+| `work-mcp1000b-p56off` | 30 | 23M | `55_beam-window-tagger-gate.md`, `p54_ab_report.py` |
+| `work-mcp1000b-d56bw` | 30 | 19M | `55_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
 | `work-smoke-d55pv` | 12 | 5M | — |
 
 ## `archive/tgm-docs29-39/` — 30 dirs, 257 MB

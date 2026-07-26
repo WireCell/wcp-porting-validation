@@ -44,6 +44,12 @@ It is an ORTHOGONAL property, not a cosmic veto: like the prototype (where FC is
 an independent eval-tree variable feeding the BDTs) it does NOT enter 'label'.
 -1 = no verdict in the log (tagger_check_fc absent from the pipeline).
 
+tgm/stm/fc = -1 also means NOT EVALUATED under the doc-55 beam-window gate
+(run_nusel_evt.sh default: only bundles whose cluster_t0 is inside --beam-window
+get a steiner graph and tagger verdicts).  Out-of-window bundles therefore read
+-1/-1/-1 and stmfit '-', and their label stays 'not-tagged' -- they are cosmics
+by construction, which is what the gate assumes.  See parse_bwonly.
+
 Usage:
   nusel_extract.py --pctree QL.tar.gz --prbee mabc-pr.zip --prlog PR.log \
       --out row.tsv [--beam-window 0.2,2.2] [--run R --subrun S] [--no-header]
@@ -212,8 +218,20 @@ def group_flashes(flashes):
 # A tear landing before any value character ("FC=") still fails to match, which
 # is the correct outcome: the verdict stays -1 and the caller warns.
 VERDICT = r'([tf01])\w*'
-RE_TGM = re.compile(r'TaggerCheckTGM: cluster (\d+) \S+ TGM=' + VERDICT + r'\b')
-RE_STM = re.compile(r'TaggerCheckSTM: cluster (\d+) \S+ STM=' + VERDICT
+# The tagger NAME is deliberately NOT required.  A tear can also remove the
+# line's HEAD, which is exactly what the doc-55 beam-window gate exposed: with
+# only one evaluated main per event the write-buffer boundary moved onto the FC
+# verdict line, and 7 of 26 events logged
+#     aggerCheckFC: cluster 5 -> FC=false
+# (the "[ts] I [clus.NeutrinoPattern] visit: T" head split off), so a regex
+# anchored on "TaggerCheckFC" read "no verdict" for a bundle the tagger had in
+# fact called FC=false.  The distinguishing token is the trailing "<KEY>=" plus
+# the "cluster N <arrow>" adjacency, which survives any tear that leaves the
+# value readable at all -- and no other component logs "cluster N -> TGM=...".
+# The STM line ("cluster N -> STM=0 TGM=0") cannot be mistaken for the TGM one:
+# \S+ matches the arrow token only, so RE_TGM does not match it.
+RE_TGM = re.compile(r'cluster (\d+) \S+ TGM=' + VERDICT + r'\b')
+RE_STM = re.compile(r'cluster (\d+) \S+ STM=' + VERDICT
                     + r' TGM=' + VERDICT + r'\b')
 # NB: matches the message PREFIX only.  Log lines can be torn by interleaved
 # writes (doc 23; seen again on evt285185 cluster 5, where another line was
@@ -221,10 +239,32 @@ RE_STM = re.compile(r'TaggerCheckSTM: cluster (\d+) \S+ STM=' + VERDICT
 # whole meaning before the tear point -- tgm=1, stm=0 -- so a prefix match
 # recovers it losslessly.  The verdict regexes above cannot do the same: their
 # information is the trailing =true/=false, which a tear destroys.
-RE_SKIP = re.compile(r'TaggerCheckSTM: cluster (\d+) already TGM')
-RE_FC = re.compile(r'TaggerCheckFC: cluster (\d+) \S+ FC=' + VERDICT + r'\b')
+RE_SKIP = re.compile(r'cluster (\d+) already TGM')
+RE_FC = re.compile(r'cluster (\d+) \S+ FC=' + VERDICT + r'\b')
 # "cluster N no STM fit: <reason>" -- the pre-fit exits of check_stm_conditions.
 RE_STM_SKIP = re.compile(r'check_stm_conditions: cluster (\d+) no STM fit: (.+)')
+
+
+# The PR job announces the doc-55 beam-window gate once per tagger, e.g.
+#   visit: TaggerCheckSTM: beam_window_only [0.200, 2.200) us: 1 main(s) ...
+# When that gate was on, a main outside the window was NEVER EVALUATED, and the
+# post-PR tree's flag_TGM/STM/FC read 0 for it simply because the flags default
+# to 0 -- reporting that as "evaluated and clean" would be a lie in the table
+# and in the scan display.  Reading the window off the log keeps the extractor
+# self-describing: no extra runner flag, and old (ungated) logs are unaffected.
+RE_BWONLY = re.compile(r'beam_window_only \[([-\d.]+), ([-\d.]+)\) us')
+
+
+def parse_bwonly(fname):
+    """(low, high) in us of the beam-window gate, or None if the run was ungated."""
+    if not fname:
+        return None
+    with open(fname, errors='replace') as f:
+        for line in f:
+            m = RE_BWONLY.search(line)
+            if m:
+                return float(m.group(1)), float(m.group(2))
+    return None
 
 
 def parse_prlog(fname):
@@ -495,12 +535,20 @@ def one_event(args):
     for g, f in flashes.items():
         pe_grp[fgrp[g]] = pe_grp.get(fgrp[g], 0.0) + f['pe']
 
+    # doc-55 beam-window gate: when the PR job ran it, only the in-window mains
+    # were evaluated at all, so their verdict columns must read -1 (unknown),
+    # not 0 (evaluated, clean).  None => ungated run, every main was evaluated.
+    gate = parse_bwonly(args.prlog)
+
+    def evaluated(c):
+        return gate is None or gate[0] <= c['t0_us'] < gate[1]
+
     # Qualifying bundles: main-flagged AND in scope.
     mains = [c for c in clusters if c['main']]
     bundles = [c for c in mains if c['ident'] in in_scope]
     dropped = [c for c in mains if c['ident'] not in in_scope]
     for c in bundles:
-        if c['ident'] not in verdicts:
+        if evaluated(c) and c['ident'] not in verdicts:
             print(f'WARNING: evt{event} in-scope main {c["ident"]} has no tagger '
                   f'verdict in {args.prlog}', file=sys.stderr)
     for c in dropped:
@@ -533,6 +581,9 @@ def one_event(args):
         peers = [o for o in clusters if o['gid'] == c['gid'] and o is not c]
         v = dict(verdicts.get(c['ident'], {}))
         v.update({k: val for k, val in flagv.get(c['ident'], {}).items()})
+        if not evaluated(c):
+            # Gated out (see parse_bwonly): the taggers never looked at it.
+            v = {}
         tgm, stm, fc = v.get('tgm', -1), v.get('stm', -1), v.get('fc', -1)
         # stmfit: did this bundle's main cluster reach the STM trajectory fit,
         # and if not, which pre-fit exit stopped it.  'fit' means a dQ/dx fit

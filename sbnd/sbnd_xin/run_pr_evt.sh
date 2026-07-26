@@ -61,8 +61,10 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             with the per-mode beam window (grep TaggerCheckNeutrino in the log;
             Bee layers track_fit/shower_track/vertices + mc particle flow)
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
-            the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} -- placeholders,
-            see the md for calibration provenance)
+            the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} = the
+            experiment window, same as SBND Q/L beam_pref).  Since doc 55 this
+            window also GATES which bundles the taggers evaluate at all
+            (beam_window_only, default on) -- not just TGM's beam protection.
   -dnn      -nu plus the SCN DL vertex with the uBooNE-trained weights
             (UNTUNED on SBND -- functional demo only; needs sparseconvnet
             importable in the job python, see the md)
@@ -83,11 +85,18 @@ BEAM_WINDOW=""
 DL_WEIGHTS=""
 # Per-mode beam-window defaults in us on cluster_t0 (= matched flash time,
 # trigger-offset-corrected -- NOT the raw opflash time convention of
-# flash_t0_lan_reco2.py).  Calibrated from the 7 saved pctrees: MC BNB bundle
-# +1.257 us (evt12); data in-time matched bundles +1.38/+1.69/+1.77 us
-# (evts 686/1698/1258).  See the md for provenance.
-BEAM_WINDOW_MC="0.5,2.0"
-BEAM_WINDOW_DATA="0.5,2.5"
+# flash_t0_lan_reco2.py).  Originally guessed from the 7 saved pctrees
+# (MC BNB bundle +1.257 us evt12; data in-time matched bundles +1.38/+1.69/+1.77
+# us, evts 686/1698/1258) as placeholders 0.5,2.0 / 0.5,2.5.
+#
+# Now the EXPERIMENT window 0.2,2.2, the same value used by SBND Q/L matching
+# (beam_pref_tlow/thigh) and by run_nusel_evt.sh.  This matters since doc 55:
+# beam_window_only defaults ON, so the window no longer only tunes TGM's in-beam
+# protection -- it decides which bundles get a steiner graph and a tagger verdict
+# at all.  The old placeholders would have silently dropped every in-beam bundle
+# below 0.5 us: 6 of the 27 in the 30-event scan (0.520 .. 0.735 us).
+BEAM_WINDOW_MC="0.2,2.2"
+BEAM_WINDOW_DATA="0.2,2.2"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in

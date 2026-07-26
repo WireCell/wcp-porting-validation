@@ -63,6 +63,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
   -bw l,h       beam window [l,h) in us on cluster_t0 (= matched flash time,
                 trigger-referenced).  Default ${BEAM_WINDOW}.  Used for the TGM
                 beam protection AND the table's in_beam / label columns.
+  -no-bwonly    run steiner + the TGM/STM/FC taggers on EVERY matched bundle
+                (the pre-doc-55 behavior).  DEFAULT is beam-window-only: only
+                the bundle(s) whose cluster_t0 is inside -bw get a steiner
+                graph and a tagger verdict; out-of-time bundles are cosmics by
+                construction.  Off => compiled config byte-identical to
+                pre-doc-55.  Env: SBND_BW_ONLY=0.
   -nucand       enable the ported check_neutrino_candidate veto in
                 tagger_check_tgm: in-beam-window bundles may then be tagged
                 TGM when the Dijkstra path-topology veto clears them.
@@ -220,6 +226,12 @@ EOF
 
 MODE=mc
 BEAM_WINDOW="0.2,2.2"
+# Beam-window-only PR tail (steiner + TGM/STM/FC only for the bundle whose
+# cluster_t0 is inside BEAM_WINDOW).  DEFAULT ON as of doc 55: with the taggers
+# validated, out-of-time bundles are cosmics by construction and evaluating them
+# cost ~10x the work for verdicts nothing consumes.  SBND_BW_ONLY=0 / -no-bwonly
+# restores the evaluate-every-bundle behavior (byte-identical compiled config).
+BWONLY="${SBND_BW_ONLY:-1}"
 # Post-PR pctree.  DEFAULT ON: its cluster_scalar carries flag_TGM/flag_STM/
 # flag_FC, which is the authoritative tagger verdict source for nusel_extract.
 # The log-regex fallback is not trustworthy on its own -- a log line can be torn
@@ -313,6 +325,8 @@ while [ $# -gt 0 ]; do
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
+        -bwonly|--bwonly) BWONLY=1; shift ;;
+        -no-bwonly|--no-bwonly) BWONLY=0; shift ;;
         -save-pr-tree|--save-pr-tree) SAVEPRT=1; shift ;;
         -no-save-pr-tree|--no-save-pr-tree) SAVEPRT=""; shift ;;
         -nucand|--nucand) NUCAND=1; shift ;;
@@ -430,7 +444,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV unmerge=$UNMERGE/$UNMERGE_MODE)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -448,6 +462,7 @@ process_event() {
             --tla-str  "save_tensors=$SAVEPRT_TLA" \
             --tla-str  "dl_weights=" \
             --tla-code "beam_window_us=[$BEAM_WINDOW]" \
+            --tla-code "beam_window_only=$([ "$BWONLY" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_neutrino_candidate=$([ "$NUCAND" = 1 ] && echo true || echo false)" \
             --tla-code "tgm_chord_charge=$([ "$CHORD" = 1 ] && echo true || echo false)" \
             --tla-str  "tgm_chord_mode=$CHORD_MODE" \

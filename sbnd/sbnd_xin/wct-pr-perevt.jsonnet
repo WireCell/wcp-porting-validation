@@ -67,6 +67,14 @@ function(
     // tagger_check_neutrino falls back to uBooNE single-main selection, which on
     // SBND picks an arbitrary main -- always set a window with tagger_check_neutrino).
     beam_window_us = [0, 0],
+    // Run the PR tail (steiner + tagger_check_{tgm,stm,fc}) ONLY on the
+    // beam-coincident bundle, i.e. the mains whose cluster_t0 is inside
+    // beam_window_us (plus, for steiner, the companions sharing their
+    // matched_flash_gid).  TRUE = SBND production default as of docs/55;
+    // false restores the evaluate-every-bundle behavior with a compiled config
+    // byte-identical to the pre-doc-55 one.  Inert when beam_window_us is empty.
+    // Runner flag: -no-bwonly.
+    beam_window_only = true,
     // Enable the ported check_neutrino_candidate veto in tagger_check_tgm so
     // in-beam-window bundles may be tagged TGM (C++ default false; key
     // omitted when off => byte-identical pre-port config).
@@ -192,6 +200,7 @@ function(
                              extra_uses=pds.all,
                              dl_weights=dl_weights,
                              beam_window=[t * wc.us for t in beam_window_us],
+                             beam_window_only=beam_window_only,
                              tgm_neutrino_candidate=tgm_neutrino_candidate,
                              tgm_chord_charge=tgm_chord_charge,
                              tgm_chord_mode=tgm_chord_mode,
