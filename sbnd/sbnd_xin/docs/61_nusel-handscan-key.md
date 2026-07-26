@@ -1,9 +1,9 @@
 # 61 — nusel hand-scan key: STM vs neutrino candidate (SBND d59k scan set)
 
 **Status.** Scan key + sub-agent operating instructions. The whole 393-event
-display set is now scanned and overlaid on **:5011**, and the 62 bundles where
-the scan contradicts the STM tagger are served on their own **:5012** for the
-owner's re-check (§5c). Two separately attributable batches — first 20 events (`scan-d59k/handscan-first20.tsv`, §4) and the
+display set is now scanned and overlaid on **:5011**, and **:5012** serves the
+88 events worth a second pair of eyes: the 62 bundles where the scan contradicts
+the STM tagger (§5c) plus the 38 pathology bundles (§5d). Two separately attributable batches — first 20 events (`scan-d59k/handscan-first20.tsv`, §4) and the
 remaining 383 by 10 sub-agents (`scan-d59k/handscan-batch2.tsv`, §5b). **Both are
 awaiting owner validation:** every criterion below is calibrated on *two*
 owner-judged bundles (evt48895, evt50787), and the ten agents agreeing 60/60 on
@@ -530,6 +530,43 @@ where the tagger would gain efficiency. Of the `misidentified` 44, the 18 that
 cite flat-MIP-to-rr=0 are the same failure the owner already confirmed on
 evt48895, so a spot-check of a few decides the class.
 
+## 5d. The pathologies are on :5012 too — 88 events
+
+Owner request, 2026-07-26: put the reconstruction/tagger pathologies of §5b on
+5012 as well. **`scan-d59k/stm-pathologies.tsv`**, 38 bundles in 4 classes:
+
+| class | n | what to look at |
+|---|---|---|
+| `negative-dqdx` | 15 | the STM dQ/dx fit returns **negative** charge somewhere on the track (to −320 ke/cm). Every row whose reason names it, so it is a floor. A fit bug, not physics — the most reproducible finding in the batch |
+| `dqdx-normalisation` | 15 | the **whole** track sits 1.5–2× above the muon table *with the correct shape*, mostly cathode-hugging / drift-parallel. **Needs an owner ruling** |
+| `upward-going-bragg` | 5 | near-bottom-wall objects whose Bragg forces an *upward*-going muon: a real sub-population, or the fit mis-assigning which end exits |
+| `tgm-miss` | 3 | both ends on boundaries (through-going) but `tgm=0`: 49951:16, 173498:6, 280972:7 |
+
+The `dqdx-normalisation` class is the one that changes verdicts. The scan had to
+invent a discriminator — *does the far end return to the 56 ke/cm MIP line?* — and
+it decides STM-vs-proton: 281632:8, 289343:9, 386838:16, 389962:5, 409084:12 were
+called **STM** on it, 59377:7, 61313:18, 63603:13, 72828:7, 168388:6, 174488:3,
+285366:13, 291345:12, 404684:9 **nu**, and 389544:13 is the counter-case (rises
+*faster* than a muon ⇒ proton). Rule on the discriminator and up to 15 rows move
+together. That class is curated by hand from the reason texts, not by a regex —
+the file header says so; the other three classes are mechanical.
+
+12 of the 38 are also claimed STM mistakes (e.g. 285443:7, 285366:13, 174488:3),
+so 5012 now serves **88 events**: the 62 of §5c plus 26 new. Same command as §5c
+with the pathology events appended to the TSV list. Verified: 88 in the dropdown,
+`AI scan` matching on a sample from every class (489327 `nu unclear`, 386838
+`STM`, 291301 `nu weak`, 280972 / 173498 `nu cosmic-like`, 48895 `nu
+cosmic-like`), AI comment box populated, no JS errors.
+
+Not included, because they are *expected* rather than suspicious: the in-beam
+bundles carrying a cosmic tag (169598:2 TGM, 70562:10 LM, 399382:15 "TGM lm").
+Those belong to the 6 `mixed` events that §5a's keep rule deliberately retains.
+
+**GOTCHA for anyone restarting these viewers:** `pkill -f 'tag s61mis'` matches
+the *launch command's own* shell, so it kills the caller before the relaunch
+runs; and `pgrep -f 'bokeh serve --port 5012'` self-matches the same way. Kill the
+viewer by a pid obtained without the pattern appearing in your own command line.
+
 ## 5. Instructions for a sub-agent extending this scan
 
 1. **Never write into `work-mcp1kall-d59k/nusel_labels/s59k/`.** That is the
@@ -580,6 +617,7 @@ evt48895, so a spot-check of a few decides the class.
 | `scan-d59k/handscan-first20.tsv` | the first 20 verdicts + reasons (§4); `--ai-scan` input on 5011 |
 | `scan-d59k/handscan-batch2.tsv` | **the other 402 bundles / 383 events (§5b)**, 10 sub-agents; second `--ai-scan` input on 5011 |
 | `scan-d59k/stm-disagreements.tsv` | the 62 claimed STM mistakes (44 misidentified + 18 missed), served on **:5012** (§5c) |
+| `scan-d59k/stm-pathologies.tsv` | the 38 pathology bundles in 4 classes, also on **:5012** (§5d) |
 | `scan-d59k/batch2/` | raw per-slice agent returns + the merge gate + the agents' manual; see its README (the slices still contain the seeded controls) |
 | `nusel_display/regrab_verified.py` | re-grab `evt:main_id` with focus verification (§5b bug 2) |
 | `nusel_display/nusel_scan_viewer.py` | `--ai-scan` overlay added (default off, §4a) + IN-BEAM-only is now the opening mode |
