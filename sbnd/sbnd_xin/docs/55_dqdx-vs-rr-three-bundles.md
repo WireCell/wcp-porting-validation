@@ -969,10 +969,14 @@ bin, and the average is taken on the **dQ/dx** side — recombination applied
 pointwise on `stopping.root`'s 1000-point dE/dx graph *first*, then binned. R is
 concave, so the other order is a different number.
 
-The generator's first act is a regression: it rebuilds all five tables with the
-**published** Box parameters and checks them against the shipped
-`stopping_ave_dQ_dx_sbnd.root`, and refuses to write anything if any of the five
-misses. It does not miss:
+The `*Box` curves in the json are **copied verbatim** off
+`stopping_ave_dQ_dx_sbnd.root` — they claim to be the tables the config holds, so
+they are those numbers, not a reimplementation that agrees to 1e-3. The
+reimplementation is the *gate*: the generator rebuilds all five tables with the
+**published** Box parameters, checks them against the shipped ROOT file, and
+refuses to write anything if any of the five misses. If the recipe ever stops
+reproducing the shipped table, the free-power tables built with that same recipe
+are not trustworthy either. It does not miss:
 
 | | muon | electron | pion | kaon | proton |
 |---|---|---|---|---|---|
@@ -1031,6 +1035,13 @@ Three things worth stating plainly:
    tables are the *same* R applied to their own `stopping.root` dE/dx graphs.
    Nothing in this sample tests them; they move because R moved.
 
+One consequence worth having in front of you, for the bundle this doc opened
+with. Re-reading 289343 blk 90 against the free-power curves instead of the
+config's (`--ref-set fit`), its median ratio to the **proton** curve goes
+**1.14 → 1.01** and to the muon curve 1.91 → 1.83. The flagged track lands on
+its own particle's curve, which is what §7g predicted for a shape the model now
+follows; the muon separation is untouched.
+
 Extrapolation, honestly: the fit was constrained to dE/dx ≤ 30 MeV/cm. The top
 dE/dx each table's innermost bin actually samples (at rr = 0.05 cm) is muon 26,
 electron 3, pion 30, kaon 50, proton 66 MeV/cm — so **muon, pion and electron
@@ -1048,7 +1059,7 @@ in rr rather than trusting the form to behave.
 | keys | model | what they are |
 |---|---|---|
 | `MuonDeDx`, `ElectronDeDx`, `PionDeDx`, `KaonDeDx`, `ProtonDeDx` | free power | the best current description of real SBND stopping tracks |
-| `…DeDxBox` (same five) | Modified Box, C = 0.85 | the tables `sbnd/particle_dataset.jsonnet` actually holds — what `TaggerCheckSTM` compares against |
+| `…DeDxBox` (same five) | Modified Box, C = 0.85 | the tables `sbnd/particle_dataset.jsonnet` actually holds, verbatim — what `TaggerCheckSTM` compares against. Bit-identical to the two curves the json carried before this section. |
 | `_meta` | — | provenance: parameters, χ²/ndf, fit domain, generator, caveats |
 
 The shipped tables were **not** rebuilt (§9 item 1 still gates that), so the
@@ -1060,18 +1071,24 @@ re-pointed accordingly:
 - `nusel_scan_viewer.py` — `MIP_DQDX` is derived from the muon plateau, and the
   free-power plateau would have rounded it to **55000** while the config still
   says 56000. It is now anchored on `MuonDeDxBox`, and still computes 56000
-  exactly. The STM panel draws the tagger's curve solid *and* the free-power
-  muon dotted, so the gap between what the tagger believes and what the data say
-  is visible on the panel rather than assumed away.
+  exactly (checked directly against the committed json). The STM panel draws the
+  tagger's curve solid *and* the free-power muon dotted, so the gap between what
+  the tagger believes and what the data say is visible on the panel rather than
+  assumed away. *That renderer change is compile-checked and the MIP value is
+  checked; the Bokeh panel itself was not launched.*
 - `stmfit_showcase.py` — reference key pinned to `MuonDeDxBox`. Doc 42 quotes its
   numbers against the config table; letting it silently follow the fit would
-  repeat exactly the failure §4a had to write up.
+  repeat exactly the failure §4a had to write up. Re-run on doc 42's muon
+  (`-r archive/stm-docs40-49/work-mcp10-stmon -e 286241 -b 80`) and diffed
+  against the pre-change script on the pre-change json: **every digit
+  identical**.
 - `stmfit_particle_overlay.py` — new `--ref-set {box,fit,both}`, **default
   `box`**, so every ratio in §§2–3 above reproduces unchanged (re-run and
   checked: 1.91 vs muon / 1.14 vs proton for 289343 blk 90, and 1.14 for the
-  §4a doc-42 muon against the archived uBooNE json). `--particles` selects which
-  of the five to draw. Keys starting with `_` are skipped, and a pre-doc-55 json
-  with only one set still works under every `--ref-set`.
+  §4a doc-42 muon against the archived uBooNE json). `--particles` is a
+  comma-separated list selecting which of the five to draw. Keys starting with
+  `_` are skipped, and a pre-doc-55 json with only one set still works under
+  every `--ref-set`.
 
 ### 10.5 What this is and is not
 

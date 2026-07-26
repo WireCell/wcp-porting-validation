@@ -67,7 +67,10 @@ ssh -L 5010:localhost:5010 <host>
 5. **STM dQ/dx panel** (needs `run_nusel_evt.sh -stm-fit` + `uproot`): the
    fitted dQ/dx vs residual range of the focused bundle's **main cluster**,
    over the muon stopping expectation (green, the exact `eval_stm` reference
-   table) and the flat MIP line (grey dashes, the `mip_dqdx` knob).  Forward
+   table — the `MuonDeDxBox` key of `stm_ref_dqdx.json`), the free-power muon
+   fit of doc 55 §10 (blue dots, `MuonDeDx`, what the data actually say — NOT
+   what the tagger compares against) and the flat MIP line (grey dashes, the
+   `mip_dqdx` knob, derived from the `*Box` plateau so it tracks the config).  Forward
    pass blue / backward red, TPC0 circles / TPC1 triangles; the same
    trajectory is drawn on the projections as black crosses.  The title and
    the summary next to it name the bundle being shown (`grp / t / main`) —

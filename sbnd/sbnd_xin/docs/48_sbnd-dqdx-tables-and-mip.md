@@ -61,6 +61,12 @@ written into (M13).
 | 3 | electron curve stopping end | synthetic 260000 @ rr −0.5 cm, hand-set 100000 @ 0.5 cm, then a *drop* to 47000 | **flat** into rr → 0 at the first physical value | `sbnd/particle_dataset.jsonnet` |
 | 4 | viewer reference dump | uBooNE `MuonDeDx`/`ProtonDeDx` | regenerated | `nusel_display/stm_ref_dqdx.json` |
 
+Row 4 has since grown: [55 §10](55_dqdx-vs-rr-three-bundles.md) put **all five**
+particles in that json under **both** models — `*DeDxBox` are the tables row 1
+describes (verbatim from `stopping_ave_dQ_dx_sbnd.root`, still what the tagger
+uses), `*DeDx` are a free-power refit against real SBND stopping tracks. Rows
+1–3 of this table are unchanged; nothing in `particle_dataset.jsonnet` moved.
+
 What did **not** change, deliberately: `alpha = 0.93`, `beta = 0.212`, `rho = 1.38`,
 `W_ion = 23.6 eV` (ArgoNeuT / MicroBooNE eq. 3.1), and the **undocumented ×0.85** — per owner
 instruction, only `E` moved. The five `*Range` tables are genuinely detector-agnostic and are

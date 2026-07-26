@@ -78,12 +78,30 @@ REF_SETS = {"box": lambda k: k.endswith("Box"),
             "both": lambda k: True}
 
 
+def ref_style(k, both):
+    """Style/label for a reference key, `*Box` or not.  When both sets are on
+    screen the config tables are drawn lighter and thinner than the fit, and
+    every label says which is which."""
+    base = k.replace("Box", "")
+    st = dict(REF_STYLE.get(base, dict(color="#52514e", ls=":", lw=1.6)))
+    lab = REF_LABEL.get(base, base)
+    if k.endswith("Box"):
+        st["lw"] = st["lw"] * 0.8
+        st["alpha"] = 0.55
+        lab += " [config table]" if both else ""
+    elif both:
+        lab += " [free-power fit]"
+    return st, lab
+
+
 def load_refs(path, which="box", only=None):
     """Return {key: (rr, dqdx)} for the selected LinterpFunction blocks.
 
     Keys beginning with `_` are metadata, not curves (the json's `_meta`
-    provenance block), and are skipped.  `*Box` keys are returned under their
-    canonical name so REF_STYLE/REF_LABEL and every caller keep working.
+    provenance block), and are skipped.  Keys are returned VERBATIM -- stripping
+    the `Box` suffix here would make `--ref-set both` collapse the two sets onto
+    each other and silently draw five curves while claiming ten.  Style and
+    label are looked up on the stripped name instead, by `ref_style`.
     """
     d = {k: v for k, v in json.load(open(path)).items() if not k.startswith("_")}
     keep = REF_SETS[which]
@@ -99,7 +117,7 @@ def load_refs(path, which="box", only=None):
         if only and k.replace("Box", "") not in only:
             continue
         x = v["start"] + v["step"] * np.arange(len(v["values"]))
-        out[k.replace("Box", "")] = (x, np.array(v["values"], dtype=float))
+        out[k] = (x, np.array(v["values"], dtype=float))
     if not out:
         raise SystemExit(f"no curves in {path} for --ref-set {which} "
                          f"and --particles {sorted(only or [])}")
@@ -219,11 +237,16 @@ def main():
                          "the tables the config holds (default, and what doc 55 "
                          "sections 2-3 quote), `fit` = doc 55 section 7g's "
                          "free-power tables, `both`")
-    ap.add_argument("--particles", nargs="*", default=["MuonDeDx", "ProtonDeDx"],
-                    help="reference curves to draw (default: %(default)s)")
+    ap.add_argument("--particles", default="MuonDeDx,ProtonDeDx",
+                    help="comma-separated reference curves to draw, canonical "
+                         "names without the Box suffix (default: %(default)s; "
+                         "all five = MuonDeDx,ElectronDeDx,PionDeDx,KaonDeDx,"
+                         "ProtonDeDx).  Comma-separated rather than nargs so it "
+                         "cannot swallow the positional track specs.")
     args = ap.parse_args()
 
-    refs = load_refs(args.ref, args.ref_set, set(args.particles))
+    want = {x.strip() for x in args.particles.split(",") if x.strip()}
+    refs = load_refs(args.ref, args.ref_set, want)
     tracks, labels = [], []
     for sp in args.specs:
         parts = sp.split(":")
@@ -247,10 +270,14 @@ def main():
                   hspace=0.42, wspace=0.20)
     top = fig.add_subplot(gs[0, :])
 
+    both_sets = any(k.endswith("Box") for k in refs) and \
+        any(not k.endswith("Box") for k in refs)
+
     def draw_refs(ax, with_labels):
         for k, (rx, rv) in refs.items():
-            ax.plot(rx, rv / 1e3, label=REF_LABEL.get(k, k) if with_labels else None,
-                    zorder=2, **REF_STYLE.get(k, dict(color="#52514e", ls=":", lw=1.6)))
+            st, lab = ref_style(k, both_sets)
+            ax.plot(rx, rv / 1e3, label=lab if with_labels else None,
+                    zorder=2, **st)
         ax.axhline(args.mip / 1e3, ls=":", color="#a3a29b", lw=1.4, zorder=1,
                    label=(f"flat MIP {args.mip / 1e3:.0f} ke/cm "
                           "(not-stopping ref)") if with_labels else None)
