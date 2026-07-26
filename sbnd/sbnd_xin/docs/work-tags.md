@@ -76,7 +76,7 @@ median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 | `work-mcp1000b-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py` |
 | `work-mcp1000b-d52ron` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
 
-## CURRENT — 43 dirs, 1890 MB (top level)
+## CURRENT — 46 dirs, 1968 MB (top level)
 
 the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster_id`), plus the `d55b`/`d55t` arms of doc 52 §13 and the doc-54 perf A/B arms.
 
@@ -101,6 +101,7 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp10-d55ton` | 53 | 60M | — |
 | `work-mcp10-p54base` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp10-p54opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
+| `work-mcp10-p55opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp10-trace51` | 6 | 36M | `51_clustering-merge-attribution.md`, `stm_merge_attribution.py` |
 | `work-mcp1000-d52off` | 30 | 47M | `d52_ab_report.py` |
 | `work-mcp1000-d52on` | 30 | 47M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
@@ -113,6 +114,7 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000-d55ton` | 30 | 46M | — |
 | `work-mcp1000-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
+| `work-mcp1000-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000b-d52off` | 30 | 44M | `d52_ab_report.py` |
 | `work-mcp1000b-d52on` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
 | `work-mcp1000b-d52roff` | 30 | 44M | `52_isolated-grouping-fix-design.md` |
@@ -124,6 +126,7 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000b-d55ton` | 30 | 44M | — |
 | `work-mcp1000b-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000b-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
+| `work-mcp1000b-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-smoke-d55pv` | 12 | 5M | — |
 
 ## `archive/tgm-docs29-39/` — 30 dirs, 257 MB

@@ -1,4 +1,4 @@
-# Doc 54 — TGM/STM tagger performance, round 1
+# Doc 54 — TGM/STM tagger performance, rounds 1–2
 
 Goal: reduce the running cost (wall + memory) of the PR tagger stage
 (`tagger_check_tgm` / `tagger_check_stm`) on the standard 30-event MCP2025C
@@ -151,14 +151,84 @@ this round; RSS work would have to target the pctree load/steiner side.
 - **GATE: 120/120 comparisons identical → PASS.**
 - `wcdoctest-clus`: 565/565 assertions pass.
 
-## Next levers (not taken this round)
+---
 
-1. `CreateSteinerGraph:pr` is now the top step by far (42.5 s, 44% of the
-   optimized evt-287517 profile) — inside it, `Cluster::get_two_boundary_wcps`
-   / `Blob::estimate_total_charge` / `Grouping::get_wire_charge` and the
-   `make_graph_*_pid` builders.  It is not a tagger; treat as its own round.
-2. Remaining `do_single_tracking` cost outside `dQ_dx_fit` (~110/782 samples
-   baseline): `trajectory_fit`, rough-path/graph work.  Second-order now.
-3. `TaggerCheckTGM` is only 4.4 s / 30 events; within it the nucand
-   (`NeutrinoPatternBase`) path already uses the indexed `dQ_dx_multi_fit`.
-   Not worth a round yet.
+# Round 2 — the Steiner-graph stage (toolkit `6c7192b1`)
+
+Round 1 left `CreateSteinerGraph:pr` as the top step (42.1 s / 30 events,
+44% of the optimized evt-287517 profile).  Under it:
+`ImproveCluster_2::mutate` 68%, and as leaf costs the graph builders
+(`make_graph_closely/ctpc_pid` ~200 samples), `get_two_boundary_wcps` 89,
+`get_activity_improved` 82, blob re-sampling (`sample_live`+`sample_blob`)
+105, `estimate_total_charge` → `get_wire_charge` 56/48.
+
+## Repro
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+# baseline = the round-1 products already on disk (work-*-p54opt)
+# apply toolkit 6c7192b1, wcbuild, freshness proof, wcdoctest-clus
+./run_perf54_nusel.sh opt p55         # -> work-*-p55opt
+python3 p54_ab_report.py --base-tag p54opt --opt-tag p55opt
+```
+
+## The change
+
+`Cluster::get_two_boundary_wcps` re-ran `Blob::estimate_total_charge()` for
+**every point** of every blob — a pure per-blob function that walks all the
+blob's wires through the grouping's hash caches.  And inside it,
+`get_wire_charge()` repeated the `cache()/find(time_slice)` chain per wire.
+Both fixed byte-identically (toolkit `6c7192b1`):
+
+- per-blob memo of the charge estimate inside `get_two_boundary_wcps`
+  (pointer-keyed `unordered_map`, keyed lookups only, never iterated —
+  determinism-safe);
+- `estimate_total_charge` fetches the charge row once per
+  (apa, face, plane, time_slice) via the new read-only
+  `Grouping::wire_charge_row()` and looks wires up in it (missing row ==
+  `get_wire_charge()`'s `{0, 1e12}` for every wire: no positive charge).
+
+`estimate_total_charge`'s only caller is the `get_two_boundary_wcps` loop,
+so the memo covers every consumer — including STM's and FC's
+`cluster_fc_check` and TGM, which call `get_two_boundary_wcps` on the same
+clusters.
+
+## Results (30 events, sequential, setarch x86_64 -R)
+
+| step | p54base | p54opt (r1) | p55opt (r2) | r2 change |
+|---|---:|---:|---:|---:|
+| CreateSteinerGraph:pr | 42.50 | 42.10 | **36.88** | **−12%** |
+| TaggerCheckSTM:pr | 29.73 | 17.49 | **16.72** | −4% |
+| TaggerCheckFC:pr | 1.46 | 1.46 | **0.44** | **−70%** |
+| TaggerCheckTGM:pr | 4.47 | 4.44 | 4.41 | −1% |
+
+Whole-job wall 154 → 146 s (164 s at the round-0 baseline: **−11%
+combined**); peak RSS 625 MB (unchanged, as expected).  Profile on
+evt 287517 (round-2 binary): event total 1121 → 1040 samples;
+`get_two_boundary_wcps` 89 → 41, `estimate_total_charge` 56 → 9,
+`cluster_fc_check` 27 → 11.
+
+## Gate
+
+`p54_ab_report.py --base-tag p54opt --opt-tag p55opt` — full report at
+`/home/xqian/tmp/p55_ab_report.txt`:
+**GATE: 120/120 comparisons identical → PASS** (same scope as round 1).
+`wcdoctest-clus` 565/565.
+
+# Next levers (not taken)
+
+1. Remaining `CreateSteinerGraph` cost (36.9 s): the graph builders
+   (`connect_graph_closely_pid` — already vector-bucket-optimized in an
+   earlier campaign, residue spread across rb-tree range scans) and the
+   retile re-sampling (`Aux::sample_live`/`sample_blob`, ~105 samples) —
+   central Aux code shared with imaging, high blast radius for a perf-only
+   change.
+2. `ImproveCluster_1::get_activity_improved` (82 samples): kd2d knn probes
+   per dead/good channel and per-wire set inserts; a contained but fiddly
+   target.
+3. Remaining `do_single_tracking` cost outside `dQ_dx_fit`
+   (`trajectory_fit`, rough-path/graph work).  Second-order.
+4. `TaggerCheckTGM` is 4.4 s / 30 events; its nucand path already uses the
+   indexed `dQ_dx_multi_fit`.  Not worth a round.
+5. Whole-job overhead (config compile, tensor IO, per-event process spawn)
+   is ~half the wall — a runner/workflow change, not a code round.
