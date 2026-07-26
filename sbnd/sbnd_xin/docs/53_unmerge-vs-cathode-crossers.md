@@ -217,12 +217,26 @@ provenance carve.
 Option B (disjoint ranges) was not taken — it removes the collisions but leaves
 the values meaningless.
 
-**Scope of the re-stamp.** It runs in the tensor-save block, i.e. after every
-`fill_bee_points()` call, so it rewrites the **saved pctree only**. The Bee zips
-this node writes still carry the legacy two-epoch labels. Measured exactly:
-10/10 pctree tarballs change, **30/30 Bee zips byte-identical**. Fixing the Bee
-labels would mean moving the re-stamp ahead of the Bee fills — deliberately not
-done.
+**Scope of the re-stamp — covers the Bee labels too.** It first shipped inside
+the tensor-save block, which runs *after* every `fill_bee_points()`, so it fixed
+the tarball and left the Bee per-blob label
+(`fill_bee_points_from_cluster`'s `real_clid`) on the old two-epoch values —
+measured then as 10/10 pctree tarballs changed, 30/30 Bee zips byte-identical.
+
+It has since been lifted out into `MultiAlgBlobClustering::restamp_real_cluster_id()`,
+called **once per event right after the clustering pipeline and before the Bee
+fills**, so the saved pctree and the Bee zip carry the *same* ids. Two
+consequences worth knowing:
+
+- Per-visitor Bee dumps (`trace_bee`, doc 51) are mid-pipeline snapshots and
+  necessarily keep whatever ids existed at that step.
+- The per-APA `mabc-apa*-face0.zip` are unaffected — the array does not exist
+  until the all-APA `examine_bundles` writes it.
+
+It is deliberately **not** gated on `save_real_cluster_id`: `examine_bundles`
+writes the array in memory whether or not the tarball is saved, so the Bee
+labels were wrong either way. Detectors that never write it stay a structural
+no-op — PDHD and PDVD have `examine_bundles()` commented out entirely.
 
 **Default.** C++ default `true` (owner decision, same pattern as
 `realign_perblob` doc 52 §12.8). The jsonnet knob is a TRISTATE: `null`
@@ -243,7 +257,7 @@ set, fresh tags throughout (M13 — no existing label was written into).
 | knob OFF byte-identical (pre-flip build) | `d53off` vs `d52ron` | **40/40 archives identical** |
 | legacy path still reachable after the flip | `d53leg` (`-no-rcid-global`) vs `d52ron` | **40/40 identical** |
 | flipped default == explicit on | `d53dflt` vs `d53on` | **40/40 identical** |
-| shipped default vs baseline | `d53dflt` vs `d52ron` | 10 pctree differ, 30 Bee zips identical |
+| shipped default vs baseline | `d53dflt` vs `d52ron` | 10 pctree differ, 30 Bee zips identical (save-block placement) |
 | group membership preserved | `d53off` vs `d53on`, 179 clusters | partition diffs 0, `real_cluster_main` diffs 0, assoc-pair diffs 0 |
 | **verdict-neutral** | `d53dflt` vs `d52ron` `nusel-table.tsv` | **row-for-row identical** |
 | collisions | `d53dflt` | **0%** (was 30% on the same events) |
@@ -252,6 +266,27 @@ set, fresh tags throughout (M13 — no existing label was written into).
 Compiled-config proof: `rcid_global=null` ⇒ key omitted and the compiled JSON is
 byte-identical to HEAD; `false` ⇒ `"real_cluster_id_global" : false`; `true` ⇒
 `: true`.
+
+### Validation of the Bee-label move
+
+A concurrent session was editing this tree, so this round is a **same-binary
+two-arm A/B** — both arms ran on one build (lib mtime verified unchanged across
+both), which cancels any contribution from the other session's in-flight edits.
+Tags `work-mcp10-d53beeoff` (`-no-rcid-global`) and `work-mcp10-d53beeon`
+(default). `setarch x86_64 -R`, doctest clus 565/565.
+
+| check | result |
+|---|---|
+| which archives move, ON vs OFF | 10 `mabc-all-apa.zip` **and** 10 pctree; per-APA zips unmoved |
+| legacy arm still reproduces the old Bee labels (`d53beeoff` vs `d52ron`) | **30/30 zips identical** |
+| **Bee labels shared by >1 `cluster_id`** | **36 → 0** (154 → 190 distinct labels) |
+| evt284349 Bee layer | 12 → 14 distinct `real_cluster_id`, still within 1..18 |
+| **verdicts** (`d53beeon` vs `d53beeoff` nusel table) | **row-for-row identical** |
+| collisions in the pctree | 0% |
+| cathode crossers | 10/10 MAIN-WHOLE, 0 torn |
+
+The 36 → 0 is the user-visible defect: a Bee `real_cluster_id` label that named
+two different `cluster_id`s at once.
 
 Census repro (add `-v` to list every colliding value):
 

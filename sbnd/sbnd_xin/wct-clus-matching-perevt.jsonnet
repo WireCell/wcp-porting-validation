@@ -137,9 +137,10 @@ function(
     // recorded with the numbering enumerate_idents has installed since -- 31% of
     // values name two clusters on the d52ron 30-event set -- which is harmless
     // for the within-cluster consumers but wrong for anything that joins on the
-    // value.  Applies to the SAVED PCTREE only -- the re-stamp runs after every
-    // fill_bee_points(), so the mabc Bee zips are byte-identical either way
-    // (measured: 10/10 pctree tarballs change, 30/30 zips do not).
+    // value (including the Bee per-blob label).  The re-stamp runs right after
+    // the clustering pipeline, before the Bee fills, so the saved pctree and the
+    // mabc Bee zips carry the SAME ids; per-step trace_bee layers are
+    // mid-pipeline snapshots and keep their own.
     // Group membership is identical either way, so
     // the un-merge and TGM are verdict-neutral (measured: 179 clusters, same
     // partition; nusel verdict tables row-for-row identical).
