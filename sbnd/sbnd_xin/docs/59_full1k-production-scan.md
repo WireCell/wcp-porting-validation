@@ -324,6 +324,10 @@ the 7 zips (268 MB), their `.url`, `.index.txt`, `.stmid-map.txt` and build logs
   the inner un-merge" for exactly that reason. Any census over these logs must
   use `grep -a` (and `LC_ALL=C`); the runner's `.status` scraper uses `sed`,
   which is not affected.
+- `work-mcp1kall-d59k/nusel_labels/d59ktest/` is mine, not a scan: the viewer was
+  first verified against the partial output on port 5097 under that scratch tag,
+  so the live `s59k` tag was never served from an unfinished sample. Inert (the
+  viewer only reads the tag it is served); left in place.
 - The doc-58 test run's scratch label tags
   `work-*-d56bw/nusel_labels/{tblrefresh,tblrefresh_before}/` are still there,
   deliberately (nothing under a labels dir is removed without the owner's word).
