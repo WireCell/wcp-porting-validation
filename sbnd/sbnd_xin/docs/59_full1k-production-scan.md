@@ -294,6 +294,14 @@ on.
 
 ## 6. The one failure: evt 278794 aborts in TrackFitting (NOT fixed here)
 
+> **Since fixed and recovered.** `2a821fd2` (doc 60) guards the one-point fit
+> path; the event was re-run from its saved pctree on 2026-07-26
+> (`ENTRIES="618" ./run_full1k_nusel.sh 0 1`, rc=0 in 2 s, `assoc=4/28`) and now
+> has its table, `tracking-stm.root` and `mabc-pr.zip`. **1000/1000.** Its
+> in-beam bundle (main 7, t=0.695 us) is STM-tagged with `fc=0`, so it is in the
+> doc-61 scan set. The census below is the 999-event one as first written; the
+> 1000-event version is `scan-d59k/census-nofc.tsv` (doc 61 §5a).
+
 Entry 618 / **evt 278794** (run 18255 subrun 1) dies in the PR job:
 
 ```

@@ -58,24 +58,42 @@ def read_tsv(path):
     return [dict(zip(head, r)) for r in rows[1:] if len(r) == len(head)]
 
 
-def classify(rows):
+def classify(rows, drop_fc=False):
     """(verdict, inbeam_labels) for one event's table rows.
 
-    verdict: 'keep' | 'tgm' | 'lm' | 'mixed' | 'no-inbeam-bundle' | 'empty'
+    verdict: 'keep' | 'tgm' | 'lm' | 'mixed' | 'all-fc' | 'no-inbeam-bundle'
+             | 'empty'
+
+    A bundle is *keepable* when its label is STM or nu-candidate and -- with
+    drop_fc -- it is not fully contained.  The event is kept when AT LEAST ONE
+    in-beam bundle is keepable (owner, 2026-07-26: "as long as one of them does
+    not satisfy the filter condition, leave the event in"), which is what
+    separates 'keep'/'mixed' from 'tgm'/'lm'/'all-fc'.
+
+    drop_fc also removes the fully-contained bundles (fc=1).  Those cannot be
+    stopping muons at all -- STM needs an entry point outside the fiducial
+    volume -- so an STM-vs-nu scan learns nothing from them; the STM tagger
+    itself skips them (stmfit=contained).  'all-fc' is the new verdict for an
+    event whose only keepable-labelled in-beam bundles are all contained.
     """
     if not rows:
         return 'empty', []
-    inbeam = [r['label'] for r in rows
+    inbeam = [r for r in rows
               if r.get('in_beam') == '1' and r.get('label') != 'no-bundle']
     if not inbeam:
         return 'no-inbeam-bundle', []
-    bad = [l for l in inbeam if l in COSMIC]
-    if not bad:
-        return 'keep', inbeam
-    if any(l in KEEPABLE for l in inbeam):
-        return 'mixed', inbeam
+    labels = [r['label'] for r in inbeam]
+    keepable = [r for r in inbeam
+                if r['label'] in KEEPABLE
+                and not (drop_fc and r.get('fc') == '1')]
+    cosmic = [l for l in labels if l in COSMIC]
+    if keepable:
+        return ('mixed' if cosmic else 'keep'), labels
+    if any(l in KEEPABLE for l in labels):
+        # had STM/untagged bundles but every one of them is contained
+        return 'all-fc', labels
     # every in-beam bundle is cosmic-tagged: name it by the first cosmic label
-    return ('tgm' if 'TGM' in bad else 'lm'), inbeam
+    return ('tgm' if 'TGM' in cosmic else 'lm'), labels
 
 
 def main():
@@ -90,6 +108,11 @@ def main():
                          'discover_events() takes explicit TSV paths and '
                          'derives each work root from the path)')
     ap.add_argument('--census-out', help='write the per-event census TSV')
+    ap.add_argument('--drop-fc', action='store_true',
+                    help='also drop the fully-contained (fc=1) in-beam bundles: '
+                         'they cannot be stopping muons, so an STM-vs-nu scan '
+                         'has nothing to decide on them.  An event survives if '
+                         'any ONE of its in-beam bundles is still keepable')
     ap.add_argument('--keep-mixed', action='store_true',
                     help='also keep events that have a cosmic-tagged AND a '
                          'keepable in-beam bundle (verdict "mixed"); they are '
@@ -115,7 +138,7 @@ def main():
     n_stm = n_nucand = 0
     for evt in sorted(seen, key=int):
         rows = read_tsv(seen[evt])
-        verdict, inbeam = classify(rows)
+        verdict, inbeam = classify(rows, drop_fc=args.drop_fc)
         counts[verdict] = counts.get(verdict, 0) + 1
         if verdict == 'keep' or (verdict == 'mixed' and args.keep_mixed):
             kept.append(evt)
@@ -127,7 +150,8 @@ def main():
 
     tot = len(seen)
     print(f'events with a table: {tot}')
-    for k in ('keep', 'tgm', 'lm', 'mixed', 'no-inbeam-bundle', 'empty'):
+    for k in ('keep', 'tgm', 'lm', 'mixed', 'all-fc', 'no-inbeam-bundle',
+              'empty'):
         if k in counts:
             tail = '  <- KEPT (--keep-mixed)' if (k == 'mixed' and args.keep_mixed) else ''
             print(f'  {k:>17}: {counts[k]:5d}  ({100.0 * counts[k] / tot:.1f}%){tail}')
