@@ -1,0 +1,17 @@
+# clean stopping-track dQ/dx-vs-rr sample, MCP2025C reco1 d55ton
+# cuts: npts>=40 nbin>=6 rrmin<=2.0 rrmax>=22.0 contrast>=2.0 chi2<=2.5 shape_rms<=0.1
+# k_<h> = free scale needed against hypothesis h; rms_<h> = shape residual after taking k out
+particle	root	event	block	status	npts	L_cm	contrast	chi2	k_muon	rms_muon	k_proton	rms_proton	mean_absx_cm
+muon	work-mcp10-d55ton	285999	90	0	618	392.3	2.86	1.82	1.060	4.1	0.639	6.8	76.9
+muon	work-mcp10-d55ton	285999	220	0	42	26.5	2.55	1.36	1.009	6.9	0.594	8.7	189.2
+muon	work-mcp10-d55ton	286065	30	0	394	249.5	2.66	1.79	1.011	8.4	0.610	7.6	153.0
+muon	work-mcp10-d55ton	286197	120	0	229	145.9	3.01	1.72	1.103	8.5	0.665	8.1	122.7
+muon	work-mcp10-d55ton	286241	80	0	250	162.1	2.54	1.92	0.981	5.4	0.592	6.9	69.3
+muon	work-mcp10-d55ton	286329	20	0	160	95.7	2.13	1.88	1.065	10.0	0.641	8.5	72.0
+muon	work-mcp1000-d55ton	286681	170	0	163	104.3	3.39	1.65	1.111	6.8	0.671	9.4	186.5
+muon	work-mcp1000-d55ton	287825	40	0	485	314.2	2.96	1.29	1.072	7.0	0.647	5.9	78.8
+muon	work-mcp1000-d55ton	288639	80	2	225	142.4	2.26	1.63	1.013	8.6	0.610	5.1	166.8
+muon	work-mcp1000b-d55ton	290069	120	0	184	117.2	2.48	1.24	1.038	4.7	0.626	3.4	149.7
+muon	work-mcp1000b-d55ton	290135	160	2	250	159.5	2.55	1.72	0.984	7.2	0.593	7.9	135.5
+muon	work-mcp1000b-d55ton	290201	80	0	318	205.3	2.47	1.64	1.022	9.9	0.616	7.1	97.3
+proton	work-mcp1000b-d55ton	289343	90	0	77	50.6	2.21	1.20	1.902	6.5	1.143	4.6	17.7

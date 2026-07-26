@@ -12,6 +12,15 @@ uncalibrated sample*, so the missing gain/lifetime calibration cancels — this 
 not an absolute-scale claim. The STM tagger nonetheless accepted all three,
 because on the `flag_strong_check = false` path nothing gates on `ratio1` (§5).
 
+**§§6–8 extend this to all 30 events and revise the proton reading.** The curated
+sample is 12 muon-like tracks and 1 proton-like track
+([`../dqdx_rr_sample/`](../dqdx_rr_sample/)). Moved into the dE/dx plane, the
+proton agrees with the muons to **1.024 ± 0.07** — its 14 % excess against *its
+own table* is the published Modified Box under-predicting the upper half of the
+dE/dx range, which it does for muons too. A single shape change (A = 0.93 kept,
+**B ≈ 0.13** instead of 0.212 at 0.5 kV/cm) halves the χ² and removes the proton
+offset; §7d says why that is a measured direction and not yet a recommendation.
+
 *(Doc number: 54 is taken by the in-flight TGM/STM perf campaign,
 `run_perf54_nusel.sh`.)*
 
@@ -96,7 +105,7 @@ Nothing was synthesized to widen "various particles" beyond what that file
 holds. Pion/kaon/electron curves do exist in
 `sbnd/particle_dataset.jsonnet`, but pulling them from a second source for a
 proton-vs-muon question would put two provenances in one figure for no gain.
-Extending the json is listed in §6.
+Extending the json is listed in §9 item 6.
 
 The third line on the plot is the flat **56 ke/cm** MIP reference — SBND's
 `mip_dqdx` (doc 48 §6, `sbnd/clus.jsonnet:513`), which is what
@@ -311,24 +320,315 @@ lists this as an open item, not a fix.
 
 ---
 
-## 6. Open items — none of these were done here
+## 6. The curated sample from all 30 events — `dqdx_rr_sample/`
 
-1. **Extend `stm_ref_dqdx.json` to all five particles** (pion, kaon, electron
+Sweeping every `T_rec_charge` block in all three `d55ton` arms (131 blocks in 30
+events) and keeping only those whose dQ/dx-vs-rr shape is highly consistent with
+an SBND expectation curve leaves **13 tracks: 12 muon-like and 1 proton-like.**
+They live in [`../dqdx_rr_sample/`](../dqdx_rr_sample/) with a README; the three
+bundles of §§0–5 are all in the set.
+
+```bash
+python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --plot dqdx_rr_sample/sample_overlay.png
+python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --verbose   # why each block dropped
+```
+
+Cuts, in order, with the value each rejected block failed on printed by
+`--verbose`: ≥ 40 fitted points; ≥ 6 populated profile bins reaching rr < 2 cm
+and rr ≥ 22 cm; **Bragg contrast** = median dQ/dx(rr < 2)/median dQ/dx(20–40 cm)
+**≥ 2.0**; median reduced χ² ≤ 2.5; **free-scale shape residual ≤ 10 %** against
+at least one of muon/pion/kaon/proton.
+
+Two things about the selection that are worth stating plainly because they shape
+what the sample can be used for:
+
+1. **The electron curve is excluded as a hypothesis.** Above 15 cm it is 44
+   identical entries (doc 48 §5) — a flat line — so *every* through-going track
+   matches it to 6–16 %. Left in, it would have swept in 30-odd non-stopping
+   passes. This is the single most important cut in the script.
+2. **Shape does not identify the particle; the overall scale does.** Over
+   0.5–60 cm the muon, pion, kaon and proton dQ/dx curves have nearly the same
+   *shape* and differ mostly in scale: on a typical selected track the four
+   shape residuals agree to < 1.5 % of each other while the free scales they
+   need differ by 1.7×. So the assignment is by scale, and the scale is
+   calibrated by the muon population itself — 12 tracks needing k = 0.98–1.11
+   against the SBND muon curve. The one track needing k = 1.90 is the proton.
+
+| particle | n | k against its own curve | Bragg contrast | fit L (cm) |
+|---|---:|---|---|---|
+| muon | 12 | 0.98 – 1.11 | 2.13 – 3.39 | 26.5 – 392.3 |
+| proton | 1 | 1.14 | 2.21 | 50.6 |
+
+![The selected sample](../dqdx_rr_sample/sample_overlay.png)
+
+**One clean proton in 30 events, and that is not a selection failure.** The STM
+fit only runs on STM *candidate* clusters, so the sample is conditioned on that
+pre-selection; and cosmic-induced stopping protons long enough to give a 6-bin
+profile are genuinely rare. Anyone who needs a proton population should widen
+the input, not the cuts.
+
+### 6a. The near misses, named
+
+Five blocks with a real Bragg rise failed, and the reasons are recorded so the
+boundary is auditable rather than hand-drawn:
+
+| block | contrast | shape rms | χ² | why dropped |
+|---|---:|---:|---:|---|
+| 288287 blk100 | 2.23 | 6.3 % (proton) | 1.80 | **scale in no window**: k_muon = 1.40, k_proton = 0.84 — between the muon band and the proton. Genuinely ambiguous; see below. |
+| 288067 blk140 | 2.21 | 12.8 % | 1.79 | shape rms |
+| 290201 blk90 | 3.11 | 13.6 % | 1.26 | shape rms |
+| 286329 blk190 | 2.06 | 11.4 % | 2.58 | χ² (and shape rms 11.4 %) |
+| 289849 blk10 | 2.97 | 20.1 % | 3.07 | χ² |
+
+**288287 blk100 is the one that matters.** Its shape is as good as anything in
+the sample and it sits 40 % above the muon curve and 16 % below the proton curve
+— i.e. between the two hypotheses, where neither a muon nor a proton should be.
+Its STM pass status is 2 (not accepted). A merged or partly overlapping cluster
+double-counting some charge would look exactly like this. It is **excluded, not
+resolved**; §9 item 2 lists it.
+
+---
+
+## 7. Can one recombination model describe all of it?
+
+The prompt was: the muons look reasonable but the proton reads high, at
+E ≈ 0.5 kV/cm, with the other parameters and the overall normalisation free — is
+there a better model?
+
+```bash
+python3 dqdx_rr_sample/fit_recombination.py -o dqdx_rr_sample/recomb_fit.png
+python3 dqdx_rr_sample/fit_recombination.py --rr-max 60    # robustness variant
+```
+
+### 7a. The right axis to ask the question on
+
+A recombination model is a function of **dE/dx**, not of residual range. So the
+sample was moved into that plane: each measured point's rr was mapped to dE/dx
+through the same `pion_travel/stopping.root` graphs `convert_field.C` uses to
+build the tables, averaged over that point's own `dx` window (the measurement is
+a segment average, so the model must be too). Then
+
+  dQ/dx = C · R(dE/dx) · (dE/dx)/W_ion,  W_ion = 23.6 eV, ρ = 1.38, E = 0.5 kV/cm
+
+with `C` free in every fit — it absorbs the gain, the mean lifetime attenuation
+and (for Modified Box) the ×0.85 fudge. Two families:
+
+| | R | shape params |
+|---|---|---|
+| Modified Box | ln(A + ξ)/ξ,  ξ = (B/ρE)·dE/dx | A, B; published 0.93, 0.212 |
+| Birks | 1/(1 + k_B′·dE/dx),  k_B′ = k_B/ρE | k_B; ICARUS 0.0486 (A_B degenerate with C) |
+
+The fit runs on **dE/dx-binned medians with equal treatment per bin**, because
+76 % of the 3380 points sit in one MIP bin (dE/dx 2.0–2.3, the long plateau of
+the through-going part of each muon) and a point-weighted fit would have almost
+no lever arm on the shape of R. Bin errors are the standard error of the mean of
+ln(dQ/dx) added in quadrature with a 3 % systematic floor. Coverage:
+
+| | points | dE/dx (MeV/cm) | drift (µs) | bins |
+|---|---:|---|---|---:|
+| muon | 3304 | 2.12 – 9.44 | 5 – 1288 | 10 |
+| proton | 76 | 3.58 – 23.4 | 1106 – 1251 | 6 |
+
+The muon and proton ranges **overlap over 3.5–10.5 MeV/cm** — six shared bins.
+That overlap is what makes the question answerable at all.
+
+### 7b. The proton is not high — at matched dE/dx it agrees with the muons
+
+Model-independent, no fit involved, just the two sets of binned medians:
+
+| dE/dx bin (MeV/cm) | muon (ke/cm) | proton (ke/cm) | proton/muon | ± |
+|---|---:|---:|---:|---:|
+| 3.5 – 4.0 | 90.1 | 104.1 | 1.155 | 5.1 % |
+| 4.0 – 4.6 | 109.0 | 110.3 | 1.012 | 5.2 % |
+| 4.6 – 5.4 | 122.0 | 118.0 | 0.967 | 6.3 % |
+| 5.4 – 6.5 | 142.0 | 133.8 | 0.942 | 6.6 % |
+| 6.5 – 8.0 | 143.7 | 157.6 | 1.096 | 7.9 % |
+| 8.0 – 10.5 | 162.9 | 168.8 | 1.036 | 8.2 % |
+
+**Median proton/muon at matched dE/dx = 1.024, scatter 7.0 % over 6 bins** —
+consistent with 1 well inside the per-bin errors, and with no trend. A
+recombination model is a function of dE/dx alone; this column being flat at 1 is
+exactly the condition under which one such model can describe both particles.
+**It is satisfied.**
+
+So the §3 picture — proton at 1.14 of its own curve, muons at 0.98 of theirs —
+is **not a proton-specific effect.** It is an artefact of comparing each particle
+against its own *rr*-parameterised table with rr-uniform bin weights. The
+proton's 0.5–50 cm of residual range samples dE/dx 3.6–23 MeV/cm; a muon's same
+rr range samples 2.1–10. The published Modified Box curve under-predicts the
+measured charge in the upper part of that span **for muons too** (§7c), and the
+proton simply lives there.
+
+That is the direct answer to "the proton's measurement seems higher": it is
+higher than *its table*, not higher than a muon of the same dE/dx.
+
+### 7c. What the data does say about the model
+
+![Recombination fit](../dqdx_rr_sample/recomb_fit.png)
+
+| model | shape params | χ²/ndf | rms of ln(data/model) | muon median | proton median |
+|---|---|---:|---:|---:|---:|
+| Modified Box, published | A = 0.93, B = 0.212 | **3.82** | 6.78 % | 0.984 | **1.054** |
+| Modified Box, B free | A = 0.93, **B = 0.1285** | **2.03** | 5.45 % | 0.986 | **1.006** |
+| Birks, k_B free | **k_B = 0.0326** | 2.89 | 6.18 % | 0.986 | 1.016 |
+| Modified Box, A and B free | A = 0.600 (at the bound), B = 0.316 | 1.08 | 3.94 % | 0.992 | 1.007 |
+
+Four readings:
+
+1. **The published parameters at 0.5 kV/cm leave a real, structured residual.**
+   χ²/ndf = 3.8 on 16 bins with one free normalisation. The residual is not
+   noise: it runs from **0.87 at dE/dx = 2.15** up to ≈ 1.05–1.10 above
+   4 MeV/cm, and the low end is the 2567-point bin whose error is the 3 %
+   systematic floor. The measured dQ/dx rises with dE/dx *faster* than Modified
+   Box(0.93, 0.212) at 0.5 kV/cm does.
+2. **One parameter fixes it, and fixes the proton with it.** Holding A at the
+   published 0.93 and freeing B gives **B = 0.129**, χ²/ndf 3.82 → 2.03, and the
+   proton's median residual 1.054 → **1.006**. Nothing was tuned *at* the proton
+   — B was fitted to muons and proton together on equal footing, and the proton
+   falling onto the curve is a consequence, not an input.
+3. **Birks is not the better family.** Its best k_B = 0.0326 (0.67 × ICARUS)
+   reaches χ²/ndf 2.89 — better than the published Modified Box, worse than
+   Modified Box with the same number of free shape parameters. On this sample
+   the choice of family matters less than the value of the one shape parameter.
+4. **A and B are strongly degenerate, so "A = 0.6" is not a measurement.** With
+   B refitted at each fixed A:
+
+   | A | B | C | χ²/ndf |
+   |---:|---:|---:|---:|
+   | 0.60 | 0.3161 | 1.2289 | 1.01 |
+   | 0.70 | 0.2648 | 1.1326 | 1.15 |
+   | 0.80 | 0.2101 | 1.0232 | 1.38 |
+   | 0.90 | 0.1491 | 0.8903 | 1.81 |
+   | **0.93** | **0.1285** | **0.8418** | **2.03** |
+   | 1.00 | 0.0731 | 0.6905 | 3.02 |
+   | 1.10 | 0.1089 | 0.6587 | 8.89 |
+
+   χ²/ndf falls monotonically as A falls, with no minimum inside the range — the
+   two-parameter fit runs to whatever lower bound it is given. And A well below
+   ~0.9 is unphysical: R = ln(A+ξ)/ξ → 1 as ξ → 0 requires A = 1, so a small A
+   has no zero-density limit. **The honest output is one number, B ≈ 0.13 at the
+   published A = 0.93, not a new (A, B) pair.**
+
+### 7d. B is degenerate with the field, and that is the uncomfortable part
+
+Only β′ = B/(ρE) enters. The fit gives β′ = **0.186 cm/MeV** where the tables
+use 0.307 at 0.5 kV/cm. Equivalently, **keeping B = 0.212 the data prefers an
+effective field of 0.825 kV/cm — 1.65× SBND's nominal 0.5.**
+
+That is not a plausible field error. SBND's 0.5 kV/cm is pinned independently by
+the drift velocity (`energy_loss/docs/efield_from_drift_velocity.md`; the
+configured 1.563 mm/µs), and a 65 % field error would be a gross one. So the
+preferred reading of B ≈ 0.13 is *not* "the field is wrong". It is one of:
+
+- **(A, B) genuinely differ at 0.5 kV/cm** from the ArgoNeuT/MicroBooNE values
+  fitted at 0.273–0.5 kV/cm — possible, and doc 48 §8 item 8 already asks for
+  SBND's own `ModBoxA`/`ModBoxB`; or
+- **the reconstructed dQ/dx carries a dE/dx-dependent instrumental bias** that
+  mimics reduced quenching — high local charge density is exactly where
+  deconvolution, charge sharing and the `dx` estimate are hardest.
+
+This sample cannot separate those two. What it *can* do is close off the cheap
+alternative explanations, which §7e does.
+
+### 7e. Three alternative explanations, tested and closed
+
+**Not the Bragg peak.** The trend is present entirely away from the stopping end:
+the muon residual runs 0.87 → 0.90 → 0.95 → 0.99 over dE/dx 2.15 → 3.22, which
+for a muon is rr ≈ 100 cm → 10 cm. Restricting the whole fit to rr ≤ 60 cm
+(the reference-table domain) leaves it: χ²/ndf 3.82 → 5.94 rms, B = 0.129 →
+0.152.
+
+**Not the drift.** The dE/dx trend survives at fixed drift time, which a
+lifetime cannot fake. Each cell below is the median dQ/dx in that (dE/dx, drift)
+cell divided by the same column's MIP cell, so a common gain and a common
+attenuation both cancel and only the shape of R is left:
+
+| dE/dx (MeV/cm) | 0–300 µs | 300–600 µs | 600–900 µs | ModBox(0.93, 0.212) |
+|---|---:|---:|---:|---:|
+| 2.0 – 2.3 | 1.000 | 1.000 | 1.000 | 1.001 |
+| 2.3 – 2.6 | 1.168 | 1.145 | 1.020 | 1.087 |
+| 2.6 – 3.0 | 1.394 | 1.338 | 1.324 | 1.241 |
+| 3.0 – 3.5 | 1.476 | 1.544 | 1.687 | 1.404 |
+| 3.5 – 4.6 | 1.980 | 1.657 | 2.182 | 1.628 |
+| 4.6 – 6.5 | 2.038 | 2.318 | 2.776 | 1.981 |
+| 6.5 – 10.5 | 3.355 | — | — | 2.595 |
+
+The data column exceeds the model column in 15 of the 17 filled cells, in every
+drift band. Individual cells hold 6–90 points so any one is noisy; the sign is
+not.
+
+**And the lifetime, measured, goes the wrong way for the proton.** Binning only
+the MIP band (dE/dx 2.0–2.5) by drift time — where recombination is constant, so
+the drift dependence is clean:
+
+| drift (µs) | n | median dQ/dx (ke/cm) |
+|---|---:|---:|
+| 0 – 200 | 240 | 57.03 |
+| 200 – 400 | 649 | 53.35 |
+| 400 – 600 | 581 | 53.37 |
+| 600 – 800 | 545 | 50.34 |
+| 800 – 1000 | 726 | 51.56 |
+| 1000 – 1300 | 172 | 50.13 |
+
+An exponential gives **τ ≈ 9 ms**, i.e. 13 % attenuation over the full 1290 µs
+drift — a sensible LAr purity, and the first number this chain has produced for
+it. Note where that leaves the proton: it sits at drift **1106–1251 µs**, the
+most attenuated corner of the whole sample. Applying a lifetime correction moves
+the proton **up**, not down. So attenuation is not the residual proton offset
+either — and after the B refit there is no offset left to explain.
+
+---
+
+## 8. Answer, in three sentences
+
+The muons are fine: 12 of them land at 0.98–1.11 of the SBND muon curve, and
+after the B refit at 0.986 with 5.5 % scatter. The proton is *not* high — at
+matched dE/dx it agrees with the muons to 1.024 ± 0.07, and its apparent 14 %
+excess against its own table is the published Modified Box under-predicting the
+upper half of the dE/dx range, which it does for muons too. There **is** a better
+model within the same family: A = 0.93 with **B ≈ 0.13** rather than 0.212 at
+E = 0.5 kV/cm halves the χ² and removes the proton offset — but B is degenerate
+with the field (β′ = 0.186 ⇔ an effective 0.83 kV/cm), the sample is 13 tracks of
+uncalibrated data, and a dE/dx-dependent reconstruction bias would look
+identical, so this is a measured direction and a magnitude, **not** a
+recommendation to change the shipped tables.
+
+---
+
+## 9. Open items — none of these were done here
+
+1. **The shipped tables were not touched.** `particle_dataset.jsonnet` still
+   carries A = 0.93, B = 0.212 at 0.5 kV/cm. Acting on §7c would move every
+   `*DeDx` curve and every STM verdict with it (doc 48 §4 measured what that
+   costs), and §7d's degeneracy is unresolved. Re-fitting on calibrated data with
+   a real proton population is the gate, not this sample.
+2. **288287 blk100** (§6a) — k_muon = 1.40, between the hypotheses, STM status 2.
+   Worth a hand scan for cluster merging; it is the only such case in 30 events.
+3. **A proton population.** One track cannot separate "SBND's (A, B) differ" from
+   "the reconstruction has a dE/dx-dependent bias". Protons at high dE/dx are the
+   lever arm, and this sample has 5 points above 10.5 MeV/cm.
+4. **The τ ≈ 9 ms of §7e is a by-product, not a calibration.** It comes from 12
+   muons in one 30-event set, with no position dependence and no cross-check
+   against a purity monitor. It does say the missing lifetime correction is worth
+   ~13 % end to end, which is the size of the effect doc 48 §8 item 3 is about.
+5. **The dE/dx side of the fit inherits `stopping.root`.** If those
+   stopping-power graphs are wrong, β′ absorbs it. They were not re-derived here.
+6. **Extend `stm_ref_dqdx.json` to all five particles** (pion, kaon, electron
    too). `docs/emit_jsonnet_dedx.py` in the `energy_loss` repo already emits all
    five from `pion_travel/stopping_ave_dQ_dx_sbnd.root`; the json dump was only
    ever muon + proton because that is what the viewer panel needed. A
    proton/kaon separation question would need it.
-2. **Decide whether the non-strong accept path should see `ratio1`** (§5). Needs
+7. **Decide whether the non-strong accept path should see `ratio1`** (§5). Needs
    a population, not this one track: how many `d55ton` STM tags have
    `1/ratio1 > 1.5`? `T_stm_eval` is dumped for every `-stm-fit` event, so the
    count is a query over the existing 30-event set, not a re-run.
-3. **Truth.** Everything here is fitted-vs-model on data. The MC sample and
+8. **Truth.** Everything here is fitted-vs-model on data. The MC sample and
    `dump_truth_sed.C` of doc 42 §7 are the way to confirm a proton is a proton.
-4. **The reference domain stops at 59.5 cm** for both curves, so 286065 m3's
+9. **The reference domain stops at 59.5 cm** for both curves, so 286065 m3's
    190 cm of plateau has no expectation to compare against and 289343 m9's
    40–60 cm bin is partly out of domain. Both are `convert_field.C` loop bounds,
    not physics limits (doc 48 §5 makes the same point for the electron curve).
-5. **Doc 42 §4's table** still quotes the uBooNE-referenced ratios (§4a). Left
+10. **Doc 42 §4's table** still quotes the uBooNE-referenced ratios (§4a). Left
    as the historical record; a reader who wants the SBND numbers has the Repro
    line above.
 
