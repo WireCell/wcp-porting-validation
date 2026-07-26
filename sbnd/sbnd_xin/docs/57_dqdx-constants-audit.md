@@ -14,7 +14,8 @@ two specific ways.** `detect_proton` never consults the proton table (§3), and
 the PR chain has *no* MIP knob at all: `mip_dqdx = 56000` reaches
 `TaggerCheckSTM` and nothing else (§4).
 
-Originally a **survey**. §5a has since become the record of an actual change:
+Originally a **survey**. §5a/§5a-bis have since become the record of an actual
+change and its A/B:
 the seven absolute-e/cm literal sites in `TaggerCheckSTM.cxx` are now written
 `a x m_mip_dqdx`, bit-identical at MicroBooNE's 50000 and following the MIP
 scale at SBND's 56000. Everything else here is still survey — `file:line`, the
@@ -228,12 +229,79 @@ was re-tuned; the numbers were only given the scale they were always written on.
 them are Michel-electron *vetoes* (`return false`, i.e. reject the STM
 hypothesis), so raising them makes the veto slightly harder to trigger and STM
 acceptance slightly looser. `:2187` feeds a track-length gate and `:762` a
-kink-finding break. **This has not been A/B'd** — see §7 item 1.
+kink-finding break. **A/B'd on the 30-event `d55ton` set: every output bit-identical**, and not for
+lack of reach — two of the five converted terms did flip on 8 eval rows, and the
+veto's OR absorbed it. Details and the caveats in §5a-bis.
 
 The mixed-convention defect this removes was real and quantified: lines `1742`, `1751`, `1753` of the same `if` use
 `ave_res_dQ_dx/m_mip_dqdx > 1.2 / 1.4 / 4.5` and have always followed `mip_dqdx`
 to 56000, while their neighbours on `1744`–`1749` stayed on 50000. The two halves of one
 veto had silently drifted 12 % apart relative to each other.
+
+### 5a-bis. The A/B on the 30-event `d55ton` set — no output changed, and it was **not** for lack of reach
+
+Two arms, same tree, same inputs, only `TaggerCheckSTM.cxx` differing
+(`efc2c281^` vs `efc2c281`), both at SBND's `mip_dqdx = 56000`:
+
+```bash
+cd sbnd_xin
+git -C ../../../toolkit checkout efc2c281^ -- clus/src/TaggerCheckSTM.cxx
+(cd ../../../toolkit && ./wcb build -j8)          # waf is content-hash based:
+                                                  # identical text => no rebuild
+./run_perf54_nusel.sh base d57mip                 # -> work-*-d57mipbase
+git -C ../../../toolkit checkout efc2c281 -- clus/src/TaggerCheckSTM.cxx
+(cd ../../../toolkit && ./wcb build -j8 && ./wcb install)
+./run_perf54_nusel.sh opt  d57mip                 # -> work-*-d57mipopt
+```
+
+Imaging and Q/L products are symlinked from `work-*-d55ton` and never
+regenerated, and both arms run under `setarch x86_64 -R` (this chain is
+ASLR-non-deterministic, doc 49 §4a), so any difference is the code change.
+Flags are the d55ton set exactly, including `-stm-fit -mip 56000`.
+
+**Result — 30 events, both arms `fail=0`:**
+
+| compared | count | differing |
+|---|---|---|
+| per-bundle label TSVs (`nusel-evt*.tsv`, TGM/STM/FC verdicts) | 30 files | **0** |
+| `T_stm_eval` rows (every KS/ratio/residual number the evaluator produced) | 56 | **0** |
+| `T_stm_pass` rows (per-pass status, kink, exit/left length and dQ/dx) | 16 | **0** |
+| `T_rec_charge` rows (every fitted point's q, dx, rr) | 2767 | **0** |
+
+ROOT trees compared branch-by-branch with `uproot` at `atol = rtol = 0`, i.e.
+exact equality, not "close".
+
+**Why that is a real null and not an insensitive test.** `T_stm_eval` dumps
+`res_length` (cm) and `ave_res_dqdx` (e/cm) — the two inputs of the veto that
+changed — so the conditional can be replayed offline on all 56 rows:
+
+| veto term | old fires | new fires | **flipped** |
+|---|---|---|---|
+| `L > 16 && ave > 1.45 MIP` | 8 | 8 | 0 |
+| `L > 10 && ave > 1.45 MIP && D > −0.05` | 14 | 14 | 0 |
+| `L > 10 && ave > 1.70 MIP` | 8 | 4 | **4** |
+| `L > 6 && ave > 1.85 MIP` | 8 | 0 | **8** |
+| `L > 6 && ave > 1.45 MIP && D > −0.05` | 14 | 14 | 0 |
+| **the whole `if` (8-term OR)** | **32** | **32** | **0** |
+
+So the change *did* reach the arithmetic: two of the five converted terms flipped
+on 8 distinct rows — `res_length = 31.36 cm, ave = 97807` (1.75 MIP) and
+`res_length = 16.68 cm, ave = 94813` (1.69 MIP), both of which clear 92500 but
+not 1.85 × 56000 = 103600. The **OR structure absorbed it**: every one of those
+rows is still vetoed by a 1.45-MIP term, because 1.75 and 1.69 MIP sit far above
+both 72500 and 81200. The veto is redundant across its terms in exactly the
+region where the rescaling bites.
+
+**Caveats.** The replay covers the five Michel-veto terms only —
+`adjust_rough_path`'s `min_dQ_dx` and `check_other_tracks`' length threshold are
+not dumped, so for those the evidence is the end-to-end bit-identical result,
+which does exercise them but cannot say how close they came. And the sample is
+small: 56 eval rows and 16 pass rows over 30 events, narrowed further by doc 56's
+beam-window-only default. A null on 30 events is not a licence to skip the check
+on a production-scale run; it is evidence that this change does not move SBND's
+current STM answers.
+
+Arms kept at `work-{mcp10,mcp1000,mcp1000b}-d57mip{base,opt}` (66 MB each).
 
 ### 5b. Peak-over-MIP thresholds — the ones doc 55's table work moves
 
@@ -308,11 +376,11 @@ how wrong it is.
 1. ~~**The absolute e/cm literals.**~~ **Done** (§5a, toolkit `efc2c281` on
    `apply-pointcloud`): seven sites converted to `a * m_mip_dqdx`, bit-identical
    at the MicroBooNE default, +12 % at SBND. `85/50.` and `110/50.` were already
-   correct and were only commented. **What remains is the A/B**: those seven now
-   move on SBND for the first time, and nothing here measured the effect on the
-   30-event `d55ton` set. That is the gate before this rides into a production
-   run — the harness is `p54_ab_report.py` and the `work-mcp10-d55t{on,off}`
-   arms (doc 54).
+   correct and were only commented. The A/B is **done** too (§5a-bis): 30
+   events, every label TSV and every `T_stm_eval`/`T_stm_pass`/`T_rec_charge`
+   row identical, with the replay showing the change reached the arithmetic on
+   8 rows and was absorbed by the veto's OR. Nothing outstanding on this item
+   except re-checking at production scale.
 2. **The PR chain's missing `mip_dqdx` knob (§4).** 102 sites and two different
    defaults. Deciding whether the PR chain should see 56000 at all is a design
    question worth answering before touching any of them — but the *inventory*
