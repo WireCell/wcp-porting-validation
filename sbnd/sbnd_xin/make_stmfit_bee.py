@@ -52,7 +52,7 @@ The PR cluster id is what tracking-stm.root encodes as cid*10+pass and what
 the nusel TSV reports, so the PR->img table is printed for cross-reference.
 
 Usage:
-  python3 make_stmfit_bee.py -w work-mcp10-stmon -o upload_286241.zip 286241
+  python3 make_stmfit_bee.py -w archive/stm-docs40-49/work-mcp10-stmon -o upload_286241.zip 286241
   ./upload-to-bee.sh upload_286241.zip
 """
 import argparse

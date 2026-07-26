@@ -18,7 +18,7 @@ Two jobs:
      the operating point needs no C++ rerun; only the final defaults do.
 
 Repro (doc 34):
-  python3 lm_tune.py work-mcp10-lm work-mcp1000-lm --out /home/xqian/tmp/lm_tune
+  python3 lm_tune.py archive/tgm-docs29-39/work-mcp10-lm archive/tgm-docs29-39/work-mcp1000-lm --out /home/xqian/tmp/lm_tune
 """
 import argparse
 import glob

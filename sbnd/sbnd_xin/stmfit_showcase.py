@@ -9,7 +9,7 @@ binned profile and the ratio to expectation that doc 42 quotes.
 
 Repro:
   cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-  python3 stmfit_showcase.py -r work-mcp10-stmon -e 286241 -b 80 \
+  python3 stmfit_showcase.py -r archive/stm-docs40-49/work-mcp10-stmon -e 286241 -b 80 \
       -o showcase-stmfit-286241/dqdx_286241_blk80.png
 """
 import argparse
@@ -35,7 +35,7 @@ def ref_curve(path, key="MuonDeDx"):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("-r", "--root", required=True, help="work root, e.g. work-mcp10-stmon")
+    ap.add_argument("-r", "--root", required=True, help="work root, e.g. archive/stm-docs40-49/work-mcp10-stmon")
     ap.add_argument("-e", "--event", required=True, help="event id")
     ap.add_argument("-b", "--block", type=int, required=True,
                     help="T_rec_charge block id = cluster_id*10 + pass")

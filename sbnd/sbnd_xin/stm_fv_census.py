@@ -33,7 +33,7 @@ box.  A positive number is a cluster the STM tagger declined to fit and the FC
 tagger called an exiter.
 
     python3 stm_fv_census.py                       # the three dq48v3 scan tags
-    python3 stm_fv_census.py work-mcp10-dq48v3
+    python3 stm_fv_census.py work-mcp10-dq48v3          # bare tag still resolves
     python3 stm_fv_census.py --detail 285185:21    # one cluster, per merge component
     python3 stm_fv_census.py --margins 2.5,3,3,3 work-mcp10-dq48v3   # other flags
 
@@ -62,6 +62,17 @@ import nusel_extract as ne  # noqa: E402
 
 MM = 10.0                     # pctree arrays are WCT internal units (mm)
 DEFAULT_TAGS = ['work-mcp10-dq48v3', 'work-mcp1000-dq48v3', 'work-mcp1000b-dq48v3']
+
+
+def resolve_tag(tag, root):
+    """Accept a bare tag dir name whether it sits at the top level or under
+    archive/<campaign>/.  The doc-29..49 tags were moved there on 2026-07-25;
+    see docs/work-tags.md for the tag -> location map."""
+    if os.path.isdir(os.path.join(root, tag)):
+        return tag
+    import glob as _glob
+    hits = _glob.glob(os.path.join(root, 'archive', '*', os.path.basename(tag)))
+    return os.path.relpath(hits[0], root) if hits else tag
 
 # STM box: union of per-face sensitive volumes (cm).
 S_XLO, S_XHI, S_Y, S_ZLO, S_ZHI = 0.45, 201.45, 199.965, 0.0, 501.0
@@ -285,6 +296,6 @@ if __name__ == '__main__':
         set_margins(argv[1])
         argv = argv[2:]
     if argv and argv[0] == '--detail':
-        detail(argv[1], argv[2:] or DEFAULT_TAGS, root)
+        detail(argv[1], [resolve_tag(t, root) for t in (argv[2:] or DEFAULT_TAGS)], root)
     else:
-        census(argv or DEFAULT_TAGS, root)
+        census([resolve_tag(t, root) for t in (argv or DEFAULT_TAGS)], root)

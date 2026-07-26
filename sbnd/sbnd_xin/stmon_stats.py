@@ -17,7 +17,10 @@ import numpy as np
 import uproot
 
 BASE = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin"
-ROOTS = ["work-mcp10-stmon", "work-mcp1000-stmon", "work-mcp1000b-stmon"]
+# Archived 2026-07-25 out of the top level; see docs/work-tags.md for the map.
+ROOTS = ["archive/stm-docs40-49/work-mcp10-stmon",
+         "archive/stm-docs40-49/work-mcp1000-stmon",
+         "archive/stm-docs40-49/work-mcp1000b-stmon"]
 STATUS = {0: "accepted-STM", 1: "TGM", 2: "long-leftover", 3: "eval-fail",
           4: "extra-tracks", 5: "proton", 6: "no-decision"}
 
