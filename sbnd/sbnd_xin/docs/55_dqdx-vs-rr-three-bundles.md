@@ -915,6 +915,10 @@ recombination model can absorb by construction.
    `*DeDx` curve and every STM verdict with it (doc 48 §4 measured what that
    costs), and §7d's degeneracy is unresolved. Re-fitting on calibrated data with
    a real proton population is the gate, not this sample.
+   [57](57_dqdx-constants-audit.md) traces exactly where that cost lands:
+   `TaggerCheckSTM` reads the **muon** curve and nothing else, the PR chain's
+   track PID reads muon + proton + electron, and the pion and kaon `*DeDx`
+   tables have no reader at all.
 2. **288287 blk100** (§6a) — k_muon = 1.40, between the hypotheses, STM status 2.
    Worth a hand scan for cluster merging; it is the only such case in 30 events.
 3. **A proton population.** One track cannot separate "SBND's (A, B) differ" from
@@ -1105,7 +1109,9 @@ all. Nothing in `energy_loss/` or `sbnd/particle_dataset.jsonnet` was modified.
 
 ---
 
-Companion docs: [48](48_sbnd-dqdx-tables-and-mip.md) (where these curves come
+Companion docs: [57](57_dqdx-constants-audit.md) (who actually reads these
+curves, and every hardcoded charge-scale constant around them),
+[48](48_sbnd-dqdx-tables-and-mip.md) (where these curves come
 from), [47](47_stm-bragg-reference-sbnd-retune.md) (why they had to be replaced),
 [42](42_stm-fit-showcase-evt286241.md) (one fit end to end, and the uncalibrated-
 data caveat), [41](41_stm-fit-dump.md) (what `save_stm_fit` writes).

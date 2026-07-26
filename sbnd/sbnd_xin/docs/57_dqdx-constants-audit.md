@@ -1,0 +1,311 @@
+# 57 — Where the dQ/dx numbers actually come from: what the STM tagger and the PR
+chain read, and every hardcoded charge-scale constant in them
+
+Three questions, asked after [55 §10](55_dqdx-vs-rr-three-bundles.md) put five
+free-power reference tables into `nusel_display/stm_ref_dqdx.json`:
+
+1. Does the STM tagger use that json?
+2. Does the PR chain use `sbnd/particle_dataset.jsonnet`?
+3. Are there hardcoded numbers in the tagger aimed at protons — inherited from
+   MicroBooNE — that need the same treatment?
+
+**Short answers: no, yes, and yes — but the third one is worse than expected in
+two specific ways.** `detect_proton` never consults the proton table (§3), and
+the PR chain has *no* MIP knob at all: `mip_dqdx = 56000` reaches
+`TaggerCheckSTM` and nothing else (§4).
+
+This document is a **survey only**. Nothing was changed. Every entry carries
+`file:line`, the number, and what would move it. Where provenance could not be
+established from the code it says so rather than inferring it from the value.
+
+---
+
+## Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev
+
+# 1. is the json in the config chain at all?
+grep -rn "stm_ref_dqdx" toolkit/ | grep -v .cache        # -> nothing
+
+# 2. who reads the five *DeDx tables
+grep -rn "get_dEdx_function(" toolkit/clus/src toolkit/clus/inc
+
+# 3. the constants
+grep -nE "m_mip_dqdx *[<>]|/ *m_mip_dqdx *[<>]" toolkit/clus/src/TaggerCheckSTM.cxx
+grep -rn "43e3\|43000" toolkit/clus/src toolkit/clus/inc | wc -l     # -> 102
+```
+
+Line numbers are against the working tree as of 2026-07-26.
+
+---
+
+## 1. The json is **not** in the config chain
+
+`nusel_display/stm_ref_dqdx.json` is read by exactly three Python programs, all
+under `sbnd_xin/`: `nusel_scan_viewer.py`, `stmfit_showcase.py`,
+`stmfit_particle_overlay.py`. Nothing in `toolkit/` opens it — it does not
+appear in any `.jsonnet`, any `.cxx`, or any config the pipeline compiles.
+
+So **doc 55 §10 changed no reconstruction behaviour whatsoever.** It changed
+what a scan viewer draws and what three analysis scripts compare against. The
+free-power tables are a *proposal* living next to the tables in use, which is
+why §10.4 kept the `*DeDxBox` keys beside them and anchored `MIP_DQDX` on the
+`*Box` muon plateau.
+
+## 2. `particle_dataset.jsonnet` **is** in the chain — for both, with very
+different coverage
+
+```
+sbnd_xin/wct-pr-perevt.jsonnet:194   local pds = (import '../particle_dataset.jsonnet')()
+        :199                         particle_dataset = pds.particle_dataset
+        :200                         extra_uses = pds.all          # the 10 LinterpFunctions
+   -> ParticleDataSet (clus/src/ParticleDataSet.cxx) — a name -> IScalarFunction map,
+      "muon"/"proton"/"pion"/"kaon"/"electron" for dedx_functions and range_functions
+```
+
+Two consumers, and they do not use the same subset:
+
+| consumer | `get_dEdx_function` calls | file:line |
+|---|---|---|
+| **`TaggerCheckSTM`** | `"muon"` **only**, 3 sites | `TaggerCheckSTM.cxx:1500, 1503, 1688` |
+| **PR chain** (`do_track_comp`, the track-PID comparator) | `"muon"`, `"proton"`, `"electron"` | `PRSegmentFunctions.cxx:1312–1314` |
+
+The `pion` and `kaon` `*DeDx` tables have **no** `get_dEdx_function` caller
+anywhere in `clus/`. They are configured and loaded and never read. (The five
+`*Range` tables are a different story — `get_range_function` is called for all
+five, and those are genuinely detector-agnostic.)
+
+Consequence for the user's question: rebuilding the shipped `*DeDx` tables would
+change **`TaggerCheckSTM` through the muon curve only**, and the PR chain's
+track PID through muon + proton + electron. That is where doc 55 §9 item 1's
+"moves every STM verdict" cost actually lands.
+
+## 3. **`detect_proton` never uses the proton table**
+
+This is the most surprising item in the survey and it goes straight at the
+user's question.
+
+`TaggerCheckSTM.cxx:1287–1542` is the function whose whole job is "is this
+stopping thing a proton?" — its `true` return sets pass status 5, *rejected
+proton endpoint*. It builds three reference vectors (`1495–1504`):
+
+- `muon_ref`   — `get_dEdx_function("muon")` over rr ∈ (3, 35) cm
+- `const_ref`  — the flat `m_mip_dqdx` line
+- `muon_ref_p` — `get_dEdx_function("muon")` again, over rr < 20 cm
+
+and then decides from `ks1/ks2/ks3`, `ratio1/2/3` and the peak height
+`dQ_dx[max_bin]/m_mip_dqdx`. **There is no `get_dEdx_function("proton")` call in
+`TaggerCheckSTM.cxx`.** A proton is identified as "a thing that fits the muon
+hypothesis badly and peaks high", never as "a thing that fits the proton
+hypothesis well".
+
+Two things follow:
+
+1. It is consistent with doc 55 §5, where all three hand-scanned bundles —
+   including the one that sits at 1.14 of the proton curve and 1.91 of the muon
+   curve — were accepted as stopping muons.
+2. **A better proton table cannot improve proton rejection**, before or after
+   §10, because that code path cannot see it. Any gain from doc 55's work would
+   have to come either from the muon curve moving or from adding a proton
+   hypothesis to this function. The second is a change of algorithm, not of
+   constants, and is out of scope here.
+
+## 4. The PR chain has no MIP knob — and two different MicroBooNE values
+
+`mip_dqdx` is a config knob on **`TaggerCheckSTM` only**. `TaggerCheckSTM.cxx`
+is the only file in `clus/src/` that mentions it (C++ default `50e3` at
+`:406`, SBND config `56000` at `cfg/pgrapher/experiment/sbnd/clus.jsonnet:513`
+and `sbnd_xin/wct-pr-perevt.jsonnet:50`).
+
+Everywhere else the MIP scale is a **compiled-in default argument**:
+
+| where | value | note |
+|---|---|---|
+| `PRSegmentFunctions.h:91, 93, 111` | `50000/units::cm` | `do_track_comp`, `segment_do_track_pid`, `segment_cal_4mom` |
+| `PRSegmentFunctions.h:104, 117, 119` | `43000/units::cm` | `segment_determine_dir_track`, the two shower-direction entries |
+| `PRShower.cxx:715` | `43e3/units::cm` | local `const double MIP_dQdx` |
+
+Both are MicroBooNE numbers, and **which one you get depends on which function
+you land in**. Every call site checked passes no explicit value — e.g.
+`NeutrinoShowerClustering.cxx:156, 1034, 1432, 1574, 2743`,
+`NeutrinoVertexFinder.cxx:500, 1224–1521` all take the default. The only
+explicit overrides found pass `43000/units::cm` again
+(`NeutrinoTrackShowerSep.cxx:119, 126, 139`).
+
+Beyond the defaults, the constant is written out inline **102 times across 15
+files**:
+
+| file | sites of `43e3`/`43000` |
+|---|---|
+| `NeutrinoTaggerNuE.cxx` | 19 |
+| `NeutrinoVertexFinder.cxx` | 17 |
+| `NeutrinoTaggerCosmic.cxx` | 13 |
+| `NeutrinoTrackShowerSep.cxx` | 12 |
+| `NeutrinoTaggerSSM.cxx` | 10 |
+| `NeutrinoTaggerSinglePhoton.cxx` | 9 |
+| `NeutrinoShowerClustering.cxx` | 5 |
+| `PRSegmentFunctions.h` | 5 |
+| `NeutrinoTaggerNuMu.cxx` | 4 |
+| `PRSegmentFunctions.cxx`, `NeutrinoPatternBase.cxx` | 2 each |
+| `PRShower.cxx`, `NeutrinoStructureExaminer.cxx`, `NeutrinoOtherSegments.cxx`, `NeutrinoDeghoster.cxx` | 1 each |
+
+**This is the single most consequential finding for the PR-chain question.**
+Doc 48 raised the SBND MIP to 56000 e/cm; that raise reaches one component. The
+rest of the chain still divides by 43000 or 50000. Provenance of the 43000 vs
+50000 split is *not established here* — both are MicroBooNE-era, but why two
+values coexist is not visible in this code.
+
+## 5. Hardcoded constants inside `TaggerCheckSTM`, by what breaks them
+
+### 5a. Absolute e/cm literals that never got the SBND treatment
+
+These are compared against a raw dQ/dx in e/cm, **not** normalised by
+`m_mip_dqdx`, so they did not move when doc 48 set 56000.
+
+| line | expression | in MIP units at uBooNE 50000 | at SBND 56000 |
+|---|---|---|---|
+| `1722` | `res_length > 16 cm && ave_res_dQ_dx > 72500` | 1.45 | 1.29 |
+| `1723` | `res_length > 10 cm && ave_res_dQ_dx > 72500` | 1.45 | 1.29 |
+| `1725` | `res_length > 10 cm && ave_res_dQ_dx > 85000` | 1.70 | 1.52 |
+| `1726` | `res_length > 6 cm && ave_res_dQ_dx > 92500` | 1.85 | 1.65 |
+| `1727` | `res_length > 6 cm && ave_res_dQ_dx > 72500` | 1.45 | 1.29 |
+
+What makes this actionable rather than stylistic: **the very same conditional
+block mixes both conventions.** Lines `1720`, `1729`, `1731` in the identical
+`if` use `ave_res_dQ_dx/m_mip_dqdx > 1.2 / 1.4 / 4.5`. So half of this
+Michel-electron veto scaled to SBND and half of it did not, and the two halves
+have silently drifted 12 % apart relative to each other.
+
+The smoking gun for provenance is a few hundred lines later, in
+`check_other_tracks`:
+
+```cpp
+2209:  else if (track_length1 < 10  && track_medium_dQ_dx <  85/50.) continue;
+2210:  else if (track_length1 < 3.5 && track_medium_dQ_dx < 110/50.) continue;
+```
+
+`track_medium_dQ_dx` is already `... / m_mip_dqdx` (`:2162`), i.e. in SBND MIP
+units — but the threshold literally spells "85000 e/cm over the **50000** MIP".
+The uBooNE denominator is written into the source. At SBND those become
+1.70 × 56000 = 95200 and 2.20 × 56000 = 123200 e/cm, not the 85000/110000 the
+expression was written to mean.
+
+Two more of the same kind:
+
+| line | expression | note |
+|---|---|---|
+| `749` | `min_dQ_dx < 1000` | raw dQ/dx, kink-finding low-charge break; units and provenance *not established here* |
+| `2163` | `segment_track_length_threshold(segment, 75000./units::cm)` | absolute e/cm, the only argument of its kind |
+
+### 5b. Peak-over-MIP thresholds — the ones doc 55's table work moves
+
+All inside `detect_proton`, all of the form `dQ_dx[max_bin]/m_mip_dqdx > X`:
+
+| line | thresholds |
+|---|---|
+| `1519` | `> 2.3` (the gate on the whole first proton branch) |
+| `1521` | `> 2.5` |
+| `1523` | `< 3.0`, `< 4.0` |
+| `1533` | `> 3.5` |
+| `1535` | `> 4.3` |
+| `1536` | `> 3.0` |
+
+These cut on **Bragg-peak height in MIP units** — which is exactly the
+peak/plateau contrast that both the field change and the recombination model
+move, while the numbers themselves have never moved:
+
+| | peak/plateau, muon | proton |
+|---|---|---|
+| uBooNE 0.273 kV/cm (doc 48 §3) | 2.525 | 2.664 |
+| SBND 0.5 kV/cm, shipped Box (doc 48 §3) | 3.076 | 3.275 |
+| SBND 0.5 kV/cm, free power (doc 55 §10.3) | **3.42** | **2.77** |
+
+A threshold of 2.3 that was tuned when a stopping muon peaked at 2.5× MIP is a
+very different cut when the same muon peaks at 3.1× or 3.4×. The proton moves
+the *other* way. Nothing in this list has been re-tuned for either change.
+
+### 5c. Everything else in `TaggerCheckSTM` that is a dQ/dx ratio
+
+Correctly written against `m_mip_dqdx`, so they follow `mip_dqdx = 56000`
+automatically — listed because they are still *tuned* at uBooNE's contrast even
+though they are *scaled* correctly.
+
+| line(s) | what |
+|---|---|
+| `1354`, `1389` | Michel/delta-ray guards: `seg_dQ_dx > 0.5`, `> 0.8` |
+| `1530`, `1533`, `1536` | `track_medium_dQ_dx < 1.0` |
+| `1715`, `1716` | residual: `> 0.9`, `> 2.3` |
+| `1720`, `1729`, `1731` | residual: `> 1.2`, `> 1.4`, `> 4.5` |
+| `2185`–`2210` | `check_other_tracks`: `0.4, 0.7, 0.8, 1.5, 2, 2.5` |
+| `2464`, `2481`, `2484`–`2487` | leftover-track gates: `2.0`, `1.5, 1.7, 1.8, 1.9` |
+
+## 6. Two Modified-Box parameter sets live in the same SBND pipeline
+
+| where | A | B | scale | used for |
+|---|---|---|---|---|
+| the five `*DeDx` tables (`particle_dataset.jsonnet`) | 0.93 | 0.212 | ×0.85 fudge | the reference curves the taggers compare shapes against |
+| `sbnd_box_recomb` (`cfg/pgrapher/experiment/sbnd/clus.jsonnet:553`) | **1.0** | **0.255** | none | `segment_cal_4mom` — dQ/dx → energy |
+
+Both at `Efield = 0.5`, `rho = 1.38`, `Wi = 23.6e-6`. Doc 55 already compared
+the two parameter sets at both fields (commit `90ab26d`); this entry exists so
+the audit is complete, not to re-derive it.
+
+**A units trap, not a live bug.** `Gen::BoxRecombination::operator()` treats
+`m_efield`, `m_b` and `m_wi` as *bare numbers* (kV/cm, (kV/cm)(g/cm²)/MeV, MeV),
+but the C++ constructor defaults are in WCT units — `Efield = 500*volt/cm`,
+`B = 0.212*gram/(MeV*cm2)*(kilovolt/cm)`, `Wi = 23.6*eV`. The SBND config sets
+all five keys explicitly, so it is self-consistent today. A config that omitted
+one would silently pick up a default in the wrong unit system.
+
+---
+
+## 7. What to look at, in priority order
+
+Ordering is by *how much it changes and how cheaply it can be checked*, not by
+how wrong it is.
+
+1. **The `85/50.` / `110/50.` pair (`2209–2210`) and the five absolute literals
+   (`1722–1727`).** These are unambiguous: the same expression mixes uBooNE
+   absolute e/cm with SBND MIP-normalised ratios. Deciding what they were
+   *meant* to say is a one-line question per site; fixing them is mechanical.
+   No new physics needed.
+2. **The PR chain's missing `mip_dqdx` knob (§4).** 102 sites and two different
+   defaults. Deciding whether the PR chain should see 56000 at all is a design
+   question worth answering before touching any of them — but the *inventory*
+   is done and the split between 43000 and 50000 needs an explanation from
+   someone who knows the uBooNE history.
+3. **The peak/MIP thresholds in `detect_proton` (§5b).** These need data, not
+   an edit: the right way to re-tune is a proton population (doc 55 §9 item 3),
+   because the quantity they cut on moved twice and the sample here is one
+   proton.
+4. **Whether `detect_proton` should have a proton hypothesis at all (§3).**
+   Algorithm change, not a constant. Related to doc 55 §9 item 7 (should the
+   non-strong accept path see `ratio1`).
+5. **The pion and kaon `*DeDx` tables have no reader (§2).** Either something
+   was meant to use them, or they can stop being configured. Harmless either
+   way; worth knowing.
+
+## 8. Not audited here
+
+Deliberately out of scope, listed so the gap is visible rather than silent:
+
+- `TaggerCheckNeutrino`, `NeutrinoTaggerSSM`, `NeutrinoTaggerNuE`,
+  `NeutrinoTaggerNuMu`, `NeutrinoTaggerCosmic`, `NeutrinoTaggerSinglePhoton`,
+  `NeutrinoKinematics`, `NeutrinoEnergyReco`, `NeutrinoDeghoster`,
+  `NeutrinoStructureExaminer`, `NeutrinoOtherSegments` — their `43e3` counts are
+  in §4's table, but their *logic* was not read. Only the call sites were.
+- The five `*Range` (range → kinetic energy) tables. Detector-agnostic by
+  construction; not checked against PDG here.
+- Angle, length and geometric thresholds throughout. Only charge-scale
+  constants were surveyed.
+- Whether any of these constants is actually *sensitive* — nothing here was
+  varied and re-run. Every claim is a reading of the source.
+
+---
+
+Companion docs: [55](55_dqdx-vs-rr-three-bundles.md) (the reference tables and
+the recombination fit), [48](48_sbnd-dqdx-tables-and-mip.md) (where the SBND
+tables and `mip_dqdx = 56000` came from), [47](47_stm-bragg-reference-sbnd-retune.md)
+(why the uBooNE tables had to be replaced),
+[41](41_stm-fit-dump.md) (what `save_stm_fit` writes).
