@@ -149,8 +149,11 @@ def remap_stm(stm, mapping):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('-w', '--work-root', required=True,
-                    help='work root holding ql_evt<ID>/ and nusel_evt<ID>/')
+    ap.add_argument('-w', '--work-root', required=True, action='append',
+                    help='work root holding ql_evt<ID>/ and nusel_evt<ID>/.  '
+                         'Repeatable (as in merge_mabc_bee.py): the 30-event '
+                         'scan lives in three roots and the first root that '
+                         'has the event wins.')
     ap.add_argument('-o', '--output', required=True, help='output upload zip')
     ap.add_argument('-no-remap', '--no-remap', dest='remap', action='store_false',
                     help='keep the PR cluster ids in stm_fit-global (legacy behaviour)')
@@ -168,10 +171,14 @@ def main():
 
     with zipfile.ZipFile(args.output, 'w', zipfile.ZIP_DEFLATED) as out:
         for bee_idx, evt in enumerate(args.events):
-            ql = os.path.join(args.work_root, f'ql_evt{evt}', 'mabc-all-apa.zip')
-            pr = os.path.join(args.work_root, f'nusel_evt{evt}', 'mabc-pr.zip')
-            if not os.path.isfile(ql):
-                sys.exit(f"ERROR: missing {ql}")
+            root = next((w for w in args.work_root
+                         if os.path.isfile(os.path.join(w, f'ql_evt{evt}',
+                                                        'mabc-all-apa.zip'))), None)
+            if root is None:
+                sys.exit(f"ERROR: no work root has ql_evt{evt}/mabc-all-apa.zip "
+                         f"(tried: {', '.join(args.work_root)})")
+            ql = os.path.join(root, f'ql_evt{evt}', 'mabc-all-apa.zip')
+            pr = os.path.join(root, f'nusel_evt{evt}', 'mabc-pr.zip')
             if not os.path.isfile(pr):
                 sys.exit(f"ERROR: missing {pr}")
 
