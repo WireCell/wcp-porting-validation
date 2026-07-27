@@ -1,16 +1,18 @@
 # 63 — STM tagger improvement campaign (against the doc-62 owner baseline)
 
-**Status.** Rounds 1–4 SHIPPED (records in §4): **16 → 5 errors on the
-72-bundle owner baseline** — 10 false STMs fixed, the 1 missed STM recovered,
+**Status.** Rounds 1–5 SHIPPED (records in §4): **16 → 3 errors on the
+72-bundle owner baseline** — 12 false STMs fixed, the 1 missed STM recovered,
 zero regressions on the 56 correct verdicts, knob-off byte-identical, and
 the full-population check (all 883 events / 923 in-beam bundles) shows zero
-unjustified flips.  **All five knobs are SBND production DEFAULT ON as of
+unjustified flips.  **All seven knobs are SBND production DEFAULT ON as of
 2026-07-26 (owner instruction)** — at the SBND jsonnet/TLA/runner level
 only; the C++ defaults stay false so every other detector's chain is
 byte-identical.  Opt out (the pre-campaign legacy A/B arm) with
 `-no-stm-guards -no-stm-proton-guard -no-stm-cathode-guard -no-stm-anode-fix
--no-stm-track-guard` — note this means post-flip knob-OFF gate arms must
-pass those flags explicitly.  Round 5+ is analysis-gated (§2).  Each round is a default-OFF knob in
+-no-stm-track-guard -no-stm-deficit-guard -no-stm-vertex-guard` — note this
+means post-flip knob-OFF gate arms must pass those flags explicitly.  The
+remaining 3 errors are measured irreducible with present signals (§1.8/§2);
+no further round is planned without a new information source.  Each round is a default-OFF knob in
 `TaggerCheckSTM.cxx`, evaluated on the full baseline AND the full population
 before it is committed.  Only the STM tagger is touched — TGM, LM and FC are
 out of scope by the owner's instruction.
@@ -170,6 +172,63 @@ Key measurements (all offline, on the stored per-pass fits; MIP = 56000 e/cm):
      STMs show up to 33 off-track points (Michels, deltas).  Prong-counting on
      the main cluster's own steiner cloud does not work.
 
+8. **The stop region itself** (round-5 signals, from the full-population
+   stop surveys —
+   `/home/xqian/tmp/stm-campaign/{deadstop,stopend,othercluster,entryface,wiggle,endkink}_survey.py`).
+   The round-5 investigation first measured and RETIRED six more candidate
+   signals on the 153-tag population (so nobody retries them): (a) the five
+   remaining false-STM stops are 72–202 cm from any same-TPC dead blob and
+   the toolkit's ported `check_dead_volume` branch cannot reach them; (b)
+   all five stops are 29–102 cm inside the FV (no boundary/readout story;
+   the d59k sample is DATA — MCP2025C — so no truth shortcut exists); (c)
+   the main cluster has ZERO steiner points beyond the stop, and (d) so
+   does every other cluster in the event — the tracks genuinely end there
+   in the reconstruction; (e) all five END nearly isochronously (80–88 deg
+   to drift) but so do 6 of 36 correct STMs (175428:17 at 89.9); (f)
+   entry-face/direction: owner-ACCEPTED STMs include bottom-entering and
+   upward-fitted tracks (68956:13 rises 241 cm), and the end-region MCS
+   wiggle ratio bottoms out at 0.45 for both populations.  Two signals DO
+   separate:
+
+   - *Charge-deficient end* — no stopping particle deposits HALF a MIP at
+     its stop.  End-5 cm median dQ/dx: **321371:18 = 0.43 MIP** while
+     correct STMs bottom out at **0.72** (283463:14), and 321371's charge
+     simply decays into NEGATIVE noise (last-15 cm max only 1.30 MIP — no
+     bump anywhere).  Two sub-0.65 cases are deliberately KEPT by the
+     second condition (a charge bump ≥ 2.0 MIP in the last 15 cm rescues
+     the tag): 283485:15 (0.62 — a smooth Bragg to 2.5 followed by a ~3 cm
+     endpoint overshoot) and 353487:3 (0.57 — a 2.19 MIP bump then a 3 cm
+     dead tail; the doc-61 scan reads it as a genuine STM with high
+     confidence, though its "175 ke/cm at rr=0" is a tiny-dx division
+     artifact of the endpoint — the raw q there is 60–294 e-scale.  A
+     truncated-but-plausible Bragg must not flip).  Veto
+     `end5_med < 0.60 && last15_max < 2.0`, anchored at the RECORDED kink:
+     the short-track reset moves the in-flow kink to the path end, which
+     drags a genuine STM's low-charge Michel tail into the window —
+     62303:12 (Bragg plateau 2.16 at rr 6–13 then a 5 cm Michel-candidate
+     tail, scan verdict STM) measured 0.99 at the recorded kink but 0.53 at
+     the reset kink, and the first full arm wrongly flipped it until the
+     guard was re-anchored.
+   - *Vertex kink* — a genuine Bragg rise is SMOOTH (no direction break at
+     its onset); a nu vertex fitted through reads MIP leg → sharp turn →
+     short HOT prong (a proton) that the eval mistakes for the Bragg.
+     Sharpest 2.5 cm-window turn in [stop−12, stop−2] cm with the post-turn
+     median dQ/dx: **402330:1 turns 53.5 deg into a 3.67 MIP prong**; the
+     sharpest correct-STM turn WITH a hot prong is 34.8 deg (389544:13),
+     the hottest prong behind a > 45 deg turn on a correct STM is 0.72 MIP
+     (283463:14), and the borderline genuine short stopper 406752:7
+     (66.7 deg but post-turn 2.01 MIP) is kept by the 2.2 MIP cut.  Veto
+     `turn > 45 deg && post_med > 2.2 MIP`.
+
+   The remaining three false STMs (48895:17, 321107:13, 278662:1) are, after
+   all of the above, measurably indistinguishable from owner-accepted STMs
+   in every fitted-trajectory and charge quantity surveyed: clean MIP tracks
+   that end mid-volume, mid-drift, away from dead regions, with no
+   continuation anywhere and no (or in-range) end rise.  The owner's
+   verdicts on them rest on display context (48895 is "the original
+   calibration event"), not on a quantity the tagger currently measures —
+   they are recorded here as irreducible with the present signals.
+
 ## 2. The round plan
 
 - **Round 1 — `stm_accept_guards` (C++ `accept_guards`, default false).**
@@ -220,13 +279,31 @@ Key measurements (all offline, on the stored per-pass fits; MIP = 56000 e/cm):
   clause).  Tunables: `guard_left_track_cm/straight`,
   `guard_seg_track_cm/mip_lo/mip_hi`.
 
-- **Round 5+ — exploratory (design against round-4 re-runs).**  Remaining
-  false STMs: 278662 (vertex, spike 2.7 inside the correct range), 402330
-  (vertex fan; the off-track near-stop steiner count was measured and does
-  NOT separate — §1.7), 48895, 321107, 321371 (flat tracks mid-volume —
-  §1.7 says dQ/dx cannot do it; candidate signals: dead-region proximity at
-  the stop, readout-window truncation geometry).  Each will only ship with
-  a §1-style measured separation.
+- **Round 5a — `stm_deficit_guard` (C++ `deficit_guard`, default false).**
+  §1.8: an accepted stop whose end-5 cm median dQ/dx is below 0.6 MIP with
+  no charge bump at all in the last 15 cm (max < 2.0 MIP) is a
+  reconstruction truncation, not a stop; evaluated at the recorded
+  (pre-short-track-reset) kink.  Expected: fixes 321371:18 (0.43 MIP
+  median, 1.30 max) and NOTHING else in the whole population — the
+  truncated/overshoot Bragg cases 353487:3 and 283485:15 are kept by their
+  bumps, 62303:12 by the kink anchoring, every correct STM by the 0.72 MIP
+  floor.  Tunables `guard_deficit_med`/`guard_deficit_bragg`.
+
+- **Round 5b — `stm_vertex_kink_guard` (C++ `vertex_kink_guard`, default
+  false).**  §1.8: a sharp (> 45 deg) turn within 12 cm of the stop into a
+  post-turn median above 2.2 MIP is a nu vertex plus proton prong, not a
+  Bragg rise.  Expected: fixes 402330:1 (53.5 deg into 3.67 MIP); 406752:7
+  (post-turn 2.01) and every correct STM (turn ≤ 34.8 with a hot prong;
+  prong ≤ 0.72 behind a big turn) protected.  Tunables
+  `guard_vertex_turn`/`guard_vertex_mip`.
+
+- **Remaining after round 5 — irreducible with present signals (§1.8).**
+  48895:17, 321107:13, 278662:1: measurably indistinguishable from
+  owner-accepted STMs in every trajectory/charge quantity surveyed; their
+  owner verdicts rest on display context.  No further round is planned
+  against them without a NEW information source (e.g. the 2D signal-level
+  view the prototype's check_signal_processing consults, or owner-supplied
+  criteria).
 
 Rounds are cumulative: round N's arm runs with rounds 1..N's knobs ON.
 Per-round record in §4; every round commits (both repos) and pushes.
@@ -373,10 +450,11 @@ compiled config or output changes.  Verified both ways on evt 72586:
 - opt-out run (`-no-stm-guards -no-stm-proton-guard -no-stm-cathode-guard`):
   byte-identical to the pre-campaign `r0` reference (GATE PASS).
 
-Round 4's `stm_anode_dist_fix` and `stm_second_track_guard` joined the SBND
-defaults after their validation (records below); the full opt-out set is now
-the five `-no-*` flags in the status header, and the post-round-4 knob-off
-gate (`r4boff`) passed with all five explicit.
+Round 4's `stm_anode_dist_fix` and `stm_second_track_guard`, and round 5's
+`stm_deficit_guard` and `stm_vertex_kink_guard`, joined the SBND defaults
+after their validations (records below); the full opt-out set is now the
+seven `-no-*` flags in the status header, and the post-round-5 knob-off
+gate (`r5offc`) passed with all seven explicit.
 
 ### Round 4a — `anode_dist_fix` (work roots `r4aoff`, `r4afull`)
 
@@ -412,19 +490,62 @@ as well", then "After fixing it, default on, please after validation").
   63163:6) — the guard causes ZERO collateral flips in the whole
   population.  Score **67/72 correct** (was 56).  SHIPPED, default ON.
 
-### Scoreboard after round 4
+### Round 5a/5b — `deficit_guard` + `vertex_kink_guard` (work roots `dbg7`–`dbg9`, `r5off`, `r5offb`, `r5offc`, `r5full`, `r5fullc`)
 
-| | round 0 | round 2 | round 3 | round 4 |
-|---|---|---|---|---|
-| false STMs (of 15) | 15 | 9 | 7 | **5** |
-| missed STMs (of 1) | 1 | 0 | 0 | **0** |
-| correct STM kept (36) | 36 | 36 | 36 | 36 |
-| correct non-tag kept (20) | 20 | 20 | 20 | 20 |
+The round-5 investigation (§1.8) retired six candidate signals as measured
+negatives, then shipped two stop-region vetoes.  Chronology matters — the
+full arm caught a semantics bug the offline survey could not, again:
 
-Remaining 5 false STMs: 278662:1 (vertex, spike inside the correct range),
-402330:1 (vertex fan, off-track steiner count does not separate — §1.7),
-48895:17, 321107:13, 321371:18 (flat tracks mid-volume — §1.7).  Round 5+
-material.
+- Knob-off gates: `r5off` (first binary), `r5offb` (kink fix), `r5offc`
+  (final thresholds) — each **GATE PASS: 72 events byte-identical** vs r0
+  with all seven `-no-*` flags.  `wcdoctest-clus` passes at each step;
+  freshness proofs done.
+- **First full arm (`r5full`) caught a kink-semantics mismatch.**  13
+  baseline fixes / 0 regressions, but a NEW unlabeled flip 62303:12
+  (scan verdict STM: Bragg plateau 2.16 MIP at rr 6–13 then a 5 cm
+  Michel-candidate tail).  The guard had fired with end-5cm median 0.53:
+  it received the POST-short-track-reset kink (stop = path end), dragging
+  the Michel tail into the window, while the calibration surveys measured
+  the RECORDED kink (median 0.99).  Fix: the round-5 guards now take
+  `kink_recorded`, captured where `note_pass_kink` records it, before the
+  reset.
+- **353487:3 review tightened the Bragg-absence threshold 2.4 → 2.0 MIP.**
+  The first arm also flipped 353487:3 (end median 0.57) as designed, but
+  the doc-61 scan calls it a genuine STM with high confidence; its raw
+  charge shows a 2.19 MIP bump then a 3 cm dead tail — a
+  truncated-but-plausible Bragg with endpoint overshoot (the scan's "175
+  ke/cm at rr=0" is a tiny-dx division artifact: raw q there is 60–294
+  e-scale).  A plausible Bragg must not flip: the bump condition now
+  rescues any tag with a ≥ 2.0 MIP bump in the last 15 cm.  321371:18 has
+  NO bump (max 1.30, charge decays into negative noise) and still dies
+  with wide margin.
+- Smoke (`dbg9`, final binary): 321371:18 "end-5cm median 0.43 MIP with
+  last-15cm max 1.30 MIP (charge-deficient end, truncation not a stop)";
+  402330:1 "53.5 deg turn 6.0 cm before the stop into a 3.67 MIP prong
+  (vertex, not Bragg)"; 62303:12, 353487:3, 283485:15, 406752:7 all kept.
+- Final cumulative arm (`r5fullc`, 883/883 events rc=0, everything ON):
+  **13 baseline FIXED / 0 REGRESSED** — rounds 1–4's eleven plus
+  **321371:18** and **402330:1**, exactly the two designed targets.
+  Non-adjudicated flips: only the same two justified ones (56463:12,
+  63163:6) — the round-5 guards cause ZERO collateral flips in the whole
+  population.  Score **69/72 correct** (was 56).  SHIPPED, default ON.
+
+### Scoreboard after round 5
+
+| | round 0 | round 2 | round 3 | round 4 | round 5 |
+|---|---|---|---|---|---|
+| false STMs (of 15) | 15 | 9 | 7 | 5 | **3** |
+| missed STMs (of 1) | 1 | 0 | 0 | 0 | **0** |
+| correct STM kept (36) | 36 | 36 | 36 | 36 | 36 |
+| correct non-tag kept (20) | 20 | 20 | 20 | 20 | 20 |
+
+Remaining 3 false STMs — measured irreducible with present signals (§1.8):
+48895:17, 321107:13 (flat tracks mid-volume, indistinguishable from
+owner-accepted flats in every surveyed quantity), 278662:1 (clean track
+with an end spike inside the correct population's range; owner note "could
+be a vertex activity").  Their owner verdicts rest on display context; no
+further round without a new information source (e.g. the 2D signal-level
+view, or owner-supplied criteria).
 
 ## 5. Files
 

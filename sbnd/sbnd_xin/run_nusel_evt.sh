@@ -175,6 +175,19 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 correct STM is 12.4 cm).  DEFAULT ON (owner 2026-07-26,
                 after validation); -no-stm-track-guard /
                 SBND_STM_TRACK_GUARD=0 restores legacy.
+  -stm-deficit-guard  doc-63 round-5a: an accepted stop whose last-5cm median
+                dQ/dx is below 0.6 MIP with no Bragg rise in the last 15 cm
+                is a reconstruction truncation, not a stop (doc-62 false STM
+                321371; correct STMs bottom out at 0.72 MIP).  DEFAULT ON
+                (owner 2026-07-26, after validation); -no-stm-deficit-guard /
+                SBND_STM_DEFICIT_GUARD=0 restores legacy.
+  -stm-vertex-guard  doc-63 round-5b: a sharp (>45 deg) turn within 12 cm of
+                the stop into a >2.2 MIP prong is a nu vertex plus proton,
+                not a Bragg rise (doc-62 false STM 402330: 53.5 deg into
+                3.67 MIP; sharpest correct turn with a hot prong is 34.8
+                deg).  DEFAULT ON (owner 2026-07-26, after validation);
+                -no-stm-vertex-guard / SBND_STM_VERTEX_GUARD=0 restores
+                legacy.
   -unmerge      restore the prototype "main cluster + associated clusters"
                 data product before the taggers (doc 45): split each
                 flash-merged bundle back into its pre-merge main (retained,
@@ -353,6 +366,12 @@ STM_AFIX="${SBND_STM_ANODE_FIX:-1}"
 # (owner 2026-07-26, after validation); opt out with -no-stm-track-guard /
 # SBND_STM_TRACK_GUARD=0.
 STM_TGUARD="${SBND_STM_TRACK_GUARD:-1}"
+# doc-63 round-5 stop-region vetoes in the STM tagger (5a deficit end, 5b
+# vertex kink).  DEFAULT ON (owner 2026-07-26, after validation); opt out
+# with -no-stm-deficit-guard / SBND_STM_DEFICIT_GUARD=0 and
+# -no-stm-vertex-guard / SBND_STM_VERTEX_GUARD=0.
+STM_DGUARD="${SBND_STM_DEFICIT_GUARD:-1}"
+STM_VGUARD="${SBND_STM_VERTEX_GUARD:-1}"
 # Restore the prototype main+associated data product before the taggers by
 # splitting each flash-merged bundle back into its pre-merge members (doc 45).
 # DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
@@ -416,6 +435,10 @@ while [ $# -gt 0 ]; do
         -no-stm-anode-fix|--no-stm-anode-fix) STM_AFIX=0; shift ;;
         -stm-track-guard|--stm-track-guard) STM_TGUARD=1; shift ;;
         -no-stm-track-guard|--no-stm-track-guard) STM_TGUARD=0; shift ;;
+        -stm-deficit-guard|--stm-deficit-guard) STM_DGUARD=1; shift ;;
+        -no-stm-deficit-guard|--no-stm-deficit-guard) STM_DGUARD=0; shift ;;
+        -stm-vertex-guard|--stm-vertex-guard) STM_VGUARD=1; shift ;;
+        -no-stm-vertex-guard|--no-stm-vertex-guard) STM_VGUARD=0; shift ;;
         -stm-fv|--stm-fv) STM_FV=1; shift ;;
         -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
@@ -511,7 +534,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD stmafix=$STM_AFIX stmtguard=$STM_TGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD stmafix=$STM_AFIX stmtguard=$STM_TGUARD stmdguard=$STM_DGUARD stmvguard=$STM_VGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -551,6 +574,8 @@ process_event() {
             --tla-code "stm_cathode_guard=$([ "$STM_CGUARD" = 1 ] && echo true || echo false)" \
             --tla-code "stm_anode_dist_fix=$([ "$STM_AFIX" = 1 ] && echo true || echo false)" \
             --tla-code "stm_second_track_guard=$([ "$STM_TGUARD" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_deficit_guard=$([ "$STM_DGUARD" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_vertex_kink_guard=$([ "$STM_VGUARD" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"

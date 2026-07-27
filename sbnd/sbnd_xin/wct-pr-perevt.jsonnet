@@ -84,6 +84,17 @@ function(
     // = SBND production as of doc 63 (owner 2026-07-26, after validation).
     // Runner flag: -stm-track-guard / SBND_STM_TRACK_GUARD=1.
     stm_second_track_guard = true,
+    // doc-63 round-5 stop-region vetoes.  5a deficit_guard: an end whose
+    // last-5cm median dQ/dx is below 0.6 MIP with no Bragg rise in the last
+    // 15 cm is a reconstruction truncation, not a stop.  5b
+    // vertex_kink_guard: a sharp (>45 deg) turn within 12 cm of the stop
+    // into a >2.2 MIP prong is a nu vertex plus proton, not a Bragg.  C++
+    // defaults false; keys omitted when off => byte-identical.  DEFAULT
+    // TRUE = SBND production as of doc 63 (owner 2026-07-26, after
+    // validation).  Runner flags: -stm-deficit-guard / SBND_STM_DEFICIT_GUARD=1,
+    // -stm-vertex-guard / SBND_STM_VERTEX_GUARD=1.
+    stm_deficit_guard = true,
+    stm_vertex_kink_guard = true,
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -251,7 +262,9 @@ function(
                              stm_proton_muon_guard=stm_proton_muon_guard,
                              stm_cathode_guard=stm_cathode_guard,
                              stm_anode_dist_fix=stm_anode_dist_fix,
-                             stm_second_track_guard=stm_second_track_guard);
+                             stm_second_track_guard=stm_second_track_guard,
+                             stm_deficit_guard=stm_deficit_guard,
+                             stm_vertex_kink_guard=stm_vertex_kink_guard);
 
     local graph = g.intern(
         innodes=[source],
