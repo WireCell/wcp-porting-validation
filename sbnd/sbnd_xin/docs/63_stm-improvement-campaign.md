@@ -1,11 +1,17 @@
 # 63 — STM tagger improvement campaign (against the doc-62 owner baseline)
 
-**Status.** Rounds 1 and 2 SHIPPED (records in §4): **16 → 9 errors on the
-72-bundle owner baseline** — 6 false STMs fixed, the 1 missed STM recovered,
-zero regressions on the 56 correct verdicts, knob-off byte-identical.  Both
-knobs default OFF; the SBND chain opts in with `-stm-guards
--stm-proton-guard`.  Round 3+ is analysis-gated (§2).  Each round is a
-default-OFF knob in `TaggerCheckSTM.cxx`, evaluated on the full baseline
+**Status.** Rounds 1–3 SHIPPED (records in §4): **16 → 7 errors on the
+72-bundle owner baseline** — 8 false STMs fixed, the 1 missed STM recovered,
+zero regressions on the 56 correct verdicts, knob-off byte-identical, and
+the full-population check (all 883 events / 923 in-beam bundles) shows zero
+unjustified flips.  **All three knobs are SBND production DEFAULT ON as of
+2026-07-26 (owner instruction)** — at the SBND jsonnet/TLA/runner level
+only; the C++ defaults stay false so every other detector's chain is
+byte-identical.  Opt out (the pre-campaign legacy A/B arm) with
+`-no-stm-guards -no-stm-proton-guard -no-stm-cathode-guard` — note this
+means post-flip knob-OFF gate arms must pass those flags explicitly.
+Round 4+ is analysis-gated (§2).  Each round is a default-OFF knob in
+`TaggerCheckSTM.cxx`, evaluated on the full baseline AND the full population
 before it is committed.  Only the STM tagger is touched — TGM, LM and FC are
 out of scope by the owner's instruction.
 
@@ -33,6 +39,10 @@ python3 stm_campaign/extract_stm_diag.py --out /home/xqian/tmp/stm-campaign/diag
 ./stm_campaign/run_round.sh r0                  # reference arm, knobs off
 ./stm_campaign/run_round.sh r1 -stm-guards     # round-1 arm
 python3 stm_campaign/score_round.py --round work-stmcamp-r1 --ref work-stmcamp-r0
+# full-population regression check (protocol step 5; owner authorized 24 CPUs):
+STM_EVENTS="$(tr '\n' ' ' < /home/xqian/tmp/stm-campaign/full-events.txt)" \
+  NJOBS=24 ./stm_campaign/run_round.sh r2fullb -stm-guards -stm-proton-guard
+python3 stm_campaign/score_full.py --round work-stmcamp-r2fullb
 ```
 
 The production flag set is `run_full1k_nusel.sh`'s `NUF` verbatim
@@ -101,7 +111,27 @@ Key measurements (all offline, on the stored per-pass fits; MIP = 56000 e/cm):
    not a proton` recovers the miss and keeps both correct rejections, with
    ~2× margins on both axes.
 
-5. **What does NOT separate** (measured, so nobody retries it):
+5. **Cathode-side flat truncation** (round-3 signal) — a track whose fitted
+   stop sits within a few cm of the cathode plane of its own drift volume,
+   with NO Bragg rise in the last 5 cm, is overwhelmingly a through-going
+   track truncated at the cathode (wrong-side charge lost), not a stopping
+   muon.  Survey of ALL 153 d59k STM tags (stop-to-cathode distance along the
+   drift axis, from the volume's `inner_bounds`, vs the end-5 cm dQ/dx peak
+   in MIP):
+
+   | bundle (verdict) | stop→cathode (cm) | end-5 cm peak (MIP) |
+   |---|---|---|
+   | 72586:17 (owner: not-STM, flat) | 2.8 | 1.95 |
+   | 392200:27 (owner: not-STM, flat) | 1.1 | 1.08 |
+   | 56463:12 (AI scan: truncated crosser) | 3.9 | 1.25 |
+   | 289343:9 (real cathode-stopping STM) | 6.3 | 5.74 |
+   | 281148:13 (real cathode-stopping STM) | 2.2 | 3.31 |
+
+   Veto `distance < 5 cm && peak < 2.5 MIP`: the flat truncations die on the
+   peak axis, the genuine cathode stoppers survive on their Bragg rise, and
+   every mid-volume STM is out of reach of the distance cut.
+
+6. **What does NOT separate** (measured, so nobody retries it):
    - The flat-track false STMs (48895, 392200, 321107, 321371, 72586) are
      indistinguishable in dQ/dx from owner-ACCEPTED flat STMs (68956, 282715,
      315409, 175428, 172596…): both run ~1 MIP into the stop, same KS values,
@@ -131,13 +161,20 @@ Key measurements (all offline, on the stored per-pass fits; MIP = 56000 e/cm):
   end region matches the muon hypothesis (ks1 < 0.045 && ratio3 < 1.1) is not
   a proton.  Expected: recovers 62613:17; 288859/319809 unchanged.
 
-- **Round 3+ — exploratory (design against round-1/2 re-runs).**  Remaining
+- **Round 3 — `stm_cathode_guard` (C++ `cathode_guard`, default false).**
+  §1.5: an accepted pass whose stop is < 5 cm from its drift volume's cathode
+  with an end-5 cm peak < 2.5 MIP is rejected (status 7).  Expected: fixes
+  72586:17 and 392200:27, plus the justified flip of the non-adjudicated
+  56463:12 (the doc-61 AI scan itself called it a truncated cathode crosser);
+  289343:9 and 281148:13 protected by their Bragg rise.
+
+- **Round 4+ — exploratory (design against round-1/2/3 re-runs).**  Remaining
   false STMs: 278662 (vertex, inside correct spike range), 349241, 353223,
-  402330, 72586 (multi-object needing bundle-level topology), 48895, 392200,
-  321107, 321371 (flat tracks — §1.5 says dQ/dx cannot do it; candidate
-  signals: dead-region proximity at the stop, readout-window truncation
-  geometry, leftover-track straightness), 321107/321371 (unstated by owner).
-  Each will only ship with a §1-style measured separation.
+  402330 (multi-object needing bundle-level topology), 48895, 321107, 321371
+  (flat tracks mid-volume — §1.6 says dQ/dx cannot do it; candidate signals:
+  dead-region proximity at the stop, readout-window truncation geometry,
+  leftover-track straightness).  Each will only ship with a §1-style measured
+  separation.
 
 Rounds are cumulative: round N's arm runs with rounds 1..N's knobs ON.
 Per-round record in §4; every round commits (both repos) and pushes.
@@ -155,7 +192,16 @@ Per-round record in §4; every round commits (both repos) and pushes.
    fixes/regressions vs round 0, and any verdict flip on non-adjudicated
    bundles that share those events (reported as collateral, judged case by
    case — they have no truth label).
-5. The round ships only on: fixes ≥ 1, regressions = 0, gate PASS.
+5. **Full-population regression check** (owner instruction 2026-07-26: the 72
+   were FILTERED from the full set and no regression is acceptable there
+   either): re-run every d59k event with an in-beam bundle — **883 events,
+   925 in-beam bundles, 153 STM tags** — with the round's knobs ON
+   (`score_full.py` vs the stored d59k verdicts).  On the non-adjudicated
+   bundles the tagger and the doc-61 AI scan agreed and the owner confirmed
+   by silence, so EVERY flip there is a regression candidate and is reviewed
+   individually (fit dQ/dx + AI-scan reasoning) before the round may ship.
+6. The round ships only on: fixes ≥ 1, regressions = 0, gate PASS, and the
+   full-population flips each individually justified.
 
 ## 4. Round records
 
@@ -194,19 +240,100 @@ every later byte-identical gate and the `--ref` for scoring.
   288859:9 (delta-ray path) and 319809:20 (ks1 = 0.063, ratio3 = 1.22) are
   unchanged, as designed.  Score **63/72 correct** (was 56).  SHIPPED.
 
-### Scoreboard after round 2
+### Full-population check of rounds 1+2 — two amendments (work roots `r2full`, `r2fullb`)
 
-| | round 0 | round 2 |
-|---|---|---|
-| false STMs (of 15) | 15 | **9** |
-| missed STMs (of 1) | 1 | **0** |
-| correct STM kept (36) | 36 | 36 |
-| correct non-tag kept (20) | 20 | 20 |
+Protocol step 5 (owner instruction) applied retroactively to the shipped
+rounds: all **883 events / 923 in-beam bundles** re-run with `-stm-guards
+-stm-proton-guard` at 24-way (owner authorized 24 CPUs for this campaign)
+and compared bundle-by-bundle against the stored d59k verdicts.
 
-Remaining 9 false STMs: 278662:1 (vertex, inside the correct spike range),
-349241:15, 353223:15, 402330:1, 72586:17 (multi-object needing bundle-level
-topology), 48895:17, 392200:27, 321107:13, 321371:18 (flat tracks / unstated
-— §1.5).  Round 3+ material.
+The FIRST full arm (`r2full`) surfaced two flips outside the 72-bundle
+baseline that the baseline could not see, each fixed by an amendment:
+
+- **290844:3 — REGRESSION, fixed by the desert cathode-join exemption.**
+  A genuine cathode-crossing STM (textbook Bragg, 208 ke/cm at the stop)
+  was killed by an 8.3 cm *instrumental* charge desert where the fit crosses
+  the CPA join between drift volumes.  Amendment: a below-threshold run whose
+  endpoints lie in different (or unknown) TPC volumes is instrumental and
+  does not count toward the desert veto, capped at 4× `guard_desert_cm` so a
+  genuine ≥ 12 cm gap still kills even across the join.
+- **405740:14 — marginal proton-guard reversal, fixed by tightening
+  `guard_proton_ks1` 0.045 → 0.040.**  Its proton veto was reversed at
+  ks1 = 0.044 (0.001 inside the threshold) though the record shows no Bragg
+  trend and no boundary entry.  At 0.040 the reversal no longer fires;
+  the round-2 target 62613:17 is recovered at ks1 = 0.030 with 25% margin.
+
+The re-run (`r2fullb`, after both amendments): **8 flips total = the 7
+baseline fixes + exactly one non-adjudicated flip**, zero baseline
+regressions, zero bundles missing:
+
+- **63163:6 (stm 0→1)** — the proton-guard reversal now tags it STM.  End
+  region is muon-consistent (ks1 = 0.032, ratio3 = 0.597), so the guard is
+  behaving as designed; the doc-61 AI scan dissents on *topology* ("horizontal
+  beam-aligned track… exiting downstream wall"), which dQ/dx cannot see.
+  Flagged for owner review; not a baseline regression.
+
+### Round 3 — `cathode_guard` (work roots `r3off`, `r3full`, `r3offb`, `r3fullb`, `dbg1`, `dbg2`)
+
+- Knob-off gate with the final binary: 10 mixed events vs r0, **GATE PASS**
+  (member-content hashes identical).  Compiled-config proof: `cathode_guard`
+  key absent off / present on.  `wcdoctest-clus` passes.
+- **The full arm caught a sign bug the offline survey could not.**  The first
+  round-3 arm (`r3full`) produced ZERO new flips: the guard never fired.
+  A single-event debug run (`dbg1`, evt 72586, with the guard's inputs
+  logged) showed `fdx=+1, bb.x=[-201.45,-0.45] cm, cathode_x=-201.45` — the
+  code had selected the ANODE face.  `IAnodeFace::dirx()` is the face-normal
+  sign, pointing from the anode INTO the drift volume (toward the cathode),
+  and the sensitive-volume BoundingBox is component-wise normalized, so the
+  cathode is at max x when fdx > 0 — the initial selection was inverted.
+  After the one-character fix (`fdx < 0` → `fdx > 0`), `dbg2` rejects
+  72586:17 with "stop 2.4 cm from the cathode, end peak 1.95 MIP".
+  *Found in passing, NOT touched: the shipped `dist_to_anode` helper in
+  `check_stm_conditions` (`anode_x = (fdx < 0) ? first : second`) appears to
+  have the SAME inversion — on SBND apa0 it returns the distance to the
+  cathode.  It is in the always-on path, so any correction is a behavior
+  change needing its own knob and validation round; flagged for the owner.*
+- Corrected cumulative arm (`r3fullb`, all 883 events / 923 in-beam bundles):
+  **9 baseline FIXED / 0 REGRESSED** — rounds 1+2's seven plus **72586:17**
+  and **392200:27** (the two cathode-truncation flats).  The two protected
+  near-cathode genuine STMs 289343:9 and 281148:13 are untouched, as
+  designed.  Two non-adjudicated flips, both justified:
+  - **56463:12 (stm 1→0)** — exactly the §1.5 third case (stop 3.9 cm from
+    the cathode, end peak 1.25 MIP); the doc-61 AI scan had itself dissented
+    from the tagger here ("truncated cathode crosser" ⇒ verdict nu), so this
+    flip moves the tagger INTO agreement with the scan.
+  - **63163:6 (stm 0→1)** — the round-2 proton-guard flip, unchanged from
+    the r2fullb review (muon-consistent end, AI dissent is topological;
+    flagged for owner review).
+  Score **65/72 correct** (was 56).  SHIPPED.
+
+### Production default ON (2026-07-26, work roots `dbg3`, `dbg4`)
+
+Owner instruction: the campaign knobs are production defaults going forward.
+Implemented at the SBND level only — `cfg/pgrapher/experiment/sbnd/
+clus.jsonnet` (clus_pr + pr arg defaults), `wct-pr-perevt.jsonnet` (TLA
+defaults) and `run_nusel_evt.sh` (env defaults) all flip to ON; the **C++
+defaults in `TaggerCheckSTM.cxx` stay false**, so no other detector's
+compiled config or output changes.  Verified both ways on evt 72586:
+
+- plain run (no flags): all three `... ON` config lines present, 72586:17
+  rejected by the cathode guard, `nusel` TSV identical to the `r3fullb` arm;
+- opt-out run (`-no-stm-guards -no-stm-proton-guard -no-stm-cathode-guard`):
+  byte-identical to the pre-campaign `r0` reference (GATE PASS).
+
+### Scoreboard after round 3
+
+| | round 0 | round 2 | round 3 |
+|---|---|---|---|
+| false STMs (of 15) | 15 | 9 | **7** |
+| missed STMs (of 1) | 1 | 0 | **0** |
+| correct STM kept (36) | 36 | 36 | 36 |
+| correct non-tag kept (20) | 20 | 20 | 20 |
+
+Remaining 7 false STMs: 278662:1 (vertex, inside the correct spike range),
+349241:15, 353223:15, 402330:1 (multi-object needing bundle-level topology),
+48895:17, 321107:13, 321371:18 (flat tracks mid-volume — §1.6).  Round 4+
+material.
 
 ## 5. Files
 
@@ -215,5 +342,7 @@ topology), 48895:17, 392200:27, 321107:13, 321371:18 (flat tracks / unstated
 | `stm_campaign/extract_stm_diag.py` | offline diagnostics from stored pctree-pr tarballs (read-only) |
 | `stm_campaign/run_round.sh` | one evaluation arm: fresh work root, 72 baseline events, production flags + round knobs |
 | `stm_campaign/score_round.py` | confusion vs owner baseline + fixes/regressions vs reference arm |
+| `stm_campaign/score_full.py` | full-population flip classifier vs stored d59k (protocol step 5), joins the doc-61 AI-scan verdicts |
+| `stm_campaign/resume_round.sh` | resume an interrupted arm: re-runs only events without rc=0 in `<root>/.status` |
 | `scan-d59k/stm-baseline.tsv` | the doc-62 truth set |
 | `/home/xqian/tmp/stm-campaign/` | scratch: extracted diagnostics TSVs |

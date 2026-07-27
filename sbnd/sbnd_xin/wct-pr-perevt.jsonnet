@@ -56,14 +56,22 @@ function(
     stm_consistent_fv = true,
     // doc-63 round-1 STM acceptance guards (charge-desert one-objectness,
     // spike-not-ramp nu-vertex veto, eval ratio2 cap).  C++ default false;
-    // key omitted when off => byte-identical compiled config.  Runner flag:
-    // -stm-guards / SBND_STM_GUARDS=1.
-    stm_accept_guards = false,
+    // key omitted when off => byte-identical compiled config.  DEFAULT TRUE
+    // = SBND production as of doc 63 (owner 2026-07-26); pass false for a
+    // pre-campaign A/B.  Runner flag: -stm-guards / SBND_STM_GUARDS=1.
+    stm_accept_guards = true,
     // doc-63 round-2 muon-consistency guard on detect_proton (an end region
     // matching the muon hypothesis in shape and normalization is not called a
     // proton).  C++ default false; key omitted when off => byte-identical.
+    // DEFAULT TRUE = SBND production as of doc 63 (owner 2026-07-26).
     // Runner flag: -stm-proton-guard / SBND_STM_PROTON_GUARD=1.
-    stm_proton_muon_guard = false,
+    stm_proton_muon_guard = true,
+    // doc-63 round-3 cathode-truncation veto (a fitted stop within ~5 cm of
+    // the CPA with no Bragg rise did not stop -- drift-boundary truncation).
+    // C++ default false; key omitted when off => byte-identical.  DEFAULT
+    // TRUE = SBND production as of doc 63 (owner 2026-07-26).  Runner flag:
+    // -stm-cathode-guard / SBND_STM_CATHODE_GUARD=1.
+    stm_cathode_guard = true,
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -228,7 +236,8 @@ function(
                              mip_dqdx=mip_dqdx,
                              stm_consistent_fv=stm_consistent_fv,
                              stm_accept_guards=stm_accept_guards,
-                             stm_proton_muon_guard=stm_proton_muon_guard);
+                             stm_proton_muon_guard=stm_proton_muon_guard,
+                             stm_cathode_guard=stm_cathode_guard);
 
     local graph = g.intern(
         innodes=[source],

@@ -142,15 +142,24 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 peak >3.2x the 2-6 cm base with a 1.5-4 cm shoulder <1.8 MIP),
                 (3) eval acceptance ratio2 cap (measured charge far below MIP
                 normalization).  Thresholds measured on the doc-62 owner
-                baseline.  DEFAULT OFF = byte-identical legacy verdicts.
-                Env: SBND_STM_GUARDS=1.
+                baseline.  DEFAULT ON = SBND production as of doc 63 (owner
+                2026-07-26); -no-stm-guards / SBND_STM_GUARDS=0 restores the
+                byte-identical legacy verdicts.
   -stm-proton-guard  doc-63 round-2 muon-consistency guard on TaggerCheckSTM's
                 detect_proton: an end region matching the muon hypothesis in
-                shape AND normalization (ks1 < 0.045, ratio3 < 1.1) is never
+                shape AND normalization (ks1 < 0.04, ratio3 < 1.1) is never
                 called a proton, so a textbook stopping muon cannot be
                 rejected by the high-dQ/dx proton branches (doc-62 miss
-                evt62613).  Michel/delta-ray checks untouched.  DEFAULT OFF =
-                byte-identical legacy verdicts.  Env: SBND_STM_PROTON_GUARD=1.
+                evt62613).  Michel/delta-ray checks untouched.  DEFAULT ON
+                (owner 2026-07-26); -no-stm-proton-guard /
+                SBND_STM_PROTON_GUARD=0 restores legacy.
+  -stm-cathode-guard  doc-63 round-3 cathode-truncation veto in TaggerCheckSTM:
+                a fitted stop within 5 cm of the CPA with no Bragg rise (end
+                peak < 2.5 MIP) is drift-boundary truncation, not a stop
+                (doc-62 false STMs 72586/392200; near-cathode genuine stops
+                keep their Bragg and survive).  DEFAULT ON (owner 2026-07-26);
+                -no-stm-cathode-guard / SBND_STM_CATHODE_GUARD=0 restores
+                legacy.
   -unmerge      restore the prototype "main cluster + associated clusters"
                 data product before the taggers (doc 45): split each
                 flash-merged bundle back into its pre-merge main (retained,
@@ -312,12 +321,15 @@ STM_FIT="${SBND_STM_FIT:-0}"
 # -no-stm-fv / SBND_STM_FV=0 restores the old volume for an A/B.
 STM_FV="${SBND_STM_FV:-1}"
 # doc-63 round-1 STM acceptance guards (charge desert, spike-not-ramp, ratio2
-# cap).  DEFAULT OFF: opt in with -stm-guards / SBND_STM_GUARDS=1 until the
-# campaign rounds are owner-accepted.
-STM_GUARDS="${SBND_STM_GUARDS:-0}"
-# doc-63 round-2 muon-consistency guard on detect_proton.  DEFAULT OFF: opt in
-# with -stm-proton-guard / SBND_STM_PROTON_GUARD=1.
-STM_PGUARD="${SBND_STM_PROTON_GUARD:-0}"
+# cap).  DEFAULT ON = SBND production as of doc 63 (owner 2026-07-26); opt
+# out with -no-stm-guards / SBND_STM_GUARDS=0 for a pre-campaign A/B.
+STM_GUARDS="${SBND_STM_GUARDS:-1}"
+# doc-63 round-2 muon-consistency guard on detect_proton.  DEFAULT ON (owner
+# 2026-07-26); opt out with -no-stm-proton-guard / SBND_STM_PROTON_GUARD=0.
+STM_PGUARD="${SBND_STM_PROTON_GUARD:-1}"
+# doc-63 round-3 cathode-truncation veto.  DEFAULT ON (owner 2026-07-26); opt
+# out with -no-stm-cathode-guard / SBND_STM_CATHODE_GUARD=0.
+STM_CGUARD="${SBND_STM_CATHODE_GUARD:-1}"
 # Restore the prototype main+associated data product before the taggers by
 # splitting each flash-merged bundle back into its pre-merge members (doc 45).
 # DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
@@ -375,6 +387,8 @@ while [ $# -gt 0 ]; do
         -no-stm-guards|--no-stm-guards) STM_GUARDS=0; shift ;;
         -stm-proton-guard|--stm-proton-guard) STM_PGUARD=1; shift ;;
         -no-stm-proton-guard|--no-stm-proton-guard) STM_PGUARD=0; shift ;;
+        -stm-cathode-guard|--stm-cathode-guard) STM_CGUARD=1; shift ;;
+        -no-stm-cathode-guard|--no-stm-cathode-guard) STM_CGUARD=0; shift ;;
         -stm-fv|--stm-fv) STM_FV=1; shift ;;
         -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
@@ -470,7 +484,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -507,6 +521,7 @@ process_event() {
             --tla-code "stm_consistent_fv=$([ "$STM_FV" = 1 ] && echo true || echo false)" \
             --tla-code "stm_accept_guards=$([ "$STM_GUARDS" = 1 ] && echo true || echo false)" \
             --tla-code "stm_proton_muon_guard=$([ "$STM_PGUARD" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_cathode_guard=$([ "$STM_CGUARD" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
