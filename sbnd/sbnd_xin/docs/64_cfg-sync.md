@@ -3,6 +3,8 @@
 **Status: DONE 2026-07-27.** Every live SBND reconstruction job and every
 pattern-recognition data file now lives in-tree; `sbnd_xin` re-exports them.
 All compiled configs byte-identical, end-to-end run identical.
+The TrackFitting parameter file is now WIRECELL_PATH-resolved (§4a), so the
+in-tree config is self-sufficient. `lifetime` is documented as inert (§4).
 LArSoft (`wcls-*`) reconcile **deferred** — see §6.
 
 ## Repro block
@@ -31,6 +33,15 @@ for e in 62613 62303 321371 402330 353487 72586; do
 
 # 4. unit tests
 ./build/clus/wcdoctest-clus       # 49 cases / 565 assertions, rc=0
+
+# 5. sec 4a: the WIRECELL_PATH resolution of the TrackFitting JSON.
+#    absolute path (what the runners pass) must be unchanged:
+NJOBS=24 ./stm_campaign/run_round.sh d64tf        # all 72 baseline events
+#    ... then every nusel TSV must equal work-stmcamp-r5fullc's.
+#    relative name must give the same answer as the absolute one: run one event
+#    twice with trackfitting_config=<abs> and =pgrapher/experiment/sbnd/
+#    sbnd_track_fitting.json, then compare member content hashes:
+python3 ../../abtest/hash_archive.py <dirA>/mabc-pr.zip <dirB>/mabc-pr.zip
 ```
 
 ## 1. What was actually out of sync
@@ -133,12 +144,13 @@ Modified in-tree: `clus.jsonnet` (defaults, §2), `qlmatching.jsonnet` (defaults
 
 In `sbnd_xin/`: the five `wct-*.jsonnet` jobs and `qlmatching.jsonnet` became
 one-line re-exports; `sbnd_track_fitting.json` became a symlink to the in-tree
-copy. **No runner logic changed** — the runners keep passing explicit TLAs,
-which is what makes the gate a pure compiled-config identity. Only two stale
-comments were refreshed (`run_nusel_evt.sh`'s `pwd -P` rationale,
-`run_ql_evt.sh`'s `-auto-mask` help, §4).
+copy. The *production* runners keep passing explicit TLAs unchanged, which is
+what makes the gate a pure compiled-config identity; the only runner logic change
+is the twelve `tgm_*` pins added to `run_pr_evt.sh` (§5). Two stale comments were
+refreshed (`run_nusel_evt.sh`'s `pwd -P` rationale, `run_ql_evt.sh`'s
+`-auto-mask` help, §4).
 
-## 4. Two warts recorded rather than "fixed"
+## 4. Warts: one fixed, one recorded
 
 **`auto_mask` was never toggleable.** `match_data` sets `auto_mask: true`
 unconditionally, so the old wrapper's `automask_on()` and the `-auto-mask` flag
@@ -148,16 +160,79 @@ disabled it. The new canonical arg is a real tri-state (`null` = inherit,
 own `auto_mask=false` TLA to `null` so the runner contract is byte-identical.
 Same shape for `beam_pref`. The help text now says so.
 
-**`trackfitting_config` is not `WIRECELL_PATH`-resolved.** `TaggerCheckSTM`
-loads it with a plain `std::ifstream` (`clus/src/TaggerCheckSTM.cxx`
-`load_trackfitting_config`), so the in-tree `sbnd_track_fitting.json` can only be
-reached by absolute path, and the job's `''` default silently falls back to the
-uBooNE-derived built-in parameters. Documented at the top of the job.
-**Follow-up (not done):** wrap the filename in `Persist::resolve()` in
-`TaggerCheckSTM` and `TaggerCheckNeutrino` — byte-identical for absolute paths
-(`resolve` returns those unchanged) and it would let the job default to the
-canonical file by name. That is a C++ production-path change and needs its own
-gate + doctest round, so it was deliberately kept out of this config sync.
+**`trackfitting_config` is now `WIRECELL_PATH`-resolved (§4a).** It was not, and
+that was the one remaining hole in "the in-tree config is self-sufficient" — see
+§4a for the fix.
+
+**`lifetime` is inert in the reco chain, and 6.0 ms is an inherited
+placeholder.** The PR and Q/L jobs take a `lifetime` TLA defaulting to 6.0 (ms)
+and override `params.lar.lifetime` with it, but **no reconstruction component
+reads it**: `lifetime` occurs **zero** times in the compiled imaging, clustering,
+Q/L and PR configs. It only feeds the sim `Drifter`'s charge attenuation in the
+`wcls-sim-*` jobs. So **no electron-lifetime / charge-attenuation correction is
+applied anywhere** in imaging, clustering, matching or PR.
+
+Provenance of the 6.0: it arrived as part of the triple
+`DL=6.2 DT=9.8 lifetime=6 driftSpeed=1.565` in HaiwangYu's first standalone Q/L
+test (`wcp-porting-img 655bd6a`, 2026-05-24) and was copied forward into
+`wct-clus-matching-perevt.jsonnet` (`ba805c6`) and the PR job. `sbnd_track_fitting.json`'s
+own `_comment_diffusion` calls that same set "the earlier 6.2/9.8 placeholders
+inherited from the Q/L chain and uBooNE". The DL/DT half was later corrected to
+the SBND physical values (`9f498089`); `lifetime` never was, because nothing
+consumes it. It is *not* an SBND measurement, and it disagrees with SBND's own
+`simparams.jsonnet` (35 ms) and with `run_clus_evt.sh`, which passes 35 —
+harmless only because the knob is dead. Both jobs now carry a comment saying so.
+**Not changed**, deliberately: the value is inert, and picking a number would
+imply a lifetime correction exists. If one is ever added, 35 ms is a simulation
+value — data needs a measured lifetime, and the whole `dQ/dx` chain (including
+the retained 0.85 scale factor in `particle_dataset.jsonnet`) would need
+revisiting together.
+
+## 4a. `trackfitting_config` resolved through WIRECELL_PATH
+
+`TaggerCheckSTM` and `TaggerCheckNeutrino` loaded the TrackFitting parameter JSON
+with a plain `std::ifstream`, so an in-tree copy was reachable only by absolute
+path and the `''` default silently fell back to the uBooNE-hard-coded C++
+presets — wrong for SBND, and invisible.
+
+Fix (owner-requested, 2026-07-27): `load_trackfitting_config()` in both taggers
+now resolves the filename with `Persist::resolve()` first:
+
+```cpp
+const std::string resolved = Persist::resolve(config_file);
+std::ifstream file(resolved.empty() ? config_file : resolved);
+```
+
+`resolve()` returns an absolute path unchanged, so every existing caller is
+unaffected; a relative name is looked up on `WIRECELL_PATH`; and when nothing is
+found the diagnostic still names what was asked for (now with "not found on
+WIRECELL_PATH either"). `TaggerCheckSTM.cxx` gained the `WireCellUtil/Persist.h`
+include (`TaggerCheckNeutrino.cxx` already had it).
+
+With that, the defaults could stop lying: `clus_pr()`/`pr()`'s
+`trackfitting_config_file` and the PR job's `trackfitting_config` TLA now default
+to `pgrapher/experiment/sbnd/sbnd_track_fitting.json`. A bare
+`wire-cell -c pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` therefore runs with
+the SBND parameters; `''` still selects the uBooNE presets.
+
+Gates for this change (all after `wcbuild` + freshness proof — `libWireCellClus.so`
+mtime newer than both edited sources):
+
+- `wcdoctest-clus`: 49 cases / 565 assertions, rc=0.
+- Compiled-config identity: the same 10/10 byte-identical result as §5 — the
+  production runners pass an absolute path, so nothing moved.
+- **Runtime, absolute path:** the full 72-event doc-62 baseline round
+  (`stm_campaign/run_round.sh d64tf`, NJOBS=24, production flag set) — 72/72
+  rc=0 and **72/72 `nusel-evt<ID>.tsv` identical** to the validated round-5 arm
+  `work-stmcamp-r5fullc`. So `Persist::resolve()` is a genuine no-op for the
+  absolute paths production uses.
+- **Runtime, relative path:** event 62613 run twice through the PR job, once with
+  the absolute path and once with
+  `trackfitting_config=pgrapher/experiment/sbnd/sbnd_track_fitting.json`.
+  `mabc-pr.zip` **member-content hashes identical** (`hash_archive.py`, M2), and
+  all 27 tagger config/verdict log lines identical — the only textual difference
+  was one spdlog line torn at a different column, the known non-atomic-write
+  artifact. No "Cannot open config file" in either log.
 
 ## 5. Verification
 
@@ -203,7 +278,9 @@ gate + doctest round, so it was deliberately kept out of this config sync.
   `nusel-evt<ID>.tsv` **identical** to the validated round-5 arm
   `work-stmcamp-r5fullc`. Scored against the doc-62 owner baseline: 4 correct,
   0 still-wrong, 0 regressed, no collateral flips.
-- `./build/clus/wcdoctest-clus`: 49 cases / 565 assertions, rc=0.
+- `./build/clus/wcdoctest-clus`: 49 cases / 565 assertions, rc=0 (re-run after
+  the §4a C++ change, with the M1 freshness proof).
+- The §4a `Persist::resolve()` change adds its own gates: see §4a.
 
 ## 6. Excluded and deferred
 
@@ -233,6 +310,12 @@ gate + doctest round, so it was deliberately kept out of this config sync.
 
 ## 7. Commits
 
-- toolkit `cfg/sbnd: promote the standalone reco jobs + PR materials in-tree`
-- toolkit `cfg/sbnd: PR + matching defaults to the SBND production operating point`
-- wcp `sbnd_xin: re-export the canonical in-tree reco jobs (doc 64)`
+- toolkit `cfg/sbnd: promote the standalone reco chain in-tree + production
+  defaults (doc 64)` — b2dab726.  (Planned as two commits, shipped as one: the
+  promotion alone would have left `wct-clus-matching-perevt.jsonnet`
+  non-compiling at the intermediate commit, since it passes `cathode_diag`, which
+  only exists after the `qlmatching.jsonnet` change.)
+- wcp `sbnd_xin: re-export the canonical in-tree reco jobs (doc 64)` — 99cc352.
+- toolkit `clus,cfg/sbnd: resolve the TrackFitting config through WIRECELL_PATH`
+  — §4a.
+- wcp `sbnd_xin: doc 64 sec 4/4a` — the lifetime finding + the resolve gates.
