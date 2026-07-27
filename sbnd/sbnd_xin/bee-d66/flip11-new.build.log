@@ -1,0 +1,35 @@
+  evt 281632: stm_fit cluster_id -> img-global space (78 pts, 211 ambiguous q fingerprints)
+    PR clus    8 -> img   10   [flash-matched]  constituents {10:468}  unmapped 7
+event 281632 -> bee index 0: 6 layer(s) ['stm_fit-global']
+  evt 283463: stm_fit cluster_id -> img-global space (40 pts, 464 ambiguous q fingerprints)
+    PR clus   14 -> img   12   [flash-matched]  constituents {12:373}  unmapped 23
+event 283463 -> bee index 1: 6 layer(s) ['stm_fit-global']
+  evt 315849: stm_fit cluster_id -> img-global space (232 pts, 820 ambiguous q fingerprints)
+    PR clus   10 -> img    7   [flash-matched]  constituents {7:656}  unmapped 35
+event 315849 -> bee index 2: 6 layer(s) ['stm_fit-global']
+  evt 319809: stm_fit cluster_id -> img-global space (115 pts, 121 ambiguous q fingerprints)
+    PR clus   20 -> img   11   [flash-matched]  constituents {11:1271}  unmapped 21
+event 319809 -> bee index 3: 6 layer(s) ['stm_fit-global']
+  evt 321107: stm_fit cluster_id -> img-global space (370 pts, 286 ambiguous q fingerprints)
+    PR clus   13 -> img    3   [flash-matched]  constituents {3:7994}  unmapped 159
+event 321107 -> bee index 4: 6 layer(s) ['stm_fit-global']
+  evt 58345: stm_fit cluster_id -> img-global space (74 pts, 310 ambiguous q fingerprints)
+    PR clus    7 -> img   13   [flash-matched]  constituents {13:734}  unmapped 19
+event 58345 -> bee index 5: 6 layer(s) ['stm_fit-global']
+  evt 58755: stm_fit cluster_id -> img-global space (635 pts, 887 ambiguous q fingerprints)
+    PR clus   21 -> img    7   [flash-matched]  constituents {7:5570}  unmapped 218
+event 58755 -> bee index 6: 6 layer(s) ['stm_fit-global']
+  evt 63163: stm_fit cluster_id -> img-global space (285 pts, 159 ambiguous q fingerprints)
+    PR clus    6 -> img   14   [flash-matched]  constituents {14:3240}  unmapped 64
+event 63163 -> bee index 7: 6 layer(s) ['stm_fit-global']
+  evt 289295: stm_fit cluster_id -> img-global space (52 pts, 179 ambiguous q fingerprints)
+    PR clus   15 -> img   11   [flash-matched]  constituents {11:288}  unmapped 4
+event 289295 -> bee index 8: 6 layer(s) ['stm_fit-global']
+  evt 317543: stm_fit cluster_id -> img-global space (169 pts, 197 ambiguous q fingerprints)
+    PR clus   15 -> img    4   [flash-matched]  constituents {4:1032}  unmapped 35
+event 317543 -> bee index 9: 6 layer(s) ['stm_fit-global']
+  evt 390864: stm_fit cluster_id -> img-global space (278 pts, 132 ambiguous q fingerprints)
+    PR clus   16 -> img    6   [flash-matched]  constituents {6:1788}  unmapped 29
+event 390864 -> bee index 10: 6 layer(s) ['stm_fit-global']
+wrote bee-d66/flip11-new.zip
+wrote bee-d66/flip11-new.stmid-map.txt

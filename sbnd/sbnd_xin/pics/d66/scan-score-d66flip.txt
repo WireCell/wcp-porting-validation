@@ -1,0 +1,28 @@
+tag d66flip under /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-stmcamp-d66new
+  flips to scan : 11
+  with labels   : 8
+  visited only  : ['281632', '319809', '321107']   <- no verdict saved
+  never visited : []
+
+bundle        direction code(new)     owner     code ok?  doc62    comment
+--------------------------------------------------------------------------
+281632:8      STM->nu   -             -         NOT SCANNED STM     
+283463:14     STM->nu   nu-candidate  not-STM   YES       STM      'nu candidate is OK'
+315849:10     STM->nu   nu-candidate  not-STM   YES       STM      'not a STM'
+319809:20     nu->STM   -             -         NOT SCANNED not-STM 
+321107:13     STM->nu   -             -         NOT SCANNED not-STM 
+58345:7       STM->nu   nu-candidate  not-STM   YES       None     'Nu candidate, not a STM'
+58755:21      nu->STM   STM           not-STM   NO        None     'Not a STM, it should be a TGM though'
+63163:6       STM->nu   nu-candidate  not-STM   YES       None     'nu candidate, not a STM, vertex activity'
+289295:15     nu->STM   STM           not-STM   NO        None     'Not a STM'
+317543:15     nu->STM   STM           not-STM   NO        None     'Not a STM'
+390864:16     nu->STM   STM           not-STM   NO        None     'not a STM, '
+
+scored bundles      : 8
+  code CORRECT      : 4  ['283463:14', '315849:10', '58345:7', '63163:6']
+  code WRONG        : 4  ['58755:21', '289295:15', '317543:15', '390864:16']
+  unclear comment   : 0  []
+  not scanned       : 3  ['281632:8', '319809:20', '321107:13']
+
+  STM->nu: 4 correct, 0 wrong
+  nu->STM: 0 correct, 4 wrong   -> ['58755:21', '289295:15', '317543:15', '390864:16']

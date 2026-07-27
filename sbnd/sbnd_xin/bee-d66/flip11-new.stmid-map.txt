@@ -1,0 +1,13 @@
+# stm_fit-global cluster_id remap for bee-d66/flip11-new.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+281632	0	8	10	flash-matched	10:468
+283463	1	14	12	flash-matched	12:373
+315849	2	10	7	flash-matched	7:656
+319809	3	20	11	flash-matched	11:1271
+321107	4	13	3	flash-matched	3:7994
+58345	5	7	13	flash-matched	13:734
+58755	6	21	7	flash-matched	7:5570
+63163	7	6	14	flash-matched	14:3240
+289295	8	15	11	flash-matched	11:288
+317543	9	15	4	flash-matched	4:1032
+390864	10	16	6	flash-matched	6:1788
