@@ -1,0 +1,85 @@
+# doc 62 -- STM baseline: every in-beam bundle the OWNER adjudicated by hand on :5012
+# (comments in work-mcp1kall-d59k/nusel_labels/s61mis/, 2026-07-26).  This is the
+# labelled set to improve the STM tagger against.  owner_verdict is the TRUTH column.
+# class:
+#   code-FALSE-STM        tagger says STM, owner says NOT a stopping muon  -> FIX (15)
+#   code-MISSED-STM       tagger left it untagged, owner says it IS an STM  -> FIX (1)
+#   code-STM-correct      tagger says STM and the owner agrees             (36)
+#   code-not-STM-correct  tagger left it untagged and the owner agrees     (20)
+# proton=1 marks the owner calling it a proton (see scan-d59k/proton-list.tsv).
+# ai_verdict/ai_quality are the doc-61 sub-agent scan, kept ONLY to show where the
+# automated scan was wrong -- it is NOT truth (see doc 62 for its measured precision).
+# TGM-only rulings are excluded: the owner ruled the TGM labels fine (doc 61 sec 5e).
+class	event	main_id	flash_gid	t_us	len_cm	tagger	owner_verdict	proton	ai_verdict	ai_quality	owner_comment
+code-FALSE-STM	48895	17	4	1.442	235.5	STM	not-STM	0	nu	cosmic-like	Not STM
+code-FALSE-STM	72586	17	3	1.175	301.6	STM	not-STM	0	nu	cosmic-like	AI id is right, there is a small track near the bottom
+code-FALSE-STM	278662	1	3	0.678	269.0	STM	not-STM	0	nu	cosmic-like	Not STM, the high dQ/dx could be a vertex activity
+code-FALSE-STM	278794	7	1000000	0.695	203.1	STM	not-STM	0	STM	clean	This is not STM, there are multiple shower like activities, negative dQ/dx is sign of gaps ...
+code-FALSE-STM	285366	13	1000001	1.102	95.1	STM	not-STM	0	nu	cosmic-like	Not STM, very high dQ/dx at the end point, neutrino vertex.
+code-FALSE-STM	285443	7	3	1.105	178.9	STM	not-STM	0	nu	unclear	Not STM, clearly other tracks/showers.
+code-FALSE-STM	289832	10	1000003	0.629	214.2	STM	not-STM	0	nu	cosmic-like	Not STM, good nu, vertex high dQ/dx
+code-FALSE-STM	290294	12	1000008	1.752	28.2	STM	not-STM	0	nu	weak	Not a STM, vertex activity
+code-FALSE-STM	321107	13	3	0.755	226.9	STM	not-STM	0	nu	cosmic-like	Not STM
+code-FALSE-STM	321371	18	1000002	0.950	308.7	STM	not-STM	0	nu	cosmic-like	Not STM
+code-FALSE-STM	349241	15	11	2.003	137.1	STM	not-STM	0	nu	unclear	Not STM, other tracks
+code-FALSE-STM	353223	15	5	1.072	67.6	STM	not-STM	0	nu	clean	Not STM, two tracks.
+code-FALSE-STM	392200	27	0	0.683	102.0	STM	not-STM	0	nu	cosmic-like	Not STM, flat track.
+code-FALSE-STM	402330	1	5	1.472	56.3	STM	not-STM	0	nu	clean	Not STM, multiple tracks, neutrino.
+code-FALSE-STM	409546	8	1	0.936	82.0	STM	not-STM	0	nu	unclear	Not STM, high vertex dQ/dx
+code-MISSED-STM	62613	17	1000000	1.041	301.4	nu-candidate	STM	0	STM	clean	This looks like a STM missed. AI scan is correct.
+code-STM-correct	58711	15	1000007	1.812	43.6	STM	STM	0	nu	weak	May be a STM, OK
+code-STM-correct	59063	14	2	1.413	52.1	STM	STM	0	nu	unclear	Can be a STM, decay in flight?
+code-STM-correct	59377	7	3	1.584	76.2	STM	STM	1	nu	unclear	Proton candidate, IDed as STM is fine
+code-STM-correct	61313	18	6	0.942	39.6	STM	STM	1	nu	unclear	Proton candidate, treated as STM is fine.
+code-STM-correct	62473	12	1	0.587	64.4	STM	STM	0	nu	unclear	STM is fine, later part is Michel electron.
+code-STM-correct	68956	13	1000002	2.010	468.1	STM	STM	0	STM	clean	This is STM,
+code-STM-correct	72828	7	0	1.243	11.8	STM	STM	1	nu	unclear	Proton, IDed as STM is fine.
+code-STM-correct	168388	6	5	1.453	12.7	STM	STM	1	nu	unclear	Proton, ided as STM is fine.
+code-STM-correct	172596	15	8	1.359	59.2	STM	STM	0	nu	unclear	STM is fine, decay to a Michel electron
+code-STM-correct	174488	3	6	1.450	16.4	STM	STM	1	nu	unclear	Proton, ided as STM is fine.
+code-STM-correct	175428	17	9	0.623	121.2	STM	STM	0	nu	cosmic-like	treated as STM is probably fine.
+code-STM-correct	277958	13	1000008	0.964	34.2	STM	STM	0	nu	unclear	STM is fine. Michel at the end after decay.
+code-STM-correct	280092	6	1000006	1.551	49.2	STM	STM	0	nu	clean	STM, with Michel electron
+code-STM-correct	281632	8	7	1.133	54.5	STM	STM	0	STM	unclear	STM is fine.
+code-STM-correct	282715	14	1000004	0.834	501.2	STM	STM	0	nu	cosmic-like	STM is fine.
+code-STM-correct	283463	14	8	0.812	86.2	STM	STM	0	nu	junk	STM is fine.
+code-STM-correct	285795	11	1000010	0.852	66.1	STM	STM	0	nu	unclear	STM with Michel electron.
+code-STM-correct	289343	9	4	1.363	53.7	STM	STM	1	STM	unclear	Proton candidate, can be viewed as STM.
+code-STM-correct	291301	18	9	1.393	34.6	STM	STM	0	nu	weak	STM is fine.
+code-STM-correct	291345	12	1000004	1.338	140.0	STM	STM	1	nu	unclear	Proton, treated as STM is fine.
+code-STM-correct	291768	18	1000012	1.604	14.8	STM	STM	0	STM	unclear	STM is fine.
+code-STM-correct	315409	16	1000006	1.759	276.5	STM	STM	0	nu	cosmic-like	treated as STM is probably fine.
+code-STM-correct	315849	10	0	0.920	91.3	STM	STM	0	nu	cosmic-like	STM is fine.
+code-STM-correct	386838	16	6	1.383	90.6	STM	STM	1	STM	clean	Proton track, can treat as STM
+code-STM-correct	389544	13	4	1.941	46.7	STM	STM	1	nu	clean	Proton track, can be treated as STM.
+code-STM-correct	389962	5	1000000	1.436	86.8	STM	STM	1	STM	unclear	Proton, can be treated as STM
+code-STM-correct	390028	5	6	1.986	23.1	STM	STM	0	nu	unclear	STM with a Michel electron at the end.
+code-STM-correct	392184	18	9	0.997	59.6	STM	STM	0	nu	clean	STM with a michel electron at the end.
+code-STM-correct	392558	2	4	1.197	7.6	STM	STM	0	nu	weak	STM clearly.
+code-STM-correct	393542	22	1000006	1.839	48.5	STM	STM	0	nu	cosmic-like	STM with Michel electron at the end.
+code-STM-correct	394906	16	1000006	0.810	91.9	STM	STM	0	nu	cosmic-like	STM with Michel electron at the end.
+code-STM-correct	401824	4	10	2.041	15.3	STM	STM	0	nu	clean	STM is fine.
+code-STM-correct	403958	3	0	1.793	67.4	STM	STM	0	nu	unclear	STM is fine.
+code-STM-correct	409084	12	1000003	1.096	108.9	STM	STM	1	STM	clean	Proton, can be viewed as STM.
+code-STM-correct	409458	8	4	1.814	6.7	STM	STM	0	nu	weak	STM is fine.
+code-STM-correct	411790	13	1000007	1.266	47.6	STM	STM	0	nu	unclear	STM with Michel electron.
+code-not-STM-correct	56243	9	1000001	0.905	185.3	nu-candidate	not-STM	0	nu	unclear	Ok, not STM
+code-not-STM-correct	57661	18	1000005	1.818	124.0	nu-candidate	not-STM	0	STM	clean	NOT STM, there are clearly another track, through the kink
+code-not-STM-correct	59085	3	6	1.778	35.8	nu-candidate	not-STM	0	STM	clean	Not STM,
+code-not-STM-correct	63603	13	1000007	1.306	117.1	nu-candidate	not-STM	0	nu	unclear	good nu candidate, with multiple tracks.
+code-not-STM-correct	169598	18	1000004	1.514	85.8	nu-candidate	not-STM	0	STM	unclear	Not STM, multiple tracks.
+code-not-STM-correct	282217	9	1000000	2.024	405.6	nu-candidate	not-STM	0	STM	clean	cleary neutron candidate, not STM
+code-not-STM-correct	283229	6	1000001	1.854	212.1	nu-candidate	not-STM	0	STM	clean	Not STM, multiple tracks
+code-not-STM-correct	284103	8	1000000	0.747	161.8	nu-candidate	not-STM	0	STM	clean	Not STM, multiple tracks.
+code-not-STM-correct	284145	11	1000000	1.626	270.8	nu-candidate	not-STM	0	STM	clean	Not STM, multiple tracks.
+code-not-STM-correct	285929	13	2	0.855	282.8	nu-candidate	not-STM	0	STM	unclear	Clear Neutrino candidate, not STM.
+code-not-STM-correct	286906	9	2	1.539	141.6	nu-candidate	not-STM	0	STM	weak	Not STM, nu candidate.
+code-not-STM-correct	288859	9	1000000	1.823	328.1	nu-candidate	not-STM	0	STM	weak	Not STM, nu candidate.
+code-not-STM-correct	290201	9	5	0.600	114.8	nu-candidate	not-STM	0	STM	clean	Not STM, vertex activity
+code-not-STM-correct	290729	12	4	1.552	114.6	nu-candidate	not-STM	0	STM	unclear	Not STM, other tracks, kink
+code-not-STM-correct	319809	20	1000009	1.540	73.6	nu-candidate	not-STM	0	STM	clean	Multiple tracks. Not STM
+code-not-STM-correct	387850	17	1000008	1.265	128.9	nu-candidate	not-STM	0	STM	unclear	Not STM, multiple tracks.
+code-not-STM-correct	397920	8	1000002	1.975	272.3	nu-candidate	not-STM	1	STM	clean	Not STM, clear proton at vertex.
+code-not-STM-correct	404684	9	1000010	1.595	74.8	nu-candidate	not-STM	1	nu	unclear	Proton candidate, Not STM
+code-not-STM-correct	405432	15	1000003	1.570	111.0	nu-candidate	not-STM	0	STM	clean	Not STM, multiple tracks.
+code-not-STM-correct	409942	17	1000006	1.961	54.3	nu-candidate	not-STM	0	STM	clean	Not STM, multiple tracks.

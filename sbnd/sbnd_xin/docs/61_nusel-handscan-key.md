@@ -1,9 +1,20 @@
 # 61 — nusel hand-scan key: STM vs neutrino candidate (SBND d59k scan set)
 
+> **Superseded in part by doc 62.** The owner has since hand-scanned the whole
+> :5012 set and adjudicated 72 bundles. **His verdicts are truth**, and §5b's
+> headline audit (43 overturned / 18 promoted) does not survive them: the real
+> tagger error list is **15 false STMs + 1 missed STM**
+> (`scan-d59k/stm-baseline.tsv`). Doc 62 also measures this scan's precision —
+> 33 % on "misidentified", 6 % on "missed" — and its one-line cause: the scan
+> demanded a textbook Bragg and rejected Michel electrons and protons, which the
+> owner accepts. §5d's `dqdx-normalisation` class turned out to be **protons**
+> (12 of 15). Read doc 62 before using any number below.
+
 **Status.** Scan key + sub-agent operating instructions. The whole 393-event
 display set is now scanned and overlaid on **:5011**, and **:5012** serves the
-93 events worth a second pair of eyes: the 62 bundles where the scan contradicts
-the STM tagger (§5c) plus the 44 pathology bundles (§5d). Two separately attributable batches — first 20 events (`scan-d59k/handscan-first20.tsv`, §4) and the
+97 events worth a second pair of eyes: the 62 bundles where the scan contradicts
+the STM tagger (§5c) plus the 49 pathology bundles (§5d), including the rows the
+owner's first ruling put back in doubt (§5e). Two separately attributable batches — first 20 events (`scan-d59k/handscan-first20.tsv`, §4) and the
 remaining 383 by 10 sub-agents (`scan-d59k/handscan-batch2.tsv`, §5b). **Both are
 awaiting owner validation:** every criterion below is calibrated on *two*
 owner-judged bundles (evt48895, evt50787), and the ten agents agreeing 60/60 on
@@ -170,6 +181,13 @@ interaction stops too. STM needs Bragg **and** a boundary-crossing entry.
 * **Constant-z tracks are badly measured** (evt52657: dz=7 cm over 165 cm).
   That is the prolonged-W geometry where collection ROIs break, so truncation
   is the default explanation, not containment.
+* **"Both ends on a boundary" is not evidence of a through-going particle**
+  until you have established the charge is **one** object (owner ruling, §5e:
+  *"Not TGM, due to multiple tracks"* on evt49951). The taggers and this scan see
+  *merged* clusters, so two wall contacts with a sharp kink between them are by
+  default **two tracks that got merged** — a muon does not turn 100°. Likewise a
+  boundary reached only *through* a tangle of other charge is not this object's
+  own end. Check one-objectness first, then use the geometry.
 * **Junk has a density signature.** Real tracks here run 5–10 points/cm of
   length; the six junk bundles are all ≲3 points/cm with the points in
   disconnected blobs spread over 100+ cm. `npts_main / len_main_cm` from the
@@ -530,7 +548,7 @@ where the tagger would gain efficiency. Of the `misidentified` 44, the 18 that
 cite flat-MIP-to-rr=0 are the same failure the owner already confirmed on
 evt48895, so a spot-check of a few decides the class.
 
-## 5d. The pathologies are on :5012 too — 93 events
+## 5d. The pathologies are on :5012 too — 97 events
 
 Owner request, 2026-07-26: put the reconstruction/tagger pathologies of §5b on
 5012 as well. **`scan-d59k/stm-pathologies.tsv`**, 38 bundles in 4 classes:
@@ -540,7 +558,7 @@ Owner request, 2026-07-26: put the reconstruction/tagger pathologies of §5b on
 | `negative-dqdx` | 15 | the STM dQ/dx fit returns **negative** charge somewhere on the track (to −320 ke/cm). Every row whose reason names it, so it is a floor. A fit bug, not physics — the most reproducible finding in the batch |
 | `dqdx-normalisation` | 15 | the **whole** track sits 1.5–2× above the muon table *with the correct shape*, mostly cathode-hugging / drift-parallel. **Needs an owner ruling** |
 | `upward-going-bragg` | 5 | near-bottom-wall objects whose Bragg forces an *upward*-going muon: a real sub-population, or the fit mis-assigning which end exits |
-| `tgm-miss` | 3 | both ends on boundaries (through-going) but `tgm=0`: 49951:16, 173498:6, 280972:7 |
+| `tgm-miss` | 3 | both ends on boundaries (through-going) but `tgm=0` — **the owner has since ruled this class wrong, see §5e**: 49951:16 withdrawn, 280972:7 withdrawn in spirit, 173498:6 doubtful |
 
 The `dqdx-normalisation` class is the one that changes verdicts. The scan had to
 invent a discriminator — *does the far end return to the 56 ke/cm MIP line?* — and
@@ -589,6 +607,54 @@ same beam window, and two of those partners are the scan's own STM calls
 the *launch command's own* shell, so it kills the caller before the relaunch
 runs; and `pgrep -f 'bokeh serve --port 5012'` self-matches the same way. Kill the
 viewer by a pid obtained without the pattern appearing in your own command line.
+
+## 5e. Owner ruling: multiple tracks ≠ through-going (and what it costs)
+
+**Owner, 2026-07-26, on evt49951 main 16** (comment in `nusel_labels/s61mis`):
+*"Not TGM, due to multiple tracks."* The scan had listed it as a TGM miss —
+"enters the top wall, kinks, and BOTH arms reach the anode plane ⇒ through-going,
+tgm=0". **The tagger is right and the scan was wrong.** The claim is withdrawn
+(class `tgm-miss-withdrawn`, the ruling quoted in the row).
+
+**The general lesson, which is bigger than the one row.** The taggers and this
+scan work on *merged clusters*. "Both ends on a boundary" is a statement about a
+cluster's bounding geometry, and a cluster may hold **several tracks**. Only after
+establishing that the charge is one physical object does multi-boundary contact
+mean a through-going particle. Two ends on two walls plus a kink between them is,
+by default, **two tracks that were merged** — a muon does not turn 100°. This is
+the mirror image of the §3 `pr`-vs-`ql` trap: there the cluster was *smaller* than
+it looked, here it is *more than one thing*.
+
+Re-examined the other two `tgm-miss` rows against that standard:
+
+* **280972:7** — the second boundary contact is reached only *through* the dense
+  tangle at the bottom wall, i.e. via other tracks; the smooth curve's own end is
+  at (48,−172,~160), inside. Withdrawn in spirit — treat as multiple tracks.
+* **173498:6** — one polyline in X-Z, but it turns a sharp ~100° corner at
+  (−175,142,340), which is exactly the two-tracks-joined shape. **Doubtful**, kept
+  in the class flagged, needs the owner's eye.
+
+So the `tgm-miss` class does not survive the ruling: 1 withdrawn, 1 withdrawn in
+spirit, 1 doubtful. **There is no demonstrated TGM miss in this scan.**
+
+**Blast radius.** 19 of the 422 scanned bundles have a reason resting on a
+through-going / both-ends-on-boundaries reading, and **7 of those also name a
+kink, tangle, junction or prong** — the shape the ruling rejects. New class
+`through-going-recheck` puts the 5 not already on 5012 there (287654:12, 348691:9,
+352365:12, 392200:27, 282459:10 — note 282459 is described as a "90-degree V",
+which is not one cosmic track). 5012 now serves **97 events**.
+
+What does and does not change:
+
+* **No verdict flips.** All 19 are `nu`, and a multi-track cluster is still not a
+  stopping muon. The STM audit of §5b (43 overturned, 18 promoted) is untouched —
+  none of it rests on a through-going argument.
+* **The `quality` field can be wrong on those 7.** They were called
+  `cosmic-like` *because* they read as through-going cosmics. If the object is
+  several tracks, the honest label is `junk` (over-merge) or possibly a real
+  neutrino vertex — the opposite end of the scale. That is the re-check.
+* **The criteria gain a rule** (§3, new bullet): establish one-objectness before
+  using multi-boundary contact as evidence.
 
 ## 5. Instructions for a sub-agent extending this scan
 
@@ -640,7 +706,7 @@ viewer by a pid obtained without the pattern appearing in your own command line.
 | `scan-d59k/handscan-first20.tsv` | the first 20 verdicts + reasons (§4); `--ai-scan` input on 5011 |
 | `scan-d59k/handscan-batch2.tsv` | **the other 402 bundles / 383 events (§5b)**, 10 sub-agents; second `--ai-scan` input on 5011 |
 | `scan-d59k/stm-disagreements.tsv` | the 62 claimed STM mistakes (44 misidentified + 18 missed), served on **:5012** (§5c) |
-| `scan-d59k/stm-pathologies.tsv` | the 44 pathology bundles in 5 classes, also on **:5012** (§5d) |
+| `scan-d59k/stm-pathologies.tsv` | the 49 pathology bundles in 7 classes, also on **:5012** (§5d, §5e) |
 | `scan-d59k/batch2/` | raw per-slice agent returns + the merge gate + the agents' manual; see its README (the slices still contain the seeded controls) |
 | `nusel_display/regrab_verified.py` | re-grab `evt:main_id` with focus verification (§5b bug 2) |
 | `nusel_display/nusel_scan_viewer.py` | `--ai-scan` overlay added (default off, §4a) + IN-BEAM-only is now the opening mode |

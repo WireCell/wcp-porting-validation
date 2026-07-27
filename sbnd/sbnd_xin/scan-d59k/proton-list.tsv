@@ -1,0 +1,21 @@
+# doc 62 -- protons identified by the OWNER during the :5012 hand scan (2026-07-26).
+# stm_ok: yes = "IDed/treated as STM is fine" (a standalone proton is not a neutrino
+#              candidate, so the tagger removing it as STM is acceptable)
+#         no  = the owner says NOT STM -- the proton sits at a neutrino vertex, so the
+#              bundle must stay in the nu pool
+# 11 of the 13 are the doc-61 sec 5d "dqdx-normalisation" class (whole track 1.5-2x
+# above the muon table with a muon-like shape): that class IS the proton signature.
+event	main_id	flash_gid	t_us	len_cm	tagger	stm_ok	owner_comment
+59377	7	3	1.584	76.2	STM	yes	Proton candidate, IDed as STM is fine
+61313	18	6	0.942	39.6	STM	yes	Proton candidate, treated as STM is fine.
+72828	7	0	1.243	11.8	STM	yes	Proton, IDed as STM is fine.
+168388	6	5	1.453	12.7	STM	yes	Proton, ided as STM is fine.
+174488	3	6	1.450	16.4	STM	yes	Proton, ided as STM is fine.
+289343	9	4	1.363	53.7	STM	yes	Proton candidate, can be viewed as STM.
+291345	12	1000004	1.338	140.0	STM	yes	Proton, treated as STM is fine.
+386838	16	6	1.383	90.6	STM	yes	Proton track, can treat as STM
+389544	13	4	1.941	46.7	STM	yes	Proton track, can be treated as STM.
+389962	5	1000000	1.436	86.8	STM	yes	Proton, can be treated as STM
+409084	12	1000003	1.096	108.9	STM	yes	Proton, can be viewed as STM.
+397920	8	1000002	1.975	272.3	nu-candidate	no	Not STM, clear proton at vertex.
+404684	9	1000010	1.595	74.8	nu-candidate	no	Proton candidate, Not STM
