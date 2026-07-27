@@ -537,14 +537,19 @@ moves in both directions, so those three bundles favour neither pair.
    bundles that gained a wrong STM tag because a veto stopped firing (§11 scored
    every one of them WRONG -- 5/5):
    319809:20 (`detect_proton`, §6), 58755:21, 289295:15, 317543:15, 390864:16.
-   Their `stm_pass` status went to 0 (accepted) in the new arm; the first step is
-   finding which veto each one used to trip, which for `detect_proton` needs
-   `ks3` / `dQ_dx[max_bin]` at TRACE level (not in the persisted record).
+   Their `stm_pass` status went to 0 (accepted) in the new arm. **DONE — §12**:
+   the TRACE-level answer is in §12.1 (each is one or two discriminants crossing
+   a fixed threshold by a hair), and §12.2 gives a measured cut package that
+   restores three of the five with zero collateral; §12.3 shows the other two
+   (the weak-branch comb accepts) are not honestly cut-fixable.
 2. ~~**Three flips still unscanned**~~ — **DONE**: all 11 now carry an owner
    verdict (§11). The one remaining question on that side is 281632:8, the single
    `STM→nu` flip the owner scored WRONG: the fit lost a tag he still considers a
    good STM, and unlike the five `nu→STM` cases its mechanism (status 0 → 3, the
    dQ/dx eval) is not a veto that stopped firing but the eval itself rejecting.
+   **DONE — §12.1/§12.2**: it is the Michel residual veto firing on a 6.10 cm
+   leftover (cut: 6 cm); the P2 knob (6 → 6.5 cm) restores it and touches no
+   other bundle in the 1000-event sample.
 3. **Doc 55 §§6–11** (the curated 12-muon/1-proton sample, the 12-proton
    population, and the §§7–10 recombination fits plus
    `nusel_display/stm_ref_dqdx.json`) are left at their published values; §12.4
@@ -766,6 +771,144 @@ why those vetoes stopped firing, not loosening the ones that did.
 Fresh tag, nothing pre-existing written (M13). All 11 bundles carry a verdict:
 8 from the first pass, the remaining three added straight after under the same
 tag.
+
+## 12. Can the six scan mistakes be fixed by cut adjustments? (2026-07-27)
+
+**Question (owner):** can the six §11 mistakes be fixed by slight adjustments of
+cut values, without regressions in the other 800+ in-beam bundles?  STM tagger
+only.
+
+**Answer: four of the six yes, cleanly; the two comb-margin false accepts no.**
+A four-cut package (P2+P3+P4+P5 below) fixes `281632:8`, `317543:15`,
+`319809:20` and `390864:16` with **zero measured collateral over every fitted
+bundle in the 1000-event sample**.  The remaining two (`58755:21`, `289295:15`)
+sit 6e-4 away from good STMs in the only discriminant that separates them —
+any cut that kills them is an overfit, and `58755:21` is anyway the §11.3
+pre-existing TGM miss.  NO code is changed by this section; it is a measured
+proposal.
+
+Repro:
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+# TRACE reruns (new SBND_WCT_LOGLEVEL hook in run_nusel_evt.sh; fresh tags):
+STM_EVENTS="281632 319809 58755 289295 317543 390864" NJOBS=6 SBND_WCT_LOGLEVEL=trace \
+  SBND_TRACKFIT_JSON=$PWD/stm_campaign/sbnd_track_fitting_d47.json \
+  ./stm_campaign/run_round.sh d66oldtrace          # old-diffusion arm, 6 events
+STM_EVENTS="..." NJOBS=6 SBND_WCT_LOGLEVEL=trace ./stm_campaign/run_round.sh d66newtrace   # same 6
+STM_EVENTS="<141 events with a status-0 bundle>" ... ./stm_campaign/run_round.sh d66newtrace0
+STM_EVENTS="59003 63163 63559 283009 285663 286527 288859 391766 405740" ... run_round.sh d66newtrace5
+# offline re-evaluation of detect_proton under modified cuts (exact code logic
+# on the exact logged discriminants; sanity-checks itself against every
+# recorded pass status):
+./d66_proton_sweep.py work-stmcamp-d66newtrace0
+# eval-side censuses read T_stm_pass/T_stm_eval from every
+# work-stmcamp-d66new/nusel_evt*/tracking-stm.root (values already persisted
+# by -stm-fit; branches are in cm — SbndMagnifyTrackingVisitor divides).
+```
+
+Two mechanical notes discovered on the way: (a) `run_nusel_evt.sh` now honors
+`SBND_WCT_LOGLEVEL` (default `debug`, unchanged behavior); (b) the per-event
+file sink tears the `detect_proton` TRACE line **deterministically** against a
+`MultiAlgBlobClustering` timing line — read the batch stderr sink
+(`.log_<evt>.log`), which writes the same records intact.
+
+### 12.1 The binding cut per mistake
+
+Every flip is a small change in one or two discriminants crossing a fixed
+threshold.  From the TRACE arms (old value → new value, cut in bold):
+
+| bundle | code path | discriminant old → new | binding cut |
+|---|---|---|---|
+| 281632:8 | eval_stm Michel veto (TaggerCheckSTM.cxx:2260) | res_length 0 → **6.10 cm**, ave_res 2.24×MIP | `res_length > 6cm && ave_res > 1.85×MIP` rejects; comb itself still −0.086 (deeply accepting) |
+| 317543:15 | detect_proton block C2 (:1786) | track_medium 0.957 → **1.010** | `track_medium < 1.0` gate no longer entered (ks3=0.188, ks1=0.125 still pass easily) |
+| 319809:20 | detect_proton block C1 (:1783-85) | track_medium 0.997 → **1.021** AND ks3 0.0622 → **0.0589** | both `track_medium < 1.0` and `ks3 > 0.06` lost |
+| 390864:16 | detect_proton block B entry (:1770) | ks2 0.0436 → **0.0507** | `ks2 < 0.05` lost by 0.0007 (comb 0.063 > 0.027 stable) |
+| 58755:21 | eval_stm weak accept (:2271) | comb +0.0058 → **−0.0118** | `comb < 0` newly satisfied |
+| 289295:15 | eval_stm weak accept (:2271) | comb +0.0306 → **−0.0072** | `comb < 0` newly satisfied |
+
+(comb = ks1−ks2 + (|ratio1−1|−|ratio2−1|)/1.5·0.3, the prototype's combined
+shape+normalization statistic.  track_medium = track median dQ/dx / MIP.)
+
+### 12.2 The proposals and their measured blast radius
+
+All thresholds would ship as default-legacy knobs (byte-identical off), doc-63
+style.  Blast radius measured on the d66new arm over **all** fitted bundles:
+141 status-0 (accepted STM), 88 status-3, 9 status-5, across 1000 events.
+
+**P2 — Michel-veto res_length 6 → 6.5 cm** (`:2260-2261`; fixes 281632:8).
+Among all 88 status-3 bundles (whose eval calls are ALL recorded — a rejection
+records every window), exactly **one** bundle anywhere in (6, 7] cm:
+`281632:8` at 6.10 cm.  Its straightness ratio is 0.808 < 0.99, so the
+straight-residual gate (`:2240`) cannot re-reject it; its restored path then
+reaches detect_proton, where its old-arm values (track_medium=1.68, comb=−0.06)
+clear the strengthened cuts below with wide margin.  Residual risk: the doc-63
+guards and the other-tracks veto run on the new fit only after the knob exists
+— needs the knob-on rerun to close.
+
+**P3 — detect_proton track_medium 1.0 → 1.05** (`:1783,:1786`; fixes
+317543:15, half of 319809:20).  Targets sit at 1.010/1.021; the nearest
+non-target accepted STM is `280281:14` between 1.10 and 1.15.  Zero collateral
+up to a cut of 1.10.
+
+**P4 — block-B entry ks2 0.05 → 0.055** (`:1770`; fixes 390864:16).  Target at
+0.0507; **no** other accepted STM enters block B even at 0.10.  The one
+non-monotone worry (a wider B entry lets a bundle exit via B2 `return false`)
+was checked on all 9 status-5 bundles: 8 stay vetoed, the 9th (`288859:9`) was
+vetoed in the early Michel/delta section that these cuts never touch.
+
+**P5 — restore 319809:20's C1 veto**, either variant:
+- P5a `ks3 > 0.06 → 0.055`: target at 0.0589; nearest non-target fires only at
+  0.03 (`281241:10`).  But ks3 moved 5% between the two diffusion arms — the
+  target's 0.004 margin is comparable to fit noise.
+- P5b `dQ_dx[max_bin]/mip > 4.3 → 4.1` (`:1785`): target at 4.164, a quantity
+  that moved only 0.1% between arms; nearest non-target fires at 3.8.
+  **Preferred for stability.**
+
+Package P3+P4+P5(a or b) over the complete sample: newly vetoed = exactly
+{317543:15, 319809:20, 390864:16}.  This is not a rerun estimate — the Python
+re-evaluation (`d66_proton_sweep.py`) applies the exact C++ cascade to the
+exact logged discriminants and reproduces every recorded pass status before
+sweeping; detect_proton is the final stage, so upstream state cannot shift
+under these cut changes.  All 141 accepted STMs accounted for: 138 parsed + 3
+with no detect_proton output at all (early-section exit, immune).
+
+### 12.3 Why the last two are not cut-fixable
+
+`58755:21` and `289295:15` are weak-branch accepts at comb −0.0118 / −0.0072.
+The comb landscape of all 39 weak-branch-2 accepted STMs (others are
+branch-1-immune):
+
+```
+392338:14  -0.0004   unadjudicated
+289295:15  -0.0072   <- target (owner: not STM)
+58755:21   -0.0118   <- target (owner: not STM, really a TGM)
+61997:12   -0.0124   unadjudicated
+346293:5   -0.0134   unadjudicated
+175428:17  -0.0213   owner-confirmed STM (doc 62) — and it sat at -0.0008 in the OLD arm
+```
+
+A cap at comb < −0.012 kills both targets plus `392338:14`; the working band
+between the deeper target (−0.0118) and the first unadjudicated good candidate
+(−0.0124) is **6×10⁻⁴ wide** — pure overfit, and the owner-confirmed STM
+`175428:17` sat within 10⁻³ of zero in the old arm, showing good STMs populate
+the whole region.  On top of that the capped bundles have 4–7 never-executed
+eval windows each that could re-accept them (an acceptance short-circuits the
+window chain), so even the cap's mechanical effect cannot be settled offline.
+**Recommendation: leave these two.**  `58755:21` belongs to the TGM tagger
+(§11.3); `289295:15` costs one false STM in 1000 events.  If the owner wants to
+go further, scanning `392338:14`, `61997:12`, `346293:5` (and re-checking
+`175428:17`) would settle whether that comb region is signal or background —
+with four adjudications a cap could be justified honestly.
+
+### 12.4 Status
+
+Assessment only — no C++ or config change is made by this section.  If adopted,
+the package is 4 knobs in TaggerCheckSTM (`michel_res_length_cut` 6 cm,
+`proton_tm_max` 1.0, `proton_b_ks2_max` 0.05, `proton_c_peak_max` 4.3 — legacy
+defaults, SBND job overrides 6.5/1.05/0.055/4.1), a knob-off byte-identical
+gate, and a knob-on 1000-event rerun expecting exactly the four verdict flips
+plus confirmation that restored `281632:8` clears its post-eval stages.
 
 ---
 

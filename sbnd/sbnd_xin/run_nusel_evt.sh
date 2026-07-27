@@ -17,7 +17,8 @@
 #      verdicts and a label, plus a row per beam-window flash that matched
 #      no bundle.
 #
-# Honors SBND_WORK_ROOT / SBND_INPUT_DIR / SBND_SAMPLE like run_ql_evt.sh, so
+# Honors SBND_WORK_ROOT / SBND_INPUT_DIR / SBND_SAMPLE like run_ql_evt.sh
+# (also SBND_WCT_LOGLEVEL=trace for the STM discriminant TRACE lines), so
 # it runs directly on reprocessing trees, e.g. the MCP2025C reco1 sample:
 #   SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-mcp2025c-10evt \
 #   SBND_WORK_ROOT=$PWD/work-mcp10 ./run_nusel_evt.sh data all
@@ -559,7 +560,7 @@ process_event() {
     (
         cd "$NUDIR"
         wire-cell \
-            -l stderr -l "${LOG}:debug" -L debug \
+            -l stderr -l "${LOG}:${SBND_WCT_LOGLEVEL:-debug}" -L "${SBND_WCT_LOGLEVEL:-debug}" \
             --tla-str  "input=$PCT" \
             --tla-code "anode_indices=[0,1]" \
             --tla-str  "output_dir=$NUDIR" \
