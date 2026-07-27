@@ -1,0 +1,436 @@
+{
+ "event": "evt281632",
+ "run": 18255,
+ "subrun": 1,
+ "event_no": 281632,
+ "source": "nusel-evt281632.tsv",
+ "work_root": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-stmcamp-d66new",
+ "tag": "d66flip",
+ "event_comment": "",
+ "bundles": [
+  {
+   "main_id": 9,
+   "flash_gid": 1000010,
+   "flash_grp": 2,
+   "flash_apa": 1,
+   "flash_time_us": -1158.857,
+   "flash_pe_grp": 4274.3,
+   "in_beam": 0,
+   "clusters": [
+    9
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 6,
+   "flash_gid": 13,
+   "flash_grp": 3,
+   "flash_apa": 0,
+   "flash_time_us": -660.626,
+   "flash_pe_grp": 34563.9,
+   "in_beam": 0,
+   "clusters": [
+    6
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 3,
+   "flash_gid": 6,
+   "flash_grp": 4,
+   "flash_apa": 0,
+   "flash_time_us": -593.383,
+   "flash_pe_grp": 3130.8,
+   "in_beam": 0,
+   "clusters": [
+    3
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 15,
+   "flash_gid": 2,
+   "flash_grp": 5,
+   "flash_apa": 0,
+   "flash_time_us": -118.082,
+   "flash_pe_grp": 15582.3,
+   "in_beam": 0,
+   "clusters": [
+    15
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 8,
+   "flash_gid": 7,
+   "flash_grp": 7,
+   "flash_apa": 0,
+   "flash_time_us": 1.133,
+   "flash_pe_grp": 2976.4,
+   "in_beam": 1,
+   "clusters": [
+    8
+   ],
+   "auto": {
+    "tgm": 0,
+    "stm": 0,
+    "fc": 0,
+    "lm": 0,
+    "label": "nu-candidate"
+   },
+   "scan_labels": [],
+   "comment": "STM is fine . ",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": 0,
+    "stm": 1,
+    "fc": 0,
+    "lm": 0,
+    "label": "STM",
+    "changed": true,
+    "scan_labels": [],
+    "comment": "STM is fine. "
+   },
+   "carried_over": false,
+   "rescan_confirmed": true
+  },
+  {
+   "main_id": 1,
+   "flash_gid": 12,
+   "flash_grp": 8,
+   "flash_apa": 0,
+   "flash_time_us": 82.092,
+   "flash_pe_grp": 489.0,
+   "in_beam": 0,
+   "clusters": [
+    1
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 18,
+   "flash_gid": 0,
+   "flash_grp": 9,
+   "flash_apa": 0,
+   "flash_time_us": 98.138,
+   "flash_pe_grp": 51937.0,
+   "in_beam": 0,
+   "clusters": [
+    18,
+    5
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 16,
+   "flash_gid": 1000006,
+   "flash_grp": 10,
+   "flash_apa": 1,
+   "flash_time_us": 230.94,
+   "flash_pe_grp": 13793.6,
+   "in_beam": 0,
+   "clusters": [
+    16
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 7,
+   "flash_gid": 15,
+   "flash_grp": 12,
+   "flash_apa": 0,
+   "flash_time_us": 364.89,
+   "flash_pe_grp": 109.7,
+   "in_beam": 0,
+   "clusters": [
+    7
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 11,
+   "flash_gid": 1000004,
+   "flash_grp": 13,
+   "flash_apa": 1,
+   "flash_time_us": 538.936,
+   "flash_pe_grp": 16284.9,
+   "in_beam": 0,
+   "clusters": [
+    11,
+    10
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 17,
+   "flash_gid": 1000001,
+   "flash_grp": 14,
+   "flash_apa": 1,
+   "flash_time_us": 607.651,
+   "flash_pe_grp": 35795.0,
+   "in_beam": 0,
+   "clusters": [
+    17,
+    12
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 14,
+   "flash_gid": 1000003,
+   "flash_grp": 16,
+   "flash_apa": 1,
+   "flash_time_us": 810.559,
+   "flash_pe_grp": 35327.1,
+   "in_beam": 0,
+   "clusters": [
+    14,
+    13
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  }
+ ]
+}

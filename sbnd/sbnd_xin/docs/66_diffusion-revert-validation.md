@@ -17,29 +17,42 @@ Source of truth: `sbndcode/sbndcode/WireCell/wcsimsp_sbnd.fcl`, which sets
 uBooNE presets in `TrackFitting.h:37-38` and `qlport/uboone_track_fitting.json`
 are deliberately **untouched**.)
 
-**Headline on 1000 data events: the tagging barely moves, and where it moves it
-is mostly right.** Over 11 426 bundles the bundle set is identical, TGM / FC / LM
-do not flip once, and **STM flips 11 times (0.10 %)**, all in-beam.
+**Headline on 1000 data events: the tagging barely moves, and on the STM verdict
+the two diffusion pairs are a wash.** Over 11 426 bundles the bundle set is
+identical, TGM / FC / LM do not flip once, and **STM flips 11 times (0.10 %)**,
+all in-beam.
 
-The owner hand-scanned the 11 (§11, tag `d66flip`, 8 of 11 with a saved verdict)
-and the result is **perfectly directional**:
+The owner hand-scanned **all 11** (§11, tag `d66flip`). Since a flip's old
+verdict is by construction the opposite of its new one, those 11 verdicts score
+both arms:
 
-| direction | scanned | code correct | code wrong |
+| | wrong on the 11 flips |
+|---|---|
+| OLD arm (6.5781 / 13.1349) | **5** |
+| NEW arm (4.0 / 8.8) | **6** |
+
+So the old pair is ahead by a single bundle — a wash on 11 cases. The two
+subsets pull opposite ways: on the 5 flips already in the doc-62 truth set the
+revert is better (3 → 2 errors), on the 6 newly adjudicated it is worse
+(2 → 4). **4.0/8.8 is therefore not demonstrably better on STM tagging**, and
+§0's provenance argument remains the reason for the change.
+
+What the scan *does* establish is a single, specific failure mode:
+
+| direction | n | code correct | code wrong |
 |---|---|---|---|
-| `STM → nu` — the revert drops a tag | 4 | **4** | 0 |
-| `nu → STM` — the revert adds a tag | 4 | 0 | **4** |
+| `STM → nu` — the revert drops a tag | 6 | **5** | 1 |
+| `nu → STM` — the revert adds a tag | 5 | 0 | **5** |
 
-So the revert's only mistakes are the four newly-*added* STM tags. Its dropped
-tags are right every time — including **283463:14 and 315849:10, whose doc-62
-labels the owner revised to not-STM**, which retires two of the four
-"regressions" §5 reported against the old baseline (§11.1). §5's "3 → 6 errors"
-headline therefore **does not stand**; a final doc-63 number needs the three
-unscanned bundles (281632:8, 319809:20, 321107:13).
+**Every STM tag the revert adds is wrong (5/5)**; tags it removes are right 5
+times in 6. Fixing that one failure mode — not reverting the constants — is what
+would make 4.0/8.8 a clear win (§11.2, §9 item 1).
 
-This also inverts §6a/§9's proposed follow-up: the guard that now *rejects*
-283463:14 on a 3.6 cm charge desert is producing the verdict the owner wants, so
-loosening it would break it. The open problem is the four `nu→STM` bundles where
-a veto that used to fire has **stopped** (§11.2).
+Two knock-on corrections: §5's "3 → 6 errors" against doc 62 **does not stand**
+(the owner revised the 283463:14 and 315849:10 labels to not-STM, so the code is
+right on both — §11.1a), and §6a/§9's proposed `guard_desert_cm` 3.0 → 4.0 "clean
+fix" is **withdrawn** — that veto now produces the verdict the owner wants, so
+loosening it would break it (§11.2).
 
 ## Repro
 
@@ -135,11 +148,12 @@ what the simulation used, which is now true and was not before. That remains the
 primary argument, and no χ² measurement supports either pair (doc 55 §12.3; §9
 item 5).
 
-**The hand scan has since added a physics argument, though.** §11: on the 8
-flips the owner scanned, 4.0/8.8 is right on all 4 where it *drops* an STM tag
-(including two bundles whose doc-62 labels he revised) and wrong on all 4 where
-it *adds* one. So the revert is a net improvement on the STM side, not merely a
-provenance fix — with one specific failure mode left to chase (§11.2).
+**The hand scan does not change that.** §11: over all 11 flips the owner's
+verdicts leave the old pair ahead by one bundle (5 wrong vs 6), so the scan gives
+no physics endorsement of 4.0/8.8 on the STM verdict either — the provenance
+argument above carries the change on its own. The scan's value is diagnostic
+rather than confirmatory: it isolates one failure mode (every added STM tag is
+wrong, 5/5) that is worth fixing on its merits (§11.2).
 
 ### 0a. What MicroBooNE uses, and a field-consistency check
 
@@ -515,20 +529,22 @@ moves in both directions, so those three bundles favour neither pair.
 
 ## 9. What is left open
 
-1. **Why did four `nu→STM` vetoes stop firing?** ~~The doc-63 guard thresholds
+1. **Why did all five `nu→STM` vetoes stop firing?** ~~The doc-63 guard thresholds
    are stale at 4.0/8.8 (§6a) and need re-deriving.~~ **Reframed by §11.2:** the
    guards that now *reject* are producing the verdicts the owner wants, so
    loosening `guard_desert_cm` — §6a's "clean one-knob fix" — would make things
-   worse, and is now explicitly **not** recommended. The real defect is the four
-   bundles that gained a wrong STM tag because a veto stopped firing:
+   worse, and is now explicitly **not** recommended. The real defect is the five
+   bundles that gained a wrong STM tag because a veto stopped firing (§11 scored
+   every one of them WRONG -- 5/5):
    319809:20 (`detect_proton`, §6), 58755:21, 289295:15, 317543:15, 390864:16.
    Their `stm_pass` status went to 0 (accepted) in the new arm; the first step is
    finding which veto each one used to trip, which for `detect_proton` needs
    `ks3` / `dQ_dx[max_bin]` at TRACE level (not in the persisted record).
-2. **Three flips still unscanned** — 281632:8, 319809:20, 321107:13 (§11).
-   Until they carry a verdict the doc-63 score cannot be restated. 319809:20 is
-   the important one: it is `nu→STM`, the direction that is 0/4 so far, and it is
-   the owner-confirmed proton of §6.
+2. ~~**Three flips still unscanned**~~ — **DONE**: all 11 now carry an owner
+   verdict (§11). The one remaining question on that side is 281632:8, the single
+   `STM→nu` flip the owner scored WRONG: the fit lost a tag he still considers a
+   good STM, and unlike the five `nu→STM` cases its mechanism (status 0 → 3, the
+   dQ/dx eval) is not a veto that stopped firing but the eval itself rejecting.
 3. **Doc 55 §§6–11** (the curated 12-muon/1-proton sample, the 12-proton
    population, and the §§7–10 recombination fits plus
    `nusel_display/stm_ref_dqdx.json`) are left at their published values; §12.4
@@ -572,13 +588,13 @@ points at the same residual ranges*, and differ **only** in the charge
 apportioned to each. That is what makes these readable as "what the diffusion
 change did to dQ/dx" rather than as two different fits.
 
-| bundle | flip | vs owner truth | npts | median `reduced_chi2` old → new | median fit/MuonBox old → new | new/old | owner (§11) | code right? | figure |
+| bundle | flip | vs doc-62 (pre-scan) | npts | median `reduced_chi2` old → new | median fit/MuonBox old → new | new/old | owner §11 | code right? | figure |
 |---|---|---|---|---|---|---|---|---|---|
-| 281632:8 | STM → nu | **REGRESSION** (owner STM) | 78 | 1.67 → **1.53** | 1.52 → 1.50 | 0.987 | — | *not scanned* | [png](../pics/d66/d66_evt281632_main8.png) |
+| 281632:8 | STM → nu | **REGRESSION** (owner STM) | 78 | 1.67 → **1.53** | 1.52 → 1.50 | 0.987 | **STM** | **NO** | [png](../pics/d66/d66_evt281632_main8.png) |
 | 283463:14 | STM → nu | **REGRESSION** (owner STM) | 40 | 3.60 → 3.58 | 0.46 → **0.51** | **1.109** | not-STM | **YES** | [png](../pics/d66/d66_evt283463_main14.png) |
 | 315849:10 | STM → nu | **REGRESSION** (owner STM) | 115 | 0.98 → **0.94** | 0.93 → 0.91 | 0.978 | not-STM | **YES** | [png](../pics/d66/d66_evt315849_main10.png) |
-| 319809:20 | nu → STM | **REGRESSION** (owner not-STM) | 115 | 1.82 → **1.78** | 0.98 → 0.99 | 1.010 | — | *not scanned* | [png](../pics/d66/d66_evt319809_main20.png) |
-| 321107:13 | STM → nu | **FIX** (owner not-STM) | 370 | 2.14 → 2.15 | 0.87 → 0.87 | 1.000 | — | *not scanned* | [png](../pics/d66/d66_evt321107_main13.png) |
+| 319809:20 | nu → STM | **REGRESSION** (owner not-STM) | 115 | 1.82 → **1.78** | 0.98 → 0.99 | 1.010 | not-STM | **NO** | [png](../pics/d66/d66_evt319809_main20.png) |
+| 321107:13 | STM → nu | **FIX** (owner not-STM) | 370 | 2.14 → 2.15 | 0.87 → 0.87 | 1.000 | not-STM | **YES** | [png](../pics/d66/d66_evt321107_main13.png) |
 | 58345:7 | STM → nu | unadjudicated (AI: STM) | 74 | 1.79 → **1.71** | 0.84 → 0.84 | 1.000 | not-STM | **YES** | [png](../pics/d66/d66_evt58345_main7.png) |
 | 58755:21 | nu → STM | unadjudicated (AI: nu) | 635 | 2.03 → **1.96** | 0.89 → 0.92 | 1.034 | not-STM | **NO** | [png](../pics/d66/d66_evt58755_main21.png) |
 | 63163:6 | STM → nu | unadjudicated (AI: nu) | 285 | 1.85 → 1.84 | 0.90 → 0.91 | 1.011 | not-STM | **YES** | [png](../pics/d66/d66_evt63163_main6.png) |
@@ -622,12 +638,12 @@ fit correctly vetoed? 319809:20 is the one to start with — it is the
 owner-confirmed **proton** whose `detect_proton` veto stopped firing (§6, and the
 one flip whose mechanism §6 could not pin down from stored data).
 
-## 11. The owner's hand scan of the 11 flips (2026-07-27) — and what it overturns
+## 11. The owner's hand scan of all 11 flips (2026-07-27)
 
 The owner scanned the flips on :5011 against the OLD arm as `--prev` (so every
 bundle he saw was flagged "this verdict moved because of the diffusion"), tag
-`d66flip`. **8 of the 11 carry a saved verdict**; 281632:8, 319809:20 and
-321107:13 were visited (`.scan_state` written) but no verdict was saved.
+`d66flip`. **All 11 now carry a saved verdict** (8 on the first pass, the
+remaining three — 281632:8, 319809:20, 321107:13 — added immediately after).
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
@@ -636,57 +652,86 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
 Verdicts are free text in the bundle `comment` (the label buttons were not
 used), so `d66_scan_score.py` applies **one** stated keyword rule — "not a stm" /
-"nu candidate" ⇒ owner verdict not-STM — and always prints the raw comment beside
-it so the classification is checkable by eye. All 8 were unambiguous; none
-needed a judgment call.
+"nu candidate" ⇒ not-STM, "stm is fine" ⇒ STM — and always prints the raw comment
+beside its classification. All 11 were unambiguous; none needed a judgment call,
+and none came back UNCLEAR.
 
 | bundle | direction | code (new) | owner | code right? | doc-62 said | owner's comment |
 |---|---|---|---|---|---|---|
 | 283463:14 | STM→nu | nu-candidate | not-STM | **YES** | STM | *"nu candidate is OK"* |
 | 315849:10 | STM→nu | nu-candidate | not-STM | **YES** | STM | *"not a STM"* |
+| 321107:13 | STM→nu | nu-candidate | not-STM | **YES** | not-STM | *"Not STM"* |
 | 58345:7 | STM→nu | nu-candidate | not-STM | **YES** | — | *"Nu candidate, not a STM"* |
 | 63163:6 | STM→nu | nu-candidate | not-STM | **YES** | — | *"nu candidate, not a STM, vertex activity"* |
+| 281632:8 | STM→nu | nu-candidate | **STM** | **NO** | STM | *"STM is fine ."* |
+| 319809:20 | nu→STM | STM | not-STM | **NO** | not-STM | *"Multiple tracks. Not STM"* |
 | 58755:21 | nu→STM | STM | not-STM | **NO** | — | *"Not a STM, it should be a TGM though"* |
 | 289295:15 | nu→STM | STM | not-STM | **NO** | — | *"Not a STM"* |
 | 317543:15 | nu→STM | STM | not-STM | **NO** | — | *"Not a STM"* |
 | 390864:16 | nu→STM | STM | not-STM | **NO** | — | *"not a STM, "* |
-| 281632:8 | STM→nu | — | — | *not scanned* | STM | — |
-| 319809:20 | nu→STM | — | — | *not scanned* | not-STM | — |
-| 321107:13 | STM→nu | — | — | *not scanned* | not-STM | — |
 
-**4 correct, 4 wrong — and the split is perfectly directional:**
+**5 correct, 6 wrong.** The directional pattern is strong but not absolute:
 
-| direction | n scanned | code correct | code wrong |
+| direction | n | code correct | code wrong |
 |---|---|---|---|
-| `STM → nu` (the revert drops a tag) | 4 | **4** | 0 |
-| `nu → STM` (the revert adds a tag) | 4 | 0 | **4** |
+| `STM → nu` (the revert drops a tag) | 6 | **5** | 1 — 281632:8 |
+| `nu → STM` (the revert adds a tag) | 5 | 0 | **5** — all of them |
 
-Every flip where 4.0/8.8 *removed* an STM tag was the right call. Every flip
-where it *added* one was wrong. The owner's verdict was not-STM on all 8 bundles
-he scanned, so the revert's only mistakes are the four newly-added tags.
+Every tag the revert *added* is wrong. Tags it *removed* are right 5 times out
+of 6, the exception being 281632:8, where the owner confirms the doc-62 STM
+label. The owner's verdict is not-STM on 10 of the 11.
 
-### 11.1 This overturns two of §5's four "regressions"
+### 11.1 Old arm vs new arm on the owner's verdicts: a wash
 
-§5 scored the change against the **doc-62** baseline and reported 4 regressions,
-because doc 62 recorded owner=STM for 283463:14 and 315849:10. **The owner has
-now revised both**, looking at the same bundles with the new fit in front of
-him — "nu candidate is OK" and "not a STM". So the new code is *right* on both,
-and what §5 counted as damage was the old label being stale, not the tagger
-getting worse. Revised state of the five doc-62 bundles:
+A flipped bundle's OLD verdict is by construction the opposite of its NEW one,
+so these 11 verdicts score **both** arms with no extra input. `d66_scan_score.py`
+does that arithmetic mechanically, because scoring only the subset that happens
+to lie in the doc-62 baseline gives the opposite answer to scoring all of them:
 
-| bundle | §5 called it | after the d66flip scan |
+```
+OLD arm wrong : 5  ['283463:14', '315849:10', '321107:13', '58345:7', '63163:6']
+NEW arm wrong : 6  ['281632:8', '289295:15', '317543:15', '319809:20', '390864:16', '58755:21']
+=> OLD better by 1 on these 11 bundles
+
+  in the doc-62 baseline  : OLD wrong 3, NEW wrong 2
+  newly adjudicated here  : OLD wrong 2, NEW wrong 4
+```
+
+**The two subsets point opposite ways, and that is the honest headline.** On the
+five flips that were already in the doc-62 truth set the revert is *better*
+(3 → 2 errors); on the six this scan newly adjudicated it is *worse* (2 → 4).
+Over all 11 the old diffusion is ahead by a single bundle — statistically a wash
+on 11 cases, and **not** the "net improvement" an earlier reading of the first
+8 verdicts suggested.
+
+So on the STM verdict, 4.0/8.8 is **not** demonstrably better than
+6.5781/13.1349. What the scan does establish is much more specific and more
+useful: the revert has **one systematic failure mode** — it adds STM tags that
+should not be there, 5 times out of 5 — and is otherwise fine. Fixing that
+failure mode, not reverting the constants, is the way to make 4.0/8.8 a clear
+win (§11.2, §9 item 1). The provenance argument of §0 is unaffected either way:
+the fit should assume what the sample was simulated with.
+
+### 11.1a What this does to §5's doc-62 accounting
+
+§5 reported 4 regressions and 1 fix against doc 62, giving "3 → 6 errors". Two
+of those four are retired and two are confirmed:
+
+| bundle | §5 called it | after the scan |
 |---|---|---|
-| 283463:14 | REGRESSION | **not a regression** — doc-62 label revised to not-STM, code correct |
-| 315849:10 | REGRESSION | **not a regression** — doc-62 label revised to not-STM, code correct |
-| 281632:8 | REGRESSION | **unresolved** — not scanned (`STM→nu`, so the §11 pattern predicts it is also fine) |
-| 319809:20 | REGRESSION | **unresolved** — not scanned (`nu→STM`, the direction that is 0/4) |
-| 321107:13 | FIX | **unresolved** — not scanned (`STM→nu`; doc 62 said not-STM, so still a fix on the old label) |
+| 283463:14 | REGRESSION | **retired** — owner revised the doc-62 label to not-STM; code correct |
+| 315849:10 | REGRESSION | **retired** — same |
+| 281632:8 | REGRESSION | **confirmed** — owner re-affirms STM; code wrong |
+| 319809:20 | REGRESSION | **confirmed** — owner re-affirms not-STM; code wrong |
+| 321107:13 | FIX | **confirmed** — owner re-affirms not-STM; code correct |
 
-So **§5's "3 → 6 errors" no longer stands as written.** With the two revisions
-folded in, only one of the four claimed regressions (319809:20) is still a
-plausible regression, and it is unscanned. The doc-63 score cannot be restated
-until 281632:8, 319809:20 and 321107:13 are scanned — that is the one thing
-blocking a final number, and it is three bundles of work.
+On the doc-62 72-bundle set with the two revised labels, the old arm holds
+**5** errors (the 2 doc-63 residuals + 283463:14 + 315849:10 + 321107:13) and the
+new arm **4** (the 2 residuals + 281632:8 + 319809:20). So §5's "3 → 6" becomes
+**5 → 4 on revised truth** — but note the "3" doc 63 published was measured
+against the *un-revised* labels, so it is not comparable to either number, and
+§11.1 shows the improvement disappears once the six newly adjudicated bundles are
+included. Quote 5 → 4 only with that qualification.
 
 ### 11.2 What this says about §6a's guard-threshold worry
 
@@ -718,8 +763,9 @@ why those vetoes stopped firing, not loosening the ones that did.
 ### 11.4 Labels
 
 `work-stmcamp-d66new/nusel_labels/d66flip/` — 8 label files + 11 `.scan_state`.
-Fresh tag, nothing pre-existing written (M13). The three unscanned bundles can be
-added under the same tag without disturbing the eight.
+Fresh tag, nothing pre-existing written (M13). All 11 bundles carry a verdict:
+8 from the first pass, the remaining three added straight after under the same
+tag.
 
 ---
 

@@ -1,16 +1,16 @@
 tag d66flip under /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-stmcamp-d66new
   flips to scan : 11
-  with labels   : 8
-  visited only  : ['281632', '319809', '321107']   <- no verdict saved
+  with labels   : 11
+  visited only  : []   <- no verdict saved
   never visited : []
 
 bundle        direction code(new)     owner     code ok?  doc62    comment
 --------------------------------------------------------------------------
-281632:8      STM->nu   -             -         NOT SCANNED STM     
+281632:8      STM->nu   nu-candidate  STM       NO        STM      'STM is fine . '
 283463:14     STM->nu   nu-candidate  not-STM   YES       STM      'nu candidate is OK'
 315849:10     STM->nu   nu-candidate  not-STM   YES       STM      'not a STM'
-319809:20     nu->STM   -             -         NOT SCANNED not-STM 
-321107:13     STM->nu   -             -         NOT SCANNED not-STM 
+319809:20     nu->STM   STM           not-STM   NO        not-STM  'Multiple tracks. Not STM '
+321107:13     STM->nu   nu-candidate  not-STM   YES       not-STM  'Not STM '
 58345:7       STM->nu   nu-candidate  not-STM   YES       None     'Nu candidate, not a STM'
 58755:21      nu->STM   STM           not-STM   NO        None     'Not a STM, it should be a TGM though'
 63163:6       STM->nu   nu-candidate  not-STM   YES       None     'nu candidate, not a STM, vertex activity'
@@ -18,11 +18,20 @@ bundle        direction code(new)     owner     code ok?  doc62    comment
 317543:15     nu->STM   STM           not-STM   NO        None     'Not a STM'
 390864:16     nu->STM   STM           not-STM   NO        None     'not a STM, '
 
-scored bundles      : 8
-  code CORRECT      : 4  ['283463:14', '315849:10', '58345:7', '63163:6']
-  code WRONG        : 4  ['58755:21', '289295:15', '317543:15', '390864:16']
+scored bundles      : 11
+  code CORRECT      : 5  ['283463:14', '315849:10', '321107:13', '58345:7', '63163:6']
+  code WRONG        : 6  ['281632:8', '319809:20', '58755:21', '289295:15', '317543:15', '390864:16']
   unclear comment   : 0  []
-  not scanned       : 3  ['281632:8', '319809:20', '321107:13']
+  not scanned       : 0  []
 
-  STM->nu: 4 correct, 0 wrong
-  nu->STM: 0 correct, 4 wrong   -> ['58755:21', '289295:15', '317543:15', '390864:16']
+  STM->nu: 5 correct, 1 wrong   -> ['281632:8']
+  nu->STM: 0 correct, 5 wrong   -> ['319809:20', '58755:21', '289295:15', '317543:15', '390864:16']
+
+old arm vs new arm, on the owner's verdicts, over the flipped bundles only
+(a flip's OLD verdict is the opposite of its NEW one by construction)
+  OLD arm wrong : 5  ['283463:14', '315849:10', '321107:13', '58345:7', '63163:6']
+  NEW arm wrong : 6  ['281632:8', '289295:15', '317543:15', '319809:20', '390864:16', '58755:21']
+  => OLD better by 1 on these 11 bundles
+
+  in the doc-62 baseline  : OLD wrong 3, NEW wrong 2
+  newly adjudicated here  : OLD wrong 2, NEW wrong 4
