@@ -141,9 +141,9 @@ The 13 tracks' fitted dQ/dx-vs-residual-range profiles were pulled out of
 `work-mcp1kall-d59k` and put on the SBND expectation curves. **Twelve of the 13
 land at k_muon = 1.69–1.93 and k_proton = 1.02–1.14** — a coherent population at
 ~1.9 × the muon expectation, agreeing with the doc-55 §7g proton curve (fitted
-before this list existed) to **0.991 ± 4.3 %**. The identification here was made
-by eye, so that agreement is a measurement rather than a definition, and §3a's
-reading is confirmed from the charge side.
+before this list existed) to **median 0.991, rms 4.3 %**. The identification
+here was made by eye, so that agreement is a measurement rather than a
+definition, and §3a's reading is confirmed from the charge side.
 
 The one exception is **397920:8** — but for a geometric reason, not a charge one:
 its fitted main runs 278.9 cm over 453 points, i.e. the fit spans the whole

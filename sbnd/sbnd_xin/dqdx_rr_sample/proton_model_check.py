@@ -148,9 +148,15 @@ def main():
     print("\n=== proton / muon at matched dE/dx (model-independent) ===")
     print("  a recombination model is a function of dE/dx alone, so it can "
           "describe\n  both particles only if this column is flat at 1")
+    # TWO error columns, and they are not interchangeable.  `+-stat` is the
+    # s.e.m. of the two medians alone.  `+-tot` folds in the same 3 % per-bin
+    # systematic floor `fit_recombination.bin_data` uses, which is what doc 55
+    # section 7b's error column is -- quoting the statistical one against 7b's
+    # would read as the error shrinking when it is only a different definition.
+    FLOOR = 0.03
     EDG = fr.EDGES
     print(f"  {'dE/dx bin':>16s} {'n mu':>6s} {'n p':>6s} {'muon':>9s} "
-          f"{'proton':>9s} {'p/mu':>7s} {'+-%':>6s}")
+          f"{'proton':>9s} {'p/mu':>7s} {'+-stat%':>8s} {'+-tot%':>7s}")
     pm = []
     for lo, hi in zip(EDG[:-1], EDG[1:]):
         sm = np.where((part[keep] == "muon") & (de[keep] >= lo) & (de[keep] < hi))[0]
@@ -159,13 +165,20 @@ def main():
             continue
         lm, lp = np.log(dq[keep][sm]), np.log(dq[keep][sp])
         vm, vp = np.exp(np.median(lm)), np.exp(np.median(lp))
-        e = np.hypot(np.std(lm) / np.sqrt(len(sm)), np.std(lp) / np.sqrt(len(sp)))
+        em, ep = np.std(lm) / np.sqrt(len(sm)), np.std(lp) / np.sqrt(len(sp))
+        e = np.hypot(em, ep)
+        et = np.hypot(np.hypot(em, FLOOR), np.hypot(ep, FLOOR))
         pm.append(vp / vm)
         print(f"  {lo:7.1f} -{hi:7.1f} {len(sm):6d} {len(sp):6d} {vm/1e3:9.1f} "
-              f"{vp/1e3:9.1f} {vp/vm:7.3f} {e*100:6.1f}")
+              f"{vp/1e3:9.1f} {vp/vm:7.3f} {e*100:8.1f} {et*100:7.1f}")
     pm = np.array(pm)
     print(f"  -> median proton/muon = {np.median(pm):.3f}, spread "
           f"{np.std(np.log(pm))*100:.1f} %, {len(pm)} bins")
+    print(f"  +-tot is the column comparable with doc 55 sec 7b "
+          f"({FLOOR*100:.0f} % systematic floor per particle); +-stat is the\n"
+          f"  s.e.m. alone.  The muon side stays floor-limited here -- it is the "
+          f"same 12 tracks\n  as doc 55, with 6-76 points per bin above "
+          f"4 MeV/cm against the proton's 54-141.")
 
     # ---- per-track ratio vs drift ------------------------------------------
     print("\n=== per-track median data / frozen free power, vs drift ===")

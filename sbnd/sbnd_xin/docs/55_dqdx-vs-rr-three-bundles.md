@@ -30,8 +30,9 @@ the Modified-Box tables the running config still uses.
 owner hand-identified in [62](62_stm-baseline-and-protons.md), 59 points above
 10.5 MeV/cm where the original sample had 5. Identified by eye and so
 independent of their charge, they land at **k_muon = 1.69–1.93** — and the §7g
-free-power model, **fitted without any of them**, describes them to **0.991 ±
-4.3 %**, where the shipped Modified-Box proton table reads **1.122 / 11.5 %**.
+free-power model, **fitted without any of them**, describes them to **median
+0.991, rms 4.3 %**, where the shipped Modified-Box proton table reads
+**1.122 / 11.5 %**.
 §7g.6's leftover 9 % particle-dependent offset does not survive: proton/muon at
 matched dE/dx is **1.012** over 7 bins. §§6–10 and their figures are the record
 of the 12-muon/1-proton sample and are left as written; §11 has its own files.
@@ -892,10 +893,11 @@ detector boundary — or something particle- or track-specific in the
 reconstruction. A second proton would settle it; §9 item 3.
 
 > **Settled in §11.5, and it is the fluctuation.** With 12 protons the
-> 3.5–4.0 MeV/cm bin falls from 1.155 ± 5.1 % to **1.085 ± 2.7 %** and is no
-> longer the outlier — three of the seven matched-dE/dx bins now sit *below*
-> 0.99 and the median is **1.012**. There is no coherent particle-dependent
-> offset left to explain.
+> 3.5–4.0 MeV/cm bin falls from 1.155 to **1.085** at the same ± 5 % (the muon
+> side of it is unchanged and floor-limited, so the error bar does not shrink) —
+> 3.0 σ off 1 becomes 1.7 σ, and it is no longer the outlier: three of the seven
+> matched-dE/dx bins now sit *below* 0.99 and the median is **1.012**. There is
+> no coherent particle-dependent offset left to explain.
 
 ### 7g.7 Caveats on the free-power form
 
@@ -943,7 +945,7 @@ recombination model can absorb by construction.
 
 **Amended by §11.** Two of those three closing caveats were about having one
 proton, and both are now answered on twelve: the free-power model describes a
-proton population it was never fitted to (0.991 ± 4.3 %), and the "particle-
+proton population it was never fitted to (median 0.991, rms 4.3 %), and the "particle-
 dependent difference no recombination model can absorb" was that one track's
 outermost bin — matched-dE/dx proton/muon is 1.012 over 7 bins. What is
 **unchanged** is the part that was never about statistics: k and p stay
@@ -1239,6 +1241,15 @@ that scale out. **Nothing in this table was cut on.**
 *(contrast needs ≥ 3 points at rr < 2 cm and ≥ 3 in 20–40 cm; the three shortest
 tracks do not reach the second window.)*
 
+![the 12 owner-identified protons on the SBND proton curves](../dqdx_rr_sample/proton_sample_p12.png)
+
+Left: the same twelve tracks as binned medians, on the shipped Modified-Box
+proton curve, the §7g free-power proton curve and — for the separation — the
+muon curve and the flat 56 ke/cm MIP line. Right: each track divided by the
+proton expectation with **no free scale removed**, i.e. the raw agreement. The
+blue family (free power) sits on 1.0; the black family (shipped Box) sits at
+1.1–1.2. §11.3 is that picture reduced to numbers.
+
 **This is the headline.** Twelve tracks identified by eye, with no reference to
 their charge, land at **k_muon = 1.69–1.93** and **k_proton = 1.02–1.14**. A
 population sitting coherently at ~1.9 × the muon expectation and within 14 % of
@@ -1384,28 +1395,35 @@ at the same dE/dx read 0.982 — "a 9 % particle-dependent difference at
 essentially the same dE/dx… A second proton would settle it; §9 item 3."
 
 Model-independent, no fit involved — the two sets of binned medians at matched
-dE/dx (`proton_model_check.py`; errors are the s.e.m. of the two medians, no
-systematic floor):
+dE/dx (`proton_model_check.py`). **Two error columns, and only the second is
+comparable with §7b**: `± tot` folds in the same 3 % per-bin systematic floor
+`fit_recombination.bin_data` uses, which is what §7b's column was; `± stat` is
+the s.e.m. of the two medians alone.
 
-| dE/dx bin (MeV/cm) | n mu | n p | muon (ke/cm) | proton (ke/cm) | proton/muon | ± |
-|---|---:|---:|---:|---:|---:|---:|
-| 3.0 – 3.5 | 76 | 141 | 82.4 | 83.4 | 1.012 | 2.2 % |
-| 3.5 – 4.0 | 39 | 114 | 90.1 | 97.8 | 1.085 | 2.7 % |
-| 4.0 – 4.6 | 24 | 104 | 109.0 | 107.6 | 0.987 | 4.8 % |
-| 4.6 – 5.4 | 17 | 122 | 122.0 | 116.4 | 0.954 | 4.6 % |
-| 5.4 – 6.5 | 13 | 98 | 142.0 | 133.2 | 0.938 | 5.0 % |
-| 6.5 – 8.0 | 9 | 82 | 143.7 | 152.2 | 1.059 | 5.6 % |
-| 8.0 – 10.5 | 6 | 54 | 162.9 | 171.5 | 1.053 | 6.9 % |
-| | | | | **median** | **1.012** | spread **5.1 %** |
+| dE/dx bin (MeV/cm) | n mu | n p | muon (ke/cm) | proton (ke/cm) | proton/muon | ± stat | **± tot** |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 3.0 – 3.5 | 76 | 141 | 82.4 | 83.4 | 1.012 | 2.2 % | 4.8 % |
+| 3.5 – 4.0 | 39 | 114 | 90.1 | 97.8 | 1.085 | 2.7 % | 5.0 % |
+| 4.0 – 4.6 | 24 | 104 | 109.0 | 107.6 | 0.987 | 4.8 % | 6.4 % |
+| 4.6 – 5.4 | 17 | 122 | 122.0 | 116.4 | 0.954 | 4.6 % | 6.3 % |
+| 5.4 – 6.5 | 13 | 98 | 142.0 | 133.2 | 0.938 | 5.0 % | 6.6 % |
+| 6.5 – 8.0 | 9 | 82 | 143.7 | 152.2 | 1.059 | 5.6 % | 7.1 % |
+| 8.0 – 10.5 | 6 | 54 | 162.9 | 171.5 | 1.053 | 6.9 % | 8.1 % |
+| | | | | **median** | **1.012** | | spread **5.1 %** |
 
 **Median proton/muon at matched dE/dx = 1.012 over 7 bins**, against §7b's
 1.024 on 6. The 3.5–4.0 bin — the single bin §7g.6 was built on — falls from
-**1.155 ± 5.1 %** to **1.085 ± 2.7 %**, and it is now the only bin above 1.06
-while three others sit *below* 0.99. There is no coherent particle-dependent
-offset: the column scatters about 1 with no trend, and the ±5 % scatter exceeds
-the quoted statistical errors, which says the per-bin systematic is ~5 % and
-that the muon side is the noisy one (6–24 points in the bins above 4 MeV/cm,
-against 54–141 for the proton).
+**1.155 to 1.085**, like-for-like at **± 5.1 % → ± 5.0 %**: ten times more
+proton data does *not* shrink that error bar, because the muon side of the bin
+is still the same 39 points and is still floor-limited. What changed is the
+central value, from 3.0 σ off 1 to **1.7 σ**.
+
+Read as a column rather than a bin, the case is stronger than that one number.
+1.085 is now the only entry above 1.06 while three others sit *below* 0.99; the
+scatter about 1 is 5.1 % with no trend in dE/dx, which is the size of the per-bin
+error itself. There is no coherent particle-dependent offset — and the noisy side
+is the muon (6–76 points per bin above 3.5 MeV/cm, against the proton's 54–141),
+which is exactly the side this campaign did not enlarge.
 
 So §7g.6's alternative reading — "a fluctuation in a single track's outermost 16
 points" — is the one that survives. **The condition under which one R(dE/dx) can
@@ -1424,8 +1442,17 @@ Fitting ln(data / frozen free power) against drift across the 12 tracks:
 | the 12 muons (per-track) | −4.9 % | 26 ms |
 | §7e, muon MIP band binned in drift | −9 to −13 % | 9.2 / 13.1 ms |
 
-The protons, a different particle over a different dE/dx range, independently
-reproduce the order-10 ms attenuation §7e measured on muons. That is a
+**The two muon rows disagree by 2× and the per-track one is the crude
+estimator**, not a second measurement: it assigns each track a single *mean*
+drift, and a 392 cm muon spans most of the drift by itself, so the regressor
+smears the very coordinate it is fitting. §7e's row bins the points themselves
+and is the number to use. The protons are short enough (10–90 cm, and drifting
+roughly along their own extent only in part) for the per-track estimator to be
+meaningful, which is why their row is quoted at all.
+
+With that caveat, the protons — a different particle over a different dE/dx
+range — independently reproduce the order-10 ms attenuation §7e measured on
+muons. That is a
 consistency check on the whole decode, and it is why the per-track ratios in
 `proton_model_check.py`'s output run from 1.05 at 20 µs down to 0.92 at 1248 µs.
 It is **still not a calibration** — §9 item 4 stands.
