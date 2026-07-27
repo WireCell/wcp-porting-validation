@@ -176,9 +176,11 @@ It used to say 6.0 ms, which arrived as part of the triple
 `DL=6.2 DT=9.8 lifetime=6 driftSpeed=1.565` in HaiwangYu's first standalone Q/L
 test (`wcp-porting-img 655bd6a`, 2026-05-24) and was copied forward into
 `wct-clus-matching-perevt.jsonnet` (`ba805c6`) and the PR job.
-`sbnd_track_fitting.json`'s own `_comment_diffusion` calls that same set "the
+`sbnd_track_fitting.json`'s `_comment_diffusion` used to call that same set "the
 earlier 6.2/9.8 placeholders inherited from the Q/L chain and uBooNE". The DL/DT
-half was later corrected to the SBND physical values (`9f498089`); `lifetime`
+half was corrected in `9f498089` to 6.5781/13.1349 and then reverted on
+2026-07-27 to sbndcode's 4.0/8.8
+([66](66_diffusion-revert-validation.md)); `lifetime`
 never was, because nothing consumes it. It was never an SBND measurement, and it
 disagreed with SBND's own `simparams.jsonnet` (35 ms) and with `run_clus_evt.sh`,
 which already passed 35.

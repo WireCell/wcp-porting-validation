@@ -29,7 +29,7 @@ JSONNET="$SBND_DIR/wct-pr-perevt.jsonnet"
 # libpython is preloaded globally.  Applied only when DL is requested.
 PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
 # Same LAr TLAs as run_ql_evt.sh (anode/params objects identical to the Q/L job).
-DL=6.5781; DT=13.1349; LIFETIME=35; DRIFTSPEED=1.563  # DL/DT = SBND physical diffusion (cm^2/s);
+DL=4.0; DT=8.8; LIFETIME=35; DRIFTSPEED=1.563  # DL/DT = SBND diffusion (cm^2/s), sbndcode wcsimsp_sbnd.fcl (docs/66);
                                                       # LIFETIME = SBND simparams (35 ms).  Inert in the
                                                       # reco chain -- see docs/64 sec 4.
 

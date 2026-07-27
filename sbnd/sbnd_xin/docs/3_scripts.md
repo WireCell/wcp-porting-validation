@@ -207,8 +207,8 @@ event list and the `reality` flag.
 | `output_dir` | str | — | output directory |
 | `run` / `subrun` / `event` | code | 0 / 0 / EVT_ID | Bee RSE metadata |
 | `reality` | str | `'sim'` | `'sim'` or `'data'` |
-| `DL` | code | 6.5781 | longitudinal diffusion (cm²/s; SBND physical, was 4.0) |
-| `DT` | code | 13.1349 | transverse diffusion (cm²/s; SBND physical, was 8.8) |
+| `DL` | code | 4.0 | longitudinal diffusion (cm²/s; sbndcode value, doc 66) |
+| `DT` | code | 8.8 | transverse diffusion (cm²/s; sbndcode value, doc 66) |
 | `lifetime` | code | 35 | electron lifetime (ms) |
 | `driftSpeed` | code | 1.565 | drift speed (mm/µs) |
 
@@ -251,11 +251,14 @@ events with no opflash in the sample are skipped with a clear message).
 **Jsonnet driven:** `wct-clus-matching-perevt.jsonnet`
 
 **TLAs forwarded:** like `run_clus_evt.sh` plus `semimodel_file` (photon model);
-Q/L drift/diffusion defaults `DL=6.5781 DT=13.1349 lifetime=6 driftSpeed=1.563`
-(the SBND physical diffusion coefficients since 2026-07-25, was 6.2/9.8; inert
-for the Q/L job itself — they only reach a `Drifter`, which it has none of — but
-the same numbers drive the PR track fit via `sbnd_track_fitting.json`, see
-`47_stm-bragg-reference-sbnd-retune.md` §6a).
+Q/L drift/diffusion defaults `DL=4.0 DT=8.8 lifetime=6 driftSpeed=1.563`
+(sbndcode's diffusion pair; 6.5781/13.1349 between 2026-07-25 and -27, reverted
+in doc 66). **Inert for the Q/L job itself** — they only reach a `Drifter`,
+which it has none of, and compiling the job at either pair gives byte-identical
+JSON with zero `DL` keys (`66_diffusion-revert-validation.md` §1). The numbers
+that actually drive the PR track fit live in `sbnd_track_fitting.json`, which is
+read at runtime, not compiled — see
+`47_stm-bragg-reference-sbnd-retune.md` §6a and doc 66.
 
 **Log:** `work/ql_evt<ID>/wct_ql_evt<ID>.log`; in `all` mode `work/.batch_ql_evt<ID>.log`
 

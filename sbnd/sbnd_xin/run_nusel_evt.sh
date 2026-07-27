@@ -45,9 +45,18 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BA
 
 JSONNET="$SBND_DIR/wct-pr-perevt.jsonnet"
 # Same LAr TLAs as run_ql_evt.sh / run_pr_evt.sh (identical anode/params objects).
-DL=6.5781; DT=13.1349; LIFETIME=35; DRIFTSPEED=1.563  # DL/DT = SBND physical diffusion (cm^2/s);
-                                                      # LIFETIME = SBND simparams (35 ms).  Inert in the
-                                                      # reco chain -- see docs/64 sec 4.
+DL=4.0; DT=8.8; LIFETIME=35; DRIFTSPEED=1.563  # DL/DT = SBND diffusion (cm^2/s), sbndcode
+                                               # wcsimsp_sbnd.fcl (doc 66 revert of the doc-47
+                                               # 6.5781/13.1349 retune).  LIFETIME = SBND
+                                               # simparams (35 ms).  Inert in the reco chain --
+                                               # see docs/64 sec 4 and docs/66 sec 1.
+
+# The TrackFitting parameter file.  This one is NOT inert: TaggerCheckSTM and the
+# PR vertex fitter read DL/DT from it at RUNTIME (it never enters the compiled
+# jsonnet), so it is the single live consumer of the diffusion constants in the
+# data chain.  Overridable so an A/B can run both diffusion arms from one binary
+# in either order -- see docs/66 sec 2.
+TFJSON=${SBND_TRACKFIT_JSON:-$SBND_DIR/sbnd_track_fitting.json}
 # The tagger pipeline.  fiducialutils MUST precede the taggers (they silently
 # no-op without it); TGM before STM (STM skips TGM-flagged mains).
 # tagger_check_fc is LAST: it evaluates every in-scope main regardless of the
@@ -543,6 +552,10 @@ process_event() {
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD stmafix=$STM_AFIX stmtguard=$STM_TGUARD stmdguard=$STM_DGUARD stmvguard=$STM_VGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
+    # Provenance: the fit JSON is the only live diffusion consumer, so name it
+    # (and its DL/DT) in every log -- an A/B arm is worthless if you cannot tell
+    # afterwards which file it ran with.
+    echo "trackfitting_config=$TFJSON $(grep -h '"D[LT]"' "$TFJSON" 2>/dev/null | tr -d ' \n')"
     (
         cd "$NUDIR"
         wire-cell \
@@ -555,7 +568,7 @@ process_event() {
             --tla-code "DL=$DL" --tla-code "DT=$DT" \
             --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
             --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]" \
-            --tla-str  "trackfitting_config=$SBND_DIR/sbnd_track_fitting.json" \
+            --tla-str  "trackfitting_config=$TFJSON" \
             --tla-str  "save_tensors=$SAVEPRT_TLA" \
             --tla-str  "dl_weights=" \
             --tla-code "beam_window_us=[$BEAM_WINDOW]" \

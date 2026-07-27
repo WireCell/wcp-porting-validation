@@ -37,6 +37,13 @@ free-power model, **fitted without any of them**, describes them to **median
 matched dE/dx is **1.012** over 7 bins. §§6–10 and their figures are the record
 of the 12-muon/1-proton sample and are left as written; §11 has its own files.
 
+**§12 re-fits the three bundles under the 4.0 / 8.8 diffusion revert** of
+[66](66_diffusion-revert-validation.md) (2026-07-27). The trajectory, `npts` and
+median `dx` are identical to the digit; the proton candidate holds at **1.91×**
+the muon curve and the two muons at 0.98 / 1.04, so every reading above stands.
+`reduced_chi2` moves in both directions, so these three do not favour either
+diffusion pair.
+
 *(Doc number: 54 is taken by the in-flight TGM/STM perf campaign,
 `run_perf54_nusel.sh`.)*
 
@@ -1505,6 +1512,107 @@ the `dqdx-normalisation` class *is* the proton signature rather than a
 normalisation or `dx` artifact. Twelve tracks at k_muon ≈ 1.88 with a
 proton-shaped profile, agreeing with a proton recombination curve to 4 %, is that
 claim measured.
+
+---
+
+## 12. Re-fit under the 4.0 / 8.8 diffusion revert (2026-07-27)
+
+**Every physics reading of §§1–5 survives.** The diffusion coefficients the track
+fit assumes were reverted from `DL = 6.5781, DT = 13.1349` to sbndcode's
+`DL = 4.0, DT = 8.8 cm²/s` ([66](66_diffusion-revert-validation.md)), which
+narrows the fit's predicted transverse footprint by ~18 % (σ_T,W ×0.82 at full
+drift). The three bundles were re-fitted on both sides of that change, same
+binary, same input pctree, differing only in the `DL`/`DT` pair.
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 stmfit_particle_overlay.py -o pics/stmfit_dqdx_particle_overlay_d66.png \
+  "work-stmcamp-d66new:289343:90:evt 289343 main 9  4.0/8.8 (proton cand.)" \
+  "work-stmcamp-d66old:289343:90:evt 289343 main 9  6.5781/13.1349" \
+  "work-stmcamp-d66new:285999:220:evt 285999 main 22  4.0/8.8 (muon)" \
+  "work-stmcamp-d66old:285999:220:evt 285999 main 22  6.5781/13.1349" \
+  "work-stmcamp-d66new:286065:30:evt 286065 main 3  4.0/8.8 (muon)" \
+  "work-stmcamp-d66old:286065:30:evt 286065 main 3  6.5781/13.1349"
+```
+
+Figure: [`pics/stmfit_dqdx_particle_overlay_d66.png`](../pics/stmfit_dqdx_particle_overlay_d66.png)
+(six traces, old and new for each bundle, on the same `box` reference set the
+§§2–3 ratios use). The published
+`pics/stmfit_dqdx_particle_overlay.png` is left as the §§1–5 record.
+
+The `main_id`s are unchanged from the d55ton epoch — 289343 main **9**, 285999
+main **22**, 286065 main **3** — so the block ids 90/220/30 the Repro block at
+the top of this doc uses still resolve, and all three are still `label=STM` with
+`stmfit=eval` in both arms.
+
+### 12.1 The trajectory does not move at all
+
+| bundle | npts | fit path L | median `dx` | verdict |
+|---|---|---|---|---|
+| 289343 main 9 | 77 → 77 | 50.6 → 50.6 cm | 0.667 → 0.667 cm | status 0 → 0 |
+| 285999 main 22 | 42 → 42 | 26.5 → 26.5 cm | 0.643 → 0.643 cm | status 0 → 0 |
+| 286065 main 3 | 394 → 394 | 249.5 → 249.5 cm | 0.626 → 0.626 cm | status 0 → 0 |
+
+Identical to the digit printed. That is the expected shape of the change: `DL`/`DT`
+enter only the *predicted charge footprint* used to apportion measured charge
+among fitted points, not the point positions or the path. So `dx` — a geometric
+quantity — is untouched, and only `dQ` moves.
+
+### 12.2 The particle identification is unchanged
+
+Median `fit / reference` over the reference domain (rr 0.5–59.5 cm):
+
+| bundle (owner reading) | /MuonBox old | /MuonBox new | /ProtonBox old | /ProtonBox new |
+|---|---|---|---|---|
+| 289343 main 9 — *"proton from outside"* | 1.91 | **1.91** | 1.14 | **1.14** |
+| 285999 main 22 — believed muon | 0.99 | **1.04** | 0.58 | 0.60 |
+| 286065 main 3 — believed muon | 0.98 | **0.98** | 0.60 | 0.60 |
+
+- The flagged bundle still sits on the **proton** curve (1.14) and is a factor
+  **1.91** above the **muon** curve — the doc's headline "factor 1.9" is
+  reproduced to two digits, unmoved.
+- Both believed muons still sit on the muon curve: 0.98 and 1.04. The §1
+  headline said "±2 %"; under the revert it is **−2 % / +4 %**, i.e. 285999
+  drifts from 0.99 to 1.04 while 286065 does not budge. That is the one number
+  in §§1–5 this change touches, and it touches it by 5 % on one of three
+  bundles — within the [16–84 %] spread already quoted for it
+  (old 0.89–1.18, new 0.91–1.25).
+
+The separation that matters — proton at 1.91 vs muons at ~1.0 against the same
+curve, in the same uncalibrated sample — is a factor **1.8**, versus 1.9 before.
+No reading changes.
+
+### 12.3 Fit quality: no systematic direction
+
+| bundle | median `reduced_chi2` old | new |
+|---|---|---|
+| 289343 main 9 | 1.20 | **1.06** |
+| 285999 main 22 | 1.36 | **1.51** |
+| 286065 main 3 | 1.79 | **1.81** |
+
+One improves, one worsens, one is flat — so on these three there is no evidence
+that either diffusion pair fits SBND data better. That is worth stating
+explicitly because a 18 % narrower footprint *could* have shown up as a
+systematic χ² shift and does not. It also means these three bundles cannot be
+used to argue the revert is the physically better choice; the case for 4.0/8.8 is
+that it is what the samples on disk were simulated with, not a fit-quality
+measurement (doc 66 §0).
+
+### 12.4 What was NOT redone
+
+§§6–11's curated sample (12 muons + 1 proton) and the §11 twelve-proton
+population are **left as published**. Their collectors
+(`dqdx_rr_sample/collect_dqdx_rr_sample.py`, `collect_proton_sample.py`) read
+per-event roots by tag, so re-pointing them at `work-stmcamp-d66new` is
+mechanically possible, but the recombination fits of §§7–10 that consume them
+(and the reference tables in `nusel_display/stm_ref_dqdx.json` those fits
+produced) would all have to be refitted to stay self-consistent — a doc-55-scale
+piece of work, not a footnote to a constants revert. §12.1's result is the reason
+that is not urgent: `dx` does not move, and §§7–10 fit *dE/dx vs residual range*,
+where the ~2–5 % `dQ` shift seen here is well inside the 4.3 % rms the §11 model
+already carries. Flagged rather than silently skipped.
 
 ---
 

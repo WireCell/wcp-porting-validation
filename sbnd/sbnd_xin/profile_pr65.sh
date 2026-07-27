@@ -17,7 +17,7 @@ CFG=$OD/pr65_evt$EVT.json
 wcsonnet \
   -A "input=$PCT" -S "anode_indices=[0,1]" -A "output_dir=$OD" \
   -S "run=$RUN_NO" -S "subrun=$SUBRUN_NO" -S "event=$EVT" -A "reality=data" \
-  -S "DL=6.5781" -S "DT=13.1349" -S "lifetime=35" -S "driftSpeed=1.563" \
+  -S "DL=4.0" -S "DT=8.8" -S "lifetime=35" -S "driftSpeed=1.563" \
   -S "pipeline_names=['switch_scope','unmerge_bundle','unmerge_assoc','steiner','fiducialutils','tagger_check_tgm','tagger_check_stm','tagger_check_fc','stm_magnify']" \
   -A "trackfitting_config=$SBND/sbnd_track_fitting.json" \
   -A "save_tensors=$OD/pctree-pr-evt$EVT.tar.gz" \
