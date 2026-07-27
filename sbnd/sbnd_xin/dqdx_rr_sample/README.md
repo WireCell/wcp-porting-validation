@@ -9,6 +9,13 @@ Written up in [`../docs/55_dqdx-vs-rr-three-bundles.md`](../docs/55_dqdx-vs-rr-t
 §§6–8. The three bundles of §§0–5 of that doc are all in here
 (289343 blk 90, 285999 blk 220, 286065 blk 30).
 
+**Doc 55 §11 adds a proton *population*** — the 12 usable protons the owner
+hand-identified in the doc-62 :5012 scan, read out of `work-mcp1kall-d59k`
+(`proton_*.tsv`, `sample_points_p12.tsv`). They are selected by the owner's eye,
+not by the cuts below, and their point files are separate: `sample_points.tsv`
+and the `sample_*.png` / `recomb_fit.png` / `muon_proton_vs_models.png` figures
+stay the 12-muon/1-proton record that §§6–10 of the doc are computed from.
+
 ## Files
 
 | file | what |
@@ -21,6 +28,14 @@ Written up in [`../docs/55_dqdx-vs-rr-three-bundles.md`](../docs/55_dqdx-vs-rr-t
 | `recomb_fit.png` | the recombination curve and the residuals of the candidate models |
 | `plot_muon_proton_models.py` | the sample-average muon and the proton in the residual-range plane against the current expectation, the free-B fit and the free-power fit, with every normalisation printed on the figure |
 | `muon_proton_vs_models.png` | that figure (doc 55 §7f, §7g) |
+| `collect_proton_sample.py` | **doc 55 §11**: the 13 protons the OWNER hand-identified in the doc-62 scan, read out of `work-mcp1kall-d59k`.  No cut is applied — the identification is the owner's — and the doc-55 selector quantities are written out per track for the record.  Checks that d59k and d55ton agree bit-for-bit on the track they share before it will merge the two |
+| `proton_index.tsv` | one row per owner-identified proton, with `use` and the named reason when it is `no` |
+| `proton_points.tsv` | per-point, same columns as `sample_points.tsv` |
+| `sample_points_p12.tsv` | the merged sample the §11 fits run on: the 12 `d55ton` muons + the 12 usable `d59k` protons, each track counted once |
+| `proton_sample_p12.png` | the 12 protons on the shipped Box and free-power proton curves (doc 55 §11.2) |
+| `proton_model_check.py` | **fits nothing**: evaluates the *committed* free-power parameters on the enlarged sample, plus proton/muon at matched dE/dx and the per-track drift trend (doc 55 §11.3, §11.5, §11.6) |
+| `proton_vs_frozen_model_p12.png` | that figure — the population against the model fitted without it |
+| `muon_proton_vs_models_p12.png` | the §7f/§7g figure regenerated on the enlarged sample (doc 55 §11.4) |
 | `make_ref_tables.py` | builds all FIVE reference tables (muon/electron/pion/kaon/proton) under the free-power model on `convert_field.C`'s grid, regression-checks the Box versions against the shipped ROOT tables, and writes both sets into `../nusel_display/stm_ref_dqdx.json` (doc 55 §10) |
 | `ref_tables_free_power.png` | the five tables, current vs free power, with a ratio row (doc 55 §10.2) |
 

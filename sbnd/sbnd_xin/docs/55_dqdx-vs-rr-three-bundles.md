@@ -26,6 +26,16 @@ proton — under the free-power form of §7g, with the electron held flat into t
 stopping end, and writes them into `nusel_display/stm_ref_dqdx.json` alongside
 the Modified-Box tables the running config still uses.
 
+**§11 closes §9 item 3 with a proton *population*:** the 12 usable protons the
+owner hand-identified in [62](62_stm-baseline-and-protons.md), 59 points above
+10.5 MeV/cm where the original sample had 5. Identified by eye and so
+independent of their charge, they land at **k_muon = 1.69–1.93** — and the §7g
+free-power model, **fitted without any of them**, describes them to **0.991 ±
+4.3 %**, where the shipped Modified-Box proton table reads **1.122 / 11.5 %**.
+§7g.6's leftover 9 % particle-dependent offset does not survive: proton/muon at
+matched dE/dx is **1.012** over 7 bins. §§6–10 and their figures are the record
+of the 12-muon/1-proton sample and are left as written; §11 has its own files.
+
 *(Doc number: 54 is taken by the in-flight TGM/STM perf campaign,
 `run_perf54_nusel.sh`.)*
 
@@ -54,6 +64,20 @@ python3 dqdx_rr_sample/make_ref_tables.py --dry-run          # print, write noth
 python3 dqdx_rr_sample/make_ref_tables.py \
     --json nusel_display/stm_ref_dqdx.json \
     -o dqdx_rr_sample/ref_tables_free_power.png
+
+# section 11 -- the doc-62 proton population.  Nothing is re-run; every
+# tracking-stm.root already exists in work-mcp1kall-d59k.
+python3 dqdx_rr_sample/collect_proton_sample.py --verbose \
+    --merge dqdx_rr_sample/sample_points_p12.tsv \
+    --plot  dqdx_rr_sample/proton_sample_p12.png
+python3 dqdx_rr_sample/proton_model_check.py \
+    --points dqdx_rr_sample/sample_points_p12.tsv \
+    -o dqdx_rr_sample/proton_vs_frozen_model_p12.png
+python3 dqdx_rr_sample/fit_recombination.py \
+    --points dqdx_rr_sample/sample_points_p12.tsv --plane rr --zoo
+python3 dqdx_rr_sample/plot_muon_proton_models.py \
+    --points dqdx_rr_sample/sample_points_p12.tsv \
+    -o dqdx_rr_sample/muon_proton_vs_models_p12.png
 ```
 
 Nothing was re-run. All four `tracking-stm.root` files already existed; the
@@ -380,6 +404,11 @@ fit only runs on STM *candidate* clusters, so the sample is conditioned on that
 pre-selection; and cosmic-induced stopping protons long enough to give a 6-bin
 profile are genuinely rare. Anyone who needs a proton population should widen
 the input, not the cuts.
+
+> **§11 did exactly that** — 12 protons hand-identified by the owner over 393
+> events, with these cuts deliberately *not* applied (only 6 of the 12 would
+> pass them, and the ones they would drop are the short, all-Bragg tracks that
+> carry the lever arm). The sample below is left as the record of §§6–10.
 
 ### 6a. The near misses, named
 
@@ -862,6 +891,12 @@ outermost 16 points — that bin is the *entering* end of the track, next to the
 detector boundary — or something particle- or track-specific in the
 reconstruction. A second proton would settle it; §9 item 3.
 
+> **Settled in §11.5, and it is the fluctuation.** With 12 protons the
+> 3.5–4.0 MeV/cm bin falls from 1.155 ± 5.1 % to **1.085 ± 2.7 %** and is no
+> longer the outlier — three of the seven matched-dE/dx bins now sit *below*
+> 0.99 and the median is **1.012**. There is no coherent particle-dependent
+> offset left to explain.
+
 ### 7g.7 Caveats on the free-power form
 
 1. **It is empirical.** p ≠ 1 has no derivation behind it here. A quenching
@@ -906,6 +941,16 @@ would look identical, and the one residual that survives — the proton 9 % high
 rr = 45 cm — is a *particle-dependent* difference at fixed dE/dx that no
 recombination model can absorb by construction.
 
+**Amended by §11.** Two of those three closing caveats were about having one
+proton, and both are now answered on twelve: the free-power model describes a
+proton population it was never fitted to (0.991 ± 4.3 %), and the "particle-
+dependent difference no recombination model can absorb" was that one track's
+outermost bin — matched-dE/dx proton/muon is 1.012 over 7 bins. What is
+**unchanged** is the part that was never about statistics: k and p stay
+degenerate with the field, the data stays uncalibrated, a dE/dx-dependent
+reconstruction bias would still look identical to a change in R, and none of
+this is a recommendation to rebuild the shipped tables.
+
 ---
 
 ## 9. Open items — none of these were done here
@@ -921,9 +966,12 @@ recombination model can absorb by construction.
    tables have no reader at all.
 2. **288287 blk100** (§6a) — k_muon = 1.40, between the hypotheses, STM status 2.
    Worth a hand scan for cluster merging; it is the only such case in 30 events.
-3. **A proton population.** One track cannot separate "SBND's (A, B) differ" from
-   "the reconstruction has a dE/dx-dependent bias". Protons at high dE/dx are the
-   lever arm, and this sample has 5 points above 10.5 MeV/cm.
+3. ~~**A proton population.**~~ — **done in §11.** Doc 62's 12 hand-identified
+   protons carry 59 points above 10.5 MeV/cm instead of 5, and the frozen §7g
+   model describes them to 4.3 % without being refitted. The *lever arm* is
+   therefore no longer missing; note that it does **not** by itself decide
+   between §7d's two readings ("SBND's (A, B) differ" vs "a dE/dx-dependent
+   reconstruction bias") — that still needs calibrated data (§11.7).
 4. **The τ of §7e is a by-product, not a calibration.** 9.2 ms over all six drift
    bins, 13.1 ms without the 0–200 µs bin — order 10 ms, from 12 muons in one
    30-event set, with no position dependence and no cross-check against a purity
@@ -1106,6 +1154,330 @@ are degenerate with the field, the sample is 12 muons and 1 proton of
 *uncalibrated* data, a dE/dx-dependent reconstruction bias would look identical
 to a change in R, and the pion/kaon/electron curves have no data behind them at
 all. Nothing in `energy_loss/` or `sbnd/particle_dataset.jsonnet` was modified.
+
+---
+
+## 11. A proton *population* — doc 62's hand-identified protons (§9 item 3, closed)
+
+§9 item 3 named the one thing this study could not do: *"One track cannot
+separate 'SBND's (A, B) differ' from 'the reconstruction has a dE/dx-dependent
+bias'. Protons at high dE/dx are the lever arm, and this sample has 5 points
+above 10.5 MeV/cm."*
+
+[62](62_stm-baseline-and-protons.md) supplies the population — **13 bundles the
+owner identified as protons by eye** while adjudicating the :5012 hand scan.
+Twelve are usable and they carry **59 points above 10.5 MeV/cm** instead of 5.
+
+**The result, before any of the detail.** The free-power model of §7g — fitted
+on 12 muons and the *one* proton, and frozen in
+`nusel_display/stm_ref_dqdx.json` before doc 62 existed — describes the enlarged
+proton population to **median 0.991, rms 4.3 %**. The shipped Modified-Box
+proton table reads **1.122 / 11.5 %** on the same data. Nothing was refitted to
+get those numbers; §11.4 refits separately and reports what moves.
+
+### 11.1 Where the sample comes from, and why it is a better sample
+
+`scan-d59k/proton-list.tsv` → `dqdx_rr_sample/collect_proton_sample.py` →
+`proton_index.tsv` (13 rows, one per owner-identified proton) and
+`proton_points.tsv` (789 fitted points). Blocks are read from the doc-59
+1000-event production arm `work-mcp1kall-d59k`; nothing was re-run.
+
+Three things about the provenance matter more than the size:
+
+1. **The identification is independent of the charge.** Doc 55's own selector
+   assigned particles *by scale* — §6 says so outright: "a track needing
+   k_muon ~ 1.9 is proton-like". Every later statement about the proton's
+   normalisation therefore carried a circularity. Here the owner identified the
+   protons from the event display, so **k_proton is a measurement**, not a
+   definition.
+2. **Doc 55's automatic cuts are deliberately not applied.** Only **6 of the 12**
+   would survive them (`npts ≥ 40`, `≥ 6 bins`, `rr_max ≥ 22 cm`, `χ² ≤ 2.5`,
+   shape rms ≤ 10 %), and the ones they would remove — 72828 at 9.7 cm,
+   168388 at 12.3 cm — are the *most* valuable tracks in the set, because a
+   short proton is almost entirely Bragg region and that is where the lever arm
+   is. §11.6 refits on the strict 6 to show it changes nothing.
+3. **The two work roots are the same reconstruction.** 289343 main 9 is doc 55's
+   original proton and appears in both `work-mcp1000b-d55ton` and
+   `work-mcp1kall-d59k`; its 77 points are **bit-identical** (`x, y, z, q, nq,
+   rr` all equal, same `dQdx_scale`/`dQdx_offset`). The collector checks this on
+   every run and **refuses to merge** if it ever stops being true — d59k sits
+   after docs 56/57/60 and `dQ_dx_fit`'s output cannot be assumed untouched. It
+   is taken from d59k in the merged file and dropped from the old one, so it is
+   counted once.
+
+**One exclusion, on model-independent grounds.** 397920 main 8 is dropped: its
+fitted main is 278.9 cm over 453 points, and the owner's own comment places its
+proton *at a vertex* — i.e. as one prong of a multi-prong object. The fitted
+block is therefore the event, not the proton, whatever its charge says. (It
+reads k_muon = 0.91 with a 35 % shape residual, which is what a muon-like main
+looks like; but the reason to exclude it is the geometry, not the charge.) The
+other at-a-vertex proton, 404684 main 9, has a 78.8 cm proton-like main and is
+kept; §11.6 refits without it too.
+
+### 11.2 The twelve tracks
+
+`dqdx_rr_sample/proton_index.tsv`. `k` is the free scale the binned profile
+needs against each SBND curve; `rms` is the shape residual left after taking
+that scale out. **Nothing in this table was cut on.**
+
+| event:main | npts | L (cm) | χ² | contrast | k_muon | k_proton | rms_p % | drift (µs) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 72828:7 | 17 | 9.7 | 2.45 | — | 1.89 | 1.12 | 8.4 | 21 |
+| 168388:6 | 22 | 12.3 | 1.86 | — | 1.93 | 1.13 | 7.7 | 139 |
+| 174488:3 | 29 | 16.5 | 2.50 | — | 1.75 | 1.03 | 20.6 | 551 |
+| 389544:13 | 38 | 23.7 | 1.93 | 2.36 | 1.78 | 1.05 | 3.5 | 909 |
+| 291345:12 | 41 | 24.3 | 1.02 | 2.23 | 1.80 | 1.06 | 4.3 | 831 |
+| 59377:7 | 44 | 26.0 | 1.76 | 2.02 | 1.89 | 1.11 | 3.4 | 375 |
+| 389962:5 | 52 | 32.6 | 2.72 | 2.04 | 1.89 | 1.12 | 7.9 | 254 |
+| 61313:18 | 64 | 39.8 | 3.80 | 2.26 | 1.93 | 1.14 | 7.2 | 50 |
+| 289343:9 | 77 | 50.6 | 1.20 | 2.21 | 1.90 | 1.14 | 4.6 | 1178 |
+| 404684:9 | 126 | 78.8 | 1.89 | 2.71 | 1.69 | 1.02 | 5.3 | 1248 |
+| 409084:12 | 132 | 81.5 | 1.45 | 2.03 | 1.83 | 1.10 | 7.2 | 668 |
+| 386838:16 | 147 | 90.4 | 1.31 | 2.16 | 1.86 | 1.12 | 5.0 | 825 |
+| | | | | **median** | **1.88** | **1.11** | | |
+
+*(contrast needs ≥ 3 points at rr < 2 cm and ≥ 3 in 20–40 cm; the three shortest
+tracks do not reach the second window.)*
+
+**This is the headline.** Twelve tracks identified by eye, with no reference to
+their charge, land at **k_muon = 1.69–1.93** and **k_proton = 1.02–1.14**. A
+population sitting coherently at ~1.9 × the muon expectation and within 14 % of
+the proton expectation is what doc 61 §5d's `dqdx-normalisation` class was, and
+doc 62 §3a already said so from the display alone. The charge agrees.
+
+For scale: doc 55's 12 *muons* needed k_muon = 0.98–1.11 (§6). The two
+populations do not come close to overlapping, and the muons calibrate the scale
+the protons are measured against — the argument of §4 with 12 protons instead of
+one.
+
+### 11.3 The frozen model against the new population — the actual test
+
+```bash
+python3 dqdx_rr_sample/proton_model_check.py \
+    --points dqdx_rr_sample/sample_points_p12.tsv \
+    -o dqdx_rr_sample/proton_vs_frozen_model_p12.png
+```
+
+`proton_model_check.py` **fits nothing**. It reads k, p and C out of
+`_meta.canonical_keys` in the committed json — A = 0.93, k = 0.282371,
+p = 1.362179, C = 0.855175 — and evaluates that curve on the enlarged sample.
+A model that has to be refitted to follow new data has not been tested by it.
+
+![the doc-62 protons against the model fitted without them](../dqdx_rr_sample/proton_vs_frozen_model_p12.png)
+
+Proton, binned in residual range exactly as §7f/§7g bin it (geometric mean over
+tracks of each track's median; error = s.e.m. across tracks):
+
+| rr (cm) | ⟨dE/dx⟩ | ntrk | data (ke/cm) | ± % | / shipped Box | / **frozen free power** |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1.0 | 17.9 | 10 | 241.3 | 3.4 | 1.101 | 1.069 \* |
+| 2.3 | 12.3 | 12 | 208.4 | 3.6 | 1.147 | 1.046 \* |
+| 4.0 | 9.6 | 12 | 176.3 | 3.4 | 1.108 | 0.983 |
+| 6.3 | 7.9 | 12 | 162.6 | 3.5 | 1.141 | 0.998 |
+| 8.8 | 7.0 | 12 | 147.1 | 3.4 | 1.116 | 0.972 |
+| 12.5 | 6.0 | 11 | 135.1 | 3.5 | 1.127 | 0.980 |
+| 17.4 | 5.3 | 10 | 117.1 | 6.1 | 1.065 | 0.928 |
+| 24.0 | 4.7 | 9 | 108.6 | 4.0 | 1.076 | 0.944 |
+| 34.8 | 4.1 | 6 | 107.1 | 4.3 | 1.170 | 1.038 |
+| 49.0 | 3.6 | 4 | 94.7 | 4.9 | 1.131 | 1.017 |
+| | | | **median** | | **1.122** | **0.991** |
+| | | | **rms of ln ratio** | | **11.5 %** | **4.3 %** |
+
+\* above dE/dx 10.5 MeV/cm — but that caveat now means something different: on
+the old sample those bins were *one track*, and now they are 10 and 12.
+
+The muon side of the same run is unchanged by construction (the same 12 tracks):
+**1.050 / 6.3 %** against the shipped table, **0.990 / 3.3 %** against the frozen
+free-power curve.
+
+Three readings:
+
+1. **The model predicted a population it was not fitted to.** 4.3 % rms against
+   a per-bin error of ~4 %, on eleven tracks the fit never saw. That is the
+   strongest statement doc 55 has been able to make about the free-power form,
+   and it is the one thing a one-track fit could not deliver.
+2. **§7g.5's tilt was one track's.** The single proton ran from 1.101 at the
+   Bragg tip to **1.213** at rr = 45 cm against the shipped Box — "the single
+   worst point left, at 2.4 σ" (§7g.5). The population runs 1.101 → 1.131 over
+   the same span: essentially flat at ~1.12, with the 1.065 and 1.170 bins
+   scattering either side of it. The *offset* against the shipped table is real
+   and reproduces on twelve tracks; the *tilt* does not.
+3. **The proton is ~12 % above the shipped proton table, robustly.** Doc 55
+   measured 1.128 on one track; twelve give 1.122. This is not a fluctuation,
+   and it is the same statement as §7c reading 1: the published Modified Box at
+   0.5 kV/cm under-predicts the upper half of the dE/dx range.
+
+### 11.4 The refit — what moves, and what does not
+
+```bash
+python3 dqdx_rr_sample/fit_recombination.py \
+    --points dqdx_rr_sample/sample_points_p12.tsv --plane rr --zoo
+python3 dqdx_rr_sample/fit_recombination.py \
+    --points dqdx_rr_sample/sample_points_p12.tsv --zoo --min-in-bin 3
+python3 dqdx_rr_sample/plot_muon_proton_models.py \
+    --points dqdx_rr_sample/sample_points_p12.tsv \
+    -o dqdx_rr_sample/muon_proton_vs_models_p12.png
+```
+
+![the §7f/§7g figure on the enlarged sample](../dqdx_rr_sample/muon_proton_vs_models_p12.png)
+
+| | frozen (12 mu + 1 p) | refit (12 mu + 12 p) |
+|---|---|---|
+| rr plane | k = 0.2824, p = 1.3622, C = 0.8552, χ²/ndf 0.82 | **k = 0.3445, p = 1.2096, C = 0.8417, χ²/ndf 0.42** |
+| dE/dx plane | k = 0.2348, p = 1.501, C = 0.8506, χ²/ndf 0.84 | **k = 0.2744, p = 1.3189, C = 0.8342, χ²/ndf 0.49** |
+
+**p moves down and toward the published form** (p = 1 recovers standard Modified
+Box). §7g.7 item 3 asked for it to be quoted as p ≈ 1.4 ± 0.1 because of the
+plane-to-plane spread; on the enlarged sample the honest quote is **p ≈ 1.3
+± 0.1**, and the two ranges overlap. C lands at 0.834–0.842, still within 2 % of
+`convert_field.C`'s 0.85 — the fit has now chosen that number on four independent
+occasions.
+
+The zoo, refitted in the rr plane. `rms p` is the column the shape question is
+about; per-bin errors are 4.4 % (muon) and 4.1 % (proton), so a model at or below
+those is fitting noise:
+
+| model | shape params | fitted | χ²/ndf | rms mu | rms p |
+|---|---|---|---:|---:|---:|
+| Modified Box, published | A = 0.93, B = 0.212 | — | 1.51 | 4.6 % | 4.3 % |
+| Modified Box, free B | B | 0.1676 | 0.82 | 2.6 % | 4.2 % |
+| Modified Box, free A and B | A, B | 0.6527, 0.3126 | 0.40 | 2.2 % | 3.0 % |
+| **Modified Box, free power** | **k, p** | **0.3445, 1.2096** | **0.42** | **2.2 %** | **3.2 %** |
+| Modified Box, A + k + p | A, k, p | 0.749, 0.762, 1.041 | 0.43 | 2.2 % | 3.0 % |
+| Birks | k_B | 0.0461 | 0.99 | 3.2 % | 4.3 % |
+| Birks, free power | k, p | 0.0571, 1.369 | 0.65 | 2.6 % | 3.7 % |
+| Birks + escape floor | k, f | 0.140, **0.000** | 1.04 | 3.2 % | 4.3 % |
+| Birks, quadratic | k₁, k₂ | 0.0832, 0.0059 | 0.70 | 2.7 % | 3.8 % |
+| pure power law | b | 0.2862 | 3.77 | 5.6 % | 8.0 % |
+
+Every §7g conclusion survives the tenfold increase in proton data:
+
+- **Free-power still wins** among two-parameter forms with a physical
+  zero-density limit, and the three-parameter version does not improve on it.
+  `box_AB` matches it at χ²/ndf 0.40, but A = 0.65 has the same defect §7c
+  reading 4 named — `ln(A+ξ)/ξ → 1` as ξ → 0 requires A = 1.
+- **Birks still does not fix the proton, in any variant.** Plain Birks leaves it
+  at 4.3 %, the escape floor still collapses to f = 0 exactly, and the quadratic
+  and free-power variants reach 3.7–3.8 % — all worse than free-power Box with
+  the same parameter count. §7g.3's pattern holds.
+- **The published parameters are better than §7g thought, but not good.**
+  χ²/ndf 2.46 → 1.51 and proton rms 5.2 % → 4.3 %, because the enlarged proton
+  set is less extreme than the single track was. It is still the worst of the
+  fitted families and still leaves the 12 % offset of §11.3.
+
+**How much of p is the muons?** Fitted to the **protons alone**, free-power Box
+gives k = 0.578, p = 1.056 (rms 2.7 %) in the rr plane and k = 0.381, p = 1.200
+(rms 1.4 %) in the dE/dx plane — in both planes ≈ 0.12–0.15 *below* the joint
+value. So the protons by themselves prefer a slightly gentler power and the
+muons pull it up. The cost of insisting on one curve for both is small: in the
+rr plane the joint fit sits 0.5 % above the proton's own floor (3.2 % vs 2.7 %)
+and 0.2 % above the muon's (2.2 % vs 2.0 %). That tension is real and worth
+recording, but it is inside the ±0.1 spread quoted on p — and far smaller than
+Birks', whose proton-only floor is *the same* 2.6 % yet whose joint fit lands at
+4.3 %, i.e. it gives up 1.6 % where free power gives up 0.5 %.
+
+### 11.5 §7g.6's open question, answered: no particle-dependent offset
+
+§7g.6 ended on the one residual no recombination model could absorb: at
+dE/dx ≈ 3.7 MeV/cm the proton read 1.087 of the free-power curve while the muon
+at the same dE/dx read 0.982 — "a 9 % particle-dependent difference at
+essentially the same dE/dx… A second proton would settle it; §9 item 3."
+
+Model-independent, no fit involved — the two sets of binned medians at matched
+dE/dx (`proton_model_check.py`; errors are the s.e.m. of the two medians, no
+systematic floor):
+
+| dE/dx bin (MeV/cm) | n mu | n p | muon (ke/cm) | proton (ke/cm) | proton/muon | ± |
+|---|---:|---:|---:|---:|---:|---:|
+| 3.0 – 3.5 | 76 | 141 | 82.4 | 83.4 | 1.012 | 2.2 % |
+| 3.5 – 4.0 | 39 | 114 | 90.1 | 97.8 | 1.085 | 2.7 % |
+| 4.0 – 4.6 | 24 | 104 | 109.0 | 107.6 | 0.987 | 4.8 % |
+| 4.6 – 5.4 | 17 | 122 | 122.0 | 116.4 | 0.954 | 4.6 % |
+| 5.4 – 6.5 | 13 | 98 | 142.0 | 133.2 | 0.938 | 5.0 % |
+| 6.5 – 8.0 | 9 | 82 | 143.7 | 152.2 | 1.059 | 5.6 % |
+| 8.0 – 10.5 | 6 | 54 | 162.9 | 171.5 | 1.053 | 6.9 % |
+| | | | | **median** | **1.012** | spread **5.1 %** |
+
+**Median proton/muon at matched dE/dx = 1.012 over 7 bins**, against §7b's
+1.024 on 6. The 3.5–4.0 bin — the single bin §7g.6 was built on — falls from
+**1.155 ± 5.1 %** to **1.085 ± 2.7 %**, and it is now the only bin above 1.06
+while three others sit *below* 0.99. There is no coherent particle-dependent
+offset: the column scatters about 1 with no trend, and the ±5 % scatter exceeds
+the quoted statistical errors, which says the per-bin systematic is ~5 % and
+that the muon side is the noisy one (6–24 points in the bins above 4 MeV/cm,
+against 54–141 for the proton).
+
+So §7g.6's alternative reading — "a fluctuation in a single track's outermost 16
+points" — is the one that survives. **The condition under which one R(dE/dx) can
+describe both particles is satisfied**, and this time on a population.
+
+### 11.6 Two checks the one-track sample could not run
+
+**Drift.** Doc 55's proton sat at 1106–1251 µs, the most attenuated corner of the
+sample, so its normalisation and the electron lifetime were entangled — §7e could
+only argue the sign. This population spans **21–1248 µs** (per-track means).
+Fitting ln(data / frozen free power) against drift across the 12 tracks:
+
+| | slope over 1290 µs | implied τ |
+|---|---:|---:|
+| the 12 protons | −9.6 % | 13.4 ms |
+| the 12 muons (per-track) | −4.9 % | 26 ms |
+| §7e, muon MIP band binned in drift | −9 to −13 % | 9.2 / 13.1 ms |
+
+The protons, a different particle over a different dE/dx range, independently
+reproduce the order-10 ms attenuation §7e measured on muons. That is a
+consistency check on the whole decode, and it is why the per-track ratios in
+`proton_model_check.py`'s output run from 1.05 at 20 µs down to 0.92 at 1248 µs.
+It is **still not a calibration** — §9 item 4 stands.
+
+**Robustness.** The rr-plane free-power refit and the frozen-model residual,
+under every subset that could plausibly be carrying the result:
+
+| arm | n protons | k | p | proton / frozen | rms |
+|---|---:|---:|---:|---:|---:|
+| all 12 | 12 | 0.3445 | 1.210 | 0.991 | 4.3 % |
+| only the 6 passing doc 55's automatic cuts | 6 | 0.3551 | 1.220 | 0.972 | 3.5 % |
+| without 174488 (20.6 % shape residual) | 11 | 0.3386 | 1.227 | 0.988 | 3.6 % |
+| without 404684 (the other at-a-vertex proton) | 11 | 0.3195 | 1.257 | 0.995 | 4.4 % |
+
+k moves over 0.32–0.36 and p over 1.21–1.26; the frozen curve reads 0.97–1.00
+with a 3.5–4.4 % residual in every arm, against the shipped Box's 1.10–1.13 at
+10–13 %. Nothing here rests on a particular track or on the choice to keep the
+short ones.
+
+### 11.7 What this does and does not change
+
+**It closes §9 item 3.** The lever arm is there: 59 points above 10.5 MeV/cm
+against 5, proton dE/dx coverage 3.0–24.6 MeV/cm in 10 bins against 3.6–23.4 in
+6, and — the part that actually mattered — a *population* whose track-to-track
+spread can be seen (per-track ratios 0.92–1.05 against the frozen curve) rather
+than assumed.
+
+**It does not resolve §7d.** k and p remain degenerate with the drift field
+exactly as B was; a dE/dx-dependent reconstruction bias still looks identical to
+a change in R; and the data is still uncalibrated (no gain, no lifetime). Twelve
+protons make the *measurement* solid without touching either alternative
+explanation. §9 item 3 asked for the lever arm and got it; what it cannot do by
+itself is tell you which of §7d's two readings is right.
+
+**Nothing was rebuilt.** `sbnd/particle_dataset.jsonnet` still carries A = 0.93,
+B = 0.212; `stm_ref_dqdx.json` still carries the frozen §10 tables and was **not**
+regenerated with the refit — §9 item 1 is still the gate. For scale, if it were:
+the muon table moves +1.3 % at rr = 0.5 cm, −2.9 % at 2.5, and +1.2 % at the
+plateau; the proton table moves **+11 %** at rr = 0.5 cm and −1 to −3 %
+everywhere else. That +11 % is the same extrapolation §10.3 flagged — the proton's
+innermost bin samples dE/dx ≈ 66 MeV/cm and the data still stops at 24.6, so it
+remains the least trustworthy number in the set. The three consumers of §10.4 are
+untouched. The
+§§6–10 figures are also untouched: they are the record of the 12-muon/1-proton
+sample and the tables above them are computed from it. The new figures are
+separate files.
+
+**Doc 62's own reading is confirmed from the charge side.** §3a of that doc said
+the `dqdx-normalisation` class *is* the proton signature rather than a
+normalisation or `dx` artifact. Twelve tracks at k_muon ≈ 1.88 with a
+proton-shaped profile, agreeing with a proton recombination curve to 4 %, is that
+claim measured.
 
 ---
 

@@ -530,9 +530,19 @@ def lifetime(part, de, dq, drift):
                   f"attenuation over 1290 us = {np.exp(sl*1290)*100:.0f} %")
     print("  The first bin sits above the next two, so the all-bins slope is the\n"
           "  steeper of the two; treat tau as order-10 ms, not a calibration.")
-    print("  Uncorrected attenuation cannot explain the proton either: the proton\n"
-          "  track sits at drift 1106-1251 us, the MOST attenuated corner of the\n"
-          "  sample, so a lifetime correction moves it further UP, not down.")
+    # measured, not asserted: with doc 55's single proton this printed
+    # 1106-1251 us -- the most attenuated corner -- so a lifetime correction
+    # could only move that track further UP.  With doc 62's population the range
+    # spans the drift and the argument becomes a spread rather than a corner.
+    pr = drift[part == "proton"]
+    if len(pr):
+        ntrk = "the proton track sits" if len(pr) < 200 else "the protons sit"
+        print(f"  Where the protons sit in drift: {ntrk} at "
+              f"{pr.min():.0f}-{pr.max():.0f} us (median {np.median(pr):.0f}).\n"
+              "  Doc 55 had one proton, at 1106-1251 us -- the MOST attenuated\n"
+              "  corner -- so uncorrected attenuation could only move it UP, never\n"
+              "  explain an excess.  A population spanning the drift tests that\n"
+              "  directly instead (doc 55 sec 11).")
 
 
 def fixed_drift_shape(part, de, dq, drift):

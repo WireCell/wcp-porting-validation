@@ -135,6 +135,25 @@ For the tagger this is directly actionable: a track sitting uniformly ~2× MIP w
 a muon-shaped profile should be **identified as a proton**, and then the standalone
 / at-a-vertex distinction decides whether it may be removed.
 
+### 3b. Confirmed from the charge — [55](55_dqdx-vs-rr-three-bundles.md) §11
+
+The 13 tracks' fitted dQ/dx-vs-residual-range profiles were pulled out of
+`work-mcp1kall-d59k` and put on the SBND expectation curves. **Twelve of the 13
+land at k_muon = 1.69–1.93 and k_proton = 1.02–1.14** — a coherent population at
+~1.9 × the muon expectation, agreeing with the doc-55 §7g proton curve (fitted
+before this list existed) to **0.991 ± 4.3 %**. The identification here was made
+by eye, so that agreement is a measurement rather than a definition, and §3a's
+reading is confirmed from the charge side.
+
+The one exception is **397920:8** — but for a geometric reason, not a charge one:
+its fitted main runs 278.9 cm over 453 points, i.e. the fit spans the whole
+multi-prong object the owner saw the proton *inside*, not the proton. The other
+at-a-vertex proton, 404684:9, has a 78.8 cm proton-like main and behaves like the
+rest.
+
+This list also closes doc 55 §9 item 3 ("a proton population"), which is why that
+doc's §11 exists.
+
 ## 4. How the automated doc-61 scan actually did (calibration, not truth)
 
 Worth recording because it sets how much the *unaudited* 99 STM tags can be
@@ -177,6 +196,8 @@ and the scan said STM — shows the scan was not merely over-strict.
 |---|---|
 | `scan-d59k/stm-baseline.tsv` | **the baseline**: 72 owner-adjudicated bundles, 4 classes, `owner_verdict` is truth |
 | `scan-d59k/proton-list.tsv` | the 13 protons + whether an STM tag is acceptable on each |
+| `dqdx_rr_sample/proton_index.tsv` | §3b: the same 13 with their fitted dQ/dx diagnostics (`k_muon`, `k_proton`, shape residual, drift), and the one named exclusion |
+| `dqdx_rr_sample/proton_points.tsv` | §3b: their 789 fitted dQ/dx points |
 | `work-mcp1kall-d59k/nusel_labels/s61mis/` | the owner's raw comments (their record — read only) |
 | `scan-d59k/stm-disagreements.tsv` | the doc-61 scan's *claims* that :5012 was built from (superseded by the baseline) |
 | `docs/61_nusel-handscan-key.md` | the scan key, the sub-agent method, and §5e's one-objectness ruling |

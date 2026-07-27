@@ -143,8 +143,9 @@ def main():
         cen, val, err, ntr, de_bin = prof[p]
         cs = {lab: table_curve(fr, graphs, p, name, pp, C, rr=cen)
               for lab, name, pp, C, _ in MOD}
+        ntrk_p = len({t for t in tid[part == p]})
         print(f"\n  {p}"
-              + ("  (mean over tracks of the per-track median)" if p == "muon"
+              + ("  (mean over tracks of the per-track median)" if ntrk_p > 1
                  else "  (the one track)"))
         print(f"  {'rr (cm)':>9s} {'dE/dx':>7s} {'ntrk':>5s} {'data ke/cm':>11s} "
               f"{'+-%':>5s} " + " ".join(f"/{lab}".rjust(12) for lab in cs))
@@ -192,8 +193,8 @@ def main():
         ax.errorbar(cen, val / 1e3, yerr=err / 1e3, fmt=mk, color=COL[pt],
                     ms=8.5, mew=1.5, mec="white", lw=0, elinewidth=1.3,
                     capsize=3, zorder=9,
-                    label=(f"muon, average of {n} tracks" if pt == "muon"
-                           else f"proton, {n} track"))
+                    label=(f"{pt}, average of {n} tracks" if n > 1
+                           else f"{pt}, {n} track"))
     ax.set_xlim(0, 60)
     ax.set_ylim(30, 330)
     ax.set_yscale("log")

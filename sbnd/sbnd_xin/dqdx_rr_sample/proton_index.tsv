@@ -1,0 +1,20 @@
+# protons hand-identified by the OWNER in the doc-62 :5012 scan
+# blocks read from work-mcp1kall-d59k/nusel_evt<ID>/tracking-stm.root, block = main_id * 10
+# NO cut is applied: the identification is the owner's, and the
+# columns below are doc 55's selector quantities kept for the record.
+# use=no is a named, model-independent exclusion (see the script's EXCLUDE).
+# k_<h> = free scale needed against hypothesis h; rms_<h> = shape residual after taking k out
+event	main	block	status	use	npts	L_cm	nbin	contrast	chi2	k_muon	rms_muon	k_proton	rms_proton	mean_absx_cm	drift_us	tagger	stm_ok	owner_comment	reason
+59377	7	70	0	yes	44	26.0	6	2.02	1.76	1.891	5.6	1.108	3.4	143.4	375	STM	yes	Proton candidate, IDed as STM is fine	
+61313	18	180	0	yes	64	39.8	7	2.26	3.80	1.926	8.9	1.143	7.2	194.2	50	STM	yes	Proton candidate, treated as STM is fine.	
+72828	7	70	0	yes	17	9.7	3	nan	2.45	1.893	12.9	1.117	8.4	198.8	21	STM	yes	Proton, IDed as STM is fine.	
+168388	6	60	0	yes	22	12.3	4	nan	1.86	1.928	11.1	1.126	7.7	180.3	139	STM	yes	Proton, ided as STM is fine.	
+174488	3	30	0	yes	29	16.5	5	nan	2.50	1.752	22.1	1.027	20.6	116.0	550	STM	yes	Proton, ided as STM is fine.	
+289343	9	90	0	yes	77	50.6	8	2.21	1.20	1.902	6.5	1.143	4.6	17.7	1179	STM	yes	Proton candidate, can be viewed as STM.	
+291345	12	120	0	yes	41	24.3	6	2.23	1.02	1.802	6.7	1.060	4.3	72.2	831	STM	yes	Proton, treated as STM is fine.	
+386838	16	160	0	yes	147	90.4	8	2.16	1.31	1.863	7.8	1.123	5.0	73.1	825	STM	yes	Proton track, can treat as STM	
+389544	13	130	0	yes	38	23.7	6	2.36	1.93	1.784	5.5	1.046	3.5	59.9	909	STM	yes	Proton track, can be treated as STM.	
+389962	5	50	0	yes	52	32.6	7	2.04	2.72	1.894	10.2	1.124	7.9	162.3	254	STM	yes	Proton, can be treated as STM	
+409084	12	120	0	yes	132	81.5	8	2.03	1.45	1.829	9.5	1.104	7.2	97.6	668	STM	yes	Proton, can be viewed as STM.	
+397920	8	80	3	no	453	278.9	8	3.50	1.32	0.911	35.2	0.549	34.2	110.6	585	nu-candidate	no	Not STM, clear proton at vertex.	fitted main is 278.9 cm / 453 pts; the owner puts the proton at a vertex, so this block is the event, not the proton
+404684	9	90	2	yes	126	78.8	8	2.71	1.89	1.688	8.3	1.018	5.3	7.0	1248	nu-candidate	no	Proton candidate, Not STM	
