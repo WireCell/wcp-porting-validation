@@ -160,6 +160,21 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 keep their Bragg and survive).  DEFAULT ON (owner 2026-07-26);
                 -no-stm-cathode-guard / SBND_STM_CATHODE_GUARD=0 restores
                 legacy.
+  -stm-anode-fix  doc-63 round-4a: fix the inverted face selection in the STM
+                tagger's dist_to_anode helper -- legacy returned the distance
+                to the CATHODE on SBND, so the prototype's anode-clipped-TGM
+                catch fired at the wrong drift boundary.  DEFAULT ON (owner
+                2026-07-26, after validation); -no-stm-anode-fix /
+                SBND_STM_ANODE_FIX=0 restores legacy.
+  -stm-track-guard  doc-63 round-4b/4c: second-track vetoes in TaggerCheckSTM.
+                4b: a leftover past the kink > 25 cm with straightness > 0.9
+                is a second track (V topology, doc-62 false STM 353223), not
+                a Michel.  4c: a search_other_tracks segment > 15 cm at
+                MIP-like dQ/dx (0.4-1.5) is a second track regardless of
+                straightness (349241; the longest MIP-like segment on any
+                correct STM is 12.4 cm).  DEFAULT ON (owner 2026-07-26,
+                after validation); -no-stm-track-guard /
+                SBND_STM_TRACK_GUARD=0 restores legacy.
   -unmerge      restore the prototype "main cluster + associated clusters"
                 data product before the taggers (doc 45): split each
                 flash-merged bundle back into its pre-merge main (retained,
@@ -330,6 +345,14 @@ STM_PGUARD="${SBND_STM_PROTON_GUARD:-1}"
 # doc-63 round-3 cathode-truncation veto.  DEFAULT ON (owner 2026-07-26); opt
 # out with -no-stm-cathode-guard / SBND_STM_CATHODE_GUARD=0.
 STM_CGUARD="${SBND_STM_CATHODE_GUARD:-1}"
+# doc-63 round-4a dist_to_anode face fix in the STM tagger.  DEFAULT ON
+# (owner 2026-07-26, after validation); opt out with -no-stm-anode-fix /
+# SBND_STM_ANODE_FIX=0.
+STM_AFIX="${SBND_STM_ANODE_FIX:-1}"
+# doc-63 round-4b/4c second-track vetoes in the STM tagger.  DEFAULT ON
+# (owner 2026-07-26, after validation); opt out with -no-stm-track-guard /
+# SBND_STM_TRACK_GUARD=0.
+STM_TGUARD="${SBND_STM_TRACK_GUARD:-1}"
 # Restore the prototype main+associated data product before the taggers by
 # splitting each flash-merged bundle back into its pre-merge members (doc 45).
 # DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
@@ -389,6 +412,10 @@ while [ $# -gt 0 ]; do
         -no-stm-proton-guard|--no-stm-proton-guard) STM_PGUARD=0; shift ;;
         -stm-cathode-guard|--stm-cathode-guard) STM_CGUARD=1; shift ;;
         -no-stm-cathode-guard|--no-stm-cathode-guard) STM_CGUARD=0; shift ;;
+        -stm-anode-fix|--stm-anode-fix) STM_AFIX=1; shift ;;
+        -no-stm-anode-fix|--no-stm-anode-fix) STM_AFIX=0; shift ;;
+        -stm-track-guard|--stm-track-guard) STM_TGUARD=1; shift ;;
+        -no-stm-track-guard|--no-stm-track-guard) STM_TGUARD=0; shift ;;
         -stm-fv|--stm-fv) STM_FV=1; shift ;;
         -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
@@ -484,7 +511,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD stmafix=$STM_AFIX stmtguard=$STM_TGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -522,6 +549,8 @@ process_event() {
             --tla-code "stm_accept_guards=$([ "$STM_GUARDS" = 1 ] && echo true || echo false)" \
             --tla-code "stm_proton_muon_guard=$([ "$STM_PGUARD" = 1 ] && echo true || echo false)" \
             --tla-code "stm_cathode_guard=$([ "$STM_CGUARD" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_anode_dist_fix=$([ "$STM_AFIX" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_second_track_guard=$([ "$STM_TGUARD" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"

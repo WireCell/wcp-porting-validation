@@ -72,6 +72,18 @@ function(
     // TRUE = SBND production as of doc 63 (owner 2026-07-26).  Runner flag:
     // -stm-cathode-guard / SBND_STM_CATHODE_GUARD=1.
     stm_cathode_guard = true,
+    // doc-63 round-4a fix of the inverted face selection in the STM tagger's
+    // dist_to_anode helper (the anode-clipped-TGM catch fired at the SBND
+    // cathode).  C++ default false; key omitted when off => byte-identical.
+    // DEFAULT TRUE = SBND production as of doc 63 (owner 2026-07-26, after
+    // validation).  Runner flag: -stm-anode-fix / SBND_STM_ANODE_FIX=1.
+    stm_anode_dist_fix = true,
+    // doc-63 round-4b/4c second-track vetoes (long straight leftover past
+    // the kink = V topology; long MIP-like other-track segment).  C++
+    // default false; key omitted when off => byte-identical.  DEFAULT TRUE
+    // = SBND production as of doc 63 (owner 2026-07-26, after validation).
+    // Runner flag: -stm-track-guard / SBND_STM_TRACK_GUARD=1.
+    stm_second_track_guard = true,
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -237,7 +249,9 @@ function(
                              stm_consistent_fv=stm_consistent_fv,
                              stm_accept_guards=stm_accept_guards,
                              stm_proton_muon_guard=stm_proton_muon_guard,
-                             stm_cathode_guard=stm_cathode_guard);
+                             stm_cathode_guard=stm_cathode_guard,
+                             stm_anode_dist_fix=stm_anode_dist_fix,
+                             stm_second_track_guard=stm_second_track_guard);
 
     local graph = g.intern(
         innodes=[source],

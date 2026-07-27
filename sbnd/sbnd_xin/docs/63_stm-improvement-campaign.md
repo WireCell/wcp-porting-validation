@@ -1,16 +1,16 @@
 # 63 — STM tagger improvement campaign (against the doc-62 owner baseline)
 
-**Status.** Rounds 1–3 SHIPPED (records in §4): **16 → 7 errors on the
-72-bundle owner baseline** — 8 false STMs fixed, the 1 missed STM recovered,
+**Status.** Rounds 1–4 SHIPPED (records in §4): **16 → 5 errors on the
+72-bundle owner baseline** — 10 false STMs fixed, the 1 missed STM recovered,
 zero regressions on the 56 correct verdicts, knob-off byte-identical, and
 the full-population check (all 883 events / 923 in-beam bundles) shows zero
-unjustified flips.  **All three knobs are SBND production DEFAULT ON as of
+unjustified flips.  **All five knobs are SBND production DEFAULT ON as of
 2026-07-26 (owner instruction)** — at the SBND jsonnet/TLA/runner level
 only; the C++ defaults stay false so every other detector's chain is
 byte-identical.  Opt out (the pre-campaign legacy A/B arm) with
-`-no-stm-guards -no-stm-proton-guard -no-stm-cathode-guard` — note this
-means post-flip knob-OFF gate arms must pass those flags explicitly.
-Round 4+ is analysis-gated (§2).  Each round is a default-OFF knob in
+`-no-stm-guards -no-stm-proton-guard -no-stm-cathode-guard -no-stm-anode-fix
+-no-stm-track-guard` — note this means post-flip knob-OFF gate arms must
+pass those flags explicitly.  Round 5+ is analysis-gated (§2).  Each round is a default-OFF knob in
 `TaggerCheckSTM.cxx`, evaluated on the full baseline AND the full population
 before it is committed.  Only the STM tagger is touched — TGM, LM and FC are
 out of scope by the owner's instruction.
@@ -131,7 +131,34 @@ Key measurements (all offline, on the stored per-pass fits; MIP = 56000 e/cm):
    peak axis, the genuine cathode stoppers survive on their Bragg rise, and
    every mid-volume STM is out of reach of the distance cut.
 
-6. **What does NOT separate** (measured, so nobody retries it):
+6. **A second MIP track hiding in the accepted fit** (round-4b/4c signal,
+   from the full-population leftover/segment surveys —
+   `/home/xqian/tmp/stm-campaign/{leftover_survey,offtrack_survey}.py`):
+
+   - *Leftover past the kink* (all 22 accepted d59k passes with left_L >
+     3 cm): the V-topology false STM **353223:15 has left_L = 28.6 cm with
+     straightness 0.972** — the longest leftover on any correct STM is
+     22.3 cm (285795:11, straightness 0.892), and the longest STRAIGHT
+     (> 0.9) one is 21.1 cm (280092:6, 0.951).  The tagger's own leftover
+     rejection only fires above 40 cm or above 2 MIP, so a second MIP leg
+     sails through.  Veto `left_L > 25 cm && straightness > 0.9`: kills
+     exactly 353223:15 in the whole population.
+   - *search_other_tracks segments* (28 instrumented segments across the 883
+     events): **349241:15's 20.4 cm segment at 1.00 MIP** escaped through
+     the prototype's `len < 25 && medQ < 1` Michel clause (medQ within
+     0.005 of the boundary).  The longest MIP-like (0.4–1.5) segment on any
+     correct STM is 12.4 cm (174422:13, 1.30 MIP); longer segments on
+     correct STMs are all > 1.5 MIP (proton stubs, e.g. 64475:23 19.9 cm at
+     2.41).  Veto `len > 15 cm && medQ ∈ (0.4, 1.5)`: kills exactly
+     349241:15.
+
+7. **What does NOT separate** (measured, so nobody retries it):
+   - Off-track near-stop steiner counting for the vertex-fan case
+     **402330:1** ("multiple tracks, neutrino", single-cluster bundle): it
+     shows only **8** off-fit points within 8 cm of the stop while correct
+     STMs (Michels, deltas) run to **59** (172788:26).  Its prongs barely
+     register in the steiner cloud (121 steiner points for a 414-point
+     cluster).
    - The flat-track false STMs (48895, 392200, 321107, 321371, 72586) are
      indistinguishable in dQ/dx from owner-ACCEPTED flat STMs (68956, 282715,
      315409, 175428, 172596…): both run ~1 MIP into the stop, same KS values,
@@ -168,13 +195,38 @@ Key measurements (all offline, on the stored per-pass fits; MIP = 56000 e/cm):
   56463:12 (the doc-61 AI scan itself called it a truncated cathode crosser);
   289343:9 and 281148:13 protected by their Bragg rise.
 
-- **Round 4+ — exploratory (design against round-1/2/3 re-runs).**  Remaining
-  false STMs: 278662 (vertex, inside correct spike range), 349241, 353223,
-  402330 (multi-object needing bundle-level topology), 48895, 321107, 321371
-  (flat tracks mid-volume — §1.6 says dQ/dx cannot do it; candidate signals:
-  dead-region proximity at the stop, readout-window truncation geometry,
-  leftover-track straightness).  Each will only ship with a §1-style measured
-  separation.
+- **Round 4a — `stm_anode_dist_fix` (C++ `anode_dist_fix`, default false).**
+  The pre-existing face-selection inversion found in round 3, now fixed on
+  the owner's instruction: the shipped `dist_to_anode` helper in
+  `check_stm_conditions` (`anode_x = (fdx < 0) ? first : second`) selects
+  the CATHODE on SBND (verified semantics: `dirx()` points from anode into
+  the drift volume; sensitive BB is normalized, so the anode is at min x
+  when fdx > 0).  The knob flips the selection to the true anode face.
+  Consumer: only the anode-clipped-TGM check (prototype
+  `ToyFiducial.cxx:762`, "at Anode").  Expected: no verdict change on this
+  sample (the check's other conditions rarely co-fire); validated by direct
+  arm-vs-arm comparison.
+
+- **Round 4b/4c — `stm_second_track_guard` (C++ `second_track_guard`,
+  default false).**  §1.6: two measured separations for "a second MIP track
+  hiding in the accepted fit".  (4b) leftover-track straightness: an
+  accepted pass whose leftover past the kink is ≥ 25 cm with chord/path
+  straightness > 0.9 is a second track, not a Michel (population max for
+  correct STMs: 22.3 cm, straight-correct max 21.1 cm at 0.951) — kills
+  353223:15 (28.6 cm at 0.972).  (4c) in check_other_tracks, a segment
+  > 15 cm at medium dQ/dx in (0.4, 1.5) MIP is a second track (correct
+  MIP-like max 12.4 cm; proton stubs > 1.5 MIP protected) — kills 349241:15
+  (20.4 cm at exactly 1.00 MIP, which escaped the `len<25 && medQ<1` Michel
+  clause).  Tunables: `guard_left_track_cm/straight`,
+  `guard_seg_track_cm/mip_lo/mip_hi`.
+
+- **Round 5+ — exploratory (design against round-4 re-runs).**  Remaining
+  false STMs: 278662 (vertex, spike 2.7 inside the correct range), 402330
+  (vertex fan; the off-track near-stop steiner count was measured and does
+  NOT separate — §1.7), 48895, 321107, 321371 (flat tracks mid-volume —
+  §1.7 says dQ/dx cannot do it; candidate signals: dead-region proximity at
+  the stop, readout-window truncation geometry).  Each will only ship with
+  a §1-style measured separation.
 
 Rounds are cumulative: round N's arm runs with rounds 1..N's knobs ON.
 Per-round record in §4; every round commits (both repos) and pushes.
@@ -321,18 +373,57 @@ compiled config or output changes.  Verified both ways on evt 72586:
 - opt-out run (`-no-stm-guards -no-stm-proton-guard -no-stm-cathode-guard`):
   byte-identical to the pre-campaign `r0` reference (GATE PASS).
 
-### Scoreboard after round 3
+Round 4's `stm_anode_dist_fix` and `stm_second_track_guard` joined the SBND
+defaults after their validation (records below); the full opt-out set is now
+the five `-no-*` flags in the status header, and the post-round-4 knob-off
+gate (`r4boff`) passed with all five explicit.
 
-| | round 0 | round 2 | round 3 |
-|---|---|---|---|
-| false STMs (of 15) | 15 | 9 | **7** |
-| missed STMs (of 1) | 1 | 0 | **0** |
-| correct STM kept (36) | 36 | 36 | 36 |
-| correct non-tag kept (20) | 20 | 20 | 20 |
+### Round 4a — `anode_dist_fix` (work roots `r4aoff`, `r4afull`)
 
-Remaining 7 false STMs: 278662:1 (vertex, inside the correct spike range),
-349241:15, 353223:15, 402330:1 (multi-object needing bundle-level topology),
-48895:17, 321107:13, 321371:18 (flat tracks mid-volume — §1.6).  Round 4+
+The dist_to_anode inversion fix, on the owner's instruction ("Please fix …
+as well", then "After fixing it, default on, please after validation").
+
+- Knob-off gate (`r4aoff`, 10 mixed events, all `-no-*` flags): **GATE
+  PASS** vs r0.  Compiled-config proof both ways.  `wcdoctest-clus` passes.
+- Cumulative full arm (`r4afull`, 883 events, knob ON on top of rounds
+  1–3): STM verdict flips **identical to `r3fullb`** — the fix changes no
+  STM verdict in this sample.  A direct arm-vs-arm diff of the
+  stm/tgm/fc/lm/label columns over all 923 in-beam bundles found exactly
+  two differences, both benign evaluation-status changes −1 → 0 with the
+  final label unchanged ('nu-candidate' both arms): 67394:18 (fc column)
+  and 283009:23 (stm column).  These are bundles whose evaluation now
+  completes (the corrected anode distance lets the anode-clipped-TGM check
+  run to a decision) without a verdict change.  VALIDATED ⇒ default ON.
+
+### Round 4b/4c — `second_track_guard` (work roots `r4boff`, `dbg6`, `r4bfull`)
+
+- Knob-off gate (`r4boff`, 10 mixed events, all five `-no-*` flags): **GATE
+  PASS: 10 event(s) byte-identical (work-stmcamp-r0 vs work-stmcamp-r4boff)**.
+  `wcdoctest-clus` passes; freshness proof done (lib 20:35:49 > last edit).
+- Smoke (`dbg6`): both designed rejections fire with the designed logs —
+  353223 "second_track_guard: cluster 15 rejected: 28.6 cm leftover past
+  the kink with straightness 0.972 (a second track, not a Michel)" and
+  349241 "second_track_guard: cluster 15 rejected: other-track segment
+  20.4 cm at 1.00 MIP (a second track)".
+- Cumulative full arm (`r4bfull`, 883/883 events rc=0, everything ON):
+  **11 baseline FIXED / 0 REGRESSED** — rounds 1–3's nine plus **349241:15**
+  and **353223:15**, exactly the two designed targets and nothing else.
+  Non-adjudicated flips: only the same two justified ones (56463:12,
+  63163:6) — the guard causes ZERO collateral flips in the whole
+  population.  Score **67/72 correct** (was 56).  SHIPPED, default ON.
+
+### Scoreboard after round 4
+
+| | round 0 | round 2 | round 3 | round 4 |
+|---|---|---|---|---|
+| false STMs (of 15) | 15 | 9 | 7 | **5** |
+| missed STMs (of 1) | 1 | 0 | 0 | **0** |
+| correct STM kept (36) | 36 | 36 | 36 | 36 |
+| correct non-tag kept (20) | 20 | 20 | 20 | 20 |
+
+Remaining 5 false STMs: 278662:1 (vertex, spike inside the correct range),
+402330:1 (vertex fan, off-track steiner count does not separate — §1.7),
+48895:17, 321107:13, 321371:18 (flat tracks mid-volume — §1.7).  Round 5+
 material.
 
 ## 5. Files
