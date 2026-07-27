@@ -164,29 +164,42 @@ Same shape for `beam_pref`. The help text now says so.
 that was the one remaining hole in "the in-tree config is self-sufficient" — see
 §4a for the fix.
 
-**`lifetime` is inert in the reco chain, and 6.0 ms is an inherited
-placeholder.** The PR and Q/L jobs take a `lifetime` TLA defaulting to 6.0 (ms)
-and override `params.lar.lifetime` with it, but **no reconstruction component
-reads it**: `lifetime` occurs **zero** times in the compiled imaging, clustering,
-Q/L and PR configs. It only feeds the sim `Drifter`'s charge attenuation in the
-`wcls-sim-*` jobs. So **no electron-lifetime / charge-attenuation correction is
-applied anywhere** in imaging, clustering, matching or PR.
+**`lifetime` was an inherited placeholder; now 35 ms, matching the simulation.**
+The PR and Q/L jobs take a `lifetime` TLA and override `params.lar.lifetime` with
+it, but **no reconstruction component reads it**: `lifetime` occurs **zero** times
+in the compiled imaging, clustering, Q/L and PR configs. It only feeds the sim
+`Drifter`'s charge attenuation in the `wcls-sim-*` jobs. So **no electron-lifetime
+/ charge-attenuation correction is applied anywhere** in imaging, clustering,
+matching or PR.
 
-Provenance of the 6.0: it arrived as part of the triple
+It used to say 6.0 ms, which arrived as part of the triple
 `DL=6.2 DT=9.8 lifetime=6 driftSpeed=1.565` in HaiwangYu's first standalone Q/L
 test (`wcp-porting-img 655bd6a`, 2026-05-24) and was copied forward into
-`wct-clus-matching-perevt.jsonnet` (`ba805c6`) and the PR job. `sbnd_track_fitting.json`'s
-own `_comment_diffusion` calls that same set "the earlier 6.2/9.8 placeholders
-inherited from the Q/L chain and uBooNE". The DL/DT half was later corrected to
-the SBND physical values (`9f498089`); `lifetime` never was, because nothing
-consumes it. It is *not* an SBND measurement, and it disagrees with SBND's own
-`simparams.jsonnet` (35 ms) and with `run_clus_evt.sh`, which passes 35 —
-harmless only because the knob is dead. Both jobs now carry a comment saying so.
-**Not changed**, deliberately: the value is inert, and picking a number would
-imply a lifetime correction exists. If one is ever added, 35 ms is a simulation
-value — data needs a measured lifetime, and the whole `dQ/dx` chain (including
-the retained 0.85 scale factor in `particle_dataset.jsonnet`) would need
-revisiting together.
+`wct-clus-matching-perevt.jsonnet` (`ba805c6`) and the PR job.
+`sbnd_track_fitting.json`'s own `_comment_diffusion` calls that same set "the
+earlier 6.2/9.8 placeholders inherited from the Q/L chain and uBooNE". The DL/DT
+half was later corrected to the SBND physical values (`9f498089`); `lifetime`
+never was, because nothing consumes it. It was never an SBND measurement, and it
+disagreed with SBND's own `simparams.jsonnet` (35 ms) and with `run_clus_evt.sh`,
+which already passed 35.
+
+**Changed to 35 ms (owner, 2026-07-27)** so the reco chain and the simulation
+state the same number: the `lifetime` TLA default in both jobs, and the `LIFETIME`
+variable in `run_nusel_evt.sh`, `run_ql_evt.sh`, `run_pr_evt.sh` and
+`run_clust_QL_evt.sh` (the runners pass it explicitly, so leaving them at 6 would
+have made the config default cosmetic). `run_clus_evt.sh` and
+`wct-clustering.jsonnet` were already 35.
+
+Gates: compiling the PR and Q/L jobs with `lifetime=6` vs `lifetime=35` gives
+**byte-identical JSON** — the direct proof of inertness — and the five jobs
+compiled with the *new* runner TLA sets are still byte-identical to the original
+pre-change baseline. Runtime: 6 decisive events through the full PR tail with
+`LIFETIME=35`, `nusel` TSVs identical to `work-stmcamp-r5fullc` (6/6).
+
+This is a documentation/consistency fix, **not** a lifetime correction. Adding a
+real one would be a physics change: 35 ms is a *simulation* value, data needs a
+measured lifetime, and the whole dQ/dx chain (including the retained 0.85 scale
+factor in `particle_dataset.jsonnet`) would have to be revisited with it.
 
 ## 4a. `trackfitting_config` resolved through WIRECELL_PATH
 

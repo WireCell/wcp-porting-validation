@@ -62,7 +62,7 @@ EOF
 # matching share one value.
 DL=6.5781         # cm^2/s, SBND physical longitudinal diffusion
 DT=13.1349        # cm^2/s, SBND physical transverse diffusion
-LIFETIME=6        # ms
+LIFETIME=35       # ms; SBND simparams value.  Inert in the reco chain (docs/64 sec 4).
 SEMIMODEL=semi-analytical-sbnd.json
 
 # sbnd_xin standalone chain (imports the in-tree pre-tagging clus.jsonnet)
