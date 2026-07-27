@@ -29,9 +29,14 @@
 
 set -e
 
-# pwd -P: sbnd_xin is reachable through a symlink (toolkit/sbnd_xin); the
-# PR jsonnet's relative import '../particle_dataset.jsonnet' only resolves
-# from the REAL location (wcp-porting-img/sbnd/), so canonicalize here.
+# pwd -P: sbnd_xin is reachable through a symlink (toolkit/sbnd_xin), so
+# canonicalize to the REAL location (wcp-porting-img/sbnd/sbnd_xin) before
+# building paths from it.  (Historically this was REQUIRED because the PR
+# jsonnet imported '../particle_dataset.jsonnet' relatively; since the 2026-07-27
+# config sync those tables live in-tree as
+# pgrapher/experiment/sbnd/particle_dataset.jsonnet and resolve through
+# WIRECELL_PATH from anywhere -- see sbnd_xin/docs/64_cfg-sync.md.  Kept because
+# $SBND_DIR is still used for data paths and the track-fitting JSON.)
 SBND_DIR=$(cd "$(dirname "$0")" && pwd -P)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
 export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BASE}/wire-cell-data/sbnd/photodet:${WIRECELL_PATH}

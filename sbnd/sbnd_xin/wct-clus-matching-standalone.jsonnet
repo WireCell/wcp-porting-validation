@@ -128,14 +128,20 @@ local cathode_fv = (import 'cathode_fiducial.jsonnet')(cx=0.5*wc.cm, cy=0.5*wc.c
 local opflash_sources = [qlm.opflash_source(n) for n in std.range(0, std.length(tools.anodes) - 1)];
 local flash_attach    = [qlm.flash_attach(n)    for n in std.range(0, std.length(tools.anodes) - 1)];
 local matching_pipes  = [
+    // lm / main_flag pinned to the pre-adoption values: the canonical module
+    // defaults them ON as of 2026-07-27 (doc 64), and this legacy all-events
+    // variant is kept byte-identical to its historical output.  Drop the pins to
+    // follow production.
     qlm.matching(tools.anodes[n], clus_maker.detector_volumes([tools.anodes[n]]),
-                 n, reality, semimodel_file, cathode_fiducial=cathode_fv.tn, pmt_nl=pmt_nl)
+                 n, reality, semimodel_file, cathode_fiducial=cathode_fv.tn, pmt_nl=pmt_nl,
+                 lm=false, main_flag=false)
     for n in std.range(0, std.length(tools.anodes) - 1)
 ];
 // Joint matcher: one node fed by both APAs' flash_attach outputs (used iff joint).
 local matching_joint = qlm.matching_joint(tools.anodes, clus_maker.detector_volumes(tools.anodes),
                                           reality, semimodel_file, cathode_fiducial=cathode_fv.tn,
-                                          pmt_nl=pmt_nl);
+                                          pmt_nl=pmt_nl,
+                                          lm=false, main_flag=false);  // see matching() above
 
 // --- All-APA clustering ---
 // In-tree all_apa is the pre-tagging chain (no nu_tagging param; see header).

@@ -191,6 +191,26 @@ process_event() {
         --tla-str  "dl_weights=$DL_WEIGHTS" \
         --tla-code "beam_window_us=$BEAM_WINDOW_CODE" \
         --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
+        `# TGM/FC knobs pinned to the PRE-ADOPTION values.  The canonical config` \
+        `# adopted the production operating point as its defaults on 2026-07-27` \
+        `# (doc 64), and this per-event debug/A-B runner passes only a subset of` \
+        `# the PR job's TLAs, so without these pins its -tgm / -nu / -dnn demos` \
+        `# would silently switch to merge-aware TGM + the wider FV margins.  That` \
+        `# change is unvalidated for this runner, so it stays byte-identical here.` \
+        `# DELETE this block to follow production (that is what run_nusel_evt.sh` \
+        `# passes); -no-nucand etc. do not exist in this runner.` \
+        --tla-code "tgm_neutrino_candidate=false" \
+        --tla-code "tgm_chord_charge=false" \
+        --tla-str  "tgm_chord_mode=chord" \
+        --tla-code "tgm_component_extremes=false" \
+        --tla-code "tgm_component_rescue=false" \
+        --tla-code "tgm_rescue_chord=false" \
+        --tla-code "tgm_main_pair=false" \
+        --tla-str  "tgm_main_pair_mode=path" \
+        --tla-code "tgm_fv_zmax_margin=3" \
+        --tla-code "tgm_fv_zmax_margin_interior=0" \
+        --tla-code "tgm_fv_x_margin=2" \
+        --tla-code "tgm_fv_y_margin=2.5" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $PRDIR/mabc-pr.zip"
 }

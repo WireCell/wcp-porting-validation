@@ -50,9 +50,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             hand-scan viewer (matched zip output is unchanged)
   -cathode-diag  log the cathode-crossing TPC0/TPC1 offset three-vector
             diagnostic (grep QLCATHODE in the run log; output unchanged)
-  -auto-mask  enable the per-event dynamic dead-PMT auto-mask (masks a PMT
-            that is dead in THIS event while its live neighbours fire; off
-            by default => byte-identical; grep QLAUTOMASK in the run log)
+  -auto-mask  RE-ASSERT the per-event dynamic dead-PMT auto-mask (masks a PMT
+            that is dead in THIS event while its live neighbours fire; grep
+            QLAUTOMASK in the run log).  The auto-mask is already ON
+            unconditionally in the production config (cfg/.../sbnd/qlmatching.jsonnet
+            match_data), so this flag does NOT toggle it -- without it the key is
+            simply omitted and production is inherited.  To genuinely disable it,
+            pass auto_mask=false to that module directly (doc 64)
   -beam-pref  re-assert the beam-window flash preference overlay. The
             preference is ON in the production config since the round-2
             adoption (weight 0.5, rescue 0.2, gate ks 0.3 / pred 2%; doc 22),
