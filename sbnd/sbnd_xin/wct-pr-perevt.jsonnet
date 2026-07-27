@@ -54,6 +54,11 @@ function(
     // restores the pre-doc-49 FiducialUtils sensitive-volume fallback, which is
     // what the A/B compares against.  Runner flag: -no-stm-fv.
     stm_consistent_fv = true,
+    // doc-63 round-1 STM acceptance guards (charge-desert one-objectness,
+    // spike-not-ramp nu-vertex veto, eval ratio2 cap).  C++ default false;
+    // key omitted when off => byte-identical compiled config.  Runner flag:
+    // -stm-guards / SBND_STM_GUARDS=1.
+    stm_accept_guards = false,
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -216,7 +221,8 @@ function(
                              save_stm_fit=save_stm_fit,
                              unmerge_bundle_mode=unmerge_bundle_mode,
                              mip_dqdx=mip_dqdx,
-                             stm_consistent_fv=stm_consistent_fv);
+                             stm_consistent_fv=stm_consistent_fv,
+                             stm_accept_guards=stm_accept_guards);
 
     local graph = g.intern(
         innodes=[source],
