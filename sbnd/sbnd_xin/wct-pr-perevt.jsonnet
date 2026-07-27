@@ -59,6 +59,11 @@ function(
     // key omitted when off => byte-identical compiled config.  Runner flag:
     // -stm-guards / SBND_STM_GUARDS=1.
     stm_accept_guards = false,
+    // doc-63 round-2 muon-consistency guard on detect_proton (an end region
+    // matching the muon hypothesis in shape and normalization is not called a
+    // proton).  C++ default false; key omitted when off => byte-identical.
+    // Runner flag: -stm-proton-guard / SBND_STM_PROTON_GUARD=1.
+    stm_proton_muon_guard = false,
     // When set, re-save the (post-PR) tree to this TensorDM tarball.  Used by the
     // round-trip gate (re-save with pipeline_names=[] and compare member hashes
     // against the input tarball).
@@ -222,7 +227,8 @@ function(
                              unmerge_bundle_mode=unmerge_bundle_mode,
                              mip_dqdx=mip_dqdx,
                              stm_consistent_fv=stm_consistent_fv,
-                             stm_accept_guards=stm_accept_guards);
+                             stm_accept_guards=stm_accept_guards,
+                             stm_proton_muon_guard=stm_proton_muon_guard);
 
     local graph = g.intern(
         innodes=[source],

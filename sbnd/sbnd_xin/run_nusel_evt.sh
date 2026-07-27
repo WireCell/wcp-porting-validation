@@ -144,6 +144,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 normalization).  Thresholds measured on the doc-62 owner
                 baseline.  DEFAULT OFF = byte-identical legacy verdicts.
                 Env: SBND_STM_GUARDS=1.
+  -stm-proton-guard  doc-63 round-2 muon-consistency guard on TaggerCheckSTM's
+                detect_proton: an end region matching the muon hypothesis in
+                shape AND normalization (ks1 < 0.045, ratio3 < 1.1) is never
+                called a proton, so a textbook stopping muon cannot be
+                rejected by the high-dQ/dx proton branches (doc-62 miss
+                evt62613).  Michel/delta-ray checks untouched.  DEFAULT OFF =
+                byte-identical legacy verdicts.  Env: SBND_STM_PROTON_GUARD=1.
   -unmerge      restore the prototype "main cluster + associated clusters"
                 data product before the taggers (doc 45): split each
                 flash-merged bundle back into its pre-merge main (retained,
@@ -308,6 +315,9 @@ STM_FV="${SBND_STM_FV:-1}"
 # cap).  DEFAULT OFF: opt in with -stm-guards / SBND_STM_GUARDS=1 until the
 # campaign rounds are owner-accepted.
 STM_GUARDS="${SBND_STM_GUARDS:-0}"
+# doc-63 round-2 muon-consistency guard on detect_proton.  DEFAULT OFF: opt in
+# with -stm-proton-guard / SBND_STM_PROTON_GUARD=1.
+STM_PGUARD="${SBND_STM_PROTON_GUARD:-0}"
 # Restore the prototype main+associated data product before the taggers by
 # splitting each flash-merged bundle back into its pre-merge members (doc 45).
 # DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
@@ -363,6 +373,8 @@ while [ $# -gt 0 ]; do
         -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
         -stm-guards|--stm-guards) STM_GUARDS=1; shift ;;
         -no-stm-guards|--no-stm-guards) STM_GUARDS=0; shift ;;
+        -stm-proton-guard|--stm-proton-guard) STM_PGUARD=1; shift ;;
+        -no-stm-proton-guard|--no-stm-proton-guard) STM_PGUARD=0; shift ;;
         -stm-fv|--stm-fv) STM_FV=1; shift ;;
         -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
@@ -458,7 +470,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS unmerge=$UNMERGE/$UNMERGE_MODE)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     (
         cd "$NUDIR"
@@ -494,6 +506,7 @@ process_event() {
             --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
             --tla-code "stm_consistent_fv=$([ "$STM_FV" = 1 ] && echo true || echo false)" \
             --tla-code "stm_accept_guards=$([ "$STM_GUARDS" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_proton_muon_guard=$([ "$STM_PGUARD" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"

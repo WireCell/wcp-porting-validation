@@ -1,10 +1,13 @@
 # 63 — STM tagger improvement campaign (against the doc-62 owner baseline)
 
-**Status.** Round 1 SHIPPED (record in §4): **6 of the 15 false STMs fixed,
-zero regressions** on the 72-bundle owner baseline, knob-off byte-identical.
-Round 2 is next.  Each round is a default-OFF knob in `TaggerCheckSTM.cxx`,
-evaluated on the full baseline before it is committed.  Only the STM tagger
-is touched — TGM, LM and FC are out of scope by the owner's instruction.
+**Status.** Rounds 1 and 2 SHIPPED (records in §4): **16 → 9 errors on the
+72-bundle owner baseline** — 6 false STMs fixed, the 1 missed STM recovered,
+zero regressions on the 56 correct verdicts, knob-off byte-identical.  Both
+knobs default OFF; the SBND chain opts in with `-stm-guards
+-stm-proton-guard`.  Round 3+ is analysis-gated (§2).  Each round is a
+default-OFF knob in `TaggerCheckSTM.cxx`, evaluated on the full baseline
+before it is committed.  Only the STM tagger is touched — TGM, LM and FC are
+out of scope by the owner's instruction.
 
 **The target.** `scan-d59k/stm-baseline.tsv` (owner verdicts = truth):
 
@@ -178,6 +181,32 @@ every later byte-identical gate and the `--ref` for scoring.
   **6 FIXED / 0 REGRESSED / no collateral flips** —
   fixes 278794:7, 285366:13, 285443:7, 289832:10, 290294:12, 409546:8.
   Score 62/72 correct (was 56).  SHIPPED.
+
+### Round 2 — `proton_muon_guard` (work roots `r2off`, `r2`)
+
+- Knob-off gate with the final (round-1 + round-2) binary: 10 mixed events vs
+  r0, **GATE PASS** (member-content hashes identical).  Compiled-config
+  proof: `proton_muon_guard` key absent off / present on.  `wcdoctest-clus`
+  565/565.
+- Cumulative arm (`-stm-guards -stm-proton-guard`), all 72 events:
+  **7 FIXED / 0 REGRESSED / no collateral flips** — round 1's six plus the
+  recovered miss **62613:17**.  The owner-confirmed proton rejections
+  288859:9 (delta-ray path) and 319809:20 (ks1 = 0.063, ratio3 = 1.22) are
+  unchanged, as designed.  Score **63/72 correct** (was 56).  SHIPPED.
+
+### Scoreboard after round 2
+
+| | round 0 | round 2 |
+|---|---|---|
+| false STMs (of 15) | 15 | **9** |
+| missed STMs (of 1) | 1 | **0** |
+| correct STM kept (36) | 36 | 36 |
+| correct non-tag kept (20) | 20 | 20 |
+
+Remaining 9 false STMs: 278662:1 (vertex, inside the correct spike range),
+349241:15, 353223:15, 402330:1, 72586:17 (multi-object needing bundle-level
+topology), 48895:17, 392200:27, 321107:13, 321371:18 (flat tracks / unstated
+— §1.5).  Round 3+ material.
 
 ## 5. Files
 
