@@ -72,6 +72,41 @@ that no longer reproduces the shipped one.
 Nothing is re-run from the reconstruction; every input `tracking-stm.root`
 already existed in the `d55ton` arms.
 
+## The `_d66*` files — doc 55 §13, the diffusion A/B
+
+Doc 66 reverted the track fit's diffusion to `DL = 4.0 / DT = 8.8 cm²/s`. §13
+re-collects the *whole* sample from **both** of doc 66's 1000-event arms and puts
+it against the frozen expectation curves. Suffixes:
+
+| suffix | arm | selection |
+|---|---|---|
+| `_d66old` | `work-stmcamp-d66old` (6.5781 / 13.1349) | §6's cuts, 1000 events → 60 muons + 10 protons |
+| `_d66new` | `work-stmcamp-d66new` (4.0 / 8.8) | §6's cuts re-run independently → 59 + 10 |
+| `_d66newF` | `work-stmcamp-d66new` | `_d66old`'s track list **replayed**, cuts off — this is the A/B arm |
+
+`plot_diffusion_ab.py` draws both arms on the same frozen curves
+(`dqdx_vs_rr_diffusion_ab.png`). The published `sample_*.tsv` /
+`sample_points_p12.tsv` and their figures are **untouched** — they are the record
+§§6–11 are computed from.
+
+Three flags exist for this and matter if you re-run any of it:
+
+- `collect_dqdx_rr_sample.py --roots / --events / --force-list / --suffix`.
+  `--force-list` replays an existing `sample_index.tsv`'s (event, block) set with
+  the cuts NOT applied, so a diffusion A/B runs on identical tracks and a cut
+  migration cannot masquerade as a physics shift.
+- `collect_proton_sample.py --root / --control-root / --old-points / --suffix`.
+  **`--old-points` is the one to get right**: it is where `--merge`'s muon rows
+  are copied from, and leaving it at the default merges old-epoch muons with
+  new-epoch protons — a mix that looks entirely plausible in every downstream
+  ratio. `--control-root` is what keeps the cross-root control meaningful when
+  both halves come from one arm.
+- `make_ref_tables.py --json` defaults to the **shipped**
+  `nusel_display/stm_ref_dqdx.json`. §13 pointed it at
+  `stm_ref_dqdx_d66*_STUDY.json` instead; overwriting the shipped file destroys
+  §11.3's premise (a model frozen before the population it is tested on existed)
+  and changes what the viewers draw.
+
 ## The one thing to read before using these numbers
 
 This is **uncalibrated data** — no gain calibration and no electron-lifetime

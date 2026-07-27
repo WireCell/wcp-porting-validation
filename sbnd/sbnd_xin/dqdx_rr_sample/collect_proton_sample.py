@@ -151,18 +151,21 @@ def diagnostics(bk, refs):
     return d
 
 
-def control_check(refs):
+def control_check(refs, root=ROOT, control_root=None):
     """289343 blk 90 lives in both roots.  The merged fit is only meaningful if
-    d59k's dQ_dx_fit output is the same object d55ton's was."""
+    the proton root's dQ_dx_fit output is the same object the muon root's was --
+    i.e. both halves of the merge are ONE reconstruction epoch.  Doc 55 section 13
+    re-points both halves at `work-stmcamp-d66new`, where the check is between
+    that arm and itself and so is trivially satisfied; that is the point."""
     ev, blk, old_root = CONTROL
-    a = read_block(old_root, ev, blk)
-    b = read_block(ROOT, ev, blk)
+    a = read_block(control_root or old_root, ev, blk)
+    b = read_block(root, ev, blk)
     if a is None or b is None:
         return False, "control block missing from one of the roots"
     same = all(a[v].shape == b[v].shape and np.array_equal(a[v], b[v])
                for v in ("x", "y", "z", "q", "dx", "rr"))
-    return same, (f"{ev} blk{blk}: {a['npts']} pts in {old_root}, {b['npts']} in "
-                  f"{ROOT}, point arrays "
+    return same, (f"{ev} blk{blk}: {a['npts']} pts in {control_root or old_root}, "
+                  f"{b['npts']} in {root}, point arrays "
                   + ("IDENTICAL" if same else "DIFFER"))
 
 
@@ -191,11 +194,25 @@ def main():
     ap.add_argument("--plot", help="overlay PNG of the proton sample")
     ap.add_argument("--no-control", action="store_true",
                     help="skip the cross-root control (do not use for a merge)")
+    ap.add_argument("--root", default=ROOT,
+                    help=f"work root the protons are read from (default {ROOT})")
+    ap.add_argument("--control-root", default=CONTROL[2],
+                    help="work root the cross-root control compares against; set "
+                         "it to the root the MUONS in --old-points came from "
+                         f"(default {CONTROL[2]})")
+    ap.add_argument("--old-points", default=OLD_POINTS,
+                    help="per-point TSV the muon rows of --merge are copied from "
+                         "(default sample_points.tsv).  MUST come from the same "
+                         "reconstruction epoch as --root, or the merged file "
+                         "mixes two epochs.")
+    ap.add_argument("--suffix", default="",
+                    help="appended to the proton_index/proton_points basenames")
     args = ap.parse_args()
 
     refs = load_refs()
 
-    ok, msg = (True, "skipped") if args.no_control else control_check(refs)
+    ok, msg = ((True, "skipped") if args.no_control
+               else control_check(refs, args.root, args.control_root))
     print(f"cross-root control -- {msg}")
     if not ok and args.merge:
         raise SystemExit("REFUSING to merge: d59k and d55ton disagree on the "
@@ -204,7 +221,7 @@ def main():
 
     tracks = []
     for row in read_list(PROTON_LIST):
-        bk = read_block(ROOT, row["event"], row["main"] * 10)
+        bk = read_block(args.root, row["event"], row["main"] * 10)
         if bk is None:
             print(f"  {row['event']} main {row['main']}: no block -- skipped")
             continue
@@ -230,11 +247,11 @@ def main():
                   f"{kp:5.2f} {rp*100:5.1f} {d['drift_us']:6.0f} "
                   + ("EXCLUDED: " + d["excluded"] if d["excluded"] else "yes"))
 
-    idx = os.path.join(args.outdir, "proton_index.tsv")
-    pts = os.path.join(args.outdir, "proton_points.tsv")
+    idx = os.path.join(args.outdir, f"proton_index{args.suffix}.tsv")
+    pts = os.path.join(args.outdir, f"proton_points{args.suffix}.tsv")
     with open(idx, "w") as fi:
         fi.write("# protons hand-identified by the OWNER in the doc-62 :5012 scan\n")
-        fi.write(f"# blocks read from {ROOT}/nusel_evt<ID>/tracking-stm.root, "
+        fi.write(f"# blocks read from {args.root}/nusel_evt<ID>/tracking-stm.root, "
                  "block = main_id * 10\n")
         fi.write("# NO cut is applied: the identification is the owner's, and the\n")
         fi.write("# columns below are doc 55's selector quantities kept for the "
@@ -268,14 +285,14 @@ def main():
     if args.merge:
         nmu = 0
         with open(args.merge, "w") as fm:
-            fm.write("# doc 55 section 11: the d55ton MUONS + the doc-62 OWNER-"
-                     "identified PROTONS (d59k)\n")
-            fm.write("# muon rows are copied verbatim from sample_points.tsv; "
-                     "its single proton\n")
-            fm.write("# (289343 blk 90) is dropped there and re-read from d59k, "
-                     "so it is counted once.\n")
+            fm.write(f"# muons from {args.old_points}, protons from "
+                     f"{args.root} (the doc-62 OWNER-identified list)\n")
+            fm.write("# muon rows are copied verbatim from --old-points; its "
+                     "single proton\n")
+            fm.write("# (289343 blk 90) is dropped there and re-read from the "
+                     "proton root, so it is counted once.\n")
             hdr = True
-            for line in open(OLD_POINTS):
+            for line in open(args.old_points):
                 if line.startswith("#"):
                     continue
                 if hdr:
@@ -291,7 +308,7 @@ def main():
             for row, bk, d in used:
                 write_points(fm, "proton", bk, header=False)
         ntrk = len({l.split("\t")[1] + l.split("\t")[2]
-                    for l in open(OLD_POINTS) if l.startswith("muon\t")})
+                    for l in open(args.old_points) if l.startswith("muon\t")})
         print(f"wrote {args.merge}: {nmu} muon points ({ntrk} tracks) + "
               f"{len(used)} proton tracks")
 
