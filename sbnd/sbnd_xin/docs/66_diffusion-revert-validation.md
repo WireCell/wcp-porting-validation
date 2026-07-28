@@ -844,7 +844,7 @@ straight-residual gate (`:2240`) cannot re-reject it; its restored path then
 reaches detect_proton, where its old-arm values (track_medium=1.68, comb=−0.06)
 clear the strengthened cuts below with wide margin.  Residual risk: the doc-63
 guards and the other-tracks veto run on the new fit only after the knob exists
-— needs the knob-on rerun to close.
+— needs the knob-on rerun to close.  (Closed in §12.5: restored at status 0.)
 
 **P3 — detect_proton track_medium 1.0 → 1.05** (`:1783,:1786`; fixes
 317543:15, half of 319809:20).  Targets sit at 1.010/1.021; the nearest
@@ -903,12 +903,77 @@ with four adjudications a cap could be justified honestly.
 
 ### 12.4 Status
 
-Assessment only — no C++ or config change is made by this section.  If adopted,
-the package is 4 knobs in TaggerCheckSTM (`michel_res_length_cut` 6 cm,
-`proton_tm_max` 1.0, `proton_b_ks2_max` 0.05, `proton_c_peak_max` 4.3 — legacy
-defaults, SBND job overrides 6.5/1.05/0.055/4.1), a knob-off byte-identical
-gate, and a knob-on 1000-event rerun expecting exactly the four verdict flips
-plus confirmation that restored `281632:8` clears its post-eval stages.
+**Implemented and shipped, DEFAULT ON for SBND** (owner adoption 2026-07-27:
+"take these as default value").  The package is 4 knobs in TaggerCheckSTM
+(`michel_res_length_cut` 6 cm, `proton_tm_max` 1.0, `proton_b_ks2_max` 0.05,
+`proton_c_peak_max` 4.3 — legacy C++ defaults, so absent keys are byte-identical
+legacy behavior; the SBND job overrides 6.5 cm / 1.05 / 0.055 / 4.1).  Commits:
+
+- toolkit `c0501d7e` — `clus/src/TaggerCheckSTM.cxx` (knobs + use sites, each
+  citing this doc), `cfg/pgrapher/common/clus.jsonnet` (null-suppressed
+  threading), `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (`stm_d66_cuts=true`
+  production default, doc-64 convention), `wct-pr-perevt.jsonnet` (TLA).
+- wcp-porting-img `a27aa12` — `run_nusel_evt.sh` flag
+  `-stm-d66cuts`/`-no-stm-d66cuts` (env `SBND_STM_D66CUTS`, default 1).
+
+Validation in §12.5.
+
+### 12.5 Validation of the shipped package (2026-07-27)
+
+Repro block:
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+EV="$(ls -d work-mcp1kall-d59k/nusel_evt* | sed 's#.*nusel_evt##' | tr '\n' ' ')"
+# knob-off gate arm and knob-on production arm, same binary as d66new:
+STM_EVENTS="$EV" NJOBS=30 ./stm_campaign/run_round.sh d66fixoff -no-stm-d66cuts
+STM_EVENTS="$EV" NJOBS=30 ./stm_campaign/run_round.sh d66fix
+./d60_ab_report.py work-stmcamp-d66new work-stmcamp-d66fixoff   # expect identical
+./d60_ab_report.py work-stmcamp-d66new work-stmcamp-d66fix      # expect the 4 targets
+./d66_flip_report.py work-stmcamp-d66new work-stmcamp-d66fix
+```
+
+Pre-run proofs: compiled `wct-pr-perevt.jsonnet` with the knob **off** is
+byte-identical to the pre-change HEAD (the key-suppression idiom); with the
+knob **on** the four keys appear (`michel_res_length_cut: 65` [WCT mm],
+`proton_tm_max: 1.05`, `proton_b_ks2_max: 0.055`,
+`proton_c_peak_max: 4.0999…`); `wcdoctest-clus` 565/565; freshness proof done.
+Both arms 1000/1000 events rc=0.
+
+**Knob-off gate (`d66fixoff` vs `d66new`): PASS — all 1000 events
+byte-identical** by member-content hash (`/home/xqian/tmp/d66fixoff_vs_new.txt`).
+The legacy path is untouched.
+
+**Knob-on arm (`d66fix` vs `d66new`): 994/1000 identical, 6 differ**
+(`/home/xqian/tmp/d66fix_vs_new.txt`):
+
+- The **4 target events** differ in both `pctree-pr-*.tar.gz` and the nusel
+  table.  Flip census over all 11,426 bundles (`d66_flip_report.py`): tgm 0,
+  fc 0, lm 0, **stm 4** — exactly the targets, 0.04% of bundles:
+  - `281632:8` nu-candidate → **STM** (restored): fit pass persisted at
+    status 0, i.e. on the *new* fit it also cleared the doc-63 guards, the
+    other-tracks veto, and detect_proton — closing §12.2's residual risk.
+  - `317543:15`, `319809:20`, `390864:16` STM → **nu-candidate**, each
+    re-vetoed by detect_proton (status 5) as designed.
+- The **2 other events** (`349549`, `65289`) differ in the tsv only — their
+  pctrees are hash-identical, so reconstruction is unchanged.  The diff is one
+  cosmetic column: `stmfit` reads `postfit` in d66new but `contained` in
+  d66fix for the in-beam bundle.  Cause: the WCT log-tearing gotcha.  Both
+  arms log *both* skip reasons ("fully contained (Mid Point A)" first, then
+  "evaluated but no pass recorded"), but in the d66new arm the first line was
+  torn mid-prefix (`tions: cluster 14 no STM fit: fully contained …`), so
+  `nusel_extract.py`'s `RE_STM_SKIP` (which anchors on
+  `check_stm_conditions:`) missed it and fell through to the second reason.
+  `contained` is the *correct* decode; d66new's `postfit` was the artifact.
+  The extractor's tear tolerance handles a torn reason *tail*, not a torn
+  line *prefix* — pre-existing limitation, noted here, not fixed in this
+  change.
+
+Net effect on the §5 hand-scan ledger: of the 11 diffusion-revert verdict
+flips, the 5 owner-confirmed-correct ones are untouched, 4 of the 6 wrong ones
+are fixed, and the 2 remaining are the non-cut-fixable pair of §12.3
+(`58755:21` — really a TGM-tagger problem, §11.3; `289295:15` — one accepted
+false STM per 1000 events).
 
 ---
 
