@@ -205,6 +205,16 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 deg).  DEFAULT ON (owner 2026-07-26, after validation);
                 -no-stm-vertex-guard / SBND_STM_VERTEX_GUARD=0 restores
                 legacy.
+  -stm-d66cuts  doc-66 sec 12 diffusion-margin cut package in TaggerCheckSTM:
+                Michel-veto res_length floor 6 -> 6.5 cm, detect_proton
+                track_medium gate 1.0 -> 1.05, block-B ks2 entry 0.05 ->
+                0.055, C1 peak clause 4.3 -> 4.1.  Restores the four vetoes
+                the 4.0/8.8 diffusion revert lost by hairline margins
+                (281632:8, 317543:15, 319809:20, 390864:16 -- all
+                owner-adjudicated); full-1000-event sweep found zero
+                collateral.  DEFAULT ON (owner 2026-07-27);
+                -no-stm-d66cuts / SBND_STM_D66CUTS=0 restores the
+                byte-identical legacy verdicts.
   -unmerge      restore the prototype "main cluster + associated clusters"
                 data product before the taggers (doc 45): split each
                 flash-merged bundle back into its pre-merge main (retained,
@@ -389,6 +399,12 @@ STM_TGUARD="${SBND_STM_TRACK_GUARD:-1}"
 # -no-stm-vertex-guard / SBND_STM_VERTEX_GUARD=0.
 STM_DGUARD="${SBND_STM_DEFICIT_GUARD:-1}"
 STM_VGUARD="${SBND_STM_VERTEX_GUARD:-1}"
+# doc-66 sec 12 diffusion-margin cut package in the STM tagger (Michel
+# res_length 6->6.5cm, detect_proton track_medium 1.0->1.05, block-B ks2
+# 0.05->0.055, C1 peak 4.3->4.1).  DEFAULT ON (owner 2026-07-27, after the
+# full-1000-event sweep); opt out with -no-stm-d66cuts / SBND_STM_D66CUTS=0
+# (keys omitted => byte-identical pre-package config).
+STM_D66CUTS="${SBND_STM_D66CUTS:-1}"
 # Restore the prototype main+associated data product before the taggers by
 # splitting each flash-merged bundle back into its pre-merge members (doc 45).
 # DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
@@ -456,6 +472,8 @@ while [ $# -gt 0 ]; do
         -no-stm-deficit-guard|--no-stm-deficit-guard) STM_DGUARD=0; shift ;;
         -stm-vertex-guard|--stm-vertex-guard) STM_VGUARD=1; shift ;;
         -no-stm-vertex-guard|--no-stm-vertex-guard) STM_VGUARD=0; shift ;;
+        -stm-d66cuts|--stm-d66cuts) STM_D66CUTS=1; shift ;;
+        -no-stm-d66cuts|--no-stm-d66cuts) STM_D66CUTS=0; shift ;;
         -stm-fv|--stm-fv) STM_FV=1; shift ;;
         -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
@@ -551,7 +569,7 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD stmafix=$STM_AFIX stmtguard=$STM_TGUARD stmdguard=$STM_DGUARD stmvguard=$STM_VGUARD unmerge=$UNMERGE/$UNMERGE_MODE)"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD stmafix=$STM_AFIX stmtguard=$STM_TGUARD stmdguard=$STM_DGUARD stmvguard=$STM_VGUARD stmd66cuts=$STM_D66CUTS unmerge=$UNMERGE/$UNMERGE_MODE)"
     rm -f "$LOG"
     # Provenance: the fit JSON is the only live diffusion consumer, so name it
     # (and its DL/DT) in every log -- an A/B arm is worthless if you cannot tell
@@ -597,6 +615,7 @@ process_event() {
             --tla-code "stm_second_track_guard=$([ "$STM_TGUARD" = 1 ] && echo true || echo false)" \
             --tla-code "stm_deficit_guard=$([ "$STM_DGUARD" = 1 ] && echo true || echo false)" \
             --tla-code "stm_vertex_kink_guard=$([ "$STM_VGUARD" = 1 ] && echo true || echo false)" \
+            --tla-code "stm_d66_cuts=$([ "$STM_D66CUTS" = 1 ] && echo true || echo false)" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
