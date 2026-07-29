@@ -1,0 +1,367 @@
+{
+ "event": "evt317543",
+ "run": 18255,
+ "subrun": 1,
+ "event_no": 317543,
+ "source": "nusel-evt317543.tsv",
+ "work_root": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-stmcamp-d66new",
+ "tag": "d66flip",
+ "event_comment": "",
+ "bundles": [
+  {
+   "main_id": 9,
+   "flash_gid": 1000010,
+   "flash_grp": 2,
+   "flash_apa": 1,
+   "flash_time_us": -971.167,
+   "flash_pe_grp": 4058.5,
+   "in_beam": 0,
+   "clusters": [
+    9
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 1,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 2,
+   "flash_gid": 3,
+   "flash_grp": 3,
+   "flash_apa": 0,
+   "flash_time_us": -825.968,
+   "flash_pe_grp": 8883.8,
+   "in_beam": 0,
+   "clusters": [
+    2
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 7,
+   "flash_gid": 2,
+   "flash_grp": 4,
+   "flash_apa": 0,
+   "flash_time_us": -524.234,
+   "flash_pe_grp": 21226.8,
+   "in_beam": 0,
+   "clusters": [
+    7
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 6,
+   "flash_gid": 7,
+   "flash_grp": 5,
+   "flash_apa": 0,
+   "flash_time_us": -509.941,
+   "flash_pe_grp": 1465.1,
+   "in_beam": 0,
+   "clusters": [
+    6
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 2,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 2,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 13,
+   "flash_gid": 6,
+   "flash_grp": 6,
+   "flash_apa": 0,
+   "flash_time_us": -269.068,
+   "flash_pe_grp": 7185.4,
+   "in_beam": 0,
+   "clusters": [
+    13,
+    1
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 15,
+   "flash_gid": 1,
+   "flash_grp": 7,
+   "flash_apa": 0,
+   "flash_time_us": 1.463,
+   "flash_pe_grp": 23706.0,
+   "in_beam": 1,
+   "clusters": [
+    15,
+    3
+   ],
+   "auto": {
+    "tgm": 0,
+    "stm": 1,
+    "fc": 0,
+    "lm": 0,
+    "label": "STM"
+   },
+   "scan_labels": [],
+   "comment": "Not a STM",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": 0,
+    "stm": 0,
+    "fc": 0,
+    "lm": 0,
+    "label": "nu-candidate",
+    "changed": true,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": true
+  },
+  {
+   "main_id": 5,
+   "flash_gid": 0,
+   "flash_grp": 8,
+   "flash_apa": 0,
+   "flash_time_us": 65.827,
+   "flash_pe_grp": 47794.4,
+   "in_beam": 0,
+   "clusters": [
+    5,
+    4
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 16,
+   "flash_gid": 1000000,
+   "flash_grp": 9,
+   "flash_apa": 1,
+   "flash_time_us": 522.039,
+   "flash_pe_grp": 21995.3,
+   "in_beam": 0,
+   "clusters": [
+    16,
+    8
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 14,
+   "flash_gid": 1000001,
+   "flash_grp": 10,
+   "flash_apa": 1,
+   "flash_time_us": 600.359,
+   "flash_pe_grp": 14611.3,
+   "in_beam": 0,
+   "clusters": [
+    14
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  },
+  {
+   "main_id": 12,
+   "flash_gid": 1000002,
+   "flash_grp": 11,
+   "flash_apa": 1,
+   "flash_time_us": 751.329,
+   "flash_pe_grp": 8704.7,
+   "in_beam": 0,
+   "clusters": [
+    12,
+    11
+   ],
+   "auto": {
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged"
+   },
+   "scan_labels": [],
+   "comment": "",
+   "prev": {
+    "tag": "d66old",
+    "matched": true,
+    "tgm": -1,
+    "stm": -1,
+    "fc": -1,
+    "lm": 0,
+    "label": "not-tagged",
+    "changed": false,
+    "scan_labels": [],
+    "comment": ""
+   },
+   "carried_over": false,
+   "rescan_confirmed": false
+  }
+ ]
+}

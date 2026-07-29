@@ -36,6 +36,16 @@ Usage:
   cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
   python3 dqdx_rr_sample/collect_dqdx_rr_sample.py            # writes into dqdx_rr_sample/
   python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --verbose   # every block, kept or not
+
+Doc 55 section 13 re-collects the same sample out of the 4.0/8.8 diffusion arm.
+`--roots`/`--events` point the sweep somewhere else, `--suffix` keeps the output
+beside the published files instead of over them, and `--force-list` replays an
+existing `sample_index.tsv`'s (event, block) set with the cuts NOT applied, so a
+diffusion A/B runs on identical tracks:
+
+  python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --suffix _d66 \\
+      --roots work-stmcamp-d66new --events dqdx_rr_sample/d55ton_events.txt \\
+      --force-list dqdx_rr_sample/sample_index.tsv
 """
 import argparse
 import glob
@@ -75,10 +85,23 @@ def load_refs():
                 np.asarray(f[n].values("y"), float)) for n in HYPS}
 
 
-def iter_blocks():
-    for wr in ROOTS:
+def read_index(path):
+    """(event, block) -> particle out of a previously written sample_index.tsv."""
+    out = {}
+    for line in open(path):
+        if line.startswith("#") or line.startswith("particle\t"):
+            continue
+        f = line.rstrip("\n").split("\t")
+        out[(f[2], int(f[3]))] = f[0]
+    return out
+
+
+def iter_blocks(roots=None, events=None):
+    for wr in (roots or ROOTS):
         for fp in sorted(glob.glob(os.path.join(wr, "nusel_evt*", "tracking-stm.root"))):
             ev = os.path.basename(os.path.dirname(fp)).replace("nusel_evt", "")
+            if events is not None and ev not in events:
+                continue
             f = uproot.open(fp)
             t = f["T_rec_charge"].arrays(["x", "y", "z", "q", "nq", "rr", "ndf",
                                           "status", "reduced_chi2"], library="np")
@@ -166,13 +189,54 @@ def main():
     ap.add_argument("--verbose", action="store_true", help="print every block")
     ap.add_argument("--outdir", default=HERE)
     ap.add_argument("--plot", help="also write an overlay PNG of the whole sample")
+    ap.add_argument("--roots", help="comma-separated work roots to sweep "
+                                    f"(default: {','.join(ROOTS)})")
+    ap.add_argument("--events", help="restrict the sweep to these events: a "
+                                     "comma-separated list, or a path to a file "
+                                     "with one event id per line")
+    ap.add_argument("--force-list", metavar="INDEX_TSV",
+                    help="keep exactly the (event, block) set of this "
+                         "sample_index.tsv with its particle assignment, and do "
+                         "NOT apply the cuts -- for an A/B on identical tracks")
+    ap.add_argument("--suffix", default="",
+                    help="appended to the output basenames, e.g. _d66")
     args = ap.parse_args()
+
+    roots = args.roots.split(",") if args.roots else list(ROOTS)
+    forced = read_index(args.force_list) if args.force_list else None
+    events = None
+    if args.events:
+        events = (set(open(args.events).read().split())
+                  if os.path.exists(args.events) else set(args.events.split(",")))
+    print(f"roots: {' '.join(roots)}"
+          + (f"\nevents: {len(events)} from {args.events}" if events else "")
+          + (f"\nforced track list: {len(forced)} blocks from {args.force_list} "
+             "(cuts NOT applied)" if forced else ""))
 
     refs = load_refs()
     kept, seen = [], 0
-    for bk in iter_blocks():
+    for bk in iter_blocks(roots, events):
         seen += 1
         ok, part, d = evaluate(bk, refs)
+        if forced is not None:
+            want = forced.get((bk["event"], bk["block"]))
+            if want is None:
+                continue
+            # replay the published set: take the track whatever the cuts say, but
+            # recompute k / rms / contrast on THIS arm's charge.
+            ok, part = True, want
+            cen, med, _ = profile(bk["rr"], bk["dqdx"])
+            near = (bk["rr"] < 2) & (bk["dqdx"] > 0)
+            mid = (bk["rr"] >= 20) & (bk["rr"] < 40) & (bk["dqdx"] > 0)
+            d["scores"] = shape_scores(cen, med, refs)
+            d["nbin"] = len(cen)
+            d["contrast"] = (float(np.median(bk["dqdx"][near])
+                                   / np.median(bk["dqdx"][mid]))
+                             if near.sum() >= 3 and mid.sum() >= 3 else float("nan"))
+            d["particle"] = part
+            d["k"] = d["scores"][part][0]
+            d["shape_rms"] = d["scores"][part][1]
+            d.pop("cut", None)
         if args.verbose:
             print(f"{'KEEP' if ok else 'drop':>4s} {bk['event']} blk{bk['block']:<4d} "
                   f"st{bk['status']} " +
@@ -186,10 +250,14 @@ def main():
 
     kept.sort(key=lambda kb: (kb[1]["particle"], kb[0]["event"], kb[0]["block"]))
 
-    idx = os.path.join(args.outdir, "sample_index.tsv")
-    pts = os.path.join(args.outdir, "sample_points.tsv")
+    idx = os.path.join(args.outdir, f"sample_index{args.suffix}.tsv")
+    pts = os.path.join(args.outdir, f"sample_points{args.suffix}.tsv")
     with open(idx, "w") as fi, open(pts, "w") as fp:
-        fi.write("# clean stopping-track dQ/dx-vs-rr sample, MCP2025C reco1 d55ton\n")
+        fi.write("# clean stopping-track dQ/dx-vs-rr sample, MCP2025C reco1\n")
+        fi.write(f"# roots: {' '.join(roots)}\n")
+        if forced:
+            fi.write(f"# track set REPLAYED from {args.force_list}; the cuts below "
+                     "were NOT applied\n")
         fi.write(f"# cuts: npts>={MIN_NPTS} nbin>={MIN_BINS} rrmin<={MAX_RRMIN} "
                  f"rrmax>={MIN_RRMAX} contrast>={MIN_CONTRAST} chi2<={MAX_CHI2} "
                  f"shape_rms<={MAX_SHAPE_RMS}\n")
@@ -219,7 +287,7 @@ def main():
     n_by = {}
     for _, d in kept:
         n_by[d["particle"]] = n_by.get(d["particle"], 0) + 1
-    print(f"\nscanned {seen} blocks in {len(ROOTS) * 10} events; kept {len(kept)}")
+    print(f"\nscanned {seen} blocks; kept {len(kept)}")
     for p, n in sorted(n_by.items()):
         print(f"  {p:>7s}: {n}")
     print(f"wrote {idx}\nwrote {pts}")

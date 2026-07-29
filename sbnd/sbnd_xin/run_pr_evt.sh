@@ -29,7 +29,9 @@ JSONNET="$SBND_DIR/wct-pr-perevt.jsonnet"
 # libpython is preloaded globally.  Applied only when DL is requested.
 PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
 # Same LAr TLAs as run_ql_evt.sh (anode/params objects identical to the Q/L job).
-DL=6.5781; DT=13.1349; LIFETIME=6; DRIFTSPEED=1.563   # DL/DT = SBND physical diffusion (cm^2/s)
+DL=4.0; DT=8.8; LIFETIME=35; DRIFTSPEED=1.563  # DL/DT = SBND diffusion (cm^2/s), sbndcode wcsimsp_sbnd.fcl (docs/66);
+                                                      # LIFETIME = SBND simparams (35 ms).  Inert in the
+                                                      # reco chain -- see docs/64 sec 4.
 
 usage() {
     cat <<EOF
@@ -191,6 +193,26 @@ process_event() {
         --tla-str  "dl_weights=$DL_WEIGHTS" \
         --tla-code "beam_window_us=$BEAM_WINDOW_CODE" \
         --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
+        `# TGM/FC knobs pinned to the PRE-ADOPTION values.  The canonical config` \
+        `# adopted the production operating point as its defaults on 2026-07-27` \
+        `# (doc 64), and this per-event debug/A-B runner passes only a subset of` \
+        `# the PR job's TLAs, so without these pins its -tgm / -nu / -dnn demos` \
+        `# would silently switch to merge-aware TGM + the wider FV margins.  That` \
+        `# change is unvalidated for this runner, so it stays byte-identical here.` \
+        `# DELETE this block to follow production (that is what run_nusel_evt.sh` \
+        `# passes); -no-nucand etc. do not exist in this runner.` \
+        --tla-code "tgm_neutrino_candidate=false" \
+        --tla-code "tgm_chord_charge=false" \
+        --tla-str  "tgm_chord_mode=chord" \
+        --tla-code "tgm_component_extremes=false" \
+        --tla-code "tgm_component_rescue=false" \
+        --tla-code "tgm_rescue_chord=false" \
+        --tla-code "tgm_main_pair=false" \
+        --tla-str  "tgm_main_pair_mode=path" \
+        --tla-code "tgm_fv_zmax_margin=3" \
+        --tla-code "tgm_fv_zmax_margin_interior=0" \
+        --tla-code "tgm_fv_x_margin=2" \
+        --tla-code "tgm_fv_y_margin=2.5" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $PRDIR/mabc-pr.zip"
 }

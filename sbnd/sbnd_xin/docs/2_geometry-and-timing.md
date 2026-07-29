@@ -121,9 +121,12 @@ in two unrelated FHICL files, both consistent with the value being a stale
 default rather than a tuned non-nominal-field setting.
 
 **LAr parameter sync (DL / DT / lifetime).** Synced across all sites to
-`DL=6.5781 cm²/s`, `DT=13.1349 cm²/s`, `lifetime=35 ms` (the diffusion pair was
-`4.0`/`8.8` before 2026-07-25 — see
-[47_stm-bragg-reference-sbnd-retune.md](47_stm-bragg-reference-sbnd-retune.md) §6a). Touches
+`DL=4.0 cm²/s`, `DT=8.8 cm²/s`, `lifetime=35 ms`. The diffusion pair is
+sbndcode's production value (`wcsimsp_sbnd.fcl`); it was raised to
+`6.5781`/`13.1349` on 2026-07-25
+([47](47_stm-bragg-reference-sbnd-retune.md) §6a) and **reverted on 2026-07-27**
+after the owner clarified with colleagues — see
+[66_diffusion-revert-validation.md](66_diffusion-revert-validation.md). Touches
 `cfg/.../sbnd/simparams.jsonnet`, all three `cfg/.../sbnd/fhicl/*.fcl`,
 `sbnd_xin/run_clus_evt.sh`, and `sbnd_xin/wct-clustering.jsonnet`
 (previously held the older `DL=6.2 DT=9.8 lifetime=10` tuning).
@@ -340,8 +343,8 @@ as an overlay on `simparams.lar`:
 
 | Knob | Value | Units | Description |
 |---|---|---|---|
-| `DL` | 6.5781 | cm²/s | longitudinal diffusion coefficient (SBND physical; was 4.0 before 2026-07-25) |
-| `DT` | 13.1349 | cm²/s | transverse diffusion coefficient (SBND physical; was 8.8) |
+| `DL` | 4.0 | cm²/s | longitudinal diffusion coefficient (sbndcode `wcsimsp_sbnd.fcl`; was 6.5781 between 2026-07-25 and -27, doc 66) |
+| `DT` | 8.8 | cm²/s | transverse diffusion coefficient (sbndcode; was 13.1349 over the same window) |
 | `lifetime` | 35 | ms | electron lifetime |
 | `driftSpeed` | 1.565 | mm/µs | overrides `simparams.lar.drift_speed` for clustering |
 | `reality` | `'sim'` | — | `'sim'` or `'data'`; controls dead-channel treatment |

@@ -356,8 +356,8 @@ DetectorVolumes/grouping at runtime, so it is already SBND's
 
 | key | uBooNE | SBND (in use) | derivation | status |
 |---|---|---|---|---|
-| `DL` | 6.4e-7 | **6.5781e-7** (6.5781 cm²/s) | longitudinal diffusion — physical, NOT filter-derived | **SBND value, set 2026-07-25** (was 6.2e-7) |
-| `DT` | 9.8e-7 | **1.31349e-6** (13.1349 cm²/s) | transverse diffusion — physical, NOT filter-derived | **SBND value, set 2026-07-25** (was 9.8e-7, the uBooNE number) |
+| `DL` | 6.4e-7 | **4.0e-7** (4.0 cm²/s) | longitudinal diffusion — physical, NOT filter-derived | sbndcode value; set 2026-07-25 to 6.5781e-7, **reverted 2026-07-27** (doc 66) |
+| `DT` | 9.8e-7 | **8.8e-7** (8.8 cm²/s) | transverse diffusion — physical, NOT filter-derived | sbndcode value; set 2026-07-25 to 1.31349e-6, **reverted 2026-07-27** (doc 66) |
 | `add_sigma_L` | 1.5699937 | **2.4876** mm | 1/(2π·σ_`Gaus_wide`) × v_drift = 1/(2π×0.10 MHz) × 1.563 mm/µs | derived from SBND SP filters |
 | `ind_sigma_u_T` | 0.3626937 | **0.48359** mm | [(1/√π)/`Wire_ind` 1.05] × 3 mm × 0.3 | derived |
 | `ind_sigma_v_T` | 0.6044895 | **0.80599** mm | same × 0.5 | derived |
@@ -377,12 +377,27 @@ empirical uBooNE tunings kept on purpose, to be revisited once SBND fit
 residuals exist (`reduced_chi2` is already dumped by `save_stm_fit`; doc 41
 measured p90 = 2.7, max 18.8, which is the handle).
 
-### 6a. Diffusion coefficients set to the SBND values (2026-07-25)
+### 6a. Diffusion coefficients set to the SBND values (2026-07-25) — SUPERSEDED, reverted 2026-07-27
+
+> **This section is history, not the current state.** On **2026-07-27** the owner
+> clarified the numbers with colleagues and the whole 6.5781 / 13.1349 change
+> described below was **reverted** to sbndcode's production pair
+> **`DL = 4.0`, `DT = 8.8 cm²/s`**, on both the fit and the simulation side. The
+> revert and its 1000-event validation are
+> [66_diffusion-revert-validation.md](66_diffusion-revert-validation.md).
+> Everything below is kept as written because it is the derivation of the σ
+> sensitivity. Do **not** read its ratios as the revert's effect: the tables
+> below compare 6.2/9.8 → 6.5781/13.1349, whereas the revert is
+> 6.5781/13.1349 → 4.0/8.8, a larger step in the opposite direction
+> (σ_T,W ×0.82, σ_L ×0.96–1.00 — the table is in doc 66 §3). Note also that the
+> "CAVEAT: existing MC on disk" paragraph below is exactly the problem the
+> revert removes.
 
 `DL`/`DT` are the only two rows in the table that are **not** SP-filter-derived
 — they are physical LAr transport coefficients, and the previous entries
 (6.2 / 9.8 cm²/s) were placeholders carried over from the Q/L chain and uBooNE.
-Owner-supplied SBND values, now in `sbnd_xin/sbnd_track_fitting.json`:
+Owner-supplied SBND values, set 2026-07-25 in `sbnd_xin/sbnd_track_fitting.json`
+(and reverted two days later):
 
 | | old | new |
 |---|---|---|
@@ -453,6 +468,10 @@ not made here), and uBooNE's 6.4 / 9.8 remains untouched in
 `TrackFitting.h`'s C++ presets and `qlport/uboone_track_fitting.json`.
 
 ### 6b. Smoke check on MC evt18 — the fit converges; the deltas are NOT measured
+
+> Also history: this is the one-event smoke check of the §6a retune that doc 66
+> later reverted. Its "the per-point deltas are NOT established" gap is what
+> doc 66 closes, on 1000 events instead of one.
 
 Same-event A/B, both runs from the identical input pctree
 (`work/ql_evt18/pctree-evt18.tar.gz`), pipeline
@@ -630,9 +649,10 @@ Two ordering notes:
   question, not the field).
 - The SP-filter-derived smearing sigmas (§6), still matching
   `sbnd/sp-filters.jsonnet` as of this doc.
-- The diffusion coefficients, **as of §6a**: `DL = 6.5781`, `DT = 13.1349` cm²/s.
-  (The *simulation* still drifts with 4.0 / 8.8 — that mismatch is open, see
-  §6a's MC caveat and §10 item 2.)
+- The diffusion coefficients, **as of doc 66** (which reverted §6a):
+  `DL = 4.0`, `DT = 8.8` cm²/s — sbndcode's production pair, carried by the fit,
+  our simulation, and the official MC/data on disk alike, so all three finally
+  agree.
 - The muon/proton/… **range** tables (range ↔ kinetic energy): pure
   material-property CSDA, genuinely detector-agnostic, no field dependence.
   These are fine as inherited — and §3 uses them as the independent cross-check
@@ -646,14 +666,15 @@ Two ordering notes:
    plateau prediction is 52.9 or 57.1 ke/cm, and whether the toolkit's
    `sbnd_box_recomb` matches the simulation it is applied to. **Owner/SBND
    calibration question — not resolvable in this tree.**
-2. ~~**SBND transverse diffusion `DT`**~~ — **RESOLVED** by §6a: DL = 6.5781,
-   DT = 13.1349 cm²/s (owner-supplied), set on **both** the fit and the
-   simulation side, so they share one diffusion model. Two residues, neither
-   fixable from here: **(a)** official MC already on disk (mcp2025c reco1) was
-   simulated with 4.0 / 8.8, so the fit over-smears those waveforms by ~15 %
-   transverse until a sample is re-simulated — that is what caps docs 44/46's MC
-   fit validation; **(b)** our `cfg/.../sbnd/` values now differ from
-   sbndcode's, and propagating them upstream is an SBND production decision.
+2. ~~**SBND transverse diffusion `DT`**~~ — **CLOSED** by
+   [doc 66](66_diffusion-revert-validation.md): `DL = 4.0`, `DT = 8.8` cm²/s on
+   **both** the fit and the simulation side. §6a's interim answer
+   (6.5781 / 13.1349) stood for two days and was reverted on owner instruction
+   after he clarified with colleagues. Both residues §6a left open are gone with
+   it: the fit no longer over-smears the official MC/data on disk (they were
+   simulated at 4.0 / 8.8, which is now what the fit assumes), and our
+   `cfg/.../sbnd/` values agree with sbndcode's again, so there is nothing to
+   propagate upstream.
 3. **The table's restriction energy** — undocumented; determines whether the
    comparison should be against restricted truth (49.8) or δ-ray-inclusive
    truth (60.6) on MC. Doc 46's two-channel truth (`true_dQ` + `true_dQ_sec`)

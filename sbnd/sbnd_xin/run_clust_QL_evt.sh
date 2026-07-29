@@ -60,9 +60,9 @@ EOF
 # NOTE: drift_speed is NOT passed here; it comes from the common SBND config
 # (pgrapher/experiment/sbnd/simparams.jsonnet: 1.563 mm/us) so charge and light
 # matching share one value.
-DL=6.5781         # cm^2/s, SBND physical longitudinal diffusion
-DT=13.1349        # cm^2/s, SBND physical transverse diffusion
-LIFETIME=6        # ms
+DL=4.0         # cm^2/s, SBND longitudinal diffusion (sbndcode; docs/66)
+DT=8.8        # cm^2/s, SBND transverse diffusion (sbndcode; docs/66)
+LIFETIME=35       # ms; SBND simparams value.  Inert in the reco chain (docs/64 sec 4).
 SEMIMODEL=semi-analytical-sbnd.json
 
 # sbnd_xin standalone chain (imports the in-tree pre-tagging clus.jsonnet)

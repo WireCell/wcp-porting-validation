@@ -678,11 +678,14 @@ preset). Walk every knob and decide "geometry", "response" or "tuning":
   4.0/8.8 (`simparams.jsonnet`) and the data values should be measured.
   Note SBND's max drift (~201 cm) is shorter, so mis-set diffusion hurts
   less — but set it consciously.
-  **DONE 2026-07-25**: the SBND fit now uses the physical values
-  `DL=6.5781, DT=13.1349 cm²/s` (`sbnd_track_fitting.json`). The sim was left
-  at 4.0/8.8, so fit and MC no longer assume the same diffusion — quantified in
-  `47_stm-bragg-reference-sbnd-retune.md` §6a (transverse σ +15 %, longitudinal
-  +0.6 %, **not bit-identical**).
+  **DONE 2026-07-25, REVERTED 2026-07-27**: the fit was briefly moved to
+  `DL=6.5781, DT=13.1349 cm²/s` (`sbnd_track_fitting.json`, and the sim was
+  moved with it), then put back to sbndcode's **4.0/8.8** after the owner
+  clarified with colleagues. Fit, sim and the official MC/data on disk now all
+  assume one diffusion model. The retune is
+  `47_stm-bragg-reference-sbnd-retune.md` §6a; the revert and its 1000-event
+  validation are `66_diffusion-revert-validation.md` (**neither direction is
+  bit-identical**).
 - **SP filter widths** (`col_sigma_w_T`, `ind_sigma_u_T/v_T`): these mirror
   the smearing applied by *our* SP configuration. Re-derive from the SBND
   SP filter setup (same procedure as the uboone numbers; wire pitch is 3 mm

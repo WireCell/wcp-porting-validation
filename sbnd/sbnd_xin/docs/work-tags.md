@@ -82,6 +82,9 @@ scan; they are listed under CURRENT below.
 | `work-mcp1kall-d60sfix` | 302 | 170M | doc 60 §6 gate 1 — **post-fix** arm, 60 STM-tagged events, byte-identical to `d60sr1` |
 | `work-mcp1kall-d60nfix` | 102 | 47M | doc 60 §6 gate 2 — **post-fix** arm, entries 0-19, byte-identical to `d60nr1` |
 | `work-mcp1kall-d60fixchk` | 5 | 2.0M | doc 60 §6.1 — evt 278794 with the fix in: `rc=0`, 8-bundle table, in-beam bundle tagged STM |
+| `work-stmcamp-d66old` / `-d66new` | 1000 events each | — | `66_diffusion-revert-validation.md`, `55_dqdx-vs-rr-three-bundles.md` §12, `d66_flip_report.py` — the diffusion A/B: `d66old` = `DL/DT` 6.5781/13.1349, `d66new` = 4.0/8.8 (the shipped revert). **Same binary, same d59k pctrees, differing only in the runtime fit JSON** — arm identified by `SBND_TRACKFIT_JSON` and recoverable from each event log's `trackfitting_config=` line. Both 1000/1000 `rc=0`. Built with `stm_campaign/run_round.sh` + `STM_EVENTS`, so they carry the `work-stmcamp-` prefix despite being the full 1000-event manifest |
+| `work-stmcamp-d66oldtrace` / `-d66newtrace` / `-d66newtrace0` / `-d66newtrace0b` / `-d66newtrace5` | 6 / 6 / 141 / 13 / 9 events | — | `66_diffusion-revert-validation.md` §12, `d66_proton_sweep.py` — TRACE-level (`SBND_WCT_LOGLEVEL=trace`) reruns for the STM cut-fixability study: the 6 scan-mistake events in both diffusion arms, every event with an accepted-STM (status-0) bundle, the torn-log redo, and the 9 proton-vetoed (status-5) events. Same arms as `d66old`/`d66new`, extra logging only — statuses verified identical. detect_proton TRACE lines must be read from the batch stderr sink `.log_<evt>.log` (the per-event file sink tears them deterministically) |
+| `work-stmcamp-d66fixoff` / `-d66fix` | 1000 events each | — | `66_diffusion-revert-validation.md` §12.5 — validation arms for the doc-66 §12 STM cut package (toolkit `c0501d7e`): `d66fixoff` = package OFF (`-no-stm-d66cuts`, the byte-identical gate vs `d66new`, PASS all 1000), `d66fix` = package ON (production default; exactly the 4 target STM flips, plus 2 tsv-only `stmfit`-column diffs from log tearing — pctrees identical). Same binary and d59k inputs as `d66new` |
 | `work-mcp10-d49son` | 43 | 29M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `52_isolated-grouping-fix-design.md`, `d52_ab_report.py`, `stm_main_connectivity.py`, `stm_merge_attribution.py` |
 | `work-mcp10-d52ron` | 53 | 60M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
 | `work-mcp1000-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py`, `stm_main_connectivity.py` |
@@ -117,6 +120,7 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp10-p55opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp10-p56off` | 30 | 30M | `56_beam-window-tagger-gate.md`, `p54_ab_report.py` |
 | `work-mcp10-d56bw` | 30 | 25M | `56_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
+| `work-mcp10-p65fin` | 30 | 26M | `65_tgm-stm-perf-final.md`, `mabc_step_totals.py`, `profile_pr65.sh` |
 | `work-mcp10-trace51` | 6 | 36M | `51_clustering-merge-attribution.md`, `stm_merge_attribution.py` |
 | `work-mcp1000-d52off` | 30 | 47M | `d52_ab_report.py` |
 | `work-mcp1000-d52on` | 30 | 47M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
@@ -132,6 +136,7 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000-p56off` | 30 | 24M | `56_beam-window-tagger-gate.md`, `p54_ab_report.py` |
 | `work-mcp1000-d56bw` | 30 | 20M | `56_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
+| `work-mcp1000-p65fin` | 30 | 21M | `65_tgm-stm-perf-final.md`, `mabc_step_totals.py`, `profile_pr65.sh` |
 | `work-mcp1000b-d52off` | 30 | 44M | `d52_ab_report.py` |
 | `work-mcp1000b-d52on` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
 | `work-mcp1000b-d52roff` | 30 | 44M | `52_isolated-grouping-fix-design.md` |
@@ -146,6 +151,7 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000b-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
 | `work-mcp1000b-p56off` | 30 | 23M | `56_beam-window-tagger-gate.md`, `p54_ab_report.py` |
 | `work-mcp1000b-d56bw` | 30 | 19M | `56_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
+| `work-mcp1000b-p65fin` | 30 | 19M | `65_tgm-stm-perf-final.md`, `mabc_step_totals.py`, `profile_pr65.sh` |
 | `work-smoke-d55pv` | 12 | 5M | — |
 
 ## `archive/tgm-docs29-39/` — 30 dirs, 257 MB

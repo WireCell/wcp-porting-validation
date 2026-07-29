@@ -37,6 +37,28 @@ free-power model, **fitted without any of them**, describes them to **median
 matched dE/dx is **1.012** over 7 bins. §§6–10 and their figures are the record
 of the 12-muon/1-proton sample and are left as written; §11 has its own files.
 
+**§12 re-fits the three bundles under the 4.0 / 8.8 diffusion revert** of
+[66](66_diffusion-revert-validation.md) (2026-07-27). The trajectory, `npts` and
+median `dx` are identical to the digit; the proton candidate holds at **1.91×**
+the muon curve and the two muons at 0.98 / 1.04, so every reading above stands.
+`reduced_chi2` moves in both directions, so these three do not favour either
+diffusion pair.
+
+**§13 does for the whole sample what §12 did for three bundles**, and it is the
+answer to "are the dQ/dx expectations still reasonable": **yes.** 60 muons and
+12 protons, re-collected from *both* of doc 66's 1000-event arms — one binary,
+one event list, only `DL`/`DT` differing — put against the frozen curves the code
+actually reads. The committed free-power model moves **0.991 → 1.006** on
+protons and **0.984 → 0.983** on muons; the shipped Modified-Box tables move
+**1.122 → 1.128** and **1.055 → 1.058**. The largest move in the table is 1.5 %
+against a ~4 % per-bin error, so nothing needs rebuilding. Two things did turn
+up: the fitted `k`/`p` move far more with the *sample size* than with the
+diffusion — 7× on `k`, 14× on `p` (§13.4) — and the trajectory fit's own
+`reduced_chi2` improves on 47 of
+70 tracks under the revert, on a metric that grades each arm against its own
+prediction — flagged for interpretation, not acted on and not a measurement
+(§13.5).
+
 *(Doc number: 54 is taken by the in-flight TGM/STM perf campaign,
 `run_perf54_nusel.sh`.)*
 
@@ -1505,6 +1527,405 @@ the `dqdx-normalisation` class *is* the proton signature rather than a
 normalisation or `dx` artifact. Twelve tracks at k_muon ≈ 1.88 with a
 proton-shaped profile, agreeing with a proton recombination curve to 4 %, is that
 claim measured.
+
+---
+
+## 12. Re-fit under the 4.0 / 8.8 diffusion revert (2026-07-27)
+
+**Every physics reading of §§1–5 survives.** The diffusion coefficients the track
+fit assumes were reverted from `DL = 6.5781, DT = 13.1349` to sbndcode's
+`DL = 4.0, DT = 8.8 cm²/s` ([66](66_diffusion-revert-validation.md)), which
+narrows the fit's predicted transverse footprint by ~18 % (σ_T,W ×0.82 at full
+drift). The three bundles were re-fitted on both sides of that change, same
+binary, same input pctree, differing only in the `DL`/`DT` pair.
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 stmfit_particle_overlay.py -o pics/stmfit_dqdx_particle_overlay_d66.png \
+  "work-stmcamp-d66new:289343:90:evt 289343 main 9  4.0/8.8 (proton cand.)" \
+  "work-stmcamp-d66old:289343:90:evt 289343 main 9  6.5781/13.1349" \
+  "work-stmcamp-d66new:285999:220:evt 285999 main 22  4.0/8.8 (muon)" \
+  "work-stmcamp-d66old:285999:220:evt 285999 main 22  6.5781/13.1349" \
+  "work-stmcamp-d66new:286065:30:evt 286065 main 3  4.0/8.8 (muon)" \
+  "work-stmcamp-d66old:286065:30:evt 286065 main 3  6.5781/13.1349"
+```
+
+Figure: [`pics/stmfit_dqdx_particle_overlay_d66.png`](../pics/stmfit_dqdx_particle_overlay_d66.png)
+(six traces, old and new for each bundle, on the same `box` reference set the
+§§2–3 ratios use). The published
+`pics/stmfit_dqdx_particle_overlay.png` is left as the §§1–5 record.
+
+The `main_id`s are unchanged from the d55ton epoch — 289343 main **9**, 285999
+main **22**, 286065 main **3** — so the block ids 90/220/30 the Repro block at
+the top of this doc uses still resolve, and all three are still `label=STM` with
+`stmfit=eval` in both arms.
+
+### 12.1 The trajectory does not move at all
+
+| bundle | npts | fit path L | median `dx` | verdict |
+|---|---|---|---|---|
+| 289343 main 9 | 77 → 77 | 50.6 → 50.6 cm | 0.667 → 0.667 cm | status 0 → 0 |
+| 285999 main 22 | 42 → 42 | 26.5 → 26.5 cm | 0.643 → 0.643 cm | status 0 → 0 |
+| 286065 main 3 | 394 → 394 | 249.5 → 249.5 cm | 0.626 → 0.626 cm | status 0 → 0 |
+
+Identical to the digit printed. That is the expected shape of the change: `DL`/`DT`
+enter only the *predicted charge footprint* used to apportion measured charge
+among fitted points, not the point positions or the path. So `dx` — a geometric
+quantity — is untouched, and only `dQ` moves.
+
+### 12.2 The particle identification is unchanged
+
+Median `fit / reference` over the reference domain (rr 0.5–59.5 cm):
+
+| bundle (owner reading) | /MuonBox old | /MuonBox new | /ProtonBox old | /ProtonBox new |
+|---|---|---|---|---|
+| 289343 main 9 — *"proton from outside"* | 1.91 | **1.91** | 1.14 | **1.14** |
+| 285999 main 22 — believed muon | 0.99 | **1.04** | 0.58 | 0.60 |
+| 286065 main 3 — believed muon | 0.98 | **0.98** | 0.60 | 0.60 |
+
+- The flagged bundle still sits on the **proton** curve (1.14) and is a factor
+  **1.91** above the **muon** curve — the doc's headline "factor 1.9" is
+  reproduced to two digits, unmoved.
+- Both believed muons still sit on the muon curve: 0.98 and 1.04. The §1
+  headline said "±2 %"; under the revert it is **−2 % / +4 %**, i.e. 285999
+  drifts from 0.99 to 1.04 while 286065 does not budge. That is the one number
+  in §§1–5 this change touches, and it touches it by 5 % on one of three
+  bundles — within the [16–84 %] spread already quoted for it
+  (old 0.89–1.18, new 0.91–1.25).
+
+The separation that matters — proton at 1.91 vs muons at ~1.0 against the same
+curve, in the same uncalibrated sample — is a factor **1.8**, versus 1.9 before.
+No reading changes.
+
+### 12.3 Fit quality: no systematic direction
+
+| bundle | median `reduced_chi2` old | new |
+|---|---|---|
+| 289343 main 9 | 1.20 | **1.06** |
+| 285999 main 22 | 1.36 | **1.51** |
+| 286065 main 3 | 1.79 | **1.81** |
+
+One improves, one worsens, one is flat — so on these three there is no evidence
+that either diffusion pair fits SBND data better. That is worth stating
+explicitly because a 18 % narrower footprint *could* have shown up as a
+systematic χ² shift and does not. It also means these three bundles cannot be
+used to argue the revert is the physically better choice; the case for 4.0/8.8 is
+that it is what the samples on disk were simulated with, not a fit-quality
+measurement (doc 66 §0).
+
+### 12.4 What was NOT redone
+
+§§6–11's curated sample (12 muons + 1 proton) and the §11 twelve-proton
+population are **left as published**. Their collectors
+(`dqdx_rr_sample/collect_dqdx_rr_sample.py`, `collect_proton_sample.py`) read
+per-event roots by tag, so re-pointing them at `work-stmcamp-d66new` is
+mechanically possible, but the recombination fits of §§7–10 that consume them
+(and the reference tables in `nusel_display/stm_ref_dqdx.json` those fits
+produced) would all have to be refitted to stay self-consistent — a doc-55-scale
+piece of work, not a footnote to a constants revert. §12.1's result is the reason
+that is not urgent: `dx` does not move, and §§7–10 fit *dE/dx vs residual range*,
+where the ~2–5 % `dQ` shift seen here is well inside the 4.3 % rms the §11 model
+already carries. Flagged rather than silently skipped.
+
+> **Done in §13** (2026-07-27, the same day). The whole sample was re-collected
+> from both diffusion arms and the frozen expectations re-tested on it. §12.4's
+> prediction holds: the medians move by ≤ 1.5 %.
+
+---
+
+## 13. The whole sample re-collected under both diffusion arms (2026-07-27)
+
+**The short answer: the dQ/dx expectations are still reasonable — the diffusion
+revert moves every headline ratio by ≤ 1.5 %, which is well inside the ~4 %
+per-bin error the sample itself carries.** The committed free-power curve reads
+**0.991 → 1.006** on protons and **0.984 → 0.983** on muons; the shipped
+Modified-Box tables `TaggerCheckSTM` actually runs on read **1.122 → 1.128** and
+**1.055 → 1.058**. Nothing here is a reason to rebuild a table.
+
+This is §12.4's deferred item, done properly: not the three bundles of §12 but
+the *sample*, 60 muons and 12 protons, re-collected from **both** arms of doc 66
+so that a diffusion A/B is possible at all.
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# 1. the muon sample, cuts applied, on each arm (1000 events, 343 blocks each)
+for a in old new; do
+  python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --suffix _d66$a \
+      --roots work-stmcamp-d66$a --plot dqdx_rr_sample/sample_overlay_d66$a.png
+done
+# and the new arm REPLAYING the old arm's track list, so the A/B is on
+# identical tracks and a cut migration cannot masquerade as a physics shift
+python3 dqdx_rr_sample/collect_dqdx_rr_sample.py --suffix _d66newF \
+    --roots work-stmcamp-d66new --force-list dqdx_rr_sample/sample_index_d66old.tsv \
+    --plot dqdx_rr_sample/sample_overlay_d66newF.png
+
+# 2. the doc-62 owner-identified protons, merged with THAT ARM'S muons.
+#    --old-points is the trap: it is where the merge's muon rows come from, and
+#    without it they are copied from the published (old-epoch) sample_points.tsv
+#    and the merged file silently mixes two epochs.
+python3 dqdx_rr_sample/collect_proton_sample.py --suffix _d66old \
+    --root work-stmcamp-d66old --control-root work-stmcamp-d66old \
+    --old-points dqdx_rr_sample/sample_points_d66old.tsv \
+    --merge dqdx_rr_sample/sample_points_p12_d66old.tsv \
+    --plot dqdx_rr_sample/proton_sample_p12_d66old.png
+python3 dqdx_rr_sample/collect_proton_sample.py --suffix _d66newF \
+    --root work-stmcamp-d66new --control-root work-stmcamp-d66new \
+    --old-points dqdx_rr_sample/sample_points_d66newF.tsv \
+    --merge dqdx_rr_sample/sample_points_p12_d66newF.tsv \
+    --plot dqdx_rr_sample/proton_sample_p12_d66newF.png
+
+# 3. the frozen check -- fits NOTHING, reads k/p/C out of the committed json
+for a in d66old d66newF; do
+  python3 dqdx_rr_sample/proton_model_check.py \
+      --points dqdx_rr_sample/sample_points_p12_$a.tsv \
+      -o dqdx_rr_sample/proton_vs_frozen_model_p12_$a.png
+done
+
+# 4. the refit, for scale only -- the model zoo and the three-curve figure
+for a in d66old d66newF; do
+  python3 dqdx_rr_sample/fit_recombination.py \
+      --points dqdx_rr_sample/sample_points_p12_$a.tsv --plane rr --zoo
+  python3 dqdx_rr_sample/fit_recombination.py \
+      --points dqdx_rr_sample/sample_points_p12_$a.tsv \
+      -o dqdx_rr_sample/recomb_fit_p12_$a.png
+  python3 dqdx_rr_sample/plot_muon_proton_models.py \
+      --points dqdx_rr_sample/sample_points_p12_$a.tsv \
+      -o dqdx_rr_sample/muon_proton_vs_models_p12_$a.png
+  # the five tables the refit WOULD give.  --json points at a _STUDY file:
+  # nusel_display/stm_ref_dqdx.json is NOT written (md5 checked before/after).
+  python3 dqdx_rr_sample/make_ref_tables.py \
+      --points dqdx_rr_sample/sample_points_p12_$a.tsv \
+      --json dqdx_rr_sample/stm_ref_dqdx_${a}_STUDY.json \
+      -o dqdx_rr_sample/ref_tables_free_power_p12_$a.png
+done
+
+# 5. the section's headline figure -- both arms on the same frozen curves
+python3 dqdx_rr_sample/plot_diffusion_ab.py
+```
+
+Nothing was re-run through wire-cell. Every `tracking-stm.root` this section
+reads already existed, in the two 1000-event arms doc 66 §4 produced.
+
+### 13.1 Why the sample had to be re-collected rather than replayed
+
+The obvious move — replay §§6–11's published sample on the new arm — **does not
+work, and not because of diffusion.** §6's 13 tracks were selected from the
+`d55ton` arms, which are 4 code epochs old. In those same 30 events the d66 arms
+hold **16** `T_rec_charge` blocks against `d55ton`'s **131**: the doc-56
+beam-window tagger gate and the doc-63 STM campaign cut the STM-fit candidate
+set down, so 9 of the 13 published tracks have no block to compare against at
+all. Forcing the list through recovers 4 tracks, which is not a sample.
+
+So the A/B is **`work-stmcamp-d66old` vs `work-stmcamp-d66new`** — doc 66's own
+two arms: one binary, the same 1000 events, the same input pctree, differing
+only in the `DL`/`DT` pair. Sweeping all 1000 events with §6's unchanged cuts
+gives **343 blocks in each arm** and a sample 5× the published one:
+
+| | doc 55 §§6–11 (published) | d66old | d66new |
+|---|---:|---:|---:|
+| source | `d55ton` (30 evt) + `d59k` | `work-stmcamp-d66old` (1000 evt) | `work-stmcamp-d66new` (1000 evt) |
+| blocks swept | 131 | 343 | 343 |
+| muons kept | 12 | **60** | 59 |
+| protons kept by the cuts | 1 | 10 | 10 |
+| owner-identified protons (§11) | 12 | 12 | 12 |
+
+Two consequences worth stating before any number is read:
+
+1. **The sample enlargement moves things more than the diffusion does.** 60
+   muons is a different measurement from 12, and §13.3 keeps the two effects
+   apart by quoting `d66old` — which is the *published* reconstruction, only
+   with more events — beside `d66new`.
+2. **The A/B proper runs on identical tracks.** `--force-list` replays
+   `d66old`'s 70 selected (event, block) pairs on the new arm with the cuts
+   switched off, so no track enters or leaves. Everything below labelled
+   "new" is that forced set unless it says otherwise.
+   *(For the record, re-running the cuts independently on the new arm keeps 69
+   instead of 70 — it loses 167200 blk160, 63515 blk10 and 412692 blk130 and
+   gains 292797 blk270 and 280774 blk160. Five tracks of churn at the cut
+   boundary out of 70; it does not move any median below.)*
+
+**Provenance improves as a side effect.** §11.1 item 3 had to flag that its
+muons came from `d55ton` and its protons from `d59k`, two different code epochs.
+Here both halves come from one arm, and the cross-root control says so:
+289343 blk90 is 77 points, point arrays IDENTICAL, in each arm against itself.
+
+### 13.2 What the revert actually changed, at the point level
+
+The two arms share 16 599 fitted points across the merged sample. On those:
+
+| quantity | identical between the arms |
+|---|---|
+| `dx`, `x`, `y`, `z` | **16 599 / 16 599** |
+| `dQ/dx` | **0 / 16 599** |
+
+That is §12.1's result on the whole sample rather than three bundles: `DL`/`DT`
+enter only the predicted charge footprint the fit apportions measured charge
+with, so the trajectory and the sampling pitch are untouched to the bit and the
+entire effect is in `dQ`. The size of it:
+
+| | median new/old | 16–84 % |
+|---|---:|---|
+| muon points (15 810) | **0.999** | 0.971 – 1.028 |
+| proton points (789) | **1.003** | 0.984 – 1.024 |
+
+Per point it is a ±2–3 % reshuffle with essentially no net shift. §12 measured
+−4.5 % to +4.4 % on one bundle; the population says the same thing.
+
+### 13.3 The frozen expectations against both arms — the answer
+
+`proton_model_check.py` **fits nothing**: it reads A, k, p, C out of
+`_meta.canonical_keys` of the committed `nusel_display/stm_ref_dqdx.json` and
+evaluates that curve, and the shipped Modified-Box tables, on each arm. That is
+what "are my current expectations still reasonable" means, because those two are
+what the code actually reads — Box for `TaggerCheckSTM`, free power for the
+viewers (§10.4).
+
+![the SBND dQ/dx expectations against both diffusion arms](../dqdx_rr_sample/dqdx_vs_rr_diffusion_ab.png)
+
+Top row: the binned sample on the two frozen curves, muon and proton, both arms.
+Bottom: the ratio. Open circles / dashed = 6.5781 / 13.1349, filled squares /
+solid = the shipped 4.0 / 8.8. The two marker families sit on top of each other
+almost everywhere; that is the result.
+
+| | published §11 (12 mu + 12 p) | **d66old** | **d66new** | new − old |
+|---|---:|---:|---:|---:|
+| muon / shipped Box | 1.050 / 6.3 % | **1.055** / 5.8 % | **1.058** / 5.8 % | +0.3 % |
+| muon / frozen free power | 0.990 / 3.3 % | **0.984** / 3.2 % | **0.983** / 3.4 % | −0.1 % |
+| proton / shipped Box | 1.122 / 11.5 % | **1.122** / 11.5 % | **1.128** / 12.5 % | +0.5 % |
+| proton / frozen free power | 0.991 / 4.3 % | **0.991** / 4.3 % | **1.006** / 4.7 % | +1.5 % |
+| proton/muon at matched dE/dx | 1.012 (7 bins) | 1.061 | 1.067 | +0.6 % |
+| k_muon, owner protons | 1.69 – 1.93 | 1.69 – 1.93 | 1.67 – 2.03 | — |
+| k_proton, owner protons | 1.02 – 1.14 | 1.02 – 1.14 | 1.01 – 1.21 | — |
+
+(median / rms of ln(ratio); "published" is §11.3's table.)
+
+Four readings:
+
+1. **The largest move in the table is 1.5 %, on the proton against the free-power
+   curve, against a 4.3–4.7 % per-bin error.** Every other row moves by ≤ 0.6 %.
+   Under either diffusion pair the committed free-power model describes the
+   population it was never fitted to, and the shipped Box tables sit the same
+   ~12 % low on protons and ~5 % low on muons they always did. **No expectation
+   needs revisiting because of this change.**
+2. **`d66old` reproduces §11.3 exactly on the proton half** — 1.122 / 11.5 % and
+   0.991 / 4.3 %, to the digit, and k_muon 1.69–1.93 / k_proton 1.02–1.14 track
+   for track. That is not a coincidence and it is the check that this section
+   decoded the same thing §11 did: `work-stmcamp-d66old` is the same
+   reconstruction as `work-mcp1kall-d59k` (verified directly — 289343 blk90 is
+   bit-identical between them).
+3. **Where the muon numbers differ from §11.3, it is the sample, not the
+   diffusion.** 0.990 → 0.984 and 1.050 → 1.055 happen between *published* and
+   `d66old`, i.e. at fixed diffusion, going from 12 muons in 30 events to 60 in
+   1000. Same for proton/muon at matched dE/dx: 1.012 → 1.061 is the muon side
+   growing, and it then moves only to 1.067 across the revert. §11.5's
+   "no coherent particle-dependent offset" now reads as a ~6 % one on the larger
+   muon sample — **that is a finding about §11.5, not about diffusion, and it is
+   left open** (§13.6 item 2).
+4. **The `> 10.5 MeV/cm` bins are still the weakest.** The shaded band on the
+   figure is where only protons constrain the curves, and it is where the new
+   arm's proton moves most (1.046 → 1.070 at rr = 2.3 cm). Twelve tracks, two
+   bins.
+
+### 13.4 The refit, for scale only — and it is dominated by the sample
+
+`fit_recombination.py --plane rr --zoo` on each arm. **This is printed for scale
+and is not a proposal**; §9 item 1 still gates any change to the shipped tables,
+and §7d's β′↔E degeneracy is still unresolved.
+
+| | committed (12 mu + 1 p) | d66old (60 + 12) | d66new (60 + 12) |
+|---|---:|---:|---:|
+| k | 0.2824 | **0.3607** | **0.3468** |
+| p | 1.3622 | **1.1884** | **1.1989** |
+| C | 0.8552 | 0.8392 | 0.8376 |
+| χ²/ndf | 0.82 | 0.60 | 0.80 |
+
+**The diffusion moves k by −3.9 % and p by +0.9 %; the sample moves k by +28 %
+and p by −13 %.** Whatever this sample has to say about the recombination model,
+the diffusion pair is not what it is saying it about. `C` lands at 0.838–0.839
+on both arms, still within 1.5 % of `convert_field.C`'s 0.85 fudge — §7f's
+observation that the fit keeps choosing the number already in the code survives
+a 5× bigger sample and a constants revert.
+
+The family ranking is also unchanged by the revert: free-power Modified Box
+(`box_p`) is the best two-parameter form on both arms (χ²/ndf 0.60 / 0.80,
+proton rms 3.3 % / 3.9 %), and every Birks variant still buys muon agreement at
+the proton's expense (plain Birks 4.4 % / 5.1 % on the proton, escape floor
+still driven to f = 0 exactly). §7g.3's conclusion stands.
+
+![the model zoo's three curves, new arm](../dqdx_rr_sample/muon_proton_vs_models_p12_d66newF.png)
+![the five reference tables the refit would give, new arm](../dqdx_rr_sample/ref_tables_free_power_p12_d66newF.png)
+
+The `d66old` counterparts are
+[`muon_proton_vs_models_p12_d66old.png`](../dqdx_rr_sample/muon_proton_vs_models_p12_d66old.png),
+[`ref_tables_free_power_p12_d66old.png`](../dqdx_rr_sample/ref_tables_free_power_p12_d66old.png),
+[`recomb_fit_p12_d66old.png`](../dqdx_rr_sample/recomb_fit_p12_d66old.png),
+[`proton_sample_p12_d66old.png`](../dqdx_rr_sample/proton_sample_p12_d66old.png),
+[`sample_overlay_d66old.png`](../dqdx_rr_sample/sample_overlay_d66old.png) and
+their `_d66newF` / `_d66new` twins.
+
+**`nusel_display/stm_ref_dqdx.json` was not written.** Its md5 is
+`7462bf9d1cf0dc078f793005ff328acc` before and after this section's runs, checked.
+The tables a refit *would* give were written to
+`dqdx_rr_sample/stm_ref_dqdx_d66{old,newF}_STUDY.json` instead — study products,
+read by nothing. Overwriting the shipped file would have destroyed §11.3's whole
+premise (a model frozen *before* the population existed) and silently changed
+what `nusel_scan_viewer.py` and `stmfit_showcase.py` draw (§10.4).
+
+One thing not to over-read: `make_ref_tables.py`'s internal gate — rebuilt Box
+tables vs `stopping_ave_dQ_dx_sbnd.root`, max relative deviation 8.1e-4 (muon)
+to 1.1e-3 (pion), PASS on both arms — is built from `stopping.root` and is
+therefore **diffusion-independent by construction**. It validates the recipe,
+not the new fit.
+
+### 13.5 One thing the revert does move: the trajectory fit's own χ²
+
+Not asked for, and reported rather than acted on. Over the 70 tracks of the
+identical-track A/B, the per-track median `reduced_chi2` improves on **47** and
+worsens on 23 (two-sided binomial **p = 0.006**); the sample median goes
+1.470 → 1.450. On the owner's 12 protons it improves on 8 of 12, and on doc 55's
+three original bundles §12.3 saw one better, one worse, one flat — three tracks
+could not see this.
+
+**This is not by itself evidence that 4.0/8.8 is the physically better pair, and
+it must not be quoted as such.** `reduced_chi2` is the charge fit's own goodness
+of fit against a footprint that `DL`/`DT` themselves predict, so it is not an
+arm-independent metric: a narrower predicted footprint changes both the model
+and its residual. **The p-value inherits that.** 47/70 is p = 0.006 only against
+a null of exactly 0.5, and for a metric where each arm grades itself against its
+own prediction there is no reason the null is 0.5. Read the number as a flag
+that something is there for someone who knows what enters that χ² to interpret —
+not as a measurement, and not as a result to carry into another doc. (§4a is in
+this doc precisely because a number was once carried forward without the
+reference it was computed against.) It is recorded because doc 66 §0 states outright that the case
+for 4.0/8.8 is provenance and not a fit-quality measurement, and this is the
+first number on that question with any statistical weight. Deciding what it
+means needs someone who knows what enters that χ² — §13.6 item 1.
+
+### 13.6 Open items
+
+1. **The χ² shift of §13.5 is unexplained.** 47 of 70 tracks improve, in the
+   direction of the shipped pair, on a metric that is not arm-independent.
+   Either it is circular (the fit grading its own prediction) or it is a real
+   preference; this section cannot tell, and no constant was touched either way.
+2. **proton/muon at matched dE/dx is 1.06, not 1.01, on 60 muons.** §7g.6 asked
+   whether a particle-dependent offset survives; §11.5 answered "no, 1.012" on
+   12 muons. With 60 it is 1.061 (d66old) — at fixed diffusion, so this is a
+   sample-size finding, and it partially **reopens** §7g.6. It sits inside the
+   ±4.5–6 % per-bin errors, so it is a 1σ-ish effect per bin that is coherent
+   across all seven; worth a look with the muon sample the 1000-event arms now
+   make cheap.
+3. **§§6–11 are left exactly as published.** Their figures, tsvs and numbers are
+   the record of the 12-muon/1-proton and 12-proton samples and are computed
+   from `sample_points.tsv` / `sample_points_p12.tsv`, which this section did
+   not touch. Everything here is in `*_d66old` / `*_d66new` / `*_d66newF` files.
+4. **The shipped tables are still not rebuilt.** §9 item 1 is unchanged and this
+   section adds no argument for changing it — if anything it subtracts one, by
+   showing the fitted k and p move more with the sample than with the physics.
 
 ---
 
