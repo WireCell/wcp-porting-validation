@@ -47,7 +47,7 @@ physics :{
 
             # WireCellAux: FlashTensorToOpticalPCs; WireCellMatch: QLMatching.
             # WireCellAIML: wclsTensorSetLabeler (truth labeling, MC only).
-            plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellQLMatch", "WireCellAux", "WireCellMatch", "WireCellAIML"]
+            plugins: ["WireCellGen", "WireCellImg", "WireCellClus", "WireCellPgraph", "WireCellSio", "WireCellRoot", "WireCellLarsoft", "WireCellAux", "WireCellMatch", "WireCellAIML"]
 
             # wclsTensorSetLabeler reads MCTruth/MCParticle/SimEnergyDeposit from
             # the art event (MC only; the data fcl overrides inputers without it).
