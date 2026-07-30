@@ -190,9 +190,21 @@ process_event() {
 
     echo "[evt $EVT_ID] PR (pipeline=$PIPELINE_CODE) $PCT -> $PRDIR/mabc-pr.zip"
     rm -f "$LOG"
+    # Preload only when the DL vertex can actually run, i.e. DL weights are set
+    # AND tagger_check_neutrino is in this pipeline.  The -stm / -tgm / bare -p
+    # arms must keep the exact process environment they had before the doc-pr/4
+    # default flip -- they are A/B comparison arms.
     # if-form, not `[ -n .. ] && ..`: under `set -e` the && list would return 1
-    # and abort the run whenever DL is off (-no-dnn).
-    if [ -n "$DL_WEIGHTS" ]; then export LD_PRELOAD="$PYLIB"; else unset LD_PRELOAD; fi
+    # and abort the run whenever the condition is false.
+    case "$PIPELINE_CODE" in
+        *"'tagger_check_neutrino'"*) NEED_DL_PRELOAD=1 ;;
+        *) NEED_DL_PRELOAD=0 ;;
+    esac
+    if [ -n "$DL_WEIGHTS" ] && [ "$NEED_DL_PRELOAD" = 1 ]; then
+        export LD_PRELOAD="$PYLIB"
+    else
+        unset LD_PRELOAD
+    fi
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
         --tla-str  "input=$PCT" \
@@ -232,7 +244,7 @@ process_event() {
     # A failed SCN import is only a WARN and the code quietly reverts to the
     # geometric vertex -- an rc=0 run with different physics.  Never let that
     # pass unnoticed (docs/pr/4).
-    if [ -n "$DL_WEIGHTS" ] && grep -q "DL vertex failed" "$LOG" 2>/dev/null; then
+    if [ "$NEED_DL_PRELOAD" = 1 ] && [ -n "$DL_WEIGHTS" ] && grep -q "DL vertex failed" "$LOG" 2>/dev/null; then
         echo "[evt $EVT_ID] *** WARNING: DL vertex requested but FAILED; this run used the" >&2
         echo "                geometric vertex.  See: grep 'DL vertex failed' $LOG" >&2
     fi

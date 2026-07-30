@@ -101,6 +101,9 @@ export LD_PRELOAD=$(python3 -c "import sysconfig;print(sysconfig.get_config_var(
 
 `run_pr_evt.sh` and `run_pr3_evt_dl.sh` set it; `run_pr_evt.sh` additionally
 greps its own log afterwards and prints a loud warning if the fallback fired.
+Both are gated on `tagger_check_neutrino` actually being in the pipeline, so the
+`-stm` / `-tgm` / bare `-p` arms keep the exact process environment (no
+`LD_PRELOAD`) they had before this flip — they are A/B comparison arms.
 **Any new batch driver must do the same** — `grep -c "DL vertex failed"` must be
 0 across the whole manifest.  On a 45- or 503-event expansion a single WARN line
 per event is invisible in practice, and the result is a run that looks
@@ -154,10 +157,48 @@ flip does what it says; and the DL and geometric arms genuinely differ.
 torch, `torch.set_num_threads(1)`).  ~1 s/event: negligible for the 45-event
 nu-candidate expansion, ~8 min added for a 503-event Track B pass.
 
-**Coverage of callers** (`grep -rn dl_weights --include=*.sh`): the four sites in
-§1 plus the three gate/profile scripts above and `run_pr3_evt.sh`, which keeps
-its explicit `dl_weights=` so it still reproduces `pr/3` §6 verbatim as the
-geometric arm.  No production or gate driver is affected.
+**Coverage of callers** (`grep -rn dl_weights --include=*.sh` and
+`grep -rn "clus_maker\.pr(" --include=*.jsonnet` across the toolkit `cfg/` and
+`wcp-porting-img/{sbnd,qlport,pdhd,pdvd}`): the four sites in §1, the three
+gate/profile scripts above, and `run_pr3_evt.sh`, which keeps its explicit
+`dl_weights=` so it still reproduces `pr/3` §6 verbatim as the geometric arm.
+One out-of-tree caller exists — `sbnd/wcls-img-clus-matching-xin.jsonnet:158`
+calls `clus_maker.pr(...)` and so inherits the new default — but its
+`pipeline_names` stops at `tagger_check_fc`, so the `tagger_check_neutrino`
+entry is dropped from its compiled JSON exactly as in the default job: unaffected.
+`sbnd_xin/wct-pr-perevt.jsonnet` is a one-line re-export of the in-tree module,
+so runners pick the new default up automatically.  No production or gate driver
+is affected.
+
+### 4b. Interaction with `nu_skip_cosmic` (pr/3) — checked, no regression
+
+The two paths differ in a way that matters: `determine_overall_main_vertex`
+takes `map_cluster_main_vertices` and `main_cluster` **by value**, so its
+internal `check_switch_main_cluster` cannot escape; `determine_overall_main_vertex_DL`
+(`NeutrinoVertexFinder.cxx:3217`) takes both **by reference** and can re-select
+the main cluster (`:3560` "rerank selected cluster="). So enabling DL enables a
+caller-visible main-cluster switch that the arm `nu_skip_cosmic` was validated
+against could not perform — the question is whether the rerank can reinstate a
+main the skip gate just rejected.
+
+It cannot, structurally: the DL candidate set is built from the PR graph
+(`ordered_nodes(graph)`), and the graph covers only `main_cluster` plus
+`other_clusters`, which `TaggerCheckNeutrino.cxx:207-213` fills exclusively from
+clusters carrying `Flags::associated_cluster` and the selected main's
+`matched_flash_gid`.  A skipped cosmic-tagged **main** never enters either.
+
+Confirmed on the event that validated the skip — evt **444187** rerun under the
+new default:
+
+```
+TaggerCheckNeutrino: in-window cluster 6 (t0 1.096 us, L 210.6 cm) cosmic-tagged (TGM=true STM=false lm_flag=0); skipping (nu_skip_cosmic)
+TaggerCheckNeutrino: selected main cluster 19 (t0 1.573 us, L 170.5 cm, 6 associated)
+```
+
+and `mabc-pr.zip` is **bit-identical** to the geometric arm
+(`0aeaf41308373c17…` both) — for this event the DL vertex agrees with the
+traditional one, so the flip is a no-op here.  A useful second data point: DL
+does not perturb every event.
 
 ## 5. Scope of this adoption — say it plainly
 
