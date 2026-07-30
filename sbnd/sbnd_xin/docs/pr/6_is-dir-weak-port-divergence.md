@@ -1,8 +1,11 @@
 # 6 — the `is_dir_weak()` port divergence: history, fix, validation
 
 Status: FIXED behind `dir_weak_use_score` (C++ default false = legacy,
-byte-identical; **SBND module default TRUE**, uBooNE untouched). Investigation
-requested by the owner after doc pr/5 §3d.1 surfaced the divergence.
+byte-identical; **SBND module default TRUE**; **uBooNE job default TRUE**
+since 2026-07-30 after the §6 impact study — override with
+`-A dir_weak_use_score=false` / `DIR_WEAK=false` for gate3-compatible runs).
+Investigation requested by the owner after doc pr/5 §3d.1 surfaced the
+divergence.
 
 ## 0. Repro block
 
@@ -209,7 +212,20 @@ preserved (§4's off-gate PASS still stands).
   above, 6612 numu sign-flip toward proto, 6642 nue −3.931→−3.960,
   6837 numu 1.026→0.890 (proto −1.150).
 
-### 6.2 Reading
+### 6.2 Adoption (owner, 2026-07-30)
+
+Owner reviewed §6.1 and adopted **default ON for uBooNE**:
+`uboone-mabc.jsonnet` top-level TLA now defaults to `"true"` (only the
+string "true" enables; anything else = legacy), and `run_one.sh` defaults
+`DIR_WEAK=true`. Proofs: default compiled JSON == the dirweakon_ub arm's
+config; `-A dir_weak_use_score=false` compiled JSON == the pre-knob
+baseline byte-for-byte; `run_5384.pl` passes no TLA, so production runs
+pick up the ON default. **Gate policy**: byte-identity checks against
+knob-OFF baselines (gate3, dirweakoff_ub) must set `DIR_WEAK=false`; the
+knob-ON reference for future A/B gates is `sweep/dirweakon_ub`
+(hashes.txt, per-event tagger logs).
+
+### 6.3 Reading
 
 Knob-ON is a modest net fidelity improvement on the uBooNE chain
 (−73 branches, 10-vs-3 events better), with one clear selection-level win

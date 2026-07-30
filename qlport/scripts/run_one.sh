@@ -25,9 +25,11 @@
 # DL_WEIGHTS=uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth for a DL-on
 # (functional, non-gate) run.
 #
-# DIR_WEAK=true enables prototype is_dir_weak() semantics (dir_weak_use_score
-# knob, doc sbnd_xin/docs/pr/6); unset/empty = legacy raw-flag reads (gate
-# default, byte-identical to gate3).
+# Prototype is_dir_weak() semantics (dir_weak_use_score knob, doc
+# sbnd_xin/docs/pr/6) are DEFAULT ON (owner 2026-07-30).  Set DIR_WEAK=false
+# for legacy raw-flag reads — required for byte-identity checks against the
+# knob-OFF baselines (gate3, dirweakoff_ub).  The knob-ON reference sweep is
+# sweep/dirweakon_ub.
 set -eu
 SCRIPTS=$(cd "$(dirname "$0")" && pwd)
 QLPORT=$(dirname "$SCRIPTS")
@@ -57,7 +59,7 @@ python3 "$ABTEST/timecmd.py" meta.txt \
     -A kind=both -A "beezip=mabc_${IDX}.zip" -A "initial_index=$IDX" \
     -A "initial_runNo=$RUN" -A "initial_subRunNo=$SR" -A "initial_eventNo=$EV" \
     -A "dl_weights=${DL_WEIGHTS:-}" \
-    -A "dir_weak_use_score=${DIR_WEAK:-}" \
+    -A "dir_weak_use_score=${DIR_WEAK:-true}" \
     -A "infiles=$FILE" "$QLPORT/uboone-mabc.jsonnet" \
     > stdout.log 2>&1 || true
 

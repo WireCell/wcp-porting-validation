@@ -1489,7 +1489,11 @@ local extra_plugins = ["WireCellAux", "WireCellRoot", "WireCellClus"];
 function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath,
          initial_index="0", initial_runNo="1", initial_subRunNo="1", initial_eventNo="1",
          dl_weights=default_dl_weights,  // -A dl_weights= disables the DL vertex (byte-identity gate runs)
-         dir_weak_use_score="")  // -A dir_weak_use_score=true enables prototype is_dir_weak() semantics; '' (default) = legacy raw flag, byte-identical to gate3
+         // Prototype is_dir_weak() semantics (doc sbnd_xin/docs/pr/6).  Owner
+         // 2026-07-30: DEFAULT ON for uBooNE too.  Anything other than the
+         // string "true" disables (legacy raw-flag reads, matches gate3;
+         // knob-ON reference sweep is scripts/sweep/dirweakon_ub).
+         dir_weak_use_score="true")
 
     // Parse the integer values from strings
     local index = std.parseInt(initial_index);
@@ -1498,7 +1502,7 @@ function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtre
     local eventNo = std.parseInt(initial_eventNo);
 
     // Use these parameters in the main graph
-    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score != ""),
+    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score == "true"),
             "Pgrapher", extra_plugins)
 
 //function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath)
