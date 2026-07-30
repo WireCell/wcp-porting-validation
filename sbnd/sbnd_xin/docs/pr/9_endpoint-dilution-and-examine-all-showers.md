@@ -1,8 +1,9 @@
 # pr/9 — evt 172230: the endpoint-dilution root cause and the real electron converter
 
-Status: INVESTIGATION COMPLETE (2026-07-30).  No code changed — all
-instrumentation reverted, bit-identity re-proven.  Corrects the converter
-identification in pr/8 §11.  Fix proposals in §6 await owner decision.
+Status: INVESTIGATION COMPLETE + **F1 IMPLEMENTED** (2026-07-30, toolkit
+d3b5972a, sec. 10; investigation instrumentation reverted with bit-identity
+re-proven).  Corrects the converter identification in pr/8 §11.  F2 and the
+sec. 5 fidelity divergences still await owner decision.
 
 Follow-on to pr/5 (initial anatomy), pr/7 (persistence divergence), pr/8
 (proton_dir_vote + MIP config, toolkit 3d71e111).
@@ -233,3 +234,65 @@ alongside pr/7 §5.
 `_topoinstr2` (+5 set_pdg(11) sites), `_topoinstr3` (+update_particle_type),
 `_topoinstr4` (+object-level 2212→11 hooks w/ backtrace),
 `_postrevert2` (identity re-proof).
+
+## 10. F1 IMPLEMENTED (owner go-ahead 2026-07-30, same session)
+
+Owner design constraint: DYNAMIC — trim 0 or 1 sample, never more; no trim
+when the endpoint is fine.  Realized as a **fallback retry**, not an
+unconditional cut (and not an explicit tip-anomaly test, which cannot
+distinguish an artificially-high tip from a genuine Bragg maximum):
+
+- Primary attempt unchanged (tip included).  Only when BOTH orientations
+  abstain (the same entry condition as the pr/8 vote, no flag_force), retry
+  once with exactly 1 sample excluded at each orientation's hypothesized
+  stopping end — template anchor (end_L) unchanged, value-agnostic.  A
+  decided retry returns direction+type+score through the same mu/p/e
+  competition; an abstaining retry falls through to the proton_dir_vote
+  (which still votes on the UNTRIMMED results — unchanged pr/8 semantics).
+- Order: legacy -> endpoint-trim retry -> proton_dir_vote -> abstain.
+
+Code: `do_track_comp(..., int skip_stop_samples=0)` drops the trailing
+(smallest-residual) samples after windowing (PRSegmentFunctions.cxx); retry
+block in `segment_do_track_pid` before the vote; knob threaded
+`TrackPidOptions.endpoint_trim_retry` <- `PatternAlgorithms::m_endpoint_trim_retry`
+<- TaggerCheckNeutrino `endpoint_trim_retry` <- jsonnet key-suppressed arg
+(`cfg/pgrapher/common/clus.jsonnet`), SBND `clus.jsonnet` clus_pr/pr args
+DEFAULT TRUE.  C++ default false.
+
+### Verification (all PASS)
+
+- wcdoctest-clus 565/565; freshness proof done.
+- Production configs: `abtest/compile_all_cfg.sh` before (worktree @34f0abd8,
+  pre-F1) vs after — **0-line diff** across the full manifest.
+- Compiled-config proof: `"endpoint_trim_retry" : true` present in the
+  13-stage PR-job JSON; absent from the uBooNE config (arg not passed).
+- SBND off-gate: pre-F1 cfg (worktree) + new binary ->
+  `65a64151...` == the committed pr/8 ON reference. Bit-identical.
+  (Scratch runs /home/xqian/tmp/nupr_evt172230_f1off2.)
+- uBooNE off-gate PASS: 35-event sweep `sweep/f1off_ub`, all 35 ZIP member
+  hashes identical to BOTH `dirweakon_ub` and `mipvoteoff_ub` (rollup md5
+  d13e7c6b), all rc=0.  (ZIPS is the only discriminating gate — ab_check
+  gate 2 is A/A-noisy per the 7902615c round.)
+
+### Knob-on result, evt 172230 (geometric arm `/home/xqian/tmp/nupr_evt172230_f1on`, DL arm `nupr_evt172230_f1on_dl`)
+
+Large improvement, one residual:
+
+- **Main vertex moved off the Bragg tip** to (−55.7, −87.3, 22.0) — ~2.3 cm
+  from the true vertex (−54.7, −87.5, 19.9), vs ~10 cm wrong before.
+- **Geometric and DL arms now agree byte-identically** (both mabc-pr.zip
+  `987fbf56...`): the strong direction lets the geometric vertexing find the
+  same vertex the DL arm favored.  Pre-F1 the arms disagreed.
+- Seg 5030 is **no longer an electron**: strong direction, pointing correctly
+  into its Bragg stop; the shower-dominated wholesale conversion no longer
+  catches it (n_good_tracks != 0).  PF: e− 1649 MeV + track + small pi+ stub.
+- RESIDUAL: the track is labeled **mu− 51 MeV, not proton**.  Cause
+  (offline-verified on the refit 20-point profile): the fit now bridges the
+  ~2 cm vertex gap with ~4 near-empty samples (dQ/dx ≈ 12k e/cm ≈ 0.2 MIP)
+  prepended to the Bragg profile; the PRIMARY attempt then passes forward on
+  the muon-vs-flat gate with s_mu 0.258 < s_p 0.411 (the empty prefix
+  deflates the measured sum, inflating the proton ratio).  The retry never
+  enters (no abstention).  This is a vertex-gap / empty-sample robustness
+  question (cf. the doc-50 STM gap-jumping observation), NOT an endpoint
+  question — flagged for the pr/8 sec 6 joint calibration round (candidate:
+  exclude near-empty samples from the comparison, or tighten the vertex fit).
