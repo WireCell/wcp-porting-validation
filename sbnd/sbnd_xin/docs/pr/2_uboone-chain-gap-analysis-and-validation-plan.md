@@ -804,6 +804,17 @@ latent false-positive channel rather than fixing an observed one.
   legs → (39.7, −67.3, 159.9) with 2 legs, i.e. 22.8 cm upstream in z; `nue_score`
   0.497 → 1.844, `numu_score` −2.446 → −2.416. Both are real (non-sentinel) BDT values.
 
+Bee sets for the two changed events (**geometric arm**, where both differences show;
+uploaded 2026-07-30 from `/home/xqian/tmp/geomab/<evt>/<arm>/mabc-pr.zip`):
+
+| event | uBooNE values (`off`) | SBND values (`on`) |
+|---|---|---|
+| 235435 | [set fdbdd87f](https://www.phy.bnl.gov/twister/bee/set/fdbdd87f-b839-459a-8a47-643641852fb3/event/list/) — main cluster **2**, vertex (−82.9, 181.9, 171.2) | [set 56ce0478](https://www.phy.bnl.gov/twister/bee/set/56ce0478-ff13-4cd9-a56c-7a927020b406/event/list/) — main cluster **24**, vertex (−101.9, 159.7, 133.5) |
+| 269774 | [set e4b8be1a](https://www.phy.bnl.gov/twister/bee/set/e4b8be1a-8dfc-4023-b3da-59d5bf9169d4/event/list/) — cluster 13 vertex (16.5, −93.0, 182.7), 3 legs | [set a46e0d7a](https://www.phy.bnl.gov/twister/bee/set/a46e0d7a-56f7-4fa6-a0ea-b56239ec76f1/event/list/) — cluster 13 vertex (39.7, −67.3, 159.9), 2 legs |
+
+Both candidate positions exist in both arms of 235435 — only the *ranking* changes, so
+the scan question is "which of the two is the neutrino vertex", not "did a vertex move".
+
 **Where these sites sit relative to the DL vertex — and the production-configuration
 numbers.** The measurement above is the *geometric* arm (`dl_weights=''`); SBND
 production defaults the SCN vertex **ON**, and the three sites are not equally exposed
