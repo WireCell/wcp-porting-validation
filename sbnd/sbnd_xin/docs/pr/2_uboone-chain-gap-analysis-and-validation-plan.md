@@ -535,10 +535,79 @@ a jsonnet edit rather than a `--tla-code`.
 
 | where | value | note |
 |---|---|---|
-| `:190,241,298` | `fudge_factor=0.95`, `recom_factor=0.7`; shower `0.5/0.8`; proton `0.35` | average recombination survival — field-dependent, uBooNE-tuned |
-| `:163,171` | plane weights `{0.25,0.25,1.0}`, asymmetry switch `0.04` | reflects uBooNE induction-plane quality |
-| `:175` | W-value `23.6 eV` duplicated (not read from the recomb model's `Wi`) | low risk, note only |
+| `:190,241,298` | `fudge_factor=0.95`, `recom_factor=0.7`; shower `0.5/0.8`; proton `0.35` | average recombination survival — field-dependent, uBooNE-tuned. **Half-closed 2026-07-30: config-fed as `kine_fudge_factor` / `kine_recom_factor` / `kine_shower_*` / `kine_proton_recom_factor`, defaults unchanged — §2e(iii-a).** |
+| `:163,171` | plane weights `{0.25,0.25,1.0}`, asymmetry switch `0.04` | reflects uBooNE induction-plane quality. **Half-closed 2026-07-30: `kine_plane_weights` / `kine_plane_asym_switch` — §2e(iii-a).** |
+| `:175` | W-value `23.6 eV` duplicated (not read from the recomb model's `Wi`) | low risk, note only. **Config-fed 2026-07-30 as `kine_w_value`; still duplicated rather than read from `Wi` — §2e(iii-a).** |
 | `:14-35` | `cal_corr_factor()` is a **stub** returning 1.0 | no position/lifetime/SCE correction for either detector; pairs with the retained `0.85` factor in the SBND dE/dx tables ("degenerate with the missing electron-lifetime correction") |
+
+**(iii-a) DONE 2026-07-30 — the charge→energy calibration constants are config-fed**
+(owner request; **no SBND value exists for any of them**, so this moves the numbers out
+of the source, it does **not** calibrate them). Toolkit commit: see below.
+
+Repro:
+
+```bash
+# compiled-config proof (knob off is byte-identical, knob on emits the keys)
+cp -r cfg /home/xqian/tmp/cfg-new && cp -r cfg /home/xqian/tmp/cfg-base
+for f in pgrapher/common/clus.jsonnet pgrapher/experiment/sbnd/clus.jsonnet \
+         pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet; do
+  git show HEAD~1:cfg/$f > /home/xqian/tmp/cfg-base/$f; done
+# same TLAs both sides (run/subrun/event/pipeline as in run_pr_evt.sh -nu), then
+cmp base.json new_off.json                      # -> identical, 250897 bytes
+wcsonnet ... --tla-code 'kine_recom_factor=0.6' | grep kine_   # -> keys present
+
+# knob-ON effect, uBooNE evt 5384/132/6642 (all four particles are showers):
+#   scratch copies of qlport/uboone-mabc.jsonnet, one with
+#   cm.tagger_check_neutrino(kine_shower_recom_factor=0.25, ...)
+python3 -c "import uproot;t=uproot.open('track_com_5384_6642.root')['T_kine'];\
+print(t['kine_reco_Enu'].array(library='np'))"
+```
+
+What moved (all in `TaggerCheckNeutrino` → `PR::KineChargeOptions`, C++ defaults = the
+uBooNE literals they replaced, so an absent key is byte-identical):
+
+| key | default | role |
+|---|---|---|
+| `kine_recom_factor` / `kine_fudge_factor` | `0.7` / `0.95` | track-like object |
+| `kine_shower_recom_factor` / `kine_shower_fudge_factor` | `0.5` / `0.8` | `flag_shower` object |
+| `kine_proton_recom_factor` | `0.35` | `abs(pdg)==2212` (the fudge factor stays at the track one — prototype behaviour) |
+| `kine_plane_weights` | `[0.25,0.25,1.0]` | `[U,V,W]` charge-average weights |
+| `kine_plane_asym_switch` | `0.04` | (median,max) asymmetry above which the largest plane is dropped |
+| `kine_w_value` | `23.6` | argon W-value in eV |
+
+Threaded to a TLA of `wct-pr-perevt.jsonnet` (i.e. `--tla-code`-reachable, unlike
+`mip_dqdx_median` — the usability note above), through `pr()` and `clus_pr()` in
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`. **No detector sets any of them.** Two
+guards were added with the knobs (unreachable at the defaults): an all-zero
+`kine_plane_weights` is rejected in `configure()` with a WARN, and both plane-average
+denominators are zero-guarded in `kine_charge_from_maps`.
+
+Gates:
+
+- **uBooNE `qlport` ZIPS: 35/35 content-identical**, `sweep/kineoff_ub` vs
+  `sweep/f3coff_ub2` (`ab_check.sh kineoff_ub f3coff_ub2`). Gate 2 (tagger-compare
+  logs) reported 33/35 DIFF, which is its known non-discriminating A/A behaviour
+  (same 33/35 seen on an A/A pair) — only ZIPS is a gate here.
+- `wcdoctest-clus`: 49 cases / 565 assertions pass.
+- Freshness: `local/lib/libWireCellClus.so` 15:21 > last source edit 15:20.
+- Knob-ON, uBooNE evt 5384/132/6642 (4 shower particles, all `kine_energy_info==2`
+  = charge-derived): `kine_shower_recom_factor` 0.5 → 0.25 doubles every particle
+  energy and `kine_reco_Enu` **858.04 → 1716.07 MeV** (852.06 → 1704.13 for the
+  leading shower). The same event is *insensitive* to `kine_recom_factor` (0.7 →
+  0.35 changes nothing) — correct, since the track branch is unused when every
+  object is shower-flagged.
+
+Caveats worth knowing before calibrating:
+
+- `kine_charge` is **not persisted by the SBND standalone PR job**: it lives in the
+  `T_kine` tree of the uBooNE `track_com_*.root` and, on SBND, only reaches the
+  (uncalibrated, gap G1) BDT features. Any SBND-side tuning of these knobs needs a
+  tagger-tree dump first.
+- `NeutrinoTaggerSinglePhoton.cxx:1499-1505` keeps its own inline `23.6e-6` (with
+  `1.38`/`0.273`); it is §2e(i)'s third correctness item, not this one, and was left
+  untouched.
+- The `0.6 cm` 2D-hit match distance in the same function is row (iv), not (iii),
+  and stays a literal.
 
 **(iv) Detector-extent / absolute-charge literals:**
 
@@ -570,7 +639,9 @@ re-rank, inert), `clus_geom_helper=''` (no SCE on SBND: `UbooneGeomHelper` doesn
 exist in this tree — `kine_nu_{x,y,z}_corr` are raw positions, a *stated decision* per
 §2d G4), and — new 2026-07-30 — `ssm_target_dir=[0.46,0.05,0.885]` /
 `ssm_absorber_dir=[0.33,0.75,-0.59]` (§2e(i-a): reachable but **live and uncalibrated**,
-unlike the inert SCN knobs — they feed 8 BDT features on every SSM-tagged event today).
+unlike the inert SCN knobs — they feed 8 BDT features on every SSM-tagged event today)
+and the eight `kine_*` charge→energy constants (§2e(iii-a): same status — live on every
+reconstructed energy, inherited from uBooNE, nobody has an SBND value).
 `mip_dqdx` / `mip_dqdx_median` are deliberately *not* in this list: SBND **sets** them
 (56000 / 48000, §2e(ii-a)) rather than inheriting the uBooNE defaults.
 
@@ -591,8 +662,9 @@ noted.
 and gets its own round in the doc-63 style. Priority order: (i) correctness items →
 ~~(ii) MIP normalization~~ **(done 2026-07-30, §2e(ii-a) — the knobs exist and SBND sets
 them; what remains is a *measurement* to replace the 48000 placeholder, not plumbing)**
-→ (iv) cosmic-y + vertex-z prior → (iii) energy reco → (v) fit-JSON thresholds; (vi)
-waits for the SCN/BDT work (G1/G3).
+→ (iv) cosmic-y + vertex-z prior → ~~(iii) energy reco~~ **(plumbing done 2026-07-30,
+§2e(iii-a); what remains is the calibration — every value is still uBooNE's)** → (v)
+fit-JSON thresholds; (vi) waits for the SCN/BDT work (G1/G3).
 
 Pre-existing oddity, noted not fixed (CLAUDE.md tie-breaker: report, don't fix):
 `clus.jsonnet:398`-area `do_tracking()` delegates to `$.tagger_check_neutrino(...)` but
