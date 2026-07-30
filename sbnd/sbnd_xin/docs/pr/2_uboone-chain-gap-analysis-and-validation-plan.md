@@ -132,7 +132,7 @@ tagger_check_tgm → tagger_check_stm → tagger_check_fc` (+ `stm_magnify` with
 | # | gap | what it takes |
 |---|---|---|
 | G1 | **numu/nue BDT scorers** (stages 7–8) | `UbooneNumuBDTScorer`/`UbooneNueBDTScorer` load ~35 MicroBooNE-trained XMLs. Running them on SBND would produce numbers with uBooNE priors baked in. Needs: SBND feature extraction first (G2), then retraining. Until then the ~200-variable `TaggerInfo` block is computed (by the taggers inside `tagger_check_neutrino`) but never scored. |
-| G2 | **`SbndTaggerOutputVisitor` / PR tracking output** (stages 9–10) | No SBND fork of `UbooneMagnifyTrackingVisitor`(full-PR mode)/`UbooneTaggerOutputVisitor` exists (`SbndMagnifyTrackingVisitor` covers only the STM fit). Without `T_tagger`/`T_kine` there is no per-event variable dump to validate taggers against (checklist V8). Fork by duplication (M10); this is the **instrumentation-first** prerequisite of §4. |
+| G2 | **`SbndTaggerOutputVisitor` / PR tracking output** (stages 9–10) | **CLOSED 2026-07-30 (doc `pr/3`)**: `SbndPrMagnifyTrackingVisitor` forked (2-APA ChanScheme + per-point `PR::Fit::paf`); `UbooneTaggerOutputVisitor` reused as-is (audited geometry-free) — `tracking-pr.root` with T_tagger/T_kine validated on evt 172230/444187.  The BDT scorers are also wired (uBooNE weights, uncalibrated — G1 retraining still open). |
 | G3 | **SCN vertex retraining** + `sparseconvnet`/torch ABI pin | uBooNE weights are a demo only. |
 | G4 | **dQ/dx calibration constants** | uBooNE passes `dQdx_scale=0.1, dQdx_offset=-1000` (uBooNE data calibration) to the neutrino tagger; SBND passes neither (C++ defaults apply). SBND has `mip_dqdx=56000` (doc 48) for STM, but the PR-internal dQ/dx→PID chain (`ParticleDataSet` tables, recombination) needs an SBND calibration decision. Flag: uBooNE corrects SCE via `clus_geom_helper=UbooneGeomHelper`; SBND passes no geom helper (no SCE correction applied — acceptable to first order for SBND, but must be a stated decision, not an accident). |
 | G5 | **Tagger threshold recalibration** | cosmic/numu/ssm/nue/single-photon tagger cut values are uBooNE-tuned (drift length, wire pitch, PMT geometry priors). They will *run* on SBND; their verdicts are uncalibrated until validated (checklist V8). |
@@ -295,6 +295,10 @@ steps; not part of the first campaign.
 the internals persistent and diffable:
 - Bee: `track_fit` / `shower_track` / `vertices` layers + the `mc` particle-flow tree
   already come free with `tagger_check_neutrino` (verified §5.3) — the scan currency.
+- Variables: **DONE (doc `pr/3`)** — `T_tagger`+`T_kine` now come from the
+  `tracking_visitor`+`tagger_output` pipeline stages (G2 closed); the TSV
+  extension of `nusel_extract.py` remains optional convenience.
+  (Original plan text kept below for the record.)
 - Variables: G2 fork (`SbndTaggerOutputVisitor`, fork-by-duplication) writing
   `T_tagger`+`T_kine`, or minimally a per-bundle TSV extension of `nusel_extract.py`
   with the main PR scalars (nu vertex x/y/z, n_vertices, n_segments, n_showers,
