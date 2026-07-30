@@ -1,4 +1,4 @@
-# Beam-window cosmic vs neutrino-candidate division on two SBND data samples
+# 1 — Beam-window cosmic vs neutrino-candidate division on two SBND data samples
 
 What fraction of in-beam-window bundles the cosmic taggers claim (TGM, STM, LM)
 and what fraction survives as a neutrino candidate, measured on **both** SBND
