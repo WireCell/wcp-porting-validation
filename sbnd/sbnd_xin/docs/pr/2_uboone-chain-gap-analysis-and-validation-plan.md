@@ -1,10 +1,16 @@
 # 2 — Neutrino PR chain on SBND: uBooNE gap analysis + validation plan + nueCC sample
 
-**Status: PLAN (with executed smoke test).** No production default changed; no C++ or
-jsonnet touched. The one new artifact besides docs is the 2-event smoke root
+**Status: PLAN (with executed smoke test), plus one worklist item since executed.** No
+production default changed. The one new artifact besides docs is the 2-event smoke root
 `work-nuecc48-prsmoke/` (§5.3). Everything else here is analysis of what exists and a
 step-by-step plan for validating `tagger_check_neutrino` (and the rest of the uBooNE
 pattern-recognition tail) on SBND.
+
+**Update 2026-07-30** — the first §2e(i) correctness item is half-closed: the SSM
+beam-line vectors are now config knobs (`ssm_target_dir` / `ssm_absorber_dir`,
+defaults = the uBooNE numbers ⇒ nothing moved). C++ and jsonnet *were* touched for
+that; see **§2e(i-a)** for the plumbing, the gate, and the caveats. The SBND *values*
+remain unknown — this is a relocation, not a calibration.
 
 Companion docs: `1_beam-window-cosmic-vs-nu-division.md` (same-day census of the
 cosmic/nu-candidate split on both data samples; it created the `work-nuecc48-nuf` arm
@@ -151,9 +157,96 @@ chain currently runs two mutually inconsistent field assumptions.**
 
 | where | what | why wrong |
 |---|---|---|
-| `NeutrinoTaggerSSM.cxx:582-583` | `target_dir(0.46,0.05,0.885)`, `absorber_dir(0.33,0.75,-0.59)` | BNB-target and NuMI-absorber directions **in the uBooNE detector frame**; feed 8 `ssm_*_angle_{target,absorber}` BDT features. SBND needs its own target vector; the NuMI-absorber features may be meaningless there. |
+| `NeutrinoTaggerSSM.cxx:582-583` | `target_dir(0.46,0.05,0.885)`, `absorber_dir(0.33,0.75,-0.59)` | BNB-target and NuMI-absorber directions **in the uBooNE detector frame**; feed 8 `ssm_*_angle_{target,absorber}` BDT features. SBND needs its own target vector; the NuMI-absorber features may be meaningless there. **Half-closed 2026-07-30: the numbers are now config-fed (`ssm_target_dir` / `ssm_absorber_dir`), defaults unchanged — see §2e(i-a). The remaining gap is the SBND *value*, which nobody has yet.** |
 | `TaggerCheckNeutrino.cxx:493` | `nue_tagger(..., apa=0, face=0, ...)` | Single-drift-volume assumption: any vertex in SBND APA 1 gets APA 0's mirrored wire geometry for `flag_prolong_u/v/w` / `flag_parallel`. `NeutrinoTaggerSinglePhoton.cxx:2186-2196` already derives apa/face from `dv->contained_by(vtx_pt)` — the nue path needs the same fix. |
 | `NeutrinoTaggerSinglePhoton.cxx:1499-1505` | inline inverse Modified-Box with `0.273` kV/cm, `1.38` g/cm³, `23.6e-6`, `43e3` | Bypasses the configured `sbnd_box_recomb` (0.5 kV/cm) entirely for its `median_dedx`/`mean_dedx`. |
+
+**(i-a) DONE 2026-07-30 — the SSM beam vectors are config-fed** (owner request; the
+SBND values are still unknown, so this moves the numbers out of the source, it does
+**not** calibrate them).
+
+Repro:
+
+```bash
+cd sbnd_xin/work-nuecc48-prsmoke2
+./run_ssm_arm.sh /home/xqian/tmp/ssmA                                    # knob off
+./run_ssm_arm.sh /home/xqian/tmp/ssmB --tla-code 'ssm_target_dir=[0,0,1]'  # knob on
+# cross-binary off-gate arm: build the pre-change clus lib into a scratch dir
+# (./wcb build, no install) and
+LD_LIBRARY_PATH=/home/xqian/tmp/ssmlib_old ./run_ssm_arm.sh /home/xqian/tmp/ssmA0
+# compare: python3 sbnd_xin/ssm_tagger_ab.py <A>/tracking-pr.root <B>/tracking-pr.root
+```
+
+`run_ssm_arm.sh` is `run_pr3_evt.sh` for evt 172230 with extra TLAs forwarded
+(`wct-pr-perevt.jsonnet` on `work-nuecc48-nuf/ql_evt172230/pctree-evt172230.tar.gz`,
+`pipeline_names=[… tagger_check_neutrino, numu/nue_bdt_scorer, tracking_visitor,
+tagger_output]`, `dl_weights=''`, `beam_window_us=[0.2,2.2]`).
+
+Two new `TaggerCheckNeutrino` keys, both `[x, y, z]` arrays in the detector frame:
+
+| key | C++ default | meaning |
+|---|---|---|
+| `ssm_target_dir` | `[0.46, 0.05, 0.885]` | BNB target as seen from MicroBooNE |
+| `ssm_absorber_dir` | `[0.33, 0.75, -0.59]` | NuMI absorber as seen from MicroBooNE |
+
+Plumbing: `PatternAlgorithms::m_ssm_target_dir` / `m_ssm_absorber_dir`
+(`NeutrinoPatternBase.h`) ← `TaggerCheckNeutrino::configure()` ← `tagger_check_neutrino`
+in `cfg/pgrapher/common/clus.jsonnet` (key-suppression idiom, key omitted when `null`)
+← SBND `clus.jsonnet` `clus_pr(...)`/`pr(...)` ← `wct-pr-perevt.jsonnet` TLA. The two
+consuming sites are unchanged: `NeutrinoTaggerSSM.cxx:908-909` (the 10 cm
+initial-direction pair) and `:1124-1125` (the nu / con_nu / prim_nu / track momentum
+pairs). SBND sets **neither** — every level defaults to `null`, so the SBND compiled
+config and the uBooNE path are untouched.
+
+Three things a future SBND value must account for:
+
+1. **The prototype vectors are not unit vectors**: `|target| = 0.99866`,
+   `|absorber| = 1.00970`. `safe_acos()` clamps the dot product, so the *absorber*
+   angle saturates at exactly 0 for true angles out to ~7.9°. They are kept verbatim
+   for parity; a properly normalized SBND replacement will shift these feature
+   distributions even at the same physical direction.
+2. A **malformed or zero** array is rejected with a warning and the default kept — a
+   zero reference would make every `safe_acos(dot)` return exactly π/2 and silently
+   pin all 8 features to 1.5708.
+3. `dir_beam(0,0,1)` and `dir_vertical(0,1,0)` on the adjacent lines are frame
+   conventions that hold for SBND too and were deliberately **not** lifted.
+
+Verification (evt 18253/1/172230, nueCC48; `ssm_flag_st_kdar = 1`, so the tagger does
+fire and none of this is vacuous):
+
+| arm | library | `ssm_target_dir` | `ssm_nu_angle_target` | `ssm_nu_angle_z` |
+|---|---|---|---|---|
+| A0 | pre-change | (key absent) | 0.85479736 | 0.39195666 |
+| A0k | pre-change | `[0,0,1]` | 0.85479736 | 0.39195666 |
+| A | post-change | (key absent) | 0.85479736 | 0.39195666 |
+| B | post-change | `[0,0,1]` | **0.39195666** | 0.39195666 |
+
+- **Off-gate (A0 vs A, cross-binary).** 1209 of 1216 `T_tagger` branches identical,
+  including every `ssm_*`. The 7 that move (`pio_2_v_{acc_length,angle2,dis2}`,
+  `shw_sp_pio_2_v_*`, `shw_sp_lol_1_v_angle`) also move in an **A/A control** — same
+  multiset, permuted order — so they are pre-existing run-to-run instability, not this
+  change. The pre-change library is toolkit `3d71e111` exactly (built into
+  `/home/xqian/tmp/ssmlib_old/` with `./wcb build`, no install, and loaded via
+  `LD_LIBRARY_PATH`); arm A0k proves the swap really took, since that library ignores
+  the key. Both arms therefore differ by this commit alone.
+- **Knob-on identity.** With `ssm_target_dir=[0,0,1]` the target reference *is* the
+  beam axis, so every `ssm_*_angle_target` must equal `ssm_*_angle_z` bit-for-bit. All
+  five pairs do (`angle_to`, `nu`, `con_nu`, `prim_nu`, `track`). A/B moves exactly two
+  branches — `ssm_nu_angle_target`, `ssm_con_nu_angle_target` — the only two live
+  target features on this event; `ssm_*_absorber` is untouched, as it must be.
+- **Compiled config.** Knob null ⇒ `cmp`-identical to the pre-edit cfg tree (255625 B,
+  both arms). Knob set ⇒ exactly one added key. `./build/clus/wcdoctest-clus`: 49/49.
+
+Recorded, not fixed (CLAUDE.md tie-breaker):
+
+- `ssm_angle_to_{z,target,absorber,vertical}` are **all exactly π/2** on this event, in
+  every arm. That means `init_dir_10 = segment_cal_dir_3vector(ssm_sg, dir, 10, 0)`
+  came back as the zero vector, so the 10 cm-direction quartet is degenerate here
+  regardless of the reference vectors. Unrelated to this change; worth a look before
+  anyone tunes those four features.
+- The 7 run-to-run-unstable `pio`/`lol` branches above (order, not content) — the same
+  class of pointer-order dependence as the `T_rec_charge` row order fixed in
+  `dc9ba62b` (doc `pr/7`).
 
 **(ii) The MIP normalization — highest-leverage single tune.** `43e3/units::cm`
 appears at ~97 sites in 16 files (19× NuE, 13× Cosmic, 10× SSM, 10× VertexFinder, 9×
@@ -203,7 +296,9 @@ prove the fit unchanged.
 SBND trains a net**), `dl_vtx_rerank/top_k/min_accept_score/score_scale` (uBooNE-tuned
 re-rank, inert), `clus_geom_helper=''` (no SCE on SBND: `UbooneGeomHelper` doesn't even
 exist in this tree — `kine_nu_{x,y,z}_corr` are raw positions, a *stated decision* per
-§2d G4).
+§2d G4), and — new 2026-07-30 — `ssm_target_dir=[0.46,0.05,0.885]` /
+`ssm_absorber_dir=[0.33,0.75,-0.59]` (§2e(i-a): reachable but **live and uncalibrated**,
+unlike the inert SCN knobs — they feed 8 BDT features on every SSM-tagged event today).
 
 **(vii) Clean bills of health** (so nobody re-audits them): `ParticleDataSet.cxx` (all
 curves from config; PDG masses only), `TrackFitting.cxx` geometry (pitch/tick/drift
@@ -419,8 +514,13 @@ imaging: do not archive `work/` pieces without `relink_tags.py`.
 
 - G1–G5 (§2d): BDT retraining, Sbnd output visitors, SCN retraining, dQ/dx + tagger
   calibration.
+- **An SBND BNB-target direction** for `ssm_target_dir`, and a decision on what (if
+  anything) `ssm_absorber_dir` should mean at SBND. The knobs exist as of 2026-07-30
+  (§2e(i-a)); until they are set, the 8 `ssm_*_angle_{target,absorber}` features carry
+  MicroBooNE geometry. Note the parity caveat about non-unit vectors before supplying
+  a normalized one.
 - The §2e tuning worklist, in its stated priority order: correctness items (SSM beam
-  vectors, nue apa/face, SinglePhoton inline box model) → chain-wide MIP
+  vectors — now half-closed, see above; nue apa/face, SinglePhoton inline box model) → chain-wide MIP
   normalization knob → cosmic-y / vertex-z-prior rescaling → energy-reco factors +
   `cal_corr_factor` stub → fit-JSON absolute-charge thresholds.
 - Track B/C campaign execution (§3) and the V0 instrumentation knobs (§4).
