@@ -771,6 +771,40 @@ latent false-positive channel rather than fixing an observed one.
   legs → (39.7, −67.3, 159.9) with 2 legs, i.e. 22.8 cm upstream in z; `nue_score`
   0.497 → 1.844, `numu_score` −2.446 → −2.416. Both are real (non-sentinel) BDT values.
 
+**Where these sites sit relative to the DL vertex — and the production-configuration
+numbers.** The measurement above is the *geometric* arm (`dl_weights=''`); SBND
+production defaults the SCN vertex **ON**, and the three sites are not equally exposed
+to it (`TaggerCheckNeutrino.cxx:506-524`):
+
+| site | when | DL ON |
+|---|---|---|
+| `compare_main_vertices` (`:875`) | inside `determine_main_vertex`, **per cluster, before any DL** — it produces the candidates DL re-ranks | **live** |
+| `compare_main_vertices_global` (`:3002`) | inside `determine_overall_main_vertex`, called only `if (!flag_dl_changed)` | **bypassed** whenever DL moves the vertex |
+| the four `cosmic_y_*` | `cosmic_tagger` at `:584`, after DL + `improve_vertex` + shower clustering | always after DL |
+
+Re-running the same 48 events with DL ON (`sbnd_xin/run_pr_geom_arm_dl.sh`, one binary,
+both arms) gives **47/48 identical, 1 changed**:
+
+- **evt 235435's main-cluster switch disappears** — the arms are byte-identical
+  (`8a45c044…`), because DL fired and `compare_main_vertices_global` never ran. So the
+  `2 → 24` switch, and the hand-scan question it raises, belong to the **geometric
+  fallback path** (the gate arm, plus any event where DL declines to move the vertex),
+  not to production-with-DL.
+- **evt 269774 still differs**, as expected from the pre-DL `:875` site: cluster 13's
+  main vertex is (16.5, −93.0, 182.7) with 3 legs vs (39.7, −67.3, 159.9) with 2. But
+  the **tagger outputs agree exactly** (`nue_score` 4.301, `numu_score` −0.600 in both);
+  DL overrides the final vertex, so only the per-cluster bookkeeping in the Bee zip moves.
+
+M4 control, since the DL vertex is not bit-stable in general: both arms were run twice
+independently and each reproduced its own hash exactly (`geomab_dl` vs `geomab_dlfull`,
+on **and** off), so the single DIFF is a real effect, not SCN noise. Two events fail in
+both arms and both configurations for unrelated reasons (271851 the same `RuntimeError`;
+one `bad_alloc` that moves between events with concurrency — load, not knob).
+
+Net: with SBND's production defaults the shipped change is **almost inert today** (1 of
+48 events, and that one keeps its verdicts); it becomes consequential exactly when the
+DL vertex is off or declines to move — which is also the arm every identity gate uses.
+
 **Side finding worth its own line (feeds gap G1).** `nue_score` is **saturated** on most
 of this sample: `±4.3009 = ±log10(0.9999·2/0.0001)` is the clamp at
 `UbooneNueBDTScorer.cxx:1920-1923`, i.e. the uBooNE-trained BDT output pinned at ±1.
