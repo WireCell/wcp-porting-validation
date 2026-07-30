@@ -29,13 +29,13 @@ local reality = std.extVar('reality');
 // The reco chain's reality config (use_sce, pos_offset_on) is grouped inside
 // the toolkit clus maker keyed by `reality` -- see clus.jsonnet `reco` local.
 
-// run_labeler: append wclsTensorSetLabeler after the all-APA MABC.  Runs in
-// BOTH realities: sim attaches run/subrun/event + nu truth metadata, a
-// truth_per_track tensor, per-blob "trackid", the truth Bee sets, and a
-// nugraph HDF5 WITH truth; data attaches only run/subrun/event metadata and
-// an input-only nugraph HDF5 (no truth, no Bee).  Requires the "WireCellAIML"
-// plugin + "wclsTensorSetLabeler" inputer in the fcl (both fcls have them).
-local run_labeler = true;
+// The follow-up tail -- STM/TGM/FC PR taggers -> wclsTensorSetLabeler -> dump --
+// is assembled below in this entry config (see the "follow-up tail" section);
+// clus.jsonnet now produces only the clustering+matching all-APA MABC.  Requires
+// the "WireCellAIML" plugin + "wclsTensorSetLabeler:clus_all_apa" inputer in the
+// fcl (both fcls have them); the labeler runs in BOTH realities (sim attaches nu
+// truth + truth_per_track + truth Bee sets + nugraph-with-truth, data attaches
+// RSE + input-only HDF5).  The tagger_stm/tgm/fc Bee sets are emitted in both.
 
 // Canonical SBND simparams (toolkit).  drift_speed (1.563 mm/us) flows into
 // QLMatching from here; no DL/DT/lifetime/driftSpeed extVars are needed.
@@ -108,7 +108,7 @@ local img_pipes = [
 local clus = import 'pgrapher/experiment/sbnd/clus.jsonnet';
 // rse_from_ident: each frame's tensor ident carries the real event id, so the
 // Bee display is labelled with the true event number (matches Xin's chain).
-local clus_maker = clus(rse_from_ident=true, reality=reality, run_labeler=run_labeler);
+local clus_maker = clus(rse_from_ident=true, reality=reality);
 // Single shared Bee sink: every MABC node (per-APA + all-APA) writes into this
 // one zip instead of one zip per node.
 local bee_shared = {
@@ -136,24 +136,96 @@ local matching_joint = qlm.matching_joint(
     tools.anodes, clus_maker.detector_volumes(tools.anodes),
     reality, semimodel_file, cathode_fiducial=cathode_fv.tn, pmt_nl=pmt_nl);
 
-// all-APA clustering: joint matcher already merged -> premerged=true.
-// dump=true appends the terminal TensorFileSink that consumes the all-APA MABC
-// output (without it the MABC output port is dangling -> "graph not fully
-// connected").  Bee still goes to the shared mabc.zip; the tensor .tar.gz is a
-// harmless byproduct (same as Xin's standalone).
-local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=true,
+// all-APA clustering + matching ONLY (joint matcher already merged ->
+// premerged=true; dump=false -> no terminal sink here, the tail below consumes
+// the MABC tensor output).  Bee (clustering-global etc.) still goes to the
+// shared mabc.zip.
+local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=false,
                                         bee_sink=bee_shared, premerged=true);
+
+// ==== follow-up tail (moved out of clus.jsonnet into this entry config) ====
+//   clus_all_apa (MABC) -> pr_node (STM/TGM/FC taggers) -> labeler -> tail_dump
+
+// Beam gate shared by the tagger PR pass AND the labeler's tagger-Bee cluster_id
+// encoding (which uses it to tell "beam-window candidate" mains from out-of-
+// window mains) -- ONE source so the two never drift.
+local beam_window = [0.2 * wc.us, 2.2 * wc.us];
+
+// PR tagger pass: SBND production operating point (clus_maker.pr defaults),
+// running the nusel tagger visitors so each cluster carries flag_STM/TGM/FC for
+// the labeler to read.  dump=false -> a pass-through tensor node.
+local pds = (import 'pgrapher/experiment/sbnd/particle_dataset.jsonnet')();
+local pr_node = clus_maker.pr(
+    tools.anodes, dump=false,
+    pipeline_names=['switch_scope', 'unmerge_bundle', 'unmerge_assoc', 'steiner',
+                    'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc'],
+    particle_dataset=pds.particle_dataset, extra_uses=pds.all, beam_window=beam_window);
+
+// wclsTensorSetLabeler (larwirecell "WireCellAIML" plugin).  Node name kept as
+// 'clus_all_apa' so the fcl inputer "wclsTensorSetLabeler:clus_all_apa" still
+// resolves.  Deps come from clus_maker primitives so the config is identical to
+// what clus.jsonnet used to build; reads raw (non-t0-corrected) blob coords, so
+// drift_speed/time_offset/tick MUST match the BlobSampler.
+local lbl_dv = clus_maker.detector_volumes(tools.anodes, face='');
+local lbl_pcts = clus_maker.pc_transforms(lbl_dv);
+local lbl_fv = clus_maker.fiducial_box();
+local labeler = g.pnode({
+    type: 'wclsTensorSetLabeler',
+    name: 'clus_all_apa',
+    data: {
+        inpath: 'pointtrees/%d',
+        grouping: 'live',
+        reality: reality,
+        anodes: [wc.tn(anode) for anode in tools.anodes],
+        detector_volumes: wc.tn(lbl_dv),
+        pc_transforms: wc.tn(lbl_pcts),
+        drift_speed: clus_maker.drift_speed,
+        time_offset: clus_maker.time_offset,
+        tick: 0.5 * wc.us,
+        // shift the priorSCE (true) depos true->reco before association.
+        sce_field: wc.tn(clus_maker.sce_field_fwd),
+        sce_correction: true,
+        n_sample_truth_depo_sce: 1,
+        pf_ke_min: 10 * wc.MeV,
+        pf_fiducial: wc.tn(lbl_fv),
+        pf_nu_only: true,
+        truth_tracks_nu_only: true,
+        bee_sink: wc.tn(bee_shared),
+        // tagger_stm/tgm/fc Bee sets use the SAME corrected coords as
+        // clustering_global (data x_t0cor/y_cor/z_cor, sim x_sce/y_sce/z_sce).
+        tagger_coords: clus_maker.bee_coords,
+        // beam gate for the 4-case tagger cluster_id (0 non-main, 1 out-of-window
+        // main, 2 in-window untagged, 3 in-window tagged); matches pr's window.
+        beam_window: beam_window,
+    },
+}, nin=1, nout=1,
+   uses=tools.anodes + [lbl_dv, lbl_pcts, clus_maker.sce_field_fwd, lbl_fv, bee_shared]);
+
+// Terminal sink for the labeled pctree tarball (dump_mode=false -> real tensors,
+// the historical labeler deliverable).  Bee -> mabc.zip and nugraph HDF5 are
+// written upstream by the MABC/labeler, so this tarball is just a byproduct.
+local tail_dump = g.pnode({
+    type: 'TensorFileSink',
+    name: 'clus_all_apa',
+    data: {
+        outname: 'trash-all-apa.tar.gz',
+        prefix: 'clustering_',
+        dump_mode: false,
+    },
+}, nin=1, nout=0);
 
 // ---- assemble the graph ----
 //  sigs ─FrameFanout─┬─ img[0] ─(live,dead)─ clus[0] ─ flash_attach[0] ─┐
 //                    └─ img[1] ─(live,dead)─ clus[1] ─ flash_attach[1] ─┤
 //  opflash[n] ───────────────────────────────────────(port1) flash_attach[n]
 //        flash_attach[n] ─(port n)─ matching_joint ─ clus_all_apa (all-APA MABC)
+//        clus_all_apa ─ pr_node (taggers) ─ labeler ─ tail_dump
 local graph = g.intern(
     innodes=[wcls_input.sigs],
     centernodes=[frame_fan] + img_pipes + clus_pipes + flash_attach
-                + [matching_joint] + wcls_input.opflashes,
-    outnodes=[clus_all_apa],
+                + [matching_joint] + wcls_input.opflashes
+                + [clus_all_apa, pr_node, labeler],
+    outnodes=[tail_dump],
     edges=
         [g.edge(wcls_input.sigs, frame_fan, 0, 0)]
         + [g.edge(frame_fan, img_pipes[n], n, 0) for n in std.range(0, nanode - 1)]
@@ -163,6 +235,9 @@ local graph = g.intern(
         + [g.edge(wcls_input.opflashes[n], flash_attach[n], 0, 1) for n in std.range(0, nanode - 1)]
         + [g.edge(flash_attach[n], matching_joint, 0, n) for n in std.range(0, nanode - 1)]
         + [g.edge(matching_joint, clus_all_apa, 0, 0)]
+        + [g.edge(clus_all_apa, pr_node, 0, 0)]
+        + [g.edge(pr_node, labeler, 0, 0)]
+        + [g.edge(labeler, tail_dump, 0, 0)]
 );
 
 local app = {
