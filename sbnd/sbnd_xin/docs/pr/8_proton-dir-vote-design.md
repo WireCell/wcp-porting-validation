@@ -299,3 +299,16 @@ Run/label ledger: `nupr_evt172230_mipvote_{off,off3}` (off-gate,
 c5bfe4bf), `_mipvote_{on,off2}` (ON, 65a64151), `_mipvote_on_trace`,
 `_mipvote_instr`/`_instr2` (instrumented, superseded), `_mipvote_on_dl`
 (DL arm); qlport `sweep/mipvoteoff_ub`.
+
+## 12. CORRECTION (2026-07-30, doc pr/9)
+
+§11's converter attribution is WRONG.  Object-level instrumentation (pr/9 §4)
+shows the improve_vertex rescue never runs for seg 5030 (`ndaughter=25 ≠ 1`
+short-circuits the gate; by that point pdg is already 11 with the vote's
+score 0.135 intact).  The real converter is `examine_all_showers`'
+shower-dominated-cluster wholesale conversion (prototype-faithful), entered
+because score 0.135 > 0.13 grades the voted proton dir-weak — which traces
+to the diluted endpoint sample (pr/9 §§2-3: dropping that one sample gives
+score 0.077 through the normal path).  See pr/9 for the corrected causal
+chain, the rescue-site fidelity divergences (real but non-causal here), and
+the proposed endpoint-robust PID fix.
