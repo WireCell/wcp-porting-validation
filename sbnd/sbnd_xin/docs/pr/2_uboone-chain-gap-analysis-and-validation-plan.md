@@ -1,7 +1,10 @@
 # 2 — Neutrino PR chain on SBND: uBooNE gap analysis + validation plan + nueCC sample
 
-**Status: PLAN (with executed smoke test), plus one worklist item since executed.** No
-production default changed. The one new artifact besides docs is the 2-event smoke root
+**Status: PLAN (with executed smoke test), plus three worklist items since executed**
+(§2e(i-a), §2e(i-b), §2e(ii-a)). The original plan changed no production default; two of
+those three items since have — the MIP scales are ON in SBND production (§2e(ii-a)) and
+the nue apa/face fix ships unconditionally (§2e(i-b)). The one new artifact besides docs
+is the 2-event smoke root
 `work-nuecc48-prsmoke/` (§5.3). Everything else here is analysis of what exists and a
 step-by-step plan for validating `tagger_check_neutrino` (and the rest of the uBooNE
 pattern-recognition tail) on SBND.
@@ -19,6 +22,16 @@ designed and gated in doc `pr/8`. **§2e(ii-a)** records the current state, the 
 call sites that still fall back to the uBooNE literals, and the one place where the
 threading is incomplete in a way that also disables `proton_dir_vote`. The `48000` is a
 ratio-preserving placeholder, not an SBND measurement.
+
+**Update 2026-07-30 (third)** — the second §2e(i) correctness item is **closed**:
+`nue_tagger` now receives the apa/face of the vertex's own drift volume instead of a
+hard-coded `(0,0)` (toolkit `7902615c`). Per the owner this is a bug fix and ships
+**without a knob**; uBooNE is unaffected and **§2e(i-b)** shows it two ways rather than
+arguing it. That section also records the first measured effect (evt 444187, APA 1:
+`mip_quality_flag`/`mip_quality_overlap` flip, `nue_score` unchanged) and a caveat about
+`ab_check.sh`'s second gate, which an A/A control shows is non-discriminating on the
+uBooNE manifest. §2e(i) is now fully closed except for the SBND `ssm_target_dir` *value*
+and the SinglePhoton inline box model.
 
 Companion docs: `1_beam-window-cosmic-vs-nu-division.md` (same-day census of the
 cosmic/nu-candidate split on both data samples; it created the `work-nuecc48-nuf` arm
@@ -166,7 +179,7 @@ chain currently runs two mutually inconsistent field assumptions.**
 | where | what | why wrong |
 |---|---|---|
 | `NeutrinoTaggerSSM.cxx:582-583` | `target_dir(0.46,0.05,0.885)`, `absorber_dir(0.33,0.75,-0.59)` | BNB-target and NuMI-absorber directions **in the uBooNE detector frame**; feed 8 `ssm_*_angle_{target,absorber}` BDT features. SBND needs its own target vector; the NuMI-absorber features may be meaningless there. **Half-closed 2026-07-30: the numbers are now config-fed (`ssm_target_dir` / `ssm_absorber_dir`), defaults unchanged — see §2e(i-a). The remaining gap is the SBND *value*, which nobody has yet.** |
-| `TaggerCheckNeutrino.cxx:493` | `nue_tagger(..., apa=0, face=0, ...)` | Single-drift-volume assumption: any vertex in SBND APA 1 gets APA 0's mirrored wire geometry for `flag_prolong_u/v/w` / `flag_parallel`. `NeutrinoTaggerSinglePhoton.cxx:2186-2196` already derives apa/face from `dv->contained_by(vtx_pt)` — the nue path needs the same fix. |
+| `TaggerCheckNeutrino.cxx:493` | `nue_tagger(..., apa=0, face=0, ...)` | Single-drift-volume assumption: any vertex in SBND APA 1 gets APA 0's mirrored wire geometry for `flag_prolong_u/v/w` / `flag_parallel`. `NeutrinoTaggerSinglePhoton.cxx:2186-2196` already derives apa/face from `dv->contained_by(vtx_pt)` — the nue path needs the same fix. **CLOSED 2026-07-30, toolkit `7902615c` — see §2e(i-b).** (The `:493` line number is from the 2026-07-29 sweep; the call site is `:561` at `34f0abd8`.) |
 | `NeutrinoTaggerSinglePhoton.cxx:1499-1505` | inline inverse Modified-Box with `0.273` kV/cm, `1.38` g/cm³, `23.6e-6`, `43e3` | Bypasses the configured `sbnd_box_recomb` (0.5 kV/cm) entirely for its `median_dedx`/`mean_dedx`. |
 
 **(i-a) DONE 2026-07-30 — the SSM beam vectors are config-fed** (owner request; the
@@ -264,6 +277,142 @@ Recorded, not fixed (CLAUDE.md tie-breaker):
 - The 7 run-to-run-unstable `pio`/`lol` branches above (order, not content) — the same
   class of pointer-order dependence as the `T_rec_charge` row order fixed in
   `dc9ba62b` (doc `pr/7`).
+
+**(i-b) DONE 2026-07-30 — `nue_tagger` gets the vertex's own apa/face.** Toolkit
+`7902615c`. Owner call: **this is a bug, so it ships unconditionally, with no knob** —
+the usual default-OFF rule does not apply to a wrong value. uBooNE is nevertheless
+unaffected, and that is shown below rather than argued.
+
+Repro:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild && ./build/clus/wcdoctest-clus
+
+# uBooNE arm: 35-event manifest, new binary
+qlport/scripts/sweep_5384.sh nueapa_ub 6
+qlport/scripts/ab_check.sh   nueapa_ub mipvoteoff_ub
+qlport/scripts/sweep_5384.sh nueapa_ub_aa 6            # A/A control, same binary
+qlport/scripts/ab_check.sh   nueapa_ub_aa nueapa_ub
+# what apa/face the fix actually derived, per event:
+grep -h "nue_tagger volume" qlport/scripts/sweep/nueapa_ub/*/wct_*.log \
+  | sed -E 's/.*volume: //; s/ \.\..*//' | sort | uniq -c
+
+# SBND arms on evt 18253/1/444187 (a vertex that lands in APA 1)
+cd sbnd_xin/work-nuecc48-prsmoke2
+PROUT=$PWD/nupr_evt444187_nueapa      ./run_pr3_evt.sh 444187        # post-change
+PROUT=$PWD/nupr_evt444187_nueapa_aa   ./run_pr3_evt.sh 444187        # A/A control
+# pre-change arm: ./wcb build (NO install) at 34f0abd8 into /home/xqian/tmp/nueapa_oldlib/
+LD_LIBRARY_PATH=/home/xqian/tmp/nueapa_oldlib:$LD_LIBRARY_PATH \
+  PROUT=$PWD/nupr_evt444187_nueapa_base ./run_pr3_evt.sh 444187
+python3 ../tagger_tree_ab.py nupr_evt444187_nueapa_base/tracking-pr.root \
+                             nupr_evt444187_nueapa/tracking-pr.root
+```
+
+The fix, at the `nue_tagger` call site (`TaggerCheckNeutrino.cxx:561` as of
+`34f0abd8`, `:493` when the §2e(i) sweep was taken):
+
+```cpp
+int nue_apa = 0, nue_face = 0;
+if (m_dv) {
+    const Point nue_vtx_pt = final_main_vertex->fit().valid()
+                             ? final_main_vertex->fit().point
+                             : final_main_vertex->wcpt().point;
+    const auto nue_wpid = m_dv->contained_by(nue_vtx_pt);
+    if (nue_wpid.apa() >= 0) { nue_apa = nue_wpid.apa(); nue_face = nue_wpid.face(); }
+}
+```
+
+Three choices worth recording:
+
+1. **Derived at the call site, not inside `nue_tagger`.** The `int apa, int face`
+   parameters exist so the caller decides; deriving inside would make them dead.
+   `singlephoton_tagger` derives internally only because it takes no such parameters.
+2. **Guarded on `apa() >= 0`, not on `wpid.valid()`.** `DetectorVolumes::contained_by`
+   returns `WirePlaneId(kUnknownLayer, -1, -1)` for an uncontained point, whose
+   `apa()` is −1 but whose `face()` is **+1** (the packed layer bits make it so) — so
+   apa and face must be taken together or not at all. `valid()` additionally demands a
+   well-defined *layer*, which the wpid coming back from `m_faces` is not guaranteed to
+   carry; using it risks a guard that never fires. `apa() >= 0` is the idiom already in
+   this file at `NeutrinoTaggerNuE.cxx:2764`.
+3. **Falling back to (0,0) when uncontained**, i.e. to the legacy value. Not obviously
+   right physically, but `Grouping::wire_angles()` is `map.at(apa).at(face)` — an
+   unguarded −1 throws.
+
+The two consuming sites are unchanged: `NeutrinoTaggerNuE.cxx:2725-2726`
+(`wire_angles` + `get_drift_dir()` → `flag_prolong_u/v/w`, `flag_parallel` inside
+`gap_identification`) and `:1638` (`segment_get_closest_2d_distances` inside
+`mip_quality`). `contained_by`'s apa numbering is the same one those point-cloud
+queries key on — `:2766` already feeds `q_apa` straight from `contained_by` into
+`grouping->get_closest_points(...)`, as do `NeutrinoVertexFinder.cxx:125,190,1847` and
+`NeutrinoStructureExaminer.cxx:569,2551`.
+
+**uBooNE off-arm.** Two independent lines of evidence:
+
+- **The arguments are literally unchanged.** The added debug line reports
+  `apa=0 face=0` on **35/35** events of the qlport manifest — exactly the values the
+  hard-coded literals supplied. Nothing downstream can differ.
+- **Gate:** `sweep/nueapa_ub` vs `sweep/mipvoteoff_ub` → **ZIPS 35/35
+  content-identical**.
+
+`ab_check.sh`'s *second* gate (tagger-compare verbose logs) reports `identical=3
+diff=32`. **That gate does not discriminate on this manifest and did not before this
+change.** An A/A control with the identical binary — `sweep/nueapa_ub_aa` vs
+`sweep/nueapa_ub` — reports `identical=2 diff=33`, i.e. *more* differing events than
+the A/B, and 1401 differing log lines against the A/B's 1363. Spot-checking ev 6505,
+the A/A reproduces the very same diffs the A/B shows
+(`numu_cc_1_particle_type` 2001↔2201, `shw_sp_lol_2_v_length` 79.3804↔80.8994,
+permuted `pio_2_v_*` vectors). Every historical `ab_check_*.log` in `sweep/` shows the
+same 32–35 DIFF count for every label pair back to `d54opt2_ub`, so this is long-standing
+run-to-run instability in the uBooNE PR stage, not a regression. **The operative gate on
+this manifest is the ZIPS line.**
+
+**SBND on-arm — the fix is exercised and it moves output.** Evt 18253/1/444187 derives
+`apa=1 face=0`; evt 172230 (this doc's usual event) derives `apa=0 face=0` and is
+therefore *unaffected*, which is why the effect had to be measured elsewhere. Against a
+cross-binary pre-change arm (`34f0abd8` built with `./wcb build`, no install, loaded via
+`LD_LIBRARY_PATH`; the base arm emits no `nue_tagger volume` line, which proves the swap
+took), of 1216 `T_tagger` branches:
+
+| comparison | moved | order-only (same multiset) | value-changed |
+|---|---|---|---|
+| A/A, same binary | 13 | 12 | 1 — `shw_sp_lol_1_v_angle` |
+| A/B, apa (0,0) → (1,0) | 9 | 6 | 3 — `mip_quality_flag`, `mip_quality_overlap`, `shw_sp_lol_1_v_angle` |
+
+`shw_sp_lol_1_v_angle` moves in the A/A too, so it is noise. The signal is the two that
+do **not** appear in the A/A: `mip_quality_flag` **0 → 1** and `mip_quality_overlap`
+**1 → 0** — precisely the `mip_quality` helper that consumes `ctx.apa`/`ctx.face` at
+`:1638`. Both are NuE BDT input features. `nue_score` is nevertheless **unchanged**
+(4.300936 in all three arms), as is `numu_score` (0.35807034): on this event the flip
+does not propagate to the score. So the correct claim is *"the fix changes NuE feature
+values on APA-1 vertices"*, **not** *"it changes the selection"* — no event is yet known
+where the score moves.
+
+**How often it matters.** Over the nueCC48 sample, 38 events ran to `rc=0` and 37 of
+those reached `nue_tagger` (evt 116962 found no main vertex): **22 derive apa=0, 15
+derive apa=1** — so roughly 40% of this sample was being evaluated against the wrong
+drift volume. The batch was cut short at 37/48 by an unrelated concurrent rebuild of
+`libWireCellClus.so` mid-run (the remaining jobs died with `failed to load plugin`);
+the 11 missing events were **not** re-run, because by then the shared tree carried
+another session's uncommitted work and a rebuild would no longer have isolated this
+change. The 15/37 figure is a sample count, not a calibrated rate.
+
+`./build/clus/wcdoctest-clus`: 49/49 cases, 565/565 assertions. Freshness proof:
+`local/lib/libWireCellClus.so` 11:16:04 vs source 11:15:39.
+
+Recorded, not fixed (CLAUDE.md tie-breaker):
+
+- **`singlephoton_tagger`'s own derivation has no `apa >= 0` guard**
+  (`NeutrinoTaggerSinglePhoton.cxx:2186-2196`). It does not call `wire_angles`, so there
+  is no `.at(-1)` throw today, but an uncontained main vertex hands it `apa=-1, face=1`,
+  which then flows into its point-cloud queries. Same one-line guard would fix it; out of
+  scope for this change.
+- `cosmic_tagger`, `numu_tagger` and `ssm_tagger` were checked: none takes apa/face at
+  all, so there is nothing analogous to fix in them.
+- `qlport/scripts/ab_check.sh` gate 2 has been non-discriminating for many labels
+  (above). It should either be scoped to the stable branches or retired in favour of the
+  ZIPS gate plus a per-branch `tagger_tree_ab.py` diff; leaving it as-is invites a future
+  reader to treat a PASS-shaped FAIL as meaningful.
 
 **(ii) The MIP normalization — highest-leverage single tune.** `43e3/units::cm`
 appears at ~97 sites in 16 files (19× NuE, 13× Cosmic, 10× SSM, 10× VertexFinder, 9×
@@ -645,8 +794,17 @@ imaging: do not archive `work/` pieces without `relink_tags.py`.
   (→ off) on the `total_length < 5 cm` non-shower-like path. Owner call whether to fix,
   and it needs the 50k-role scale plumbed into `segment_determine_shower_direction`
   first (§2e(ii-a)).
+- **`singlephoton_tagger`'s apa/face derivation is unguarded**
+  (`NeutrinoTaggerSinglePhoton.cxx:2186-2196`): an uncontained main vertex gives it
+  `apa=-1, face=1`. No throw today (it never calls `wire_angles`), but those values reach
+  its point-cloud queries. The one-line `apa() >= 0` guard from §2e(i-b) applies verbatim.
+- **No event is yet known where the nue apa/face fix moves `nue_score`** — on evt 444187
+  it flips `mip_quality_flag`/`mip_quality_overlap` but the BDT score is unchanged
+  (§2e(i-b)). Worth a pass over the 15 APA-1 events of the nueCC48 sample before claiming
+  any selection impact.
 - The §2e tuning worklist, in its stated priority order: correctness items (SSM beam
-  vectors — now half-closed, see above; nue apa/face, SinglePhoton inline box model) →
+  vectors — now half-closed, see above; ~~nue apa/face~~ **done, §2e(i-b)**;
+  SinglePhoton inline box model) →
   ~~chain-wide MIP normalization knob~~ (done, §2e(ii-a); the open piece is the
   measurement above) → cosmic-y / vertex-z-prior rescaling → energy-reco factors +
   `cal_corr_factor` stub → fit-JSON absolute-charge thresholds.
