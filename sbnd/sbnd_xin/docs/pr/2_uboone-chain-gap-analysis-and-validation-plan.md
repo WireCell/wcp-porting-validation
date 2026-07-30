@@ -231,9 +231,18 @@ fire and none of this is vacuous):
   the key. Both arms therefore differ by this commit alone.
 - **Knob-on identity.** With `ssm_target_dir=[0,0,1]` the target reference *is* the
   beam axis, so every `ssm_*_angle_target` must equal `ssm_*_angle_z` bit-for-bit. All
-  five pairs do (`angle_to`, `nu`, `con_nu`, `prim_nu`, `track`). A/B moves exactly two
-  branches — `ssm_nu_angle_target`, `ssm_con_nu_angle_target` — the only two live
-  target features on this event; `ssm_*_absorber` is untouched, as it must be.
+  five pairs do, but **only two of them are live on this event**: `nu` (0.85480 →
+  0.39196) and `con_nu` (1.17490 → 0.69469), both from the `:1124-1125` site. The
+  `angle_to` pair is π/2 == π/2 and `prim_nu`/`track` are −999 == −999 — trivially
+  equal, so they prove nothing. **The `:908-909` site (`angle_to_target_10`) was
+  therefore never exercised with a non-degenerate value**; it is verified by
+  construction (same local name, same rebind, one line apart) rather than by output.
+  A/B moves exactly those two branches; `ssm_*_absorber` is untouched, as it must be.
+- **Blast radius.** Neither `UbooneNumuBDTScorer` nor `UbooneNueBDTScorer` reads any
+  `ssm_*` feature (`grep -c ssm root/src/Uboone*BDTScorer.cxx` → 0/0), so setting an
+  SBND vector moves the `T_tagger` branches only — no BDT score shifts underneath it.
+  The 8 features reach the ROOT output through `UbooneTaggerOutputVisitor` and wait
+  there for an SSM classifier.
 - **Compiled config.** Knob null ⇒ `cmp`-identical to the pre-edit cfg tree (255625 B,
   both arms). Knob set ⇒ exactly one added key. `./build/clus/wcdoctest-clus`: 49/49.
 
