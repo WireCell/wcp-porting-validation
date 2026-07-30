@@ -237,11 +237,31 @@ Both events' `nue_score` saturating at 4.301 is the XGB output clipping in
 log-odds — a reminder the scores are uBooNE-trained and uncalibrated here
 (record, don't cut; §7).
 
-## 7. Open items
+## 6b. Magnify round-trip (CLOSED 2026-07-30)
 
-- Magnify GUI round-trip: `wire-cell-sbnd-magnify-tracking-convert` was built
-  for the STM trees; verify it (or a small PR-variant) renders
-  `tracking-pr.root`, then hand-scan the projections.
+`wire-cell-sbnd-magnify-tracking-convert` works on the PR file **unmodified**
+(every STM extra is `GetBranch`-guarded, `T_stm_pass`/`T_stm_eval` cloned only
+when present):
+
+```bash
+cd work-nuecc48-prsmoke2/nupr_evt172230
+wire-cell-sbnd-magnify-tracking-convert -btracking-pr.root -otrack_com_pr_evt172230.root -f2
+#  -> 32 track block(s), 582 fitted point(s)      (evt 444187: 7 blocks, 515 points)
+
+# view (needs X / ssh -X):
+/nfs/data/1/xqian/toolkit-dev/Magnify-tracking-SBND/magnify.sh \
+    $PWD/track_com_pr_evt172230.root
+```
+
+`Magnify-tracking-SBND` itself needs **no modifications**: its channel axes
+(U [0,3968), V [3968,7936), W [7936,11276)) are exactly the ChanScheme the PR
+writer emits, its `T_rec` reader takes `reduced_chi2` / `sub_cluster_id` /
+`true_*` / stm branches conditionally (`Data.cc:216-242`), and the block-id
+convention (new track when `ndf` changes; PR writer: ndf = cluster_id) is the
+same one the uBooNE chain used.  Converted files:
+`work-nuecc48-prsmoke2/nupr_evt{172230,444187}/track_com_pr_evt*.root`.
+
+## 7. Open items
 - Expand from evt 172230 to the 45 nu-candidate nueCC events + Track B
   (doc pr/2 §3), now that the outputs exist.
 - BDT scores are uBooNE-trained (uncalibrated on SBND): record distributions,
