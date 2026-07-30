@@ -296,3 +296,90 @@ Large improvement, one residual:
   question (cf. the doc-50 STM gap-jumping observation), NOT an endpoint
   question — flagged for the pr/8 sec 6 joint calibration round (candidate:
   exclude near-empty samples from the comparison, or tighten the vertex fit).
+
+## 11. Post-F1 vertex-displacement autopsy: DL is right, `search_for_vertex_activities` drags it (2026-07-30, same session)
+
+Owner questions: (a) is the DL vertex actually running properly post-F1?
+(b) which algorithm creates the extra small track at the vertex that makes
+the refit drag?
+
+### Repro block
+
+```
+# post-F1 DL arm, trace-level logging (bit-identical output: mabc 987fbf56)
+PROUT=/home/xqian/tmp/nupr_evt172230_f1dl_trace \
+  <scratchpad>/run_pr3_evt_dl_trace.sh 172230
+# pre-F1 DL arm: worktree cfg at 7902615c (knob key absent = legacy path)
+git -C toolkit worktree add /home/xqian/tmp/wt-pref1 7902615c
+PROUT=/home/xqian/tmp/nupr_evt172230_pref1dl_trace \
+  <scratchpad>/run_pr3_evt_pref1_dl_trace.sh 172230
+```
+
+(The DL/vertexing trace lines are SPDLOG_LOGGER_TRACE — invisible at the
+usual `-L debug`; that is why earlier greps found nothing.)
+
+### (a) DL runs properly and selects the TRUE vertex
+
+Post-F1 trace: `determine_overall_main_vertex_DL: rerank mode, K=5`,
+regime=confident, voxel 0 → cluster 5 pos (−54.7,−87.5,19.9) — the true
+vertex — snap 0.32 cm, "switching to DL vertex", scn_inference=1003.6 ms.
+The trace run's mabc-pr.zip hashes 987fbf56 == the recorded post-F1 arms.
+
+### (b) The stub creator is `search_for_vertex_activities`, and the drag is a create→refit→prune ordering effect
+
+Chain in the final `improve_vertex(flag_search_vertex_activity=true,
+flag_final_vertex=true)` (TaggerCheckNeutrino.cxx:473):
+
+1. `fit_vertex` nsegs=2: (−54.92,−87.67,19.72) → (−54.61,−87.67,19.72),
+   0.313 cm.  Fine.
+2. `search_for_vertex_activities` (NeutrinoVertexFinder.cxx:56, prototype
+   NeutrinoID_improve_vertex.h:1039) at the main vertex, range 1.5 cm,
+   finds a steiner-terminal at (−55.23,−87.67,19.72) — **0.62 cm away
+   purely along −x (drift), y and z identical**: drift-blurred charge of
+   the vertex blob, not a real third prong.  Round-1 accept (>0.6 cm 3D
+   from both fit clouds, sum-2D >1.2 cm, angle x charge = 3.5e6).  Creates
+   stub vertex+segment; main vertex nsegs 2→3, queued for refit.
+3. `do_multi_tracking` with the stub, then the 3-segment refit
+   (NeutrinoVertexFinder.cxx:2198): vertex dragged 2.4 cm to
+   (−55.86,−87.67,22.12), mostly +z along the proton toward its Bragg tip.
+4. `eliminate_short_vertex_activities` runs only AFTER the refit
+   (toolkit :2213 == prototype :225 — prototype-faithful ordering).  Its
+   cuts are 0.36–0.5 cm, but the stub now spans to the displaced vertex
+   and re-tracking stretched it to 2.42 cm → survives (examine_direction:
+   nfits=5, dqdx_ratio=0.285, assigned pdg 13 dir-weak).  **Self-locking:
+   the displacement the stub causes makes the stub un-prunable.**  (The
+   pruner does work: one of two other activity stubs was removed, 57→56.)
+
+CORRECTION to sec 10: the "small pi+ stub" in the PF listing is this
+2.42 cm near-empty (0.3 MIP) vertex-activity artifact, not a pion.
+
+### Why pre-F1 (DL arm) did NOT create the stub
+
+Pre-F1 trace: same DL selection (voxel 0 dl=0.9944, same position, snap
+0.70 cm, switch) — but the final `improve_vertex` enters and exits in 3 ms
+with ZERO fit/search lines, main vertex left untouched at the snap
+(−54.92,−87.67,19.72).  Cause: the all-shower guard `flag_skip_two_legs`
+(NeutrinoVertexFinder.cxx:1956-1968 == prototype
+NeutrinoID_improve_vertex.h:48-60 "if all showers, no need to fit vertex
+with only two legs").  Pre-F1, examine_all_showers had wholesale-converted
+EVERY cluster-5 segment to electron (sec 4), so ntracks==0 →
+flag_skip_two_legs=true → both the fit loop (:2015) and the activity-search
+loop (:2149) skip the 2-leg main vertex entirely.  Post-F1 the proton is a
+track again → guard off → the machinery engages and invents the stub.
+
+**Net: F1's PID fix re-armed the vertex-activity machinery that the
+all-shower mislabeling had been accidentally disarming.**  The full causal
+chain of the sec-10 residual is closed: drift-blur stub → 3-seg refit drag
+(2.4 cm along the proton) → near-empty bridge samples → mu-vs-proton flip.
+
+### Candidate fixes (owner decision; all prototype divergences ⇒ default-OFF knobs)
+
+- F3a: gate stub creation on fitted charge quality or veto drift-parallel
+  candidates (Δy,Δz ≈ 0) — kills exactly this artifact class.
+- F3b: run the short-stub elimination (or a creation-length <0.5 cm check)
+  BEFORE the 3-segment refit, so a prunable stub cannot first move the vertex.
+- F3c: exclude sub-cm stubs from `fit_vertex`'s segment set.
+
+Run ledger addition: `/home/xqian/tmp/nupr_evt172230_f1dl_trace` (post-F1 DL
+trace, mabc 987fbf56), `/home/xqian/tmp/nupr_evt172230_pref1dl_trace`
+(pre-F1 DL trace, worktree wt-pref1 @ 7902615c).
