@@ -148,14 +148,75 @@ conflict scoring, and the cosmic/nue/single-photon tagger BDT inputs.
 
 ## 5. What is NOT done (owner decisions)
 
-1. **uBooNE knob-ON fidelity study**: turning this on for the uBooNE chain
-   should move ~83 read sites back to prototype semantics and could REDUCE
-   the residual proto-vs-toolkit tagger diffs (the `flag_dir_weak` columns).
-   That breaks gate3 identity by design, so it needs its own campaign:
-   knob-on sweep + `wire-cell-uboone-tagger-compare` against the prototype
-   references, diff count before/after, then a new gate label. Not started.
+1. **uBooNE knob-ON fidelity study**: DONE 2026-07-30 — see §6. Whether to
+   adopt knob-ON as the uBooNE default (and re-baseline the gate) remains
+   the owner's call.
 2. The review-doc ✅ at `nue_low_energy_..._review.md:126` and the
    translation-key comment at `NeutrinoTaggerNuE.cxx:38` are corrected as
    part of this change's commits.
 3. pr/5 §6's other two items (proton-template direction vote; mip_dqdx
    threading) remain open — this fix is one of the three.
+
+## 6. uBooNE knob-ON impact study (2026-07-30, owner-requested)
+
+### 6.0 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/qlport/scripts
+DIR_WEAK=true ./sweep_5384.sh dirweakon_ub 6      # 35/35 rc=0
+./ab_check.sh dirweakon_ub dirweakoff_ub          # ZIPS 5 mismatch, TAGGER diff=33
+# per-event fidelity table (category n_diff_branches, both arms vs the SAME
+# prototype references qlport/prototype/nue_5384_<sr>_<ev>.root):
+python3 ./fidelity_compare.py sweep/dirweakoff_ub sweep/dirweakon_ub
+```
+
+Plumbing added for the study (committed): `uboone-mabc.jsonnet` gained a
+`dir_weak_use_score=""` TLA threaded to the `cm.tagger_check_neutrino` call
+(default '' = off; compiled JSON proven byte-identical to pre-change, ON
+differs by exactly `+ "dir_weak_use_score" : true`); `run_one.sh` passes it
+via `DIR_WEAK=true`. The uBooNE **default stays OFF** — gate3 identity is
+preserved (§4's off-gate PASS still stands).
+
+### 6.1 Results (35 nue events, ASLR off, DL off — gate conditions)
+
+- **Reco outputs (Bee zips)**: 5/35 events change content hash
+  (idx 5/6/7/14/26 = evts 6529, 6532, 6536, 6612, 6837); 30/35 stay
+  byte-identical.
+- **T_tagger values**: 33/35 events change somewhere (dir_weak feeds many
+  BDT input branches directly). Evt 6588 has no T_tagger either arm
+  (pre-existing, excluded below).
+- **Prototype fidelity** (total differing branches vs prototype, summed over
+  the compare tool's category tables, 34 events):
+  **off = 20604 → on = 20531 (−73 net)**; per event 10 improved,
+  3 worsened, 21 unchanged.
+- **`*_flag_dir_weak` branches differing vs prototype**: 91 → 90. Most
+  "still differ" because the *particle scores feeding the thresholds* are
+  themselves already divergent upstream (PID differences) — faithful
+  semantics cannot fix unfaithful inputs.
+- The two large movers, both vertex-mediated:
+  - **evt 6612 (−117)**: cosmic category 22→**0** differing branches, ssm
+    139→**6** — the cosmict_2/cosmict_7 taggers now agree with the
+    prototype; `numu_score` flips 1.031 → −1.303 (prototype −0.875), i.e.
+    the numu selection decision now AGREES with the prototype.
+  - **evt 6536 (+70)**: the main vertex moves (nu_x diff vs prototype
+    1.0 → 43.6 cm) and everything downstream cascades; `nue_score` flips
+    +4.30 → −4.30 (prototype +8.05) — the nue decision now DISAGREES.
+    This event already carried large upstream divergences in both arms
+    (600+ differing branches); the knob changed which side of a marginal
+    vertex decision it lands on.
+- BDT score changes (only events that moved): 6529 numu 1.086→0.935
+  (proto −0.139), 6536 numu −0.231→−0.334 (proto −0.283) + the nue flip
+  above, 6612 numu sign-flip toward proto, 6642 nue −3.931→−3.960,
+  6837 numu 1.026→0.890 (proto −1.150).
+
+### 6.2 Reading
+
+Knob-ON is a modest net fidelity improvement on the uBooNE chain
+(−73 branches, 10-vs-3 events better), with one clear selection-level win
+(6612) and one selection-level regression (6536) — the regression being a
+marginal-vertex coin-flip on an event that was already far from the
+prototype in both arms, not a new pathology. The bulk of the residual
+proto-vs-toolkit diffs are upstream of dir_weak (PID/score divergences) and
+are untouched by this knob. Sweep labels kept for re-checking:
+`sweep/dirweakoff_ub/`, `sweep/dirweakon_ub/` (hashes.txt +
+ab_check_dirweakoff_ub.log + per-event tagger logs).

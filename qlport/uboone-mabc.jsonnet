@@ -1166,7 +1166,9 @@ local ub = {
                            tracking_output="", dl_weights="",
                            dQdx_scale=0.1, dQdx_offset=-1000,
                            numu_weights_dir="",
-                           nue_weights_dir="") ::
+                           nue_weights_dir="",
+                           // C++ default false. Key omitted when off => byte-identical gate3 config.
+                           dir_weak_use_score=false) ::
         local cm = clus.clustering_methods(detector_volumes=detector_volumes,
                                            pc_transforms=pctransforms,
                                            fiducial=$.uboone_mc_fid);
@@ -1250,7 +1252,7 @@ local ub = {
             cm.steiner(retiler=improve_cluster_2, perf=perf),
             cm.fiducialutils(),
             // //cm.tagger_check_stm(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset)),
-            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset), perf=perf, dl_weights=dl_weights, dQdx_scale=dQdx_scale, dQdx_offset=dQdx_offset, clus_geom_helper=wc.tn(uboone_geom_helper)),
+            cm.tagger_check_neutrino(trackfitting_config_file=trackfitting_config, recombination_model=wc.tn(ub.uBooNE_box_recomb_model), particle_dataset=wc.tn(ub.particle_dataset), perf=perf, dl_weights=dl_weights, dQdx_scale=dQdx_scale, dQdx_offset=dQdx_offset, clus_geom_helper=wc.tn(uboone_geom_helper), dir_weak_use_score=dir_weak_use_score),
         ] + (if numu_weights_dir != "" then [numu_bdt_scorer] else [])
           + (if nue_weights_dir  != "" then [nue_bdt_scorer]  else [])
           + (if tracking_output != "" then [tracking_visitor, tagger_output_visitor] else []);
@@ -1425,13 +1427,14 @@ local ingraph_dead(infiles, datapath=pointtree_datapath) = pg.pipeline([
     ub.multiplex_blob_views(infiles, 'dead', ["uv","vw","wu"]),
     ub.UbooneClusterSource(infiles, datapath=datapath, sampler=ub.bs_dead, kind='dead', optical=false)
 ]);
-local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights) =
+local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false) =
     local tracking_output = "track_com_%d_%d.root" % [runNo, eventNo];
     pg.pipeline([
         ub.MultiAlgBlobClustering(beezip, datapath=datapath, index=index, runNo=runNo, subRunNo=subRunNo, eventNo=eventNo, trackfitting_config="uboone_track_fitting.json", tracking_output=tracking_output,
                                   dl_weights=dl_weights,  // '' disables the DL vertex (geometric fallback)
                                   numu_weights_dir="uboone/weights",
-                                  nue_weights_dir="uboone/weights"),
+                                  nue_weights_dir="uboone/weights",
+                                  dir_weak_use_score=dir_weak_use_score),
         ub.ClusterFlashDump(datapath=datapath)
     ]);
 //local outgraph(beezip,  datapath=pointtree_datapath) = pg.pipeline([
@@ -1441,18 +1444,18 @@ local outgraph(beezip, datapath=pointtree_datapath, index=0, runNo=1, subRunNo=1
 
 
 local graphs = {
-    live :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights)
+    live :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false)
         pg.pipeline([ingraph_live(infiles, datapath),
-                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights)]),
+                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score)]),
 
-    dead :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights)
+    dead :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false)
         pg.pipeline([ingraph_dead(infiles, datapath),
-                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights)]),
+                    outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score)]),
 
-    both :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights)
+    both :: function(infiles, beezip, datapath, index=0, runNo=1, subRunNo=1, eventNo=1, dl_weights=default_dl_weights, dir_weak_use_score=false)
         local live = ingraph_live(infiles, datapath);
         local dead = ingraph_dead(infiles, datapath);
-        local out = outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights);
+        local out = outgraph(beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score);
         local fanin = ub.TensorSetFanin();
         pg.intern(innodes=[live,dead], outnodes=[out], centernodes=[fanin],
                   edges=[
@@ -1485,7 +1488,8 @@ local extra_plugins = ["WireCellAux", "WireCellRoot", "WireCellClus"];
 // kind can be "live", "dead" or "both".
 function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath,
          initial_index="0", initial_runNo="1", initial_subRunNo="1", initial_eventNo="1",
-         dl_weights=default_dl_weights)  // -A dl_weights= disables the DL vertex (byte-identity gate runs)
+         dl_weights=default_dl_weights,  // -A dl_weights= disables the DL vertex (byte-identity gate runs)
+         dir_weak_use_score="")  // -A dir_weak_use_score=true enables prototype is_dir_weak() semantics; '' (default) = legacy raw flag, byte-identical to gate3
 
     // Parse the integer values from strings
     local index = std.parseInt(initial_index);
@@ -1494,7 +1498,7 @@ function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtre
     local eventNo = std.parseInt(initial_eventNo);
 
     // Use these parameters in the main graph
-    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights),
+    ub.main(graphs[kind](infiles, beezip, datapath, index, runNo, subRunNo, eventNo, dl_weights, dir_weak_use_score != ""),
             "Pgrapher", extra_plugins)
 
 //function(infiles="uboone.root", beezip="bee.zip", kind="live", datapath=pointtree_datapath)
