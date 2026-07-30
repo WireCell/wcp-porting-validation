@@ -1,8 +1,12 @@
-# 8 — design: proton-template direction vote (`proton_dir_vote`)
+# 8 — design + implementation: proton-template direction vote (`proton_dir_vote`) and configurable MIP dQ/dx scales
 
-Status: DESIGN (owner-requested 2026-07-30, "OK to be different from the
-prototype — this is an improvement"). Not implemented. Successor to
-pr/5 §6.1; builds on the pr/7 §6 anatomy. Owner sign-off points in §8.
+Status: IMPLEMENTED (§9-§11; owner-requested 2026-07-30, "OK to be
+different from the prototype — this is an improvement", plus the MIP
+config pull 50000→56000 / 43000→48000 for SBND). All off-gates PASS.
+On evt 172230 the vote FIRES and sets pdg 2212 with the correct direction
+(§11), but a downstream prototype-faithful main-vertex re-test
+(rescue threshold score<0.09) re-electrons it — the pinned next blocker.
+Successor to pr/5 §6.1; builds on the pr/7 §6 anatomy.
 
 ## 0. Repro block (design inputs)
 
@@ -174,11 +178,124 @@ Blind-tune risk is real (G1/G3 chosen from one event). Plan:
 - [ ] Determinism: pure arithmetic on per-segment vectors, no
       pointer-order dependence introduced.
 
-## 8. Owner sign-off points
+## 8. Owner sign-off points (as designed; superseded by the 2026-07-30 go-ahead)
 
-1. Guards G1–G4 and the recovery scope (failure path only) — §3.
-2. Initial thresholds 0.25/1.3 pending §6 calibration — or calibrate
-   first, then freeze.
-3. Whether the pr/7 §5 persistence parity fix rides along (separate knob)
-   or stays deferred.
-4. SBND default ON after validation; uBooNE default after its study.
+1. Guards G1–G4 and the recovery scope (failure path only) — §3. ADOPTED.
+2. Initial thresholds 0.25/1.3 — owner: implement now, CALIBRATE LATER.
+3. pr/7 §5 persistence parity fix — still deferred (not in this change).
+4. SBND default ON now (owner); uBooNE untouched (keys absent).
+
+## 9. Implementation (owner go-ahead 2026-07-30, same session)
+
+Two coupled changes, one commit:
+
+**(a) The vote** — exactly §3's rule. `TrackPidOptions` struct
+(`PRSegmentFunctions.h`) carries `mip_dqdx` (flat-template scale),
+`proton_dir_vote`, `proton_dir_score_max=0.25`, `proton_dir_asym_min=1.3`,
+`start_n/end_n` (filled per-segment by `segment_determine_dir_track`).
+Vote block at the abstention path of `segment_do_track_pid`; threading
+`TaggerCheckNeutrino` config → `PatternAlgorithms::track_pid_options()` →
+every `determine_dir_track` call site (NeutrinoTrackShowerSep:139 + the
+five NeutrinoVertexFinder re-determination sites + the trajectory-shower
+internal call).
+
+**(b) MIP scales pulled to config** — the census of pr/7 §5:
+- `mip_dqdx` (C++ default 50000 e/cm = uBooNE): flat-template amplitude in
+  `do_track_comp`, `segment_cal_4mom` scale (~37 default-relying call
+  sites now pass it explicitly), `segment_is_shower_trajectory`.
+- `mip_dqdx_median` (C++ default 43000 e/cm = uBooNE): ALL median-dQ/dx
+  ratio thresholds — 80 inline `43e3/units::cm` sites across 12 files
+  (member functions use `m_mip_dqdx_median`, free tagger helpers
+  `ctx.self.…`, the SSM block helper `self.…`), plus
+  `segment_search_kink`/`segment_is_shower_topology` defaults,
+  `PRShower::get_stem_dQ_dx` (new defaulted param, threaded from the NuE /
+  SinglePhoton callers) and the SinglePhoton inverse-normalization
+  (`exp(dqdx * MIP * 23.6e-6 …)`) which must share the same scale.
+- SBND jsonnet: `mip_dqdx=56000` (REUSES the existing STM arg — one number,
+  both taggers), `mip_dqdx_median=48000` (uBooNE 43/50 ratio preserved,
+  placeholder pending an SBND median-MIP measurement), `proton_dir_vote=true`.
+  Key-suppression in common/clus.jsonnet: uBooNE compiled config unchanged.
+
+Deliberately NOT touched (residuals, documented): the two inert clamps
+`PRSegmentFunctions.cxx:1240/1271` (ratio>1000 against 43e3 — unreachable);
+SinglePhoton's Birks/field constants 1.38/0.273 (uBooNE recombination in the
+dedx conversion — separate issue); the SSM helpers' `do_track_comp` calls
+stay at the 50k default (their dQ/dx vector is built in e/cm numbers, a
+different unit convention from `determine_dir_track`'s — flagged for a
+separate review before threading); `TaggerCheckSTM`'s own `mip_dqdx` knob
+(already SBND-calibrated, doc 48).
+
+## 10. Verification (all PASS)
+
+- `wcdoctest-clus` 565/565 (before and after the temporary instrumentation
+  round of §11, which was fully reverted; final off-arm rerun §10.3 proves
+  the reverted binary bit-reproduces).
+- **Compiled configs**: 16/16 live production jobs byte-identical
+  (`abtest/compile_all_cfg.sh`, worktree method).  The nu-PR job (13-stage
+  `pipeline_names`) differs by exactly
+  `+mip_dqdx:56000 +mip_dqdx_median:48000 +proton_dir_vote:true`.
+  uBooNE `uboone-mabc.jsonnet` compiled config byte-unchanged.
+- **uBooNE off-gate**: sweep `mipvoteoff_ub` (new binary, DIR_WEAK default)
+  vs `dirweakon_ub`: ZIPS 35/35 content-identical, 0 failures.
+- **SBND off-gate**: evt 172230 geometric arm, new binary + before-tree
+  config (`run_pr3_evt.sh` TLAs, worktree cfg): `mabc-pr.zip` =
+  `c5bfe4bf…` — bit-identical to the pr/6 reference
+  (`nupr_evt172230_mipvote_off3`; earlier identical run `_mipvote_off`).
+- **Knob-on determinism**: ON arm `65a64151…` reproduced bit-identically by
+  two independent builds (pre/post instrumentation-revert;
+  `_mipvote_on` / `_mipvote_off2`).
+
+## 11. evt 172230 knob-on result: vote fires, a downstream rescue gate re-electrons it
+
+The vote does exactly what §3 designed — per-logger trace
+(`nupr_evt172230_mipvote_on_trace`):
+
+```
+determine_direction: Track nfits=17 nwcpts=23 len=9.75cm dirsign=1 dir_weak=1 start_n=2 end_n=1 pdg=2212
+```
+
+pdg **2212**, direction **toward the free (Bragg) end** = the physically
+correct direction, score 0.135 ⇒ correctly graded dir-weak (>0.13).
+
+But the final output still shows seg 5030 as pdg 11, and the geometric
+main vertex is UNCHANGED at the Bragg end (−46.1, −84.2, 22.9 — 1.3 cm
+from the tip; the weak direction constrains nothing in vertex candidate
+scoring). The converter was pinned by a one-run instrumentation of every
+literal pdg-11 store (11 sites + the S_traj store + the setter bypasses;
+all reverted): none fire on a 2212 — the conversion is the **main-vertex
+re-test** `NeutrinoVertexFinder.cxx:2339-2375` (prototype
+`NeutrinoID_improve_vertex.h:334/353`, reached via `set_pdg(11)` on the
+existing ParticleInfo, invisible to store-level instrumentation):
+
+```
+main-vertex segment && n_daughter_showers==1 && segment_is_shower_topology(...):
+    re-run determine_dir_track      // the vote fires again: 2212, 0.135
+    rescued only if (pdg==2212 && score<0.09) || (pdg==13 && score<0.06)
+    else: set kShowerTopology, set_pdg(11), score=100
+```
+
+Our 0.135 fails the 0.09 rescue. Note the prototype would fail this gate
+too (its median-catch proton carries the score sentinel 100), so this is
+not a port bug — it is the next uBooNE-tuned constant in the chain. The
+production (DL-vertex) arm confirms the re-test is not vertex-position
+specific: with the DL main vertex at the true interaction point
+(−54.7, −87.5, 19.9), seg 5030 is STILL re-electron'd
+(`nupr_evt172230_mipvote_on_dl`; exact branch for that arm not yet
+instrumented).
+
+**Where this leaves the calibration (§6)**: three thresholds of the same
+score family now interact and must be calibrated together —
+`proton_dir_score_max` (0.25, vote), the `is_dir_weak` proton threshold
+(0.13, decides whether the voted direction constrains the vertex), and the
+main-vertex rescue (0.09, decides whether the proton identity survives).
+Evt 172230's score 0.135 passes the first and fails the other two by
+0.005 and 0.045. Options for the owner: (a) calibrate all three on the
+45-candidate + doc-62 proton samples; (b) knob the rescue threshold /
+count a vote-scored proton as rescuable (a further designed divergence);
+(c) accept the label on this event and revisit after the SBND-native
+score calibration. No change made pending that decision.
+
+Run/label ledger: `nupr_evt172230_mipvote_{off,off3}` (off-gate,
+c5bfe4bf), `_mipvote_{on,off2}` (ON, 65a64151), `_mipvote_on_trace`,
+`_mipvote_instr`/`_instr2` (instrumented, superseded), `_mipvote_on_dl`
+(DL arm); qlport `sweep/mipvoteoff_ub`.
