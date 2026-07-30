@@ -33,6 +33,17 @@ arguing it. That section also records the first measured effect (evt 444187, APA
 uBooNE manifest. §2e(i) is now fully closed except for the SBND `ssm_target_dir` *value*
 and the SinglePhoton inline box model.
 
+**Update 2026-07-30 (fourth)** — the two **§2e(iv) detector-extent** rows are **closed**
+and are the first worklist item whose SBND value is a real translation rather than a
+placeholder: `cosmic_y_top_main/_top_strict/_top_loose/_small_piece` (uBooNE
+100/102/80/50 → SBND 183/185/163/133 cm, the same offsets below a top face that moved
+from y = +117 to +200) and `vertex_z_prior_scale` (200 → 100 cm, the upstream-z prior
+scaled by detector length 1037 → 501 cm). **§2e(iv-a)** has the geometry table, why the
+two rows translate by *different* rules, the gates (uBooNE byte-identical), and the
+measured SBND effect: 46/48 nueCC events unchanged, 2 changed — one main-cluster switch
+(evt 235435, needs a hand scan) and one 22.8 cm main-vertex move (evt 269774). It also
+records that `nue_score = ±4.301` is the BDT **saturation clamp**, not a resolved score.
+
 Companion docs: `1_beam-window-cosmic-vs-nu-division.md` (same-day census of the
 cosmic/nu-candidate split on both data samples; it created the `work-nuecc48-nuf` arm
 this doc builds on), `../../../docs/sbnd-pattern-recognition.md` (the M0–M8 port log
@@ -613,12 +624,154 @@ Caveats worth knowing before calibrating:
 
 | where | value | uBooNE meaning → SBND effect |
 |---|---|---|
-| `NeutrinoTaggerCosmic.cxx:1175,1190` | `highest_y > 100/102/80 cm` → cosmic | "reaches the top": 16 cm below uBooNE's y=116.5 top; SBND top is y≈200, so 100 cm is **mid-detector** — cut near-meaningless as-is |
-| `NeutrinoVertexFinder.cxx:875,2948` | vertex score penalty `(z−min_z)/(200 cm)` | upstream-z prior calibrated to uBooNE's 1037 cm (≈5 units end-to-end); on SBND's 500 cm it is ~2× weaker relative to the +0.25-per-track terms |
+| `NeutrinoTaggerCosmic.cxx:1073,1175,1190,1191` | `pca.center.y > 50`, `highest_y > 100/102/80 cm` → cosmic | "reaches the top": 67/17/15/37 cm below uBooNE's top face, which is **y = +117 cm**, not the 116.5 this row claimed until 2026-07-30 (`prototype_base/pid/apps/wire-cell-prod-nue.cxx:417` passes the FV as `3, 117, -116, 0, 1037, 0, 256`). SBND's top is y ≈ +200, so 100 cm is **mid-detector** — cut near-meaningless as-is. **CLOSED 2026-07-30: four config knobs `cosmic_y_top_main/_top_strict/_top_loose/_small_piece`, SBND 183/185/163/133 cm — see §2e(iv-a).** |
+| `NeutrinoVertexFinder.cxx:875,3001` | vertex score penalty `(z−min_z)/(200 cm)` | upstream-z prior calibrated to uBooNE's 1037 cm (≈5.2 units end-to-end); on SBND's 501 cm it is ~2× weaker relative to the +0.25-per-track terms. (`:2948` in the pre-2026-07-30 sweep; the second site is `compare_main_vertices_global`, the first is `compare_main_vertices` — **both** are exercised on SBND.) **CLOSED 2026-07-30: config knob `vertex_z_prior_scale`, SBND 100 cm — see §2e(iv-a).** |
 | `NeutrinoTaggerNuMu.cxx:191,296`, `NeutrinoVertexFinder.cxx:3340` | `0.8866+0.9533·(18cm/L)^0.4234` (×43e3) | empirical uBooNE muon dQ/dx-vs-length curve |
 | `NeutrinoTaggerCosmic.cxx:536` | FV shrink `−1.5 cm` (6 faces) | absolute margin for vertex-outside-FV test |
 | `SteinerGrapher.cxx:86-88,202-214,353` | `Q0=10000`, `charge_threshold=4000` e; distances 0.6/1.8/6.0 cm | prototype constants; gain/noise- and pitch-coupled |
 | `NeutrinoEnergyReco.cxx:209,264,287` | 2D-hit match `0.6 cm` | pitch-coupled; SBND also 3 mm — likely transfers |
+
+**(iv-a) DONE 2026-07-30 — the two detector-extent rows are config-fed and SBND sets
+them** (owner request: "compare the geometry between MicroBooNE and SBND's FV and
+suggest a fix; pull them out to configuration, then add the SBND value"). Unlike
+§2e(i-a)/(iii-a), this one **does change SBND output** — the values are a translation of
+the uBooNE geometry, not a placeholder. uBooNE stays byte-identical. Toolkit commit
+`cbd78820` (parent `f14bbce8` = the §2e(iii-a) `kine_*` commit).
+
+Repro:
+
+```bash
+# compiled-config proof (uBooNE unchanged; SBND emits the 5 keys).  The "before"
+# tree is a worktree at the parent commit: git worktree add --detach /home/xqian/tmp/wt-head f14bbce8
+qlport/scripts/compile_ub_cfg.sh /home/xqian/tmp/wt-head/cfg ub_head.json
+qlport/scripts/compile_ub_cfg.sh $TK/cfg                     ub_now.json
+diff ub_head.json ub_now.json                                    # empty (258945 B both)
+sbnd_xin/compile_prjob_cfg.sh    $TK/cfg pr_geo_now.json
+grep -E 'cosmic_y_|vertex_z_prior' pr_geo_now.json               # 133/163/183/185, 100
+# the uBooNE arm is one flag pair (reproduces 100/102/80/50 and 200 exactly):
+#   --tla-code pr_y_top=117 --tla-code vertex_z_prior_scale=200
+# uBooNE off-gate (35 events, keys absent)
+qlport/scripts/sweep_5384.sh geomoff_ub 6
+diff sweep/f3coff_ub2/hashes.txt sweep/geomoff_ub/hashes.txt     # empty
+# SBND two-arm effect, ONE binary, 48-event nueCC sample
+sbnd_xin/geom_ab_batch.sh            # ARM=on = SBND defaults; ARM=off = uBooNE TLAs
+sbnd_xin/geom_ab_summary.sh          # per-event mabc-pr.zip member-hash equality
+                                     # -> docs/pr/2_geom_ab_summary.tsv
+```
+
+**The geometry.** uBooNE's active volume, as the prototype's own apps declare it
+(`prototype_base/pid/apps/wire-cell-prod-nue.cxx:417`,
+`wire-cell-prod-bee.cxx:304` — `ToyFiducial(..., 3, 117, -116, 0, 1037, 0, 256, ...)`):
+
+| axis | uBooNE | SBND (sensitive box, from the `DetectorVolumes` note in `sbnd/clus.jsonnet`) | ratio |
+|---|---|---|---|
+| y (vertical) | −116 … **+117** cm (233 cm tall, centre +0.5) | −199.965 … **+199.965** cm (400 cm tall, centre 0) | top face +83 cm |
+| z (beam) | 0 … **1037** cm | 0 … **501.0** cm | 2.07× shorter |
+| x (drift) | 0 … 256 cm (single drift) | ±201.45 cm (two drifts, CPA at 0) | — |
+
+**How each cut translates.** The two rows need *different* rules, which is why they get
+different treatment:
+
+- **The cosmic-`y` cuts are offsets below the top face, and do not scale.** A downward
+  cosmic entering the detector roof puts its highest reconstructed point a fixed
+  tolerance below the top face — set by reconstruction slop, not by detector height. So
+  the uBooNE values are read as 117 − {17, 15, 37, 67} and re-anchored to SBND's +200:
+  **183 / 185 / 163 / 133 cm**. Scaling by height instead (×200/117) would give
+  171/174/137/85 — a *looser* cosmic tag than uBooNE's own, i.e. more false cosmic tags,
+  which is the wrong direction for a cut whose failure mode on SBND today is firing at
+  mid-detector.
+- **The upstream-`z` prior is a penalty per cm, and the question is dynamic range.**
+  Within one cluster the trade-off "how many cm downstream cancels one +0.25 track
+  bonus" (50 cm at 200 cm scale) is detector-independent, and by that reading 200 cm
+  transfers unchanged. But the site that matters most on SBND is
+  `compare_main_vertices_global`, which ranks candidates from **different clusters of
+  the beam bundle**, where separations run toward the full detector length: uBooNE gets
+  ≈5.2 penalty units end-to-end, SBND at 200 cm would get only 2.5. Shipped value is the
+  length-scaled one, **100 cm ≈ 200 × 501/1037 = 96.6** (rounded). The alternative
+  reading is one word away — `vertex_z_prior_scale=null` restores 200 cm — and the
+  measured effect below is the evidence for choosing between them.
+
+**What shipped** (toolkit, single commit; C++ defaults are the uBooNE literals, so an
+absent key is byte-identical):
+
+| knob (cm) | C++ default | SBND | site |
+|---|---|---|---|
+| `cosmic_y_top_main` | 100 | 183 | `NeutrinoTaggerCosmic.cxx:1176` — main cluster's own highest point (relaxes the vertical-angle cut 20° → 30°) |
+| `cosmic_y_top_strict` | 102 | 185 | `:1191` — event highest point, single-cosmic branch |
+| `cosmic_y_top_loose` | 80 | 163 | `:1192` — event highest point, global gate on the whole `flagp_cosmic` decision |
+| `cosmic_y_small_piece` | 50 | 133 | `:1073` — PCA centre of a <3 cm cluster counted as cosmic debris (`acc_small_length`, which feeds the gate above) |
+| `vertex_z_prior_scale` | 200 | 100 | `NeutrinoVertexFinder.cxx:875` + `:3001` |
+
+Members live on `PatternAlgorithms` (internal units) and are fed from
+`TaggerCheckNeutrino` (cm → internal), the same three-site pattern as
+`fit_vertex_min_seg_length`. `vertex_z_prior_scale ≤ 0` warns and keeps 200 (it is a
+divisor). jsonnet: `cosmic_y_*` / `vertex_z_prior_scale` args on
+`common/clus.jsonnet:tagger_check_neutrino` with the key-suppression idiom; SBND sets
+them from a single anchor `local sbnd_y_top = 200.0` in `sbnd/clus.jsonnet` (change that
+one number, not the four cuts). `wct-pr-perevt.jsonnet` gains TLAs `pr_y_top` (default
+200) and `vertex_z_prior_scale` (default 100), so **the uBooNE arm of any A/B is one
+flag**: `--tla-code pr_y_top=117 --tla-code vertex_z_prior_scale=200` reproduces
+100/102/80/50 and 200 exactly (verified in the compiled JSON).
+
+Deliberately **not** touched, though they are the same class: the `mv_pt.y() > 0` term in
+the same `flagp_cosmic` expression is the detector **mid-plane** and is scale-free on
+both detectors (uBooNE centre +0.5 cm, SBND 0); the `highest_y = -100*units::cm` seed at
+`:1119` is a pure max-accumulator sentinel that every threshold sits far above (it can
+only make `highest_y` *larger* than the true maximum, and −100 fails all four cuts on
+both detectors); and `NeutrinoTaggerCosmic.cxx:536`'s −1.5 cm FV shrink, which is an
+absolute margin, not an extent.
+
+**Gates.**
+
+| gate | result |
+|---|---|
+| uBooNE 35-event off-gate | **PASS** — `sweep/geomoff_ub/hashes.txt` == `sweep/f3coff_ub2/hashes.txt`, zero diff, all `rc=0` (the 16-line delta vs `gate3` is the pre-existing one from `7902615c`, identical in `f1off_ub`/`f3coff_ub2`) |
+| uBooNE compiled config | **byte-identical**, 258945 B both |
+| SBND compiled config | the 5 keys appear with 183/185/163/133/100 and **nothing else changes** |
+| `wcdoctest-clus` | 565/565 |
+| freshness | `local/lib/libWireCellClus.so` == `build/clus/libWireCellClus.so`, 350804144 B, 15:34, both newer than the last edit (the sweep loads from `build/`) |
+| SBND arm | **NOT bit-identical by design** — characterized below, no gate label |
+
+Caveat on the binary: a second session was mid-flight on the §2e(iii-a) `kine_*` work in
+the same tree, so the gated binary contains **both** changes. The uBooNE PASS therefore
+covers both; it does not isolate mine. The SBND two-arm comparison below is
+same-binary, so that contamination cancels there.
+
+**Measured effect — 48-event nueCC sample, one binary, both arms.** 46/48 events have
+**identical** `mabc-pr.zip` member hashes; 2 differ; 3 events fail identically in both
+arms (10550, 271851 throw the same `RuntimeError`; 433451 `bad_alloc` — pre-existing,
+not knob-related). Both differences come from the **z-prior**; the cosmic-`y` re-anchor
+changed no verdict on this sample (`flagp_cosmic=false` in all 44 events that reach
+part D — expected: these are νe candidates that already survived cosmic rejection, and
+production also runs the PR chain with `nu_skip_cosmic=true`). Reach, for context: 10 of
+those 44 events have `highest_y > 163` cm and 6 sit in the 80–163 cm band where the
+uBooNE cut passes the loose gate and the SBND cut does not — the re-anchor removes a
+latent false-positive channel rather than fixing an observed one.
+
+- **evt 235435 — main cluster switches, quotable mechanism.** The two candidates are
+  37.7 cm apart in z (`z_norm=0.1884` at 200 cm). At the uBooNE scale cluster 2 wins by a
+  hairline, 0.6866 vs 0.6250; doubling the prior costs cluster 2 exactly the extra
+  0.1884, and cluster 24 takes the main slot:
+  ```
+  off: cluster 2 score_A=0.1866 z_norm=0.1884 -> score_E=0.6866   cluster 24 score_E=0.6250
+  on : cluster 2 score_A=-0.0018 z_norm=0.3768 -> score_E=0.4982  cluster 24 score_E=0.6250
+       check_switch_main_cluster: switch main cluster 2 -> 24
+  ```
+  Consequence downstream: `nue_score` 4.30 → −15, i.e. the nue tagger no longer fills its
+  branch variables (`br_filled != 1`) for the new main cluster. **This is the one event
+  that needs a hand scan before the 100 cm value is adopted beyond the PR-dev chain** —
+  reported, not tuned (CLAUDE.md §5 rule 7).
+- **evt 269774 — main vertex moves within the main cluster**, (16.5, −93.0, 182.7) with 3
+  legs → (39.7, −67.3, 159.9) with 2 legs, i.e. 22.8 cm upstream in z; `nue_score`
+  0.497 → 1.844, `numu_score` −2.446 → −2.416. Both are real (non-sentinel) BDT values.
+
+**Side finding worth its own line (feeds gap G1).** `nue_score` is **saturated** on most
+of this sample: `±4.3009 = ±log10(0.9999·2/0.0001)` is the clamp at
+`UbooneNueBDTScorer.cxx:1920-1923`, i.e. the uBooNE-trained BDT output pinned at ±1.
+28 of 44 events sit at +4.3009 and 4 at −4.3009; `−15` is the separate
+"`br_filled != 1`" default at `:1655,1925`. So a quoted `nue_score = 4.301` on SBND
+today means "pegged at the ceiling", **not** a resolved per-event score — one more
+reason the uBooNE weights cannot rank SBND events until they are retrained (§2d G1).
 
 **(v) `sbnd_track_fitting.json` vs `uboone_track_fitting.json`:** same 44 keys; **6
 already SBND-adapted** (`DL`, `DT`, `add_sigma_L`, `col_sigma_w_T`, `ind_sigma_u_T`,
@@ -662,7 +815,9 @@ noted.
 and gets its own round in the doc-63 style. Priority order: (i) correctness items →
 ~~(ii) MIP normalization~~ **(done 2026-07-30, §2e(ii-a) — the knobs exist and SBND sets
 them; what remains is a *measurement* to replace the 48000 placeholder, not plumbing)**
-→ (iv) cosmic-y + vertex-z prior → ~~(iii) energy reco~~ **(plumbing done 2026-07-30,
+→ ~~(iv) cosmic-y + vertex-z prior~~ **(done 2026-07-30, §2e(iv-a) — knobs exist AND
+SBND sets translated values; this is the first worklist item that changes SBND output,
+so the open piece is a hand scan of evt 235435, not plumbing)** → ~~(iii) energy reco~~ **(plumbing done 2026-07-30,
 §2e(iii-a); what remains is the calibration — every value is still uBooNE's)** → (v)
 fit-JSON thresholds; (vi) waits for the SCN/BDT work (G1/G3).
 
