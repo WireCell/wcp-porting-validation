@@ -21,6 +21,7 @@ event manifests:
 | `work-mcp1000b-<tag>` | a second 30-event draw from the same 1000-event set |
 | `work-mcp1kall-<tag>` | **all 1000** events of that set, not a draw (doc 59; imaging from `work-mcp1000`) |
 | `work-mcsim-<tag>` | the MC-truth sim set (truth dQ/dx, delta rays) |
+| `work-nuecc48-<tag>` | the 48-event Lynn nueCC data candidate set (`samples/lynn-nuecc-rse.csv`; input `input_files_reco1/extracted-2025fall-48evt-fsprod`; imaging in the shared `work/`) |
 
 **These arms are not reproducible.** A tag names a *config*, not a build. The
 binary has moved many commits since most of them were written, and the SBND PR
@@ -153,6 +154,14 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000b-d56bw` | 30 | 19M | `56_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
 | `work-mcp1000b-p65fin` | 30 | 19M | `65_tgm-stm-perf-final.md`, `mabc_step_totals.py`, `profile_pr65.sh` |
 | `work-smoke-d55pv` | 12 | 5M | — |
+
+### Added 2026-07-29 — nueCC48 campaign roots (docs `pr/1_`, `pr/2_`)
+
+| dir | entries | size | referenced by |
+|---|---|---|---|
+| `work-nuecc48-base` | 92 | 154M | `pr/2_uboone-chain-gap-analysis-and-validation-plan.md` §5 — partial earlier arm of the 48-event Lynn nueCC candidate set (48 evt, 24 ql_evt, 20 nusel_evt) |
+| `work-nuecc48-nuf` | 146 | 485M | `pr/1_beam-window-cosmic-vs-nu-division.md` (the run that created it, 48/48 rc=0), `pr/2_…` §5 — **complete** cosmic-tagger-tail arm: 48 evt (symlinks into shared `work/` imaging) + 48 ql_evt (with pctrees) + 48 nusel_evt + merged `nusel-table.tsv`/`nusel-events.tsv`; production NUF flags (unmerge_assoc in-log). 45 nu-candidate / 3 cosmic-tagged. The planned Track C PR arm symlinks from here |
+| `work-nuecc48-prsmoke` | 2 | 8M | `pr/2_…` §5.3 — 2-event smoke of the PR neutrino stage (evt 172230, 444187; production tail + `tagger_check_neutrino`, rc=0, full PR Bee layers) |
 
 ## `archive/tgm-docs29-39/` — 30 dirs, 257 MB
 
