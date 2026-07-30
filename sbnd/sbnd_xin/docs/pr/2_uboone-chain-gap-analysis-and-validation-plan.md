@@ -12,6 +12,14 @@ defaults = the uBooNE numbers ⇒ nothing moved). C++ and jsonnet *were* touched
 that; see **§2e(i-a)** for the plumbing, the gate, and the caveats. The SBND *values*
 remain unknown — this is a relocation, not a calibration.
 
+**Update 2026-07-30 (second)** — the §2e(ii) MIP normalization, this worklist's
+highest-priority tune, is **implemented and ON in SBND production**: two knobs
+(`mip_dqdx` = 56000, `mip_dqdx_median` = 48000 e/cm) shipped in toolkit `3d71e111`,
+designed and gated in doc `pr/8`. **§2e(ii-a)** records the current state, the residual
+call sites that still fall back to the uBooNE literals, and the one place where the
+threading is incomplete in a way that also disables `proton_dir_vote`. The `48000` is a
+ratio-preserving placeholder, not an SBND measurement.
+
 Companion docs: `1_beam-window-cosmic-vs-nu-division.md` (same-day census of the
 cosmic/nu-candidate split on both data samples; it created the `work-nuecc48-nuf` arm
 this doc builds on), `../../../docs/sbnd-pattern-recognition.md` (the M0–M8 port log
@@ -268,6 +276,87 @@ Proposed tune: one config-fed `mip_dqdx`-style parameter (SBND already ships
 `mip_dqdx=56000` for the STM tagger, doc 48) threaded through these sites, default
 43e3 ⇒ uBooNE byte-identical.
 
+**DONE 2026-07-30 — implemented as designed and ON in SBND production; see §2e(ii-a).**
+(The census above is left as the record of what the audit found. Its site count and the
+`PRSegmentFunctions.h` line numbers are now stale — the current citations are in
+(ii-a).)
+
+**(ii-a) DONE 2026-07-30 — the MIP scales are config-fed and SBND sets them.** Designed,
+implemented and gated in doc `pr/8` (toolkit `3d71e111`); this section is the §2e
+worklist's view of it. **This doc entry changes no code**, so no new gate is owed — the
+byte-identity evidence below is `pr/8` §10's, quoted by label.
+
+The audit's "one parameter" turned out to be **two**, because the literal carries two
+unrelated roles:
+
+| key | C++ default | role | SBND |
+|---|---|---|---|
+| `mip_dqdx` | `50000` e/cm | flat-template amplitude in the `do_track_comp` KS comparison; `segment_cal_4mom` scale; `segment_is_shower_trajectory` | **56000** (reuses the existing STM arg — one number, both taggers) |
+| `mip_dqdx_median` | `43000` e/cm | the scale every median-dQ/dx ratio threshold (×1.2/1.3/1.4/1.75…) and BDT normalization is quoted against | **48000** |
+
+Both live on `TaggerCheckNeutrino` → `PatternAlgorithms::m_mip_dqdx{,_median}`
+(`NeutrinoPatternBase.h:68-69`) → member functions directly, free tagger helpers via
+`ctx.self`, and the `PRSegmentFunctions` free functions via explicit arguments. Header
+defaults (`PRSegmentFunctions.h:27,91,106,126,133,138-142`, `PRShower.h:189,192`) keep
+the uBooNE numbers, so an omitted argument is legacy-identical. 16 files under
+`clus/src/` now read a configured scale (116 median-role, 131 flat-role references).
+
+**Why 48000 and not the ~54.7e3 of the census above.** They are different quantities.
+54.7e3 e/cm is the doc-48 *muon-plateau* dQ/dx; `mip_dqdx_median` is the *reference
+scale the ratio cuts are quoted against*, which in uBooNE sat at 43000 against a
+flat-template 50000 — a ratio of 0.86. `48000 ≈ 0.86 × 56000` preserves that internal
+ratio, and is a **placeholder pending an SBND median-MIP measurement** (owner,
+2026-07-30). Nothing here is a measurement of the SBND median.
+
+Compiled-config proof (fresh, 2026-07-30, this doc entry):
+
+```bash
+wcsonnet --tla-code "pipeline_names=['tagger_check_stm','tagger_check_neutrino']" \
+   … cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet | grep -n 'mip_dqdx\|proton_dir_vote'
+# TaggerCheckSTM:        "mip_dqdx" : 56000
+# TaggerCheckNeutrino:   "mip_dqdx" : 56000, "mip_dqdx_median" : 48000, "proton_dir_vote" : true
+```
+
+(a 2-stage `pipeline_names`, not the production 13-stage job — enough to show both
+components receive the keys.)
+
+Byte-identity, from `pr/8` §10 — labels so any of it can be re-checked: `wcdoctest-clus`
+565/565; 16/16 live production jobs compiled byte-identical, the nu-PR job differing by
+exactly `+mip_dqdx +mip_dqdx_median +proton_dir_vote`, uBooNE `uboone-mabc.jsonnet`
+unchanged; uBooNE off-gate sweep `mipvoteoff_ub` vs `dirweakon_ub` 35/35 zips
+content-identical; SBND off-arm `nupr_evt172230_mipvote_off3` = `c5bfe4bf…`,
+bit-identical to the `pr/6` reference; knob-on arm `65a64151…` reproduced by two
+independent builds.
+
+**Incomplete threading — recorded, not fixed (CLAUDE.md tie-breaker).** `pr/8` §9(a)
+states the threading reached "every `determine_dir_track` call site". It did not:
+
+- `PRSegmentFunctions.cxx:2396`, inside
+  `segment_determine_shower_direction(..., double MIP_dQdx, ...)`, calls
+  `segment_determine_dir_track(segment, 0, fits.size(), particle_data, recomb_model)`
+  and `segment_is_shower_trajectory(segment)` with **neither the scale nor
+  `pid_opts`**. Two consequences on that path, and the second is the larger one:
+  `mip_dqdx_median` reverts to `43000`, **and `proton_dir_vote` is off even though SBND
+  sets it true**. The fix is not a one-liner: `segment_is_shower_trajectory` wants the
+  50k-role scale, which that signature does not carry. Gate condition for the branch is
+  `total_length < 5 cm` in the not-shower-like arm; **how often it is taken has not been
+  measured.**
+- `PRSegmentFunctions.cxx:558,568` — the two `segment_cal_4mom` calls inside
+  `break_segment()`, whose signature carries no MIP parameter, so they take the 50000
+  default.
+
+Residuals already documented in `pr/8` §9 and still true: the four SSM
+`do_track_comp` calls (`NeutrinoTaggerSSM.cxx:64,65,96,98`) stay at the 50k default
+(their dQ/dx vector uses a different unit convention — flagged for separate review); the
+two inert ×1000 outlier clamps (`PRSegmentFunctions.cxx:1240,1271`, still literal
+`43e3`, unreachable at either scale); SinglePhoton's Birks/field constants
+`1.38`/`0.273`, which are §2e(i)'s third correctness item, not this one.
+
+Usability note, same class as (i-a)'s: `mip_dqdx_median` is **not** a TLA of
+`wct-pr-perevt.jsonnet` (only `mip_dqdx=56000` at `:103`; the median is defaulted inside
+`pr()` at `clus.jsonnet:1294`), so isolating the median change in an A/B currently needs
+a jsonnet edit rather than a `--tla-code`.
+
 **(iii) Energy reconstruction (`NeutrinoEnergyReco.cxx`):**
 
 | where | value | note |
@@ -308,6 +397,8 @@ exist in this tree — `kine_nu_{x,y,z}_corr` are raw positions, a *stated decis
 §2d G4), and — new 2026-07-30 — `ssm_target_dir=[0.46,0.05,0.885]` /
 `ssm_absorber_dir=[0.33,0.75,-0.59]` (§2e(i-a): reachable but **live and uncalibrated**,
 unlike the inert SCN knobs — they feed 8 BDT features on every SSM-tagged event today).
+`mip_dqdx` / `mip_dqdx_median` are deliberately *not* in this list: SBND **sets** them
+(56000 / 48000, §2e(ii-a)) rather than inheriting the uBooNE defaults.
 
 **(vii) Clean bills of health** (so nobody re-audits them): `ParticleDataSet.cxx` (all
 curves from config; PDG masses only), `TrackFitting.cxx` geometry (pitch/tick/drift
@@ -324,8 +415,10 @@ noted.
 **Tuning protocol:** every change from this worklist ships as a default-OFF knob
 (uBooNE path byte-identical, Track A gate PASS), is tuned on the Track B/C samples,
 and gets its own round in the doc-63 style. Priority order: (i) correctness items →
-(ii) MIP normalization → (iv) cosmic-y + vertex-z prior → (iii) energy reco → (v)
-fit-JSON thresholds; (vi) waits for the SCN/BDT work (G1/G3).
+~~(ii) MIP normalization~~ **(done 2026-07-30, §2e(ii-a) — the knobs exist and SBND sets
+them; what remains is a *measurement* to replace the 48000 placeholder, not plumbing)**
+→ (iv) cosmic-y + vertex-z prior → (iii) energy reco → (v) fit-JSON thresholds; (vi)
+waits for the SCN/BDT work (G1/G3).
 
 Pre-existing oddity, noted not fixed (CLAUDE.md tie-breaker: report, don't fix):
 `clus.jsonnet:398`-area `do_tracking()` delegates to `$.tagger_check_neutrino(...)` but
@@ -528,9 +621,19 @@ imaging: do not archive `work/` pieces without `relink_tags.py`.
   (§2e(i-a)); until they are set, the 8 `ssm_*_angle_{target,absorber}` features carry
   MicroBooNE geometry. Note the parity caveat about non-unit vectors before supplying
   a normalized one.
+- **An SBND median-MIP dQ/dx measurement** to replace the `mip_dqdx_median=48000`
+  placeholder, which today is only `0.86 × 56000` — the uBooNE 43/50 ratio carried over
+  (§2e(ii-a)). The knob is live in production, so this number is currently shifting
+  every ratio cut in the PR chain on a value nobody measured.
+- **`PRSegmentFunctions.cxx:2396`** — the one `determine_dir_track` call site the pr/8
+  threading missed; it drops both `mip_dqdx_median` (→ 43000) and `proton_dir_vote`
+  (→ off) on the `total_length < 5 cm` non-shower-like path. Owner call whether to fix,
+  and it needs the 50k-role scale plumbed into `segment_determine_shower_direction`
+  first (§2e(ii-a)).
 - The §2e tuning worklist, in its stated priority order: correctness items (SSM beam
-  vectors — now half-closed, see above; nue apa/face, SinglePhoton inline box model) → chain-wide MIP
-  normalization knob → cosmic-y / vertex-z-prior rescaling → energy-reco factors +
+  vectors — now half-closed, see above; nue apa/face, SinglePhoton inline box model) →
+  ~~chain-wide MIP normalization knob~~ (done, §2e(ii-a); the open piece is the
+  measurement above) → cosmic-y / vertex-z-prior rescaling → energy-reco factors +
   `cal_corr_factor` stub → fit-JSON absolute-charge thresholds.
 - Track B/C campaign execution (§3) and the V0 instrumentation knobs (§4).
 - Beam-window calibration on a larger sample; multi-bundle "longest wins" rule.
