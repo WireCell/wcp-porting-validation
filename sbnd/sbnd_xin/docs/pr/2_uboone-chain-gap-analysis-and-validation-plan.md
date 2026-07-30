@@ -200,7 +200,7 @@ chain currently runs two mutually inconsistent field assumptions.**
 |---|---|---|
 | `NeutrinoTaggerSSM.cxx:582-583` | `target_dir(0.46,0.05,0.885)`, `absorber_dir(0.33,0.75,-0.59)` | BNB-target and NuMI-absorber directions **in the uBooNE detector frame**; feed 8 `ssm_*_angle_{target,absorber}` BDT features. SBND needs its own target vector; the NuMI-absorber features may be meaningless there. **Half-closed 2026-07-30: the numbers are now config-fed (`ssm_target_dir` / `ssm_absorber_dir`), defaults unchanged — see §2e(i-a). The remaining gap is the SBND *value*, which nobody has yet.** |
 | `TaggerCheckNeutrino.cxx:493` | `nue_tagger(..., apa=0, face=0, ...)` | Single-drift-volume assumption: any vertex in SBND APA 1 gets APA 0's mirrored wire geometry for `flag_prolong_u/v/w` / `flag_parallel`. `NeutrinoTaggerSinglePhoton.cxx:2186-2196` already derives apa/face from `dv->contained_by(vtx_pt)` — the nue path needs the same fix. **CLOSED 2026-07-30, toolkit `7902615c` — see §2e(i-b).** (The `:493` line number is from the 2026-07-29 sweep; the call site is `:561` at `34f0abd8`.) |
-| `NeutrinoTaggerSinglePhoton.cxx:1499-1505` | inline inverse Modified-Box with `0.273` kV/cm, `1.38` g/cm³, `23.6e-6`, `43e3` | Bypasses the configured `sbnd_box_recomb` (0.5 kV/cm) entirely for its `median_dedx`/`mean_dedx`. **Knob-closed 2026-07-30: `sp_dedx_use_recomb_model` routes it through the configured model, `sp_mean_dedx_cut` (legacy 2.3 MeV/cm, transfers as ≈2.23 on the physical scale) exposes the coupled cut — §2e(i-c), pr/10 §5. Default OFF = byte-identical; not yet ON anywhere.** |
+| `NeutrinoTaggerSinglePhoton.cxx:1499-1505` | inline inverse Modified-Box with `0.273` kV/cm, `1.38` g/cm³, `23.6e-6`, `43e3` | Bypasses the configured `sbnd_box_recomb` (0.5 kV/cm) entirely for its `median_dedx`/`mean_dedx`. **CLOSED 2026-07-30: `sp_dedx_use_recomb_model` routes it through the configured model, `sp_mean_dedx_cut` exposes the coupled cut — §2e(i-c), pr/10 §5. ON for SBND (with `sp_mean_dedx_cut=2.23`, toolkit `6d0396a2`); default OFF = uBooNE byte-identical.** |
 
 **(i-a) DONE 2026-07-30 — the SSM beam vectors are config-fed** (owner request; the
 SBND values are still unknown, so this moves the numbers out of the source, it does
@@ -452,8 +452,9 @@ the configured model** (pr/10 §5, toolkit `21c31439`). `sp_dedx_use_recomb_mode
 `m_recomb_model->dE()`; the coupled hard cut is `sp_mean_dedx_cut` (default 2.3,
 compared as float ⇒ bit-identical). Threshold transfer: 2.3 on the inline
 (A=1.0/B=0.255 @ 0.273) scale = 58 768 e/cm = **2.23 MeV/cm** physical
-(`dqdx_rr_sample/derive_kine_recom_factors.py`). Not ON anywhere yet — staged with
-`use_power_recomb` pending owner review of the pr/10 §7 before/after.
+(`dqdx_rr_sample/derive_kine_recom_factors.py`). **ON for SBND since 2026-07-30
+(owner approval after the pr/10 §7 review; toolkit `6d0396a2`), together with
+`use_power_recomb` and `sp_mean_dedx_cut=2.23`.** uBooNE keeps the inline path.
 
 **(ii) The MIP normalization — highest-leverage single tune.** `43e3/units::cm`
 appears at ~97 sites in 16 files (19× NuE, 13× Cosmic, 10× SSM, 10× VertexFinder, 9×
@@ -910,10 +911,11 @@ so the open piece is a hand scan of evt 235435, not plumbing)** → ~~(iii) ener
 → ~~(iv) muon dQ/dx-vs-length curve~~ **(done 2026-07-30, §2e(iv-b) — nine sites, one
 knob, SBND fit adopted)** → (v)
 fit-JSON thresholds; (vi) waits for the SCN/BDT work (G1/G3).
-**Staged, config-ready, awaiting owner review (pr/10 §7):** `use_power_recomb`
-(free-power recombination for both taggers) and `sp_dedx_use_recomb_model` +
-`sp_mean_dedx_cut≈2.23` (SinglePhoton stem dE/dx) — before/after on three nuecc48
-events shows small persisted diffs and no verdict flips.
+**Owner-approved and ON for SBND, 2026-07-30 (toolkit `6d0396a2`):**
+`use_power_recomb` (free-power recombination for both taggers) and
+`sp_dedx_use_recomb_model` + `sp_mean_dedx_cut=2.23` (SinglePhoton stem dE/dx) —
+the pr/10 §7 before/after on three nuecc48 events showed small persisted diffs and
+no verdict flips; the ON-defaults compile is cmp-identical to that evidence arm.
 
 Pre-existing oddity, noted not fixed (CLAUDE.md tie-breaker: report, don't fix):
 `clus.jsonnet:398`-area `do_tracking()` delegates to `$.tagger_check_neutrino(...)` but

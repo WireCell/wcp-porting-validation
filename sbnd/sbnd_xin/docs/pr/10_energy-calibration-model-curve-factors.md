@@ -1,9 +1,10 @@
 # pr/10 — energy calibration round: SBND recombination model, muon dQ/dx-vs-L envelope, kine_* factors
 
-Status: DONE (2026-07-30).  Toolkit `405a0f9a` (gen model) + `21c31439`
-(knob plumbing, byte-identical OFF) + `db625c81` (SBND adoption: muon
-curve + 3 kine recombination factors).  Staged awaiting owner review:
-`use_power_recomb`, `sp_dedx_use_recomb_model`/`sp_mean_dedx_cut` (sec 7).
+Status: DONE, ALL FLIPS ON (2026-07-30).  Toolkit `405a0f9a` (gen model) +
+`21c31439` (knob plumbing, byte-identical OFF) + `db625c81` (SBND adoption:
+muon curve + 3 kine recombination factors) + `6d0396a2` (owner-approved
+enable of `use_power_recomb` and `sp_dedx_use_recomb_model`/
+`sp_mean_dedx_cut=2.23` — sec 7 items 3, reviewed same day).
 Closes the plumbing of doc pr/2 §2e(i) row 3 (SinglePhoton inline inverse
 Box) and the §2e(iv) muon-curve row (corrected here from 3 to **9** sites);
 supplies the first SBND values for the §2e(iii) `kine_*` recombination
@@ -232,11 +233,11 @@ Production flips this round (each its own commit, separately revertible):
    `kine_proton_recom_factor = 0.51` — SBND jobs only.  Changes
    kine-derived BDT features; nothing persisted moves (see section 6).
 
-Staged, config-ready, NOT flipped (owner review pending):
-
-3. `use_power_recomb = true` (+ `sp_dedx_use_recomb_model = true`,
-   `sp_mean_dedx_cut = 2.23`) — the before/after evidence below is the
-   review material.
+3. `use_power_recomb = true` + `sp_dedx_use_recomb_model = true`,
+   `sp_mean_dedx_cut = 2.23` — staged first with the before/after below as
+   review material, then **approved by the owner and enabled the same day**
+   (toolkit `6d0396a2`; the ON-defaults compile is cmp-identical to the
+   `power` evidence arm).
 
 Before/after on nuecc48 events (18253/1/{172230, 235435, 444187}; arms =
 the run_pr3_evt.sh command + extra TLAs, all `setarch -R`, `dl_weights=''`;
