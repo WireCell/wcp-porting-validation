@@ -213,6 +213,13 @@ cosmic verdict on one bundle does not veto another candidate bundle.
 | `vertices` | 87, exactly 1 with q=15000 (main) | present |
 | `mc.json` prototype format | `e-  1686 MeV` → {`gamma 5 MeV`→`e- 5 MeV`, `gamma 7 MeV`→`e- 7 MeV`}, int-MeV text, KeepMC floors active | roots: `e-  740 MeV`, `proton  579 MeV` (TDatabasePDG "proton", not "p"), `pi+  1 MeV` (π not floored — correct KeepMC scope) |
 
+**Bee sets (uploaded 2026-07-30, owner-approved):**
+
+- evt 172230: <https://www.phy.bnl.gov/twister/bee/set/0bfe4744-30bf-44cd-945d-b8e13470aaa7/event/list/>
+- evt 444187: <https://www.phy.bnl.gov/twister/bee/set/f781b49a-e3bc-4f7e-99bf-1a444e6c1feb/event/list/>
+  (cluster 6 visible in `clustering` only — no PR layers = the skip; cluster
+  19 carries the PR layers and the MC-panel particle flow)
+
 **tracking-pr.root (SbndPrMagnifyTrackingVisitor + UbooneTaggerOutputVisitor):**
 
 ```
