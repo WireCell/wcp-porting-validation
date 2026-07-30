@@ -1,11 +1,14 @@
 #!/bin/bash
 # doc pr/3 validation runner: production tail + neutrino PR + BDT scorers +
 # Magnify-tracking + T_tagger/T_kine on one nueCC48 event.
-# Usage: ./run_pr3_evt.sh <EVT>
+# Usage: ./run_pr3_evt.sh <EVT>            -> ./nupr_evt<EVT>/   (the record dir)
+#        PROUT=<dir> ./run_pr3_evt.sh <EVT>  -> <dir>/           (scratch re-runs)
+# Use PROUT for anything exploratory: nupr_evt<EVT>/ is a record of a past run and
+# is never to be overwritten (CLAUDE.md M13).
 set -u
 EVT=${1:?usage: run_pr3_evt.sh <EVT>}
 SX=$(cd "$(dirname "$0")/.." && pwd)          # sbnd_xin
-OUT=$(cd "$(dirname "$0")" && pwd)/nupr_evt$EVT
+OUT=${PROUT:-$(cd "$(dirname "$0")" && pwd)/nupr_evt$EVT}
 mkdir -p "$OUT"
 TK=/nfs/data/1/xqian/toolkit-dev/toolkit
 export WIRECELL_PATH=$TK/cfg:/nfs/data/1/xqian/toolkit-dev/wire-cell-data:/nfs/data/1/xqian/toolkit-dev/wire-cell-data/sbnd/photodet

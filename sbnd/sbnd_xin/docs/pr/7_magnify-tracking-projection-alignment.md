@@ -15,24 +15,33 @@ here too.
 ## Repro
 
 ```bash
+SX=.../wcp-porting-img/sbnd/sbnd_xin
+OUT=/home/xqian/tmp/pr7                     # any scratch dir; PROUT keeps
+mkdir -p $OUT                               # nupr_evt172230/ intact (M13)
+
 # 1. PR chain on evt 172230 (writer output: tracking-pr.root)
-cd .../wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-prsmoke2
-PROUT=<outdir> ./run_pr3_evt.sh 172230          # OUT= hard-coded; see §6 for the scratch variant
+PROUT=$OUT $SX/work-nuecc48-prsmoke2/run_pr3_evt.sh 172230
 
 # 2. is the writer consistent with the measured charge? (index space)
-python3 sbnd_xin/pr_proj_align.py <outdir>/tracking-pr.root 5
+python3 $SX/pr_proj_align.py $OUT/tracking-pr.root 5
 
 # 3. GUI-format conversion
-wire-cell-sbnd-magnify-tracking-convert -b<outdir>/tracking-pr.root -f2 -otrack_com.root
+wire-cell-sbnd-magnify-tracking-convert -b$OUT/tracking-pr.root -f2 -o$OUT/track_com.root
 
-# 4. old-vs-new binning, side by side (negative control)
-root -l -b -q 'sbnd_xin/pr_proj_binctl.C("track_com.root")'    # -> binctl.png
+# 4. old-vs-new binning, side by side (negative control; writes ./binctl.png)
+root -l -b -q "$SX/pr_proj_binctl.C(\"$OUT/track_com.root\")"
 
-# 5. the GUI itself
-.../Magnify-tracking-SBND/magnify.sh track_com.root
+# 5. the real viewer code, headless (writes a PNG; no X needed)
+cd .../Magnify-tracking-SBND/scripts
+root -l -b -q loadClasses.C "$SX/pr_proj_guishot.C(\"$OUT/track_com.root\",0,79,20,\"$OUT/gui.png\")"
+
+# 6. the GUI itself
+.../Magnify-tracking-SBND/magnify.sh $OUT/track_com.root
 ```
 
-Toolkit `apply-pointcloud`; viewer `BNLIF/Magnify-tracking-SBND` `master`.
+Toolkit `apply-pointcloud` (`b8080267`, `dc9ba62b`); viewer
+`BNLIF/Magnify-tracking-SBND` `master` (`12de6c9`).  A ready-made output of steps
+1–3 is in `work-nuecc48-prsmoke2/nupr_evt172230_pr7/`.
 
 ---
 
@@ -72,9 +81,14 @@ within 3 index units).  Evt 172230, cluster 5, 582 fitted points, 7577 cells:
 | V | 1734 | −0.163 | −0.057 | −0.077 | −0.031 |
 | W | 2378 | −0.028 | +0.012 | −0.035 | +0.010 |
 
-Zero on both axes, and `charge_pred` — the fit's own prediction — lands where the
-measurement lands.  **There is no reconstruction offset.**  This is also why the
-best-fit dQ/dx looked reasonable all along.
+Read "zero" against the scale of the effect under diagnosis: the half-bin
+mismatch is exactly **0.5** by construction, and every residual here is ≤0.16, so
+the data excludes a half-bin writer offset by more than 3×.  (The V column moved
+by ~0.18 between two different runs of the same event, which is the size of the
+method's own systematic — still a third of what is being excluded.)
+`charge_pred` — the fit's own prediction — lands where the measurement lands.
+**There is no reconstruction offset.**  This is also why the best-fit dQ/dx
+looked reasonable all along.
 
 ## 3. Root cause: the viewer's bin edges
 
@@ -134,6 +148,16 @@ the left, new on the right:
 The left column reproduces the offset seen in the GUI: the magenta markers hug
 the left/lower edge of the yellow charge band.  On the right they sit on it.
 
+`pr_proj_binctl.C` is a reimplementation of those three lines, so it does not
+exercise `Data.cc` itself.  `sbnd_xin/pr_proj_guishot.C` does: it mirrors
+`GuiController`'s init sequence (3×3 canvas, `Data(file, sign)`, `data->c1 =
+can`, `DrawNewCluster()`) without a `TGWindow` and then calls the same public
+entry points the GUI calls (`DrawDQDX`, `DrawProj`, `DrawSubclusters`,
+`DrawBadCh`, `DrawPoint`, `ZoomProj`), writing a PNG.  Run clean on three files:
+the new PR dump, an STM dump (`showcase-stmfit-286241/track_com_286241.root`,
+which takes the single-sub-cluster path), and an OLD PR conversion — no crash,
+no double free, tracks centred on the charge in all three planes.
+
 ## 4. `rec_L`: the dQ/dx "Distance from start" axis was a concatenation
 
 `rec_L` does not exist in `tracking-pr.root`.  The convert app synthesizes it as
@@ -171,6 +195,14 @@ lines across the pad.
   `g_dqdx` is now drawn `"AP"` — markers only — with one `"Lsame"` graph per
   sub-cluster, so nothing joins two segments.  The truth curves, the
   reduced-chi2 curve and the MC-compare pad use the same layout.
+
+**Old converted files still open.**  `DisplayL()` sets
+`off = x[i-1] + gap - L[i]` at a sub change, which differences a cumulative
+`rec_L` back into per-segment increments — so the dozen existing
+`track_com*.root` files render sensibly without re-converting.  Their vertex run
+keeps its long prefix (evt 172230 still starts the segments near 1034 cm,
+verified by rendering `nupr_evt172230_pufix/track_com_pr_evt172230.root`), but
+the segments no longer stack on top of each other.
 
 **No-op for STM dumps**, and proved with bytes rather than reasoning:
 `SbndMagnifyTrackingVisitor` writes `ndf == sub_cluster_id == cid*10+pass`, so
@@ -242,6 +274,14 @@ written — confirmed by the content hash above being identical to `prA`.
 
 ## 7. Status, and what is deliberately not fixed
 
+The row-order change in §5 touches `tracking-pr.root` for every PR event, so
+"display-layer" is a checked claim, not an assumption:
+`grep -rl T_rec_charge` over the toolkit and wcp-porting-img finds the three
+writers, the two convert apps, `cfg/.../sbnd/clus.jsonnet` (wiring only), and
+eight analysis scripts — and all eight read `tracking-stm.root`, written by the
+untouched `SbndMagnifyTrackingVisitor`.  Nothing but the SBND convert app reads
+`tracking-pr.root`.
+
 **Changed** (all display-layer; no wire-cell reconstruction output changes, so no
 A/B gate applies — `mabc-pr.zip` is byte-identical across every run above):
 
@@ -251,6 +291,8 @@ A/B gate applies — `mabc-pr.zip` is byte-identical across every run above):
 | toolkit | `root/src/SbndPrMagnifyTrackingVisitor.cxx` | content-ordered rows, `paf` guard |
 | toolkit | `clus/docs/porting/porting_dictionary.md` | the `+0.5` divergence |
 | viewer | `event/Data.cc`, `event/Data.h` | bin centres, `DisplayL`, per-sub dQ/dx graphs |
+| wcp-porting-img | `work-nuecc48-prsmoke2/run_pr3_evt.sh` | honour `PROUT` so re-runs stay out of the record dir |
+| wcp-porting-img | `pr_proj_align.py`, `pr_proj_binctl.C`, `pr_proj_guishot.C` | new |
 
 **Recorded, not fixed:**
 
