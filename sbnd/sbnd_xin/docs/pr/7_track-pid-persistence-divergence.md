@@ -139,6 +139,83 @@ prototype parity). Validation: off-gate byte-identical (uBooNE 35-evt ZIPS
 track survives, traditional vertex uses the Bragg constraint), 45
 nu-candidate scan, uBooNE on-arm `fidelity_compare.py`.
 
+## 6. Anatomy: why the direction was "not determined" (owner question, 2026-07-30)
+
+`segment_do_track_pid` (= prototype `ProtoSegment::do_track_pid`) is a
+two-step machine, and the key fact is that the two steps read different
+rows of the same comparison table.
+
+**Step A — `do_track_comp` computes everything, both ways.** For each
+orientation (forward = start_v→end_v, and the reversed vectors) it builds
+the normalized cumulative-charge-vs-length curve and compares it to FOUR
+references: muon table, flat constant (MIP), proton table, electron table
+— KS distance + magnitude ratio each. So the direction-sensitive
+information for the proton hypothesis IS available at this point, and for
+our track it is discriminating: **proton score fwd 0.135 vs bwd 0.193**
+(smaller = better; fwd = away from the 2-connection vertex shared with the
+shower = the physically correct direction, Bragg at the free end).
+
+**Step B — the direction decision reads only the muon and flat rows.**
+`eval_ks_ratio(ks_mu, ks_flat, r_mu, r_flat)` first line:
+`if (ks_mu - ks_flat >= 0) return false`. A direction is declared only if
+exactly one orientation passes. Our track: fwd ks_mu=0.0746 >
+ks_flat=0.0494 (bwd similar) → both orientations fail the first line →
+abstain, `dirsign=0`, and the function returns **without ever running the
+particle-type competition** — the proton row is computed and never read.
+The type competition (mu/p/e scores) only runs AFTER a muon-anchored
+direction exists.
+
+**Why the muon-vs-flat gate physically fails for a short proton:**
+1. KS acts on NORMALIZED shapes — the absolute dQ/dx magnitude
+   (2.3–4.4× MIP here, unambiguous proton) is invisible to it; magnitude
+   sits in the ratio term, which is only consulted if the KS test wins
+   first.
+2. Over ~10 cm a proton's charge profile varies slowly except in the last
+   few mm. Recombination compresses the contrast (high dE/dx saturates in
+   charge), and diffusion + the 0.6 cm fit binning clip the sharpest 1–2
+   tip points — our measured tip points DROP (98k, 121k) below the peak at
+   rr≈1–2 cm (190k). Measured spread: 0.70–1.37× the median. In shape
+   space the track is nearly flat: KS vs flat ≈ 0.039 (this doc's simple
+   reconstruction) / 0.0494 (pr/5's faithful replay).
+3. The muon reference's last 10 cm concentrates its rise in the final
+   2–3 cm; a proton's gentle decline matches it worse (KS 0.075) than a
+   constant does. The gate correctly concludes "not a stopping muon" — and
+   the code equates that with "direction cannot be determined."
+
+**So, answering the two sub-questions directly:**
+- *"When it compares with the particle hypothesis, direction information
+  must be available?"* — Yes: fwd/bwd proton scores exist (0.135/0.193,
+  correctly asymmetric) but the decision logic never uses any non-muon row
+  for direction. This is faithful prototype behavior (a prototype design
+  limitation, not a port bug).
+- *"Is it the high-dQ/dx determination that leads to proton, instead of
+  the dQ/dx template fit?"* — Yes: in this event the proton identity comes
+  from the coarse median-dQ/dx catch (>1.75×MIP, type ONLY, deliberately
+  no direction), not from the template fit, which was never allowed to
+  conclude. In the prototype design a typed-but-undirected track then gets
+  its direction LATER, from topology: `examine_direction` orients segments
+  away from the chosen main vertex and marks them dir_weak. A vertex-
+  attached proton's direction is meant to come from the vertex, not from
+  its own dQ/dx; its Bragg peak influences vertexing only indirectly (by
+  keeping the cluster in track mode with a track that must attach), never
+  as an explicit "Bragg end = stopping end" vote.
+
+The dependency chain is therefore: dQ/dx→direction is muon-only BY DESIGN;
+dQ/dx→type has two paths (template fit, direction-gated; median catch,
+direction-free); and type→vertex-mode is what keeps track-mode vertexing
+alive. The toolkit bug (§3) severed the middle link — type discarded
+whenever direction is absent — which then corrupted the third (all-showers
+mode), where even the last-chance 1.4×MIP proton catch at the main vertex
+is explicitly bypassed.
+
+Caveats to keep honest for the fix phase: (a) even with §5 implemented,
+this proton's direction will be topology-assigned (dir_weak), so whether
+the traditional vertexer picks the correct end must be MEASURED on the
+knob-on rerun, not assumed; (b) using the proton-template fwd/bwd
+asymmetry as a direction vote would go BEYOND prototype parity — that is
+the separate pr/5 §6.1 improvement, to be kept distinct from the
+parity-restoring persistence fix.
+
 Second, separable issue (real but NOT this event's cause): the MIP scale is
 hard-coded `43e3` (uBooNE) at every PR-chain call site (~97 sites, pr/2
 census) while SBND's calibrated value is 56000 e/cm (docs 47-48, already
