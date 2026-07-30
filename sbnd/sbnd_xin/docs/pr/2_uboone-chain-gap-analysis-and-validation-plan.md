@@ -797,9 +797,11 @@ latent false-positive channel rather than fixing an observed one.
        check_switch_main_cluster: switch main cluster 2 -> 24
   ```
   Consequence downstream: `nue_score` 4.30 → −15, i.e. the nue tagger no longer fills its
-  branch variables (`br_filled != 1`) for the new main cluster. **This is the one event
-  that needs a hand scan before the 100 cm value is adopted beyond the PR-dev chain** —
-  reported, not tuned (CLAUDE.md §5 rule 7).
+  branch variables (`br_filled != 1`) for the new main cluster. Reported, not tuned
+  (CLAUDE.md §5 rule 7). **Owner decision 2026-07-30, after seeing the Bee sets above
+  and the DL-ON numbers below: keep 100 cm.** The event stays on the list as a scan
+  item for the geometric fallback (both candidates exist in either arm — the question
+  is which one is the neutrino vertex), not as a blocker on the value.
 - **evt 269774 — main vertex moves within the main cluster**, (16.5, −93.0, 182.7) with 3
   legs → (39.7, −67.3, 159.9) with 2 legs, i.e. 22.8 cm upstream in z; `nue_score`
   0.497 → 1.844, `numu_score` −2.446 → −2.416. Both are real (non-sentinel) BDT values.
@@ -916,7 +918,8 @@ and gets its own round in the doc-63 style. Priority order: (i) correctness item
 them; what remains is a *measurement* to replace the 48000 placeholder, not plumbing)**
 → ~~(iv) cosmic-y + vertex-z prior~~ **(done 2026-07-30, §2e(iv-a) — knobs exist AND
 SBND sets translated values; this is the first worklist item that changes SBND output,
-so the open piece is a hand scan of evt 235435, not plumbing)** → ~~(iii) energy reco~~ **(plumbing done 2026-07-30,
+values ADOPTED by the owner 2026-07-30; the residual is a scan of evt 235435 on the
+geometric fallback, not plumbing and not a blocker)** → ~~(iii) energy reco~~ **(plumbing done 2026-07-30,
 §2e(iii-a); the pr/10 round then calibrated the three recombination factors —
 §2e(iii-b); still uBooNE: fudge factors, plane weights, asymmetry switch, W-value)**
 → ~~(iv) muon dQ/dx-vs-length curve~~ **(done 2026-07-30, §2e(iv-b) — nine sites, one
