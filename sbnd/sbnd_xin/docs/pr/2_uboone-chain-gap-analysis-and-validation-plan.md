@@ -642,7 +642,9 @@ Repro:
 
 ```bash
 # compiled-config proof (uBooNE unchanged; SBND emits the 5 keys).  The "before"
-# tree is a worktree at the parent commit: git worktree add --detach /home/xqian/tmp/wt-head f14bbce8
+# tree is a worktree at 66957283, the commit this work started from (the parent
+# f14bbce8 landed mid-task from a second session and touches neither key):
+#   git worktree add --detach /home/xqian/tmp/wt-head 66957283
 qlport/scripts/compile_ub_cfg.sh /home/xqian/tmp/wt-head/cfg ub_head.json
 qlport/scripts/compile_ub_cfg.sh $TK/cfg                     ub_now.json
 diff ub_head.json ub_now.json                                    # empty (258945 B both)
@@ -699,8 +701,11 @@ absent key is byte-identical):
 | `cosmic_y_top_main` | 100 | 183 | `NeutrinoTaggerCosmic.cxx:1176` — main cluster's own highest point (relaxes the vertical-angle cut 20° → 30°) |
 | `cosmic_y_top_strict` | 102 | 185 | `:1191` — event highest point, single-cosmic branch |
 | `cosmic_y_top_loose` | 80 | 163 | `:1192` — event highest point, global gate on the whole `flagp_cosmic` decision |
-| `cosmic_y_small_piece` | 50 | 133 | `:1073` — PCA centre of a <3 cm cluster counted as cosmic debris (`acc_small_length`, which feeds the gate above) |
-| `vertex_z_prior_scale` | 200 | 100 | `NeutrinoVertexFinder.cxx:875` + `:3001` |
+| `cosmic_y_small_piece` | 50 | 133 | `:1074` — PCA centre of a <3 cm cluster counted as cosmic debris (`acc_small_length`, which feeds the gate above) |
+| `vertex_z_prior_scale` | 200 | 100 | `NeutrinoVertexFinder.cxx:875` + `:3002` |
+
+(All line numbers at `cbd78820`; the pre-change sweep quoted `:1073/:1175/:1190/:1191`
+and `:875/:3001` — the block shifted by the added trace line.)
 
 Members live on `PatternAlgorithms` (internal units) and are fed from
 `TaggerCheckNeutrino` (cm → internal), the same three-site pattern as
@@ -727,7 +732,8 @@ absolute margin, not an extent.
 |---|---|
 | uBooNE 35-event off-gate | **PASS** — `sweep/geomoff_ub/hashes.txt` == `sweep/f3coff_ub2/hashes.txt`, zero diff, all `rc=0` (the 16-line delta vs `gate3` is the pre-existing one from `7902615c`, identical in `f1off_ub`/`f3coff_ub2`) |
 | uBooNE compiled config | **byte-identical**, 258945 B both |
-| SBND compiled config | the 5 keys appear with 183/185/163/133/100 and **nothing else changes** |
+| SBND compiled config (PR job) | the 5 keys appear with 183/185/163/133/100 and **nothing else changes** |
+| SBND **production** compiled config | **byte-identical** both entry points that import `sbnd/clus.jsonnet` — `wcls-img-clus.jsonnet` 169809 B and `wct-clus-matching-standalone.jsonnet` 190598 B, zero diff (`sbnd_xin/compile_sbnd_prod.sh`): the new `pr()`/`clus_pr()` args do not leak where `tagger_check_neutrino` is not in `pipeline_names` |
 | `wcdoctest-clus` | 565/565 |
 | freshness | `local/lib/libWireCellClus.so` == `build/clus/libWireCellClus.so`, 350804144 B, 15:34, both newer than the last edit (the sweep loads from `build/`) |
 | SBND arm | **NOT bit-identical by design** — characterized below, no gate label |
