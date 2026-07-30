@@ -304,17 +304,31 @@ the uBooNE numbers, so an omitted argument is legacy-identical. 16 files under
 **Why 48000 and not the ~54.7e3 of the census above.** They are different quantities.
 54.7e3 e/cm is the doc-48 *muon-plateau* dQ/dx; `mip_dqdx_median` is the *reference
 scale the ratio cuts are quoted against*, which in uBooNE sat at 43000 against a
-flat-template 50000 — a ratio of 0.86. `48000 ≈ 0.86 × 56000` preserves that internal
-ratio, and is a **placeholder pending an SBND median-MIP measurement** (owner,
-2026-07-30). Nothing here is a measurement of the SBND median.
+flat-template 50000 — a ratio of 0.860. 48000 against SBND's 56000 is 0.857, i.e. the
+round number nearest to carrying that internal ratio over (0.860 × 56000 = 48160). It is
+a **placeholder pending an SBND median-MIP measurement** (owner, 2026-07-30). Nothing
+here is a measurement of the SBND median.
 
-Compiled-config proof (fresh, 2026-07-30, this doc entry):
+Compiled-config proof (fresh, 2026-07-30, this doc entry) — the full command, verbatim.
+`input`/`output_dir` are never opened by jsonnet, so any placeholder works:
 
 ```bash
-wcsonnet --tla-code "pipeline_names=['tagger_check_stm','tagger_check_neutrino']" \
-   … cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet | grep -n 'mip_dqdx\|proton_dir_vote'
-# TaggerCheckSTM:        "mip_dqdx" : 56000
-# TaggerCheckNeutrino:   "mip_dqdx" : 56000, "mip_dqdx_median" : 48000, "proton_dir_vote" : true
+export WIRECELL_PATH=$TK/cfg:/nfs/data/1/xqian/toolkit-dev/wire-cell-data
+wcsonnet \
+  --tla-str "input=x.tar.gz" --tla-code 'anode_indices=[0,1]' \
+  --tla-str "output_dir=/home/xqian/tmp/z" \
+  --tla-code run=18253 --tla-code subrun=1 --tla-code event=172230 \
+  --tla-str reality=data --tla-code DL=4.0 --tla-code DT=8.8 \
+  --tla-code lifetime=35 --tla-code driftSpeed=1.563 \
+  --tla-code "pipeline_names=['tagger_check_stm','tagger_check_neutrino']" \
+  --tla-str "trackfitting_config=$SB/sbnd_track_fitting.json" \
+  --tla-str "dl_weights=" --tla-code 'beam_window_us=[0.2,2.2]' \
+  $TK/cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet \
+  | grep -n 'mip_dqdx\|proton_dir_vote'
+# 206:  "mip_dqdx" : 56000                      <- TaggerCheckSTM
+# 238:  "mip_dqdx" : 56000                      <- TaggerCheckNeutrino
+# 239:  "mip_dqdx_median" : 48000
+# 244:  "proton_dir_vote" : true
 ```
 
 (a 2-stage `pipeline_names`, not the production 13-stage job — enough to show both
@@ -622,8 +636,9 @@ imaging: do not archive `work/` pieces without `relink_tags.py`.
   MicroBooNE geometry. Note the parity caveat about non-unit vectors before supplying
   a normalized one.
 - **An SBND median-MIP dQ/dx measurement** to replace the `mip_dqdx_median=48000`
-  placeholder, which today is only `0.86 × 56000` — the uBooNE 43/50 ratio carried over
-  (§2e(ii-a)). The knob is live in production, so this number is currently shifting
+  placeholder, which today is only the round number nearest to carrying the uBooNE 43/50
+  ratio over onto 56000 (48000/56000 = 0.857 vs uBooNE's 0.860 — §2e(ii-a)). The knob is
+  live in production, so this number is currently shifting
   every ratio cut in the PR chain on a value nobody measured.
 - **`PRSegmentFunctions.cxx:2396`** — the one `determine_dir_track` call site the pr/8
   threading missed; it drops both `mip_dqdx_median` (→ 43000) and `proton_dir_vote`
