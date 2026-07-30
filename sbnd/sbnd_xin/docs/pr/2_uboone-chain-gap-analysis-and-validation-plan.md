@@ -33,6 +33,15 @@ arguing it. That section also records the first measured effect (evt 444187, APA
 uBooNE manifest. §2e(i) is now fully closed except for the SBND `ssm_target_dir` *value*
 and the SinglePhoton inline box model.
 
+**Update 2026-07-30 (fifth, the pr/10 energy round)** — the SinglePhoton inline box
+model is knob-closed (`sp_dedx_use_recomb_model` + `sp_mean_dedx_cut`, §2e(i-c)); the
+§2e(iv) muon dQ/dx-vs-length curve — actually at **nine** sites, not the three listed
+— is config-fed AND carries an SBND table-derived fit in production (§2e(iv-b)); the
+three `kine_*` recombination survival factors now carry SBND transfer values
+(§2e(iii-b)); and the doc-55 free-power recombination model exists in the toolkit as
+`PowerBoxRecombination` behind `use_power_recomb` (OFF pending review). All in
+`sbnd_xin/docs/pr/10`; toolkit `405a0f9a` + `21c31439` + `db625c81`.
+
 **Update 2026-07-30 (fourth)** — the two **§2e(iv) detector-extent** rows are **closed**
 and are the first worklist item whose SBND value is a real translation rather than a
 placeholder: `cosmic_y_top_main/_top_strict/_top_loose/_small_piece` (uBooNE
@@ -191,7 +200,7 @@ chain currently runs two mutually inconsistent field assumptions.**
 |---|---|---|
 | `NeutrinoTaggerSSM.cxx:582-583` | `target_dir(0.46,0.05,0.885)`, `absorber_dir(0.33,0.75,-0.59)` | BNB-target and NuMI-absorber directions **in the uBooNE detector frame**; feed 8 `ssm_*_angle_{target,absorber}` BDT features. SBND needs its own target vector; the NuMI-absorber features may be meaningless there. **Half-closed 2026-07-30: the numbers are now config-fed (`ssm_target_dir` / `ssm_absorber_dir`), defaults unchanged — see §2e(i-a). The remaining gap is the SBND *value*, which nobody has yet.** |
 | `TaggerCheckNeutrino.cxx:493` | `nue_tagger(..., apa=0, face=0, ...)` | Single-drift-volume assumption: any vertex in SBND APA 1 gets APA 0's mirrored wire geometry for `flag_prolong_u/v/w` / `flag_parallel`. `NeutrinoTaggerSinglePhoton.cxx:2186-2196` already derives apa/face from `dv->contained_by(vtx_pt)` — the nue path needs the same fix. **CLOSED 2026-07-30, toolkit `7902615c` — see §2e(i-b).** (The `:493` line number is from the 2026-07-29 sweep; the call site is `:561` at `34f0abd8`.) |
-| `NeutrinoTaggerSinglePhoton.cxx:1499-1505` | inline inverse Modified-Box with `0.273` kV/cm, `1.38` g/cm³, `23.6e-6`, `43e3` | Bypasses the configured `sbnd_box_recomb` (0.5 kV/cm) entirely for its `median_dedx`/`mean_dedx`. |
+| `NeutrinoTaggerSinglePhoton.cxx:1499-1505` | inline inverse Modified-Box with `0.273` kV/cm, `1.38` g/cm³, `23.6e-6`, `43e3` | Bypasses the configured `sbnd_box_recomb` (0.5 kV/cm) entirely for its `median_dedx`/`mean_dedx`. **Knob-closed 2026-07-30: `sp_dedx_use_recomb_model` routes it through the configured model, `sp_mean_dedx_cut` (legacy 2.3 MeV/cm, transfers as ≈2.23 on the physical scale) exposes the coupled cut — §2e(i-c), pr/10 §5. Default OFF = byte-identical; not yet ON anywhere.** |
 
 **(i-a) DONE 2026-07-30 — the SSM beam vectors are config-fed** (owner request; the
 SBND values are still unknown, so this moves the numbers out of the source, it does
@@ -436,6 +445,16 @@ Recorded, not fixed (CLAUDE.md tie-breaker):
   ZIPS gate plus a per-branch `tagger_tree_ab.py` diff; leaving it as-is invites a future
   reader to treat a PASS-shaped FAIL as meaningful.
 
+**(i-c) KNOB-CLOSED 2026-07-30 — the SinglePhoton inline inverse Box routes through
+the configured model** (pr/10 §5, toolkit `21c31439`). `sp_dedx_use_recomb_model`
+(default **false** = the inline float formula, byte-identical; gate: qlport ZIPS 35/35
+`energyoff_ub` vs `geomoff_ub`) sends `shw_sp_vec_{median,mean}_dedx` through
+`m_recomb_model->dE()`; the coupled hard cut is `sp_mean_dedx_cut` (default 2.3,
+compared as float ⇒ bit-identical). Threshold transfer: 2.3 on the inline
+(A=1.0/B=0.255 @ 0.273) scale = 58 768 e/cm = **2.23 MeV/cm** physical
+(`dqdx_rr_sample/derive_kine_recom_factors.py`). Not ON anywhere yet — staged with
+`use_power_recomb` pending owner review of the pr/10 §7 before/after.
+
 **(ii) The MIP normalization — highest-leverage single tune.** `43e3/units::cm`
 appears at ~97 sites in 16 files (19× NuE, 13× Cosmic, 10× SSM, 10× VertexFinder, 9×
 TrackShowerSep, 5× ShowerClustering, …), including as *default arguments* in
@@ -546,7 +565,7 @@ a jsonnet edit rather than a `--tla-code`.
 
 | where | value | note |
 |---|---|---|
-| `:190,241,298` | `fudge_factor=0.95`, `recom_factor=0.7`; shower `0.5/0.8`; proton `0.35` | average recombination survival — field-dependent, uBooNE-tuned. **Half-closed 2026-07-30: config-fed as `kine_fudge_factor` / `kine_recom_factor` / `kine_shower_*` / `kine_proton_recom_factor`, defaults unchanged — §2e(iii-a).** |
+| `:190,241,298` | `fudge_factor=0.95`, `recom_factor=0.7`; shower `0.5/0.8`; proton `0.35` | average recombination survival — field-dependent, uBooNE-tuned. **Half-closed 2026-07-30: config-fed as `kine_fudge_factor` / `kine_recom_factor` / `kine_shower_*` / `kine_proton_recom_factor`, defaults unchanged — §2e(iii-a). Later same day: the three RECOM factors carry SBND production values 0.87/0.58/0.51 (table-integrated ratio transfer, §2e(iii-b) → pr/10 §6); the fudge factors deliberately stay uBooNE.** |
 | `:163,171` | plane weights `{0.25,0.25,1.0}`, asymmetry switch `0.04` | reflects uBooNE induction-plane quality. **Half-closed 2026-07-30: `kine_plane_weights` / `kine_plane_asym_switch` — §2e(iii-a).** |
 | `:175` | W-value `23.6 eV` duplicated (not read from the recomb model's `Wi`) | low risk, note only. **Config-fed 2026-07-30 as `kine_w_value`; still duplicated rather than read from `Wi` — §2e(iii-a).** |
 | `:14-35` | `cal_corr_factor()` is a **stub** returning 1.0 | no position/lifetime/SCE correction for either detector; pairs with the retained `0.85` factor in the SBND dE/dx tables ("degenerate with the missing electron-lifetime correction") |
@@ -620,13 +639,26 @@ Caveats worth knowing before calibrating:
 - The `0.6 cm` 2D-hit match distance in the same function is row (iv), not (iii),
   and stays a literal.
 
+**(iii-b) DONE 2026-07-30 — the three recombination factors carry SBND values**
+(pr/10 §6, toolkit `db625c81`): `kine_recom_factor` 0.7 → **0.87**,
+`kine_shower_recom_factor` 0.5 → **0.58**, `kine_proton_recom_factor` 0.35 → **0.51**
+— the uBooNE empiricals scaled by the table-integrated survival ratio
+R_eff(SBND free-power fit, C excluded) / R_eff(official uBooNE Box @ 0.273), per-class
+dE/dx profiles from `energy_loss/pion_travel/stopping.root`
+(`dqdx_rr_sample/derive_kine_recom_factors.py`). The fudge factors deliberately stay
+uBooNE (they absorb the gain/lifetime normalization that the fit's C carries).
+Effect: `kine_reco_Enu` −12…−14 % on nuecc48 172230/235435/444187 (T_kine of the
+pr/3-style `tracking-pr.root` — which **corrects the (iii-a) caveat**: kine IS
+persisted there; only `mabc-pr.zip`/pctree are insensitive). Plane weights, asymmetry
+switch and W-value still have no SBND value.
+
 **(iv) Detector-extent / absolute-charge literals:**
 
 | where | value | uBooNE meaning → SBND effect |
 |---|---|---|
 | `NeutrinoTaggerCosmic.cxx:1073,1175,1190,1191` | `pca.center.y > 50`, `highest_y > 100/102/80 cm` → cosmic | "reaches the top": 67/17/15/37 cm below uBooNE's top face, which is **y = +117 cm**, not the 116.5 this row claimed until 2026-07-30 (`prototype_base/pid/apps/wire-cell-prod-nue.cxx:417` passes the FV as `3, 117, -116, 0, 1037, 0, 256`). SBND's top is y ≈ +200, so 100 cm is **mid-detector** — cut near-meaningless as-is. **CLOSED 2026-07-30: four config knobs `cosmic_y_top_main/_top_strict/_top_loose/_small_piece`, SBND 183/185/163/133 cm — see §2e(iv-a).** |
 | `NeutrinoVertexFinder.cxx:875,3001` | vertex score penalty `(z−min_z)/(200 cm)` | upstream-z prior calibrated to uBooNE's 1037 cm (≈5.2 units end-to-end); on SBND's 501 cm it is ~2× weaker relative to the +0.25-per-track terms. (`:2948` in the pre-2026-07-30 sweep; the second site is `compare_main_vertices_global`, the first is `compare_main_vertices` — **both** are exercised on SBND.) **CLOSED 2026-07-30: config knob `vertex_z_prior_scale`, SBND 100 cm — see §2e(iv-a).** |
-| `NeutrinoTaggerNuMu.cxx:191,296`, `NeutrinoVertexFinder.cxx:3340` | `0.8866+0.9533·(18cm/L)^0.4234` (×43e3) | empirical uBooNE muon dQ/dx-vs-length curve |
+| `NeutrinoTaggerNuMu.cxx:198,296`, `NeutrinoVertexFinder.cxx:3394`, `NeutrinoTaggerNuE.cxx:402,759,1721,3448`, `NeutrinoTaggerSSM.cxx:1034`, `NeutrinoTaggerCosmic.cxx:558` | `0.8866+0.9533·(18cm/L)^0.4234` (×`mip_dqdx_median`) | empirical uBooNE muon dQ/dx-vs-length curve — **NINE sites, not the three this row listed until 2026-07-30. CLOSED: one knob `muon_dqdx_curve`, SBND production carries the table-derived fit `[0.8826, 1.0587, 18, 0.4745]` — §2e(iv-b) → pr/10 §4.** |
 | `NeutrinoTaggerCosmic.cxx:536` | FV shrink `−1.5 cm` (6 faces) | absolute margin for vertex-outside-FV test |
 | `SteinerGrapher.cxx:86-88,202-214,353` | `Q0=10000`, `charge_threshold=4000` e; distances 0.6/1.8/6.0 cm | prototype constants; gain/noise- and pitch-coupled |
 | `NeutrinoEnergyReco.cxx:209,264,287` | 2D-hit match `0.6 cm` | pitch-coupled; SBND also 3 mm — likely transfers |
@@ -813,6 +845,21 @@ of this sample: `±4.3009 = ±log10(0.9999·2/0.0001)` is the clamp at
 today means "pegged at the ceiling", **not** a resolved per-event score — one more
 reason the uBooNE weights cannot rank SBND events until they are retrained (§2d G1).
 
+**(iv-b) DONE 2026-07-30 — the muon dQ/dx-vs-length envelope is config-fed AND SBND
+sets a table-derived fit** (pr/10 §4, toolkit `21c31439` + `db625c81`). One knob
+`muon_dqdx_curve [c0, c1, pivot_cm, power]` replaces the literal at **nine** sites
+(this table's row undercounted 3; also note the prototype's SSM copy
+`NeutrinoID_ssm_tagger.h:743` is dimensionally wrong by ×100 and the toolkit port
+silently normalized it — pr/10 §8, porting-dictionary item). Defaults = the uBooNE
+refit, byte-identical, and **bit-identical even when passed explicitly** (same mabc
+content hash on evt 172230). SBND production: **`[0.8826, 1.0587, 18, 0.4745]`** =
+the SBND stopping-muon table median (0.5 kV/cm, /48000) × the uBooNE empirical/table
+margin g(L)=1.16–1.32, same functional form (`dqdx_rr_sample/fit_muon_length_curve.py`,
+rms 1.5e-3). Looser at short L (2.83 vs 2.53 × MIP at 5 cm), converges at long L.
+Effect on nuecc48 172230/235435/444187 (with (iii-b), same arm): `numu_score` moves
+(−0.455→0.121 / 0.426→−0.123 / 0.358→0.889), **no verdict flips**. Scales as
+1/`mip_dqdx_median` — re-derive when the 48000 placeholder becomes a measurement.
+
 **(v) `sbnd_track_fitting.json` vs `uboone_track_fitting.json`:** same 44 keys; **6
 already SBND-adapted** (`DL`, `DT`, `add_sigma_L`, `col_sigma_w_T`, `ind_sigma_u_T`,
 `ind_sigma_v_T`), **38 verbatim uBooNE**. Detector-coupled among the 38:
@@ -858,8 +905,15 @@ them; what remains is a *measurement* to replace the 48000 placeholder, not plum
 → ~~(iv) cosmic-y + vertex-z prior~~ **(done 2026-07-30, §2e(iv-a) — knobs exist AND
 SBND sets translated values; this is the first worklist item that changes SBND output,
 so the open piece is a hand scan of evt 235435, not plumbing)** → ~~(iii) energy reco~~ **(plumbing done 2026-07-30,
-§2e(iii-a); what remains is the calibration — every value is still uBooNE's)** → (v)
+§2e(iii-a); the pr/10 round then calibrated the three recombination factors —
+§2e(iii-b); still uBooNE: fudge factors, plane weights, asymmetry switch, W-value)**
+→ ~~(iv) muon dQ/dx-vs-length curve~~ **(done 2026-07-30, §2e(iv-b) — nine sites, one
+knob, SBND fit adopted)** → (v)
 fit-JSON thresholds; (vi) waits for the SCN/BDT work (G1/G3).
+**Staged, config-ready, awaiting owner review (pr/10 §7):** `use_power_recomb`
+(free-power recombination for both taggers) and `sp_dedx_use_recomb_model` +
+`sp_mean_dedx_cut≈2.23` (SinglePhoton stem dE/dx) — before/after on three nuecc48
+events shows small persisted diffs and no verdict flips.
 
 Pre-existing oddity, noted not fixed (CLAUDE.md tie-breaker: report, don't fix):
 `clus.jsonnet:398`-area `do_tracking()` delegates to `$.tagger_check_neutrino(...)` but
