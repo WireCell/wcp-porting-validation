@@ -269,8 +269,14 @@ same one the uBooNE chain used.  Converted files:
 `work-nuecc48-prsmoke2/nupr_evt{172230,444187}/track_com_pr_evt*.root`.
 
 ## 7. Open items
+- **SUPERSEDED for the vertex**: every §6 number here comes from the GEOMETRIC
+  vertex (`dl_weights=''`).  On 2026-07-30 the owner adopted the SCN (DL) vertex
+  as the SBND default — for evt 172230 it moves the vertex 9.73 cm off the end
+  of a proton track onto the true interaction point.  See `pr/4_dl-vertex-default.md`.
+  `run_pr3_evt.sh` still pins `dl_weights=''` so this doc's numbers stay
+  reproducible as the pre-adoption arm.
 - Expand from evt 172230 to the 45 nu-candidate nueCC events + Track B
-  (doc pr/2 §3), now that the outputs exist.
+  (doc pr/2 §3), now that the outputs exist — **both vertex arms** (pr/4 §5).
 - BDT scores are uBooNE-trained (uncalibrated on SBND): record distributions,
   do not cut on them (doc pr/2 gap G1).
 - `real_cluster_id` in `track_fit` still uses `get_graph_index()` while

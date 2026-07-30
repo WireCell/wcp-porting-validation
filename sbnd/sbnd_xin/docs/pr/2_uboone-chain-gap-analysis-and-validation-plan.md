@@ -114,8 +114,8 @@ tagger_check_tgm → tagger_check_stm → tagger_check_fc` (+ `stm_magnify` with
 
 | piece | state |
 |---|---|
-| `tagger_check_neutrino` | wired in `clus.jsonnet` `cm_by_name` (~line 909) with SBND args (`sbnd_track_fitting.json`, `ParticleDataSet`, `recombination_model=sbnd_box_recomb`, beam-window gate, `dl_weights=''` → geometric vertex); milestone-M5 demo on 7 events (2026-07-10); **absent from production `pipeline_names`**; re-verified by the §5.3 smoke |
-| DL (SCN) vertex | milestone-M6 demo with **uBooNE-trained** weights; functional only, physics needs SBND retraining; stays out of all identity gates (not bit-stable) |
+| `tagger_check_neutrino` | wired in `clus.jsonnet` `cm_by_name` (~line 909) with SBND args (`sbnd_track_fitting.json`, `ParticleDataSet`, `recombination_model=sbnd_box_recomb`, beam-window gate); milestone-M5 demo on 7 events (2026-07-10); **absent from production `pipeline_names`**; re-verified by the §5.3 smoke |
+| DL (SCN) vertex | **DEFAULT ON for SBND since 2026-07-30 (doc `pr/4`)** — adopted on evt 18253/1/172230, where the geometric vertex sat at the end of a proton track and the DL vertex moved it 9.73 cm onto the true interaction point. Weights are still **uBooNE-trained** (G3 open); requires the libpython preload or it silently falls back (pr/4 §3); stays out of all identity gates, which keep passing `dl_weights=''` |
 
 ### 2c. Missing — deliberate simplification (do NOT port)
 
@@ -133,7 +133,7 @@ tagger_check_tgm → tagger_check_stm → tagger_check_fc` (+ `stm_magnify` with
 |---|---|---|
 | G1 | **numu/nue BDT scorers** (stages 7–8) | `UbooneNumuBDTScorer`/`UbooneNueBDTScorer` load ~35 MicroBooNE-trained XMLs. Running them on SBND would produce numbers with uBooNE priors baked in. Needs: SBND feature extraction first (G2), then retraining. Until then the ~200-variable `TaggerInfo` block is computed (by the taggers inside `tagger_check_neutrino`) but never scored. |
 | G2 | **`SbndTaggerOutputVisitor` / PR tracking output** (stages 9–10) | **CLOSED 2026-07-30 (doc `pr/3`)**: `SbndPrMagnifyTrackingVisitor` forked (2-APA ChanScheme + per-point `PR::Fit::paf`); `UbooneTaggerOutputVisitor` reused as-is (audited geometry-free) — `tracking-pr.root` with T_tagger/T_kine validated on evt 172230/444187.  The BDT scorers are also wired (uBooNE weights, uncalibrated — G1 retraining still open). |
-| G3 | **SCN vertex retraining** + `sparseconvnet`/torch ABI pin | uBooNE weights are a demo only. |
+| G3 | **SCN vertex retraining** + `sparseconvnet`/torch ABI pin | **STILL OPEN, but the net is now in use**: doc `pr/4` made the uBooNE-trained SCN vertex the SBND default (owner call, evt 172230). Defensible because `SCN_Vertex.py`'s voxelizer subtracts the point-cloud min, so the net sees only relative geometry + charge scale — but every PR vertex now carries an other-detector training caveat until this gap closes. |
 | G4 | **dQ/dx calibration constants** | uBooNE passes `dQdx_scale=0.1, dQdx_offset=-1000` (uBooNE data calibration) to the neutrino tagger; SBND passes neither (C++ defaults apply). SBND has `mip_dqdx=56000` (doc 48) for STM, but the PR-internal dQ/dx→PID chain (`ParticleDataSet` tables, recombination) needs an SBND calibration decision. Flag: uBooNE corrects SCE via `clus_geom_helper=UbooneGeomHelper`; SBND passes no geom helper (no SCE correction applied — acceptable to first order for SBND, but must be a stated decision, not an accident). |
 | G5 | **Tagger threshold recalibration** | cosmic/numu/ssm/nue/single-photon tagger cut values are uBooNE-tuned (drift length, wire pitch, PMT geometry priors). They will *run* on SBND; their verdicts are uncalibrated until validated (checklist V8). |
 
