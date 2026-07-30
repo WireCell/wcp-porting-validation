@@ -400,6 +400,17 @@ change. The 15/37 figure is a sample count, not a calibrated rate.
 `./build/clus/wcdoctest-clus`: 49/49 cases, 565/565 assertions. Freshness proof:
 `local/lib/libWireCellClus.so` 11:16:04 vs source 11:15:39.
 
+**Which binary those numbers describe.** All of them — doctest, both uBooNE sweeps
+(11:11–11:13), and all three SBND arms (11:10–11:16:47) — come from a library built from
+`34f0abd8` **plus this hunk and nothing else**. At 11:18:29 a concurrent session in the
+same tree edited `TaggerCheckNeutrino.cxx` (an unrelated `endpoint_trim_retry` knob) and
+rebuilt at 11:19:55, so the *currently installed* `libWireCellClus.so` is no longer that
+binary and re-running `wcdoctest-clus` today does not re-test this change. `7902615c`
+was committed by staging exactly the 27+/1− hunk that was built and gated at 11:16:04
+(`git apply --cached` of the pre-contamination diff), leaving the other session's work in
+the worktree; it therefore contains only what the evidence above covers, but it was never
+re-compiled in isolation *after* being staged.
+
 Recorded, not fixed (CLAUDE.md tie-breaker):
 
 - **`singlephoton_tagger`'s own derivation has no `apa >= 0` guard**
