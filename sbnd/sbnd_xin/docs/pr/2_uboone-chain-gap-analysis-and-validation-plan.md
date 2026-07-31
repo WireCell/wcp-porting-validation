@@ -39,8 +39,19 @@ model is knob-closed (`sp_dedx_use_recomb_model` + `sp_mean_dedx_cut`, §2e(i-c)
 — is config-fed AND carries an SBND table-derived fit in production (§2e(iv-b)); the
 three `kine_*` recombination survival factors now carry SBND transfer values
 (§2e(iii-b)); and the doc-55 free-power recombination model exists in the toolkit as
-`PowerBoxRecombination` behind `use_power_recomb` (OFF pending review). All in
-`sbnd_xin/docs/pr/10`; toolkit `405a0f9a` + `21c31439` + `db625c81`.
+`PowerBoxRecombination` behind `use_power_recomb` (since **ON for SBND** together with
+the SinglePhoton routing, owner approval, toolkit `6d0396a2`). All in
+`sbnd_xin/docs/pr/10`; toolkit `405a0f9a` + `21c31439` + `db625c81` + `6d0396a2`.
+
+**Update 2026-07-30 (sixth)** — owner request: "examine the code another time
+carefully to see if we are missing anything" (geometry, hard-coded energy, dQ/dx
+cuts). **§7** is that second-pass audit. Headline: the detector-parameter sweep is
+essentially complete — no absolute uBooNE coordinate survives anywhere in the chain —
+but the pass found **two ×10 unit divergences from the prototype inside the SSM
+tagger** (port-fidelity bugs that affect uBooNE parity too, §7.1), one remaining
+uBooNE-frame expression (the STM `dist_to_anode` uncontained fallback, §7.2), a
+short list of absolute-charge literals on the uBooNE gain scale (§7.3), and a few
+config-coverage holes (§7.4). Report-only: **no code was changed in this pass.**
 
 **Update 2026-07-30 (fourth)** — the two **§2e(iv) detector-extent** rows are **closed**
 and are the first worklist item whose SBND value is a real translation rather than a
@@ -1160,3 +1171,199 @@ imaging: do not archive `work/` pieces without `relink_tags.py`.
 - Beam-window calibration on a larger sample; multi-bundle "longest wins" rule.
 - MC-with-truth route B + the `recob::OpFlash` converter (§3.4).
 - The `do_tracking()` `$`-scoping oddity (§2d note) — dead code, flag to owner.
+- **The §7 second-pass audit findings (2026-07-30)** — in priority order: the two SSM
+  ×10 unit divergences (§7.1, owner decision needed: they are prototype-parity bugs,
+  so any fix changes uBooNE outputs), the STM `dist_to_anode` uncontained fallback
+  (§7.2), the three absolute-charge floors + the kink-gate literal (§7.3), and the
+  `dl_vtx_cut` jsonnet threading (§7.4).
+
+## 7. Residual hard-code audit — second pass (owner request, 2026-07-30)
+
+**Status: AUDIT DONE, report-only — no code changed.** Owner question: with the
+§2e worklist largely executed, "examine the code another time carefully to see if we
+are missing anything — detector geometry, hard-coded energy, dQ/dx cuts," with the
+stated ground rule that **relative FV-volume cuts and distance windows transfer
+acceptably** between uBooNE and SBND (both are ~m-scale LArTPCs with 3 mm pitch) and
+need a note, not a knob.
+
+Method: four parallel sweeps (geometry literals + coordinate-comparison idioms;
+energy-calibration constants; dQ/dx thresholds; the STM/TGM/FC side + the compiled
+SBND config), then hand-verification of every load-bearing claim against
+`prototype_base/` before it entered this section. Files covered: all of
+`clus/src/Neutrino*.cxx` (14), `clus/src/PR*.cxx`, `TaggerCheck{Neutrino,STM,TGM,FC}.cxx`,
+`FiducialUtils.cxx`, `TrackFitting.cxx`, the `clus/inc/WireCellClus/` headers, and
+`cfg/pgrapher/{common,experiment/sbnd}/clus.jsonnet` resolved by **compiling**.
+
+### Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+# geometry literals + coordinate comparisons (all zero live hits in the chain):
+grep -nE '(256|1037|1036|116\.5|\b117\b)' clus/src/Neutrino*.cxx clus/src/TaggerCheck*.cxx
+grep -nE '\.(x|y|z)\(\)\s*[<>]=?\s*-?[0-9]' clus/src/Neutrino*.cxx clus/src/TaggerCheck*.cxx
+# calibration constants:
+grep -nE '(0\.255|23\.6|0\.212|43e3|43000|50000|25000|20000)' clus/src/*.cxx clus/inc/WireCellClus/*.h
+# the SSM x10 checks (sec 7.1) — compare against prototype:
+grep -n 'units::cm) / m_mip_dqdx_median' clus/src/NeutrinoTaggerSSM.cxx
+grep -n '43e3/units::cm' prototype_base/pid/src/NeutrinoID_ssm_tagger.h
+# config side, resolved from the compiled artifact:
+/nfs/data/1/xqian/toolkit-dev/local/bin/jsonnet -J cfg -J cfg/pgrapher/experiment/sbnd \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet | grep -nE 'dl_vtx_cut|proton_dir'
+```
+
+### 7.1 Port-fidelity findings — two ×10 unit divergences in the SSM tagger (NEW)
+
+These are **not** uBooNE-vs-SBND tuning items: the toolkit diverges from the
+prototype, so they affect **uBooNE parity as well**. They went undetected because the
+qlport ZIPS gate compares toolkit-to-toolkit (never prototype-to-toolkit) and gate 2
+is non-discriminating (§2e(i-b)). Per the escalation rules they are surfaced here,
+not fixed: any fix changes uBooNE outputs, so it needs an owner decision (fix behind
+a default-OFF knob preserving today's byte-identity, or accept a parity break and
+revalidate).
+
+**(a) The vertex-activity d(dQ/dx) vectors are ×10 the prototype's.**
+`NeutrinoTaggerSSM.cxx:627,629` (candidate-segment loop) and `:922,925` (the
+`ssm_sg` dQ/dx profile) build
+
+```cpp
+double last = fits[0].dQ / (fits[0].dx/units::cm) / m_mip_dqdx_median;
+```
+
+`fits[].dx` is internal-unit (the same function subtracts `fits_ssm[i].dx/units::cm`
+from a cm-valued length at `:942,954`), so `dQ/(dx/units::cm)` is e/**cm** ≈ 43000
+for a MIP — divided by `m_mip_dqdx_median` = `43000/units::cm` = 4300 e/internal
+(`NeutrinoPatternBase.h:114`), giving **≈ 10** where the prototype gets ≈ 1:
+`NeutrinoID_ssm_tagger.h:438-440,613-615` computes
+`vec_dQ.at(i)/vec_dx.at(i)/(43e3/units::cm)` — internal ÷ internal, ≈ 1 (WCP and
+WCT share mm = 1, cm = 10; `prototype_base/data/inc/WCPData/Units.h:21-25`). The
+same file does it correctly four lines earlier (`:618`
+`segment_median_dQ_dx(sg)/m_mip_dqdx_median`, matching prototype `:425`), so the
+inconsistency is intra-function. Consequence: the `|d(dQ/dx)| > 0.7` / `> 1.0`
+vertex-activity and `break_point` thresholds (`:642,649,940,951`) fire on
+fluctuations ×10 the intended scale, and the BDT features
+`ssm_max_dq_dx_fwd_3/_fwd_5/_bck_3/_bck_5` (`:1295-1296`) are stored ×10.
+
+**(b) `get_scores`/`get_scores_bp` feed e/cm data into internal-unit templates,
+and bypass the MIP knob.** `NeutrinoTaggerSSM.cxx:52,82` build `dQ_dx` in e/cm —
+a faithful surface-port of prototype `NeutrinoID_ssm_tagger.h:2306`
+(`vec_dQ/(vec_dx/units::cm+1e-9)`), which was *consistent* there because the
+prototype's `do_track_comp` templates are also e/cm (`ProtoSegment.cxx:1152`
+`h3->SetBinContent(i+1, 50e3)`, TGraph tables in e/cm). The toolkit's
+`do_track_comp` templates are **internal-unit** (`PRSegmentFunctions.cxx:1336-1340`,
+`scalar_function(cm)/units::cm`; `const_ref = MIP_dQdx` with the default
+`50000/units::cm` = 5000). Result: the KS terms survive (`kslike_compare`
+normalizes both sums, `util/src/KSTest.cxx:216`), but `ratio1..ratio4` =
+ref_sum/data_sum come out **≈ 0.1× intended**, corrupting the muon/proton/electron
+scores `sqrt(ks² + (ratio−1)²)` and the `eval_ks_ratio` direction metric that feed
+`ssm_score_*` and the direction resolution at `:482-486,1195-1199`. Compounding it,
+all four call sites (`:64,65,96,98`) omit the `MIP_dQdx` argument, so even the
+template amplitude is the uBooNE header default, not `m_mip_dqdx` — the only
+`do_track_comp` callers in the tree that drop it (`PRSegmentFunctions.cxx:1418,
+1419,1516,1517` all pass it through).
+
+**(c) Related documentation nit.** The unit-convention comment at
+`PRSegmentFunctions.cxx:1655-1661` ("fits[i].dx is stored in WireCell length units
+(cm) … dx_vec carried raw WCP units == cm") rests on a false premise — WCP cm = 10,
+not 1 — but its *conclusion* is accidentally right: the main PID path compares
+internal-unit data against internal-unit templates, verified self-consistent. Fix
+the comment whenever (a)/(b) are addressed.
+
+### 7.2 Detector-frame residual — the STM `dist_to_anode` uncontained fallback
+
+`TaggerCheckSTM.cxx:2903`: when `contained_by` fails (`apa < 0`), `dist_to_anode`
+returns `std::abs(pt.x())` — correct only where the anode sits at x = 0, i.e.
+uBooNE. On SBND x = 0 is the **cathode**, so the fallback returns
+distance-to-cathode. The `anode_dist_fix` knob (ON for SBND) only rewrites the
+*contained* branch (`:2908`). The exposure is real: the three call sites
+(`:3053,3056`, the anode-clipped-TGM catch at `< 2 cm` / `< 6 cm`, prototype
+`ToyFiducial.cxx:762`) run precisely when **both endpoints are already outside the
+FV** — the population most likely to be uncontained. A cathode-hugging SBND track
+can pass the `flag_TGM_anode` gate it should fail; a genuinely anode-clipped one at
+|x| ≈ 200 never fires the fallback. Worklist: fold the fallback under
+`anode_dist_fix` (nearest volume's anode-x, or a large sentinel). The 2/6 cm
+tolerances themselves are distance-class — transfer per the ground rule.
+
+### 7.3 Absolute-charge literals (uBooNE gain scale; faithful ports; tuning debt)
+
+All verified against the prototype — these are **not** port bugs, they are
+uBooNE-tuned absolute electron counts that do not ride on `mip_dqdx_median`, so at
+SBND's higher charge scale they are effectively ~12–16 % tighter than designed:
+
+| where | literal | prototype | role |
+|---|---|---|---|
+| `PRSegmentFunctions.cxx:433` | `local_dQdx > 25000/units::cm` | `ProtoSegment.cxx:937` `sum_dQ/(sum_dx+1e-9) > 2500` (identical) | kink-search "charge not too low" gate on `flag_reverse`; ≈ 0.58 × the uBooNE MIP. Same function already routes `dQ_dx_threshold` = `m_mip_dqdx_median` (`:346`), so `0.58 × threshold` is the natural fix |
+| `NeutrinoVertexFinder.cxx:210` | `sum_charge > 20000` | `NeutrinoID.h:1172` | min plane-averaged charge for a candidate vertex point |
+| `NeutrinoVertexFinder.cxx:1986,1988` | `new_charge < 5000` / `< 8000` | `NeutrinoID_improve_vertex.h:26,28` | reject / soften a vertex refit landing on low charge (per-point charges — a rewrite needs an explicit length scale, owner call) |
+
+Latent-only (dead defaults, live traps for the next caller):
+`PRSegmentFunctions.h:47` (`75000/units::cm`), `PRShower.h:189,192`
+(`43000`/`50000/units::cm`) — every current call site passes the knobs explicitly
+(verified), matching the family recorded in pr/10 §8. `SteinerGrapher.cxx:86-88`
+(`Q0=10000`, `charge_threshold=4000` e) stays on the §2e(iv) table.
+
+### 7.4 Config-coverage holes (knob exists in C++, SBND inherits uBooNE)
+
+| param | effective value | note |
+|---|---|---|
+| `dl_vtx_cut` | 2.5 cm (`TaggerCheckNeutrino.h:110`) | readable from raw config (`TaggerCheckNeutrino.cxx:163`) but **not threaded through the jsonnet builders** — zero hits in `cfg/`. Live now that the DL vertex is ON (pr/4); the value is coupled to the uBooNE-trained net, so it travels with G3, but the threading hole should close before any tuning |
+| `proton_dir_score_max` / `proton_dir_asym_min` | 0.25 / 1.3 | live (`proton_dir_vote` ON, pr/8); flagged "pending the pr/8 §6 calibration" in `common/clus.jsonnet` — restated here so it stays visible |
+| `kine_plane_asym_switch` | 0.04 | the median/min fallback trigger; pairs with the `kine_plane_weights` family (§2e(vi)), same still-uBooNE status |
+| TGM `chord_support_radius`/`chord_max_gap`/`component_min_length`/`length_limit_frac` | 6 cm / 30 cm / 10 cm / 0.45 | unset by SBND (uBooNE defaults) — but the in-code comments record SBND MCP2025C validation, so low priority |
+| `fv_tolerance[5]` (upstream z) | hard-wired `-3*wc.cm` at `sbnd/clus.jsonnet` (fed to STM+TGM+FC) | the only FV margin not routed through the `tgm_fv_*_margin` knobs; distance-class, transfers per the ground rule — note-only |
+
+### 7.5 Transfers-acceptably (the ground-rule bucket — noted, no action)
+
+STM guard windows (`:1927-1929,1986,2047-2048,2083,2103-2106` — peak/shoulder/base
+cm windows), TGM topology scales (30 cm hough, 25 cm gap veto, 5–15 cm kink arms,
+0.5–1 cm steps), the STM 2/6 cm anode tolerances (§7.2), Cosmic's `-1.5 cm` FV
+shrink and `NeutrinoEnergyReco`'s 0.6 cm 2D-hit match (both already on the §2e(iv)
+table), and the ~180 **dimensionless** MIP-ratio thresholds across the taggers
+(NuE ~49, SinglePhoton ~32, STM ~36, Cosmic ~9, VertexFinder ~8, SSM ~8,
+TrackShowerSep ~7, ShowerClustering 4, others ~10 — e.g. the energy-stepped
+`dQ_dx_cut = 1.3…1.85` ladder at `NeutrinoTaggerNuE.cxx:3834-3838` that defines
+every MIP-block counter, mirrored in SinglePhoton). The ratios rescale coherently
+through `mip_dqdx_median`; their *spacing* is uBooNE-tuned and is exactly what the
+Track B/C scans validate (§3). One caveat worth carrying: the SSM
+`|d(dQ/dx)| > 0.7` derivative thresholds compare *differences between adjacent fit
+points*, which scale with the local `dx` step, not just the MIP value — they
+transfer less cleanly than ratio cuts (and are currently ×10 off anyway, §7.1a).
+
+### 7.6 Clean bills of health (adds to §2e(vii))
+
+- **Zero absolute uBooNE coordinates anywhere in the chain** — the full sweep for
+  256/1037/116/117-class literals, meter forms, and `.x()/.y()/.z()` comparisons
+  found no live hit; the only coordinate comparisons are sign tests and the
+  documented `y > 0` mid-plane check (`NeutrinoTaggerCosmic.cxx:1192`).
+- Dead/shorted regions are fully data-driven (`FiducialUtils::inside_dead_region`
+  → CTPC dead-channel lookup; `shorted_y_w_range` correctly empty on SBND). No
+  z-window literals exist.
+- All ~14 `drift_dir(1,0,0)` uses are `|90° − angle|`-symmetric — correct for both
+  SBND drift signs. `dir_beam(0,0,1)`/`dir_vertical(0,1,0)` (~10 sites) are correct
+  for SBND; same category as `ssm_target_dir`, noted for any future non-z-beam port.
+- `TaggerCheckFC.cxx` clean; all ~20 STM `guard_*` defaults are **SBND-measured**
+  (docs 62/63/66), not uBooNE debt; `TaggerCheckNeutrino.cxx:86`'s bare `200` is
+  inside a `<= 0` validation guard, not an unconditional reassignment (false alarm,
+  recorded so nobody re-flags it).
+- Latent robustness notes, no live effect: `NeutrinoTaggerCosmic.cxx:1120` seeds
+  `highest_y = -100 cm` (mid-volume on SBND but only ever compared against the
+  +163/+185 cm knobs — cannot misfire; `-1e9` would be cleaner);
+  `PRShower.cxx:941` tests a `(0,0,0)` failure sentinel that on SBND is a reachable
+  point (cathode, mid-height, upstream face) — the producer already returns
+  distance `-1.0`, `sgcp_dis < 0` is the unambiguous guard.
+- Dead code: `Facade_Util.h:59-85` `struct TPCParams` carries the full uBooNE
+  parameter set but has **no live reference** (only commented-out accessors);
+  `SimpleClusGeomHelper.h:36-48`'s uBooNE FV defaults are config-overridden and the
+  PR chain only reaches the helper via `get_corrected_point` (inert while
+  `clus_geom_helper=''`, the stated G4 decision).
+
+### 7.7 Disposition
+
+Nothing in this pass was fixed (report-only round). Priority for the worklist, in
+order: **(1)** the two SSM unit divergences (§7.1 — owner decision on
+fix-with-knob vs accepted parity break; either way the fix is mechanical),
+**(2)** the `dist_to_anode` uncontained fallback (§7.2 — one lambda branch, natural
+home under `anode_dist_fix`), **(3)** the three absolute-charge floors + the kink
+gate (§7.3 — scale by `mip_dqdx_median` behind knobs), **(4)** the `dl_vtx_cut`
+jsonnet threading (§7.4 — plumbing only). The §7.5 bucket is deliberately parked
+per the owner's ground rule; the Track B/C scans are the instrument that would
+promote any of it.
