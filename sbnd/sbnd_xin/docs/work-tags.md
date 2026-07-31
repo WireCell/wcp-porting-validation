@@ -4,10 +4,16 @@ Repro:
 
 ```bash
 cd sbnd_xin
-ls -d work* | wc -l              # 46 at the top level after the 2026-07-25 consolidation
-ls archive/*/ -d                 # 3 campaign archives, 79 dirs
+ls -d work* | wc -l              # 149 at the top level on 2026-07-30 (56 GB)
+ls archive/*/ -d                 # 3 campaign archives + records/, 79 dirs
 find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below
 python3 relink_tags.py           # dry-run repair after any move
+
+# the 2026-07-30 retirement round (see that section below):
+python3 scripts/retire/inventory.py       # size / symlink-dep / citation inventory
+python3 scripts/retire/plan.py            # removal set + dangling-link dry run
+python3 scripts/retire/archive_records.py # write archive/records/  (additive)
+scripts/retire/retire_20260730.sh 1,2     # dry run of the removal list
 ```
 
 Every tagged output dir is one arm of one A/B or one hand scan, produced by
@@ -54,6 +60,143 @@ Verification that the move was faithful: `python3 stm_fv_census.py` after the
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-07-30 — 134 arms proposed for removal, 35.9 GiB
+
+State at the start of the round: **149 top-level `work*` dirs, 54.9 GiB of real
+bytes** (`du` says 56 GB; the difference is directory overhead — 208499 entries
+under `work*`). `sbnd_xin` as a whole was 58.5 GB (60 GB after the archive was
+written); `/nfs/data/1` was 87 % full, 481 GB free.
+
+The round is **archive-then-list**: the record layer of every retiring arm was
+copied into `archive/records/` (additive — nothing under `work-*` was moved,
+rewritten or deleted), and the deletion itself is left to the owner as
+`scripts/retire/retire_20260730.sh`, which refuses to delete any arm whose
+`<tag>.tar.gz` is not present in the archive.
+
+### What was archived, and what removal costs
+
+`archive/records/` (731 MB gz, 1587.9 MiB raw, 68856 files, README there) holds
+per arm: a `<tag>.tar.gz` of every real file **except** `pctree-*.tar.gz`,
+`mabc*.zip`, `calib-evt*.json`, `*.npz`; a `<tag>.links.txt` symlink map; a
+`<tag>.manifest.tsv` of kept-vs-dropped bytes; and — verbatim as directories,
+never tarred — the ten `nusel_labels/` hand-scan record dirs that live inside
+removal candidates:
+
+`work-mcp10-{d49son,d52on,d52ron,d55ton,d56bw}`,
+`work-mcp1000-{d55ton,d56bw}`, `work-mcp1000b-{d55ton,d56bw}`,
+`work-stmcamp-d66new` → `archive/records/labels/<tag>/nusel_labels/`.
+
+Integrity gate: tar member count == manifest record-file count, 68856 == 68856,
+all 134 arms.
+
+**Survives removal**: doc-table re-checkability. Every number the docs quote
+from these arms comes from `nusel-evt*.tsv`, the run logs or `tracking-stm.root`
+— `bwgate_report.py`, `d60_ab_report.py`, `d66_flip_report.py`,
+`d66_proton_sweep.py`, `p54_ab_report.py`, `mabc_step_totals.py`,
+`stmon_stats.py` read only those.
+
+**Lost on removal**: pctree-level re-analysis and Bee display —
+`stm_fv_census.py`, `unmerge_crosser_audit.py`, `stm_main_connectivity.py`,
+`nusel_extract.py --archives` and the scan viewer need `pctree-pr-evt*.tar.gz` /
+`mabc-pr.zip`. Combined with "these arms are not reproducible" above, removal is
+permanent: the doc's stated numbers, the tsv/logs and the labels become the only
+surviving record.
+
+### SP and light data are untouched
+
+The owner's one constraint. SP = `sp-frames.tar.bz2` and
+`sbnd-sp-frames-anode{0,1}.tar.bz2`; light = `opflash_apa{0,1}.tar.gz`. Both
+live in the BASE `evt*` / `ql_evt*` dirs (`work`, `work-mcp1000`, `work-mcp10`
+— 4062 files, 1752 MB) and in the kept hub `work-mcp1kall-d59k` and the current
+`work-nuecc48-*` arms. **No removal candidate holds an SP frame at all**, and
+the per-arm `opflash_apa*.tar.gz` copies that some 30-event arms carry are
+included in the archive tarballs, so no light product is lost either.
+`input_files`, `input_files_reco1/` (1.7 GB) and `scan-d59k/` are not in scope.
+
+### Dangling-link dry run — 0
+
+The scar this file documents (1536 broken links, `stm_fv_census.py` silently
+reporting 0 instead of 147) was checked mechanically, not argued: every symlink
+under every **surviving** dir (`work`, `work-mcp1000`, `work-mcp10`,
+`work-mcp1kall-d59k`, the `work-nuecc48-*` / `work-r1ql-*` / `work-r2patrec-*`
+arms, plus `archive/`, `scan-*`, `nusel_display/`, `ql_scan/`, `docs/`,
+`stm_campaign/`, `bee-*`, `showcase-*`) was resolved and none points into the
+removal set. The removal set is closed under the dependency graph: the only
+in-set arms with dependents are `work-mcp10-d55ton`, `work-mcp1000-d55ton`,
+`work-mcp1000b-d55ton` (11 dependents each) and `work-mcp10-d49son` (1), and
+every one of those dependents is itself in the set. After deletion, run
+`python3 relink_tags.py` and confirm `find . -xtype l | wc -l` is 0 anyway —
+`retire_20260730.sh` does both.
+
+### KEEP — 15 dirs, 19.05 GiB
+
+| dir | size | why |
+|---|---|---|
+| `work` | 2792 MB | BASE: data-sample imaging + **SP frames** + light + `ql_labels/` |
+| `work-mcp1000` | 7127 MB | BASE: 1000-event MC imaging + SP frames; 14372 inbound links |
+| `work-mcp10` | 96 MB | BASE: 10/30-event hand-scan set + `nusel_labels/` |
+| `work-mcp1kall-d59k` | 8383 MB | HUB + LIVE: doc 59 production scan (`s59k`, labels), **18462 inbound links** — every `stmcamp`/`d60` arm's `ql_evt*` is a symlink into it. Its 2.5 GiB of `calib-evt*.json` is the largest non-BASE block deliberately not touched |
+| `work-nuecc48-{base,nuf,prsmoke,prsmoke2}` | 745 MB | CURRENT: the 48-event Lynn nueCC campaign behind docs `pr/1`–`pr/10` |
+| `work-r1ql-{f1,f1-nobw,f2,f2-nobw,first10}` | 173 MB | CURRENT: round-1 Q/L arms (doc 67), created 2026-07-30 |
+| `work-r2patrec-{f1,f1-nobw}` | 191 MB | CURRENT: round-2 pattern-rec arms (doc 67), created 2026-07-30 |
+
+Optional additions the owner may want to retire too, listed but **not** in the
+tiers: `work-nuecc48-base` (151 MB, the partial earlier arm superseded by
+`-nuf`) and `work-nuecc48-prsmoke` (8 MB, superseded by `prsmoke2`).
+
+### TIER 1 — low regret, recommended: 125 dirs, 25.14 GiB
+
+Campaigns that shipped and closed. Full per-dir listing with sizes:
+`scripts/retire/tier1.txt`.
+
+| group | dirs | size | status |
+|---|---|---|---|
+| doc-63 STM improvement rounds — `work-stmcamp-{r0,r1,r1b,r2,r2full,r2fullb,r3full,r3fullb,r4afull,r4bfull,r5full,r5fullb,r5fullc,r5off,r5offb,r5offc,r1off,r2off,r3off,r3offb,r4aoff,r4boff,d64tf,d64lt,d64smoke}` | 25 | **20.30 GiB** | doc 63 SHIPPED + default ON, closed. Eight near-duplicate 883/1000-event `*full` arms at 2.3 GiB each are 19.5 GiB of the total |
+| doc-60 TrackFitting single-point abort — `work-mcp1kall-d60{base,bw1,bw2,sr1,sr2,sfix,nr1,nr2,nfix,fix,fixchk,crash}` | 12 | 2.09 GiB | doc 60 FIXED + pushed (`2a821fd2`); determinism repeats and gate arms |
+| docs 52–57 30-event arms — `work-mcp{10,1000,1000b}-{d49son,d52*,d53*,d55*,p54*,p55opt,p56off,d56bw,d57mip*,m66*,p65fin}`, `work-mcp10-{trace51,d52chk,d52trace,d53leg,m66*sb}`, `work-smoke-d55pv` | 78 | 2.67 GiB | docs 52/53/54/55/56/57/65 all closed; includes the four `nusel_labels` arms (labels archived) |
+| `work-stmcamp-dbg1..9` | 9 | 0.08 GiB | ad-hoc debug probes of the doc-63 campaign |
+
+### TIER 2 — owner's call: 9 dirs, 10.76 GiB
+
+The doc-66 diffusion-revert campaign (`work-stmcamp-d66{old,new,fix,fixoff,oldtrace,newtrace,newtrace0,newtrace0b,newtrace5}`; list in
+`scripts/retire/tier2.txt`). Closed and shipped like tier 1, but two reasons to
+pause before deleting:
+
+- `d66fix` / `d66fixoff` are the validation **pair** for the doc-66 §12 STM cut
+  package (toolkit `c0501d7e`) which is **currently default ON**. If that
+  default ever has to be re-validated at pctree level, this pair is the arm that
+  did it.
+- `d66new` is the shipped-revert arm and carries the largest surviving
+  `nusel_labels/` (148 K, archived).
+
+Keeping the `d66fix`/`d66fixoff` pair whole costs 5.27 GiB; keeping `d66new`
+too costs 7.9 GiB. Deleting all nine reclaims 10.76 GiB.
+
+### TIER 3 — optional, not scripted: ~0.9 GiB
+
+The three existing `archive/` campaign trees still hold their heavy layer:
+`stm-docs40-49` 553 MB, `tgm-docs29-39` 229 MB, `aborted-d54` 132 MB of
+pctree/mabc/calib/npz against 137 MB of records. Applying the same record-only
+rule to them reclaims ~0.9 GiB. Not scripted here because they were already
+curated once (2026-07-25) with the whole-directory convention.
+
+### Totals
+
+| | dirs | GiB |
+|---|---|---|
+| start | 149 | 54.9 |
+| KEEP | 15 | 19.05 |
+| TIER 1 | 125 | 25.14 |
+| TIER 2 | 9 | 10.76 |
+| archive added | — | +0.71 |
+| after tiers 1+2 | 15 | **19.05** (`work*` ≈ 20 GB by `du`; sbnd_xin ≈ 24 GB incl. `input_files_reco1` 1.7 GB, `scan-d59k` 694 MB, `archive/` 1.9 GB) |
+
+---
+
+*Sections below describe the state at the 2026-07-25 consolidation. The BASE /
+LIVE / CURRENT tables are superseded by the KEEP and TIER tables above; the
+`archive/` and RETIRED tables remain current.*
 
 ## BASE — 3 dirs, 10026 MB (top level)
 

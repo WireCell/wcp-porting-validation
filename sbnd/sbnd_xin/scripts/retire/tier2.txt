@@ -1,0 +1,9 @@
+work-stmcamp-d66fix
+work-stmcamp-d66new
+work-stmcamp-d66fixoff
+work-stmcamp-d66old
+work-stmcamp-d66newtrace0
+work-stmcamp-d66newtrace0b
+work-stmcamp-d66newtrace5
+work-stmcamp-d66oldtrace
+work-stmcamp-d66newtrace
