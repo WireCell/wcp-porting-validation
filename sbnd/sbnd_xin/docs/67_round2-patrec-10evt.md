@@ -645,9 +645,19 @@ either reading the claim does not reproduce here.
 ### 10.4 The gate-off arm
 
 Same binary and flags plus `-no-bwonly`, so the taggers evaluate every matched
-bundle (`work-r1ql-{f1,f2}-nobw/`). **The in-beam rows are byte-for-byte the
-same verdicts as production in all 10 events** — the gate only adds scope. The
-15 STM firings it adds are all out of time, and the ones that matter here:
+bundle (`work-r1ql-{f1,f2}-nobw/`). **Every in-beam row is identical to
+production in all 10 events** — checked field-by-field, the two files differ
+only in column padding:
+
+```bash
+norm() { awk '$11=="1"{$1=$1;print}' "$1"; }
+diff <(norm work-r1ql-f1/nusel-table.tsv) <(norm work-r1ql-f1-nobw/nusel-table.tsv)
+#   -> no output ("F1 IN-BEAM ROWS IDENTICAL"); same for f2 evts 5 and 12
+```
+
+so the gate only adds scope, it changes no verdict. Of the arm's 15 STM rows,
+3 are the in-beam ones already in production; the **12 it adds are all out of
+time**. The ones that matter here:
 
 | run-sub-evt | STM bundle t (µs) | main len | truth stopping muon |
 |---|---:|---:|---|
@@ -675,6 +685,12 @@ question asked here; not chased.)
 10 events, ordinal order, index = `scan-r1ql/bee/first10.index.txt`:
 
 **https://www.phy.bnl.gov/twister/bee/set/ac51d469-2867-4a26-9362-25901c78678e/event/list/**
+
+Its `event/list/` renders, in order, `32-10-6 32-10-10 32-10-13 32-10-14
+32-10-16 32-10-21 32-10-39 32-10-43 31-88-5 31-88-12` — i.e. the run/subrun is
+carried per event across the two-file merge (checked with
+`curl -k -s <set>/event/list/`), and index 4 is labelled **32-10-16**, not
+`0-0-16`.
 
 Layers per event: `img-global`, `clustering-global`, `op` and the channel
 dead-area layers from `ql_evt<ID>/mabc-all-apa.zip`, plus `stm_fit-global`
