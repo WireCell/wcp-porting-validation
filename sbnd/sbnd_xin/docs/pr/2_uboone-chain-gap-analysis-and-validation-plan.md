@@ -68,6 +68,13 @@ of `sbnd_track_fitting.json`'s 38 verbatim-uBooNE keys (§8.1b), **one
 undocumented toolkit-vs-prototype divergence** in the dQ/dx-fit diffusion-width
 normalization (§8.3a, surfaced for adjudication, not fixed), and a short
 latent/robustness list (§8.4). Report-only; no code changed.
+*Same-day follow-up (owner: "fix 1 … double check 3 … change default 4.0")*:
+§8.1a is **FIXED** and the `dl_vtx_min_accept_score` default **aligned**
+(toolkit `135e5f38`, uBooNE ZIPS 35/35), and §8.3a is **RESOLVED — the 4×
+claim is REFUTED by an instrumented run**: the toolkit fits in tick units end
+to end (model `central_T` matches the data tick index on both detectors), the
+prototype in slice units end to end; residual/σ is frame-invariant. Now a
+porting-dictionary entry. §8.7 is the fix round.
 
 **Update 2026-07-30 (fourth)** — the two **§2e(iv) detector-extent** rows are **closed**
 and are the first worklist item whose SBND value is a real translation rather than a
@@ -1510,7 +1517,7 @@ git log --oneline -- cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json   # b2
 ### 8.1 Actionable finds (new)
 
 **(a) `PRSegmentFunctions.cxx:2467` — the one live MIP default-argument hole in
-the repo.** Inside `segment_determine_shower_direction` (defined `:2197`, which
+the repo (FIXED §8.7, toolkit `135e5f38`, no knob).** Inside `segment_determine_shower_direction` (defined `:2197`, which
 *has* `MIP_dQdx` as a parameter), the short-segment branch (`total_length <
 5*units::cm`, non-shower) calls
 
@@ -1603,21 +1610,39 @@ handles all 44 names with a throwing `else` (no silent drops); the
   comment-only pointer; the numbers it justifies are un-auditable from this
   repo.
 
-### 8.3 Undocumented toolkit-vs-prototype divergences (M15 — surfaced, not adjudicated)
+### 8.3 Undocumented toolkit-vs-prototype divergences (M15 — surfaced; (a) since RESOLVED)
 
-**(a) dQ/dx-fit diffusion-width normalization — 4× vs the prototype.**
-`TrackFitting.cxx:439-440` sets `time_slice_width = md["tick_drift"]` with the
-`nticks_live_slice` multiplication **commented out**; the prototype
+**(a) dQ/dx-fit diffusion-width normalization — the suspected 4× shift is
+REFUTED (owner-requested runtime check, §8.7; porting-dictionary entry added
+in `135e5f38`).** The original suspicion: `TrackFitting.cxx:439-440` sets
+`time_slice_width = md["tick_drift"]` with the `nticks_live_slice`
+multiplication **commented out**, while the prototype
 (`prototype_base/pid/src/PR3DCluster_dQ_dx_fit.h:435`,
-`PR3DCluster_multi_dQ_dx_fit.h:60`) uses `time_slice_width = nrebin × 0.5 µs ×
-drift_speed` (4 ticks). Downstream `sigma_L` divisions therefore land in
-per-tick rather than per-live-slice units — a 4× convention shift in the fit's
-longitudinal diffusion width. This is detector-neutral (identical on the uBooNE
-toolkit path, so it is a *port-fidelity* question, not SBND residue) and it is
-**not** in `porting_dictionary.md` (grep clean). Per the M15 rule this is
-surfaced, not "fixed": it needs an owner reading — deliberate retune or
-dropped factor — and a dictionary entry either way. (`nticks_live_slice: 4`
-sits unused at `sbnd/clus.jsonnet:111`.)
+`PR3DCluster_multi_dQ_dx_fit.h:60`) uses `nrebin × 0.5 µs × drift_speed`
+(4 ticks) — apparently a 4× shift in the fit's longitudinal width.
+
+The static analysis and the instrumented run both show the two codes are
+**each self-consistent in a different time frame**, so residual/σ — the only
+thing the χ² sees — is identical:
+
+| | data T coordinate | model slope | σ_L divisor |
+|---|---|---|---|
+| WCP | `GetTimeSlice()` (slice = 4 ticks) | `1/ts_width` (`:304`) | `ts_width` (`:612`) |
+| WCT | tick index (`convert_3Dpoint_time_ch`: `round(time/tick)`) | `1/(xsign·v·tick)` (`TrackFitting.cxx:517`) | `tick_drift` |
+
+Runtime proof (temporary `TSW-DBG` prints, one SBND + one uBooNE event; both
+logs in the §8.7 repro): the model prediction `central_T` matches the *data*
+tick index to within rounding — uBooNE `central_T=7052.28` vs `data_tind=7052`
+with mm-per-T-unit = 0.5505 (= tick_drift; the 4× value would be 2.202); SBND
+`1793.09` vs `1793` with 0.7815 (4× would be 3.126). Physical widths are sane
+on both (σ_L 2.22 mm uBooNE / 2.60 mm SBND), and the physical `add_sigma_L`
+matches the prototype exactly (WCP `1.428249·ts_width/nrebin/0.5` = WCT preset
+= 1.5725 mm). "Restoring" the `nticks_live_slice` factor would inflate σ 4×
+against tick-indexed data — the commented-out factor is the *correct* choice
+for the toolkit frame. Recorded as an INTENTIONAL divergence in
+`clus/docs/porting/porting_dictionary.md` so nobody re-flags it.
+(`nticks_live_slice: 4` at `sbnd/clus.jsonnet:111` remains unused by this
+path — metadata only.)
 
 **(b) One-sided drift-parallel guard.** `angle_deg < 7.5`
 (`PRSegmentFunctions.cxx:2260-2269` and `:2561-2570`) catches a track parallel
@@ -1630,11 +1655,12 @@ behavior change ⇒ default-OFF knob if pursued.
 
 ### 8.4 Latent / robustness / cosmetic (record only)
 
-- **`m_dl_vtx_min_accept_score` default mismatch**: header member is `{0.0}`
-  (`TaggerCheckNeutrino.h:115`) while `default_configuration()` advertises 4.0
-  (`.cxx:238`); `configure()` falls back to the *member*, so a caller omitting
-  the key accepts every re-ranked DL vertex. Production unaffected (builder
-  default and `sbnd/clus.jsonnet:1115` both pass 4.0 explicitly). Cheap tidy.
+- **`m_dl_vtx_min_accept_score` default mismatch (FIXED §8.7, `135e5f38`)**:
+  header member was `{0.0}` (`TaggerCheckNeutrino.h:115`) while
+  `default_configuration()` advertises 4.0 (`.cxx:238`); `configure()` falls
+  back to the *member*, so a caller omitting the key accepted every re-ranked
+  DL vertex. Member now `{4.0}`. Production was already unaffected (builder
+  default and `sbnd/clus.jsonnet:1115` both pass 4.0 explicitly).
 - **TGM silent wrong-face fallback**: `uvw_dirs_at`/`pick`
   (`TaggerCheckTGM.cxx:704-714`) returns the lowest-ident face's wire dirs when
   `contained_by` yields apa −1 — a *common* path for the cluster boundary
@@ -1707,13 +1733,64 @@ behavior change ⇒ default-OFF knob if pursued.
 
 ### 8.6 Disposition
 
-Report-only, per the request. If the owner wants a fix round, the recommended
-order: **(1)** §8.1a — forward the MIP arguments at `:2467` (uBooNE
-byte-identical by FP identity of the defaults; one threading decision on the
-`segment_is_shower_trajectory` leg); **(2)** adjudicate §8.3a — the 4×
-`time_slice_width` divergence is the one item that touches uBooNE *parity*,
-and needs a porting-dictionary entry whichever way it lands; **(3)**
-`sbnd_track_fitting.json` tier-1/2 keys when a calibration source exists (the
-§2e protocol; remember the runtime-JSON gate caveat in §8.1b); **(4)** §8.4
-tidies opportunistically. §8.2 items stay attached to their parent gaps
-(G1, G3, §7.4/§2e) rather than becoming new ones.
+The audit pass was report-only. The owner then directed (same day): *"Can you
+fix 1? I am not sure about your claim in 3, can you run the code and print out
+to double check? For 4, change default 4.0 for m_dl_vtx_min_accept_score?"* —
+§8.7 is the resulting round: §8.1a fixed (no knob, uBooNE byte-identical by FP
+identity), §8.3a instrumented at runtime and **refuted** (now a
+porting-dictionary entry), the §8.4 default aligned. Still open, unchanged:
+`sbnd_track_fitting.json` tier-1/2 keys await a calibration source (the §2e
+protocol; remember the runtime-JSON gate caveat in §8.1b); the remaining §8.4
+tidies are opportunistic; §8.2 items stay attached to their parent gaps
+(G1, G3, §7.4/§2e).
+
+### 8.7 Fix round (owner-directed, 2026-07-30) — items 1, 3-check, 4 executed
+
+**Status: DONE.** Toolkit `135e5f38` (one commit: §8.1a fix + §8.4 default +
+the §8.3a porting-dictionary entry). uBooNE selection outputs unchanged
+(ZIPS 35/35).
+
+Repro:
+
+```bash
+# builds + tests (fix build, then instrumented build, then clean rebuild)
+./wcb build --notests -p && ./wcb install --notests -p   # freshness: libWireCellClus.so 2026-07-30 19:59
+./build/clus/wcdoctest-clus                              # 565/565 (both builds)
+# item-3 runtime check: temporary TSW-DBG prints in TrackFitting.cxx
+#   (geom/slope/sample lines; reverted before the gate build), then
+#   scratchpad tsw_dbg_172230 (SBND) + qlport sweep/tswdbg_ub idx 0 (uBooNE)
+# uBooNE gate (35 events):
+cd qlport/scripts && ./sweep_5384.sh sec8fix_ub 6 && ./ab_check.sh sec8fix_ub sec7fix_ub
+# same-binary A/A control for the T_tagger vector-branch noise:
+./run_one.sh 10 sec8fixaa_ub   # then branch-diff vs sec8fix_ub/10_6570
+# SBND before/after (per-event PR, production defaults, setarch -R, dl_weights=''):
+#   scratchpad ba_energy/{sec7fix,sec8fix}_{172230,235435,444187}
+```
+
+**Item 1 — MIP forwarding at `PRSegmentFunctions.cxx:2467` (no knob).**
+`segment_determine_shower_direction` gains a trailing `mip_dqdx` parameter
+(default `50000/units::cm`, the old fallback) and the short-segment branch now
+calls `segment_is_shower_trajectory(segment, 10*units::cm, mip_dqdx)` and
+`segment_determine_dir_track(…, MIP_dQdx)`; both callers
+(`NeutrinoTrackShowerSep.cxx:123`, `NeutrinoVertexFinder.cxx:506`) pass
+`m_mip_dqdx` / `m_mip_dqdx_median`. Measured effect:
+
+| where | result |
+|---|---|
+| uBooNE 35-evt manifest | **ZIPS 35/35 identical** (`sec8fix_ub` vs `sec7fix_ub`); `numu_score`/`nue_score` diffs **0/35** |
+| uBooNE `T_tagger` vector branches | diffs on some events are **run-to-run noise, not the fix**: a same-binary A/A rerun of idx 10 reproduces the same ~25 moved vector branches (daughter-order permutations + one angle) with the mabc zip content-identical — extends the known "gate 2 non-discriminating" A/A result to branch level |
+| SBND evts 172230/235435/444187 | all three `mabc-pr.zip` hashes move (fix live: short-segment directions now use 56000/48000); diffs are daughter-order permutations plus a few real feature moves (evt 444187 `brm_Ep` 81.1→167.1, evt 235435 one `shw_sp_lol_1_v_angle` 110.5→127.6); `numu_score`/`nue_score` **unchanged on all three** |
+
+**Item 3 — runtime double-check of the 4× claim: REFUTED.** Details and the
+printed numbers are in §8.3a; the one-line summary is that model `central_T`
+equals the data tick index on both detectors (0.5505 / 0.7815 mm per T-unit —
+the tick, not 4× it), so the toolkit is self-consistent in the tick frame and
+matching the prototype's slice-frame arithmetic would be the actual bug. The
+instrumentation was removed and the gate build is print-free (`git checkout`
+of `TrackFitting.cxx`, clean rebuild, doctest re-run).
+
+**Item 4 — `m_dl_vtx_min_accept_score{0.0}` → `{4.0}`.** Member default now
+matches the advertised `default_configuration()` value; every production
+config already passes 4.0 explicitly (builder default + `sbnd/clus.jsonnet:
+1115`), and the uBooNE gate above covers the change (DL is off there;
+key emitted unconditionally by the builder regardless).
