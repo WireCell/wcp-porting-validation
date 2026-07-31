@@ -373,6 +373,71 @@ So he is running the same MABC/Q-L Bee dumper (same layer names, same
 STM-fit / PR layers** — i.e. the tagger tail of `run_nusel_evt.sh` did not
 produce output in that set.
 
+### 9.1 Full inventory of the staged files — his events are in none of them
+
+Every entry of every file in the wcgpu1 list, read with the new
+`mc_find_rse.C` (bare ROOT, `EventAuxiliary` only, works on `/pnfs` and
+`xroot://` too):
+
+```
+$ root -l -b -q 'mc_find_rse.C("<list>", -1, -1)'
+FILE   1 run 713 subrun 74 nevt 13 events: 3 4 7 9 11 12 23 24 31 34 36 37 45   ...-7b1f-18f4-1bfb-4f0c.root
+FILE   2 run 713 subrun 35 nevt  6 events: 3 9 12 17 18 46                      ...-1233-281b-350b-480e.root
+FILE   3 run 713 subrun  0 nevt 11 events: 11 17 25 27 30 34 36 37 38 46 47     ...-68b7-0715-d2b4-a1fa.root
+FILE   4 run 713 subrun 68 nevt  5 events: 2 6 11 23 43                         ...-1fb7-fb06-5b32-db2e.root
+FILE   5 run 713 subrun 59 nevt 10 events: 9 15 21 22 23 30 39 40 41 50         ...-a6a0-2395-0263-6d62.root
+FILE   6 run 713 subrun  5 nevt 11 events: 4 5 15 18 22 28 34 36 39 43 46       ...-dad6-2031-00a1-30ae.root
+FILE   7 run 713 subrun 51 nevt 13 events: 3 6 7 8 13 19 20 21 25 34 35 41 44   ...-978b-40cc-538d-4e7b.root
+FILE   8 run 713 subrun 70 nevt 12 events: 3 5 9 15 17 18 19 25 29 36 37 48     ...-6be3-50c1-cb2e-ab24.root
+FILE   9 run 713 subrun 40 nevt 13 events: 2 9 11 17 21 23 27 28 34 35 37 41 49 ...-b9e8-35c5-ce0d-e6ab.root
+FILE  10 run 713 subrun 52 nevt 10 events: 1 6 7 8 19 22 23 30 42 48            ...-f62c-e7fb-8427-11ac.root
+
+$ root -l -b -q 'mc_find_rse.C("<list>", 32, 10)'    ->  no MATCH
+$ root -l -b -q 'mc_find_rse.C("<list>", 31, 88)'    ->  no MATCH
+```
+
+104 events, **one run (713)**, subruns {0, 5, 35, 40, 51, 52, 59, 68, 70, 74}.
+Note also that if a job read this list in order, its first ten events would be
+exactly file 1's — i.e. ours. His ten instead split 8 + 2 across two files.
+
+### 9.2 Where his events must be, and how to find them
+
+The wcgpu1 list is the **first 10 files of the 100-file gpvm list**, in the same
+order (basenames verified one by one). The other 90 live only on
+`/pnfs/sbn/data_add/sbn_nd/aurora/mc/v10_14_02_03/prodgenie_corsika_proton_rockbox0p1_sbnd/Gen2_2026/CV/reco1/000041/0004{11,12,13,14,16,18,19}/`,
+which is **not mounted on wcgpu1** (`/pnfs` does not exist here) and not
+copied anywhere under `/nfs/data`. Only these 10 files are local, so his two
+files cannot be identified from this machine.
+
+On a node that can see `/pnfs` (or with `xroot://` paths) one command finds
+them:
+
+```sh
+root -l -b -q 'mc_find_rse.C("mc_paths-v10_14_02_03-100files-gpvm.lst", 32, 10)'
+root -l -b -q 'mc_find_rse.C("mc_paths-v10_14_02_03-100files-gpvm.lst", 31, 88)'
+# ~2 s per file; prints  MATCH <file-index> <entry> run .. subrun .. event ..  <path>
+```
+
+Then stage those two files here and rerun the Repro block verbatim — the
+`-mc` extraction and the whole chain are already in place.
+
+Independent confirmation once staged (in case the run/subrun labels in his set
+are not the art ones): his `mc` layer's neutrino vertices, which must match to
+< 0.01 cm. Kept in `scan-r2patrec/bee_169bdddf_vertex_match.txt`:
+
+| his Bee event | ν vertex (cm) |
+|---:|---|
+| 0 | (17.08, −139.91, 16.25) |
+| 1 | (−125.29, −528.35, −624.13) |
+| 2 | (48.10, 56.52, 471.06) and (−25.73, 131.67, −421.13) |
+| 3 | (−39.83, 72.08, 450.64) |
+| 4 | (13.25, −161.67, 495.69) and (31.44, 185.09, 451.40) |
+| 5 | (−51.19, −68.95, −365.31) and (383.70, 333.11, −323.15) |
+| 6 | (−147.75, 114.00, 495.88) |
+| 7 | (616.11, 172.48, −1224.09), (−403.89, 416.17, −449.53), (225.43, −136.96, 175.82) |
+| 8 | (9.21, −35.67, 333.07) |
+| 9 | (−246.89, 343.40, −377.08) |
+
 **Consequence for §§4–7.** Everything in this note is about the ten events of
 the wcgpu1 list. His "1st / 5th / 6th" refer to *his* ten, which are different
 events, so the STM claim has not actually been tested against our chain yet.
