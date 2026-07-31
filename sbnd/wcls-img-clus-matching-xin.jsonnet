@@ -140,8 +140,17 @@ local matching_joint = qlm.matching_joint(
 // premerged=true; dump=false -> no terminal sink here, the tail below consumes
 // the MABC tensor output).  Bee (clustering-global etc.) still goes to the
 // shared mabc.zip.
+// save_real_cluster_id / save_assoc_cluster_id: attach the flash-merge (and
+// isolated-grouping) provenance to the grouping so the pr_node's unmerge_bundle
+// / unmerge_assoc can actually split the flash-merged bundles.  WITHOUT these,
+// unmerge logs "no flash-merge provenance ... not split" and every cluster stays
+// merged across the cathode -> the taggers judge the wrong (merged) geometry
+// (e.g. nue evt 46363 cluster 19 spans both TPCs -> FC=false, vs the compact
+// post-split main -> FC=true in sbnd_xin's 2-step chain).
 local clus_all_apa = clus_maker.all_apa(tools.anodes, dump=false,
-                                        bee_sink=bee_shared, premerged=true);
+                                        bee_sink=bee_shared, premerged=true,
+                                        save_real_cluster_id=true,
+                                        save_assoc_cluster_id=true);
 
 // ==== follow-up tail (moved out of clus.jsonnet into this entry config) ====
 //   clus_all_apa (MABC) -> pr_node (STM/TGM/FC taggers) -> labeler -> tail_dump
