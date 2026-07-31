@@ -1,10 +1,23 @@
-# 67 — yuhw's round2-patrec 10 MC events through our production chain: the "missed STM" claim
+# 67 — yuhw's 10 MC events through our production chain: the "missed STM" claim
 
-> **Update (§9): his Bee set and ours are different events.** His ten are
-> run 32/subrun 10 and run 31/subrun 88; every file in the wcgpu1 list is
-> run 713, and none of his 15 truth neutrino vertices matches any of the 4 896
-> in the list's 104 events. So the STM claim has **not** yet been tested on the
-> same events — §§4–8 below describe the ten events of the list as written.
+> **RESOLVED in §10.** The sample is **`round1-qlmatch/mc_paths-10files`**, not
+> the round2-patrec list this note was started from. His ten events are the
+> 8 entries of `…-6548848c-…root` (run 32/subrun 10) plus the first 2 of
+> `…-c7d2311d-…root` (run 31/subrun 88); all 15 of his Bee truth vertices
+> match ours to ≤0.01 cm (§10.1). Run through the production chain, **our
+> taggers tag every in-beam stopping muon in his ten as STM** (§10.3) — the
+> claim is **not confirmed** on his own events.
+>
+> **§10 is the answer. §§1–9 are the earlier, wrong-sample round** (the
+> round2-patrec list), kept because the plumbing (§2), the method (§§5–6) and
+> the sample-mismatch forensics (§9) are what led to the right file.
+
+Bee for his ten (ordinal order):
+**https://www.phy.bnl.gov/twister/bee/set/ac51d469-2867-4a26-9362-25901c78678e/event/list/**
+
+---
+
+## Part I — the round2-patrec list (superseded by §10)
 
 **Short answer: our chain did not miss a stopping muon in those events.** The
 three events flagged as "true STM but not tagged" (ordinals 1, 5, 6 = evts 3,
@@ -26,7 +39,7 @@ tagger runs on it (§7). The loss is inside the Q/L step, after the cull;
 whether it is a clustering merge or a solver drop is left open. Reported, not
 fixed here.
 
-Bee (10 events, ordinal order):
+Bee for the round2-patrec ten (ordinal order, superseded):
 **https://www.phy.bnl.gov/twister/bee/set/d4f3a348-5d7d-4c8c-8bd0-494c4e309489/event/list/**
 
 ## Repro block
@@ -443,23 +456,255 @@ the wcgpu1 list. His "1st / 5th / 6th" refer to *his* ten, which are different
 events, so the STM claim has not actually been tested against our chain yet.
 What is needed to close it is either (i) the file list / sample his set came
 from, or (ii) his set's run-subrun-event triplets resolved to files — then the
-same procedure in the Repro block reruns those exact events. The findings that
+same procedure in the Repro block reruns those exact events. **Route (i) is
+what happened: the sample is `round1-qlmatch/mc_paths-10files`, see §10.** The
+prediction of §9.2 held — the ten do sit in one production, `mc_find_rse.C`
+mode found them in one pass, and the vertex fingerprint confirmed them
+(§10.1). The findings that
 do stand independently of which ten events are meant: our chain tags the one
 true in-beam stopping muon it was given (evt 23), the STM tagger fires on
 out-of-time stopping cosmics when the beam-window gate is lifted, and evt 7's
 contained in-time muon gets no in-beam bundle (§7).
 
+---
+
+# Part II — his actual ten events
+
+## 10. The right sample: `round1-qlmatch/mc_paths-10files`
+
+The file yuhw eventually named is
+
+```
+/nfs/data/1/yuhw/2025-fall-prod-sample/round1-qlmatch/mc_paths-10files/
+    gen_g4_detsim_reco1-6548848c-576f-520e-c045-2cc101674fea.root
+```
+
+which is **line 1** of `round1-qlmatch/mc_paths-10files-wcgpu1.lst`. It holds
+**8** events, not 10 — run 32/subrun 10, events 6 10 13 14 16 21 39 43. The
+remaining two of "the first 10 events using this list" come from **line 2**,
+`…-c7d2311d-…root` (run 31/subrun 88), entries 0–1 = events 5 and 12. That
+reconstructs his Bee set `169bdddf` exactly, including its ordering:
+
+| Bee idx | his `event/list/` label | art file | entry | run-subrun-event |
+|---:|---|---|---:|---|
+| 0 | 32-10-6  | 6548848c | 0 | 32-10-6 |
+| 1 | 32-10-10 | 6548848c | 1 | 32-10-10 |
+| 2 | 32-10-13 | 6548848c | 2 | 32-10-13 |
+| 3 | 32-10-14 | 6548848c | 3 | 32-10-14 |
+| 4 | **0-0-16** (label glitch) | 6548848c | 4 | **32-10-16** |
+| 5 | 32-10-21 | 6548848c | 5 | 32-10-21 |
+| 6 | 32-10-39 | 6548848c | 6 | 32-10-39 |
+| 7 | 32-10-43 | 6548848c | 7 | 32-10-43 |
+| 8 | 31-88-5  | c7d2311d | 0 | 31-88-5 |
+| 9 | 31-88-12 | c7d2311d | 1 | 31-88-12 |
+
+### Repro block (Part II)
+
+```bash
+cd wcp-porting-img/sbnd/sbnd_xin
+D=/nfs/data/1/yuhw/2025-fall-prod-sample/round1-qlmatch/mc_paths-10files
+
+# 1. extract both files (MC product names, sec 2)
+./run_reco1_dump.sh -mc -caf none -t r1ql-f1 $D/gen_g4_detsim_reco1-6548848c-576f-520e-c045-2cc101674fea.root
+./run_reco1_dump.sh -mc -caf none -t r1ql-f2 $D/gen_g4_detsim_reco1-c7d2311d-cfb2-4c47-b343-1c32c594a09f.root
+
+export SBND_MAX_JOBS=6 SBND_SAVE_ASSOC=1
+NUF="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real \
+     -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc"     # doc 59 production set
+
+# 2. imaging + the production nusel chain.  f1 = all 8; f2 = ONLY idx 1,2
+#    (= evts 5,12).  Never 'all' on f2: its evts 14 and 39 would collide with
+#    f1's directory names in a merged tree.
+export SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-r1ql-f1
+export SBND_WORK_ROOT=$PWD/work-r1ql-f1
+./run_img_evt.sh mc all; ./run_nusel_evt.sh mc $NUF all
+export SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-r1ql-f2
+export SBND_WORK_ROOT=$PWD/work-r1ql-f2
+./run_img_evt.sh mc 1; ./run_img_evt.sh mc 2
+./run_nusel_evt.sh mc $NUF 1; ./run_nusel_evt.sh mc $NUF 2
+
+# 3. gate-off arm (sec 10.4): symlink evt/ql_evt into work-r1ql-{f1,f2}-nobw
+#    and rerun the same command with -no-bwonly.
+
+# 4. truth: stopping-muon census + the vertex fingerprint (both bare ROOT)
+export ROOT_INCLUDE_PATH=/nfs/data/1/xqian/toolkit-dev/toolkit/root/src
+root -l -b -q 'mc_truth_muons.C("<file>",<ent>,<ent>,-2000000,2000000,20)' > out.txt 2>&1
+root -l -b -q 'mc_nu_vertices.C("<file>","f1",<ent>,<ent>,50)'   > vtx.txt 2>&1
+#   GOTCHA: ROOT aborts on teardown of these art files ('free(): invalid
+#   pointer', rc=6) and multi-entry loops die partway -- run ONE entry per
+#   invocation and redirect to a FILE (a pipe loses the unflushed tail).
+
+# 5. Bee (10 events, ordinal order)
+printf '6\n10\n13\n14\n16\n21\n39\n43\n5\n12\n' > scan-r1ql/first10.txt
+mkdir -p work-r1ql-first10   # symlink ql_evt<N>/nusel_evt<N> from both roots
+./make_scan_bee.sh scan-r1ql/bee work-r1ql-first10 scan-r1ql/first10.txt
+```
+
+Nothing was tuned and no default moved; no C++ or config change was needed for
+this round (the `-mc` plumbing of §2 already shipped, toolkit `9cb6c860`).
+
+### 10.1 Proof that these are his events
+
+Label-independent, using the same fingerprint as §9.2: the beam-origin
+`sim::MCTrack` vertices (new `mc_nu_vertices.C`) versus the neutrino vertices
+Bee carries in his `mc` layer. **All 15 of his vertices match, 13 of them
+exactly and the other 2 at 0.010 cm** (his are printed to 2 decimals) —
+against 13.5 cm for the best wrong-sample match in §9.
+
+```
+his Bee evt 0 (17.08, -139.91,   16.25) -> 32-10-6  (17.08, -139.92,   16.25)  0.010 cm
+his Bee evt 1 (-125.29,-528.35, -624.13) -> 32-10-10 (-125.29,-528.35, -624.13)  0.000
+his Bee evt 2 (48.10,   56.52,  471.06) -> 32-10-13 ( 48.10,   56.52,  471.06)  0.000
+his Bee evt 2 (-25.73, 131.67, -421.13) -> 32-10-13 (-25.73,  131.67, -421.13)  0.000
+his Bee evt 3 (-39.83,  72.08,  450.64) -> 32-10-14 (-39.83,   72.08,  450.65)  0.010
+his Bee evt 4 ( 13.25,-161.67,  495.69) -> 32-10-16 ( 13.25, -161.67,  495.69)  0.000
+his Bee evt 4 ( 31.44, 185.09,  451.40) -> 32-10-16 ( 31.44,  185.09,  451.40)  0.000
+his Bee evt 5 (-51.19, -68.95, -365.31) -> 32-10-21 (-51.19,  -68.95, -365.31)  0.000
+his Bee evt 5 (383.70, 333.11, -323.15) -> 32-10-21 (383.70,  333.11, -323.15)  0.000
+his Bee evt 6 (-147.75,114.00,  495.88) -> 32-10-39 (-147.75, 114.00,  495.88)  0.000
+his Bee evt 7 (616.11, 172.48,-1224.09) -> 32-10-43 (616.11,  172.48,-1224.09)  0.000
+his Bee evt 7 (-403.89,416.17, -449.53) -> 32-10-43 (-403.89, 416.17, -449.53)  0.000
+his Bee evt 7 (225.43,-136.96,  175.82) -> 32-10-43 (225.43, -136.96,  175.82)  0.000
+his Bee evt 8 (  9.21, -35.67,  333.07) -> 31-88-5  (  9.21,  -35.67,  333.08)  0.010
+his Bee evt 9 (-246.89,343.40, -377.08) -> 31-88-12 (-246.89, 343.40, -377.08)  0.000
+```
+
+This also settles his Bee index 4, whose label reads `0-0-16`: it is
+**32-10-16**, entry 4 of the first file — its two vertices are the two beam
+neutrinos of that event.
+
+### 10.2 MC truth — where the in-time muons are
+
+`mc_truth_muons.C` at **E > 20 MeV** (i.e. no effective threshold: `E` is total
+energy and a muon carries 105.7 MeV of rest mass, so *every* MCTrack muon is
+in). "AV" = |x| < 200, |y| < 200, 0 < z < 500 cm. A **stopping muon** = a muon
+whose **end** is in the AV; it is an *entering* stopper if its start is not.
+"In beam" = t₀ ∈ [0.2, 2.2) µs, the production gate.
+
+| # | run-sub-evt | in-time (beam-window) truth activity in the AV | in-beam **stopping** muon? |
+|---:|---|---|---|
+| 1 | 32-10-6 | ν vertex (17, −140, 16) **inside** the AV, but the only products are **5 protons at rest** (E ≈ 940–960 MeV ⇒ KE ≲ 20 MeV, sub-mm tracks) — no visible charge, no light | **no** |
+| 2 | 32-10-10 | 2 245-MeV µ from a **dirt** ν at (−125, −528, −624): enters the TPC and **stops at (47, −190, 226)**, t₀ = 532 ns | **YES (entering)** |
+| 3 | 32-10-13 | contained ν at (48, 57, 471); 930-MeV µ **exits**, 1 158-MeV proton stays | no |
+| 4 | 32-10-14 | contained ν at (−40, 72, 451); 382-MeV µ exits at z = 501 | no |
+| 5 | 32-10-16 | **two** ν interactions: (13, −162, 496) with a **contained** 421-MeV µ ending at (−0.5, −64, 457), t₀ = 1 172 ns; and (31, 185, 451) whose 581-MeV µ exits | no — the in-time µ is **contained**, not entering |
+| 6 | 32-10-21 | 1 199-MeV µ from a **dirt** ν at (−51, −69, −365): enters and **stops at (−145, 143, 167)**, t₀ = 786 ns | **YES (entering)** |
+| 7 | 32-10-39 | contained ν at (−148, 114, 496); **contained** 354-MeV µ ending at (−111, 28, 455), t₀ = 1 193 ns | no — contained |
+| 8 | 32-10-43 | ν vertex (616, 172, −1224) — entirely outside the cryostat; nothing reaches the AV | **no** |
+| 9 | 31-88-5 | contained ν at (9, −36, 333); 756-MeV µ exits at (85, −224, 538) | no |
+| 10 | 31-88-12 | 1 161-MeV µ from a **dirt** ν at (−247, 343, −377): enters and **stops at (−172, 87, 175)**, t₀ = 1 543 ns | **YES (entering)** |
+
+So this sample is genuinely different from the round2-patrec ten: it contains
+**three** in-beam entering-and-stopping muons (ordinals 2, 6, 10), all of them
+dirt-neutrino muons rather than cosmics. The out-of-time cosmic stoppers are
+still there (2–4 per event, spread over ±1.5 ms) exactly as in §5.
+
+### 10.3 Our tagger verdicts (production chain) — the table
+
+10/10 imaged and 10/10 through the nusel chain, rc = 0, doc-59 production flag
+set verbatim, beam-window gate ON, mode `mc`. One row per in-beam bundle;
+full tables `work-r1ql-f1/nusel-table.tsv` and
+`work-r1ql-f2/nusel_evt{5,12}/nusel-evt*.tsv`.
+
+| # | run-sub-evt | in-beam flash (µs / PE) | main len / pts | TGM | STM | FC | LM | bundle label | event label |
+|---:|---|---|---|:--:|:--:|:--:|:--:|---|---|
+| 1 | 32-10-6 | **none in [0.2, 2.2) µs** (13 bundles, nearest flashes 7.5 µs and −1.0 ms) | — | — | — | — | — | — | **no-beam-flash** |
+| 2 | 32-10-10 | 0.697 / 2 996 | 92.9 cm / 834 | 0 | **1** | 0 | 0 | **STM** | cosmic-tagged |
+| 3 | 32-10-13 | 0.301 / 25 779 | 501.9 cm / 18 879 | **1** | 0 | 0 | 0 | TGM | nu-candidate |
+| 3 | 32-10-13 | 0.875 / 4 762 | 53.9 cm / 601 | 0 | 0 | 0 | 0 | nu-candidate | ″ |
+| 4 | 32-10-14 | 1.119 / 5 952 | 116.1 cm / 1 317 | 0 | 0 | 0 | 0 | nu-candidate | nu-candidate |
+| 5 | 32-10-16 | 1.306 / 6 529 | 74.9 cm / 2 336 | 0 | 0 | 0 | 0 | nu-candidate | nu-candidate |
+| 6 | 32-10-21 | 0.937 / 11 337 | 263.9 cm / 2 679 | 0 | **1** | 0 | 0 | **STM** | cosmic-tagged |
+| 7 | 32-10-39 | 1.330 / 7 816 | 126.6 cm / 1 118 | 0 | 0 | 0 | 0 | nu-candidate | nu-candidate |
+| 8 | 32-10-43 | **none in [0.2, 2.2) µs** (16 bundles, nearest 8.4 µs) | — | — | — | — | — | — | **no-beam-flash** |
+| 9 | 31-88-5 | 1.381 / 7 813 | 234.0 cm / 2 543 | 0 | 0 | 0 | 0 | nu-candidate | nu-candidate |
+| 10 | 31-88-12 | 1.692 / 15 070 | 192.8 cm / 2 545 | 0 | **1** | 0 | 0 | **STM** | cosmic-tagged |
+
+**Line up §10.2 and §10.3 row by row:** the three events with a true in-beam
+entering-and-stopping muon — ordinals **2, 6, 10** — are exactly the three our
+chain tags **STM**. The two events with a *contained* in-time ν muon
+(ordinals 5, 7) stay **nu-candidate**, which is the right answer: a contained
+muon is a ν<sub>µ</sub> CC candidate, not a stopping muon in the tagger's
+sense (STM requires entry through a boundary). The two events with **no**
+in-time charge in the AV (ordinals 1, 8) get no beam-window flash at all, so
+there is nothing to tag — and truth agrees there is nothing there. Flash times
+track truth t₀ with the usual ≈ +0.15 µs offset (0.697 vs 0.532, 0.937 vs
+0.786, 1.692 vs 1.543).
+
+**Against the claim.** "1st, 5th and 6th event are true STM but not properly
+tagged" — both readings of the ordinals, so no adjudication is needed:
+
+| reading | events | what truth says | what we do |
+|---|---|---|---|
+| 1-based ordinals 1/5/6 | 32-10-**6**, 32-10-**16**, 32-10-**21** | 6: no in-time activity at all (5 protons at rest); 16: in-time µ is **contained**; 21: **true entering stopper** | 6: no beam flash (nothing to tag — but the +7.5 µs cosmic stopper **is** tagged STM with the gate off, §10.4); 16: nu-candidate (correct); 21: **tagged STM** |
+| 0-based Bee indices 1/5/6 | 32-10-**10**, 32-10-**21**, 32-10-**39** | 10 and 21: **true entering stoppers**; 39: contained µ | 10 and 21: **both tagged STM**; 39: nu-candidate (correct) |
+
+**Not one in-beam stopping muon in his ten is missed by our chain.** Under
+either reading the claim does not reproduce here.
+
+### 10.4 The gate-off arm
+
+Same binary and flags plus `-no-bwonly`, so the taggers evaluate every matched
+bundle (`work-r1ql-{f1,f2}-nobw/`). **The in-beam rows are byte-for-byte the
+same verdicts as production in all 10 events** — the gate only adds scope. The
+15 STM firings it adds are all out of time, and the ones that matter here:
+
+| run-sub-evt | STM bundle t (µs) | main len | truth stopping muon |
+|---|---:|---:|---|
+| 32-10-6 (ordinal 1) | **7.545** | 95.6 cm | cosmic µ, t₀ = **7.343 µs**, ends (84, 159, 225) [AV] ✓ |
+| 32-10-16 (ordinal 5) | 1113.2 | 27.9 cm | cosmic µ, t₀ = **1113.0 µs**, ends (−177, −40, 15) [AV] ✓ |
+| 32-10-43 (ordinal 8) | −620.1 / 711.6 | 72.2 / 84.9 cm | cosmics at −620.3 µs and 711.4 µs ✓ |
+
+**Ordinal 1 is the interesting one.** Its stopping muon is real, our STM tagger
+does fire on it — at **7.5 µs**, i.e. 5.3 µs *after* the beam window closes.
+Production never evaluates it (doc-56 gate), so it never becomes an event
+label. That is the same mechanism as §6, and it is the most likely source of a
+hand-scan impression of "a true STM we didn't tag": in a CORSIKA-overlay MC the
+display shows the stopping muon, but not that it is microseconds-to-milliseconds
+away from the beam.
+
+(Caveat, stated because the arm is quoted: a few of the other out-of-time STM
+firings — e.g. 32-10-13 at 592 µs, 32-10-14 at 386/432 µs — have no
+`sim::MCTrack` muon ending inside the AV at that time. Those are most plausibly
+readout-window truncation making a through-going cosmic look like a stopper,
+the same effect documented for FC. They are out of time and outside the
+question asked here; not chased.)
+
+### 10.5 Bee
+
+10 events, ordinal order, index = `scan-r1ql/bee/first10.index.txt`:
+
+**https://www.phy.bnl.gov/twister/bee/set/ac51d469-2867-4a26-9362-25901c78678e/event/list/**
+
+Layers per event: `img-global`, `clustering-global`, `op` and the channel
+dead-area layers from `ql_evt<ID>/mabc-all-apa.zip`, plus `stm_fit-global`
+from `nusel_evt<ID>/mabc-pr.zip` (PR cluster id → img cluster id in
+`first10.stmid-map.txt`). Note his set `169bdddf` carries **no** `stm_fit`,
+`track_fit` or `vertices` layer (§9), so nothing in it displays a tagger
+verdict — which is worth keeping in mind when comparing the two displays.
+
 ## Status
 
-- Chain reproduced on the colleague's sample: **10/10 events processed**, 13/13
-  including the rest of file 1.
-- The STM claim on ordinals 1/5/6 **of this list** is not confirmed; truth says
-  there is no in-beam stopping muon in those events, and the STM tagger does
-  fire on the out-of-time ones when the gate is lifted. **But his Bee set is a
-  different sample entirely (§9)**, so the claim is still open on *his* events —
-  it needs his file list to be closed.
-- One apparent miss found and reported: **evt 7's contained in-time
-  ν<sub>µ</sub> CC muon produces no in-beam bundle** — loss inside the Q/L
-  step, mechanism open (§7).
+- **CLOSED. The STM claim is not confirmed on his own events.** His ten
+  (`round1-qlmatch`, identified and proven in §10 / §10.1) went through the
+  production chain 10/10, rc = 0. Truth has **three** in-beam entering-and-
+  stopping muons among them; our chain tags **all three STM** (ordinals 2, 6,
+  10 = 32-10-10, 32-10-21, 31-88-12). Under either reading of "1st / 5th / 6th"
+  no missed in-beam stopper survives (§10.3).
+- The two of his flagged events that are *not* tagged are correctly not tagged:
+  32-10-6 has no in-time charge in the AV at all (its ν yields 5 protons at
+  rest) and hence no beam-window flash, and 32-10-16's in-time muon is
+  **contained** — a ν<sub>µ</sub> CC candidate, not a stopping muon. 32-10-6's
+  real stopping muon sits at **+7.5 µs**, and the STM tagger does fire on it
+  once the beam-window gate is lifted (§10.4) — the likely source of the
+  impression.
+- Part I (the round2-patrec list, §§1–9) is superseded as an answer to the
+  claim but stands on its own: 13/13 events processed, same conclusion on those
+  ten, plus the sample-mismatch forensics that led to the right file.
+- One apparent miss found and reported, in Part I's sample: **evt 7's contained
+  in-time ν<sub>µ</sub> CC muon produces no in-beam bundle** — loss inside the
+  Q/L step, mechanism open (§7). Nothing like it in Part II's ten.
 - Toolkit change: `wct-reco1-dump.jsonnet` MC product TLAs (compiled config
-  byte-identical when unset). No C++ change, no rebuild, no default moved.
+  byte-identical when unset), shipped in `9cb6c860`. No C++ change, no rebuild,
+  no default moved, in either part.
+- New bare-ROOT helpers: `mc_find_rse.C` (§9.2), `mc_nu_vertices.C` (§10.1).
