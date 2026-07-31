@@ -4,7 +4,7 @@ Repro:
 
 ```bash
 cd sbnd_xin
-ls -d work* | wc -l              # 149 at the top level on 2026-07-30 (56 GB)
+ls -d work* | wc -l              # 15 after the 2026-07-30 retirement round (20 GB; 149 / 56 GB before)
 ls archive/*/ -d                 # 3 campaign archives + records/, 79 dirs
 find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below
 python3 relink_tags.py           # dry-run repair after any move
@@ -61,18 +61,32 @@ repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
 
-## RETIREMENT ROUND 2026-07-30 — 134 arms proposed for removal, 35.9 GiB
+## RETIREMENT ROUND 2026-07-30 — 134 arms REMOVED, 35.9 GiB reclaimed
 
 State at the start of the round: **149 top-level `work*` dirs, 54.9 GiB of real
 bytes** (`du` says 56 GB; the difference is directory overhead — 208499 entries
 under `work*`). `sbnd_xin` as a whole was 58.5 GB (60 GB after the archive was
 written); `/nfs/data/1` was 87 % full, 481 GB free.
 
-The round is **archive-then-list**: the record layer of every retiring arm was
-copied into `archive/records/` (additive — nothing under `work-*` was moved,
-rewritten or deleted), and the deletion itself is left to the owner as
-`scripts/retire/retire_20260730.sh`, which refuses to delete any arm whose
-`<tag>.tar.gz` is not present in the archive.
+The round was **archive-then-remove**: the record layer of every retiring arm
+was first copied into `archive/records/` (additive — nothing under `work-*` was
+moved or rewritten), the removal list was reviewed, and then
+`CONFIRM=yes scripts/retire/retire_20260730.sh 1,2` deleted tiers 1+2 on the
+owner's approval. The script refuses to delete any arm whose `<tag>.tar.gz` is
+not present in the archive, and refuses to run at all while a `bokeh serve`
+viewer is up.
+
+One arm survives as a stub: `work-stmcamp-d66new/nusel_labels/d66flip/` is
+**git-tracked** (22 label json force-added past the `*.json` ignore rule), so
+`git checkout` restored it in place after the removal — the directory now holds
+nothing but those 152 K of hand-scan labels. No other removed arm held a tracked
+file (`git status` showed 22 deletions, all of them that one dir).
+
+**Result** (`scripts/retire/retire_20260730.sh 1,2`, `CONFIRM=yes`):
+134 dirs removed, 0 refused; `relink_tags.py` dry run `repaired=0
+unresolved=0`; `find . -xtype l | wc -l` = **0**; `work*` 149 dirs / 56 GB →
+**15 dirs + the d66new label stub / 20 GB**, `sbnd_xin` 60 GB → **24 GB**; `/nfs/data/1` free
+481 GB → **517 GB**. SP + light after the round: 6158 files / 1765 MB, intact.
 
 ### What was archived, and what removal costs
 
@@ -142,7 +156,7 @@ every one of those dependents is itself in the set. After deletion, run
 `python3 relink_tags.py` and confirm `find . -xtype l | wc -l` is 0 anyway —
 `retire_20260730.sh` does both.
 
-### KEEP — 15 dirs, 19.05 GiB
+### KEEP — 15 dirs, 19.05 GiB (all that remains)
 
 | dir | size | why |
 |---|---|---|
@@ -158,7 +172,7 @@ Optional additions the owner may want to retire too, listed but **not** in the
 tiers: `work-nuecc48-base` (151 MB, the partial earlier arm superseded by
 `-nuf`) and `work-nuecc48-prsmoke` (8 MB, superseded by `prsmoke2`).
 
-### TIER 1 — low regret, recommended: 125 dirs, 25.14 GiB
+### TIER 1 — REMOVED 2026-07-30: 125 dirs, 25.14 GiB
 
 Campaigns that shipped and closed. Full per-dir listing with sizes:
 `scripts/retire/tier1.txt`.
@@ -170,7 +184,7 @@ Campaigns that shipped and closed. Full per-dir listing with sizes:
 | docs 52–57 30-event arms — `work-mcp{10,1000,1000b}-{d49son,d52*,d53*,d55*,p54*,p55opt,p56off,d56bw,d57mip*,m66*,p65fin}`, `work-mcp10-{trace51,d52chk,d52trace,d53leg,m66*sb}`, `work-smoke-d55pv` | 78 | 2.67 GiB | docs 52/53/54/55/56/57/65 all closed; includes the four `nusel_labels` arms (labels archived) |
 | `work-stmcamp-dbg1..9` | 9 | 0.08 GiB | ad-hoc debug probes of the doc-63 campaign |
 
-### TIER 2 — owner's call: 9 dirs, 10.76 GiB
+### TIER 2 — REMOVED 2026-07-30 (owner approved): 9 dirs, 10.76 GiB
 
 The doc-66 diffusion-revert campaign (`work-stmcamp-d66{old,new,fix,fixoff,oldtrace,newtrace,newtrace0,newtrace0b,newtrace5}`; list in
 `scripts/retire/tier2.txt`). Closed and shipped like tier 1, but two reasons to
@@ -183,8 +197,10 @@ pause before deleting:
 - `d66new` is the shipped-revert arm and carries the largest surviving
   `nusel_labels/` (148 K, archived).
 
-Keeping the `d66fix`/`d66fixoff` pair whole costs 5.27 GiB; keeping `d66new`
-too costs 7.9 GiB. Deleting all nine reclaims 10.76 GiB.
+Keeping the `d66fix`/`d66fixoff` pair whole would have cost 5.27 GiB; the owner
+chose to remove all nine (10.76 GiB). Their record layer — including `d66new`'s
+148 K `nusel_labels/` — is in `archive/records/doc66-diffusion/` and
+`archive/records/labels/work-stmcamp-d66new/`.
 
 ### TIER 3 — optional, not scripted: ~0.9 GiB
 
@@ -203,7 +219,7 @@ curated once (2026-07-25) with the whole-directory convention.
 | TIER 1 | 125 | 25.14 |
 | TIER 2 | 9 | 10.76 |
 | archive added | — | +0.71 |
-| after tiers 1+2 | 15 | **19.05** (`work*` ≈ 20 GB by `du`; sbnd_xin ≈ 24 GB incl. `input_files_reco1` 1.7 GB, `scan-d59k` 694 MB, `archive/` 1.9 GB) |
+| **after tiers 1+2 (actual)** | **15** | **19.05** (`work*` 20 GB by `du`; sbnd_xin 24 GB incl. `input_files_reco1` 1.7 GB, `scan-d59k` 694 MB, `archive/` 1.8 GB) |
 
 ---
 
@@ -223,11 +239,10 @@ LIVE / CURRENT tables are superseded by the KEEP and TIER tables above; the
 
 ## LIVE — 7 dirs, 8.5 GB (as of 2026-07-25 — SUPERSEDED, retained for the "referenced by" columns)
 
-> Currency warning: this table's "live" claims are from 2026-07-25. The port-5011
-> viewer was not running on 2026-07-30, and most arms listed here (`d56bw`,
-> `d66*`, `d60*`, `d49son`, `d52ron`) are in TIER 1/2 of the retirement round
-> above. Use the KEEP / TIER tables for what is current; use this table only for
-> the per-dir reference lists.
+> Currency warning: this table's "live" claims are from 2026-07-25. Every arm
+> listed here except `work-mcp1kall-d59k` was **removed** on 2026-07-30 (tiers
+> 1/2 above); its record layer is in `archive/records/`. Use the KEEP table for
+> what exists; use this table only for the per-dir reference lists.
 
 **wired into a running viewer** — the port-5011 `nusel_scan_viewer.py` command line names these as its current tag or as a `--prev` baseline. Deleting or moving one blanks the live scan.
 
@@ -257,8 +272,9 @@ scan; they are listed under CURRENT below.
 
 ## CURRENT — 52 dirs, 2109 MB (as of 2026-07-25 — SUPERSEDED, retained for the "referenced by" columns)
 
-> Currency warning: every arm in this table is in TIER 1 of the retirement round
-> above except the `work-nuecc48-*` roots at the end, which are KEEP.
+> Currency warning: every arm in this table was **removed** on 2026-07-30
+> (TIER 1 above) except the `work-nuecc48-*` roots at the end, which are KEEP.
+> Records in `archive/records/docs52-57-arms/`.
 
 the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster_id`), plus the `d55b`/`d55t` arms of doc 52 §13, the doc-54 perf A/B arms and the doc-56 beam-window-gate arms (`p56off` knob-off gate, `d56bw` = the new production default, served on :5011).
 
