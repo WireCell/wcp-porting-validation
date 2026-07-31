@@ -116,8 +116,19 @@ local bee_shared = {
     name: 'mabc_shared',
     data: { outname: 'mabc.zip', initial_index: 0 },
 };
+// save_assoc_id=true: the per-APA clustering_isolated pass writes the isolated-
+// grouping provenance (assoc_cluster_id/assoc_cluster_main); this flag
+// homogenizes it so it SURVIVES serialization out of the per-APA MABC (the
+// serializer silently drops heterogeneous perblob keys).  Without it the
+// provenance is born here but dropped before matching_joint, so the all-APA
+// save_assoc_cluster_id has nothing to preserve and the pr_node's unmerge_assoc
+// finds nothing to split ("unmerged 0 main clusters") -- leaving the tagger
+// main un-refined and mis-verdicted (MC 32-10-10 cluster 22: STM=0 un-split vs
+// STM=1 after the isolated split, matching sbnd_xin's 2-step).  Pairs with the
+// all_apa save_real/assoc_cluster_id below (real_cluster_id is instead created
+// by all_apa's own examine_bundles, so it needs no per-APA flag).
 local clus_pipes = [
-    clus_maker.per_apa(tools.anodes[n], dump=false, bee_sink=bee_shared)
+    clus_maker.per_apa(tools.anodes[n], dump=false, bee_sink=bee_shared, save_assoc_id=true)
     for n in std.range(0, nanode - 1)
 ];
 
