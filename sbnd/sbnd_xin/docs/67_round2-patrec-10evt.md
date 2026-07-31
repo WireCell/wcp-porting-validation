@@ -1,5 +1,11 @@
 # 67 — yuhw's round2-patrec 10 MC events through our production chain: the "missed STM" claim
 
+> **Update (§9): his Bee set and ours are different events.** His ten are
+> run 32/subrun 10 and run 31/subrun 88; every file in the wcgpu1 list is
+> run 713, and none of his 15 truth neutrino vertices matches any of the 4 896
+> in the list's 104 events. So the STM claim has **not** yet been tested on the
+> same events — §§4–8 below describe the ten events of the list as written.
+
 **Short answer: our chain did not miss a stopping muon in those events.** The
 three events flagged as "true STM but not tagged" (ordinals 1, 5, 6 = evts 3,
 11, 12) contain **no stopping muon in the beam window** — MC truth says so:
@@ -309,13 +315,84 @@ track fits). The `op` layer is the one to open first when comparing with a
 display that has no flash matching: it is where the −300 µs cosmics separate
 from the beam bundle.
 
+## 9. Update — the two Bee sets are NOT the same events
+
+yuhw's Bee set is
+`https://www.phy.bnl.gov/twister/bee/set/169bdddf-0f71-44ab-aab1-47a896316040/event/list/`.
+It holds 10 events, and **none of them is in the wcgpu1 list**. Three
+independent checks, all agreeing:
+
+**(a) The run/subrun/event labels.** Bee's own event list:
+
+| # | his set 169bdddf | our set d4f3a348 |
+|---:|---|---|
+| 1 | 32-10-6 | 713-74-3 |
+| 2 | 32-10-10 | 713-74-4 |
+| 3 | 32-10-13 | 713-74-7 |
+| 4 | 32-10-14 | 713-74-9 |
+| 5 | **0-0-16** | 713-74-11 |
+| 6 | 32-10-21 | 713-74-12 |
+| 7 | 32-10-39 | 713-74-23 |
+| 8 | 32-10-43 | 713-74-24 |
+| 9 | 31-88-5 | 713-74-31 |
+| 10 | 31-88-12 | 713-74-34 |
+
+Every one of the ten files in `mc_paths-v10_14_02_03-100files-wcgpu1.lst` is
+**run 713**, subruns **{0, 5, 35, 40, 51, 52, 59, 68, 70, 74}** — read twice by
+independent code paths (`EventAuxiliary` via `TTree::Draw`, and the toolkit's
+own `SBNDReco1Reader` through the opflash tensor-set metadata, which is what
+puts `713-74-3` on our Bee set). **Runs 31 and 32 do not occur in this list at
+all**, and neither does subrun 10 or 88. His 8 + 2 split across two subruns also
+does not fit the list, whose first file alone has 13 events.
+
+**(b) MC truth vertices — the label-independent check.** His `mc` layer (a
+neutrino-only particle-flow tree) gives 15 neutrino vertices across the 10
+events. Compared against **every** beam-origin truth vertex in **all 104 events
+of the 10 files** (4 896 points, `sim::MCTrack` origin 1, E > 50 MeV): the
+closest match to any of his 15 is **13.5 cm** away, typical nearest 40–110 cm,
+worst 360 cm. Identical events would match to < 0.01 cm. The residual vectors
+point in random directions, so it is not a coordinate-frame offset either.
+
+```
+his evt 0 vtx (17.08, -139.91, 16.25)  -> nearest ours file6 evt22 (74.0,-194.9,-3.7)   dist 81.7 cm
+his evt 3 vtx (-39.83, 72.08, 450.64)  -> nearest ours file3 evt34 (-23.1, 67.7, 454.5) dist 17.7 cm
+his evt 5 vtx (-51.19, -68.95,-365.31) -> nearest ours file2 evt46 (-54.7,-56.0,-366.4) dist 13.5 cm
+... (all 15 in the session log; none below 13.5 cm)
+```
+
+**(c) The layer inventory** (useful for what his chain did run):
+
+| layer | his set | our set |
+|---|:--:|:--:|
+| `img-global`, `clustering-global`, `deadarea`, `op` | yes | yes |
+| `mc` (particle-flow truth tree) | **yes** | no |
+| `stm_fit-global`, `track_fit`, `vertices`, `shower_track` | **no** | `stm_fit-global` yes |
+
+So he is running the same MABC/Q-L Bee dumper (same layer names, same
+`op` flash↔cluster layer) with the pf truth tree enabled, but **without the
+STM-fit / PR layers** — i.e. the tagger tail of `run_nusel_evt.sh` did not
+produce output in that set.
+
+**Consequence for §§4–7.** Everything in this note is about the ten events of
+the wcgpu1 list. His "1st / 5th / 6th" refer to *his* ten, which are different
+events, so the STM claim has not actually been tested against our chain yet.
+What is needed to close it is either (i) the file list / sample his set came
+from, or (ii) his set's run-subrun-event triplets resolved to files — then the
+same procedure in the Repro block reruns those exact events. The findings that
+do stand independently of which ten events are meant: our chain tags the one
+true in-beam stopping muon it was given (evt 23), the STM tagger fires on
+out-of-time stopping cosmics when the beam-window gate is lifted, and evt 7's
+contained in-time muon gets no in-beam bundle (§7).
+
 ## Status
 
 - Chain reproduced on the colleague's sample: **10/10 events processed**, 13/13
   including the rest of file 1.
-- The STM claim on ordinals 1/5/6 is **not confirmed**; truth says there is no
-  in-beam stopping muon in those events, and the STM tagger does fire on the
-  out-of-time ones when the gate is lifted.
+- The STM claim on ordinals 1/5/6 **of this list** is not confirmed; truth says
+  there is no in-beam stopping muon in those events, and the STM tagger does
+  fire on the out-of-time ones when the gate is lifted. **But his Bee set is a
+  different sample entirely (§9)**, so the claim is still open on *his* events —
+  it needs his file list to be closed.
 - One apparent miss found and reported: **evt 7's contained in-time
   ν<sub>µ</sub> CC muon produces no in-beam bundle** — loss inside the Q/L
   step, mechanism open (§7).
