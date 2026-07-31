@@ -56,6 +56,19 @@ fix round (§7.8, owner: "fix 1, 2, 3 … 4 should be fixed with proper
 configurations") then executed all four** — the SSM fix ships without a knob
 (owner call: it is a bug), toolkit `1628328e` + `2ebb0177`.
 
+**Update 2026-07-30 (seventh)** — owner: "I am still concerned something may be
+leftout. Can you do another round of comprehensive search?" **§8** is that
+third-pass audit, run along four axes the §7 pass did not use as primary lenses
+(drift-sign/absolute-x/time, wire-plane/angular geometry, numeric-literal
+residue, config surface + data files). Headline: the code-side sweep is clean —
+no absolute-x, drift/tick, wire-angle, or channel-number literal survives in the
+44-file chain — and the pass found **one live default-argument hole**
+(`PRSegmentFunctions.cxx:2467`, §8.1a), a sharpened detector-sensitivity ranking
+of `sbnd_track_fitting.json`'s 38 verbatim-uBooNE keys (§8.1b), **one
+undocumented toolkit-vs-prototype divergence** in the dQ/dx-fit diffusion-width
+normalization (§8.3a, surfaced for adjudication, not fixed), and a short
+latent/robustness list (§8.4). Report-only; no code changed.
+
 **Update 2026-07-30 (fourth)** — the two **§2e(iv) detector-extent** rows are **closed**
 and are the first worklist item whose SBND value is a real translation rather than a
 placeholder: `cosmic_y_top_main/_top_strict/_top_loose/_small_piece` (uBooNE
@@ -1454,3 +1467,253 @@ the vertex refit), 0.213→0.889 (444187); `nue_score` stays at its saturation
 values. Scores are uBooNE-weighted and uncalibrated on SBND (G1), so these are
 recorded as shifts, not selection claims; the Track B/C scans remain the
 validation instrument.
+
+## 8. Residual hard-code audit — third pass (owner request, 2026-07-30)
+
+**Status: REPORT-ONLY — no code changed.** Owner: "I am still concerned
+something may be leftout. Can you do another round of comprehensive search?"
+This pass searched along four axes that were not the §7 pass's primary lenses:
+(a) single-drift / absolute-x / drift-time assumptions, (b) wire-plane and
+angular geometry, (c) raw numeric-literal residue *after* the §7 + pr/10
+exclusion lists, (d) the config surface itself (keys the C++ reads that SBND
+never sets, BDT weight files, `sbnd_track_fitting.json`, particle-data tables).
+Four independent sweeps covered the 44-file PR chain (~41.7k lines); every
+load-bearing claim below was then hand-verified against the source (and the
+prototype where cited) before entering this section.
+
+**Headline: the code-side sweep is clean** (§8.5). What survives is one live
+default-argument hole (§8.1a), a sharpened ranking of the *known*
+`sbnd_track_fitting.json` debt (§8.1b), facets of the two big known gaps
+(§8.2), one undocumented toolkit-vs-prototype divergence to adjudicate (§8.3a),
+and a latent/robustness list (§8.4).
+
+### Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+# (a) absolute-x + drift/time: x-vs-literal comparisons, drift/tick constants
+grep -nE '\.x\(\)\s*[<>]=?\s*[0-9]' clus/src/{Neutrino,Tagger,PR}*.cxx      # 1 hit, a comment
+grep -nE '1\.098|1\.101|1\.56[35]|9595|6400|nticks' clus/src/{Neutrino,Tagger,PR}*.cxx
+# (b) wire angles / channel literals; SBND face angles measured from the geometry file:
+#   bzcat ../wire-cell-data/sbnd-wires-geometry-v0206.json.bz2 | <atan2(dz,dy) per plane>
+#   -> face 0: {+60,-60,0} deg, face 1: {-60,+60,0} deg (U/V label-exchanged, W vertical)
+grep -nE '1\.0472|0\.5236|2400|4800|8256' clus/src/{Neutrino,Tagger,PR}*.cxx
+# (c) literal residue: 43e3/50e3-class + default-arg omissions
+grep -n 'MIP_dQdx = ' clus/inc/WireCellClus/PRSegmentFunctions.h
+grep -n 'segment_is_shower_trajectory(segment)' clus/src/PRSegmentFunctions.cxx  # :2467
+# (d) config surface: track-fitting json vs the uBooNE preset
+python3 -c "import json; print(json.load(open('cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json')))"
+#   vs clus/inc/WireCellClus/TrackFittingPresets.h  (create_with_current_values)
+git log --oneline -- cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json   # b2dab726, 564012fe only
+```
+
+### 8.1 Actionable finds (new)
+
+**(a) `PRSegmentFunctions.cxx:2467` — the one live MIP default-argument hole in
+the repo.** Inside `segment_determine_shower_direction` (defined `:2197`, which
+*has* `MIP_dQdx` as a parameter), the short-segment branch (`total_length <
+5*units::cm`, non-shower) calls
+
+```cpp
+if (!segment_is_shower_trajectory(segment)) segment_determine_dir_track(segment, 0, fits.size(), particle_data, recomb_model);
+```
+
+dropping the MIP argument to **both** callees: `segment_is_shower_trajectory`
+falls back to its header default `50000/units::cm` (`PRSegmentFunctions.h:154`)
+and `segment_determine_dir_track` to `43000/units::cm` (`:142`). Caller census:
+these are the **only** call sites in the repo that omit the argument
+(`segment_is_shower_trajectory` 4/5 explicit, `segment_determine_dir_track`
+all others explicit). On uBooNE the defaults equal the configured values, so
+the omission is invisible; on SBND, short (<5 cm) track-like segments inside
+shower-direction determination run with 50000/43000 instead of the production
+56000/48000. Fix shape for an owner-directed round: forward `MIP_dQdx` to
+`segment_determine_dir_track` (same median-scale semantics, uBooNE
+byte-identical by FP identity); `segment_is_shower_trajectory` wants the
+*50000-scale* `mip_dqdx`, which is **not** in this function's signature — that
+leg needs a threading decision (new parameter defaulting to
+`50000/units::cm`). Note for the record: §7-era notes cited a single omission
+"at `:2456`"; the correct line is 2467 and it carries two.
+
+**(b) `sbnd_track_fitting.json` — the 38 verbatim-uBooNE keys (§2e), now ranked
+by detector sensitivity.** `git log` shows the file untouched since `b2dab726`
+(+ the `564012fe` DL/DT revert); only the 6 diffusion/smearing keys (`DL`,
+`DT`, `col_sigma_w_T`, `ind_sigma_u_T`, `ind_sigma_v_T`, `add_sigma_L`) are
+SBND-derived. Of the remaining 38 (hand-diffed against
+`TrackFittingPresets.h::create_with_current_values`, byte-identical):
+
+| tier | keys | why it matters |
+|---|---|---|
+| **1 — absolute charge (7)** | `default_dQ_dx` 5000, `charge_cut` 2000, `share_charge_err` 8000, `default_charge_err` 1000, `add_charge_uncer` 600, `add_uncer_col` 300, `default_charge_th` 100 | electrons at the uBooNE gain×recombination scale (~12% below SBND per the muon-plateau transfer at `sbnd/clus.jsonnet:940-947`); they set the χ² weights, charge gating, and fallback dQ/dx of the very fit every STM/PR verdict reads |
+| **2 — same number, different physics (2)** | `min_drift_time` 50000 (50 µs), `time_tick_cut` 20 | times: 50 µs is 5.5 cm of drift at uBooNE's 1.101 mm/µs but **7.8 cm** at SBND's 1.563 — the "no-diffusion-below-this" slab at each anode is 42% thicker than the tuning intended |
+| 3 — transfers (7) | `low_dis_limit` 12, `end_point_limit` 6, `skip_dis_cut` 5, `dx_norm_length` 6, `div_sigma` 6, `area_ratio1` 1.8, `search_range` 10 | geometric mm/wires at equal 3 mm pitch — legitimately shared |
+| 4 — dimensionless (22) | `skip_*`, `*_weight`, `rel_uncer_*`, `overlap_th`, `nlevel`, factors | ratios/angles/weights; `lambda` 0.0005 sits against the charge scale (unranked) |
+
+Two wiring caveats worth standing rules: **(i)** this JSON is read at *runtime*
+by `TrackFitting` — it never enters the compiled jsonnet, so compiled-config
+`cmp` gates do NOT cover changes to it (only output hashes do); **(ii)** the
+builders default `trackfitting_config_file=""`, which silently falls back to
+the uBooNE presets compiled into `TrackFittingPresets.h` — all 7 SBND
+entry-point pass-sites verified present (`sbnd/clus.jsonnet:516,931,1103,
+1421,1487`, `wct-pr-perevt.jsonnet:98,405`). Clean sub-bills: `set_parameter`
+handles all 44 names with a throwing `else` (no silent drops); the
+`Parameters` struct is exactly those 44 fields (no unreviewed third bucket).
+
+### 8.2 Known-gap facets sharpened (attach to G1 / G3 / §7.4 — no new items)
+
+- **G3 (SCN vertex) — the input transform is training-coupled.** The SCN charge
+  feature is `q_in = dQ*0.1 − 1000` (`TaggerCheckNeutrino.h:111-112`, threaded
+  live into `determine_overall_main_vertex_DL` at `TaggerCheckNeutrino.cxx:545`;
+  the keys exist in jsonnet but SBND never sets them). That is *correct today*:
+  the constants must stay matched to the uBooNE-trained weights SBND runs by
+  choice (pr/4) — they are retraining parameters, not independent tuning knobs.
+  Two new specifics for the eventual retrain: sparse-conv kernels are **not
+  mirror-invariant** (SBND TPC0's cathode→anode x-order mirrors uBooNE's
+  training frame; nothing mirrors it), and a two-TPC event spans ~800 voxels at
+  0.5 cm with a cathode gap vs uBooNE's ≤512. Verified non-issues: the Python
+  wrapper subtracts `x.min()` before voxelizing (translation-invariant,
+  sign-symmetric round trip); the four `dQdx_scale: 0.1` literals at
+  `sbnd/clus.jsonnet:1018/1208/1285/1339` are magnify/Bee display
+  normalization, not this path.
+- **G1 (BDT) — where the uBooNE anchoring actually lives.** All 35 weight XMLs
+  resolve on disk; scores are *terminal* (no `score > X` decision anywhere
+  in-chain — traced to the ROOT branches). Inside the scorers: **15 no-fill
+  fallback scores** (`UbooneNueBDTScorer.cxx:1631-1645`) plus
+  `cal_cosmict_10_bdt(ti, 0.7f)` are uBooNE training-set medians that will fire
+  at SBND's different fill rates against distributions they don't describe; the
+  `m_numu1_dQ_dx_cut` inf→10 sentinel (`UbooneNumuBDTScorer.cxx:332`) is a
+  uBooNE-scale dQ/dx value; and the `cosmict_{2,3,7}_phi` *features* are raw
+  x-framed φ — mirrored on SBND face 1 relative to the training distribution
+  (the C++ cuts on φ are symmetric; only the BDT input is affected).
+- **§7.4 / §2e still-open values, re-confirmed live:** `kine_plane_weights`
+  {0.25, 0.25, 1.0} and `kine_plane_asym_switch` 0.04 (the neighbouring recom
+  factors were calibrated in pr/10; these were not — structure is right for
+  SBND, both faces being ±60°/vertical, only the S/N-derived magnitudes are
+  uBooNE); `proton_dir_score_max` 0.25 / `proton_dir_asym_min` 1.3 uncalibrated
+  while `proton_dir_vote=true`; `ssm_target_dir`/`ssm_absorber_dir` still
+  `null` on SBND (uBooNE-frame beam vectors feed the SSM angle features).
+- **Cross-estimator ratio cut, new scan-watch item:** `E_dQdx < 0.7*E_charge`
+  (`NeutrinoTaggerNuE.cxx:165`, mirrored `NeutrinoTaggerSinglePhoton.cxx:2147`)
+  flags a low-charge shower as bad. Its two legs are now *independently*
+  recalibrated on SBND (`E_dQdx` moves with the power recombination model,
+  `E_charge` with the kine factors) and nothing preserves the ratio
+  distribution the 0.7 was tuned on. Not a code bug — a Track B/C validation
+  flag.
+- Provenance note: `stm_ref_dqdx.json`, cited at `sbnd/clus.jsonnet:820` as the
+  PowerBox parameter source, is not in-tree or in wire-cell-data — a
+  comment-only pointer; the numbers it justifies are un-auditable from this
+  repo.
+
+### 8.3 Undocumented toolkit-vs-prototype divergences (M15 — surfaced, not adjudicated)
+
+**(a) dQ/dx-fit diffusion-width normalization — 4× vs the prototype.**
+`TrackFitting.cxx:439-440` sets `time_slice_width = md["tick_drift"]` with the
+`nticks_live_slice` multiplication **commented out**; the prototype
+(`prototype_base/pid/src/PR3DCluster_dQ_dx_fit.h:435`,
+`PR3DCluster_multi_dQ_dx_fit.h:60`) uses `time_slice_width = nrebin × 0.5 µs ×
+drift_speed` (4 ticks). Downstream `sigma_L` divisions therefore land in
+per-tick rather than per-live-slice units — a 4× convention shift in the fit's
+longitudinal diffusion width. This is detector-neutral (identical on the uBooNE
+toolkit path, so it is a *port-fidelity* question, not SBND residue) and it is
+**not** in `porting_dictionary.md` (grep clean). Per the M15 rule this is
+surfaced, not "fixed": it needs an owner reading — deliberate retune or
+dropped factor — and a dictionary entry either way. (`nticks_live_slice: 4`
+sits unused at `sbnd/clus.jsonnet:111`.)
+
+**(b) One-sided drift-parallel guard.** `angle_deg < 7.5`
+(`PRSegmentFunctions.cxx:2260-2269` and `:2561-2570`) catches a track parallel
+to +drift but not anti-parallel (172.5°), which then normalizes a near-zero
+cross product (`:2267`/`:2568` are unguarded, unlike the `magnitude() > 0`
+guard at `:1034`). Faithful port of `ProtoSegment.cxx:112/:359` — the asymmetry
+exists in uBooNE too, and `dir_1`'s sign tracks fit-point ordering, so it is
+already a coin flip there. Any correction (`min(angle, 180−angle) < 7.5`) is a
+behavior change ⇒ default-OFF knob if pursued.
+
+### 8.4 Latent / robustness / cosmetic (record only)
+
+- **`m_dl_vtx_min_accept_score` default mismatch**: header member is `{0.0}`
+  (`TaggerCheckNeutrino.h:115`) while `default_configuration()` advertises 4.0
+  (`.cxx:238`); `configure()` falls back to the *member*, so a caller omitting
+  the key accepts every re-ranked DL vertex. Production unaffected (builder
+  default and `sbnd/clus.jsonnet:1115` both pass 4.0 explicitly). Cheap tidy.
+- **TGM silent wrong-face fallback**: `uvw_dirs_at`/`pick`
+  (`TaggerCheckTGM.cxx:704-714`) returns the lowest-ident face's wire dirs when
+  `contained_by` yields apa −1 — a *common* path for the cluster boundary
+  points it is called on. Harmless on SBND (both faces share {±60°, 0°} and
+  every consumer is a symmetric U/V OR), but inconsistent with the explicit
+  apa −1 handling in `TaggerCheckNeutrino.cxx:684-690`, and it breaks for any
+  detector whose faces differ in angle magnitude or pitch.
+- **NuE `gap_identification` face binding**: `flag_prolong_u/v/w` are computed
+  from the *vertex's* face (`:2725`, correct) but consumed against planes of
+  `test_p`'s volume (`:2762`), which can cross a face boundary within the
+  ≤2.4 cm walk — a label-binding mismatch reachable only for vertices
+  essentially on a boundary.
+- **18 `guard_*` STM thresholds have no jsonnet surface**
+  (`TaggerCheckSTM.cxx:613-650`; the builder exposes the guard *switches*
+  only). The values are SBND-tuned (docs 63/66), so this is tunability debt,
+  not uBooNE residue.
+- **Dead parameter**: `segment_cal_4mom`'s `MIP_dQdx` is never referenced in
+  the body (`PRSegmentFunctions.cxx:1593-1623`; the prototype `cal_4mom` takes
+  no such argument) — the two call sites passing `m_mip_dqdx_median` where ~40
+  pass `m_mip_dqdx` are therefore inconsequential.
+- **Form-only literals**: `TaggerCheckSTM.cxx:2820-2821` writes ratio cuts as
+  `85/50.` and `110/50.` (uBooNE MIP in ke) — numerically already correct
+  (operand is member-normalized at `:2742`); would read better as 1.7/2.2.
+- **Dead uBooNE blocks** (extends §7.6): `Facade_Util.h:59-85` `TPCParams`
+  (no live reference) — plus a default disagreement between
+  `BlobSampler.h:53` (`drift_speed{1.6}`, overridden by SBND) and
+  `Facade_Util.h:67` (`{1.101}`, dead). Worth normalizing whenever touched.
+- **Comment**: `NeutrinoVertexFinder.cxx:1133` says "Beam direction (along
+  z-axis)" above the *drift* vector `(1,0,0)` (uses are correct).
+
+### 8.5 Clean bills of health (third pass adds to §7.6)
+
+- **Absolute-x / drift sign**: 502 `.x()` uses in the 44 files; exactly one
+  x-vs-literal comparison and it is a comment. All containment via
+  `m_dv->contained_by()/face_dirx()/inner_bounds()` or `FiducialUtils`. All 27
+  drift-axis `(1,0,0)` declarations (and all 137 `drift_dir` uses) fold the
+  sign away (`|90°−angle|`, `|cos|`, `fabs(dir.x())`) except the §8.3b guard —
+  each non-obvious site read in context, not pattern-matched.
+- **Drift/tick/readout constants**: zero occurrences of any drift-speed, tick,
+  or nticks literal in the chain; the beam gate is fully configured
+  (`beam_window=[0.2, 2.2] µs`, SBND's, at `sbnd/clus.jsonnet:536`). Every
+  x↔time conversion resolves per-(apa,face) DetectorVolumes metadata with that
+  face's own sign and anode-x origin (`PCTransforms` T0Correction,
+  `Facade_Util::time2drift/drift2time`, `TrackFitting` drift-distance against
+  the face's own `xorig` — not `|x|`).
+- **SCE is inert on SBND**: `SCECorrection` registers only on an `"sce_field"`
+  metadata key; no such key exists anywhere in `cfg/`. The uBooNE SCE map is
+  unreferenced from the SBND chain (`clus_geom_helper=""` throughout).
+- **Wire geometry**: zero wire-angle literals; every U/V/W direction is
+  geometry-derived (`wire_angles` / `compute_wireplane_params` /
+  `dv->wire_direction`, rooted in `Facade_Grouping.cxx:449-451` `atan2` per
+  apa/face/layer). Measured from `sbnd-wires-geometry-v0206`: face 0
+  {+60, −60, 0}°, face 1 {−60, +60, 0}° — U/V label-exchanged with identical
+  magnitudes, so every symmetric U/V consumer is face-proof by construction.
+  No channel-number literals (2400/4800/8256-class absent); dead regions all
+  via `get_closest_dead_chs(apa, face, plane)`. TGM's tighter W threshold
+  (`5°` vs `10°`, `:1134`) encodes collection-vs-induction resolution — valid
+  for SBND, whose W is also vertical on both faces.
+- **Pitch**: all `0.3`/`0.15 cm` hits are step sizes and thresholds, not
+  pitch-derived; both detectors are 3 mm.
+- **Particle-data tables**: the five `*DeDx` tables are SBND-regenerated
+  (2026-07-25, 0.5 kV/cm); the five `*Range` tables are detector-independent;
+  wiring verified from `wct-pr-perevt.jsonnet:401-407` into both taggers. (The
+  retained 0.85 scale and the electron stopping-end guess remain the file's
+  own flagged caveats.)
+- **BDT plumbing**: all 36 weight/model files present on disk (missing files
+  would degrade silently — checked precisely because of that); scores
+  terminal; the known scorer bugs remain tracked in
+  `root/docs/examination/bdt-scorers-examination.md`.
+
+### 8.6 Disposition
+
+Report-only, per the request. If the owner wants a fix round, the recommended
+order: **(1)** §8.1a — forward the MIP arguments at `:2467` (uBooNE
+byte-identical by FP identity of the defaults; one threading decision on the
+`segment_is_shower_trajectory` leg); **(2)** adjudicate §8.3a — the 4×
+`time_slice_width` divergence is the one item that touches uBooNE *parity*,
+and needs a porting-dictionary entry whichever way it lands; **(3)**
+`sbnd_track_fitting.json` tier-1/2 keys when a calibration source exists (the
+§2e protocol; remember the runtime-JSON gate caveat in §8.1b); **(4)** §8.4
+tidies opportunistically. §8.2 items stay attached to their parent gaps
+(G1, G3, §7.4/§2e) rather than becoming new ones.
