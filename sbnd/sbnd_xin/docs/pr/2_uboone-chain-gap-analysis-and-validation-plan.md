@@ -1270,8 +1270,11 @@ template amplitude is the uBooNE header default, not `m_mip_dqdx` — the only
 `PRSegmentFunctions.cxx:1655-1661` ("fits[i].dx is stored in WireCell length units
 (cm) … dx_vec carried raw WCP units == cm") rests on a false premise — WCP cm = 10,
 not 1 — but its *conclusion* is accidentally right: the main PID path compares
-internal-unit data against internal-unit templates, verified self-consistent. Fix
-the comment whenever (a)/(b) are addressed.
+internal-unit data against internal-unit templates, verified self-consistent.
+**Reworded (owner request), toolkit `b58f84f1`** — the comment now states the
+correct premise (mm = 1, cm = 10 in WCP and WCT alike) and points at the §7.8
+SSM fix as the failure mode the wrong premise obscured. Comment-only commit, no
+binary change.
 
 ### 7.2 Detector-frame residual — the STM `dist_to_anode` uncontained fallback (**FIXED §7.8, toolkit `2ebb0177`, under `anode_dist_fix`**)
 
