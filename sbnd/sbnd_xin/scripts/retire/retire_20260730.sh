@@ -16,6 +16,17 @@ REC=$BASE/archive/records
 TIERS=${1:-1}
 CONFIRM=${CONFIRM:-no}
 
+# A running scan viewer pins its tag and its --prev baselines on the command
+# line; deleting one of those blanks the live scan.  The check that mattered on
+# 2026-07-30 (nothing running) is a point-in-time fact, so re-do it here.
+viewers=$(pgrep -a -f 'bokeh serve' 2>/dev/null)
+if [ -n "$viewers" ]; then
+    echo "!! a Bokeh viewer is running -- its tags must not be deleted:"
+    echo "$viewers" | sed 's/^/     /'
+    echo "!! stop it (or confirm none of its tags are in the list) before CONFIRM=yes"
+    [ "${CONFIRM:-no}" = yes ] && { echo "refusing to delete while a viewer is up"; exit 2; }
+fi
+
 list=""
 for t in ${TIERS//,/ }; do
     f=$BASE/scripts/retire/tier$t.txt

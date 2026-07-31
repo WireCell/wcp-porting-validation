@@ -96,12 +96,25 @@ from these arms comes from `nusel-evt*.tsv`, the run logs or `tracking-stm.root`
 `d66_proton_sweep.py`, `p54_ab_report.py`, `mabc_step_totals.py`,
 `stmon_stats.py` read only those.
 
-**Lost on removal**: pctree-level re-analysis and Bee display —
-`stm_fv_census.py`, `unmerge_crosser_audit.py`, `stm_main_connectivity.py`,
-`nusel_extract.py --archives` and the scan viewer need `pctree-pr-evt*.tar.gz` /
-`mabc-pr.zip`. Combined with "these arms are not reproducible" above, removal is
-permanent: the doc's stated numbers, the tsv/logs and the labels become the only
-surviving record.
+**Lost on removal**, precisely — the loss depends on whether the arm re-ran the
+Q/L stage or shared it:
+
+- **91 of the 134 arms symlink their `ql_evt*` into `work-mcp1kall-d59k` or
+  `work-mcp1000`** (every `stmcamp` and `d60` arm). For those, the Q/L-side
+  products — `mabc-all-apa.zip`, the per-face Bee zips, the Q/L pctrees,
+  `opflash_apa*.tar.gz`, `calib-evt*.json` — **survive in the kept hub**. What
+  goes is only the PR side: `nusel_evt*/pctree-pr-evt*.tar.gz` and
+  `nusel_evt*/mabc-pr.zip`.
+- **43 arms own their `ql_evt*`** (the 10-event `mcp10`/`mcp1000`/`mcp1000b`
+  `d52*`/`d53*`/`d55*` arms plus `trace51`, `m66*sb`, `d55pv` — 371 Q/L Bee
+  zips). Those re-ran clustering, so their Q/L products are unique and go too.
+
+So after removal `stm_fv_census.py`, `unmerge_crosser_audit.py`,
+`stm_main_connectivity.py` and `nusel_extract.py`'s archive mode cannot be
+re-run against any removed arm, and the scan viewer cannot display one.
+Combined with "these arms are not reproducible" above, removal is permanent:
+the doc's stated numbers, the tsv/logs/`tracking-stm.root` and the labels become
+the only surviving record.
 
 ### SP and light data are untouched
 
@@ -198,7 +211,7 @@ curated once (2026-07-25) with the whole-directory convention.
 LIVE / CURRENT tables are superseded by the KEEP and TIER tables above; the
 `archive/` and RETIRED tables remain current.*
 
-## BASE — 3 dirs, 10026 MB (top level)
+## BASE — 3 dirs, 10026 MB (as of 2026-07-25; still current, see KEEP above)
 
 **base input** — the imaging / PR products every tagged arm links into. Never delete: regenerating `work-mcp1000` alone is a 2000-event imaging run.
 
@@ -208,7 +221,13 @@ LIVE / CURRENT tables are superseded by the KEEP and TIER tables above; the
 | `work-mcp10` | 63 | 96M | — |
 | `work-mcp1000` | 2000 | 7136M | — |
 
-## LIVE — 7 dirs, 8.5 GB (top level)
+## LIVE — 7 dirs, 8.5 GB (as of 2026-07-25 — SUPERSEDED, retained for the "referenced by" columns)
+
+> Currency warning: this table's "live" claims are from 2026-07-25. The port-5011
+> viewer was not running on 2026-07-30, and most arms listed here (`d56bw`,
+> `d66*`, `d60*`, `d49son`, `d52ron`) are in TIER 1/2 of the retirement round
+> above. Use the KEEP / TIER tables for what is current; use this table only for
+> the per-dir reference lists.
 
 **wired into a running viewer** — the port-5011 `nusel_scan_viewer.py` command line names these as its current tag or as a `--prev` baseline. Deleting or moving one blanks the live scan.
 
@@ -236,7 +255,10 @@ scan; they are listed under CURRENT below.
 | `work-mcp1000b-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py` |
 | `work-mcp1000b-d52ron` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
 
-## CURRENT — 52 dirs, 2109 MB (top level)
+## CURRENT — 52 dirs, 2109 MB (as of 2026-07-25 — SUPERSEDED, retained for the "referenced by" columns)
+
+> Currency warning: every arm in this table is in TIER 1 of the retirement round
+> above except the `work-nuecc48-*` roots at the end, which are KEEP.
 
 the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster_id`), plus the `d55b`/`d55t` arms of doc 52 §13, the doc-54 perf A/B arms and the doc-56 beam-window-gate arms (`p56off` knob-off gate, `d56bw` = the new production default, served on :5011).
 
