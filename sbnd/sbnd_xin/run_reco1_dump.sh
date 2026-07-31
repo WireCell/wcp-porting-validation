@@ -2,13 +2,17 @@
 # Extract an SBND reco1 art/LArSoft ROOT file into a standalone-chain
 # sample dir -- directly with the toolkit, no LArSoft.  Run with -h for help.
 #
-# Usage: ./run_reco1_dump.sh [-caf none|product|auto|override:<ns>] [-t tag] [reco1.root]
+# Usage: ./run_reco1_dump.sh [-caf none|product|auto|override:<ns>] [-mc] [-t tag] [reco1.root]
 #   reco1.root  input art file; default: the single .root under input_files_reco1/
 #   -caf        frame_apply_at_caf mode for the opflash tensor-set metadata
 #               (default auto = ported FrameShift derivation, ~0.26 us low;
 #                product = authoritative FrameShiftInfo::fFrameApplyAtCaf,
 #                needs a *_frameshift.root input; none = omit key;
 #                override:<ns> = fixed value)
+#   -mc         read the SBND *MC* reco1 product names (simtpc2d/dnnsp under the
+#               DetSim process) instead of the data ones (sptpc2d, Reco1).  MC
+#               files carry no PTB/TDC/DAQ-header products, so use with -caf none
+#               (the default).  See docs/67_round2-patrec-10evt.md.
 #   -t          output tag; sample dir becomes input_files_reco1/extracted-<tag>/
 #               (default: input file basename up to the first '-')
 #
@@ -31,12 +35,21 @@ CAF_MODE=auto
 CAF_OVERRIDE=""
 TAG=""
 INPUT=""
+# Empty => the jsonnet omits the keys => C++ defaults = the data product names.
+WIRE_PRODUCT=""
+BADMASK_PRODUCT=""
+SUMMARY_PRODUCT=""
 
 usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) usage; exit 0 ;;
+        -mc|--mc)
+            WIRE_PRODUCT='recob::Wires_simtpc2d_dnnsp_DetSim.'
+            BADMASK_PRODUCT='ints_simtpc2d_badmasks_DetSim.'
+            SUMMARY_PRODUCT='doubles_simtpc2d_wienersummary_DetSim.'
+            shift ;;
         -caf) CAF_MODE="$2"; shift 2 ;;
         -caf*) CAF_MODE="${1#-caf}"; shift ;;
         -t) TAG="$2"; shift 2 ;;
@@ -89,6 +102,9 @@ wire-cell \
     --tla-str "output_dir=${OUTDIR}" \
     --tla-str "caf_offset_mode=${CAF_MODE}" \
     --tla-str "caf_offset_override=${CAF_OVERRIDE:-0}" \
+    --tla-str "wire_product=${WIRE_PRODUCT}" \
+    --tla-str "badmask_product=${BADMASK_PRODUCT}" \
+    --tla-str "summary_product=${SUMMARY_PRODUCT}" \
     -c wct-reco1-dump.jsonnet
 
 echo

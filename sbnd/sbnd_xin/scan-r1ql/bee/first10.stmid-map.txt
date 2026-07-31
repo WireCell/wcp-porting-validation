@@ -1,0 +1,10 @@
+# stm_fit-global cluster_id remap for scan-r1ql/bee/first10.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+10	1	17	14	flash-matched	14:779
+13	2	10	12	flash-matched	12:561
+14	3	4	5	flash-matched	5:1276
+16	4	21	25	flash-matched	25:978, 7:112
+21	5	2	3	flash-matched	3:2601
+39	6	6	5	flash-matched	5:1013
+5	8	15	12	flash-matched	12:2415
+12	9	4	5	flash-matched	5:2461

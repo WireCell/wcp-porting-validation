@@ -1,0 +1,19 @@
+yuhw Bee set 169bdddf-0f71-44ab-aab1-47a896316040: neutrino vertices from its 'mc' layer,
+matched against every beam-origin sim::MCTrack vertex (E>50 MeV) in the 104 events of
+mc_paths-v10_14_02_03-100files-wcgpu1.lst (4896 points).  Identical events would match <0.01 cm.
+
+his evt 0 vtx (17.08, -139.91, 16.25) -> nearest file6 ent4 sr=5 evt=22 (74.0,-194.9,-3.7)  dist=81.7 cm
+his evt 1 vtx (-125.29, -528.35, -624.13) -> nearest file7 ent2 sr=51 evt=7 (-162.1,-511.2,-614.6)  dist=41.7 cm
+his evt 2 vtx (48.1, 56.52, 471.06) -> nearest file10 ent1 sr=52 evt=6 (94.2,50.4,448.4)  dist=51.7 cm
+his evt 2 vtx (-25.73, 131.67, -421.13) -> nearest file10 ent2 sr=52 evt=7 (-33.2,175.2,-480.1)  dist=73.7 cm
+his evt 3 vtx (-39.83, 72.08, 450.64) -> nearest file3 ent5 sr=0 evt=34 (-23.1,67.7,454.5)  dist=17.7 cm
+his evt 4 vtx (13.25, -161.67, 495.69) -> nearest file6 ent1 sr=5 evt=5 (17.9,-130.0,544.2)  dist=58.1 cm
+his evt 4 vtx (31.44, 185.09, 451.4) -> nearest file6 ent0 sr=5 evt=4 (92.8,223.6,469.6)  dist=74.7 cm
+his evt 5 vtx (-51.19, -68.95, -365.31) -> nearest file2 ent5 sr=35 evt=46 (-54.7,-56.0,-366.4)  dist=13.5 cm
+his evt 5 vtx (383.7, 333.11, -323.15) -> nearest file3 ent8 sr=0 evt=38 (355.6,438.9,-290.6)  dist=114.2 cm
+his evt 6 vtx (-147.75, 114.0, 495.88) -> nearest file1 ent0 sr=74 evt=3 (-170.1,141.2,506.3)  dist=36.7 cm
+his evt 7 vtx (616.11, 172.48, -1224.09) -> nearest file7 ent5 sr=51 evt=19 (411.8,207.9,-930.1)  dist=359.8 cm
+his evt 7 vtx (-403.89, 416.17, -449.53) -> nearest file3 ent2 sr=0 evt=25 (-348.4,505.4,-405.5)  dist=113.9 cm
+his evt 7 vtx (225.43, -136.96, 175.82) -> nearest file9 ent8 sr=40 evt=34 (270.6,-105.2,199.0)  dist=59.9 cm
+his evt 8 vtx (9.21, -35.67, 333.07) -> nearest file8 ent6 sr=70 evt=19 (-35.3,-22.4,377.8)  dist=64.5 cm
+his evt 9 vtx (-246.89, 343.4, -377.08) -> nearest file8 ent5 sr=70 evt=18 (-233.3,260.8,-396.4)  dist=85.9 cm

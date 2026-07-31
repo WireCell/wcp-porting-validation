@@ -67,9 +67,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             experiment window, same as SBND Q/L beam_pref).  Since doc 56 this
             window also GATES which bundles the taggers evaluate at all
             (beam_window_only, default on) -- not just TGM's beam protection.
-  -dnn      -nu plus the SCN DL vertex with the uBooNE-trained weights
-            (UNTUNED on SBND -- functional demo only; needs sparseconvnet
-            importable in the job python, see the md)
+  -dnn      -nu plus the SCN DL vertex (now the DEFAULT for any pipeline that
+            includes tagger_check_neutrino, so this is just the -nu shorthand
+            with DL spelled out).  Needs sparseconvnet importable in the job
+            python; the libpython preload is handled here.  Weights are still
+            uBooNE-TRAINED (SBND retraining = docs/pr/2 gap G3).
+  -no-dnn   geometric vertex instead of the DL one (SBND_DL_VTX=0).  This is the
+            arm every identity gate must use -- the DL vertex is never a gate arm.
 
 Requires: run_ql_evt.sh <mode> -save-pctree <idx> first
           (work/ql_evt<ID>/pctree-evt<ID>.tar.gz).
@@ -84,7 +88,15 @@ PIPELINE=""
 STM_FIT="${SBND_STM_FIT:-0}"
 NU=0
 BEAM_WINDOW=""
-DL_WEIGHTS=""
+# SCN (DL) neutrino vertex.  DEFAULT ON since 2026-07-30 (docs/pr/4): the
+# geometric vertex put evt 18253/1/172230's vertex at the far end of a proton
+# track; the DL vertex moved it 9.7 cm onto the true interaction point.  The
+# weights stay uBooNE-TRAINED (docs/pr/2 gap G3 open).  Only meaningful with
+# tagger_check_neutrino in the pipeline -- inert otherwise.
+# Turn off with -no-dnn (or SBND_DL_VTX=0) for the geometric-vertex arm, which
+# is also what every identity gate must use (CLAUDE.md M4).
+DL_WEIGHTS_DEFAULT="uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth"
+DL_WEIGHTS="$([ "${SBND_DL_VTX:-1}" = 0 ] && echo "" || echo "$DL_WEIGHTS_DEFAULT")"
 # Per-mode beam-window defaults in us on cluster_t0 (= matched flash time,
 # trigger-offset-corrected -- NOT the raw opflash time convention of
 # flash_t0_lan_reco2.py).  Originally guessed from the 7 saved pctrees
@@ -111,7 +123,8 @@ while [ $# -gt 0 ]; do
         -tgm|--tgm) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm"; shift ;;
         -nu|--nu) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"; shift ;;
         -dnn|--dnn) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"
-                    DL_WEIGHTS="uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth"; shift ;;
+                    DL_WEIGHTS="$DL_WEIGHTS_DEFAULT"; shift ;;
+        -no-dnn|--no-dnn) DL_WEIGHTS=""; shift ;;
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
@@ -177,7 +190,21 @@ process_event() {
 
     echo "[evt $EVT_ID] PR (pipeline=$PIPELINE_CODE) $PCT -> $PRDIR/mabc-pr.zip"
     rm -f "$LOG"
-    [ -n "$DL_WEIGHTS" ] && export LD_PRELOAD="$PYLIB"
+    # Preload only when the DL vertex can actually run, i.e. DL weights are set
+    # AND tagger_check_neutrino is in this pipeline.  The -stm / -tgm / bare -p
+    # arms must keep the exact process environment they had before the doc-pr/4
+    # default flip -- they are A/B comparison arms.
+    # if-form, not `[ -n .. ] && ..`: under `set -e` the && list would return 1
+    # and abort the run whenever the condition is false.
+    case "$PIPELINE_CODE" in
+        *"'tagger_check_neutrino'"*) NEED_DL_PRELOAD=1 ;;
+        *) NEED_DL_PRELOAD=0 ;;
+    esac
+    if [ -n "$DL_WEIGHTS" ] && [ "$NEED_DL_PRELOAD" = 1 ]; then
+        export LD_PRELOAD="$PYLIB"
+    else
+        unset LD_PRELOAD
+    fi
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
         --tla-str  "input=$PCT" \
@@ -214,6 +241,13 @@ process_event() {
         --tla-code "tgm_fv_x_margin=2" \
         --tla-code "tgm_fv_y_margin=2.5" \
         -c "$JSONNET"
+    # A failed SCN import is only a WARN and the code quietly reverts to the
+    # geometric vertex -- an rc=0 run with different physics.  Never let that
+    # pass unnoticed (docs/pr/4).
+    if [ "$NEED_DL_PRELOAD" = 1 ] && [ -n "$DL_WEIGHTS" ] && grep -q "DL vertex failed" "$LOG" 2>/dev/null; then
+        echo "[evt $EVT_ID] *** WARNING: DL vertex requested but FAILED; this run used the" >&2
+        echo "                geometric vertex.  See: grep 'DL vertex failed' $LOG" >&2
+    fi
     echo "[evt $EVT_ID] done -> $PRDIR/mabc-pr.zip"
 }
 

@@ -1,0 +1,4 @@
+# stm_fit-global cluster_id remap for scan-r2patrec/bee/first10.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+23	6	13	13	flash-matched	13:2399
+34	9	16	13	flash-matched	13:3268, 9:1615
