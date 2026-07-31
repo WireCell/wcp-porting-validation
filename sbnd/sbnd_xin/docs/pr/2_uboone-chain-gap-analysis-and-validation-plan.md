@@ -51,7 +51,10 @@ but the pass found **two ×10 unit divergences from the prototype inside the SSM
 tagger** (port-fidelity bugs that affect uBooNE parity too, §7.1), one remaining
 uBooNE-frame expression (the STM `dist_to_anode` uncontained fallback, §7.2), a
 short list of absolute-charge literals on the uBooNE gain scale (§7.3), and a few
-config-coverage holes (§7.4). Report-only: **no code was changed in this pass.**
+config-coverage holes (§7.4). The audit pass itself changed no code; **the same-day
+fix round (§7.8, owner: "fix 1, 2, 3 … 4 should be fixed with proper
+configurations") then executed all four** — the SSM fix ships without a knob
+(owner call: it is a bug), toolkit `1628328e` + `2ebb0177`.
 
 **Update 2026-07-30 (fourth)** — the two **§2e(iv) detector-extent** rows are **closed**
 and are the first worklist item whose SBND value is a real translation rather than a
@@ -1171,11 +1174,13 @@ imaging: do not archive `work/` pieces without `relink_tags.py`.
 - Beam-window calibration on a larger sample; multi-bundle "longest wins" rule.
 - MC-with-truth route B + the `recob::OpFlash` converter (§3.4).
 - The `do_tracking()` `$`-scoping oddity (§2d note) — dead code, flag to owner.
-- **The §7 second-pass audit findings (2026-07-30)** — in priority order: the two SSM
-  ×10 unit divergences (§7.1, owner decision needed: they are prototype-parity bugs,
-  so any fix changes uBooNE outputs), the STM `dist_to_anode` uncontained fallback
-  (§7.2), the three absolute-charge floors + the kink-gate literal (§7.3), and the
-  `dl_vtx_cut` jsonnet threading (§7.4).
+- ~~The §7 second-pass audit findings (2026-07-30)~~ — **all four fixed the same
+  day (§7.8, toolkit `1628328e` + `2ebb0177`)**: SSM ×10 unit divergences (no
+  knob, owner call), STM `dist_to_anode` fallback (under `anode_dist_fix`),
+  absolute-charge floors (on `mip_dqdx_median` × 1 cm), `dl_vtx_cut` threading.
+  Remaining from §7: the §7.5 transfers-acceptably bucket (parked) and the
+  §7.4 still-uBooNE values (`proton_dir_*`, `kine_plane_asym_switch`, the
+  `dl_vtx_cut` *value*).
 
 ## 7. Residual hard-code audit — second pass (owner request, 2026-07-30)
 
@@ -1211,7 +1216,7 @@ grep -n '43e3/units::cm' prototype_base/pid/src/NeutrinoID_ssm_tagger.h
   cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet | grep -nE 'dl_vtx_cut|proton_dir'
 ```
 
-### 7.1 Port-fidelity findings — two ×10 unit divergences in the SSM tagger (NEW)
+### 7.1 Port-fidelity findings — two ×10 unit divergences in the SSM tagger (NEW; **FIXED §7.8, toolkit `1628328e`, no knob**)
 
 These are **not** uBooNE-vs-SBND tuning items: the toolkit diverges from the
 prototype, so they affect **uBooNE parity as well**. They went undetected because the
@@ -1268,7 +1273,7 @@ not 1 — but its *conclusion* is accidentally right: the main PID path compares
 internal-unit data against internal-unit templates, verified self-consistent. Fix
 the comment whenever (a)/(b) are addressed.
 
-### 7.2 Detector-frame residual — the STM `dist_to_anode` uncontained fallback
+### 7.2 Detector-frame residual — the STM `dist_to_anode` uncontained fallback (**FIXED §7.8, toolkit `2ebb0177`, under `anode_dist_fix`**)
 
 `TaggerCheckSTM.cxx:2903`: when `contained_by` fails (`apa < 0`), `dist_to_anode`
 returns `std::abs(pt.x())` — correct only where the anode sits at x = 0, i.e.
@@ -1283,7 +1288,7 @@ can pass the `flag_TGM_anode` gate it should fail; a genuinely anode-clipped one
 `anode_dist_fix` (nearest volume's anode-x, or a large sentinel). The 2/6 cm
 tolerances themselves are distance-class — transfer per the ground rule.
 
-### 7.3 Absolute-charge literals (uBooNE gain scale; faithful ports; tuning debt)
+### 7.3 Absolute-charge literals (uBooNE gain scale; faithful ports; **FIXED §7.8, toolkit `2ebb0177`, expressed on `mip_dqdx_median` × 1 cm**)
 
 All verified against the prototype — these are **not** port bugs, they are
 uBooNE-tuned absolute electron counts that do not ride on `mip_dqdx_median`, so at
@@ -1301,11 +1306,11 @@ Latent-only (dead defaults, live traps for the next caller):
 (verified), matching the family recorded in pr/10 §8. `SteinerGrapher.cxx:86-88`
 (`Q0=10000`, `charge_threshold=4000` e) stays on the §2e(iv) table.
 
-### 7.4 Config-coverage holes (knob exists in C++, SBND inherits uBooNE)
+### 7.4 Config-coverage holes (knob exists in C++, SBND inherits uBooNE; **`dl_vtx_cut` threading CLOSED §7.8, toolkit `2ebb0177`**)
 
 | param | effective value | note |
 |---|---|---|
-| `dl_vtx_cut` | 2.5 cm (`TaggerCheckNeutrino.h:110`) | readable from raw config (`TaggerCheckNeutrino.cxx:163`) but **not threaded through the jsonnet builders** — zero hits in `cfg/`. Live now that the DL vertex is ON (pr/4); the value is coupled to the uBooNE-trained net, so it travels with G3, but the threading hole should close before any tuning |
+| `dl_vtx_cut` | 2.5 cm (`TaggerCheckNeutrino.h:110`) | readable from raw config (`TaggerCheckNeutrino.cxx:163`) but at audit time **not threaded through the jsonnet builders** — zero hits in `cfg/`. Live now that the DL vertex is ON (pr/4); the value is coupled to the uBooNE-trained net, so it travels with G3. **Threading CLOSED same day (§7.8, `2ebb0177`); the value is unchanged.** |
 | `proton_dir_score_max` / `proton_dir_asym_min` | 0.25 / 1.3 | live (`proton_dir_vote` ON, pr/8); flagged "pending the pr/8 §6 calibration" in `common/clus.jsonnet` — restated here so it stays visible |
 | `kine_plane_asym_switch` | 0.04 | the median/min fallback trigger; pairs with the `kine_plane_weights` family (§2e(vi)), same still-uBooNE status |
 | TGM `chord_support_radius`/`chord_max_gap`/`component_min_length`/`length_limit_frac` | 6 cm / 30 cm / 10 cm / 0.45 | unset by SBND (uBooNE defaults) — but the in-code comments record SBND MCP2025C validation, so low priority |
@@ -1358,12 +1363,91 @@ transfer less cleanly than ratio cuts (and are currently ×10 off anyway, §7.1a
 
 ### 7.7 Disposition
 
-Nothing in this pass was fixed (report-only round). Priority for the worklist, in
-order: **(1)** the two SSM unit divergences (§7.1 — owner decision on
-fix-with-knob vs accepted parity break; either way the fix is mechanical),
-**(2)** the `dist_to_anode` uncontained fallback (§7.2 — one lambda branch, natural
-home under `anode_dist_fix`), **(3)** the three absolute-charge floors + the kink
-gate (§7.3 — scale by `mip_dqdx_median` behind knobs), **(4)** the `dl_vtx_cut`
-jsonnet threading (§7.4 — plumbing only). The §7.5 bucket is deliberately parked
-per the owner's ground rule; the Track B/C scans are the instrument that would
-promote any of it.
+The audit pass itself was report-only. The owner then directed (same day): *"fix
+1, 2, 3. For 3 please express these in terms of MIP dQ/dx median with the 1 cm
+distance. 4 is OK but should be fixed with proper configurations"* — and, on the
+follow-up about item 1: *"if it is a bug, we should just fix it instead of put it
+behind a knob"*. §7.8 is the resulting fix round. The §7.5 bucket stays parked
+per the ground rule; the Track B/C scans are the instrument that would promote
+any of it.
+
+### 7.8 Fix round (owner-directed, 2026-07-30) — all four items executed
+
+**Status: DONE.** Toolkit `1628328e` (item 1) + `2ebb0177` (items 2–4).
+uBooNE selection outputs unchanged (ZIPS 35/35); the SSM **feature block** on
+uBooNE is deliberately NOT bit-identical — it is the bug being fixed.
+
+Repro:
+
+```bash
+# builds + tests
+./wcb build --notests -p && ./wcb install --notests -p   # freshness: libWireCellClus.so 2026-07-30 17:43
+./build/clus/wcdoctest-clus                              # 565/565
+# compiled-config identity vs pre-fix HEAD (worktree at 9cb6c860):
+#   uBooNE qlport/uboone-mabc.jsonnet        -> cmp rc=0 (255699 B)
+#   SBND wct-pr-perevt (PR-chain pipeline)   -> cmp rc=0
+#   knob-on: --tla-code dl_vtx_cut=30.0      -> key emitted
+# uBooNE gate (35 events):
+cd qlport/scripts && ./sweep_5384.sh sec7fix_ub 6 && ./ab_check.sh sec7fix_ub energyoff_ub
+# SBND before/after (per-event PR, production defaults, setarch -R, dl_weights=''):
+#   scratchpad ba_energy/{power,sec7fix}_{172230,235435,444187}
+```
+
+**Item 1 — SSM ×10 unit fix (`1628328e`), NO knob (owner call: it's a bug).**
+The four d(dQ/dx) sites now compute internal/internal
+(`fits[i].dQ/(fits[i].dx+1e-9)/m_mip_dqdx_median`, the `segment_median_dQ_dx`
+convention, = prototype `NeutrinoID_ssm_tagger.h:438,613` semantics), and
+`get_scores`/`get_scores_bp` feed internal-unit dQ/dx into `do_track_comp` while
+routing `m_mip_dqdx` as the template amplitude (its uBooNE default equals the old
+header default, so the only uBooNE-side change is the intended data-scale repair).
+Measured effect:
+
+| where | before | after |
+|---|---|---|
+| uBooNE 35-evt manifest | — | **ZIPS 35/35 identical**; `numu_score`/`nue_score` diffs **0/35**; `ssm_*` feature diffs 27/35 (= every event with an SSM candidate) |
+| SBND evt 172230 `ssm_max_dq_dx_fwd_3` | 15.18 | 1.518 (exactly ÷10) |
+| SBND evt 444187 `ssm_max_dq_dx_fwd_3` | 20.79 | 2.079 (exactly ÷10) |
+| SBND SSM PID scores (mu/p/e fwd) | 0.94/0.89/0.98 (everything "bad fit") | 0.32/0.26/0.57 (discriminating) |
+| `ssm_medium_dq_dx` | 1.288 | 1.288 (already-correct path untouched) |
+
+Gate-2 note: `ab_check` TAGGER shows 34/35 diff, but that gate is
+non-discriminating (§2e(i-b) A/A control: 33/35) — the per-branch comparison
+above is the real instrument. The uBooNE `numu/nue` scores are unaffected
+because those BDTs do not consume the `ssm_*` block; the SSM features feed the
+KDAR-type consumers only.
+
+**Item 2 — `dist_to_anode` uncontained fallback (`2ebb0177`), under
+`anode_dist_fix`.** With the knob ON the fallback returns the distance to the
+nearest anode plane across all faces (`m_dv->wpident_faces()` enumeration, int-
+keyed = deterministic); knob OFF keeps the uBooNE-frame `|x|` byte-identically.
+uBooNE (knob absent) is untouched; SBND (knob ON since docs/63 round 4a) now gets
+a correct anode distance for the endpoints-outside-FV population that the
+anode-clipped-TGM catch actually runs on.
+
+**Item 3 — absolute-charge floors on `mip_dqdx_median` × 1 cm (`2ebb0177`), no
+knob needed.** Per the owner's formulation, each literal is now a ratio of the
+MIP-median dQ/dx integrated over 1 cm:
+
+| site | expression | uBooNE (43000) | SBND (48000) |
+|---|---|---|---|
+| `PRSegmentFunctions.cxx` kink gate | `dQ_dx_threshold * 25/43` | 25000 e/cm (FP-exact) | 27907 e/cm |
+| `NeutrinoVertexFinder.cxx` vertex-candidate floor | `m_mip_dqdx_median * cm * 20/43` | 20000 e (FP-exact) | 22326 e |
+| `NeutrinoVertexFinder.cxx` refit floors | `… * 5/43` / `… * 8/43` | 5000 / 8000 e (FP-exact) | 5581 / 8930 e |
+
+The multiplication order (`median × cm × K / 43`) makes every uBooNE value
+FP-exact, proven by the compiled-config cmp plus the ZIPS 35/35 — on uBooNE this
+is a pure rewrite, on SBND the floors finally ride the measured charge scale.
+
+**Item 4 — `dl_vtx_cut` configuration path (`2ebb0177`).** Threaded through
+`common/clus.jsonnet` → `sbnd/clus.jsonnet` (clus_pr + pr) → `wct-pr-perevt`
+TLA, key-suppressed `null` default (C++ 25.0 mm unchanged, cmp-identical
+compile); `--tla-code dl_vtx_cut=30.0` emits the key. The *value* still travels
+with the uBooNE net (G3) — this closes the plumbing hole only.
+
+**SBND net effect (production defaults, 3 nuecc48 events):** all three
+`mabc-pr.zip` hashes move; `numu_score` −0.455→0.121 (172230), 0.426→−0.123
+(235435, no SSM candidate — the shift there is the item-3 floor rescale reaching
+the vertex refit), 0.213→0.889 (444187); `nue_score` stays at its saturation
+values. Scores are uBooNE-weighted and uncalibrated on SBND (G1), so these are
+recorded as shifts, not selection claims; the Track B/C scans remain the
+validation instrument.
