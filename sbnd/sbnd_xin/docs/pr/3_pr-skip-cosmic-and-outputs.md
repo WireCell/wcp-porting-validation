@@ -2,7 +2,9 @@
 
 Status: IMPLEMENTED; validation on evt 18253/1/172230 (nu candidate) + 444187
 (TGM-tagged in-beam, skip demo) recorded in §6.  Off-path proven byte-identical
-(§5).  Follow-up items in §7.
+(§5).  Follow-up items in §7.  **§8 (2026-08-01) extends the gate from per-main
+to per-bundle (`nu_skip_cosmic_bundle`, SBND default ON, NOT bit-identical) —
+read §8.5 before treating it as settled.**
 
 Companion docs: `pr/1_beam-window-cosmic-vs-nu-division.md` (nueCC48 sample),
 `pr/2_uboone-chain-gap-analysis-and-validation-plan.md` (gap analysis + V0-V10
@@ -282,3 +284,173 @@ same one the uBooNE chain used.  Converted files:
 - `real_cluster_id` in `track_fit` still uses `get_graph_index()` while
   `shower_track`/pf-tree use `seg->id()` — harmless display inconsistency,
   noted for a future parity pass (kept to limit this round's surface).
+
+## 8. nu_skip_cosmic_bundle — the cosmic verdict vetoes the whole bundle (2026-08-01)
+
+Status: IMPLEMENTED, **DEFAULT ON for SBND**, C++ default false.  Knob-off path
+gated byte-identical; knob-on is **NOT bit-identical** (that is the point) —
+4/31 mcp30 events and 3/48 nueCC48 events change, all listed below.  Two of
+those, evts 271851 and 10550, are the cases the owner should look at before
+this becomes the permanent operating point (§8.5).
+
+### 8.0 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+./wcb build --notests -p && ./wcb install --notests -p   # -> libWireCellClus.so md5 d00bb418
+./build/clus/wcdoctest-clus                               # 49 cases / 565 assertions
+
+# compiled-config proofs
+qlport/scripts/compile_ub_cfg.sh    $PWD/cfg /home/xqian/tmp/ub_new.json   # uBooNE: knob off
+sbnd_xin/compile_prjob_cfg.sh       $PWD/cfg /home/xqian/tmp/pr_new.json   # SBND:  knob on
+grep -c nu_skip_cosmic_bundle /home/xqian/tmp/pr_new.json                  # 1
+
+# knob-OFF arm: same driver against a cfg tree at HEAD (the knob absent)
+cp -a cfg /home/xqian/tmp/cfg_head
+git show HEAD:cfg/pgrapher/common/clus.jsonnet            > /home/xqian/tmp/cfg_head/pgrapher/common/clus.jsonnet
+git show HEAD:cfg/pgrapher/experiment/sbnd/clus.jsonnet   > /home/xqian/tmp/cfg_head/pgrapher/experiment/sbnd/clus.jsonnet
+cd sbnd_xin
+sed 's|^export WIRECELL_PATH=$TK/cfg:|export WIRECELL_PATH=/home/xqian/tmp/cfg_head:|' \
+    run_pr_chain_batch.sh > tmp_run_pr_chain_cfghead.sh && chmod +x tmp_run_pr_chain_cfghead.sh
+
+AB31="166870 279256 281808 282292 282541 283040 285366 285443 286177 288468 292450 292643 \
+293127 347085 350121 351507 389588 391172 393410 395610 399382 399910 400054 400856 404684 \
+409282 493485 58169 65788 72828 52195"
+PR_JOBS=6 ./tmp_run_pr_chain_cfghead.sh work-mcp1kall-d59k work-nscbase-ab31 data $AB31  # old binary
+PR_JOBS=6 ./tmp_run_pr_chain_cfghead.sh work-mcp1kall-d59k work-nscoff-ab31  data $AB31  # new binary, knob off
+PR_JOBS=6 ./run_pr_chain_batch.sh       work-mcp1kall-d59k work-nscon-ab31   data $AB31  # new binary, knob on
+PR_JOBS=6 ./tmp_run_pr_chain_cfghead.sh work-nuecc48-nuf   work-nscoff-nuecc48 data
+PR_JOBS=6 ./run_pr_chain_batch.sh       work-nuecc48-nuf   work-nscon-nuecc48  data
+# comparison = hash_archive.py over mabc-pr.zip + pctree tar.gz, plus T_tagger/T_kine rows
+```
+
+### 8.1 Why
+
+`nu_skip_cosmic` (§2) is **per-main**, and a flash bundle can hold more than one
+main.  SBND run 18255 evt 52195, bundle gid 6 (t0 +0.566 µs) — read from
+`work-mcp1kall-cbron1k/nusel_evt52195/pctree-pr-evt52195.tar.gz`:
+
+| ident | flags | npts | length | what it is |
+|---|---|---|---|---|
+| 13 | `main_cluster` | 4592 | 513.3 cm | cathode-crossing cosmic → **TGM=true** |
+| 23 | `associated_cluster` | 8123 | 399.7 cm | vertical through-going muon, **never evaluated** |
+| 5 | `main_cluster` | 5 | 1.3 cm | speck, **out of scope** so never evaluated |
+| 44–50 | `associated_cluster` | 9–36 | 1–4 cm | specks |
+
+The taggers iterate main-flagged, in-scope clusters only
+(`TaggerCheckTGM.cxx:243`, `require_in_scope`), so cluster 23 (associated) and
+cluster 5 (out of scope) carry no verdict at all.  `nu_skip_cosmic` skipped 13,
+then selected **5** — a 5-point shard — as the ν candidate, and its companion
+set (`matched_flash_gid == 6`) pulled in cluster 23.  Result: a full PR + track
+fit (2.58 s) whose Bee `track_fit-global` layer is 821 points tracing the 400 cm
+cosmic, on a bundle whose main was already TGM.
+
+Two structural asymmetries make this reachable and both survive this round:
+`TaggerCheckNeutrino`'s selection loop has **no scope filter** while the taggers
+do, and associated clusters are **never** tagged.  Also note
+`normalize_cluster_flags` stamps `flag_TGM = 0` on unevaluated clusters, so
+downstream (and Bee) cannot distinguish "evaluated, clean" from "never looked
+at".
+
+### 8.2 What the knob does
+
+`clus/src/TaggerCheckNeutrino.cxx`, beam-gate selection block: before selecting,
+collect the `matched_flash_gid` of every in-window main carrying a cosmic
+verdict (`flag_TGM || flag_STM || lm_flag > 0`) into a `std::set<int>`; any
+in-window main whose gid is in that set is skipped with an INFO line:
+
+```
+TaggerCheckNeutrino: in-window cluster 5 (t0 0.566 us, L 1.7 cm) shares flash
+bundle gid 6 with a cosmic-tagged main; skipping (nu_skip_cosmic_bundle)
+TaggerCheckNeutrino: no main cluster selected (16 mains, 2 in-window); skipping.
+```
+
+- Bundle identity is `matched_flash_gid` — the same definition the companion
+  loop 20 lines below already uses.  `gid < 0` never joins a veto set.
+- The set is empty unless `nu_skip_cosmic && nu_skip_cosmic_bundle`, so the
+  knob-off path cannot reach the new branch.
+- `int`-keyed, so no pointer-order iteration (CLAUDE.md determinism rule).
+- Knob `nu_skip_cosmic_bundle`, C++ default false, key-suppressed in
+  `cfg/pgrapher/common/clus.jsonnet`; SBND `clus_pr`/`pr` set it true.
+
+### 8.3 Gates
+
+Binaries: baseline `e72494c4` (HEAD 6a5450a0), fix `d00bb418`.  Both rebuilt
+from a clean stash/pop cycle and reproduced their md5 exactly.  `wcdoctest-clus`
+49/49 cases, 565/565 assertions on the fix binary.  Freshness proof: lib 13:26 >
+last source edit 13:24.
+
+**Compiled config.** uBooNE PR job (`compile_ub_cfg.sh`) byte-identical to HEAD
+(`cmp` PASS).  SBND PR job: exactly one key added, `nu_skip_cosmic_bundle: true`,
+nothing else changed (JSON diff over the whole job).
+
+**Knob-off runtime identity** — `work-nscbase-ab31` (old binary, HEAD cfg) vs
+`work-nscoff-ab31` (fix binary, HEAD cfg), 31 events:
+
+```
+mabc-pr.zip identical 31/31 | pctree identical 31/31 | T_tagger rows identical 31/31
+```
+
+**Knob-on effect** — `work-nscoff-ab31` vs `work-nscon-ab31` (mcp30 + 52195):
+
+| | events | changed |
+|---|---|---|
+| mabc-pr.zip | 31 | 4 |
+| pctree | 31 | 2 |
+| T_tagger rows | 31 | 4 |
+
+Changed: **52195** (PR now skipped entirely — the target case), **72828**,
+**288468** (PR skipped), **409282** (candidate lost, sentinel row).  PR ran on
+18/31 events before, 15/31 after.  All four had `cosmic_flag = 1` before.
+
+**nueCC48** — `work-nscoff-nuecc48` vs `work-nscon-nuecc48`, 48 events: mabc
+46/48, pctree 46/48, T_tagger 45/48.  Changed: **271851** (PR skipped),
+**10550** (bundle vetoed, a different in-window bundle's 1.7 cm main selected
+instead), and **422851**, which is *not* an effect of this knob: its
+`mabc-pr.zip` and pctree are byte-identical across arms and only
+`kine_reco_Enu` moves 1455.9769 → 1455.9768, the documented ±0.0001 MeV FP
+flicker on this event (`clus/docs/audits/pr11-latent-pattern-audit.md`).
+
+### 8.4 Cost
+
+31-event mcp30 arm: 266 s → 256 s total wall (8.6 → 8.3 s/event).  The saving is
+small because the vetoed bundles were mostly cheap; evt 52195 alone drops 2.58 s
+of `TaggerCheckNeutrino`.
+
+### 8.5 What the owner should look at
+
+The rule does what it says, and on evt 52195 it is unambiguously right.  On two
+nueCC48 events it removes a candidate that was **not** obviously junk:
+
+- **evt 271851**, bundle gid 2 (t0 0.764 µs): main 24 = 253.9 cm, TGM-tagged;
+  main 7 = 13.0 cm **with 26 associated clusters** — that is the shape of a
+  contained interaction sharing a flash with a through-going cosmic.  Before:
+  PR ran on cluster 7.  After: no PR at all.
+- **evt 10550**, bundle gid 1000002 (t0 1.193 µs): main 11 = 380.0 cm TGM;
+  main 7 = 18.5 cm with 28 associated.  After the veto the selection falls
+  through to a *different* in-beam bundle's 1.7 cm main (t0 1.209 µs, 0
+  associated) — PR runs, but on a shard.
+
+Both are the price of the rule: a beam-coincident cosmic and a real neutrino can
+share one flash bundle.  If that trade is not wanted, the natural refinements
+(none implemented) are to veto only when the surviving main is below a
+size/length threshold or has no associated clusters, or to fix the two
+asymmetries in §8.1 instead (give `TaggerCheckNeutrino` the taggers' scope
+filter, and/or evaluate associated clusters).
+
+### 8.6 Pre-existing, not fixed here
+
+When `TaggerCheckNeutrino` takes the "no main cluster selected" exit, the Bee PR
+layers are **not** empty: `track_fit-global`, `shower_track-global` and
+`vertices-global` are each written with ~the full clustering point set (evt
+52195 knob-on: 30127 points each vs 30102 in `clustering-global`).  This is not
+new — 12/31 events in the *baseline* arm already skip PR and show
+`track_fit ≈ clustering` file sizes — but this knob makes the skip path more
+common, so the artefact will be more visible in Bee.  Reported, not fixed
+(CLAUDE.md: no unrelated fixes in the same change).
+
+### 8.7 Labels
+
+`work-nscbase-ab31`, `work-nscoff-ab31`, `work-nscon-ab31` (mcp30 + 52195, data,
+ql root `work-mcp1kall-d59k`); `work-nscoff-nuecc48`, `work-nscon-nuecc48` (ql
+root `work-nuecc48-nuf`, data); `work-nscrep-422851` (single-event repeat).
