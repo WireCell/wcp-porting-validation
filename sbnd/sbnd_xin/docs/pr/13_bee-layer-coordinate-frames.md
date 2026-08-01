@@ -75,6 +75,26 @@ jsonnet keeps lockstep through `common_corr_coords(pos_offset_on)`
 corrected coordinates do not exist yet. That, not a choice about display, is why the
 layer is raw.
 
+### The Bee JSON keys are always `x`/`y`/`z` — they do not tell you the frame
+
+Nothing in a Bee point file records which frame it is in. Every layer writes the three
+keys `"x"`, `"y"`, `"z"` — that is Bee's schema. The `coords` list in
+`bee_points_sets` selects *which point-cloud arrays are written into those keys*:
+
+| layer | `coords` in the config | arrays actually read | JSON keys |
+|---|---|---|---|
+| `img-global` | `['x','y','z']` | `x`, `y`, `z` | `x`,`y`,`z` |
+| `clustering-global` | `common_corr_coords(pos_offset_on)` | **`x_t0cor`, `y_cor`, `z_cor`** | `x`,`y`,`z` |
+
+So `clustering-global` is **corrected**, despite looking byte-for-byte structurally
+identical to `img-global` and despite its keys being named `x/y/z`. The only way to tell
+the two frames apart from the files alone is to compare them point by point — §2B.
+
+**On MC this is weaker.** `common_corr_coords` is a function of `pos_offset_on`
+(`clus.jsonnet:73-74`), which is `reality == 'data'`. With `reality='sim'` it degrades to
+`['x_t0cor', 'y', 'z']`: `clustering-global` is still T0-corrected in x, but y and z are
+raw, so only the drift component separates it from `img-global`.
+
 ### A trap worth writing down
 
 The three PR sets carry `coords: ['x','y','z']` in the jsonnet with the comment *"PRGraph
@@ -206,18 +226,34 @@ switch-scope visitor dumps the full cloud right after the correction is applied 
 before any merging:
 
 ```jsonnet
-{ name: 'img_cor', visitor: 'ClusteringSwitchScope:all', grouping: 'live',
+{ name: 'img_cor', visitor: 'ClusteringSwitchScope:pr', grouping: 'live',
   algorithm: 'img_cor', pcname: '3d',
   coords: common_corr_coords(pos_offset_on), filter: 0, individual: false }
 ```
 
+`:pr` puts the layer in the PR zip next to the PR layers (`clus_pr` builds its
+`cm_old` with `prefix='pr'`, `clus.jsonnet:806-807`); use `ClusteringSwitchScope:all`
+instead to put it in the Q/L zip next to `img-global`.
+
+**What will not work: changing the existing `img` set's `coords`.** `img` is dumped
+pre-pipeline, where `y_cor`/`z_cor` do not exist, and the generic fill path
+dereferences the array pointer without a null check
+(`spc.get().get(coords[0])->elements<double>()`,
+`MultiAlgBlobClustering.cxx` `fill_bee_points_from_cluster`) — so it crashes rather
+than silently no-oping. Making `img` corrected means *moving its dump point*, which is
+this option under another name.
+
 Feasibility checked, not yet run: sets carrying a `visitor` are dispatched at
-`MultiAlgBlobClustering.cxx:2452-2476`, and because no PR graph exists in the Q/L job the
-`else` branch is taken — `fill_bee_points` honours `config.coords`. Guarded by the same
-key-suppression idiom the file already uses, the compiled config is byte-identical with
-the knob off. Open items: confirm the visitor string is the component `type:name`
-(`ClusteringSwitchScope:all`, `cfg/pgrapher/common/clus.jsonnet:986-992`, prefix `all`),
-and that the bee3 viewer accepts the new algorithm name.
+`MultiAlgBlobClustering.cxx:2452-2476`, where the `else` branch — `fill_bee_points`,
+which honours `config.coords` — is taken whenever the grouping holds no PR graph. That
+is true in the Q/L job throughout, and true in the PR job **at switch-scope time**,
+because `switch_scope` sits at the head of the PR pipeline, before
+`tagger_check_neutrino` builds the graph. Either placement therefore works. Guarded by
+the same key-suppression idiom the file already uses, the compiled config is
+byte-identical with the knob off. Open items: confirm the visitor string is the
+component `type:name` (`ClusteringSwitchScope:` + prefix, `pr` or `all`;
+`cfg/pgrapher/common/clus.jsonnet:986-992`), and that the bee3 viewer accepts the new
+algorithm name.
 
 **Option 2 — correct the display at merge time in `make_pr_bee.py`.** The transverse part
 is a per-TPC constant, invertible offline from the sign of x; the drift part can be
