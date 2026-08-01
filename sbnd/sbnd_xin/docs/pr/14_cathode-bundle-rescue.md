@@ -1,8 +1,9 @@
 # Doc pr/14 — Cathode bundle rescue: reuniting cross-bundle cathode crossers split by the flash-reco absorbing window
 
-**Status: IMPLEMENTED (toolkit `8d6de401`, default OFF) + DEMONSTRATED 8/8 (§7).**
-The knob-off byte-identical gates and the full-1k no-regression sweep are the
-remaining steps and are appended when done.
+**Status: IMPLEMENTED (toolkit `8d6de401`) + DEMONSTRATED 8/8 (§7) + VALIDATED
+(§5, §7.4) + SBND DEFAULT ON (§9, owner decision 2026-08-01).**
+Knob-off byte-identical gates (§5.1), full-1k+nueCC48 no-regression sweep and
+determinism (§7.4) are complete; §9 records the default flip.
 
 Owner request (2026-08-01): implement an **isolated, removable** post-QLMatching
 patch that fixes the doc pr/12 §6 failure mode — a cathode-crossing track whose two
@@ -429,3 +430,29 @@ the identical QL zip hash for 56463 (`d4467b1f…`) in separate batch runs.
 None — this is a new algorithm, not a WCP port. There is no prototype counterpart to
 cite; the failure mode itself is documented in doc pr/12 §6 and the flash-reco
 absorbing-window defect is the owner's diagnosis from the SBND light reconstruction.
+
+## 9. SBND default flipped ON (owner decision, 2026-08-01)
+
+After the §5/§7.4 validation the owner directed the SBND default to ON.
+Toolkit commit flips three jsonnet defaults to `true` (SBND files only):
+`sbnd/clus.jsonnet` `clus_all_apa(... cathode_rescue_on=true)` and the
+`all_apa()` wrapper, and `sbnd/wct-clus-matching-perevt.jsonnet` TLA
+`cathode_rescue = true`.  The C++ component and `common/clus.jsonnet` factory
+are untouched; no other detector references the knob, so PDHD/PDVD/uBooNE
+configs are structurally unchanged.
+
+Proofs (wcsonnet on `wct-clus-matching-perevt.jsonnet`, full TLA set):
+- new default compile `cmp`-identical to the pre-flip `cathode_rescue=true`
+  compile ⇒ the ON path is byte-for-byte the §7.4-validated configuration;
+- new compile with `cathode_rescue=false` `cmp`-identical to the pre-flip
+  default ⇒ the legacy escape hatch is byte-identical to before the knob.
+- End-to-end smoke (no env flag): evt 352365 fires and its pctree hash equals
+  the §7.4 ON arm (`94930f51…`); with `SBND_CATHODE_RESCUE=0` it does not
+  fire and equals the OFF arm (`eb12d81a…`).
+
+**This is a deliberate SBND behavior change** — 9 of 1048 validated events
+change output (§7.4); everything else is byte-identical.  Runner:
+`run_ql_evt.sh` now treats unset as "inherit production default (ON)",
+`SBND_CATHODE_RESCUE=0` forces the legacy path, `=1` forces on.  Retirement
+instructions (§4.5) unchanged: when the upstream flash reco is fixed, delete
+the pipeline entry + knob and the component file.

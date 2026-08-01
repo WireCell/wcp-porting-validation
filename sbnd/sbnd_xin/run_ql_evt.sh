@@ -333,12 +333,17 @@ process_event() {
     # Optional persistent post-QL point-cloud tree (PR-job intermediate file).
     local SAVEPCT_TLA=()
     [ -n "$SAVEPCT" ] && SAVEPCT_TLA=(--tla-str "save_tensors=$QLDIR/pctree-evt${EVT_ID}.tar.gz")
-    # Optional cathode BUNDLE rescue (doc pr/14): joins a cathode crosser whose
-    # halves sit in different flash bundles (flash-reco absorbing-window defect).
-    # Off by default => the TLA is omitted => compiled config byte-identical.
-    # Env: SBND_CATHODE_RESCUE=1.
+    # Cathode BUNDLE rescue (doc pr/14): joins a cathode crosser whose halves
+    # sit in different flash bundles (flash-reco absorbing-window defect).
+    # SBND production default is ON since pr/14 §7.4 validation (owner decision
+    # 2026-08-01); unset inherits that config default.  SBND_CATHODE_RESCUE=0
+    # forces the pre-pr/14 legacy path (byte-identical to before the knob),
+    # =1 forces on explicitly.
     local CRESCUE_TLA=()
-    [ "${SBND_CATHODE_RESCUE:-0}" = 1 ] && CRESCUE_TLA=(--tla-code "cathode_rescue=true")
+    case "${SBND_CATHODE_RESCUE:-}" in
+        1) CRESCUE_TLA=(--tla-code "cathode_rescue=true") ;;
+        0) CRESCUE_TLA=(--tla-code "cathode_rescue=false") ;;
+    esac
 
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
