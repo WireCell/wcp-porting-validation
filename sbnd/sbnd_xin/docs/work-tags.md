@@ -345,6 +345,18 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-nuecc48-prsmoke` | 2 | 8M | `pr/2_…` §5.3 — 2-event smoke of the PR neutrino stage (evt 172230, 444187; production tail + `tagger_check_neutrino`, rc=0, full PR Bee layers) |
 | `work-nuecc48-prsmoke2` | 2 | ~5M | `pr/3_pr-skip-cosmic-and-outputs.md` §6 — single-event validation of the full PR output chain (evt 172230 nu-candidate + 444187 TGM skip-demo; 13-stage pipeline with `nu_skip_cosmic`, Bee prototype-parity knobs, BDT scorers, `tracking-pr.root` T_tagger/T_kine); runner `run_pr3_evt.sh` in the root.  Also holds the `pr/4` DL-vertex adoption arms: `nupr_evt172230_dl{,_rep}` (explicit SCN weights + determinism repeat), `nupr_evt172230_defaultdl` (inherits the new config default), `nupr_evt172230_dl_importfail` (the silent-fallback failure, kept as the exhibit); runner `run_pr3_evt_dl.sh`.  `pr/5` investigation arms: `nupr_evt172230_dl_trace2` (per-logger trace used to pin the PID/vertex chain; `_dl_trace` is the clobbered-log first attempt, kept), `nupr_evt172230_pufix` (verifies the SbndPrMagnifyTrackingVisitor fractional-channel fix, mabc bit-identical to the DL arm).  `pr/6` arms: `nupr_evt172230_dirweak{,_geo}`, `nupr_evt444187_dirweak` (dir_weak_use_score knob-on runs, all bit-identical to their pr/4 counterparts) |
 
+### Added 2026-08-01 — cathode-crossing PR arms (doc `pr/12_`)
+
+Both are subset re-runs of the doc pr/11 population arms at HEAD `3fe65876`, made only
+so every number in `pr/12` comes from one binary (md5 `07a78447…` verified before and
+after both). Selection came from `work-mcp1kall-pr11v3` / `work-nuecc48-pr11v3`, which
+stay the population reference.
+
+| dir | entries | size | referenced by |
+|---|---|---|---|
+| `work-mcp1kall-cath01` | 54 | ~150M | `pr/12_cathode-crossing-neutrino-pr.md` — the 54 mcp1k candidates whose fitted trajectory and/or charge crosses the cathode, full 13-stage PR chain, 54/54 rc=0. Source of `docs/pr/12_cathode-census.tsv` and the `cath_spanned`/`cath_broken` Bee sets |
+| `work-nuecc48-cath01` | 3 | ~10M | `pr/12_…` — the 3 nueCC48 cathode-crossing candidates (214469 spanned, 267597 the single genuine split, 437699 fit-stops-at-cathode), 3/3 rc=0 |
+
 ## `archive/tgm-docs29-39/` — 30 dirs, 257 MB
 
 **TGM / LM / FV campaign.** every arm whose newest citation is doc ≤39 — the merge-aware TGM chain (docs 29-33), the LM tagger (34), interior FV and main-component-pairs (35-36), pctree provenance (38) and the FC/TGM x-y margins (39).
