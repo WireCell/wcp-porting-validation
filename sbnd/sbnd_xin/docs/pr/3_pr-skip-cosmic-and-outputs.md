@@ -4,7 +4,7 @@ Status: IMPLEMENTED; validation on evt 18253/1/172230 (nu candidate) + 444187
 (TGM-tagged in-beam, skip demo) recorded in §6.  Off-path proven byte-identical
 (§5).  Follow-up items in §7.  **§8 (2026-08-01) extends the gate from per-main
 to per-bundle (`nu_skip_cosmic_bundle`, SBND default ON, NOT bit-identical) —
-read §8.5 before treating it as settled.**
+read §8.5 before treating it as settled.**  §9 (same day) stops the Bee PR layers from dumping the whole clustering when no PR runs.
 
 Companion docs: `pr/1_beam-window-cosmic-vs-nu-division.md` (nueCC48 sample),
 `pr/2_uboone-chain-gap-analysis-and-validation-plan.md` (gap analysis + V0-V10
@@ -463,3 +463,96 @@ common, so the artefact will be more visible in Bee.  Reported, not fixed
 `work-nscbase-ab31`, `work-nscoff-ab31`, `work-nscon-ab31` (mcp30 + 52195, data,
 ql root `work-mcp1kall-d59k`); `work-nscoff-nuecc48`, `work-nscon-nuecc48` (ql
 root `work-nuecc48-nuf`, data); `work-nscrep-422851` (single-event repeat).
+
+## 9. The Bee PR layers go dark when no PR runs (2026-08-01)
+
+Status: FIXED (`require_pr_graph`, SBND PR layers ON).  Display-only: pctree and
+`T_tagger` are untouched, 31/31 in the gate below.  Follow-up to §8.6, which
+reported this artefact but did not fix it.
+
+### 9.0 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+./wcb build --notests -p && ./wcb install --notests -p      # -> libWireCellClus.so md5 55e5e621
+./build/clus/wcdoctest-clus                                  # 49 / 565
+qlport/scripts/compile_ub_cfg.sh $PWD/cfg /home/xqian/tmp/ub_new2.json   # byte-identical to HEAD
+sbnd_xin/compile_prjob_cfg.sh    $PWD/cfg /home/xqian/tmp/pr_new2.json   # 3 sets gain the key
+cd sbnd_xin && PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1kall-d59k work-rpg-ab31 data $AB31
+cd ../qlport/scripts && ./run_one.sh 0 rpgcheck               # uBooNE fallback still wanted
+```
+
+### 9.1 The artefact
+
+`clus/src/MultiAlgBlobClustering.cxx:2466`, the per-visitor Bee dump:
+
+```cpp
+auto pr_graph = gs[0]->get_pr_graph();
+if (pr_graph) { ... fill from the PR graph ... }
+else          { fill_bee_points(config.name, *gs[0]); }   // generic cluster dump
+```
+
+`TaggerCheckNeutrino` returns at "no main cluster selected" **before** building a
+graph, so `get_pr_graph()` is null and every set bound to that visitor fell into
+the generic dump.  Consequences on SBND evt 18255/52195 with §8's bundle veto on:
+
+| set | points | x range |
+|---|---:|---|
+| `clustering-global` | 30102 | −201.4 … 201.2 cm |
+| `track_fit-global` | 30127 | −234.1 … 226.9 cm |
+| `shower_track-global` | 30127 | byte-identical to `track_fit` |
+| `vertices-global` | 30127 | byte-identical to `track_fit` |
+
+Three failures at once: the sets hold cluster charge instead of fit output; they
+hold it in **raw coordinates** (those sets declare `coords: ['x','y','z']`,
+correct for PR fit points which are already T0-corrected, while `clustering`
+declares `common_corr_coords`) so x runs past the ±200 cm drift volume; and they
+ignore the scope filter, adding the 4 out-of-scope clusters (ids 2,3,5,8 = 25
+points).  Pre-existing: baseline evt 281808 (PR already skipped before §8) shows
+the same signature — `clustering` 32142 pts / 31 clusters / x ∈ [−200.6, 201.4]
+vs `track_fit` 32419 pts / 36 clusters / x ∈ [−234.1, 233.8].
+
+### 9.2 The fix
+
+New `BeePointsConfig` field `require_pr_graph` (C++ default false).  When set and
+the bound visitor produced no PR graph, the set is left empty and a DEBUG line is
+logged instead of falling back.  **The default must stay false**: uBooNE's
+`regular` and `steiner` sets (`qlport/uboone-mabc.jsonnet:1311,1321`) are bound
+to `CreateSteinerGraph`, which never makes a PR graph, and *rely* on that
+fallback to dump their cluster point clouds.
+
+SBND sets the key on `track_fit`, `shower_track` and `vertices` only, guarded by
+`std.member(pipeline_names, 'tagger_check_neutrino')` like the neighbouring
+`include_vertex_points` / `particle_ids` keys, so a non-PR SBND job compiles
+byte-identically.
+
+Empty means **the member is absent from the zip**, not present-and-empty: evt
+52195 now ships `clustering-global` + the two dead-area sets and nothing else.
+
+### 9.3 Gates
+
+Binaries `d00bb418` (§8) → `55e5e621`.  `wcdoctest-clus` 49 cases / 565
+assertions.  Compiled config: uBooNE PR job `cmp`-identical to HEAD; SBND PR job
+gains `require_pr_graph: true` on exactly the three PR sets, `clustering`
+untouched.
+
+`work-nscon-ab31` vs `work-rpg-ab31`, same 31 events, same cfg apart from the new
+key:
+
+```
+mabc-pr.zip identical 15/31 | pctree identical 31/31 | T_tagger rows identical 31/31
+```
+
+The 15 are exactly the events where PR ran; the 16 that differ are exactly the
+events logging "no main cluster selected", and the zip diff on each is exactly
+three members removed (`0-track_fit-global.json`, `0-shower_track-global.json`,
+`0-vertices-global.json`) with nothing added or altered.
+
+uBooNE regression check (`qlport/scripts/sweep/rpgcheck`, evt 5384/22/6501,
+rc=0): `regular-global` (2.02 MB) and `steiner-global` (7.7 kB) are still
+present and populated — the fallback survives where it is wanted.
+
+### 9.4 Labels
+
+`work-rpg-ab31` (SBND, mcp30 + 52195, ql root `work-mcp1kall-d59k`, data);
+`qlport/scripts/sweep/rpgcheck` (uBooNE single event).
