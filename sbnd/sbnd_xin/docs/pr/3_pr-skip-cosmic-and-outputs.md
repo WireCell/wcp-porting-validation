@@ -431,6 +431,15 @@ nueCC48 events it removes a candidate that was **not** obviously junk:
   through to a *different* in-beam bundle's 1.7 cm main (t0 1.209 µs, 0
   associated) — PR runs, but on a shard.
 
+Both are already on record: `pr/1_beam-window-cosmic-vs-nu-division.md` §2.2
+lists exactly these two (plus 18259/116962) as the nueCC48 events whose **sole
+in-beam bundle is TGM-tagged**, and quotes the resulting loss band as
+**6–13 % (3/48 floor)**.  So this knob does not introduce a new loss so much as
+make the code agree with pr/1's own accounting: that census counts **bundles**,
+while the per-main rule was still selecting a *main inside* a bundle pr/1 had
+already written off.  (18259/116962 does not move here — its bundle holds a
+single main, so per-main and per-bundle coincide.)
+
 Both are the price of the rule: a beam-coincident cosmic and a real neutrino can
 share one flash bundle.  If that trade is not wanted, the natural refinements
 (none implemented) are to veto only when the surviving main is below a
