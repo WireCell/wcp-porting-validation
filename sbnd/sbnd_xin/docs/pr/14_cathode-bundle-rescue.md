@@ -378,6 +378,30 @@ irrelevant (out-of-beam speck), but this is the first 1-in-1000 sighting in
 an A/B context: worth remembering when a single-event QL hash MISMATCH shows
 up in future gates — re-run the event before suspecting the change.
 
+**16-run census (owner follow-up: "is it real nondeterminism?" — YES).**
+16 total runs of 286191 (2 sweep-arm originals + 14 fresh: 10 sequential
+`SBND_CATHODE_RESCUE=0`, 2× knob-off / 2× knob-on from the exoneration, 2
+under `setarch x86_64 -R`): exactly two outcomes ever occur, hash
+`15900dce…` (speck → flash 17, 931.8 µs) 13/16 and hash `811c41f6…`
+(speck → flash 21, 856.1 µs) 3/16.  Both branches occur within a single
+knob state (r6/r10 vs the other =0 runs), so it is genuine run-to-run
+nondeterminism, fully independent of the cathode rescue.  Both ASLR-off
+runs took the majority branch (2 samples — suggestive, not conclusive).
+Localization: every logged matching quantity is identical between branches
+— prefilter, cull_cross_tpc (77 cands), fit_round1 matrix (39 bundles, 17
+flashes, X 56×56), `QLrescue` adoptions with identical metrics — and no
+`QLclusrescue` fires; the only difference is which of two near-degenerate
+flashes (KS 0.319 vs 0.323, pred 29.5 vs 28.3 PE for a 1.7 cm speck) ends
+up holding the bundle in `flash_bundles_map`.  The flip therefore happens
+inside the unlogged LASSO fit / post-fit bundle selection.  Structural
+suspect: `FlashBundlesMap = std::map<Opflash*, …>`
+(TimingTPCBundle.h:280) is pointer-keyed; the doc-28 campaign added
+`flash_iter_order()` at the consumer sites it found, and this residual is
+consistent with a remaining pointer-order-seeded path deciding a
+degenerate LASSO support.  Root-cause instrumentation of the solver is a
+separate campaign (pre-existing issue, out of pr/14 scope); the effect is
+confined to out-of-beam near-ties and does not touch beam physics.
+
 **Firings.** All 8 hand-scan moves reproduce move-for-move (§7.1 decisions,
 including 56463's two opposite-direction rounds), plus **two new firings**,
 both MC events outside the pr/12 list:
