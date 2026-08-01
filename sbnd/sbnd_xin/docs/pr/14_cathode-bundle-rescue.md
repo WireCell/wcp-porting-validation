@@ -53,6 +53,24 @@ python3 make_pr_bee.py -q work-mcp1kall-rescue01 -p work-mcp1kall-rescue01pr \
     -q work-nuecc48-rescue01 -p work-nuecc48-rescue01pr --allow-unevaluated \
     -o /home/xqian/tmp/cbr_rescue_after.zip 288952 169824 56463 59003 437699 392200 398690
 ./upload-to-bee.sh /home/xqian/tmp/cbr_rescue_after.zip
+
+# --- §7.4 no-regression sweep: full 1000-event mcp1k + all 48 nueCC48, OFF vs ON ---
+TAG=cbroff1k ./run_full1k_nusel.sh 1000 6                          # OFF arm
+TAG=cbron1k SBND_CATHODE_RESCUE=1 ./run_full1k_nusel.sh 1000 6     # ON arm
+# nueCC48 arms: the §7 run_nusel_evt.sh invocation with
+# SBND_WORK_ROOT=$PWD/work-nuecc48-cbroff (resp. -cbron, + SBND_CATHODE_RESCUE=1)
+# and 'all' instead of 29; imaging symlinked per event from work/evt<ID>.
+# Per-event member-content hash OFF vs ON + firing census (verdict per event:
+# IDENTICAL / FIRED / MISMATCH):
+python3 cbr_sweep_compare.py --off work-mcp1kall-cbroff1k --on work-mcp1kall-cbron1k \
+    --out /home/xqian/tmp/cbr_sweep_mcp1k.tsv
+python3 cbr_sweep_compare.py --off work-nuecc48-cbroff --on work-nuecc48-cbron \
+    --out /home/xqian/tmp/cbr_sweep_nuecc.tsv
+# determinism (§5.3): two fresh ON re-runs of 437699 (idx 29) into
+# work-cbr-det{1,2}, then 3-way hash_archive vs work-nuecc48-cbron.
+# geometry trace of any unexpected firing (raw-stderr [cbrx] lines):
+TAG=cbrdbg ENTRIES="472 692" SBND_CATHODE_RESCUE=1 CATHODE_RESCUE_DEBUG=1 \
+    ./run_full1k_nusel.sh 1000 2
 ```
 
 ## 1. Symptom
@@ -232,19 +250,42 @@ cathode_connect's crossers today (doc 53).
   scope/filter inherited by the merged cluster; opflash gid domain ==
   `matched_flash_gid` domain on SBND.
 
-## 5. Planned verification (results in follow-up commits)
+## 5. Verification
 
-1. **Knob-off gates**: wcsonnet compiled-config diff empty; abtest pdhd+pdvd
-   (`events.txt`), qlport uboone `ab_check.sh`, SBND manual `hash_archive.py` A/B on
-   standard events; `wcdoctest-clus`; freshness proof before every gate.
-2. **Demonstration**: QL + PR chains with the rescue ON for the 7 events into a new
-   work tag; log decisions vs the 8 ground-truth moves (target 8/8);
-   `cathode_nu_census.py` class flips to `spanned`; Bee sets for owner hand check.
-3. **No-regression** (owner decision: full scope): QL stage over all 1000 mcp1k
-   events + nueCC48 with the rescue ON; non-firing events byte-identical to the OFF
-   arm (member-content hashes); every firing listed and inspected; PR re-run and
-   score comparison for firing events only.
-4. Determinism: repeat-run identity on at least one firing event.
+### 5.1 Knob-off byte-identical gates — ALL PASS
+
+Both sides built and installed cleanly with freshness proofs
+(A = pre-change `3fe65876`, libWireCellClus.so 351120832 B @ 11:25;
+B = `8d6de401` knob-off, 355168784 B @ 11:20/11:28); `wcdoctest-clus`
+565/565 on B.  Compiled-config proofs: the QL job (`wct-clus-matching-perevt`)
+and the PR job (`wct-pr-perevt`) compile **byte-identical** JSON with the knob
+off vs the pre-change tree; with `cathode_rescue=true` the compiled pipeline
+carries `ClusteringCathodeBundleRescue:all` between `ClusteringCathodeConnect:all`
+and `ClusteringExamineBundles:all` with the §4 knob values.
+
+| gate | label pair | result |
+|---|---|---|
+| abtest pdhd+pdvd, `events.txt`, clus stage | `snap/cbroff_base_clus2` vs `snap/cbroff_new_clus` | `ab_compare.sh` **OVERALL: PASS** (every mabc zip content-identical) |
+| qlport uBooNE 35-event manifest | `sweep/cbroff_new_ub` vs `sweep/cbroff_base_ub` | Gate 1 **ZIPS 35/35 content-identical**.  Gate 2 tagger-compare `identical=2 diff=33` = the documented non-discriminating A/A behavior (doc pr/2 §8: an A/A run also gives 33/35 DIFF from T_tagger vector-branch run-to-run noise; ZIPS is the gate) |
+| SBND QL+PR chain, 3 events (288952/169824/56463) | `work-mcp1kall-cbroffA` (at `3fe65876`) vs `work-mcp1kall-cbroffB` (at `8d6de401`, knob off) | `hash_archive.py` member-content: `mabc-all-apa.zip`, `pctree-evt*.tar.gz`, `mabc-pr.zip` **IDENTICAL** ×3 events; `nusel-evt*.tsv` identical |
+
+The abtest **img stage could not be re-run** (the PDHD/PDVD SP-frame inputs
+were removed in the 2026-07-30 disk-retirement round); the clus stage — the
+only stage a `clus/`-only change can affect — ran from the surviving imaging
+tarballs on both sides.  A first A-side clus snapshot (`cbroff_base_clus`) was
+discarded: the B-side install overlapped its tail, so its later per-event
+stages may have loaded the new library (label kept, never compared —
+`cbroff_base_clus2` is the clean A side).
+
+### 5.2 No-regression sweep (owner decision: full scope) — §7.4
+
+Full 1000-event mcp1k + all 48 nueCC48, OFF arm vs ON arm at the same
+`8d6de401` binary; non-firing events must be byte-identical, every firing
+listed.  Results in §7.4.
+
+### 5.3 Determinism
+
+Repeat-run identity on a firing event: §7.4.
 
 ## 7. Demonstration — the 7 hand-scan events, 8/8 moves reproduced
 
@@ -276,9 +317,9 @@ longer-half tie-break decided two of the eight (56463a: neither dominant;
 |---|---|---|---|
 | 169824 | one-sided, far half unjoined | **spanned**, ql_joined=1 | fit crosses the cathode — recovered |
 | 59003 | one-sided | **spanned**, ql_joined=1 | fit crosses the cathode — recovered |
-| 56463 | one-sided | **eroded**, ql_joined=1 | halves are ONE cluster now; the fit still leaves a >4 cm gap at the cathode (the pr/12 §6 "joined eroded" tracking mode, cf. evt 406796) |
+| 56463 | one-sided | **eroded**, ql_joined=1; standard chain labels it **TGM** | halves are ONE cluster now; the fit still leaves a >4 cm gap at the cathode (the pr/12 §6 "joined eroded" tracking mode, cf. evt 406796). In the standard nusel chain the joined 546 cm in-beam crosser is TGM-tagged, so 56463 stops yielding a nu candidate — whether that is a correct background rejection or an efficiency loss needs the owner's truth check (§7.4) |
 | 288952 | one-sided | joined crosser → **TGM=true** → no nu candidate | the "candidate" was half a cathode-crossing cosmic; whole, the TGM tagger correctly removes it (background rejection win) |
-| 392200 | one-sided | crosser moved out; candidate = remaining beam charge (`tiny`) | beam bundle cleaned of the misassigned cosmic half |
+| 392200 | one-sided | crosser moved out; remaining 58 cm beam main is **STM**-tagged | beam bundle cleaned of the misassigned cosmic half; the standard chain then tags the leftover as a stopping muon (no nu candidate) |
 | 398690 | one-sided | crosser moved out; candidate = 401.6 cm beam main, **no cathode contact** | ditto |
 | 437699 | one-sided | crosser moved out; candidate = remaining beam charge, no cathode contact | ditto (nueCC48) |
 
@@ -300,6 +341,88 @@ one cluster) rather than the PR layers.
 
 **Before (same events, HEAD pre-rescue):** the doc pr/12 §8 pathological set
 <https://www.phy.bnl.gov/twister/bee/set/f9d2ed52-617d-4835-a228-730feeaf84e1/event/list/>.
+
+### 7.4 No-regression sweep — full mcp1k (1000 evts) + nueCC48 (48 evts), OFF vs ON
+
+Four arms at the same `8d6de401` binary (Repro block), all rc=0:
+`work-mcp1kall-cbroff1k` / `work-mcp1kall-cbron1k` (1000 events each) and
+`work-nuecc48-cbroff` / `work-nuecc48-cbron` (48 events each, full QL + nusel
+per event).  Per event, `cbr_sweep_compare.py` compares member-content hashes
+(the §5 `hash_archive` definition) of the QL zip, the pctree tarball and the
+PR zip, and greps the ON log for rescue firings.  Verdicts:
+
+| sample | IDENTICAL (no firing) | FIRED | MISMATCH |
+|---|---|---|---|
+| mcp1k (1000) | 991 | 8 | 1 (286191 — pre-existing nondeterminism, exonerated below) |
+| nueCC48 (48) | 47 | 1 (437699) | **0** |
+
+The OFF arms contain **zero** rescue log lines (the env-gated TLA is the only
+path to the knob).
+
+**The 286191 MISMATCH is NOT the rescue.**  The rescue did not fire there
+(component ran in 0.04 ms, no `rescue round` line), yet the arms' archives
+differ.  Log diff localizes the first divergence *upstream* of the rescue,
+inside QLMatching's final bundle association: a 1.7 cm out-of-beam speck
+(cluster ident 1, `lm=1`) is adopted by flash 21 (856.1 µs, KS 0.323) in the
+OFF-arm run but flash 17 (931.8 µs, KS 0.319) in the ON-arm run — two
+near-degenerate cosmic flashes — which cascades into a different
+`examine_bundles` collapse count (`re-stamped 6` vs `5 cluster(s)`) and
+different hashes.  Exoneration: 2 fresh OFF re-runs + 2 fresh ON re-runs of
+the event (`work-mcp1kall-cbr286191{offr1,offr2,onr1,onr2}`) ALL produce the
+identical pctree hash `15900dce…` — equal to the ON arm — so the knob does
+not select the outcome; the original OFF-arm run simply caught the rare
+branch of the known residual QL-matching run-to-run nondeterminism (doc 28
+lineage: pointer nondeterminism FIXED, benign residual remains).  Physically
+irrelevant (out-of-beam speck), but this is the first 1-in-1000 sighting in
+an A/B context: worth remembering when a single-event QL hash MISMATCH shows
+up in future gates — re-run the event before suspecting the change.
+
+**Firings.** All 8 hand-scan moves reproduce move-for-move (§7.1 decisions,
+including 56463's two opposite-direction rounds), plus **two new firings**,
+both MC events outside the pr/12 list:
+
+| event | move (`rescue round` log) | geometry (`[cbrx]` trace) | PR outcome OFF → ON |
+|---|---|---|---|
+| 352365 | beam c7 (gid 2, t0 0.722 µs, 220.4 cm) + far c13 (gid 1000002, t0 2.685 µs, 219.1 cm) → **beam** gid 2 (longer-half) | far-regime accept: tips 2.88/0.38 cm from the cathode, 3-D gap 10.5 cm, Hough/PCA angles 4.0°/0.8°, connectivity 3.3 | half-cosmic "nu-candidate" (218.9 cm) → joined 634 cm crosser spanning x −80→+78, y −199→+199 → **TGM=true**, candidate removed (same class as 288952) |
+| 395148 | beam c10 (gid 0, t0 1.533 µs, 410.3 cm) + far c24 (gid 1000003, t0 0.078 µs, 102.1 cm) → **beam** gid 0 (longer-half) | close-regime primary accept: tips 0.51/1.13 cm, gap 2.85 cm, angle 2.8° | TGM (424 cm) → joined 533 cm, **STM**; either way cosmic-tagged, no candidate change in kind |
+
+Both are exactly the targeted failure mode (a second flash within ±2 µs of the
+beam flash steals one half of a cathode crosser), not collateral: accepted as
+correct new rescues, no cut tightening needed.
+
+**Known reporting artifact (352365 only).** The ON-side `nusel-evt352365.tsv`
+prints the beam flash as `no-bundle`.  The crosser is present and evaluated —
+the PR log tags it TGM and `mabc-pr.zip` holds its 4766-pt main spanning the
+cathode — but the QL→PR cluster-ident mapping swapped idents 11↔12 for this
+event, and `nusel_extract.py` matches QL idents against PR-Bee idents.  This
+is a pre-existing assumption in the analysis script (first event observed to
+break it), NOT a chain regression; left as-is per the one-change rule, worth a
+follow-up fix in `nusel_extract.py` (match by gid + size, or carry PR idents).
+
+**In-beam label changes (standard nusel chain), all 9 firing events:**
+
+| event | OFF | ON | net |
+|---|---|---|---|
+| 169824 | nu-candidate (199 cm half) | nu-candidate (286 cm whole, fit spans) | candidate recovered whole |
+| 59003 | nu-candidate (144 cm half) | nu-candidate (319 cm whole, fit spans) | candidate recovered whole |
+| 437699 | nu-candidate (νe CC) | nu-candidate, bundle −226 pts | candidate cleaned of the 25 cm cosmic stub |
+| 288952 | nu-candidate | TGM | fake candidate (half-cosmic) removed |
+| 56463 | nu-candidate | TGM (joined 546 cm crosser) | candidate removed — needs owner truth check (§7.2) |
+| 352365 | nu-candidate | TGM (see artifact note) | fake candidate removed |
+| 392200 | nu-candidate (102 cm) | STM (58 cm leftover) | fake candidate removed |
+| 398690 | TGM | TGM (companion moved out) | no change in kind |
+| 395148 | TGM | STM | no change in kind |
+
+Net over 1048 events: 2 candidates recovered whole, 1 cleaned, 4 cosmic
+fakes removed, 0 candidates altered in any non-firing event (286191's
+nondeterministic flip is confined to an out-of-beam speck's flash choice —
+no in-beam bundle is affected).
+
+**Determinism (§5.3).**  Two fresh ON re-runs of 437699 (`work-cbr-det1/2`)
+vs the sweep arm: all three archives (QL zip `3e959653…`, pctree `9e156311…`,
+PR zip `e195f87c…`) 3-way identical.  Independently, the §7 demonstration arm
+`work-mcp1kall-rescue01` and the sweep arm `work-mcp1kall-cbron1k` produced
+the identical QL zip hash for 56463 (`d4467b1f…`) in separate batch runs.
 
 ## 8. Prototype provenance
 
