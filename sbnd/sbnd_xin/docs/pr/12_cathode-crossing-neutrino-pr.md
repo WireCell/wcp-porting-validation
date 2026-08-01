@@ -22,7 +22,8 @@ sub-clustering, dQ/dx).
 | Spurious PR vertex within 3 cm of the cathode | **13/44** spanned events, plus the 1 split |
 | Track/shower flag flipping across the cathode | **0/44** |
 | `particle_id` flipping across the cathode | **0/44** |
-| dQ/dx suppression in the gap (median of \|x\|<3 cm over 3–15 cm) | **0.80**; 22/44 below 0.8, 13/44 below **0.6** |
+| Neutrino vertex within 5 cm of the cathode | **7/57 observed vs 5.5 expected** from the candidates' own charge — no attraction (§7 fig, panel a) |
+| dQ/dx suppression in the gap (median of \|x\|<3 cm over 3–15 cm) | **0.80**; 22/44 below 0.8, 13/44 below **0.6**; the pooled profile bottoms at **0.43** in the 0–1 cm bin |
 | Transverse (y,z) offset measured at the crossing | median **1.08 cm** — an independent confirmation of doc 14's data cathode offset |
 
 So the answer to the question as posed is: **the PR chain does not turn a
@@ -75,7 +76,12 @@ python3 cathode_nu_census.py --merge /home/xqian/tmp/f_mcp1k.tsv /home/xqian/tmp
 # their t0 / in_beam come from the Q/L per-event table
 awk 'NR==1 || $4==<bundle>' work-mcp1kall-d59k/nusel_evt288952/nusel-evt288952.tsv
 
-# 3. Bee sets (13 pathological + 44 spanned).
+# 3. The sec-7 figures.
+python3 cathode_plots.py --census docs/pr/12_cathode-census.tsv \
+        --root mcp1k=work-mcp1kall-cath01 --root nuecc48=work-nuecc48-cath01 \
+        --outdir docs/pics
+
+# 4. Bee sets (13 pathological + 44 spanned).
 python3 make_pr_bee.py -q work-mcp1kall-d59k -q work-nuecc48-nuf \
                        -p work-mcp1kall-cath01 -p work-nuecc48-cath01 \
                        -o cath_broken.zip  <chunk A ids>
@@ -304,21 +310,43 @@ not along this candidate.
 
 ## 7. Effect on the other PR steps
 
-- **Neutrino vertex.** No sentinel `(0,0,0)` rows in the 57. 7/57 have a genuine
-  neutrino vertex within 5 cm of the cathode. The cathode does **not** systematically
-  attract the neutrino vertex — in evt 267597, where a PR vertex does land on the gap
-  edge, that vertex is *not* the neutrino vertex (it carries `q = 0`).
-- **Spurious vertex activity in the gap.** 13 of the 44 spanned events nevertheless have
-  a PR graph vertex within 3 cm of x = 0 (median nearest-vertex |x| over all spanned:
-  9.18 cm). The track is not broken there, but the graph acquires a junction at the gap.
-- **Track vs shower, and PID.** Stable: the `flag_shower` value differs across the
-  cathode in **0/44** spanned events, and `particle_id` in **0/44**. Whatever the gap
-  does, it does not flip a track into a shower or change the particle hypothesis.
-- **dQ/dx.** The dead gap reads as a notch. Median ratio of the fitted dQ/dx within
-  |x| < 3 cm to the 3–15 cm band is **0.80**; 22/44 below 0.8 and 13/44 below **0.6**
-  (worst 0.356). This is charge that is physically absent, not a fit failure — but any
-  logic that reads dQ/dx shape (STM Bragg matching, MIP identification, the kink finder)
-  sees a 20–40% dip at a fixed detector location. Not investigated further here.
+![vertex and PID across the cathode](../pics/pr12_vertex_and_pid.png)
+
+- **Neutrino vertex — not pulled to the cathode** (panel a). No sentinel `(0,0,0)` rows
+  in the 57. 7/57 have a genuine neutrino vertex within 5 cm of the cathode, but "7" is
+  only meaningful against where the vertex *could* have landed: taking each candidate's
+  own fitted-point |x| distribution as the null (each event weighted equally), the
+  expectation is **5.5**. Observed 7 vs expected 5.5 — no attraction. The grey step in
+  panel (a) is that null; the reconstructed vertices track it across the whole range.
+  In evt 267597, where a PR vertex *does* land on the gap edge, that vertex is not the
+  neutrino vertex (it carries `q = 0`).
+- **Spurious vertex activity in the gap** (panel b). 13 of the 44 spanned events
+  nevertheless have a PR graph vertex within 3 cm of x = 0 (median nearest-vertex |x|
+  over all spanned: 9.2 cm), and the shaded 0–3 cm band is the single most populated
+  region of the distribution. The track is not broken there, but the graph acquires a
+  junction at the gap.
+- **Track vs shower, and PID — stable** (panel c). Every spanned event lies on the
+  diagonal: `particle_id` differs across the cathode in **0/44**, `flag_shower` in
+  **0/44**, across all four hypotheses present (e, μ, π, p). Whatever the gap does, it
+  does not flip a track into a shower or change the particle hypothesis.
+- **dQ/dx — a notch at a fixed detector location.**
+
+![dQ/dx through the dead gap](../pics/pr12_dqdx_gap.png)
+
+  Panel (a) pools every fitted point of the 44 spanned candidates, each event first
+  normalised to its **own** 3–15 cm median so detector-wide dQ/dx differences between
+  events cannot create the feature. The profile is flat at 1.0 from ~3 cm outward and
+  collapses to **0.43 in the 0–1 cm bin** — the notch is confined to, and centred on,
+  the inactive |x| < 0.45 cm band. Panel (b) is the per-event ratio the tables quote:
+  median **0.80**, 22/44 below 0.8, 13/44 below **0.6**, worst 0.356.
+
+  This is charge that is physically absent, not a fit failure — but any logic that reads
+  dQ/dx shape (STM Bragg matching, MIP identification, the kink finder) sees a 20–40%
+  dip, at the same place in the detector, on every cathode-crossing track. Not
+  investigated further here.
+
+Both figures come from `cathode_plots.py` (see the Repro block); they read the same
+census TSV and the same arms as every table above.
 
 ## 8. Bee displays
 
