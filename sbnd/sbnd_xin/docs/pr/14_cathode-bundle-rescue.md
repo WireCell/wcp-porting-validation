@@ -1,9 +1,8 @@
 # Doc pr/14 — Cathode bundle rescue: reuniting cross-bundle cathode crossers split by the flash-reco absorbing window
 
-**Status: DESIGN (this commit).** No toolkit code or config is changed yet; the
-algorithm below is committed before implementation so the design decisions and the
-ground-truth validation set are on record. Implementation, gates and validation
-results land in follow-up commits and are appended to this doc.
+**Status: IMPLEMENTED (toolkit `8d6de401`, default OFF) + DEMONSTRATED 8/8 (§7).**
+The knob-off byte-identical gates and the full-1k no-regression sweep are the
+remaining steps and are appended when done.
 
 Owner request (2026-08-01): implement an **isolated, removable** post-QLMatching
 patch that fixes the doc pr/12 §6 failure mode — a cathode-crossing track whose two
@@ -24,8 +23,36 @@ python3 cathode_nu_census.py --root work-mcp1kall-cath01 --sample mcp1k \
 # The per-event bundle tables the hand scan used:
 awk 'NR==1 || 1' work-mcp1kall-d59k/nusel_evt288952/nusel-evt288952.tsv
 
-# (after implementation) QL job with the rescue enabled, one event:
-# ./run_clus_matching.sh <evt> data work-mcp1kall-rescue01 --cathode-rescue
+# --- §7 demonstration: the 7 hand-scan events, rescue ON, fresh tags ---
+# toolkit 8d6de401 built + installed (wcbuild); freshness proof per CLAUDE.md.
+# mcp1k (6 events; entries from the staged map):
+TAG=rescue01 ENTRIES="227 809 599 411 453 490" SBND_CATHODE_RESCUE=1 \
+    ./run_full1k_nusel.sh 1000 5           # -> work-mcp1kall-rescue01
+# nueCC48 (437699 = idx 29):
+mkdir -p work-nuecc48-rescue01 && ln -sfn $PWD/work/evt437699 work-nuecc48-rescue01/evt437699
+SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod \
+SBND_WORK_ROOT=$PWD/work-nuecc48-rescue01 SBND_SAVE_ASSOC=1 SBND_CATHODE_RESCUE=1 \
+    ./run_nusel_evt.sh data -chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm \
+    -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc 29
+
+# the rescue decisions (compare to the §3 table):
+grep -h "rescue round" work-mcp1kall-rescue01/ql_evt*/wct_ql_evt*.log \
+                       work-nuecc48-rescue01/ql_evt*/wct_ql_evt*.log
+
+# --- full PR chain on the rescued pctrees + census ---
+PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1kall-rescue01 work-mcp1kall-rescue01pr data \
+    288952 169824 56463 59003 392200 398690
+PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-rescue01 work-nuecc48-rescue01pr data 437699
+python3 cathode_nu_census.py --root work-mcp1kall-rescue01pr --ql-root work-mcp1kall-rescue01 \
+    --sample mcp1k --out /home/xqian/tmp/cbr_census_mcp.tsv
+python3 cathode_nu_census.py --root work-nuecc48-rescue01pr --ql-root work-nuecc48-rescue01 \
+    --sample nuecc48 --out /home/xqian/tmp/cbr_census_nuecc.tsv
+
+# --- Bee set (§7.3) ---
+python3 make_pr_bee.py -q work-mcp1kall-rescue01 -p work-mcp1kall-rescue01pr \
+    -q work-nuecc48-rescue01 -p work-nuecc48-rescue01pr --allow-unevaluated \
+    -o /home/xqian/tmp/cbr_rescue_after.zip 288952 169824 56463 59003 437699 392200 398690
+./upload-to-bee.sh /home/xqian/tmp/cbr_rescue_after.zip
 ```
 
 ## 1. Symptom
@@ -219,7 +246,62 @@ cathode_connect's crossers today (doc 53).
    score comparison for firing events only.
 4. Determinism: repeat-run identity on at least one firing event.
 
-## 6. Prototype provenance
+## 7. Demonstration — the 7 hand-scan events, 8/8 moves reproduced
+
+Arms `work-mcp1kall-rescue01`(+`pr`) and `work-nuecc48-rescue01`(+`pr`), toolkit
+`8d6de401`, rescue ON, fresh tags (Repro above). **The starting §4.3 rule
+reproduced all 8 hand-scanned moves on the first pass — no refinement was
+needed.** The rescue log lines against the §3 truth table:
+
+| event | rescue log (a/b/c/d in cm) | rule fired | direction vs hand scan |
+|---|---|---|---|
+| 288952 | c7 (gid 2, +2.177, 312.8) + c19 (gid 1000001, −4.323, 118.2) → gid 2; a=312.8 b=0 c=118.2 d=429.7 | beam-dominant | into beam ✓ |
+| 169824 | c15 (gid 1000003, +1.328, 208.0) + c14 (gid 0, −3.141, 119.8) → gid 1000003; a=208.0 b=0 c=119.8 d=261.7 | beam-dominant | into beam ✓ |
+| 56463 (a) | c12 (gid 6, +1.185, 169.1) + c21 (gid 1000000, +5.746, 234.3) → gid 1000000; a=169.1 b=199.2 c=234.3 d=332.3 | longer-half | out of beam ✓ |
+| 56463 (b) | c14 (gid 6, +1.185, 199.2) + c23 (gid 1000000, +5.746, 332.3) → gid 6; a=199.2 b=1.6 c=332.3 d=403.4 | beam-dominant | into beam ✓ |
+| 59003 | c4 (gid 10, +1.578, 144.4) + c29 (gid 1000001, −0.750, 155.2) → gid 10; a=144.4 b=109.4 c=155.2 d=388.3 | beam-dominant | into beam ✓ |
+| 437699 | c12 (gid 1000001, +1.593, 25.1) + c7 (gid 2, +13.656, 364.3) → gid 2; a=25.1 b=118.8 c=364.3 d=3.1 | far-dominant | out of beam ✓ |
+| 392200 | c16 (gid 0, +0.683, 104.5) + c25 (gid 1000001, +3.113, 227.3) → gid 1000001; a=104.5 b=31.7 c=227.3 d=1.0 | longer-half | out of beam ✓ |
+| 398690 | c17 (gid 1000001, +2.057, 255.7) + c8 (gid 5, −5.132, 186.5) → gid 5; a=255.7 b=401.6 c=186.5 d=0.5 | far-dominant | out of beam ✓ |
+
+Notes: 56463 needed both rounds and they went in opposite directions between
+the same two flashes, as the hand scan says (the round-1 far bundle's d=403.4
+is the round-0 merged crosser, correctly counted as bundle support).  The
+longer-half tie-break decided two of the eight (56463a: neither dominant;
+392200: both dominant) — both agree with the hand scan.
+
+### 7.2 Downstream: what the PR chain now does (census on the rescued arms)
+
+| event | pr/12 class (before) | after rescue | reading |
+|---|---|---|---|
+| 169824 | one-sided, far half unjoined | **spanned**, ql_joined=1 | fit crosses the cathode — recovered |
+| 59003 | one-sided | **spanned**, ql_joined=1 | fit crosses the cathode — recovered |
+| 56463 | one-sided | **eroded**, ql_joined=1 | halves are ONE cluster now; the fit still leaves a >4 cm gap at the cathode (the pr/12 §6 "joined eroded" tracking mode, cf. evt 406796) |
+| 288952 | one-sided | joined crosser → **TGM=true** → no nu candidate | the "candidate" was half a cathode-crossing cosmic; whole, the TGM tagger correctly removes it (background rejection win) |
+| 392200 | one-sided | crosser moved out; candidate = remaining beam charge (`tiny`) | beam bundle cleaned of the misassigned cosmic half |
+| 398690 | one-sided | crosser moved out; candidate = 401.6 cm beam main, **no cathode contact** | ditto |
+| 437699 | one-sided | crosser moved out; candidate = remaining beam charge, no cathode contact | ditto (nueCC48) |
+
+All seven downstream outcomes are consistent with the hand-scan intent: the
+four into-beam moves give the candidate its whole track (two now fitted
+across, one joined-eroded, one revealed as TGM), and the four out-moves clean
+the misassigned cosmic half out of the neutrino candidate's bundle.
+
+### 7.3 Bee display (owner hand check)
+
+**After (rescue ON, PR layers + img/clustering/op):**
+<https://www.phy.bnl.gov/twister/bee/set/c9d469c3-b473-4283-8f8f-67237fc30722/event/list/>
+— index `docs/pr/14_rescue-after.index.txt` (Bee idx 0..6 = 288952, 169824,
+56463, 59003, 437699, 392200, 398690), PR→img id map
+`docs/pr/14_rescue-after.prid-map.txt`.  288952 is included via
+`--allow-unevaluated` (no nu candidate after the TGM tag): its PR layers are
+the whole-event dump, so read its `clustering-global` (the joined crosser is
+one cluster) rather than the PR layers.
+
+**Before (same events, HEAD pre-rescue):** the doc pr/12 §8 pathological set
+<https://www.phy.bnl.gov/twister/bee/set/f9d2ed52-617d-4835-a228-730feeaf84e1/event/list/>.
+
+## 8. Prototype provenance
 
 None — this is a new algorithm, not a WCP port. There is no prototype counterpart to
 cite; the failure mode itself is documented in doc pr/12 §6 and the flash-reco

@@ -1,0 +1,105 @@
+# PR cluster_id remap for /home/xqian/tmp/cbr_rescue_after.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+288952	0	1	None	NO-BRIDGE	-
+288952	0	2	17	NO-FLASH-MATCH (fallback: dominant)	17:75
+288952	0	3	None	NO-BRIDGE	-
+288952	0	4	20	flash-matched	20:13561
+288952	0	5	None	NO-BRIDGE	-
+288952	0	6	18	flash-matched	18:3031, 5:746
+288952	0	7	8	flash-matched	8:1735, 16:1500
+288952	0	8	9	flash-matched	9:2907, 22:1261
+288952	0	9	21	flash-matched	21:2627
+288952	0	10	2	flash-matched	2:4817
+288952	0	11	14	flash-matched	14:1147
+288952	0	12	13	flash-matched	13:475
+288952	0	13	19	flash-matched	19:4129, 6:181
+288952	0	14	15	flash-matched	15:1161
+288952	0	15	1	NO-FLASH-MATCH (fallback: dominant)	1:15
+288952	0	16	7	flash-matched	7:1126
+288952	0	17	3	NO-FLASH-MATCH (fallback: dominant)	3:6
+288952	0	18	4	NO-FLASH-MATCH (fallback: dominant)	4:7
+288952	0	19	10	flash-matched	10:65
+288952	0	20	11	NO-FLASH-MATCH (fallback: dominant)	11:12
+288952	0	21	12	flash-matched	12:47
+288952	0	22	20	flash-matched	20:8
+288952	0	23	20	flash-matched	20:6
+288952	0	24	20	flash-matched	20:68
+288952	0	25	20	flash-matched	20:17
+288952	0	26	18	flash-matched	18:13
+288952	0	27	8	flash-matched	8:12
+288952	0	28	8	flash-matched	8:14
+288952	0	29	9	flash-matched	9:30
+288952	0	30	9	flash-matched	9:20
+288952	0	31	9	flash-matched	9:14
+288952	0	32	22	flash-matched	22:31
+288952	0	33	21	flash-matched	21:16
+288952	0	34	19	flash-matched	19:24
+288952	0	35	19	flash-matched	19:34
+288952	0	36	19	flash-matched	19:14
+288952	0	37	19	flash-matched	19:34
+288952	0	38	19	flash-matched	19:10
+288952	0	39	19	flash-matched	19:2
+288952	0	40	19	flash-matched	19:10
+288952	0	41	19	flash-matched	19:96
+288952	0	42	19	flash-matched	19:3
+169824	1	18	13	flash-matched	13:2571, 11:1058
+169824	1	42	11	flash-matched	11:13
+169824	1	43	13	flash-matched	13:12
+169824	1	44	13	flash-matched	13:8
+169824	1	45	13	flash-matched	13:7
+56463	2	21	3	NO-FLASH-MATCH (fallback: dominant)	3:11
+56463	2	36	14	flash-matched	14:4
+56463	2	37	14	flash-matched	14:24
+56463	2	39	14	flash-matched	14:7
+56463	2	40	14	flash-matched	14:18
+56463	2	41	21	flash-matched	21:7
+56463	2	42	21	flash-matched	21:21
+56463	2	43	21	flash-matched	21:6
+56463	2	44	21	flash-matched	21:12
+56463	2	45	21	flash-matched	21:13
+56463	2	46	21	flash-matched	21:2
+56463	2	47	21	flash-matched	21:59
+56463	2	48	21	flash-matched	21:22
+59003	3	0	None	NO-BRIDGE	-
+59003	3	19	3	flash-matched	3:2100, 26:1756
+59003	3	26	4	flash-matched	4:1127
+59003	3	56	26	flash-matched	26:8
+59003	3	57	26	flash-matched	26:6
+59003	3	58	26	flash-matched	26:14
+437699	4	11	13	flash-matched	13:4020
+437699	4	17	7	NO-FLASH-MATCH (fallback: dominant)	7:17
+437699	4	18	12	flash-matched	12:1122
+437699	4	80	13	flash-matched	13:14
+437699	4	81	13	flash-matched	13:3
+437699	4	82	13	flash-matched	13:31
+437699	4	83	13	flash-matched	13:24
+437699	4	84	13	flash-matched	13:7
+437699	4	85	13	flash-matched	13:28
+437699	4	86	13	flash-matched	13:43
+437699	4	87	13	flash-matched	13:11
+437699	4	88	13	flash-matched	13:19
+437699	4	89	13	flash-matched	13:8
+437699	4	90	13	flash-matched	13:9
+437699	4	91	13	flash-matched	13:17
+437699	4	92	13	flash-matched	13:9
+437699	4	93	13	flash-matched	13:8
+437699	4	94	13	flash-matched	13:8
+437699	4	95	13	flash-matched	13:11
+437699	4	96	13	flash-matched	13:14
+437699	4	97	13	flash-matched	13:14
+437699	4	98	13	flash-matched	13:20
+392200	5	35	10	flash-matched	10:5
+392200	5	36	10	flash-matched	10:16
+398690	6	24	10	flash-matched	10:6
+398690	6	25	10	flash-matched	10:9
+398690	6	26	10	flash-matched	10:22
+398690	6	27	10	flash-matched	10:24
+398690	6	28	10	flash-matched	10:16
+398690	6	29	10	flash-matched	10:8
+398690	6	30	10	flash-matched	10:17
+398690	6	32	10	flash-matched	10:68
+398690	6	33	10	flash-matched	10:149
+398690	6	34	10	flash-matched	10:45
+398690	6	35	10	flash-matched	10:42
+398690	6	36	10	flash-matched	10:15
+398690	6	37	10	flash-matched	10:6

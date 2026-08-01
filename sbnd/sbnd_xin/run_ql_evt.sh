@@ -333,6 +333,12 @@ process_event() {
     # Optional persistent post-QL point-cloud tree (PR-job intermediate file).
     local SAVEPCT_TLA=()
     [ -n "$SAVEPCT" ] && SAVEPCT_TLA=(--tla-str "save_tensors=$QLDIR/pctree-evt${EVT_ID}.tar.gz")
+    # Optional cathode BUNDLE rescue (doc pr/14): joins a cathode crosser whose
+    # halves sit in different flash bundles (flash-reco absorbing-window defect).
+    # Off by default => the TLA is omitted => compiled config byte-identical.
+    # Env: SBND_CATHODE_RESCUE=1.
+    local CRESCUE_TLA=()
+    [ "${SBND_CATHODE_RESCUE:-0}" = 1 ] && CRESCUE_TLA=(--tla-code "cathode_rescue=true")
 
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
@@ -363,6 +369,7 @@ process_event() {
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \
+        "${CRESCUE_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
