@@ -344,6 +344,16 @@ process_event() {
         1) CRESCUE_TLA=(--tla-code "cathode_rescue=true") ;;
         0) CRESCUE_TLA=(--tla-code "cathode_rescue=false") ;;
     esac
+    # Separate vertex veto (doc pr/15): per-APA separate() un-splits a
+    # neutrino-vertex "V" (run 18255 evt 56463, nu cut in two at its vertex).
+    # SBND production default is ON; unset inherits that config default.
+    # SBND_SEP_VVETO=0 forces the pre-pr/15 legacy path (byte-identical to
+    # before the knob), =1 forces on explicitly.
+    local VVETO_TLA=()
+    case "${SBND_SEP_VVETO:-}" in
+        1) VVETO_TLA=(--tla-code "sep_vertex_veto=true") ;;
+        0) VVETO_TLA=(--tla-code "sep_vertex_veto=false") ;;
+    esac
 
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
@@ -375,6 +385,7 @@ process_event() {
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \
         "${CRESCUE_TLA[@]}" \
+        "${VVETO_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
