@@ -447,6 +447,13 @@ size/length threshold or has no associated clusters, or to fix the two
 asymmetries in §8.1 instead (give `TaggerCheckNeutrino` the taggers' scope
 filter, and/or evaluate associated clusters).
 
+**Resolved (2026-08-01, doc pr/16)**: the size-threshold refinement shipped as
+`nu_skip_cosmic_bundle_min_length` (owner-chosen 15 cm, SBND ON) after the
+pr/16 interaction study.  10550's 18.5 cm main is restored (row identical to
+the pre-veto run); 271851's 13.0 cm main stays vetoed (below the owner's
+threshold); 52195 unchanged.  Evaluating associated clusters was considered
+and dropped (taggers are designed for mains).
+
 ### 8.6 Pre-existing, not fixed here
 
 When `TaggerCheckNeutrino` takes the "no main cluster selected" exit, the Bee PR

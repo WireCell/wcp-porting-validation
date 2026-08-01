@@ -1,8 +1,10 @@
 # pr/16 — Bundle-veto refinement study: can PR run on "the rest of the bundle" when the main is cosmic-tagged?
 
-Status: **STUDY — no code changed.**  Owner question (2026-08-01, follow-up to
-doc pr/3 §8.5): the bundle veto (`nu_skip_cosmic_bundle`, 45dae9d0) discards
-the whole flash bundle when any main is cosmic-tagged.  The proposed
+Status: §§1–9 STUDY (code read at `7f29d32d`); **§10 design A IMPLEMENTED**
+(`nu_skip_cosmic_bundle_min_length`, owner-chosen 15 cm, SBND ON — NOT
+bit-identical: it restores PR on evt 10550).  Owner question (2026-08-01,
+follow-up to doc pr/3 §8.5): the bundle veto (`nu_skip_cosmic_bundle`,
+45dae9d0) discards the whole flash bundle when any main is cosmic-tagged.  The proposed
 refinement is to instead *filter out the cosmic-tagged cluster and use the
 rest of the bundle for neutrino reconstruction* — possibly promoting an
 associated cluster to be the new "main".  Before implementing, the owner asked
@@ -256,8 +258,101 @@ is wanted; consider B only on top of C.  Decision is the owner's.
    pipeline; the actual producer chain is QLMatching →
    `ClusteringUnmergeBundle`.
 
-## 9. Provenance
+## 9. Provenance (study half)
 
 Code read at toolkit `7f29d32d` (apply-pointcloud).  Score rows from
 `work-nscbase-ab31` (evt 52195) and `work-nscoff-nuecc48` (evts 271851,
 10550) — the doc pr/3 §8.7 arms; no new runs, no labels created.
+
+## 10. Design A implemented: `nu_skip_cosmic_bundle_min_length` (2026-08-01)
+
+Owner decisions: implement A, drop C ("it does not make a lot of sense to
+check associated clusters, many times dots"); threshold **15 cm**, not the
+suggested 5 ("5 cm is too short").  Consequence accepted up front: 15 sits
+above evt 271851's 13.0 cm surviving main, so of the two documented losses
+only 10550 (18.5 cm) is restored.
+
+### 10.0 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+./wcb build --notests -p && ./wcb install --notests -p    # -> libWireCellClus.so md5 c4586ae4
+./build/clus/wcdoctest-clus                                # 49 cases / 565 assertions
+
+# compiled-config proofs (wcsonnet; note compiled JSON spells the key '"k" : v')
+qlport/scripts/compile_ub_cfg.sh $PWD/cfg /home/xqian/tmp/ub_nbl.json      # cmp-identical to HEAD compile
+sbnd_xin/compile_prjob_cfg.sh    $PWD/cfg /home/xqian/tmp/pr_nbl.json      # "nu_skip_cosmic_bundle_min_length" : 15 (once)
+# knob-suppression proof: tree with the two SBND 15s sed'ed to 0 compiles
+# cmp-identical to the HEAD compile (key absent in both).
+
+# runtime arms (driver run_pr_chain_batch.sh; knob-off arm via
+# tmp_run_pr_chain_nblhead.sh = same driver against a HEAD copy of cfg)
+cd sbnd_xin
+PR_JOBS=6 ./tmp_run_pr_chain_nblhead.sh work-mcp1kall-d59k work-nbloff-ab31    data $AB31   # knob off
+PR_JOBS=6 ./run_pr_chain_batch.sh       work-mcp1kall-d59k work-nbl15-ab31     data $AB31   # knob on (15)
+PR_JOBS=6 ./tmp_run_pr_chain_nblhead.sh work-nuecc48-nuf   work-nbloff-nuecc48 data
+PR_JOBS=6 ./run_pr_chain_batch.sh       work-nuecc48-nuf   work-nbl15-nuecc48  data
+PR_JOBS=1 ./run_pr_chain_batch.sh       work-mcp1kall-d59k work-nblrep-279256  data 279256  # determinism probe
+python3 pr_arm_compare.py <armA> <armB> <evts...>   # hash_archive members + full T_tagger/T_kine rows
+```
+
+### 10.1 The knob
+
+- C++: `TaggerCheckNeutrino` (`clus/src/TaggerCheckNeutrino.cxx`, veto branch
+  ~:355): when `nu_skip_cosmic_bundle` would skip an in-window main because it
+  shares `matched_flash_gid` with a cosmic-tagged main, a main whose length is
+  `>= nu_skip_cosmic_bundle_min_length` (cm, C++ default **0** = veto
+  everything, byte-identical) is **kept** instead, with an INFO log line
+  (`kept (nu_skip_cosmic_bundle_min_length)`).  The cluster itself carries no
+  cosmic verdict by construction (the per-main check at :338 ran first), and
+  the tagged bundle-mate stays out of the PR ensemble (§3.1).
+- jsonnet: threaded `common/clus.jsonnet` `tagger_check_neutrino(...)` with
+  the key-suppression idiom (`> 0` emits); `sbnd/clus.jsonnet` sets **15** at
+  the `clus_pr`/`pr` default sites and forwards through both call chains.
+
+### 10.2 Gates (binary `c4586ae4`, freshness proof lib 14:55 > src 14:52)
+
+| comparison | archives (mabc, pctree) | headline scores* |
+|---|---|---|
+| `work-rpg-ab31` vs `work-nbloff-ab31` (binary change, knob off) | 31/31, 31/31 | identical |
+| `work-nbloff-ab31` vs `work-nbl15-ab31` (knob on, mcp30+52195) | 31/31, 31/31 — **no event moves** | identical |
+| `work-nbloff-nuecc48` vs `work-nbl15-nuecc48` (knob on, nueCC48) | 47/48, 47/48 — **only 10550** | only 10550 (+3 FP-flicker Enu, ±0.0002 MeV: 269774, 422851, 447477) |
+
+*headline = nue_score, numu_score, numu_cc_flag, cosmict_flag, kine_reco_Enu,
+kine_nu_{x,y,z}_corr.
+
+Knob-on behavior, from the logs:
+
+- ab31: the four vetoed bundles' surviving mains are 1.7 / 4.0 / 3.1 / 3.7 cm
+  — all < 15, all still skipped (52195 included).  No `kept` line fires.
+- evt 10550: `in-window cluster 7 (t0 1.193 us, L 18.5 cm) ... kept
+  (nu_skip_cosmic_bundle_min_length)` → `selected main cluster 7 (28
+  associated)`.  The restored row **reproduces the pre-veto
+  (`work-nscoff-nuecc48`) result exactly**: numu_score −1.595, cosmict_flag 1,
+  kine_reco_Enu 387.6 MeV, vertex (−14.8, 59.1, 147.1) cm.
+- evt 271851: `L 13.0 cm ... skipping` — below threshold, stays vetoed
+  (owner-accepted trade of the 15 cm choice).
+
+### 10.3 Side finding: pre-existing T_tagger detail-branch flicker
+
+`pr_arm_compare.py` compares **every** branch, which the earlier rounds'
+row checks did not.  Between any two runs (same binary, same config —
+`work-nbl15-ab31` vs the `work-nblrep-279256` repeat proves it) a family of
+per-candidate vector branches (`pio_2_v_*`, `shw_sp_pio_2_v_*`, `br3_6_v_*`,
+`lol_2_v_*`) and the `numu_cc_1_*` scalars flicker: same value multisets,
+permuted candidate order (one entry of `shw_sp_lol_1_v_angle` genuinely
+changes on evt 166870).  Rate: 44/48 nueCC48 events, 3/31 mcp30 events —
+and the **same magnitude between the pre-existing
+`work-nscoff-nuecc48`/`work-nscon-nuecc48` arms (45/48)**, so this is not
+introduced by this round.  The archives (mabc, pctree) and every headline
+score are stable across the same run pairs.  Likely a pointer-order iteration
+in the pi0/candidate enumeration that feeds these vectors (the pr/11 audit
+fixed the `out_edges` instance of this class).  Reported, not fixed.
+
+### 10.4 Labels
+
+`work-nbloff-ab31`, `work-nbl15-ab31` (ql root `work-mcp1kall-d59k`, data);
+`work-nbloff-nuecc48`, `work-nbl15-nuecc48` (ql root `work-nuecc48-nuf`,
+data); `work-nblrep-279256` (determinism repeat).  Comparator:
+`sbnd_xin/pr_arm_compare.py`.  Binaries: `55e5e621` (rpg arms) →
+`c4586ae4` (this round).
