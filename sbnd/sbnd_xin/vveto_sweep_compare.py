@@ -3,7 +3,8 @@
 
 Per event: member-content hashes (hash_archive definition) of the QL zip and
 the pctree tarball, baseline arm vs veto-ON arm; plus the veto firing log
-("Separate vertex_veto:" lines in the QL wct log).  Verdict per event:
+("Separate vertex_veto:" cout lines, found in the harness stdout logs --
+see firing_map).  Verdict per event:
 IDENTICAL (no firing, QL hashes equal), FIRED (veto log lines present;
 differences expected), or MISMATCH (no firing but QL output differs -- a
 regression, or the evt-286191-style QL nondeterminism, re-run to tell).
@@ -14,6 +15,7 @@ SBND default ON), so cross-arm PR diffs are expected on events my change never
 touched.  PR labels of FIRED events are inspected separately.
 """
 import argparse
+import concurrent.futures
 import glob
 import hashlib
 import os
@@ -46,15 +48,42 @@ def events_of(root):
     return sorted(int(d.split('ql_evt')[1]) for d in glob.glob(os.path.join(root, 'ql_evt*')))
 
 
-def firing(root, evt):
-    log = os.path.join(root, f'ql_evt{evt}', f'wct_ql_evt{evt}.log')
-    if not os.path.exists(log):
-        return []
-    out = []
-    for line in open(log, errors='replace'):
-        if 'Separate vertex_veto:' in line:
-            out.append(line.split('Separate vertex_veto:', 1)[1].strip())
+def firing_map(root):
+    """evt -> veto lines.  The marker is a cout line: wire-cell's -l "<log>"
+    captures spdlog only, so the marker lands in the harness stdout capture
+    (.log_e<entry>.log from run_full1k_nusel.sh, or .batch_ql_evt<ID>.log from
+    run_ql_evt.sh batch mode), NOT in ql_evt*/wct_ql_evt*.log."""
+    out = {}
+    for log in glob.glob(os.path.join(root, '.log_e*.log')) + \
+               glob.glob(os.path.join(root, '.batch_ql_evt*.log')):
+        evt = None
+        lines = []
+        for line in open(log, errors='replace'):
+            if evt is None and '[evt ' in line:
+                try:
+                    evt = int(line.split('[evt ', 1)[1].split(']')[0])
+                except ValueError:
+                    pass
+            if 'Separate vertex_veto:' in line:
+                lines.append(line.split('Separate vertex_veto:', 1)[1].strip())
+        if evt is not None and lines:
+            out.setdefault(evt, []).extend(lines)
     return out
+
+
+def compare_event(base, on, evt):
+    """Hash the QL products of one event in both arms; safe to run in a pool."""
+    cols = []
+    same = True
+    for rel in (f'ql_evt{evt}/mabc-all-apa.zip',
+                f'ql_evt{evt}/pctree-evt{evt}.tar.gz'):
+        ha = hash_archive(os.path.join(base, rel))
+        hb = hash_archive(os.path.join(on, rel))
+        eq = (ha is not None and ha == hb)
+        cols.append('=' if eq else ('miss' if ha is None or hb is None else 'DIFF'))
+        if not eq:
+            same = False
+    return evt, cols, same
 
 
 def main():
@@ -62,6 +91,8 @@ def main():
     ap.add_argument('--base', required=True, help='baseline arm (veto off / pre-veto binary)')
     ap.add_argument('--on', required=True, help='veto-ON arm')
     ap.add_argument('--out', required=True)
+    ap.add_argument('--jobs', type=int, default=12,
+                    help='hash-worker processes (hashing is CPU-bound decompress+sha256)')
     args = ap.parse_args()
 
     evts_base = set(events_of(args.base))
@@ -71,23 +102,22 @@ def main():
     if only:
         print(f'WARNING: {len(only)} events in one arm only: {only[:10]}...')
 
+    fmap = firing_map(args.on)
     n_ident = n_fired = n_mismatch = 0
     fired_rows = []
     mismatch_rows = []
+    with concurrent.futures.ProcessPoolExecutor(max_workers=args.jobs) as pool:
+        results = dict()
+        for evt, cols, same in pool.map(compare_event,
+                                        [args.base] * len(both),
+                                        [args.on] * len(both), both,
+                                        chunksize=8):
+            results[evt] = (cols, same)
     with open(args.out, 'w') as out:
         out.write('event\tverdict\tql_zip\tpctree\tn_vetoes\n')
         for evt in both:
-            fl = firing(args.on, evt)
-            cols = []
-            same = True
-            for rel in (f'ql_evt{evt}/mabc-all-apa.zip',
-                        f'ql_evt{evt}/pctree-evt{evt}.tar.gz'):
-                ha = hash_archive(os.path.join(args.base, rel))
-                hb = hash_archive(os.path.join(args.on, rel))
-                eq = (ha is not None and ha == hb)
-                cols.append('=' if eq else ('miss' if ha is None or hb is None else 'DIFF'))
-                if not eq:
-                    same = False
+            fl = fmap.get(evt, [])
+            cols, same = results[evt]
             if fl:
                 verdict = 'FIRED'
                 n_fired += 1

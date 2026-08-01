@@ -117,11 +117,18 @@ hand-scan of the Bee display to notice the interaction was in two colors.
 - SBND runtime escape: 56463 QL with `SBND_SEP_VVETO=0` hash
   `d4467b1f…` == the pr/14 `cbron1k` sweep arm (across the binary change).
 - abtest (pdhd+pdvd, events.txt, clus stage): A = `cbroff_new_clus`
-  (pre-change binary), B = `post_vveto_clus` → PENDING §5-RESULT.
+  (pre-change binary), B = `post_vveto_clus` → `ab_compare.sh` OVERALL PASS.
   (Label `post_vveto` is VOID — an img-mode snapshot attempt that skipped on
-  missing SP frames; superseded by `post_vveto_clus`.)
-- qlport uboone MABC two-gate: base `cbroff_new_ub` vs `vveto_ub` →
-  PENDING §5-RESULT.
+  missing SP frames after the 2026-07-30 input retirement; superseded by
+  `post_vveto_clus`.)
+- qlport uboone MABC gate: base `cbroff_new_ub` vs `vveto_ub2` →
+  ZIPS 35/35 content-identical, lib-mtime bracket LIBS_STABLE.
+  (Label `vveto_ub` is VOID — 3 events crashed on a concurrent-session
+  install race, "libWireCellClus.so: file too short".)
+  Tagger gate 2 reads identical=2/diff=33 — the documented non-discriminating
+  A/A noise (doc pr/2 §8, quoted in pr/14 §5.1); reproduced identical=2/diff=33
+  running ab_check between the two pre-change baselines themselves.  ZIPS
+  content-identity is the gate.
 - `./build/clus/wcdoctest-clus`: 565/565 pass.
 - Freshness proof: libWireCellClus.so 13:59 > clustering_separate.cxx 13:58
   (2026-08-01).
@@ -131,15 +138,76 @@ hand-scan of the Bee display to notice the interaction was in two colors.
 QL (tag `work-mcp1kall-cbr56463vvon2`): `Separate vertex_veto: rejoined V at
 (132.653, 166.753, 188.625) cm, arms 260.97 cm total, touch 0.357 cm, opening
 84.5°, behind 0/0`.  The img layer now holds the interaction as ONE 3529-pt
-cluster (was 1505 + 2024).  PR-chain outcome: §7-RESULT.
+cluster (was 1505 + 2024).  The sweep arm reproduces the demo tag exactly
+(mabc-all-apa.zip member hash `58b832d6…` in both; baseline `d4467b1f…`).
+
+PR-chain outcome (sweep arms, `.log_e599.log` nusel rows):
+
+| arm | beam flash 1.185 µs | −198.7 µs cosmic bundle | +5.746 µs bundle |
+|---|---|---|---|
+| cbron1k (pre-veto) | 5537 pts, 546 cm, **TGM** | 11282 pts (holds shower arm) | 3560 pts (holds muon arm) |
+| vveto1k (veto ON)  | 1547 pts, 173 cm, **contained → nu-candidate** | 9781 pts | 5526 pts (holds the rejoined 3529-pt nu) |
+
+The veto fixes the SPLIT: the interaction is one cluster end-to-end.  The
+pr/12 flash-reco defect still routes that joined cluster to the +5.746 µs
+wrong-window flash, so the beam-window candidate is the muon's TPC0
+continuation (now contained, no longer dragged into a 546 cm TGM by the
+split pieces).  Net: the event flips from TGM-killed to a beam-window
+nu-candidate; full recovery of the whole interaction into the beam bundle
+additionally needs the flash-reco fix (upstream, out of scope — pr/12 §6).
 
 ## 7. No-regression sweep (1000-event mcp1k + 48 nueCC48)
 
-PENDING — arms `work-mcp1kall-vveto1k` (veto ON, production default stack
-incl. cathode rescue and 45dae9d0's nu_skip_cosmic_bundle) vs the pr/14
-`cbron1k` / `cbron` baselines.  QL-stage products (mabc-all-apa.zip + pctree)
-compared per event; PR products are NOT compared arm-wide (45dae9d0 is
-PR-stage, so PR diffs are expected), PR labels inspected for FIRED events only.
+Arms `work-mcp1kall-vveto1k` / `work-nuecc48-vveto` (veto ON, production
+default stack incl. cathode rescue and 45dae9d0's nu_skip_cosmic_bundle) vs
+the pr/14 `cbron1k` / `cbron` baselines.  Both arms rc=0; installed-lib
+mtime bracket LIBS_STABLE (no concurrent-session install mid-sweep).
+QL-stage products (mabc-all-apa.zip + pctree) compared per event
+(`vveto_sweep_compare.py`, TSVs `/home/xqian/tmp/vveto_sweep_{mcp1k,nuecc}.tsv`);
+PR products are NOT compared arm-wide (45dae9d0 is PR-stage, so PR diffs are
+expected), PR labels inspected for FIRED events only.
+
+**nueCC48: 48/48 IDENTICAL, 0 firings.**  The veto never touches the 48
+nue events — no efficiency risk on the signal sample.
+
+**mcp1k: 991/1000 IDENTICAL, 7 firings (0.7%), 2 nondeterminism repeats.**
+The only differing events besides the 7 firings are 292643 and 390182:
+for each, a fresh single-event re-run with the SAME veto-ON binary
+(tags `work-mcp1kall-vv{292643,390182}rr`) reproduces the BASELINE hash
+exactly — the sweep-arm difference is the documented bimodal QL
+nondeterminism (pr/14 §7, evt 286191 class), not a veto effect.
+All 7 firings pass with
+unambiguous V geometry (touch < 0.7 cm, behind-fraction ≤ 0.018 vs the 0.47
+of the forced-X control, opening 57–116°):
+
+| entry | evt | V (raw cm) | arms | touch | opening | behind | beam-window PR outcome |
+|---|---|---|---|---|---|---|---|
+| 599 | 56463 | (132.7, 166.8, 188.6) | 261 cm | 0.36 | 84.5° | 0/0 | **TGM → contained nu-candidate** (§6, the founding event) |
+| 42 | 292533 | (−119.5, 127.1, 125.4) | 309 cm | 0.31 | 115.2° | 0/0 | unchanged (ident renumbering only) |
+| 301 | 313847 | (−41.7, −2.1, 252.2) | 284 cm | 0.55 | 115.8° | 0/0 | unchanged (beam TGM stays TGM; +9 pts) |
+| 412 | 59025 | (−164.9, −25.4, 134.9) | 237 cm | 0.68 | 84.4° | 0/0 | unchanged (nu-candidate stays, same rows) |
+| 667 | 348889 | (−3.5, −191.7, 360.7) | 361 cm | 0.43 | 107.3° | 0.001/0 | unchanged (465 pts move between two out-of-beam cosmics) |
+| 739 | 285795 | (−20.7, 199.3, 100.4) | 117 cm | 0.47 | 57.2° | 0/0 | unchanged (beam STM stays; out-of-beam redistribution) |
+| 892 | 174306 | (230.5, −49.7, 354.6) | 237 cm | 0.47 | 79.5° | 0.013/0.018 | unchanged (657 pts move between two out-of-time cosmics) |
+
+Bee sets for hand-check (7 events, index 0–6 in the table's order with
+56463 = index 0; layers img-global / clustering-global / op; no PR point
+layers exist for these events in either arm):
+
+- baseline (cbron1k): https://www.phy.bnl.gov/twister/bee/set/b1feaa93-1fe6-44ac-88b3-02c9724b5d4f/event/list/
+- veto ON (vveto1k):  https://www.phy.bnl.gov/twister/bee/set/881892b2-9d8e-4a88-b639-ab1033f89ab4/event/list/
+
+Only the founding event's beam-window physics changes; the other six rejoin
+out-of-beam activity (their beam-window rows are line-identical between the
+arms up to cluster-ident renumbering).  Events 348889 / 174306 rejoin what
+are presumably genuine cosmic tip-meetings near walls — the merged pieces
+stay in out-of-time bundles, so downstream nu selection is unaffected; the
+V candidates are available for owner hand-check on Bee.
+
+Note the firing marker is a cout line: it lands in the harness stdout logs
+(`.log_e<entry>.log` / `.batch_ql_evt<ID>.log`), not in
+`ql_evt*/wct_ql_evt*.log` (wire-cell `-l` captures spdlog only) —
+`vveto_sweep_compare.py::firing_map` scans the right files.
 
 ## 8. Files
 
