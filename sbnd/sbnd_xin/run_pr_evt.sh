@@ -177,9 +177,9 @@ process_event() {
     local EVT_ID="${EVENT_IDS[$((IDX - 1))]}"
     [ -n "$EVT_ID" ] || { echo "ERROR: invalid idx $IDX (1..${#EVENT_IDS[@]})" >&2; return 1; }
 
-    local QLDIR="$SBND_DIR/work/ql_evt${EVT_ID}"
+    local QLDIR="$SBND_WORK_ROOT/ql_evt${EVT_ID}"
     local PCT="$QLDIR/pctree-evt${EVT_ID}.tar.gz"
-    local PRDIR="$SBND_DIR/work/pr_evt${EVT_ID}"
+    local PRDIR="$SBND_WORK_ROOT/pr_evt${EVT_ID}"
     local LOG="$PRDIR/wct_pr_evt${EVT_ID}.log"
 
     if [ ! -s "$PCT" ]; then
@@ -236,14 +236,14 @@ process_event() {
     echo "[evt $EVT_ID] done -> $PRDIR/mabc-pr.zip"
 }
 
-mkdir -p "$SBND_DIR/work"
+mkdir -p "$SBND_WORK_ROOT"
 IDX="$1"
 if [ "$IDX" = "all" ]; then
     batch_init
     echo "Mode $MODE: ${#EVENT_IDS[@]} events. Parallel jobs: $BATCH_MAX"
     for i in $(seq 1 "${#EVENT_IDS[@]}"); do
         _evtid="${EVENT_IDS[$((i - 1))]}"
-        _blog="$SBND_DIR/work/.batch_pr_evt${_evtid}.log"
+        _blog="$SBND_WORK_ROOT/.batch_pr_evt${_evtid}.log"
         batch_wait_slot
         ( process_event "$i" ) > "$_blog" 2>&1 &
         BATCH_PIDS[$!]=$_evtid

@@ -135,7 +135,7 @@ TLA only when given.
 |---|---|
 | `run_nusel_evt.sh` | 32 TLAs deleted (LAr set, `bwonly`, `nucand`, chord/rescue/main-pair, 4 FV margins, `mip_dqdx`, 8 STM guards + d66 cuts, `unmerge_bundle_mode`, the `dl_weights=` pin, the `TFJSON` default). `pipeline_names` is now named **only** when a flag changes the default list. **45 → 13 TLAs** at production. |
 | `run_ql_evt.sh` | 15 TLAs deleted (LAr set, `semimodel_file`, `joint`, `pmt_nl`, `main_flag`, `lm`, `save_rcid`, `save_assoc`, `trace_bee`, `auto_mask`, `beam_pref*`, `rcid_global`, `realign`). `anode_indices` is passed only under `-a`. **21 → 8 TLAs** at production. |
-| `run_pr_evt.sh` | the twelve `tgm_*` pins deleted (decision 4) + the LAr set and `trackfitting_config`. |
+| `run_pr_evt.sh` | the twelve `tgm_*` pins deleted (decision 4) + the LAr set and `trackfitting_config`. **25 → 9 TLAs.** Also now honours `SBND_WORK_ROOT` (§6). |
 | `run_pr_chain_batch.sh` | the same 28-TLA production block deleted; `PIPELINE` stays explicit (this chain adds the neutrino taggers + BDT scorers on top of the default list). |
 | `run_full1k_nusel.sh` | `NUF` → `-stm-fit`; `export SBND_SAVE_ASSOC=1` deleted. |
 | `run_perf54_nusel.sh` | same `NUF` collapse. |
@@ -260,13 +260,35 @@ every `nusel-evt<ID>.tsv` **byte-identical** to the current production arm
 isolated-grouping un-merge engages from the config default alone, with no
 `SBND_SAVE_ASSOC` in the environment. That is §1(b) closed, measured.
 
-## 6. Found, not fixed
+## 6. `run_pr_evt.sh` now honours `SBND_WORK_ROOT`
 
-`run_pr_evt.sh` hard-codes its work root as `$SBND_DIR/work` (line 179) instead
-of honouring `SBND_WORK_ROOT` like every other runner in this directory. It is
-the reason that script could not be driven by the §5 capture harness and had to
-be verified by a direct `wcsonnet` comparison instead. Unrelated to this change,
-so not touched here.
+Found while building the §5 harness and fixed on request: `run_pr_evt.sh` was
+the only runner in this directory that hard-coded its work root as
+`$SBND_DIR/work` (four places: `QLDIR`, `PRDIR`, the `mkdir -p`, and the batch
+log path) instead of honouring `SBND_WORK_ROOT`. That is exactly why it could
+not be driven by the capture harness and had to be verified by a direct
+`wcsonnet` comparison instead.
+
+The fix is a four-line substitution to `$SBND_WORK_ROOT`. It is **provably
+inert when the variable is unset**, which is how the script has always been
+run: `_runlib.sh` (sourced at line 22, after `SBND_DIR` is set at line 18) does
+
+```bash
+SBND_WORK_ROOT="${SBND_WORK_ROOT:-$SBND_DIR/work}"
+```
+
+so with nothing exported the two expressions resolve to the same absolute path
+(verified: both `…/sbnd_xin/work`). With the variable set, the script now lands
+in the requested root like `run_ql_evt.sh` / `run_nusel_evt.sh` do.
+
+Gate: the §5 capture harness can now drive it, which is the point.
+`run_pr_evt.sh` under `SBND_WORK_ROOT=$D/wr/<label>` runs to a clean argv
+capture for all four demo modes — `pr_bare` (empty round-trip pipeline),
+`-tgm`, `-stm`, `-nu -no-dnn` — 4/4 rc=0, each compiling without error. Its
+invocation is down to **9 TLAs**: `input`, `anode_indices`, `output_dir`,
+`run`/`subrun`/`event`, `reality`, `pipeline_names`, `save_tensors`,
+`dl_weights`, `beam_window_us`, `save_stm_fit`. The twelve `tgm_*` pins are
+gone and the operating point comes from the config, as §4(iii) intends.
 
 ## 7. Commits
 
