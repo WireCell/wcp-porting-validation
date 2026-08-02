@@ -57,7 +57,22 @@ done
 [ -n "$SAMPLES" ] || SAMPLES="mcp1k nuecc48 r1qlmc r2mc"
 
 reality() { case "$1" in mcp1k|nuecc48) echo data;; *) echo sim;; esac; }
+# VF_QLROOT_TAG=<t>: PR-tail mode reads the FRESH hubs a previous
+# `run_valfast.sh -full <t>` built (work-*-vf<t>) instead of the pinned
+# legacy hubs -- so an A/B pair can share one production-operating-point
+# Q/L regeneration (doc pr/23 sec 6: regenerating per arm would let Q/L-side
+# nondeterminism pollute a PR-stage A/B).  Fresh hubs carry was_main, so the
+# SBND_REQUIRE_WASMAIN=0 legacy declaration is NOT applied.
 pinned_qlroot() {
+    if [ -n "${VF_QLROOT_TAG:-}" ]; then
+        case "$1" in
+            mcp1k)   echo work-mcp1kall-vf$VF_QLROOT_TAG;;
+            nuecc48) echo work-nuecc48-vf$VF_QLROOT_TAG;;
+            r1qlmc)  echo work-r1qlmc-vf$VF_QLROOT_TAG;;
+            r2mc)    echo work-r2mc-vf$VF_QLROOT_TAG;;
+        esac
+        return
+    fi
     case "$1" in
         mcp1k)   echo work-mcp1kall-d59k;;
         nuecc48) echo work-nuecc48-nuf;;
@@ -152,8 +167,12 @@ run_pr() {
     # declare that to the legacy-tree guard (doc pr/23 sec 4.2) or the job
     # aborts.  -full mode regenerates fresh trees and inherits cfg TRUE.
     REQWM=()
-    [ "$FULL" = yes ] || REQWM=(SBND_REQUIRE_WASMAIN=0)
-    [ "$FULL" = yes ] || echo "[$s] NOTE: pinned legacy hub (P2-inert), SBND_REQUIRE_WASMAIN=0 declared"
+    if [ "$FULL" != yes ] && [ -z "${VF_QLROOT_TAG:-}" ]; then
+        REQWM=(SBND_REQUIRE_WASMAIN=0)
+        echo "[$s] NOTE: pinned legacy hub (P2-inert), SBND_REQUIRE_WASMAIN=0 declared"
+    elif [ -n "${VF_QLROOT_TAG:-}" ]; then
+        echo "[$s] NOTE: fresh hub override VF_QLROOT_TAG=$VF_QLROOT_TAG (was_main present, guard active)"
+    fi
     # shellcheck disable=SC2046
     env "${REQWM[@]}" PR_JOBS=$JOBS ./run_pr_chain_batch.sh "$QL" "$OUT" "$(reality "$s")" \
         $(tr '\n' ' ' < "$VF/events-$s.txt")
