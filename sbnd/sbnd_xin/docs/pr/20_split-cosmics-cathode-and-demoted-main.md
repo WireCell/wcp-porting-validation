@@ -1704,6 +1704,11 @@ single 28.76 cm segment.
 135→134, 125→124, 87→86. That is the direct answer to "does suppressing a break
 just relocate the split and cut something new somewhere else?" — it does not.
 
+> **Superseded by Part VI.** This holds on the 348 events measured here and
+> **fails on the full 1000**: evts 172794, 386948 and 395654 each *gain*
+> vertices. The mechanism is in Part VI §2.  Read Part VI before acting on any
+> conclusion in this section.
+
 ### 4. B0-3b — the vertices B0 did *not* remove
 
 B0-3 proves the firings are right. It does not by itself prove the survivors
@@ -1799,6 +1804,10 @@ in 348 PR events across two samples it changed **5**, each traced to a single
 cluster holding a cathode-band break, with **0** beam-label changes and **0**
 collateral.
 
+> **Superseded by Part VI.** At 1000 events the count is 21, including **10
+> relocated neutrino vertices** and **3 `cosmict_flag` flips**. The
+> recommendation below is withdrawn there.
+
 **NOT bit-identical when ON** — the SBND PR path changes on those 5 events.
 
 **Open ask — the SBND default.** The plan's S6 ends with the config line
@@ -1810,6 +1819,164 @@ both ways here: pr/17's rescue pass shipped ON, pr/19's absorb pass shipped OFF
 and the owner declined the flip after reading the census. So B0 stays **default
 OFF** until asked for, and a Bee set for 169824 (OFF vs ON) can be built on
 request in one step.
+
+## Part VI — the 1000-event roll-up, and a correction to Part V (2026-08-02)
+
+Part V reported B0 as a surgical, cathode-local change on the basis of 348 PR
+events (300 mcp1k + 48 nueCC). **On the full 1000 it is not.** This section
+records the larger measurement, the mechanism that explains it, and the
+resulting recommendation — which is the opposite of Part V's.
+
+### 0. Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+ls -d work-mcp1kall-cathA12on2/ql_evt* | sed 's/.*ql_evt//' | sort -n | tail -n +301 > e700.txt
+EV=$(tr '\n' ' ' < e700.txt)
+PR_JOBS=20 ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0pr700-off data $EV
+PR_JOBS=20 SBND_CATHODE_KINK_XCUT=5 SBND_CATHODE_X=0 \
+  ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0pr700-on data $EV
+python3 pr_scores_table.py --root work-b0pr700-off --sample b7off --out b7off.tsv   # and --on
+python3 pr20_b1_population.py work-b0pr700-off work-b0pr700-on
+# same-config control, 16 changed events:
+PR_JOBS=16 ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0rep-off data <the 16>
+```
+
+### 1. What the full sample says
+
+1000 events, 445 with a real `TaggerCheckNeutrino` evaluation, all 16 physics
+columns of `pr_scores_table.py`:
+
+| | 348-event slice (Part V) | **full 1000** |
+|---|---|---|
+| events identical on every physics column | 346 | **979 / 1000** |
+| events differing | 2 | **21** |
+| `event_label` changes | 0 | **0** |
+| `cosmic_flag` changes | 0 | **0** |
+| `cosmict_flag` changes | 0 | **3** (286400 1→0, 486247 1→0, 395654 0→1) |
+| `nue_score` changes | 0 | **6** |
+| `numu_score` changes | 1 | **13** |
+| neutrino **vertex** moves | 0 | **10** |
+
+Some of the vertex moves are large — 286400 goes from
+(−2.2, −164.2, 56.4) to (153.7, −87.5, 309.0) cm, i.e. a **different neutrino
+candidate is selected**; 289559 moves ~90 cm. Energies move accordingly:
+281214 1639.7 → 1043.8 MeV, 289559 1834.5 → 763.4, 315497 382.0 → 962.8,
+172794 802.6 → 1215.3.
+
+**This is not run-to-run noise.** A same-config repeat of the OFF arm on all 16
+changed mcp1k events (`work-b0rep-off` vs `work-b0pr700-off`) reproduces
+**16/16 exactly** — same vertex count, same cluster point sets. Every change is
+caused by the knob.
+
+### 2. The mechanism — B0 reorders the break search, it does not only delete
+
+Part V's §2 claimed the veto is a pure removal: "a vetoed cathode index simply
+lets the scan continue and a genuine kink elsewhere sees arithmetic identical to
+today's". The arithmetic part is true. **The outcome part is wrong**, and evt
+172794 is the counterexample: with B0 ON, a cluster that was *one* 307 cm
+segment becomes *three* (300.7 + 32.0 + 0.6 cm) with a **new** break at
+x = 21.2 cm — 21 cm from the cathode, and the event has no cathode-band vertex
+on either arm.
+
+A veto cannot create an accept inside one call. But `segment_search_kink`
+**breaks at the first qualifying index** (`PRSegmentFunctions.cxx:344-365`), and
+`break_segments` iterates over the resulting pieces. Skipping the cathode index
+therefore *promotes* the next qualifying index to first, the split happens
+somewhere else, the pieces handed to the next iteration differ, and the
+downstream `examine_structure_*` merges land differently. A cathode split that
+was later re-merged into one segment (OFF) is replaced by an off-cathode split
+that is not (ON).
+
+So the right description of B0 is **"suppress cathode kink candidates and let
+the search continue"**, with all that implies — not "remove the spurious cathode
+vertex".
+
+### 3. What is still true, and what it costs
+
+The change *is* geometrically local. Across the 18 events whose PR graph moved,
+**22 of 163 clusters changed, and 20 of those 22 contain points within 5 cm of
+the cathode**. The two exceptions are 1–2 cm off-cathode fragments in evt
+287654. The blast radius is the cathode-crossing cluster; what is not local is
+the *consequence*, because that cluster can be the neutrino candidate.
+
+Cases that are clearly right:
+
+- **169824** — as designed (Part V §2).
+- **315497** — the class-A target. A1 joins its two halves; the kink finder then
+  immediately re-splits them into a 4.76 cm cathode stub, and **B0 is what keeps
+  the joined track whole** (`pr20_s7_crossers.py`: cathode stubs on the 29 merge
+  events, A1+A2 **1 → 0** with B0). `kine_reco_Enu` 382.0 → 962.8 MeV, the
+  recovered half. This is the doc's ordering argument — "A1 without B0 will
+  raise the class-B rate" — measured on the very event A1 was built for.
+
+Cases that need eyes before any flip: the 10 vertex movers, above all 286400
+(vertex jumps 150 cm, `cosmict_flag` 1 → 0) and 289559 (90 cm).
+
+### 4. Gate S7 — the ordering check
+
+`pr20_s7_crossers.py` over all 29 events carrying a new `cathode_connect` merge:
+15 have a PR graph (the other 14 have no in-beam neutrino candidate).
+**Cathode stubs on those events: A1+A2 alone 1 → A1+A2+B0 0.** The class-B rate
+does not rise, and the single stub A1 induced is exactly what B0 removes. **PASS.**
+
+### 5. B1 — its trigger population is empty once B0 is on
+
+`pr20_b1_population.py` counts the exact trigger B1 is specified for (a
+cathode-straddling stub, `L < 8 cm`, both ends `|x| < 4 cm`, both graph vertices
+degree 2, neighbour-to-neighbour angle `< 15°` at `R = 15 cm`):
+
+| arm | candidate stubs | **firing** |
+|---|---|---|
+| 1000 mcp1k + 48 nueCC, **B0 OFF** | 3 | **2** (169824 at 2.70°, 286400 at 2.92° — the doc's two known cases) |
+| the same events, **B0 ON** | **0** | **0** |
+
+The third candidate is 315497's post-A1 stub, and B1 would **not** have absorbed
+it: its neighbour angle is 38.6°, far outside a 15° bound. B0 removes it anyway.
+
+The vertex-shaped residual does not rescue B1 either. Of 476 graph events with
+B0 ON there are 2 degree-2 cathode-band vertices left, both at ~98–109° — real
+turns. Evt 63603's 15.5° break at x = 1.63 cm, flagged in Part V §4 as the B1
+case, turns out on inspection **not** to be a cathode split at all: its longer
+neighbour (`13004`, x −26.1 → +1.6) traverses the cathode *internally* and
+uninterrupted, so the vertex is a genuine kink that happens to sit 1.6 cm from
+the plane. Part V §4's reading of it was wrong.
+
+**Conclusion: B1 as specified has no case left on this sample.** Building it
+would ship a splice-and-refit pass — the highest-risk shape in this doc, and the
+reason B0 was preferred in the first place — with zero measured firings and no
+event to validate it against.
+
+But that is not the same as "B1 is pointless". §2 changes the comparison: B0
+gets its effect by *reordering* the break search, while B1 would act *after* the
+graph is built and would not perturb the ordering at all. On the evidence here
+B1 is the more surgical mechanism and B0 the wider one — the reverse of the
+doc's original framing. That is an argument for a **B0-stop** variant (below),
+not for building B1 as written.
+
+### 6. The variant that would restore Part V's claim
+
+The cascade in §2 comes entirely from `continue` — skip the cathode index and
+let a later one become first. The alternative is to **stop**: if the first
+qualifying index falls in the cathode band, return *no* kink for that segment
+instead of scanning on. Then the ON accept set is a strict subset of OFF's, no
+candidate is ever promoted, and 172794-style invented breaks cannot happen.
+
+What it gives up: a segment carrying both a cathode artifact and a genuine kink
+further along loses the genuine one, because no break means no iteration onto
+the pieces. Which effect dominates is a measurement, not an argument — it is a
+~3-line change plus one rebuild and one 1000-event pair.
+
+### 7. Status
+
+- **B0 remains default OFF.** Part V's recommendation to flip it for SBND was
+  made on 348 events and is **withdrawn**; the 1000-event evidence does not
+  support flipping without a hand scan of the 10 vertex movers.
+- **B1 is not built**, and now for a measured reason rather than a deferral:
+  0 firings in 476 graph events with B0 on.
+- **Open decision for the owner**, in the order they would be taken: (a) Bee set
+  for the 10 vertex movers, above all 286400 and 289559; (b) whether to measure
+  the **B0-stop** variant of §6 before deciding anything about the default.
 
 ## Related
 
