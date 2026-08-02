@@ -49,20 +49,24 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             cm_by_name (cfg/pgrapher/experiment/sbnd/clus.jsonnet),
             e.g. -p switch_scope
   -stm      shorthand for the STM tagger chain:
-            -p switch_scope,steiner,fiducialutils,tagger_check_stm
+            -p switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_stm
             (uses sbnd_track_fitting.json; grep TaggerCheckSTM in the log)
   -stm-fit  persist the per-pass STM track fits (doc 40): cluster PCs
             stm_fit/stm_pass/stm_eval, a Bee 'stm_fit' layer in mabc-pr.zip,
             and tracking-stm.root (appends stm_magnify to the pipeline).
             DEFAULT OFF = byte-identical legacy outputs.  Env: SBND_STM_FIT=1.
   -tgm      shorthand for the cosmic-tagger chain (TGM then STM):
-            -p switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm
+            -p switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm
             with the per-mode beam window (in-window bundles are never TGM-tagged;
             grep TaggerCheckTGM in the log)
   -nu       shorthand for the full PR chain:
-            -p switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino
+            -p switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino
             with the per-mode beam window (grep TaggerCheckNeutrino in the log;
             Bee layers track_fit/shower_track/vertices + mc particle flow)
+            The unmerge stages (docs 45/50-52) match the production chain
+            (run_pr_chain_batch.sh / run_nusel_evt.sh); before doc pr/22 the
+            shorthands omitted them, so pre-pr/22 Bee sets show the PR fit of
+            the PRE-unmerge flash bundle (inflated track_fit gap jumping).
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
             the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} = the
             experiment window, same as SBND Q/L beam_pref).  Since doc 56 this
@@ -120,10 +124,16 @@ while [ $# -gt 0 ]; do
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
         -p) PIPELINE="$2"; shift 2 ;;
-        -stm|--stm) PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_stm"; shift ;;
-        -tgm|--tgm) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm"; shift ;;
-        -nu|--nu) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"; shift ;;
-        -dnn|--dnn) NU=1; PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"
+        # The tagger shorthands carry the production chain's unmerge stages
+        # (run_pr_chain_batch.sh / run_nusel_evt.sh): without them the fit runs
+        # on the PRE-unmerge flash bundle and track_fit stitches every bundle
+        # companion across voids (doc pr/22: 26.3% -> 7.9% in-void fit points
+        # on evt 386948).  Added 2026-08-02; pre-pr/22 scan Bee sets were made
+        # without them.
+        -stm|--stm) PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_stm"; shift ;;
+        -tgm|--tgm) NU=1; PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm"; shift ;;
+        -nu|--nu) NU=1; PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"; shift ;;
+        -dnn|--dnn) NU=1; PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino"
                     DL_WEIGHTS="$DL_WEIGHTS_DEFAULT"; shift ;;
         -no-dnn|--no-dnn) DL_WEIGHTS=""; shift ;;
         -bw) BEAM_WINDOW="$2"; shift 2 ;;

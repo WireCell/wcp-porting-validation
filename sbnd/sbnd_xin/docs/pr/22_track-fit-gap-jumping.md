@@ -1,6 +1,11 @@
 # Doc pr/22 — Why `track_fit` points fly over space the `track_shower` layer never covers
 
-**Status: ANALYSIS ONLY — no code changed, no config changed.**  Owner
+**Status: CLOSED — analysis + one runner-only fix (owner-approved 2026-08-02).**
+No C++ or jsonnet changed.  `run_pr_evt.sh`'s tagger shorthands
+(`-stm/-tgm/-nu/-dnn`) now carry the production chain's
+`unmerge_bundle,unmerge_assoc` stages (§5.2, §6); production itself never
+lacked them, so **no production baseline changes** — only future per-event
+scan Bee sets.  Owner
 question (2026-08-02): in Bee set
 <https://www.phy.bnl.gov/twister/bee/set/29af12de-2cb2-43fb-b3d8-934000889c0d/event/1/>
 (the doc pr/19 OLD-baseline scan set; event index 1 = **evt 386948**, a nueCC
@@ -185,21 +190,44 @@ production-config residual is the modest, intended behavior of §3 arm B.
    job; the residual production-config jumping (7.9 % / 33 cm here) is the
    designed shower stitching plus SP-dropout hops, and dead-region jumps
    would use the same machinery.
-2. **Scan-set runner alignment (owner decision, runner-only edit):** give
-   `run_pr_evt.sh` a production-prefix shorthand (or fold
-   `unmerge_bundle,unmerge_assoc` into `-nu`) so future Bee scan sets show
-   what production actually fits.  Until then, read `track_fit` trails in
-   the pr/19-style sets with this doc's caveat.  Not done here (no changes
-   requested).
+2. **Scan-set runner alignment — DONE (owner-approved).**
+   `run_pr_evt.sh`'s `-stm`, `-tgm`, `-nu`, `-dnn` shorthands now insert
+   `unmerge_bundle,unmerge_assoc` after `switch_scope`, mirroring the
+   production pipelines (`run_pr_chain_batch.sh:107`,
+   `run_nusel_evt.sh:72` PIPELINE_FULL).  Verified: fresh tag
+   `work-pr22gap-c`, updated `-nu` on evt 386948 reproduces arm B exactly
+   (634 fit points, 50 uncovered = 7.9 %, same stretch table).  Explicit
+   `-p` pipelines and the empty-pipeline round-trip identity gate are
+   untouched.  Bee sets built before this change (docs pr/3–pr/21 era
+   `-nu`/`-tgm`/`-stm` sets, incl. the pr/19 pair) show the pre-unmerge
+   fit and must be read with this doc's caveat.
 3. **If void-crossing fits ever need flagging** (doc 50 remedy 2): persist
    the max fit-point-to-charge distance per segment — makes the jumps
    visible in scans without changing any verdict.  Evidence-blocked;
    nothing here demands it.
 
+## 6. Baseline impact of the runner change
+
+- **Production: none, and nothing was ever missing there.**  The batch
+  production runner was *born* with both unmerge stages
+  (`run_pr_chain_batch.sh` created 2026-07-31 with
+  `switch_scope,unmerge_bundle,unmerge_assoc,steiner,...` — doc pr/11's
+  1071-event census and every mcp1kall arm since), and the nusel arm
+  (`run_nusel_evt.sh` PIPELINE_FULL) likewise runs both.  All production
+  score tables, verdict censuses, and hand-scan baselines are unaffected.
+- **What was affected**: only per-event scan/Bee dumps made with
+  `run_pr_evt.sh -nu/-tgm/-stm` (shorthands written 2026-07-10, before the
+  unmerge visitors existed — docs 45/51-52 — and never updated).  Those
+  Bee sets remain valid for what they were scanned for; their `track_fit`
+  trails overstate gap jumping per §3-4.
+- **No scripted consumer changes behavior**: nothing calls the shorthands
+  from other scripts (`compare_pr_roundtrip.py` uses the empty pipeline /
+  `-p switch_scope`, both untouched).
+
 ## Artifacts
 
 - Probe: `sbnd_xin/gapjump_probe.py` (this doc).
-- Fresh arms: `sbnd_xin/work-pr22gap-{input,a,b}` (evt 386948 only).
+- Fresh arms: `sbnd_xin/work-pr22gap-{input,a,b,c}` (evt 386948 only; c = updated `-nu` verification).
 - Scan-set input analyzed: `sbnd_xin/work-oc19scan-old/pr_evt386948/mabc-pr.zip`.
 - Related: doc pr/19 (the Bee sets), doc 50 (STM gap-jumping + MST no-cap),
   docs 45/50/51/52 (unmerge stages), doc pr/3 (the PR Bee layers).
