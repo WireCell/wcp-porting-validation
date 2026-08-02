@@ -354,6 +354,18 @@ process_event() {
         1) VVETO_TLA=(--tla-code "sep_vertex_veto=true") ;;
         0) VVETO_TLA=(--tla-code "sep_vertex_veto=false") ;;
     esac
+    # Neutrino-stage iso-band guard (doc pr/18): the per-APA neutrino stage may
+    # not merge an isochronous band with a non-band cluster spanning > 20 cm of
+    # drift, even on touch (run 18255 evt 10550: separate correctly split the
+    # nu candidate off the cosmic band, neutrino re-merged them at 0.31 cm).
+    # SBND production default is ON; unset inherits that config default.
+    # SBND_NU_ISO_GUARD=0 forces the pre-pr/18 legacy path (byte-identical to
+    # before the knob), =1 forces on explicitly.
+    local ISOGUARD_TLA=()
+    case "${SBND_NU_ISO_GUARD:-}" in
+        1) ISOGUARD_TLA=(--tla-code "nu_iso_band_guard=true") ;;
+        0) ISOGUARD_TLA=(--tla-code "nu_iso_band_guard=false") ;;
+    esac
 
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
@@ -386,6 +398,7 @@ process_event() {
         "${SAVEPCT_TLA[@]}" \
         "${CRESCUE_TLA[@]}" \
         "${VVETO_TLA[@]}" \
+        "${ISOGUARD_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }
