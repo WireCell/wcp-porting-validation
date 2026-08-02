@@ -1979,6 +1979,58 @@ the pieces. Which effect dominates is a measurement, not an argument — it is a
   §8**; (b) whether to measure the **B0-stop** variant of §6 before deciding
   anything about the default.
 
+### 9. SBND DEFAULT ON — adopted 2026-08-02, and the round's loose ends
+
+The owner scanned the §8 Bee pair and adopted B0. Toolkit `fe6b7d90` sets
+`cathode_x = 0`, `cathode_kink_xcut = 5` (cm) in **both** SBND entry points —
+`clus.jsonnet`'s `pr()` signature and `wct-pr-perevt.jsonnet`'s TLA layer.
+Setting only one would not work: the other's explicit `null` overrides it back
+to OFF.
+
+**SBND PR output is NOT bit-identical.** 21 of 1000 mcp1k events move (§1).
+Any SBND baseline taken before `fe6b7d90` — including
+`docs/pr/pr20-sbnd-b0-baseline.txt` — is now the *legacy* path, not the default,
+and a future A/B needs a fresh one.
+
+Gates on the flip:
+
+| gate | result |
+|---|---|
+| compiled config, **production PR pipeline** | **PASS** — exactly 2 keys appear (`cathode_kink_xcut: 5`, `cathode_x: 0`), nothing else |
+| compiled config, **nusel pipeline** (stops at `tagger_check_fc`) | **PASS — IDENTICAL**; the node is never instantiated |
+| scope | **PASS** — 2 files, both SBND; `cfg/pgrapher/common/` untouched ⇒ PDHD/PDVD/uBooNE cannot move |
+| bare run == production | **PASS** — 4 events with no env knobs (169824, 57661, 286400, 172794) reproduce the TLA-driven ON arm member-for-member |
+
+**What this does and does not change.** Only jobs whose pipeline includes
+`tagger_check_neutrino` — the PR chain — are affected. SBND cosmic tagging
+(TGM/STM/FC, the `nusel` job) is byte-identical, proven above, and that is why
+the `nusel-evt*.tsv` censuses in Part V §5 read 300/300 and 48/48.
+
+#### Loose ends carried out of this round
+
+1. **B1 is closed, not deferred** — 0 firings in 476 graph events with B0 on
+   (§5). It is no longer "the backstop"; if the residual in item 2 ever needs a
+   fix, that fix should be re-derived, not taken from §B1 as written.
+2. **A cathode stub survives B0** — evt 409634 keeps one (6.81 → 4.26 cm),
+   built by a breaker other than `segment_search_kink`. Two more degree-2
+   cathode-band vertices survive at ~98–109°, correctly.
+3. **B0 reduces, it does not eliminate.** Cathode-band vertices (|x| < 3 cm)
+   go 28 → 25 on the 300 slice and 98 → 86 on the 700 — roughly an 11 %
+   reduction. doc pr/12 §7's "13 of 44 spanned crossers acquire a cathode-band
+   vertex" is improved, not solved.
+4. **The B0-stop variant (§6) was never measured.** The owner adopted
+   B0-continue on the Bee evidence, so the question is moot for shipping — but
+   it remains the answer if a later sample shows an invented break like evt
+   172794's that scans badly.
+5. **`pr20_census.py` cannot see PR-layer changes** (Part V §5). Any future
+   round touching `tagger_check_neutrino` must census with
+   `pr_scores_table.py`, not the nusel tsv.
+6. **Part I's standing prediction needs rebasing.** Its
+   `kine_reco_Enu` 1202.5 → ≈841 MeV for evt 169824 was measured before A1/A2
+   and before B0. The current baseline for that event is **1071.17 MeV**
+   (`work-b0pr300-on`), and Part I must be compared against that, not the old
+   number.
+
 ### 8. Bee scan set for the moved events
 
 14 events — the 10 whose neutrino vertex moved, the 2 with a `cosmict_flag`
