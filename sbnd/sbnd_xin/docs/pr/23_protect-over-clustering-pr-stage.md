@@ -296,6 +296,32 @@ real residual hop), 360535 (re-join fired), 267597 and 269774
 
 ## 6. V4 — broad impact (valfast 629) (pending)
 
-## 7. Bee sets (pending)
+## 7. Bee sets (for owner examination)
+
+Built with `make_pr_bee.py` (Q/L layers incl. deadarea merged from the
+matching ql roots), artifacts + build logs + `urls.txt` under `bee-pr23/`.
+OFF/ON pairs share bee event indices, so the same index shows the same event
+in both sets.
+
+| set | events | URL |
+|-----|--------|-----|
+| nueCC48 **OFF** | 47 (116962 has no nu candidate — TGM) | <https://www.phy.bnl.gov/twister/bee/set/cb297161-73f5-4a14-8909-b64ffbc0a9fe/event/list/> |
+| nueCC48 **ON** | 47 | <https://www.phy.bnl.gov/twister/bee/set/4c44a311-c16e-4fcd-a327-63773ff38a61/event/list/> |
+| 386948 OFF (pilot) | 1 | <https://www.phy.bnl.gov/twister/bee/set/84d691fe-d423-4586-b906-812420bc1407/event/list/> |
+| 386948 ON | 1 | <https://www.phy.bnl.gov/twister/bee/set/307fd253-3a41-4133-867a-01565ac04aff/event/list/> |
+| cathode-5 OFF (`cathO`) | 169824 286400 315497 406796 409634 | <https://www.phy.bnl.gov/twister/bee/set/20d4c217-34be-48e1-9b74-3e8c420198f7/event/list/> |
+| cathode-5 ON (`cathB`, re-join 5/4/8) | same 5 | <https://www.phy.bnl.gov/twister/bee/set/8e342b4b-79fe-4b07-aab1-6d4a24263d1a/event/list/> |
+
+Exemplar bee indices in the nueCC48 pair (§5.3):
+
+| bee idx | evt | why look |
+|---------|-----|----------|
+| 21 | 271851 | **the flagged regression**: nue tagger stops filling ON (vertex moved 25 cm, main 121→71 cm) |
+| 3 | 10550 | vertex relocates 77 cm ON; nue tagger starts filling |
+| 27 | 433451 | nue tagger starts filling ON, saturated nue-like |
+| 45 | 400474 | biggest bridge cleanup (206→19 cm) + the one real residual 18.6 cm hop |
+| 23 | 360535 | the cathode re-join fired here — crosser preserved |
+| 40 | 267597 | pre-existing cathode-band pairs (unchanged) + numu_score sign flip |
+| 20 | 269774 | largest main-length change (174→75 cm) |
 
 ## 8. V6 — production flip (pending)
