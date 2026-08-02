@@ -15,6 +15,10 @@ No C++, jsonnet or runner changed for either part. The files this doc adds are
 its two figures under `docs/pics/` and the three read-only analysis scripts
 named in the Part II repro block.
 
+A plan-review round (2026-08-02) went over both fix designs before any
+implementation. Its inline additions are marked *(plan review)*; the combined
+ordering of the two parts is the new §"Execution order" at the end.
+
 ## Part I — a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged
 
 **Status: DESIGN ONLY — no code written, no knob exists yet.** This part records
@@ -259,6 +263,18 @@ silently.
 Empty name ⇒ array never created ⇒ no key-set change ⇒ byte-identical for
 every caller (PDHD, PDVD, uBooNE, SBND).
 
+*(plan review)* Two notes against the source. First, `merge_clusters` already
+has an `orig_main_aname` parameter, and its array name is
+`real_cluster_main` — which marks only the rows of the one *representative*
+donor member. The new array marks *every* member that carried the flag, and
+its name `real_cluster_was_main` differs from the existing one by a single
+word. The parameter comment must spell the distinction out, or the next
+reader will conflate them the way this review nearly did. Second, the
+carried-provenance-pair registry in the same function
+(`assoc_cluster_id`/`assoc_cluster_main`) is not a shortcut here: it carries
+arrays that exist on the members *before* the merge, while `was_main` must be
+created *at* merge time from the live flag. The new parameter is needed.
+
 #### P2 — re-express it as a SEPARATE flag
 
 `ClusteringUnmergeBundle`, knob `restore_demoted_mains` (default false): a
@@ -288,6 +304,13 @@ radius at zero.
 Same key-homogeneity trap one level up: when the knob is on, `demoted_main`
 must be materialised (0/1) on **every** cluster for the `cluster_scalar` PC,
 exactly as `QLMatching.cxx:1341` does for `main_cluster`/`associated_cluster`.
+
+*(plan review)* Mechanically this is cheap: cluster flags are string-named
+scalars, not an enum bitmask — `Flags::main_cluster` is an
+`inline const std::string` in the `Flags` namespace
+(`ClusteringFuncs.h:69`) — so `demoted_main` is one new string constant with
+no persisted-format or flag-space concern. The materialisation obligation
+above is the whole serialisation story.
 
 #### P3 — let the cosmic taggers see them
 
@@ -338,6 +361,15 @@ never be silently dropped and a bad tag on a fragment is bounded.
 Same shape as `nu_skip_cosmic_bundle_min_length`, but a different question, so
 it wants its own tuning rather than inheriting the 15 cm.
 
+*(plan review)* Where that tuning comes from: the `n_frag` census
+(§Verification), **re-run after Part II's A1 lands**, with the companions
+classified into (a) demoted ex-bundle-mains (`assoc_cluster_main` today, P1's
+array once it exists) and (b) unjoined cathode-crosser halves — a straddle
+test of the companion's points against x = 0. Class (b) belongs to Part II's
+A1, not to P4: 315497 is in both parts of this doc precisely because it is a
+class-(b) companion, and tuning `cosmic_companion_min_length` on the pre-A1
+population would tune it on events A1 already fixes.
+
 ### Alternative considered and rejected: no new array
 
 `assoc_cluster_main` already separates them on this event (table in §Root cause
@@ -372,6 +404,18 @@ Knob-on demonstration is this event: cluster 26 tagged TGM, dropped from
 carry demoted mains, their length/charge, how many are TGM-taggable on
 geometry, and the resulting `kine_reco_Enu` shift distribution. Hard
 constraint: zero selection changes on the 48 nueCC events.
+
+*(plan review)* Two additions to that bar. (1) The census runs **after**
+Part II's A1 — A1 moves the unjoined crosser halves out of the companion
+population, and the classification in P4 above keeps the two parts from
+double-counting each other's events. (2) The ship/no-ship evidence for
+P3 + P4 ON is a full **mcp1k verdict census**, not the 48 nueCC events alone.
+That is the pr/19 precedent: the owner's decision there was made on 7/1000
+verdict changes that only the 1000-event census surfaced. The sweep costs
+~21 min at 8 jobs (`run_full1k_nusel.sh`) and the census + attribution
+machinery is already committed (`oc19_census_mcp1k.py`; same-binary OFF/ON
+rerun pairs for every changed event). Never present a knob for a ship
+decision without it.
 
 ### Staging
 
@@ -821,6 +865,16 @@ exactly as `m_mip_dqdx_median` is set today
 (`TaggerCheckNeutrino.cxx:73, 201, 459` — read the key, round-trip it in
 `default_configuration()`, assign to `pattern_algos.m_*`).
 
+*(plan review — two facts checked against source.)* `segment_search_kink`
+has exactly **two** call sites in the tree, both inside `break_segments`
+(`NeutrinoPatternBase.cxx:963`, `:1025`) — the veto cannot leak into STM or
+any other consumer, and the threading above covers every caller. And the
+skip must gate **only the four accept tests at index i**, leaving
+`refl_angles` / `para_angles` and the windowed `sum_angles` untouched: the
+loop breaks at the first qualifying index, so a vetoed cathode index simply
+lets the scan continue, and a genuine kink elsewhere on the segment sees
+arithmetic identical to today's.
+
 Why prefer this to B1:
 
 - **Nothing has to be undone.** No vertex, no stub segment, no splice, no refit
@@ -845,7 +899,11 @@ question, not built here.
 #### B1 — cathode-aware stub absorption (new C++, default OFF)
 
 A pass placed immediately after `examine_structure_3`
-(`NeutrinoPatternBase.cxx:1747`), or a branch inside it. For every segment S:
+(`NeutrinoPatternBase.cxx:1747`), or a branch inside it. *(plan review:
+prefer the standalone pass — a branch inside `examine_structure_3` edits a
+function every detector runs, and the knob-off gate then has to prove that
+edit inert; a separate pass keeps the production function byte-identical at
+the source level, the usual fork-not-modify shape.)* For every segment S:
 
 1. S's end-to-end extent < `cathode_stub_max_len` (C++ default **0 ⇒ pass OFF**;
    proposed SBND 8 cm), and
@@ -939,11 +997,15 @@ stated explicitly in the report rather than silently skipped.
 | A-5 | 48 nueCC events (`work-nuecc48-*`), full chain | **hard constraint: zero beam-label changes** (the pr/18 and pr/20 Part I bar) |
 | A-6 | the 13 `cath13-prod` events re-run and re-uploaded as a **fresh** Bee set | 315497 (and, with A2, 406796) draw as one object; the other 11 unchanged |
 | A-7 | owner eyeball of the 3 ambiguous merges (392354, 71266, 71882) and, if A2, of 315849 / 399702 | owner sign-off before default-ON |
+| A-8 | *(plan review)* mcp1k nusel sweep + verdict census (`oc19_census_mcp1k.py` pattern), before vs after | every verdict change explained by a new edge, enumerated; the count is the owner's ship-decision evidence (pr/19 precedent: decided on 7/1000) |
+| B0-0 | *(plan review — promoted from open question 3)* scratch build, evt 169824 only: flip the hard-coded `flag_break_track` (`TaggerCheckNeutrino.cxx:512`) to false | the stub and both cathode vertices disappear — the by-construction proof, run **before** implementing B0 |
 | B0-1 | knob OFF byte-identical (B0 edits `PRSegmentFunctions.cxx`, which uBooNE links): `qlport/scripts/ab_check.sh` both gates, `abtest/ab_compare.sh` pdhd + pdvd, `hash_archive.py` on SBND `mabc-pr.zip` ×6 | all PASS with `cathode_kink_xcut` unset |
 | B0-2 | compiled-config proof: `wcsonnet` the SBND PR job, `grep cathode_kink_xcut` | key present when on, absent when off |
-| B0-3 | knob ON, 300-event PR arm: count graph vertices within 3 cm of x = 0 (the doc pr/12 §7 statistic) and segment counts elsewhere | the cathode vertices go away; **no vertex more than `cathode_kink_xcut` from the cathode moves** — this is the "did we suppress a real kink" test |
+| B0-3 | knob ON, 300-event PR arm: count graph vertices within 3 cm of x = 0 (the doc pr/12 §7 statistic) and segment counts elsewhere | the cathode vertices go away; on events with **no** cathode-band vertex at baseline, vertices identical; on events where a break was suppressed, off-cathode changes are allowed but must be **traceable to the affected track** *(plan review: suppressing a break re-runs the search on the longer surviving segment, so its later break positions can legitimately shift — the original "no vertex away from the cathode moves" criterion would fail on expected behaviour)* |
 | B0-4 | knob ON, evt 169824 | segments `18005`/`18007`/`18008` become one; the PF tree has one muon; `kine_reco_Enu` recomputed and reported |
 | B0-5 | knob ON, 48 nueCC events | **hard constraint: zero beam-label changes**; neutrino vertices unmoved |
+| B0-6 | *(plan review)* determinism: knob ON, 3 events × 3 runs under `setarch x86_64 -R` | identical archives run-to-run — house bar for a pass that changes vertex selection |
+| B0-7 | *(plan review)* knob ON, mcp1k nusel sweep + verdict census vs baseline | changes enumerated and attributed (same-binary OFF/ON rerun pairs), same bar as A-8 |
 | B-1 | `./build/clus/wcdoctest-clus` | passes |
 | B-2 | knob OFF byte-identical: `abtest/ab_compare.sh` (pdhd + pdvd, `events.txt`), `qlport/scripts/ab_check.sh` (uboone, both gates), `hash_archive.py` on SBND `mabc-pr.zip` ×6 | all PASS — B1 touches `clus/`, which every detector links |
 | B-3 | knob ON, evts 169824 + 286400 | the stub segment is gone; the PF tree has one muon where it had three; `kine_reco_Enu` recomputed and reported |
@@ -992,7 +1054,8 @@ created fresh for this doc; no existing label or `work/` tree was written into).
    169824 alone should make the stub and both cathode vertices disappear. That
    is the one-line experiment that turns `kink_probe.py`'s offline
    re-evaluation into a direct proof, and it was not run here (it needs a C++
-   edit in a shared tree).
+   edit in a shared tree). *(plan review: promoted to gate B0-0 — it runs
+   before B0 is implemented, not after.)*
 4. Should `IDetectorVolumes` grow a cathode accessor, so the PR chain can ask
    instead of being told? The plane is already derivable from two faces'
    `inner_bounds`; B0 and `ClusteringCathodeConnect` would both stop carrying a
@@ -1005,6 +1068,35 @@ created fresh for this doc; no existing label or `work/` tree was written into).
 6. Why is 169824's 285 cm through-going crosser tagged `fc = 1` (contained) with
    `tgm = 0`? It is the selected nu candidate at `numu_score 3.11`. Out of scope
    here, but it is the same family as Part I: a cosmic that no tagger caught.
+
+## Execution order (plan review, 2026-08-02)
+
+Each change above carries its own gates; what the doc had not fixed is the
+order across the two parts. The review settles it:
+
+0. **Owner decisions first, no build.** Everything class A needs from the
+   owner can be decided from data already on disk: build **one fresh Bee set**
+   holding the 3 ambiguous A1 merges (392354, 71266, 71882 — gate A-7), the
+   A2 candidates (406796, 315849, 399702), and two or three of the clean A1
+   merges for contrast; upload; get the A1 sign-off and the A2 yes/no before
+   any code or config moves. In the same round run **B0-0** (the
+   `flag_break_track = false` scratch experiment on 169824) — it is the
+   by-construction proof B0's design rests on, and it costs one scratch build.
+1. **B0 + A1 land in one round** (the ordering argument in §Fix: A1 without
+   B0 raises the class-B rate). A2 rides along iff step 0 approved it.
+   Ship evidence: gates A-8 / B0-7 (the mcp1k census) plus the nueCC48
+   zero-change constraints (A-5 / B0-5).
+2. **Part I P1 + P2 in parallel** — inert bookkeeping, gate-proven
+   independently. Theirs is the expensive full-detector sweep, because
+   `ClusteringFuncs.cxx` is linked by every detector.
+3. **The `n_frag` census, post-A1** (Part I §Verification as amended):
+   classify companions into demoted ex-mains vs unjoined crosser halves, set
+   `cosmic_companion_min_length` from the class-(a) distribution.
+4. **P3 + P4**, with the same mcp1k-census bar before any default flips.
+
+The pr/19 lesson is budgeted throughout: a 1000-event nusel sweep is ~21 min
+at 8 jobs, and its verdict census is the artifact the owner actually decides
+on.
 
 ## Related
 
