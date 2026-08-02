@@ -1481,6 +1481,106 @@ SBND baseline taken before `a02c96b3` is stale.
 Not in this round, and not dropped: **B0** (written, parked, builds at S5),
 **B1** (deferred), **Part I P1–P4** (scheduled — §Execution order steps S8–S13).
 
+## Part IV — execution log, the B round (B0 knob-off, 2026-08-02)
+
+B0 — the cathode kink veto — implemented and gate-proven **knob OFF**. The knob
+itself is turned on in the next step (S6); nothing in this section changes any
+reconstruction output.
+
+### 0. Repro
+
+```bash
+# toolkit a02c96b3 + the B0 patch; ONE build, nothing else running.
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild > /home/xqian/tmp/pr20exec/b0_build.log 2>&1; echo rc=$?
+./build/clus/wcdoctest-clus
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/abtest
+./run_events.sh post_cathkink_clus clus && ./ab_compare.sh pre_cathkink_clus post_cathkink_clus
+
+cd ../qlport/scripts
+./sweep_5384.sh post_cathkink_ub 6  && ./ab_check.sh post_cathkink_ub  pre_cathkink_ub
+./sweep_5384.sh post_cathkink_ub2 6 && ./ab_check.sh post_cathkink_ub2 post_cathkink_ub   # A/A control
+
+cd ../../sbnd/sbnd_xin
+TAG=b0off ENTRIES="$(cat /home/xqian/tmp/pr20exec/b0_entries.txt)" ./run_full1k_nusel.sh 1000 4
+```
+
+**Binary provenance.** `libWireCellClus.so` md5 `525a7c21…` (pre-B0) →
+`d72afc9ff8e9f90e97e00adf87bc942a` (post-B0). Freshness proof: installed lib
+`2026-08-02 07:02:21` is newer than the newest edited source
+(`clus/src/TaggerCheckNeutrino.cxx`, `07:01:35`) — M1 satisfied, so the gates
+below compare two genuinely different binaries rather than one to itself.
+
+### 1. The change
+
+`segment_search_kink` gains two trailing defaulted arguments
+(`cathode_x = 0`, `cathode_kink_xcut = 0`) and one guard, placed so it gates
+**only** the four accept tests — `refl_angles` / `para_angles` and the windowed
+`sum_angles` arithmetic are untouched, and since the loop breaks at the first
+qualifying index, a vetoed cathode index simply lets the scan continue and a
+genuine kink elsewhere on the segment sees arithmetic identical to today's:
+
+```cpp
+if (cathode_kink_xcut > 0 &&
+    std::abs(fits[i].point.x() - cathode_x) < cathode_kink_xcut) continue;
+```
+
+The `> 0` guard and the strict `<` are both load-bearing: a `<=`, or a missing
+`> 0`, would make a point sitting exactly at `x = cathode_x` skip even with the
+knob off, and B0-1 would fail on a one-character bug.
+
+Threaded as `m_mip_dqdx_median` is: two `PatternAlgorithms` members, passed at
+both `segment_search_kink` call sites (`NeutrinoPatternBase.cxx:963, :1025`),
+read / round-tripped / assigned in `TaggerCheckNeutrino`, and exposed as
+`cathode_x` / `cathode_kink_xcut` on `tagger_check_neutrino()` with the
+null-key-suppression idiom.
+
+### 2. Gate B0-2 — compiled-config proof (knob off) — **PASS**
+
+The patched tree's compiled SBND Q/L JSON is **identical** to the pre-B0
+compile, and `cathode_kink_xcut` appears **0 times** — the key-suppression
+idiom holds, so the knob-off config is byte-identical for every caller.
+
+*(This was additionally proven ahead of the build, against a scratch `cfg/`
+tree, while diagnosing the retired arm of Part III §0b.)*
+
+### 3. Gate B0-1 — knob-off byte-identity
+
+| gate | scope | result |
+|---|---|---|
+| `abtest ab_compare pre_cathkink_clus vs post_cathkink_clus` | pdhd + pdvd, `events.txt` | **PASS — OVERALL PASS** |
+| `qlport ab_check post_cathkink_ub vs pre_cathkink_ub`, gate 1 | uboone, 35 events | **PASS — 35/35 content-identical** |
+| `qlport` gate 2 (tagger-compare logs) | uboone | **non-discriminating — see below** |
+| SBND `mabc-pr.zip` × 20, `hash_archive.py` | sbnd | **PASS — 20/20 identical** |
+| `./build/clus/wcdoctest-clus` | — | **PASS — 49 cases, 565 assertions** |
+
+SBND baseline: `docs/pr/pr20-sbnd-b0-baseline.txt`, captured from
+`work-mcp1kall-cathA12on2` **before** the B0 build, at toolkit `a02c96b3` with
+A1+A2 ON — exactly the state knob-off must reproduce. The comparison arm is
+`work-mcp1kall-b0off` (20 events, 0 failures).
+
+**On qlport gate 2.** It reported `identical=2 diff=33`. That is not evidence of
+a regression: an **A/A control run with the identical binary**
+(`sweep/post_cathkink_ub2` vs `post_cathkink_ub`) returns the *same* numbers —
+`ZIPS 35/35 content-identical, TAGGER identical=2 diff=33`. The differing lines
+are overwhelmingly permutations of the same value multisets (e.g.
+`[3.53e+01, 1.91e+01, 8.02e+01]` vs `[1.91e+01, 8.02e+01, 3.53e+01]`;
+`[1,0,0]` vs `[0,0,1]`), the pointer-order signature, and both logs are byte-for-byte
+the same *size*. This is a known and previously recorded property of that gate —
+only its ZIPS line discriminates. **Always run the A/A before reading anything
+into gate 2**; it was written down after the nue_tagger apa/face round and it
+cost a sweep again here for not being consulted first.
+
+### 4. Status
+
+B0 is landed **default OFF** and is inert by measurement on all four detectors.
+Still to come: **S6** — knob ON, where the doc's standing prediction for evt
+18259/169824 gets tested (segments 18005/18007/18008 become one, the PF tree
+carries one muon, and `kine_reco_Enu` is recomputed), plus the 300-event vertex
+census, the nueCC48 zero-change constraint and the determinism check. Then the
+SBND config line `cathode_kink_xcut = 5*wc.cm`.
+
 ## Related
 
 - doc pr/3 §8 — `nu_skip_cosmic_bundle` (the per-main version of this veto)
