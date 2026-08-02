@@ -67,6 +67,13 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             (run_pr_chain_batch.sh / run_nusel_evt.sh); before doc pr/22 the
             shorthands omitted them, so pre-pr/22 Bee sets show the PR fit of
             the PRE-unmerge flash bundle (inflated track_fit gap jumping).
+  -protect  insert the 'protect_bundle' stage after unmerge_assoc (doc pr/23:
+            uboone's second graph examination -- split beam-bundle clusters at
+            graph component boundaries; cathode re-join per the cfg operating
+            point).  Works with -stm/-tgm/-nu/-dnn or an explicit -p that
+            contains unmerge_assoc.  DEFAULT OFF until the production flip.
+            Env: SBND_PROTECT_BUNDLE=1; knob overrides SBND_PROTECT_GRAPH,
+            SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS (cm; 0 disables the re-join).
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
             the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} = the
             experiment window, same as SBND Q/L beam_pref).  Since doc 56 this
@@ -91,6 +98,14 @@ PIPELINE=""
 # Persist per-pass STM track fits + tracking-stm.root (doc 40).
 # DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
 STM_FIT="${SBND_STM_FIT:-0}"
+# PR-stage overclustering protection (doc pr/23): -protect inserts the
+# 'protect_bundle' stage after unmerge_assoc in whatever pipeline was chosen
+# (uboone's second graph examination; splits beam-bundle clusters at graph
+# component boundaries, cathode re-join per the cfg operating point).
+# DEFAULT OFF until the production flip.  Env: SBND_PROTECT_BUNDLE=1.
+# Knob overrides (validation only): SBND_PROTECT_GRAPH=relaxed|relaxed_pid,
+# SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS in cm (0 disables the re-join pass).
+PROTECT="${SBND_PROTECT_BUNDLE:-0}"
 NU=0
 BEAM_WINDOW=""
 # SCN (DL) neutrino vertex.  DEFAULT ON since 2026-07-30 (docs/pr/4): the
@@ -139,6 +154,8 @@ while [ $# -gt 0 ]; do
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
+        -protect|--protect) PROTECT=1; shift ;;
+        -no-protect|--no-protect) PROTECT=0; shift ;;
         -p*) PIPELINE="${1#-p}"; shift ;;
         *) _args+=("$1"); shift ;;
     esac
@@ -176,6 +193,31 @@ fi
 if [ "$STM_FIT" = 1 ] && [ -n "$PIPELINE" ]; then
     PIPELINE="$PIPELINE,stm_magnify"
 fi
+
+# -protect: insert protect_bundle after unmerge_assoc (doc pr/23 placement:
+# after both un-merges, before steiner).  No-op on an empty pipeline (the
+# identity gate must stay empty) or when the stage is already named.
+if [ "$PROTECT" = 1 ] && [ -n "$PIPELINE" ]; then
+    case ",$PIPELINE," in
+        *,protect_bundle,*) : ;;
+        *,unmerge_assoc,*) PIPELINE="${PIPELINE/unmerge_assoc/unmerge_assoc,protect_bundle}" ;;
+        *) echo "ERROR: -protect needs unmerge_assoc in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
+    esac
+fi
+
+# protect_bundle knob overrides, validation only.  Empty = no TLA = the cfg
+# default (= the SBND operating point).  The _XCUT/_DYZ/_DIS values are in CM
+# and converted here via wirecell.jsonnet, since the C++ takes internal units
+# (the cathode_kink_xcut cm-vs-internal trap, doc pr/20).
+PROT_TLA=()
+[ -n "${SBND_PROTECT_GRAPH:-}" ] && \
+    PROT_TLA+=(--tla-str "protect_graph_name=${SBND_PROTECT_GRAPH}")
+[ -n "${SBND_PROTECT_REJOIN_XCUT:-}" ] && \
+    PROT_TLA+=(--tla-code "protect_cathode_rejoin_xcut=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_XCUT}")
+[ -n "${SBND_PROTECT_REJOIN_DYZ:-}" ] && \
+    PROT_TLA+=(--tla-code "protect_cathode_rejoin_dyz=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DYZ}")
+[ -n "${SBND_PROTECT_REJOIN_DIS:-}" ] && \
+    PROT_TLA+=(--tla-code "protect_cathode_rejoin_dis=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DIS}")
 
 PIPELINE_CODE="[]"
 if [ -n "$PIPELINE" ]; then
@@ -231,6 +273,7 @@ process_event() {
         `# per-event, plus this runner's own pipeline/beam-window/DL choices,` \
         `# is named here.` \
         --tla-code "pipeline_names=$PIPELINE_CODE" \
+        "${PROT_TLA[@]}" \
         --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
         --tla-str  "dl_weights=$DL_WEIGHTS" \
         --tla-code "beam_window_us=$BEAM_WINDOW_CODE" \

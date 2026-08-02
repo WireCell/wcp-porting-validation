@@ -106,6 +106,16 @@ TFJSON_TLA=()
 # after tracking_visitor because it opens tracking-pr.root in UPDATE mode).
 PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output"
 
+# PR-stage overclustering protection (doc pr/23): uboone's second graph
+# examination (Protect_Over_Clustering) -- split each beam-bundle cluster at
+# graph component boundaries after the un-merges, cathode re-join per the cfg
+# operating point.  SBND_PROTECT_BUNDLE=1 inserts the stage after
+# unmerge_assoc; DEFAULT OFF until the production flip, so a bare run of this
+# script stays the pre-pr/23 production chain.
+if [ "${SBND_PROTECT_BUNDLE:-0}" = 1 ]; then
+    PIPELINE="${PIPELINE/unmerge_assoc,/unmerge_assoc,protect_bundle,}"
+fi
+
 # Cathode kink veto (doc pr/20 Part II B0), cm.  EMPTY = emit no TLA = the job
 # default null = C++ 0 = OFF = the legacy kink search, so a bare run of this
 # script is byte-identical to before the knob existed.
@@ -113,6 +123,19 @@ PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger
 CATH_TLA=()
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+# protect_bundle knob overrides (doc pr/23, validation only).  EMPTY = no TLA
+# = the cfg default = the SBND operating point.  The _XCUT/_DYZ/_DIS values
+# are in CM, converted via wirecell.jsonnet because the C++ takes INTERNAL
+# units (the cathode_kink_xcut cm-vs-internal trap, doc pr/20).  0 disables
+# the cathode re-join pass (prototype-faithful).
+[ -n "${SBND_PROTECT_GRAPH:-}" ] && \
+    CATH_TLA+=(--tla-str "protect_graph_name=${SBND_PROTECT_GRAPH}")
+[ -n "${SBND_PROTECT_REJOIN_XCUT:-}" ] && \
+    CATH_TLA+=(--tla-code "protect_cathode_rejoin_xcut=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_XCUT}")
+[ -n "${SBND_PROTECT_REJOIN_DYZ:-}" ] && \
+    CATH_TLA+=(--tla-code "protect_cathode_rejoin_dyz=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DYZ}")
+[ -n "${SBND_PROTECT_REJOIN_DIS:-}" ] && \
+    CATH_TLA+=(--tla-code "protect_cathode_rejoin_dis=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DIS}")
 # Demoted-main flag on the outer un-merge (doc pr/20 Part I P2).  EMPTY = emit
 # no TLA = the job default null = C++ false = OFF.  Needs the Q/L stage to have
 # run with SBND_SAVE_WASMAIN=1, else the visitor warns and flags nothing.

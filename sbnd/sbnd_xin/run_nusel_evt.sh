@@ -441,6 +441,11 @@ UNMERGE="${SBND_UNMERGE:-}"
 # component (proxy).  -unmerge-comp selects the proxy.
 UNMERGE_MODE="${SBND_UNMERGE_MODE:-}"
 UNMERGE_ASSOC="${SBND_UNMERGE_ASSOC:-}"
+# PR-stage overclustering protection (doc pr/23): -protect / SBND_PROTECT_BUNDLE=1
+# inserts 'protect_bundle' after unmerge_assoc (uboone's second graph
+# examination; cathode re-join per the cfg operating point).  DEFAULT OFF
+# until the production flip, so a bare run stays the pre-pr/23 chain.
+PROTECT="${SBND_PROTECT_BUNDLE:-0}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -491,6 +496,8 @@ while [ $# -gt 0 ]; do
         -no-stm-d66cuts|--no-stm-d66cuts) STM_D66CUTS=0; shift ;;
         -stm-fv|--stm-fv) STM_FV=1; shift ;;
         -no-stm-fv|--no-stm-fv) STM_FV=0; shift ;;
+        -protect|--protect) PROTECT=1; shift ;;
+        -no-protect|--no-protect) PROTECT=0; shift ;;
         -unmerge|--unmerge) UNMERGE=1; shift ;;
         -unmerge-comp|--unmerge-comp) UNMERGE=1; UNMERGE_MODE=component; shift ;;
         -unmerge-assoc|--unmerge-assoc) UNMERGE=1; UNMERGE_ASSOC=1; shift ;;
@@ -521,6 +528,17 @@ if [ "$UNMERGE" = 0 ]; then
 elif [ "$UNMERGE_ASSOC" = 0 ]; then
     PIPELINE="${PIPELINE/unmerge_assoc,/}"
     _pipe_changed=1
+fi
+# -protect (doc pr/23): protect_bundle sits after both un-merges, before
+# steiner.  Refused when the un-merges were dropped -- the stage's split
+# targets the post-unmerge bundle structure.
+if [ "$PROTECT" = 1 ]; then
+    case ",$PIPELINE," in
+        *,unmerge_assoc,*)
+            PIPELINE="${PIPELINE/unmerge_assoc,/unmerge_assoc,protect_bundle,}"
+            _pipe_changed=1 ;;
+        *) echo "ERROR: -protect needs unmerge_assoc in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
+    esac
 fi
 # -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
 if [ "$STM_FIT" = 1 ]; then
