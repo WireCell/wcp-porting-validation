@@ -384,16 +384,28 @@ To review: `work-mcp1kall-{u17on1kb,oc19on1k}/nusel_evt{395060,386948,
 ON), guard markers in the ON arm's `.log_e{471,956,546,318,257,532,308,
 667,369}.log`.
 
-Bee scan sets (same event order in both, so index N compares directly;
-layers per event: raw `img`, QL `clustering`, final `pr`, `op` flashes,
-`stm_fit` where the STM fit ran):
+Bee scan sets v2 (same event order in both, so index N compares directly;
+layers per event: raw `img`, QL `clustering`, `op` flashes, plus the full
+`-nu` PR-chain layers `track_fit` / `shower_track` / `vertices` / `mc`
+particle flow where TaggerCheckNeutrino built a PR graph — fresh
+`run_pr_evt.sh data -nu` runs on the sweep pctrees, roots
+`work-oc19scan-{old,new}`):
 - OLD (baseline `u17on1kb`):
-  <https://www.phy.bnl.gov/twister/bee/set/50fbdda3-160d-4397-9065-8444fc0994e3/event/list/>
+  <https://www.phy.bnl.gov/twister/bee/set/29af12de-2cb2-43fb-b3d8-934000889c0d/event/list/>
 - NEW (guard+adopt ON `oc19on1k`):
-  <https://www.phy.bnl.gov/twister/bee/set/e75fd523-85ad-4342-b4ca-6fb3ff6b005f/event/list/>
+  <https://www.phy.bnl.gov/twister/bee/set/2ff42e09-f7e9-4bd6-86c8-086254f7fbb0/event/list/>
 - Index map: 0=395060 (nu-cand→TGM), 1=386948 (bundle 6063→1777),
   2=65025 (506→13), 3=315959 (no-bundle→30-pt TGM), 4=56519, 5=62495,
-  6=314925, 7=348889, 8=407258 (4-8 = new nu-candidates).  To flip after review: `iso_cathode_guard=true` /
+  6=314925, 7=348889, 8=407258 (4-8 = new nu-candidates).
+- PR-layer availability: idx 1 and 5 have the full PR layers in BOTH arms;
+  idx 2 in OLD only (the NEW 13-pt candidate is `nosteiner`).  The tiny new
+  candidates (idx 3,4,6,7,8) have no steiner points, hence no PR graph and
+  no fit layers in either arm.  Idx 0 (395060) has no PR layers in EITHER
+  arm: the standalone `-nu` pipeline (no un-merge visitors) TGM-tags its
+  beam cluster even in the baseline (`nu_skip_cosmic` skip,
+  TaggerCheckNeutrino.cxx:341) — the OLD nusel nu-candidate verdict there
+  comes via the un-merge pipeline, i.e. the event is borderline TGM in
+  BOTH arms.  (Superseded v1 sets: 50fbdda3…, e75fd523….)  To flip after review: `iso_cathode_guard=true` /
 `adopt_nu_fragments=true` TLA defaults in
 `wct-clus-matching-perevt.jsonnet` (runner escapes
 `SBND_ISO_CATHODE_GUARD=0` / `SBND_ADOPT_NU_FRAG=0` then force legacy).
