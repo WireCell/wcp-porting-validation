@@ -421,6 +421,21 @@ process_event() {
         1) ISOGUARD_TLA=(--tla-code "nu_iso_band_guard=true") ;;
         0) ISOGUARD_TLA=(--tla-code "nu_iso_band_guard=false") ;;
     esac
+    # doc pr/19 campaign pair (SBND config default OFF pending validation):
+    # iso_cathode_guard = per-APA clustering_isolated declines the 80 cm
+    # small->big absorb for near-cathode smalls; adopt_nu_fragments = all-APA
+    # rescue pass 3 adopts the freed flashless fragments into a beam-window
+    # cluster (run 18253 evt 444187).  Unset inherits the config default;
+    # =1 forces on, =0 forces the legacy path (byte-identical).
+    local OC_TLA=()
+    case "${SBND_ISO_CATHODE_GUARD:-}" in
+        1) OC_TLA=(--tla-code "iso_cathode_guard=true") ;;
+        0) OC_TLA=(--tla-code "iso_cathode_guard=false") ;;
+    esac
+    case "${SBND_ADOPT_NU_FRAG:-}" in
+        1) OC_TLA+=(--tla-code "adopt_nu_fragments=true") ;;
+        0) OC_TLA+=(--tla-code "adopt_nu_fragments=false") ;;
+    esac
 
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     local _ov=""
@@ -440,6 +455,7 @@ process_event() {
         "${CRESCUE_TLA[@]}" \
         "${VVETO_TLA[@]}" \
         "${ISOGUARD_TLA[@]}" \
+        "${OC_TLA[@]}" \
         "${KNOB_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
