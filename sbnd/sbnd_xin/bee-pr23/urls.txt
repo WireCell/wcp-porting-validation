@@ -6,3 +6,5 @@ cath-off https://www.phy.bnl.gov/twister/bee/set/20d4c217-34be-48e1-9b74-3e8c420
 cath-on https://www.phy.bnl.gov/twister/bee/set/8e342b4b-79fe-4b07-aab1-6d4a24263d1a/event/list/
 cath5new-off https://www.phy.bnl.gov/twister/bee/set/c5c94f9e-9743-4a6d-aedc-9ff92cf0427e/event/list/
 cath5new-on https://www.phy.bnl.gov/twister/bee/set/23c92803-47ac-4f05-bb44-86011fa2ca17/event/list/
+vfmov16-off https://www.phy.bnl.gov/twister/bee/set/bdb6c0aa-6798-4481-b66e-2455a7ba04c7/event/list/
+vfmov16-on https://www.phy.bnl.gov/twister/bee/set/5cb3bfcd-68ec-49ba-821f-eed254dd1771/event/list/

@@ -402,7 +402,61 @@ OFF/ON exemplar list together with 400474 (biggest bridge cleanup + the one
 real residual hop), 360535 (re-join fired), 267597 and 269774
 (len 174→75 cm).
 
-## 6. V4 — broad impact (valfast 629) (pending)
+## 6. V4 — broad impact (valfast 629)
+
+Repro:
+```
+cd sbnd_xin
+./valfast/run_valfast.sh pr23off                        # OFF arm, fail=0
+SBND_PROTECT_BUNDLE=1 ./valfast/run_valfast.sh pr23on   # ON arm,  fail=0
+VF_CMP_JOBS=8 ./valfast/valfast_compare_par.sh pr23off pr23on
+#   -> /home/xqian/tmp/pr23_vf_cmp_par.log   (rc=1 = DIFF, expected knob-ON)
+# full per-cell diffs (vf_scores_diff.py --max-print 2000):
+#   docs/pr/23_v4-scorediff-mcp1k.txt
+```
+
+**Caveat first**: valfast PR-tail mode runs both arms from the *pinned legacy
+hubs* (`work-mcp1kall-d59k` etc., declared with `SBND_REQUIRE_WASMAIN=0`,
+§4.3). Both arms see identical inputs, so the OFF→ON delta isolates
+`protect_bundle` cleanly — but the hubs are P2-inert and pre-A1/A2, so the
+absolute numbers are not the production operating point. The production-tree
+behaviour (cathode included) is §4.2/§5; this section is the *population-scale*
+delta census.
+
+Tooling: `valfast/valfast_compare_par.sh` = chunk-parallel fork of
+`valfast_compare.sh` (identical gates/output; gate 1 fans `vf_tree_compare.py`
+over `VF_CMP_JOBS` event chunks). 629 events compare in ~7 min at 8-way vs
+1 h+ serial.
+
+### 6.1 Movement census (OFF → ON)
+
+| sample | events | archives ≠ | score rows moved | event_label flips |
+|--------|-------:|-----------:|-----------------:|------------------:|
+| mcp1k (data) | 572 | 211 | 169 (991 cells) | **8** |
+| nuecc48 (data) | 47 | 47 | 39 (222 cells) | 0 |
+| r1qlmc (sim) | 5 | 2 | 2 | 0 |
+| r2mc (sim) | 5 | 1 | 1 | 0 |
+
+mcp1k columns moved: `nu_sel_n_assoc`=169 (mechanical — the stage creates
+associated fragments), `numu_score`=137, `kine_reco_Enu`=155, vertex
+(`nu_{x,y,z}`)≈108, `nue_score`=48, `cosmict_flag`=30. Sign-relevant flips at
+population scale: `numu_score` crosses 0 on **30/572** events, `nue_score`
+crosses 0 on 5 and transitions −15↔filled on 31.
+
+### 6.2 The 8 event_label flips (mcp1k)
+
+**cosmic-tagged → nu-candidate (5)**: 52195 (the §4.2 TGM-defeat exemplar,
+now confirmed at population scale: Enu 2181 MeV, 417.9 cm main), 171446,
+286617, 287434, 398238 (biggest: vertex 509 cm away, Enu +460 MeV).
+**nu-candidate → cosmic-tagged (3)**: 283463, 286177, 394532 — the split
+main is now convicted by the cosmic taggers.
+
+All 8 are reported, not tuned (rule 7); mechanism per event is for the owner's
+Bee examination (§7, `vfmov16` pair). The promotions are the §4.2 ordering
+question at scale — uboone ran Protect_Over_Clustering *after* its
+cosmic-tagging executable, our stage runs *before* tagger_check_tgm/stm/fc —
+so the V6 flip decision should weigh: 5/572 (~0.9%) cosmic promotions,
+3/572 demotions on data.
 
 ## 7. Bee sets (for owner examination)
 
@@ -419,6 +473,8 @@ in both sets.
 | 386948 ON | 1 | <https://www.phy.bnl.gov/twister/bee/set/307fd253-3a41-4133-867a-01565ac04aff/event/list/> |
 | cathode-5 OFF (`cathO`) | 169824 286400 315497 406796 409634 | <https://www.phy.bnl.gov/twister/bee/set/20d4c217-34be-48e1-9b74-3e8c420198f7/event/list/> |
 | cathode-5 ON (`cathB`, re-join 5/4/8) | same 5 | <https://www.phy.bnl.gov/twister/bee/set/8e342b4b-79fe-4b07-aab1-6d4a24263d1a/event/list/> |
+| V4 movers **OFF** (`vfmov16`, mcp1k, d59k hubs) | 16 (§6.2 flips + top movers) | <https://www.phy.bnl.gov/twister/bee/set/bdb6c0aa-6798-4481-b66e-2455a7ba04c7/event/list/> |
+| V4 movers **ON** (`vfmov16`) | same 16 | <https://www.phy.bnl.gov/twister/bee/set/5cb3bfcd-68ec-49ba-821f-eed254dd1771/event/list/> |
 
 Exemplar bee indices in the nueCC48 pair (§5.3):
 
@@ -431,5 +487,27 @@ Exemplar bee indices in the nueCC48 pair (§5.3):
 | 23 | 360535 | the cathode re-join fired here — crosser preserved |
 | 40 | 267597 | pre-existing cathode-band pairs (unchanged) + numu_score sign flip |
 | 20 | 269774 | largest main-length change (174→75 cm) |
+
+Bee indices in the `vfmov16` V4 pair (same index = same event in OFF and ON;
+built from the pinned d59k hubs, §6 caveat applies):
+
+| bee idx | evt | why look |
+|---------|-----|----------|
+| 0 | 52195 | cosmic→nu promotion (the §4.2 TGM-defeat exemplar; Enu 2181 MeV) |
+| 1 | 171446 | cosmic→nu promotion |
+| 2 | 286617 | cosmic→nu promotion |
+| 3 | 287434 | cosmic→nu promotion |
+| 4 | 398238 | cosmic→nu promotion; selected vertex 509 cm from OFF's, Enu +460 MeV |
+| 5 | 283463 | nu→cosmic demotion (nue −4.3 → −15) |
+| 6 | 286177 | nu→cosmic demotion (nu no longer evaluated) |
+| 7 | 394532 | nu→cosmic demotion (nu no longer evaluated) |
+| 8 | 63427 | numu −0.94→+2.79, vertex moves 425 cm, Enu +339 MeV |
+| 9 | 316553 | numu −2.15→+2.04, vertex moves 374 cm, Enu +540 MeV |
+| 10 | 63669 | numu −1.98→+1.83, vertex moves 384 cm, nue fills |
+| 11 | 284637 | numu −1.04→+1.35, vertex moves 400 cm |
+| 12 | 412692 | numu −0.02→+1.18, vertex moves 383 cm |
+| 13 | 321107 | numu −0.65→+0.92, vertex moves 211 cm, Enu −363 MeV |
+| 14 | 61579 | numu −1.12→+4.09, vertex moves 215 cm |
+| 15 | 320029 | numu −0.01→+3.61, vertex moves 203 cm, Enu +219 MeV |
 
 ## 8. V6 — production flip (pending)
