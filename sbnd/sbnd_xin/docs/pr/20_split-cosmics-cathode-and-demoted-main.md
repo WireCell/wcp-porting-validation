@@ -226,6 +226,16 @@ separate flag, let the cosmic taggers see it, act on the verdict.**
 
 #### P1 — preserve the pre-merge main flag
 
+> **Built, and its premise measured false — see Part VII §3.** P1 ships as
+> written (commits `c57fa1ec` + `f43063b2`, default OFF), but the flag it
+> records is 1 on **every** member at merge time (112,620 rows, 0 clear),
+> because `QLMatching::recompose_cluster_groups` folds each bundle's companions
+> back into its main before the tree is emitted and SBND stamps
+> `flag_matched_mains` on every matched cluster.  The array is therefore a
+> fail-closed **guard**, not a discriminator, and P2's "all rows == 1" test is
+> satisfied by every split part (143/143 measured).  Read the paragraphs below
+> as the design intent, not as a description of what the array distinguishes.
+
 `merge_clusters()` (`clus/src/ClusteringFuncs.cxx`) gains an optional
 `orig_wasmain_aname`, default `""`. One line in the member loop beside the
 existing `orig_id.resize(...)`, before `destroy_child(live)`:
@@ -372,6 +382,13 @@ population would tune it on events A1 already fixes.
 
 ### Alternative considered and rejected: no new array
 
+> **Superseded by Part VII §3.**  The open question this section rests on --
+> "whether the flash-time merge can ever group an unmatched cluster
+> (`t0 = -1e12`) into a beam bundle has **not** been checked" -- is now checked:
+> it cannot (unmatched clusters get singleton flash-time groups), and every
+> merge member is a matched bundle main by construction.  The two concepts this
+> section works to separate do not diverge on this configuration.
+
 `assoc_cluster_main` already separates them on this event (table in §Root cause
 2): rcid 19 → {1: 363, 0: 11}, rcid 26 → all 1. So "companion whose blobs are
 all `assoc_cluster_main == 1`" picks out cluster 26 today with zero new state.
@@ -431,7 +448,9 @@ physics moves.
    **not** analysed here.
 2. Whether the 361 MeV shower moved `numu_score` (needs an A/B).
 3. Whether `assign_flash_t0_groups` can group unmatched clusters
-   (`t0 = -1e12`) — see §Alternative.
+   (`t0 = -1e12`) — see §Alternative.  **ANSWERED (Part VII §3): no.**
+   An unmatched cluster gets a unique singleton group and is never linked, so
+   every member of a flash-group merge is a matched bundle main.
 
 ## Part II — a cathode-crossing track broken in two
 
@@ -2046,6 +2065,287 @@ Per-event key, ordered worst-first, with the vertex and score deltas to look
 for: `sbnd_xin/bee-pr20/b0v.scan-key.md`. Both arms come from the identical Q/L
 tree (`work-mcp1kall-cathA12on2`, A1+A2 ON) and the identical binary; only the
 two TLAs differ.
+
+## Part VII — execution log, Part I S8+S9 (P1 + P2, knobs OFF, 2026-08-02)
+
+P1 (the pre-merge main array) and P2 (the separate `demoted_main` flag) are
+implemented and gate-proven **knobs OFF**. Neither knob is enabled anywhere;
+every detector's output is byte-identical.
+
+**One measurement changes Part I's story and is reported before the gates, not
+after them: the flag P1 records is 1 on every member at merge time.** §3 below.
+
+### 0. Repro
+
+```bash
+# Binary provenance.  TWO binaries, because S8's first build had a defect
+# (§2b): libWireCellClus.so 46255b72f439a61c7ab8916d577f5b9f (commit c57fa1ec)
+# and e0f8650a4a13237142f493a07af80c0c (commit f43063b2).  Every gate below
+# names which one it ran against.  Baseline binary: d72afc9f... at fe6b7d90.
+
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild > /home/xqian/tmp/pr20exec/pi1_build2.log 2>&1; echo rc=$?
+./build/clus/wcdoctest-clus
+
+# PI-0, the baseline this round is judged against -- RETAKEN at fe6b7d90
+# because A1+A2 and the cathode kink veto both changed SBND since Part II.
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+TAG=pi0base ENTRIES="164 185 191 249 263 314 316 366 454 496 809 850 851 852 \
+  853 854 855 856 857 858" ./run_full1k_nusel.sh 1000 6
+PR_JOBS=8 ./run_pr_chain_batch.sh work-mcp1kall-pi0base work-pi0base-pr data <20 ids>
+# -> docs/pr/pr20-sbnd-partI-baseline.txt   (100 member-content hashes)
+
+# PI-1 / PI-2 / PI-3, knobs off, against the e0f8650a binary
+/home/xqian/tmp/pr20exec/pi2_gates.sh          # the three arms, in parallel
+
+# PI-5 / PI-6, knobs ON
+SBND_SAVE_WASMAIN=1 TAG=pi2on ENTRIES="<the same 20>" ./run_full1k_nusel.sh 1000 6
+PR_JOBS=6                                 ./run_pr_chain_batch.sh work-mcp1kall-pi2on work-pi2on-proff data <20 ids>
+PR_JOBS=6 SBND_RESTORE_DEMOTED_MAINS=1    ./run_pr_chain_batch.sh work-mcp1kall-pi2on work-pi2on-pron  data <20 ids>
+python3 pr20_wasmain_check.py work-mcp1kall-pi2on/ql_evt*/pctree-evt*.tar.gz
+python3 pr_scores_table.py --root work-pi2on-proff --out off.tsv
+python3 pr_scores_table.py --root work-pi2on-pron  --out on.tsv
+```
+
+Arms on disk, and which is which — three knob-off arms exist and only the
+first is the baseline of record:
+
+| arm | binary | role |
+|---|---|---|
+| `work-mcp1kall-pi0base` + `work-pi0base-pr` | d72afc9f (fe6b7d90) | **the baseline**, hashed into `pr20-sbnd-partI-baseline.txt` |
+| `work-mcp1kall-pi1off` + `work-pi1off-pr` | 46255b72 (c57fa1ec) | first knob-off gate |
+| `work-mcp1kall-pi2off` + `work-pi2off-pr` | e0f8650a (f43063b2) | knob-off re-gate after the §2b fix |
+| `work-mcp1kall-pi2on`, `work-pi2on-proff`, `work-pi2on-pron` | e0f8650a | the knob-ON pair (same Q/L tree, PR knob off vs on) |
+
+### 1. The baseline had to be retaken, and that is not bookkeeping
+
+`abtest/snap/pre_cathkink_clus` (pdhd+pdvd) and
+`qlport/scripts/sweep/pre_cathkink_ub` (uboone) **carry over**: gate B0-1
+PASSed against exactly those labels, and everything that landed since
+(`b19c56ab`, `fe6b7d90`) is SBND jsonnet. The SBND baseline does **not** carry
+over — A1+A2 changed SBND output deliberately and `cathode_kink_xcut = 5`
+changed it again — so `pr20-sbnd-b0-baseline.txt` is now a record of the
+*legacy* path. Retaken as `docs/pr/pr20-sbnd-partI-baseline.txt`, beside this
+doc rather than in scratch, because this round spans sessions.
+
+One line in that file is worth reading twice: **the nusel arm's 20 `mabc-pr.zip`
+hashes are identical to the pre-B0 baseline, event for event, including
+169824.** That is not a failed default flip. The nusel job's `pipeline_names`
+stops at `tagger_check_fc`, so `tagger_check_neutrino` is never instantiated
+and B0 cannot act there. Only the PR arm sees it. The baseline therefore
+carries both arms.
+
+### 2. The change
+
+#### 2a. What landed
+
+`merge_clusters()` (`clus/src/ClusteringFuncs.cxx`) gains
+`orig_wasmain_aname` (default `""`), and one resize beside the existing
+`orig_id` one:
+
+```cpp
+if (save_wasmain) {
+    orig_wasmain.resize(fresh_cluster.nchildren(),
+                        live->get_flag(Flags::main_cluster) ? 1 : 0);
+}
+```
+
+Independent of `orig_id_aname` — unlike `orig_main_aname`, which needs it for
+the representative-ident comparison. `ClusteringExamineBundles` passes
+`"real_cluster_was_main"` under the new visitor knob
+`save_bundle_main_provenance`, and only at the all-APA instance.
+
+The MABC fill-in is **presence-triggered**, not knob-gated: it fills iff some
+cluster actually has the array. Two independent booleans would admit the one
+configuration that throws (writer on, fill-in off ⇒ a `perblob` PC whose key
+set differs between clusters ⇒ `Dataset::append` raises).
+
+P2 is `ClusteringUnmergeBundle`'s `restore_demoted_mains`. The array is read
+**strictly after `carve(part, gid)`** — `separate()→from()` hands each part a
+*full-length* copy of the merged cluster's `perblob` PC, so a read placed
+beside the existing `set_flag` calls would test the whole bundle's rows
+instead of the part's. It would not throw; it would be wrong, silently, on
+exactly the events this is for. `carve()` either installs the correct subset
+or erases the PC, so a read after it is right or absent, never stale. Absent,
+wrong-length and mixed all fail **closed** with a warning.
+
+#### 2b. The defect in the first build, and the registry that catches it
+
+`c57fa1ec` passed every knob-off gate and then flagged **nothing** with both
+knobs on: `restore_demoted_mains is on but 'real_cluster_was_main' is absent`
+on every split part. The array was written at the Q/L stage and survived into
+the pctree (PI-5 confirmed six `perblob` keys), but the PR job's *first*
+visitor rebuilds every cluster and re-attaches only the names in
+`clustering_switch_scope`'s carry registry — and the array was not in it. It
+died before its only consumer.
+
+That registry's own comment says it: *"Any future per-blob provenance array
+goes here and nowhere else"* — the same defect doc 52 recorded as D3 for the
+`assoc_cluster_*` pair, hit again by the next person to add an array, which is
+what a comment cannot prevent and a test can. Fixed in `f43063b2`; the whole
+knob-off gate set was re-run against the new binary rather than argued inert.
+
+### 3. The finding: P1 records a constant, and Part I's premise needs restating
+
+Measured on the 20-event knob-ON arm, at the Q/L stage where `merge_clusters`
+writes:
+
+```
+20 events: 368 clusters, 96 multi-member (flash-merged)
+was_main rows: 112620 set, 0 clear   (0.00% clear)
+post-QL clusters by (flag_main_cluster, flag_associated_cluster): {(1, 0): 368}
+```
+
+**Every cluster entering the all-APA flash merge carries `flag_main_cluster`.**
+Not most — all 368, over 112,620 blob rows, with zero exceptions. So
+`real_cluster_was_main` is identically 1, and P2's rule "a split part whose
+rows are all 1" is satisfied by *every* part.
+
+This is structural, not a sampling accident. Two upstream facts make it so:
+
+1. `QLMatching::recompose_cluster_groups` (`match/src/QLMatching.cxx:1363`)
+   merges each bundle's associated sub-clusters **back into their main** and
+   destroys them before the tree is emitted. The split into main+associated is
+   a matching-internal device that deliberately does not leak out. So every
+   cluster in the post-QL tree is a bundle main already.
+2. SBND runs `flag_matched_mains = true` (verified in the compiled Q/L config),
+   which stamps `main_cluster` on every cluster that matched a flash. Clusters
+   that matched nothing get a singleton flash-time group and are never merged.
+
+So the members of a flash-group merge are bundle mains **by construction**, and
+"which of them were mains" cannot distinguish them. Confirmed at the point P2
+actually acts — 20 events, PR stage, both knobs on:
+
+| | |
+|---|---|
+| outer un-merge split parts | 143 |
+| parts flagged `demoted_main` | **143** |
+| absent / wrong-size / MIXED warnings | **0** |
+
+143/143, event by event. The flag is exactly "is an outer-unmerge split part."
+
+**What this does and does not invalidate.** It does *not* make `demoted_main`
+useless: on evt 169824 it marks 2 clusters out of **30** companions, because
+the other 28 come from the *inner* un-merge (`unmerge_assoc`, the isolated
+grouping). Against the population P3 cares about — everything the taggers
+currently skip — the flag is sharply selective. What it invalidates is the
+*need for the array to compute it*, and with it the §Alternative section's
+reasoning: that section rejected `assoc_cluster_main` on the grounds that "was
+the main of its isolated grouping" and "was the main of a matched Q/L bundle"
+could diverge, and flagged as unchecked whether the flash merge can group an
+unmatched cluster (`t0 = -1e12`) into a beam bundle. It cannot — singleton
+groups — and the second concept is now measured to be universal.
+
+**P1 is therefore kept as a guard, not as a discriminator**, and the code says
+so. It fails closed: if a configuration ever reaches this merge where
+`main_cluster` is *not* universal (`flag_matched_mains` off, another detector,
+a future pass that merges an unmatched cluster), P2 stops flagging instead of
+mis-flagging, and the MIXED-row warning fires. The alternative — deleting P1
+and flagging every outer-unmerge part unconditionally — is one line shorter and
+silently wrong the day that assumption breaks.
+
+**Consequence for S10, stated before S10 runs.** The census was specified to
+classify companions into "(a) demoted ex-bundle-mains" and "(b) unjoined
+cathode-crosser halves". Class (a) is now known to be *every* outer-unmerge
+part, so the (a)/(b) split is not a discovery — it is the outer/inner un-merge
+distinction, available without P1. `cosmic_companion_min_length` must therefore
+be set from the **length and charge distribution** of the class-(a) population,
+not from a class split. **This is an open question for the owner, not a
+decision taken here** (§6).
+
+### 4. Gates — knobs OFF
+
+Freshness: `local/lib/libWireCellClus.so` 08:57:11 > newest edited source
+`clustering_switch_scope.cxx` 08:56:44. Tracked tree clean at both gate points.
+
+| gate | scope | binary | result |
+|---|---|---|---|
+| **PI-1** `abtest ab_compare pre_cathkink_clus vs post_partI2_clus` | pdhd + pdvd, `events.txt` | e0f8650a | **PASS — OVERALL PASS** |
+| **PI-2** `qlport ab_check post_partI2_ub vs pre_cathkink_ub`, gate 1 | uboone, 35 events | e0f8650a | **PASS — 35/35 content-identical** |
+| PI-2 gate 2 (tagger-compare logs) | uboone | e0f8650a | **non-discriminating** — `identical=3 diff=32`, the same regime the Part IV §3 A/A control produced with one identical binary (`identical=2 diff=33`). Only its ZIPS line discriminates. |
+| **PI-3** SBND ×20 events × 5 products, `hash_archive.py` | sbnd | e0f8650a | **PASS — 100/100 identical** vs `pr20-sbnd-partI-baseline.txt` |
+| **PI-4** `./build/clus/wcdoctest-clus` | — | e0f8650a | **PASS — 49 cases, 565 assertions** |
+| compiled config, knobs off | SBND Q/L + PR jobs | — | **PASS — both IDENTICAL** to the pre-edit tree |
+| compiled config, knobs on | SBND Q/L + PR jobs | — | **PASS** — exactly one key each; `restore_demoted_mains` lands on `pr` and **not** on `prassoc` |
+
+The same set also PASSed against the 46255b72 binary before the §2b fix
+(labels `post_partI_clus` / `post_partI_ub`, arm `work-mcp1kall-pi1off`).
+
+The five SBND products per event, deliberately spanning both stages:
+`ql_evt<ID>/mabc-all-apa.zip`, `ql_evt<ID>/pctree-evt<ID>.tar.gz`,
+`nusel_evt<ID>/mabc-pr.zip` (nusel pipeline), `pr_evt<ID>/mabc-pr.zip` and
+`pr_evt<ID>/pctree-pr-evt<ID>.tar.gz` (production 13-stage PR pipeline).
+
+### 5. Gates — knobs ON
+
+**PI-5, the key-homogeneity round trip — PASS.** This is a gate and not a
+prose warning because the failure mode is silent: `Dataset::append` keys the
+copy on the accumulated dataset, so an array absent from the first-seen node
+vanishes without a word (`aux/src/TensorDMpointtree.cxx:88-93`), and it cost a
+debugging session once on `perblob`/`real_cluster_id`. New script
+`pr20_wasmain_check.py`, run on both stages:
+
+- Q/L tree: **6** `perblob` keys, all the same length, on every event.
+- PR tree (the one `switch_scope` rebuilt — never checked before §2b): **5**
+  keys, all the same length.
+- `WCT_PROV_CHECK=1` reports `0 problem(s)` at every boundary, `save` and
+  `rtrip` alike.
+- Cross-check: no cluster anywhere has `real_cluster_main == 1` on a row where
+  `real_cluster_was_main == 0`. The representative member is a main by
+  construction, so this had to hold, and it does.
+
+*(The first version of this script FAILED all three events — it read the
+lpcmap arrays as a row→node map when they are per-node row **counts** in node
+order. The array was fine; the reader was not. Recorded because a gate that
+reports a false FAIL is as expensive as one that reports a false PASS.)*
+
+**PI-6, the inertness gate — PASS.** P1+P2 are bookkeeping; a verdict change
+here would be a bug, not a result. Same Q/L tree, PR knob off vs on, 20 events:
+
+- **25 columns compared** from `pr_scores_table.py` — `event_label`,
+  `n_bundle`, `n_inbeam_bundle`, `nu_evaluated`, `n_cosmic_skipped`,
+  `nu_sel_t0_us`, `nu_sel_len_cm`, `nu_sel_n_assoc`, `nu_x/y/z_cm`,
+  `numu_score`, `nue_score`, `cosmic_flag`, `cosmict_flag`,
+  `cosmict_10_score`, `kine_reco_Enu_MeV`, … — **0 differing cells.** The only
+  differences anywhere are `timecmd_wall_s` (±1 s on 9 events), which is the
+  wall clock.
+- Flag combination on evt 18259/169824, read back from the PR pctree:
+
+  ```
+  cluster 21  demoted_main=1  main_cluster=0  associated_cluster=1
+  cluster 22  demoted_main=1  main_cluster=0  associated_cluster=1
+  totals: 2 demoted, 20 main, 30 associated, 50 clusters
+  ```
+
+  Exactly the designed shape: the part keeps `associated_cluster`, gains
+  `demoted_main`, and does **not** get `main_cluster` back — the load-bearing
+  decision, because `nu_skip_cosmic_bundle` builds its bundle-level veto set
+  from `main_cluster` (`TaggerCheckNeutrino.cxx:311`).
+- `flag_demoted_main` is **absent** from `cluster_scalar` with the knob off and
+  present with it on, so the key-set change is knob-scoped.
+
+### 6. Status and what is open
+
+**Done:** S8 and S9. P1+P2 land default OFF, byte-identical on all four
+detectors, with the knob-ON behaviour demonstrated and proven inert.
+
+**Open for the owner, before S10:**
+
+1. **Is P1 worth keeping now that it is measured to be a constant?** Kept here
+   as a fail-closed guard with the reasoning in §3. Deleting it and flagging
+   every outer-unmerge part is a defensible smaller change; it trades a
+   silent-wrong-answer mode for one line. This doc does not pick — §3 lays out
+   both readings, per the escalation rule on undocumented premise/measurement
+   conflicts.
+2. **`cosmic_companion_min_length` has to be tuned from a distribution, not a
+   class split** (§3). S10's deliverable changes shape accordingly.
+3. **Part I's standing prediction needs rebasing.** `kine_reco_Enu`
+   1202.5 → ≈ 841 MeV for evt 169824 predates A1/A2 and B0. The live knob-off
+   baseline for that event is **1071.17 MeV**, and that is what P4 must be
+   measured against.
+
+**Not done and not started:** S10 (the `n_frag` census), S11 (P3), S12 (P4),
+S13 (ship evidence). No default flip is proposed for anything in Part I.
 
 ## Related
 

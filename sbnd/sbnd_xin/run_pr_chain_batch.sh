@@ -113,6 +113,14 @@ PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger
 CATH_TLA=()
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+# Demoted-main flag on the outer un-merge (doc pr/20 Part I P2).  EMPTY = emit
+# no TLA = the job default null = C++ false = OFF.  Needs the Q/L stage to have
+# run with SBND_SAVE_WASMAIN=1, else the visitor warns and flags nothing.
+# Env: SBND_RESTORE_DEMOTED_MAINS=1|0.
+case "${SBND_RESTORE_DEMOTED_MAINS:-}" in
+    1) CATH_TLA+=(--tla-code "restore_demoted_mains=true") ;;
+    0) CATH_TLA+=(--tla-code "restore_demoted_mains=false") ;;
+esac
 true
 
 # The embedded interpreter needs libpython loaded RTLD_GLOBAL for the SCN

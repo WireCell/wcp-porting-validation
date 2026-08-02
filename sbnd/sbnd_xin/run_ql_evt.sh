@@ -436,6 +436,14 @@ process_event() {
         1) OC_TLA+=(--tla-code "adopt_nu_fragments=true") ;;
         0) OC_TLA+=(--tla-code "adopt_nu_fragments=false") ;;
     esac
+    # doc pr/20 Part I P1: write the per-blob "real_cluster_was_main" array on
+    # the all-APA flash-time merge (which member was a matched bundle MAIN
+    # before the merge demoted it).  Unset inherits the config default (false);
+    # =1 forces on, =0 forces the legacy path (byte-identical).
+    case "${SBND_SAVE_WASMAIN:-}" in
+        1) OC_TLA+=(--tla-code "save_bundle_main_provenance=true") ;;
+        0) OC_TLA+=(--tla-code "save_bundle_main_provenance=false") ;;
+    esac
 
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
     local _ov=""
