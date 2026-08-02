@@ -8,7 +8,7 @@ candidate as a gamma hanging off its muon.
 
 | | part | reproducing events | status |
 |---|---|---|---|
-| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | **P1-P4 BUILT, all default OFF** (Parts VII, VIII); `kine_reco_Enu` 1202.5 -> 841.0 MeV with all four on, as predicted.  S10 DONE (Part IX): 1000-event census, PI-8 PASS, 14 drops / 1000 events, ALL convicted by STM and none by TGM.  **The length floor is NOT derivable from the data** (length does not predict impact); 15 cm is recommended on tagger-plausibility grounds only.  Hand scan of the 4 vertex-moving events is the remaining gate; **no default flip proposed** |
+| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | **SHIPPED, SBND DEFAULT ON** (`c8f19b92`, Part X) with `cosmic_companion_min_length = 15 cm`; `kine_reco_Enu` 1202.5 -> 841.0 MeV from a bare run.  9 of 1000 mcp1k events move, 0 beam labels change, nueCC48 untouched.  **NOT bit-identical: the Q/L job's output changes, so production Q/L trees must be REGENERATED.**  The floor is a tagger-plausibility guard, not a value read off the impact distribution (Part IX sec 6b) |
 | **II** | a cathode-crossing track broken in two | 18259 / 169824, 18255 / 406796, 18255 / 315497 | diagnosis complete and reproduced at HEAD; fix design only — 2 SBND config lines + 2 new default-OFF passes |
 
 No C++, jsonnet or runner changed for either part. The files this doc adds are
@@ -2878,6 +2878,130 @@ is the same event on either link.
 **The four that decide it are indices 4, 5, 8 and 6** — the ones where the
 pattern recognition re-solved the event rather than just dropping a node. The
 other ten either change nothing or drop a single shower node at a fixed vertex.
+
+## Part X — Part I is the SBND production default (2026-08-02)
+
+The owner adopted Part I on the Part IX census and the two Bee sets. All four
+knobs are ON for SBND. Toolkit `c8f19b92`; **no C++ changed** — the code has
+been in tree and default-OFF since `015b8f9c`, and this is a config flip only.
+
+### 0. Repro
+
+```bash
+# the flip is two files; nothing is rebuilt
+git show --stat c8f19b92
+
+# compiled-config proof, BARE compile of both jobs (no TLA overrides)
+wcsonnet ... wct-clus-matching-perevt.jsonnet | grep save_bundle_main_provenance
+wcsonnet ... wct-pr-perevt.jsonnet | grep -E 'demoted_mains|cosmic_companion'
+
+# bare end-to-end on the doc's own event -- no SBND_* env set anywhere
+cd ../wcp-porting-img/sbnd/sbnd_xin
+TAG=pr20x ENTRIES="411" ./run_full1k_nusel.sh 1000 1
+PR_JOBS=1 ./run_pr_chain_batch.sh work-mcp1kall-pr20x work-pr20x-59003 data 59003
+```
+
+### 1. What changed
+
+| file | knob | before | after |
+|---|---|---|---|
+| `wct-clus-matching-perevt.jsonnet` | `save_bundle_main_provenance` | `false` | **`true`** |
+| `wct-pr-perevt.jsonnet` | `restore_demoted_mains` | `null` | **`true`** |
+| | `evaluate_demoted_mains` | `false` | **`true`** |
+| | `skip_cosmic_companions` | `false` | **`true`** |
+| | `cosmic_companion_min_length` | `null` | **`15`** |
+
+Both are job entry points, so a **bare run is now the production operating
+point** (doc 68's single-source rule). Every knob still turns off from the
+runner: `SBND_SAVE_WASMAIN=0`, `SBND_RESTORE_DEMOTED_MAINS=0`,
+`SBND_EVAL_DEMOTED_MAINS=0`, `SBND_SKIP_COSMIC_COMPANIONS=0`.
+
+### 2. NOT bit-identical — twice over, and the second one bites
+
+- **The Q/L job's OUTPUT changes.** P1 writes a new `perblob` array, so the
+  pctree tarball differs from any pre-flip one. **Every production Q/L tree the
+  PR chain is meant to read with `restore_demoted_mains` must be regenerated.**
+  P2 fails *closed* on a legacy tree — it warns per cluster and flags nothing,
+  so the chain still runs and produces plausible output, but P3/P4 are then
+  inert and the run is **not** the production operating point. That is the
+  silent-wrong-answer path in this change; it is why the knob comment says so
+  at the knob.
+- **The PR job's PHYSICS changes.** 14 of 1000 mcp1k events move (Part IX §5).
+
+This is the first SBND flip in doc pr/20 that touches the Q/L stage; Part II's
+B0 was PR-only.
+
+### 3. Gates
+
+| gate | result |
+|---|---|
+| compiled config, **bare** Q/L job | `save_bundle_main_provenance: true` |
+| compiled config, **bare** PR job | `restore_demoted_mains: true`; `evaluate_demoted_mains: true` on all three taggers; `skip_cosmic_companions: true`; `cosmic_companion_min_length: 15` |
+| scope | `git diff --stat` = these two SBND files, nothing else |
+| PDHD / PDVD / uBooNE | **not required, and here is why**: no C++ changed and no `cfg/pgrapher/common/` file moved, so no other detector's compiled config can differ |
+| PI-8 nueCC48 | PASS (Part IX §2), at floor 0 ⇒ holds at 15 |
+
+**Bare end-to-end on evt 18255/59003, with no `SBND_*` env set:**
+
+```
+TaggerCheckSTM: evaluate_demoted_mains: 1 demoted main(s) added
+TaggerCheckNeutrino: companion cluster 26 (L 109.4 cm, TGM=0 STM=1) dropped
+    from other_clusters (skip_cosmic_companions, floor 15.0 cm)
+kine_reco_Enu = 841.02783   PF: mu- 732.2, e- 0.6, e- 1.1, e- 1.4
+```
+
+The floor reads 15.0 cm, the 109.4 cm cosmic is dropped, and the `e- 361` node
+is gone — the same result the knob-on arm produced, now from the defaults.
+
+### 4. PI-9, determinism at the shipped defaults — PASS
+
+3 events × 3 runs, bare (the runner already pins ASLR off with
+`setarch x86_64 -R`), events chosen to include the two largest vertex movers:
+
+| event | `mabc-pr.zip` content hash | `T_kine` |
+|---|---|---|
+| 59003 | `288161010eb98bfe…` ×3 | identical ×3 |
+| 73004 | `6689b59ae3aedf22…` ×3 | identical ×3 |
+| 285467 | `a660282843241 9c1…` ×3 | identical ×3 |
+
+One distinct hash per event over three runs, and `kine_reco_Enu`, the vertex
+and the particle list are bit-identical each time. Note this is a *stronger*
+result than §3 of Part IX led one to expect: the `kine_reco_Enu` jitter measured
+there is rare (≈7 events per 1000), so three repeats of three events is not
+evidence it is gone — only that these three are stable. **The bar for PI-9 is
+"no NEW nondeterminism from P2/P3/P4", and that is met**; the pre-existing
+floor stands as recorded.
+
+### 5. The floor doing its job, visible in the shipped numbers
+
+The same three events also show the 15 cm floor working as intended:
+
+| event | L (cm) | at floor 0 | **at the shipped floor 15** |
+|---|---|---|---|
+| 59003 | 109.4 | 841.0 MeV | **841.0 MeV** — drop fires |
+| 285467 | 39.5 | 428.1 MeV | **428.1 MeV** — drop fires |
+| **73004** | **11.9** | 579.3 MeV | **607.5 MeV = the baseline** — drop suppressed |
+
+Evt 73004, the one drop in the sample with clear evidence of harm (vertex
+jumping 92 cm, `numu_score` 4.13 → 0.70), is back to its pre-flip answer. **9 of
+the 14 events move at the shipped floor**, not 14.
+
+### 6. What is still open after the flip
+
+- **PI-7 as a formal artifact was overtaken by events.** The owner adopted on
+  the Part IX census + Bee sets rather than on a separate floor-15 arm. What
+  exists is the floor-0 envelope; the floor-15 population is those 9 of 14
+  events, derivable from the drops table but not separately run at 1000 events.
+  Worth doing before the next production campaign, not before this flip.
+- **The four vertex-moving events (73004, 285467, 169356, 317939) were never
+  hand-scanned**, and one of them (73004) is now suppressed by the floor while
+  two others still fire. The Bee sets in Part IX §8 are the material.
+- **The STM applicability question is untouched** (Part IX §6b): every
+  conviction in 1000 events came from STM, so the floor is standing in for
+  "STM should not convict a 12 cm track". If that is the real defect, it
+  belongs in `TaggerCheckSTM` and P4 would need no floor at all.
+- **Regenerate the production Q/L trees.** Any pre-flip pctree makes P2 fail
+  closed and silently reduces the chain to the old behaviour (§2).
 
 ## Related
 
