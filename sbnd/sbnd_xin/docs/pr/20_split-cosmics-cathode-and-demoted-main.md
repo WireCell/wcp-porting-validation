@@ -8,7 +8,7 @@ candidate as a gamma hanging off its muon.
 
 | | part | reproducing events | status |
 |---|---|---|---|
-| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | **P1-P4 BUILT, all default OFF** (Parts VII, VIII); `kine_reco_Enu` 1202.5 -> 841.0 MeV with all four on, as predicted.  S10 DONE (Part IX): 1000-event census, PI-8 PASS, **floor 15 cm recommended** (10 cm measured too low).  A hand scan of the 9 surviving drops is the remaining gate; **no default flip proposed** |
+| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | **P1-P4 BUILT, all default OFF** (Parts VII, VIII); `kine_reco_Enu` 1202.5 -> 841.0 MeV with all four on, as predicted.  S10 DONE (Part IX): 1000-event census, PI-8 PASS, 14 drops / 1000 events, ALL convicted by STM and none by TGM.  **The length floor is NOT derivable from the data** (length does not predict impact); 15 cm is recommended on tagger-plausibility grounds only.  Hand scan of the 4 vertex-moving events is the remaining gate; **no default flip proposed** |
 | **II** | a cathode-crossing track broken in two | 18259 / 169824, 18255 / 406796, 18255 / 315497 | diagnosis complete and reproduced at HEAD; fix design only — 2 SBND config lines + 2 new default-OFF passes |
 
 No C++, jsonnet or runner changed for either part. The files this doc adds are
@@ -2731,67 +2731,116 @@ it is not the one the doc named. Reported, not rationalised.
 aggressive setting the knob has. Every affected event keeps its `nu-candidate`
 verdict; what moves is the energy, the vertex and the BDT scores.
 
-### 6. The per-drop impact table — and why 10 cm was too low
+### 6. The per-drop impact table
 
 Every one of the 14 events has exactly **one** drop, so every delta below is
-attributable to a single named companion. (`nue_score` ±10.6991 is the sentinel
-pair −4.300936 ↔ −15.0 switching, not a physics swing.)
+attributable to a single named companion. `dvtx` is the shift of the
+reconstructed neutrino vertex (`kine_nu_{x,y,z}_corr`); the last column is the
+change in the `T_kine` particle-flow tree, read straight out of
+`tracking-pr.root` in both arms.
 
-| L (cm) | event | ΔEnu (MeV) | Δnumu | note |
-|---|---|---|---|---|
-| 3.3 | 283595 | 0 | 0 | **no effect at all** |
-| 3.4 | 281595 | 0 | 0 | **no effect at all** |
-| 5.2 | 489327 | +23.6 | +0.54 | improves |
-| 8.5 | 394796 | −47.4 | −0.13 | |
-| **11.9** | **73004** | −28.2 | **−3.43** | **vertex jumps 70 cm; see below** |
-| 16.9 | 169356 | −149.0 | +0.58 | |
-| 16.9 | 317939 | −189.0 | −0.48 | |
-| 21.1 | 315849 | −183.1 | −0.08 | |
-| 39.5 | 285467 | −169.3 | −0.04 | `cosmict_flag` 0 → 1 |
-| 61.6 | 278684 | −386.4 | −1.51 | |
-| 62.2 | 314507 | **+278.5** | +0.18 | energy *rises* — unexplained |
-| 80.7 | 288639 | +0.2 | 0 | |
-| 109.4 | 59003 | −361.5 | −0.11 | the doc's own event |
-| 158.7 | 282899 | 0 | 0 | |
+| L (cm) | event | dvtx (cm) | ΔEnu (MeV) | Δnumu | PF-tree change |
+|---|---|---|---|---|---|
+| 3.3 | 283595 | 0.0 | 0 | 0 | none |
+| 3.4 | 281595 | 0.0 | 0 | 0 | none |
+| 5.2 | 489327 | 0.5 | +23.6 | +0.54 | `e- 49` → `p 81` (PID) |
+| 8.5 | 394796 | 0.0 | −47.4 | −0.13 | −`e- 47` |
+| **11.9** | **73004** | **92.3** | −28.2 | **−3.43** | muon kept, e- reshuffle |
+| 16.9 | 169356 | 27.1 | −149.0 | +0.58 | `pi+ pi+ mu-` → `mu- e-` |
+| 16.9 | 317939 | 2.1 | −189.0 | −0.48 | `mu- p e- p` → `e- 615` |
+| 21.1 | 315849 | 0.0 | −183.1 | −0.08 | −`p 175` |
+| **39.5** | **285467** | **116.5** | −169.3 | −0.04 | `mu- e- 329` → `mu- mu-` |
+| 61.6 | 278684 | 0.0 | −386.4 | −1.51 | −`e- 386`, muons untouched |
+| 62.2 | 314507 | 0.0 | **+278.5** | +0.18 | `mu- 254` → `pi+ 276, p 83, e- 26` |
+| 80.7 | 288639 | 0.0 | +0.2 | 0 | none |
+| 109.4 | 59003 | 0.0 | −361.5 | −0.11 | −`e- 362`, muon untouched |
+| 158.7 | 282899 | 0.0 | 0 | 0 | none |
 
-The distribution is **continuous, not bimodal**, so no floor falls out of a gap
-in the lengths. It has to come from this table.
+*(`nue_score` moves of ±10.6991 are the pair −15.0 ↔ −4.300936.
+`UbooneNueBDTScorer.cxx:1925` sets −15 as the "background-like default" when
+`br_filled != 1`; −4.300936 is the clamped floor of the log-odds transform at
+`val1 = -0.9999` (`:1923`). Both mean "maximally background-like", so the jump
+signals that the nue branch stopped/started being filled, not a score swing.)*
 
-**Evt 73004 is the case that sets the floor.** Dropping its 11.9 cm companion
-leaves the main cluster identical (15, L 107.1 cm, same t0) but moves the
-neutrino vertex 70 cm in x (−11.8 → −81.9) and collapses `numu_score`
-4.13 → 0.70. And the conviction that caused it is physically hard to credit:
+**P4 has two modes, and both are the fix working.**
 
-```
-cathode_guard: cluster 23 stop x=-177.90cm ... cathode_x=-0.45cm dist=177.45cm
-visit: TaggerCheckSTM: cluster 23 → STM=1 TGM=0
-```
+- *Removing cosmic charge wrongly given to the neutrino.* 59003 loses its
+  `e- 362` node and 278684 its `e- 386`, in both cases with the muon nodes and
+  the vertex **untouched**. This is precisely §Root cause.
+- *Returning neutrino charge a cosmic companion had absorbed.* Evt 314507's
+  energy **rises** 254 → 533 MeV because the single `mu- 254` becomes
+  `pi+ 276 + p 83 + e- 26 + e- 1`, at an identical vertex. The companion had
+  been swallowing the interaction's own daughters. This was flagged as
+  "unexplained" in the first draft of this section; it is not — it is the same
+  defect seen from the other side, and it means a positive ΔEnu is not evidence
+  against the mechanism.
 
-an **11.9 cm "stopping muon" that stops 177 cm from the cathode, inside a
-neutrino candidate**. A proton or pion from the interaction is the far more
-likely reading. This is exactly the mis-tagged-daughter case
-`cosmic_companion_min_length` exists to protect against — and it is the one
-drop in the sample with clear evidence of harm.
+### 6b. The floor cannot be derived from these data — and here is why
 
-**Recommendation: `cosmic_companion_min_length = 15 cm`**, not the provisional
-10. The data supports any floor in **(11.9, 16.9] cm**; 15 sits in the middle of
-that interval, which is also the only real gap in the length distribution. It
-excludes the two provably-inert sub-4 cm specks, the two small mixed-sign cases,
-and the one drop that demonstrably destabilises an event. **The provisional
-10 cm is now measured to be too low** — it would admit the 73004 drop.
+The first version of this section recommended `cosmic_companion_min_length =
+15 cm` and called the provisional 10 cm "measured too low". **Reading the PF
+trees withdraws that.** The claim rested on evt 73004 being the only harmful
+drop and on it sitting at 11.9 cm. Two of the columns above break it:
 
-At 15 cm, **9 drops on 9 events (0.9 % of the sample)** survive.
+- **Length does not predict impact.** The four drops that change *nothing* are
+  at 3.3, 3.4, 80.7 and 158.7 cm — spanning the whole range. The two largest
+  energy changes are at 61.6 and 62.2 cm and point in *opposite directions*.
+- **A length floor does not protect against the failure it was meant to catch.**
+  The signature of a destabilised event is the vertex moving, and the biggest
+  move in the sample is **evt 285467 at 39.5 cm, 116 cm of vertex shift** —
+  above any floor anyone would propose. 73004 (11.9 cm, 92 cm) and 169356
+  (16.9 cm, 27 cm) straddle the candidate values. Ten of the fourteen drops
+  leave the vertex within 2.1 cm.
+
+And vertex movement is not automatically harm: of the three events that move it
+more than 20 cm, `numu_score` goes **−3.43** (73004), **−0.04** (285467) and
+**+0.58** (169356). One looks broken, one neutral, one improved.
+
+**So: no floor is derivable from this sample.** What the data does support:
+
+1. `L < 5 cm` drops are inert *here* (2/2), so a floor of 5 cm costs nothing —
+   but 80.7 and 158.7 cm are equally inert, so this is a fact about these two
+   events, not a rule.
+2. The one drop with clear evidence of harm, 73004, is convicted by a verdict
+   that is hard to credit on physics grounds — an **11.9 cm "stopping muon"
+   that stops 177 cm from the cathode, inside a neutrino candidate**
+   (`cathode_guard: cluster 23 stop x=-177.90cm ... dist=177.45cm`). A proton or
+   pion from the interaction is the likelier object.
+
+**Recommendation: `cosmic_companion_min_length = 15 cm`, justified by (2) and
+labelled as such** — a guard against the stopping-muon tagger convicting tracks
+too short to be stopping muons, *not* a value read off an impact distribution.
+Anyone re-deriving it should know the distribution does not contain it.
+
+**The reframe this forces.** All 14 convictions are STM; TGM never fires on a
+demoted main in 1000 events. A length floor on P4 is therefore standing in for
+*"`TaggerCheckSTM` should not convict a 12 cm track"* — a statement about the
+STM tagger's domain of applicability, not about P4. If that is the real defect,
+the floor belongs in STM and P4 needs none. Out of scope here; recorded so it
+is not rediscovered.
 
 ### 7. What this does NOT establish
 
 - **No default flip is proposed.** All four knobs stay OFF.
-- **None of the 9 surviving drops is truth-verified.** The energy reductions
-  (−149 to −386 MeV) are what the fix is *for*, but "the tagger convicted it"
-  is not the same as "it was a cosmic". Evt 314507's **+278.5 MeV increase**
-  is not explained by the mechanism at all and should be looked at directly.
-- **The right next gate is a hand scan**, not more arms — the same bar B0 had
-  to meet before the owner adopted it. 9 events is a scannable set. That is
-  outward-facing (Bee upload) and needs authorisation.
+- **No drop is truth-verified, and on this sample none can be.** The 1000-event
+  input is `input_files_reco1/data_MCP2025C_reco1_frameshift_first1000ev.root`;
+  its `Events` tree has **531 branches and not one truth-like branch** (checked
+  directly), and the products present — `raw::ptb::sbndptb`,
+  `sbnd::timing::DAQTimestamp`, `artdaq::detail::RawEventHeader` — are DAQ
+  products. Despite the "MCP2025C" in the name this is detector **data**, which
+  is why the runner passes `reality=data`. So "the tagger convicted it" cannot
+  be promoted to "it was a cosmic" by a truth lookup here. Recorded so the check
+  is not repeated.
+- **The right next gate is a hand scan** — the same bar B0 had to meet before
+  the owner adopted it. The set to scan is **not** the long drops but the four
+  that move the neutrino vertex: **73004 (92 cm), 285467 (116 cm), 169356
+  (27 cm)** and, marginally, **317939 (2.1 cm)**. That is outward-facing (Bee
+  upload) and needs authorisation.
+- **PI-7 is not free.** An earlier plan assumed arm B could double as the
+  F-arm; it cannot — five of its drops sit below 15 cm, so the recommended
+  floor needs its own 1000-event pass (~11 min at 24 jobs).
+- **PI-9 (determinism) has not run.** Its bar must be stated against the
+  measured `kine_reco_Enu` noise floor of §3, not against bit-identity.
 - Part I's premise shifted twice under measurement: P1's discriminator is a
   constant (Part VII §3), and now the tagger that fires is STM, never TGM. The
   fix works on its own event and at scale; the *story* told in §Root cause
