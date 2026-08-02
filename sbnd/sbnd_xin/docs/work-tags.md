@@ -71,8 +71,12 @@ median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 
 ## RETIREMENT ROUND 2026-08-02 — the pr/11..pr/22 era, 231 arms, 127 GiB
 
-**STATUS: archived + dry-run prepared, deletion awaiting owner `CONFIRM=yes`.**
-(This line is updated when `retire_20260802.sh` executes.)
+**STATUS: EXECUTED 2026-08-02 (`CONFIRM=yes retire_20260802.sh 1`) — 231 dirs
+/ 135 GiB removed, refused=0.** Post-checks: relink repaired=0 unresolved=0;
+`find . -xtype l` = 0; no git-tracked deletions; `gapjump_probe.py` on
+`work-pr22gap-b/pr_evt386948/mabc-pr.zip` reproduces doc pr/22 §6 exactly
+(634 fit pts, 50/634 = 7.9 % uncovered, 33.3 cm across 7 stretches) — the
+materialized exhibits are faithful.
 
 State at the start: **254 top-level `work*` dirs, 155.1 GiB** (`du` 158.8 GB;
 sbnd_xin 160 GB total), `/nfs/data/1` at 90 %. The tree regrew from the
@@ -157,14 +161,15 @@ names a config, not a build). The `pr11v3` retirement additionally idles
 `pr11_br_filled_census.py`, `cathode_nu_census.py` and `stub_census.py`
 until pointed at a future census arm.
 
-### Totals (to be finalized after CONFIRM)
+### Totals (final, post-execution)
 
 | | dirs | GiB |
 |---|---|---|
 | start | 254 | 155.1 real (158.8 du) |
 | KEEP | 23 | ~19.5 |
-| TIER 1 | 231 | 133.9 real / 127.2 reclaimed after archive |
+| TIER 1 removed | 231 | 133.9 real (135 du) |
 | archive added | — | +2.1 |
+| sbnd_xin after | 23 work* | 26 total incl. archive (transient `work-vf*` A/A′ arms deleted separately per the valfast disposal rule) |
 
 ---
 
