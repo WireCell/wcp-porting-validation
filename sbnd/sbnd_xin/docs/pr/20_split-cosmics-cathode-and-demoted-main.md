@@ -1470,7 +1470,13 @@ from a Bee colour back to the TSV ids) are kept in `sbnd_xin/bee-pr20/`.
 | A-4 / A-8 verdict census | PASS — 0 verdict changes, 30/30 attributed |
 | A-5 nueCC48 | PASS — 48/48 fully identical |
 | A-6 cath13 | PASS |
-| A-7 owner Bee set | uploaded — awaiting owner sign-off on the three ambiguous merges |
+| A-7 owner Bee set | PASS — **owner signed off 2026-08-02, A1+A2 ADOPTED** |
+
+**Owner decision, 2026-08-02:** the Bee sets were scanned and all eleven events
+judged good, including the three ambiguous merges (392354, 71266, 71882) that
+were the open question. **A1 + A2 are adopted, default-ON for SBND** — shipped
+as toolkit `a02c96b3`. The SBND path is **NOT bit-identical** and any downstream
+SBND baseline taken before `a02c96b3` is stale.
 
 Not in this round, and not dropped: **B0** (written, parked, builds at S5),
 **B1** (deferred), **Part I P1–P4** (scheduled — §Execution order steps S8–S13).
