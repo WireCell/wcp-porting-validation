@@ -405,7 +405,15 @@ particle flow where TaggerCheckNeutrino built a PR graph — fresh
   beam cluster even in the baseline (`nu_skip_cosmic` skip,
   TaggerCheckNeutrino.cxx:341) — the OLD nusel nu-candidate verdict there
   comes via the un-merge pipeline, i.e. the event is borderline TGM in
-  BOTH arms.  (Superseded v1 sets: 50fbdda3…, e75fd523….)  To flip after review: `iso_cathode_guard=true` /
+  BOTH arms.  (Superseded v1 sets: 50fbdda3…, e75fd523….)
+
+444187 itself, same layer package (QL from the nueCC48 arms, `-nu` PR runs
+in `work-oc19scan-{old,new}/pr_evt444187`; both arms select the nueCC main
+— OLD fit L 171.5 cm, NEW 214.5 cm with the recovered fragments):
+- OLD (`work-nuecc48-u17on`):
+  <https://www.phy.bnl.gov/twister/bee/set/04bfaea1-ebaa-4ed0-a718-683fac80e80d/event/list/>
+- NEW (`work-nuecc48-oc19on2`):
+  <https://www.phy.bnl.gov/twister/bee/set/43237cfe-bcd1-4132-8a56-b9a224ed08e1/event/list/>  To flip after review: `iso_cathode_guard=true` /
 `adopt_nu_fragments=true` TLA defaults in
 `wct-clus-matching-perevt.jsonnet` (runner escapes
 `SBND_ISO_CATHODE_GUARD=0` / `SBND_ADOPT_NU_FRAG=0` then force legacy).
