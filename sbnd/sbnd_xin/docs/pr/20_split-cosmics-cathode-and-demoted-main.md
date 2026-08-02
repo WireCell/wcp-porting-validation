@@ -8,7 +8,7 @@ candidate as a gamma hanging off its muon.
 
 | | part | reproducing events | status |
 |---|---|---|---|
-| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | **P1-P4 BUILT, all default OFF** (Parts VII, VIII); `kine_reco_Enu` 1202.5 -> 841.0 MeV with all four on, as predicted.  S10 (the floor) and S13 (ship evidence) remain |
+| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | **P1-P4 BUILT, all default OFF** (Parts VII, VIII); `kine_reco_Enu` 1202.5 -> 841.0 MeV with all four on, as predicted.  S10 DONE (Part IX): 1000-event census, PI-8 PASS, **floor 15 cm recommended** (10 cm measured too low).  A hand scan of the 9 surviving drops is the remaining gate; **no default flip proposed** |
 | **II** | a cathode-crossing track broken in two | 18259 / 169824, 18255 / 406796, 18255 / 315497 | diagnosis complete and reproduced at HEAD; fix design only — 2 SBND config lines + 2 new default-OFF passes |
 
 No C++, jsonnet or runner changed for either part. The files this doc adds are
@@ -2590,6 +2590,212 @@ that motivated the doc.
 **Corrections this round made to earlier text**, both marked in place rather
 than edited away: §Fix P1's premise (Part VII §3) and §Fix P3's TGM prediction
 (§3 above).
+
+## Part IX — execution log, Part I S10 (the census and the floor, 2026-08-02)
+
+S10 is the step that turns `cosmic_companion_min_length` from a provisional
+number into a derived one, and it is the last thing between Part I and a
+default-flip proposal.
+
+### 0. Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# binary: HEAD 015b8f9c, unchanged -- S10 adds no code.
+
+# the two Q/L roots, production config + P1 only
+SBND_SAVE_WASMAIN=1 ./s4_nuecc48.sh pi5wm                       # 48 evts
+TAG=pi5cens SBND_SAVE_WASMAIN=1 ./run_full1k_nusel.sh 1000 8    # 1000 evts
+python3 pr20_wasmain_check.py work-nuecc48-pi5wm/ql_evt*/pctree-evt*.tar.gz
+
+# PI-8 (nueCC48) and the mcp1k census, each = all-OFF vs floor-0 + an A/A control
+/home/xqian/tmp/pr20exec/s10_nuecc48_pr.sh
+/home/xqian/tmp/pr20exec/s10_mcp1k_pr.sh
+
+# the instruments (both new, both in sbnd_xin/)
+./pr20_partI_census.py <off_root> <on_root> --off-scores A.tsv --on-scores B.tsv
+./pr20_scores_diff.py A.tsv B.tsv
+```
+
+### 1. Why floor 0, and why PI-8 went first
+
+P4's test is `L >= cosmic_companion_min_length`, so the set of dropped
+companions **shrinks monotonically** as the floor rises. Floor 0 is therefore
+the envelope: it drops every companion any floor could ever drop.
+
+Two consequences drove the whole design of this step:
+
+1. **One arm enumerates the entire actionable population**, with lengths, from
+   P4's own drop log. No second arm per candidate floor.
+2. **PI-8 can be discharged before the floor is chosen.** The nueCC48 hard
+   constraint is "zero beam-label changes". Passing it at floor 0 passes it at
+   every floor. It was scheduled last in the original plan; running it last
+   would have meant redoing the census if it failed. It ran first.
+
+### 2. PI-8, nueCC48 — PASS, and P4 never fires at all
+
+48 events, all-OFF (`work-nuecc48-pi5off`) vs P2+P3+P4 floor 0
+(`work-nuecc48-pi5on0`), same Q/L root, `rc=0` on all 96 runs.
+
+| funnel stage | count |
+|---|---|
+| **flagged** — parts the outer un-merge marked `demoted_main` (P2) | 344, on 48/48 events |
+| **admitted** — of those, evaluated by TGM/STM/FC (P3) | 69, on 37/48 events |
+| **convicted** — TGM or STM | **0** |
+| **dropped** — companions of the selected main removed (P4) | **0** |
+
+Not one demoted main on the nueCC48 sample is convicted as a cosmic, so P4 has
+nothing to act on. **Zero beam-label changes, and by monotonicity that holds at
+every floor.** `event_label`, `numu_score`, `nue_score`, `nu_x/y/z_cm`,
+`nu_sel_n_assoc` and `n_cosmic_skipped`: 0 differing cells over 48 events.
+
+Note the shape of the gate the beam window imposes: 344 → 69 is a factor 5, and
+it is the scope filter and beam window doing it, not P4. The actionable
+population is far smaller than the flagged population, everywhere.
+
+### 3. The measured noise floor (and why this section exists)
+
+The full 24-column diff of that PI-8 pair is **not** empty: `kine_reco_Enu_MeV`
+differs in the last digit on 2 of 48 events. That cannot be a P4 effect — there
+were zero drops, and on one of the two events (422851) P3 admitted nothing at
+all, so the ON arm did strictly no extra work.
+
+So the arm was re-run against itself — same binary, same knobs
+(`work-nuecc48-pi5off2`), the A/A control CLAUDE.md §5 asks for before
+attributing any diff:
+
+| pair | differing cells | column | events |
+|---|---|---|---|
+| OFF vs floor-0 | 2 | `kine_reco_Enu_MeV` | 269774, 422851 |
+| **OFF vs OFF (A/A)** | **2** | `kine_reco_Enu_MeV` | 138009, **269774** |
+
+Same count, same column, same magnitude (last digit, ~1e-7 relative), and one
+event in common with the identical value change (`2551.7947 → 2551.795`). The
+PI-8 diff is indistinguishable from the chain's own run-to-run noise.
+
+**This is a pre-existing property of the PR chain, not a Part I effect**, and it
+is reported rather than fixed (it is outside this doc's scope). Two things about
+it are worth recording for whoever meets it next:
+
+- It is confined to `kine_reco_Enu_MeV`. `numu_score`, `nue_score`, the vertex
+  coordinates, the labels and the cluster counts are all stable.
+- It survives `setarch x86_64 -R` — the runner already pins ASLR off. The DL
+  (SCN) vertex is ON in this runner and is the standing suspect (M4), though the
+  vertex coordinates themselves do not move, so the mechanism is not obvious.
+
+**Consequence for every gate below**: strict cell equality is the wrong bar for
+this chain. A 1000-event A/A control (arm 0′) therefore runs alongside the
+census arms, so the arm-A inertness gate and the arm-B result are both read
+against a measured floor instead of an assumed zero.
+
+### 4. The 1000-event census — four arms, one Q/L root
+
+`work-mcp1kall-pi5cens` (1000 events, `SBND_SAVE_WASMAIN=1`, nothing else;
+1000/1000 ok in 1353 s) feeds four PR arms. **4000 events, `rc=0` on every
+one** — including arm B, where floor 0 can strip a neutrino's `other_clusters`
+to nothing.
+
+| arm | knobs | role |
+|---|---|---|
+| `work-pi5cens-pr0` | all OFF | the baseline |
+| `work-pi5cens-pr0b` | all OFF | A/A control — the noise floor |
+| `work-pi5cens-prA` | P2+P3 | P3-inertness gate |
+| `work-pi5cens-prB` | P2+P3+P4, floor 0 | the envelope |
+
+**The noise floor, measured (arm 0 vs arm 0′):** 7 differing cells on 7 events,
+**all `kine_reco_Enu_MeV`, all last-digit**. Nothing else moves — not a label,
+not a score, not a vertex, not a cluster count.
+
+**Gate: P3 is inert at 1000 events — PASS.** Arm A vs arm 0 is 4 differing
+cells on 4 events, again `kine_reco_Enu_MeV` only, and **3 of the 4 events
+(281214, 291961, 388224) are in the A/A set with the identical value change**.
+The gate's diff is smaller than the control's and overlaps it. P3 produces
+verdicts and acts on nothing, at population scale.
+
+### 5. The funnel, and what actually convicts
+
+| stage | count |
+|---|---|
+| **flagged** (P2) | 7175, on 995/1000 events |
+| **admitted** (P3; scope + beam window) | 998, on 510/1000 events |
+| **convicted** (TGM or STM) | 24 |
+| **dropped** (P4, companions of the selected main) | **14, on 14 events** |
+
+**All 14 convictions are STM. Not one is TGM.** §Root cause is written about
+*through-going* cosmics and §Fix P3 predicted a TGM tag on evt 59003; at
+population scale the through-going tagger never fires on a demoted main and the
+**stopping-muon** cut does all the work. The mechanism P4 acts on is real, but
+it is not the one the doc named. Reported, not rationalised.
+
+**Zero beam-label changes on all 1000 events, at floor 0** — the most
+aggressive setting the knob has. Every affected event keeps its `nu-candidate`
+verdict; what moves is the energy, the vertex and the BDT scores.
+
+### 6. The per-drop impact table — and why 10 cm was too low
+
+Every one of the 14 events has exactly **one** drop, so every delta below is
+attributable to a single named companion. (`nue_score` ±10.6991 is the sentinel
+pair −4.300936 ↔ −15.0 switching, not a physics swing.)
+
+| L (cm) | event | ΔEnu (MeV) | Δnumu | note |
+|---|---|---|---|---|
+| 3.3 | 283595 | 0 | 0 | **no effect at all** |
+| 3.4 | 281595 | 0 | 0 | **no effect at all** |
+| 5.2 | 489327 | +23.6 | +0.54 | improves |
+| 8.5 | 394796 | −47.4 | −0.13 | |
+| **11.9** | **73004** | −28.2 | **−3.43** | **vertex jumps 70 cm; see below** |
+| 16.9 | 169356 | −149.0 | +0.58 | |
+| 16.9 | 317939 | −189.0 | −0.48 | |
+| 21.1 | 315849 | −183.1 | −0.08 | |
+| 39.5 | 285467 | −169.3 | −0.04 | `cosmict_flag` 0 → 1 |
+| 61.6 | 278684 | −386.4 | −1.51 | |
+| 62.2 | 314507 | **+278.5** | +0.18 | energy *rises* — unexplained |
+| 80.7 | 288639 | +0.2 | 0 | |
+| 109.4 | 59003 | −361.5 | −0.11 | the doc's own event |
+| 158.7 | 282899 | 0 | 0 | |
+
+The distribution is **continuous, not bimodal**, so no floor falls out of a gap
+in the lengths. It has to come from this table.
+
+**Evt 73004 is the case that sets the floor.** Dropping its 11.9 cm companion
+leaves the main cluster identical (15, L 107.1 cm, same t0) but moves the
+neutrino vertex 70 cm in x (−11.8 → −81.9) and collapses `numu_score`
+4.13 → 0.70. And the conviction that caused it is physically hard to credit:
+
+```
+cathode_guard: cluster 23 stop x=-177.90cm ... cathode_x=-0.45cm dist=177.45cm
+visit: TaggerCheckSTM: cluster 23 → STM=1 TGM=0
+```
+
+an **11.9 cm "stopping muon" that stops 177 cm from the cathode, inside a
+neutrino candidate**. A proton or pion from the interaction is the far more
+likely reading. This is exactly the mis-tagged-daughter case
+`cosmic_companion_min_length` exists to protect against — and it is the one
+drop in the sample with clear evidence of harm.
+
+**Recommendation: `cosmic_companion_min_length = 15 cm`**, not the provisional
+10. The data supports any floor in **(11.9, 16.9] cm**; 15 sits in the middle of
+that interval, which is also the only real gap in the length distribution. It
+excludes the two provably-inert sub-4 cm specks, the two small mixed-sign cases,
+and the one drop that demonstrably destabilises an event. **The provisional
+10 cm is now measured to be too low** — it would admit the 73004 drop.
+
+At 15 cm, **9 drops on 9 events (0.9 % of the sample)** survive.
+
+### 7. What this does NOT establish
+
+- **No default flip is proposed.** All four knobs stay OFF.
+- **None of the 9 surviving drops is truth-verified.** The energy reductions
+  (−149 to −386 MeV) are what the fix is *for*, but "the tagger convicted it"
+  is not the same as "it was a cosmic". Evt 314507's **+278.5 MeV increase**
+  is not explained by the mechanism at all and should be looked at directly.
+- **The right next gate is a hand scan**, not more arms — the same bar B0 had
+  to meet before the owner adopted it. 9 events is a scannable set. That is
+  outward-facing (Bee upload) and needs authorisation.
+- Part I's premise shifted twice under measurement: P1's discriminator is a
+  constant (Part VII §3), and now the tagger that fires is STM, never TGM. The
+  fix works on its own event and at scale; the *story* told in §Root cause
+  needs rewriting around stopping muons before anyone re-derives from it.
 
 ## Related
 

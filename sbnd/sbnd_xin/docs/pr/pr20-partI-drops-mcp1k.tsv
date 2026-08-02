@@ -1,0 +1,15 @@
+event	cluster	L_cm	TGM	STM	was_demoted	label_off	label_on	label_moved	dEnu_MeV	dnumu	dnue	n_drops_this_evt
+59003	26	109.4	0	1	1	nu-candidate	nu-candidate	0	-361.5158	-0.1101	0.0000	1
+73004	23	11.9	0	1	1	nu-candidate	nu-candidate	0	-28.2128	-3.4310	-10.6991	1
+169356	23	16.9	0	1	1	nu-candidate	nu-candidate	0	-148.9956	0.5781	10.6991	1
+278684	20	61.6	0	1	1	nu-candidate	nu-candidate	0	-386.4042	-1.5073	0.0000	1
+281595	27	3.4	0	1	1	nu-candidate	nu-candidate	0	0.0000	0.0000	0.0000	1
+282899	13	158.7	0	1	1	nu-candidate	nu-candidate	0	0.0000	0.0000	0.0000	1
+283595	23	3.3	0	1	1	nu-candidate	nu-candidate	0	0.0000	0.0000	0.0000	1
+285467	27	39.5	0	1	1	nu-candidate	nu-candidate	0	-169.3494	-0.0421	0.0000	1
+288639	12	80.7	0	1	1	nu-candidate	nu-candidate	0	0.2121	0.0000	0.0000	1
+314507	23	62.2	0	1	1	nu-candidate	nu-candidate	0	278.5444	0.1796	-10.6991	1
+315849	17	21.1	0	1	1	nu-candidate	nu-candidate	0	-183.1136	-0.0843	0.0000	1
+317939	32	16.9	0	1	1	nu-candidate	nu-candidate	0	-188.9524	-0.4812	0.0000	1
+394796	24	8.5	0	1	1	nu-candidate	nu-candidate	0	-47.4433	-0.1287	0.0000	1
+489327	27	5.2	0	1	1	nu-candidate	nu-candidate	0	23.5714	0.5393	0.4334	1

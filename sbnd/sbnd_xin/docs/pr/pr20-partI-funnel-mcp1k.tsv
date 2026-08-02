@@ -1,0 +1,1001 @@
+event	flagged	admitted	admitted_info	convicted	verdict_unknown	dropped	sel_main_off	sel_main_on	sel_L_off	sel_L_on	n_assoc_off	n_assoc_on	label_off	label_on
+48301	8	5	5	0	0	0							cosmic-tagged	cosmic-tagged
+48367	6	1	1	0	0	0	19	19	168.2	168.2	22	22	nu-candidate	nu-candidate
+48565	8	0		0	0	0							no-bundle	no-bundle
+48895	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+49445	2	0		0	0	0							cosmic-tagged	cosmic-tagged
+49467	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+49511	3	0		0	0	0							no-beam-flash	no-beam-flash
+49709	3	0		0	0	0							no-beam-flash	no-beam-flash
+49885	6	0		0	0	0							no-beam-flash	no-beam-flash
+49951	6	1	1	0	0	0	16	16	61.3	61.3	12	12	nu-candidate	nu-candidate
+50017	13	0		0	0	0							no-beam-flash	no-beam-flash
+50303	8	4	4	0	0	0	12	12	44.2	44.2	10	10	nu-candidate	nu-candidate
+50523	5	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+50743	10	2	2	0	0	0	17	17	2.7	2.7	5	5	nu-candidate	nu-candidate
+50765	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+50787	4	1	1	0	0	0	6	6	49.2	49.2	1	1	nu-candidate	nu-candidate
+50809	5	0		0	0	0							no-beam-flash	no-beam-flash
+50831	10	1	1	0	0	0	14	14	18.7	18.7	10	10	nu-candidate	nu-candidate
+50919	8	2	2	0	0	0							nu-candidate	nu-candidate
+51051	9	2	2	0	0	0	19	19	253.1	253.1	4	4	nu-candidate	nu-candidate
+51469	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+51513	7	2	2	0	0	0	16	16	74.5	74.5	5	5	nu-candidate	nu-candidate
+51865	10	5	5	0	0	0	8	8	2.8	2.8	7	7	nu-candidate	nu-candidate
+52085	9	0		0	0	0	6	6	139.9	139.9	6	6	nu-candidate	nu-candidate
+52195	10	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+52613	7	0		0	0	0	2	2	15.2	15.2	31	31	nu-candidate	nu-candidate
+52657	6	1	1	0	0	0	23	23	101.0	101.0	5	5	nu-candidate	nu-candidate
+52723	6	0		0	0	0	7	7	61.6	61.6	3	3	nu-candidate	nu-candidate
+53361	3	2	2	0	0	0	27	27	124.4	124.4	4	4	nu-candidate	nu-candidate
+53427	3	0		0	0	0	14	14	195.5	195.5	3	3	nu-candidate	nu-candidate
+53493	11	0		0	0	0							no-bundle	no-bundle
+53581	8	0		0	0	0							no-bundle	no-bundle
+53713	5	3	3	0	0	0	15	15	2.3	2.3	9	9	nu-candidate	nu-candidate
+53779	8	0		0	0	0							no-beam-flash	no-beam-flash
+53955	9	0		0	0	0							cosmic-tagged	cosmic-tagged
+54175	8	1	1	0	0	0	18	18	187.1	187.1	17	17	nu-candidate	nu-candidate
+54209	8	0		0	0	0							no-beam-flash	no-beam-flash
+54285	10	0		0	0	0							no-beam-flash	no-beam-flash
+54341	19	5	5	0	0	0	18	18	80.4	80.4	14	14	nu-candidate	nu-candidate
+54351	7	1	1	0	0	0	17	17	68.2	68.2	5	5	nu-candidate	nu-candidate
+54505	3	0		0	0	0							no-beam-flash	no-beam-flash
+54527	4	0		0	0	0							no-beam-flash	no-beam-flash
+55231	9	0		0	0	0							cosmic-tagged	cosmic-tagged
+55539	5	2	2	0	0	0	18	18	196.0	196.0	2	2	nu-candidate	nu-candidate
+55583	10	1	1	0	0	0							nu-candidate	nu-candidate
+55595	9	2	2	0	0	0	8	8	190.4	190.4	6	6	nu-candidate	nu-candidate
+55627	8	1	1	0	0	0	22	22	191.7	191.7	5	5	nu-candidate	nu-candidate
+55693	5	0		0	0	0							no-bundle	no-bundle
+55715	8	3	3	0	0	0	15	15	31.8	31.8	8	8	nu-candidate	nu-candidate
+55925	7	1	1	0	0	0							nu-candidate	nu-candidate
+55957	13	0		0	0	0	13	13	2.2	2.2	2	2	nu-candidate	nu-candidate
+56211	13	0		0	0	0	11	11	23.1	23.1	3	3	nu-candidate	nu-candidate
+56243	8	0		0	0	0	9	9	117.2	117.2	25	25	nu-candidate	nu-candidate
+56299	10	0		0	0	0							no-beam-flash	no-beam-flash
+56353	12	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+56387	9	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+56463	9	1	1	0	0	0	14	14	429.3	429.3	17	17	no-bundle	no-bundle
+56519	6	0		0	0	0							no-bundle	no-bundle
+57245	9	0		0	0	0							nu-candidate	nu-candidate
+57311	3	0		0	0	0							no-bundle	no-bundle
+57333	7	0		0	0	0							no-bundle	no-bundle
+57355	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+57441	5	1	1	0	0	0	20	20	102.0	102.0	9	9	nu-candidate	nu-candidate
+57485	9	4	4	0	0	0	16	16	80.8	80.8	4	4	nu-candidate	nu-candidate
+57487	1	0		0	0	0							nu-candidate	nu-candidate
+57575	12	0		0	0	0	12	12	285.1	285.1	6	6	nu-candidate	nu-candidate
+57661	9	6	6	0	0	0	18	18	122.3	122.3	7	7	nu-candidate	nu-candidate
+57883	11	2	2	0	0	0	16	16	97.4	97.4	2	2	nu-candidate	nu-candidate
+57903	10	4	4	0	0	0	14	14	97.3	97.3	4	4	nu-candidate	nu-candidate
+57949	6	0		0	0	0							no-bundle	no-bundle
+58169	13	1	1	0	0	0							nu-candidate	nu-candidate
+58211	4	1	1	0	0	0							nu-candidate	nu-candidate
+58255	8	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+58321	5	0		0	0	0	19	19	177.8	177.8	2	2	nu-candidate	nu-candidate
+58343	10	4	4	0	0	0	2	2	1.2	1.2	0	0	cosmic-tagged	cosmic-tagged
+58345	5	0		0	0	0	7	7	47.7	47.7	3	3	nu-candidate	nu-candidate
+58433	5	0		0	0	0							nu-candidate	nu-candidate
+58519	10	0		0	0	0							no-beam-flash	no-beam-flash
+58543	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+58607	15	2	2	0	0	0	23	23	15.7	15.7	8	8	nu-candidate	nu-candidate
+58653	6	0		0	0	0	4	4	94.3	94.3	7	7	nu-candidate	nu-candidate
+58667	7	0		0	0	0							nu-candidate	nu-candidate
+58711	2	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+58717	9	2	2	0	0	0	21	21	21.4	21.4	4	4	nu-candidate	nu-candidate
+58755	11	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+58777	10	0		0	0	0							no-beam-flash	no-beam-flash
+58821	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+58997	12	0		0	0	0							no-beam-flash	no-beam-flash
+59003	8	1	1	1	0	1	19	19	298.4	298.4	4	3	nu-candidate	nu-candidate
+59019	9	0		0	0	0							no-beam-flash	no-beam-flash
+59025	5	1	1	0	0	0	19	19	299.7	299.7	4	4	nu-candidate	nu-candidate
+59047	10	0		0	0	0	2	2	1.1	1.1	0	0	cosmic-tagged	cosmic-tagged
+59063	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+59069	6	0		0	0	0							no-bundle	no-bundle
+59085	3	0		0	0	0	3	3	27.1	27.1	2	2	nu-candidate	nu-candidate
+59093	4	1	1	0	0	0	15	15	120.1	120.1	14	14	nu-candidate	nu-candidate
+59179	5	1	1	0	0	0	15	15	168.6	168.6	4	4	nu-candidate	nu-candidate
+59247	7	1	1	0	0	0	15	15	159.4	159.4	2	2	nu-candidate	nu-candidate
+59261	8	4	4	0	0	0	11	11	94.5	94.5	8	8	nu-candidate	nu-candidate
+59335	9	2	2	0	0	0	11	11	71.2	71.2	8	8	nu-candidate	nu-candidate
+59371	16	2	2	0	0	0	8	8	107.8	107.8	7	7	nu-candidate	nu-candidate
+59377	10	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+59415	14	0		0	0	0							no-beam-flash	no-beam-flash
+59459	7	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+59553	7	2	2	0	0	0	10	10	78.3	78.3	9	9	nu-candidate	nu-candidate
+59663	7	2	2	0	0	0							nu-candidate	nu-candidate
+59685	6	0		0	0	0	6	6	168.2	168.2	2	2	nu-candidate	nu-candidate
+59723	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+59753	7	0		0	0	0	14	14	3.1	3.1	13	13	nu-candidate	nu-candidate
+59773	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+59789	2	0		0	0	0							no-bundle	no-bundle
+59795	12	0		0	0	0							no-beam-flash	no-beam-flash
+59863	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+59899	3	0		0	0	0	5	5	40.2	40.2	2	2	nu-candidate	nu-candidate
+59929	3	1	1	0	0	0	20	20	139.7	139.7	11	11	nu-candidate	nu-candidate
+60017	10	0		0	0	0	7	7	46.7	46.7	2	2	nu-candidate	nu-candidate
+60119	15	0		0	0	0							no-beam-flash	no-beam-flash
+60345	12	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+60369	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+60559	4	1	1	1	0	0							cosmic-tagged	cosmic-tagged
+60669	5	1	1	0	0	0	17	17	81.0	81.0	4	4	nu-candidate	nu-candidate
+60763	6	0		0	0	0							no-bundle	no-bundle
+60933	5	0		0	0	0	18	18	145.3	145.3	5	5	nu-candidate	nu-candidate
+60985	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+61071	10	0		0	0	0	4	4	3.1	3.1	3	3	nu-candidate	nu-candidate
+61093	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+61307	9	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+61313	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+61351	9	2	2	0	0	0	17	17	352.5	352.5	6	6	nu-candidate	nu-candidate
+61417	7	1	1	0	0	0	9	9	157.3	157.3	5	5	nu-candidate	nu-candidate
+61461	4	3	3	0	0	0	10	10	138.9	138.9	12	12	nu-candidate	nu-candidate
+61483	4	0		0	0	0							no-beam-flash	no-beam-flash
+61579	2	1	1	0	0	0	20	20	156.2	156.2	6	6	nu-candidate	nu-candidate
+61637	5	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+61681	7	1	1	0	0	0	2	2	111.1	111.1	2	2	nu-candidate	nu-candidate
+61711	11	1	1	0	0	0							nu-candidate	nu-candidate
+61843	5	2	2	0	0	0	17	17	47.1	47.1	17	17	nu-candidate	nu-candidate
+61997	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+62011	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+62019	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+62149	9	0		0	0	0	13	13	128.2	128.2	3	3	nu-candidate	nu-candidate
+62209	7	0		0	0	0							no-beam-flash	no-beam-flash
+62231	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+62281	6	1	1	0	0	0	19	19	120.8	120.8	2	2	nu-candidate	nu-candidate
+62303	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+62327	9	4	4	0	0	0							cosmic-tagged	cosmic-tagged
+62429	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+62459	6	0		0	0	0	10	10	197.1	197.1	4	4	nu-candidate	nu-candidate
+62473	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+62495	10	0		0	0	0	16	16	76.4	76.4	10	10	nu-candidate	nu-candidate
+62561	3	1	1	0	0	0	15	15	2.4	2.4	1	1	nu-candidate	nu-candidate
+62583	12	6	6	0	0	0	12	12	1.6	1.6	0	0	cosmic-tagged	cosmic-tagged
+62613	1	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+62721	8	1	1	0	0	0	16	16	5.2	5.2	11	11	nu-candidate	nu-candidate
+62825	3	0		0	0	0							no-beam-flash	no-beam-flash
+62943	7	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+62979	5	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+63097	2	0		0	0	0							nu-candidate	nu-candidate
+63163	6	0		0	0	0	6	6	171.8	171.8	9	9	nu-candidate	nu-candidate
+63273	2	0		0	0	0							nu-candidate	nu-candidate
+63359	8	0		0	0	0	3	3	26.0	26.0	3	3	nu-candidate	nu-candidate
+63427	8	1	1	0	0	0	18	18	84.4	84.4	3	3	nu-candidate	nu-candidate
+63493	9	3	3	0	0	0							nu-candidate	nu-candidate
+63515	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+63537	7	0		0	0	0	2	2	2.0	2.0	9	9	nu-candidate	nu-candidate
+63551	3	0		0	0	0	6	6	94.7	94.7	1	1	nu-candidate	nu-candidate
+63559	5	2	2	0	0	0	11	11	159.1	159.1	15	15	nu-candidate	nu-candidate
+63581	1	0		0	0	0							no-bundle	no-bundle
+63603	6	1	1	0	0	0	13	13	120.9	120.9	1	1	nu-candidate	nu-candidate
+63669	10	5	5	0	0	0	5	5	180.5	180.5	10	10	nu-candidate	nu-candidate
+63711	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+63947	4	0		0	0	0							nu-candidate	nu-candidate
+64057	3	0		0	0	0							no-beam-flash	no-beam-flash
+64079	5	0		0	0	0							no-bundle	no-bundle
+64107	2	0		0	0	0							nu-candidate	nu-candidate
+64409	6	5	5	0	0	0	8	8	91.6	91.6	24	24	nu-candidate	nu-candidate
+64453	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+64475	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+64503	7	0		0	0	0	9	9	49.8	49.8	3	3	nu-candidate	nu-candidate
+64591	10	2	2	0	0	0	17	17	214.0	214.0	14	14	nu-candidate	nu-candidate
+64613	4	0		0	0	0	3	3	1.6	1.6	2	2	nu-candidate	nu-candidate
+64701	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+64717	9	1	1	0	0	0	17	17	46.9	46.9	16	16	nu-candidate	nu-candidate
+64921	9	1	1	0	0	0	11	11	112.5	112.5	13	13	nu-candidate	nu-candidate
+64959	3	2	2	0	0	0	19	19	87.7	87.7	2	2	nu-candidate	nu-candidate
+65018	8	0		0	0	0							nu-candidate	nu-candidate
+65025	5	0		0	0	0	16	16	38.3	38.3	1	1	nu-candidate	nu-candidate
+65053	7	0		0	0	0	6	6	127.3	127.3	4	4	nu-candidate	nu-candidate
+65267	9	3	3	0	0	0	15	15	10.6	10.6	6	6	nu-candidate	nu-candidate
+65289	5	1	1	0	0	0	14	14	159.2	159.2	3	3	nu-candidate	nu-candidate
+65295	3	0		0	0	0	13	13	62.6	62.6	1	1	nu-candidate	nu-candidate
+65355	8	1	1	0	0	0							nu-candidate	nu-candidate
+65612	3	0		0	0	0							no-beam-flash	no-beam-flash
+65647	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+65691	10	0		0	0	0							cosmic-tagged	cosmic-tagged
+65788	6	0		0	0	0							no-beam-flash	no-beam-flash
+65942	9	0		0	0	0							cosmic-tagged	cosmic-tagged
+65999	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+66043	4	0		0	0	0							no-beam-flash	no-beam-flash
+66087	9	0		0	0	0							no-beam-flash	no-beam-flash
+66118	8	0		0	0	0	9	9	83.4	83.4	1	1	nu-candidate	nu-candidate
+66272	6	1	1	0	0	0	24	24	16.0	16.0	5	5	nu-candidate	nu-candidate
+66329	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+66338	7	0		0	0	0							no-beam-flash	no-beam-flash
+66461	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+66571	7	0		0	0	0							no-bundle	no-bundle
+66615	4	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+66624	10	0		0	0	0							cosmic-tagged	cosmic-tagged
+66646	12	1	1	0	0	0	14	14	22.1	22.1	1	1	nu-candidate	nu-candidate
+66712	4	0		0	0	0	11	11	72.6	72.6	2	2	nu-candidate	nu-candidate
+66822	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+66954	14	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+67108	5	0		0	0	0							no-bundle	no-bundle
+67152	12	4	4	0	0	0							nu-candidate	nu-candidate
+67394	3	1	1	0	0	0	19	19	79.5	79.5	15	15	nu-candidate	nu-candidate
+67746	5	1	1	0	0	0	10	10	172.4	172.4	1	1	nu-candidate	nu-candidate
+67922	18	0		0	0	0							no-beam-flash	no-beam-flash
+67988	4	0		0	0	0							no-beam-flash	no-beam-flash
+68054	6	1	1	1	0	0							cosmic-tagged	cosmic-tagged
+68362	0	0		0	0	0							no-bundle	no-bundle
+68428	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+68516	9	0		0	0	0							no-bundle	no-bundle
+68648	7	1	1	0	0	0	15	15	116.8	116.8	1	1	nu-candidate	nu-candidate
+68714	4	0		0	0	0	5	5	94.0	94.0	1	1	nu-candidate	nu-candidate
+68956	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+68978	6	2	2	0	0	0	18	18	156.3	156.3	2	2	nu-candidate	nu-candidate
+69000	13	6	6	0	0	0							cosmic-tagged	cosmic-tagged
+69066	14	0		0	0	0							cosmic-tagged	cosmic-tagged
+69286	5	0		0	0	0							no-bundle	no-bundle
+69308	10	1	1	0	0	0							nu-candidate	nu-candidate
+70562	11	3	3	0	0	0							nu-candidate	nu-candidate
+70980	7	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+71046	10	1	1	0	0	0	19	19	192.2	192.2	8	8	nu-candidate	nu-candidate
+71178	7	0		0	0	0	10	10	41.2	41.2	9	9	nu-candidate	nu-candidate
+71222	8	1	1	0	0	0	15	15	122.8	122.8	8	8	nu-candidate	nu-candidate
+71266	2	0		0	0	0	15	15	95.2	95.2	1	1	nu-candidate	nu-candidate
+71288	6	0		0	0	0							no-bundle	no-bundle
+71376	7	0		0	0	0							no-beam-flash	no-beam-flash
+71486	11	0		0	0	0							cosmic-tagged	cosmic-tagged
+71530	2	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+71640	3	0		0	0	0	9	9	231.1	231.1	5	5	nu-candidate	nu-candidate
+71882	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+71948	7	0		0	0	0							no-beam-flash	no-beam-flash
+72256	9	0		0	0	0	9	9	75.9	75.9	2	2	nu-candidate	nu-candidate
+72564	8	0		0	0	0							no-bundle	no-bundle
+72586	9	2	2	0	0	0	17	17	301.4	301.4	7	7	nu-candidate	nu-candidate
+72828	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+73004	11	3	3	1	0	1	15	15	107.1	107.1	7	6	nu-candidate	nu-candidate
+73070	10	1	1	0	0	0							nu-candidate	nu-candidate
+73422	7	0		0	0	0							no-beam-flash	no-beam-flash
+166650	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+166738	11	2	2	0	0	0	16	16	225.9	225.9	19	19	nu-candidate	nu-candidate
+166804	10	1	1	0	0	0	9	9	28.3	28.3	1	1	nu-candidate	nu-candidate
+166870	7	0		0	0	0	10	10	64.3	64.3	14	14	nu-candidate	nu-candidate
+167112	6	1	1	0	0	0	16	16	57.0	57.0	5	5	nu-candidate	nu-candidate
+167200	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+167222	7	0		0	0	0							no-bundle	no-bundle
+167354	7	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+167376	9	0		0	0	0							cosmic-tagged	cosmic-tagged
+167398	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+167640	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+167684	5	0		0	0	0	10	10	14.6	14.6	0	0	nu-candidate	nu-candidate
+167904	7	0		0	0	0							no-beam-flash	no-beam-flash
+168388	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+168410	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+168432	4	1	1	0	0	0	19	19	84.7	84.7	2	2	nu-candidate	nu-candidate
+168526	7	4	4	0	0	0	19	19	373.1	373.1	36	36	nu-candidate	nu-candidate
+168614	5	0		0	0	0	5	5	174.2	174.2	1	1	nu-candidate	nu-candidate
+168658	9	0		0	0	0	12	12	90.3	90.3	5	5	nu-candidate	nu-candidate
+169054	4	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+169202	9	0		0	0	0							no-bundle	no-bundle
+169208	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+169340	8	0		0	0	0							no-bundle	no-bundle
+169356	7	1	1	1	0	1	16	16	138.9	138.9	16	15	nu-candidate	nu-candidate
+169488	9	3	3	0	0	0	8	8	3.7	3.7	10	10	nu-candidate	nu-candidate
+169532	9	0		0	0	0							cosmic-tagged	cosmic-tagged
+169598	8	1	1	0	0	0	18	18	88.0	88.0	2	2	nu-candidate	nu-candidate
+169620	9	1	1	0	0	0	13	13	201.8	201.8	7	7	nu-candidate	nu-candidate
+169626	13	3	3	0	0	0	13	13	79.1	79.1	14	14	nu-candidate	nu-candidate
+169708	12	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+169736	10	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+169758	8	2	2	0	0	0	6	6	70.0	70.0	2	2	nu-candidate	nu-candidate
+169774	8	0		0	0	0	2	2	14.1	14.1	10	10	nu-candidate	nu-candidate
+169824	2	0		0	0	0	18	18	325.2	325.2	4	4	nu-candidate	nu-candidate
+169846	6	0		0	0	0	6	6	2.4	2.4	8	8	nu-candidate	nu-candidate
+169890	10	1	1	0	0	0	21	21	149.1	149.1	2	2	nu-candidate	nu-candidate
+170792	6	1	1	0	0	0	10	10	56.2	56.2	4	4	nu-candidate	nu-candidate
+170808	7	1	1	0	0	0	14	14	91.4	91.4	9	9	nu-candidate	nu-candidate
+170814	8	0		0	0	0	18	18	52.6	52.6	3	3	nu-candidate	nu-candidate
+170880	11	4	4	0	0	0	13	13	18.4	18.4	8	8	nu-candidate	nu-candidate
+170924	13	1	1	0	0	0	16	16	35.8	35.8	1	1	nu-candidate	nu-candidate
+170940	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+170984	5	0		0	0	0							nu-candidate	nu-candidate
+171050	8	0		0	0	0							nu-candidate	nu-candidate
+171116	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+171144	7	0		0	0	0							no-beam-flash	no-beam-flash
+171358	12	3	3	0	0	0	10	10	31.2	31.2	8	8	nu-candidate	nu-candidate
+171446	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+171600	14	3	3	0	0	0	14	14	341.8	341.8	12	12	nu-candidate	nu-candidate
+171892	4	1	1	0	0	0	23	23	1.9	1.9	2	2	nu-candidate	nu-candidate
+172090	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+172200	7	0		0	0	0							nu-candidate	nu-candidate
+172266	9	4	4	0	0	0	16	16	158.6	158.6	13	13	nu-candidate	nu-candidate
+172414	11	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+172552	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+172596	11	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+172656	6	0		0	0	0	10	10	262.6	262.6	12	12	nu-candidate	nu-candidate
+172722	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+172788	10	2	2	0	0	0							nu-candidate	nu-candidate
+172794	3	0		0	0	0	20	20	306.4	306.4	1	1	nu-candidate	nu-candidate
+172832	8	2	2	0	0	0	21	21	137.1	137.1	15	15	nu-candidate	nu-candidate
+172860	12	0		0	0	0							no-beam-flash	no-beam-flash
+172926	8	0		0	0	0							no-beam-flash	no-beam-flash
+172942	6	0		0	0	0	4	4	84.2	84.2	8	8	nu-candidate	nu-candidate
+173058	8	3	3	0	0	0	14	14	7.0	7.0	22	22	nu-candidate	nu-candidate
+173146	14	3	3	0	0	0	15	15	154.2	154.2	12	12	nu-candidate	nu-candidate
+173234	8	2	2	0	0	0	10	10	233.1	233.1	7	7	nu-candidate	nu-candidate
+173256	6	1	1	0	0	0							nu-candidate	nu-candidate
+173294	11	0		0	0	0							no-beam-flash	no-beam-flash
+173476	9	0		0	0	0							no-beam-flash	no-beam-flash
+173498	1	0		0	0	0	6	6	171.7	171.7	3	3	nu-candidate	nu-candidate
+173586	10	3	3	0	0	0							nu-candidate	nu-candidate
+173718	6	1	1	0	0	0							nu-candidate	nu-candidate
+173822	4	0		0	0	0							no-bundle	no-bundle
+173888	5	0		0	0	0							nu-candidate	nu-candidate
+173982	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+174114	9	1	1	0	0	0	17	17	54.2	54.2	10	10	nu-candidate	nu-candidate
+174136	6	0		0	0	0							no-bundle	no-bundle
+174224	10	3	3	0	0	0	20	20	325.1	325.1	8	8	nu-candidate	nu-candidate
+174240	3	0		0	0	0							no-beam-flash	no-beam-flash
+174306	3	0		0	0	0							no-beam-flash	no-beam-flash
+174422	5	1	1	0	0	0	8	8	10.3	10.3	0	0	cosmic-tagged	cosmic-tagged
+174488	0	0		0	0	0							cosmic-tagged	cosmic-tagged
+174576	7	0		0	0	0	5	5	110.1	110.1	4	4	nu-candidate	nu-candidate
+174642	8	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+174752	3	1	1	0	0	0	14	14	17.2	17.2	4	4	nu-candidate	nu-candidate
+174878	8	0		0	0	0							no-bundle	no-bundle
+174928	5	0		0	0	0	9	9	92.2	92.2	8	8	nu-candidate	nu-candidate
+175016	12	3	3	0	0	0	19	19	7.0	7.0	4	4	nu-candidate	nu-candidate
+175104	10	4	4	0	0	0							nu-candidate	nu-candidate
+175428	10	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+175500	6	0		0	0	0							no-beam-flash	no-beam-flash
+175808	9	2	2	0	0	0	18	18	136.3	136.3	9	9	nu-candidate	nu-candidate
+175896	9	3	3	0	0	0	17	17	71.2	71.2	4	4	nu-candidate	nu-candidate
+175956	6	0		0	0	0							no-bundle	no-bundle
+176022	9	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+176066	4	0		0	0	0							no-beam-flash	no-beam-flash
+176088	11	0		0	0	0							no-beam-flash	no-beam-flash
+176132	12	0		0	0	0							no-beam-flash	no-beam-flash
+176160	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+276198	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+276330	5	0		0	0	0							no-beam-flash	no-beam-flash
+276418	1	0		0	0	0							no-beam-flash	no-beam-flash
+276550	14	0		0	0	0							no-bundle	no-bundle
+276638	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+276836	7	1	1	0	0	0	11	11	236.7	236.7	9	9	nu-candidate	nu-candidate
+277276	10	2	2	0	0	0	8	8	139.7	139.7	2	2	nu-candidate	nu-candidate
+277298	8	2	2	0	0	0	17	17	57.3	57.3	7	7	nu-candidate	nu-candidate
+277320	6	0		0	0	0							no-beam-flash	no-beam-flash
+277782	6	0		0	0	0							no-bundle	no-bundle
+277958	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+278046	9	0		0	0	0	3	3	23.2	23.2	4	4	nu-candidate	nu-candidate
+278266	4	2	2	0	0	0	22	22	17.2	17.2	5	5	nu-candidate	nu-candidate
+278398	1	0		0	0	0							cosmic-tagged	cosmic-tagged
+278420	7	1	1	0	0	0	18	18	88.4	88.4	10	10	nu-candidate	nu-candidate
+278640	7	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+278662	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+278684	12	3	3	1	0	1	10	10	167.2	167.2	10	9	nu-candidate	nu-candidate
+278785	3	0		0	0	0	5	5	195.2	195.2	9	9	nu-candidate	nu-candidate
+278794	8	1	1	0	0	0	7	7	159.1	159.1	19	19	nu-candidate	nu-candidate
+278860	6	0		0	0	0							no-beam-flash	no-beam-flash
+278917	4	0		0	0	0							no-bundle	no-bundle
+278939	18	0		0	0	0							no-beam-flash	no-beam-flash
+279080	2	0		0	0	0							nu-candidate	nu-candidate
+279115	10	0		0	0	0							no-bundle	no-bundle
+279124	9	0		0	0	0							no-beam-flash	no-beam-flash
+279190	11	2	2	0	0	0	17	17	4.9	4.9	2	2	nu-candidate	nu-candidate
+279256	6	1	1	0	0	0	15	15	291.8	291.8	5	5	nu-candidate	nu-candidate
+279432	8	0		0	0	0							no-bundle	no-bundle
+279445	7	2	2	0	0	0	19	19	132.5	132.5	5	5	nu-candidate	nu-candidate
+279564	6	0		0	0	0							no-beam-flash	no-beam-flash
+279643	8	3	3	0	0	0	20	20	7.6	7.6	5	5	nu-candidate	nu-candidate
+279797	6	0		0	0	0							no-beam-flash	no-beam-flash
+279951	8	2	2	0	0	0							nu-candidate	nu-candidate
+280017	8	1	1	0	0	0	8	8	15.4	15.4	13	13	nu-candidate	nu-candidate
+280092	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+280281	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+280466	4	2	2	0	0	0	8	8	1.3	1.3	0	0	cosmic-tagged	cosmic-tagged
+280598	14	4	4	0	0	0	15	15	46.3	46.3	11	11	nu-candidate	nu-candidate
+280752	7	2	2	0	0	0	13	13	16.2	16.2	7	7	nu-candidate	nu-candidate
+280774	4	1	1	0	0	0	16	16	89.6	89.6	8	8	nu-candidate	nu-candidate
+280853	10	2	2	0	0	0	11	11	59.1	59.1	3	3	nu-candidate	nu-candidate
+280884	5	0		0	0	0							no-beam-flash	no-beam-flash
+280972	11	0		0	0	0	7	7	511.4	511.4	32	32	nu-candidate	nu-candidate
+280994	15	2	2	0	0	0	18	18	116.9	116.9	4	4	nu-candidate	nu-candidate
+281095	0	0		0	0	0							cosmic-tagged	cosmic-tagged
+281148	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+281155	8	0		0	0	0							no-beam-flash	no-beam-flash
+281214	8	3	3	0	0	0	15	15	151.6	151.6	13	13	nu-candidate	nu-candidate
+281241	13	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+281337	11	0		0	0	0	8	8	1.7	1.7	2	2	nu-candidate	nu-candidate
+281485	9	2	2	0	0	0	15	15	65.4	65.4	21	21	nu-candidate	nu-candidate
+281505	7	2	2	0	0	0	18	18	95.9	95.9	7	7	nu-candidate	nu-candidate
+281507	5	0		0	0	0	8	8	123.1	123.1	4	4	nu-candidate	nu-candidate
+281527	7	1	1	0	0	0	14	14	166.7	166.7	2	2	nu-candidate	nu-candidate
+281551	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+281557	7	2	2	0	0	0							nu-candidate	nu-candidate
+281595	7	1	1	1	0	1	20	20	326.4	326.4	2	1	nu-candidate	nu-candidate
+281632	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+281639	4	1	1	0	0	0	23	23	47.5	47.5	11	11	nu-candidate	nu-candidate
+281676	8	0		0	0	0							no-bundle	no-bundle
+281720	22	0		0	0	0							cosmic-tagged	cosmic-tagged
+281727	8	3	3	0	0	0	10	10	2.3	2.3	13	13	nu-candidate	nu-candidate
+281808	5	1	1	0	0	0							nu-candidate	nu-candidate
+281837	11	1	1	0	0	0	13	13	184.2	184.2	16	16	nu-candidate	nu-candidate
+281857	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+281901	7	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+281918	16	1	1	0	0	0							nu-candidate	nu-candidate
+281925	7	1	1	0	0	0							nu-candidate	nu-candidate
+281953	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+281997	5	1	1	1	0	0							cosmic-tagged	cosmic-tagged
+282011	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+282033	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+282057	5	1	1	0	0	0	19	19	18.1	18.1	1	1	nu-candidate	nu-candidate
+282072	10	4	4	0	0	0	7	7	307.4	307.4	8	8	nu-candidate	nu-candidate
+282094	5	0		0	0	0							no-bundle	no-bundle
+282160	9	3	3	0	0	0							nu-candidate	nu-candidate
+282204	4	0		0	0	0	4	4	117.4	117.4	3	3	nu-candidate	nu-candidate
+282217	8	2	2	0	0	0	9	9	417.2	417.2	3	3	nu-candidate	nu-candidate
+282231	4	1	1	0	0	0	19	19	55.3	55.3	2	2	nu-candidate	nu-candidate
+282292	5	0		0	0	0							no-beam-flash	no-beam-flash
+282299	0	0		0	0	0							cosmic-tagged	cosmic-tagged
+282385	6	0		0	0	0	11	11	156.8	156.8	3	3	nu-candidate	nu-candidate
+282459	8	0		0	0	0	10	10	99.1	99.1	6	6	nu-candidate	nu-candidate
+282541	6	0		0	0	0							no-beam-flash	no-beam-flash
+282666	7	0		0	0	0	10	10	148.3	148.3	3	3	nu-candidate	nu-candidate
+282715	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+282737	7	2	2	0	0	0	21	21	189.9	189.9	4	4	nu-candidate	nu-candidate
+282871	6	1	1	0	0	0							nu-candidate	nu-candidate
+282899	10	6	6	1	0	1	7	7	153.9	153.9	33	32	nu-candidate	nu-candidate
+282930	15	0		0	0	0							no-bundle	no-bundle
+282952	4	0		0	0	0							nu-candidate	nu-candidate
+282979	6	3	3	0	0	0	14	14	60.7	60.7	11	11	nu-candidate	nu-candidate
+283009	10	2	2	0	0	0	23	23	253.6	253.6	9	9	nu-candidate	nu-candidate
+283040	8	0		0	0	0	2	2	120.5	120.5	20	20	nu-candidate	nu-candidate
+283047	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+283091	8	1	1	0	0	0	24	24	126.1	126.1	2	2	nu-candidate	nu-candidate
+283119	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+283229	8	2	2	0	0	0	6	6	172.5	172.5	5	5	nu-candidate	nu-candidate
+283265	10	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+283331	8	0		0	0	0							no-beam-flash	no-beam-flash
+283463	13	4	4	0	0	0	14	14	19.1	19.1	18	18	nu-candidate	nu-candidate
+283485	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+283515	8	4	4	0	0	0							cosmic-tagged	cosmic-tagged
+283529	12	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+283537	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+283581	8	0		0	0	0							nu-candidate	nu-candidate
+283595	15	5	5	1	0	1	12	12	30.3	30.3	19	18	nu-candidate	nu-candidate
+283683	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+283691	4	1	1	0	0	0	23	23	21.9	21.9	2	2	nu-candidate	nu-candidate
+283713	8	3	3	0	0	0	17	17	487.5	487.5	10	10	nu-candidate	nu-candidate
+283771	6	2	2	0	0	0	21	21	135.9	135.9	8	8	nu-candidate	nu-candidate
+283793	8	3	3	1	0	0							nu-candidate	nu-candidate
+283801	6	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+283817	19	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+283839	5	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+283905	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+283969	11	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+283991	4	2	2	0	0	0	15	15	139.8	139.8	2	2	nu-candidate	nu-candidate
+284013	10	2	2	0	0	0	8	8	146.9	146.9	12	12	nu-candidate	nu-candidate
+284081	2	0		0	0	0							no-beam-flash	no-beam-flash
+284103	4	1	1	0	0	0	8	8	165.6	165.6	2	2	nu-candidate	nu-candidate
+284125	4	2	2	0	0	0							nu-candidate	nu-candidate
+284145	8	1	1	0	0	0	11	11	229.4	229.4	12	12	nu-candidate	nu-candidate
+284153	8	1	1	0	0	0	14	14	146.8	146.8	5	5	nu-candidate	nu-candidate
+284200	7	2	2	0	0	0	6	6	50.0	50.0	11	11	nu-candidate	nu-candidate
+284211	9	2	2	0	0	0	14	14	151.7	151.7	6	6	nu-candidate	nu-candidate
+284235	9	0		0	0	0	6	6	43.8	43.8	13	13	nu-candidate	nu-candidate
+284255	7	2	2	0	0	0							nu-candidate	nu-candidate
+284323	3	1	1	0	0	0							nu-candidate	nu-candidate
+284349	7	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+284365	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+284367	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+284563	4	0		0	0	0							no-beam-flash	no-beam-flash
+284587	10	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+284596	5	0		0	0	0							nu-candidate	nu-candidate
+284637	14	1	1	0	0	0	23	23	36.6	36.6	3	3	nu-candidate	nu-candidate
+284657	7	0		0	0	0	5	5	102.9	102.9	5	5	nu-candidate	nu-candidate
+284769	7	2	2	0	0	0	16	16	352.4	352.4	8	8	nu-candidate	nu-candidate
+284791	8	0		0	0	0	4	4	34.9	34.9	16	16	nu-candidate	nu-candidate
+284794	13	4	4	0	0	0	12	12	264.3	264.3	6	6	nu-candidate	nu-candidate
+284835	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+284937	4	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+284989	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+285025	9	0		0	0	0							no-beam-flash	no-beam-flash
+285049	4	0		0	0	0							no-beam-flash	no-beam-flash
+285069	10	4	4	0	0	0	9	9	33.1	33.1	6	6	nu-candidate	nu-candidate
+285080	2	0		0	0	0							cosmic-tagged	cosmic-tagged
+285185	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+285201	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+285253	19	5	5	0	0	0							cosmic-tagged	cosmic-tagged
+285311	3	1	1	0	0	0	11	11	79.3	79.3	7	7	nu-candidate	nu-candidate
+285333	7	2	2	0	0	0							nu-candidate	nu-candidate
+285366	5	0		0	0	0	13	13	68.2	68.2	4	4	nu-candidate	nu-candidate
+285421	3	1	1	1	0	0							cosmic-tagged	cosmic-tagged
+285443	16	6	6	0	0	0	7	7	99.0	99.0	16	16	nu-candidate	nu-candidate
+285467	9	1	1	1	0	1	18	18	101.6	101.6	6	5	nu-candidate	nu-candidate
+285531	7	0		0	0	0	15	15	221.8	221.8	2	2	nu-candidate	nu-candidate
+285564	8	1	1	0	0	0	9	9	43.5	43.5	1	1	nu-candidate	nu-candidate
+285577	7	0		0	0	0							no-beam-flash	no-beam-flash
+285586	6	0		0	0	0							no-beam-flash	no-beam-flash
+285652	6	0		0	0	0	6	6	1.6	1.6	0	0	cosmic-tagged	cosmic-tagged
+285663	12	2	2	0	0	0	7	7	6.0	6.0	3	3	nu-candidate	nu-candidate
+285665	12	6	6	0	0	0	9	9	94.7	94.7	17	17	nu-candidate	nu-candidate
+285674	16	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+285753	14	2	2	0	0	0	15	15	22.3	22.3	10	10	nu-candidate	nu-candidate
+285795	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+285929	10	0		0	0	0	13	13	288.7	288.7	2	2	nu-candidate	nu-candidate
+285971	11	0		0	0	0	7	7	274.6	274.6	4	4	nu-candidate	nu-candidate
+285979	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+285993	5	0		0	0	0							no-beam-flash	no-beam-flash
+285999	7	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+286021	11	0		0	0	0							cosmic-tagged	cosmic-tagged
+286065	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+286089	2	0		0	0	0							no-beam-flash	no-beam-flash
+286114	9	1	1	0	0	0							nu-candidate	nu-candidate
+286133	6	0		0	0	0							no-beam-flash	no-beam-flash
+286177	5	0		0	0	0	10	10	19.0	19.0	1	1	nu-candidate	nu-candidate
+286180	10	0		0	0	0	6	6	43.1	43.1	2	2	nu-candidate	nu-candidate
+286191	6	0		0	0	0	7	7	108.5	108.5	7	7	nu-candidate	nu-candidate
+286197	4	0		0	0	0							no-bundle	no-bundle
+286213	7	1	1	0	0	0							nu-candidate	nu-candidate
+286221	4	0		0	0	0							no-bundle	no-bundle
+286241	4	0		0	0	0	11	11	288.0	288.0	7	7	nu-candidate	nu-candidate
+286268	9	2	2	0	0	0	11	11	197.4	197.4	10	10	nu-candidate	nu-candidate
+286325	10	0		0	0	0							cosmic-tagged	cosmic-tagged
+286329	12	0		0	0	0							cosmic-tagged	cosmic-tagged
+286353	6	2	2	0	0	0	9	9	264.1	264.1	4	4	nu-candidate	nu-candidate
+286391	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+286400	6	0		0	0	0	11	11	338.3	338.3	8	8	nu-candidate	nu-candidate
+286527	13	0		0	0	0	16	16	26.4	26.4	13	13	nu-candidate	nu-candidate
+286532	1	0		0	0	0							no-bundle	no-bundle
+286551	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+286587	3	0		0	0	0							no-beam-flash	no-beam-flash
+286617	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+286631	12	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+286655	11	1	1	0	0	0	19	19	61.1	61.1	13	13	nu-candidate	nu-candidate
+286681	10	0		0	0	0	3	3	127.9	127.9	17	17	nu-candidate	nu-candidate
+286683	7	0		0	0	0							no-beam-flash	no-beam-flash
+286787	7	0		0	0	0							no-bundle	no-bundle
+286818	6	0		0	0	0	5	5	47.0	47.0	3	3	nu-candidate	nu-candidate
+286884	2	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+286906	10	1	1	0	0	0	9	9	139.3	139.3	3	3	nu-candidate	nu-candidate
+287007	11	5	5	1	0	0							cosmic-tagged	cosmic-tagged
+287013	7	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+287016	3	0		0	0	0							no-beam-flash	no-beam-flash
+287029	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+287099	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+287181	8	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+287211	10	4	4	0	0	0	10	10	109.2	109.2	16	16	nu-candidate	nu-candidate
+287249	9	1	1	0	0	0	14	14	140.1	140.1	9	9	nu-candidate	nu-candidate
+287277	7	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+287315	9	5	5	0	0	0							cosmic-tagged	cosmic-tagged
+287431	6	2	2	0	0	0	7	7	52.0	52.0	2	2	cosmic-tagged	cosmic-tagged
+287434	11	0		0	0	0							cosmic-tagged	cosmic-tagged
+287517	6	0		0	0	0	13	13	142.7	142.7	4	4	nu-candidate	nu-candidate
+287522	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+287555	4	0		0	0	0	18	18	169.8	169.8	10	10	nu-candidate	nu-candidate
+287599	3	0		0	0	0	6	6	35.5	35.5	0	0	nu-candidate	nu-candidate
+287621	7	1	1	0	0	0	6	6	93.6	93.6	6	6	nu-candidate	nu-candidate
+287654	7	0		0	0	0	12	12	96.0	96.0	7	7	nu-candidate	nu-candidate
+287717	8	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+287759	7	0		0	0	0							no-beam-flash	no-beam-flash
+287783	10	2	2	0	0	0							nu-candidate	nu-candidate
+287825	16	4	4	0	0	0	5	5	119.8	119.8	9	9	nu-candidate	nu-candidate
+287830	7	3	3	0	0	0	16	16	98.7	98.7	11	11	nu-candidate	nu-candidate
+287896	13	3	3	0	0	0							nu-candidate	nu-candidate
+288067	6	0		0	0	0	7	7	42.8	42.8	1	1	nu-candidate	nu-candidate
+288287	9	2	2	0	0	0	10	10	256.0	256.0	14	14	nu-candidate	nu-candidate
+288327	11	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+288358	10	0		0	0	0	3	3	125.7	125.7	1	1	nu-candidate	nu-candidate
+288397	8	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+288468	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+288613	3	0		0	0	0							no-beam-flash	no-beam-flash
+288639	11	5	5	1	0	1	8	8	117.3	117.3	9	8	nu-candidate	nu-candidate
+288727	8	0		0	0	0							no-beam-flash	no-beam-flash
+288745	7	1	1	0	0	0	23	23	34.5	34.5	11	11	nu-candidate	nu-candidate
+288776	8	2	2	0	0	0							nu-candidate	nu-candidate
+288859	7	1	1	0	0	0	9	9	318.7	318.7	9	9	nu-candidate	nu-candidate
+288864	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+288921	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+288947	9	2	2	0	0	0	16	16	89.6	89.6	8	8	nu-candidate	nu-candidate
+288952	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+288974	7	3	3	0	0	0							nu-candidate	nu-candidate
+289062	11	0		0	0	0							no-bundle	no-bundle
+289141	6	1	1	1	0	0	8	8	1.1	1.1	0	0	cosmic-tagged	cosmic-tagged
+289145	13	4	4	0	0	0							cosmic-tagged	cosmic-tagged
+289251	6	2	2	0	0	0	12	12	281.3	281.3	3	3	nu-candidate	nu-candidate
+289295	11	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+289343	10	5	5	0	0	0							cosmic-tagged	cosmic-tagged
+289475	9	0		0	0	0							no-beam-flash	no-beam-flash
+289493	4	0		0	0	0							no-beam-flash	no-beam-flash
+289559	4	0		0	0	0	14	14	166.4	166.4	2	2	nu-candidate	nu-candidate
+289647	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+289656	13	6	6	0	0	0							cosmic-tagged	cosmic-tagged
+289805	6	0		0	0	0							nu-candidate	nu-candidate
+289832	5	0		0	0	0	10	10	208.7	208.7	2	2	nu-candidate	nu-candidate
+289849	9	1	1	0	0	0							nu-candidate	nu-candidate
+290052	9	7	7	0	0	0	8	8	88.1	88.1	8	8	nu-candidate	nu-candidate
+290069	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+290135	12	0		0	0	0							no-beam-flash	no-beam-flash
+290201	7	1	1	0	0	0	9	9	116.0	116.0	3	3	nu-candidate	nu-candidate
+290223	8	0		0	0	0							no-beam-flash	no-beam-flash
+290294	3	0		0	0	0	12	12	25.2	25.2	1	1	nu-candidate	nu-candidate
+290316	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+290329	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+290602	8	0		0	0	0							no-beam-flash	no-beam-flash
+290712	4	0		0	0	0							no-bundle	no-bundle
+290729	7	2	2	0	0	0	12	12	118.3	118.3	2	2	nu-candidate	nu-candidate
+290800	5	0		0	0	0							no-beam-flash	no-beam-flash
+290844	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+291037	5	1	1	0	0	0	13	13	105.3	105.3	4	4	nu-candidate	nu-candidate
+291064	9	1	1	0	0	0	14	14	164.7	164.7	1	1	nu-candidate	nu-candidate
+291262	6	1	1	0	0	0	18	18	141.1	141.1	5	5	nu-candidate	nu-candidate
+291301	9	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+291345	7	1	1	0	0	0							nu-candidate	nu-candidate
+291372	8	3	3	0	0	0	11	11	8.2	8.2	5	5	nu-candidate	nu-candidate
+291499	11	3	3	0	0	0	12	12	40.9	40.9	4	4	nu-candidate	nu-candidate
+291526	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+291548	4	1	1	0	0	0	21	21	82.2	82.2	11	11	nu-candidate	nu-candidate
+291570	11	1	1	0	0	0	17	17	197.2	197.2	1	1	nu-candidate	nu-candidate
+291724	15	4	4	0	0	0							nu-candidate	nu-candidate
+291768	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+291785	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+291961	4	0		0	0	0	4	4	126.3	126.3	10	10	nu-candidate	nu-candidate
+292005	8	2	2	0	0	0	18	18	169.2	169.2	15	15	nu-candidate	nu-candidate
+292027	12	2	2	0	0	0	12	12	302.1	302.1	8	8	nu-candidate	nu-candidate
+292115	10	0		0	0	0							no-bundle	no-bundle
+292384	5	1	1	0	0	0	19	19	460.5	460.5	7	7	nu-candidate	nu-candidate
+292406	10	0		0	0	0	6	6	46.4	46.4	6	6	nu-candidate	nu-candidate
+292423	11	0		0	0	0							no-beam-flash	no-beam-flash
+292450	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+292533	7	0		0	0	0	3	3	308.6	308.6	3	3	nu-candidate	nu-candidate
+292577	9	1	1	0	0	0	12	12	64.9	64.9	7	7	nu-candidate	nu-candidate
+292643	7	1	1	0	0	0	18	18	184.3	184.3	14	14	nu-candidate	nu-candidate
+292687	11	3	3	0	0	0	11	11	117.5	117.5	6	6	nu-candidate	nu-candidate
+292797	6	1	1	0	0	0	4	4	0.8	0.8	0	0	cosmic-tagged	cosmic-tagged
+293127	8	0		0	0	0							no-bundle	no-bundle
+293149	6	0		0	0	0	4	4	48.4	48.4	17	17	nu-candidate	nu-candidate
+293391	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+313781	12	1	1	0	0	0	9	9	24.2	24.2	4	4	nu-candidate	nu-candidate
+313847	7	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+313979	8	0		0	0	0	12	12	272.9	272.9	0	0	nu-candidate	nu-candidate
+314199	11	0		0	0	0							no-bundle	no-bundle
+314309	6	0		0	0	0							nu-candidate	nu-candidate
+314507	6	1	1	1	0	1	17	17	79.3	79.3	2	1	nu-candidate	nu-candidate
+314705	6	0		0	0	0	3	3	5.2	5.2	10	10	nu-candidate	nu-candidate
+314881	8	0		0	0	0							nu-candidate	nu-candidate
+314925	7	0		0	0	0							no-bundle	no-bundle
+315013	7	2	2	0	0	0	15	15	214.4	214.4	14	14	nu-candidate	nu-candidate
+315079	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+315167	4	0		0	0	0	8	8	162.5	162.5	14	14	nu-candidate	nu-candidate
+315343	10	3	3	0	0	0	7	7	35.1	35.1	16	16	nu-candidate	nu-candidate
+315409	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+315497	7	0		0	0	0	14	14	312.8	312.8	6	6	nu-candidate	nu-candidate
+315629	2	0		0	0	0							no-bundle	no-bundle
+315849	8	2	2	1	0	1	11	11	69.8	69.8	4	3	nu-candidate	nu-candidate
+315871	10	2	2	0	0	0	18	18	104.0	104.0	6	6	nu-candidate	nu-candidate
+315959	5	0		0	0	0							no-bundle	no-bundle
+316003	12	3	3	0	0	0	16	16	32.9	32.9	6	6	nu-candidate	nu-candidate
+316025	7	4	4	0	0	0	16	16	80.8	80.8	16	16	nu-candidate	nu-candidate
+316311	2	0		0	0	0	11	11	91.1	91.1	2	2	nu-candidate	nu-candidate
+316487	9	0		0	0	0							no-beam-flash	no-beam-flash
+316553	5	1	1	0	0	0	11	11	255.8	255.8	2	2	nu-candidate	nu-candidate
+316729	6	1	1	0	0	0	8	8	140.7	140.7	9	9	nu-candidate	nu-candidate
+316971	6	0		0	0	0							no-beam-flash	no-beam-flash
+317191	9	1	1	0	0	0	17	17	129.6	129.6	11	11	nu-candidate	nu-candidate
+317323	4	1	1	0	0	0							nu-candidate	nu-candidate
+317543	5	3	3	0	0	0	15	15	106.0	106.0	7	7	nu-candidate	nu-candidate
+317741	7	1	1	0	0	0	13	13	10.6	10.6	18	18	nu-candidate	nu-candidate
+317939	7	3	3	1	0	1	26	26	148.2	148.2	7	6	nu-candidate	nu-candidate
+318049	3	0		0	0	0	9	9	1.8	1.8	0	0	cosmic-tagged	cosmic-tagged
+318335	10	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+318379	4	0		0	0	0							no-bundle	no-bundle
+318731	7	0		0	0	0	1	1	86.0	86.0	8	8	nu-candidate	nu-candidate
+319039	7	3	3	0	0	0	20	20	85.7	85.7	6	6	nu-candidate	nu-candidate
+319611	6	0		0	0	0	2	2	109.1	109.1	0	0	nu-candidate	nu-candidate
+319809	3	2	2	0	0	0	20	20	75.3	75.3	2	2	nu-candidate	nu-candidate
+320029	6	2	2	0	0	0	24	24	219.5	219.5	4	4	nu-candidate	nu-candidate
+320095	9	3	3	0	0	0							nu-candidate	nu-candidate
+320491	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+320623	6	0		0	0	0							nu-candidate	nu-candidate
+320667	11	3	3	0	0	0	21	21	162.2	162.2	7	7	nu-candidate	nu-candidate
+320865	6	1	1	0	0	0	13	13	189.2	189.2	10	10	nu-candidate	nu-candidate
+321107	10	4	4	0	0	0	13	13	225.5	225.5	4	4	nu-candidate	nu-candidate
+321173	7	0		0	0	0	10	10	149.0	149.0	7	7	nu-candidate	nu-candidate
+321371	9	2	2	0	0	0	18	18	302.1	302.1	6	6	nu-candidate	nu-candidate
+321525	10	0		0	0	0	5	5	86.4	86.4	6	6	nu-candidate	nu-candidate
+321767	6	1	1	0	0	0	15	15	326.5	326.5	7	7	nu-candidate	nu-candidate
+321789	3	0		0	0	0	7	7	31.5	31.5	2	2	nu-candidate	nu-candidate
+345523	7	0		0	0	0							no-bundle	no-bundle
+345633	4	0		0	0	0	8	8	227.4	227.4	5	5	nu-candidate	nu-candidate
+345655	4	0		0	0	0							nu-candidate	nu-candidate
+346293	9	4	4	0	0	0							cosmic-tagged	cosmic-tagged
+346315	5	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+346491	6	0		0	0	0							no-beam-flash	no-beam-flash
+346623	11	3	3	0	0	0	14	14	16.9	16.9	9	9	nu-candidate	nu-candidate
+347085	4	0		0	0	0	4	4	92.5	92.5	20	20	nu-candidate	nu-candidate
+347129	11	1	1	0	0	0	11	11	42.5	42.5	10	10	nu-candidate	nu-candidate
+347371	12	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+347833	8	0		0	0	0							no-beam-flash	no-beam-flash
+348075	11	0		0	0	0							cosmic-tagged	cosmic-tagged
+348471	7	2	2	0	0	0	12	12	130.5	130.5	14	14	nu-candidate	nu-candidate
+348515	8	3	3	0	0	0	14	14	55.6	55.6	7	7	nu-candidate	nu-candidate
+348691	8	2	2	0	0	0	9	9	382.9	382.9	19	19	nu-candidate	nu-candidate
+348713	11	0		0	0	0	7	7	116.6	116.6	8	8	nu-candidate	nu-candidate
+348845	7	0		0	0	0	7	7	73.8	73.8	1	1	nu-candidate	nu-candidate
+348889	5	0		0	0	0							no-bundle	no-bundle
+349087	8	0		0	0	0	3	3	34.8	34.8	2	2	nu-candidate	nu-candidate
+349241	7	2	2	0	0	0	15	15	51.4	51.4	18	18	nu-candidate	nu-candidate
+349373	9	2	2	0	0	0							nu-candidate	nu-candidate
+349461	5	3	3	0	0	0	17	17	183.2	183.2	8	8	nu-candidate	nu-candidate
+349527	9	0		0	0	0							no-beam-flash	no-beam-flash
+349549	10	2	2	0	0	0	12	12	100.2	100.2	15	15	nu-candidate	nu-candidate
+349835	3	0		0	0	0	2	2	63.9	63.9	3	3	nu-candidate	nu-candidate
+349879	7	1	1	0	0	0	17	17	282.8	282.8	1	1	nu-candidate	nu-candidate
+349945	12	4	4	0	0	0	18	18	185.2	185.2	20	20	nu-candidate	nu-candidate
+350099	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+350121	5	0		0	0	0	2	2	186.0	186.0	20	20	nu-candidate	nu-candidate
+350297	5	0		0	0	0	18	18	252.8	252.8	4	4	nu-candidate	nu-candidate
+350781	10	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+350935	10	2	2	0	0	0	11	11	191.3	191.3	5	5	nu-candidate	nu-candidate
+351507	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+351551	9	0		0	0	0							cosmic-tagged	cosmic-tagged
+351617	7	1	1	1	0	0							cosmic-tagged	cosmic-tagged
+351639	10	2	2	0	0	0	9	9	19.1	19.1	3	3	cosmic-tagged	cosmic-tagged
+351705	5	0		0	0	0	3	3	114.8	114.8	0	0	nu-candidate	nu-candidate
+351749	7	2	2	0	0	0	14	14	8.6	8.6	22	22	nu-candidate	nu-candidate
+351815	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+352123	8	0		0	0	0	10	10	65.1	65.1	0	0	nu-candidate	nu-candidate
+352211	2	0		0	0	0							no-beam-flash	no-beam-flash
+352233	9	0		0	0	0	6	6	128.7	128.7	11	11	nu-candidate	nu-candidate
+352365	4	1	1	1	0	0							no-bundle	no-bundle
+352915	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+352937	6	0		0	0	0							nu-candidate	nu-candidate
+353179	6	0		0	0	0							no-bundle	no-bundle
+353223	4	0		0	0	0	15	15	62.4	62.4	2	2	nu-candidate	nu-candidate
+353487	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+353729	9	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+353751	7	0		0	0	0	10	10	159.8	159.8	2	2	nu-candidate	nu-candidate
+386332	5	1	1	0	0	0	12	12	34.5	34.5	7	7	nu-candidate	nu-candidate
+386354	5	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+386442	6	2	2	0	0	0	16	16	34.1	34.1	15	15	nu-candidate	nu-candidate
+386794	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+386816	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+386838	5	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+386948	7	1	1	0	0	0	16	16	94.3	94.3	20	20	nu-candidate	nu-candidate
+387102	4	0		0	0	0	4	4	2.7	2.7	0	0	cosmic-tagged	cosmic-tagged
+387168	8	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+387674	2	0		0	0	0							no-bundle	no-bundle
+387696	7	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+387850	5	1	1	0	0	0	15	15	121.2	121.2	2	2	nu-candidate	nu-candidate
+388026	13	2	2	0	0	0	12	12	282.2	282.2	4	4	nu-candidate	nu-candidate
+388224	6	0		0	0	0	3	3	199.1	199.1	4	4	nu-candidate	nu-candidate
+388510	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+388642	5	0		0	0	0							no-beam-flash	no-beam-flash
+388752	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+388884	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+388972	6	0		0	0	0							nu-candidate	nu-candidate
+389214	12	0		0	0	0							no-bundle	no-bundle
+389302	13	2	2	0	0	0							nu-candidate	nu-candidate
+389544	7	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+389588	6	2	2	0	0	0	17	17	6.1	6.1	10	10	nu-candidate	nu-candidate
+389830	8	0		0	0	0							no-bundle	no-bundle
+389874	8	0		0	0	0	11	11	18.6	18.6	0	0	nu-candidate	nu-candidate
+389962	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+390006	7	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+390028	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+390182	10	0		0	0	0	4	4	144.7	144.7	7	7	nu-candidate	nu-candidate
+390270	5	0		0	0	0							no-bundle	no-bundle
+390534	5	0		0	0	0							no-bundle	no-bundle
+390600	3	0		0	0	0							no-bundle	no-bundle
+390644	8	0		0	0	0							no-beam-flash	no-beam-flash
+390842	5	0		0	0	0	3	3	417.7	417.7	1	1	nu-candidate	nu-candidate
+390864	6	1	1	0	0	0	16	16	174.5	174.5	7	7	nu-candidate	nu-candidate
+390996	8	3	3	0	0	0	9	9	2.9	2.9	9	9	nu-candidate	nu-candidate
+391172	8	2	2	0	0	0							nu-candidate	nu-candidate
+391238	17	2	2	0	0	0	8	8	2.1	2.1	6	6	nu-candidate	nu-candidate
+391260	10	3	3	0	0	0	13	13	114.4	114.4	5	5	nu-candidate	nu-candidate
+391722	6	0		0	0	0							nu-candidate	nu-candidate
+391766	8	2	2	0	0	0	17	17	275.6	275.6	2	2	nu-candidate	nu-candidate
+391826	14	0		0	0	0							no-beam-flash	no-beam-flash
+391854	5	1	1	0	0	0	1	1	28.4	28.4	0	0	nu-candidate	nu-candidate
+392112	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+392178	3	0		0	0	0							no-beam-flash	no-beam-flash
+392184	10	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+392200	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+392272	5	0		0	0	0							no-bundle	no-bundle
+392316	6	2	2	0	0	0							nu-candidate	nu-candidate
+392338	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+392354	5	1	1	0	0	0							nu-candidate	nu-candidate
+392376	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+392552	4	0		0	0	0	12	12	237.3	237.3	8	8	nu-candidate	nu-candidate
+392558	12	0		0	0	0							cosmic-tagged	cosmic-tagged
+392684	3	0		0	0	0							no-beam-flash	no-beam-flash
+392800	8	0		0	0	0							no-beam-flash	no-beam-flash
+393042	10	3	3	0	0	0	15	15	396.9	396.9	6	6	nu-candidate	nu-candidate
+393086	6	0		0	0	0							no-bundle	no-bundle
+393124	7	0		0	0	0							no-beam-flash	no-beam-flash
+393212	11	0		0	0	0	6	6	64.7	64.7	25	25	nu-candidate	nu-candidate
+393256	4	0		0	0	0							no-bundle	no-bundle
+393322	13	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+393410	1	0		0	0	0							cosmic-tagged	cosmic-tagged
+393542	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+393608	8	0		0	0	0	9	9	48.1	48.1	1	1	nu-candidate	nu-candidate
+394268	6	0		0	0	0							no-beam-flash	no-beam-flash
+394488	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+394532	4	0		0	0	0	8	8	26.0	26.0	10	10	nu-candidate	nu-candidate
+394642	6	1	1	0	0	0	13	13	306.8	306.8	2	2	nu-candidate	nu-candidate
+394796	9	2	2	1	0	1	15	15	159.5	159.5	9	8	nu-candidate	nu-candidate
+394906	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+395060	6	2	2	0	0	0	19	19	125.4	125.4	9	9	nu-candidate	nu-candidate
+395148	14	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+395258	13	0		0	0	0							no-beam-flash	no-beam-flash
+395390	13	2	2	0	0	0	13	13	3.1	3.1	4	4	nu-candidate	nu-candidate
+395610	6	1	1	0	0	0	22	22	199.3	199.3	3	3	nu-candidate	nu-candidate
+395654	4	0		0	0	0	15	15	197.4	197.4	1	1	nu-candidate	nu-candidate
+395720	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+395764	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+395852	6	0		0	0	0							no-beam-flash	no-beam-flash
+395962	7	2	2	0	0	0	15	15	40.8	40.8	16	16	nu-candidate	nu-candidate
+396776	11	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+397194	3	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+397238	7	0		0	0	0							nu-candidate	nu-candidate
+397392	11	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+397480	4	0		0	0	0	8	8	2.7	2.7	5	5	nu-candidate	nu-candidate
+397568	5	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+397722	4	1	1	0	0	0	18	18	69.0	69.0	2	2	nu-candidate	nu-candidate
+397920	8	1	1	0	0	0	8	8	274.4	274.4	4	4	nu-candidate	nu-candidate
+398084	4	1	1	0	0	0	15	15	5.0	5.0	9	9	nu-candidate	nu-candidate
+398238	5	2	2	0	0	0	7	7	7.9	7.9	0	0	cosmic-tagged	cosmic-tagged
+398260	2	0		0	0	0	5	5	170.0	170.0	6	6	nu-candidate	nu-candidate
+398414	10	1	1	0	0	0	18	18	17.3	17.3	1	1	nu-candidate	nu-candidate
+398436	9	3	3	0	0	0	8	8	1.6	1.6	4	4	nu-candidate	nu-candidate
+398480	7	0		0	0	0							no-beam-flash	no-beam-flash
+398514	8	3	3	0	0	0	18	18	2.0	2.0	5	5	nu-candidate	nu-candidate
+398656	3	0		0	0	0							no-beam-flash	no-beam-flash
+398690	0	0		0	0	0							cosmic-tagged	cosmic-tagged
+398722	8	0		0	0	0							cosmic-tagged	cosmic-tagged
+398810	8	1	1	0	0	0							nu-candidate	nu-candidate
+398932	4	0		0	0	0							no-bundle	no-bundle
+399042	8	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+399052	5	1	1	0	0	0	15	15	59.6	59.6	9	9	nu-candidate	nu-candidate
+399118	7	2	2	0	0	0	9	9	149.4	149.4	5	5	nu-candidate	nu-candidate
+399240	15	0		0	0	0							no-bundle	no-bundle
+399284	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+399328	8	0		0	0	0	12	12	14.2	14.2	1	1	nu-candidate	nu-candidate
+399382	9	1	1	0	0	0							nu-candidate	nu-candidate
+399426	6	0		0	0	0							nu-candidate	nu-candidate
+399702	11	1	1	0	0	0	27	27	210.7	210.7	1	1	nu-candidate	nu-candidate
+399856	7	0		0	0	0	3	3	62.9	62.9	1	1	nu-candidate	nu-candidate
+399910	6	0		0	0	0							no-beam-flash	no-beam-flash
+399998	4	1	1	0	0	0	20	20	40.9	40.9	3	3	nu-candidate	nu-candidate
+400054	8	1	1	0	0	0	16	16	6.8	6.8	5	5	nu-candidate	nu-candidate
+400174	6	0		0	0	0							nu-candidate	nu-candidate
+400262	5	2	2	0	0	0							nu-candidate	nu-candidate
+400274	9	2	2	0	0	0	6	6	2.3	2.3	0	0	cosmic-tagged	cosmic-tagged
+400460	10	1	1	0	0	0	18	18	164.2	164.2	4	4	nu-candidate	nu-candidate
+400504	9	1	1	0	0	0	6	6	79.0	79.0	2	2	nu-candidate	nu-candidate
+400592	5	0		0	0	0	14	14	236.6	236.6	1	1	nu-candidate	nu-candidate
+400636	9	0		0	0	0	13	13	260.3	260.3	4	4	nu-candidate	nu-candidate
+400724	8	5	5	0	0	0							cosmic-tagged	cosmic-tagged
+400768	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+400856	7	1	1	0	0	0	12	12	93.5	93.5	2	2	nu-candidate	nu-candidate
+400900	6	0		0	0	0							no-bundle	no-bundle
+400922	5	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+401054	7	2	2	0	0	0	11	11	8.2	8.2	6	6	nu-candidate	nu-candidate
+401208	4	0		0	0	0							no-bundle	no-bundle
+401252	11	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+401450	9	4	4	0	0	0							cosmic-tagged	cosmic-tagged
+401516	6	1	1	0	0	0	12	12	180.5	180.5	3	3	nu-candidate	nu-candidate
+401626	7	3	3	0	0	0	9	9	103.4	103.4	5	5	nu-candidate	nu-candidate
+401758	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+401780	6	1	1	0	0	0	13	13	150.9	150.9	2	2	nu-candidate	nu-candidate
+401824	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+401846	5	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+401912	4	0		0	0	0							nu-candidate	nu-candidate
+401934	3	0		0	0	0							nu-candidate	nu-candidate
+402330	9	0		0	0	0	1	1	34.4	34.4	2	2	nu-candidate	nu-candidate
+402484	7	1	1	1	0	0							cosmic-tagged	cosmic-tagged
+402506	10	3	3	0	0	0	13	13	2.3	2.3	6	6	nu-candidate	nu-candidate
+402528	9	4	4	0	0	0							nu-candidate	nu-candidate
+402880	15	3	3	0	0	0	9	9	70.0	70.0	16	16	nu-candidate	nu-candidate
+402902	5	0		0	0	0							no-beam-flash	no-beam-flash
+402968	6	1	1	0	0	0							nu-candidate	nu-candidate
+403518	9	0		0	0	0							no-beam-flash	no-beam-flash
+403716	4	0		0	0	0							no-beam-flash	no-beam-flash
+403958	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+404244	9	0		0	0	0	12	12	130.4	130.4	15	15	nu-candidate	nu-candidate
+404464	12	0		0	0	0							no-bundle	no-bundle
+404684	4	0		0	0	0	9	9	77.9	77.9	0	0	nu-candidate	nu-candidate
+404772	2	0		0	0	0							no-beam-flash	no-beam-flash
+404816	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+404860	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+405190	8	0		0	0	0							nu-candidate	nu-candidate
+405212	14	0		0	0	0							no-beam-flash	no-beam-flash
+405234	4	1	1	0	0	0	16	16	34.6	34.6	6	6	nu-candidate	nu-candidate
+405432	12	0		0	0	0	15	15	93.6	93.6	6	6	nu-candidate	nu-candidate
+405454	6	0		0	0	0	7	7	1.6	1.6	2	2	nu-candidate	nu-candidate
+405586	2	0		0	0	0							no-beam-flash	no-beam-flash
+405674	5	0		0	0	0	11	11	173.2	173.2	1	1	nu-candidate	nu-candidate
+405740	5	1	1	0	0	0	14	14	23.0	23.0	4	4	nu-candidate	nu-candidate
+405938	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+406444	5	0		0	0	0	9	9	1.9	1.9	0	0	nu-candidate	nu-candidate
+406642	9	0		0	0	0	4	4	1.6	1.6	0	0	nu-candidate	nu-candidate
+406752	3	0		0	0	0							cosmic-tagged	cosmic-tagged
+406796	8	1	1	0	0	0	11	11	92.3	92.3	11	11	nu-candidate	nu-candidate
+407148	5	1	1	0	0	0	15	15	178.3	178.3	4	4	nu-candidate	nu-candidate
+407170	6	2	2	0	0	0	9	9	1.6	1.6	0	0	cosmic-tagged	cosmic-tagged
+407258	6	0		0	0	0							no-bundle	no-bundle
+407280	3	0		0	0	0	16	16	352.5	352.5	1	1	nu-candidate	nu-candidate
+407918	10	2	2	0	0	0	11	11	90.4	90.4	5	5	nu-candidate	nu-candidate
+408028	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+408094	5	2	2	0	0	0	15	15	1.4	1.4	0	0	cosmic-tagged	cosmic-tagged
+408534	8	3	3	0	0	0	9	9	136.3	136.3	3	3	nu-candidate	nu-candidate
+408556	1	0		0	0	0							no-beam-flash	no-beam-flash
+408776	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+409084	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+409282	5	0		0	0	0	4	4	0.8	0.8	0	0	cosmic-tagged	cosmic-tagged
+409458	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+409480	9	0		0	0	0							no-beam-flash	no-beam-flash
+409546	15	6	6	0	0	0	9	9	20.2	20.2	7	7	nu-candidate	nu-candidate
+409590	11	0		0	0	0							no-beam-flash	no-beam-flash
+409634	6	1	1	0	0	0	21	21	43.8	43.8	7	7	nu-candidate	nu-candidate
+409920	5	0		0	0	0	7	7	8.8	8.8	10	10	nu-candidate	nu-candidate
+409942	7	3	3	0	0	0	17	17	47.0	47.0	7	7	nu-candidate	nu-candidate
+409964	7	2	2	0	0	0	14	14	194.8	194.8	12	12	nu-candidate	nu-candidate
+410008	15	1	1	0	0	0	20	20	40.1	40.1	12	12	nu-candidate	nu-candidate
+410426	5	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+410558	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+411152	3	0		0	0	0							nu-candidate	nu-candidate
+411262	5	0		0	0	0							no-beam-flash	no-beam-flash
+411306	8	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+411460	6	0		0	0	0	6	6	15.6	15.6	6	6	nu-candidate	nu-candidate
+411790	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+411834	6	0		0	0	0							no-beam-flash	no-beam-flash
+412208	2	0		0	0	0	7	7	81.9	81.9	4	4	nu-candidate	nu-candidate
+412626	4	0		0	0	0							no-beam-flash	no-beam-flash
+412692	10	6	6	0	0	0	13	13	124.2	124.2	9	9	nu-candidate	nu-candidate
+412846	13	4	4	0	0	0							cosmic-tagged	cosmic-tagged
+486049	9	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+486093	2	0		0	0	0							cosmic-tagged	cosmic-tagged
+486225	9	0		0	0	0							no-bundle	no-bundle
+486247	14	3	3	0	0	0	7	7	50.2	50.2	5	5	nu-candidate	nu-candidate
+486511	6	0		0	0	0							no-beam-flash	no-beam-flash
+486577	8	0		0	0	0							no-bundle	no-bundle
+486621	2	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+486687	13	1	1	0	0	0	20	20	274.5	274.5	27	27	nu-candidate	nu-candidate
+486753	9	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+486907	9	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+487237	9	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+487259	4	0		0	0	0							no-beam-flash	no-beam-flash
+487303	12	0		0	0	0	7	7	126.0	126.0	4	4	nu-candidate	nu-candidate
+487545	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+487633	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+487853	5	2	2	0	0	0	13	13	36.8	36.8	9	9	nu-candidate	nu-candidate
+488139	9	0		0	0	0	14	14	139.8	139.8	1	1	nu-candidate	nu-candidate
+488689	4	0		0	0	0							no-beam-flash	no-beam-flash
+488755	7	2	2	0	0	0	9	9	41.0	41.0	6	6	nu-candidate	nu-candidate
+488799	9	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+488953	10	0		0	0	0							no-bundle	no-bundle
+489327	8	1	1	1	0	1	19	19	395.2	395.2	15	14	nu-candidate	nu-candidate
+489459	7	0		0	0	0							nu-candidate	nu-candidate
+489503	5	1	1	0	0	0	18	18	132.2	132.2	14	14	nu-candidate	nu-candidate
+489679	8	1	1	0	0	0							nu-candidate	nu-candidate
+489789	2	0		0	0	0							no-beam-flash	no-beam-flash
+489811	5	0		0	0	0							cosmic-tagged	cosmic-tagged
+490339	6	0		0	0	0							no-beam-flash	no-beam-flash
+490361	9	2	2	0	0	0	20	20	49.3	49.3	12	12	nu-candidate	nu-candidate
+490559	7	0		0	0	0							no-beam-flash	no-beam-flash
+490581	6	0		0	0	0	6	6	220.0	220.0	0	0	nu-candidate	nu-candidate
+490779	13	5	5	0	0	0	15	15	5.7	5.7	9	9	nu-candidate	nu-candidate
+490889	4	0		0	0	0							cosmic-tagged	cosmic-tagged
+490977	6	1	1	0	0	0	17	17	75.9	75.9	5	5	nu-candidate	nu-candidate
+491021	6	0		0	0	0							cosmic-tagged	cosmic-tagged
+491197	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+491241	7	0		0	0	0							no-beam-flash	no-beam-flash
+491285	6	2	2	0	0	0							cosmic-tagged	cosmic-tagged
+491417	10	0		0	0	0							cosmic-tagged	cosmic-tagged
+491483	3	1	1	0	0	0	13	13	61.9	61.9	2	2	nu-candidate	nu-candidate
+491857	9	0		0	0	0							cosmic-tagged	cosmic-tagged
+492649	10	2	2	0	0	0	20	20	78.9	78.9	25	25	nu-candidate	nu-candidate
+492803	7	1	1	0	0	0	16	16	234.4	234.4	4	4	nu-candidate	nu-candidate
+492891	7	0		0	0	0							cosmic-tagged	cosmic-tagged
+492913	6	1	1	0	0	0	15	15	49.8	49.8	1	1	nu-candidate	nu-candidate
+493199	8	3	3	0	0	0							cosmic-tagged	cosmic-tagged
+493243	5	0		0	0	0	13	13	181.5	181.5	7	7	nu-candidate	nu-candidate
+493397	5	0		0	0	0							no-bundle	no-bundle
+493419	4	1	1	0	0	0							cosmic-tagged	cosmic-tagged
+493485	6	1	1	0	0	0							cosmic-tagged	cosmic-tagged
