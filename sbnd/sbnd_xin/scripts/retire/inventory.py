@@ -37,7 +37,11 @@ for (s,t),c in dep.items(): rdep[t].append((s,c))
 
 # citations: bare tag (strip manifest prefix)
 def bare(d):
-    for pre in ('work-mcp1000b-','work-mcp1000-','work-mcp1kall-','work-mcp10-','work-stmcamp-','work-nuecc48-','work-mcsim-','work-r1ql-','work-r2patrec-','work-smoke-','work-'):
+    for pre in ('work-mcp1000b-','work-mcp1000-','work-mcp1kall-','work-mcp10-','work-stmcamp-','work-nuecc48-','work-mcsim-','work-r1ql-','work-r2patrec-','work-r1qlmc-','work-r2mc-','work-smoke-',
+                # pr/11..pr/22-era manifests (2026-08-02 round) + the valfast gate arms
+                'work-pi5cens-','work-pr22gap-','work-pr20x-','work-oc19scan-','work-oc444187-','work-b0pr700-','work-b0pr300-','work-b0pr-','work-b0nue48-','work-b0rep-',
+                'work-nscon-','work-nscoff-','work-nscbase-','work-nscrep-','work-nbl15-','work-nbloff-','work-nblrep-','work-cbr-','work-cath13pr-','work-cathdbg1pr-','work-ccfeat300pr-',
+                'work-vfmcp1k-','work-vfnuecc48-','work-vfr1qlmc-','work-vfr2mc-','work-'):
         if d.startswith(pre) and len(d)>len(pre): return d[len(pre):]
     return d
 cites={}

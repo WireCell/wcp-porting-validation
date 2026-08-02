@@ -4,10 +4,17 @@ Repro:
 
 ```bash
 cd sbnd_xin
-ls -d work* | wc -l              # 15 after the 2026-07-30 retirement round (20 GB; 149 / 56 GB before)
+ls -d work* | wc -l              # 23 after the 2026-08-02 round (was 254 / 155 GiB; 15 after 2026-07-30)
 ls archive/*/ -d                 # 3 campaign archives + records/, 79 dirs
 find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below
 python3 relink_tags.py           # dry-run repair after any move
+
+# the 2026-08-02 retirement round (see that section below):
+scripts/retire/materialize_20260802.sh        # pr/22 exhibit chain self-contained (dry run)
+python3 scripts/retire/plan_20260802.py       # removal set + footprint + dangling-link dry run
+python3 scripts/retire/lightcheck_20260802.py # SP+light coverage proof / exceptions
+python3 scripts/retire/archive_records_20260802.py  # archive/records/pr-era-20260802/ (additive)
+scripts/retire/retire_20260802.sh 1           # dry run of the removal list
 
 # the 2026-07-30 retirement round (see that section below):
 python3 scripts/retire/inventory.py       # size / symlink-dep / citation inventory
@@ -28,6 +35,7 @@ event manifests:
 | `work-mcp1kall-<tag>` | **all 1000** events of that set, not a draw (doc 59; imaging from `work-mcp1000`) |
 | `work-mcsim-<tag>` | the MC-truth sim set (truth dQ/dx, delta rays) |
 | `work-nuecc48-<tag>` | the 48-event Lynn nueCC data candidate set (`samples/lynn-nuecc-rse.csv`; input `input_files_reco1/extracted-2025fall-48evt-fsprod`; imaging in the shared `work/`) |
+| `work-vf<sample>-<tag>` | a **valfast** PR out-root over the 629-event `nu_evaluated=1` subset (`valfast/README.md`; sample ∈ mcp1k/nuecc48/r1qlmc/r2mc). TRANSIENT by contract — delete after the gate report. `-full` arms also create nusel roots `work-mcp1kall-vf<tag>`, `work-nuecc48-vf<tag>`, `work-r1qlmc-vf<tag>`, `work-r2mc-vf<tag>` |
 
 **These arms are not reproducible.** A tag names a *config*, not a build. The
 binary has moved many commits since most of them were written, and the SBND PR
@@ -60,6 +68,105 @@ Verification that the move was faithful: `python3 stm_fv_census.py` after the
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-02 — the pr/11..pr/22 era, 231 arms, 127 GiB
+
+**STATUS: archived + dry-run prepared, deletion awaiting owner `CONFIRM=yes`.**
+(This line is updated when `retire_20260802.sh` executes.)
+
+State at the start: **254 top-level `work*` dirs, 155.1 GiB** (`du` 158.8 GB;
+sbnd_xin 160 GB total), `/nfs/data/1` at 90 %. The tree regrew from the
+post-2026-07-30 20 GB in ~62 hours (07-31 → 08-02): the doc pr/11–pr/22
+campaigns ran roughly ten back-to-back generations of validation arms and
+none were retired in flight. Eleven ~8.5 GB full-chain 1000-event arms alone
+(`u17on1k(b)`, `cbron/off1k`, `vveto1k`, `isog1k`, `oc19on1k`, `cathA12*`,
+`pi5cens`) hold 83 GiB. Everything from `rescue01` onward was never indexed
+in this file — the tier table below is its only documentation.
+
+Round tooling (all in `scripts/retire/`, forked from the July round;
+state + tier list in `scripts/retire/state-20260802/` and
+`tier1_20260802.txt`):
+
+1. **`materialize_20260802.sh`** — made `work-oc19scan-old` self-contained so
+   the doc pr/22 exhibits (`work-pr22gap-{a,b,c,input}`) survive: 10 `ql_evt*`
+   symlinks into removal-set hubs replaced by `cmp`-verified copies (inner
+   npz links repointed to their `readlink -f` targets in `work-mcp1000`/`work`)
+   and `evt444187` repointed to its physical target `work/evt444187`.
+   Executed 2026-08-02: repoint=1 copy=10 fail=0, 0 broken links after.
+2. **`plan_20260802.py`** — survivors = the documented KEEP set + the pr/22
+   exhibit chain; removal set = the other **231 dirs, 133.9 GiB real bytes**
+   (owner decision: ALL pr-era arms retire, incl. the four pr11v3 census
+   arms). Dangling-link dry run walks every symlink outside the removal set
+   (12 837): **0** point into it. SP-data safety scan found 144 real
+   `sp-frames.tar.bz2` in `work-nuecc48-{cathA12off,cathA12on,pi5wm}` — all
+   144 verified byte-identical to the surviving `work/evt*` copies.
+3. **`lightcheck_20260802.py`** — proves the round may DROP (not archive)
+   `opflash_apa*.tar.gz` (new in this round's HEAVY class; the July round
+   archived them): of 25 112 SP/light files in the removal set, 25 104 are
+   byte-identical to surviving copies (hubs `d59k`/`nuf`/BASE); the **8**
+   that differ (unique light variants in `work-cbr-det{1,2}`,
+   `work-oc444187-{off,trace}`, evts 437699/444187) are force-ARCHIVED via
+   `state-20260802/light_exceptions.txt`.
+4. **`archive_records_20260802.py`** — record layer of all 231 arms into
+   `archive/records/pr-era-20260802/<group>/<tag>.tar.gz` + `.links.txt` +
+   `.manifest.tsv`: **6804 MiB raw → 2.1 GiB gz**. HEAVY (dropped) =
+   pctree/mabc zips/calib/npz/clusters **+ opflash** (per 3). Integrity gate:
+   tar members == manifest records, **159 251 == 159 251, 231/231 arms**.
+   No `nusel_labels`/hand-scan/decision dir exists in any removal candidate
+   (verified); the only labels under `work*` are in KEEP dirs and the
+   `work-stmcamp-d66new` git-tracked stub.
+5. **`retire_20260802.sh 1`** — dry run: **231 dirs, 135 GiB (du), refused=0**.
+   Same guards as the July script (refuse-without-archive, Bokeh interlock,
+   post-checks incl. `git status` for deleted tracked files).
+
+### KEEP — 23 dirs, ~19.5 GiB
+
+The 15 dirs of the July KEEP table, plus `work-mcp1kall-cath01` +
+`work-nuecc48-cath01` (added 2026-08-01, doc pr/12), the
+`work-stmcamp-d66new` label stub, and the pr/22 exhibit chain
+`work-oc19scan-old` (37 MB, now self-contained) + `work-pr22gap-{a,b,c,input}`
+(13 MB, cited by `docs/pr/22_track-fit-gap-jumping.md`).
+
+### TIER 1 — 231 dirs, 133.9 GiB real (135 GiB du)
+
+All campaigns are CLOSED (docs pr/11–pr/22 shipped/pushed). Grouped as in
+`archive/records/pr-era-20260802/`; full list `scripts/retire/tier1_20260802.txt`.
+
+| group | dirs | GiB | what it was |
+|---|---|---|---|
+| `pr11-census` | 20 | 7.5 | doc pr/11 1071-event population census v1→v3 + the crash-fix arms (`all73*`, `failfix`, `badallocfix`, `*-fix`) incl. the four `pr11v3` reference arms |
+| `pr11-audit` | 46 | 1.6 | doc pr/11 latent-pattern audit + determinism/DL arms (`ab30*`, `audit*`, `det*`, the 21 single-event `469665`/`389538`/`52672` repeats) |
+| `cath13-ccfeat` | 10 | 5.1 | docs pr/13–14 cathode-crossing Bee sets, `cath13` Q/L arms, `ccfeat300*` connector-feature census |
+| `rescue01` | 4 | 0.1 | doc pr/14 cathode-bundle-rescue gate arms |
+| `cbr` | 32 | 17.6 | docs pr/14+17 cathode-bundle-rescue 1k census (`cbron/off1k`) + the 16 `cbr286191*`/`cbr56463*` determinism probes |
+| `vveto` | 4 | 8.7 | doc pr/15 separate() vertex_veto 1k census + `vv*rr` repeats |
+| `nsc` | 6 | 0.6 | doc pr/16 nu_skip_cosmic size-guard arms (`nscon/off/base/rep`) |
+| `isog-u17` | 26 | 27.8 | doc pr/17 unmerge (`u17*` incl. the two 8.5 GB 1k hubs) + isolated-grouping arms (`isog*`, `iso10550*`) |
+| `nbl` | 5 | 0.5 | doc pr/18 iso-band nu guard arms (`nbl15`, `nbloff`, `nblrep`) |
+| `oc19` | 13 | 9.5 | doc pr/19 isolated-absorb (`oc19*`, `oc444187-*`) + `work-oc19scan-new` (the OLD scan dir is KEEP) |
+| `cathA12-b0` | 27 | 32.6 | doc pr/20 Part II: `cathA12*` A1/A2 census (three 8.5 GB 1k arms) + `b0*` cathode-kink-veto gates |
+| `pi-partI` | 30 | 22.1 | doc pr/20 Part I: `pi0..pi5` demoted-main census/gates incl. the 8.5 GB `pi5cens` and four 2.7 GB `pi5cens-pr*` arms |
+| `pr20x` | 5 | 0.04 | doc pr/20 Part X production-default determinism arms |
+| `probes` | 3 | 0.1 | `d68smoke` (doc 68), `nuecc48-probe`, `rpg-ab31` |
+
+**Survives removal**: every doc-quoted number (tsv, logs, `tracking-*.root`
+are in the record tarballs), the 8 unique light files, and doc-table
+re-checkability. **Lost**: pctree/Bee-level re-analysis of these arms (the
+same class of loss as the July round; arms are not reproducible — a tag
+names a config, not a build). The `pr11v3` retirement additionally idles
+`pr11_br_filled_census.py`, `cathode_nu_census.py` and `stub_census.py`
+until pointed at a future census arm.
+
+### Totals (to be finalized after CONFIRM)
+
+| | dirs | GiB |
+|---|---|---|
+| start | 254 | 155.1 real (158.8 du) |
+| KEEP | 23 | ~19.5 |
+| TIER 1 | 231 | 133.9 real / 127.2 reclaimed after archive |
+| archive added | — | +2.1 |
+
+---
 
 ## RETIREMENT ROUND 2026-07-30 — 134 arms REMOVED, 35.9 GiB reclaimed
 

@@ -1,0 +1,8 @@
+work-cbr-det1/ql_evt437699/opflash_apa0.tar.gz
+work-cbr-det1/ql_evt437699/opflash_apa1.tar.gz
+work-cbr-det2/ql_evt437699/opflash_apa0.tar.gz
+work-cbr-det2/ql_evt437699/opflash_apa1.tar.gz
+work-oc444187-off/ql_evt444187/opflash_apa0.tar.gz
+work-oc444187-off/ql_evt444187/opflash_apa1.tar.gz
+work-oc444187-trace/ql_evt444187/opflash_apa0.tar.gz
+work-oc444187-trace/ql_evt444187/opflash_apa1.tar.gz
