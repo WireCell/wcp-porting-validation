@@ -382,7 +382,18 @@ byte-identical to pr/17.
 To review: `work-mcp1kall-{u17on1kb,oc19on1k}/nusel_evt{395060,386948,
 65025,315959,56519,62495,314925,348889,407258}/mabc-pr.zip` (baseline vs
 ON), guard markers in the ON arm's `.log_e{471,956,546,318,257,532,308,
-667,369}.log`.  To flip after review: `iso_cathode_guard=true` /
+667,369}.log`.
+
+Bee scan sets (same event order in both, so index N compares directly;
+layers per event: raw `img`, QL `clustering`, final `pr`, `op` flashes,
+`stm_fit` where the STM fit ran):
+- OLD (baseline `u17on1kb`):
+  <https://www.phy.bnl.gov/twister/bee/set/50fbdda3-160d-4397-9065-8444fc0994e3/event/list/>
+- NEW (guard+adopt ON `oc19on1k`):
+  <https://www.phy.bnl.gov/twister/bee/set/e75fd523-85ad-4342-b4ca-6fb3ff6b005f/event/list/>
+- Index map: 0=395060 (nu-cand→TGM), 1=386948 (bundle 6063→1777),
+  2=65025 (506→13), 3=315959 (no-bundle→30-pt TGM), 4=56519, 5=62495,
+  6=314925, 7=348889, 8=407258 (4-8 = new nu-candidates).  To flip after review: `iso_cathode_guard=true` /
 `adopt_nu_fragments=true` TLA defaults in
 `wct-clus-matching-perevt.jsonnet` (runner escapes
 `SBND_ISO_CATHODE_GUARD=0` / `SBND_ADOPT_NU_FRAG=0` then force legacy).
