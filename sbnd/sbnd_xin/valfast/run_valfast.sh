@@ -148,8 +148,14 @@ run_pr() {
     refuse_existing "$OUT"
     [ -d "$QL" ] || { echo "REFUSE: ql_root $QL missing"; fail=1; return; }
     echo "== [$s] PR chain: ql_root=$QL -> $OUT =="
+    # PR-tail mode runs the PINNED (pre-pr/20, no-wasmain) hubs on purpose --
+    # declare that to the legacy-tree guard (doc pr/23 sec 4.2) or the job
+    # aborts.  -full mode regenerates fresh trees and inherits cfg TRUE.
+    REQWM=()
+    [ "$FULL" = yes ] || REQWM=(SBND_REQUIRE_WASMAIN=0)
+    [ "$FULL" = yes ] || echo "[$s] NOTE: pinned legacy hub (P2-inert), SBND_REQUIRE_WASMAIN=0 declared"
     # shellcheck disable=SC2046
-    PR_JOBS=$JOBS ./run_pr_chain_batch.sh "$QL" "$OUT" "$(reality "$s")" \
+    env "${REQWM[@]}" PR_JOBS=$JOBS ./run_pr_chain_batch.sh "$QL" "$OUT" "$(reality "$s")" \
         $(tr '\n' ' ' < "$VF/events-$s.txt")
     rc=$?
     nexp=$(wc -l < "$VF/events-$s.txt")

@@ -281,6 +281,43 @@ at population scale.
 
 Event order in all three: 169824, 286400, 315497, 406796, 409634.
 
+### 4.3 Guard against the mistake class: `require_provenance` (SHIPPED)
+
+The §4.2 mistake generalizes: with `restore_demoted_mains` on, a legacy
+pctree (no `real_cluster_was_main` array) makes P2 fail CLOSED — per-cluster
+WARNs, then a complete, plausible output that is silently the pre-pr/20
+chain. Nothing downstream can tell.
+
+Fix (toolkit `08ca870d`): new `ClusteringUnmergeBundle` knob
+`require_provenance` — C++ default `false` = the historical warn-and-skip,
+byte-identical. **SBND `wct-pr-perevt.jsonnet` default `true`**: a PR job
+fed a legacy tree now ABORTS with
+
+    ClusteringUnmergeBundle: restore_demoted_mains is on but the input pctree
+    has no 'real_cluster_was_main' array -- this is a LEGACY tree ... Regenerate
+    the Q/L pctree at the production operating point, or declare the legacy
+    input with require_provenance=false.
+
+Intentional legacy runs declare themselves: runner env
+`SBND_REQUIRE_WASMAIN=0` (tri-state, doc 68 style) in
+`run_pr_chain_batch.sh` / `run_pr_evt.sh`; `valfast/run_valfast.sh` PR-tail
+mode passes it automatically for its pinned pre-pr/20 hubs and prints a
+"pinned legacy hub (P2-inert)" note per sample (-full mode inherits cfg
+`true`).
+
+Verification (all at lib 15:47, doctest 565/565):
+- compiled-config diff vs the pre-guard JSON: exactly one change,
+  `ClusteringUnmergeBundle:pr require_provenance: true`;
+- legacy tree (d59k) + guard → `rc=1` with the message above;
+- legacy tree + `SBND_REQUIRE_WASMAIN=0` → `rc=0`, historical WARNs intact;
+- fresh tree (pr23cath) + guard → `rc=0`.
+
+Not covered (documented residual): nothing marks a tree that predates a
+*clustering*-side change with no witness array (e.g. A1/A2 merges).  A
+general fix would stamp the Q/L operating point (cfg epoch / git describe)
+into the pctree tensorset metadata and have the PR job check it — proposed,
+not implemented; needs an owner decision on the stamp format.
+
 ## 5. V3 — nueCC48 track_fit vs shower_track census
 
 Arms (fresh, M13):

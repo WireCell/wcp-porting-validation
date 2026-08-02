@@ -144,6 +144,15 @@ case "${SBND_RESTORE_DEMOTED_MAINS:-}" in
     1) CATH_TLA+=(--tla-code "restore_demoted_mains=true") ;;
     0) CATH_TLA+=(--tla-code "restore_demoted_mains=false") ;;
 esac
+# Legacy-tree guard (doc pr/23 sec 4.2).  cfg default TRUE: with the restore
+# on, a pctree with no wasmain array ABORTS the job instead of silently
+# running pre-pr/20 behaviour.  Pass 0 to DECLARE an intentional legacy-tree
+# run (e.g. the pinned valfast PR-tail hubs).
+# Env: SBND_REQUIRE_WASMAIN=1|0.
+case "${SBND_REQUIRE_WASMAIN:-}" in
+    1) CATH_TLA+=(--tla-code "require_provenance=true") ;;
+    0) CATH_TLA+=(--tla-code "require_provenance=false") ;;
+esac
 # Let TGM/STM/FC evaluate those demoted mains (doc pr/20 Part I P3).  Inert
 # unless SBND_RESTORE_DEMOTED_MAINS=1 above put the flag there.
 # Env: SBND_EVAL_DEMOTED_MAINS=1|0.

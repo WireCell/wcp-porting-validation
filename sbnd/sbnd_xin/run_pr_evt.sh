@@ -218,6 +218,13 @@ PROT_TLA=()
     PROT_TLA+=(--tla-code "protect_cathode_rejoin_dyz=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DYZ}")
 [ -n "${SBND_PROTECT_REJOIN_DIS:-}" ] && \
     PROT_TLA+=(--tla-code "protect_cathode_rejoin_dis=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DIS}")
+# Legacy-tree guard (doc pr/23 sec 4.2; cfg default TRUE = abort on a pctree
+# with no wasmain array).  SBND_REQUIRE_WASMAIN=0 declares an intentional
+# legacy-tree run (old scan sets / pinned hubs).
+case "${SBND_REQUIRE_WASMAIN:-}" in
+    1) PROT_TLA+=(--tla-code "require_provenance=true") ;;
+    0) PROT_TLA+=(--tla-code "require_provenance=false") ;;
+esac
 
 PIPELINE_CODE="[]"
 if [ -n "$PIPELINE" ]; then
