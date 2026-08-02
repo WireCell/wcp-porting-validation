@@ -442,7 +442,8 @@ UNMERGE="${SBND_UNMERGE:-}"
 UNMERGE_MODE="${SBND_UNMERGE_MODE:-}"
 UNMERGE_ASSOC="${SBND_UNMERGE_ASSOC:-}"
 # PR-stage overclustering protection (doc pr/23): -protect / SBND_PROTECT_BUNDLE=1
-# inserts 'protect_bundle' after unmerge_assoc (uboone's second graph
+# inserts 'protect_bundle' + a second steiner pass after tagger_check_fc
+# (uboone's second graph
 # examination; cathode re-join per the cfg operating point).  DEFAULT OFF
 # until the production flip, so a bare run stays the pre-pr/23 chain.
 PROTECT="${SBND_PROTECT_BUNDLE:-0}"
@@ -529,15 +530,17 @@ elif [ "$UNMERGE_ASSOC" = 0 ]; then
     PIPELINE="${PIPELINE/unmerge_assoc,/}"
     _pipe_changed=1
 fi
-# -protect (doc pr/23): protect_bundle sits after both un-merges, before
-# steiner.  Refused when the un-merges were dropped -- the stage's split
-# targets the post-unmerge bundle structure.
+# -protect (doc pr/23 ordering decision): protect_bundle sits after the
+# cosmic taggers and before tagger_check_neutrino, with a second 'steiner'
+# pass to rebuild the split clusters' steiner products -- the
+# prototype-faithful order (the earlier after-unmerge_assoc placement defeats
+# TGM, doc pr/23 sec 6).  Refused when the taggers were dropped.
 if [ "$PROTECT" = 1 ]; then
     case ",$PIPELINE," in
-        *,unmerge_assoc,*)
-            PIPELINE="${PIPELINE/unmerge_assoc,/unmerge_assoc,protect_bundle,}"
+        *,tagger_check_fc,*)
+            PIPELINE="${PIPELINE/tagger_check_fc,/tagger_check_fc,protect_bundle,steiner,}"
             _pipe_changed=1 ;;
-        *) echo "ERROR: -protect needs unmerge_assoc in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
+        *) echo "ERROR: -protect needs tagger_check_fc in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
     esac
 fi
 # -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.

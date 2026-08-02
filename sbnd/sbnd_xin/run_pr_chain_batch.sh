@@ -108,12 +108,16 @@ PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger
 
 # PR-stage overclustering protection (doc pr/23): uboone's second graph
 # examination (Protect_Over_Clustering) -- split each beam-bundle cluster at
-# graph component boundaries after the un-merges, cathode re-join per the cfg
-# operating point.  SBND_PROTECT_BUNDLE=1 inserts the stage after
-# unmerge_assoc; DEFAULT OFF until the production flip, so a bare run of this
-# script stays the pre-pr/23 production chain.
+# graph component boundaries, cathode re-join per the cfg operating point.
+# Position (doc pr/23 ordering decision): AFTER the cosmic taggers and BEFORE
+# tagger_check_neutrino, with 'steiner' named a second time right after so
+# the split clusters' steiner products are rebuilt -- the prototype-faithful
+# order (cosmic verdicts on unsplit clusters, wire-cell-prod-stm.cxx:806;
+# protect only in the nue executable, wire-cell-prod-nue.cxx:1322).
+# SBND_PROTECT_BUNDLE=1 inserts the stage; DEFAULT OFF until the production
+# flip, so a bare run of this script stays the pre-pr/23 production chain.
 if [ "${SBND_PROTECT_BUNDLE:-0}" = 1 ]; then
-    PIPELINE="${PIPELINE/unmerge_assoc,/unmerge_assoc,protect_bundle,}"
+    PIPELINE="${PIPELINE/tagger_check_neutrino/protect_bundle,steiner,tagger_check_neutrino}"
 fi
 
 # Cathode kink veto (doc pr/20 Part II B0), cm.  EMPTY = emit no TLA = the job

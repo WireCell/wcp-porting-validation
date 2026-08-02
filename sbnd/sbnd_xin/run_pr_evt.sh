@@ -67,11 +67,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             (run_pr_chain_batch.sh / run_nusel_evt.sh); before doc pr/22 the
             shorthands omitted them, so pre-pr/22 Bee sets show the PR fit of
             the PRE-unmerge flash bundle (inflated track_fit gap jumping).
-  -protect  insert the 'protect_bundle' stage after unmerge_assoc (doc pr/23:
+  -protect  insert protect_bundle + a second steiner pass after the cosmic
+            taggers, before tagger_check_neutrino (doc pr/23 ordering:
             uboone's second graph examination -- split beam-bundle clusters at
             graph component boundaries; cathode re-join per the cfg operating
             point).  Works with -stm/-tgm/-nu/-dnn or an explicit -p that
-            contains unmerge_assoc.  DEFAULT OFF until the production flip.
+            contains tagger_check_neutrino.  DEFAULT OFF until the production flip.
             Env: SBND_PROTECT_BUNDLE=1; knob overrides SBND_PROTECT_GRAPH,
             SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS (cm; 0 disables the re-join).
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
@@ -99,7 +100,8 @@ PIPELINE=""
 # DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
 STM_FIT="${SBND_STM_FIT:-0}"
 # PR-stage overclustering protection (doc pr/23): -protect inserts the
-# 'protect_bundle' stage after unmerge_assoc in whatever pipeline was chosen
+# 'protect_bundle' stage (+ second steiner pass) after tagger_check_fc in
+# whatever pipeline was chosen
 # (uboone's second graph examination; splits beam-bundle clusters at graph
 # component boundaries, cathode re-join per the cfg operating point).
 # DEFAULT OFF until the production flip.  Env: SBND_PROTECT_BUNDLE=1.
@@ -194,14 +196,17 @@ if [ "$STM_FIT" = 1 ] && [ -n "$PIPELINE" ]; then
     PIPELINE="$PIPELINE,stm_magnify"
 fi
 
-# -protect: insert protect_bundle after unmerge_assoc (doc pr/23 placement:
-# after both un-merges, before steiner).  No-op on an empty pipeline (the
-# identity gate must stay empty) or when the stage is already named.
+# -protect: insert protect_bundle after the cosmic taggers, before
+# tagger_check_neutrino, plus a second 'steiner' pass to rebuild the split
+# clusters' steiner products (doc pr/23 ordering decision -- the
+# prototype-faithful order; the earlier after-unmerge_assoc placement defeats
+# TGM, doc pr/23 sec 6).  No-op on an empty pipeline (the identity gate must
+# stay empty) or when the stage is already named.
 if [ "$PROTECT" = 1 ] && [ -n "$PIPELINE" ]; then
     case ",$PIPELINE," in
         *,protect_bundle,*) : ;;
-        *,unmerge_assoc,*) PIPELINE="${PIPELINE/unmerge_assoc/unmerge_assoc,protect_bundle}" ;;
-        *) echo "ERROR: -protect needs unmerge_assoc in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
+        *,tagger_check_neutrino,*) PIPELINE="${PIPELINE/tagger_check_neutrino/protect_bundle,steiner,tagger_check_neutrino}" ;;
+        *) echo "ERROR: -protect needs tagger_check_neutrino in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
     esac
 fi
 
