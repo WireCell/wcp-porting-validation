@@ -1975,8 +1975,25 @@ the pieces. Which effect dominates is a measurement, not an argument — it is a
 - **B1 is not built**, and now for a measured reason rather than a deferral:
   0 firings in 476 graph events with B0 on.
 - **Open decision for the owner**, in the order they would be taken: (a) Bee set
-  for the 10 vertex movers, above all 286400 and 289559; (b) whether to measure
-  the **B0-stop** variant of §6 before deciding anything about the default.
+  for the 10 vertex movers, above all 286400 and 289559 — **built and uploaded,
+  §8**; (b) whether to measure the **B0-stop** variant of §6 before deciding
+  anything about the default.
+
+### 8. Bee scan set for the moved events
+
+14 events — the 10 whose neutrino vertex moved, the 2 with a `cosmict_flag`
+flip or a surviving stub, and 315497 + 169824 as the intended wins — in the
+**same index order** in both sets, so index *i* is the same event in each:
+
+- OFF (today's SBND production):
+  <https://www.phy.bnl.gov/twister/bee/set/00ec3bae-3461-4046-a282-b5d3cecda13e/event/list/>
+- ON (`cathode_kink_xcut = 5`, `cathode_x = 0`):
+  <https://www.phy.bnl.gov/twister/bee/set/9b16b249-3bfd-4c69-8882-44605e2584ac/event/list/>
+
+Per-event key, ordered worst-first, with the vertex and score deltas to look
+for: `sbnd_xin/bee-pr20/b0v.scan-key.md`. Both arms come from the identical Q/L
+tree (`work-mcp1kall-cathA12on2`, A1+A2 ON) and the identical binary; only the
+two TLAs differ.
 
 ## Related
 
