@@ -2339,66 +2339,95 @@ detectors, with the knob-ON behaviour demonstrated and proven inert.
    conflicts.
 2. **`cosmic_companion_min_length` has to be tuned from a distribution, not a
    class split** (§3). S10's deliverable changes shape accordingly.
-3. **Part I's standing prediction is void, not merely stale** — see §7. The
-   baseline for evt 169824 is now 1071.17 MeV *and* the 361 MeV gamma P4 was
-   predicted to remove is already absent from the particle-flow tree.
-4. **Is Part I still worth finishing at all?** Its motivating event no longer
-   shows the defect (§7). The case for P3+P4 now rests entirely on the
-   population, i.e. on S10.
+3. **Part I's standing prediction needs no rebasing** — §7. Evt 18255/59003 is
+   unchanged since the diagnosis (`kine_reco_Enu` 1202.5436 MeV, `numu_score`
+   4.072, the `gamma 361 MeV` node still in the tree), and P2 flags the
+   culprit cluster 26. P3+P4 are the remaining work and the 1202.5 -> ~841 MeV
+   demo stands as written.
 
 **Not done and not started:** S10 (the `n_frag` census), S11 (P3), S12 (P4),
 S13 (ship evidence). No default flip is proposed for anything in Part I.
 
-### 7. Does this fix evt 18259/169824? No — and the symptom is already gone
+### 7. Does this fix the event that started Part I? Not yet — but P2 flags the culprit
 
-Asked directly by the owner, so answered with the arms this round produced.
+**Correction, made before the answer.** An earlier draft of this section
+answered for evt 18259/**169824**. That is Part II's class-B event. Part I's
+event is 18255/**59003** (§Part I Repro), and so is the
+`kine_reco_Enu 1202.5 -> ~841 MeV` prediction. Everything below is 59003, run
+fresh at HEAD with `SBND_SAVE_WASMAIN=1` (arms `work-mcp1kall-pi3_59003`,
+`work-pi3-59003-proff` / `-pron`). The 169824 material that was here has moved
+to §7b, where it belongs.
 
-**P1+P2 change nothing on it**, by design and by measurement — PI-6's whole
-point:
-
-| | label | n_assoc | len | numu | `kine_reco_Enu` |
-|---|---|---|---|---|---|
-| P1+P2 OFF | nu-candidate | 4 | 325.2 cm | 4.301 | 1071.1697 MeV |
-| P1+P2 ON | nu-candidate | 4 | 325.2 cm | 4.301 | 1071.1697 MeV |
-
-**But the Part I symptom is no longer present on this event at HEAD.** The
-particle-flow tree carries **no `gamma 361 MeV` node** — the 361 MeV shower
-this doc opened on, contributed by the absorbed demoted main:
+**The symptom is fully intact.** The particle-flow tree at HEAD, with every
+shipped default on:
 
 ```
-evt 169824, B0 OFF (legacy kink search)      evt 169824, HEAD (B0 ON, shipped)
-   pi+  378 MeV                                 pi+  380 MeV
-     proton  203 MeV                              proton  201 MeV
-   mu-  173 MeV                                   proton   86 MeV
-     pi+   33 MeV                               mu-  440 MeV
+mu-    732 MeV
+  gamma  361 MeV
+    e-   361 MeV
+```
+
+and `kine_reco_Enu = 1202.5436 MeV`, `numu_score = 4.072162`,
+`nu_sel_len_cm = 298.4`, `n_assoc = 4`. Those are the §Symptom numbers to the
+decimal — 1202.544 and 4.07. **Nothing shipped since the Part I diagnosis has
+touched this event**, so P4's standing prediction needs no rebasing: it stands
+as written.
+
+**P1+P2 do not fix it**, which is what PI-6 exists to prove — every column
+above is identical with the knobs on. They are bookkeeping; P3+P4 are where
+the physics moves.
+
+**But P2 identifies the culprit, which is the prerequisite.** With both knobs
+on, `ClusteringUnmergeBundle` splits cluster 18 and the flag lands on eight
+clusters, one of which is exactly the cosmic §Symptom names:
+
+| cluster | pts | extent | y | z | gid | t0 |
+|---|---|---|---|---|---|---|
+| **26** | **1155** | **108.8 cm** | **104.8 → 199.7** | **459.5 → 501.1** | 10 | **1.58 us** |
+| 29 | 355 | 110.7 cm | 129.1 → 199.9 | 204.7 → 286.0 | 6 | -60.15 us |
+| 24 | 27 | 32.3 cm | 143.7 → 169.5 | 370.9 → 385.6 | 14 | 200.45 us |
+| 28 | 38 | 33.1 cm | -49.4 → -42.5 | 78.1 → 110.0 | 7 | -41.63 us |
+| 30 | 19 | 30.0 cm | -110.3 → -80.7 | 20.5 → 24.4 | 1000004 | -428.01 us |
+| 23, 25, 27 | 6, 6, 12 | 0.8, 0.7, 1.7 cm | — | — | — | — |
+
+Cluster 26 is the doc's cluster 26: y running to **199.7** against the top face
+at 200, z to **501.1** against the downstream wall at 500 — the through-going
+cosmic supplying 361.5 of 1202.5 MeV — and it sits in the beam window at
+t0 = 1.58 us, which is why the companion gather reaches it at all. It carries
+`associated_cluster = 1`, `main_cluster = 0`, `demoted_main = 1`: precisely the
+state P3's one-line predicate was written against.
+
+Eight demoted of **36** associated clusters, and the eight span 0.7 cm to
+110.7 cm. So the flag is selective against the companion population, and
+`cosmic_companion_min_length` has real work to do — cutting the sub-2 cm specks
+while keeping 26 and 29. That is the distribution S10 must produce, and this
+event alone shows it is not degenerate in the way that matters.
+
+**Part I is alive and its path is unchanged:** S11 (P3, let the taggers see
+`demoted_main`) then S12 (P4, drop the cosmic-tagged companion), with the
+1202.5 -> ~841 MeV prediction as the knob-on demo.
+
+### 7b. Evt 18259/169824 — B0's effect on the particle-flow tree
+
+Part II's event, reported here because the arms existed and the comparison is
+clean: one Q/L tree (`work-mcp1kall-pi2on`), one binary, the two arms differing
+only by `-A cathode_kink_xcut=null -A cathode_x=null`.
+
+```
+B0 OFF (legacy kink search)        HEAD (B0 ON, shipped default)
+   pi+  378 MeV                       pi+  380 MeV
+     proton  203 MeV                    proton  201 MeV
+   mu-  173 MeV                         proton   86 MeV
+     pi+   33 MeV                     mu-  440 MeV
        mu-  290 MeV
 ```
 
-Two separate things are visible there:
+The cathode-crossing muon that Part II §Class B diagnosed as
+`173.2 + 33.4 + 290.2 = 496.8 MeV, as three particles` is one `mu- 440 MeV`
+with the veto on. That is gate B0-4 confirmed at the particle-flow level, on
+the shipped default rather than on a TLA override. P1+P2 leave it untouched
+(`kine_reco_Enu` 1071.1697 MeV in both arms).
 
-1. **B0 fixed the class-B split, and that is Part II's win, not Part I's.**
-   With the legacy kink search the cathode-crossing muon comes out as
-   `mu- 173 -> pi+ 33 -> mu- 290`; with the shipped default it is one
-   `mu- 440 MeV`. Attribution is clean — one Q/L tree
-   (`work-mcp1kall-pi2on`), one binary, the arms differing only by
-   `-A cathode_kink_xcut=null -A cathode_x=null`.
-2. **The gamma is absent from BOTH arms**, so whatever removed it landed
-   *earlier* than B0 — some round shipped between the Part I diagnosis (taken
-   on `work-mcp1kall-u17on1kb`, an older HEAD) and now. This doc does not
-   attribute it further; doing so would need an arm per candidate round.
-
-Consistent with that, the two demoted mains this event actually has at HEAD are
-**specks**, not a cosmic: cluster 21 is 6 points / 0.7 cm extent (gid 0, the
-neutrino's own flash group) and cluster 22 is 15 points / 1.4 cm (gid 12).
-Nothing of that size can carry 361 MeV, and `cosmic_companion_min_length` would
-exclude both under any sane value.
-
-**So Part I's motivating event no longer motivates it**, and P4's standing
-prediction (`kine_reco_Enu` 1202.5 -> ~841 MeV) is void twice over: the
-baseline is 1071.17 MeV, and the object it predicted removing is not there.
-Whether P3+P4 are still worth building is now a **population** question --
-S10's -- and an owner decision, not something this round takes. It is possible
-the answer is that Part I closes.
 
 ## Related
 
