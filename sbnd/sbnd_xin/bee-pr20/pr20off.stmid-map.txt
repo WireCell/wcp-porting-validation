@@ -1,0 +1,9 @@
+# stm_fit-global cluster_id remap for bee-pr20/pr20off.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+315497	0	16	12	flash-matched	12:6011
+406796	1	9	7	flash-matched	7:601
+71266	4	15	15	flash-matched	15:843
+315849	6	10	7	flash-matched	7:656
+67394	8	18	16	flash-matched	16:2381
+292450	9	8	8	flash-matched	8:4386
+57575	10	12	13	flash-matched	13:2255, 19:1338

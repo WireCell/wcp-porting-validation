@@ -1431,7 +1431,36 @@ Exactly the predicted outcome: the two class-A targets join, the other nine are
 untouched. **169824 is correctly unchanged** — it is class B (already one
 cluster), which A1/A2 do not address and B0 does.
 
-### 7. Status
+### 7. Gate A-7 — the owner Bee set — **uploaded**
+
+Eleven events, the same eleven in the same Bee-index order on both sides, so
+index *i* is the same event in each set and the two can be stepped through
+side by side:
+
+| Bee idx | event | why it is in the set |
+|---|---|---|
+| 0 | **315497** | class-A target — A1 recovers it |
+| 1 | **406796** | class-A target — A2 recovers it |
+| 2 | **169824** | class-B target — **A1/A2 do NOT fix this one**, B0 does |
+| 3–5 | 392354, 71266, 71882 | the three ambiguous merges (the A1 sign-off question) |
+| 6–7 | 315849, 399702 | further A2 candidates |
+| 8–10 | 67394, 292450, 57575 | clean contrasts |
+
+- **A1+A2 ON** — https://www.phy.bnl.gov/twister/bee/set/1ec1f79e-cc89-4a87-99da-e3c25f14fd0d/event/list/
+- **OFF (baseline)** — https://www.phy.bnl.gov/twister/bee/set/377ff0b3-1d65-4cf9-864b-22ec08ce2b3a/event/list/
+
+Provenance: the ON side comes from `work-mcp1kall-cathA12bee`, built at
+21:44:24 — before the retired-arm window of §0b opened at 21:48:14. Rather than
+rely on that margin, all eleven of its `mabc-pr.zip` were compared by
+`hash_archive.py` member-content hash against the verified-clean
+`work-mcp1kall-cathA12on2` arm: **11 identical, 0 differing.** The OFF side is
+from `work-mcp1kall-cathA12beeoff`, produced by `s4_off.sh` at 22:45 with the
+same binary.
+
+Zips, index files and `stmid-map` (PR cluster id → img cluster id, needed to get
+from a Bee colour back to the TSV ids) are kept in `sbnd_xin/bee-pr20/`.
+
+### 8. Status
 
 | gate | result |
 |---|---|
@@ -1441,7 +1470,7 @@ cluster), which A1/A2 do not address and B0 does.
 | A-4 / A-8 verdict census | PASS — 0 verdict changes, 30/30 attributed |
 | A-5 nueCC48 | PASS — 48/48 fully identical |
 | A-6 cath13 | PASS |
-| A-7 owner Bee set | **pending** — arms built, merge + upload outstanding |
+| A-7 owner Bee set | uploaded — awaiting owner sign-off on the three ambiguous merges |
 
 Not in this round, and not dropped: **B0** (written, parked, builds at S5),
 **B1** (deferred), **Part I P1–P4** (scheduled — §Execution order steps S8–S13).
