@@ -1,9 +1,13 @@
 # doc pr/19 — nueCC 444187: near-cathode shower fragments absorbed into a cosmic by the per-APA `clustering_isolated` small→big merge
 
-**Status: FIX CAMPAIGN (b)+(c) SHIPPED default OFF; validation DONE (§8) —
-nueCC48 clean, 444187 recovered (+786 pts); mcp1k has 7/1000 knob-caused
-beam-verdict changes (§8.2) so the SBND default flip is ESCALATED to the
-owner (§8.3).  Production output is byte-identical to pr/17 until flipped.**
+**Status: CLOSED — FIX CAMPAIGN (b)+(c) SHIPPED default OFF; validation
+DONE (§8): nueCC48 clean, 444187 recovered (+786 pts); mcp1k has 7/1000
+knob-caused beam-verdict changes (§8.2).  OWNER DECISION (2026-08-02,
+after the §8.3 Bee scan): keep the current default — the knobs stay OFF
+for SBND production.  Production output remains byte-identical to pr/17;
+the fix stays available per event via `SBND_ISO_CATHODE_GUARD=1
+SBND_ADOPT_NU_FRAG=1` (or the `iso_cathode_guard`/`adopt_nu_fragments`
+TLAs).**
 Owner report (2026-08-01): in nueCC evt 444187, `(x,y,z) = (-77.8, 3.1,
 246.0)` is on the main cosmic (final Bee cluster 4) and `(x,y,z) = (-3.7,
 -16.3, 216.0)` is one of many dots that belong to the nueCC (whose main body
@@ -367,7 +371,12 @@ pr/17 validated baseline `work-mcp1kall-u17on1kb`:
   **9/9 SAME**.  Every change is deterministic and knob-caused — none is
   the known QL run-to-run flicker.
 
-### 8.3 Default-flip decision: NOT flipped — escalated to owner
+### 8.3 Default-flip decision: NOT flipped — owner kept the legacy default
+
+**Owner decision (2026-08-02): keep the current default; do not turn this
+on for SBND production.**  Rationale context from the scan round below
+(the campaign evidence was presented with old/new Bee sets); the knobs
+remain in the code/config for per-event or future use.
 
 The nueCC48 arm is clean (0 verdict changes, tight drift, 444187
 recovered).  The mcp1k arm has 7/1000 beam-verdict changes and two large
