@@ -1238,6 +1238,214 @@ the mechanism in §Root cause is not what is being fixed.
 Default flips are a separate owner decision after PI-7/PI-8 are on the table,
 not part of this round.
 
+## Part III — execution log, the A round (2026-08-02)
+
+The Part II fix design, executed for **A1 + A2**. Owner decisions taken before
+any code moved: **A2 is in at `crosser_pca_angle = 20`**, **A1 lands default-ON
+for SBND**, and the step-0 Bee set is built **and uploaded**. B1 is deliberately
+not implemented (B0 is the primary, B1 its backstop). B0 itself is written but
+**not built** in this round — it lands in S5, after the A gates.
+
+**Headline.** Over 1000 mcp1k events, A1 + A2 make **29 new merges, every one of
+them at the cathode**, and change **zero** beam labels, **zero** verdict classes
+and **zero** neutrino point counts. Both target crossers are recovered.
+
+### 0. Repro
+
+```bash
+# --- binary provenance.  ONE binary produced every A-arm number below:
+#     libWireCellClus.so md5 525a7c213f68f870b0a064553405d83e (toolkit aff0ffde),
+#     sampled before AND after each arm -- all four samples equal.
+#     The tree carried exactly one modification for the whole window:
+#     cfg/pgrapher/experiment/sbnd/clus.jsonnet (the A1/A2 line).
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+/home/xqian/tmp/pr20exec/s4_chain.sh          # ON then OFF, back-to-back, one tree
+
+# censuses (both committed beside this doc)
+python3 pr20_edge_census.py --base work-mcp1kall-cathA12off \
+        --on work-mcp1kall-cathA12on2 --out edges_mcp1k.tsv --jobs 8
+python3 pr20_census.py --base work-mcp1kall-cathA12off \
+        --on work-mcp1kall-cathA12on2 --edges edges_mcp1k.evts
+python3 pr20_census.py --base work-nuecc48-cathA12off --on work-nuecc48-cathA12on
+```
+
+Arms: `work-mcp1kall-cathA12{on2,off}` (1000 events each, 0 failures),
+`work-nuecc48-cathA12{on,off}` (48 each).
+
+### 0b. An arm that was retired, and why
+
+The **first** ON arm, `work-mcp1kall-cathA12on`, is not the source of any number
+here. It was launched at 21:48:14 while B0's *config* half was being written into
+`cfg/pgrapher/common/clus.jsonnet`. The body edit (the two key-suppression lines)
+landed before the signature parameter, so for ~1.6 s the file referenced an
+undeclared variable and the six jobs that compiled config in that window died:
+
+```
+RUNTIME ERROR: cfg/pgrapher/common/clus.jsonnet:446:21-30 Unknown variable: cathode_x
+  entries 83, 84, 87, 88, 89, 90   (21:49:46.194 .. 21:49:47.804)
+```
+
+The revert only happened at 21:53:02 (`b0.patch` mtime 21:53:02.488,
+`clus.jsonnet` 21:53:02.492), so the *complete* B0 config state was present for
+about three minutes of a twenty-minute arm.
+
+That state is provably inert in the compiled JSON — the B0 keys default to
+`null` and are key-suppressed, and compiling the Q/L job against a scratch `cfg/`
+tree with the patch applied gives a file **identical** to the clean-tree compile
+(`diff ql_after.json ql_b0state.json` empty; this also banks half of gate B0-2
+early). A torn jsonnet file parse-*errors* rather than silently differing, so no
+event can have produced wrong output.
+
+**The arm was retired anyway.** "The other 994 are fine because we argue X" is
+not the standard this repo runs on, and the replacement cost one unattended block
+that was going to be spent on the OFF arm regardless. Two process fixes came out
+of it, both applied:
+
+- **the tree is frozen for the duration of an arm.** B0 stays parked outside the
+  tree until S5, when no sweep is running.
+- **config swaps are atomic.** `s4_off.sh` reverted the A1/A2 line with `cp -f`,
+  which truncates and rewrites in place — the same torn-read hazard, aimed at a
+  1000-event arm. It now writes a temp file and `mv`s it into place; a rename
+  within one filesystem is seen whole or not at all.
+
+The nueCC48 ON arm started 22:16, after the revert, and is unaffected. It needed
+its imaging seeded into the work root first (`run_nusel_evt.sh` aborts on a
+missing `icluster-apa0-active.npz`); the seed comes from our own
+`work-nuecc48-oc19on`, whose imaging is byte-equal to three other arms'
+(`evt172230` apa0-active md5 `ecdb89d7b5fe5391` in oc19on / u17on / cbron /
+vveto) and is upstream of clustering, so it cannot differ between the two sides.
+
+### 1. Gate A-1 — compiled-config proof + scope — **PASS**
+
+`wcsonnet` of `wct-clus-matching-perevt.jsonnet`, before vs after the edit, adds
+exactly two keys and moves nothing else:
+
+```
+1333a1334 >  "crosser_pca_angle": 20,
+1342a1344 >  "tip_touch_cut": 40,
+```
+
+(40 = 4 cm in internal units.) `git diff --stat` =
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet | 19 ++++-` and nothing else. No
+`cfg/pgrapher/common/` file moves, so PDHD / PDVD / uBooNE **cannot** move —
+which is why abtest and qlport are not required for A1/A2. Stated rather than
+skipped.
+
+**SBND is NOT bit-identical and needs revalidation** — that is the point of the
+change, not a side effect.
+
+### 2. Gate A-2 — the merges A1+A2 actually made — **PASS**
+
+**Substitution, stated:** the doc's A-2 asked for a `[ccx]` accept-log delta. The
+1000-event arms were not run under the tracers, and the log measures the
+connector's *intent*. `pr20_edge_census.py` measures the *outcome*: it compares
+the OFF and ON `clustering-global` partitions of the same point cloud and reports
+every ON cluster covering more than one OFF cluster. It is label-renumbering-proof
+and catches a merge however it arose. The tracer excerpt below is kept as the
+mechanism proof.
+
+```
+common events = 1000
+events missing an arm: 0    events whose point arrays differ: 29
+MERGES (ON cluster covering >1 OFF cluster): 29   of which cathode-straddling: 29
+```
+
+**29 merges in 1000 events, 29 of 29 at the cathode — zero collateral merges
+anywhere else.** All 29 are enumerated in `edges_mcp1k.tsv` (closest-approach
+distance 1.59 – 4.92 cm, both tips within the tip cut of x = 0), including both
+targets: **315497** at 3.28 cm and **406796** at 3.65 cm.
+
+Mechanism proof, from the shipped binary's own tracer on 315497 — previously
+`close_fallthrough -> reject`:
+
+```
+[cc] c13<->c6 CLOSE both-long: tt_hough=27.0 tt_pca=1.7 cc_pca=89.1
+     tip_touch=1(cut=4.0,ang=10.0) -> ACCEPT
+```
+
+Structurally, by KD-tree `real_cluster_id` lookup at the doc's tip coordinates:
+**315497** OFF `[16, 24]` → ON `[14, 14]`; **406796** OFF `[9, 17]` → ON
+`[11, 11]`. Both crossers are now one object.
+
+### 3. Gate A-3 — collateral — **PASS**
+
+20 events with no new edge, `mabc-pr.zip` compared by `hash_archive.py`
+member-content hash (never `cmp` — M2): **20 identical, 0 differing.**
+
+### 4. Gates A-4 / A-8 — verdict census — **PASS**
+
+```
+identical tables: 970   differing: 30   missing tsv: 0
+VERDICT-CLASS multiset changes: 0
+label-class flow: {}
+differing-with-verdicts-unchanged (npts / extra untagged rows only): 30
+   of which WITHOUT a new edge: 1  ['292643']
+nu-npts drifts: 0   range: 0..0
+```
+
+Every one of the 30 differing events is attributed:
+
+- **29** carry a named new cathode edge from `edges_mcp1k.tsv`.
+- **1 — evt 292643 — is pre-existing nondeterminism, not this knob.** Its
+  clustering partition is *bit-identical* between the two arms (point arrays
+  exact, no merge found), so A1/A2 demonstrably did not touch it; the difference
+  is downstream Q/L bundle re-assignment. Three fresh same-config repeat runs all
+  reproduce the OFF result, and across seven prior, unrelated 1000-event arms the
+  event takes **three** distinct values:
+
+  | value | arms |
+  |---|---|
+  | `bd90c068` | cbron1k, cbroff1k, d59k, this OFF arm, rr1/rr2/rr3 |
+  | `bf47ad30` | vveto1k, isog1k, u17on1kb, this ON arm |
+  | `bb10029b` | oc19on1k |
+
+  The value this ON arm landed on is one already produced by three arms that
+  predate cathode_connect entirely.
+
+This is the ship evidence, and it is cleaner than the pr/19 precedent: that round
+was decided on 7/1000 genuine verdict changes; this one has **0**.
+
+### 5. Gate A-5 — nueCC48 — **PASS (hard constraint met)**
+
+```
+events A=48 B=48 common=48 onlyA=0 onlyB=0
+identical tables: 48   differing: 0
+VERDICT-CLASS multiset changes: 0     label-class flow: {}
+nu-npts drifts: 0
+```
+
+Stronger than the constraint required: not merely zero beam-label changes, but
+**all 48 tables fully identical**.
+
+### 6. Gate A-6 — the cath13 set — **PASS**
+
+| evt | new edge | table |
+|---|---|---|
+| 315497 | **YES** | changed (target recovered) |
+| 406796 | **YES** | changed (target recovered) |
+| 288952, 169824, 56463, 59003, 392200, 398690, 348691, 287654, 52195 | no | identical |
+| 267597, 437699 | — | not in the mcp1k 1000 sample |
+
+Exactly the predicted outcome: the two class-A targets join, the other nine are
+untouched. **169824 is correctly unchanged** — it is class B (already one
+cluster), which A1/A2 do not address and B0 does.
+
+### 7. Status
+
+| gate | result |
+|---|---|
+| A-1 compiled-config + scope | PASS |
+| A-2 merges enumerated | PASS — 29/29 at the cathode |
+| A-3 collateral hashes | PASS — 20/20 identical |
+| A-4 / A-8 verdict census | PASS — 0 verdict changes, 30/30 attributed |
+| A-5 nueCC48 | PASS — 48/48 fully identical |
+| A-6 cath13 | PASS |
+| A-7 owner Bee set | **pending** — arms built, merge + upload outstanding |
+
+Not in this round, and not dropped: **B0** (written, parked, builds at S5),
+**B1** (deferred), **Part I P1–P4** (scheduled — §Execution order steps S8–S13).
+
 ## Related
 
 - doc pr/3 §8 — `nu_skip_cosmic_bundle` (the per-main version of this veto)
