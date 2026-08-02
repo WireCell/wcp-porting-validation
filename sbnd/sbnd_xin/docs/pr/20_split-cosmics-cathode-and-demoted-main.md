@@ -1579,7 +1579,237 @@ Still to come: **S6** — knob ON, where the doc's standing prediction for evt
 18259/169824 gets tested (segments 18005/18007/18008 become one, the PF tree
 carries one muon, and `kine_reco_Enu` is recomputed), plus the 300-event vertex
 census, the nueCC48 zero-change constraint and the determinism check. Then the
-SBND config line `cathode_kink_xcut = 5*wc.cm`.
+SBND config line `cathode_kink_xcut = 5*wc.cm`. **Executed — see Part V**, with
+two changes to the plan recorded there: B0-7 is a *PR-chain* census (a nusel
+census cannot see B0 at all, §5), and the SBND default flip is left as an owner
+ask rather than taken (§8).
+
+## Part V — execution log, the B round (B0 knob ON, 2026-08-02)
+
+B0 is exercised. Every number below comes from one binary — the
+`d72afc9f…` `libWireCellClus.so` gated knob-off in Part IV — with the two arms
+differing only by `-A cathode_kink_xcut=5 -A cathode_x=0`.
+
+**B0 is still landed default OFF. The SBND default flip is an open ask to the
+owner at the end of this section, not something this round takes.**
+
+### 0. Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# B0-3 / B0-7, the 300-event PR arm pair (both arms from the SAME Q/L tree)
+ls -d work-mcp1kall-cathA12on2/ql_evt* | sed 's/.*ql_evt//' | sort -n | head -300 > evts.txt
+EV=$(tr '\n' ' ' < evts.txt)
+PR_JOBS=20 ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0pr300-off data $EV
+PR_JOBS=20 SBND_CATHODE_KINK_XCUT=5 SBND_CATHODE_X=0 \
+  ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0pr300-on  data $EV
+
+# B0-5, nueCC48
+EVN=$(ls -d work-nuecc48-cathA12on/ql_evt* | sed 's/.*ql_evt//' | sort -n | tr '\n' ' ')
+PR_JOBS=16 ./run_pr_chain_batch.sh work-nuecc48-cathA12on work-b0nue48-off data $EVN
+PR_JOBS=16 SBND_CATHODE_KINK_XCUT=5 SBND_CATHODE_X=0 \
+  ./run_pr_chain_batch.sh work-nuecc48-cathA12on work-b0nue48-on  data $EVN
+
+# B0-6, determinism (run_pr_chain_batch already runs under `setarch x86_64 -R`)
+for i in 1 2 3; do PR_JOBS=6 SBND_CATHODE_KINK_XCUT=5 SBND_CATHODE_X=0 \
+  ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0det$i data 169824 57661 166738; done
+
+# the censuses
+python3 pr20_b03_census.py     work-b0pr300-off work-b0pr300-on
+python3 pr20_b03_census.py     work-b0nue48-off work-b0nue48-on
+python3 pr20_b03_survivors.py  work-b0pr300-on  work-b0nue48-on
+python3 pr_scores_table.py --root work-b0pr300-off --sample b0off --out off.tsv   # and --on
+python3 stub_census.py         work-b0pr300-off   # and -on
+```
+
+### 1. Gate results
+
+| gate | scope | result |
+|---|---|---|
+| **B0-4** | evt 18259/169824, the doc's standing prediction | **PASS** |
+| **B0-3** | 300 PR events, vertex + stub census | **PASS — 0 collateral** |
+| **B0-3b** | classification of the vertices B0 did *not* remove | **PASS — 3 in-scope survivors, all explained** |
+| **B0-5** | nueCC48, 48 events, PR chain | **PASS — 0 beam-label changes** |
+| **B0-6** | 3 events × 3 runs, `setarch x86_64 -R` | **PASS — 1 hash per event** |
+| **B0-7** | 300-event PR score-table census | **PASS — 298/300 identical on every physics column** |
+
+### 2. B0-4 — evt 18259/169824, the prediction tested
+
+The OFF arm names the doc's segment independently of the doc: `stub_census.py`
+finds **segment 18007, L = 4.67 cm, straddling x = 2.42 → −2.04**, its two
+neighbours `(18005, 18008)` of length 62.5 and 116.9 cm, and the
+neighbour-to-neighbour kink measured across the stub is **3.31°** — a track
+that is straight to within 3° carrying a 4.7 cm cathode-gap segment between two
+metre-scale halves. With the knob ON that segment is **gone**, and both cathode
+vertices with it (`nvtx 14 → 13`, cathode-band vertices `2 → 0`).
+
+Energy, and why it moves by the amount it does:
+
+| | particles | `kine_reco_Enu` |
+|---|---|---|
+| OFF | 8 — incl. 378.5, 173.2, 33.4, 290.2 MeV = **875.3** | **1125.6372 MeV** |
+| ON | 6 — incl. 440.1, 380.7 MeV = **820.8** | **1071.1697 MeV** |
+
+875.3 − 820.8 = **54.5 MeV**, and 1125.6372 − 1071.1697 = **54.47 MeV**. The
+energy drop *is* the removed fragments' double-counted contribution, not a
+recalibration. `numu_score` moves 3.109 → 4.301 in the same event: the track
+now reads as one muon, which is the direction the fix is supposed to push.
+
+*(This is the folded gate B0-0. Because the veto lives only inside
+`segment_search_kink`, the stub and both cathode vertices vanishing under the
+knob proves the kink finder is what built them — the `flag_break_track`
+scratch build is not needed.)*
+
+### 3. B0-3 — 300-event vertex and stub census
+
+`pr20_b03_census.py`, over the 132 of 300 events that have a PR graph on both
+arms (the other 168 have no in-beam neutrino candidate, so no graph on either
+side — they are identical by construction and are not counted as passes):
+
+```
+vertex sets identical: 130 / 132;  differing: 2
+cathode-band vertices (|x|<3.0cm): OFF 28 -> ON 25      # the pr/12 §7 statistic
+knob-band vertices    (|x|<5.0cm): OFF 43 -> ON 40      # the knob's own band
+cathode stubs (L<10cm, both ends |x|<6cm): OFF 1 -> ON 0
+COLLATERAL (vertex set changed with NO knob-band vertex and NO stub OFF): 0
+```
+
+**The band matters and the first cut of this census got it wrong.** Judging
+"traceable" against the 3 cm pr/12 statistic while the knob cuts at 5 cm
+manufactured one phantom collateral event (nueCC48 evt 400474, whose suppressed
+break sits at x = 4.18 cm). Measured against the knob's own band the collateral
+count is **0 on both arm pairs**. The script now reports both bands and uses
+the 5 cm one for the traceability test.
+
+Both changed events, traced to the cluster:
+
+- **evt 169824** — `nvtx 14 → 13`, the B0-4 case above. 
+- **evt 57661** — `nvtx 27 → 26`. Of its **8 PR clusters, 7 are point-identical
+  between the arms**; only cluster 25 moved. There, a 1.70 cm fragment at
+  x = −4.5 → −4.9 is absorbed (`25021/25023/25024` = 5.35 + 1.70 + 10.18 cm →
+  `25021/25022` = 6.75 + 10.44 cm) and the *next* break down the same track
+  shifts from x = −4.9 to x = −3.3. That shift is the plan's explicitly
+  allowed behaviour: suppressing a break re-runs the search on the longer
+  surviving segment, so later break positions legitimately move — and it stays
+  inside the one affected cluster.
+
+Same census on the nueCC48 pair: 44/47 vertex sets identical, 3 changed
+(90055, 267597, 400474), **0 collateral**, and each changed event again touches
+exactly **one** cluster out of 50, 48 and 24 respectively. In 90055 the merged
+object is a 1.16 cm fragment at x = 1.00 → 2.04 rejoining its neighbour into a
+single 28.76 cm segment.
+
+**No event on either arm pair gained a vertex.** Every change is 14→13, 27→26,
+135→134, 125→124, 87→86. That is the direct answer to "does suppressing a break
+just relocate the split and cut something new somewhere else?" — it does not.
+
+### 4. B0-3b — the vertices B0 did *not* remove
+
+B0-3 proves the firings are right. It does not by itself prove the survivors
+should have survived: 40 knob-band vertices remain in the 300-event ON arm.
+`pr20_b03_survivors.py` classifies all 69 survivors across both ON arms by
+their degree in the fitted segment graph:
+
+| class | count | status |
+|---|---|---|
+| degree 1 — a track **end** near the cathode | 64 | out of scope: no kink to veto |
+| degree ≥3 — a real junction | 2 | out of scope |
+| degree 2 — an in-line break at \|x\| < 5 cm | **3** | in scope, listed below |
+
+```
+evt  57661  x=-3.27  segs (25027,25028) L=(3.48, 5.47)   kink10 = 96.66 deg
+evt  63603  x= 1.63  segs (13004,13008) L=(28.86,43.48)  kink10 = 18.99 deg
+evt 267597  x=-4.79  segs (12053,12055) L=(6.48,13.27)   kink10 = 58.97 deg
+```
+
+With the knob ON, `segment_search_kink` **cannot** return a break inside the
+band — so all three of these were built by a *different* breaker
+(`examine_structure_3` / `NeutrinoOtherSegments`). Two of them are hard turns
+(96.7°, 59.0°) that nothing should be removing. The third, evt 63603, is a 19°
+break between two long tracks at x = 1.63 cm — the shallow, cathode-band,
+long-neighbour signature — and it is exactly the case **B1** (cathode-aware stub
+absorption) was written for. This is measured evidence that the deferred B1
+scope is real and non-empty, and simultaneously that B0 is complete *within its
+own scope*: there is no case where the kink finder produced a band break and
+the veto missed it.
+
+### 5. B0-5 — nueCC48, the hard constraint
+
+48/48 events ran; 47 have a real `TaggerCheckNeutrino` evaluation. From the
+score-table diff (`pr_scores_table.py`, all 16 physics columns):
+
+| column | changes |
+|---|---|
+| `event_label` | **0** |
+| `cosmic_flag`, `cosmict_flag` | **0** |
+| `numu_score`, `nue_score`, `cosmict_10_score`, `cosmict_score` | **0** |
+| `nu_x_cm` / `nu_y_cm` / `nu_z_cm`, `nu_sel_t0_us`, `nu_sel_len_cm`, `nu_sel_n_assoc` | **0** |
+| `kine_reco_Enu_MeV` | 3 events: 2506.27→2505.18, 1735.32→1735.24, 1298.1938→1298.1937 |
+
+**Zero beam-label changes, and the selected neutrino vertex does not move in any
+of the 48.** The only motion is ≤1.1 MeV of energy on three events, from
+fragments merging into their neighbours.
+
+**Read the constraint from the scores table, not from `pr20_census.py`.** That
+script reports `identical tables: 48 / 48` and `VERDICT-CLASS multiset changes: 0`
+— true, but **non-discriminating for B0**: the `nusel-evt*.tsv` is written by the
+Q/L + cosmic-tagging layer, which runs entirely *upstream* of
+`tagger_check_neutrino`, the only place `m_cathode_kink_xcut` is ever read. A
+B0 arm pair cannot move those tables, so 48/48 is not evidence of anything here.
+(Same trap as qlport gate 2 in Part IV §3 — a gate that passes because it cannot
+see the change.) The discriminating gate is the score table, and it is the one
+quoted above.
+
+### 6. B0-6 — determinism
+
+Three events × three runs, knob ON, under `setarch x86_64 -R`,
+`hash_archive.py` on `mabc-pr.zip` — **one distinct hash per event**:
+
+| event | hash (all 3 runs) |
+|---|---|
+| 169824 | `56b71102285021d7…` |
+| 57661 | `0a71c7b8f38f6399…` |
+| 166738 | `14a52491e1d6afd9…` |
+
+169824's hash also matches the single-event B0-4 run made from a different
+harness, so the result is reproducible across invocations, not just within a
+batch.
+
+### 7. B0-7 — population census, 300 events
+
+`pr_scores_table.py` on both arms, diffed on all 16 physics columns
+(135 of 300 events have a real `TaggerCheckNeutrino` evaluation):
+
+```
+events compared: 300   identical on every physics column: 298   differing: 2
+evt  57661: kine_reco_Enu 558.79425 -> 557.94240
+evt 169824: numu_score 3.1090775 -> 4.301008 ; kine_reco_Enu 1125.6372 -> 1071.1697
+```
+
+**0 `event_label`, `cosmic_flag`, `cosmict_flag` or `nue_score` changes in 300
+events.** The two differing events are exactly the two B0-3 flagged from the
+geometry, reached independently through the scores — the two censuses agree on
+which events moved.
+
+### 8. Status, and the one open ask
+
+B0 works, is scoped, is deterministic, and does not disturb neutrino selection:
+in 348 PR events across two samples it changed **5**, each traced to a single
+cluster holding a cathode-band break, with **0** beam-label changes and **0**
+collateral.
+
+**NOT bit-identical when ON** — the SBND PR path changes on those 5 events.
+
+**Open ask — the SBND default.** The plan's S6 ends with the config line
+`cathode_kink_xcut = 5*wc.cm` (plus an explicit `cathode_x = 0` rather than
+relying on the C++ default). That line makes B0 SBND production behaviour, and
+the owner has not yet seen a B0 event drawn — the sign-off on 2026-08-02
+("we can adopt these fixes") was against the A1+A2 Bee links. Precedent runs
+both ways here: pr/17's rescue pass shipped ON, pr/19's absorb pass shipped OFF
+and the owner declined the flip after reading the census. So B0 stays **default
+OFF** until asked for, and a Bee set for 169824 (OFF vs ON) can be built on
+request in one step.
 
 ## Related
 

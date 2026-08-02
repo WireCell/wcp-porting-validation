@@ -106,6 +106,15 @@ TFJSON_TLA=()
 # after tracking_visitor because it opens tracking-pr.root in UPDATE mode).
 PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output"
 
+# Cathode kink veto (doc pr/20 Part II B0), cm.  EMPTY = emit no TLA = the job
+# default null = C++ 0 = OFF = the legacy kink search, so a bare run of this
+# script is byte-identical to before the knob existed.
+# Env: SBND_CATHODE_KINK_XCUT=<cm> SBND_CATHODE_X=<cm>.
+CATH_TLA=()
+[ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
+[ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+true
+
 # The embedded interpreter needs libpython loaded RTLD_GLOBAL for the SCN
 # (DL vertex) import to succeed -- same idiom as run_pr3_evt_dl.sh / M4.
 PYLIB=$(python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))")/libpython3.11.so.1.0
@@ -160,6 +169,7 @@ process_event() {
             `# neutrino taggers + BDT scorers on top of the default list.` \
             --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]" \
             "${TFJSON_TLA[@]}" \
+            "${CATH_TLA[@]}" \
             --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
             -c "$JSONNET"
         echo "rc=$?" > "$PRDIR/rc.txt"

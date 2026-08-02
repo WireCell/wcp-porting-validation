@@ -360,6 +360,11 @@ FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-}"
 FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-}"
 FVX_MARGIN="${SBND_TGM_FVX_MARGIN:-}"
 FVY_MARGIN="${SBND_TGM_FVY_MARGIN:-}"
+# Cathode kink veto (doc pr/20 Part II B0), cm.  Empty = pass no TLA = the job
+# default = null = C++ 0 = OFF = the legacy kink search.
+# Env: SBND_CATHODE_KINK_XCUT=<cm> SBND_CATHODE_X=<cm>.
+CATH_KINK_XCUT="${SBND_CATHODE_KINK_XCUT:-}"
+CATH_X="${SBND_CATHODE_X:-}"
 # MIP dQ/dx scale (e/cm) for TaggerCheckSTM.  Config: 56000 = SBND (docs/48,
 # matches the *DeDx tables regenerated at 0.5 kV/cm); pass 50000 for the
 # inherited MicroBooNE value (the C++ default), to isolate the table change
@@ -558,6 +563,8 @@ knob_num  tgm_fv_zmax_margin          "$FVZ_MARGIN"
 knob_num  tgm_fv_zmax_margin_interior "$FVZ_INTERIOR"
 knob_num  tgm_fv_x_margin             "$FVX_MARGIN"
 knob_num  tgm_fv_y_margin             "$FVY_MARGIN"
+knob_num  cathode_kink_xcut           "$CATH_KINK_XCUT"
+knob_num  cathode_x                   "$CATH_X"
 knob_num  mip_dqdx                    "$MIP_DQDX"
 knob_str  unmerge_bundle_mode         "$UNMERGE_MODE"
 knob_bool save_stm_fit           "$STM_FIT"

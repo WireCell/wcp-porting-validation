@@ -23,8 +23,13 @@ KEY = ("nu-candidate", "tgm", "stm", "lm", "fc")
 
 
 def load(arm, evt):
-    path = os.path.join(arm, f"nusel_evt{evt}", f"nusel-evt{evt}.tsv")
-    if not os.path.exists(path):
+    # nusel arms (run_full1k_nusel.sh) write nusel_evt<ID>/; PR-chain arms
+    # (run_pr_chain_batch.sh) write pr_evt<ID>/ with the same tsv inside.
+    for sub in (f"nusel_evt{evt}", f"pr_evt{evt}"):
+        path = os.path.join(arm, sub, f"nusel-evt{evt}.tsv")
+        if os.path.exists(path):
+            break
+    else:
         return None
     rows = []
     with open(path) as f:
@@ -60,8 +65,13 @@ def main():
         with open(args.edges) as f:
             edges = {l.split()[0] for l in f if l.strip() and not l.startswith('#')}
 
-    evA = {os.path.basename(d)[9:] for d in glob.glob(os.path.join(A, "nusel_evt*"))}
-    evB = {os.path.basename(d)[9:] for d in glob.glob(os.path.join(B, "nusel_evt*"))}
+    def enum(root):
+        out = set()
+        for pat, cut in (("nusel_evt*", 9), ("pr_evt*", 6)):
+            out |= {os.path.basename(d)[cut:] for d in glob.glob(os.path.join(root, pat))}
+        return out
+
+    evA, evB = enum(A), enum(B)
     print(f"base = {A}")
     print(f"on   = {B}")
     print(f"events A={len(evA)} B={len(evB)} common={len(evA & evB)} "
