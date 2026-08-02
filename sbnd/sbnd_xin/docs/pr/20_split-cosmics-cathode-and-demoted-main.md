@@ -9,7 +9,7 @@ candidate as a gamma hanging off its muon.
 | | part | reproducing events | status |
 |---|---|---|---|
 | **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | design only — 4 knobs, all default OFF |
-| **II** | a cathode-crossing track broken in two | 18259 / 169824, 18255 / 406796, 18255 / 315497 | diagnosis complete and reproduced at HEAD; fix design only — 2 SBND config lines + 1 new default-OFF pass |
+| **II** | a cathode-crossing track broken in two | 18259 / 169824, 18255 / 406796, 18255 / 315497 | diagnosis complete and reproduced at HEAD; fix design only — 2 SBND config lines + 2 new default-OFF passes |
 
 No C++, jsonnet or runner changed for either part. The files this doc adds are
 its two figures under `docs/pics/` and the three read-only analysis scripts
@@ -392,9 +392,10 @@ physics moves.
 ## Part II — a cathode-crossing track broken in two
 
 **Status: diagnosis COMPLETE and reproduced at HEAD; fix DESIGN ONLY.** No C++,
-no jsonnet and no runner changed for Part II. Two of the three proposed changes
+no jsonnet and no runner changed for Part II. Two of the four proposed changes
 need only an SBND config line (the C++ knobs already exist and ship in PDHD);
-the third needs a new default-OFF pass.
+the other two are new default-OFF passes in the pattern-recognition chain, which
+today has no notion of the cathode plane at all.
 
 Reported by the owner from the `cath13-prod-20260801` Bee scan:
 
@@ -434,10 +435,12 @@ TAG=ccfeat300b ENTRIES="$(seq 300 499 | tr '\n' ' ')" ./run_full1k_nusel.sh 200 
 ./run_pr_chain_batch.sh work-mcp1kall-ccfeat300 work-ccfeat300pr data
 ./run_pr_chain_batch.sh work-mcp1kall-cathdbg1  work-cathdbg1pr  data
 
-# (4) analysis (read-only; all three scripts committed beside this doc)
+# (4) analysis (read-only; all four scripts committed beside this doc)
 python3 feat_census.py work-mcp1kall-ccfeat300      # connector accept/reject census
 python3 stub_census.py work-ccfeat300pr             # cathode-stub segment census
 python3 pair_eyeball.py work-mcp1kall-ccfeat300 pairs.json newedges.png
+python3 kink_probe.py                               # re-runs segment_search_kink's
+                                                    # criteria on evt 169824 offline
 ```
 
 `work-cath13ql/` and `work-cath13pr/` (the arm the Bee set was built from) give
@@ -633,10 +636,84 @@ crossers are fitted as a single segment, i.e. the stub is the ~2 % tail. Fixing
 class A moves crossers into that population, so class B should be fixed with it,
 not after it.
 
+#### Where the break comes from — the PR chain does not know the cathode exists
+
+The stub is not something the fitter drew badly; it is the product of a
+deliberate **track-breaking** step. `PatternAlgorithms::break_segments`
+(`NeutrinoPatternBase.cxx:880`, reached from `find_proto_vertex` when
+`flag_break_track` is true — hard-coded `true` for the main cluster at
+`TaggerCheckNeutrino.cxx:512`) walks each segment asking
+`segment_search_kink` (`PRSegmentFunctions.cxx:191-352`) for a point where the
+trajectory turns, and splits the segment there.
+
+That kink finder scores each fit point with two angles:
+
+- `refl_angle` — how much the trajectory turns at the point (minimised over six
+  half-window sizes, 2 to 12 points), and
+- `para_angle` — `|angle-to-drift − 90°|`, i.e. how far the local direction is
+  from being **perpendicular to the drift axis**.
+
+All four kink criteria (`PRSegmentFunctions.cxx:336-350`) require
+`para_angle > 7.5-15°`. That term is a guard: a trajectory running
+perpendicular to drift is isochronous, its apparent wiggles are an imaging
+artefact, and it must not be broken on them.
+
+**At the cathode that guard is exactly inverted.** The apparent crossing is
+drift-x dominated — the two halves are separated by the drift gap, not by
+track — so `para_angle` is wide open there, while the ~1 cm transverse cathode
+mismatch supplies the turn. Re-running the finder's own arithmetic offline on
+evt 169824's trajectory, reconstituted by concatenating `18005 + 18007 + 18008`
+(`kink_probe.py`; a proxy — the pre-break fit is not bit-identical to the
+concatenation of the post-break fits):
+
+| i | x (cm) | `refl_angle` | `para_angle` | `sum_angles` | criteria met |
+|---|---|---|---|---|---|
+| 104 | 3.18 | 4.3 | 60.9 | 17.7 | — |
+| 105 | 2.74 | 23.9 | 67.9 | 21.8 | — |
+| **106** | **2.42** | **30.8** | **72.8** | **22.6** | **C1, C3** |
+| 107 | 2.42 | 28.7 | 72.8 | 22.7 | C3 |
+| 108-113 | 1.83 → −2.04 | 13.8 … 26.1 | 71-78 | 6.9-17.1 | — |
+| **114** | **−2.04** | **27.4** | **71.1** | **17.1** | **C3** |
+| 115 | −2.57 | 4.9 | 66.2 | 17.1 | — |
+
+Over the whole 312-point, 163 cm trajectory the **only** indices that meet any
+kink criterion are `3, 4` — the genuine junction at x = 56.7 cm where the muon
+leaves the π⁺ — and `106, 107, 114`: the two cathode tips. `para_angle` sits at
+61-78° through the crossing, so the isochronous guard never engages, and
+`refl_angle` clears its thresholds by a hair (30.8 against C1's 30, 27.4 against
+C3's 27).
+
+And the PR chain has no way to know better. `grep -c cathode` over the
+pattern-recognition sources:
+
+| file | occurrences |
+|---|---|
+| `TaggerCheckSTM.cxx` | 43 |
+| `TaggerCheckTGM.cxx` | 11 |
+| `TaggerCheckNeutrino.cxx` / `TaggerCheckFC.cxx` | 1 / 1 |
+| `NeutrinoStructureExaminer.cxx`, `TrackFitting*.cxx`, `PRSegment*.cxx`, `NeutrinoPatternBase.cxx` | **0** |
+
+The **taggers** know where the cathode is; the graph builder, the kink finder
+and the trajectory fitter do not. Nor can they ask: `IDetectorVolumes` exposes
+`contained_by`, `inner_bounds` and `face_dirx` but has no cathode accessor — the
+plane is only implicit, as the gap between two faces' `inner_bounds` (SBND:
+apa0 sensitive volume ends at x = −0.45 cm, apa1 starts at +0.45 cm). The PR
+sources that do use `dv` use it for dead-region and containment tests only.
+
+How big is the mismatch it is breaking on? Extrapolating the +x half's 20 cm
+near-cathode arm across the gap to the −x half's tip misses it by **3.74 cm**
+transversely (3.71 cm computing it the other way). Not all of that is the
+physical cathode offset: the extrapolation runs over the full 4.47 cm *apparent*
+drift-x gap, of which only the ~1.5 cm cathode thickness is real travel, so the
+genuine transverse mismatch is roughly 2 cm — the upper tail of doc pr/12 §6's
+1.08 cm median, not an outlier.
+
 ### Fix
 
-Three changes. **A1 and A2 are SBND config lines only — the C++ already exists
-and PDHD already ships A1.** B1 is new C++, default OFF.
+Four changes, plus one that belongs to calibration rather than to this doc.
+**A1 and A2 are SBND config lines only — the C++ already exists and PDHD
+already ships A1.** B0 and B1 are new C++, both default OFF; B0 is the one to
+prefer, and B1 is its backstop.
 
 #### A1 — enable `tip_touch_cut` for SBND (config only)
 
@@ -726,6 +803,45 @@ truth study says coincidences begin. What argues against it: it is a bound
 chosen after seeing the event it recovers. Recommend the owner look at the three
 in Bee and decide.
 
+#### B0 — do not create the break (cathode kink veto, new C++, default OFF)
+
+The cheapest place to fix this is where the vertex is invented. In
+`segment_search_kink`, **skip a candidate fit point whose |x − cathode_x| is
+below `cathode_kink_xcut`** (C++ default 0 ⇒ no point is ever skipped ⇒
+byte-identical; proposed SBND 5 cm). The loop already scans forward and takes
+the first qualifying index, so skipping cathode indices lets it keep looking and
+still find a genuine kink further along — it suppresses the cathode break
+without suppressing the search.
+
+Threading: `segment_search_kink` is a free function with defaulted trailing
+arguments; add `double cathode_x = 0, double cathode_kink_xcut = 0` in the same
+style, pass them from `break_segments` out of two new
+`PatternAlgorithms` members, and set those in `TaggerCheckNeutrino::visit()`
+exactly as `m_mip_dqdx_median` is set today
+(`TaggerCheckNeutrino.cxx:73, 201, 459` — read the key, round-trip it in
+`default_configuration()`, assign to `pattern_algos.m_*`).
+
+Why prefer this to B1:
+
+- **Nothing has to be undone.** No vertex, no stub segment, no splice, no refit
+  — and no risk that the splice picks the wrong wcpts orientation.
+- **It is strictly wider.** doc pr/12 §7 measured that 13 of 44 spanned
+  crossers acquire a graph vertex within 3 cm of x = 0, and that the 0-3 cm band
+  is the single most populated bin of the nearest-vertex distribution. Only the
+  handful whose two vertices bracket a whole short segment produce the class-B
+  stub that B1 can absorb; B0 removes the spurious vertex in all of them.
+- **Its cut is on position, not on angle**, so it does not need a threshold
+  tuned against the events it recovers.
+
+What it gives up: a real kink that genuinely happens within 5 cm of the cathode
+is no longer found. At SBND's cosmic rate that is a rare loss, and the trade is
+explicit and measurable (gate B0-3 below).
+
+`cathode_x` is a knob rather than a lookup because `IDetectorVolumes` has no
+cathode accessor. Deriving it from the two faces' `inner_bounds` would be more
+general and is worth doing if this pattern recurs — recorded as an open
+question, not built here.
+
 #### B1 — cathode-aware stub absorption (new C++, default OFF)
 
 A pass placed immediately after `examine_structure_3`
@@ -761,10 +877,33 @@ Why not simply loosen `examine_structure_3`'s 18°/27° cuts: those are prototyp
 values that apply everywhere in the detector and would merge real kinks; the
 cathode exemption is the narrow statement that is actually true.
 
-Note the ordering: B1 alone recovers ~1 event in 300 today. **A1 without B1 will
-raise the class-B rate**, because the ~10 newly joined crossers per 500 events
-enter the population where the stub can form (~2 % of joined crossers, doc
-pr/12's 1 in 45). Land B1 with, or before, A1.
+B1 is worth having even with B0 in place: it catches a stub that arises some
+other way (a bridge built by `find_other_segments` rather than by a kink break,
+which this doc has not excluded). But B0 is the primary and B1 the backstop, not
+the other way round.
+
+Note the ordering against class A: the class-B repair alone touches ~1 event in
+300 today. **A1 without B0 will raise the class-B rate**, because the ~10 newly
+joined crossers per 500 events enter the population where the break can form
+(~2 % of joined crossers become stubs, doc pr/12's 1 in 45; the spurious-vertex
+rate is much higher, 13 in 44). Land B0 with, or before, A1.
+
+#### B2 — remove the mismatch itself (calibration; not this doc's to make)
+
+The physically right answer is that the two halves should line up. The cathode
+crossing offset is measured (doc 14 / `project_cathode_crossing_offset`: ~1.5 cm
+in drift-x and ~1 cm transverse in data, with a field-cage distortion map), and
+applying it would shrink the turn the kink finder sees.
+
+It is recorded here as the honest long-term direction and **not proposed as the
+fix**, for two reasons. First, the margins say it would be fragile: `refl_angle`
+at the two cathode tips is 30.8° and 27.4° against thresholds of 30° and 27°, so
+a correction would have to remove nearly all of the ~2 cm transverse mismatch to
+push the break below threshold, and any residual leaves it firing. Second, it
+does nothing for class A: with the halves perfectly aligned the tip-to-tip
+vector is still almost pure drift-x, so `cc_pca` stays near 90° for any track
+that is not itself along the drift axis. A calibration improvement is welcome
+and orthogonal; it is not a substitute for A1 or B0.
 
 #### Considered and not proposed
 
@@ -800,6 +939,11 @@ stated explicitly in the report rather than silently skipped.
 | A-5 | 48 nueCC events (`work-nuecc48-*`), full chain | **hard constraint: zero beam-label changes** (the pr/18 and pr/20 Part I bar) |
 | A-6 | the 13 `cath13-prod` events re-run and re-uploaded as a **fresh** Bee set | 315497 (and, with A2, 406796) draw as one object; the other 11 unchanged |
 | A-7 | owner eyeball of the 3 ambiguous merges (392354, 71266, 71882) and, if A2, of 315849 / 399702 | owner sign-off before default-ON |
+| B0-1 | knob OFF byte-identical (B0 edits `PRSegmentFunctions.cxx`, which uBooNE links): `qlport/scripts/ab_check.sh` both gates, `abtest/ab_compare.sh` pdhd + pdvd, `hash_archive.py` on SBND `mabc-pr.zip` ×6 | all PASS with `cathode_kink_xcut` unset |
+| B0-2 | compiled-config proof: `wcsonnet` the SBND PR job, `grep cathode_kink_xcut` | key present when on, absent when off |
+| B0-3 | knob ON, 300-event PR arm: count graph vertices within 3 cm of x = 0 (the doc pr/12 §7 statistic) and segment counts elsewhere | the cathode vertices go away; **no vertex more than `cathode_kink_xcut` from the cathode moves** — this is the "did we suppress a real kink" test |
+| B0-4 | knob ON, evt 169824 | segments `18005`/`18007`/`18008` become one; the PF tree has one muon; `kine_reco_Enu` recomputed and reported |
+| B0-5 | knob ON, 48 nueCC events | **hard constraint: zero beam-label changes**; neutrino vertices unmoved |
 | B-1 | `./build/clus/wcdoctest-clus` | passes |
 | B-2 | knob OFF byte-identical: `abtest/ab_compare.sh` (pdhd + pdvd, `events.txt`), `qlport/scripts/ab_check.sh` (uboone, both gates), `hash_archive.py` on SBND `mabc-pr.zip` ×6 | all PASS — B1 touches `clus/`, which every detector links |
 | B-3 | knob ON, evts 169824 + 286400 | the stub segment is gone; the PF tree has one muon where it had three; `kine_reco_Enu` recomputed and reported |
@@ -843,12 +987,22 @@ created fresh for this doc; no existing label or `work/` tree was written into).
 2. Is 315497 one EM shower crossing the cathode, or a track plus a shower? Both
    halves are broad in y (see the figure); the class-A verdict (one object) does
    not depend on the answer, but the 706 MeV energy assignment does.
-3. Should the B1 stub absorption also run on non-main clusters?
+3. **Confirm the origin by construction.** `flag_break_track` is hard-coded
+   `true` at `TaggerCheckNeutrino.cxx:512`; flipping it to `false` for evt
+   169824 alone should make the stub and both cathode vertices disappear. That
+   is the one-line experiment that turns `kink_probe.py`'s offline
+   re-evaluation into a direct proof, and it was not run here (it needs a C++
+   edit in a shared tree).
+4. Should `IDetectorVolumes` grow a cathode accessor, so the PR chain can ask
+   instead of being told? The plane is already derivable from two faces'
+   `inner_bounds`; B0 and `ClusteringCathodeConnect` would both stop carrying a
+   `cathode_x` knob.
+5. Should the B1 stub absorption also run on non-main clusters?
    `examine_structure_3` is gated on `is_main_cluster`
    (`NeutrinoPatternBase.cxx:1745`), so a cosmic that is not the candidate keeps
    its stub — harmless for the PF display, but it changes segment counts that
    the cosmic taggers read.
-4. Why is 169824's 285 cm through-going crosser tagged `fc = 1` (contained) with
+6. Why is 169824's 285 cm through-going crosser tagged `fc = 1` (contained) with
    `tgm = 0`? It is the selected nu candidate at `numu_score 3.11`. Out of scope
    here, but it is the same family as Part I: a cosmic that no tagger caught.
 
