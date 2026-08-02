@@ -224,6 +224,23 @@ production-config residual is the modest, intended behavior of §3 arm B.
   from other scripts (`compare_pr_roundtrip.py` uses the empty pipeline /
   `-p switch_scope`, both untouched).
 
+## 7. Bee: before/after on evt 386948
+
+Two-event set, same event, same HEAD, same Q/L input — only the PR pipeline
+differs.  Index **0 = OLD** (`work-pr22gap-a`, pre-fix `-nu`, no unmerge),
+index **1 = NEW** (`work-pr22gap-c`, post-fix `-nu`):
+
+<https://www.phy.bnl.gov/twister/bee/set/81518c11-055d-4bad-b66e-96ecbd7b7227/event/list/>
+
+Compare `track_fit` against `shower_track`: index 0 shows the long dotted
+trails across empty space (incl. the 45 cm and 49 cm monsters), index 1 does
+not.  Also visible in the `mc` particle-flow tree and in the remap log: the
+OLD PR job fits **1** cluster (the whole pre-unmerge flash bundle), the NEW
+one **21** (the unmerged pieces, each fit on its own).
+
+Built with `make_pr_bee.py -q work-oc19scan-old -p work-pr22gap-{a,c}`, the
+two single-event zips merged into `data/{0,1}`.
+
 ## Artifacts
 
 - Probe: `sbnd_xin/gapjump_probe.py` (this doc).
