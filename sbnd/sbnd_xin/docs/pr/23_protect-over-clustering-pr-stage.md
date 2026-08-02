@@ -210,7 +210,89 @@ TGM components) already uses. `relaxed_pid` stays one knob away
 (`SBND_PROTECT_GRAPH=relaxed_pid`) for a future tightening round.
 (M15: both readings measured and recorded, decision by data.)
 
-## 5. V3 — nueCC48 track_fit vs shower_track census (pending)
+## 5. V3 — nueCC48 track_fit vs shower_track census
+
+Arms (fresh, M13):
+- Hub `work-nuecc48-poc0` — 48-event nusel Q/L rerun at current HEAD
+  (post-pr/20-flip trees; `was_main` verified present in the pctree
+  tensorsets), imaging seeded by symlink from `work-nuecc48-nuf`.
+- `work-poc48-off` / `work-poc48-on` — full 13(+1)-stage PR chain via
+  `run_pr_chain_batch.sh` on that hub; ON arm = `SBND_PROTECT_BUNDLE=1`
+  at the shipped operating point (`relaxed`, re-join 5/4/8 cm). 48/48
+  `rc=0` on both arms; stage present in all 48 ON logs, absent from all
+  48 OFF logs.
+
+Stage activity (ON): **40/48 events split; 67 bundle clusters → 223 extra
+associated fragments; 1 cathode re-join** —
+
+    <ClusteringProtectBundle:pr> cluster 19: cathode re-join comp 0+1
+      (gap 3.30 cm, dyz 2.70 cm, x -0.48/1.42 cm)      [evt 360535]
+
+i.e. one real-data cathode crosser would have been broken by the prototype
+behavior and was preserved by the re-join pass.
+
+### 5.1 Coverage census (`pr23_fitcover_census.py`, cover = 1 cm)
+
+Full table: `docs/pr/23_fitcover-nuecc48.tsv` (96 rows). Per-arm totals:
+
+| arm | events | uncovered fit pts | dead | cathode | assoc | bridge | stitch |
+|-----|-------|--------------------|------|---------|-------|--------|--------|
+| OFF | 47 | 3211/34627 (**9.3%**) | 0.0 | 30.0 cm | 7.6 cm | **2045.7 cm** | 311.7 cm |
+| ON  | 47 | 1020/32725 (**3.1%**) | 0.0 | 0.0 cm | 1.1 cm | **208.5 cm** | 286.9 cm |
+
+(47 not 48: evt 116962 has no track_fit/shower_track layers in EITHER arm —
+its only in-beam bundle is tagged TGM, a pre-existing property.)
+
+- **Bridge class (the doc pr/22 §8 pathology): 2045.7 → 208.5 cm (−90%).**
+  The OFF worst offenders collapse: 400474 205.7→18.6 cm, 389538 161.1→0,
+  269774 147.0→10.2, 234638 125.9→0.
+- **Residual "bridge" is mostly reclassification noise, not void jumping**:
+  per-stretch inspection (42280, 239794) shows charge at median 1.4-2.4 cm
+  (max ≤2.9 cm) from the fit points — micro-hops over near-continuous charge
+  that only count as "different components" because of the census's 3 cm
+  linkage. One genuine residual hop remains: 400474 seg 22032, 18.6 cm with
+  charge at median 3.5 / max 6.4 cm — a ct-consistent gap the `relaxed`
+  graph keeps (would need `relaxed_pid` or a tighter graph to cut; recorded,
+  not chased).
+- **Cathode class 30.0 → 0.0 cm** (267597 10.2 cm + 400474 19.8 cm both
+  resolved by the re-fit of the split pieces).
+- **Dead class is genuinely empty**, not a census defect: only 2/34627 fit
+  points lie inside any channel-deadarea polygon in this sample (containment
+  self-test passes; the SBND dead regions are small and the fitter does not
+  route through them here).
+- The remaining uncovered length is dominated by **stitch** (same-charge
+  component, the designed WCP shower stitching) — the "makes sense" residual.
+
+### 5.2 Cathode gate on real data
+
+Straddle-pair scan (`pr23_cathprobe.py` logic batched over all 48×2 zips,
+band 6 cm, gap < 10 cm): **zero new cathode-straddle splits in the ON arm.**
+The only event with such pairs at all, 267597, has the identical two pairs
+in both arms (gaps 1.94 / 7.11 cm; only cluster ids renumber). Combined with
+the 360535 re-join above: the SBND-specific risk is controlled on data.
+
+### 5.3 Score movement (`pr_scores_table.py`, both arms)
+
+38/48 events move in scores; **no event changes `event_label` or
+`nu_evaluated`** (no nu/cosmic verdict flips). The systematic pattern is the
+intended one: `nu_sel_len_cm` down, `nu_sel_n_assoc` up (bridged fragments
+become separate associated clusters that are fit on their own).
+
+nue-side net effect is **positive**: `nue_score > 0` on 36 → 38 of 48
+events; nue-tagger-not-filled (`br_filled=0` ⇒ score −15) 3 → 2 events:
+
+| evt | nue_score OFF → ON | what happened |
+|-----|--------------------|----------------|
+| 10550 | −15 → −4.3 | vertex moved 77 cm (x −14.8→+60.8!), tagger now fills |
+| 433451 | −15 → **+4.3** | vertex moved ~4 cm, tagger now fills, saturated nue-like |
+| 271851 | **+4.3 → −15** | vertex moved 25 cm, main 121→71 cm; no ≥80 MeV electron shower attaches at the new vertex (`NeutrinoTaggerNuE.cxx:4299-4309` gate) |
+
+**Flag for owner (rule 7 — reported, not tuned): evt 271851** (the doc
+pr/18 iso-band recovery event) loses its nue evaluation ON; 10550's vertex
+relocation is also large enough to warrant a look. Both are in the V5 Bee
+OFF/ON exemplar list together with 400474 (biggest bridge cleanup + the one
+real residual hop), 360535 (re-join fired), 267597 and 269774
+(len 174→75 cm).
 
 ## 6. V4 — broad impact (valfast 629) (pending)
 
