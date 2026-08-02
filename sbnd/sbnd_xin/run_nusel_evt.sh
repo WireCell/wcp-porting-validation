@@ -45,27 +45,31 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BA
 . "$SBND_DIR/_runlib.sh"
 
 JSONNET="$SBND_DIR/wct-pr-perevt.jsonnet"
-# Same LAr TLAs as run_ql_evt.sh / run_pr_evt.sh (identical anode/params objects).
-DL=4.0; DT=8.8; LIFETIME=35; DRIFTSPEED=1.563  # DL/DT = SBND diffusion (cm^2/s), sbndcode
-                                               # wcsimsp_sbnd.fcl (doc 66 revert of the doc-47
-                                               # 6.5781/13.1349 retune).  LIFETIME = SBND
-                                               # simparams (35 ms).  Inert in the reco chain --
-                                               # see docs/64 sec 4 and docs/66 sec 1.
-
-# The TrackFitting parameter file.  This one is NOT inert: TaggerCheckSTM and the
-# PR vertex fitter read DL/DT from it at RUNTIME (it never enters the compiled
-# jsonnet), so it is the single live consumer of the diffusion constants in the
-# data chain.  Overridable so an A/B can run both diffusion arms from one binary
-# in either order -- see docs/66 sec 2.
-TFJSON=${SBND_TRACKFIT_JSON:-$SBND_DIR/sbnd_track_fitting.json}
-# The tagger pipeline.  fiducialutils MUST precede the taggers (they silently
-# no-op without it); TGM before STM (STM skips TGM-flagged mains).
-# tagger_check_fc is LAST: it evaluates every in-scope main regardless of the
-# TGM/STM verdicts (so position does not change its coverage), and running it
-# after them keeps their inputs free of the PCA/hough/steiner-boundary caches
-# cluster_fc_check populates.  Verified: TGM/STM verdicts on the 10-event
-# MCP2025C sample are identical with and without it (docs/25_fc-flag.md).
-PIPELINE="switch_scope,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc"
+# NOTE (doc 68): the SBND production operating point is NOT in this script.  It
+# lives in the job's TLA defaults, cfg/pgrapher/experiment/sbnd/
+# wct-pr-perevt.jsonnet -- the LAr DL/DT/lifetime/driftSpeed set, the beam
+# window, every tgm_* and stm_* knob, mip_dqdx, unmerge_bundle_mode, the tagger
+# pipeline, and the TrackFitting parameter file (WIRECELL_PATH-resolved since
+# doc 64 sec 4a).  This runner passes only what is per-event plus explicit
+# OVERRIDES.  Do not reintroduce a default value here.
+#
+# The TrackFitting parameter file is the one knob that is NOT inert: TaggerCheckSTM
+# and the PR vertex fitter read DL/DT from it at RUNTIME (it never enters the
+# compiled jsonnet), so it is the single live consumer of the diffusion constants
+# in the data chain.  SBND_TRACKFIT_JSON overrides it so an A/B can run both
+# diffusion arms from one binary in either order -- see docs/66 sec 2.
+TFJSON="${SBND_TRACKFIT_JSON:-}"
+# The tagger pipeline is the job's default:
+#   switch_scope, unmerge_bundle, unmerge_assoc, steiner, fiducialutils,
+#   tagger_check_tgm, tagger_check_stm, tagger_check_fc
+# fiducialutils MUST precede the taggers (they silently no-op without it); TGM
+# before STM (STM skips TGM-flagged mains); tagger_check_fc is LAST because it
+# evaluates every in-scope main regardless of the TGM/STM verdicts, and running
+# it after them keeps their inputs free of the PCA/hough/steiner-boundary caches
+# cluster_fc_check populates (verified identical with and without it on the
+# 10-event MCP2025C sample, docs/25_fc-flag.md).  Only a flag that CHANGES that
+# list makes this runner name it -- see the pipeline_override block below.
+PIPELINE_FULL="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc"
 
 usage() {
     cat <<EOF
@@ -126,11 +130,12 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 bottom, faked a TGM -- doc 33).  Requires -rescue.
                 Env: SBND_TGM_RESCUE_CHORD=1.
   -fvz <cm>     downstream-z (z ~ 500 cm face) inset of the TGM/FC fiducial
-                box in cm (default 3 = legacy).  Shared by tagger_check_tgm
-                and tagger_check_fc.  Env: SBND_TGM_FVZ_MARGIN=<cm>.
+                box in cm (config 5; the pre-adoption value was 3).  Shared by
+                tagger_check_tgm and tagger_check_fc.
+                Env: SBND_TGM_FVZ_MARGIN=<cm>.
   -fvzi <cm>    downstream-z inset used by check_tgm's CASE-A INTERIOR
                 support tests (chord midpoints + waypoint re-check) when > 0
-                (default 0 = off; interior tests then share -fvz).  Makes
+                (config 3; 0 = off, interior tests then share -fvz).  Makes
                 the -fvz widening endpoint-only so a corner clipper running
                 ALONG the downstream wall inside the widened band keeps its
                 midpoint support (evt287517 cluster 16 / evt289805 cluster 9
@@ -238,8 +243,11 @@ Usage: $(basename "$0") [mc|data] [-N n] [-bw l,h] [-save-pr-tree] <idx|all>
                 clusters clustering_isolated merged into each main without
                 requiring connectivity), so STM/PR fit the main alone as the
                 prototype does.  Implies -unmerge and inserts 'unmerge_assoc'
-                after 'unmerge_bundle'.  Requires a pctree written with
-                run_ql_evt.sh -save-assoc.  Env: SBND_UNMERGE_ASSOC=1.
+                after 'unmerge_bundle'.  BOTH un-merges are in the config's
+                default pipeline, and the Q/L config saves the arrays this one
+                needs, so this flag only re-asserts them; -no-unmerge-assoc
+                drops the inner one and -no-unmerge drops both.
+                Env: SBND_UNMERGE_ASSOC=0.
   -unmerge-comp like -unmerge but pick the main from the longest RELAXED-GRAPH
                 CONNECTED COMPONENT instead of the flash-merge provenance.
                 That is a clustering decision, not bookkeeping (the relaxed
@@ -297,20 +305,31 @@ TPC), so a beam flash seen in both TPCs counts once.
       an independent eval variable, not a veto.
   label: TGM | STM | nu-candidate (in-window, untagged) | not-tagged | no-bundle
 
+NOTE (doc 68): the SBND production operating point lives in the job configs
+(cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet and, for the Q/L step it
+launches, wct-clus-matching-perevt.jsonnet), not in this script.  Every flag
+above is an OVERRIDE; with no flags at all you get production.  "config <x>"
+in a flag's text is the value that job's TLA default supplies.
+
 Requires per-event imaging (./run_img_evt.sh) in \$SBND_WORK_ROOT/evt<ID>/.
 The Q/L step reruns automatically when the pctree tarball is missing.
 EOF
     sbnd_common_help
 }
 
+# Every knob variable below is EMPTY by default, meaning "pass no TLA" => the
+# config default (= the production operating point) applies.  1 forces true,
+# 0 forces false; numeric knobs pass their TLA only when non-empty.  See the
+# doc-68 note at the top of this file.
 MODE=mc
-BEAM_WINDOW="0.2,2.2"
-# Beam-window-only PR tail (steiner + TGM/STM/FC only for the bundle whose
-# cluster_t0 is inside BEAM_WINDOW).  DEFAULT ON as of doc 56: with the taggers
-# validated, out-of-time bundles are cosmics by construction and evaluating them
-# cost ~10x the work for verdicts nothing consumes.  SBND_BW_ONLY=0 / -no-bwonly
-# restores the evaluate-every-bundle behavior (byte-identical compiled config).
-BWONLY="${SBND_BW_ONLY:-1}"
+# -bw l,h overrides the config's beam window (0.2,2.2 us).
+BEAM_WINDOW=""
+# -no-bwonly / SBND_BW_ONLY=0: evaluate EVERY bundle instead of only the one
+# whose cluster_t0 is inside the beam window.  Beam-window-only is ON in the
+# config as of doc 56: with the taggers validated, out-of-time bundles are
+# cosmics by construction and evaluating them cost ~10x the work for verdicts
+# nothing consumes.
+BWONLY="${SBND_BW_ONLY:-}"
 # Post-PR pctree.  DEFAULT ON: its cluster_scalar carries flag_TGM/flag_STM/
 # flag_FC, which is the authoritative tagger verdict source for nusel_extract.
 # The log-regex fallback is not trustworthy on its own -- a log line can be torn
@@ -318,114 +337,105 @@ BWONLY="${SBND_BW_ONLY:-1}"
 # logged STM=1 but the line split, and the bundle came out not-tagged).
 # Costs ~3.5 MB/event.  -no-save-pr-tree to skip it.
 SAVEPRT=1
-# check_neutrino_candidate veto in tagger_check_tgm (in-beam-window bundles may
-# then be tagged TGM).  DEFAULT ON for this chain as of doc 26 -- the knob-off
-# path left in-beam bundles untaggable by construction, which is not the
-# behavior we want from the selection.  The C++ and jsonnet defaults are still
-# false; this runner passes tgm_neutrino_candidate=true explicitly, so nothing
-# outside this chain changes.  -no-nucand / SBND_TGM_NUCAND=0 restores it.
-NUCAND="${SBND_TGM_NUCAND:-1}"
-# Chord-charge guard in tagger_check_tgm.  DEFAULT OFF: opt in with -chord /
-# SBND_TGM_CHORD=1 until the flipped verdicts are hand-scanned.
-CHORD="${SBND_TGM_CHORD:-0}"
-# Support-measurement mode for the guard: "path" (piecewise charge path,
-# doc 31) or "chord" (straight-chord sampling, doc 29).  Only used when the
-# guard is on.
-CHORD_MODE="${SBND_TGM_CHORD_MODE:-path}"
-# Component rescue in tagger_check_tgm (path-connected short components keep
-# their extremes).  DEFAULT OFF: opt in with -rescue / SBND_TGM_RESCUE=1.
-RESCUE="${SBND_TGM_RESCUE:-0}"
-# Straight-chord check on rescued-end pairs (doc 33).  DEFAULT OFF: opt in
-# with -rescue-chord / SBND_TGM_RESCUE_CHORD=1.
-RESCUE_CHORD="${SBND_TGM_RESCUE_CHORD:-0}"
-# Downstream-z inset of the TGM/FC fiducial box, cm.  DEFAULT 3 = legacy.
-FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-3}"
-# Interior-support downstream-z inset for check_tgm CASE-A, cm.  DEFAULT 0 =
-# off (interior tests share FVZ_MARGIN).
-FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-0}"
-# Drift-x / vertical-y insets of the TGM/FC fiducial box, cm, both faces
-# symmetric.  DEFAULTS 2 / 2.5 = legacy.
-FVX_MARGIN="${SBND_TGM_FVX_MARGIN:-2}"
-FVY_MARGIN="${SBND_TGM_FVY_MARGIN:-2.5}"
-# MIP dQ/dx scale (e/cm) for TaggerCheckSTM.  56000 = SBND (docs/48, matches the
-# *DeDx tables regenerated at 0.5 kV/cm); 50000 = the inherited MicroBooNE value
-# and the C++ default, for isolating the table change from the MIP-scale change.
-MIP_DQDX="${SBND_MIP_DQDX:-56000}"
-# TGM pairs must touch the cluster's main charge component (doc 36).
-# DEFAULT OFF: opt in with -main-pair / SBND_TGM_MAIN_PAIR=1.
-MAIN_PAIR="${SBND_TGM_MAIN_PAIR:-0}"
-# How -main-pair identifies the main: "path" = largest-component proxy
-# (doc 36), "real" = per-blob flash-merge provenance (doc 38, needs a
-# -save-rcid pctree).  -main-pair-real sets both.
-MAIN_PAIR_MODE="${SBND_TGM_MAIN_PAIR_MODE:-path}"
-# LM (light-mismatch) tagger in the Q/L step (QLMatching lm_tagger, doc 34).
-# DEFAULT OFF: opt in with -lm / SBND_QL_LM=1.  Only affects a Q/L step this
-# runner LAUNCHES (pctree missing); an existing pctree is reused as-is, so mix
-# -lm with pre-LM trees deliberately or start a fresh work root.
-QL_LM="${SBND_QL_LM:-0}"
-# Persist per-pass STM track fits + tracking-stm.root (doc 40).
-# DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
-STM_FIT="${SBND_STM_FIT:-0}"
-# TaggerCheckSTM's containment gate uses the SAME fiducial + margins as
-# tagger_check_tgm / tagger_check_fc, so "contained" means one thing across all
-# three verdicts (doc 49).  DEFAULT ON: the pre-doc-49 fallback was
+# -no-nucand / SBND_TGM_NUCAND=0: restore the check_neutrino_candidate veto in
+# tagger_check_tgm, i.e. make in-beam-window bundles untaggable by construction.
+# The veto is OFF in the config as of doc 26 -- leaving it on is not the
+# behavior we want from the selection.
+NUCAND="${SBND_TGM_NUCAND:-}"
+# -no-chord / SBND_TGM_CHORD=0: drop the chord-charge guard in tagger_check_tgm
+# (and, with it, tgm_component_extremes).  ON in the config.
+CHORD="${SBND_TGM_CHORD:-}"
+# Support-measurement mode for the guard: "path" (piecewise charge path, doc 31,
+# the config value) or "chord" (straight-chord sampling, doc 29).
+CHORD_MODE="${SBND_TGM_CHORD_MODE:-}"
+# -no-rescue / SBND_TGM_RESCUE=0: drop the component rescue in tagger_check_tgm
+# (path-connected short components keep their extremes).  ON in the config.
+RESCUE="${SBND_TGM_RESCUE:-}"
+# -no-rescue-chord / SBND_TGM_RESCUE_CHORD=0: drop the straight-chord check on
+# rescued-end pairs (doc 33).  ON in the config.
+RESCUE_CHORD="${SBND_TGM_RESCUE_CHORD:-}"
+# TGM/FC fiducial-box insets, cm (config: z 5, z-interior 3, x 2.5, y 3 --
+# doc 39; the pre-adoption values were 3 / 0 / 2 / 2.5).  Empty = inherit.
+FVZ_MARGIN="${SBND_TGM_FVZ_MARGIN:-}"
+FVZ_INTERIOR="${SBND_TGM_FVZ_INTERIOR:-}"
+FVX_MARGIN="${SBND_TGM_FVX_MARGIN:-}"
+FVY_MARGIN="${SBND_TGM_FVY_MARGIN:-}"
+# MIP dQ/dx scale (e/cm) for TaggerCheckSTM.  Config: 56000 = SBND (docs/48,
+# matches the *DeDx tables regenerated at 0.5 kV/cm); pass 50000 for the
+# inherited MicroBooNE value (the C++ default), to isolate the table change
+# from the MIP-scale change.
+MIP_DQDX="${SBND_MIP_DQDX:-}"
+# -no-main-pair / SBND_TGM_MAIN_PAIR=0: drop the requirement that TGM pairs
+# touch the cluster's main charge component (doc 36).  ON in the config.
+MAIN_PAIR="${SBND_TGM_MAIN_PAIR:-}"
+# How -main-pair identifies the main: "real" = per-blob flash-merge provenance
+# (doc 38, the config value; needs a save_rcid pctree, which is now the Q/L
+# default), "path" = largest-component proxy (doc 36).
+MAIN_PAIR_MODE="${SBND_TGM_MAIN_PAIR_MODE:-}"
+# -no-lm / SBND_QL_LM=0: turn OFF the LM (light-mismatch) tagger in the Q/L step
+# (QLMatching lm_tagger, doc 34), which is ON in the Q/L config.  Only affects a
+# Q/L step this runner LAUNCHES (pctree missing); an existing pctree is reused
+# as-is, so mix arms deliberately or start a fresh work root.
+QL_LM="${SBND_QL_LM:-}"
+# -stm-fit / SBND_STM_FIT=1: persist per-pass STM track fits + tracking-stm.root
+# (doc 40).  OFF in the config -- a diagnostic output, per the doc-64 line.
+STM_FIT="${SBND_STM_FIT:-}"
+# -no-stm-fv / SBND_STM_FV=0: restore the pre-doc-49 STM containment volume for
+# an A/B.  In the config, TaggerCheckSTM's containment gate uses the SAME
+# fiducial + margins as tagger_check_tgm / tagger_check_fc, so "contained" means
+# one thing across all three verdicts (doc 49).  The old fallback was
 # FiducialUtils' un-inset union of per-face sensitive volumes, which exceeds the
 # TGM/FC box at every wall -- 96 of 147 "contained" STM skips on the 30-event
 # sample were exiters to FC, and none of them ever got a dQ/dx fit.  The
 # prototype has no such split (one ToyFiducial shared by check_stm/check_tgm).
-# -no-stm-fv / SBND_STM_FV=0 restores the old volume for an A/B.
-STM_FV="${SBND_STM_FV:-1}"
-# doc-63 round-1 STM acceptance guards (charge desert, spike-not-ramp, ratio2
-# cap).  DEFAULT ON = SBND production as of doc 63 (owner 2026-07-26); opt
-# out with -no-stm-guards / SBND_STM_GUARDS=0 for a pre-campaign A/B.
-STM_GUARDS="${SBND_STM_GUARDS:-1}"
-# doc-63 round-2 muon-consistency guard on detect_proton.  DEFAULT ON (owner
-# 2026-07-26); opt out with -no-stm-proton-guard / SBND_STM_PROTON_GUARD=0.
-STM_PGUARD="${SBND_STM_PROTON_GUARD:-1}"
-# doc-63 round-3 cathode-truncation veto.  DEFAULT ON (owner 2026-07-26); opt
-# out with -no-stm-cathode-guard / SBND_STM_CATHODE_GUARD=0.
-STM_CGUARD="${SBND_STM_CATHODE_GUARD:-1}"
-# doc-63 round-4a dist_to_anode face fix in the STM tagger.  DEFAULT ON
-# (owner 2026-07-26, after validation); opt out with -no-stm-anode-fix /
-# SBND_STM_ANODE_FIX=0.
-STM_AFIX="${SBND_STM_ANODE_FIX:-1}"
-# doc-63 round-4b/4c second-track vetoes in the STM tagger.  DEFAULT ON
-# (owner 2026-07-26, after validation); opt out with -no-stm-track-guard /
-# SBND_STM_TRACK_GUARD=0.
-STM_TGUARD="${SBND_STM_TRACK_GUARD:-1}"
-# doc-63 round-5 stop-region vetoes in the STM tagger (5a deficit end, 5b
-# vertex kink).  DEFAULT ON (owner 2026-07-26, after validation); opt out
-# with -no-stm-deficit-guard / SBND_STM_DEFICIT_GUARD=0 and
-# -no-stm-vertex-guard / SBND_STM_VERTEX_GUARD=0.
-STM_DGUARD="${SBND_STM_DEFICIT_GUARD:-1}"
-STM_VGUARD="${SBND_STM_VERTEX_GUARD:-1}"
-# doc-66 sec 12 diffusion-margin cut package in the STM tagger (Michel
-# res_length 6->6.5cm, detect_proton track_medium 1.0->1.05, block-B ks2
-# 0.05->0.055, C1 peak 4.3->4.1).  DEFAULT ON (owner 2026-07-27, after the
-# full-1000-event sweep); opt out with -no-stm-d66cuts / SBND_STM_D66CUTS=0
-# (keys omitted => byte-identical pre-package config).
-STM_D66CUTS="${SBND_STM_D66CUTS:-1}"
-# Restore the prototype main+associated data product before the taggers by
-# splitting each flash-merged bundle back into its pre-merge members (doc 45).
-# DEFAULT ON: without it TaggerCheckSTM fits a flash-merged bundle of detached
-# cosmics as ONE track -- evt284657 cluster 27 was fitted across the cathode
-# (139 pts, 71.8 cm, x -18.3..+6.9) and rejected as "long leftover"; split, the
-# same cluster is a 29.5 cm one-sided stopping muon that PASSES eval_stm.  On
-# the 30-event dq48v3 sample the split moved 14 of 329 bundles (+7 STM, +3 TGM,
-# +2 FC, -2 FC on sub-steiner leftovers), every split from exact per-blob
-# provenance (0 proxy fallbacks).  The visitor is inserted between switch_scope
+STM_FV="${SBND_STM_FV:-}"
+# The doc-63 STM guard campaign + the doc-66 sec 12 diffusion-margin cut
+# package: all ON in the config (owner 2026-07-26 / 2026-07-27, after
+# validation).  Each -no-* flag below opts one out for a pre-campaign A/B.
+#   guards   round-1 acceptance guards (charge desert, spike-not-ramp, ratio2 cap)
+#   pguard   round-2 muon-consistency guard on detect_proton
+#   cguard   round-3 cathode-truncation veto
+#   afix     round-4a dist_to_anode face fix
+#   tguard   round-4b/4c second-track vetoes
+#   dguard   round-5a deficit-end stop-region veto
+#   vguard   round-5b vertex-kink stop-region veto
+#   d66cuts  Michel res_length 6->6.5cm, detect_proton track_medium 1.0->1.05,
+#            block-B ks2 0.05->0.055, C1 peak 4.3->4.1
+STM_GUARDS="${SBND_STM_GUARDS:-}"
+STM_PGUARD="${SBND_STM_PROTON_GUARD:-}"
+STM_CGUARD="${SBND_STM_CATHODE_GUARD:-}"
+STM_AFIX="${SBND_STM_ANODE_FIX:-}"
+STM_TGUARD="${SBND_STM_TRACK_GUARD:-}"
+STM_DGUARD="${SBND_STM_DEFICIT_GUARD:-}"
+STM_VGUARD="${SBND_STM_VERTEX_GUARD:-}"
+STM_D66CUTS="${SBND_STM_D66CUTS:-}"
+# The two un-merge visitors are both in the config's default pipeline.
+#
+# unmerge_bundle (doc 45) restores the prototype main+associated data product
+# before the taggers by splitting each flash-merged bundle back into its
+# pre-merge members.  Without it TaggerCheckSTM fits a flash-merged bundle of
+# detached cosmics as ONE track -- evt284657 cluster 27 was fitted across the
+# cathode (139 pts, 71.8 cm, x -18.3..+6.9) and rejected as "long leftover";
+# split, the same cluster is a 29.5 cm one-sided stopping muon that PASSES
+# eval_stm.  On the 30-event dq48v3 sample the split moved 14 of 329 bundles
+# (+7 STM, +3 TGM, +2 FC, -2 FC on sub-steiner leftovers), every split from
+# exact per-blob provenance (0 proxy fallbacks).  It sits between switch_scope
 # and steiner (it MUST precede steiner_pc creation).
-# -no-unmerge / SBND_UNMERGE=0 restores the legacy merged-bundle pipeline.
-UNMERGE="${SBND_UNMERGE:-1}"
-# How -unmerge identifies the main: "real" = per-blob flash-merge provenance
-# (exact, needs a -save-rcid pctree -- this runner passes it), "component" =
-# longest connected component (proxy).  -unmerge-comp selects the proxy.
-UNMERGE_MODE="${SBND_UNMERGE_MODE:-real}"
-# -unmerge-assoc (doc 52): ALSO undo the per-APA isolated GROUPING, which merged
-# each main cluster with the small clusters near but not connected to it.  Needs
-# a pctree saved with run_ql_evt.sh -save-assoc; without the arrays the visitor
-# is a no-op and warns.  Runs after unmerge_bundle (flash outer, isolated inner).
-UNMERGE_ASSOC="${SBND_UNMERGE_ASSOC:-0}"
+#
+# unmerge_assoc (doc 52) then ALSO undoes the per-APA isolated GROUPING, which
+# merged each main cluster with the small clusters near but not connected to it.
+# It needs the Q/L save_assoc arrays (a Q/L config default since doc 68);
+# without them the visitor is a no-op and warns.  Runs right after
+# unmerge_bundle (flash outer, isolated inner), still before steiner.
+#
+# -no-unmerge / SBND_UNMERGE=0 drops BOTH (the legacy merged-bundle pipeline);
+# -no-unmerge-assoc / SBND_UNMERGE_ASSOC=0 drops only the inner one.
+UNMERGE="${SBND_UNMERGE:-}"
+# How unmerge_bundle identifies the main: "real" = per-blob flash-merge
+# provenance (exact, the config value), "component" = longest connected
+# component (proxy).  -unmerge-comp selects the proxy.
+UNMERGE_MODE="${SBND_UNMERGE_MODE:-}"
+UNMERGE_ASSOC="${SBND_UNMERGE_ASSOC:-}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -479,31 +489,96 @@ while [ $# -gt 0 ]; do
         -unmerge|--unmerge) UNMERGE=1; shift ;;
         -unmerge-comp|--unmerge-comp) UNMERGE=1; UNMERGE_MODE=component; shift ;;
         -unmerge-assoc|--unmerge-assoc) UNMERGE=1; UNMERGE_ASSOC=1; shift ;;
-        -no-unmerge|--no-unmerge) UNMERGE=0; UNMERGE_MODE=real; shift ;;
+        -no-unmerge-assoc|--no-unmerge-assoc) UNMERGE_ASSOC=0; shift ;;
+        -no-unmerge|--no-unmerge) UNMERGE=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
 
-# -unmerge inserts the bundle un-merge between switch_scope and steiner.  The
-# order matters twice over: it must run AFTER switch_scope (which re-applies
-# the T0 correction and carves the out-of-volume shards, and carries the
-# per-blob provenance across that carve) and BEFORE steiner (separate() does
-# not carry node-local PCs, so a steiner_pc built from the pre-split blob set
-# would survive on the retained main).
-if [ "$UNMERGE" = 1 ]; then
-    PIPELINE="${PIPELINE/switch_scope,/switch_scope,unmerge_bundle,}"
-fi
-# -unmerge-assoc adds the INNER un-merge (the isolated grouping) right after the
-# outer one, so the two together reproduce the prototype's main_cluster +
-# additional_clusters.  Still before steiner, for the same reason.
-if [ "$UNMERGE_ASSOC" = 1 ]; then
-    PIPELINE="${PIPELINE/unmerge_bundle,/unmerge_bundle,unmerge_assoc,}"
+# --- Pipeline override ---------------------------------------------------
+# The config's default pipeline is $PIPELINE_FULL.  We name pipeline_names ONLY
+# when a flag actually CHANGES that list; otherwise the TLA is omitted and the
+# config's own list stands (doc 68).
+#
+# Ordering constraints encoded in PIPELINE_FULL: unmerge_bundle must run AFTER
+# switch_scope (which re-applies the T0 correction and carves the out-of-volume
+# shards, carrying the per-blob provenance across that carve) and BEFORE steiner
+# (separate() does not carry node-local PCs, so a steiner_pc built from the
+# pre-split blob set would survive on the retained main).  unmerge_assoc is the
+# INNER un-merge and sits right after the outer one, still before steiner.
+PIPELINE="$PIPELINE_FULL"
+PIPELINE_TLA=()
+_pipe_changed=0
+if [ "$UNMERGE" = 0 ]; then
+    PIPELINE="${PIPELINE/unmerge_bundle,/}"; PIPELINE="${PIPELINE/unmerge_assoc,/}"
+    _pipe_changed=1
+elif [ "$UNMERGE_ASSOC" = 0 ]; then
+    PIPELINE="${PIPELINE/unmerge_assoc,/}"
+    _pipe_changed=1
 fi
 # -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
 if [ "$STM_FIT" = 1 ]; then
     PIPELINE="$PIPELINE,stm_magnify"
+    _pipe_changed=1
 fi
+if [ "$_pipe_changed" = 1 ]; then
+    PIPELINE_TLA=(--tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]")
+fi
+
+# --- Override TLAs -------------------------------------------------------
+# Built once: an EMPTY knob emits no TLA, so the job's own default (= the SBND
+# production operating point, doc 68) stands.  Only an explicit value speaks.
+KNOB_TLA=()
+knob_bool() {   # knob_bool <tla-name> <value>
+    case "$2" in
+        1) KNOB_TLA+=(--tla-code "$1=true") ;;
+        0) KNOB_TLA+=(--tla-code "$1=false") ;;
+    esac
+}
+knob_num() {    # knob_num <tla-name> <value>
+    [ -n "$2" ] && KNOB_TLA+=(--tla-code "$1=$2")
+    return 0    # an empty knob is the normal case, not a failure (set -e)
+}
+knob_str() {    # knob_str <tla-name> <value>
+    [ -n "$2" ] && KNOB_TLA+=(--tla-str "$1=$2")
+    return 0
+}
+knob_bool beam_window_only     "$BWONLY"
+knob_bool tgm_neutrino_candidate "$NUCAND"
+# -chord drives the guard and the component-extremes pair together, as it always did.
+knob_bool tgm_chord_charge       "$CHORD"
+knob_bool tgm_component_extremes "$CHORD"
+knob_str  tgm_chord_mode         "$CHORD_MODE"
+knob_bool tgm_component_rescue   "$RESCUE"
+knob_bool tgm_rescue_chord       "$RESCUE_CHORD"
+knob_bool tgm_main_pair          "$MAIN_PAIR"
+knob_str  tgm_main_pair_mode     "$MAIN_PAIR_MODE"
+knob_num  tgm_fv_zmax_margin          "$FVZ_MARGIN"
+knob_num  tgm_fv_zmax_margin_interior "$FVZ_INTERIOR"
+knob_num  tgm_fv_x_margin             "$FVX_MARGIN"
+knob_num  tgm_fv_y_margin             "$FVY_MARGIN"
+knob_num  mip_dqdx                    "$MIP_DQDX"
+knob_str  unmerge_bundle_mode         "$UNMERGE_MODE"
+knob_bool save_stm_fit           "$STM_FIT"
+knob_bool stm_consistent_fv      "$STM_FV"
+knob_bool stm_accept_guards      "$STM_GUARDS"
+knob_bool stm_proton_muon_guard  "$STM_PGUARD"
+knob_bool stm_cathode_guard      "$STM_CGUARD"
+knob_bool stm_anode_dist_fix     "$STM_AFIX"
+knob_bool stm_second_track_guard "$STM_TGUARD"
+knob_bool stm_deficit_guard      "$STM_DGUARD"
+knob_bool stm_vertex_kink_guard  "$STM_VGUARD"
+knob_bool stm_d66_cuts           "$STM_D66CUTS"
+[ -n "$BEAM_WINDOW" ] && KNOB_TLA+=(--tla-code "beam_window_us=[$BEAM_WINDOW]")
+# The TrackFitting parameter file: only an SBND_TRACKFIT_JSON override is named;
+# otherwise the config resolves its own copy through WIRECELL_PATH (doc 64 4a).
+TFJSON_TLA=()
+[ -n "$TFJSON" ] && TFJSON_TLA=(--tla-str "trackfitting_config=$TFJSON")
+# nusel_extract.py is a post-processor, not a wire-cell node, so it cannot read
+# the job's beam window -- it needs the number spelled out.  Keep this in step
+# with beam_window_us in cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet.
+BEAM_WINDOW_EFF="${BEAM_WINDOW:-0.2,2.2}"
 
 case "$MODE" in
     mc)   REALITY=sim ;;
@@ -537,15 +612,14 @@ process_event() {
     # pctree; run_ql_evt.sh is deterministic so a rerun reproduces the same
     # matching, only adding the tarball).
     if [ ! -s "$PCT" ]; then
-        local QL_FLAGS=(-save-pctree)
-        # -lm: LM tagger + calib dump in the Q/L step (the dump carries the
-        # per-bundle lm* metrics the tuning/hand-scan read; doc 34).
-        [ "$QL_LM" = 1 ] && QL_FLAGS+=(-lm -calib)
-        # -main-pair-real (doc 38) and -unmerge in "real" mode (doc 45) both
-        # need the per-blob provenance in the pctree.
-        if [ "$MAIN_PAIR_MODE" = real ] || { [ "$UNMERGE" = 1 ] && [ "$UNMERGE_MODE" = real ]; }; then
-            QL_FLAGS+=(-save-rcid)
-        fi
+        # The Q/L step's own config supplies lm, save_rcid and save_assoc (doc
+        # 68), so only the per-event OUTPUT paths are named here: the pctree
+        # this job consumes and the calib JSON carrying the per-bundle lm*
+        # metrics the tuning/hand-scan read (doc 34).
+        local QL_FLAGS=(-save-pctree -calib)
+        # Pass an explicit LM override straight through when the caller gave one.
+        [ "$QL_LM" = 1 ] && QL_FLAGS+=(-lm)
+        [ "$QL_LM" = 0 ] && QL_FLAGS+=(-no-lm)
         echo "[evt $EVT_ID] pctree missing — running Q/L step (${QL_FLAGS[*]})"
         "$SBND_DIR/run_ql_evt.sh" "$MODE" "${QL_FLAGS[@]}" "$IDX" || return 1
         [ -s "$PCT" ] || { echo "ERROR: Q/L step did not produce $PCT" >&2; return 1; }
@@ -569,53 +643,27 @@ process_event() {
 
     # 2. PR tagger job.  Run from NUDIR so the dump-mode TensorFileSink's
     # trash-pr.tar.gz (if any) lands here, not in the source tree.
-    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE, bw=[$BEAM_WINDOW] us bwonly=$BWONLY, chord=$CHORD mode=$CHORD_MODE rescue=$RESCUE rescue_chord=$RESCUE_CHORD main_pair=$MAIN_PAIR/$MAIN_PAIR_MODE fvz=$FVZ_MARGIN fvzi=$FVZ_INTERIOR fvx=$FVX_MARGIN fvy=$FVY_MARGIN lm=$QL_LM stmfit=$STM_FIT stmfv=$STM_FV stmguards=$STM_GUARDS stmpguard=$STM_PGUARD stmcguard=$STM_CGUARD stmafix=$STM_AFIX stmtguard=$STM_TGUARD stmdguard=$STM_DGUARD stmvguard=$STM_VGUARD stmd66cuts=$STM_D66CUTS unmerge=$UNMERGE/$UNMERGE_MODE)"
+    local _ov="config defaults"
+    [ ${#KNOB_TLA[@]} -gt 0 ] && _ov="${KNOB_TLA[*]}"
+    echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID) taggers ($PIPELINE${SAVEPRT:+, save-pr-tree}) overrides: $_ov"
     rm -f "$LOG"
     # Provenance: the fit JSON is the only live diffusion consumer, so name it
     # (and its DL/DT) in every log -- an A/B arm is worthless if you cannot tell
-    # afterwards which file it ran with.
-    echo "trackfitting_config=$TFJSON $(grep -h '"D[LT]"' "$TFJSON" 2>/dev/null | tr -d ' \n')"
+    # afterwards which file it ran with.  Empty TFJSON = the config's own
+    # WIRECELL_PATH-resolved pgrapher/experiment/sbnd/sbnd_track_fitting.json.
+    echo "trackfitting_config=${TFJSON:-<config default: pgrapher/experiment/sbnd/sbnd_track_fitting.json>} $(grep -h '"D[LT]"' "${TFJSON:-$WCT_BASE/toolkit/cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json}" 2>/dev/null | tr -d ' \n')"
     (
         cd "$NUDIR"
         wire-cell \
             -l stderr -l "${LOG}:${SBND_WCT_LOGLEVEL:-debug}" -L "${SBND_WCT_LOGLEVEL:-debug}" \
             --tla-str  "input=$PCT" \
-            --tla-code "anode_indices=[0,1]" \
             --tla-str  "output_dir=$NUDIR" \
             --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
             --tla-str  "reality=$REALITY" \
-            --tla-code "DL=$DL" --tla-code "DT=$DT" \
-            --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
-            --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]" \
-            --tla-str  "trackfitting_config=$TFJSON" \
             --tla-str  "save_tensors=$SAVEPRT_TLA" \
-            --tla-str  "dl_weights=" \
-            --tla-code "beam_window_us=[$BEAM_WINDOW]" \
-            --tla-code "beam_window_only=$([ "$BWONLY" = 1 ] && echo true || echo false)" \
-            --tla-code "tgm_neutrino_candidate=$([ "$NUCAND" = 1 ] && echo true || echo false)" \
-            --tla-code "tgm_chord_charge=$([ "$CHORD" = 1 ] && echo true || echo false)" \
-            --tla-str  "tgm_chord_mode=$CHORD_MODE" \
-            --tla-code "tgm_component_extremes=$([ "$CHORD" = 1 ] && echo true || echo false)" \
-            --tla-code "tgm_component_rescue=$([ "$RESCUE" = 1 ] && echo true || echo false)" \
-            --tla-code "tgm_rescue_chord=$([ "$RESCUE_CHORD" = 1 ] && echo true || echo false)" \
-            --tla-code "tgm_main_pair=$([ "$MAIN_PAIR" = 1 ] && echo true || echo false)" \
-            --tla-str  "tgm_main_pair_mode=$MAIN_PAIR_MODE" \
-            --tla-code "tgm_fv_zmax_margin=$FVZ_MARGIN" \
-            --tla-code "tgm_fv_zmax_margin_interior=$FVZ_INTERIOR" \
-            --tla-code "tgm_fv_x_margin=$FVX_MARGIN" \
-            --tla-code "tgm_fv_y_margin=$FVY_MARGIN" \
-            --tla-code "mip_dqdx=$MIP_DQDX" \
-            --tla-str  "unmerge_bundle_mode=$UNMERGE_MODE" \
-            --tla-code "save_stm_fit=$([ "$STM_FIT" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_consistent_fv=$([ "$STM_FV" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_accept_guards=$([ "$STM_GUARDS" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_proton_muon_guard=$([ "$STM_PGUARD" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_cathode_guard=$([ "$STM_CGUARD" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_anode_dist_fix=$([ "$STM_AFIX" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_second_track_guard=$([ "$STM_TGUARD" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_deficit_guard=$([ "$STM_DGUARD" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_vertex_kink_guard=$([ "$STM_VGUARD" = 1 ] && echo true || echo false)" \
-            --tla-code "stm_d66_cuts=$([ "$STM_D66CUTS" = 1 ] && echo true || echo false)" \
+            "${TFJSON_TLA[@]}" \
+            "${PIPELINE_TLA[@]}" \
+            "${KNOB_TLA[@]}" \
             -c "$JSONNET"
     ) || return 1
     rm -f "$NUDIR/trash-pr.tar.gz"
@@ -625,7 +673,7 @@ process_event() {
         --pctree "$PCT" --prbee "$NUDIR/mabc-pr.zip" --prlog "$LOG" \
         --prtree "$NUDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
         --qlbee "$QLDIR/mabc-all-apa.zip" \
-        --beam-window "$BEAM_WINDOW" \
+        --beam-window "$BEAM_WINDOW_EFF" \
         --run "$RUN_NO" --subrun "$SUBRUN_NO" \
         --out "$NUDIR/nusel-evt${EVT_ID}.tsv" || return 1
 

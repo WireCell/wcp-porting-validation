@@ -23,7 +23,8 @@ shift $(( $# > 2 ? 2 : $# ))
 EXTRA="$*"
 tag="$TAGBASE$ARM"
 
-NUF="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc $EXTRA"
+# The production flag set: everything else is now a config default (doc 68).
+NUF="-stm-fit $EXTRA"
 S=$PWD/input_files_reco1/staged-mcp2025c-1000evt
 TEN=$PWD/input_files_reco1/extracted-mcp2025c-10evt
 TC=$(cd ../../abtest && pwd)/timecmd.py

@@ -30,12 +30,14 @@ export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WCT_BA
 
 . "$SBND_DIR/_runlib.sh"
 
-SEMIMODEL=semi-analytical-sbnd.json
 JSONNET="$SBND_DIR/wct-clus-matching-perevt.jsonnet"
-# Q/L drift / diffusion (documented values; same as run_clust_QL_evt.sh).
-DL=4.0; DT=8.8; LIFETIME=35; DRIFTSPEED=1.563  # DL/DT = SBND diffusion (cm^2/s), sbndcode wcsimsp_sbnd.fcl (docs/66);
-                                                      # LIFETIME = SBND simparams (35 ms).  Inert in the
-                                                      # reco chain -- see docs/64 sec 4.
+# NOTE (doc 68): the SBND production operating point is NOT in this script.  It
+# lives in the job's TLA defaults, cfg/pgrapher/experiment/sbnd/
+# wct-clus-matching-perevt.jsonnet -- including semimodel_file, the LAr
+# DL/DT/lifetime/driftSpeed set, joint, pmt_nl, main_flag, lm, save_rcid and
+# save_assoc.  This runner passes only what is per-event (paths, run/subrun/
+# event, an anode restriction) plus explicit overrides.  Do not reintroduce a
+# default value here: two copies of the operating point is what doc 68 removed.
 
 usage() {
     cat <<EOF
@@ -65,36 +67,34 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             so this flag only matters together with BEAMPREF_WEIGHT /
             BEAMPREF_RESCUE env overrides to scan a different operating point
   -no-main-flag  do NOT stamp flag_main_cluster on every matched bundle main
-            (QLMatching flag_matched_mains).  ON BY DEFAULT for this chain:
-            without it only the mains that decompose_cluster_groups SPLIT carry
-            the flag, so a compact single-component match is skipped by
-            TaggerCheckTGM/STM/FC and reads "no-bundle" in the nusel table
-            (evt286021, 1.158 us beam flash -> 141-pt cluster, 437 PE predicted).
-            The C++/jsonnet defaults stay FALSE -- only this runner opts in, so
-            every other config and detector is unaffected.
+            (QLMatching flag_matched_mains).  ON in the config: without it only
+            the mains that decompose_cluster_groups SPLIT carry the flag, so a
+            compact single-component match is skipped by TaggerCheckTGM/STM/FC
+            and reads "no-bundle" in the nusel table (evt286021, 1.158 us beam
+            flash -> 141-pt cluster, 437 PE predicted).
             Env: SBND_QL_MAIN_FLAG=0.
   -save-pctree  also write the post-QL point-cloud tree to
             work/ql_evt<ID>/pctree-evt<ID>.tar.gz (TensorDM tar; input of the
             pattern-recognition job; off by default => byte-identical)
-  -save-rcid  persist the flash-merge per-blob provenance (real_cluster_id /
-            real_cluster_main perblob arrays) through the pctree tarball, so
-            the PR job can tell which points were the bundle's main cluster
-            (TaggerCheckTGM main mode "real", doc 38).  Only meaningful WITH
-            -save-pctree.  Off by default => byte-identical tarball.
+  -save-rcid  re-assert the flash-merge per-blob provenance (real_cluster_id /
+            real_cluster_main perblob arrays) in the pctree tarball, which lets
+            the PR job tell which points were the bundle's main cluster
+            (TaggerCheckTGM main mode "real", doc 38).  ON in the config since
+            doc 68; only meaningful WITH -save-pctree.  See -no-save-rcid.
             Env: SBND_QL_SAVE_RCID=1.
   -no-rcid-global  doc 53: DISABLE the real_cluster_id re-stamp, which is ON by
-                default (C++ default true).  On, real_cluster_id is one globally
-                unique ident epoch; off, it is a mix of two dense 1..N epochs and
-                31% of values name two clusters.  Group membership is unchanged
-                either way => the un-merge and TGM are verdict-neutral, so pass
-                this ONLY for A/B archaeology.  Env: SBND_QL_RCID_GLOBAL=0.
-                (-rcid-global is accepted and also implies -save-rcid.)
-  -save-assoc   doc 52: also record the isolated grouping's main+associated
+                C++ default.  On, real_cluster_id is one globally unique ident
+                epoch; off, it is a mix of two dense 1..N epochs and 31% of
+                values name two clusters.  Group membership is unchanged either
+                way => the un-merge and TGM are verdict-neutral, so pass this
+                ONLY for A/B archaeology.  Env: SBND_QL_RCID_GLOBAL=0.
+                (-rcid-global is accepted and is a no-op: 1 means "inherit".)
+  -save-assoc   doc 52: re-assert the isolated grouping's main+associated
                 partition (assoc_cluster_id / assoc_cluster_main per blob),
                 carried across every later merge and saved into the pctree
-                tarball, so the PR job can un-merge it (run_nusel_evt.sh
-                -unmerge-assoc) and fit the main alone.  Use with -save-pctree.
-                Env: SBND_SAVE_ASSOC=1.
+                tarball, so the PR job can un-merge it (its default pipeline
+                runs unmerge_assoc) and fit the main alone.  ON in the config
+                since doc 68; use with -save-pctree.  Env: SBND_SAVE_ASSOC=1.
   -no-realign   A/B ARCHAEOLOGY ONLY: reproduce the pre-fix behavior where
                 QLMatching's decompose/recompose left every perblob array
                 misaligned with the permuted blob order (doc 52 §12; the fix
@@ -106,15 +106,25 @@ Usage: $(basename "$0") [mc|data] [-N n] [-a anode] <idx|all>
             coordinates -- cluster ids are renumbered after every step.  Adds
             ~20 layers per zip; use a FRESH work root.  Off => byte-identical.
             Env: SBND_TRACE_BEE=1.  See sbnd_xin/docs/51.
-  -lm       LM (light-mismatch) tagger (QLMatching lm_tagger).  Judges every
-            FINAL matched bundle by per-drift-side KS shape + pred/meas
-            normalization (the photon library's unmodeled cathode leakage
-            light means the far side is never judged alone); stamps cluster
-            scalar "lm_flag" (0 pass / 1 low-energy / 2 light mismatch) read
-            by nusel_extract.py's lm column, dumps per-bundle lm* keys into
-            the -calib JSON, and logs "LM verdict" lines.  Off by default =>
-            byte-identical (C++/jsonnet defaults stay FALSE).
-            Env: SBND_QL_LM=1.
+  -no-lm    turn OFF the LM (light-mismatch) tagger (QLMatching lm_tagger),
+            which is ON in the config since doc 64.  It judges every FINAL
+            matched bundle by per-drift-side KS shape + pred/meas normalization
+            (the photon library's unmodeled cathode leakage light means the far
+            side is never judged alone); stamps cluster scalar "lm_flag"
+            (0 pass / 1 low-energy / 2 light mismatch) read by
+            nusel_extract.py's lm column, dumps per-bundle lm* keys into the
+            -calib JSON, and logs "LM verdict" lines.  -lm re-asserts it.
+            Env: SBND_QL_LM=0.
+  -no-save-rcid / -no-save-assoc
+            drop the flash-merge (doc 38) / isolated-grouping (doc 52) per-blob
+            provenance from the -save-pctree tarball.  Both ON in the config
+            since doc 68; the PR job's default pipeline reads them
+            (unmerge_bundle mode "real", unmerge_assoc).
+            Env: SBND_QL_SAVE_RCID=0 / SBND_SAVE_ASSOC=0.
+
+NOTE (doc 68): the production operating point lives in the job config
+(cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet), not in this
+script.  Every flag above is an OVERRIDE; with no flags you get production.
 
 Requires: run_img_evt.sh first (work/evt<ID>/icluster-apa{0,1}-{active,masked}.npz).
 Opflash comes from input_files/input-<N>evt-<mode>/opflash_apa{0,1}.tar.gz (keyed
@@ -125,14 +135,14 @@ EOF
 }
 
 # --- Args ---
+# Every knob variable below is EMPTY by default, meaning "pass no TLA" => the
+# config default (= the production operating point) applies.  1 forces true,
+# 0 forces false.  See the doc-68 note at the top of this file.
 MODE=mc
 ANODE=""
-# Joint matching is the default: both TPCs go into ONE QLMatching node (which
-# matches each APA and merges, replacing the separate PointTreeMerging). Pass
-# --per-apa (or SBND_JOINT=0) to run the legacy two-node per-APA path instead.
-# Both are byte-identical today; the joint node is where the joint algorithm lands.
-JOINT=true
-[ "${SBND_JOINT:-}" = "0" ] && JOINT=false
+# --per-apa / SBND_JOINT=0: legacy two-node per-APA graph (one QLMatching per
+# APA -> PointTreeMerging -> all-APA MABC) instead of the production joint node.
+JOINT="${SBND_JOINT:-}"
 # -calib: also dump the per-event Q/L hand-scan calibration JSON
 # (work/ql_evt<ID>/calib-evt<ID>.json) for the ql_scan viewer. Off by default;
 # the matched mabc-all-apa.zip output is byte-identical with or without it.
@@ -141,10 +151,9 @@ CALIB=""
 # (e.g. CALIB_SUFFIX=.nl -> calib-evt<ID>.nl.json), so an NL rerun does not clobber
 # the linear dump the hand-scan was based on. Default empty = calib-evt<ID>.json.
 CALIB_SUFFIX="${CALIB_SUFFIX:-}"
-# PMT_NL: enable the per-PMT predicted-light non-linearity correction (threaded into
-# the matching jsonnet as --tla-code pmt_nl). true (default, SBND going forward) maps
-# predicted PE into the saturated space. PMT_NL=false = identity (OFF baseline).
-PMT_NL="${PMT_NL:-true}"
+# PMT_NL=0: turn OFF the per-PMT predicted-light non-linearity correction (the
+# identity/OFF baseline).  ON in the config; unset here = inherit.
+PMT_NL="${PMT_NL:-}"
 # -cathode-diag: log the cathode-crossing TPC0/TPC1 offset three-vector diagnostic
 # (grep "QLCATHODE" in the run log). Off by default; matched output is unchanged.
 CATHODE=""
@@ -155,55 +164,50 @@ CATHODE=""
 # default (production byte-identical; the sink stays a dump_mode no-op).
 # See sbnd/docs/sbnd-pattern-recognition.md.
 SAVEPCT=""
-# -auto-mask: enable the per-event dynamic dead-PMT auto-mask (QLMatching auto_mask).
-# Off by default (production byte-identical); masks a PMT that is dead in THIS event
-# while its live neighbours fire (a run-dead channel absent from the static ch_mask).
-AUTOMASK="false"
-# -beam-pref: beam-window flash preference (QLMatching beam_pref). Off by default
-# (production byte-identical); when on, a flash in the (0.2, 2.2) us BNB window is
-# exempt from the rival-consistent cull and its LASSO columns are shrunk less, so
-# the beam flash competes for (and tends to win) its clusters. See
-# docs/22_ql-beam-flash-preference.md (reco1 evts 246579/116962 case study).
-BEAMPREF="false"
-# BEAMPREF_WEIGHT / BEAMPREF_RESCUE: beam-preference operating point (inert unless
-# -beam-pref). weight = LASSO L1 multiplier for beam-window bundles (validated 0.5;
-# 0.2 over-collects), rescue = empty-flash rescue steal guard scale. Env-overridable
-# for scans, e.g. BEAMPREF_WEIGHT=0.35 ./run_ql_evt.sh data all -beam-pref -calib.
-BEAMPREF_WEIGHT="${BEAMPREF_WEIGHT:-0.5}"
-BEAMPREF_RESCUE="${BEAMPREF_RESCUE:-0.2}"
-# flag_matched_mains (QLMatching): stamp flag_main_cluster on EVERY matched bundle
-# main, not only on the ones decompose_cluster_groups split.  DEFAULT ON for this
-# chain -- the knob-off path leaves compact single-component matches unflagged and
-# therefore invisible to TaggerCheckTGM/STM/FC and to the nusel bundle table, which
-# is not the behavior we want from the selection.  The C++ and jsonnet defaults are
-# still false; this runner passes main_flag=true explicitly, so nothing outside this
-# chain changes.  -no-main-flag / SBND_QL_MAIN_FLAG=0 restores the legacy set.
-MAINFLAG="${SBND_QL_MAIN_FLAG:-1}"
-# LM (light-mismatch) tagger (QLMatching lm_tagger): per-drift-side KS +
-# normalization verdict on every final matched bundle, stamped as cluster
-# scalar "lm_flag" + calib-dump lm* keys.  OFF by default (C++/jsonnet defaults
-# false => byte-identical); -lm / SBND_QL_LM=1 opts in.  See docs/34_lm-tagger.md.
-QL_LM="${SBND_QL_LM:-0}"
-# Persist flash-merge per-blob provenance through the pctree tarball (doc 38).
-# OFF by default: opt in with -save-rcid / SBND_QL_SAVE_RCID=1.
-SAVE_RCID="${SBND_QL_SAVE_RCID:-0}"
-# -rcid-global (doc 53): re-stamp real_cluster_id into ONE globally unique ident
-# epoch at save time, instead of the legacy mix of the epoch examine_bundles
-# recorded and the epoch enumerate_idents has since installed (31% of values
-# name two clusters).  Group membership is unchanged, so the un-merge and TGM
-# are unaffected; what changes is that the value becomes a valid event-wide key.
-# Implies -save-rcid.  Env: SBND_QL_RCID_GLOBAL=1.
-RCID_GLOBAL="${SBND_QL_RCID_GLOBAL:-1}"
-if [ "$RCID_GLOBAL" = 1 ]; then SAVE_RCID=1; fi
-# Per-step Bee trace for merge attribution.  OFF by default (diagnostic only).
-TRACE_BEE="${SBND_TRACE_BEE:-0}"
+# -auto-mask: RE-ASSERT the per-event dynamic dead-PMT auto-mask (QLMatching
+# auto_mask), which the production config already enables unconditionally.
+AUTOMASK=""
+# -beam-pref: RE-ASSERT the beam-window flash preference overlay (QLMatching
+# beam_pref), also already ON in the production config since the round-2
+# adoption. Only useful together with BEAMPREF_WEIGHT / BEAMPREF_RESCUE to scan
+# a different operating point. See docs/22_ql-beam-flash-preference.md.
+BEAMPREF=""
+# BEAMPREF_WEIGHT / BEAMPREF_RESCUE: beam-preference operating-point OVERRIDES
+# (inert unless -beam-pref; empty = keep the config's validated 0.5 / 0.2).
+# weight = LASSO L1 multiplier for beam-window bundles (0.2 over-collects),
+# rescue = empty-flash rescue steal guard scale. For scans, e.g.
+# BEAMPREF_WEIGHT=0.35 ./run_ql_evt.sh data all -beam-pref -calib.
+BEAMPREF_WEIGHT="${BEAMPREF_WEIGHT:-}"
+BEAMPREF_RESCUE="${BEAMPREF_RESCUE:-}"
+# -no-main-flag / SBND_QL_MAIN_FLAG=0: legacy flag_matched_mains set (only the
+# mains decompose_cluster_groups SPLIT carry flag_main_cluster, so a compact
+# single-component match is invisible to TaggerCheckTGM/STM/FC and reads
+# "no-bundle" in the nusel table).  ON in the config.
+MAINFLAG="${SBND_QL_MAIN_FLAG:-}"
+# -no-lm / SBND_QL_LM=0: pre-LM baseline (QLMatching lm_tagger off).  ON in the
+# config since doc 64.  See docs/34_lm-tagger.md.
+QL_LM="${SBND_QL_LM:-}"
+# -no-save-rcid / SBND_QL_SAVE_RCID=0: drop the flash-merge per-blob provenance
+# from the pctree tarball (doc 38).  ON in the config since doc 68 -- the PR
+# job's default unmerge_bundle runs in "real" mode, which reads these arrays.
+SAVE_RCID="${SBND_QL_SAVE_RCID:-}"
+# -no-rcid-global (doc 53): do NOT re-stamp real_cluster_id into ONE globally
+# unique ident epoch at save time, leaving the legacy mix of the epoch
+# examine_bundles recorded and the epoch enumerate_idents has since installed
+# (31% of values name two clusters).  Group membership is unchanged, so the
+# un-merge and TGM are verdict-neutral either way.  ON by C++ default; only the
+# OFF case is expressible as a TLA.  Env: SBND_QL_RCID_GLOBAL=0.
+RCID_GLOBAL="${SBND_QL_RCID_GLOBAL:-}"
+# Per-step Bee trace for merge attribution.  OFF in the config (diagnostic only).
+TRACE_BEE="${SBND_TRACE_BEE:-}"
 # -save-assoc: doc 52.  clustering_isolated records the main + associated
 # partition it creates into the per-blob pair assoc_cluster_id /
 # assoc_cluster_main, merge_clusters carries it across every later merge, and
 # MABC homogenizes it into the pctree tarball, so the PR job can undo the
-# grouping (run_nusel_evt.sh -unmerge-assoc) and fit the main alone.
-# Only meaningful together with -save-pctree.
-SAVE_ASSOC="${SBND_SAVE_ASSOC:-0}"
+# grouping (its default pipeline runs unmerge_assoc) and fit the main alone.
+# ON in the config since doc 68; -no-save-assoc / SBND_SAVE_ASSOC=0 drops them,
+# which makes that visitor a warning + no-op.
+SAVE_ASSOC="${SBND_SAVE_ASSOC:-}"
 # -no-realign: doc 52 §12.8, A/B archaeology ONLY.  QLMatching realign_perblob
 # is ON by C++ default (recompose keeps the perblob rows aligned with the
 # permuted blob order); this reproduces the pre-fix misaligned behavior.
@@ -216,26 +220,61 @@ while [ $# -gt 0 ]; do
         -N) SBND_SAMPLE="$2"; shift 2 ;;
         -N*) SBND_SAMPLE="${1#-N}"; shift ;;
         mc|data) MODE="$1"; shift ;;
-        -auto-mask|--auto-mask) AUTOMASK="true"; shift ;;   # before -a* (it starts with -a)
-        -beam-pref|--beam-pref) BEAMPREF="true"; shift ;;
+        -auto-mask|--auto-mask) AUTOMASK=1; shift ;;   # before -a* (it starts with -a)
+        -beam-pref|--beam-pref) BEAMPREF=1; shift ;;
         -a) ANODE="$2"; shift 2 ;;
         -a*) ANODE="${1#-a}"; shift ;;
-        -s|--per-apa|--separate) JOINT=false; shift ;;
+        -s|--per-apa|--separate) JOINT=0; shift ;;
+        -joint|--joint) JOINT=1; shift ;;
         -calib|--calib) CALIB=1; shift ;;
         -cathode-diag|--cathode-diag) CATHODE=1; shift ;;
         -save-pctree|--save-pctree) SAVEPCT=1; shift ;;
         -save-rcid|--save-rcid) SAVE_RCID=1; shift ;;
+        -no-save-rcid|--no-save-rcid) SAVE_RCID=0; shift ;;
         -trace-bee|--trace-bee) TRACE_BEE=1; shift ;;
         -save-assoc|--save-assoc) SAVE_ASSOC=1; shift ;;
-        -rcid-global|--rcid-global) RCID_GLOBAL=1; SAVE_RCID=1; shift ;;
+        -no-save-assoc|--no-save-assoc) SAVE_ASSOC=0; shift ;;
+        -rcid-global|--rcid-global) RCID_GLOBAL=1; shift ;;
         -no-rcid-global|--no-rcid-global) RCID_GLOBAL=0; shift ;;
         -no-realign|--no-realign) REALIGN=0; shift ;;
+        -main-flag|--main-flag) MAINFLAG=1; shift ;;
         -no-main-flag|--no-main-flag) MAINFLAG=0; shift ;;
         -lm|--lm) QL_LM=1; shift ;;
+        -no-lm|--no-lm) QL_LM=0; shift ;;
         *) _args+=("$1"); shift ;;
     esac
 done
 set -- "${_args[@]}"
+
+# --- Override TLAs -------------------------------------------------------
+# Built once: an EMPTY knob emits no TLA, so the job's own default (= the SBND
+# production operating point, doc 68) stands.  Only an explicit 1/0 speaks.
+KNOB_TLA=()
+knob_bool() {   # knob_bool <tla-name> <value>
+    case "$2" in
+        1) KNOB_TLA+=(--tla-code "$1=true") ;;
+        0) KNOB_TLA+=(--tla-code "$1=false") ;;
+    esac
+}
+knob_bool joint      "$JOINT"
+knob_bool pmt_nl     "$PMT_NL"
+knob_bool auto_mask  "$AUTOMASK"
+knob_bool main_flag  "$MAINFLAG"
+knob_bool lm         "$QL_LM"
+knob_bool save_rcid  "$SAVE_RCID"
+knob_bool trace_bee  "$TRACE_BEE"
+knob_bool save_assoc "$SAVE_ASSOC"
+# rcid_global / realign are C++-default-TRUE tri-states whose config default is
+# null (= inherit), so only the OFF case is expressible; 1 means "inherit", not
+# "emit true", and must stay silent to keep the compiled config unchanged.
+[ "$RCID_GLOBAL" = 0 ] && KNOB_TLA+=(--tla-code "rcid_global=false")
+[ "$REALIGN" = 0 ]     && KNOB_TLA+=(--tla-code "realign=false")
+# -beam-pref re-asserts the overlay; its numbers are only read then.
+if [ "$BEAMPREF" = 1 ]; then
+    KNOB_TLA+=(--tla-code "beam_pref=true")
+    [ -n "$BEAMPREF_WEIGHT" ] && KNOB_TLA+=(--tla-code "beam_pref_weight=$BEAMPREF_WEIGHT")
+    [ -n "$BEAMPREF_RESCUE" ] && KNOB_TLA+=(--tla-code "beam_pref_rescue=$BEAMPREF_RESCUE")
+fi
 
 case "$MODE" in
     mc)   REALITY=sim ;;
@@ -259,8 +298,13 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
+# Both anodes is the job default; only a -a restriction needs a TLA.
 ANODE_CODE="[0,1]"
-[ -n "$ANODE" ] && ANODE_CODE="[$ANODE]"
+ANODE_TLA=()
+if [ -n "$ANODE" ]; then
+    ANODE_CODE="[$ANODE]"
+    ANODE_TLA=(--tla-code "anode_indices=${ANODE_CODE}")
+fi
 
 process_event() {
     local IDX=$1
@@ -379,37 +423,24 @@ process_event() {
     esac
 
     echo "[evt $EVT_ID] rse=($RUN_NO, $SUBRUN_NO, $EVT_ID)"
-    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE, joint=$JOINT${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}) -> $QLDIR/mabc-all-apa.zip"
+    local _ov=""
+    [ ${#KNOB_TLA[@]} -gt 0 ] && _ov=", overrides: ${KNOB_TLA[*]}"
+    echo "[evt $EVT_ID] Q/L matching (anodes $ANODE_CODE${CALIB:+, calib}${CATHODE:+, cathode-diag}${SAVEPCT:+, save-pctree}${_ov}) -> $QLDIR/mabc-all-apa.zip"
     rm -f "$LOG"
     wire-cell \
         -l stderr -l "${LOG}:debug" -L debug \
         --tla-str  "input=$QLDIR" \
-        --tla-code "anode_indices=${ANODE_CODE}" \
+        "${ANODE_TLA[@]}" \
         --tla-str  "output_dir=$QLDIR" \
         --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
         --tla-str  "reality=$REALITY" \
-        --tla-str  "semimodel_file=$SEMIMODEL" \
-        --tla-code "DL=$DL" --tla-code "DT=$DT" \
-        --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
-        --tla-code "joint=$JOINT" \
-        --tla-code "pmt_nl=$PMT_NL" \
-        --tla-code "auto_mask=$AUTOMASK" \
-        --tla-code "beam_pref=$BEAMPREF" \
-        --tla-code "beam_pref_weight=$BEAMPREF_WEIGHT" \
-        --tla-code "beam_pref_rescue=$BEAMPREF_RESCUE" \
-        --tla-code "main_flag=$([ "$MAINFLAG" = 1 ] && echo true || echo false)" \
-        --tla-code "lm=$([ "$QL_LM" = 1 ] && echo true || echo false)" \
-        --tla-code "save_rcid=$([ "$SAVE_RCID" = 1 ] && echo true || echo false)" \
-        --tla-code "trace_bee=$([ "$TRACE_BEE" = 1 ] && echo true || echo false)" \
-        --tla-code "save_assoc=$([ "$SAVE_ASSOC" = 1 ] && echo true || echo false)" \
-        --tla-code "rcid_global=$([ "$RCID_GLOBAL" = 0 ] && echo false || echo null)" \
-        --tla-code "realign=$([ "$REALIGN" = 0 ] && echo false || echo null)" \
         "${CALIB_TLA[@]}" \
         "${CATHODE_TLA[@]}" \
         "${SAVEPCT_TLA[@]}" \
         "${CRESCUE_TLA[@]}" \
         "${VVETO_TLA[@]}" \
         "${ISOGUARD_TLA[@]}" \
+        "${KNOB_TLA[@]}" \
         -c "$JSONNET"
     echo "[evt $EVT_ID] done -> $QLDIR/mabc-all-apa.zip${CALIB:+ (+ calib-evt${EVT_ID}.json)}"
 }

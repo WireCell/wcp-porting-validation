@@ -94,10 +94,12 @@ fi
 JSONNET="$SX/wct-pr-perevt.jsonnet"
 [ -f "$JSONNET" ] || { echo "ERROR: missing jsonnet: $JSONNET" >&2; exit 1; }
 
-# Same LAr TLAs as run_nusel_evt.sh (identical anode/params objects; both
-# provably inert in the reco chain -- docs/64 sec 4, docs/66 sec 1).
-DL=4.0; DT=8.8; LIFETIME=35; DRIFTSPEED=1.563
-TFJSON=${SBND_TRACKFIT_JSON:-$SX/sbnd_track_fitting.json}
+# doc 68: the LAr set and the TrackFitting parameter file come from the job's
+# own defaults (cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet); only an
+# SBND_TRACKFIT_JSON override is named, for the doc-66 diffusion A/B.
+TFJSON="${SBND_TRACKFIT_JSON:-}"
+TFJSON_TLA=()
+[ -n "$TFJSON" ] && TFJSON_TLA=(--tla-str "trackfitting_config=$TFJSON")
 
 # Production NUF pipeline + the 5 neutrino-PR stages (doc pr/2-3; ordering
 # matters -- BDTs after tagger_check_neutrino, nue after numu, tagger_output
@@ -152,37 +154,13 @@ process_event() {
             --tla-str  "output_dir=$PRDIR" \
             --tla-code "run=${RUN_NO}" --tla-code "subrun=${SUBRUN_NO}" --tla-code "event=${EVT_ID}" \
             --tla-str  "reality=$REALITY" \
-            --tla-code "DL=$DL" --tla-code "DT=$DT" \
-            --tla-code "lifetime=$LIFETIME" --tla-code "driftSpeed=$DRIFTSPEED" \
+            `# doc 68: the LAr set, the beam window and every tgm_*/stm_* knob` \
+            `# spelled out here were byte-for-byte the job's own defaults, so` \
+            `# they are gone.  PIPELINE stays explicit -- this chain adds the` \
+            `# neutrino taggers + BDT scorers on top of the default list.` \
             --tla-code "pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]" \
-            --tla-str  "trackfitting_config=$TFJSON" \
+            "${TFJSON_TLA[@]}" \
             --tla-str  "save_tensors=$PRDIR/pctree-pr-evt${EVT_ID}.tar.gz" \
-            --tla-code "beam_window_us=[0.2,2.2]" \
-            --tla-code "beam_window_only=true" \
-            --tla-code "tgm_neutrino_candidate=true" \
-            --tla-code "tgm_chord_charge=true" \
-            --tla-str  "tgm_chord_mode=path" \
-            --tla-code "tgm_component_extremes=true" \
-            --tla-code "tgm_component_rescue=true" \
-            --tla-code "tgm_rescue_chord=true" \
-            --tla-code "tgm_main_pair=true" \
-            --tla-str  "tgm_main_pair_mode=real" \
-            --tla-code "tgm_fv_zmax_margin=5" \
-            --tla-code "tgm_fv_zmax_margin_interior=3" \
-            --tla-code "tgm_fv_x_margin=2.5" \
-            --tla-code "tgm_fv_y_margin=3" \
-            --tla-code "mip_dqdx=56000" \
-            --tla-str  "unmerge_bundle_mode=real" \
-            --tla-code "save_stm_fit=false" \
-            --tla-code "stm_consistent_fv=true" \
-            --tla-code "stm_accept_guards=true" \
-            --tla-code "stm_proton_muon_guard=true" \
-            --tla-code "stm_cathode_guard=true" \
-            --tla-code "stm_anode_dist_fix=true" \
-            --tla-code "stm_second_track_guard=true" \
-            --tla-code "stm_deficit_guard=true" \
-            --tla-code "stm_vertex_kink_guard=true" \
-            --tla-code "stm_d66_cuts=true" \
             -c "$JSONNET"
         echo "rc=$?" > "$PRDIR/rc.txt"
     ) > "$PRDIR/stdout.log" 2>&1

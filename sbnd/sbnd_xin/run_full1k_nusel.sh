@@ -8,20 +8,20 @@
 # fresh in this root: the Q/L step (run_nusel_evt.sh launches it because the
 # pctree is missing) and the PR tagger tail + label table.
 #
-# Flags = the d55ton/d56bw production set verbatim, i.e. what every doc-52..57
-# arm and the doc-56 SBND default use.  In particular -lm (LM tagger, so the
-# table's lm column and the LM label exist) and -stm-fit (STM fit PCs + the Bee
-# stm_fit layer), both of which the doc-59 scan consumes.
+# Flags: since doc 68 the SBND production operating point IS the config default
+# (cfg/pgrapher/experiment/sbnd/wct-{pr,clus-matching}-perevt.jsonnet), so the
+# twelve-flag d55ton/d56bw string this script used to carry is gone -- passing
+# nothing now reproduces it exactly.  What remains is -stm-fit, a pure
+# diagnostic output (STM fit PCs + the Bee stm_fit layer + tracking-stm.root)
+# that the doc-59 scan consumes and that the doc-64 line deliberately keeps OFF
+# in the config.
 #
-# SBND_SAVE_ASSOC=1 is EXPORTED, not passed: run_nusel_evt.sh forwards only
-# -save-pctree/-save-rcid/-lm/-calib to a Q/L step it launches, and without the
-# isolated-grouping arrays -unmerge-assoc degrades to a per-cluster WARNING (not
-# an error) and the inner un-merge silently does nothing.  run_ql_evt.sh reads
-# SBND_SAVE_ASSOC from the environment, so exporting it here closes that gap.
-# Every event's status line therefore carries assoc=<mains>/<parts> read back
-# from the PR log's `<ClusteringUnmergeBundle:prassoc> unmerged ...` line: 0/0
-# on every event of a batch means the arrays were absent and the inner un-merge
-# was a no-op (0/0 on a single event is legitimate -- nothing to undo).
+# The Q/L step's lm / save_rcid / save_assoc are likewise config defaults now,
+# so SBND_SAVE_ASSOC no longer has to be exported here.  Every event's status
+# line still carries assoc=<mains>/<parts>, read back from the PR log's
+# `<ClusteringUnmergeBundle:prassoc> unmerged ...` line: 0/0 on every event of a
+# batch means the arrays were absent and the inner un-merge was a no-op (0/0 on
+# a single event is legitimate -- nothing to undo).
 #
 # Usage: ./run_full1k_nusel.sh [nentries] [njobs]
 #   nentries  how many art entries to process, from entry 0 (default 1000)
@@ -44,12 +44,8 @@ IMGBASE=$SBND_DIR/work-mcp1000
 MAP=$STAGE/entry_event_map.tsv
 TC=$(cd ../../abtest && pwd)/timecmd.py
 
-# The production flag set (identical string to run_perf54_nusel.sh's NUF).
-NUF="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc"
-
-# The Q/L step needs the isolated-grouping main+associated arrays for
-# -unmerge-assoc; run_nusel_evt.sh does not forward -save-assoc.
-export SBND_SAVE_ASSOC=1
+# The production flag set: everything else is now a config default (doc 68).
+NUF="-stm-fit"
 
 evt_of() { awk -F'\t' -v e="$1" '$1==e {print $4; exit}' "$MAP"; }
 
@@ -103,7 +99,7 @@ nreq=$(echo "$list" | wc -w)
 echo "=== doc59 full-1k nusel production ==="
 echo "  tag=$TAG root=$ROOT"
 echo "  entries=$nreq jobs=$J"
-echo "  flags=$NUF (SBND_SAVE_ASSOC=$SBND_SAVE_ASSOC)"
+echo "  flags=$NUF (everything else = the config defaults, doc 68)"
 echo "  started $(date -Is)"
 t0=$(date +%s)
 echo "$list" | tr ' ' '\n' | xargs -P "$J" -I{} "$SBND_DIR/run_full1k_nusel.sh" --worker {}
