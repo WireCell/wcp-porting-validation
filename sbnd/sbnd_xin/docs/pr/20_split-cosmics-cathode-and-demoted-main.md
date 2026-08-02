@@ -2846,6 +2846,39 @@ is not rediscovered.
   fix works on its own event and at scale; the *story* told in §Root cause
   needs rewriting around stopping muons before anyone re-derives from it.
 
+### 8. Bee — the 14 changed events, knobs OFF vs floor 0
+
+Both sets are the **PR-stage** dump (`pr_evt<ID>/mabc-pr.zip`), i.e. the
+post-un-merge geometry the taggers actually saw, from the two 1000-event arms
+directly. Same 14 events in the same Bee index order in both, so the same index
+is the same event on either link.
+
+- **OFF** (`work-pi5cens-pr0`, every Part I knob off) —
+  <https://www.phy.bnl.gov/twister/bee/set/5985c62b-bd46-4343-975c-5f414ed303fc/event/list/>
+- **ON** (`work-pi5cens-prB`, P2+P3+P4 at floor 0) —
+  <https://www.phy.bnl.gov/twister/bee/set/42e5af55-0d86-4bcd-9a3d-e27b9046cfd1/event/list/>
+
+| Bee idx | event | L (cm) | dvtx (cm) | ΔEnu (MeV) | what to look for |
+|---|---|---|---|---|---|
+| 0 | 283595 | 3.3 | 0.0 | 0 | nothing changes |
+| 1 | 281595 | 3.4 | 0.0 | 0 | nothing changes |
+| 2 | 489327 | 5.2 | 0.5 | +23.6 | `e- 49` → `p 81`, a PID change |
+| 3 | 394796 | 8.5 | 0.0 | −47.4 | a small shower node leaves |
+| 4 | **73004** | 11.9 | **92.3** | −28.2 | **vertex jumps 92 cm; `numu_score` 4.13 → 0.70.** The dropped 11.9 cm object is the implausible "stopping muon" |
+| 5 | **169356** | 16.9 | **27.1** | −149.0 | topology re-solves `pi+ pi+ mu-` → `mu- e-`; `numu_score` *improves* +0.58 |
+| 6 | 317939 | 16.9 | 2.1 | −189.0 | `mu- p e- p` collapses to one `e- 615` |
+| 7 | 315849 | 21.1 | 0.0 | −183.1 | a `p 175` leaves — is it a neutrino proton? |
+| 8 | **285467** | 39.5 | **116.5** | −169.3 | **the largest vertex move in the sample**, and above any candidate floor |
+| 9 | 278684 | 61.6 | 0.0 | −386.4 | textbook: `e- 386` leaves, muons and vertex untouched |
+| 10 | 314507 | 62.2 | 0.0 | **+278.5** | the other mode: `mu- 254` → `pi+ 276 + p 83 + e- 26`, same vertex |
+| 11 | 288639 | 80.7 | 0.0 | +0.2 | nothing changes |
+| 12 | **59003** | 109.4 | 0.0 | −361.5 | **the event that motivated the doc**; `e- 362` leaves |
+| 13 | 282899 | 158.7 | 0.0 | 0 | nothing changes |
+
+**The four that decide it are indices 4, 5, 8 and 6** — the ones where the
+pattern recognition re-solved the event rather than just dropping a node. The
+other ten either change nothing or drop a single shower node at a fixed vertex.
+
 ## Related
 
 - doc pr/3 §8 — `nu_skip_cosmic_bundle` (the per-main version of this veto)
