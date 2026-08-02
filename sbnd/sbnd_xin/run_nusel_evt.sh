@@ -538,7 +538,7 @@ fi
 if [ "$PROTECT" = 1 ]; then
     case ",$PIPELINE," in
         *,tagger_check_fc,*)
-            PIPELINE="${PIPELINE/tagger_check_fc,/tagger_check_fc,protect_bundle,steiner,}"
+            PIPELINE="${PIPELINE/tagger_check_fc,/tagger_check_fc,protect_bundle,steiner_refresh,}"
             _pipe_changed=1 ;;
         *) echo "ERROR: -protect needs tagger_check_fc in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
     esac

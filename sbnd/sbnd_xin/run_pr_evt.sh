@@ -205,7 +205,7 @@ fi
 if [ "$PROTECT" = 1 ] && [ -n "$PIPELINE" ]; then
     case ",$PIPELINE," in
         *,protect_bundle,*) : ;;
-        *,tagger_check_neutrino,*) PIPELINE="${PIPELINE/tagger_check_neutrino/protect_bundle,steiner,tagger_check_neutrino}" ;;
+        *,tagger_check_neutrino,*) PIPELINE="${PIPELINE/tagger_check_neutrino/protect_bundle,steiner_refresh,tagger_check_neutrino}" ;;
         *) echo "ERROR: -protect needs tagger_check_neutrino in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
     esac
 fi

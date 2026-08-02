@@ -117,7 +117,7 @@ PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger
 # SBND_PROTECT_BUNDLE=1 inserts the stage; DEFAULT OFF until the production
 # flip, so a bare run of this script stays the pre-pr/23 production chain.
 if [ "${SBND_PROTECT_BUNDLE:-0}" = 1 ]; then
-    PIPELINE="${PIPELINE/tagger_check_neutrino/protect_bundle,steiner,tagger_check_neutrino}"
+    PIPELINE="${PIPELINE/tagger_check_neutrino/protect_bundle,steiner_refresh,tagger_check_neutrino}"
 fi
 
 # Cathode kink veto (doc pr/20 Part II B0), cm.  EMPTY = emit no TLA = the job
