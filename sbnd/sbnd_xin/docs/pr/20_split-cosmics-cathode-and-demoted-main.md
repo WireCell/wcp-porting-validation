@@ -1094,9 +1094,149 @@ order across the two parts. The review settles it:
    `cosmic_companion_min_length` from the class-(a) distribution.
 4. **P3 + P4**, with the same mcp1k-census bar before any default flips.
 
+Step 1 is in execution now (§Part III). **Steps 2–4 are scheduled as the next
+round** (owner instruction, 2026-08-02) and detailed immediately below; they
+were previously carried as deferred and are no longer. **B1 remains deferred** —
+B0 is the primary, B1 only its backstop, and it matters only for a stub built
+some way other than a kink break.
+
 The pr/19 lesson is budgeted throughout: a 1000-event nusel sweep is ~21 min
 at 8 jobs, and its verdict census is the artifact the owner actually decides
 on.
+
+### Part I execution steps (steps 2–4 above, expanded)
+
+Written 2026-08-02, before any Part I code exists. Every step ends in a doc
+update + commit + push, the same cadence Part III runs on.
+
+**Which baselines survive into this round — the precondition that is easiest to
+get wrong.** By the time `ClusteringFuncs.cxx` is edited, HEAD is no longer
+`aff0ffde`: Part III's S5 lands B0's C++ and S6 lands the SBND
+`cathode_kink_xcut` config line. Therefore
+
+- `abtest/snap/pre_cathkink_clus` (pdhd+pdvd) and
+  `qlport/scripts/sweep/pre_cathkink_ub` (uboone) **carry over iff gate B0-1
+  PASSed** — B0 knob-off is byte-identical by construction, so a PASS means
+  those two labels still describe post-S6 HEAD. If B0-1 failed, or anything
+  else landed in between, **re-snapshot before the P1 edit**; do not infer.
+- the SBND baseline **does not carry over and must be retaken**. A1+A2 change
+  SBND output deliberately, and `cathode_kink_xcut = 5*wc.cm` changes it again;
+  any SBND hash taken before those is stale for Part I by construction. Retake
+  `hash_archive.py` on `mabc-all-apa.zip` + `mabc-pr.zip` for the 6 standard
+  events at post-S6 HEAD, immediately before the P1 edit.
+- baseline hash files live **beside this doc**, not in `/home/xqian/tmp/` — this
+  round already spans sessions and scratch will not survive to it.
+
+**No staged patch on disk for P1.** B0's implementation was parked as a patch
+outside the tree so an accidental build could not mix it into the A-arm binary.
+That is the wrong move here: `ClusteringFuncs.cxx` is linked by *every*
+detector, so an accidental build during a gate window poisons the shared
+install for all four gates at once, not just SBND. Part I code is written only
+when its round is actually running.
+
+#### S8 — P1, the pre-merge main flag (knob OFF)
+
+`merge_clusters()` gains `orig_wasmain_aname` (default `""`), the one resize
+line in the member loop, and `clustering_examine_bundles.cxx:153` passes
+`"real_cluster_was_main"` under the visitor knob `save_bundle_main_provenance`.
+The parameter comment must spell out the distinction from the existing
+`orig_main_aname` / `real_cluster_main` — one word apart in the name, and they
+mark different rows (representative donor vs every member that carried the
+flag). MABC fill-in is **presence-triggered**, per the doc above.
+
+Gates, all with the knob unset:
+
+- **PI-1** `abtest/ab_compare.sh <pre> post_partI` — pdhd + pdvd, `events.txt`.
+- **PI-2** `qlport/scripts/ab_check.sh` — uboone, gate 1 + gate 2.
+- **PI-3** SBND `mabc-all-apa.zip` + `mabc-pr.zip` × 6, member-content hashes
+  vs the freshly-retaken baseline above.
+- **PI-4** `./build/clus/wcdoctest-clus`.
+- **PI-5 — the key-homogeneity round-trip.** Not a prose warning but a gate,
+  because this exact failure mode ("`append()` keys the copy on the
+  ACCUMULATED dataset") cost a debugging session once on
+  perblob/`real_cluster_id`. With the knob **ON**, run an event whose grouping
+  contains clusters that never went through `merge_clusters` and therefore lack
+  the array: confirm it is neither silently dropped nor thrown on, that
+  `check_perblob_provenance` logs no violation, and that the array reads back
+  with the all-1 sentinel on the fill-in clusters.
+
+#### S9 — P2, the separate `demoted_main` flag (knob OFF)
+
+`ClusteringUnmergeBundle` knob `restore_demoted_mains`. A split part whose rows
+are all `real_cluster_was_main == 1` gains `Flags::demoted_main`; it keeps
+`associated_cluster` and **does not** get `main_cluster` back — the load-bearing
+decision, for the `nu_skip_cosmic_bundle` reason argued above. When the knob is
+on, `demoted_main` is materialised 0/1 on every cluster for `cluster_scalar`,
+as `QLMatching.cxx:1341` does for `main_cluster`.
+
+Gates: PI-1…PI-4 repeated (P1 and P2 land in one build; the sweep is the
+expensive part, not the compile), plus **PI-6**: with both knobs ON on evt
+18259/169824, cluster 26 carries `demoted_main`, still carries
+`associated_cluster`, and does **not** carry `main_cluster`. Verdicts and
+`kine_reco_Enu` are unchanged from baseline at this stage — P1+P2 are inert
+bookkeeping, and a verdict change here is a bug, not a result.
+
+#### S10 — the `n_frag` census (no code)
+
+Input is **already on disk**: the post-A1 arms this round produced,
+`work-mcp1kall-cathA12on` with `work-mcp1kall-cathA12off` as contrast. The
+post-A1 precondition in §Fix P4 is satisfied by construction — no re-run.
+
+Deliverable: every nu-candidate companion classified into
+
+- **(a)** demoted ex-bundle-mains — `assoc_cluster_main` today, P1's array once
+  S8 lands, and the two must agree where both exist (a free cross-check on P1);
+- **(b)** unjoined cathode-crosser halves — straddle test of the companion's
+  points against x = 0.
+
+with length, charge, TGM-taggability-on-geometry and the implied
+`kine_reco_Enu` shift per class. `cosmic_companion_min_length` is then set
+**from the class-(a) distribution only**. Class (b) belongs to Part II's A1;
+tuning on the pre-A1 population would tune on events A1 already fixes, and
+315497 appears in both parts of this doc precisely because it is class (b).
+
+#### S11 — P3, let the cosmic taggers see them (knob OFF, then ON)
+
+`evaluate_demoted_mains` in `TaggerCheckTGM` + `TaggerCheckSTM` (+
+`TaggerCheckFC`, informational). Both implementation details from §Fix P3 are
+gates, not notes: **self-exclusion** (a demoted main shares its
+`matched_flash_gid`, so it would otherwise appear in its own
+`associated_clusters`) and **per-bundle rather than per-gid companion sets**
+(cluster 26 must get an empty companion list; main 19 must keep {56, 57, 58}).
+
+Knob-off: PI-1…PI-4. Knob-on demo, the doc's standing prediction for
+evt 18259/169824 — cluster 26 is **tagged TGM**.
+
+#### S12 — P4, act on the verdict (knob OFF, then ON)
+
+`skip_cosmic_companions` at `TaggerCheckNeutrino.cxx:386-394`, with
+`cosmic_companion_min_length` from S10. Knob-off: PI-1…PI-4.
+
+Knob-on demo on evt 18259/169824, the numbers this doc has predicted since
+§Verification plan — cluster 26 dropped from `other_clusters`, the
+`gamma 361 MeV` node gone from the PF tree, `kine_reco_Enu` **1202.5 → ≈ 841
+MeV**. The run either confirms that or contradicts it; a third outcome means
+the mechanism in §Root cause is not what is being fixed.
+
+#### S13 — ship evidence and close-out
+
+- **PI-7** mcp1k OFF/ON verdict census with P3+P4 ON, same instrument and same
+  bar as A-8 / B0-7. This is the artifact the ship decision is made on — the
+  pr/19 precedent is that the owner decided on 7/1000 verdict changes that only
+  the 1000-event census surfaced. Never present these knobs for a default flip
+  without it.
+- **PI-8** nueCC48 arm, P3+P4 ON — **hard constraint: zero beam-label changes**,
+  neutrino vertices unmoved. Same shape as A-5 / B0-5; a single flip stops the
+  round.
+- **PI-9** determinism: 3 events × 3 runs under `setarch x86_64 -R`, identical
+  archives — P2 introduces a new per-cluster flag and P3 a new iteration over
+  companions, so the pointer-order bar from doc pr/11 applies.
+- Rewrite §Fix P1–P4 with measured results in place of predictions, mark each
+  gate PASS/FAIL with its label and hash-file path, and flag any SBND path that
+  is **NOT bit-identical, needs revalidation**.
+
+Default flips are a separate owner decision after PI-7/PI-8 are on the table,
+not part of this round.
 
 ## Related
 
