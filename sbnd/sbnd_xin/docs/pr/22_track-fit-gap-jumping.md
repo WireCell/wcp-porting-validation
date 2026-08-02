@@ -241,6 +241,92 @@ one **21** (the unmerged pieces, each fit on its own).
 Built with `make_pr_bee.py -q work-oc19scan-old -p work-pr22gap-{a,c}`, the
 two single-event zips merged into `data/{0,1}`.
 
+## 8. The residual jumps: uboone's second graph examination is missing from the PR chain
+
+Owner follow-up on the §7 Bee set: the NEW arm is much better but still has
+fit points in gaps, and the trajectory visibly connects several photons —
+didn't uboone have another round of graph examination before PR?  It did,
+and it is indeed missing from the SBND toolkit PR chain.
+
+### 8.1 What the residual actually is (arm C probe)
+
+50/634 fit points uncovered (7.9%), 33.3 cm in 7 stretches, 48/50 through
+genuinely charge-free space, zero dead-area overlap.  **Every stretch is
+inside cluster 16** (the nu candidate).  Attributing each stretch's endpoints
+to connected components of the charge cloud at 3 cm linkage:
+
+| seg   | len (cm) | endpoint components (size) | verdict |
+|-------|---------|----------------------------|---------|
+| 16003 |     9.0 | 15(823) ↔ 12(814)          | bridges two fragments |
+| 16011 |     3.9 | 12(814) ↔ 10(319)          | bridges two fragments |
+| 16024 |     6.6 | 4(6918) ↔ 15(823)          | bridges two fragments |
+| 16030 |    10.2 | 12(814) ↔ 8(2738)          | bridges two fragments |
+| 16013/16022/16035 | 3.6 total | same component     | in-fragment stitching |
+
+So 29.7 of the 33.3 cm are Dijkstra/MST bridges between **distinct charge
+fragments that share cluster id 16** — the "several photons connected by one
+trajectory" seen in Bee.  The remaining 3.6 cm is benign short stitching
+within a fragment.
+
+### 8.2 Is the initial clustering the origin?
+
+Partly, and by design: the clustering tail deliberately merges
+vertex-proximate fragments (photon showers) into the nu cluster.  The
+ordering is prototype-faithful — `ToyClustering.cxx:374-395` runs deghost →
+examine_x_boundary → `Clustering_protect_overclustering` (:388) →
+`Clustering_neutrino` (:395), and `sbnd/clus.jsonnet:259-263` mirrors it
+exactly (`cm.deghost, cm.examine_x_boundary, cm.protect_overclustering,
+cm.neutrino`).  So the clustering-stage overclustering protection runs
+*before* the neutrino merge in **both** codebases and never re-splits the
+merged photons.  uboone tolerated this because of a second, later round:
+
+### 8.3 The uboone pid-stage round: `WCPPID::Protect_Over_Clustering`
+
+In the prototype nue app (`wire-cell-prod-nue.cxx:1313-1322`), after Q/L
+matching and before NeutrinoID, every beam-window bundle is re-examined:
+
+- `Protect_Over_Clustering` (`pid/src/ProtectOverClustering.cxx:6-160`)
+  calls `PR3DCluster::Examine_graph(ct_point_cloud)` on **each** cluster of
+  the bundle, including the main (`:56`).
+- `Examine_graph` (`data/src/PR3DCluster.cxx:2311`) rebuilds the graph as
+  close-connected edges + `Connect_graph_overclustering_protection(ct)` —
+  inter-component bridges must pass `check_connectivity` against the 2D
+  charge/dead-channel CT cloud (`pid/src/PR3DCluster_graph_overclustering.h`
+  :105-183); failing bridges are dropped and the cluster splits into its
+  surviving connected components.
+- The largest component keeps the main cluster id; the rest become new
+  clusters **in the same parent group** (`ProtectOverClustering.cxx:104-124`).
+- `NeutrinoID(main_cluster, additional_clusters, ...)` then fits each piece
+  on its own (`wire-cell-prod-nue.cxx:1345,1360`); shower clustering later
+  re-associates them at the *shower* level, so the photons are still part of
+  the interaction — but no track fit ever bridges the voids between them.
+
+Our residual bridges (3.9–10.2 cm hops, 1.6–3.7 cm off charge, no dead
+channels) are exactly what `check_connectivity` exists to cut.  (Caveat: the
+test runs in 2D projections, so overlapping unrelated activity can keep a
+3D-empty bridge alive; a definitive per-bridge verdict needs the port.)
+
+### 8.4 The SBND toolkit PR chain has no counterpart
+
+The production PR pipeline is `switch_scope, unmerge_bundle, unmerge_assoc,
+steiner, ...` (`wct-pr-perevt.jsonnet:89`).  The unmerge stages restore the
+clustering-era cluster boundaries (bundle → main + associated), which is why
+§5's fix helped — but they cannot split *within* a cluster id, so the
+fragments `Clustering_neutrino` merged into cluster 16 stay one graph, and
+`connect_graph.cxx:155-169`'s uncapped MST does the rest.
+
+The machinery to fix this is already ported: `Cluster::connected_blobs(dv,
+pcts, "relaxed")` (`Facade_Cluster.h:531-534` — "used to be called
+examine_graph()"; flavor "relaxed" *is* the overclustering protection) is
+what `ClusteringProtectOverclustering` uses at the clustering stage.  The
+missing piece is a PR-chain visitor mirroring `WCPPID::Protect_Over_Clustering`:
+after `unmerge_assoc`, split each beam-bundle cluster by relaxed-graph
+connected components, keep the largest as main, spin the rest off as
+associated clusters so the existing per-cluster fitting handles them.  Per
+house rules it would ship as a default-OFF stage (named in `pipeline_names`
+only when wanted) and needs its own validation round — **not implemented
+here**; this section records the diagnosis and the fix shape.
+
 ## Artifacts
 
 - Probe: `sbnd_xin/gapjump_probe.py` (this doc).
