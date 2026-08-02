@@ -8,7 +8,7 @@ candidate as a gamma hanging off its muon.
 
 | | part | reproducing events | status |
 |---|---|---|---|
-| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | design only — 4 knobs, all default OFF |
+| **I** | a Q/L bundle main demoted by the flash-group merge is never cosmic-tagged | 18255 / 59003 | **P1-P4 BUILT, all default OFF** (Parts VII, VIII); `kine_reco_Enu` 1202.5 -> 841.0 MeV with all four on, as predicted.  S10 (the floor) and S13 (ship evidence) remain |
 | **II** | a cathode-crossing track broken in two | 18259 / 169824, 18255 / 406796, 18255 / 315497 | diagnosis complete and reproduced at HEAD; fix design only — 2 SBND config lines + 2 new default-OFF passes |
 
 No C++, jsonnet or runner changed for either part. The files this doc adds are
@@ -323,6 +323,11 @@ no persisted-format or flag-space concern. The materialisation obligation
 above is the whole serialisation story.
 
 #### P3 — let the cosmic taggers see them
+
+> **Built (commit `0de62175`, default OFF) — and the verdict prediction below
+> is wrong: cluster 26 is tagged STM, not TGM.  See Part VIII §3.**  The
+> mechanism is unaffected (P4's rule is "TGM or STM"), but anyone re-deriving
+> from this section should know which cut actually fires.
 
 `TaggerCheckTGM` **and** `TaggerCheckSTM` (and `TaggerCheckFC`, informational),
 knob `evaluate_demoted_mains` (default false):
@@ -2428,6 +2433,163 @@ with the veto on. That is gate B0-4 confirmed at the particle-flow level, on
 the shipped default rather than on a TLA override. P1+P2 leave it untouched
 (`kine_reco_Enu` 1071.1697 MeV in both arms).
 
+
+## Part VIII — execution log, Part I S11+S12 (P3 + P4, knobs OFF, 2026-08-02)
+
+P3 (the cosmic taggers see demoted mains) and P4 (the neutrino acts on their
+verdict) are implemented and gate-proven **knobs OFF**. With all four Part I
+knobs on, **evt 18255/59003 comes out at the energy this doc has predicted
+since its Verification plan.**
+
+### 0. Repro
+
+```bash
+# Two binaries, one per step: 52483c37d48d0aaf77c187938af1bb24 (commit
+# 0de62175, P3) and a059403154e107cc5da1777184c10136 (commit 015b8f9c, P4).
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild; ./build/clus/wcdoctest-clus
+
+# knob-off gates, per step (labels post_partI3_* then post_partI4_*)
+/home/xqian/tmp/pr20exec/pi3_gates.sh
+/home/xqian/tmp/pr20exec/pi4_gates.sh
+
+# the demo, on Part I's own event
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+SBND_SAVE_WASMAIN=1 TAG=pi3_59003 ENTRIES="411" ./run_full1k_nusel.sh 1000 1
+PR_JOBS=1 ./run_pr_chain_batch.sh work-mcp1kall-pi3_59003 work-pi3-59003-proff data 59003
+PR_JOBS=1 SBND_RESTORE_DEMOTED_MAINS=1 SBND_EVAL_DEMOTED_MAINS=1 \
+  ./run_pr_chain_batch.sh work-mcp1kall-pi3_59003 work-p3-59003-on data 59003
+PR_JOBS=1 SBND_RESTORE_DEMOTED_MAINS=1 SBND_EVAL_DEMOTED_MAINS=1 \
+  SBND_SKIP_COSMIC_COMPANIONS=1 SBND_COSMIC_COMPANION_MIN_LEN=10 \
+  ./run_pr_chain_batch.sh work-mcp1kall-pi3_59003 work-p4-59003-on data 59003
+```
+
+### 1. The changes
+
+**P3** — `evaluate_demoted_mains` (default false) in `TaggerCheckTGM`,
+`TaggerCheckSTM` and `TaggerCheckFC`. A cluster carrying `Flags::demoted_main`
+joins the main-cluster loop; the scope filter and beam-window gate apply to it
+unchanged, which is what keeps the population honest (on 59003 the gate admits
+exactly one of the event's eight demoted mains — the one in the beam window).
+
+STM additionally needs the **self-exclusion** the design called for: a demoted
+main keeps `flag_associated_cluster` and shares its `matched_flash_gid`, so
+without an `oc == main_cluster` skip it would appear in its own companion list
+and `check_other_clusters()` would count it against itself. Inert unless
+`evaluate_demoted_mains` put the cluster in `main_clusters`.
+
+**P4** — `skip_cosmic_companions` (default false) and
+`cosmic_companion_min_length` (default 0, cm) in `TaggerCheckNeutrino`, at the
+`other_clusters` build. A companion that is TGM- **or** STM-tagged and at least
+the floor long is dropped. The floor is the safety valve, not a tuning
+convenience: a short tagged companion stays in regardless of verdict, so a
+mis-tagged neutrino daughter can never be silently lost.
+
+Nothing tags a companion unless P3 ran, and nothing carries `demoted_main`
+unless P2 ran, so each knob is inert without the one above it. That chain is
+why four knobs rather than one: each can be gated, and turned on, alone.
+
+### 2. Gates — knobs OFF
+
+| gate | scope | P3 build (52483c37) | P4 build (a0594031) |
+|---|---|---|---|
+| **PI-1** `abtest ab_compare` vs `pre_cathkink_clus` | pdhd + pdvd | **PASS** (`post_partI3_clus`) | **PASS** (`post_partI4_clus`) |
+| **PI-2** `qlport ab_check` gate 1 vs `pre_cathkink_ub` | uboone, 35 evts | **PASS — 35/35** (`post_partI3_ub`) | **PASS — 35/35** (`post_partI4_ub`) |
+| **PI-3** SBND 20 evts × 5 products vs `pr20-sbnd-partI-baseline.txt` | sbnd | **PASS — 100/100** | **PASS — 100/100** |
+| **PI-4** `wcdoctest-clus` | — | **PASS — 49 / 565** | **PASS — 49 / 565** |
+| compiled config, knobs off | SBND Q/L + PR | **IDENTICAL** | **IDENTICAL** |
+
+qlport gate 2 reported `identical=2 diff=33` (P3) and `identical=3 diff=32`
+(P4) — the same non-discriminating regime as the Part IV §3 A/A control with
+one identical binary. Only its ZIPS line discriminates.
+
+Compiled config with **all four** Part I knobs on adds exactly six keys and
+nothing else: `restore_demoted_mains` on the outer un-merge,
+`evaluate_demoted_mains` on each of the three taggers, and
+`skip_cosmic_companions` + `cosmic_companion_min_length` on
+`tagger_check_neutrino`.
+
+### 3. Knob ON — P3 alone
+
+All three taggers report `evaluate_demoted_mains: 1 demoted main(s) added`, and
+
+```
+TaggerCheckTGM: cluster 19 -> TGM=false      TaggerCheckTGM: cluster 26 -> TGM=false
+TaggerCheckSTM: cluster 19 -> STM=0 TGM=0    TaggerCheckSTM: cluster 26 -> STM=1 TGM=0
+TaggerCheckFC:  cluster 19 -> FC=false       TaggerCheckFC:  cluster 26 -> FC=false
+```
+
+**The verdict is STM, not TGM.** §Fix P3 predicted "cluster 26 is **tagged
+TGM**". It is not; the cosmic conviction comes from the STM cut instead.
+Reported rather than tuned. It does not change the mechanism — P4's rule is
+"TGM **or** STM" precisely because the prototype treats both as cosmic
+verdicts — but the doc's prediction was specific and it was wrong, and anyone
+re-deriving from §Fix should know which cut actually fires. Cluster 19, the
+neutrino main, is untouched: `STM=0 TGM=0 FC=false` exactly as before.
+
+P3 alone changes nothing downstream, which is correct — it produces a verdict,
+it does not act on one. `kine_reco_Enu` stays 1202.5436 MeV and the
+`gamma 361 MeV` node stays in the tree.
+
+### 4. Knob ON — P3 + P4, and the prediction lands
+
+With `cosmic_companion_min_length = 10 cm` (provisional, pending S10):
+
+```
+TaggerCheckNeutrino: companion cluster 26 (L 109.4 cm, TGM=0 STM=1) dropped
+    from other_clusters (skip_cosmic_companions, floor 10.0 cm)
+TaggerCheckNeutrino: selected main cluster 19 (t0 1.578 us, L 298.4 cm, 3 associated)
+```
+
+| | label | n_assoc | `numu_score` | `kine_reco_Enu` | particle flow |
+|---|---|---|---|---|---|
+| baseline (all OFF) | nu-candidate | 4 | 4.072162 | 1202.5436 MeV | `mu- 732` / `gamma 361` / `e- 361` |
+| P3 ON | nu-candidate | 4 | 4.072162 | 1202.5436 MeV | unchanged |
+| **P3 + P4 ON** | nu-candidate | **3** | **3.962053** | **841.02783 MeV** | **`mu- 732`** |
+
+**`kine_reco_Enu` 1202.5 -> 841.0 MeV.** §Verification plan predicted "≈ 841
+MeV" from the energy budget in §Symptom — `1202.543 - 361.516 = 841.027` — and
+the run reproduces it to five decimals. The `gamma 361 MeV` node and its `e-`
+daughter are gone from the flow tree; the 108.8 cm through-going cosmic that
+supplied 30 % of the reconstructed neutrino energy is no longer part of the
+neutrino.
+
+That is the third outcome §S12 named as the failure mode ("a third outcome
+means the mechanism in §Root cause is not what is being fixed") not happening:
+the number is exactly the one the root cause predicts, which is the strongest
+confirmation available that the diagnosis was right.
+
+**And it answers open question 2** ("whether the 361 MeV shower moved
+`numu_score` — needs an A/B"): it did, by **-0.11** (4.072 -> 3.962). The event
+stays numu-CC, so the selection does not flip, but the shower was not free.
+
+### 5. Status and what is open
+
+**Done:** S11 and S12. All four Part I knobs land default OFF, byte-identical
+on all four detectors, with the full chain demonstrated end to end on the event
+that motivated the doc.
+
+**Not done:**
+
+1. **S10, the `n_frag` census** — and it is now the *only* thing standing
+   between Part I and a default-flip proposal. `cosmic_companion_min_length =
+   10 cm` above is provisional: it was chosen to clear 59003's sub-2 cm specks,
+   not derived. The census must produce the length/charge distribution of the
+   demoted-main population and set the floor from it. Note the shape change
+   recorded in Part VII §3: the (a)/(b) class split is vacuous, so the floor
+   comes from the distribution alone.
+2. **S13, ship evidence** — PI-7 (the mcp1k OFF/ON verdict census with P3+P4
+   on, the artifact any default flip is decided on), PI-8 (nueCC48, hard
+   constraint: zero beam-label changes) and PI-9 (determinism, 3 events × 3
+   runs under `setarch x86_64 -R`, since P2 adds a per-cluster flag and P3 a
+   new iteration over companions).
+3. **No default flip is proposed.** Every Part I knob is OFF and stays OFF
+   until PI-7 and PI-8 are on the table, per the standing rule that the
+   1000-event census is what the owner decides on.
+
+**Corrections this round made to earlier text**, both marked in place rather
+than edited away: §Fix P1's premise (Part VII §3) and §Fix P3's TGM prediction
+(§3 above).
 
 ## Related
 
