@@ -210,6 +210,77 @@ TGM components) already uses. `relaxed_pid` stays one knob away
 (`SBND_PROTECT_GRAPH=relaxed_pid`) for a future tightening round.
 (M15: both readings measured and recorded, decision by data.)
 
+### 4.2 Operating-point audit + production-tree re-validation (owner request)
+
+**Audit.** The owner asked whether the pr/20 cathode flags were actually set.
+Finding: the cfg flags (B0 `cathode_kink_xcut=5`, Part I P1-P4, A1/A2
+`tip_touch_cut`/`crosser_pca_angle`) were ON in every pr/23 arm — all arms ran
+14:42-15:36 on 2026-08-02, after the last flip (`c8f19b92`, 11:33) — **but the
+V1/V2 input trees are legacy** (`work-pr22gap-c`, `work-mcp1kall-d59k`):
+they predate A1/A2 and carry no `was_main` array, so P2 fails CLOSED
+(per-cluster WARN "restore_demoted_mains is on but 'real_cluster_was_main' is
+absent … not flagged" — quoted from both arms' logs). §3-§4.1 are therefore
+tuning evidence on frozen shared inputs, not a production-consistent cathode
+measurement. V3 (§5) is unaffected: its hub was rebuilt at HEAD
+(compiled-config dump: B0/P2/P3/P4 all true; hub log shows
+ClusteringCathodeConnect + demoted_main restores firing).
+
+**Re-validation on production trees.** Fresh hub `work-mcp1kall-pr23cath`
+(13 cathode events = cathode-5 + cath13-8, `run_full1k_nusel.sh`
+TAG=pr23cath, imaging from our `work-mcp1000`; `was_main` + cathode_connect
+verified). Three PR arms, 13/13 rc=0 each: `work-pr23c-off` (no stage),
+`work-pr23c-noRJ` (stage ON, re-join disabled), `work-pr23c-on` (stage ON,
+re-join 5/4/8 = shipped operating point).
+
+Straddle census (band 6 cm, gap < 10 cm):
+
+| evt | OFF | noRJ (prototype-faithful) | ON (re-join 5/4/8) |
+|-----|-----|---------------------------|--------------------|
+| 169824 | crosser intact | **broken** (gap 3.18) | **restored** |
+| 286400 | crosser intact | **broken** (gap 4.82) | **restored** |
+| 406796 | crosser intact | **broken** (gap 3.65) | **restored** |
+| 56463 | crosser intact | **broken** (gap 2.63) | **restored** |
+| 287654 | crosser intact | **broken** | **NOT restored** (residual, below) |
+| 315497, 409634 | pre-existing cathode pairs | identical | identical |
+| 348691, 59003 | no change | no change | no change |
+| 288952, 392200, 398690 | no nu candidate in any arm | — | — |
+| 52195 | no nu candidate (TGM) | candidate appears | candidate appears (flag, below) |
+
+So on production trees the prototype-faithful stage breaks **5/13** cathode
+crossers and the re-join restores **4 of 5** — confirming both the risk and
+the fix at the production operating point.
+
+**Residual 1 — evt 287654 (re-join out of reach).** The OFF crosser
+(cluster 12, x −9.9 → +43.3) is split by the graph into a negative-side main
+(ends x −0.5) and a positive-side fragment starting at **x +21.4**: the
+apparent cathode gap along this steep track is ~22 cm in x, far beyond
+`cathode_rejoin_dis=8 cm` (and the fragment endpoint is outside the 5 cm
+band). A1/A2 merged it at clustering with PCA-crosser logic, which proximity
+re-join cannot imitate. Candidate improvement (not implemented): an
+A2-style direction/PCA-agreement re-join term for exactly this topology.
+
+**Flag 2 — evt 52195 (TGM defeat by splitting; rule 7, reported not tuned).**
+OFF: in-window cluster 13 (L 469.8 cm) is TGM=true → skipped as cosmic.
+ON/noRJ: the stage splits it (L 417.9 cm), TGM=false, and the cosmic is
+**promoted to the selected neutrino candidate**. Mechanism: TGM needs both
+track ends at boundaries; splitting off an end-adjacent fragment defeats it.
+Note the uboone prototype ran Protect_Over_Clustering in the *nue/stm*
+executables — the toolkit pipeline order (`protect_bundle` before
+`tagger_check_tgm`) is a placement choice that lets splits change cosmic
+verdicts. Whether to reorder (taggers first, then protect + steiner rebuild)
+is an owner decision; V4's valfast census quantifies how often this happens
+at population scale.
+
+**Bee sets (owner: "old vs new for the cathode-5 off cases")** —
+
+| set | trees | URL |
+|-----|-------|-----|
+| cathode-5 OFF, OLD (d59k legacy trees, arm `cathO`) | pre-pr/20 | <https://www.phy.bnl.gov/twister/bee/set/20d4c217-34be-48e1-9b74-3e8c420198f7/event/list/> |
+| cathode-5 OFF, NEW (production trees, arm `pr23c-off`) | at HEAD | <https://www.phy.bnl.gov/twister/bee/set/c5c94f9e-9743-4a6d-aedc-9ff92cf0427e/event/list/> |
+| cathode-5 ON, NEW (production trees, re-join 5/4/8) | at HEAD | <https://www.phy.bnl.gov/twister/bee/set/23c92803-47ac-4f05-bb44-86011fa2ca17/event/list/> |
+
+Event order in all three: 169824, 286400, 315497, 406796, 409634.
+
 ## 5. V3 — nueCC48 track_fit vs shower_track census
 
 Arms (fresh, M13):

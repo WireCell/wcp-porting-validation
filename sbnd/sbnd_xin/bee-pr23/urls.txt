@@ -4,3 +4,5 @@ poc48-on https://www.phy.bnl.gov/twister/bee/set/4c44a311-c16e-4fcd-a327-63773ff
 386948-on https://www.phy.bnl.gov/twister/bee/set/307fd253-3a41-4133-867a-01565ac04aff/event/list/
 cath-off https://www.phy.bnl.gov/twister/bee/set/20d4c217-34be-48e1-9b74-3e8c420198f7/event/list/
 cath-on https://www.phy.bnl.gov/twister/bee/set/8e342b4b-79fe-4b07-aab1-6d4a24263d1a/event/list/
+cath5new-off https://www.phy.bnl.gov/twister/bee/set/c5c94f9e-9743-4a6d-aedc-9ff92cf0427e/event/list/
+cath5new-on https://www.phy.bnl.gov/twister/bee/set/23c92803-47ac-4f05-bb44-86011fa2ca17/event/list/
