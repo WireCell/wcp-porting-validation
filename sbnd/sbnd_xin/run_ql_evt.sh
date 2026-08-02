@@ -344,6 +344,17 @@ process_event() {
         1) CRESCUE_TLA=(--tla-code "cathode_rescue=true") ;;
         0) CRESCUE_TLA=(--tla-code "cathode_rescue=false") ;;
     esac
+    # Unmatched-cluster adoption pass of the rescue (doc pr/17): a flashless
+    # cluster geometrically continuing a beam-window cluster across the
+    # cathode is merged into the beam bundle (56463 veto-ON: the rejoined nu
+    # is unmatched and invisible downstream).  SBND production default is ON
+    # since doc pr/17 (validated: fires 1/1000 mcp1k, 0/48 nueCC48); unset
+    # inherits that config default.  SBND_RESCUE_UNMATCHED=0 forces the
+    # pre-pr/17 legacy path (byte-identical), =1 forces on explicitly.
+    case "${SBND_RESCUE_UNMATCHED:-}" in
+        1) CRESCUE_TLA+=(--tla-code "cathode_rescue_unmatched=true") ;;
+        0) CRESCUE_TLA+=(--tla-code "cathode_rescue_unmatched=false") ;;
+    esac
     # Separate vertex veto (doc pr/15): per-APA separate() un-splits a
     # neutrino-vertex "V" (run 18255 evt 56463, nu cut in two at its vertex).
     # SBND production default is ON; unset inherits that config default.
