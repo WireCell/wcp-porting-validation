@@ -147,9 +147,68 @@ Recorded prototype divergences (M15, decided by measurement in V1/V2):
 - `run_nusel_evt.sh`: `-protect` flag; refuses without the un-merges.
 - Bare runs of all three remain the pre-pr/23 production chain until V6.
 
-## 3. V1 — pilot on evt 386948 (pending)
+## 3. V1 — pilot on evt 386948: the pathology is gone
 
-## 4. V2 — cathode robustness and re-join tuning (pending)
+Fresh roots `work-pr23-v1a` (graph `relaxed`) / `work-pr23-v1b`
+(`relaxed_pid`), ql_evt386948 symlinked from the doc pr/22 exhibit
+`work-pr22gap-c` (untouched), runner:
+
+```bash
+SBND_INPUT_DIR=$PWD/work-pr22gap-input SBND_WORK_ROOT=$PWD/work-pr23-v1a \
+  ./run_pr_evt.sh data -nu -protect 1          # v1b adds SBND_PROTECT_GRAPH=relaxed_pid
+python3 gapjump_probe.py work-pr23-v1a/pr_evt386948/mabc-pr.zip
+```
+
+| arm | fit pts | uncovered | stretches | DIFF-fragment bridges | stage cost |
+|---|---|---|---|---|---|
+| OFF (doc pr/22 §6, `work-pr22gap-c`) | 634 | 50 (7.9%), 33.3 cm | 7 | 4 (29.7 cm) | — |
+| ON `relaxed` | 559 | 6 (1.1%), **1.8 cm** | 1 | 1 (1.8 cm, 1.5 cm off charge) | 83 ms |
+| ON `relaxed_pid` | 512 | **0 (0.0%), 0.0 cm** | 0 | 0 | 59 ms |
+
+The stage log shows exactly the diagnosed split: `cluster 16 (main): 626
+blobs -> retained 313 + 7 fragment(s)` (`relaxed`; 9 fragments with
+`relaxed_pid`, incl. one same-side cathode re-join at x=-3.5, 1.2 cm gap).
+`nu_evaluated` stays 1 in both arms; zero dead-area overlap; the 29.7 cm of
+photon-bridging trails are eliminated by either flavor.
+
+## 4. V2 — cathode robustness and re-join tuning
+
+Arms from the pinned mcp1k Q/L root `work-mcp1kall-d59k` (NOTE: pre-pr/20
+trees, so the class-A crossers 315497/406796 enter the PR job still split —
+their straddle pairs below are pre-existing input structure, not stage
+collateral), events 169824, 406796, 315497, 286400, 409634:
+
+| arm | config | new cathode-straddle splits vs OFF |
+|---|---|---|
+| `work-pr23-cathO` | stage OFF | (baseline) |
+| `work-pr23-cathA` | ON, `relaxed`, re-join OFF | **1 — evt 286400 main broken at the cathode** (fragment 58, gap 4.8 cm, x +2.2/−1.6, dyz 2.9 cm; selected length 338.3 → 306.0 cm) |
+| `work-pr23-cathB` | ON, `relaxed`, re-join 5/4/8 cm | **0** — the 286400 pair is re-joined (log quotes the exact geometry), selected length restored to 338.3 cm; straddle-pair counts equal arm O on all 5 events; 409634's crossing cluster keeps its full x-extent |
+| `work-pr23-cathC` | ON, `relaxed_pid`, re-join OFF | 286400 broken (as A) + more aggressive debris splits (409634 selected length 43.8 → 16.0 cm, vertex moves 95 cm) |
+| `work-pr23-cathD` | ON, `relaxed_pid`, re-join 5/4/8 cm | 286400 protected; 2 straddling re-joins fire on 409634; but one NEW band pair remains (21↔62, gap 8.2 cm, **dyz 6.6 cm** — outside crosser phenomenology, doc pr/12's ~1.1 cm median offset), the crossing cluster is trimmed (x max 7.9 → 5.8 cm), and 315497's vertex moves 55 cm |
+
+Notes:
+- **169824 (the class-B crosser) is never split by either flavor** — the
+  relaxed close-graph joins its 4.7 cm tip-to-tip gap, so the doc pr/20
+  fear ("the relaxed graph does not join the halves") applies to the
+  *bridge-starved* component pairs, not to this crosser's geometry.
+- The re-join criteria (both endpoints within 5 cm of x=0, 3D gap < 8 cm,
+  transverse offset < 4 cm) fire exactly on real crossing boundaries
+  (286400: 4.8/2.9 cm; 409634 pid: 1.8/0.2 cm) and stay silent on the
+  dyz 6.6 cm debris pair — the 4 cm dyz cut is doing the intended
+  physics (crosser transverse offset ~1.1 cm median, ≲3.7 cm observed).
+
+### 4.1 Flavor decision: SBND ships `graph_name = "relaxed"`
+
+`relaxed_pid` is the structurally closer port of the uboone pid-stage graph
+and scores marginally better on the pilot (0.0% vs 1.1%), but on the cathode
+set it is measurably more aggressive: it trims a genuine crossing cluster,
+leaves a new cathode-band pair, and relocates two selected vertices by
+55-95 cm on the stub events. `relaxed` at the arm-B operating point removes
+94% of the pilot pathology with **zero** cathode collateral and is the
+flavor every other PR-stage consumer (unmerge, recovering, examine_bundles,
+TGM components) already uses. `relaxed_pid` stays one knob away
+(`SBND_PROTECT_GRAPH=relaxed_pid`) for a future tightening round.
+(M15: both readings measured and recorded, decision by data.)
 
 ## 5. V3 — nueCC48 track_fit vs shower_track census (pending)
 
