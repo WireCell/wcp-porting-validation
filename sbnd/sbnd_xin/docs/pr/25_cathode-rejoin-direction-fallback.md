@@ -6,7 +6,7 @@ investigated alongside these two; see the status table below.
 | evt | question | status |
 |---|---|---|
 | **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`); SBND default left OFF pending owner go-ahead. |
-| **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven and **fix implemented + small-group measured** (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **Default-ON blocked on that gap, not on the original veto question.** |
+| **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven, fix implemented + small-group measured (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **SBND DEFAULT ON** (owner 2026-08-02, impact judged small); the `check_tgm` gap remains an open, separate item. |
 | **321107** | main track is a muon, tagged as an electron | mechanism fully traced: `is_shower_topology`, not `is_shower_trajectory`, made the call (§3). **No fix proposed.** |
 
 Repro base for all three: `sbnd_xin/work-vfmcp1k-prodon` (protect_bundle ON,
@@ -343,6 +343,28 @@ shared with uBooNE/prototype, not an SBND-only knob.
 **Escalation rule 1**: changes cosmic verdicts — flipping `exempt_demoted_main_pairs`
 to the SBND default needs both an owner decision on the veto question AND,
 independently, a decision on the debris-speck gap above.
+
+### SBND DEFAULT ON (owner decision, 2026-08-02)
+
+Owner reviewed the debris-speck finding above and judged the measured impact
+small enough to accept: only 1 of 4 new-speck convictions in the 15-event
+small group was ever a bundle companion, and its effect was +3.6 MeV on a
+~800 MeV `kine_reco_Enu_MeV` (~0.4%) — smaller than run-to-run noise-floor
+movement measured elsewhere in this chain (doc pr/20 Part I: 7 differing
+`kine_reco_Enu_MeV` cells on an A/A′ control, all last-digit). `wct-pr-perevt.jsonnet`'s
+`tgm_exempt_demoted_main` TLA default flipped `false → true` (the SBND
+single-source-of-truth entry point per doc 68; `clus.jsonnet`'s own
+`clus_pr()`/`pr()` function defaults are unchanged at `false`, same pattern
+as `evaluate_demoted_mains`). Verified: bare compile (no TLA override) now
+emits `"exempt_demoted_main_pairs" : true`; explicit
+`tgm_exempt_demoted_main=false` still suppresses the key; a bare
+`run_pr_chain_batch.sh` run on evt 320029 (no env override) reproduces the
+measured ON-arm behavior exactly (cluster 30 convicts, `skip_cosmic_companions`
+drops it). **NOT bit-identical** — same bar as every other SBND default flip
+in this doc series. The `check_tgm` CASE-A length-floor gap (debris specks)
+remains open and untouched by this decision; it is a separate, not-yet-designed
+fix, tracked here for whenever it gets picked up. Runner escape to restore
+the pre-flip behavior: `SBND_TGM_EXEMPT_DEMOTED_MAIN=0`.
 
 ### Repro
 
