@@ -1,0 +1,112 @@
+# PR cluster_id remap for bee-pr25/pr25s3_numain10.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+321107	0	13	3	flash-matched	3:7994
+321107	0	19	7	NO-FLASH-MATCH (fallback: dominant)	7:14
+321107	0	20	10	NO-FLASH-MATCH (fallback: dominant)	10:8
+321107	0	21	12	NO-FLASH-MATCH (fallback: dominant)	12:8
+321107	0	22	18	NO-FLASH-MATCH (fallback: dominant)	18:17
+321107	0	40	18	NO-FLASH-MATCH (fallback: dominant)	18:16
+286353	1	9	6	flash-matched	6:2515
+286353	1	14	10	NO-FLASH-MATCH (fallback: dominant)	10:21
+286353	1	60	6	flash-matched	6:12
+286353	1	61	6	flash-matched	6:16
+284013	2	8	10	flash-matched	10:831, 14:517
+284013	2	13	3	NO-FLASH-MATCH (fallback: dominant)	3:6
+284013	2	14	11	flash-matched	11:50
+284013	2	27	10	flash-matched	10:11
+284013	2	28	10	flash-matched	10:7
+284013	2	29	10	flash-matched	10:20
+284013	2	30	10	flash-matched	10:13
+284013	2	31	10	flash-matched	10:17
+284013	2	32	10	flash-matched	10:15
+284013	2	33	10	flash-matched	10:6
+284013	2	35	10	flash-matched	10:10
+284013	2	36	14	flash-matched	14:10
+277276	3	8	6	flash-matched	6:1715
+277276	3	16	14	flash-matched	14:31
+277276	3	17	15	NO-FLASH-MATCH (fallback: dominant)	15:6
+57903	4	14	5	flash-matched	5:1270
+57903	4	21	11	NO-FLASH-MATCH (fallback: dominant)	11:15
+57903	4	22	15	NO-FLASH-MATCH (fallback: dominant)	15:9
+57903	4	23	16	flash-matched	16:17
+57903	4	24	19	flash-matched	19:11
+57903	4	66	19	flash-matched	19:11
+57903	4	67	19	flash-matched	19:13
+57903	4	68	19	flash-matched	19:8
+280972	5	7	19	flash-matched	19:9891, 5:3513
+280972	5	24	19	flash-matched	19:13
+280972	5	25	19	flash-matched	19:28
+280972	5	26	19	flash-matched	19:11
+280972	5	27	19	flash-matched	19:16
+280972	5	28	19	flash-matched	19:15
+280972	5	29	19	flash-matched	19:11
+280972	5	31	19	flash-matched	19:7
+280972	5	32	19	flash-matched	19:16
+280972	5	33	19	flash-matched	19:13
+280972	5	34	19	flash-matched	19:7
+280972	5	35	19	flash-matched	19:21
+280972	5	36	19	flash-matched	19:7
+280972	5	37	19	flash-matched	19:12
+280972	5	38	19	flash-matched	19:27
+280972	5	39	19	flash-matched	19:7
+280972	5	40	19	flash-matched	19:9
+280972	5	41	19	flash-matched	19:43
+280972	5	42	19	flash-matched	19:11
+280972	5	43	19	flash-matched	19:9
+280972	5	44	19	flash-matched	19:13
+280972	5	45	19	flash-matched	19:6
+280972	5	46	19	flash-matched	19:18
+280972	5	47	19	flash-matched	19:16
+280972	5	48	19	flash-matched	19:6
+280972	5	49	19	flash-matched	19:20
+280972	5	50	19	flash-matched	19:7
+280972	5	51	19	flash-matched	19:20
+280972	5	52	19	flash-matched	19:62
+280972	5	53	19	flash-matched	19:28
+280972	5	54	19	flash-matched	19:14
+280972	5	55	19	flash-matched	19:43
+280972	5	70	19	flash-matched	19:156
+280972	5	71	19	flash-matched	19:151
+280972	5	72	19	flash-matched	19:57
+280972	5	73	19	flash-matched	19:11
+280972	5	74	19	flash-matched	19:113
+280972	5	75	19	flash-matched	19:67
+315167	6	8	15	flash-matched	15:5278
+315167	6	27	15	flash-matched	15:12
+315167	6	28	15	flash-matched	15:11
+315167	6	29	15	flash-matched	15:12
+315167	6	30	15	flash-matched	15:10
+315167	6	31	15	flash-matched	15:12
+315167	6	32	15	flash-matched	15:12
+315167	6	33	15	flash-matched	15:37
+315167	6	34	15	flash-matched	15:12
+315167	6	35	15	flash-matched	15:12
+315167	6	36	15	flash-matched	15:12
+315167	6	37	15	flash-matched	15:9
+315167	6	38	15	flash-matched	15:14
+315167	6	39	15	flash-matched	15:7
+315167	6	40	15	flash-matched	15:4
+278684	7	10	22	flash-matched	22:1537
+278684	7	18	3	NO-FLASH-MATCH (fallback: dominant)	3:14
+278684	7	19	9	flash-matched	9:11
+278684	7	32	22	flash-matched	22:3
+278684	7	33	22	flash-matched	22:17
+278684	7	34	22	flash-matched	22:28
+278684	7	35	22	flash-matched	22:17
+278684	7	36	22	flash-matched	22:27
+278684	7	37	22	flash-matched	22:13
+278684	7	38	22	flash-matched	22:13
+278684	7	43	22	flash-matched	22:109
+278684	7	44	9	flash-matched	9:11
+287621	8	0	None	NO-BRIDGE	-
+287621	8	6	13	flash-matched	13:1576
+287621	8	9	1	NO-FLASH-MATCH (fallback: dominant)	1:9
+287621	8	19	13	flash-matched	13:12
+287621	8	20	13	flash-matched	13:22
+287621	8	21	13	flash-matched	13:9
+287621	8	22	13	flash-matched	13:14
+287621	8	23	13	flash-matched	13:122
+400504	9	6	17	flash-matched	17:2217
+400504	9	12	1	NO-FLASH-MATCH (fallback: dominant)	1:14
+400504	9	21	17	flash-matched	17:26
+400504	9	62	17	flash-matched	17:156

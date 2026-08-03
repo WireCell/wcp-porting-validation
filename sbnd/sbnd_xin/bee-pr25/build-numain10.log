@@ -1,0 +1,24 @@
+WARNING: evt 287621: 1/8 PR cluster ids have no counterpart in the PR clustering-global layer; those keep their PR id (they will not follow the flash filter)
+  evt 321107: PR cluster_id -> img-global space (6 ids, 286 ambiguous q fingerprints)
+event 321107 -> bee index 0: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 286353: PR cluster_id -> img-global space (4 ids, 1456 ambiguous q fingerprints)
+event 286353 -> bee index 1: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 284013: PR cluster_id -> img-global space (12 ids, 156 ambiguous q fingerprints)
+event 284013 -> bee index 2: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 277276: PR cluster_id -> img-global space (3 ids, 135 ambiguous q fingerprints)
+event 277276 -> bee index 3: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 57903: PR cluster_id -> img-global space (8 ids, 142 ambiguous q fingerprints)
+event 57903 -> bee index 4: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 280972: PR cluster_id -> img-global space (38 ids, 1028 ambiguous q fingerprints)
+event 280972 -> bee index 5: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 315167: PR cluster_id -> img-global space (15 ids, 427 ambiguous q fingerprints)
+event 315167 -> bee index 6: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 278684: PR cluster_id -> img-global space (12 ids, 339 ambiguous q fingerprints)
+event 278684 -> bee index 7: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 287621: PR cluster_id -> img-global space (8 ids, 44 ambiguous q fingerprints)
+event 287621 -> bee index 8: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+  evt 400504: PR cluster_id -> img-global space (4 ids, 836 ambiguous q fingerprints)
+event 400504 -> bee index 9: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+wrote bee-pr25/pr25s3_numain10.zip
+wrote bee-pr25/pr25s3_numain10.index.txt
+wrote bee-pr25/pr25s3_numain10.prid-map.txt
