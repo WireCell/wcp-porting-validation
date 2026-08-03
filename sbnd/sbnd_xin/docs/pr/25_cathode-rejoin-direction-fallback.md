@@ -7,7 +7,7 @@ investigated alongside these two; see the status table below.
 |---|---|---|
 | **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`); SBND default left OFF pending owner go-ahead. |
 | **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven, fix implemented + small-group measured (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **SBND DEFAULT ON** (owner 2026-08-02, impact judged small); the `check_tgm` gap remains an open, separate item. |
-| **321107** | main track is a muon, tagged as an electron | mechanism fully traced: `is_shower_topology`, not `is_shower_trajectory`, made the call (§3). **No fix proposed.** |
+| **321107** | main track is a muon, tagged as an electron | mechanism fully traced AND directly instrumented (§3): `is_shower_topology`, not `is_shower_trajectory`, made the call; isochrony is population-level irrelevant; the discriminant itself is unstable at the margin (3/21 events flip verdict between two evaluations of the same fit, ~1cm apart). **No safe SBND-scoped fix found this round** — three candidate knobs were measured directly and rejected. Diagnostic instrument (`WCT_SHOWER_TOPO_DEBUG`) **committed, default off**. |
 
 Repro base for all three: `sbnd_xin/work-vfmcp1k-prodon` (protect_bundle ON,
 the SBND production default since `f813e312`) and `work-vfmcp1k-prodoff`,
@@ -442,14 +442,45 @@ done
   default) and got a real byte-identical-off / key-present-on result. Same
   root cause as the standing "doc pr/23 gotcha" above; a second, independent
   near-miss of it in the same session is worth its own line.
+- **§3's proxy-vs-direct-instrument trap actually fired, not just risked.**
+  A 3-D nearest-fit-point proxy (no code changed, pure Python re-derivation
+  from the pctree) predicted `is_shower_topology` should NOT have fired on
+  321107 (0.72 cm computed spread < the code's 0.8 cm branch threshold); the
+  real code fired it. Every number that proxy produced (the "0.37 narrow
+  miss", the "associated-cloud contamination" theory) was wrong and had to be
+  withdrawn once a real env-gated instrument was added and run. The general
+  lesson from §2 ("get the direct instrument, don't infer from an adjacent
+  debug line") generalizes further: a from-scratch Python re-derivation of a
+  C++ algorithm is not a "direct enough" instrument either — a 2-D
+  voronoi-with-ghost-removal association cannot be approximated by a 3-D
+  nearest-neighbor proxy, no matter how carefully the geometry is checked by
+  eye. Add the log line and run the actual binary.
+- **A discriminant that is unstable across two evaluations of the same input
+  is not a "close" measurement, it is a broken one for tuning purposes.**
+  §3.6: `TaggerCheckNeutrino` runs the topology test twice per event
+  (`:545`, `:673`, before/after `improve_vertex`), and 3/21 events flip
+  verdict between the two passes on a sub-2cm change in the fitted length.
+  Before this was measured, the plan's candidate C looked like the leading
+  fix shape (closest miss, most surgical). The instrument changed that
+  conclusion — worth remembering that "closest to the boundary" and "safe to
+  tune" are different claims, and the second one needs its own check.
 
-## 3. Event 321107 — explained, no fix proposed
+## 3. Event 321107 — investigated with a direct instrument; no safe fix found
 
 Main segment (`real_cluster_id` 13000): 415 fit points, 248.72 cm, PCA angle
 to drift-x **88.55°** — confirmed isochronous. `pdg=11`, `flag_shower=1`
 across all 415 points, bit-identical on `prodon`/`prodoff`.
 
-### Why an electron, not a muon
+**Correction to an earlier pass of this section**: the previous write-up's
+§3.4 ("associated-cloud contamination") and its `0.37` narrow-miss estimate
+were built on a 3-D nearest-fit-point proxy, not the code's actual 2-D
+voronoi + ghost-removed association. That proxy predicted the flag *should
+not* fire (0.72 cm spread < the 0.8 cm branch threshold) on the one event
+that matters, and it did fire — the proxy does not reproduce the mechanism.
+This round replaces every proxy-derived number with a direct measurement,
+via a new instrument (§3.4), and reaches a materially different conclusion.
+
+### 3.1 Why an electron, not a muon — the owner's guess is ruled out twice
 
 `NeutrinoTrackShowerSep.cxx:52-59`: `segment_is_shower_topology` runs first
 and short-circuits `segment_is_shower_trajectory`. Separately,
@@ -462,27 +493,212 @@ never reach it regardless of order.
 `is_shower_trajectory` — it just never ran here: wrong function (topology
 fired first), and length-gated out of the right one anyway.
 
+Once topology fires, `NeutrinoTrackShowerSep.cxx:117-135` hard-assigns
+`pdg=11`/`score=100` as literals — `segment_determine_dir_track`, the real
+muon/proton/pion PID call, is never attempted on this path.
+
+### 3.2 Isochrony is not the population-level driver
+
 `is_shower_topology`'s only angle-to-drift special case
 (`PRSegmentFunctions.cxx:2570-2578`) is `angle_deg < 7.5°` — drift-*parallel*,
-the opposite regime. At 88.55° the general branch always runs, using RMS
-spread along `dir_3`, which at this angle is ≈ the drift axis (`dir_3 · x̂ ≈
-0.9997`) — arguably the *right* projection for an isochronous track, not a
-gap: a same-cut recompute using `dir_2` (the in-plane transverse, where the
-isochronous ambiguity actually lives) fires far more aggressively
-(length-fraction 0.99 vs 0.41 measured — indicative 3D-radius proxy, not the
-code's exact 2D-projection/ghost-removed association).
+the opposite regime from 321107. At 88.55° the general branch always runs,
+using RMS spread along `dir_3`, which at this angle is ≈ the drift axis
+(`dir_3 · x̂ ≈ 0.9997`).
 
-Best working theory: associated-cloud contamination, not the angle handling
-— `n_frag=5`, median point-to-trajectory distance 5.4 cm (90th pct 14.8 cm).
-The only long-track guard (`:2766-2773`, `length1 < 0.25·L`) misses narrowly
-(≈0.37 measured vs the 0.25 threshold). Once topology fires,
-`NeutrinoTrackShowerSep.cxx:117-135` hard-assigns pdg 11/score 100 — no PID
-call is ever attempted.
+Census (`pr25_shower_topo_census.py population --arm work-vfmcp1k-prodon
+--nu-only`), 324 nu-candidate main segments >50 cm across 444/572 `prodon`
+events (the other 128 have no `T_rec_charge` tree at all — no tracking
+output, not a census artifact), binned by angle to drift:
 
-Prototype comparison: no divergence (`prototype_base/pid/src/
-ProtoSegment.cxx:319-471`/`:543-611` match line-for-line). Not a porting
-bug — original to the algorithm design.
+| angle to drift | n | shower-flagged | rate |
+|---|---|---|---|
+| 0–30° | 16 | 1 | 6.2% |
+| 30–50° | 58 | 3 | 5.2% |
+| 50–65° | 72 | 1 | 1.4% |
+| 65–75° | 70 | 7 | 10.0% |
+| 75–85° | 74 | 4 | 5.4% |
+| 85–90° | 34 | 3 | 8.8% |
 
-**No fix proposed.** If pursued: the `0.25` veto fraction is shared with
-uboone/the prototype (a real algorithm change, not an SBND-only knob); the
-associated-cloud contamination needs its own root-cause pass first.
+Flat, within counting noise. **"Isochronous tracks get called showers" is
+not a population-level effect** — 321107 is an individual case, not an
+instance of an angle-dependent failure, and the owner's original framing of
+the question (mirrored in the previous pass of this doc) should be retired.
+
+### 3.3 The blast radius of any fix is small and exactly known
+
+`PRSegmentFunctions.cxx:2765-2772`'s long-track guard only runs on segments
+already flagged `kShowerTopology` with geometric length > 50 cm and can only
+demote them — so the population any change can possibly touch is exactly
+*that* set. Census over all clusters (not just nu-candidate mains) in the
+same 444 events: 1850 segments written to `T_rec_charge`, 841 shower-flagged,
+of which **21 exceed 50 cm, in 21 distinct events**:
+
+```
+286353 321107 53427 292643 281527 277276 387850 316729 62281 278420 404684
+57903  65289  350935 280972 315167 286681 278684 347085 287621 400504
+```
+
+This is the small group used below — the owner's own scoping request, not a
+new event selection.
+
+### 3.4 Direct instrument, not a proxy
+
+`segment_is_shower_topology` had **zero active log lines** before this round
+(one relevant `std::cout` existed, commented out, at `:2660`). Added an
+env-gated diagnostic (`WCT_SHOWER_TOPO_DEBUG=1`, default off, same idiom as
+`WCT_TGM_DEBUG`) emitting, per evaluation: the per-bucket `dir_3` RMS
+distribution (count over the 0.4 cm cut, median, p90 — not just the max),
+association coverage (`total_effective_length / geometric length`), which of
+the 5 disjunction branches fired, and the long-track guard's
+`total_length1/2` fractions. `clus/src/PRSegmentFunctions.cxx`.
+
+Target (321107, cluster 13, seg 13000, L = 248.7 cm), measured directly:
+
+```
+assoc_npts 8136  nbuckets 389  n_over0.4cm 134  rms_p50 0.36cm  rms_p90 0.50cm
+max_spread 1.24cm  lsl 80.4cm  tel 233.7cm  lsl/tel 0.344  tel/L 0.940  branch 2
+guard: total_length1 64.2cm (0.258·L)  total_length2 63.6cm (0.256·L)  demoted false
+```
+
+This directly refutes two of the three candidate mechanisms considered:
+
+- **Not sparse association** (candidate A, "the coverage denominator is
+  small"): `tel/L = 0.940` — 94% of the track's length has ≥2 associated
+  points. This is a well-covered segment, not a starved one.
+- **Not a single outlier bucket** (candidate B, "one bucket carries
+  `max_spread`"): 134 of 389 populated buckets (34%) exceed the 0.4 cm cut,
+  and the *median* bucket RMS (0.36 cm) already sits just under that cut. The
+  spread is broadly distributed across a third of the track, not concentrated
+  in one or two buckets that a robuster statistic would filter out.
+
+What remains is **candidate C**, the long-track guard's `0.25` fraction: the
+target genuinely sits close to it (0.258 / 0.256 vs 0.25) — a real
+near-miss, this time measured directly rather than inferred from a proxy.
+
+### 3.5 The 0.25 threshold has no natural break across the affected population
+
+Re-running the same instrument over all 21 events plus ~9 muon controls that
+correctly stayed tracks (`pr25_shower_topo_census.py guard --arm
+work-pr25s3-dbg21`): 41 evaluations of an L>50cm shower-flagged segment, of
+which the *existing* guard already correctly demotes 6 (they are not part of
+the population below). The controls contribute **zero** guard-evaluated
+segments — the guard cannot touch a segment that never gets flagged in the
+first place, so "the controls are untouched" does not by itself validate any
+candidate, exactly as anticipated before running this.
+
+The 35 that survive, by `max(total_length1, total_length2) / L`:
+
+```
+0.570 0.398 0.375 0.369 0.361 0.357 0.353 0.353 0.338 0.304 0.304 0.300 0.300
+0.300 0.293 0.292 0.285 0.282 0.278 0.278 0.276 0.276 0.274 0.273 0.273 0.270
+0.270 0.268 0.268 0.265 0.265 0.259 0.258 0.258 0.256 0.250
+```
+
+**Continuous from 0.250 to 0.570, no gap.** 321107 sits at the low end
+(0.258), tied with several others. There is no truth label on this sample
+(M11/no-truth caveat, as in every prior round) to say which of these 21 are
+genuine showers and which are mislabeled tracks like 321107 — so there is no
+principled place to draw a raised threshold. Any value that catches 321107
+also catches an a-priori-unknown number of the other 20, and a value that
+catches only 321107 does not exist (277276 sits at the identical 0.250).
+
+### 3.6 The discriminant is unstable at the margin — not just close, unreliable
+
+`TaggerCheckNeutrino.cxx` runs `clustering_points` + `separate_track_shower`
+**twice** per event — once before `improve_vertex`, once after
+(`:545` and `:673`). The instrument catches the same physical segment
+evaluated at both passes. In most of the 21 events the two passes agree; in
+**3 of 21** they do not — the fit shifts by ~1–2 cm between passes and the
+verdict flips:
+
+| evt | pass-1 length | pass-2 length | verdict |
+|---|---|---|---|
+| 65289 | 150.3 cm | 69.5 cm† | flips |
+| 277276 | 140.4 cm (f=0.244, demoted) | 139.3 cm (f=0.250, survives) | flips |
+| 278684 | 109.6 cm (demoted) | 59.2/59.3 cm† | flips |
+
+†different segment lengths across passes on these two events reflect more
+than one segment moving; 277276 is the clean single-segment case: the
+*same* ~140 cm segment is correctly demoted at 0.244 and then survives at
+0.250 after a sub-2-cm change in the fitted length, purely from crossing the
+`<` in `total_length1 < 0.25 * L`.
+
+**This is the decisive finding.** It is not merely that 321107 sits close to
+the boundary — the classification the guard produces for a fixed physical
+track is not even stable across two evaluations of the *same* input a few
+centimeters apart. Raising, lowering, or otherwise tuning the `0.25`
+constant does not fix an instability of this kind; it only relocates where
+the knife-edge sits. Per CLAUDE.md §5's "a physics number looks wrong: report,
+don't tune", and per the selection rule fixed in this round's plan before any
+of the above was measured: **no candidate cleanly separates the target from
+its own population, so no threshold change is proposed.**
+
+### 3.7 Prototype comparison
+
+No divergence — `prototype_base/pid/src/ProtoSegment.cxx:319-471` (topology)
+and `:543-611` (trajectory) match the toolkit line-for-line on every
+threshold and the same `<7.5°` drift-parallel-only special case. This is not
+a porting bug; the behavior is original to the algorithm design, and the
+same-input verdict instability of §3.6 is therefore also original, not a
+toolkit regression.
+
+### 3.8 Conclusion — no fix this round; the instrument is the deliverable
+
+Three candidate default-OFF knobs were designed in advance of measurement
+(coverage floor, per-bucket-count spread statistic, raised long-track
+fraction) with an explicit selection rule committed before running the
+instrument. All three fail that rule: A and B are directly refuted on the
+target itself (§3.4); C shows no separation and, worse, sits on a
+demonstrably unstable discriminant (§3.5–3.6). Per the pre-committed rule,
+**no fix is shipped.**
+
+What *is* shipped: the `WCT_SHOWER_TOPO_DEBUG` instrument itself
+(`clus/src/PRSegmentFunctions.cxx`, default off, zero behavior change either
+way — it only adds log lines) and `pr25_shower_topo_census.py`, both durable
+assets for the next pass at this problem.
+
+**If pursued further**: `segment_is_shower_topology` already computes a
+per-bucket `dQ/dx` (`vec_dQ_dx`, `PRSegmentFunctions.cxx:2616`) that is
+currently **dead code** — read only for its `.size()`, never its values
+(`:2681`, `:2722`). A shower's dQ/dx profile (cascade multiplication) differs
+physically from a muon's (~constant, MIP-like) in a way none of the three
+candidates above used. Using it would be a genuine algorithm addition, not a
+threshold tune, and needs its own measurement round — not proposed here.
+
+### Verification performed
+
+- `./wcb build --notests -p && ./wcb install --notests -p`; freshness proof
+  (`local/lib/libWireCellClus.so` newer than the edit).
+- `./build/clus/wcdoctest-clus`: 49/49 pass, 565/565 assertions, 0 failed.
+- The instrument is a pure log addition behind `std::getenv`, read once into
+  a function-local `static const bool` — no control-flow change on any path,
+  so no compiled-config proof or byte-identical gate is needed (there is no
+  new jsonnet key; nothing is threaded to config).
+- Knob-on smoke: ran on the full 21-event population + 9 controls
+  (`work-pr25s3-dbg21`, `PR_JOBS=6`, all 30 events `rc=0`); the debug lines
+  are exactly what §3.4–3.6 quote.
+
+No cfg change, no default flip, no A/B gate — there is no behavior-affecting
+change in this section, by design (§3.8).
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# population census: angle-independence + exact blast-radius population
+python3 pr25_shower_topo_census.py population --arm work-vfmcp1k-prodon --nu-only
+python3 pr25_shower_topo_census.py population --arm work-vfmcp1k-prodon   # all clusters, the 21-event set
+
+# direct instrument on the target
+WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3-dbg1 data 321107
+grep "shower_topo dbg" work-pr25s3-dbg1/pr_evt321107/wct_pr_evt321107.log
+
+# direct instrument on the full 21-event population + muon controls
+WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3-dbg21 data \
+  286353 321107 53427 292643 281527 277276 387850 316729 62281 278420 404684 \
+  57903 65289 350935 280972 315167 286681 278684 347085 287621 400504 \
+  402880 65295 168614 48367 394642 291570 283771 319611 67746
+python3 pr25_shower_topo_census.py guard --arm work-pr25s3-dbg21
+```
