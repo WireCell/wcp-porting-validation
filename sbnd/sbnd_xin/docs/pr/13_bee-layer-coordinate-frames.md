@@ -33,11 +33,11 @@ correction dominates.
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
 # sections A (frame fingerprint), B (img<->clustering delta), D (t0 through the tarball)
-python3 bee_frame_probe.py -q work-mcp1kall-d59k -p work-mcp1kall-cath01 \
+python3 scripts/bee/bee_frame_probe.py -q work-mcp1kall-d59k -p work-mcp1kall-cath01 \
         -e 280972 -e 292384 -s ABD
 
 # section C (the decisive track_fit test), pooled over the pr/12 spanned set
-python3 bee_frame_probe.py -q work-mcp1kall-d59k -p work-mcp1kall-cath01 \
+python3 scripts/bee/bee_frame_probe.py -q work-mcp1kall-d59k -p work-mcp1kall-cath01 \
         --index docs/pr/cath_spanned.index.txt -n 20 -s C
 ```
 
@@ -255,7 +255,7 @@ component `type:name` (`ClusteringSwitchScope:` + prefix, `pr` or `all`;
 `cfg/pgrapher/common/clus.jsonnet:986-992`), and that the bee3 viewer accepts the new
 algorithm name.
 
-**Option 2 — correct the display at merge time in `make_pr_bee.py`.** The transverse part
+**Option 2 — correct the display at merge time in `scripts/bee/make_pr_bee.py`.** The transverse part
 is a per-TPC constant, invertible offline from the sign of x; the drift part can be
 recovered per cluster by the same unique-`q` match this probe uses. Emits a shifted
 `img-global` without touching the toolkit. Ranked below Option 0 because it

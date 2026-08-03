@@ -1,0 +1,164 @@
+name	newpath	action
+Magnify-tracking-SBND		STAY
+Woodpecker		STAY
+_runlib.sh		STAY
+automask_prototype.py	scripts/analysis/ql/automask_prototype.py	MOVE
+bee_frame_probe.py	scripts/bee/bee_frame_probe.py	MOVE
+build_mcbase_stage.py	scripts/analysis/misc/build_mcbase_stage.py	MOVE
+bw_label_census.py	scripts/analysis/stm/bw_label_census.py	MOVE
+bwgate_report.py	scripts/analysis/stm/bwgate_report.py	MOVE
+cathode_distortion.py	scripts/analysis/cathode/cathode_distortion.py	MOVE
+cathode_fiducial.jsonnet		STAY
+cathode_nu_census.py	scripts/analysis/cathode/cathode_nu_census.py	MOVE
+cathode_plots.py	scripts/analysis/cathode/cathode_plots.py	MOVE
+cbr_sweep_compare.py	scripts/analysis/cathode/cbr_sweep_compare.py	MOVE
+check_dead5.py	scripts/analysis/ql/check_dead5.py	MOVE
+clus.jsonnet		STAY
+clustering_timing_analysis.py	scripts/perf/clustering_timing_analysis.py	MOVE
+compare_pr_roundtrip.py	scripts/analysis/misc/compare_pr_roundtrip.py	MOVE
+compile_prjob_cfg.sh	scripts/cfg/compile_prjob_cfg.sh	MOVE
+compile_sbnd_prod.sh	scripts/cfg/compile_sbnd_prod.sh	MOVE
+d52_ab_report.py	scripts/analysis/stm/d52_ab_report.py	MOVE
+d60_ab_report.py	scripts/analysis/stm/d60_ab_report.py	MOVE
+d66_flip_plots.sh	scripts/runners/d66_flip_plots.sh	MOVE
+d66_flip_report.py	scripts/analysis/stm/d66_flip_report.py	MOVE
+d66_proton_sweep.py	scripts/analysis/stm/d66_proton_sweep.py	MOVE
+d66_scan_score.py	scripts/analysis/stm/d66_scan_score.py	MOVE
+dump_stopping_dqdx.C	scripts/root/dump_stopping_dqdx.C	MOVE
+dump_truth_sed.C	scripts/root/dump_truth_sed.C	MOVE
+fc_speck_audit.py	scripts/analysis/misc/fc_speck_audit.py	MOVE
+feat_census.py	scripts/analysis/misc/feat_census.py	MOVE
+flash_coincidence.py	scripts/analysis/light/flash_coincidence.py	MOVE
+flash_dump.csv	products/flash_dump.csv	MOVE
+flash_t0_lan_reco2.py	scripts/analysis/light/flash_t0_lan_reco2.py	MOVE
+gapjump_probe.py	scripts/analysis/misc/gapjump_probe.py	MOVE
+geom_ab_batch.sh	scripts/runners/geom_ab_batch.sh	MOVE
+geom_ab_summary.sh	scripts/runners/geom_ab_summary.sh	MOVE
+input_files		STAY
+inspect_pctree.py	scripts/analysis/misc/inspect_pctree.py	MOVE
+iso_sweep_compare.py	scripts/analysis/misc/iso_sweep_compare.py	MOVE
+kink_probe.py	scripts/analysis/cathode/kink_probe.py	MOVE
+lm_tune.py	scripts/analysis/ql/lm_tune.py	MOVE
+mabc_step_totals.py	scripts/analysis/misc/mabc_step_totals.py	MOVE
+magnify-sinks.jsonnet		STAY
+make_pr_bee.py	scripts/bee/make_pr_bee.py	MOVE
+make_scan_bee.sh	scripts/bee/make_scan_bee.sh	MOVE
+make_stmfit_bee.py	scripts/bee/make_stmfit_bee.py	MOVE
+mc_find_rse.C	scripts/root/mc_find_rse.C	MOVE
+mc_nu_vertices.C	scripts/root/mc_nu_vertices.C	MOVE
+mc_truth_muons.C	scripts/root/mc_truth_muons.C	MOVE
+merge_mabc_bee.py	scripts/bee/merge_mabc_bee.py	MOVE
+merge_sel_archives.py		STAY
+nuecc48_detail.py	scripts/analysis/misc/nuecc48_detail.py	MOVE
+nusel_extract.py		STAY
+nusel_scan_filter.py	scripts/analysis/misc/nusel_scan_filter.py	MOVE
+oc19_census_mcp1k.py	scripts/analysis/misc/oc19_census_mcp1k.py	MOVE
+oc19_census_nuecc48.py	scripts/analysis/misc/oc19_census_nuecc48.py	MOVE
+oc_stage_gap.py	scripts/analysis/misc/oc_stage_gap.py	MOVE
+oc_stage_trace.py	scripts/analysis/misc/oc_stage_trace.py	MOVE
+p54_ab_report.py	scripts/perf/p54_ab_report.py	MOVE
+pair_eyeball.py	scripts/analysis/misc/pair_eyeball.py	MOVE
+pmt_health_study.py	scripts/analysis/light/pmt_health_study.py	MOVE
+pmt_nonlin_params_v3r1.csv	products/pmt_nonlin_params_v3r1.csv	MOVE
+pmt_nonlinearity_curve.py	scripts/analysis/light/pmt_nonlinearity_curve.py	MOVE
+pr11_analyze_census.py	scripts/analysis/pr11/pr11_analyze_census.py	MOVE
+pr11_br_filled_census.py	scripts/analysis/pr11/pr11_br_filled_census.py	MOVE
+pr11_config_cost.py	scripts/perf/pr11_config_cost.py	MOVE
+pr11_pick_events.py	scripts/analysis/pr11/pr11_pick_events.py	MOVE
+pr11_seq_compare.py	scripts/analysis/pr11/pr11_seq_compare.py	MOVE
+pr20_b03_census.py	scripts/analysis/pr20/pr20_b03_census.py	MOVE
+pr20_b03_survivors.py	scripts/analysis/pr20/pr20_b03_survivors.py	MOVE
+pr20_b1_population.py	scripts/analysis/pr20/pr20_b1_population.py	MOVE
+pr20_census.py	scripts/analysis/pr20/pr20_census.py	MOVE
+pr20_edge_census.py	scripts/analysis/pr20/pr20_edge_census.py	MOVE
+pr20_partI_census.py	scripts/analysis/pr20/pr20_partI_census.py	MOVE
+pr20_partI_pftree.py	scripts/analysis/pr20/pr20_partI_pftree.py	MOVE
+pr20_s7_crossers.py	scripts/analysis/pr20/pr20_s7_crossers.py	MOVE
+pr20_scores_diff.py	scripts/analysis/pr20/pr20_scores_diff.py	MOVE
+pr20_wasmain_check.py	scripts/analysis/pr20/pr20_wasmain_check.py	MOVE
+pr20off.txt	products/pr20off.txt	MOVE
+pr20on.txt	products/pr20on.txt	MOVE
+pr23_cathprobe.py	scripts/analysis/pr23/pr23_cathprobe.py	MOVE
+pr23_fitcover_census.py	scripts/analysis/pr23/pr23_fitcover_census.py	MOVE
+pr24_iso_probe.py	scripts/analysis/pr24/pr24_iso_probe.py	MOVE
+pr25_rejoin_census.py	scripts/analysis/pr25/pr25_rejoin_census.py	MOVE
+pr25_shower_topo_census.py	scripts/analysis/pr25/pr25_shower_topo_census.py	MOVE
+pr25_spread_census.py	scripts/analysis/pr25/pr25_spread_census.py	MOVE
+pr_arm_compare.py	scripts/analysis/misc/pr_arm_compare.py	MOVE
+pr_proj_align.py	scripts/analysis/geom/pr_proj_align.py	MOVE
+pr_proj_binctl.C	scripts/root/pr_proj_binctl.C	MOVE
+pr_proj_guishot.C	scripts/root/pr_proj_guishot.C	MOVE
+pr_scores_table.py		STAY
+pr_stage_totals.py	scripts/analysis/misc/pr_stage_totals.py	MOVE
+profile_pr11.sh	scripts/perf/profile_pr11.sh	MOVE
+profile_pr65.sh	scripts/perf/profile_pr65.sh	MOVE
+ql_arm_compare.py	scripts/analysis/ql/ql_arm_compare.py	MOVE
+ql_beam_pref_score.py	scripts/analysis/ql/ql_beam_pref_score.py	MOVE
+ql_beam_pref_tune.py	scripts/analysis/ql/ql_beam_pref_tune.py	MOVE
+ql_dump_scalar.jsonnet		STAY
+ql_light_compare.py	scripts/analysis/ql/ql_light_compare.py	MOVE
+ql_light_dump.csv	products/ql_light_dump.csv	MOVE
+ql_nonlin_compare.py	scripts/analysis/ql/ql_nonlin_compare.py	MOVE
+ql_pe_error.py	scripts/analysis/ql/ql_pe_error.py	MOVE
+ql_perpmt_dump.csv	products/ql_perpmt_dump.csv	MOVE
+ql_prefilter_parity.py	scripts/analysis/ql/ql_prefilter_parity.py	MOVE
+ql_prefilter_tune.py	scripts/analysis/ql/ql_prefilter_tune.py	MOVE
+ql_recipe_compare.py	scripts/analysis/ql/ql_recipe_compare.py	MOVE
+qlmatching.jsonnet		STAY
+relink_tags.py		STAY
+run_bee_img_evt.sh		STAY
+run_clus_evt.sh		STAY
+run_clust_QL_evt.sh		STAY
+run_d52_campaign.sh	scripts/runners/run_d52_campaign.sh	MOVE
+run_full1k_nusel.sh		STAY
+run_img_evt.sh		STAY
+run_mcbase.sh	scripts/runners/run_mcbase.sh	MOVE
+run_nusel_evt.sh		STAY
+run_perf54_nusel.sh	scripts/runners/run_perf54_nusel.sh	MOVE
+run_pr_chain_batch.sh		STAY
+run_pr_evt.sh		STAY
+run_pr_geom_arm.sh	scripts/runners/run_pr_geom_arm.sh	MOVE
+run_pr_geom_arm_dl.sh	scripts/runners/run_pr_geom_arm_dl.sh	MOVE
+run_ql_evt.sh		STAY
+run_reco1_dump.sh		STAY
+run_select_evt.sh		STAY
+run_sp_to_magnify_evt.sh		STAY
+s4_chain.sh	scripts/runners/s4_chain.sh	MOVE
+s4_nuecc48.sh	scripts/runners/s4_nuecc48.sh	MOVE
+s4_off.sh	scripts/runners/s4_off.sh	MOVE
+saturation_flash_dump.csv	products/saturation_flash_dump.csv	MOVE
+saturation_pe.py	scripts/analysis/light/saturation_pe.py	MOVE
+saturation_perchan.csv	products/saturation_perchan.csv	MOVE
+sbnd_track_fitting.json		STAY
+ssm_tagger_ab.py	scripts/analysis/misc/ssm_tagger_ab.py	MOVE
+stm_dqdx_reference.py	scripts/analysis/stm/stm_dqdx_reference.py	MOVE
+stm_fv_census.py	scripts/analysis/stm/stm_fv_census.py	MOVE
+stm_main_connectivity.py	scripts/analysis/stm/stm_main_connectivity.py	MOVE
+stm_merge_attribution.py	scripts/analysis/stm/stm_merge_attribution.py	MOVE
+stmfit_mc_compare.py	scripts/analysis/stm/stmfit_mc_compare.py	MOVE
+stmfit_particle_overlay.py	scripts/analysis/stm/stmfit_particle_overlay.py	MOVE
+stmfit_showcase.py	scripts/analysis/stm/stmfit_showcase.py	MOVE
+stmon_stats.py	scripts/analysis/stm/stmon_stats.py	MOVE
+stub_census.py	scripts/analysis/misc/stub_census.py	MOVE
+tagger_tree_ab.py	scripts/analysis/misc/tagger_tree_ab.py	MOVE
+tgm_readout_cut.py	scripts/analysis/geom/tgm_readout_cut.py	MOVE
+tmp_run_pr_chain_cfghead.sh	scripts/runners/tmp_run_pr_chain_cfghead.sh	MOVE
+tmp_run_pr_chain_geovtx.sh	scripts/runners/tmp_run_pr_chain_geovtx.sh	MOVE
+tmp_run_pr_chain_nblhead.sh	scripts/runners/tmp_run_pr_chain_nblhead.sh	MOVE
+trash-all-apa.tar.gz		STAY
+unmatched_census.py	scripts/analysis/ql/unmatched_census.py	MOVE
+unmerge_crosser_audit.py	scripts/analysis/misc/unmerge_crosser_audit.py	MOVE
+unzip.pl	scripts/bee/unzip.pl	MOVE
+upload-d55ton-30evt-stmfit.stmid-map.txt	products/upload-d55ton-30evt-stmfit.stmid-map.txt	MOVE
+upload-to-bee.sh		STAY
+vveto_sweep_compare.py	scripts/analysis/misc/vveto_sweep_compare.py	MOVE
+wct-clus-matching-perevt.jsonnet		STAY
+wct-clus-matching-standalone.jsonnet		STAY
+wct-clustering.jsonnet		STAY
+wct-img-2-bee.py		STAY
+wct-img-all.jsonnet		STAY
+wct-pr-perevt.jsonnet		STAY
+wct-reco1-dump.jsonnet		STAY
+wct-sp-to-magnify.jsonnet		STAY
+yz_coverage.py	scripts/analysis/geom/yz_coverage.py	MOVE
+zip-upload.sh	scripts/bee/zip-upload.sh	MOVE

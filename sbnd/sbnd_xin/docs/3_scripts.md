@@ -460,7 +460,7 @@ Usage: python3 merge_sel_archives.py <orig_archive> <out_archive> <evt_id> <mask
 
 Channels for anodes that were not selected keep their original unmasked values.
 
-### `pmt_nonlinearity_curve.py`
+### `scripts/analysis/light/pmt_nonlinearity_curve.py`
 
 Standalone reproduction of the sbndcode PMT non-linearity (saturation) that maps
 `NPE_true → NPE_observed/reco`. Reproduces `PMTNonLinearityTF1::NObservedPE` exactly
@@ -473,10 +473,10 @@ clip never engages. Plots **envelope** (single burst, worst-case `Eval(N)`) vs *
 
 ```
 # single-channel: NPE_true vs NPE_obs for single-burst + scintillation, plus inverse
-python3 pmt_nonlinearity_curve.py                  # -> pmt_nonlin_out/{png,csv}
+python3 scripts/analysis/light/pmt_nonlinearity_curve.py                  # -> pmt_nonlin_out/{png,csv}
 
 # all-PMT overlay (one curve per channel), real params from the conditions DB:
-python3 pmt_nonlinearity_curve.py --all-pmt --params-csv perchan.csv   # -> pics/pmt_nonlinearity_allpmt.png
+python3 scripts/analysis/light/pmt_nonlinearity_curve.py --all-pmt --params-csv perchan.csv   # -> pics/pmt_nonlinearity_allpmt.png
 ```
 
 Per-channel `(PESat, Alpha)` are in the remote conditions DB (table `pds_calibration`,
@@ -495,11 +495,11 @@ for QLMatching, plus a fit-vs-MC validation plot (`pics/pmt_nonlinearity_fit.png
 residual ≤2% over the data regime):
 
 ```
-python3 pmt_nonlinearity_curve.py --emit-qlmatching --params-csv pmt_nonlin_params_v3r1.csv \
+python3 scripts/analysis/light/pmt_nonlinearity_curve.py --emit-qlmatching --params-csv pmt_nonlin_params_v3r1.csv \
         --params-out ../../toolkit/cfg/pgrapher/experiment/sbnd/pmt_nonlinearity_params.jsonnet
 ```
 
-### `ql_nonlin_compare.py`
+### `scripts/analysis/ql/ql_nonlin_compare.py`
 
 Compares QLMatching predicted-vs-measured PE with the PMT non-linearity OFF vs ON, from two
 `mabc.zip` BEE archives per sample (`run_clust_QL_evt.sh` with `PMT_NL=false` / default on).
@@ -510,11 +510,11 @@ does not help there. As of 2026-06-04 the correction is **ON by default for SBND
 `qlmatching.jsonnet`; `PMT_NL=false` / `pmt_nl=false` recovers the OFF baseline).
 
 ```
-python3 ql_nonlin_compare.py --mc-off mc_off.zip --mc-on mc_on.zip \
+python3 scripts/analysis/ql/ql_nonlin_compare.py --mc-off mc_off.zip --mc-on mc_on.zip \
                              --data-off data_off.zip --data-on data_on.zip
 ```
 
-### `ql_pe_error.py`
+### `scripts/analysis/ql/ql_pe_error.py`
 
 Measures the per-PMT light-error fraction `a` from the hand-scanned matches (the matcher assumes
 30% ⇒ `a=0.09`), modelling `E[(pred−meas)²] = meas + a·pred²`. Reads the per-event calib dumps
@@ -526,11 +526,11 @@ PMTs (`opdet type==1`) in the flash's TPC. Writes 4-panel figures
 pull). Full writeup + findings in `docs/17_pe-error-study.md`. Default runs both modes:
 
 ```
-python3 ql_pe_error.py            # data + mc
-python3 ql_pe_error.py mc         # one mode
+python3 scripts/analysis/ql/ql_pe_error.py            # data + mc
+python3 scripts/analysis/ql/ql_pe_error.py mc         # one mode
 ```
 
-### `ql_recipe_compare.py`
+### `scripts/analysis/ql/ql_recipe_compare.py`
 
 Compares data vs MC Q/L **match quality** (χ²/ndf, ks, meas/pred) on the hand-scans AFTER the
 SBND data recipe (data `QtoL=0.86` + the PE-dependent error `σ²=meas+max(5 PE,0.25·pred)²`). Reads
@@ -539,5 +539,5 @@ the regenerated recipe calib dumps from `work/ql_recipe/`. Finding: χ²/ndf dro
 Writes `pics/ql_recipe_data_vs_mc.png`. Full writeup in `docs/17_pe-error-study.md`.
 
 ```
-python3 ql_recipe_compare.py
+python3 scripts/analysis/ql/ql_recipe_compare.py
 ```

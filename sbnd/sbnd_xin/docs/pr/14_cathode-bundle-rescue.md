@@ -17,7 +17,7 @@ no-regression sweep over the full sample.
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
 # The failure-mode census this design targets (doc pr/12 §6):
-python3 cathode_nu_census.py --root work-mcp1kall-cath01 --sample mcp1k \
+python3 scripts/analysis/cathode/cathode_nu_census.py --root work-mcp1kall-cath01 --sample mcp1k \
     --scores docs/pr/11_scores-table.tsv --ql-root work-mcp1kall-d59k \
     --merge docs/pr/12_cathode-census.tsv
 
@@ -44,13 +44,13 @@ grep -h "rescue round" work-mcp1kall-rescue01/ql_evt*/wct_ql_evt*.log \
 PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1kall-rescue01 work-mcp1kall-rescue01pr data \
     288952 169824 56463 59003 392200 398690
 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-rescue01 work-nuecc48-rescue01pr data 437699
-python3 cathode_nu_census.py --root work-mcp1kall-rescue01pr --ql-root work-mcp1kall-rescue01 \
+python3 scripts/analysis/cathode/cathode_nu_census.py --root work-mcp1kall-rescue01pr --ql-root work-mcp1kall-rescue01 \
     --sample mcp1k --out /home/xqian/tmp/cbr_census_mcp.tsv
-python3 cathode_nu_census.py --root work-nuecc48-rescue01pr --ql-root work-nuecc48-rescue01 \
+python3 scripts/analysis/cathode/cathode_nu_census.py --root work-nuecc48-rescue01pr --ql-root work-nuecc48-rescue01 \
     --sample nuecc48 --out /home/xqian/tmp/cbr_census_nuecc.tsv
 
 # --- Bee set (§7.3) ---
-python3 make_pr_bee.py -q work-mcp1kall-rescue01 -p work-mcp1kall-rescue01pr \
+python3 scripts/bee/make_pr_bee.py -q work-mcp1kall-rescue01 -p work-mcp1kall-rescue01pr \
     -q work-nuecc48-rescue01 -p work-nuecc48-rescue01pr --allow-unevaluated \
     -o /home/xqian/tmp/cbr_rescue_after.zip 288952 169824 56463 59003 437699 392200 398690
 ./upload-to-bee.sh /home/xqian/tmp/cbr_rescue_after.zip
@@ -63,9 +63,9 @@ TAG=cbron1k SBND_CATHODE_RESCUE=1 ./run_full1k_nusel.sh 1000 6     # ON arm
 # and 'all' instead of 29; imaging symlinked per event from work/evt<ID>.
 # Per-event member-content hash OFF vs ON + firing census (verdict per event:
 # IDENTICAL / FIRED / MISMATCH):
-python3 cbr_sweep_compare.py --off work-mcp1kall-cbroff1k --on work-mcp1kall-cbron1k \
+python3 scripts/analysis/cathode/cbr_sweep_compare.py --off work-mcp1kall-cbroff1k --on work-mcp1kall-cbron1k \
     --out /home/xqian/tmp/cbr_sweep_mcp1k.tsv
-python3 cbr_sweep_compare.py --off work-nuecc48-cbroff --on work-nuecc48-cbron \
+python3 scripts/analysis/cathode/cbr_sweep_compare.py --off work-nuecc48-cbroff --on work-nuecc48-cbron \
     --out /home/xqian/tmp/cbr_sweep_nuecc.tsv
 # determinism (§5.3): two fresh ON re-runs of 437699 (idx 29) into
 # work-cbr-det{1,2}, then 3-way hash_archive vs work-nuecc48-cbron.
@@ -348,7 +348,7 @@ one cluster) rather than the PR layers.
 Four arms at the same `8d6de401` binary (Repro block), all rc=0:
 `work-mcp1kall-cbroff1k` / `work-mcp1kall-cbron1k` (1000 events each) and
 `work-nuecc48-cbroff` / `work-nuecc48-cbron` (48 events each, full QL + nusel
-per event).  Per event, `cbr_sweep_compare.py` compares member-content hashes
+per event).  Per event, `scripts/analysis/cathode/cbr_sweep_compare.py` compares member-content hashes
 (the §5 `hash_archive` definition) of the QL zip, the pctree tarball and the
 PR zip, and greps the ON log for rescue firings.  Verdicts:
 

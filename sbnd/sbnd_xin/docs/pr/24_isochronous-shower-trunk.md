@@ -14,9 +14,9 @@ as the diagnosis record: both of its attempts were REJECTED and removed.
 **removed at the owner's direction** (2026-08-02). Nothing from this round is
 in the chain: the toolkit is back to its pre-round state and the compiled PR
 job config is byte-identical to the doc pr/23 §9 baseline
-(`compile_prjob_cfg.sh` vs `scratchpad/v6flip/postflip-prjob.json`, `cmp`
+(`scripts/cfg/compile_prjob_cfg.sh` vs `scratchpad/v6flip/postflip-prjob.json`, `cmp`
 clean). What survives is this diagnosis, the measurement instrument
-(`pr24_iso_probe.py`), one runner convenience (`SBND_DL_WEIGHTS`), and the
+(`scripts/analysis/pr24/pr24_iso_probe.py`), one runner convenience (`SBND_DL_WEIGHTS`), and the
 next-session plan in §7.
 
 Trigger: owner hand-scan of SBND run 18255 evt 271851 (nueCC48 sample) —
@@ -53,9 +53,9 @@ SBND_PROTECT_BUNDLE=0 SBND_DL_WEIGHTS= \
   ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24-a2poffgeom  data 271851
 
 # --- measurements (the instrument that survives this round) ---
-python3 pr24_iso_probe.py work-pr24-a1    --detail 271851   # segments + 2-D overlap
-python3 pr24_iso_probe.py work-pr24-a2poff --detail 271851
-python3 pr24_iso_probe.py work-vfmcp1k-prodon --jobs 12 \
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-pr24-a1    --detail 271851   # segments + 2-D overlap
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-pr24-a2poff --detail 271851
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-vfmcp1k-prodon --jobs 12 \
         --out /home/xqian/tmp/pr24_prodon.tsv               # main-cluster swap census
 ```
 
@@ -182,7 +182,7 @@ concurrent session and is reverted by this round's commit), and from the runner.
 Worth keeping from it: the swap census below — the pathology is real,
 pre-existing, and not caused by the doc pr/23 flip.
 
-## 5. Census (instrument: `pr24_iso_probe.py`)
+## 5. Census (instrument: `scripts/analysis/pr24/pr24_iso_probe.py`)
 
 The main-cluster swap is detected exactly: compare `TaggerCheckNeutrino`'s
 "selected main cluster N" log line with the cluster hosting the final vertex.
@@ -248,7 +248,7 @@ Two leads recorded but not pursued:
 
 ## 8. What this round leaves behind
 
-* `sbnd_xin/pr24_iso_probe.py` — per-event isochrony / vertex-host / segment /
+* `sbnd_xin/scripts/analysis/pr24/pr24_iso_probe.py` — per-event isochrony / vertex-host / segment /
   2-D projection-overlap / charge-coverage probe, plus the population census.
 * `sbnd_xin/run_pr_chain_batch.sh` — `SBND_DL_WEIGHTS` (unset ⇒ cfg default;
   set-empty ⇒ geometric vertex), the attribution arm of §2.
@@ -285,7 +285,7 @@ SBND_ISO_ENDPOINT=1 SBND_DL_WEIGHTS= \
 valfast/run_valfast.sh pr24r2off -j 24 mcp1k nuecc48
 SBND_ISO_ENDPOINT=1 valfast/run_valfast.sh pr24r2on -j 24 mcp1k nuecc48
 
-python3 pr24_iso_probe.py work-pr24r2-on1geom --detail 271851
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-pr24r2-on1geom --detail 271851
 ```
 
 ## 10. Symptom / Root cause / Why it hid / Fix / Verification
@@ -490,7 +490,7 @@ to have more break points in the middle of the track"* — evt **284794** and
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
 # --- off-path gates ---
-./compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/pr24r3/off-prjob.json
+./scripts/cfg/compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/pr24r3/off-prjob.json
 cmp /home/xqian/tmp/pr24r3/v0-base-prjob.json /home/xqian/tmp/pr24r3/off-prjob.json
 PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-off6 data \
     271851 10550 111412 116962 122660 131357
@@ -511,7 +511,7 @@ SBND_ISO_ENDPOINT=1                ./run_pr_chain_batch.sh work-nuecc48-poc0 wor
 SBND_ISO_ENDPOINT=1 SBND_DL_WEIGHTS= ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-on1geom data 271851
 
 # --- the new regression detector ---
-python3 pr24_iso_probe.py work-vfmcp1k-pr24r3 --junctions --vs work-vfmcp1k-pr24r2off
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-vfmcp1k-pr24r3 --junctions --vs work-vfmcp1k-pr24r2off
 ```
 
 ### 15.1 Symptom
@@ -592,7 +592,7 @@ evt 282204 (4.7°) and evt 48367 (1.1°) — which still fire under the gate.
 
 ### 15.5 The regression detector (new)
 
-`pr24_iso_probe.py --junctions [--vs OTHER_ARM]`: for the vertex-host cluster
+`scripts/analysis/pr24/pr24_iso_probe.py --junctions [--vs OTHER_ARM]`: for the vertex-host cluster
 it pairs segments ≥ 5 cm whose endpoints meet within 2 cm, and reports the
 **deviation from straight-through** (0° = the two segments continue each other
 exactly). Direction at a junction is taken over 10 cm of arc so one jittery fit
@@ -790,7 +790,7 @@ what they said.
 ```bash
 # repro of the flip verification
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-./compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/pr24r3/flip-prjob.json
+./scripts/cfg/compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/pr24r3/flip-prjob.json
 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-flip1 data 271851
 SBND_ISO_ENDPOINT=0 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-flipoff1 data 271851
 ```

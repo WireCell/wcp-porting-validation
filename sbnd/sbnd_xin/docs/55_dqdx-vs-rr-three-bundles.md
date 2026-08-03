@@ -60,7 +60,7 @@ prediction — flagged for interpretation, not acted on and not a measurement
 (§13.5).
 
 *(Doc number: 54 is taken by the in-flight TGM/STM perf campaign,
-`run_perf54_nusel.sh`.)*
+`scripts/runners/run_perf54_nusel.sh`.)*
 
 ---
 
@@ -68,18 +68,18 @@ prediction — flagged for interpretation, not acted on and not a measurement
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python3 stmfit_particle_overlay.py -o pics/stmfit_dqdx_particle_overlay.png \
+python3 scripts/analysis/stm/stmfit_particle_overlay.py -o pics/stmfit_dqdx_particle_overlay.png \
   "work-mcp1000b-d55ton:289343:90:evt 289343  grp 5, t=1.363 us, main 9  (proton cand.)" \
   "work-mcp10-d55ton:285999:220:evt 285999  grp 12, t=0.705 us, main 22  (muon)" \
   "work-mcp10-d55ton:286065:30:evt 286065  grp 8, t=1.260 us, main 3  (muon)"
 
 # the doc-42 muon re-read against the SBND table (section 4a):
-python3 stmfit_particle_overlay.py \
+python3 scripts/analysis/stm/stmfit_particle_overlay.py \
   "archive/stm-docs40-49/work-mcp10-stmon:286241:80:evt 286241 (doc 42 muon)"
 
 # and the proof that doc 42's table was against the uBooNE curves (section 4a):
 git show 6099ed0:sbnd/sbnd_xin/nusel_display/stm_ref_dqdx.json > /tmp/ref_ub.json
-python3 stmfit_particle_overlay.py --ref /tmp/ref_ub.json --mip 50000 \
+python3 scripts/analysis/stm/stmfit_particle_overlay.py --ref /tmp/ref_ub.json --mip 50000 \
   "archive/stm-docs40-49/work-mcp10-stmon:286241:80:doc42 muon"
 
 # section 10 -- the five free-power tables and the json they are written into:
@@ -107,7 +107,7 @@ Nothing was re-run. All four `tracking-stm.root` files already existed; the
 `d55ton` arm is the one the live scan viewer on :5011 serves, which is where the
 three bundles were flagged.
 
-`stmfit_particle_overlay.py` is **new**. `stmfit_showcase.py` keeps its
+`scripts/analysis/stm/stmfit_particle_overlay.py` is **new**. `scripts/analysis/stm/stmfit_showcase.py` keeps its
 hard-coded muon-only reference and flat-50 line — doc 42's Repro block cites it
 with specific arguments and those are part of that record; the one change §10
 had to make to it is that its reference key is now pinned to `MuonDeDxBox`, so
@@ -172,7 +172,7 @@ The third line on the plot is the flat **56 ke/cm** MIP reference — SBND's
 `mip_dqdx` (doc 48 §6, `sbnd/clus.jsonnet:513`), which is what
 `eval_stm_core`'s `ref_flat` not-stopping hypothesis uses and what the `d55ton`
 runs were configured with. It is **not** the uBooNE 50 ke/cm that
-`stmfit_showcase.py` draws.
+`scripts/analysis/stm/stmfit_showcase.py` draws.
 
 Outside 0.5 – 59.5 cm no ratio is quoted. `np.interp` clamps above the last
 node, which would silently compare against a flat line and manufacture a
@@ -356,7 +356,7 @@ each bundle:
 tagger's own data-over-muon-reference number, computed inside the tagger from its
 own sampling. It reproduces §3's independent decode — **1.922 vs 1.91** on the
 flagged track, 1.035 / 1.008 vs 0.99 / 0.98 on the muons. That is a cross-check
-of the whole `q → dQ → dQ/dx` decode of `stmfit_particle_overlay.py`, not just of
+of the whole `q → dQ → dQ/dx` decode of `scripts/analysis/stm/stmfit_particle_overlay.py`, not just of
 the conclusion.
 
 **All three were accepted, and on this path `ratio1` is not consulted.** With
@@ -1012,7 +1012,7 @@ this is a recommendation to rebuild the shipped tables.
    `1/ratio1 > 1.5`? `T_stm_eval` is dumped for every `-stm-fit` event, so the
    count is a query over the existing 30-event set, not a re-run.
 8. **Truth.** Everything here is fitted-vs-model on data. The MC sample and
-   `dump_truth_sed.C` of doc 42 §7 are the way to confirm a proton is a proton.
+   `scripts/root/dump_truth_sed.C` of doc 42 §7 are the way to confirm a proton is a proton.
 9. **The reference domain stops at 59.5 cm** for both curves, so 286065 m3's
    190 cm of plateau has no expectation to compare against and 289343 m9's
    40–60 cm bin is partly out of domain. Both are `convert_field.C` loop bounds,
@@ -1152,13 +1152,13 @@ re-pointed accordingly:
   the tagger believes and what the data say is visible on the panel rather than
   assumed away. *That renderer change is compile-checked and the MIP value is
   checked; the Bokeh panel itself was not launched.*
-- `stmfit_showcase.py` — reference key pinned to `MuonDeDxBox`. Doc 42 quotes its
+- `scripts/analysis/stm/stmfit_showcase.py` — reference key pinned to `MuonDeDxBox`. Doc 42 quotes its
   numbers against the config table; letting it silently follow the fit would
   repeat exactly the failure §4a had to write up. Re-run on doc 42's muon
   (`-r archive/stm-docs40-49/work-mcp10-stmon -e 286241 -b 80`) and diffed
   against the pre-change script on the pre-change json: **every digit
   identical**.
-- `stmfit_particle_overlay.py` — new `--ref-set {box,fit,both}`, **default
+- `scripts/analysis/stm/stmfit_particle_overlay.py` — new `--ref-set {box,fit,both}`, **default
   `box`**, so every ratio in §§2–3 above reproduces unchanged (re-run and
   checked: 1.91 vs muon / 1.14 vs proton for 289343 blk 90, and 1.14 for the
   §4a doc-42 muon against the archived uBooNE json). `--particles` is a
@@ -1543,7 +1543,7 @@ binary, same input pctree, differing only in the `DL`/`DT` pair.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python3 stmfit_particle_overlay.py -o pics/stmfit_dqdx_particle_overlay_d66.png \
+python3 scripts/analysis/stm/stmfit_particle_overlay.py -o pics/stmfit_dqdx_particle_overlay_d66.png \
   "work-stmcamp-d66new:289343:90:evt 289343 main 9  4.0/8.8 (proton cand.)" \
   "work-stmcamp-d66old:289343:90:evt 289343 main 9  6.5781/13.1349" \
   "work-stmcamp-d66new:285999:220:evt 285999 main 22  4.0/8.8 (muon)" \
@@ -1874,7 +1874,7 @@ The tables a refit *would* give were written to
 `dqdx_rr_sample/stm_ref_dqdx_d66{old,newF}_STUDY.json` instead — study products,
 read by nothing. Overwriting the shipped file would have destroyed §11.3's whole
 premise (a model frozen *before* the population existed) and silently changed
-what `nusel_scan_viewer.py` and `stmfit_showcase.py` draw (§10.4).
+what `nusel_scan_viewer.py` and `scripts/analysis/stm/stmfit_showcase.py` draw (§10.4).
 
 One thing not to over-read: `make_ref_tables.py`'s internal gate — rebuilt Box
 tables vs `stopping_ave_dQ_dx_sbnd.root`, max relative deviation 8.1e-4 (muon)

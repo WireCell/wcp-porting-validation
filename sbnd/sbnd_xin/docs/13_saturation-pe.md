@@ -64,8 +64,8 @@ including `ch_mask` are in the CSV.
 Reproduce with:
 
 ```bash
-python3 saturation_pe.py                 # default threshold = 5000
-python3 saturation_pe.py --threshold 8000
+python3 scripts/analysis/light/saturation_pe.py                 # default threshold = 5000
+python3 scripts/analysis/light/saturation_pe.py --threshold 8000
 ```
 
 ## Results
@@ -230,7 +230,7 @@ detectors. (Gray squares = `ch_mask` zeros.)
    Channel→TPC split (semi-analytical model, `x<0 ⇒ apa0`): **67 → TPC1**; **92, 170, 218,
    248 → TPC0** — the same 4-in-apa0 / 1-in-apa1 dead floor reported above. The dead-channel
    conclusion therefore holds on the current `v10_14_02_02` data release as well as the
-   original sample. (Check script: `sbnd_xin/check_dead5.py`.)
+   original sample. (Check script: `sbnd_xin/scripts/analysis/ql/check_dead5.py`.)
 
 **Caveat — measured PE only.** This analysis sees only the *measured* per-PMT PE in the
 flash archives, not the matcher's *predicted* PE. The gate's literal premise is "a zero
@@ -243,7 +243,7 @@ part that would need the prediction to settle.
 
 ## Files
 
-- `saturation_pe.py` — analysis + plotting script.
+- `scripts/analysis/light/saturation_pe.py` — analysis + plotting script.
 - `saturation_flash_dump.csv` — per-flash observables (4972 flashes: mc+data, 10+100 evt,
   both APAs): `mode, sample, apa, event, flash_index, time_ns, total_pe, n_active_pmt,
   n_zero_excl_chmask, n_zero_incl_chmask, min_pe_active, min_nonzero_pe`.

@@ -163,7 +163,7 @@ from `*-fvxy`).  TSV verdicts vs the knob-off round: **0 real differences**
 verified line-by-line against the raw logs).  Viewer re-served on :5010,
 tag `mcp10-stmfit`, prevs fvxy(×3) → mainreal → mainpair → fvzi → lm2.
 
-STM fit inventory — `python3 stmon_stats.py` from `sbnd_xin/` (committed
+STM fit inventory — `python3 scripts/analysis/stm/stmon_stats.py` from `sbnd_xin/` (committed
 alongside these docs; it reads the three `*-stmon` roots and reprints every
 number in this section):
 
@@ -215,5 +215,5 @@ wire-cell-uboone-magnify-tracking-convert \
 # viewer with the panel: nusel_display/serve_nusel_scan.sh ... (reads
 # nusel_evt*/tracking-stm.root automatically when present)
 # fit inventory / plateau / x-frame numbers quoted above:
-python3 stmon_stats.py
+python3 scripts/analysis/stm/stmon_stats.py
 ```

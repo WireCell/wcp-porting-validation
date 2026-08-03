@@ -325,7 +325,7 @@ consequences above — companion counting is not yet demonstrated live.
 * `showcase-stmfit-mc-evt18/track_com_18.root` was replaced in place (owner
   instruction, same decision as docs 44/46) by the `work-mcsim-unmon`
   regeneration.  Content-identical to the doc-46 file — see §(b) — so the
-  doc-44/46 figures and `stmfit_mc_compare.py` numbers all still hold.
+  doc-44/46 figures and `scripts/analysis/stm/stmfit_mc_compare.py` numbers all still hold.
 
 ---
 

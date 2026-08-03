@@ -25,20 +25,20 @@ ray** — see §3.3.
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 D=showcase-stmfit-mc-evt18
-root -l -b -q "dump_truth_sed.C(\"input_files/input-10evt-mc/2025f-mc.root\",228,18,
+root -l -b -q "scripts/root/dump_truth_sed.C(\"input_files/input-10evt-mc/2025f-mc.root\",228,18,
                                 \"work-mcsim-stmon/nusel_evt18/tracking-stm.root\",
                                 150, 5.0, \"$D/truth-evt18-blk150.root\")"
 wire-cell-sbnd-magnify-tracking-convert \
   -bwork-mcsim-stmon/nusel_evt18/tracking-stm.root -tT_rec_charge \
   -a$D/truth-evt18-blk150.root -nT -o$D/track_com_18.root -f1
-python3 stmfit_mc_compare.py -f $D/track_com_18.root -b 150 \
+python3 scripts/analysis/stm/stmfit_mc_compare.py -f $D/track_com_18.root -b 150 \
     -o $D/dqdx_mc_evt18_blk150.png
 # GUI (headless recipe of doc 43/44; block 150 is cluster index 1):
 A=$PWD/$D
 cd /nfs/data/1/xqian/toolkit-dev/Magnify-tracking-SBND/scripts
 xvfb-run -a -s "-screen 0 1920x1080x24" root -l -q loadClasses.C \
   "/home/xqian/tmp/drive2.C(\"$A/track_com_18.root\",\"$A/magnify_mc_evt18_blk150.png\",1)"
-# add `dump_truth_sed.C(..., 5.0, "out.root", false)` for the pre-doc-46
+# add `scripts/root/dump_truth_sed.C(..., 5.0, "out.root", false)` for the pre-doc-46
 # primary-only truth.
 ```
 
@@ -52,7 +52,7 @@ decision as doc 44).  New evidence crops: `magnify_dqdx_deltaray.png`,
 exceeds 0.45, on a track whose fitted-to-truth distance is 1.78 cm median.
 
 **Root cause — display, not value.** `com_dis` is correct: the converter's and
-`dump_truth_sed.C`'s own printouts agree, median **1.78 cm**, p90 3.45, max
+`scripts/root/dump_truth_sed.C`'s own printouts agree, median **1.78 cm**, p90 3.45, max
 3.94.  `Data::DrawMCCompare` builds the pad frame from `com_dtheta`, which is in
 **radians**, and hard-codes `GetYaxis()->SetRangeUser(0, 0.6)` — a uBooNE-era
 range.  `com_dis`, in **centimetres**, is then drawn `LPsame` on that frame.
@@ -119,7 +119,7 @@ the sign of one of them:
 | `origTrackID` | "complementary simulation track id, kept **true to G4** even for shower secondaries" — a delta ray carries its **own** id |
 | `trackID` | `> 0`: that particle stepped. `< 0`: a **secondary of `|trackID|`** stepped (the daughters largeant did not keep as separate MCParticles — cf. the `simb::MCParticles_largeantdropped` product) |
 
-`dump_truth_sed.C` grouped by `origTrackID`, so it kept only the muon's own
+`scripts/root/dump_truth_sed.C` grouped by `origTrackID`, so it kept only the muon's own
 steps.  Measured within 10 cm of this block: 1703 of 9346 deposits, carrying
 **18.3 % of the charge**, belong to 157 other ids — and 1693 of those 1703 carry
 `trackID = −20000167`, i.e. they are secondaries of exactly this muon.  Their
@@ -149,7 +149,7 @@ only part of it.  Summing therefore trades doc 44's artifact for a new one.
 
 So the two are kept apart:
 
-- `dump_truth_sed.C` groups by `|trackID|`, keeps the whole family within `-R`,
+- `scripts/root/dump_truth_sed.C` groups by `|trackID|`, keeps the whole family within `-R`,
   and tags each row `sec = 0/1`.  **Secondary rows get `dx = 0`**: dQ/dx is
   charge per unit length *of the parent track*, and a delta ray's own path is
   not parent path, so it must contribute charge without contributing length.

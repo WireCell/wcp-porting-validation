@@ -29,7 +29,7 @@ exactly as to the older samples.
 | `wct-reco1-dump.jsonnet` | `sbnd_xin/` | reco1 → `frames-dnn.tar.bz2` + `opflash_apa{0,1}.tar.gz` (all events streamed in one process; `entry` TLA for one event) |
 | `run_reco1_dump.sh` | `sbnd_xin/` | runner; writes `input_files_reco1/extracted-<tag>/` (refuses to overwrite an existing tag); `-caf product` for `*_frameshift.root` inputs |
 | `SBND_WORK_ROOT` | `_runlib.sh` (+ img/ql runners) | work-tree root override (default `work/`); land a reprocessing campaign in a fresh tree instead of overwriting an old one |
-| `merge_mabc_bee.py` | `sbnd_xin/` | re-keys N per-event `ql_evt<ID>/mabc-all-apa.zip` Bee dumps into one multi-event upload zip (`data/<i>/<i>-*.json`) |
+| `scripts/bee/merge_mabc_bee.py` | `sbnd_xin/` | re-keys N per-event `ql_evt<ID>/mabc-all-apa.zip` Bee dumps into one multi-event upload zip (`data/<i>/<i>-*.json`) |
 | Bee run/subrun numbers | `run_ql_evt.sh` | reads `run`/`subrun` from the staged opflash tensor-set metadata and passes them as the `run`/`subrun` TLAs, so every Bee layer shows the full `(runNo, subRunNo, eventNo)` triplet; samples without those metadata keys (yuhw's dumps) keep `run=0 subrun=0` unchanged |
 
 The extraction is the toolkit-only counterpart of yuhw's LArSoft dumps
@@ -99,7 +99,7 @@ SBND_MAX_JOBS=8 ./run_img_evt.sh data all      # 48/48 ok
 SBND_MAX_JOBS=6 ./run_ql_evt.sh  data all      # 48/48 ok
 EVTS=$(tar tjf $SBND_INPUT_DIR/frames-dnn.tar.bz2 \
        | sed -n 's/^frame_dnnsp_\([0-9]*\)\.npy$/\1/p' | awk '!seen[$0]++')
-python3 merge_mabc_bee.py -w work-fsprod -o upload-fsprod-48evt.zip $EVTS
+python3 scripts/bee/merge_mabc_bee.py -w work-fsprod -o upload-fsprod-48evt.zip $EVTS
 ./upload-to-bee.sh upload-fsprod-48evt.zip
 ```
 
@@ -141,7 +141,7 @@ cd sbnd_xin
 export SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod
 export SBND_WORK_ROOT=$PWD/work-fsprod-rse    # evt<ID> symlinked to work-fsprod
 SBND_MAX_JOBS=6 ./run_ql_evt.sh data all      # 48/48 ok; logs "[evt <ID>] rse=(run, subrun, evt)"
-python3 merge_mabc_bee.py -w work-fsprod-rse -o upload-fsprod-48evt-rse.zip $EVTS
+python3 scripts/bee/merge_mabc_bee.py -w work-fsprod-rse -o upload-fsprod-48evt-rse.zip $EVTS
 ./upload-to-bee.sh upload-fsprod-48evt-rse.zip
 ```
 

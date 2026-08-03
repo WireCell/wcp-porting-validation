@@ -29,12 +29,12 @@ selection and by the label table's `in_beam` column.  No new constant.
 cd wcp-porting-img/sbnd/sbnd_xin
 
 # knob-off gate arm (30 events, sequential, setarch x86_64 -R, timecmd metering)
-./run_perf54_nusel.sh off p56 -no-bwonly     # -> work-*-p56off
-python3 p54_ab_report.py --base-tag p55opt --opt-tag p56off
+./scripts/runners/run_perf54_nusel.sh off p56 -no-bwonly     # -> work-*-p56off
+python3 scripts/perf/p54_ab_report.py --base-tag p55opt --opt-tag p56off
 
 # new production arm (gate ON = the new default; no flag needed)
-./run_perf54_nusel.sh bw d56                 # -> work-*-d56bw
-python3 p54_ab_report.py --base-tag p55opt --opt-tag d56bw   # timing table
+./scripts/runners/run_perf54_nusel.sh bw d56                 # -> work-*-d56bw
+python3 scripts/perf/p54_ab_report.py --base-tag p55opt --opt-tag d56bw   # timing table
 
 # hand-scan display (port 5011), previous tag as the side-by-side baseline.
 # GOTCHA: serve_nusel_scan.sh forwards the work roots to bokeh VERBATIM, so
@@ -123,7 +123,7 @@ scan display renders them "n/a".
 
 ## Cost (30 events, sequential, `setarch x86_64 -R`)
 
-Summed `MABC timing` per step (`mabc_step_totals.py p55opt p56off d56bw`):
+Summed `MABC timing` per step (`scripts/analysis/misc/mabc_step_totals.py p55opt p56off d56bw`):
 
 | step | p55opt (ungated) | p56off (knob off) | d56bw (gate ON) |
 |---|---:|---:|---:|
@@ -143,7 +143,7 @@ this scope change is 4× that, because it removes work rather than speeding it u
 
 ## Verification
 
-**Knob-off gate (byte-identicality).**  `run_perf54_nusel.sh off p56 -no-bwonly`
+**Knob-off gate (byte-identicality).**  `scripts/runners/run_perf54_nusel.sh off p56 -no-bwonly`
 vs the round-2 arm `p55opt`, same scope as doc 54 (mabc-pr.zip + pctree-pr member
 hashes, TSV text, tracking-stm.root branch content):
 
@@ -155,7 +155,7 @@ TOTAL wall: 146 s -> 146 s      PEAK RSS: 625 MB -> 625 MB
 
 `./build/clus/wcdoctest-clus`: 565/565 assertions pass.
 
-**ON-path check** (`bwgate_report.py --base-tag p55opt --gated-tag d56bw`) — the
+**ON-path check** (`scripts/analysis/stm/bwgate_report.py --base-tag p55opt --gated-tag d56bw`) — the
 gate must remove work, never change it.  Baseline is `p55opt`, the SAME-BINARY
 ungated arm: `d55ton` predates the `real_cluster_id_global` re-stamp taking
 effect in the PR job, so comparing archive layers against it mixes this change

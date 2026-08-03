@@ -9,7 +9,7 @@ The SBND charge–light matcher (`QLMatching`) assigns each PMT a light error of
 matches that were hand-scanned in the `ql_scan` viewer (10 data + 10 MC events), rather than
 assuming it.
 
-`sbnd_xin/ql_pe_error.py` produces the plots; this note records the method and findings.
+`sbnd_xin/scripts/analysis/ql/ql_pe_error.py` produces the plots; this note records the method and findings.
 
 ## Model and estimator
 
@@ -86,7 +86,7 @@ panel 4 = pull).
 
 ```
 cd sbnd_xin
-python3 ql_pe_error.py            # data + mc -> pics/ql_pe_error_*.png
+python3 scripts/analysis/ql/ql_pe_error.py            # data + mc -> pics/ql_pe_error_*.png
 ```
 
 Requires the NL dumps in `work/ql_nl_study/` (regenerate with
@@ -114,7 +114,7 @@ Derivation/verification: `ql_derive*.py` (the σ vs PE fit) and the recipe figur
 
 ## Data vs MC after the recipe
 
-`ql_recipe_compare.py` regenerates the calib dumps with the recipe (now the SBND default) and
+`scripts/analysis/ql/ql_recipe_compare.py` regenerates the calib dumps with the recipe (now the SBND default) and
 compares the updated χ²/ks for the hand-scans (`pics/ql_recipe_data_vs_mc.png`):
 
 | metric (hand-scan kept matches) | DATA | MC |
@@ -136,8 +136,8 @@ These updated χ²/ks (+ the hand-scan labels) are the inputs for further QLMatc
 
 ```
 cd sbnd_xin
-python3 ql_pe_error.py            # per-PMT error study (NL on/off, consistent) -> pics/ql_pe_error_*.png
-python3 ql_recipe_compare.py      # data vs MC after the recipe -> pics/ql_recipe_data_vs_mc.png
+python3 scripts/analysis/ql/ql_pe_error.py            # per-PMT error study (NL on/off, consistent) -> pics/ql_pe_error_*.png
+python3 scripts/analysis/ql/ql_recipe_compare.py      # data vs MC after the recipe -> pics/ql_recipe_data_vs_mc.png
 ```
 
 Regenerate recipe calib dumps (recipe is the SBND default): `PMT_NL=true ./run_ql_evt.sh <mode>

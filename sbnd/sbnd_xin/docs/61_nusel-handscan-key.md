@@ -298,7 +298,7 @@ has nothing to decide there — it is a nu candidate by construction. All 10 of
 the `fc=1` bundles in the first-20 batch had no dQ/dx panel at all, which is
 what made this concrete.
 
-**Keep rule** (`nusel_scan_filter.py --drop-fc --keep-mixed`), the owner's
+**Keep rule** (`scripts/analysis/misc/nusel_scan_filter.py --drop-fc --keep-mixed`), the owner's
 wording: *an event stays in if at least one of its in-beam bundles does not
 satisfy the filter condition.* Formally: keep the event iff ≥1 in-beam bundle
 has label ∈ {STM, nu-candidate} **and** `fc≠1`. A kept event still displays its
@@ -714,7 +714,7 @@ What does and does not change:
 | `nusel_display/grab_scan_shots.py` | headless evidence grabber (read-only) |
 | `scan-d59k/events-nofc.txt` + `census-nofc.tsv` | **the current 393-event scan set** (§5a) |
 | `scan-d59k/bee/nofc393.{url,index.txt,stmid-map.txt}` | its Bee set (166 MB zip beside them) |
-| `nusel_scan_filter.py` | `--drop-fc` added (default off; old census reproduces) |
+| `scripts/analysis/misc/nusel_scan_filter.py` | `--drop-fc` added (default off; old census reproduces) |
 | `scan-d59k/events-withmixed.txt` | the older 648-event scan order (doc 59) |
 | `work-mcp1kall-d59k/nusel_labels/c59k/` | the same verdicts as viewer labels |
 | `work-mcp1kall-d59k/nusel_labels/s59k/` | **the owner's record — read only** |

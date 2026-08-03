@@ -26,7 +26,7 @@ cd /nfs/data/1/xqian/toolkit-dev/toolkit && wcbuild   # build+install
 
 # compiled-config proofs (both PASS, see §2.3):
 cd sbnd_xin
-./compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/new.json
+./scripts/cfg/compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/new.json
 # vs the same at HEAD^ cfg => byte-identical (stage absent);
 # add 'protect_bundle' after unmerge_assoc in the pipeline_names TLA and the
 # compiled JSON gains one ClusteringProtectBundle:pr node (knob-on proof).
@@ -143,7 +143,7 @@ Recorded prototype divergences (M15, decided by measurement in V1/V2):
 - Build+install rc=0; `local/lib/libWireCellClus.so` mtime 2026-08-02 14:33 >
   source edit; factory symbol present (M1 freshness proof).
 - `./build/clus/wcdoctest-clus`: **565/565 assertions, SUCCESS**.
-- Compiled-config, stage absent: `compile_prjob_cfg.sh` (production 13-name
+- Compiled-config, stage absent: `scripts/cfg/compile_prjob_cfg.sh` (production 13-name
   pipeline) on HEAD-cfg vs edited cfg → **BYTE-IDENTICAL**.
 - Compiled-config, stage named: pipeline gains exactly
   `ClusteringProtectBundle:pr` between `ClusteringUnmergeBundle:prassoc` and
@@ -172,7 +172,7 @@ Fresh roots `work-pr23-v1a` (graph `relaxed`) / `work-pr23-v1b`
 ```bash
 SBND_INPUT_DIR=$PWD/work-pr22gap-input SBND_WORK_ROOT=$PWD/work-pr23-v1a \
   ./run_pr_evt.sh data -nu -protect 1          # v1b adds SBND_PROTECT_GRAPH=relaxed_pid
-python3 gapjump_probe.py work-pr23-v1a/pr_evt386948/mabc-pr.zip
+python3 scripts/analysis/misc/gapjump_probe.py work-pr23-v1a/pr_evt386948/mabc-pr.zip
 ```
 
 | arm | fit pts | uncovered | stretches | DIFF-fragment bridges | stage cost |
@@ -355,7 +355,7 @@ associated fragments; 1 cathode re-join** —
 i.e. one real-data cathode crosser would have been broken by the prototype
 behavior and was preserved by the re-join pass.
 
-### 5.1 Coverage census (`pr23_fitcover_census.py`, cover = 1 cm)
+### 5.1 Coverage census (`scripts/analysis/pr23/pr23_fitcover_census.py`, cover = 1 cm)
 
 Full table: `docs/pr/23_fitcover-nuecc48.tsv` (96 rows). Per-arm totals:
 
@@ -389,7 +389,7 @@ its only in-beam bundle is tagged TGM, a pre-existing property.)
 
 ### 5.2 Cathode gate on real data
 
-Straddle-pair scan (`pr23_cathprobe.py` logic batched over all 48×2 zips,
+Straddle-pair scan (`scripts/analysis/pr23/pr23_cathprobe.py` logic batched over all 48×2 zips,
 band 6 cm, gap < 10 cm): **zero new cathode-straddle splits in the ON arm.**
 The only event with such pairs at all, 267597, has the identical two pairs
 in both arms (gaps 1.94 / 7.11 cm; only cluster ids renumber). Combined with
@@ -476,7 +476,7 @@ so the V6 flip decision should weigh: 5/572 (~0.9%) cosmic promotions,
 
 ## 7. Bee sets (for owner examination)
 
-Built with `make_pr_bee.py` (Q/L layers incl. deadarea merged from the
+Built with `scripts/bee/make_pr_bee.py` (Q/L layers incl. deadarea merged from the
 matching ql roots), artifacts + build logs + `urls.txt` under `bee-pr23/`.
 OFF/ON pairs share bee event indices, so the same index shows the same event
 in both sets.
@@ -625,7 +625,7 @@ and we should turn it on for the production as well as PR tail jobs."
 wcsonnet -A input=in.tar.gz -A output_dir=out --tla-code run=18253 \
   --tla-code subrun=1 --tla-code event=172230 -A reality=data -A "dl_weights=" \
   cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet > bare.json
-./compile_prjob_cfg.sh $TK/cfg prjob.json          # 15-name PR-chain list
+./scripts/cfg/compile_prjob_cfg.sh $TK/cfg prjob.json          # 15-name PR-chain list
 # Smoke of the flipped default (NO env vars -- the bare production path):
 ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr23flip-smoke data 386948 52195
 ```
@@ -648,7 +648,7 @@ wcsonnet -A input=in.tar.gz -A output_dir=out --tla-code run=18253 \
   for any pipeline naming `tagger_check_neutrino` (`-nu`/`-dnn`/`-p`);
   pipelines without the anchor (`-stm`/`-tgm`, the empty identity-gate
   pipeline) skip the insertion silently — an explicit `-protect` on such a
-  pipeline still errors.  `compile_prjob_cfg.sh`: 15-name list.
+  pipeline still errors.  `scripts/cfg/compile_prjob_cfg.sh`: 15-name list.
 
 ### 9.3 Gates
 

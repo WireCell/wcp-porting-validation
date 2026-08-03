@@ -23,11 +23,11 @@ cd Magnify-tracking-SBND && ./magnify.sh ../showcase-stmfit-286241/track_com_286
 # (needs $DISPLAY; headless recipe + the bug fixes that made this work: doc 43)
 
 # 2. Bee upload zip (QL layers + the stm_fit dQ/dx layer), then upload:
-python3 make_stmfit_bee.py -w work-mcp10-stmon -o showcase-stmfit-286241/upload_286241.zip 286241
+python3 scripts/bee/make_stmfit_bee.py -w work-mcp10-stmon -o showcase-stmfit-286241/upload_286241.zip 286241
 ./upload-to-bee.sh showcase-stmfit-286241/upload_286241.zip     # prints the Bee URL
 
 # 3. numbers + plot of this doc:
-python3 stmfit_showcase.py -r work-mcp10-stmon -e 286241 -b 80 \
+python3 scripts/analysis/stm/stmfit_showcase.py -r work-mcp10-stmon -e 286241 -b 80 \
   -o showcase-stmfit-286241/dqdx_286241_blk80.png
 ```
 
@@ -49,7 +49,7 @@ Consequences:
 - **Fitted vs. truth — the comparison that actually validates the fitter —
   is not this event.**  It is **§7**, added later, on the 10-event MC sample
   `input_files/input-10evt-mc/` and with the SimEnergyDeposit dumper
-  (`dump_truth_sed.C`) this section originally listed as missing.  Take any
+  (`scripts/root/dump_truth_sed.C`) this section originally listed as missing.  Take any
   statement about how well the fitter reproduces charge from §7; §2–§5 below
   are a data event and can only compare against a model.
 
@@ -110,7 +110,7 @@ dump stores `rr = L_tot − L_i`, so `rr = 0` is the stopping end.
    `img-global`, `clustering-global`, two `channel-deadarea-*`, `op`, and
    **`stm_fit-global`**, the fitted trajectory with `q = dQ*0.1 − 1000`
    (the uBooNE `track_fit` convention, so Bee's `q` color ramp reads as
-   dQ/dx).  Built by `make_stmfit_bee.py`, which merges the QL tree
+   dQ/dx).  Built by `scripts/bee/make_stmfit_bee.py`, which merges the QL tree
    (`ql_evt*/mabc-all-apa.zip`) with the PR tree's STM layer
    (`nusel_evt*/mabc-pr.zip`); the two `clustering-global` layers were
    checked to be the same frame and point count (25786) before merging.
@@ -135,7 +135,7 @@ dump stores `rr = L_tot − L_i`, so `rr = 0` is the stopping end.
 
 ## 4. Fitted dQ/dx vs expectation for this fit
 
-`stmfit_showcase.py` compares each fitted point with the **muon expectation
+`scripts/analysis/stm/stmfit_showcase.py` compares each fitted point with the **muon expectation
 the tagger itself uses** (`nusel_display/stm_ref_dqdx.json`, extracted from
 the compiled config's `MuonDeDx` `LinterpFunction`, i.e. the exact curve
 `eval_stm` tests against; tabulated 0.5 → 59.5 cm) and with the flat
@@ -178,7 +178,7 @@ Reading:
 
 ## 5. Population context (why one event is not enough)
 
-From the same 30-event round (`stmon_stats.py`), for the 11 accepted-STM
+From the same 30-event round (`scripts/analysis/stm/stmon_stats.py`), for the 11 accepted-STM
 tracks with ≥ 60 points and ≥ 40 cm of range:
 
 - **Only this one shows a Bragg rise.**  Ratio of median dQ/dx at rr < 5 cm
@@ -204,7 +204,7 @@ the first things the fitted-vs-truth comparison should settle.
 - Products under `showcase-stmfit-286241/`: the Magnify ROOT and the PNG are
   committed (`git add -f`, both under 90 kB).  `upload_286241.zip` (378 kB)
   is deliberately **not** committed — the Bee set is hosted and the zip
-  regenerates from `make_stmfit_bee.py` in one command.
+  regenerates from `scripts/bee/make_stmfit_bee.py` in one command.
 - Bee set uploaded to the public BNL server with owner approval:
   `d11b087c-f8a3-4781-96ac-dc3a08f82a87` (link in §3).  It contains
   reconstruction points only — no raw waveforms.
@@ -272,9 +272,9 @@ cd Magnify-tracking-SBND && ./magnify.sh ../showcase-stmfit-mc-evt18/track_com_1
 # (headless recipe: doc 43 Repro; block 150 is cluster index 1 in the GUI)
 
 # 4. numbers + plot of this section, and the Bee zip:
-python3 stmfit_mc_compare.py -f showcase-stmfit-mc-evt18/track_com_18.root -b 150 \
+python3 scripts/analysis/stm/stmfit_mc_compare.py -f showcase-stmfit-mc-evt18/track_com_18.root -b 150 \
     -o showcase-stmfit-mc-evt18/dqdx_mc_evt18_blk150.png
-python3 make_stmfit_bee.py -w work-mcsim-stmon -o showcase-stmfit-mc-evt18/upload_mc18.zip 18
+python3 scripts/bee/make_stmfit_bee.py -w work-mcsim-stmon -o showcase-stmfit-mc-evt18/upload_mc18.zip 18
 ./upload-to-bee.sh showcase-stmfit-mc-evt18/upload_mc18.zip
 ```
 
@@ -286,7 +286,7 @@ sample (GENIE ν + CORSIKA cosmics through G4 + detsim + reco1), run 228,
 35, 41, 42) are the standalone chain's `mc` mode.  Unlike the MCP2025C reco1
 data of §0 it carries `sim::SimEnergyDeposit`.
 
-`dump_truth_sed.C` (new) turns those deposits into the `(N, x, y, z, Q)` tree
+`scripts/root/dump_truth_sed.C` (new) turns those deposits into the `(N, x, y, z, Q)` tree
 the converter's `-f1` reads.  Three decisions in it matter for reading any
 number below:
 
@@ -475,7 +475,7 @@ a larger MC round, not a parameter change.
 
 ## 7.6 Status
 
-- New: `dump_truth_sed.C`, `stmfit_mc_compare.py`, this section.  No C++ or
+- New: `scripts/root/dump_truth_sed.C`, `scripts/analysis/stm/stmfit_mc_compare.py`, this section.  No C++ or
   jsonnet change — the converter's `-f1` path and the GUI's MC branch already
   existed (doc 42 §1, doc 43 §E); this is their first use on real truth, so
   **no reconstruction output moves and no A/B gate applies**.

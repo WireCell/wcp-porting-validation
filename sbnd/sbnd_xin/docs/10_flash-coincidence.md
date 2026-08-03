@@ -52,8 +52,8 @@ No PE threshold is applied. The per-flash total-PE distribution is shown separat
 Reproduce with:
 
 ```bash
-python3 flash_coincidence.py            # default zoom = ±1 µs
-python3 flash_coincidence.py --zoom 0.5 # custom zoom half-window in µs
+python3 scripts/analysis/light/flash_coincidence.py            # default zoom = ±1 µs
+python3 scripts/analysis/light/flash_coincidence.py --zoom 0.5 # custom zoom half-window in µs
 ```
 
 ## Results
@@ -172,7 +172,7 @@ missed beam flash). *(Note: `BEE-links.md` flags all three files as SIGSEGV in t
 bundle dump, but the frames/imaging/opflash outputs are intact, so this extraction is
 unaffected.)*
 
-Reproduce with `python3 flash_t0_lan_reco2.py` (run from `sbnd_xin/`).
+Reproduce with `python3 scripts/analysis/light/flash_t0_lan_reco2.py` (run from `sbnd_xin/`).
 
 **This ≈ −0.71 µs is the *raw* (uncorrected) in-time flash time.** The lan-reco2
 dumps carry a per-frame `frame_apply_at_caf` offset (ns) in the opflash tensor-set
@@ -186,9 +186,9 @@ exactly what the correction fixes; the older 10-event sample has no
 
 ## Files
 
-- `flash_coincidence.py` — analysis + plotting script.
+- `scripts/analysis/light/flash_coincidence.py` — analysis + plotting script.
 - `flash_dump.csv` — all 649 flashes (mc + data, both APAs).
-- `flash_t0_lan_reco2.py` — per-event in-time flash time vs T0 (3-file lan-reco2 sample).
+- `scripts/analysis/light/flash_t0_lan_reco2.py` — per-event in-time flash time vs T0 (3-file lan-reco2 sample).
 - `pics/flash_coinc_{allpairs,nearest}_{wide,zoom,fine}.png` — Δt histograms.
 - `pics/flash_pe_dist.png` — per-flash total-PE distribution.
 - `pics/flash_pe2d_coinc.png` — coincident (±80 ns) cross-APA PE scatter, data vs mc.

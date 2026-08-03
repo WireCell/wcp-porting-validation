@@ -74,5 +74,5 @@ matcher diff is fully recoverable: within `matches`, `flags.auto_selected` is `t
 for kept auto-matches and `false` for hand-added ones; `rejected_auto` holds the
 removed auto-matches.
 
-> Note: `ql_pe_error.py` / `ql_prefilter_tune.py` currently read `matches` only.
+> Note: `scripts/analysis/ql/ql_pe_error.py` / `scripts/analysis/ql/ql_prefilter_tune.py` currently read `matches` only.
 > `rejected_auto` is recorded for future tuning use; consuming it is a separate task.

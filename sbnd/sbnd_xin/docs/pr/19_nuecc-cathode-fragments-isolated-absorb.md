@@ -33,12 +33,12 @@ SBND_WORK_ROOT=$ROOT SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48
     SBND_TRACE_BEE=1 ./run_ql_evt.sh data 45
 # stage attribution (16 layers 0-tr00..0-tr15 in the per-APA zip)
 unzip -q $ROOT/ql_evt444187/mabc-apa0-face0.zip -d /home/xqian/tmp/oc444187/trace-apa0
-./oc_stage_trace.py /home/xqian/tmp/oc444187/trace-apa0 \
+./scripts/analysis/misc/oc_stage_trace.py /home/xqian/tmp/oc444187/trace-apa0 \
     "-77.8,3.1,246.0=cosmicA" "-75.0,-100.0,200.0=cosmicB" \
     "-3.7,-16.3,216.0=dotsNear" "-26.0,-22.0,220.0=dotsFar"
 # quantify the isolated-stage absorption (44 clusters -> final cluster 4)
 T=/home/xqian/tmp/oc444187/trace-apa0/data/0
-./oc_stage_gap.py $T/0-tr13_ClusteringNeutrino-global.json \
+./scripts/analysis/misc/oc_stage_gap.py $T/0-tr13_ClusteringNeutrino-global.json \
     $T/0-tr14_ClusteringIsolated-global.json 4 55
 ```
 
@@ -87,7 +87,7 @@ clusters.
 
 ## 3. Stage attribution (per-stage Bee trace, apa0)
 
-`oc_stage_trace.py` on the 16 `0-tr*` layers; refs: cosmicA = comp 4183,
+`scripts/analysis/misc/oc_stage_trace.py` on the 16 `0-tr*` layers; refs: cosmicA = comp 4183,
 cosmicB = comp 3356, dotsNear = fragment at the cathode, dotsFar = fragment
 at x ≈ −26:
 
@@ -125,7 +125,7 @@ at x ≈ −26:
 Measured gaps for the 15 nueCC-region fragments (stage 13 → cluster 55):
 **46.6 – 75.9 cm — every one under the 80 cm cut, none under 40 cm.**
 (For contrast, the legitimately-absorbed delta rays hug the cosmic at
-4.8–10 cm.)  Table: `oc_stage_gap.py` output, §0.
+4.8–10 cm.)  Table: `scripts/analysis/misc/oc_stage_gap.py` output, §0.
 
 Two structural aggravators:
 
@@ -431,9 +431,9 @@ in `work-oc19scan-{old,new}/pr_evt444187`; both arms select the nueCC main
 
 - Trace run (fresh tag): `work-oc444187-trace/ql_evt444187/` — per-APA zips
   carry the 16 `0-tr*` stage layers; all-APA zip as usual.
-- Committed probes: `oc_stage_trace.py` (stage attribution),
-  `oc_stage_gap.py` (per-cluster gap table for one stage's absorb),
-  `oc19_census_nuecc48.py` / `oc19_census_mcp1k.py` (the §8.2 censuses;
+- Committed probes: `scripts/analysis/misc/oc_stage_trace.py` (stage attribution),
+  `scripts/analysis/misc/oc_stage_gap.py` (per-cluster gap table for one stage's absorb),
+  `scripts/analysis/misc/oc19_census_nuecc48.py` / `scripts/analysis/misc/oc19_census_mcp1k.py` (the §8.2 censuses;
   whitespace-split parsing, lower-cased label classes).
 - Campaign tags: knob-off gates `work-oc444187-off{,2,3}`; smoke
   `work-oc444187-{on,bonly,on2}`; sweeps `work-nuecc48-oc19on{,2}`,

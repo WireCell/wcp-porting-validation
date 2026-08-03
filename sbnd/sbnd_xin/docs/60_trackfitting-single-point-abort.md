@@ -406,8 +406,8 @@ Row counts and tag counts match exactly as well (761 rows / 60 STM, and
 233 rows / 5 STM). Reproduce with
 
 ```bash
-./d60_ab_report.py work-mcp1kall-d60sr1 work-mcp1kall-d60sfix
-./d60_ab_report.py work-mcp1kall-d60nr1 work-mcp1kall-d60nfix
+./scripts/analysis/stm/d60_ab_report.py work-mcp1kall-d60sr1 work-mcp1kall-d60sfix
+./scripts/analysis/stm/d60_ab_report.py work-mcp1kall-d60nr1 work-mcp1kall-d60nfix
 ```
 
 The gate is meaningful only because §7 first established the chain is
@@ -418,7 +418,7 @@ config **60/60 DIFFERENT** (negative control, §7).
 result plus two byte-identical gates over 80 events (206 STM tags, both the
 beam-window and all-bundle configs) make the remaining risk small, and the owner
 scoped this down. If it is wanted later: `TAG=d60fix ./run_full1k_nusel.sh 1000
-24`, then `./d60_ab_report.py work-mcp1kall-d60base work-mcp1kall-d60fix`
+24`, then `./scripts/analysis/stm/d60_ab_report.py work-mcp1kall-d60base work-mcp1kall-d60fix`
 — but build the arm with **whole** `ql_evt<ID>/` symlinks, not pctree-only, or
 every Bee zip will mismatch on `runNo` (§7 caveat).
 

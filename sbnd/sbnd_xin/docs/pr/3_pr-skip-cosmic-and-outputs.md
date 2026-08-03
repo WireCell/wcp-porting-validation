@@ -302,7 +302,7 @@ cd /nfs/data/1/xqian/toolkit-dev/toolkit
 
 # compiled-config proofs
 qlport/scripts/compile_ub_cfg.sh    $PWD/cfg /home/xqian/tmp/ub_new.json   # uBooNE: knob off
-sbnd_xin/compile_prjob_cfg.sh       $PWD/cfg /home/xqian/tmp/pr_new.json   # SBND:  knob on
+sbnd_xin/scripts/cfg/compile_prjob_cfg.sh       $PWD/cfg /home/xqian/tmp/pr_new.json   # SBND:  knob on
 grep -c nu_skip_cosmic_bundle /home/xqian/tmp/pr_new.json                  # 1
 
 # knob-OFF arm: same driver against a cfg tree at HEAD (the knob absent)
@@ -316,10 +316,10 @@ sed 's|^export WIRECELL_PATH=$TK/cfg:|export WIRECELL_PATH=/home/xqian/tmp/cfg_h
 AB31="166870 279256 281808 282292 282541 283040 285366 285443 286177 288468 292450 292643 \
 293127 347085 350121 351507 389588 391172 393410 395610 399382 399910 400054 400856 404684 \
 409282 493485 58169 65788 72828 52195"
-PR_JOBS=6 ./tmp_run_pr_chain_cfghead.sh work-mcp1kall-d59k work-nscbase-ab31 data $AB31  # old binary
-PR_JOBS=6 ./tmp_run_pr_chain_cfghead.sh work-mcp1kall-d59k work-nscoff-ab31  data $AB31  # new binary, knob off
+PR_JOBS=6 ./scripts/runners/tmp_run_pr_chain_cfghead.sh work-mcp1kall-d59k work-nscbase-ab31 data $AB31  # old binary
+PR_JOBS=6 ./scripts/runners/tmp_run_pr_chain_cfghead.sh work-mcp1kall-d59k work-nscoff-ab31  data $AB31  # new binary, knob off
 PR_JOBS=6 ./run_pr_chain_batch.sh       work-mcp1kall-d59k work-nscon-ab31   data $AB31  # new binary, knob on
-PR_JOBS=6 ./tmp_run_pr_chain_cfghead.sh work-nuecc48-nuf   work-nscoff-nuecc48 data
+PR_JOBS=6 ./scripts/runners/tmp_run_pr_chain_cfghead.sh work-nuecc48-nuf   work-nscoff-nuecc48 data
 PR_JOBS=6 ./run_pr_chain_batch.sh       work-nuecc48-nuf   work-nscon-nuecc48  data
 # comparison = hash_archive.py over mabc-pr.zip + pctree tar.gz, plus T_tagger/T_kine rows
 ```
@@ -484,7 +484,7 @@ cd /nfs/data/1/xqian/toolkit-dev/toolkit
 ./wcb build --notests -p && ./wcb install --notests -p      # -> libWireCellClus.so md5 55e5e621
 ./build/clus/wcdoctest-clus                                  # 49 / 565
 qlport/scripts/compile_ub_cfg.sh $PWD/cfg /home/xqian/tmp/ub_new2.json   # byte-identical to HEAD
-sbnd_xin/compile_prjob_cfg.sh    $PWD/cfg /home/xqian/tmp/pr_new2.json   # 3 sets gain the key
+sbnd_xin/scripts/cfg/compile_prjob_cfg.sh    $PWD/cfg /home/xqian/tmp/pr_new2.json   # 3 sets gain the key
 cd sbnd_xin && PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1kall-d59k work-rpg-ab31 data $AB31
 cd ../qlport/scripts && ./run_one.sh 0 rpgcheck               # uBooNE fallback still wanted
 ```

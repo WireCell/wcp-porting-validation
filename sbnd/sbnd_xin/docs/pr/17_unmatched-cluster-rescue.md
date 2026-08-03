@@ -18,11 +18,11 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
 # --- the founding case: run 18255 evt 56463 (mcp1k entry 599), vertex veto ON ---
 # candidate census over the production (veto-ON) arms:
-python3 unmatched_census.py work-mcp1kall-vveto1k /home/xqian/tmp/u17_census.tsv 6
+python3 scripts/analysis/ql/unmatched_census.py work-mcp1kall-vveto1k /home/xqian/tmp/u17_census.tsv 6
 
 # knob-off identity check across the binary change (3 events, fresh tag):
 TAG=u17offchk ENTRIES="42 472 599" ./run_full1k_nusel.sh 1000 3
-python3 ql_arm_compare.py work-mcp1kall-vveto1k work-mcp1kall-u17offchk 292533 395148 56463
+python3 scripts/analysis/ql/ql_arm_compare.py work-mcp1kall-vveto1k work-mcp1kall-u17offchk 292533 395148 56463
 
 # demo, knob ON (56463):
 TAG=u17on56463 ENTRIES="599" SBND_RESCUE_UNMATCHED=1 ./run_full1k_nusel.sh 1000 1
@@ -40,7 +40,7 @@ SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod \
 SBND_WORK_ROOT=$PWD/work-nuecc48-u17on SBND_SAVE_ASSOC=1 SBND_RESCUE_UNMATCHED=1 \
     ./run_nusel_evt.sh data -chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm \
     -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc all
-python3 cbr_sweep_compare.py --off work-mcp1kall-vveto1k --on work-mcp1kall-u17on1kb \
+python3 scripts/analysis/cathode/cbr_sweep_compare.py --off work-mcp1kall-vveto1k --on work-mcp1kall-u17on1kb \
     --out /home/xqian/tmp/cbr17/u17_sweep_mcp1k.tsv
 # determinism: two more fresh ON runs of entry 599 (56463), 3-way QL-product hash
 TAG=u17det1 SBND_RESCUE_UNMATCHED=1 ENTRIES=599 ./run_full1k_nusel.sh 1000 1
@@ -50,9 +50,9 @@ TAG=u17det2 SBND_RESCUE_UNMATCHED=1 ENTRIES=599 ./run_full1k_nusel.sh 1000 1
 ENT=$(cut -d' ' -f1 /home/xqian/tmp/cbr17/attr_entries.txt | tr '\n' ' ')
 TAG=u17attroff SBND_RESCUE_UNMATCHED=0 ENTRIES="$ENT" ./run_full1k_nusel.sh 1000 6
 TAG=u17attron  SBND_RESCUE_UNMATCHED=1 ENTRIES="$ENT" ./run_full1k_nusel.sh 1000 6
-python3 cbr_sweep_compare.py --off work-mcp1kall-u17attroff --on work-mcp1kall-u17attron \
+python3 scripts/analysis/cathode/cbr_sweep_compare.py --off work-mcp1kall-u17attroff --on work-mcp1kall-u17attron \
     --out /home/xqian/tmp/cbr17/u17_sweep_attr.tsv
-python3 cbr_sweep_compare.py --off work-nuecc48-vveto --on work-nuecc48-u17on \
+python3 scripts/analysis/cathode/cbr_sweep_compare.py --off work-nuecc48-vveto --on work-nuecc48-u17on \
     --out /home/xqian/tmp/cbr17/u17_sweep_nuecc.tsv
 # ^ stale-baseline artifacts (sec 7.2); the attribution baseline is a fresh
 #   knob-off run at the same binary family:
@@ -60,7 +60,7 @@ SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod \
 SBND_WORK_ROOT=$PWD/work-nuecc48-u17off SBND_SAVE_ASSOC=1 SBND_RESCUE_UNMATCHED=0 \
     ./run_nusel_evt.sh data -chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm \
     -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc all
-python3 cbr_sweep_compare.py --off work-nuecc48-u17off --on work-nuecc48-u17on \
+python3 scripts/analysis/cathode/cbr_sweep_compare.py --off work-nuecc48-u17off --on work-nuecc48-u17on \
     --out /home/xqian/tmp/cbr17/u17_sweep_nuecc_cleanbase.tsv
 # per-pair cut tracer (sec 7.4), env-gated, prints [cbrx] lines to stderr:
 #   CATHODE_RESCUE_DEBUG=1 + any of the runs above (work-nuecc48-u17dbg,
@@ -143,7 +143,7 @@ component).
 
 ## 4. Candidate population (why this is worth having)
 
-Census over the production veto-ON arms (`unmatched_census.py`: flashless
+Census over the production veto-ON arms (`scripts/analysis/ql/unmatched_census.py`: flashless
 clusters ≥ 200 pts and ≥ 30 cm whose cathode-nearest tip is within 5 cm of
 the cathode, in an event that has an in-beam bundle):
 
@@ -273,7 +273,7 @@ ends) vs `work-nuecc48-u17on`:
 
 Four independent ON runs — `u17on56463`, the `u17on1kb` sweep, and two
 fresh single-event tags `u17det1`/`u17det2` — give member-content-identical
-`mabc-all-apa.zip` and pctree (3 pairwise `ql_arm_compare.py` checks, all
+`mabc-all-apa.zip` and pctree (3 pairwise `scripts/analysis/ql/ql_arm_compare.py` checks, all
 `zip== pctree==`).
 
 ### 7.4 The nueCC48 near-miss (444187) — observation for the owner
@@ -334,4 +334,4 @@ Bare-default smoke (`work-mcp1kall-u17defsmoke`, entry 599, NO
 `SBND_RESCUE_UNMATCHED` in the environment): the adoption fires from pure
 defaults (`unmatched rescue round 0: c12 … + c19 … -> gid 6`) and the QL
 products are member-hash identical to the validated ON arm
-(`ql_arm_compare.py` vs `u17on1kb`: `zip== pctree==`).
+(`scripts/analysis/ql/ql_arm_compare.py` vs `u17on1kb`: `zip== pctree==`).

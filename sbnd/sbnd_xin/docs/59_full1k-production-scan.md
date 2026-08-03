@@ -28,7 +28,7 @@ cd wcp-porting-img/sbnd/sbnd_xin
 
 # 2. the hand-scan subset + the Bee-index maps.  --keep-mixed is what the scan
 #    runs with (owner request, sec 4): 648 events instead of 639.
-python3 nusel_scan_filter.py -w work-mcp1kall-d59k --keep-mixed \
+python3 scripts/analysis/misc/nusel_scan_filter.py -w work-mcp1kall-d59k --keep-mixed \
     --census-out   scan-d59k/census.tsv \
     --events-out   scan-d59k/events-withmixed.txt \
     --tsv-list-out scan-d59k/tsvs-withmixed.txt
@@ -44,7 +44,7 @@ nusel_display/serve_nusel_scan.sh 5011 --tag s59k --charge-src pr \
 
 # 4. Bee (outward-facing -- owner asked for links).  ONE set for the whole scan:
 cp scan-d59k/events-withmixed.txt scan-d59k/all648.txt
-./make_scan_bee.sh scan-d59k/bee work-mcp1kall-d59k scan-d59k/all648.txt
+./scripts/bee/make_scan_bee.sh scan-d59k/bee work-mcp1kall-d59k scan-d59k/all648.txt
 # (the earlier 7x100-event chunk sets were built the same way from chunk-*.txt)
 ```
 
@@ -175,7 +175,7 @@ beam-window gate already cut the PR tail to ~3 s/event.
 ## 4. The hand-scan subset, and the 5011 display
 
 The request: keep events with an in-beam bundle, drop TGM-tagged and LM-tagged
-events, so what remains is STM-tagged or untagged. `nusel_scan_filter.py`
+events, so what remains is STM-tagged or untagged. `scripts/analysis/misc/nusel_scan_filter.py`
 implements exactly that, deciding on the table's **`label`** column — not the raw
 `tgm`/`stm`/`lm` columns, because `nusel_extract.label_of()` already applies the
 beam window and the TGM > STM > LM priority, and the raw `lm` column is a 0/1/2
@@ -251,7 +251,7 @@ only precedent), not a constraint. 269 MB in one POST is accepted. The chunked
 sets below were built first and are left live — they remain valid links, and they
 are the fallback if a 648-event set ever proves too heavy for a browser.
 
-Both were built by `make_scan_bee.sh` → `make_stmfit_bee.py`. Per event the Bee
+Both were built by `scripts/bee/make_scan_bee.sh` → `scripts/bee/make_stmfit_bee.py`. Per event the Bee
 tree carries
 
 - **`img-global`** — the per-APA post-Q/L clusters, raw x,
@@ -279,7 +279,7 @@ The 7 earlier chunk sets (the 639-event cut, i.e. without the 9 mixed events):
 
 All seven return HTTP 200. **Bee identifies events by directory index, not event
 id**, so every set ships its map: `scan-d59k/bee/{all648,chunk-NN}.index.txt` —
-Bee event `i` is line `i+1`. `make_stmfit_bee.py` also drops
+Bee event `i` is line `i+1`. `scripts/bee/make_stmfit_bee.py` also drops
 `chunk-NN.stmid-map.txt` (PR cluster id → img cluster id) next to each zip;
 that is the way back from a Bee color to the TSV / `tracking-stm.root` ids.
 
@@ -288,7 +288,7 @@ have none: the STM tagger only fits a main it does not skip first. The
 `stmfit` column of the kept events' in-beam bundles reads `eval` 329,
 `contained` 259, `nosteiner` 53, `postfit` 6, `midkink`/`shortfit`/`nexits` 1
 each, `-` 2 — so the 329 `eval` rows are exactly the events with a fit layer.
-`make_stmfit_bee.py`'s `has no ['stm_fit-global'] (was the run made with
+`scripts/bee/make_stmfit_bee.py`'s `has no ['stm_fit-global'] (was the run made with
 -stm-fit?)` warning is therefore benign here; the 330 fits prove `-stm-fit` was
 on.
 
@@ -333,8 +333,8 @@ New in `sbnd_xin/`:
 | file | what |
 |---|---|
 | `run_full1k_nusel.sh` | the production driver (entry list, per-entry cwd, `.status/` rc+wall+RSS+assoc, resumable by `ENTRIES=`) |
-| `nusel_scan_filter.py` | the census + subset selector (`--census-out/--events-out/--tsv-list-out/--chunk/--keep-mixed`) |
-| `make_scan_bee.sh` | per-chunk Bee build + upload, with input pre-validation and the index map |
+| `scripts/analysis/misc/nusel_scan_filter.py` | the census + subset selector (`--census-out/--events-out/--tsv-list-out/--chunk/--keep-mixed`) |
+| `scripts/bee/make_scan_bee.sh` | per-chunk Bee build + upload, with input pre-validation and the index map |
 | `scan-d59k/census.tsv` | per-event verdict for all 999 tabulated events |
 | `scan-d59k/{events,tsvs}.txt`, `chunk-*.txt` | the 639-event cut and its 7 Bee-index chunk maps |
 | `scan-d59k/{events,tsvs}-withmixed.txt`, `all648.txt` | the **served** 648-event set (`--keep-mixed`) and its single Bee set |

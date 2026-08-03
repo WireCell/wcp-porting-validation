@@ -78,7 +78,7 @@ ROOT_INCLUDE_PATH=/nfs/data/1/xqian/toolkit-dev/toolkit/root/src \
 
 # 5. Bee (10 events, ordinal order)
 printf '3\n4\n7\n9\n11\n12\n23\n24\n31\n34\n' > scan-r2patrec/first10.txt
-./make_scan_bee.sh scan-r2patrec/bee work-r2patrec-f1 scan-r2patrec/first10.txt
+./scripts/bee/make_scan_bee.sh scan-r2patrec/bee work-r2patrec-f1 scan-r2patrec/first10.txt
 ```
 
 Nothing was tuned and no default moved. The only code/config change is the
@@ -199,7 +199,7 @@ One row per event, the in-beam bundle only. Full per-bundle tables:
 
 ## 5. MC truth: where the neutrino was, and where the stopping muons are
 
-From `sim::MCTrack` (`mc_truth_muons.C`, §Repro). "AV" = |x| < 200, |y| < 200,
+From `sim::MCTrack` (`scripts/root/mc_truth_muons.C`, §Repro). "AV" = |x| < 200, |y| < 200,
 0 < z < 500 cm. Origin 1 = beam neutrino, 2 = cosmic.
 
 **Scope of the census.** It is `sim::MCTrack` only, above an energy threshold:
@@ -321,7 +321,7 @@ One set, 10 events, **ordinal order** — Bee index *i* is line *i*+1 of
 
 **https://www.phy.bnl.gov/twister/bee/set/d4f3a348-5d7d-4c8c-8bd0-494c4e309489/event/list/**
 
-Layers per event (doc 59 `make_stmfit_bee.py` merge): `img-global`,
+Layers per event (doc 59 `scripts/bee/make_stmfit_bee.py` merge): `img-global`,
 `clustering-global`, `op` (the Q/L flash↔cluster match — use it to read each
 cluster's t₀), the dead-area layers, and `stm_fit-global` (the STM
 track fits). The `op` layer is the one to open first when comparing with a
@@ -389,7 +389,7 @@ produce output in that set.
 ### 9.1 Full inventory of the staged files — his events are in none of them
 
 Every entry of every file in the wcgpu1 list, read with the new
-`mc_find_rse.C` (bare ROOT, `EventAuxiliary` only, works on `/pnfs` and
+`scripts/root/mc_find_rse.C` (bare ROOT, `EventAuxiliary` only, works on `/pnfs` and
 `xroot://` too):
 
 ```
@@ -458,7 +458,7 @@ What is needed to close it is either (i) the file list / sample his set came
 from, or (ii) his set's run-subrun-event triplets resolved to files — then the
 same procedure in the Repro block reruns those exact events. **Route (i) is
 what happened: the sample is `round1-qlmatch/mc_paths-10files`, see §10.** The
-prediction of §9.2 held — the ten do sit in one production, `mc_find_rse.C`
+prediction of §9.2 held — the ten do sit in one production, `scripts/root/mc_find_rse.C`
 mode found them in one pass, and the vertex fingerprint confirmed them
 (§10.1). The findings that
 do stand independently of which ten events are meant: our chain tags the one
@@ -537,7 +537,7 @@ root -l -b -q 'mc_nu_vertices.C("<file>","f1",<ent>,<ent>,50)'   > vtx.txt 2>&1
 # 5. Bee (10 events, ordinal order)
 printf '6\n10\n13\n14\n16\n21\n39\n43\n5\n12\n' > scan-r1ql/first10.txt
 mkdir -p work-r1ql-first10   # symlink ql_evt<N>/nusel_evt<N> from both roots
-./make_scan_bee.sh scan-r1ql/bee work-r1ql-first10 scan-r1ql/first10.txt
+./scripts/bee/make_scan_bee.sh scan-r1ql/bee work-r1ql-first10 scan-r1ql/first10.txt
 ```
 
 Nothing was tuned and no default moved; no C++ or config change was needed for
@@ -546,7 +546,7 @@ this round (the `-mc` plumbing of §2 already shipped, toolkit `9cb6c860`).
 ### 10.1 Proof that these are his events
 
 Label-independent, using the same fingerprint as §9.2: the beam-origin
-`sim::MCTrack` vertices (new `mc_nu_vertices.C`) versus the neutrino vertices
+`sim::MCTrack` vertices (new `scripts/root/mc_nu_vertices.C`) versus the neutrino vertices
 Bee carries in his `mc` layer. **All 15 of his vertices match, 13 of them
 exactly and the other 2 at 0.010 cm** (his are printed to 2 decimals) —
 against 13.5 cm for the best wrong-sample match in §9.
@@ -575,7 +575,7 @@ neutrinos of that event.
 
 ### 10.2 MC truth — where the in-time muons are
 
-`mc_truth_muons.C` at **E > 20 MeV** (i.e. no effective threshold: `E` is total
+`scripts/root/mc_truth_muons.C` at **E > 20 MeV** (i.e. no effective threshold: `E` is total
 energy and a muon carries 105.7 MeV of rest mass, so *every* MCTrack muon is
 in). "AV" = |x| < 200, |y| < 200, 0 < z < 500 cm. A **stopping muon** = a muon
 whose **end** is in the AV; it is an *entering* stopper if its start is not.
@@ -723,4 +723,4 @@ verdict — which is worth keeping in mind when comparing the two displays.
 - Toolkit change: `wct-reco1-dump.jsonnet` MC product TLAs (compiled config
   byte-identical when unset), shipped in `9cb6c860`. No C++ change, no rebuild,
   no default moved, in either part.
-- New bare-ROOT helpers: `mc_find_rse.C` (§9.2), `mc_nu_vertices.C` (§10.1).
+- New bare-ROOT helpers: `scripts/root/mc_find_rse.C` (§9.2), `scripts/root/mc_nu_vertices.C` (§10.1).

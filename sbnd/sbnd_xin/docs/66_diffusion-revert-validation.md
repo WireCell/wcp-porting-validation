@@ -79,11 +79,11 @@ SBND_TRACKFIT_JSON=$PWD/stm_campaign/sbnd_track_fitting_d47.json \
 STM_EVENTS="$EV" NJOBS=6 ./stm_campaign/run_round.sh d66new       # 4.0 / 8.8  (in-tree default)
 
 # 3. secs 4-5 -- the three reports
-python3 d66_flip_report.py work-stmcamp-d66old work-stmcamp-d66new
-python3 d66_flip_report.py work-stmcamp-d66old work-stmcamp-d66new --beam-only
+python3 scripts/analysis/stm/d66_flip_report.py work-stmcamp-d66old work-stmcamp-d66new
+python3 scripts/analysis/stm/d66_flip_report.py work-stmcamp-d66old work-stmcamp-d66new --beam-only
 python3 stm_campaign/score_round.py --round work-stmcamp-d66new --ref work-stmcamp-d66old
 python3 stm_campaign/score_full.py  --round work-stmcamp-d66new --ref work-stmcamp-d66old
-./d60_ab_report.py work-stmcamp-d66old work-stmcamp-d66new
+./scripts/analysis/stm/d60_ab_report.py work-stmcamp-d66old work-stmcamp-d66new
 
 # 4. sec 6 -- per-bundle fit diagnostics behind the flips
 for t in d66old d66new; do
@@ -91,7 +91,7 @@ for t in d66old d66new; do
 done
 
 # 5. sec 10 -- the 11 dQ/dx-vs-residual-range overlay figures
-./d66_flip_plots.sh                        # -> pics/d66/ + overlay-numbers.txt
+./scripts/runners/d66_flip_plots.sh                        # -> pics/d66/ + overlay-numbers.txt
 
 # 6. sec 11 -- serve the 11 for hand scan, OLD arm as the --prev baseline so the
 #    amber change flag marks exactly the diffusion-induced flips.  ABSOLUTE paths.
@@ -104,13 +104,13 @@ nusel_display/serve_nusel_scan.sh 5011 --tag d66flip --charge-src pr \
       echo $SB/work-stmcamp-d66new/nusel_evt$e/nusel-evt$e.tsv; done)
 
 # 7. sec 11 -- score the scan (prints the owner's raw comment beside each verdict)
-./d66_scan_score.py                        # -> pics/d66/scan-score-d66flip.txt
+./scripts/analysis/stm/d66_scan_score.py                        # -> pics/d66/scan-score-d66flip.txt
 
 # 8. Bee sets for the 11 (outward-facing; owner asked).  img-global +
 #    clustering-global + stm_fit-global, one set per arm -- the two differ ONLY
 #    in stm_fit-global, verified by member-content hashing.
-./make_scan_bee.sh bee-d66 work-stmcamp-d66new bee-d66/flip11-new.txt
-./make_scan_bee.sh bee-d66 work-stmcamp-d66old bee-d66/flip11-old.txt
+./scripts/bee/make_scan_bee.sh bee-d66 work-stmcamp-d66new bee-d66/flip11-new.txt
+./scripts/bee/make_scan_bee.sh bee-d66 work-stmcamp-d66old bee-d66/flip11-old.txt
 ```
 
 Bee sets (2026-07-27): **new 4.0/8.8** →
@@ -239,7 +239,7 @@ intended: `simparams.lar.DL` = `3.9999999999999998e-07`, `DT` =
 `cfg/.../sbnd/wct-pr-perevt.jsonnet`, `wct-clus-matching-perevt.jsonnet`,
 `sbnd_xin/ql_dump_scalar.jsonnet`, and the runners `run_nusel_evt.sh`,
 `run_pr_evt.sh`, `run_ql_evt.sh`, `run_clus_evt.sh`, `run_clust_QL_evt.sh`,
-`profile_pr65.sh`.
+`scripts/perf/profile_pr65.sh`.
 
 **Deliberately NOT touched** — `clus/inc/WireCellClus/TrackFitting.h:37-38`
 (uBooNE 6.4/9.8 C++ presets), `qlport/uboone_track_fitting.json`, and
@@ -470,7 +470,7 @@ in the old arm.
 
 ## 7. Archive-level comparison
 
-`d60_ab_report.py` compares both arms' `mabc-pr.zip` and
+`scripts/analysis/stm/d60_ab_report.py` compares both arms' `mabc-pr.zip` and
 `pctree-pr-evt<ID>.tar.gz` by **member content** (`abtest/hash_archive.py`, never
 raw `cmp`/`md5sum` — M2) and the `nusel-evt<ID>.tsv` tables by direct hash;
 `tracking-stm.root` is skipped as ROOT files embed a creation timestamp.
@@ -562,7 +562,7 @@ moves in both directions, so those three bundles favour neither pair.
    their fit moved, so the sample is biased and the observation cannot support
    "4.0/8.8 fits SBND data better". The clean version is median `reduced_chi2`
    old vs new over all 923 in-beam bundles, which needs `tracking-stm.root`
-   parsed for every bundle in both arms (the `stmfit_particle_overlay.py` path,
+   parsed for every bundle in both arms (the `scripts/analysis/stm/stmfit_particle_overlay.py` path,
    looped) — not run. §11 has since answered the *verdict* version of that
    question directly from the owner's eyes, so this is now a supporting
    measurement rather than the deciding one.
@@ -575,11 +575,11 @@ scan.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-./d66_flip_plots.sh                    # -> pics/d66/d66_evt<ID>_main<M>.png (11)
+./scripts/runners/d66_flip_plots.sh                    # -> pics/d66/d66_evt<ID>_main<M>.png (11)
                                        #    + pics/d66/overlay-numbers.txt
 ```
 
-`d66_flip_plots.sh` pins the **deciding pass** per bundle — the pass whose status
+`scripts/runners/d66_flip_plots.sh` pins the **deciding pass** per bundle — the pass whose status
 differs between the arms, read from each arm's
 `persist_stm_fit: cluster N stmfit pass=P status=S`. Ten bundles decide on
 pass 0; **315849:10 is the only two-pass case** (pass 0 exits `status=2` in both
@@ -652,11 +652,11 @@ remaining three — 281632:8, 319809:20, 321107:13 — added immediately after).
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-./d66_scan_score.py                      # --tag d66flip --root work-stmcamp-d66new
+./scripts/analysis/stm/d66_scan_score.py                      # --tag d66flip --root work-stmcamp-d66new
 ```
 
 Verdicts are free text in the bundle `comment` (the label buttons were not
-used), so `d66_scan_score.py` applies **one** stated keyword rule — "not a stm" /
+used), so `scripts/analysis/stm/d66_scan_score.py` applies **one** stated keyword rule — "not a stm" /
 "nu candidate" ⇒ not-STM, "stm is fine" ⇒ STM — and always prints the raw comment
 beside its classification. All 11 were unambiguous; none needed a judgment call,
 and none came back UNCLEAR.
@@ -689,7 +689,7 @@ label. The owner's verdict is not-STM on 10 of the 11.
 ### 11.1 Old arm vs new arm on the owner's verdicts: a wash
 
 A flipped bundle's OLD verdict is by construction the opposite of its NEW one,
-so these 11 verdicts score **both** arms with no extra input. `d66_scan_score.py`
+so these 11 verdicts score **both** arms with no extra input. `scripts/analysis/stm/d66_scan_score.py`
 does that arithmetic mechanically, because scoring only the subset that happens
 to lie in the doc-62 baseline gives the opposite answer to scoring all of them:
 
@@ -801,7 +801,7 @@ STM_EVENTS="59003 63163 63559 283009 285663 286527 288859 391766 405740" ... run
 # offline re-evaluation of detect_proton under modified cuts (exact code logic
 # on the exact logged discriminants; sanity-checks itself against every
 # recorded pass status):
-./d66_proton_sweep.py work-stmcamp-d66newtrace0
+./scripts/analysis/stm/d66_proton_sweep.py work-stmcamp-d66newtrace0
 # eval-side censuses read T_stm_pass/T_stm_eval from every
 # work-stmcamp-d66new/nusel_evt*/tracking-stm.root (values already persisted
 # by -stm-fit; branches are in cm — SbndMagnifyTrackingVisitor divides).
@@ -867,7 +867,7 @@ vetoed in the early Michel/delta section that these cuts never touch.
 
 Package P3+P4+P5(a or b) over the complete sample: newly vetoed = exactly
 {317543:15, 319809:20, 390864:16}.  This is not a rerun estimate — the Python
-re-evaluation (`d66_proton_sweep.py`) applies the exact C++ cascade to the
+re-evaluation (`scripts/analysis/stm/d66_proton_sweep.py`) applies the exact C++ cascade to the
 exact logged discriminants and reproduces every recorded pass status before
 sweeping; detect_proton is the final stage, so upstream state cannot shift
 under these cut changes.  All 141 accepted STMs accounted for: 138 parsed + 3
@@ -928,9 +928,9 @@ EV="$(ls -d work-mcp1kall-d59k/nusel_evt* | sed 's#.*nusel_evt##' | tr '\n' ' ')
 # knob-off gate arm and knob-on production arm, same binary as d66new:
 STM_EVENTS="$EV" NJOBS=30 ./stm_campaign/run_round.sh d66fixoff -no-stm-d66cuts
 STM_EVENTS="$EV" NJOBS=30 ./stm_campaign/run_round.sh d66fix
-./d60_ab_report.py work-stmcamp-d66new work-stmcamp-d66fixoff   # expect identical
-./d60_ab_report.py work-stmcamp-d66new work-stmcamp-d66fix      # expect the 4 targets
-./d66_flip_report.py work-stmcamp-d66new work-stmcamp-d66fix
+./scripts/analysis/stm/d60_ab_report.py work-stmcamp-d66new work-stmcamp-d66fixoff   # expect identical
+./scripts/analysis/stm/d60_ab_report.py work-stmcamp-d66new work-stmcamp-d66fix      # expect the 4 targets
+./scripts/analysis/stm/d66_flip_report.py work-stmcamp-d66new work-stmcamp-d66fix
 ```
 
 Pre-run proofs: compiled `wct-pr-perevt.jsonnet` with the knob **off** is
@@ -948,7 +948,7 @@ The legacy path is untouched.
 (`/home/xqian/tmp/d66fix_vs_new.txt`):
 
 - The **4 target events** differ in both `pctree-pr-*.tar.gz` and the nusel
-  table.  Flip census over all 11,426 bundles (`d66_flip_report.py`): tgm 0,
+  table.  Flip census over all 11,426 bundles (`scripts/analysis/stm/d66_flip_report.py`): tgm 0,
   fc 0, lm 0, **stm 4** — exactly the targets, 0.04% of bundles:
   - `281632:8` nu-candidate → **STM** (restored): fit pass persisted at
     status 0, i.e. on the *new* fit it also cleared the doc-63 guards, the

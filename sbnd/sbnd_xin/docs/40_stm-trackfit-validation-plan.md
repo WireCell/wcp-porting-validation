@@ -200,7 +200,7 @@ T0-corrected coordinates.  Empirical confirmation over the 30-event knob-on
 round: all 18561 fitted points lie in x ∈ [−201.3, +198.2] cm against SBND's
 200 cm half-drift, only 0.17 % marginally past 200 (fit overshoot at the
 anode) — a raw-x frame would spill across the full ~2.7 m readout window.
-TPC assignment by `sign(x)` (used by the viewer and `stmon_stats.py`) is
+TPC assignment by `sign(x)` (used by the viewer and `scripts/analysis/stm/stmon_stats.py`) is
 therefore sound.
 Per-cluster scalars landed as two PCs: `stm_pass`
 (status/kink_num/npoints/exit_L/left_L/exit_dqdx/left_dqdx) and `stm_eval`

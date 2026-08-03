@@ -27,21 +27,21 @@ cd wcp-porting-img/sbnd/sbnd_xin
 # than every clus source), 30 events, sequential, setarch x86_64 -R,
 # per-event wall/RSS via abtest/timecmd.py -- identical harness to doc 54
 # sanity first: (cd toolkit && ./build/clus/wcdoctest-clus)  # 565/565 pass
-./run_perf54_nusel.sh fin p65                     # -> work-*-p65fin
+./scripts/runners/run_perf54_nusel.sh fin p65                     # -> work-*-p65fin
 
-python3 mabc_step_totals.py p54base p54opt p55opt p65fin   # step table below
-python3 p54_ab_report.py --base-tag p55opt --opt-tag p65fin \
+python3 scripts/analysis/misc/mabc_step_totals.py p54base p54opt p55opt p65fin   # step table below
+python3 scripts/perf/p54_ab_report.py --base-tag p55opt --opt-tag p65fin \
     > /home/xqian/tmp/p65_ab_report.txt           # timing + output-diff census
 
 # profiles (no setarch -- SIGPROF; config precompiled with wcsonnet, M17)
 EVT=287517 ROOT=work-mcp1000-p65fin  OUTDIR=/home/xqian/tmp/p65prof_e12 \
-    ./profile_pr65.sh
+    ./scripts/perf/profile_pr65.sh
 EVT=288859 ROOT=work-mcp1000b-p65fin OUTDIR=/home/xqian/tmp/p65prof_e20 \
-    ./profile_pr65.sh
+    ./scripts/perf/profile_pr65.sh
 google-pprof --text $(which wire-cell) <OUTDIR>/pr65_evt<EVT>.prof
 ```
 
-`run_perf54_nusel.sh` reruns ONLY the nusel (PR tagger) stage; imaging and
+`scripts/runners/run_perf54_nusel.sh` reruns ONLY the nusel (PR tagger) stage; imaging and
 Q/L products are symlinked from `work-*-d55ton` (M11/M13, identical inputs to
 every doc-54 arm).  Flag set unchanged from doc 54: the d52 NUF set +
 `-unmerge-assoc` (chord/rescue/rescue-chord, main-pair-real, fvz 5 / fvzi 3 /
@@ -91,7 +91,7 @@ are the intended production behavior changes shipped since doc 54:
 3. RSS −108 MB: fewer steiner graphs/point clouds resident, same pctree load.
 
 **Outputs intentionally differ from p55opt** — this is a timing measurement,
-not an identity gate.  `p54_ab_report.py --base-tag p55opt --opt-tag p65fin`
+not an identity gate.  `scripts/perf/p54_ab_report.py --base-tag p55opt --opt-tag p65fin`
 finds 118/120 comparisons changed (report:
 `/home/xqian/tmp/p65_ab_report.txt`), exactly the docs-49/56/63 behavior:
 out-of-window bundles now carry `tgm/stm/fc = -1 -1 -1, stmfit -` (not

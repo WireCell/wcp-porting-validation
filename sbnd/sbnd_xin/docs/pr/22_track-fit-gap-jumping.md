@@ -35,7 +35,7 @@ with dead regions either way (this is MC-era data-prod with tiny dead area).
 
 ```bash
 # probe a PR Bee dump (any mabc-pr.zip with track_fit/shower_track layers):
-python3 sbnd_xin/gapjump_probe.py \
+python3 sbnd_xin/scripts/analysis/misc/gapjump_probe.py \
     sbnd_xin/work-oc19scan-old/pr_evt386948/mabc-pr.zip 1.0
 
 # the two fresh arms (toolkit HEAD fe6b7d90, production install):
@@ -52,8 +52,8 @@ SBND_INPUT_DIR=$PWD/work-pr22gap-input SBND_WORK_ROOT=$PWD/work-pr22gap-b \
     ./run_pr_evt.sh data -p \
     switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_neutrino \
     -bw 0.2,2.2 1
-python3 gapjump_probe.py work-pr22gap-a/pr_evt386948/mabc-pr.zip 1.0
-python3 gapjump_probe.py work-pr22gap-b/pr_evt386948/mabc-pr.zip 1.0
+python3 scripts/analysis/misc/gapjump_probe.py work-pr22gap-a/pr_evt386948/mabc-pr.zip 1.0
+python3 scripts/analysis/misc/gapjump_probe.py work-pr22gap-b/pr_evt386948/mabc-pr.zip 1.0
 ```
 
 Fresh tags `work-pr22gap-{input,a,b}` (M13: nothing written into
@@ -132,7 +132,7 @@ but:
 
 ## 3. The quantification (evt 386948)
 
-`gapjump_probe.py`: for every `track_fit` point, distance to nearest
+`scripts/analysis/misc/gapjump_probe.py`: for every `track_fit` point, distance to nearest
 `shower_track` point and to nearest `clustering` (QL charge) point;
 uncovered = no `shower_track` point within 1 cm; stretches = ≥ 2 consecutive
 uncovered fit points of one segment.
@@ -221,7 +221,7 @@ production-config residual is the modest, intended behavior of §3 arm B.
   Bee sets remain valid for what they were scanned for; their `track_fit`
   trails overstate gap jumping per §3-4.
 - **No scripted consumer changes behavior**: nothing calls the shorthands
-  from other scripts (`compare_pr_roundtrip.py` uses the empty pipeline /
+  from other scripts (`scripts/analysis/misc/compare_pr_roundtrip.py` uses the empty pipeline /
   `-p switch_scope`, both untouched).
 
 ## 7. Bee: before/after on evt 386948
@@ -238,7 +238,7 @@ not.  Also visible in the `mc` particle-flow tree and in the remap log: the
 OLD PR job fits **1** cluster (the whole pre-unmerge flash bundle), the NEW
 one **21** (the unmerged pieces, each fit on its own).
 
-Built with `make_pr_bee.py -q work-oc19scan-old -p work-pr22gap-{a,c}`, the
+Built with `scripts/bee/make_pr_bee.py -q work-oc19scan-old -p work-pr22gap-{a,c}`, the
 two single-event zips merged into `data/{0,1}`.
 
 ## 8. The residual jumps: uboone's second graph examination is missing from the PR chain
@@ -329,7 +329,7 @@ here**; this section records the diagnosis and the fix shape.
 
 ## Artifacts
 
-- Probe: `sbnd_xin/gapjump_probe.py` (this doc).
+- Probe: `sbnd_xin/scripts/analysis/misc/gapjump_probe.py` (this doc).
 - Fresh arms: `sbnd_xin/work-pr22gap-{input,a,b,c}` (evt 386948 only; c = updated `-nu` verification).
 - Scan-set input analyzed: `sbnd_xin/work-oc19scan-old/pr_evt386948/mabc-pr.zip`.
 - Related: doc pr/19 (the Bee sets), doc 50 (STM gap-jumping + MST no-cap),

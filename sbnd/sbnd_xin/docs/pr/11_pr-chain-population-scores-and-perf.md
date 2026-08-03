@@ -69,17 +69,17 @@ python3 pr_scores_table.py --merge /tmp/nuecc48.tsv /tmp/r1qlmc.tsv /tmp/r2mc.ts
 
 # label breakdown (sec 2.1), score percentiles (2.2/2.5), wall/core (3.1),
 # peak RSS (4) -- every distribution table in this doc comes from this one call
-python3 pr11_analyze_census.py docs/pr/11_scores-table.tsv
+python3 scripts/analysis/pr11/pr11_analyze_census.py docs/pr/11_scores-table.tsv
 
 # stage-cost breakdown (population, free at -L debug -- perf=true is already
 # the SBND default for MABC and TaggerCheckNeutrino)
-python3 pr_stage_totals.py --root work-mcp1kall-pr11v3
+python3 scripts/analysis/misc/pr_stage_totals.py --root work-mcp1kall-pr11v3
 
 # --- sec 5: DL-vertex acceptance arm (248 events at TRACE) -------------------
 # The DL decision lines are SPDLOG_LOGGER_TRACE, so they do NOT appear in the
 # -L debug census logs.  200 mcp1k events stratified over the core_s ordering
 # (deterministic every-Nth pick, no RNG) + all 48 nueCC48.
-python3 pr11_pick_events.py docs/pr/11_scores-table.tsv dlrate > /tmp/dlrate_picks.sh
+python3 scripts/analysis/pr11/pr11_pick_events.py docs/pr/11_scores-table.tsv dlrate > /tmp/dlrate_picks.sh
 . /tmp/dlrate_picks.sh
 SBND_WCT_LOGLEVEL=trace PR_JOBS=20 ./run_pr_chain_batch.sh work-mcp1kall-d59k /tmp/dlrate_mcp1k data $MCP1K_DL
 SBND_WCT_LOGLEVEL=trace PR_JOBS=20 ./run_pr_chain_batch.sh work-nuecc48-nuf   /tmp/dlrate_nuecc data $NUECC_DL
@@ -90,22 +90,22 @@ grep -ho "scn_inference=[0-9.]*ms" /tmp/dlrate_*/pr_evt*/wct_pr_evt*.log        
 # Events are ranked by core_s, NOT wall_s: under 20-way concurrency wall is
 # contention-dominated (events with identical 6.23 s wall span core 0.73-3.63 s),
 # so wall is the wrong key for picking events whose latency we want.
-python3 pr11_pick_events.py docs/pr/11_scores-table.tsv phase4 > /tmp/phase4_picks.sh
+python3 scripts/analysis/pr11/pr11_pick_events.py docs/pr/11_scores-table.tsv phase4 > /tmp/phase4_picks.sh
 . /tmp/phase4_picks.sh
 PR_JOBS=1 ./run_pr_chain_batch.sh work-mcp1kall-d59k /tmp/seq_mcp1k data $HEAVY_MCP1K $MEDIAN_MCP1K
 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-nuf   /tmp/seq_nuecc data $HEAVY_NUECC48
 
 # seq-vs-census comparison (sec 3.2) and the per-process configure cost (3.3)
-python3 pr11_seq_compare.py /tmp/seq_table.tsv docs/pr/11_scores-table.tsv
-python3 pr11_config_cost.py work-mcp1kall-pr11v3
+python3 scripts/analysis/pr11/pr11_seq_compare.py /tmp/seq_table.tsv docs/pr/11_scores-table.tsv
+python3 scripts/perf/pr11_config_cost.py work-mcp1kall-pr11v3
 
 # --- sec 2.3: nue_score buckets (br_filled read straight from T_tagger) ------
-python3 pr11_br_filled_census.py .
+python3 scripts/analysis/pr11/pr11_br_filled_census.py .
 
 # --- sec 5.3: CPU profile.  DL_WEIGHTS= is REQUIRED: libpython + ------------
 # libtcmalloc_and_profiler co-preloaded deadlocks (see sec 5.3 caveat 1).
 DL_WEIGHTS= EVT=397480 ROOT=work-mcp1kall-d59k OUTDIR=/tmp/prof_geo \
-    ./profile_pr11.sh /tmp/prof_geo/cpu.prof
+    ./scripts/perf/profile_pr11.sh /tmp/prof_geo/cpu.prof
 google-pprof --text --cum $(which wire-cell) /tmp/prof_geo/cpu.prof | head -32
 ```
 
@@ -167,7 +167,7 @@ verified unchanged at both ends of each arm.
   value would wrongly conclude the DL vertex failed on every event.
   (`cw_ratio` is not a column in `11_scores-table.tsv`; `pr_scores_table.py`
   never implemented it. It exists only in the round's plan and in
-  `pr11_analyze_census.py`, which recomputes it from `wall_s`/`core_s` — this
+  `scripts/analysis/pr11/pr11_analyze_census.py`, which recomputes it from `wall_s`/`core_s` — this
   paragraph is the reason it is reported there but used nowhere.)
 - **A `nu_evaluated` flag, not the nusel bundle table, decides whether scores
   are meaningful.** `unmerge_bundle`/`unmerge_assoc` (both production-ON) run
@@ -439,7 +439,7 @@ event now peaks at 1.53 GB, inside the distribution above.)*
 
 `perf: true` is already the SBND default for MABC and `TaggerCheckNeutrino`,
 so the whole 1000-event census carries a substage breakdown at `-L debug`
-(`pr_stage_totals.py`). Top of the table, totals over 1000 events:
+(`scripts/analysis/misc/pr_stage_totals.py`). Top of the table, totals over 1000 events:
 
 | step | total | n_evt | median | max |
 |---|---:|---:|---:|---:|
@@ -538,7 +538,7 @@ two methods.
    profiled: `LD_PRELOAD` carrying both libpython (needed `RTLD_GLOBAL` for
    the SCN import) and `libtcmalloc_and_profiler` **deadlocks** — the process
    sat alive at ~0% CPU with a frozen log for 10 minutes and had to be
-   killed. `profile_pr11.sh`'s header already anticipated this and prescribes
+   killed. `scripts/perf/profile_pr11.sh`'s header already anticipated this and prescribes
    exactly this fallback. The DL cost is therefore quoted from the trace arm
    (sec 5.2), which needs no profiler, and is *excluded* from these
    percentages. Adding it back, **using the sequential arm's numbers only**

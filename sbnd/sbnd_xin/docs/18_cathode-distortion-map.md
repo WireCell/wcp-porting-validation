@@ -27,12 +27,12 @@ MC ≈ 0.5 cm transverse), into a **spatially resolved** field over the cathode 
   in the reco path changes.
 - **MC baseline (`input-10files-mc`, 118 events).** Those 10 files share the
   event-id space 1–50, so they are first remapped to globally-unique ids
-  (`uid = 700000 + file·1000 + evt`, `build_mcbase_stage.py`) and then run through
-  the **full chain — imaging + clustering + QLMatching** with `run_mcbase.sh`
+  (`uid = 700000 + file·1000 + evt`, `scripts/analysis/misc/build_mcbase_stage.py`) and then run through
+  the **full chain — imaging + clustering + QLMatching** with `scripts/runners/run_mcbase.sh`
   (parallel, 64 CPU; uses the new `SBND_INPUT_DIR` override added to `_runlib.sh`):
   ```
-  python3 build_mcbase_stage.py          # stage 10 files -> unique ids
-  ./run_mcbase.sh                        # per file: run_img_evt.sh + run_ql_evt.sh -calib -cathode-diag
+  python3 scripts/analysis/misc/build_mcbase_stage.py          # stage 10 files -> unique ids
+  ./scripts/runners/run_mcbase.sh                        # per file: run_img_evt.sh + run_ql_evt.sh -calib -cathode-diag
   ```
   The analysis classifies any id ≥ 700000 (plus the 10 small original ids) as MC.
 - **Sample:** 160 data events (150 lan-reco2 + 10) vs **128 MC** (118 baseline +
@@ -49,8 +49,8 @@ MC ≈ 0.5 cm transverse), into a **spatially resolved** field over the cathode 
   `d̂ = unit(dir0 + dir1)` — is the artifact-immune distortion (the drift x part
   is degenerate with T0/velocity).
 
-Analysis script: [`../cathode_distortion.py`](../cathode_distortion.py)
-(parallel JSON load + plotting; `python3 cathode_distortion.py -j 16`).
+Analysis script: [`../scripts/analysis/cathode/cathode_distortion.py`](../scripts/analysis/cathode/cathode_distortion.py)
+(parallel JSON load + plotting; `python3 scripts/analysis/cathode/cathode_distortion.py -j 16`).
 
 ## Method — six (Y, Z) views
 

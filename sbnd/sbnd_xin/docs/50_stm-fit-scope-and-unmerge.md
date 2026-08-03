@@ -10,13 +10,13 @@ decisions for the owner.
 cd sbnd_xin
 
 # the population census (needs the -stm-fit rounds; d49son = doc 49 knob-on)
-python3 stm_main_connectivity.py work-mcp10-d49son work-mcp1000-d49son work-mcp1000b-d49son
-python3 stm_main_connectivity.py --gap 3   work-mcp10-d49son work-mcp1000-d49son work-mcp1000b-d49son
-python3 stm_main_connectivity.py --gap 15  work-mcp10-d49son work-mcp1000-d49son work-mcp1000b-d49son
+python3 scripts/analysis/stm/stm_main_connectivity.py work-mcp10-d49son work-mcp1000-d49son work-mcp1000b-d49son
+python3 scripts/analysis/stm/stm_main_connectivity.py --gap 3   work-mcp10-d49son work-mcp1000-d49son work-mcp1000b-d49son
+python3 scripts/analysis/stm/stm_main_connectivity.py --gap 15  work-mcp10-d49son work-mcp1000-d49son work-mcp1000b-d49son
 
 # the two reported events
-python3 stm_main_connectivity.py --detail 284657:27 work-mcp10-d49son
-python3 stm_main_connectivity.py --detail 285185:21 work-mcp10-d49son
+python3 scripts/analysis/stm/stm_main_connectivity.py --detail 284657:27 work-mcp10-d49son
+python3 scripts/analysis/stm/stm_main_connectivity.py --detail 285185:21 work-mcp10-d49son
 
 # what the un-merge actually did, from the run's own log
 grep "UnmergeBundle:pr> cluster" work-mcp10-d49son/nusel_evt285185/wct_nusel_evt285185.log
@@ -179,7 +179,7 @@ Naming the projection would settle which.
 
 ## 4. How common is this? (128 fitted mains, 30 events)
 
-`stm_main_connectivity.py`, post-un-merge geometry (`mabc-pr.zip`) vs the fitted
+`scripts/analysis/stm/stm_main_connectivity.py`, post-un-merge geometry (`mabc-pr.zip`) vs the fitted
 trajectory (`tracking-stm.root`, last pass):
 
 | | gap=3 cm | **gap=5 cm** | gap=10 cm | gap=15 cm |

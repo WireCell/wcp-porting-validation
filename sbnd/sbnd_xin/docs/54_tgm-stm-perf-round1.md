@@ -18,13 +18,13 @@ cd wcp-porting-img/sbnd/sbnd_xin
 
 # arm 1: baseline binary (toolkit HEAD 11bec7f4), 30 events, sequential,
 # per-event wall/RSS via abtest/timecmd.py, setarch x86_64 -R
-./run_perf54_nusel.sh base            # -> work-{mcp10,mcp1000,mcp1000b}-p54base
+./scripts/runners/run_perf54_nusel.sh base            # -> work-{mcp10,mcp1000,mcp1000b}-p54base
 
 # apply toolkit commit 077a48d1, then wcbuild (build + install; freshness
 # proof: local/lib/libWireCellClus.so mtime > source edit), wcdoctest-clus
-./run_perf54_nusel.sh opt             # -> work-*-p54opt
+./scripts/runners/run_perf54_nusel.sh opt             # -> work-*-p54opt
 
-python3 p54_ab_report.py              # gate + timing tables
+python3 scripts/perf/p54_ab_report.py              # gate + timing tables
 ```
 
 The runner reruns ONLY the nusel (PR tagger) stage: imaging `evt*` and Q/L
@@ -141,7 +141,7 @@ this round; RSS work would have to target the pctree load/steiner side.
 
 ## Gate (byte-identicality)
 
-`p54_ab_report.py` — labels `work-{mcp10,mcp1000,mcp1000b}-p54base` vs
+`scripts/perf/p54_ab_report.py` — labels `work-{mcp10,mcp1000,mcp1000b}-p54base` vs
 `-p54opt`, full report at `/home/xqian/tmp/p54_ab_report.txt`:
 
 - per event: `mabc-pr.zip` and `pctree-pr-evt*.tar.gz` member-content hash
@@ -168,8 +168,8 @@ Round 1 left `CreateSteinerGraph:pr` as the top step (42.1 s / 30 events,
 cd wcp-porting-img/sbnd/sbnd_xin
 # baseline = the round-1 products already on disk (work-*-p54opt)
 # apply toolkit 6c7192b1, wcbuild, freshness proof, wcdoctest-clus
-./run_perf54_nusel.sh opt p55         # -> work-*-p55opt
-python3 p54_ab_report.py --base-tag p54opt --opt-tag p55opt
+./scripts/runners/run_perf54_nusel.sh opt p55         # -> work-*-p55opt
+python3 scripts/perf/p54_ab_report.py --base-tag p54opt --opt-tag p55opt
 ```
 
 ## The change
@@ -210,7 +210,7 @@ evt 287517 (round-2 binary): event total 1121 → 1040 samples;
 
 ## Gate
 
-`p54_ab_report.py --base-tag p54opt --opt-tag p55opt` — full report at
+`scripts/perf/p54_ab_report.py --base-tag p54opt --opt-tag p55opt` — full report at
 `/home/xqian/tmp/p55_ab_report.txt`:
 **GATE: 120/120 comparisons identical → PASS** (same scope as round 1).
 `wcdoctest-clus` 565/565.

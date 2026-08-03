@@ -26,7 +26,7 @@ needs no instrumentation — it reads only `nusel-table.tsv` and the per-event
 `mabc-pr.zip`:
 
 ```bash
-cd sbnd_xin && python3 tgm_readout_cut.py work-mcp10
+cd sbnd_xin && python3 scripts/analysis/geom/tgm_readout_cut.py work-mcp10
 ```
 
 The `check_tgm entry:` (all extreme groups + `inside_fv`), `check_tgm CASE-B:`
@@ -180,10 +180,10 @@ end of the track is never digitized, and the reconstruction stops on a plane
 > `|x_cut| = A + v·t0`
 
 Fitting that line to the clipped endpoints of **11 main clusters across all 10
-events** (t0 from −1176 to −225 µs, |x| from 50 to 199 cm) — `tgm_readout_cut.py`:
+events** (t0 from −1176 to −225 µs, |x| from 50 to 199 cm) — `scripts/analysis/geom/tgm_readout_cut.py`:
 
 ```bash
-cd sbnd_xin && python3 tgm_readout_cut.py work-mcp10
+cd sbnd_xin && python3 scripts/analysis/geom/tgm_readout_cut.py work-mcp10
 ```
 
 > **A = 233.941 cm, v = 0.15634 cm/µs**, residual **rms 0.28 cm**, max 0.78 cm

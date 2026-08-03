@@ -160,7 +160,7 @@ samples), so 0.85 is a representative point.
 cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
 ./run_clust_QL_evt.sh mc      # -> work/ql_mc/mabc.zip
 ./run_clust_QL_evt.sh data    # -> work/ql_data/mabc.zip
-python3 ql_light_compare.py   # default --cos-cut 0.85
+python3 scripts/analysis/ql/ql_light_compare.py   # default --cos-cut 0.85
 ```
 
 ## Dumps

@@ -21,9 +21,9 @@ SBND_WORK_ROOT=$PWD/work-nuecc48-isog10550off SBND_NU_ISO_GUARD=0  ./run_ql_evt.
 
 # --- no-regression sweeps (vs the pr/15 vveto baselines) ---
 TAG=isog1k ./run_full1k_nusel.sh 1000 6
-python3 iso_sweep_compare.py --base work-mcp1kall-vveto1k --on work-mcp1kall-isog1k \
+python3 scripts/analysis/misc/iso_sweep_compare.py --base work-mcp1kall-vveto1k --on work-mcp1kall-isog1k \
     --out /home/xqian/tmp/isog_sweep_mcp1k.tsv --jobs 16
-python3 iso_sweep_compare.py --base work-nuecc48-vveto --on work-nuecc48-isog \
+python3 scripts/analysis/misc/iso_sweep_compare.py --base work-nuecc48-vveto --on work-nuecc48-isog \
     --out /home/xqian/tmp/isog_sweep_nuecc.tsv --jobs 12
 ```
 
@@ -158,7 +158,7 @@ as follow-up in §9, not smuggled into this clustering fix.
 
 Arms `work-mcp1kall-isog1k` / `work-nuecc48-isog` (guard ON, production
 stack, LIBS_STABLE bracket) vs the pr/15 baselines `work-mcp1kall-vveto1k` /
-`work-nuecc48-vveto`.  Census `iso_sweep_compare.py`
+`work-nuecc48-vveto`.  Census `scripts/analysis/misc/iso_sweep_compare.py`
 (`/home/xqian/tmp/isog_sweep_{mcp1k,nuecc}.tsv`).  The first census pass
 found 47 + 6 hash diffs WITHOUT the (xext) marker; root cause: the package
 also enables the pre-existing 6 cm far-veto, whose refusal path had NO
@@ -202,7 +202,7 @@ charge to the guard: every firing strips cosmic-band material only.
   protect_iso_band_xext + marker), `cfg/pgrapher/common/clus.jsonnet`,
   `cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
   `cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet`.
-- wcp-porting-img: `run_ql_evt.sh` (SBND_NU_ISO_GUARD), `iso_sweep_compare.py`
+- wcp-porting-img: `run_ql_evt.sh` (SBND_NU_ISO_GUARD), `scripts/analysis/misc/iso_sweep_compare.py`
   (fork of vveto_sweep_compare.py, M10), this doc.
 
 ## 9. Follow-up (out of scope here)

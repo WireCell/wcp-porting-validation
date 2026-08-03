@@ -70,7 +70,7 @@ SBND_MY_KNOB=1 ./valfast/run_valfast.sh myknobon
   not today's production clustering.
 - **-full mode**: regenerates the nusel stage per sample first (mcp1k via
   `TAG=vf<tag> ENTRIES=… run_full1k_nusel.sh`; nuecc48 via the
-  `s4_nuecc48.sh` pattern with imaging symlinked from `work/`; MC via the doc
+  `scripts/runners/s4_nuecc48.sh` pattern with imaging symlinked from `work/`; MC via the doc
   67 recipes), then the PR chain from those fresh roots. Use whenever the
   change can move clustering/Q-L products.
 
@@ -82,7 +82,7 @@ refused (M13): new run ⇒ new tag.
 1. **PR archives — HARD**: `hash_archive.py` member hashes of `mabc-pr.zip` +
    `pctree-pr-evt*.tar.gz` per event.
 2. **Physics score columns — HARD**: `pr_scores_table.py` output diffed by
-   `vf_scores_diff.py` (fork of doc pr/20 gate PI-6's `pr20_scores_diff.py`;
+   `vf_scores_diff.py` (fork of doc pr/20 gate PI-6's `scripts/analysis/pr20/pr20_scores_diff.py`;
    timing/RSS columns excluded by name; `kine_reco_Enu_MeV` compared with a
    1e-5 RELATIVE tolerance because the chain has a documented run-to-run
    noise floor in that one column — last-digit flutter surviving

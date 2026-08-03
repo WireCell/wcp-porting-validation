@@ -150,7 +150,7 @@ flip does what it says; and the DL and geometric arms genuinely differ.
 
 **M4 still stands**: identity gates keep passing `dl_weights=''` explicitly
 (`qlport/scripts/run_one.sh:55`, `abtest/compile_all_cfg.sh:45`,
-`sbnd_xin/profile_pr65.sh:24`).  The DL vertex is never a gate arm.
+`sbnd_xin/scripts/perf/profile_pr65.sh:24`).  The DL vertex is never a gate arm.
 
 **Cost**: `TaggerCheckNeutrino timing: overall main vertex` goes
 **0.105 ms → ~980 ms** per event (990.0 / 975.9 ms in the two DL runs, CPU

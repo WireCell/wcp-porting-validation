@@ -22,9 +22,9 @@ SBND_INPUT_DIR=... SBND_WORK_ROOT=$PWD/work-mcp1kall-cbr56463vvoff SBND_SEP_VVET
 
 # --- no-regression sweep: full 1000-event mcp1k + all 48 nueCC48 ---
 TAG=vveto1k ./run_full1k_nusel.sh 1000 6          # veto ON (production default)
-python3 vveto_sweep_compare.py --base work-mcp1kall-cbron1k --on work-mcp1kall-vveto1k \
+python3 scripts/analysis/misc/vveto_sweep_compare.py --base work-mcp1kall-cbron1k --on work-mcp1kall-vveto1k \
     --out /home/xqian/tmp/vveto_sweep_mcp1k.tsv
-python3 vveto_sweep_compare.py --base work-nuecc48-cbron --on work-nuecc48-vveto \
+python3 scripts/analysis/misc/vveto_sweep_compare.py --base work-nuecc48-cbron --on work-nuecc48-vveto \
     --out /home/xqian/tmp/vveto_sweep_nuecc.tsv
 ```
 
@@ -163,7 +163,7 @@ default stack incl. cathode rescue and 45dae9d0's nu_skip_cosmic_bundle) vs
 the pr/14 `cbron1k` / `cbron` baselines.  Both arms rc=0; installed-lib
 mtime bracket LIBS_STABLE (no concurrent-session install mid-sweep).
 QL-stage products (mabc-all-apa.zip + pctree) compared per event
-(`vveto_sweep_compare.py`, TSVs `/home/xqian/tmp/vveto_sweep_{mcp1k,nuecc}.tsv`);
+(`scripts/analysis/misc/vveto_sweep_compare.py`, TSVs `/home/xqian/tmp/vveto_sweep_{mcp1k,nuecc}.tsv`);
 PR products are NOT compared arm-wide (45dae9d0 is PR-stage, so PR diffs are
 expected), PR labels inspected for FIRED events only.
 
@@ -207,12 +207,12 @@ V candidates are available for owner hand-check on Bee.
 Note the firing marker is a cout line: it lands in the harness stdout logs
 (`.log_e<entry>.log` / `.batch_ql_evt<ID>.log`), not in
 `ql_evt*/wct_ql_evt*.log` (wire-cell `-l` captures spdlog only) —
-`vveto_sweep_compare.py::firing_map` scans the right files.
+`scripts/analysis/misc/vveto_sweep_compare.py::firing_map` scans the right files.
 
 ## 8. Files
 
 - toolkit: `clus/src/clustering_separate.cxx` (veto_vertex_split + knob),
   `cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
   `cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet`.
-- wcp-porting-img: `run_ql_evt.sh` (SBND_SEP_VVETO), `vveto_sweep_compare.py`,
+- wcp-porting-img: `run_ql_evt.sh` (SBND_SEP_VVETO), `scripts/analysis/misc/vveto_sweep_compare.py`,
   this doc.

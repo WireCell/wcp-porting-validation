@@ -29,8 +29,8 @@ for i in 2 3; do                                   # idx 2 = 284657, 3 = 285185
 done
 
 # 2. attribute the merge
-python3 stm_merge_attribution.py --pr-root work-mcp10-d49son work-mcp10-trace51 285185 21
-python3 stm_merge_attribution.py --pr-root work-mcp10-d49son work-mcp10-trace51 284657 27
+python3 scripts/analysis/stm/stm_merge_attribution.py --pr-root work-mcp10-d49son work-mcp10-trace51 285185 21
+python3 scripts/analysis/stm/stm_merge_attribution.py --pr-root work-mcp10-d49son work-mcp10-trace51 284657 27
 ```
 
 Follows doc 50, which measured the *consequence*: 26 % of STM fits stray >5 cm
@@ -276,7 +276,7 @@ first.
 - Two events. The mechanism is general (§3-§4) and the collapse ratios (25→9,
   46→11) say it is common, but "`clustering_isolated` is the merger" is
   established here only for these two clusters. Running
-  `stm_merge_attribution.py` over doc 50's 36 end-in-clump cases would make it a
+  `scripts/analysis/stm/stm_merge_attribution.py` over doc 50's 36 end-in-clump cases would make it a
   rate; not done.
 - Which of the two distance branches fired is not pinned down (§3).
 - The 80 cm merge was already implicated once, in

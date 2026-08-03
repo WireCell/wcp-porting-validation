@@ -56,8 +56,8 @@ Line numbers are against the working tree as of 2026-07-26.
 ## 1. The json is **not** in the config chain
 
 `nusel_display/stm_ref_dqdx.json` is read by exactly three Python programs, all
-under `sbnd_xin/`: `nusel_scan_viewer.py`, `stmfit_showcase.py`,
-`stmfit_particle_overlay.py`. Nothing in `toolkit/` opens it — it does not
+under `sbnd_xin/`: `nusel_scan_viewer.py`, `scripts/analysis/stm/stmfit_showcase.py`,
+`scripts/analysis/stm/stmfit_particle_overlay.py`. Nothing in `toolkit/` opens it — it does not
 appear in any `.jsonnet`, any `.cxx`, or any config the pipeline compiles.
 
 So **doc 55 §10 changed no reconstruction behaviour whatsoever.** It changed
@@ -256,10 +256,10 @@ cd sbnd_xin
 git -C ../../../toolkit checkout efc2c281^ -- clus/src/TaggerCheckSTM.cxx
 (cd ../../../toolkit && ./wcb build -j8)          # waf is content-hash based:
                                                   # identical text => no rebuild
-./run_perf54_nusel.sh base d57mip                 # -> work-*-d57mipbase
+./scripts/runners/run_perf54_nusel.sh base d57mip                 # -> work-*-d57mipbase
 git -C ../../../toolkit checkout efc2c281 -- clus/src/TaggerCheckSTM.cxx
 (cd ../../../toolkit && ./wcb build -j8 && ./wcb install)
-./run_perf54_nusel.sh opt  d57mip                 # -> work-*-d57mipopt
+./scripts/runners/run_perf54_nusel.sh opt  d57mip                 # -> work-*-d57mipopt
 ```
 
 Imaging and Q/L products are symlinked from `work-*-d55ton` and never

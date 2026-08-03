@@ -41,10 +41,10 @@ grep -n "sensvol\|X planes:" work-mcp10-dq48v3/nusel_evt285185/wct_nusel_evt2851
 grep -n "check_stm_conditions" work-mcp10-dq48v3/nusel_evt285185/wct_nusel_evt285185.log
 
 # this cluster, per merge component
-python3 stm_fv_census.py --detail 285185:21
+python3 scripts/analysis/stm/stm_fv_census.py --detail 285185:21
 
 # the census over all 30 scan events (prediction, before the fix)
-python3 stm_fv_census.py            # -> §4
+python3 scripts/analysis/stm/stm_fv_census.py            # -> §4
 
 # the A/B.  setarch x86_64 -R IS MANDATORY -- see 4a.
 F="-chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real -fvx 2.5 -fvy 3 -stm-fit -mip 56000"
@@ -64,7 +64,7 @@ for arm in off on; do
 done
 ```
 
-`stm_fv_census.py` reads only committed scan products (`work-*-dq48v3/`); it runs
+`scripts/analysis/stm/stm_fv_census.py` reads only committed scan products (`work-*-dq48v3/`); it runs
 no wire-cell and takes ~40 s.  Scan labels: **`work-{mcp10,mcp1000,mcp1000b}-d49soff`**
 (knob off) and **`-d49son`** (knob on), both under `setarch -R`.
 
@@ -170,7 +170,7 @@ respect, which is what "consistent" was asked to mean.
 
 ## 2. Cluster 21
 
-`stm_fv_census.py --detail 285185:21`, on the Bee clustering layer (the only place
+`scripts/analysis/stm/stm_fv_census.py --detail 285185:21`, on the Bee clustering layer (the only place
 per-point `real_cluster_id` survives):
 
 ```
@@ -263,7 +263,7 @@ Effect on the 30-event tables: **exactly one row changed**, `skip` → `containe
 
 ## 4. How big is this? 96 of 147, and it is not a corner case
 
-`python3 stm_fv_census.py` over the three `dq48v3` tags (30 events, 328 bundles).
+`python3 scripts/analysis/stm/stm_fv_census.py` over the three `dq48v3` tags (30 events, 328 bundles).
 For every bundle whose `stmfit` is `contained`, it measures the 6 axis-extreme
 points `get_extreme_wcps()` collects against both boxes:
 
@@ -464,7 +464,7 @@ STM/TGM/FC agree, `match_isFC` does not.
 | STM box was the sensitive-volume union, \|x\| ≤ 201.45 | run log `sensvol: [(4.5 …) --> (2014.5 …)]` mm; code path `contained` → `contained_by` → `sensitive()`; `AnodePlane.cxx:296-299` |
 | … and the tagger really used it | 0 of 147 `contained` clusters had an extreme point outside that box |
 | FC/TGM box is \|x\| ≤ 198.55 | `sbnd_pr_fv` 201.05 − `tgm_fv_x_margin` 2.5 (`sbnd/clus.jsonnet:483,499`) |
-| cluster 21 ends 0.25 cm inside STM / 2.65 cm outside FC | `stm_fv_census.py --detail 285185:21` |
+| cluster 21 ends 0.25 cm inside STM / 2.65 cm outside FC | `scripts/analysis/stm/stm_fv_census.py --detail 285185:21` |
 | the box is the only discriminator | geometry and FC flag agree 96/96, 0 either-only |
 | prototype shares one FV, inset 3 cm | §1a file:line table; `prod-wire-cell-matching-nusel.cxx:348-351` |
 | the torn-line fix moves nothing else | field-20-blanked `diff` of all three `dq48v3` tables: 1 row (`skip`→`contained`), no other change |

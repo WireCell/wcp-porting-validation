@@ -267,7 +267,7 @@ on connectivity would undo the chain's intentional long-range merges
 choice of main representation touches it. It has to be handled either
 
 - **upstream** — if the pass that merged it was not one of the deliberate
-  gap-jumpers, that is a separate bug; `stm_merge_attribution.py` can now name the
+  gap-jumpers, that is a separate bug; `scripts/analysis/stm/stm_merge_attribution.py` can now name the
   pass (doc 51 §8, unmeasured for evt18 clus 80), or
 - **inside the fit** — a path-component restriction, the STM analogue of TGM's
   `main_component_pairs` (doc 36/38), which restricts endpoint pairs to a single
@@ -402,7 +402,7 @@ tip on the far side was itself mis-grouped as *associated* to an unrelated main,
 retained main then keeps an unrelated cluster and loses the tip. This is a
 pre-existing `clustering_isolated` mis-grouping, not something the un-merge
 creates, and no provenance rule can repair it. Detectable by the same
-`stm_merge_attribution.py` route if it ever shows up in a scan.
+`scripts/analysis/stm/stm_merge_attribution.py` route if it ever shows up in a scan.
 
 ### TGM: no improvement needed — `mode="real"` goes inert by itself
 
@@ -476,7 +476,7 @@ Per stage, in this order:
 4. Knob-on: quote the array contents, not just verdict counts — for Stage 1, the
    `assoc_cluster_id` partition of cluster 21 must be 1164 + 8 and of cluster 27
    279 + 21 (doc 51 §2). That is a direct check, independent of any verdict.
-5. Re-run doc 50's `stm_main_connectivity.py`: the headline "26 % of fits stray
+5. Re-run doc 50's `scripts/analysis/stm/stm_main_connectivity.py`: the headline "26 % of fits stray
    >5 cm from their own charge" should fall. If it does not, the fix did not
    reach the fitter.
 6. Then, and only then, a verdict A/B on the 30-event manifest, and a hand scan
@@ -497,7 +497,7 @@ Per stage, in this order:
 - §4 is **resolved** (representation = A, un-merge first, then STM/PR). What is
   still open from it: whether the residual internally-disconnected-single-member
   class needs an STM `main_component_pairs` analogue, or whether the pass that
-  merged evt18 cluster 80 is itself the bug — run `stm_merge_attribution.py` on
+  merged evt18 cluster 80 is itself the bug — run `scripts/analysis/stm/stm_merge_attribution.py` on
   that event to decide.
 - Stage counts assume the SBND per-APA + all-APA layout. PDHD/PDVD run the same
   `clustering_isolated`, so Stage 0's diff will not be SBND-only — those
@@ -573,9 +573,9 @@ class of mistake — always run the on-side proof too (M6's cousin).
 **Repro:**
 ```bash
 cd sbnd_xin
-./run_d52_campaign.sh both          # ~25 min; both arms under setarch x86_64 -R
-python3 d52_ab_report.py
-python3 stm_main_connectivity.py work-mcp10-d52on work-mcp1000-d52on work-mcp1000b-d52on
+./scripts/runners/run_d52_campaign.sh both          # ~25 min; both arms under setarch x86_64 -R
+python3 scripts/analysis/stm/d52_ab_report.py
+python3 scripts/analysis/stm/stm_main_connectivity.py work-mcp10-d52on work-mcp1000-d52on work-mcp1000b-d52on
 ```
 Tags: **`work-{mcp10,mcp1000,mcp1000b}-d52off`** and **`-d52on`**. Imaging is
 symlinked from `-d49son`, never regenerated.
@@ -718,7 +718,7 @@ the STM fit.
 **Repro:**
 ```bash
 cd sbnd_xin
-python3 d52_ab_report.py                     # verdict deltas
+python3 scripts/analysis/stm/d52_ab_report.py                     # verdict deltas
 grep "check_tgm: cluster 8 " work-mcp10-d52on/nusel_evt284349/wct_nusel_evt284349.log
 grep "prassoc> cluster 8:"   work-mcp10-d52on/nusel_evt284349/wct_nusel_evt284349.log
 ```
@@ -1027,7 +1027,7 @@ together. No blob-node-per-row representation needed.
   (QL and PR jobs, `wcsonnet` diff vs HEAD worktrees); knob-on emits
   `realign_perblob: true` on every QLMatching node (compiled-config proof);
   `wcdoctest-clus` 518/518, `wcdoctest-match` 36/36. 30-event A/B redo (tag
-  `d52roff`/`d52ron`, `./run_d52_campaign.sh both d52r`) — §12.7.
+  `d52roff`/`d52ron`, `./scripts/runners/run_d52_campaign.sh both d52r`) — §12.7.
 
 ### 12.6 Pre-existing bug, NOT fixed here (reported, default path unchanged)
 
@@ -1045,8 +1045,8 @@ needs its own validation round.
 
 ### 12.7 30-event A/B redo (tags d52roff / d52ron) — replaces the VOID §9/§10 numbers
 
-**Repro:** `./run_d52_campaign.sh both d52r` then
-`python3 d52_ab_report.py --off-tag d52roff --on-tag d52ron`
+**Repro:** `./scripts/runners/run_d52_campaign.sh both d52r` then
+`python3 scripts/analysis/stm/d52_ab_report.py --off-tag d52roff --on-tag d52ron`
 (both arms `setarch x86_64 -R`, imaging symlinked from `work-*-d49son`).
 
 - **GATE (knob-off): 210/210 archive comparisons identical → PASS** — the
@@ -1101,7 +1101,7 @@ C++ default = on; explicit `false` reproduces the pre-fix behavior).  Runner:
 Compiled-config proof: default emits no key; `-no-realign` emits
 `"realign_perblob": false` on both QLMatching nodes.
 
-**Production-delta arm (tag d52rp):** `./run_d52_campaign.sh off d52rp` with
+**Production-delta arm (tag d52rp):** `./scripts/runners/run_d52_campaign.sh off d52rp` with
 the flipped default — same flags as d52roff, the ONLY difference is realign
 (work dirs `work-*-d52rpoff`; comparison script: session scratch
 `d52rp_delta.py`, member-content hashes + per-main verdict tuples).
@@ -1202,7 +1202,7 @@ audit table) and a pointer entry at the end of
 * `wcbuild` rc=0; freshness proof (`local/lib/libWireCellClus.so` 17:06 >
   last source edit 17:04); `wcdoctest-clus` 518/518.
 * Gate: 30-event off-arm redo under fresh tag `d53`
-  (`./run_d52_campaign.sh off d53`, `setarch x86_64 -R`), compared with
+  (`./scripts/runners/run_d52_campaign.sh off d53`, `setarch x86_64 -R`), compared with
   member-content hashes against the current production baseline
   `work-*-d52rpoff` (realign_perblob default ON).  **GATE PASS: 120/120
   archives identical, 30/30 nusel verdict tables row-for-row identical

@@ -41,10 +41,10 @@ python3 $D/keydiff.py $D/before/<label>.json $D/after/<label>.json   # key-level
 
 # 2. Gate B, second consumers
 cd $SX
-./compile_sbnd_prod.sh $D/pristine/toolkit/cfg $D/before/prod        # wcls + legacy standalone
-./compile_sbnd_prod.sh $WCT/toolkit/cfg        $D/after/prod
-$D/pristine/wcp/sbnd/sbnd_xin/compile_prjob_cfg.sh $D/pristine/toolkit/cfg $D/before/prjob.json
-./compile_prjob_cfg.sh $WCT/toolkit/cfg $D/after/prjob.json
+./scripts/cfg/compile_sbnd_prod.sh $D/pristine/toolkit/cfg $D/before/prod        # wcls + legacy standalone
+./scripts/cfg/compile_sbnd_prod.sh $WCT/toolkit/cfg        $D/after/prod
+$D/pristine/wcp/sbnd/sbnd_xin/scripts/cfg/compile_prjob_cfg.sh $D/pristine/toolkit/cfg $D/before/prjob.json
+./scripts/cfg/compile_prjob_cfg.sh $WCT/toolkit/cfg $D/after/prjob.json
 
 # 3. Gate C -- output identity
 #    (a) the save_assoc flip must not move the Bee zip of a non-saving caller
@@ -138,8 +138,8 @@ TLA only when given.
 | `run_pr_evt.sh` | the twelve `tgm_*` pins deleted (decision 4) + the LAr set and `trackfitting_config`. **25 → 9 TLAs.** Also now honours `SBND_WORK_ROOT` (§6). |
 | `run_pr_chain_batch.sh` | the same 28-TLA production block deleted; `PIPELINE` stays explicit (this chain adds the neutrino taggers + BDT scorers on top of the default list). |
 | `run_full1k_nusel.sh` | `NUF` → `-stm-fit`; `export SBND_SAVE_ASSOC=1` deleted. |
-| `run_perf54_nusel.sh` | same `NUF` collapse. |
-| `compile_prjob_cfg.sh` | compiles the production PR chain nearly bare, matching the new invocation. |
+| `scripts/runners/run_perf54_nusel.sh` | same `NUF` collapse. |
+| `scripts/cfg/compile_prjob_cfg.sh` | compiles the production PR chain nearly bare, matching the new invocation. |
 
 Not touched, deliberately: `wct-clus-matching-standalone.jsonnet` and its
 `lm=false, main_flag=false` pins (doc 64 §6 legacy job — verified unmoved,
@@ -213,7 +213,7 @@ through the §3a defaults. Identical output is what proves the flip and the stri
 cancel exactly.
 
 | `run_nusel_evt.sh` production (`-stm-fit`, was the 12-flag `NUF`) | identical except (i) — `diff` is one line |
-| `compile_prjob_cfg.sh` (PR chain + neutrino taggers + BDTs) | identical except (i), 2 keys |
+| `scripts/cfg/compile_prjob_cfg.sh` (PR chain + neutrino taggers + BDTs) | identical except (i), 2 keys |
 
 **Gate B — per-caller sweep.** Every invocation whose *default* moves, plus the
 second consumers doc 64 had to retrofit:
@@ -225,7 +225,7 @@ second consumers doc 64 had to retrofit:
 | `sbnd/wct-clus.jsonnet` | insulated: zero references to the flipped job or its three TLAs |
 | `sbnd/wcls-img-clus-matching-xin.jsonnet` | **does not compile on this branch** (`RUNTIME ERROR: Field does not exist: pc_transforms`) — pre-existing, exactly as doc 64 §6 recorded; HaiwangYu's `origin/tgm` file, not caused by doc 68 |
 
-**Insulation note on the standalone job.** `compile_sbnd_prod.sh` compiles it
+**Insulation note on the standalone job.** `scripts/cfg/compile_sbnd_prod.sh` compiles it
 with `--ext-code joint=false`, so on its own that IDENTICAL would only prove
 "a caller that pins `joint` is unaffected by the `joint` default flip" — true by
 construction and worth nothing. The result is real for a different reason:

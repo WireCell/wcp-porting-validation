@@ -1,0 +1,131 @@
+# stm_fit-global cluster_id remap for /home/xqian/tmp/claude-25225/-nfs-data-1-xqian-toolkit-dev-toolkit/66f898d9-1da5-4f9b-b7d7-2b0fb22ab304/scratchpad/upload-d55ton-30evt-stmfit.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+284657	1	4	5	flash-matched	5:1024
+284657	1	5	6	flash-matched	6:1428
+284657	1	11	13	flash-matched	13:1352
+284657	1	14	17	flash-matched	17:1858
+284657	1	16	20	flash-matched	20:3962
+284657	1	18	23	flash-matched	23:837
+284657	1	20	24	flash-matched	24:215
+284657	1	24	4	flash-matched	4:483
+284657	1	27	25	flash-matched	25:264
+285185	2	17	19	flash-matched	19:2255, 4:1412
+285185	2	19	3	flash-matched	3:2778
+285185	2	20	5	flash-matched	5:1778
+285185	2	21	17	flash-matched	17:1084
+285999	3	3	3	flash-matched	3:1476
+285999	3	9	12	flash-matched	12:5774
+285999	3	22	11	flash-matched	11:202
+285999	3	23	18	flash-matched	18:1467
+286021	4	8	19	flash-matched	19:136
+286021	4	14	7	flash-matched	7:749
+286021	4	15	9	flash-matched	9:3014
+286021	4	16	20	flash-matched	20:4848
+286065	5	3	2	flash-matched	2:4257
+286065	5	11	12	flash-matched	12:2155
+286065	5	12	5	flash-matched	5:1335
+286197	6	4	3	flash-matched	3:465
+286197	6	8	12	flash-matched	12:2945
+286197	6	11	5	flash-matched	5:3487
+286197	6	12	6	flash-matched	6:2294
+286241	7	5	7	flash-matched	7:2383
+286241	7	6	9	flash-matched	9:1282
+286241	7	8	13	flash-matched	13:2383
+286241	7	13	2	flash-matched	2:2890
+286241	7	14	14	flash-matched	14:1623
+286329	8	2	6	flash-matched	6:1773
+286329	8	9	19	flash-matched	19:1053
+286329	8	14	23	flash-matched	23:520
+286329	8	19	11	flash-matched	11:2400
+286527	9	7	8	flash-matched	8:1120
+286527	9	9	9	flash-matched	9:1546
+286527	9	14	23	flash-matched	23:520
+286527	9	16	24	flash-matched	24:247
+286527	9	18	10	flash-matched	10:12
+286527	9	21	11	flash-matched	11:1548
+286527	9	22	21	flash-matched	21:2178
+286681	10	3	4	flash-matched	4:12296
+286681	10	7	9	flash-matched	9:217
+286681	10	10	17	flash-matched	17:464
+286681	10	17	22	flash-matched	22:1057
+286681	10	18	18	NO-FLASH-MATCH (fallback: dominant)	18:86
+287099	11	14	12	flash-matched	12:1109
+287099	11	18	15	flash-matched	15:2111
+287099	11	19	16	flash-matched	16:566
+287099	11	21	8	flash-matched	8:1080
+287517	12	7	12	flash-matched	12:1675
+287517	12	8	13	flash-matched	13:3710
+287517	12	14	11	flash-matched	11:3757
+287517	12	17	5	flash-matched	5:2557
+287517	12	18	6	flash-matched	6:2642
+287759	13	8	13	flash-matched	13:1181
+287759	13	10	6	flash-matched	6:440
+287825	14	3	25	flash-matched	25:1252, 6:528
+287825	14	4	8	flash-matched	8:2215, 20:235
+287825	14	6	14	flash-matched	14:3268
+287825	14	8	19	flash-matched	19:2269
+288067	15	2	5	flash-matched	5:1347
+288067	15	5	8	flash-matched	8:617
+288067	15	7	10	flash-matched	10:404
+288067	15	11	7	flash-matched	7:2499, 20:1245
+288067	15	14	19	flash-matched	19:1399
+288287	16	8	15	flash-matched	15:343
+288287	16	10	2	flash-matched	2:4850
+288287	16	14	3	flash-matched	3:1863, 19:1070
+288397	17	12	19	flash-matched	19:641, 10:583
+288397	17	13	21	flash-matched	21:241
+288397	17	16	5	flash-matched	5:809
+288639	18	1	2	flash-matched	2:859
+288639	18	8	5	flash-matched	5:1308
+288639	18	10	8	flash-matched	8:978, 13:510
+288727	19	5	7	flash-matched	7:2147, 6:118
+288727	19	6	11	flash-matched	11:3462
+288727	19	7	13	flash-matched	13:247
+288727	19	8	4	flash-matched	4:1424
+288727	19	9	14	flash-matched	14:93
+288859	20	6	13	flash-matched	13:1194
+288859	20	7	16	flash-matched	16:1648
+288859	20	9	14	flash-matched	14:7630
+288859	20	10	2	flash-matched	2:1571
+288859	20	11	12	flash-matched	12:4372
+288859	20	13	11	flash-matched	11:3536
+288947	21	3	5	flash-matched	5:982
+288947	21	12	20	flash-matched	20:735
+288947	21	15	19	flash-matched	19:1582
+289145	22	8	20	flash-matched	20:391
+289145	22	9	21	flash-matched	21:1080
+289145	22	10	22	flash-matched	22:2081
+289145	22	14	24	flash-matched	24:1849
+289145	22	16	26	flash-matched	26:1136
+289343	23	5	13	flash-matched	13:570
+289343	23	8	19	flash-matched	19:1468
+289343	23	9	7	flash-matched	7:581
+289343	23	13	14	flash-matched	14:219
+289475	24	7	17	flash-matched	17:1334
+289475	24	10	8	flash-matched	8:206
+289475	24	12	20	flash-matched	20:829
+289475	24	13	9	flash-matched	9:506
+289475	24	15	13	flash-matched	13:2044, 6:1601
+289805	25	7	9	flash-matched	9:611
+289805	25	17	19	flash-matched	19:145
+289805	25	19	8	flash-matched	8:1669
+289805	25	20	11	flash-matched	11:1423
+289805	25	21	6	flash-matched	6:118
+289849	26	1	2	flash-matched	2:336
+289849	26	11	4	flash-matched	4:11643, 3:889
+289849	26	14	9	flash-matched	9:2786, 20:425
+289849	26	15	7	flash-matched	7:5933
+290069	27	8	10	flash-matched	10:601
+290069	27	12	17	flash-matched	17:909
+290069	27	15	20	flash-matched	20:806
+290069	27	16	21	flash-matched	21:1191
+290069	27	17	22	flash-matched	22:144
+290069	27	23	9	flash-matched	9:5159
+290135	28	3	12	flash-matched	12:3508
+290135	28	5	13	flash-matched	13:1041
+290135	28	6	15	flash-matched	15:912
+290135	28	7	21	flash-matched	21:739
+290135	28	16	11	flash-matched	11:4747
+290201	29	4	8	flash-matched	8:6864
+290201	29	8	14	flash-matched	14:2178
+290201	29	9	10	flash-matched	10:1056

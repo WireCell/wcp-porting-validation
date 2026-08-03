@@ -70,7 +70,7 @@ index.
 
 ## 2. The measurement: the writer agrees with the data
 
-`pr_proj_align.py` fits the global (channel, slice) shift that best centres the
+`scripts/analysis/geom/pr_proj_align.py` fits the global (channel, slice) shift that best centres the
 measured charge cells on the drawn polyline, in index space (charge-weighted
 least squares on the perpendicular offset to the nearest polyline segment; cells
 within 3 index units).  Evt 172230, cluster 5, 582 fitted points, 7577 cells:
@@ -139,7 +139,7 @@ and `GetPointIndex` take raw channel values and still land right.
 
 ### Negative control
 
-`sbnd_xin/pr_proj_binctl.C` reproduces the three lines above and draws the same
+`sbnd_xin/scripts/root/pr_proj_binctl.C` reproduces the three lines above and draws the same
 U/V/W zoom (t 564–604, u 836–876, v 4307–4347, w 7983–8023) twice — old edges on
 the left, new on the right:
 
@@ -148,8 +148,8 @@ the left, new on the right:
 The left column reproduces the offset seen in the GUI: the magenta markers hug
 the left/lower edge of the yellow charge band.  On the right they sit on it.
 
-`pr_proj_binctl.C` is a reimplementation of those three lines, so it does not
-exercise `Data.cc` itself.  `sbnd_xin/pr_proj_guishot.C` does: it mirrors
+`scripts/root/pr_proj_binctl.C` is a reimplementation of those three lines, so it does not
+exercise `Data.cc` itself.  `sbnd_xin/scripts/root/pr_proj_guishot.C` does: it mirrors
 `GuiController`'s init sequence (3×3 canvas, `Data(file, sign)`, `data->c1 =
 can`, `DrawNewCluster()`) without a `TGWindow` and then calls the same public
 entry points the GUI calls (`DrawDQDX`, `DrawProj`, `DrawSubclusters`,
@@ -292,7 +292,7 @@ A/B gate applies — `mabc-pr.zip` is byte-identical across every run above):
 | toolkit | `clus/docs/porting/porting_dictionary.md` | the `+0.5` divergence |
 | viewer | `event/Data.cc`, `event/Data.h` | bin centres, `DisplayL`, per-sub dQ/dx graphs |
 | wcp-porting-img | `work-nuecc48-prsmoke2/run_pr3_evt.sh` | honour `PROUT` so re-runs stay out of the record dir |
-| wcp-porting-img | `pr_proj_align.py`, `pr_proj_binctl.C`, `pr_proj_guishot.C` | new |
+| wcp-porting-img | `scripts/analysis/geom/pr_proj_align.py`, `scripts/root/pr_proj_binctl.C`, `scripts/root/pr_proj_guishot.C` | new |
 
 **Recorded, not fixed:**
 

@@ -435,7 +435,7 @@ P3 + P4 ON is a full **mcp1k verdict census**, not the 48 nueCC events alone.
 That is the pr/19 precedent: the owner's decision there was made on 7/1000
 verdict changes that only the 1000-event census surfaced. The sweep costs
 ~21 min at 8 jobs (`run_full1k_nusel.sh`) and the census + attribution
-machinery is already committed (`oc19_census_mcp1k.py`; same-binary OFF/ON
+machinery is already committed (`scripts/analysis/misc/oc19_census_mcp1k.py`; same-binary OFF/ON
 rerun pairs for every changed event). Never present a knob for a ship
 decision without it.
 
@@ -504,10 +504,10 @@ TAG=ccfeat300b ENTRIES="$(seq 300 499 | tr '\n' ' ')" ./run_full1k_nusel.sh 200 
 ./run_pr_chain_batch.sh work-mcp1kall-cathdbg1  work-cathdbg1pr  data
 
 # (4) analysis (read-only; all four scripts committed beside this doc)
-python3 feat_census.py work-mcp1kall-ccfeat300      # connector accept/reject census
-python3 stub_census.py work-ccfeat300pr             # cathode-stub segment census
-python3 pair_eyeball.py work-mcp1kall-ccfeat300 pairs.json newedges.png
-python3 kink_probe.py                               # re-runs segment_search_kink's
+python3 scripts/analysis/misc/feat_census.py work-mcp1kall-ccfeat300      # connector accept/reject census
+python3 scripts/analysis/misc/stub_census.py work-ccfeat300pr             # cathode-stub segment census
+python3 scripts/analysis/misc/pair_eyeball.py work-mcp1kall-ccfeat300 pairs.json newedges.png
+python3 scripts/analysis/cathode/kink_probe.py                               # re-runs segment_search_kink's
                                                     # criteria on evt 169824 offline
 ```
 
@@ -602,7 +602,7 @@ regime. What rejects them is the direction logic
 
 **`cc_pca` is not a discriminator in the close regime — and the connector's own
 accepted population proves it.** Over 500 SBND data events (entries 0-499,
-`feat_census.py`), the connector saw 330 cross-APA candidate pairs and accepted
+`scripts/analysis/misc/feat_census.py`), the connector saw 330 cross-APA candidate pairs and accepted
 264. Of those, **183 were accepted by the primary Hough test, which never
 consults `cc_pca` at all — and their `cc_pca` has median 37.8°, exceeding the
 30° bound in 123 of 183 (67 %)**. Two thirds of the crossers the pass already
@@ -682,7 +682,7 @@ tip-to-tip vector: 4.47 cm of drift-x and 1.12 cm of y, and the y step has the
 the cathode offset does not). The two long arms either side agree to 2.7°.
 Same physical fact as `cc_pca = 89°` in class A, one layer further down.
 
-**Population.** `stub_census.py` looks for a segment whose end-to-end extent is
+**Population.** `scripts/analysis/misc/stub_census.py` looks for a segment whose end-to-end extent is
 < 10 cm, whose endpoints straddle x = 0 with both |x| < 6 cm, and counts its
 neighbours:
 
@@ -731,7 +731,7 @@ drift-x dominated — the two halves are separated by the drift gap, not by
 track — so `para_angle` is wide open there, while the ~1 cm transverse cathode
 mismatch supplies the turn. Re-running the finder's own arithmetic offline on
 evt 169824's trajectory, reconstituted by concatenating `18005 + 18007 + 18008`
-(`kink_probe.py`; a proxy — the pre-break fit is not bit-identical to the
+(`scripts/analysis/cathode/kink_probe.py`; a proxy — the pre-break fit is not bit-identical to the
 concatenation of the post-break fits):
 
 | i | x (cm) | `refl_angle` | `para_angle` | `sum_angles` | criteria met |
@@ -817,7 +817,7 @@ not. The defence is the no-cliff evidence (4 and 5 cm are the same set, and the
 next edge only appears when `dis_cut = 5 cm` itself would have to move) plus the
 fact that the accept-log delta is enumerated rather than counted. It is a weaker
 objection than A2's, not a different kind of objection.
-Every one of the 10 new edges, eyeballed (`pair_eyeball.py`, figure below):
+Every one of the 10 new edges, eyeballed (`scripts/analysis/misc/pair_eyeball.py`, figure below):
 
 ![the new edges](../pics/pr20_cathode_newedges.png)
 
@@ -934,7 +934,7 @@ the source level, the usual fork-not-modify shape.)* For every segment S:
 2. S's two endpoints lie on opposite sides of `cathode_x` with both
    |x − cathode_x| < `cathode_stub_xcut` (SBND 4 cm), and
 3. both of S's graph vertices have degree exactly 2 — S bridges two segments and
-   nothing else. **This condition is proposed, not measured**: `stub_census.py`
+   nothing else. **This condition is proposed, not measured**: `scripts/analysis/misc/stub_census.py`
    works from the Bee `track_fit` layer, so what it can test is the geometric
    proxy "exactly one other segment has a fit point near each endpoint". On
    169824 that proxy is robust — at tolerances of 0.5, 1.0 and 2.0 cm the only
@@ -1021,7 +1021,7 @@ stated explicitly in the report rather than silently skipped.
 | A-5 | 48 nueCC events (`work-nuecc48-*`), full chain | **hard constraint: zero beam-label changes** (the pr/18 and pr/20 Part I bar) |
 | A-6 | the 13 `cath13-prod` events re-run and re-uploaded as a **fresh** Bee set | 315497 (and, with A2, 406796) draw as one object; the other 11 unchanged |
 | A-7 | owner eyeball of the 3 ambiguous merges (392354, 71266, 71882) and, if A2, of 315849 / 399702 | owner sign-off before default-ON |
-| A-8 | *(plan review)* mcp1k nusel sweep + verdict census (`oc19_census_mcp1k.py` pattern), before vs after | every verdict change explained by a new edge, enumerated; the count is the owner's ship-decision evidence (pr/19 precedent: decided on 7/1000) |
+| A-8 | *(plan review)* mcp1k nusel sweep + verdict census (`scripts/analysis/misc/oc19_census_mcp1k.py` pattern), before vs after | every verdict change explained by a new edge, enumerated; the count is the owner's ship-decision evidence (pr/19 precedent: decided on 7/1000) |
 | B0-0 | *(plan review — promoted from open question 3)* scratch build, evt 169824 only: flip the hard-coded `flag_break_track` (`TaggerCheckNeutrino.cxx:512`) to false | the stub and both cathode vertices disappear — the by-construction proof, run **before** implementing B0 |
 | B0-1 | knob OFF byte-identical (B0 edits `PRSegmentFunctions.cxx`, which uBooNE links): `qlport/scripts/ab_check.sh` both gates, `abtest/ab_compare.sh` pdhd + pdvd, `hash_archive.py` on SBND `mabc-pr.zip` ×6 | all PASS with `cathode_kink_xcut` unset |
 | B0-2 | compiled-config proof: `wcsonnet` the SBND PR job, `grep cathode_kink_xcut` | key present when on, absent when off |
@@ -1033,7 +1033,7 @@ stated explicitly in the report rather than silently skipped.
 | B-1 | `./build/clus/wcdoctest-clus` | passes |
 | B-2 | knob OFF byte-identical: `abtest/ab_compare.sh` (pdhd + pdvd, `events.txt`), `qlport/scripts/ab_check.sh` (uboone, both gates), `hash_archive.py` on SBND `mabc-pr.zip` ×6 | all PASS — B1 touches `clus/`, which every detector links |
 | B-3 | knob ON, evts 169824 + 286400 | the stub segment is gone; the PF tree has one muon where it had three; `kine_reco_Enu` recomputed and reported |
-| B-4 | knob ON, 300-event PR arm, `stub_census.py` + `nusel-table.tsv` diff | no segment count changes away from the cathode; label changes enumerated |
+| B-4 | knob ON, 300-event PR arm, `scripts/analysis/misc/stub_census.py` + `nusel-table.tsv` diff | no segment count changes away from the cathode; label changes enumerated |
 | B-5 | A1 + B1 together, 500-event arm | the newly joined crossers are fitted as single segments; the class-B rate does not rise |
 
 Labels to report: `abtest/snap/{pre,post}_cathstub/`, and the analysis arms
@@ -1076,7 +1076,7 @@ created fresh for this doc; no existing label or `work/` tree was written into).
 3. **Confirm the origin by construction.** `flag_break_track` is hard-coded
    `true` at `TaggerCheckNeutrino.cxx:512`; flipping it to `false` for evt
    169824 alone should make the stub and both cathode vertices disappear. That
-   is the one-line experiment that turns `kink_probe.py`'s offline
+   is the one-line experiment that turns `scripts/analysis/cathode/kink_probe.py`'s offline
    re-evaluation into a direct proof, and it was not run here (it needs a C++
    edit in a shared tree). *(plan review: promoted to gate B0-0 — it runs
    before B0 is implemented, not after.)*
@@ -1287,11 +1287,11 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 /home/xqian/tmp/pr20exec/s4_chain.sh          # ON then OFF, back-to-back, one tree
 
 # censuses (both committed beside this doc)
-python3 pr20_edge_census.py --base work-mcp1kall-cathA12off \
+python3 scripts/analysis/pr20/pr20_edge_census.py --base work-mcp1kall-cathA12off \
         --on work-mcp1kall-cathA12on2 --out edges_mcp1k.tsv --jobs 8
-python3 pr20_census.py --base work-mcp1kall-cathA12off \
+python3 scripts/analysis/pr20/pr20_census.py --base work-mcp1kall-cathA12off \
         --on work-mcp1kall-cathA12on2 --edges edges_mcp1k.evts
-python3 pr20_census.py --base work-nuecc48-cathA12off --on work-nuecc48-cathA12on
+python3 scripts/analysis/pr20/pr20_census.py --base work-nuecc48-cathA12off --on work-nuecc48-cathA12on
 ```
 
 Arms: `work-mcp1kall-cathA12{on2,off}` (1000 events each, 0 failures),
@@ -1328,7 +1328,7 @@ of it, both applied:
 
 - **the tree is frozen for the duration of an arm.** B0 stays parked outside the
   tree until S5, when no sweep is running.
-- **config swaps are atomic.** `s4_off.sh` reverted the A1/A2 line with `cp -f`,
+- **config swaps are atomic.** `scripts/runners/s4_off.sh` reverted the A1/A2 line with `cp -f`,
   which truncates and rewrites in place — the same torn-read hazard, aimed at a
   1000-event arm. It now writes a temp file and `mv`s it into place; a rename
   within one filesystem is seen whole or not at all.
@@ -1363,7 +1363,7 @@ change, not a side effect.
 
 **Substitution, stated:** the doc's A-2 asked for a `[ccx]` accept-log delta. The
 1000-event arms were not run under the tracers, and the log measures the
-connector's *intent*. `pr20_edge_census.py` measures the *outcome*: it compares
+connector's *intent*. `scripts/analysis/pr20/pr20_edge_census.py` measures the *outcome*: it compares
 the OFF and ON `clustering-global` partitions of the same point cloud and reports
 every ON cluster covering more than one OFF cluster. It is label-renumbering-proof
 and catches a merge however it arose. The tracer excerpt below is kept as the
@@ -1478,7 +1478,7 @@ Provenance: the ON side comes from `work-mcp1kall-cathA12bee`, built at
 rely on that margin, all eleven of its `mabc-pr.zip` were compared by
 `hash_archive.py` member-content hash against the verified-clean
 `work-mcp1kall-cathA12on2` arm: **11 identical, 0 differing.** The OFF side is
-from `work-mcp1kall-cathA12beeoff`, produced by `s4_off.sh` at 22:45 with the
+from `work-mcp1kall-cathA12beeoff`, produced by `scripts/runners/s4_off.sh` at 22:45 with the
 same binary.
 
 Zips, index files and `stmid-map` (PR cluster id → img cluster id, needed to get
@@ -1640,11 +1640,11 @@ for i in 1 2 3; do PR_JOBS=6 SBND_CATHODE_KINK_XCUT=5 SBND_CATHODE_X=0 \
   ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0det$i data 169824 57661 166738; done
 
 # the censuses
-python3 pr20_b03_census.py     work-b0pr300-off work-b0pr300-on
-python3 pr20_b03_census.py     work-b0nue48-off work-b0nue48-on
-python3 pr20_b03_survivors.py  work-b0pr300-on  work-b0nue48-on
+python3 scripts/analysis/pr20/pr20_b03_census.py     work-b0pr300-off work-b0pr300-on
+python3 scripts/analysis/pr20/pr20_b03_census.py     work-b0nue48-off work-b0nue48-on
+python3 scripts/analysis/pr20/pr20_b03_survivors.py  work-b0pr300-on  work-b0nue48-on
 python3 pr_scores_table.py --root work-b0pr300-off --sample b0off --out off.tsv   # and --on
-python3 stub_census.py         work-b0pr300-off   # and -on
+python3 scripts/analysis/misc/stub_census.py         work-b0pr300-off   # and -on
 ```
 
 ### 1. Gate results
@@ -1660,7 +1660,7 @@ python3 stub_census.py         work-b0pr300-off   # and -on
 
 ### 2. B0-4 — evt 18259/169824, the prediction tested
 
-The OFF arm names the doc's segment independently of the doc: `stub_census.py`
+The OFF arm names the doc's segment independently of the doc: `scripts/analysis/misc/stub_census.py`
 finds **segment 18007, L = 4.67 cm, straddling x = 2.42 → −2.04**, its two
 neighbours `(18005, 18008)` of length 62.5 and 116.9 cm, and the
 neighbour-to-neighbour kink measured across the stub is **3.31°** — a track
@@ -1687,7 +1687,7 @@ scratch build is not needed.)*
 
 ### 3. B0-3 — 300-event vertex and stub census
 
-`pr20_b03_census.py`, over the 132 of 300 events that have a PR graph on both
+`scripts/analysis/pr20/pr20_b03_census.py`, over the 132 of 300 events that have a PR graph on both
 arms (the other 168 have no in-beam neutrino candidate, so no graph on either
 side — they are identical by construction and are not counted as passes):
 
@@ -1737,7 +1737,7 @@ just relocate the split and cut something new somewhere else?" — it does not.
 
 B0-3 proves the firings are right. It does not by itself prove the survivors
 should have survived: 40 knob-band vertices remain in the 300-event ON arm.
-`pr20_b03_survivors.py` classifies all 69 survivors across both ON arms by
+`scripts/analysis/pr20/pr20_b03_survivors.py` classifies all 69 survivors across both ON arms by
 their degree in the fitted segment graph:
 
 | class | count | status |
@@ -1780,7 +1780,7 @@ score-table diff (`pr_scores_table.py`, all 16 physics columns):
 of the 48.** The only motion is ≤1.1 MeV of energy on three events, from
 fragments merging into their neighbours.
 
-**Read the constraint from the scores table, not from `pr20_census.py`.** That
+**Read the constraint from the scores table, not from `scripts/analysis/pr20/pr20_census.py`.** That
 script reports `identical tables: 48 / 48` and `VERDICT-CLASS multiset changes: 0`
 — true, but **non-discriminating for B0**: the `nusel-evt*.tsv` is written by the
 Q/L + cosmic-tagging layer, which runs entirely *upstream* of
@@ -1861,7 +1861,7 @@ PR_JOBS=20 ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0pr700-off dat
 PR_JOBS=20 SBND_CATHODE_KINK_XCUT=5 SBND_CATHODE_X=0 \
   ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0pr700-on data $EV
 python3 pr_scores_table.py --root work-b0pr700-off --sample b7off --out b7off.tsv   # and --on
-python3 pr20_b1_population.py work-b0pr700-off work-b0pr700-on
+python3 scripts/analysis/pr20/pr20_b1_population.py work-b0pr700-off work-b0pr700-on
 # same-config control, 16 changed events:
 PR_JOBS=16 ./run_pr_chain_batch.sh work-mcp1kall-cathA12on2 work-b0rep-off data <the 16>
 ```
@@ -1929,7 +1929,7 @@ Cases that are clearly right:
 - **169824** — as designed (Part V §2).
 - **315497** — the class-A target. A1 joins its two halves; the kink finder then
   immediately re-splits them into a 4.76 cm cathode stub, and **B0 is what keeps
-  the joined track whole** (`pr20_s7_crossers.py`: cathode stubs on the 29 merge
+  the joined track whole** (`scripts/analysis/pr20/pr20_s7_crossers.py`: cathode stubs on the 29 merge
   events, A1+A2 **1 → 0** with B0). `kine_reco_Enu` 382.0 → 962.8 MeV, the
   recovered half. This is the doc's ordering argument — "A1 without B0 will
   raise the class-B rate" — measured on the very event A1 was built for.
@@ -1939,14 +1939,14 @@ Cases that need eyes before any flip: the 10 vertex movers, above all 286400
 
 ### 4. Gate S7 — the ordering check
 
-`pr20_s7_crossers.py` over all 29 events carrying a new `cathode_connect` merge:
+`scripts/analysis/pr20/pr20_s7_crossers.py` over all 29 events carrying a new `cathode_connect` merge:
 15 have a PR graph (the other 14 have no in-beam neutrino candidate).
 **Cathode stubs on those events: A1+A2 alone 1 → A1+A2+B0 0.** The class-B rate
 does not rise, and the single stub A1 induced is exactly what B0 removes. **PASS.**
 
 ### 5. B1 — its trigger population is empty once B0 is on
 
-`pr20_b1_population.py` counts the exact trigger B1 is specified for (a
+`scripts/analysis/pr20/pr20_b1_population.py` counts the exact trigger B1 is specified for (a
 cathode-straddling stub, `L < 8 cm`, both ends `|x| < 4 cm`, both graph vertices
 degree 2, neighbour-to-neighbour angle `< 15°` at `R = 15 cm`):
 
@@ -2046,7 +2046,7 @@ the `nusel-evt*.tsv` censuses in Part V §5 read 300/300 and 48/48.
    B0-continue on the Bee evidence, so the question is moot for shipping — but
    it remains the answer if a later sample shows an invented break like evt
    172794's that scans badly.
-5. **`pr20_census.py` cannot see PR-layer changes** (Part V §5). Any future
+5. **`scripts/analysis/pr20/pr20_census.py` cannot see PR-layer changes** (Part V §5). Any future
    round touching `tagger_check_neutrino` must census with
    `pr_scores_table.py`, not the nusel tsv.
 6. **Part I's standing prediction needs rebasing.** Its
@@ -2107,7 +2107,7 @@ PR_JOBS=8 ./run_pr_chain_batch.sh work-mcp1kall-pi0base work-pi0base-pr data <20
 SBND_SAVE_WASMAIN=1 TAG=pi2on ENTRIES="<the same 20>" ./run_full1k_nusel.sh 1000 6
 PR_JOBS=6                                 ./run_pr_chain_batch.sh work-mcp1kall-pi2on work-pi2on-proff data <20 ids>
 PR_JOBS=6 SBND_RESTORE_DEMOTED_MAINS=1    ./run_pr_chain_batch.sh work-mcp1kall-pi2on work-pi2on-pron  data <20 ids>
-python3 pr20_wasmain_check.py work-mcp1kall-pi2on/ql_evt*/pctree-evt*.tar.gz
+python3 scripts/analysis/pr20/pr20_wasmain_check.py work-mcp1kall-pi2on/ql_evt*/pctree-evt*.tar.gz
 python3 pr_scores_table.py --root work-pi2on-proff --out off.tsv
 python3 pr_scores_table.py --root work-pi2on-pron  --out on.tsv
 ```
@@ -2288,7 +2288,7 @@ prose warning because the failure mode is silent: `Dataset::append` keys the
 copy on the accumulated dataset, so an array absent from the first-seen node
 vanishes without a word (`aux/src/TensorDMpointtree.cxx:88-93`), and it cost a
 debugging session once on `perblob`/`real_cluster_id`. New script
-`pr20_wasmain_check.py`, run on both stages:
+`scripts/analysis/pr20/pr20_wasmain_check.py`, run on both stages:
 
 - Q/L tree: **6** `perblob` keys, all the same length, on every event.
 - PR tree (the one `switch_scope` rebuilt — never checked before §2b): **5**
@@ -2604,17 +2604,17 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 # binary: HEAD 015b8f9c, unchanged -- S10 adds no code.
 
 # the two Q/L roots, production config + P1 only
-SBND_SAVE_WASMAIN=1 ./s4_nuecc48.sh pi5wm                       # 48 evts
+SBND_SAVE_WASMAIN=1 ./scripts/runners/s4_nuecc48.sh pi5wm                       # 48 evts
 TAG=pi5cens SBND_SAVE_WASMAIN=1 ./run_full1k_nusel.sh 1000 8    # 1000 evts
-python3 pr20_wasmain_check.py work-nuecc48-pi5wm/ql_evt*/pctree-evt*.tar.gz
+python3 scripts/analysis/pr20/pr20_wasmain_check.py work-nuecc48-pi5wm/ql_evt*/pctree-evt*.tar.gz
 
 # PI-8 (nueCC48) and the mcp1k census, each = all-OFF vs floor-0 + an A/A control
 /home/xqian/tmp/pr20exec/s10_nuecc48_pr.sh
 /home/xqian/tmp/pr20exec/s10_mcp1k_pr.sh
 
 # the instruments (both new, both in sbnd_xin/)
-./pr20_partI_census.py <off_root> <on_root> --off-scores A.tsv --on-scores B.tsv
-./pr20_scores_diff.py A.tsv B.tsv
+./scripts/analysis/pr20/pr20_partI_census.py <off_root> <on_root> --off-scores A.tsv --on-scores B.tsv
+./scripts/analysis/pr20/pr20_scores_diff.py A.tsv B.tsv
 ```
 
 ### 1. Why floor 0, and why PI-8 went first

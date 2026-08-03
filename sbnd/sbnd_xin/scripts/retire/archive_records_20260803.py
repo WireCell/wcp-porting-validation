@@ -19,8 +19,13 @@ work-*.
 import os, re, json, tarfile, shutil, collections, sys
 
 ROOT = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin"
-SCR  = os.path.join(ROOT, "scripts", "retire", "state-20260803")
-OUT  = os.path.join(ROOT, "archive", "records", "pr23-25-era-20260803")
+# Defaults reproduce the original pr/23-25 run exactly; the tidy round reuses
+# this script with RETIRE_STATE / RETIRE_OUT pointed at its own dirs, so the
+# 08-03 archive tree is never written into twice (M13).
+SCR  = os.environ.get("RETIRE_STATE",
+                      os.path.join(ROOT, "scripts", "retire", "state-20260803"))
+OUT  = os.environ.get("RETIRE_OUT",
+                      os.path.join(ROOT, "archive", "records", "pr23-25-era-20260803"))
 os.chdir(ROOT)
 
 plan = json.load(open(os.path.join(SCR, "plan.json")))

@@ -4,8 +4,12 @@ Repro:
 
 ```bash
 cd sbnd_xin
-ls -d work* | wc -l              # 27 after the 2026-08-03 round (138 before it; 23 after
+ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TIDY round
+                                 #   (216 before it) -- see that section below
+ls -d work* | wc -l              # 19 after the 2026-08-03 tidy round (27 after the
+                                 #   retirement round the same day, 138 before it; 23 after
                                  #   2026-08-02, 254 / 155 GiB before that, 15 after 2026-07-30)
+cat scripts/README.md            # where every non-interface script now lives
 ls archive/*/ -d                 # 3 campaign archives + records/, 79 dirs
 find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below.
                                  #   MEASURE IT BEFORE A ROUND, NOT ONLY AFTER: it was
@@ -68,15 +72,139 @@ work-mcp10-dq48v3/ql_evt284349
 
 So the tags form a dependency graph and **moving a tag breaks every dependent**.
 Archiving the doc-29..49 tags below broke 1536 links. It failed silently in the
-worst way: `stm_fv_census.py` reported `0 "contained" clusters` instead of 147,
+worst way: `scripts/analysis/stm/stm_fv_census.py` reported `0 "contained" clusters` instead of 147,
 because a missing pctree is a `continue`, not an error. `relink_tags.py`
 rewrites broken links to wherever the tag now lives; run it after ANY move and
 confirm `find . -xtype l | wc -l` is 0.
 
-Verification that the move was faithful: `python3 stm_fv_census.py` after the
+Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_census.py` after the
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
-`stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+`scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## TIDY ROUND 2026-08-03 — the directory itself: 216 → 74 top-level entries
+
+**STATUS: EXECUTED 2026-08-03**, immediately after the retirement round below.
+That round took the *space*; this one took the *tree*. Motivation: the next task
+is a PR-tuning campaign over the 572 valfast mcp1k events, and `sbnd_xin` had
+**216 top-level entries** (56 dirs, 34 `*.sh`, 95 `*.py`, 34 misc).
+
+| | before | after |
+|---|---|---|
+| top-level entries | 216 | **74** |
+| `work*` dirs | 27 | **19** |
+| `bee-*` dirs | 8 | **1** (`bee/`) |
+| top-level `*.py` / `*.sh` | 95 / 34 | **5 / 14** |
+| `sbnd_xin` | 28 GB | **25 GB** |
+
+Tooling in `scripts/retire/tidy_*_20260803.{py,sh}`; the authoritative
+name → new-path map is `tidy_map_20260803.tsv`, and `scripts/README.md` is the
+human index.
+
+```bash
+python3 scripts/retire/tidy_map_20260803.py       # build the map (STAY vs MOVE)
+python3 scripts/retire/tidy_refscan_20260803.py   # who references whom; INVOCATION vs MENTION
+scripts/retire/tidy_move_20260803.sh              # dry run of the moves
+python3 scripts/retire/tidy_rootfix_20260803.py   # repoint $0/__file__ roots
+python3 scripts/retire/tidy_docfix_20260803.py    # rewrite doc citations
+python3 scripts/retire/tidy_citegate_20260803.py  # GATE: every cited path resolves
+```
+
+### What moved, and what deliberately did not
+
+**Stayed** (36 entries): the 12 `run_*_evt.sh` + `_runlib.sh`, the 12 jsonnet job
+configs, the four symlinks, and five cross-campaign tools (`nusel_extract.py` —
+28 doc citations and imported by `scripts/analysis/stm/stm_fv_census.py` — `pr_scores_table.py`,
+`relink_tags.py`, plus `wct-img-2-bee.py` / `merge_sel_archives.py` /
+`upload-to-bee.sh`, which belong in `scripts/bee/` by topic but are **invoked by
+runners that stay**; moving them would have meant editing production runners
+immediately before a campaign).
+
+**Moved** (127) into `scripts/{analysis/{pr11,pr20,pr23,pr24,pr25,stm,ql,light,cathode,geom,misc},runners,bee,cfg,perf,root}/`
+and `products/`.
+
+### Three traps this round hit — read before attempting a similar move
+
+1. **The self-locating root.** 21 of 34 `*.sh` resolve their root as
+   `SBND_DIR=$(cd "$(dirname "$0")" && pwd)` and 23 of 95 `*.py` as
+   `os.path.dirname(os.path.abspath(__file__))`. Moving a file into a subdir
+   silently repoints `$SBND_DIR/work`, `$SBND_DIR/input_files` and every
+   `HERE/"work-…"`. `tidy_rootfix` walks each up by the depth of its new dir.
+   **Not a blanket rewrite**: `scripts/runners/geom_ab_batch.sh` sets `SC` and dereferences it
+   only against `scripts/runners/run_pr_geom_arm.sh`, which moved into the *same* directory — a
+   blanket `../..` would have broken it.
+2. **Non-idempotent rewriters.** `tidy_rootfix`'s python substitution emits text
+   that still matches its own pattern, so a second run nested the expression and
+   the root climbed two levels too far. It hit 22 files and had to be restored
+   from the git index. Both rewriters now carry an explicit idempotence guard
+   and are verified by re-running to a 0-change result.
+3. **`csv.writer` defaults to CRLF.** The stray `\r` made
+   `awk -F'\t' '$3=="MOVE"'` in the move script match nothing — a silent
+   zero-move "success". Use `lineterminator="\n"`.
+
+### Gates
+
+- **Citation gate `tidy_citegate_20260803.py`: PASS** — all **551** path-shaped
+  citations of the 118 moved scripts, across 251 files, resolve on disk. Scoped
+  to the move set on purpose: an unscoped version reported 142 "failures" that
+  were all pre-existing (`abtest/hash_archive.py`, `qlport/scripts/ab_check.sh`,
+  `convert.C`, …) and would have buried the real signal.
+- **Reference gate `tidy_refscan_20260803.py`: 0 INVOCATIONs** left in buckets A
+  (staying runners → moved scripts) and B (moved → moved across destinations).
+- **Root-resolution gate**: all 22 fixed `.py` and all fixed `.sh` compute
+  `sbnd_xin` exactly (`scripts/runners/geom_ab_batch.sh` correctly computes its own dir).
+- **Syntax**: `python3 -m py_compile` on all 103 moved `.py`, `bash -n` on all
+  moved and all top-level `.sh` — 0 failures.
+- **Interface regression**: `run_{ql,nusel,pr,img}_evt.sh data` all list events,
+  `rc=0`. Those files are byte-identical, so this proves nothing they depend on
+  moved out from under them.
+- **valfast intact**: `events-mcp1k.txt` still 572, all six pinned hubs present,
+  d59k still holds 2000 `pctree-*.tar.gz`. Only `valfast/README.md` changed
+  (prose paths); no executable valfast content was touched.
+- **Symlinks**: `find . -xtype l` = **0** before and after.
+
+### Tier W — 9 `work*` arms, 673 MB (archived, then removed)
+
+`work-mrgB-post` (superseded by `work-nuecc48-prod0803` at 48/48),
+`work-nuecc48-base`, `work-nuecc48-prsmoke`, `work-nuecc48-prsmoke2`,
+`work-mcp1kall-cath01`, `work-nuecc48-cath01`, and
+`work-r1ql-{f1,f2}-nobw` + `work-r2patrec-f1-nobw` (doc 67 closed; the non-`nobw`
+arms are valfast hubs and stay). Records in
+`archive/records/tidy-20260803/` (71.1 MiB raw → 33 MB gz, integrity 9/9).
+`prsmoke2` leaves a git-tracked stub (three `run_*.sh`), like `d66new` in July.
+
+**Of the 27 arms, only 9 were retirable**: 8 arms hold 18.9 GB (97 % of the
+bytes) and are all load-bearing for the 572-event campaign — `run_valfast.sh`
+pins `work-mcp1kall-d59k` (572), `work-nuecc48-nuf` (47), `work-r1ql-first10`
+(5) and `work-r2patrec-f1` (5), and those hubs symlink into `work-mcp1000`,
+`work` and `work-r1ql-f1/f2`.
+
+### Tier C — 1000 `calib-evt*.json` deleted from `work-mcp1kall-d59k`, 2.43 GiB
+
+Larger than all of tier W combined; d59k 8.5 → 5.9 GB. The PR chain and valfast
+never read these — `-calib` is passed only when the Q/L step *re-runs*
+(`run_nusel_evt.sh:643`), and PR-tail mode reads pinned pctrees. Owner decision
+2026-08-03: drop, archive nothing.
+
+**What this costs**, plainly: eight Q/L-tuning scripts can no longer run against
+the mcp1k sample — `scripts/analysis/ql/{ql_pe_error,ql_beam_pref_score,
+ql_beam_pref_tune,ql_prefilter_tune,ql_prefilter_parity,ql_recipe_compare}.py`,
+`scripts/analysis/light/pmt_health_study.py`,
+`scripts/analysis/cathode/cathode_distortion.py`. They still work on any sample
+whose calib dumps survive. Regenerable only by re-running a 1000-event Q/L
+campaign with `-calib`, so treat it as permanent.
+
+### Bee — 8 `bee-*` dirs → `bee/<campaign>/`, 44 zips dropped (313 MB)
+
+Record layer kept in full (120 files: `.url`, `.index.txt`, `.prid-map.txt`,
+build/upload logs, scan keys). Owner decision: drop the zips, "we can
+regenerate". **Caveat for the record**: only **12 of 44** had a saved `.url` on
+the BNL twister server, and the source `work-*` arms for `pr20` and `pr23` were
+already deleted in the retirement round below — so those particular sets cannot
+actually be rebuilt. Five zips were git-tracked and are recoverable from history;
+the other 39 are not.
+
+---
 
 ## RETIREMENT ROUND 2026-08-03 — the pr/23..pr/25 era + valfast, 111 arms, 27 GiB
 
@@ -85,7 +213,7 @@ retire_20260803.sh V,1,2`) — 111 dirs / 27 GiB removed, refused=0.**
 Post-checks: relink `repaired=0 unresolved=0`; `find . -xtype l` = **0** (it was
 **284** before the round — see "the 284" below); no git-tracked deletion;
 `work*` 138 → **27** dirs; `sbnd_xin` 55 GB → **28 GB**; `/nfs/data/1` free
-485 → **512 GB**. Exhibit check: `gapjump_probe.py` on
+485 → **512 GB**. Exhibit check: `scripts/analysis/misc/gapjump_probe.py` on
 `work-pr22gap-b/pr_evt386948/mabc-pr.zip` reproduces doc pr/22 §6 exactly
 (634 fit pts, 50/634 = 7.9 % uncovered, 33.3 cm across 7 stretches).
 
@@ -240,7 +368,7 @@ arms leave no record layer at all, by the valfast contract.
 
 **STATUS: EXECUTED 2026-08-02 (`CONFIRM=yes retire_20260802.sh 1`) — 231 dirs
 / 135 GiB removed, refused=0.** Post-checks: relink repaired=0 unresolved=0;
-`find . -xtype l` = 0; no git-tracked deletions; `gapjump_probe.py` on
+`find . -xtype l` = 0; no git-tracked deletions; `scripts/analysis/misc/gapjump_probe.py` on
 `work-pr22gap-b/pr_evt386948/mabc-pr.zip` reproduces doc pr/22 §6 exactly
 (634 fit pts, 50/634 = 7.9 % uncovered, 33.3 cm across 7 stretches) — the
 materialized exhibits are faithful.
@@ -325,7 +453,7 @@ are in the record tarballs), the 8 unique light files, and doc-table
 re-checkability. **Lost**: pctree/Bee-level re-analysis of these arms (the
 same class of loss as the July round; arms are not reproducible — a tag
 names a config, not a build). The `pr11v3` retirement additionally idles
-`pr11_br_filled_census.py`, `cathode_nu_census.py` and `stub_census.py`
+`scripts/analysis/pr11/pr11_br_filled_census.py`, `scripts/analysis/cathode/cathode_nu_census.py` and `scripts/analysis/misc/stub_census.py`
 until pointed at a future census arm.
 
 ### Totals (final, post-execution)
@@ -385,9 +513,9 @@ all 134 arms.
 
 **Survives removal**: doc-table re-checkability. Every number the docs quote
 from these arms comes from `nusel-evt*.tsv`, the run logs or `tracking-stm.root`
-— `bwgate_report.py`, `d60_ab_report.py`, `d66_flip_report.py`,
-`d66_proton_sweep.py`, `p54_ab_report.py`, `mabc_step_totals.py`,
-`stmon_stats.py` read only those.
+— `scripts/analysis/stm/bwgate_report.py`, `scripts/analysis/stm/d60_ab_report.py`, `scripts/analysis/stm/d66_flip_report.py`,
+`scripts/analysis/stm/d66_proton_sweep.py`, `scripts/perf/p54_ab_report.py`, `scripts/analysis/misc/mabc_step_totals.py`,
+`scripts/analysis/stm/stmon_stats.py` read only those.
 
 **Lost on removal**, precisely — the loss depends on whether the arm re-ran the
 Q/L stage or shared it:
@@ -402,8 +530,8 @@ Q/L stage or shared it:
   `d52*`/`d53*`/`d55*` arms plus `trace51`, `m66*sb`, `d55pv` — 371 Q/L Bee
   zips). Those re-ran clustering, so their Q/L products are unique and go too.
 
-So after removal `stm_fv_census.py`, `unmerge_crosser_audit.py`,
-`stm_main_connectivity.py` and `nusel_extract.py`'s archive mode cannot be
+So after removal `scripts/analysis/stm/stm_fv_census.py`, `scripts/analysis/misc/unmerge_crosser_audit.py`,
+`scripts/analysis/stm/stm_main_connectivity.py` and `nusel_extract.py`'s archive mode cannot be
 re-run against any removed arm, and the scan viewer cannot display one.
 Combined with "these arms are not reproducible" above, removal is permanent:
 the doc's stated numbers, the tsv/logs/`tracking-stm.root` and the labels become
@@ -422,7 +550,7 @@ included in the archive tarballs, so no light product is lost either.
 
 ### Dangling-link dry run — 0
 
-The scar this file documents (1536 broken links, `stm_fv_census.py` silently
+The scar this file documents (1536 broken links, `scripts/analysis/stm/stm_fv_census.py` silently
 reporting 0 instead of 147) was checked mechanically, not argued: every symlink
 under every **surviving** dir (`work`, `work-mcp1000`, `work-mcp10`,
 `work-mcp1kall-d59k`, the `work-nuecc48-*` / `work-r1ql-*` / `work-r2patrec-*`
@@ -442,7 +570,7 @@ every one of those dependents is itself in the set. After deletion, run
 | `work` | 2792 MB | BASE: data-sample imaging + **SP frames** + light + `ql_labels/` |
 | `work-mcp1000` | 7127 MB | BASE: 1000-event MC imaging + SP frames; 14372 inbound links |
 | `work-mcp10` | 96 MB | BASE: 10/30-event hand-scan set + `nusel_labels/` |
-| `work-mcp1kall-d59k` | 8383 MB | HUB + LIVE: doc 59 production scan (`s59k`, labels), **18462 inbound links** — every `stmcamp`/`d60` arm's `ql_evt*` is a symlink into it. Its 2.5 GiB of `calib-evt*.json` is the largest non-BASE block deliberately not touched |
+| `work-mcp1kall-d59k` | 8383 MB → **5.9 GB** | HUB + LIVE: doc 59 production scan (`s59k`, labels), **18462 inbound links** — every `stmcamp`/`d60` arm's `ql_evt*` is a symlink into it. ~~Its 2.5 GiB of `calib-evt*.json` is the largest non-BASE block deliberately not touched~~ **SUPERSEDED: those 1000 calib dumps (2.43 GiB) were DELETED in the 2026-08-03 tidy round** — see "TIDY ROUND" below for what that costs |
 | `work-nuecc48-{base,nuf,prsmoke,prsmoke2}` | 745 MB | CURRENT: the 48-event Lynn nueCC campaign behind docs `pr/1`–`pr/10` |
 | `work-r1ql-{f1,f1-nobw,f2,f2-nobw,first10}` | 173 MB | CURRENT: round-1 Q/L arms (doc 67), created 2026-07-30 |
 | `work-r2patrec-{f1,f1-nobw}` | 191 MB | CURRENT: round-2 pattern-rec arms (doc 67), created 2026-07-30 |
@@ -530,7 +658,7 @@ scan; they are listed under CURRENT below.
 
 | dir | entries | size | referenced by |
 |---|---|---|---|
-| `work-mcp1kall-d59k` | 2999 | 8.3G | `59_full1k-production-scan.md`, `nusel_scan_filter.py`, `run_full1k_nusel.sh`, `make_scan_bee.sh` — the port-5011 `s59k` scan (648 of its 999 tables) |
+| `work-mcp1kall-d59k` | 2999 | 8.3G | `59_full1k-production-scan.md`, `scripts/analysis/misc/nusel_scan_filter.py`, `run_full1k_nusel.sh`, `scripts/bee/make_scan_bee.sh` — the port-5011 `s59k` scan (648 of its 999 tables) |
 | `work-mcp1kall-d60crash` | 9 | 88K | `60_trackfitting-single-point-abort.md` — 1-event repro root for the evt 278794 abort (entry 618 only; only the pctree *tarball* is symlinked in, never the `ql_evt278794` dir, so a from-scratch Q/L rerun cannot write into the d59k record) |
 | `work-mcp1kall-d60base` | 2728 | 1.2G | doc 60 §7 — pre-fix PR-only re-run of entries 0-430 + 618, used as the pinned determinism arm vs `d59k`. **Bee zips carry `runNo="0"`**: its `ql_evt*` hold only the pctree tarball, so `nusel_extract.py` could not run (rc=1 on every entry by construction, not a failure) — compare it `--archives-only` |
 | `work-mcp1kall-d60nr1` / `-d60nr2` | 102 | 47M each | doc 60 §7 — two **un-pinned** (no `setarch`) repeats, entries 0-19, production config |
@@ -539,15 +667,15 @@ scan; they are listed under CURRENT below.
 | `work-mcp1kall-d60sfix` | 302 | 170M | doc 60 §6 gate 1 — **post-fix** arm, 60 STM-tagged events, byte-identical to `d60sr1` |
 | `work-mcp1kall-d60nfix` | 102 | 47M | doc 60 §6 gate 2 — **post-fix** arm, entries 0-19, byte-identical to `d60nr1` |
 | `work-mcp1kall-d60fixchk` | 5 | 2.0M | doc 60 §6.1 — evt 278794 with the fix in: `rc=0`, 8-bundle table, in-beam bundle tagged STM |
-| `work-stmcamp-d66old` / `-d66new` | 1000 events each | — | `66_diffusion-revert-validation.md`, `55_dqdx-vs-rr-three-bundles.md` §12, `d66_flip_report.py` — the diffusion A/B: `d66old` = `DL/DT` 6.5781/13.1349, `d66new` = 4.0/8.8 (the shipped revert). **Same binary, same d59k pctrees, differing only in the runtime fit JSON** — arm identified by `SBND_TRACKFIT_JSON` and recoverable from each event log's `trackfitting_config=` line. Both 1000/1000 `rc=0`. Built with `stm_campaign/run_round.sh` + `STM_EVENTS`, so they carry the `work-stmcamp-` prefix despite being the full 1000-event manifest |
-| `work-stmcamp-d66oldtrace` / `-d66newtrace` / `-d66newtrace0` / `-d66newtrace0b` / `-d66newtrace5` | 6 / 6 / 141 / 13 / 9 events | — | `66_diffusion-revert-validation.md` §12, `d66_proton_sweep.py` — TRACE-level (`SBND_WCT_LOGLEVEL=trace`) reruns for the STM cut-fixability study: the 6 scan-mistake events in both diffusion arms, every event with an accepted-STM (status-0) bundle, the torn-log redo, and the 9 proton-vetoed (status-5) events. Same arms as `d66old`/`d66new`, extra logging only — statuses verified identical. detect_proton TRACE lines must be read from the batch stderr sink `.log_<evt>.log` (the per-event file sink tears them deterministically) |
+| `work-stmcamp-d66old` / `-d66new` | 1000 events each | — | `66_diffusion-revert-validation.md`, `55_dqdx-vs-rr-three-bundles.md` §12, `scripts/analysis/stm/d66_flip_report.py` — the diffusion A/B: `d66old` = `DL/DT` 6.5781/13.1349, `d66new` = 4.0/8.8 (the shipped revert). **Same binary, same d59k pctrees, differing only in the runtime fit JSON** — arm identified by `SBND_TRACKFIT_JSON` and recoverable from each event log's `trackfitting_config=` line. Both 1000/1000 `rc=0`. Built with `stm_campaign/run_round.sh` + `STM_EVENTS`, so they carry the `work-stmcamp-` prefix despite being the full 1000-event manifest |
+| `work-stmcamp-d66oldtrace` / `-d66newtrace` / `-d66newtrace0` / `-d66newtrace0b` / `-d66newtrace5` | 6 / 6 / 141 / 13 / 9 events | — | `66_diffusion-revert-validation.md` §12, `scripts/analysis/stm/d66_proton_sweep.py` — TRACE-level (`SBND_WCT_LOGLEVEL=trace`) reruns for the STM cut-fixability study: the 6 scan-mistake events in both diffusion arms, every event with an accepted-STM (status-0) bundle, the torn-log redo, and the 9 proton-vetoed (status-5) events. Same arms as `d66old`/`d66new`, extra logging only — statuses verified identical. detect_proton TRACE lines must be read from the batch stderr sink `.log_<evt>.log` (the per-event file sink tears them deterministically) |
 | `work-stmcamp-d66fixoff` / `-d66fix` | 1000 events each | — | `66_diffusion-revert-validation.md` §12.5 — validation arms for the doc-66 §12 STM cut package (toolkit `c0501d7e`): `d66fixoff` = package OFF (`-no-stm-d66cuts`, the byte-identical gate vs `d66new`, PASS all 1000), `d66fix` = package ON (production default; exactly the 4 target STM flips, plus 2 tsv-only `stmfit`-column diffs from log tearing — pctrees identical). Same binary and d59k inputs as `d66new` |
-| `work-mcp10-d49son` | 43 | 29M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `52_isolated-grouping-fix-design.md`, `d52_ab_report.py`, `stm_main_connectivity.py`, `stm_merge_attribution.py` |
-| `work-mcp10-d52ron` | 53 | 60M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
-| `work-mcp1000-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py`, `stm_main_connectivity.py` |
-| `work-mcp1000-d52ron` | 30 | 46M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
-| `work-mcp1000b-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `d52_ab_report.py` |
-| `work-mcp1000b-d52ron` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `unmerge_crosser_audit.py` |
+| `work-mcp10-d49son` | 43 | 29M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `52_isolated-grouping-fix-design.md`, `scripts/analysis/stm/d52_ab_report.py`, `scripts/analysis/stm/stm_main_connectivity.py`, `scripts/analysis/stm/stm_merge_attribution.py` |
+| `work-mcp10-d52ron` | 53 | 60M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `scripts/analysis/misc/unmerge_crosser_audit.py` |
+| `work-mcp1000-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `scripts/analysis/stm/d52_ab_report.py`, `scripts/analysis/stm/stm_main_connectivity.py` |
+| `work-mcp1000-d52ron` | 30 | 46M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `scripts/analysis/misc/unmerge_crosser_audit.py` |
+| `work-mcp1000b-d49son` | 32 | 23M | `50_stm-fit-scope-and-unmerge.md`, `51_clustering-merge-attribution.md`, `scripts/analysis/stm/d52_ab_report.py` |
+| `work-mcp1000b-d52ron` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md`, `scripts/analysis/misc/unmerge_crosser_audit.py` |
 
 ## CURRENT — 52 dirs, 2109 MB (as of 2026-07-25 — SUPERSEDED, retained for the "referenced by" columns)
 
@@ -560,8 +688,8 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | dir | entries | size | referenced by |
 |---|---|---|---|
 | `work-mcp10-d52chk` | 12 | 4M | `52_isolated-grouping-fix-design.md` |
-| `work-mcp10-d52off` | 52 | 60M | `d52_ab_report.py` |
-| `work-mcp10-d52on` | 53 | 60M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
+| `work-mcp10-d52off` | 52 | 60M | `scripts/analysis/stm/d52_ab_report.py` |
+| `work-mcp10-d52on` | 53 | 60M | `52_isolated-grouping-fix-design.md`, `scripts/analysis/stm/d52_ab_report.py` |
 | `work-mcp10-d52roff` | 52 | 60M | `52_isolated-grouping-fix-design.md` |
 | `work-mcp10-d52rpoff` | 52 | 60M | `52_isolated-grouping-fix-design.md` |
 | `work-mcp10-d52trace` | 2 | 2M | `52_isolated-grouping-fix-design.md` |
@@ -576,15 +704,15 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp10-d55bon` | 52 | 60M | — |
 | `work-mcp10-d55toff` | 52 | 60M | — |
 | `work-mcp10-d55ton` | 53 | 60M | — |
-| `work-mcp10-p54base` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp10-p54opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp10-p55opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp10-p56off` | 30 | 30M | `56_beam-window-tagger-gate.md`, `p54_ab_report.py` |
-| `work-mcp10-d56bw` | 30 | 25M | `56_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
-| `work-mcp10-p65fin` | 30 | 26M | `65_tgm-stm-perf-final.md`, `mabc_step_totals.py`, `profile_pr65.sh` |
-| `work-mcp10-trace51` | 6 | 36M | `51_clustering-merge-attribution.md`, `stm_merge_attribution.py` |
-| `work-mcp1000-d52off` | 30 | 47M | `d52_ab_report.py` |
-| `work-mcp1000-d52on` | 30 | 47M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
+| `work-mcp10-p54base` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp10-p54opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp10-p55opt` | 30 | 30M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp10-p56off` | 30 | 30M | `56_beam-window-tagger-gate.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp10-d56bw` | 30 | 25M | `56_beam-window-tagger-gate.md`, `scripts/analysis/stm/bwgate_report.py`, `scripts/analysis/misc/mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
+| `work-mcp10-p65fin` | 30 | 26M | `65_tgm-stm-perf-final.md`, `scripts/analysis/misc/mabc_step_totals.py`, `scripts/perf/profile_pr65.sh` |
+| `work-mcp10-trace51` | 6 | 36M | `51_clustering-merge-attribution.md`, `scripts/analysis/stm/stm_merge_attribution.py` |
+| `work-mcp1000-d52off` | 30 | 47M | `scripts/analysis/stm/d52_ab_report.py` |
+| `work-mcp1000-d52on` | 30 | 47M | `52_isolated-grouping-fix-design.md`, `scripts/analysis/stm/d52_ab_report.py` |
 | `work-mcp1000-d52roff` | 30 | 47M | `52_isolated-grouping-fix-design.md` |
 | `work-mcp1000-d52rpoff` | 30 | 47M | `52_isolated-grouping-fix-design.md` |
 | `work-mcp1000-d53off` | 30 | 47M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md` |
@@ -592,14 +720,14 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000-d55bon` | 30 | 46M | — |
 | `work-mcp1000-d55toff` | 30 | 47M | — |
 | `work-mcp1000-d55ton` | 30 | 46M | — |
-| `work-mcp1000-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp1000-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp1000-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp1000-p56off` | 30 | 24M | `56_beam-window-tagger-gate.md`, `p54_ab_report.py` |
-| `work-mcp1000-d56bw` | 30 | 20M | `56_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
-| `work-mcp1000-p65fin` | 30 | 21M | `65_tgm-stm-perf-final.md`, `mabc_step_totals.py`, `profile_pr65.sh` |
-| `work-mcp1000b-d52off` | 30 | 44M | `d52_ab_report.py` |
-| `work-mcp1000b-d52on` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `d52_ab_report.py` |
+| `work-mcp1000-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000-p56off` | 30 | 24M | `56_beam-window-tagger-gate.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000-d56bw` | 30 | 20M | `56_beam-window-tagger-gate.md`, `scripts/analysis/stm/bwgate_report.py`, `scripts/analysis/misc/mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
+| `work-mcp1000-p65fin` | 30 | 21M | `65_tgm-stm-perf-final.md`, `scripts/analysis/misc/mabc_step_totals.py`, `scripts/perf/profile_pr65.sh` |
+| `work-mcp1000b-d52off` | 30 | 44M | `scripts/analysis/stm/d52_ab_report.py` |
+| `work-mcp1000b-d52on` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `scripts/analysis/stm/d52_ab_report.py` |
 | `work-mcp1000b-d52roff` | 30 | 44M | `52_isolated-grouping-fix-design.md` |
 | `work-mcp1000b-d52rpoff` | 30 | 44M | `52_isolated-grouping-fix-design.md` |
 | `work-mcp1000b-d53off` | 30 | 44M | `52_isolated-grouping-fix-design.md`, `53_unmerge-vs-cathode-crossers.md` |
@@ -607,12 +735,12 @@ the campaigns still in flight: docs 52 (isolated grouping) and 53 (`real_cluster
 | `work-mcp1000b-d55bon` | 30 | 44M | — |
 | `work-mcp1000b-d55toff` | 30 | 44M | — |
 | `work-mcp1000b-d55ton` | 30 | 44M | — |
-| `work-mcp1000b-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp1000b-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp1000b-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `p54_ab_report.py` |
-| `work-mcp1000b-p56off` | 30 | 23M | `56_beam-window-tagger-gate.md`, `p54_ab_report.py` |
-| `work-mcp1000b-d56bw` | 30 | 19M | `56_beam-window-tagger-gate.md`, `bwgate_report.py`, `mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
-| `work-mcp1000b-p65fin` | 30 | 19M | `65_tgm-stm-perf-final.md`, `mabc_step_totals.py`, `profile_pr65.sh` |
+| `work-mcp1000b-p54base` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000b-p54opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000b-p55opt` | 30 | 24M | `54_tgm-stm-perf-round1.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000b-p56off` | 30 | 23M | `56_beam-window-tagger-gate.md`, `scripts/perf/p54_ab_report.py` |
+| `work-mcp1000b-d56bw` | 30 | 19M | `56_beam-window-tagger-gate.md`, `scripts/analysis/stm/bwgate_report.py`, `scripts/analysis/misc/mabc_step_totals.py`, `nusel_display/serve_nusel_scan.sh` |
+| `work-mcp1000b-p65fin` | 30 | 19M | `65_tgm-stm-perf-final.md`, `scripts/analysis/misc/mabc_step_totals.py`, `scripts/perf/profile_pr65.sh` |
 | `work-smoke-d55pv` | 12 | 5M | — |
 
 ### Added 2026-07-29 — nueCC48 campaign roots (docs `pr/1_`, `pr/2_`)
@@ -645,11 +773,11 @@ stay the population reference.
 | `work-mcp10-chord` | 43 | 3M | `29_tgm-chord-charge.md`, `30_matched-mains-main-flag.md`, `31_tgm-chord-path-mode.md`, `32_tgm-component-rescue-fvz.md`, `35_tgm-interior-fv.md`, `nusel_display/README.md`, `run_nusel_evt.sh`, `wct-pr-perevt.jsonnet` |
 | `work-mcp10-ctpcfix` | 43 | 33M | `32_tgm-component-rescue-fvz.md`, `33_tgm-rescue-chord.md`, `34_lm-tagger.md`, `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md` |
 | `work-mcp10-fvxy` | 43 | 3M | `39_tgm-fc-fv-xy-margins.md` |
-| `work-mcp10-lm` | 53 | 37M | `34_lm-tagger.md`, `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `lm_tune.py`, `nusel_display/nusel_scan_viewer.py`, `nusel_extract.py`, `qlmatching.jsonnet`, `run_ql_evt.sh`, `wct-clus-matching-perevt.jsonnet` |
+| `work-mcp10-lm` | 53 | 37M | `34_lm-tagger.md`, `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `scripts/analysis/ql/lm_tune.py`, `nusel_display/nusel_scan_viewer.py`, `nusel_extract.py`, `qlmatching.jsonnet`, `run_ql_evt.sh`, `wct-clus-matching-perevt.jsonnet` |
 | `work-mcp10-lm-offgate` | 2 | 2M | `34_lm-tagger.md` |
 | `work-mcp10-lm2-offgate` | 2 | 2M | `34_lm-tagger.md` |
 | `work-mcp10-mainflag` | 43 | 30M | `30_matched-mains-main-flag.md`, `31_tgm-chord-path-mode.md`, `32_tgm-component-rescue-fvz.md`, `33_tgm-rescue-chord.md` |
-| `work-mcp10-merge` | 42 | 3M | `15_overclustering-evt11-gamma.md`, `23_nusel-tgm-stm-chain.md`, `29_tgm-chord-charge.md`, `30_matched-mains-main-flag.md`, `31_tgm-chord-path-mode.md`, `51_clustering-merge-attribution.md`, `52_isolated-grouping-fix-design.md`, `nusel_display/README.md`, `nusel_display/nusel_scan_viewer.py`, `nusel_display/serve_nusel_scan.sh`, `stm_main_connectivity.py` |
+| `work-mcp10-merge` | 42 | 3M | `15_overclustering-evt11-gamma.md`, `23_nusel-tgm-stm-chain.md`, `29_tgm-chord-charge.md`, `30_matched-mains-main-flag.md`, `31_tgm-chord-path-mode.md`, `51_clustering-merge-attribution.md`, `52_isolated-grouping-fix-design.md`, `nusel_display/README.md`, `nusel_display/nusel_scan_viewer.py`, `nusel_display/serve_nusel_scan.sh`, `scripts/analysis/stm/stm_main_connectivity.py` |
 | `work-mcp10-merge2` | 43 | 3M | `29_tgm-chord-charge.md`, `30_matched-mains-main-flag.md`, `31_tgm-chord-path-mode.md`, `nusel_display/README.md`, `nusel_display/serve_nusel_scan.sh` |
 | `work-mcp10-offgate` | 42 | 3M | `29_tgm-chord-charge.md` |
 | `work-mcp10-offgate2` | 42 | 3M | `29_tgm-chord-charge.md` |
@@ -661,7 +789,7 @@ stay the population reference.
 | `work-mcp10-tgmfv-offgate` | 2 | 233K | `32_tgm-component-rescue-fvz.md` |
 | `work-mcp1000-ctpcfix` | 33 | 25M | `32_tgm-component-rescue-fvz.md`, `33_tgm-rescue-chord.md`, `34_lm-tagger.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md` |
 | `work-mcp1000-fvxy` | 33 | 2M | `39_tgm-fc-fv-xy-margins.md` |
-| `work-mcp1000-lm` | 33 | 28M | `34_lm-tagger.md`, `35_tgm-interior-fv.md`, `38_pctree-provenance-tgm-main-real.md`, `lm_tune.py`, `nusel_display/nusel_scan_viewer.py`, `nusel_extract.py`, `qlmatching.jsonnet`, `run_ql_evt.sh`, `wct-clus-matching-perevt.jsonnet` |
+| `work-mcp1000-lm` | 33 | 28M | `34_lm-tagger.md`, `35_tgm-interior-fv.md`, `38_pctree-provenance-tgm-main-real.md`, `scripts/analysis/ql/lm_tune.py`, `nusel_display/nusel_scan_viewer.py`, `nusel_extract.py`, `qlmatching.jsonnet`, `run_ql_evt.sh`, `wct-clus-matching-perevt.jsonnet` |
 | `work-mcp1000-mainflag` | 32 | 22M | `30_matched-mains-main-flag.md`, `31_tgm-chord-path-mode.md` |
 | `work-mcp1000-pathchord` | 22 | 2M | `31_tgm-chord-path-mode.md` |
 | `work-mcp1000-rcoff` | 30 | 2M | `33_tgm-rescue-chord.md` |
@@ -675,38 +803,38 @@ stay the population reference.
 
 ## `archive/stm-docs40-49/` — 43 dirs, 622 MB
 
-**STM track-fit campaign.** arms whose newest citation is doc 40-49 — the STM fit dump and showcase (41-43), truth dQ/dx and delta rays (44,46), the un-merge into main+associated (45), the Bragg reference retune (47-48) and the STM containment FV fix (49). Also the three `stmon` arms, named only by `stmon_stats.py`.
+**STM track-fit campaign.** arms whose newest citation is doc 40-49 — the STM fit dump and showcase (41-43), truth dQ/dx and delta rays (44,46), the un-merge into main+associated (45), the Bragg reference retune (47-48) and the STM containment FV fix (49). Also the three `stmon` arms, named only by `scripts/analysis/stm/stmon_stats.py`.
 
 | dir | entries | size | referenced by |
 |---|---|---|---|
-| `work-mcp10-dq48` | 42 | 3M | `48_sbnd-dqdx-tables-and-mip.md`, `49_stm-containment-fv-inconsistency.md`, `stm_fv_census.py` |
+| `work-mcp10-dq48` | 42 | 3M | `48_sbnd-dqdx-tables-and-mip.md`, `49_stm-containment-fv-inconsistency.md`, `scripts/analysis/stm/stm_fv_census.py` |
 | `work-mcp10-dq48base` | 42 | 3M | `48_sbnd-dqdx-tables-and-mip.md` |
 | `work-mcp10-dq48tab` | 42 | 3M | `48_sbnd-dqdx-tables-and-mip.md` |
-| `work-mcp10-dq48v3` | 45 | 28M | `45_unmerge-bundle-main-associated.md`, `49_stm-containment-fv-inconsistency.md`, `stm_fv_census.py` |
+| `work-mcp10-dq48v3` | 45 | 28M | `45_unmerge-bundle-main-associated.md`, `49_stm-containment-fv-inconsistency.md`, `scripts/analysis/stm/stm_fv_census.py` |
 | `work-mcp10-dq49off` | 42 | 28M | `49_stm-containment-fv-inconsistency.md` |
 | `work-mcp10-dq49off2` | 42 | 27M | `49_stm-containment-fv-inconsistency.md` |
 | `work-mcp10-fvzi` | 43 | 3M | `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp10-lm2` | 43 | 37M | `34_lm-tagger.md`, `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp10-mainpair` | 42 | 3M | `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp10-mainreal` | 42 | 37M | `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
-| `work-mcp10-stmon` | 43 | 4M | `41_stm-fit-dump.md`, `42_stm-fit-showcase-evt286241.md`, `43_magnify-tracking-sbnd-bugs.md`, `47_stm-bragg-reference-sbnd-retune.md`, `make_stmfit_bee.py`, `stmfit_showcase.py`, `stmon_stats.py` |
+| `work-mcp10-stmon` | 43 | 4M | `41_stm-fit-dump.md`, `42_stm-fit-showcase-evt286241.md`, `43_magnify-tracking-sbnd-bugs.md`, `47_stm-bragg-reference-sbnd-retune.md`, `scripts/bee/make_stmfit_bee.py`, `scripts/analysis/stm/stmfit_showcase.py`, `scripts/analysis/stm/stmon_stats.py` |
 | `work-mcp10-unm45` | 43 | 27M | `45_unmerge-bundle-main-associated.md` |
-| `work-mcp1000-dq48` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md`, `stm_fv_census.py` |
+| `work-mcp1000-dq48` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md`, `scripts/analysis/stm/stm_fv_census.py` |
 | `work-mcp1000-dq48base` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md` |
 | `work-mcp1000-dq48tab` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md` |
-| `work-mcp1000-dq48v3` | 35 | 22M | `45_unmerge-bundle-main-associated.md`, `49_stm-containment-fv-inconsistency.md`, `stm_fv_census.py` |
+| `work-mcp1000-dq48v3` | 35 | 22M | `45_unmerge-bundle-main-associated.md`, `49_stm-containment-fv-inconsistency.md`, `scripts/analysis/stm/stm_fv_census.py` |
 | `work-mcp1000-dq49off` | 32 | 22M | `49_stm-containment-fv-inconsistency.md` |
 | `work-mcp1000-dq49off2` | 32 | 21M | `49_stm-containment-fv-inconsistency.md` |
 | `work-mcp1000-fvzi` | 32 | 2M | `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp1000-lm2` | 33 | 28M | `34_lm-tagger.md`, `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp1000-mainpair` | 32 | 2M | `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp1000-mainreal` | 32 | 28M | `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
-| `work-mcp1000-stmon` | 32 | 4M | `stmon_stats.py` |
+| `work-mcp1000-stmon` | 32 | 4M | `scripts/analysis/stm/stmon_stats.py` |
 | `work-mcp1000-unm45` | 30 | 21M | `45_unmerge-bundle-main-associated.md` |
-| `work-mcp1000b-dq48` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md`, `stm_fv_census.py` |
+| `work-mcp1000b-dq48` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md`, `scripts/analysis/stm/stm_fv_census.py` |
 | `work-mcp1000b-dq48base` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md` |
 | `work-mcp1000b-dq48tab` | 32 | 2M | `48_sbnd-dqdx-tables-and-mip.md` |
-| `work-mcp1000b-dq48v3` | 34 | 20M | `45_unmerge-bundle-main-associated.md`, `49_stm-containment-fv-inconsistency.md`, `stm_fv_census.py` |
+| `work-mcp1000b-dq48v3` | 34 | 20M | `45_unmerge-bundle-main-associated.md`, `49_stm-containment-fv-inconsistency.md`, `scripts/analysis/stm/stm_fv_census.py` |
 | `work-mcp1000b-dq49off` | 32 | 20M | `49_stm-containment-fv-inconsistency.md` |
 | `work-mcp1000b-dq49off2` | 32 | 20M | `49_stm-containment-fv-inconsistency.md` |
 | `work-mcp1000b-evnew` | 6 | 394K | `48_sbnd-dqdx-tables-and-mip.md` |
@@ -714,7 +842,7 @@ stay the population reference.
 | `work-mcp1000b-lm2` | 33 | 27M | `35_tgm-interior-fv.md`, `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp1000b-mainpair` | 32 | 2M | `36_tgm-main-component-pairs.md`, `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
 | `work-mcp1000b-mainreal` | 32 | 27M | `38_pctree-provenance-tgm-main-real.md`, `39_tgm-fc-fv-xy-margins.md`, `41_stm-fit-dump.md` |
-| `work-mcp1000b-stmon` | 32 | 3M | `stmon_stats.py` |
+| `work-mcp1000b-stmon` | 32 | 3M | `scripts/analysis/stm/stmon_stats.py` |
 | `work-mcp1000b-unm45` | 30 | 20M | `45_unmerge-bundle-main-associated.md` |
 | `work-mcsim-diffusion` | 1 | 5K | `run_ql_evt.sh` |
 | `work-mcsim-stmon` | 52 | 109M | `42_stm-fit-showcase-evt286241.md`, `44_stm-fit-truth-dqdx.md`, `45_unmerge-bundle-main-associated.md`, `46_stm-fit-deltarays-and-gui.md` |

@@ -28,11 +28,11 @@ MIP plateau.
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/toolkit
 # every number in sections 3-5 (closed-form recombination arithmetic, no fitting):
-python3 sbnd_xin/stm_dqdx_reference.py
+python3 sbnd_xin/scripts/analysis/stm/stm_dqdx_reference.py
 # the reference curve's provenance -- the 5 TGraphs the jsonnet tables came from:
 cd prototype_base/input_data_files
-root -l -b -q '/nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin/dump_stopping_dqdx.C("stopping_ave_dQ_dx.root")'
-root -l -b -q '/nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin/dump_stopping_dqdx.C("stopping_ave_dQ_dx_v2.root")'
+root -l -b -q '/nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin/scripts/root/dump_stopping_dqdx.C("stopping_ave_dQ_dx.root")'
+root -l -b -q '/nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin/scripts/root/dump_stopping_dqdx.C("stopping_ave_dQ_dx_v2.root")'
 # the code paths quoted below:
 sed -n '1500,1600p' clus/src/TaggerCheckSTM.cxx          # eval_stm_core, the KS comparison
 sed -n '216,240p'   util/src/KSTest.cxx                  # kslike_compare

@@ -14,7 +14,7 @@ delivered PR output tree.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python3 unmerge_crosser_audit.py work-mcp10-d52ron work-mcp1000-d52ron \
+python3 scripts/analysis/misc/unmerge_crosser_audit.py work-mcp10-d52ron work-mcp1000-d52ron \
                                  work-mcp1000b-d52ron          # add -v for the tables
 # rc=0 => every check passed.  Log-side sweep:
 grep -h -E "no flash-merge provenance|no blob marked real_cluster_main|provenance size|BLOB LOSS in separate|erased a steiner_pc built before" \
@@ -292,7 +292,7 @@ Census repro (add `-v` to list every colliding value):
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python3 unmerge_crosser_audit.py --collide-census \
+python3 scripts/analysis/misc/unmerge_crosser_audit.py --collide-census \
         work-mcp10-d52ron work-mcp1000-d52ron work-mcp1000b-d52ron
 #   distinct real_cluster_id values (summed over events) : 563
 #     naming more than one cluster                       : 175  (31%)
@@ -310,7 +310,7 @@ It is verdict-neutral on the 10-event set, so `d52ron`'s physics conclusions
 stand; its pctree tarballs carry the old two-epoch ids, which is only a problem
 for a reader that joins on the value across clusters.
 
-Sample size is 28 crossers over 30 events — thin. `unmerge_crosser_audit.py` is
+Sample size is 28 crossers over 30 events — thin. `scripts/analysis/misc/unmerge_crosser_audit.py` is
 read-only pure file parsing, so it can be pointed at any additional `work-*-<tag>`
-dirs (`python3 unmerge_crosser_audit.py <dir> …`) for a larger sample without
+dirs (`python3 scripts/analysis/misc/unmerge_crosser_audit.py <dir> …`) for a larger sample without
 re-running the chain.

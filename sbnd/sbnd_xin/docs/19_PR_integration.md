@@ -867,7 +867,7 @@ template is the ProtoDUNE two-stage **depo-file-split** recipe in
 **Route A — existing LArSoft-produced samples (already working).** The
 `input-10files-mc` baseline (dnnsp frames + opflash tensors produced by
 SBND production) runs through our full chain today via
-`build_mcbase_stage.py` + `run_mcbase.sh` (event-id remap UID = 700000 +
+`scripts/analysis/misc/build_mcbase_stage.py` + `scripts/runners/run_mcbase.sh` (event-id remap UID = 700000 +
 file·1000 + evt, `SBND_INPUT_DIR` override). Best for: chain integration
 tests, flash matching on MC, selection-level studies. Limitation: truth
 lives back in the art files, so fit-vs-truth requires a separate truth
@@ -946,7 +946,7 @@ DepoFluxSplat truth branch. Notes:
 - Package outputs per event under the `SBND_INPUT_DIR` conventions
   (`frames-dnn.tar.bz2`, optional `opflash_apa{0,1}.tar.gz`) so
   `run_img_evt.sh → run_clus_evt.sh → run_ql_evt.sh` (and the future PR
-  step) run on MC unchanged — `build_mcbase_stage.py` is the reference for
+  step) run on MC unchanged — `scripts/analysis/misc/build_mcbase_stage.py` is the reference for
   the member naming and the event-uid remap.
 
 ### 7.4 Verification ladder

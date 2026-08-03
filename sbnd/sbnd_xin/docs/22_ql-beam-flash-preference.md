@@ -31,8 +31,8 @@ SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod \
 SBND_WORK_ROOT=$PWD/work-fsprod-bpv2-w050 BEAMPREF_WEIGHT=0.5 \
 SBND_MAX_JOBS=6 ./run_ql_evt.sh data all -calib -beam-pref
 # scoring:
-./ql_beam_pref_score.py work-bpval-off work-bpval2-w050    # vs work/ql_labels/{data,mc}
-./ql_beam_pref_tune.py  work-fsprod-bpv-off work-fsprod-bpv2-w050
+./scripts/analysis/ql/ql_beam_pref_score.py work-bpval-off work-bpval2-w050    # vs work/ql_labels/{data,mc}
+./scripts/analysis/ql/ql_beam_pref_tune.py  work-fsprod-bpv-off work-fsprod-bpv2-w050
 ```
 
 Reading the numbers below: Bee flash indices/times are from the baseline
@@ -194,11 +194,11 @@ operating point:
    `work/ql_labels/{data,mc}/.scan_state-evt*.json`, the same convention as
    the ladder tuning in [16_highconsist-ladder.md](16_highconsist-ladder.md)
    (93/100 data, 92/113 MC at ladder adoption). Scorer:
-   `ql_beam_pref_score.py`. The data sample is off-beam cosmics, so any
+   `scripts/analysis/ql/ql_beam_pref_score.py`. The data sample is off-beam cosmics, so any
    0.2–2.2 µs flash there is a random cosmic — this set measures *harm*.
 2. **The 48-evt reco1 nueCC criterion** — every event carries a neutrino, so
    the dominant in-window flash should hold a light-consistent charge budget.
-   Grade per event (scorer `ql_beam_pref_tune.py`): GOOD = matched with
+   Grade per event (scorer `scripts/analysis/ql/ql_beam_pref_tune.py`): GOOD = matched with
    0.33 ≤ Σpred/meas ≤ 3, WEAK = matched outside that band, ORPHAN = no
    cluster.
 

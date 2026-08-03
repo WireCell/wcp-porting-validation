@@ -17,9 +17,9 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 # inputs: work-mcp1000/evt<ID>/icluster-apa{0,1}-{active,masked}.npz
 #         (1000 events, 0 missing; from run_img_evt.sh on
 #          input_files_reco1/staged-mcp2025c-1000evt SP frames)
-python3 yz_coverage.py accumulate --work-root work-mcp1000 \
+python3 scripts/analysis/geom/yz_coverage.py accumulate --work-root work-mcp1000 \
     --out pics/yz_coverage/yz-hist-mcp1000-v2.npz
-python3 yz_coverage.py plot --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz \
+python3 scripts/analysis/geom/yz_coverage.py plot --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz \
     --out-dir pics/yz_coverage
 ```
 
@@ -176,9 +176,9 @@ cannot explain — and do the middle region over the **entire Y range,
 top vs bottom**.  Run with
 
 ```bash
-python3 yz_coverage.py plot   --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz \
+python3 scripts/analysis/geom/yz_coverage.py plot   --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz \
                               --out-dir pics/yz_coverage
-python3 yz_coverage.py census --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz
+python3 scripts/analysis/geom/yz_coverage.py census --hist pics/yz_coverage/yz-hist-mcp1000-v2.npz
 ```
 
 **"Declared dead" is thresholded, not boolean-ever.**  Summed over 1000

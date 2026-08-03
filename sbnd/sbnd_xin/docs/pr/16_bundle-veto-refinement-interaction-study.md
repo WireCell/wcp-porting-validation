@@ -281,19 +281,19 @@ cd /nfs/data/1/xqian/toolkit-dev/toolkit
 
 # compiled-config proofs (wcsonnet; note compiled JSON spells the key '"k" : v')
 qlport/scripts/compile_ub_cfg.sh $PWD/cfg /home/xqian/tmp/ub_nbl.json      # cmp-identical to HEAD compile
-sbnd_xin/compile_prjob_cfg.sh    $PWD/cfg /home/xqian/tmp/pr_nbl.json      # "nu_skip_cosmic_bundle_min_length" : 15 (once)
+sbnd_xin/scripts/cfg/compile_prjob_cfg.sh    $PWD/cfg /home/xqian/tmp/pr_nbl.json      # "nu_skip_cosmic_bundle_min_length" : 15 (once)
 # knob-suppression proof: tree with the two SBND 15s sed'ed to 0 compiles
 # cmp-identical to the HEAD compile (key absent in both).
 
 # runtime arms (driver run_pr_chain_batch.sh; knob-off arm via
 # tmp_run_pr_chain_nblhead.sh = same driver against a HEAD copy of cfg)
 cd sbnd_xin
-PR_JOBS=6 ./tmp_run_pr_chain_nblhead.sh work-mcp1kall-d59k work-nbloff-ab31    data $AB31   # knob off
+PR_JOBS=6 ./scripts/runners/tmp_run_pr_chain_nblhead.sh work-mcp1kall-d59k work-nbloff-ab31    data $AB31   # knob off
 PR_JOBS=6 ./run_pr_chain_batch.sh       work-mcp1kall-d59k work-nbl15-ab31     data $AB31   # knob on (15)
-PR_JOBS=6 ./tmp_run_pr_chain_nblhead.sh work-nuecc48-nuf   work-nbloff-nuecc48 data
+PR_JOBS=6 ./scripts/runners/tmp_run_pr_chain_nblhead.sh work-nuecc48-nuf   work-nbloff-nuecc48 data
 PR_JOBS=6 ./run_pr_chain_batch.sh       work-nuecc48-nuf   work-nbl15-nuecc48  data
 PR_JOBS=1 ./run_pr_chain_batch.sh       work-mcp1kall-d59k work-nblrep-279256  data 279256  # determinism probe
-python3 pr_arm_compare.py <armA> <armB> <evts...>   # hash_archive members + full T_tagger/T_kine rows
+python3 scripts/analysis/misc/pr_arm_compare.py <armA> <armB> <evts...>   # hash_archive members + full T_tagger/T_kine rows
 ```
 
 ### 10.1 The knob
@@ -335,7 +335,7 @@ Knob-on behavior, from the logs:
 
 ### 10.3 Side finding: pre-existing T_tagger detail-branch flicker
 
-`pr_arm_compare.py` compares **every** branch, which the earlier rounds'
+`scripts/analysis/misc/pr_arm_compare.py` compares **every** branch, which the earlier rounds'
 row checks did not.  Between any two runs (same binary, same config —
 `work-nbl15-ab31` vs the `work-nblrep-279256` repeat proves it) a family of
 per-candidate vector branches (`pio_2_v_*`, `shw_sp_pio_2_v_*`, `br3_6_v_*`,
@@ -354,5 +354,5 @@ fixed the `out_edges` instance of this class).  Reported, not fixed.
 `work-nbloff-ab31`, `work-nbl15-ab31` (ql root `work-mcp1kall-d59k`, data);
 `work-nbloff-nuecc48`, `work-nbl15-nuecc48` (ql root `work-nuecc48-nuf`,
 data); `work-nblrep-279256` (determinism repeat).  Comparator:
-`sbnd_xin/pr_arm_compare.py`.  Binaries: `55e5e621` (rpg arms) →
+`sbnd_xin/scripts/analysis/misc/pr_arm_compare.py`.  Binaries: `55e5e621` (rpg arms) →
 `c4586ae4` (this round).

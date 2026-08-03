@@ -121,7 +121,7 @@ the prototype's `cluster_length`.
   details pane, lm in the exported scan JSON; prev-baseline compare now also
   tints on an auto-label change (so the LM demotion is amber) and tolerates
   baselines without the column.
-- `sbnd_xin/lm_tune.py`: offline cut tuning from the calib dumps (replicates
+- `sbnd_xin/scripts/analysis/ql/lm_tune.py`: offline cut tuning from the calib dumps (replicates
   the C++ verdict; `--scan key=val` re-evaluates without a rerun).
 
 ## Repro
@@ -144,7 +144,7 @@ done
 python3 nusel_extract.py --merge work-mcp1000-lm/nusel_evt*/nusel-evt*.tsv \
   --out work-mcp1000-lm/nusel-table.tsv --events-out work-mcp1000-lm/nusel-events.tsv
 # tuning study:
-python3 lm_tune.py work-mcp10-lm work-mcp1000-lm --out /home/xqian/tmp/lm_tune
+python3 scripts/analysis/ql/lm_tune.py work-mcp10-lm work-mcp1000-lm --out /home/xqian/tmp/lm_tune
 # viewer:
 nusel_display/serve_nusel_scan.sh 5010 --tag mcp10-lm \
   --prev ../work-mcp10-reschord:mcp10-reschord \

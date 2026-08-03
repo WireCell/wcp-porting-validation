@@ -118,7 +118,7 @@ path (distinct from the pr/23 §4.2 residual, evt 287654, which dies on
 
 ### Population scan
 
-`pr25_rejoin_census.py scan/direct` (committed, `sbnd_xin` commit `e370ded`),
+`scripts/analysis/pr25/pr25_rejoin_census.py scan/direct` (committed, `sbnd_xin` commit `e370ded`),
 572-event valfast prod arm: 191 events have a protect_bundle split, 610
 (retained, fragment) pairs total. **0 pairs pass all four cuts as shipped; 6
 fail ONLY dyz:**
@@ -230,7 +230,7 @@ independently).
     3.14, moving further from the nue/cosmic side.
   - **Runtime vs. census numbers differ, verdicts agree.** The C++ tracer's
     live `dis`/`dyz` at re-join time (e.g. 489327: gap 5.73, dyz 5.14) are
-    not the same numbers as the offline `pr25_rejoin_census.py` scan (6.83 /
+    not the same numbers as the offline `scripts/analysis/pr25/pr25_rejoin_census.py` scan (6.83 /
     6.50) — different pipeline stage, likely a different coordinate scope
     snapshot (the census reads the persisted post-hoc pctree; the tracer
     reads the live default-scope cluster mid-pipeline). Both agree on the
@@ -251,7 +251,7 @@ prototype-faithful when disabled AND because it is not yet the SBND default.
 `clus/src/ClusteringProtectBundle.cxx` + jsonnet
 `cfg/pgrapher/common/clus.jsonnet`,
 `cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet`);
-wcp-porting-img `c8d4e32` (doc) and `e370ded` (`pr25_rejoin_census.py`),
+wcp-porting-img `c8d4e32` (doc) and `e370ded` (`scripts/analysis/pr25/pr25_rejoin_census.py`),
 plus the `run_pr_evt.sh` / `run_pr_chain_batch.sh` runner escapes.
 
 **SBND DEFAULT ON (owner decision, 2026-08-03).** `wct-pr-perevt.jsonnet`
@@ -273,8 +273,8 @@ wcbuild   # freshness proof: check local/lib/libWireCellClus.so mtime after
 ./build/clus/wcdoctest-clus   # 49/49 expected
 
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-python3 pr25_rejoin_census.py scan     # reproduces the 6-pair dyz-only census
-python3 pr25_rejoin_census.py direct   # reproduces the angle/perp separation
+python3 scripts/analysis/pr25/pr25_rejoin_census.py scan     # reproduces the 6-pair dyz-only census
+python3 scripts/analysis/pr25/pr25_rejoin_census.py direct   # reproduces the angle/perp separation
 
 EVTS="399118 489327 289832 488139 492913 279445 169824 286400 406796 56463 315497 409634 287654"
 ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25-off data $EVTS
@@ -818,7 +818,7 @@ ways within one event.
 **Shipped this round**: the extended `WCT_SHOWER_TOPO_DEBUG` instrument
 (quantiles p50/p75/p90/p95, bucket counts at every branch threshold 0.4/0.7/
 0.8/1.0, `maxcont`, and `dir3x = |dir_3·x̂|`), default off, log-only, zero
-behavior change; and `pr25_spread_census.py`.
+behavior change; and `scripts/analysis/pr25/pr25_spread_census.py`.
 
 **Not shipped**: any behavior change. Two rounds have now failed to find a
 threshold that separates these segments, and §3.4 explains why — there is
@@ -907,7 +907,7 @@ cluster reads `pdg 13`, mean `flag_shower` 0.00 (pre-flip: `pdg 11`, 1.00).
 point is **50 cm**. Evt 400504 is the tenth: it measures **49.1 cm** by
 `segment_track_length(seg,0)` — the length the guard uses — while the census
 script's fit-point path length reads 50.4 cm. ~45 cm would cover all ten.
-The two length measures are now documented in `pr25_shower_topo_census.py`;
+The two length measures are now documented in `scripts/analysis/pr25/pr25_shower_topo_census.py`;
 when a decision depends on the length, read the instrument's `L`.
 
 #### Measured effect (`work-pr25s3r2-dbgall` OFF vs `work-pr25s3r2-on50b` ON, 572 events, all `rc=0`)
@@ -1019,16 +1019,16 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 # round 2: instrument over the full valfast manifest, then the decision tables
 WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=6 \
   ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3r2-dbgall sim
-python3 pr25_spread_census.py --arm work-pr25s3r2-dbgall
+python3 scripts/analysis/pr25/pr25_spread_census.py --arm work-pr25s3r2-dbgall
 
 # physics-relevant blast radius (nu-candidate main clusters only)
-python3 pr25_shower_topo_census.py population --arm work-pr25s3r2-dbgall --nu-only
+python3 scripts/analysis/pr25/pr25_shower_topo_census.py population --arm work-pr25s3r2-dbgall --nu-only
 
 # the target's own instrument lines
 grep "shower_topo dbg" work-pr25s3r2-dbgall/pr_evt321107/wct_pr_evt321107.log
 
 # round 1 arms (21-event blast radius + controls), kept for provenance
-python3 pr25_shower_topo_census.py guard --arm work-pr25s3-dbg21
+python3 scripts/analysis/pr25/pr25_shower_topo_census.py guard --arm work-pr25s3-dbg21
 
 # ---- round 3: the fix ----
 # knob-off byte-identical gate (new binary vs the pre-change arm)

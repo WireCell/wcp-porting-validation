@@ -29,14 +29,14 @@ cd wcp-porting-img/sbnd/sbnd_xin
 
 # --- A. the 1000-event sample: census the existing arm (no run needed).
 #     Second root is the cross-check; the script prints the per-event delta.
-python3 bw_label_census.py work-stmcamp-d66fix work-mcp1kall-d59k
+python3 scripts/analysis/stm/bw_label_census.py work-stmcamp-d66fix work-mcp1kall-d59k
 
 #     arm attribution (each pair prints "events differing"):
 for p in "work-mcp1kall-d59k work-stmcamp-d66old" \
          "work-stmcamp-d66old work-stmcamp-d66new" \
          "work-stmcamp-d66new work-stmcamp-d66fixoff" \
          "work-stmcamp-d66fixoff work-stmcamp-d66fix"; do
-    python3 bw_label_census.py $p | grep -E "^   (TGM|STM|LM|nu-cand)|events differing"
+    python3 scripts/analysis/stm/bw_label_census.py $p | grep -E "^   (TGM|STM|LM|nu-cand)|events differing"
 done
 
 # --- B. the 48 nueCC candidates: the run this doc adds.
@@ -59,8 +59,8 @@ SBND_MAX_JOBS=6 ./run_nusel_evt.sh data \
     -chord -rescue -rescue-chord -fvz 5 -fvzi 3 -lm -main-pair-real \
     -fvx 2.5 -fvy 3 -stm-fit -mip 56000 -unmerge-assoc all
 
-python3 nuecc48_detail.py  work-nuecc48-nuf   # per-event, names every bundle
-python3 bw_label_census.py work-nuecc48-nuf   # same columns as A
+python3 scripts/analysis/misc/nuecc48_detail.py  work-nuecc48-nuf   # per-event, names every bundle
+python3 scripts/analysis/stm/bw_label_census.py work-nuecc48-nuf   # same columns as A
 ```
 
 ## 1. Sample A — 1000 events, MCP2025C

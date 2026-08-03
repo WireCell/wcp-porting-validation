@@ -249,7 +249,7 @@ cd sbnd_xin/work-nuecc48-prsmoke2
 # cross-binary off-gate arm: build the pre-change clus lib into a scratch dir
 # (./wcb build, no install) and
 LD_LIBRARY_PATH=/home/xqian/tmp/ssmlib_old ./run_ssm_arm.sh /home/xqian/tmp/ssmA0
-# compare: python3 sbnd_xin/ssm_tagger_ab.py <A>/tracking-pr.root <B>/tracking-pr.root
+# compare: python3 sbnd_xin/scripts/analysis/misc/ssm_tagger_ab.py <A>/tracking-pr.root <B>/tracking-pr.root
 ```
 
 `run_ssm_arm.sh` is `run_pr3_evt.sh` for evt 172230 with extra TLAs forwarded
@@ -476,7 +476,7 @@ Recorded, not fixed (CLAUDE.md tie-breaker):
   all, so there is nothing analogous to fix in them.
 - `qlport/scripts/ab_check.sh` gate 2 has been non-discriminating for many labels
   (above). It should either be scoped to the stable branches or retired in favour of the
-  ZIPS gate plus a per-branch `tagger_tree_ab.py` diff; leaving it as-is invites a future
+  ZIPS gate plus a per-branch `scripts/analysis/misc/tagger_tree_ab.py` diff; leaving it as-is invites a future
   reader to treat a PASS-shaped FAIL as meaningful.
 
 **(i-c) KNOB-CLOSED 2026-07-30 — the SinglePhoton inline inverse Box routes through
@@ -715,7 +715,7 @@ Repro:
 qlport/scripts/compile_ub_cfg.sh /home/xqian/tmp/wt-head/cfg ub_head.json
 qlport/scripts/compile_ub_cfg.sh $TK/cfg                     ub_now.json
 diff ub_head.json ub_now.json                                    # empty (258945 B both)
-sbnd_xin/compile_prjob_cfg.sh    $TK/cfg pr_geo_now.json
+sbnd_xin/scripts/cfg/compile_prjob_cfg.sh    $TK/cfg pr_geo_now.json
 grep -E 'cosmic_y_|vertex_z_prior' pr_geo_now.json               # 133/163/183/185, 100
 # the uBooNE arm is one flag pair (reproduces 100/102/80/50 and 200 exactly):
 #   --tla-code pr_y_top=117 --tla-code vertex_z_prior_scale=200
@@ -723,8 +723,8 @@ grep -E 'cosmic_y_|vertex_z_prior' pr_geo_now.json               # 133/163/183/1
 qlport/scripts/sweep_5384.sh geomoff_ub 6
 diff sweep/f3coff_ub2/hashes.txt sweep/geomoff_ub/hashes.txt     # empty
 # SBND two-arm effect, ONE binary, 48-event nueCC sample
-sbnd_xin/geom_ab_batch.sh            # ARM=on = SBND defaults; ARM=off = uBooNE TLAs
-sbnd_xin/geom_ab_summary.sh          # per-event mabc-pr.zip member-hash equality
+sbnd_xin/scripts/runners/geom_ab_batch.sh            # ARM=on = SBND defaults; ARM=off = uBooNE TLAs
+sbnd_xin/scripts/runners/geom_ab_summary.sh          # per-event mabc-pr.zip member-hash equality
                                      # -> docs/pr/2_geom_ab_summary.tsv
 ```
 
@@ -800,7 +800,7 @@ absolute margin, not an extent.
 | uBooNE 35-event off-gate | **PASS** — `sweep/geomoff_ub/hashes.txt` == `sweep/f3coff_ub2/hashes.txt`, zero diff, all `rc=0` (the 16-line delta vs `gate3` is the pre-existing one from `7902615c`, identical in `f1off_ub`/`f3coff_ub2`) |
 | uBooNE compiled config | **byte-identical**, 258945 B both |
 | SBND compiled config (PR job) | the 5 keys appear with 183/185/163/133/100 and **nothing else changes** |
-| SBND **production** compiled config | **byte-identical** both entry points that import `sbnd/clus.jsonnet` — `wcls-img-clus.jsonnet` 169809 B and `wct-clus-matching-standalone.jsonnet` 190598 B, zero diff (`sbnd_xin/compile_sbnd_prod.sh`): the new `pr()`/`clus_pr()` args do not leak where `tagger_check_neutrino` is not in `pipeline_names` |
+| SBND **production** compiled config | **byte-identical** both entry points that import `sbnd/clus.jsonnet` — `wcls-img-clus.jsonnet` 169809 B and `wct-clus-matching-standalone.jsonnet` 190598 B, zero diff (`sbnd_xin/scripts/cfg/compile_sbnd_prod.sh`): the new `pr()`/`clus_pr()` args do not leak where `tagger_check_neutrino` is not in `pipeline_names` |
 | `wcdoctest-clus` | 565/565 |
 | freshness | `local/lib/libWireCellClus.so` == `build/clus/libWireCellClus.so`, 350804144 B, 15:34, both newer than the last edit (the sweep loads from `build/`) |
 | SBND arm | **NOT bit-identical by design** — characterized below, no gate label |
@@ -862,7 +862,7 @@ to it (`TaggerCheckNeutrino.cxx:506-524`):
 | `compare_main_vertices_global` (`:3002`) | inside `determine_overall_main_vertex`, called only `if (!flag_dl_changed)` | **bypassed** whenever DL moves the vertex |
 | the four `cosmic_y_*` | `cosmic_tagger` at `:584`, after DL + `improve_vertex` + shower clustering | always after DL |
 
-Re-running the same 48 events with DL ON (`sbnd_xin/run_pr_geom_arm_dl.sh`, one binary,
+Re-running the same 48 events with DL ON (`sbnd_xin/scripts/runners/run_pr_geom_arm_dl.sh`, one binary,
 both arms) gives **47/48 identical, 1 changed**:
 
 - **evt 235435's main-cluster switch disappears** — the arms are byte-identical
@@ -1025,8 +1025,8 @@ eye — scan Track C **first**, then the Track B data candidates.
 
 ### 3.4 MC with truth (later)
 
-`19_PR_integration.md` §7 route A (existing LArSoft MC via `build_mcbase_stage.py` /
-`run_mcbase.sh`) gives chain-integration MC today; route B (depo-split sim) + the
+`19_PR_integration.md` §7 route A (existing LArSoft MC via `scripts/analysis/misc/build_mcbase_stage.py` /
+`scripts/runners/run_mcbase.sh`) gives chain-integration MC today; route B (depo-split sim) + the
 missing `recob::OpFlash → opflash_apa{N}.tar.gz` converter unlocks fit-vs-truth
 (vertex resolution, energy scale). Named here so the checklist can reference truth
 steps; not part of the first campaign.

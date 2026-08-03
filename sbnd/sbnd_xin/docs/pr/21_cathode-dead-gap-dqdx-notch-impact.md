@@ -12,7 +12,7 @@ that does not currently exist (§6).
 ## 0. Repro block
 
 The notch numbers are doc pr/12 §7 (census `12_cathode-census-pr11v3.tsv`, arms
-`work-ccfeat300pr`, plots `cathode_plots.py` → `pics/pr12_dqdx_gap.png`). The code facts
+`work-ccfeat300pr`, plots `scripts/analysis/cathode/cathode_plots.py` → `pics/pr12_dqdx_gap.png`). The code facts
 below reproduce at toolkit HEAD `fe6b7d90` (doc pr/20 B0/A1/A2 already landed):
 
 ```

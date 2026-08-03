@@ -46,9 +46,9 @@ dQ/dx notch there (§7).
 cd wcp-porting-img/sbnd/sbnd_xin
 
 # 1. Selection net: census over the doc pr/11 population arms (binary 289d78e4).
-python3 cathode_nu_census.py --root work-mcp1kall-pr11v3 --sample mcp1k   --out /home/xqian/tmp/c3_mcp1k.tsv
-python3 cathode_nu_census.py --root work-nuecc48-pr11v3  --sample nuecc48 --out /home/xqian/tmp/c3_nuecc.tsv
-python3 cathode_nu_census.py --merge /home/xqian/tmp/c3_mcp1k.tsv /home/xqian/tmp/c3_nuecc.tsv \
+python3 scripts/analysis/cathode/cathode_nu_census.py --root work-mcp1kall-pr11v3 --sample mcp1k   --out /home/xqian/tmp/c3_mcp1k.tsv
+python3 scripts/analysis/cathode/cathode_nu_census.py --root work-nuecc48-pr11v3  --sample nuecc48 --out /home/xqian/tmp/c3_nuecc.tsv
+python3 scripts/analysis/cathode/cathode_nu_census.py --merge /home/xqian/tmp/c3_mcp1k.tsv /home/xqian/tmp/c3_nuecc.tsv \
         --out docs/pr/12_cathode-census-pr11v3.tsv --summary
 
 # 2. Authoritative arm: the 57 selected events re-run at HEAD (3fe65876).
@@ -65,11 +65,11 @@ PR_JOBS=3  ./run_pr_chain_batch.sh work-nuecc48-nuf   work-nuecc48-cath01  data 
 # --ql-root turns on the join test of sec 6 (was the far half even in the candidate's
 # cluster in the PR job's input?) -- without it a fit stopping at the cathode is
 # indistinguishable from a tracking failure.
-python3 cathode_nu_census.py --root work-mcp1kall-cath01 --ql-root work-mcp1kall-d59k \
+python3 scripts/analysis/cathode/cathode_nu_census.py --root work-mcp1kall-cath01 --ql-root work-mcp1kall-d59k \
         --sample mcp1k   --out /home/xqian/tmp/f_mcp1k.tsv
-python3 cathode_nu_census.py --root work-nuecc48-cath01  --ql-root work-nuecc48-nuf \
+python3 scripts/analysis/cathode/cathode_nu_census.py --root work-nuecc48-cath01  --ql-root work-nuecc48-nuf \
         --sample nuecc48 --out /home/xqian/tmp/f_nuecc.tsv
-python3 cathode_nu_census.py --merge /home/xqian/tmp/f_mcp1k.tsv /home/xqian/tmp/f_nuecc.tsv \
+python3 scripts/analysis/cathode/cathode_nu_census.py --merge /home/xqian/tmp/f_mcp1k.tsv /home/xqian/tmp/f_nuecc.tsv \
         --out docs/pr/12_cathode-census.tsv --summary     # every table below
 
 # sec 6 flash-t0 table: the near/far bundle ids are the ql_cid_near / ql_cid_far columns;
@@ -77,15 +77,15 @@ python3 cathode_nu_census.py --merge /home/xqian/tmp/f_mcp1k.tsv /home/xqian/tmp
 awk 'NR==1 || $4==<bundle>' work-mcp1kall-d59k/nusel_evt288952/nusel-evt288952.tsv
 
 # 3. The sec-7 figures.
-python3 cathode_plots.py --census docs/pr/12_cathode-census.tsv \
+python3 scripts/analysis/cathode/cathode_plots.py --census docs/pr/12_cathode-census.tsv \
         --root mcp1k=work-mcp1kall-cath01 --root nuecc48=work-nuecc48-cath01 \
         --outdir docs/pics
 
 # 4. Bee sets (13 pathological + 44 spanned).
-python3 make_pr_bee.py -q work-mcp1kall-d59k -q work-nuecc48-nuf \
+python3 scripts/bee/make_pr_bee.py -q work-mcp1kall-d59k -q work-nuecc48-nuf \
                        -p work-mcp1kall-cath01 -p work-nuecc48-cath01 \
                        -o cath_broken.zip  <chunk A ids>
-python3 make_pr_bee.py ... -o cath_spanned.zip <chunk B ids>
+python3 scripts/bee/make_pr_bee.py ... -o cath_spanned.zip <chunk B ids>
 ./upload-to-bee.sh cath_broken.zip ; ./upload-to-bee.sh cath_spanned.zip
 ```
 
@@ -250,7 +250,7 @@ check that shows it is the one asking whether the PR chain was ever *given* both
 `drift_cut = 8 cm`, `flash_t0_window = 800 ns`). In the same 10 cm (y,z) tube used for
 the charge test, do the near-side and far-side charge share a Q/L `cluster_id`?
 
-(`cathode_nu_census.py --ql-root …`, column `ql_joined`; the tube is centred on the same
+(`scripts/analysis/cathode/cathode_nu_census.py --ql-root …`, column `ql_joined`; the tube is centred on the same
 probe point at which the charge test found the crossing.)
 
 | class | halves in one Q/L cluster | not joined |
@@ -345,7 +345,7 @@ not along this candidate.
   dip, at the same place in the detector, on every cathode-crossing track. Not
   investigated further here.
 
-Both figures come from `cathode_plots.py` (see the Repro block); they read the same
+Both figures come from `scripts/analysis/cathode/cathode_plots.py` (see the Repro block); they read the same
 census TSV and the same arms as every table above.
 
 ## 8. Bee displays
@@ -353,8 +353,8 @@ census TSV and the same arms as every table above.
 Two sets, both carrying **img-global, clustering-global, op (flash↔cluster), dead areas**
 from the Q/L arm and **track_fit (dQ/dx), shower_track (track/shower + per-particle
 sub-clustering), vertices (PR graph, neutrino vertex q=15000), mc (particle-flow tree)**
-from the at-HEAD PR arm. Built by `make_pr_bee.py` — a fork-by-duplication of
-`make_stmfit_bee.py` (M10: that script stays byte-untouched for `make_scan_bee.sh`).
+from the at-HEAD PR arm. Built by `scripts/bee/make_pr_bee.py` — a fork-by-duplication of
+`scripts/bee/make_stmfit_bee.py` (M10: that script stays byte-untouched for `scripts/bee/make_scan_bee.sh`).
 
 | set | events | link | index file |
 |---|---|---|---|
@@ -386,7 +386,7 @@ at the cathode is visible as a colour change at x ≈ 0. `track_fit` carries dQ/
   fit is defeated by the 1.4 cm data misalignment" from "the fit is defeated by the gap
   itself"; it is the obvious next measurement and is **not** made here.
 - The charge test uses a 10 cm (y,z) tube and a 4 cm gap threshold. Both are stated
-  parameters of `cathode_nu_census.py` (`--radius`, `--gap`), not tuned to an outcome;
+  parameters of `scripts/analysis/cathode/cathode_nu_census.py` (`--radius`, `--gap`), not tuned to an outcome;
   the extrapolation test in §6 is what carries the "same track" claim.
 - `no-contact` events are excluded by construction: their candidate has no fitted point
   within 6 cm of the cathode, so the candidate does not cross whatever charge exists

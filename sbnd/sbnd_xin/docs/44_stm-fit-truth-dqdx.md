@@ -34,7 +34,7 @@ wire-cell-sbnd-magnify-tracking-convert \
   -a$D/truth-evt18-blk150.root -nT -o$D/track_com_18.root -f1
 
 # 3. numbers + plot
-python3 stmfit_mc_compare.py -f $D/track_com_18.root -b 150 \
+python3 scripts/analysis/stm/stmfit_mc_compare.py -f $D/track_com_18.root -b 150 \
     -o $D/dqdx_mc_evt18_blk150.png
 
 # 4. GUI (headless recipe of doc 43; block 150 is cluster index 1)
@@ -52,7 +52,7 @@ root -l -b -q 'dump_truth_sed.C("input_files/input-10evt-mc/2025f-mc.root",228,2
         "work-mcsim-stmon/nusel_evt2/tracking-stm.root",110,5.0,"/home/xqian/tmp/gen/truth-evt2-blk110.root")'
 wire-cell-sbnd-magnify-tracking-convert -bwork-mcsim-stmon/nusel_evt2/tracking-stm.root \
   -tT_rec_charge -a/home/xqian/tmp/gen/truth-evt2-blk110.root -nT -o/home/xqian/tmp/gen/tc_2.root -f1
-python3 stmfit_mc_compare.py -f /home/xqian/tmp/gen/tc_2.root -b 110
+python3 scripts/analysis/stm/stmfit_mc_compare.py -f /home/xqian/tmp/gen/tc_2.root -b 110
 ```
 
 Products **regenerated in place** in `showcase-stmfit-mc-evt18/` (owner
@@ -63,7 +63,7 @@ decision, 2026-07-25): one showcase directory, so opening
 the pre-fix numbers survive only as text, in doc 42 §7 and in the tables below.
 `magnify_dqdx_recdx.png` / `magnify_dqdx_truedx.png` are the before/after
 renders of the GUI dQ/dx pad, kept in the same directory as the visual
-evidence.  `upload_mc18.zip` is untouched and still valid: `make_stmfit_bee.py`
+evidence.  `upload_mc18.zip` is untouched and still valid: `scripts/bee/make_stmfit_bee.py`
 reads only the work dirs, never the truth or `track_com` file, so the Bee set
 **d11b087c… / 1b654c7c…** does not depend on this fix.
 
@@ -88,7 +88,7 @@ Side effects of the same fix, all visible in the GUI pad
 
 - The **fake Bragg peak** is gone.  The truth beyond the fit's end piled onto
   the endpoints: 186.5 and 396.5 ke/cm, now 51.4 and 48.8.  The 5 cm `-R` cut
-  in `dump_truth_sed.C` and `--edge 1` in `stmfit_mc_compare.py` existed only
+  in `scripts/root/dump_truth_sed.C` and `--edge 1` in `scripts/analysis/stm/stmfit_mc_compare.py` existed only
   to hide this; `--edge` now defaults to 0 on files that carry `true_dx`.
   The `-R` cut is **still wanted**, for a different reason: dropping it does
   not bring the fake peak back, but it puts the whole far part of the muon
@@ -129,7 +129,7 @@ produced the numerator.
    `wire-cell-mcs-sim` and `wire-cell-le-sim`) walks the particle in fixed
    `step_size` increments (default 0.1 cm) and stores the charge of that whole
    step, so its truth points are coarse and comparable to the fitted spacing.
-   `dump_truth_sed.C` feeds the same machine raw G4 `SimEnergyDeposit`
+   `scripts/root/dump_truth_sed.C` feeds the same machine raw G4 `SimEnergyDeposit`
    micro-steps at 0.03 cm — 21 per fitted point — which is what makes the
    cell-occupancy variance visible.  `wire-cell-display-convert.cxx`, the
    third writer of that tree format, only repackages an existing truth tree.
@@ -153,7 +153,7 @@ produced the numerator.
 
 Purely additive; `true_dQ` is bit-for-bit unchanged.
 
-1. **`sbnd_xin/dump_truth_sed.C`** — new truth-tree branch `dx`, the G4 step
+1. **`sbnd_xin/scripts/root/dump_truth_sed.C`** — new truth-tree branch `dx`, the G4 step
    length `|endPos − startPos|` per deposit.  Taken from the endpoints rather
    than from consecutive-point spacing so it stays exact when the deposit list
    is not one ordered chain.  The summary line now also prints the true path
@@ -174,7 +174,7 @@ Purely additive; `true_dQ` is bit-for-bit unchanged.
    (a zero draws a spike to the axis — same class of defect as the doc-43
    cursor bug), and a block with no paired truth at all draws nothing instead
    of earning a `TGraphPainter: illegal number of points (0)` on every redraw.
-4. **`sbnd_xin/stmfit_mc_compare.py`** — same preference and same skip;
+4. **`sbnd_xin/scripts/analysis/stm/stmfit_mc_compare.py`** — same preference and same skip;
    `--edge` defaults to 0 with `true_dx` and 1 without; per-bin and integral
    ratios are now length-normalised (ratio of mean dQ/dx, since the two
    denominators are different lengths); new `--max-dx-ratio` cut and a
@@ -223,10 +223,10 @@ the gates use the uBooNE app and the visitor's `T_rec_charge`):
   the pre-fix file → *"no true_dx branch: … falls back to true_dQ/rec_dx"*.
   Block 80, whose truth file describes a different track, draws no truth curve
   and no ROOT error.
-- **`dump_truth_sed.C`'s existing branches unchanged:** `x` and `Q` of the
+- **`scripts/root/dump_truth_sed.C`'s existing branches unchanged:** `x` and `Q` of the
   regenerated `truth-evt18-blk150.root` are array-identical to the doc-42 §7
   record.
-- **Both `stmfit_mc_compare.py` paths exercised.**  On the pre-fix
+- **Both `scripts/analysis/stm/stmfit_mc_compare.py` paths exercised.**  On the pre-fix
   `showcase-stmfit-mc-evt18/track_com_18.root` it prints the fallback NOTE,
   defaults `--edge` to 1, and reproduces doc 42 §7 exactly (true median
   49.5 ke/cm, rms/median 0.376 over the 344 core points, mean-dQ/dx ratio
@@ -291,8 +291,8 @@ Two things this exposes, both **findings, not fixed here**:
   family as doc 42 §7's finding that the accepted-STM blocks follow no true
   particle.  Its fitted/true of 0.901 is therefore not a calibration number.
 - evt 9 block 110 pairs at median **11.3 cm** and elects a 9-deposit shower
-  electron; `stmfit_mc_compare.py` refuses to quote (exit 1) and
-  `dump_truth_sed.C` writes 0 truth points.  The guards work; the block is
+  electron; `scripts/analysis/stm/stmfit_mc_compare.py` refuses to quote (exit 1) and
+  `scripts/root/dump_truth_sed.C` writes 0 truth points.  The guards work; the block is
   unusable for truth comparison.  Of the 10-event MC sample only 4 events have
   an STM fit at all (evt 2 blk 110, evt 9 blk 110, evt 18 blk 80 + 150,
   evt 42 blk 60), and only evt 18 blk 150 and evt 2 blk 110 pair well enough

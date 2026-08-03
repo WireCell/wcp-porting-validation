@@ -5,7 +5,7 @@ A Bokeh event display for checking/scanning the PR-chain tagger verdicts
 Bee tab can be kept open next to it:
 
 * charge points = the `clustering-global` layer of `ql_evt<ID>/mabc-all-apa.zip`
-  (what `merge_mabc_bee.py` uploads to Bee: T0-corrected coordinates,
+  (what `scripts/bee/merge_mabc_bee.py` uploads to Bee: T0-corrected coordinates,
   per-point `cluster_id`)
 * light = the `op` layer of the same zip (`op_pes` measured / `op_pes_pred`
   predicted, per flash)
