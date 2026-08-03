@@ -629,11 +629,21 @@ picks the *far* end of that segment (y = 12.9) instead of the near end
 (y = 4.6, which is 2.4 cm from truth and is what the DL arm picks). Charge
 coverage also slips, 0.372 → 0.333 all-plane.
 
+Note what that means: **segment `23011` did not exist before this change** —
+the extra 3.8 cm of reach manufactured it, and the vertex finder was then
+handed a segment whose far end it prefers. The vertex finder did not develop a
+new flaw.
+
 No parameter was tuned to make this look better. Two readings are available for
-the owner and this doc does not choose between them: (i) the shipped rule is
-right and the residual is the geometric vertex-finder's end choice on a
-low-dQ/dx tail; (ii) the endpoint should carry a charge-quality requirement
-beyond the existing blob ≥ 1500 e cut. Note the SBND production default *is*
+the owner and this doc does not choose between them: (i) the shipped endpoint
+rule is right and the residual is the geometric vertex-finder's end choice on a
+segment it should not terminate at; (ii) the endpoint needs a charge-quality
+requirement, because the only quality filter today is the blob ≥ 1500 e cut
+inherited from the legacy boundary search, which a dQ/dx-467 tail clears
+easily — the concrete lever would be a minimum median dQ/dx (or a minimum
+point density) on the end band before the extreme is accepted.
+**No aspect threshold can protect this event**: 271851 gates at 0.347, far
+above any cut that still rejects 284794/59899 at 0.068/0.069. Note the SBND production default *is*
 the DL vertex (doc pr/4), which is the arm that improved.
 
 ### 15.7 Cohort results (20 nueCC48 + 17 mcp1k of §13)
