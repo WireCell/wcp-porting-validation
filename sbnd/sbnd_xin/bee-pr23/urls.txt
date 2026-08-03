@@ -8,3 +8,9 @@ cath5new-off https://www.phy.bnl.gov/twister/bee/set/c5c94f9e-9743-4a6d-aedc-9ff
 cath5new-on https://www.phy.bnl.gov/twister/bee/set/23c92803-47ac-4f05-bb44-86011fa2ca17/event/list/
 vfmov16-off https://www.phy.bnl.gov/twister/bee/set/bdb6c0aa-6798-4481-b66e-2455a7ba04c7/event/list/
 vfmov16-on https://www.phy.bnl.gov/twister/bee/set/5cb3bfcd-68ec-49ba-821f-eed254dd1771/event/list/
+poc48ord-off https://www.phy.bnl.gov/twister/bee/set/f77c4d27-39e9-4e6e-9b65-3b21671d90b4/event/list/
+poc48ord-on https://www.phy.bnl.gov/twister/bee/set/d1a34c11-695b-44da-8afa-69ec2f0d9e06/event/list/
+cath13-off https://www.phy.bnl.gov/twister/bee/set/cf7bf3ee-f39d-4791-a395-d70026570d10/event/list/
+cath13-on https://www.phy.bnl.gov/twister/bee/set/9129922b-2bee-4355-93ae-cf29ec57464f/event/list/
+vfprodmov18-off https://www.phy.bnl.gov/twister/bee/set/1600aec8-d3f0-4a23-aa7e-9ee5da11057d/event/list/
+vfprodmov18-on https://www.phy.bnl.gov/twister/bee/set/28590bf4-285a-4b8e-8524-a926ec19d8f4/event/list/

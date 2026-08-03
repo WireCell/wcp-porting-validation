@@ -510,4 +510,91 @@ built from the pinned d59k hubs, §6 caveat applies):
 | 14 | 61579 | numu −1.12→+4.09, vertex moves 215 cm |
 | 15 | 320029 | numu −0.01→+3.61, vertex moves 203 cm, Enu +219 MeV |
 
-## 8. V6 — production flip (pending)
+## 8. Ordering round (2026-08-02): protect_bundle moves after the cosmic taggers
+
+**Owner decision** on the §6.2 label flips ("these are mostly TGMs, but were
+identified as neutrinos, which is not good"): run the stage after the various
+taggers, before the neutrino PR step.  This is also the **prototype-faithful
+order**: uboone's cosmic verdicts were computed on the UNSPLIT clusters (the
+TGM flag prod-stm reads at `wire-cell-prod-stm.cxx:806-810` comes from the
+Q/L-stage event_type) and `Protect_Over_Clustering` ran only in the nue
+executable immediately before NeutrinoID (`wire-cell-prod-nue.cxx:1322`,
+point clouds recomputed at `:1325-1330`).  §2-§6 measured the cost of the
+inverted order: 5 cosmic→nu promotions + 3 demotions / 572 data events.
+
+Repro:
+```
+# pipeline (run_pr_chain_batch.sh with SBND_PROTECT_BUNDLE=1):
+#   ... tagger_check_tgm, tagger_check_stm, tagger_check_fc,
+#   protect_bundle, steiner_refresh, tagger_check_neutrino, ...
+SBND_PROTECT_BUNDLE=1 PR_JOBS=5 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-poc48c-on3 data
+SBND_PROTECT_BUNDLE=1 PR_JOBS=3 ./run_pr_chain_batch.sh work-mcp1kall-pr23cath work-pr23c-on4 data
+./valfast/run_valfast.sh prodoff -full -j 12                      # fresh hubs + PR OFF
+VF_QLROOT_TAG=prodoff SBND_PROTECT_BUNDLE=1 ./valfast/run_valfast.sh prodon -j 12 mcp1k
+VF_CMP_JOBS=10 ./valfast/valfast_compare_par.sh prodoff prodon mcp1k
+# full diffs: docs/pr/23_v4-scorediff-mcp1k-prod.txt (fresh trees, 0 label flips)
+```
+
+### 8.1 Implementation (toolkit `344c5c1e` + `b2149dd3` + `3fcde804`, wcp `6251375`/`7d3bd77`/`1f2dbf7`)
+
+- Pipeline position: `..., tagger_check_fc, protect_bundle, steiner_refresh,
+  tagger_check_neutrino, ...` (runners' `-protect`/`SBND_PROTECT_BUNDLE=1`
+  insertion anchor moved; stage still absent from default pipeline_names =>
+  bare runs byte-identical, compiled-config proven).
+- **skip_convicted** (new knob, C++ default true): a TGM/STM/lm-convicted
+  in-window main neither opens its bundle nor is ever split as a member
+  (the TaggerCheckNeutrino `nu_skip_cosmic` condition; evt 52195's gid-6
+  shard still opens the bundle for its unconvicted mates — archives of such
+  cosmic events can churn, labels/scores do not).
+- **Pre-split product purge**: on split, the retained cluster drops its
+  steiner_pc and EVERY facade-owned graph + GraphAlgorithms cache.  Two
+  crashes found and fixed on the way:
+  1. `blob_with_point(3906)` on 2738 points (evt 386948, abort): the STM
+     fit's `basic_pid` graph survived the split with pre-split indices —
+     fixed by purging all graphs, not just steiner_graph (`344c5c1e`).
+  2. bad_alloc/length_error/boost color-map asserts (evts 54095, 74544,
+     163543, 235435): `CreateSteinerGraph`'s `replace` knob was read but
+     NEVER consulted — the second pass always rebuilt, and `give_graph`'s
+     erase+emplace dangled every GraphAlgorithms the tagger stage had cached.
+     Fixed by implementing the knob (`3fcde804`, default true = historical
+     path, key-absent configs byte-identical) and running the second pass as
+     `steiner_refresh` (distinct `CreateSteinerGraph:prrefresh`,
+     replace=false — rebuilds ONLY the purged clusters, `b2149dd3`).
+
+### 8.2 Revalidation — fresh Part I+II production trees
+
+The owner also asked that this round drop the §6 pinned-legacy-hub caveat:
+all arms below run from trees at the CURRENT production operating point
+(was_main present, A1/A2 cathode_connect, B0), regenerated with
+`run_valfast.sh -full` (mcp1k: fresh hub `work-mcp1kall-vfprodoff`,
+572/572).  nueCC48 uses the existing fresh hub `work-nuecc48-poc0`; the two
+5-event sim samples stay on their pinned hubs (declared,
+`SBND_REQUIRE_WASMAIN=0`) — valfast full-mode's nuecc48/sim hub seeding
+links a stale `work/` path (pre-existing rot, noted, not fixed here).
+
+| check | result |
+|-------|--------|
+| pilot 52195 | **stays cosmic-tagged**, every score row identical to OFF (2 convicted skips in the log) |
+| pilot 386948 | nu-candidate; uncovered fit points 7.9%→**1.1%**, bridges 33.3→**1.8 cm** (better than the old ordering's 3.4%) |
+| cathode-13 (`work-pr23c-off` vs `-on4`) | 13/13 rc=0; cathode-band pair counts identical on every event; event labels identical |
+| nueCC48 census (`work-poc48-off` vs `-poc48c-on3`) | 48/48 rc=0 (the 4 crashers fixed); uncovered 9.3%→**3.1%**, bridge 2045.7→**208.5 cm**, cathode 30→0 — same benefit as the old ordering |
+| nueCC48 scores | 39/48 move; **271851 still loses its nue evaluation** (+4.3→−15, main 121→70.8 cm — the §5.3 rule-7 flag persists, a PR-stage effect independent of ordering) |
+| valfast mcp1k, fresh trees (`prodoff` vs `prodon`) | 163/572 move (893 cells) — **0 event_label flips, 0 nu_evaluated changes** (was 8 + 6); numu crosses 0 on 30, nue on 6, per-candidate cosmict_flag on 23 |
+| valfast sims (pinned) | identical movement to §6: r1qlmc evts 5+16, r2mc evt 31 |
+
+The ordering change achieves exactly what it was for: **no event changes its
+cosmic-vs-neutrino identity**; the split only reshapes the reconstruction of
+events that were already neutrino candidates.
+
+### 8.3 Bee sets for owner examination (all fresh-tree, new ordering; same index = same event)
+
+| set | events | URL |
+|-----|--------|-----|
+| nueCC48 OFF (`poc48ord`) | 47 (§7 index order) | <https://www.phy.bnl.gov/twister/bee/set/f77c4d27-39e9-4e6e-9b65-3b21671d90b4/event/list/> |
+| nueCC48 ON | same 47 | <https://www.phy.bnl.gov/twister/bee/set/d1a34c11-695b-44da-8afa-69ec2f0d9e06/event/list/> |
+| cathode-13 OFF (`cath13`) | idx 0-4 = cathode-5, 5-12 = cath13-8 | <https://www.phy.bnl.gov/twister/bee/set/cf7bf3ee-f39d-4791-a395-d70026570d10/event/list/> |
+| cathode-13 ON | same 13 | <https://www.phy.bnl.gov/twister/bee/set/9129922b-2bee-4355-93ae-cf29ec57464f/event/list/> |
+| valfast movers OFF (`vfprodmov18`) | idx 0-5 = the 6 nue sign flips (166870 175896 286681 348471 349549 489327), 6-17 = top vertex/numu movers (63427 63669 284637 316553 412692 169488 170880 321107 320029 61579 57903 490779) | <https://www.phy.bnl.gov/twister/bee/set/1600aec8-d3f0-4a23-aa7e-9ee5da11057d/event/list/> |
+| valfast movers ON | same 18 | <https://www.phy.bnl.gov/twister/bee/set/28590bf4-285a-4b8e-8524-a926ec19d8f4/event/list/> |
+
+## 9. V6 — production flip (pending owner approval of §8)
