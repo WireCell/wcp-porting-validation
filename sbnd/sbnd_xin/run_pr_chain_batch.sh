@@ -200,6 +200,16 @@ case "${SBND_SKIP_COSMIC_COMPANIONS:-}" in
 esac
 [ -n "${SBND_COSMIC_COMPANION_MIN_LEN:-}" ] && \
     CATH_TLA+=(--tla-code "cosmic_companion_min_length=${SBND_COSMIC_COMPANION_MIN_LEN}")
+# DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
+# no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
+# SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a
+# DL-vertex effect from a PR-structure one.  Set-but-empty is honoured, hence
+# the ${VAR+x} test rather than ${VAR:-}.
+[ -n "${SBND_DL_WEIGHTS+x}" ] && CATH_TLA+=(--tla-str "dl_weights=${SBND_DL_WEIGHTS}")
+# DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
+# null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
+# multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
+# cluster's total track length.
 true
 true
 
