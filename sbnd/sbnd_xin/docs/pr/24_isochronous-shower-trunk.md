@@ -1,6 +1,11 @@
-# doc pr/24 — isochronous EM showers: diagnosis, two rejected fixes, and what to try next
+# doc pr/24 — isochronous EM showers: diagnosis, two rejected fixes, and the round-2 endpoint fix
 
-**Status: NO FIX ADOPTED.** Both attempts were implemented, measured and then
+**Status: round 2 SHIPPED default OFF (`iso_endpoint`, §9-§14) — the fix lives
+in first-segment ENDPOINT FINDING, per the owner's round-2 direction; flip is
+the owner's call.** Round 1 below stands as the diagnosis record: both of its
+attempts were REJECTED and removed.
+
+**Round 1 status: NO FIX ADOPTED.** Both attempts were implemented, measured and then
 **removed at the owner's direction** (2026-08-02). Nothing from this round is
 in the chain: the toolkit is back to its pre-round state and the compiled PR
 job config is byte-identical to the doc pr/23 §9 baseline
@@ -238,3 +243,209 @@ Two leads recorded but not pursued:
   byte-identical to the doc pr/23 §9 baseline; `wcdoctest-clus` 49/49 PASS.
 * Arms kept as records: `work-pr24-a1`, `-a2poff`, `-a2geom`, `-a2poffgeom`,
   `-b1on`, `-c3iso`, `work-vf{mcp1k,nuecc48}-pr24{off,on}`, `bee-pr24/`.
+
+---
+
+# Round 2 (2026-08-03) — fix the ENDPOINTS, not the split: `iso_endpoint`
+
+**Status: IMPLEMENTED, default OFF, small-set validated.** Owner direction for
+this round: `protect_over_clustering` is good and stays; the suspected defects
+are (a) the big split of the end tracks (Steiner graph?) and (b) incorrect
+end-point finding for the isochronous case, where the pre-split image had "a
+more reasonable (though still not exactly correct)" endpoint. Reference image
+of a good isochronous track (owner): the fitted trajectory runs down the
+sheet's interior axis and ends at one clean corner point.
+
+## 9. Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# knob-on single event, production DL vertex and geometric-vertex arms
+SBND_ISO_ENDPOINT=1 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r2-on1     data 271851
+SBND_ISO_ENDPOINT=1 SBND_DL_WEIGHTS= \
+  ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r2-on1geom data 271851
+
+# knob-off byte-identity gate (6 events) + cohorts (valfast pinned hubs)
+./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r2-off6 data 271851 10550 111412 116962 122660 131357
+valfast/run_valfast.sh pr24r2off -j 24 mcp1k nuecc48
+SBND_ISO_ENDPOINT=1 valfast/run_valfast.sh pr24r2on -j 24 mcp1k nuecc48
+
+python3 pr24_iso_probe.py work-pr24r2-on1geom --detail 271851
+```
+
+## 10. Symptom / Root cause / Why it hid / Fix / Verification
+
+**Symptom** (owner, §0): two ~50 cm PR tracks hugging the top and bottom edges
+of the isochronous charge sheet, forking from a vertex at the wrong (high-y,
+high-z) corner; the reconstruction "does not reach the end of the image".
+
+**Root cause — it is the endpoint selection, not the Steiner graph and not the
+fit.** The first PR segment's endpoints come from
+`init_first_segment` → `get_two_boundary_steiner_graph_idx` →
+`get_two_boundary_wcps` (`clus/src/Facade_Cluster.cxx`), whose non-cosmic
+score (`calculate_boundary_metric`, a faithful port of prototype
+`PR3DCluster_path.h:530-536`) is
+
+```
+|dx|/one_tick + 0.0*|dU| + live_U + 0.0*|dV| + live_V + 0.0*|dW| + live_W
+```
+
+The wire-separation terms carry `*0.0` coefficients (prototype parity), so on
+an isochronous sheet (`|dx| ~ 0`) the score degenerates to "count of live
+wires spanned in U+V+W": the winner is the widest wire-footprint pair — two
+corners on the sheet's EDGES, not the tip of its axis. The Steiner graph's
+role is only obliging: between two same-edge corners the cheapest paths ARE
+the boundary edges (charge-scaled weights 0.8-1.2x, intra-blob chords
+0.8-0.9x). Two aggravators:
+
+1. A TOOLKIT-ONLY local-PCA endpoint refinement
+   (`clus/src/NeutrinoPatternBase.cxx`, commit `1eb097a9`, no prototype
+   counterpart) power-iterates a 10 cm neighbourhood; on a filled 2-D patch
+   that local PCA is degenerate in the sheet plane and drags each endpoint
+   further along the edge.
+2. `find_other_segments`' far endpoint `special_B` is the plain farthest
+   Euclidean point (`clus/src/NeutrinoOtherSegments.cxx:306`) — from any
+   corner that is the opposite corner, so every fan segment repeats the
+   degeneracy. (NOT touched this round; see §13.)
+
+**Why it hid.** uBooNE's beam is along z, so beam-related objects almost never
+lie perpendicular to drift and the `*0.0` metric was adequate there; the
+prototype's own iso endpoint recipe (`adjust_wcpoints_parallel`,
+`data/src/PR3DCluster.cxx:428` — drop the narrowest plane, re-pick by
+wire-space separation, 30 cm leash) exists only in cluster separation, and
+`search_for_connection_isochronous` (`pid/src/PR3DCluster_graph.h:1445`) has
+its only call site commented out. SBND sees drift-perpendicular showers
+routinely (98/428 iso mains, §5). The owner's observation that the PRE-split
+endpoint was "more reasonable" is the same mechanism at a different scale:
+the unsplit 121 cm object includes charge that stretches the live-wire
+footprint toward the true corner, the truncated 70.8 cm sheet does not.
+
+**Fix — `iso_endpoint` (C++ default false, byte-identical off).**
+`PatternAlgorithms::find_iso_first_segment_endpoints`
+(`clus/src/NeutrinoPatternBase.cxx`), called at the top of
+`init_first_segment`; on gate failure the legacy block runs unchanged.
+
+* Gate: cluster `length >= iso_endpoint_min_length` (40 cm) AND the
+  2 %-quantile-trimmed drift-x extent of the charge-qualified default-scope
+  points (same `is_point_excluded` skip and blob-charge >= 1500 cut as the
+  legacy search) `< iso_endpoint_max_xext` (25 cm) AND
+  `< iso_endpoint_xext_frac * length` (0.35). The trimmed corrected-frame
+  extent is the one honest isochrony measure (§4.1 traps).
+* Endpoints: principal axis of the qualified points (power iteration seeded
+  with the global PCA axis-0); axis projections quantile-trimmed at the same
+  2 %; each end band (3 cm) contributes the point nearest its band CENTROID —
+  an interior pick, not a corner — then snaps to the nearest Steiner terminal
+  exactly like the legacy path. Same-terminal or degenerate-axis outcomes
+  fall back to legacy.
+* The local-PCA refinement is SKIPPED on this branch (aggravator 1).
+* Knobs: `iso_endpoint`, `iso_endpoint_min_length`, `iso_endpoint_max_xext`,
+  `iso_endpoint_xext_frac`, `iso_endpoint_xext_quantile`, threaded
+  TaggerCheckNeutrino -> PatternAlgorithms; jsonnet key-suppression in
+  `cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
+  `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` (SHIPS OFF); runner
+  escape `SBND_ISO_ENDPOINT=1`. Porting-divergence entry added to
+  `clus/docs/porting/porting_dictionary.md` (do not "fix" the `*0.0`
+  coefficients in `calculate_boundary_metric` itself).
+
+**Verification — knob-off gates (all PASS):**
+
+* Compiled PR-job config `cmp`-identical to the pre-change compile at the same
+  HEAD (`/home/xqian/tmp/pr24r2/base-prjob.json` vs `off-prjob.json`; the
+  production `pipeline_names` list, not the vacuous `[]`).
+* Knob-on compiled config differs by exactly one key: `"iso_endpoint": true`.
+* `./build/clus/wcdoctest-clus`: 49/49 cases, 565/565 assertions.
+* 6-event A/B (`work-pr24r2-base` pre-change build vs `work-pr24r2-off6`
+  post-change build, knob off): 12/12 archives member-hash identical
+  (`hash_archive.py` FIELD 1), nusel tables identical. Events: 271851, 10550,
+  111412, 116962, 122660, 131357.
+* Freshness proof: `local/lib/libWireCellClus.so` reinstalled after the last
+  source edit before every arm.
+
+## 11. Measured effect, evt 271851 (all arms at current HEAD, protect_bundle ON)
+
+Gate fires once, on the target cluster only:
+
+```
+iso endpoint: fired (L=70.8 cm, xext=7.5 cm) A=(-160.7,31.1,374.5) B=(-156.4,7.1,316.7)
+```
+
+Endpoint B is **2.1 cm** from the owner's truth vertex (−156.3, 6.4, 314.7).
+
+| arm | vertex | dist to truth | vertex host | nue | Enu (MeV) |
+|---|---|---|---|---|---|
+| `pr24r2-base` (production DL) | (−161.8, 19.3, 342.2) | 30.9 cm | **stub 116, 8.1 cm** | −15.0 never evaluated | 1445.8 |
+| `pr24r2-on1` (iso ON, DL) | (−156.7, 13.7, 334.8) | 21.4 cm | shower 23 | +4.30 | 1543.0 |
+| `pr24r2-on1geom` (iso ON, geometric) | (−156.6, 7.6, 315.8) | **1.7 cm** | shower 23 | +4.30 | 1484.5 |
+
+* **The two-edge-track V is gone.** The base arm's 50.4 + 46.0 cm edge pair is
+  replaced by a connected trunk chain from the wide corner
+  (−160.6, 31.7, 374.5) down to (−156.6, 7.6, 315.8) — the narrow corner where
+  the shower starts — with a fan of short shower segments around it. No
+  segment pair sits at opposite sheet edges.
+* **The fit runs down the interior.** Fit-point transverse offset vs the
+  sheet's principal axis (7807-point img cloud, span ±13 cm): |median|
+  **7.8 → 1.6 cm**, p90 **11.1 → 4.2 cm** (base → on1geom).
+* **The DL stub-swap disappears on this event**: with a real trunk passing
+  near the DL voxel, the rerank keeps cluster 23. The DL arm's remaining
+  21.4 cm residual is the SCN network's own mid-trunk voxel choice (§3.2's
+  uncertain-regime scaling, unchanged this round, out of scope).
+* Charge coverage Σq_pred/Σq: 0.198/0.446/0.459 → 0.053/0.598/0.558 (U/V/W;
+  totals 0.353 → 0.372). V and W rise; **U drops** — the trunk's U projection
+  overlaps the sheet's own U footprint less than the edge tracks did. Watch
+  item, not tuned (§5 rule 7).
+* Both fixes the owner rejected in round 1 stay out; `protect_bundle` is
+  untouched and the cluster stays split at 70.8 cm.
+
+## 12. Small-set cohorts (owner-authorized 572-event sample, 24 jobs)
+
+Arms `work-vf{mcp1k,nuecc48}-pr24r2{off,on}` from the pinned valfast hubs
+(`run_valfast.sh pr24r2off|pr24r2on -j 24 mcp1k nuecc48`); all 1238 jobs
+rc=0. CAVEAT (valfast/README.md): the pinned pctrees predate the pr/14-pr/20
+clustering defaults — valid for off-vs-on A/B, not a reproduction of today's
+clustering. In particular evt 271851 is cosmic-tagged in the pinned nueCC48
+hub (both arms, no firing); its recovery in §11 is measured on the
+current-clustering `work-nuecc48-poc0` hub.
+
+* **Fire rate**: mcp1k **80/572** events (14 %), nueCC48 **20/47** — 105
+  cluster firings over the 100 events (a few events gate two clusters).
+  Consistent with the §5 iso-main census (98/428).
+* **Containment**: all **519 non-firing events are archive-identical**
+  (`hash_archive.py` member hashes, pctree + mabc, 0 diffs) between off and
+  on. The knob touches gated clusters only.
+* **Firing-event deltas** (off → on): **0 event_label moves, 0 nu_evaluated
+  moves** in both samples. mcp1k: 72/80 move `numu_score`, 52/80 move the
+  vertex by > 0.5 cm — mostly a few cm, but 10 events move it 27-173 cm
+  (trunk-end relocations; e.g. 168614 173 cm with numu −0.16 → −2.94, 68648
+  114 cm with +2.26 → −0.23). `numu_score` moves are MIXED in sign, as
+  expected when trunks re-route; there is no truth on mcp1k (doc pr/20), so
+  these are recorded, not judged. `nue_score` flips are between the −15.0 /
+  ±4.30 sentinels (doc pr/25 gotcha: quantized, not continuous).
+* **nueCC48**: 18/20 move `numu_score`; the standout is **evt 122660** —
+  `nue_score` −15.0 → **+4.30** with an 85 cm vertex move, the same event
+  round 1's rejected swap guard could only take to −3.84. Owner scan of the
+  20 knob-on events is the natural next step before any flip talk.
+* **DL stub-swap census unchanged** (probe on the mcp1k arms): swaps 50 → 49,
+  swaps onto a host < 25 % of the incumbent 11 → 11. Expected — this round
+  does not touch the §3.2 DL scoring; on 271851 the swap disappears only
+  because the improved trunk puts real fit points near the DL voxel.
+
+## 13. Bee sets (evt 271851, round 2)
+
+| arm | Bee set |
+|---|---|
+| production default (current HEAD) | https://www.phy.bnl.gov/twister/bee/set/1c639f1c-4413-4d06-be65-af7d53b80edd/event/list/ |
+| iso_endpoint ON + DL vertex | https://www.phy.bnl.gov/twister/bee/set/98850353-e0f1-4980-92cd-8084bc00d32a/event/list/ |
+| iso_endpoint ON + geometric vertex | https://www.phy.bnl.gov/twister/bee/set/e6021737-741f-4180-b8c4-6eed5d81718c/event/list/ |
+
+## 14. Residuals and the next decision
+
+* `special_B` in `find_other_segments` still picks the farthest point; with an
+  axial first trunk the observed fan is short shower segments (expected for an
+  EM shower), so it was left prototype-faithful this round. Reopen only if the
+  knob-on census shows surviving >=30 cm opposite-edge pairs.
+* The DL mid-trunk vertex (21.4 cm) is the §3.2 uncertain-regime scaling,
+  unchanged. The geometric arm shows what the trunk itself supports (1.7 cm).
+* The U-plane coverage drop (§11) is unexplained and recorded.
+* Default flip is the owner's call (escalation rule 1) after scanning the
+  knob-on Bee sets and the §12 census.

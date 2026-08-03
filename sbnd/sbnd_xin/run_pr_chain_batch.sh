@@ -133,6 +133,11 @@ CATH_TLA=()
 # the cfg default (null = OFF = byte-identical).  50 is the scan-supported
 # operating point; the guard measures segment_track_length(seg,0).
 [ -n "${SBND_SHOWER_TOPO_DEMOTE_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_topo_demote_len=${SBND_SHOWER_TOPO_DEMOTE_LEN}")
+# doc pr/24 round 2: isochronous first-segment endpoint finding.  EMPTY = no
+# TLA = the cfg default (false = OFF = byte-identical).  SBND_ISO_ENDPOINT=1
+# enables at the C++ defaults (40 cm min length, 25 cm max drift extent,
+# 0.35 frac, 0.02 quantile).
+[ "${SBND_ISO_ENDPOINT:-}" = 1 ] && CATH_TLA+=(--tla-code "iso_endpoint=true")
 # protect_bundle knob overrides (doc pr/23, validation only).  EMPTY = no TLA
 # = the cfg default = the SBND operating point.  The _XCUT/_DYZ/_DIS values
 # are in CM, converted via wirecell.jsonnet because the C++ takes INTERNAL
