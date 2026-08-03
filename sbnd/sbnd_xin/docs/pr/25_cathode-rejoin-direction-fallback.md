@@ -7,7 +7,7 @@ investigated alongside these two; see the status table below.
 |---|---|---|
 | **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`); SBND default left OFF pending owner go-ahead. |
 | **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven, fix implemented + small-group measured (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **SBND DEFAULT ON** (owner 2026-08-02, impact judged small); the `check_tgm` gap remains an open, separate item. |
-| **321107** | main track is a muon, tagged as an electron | mechanism fully traced AND directly instrumented (§3): `is_shower_topology`, not `is_shower_trajectory`, made the call; isochrony is population-level irrelevant; the discriminant itself is unstable at the margin (3/21 events flip verdict between two evaluations of the same fit, ~1cm apart). **No safe SBND-scoped fix found this round** — three candidate knobs were measured directly and rejected. Diagnostic instrument (`WCT_SHOWER_TOPO_DEBUG`) **committed, default off**. |
+| **321107** | main track is a muon, tagged as an electron | mechanism fully traced AND directly instrumented (§3): `is_shower_topology`, not `is_shower_trajectory`, made the call; isochrony is population-level irrelevant; the one remaining candidate threshold shows no natural separation across its 21-event blast radius and at least one segment flips verdict between two evaluations of the same fit. **No safe SBND-scoped fix found this round** — three candidate knobs were measured directly and rejected. Diagnostic instrument (`WCT_SHOWER_TOPO_DEBUG`) **committed, default off**. |
 
 Repro base for all three: `sbnd_xin/work-vfmcp1k-prodon` (protect_bundle ON,
 the SBND production default since `f813e312`) and `work-vfmcp1k-prodoff`,
@@ -458,12 +458,17 @@ done
 - **A discriminant that is unstable across two evaluations of the same input
   is not a "close" measurement, it is a broken one for tuning purposes.**
   §3.6: `TaggerCheckNeutrino` runs the topology test twice per event
-  (`:545`, `:673`, before/after `improve_vertex`), and 3/21 events flip
-  verdict between the two passes on a sub-2cm change in the fitted length.
-  Before this was measured, the plan's candidate C looked like the leading
-  fix shape (closest miss, most surgical). The instrument changed that
-  conclusion — worth remembering that "closest to the boundary" and "safe to
-  tune" are different claims, and the second one needs its own check.
+  (`:545`, `:673`, before/after `improve_vertex`); one segment (evt 277276)
+  flips verdict between the two passes on a ~1cm change in the fitted
+  length. First draft of this section over-read the raw per-event guard
+  table as "3/21 events flip" — two of those three were actually two
+  *different* long segments landing in the same event (one demoted, one
+  surviving), not the same segment moving. Caught before push: the instrument
+  logs `segment->id()`, which reads `-1` here (`Segment::set_id` runs later,
+  `NeutrinoPatternBase.cxx:1858`), so grouping is only by event, and a
+  same-segment claim needs the length continuity to back it up, not just
+  co-occurrence in one event's guard table. n=1 is still sufficient to make
+  the point; it is not evidence for a rate.
 
 ## 3. Event 321107 — investigated with a direct instrument; no safe fix found
 
@@ -595,43 +600,53 @@ The 35 that survive, by `max(total_length1, total_length2) / L`:
 ```
 
 **Continuous from 0.250 to 0.570, no gap.** 321107 sits at the low end
-(0.258), tied with several others. There is no truth label on this sample
-(M11/no-truth caveat, as in every prior round) to say which of these 21 are
-genuine showers and which are mislabeled tracks like 321107 — so there is no
-principled place to draw a raised threshold. Any value that catches 321107
-also catches an a-priori-unknown number of the other 20, and a value that
-catches only 321107 does not exist (277276 sits at the identical 0.250).
+(0.258), tied with several others. **The 21 is a blast-radius population,
+not an error population** — the census identifies every segment a guard
+change could touch, not which ones are wrongly classified; some are almost
+certainly genuine showers. There is no truth label on this sample (M11/
+no-truth caveat, as in every prior round) to separate them, so there is no
+principled place to draw a raised threshold: any value that catches 321107
+also catches an a-priori-unknown number of the other 20 (genuine or not),
+and a value that catches only 321107 does not exist (277276 sits at the
+identical 0.250).
 
-### 3.6 The discriminant is unstable at the margin — not just close, unreliable
+### 3.6 The discriminant is not stable at the margin
 
 `TaggerCheckNeutrino.cxx` runs `clustering_points` + `separate_track_shower`
 **twice** per event — once before `improve_vertex`, once after
-(`:545` and `:673`). The instrument catches the same physical segment
-evaluated at both passes. In most of the 21 events the two passes agree; in
-**3 of 21** they do not — the fit shifts by ~1–2 cm between passes and the
-verdict flips:
+(`:545` and `:673`). The instrument's per-segment identity field reads `-1`
+at this point in the pipeline (`Segment::id()` is not stamped until later,
+`NeutrinoPatternBase.cxx:1858`), so grouping is by event, and most events in
+the table contain more than one L>50cm shower-flagged segment — a demoted
+one and a surviving one in the same event is unremarkable on its own and
+does **not** by itself show a same-segment flip. Filtering to the case where
+the length is continuous enough across the two passes to be plausibly the
+same segment leaves **one clean instance, event 277276**: the fit shifts by
+~1 cm between passes and the verdict flips:
 
-| evt | pass-1 length | pass-2 length | verdict |
+| evt | pass-1 | pass-2 | verdict |
 |---|---|---|---|
-| 65289 | 150.3 cm | 69.5 cm† | flips |
 | 277276 | 140.4 cm (f=0.244, demoted) | 139.3 cm (f=0.250, survives) | flips |
-| 278684 | 109.6 cm (demoted) | 59.2/59.3 cm† | flips |
 
-†different segment lengths across passes on these two events reflect more
-than one segment moving; 277276 is the clean single-segment case: the
-*same* ~140 cm segment is correctly demoted at 0.244 and then survives at
-0.250 after a sub-2-cm change in the fitted length, purely from crossing the
-`<` in `total_length1 < 0.25 * L`.
+(65289 and 278684 also show "demoted" and "survives" rows in the same event,
+but at length pairs 150.3/69.5 cm and 109.6/59.2-59.3 cm — too far apart to
+be the same segment continuing between passes, more likely two distinct
+long segments in the same event, one genuinely a shower and one not. Listed
+here only so the raw counts in §3.5 are traceable; they are **not** claimed
+as flips.)
 
-**This is the decisive finding.** It is not merely that 321107 sits close to
-the boundary — the classification the guard produces for a fixed physical
-track is not even stable across two evaluations of the *same* input a few
-centimeters apart. Raising, lowering, or otherwise tuning the `0.25`
-constant does not fix an instability of this kind; it only relocates where
-the knife-edge sits. Per CLAUDE.md §5's "a physics number looks wrong: report,
-don't tune", and per the selection rule fixed in this round's plan before any
-of the above was measured: **no candidate cleanly separates the target from
-its own population, so no threshold change is proposed.**
+This one instance is enough to make the point, even at n=1: the
+classification the guard produces for a fixed physical track is not
+necessarily stable across two evaluations of the *same* input a few
+centimeters apart. It does not by itself carry the rejection of candidate C
+— that rests on §3.5's continuous, gapless 0.250–0.570 distribution across a
+population with no truth labels — but it reinforces why tuning the `0.25`
+constant would not resolve the underlying issue: at least for this one
+segment, the constant sits inside a region the algorithm's own two passes
+do not agree on. Per CLAUDE.md §5's "a physics number looks wrong: report,
+don't tune", and per the selection rule fixed in this round's plan before
+any of the above was measured: **no candidate cleanly separates the target
+from its own population, so no threshold change is proposed.**
 
 ### 3.7 Prototype comparison
 
