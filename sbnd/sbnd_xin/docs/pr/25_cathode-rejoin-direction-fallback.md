@@ -7,7 +7,7 @@ investigated alongside these two; see the status table below.
 |---|---|---|
 | **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`); SBND default left OFF pending owner go-ahead. |
 | **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven, fix implemented + small-group measured (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **SBND DEFAULT ON** (owner 2026-08-02, impact judged small); the `check_tgm` gap remains an open, separate item. |
-| **321107** | main track is a muon, tagged as an electron | **mechanism fully explained** (§3, two rounds). `is_shower_topology` made the call, and its only measurement axis satisfies `dir_3·x̂ = sin θ` — at 88.55° (`dir3x = 0.9994`) it *is* the drift axis, so the wide halo (rms 8.34 cm in `dir_2` vs 0.40 cm in `dir_3`) **never entered the decision**: the flag fired on drift quantization noise (0.313 cm lattice vs a 0.4 cm cut). **The owner's proposed 2-D-projective-narrowness direction would not have changed this verdict.** 321107 is not exceptional — **86 of 91** long firings across 429 events sit in the same noise floor and it ranks 77/91. **No fix shipped, two rounds running**: a robust-statistic guard was pre-committed and then failed its own rule on the full manifest (short showers scatter 0.53–1.44; the statistic is length-dependent; both fallbacks fail, contiguity *inverts*). Open question handed to the owner: should a 249 cm segment be eligible for `kShowerTopology` at all (X₀ ≈ 14 cm)? Physics-relevant blast radius **10 nu-main segments in 10 events**. Instrument (`WCT_SHOWER_TOPO_DEBUG`) extended, **committed, default off**. |
+| **321107** | main track is a muon, tagged as an electron | **mechanism fully explained AND fix SHIPPED, default OFF** (§3, three rounds). `is_shower_topology` made the call, and its only measurement axis satisfies `dir_3·x̂ = sin θ` — at 88.55° (`dir3x = 0.9994`) it *is* the drift axis, so the wide halo (rms 8.34 cm in `dir_2` vs 0.40 cm in `dir_3`) **never entered the decision**: the flag fired on drift quantization noise (0.313 cm lattice vs a 0.4 cm cut). **The 2-D-projective-narrowness direction would not have changed this verdict.** 321107 is not exceptional — **86 of 91** long firings across 429 events sit in the same noise floor. Two spread-statistic fixes were pre-committed and rejected by their own stop rules; **the owner's 2026-08-03 hand-scan of all 10 nu-main cases returned 10/10 tracks, 0 showers**, which both supplied the missing truth and refuted the round-2 candidate (evt 400504 would have survived it and is a track). Fix = a length rule reusing the existing demote-only guard: **`shower_topo_demote_len`, C++ default 0 = OFF = byte-identical**, threaded to all four call sites. At 50 cm: 23 long segments flip shower→track across 22 events, **0 the other way**; **17/572 events (3.0%)** move `numu_score`; **321107 `pdg 11→13`, `numu_score −0.783 → +0.317`**. Score moves are mixed — **286353 drops 2.023 → −1.139**, flagged for owner judgement, not tuned away. SBND default **ships OFF**; the flip is the owner's call. |
 
 Repro base for all three: `sbnd_xin/work-vfmcp1k-prodon` (protect_bundle ON,
 the SBND production default since `f813e312`) and `work-vfmcp1k-prodoff`,
@@ -496,6 +496,16 @@ done
   rounds in a row the selected population produced a separation that the
   general population did not have. **Write the stop rule before the wide run,
   not after seeing it.**
+- **`hash_archive.py` prints `<hash>  <count>  <path>` — compare field 1.**
+  Diffing the whole line reports 100% DIFF between two arms because the path
+  differs, which reads exactly like a failed byte-identical gate. This fired
+  in §3 round 3 (40/40 false diffs, actually 40/40 identical).
+- **The owner's hand-scan is what made the cut derivable.** Two rounds of
+  increasingly clever spread statistics both failed their own pre-committed
+  stop rules; ten scanned events settled it in one message, and *also*
+  refuted round 2's candidate (evt 400504 would have survived the quantile cut
+  and is a track). When a discriminant has no truth to calibrate against, the
+  cheapest path is often to go get ten labels, not a better statistic.
 - **Test the fallback, don't assume it.** The "sustained, not one bucket"
   argument sounds obviously right and is measurably wrong here: by absolute
   contiguous wide-run length the noise-driven long segments score 6–12 cm
@@ -799,6 +809,80 @@ its flagged segment, so it is a partial case, not a clean muon-as-electron.
 A scan of these 10 is what would turn §3.8's question from an investigation
 into a decision.
 
+### 3.10 FIX SHIPPED (default OFF) — `shower_topo_demote_len`
+
+The owner scanned the §3.9 Bee set on 2026-08-03 and returned a verdict:
+**"none of these are actually shower, they all look like tracks" — 10/10.**
+That is the truth §3.8 asked for, and it makes the cut derivable rather than
+tuned. It also **refutes round 2's own candidate**: evt 400504 sits in the
+"wide" class (`rms_p90` 0.90 > 0.8), so the quantile fix of §3.5 would have
+*kept* it flagged — and it is a track. The discriminant was not merely
+unsupported; on the one scanned case where it would have changed the answer,
+it was wrong.
+
+**The fix is a length rule, not a spread rule**, and it reuses the existing
+demote-only guard rather than adding a statistic:
+
+```cpp
+// PRSegmentFunctions.cxx, inside `if (flag_shower_topology)`
+if (demote_len > 0 && tmp_total_length > demote_len) {
+    flag_dir = 0; flag_shower_topology = false;
+}
+```
+
+Knob `shower_topo_demote_len` (cm, **C++ default 0 = off = byte-identical**),
+threaded `TaggerCheckNeutrino` → `PatternAlgorithms` → **all four**
+`segment_is_shower_topology` call sites (`NeutrinoTrackShowerSep.cxx:53` and
+`NeutrinoVertexFinder.cxx:2287/2327/2397`), so one segment cannot be
+classified two ways within an event. Runner escape:
+`SBND_SHOWER_TOPO_DEMOTE_LEN`. A demoted long segment then fails the
+trajectory test (`>50cm`) and lands in the Track branch with full PID (§1f).
+
+**Threshold.** The owner accepted 9/10 for this round, so the SBND operating
+point is **50 cm**. Evt 400504 is the tenth: it measures **49.1 cm** by
+`segment_track_length(seg,0)` — the length the guard uses — while the census
+script's fit-point path length reads 50.4 cm. ~45 cm would cover all ten.
+The two length measures are now documented in `pr25_shower_topo_census.py`;
+when a decision depends on the length, read the instrument's `L`.
+
+#### Measured effect (`work-pr25s3r2-dbgall` OFF vs `work-pr25s3r2-on50b` ON, 572 events, all `rc=0`)
+
+| | OFF (legacy) | ON (50 cm) |
+|---|---|---|
+| guard evaluations, `L>50cm` | 91 | 94 |
+| …still `kShowerTopology` after the guard | **24** | **0** |
+| …demoted | 67 | 94 |
+
+- **23 long segments flip shower → track across 22 events; 0 flip the other
+  way** — demote-only confirmed empirically, not just by inspection.
+- **17 of 572 events (3.0%) move `numu_score` at all.** Contained.
+- The target: **321107 `pdg 11 → 13`, `flag_shower 1.00 → 0.00`,
+  `numu_score −0.783 → +0.317`** — it crosses zero in the direction a muon
+  candidate should.
+
+Per-event, the ten owner-scanned cases (9 change; 400504 is the 49.1 cm one):
+
+| evt | pdg OFF → ON | flag_shower | numu_score OFF → ON | kine_Enu OFF → ON |
+|---|---|---|---|---|
+| **321107** | **11 → 13** | 1.00 → 0.00 | **−0.783 → +0.317** | 550 → 680 |
+| 286353 | 11 → 11,13,211 | 0.99 → 0.05 | 2.023 → **−1.139** | 625 → 908 |
+| 284013 | 11 → 11,13 | 1.00 → 0.05 | 0.880 → 2.495 | 394 → 520 |
+| 277276 | 11,2212 → +13,211 | 0.90 → 0.09 | 1.291 → 2.437 | 1566 → 801 |
+| 57903 | 11,13 → 211,2212 | 0.66 → 0.00 | 1.070 → 0.456 | 391 → 632 |
+| 280972 | 11,13,211 (same) | 0.29 → 0.19 | 3.409 → 3.353 | 3088 → 3071 |
+| 315167 | 11,211,2212 (same) | 0.42 → 0.22 | 2.069 → 2.596 | 1355 → 1355 |
+| 278684 | 11 → 11,13 | 0.42 → 0.10 | −0.485 → −0.850 | 680 → 504 |
+| 287621 | 13,2212 (same) | 0.40 → 0.00 | 1.785 → 2.931 | 716 → 728 |
+| 400504 | unchanged | 0.48 | 1.190 (unchanged) | 508 (unchanged) |
+
+**Reported honestly: the score moves are mixed, not uniformly good.** Five go
+up, three down, one flat. **286353 moves 2.023 → −1.139**, crossing zero
+*downward* on an event the owner called a track — the largest single move in
+the set and the opposite of the intended direction. There is no truth on
+`numu` selection for mcp1k, so this is a flag for the owner's judgement, not
+something to tune away (§5.7). It is the one result that argues for scanning
+the knob-on outputs before any default flip.
+
 ### Verification performed
 
 - `./wcb build --notests -p && ./wcb install --notests -p`, both `rc=0`;
@@ -827,6 +911,41 @@ into a decision.
   exactly the near-threshold ones §3.3 says are decided by noise. It does mean
   individual counts should always be quoted with their arm, as done here.
 
+**Round 3 (the fix) verification:**
+
+- `./wcb build --notests -p && ./wcb install --notests -p`, both `rc=0`;
+  freshness proof — `libWireCellClus.so` 21:21:22 newer than the edits
+  (21:19:05 / 21:19:59) (M1).
+- `./build/clus/wcdoctest-clus`: 49/49 cases, 565/565 assertions.
+- **Compiled-config proof with the PRODUCTION `pipeline_names`** (the empty
+  default never instantiates the tagger and would pass vacuously — the §2
+  near-miss): `TaggerCheckNeutrino` present (6 nodes); key **absent** with the
+  knob off, `"shower_topo_demote_len" : 50` with it on; and the compiled JSON
+  with the knob off is **byte-identical to the pre-change config**.
+- **Byte-identical output gate PASS**: 20 events, `mabc-pr.zip` +
+  `pctree-pr-evt*.tar.gz`, **40/40 archive members identical, 0 differ**, new
+  binary knob-off (`work-pr25s3r2-gateoff`) vs the pre-change binary
+  (`work-pr25s3r2-dbgall`), via `abtest/hash_archive.py` member content (M2).
+  *Trap hit and corrected*: the first pass compared `hash_archive.py`'s whole
+  output line, which ends in the file path — 40/40 false DIFFs. Compare field 1.
+- **Knob engagement proven on a real run, not just in `wcsonnet`**: a segment
+  at `L 202.9cm` with guard fractions 0.296/0.287 — both *above* the legacy
+  0.25 — reads `demoted false / final_shower true` OFF and
+  `demoted true / final_shower false` ON.
+- **Determinism**: 3 runs of 321107 knob-on under the runner's
+  `setarch x86_64 -R`, all `rc=0` and byte-identical (`mabc-pr.zip`
+  `6228d5f0…`, `pctree` `28bf7e8d…`) (M4). The `pctree` hash equals the
+  knob-off arm's — the knob changes PID/flags, not the point cloud.
+- Knob-on population: `work-pr25s3r2-on50b`, full 572 events, `PR_JOBS=24`
+  (owner direction; 23–24 concurrent `wire-cell`, loadavg 27–44 of 64 cores,
+  well inside M5), **all 572 `rc=0`**.
+- **Not bit-identical when ON**, by design. SBND default ships OFF; the flip
+  is the owner's call (escalation rule 1).
+
+*(`work-pr25s3r2-on50` is an abandoned partial 6-job arm, killed mid-write when
+the run was relaunched at 24 jobs; superseded by `-on50b` and unused. Left in
+place rather than deleted, per M13.)*
+
 ### Repro
 
 ```bash
@@ -845,4 +964,25 @@ grep "shower_topo dbg" work-pr25s3r2-dbgall/pr_evt321107/wct_pr_evt321107.log
 
 # round 1 arms (21-event blast radius + controls), kept for provenance
 python3 pr25_shower_topo_census.py guard --arm work-pr25s3-dbg21
+
+# ---- round 3: the fix ----
+# knob-off byte-identical gate (new binary vs the pre-change arm)
+WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=6 \
+  ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3r2-gateoff sim \
+  321107 286353 284013 277276 57903 280972 315167 278684 287621 400504 \
+  48367 53427 62281 65295 68648 73004 166650 167200 172656 173234
+# compare FIELD 1 of hash_archive.py -- the rest of the line is the file path
+python3 ../../abtest/hash_archive.py <arm>/pr_evt<ID>/mabc-pr.zip | awk '{print $1}'
+
+# knob-on population (572 events, 24 jobs)
+WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=24 SBND_SHOWER_TOPO_DEMOTE_LEN=50 \
+  ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3r2-on50b sim
+python3 pr_scores_table.py --root work-pr25s3r2-on50b --out /tmp/scores_on.tsv
+
+# compiled-config proof -- MUST pass the production pipeline_names, or the
+# tagger node is never built and the diff is vacuously empty
+wcsonnet --tla-str input=x --tla-code 'anode_indices=[0,1]' --tla-str output_dir=/tmp \
+  --tla-code run=18255 --tla-code subrun=1 --tla-code event=321107 --tla-str reality=sim \
+  --tla-code "pipeline_names=['switch_scope',...,'tagger_output']" --tla-str save_tensors=y \
+  [-A shower_topo_demote_len=50] cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet
 ```

@@ -44,7 +44,17 @@ BASE = "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin"
 
 def _seg_table(root_path):
     """Return list of (cluster, seg_id, npts, len_cm, angle_to_drift_deg, flag_shower) for
-    every sub_cluster_id in T_rec_charge with >=5 points."""
+    every sub_cluster_id in T_rec_charge with >=5 points.
+
+    LENGTH CAVEAT (doc pr/25 sec 3): len_cm here is the summed T_rec_charge
+    fit-point path length.  The C++ guard uses segment_track_length(seg, 0),
+    which is the SAME quantity computed on the in-memory fits -- but the two
+    can disagree by ~1 cm because T_rec_charge is written after later PR
+    stages may have re-fit the segment.  That matters only at the threshold:
+    evt 400504 reads 50.4 cm here and 49.1 cm in the guard, straddling a
+    50 cm cut.  When a decision depends on the length, read the instrument's
+    `L` field (WCT_SHOWER_TOPO_DEBUG, which prints segment_track_length
+    itself) rather than this column -- see pr25_spread_census.py."""
     t = uproot.open(root_path)["T_rec_charge"].arrays(
         ["x", "y", "z", "sub_cluster_id", "flag_shower"], library="np")
     sid = t["sub_cluster_id"]

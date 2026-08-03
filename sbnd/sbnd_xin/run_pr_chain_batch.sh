@@ -129,6 +129,10 @@ fi
 CATH_TLA=()
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+# doc pr/25 sec 3: long shower-topology demote length, cm.  EMPTY = no TLA =
+# the cfg default (null = OFF = byte-identical).  50 is the scan-supported
+# operating point; the guard measures segment_track_length(seg,0).
+[ -n "${SBND_SHOWER_TOPO_DEMOTE_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_topo_demote_len=${SBND_SHOWER_TOPO_DEMOTE_LEN}")
 # protect_bundle knob overrides (doc pr/23, validation only).  EMPTY = no TLA
 # = the cfg default = the SBND operating point.  The _XCUT/_DYZ/_DIS values
 # are in CM, converted via wirecell.jsonnet because the C++ takes INTERNAL
