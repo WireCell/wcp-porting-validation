@@ -240,6 +240,105 @@ def detail(arm, evt):
             print("    %6d vs %6d   u=%.2f v=%.2f w=%.2f%s" % (s1, s2, fr[0], fr[1], fr[2], flag))
 
 
+def _seg_dir_at(x, y, z, at_end, reach=10.0):
+    """Unit vector pointing from one end of a segment INTO the segment.
+
+    `reach` cm of arc length is used rather than the raw first/last step, so a
+    single jittery fit point cannot set the direction.
+    """
+    pts = np.stack([x, y, z], 1)
+    if at_end:
+        pts = pts[::-1]
+    step = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))]
+    j = int(np.searchsorted(step, reach))
+    j = min(max(j, 1), len(pts) - 1)
+    v = pts[j] - pts[0]
+    n = np.linalg.norm(v)
+    return v / n if n > 0 else None
+
+
+def junctions(arm, evt, min_len=5.0, join_tol=2.0, reach=10.0):
+    """Segment junctions of the vertex-host cluster and their turn angles.
+
+    A junction is a pair of >= min_len cm segments whose endpoints meet within
+    join_tol.  `turn` is the deviation from straight-through: 0 deg means the
+    two segments continue each other exactly, i.e. a vertex sitting inside a
+    straight track -- the pathology doc pr/24 round 3 fixes (evt 284794's
+    260.1 + 15.7 cm pair met at 0.9 deg).
+    """
+    path = os.path.join(arm, "pr_evt%s" % evt, "tracking-pr.root")
+    f, t, tg, kin = _load(path)
+    vtx = (float(tg["nu_x"][0]), float(tg["nu_y"][0]), float(tg["nu_z"][0]))
+    host, _ = _host_of(t, vtx)
+    sids = [s for s in sorted(set(t["sub_cluster_id"].tolist()))
+            if s >= 0 and s // SID_DIV == host]
+    segs = {}
+    for sid in sids:
+        m = t["sub_cluster_id"] == sid
+        x, y, z = t["x"][m], t["y"][m], t["z"][m]
+        if len(x) < 2 or _seg_len(x, y, z) < min_len:
+            continue
+        segs[sid] = (x, y, z, _seg_len(x, y, z))
+    out = []
+    ks = sorted(segs)
+    for a in range(len(ks)):
+        for b in range(a + 1, len(ks)):
+            xa, ya, za, la = segs[ks[a]]
+            xb, yb, zb, lb = segs[ks[b]]
+            best = None
+            for ea in (0, 1):
+                for eb in (0, 1):
+                    pa = np.array([xa[-1 if ea else 0], ya[-1 if ea else 0], za[-1 if ea else 0]])
+                    pb = np.array([xb[-1 if eb else 0], yb[-1 if eb else 0], zb[-1 if eb else 0]])
+                    d = float(np.linalg.norm(pa - pb))
+                    if best is None or d < best[0]:
+                        best = (d, ea, eb, pa)
+            d, ea, eb, pj = best
+            if d > join_tol:
+                continue
+            da = _seg_dir_at(xa, ya, za, ea, reach)
+            db = _seg_dir_at(xb, yb, zb, eb, reach)
+            if da is None or db is None:
+                continue
+            ang = float(np.degrees(np.arccos(np.clip(float(np.dot(da, db)), -1.0, 1.0))))
+            out.append(dict(evt=evt, host=host, sa=ks[a], sb=ks[b], la=la, lb=lb,
+                            gap=d, turn=180.0 - ang,
+                            jx=float(pj[0]), jy=float(pj[1]), jz=float(pj[2])))
+    return out
+
+
+def junction_scan(arm, ref, evts, straight_deg=15.0, jobs=8):
+    """Report straight-through junctions in `arm`, and what `ref` had for the
+    same event -- the regression detector round 2 lacked (0 label / 0
+    nu_evaluated moves said nothing about a vertex planted in a straight track).
+    """
+    print("evt\tarm_njunc\tarm_straight\tref_straight\tworst_turn\tworst_pair\tverdict")
+    nbad = 0
+    for e in evts:
+        try:
+            ja = junctions(arm, e)
+        except Exception as ex:
+            print("%s\tERR\t%s" % (e, ex))
+            continue
+        try:
+            jr = junctions(ref, e) if ref else []
+        except Exception:
+            jr = []
+        sa = [j for j in ja if j["turn"] < straight_deg]
+        sr = [j for j in jr if j["turn"] < straight_deg]
+        worst = min(ja, key=lambda j: j["turn"]) if ja else None
+        verdict = "NEW-STRAIGHT-JUNCTION" if len(sa) > len(sr) else "ok"
+        if verdict != "ok":
+            nbad += 1
+        print("%s\t%d\t%d\t%d\t%s\t%s\t%s"
+              % (e, len(ja), len(sa), len(sr),
+                 ("%.1f" % worst["turn"]) if worst else "-",
+                 ("%d+%d L=%.1f/%.1f" % (worst["sa"], worst["sb"], worst["la"], worst["lb"]))
+                 if worst else "-", verdict))
+    print("# %d/%d events gained a straight-through junction (turn < %.0f deg) vs %s"
+          % (nbad, len(evts), straight_deg, ref or "(no ref)"), file=sys.stderr)
+
+
 COLS = ["event", "sel_main", "sel_len", "swap", "cosmic", "enu", "vx", "vy", "vz",
         "host", "host_len", "host_npts", "host_xext", "host_yz",
         "long_id", "long_len", "long_xext", "long_yz",
@@ -253,10 +352,21 @@ def main():
     ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--events", nargs="*")
     ap.add_argument("--detail")
+    ap.add_argument("--junctions", action="store_true",
+                    help="report straight-through segment junctions (doc pr/24 round 3)")
+    ap.add_argument("--vs", help="reference arm to compare junction counts against")
+    ap.add_argument("--straight-deg", type=float, default=15.0)
     a = ap.parse_args()
 
     if a.detail:
         detail(a.arm, a.detail)
+        return
+
+    if a.junctions:
+        evts = a.events or sorted(os.path.basename(p)[6:]
+                                  for p in glob.glob(os.path.join(a.arm, "pr_evt*"))
+                                  if os.path.isdir(p))
+        junction_scan(a.arm, a.vs, evts, a.straight_deg, a.jobs)
         return
 
     evts = a.events or sorted(os.path.basename(p)[6:]

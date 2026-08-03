@@ -1,8 +1,12 @@
 # doc pr/24 — isochronous EM showers: diagnosis, two rejected fixes, and the round-2 endpoint fix
 
-**Status: round 2 SHIPPED default OFF (`iso_endpoint`, §9-§14) — the fix lives
+**Status: round 3 SHIPPED default OFF (`iso_endpoint`, §9-§15) — the fix lives
 in first-segment ENDPOINT FINDING, per the owner's round-2 direction; flip is
-the owner's call.** Round 1 below stands as the diagnosis record: both of its
+the owner's call.** Round 3 (§15) repairs a mid-track break-point regression
+the owner found in the round-2 scan (evts 284794, 59899): the endpoint is now
+the untrimmed axial extreme (no tip discarded) and a sheet-aspect gate keeps
+1-D tracks out of the branch entirely. One number moved the wrong way and is
+reported, not tuned — §15.6, evt 271851 on the geometric arm. Round 1 below stands as the diagnosis record: both of its
 attempts were REJECTED and removed.
 
 **Round 1 status: NO FIX ADOPTED.** Both attempts were implemented, measured and then
@@ -457,3 +461,243 @@ set of each pair, so Bee index N is the same event in both):
 * The U-plane coverage drop (§11) is unexplained and recorded.
 * Default flip is the owner's call (escalation rule 1) after scanning the
   knob-on Bee sets and the §12 census.
+
+## 15. Round 3 — the mid-track break-point regression
+
+**Status: SHIPPED default OFF** (toolkit `iso_endpoint` unchanged at `false`;
+two new knobs `iso_endpoint_tube_radius` = 4 cm diagnostic-only and
+`iso_endpoint_min_aspect` = 0.12). Knob-off path proven byte-identical to
+round 2. **One physics number moved the wrong way and is reported, not tuned**
+(§15.6, evt 271851 geometric arm).
+
+Owner trigger, after scanning the §13 knob-on sets: *"the new algorithm seems
+to have more break points in the middle of the track"* — evt **284794** and
+**59899**, each a straight track that acquired an interior vertex.
+
+### 15.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# --- off-path gates ---
+./compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/pr24r3/off-prjob.json
+cmp /home/xqian/tmp/pr24r3/v0-base-prjob.json /home/xqian/tmp/pr24r3/off-prjob.json
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-off6 data \
+    271851 10550 111412 116962 122660 131357
+# vs work-pr24r2-off6, hash_archive.py FIELD 1 ONLY
+
+# --- aspect harvest (Fix B disabled, Fix A live) ---
+SBND_REQUIRE_WASMAIN=0 SBND_ISO_ENDPOINT=1 SBND_ISO_MIN_ASPECT=0 PR_JOBS=11 \
+  ./run_pr_chain_batch.sh work-nuecc48-nuf  work-vfnuecc48-pr24r3b data <20 evts of §13>
+SBND_REQUIRE_WASMAIN=0 SBND_ISO_ENDPOINT=1 SBND_ISO_MIN_ASPECT=0 PR_JOBS=11 \
+  ./run_pr_chain_batch.sh work-mcp1kall-d59k work-vfmcp1k-pr24r3b  data <17 evts of §13>
+
+# --- final arm (shipped defaults) ---
+SBND_REQUIRE_WASMAIN=0 SBND_ISO_ENDPOINT=1 PR_JOBS=11 \
+  ./run_pr_chain_batch.sh work-nuecc48-nuf  work-vfnuecc48-pr24r3 data <same 20>
+SBND_REQUIRE_WASMAIN=0 SBND_ISO_ENDPOINT=1 PR_JOBS=11 \
+  ./run_pr_chain_batch.sh work-mcp1kall-d59k work-vfmcp1k-pr24r3  data <same 17>
+SBND_ISO_ENDPOINT=1                ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-on1     data 271851
+SBND_ISO_ENDPOINT=1 SBND_DL_WEIGHTS= ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-on1geom data 271851
+
+# --- the new regression detector ---
+python3 pr24_iso_probe.py work-vfmcp1k-pr24r3 --junctions --vs work-vfmcp1k-pr24r2off
+```
+
+### 15.1 Symptom
+
+Two mcp1k events gained an interior vertex under round 2:
+
+| evt | round-2 segments | junction turn | legacy trajectory bend there |
+|---|---|---|---|
+| 284794 | 260.1 + 15.7 cm | **0.9°** | straight |
+| 59899 | 27.6 + 8.6 cm | **8.0°** (probe: 7.2°) | 1.6-2.8° |
+
+A 0.9° junction is a vertex planted in a straight track. 59899 additionally
+lost 3 cm of tip (charge coverage 0.873 → 0.738).
+
+### 15.2 Root cause
+
+Round 2 picked each endpoint as *the band point nearest the centroid of a 3 cm
+band at the **quantile-trimmed** axial extreme*. Both steps pull inward, and
+the trim scales with the point count: on the 7123-point 284794 cluster the 2 %
+trim alone is 142 points, and the endpoints landed **8.4 cm (A) / 15.1 cm (B)**
+short of the true tip (59899: 1.7 / 1.5 cm). The perpendicular error was only
+0.05-0.20 cm — the defect was purely axial.
+
+Nothing downstream of `init_first_segment` is modified by the knob (the helper
+is called at `NeutrinoPatternBase.cxx:430`, near the top of that function, and
+only replaces the two seed points). So `find_other_segments` did exactly its
+job and claimed the uncovered tip as a segment of its own, and `break_segments`
+split 59899 at a marginal wobble on the perturbed path.
+
+### 15.3 Why it hid
+
+The round-2 census reported 0 `event_label` moves, 0 `nu_evaluated` moves, and
+vertex/score deltas — **none of which can see a vertex inside a straight
+track**. The pathology only surfaced in the owner's Bee scan. The gate itself
+was also blind: it tested "long and thin in drift", which an ordinary track
+satisfies, and never tested 2-D sheet-ness.
+
+### 15.4 Fix — two mechanisms, each fixing a different subset
+
+**A. Endpoint = axial extreme first, lateral centring second** (all in
+`find_iso_first_segment_endpoints`). The quantile trim now serves only the
+*gate* measurements. The endpoint is the **untrimmed** axial extreme over all
+charge-qualified points, walked inward only past isolated spikes (≥ 3 qualified
+points within 3 cm, itself included); then, within the 3 cm end band, the point
+**nearest the axis line** is taken — which is what still keeps the pick off a
+sheet's edge corner. The endpoint can never move inward of the object's extent,
+so "leaves no stub" holds by construction.
+
+*Design note — the tube filter was measured and rejected.* The first draft
+followed the owner's proposal literally: filter to a 4 cm tube around the axis
+line and take that subset's extreme, on the premise that anything thinner than
+the tube degenerates to the plain tip. **The premise is false on real
+clusters**: the axis line is straight, so a long or curved object leaves the
+tube near its tips. Measured over the 38 gated clusters, the tube held only
+383/2097 points on evt 282204 and its extreme sat **28.6 cm inside** the round-2
+endpoint (284794 A: −20.8 cm) — re-introducing the very inward bias this round
+removes. **16 of 76 shipped endpoints lie farther than 4 cm from the axis
+line** (max 29.5 cm). `iso_endpoint_tube_radius` is therefore retained as a
+**diagnostic only**: the DEBUG line reports whether the chosen endpoint is
+laterally central (`intube=true/false`). Under the shipped rule all 38 axial
+gains are **positive** (min +0.7, max +22.7 cm) and no spike-guard walk-in ever
+occurred (`walk=0.00` on all 76 endpoints).
+
+**B. Sheet-aspect gate** `iso_endpoint_min_aspect` (default **0.12**): the
+trimmed transverse-to-axial extent ratio, from the second PCA axis obtained by
+deflating the covariance with the Rayleigh quotient λ₀ = v₀ᵀSv₀. Below it the
+cluster is handed back to the legacy path, so the branch is *provably inert* on
+1-D track-like clusters rather than merely harmless.
+
+The C++ aspect reproduces the offline probe exactly: **271851 = 0.347,
+122660 = 0.184, 284794 = 0.068, 59899 = 0.069**. 0.12 keeps both recoveries and
+rejects both regressions. 0.25 would have killed the 122660 recovery.
+
+Which mechanism fixed what, honestly: **the aspect gate is what removes the
+owner's two named events** (they never reach the endpoint code again). **Fix A
+is what cleans up the two further round-2 cases the detector found** —
+evt 282204 (4.7°) and evt 48367 (1.1°) — which still fire under the gate.
+
+### 15.5 The regression detector (new)
+
+`pr24_iso_probe.py --junctions [--vs OTHER_ARM]`: for the vertex-host cluster
+it pairs segments ≥ 5 cm whose endpoints meet within 2 cm, and reports the
+**deviation from straight-through** (0° = the two segments continue each other
+exactly). Direction at a junction is taken over 10 cm of arc so one jittery fit
+point cannot set it.
+
+Validation of the tool itself: run against round-2's own arm it flags
+**4/17 mcp1k events** — the owner's 284794 (2.5°) and 59899 (7.2°) plus 282204
+(4.7°) and 48367 (1.1°), which had not been spotted by hand.
+
+| arm | mcp1k events gaining a straight-through junction vs OFF |
+|---|---|
+| round 2 ON | **4/17** |
+| round 3, Fix A only (no aspect gate) | **0/17** |
+| round 3 shipped | **0/17** |
+
+On nueCC48 the count is 6/20 (round 2) → 5/20 (round 3). These are EM showers,
+where near-collinear branch meetings are physical and mostly short (7.1/5.5,
+6.2/6.2, 11.2/13.0 cm pairs) — **the metric discriminates on tracks and not on
+showers**, so the count is recorded, not chased (§5 rule 7). The one
+substantial case is evt 469665 (24.2 + 36.0 cm meeting at 1.6°), present in
+both round 2 and round 3; it is a residual, not a round-3 regression.
+
+### 15.6 Evt 271851 — the motivating event, mixed and REPORTED
+
+Fired: `L=70.8 cm, xext=7.5 cm, aspect=0.347, n=7696,
+A=(−156.7,32.0,377.9) B=(−155.7,4.1,317.6), gain=6.5/3.8 cm, walk=0.00/0.00,
+dperp=0.2/0.1 cm`. The trunk reaches 6.5 / 3.8 cm further than round 2 and both
+endpoints are laterally central.
+
+| arm | vertex → truth (−156.3, 6.4, 314.7) | nue_score |
+|---|---|---|
+| production default (knob off) | 30.87 cm | −15.00 |
+| round 2, DL vertex | 21.38 cm | +4.30 |
+| **round 3, DL vertex** | **2.36 cm** | **+4.30** |
+| round 2, geometric vertex | 1.66 cm | +4.30 |
+| **round 3, geometric vertex** | **6.60 cm** | **−3.49** |
+
+**The production (DL) arm improves by 19 cm. The diagnostic geometric arm gets
+worse and loses the nue selection.** Mechanism, from the segment table: the
+extra 3.8 cm of reach at the shower's narrow end is real but low-quality charge
+— it produces a new 15.6 cm segment `23011` with chord/path **0.53** and median
+dQ/dx **467** (vs 3244 on its neighbour), and the traditional vertex algorithm
+picks the *far* end of that segment (y = 12.9) instead of the near end
+(y = 4.6, which is 2.4 cm from truth and is what the DL arm picks). Charge
+coverage also slips, 0.372 → 0.333 all-plane.
+
+No parameter was tuned to make this look better. Two readings are available for
+the owner and this doc does not choose between them: (i) the shipped rule is
+right and the residual is the geometric vertex-finder's end choice on a
+low-dQ/dx tail; (ii) the endpoint should carry a charge-quality requirement
+beyond the existing blob ≥ 1500 e cut. Note the SBND production default *is*
+the DL vertex (doc pr/4), which is the arm that improved.
+
+### 15.7 Cohort results (20 nueCC48 + 17 mcp1k of §13)
+
+The §13 mover list is **17**, not 20 — that is every mcp1k event over the
+round-2 "vertex > 25 cm or nue flip" bar.
+
+* **Fire rate under the gate**: nueCC48 **19/20** events (437699 now rejected at
+  aspect 0.111), mcp1k **7/17** — the gate hands 10 of the 17 movers straight
+  back to the legacy path.
+* **Containment**: all **11 non-firing events are archive-identical to the OFF
+  arm** (`hash_archive.py` member hashes on `mabc-pr.zip` + `pctree`, 0 diffs).
+  In particular **284794 and 59899 are byte-identical to legacy** — the two
+  events the owner reported are fully reverted. Round 2's 519/519 non-firing
+  containment carries over a fortiori: the round-3 gate is a strict subset of
+  round 2's, so it was not re-run.
+* **Recoveries held**: evt **122660** keeps `nue_score` −15.00 → **+4.30**.
+* **Score census** (no truth on either sample — recorded, not judged): among the
+  19 firing nueCC48 events, 6 flip `nue_score` sign vs OFF — 4 upward
+  (111412 −0.34→+1.75, 350186 −4.30→+2.01, 469665 −1.32→+4.13, 122660) and
+  2 downward (38856 +1.89→−1.21, 52672 +0.10→−2.92). Round 2 flipped a
+  different 6. `nue_score` is quantized at the ±4.30 / −15.0 sentinels.
+* **Aspect distribution** over the 38 gated clusters: min 0.039, p10 0.069,
+  median 0.200, p90 0.361, max 0.554. **Six clusters sit within ±0.02 of the
+  0.12 cut** (0.103, 0.104, 0.111, 0.118, 0.128, 0.137), so 0.12-vs-0.15 is a
+  3-cluster decision on this set (27/38 vs 24/38 fire). This set is biased — it
+  was selected as round-2 movers — so these are not population rates.
+
+### 15.8 Gates
+
+| gate | result |
+|---|---|
+| compiled config, knob off | `cmp`-identical to the pre-change baseline (`/home/xqian/tmp/pr24r3/v0-base-prjob.json`) |
+| compiled config, knob on | differs by exactly the new keys |
+| `./build/clus/wcdoctest-clus` | 49/49 cases, 565/565 assertions |
+| freshness proof | `libWireCellClus.so` 07:58:56 > `NeutrinoPatternBase.cxx` 07:58:03 |
+| knob-off A/B, 6 events × 2 archives | **12/12 identical** to the round-2 off arm (`work-pr24r3-off6` vs `work-pr24r2-off6`) |
+| non-firing containment, 37-event cohort | **11/11 identical** to OFF |
+
+### 15.9 Bee sets (round 3)
+
+Same event order as the §13 tables, so Bee index N is the same event across the
+off / round-2 / round-3 sets.
+
+| set | fired under the gate | Bee |
+|---|---|---|
+| evt 271851, iso_endpoint ON + DL vertex | yes | https://www.phy.bnl.gov/twister/bee/set/a73f7989-e3c4-4f9f-b60f-29c99c34c356/event/list/ |
+| evt 271851, iso_endpoint ON + geometric | yes | https://www.phy.bnl.gov/twister/bee/set/18c57992-1c9a-4b77-9040-6ebce4f47996/event/list/ |
+| nueCC48, all 20 | 19/20 (437699 no) | https://www.phy.bnl.gov/twister/bee/set/aa8ce702-c1df-45f2-a77f-0c63f83e6f9d/event/list/ |
+| mcp1k, 17 movers | 7/17 | https://www.phy.bnl.gov/twister/bee/set/9a54cba3-7d19-4664-9d2d-9f9618649e67/event/list/ |
+
+Fired / not-fired per event, mcp1k (not-fired ⇒ byte-identical to the OFF set,
+no scan effort needed): **fired** 48367, 168614, 172942, 282204, 285564,
+400504, 402880 — **not fired** 55595, 58345, 59899, 67746, 68648, 284794,
+292577, 321525, 393608, 395060.
+
+### 15.10 Residuals and the next decision
+
+* The **271851 geometric-arm regression** (§15.6) is the open item; it is the
+  owner's call whether it blocks anything, since the production arm improved.
+* `iso_endpoint_tube_radius` is now diagnostic-only. It could be deleted, but
+  the `intube` flag is what makes the "endpoint stranded off-axis" cases
+  (282204 at 29.5 cm) visible in a log, so it is kept.
+* nueCC48 evt 469665's 24.2 + 36.0 cm junction at 1.6° predates round 3.
+* The U-plane coverage drop from §11 persists (0.198 → 0.060 on 271851).
+* Full valfast (572 + 47) is **still deferred** — the owner decides after this
+  scan.

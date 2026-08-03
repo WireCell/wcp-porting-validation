@@ -136,8 +136,14 @@ CATH_TLA=()
 # doc pr/24 round 2: isochronous first-segment endpoint finding.  EMPTY = no
 # TLA = the cfg default (false = OFF = byte-identical).  SBND_ISO_ENDPOINT=1
 # enables at the C++ defaults (40 cm min length, 25 cm max drift extent,
-# 0.35 frac, 0.02 quantile).
+# 0.35 frac, 0.02 quantile, round 3: 4 cm axis tube, 0.12 min sheet aspect).
 [ "${SBND_ISO_ENDPOINT:-}" = 1 ] && CATH_TLA+=(--tla-code "iso_endpoint=true")
+# doc pr/24 round 3 overrides, validation only (both inert unless
+# SBND_ISO_ENDPOINT=1).  SBND_ISO_MIN_ASPECT=0 disables the sheet-aspect gate,
+# which is how the aspect distribution is harvested from the DEBUG log without
+# a rebuild; SBND_ISO_TUBE_R sets the axis-tube radius in cm.
+[ -n "${SBND_ISO_MIN_ASPECT:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_min_aspect=${SBND_ISO_MIN_ASPECT}")
+[ -n "${SBND_ISO_TUBE_R:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_tube_radius=${SBND_ISO_TUBE_R}")
 # protect_bundle knob overrides (doc pr/23, validation only).  EMPTY = no TLA
 # = the cfg default = the SBND operating point.  The _XCUT/_DYZ/_DIS values
 # are in CM, converted via wirecell.jsonnet because the C++ takes INTERNAL
