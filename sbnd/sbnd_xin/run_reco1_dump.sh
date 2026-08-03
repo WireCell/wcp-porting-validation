@@ -29,7 +29,29 @@ set -e
 
 SBND_DIR=$(cd "$(dirname "$0")" && pwd)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
-export WIRECELL_PATH=${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
+export WIRECELL_PATH=${SBND_DIR}:${WCT_BASE}/toolkit/cfg:${WCT_BASE}/wire-cell-data:${WIRECELL_PATH}
+
+# The SBNDReco1FrameSource / SBNDReco1OpFlashSource factories no longer live in
+# libWireCellRoot.so: WCT master 5f684887 moved them to the standalone plugin
+# https://github.com/WireCell/wire-cell-sbnd-reco1 (WCT issue #494 -- the mirror
+# ROOT classes clashed with the real LArSoft dictionaries inside a lar process).
+# Build it as a sibling of toolkit/ with:
+#   cd ${WCT_BASE}/wire-cell-sbnd-reco1
+#   cmake -B build -S . -DCMAKE_PREFIX_PATH=${WCT_BASE}/local \
+#         -DCMAKE_INSTALL_PREFIX=$PWD/install \
+#         -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON \
+#         -DCMAKE_INSTALL_RPATH="$(root-config --libdir);${WCT_BASE}/local/lib"
+#   cmake --build build -j6 && cmake --install build
+# The RPATH flags matter: without them the .so cannot resolve libCore/libRIO/
+# libTree and wire-cell reports only "failed to load plugin".
+SBND_RECO1=${SBND_RECO1:-${WCT_BASE}/wire-cell-sbnd-reco1/install}
+if [ ! -r "$SBND_RECO1/lib/libWireCellSBNDReco1.so" ]; then
+    echo "ERROR: standalone reco1 plugin not found: $SBND_RECO1/lib/libWireCellSBNDReco1.so" >&2
+    echo "       build it (see the comment above) or set SBND_RECO1=<install prefix>" >&2
+    exit 1
+fi
+export LD_LIBRARY_PATH=${SBND_RECO1}/lib:${LD_LIBRARY_PATH}
+export WIRECELL_PATH=${WIRECELL_PATH}:${SBND_RECO1}/share/wirecell
 
 CAF_MODE=auto
 CAF_OVERRIDE=""
