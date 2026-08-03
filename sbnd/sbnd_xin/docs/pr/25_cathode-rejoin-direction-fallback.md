@@ -5,9 +5,27 @@ investigated alongside these two; see the status table below.
 
 | evt | question | status |
 |---|---|---|
-| **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`); SBND default left OFF pending owner go-ahead. |
+| **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed + pushed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`). **SBND default OFF** — `protect_cathode_rejoin_perp = null`; the flip is a pending owner decision. |
 | **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven, fix implemented + small-group measured (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **SBND DEFAULT ON** (owner 2026-08-02, impact judged small); the `check_tgm` gap remains an open, separate item. |
 | **321107** | main track is a muon, tagged as an electron | **mechanism fully explained AND fix SHIPPED, default OFF** (§3, three rounds). `is_shower_topology` made the call, and its only measurement axis satisfies `dir_3·x̂ = sin θ` — at 88.55° (`dir3x = 0.9994`) it *is* the drift axis, so the wide halo (rms 8.34 cm in `dir_2` vs 0.40 cm in `dir_3`) **never entered the decision**: the flag fired on drift quantization noise (0.313 cm lattice vs a 0.4 cm cut). **The 2-D-projective-narrowness direction would not have changed this verdict.** 321107 is not exceptional — **86 of 91** long firings across 429 events sit in the same noise floor. Two spread-statistic fixes were pre-committed and rejected by their own stop rules; **the owner's 2026-08-03 hand-scan of all 10 nu-main cases returned 10/10 tracks, 0 showers**, which both supplied the missing truth and refuted the round-2 candidate (evt 400504 would have survived it and is a track). Fix = a length rule reusing the existing demote-only guard: **`shower_topo_demote_len`, C++ default 0 = OFF = byte-identical**, threaded to all four call sites. At 50 cm: 23 long segments flip shower→track across 22 events, **0 the other way**; **17/572 events (3.0%)** move `numu_score`; **321107 `pdg 11→13`, `numu_score −0.783 → +0.317`**. Score moves are mixed — **286353 drops 2.023 → −1.139**, flagged for owner judgement, not tuned away. SBND default **ships OFF**; the flip is the owner's call. |
+
+### SBND production default status — all three, verified in-tree
+
+Read straight from `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` (the
+single source of truth for the SBND operating point, doc 68), not from
+memory. **All three are committed and pushed; only §2 is ON.**
+
+| § | evt | knob | value in `wct-pr-perevt.jsonnet` | SBND default | commit |
+|---|---|---|---|---|---|
+| 1 | 489327 | `protect_cathode_rejoin_perp` | `null` | **OFF** | toolkit `75c703da` |
+| 2 | 320029 | `tgm_exempt_demoted_main` | `true` | **ON** (owner 2026-08-02) | `08d6aef4` + flip `b04b1762` |
+| 3 | 321107 | `shower_topo_demote_len` | `null` | **OFF** | `5beb248a` |
+
+So the three fixes are *available* but only the TGM demoted-main veto is
+actually running in production. Flipping §1 and §3 on is a separate owner
+decision each (escalation rule 1) — for §3 in particular, §3.10's mixed
+`numu_score` moves (evt 286353 drops 2.023 → −1.139) are the reason to scan
+the knob-on outputs before flipping.
 
 Repro base for all three: `sbnd_xin/work-vfmcp1k-prodon` (protect_bundle ON,
 the SBND production default since `f813e312`) and `work-vfmcp1k-prodoff`,
@@ -15,7 +33,7 @@ the SBND production default since `f813e312`) and `work-vfmcp1k-prodoff`,
 
 ---
 
-## 1. Event 489327 — SHIPPED (validated, not yet committed)
+## 1. Event 489327 — COMMITTED + PUSHED, SBND default OFF
 
 ### Symptom
 
@@ -197,13 +215,18 @@ that flipped ON the same day (`f813e312`). Knob-off path is byte-identical
 (proven above); this is currently true both because the new fallback is
 prototype-faithful when disabled AND because it is not yet the SBND default.
 
-**C++ (`clus/src/ClusteringProtectBundle.cxx`) and jsonnet
-(`cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/
-{clus,wct-pr-perevt}.jsonnet`) changes are validated but UNCOMMITTED** —
-per CLAUDE.md, commits land only when asked. `sbnd_xin/run_pr_evt.sh` and
-`run_pr_chain_batch.sh` (runner knob wiring) are similarly uncommitted in
-`wcp-porting-img`. Only `pr25_rejoin_census.py` (read-only analysis, step 0
-of the plan) is committed so far (`e370ded`).
+**COMMITTED AND PUSHED** — toolkit `75c703da` (C++
+`clus/src/ClusteringProtectBundle.cxx` + jsonnet
+`cfg/pgrapher/common/clus.jsonnet`,
+`cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet`);
+wcp-porting-img `c8d4e32` (doc) and `e370ded` (`pr25_rejoin_census.py`),
+plus the `run_pr_evt.sh` / `run_pr_chain_batch.sh` runner escapes.
+
+**SBND default: OFF.** `wct-pr-perevt.jsonnet` ships
+`protect_cathode_rejoin_perp = null` (verified in-tree), so the production
+operating point is unchanged and the fallback never runs. Turning it on is
+the owner's call (escalation rule 1); the proposed operating point is
+`perp=3cm, angle=20.0, dir_radius=15cm, dir_npts=20`.
 
 ### Repro
 
@@ -228,7 +251,7 @@ python3 pr_scores_table.py --root work-pr25-on  > /tmp/on.tsv   # diff the two
 
 ---
 
-## 2. Event 320029 — implemented, default OFF, small-group measured
+## 2. Event 320029 — COMMITTED + PUSHED, **SBND DEFAULT ON**
 
 Owner-confirmed target: **cluster 30** (point (191.2, 190.8, 112.7) cm, Bee
 label `30004`) — a 37.0 cm demoted-main fragment whose two ends sit on two
