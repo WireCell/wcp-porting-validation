@@ -178,17 +178,97 @@ that sentence a green suite reads as "production is on the legacy path".
   `g++` builds clean (`build rc=0`) and there is **no CI** in this repo
   (`.github/workflows/` does not exist), so nothing compiles it with clang.
 
-## 6. Mentioned, not fixed (pre-existing; §5 tie-breaker)
+## 6. Two pre-existing defects found by writing the tests — FIXED
 
-- **`ClusteringExamineBundles` implements `configure()` but not
-  `default_configuration()`**, so none of its knobs round-trip — not
-  `save_bundle_main_provenance` (ours) and not upstream's own `use_ctpc`,
-  `graph_name`, `use_flash_t0`, `flags_from_longest`. Its defaults are invisible
-  to a config dump. The branch is compliant with "round-trip new keys *when the
-  component has one*"; the test case documents the gap instead of asserting a
-  key that cannot exist.
-- **`FiducialUtils::FiducialUtils()` is declared but never defined** anywhere in
-  the tree. Construct from `StaticData{}`.
+Both surfaced only because a test tried to construct these classes directly.
+Neither is caused by the branch; both are fixed here on the owner's call.
+
+### 6.1 `FiducialUtils::InternalData::live` was indeterminate
+
+```cpp
+// This struct must be default-constructable, eg via InternalData{} so
+// make sure all values are initialized here.
+struct InternalData {
+    Facade::Grouping* live;      // <-- no initializer
+};
+```
+
+The comment states the requirement; the code did not meet it.
+`feed_static`/`feed_dynamic` assign `m_internal = InternalData{}`, which
+*value*-initializes and so already yielded `nullptr` — but
+`FiducialUtils(StaticData)` leaves `m_internal` **default**-initialized, so
+`live` held an indeterminate value until the first `feed_*()`.
+
+**Latent, not live**: the sole production construction site
+(`make_fiducialutils.cxx:69`) calls `feed_dynamic` three lines later and nothing
+reads `m_internal` in between. But this is the doc pr/11 class-C shape, and a
+garbage pointer here is a segfault rather than a diagnosable null — which is
+exactly what the §3 revert-proof produced (SIGSEGV, not a null deref) once the
+`apa < 0 || face < 0` guard was removed.
+
+Fix: `Facade::Grouping* live{nullptr};`. No behavior risk — production already
+value-initialized via `feed_*`.
+
+### 6.2 `FiducialUtils::FiducialUtils()` was declared but never defined
+
+Any use failed at link time with `undefined reference to
+FiducialUtils::FiducialUtils()` — how it was found. The class is designed to be
+constructible empty (see `feed_static`), so the ctor is now `= default` rather
+than dropped.
+
+### 6.3 `ClusteringExamineBundles` had no `default_configuration()`
+
+It implements `configure()` reading five knobs but inherited `IConfigurable`'s
+empty `default_configuration()`, so **none** of them round-tripped — not
+`save_bundle_main_provenance` (ours, doc pr/20 Part I P1) and not the
+pre-existing `use_ctpc` / `graph_name` / `use_flash_t0` / `flash_t0_window` /
+`flags_from_longest`. They were invisible to a config dump and discoverable only
+by reading the source.
+
+Added, emitting this class's own six knobs. Deliberately **not** the
+`NeedDV`/`NeedPCTS`/`NeedScope` keys — those belong to the mixins, which apply
+their own defaults when absent, and duplicating them would be a second source of
+truth.
+
+**Output-neutral by construction.** `configure()` reads every key as
+`get<T>(config, key, member_)`, which returns `member_` when the key is absent;
+emitting the key *with `member_`'s value* therefore makes `get()` return exactly
+what it returned before. Checking each path against
+`cfg/pgrapher/common/clus.jsonnet:1204` (the only instantiation):
+
+| knob | what the builder passes | after the change |
+|---|---|---|
+| `graph_name`, `use_flash_t0`, `flash_t0_window` | always present in `data` | `data` wins, unchanged |
+| `flags_from_longest`, `save_bundle_main_provenance` | key-suppression idiom — absent when off | now defaults to the same `false` the member held |
+| `use_ctpc` | never passed | now defaults to the same `true` the member held |
+
+The argument is airtight, but this is a **shared** component reached through the
+common builder, so it ships with a gate rather than an argument alone — §6.4.
+
+`doctest_clus_knob_defaults.cxx` now pins all six instead of documenting their
+absence.
+
+### 6.4 Gate
+
+SBND 48-event nueCC PR chain, `mabc-pr.zip` + `pctree-pr-*.tar.gz` member
+content hashes (`abtest/hash_archive.py`, **field 1 only** — the field-1 trap):
+
+- **before** = `work-mrgB-post` (built at `87ada3d5`; production code is
+  identical at the test-only commit `e82ff903`, so it is a valid baseline and
+  did not need re-running)
+- **after** = `work-d70-eb` (48/48 events, fail=0)
+
+```
+gate_cmp.sh work-mrgB-post work-d70-eb
+identical=144  differing=0  missing=0
+GATE: PASS (byte-identical)
+```
+
+All 48 `mabc-pr.zip`, all 48 `pctree-pr-*.tar.gz` **and** all 48 `nusel-*.tsv`
+identical. Note the nusel column is clean here where the doc-69 merge gate had 3
+differing: that gate's diffs were the `stmfit` log-tearing artifact, which needs
+the *log text* to change length. Nothing here changes a log line, so the
+artifact does not fire — an independent confirmation of the doc-69 diagnosis.
 
 ## 7. Result
 
@@ -204,8 +284,12 @@ per-package binaries, but upstream's `wct-testing` skill prescribes
 waf (`wcbuild`); there is **no CI** in the repo, so no cmake path was exercised
 — if a reviewer configures with cmake, that is the one unverified axis.
 
-`git status` shows no modified tracked file — only the two additions — so no
-reconstruction output can have moved.
+The first commit (`e82ff903`) is test-only — `git status` showed no modified
+tracked file — so no reconstruction output can have moved there. The follow-up
+commit does touch two production files (§6) and is backed by the §6.4 gate.
+
+**Gate labels, re-checkable:** baseline `sbnd_xin/work-mrgB-post`, arm
+`sbnd_xin/work-d70-eb`, comparator `abtest/hash_archive.py` field 1.
 
 ## 8. Not covered (deferred by owner, 2026-08-03)
 
