@@ -771,6 +771,34 @@ shower's dQ/dx profile differs physically from a muon's in a way none of the
 spread statistics capture. Also a genuine algorithm addition, also needing its
 own measurement round.
 
+### 3.9 The 10 nu-main cases — what the owner would actually be deciding
+
+These are the segments where a verdict change moves a physics answer. All are
+on the selected nu-candidate main cluster, all `L>50cm`, all currently carrying
+`flag_shower`. Scores are from `work-pr25s3r2-dbgall` (`pr_scores_table.py`);
+`pdg` is of the shower-flagged segment(s) on that cluster.
+
+| evt | seg L (cm) | angle to drift | numu_score | kine_reco_Enu (MeV) | pdg now | cosmict |
+|---|---|---|---|---|---|---|
+| 286353 | 271.3 | 71.3° | 2.023 | 624.9 | 11 | 0 |
+| **321107** | **248.7** | **88.5°** | **−0.783** | **550.1** | **11** | **1** |
+| 284013 | 149.6 | 48.9° | 0.880 | 394.1 | 11 | 0 |
+| 277276 | 140.4 | 76.6° | 1.291 | 1566.3 | 11, 2212 | 0 |
+| 57903 | 69.9 | 87.5° | 1.070 | 391.2 | 11 | 0 |
+| 280972 | 68.5 | 71.2° | 3.409 | 3088.2 | 11, 211 | 0 |
+| 315167 | 62.9 | 64.0° | 2.069 | 1354.5 | 11 | 0 |
+| 278684 | 59.2 | 38.9° | −0.485 | 680.0 | 11 | 1 |
+| 287621 | 54.0 | 75.7° | 1.785 | 716.0 | 13 | 0 |
+| 400504 | 50.4 | 84.2° | 1.190 | 508.5 | 11 | 0 |
+
+Notes for a hand scan: **321107 is the only one with a negative `numu_score`
+*and* a nearly-perpendicular angle** — the combination the owner flagged by
+eye. `nue_score` is the −4.300936 / −15.0 sentinel on 10/10 of these, so it
+carries no information here (see GOTCHAS). 287621 already reads `pdg=13` on
+its flagged segment, so it is a partial case, not a clean muon-as-electron.
+A scan of these 10 is what would turn §3.8's question from an investigation
+into a decision.
+
 ### Verification performed
 
 - `./wcb build --notests -p && ./wcb install --notests -p`, both `rc=0`;
@@ -787,6 +815,17 @@ own measurement round.
   `rc=0`**; 429 events yielded at least one `segment_is_shower_topology`
   evaluation (the rest have no segment reaching it with a non-empty
   `associate_points` cloud).
+- **Cross-arm stability of §3.4's load-bearing numbers.** The round-1 arm
+  (`work-pr25s3-dbg21`) was run with the `data` reality TLA and round 2 with
+  `sim`, so the 30 events common to both were compared directly. The
+  population picture is the same — 31 vs 28 long firings, median `rms_p90`
+  0.48 vs 0.47, 28 vs 25 below 0.7 cm, and the *same* three wide segments at
+  1.17/1.18, 1.69/1.67, 10.86/10.86. What differs: 5 of 30 events gain or lose
+  one **marginal** long firing, and segment lengths shift by ~1 cm
+  (e.g. 201.4 → 202.9 cm), moving bucket counts slightly. This does not
+  threaten the conclusion — it *corroborates* it: the segments that flip are
+  exactly the near-threshold ones §3.3 says are decided by noise. It does mean
+  individual counts should always be quoted with their arm, as done here.
 
 ### Repro
 
