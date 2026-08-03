@@ -620,8 +620,11 @@ endpoints are laterally central.
 | round 2, geometric vertex | 1.66 cm | +4.30 |
 | **round 3, geometric vertex** | **6.60 cm** | **−3.49** |
 
-**The production (DL) arm improves by 19 cm. The diagnostic geometric arm gets
-worse and loses the nue selection.** Mechanism, from the segment table: the
+**The DL arm — the owner's official chain (confirmed 2026-08-03) — improves by
+19 cm. The diagnostic geometric arm gets worse and loses the nue selection.**
+So on the chain that actually runs, round 3 takes 271851 from 21.4 cm to
+2.4 cm; the geometric regression is a diagnostic-arm result, and the geometric
+arm's role here is to show what the trunk geometry alone supports. Mechanism, from the segment table: the
 extra 3.8 cm of reach at the shower's narrow end is real but low-quality charge
 — it produces a new 15.6 cm segment `23011` with chord/path **0.53** and median
 dQ/dx **467** (vs 3244 on its neighbour), and the traditional vertex algorithm
@@ -643,7 +646,13 @@ inherited from the legacy boundary search, which a dQ/dx-467 tail clears
 easily — the concrete lever would be a minimum median dQ/dx (or a minimum
 point density) on the end band before the extreme is accepted.
 **No aspect threshold can protect this event**: 271851 gates at 0.347, far
-above any cut that still rejects 284794/59899 at 0.068/0.069. Note the SBND production default *is*
+above any cut that still rejects 284794/59899 at 0.068/0.069.
+
+Weighting, given the DL arm is the official chain: this is a **watch item on a
+diagnostic arm**, not a blocker on the production path. It still matters as
+evidence about the endpoint rule itself — the geometric arm is the one that
+reads the trunk geometry without a network prior, so its disagreement is the
+cleanest signal that the last 3.8 cm of reach is low-quality charge. Note the SBND production default *is*
 the DL vertex (doc pr/4), which is the arm that improved.
 
 ### 15.7 Cohort results (20 nueCC48 + 17 mcp1k of §13)
