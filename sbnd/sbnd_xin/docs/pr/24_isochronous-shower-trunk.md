@@ -1,13 +1,14 @@
-# doc pr/24 — isochronous EM showers: diagnosis, two rejected fixes, and the round-2 endpoint fix
+# doc pr/24 — isochronous EM showers: diagnosis, two rejected fixes, and the endpoint fix that became the SBND default
 
-**Status: round 3 SHIPPED default OFF (`iso_endpoint`, §9-§15) — the fix lives
-in first-segment ENDPOINT FINDING, per the owner's round-2 direction; flip is
-the owner's call.** Round 3 (§15) repairs a mid-track break-point regression
-the owner found in the round-2 scan (evts 284794, 59899): the endpoint is now
-the untrimmed axial extreme (no tip discarded) and a sheet-aspect gate keeps
-1-D tracks out of the branch entirely. One number moved the wrong way and is
-reported, not tuned — §15.6, evt 271851 on the geometric arm. Round 1 below stands as the diagnosis record: both of its
-attempts were REJECTED and removed.
+**Status: `iso_endpoint` is the SBND PRODUCTION DEFAULT (owner 2026-08-03,
+§16).** The fix lives in first-segment ENDPOINT FINDING, per the owner's
+round-2 direction. Round 2 (§9-§14) built it; **round 3 (§15) is what made it
+flippable** — it repairs a mid-track break-point regression the owner found in
+the round-2 Bee scan (evts 284794, 59899) by taking the untrimmed axial extreme
+(no tip discarded) and adding a sheet-aspect gate that keeps 1-D tracks out of
+the branch entirely. One number moved the wrong way and is reported, not tuned:
+§15.6/§16.2, evt 271851 on the diagnostic geometric arm. Round 1 below stands
+as the diagnosis record: both of its attempts were REJECTED and removed.
 
 **Round 1 status: NO FIX ADOPTED.** Both attempts were implemented, measured and then
 **removed at the owner's direction** (2026-08-02). Nothing from this round is
@@ -720,3 +721,67 @@ no scan effort needed): **fired** 48367, 168614, 172942, 282204, 285564,
 * The U-plane coverage drop from §11 persists (0.198 → 0.060 on 271851).
 * Full valfast (572 + 47) is **still deferred** — the owner decides after this
   scan.
+
+
+## 16. Production flip (owner 2026-08-03)
+
+Owner, after the §15.9 Bee scan: *"This is better, please make this our default
+production running for SBND."*
+
+**`iso_endpoint = true` in `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`.**
+Per doc 68 the SBND operating point lives in that file only — `clus.jsonnet`'s
+`clus_pr()`/`pr()` function defaults stay `false`, and the **C++ default stays
+`false`**, so no other experiment and no bare C++ consumer is affected. The six
+sizing knobs stay `null` = the C++ defaults (40 cm min length, 25 cm max drift
+extent, 0.35 frac, 0.02 quantile, 4 cm diagnostic tube radius, 0.12 min sheet
+aspect).
+
+**NOT bit-identical** to the pre-flip chain — a deliberate production-behaviour
+change, same bar as every other SBND default flip.
+
+### 16.1 What the flip buys (all measured in §15, on the DL vertex arm — the
+owner's official chain)
+
+* evt **271851**: vertex **30.9 → 2.4 cm** from truth, `nue_score` −15 → **+4.30**.
+* evt **122660**: `nue_score` −15 → **+4.30**.
+* **0/17** mcp1k events gain a straight-through segment junction (round 2: 4/17);
+  evts 284794 and 59899 are byte-identical to legacy because the aspect gate
+  rejects them at 0.068/0.069.
+* Every non-firing event stays archive-identical to the legacy arm.
+
+### 16.2 Caveat carried into production
+
+§15.6: on the **diagnostic geometric-vertex arm** evt 271851 goes 1.7 → 6.6 cm
+and loses the nue selection, because the endpoint's extra 3.8 cm of reach
+manufactures a low-quality tail segment (chord/path 0.53, median dQ/dx 467)
+whose far end the traditional vertex finder prefers. Accepted by the owner on
+the strength of the DL-arm result; **this is the first thing to check if the
+next valfast census surprises**. The lever, if it ever needs one, is a
+charge-quality requirement on the end band — today's only filter is the
+inherited blob ≥ 1500 e cut.
+
+Also on record: among the 19 firing nueCC48 events, 6 flip `nue_score` sign vs
+legacy, 4 up and 2 down (38856 +1.89 → −1.21, 52672 +0.10 → −2.92). Neither
+sample carries truth, so these are recorded, not judged.
+
+### 16.3 Verification of the flip itself
+
+| check | result |
+|---|---|
+| bare compile (no TLA) | adds exactly one key, `"iso_endpoint": true` |
+| `--tla-code iso_endpoint=false` | the key drops out entirely — legacy restorable |
+| bare production run == the validated knob-on arm | **byte-identical** on evts 271851 (fires, DL), 168614 (fires), 122660 (fires), 284794 (gate rejects) — `mabc-pr.zip` + `pctree`, `hash_archive.py` member hashes |
+| bare run of a gate-rejected event == legacy | evt 284794 identical to the OFF arm |
+| `SBND_ISO_ENDPOINT=0` | evt 271851 identical to the pre-flip production base |
+
+Runner: `SBND_ISO_ENDPOINT=0` now restores the legacy wire-footprint boundary
+endpoints for an A/B; `=1` is a retained no-op so older invocations still mean
+what they said.
+
+```bash
+# repro of the flip verification
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /home/xqian/tmp/pr24r3/flip-prjob.json
+PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-flip1 data 271851
+SBND_ISO_ENDPOINT=0 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-flipoff1 data 271851
+```

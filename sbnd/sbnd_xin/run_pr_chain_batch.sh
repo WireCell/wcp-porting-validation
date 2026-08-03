@@ -133,11 +133,18 @@ CATH_TLA=()
 # the cfg default (null = OFF = byte-identical).  50 is the scan-supported
 # operating point; the guard measures segment_track_length(seg,0).
 [ -n "${SBND_SHOWER_TOPO_DEMOTE_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_topo_demote_len=${SBND_SHOWER_TOPO_DEMOTE_LEN}")
-# doc pr/24 round 2: isochronous first-segment endpoint finding.  EMPTY = no
-# TLA = the cfg default (false = OFF = byte-identical).  SBND_ISO_ENDPOINT=1
-# enables at the C++ defaults (40 cm min length, 25 cm max drift extent,
-# 0.35 frac, 0.02 quantile, round 3: 4 cm axis tube, 0.12 min sheet aspect).
-[ "${SBND_ISO_ENDPOINT:-}" = 1 ] && CATH_TLA+=(--tla-code "iso_endpoint=true")
+# doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
+# DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
+# cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max
+# drift extent, 0.35 frac, 0.02 quantile, 4 cm diagnostic tube radius, 0.12 min
+# sheet aspect).  SBND_ISO_ENDPOINT=0 restores the legacy wire-footprint
+# boundary endpoints for an A/B; =1 is now a no-op kept so older runner
+# invocations still mean what they said.
+if [ "${SBND_ISO_ENDPOINT:-1}" = 0 ]; then
+    CATH_TLA+=(--tla-code "iso_endpoint=false")
+else
+    [ "${SBND_ISO_ENDPOINT:-}" = 1 ] && CATH_TLA+=(--tla-code "iso_endpoint=true")
+fi
 # doc pr/24 round 3 overrides, validation only (both inert unless
 # SBND_ISO_ENDPOINT=1).  SBND_ISO_MIN_ASPECT=0 disables the sheet-aspect gate,
 # which is how the aspect distribution is harvested from the DEBUG log without
