@@ -32,3 +32,6 @@ rebase-scan
 *.h5
 *.bz2
 *.out
+# per-run scratch dirs (pdhd/work, sbnd_xin/work-mcp10-*, work-stmcamp-*, ...)
+work/
+work-*/
