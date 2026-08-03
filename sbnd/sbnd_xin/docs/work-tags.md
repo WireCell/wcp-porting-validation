@@ -7,7 +7,9 @@ cd sbnd_xin
 ls -d work* | wc -l              # 27 after the 2026-08-03 round (138 before it; 23 after
                                  #   2026-08-02, 254 / 155 GiB before that, 15 after 2026-07-30)
 ls archive/*/ -d                 # 3 campaign archives + records/, 79 dirs
-find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below
+find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below.
+                                 #   MEASURE IT BEFORE A ROUND, NOT ONLY AFTER: it was
+                                 #   284 going into 2026-08-03 and nobody had noticed.
 python3 relink_tags.py           # dry-run repair after any move
 
 # the 2026-08-03 retirement round (see that section below):

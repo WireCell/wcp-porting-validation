@@ -28,6 +28,15 @@ separate tracks from the PR graph, one at the very top and one at the bottom …
 this is supposedly an EM shower, from the corner of the blob and then gradually
 grow"; and the truth vertex **(−156.3, 6.4, 314.7)**.
 
+> **Arms retired 2026-08-03.** The `work-*` arms this doc cites no longer exist
+> on disk. Their record layer (logs, tsv, `tracking-*.root`; no pctree/Bee/npz/
+> calib/opflash) is in `archive/records/pr23-25-era-20260803/<group>/<tag>.tar.gz`
+> with a `.links.txt` and `.manifest.tsv` beside it. The **valfast** arms
+> (`work-vf*-*`, `work-*-vf*`) were dropped with **no** record layer, per the
+> transient-arm contract in `valfast/README.md` — the compare summaries quoted
+> below are the only surviving record of those gates. See
+> `docs/work-tags.md`, "RETIREMENT ROUND 2026-08-03".
+
 ## 0. Repro
 
 ```bash

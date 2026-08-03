@@ -3,6 +3,12 @@
 **Status:** merge landed (toolkit `87ada3d5`); SBND PR chain gated byte-identical;
 reco1 dump path externalized and proven byte-identical.
 
+> **Arms retired 2026-08-03.** The `work-*` arms this doc cites no longer exist
+> on disk. Their record layer (logs, tsv, `tracking-*.root`; no pctree/Bee/npz/
+> calib/opflash) is in `archive/records/pr23-25-era-20260803/<group>/<tag>.tar.gz`
+> with a `.links.txt` and `.manifest.tsv` beside it. See `docs/work-tags.md`,
+> "RETIREMENT ROUND 2026-08-03".
+
 ## Repro
 
 ```bash
