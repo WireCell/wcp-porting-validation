@@ -179,7 +179,11 @@ local pr_node = clus_maker.pr(
     tools.anodes, dump=false,
     pipeline_names=['switch_scope', 'unmerge_bundle', 'unmerge_assoc', 'steiner',
                     'fiducialutils', 'tagger_check_tgm', 'tagger_check_stm', 'tagger_check_fc'],
-    particle_dataset=pds.particle_dataset, extra_uses=pds.all, beam_window=beam_window);
+    particle_dataset=pds.particle_dataset, extra_uses=pds.all, beam_window=beam_window,
+    // Match the SBND production operating point (apc doc pr/24 sec 16): the
+    // 2-step wct-pr-perevt.jsonnet sets iso_endpoint=true; mirror it here so the
+    // 1-step uses the same endpoint finder for the FC/containment check.
+    iso_endpoint=true);
 
 // wclsTensorSetLabeler (larwirecell "WireCellAIML" plugin).  Node name kept as
 // 'clus_all_apa' so the fcl inputer "wclsTensorSetLabeler:clus_all_apa" still
