@@ -438,6 +438,14 @@ current-clustering `work-nuecc48-poc0` hub.
 | iso_endpoint ON + DL vertex | https://www.phy.bnl.gov/twister/bee/set/98850353-e0f1-4980-92cd-8084bc00d32a/event/list/ |
 | iso_endpoint ON + geometric vertex | https://www.phy.bnl.gov/twister/bee/set/e6021737-741f-4180-b8c4-6eed5d81718c/event/list/ |
 
+Cohort off-vs-on pairs for the owner scan (same event order in the off and on
+set of each pair, so Bee index N is the same event in both):
+
+| set | events (Bee index order) | off | on |
+|---|---|---|---|
+| nueCC48, all 20 firing | 388, 30504, 38856, 42280, 52672, 74544, 81597, 90055, 111412, 122660, 168596, 196649, 246579, 256587, 269774, 350186, 360535, 437699, 447477, 469665 | https://www.phy.bnl.gov/twister/bee/set/54ec60af-3626-46d4-bb5e-c8ae5fb796b1/event/list/ | https://www.phy.bnl.gov/twister/bee/set/86633e49-9819-4d37-802e-a47e0c80692b/event/list/ |
+| mcp1k, 17 biggest movers (vertex > 25 cm or nue flip) | 48367, 55595, 58345, 59899, 67746, 68648, 168614, 172942, 282204, 284794, 285564, 292577, 321525, 393608, 395060, 400504, 402880 | https://www.phy.bnl.gov/twister/bee/set/9c9056d1-f24d-4e01-be1e-230104e14161/event/list/ | https://www.phy.bnl.gov/twister/bee/set/bbcefa2e-2972-44ba-b7ba-dd7b81720026/event/list/ |
+
 ## 14. Residuals and the next decision
 
 * `special_B` in `find_other_segments` still picks the farthest point; with an
