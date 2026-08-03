@@ -69,7 +69,7 @@ TFJSON="${SBND_TRACKFIT_JSON:-}"
 # cluster_fc_check populates (verified identical with and without it on the
 # 10-event MCP2025C sample, docs/25_fc-flag.md).  Only a flag that CHANGES that
 # list makes this runner name it -- see the pipeline_override block below.
-PIPELINE_FULL="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc"
+PIPELINE_FULL="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh"
 
 usage() {
     cat <<EOF
@@ -441,12 +441,12 @@ UNMERGE="${SBND_UNMERGE:-}"
 # component (proxy).  -unmerge-comp selects the proxy.
 UNMERGE_MODE="${SBND_UNMERGE_MODE:-}"
 UNMERGE_ASSOC="${SBND_UNMERGE_ASSOC:-}"
-# PR-stage overclustering protection (doc pr/23): -protect / SBND_PROTECT_BUNDLE=1
-# inserts 'protect_bundle' + a second steiner pass after tagger_check_fc
-# (uboone's second graph
-# examination; cathode re-join per the cfg operating point).  DEFAULT OFF
-# until the production flip, so a bare run stays the pre-pr/23 chain.
-PROTECT="${SBND_PROTECT_BUNDLE:-0}"
+# PR-stage overclustering protection (doc pr/23): 'protect_bundle' + the
+# steiner_refresh rebuild after tagger_check_fc (uboone's second graph
+# examination; cathode re-join per the cfg operating point).  SBND PRODUCTION
+# DEFAULT ON since the doc pr/23 sec 9 flip (owner 2026-08-02); -no-protect /
+# SBND_PROTECT_BUNDLE=0 removes both stages = the pre-pr/23 chain.
+PROTECT="${SBND_PROTECT_BUNDLE:-1}"
 _args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -530,18 +530,14 @@ elif [ "$UNMERGE_ASSOC" = 0 ]; then
     PIPELINE="${PIPELINE/unmerge_assoc,/}"
     _pipe_changed=1
 fi
-# -protect (doc pr/23 ordering decision): protect_bundle sits after the
-# cosmic taggers and before tagger_check_neutrino, with a second 'steiner'
-# pass to rebuild the split clusters' steiner products -- the
-# prototype-faithful order (the earlier after-unmerge_assoc placement defeats
-# TGM, doc pr/23 sec 6).  Refused when the taggers were dropped.
-if [ "$PROTECT" = 1 ]; then
-    case ",$PIPELINE," in
-        *,tagger_check_fc,*)
-            PIPELINE="${PIPELINE/tagger_check_fc,/tagger_check_fc,protect_bundle,steiner_refresh,}"
-            _pipe_changed=1 ;;
-        *) echo "ERROR: -protect needs tagger_check_fc in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
-    esac
+# protect_bundle + steiner_refresh are IN PIPELINE_FULL (after
+# tagger_check_fc -- doc pr/23 ordering decision, the prototype-faithful
+# order; the earlier after-unmerge_assoc placement defeats TGM, doc pr/23
+# sec 6).  Production default ON since sec 9; -no-protect removes them for
+# the pre-pr/23 arm.
+if [ "$PROTECT" = 0 ]; then
+    PIPELINE="${PIPELINE/,protect_bundle,steiner_refresh/}"
+    _pipe_changed=1
 fi
 # -stm-fit appends the Magnify-tracking ROOT dump to the tagger pipeline.
 if [ "$STM_FIT" = 1 ]; then

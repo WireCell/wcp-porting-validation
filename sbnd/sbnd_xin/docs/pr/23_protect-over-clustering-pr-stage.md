@@ -1,10 +1,13 @@
 # doc pr/23 — PR-stage overclustering protection (`protect_bundle`): uboone's second graph examination, ported and made cathode-gap safe
 
-**Status: IN PROGRESS.** Implementation landed (toolkit + runners, default OFF
-everywhere); validation campaign V1-V5 and the production flip V6 pending.
-**NOT bit-identical when enabled — that is the point of the stage** (doc
-pr/22 §8 diagnosed its absence as the residual gap-jumping cause; the owner
-requested the port 2026-08-02, accepting the result change).
+**Status: SHIPPED, SBND PRODUCTION DEFAULT ON** (§9, owner 2026-08-02 after
+the §8 Bee review): `protect_bundle,steiner_refresh` sit after
+`tagger_check_fc` in the default `pipeline_names` of the in-tree job and all
+three production runners.  Pre-flip arm: `SBND_PROTECT_BUNDLE=0` /
+`-no-protect`.  **NOT bit-identical to the pre-pr/23 chain — that is the
+point of the stage** (doc pr/22 §8 diagnosed its absence as the residual
+gap-jumping cause; the owner requested the port 2026-08-02, accepting the
+result change; §8.2 quantifies the change on fresh trees).
 
 ## 0. Repro
 
@@ -19,10 +22,11 @@ cd sbnd_xin
 # add 'protect_bundle' after unmerge_assoc in the pipeline_names TLA and the
 # compiled JSON gains one ClusteringProtectBundle:pr node (knob-on proof).
 
-# enable in any runner (validation phase; production default still OFF):
-SBND_PROTECT_BUNDLE=1 ./run_pr_chain_batch.sh <ql_root> <out_root> data <evt...>
-./run_pr_evt.sh data -nu -protect <idx>
-./run_nusel_evt.sh data -protect <idx>
+# PRODUCTION DEFAULT ON since the sec 9 flip (2026-08-02) -- a bare run of
+# any production runner carries protect_bundle,steiner_refresh.  Pre-flip arm:
+SBND_PROTECT_BUNDLE=0 ./run_pr_chain_batch.sh <ql_root> <out_root> data <evt...>
+./run_pr_evt.sh data -nu -no-protect <idx>
+./run_nusel_evt.sh data -no-protect <idx>
 # knob overrides: SBND_PROTECT_GRAPH=relaxed|relaxed_pid,
 # SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS in cm (0 disables the cathode re-join).
 ```
@@ -123,6 +127,7 @@ Recorded prototype divergences (M15, decided by measurement in V1/V2):
   the other file back to OFF" gotcha).
 - **`pipeline_names` defaults unchanged everywhere** until V6: the stage acts
   only when named, so every existing pipeline is byte-identical.
+  *(Superseded 2026-08-02 by the §9 flip: the defaults now name the stage.)*
 
 ### 2.3 Proofs at landing
 
@@ -146,6 +151,8 @@ Recorded prototype divergences (M15, decided by measurement in V1/V2):
   explicit `-p` containing `unmerge_assoc`), same env overrides.
 - `run_nusel_evt.sh`: `-protect` flag; refuses without the un-merges.
 - Bare runs of all three remain the pre-pr/23 production chain until V6.
+  *(Superseded 2026-08-02 by the §9 flip: bare runs now carry the stage;
+  the insertion later moved to after `tagger_check_fc`, §8.)*
 
 ## 3. V1 — pilot on evt 386948: the pathology is gone
 
@@ -597,4 +604,72 @@ events that were already neutrino candidates.
 | valfast movers OFF (`vfprodmov18`) | idx 0-5 = the 6 nue sign flips (166870 175896 286681 348471 349549 489327), 6-17 = top vertex/numu movers (63427 63669 284637 316553 412692 169488 170880 321107 320029 61579 57903 490779) | <https://www.phy.bnl.gov/twister/bee/set/1600aec8-d3f0-4a23-aa7e-9ee5da11057d/event/list/> |
 | valfast movers ON | same 18 | <https://www.phy.bnl.gov/twister/bee/set/28590bf4-285a-4b8e-8524-a926ec19d8f4/event/list/> |
 
-## 9. V6 — production flip (pending owner approval of §8)
+## 9. V6 — production flip (2026-08-02): `protect_bundle,steiner_refresh` DEFAULT ON
+
+Owner decision 2026-08-02, after reviewing the §8.3 Bee pairs: "This is good,
+and we should turn it on for the production as well as PR tail jobs."
+
+### 9.1 Repro
+
+```bash
+# Compiled-config proofs (toolkit @ f813e312):
+wcsonnet -A input=in.tar.gz -A output_dir=out --tla-code run=18253 \
+  --tla-code subrun=1 --tla-code event=172230 -A reality=data -A "dl_weights=" \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet > bare.json
+./compile_prjob_cfg.sh $TK/cfg prjob.json          # 15-name PR-chain list
+# Smoke of the flipped default (NO env vars -- the bare production path):
+./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr23flip-smoke data 386948 52195
+```
+
+### 9.2 What changed
+
+- **toolkit `f813e312`** —
+  `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`: `pipeline_names`
+  default gains `'protect_bundle', 'steiner_refresh'` after
+  `'tagger_check_fc'` (the §8 ordering); knob-comment updates here and in
+  `clus.jsonnet` (four "not in pipeline_names ⇒ absent" comments now state
+  the default).  No C++ change — no rebuild needed.
+- **this repo** — `run_pr_chain_batch.sh`: the two stages are IN the
+  15-stage `PIPELINE` default; `SBND_PROTECT_BUNDLE=0` removes them
+  (default was `:-0` insert-on-1, now `:-1` remove-on-0).
+  `run_nusel_evt.sh`: `PIPELINE_FULL` (the production/cosmic-tagging chain,
+  ends at `tagger_check_fc`) appends the two stages; `-no-protect` /
+  `SBND_PROTECT_BUNDLE=0` removes them (a bare run emits no pipeline TLA and
+  rides the cfg default, doc 68 single-source).  `run_pr_evt.sh`: default ON
+  for any pipeline naming `tagger_check_neutrino` (`-nu`/`-dnn`/`-p`);
+  pipelines without the anchor (`-stm`/`-tgm`, the empty identity-gate
+  pipeline) skip the insertion silently — an explicit `-protect` on such a
+  pipeline still errors.  `compile_prjob_cfg.sh`: 15-name list.
+
+### 9.3 Gates
+
+- **Kill-switch byte-identity**: the post-flip jsonnet compiled with the
+  pre-flip 8-name `pipeline_names` is `cmp`-identical to the pre-flip bare
+  compile — the off path is exactly the old chain.
+- **Additive-only**: bare compile and the 15-name PR-chain compile each gain
+  exactly two components, `ClusteringProtectBundle:pr` +
+  `CreateSteinerGraph:prrefresh`, in the §8 order
+  (`TaggerCheckFC:pr → ClusteringProtectBundle:pr →
+  CreateSteinerGraph:prrefresh → TaggerCheckNeutrino:pr`); nothing removed,
+  no other data block changes.
+- **Bare-default smoke** (`work-pr23flip-smoke`, no env vars): 2/2 rc=0;
+  evt 386948 logs `split 1 bundle cluster(s) into 7 extra cluster(s)`,
+  evt 52195 logs `2 convicted main(s) skipped` (TGM verdict untouched);
+  both events' `nusel-evt*.tsv` are **byte-identical to the §8.2 validated
+  ON arm** (`work-vfmcp1k-prodon`) — the flipped default IS the validated
+  configuration.
+
+### 9.4 Consequences
+
+- **NOT bit-identical to the pre-flip production chain by design** — §8.2 is
+  the quantification (163/572 valfast score rows move, 0 event_label /
+  nu_evaluated flips; nueCC48 uncovered fit points 9.3→3.1%).
+- The next valfast baseline (A/A′ and any future gate arm) must be
+  regenerated at the new default; a pre-flip comparison arm is
+  `SBND_PROTECT_BUNDLE=0`.
+- The `-stm-fit` chain order is now `…,protect_bundle,steiner_refresh,
+  stm_magnify` — same relative order the §8 validation arms ran.
+- Open item carried from §8: evt 271851 loses its nue evaluation with the
+  stage on (+4.3 → −15, main 121 → 70.8 cm) — a PR-stage effect independent
+  of ordering, flagged to the owner (escalation rule 7), unresolved by this
+  flip.

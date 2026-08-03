@@ -67,13 +67,16 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             (run_pr_chain_batch.sh / run_nusel_evt.sh); before doc pr/22 the
             shorthands omitted them, so pre-pr/22 Bee sets show the PR fit of
             the PRE-unmerge flash bundle (inflated track_fit gap jumping).
-  -protect  insert protect_bundle + a second steiner pass after the cosmic
-            taggers, before tagger_check_neutrino (doc pr/23 ordering:
+  -protect  insert protect_bundle + the steiner_refresh rebuild after the
+            cosmic taggers, before tagger_check_neutrino (doc pr/23 ordering:
             uboone's second graph examination -- split beam-bundle clusters at
             graph component boundaries; cathode re-join per the cfg operating
-            point).  Works with -stm/-tgm/-nu/-dnn or an explicit -p that
-            contains tagger_check_neutrino.  DEFAULT OFF until the production flip.
-            Env: SBND_PROTECT_BUNDLE=1; knob overrides SBND_PROTECT_GRAPH,
+            point).  PRODUCTION DEFAULT ON since the doc pr/23 sec 9 flip for
+            any pipeline containing tagger_check_neutrino (-nu/-dnn or -p);
+            silently skipped on pipelines without that anchor (-stm/-tgm, the
+            identity gate) unless -protect was passed explicitly (then an
+            error).  -no-protect / SBND_PROTECT_BUNDLE=0 = the pre-pr/23 arm.
+            Knob overrides: SBND_PROTECT_GRAPH,
             SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS (cm; 0 disables the re-join).
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
             the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} = the
@@ -99,15 +102,19 @@ PIPELINE=""
 # Persist per-pass STM track fits + tracking-stm.root (doc 40).
 # DEFAULT OFF: opt in with -stm-fit / SBND_STM_FIT=1.
 STM_FIT="${SBND_STM_FIT:-0}"
-# PR-stage overclustering protection (doc pr/23): -protect inserts the
-# 'protect_bundle' stage (+ second steiner pass) after tagger_check_fc in
-# whatever pipeline was chosen
+# PR-stage overclustering protection (doc pr/23): insert the
+# 'protect_bundle' stage (+ steiner_refresh rebuild) before
+# tagger_check_neutrino in whatever pipeline was chosen
 # (uboone's second graph examination; splits beam-bundle clusters at graph
 # component boundaries, cathode re-join per the cfg operating point).
-# DEFAULT OFF until the production flip.  Env: SBND_PROTECT_BUNDLE=1.
+# PRODUCTION DEFAULT ON since the doc pr/23 sec 9 flip (owner 2026-08-02);
+# -no-protect / SBND_PROTECT_BUNDLE=0 = the pre-pr/23 arm.  Pipelines with
+# no tagger_check_neutrino anchor (-stm/-tgm, the identity gate) skip the
+# insertion silently unless -protect was explicit.
 # Knob overrides (validation only): SBND_PROTECT_GRAPH=relaxed|relaxed_pid,
 # SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS in cm (0 disables the re-join pass).
-PROTECT="${SBND_PROTECT_BUNDLE:-0}"
+PROTECT="${SBND_PROTECT_BUNDLE:-1}"
+PROTECT_EXPLICIT=0
 NU=0
 BEAM_WINDOW=""
 # SCN (DL) neutrino vertex.  DEFAULT ON since 2026-07-30 (docs/pr/4): the
@@ -156,7 +163,7 @@ while [ $# -gt 0 ]; do
         -bw) BEAM_WINDOW="$2"; shift 2 ;;
         -stm-fit|--stm-fit) STM_FIT=1; shift ;;
         -no-stm-fit|--no-stm-fit) STM_FIT=0; shift ;;
-        -protect|--protect) PROTECT=1; shift ;;
+        -protect|--protect) PROTECT=1; PROTECT_EXPLICIT=1; shift ;;
         -no-protect|--no-protect) PROTECT=0; shift ;;
         -p*) PIPELINE="${1#-p}"; shift ;;
         *) _args+=("$1"); shift ;;
@@ -196,17 +203,21 @@ if [ "$STM_FIT" = 1 ] && [ -n "$PIPELINE" ]; then
     PIPELINE="$PIPELINE,stm_magnify"
 fi
 
-# -protect: insert protect_bundle after the cosmic taggers, before
-# tagger_check_neutrino, plus a second 'steiner' pass to rebuild the split
+# protect_bundle insertion, after the cosmic taggers and before
+# tagger_check_neutrino, plus the steiner_refresh pass to rebuild the split
 # clusters' steiner products (doc pr/23 ordering decision -- the
 # prototype-faithful order; the earlier after-unmerge_assoc placement defeats
-# TGM, doc pr/23 sec 6).  No-op on an empty pipeline (the identity gate must
-# stay empty) or when the stage is already named.
+# TGM, doc pr/23 sec 6).  PRODUCTION DEFAULT ON (sec 9): applied to any
+# pipeline naming tagger_check_neutrino; skipped silently otherwise
+# (-stm/-tgm, the empty identity-gate pipeline) UNLESS -protect was explicit,
+# which is then an error.  Already-named stages are left alone.
 if [ "$PROTECT" = 1 ] && [ -n "$PIPELINE" ]; then
     case ",$PIPELINE," in
         *,protect_bundle,*) : ;;
         *,tagger_check_neutrino,*) PIPELINE="${PIPELINE/tagger_check_neutrino/protect_bundle,steiner_refresh,tagger_check_neutrino}" ;;
-        *) echo "ERROR: -protect needs tagger_check_neutrino in the pipeline (got: $PIPELINE)" >&2; exit 1 ;;
+        *) if [ "$PROTECT_EXPLICIT" = 1 ]; then
+               echo "ERROR: -protect needs tagger_check_neutrino in the pipeline (got: $PIPELINE)" >&2; exit 1
+           fi ;;
     esac
 fi
 

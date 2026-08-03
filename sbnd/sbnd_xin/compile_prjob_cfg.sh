@@ -14,7 +14,7 @@ export WIRECELL_PATH=$CFG:/nfs/data/1/xqian/toolkit-dev/wire-cell-data:/nfs/data
   -A "output_dir=out" \
   --tla-code run=18253 --tla-code subrun=1 --tla-code event=172230 \
   -A reality=data \
-  --tla-code "pipeline_names=['switch_scope','unmerge_bundle','unmerge_assoc','steiner','fiducialutils','tagger_check_tgm','tagger_check_stm','tagger_check_fc','tagger_check_neutrino','numu_bdt_scorer','nue_bdt_scorer','tracking_visitor','tagger_output']" \
+  --tla-code "pipeline_names=['switch_scope','unmerge_bundle','unmerge_assoc','steiner','fiducialutils','tagger_check_tgm','tagger_check_stm','tagger_check_fc','protect_bundle','steiner_refresh','tagger_check_neutrino','numu_bdt_scorer','nue_bdt_scorer','tracking_visitor','tagger_output']" \
   -A "save_tensors=out.tar.gz" \
   -A "dl_weights=" \
   $CFG/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet > $OUT
