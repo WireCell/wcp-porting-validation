@@ -1,0 +1,5 @@
+  evt 286353: PR cluster_id -> img-global space (4 ids, 1456 ambiguous q fingerprints)
+event 286353 -> bee index 0: 9 layer(s), PR ['shower_track-global', 'track_fit-global', 'vertices-global', 'mc']
+wrote bee-pr25/pr25s3_286353_on.zip
+wrote bee-pr25/pr25s3_286353_on.index.txt
+wrote bee-pr25/pr25s3_286353_on.prid-map.txt

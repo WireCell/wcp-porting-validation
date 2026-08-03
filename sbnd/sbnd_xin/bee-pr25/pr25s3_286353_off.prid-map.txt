@@ -1,0 +1,6 @@
+# PR cluster_id remap for bee-pr25/pr25s3_286353_off.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+286353	0	9	6	flash-matched	6:2515
+286353	0	14	10	NO-FLASH-MATCH (fallback: dominant)	10:21
+286353	0	60	6	flash-matched	6:12
+286353	0	61	6	flash-matched	6:16
