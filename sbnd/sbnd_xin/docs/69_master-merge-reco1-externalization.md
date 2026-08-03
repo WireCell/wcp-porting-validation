@@ -270,10 +270,62 @@ everywhere. (`cmp_cfg.sh` normalizes away master's new `_pnode` key, a sibling o
   arose *from* the OOB read; with an in-bounds read there are none, and the
   commit states "no behavior change for finite data".
 
-So PDHD/PDVD NF+SP output is expected byte-identical. This is a **reasoned**
-conclusion, not an empirical one — `abtest/mergegate_{run,cmp}.sh` (4 PDHD +
-2 PDVD, snapshotting nfsp/img/clus separately) is the harness to confirm it, and
-has **not** been run in this round.
+So PDHD/PDVD NF+SP output is expected byte-identical. That reasoning was then
+confirmed empirically — see §9.
+
+## 9. PDHD/PDVD gate: master vs apply-pointcloud
+
+Run to answer the *separate* question "is `apply-pointcloud` safe to merge into
+master?", i.e. do our 67 commits move PDHD/PDVD. Manifest `abtest/events.txt`
+(4 PDHD + 2 PDVD), three stages each, via `abtest/mergegate_run.sh`.
+Arms in `/home/xqian/tmp/mergegate/`: **`master`** (`b806824f`), **`ap`**
+(`87ada3d5`), **`ap2`** (repeat of `ap`, identical binary).
+
+Naive `mergegate_cmp.sh master ap` → **FAIL**: nfsp 31/32, img 63/64, clus
+110/114. The divergence starts at NF+SP on `pdvd_039252_5` **anode7** and
+cascades into that event's `clusters-apa-anode7-ms-active.tar.gz` and four
+`mabc-*.zip`.
+
+That FAIL is **not** attributable to the branch. `sigproc/` is byte-identical
+between the two arms (apply-pointcloud contains master), and our 67 commits
+touch no package upstream of SP. The same-binary self-test settles it:
+
+```
+mergegate_cmp.sh ap ap2      # IDENTICAL binary, run twice
+  nfsp   31/32 identical   <-- FAIL   (pdhd_027305_0 anode0)
+  img    63/64 identical   <-- FAIL
+  clus  114/114 identical
+```
+
+Same failure rate, different anode — this is the known pre-existing PDHD/PDVD
+NF+SP nondeterminism (memory `pdhd-nfsp-nondeterminism`, found 2026-07-27 on a
+pre-merge binary; it names `pdvd 039252 evt 5` explicitly).
+
+The honest gate holds SP fixed. `abtest/fixedinput_gate.sh` copies the `master`
+arm's SP frames back into `work/<run>_<evt>/` and re-runs **only img + clus** on
+the apply-pointcloud binary (`pre` symlinked to `master` so the house script runs
+unmodified):
+
+| comparison | result |
+|---|---|
+| `clusters-apa-*.tar.gz` + `mabc-*.zip`, master vs apply-pointcloud, identical SP input | **178/178 byte-identical** |
+
+**GATE: PASS.** With SP noise removed, our 67 commits change **nothing** in
+PDHD/PDVD imaging or clustering — consistent with all 11 PDHD/PDVD compiled
+configs already matching master (§6).
+
+> **GOTCHA — never report a raw `mergegate_cmp` FAIL as a regression.** Always
+> run the same-binary repeat arm first; if the same archives differ, it is the SP
+> nondeterminism bug, and `fixedinput_gate.sh` is the gate that actually answers
+> the question. A systematic code change would move *all* anodes, not one.
+>
+> **GOTCHA — the checkout dance breaks `wcdoctest-gen`.** Returning from a master
+> build to apply-pointcloud, waf relinked our new
+> `doctest_powerbox_recombination.cxx.4.o` against a master-built
+> `libWireCellGen` and failed with undefined `PowerBoxRecombination` symbols
+> (`build rc=1`, while `install rc=0` — the shared libs were fine). A second
+> `wcbuild` clears it. Check the build rc after any A/B that switches commits;
+> `install` succeeding is not proof the build did.
 
 ## 8. Not covered here
 
