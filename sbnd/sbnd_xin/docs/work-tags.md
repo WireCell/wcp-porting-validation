@@ -4,10 +4,17 @@ Repro:
 
 ```bash
 cd sbnd_xin
-ls -d work* | wc -l              # 23 after the 2026-08-02 round (was 254 / 155 GiB; 15 after 2026-07-30)
+ls -d work* | wc -l              # 27 after the 2026-08-03 round (138 before it; 23 after
+                                 #   2026-08-02, 254 / 155 GiB before that, 15 after 2026-07-30)
 ls archive/*/ -d                 # 3 campaign archives + records/, 79 dirs
 find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below
 python3 relink_tags.py           # dry-run repair after any move
+
+# the 2026-08-03 retirement round (see that section below):
+python3 scripts/retire/plan_20260803.py       # 3 tier lists + 4 safety asserts
+python3 scripts/retire/lightcheck_20260803.py # light/SP coverage proof (BLOCKING)
+python3 scripts/retire/archive_records_20260803.py  # archive/records/pr23-25-era-20260803/
+scripts/retire/retire_20260803.sh V,1,2       # dry run of the removal list
 
 # the 2026-08-02 retirement round (see that section below):
 scripts/retire/materialize_20260802.sh        # pr/22 exhibit chain self-contained (dry run)
@@ -68,6 +75,164 @@ Verification that the move was faithful: `python3 stm_fv_census.py` after the
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-03 — the pr/23..pr/25 era + valfast, 111 arms, 27 GiB
+
+**STATUS: EXECUTED 2026-08-03 (`CONFIRM=yes ALLOW_LIVE_JOBS=yes
+retire_20260803.sh V,1,2`) — 111 dirs / 27 GiB removed, refused=0.**
+Post-checks: relink `repaired=0 unresolved=0`; `find . -xtype l` = **0** (it was
+**284** before the round — see "the 284" below); no git-tracked deletion;
+`work*` 138 → **27** dirs; `sbnd_xin` 55 GB → **28 GB**; `/nfs/data/1` free
+485 → **512 GB**. Exhibit check: `gapjump_probe.py` on
+`work-pr22gap-b/pr_evt386948/mabc-pr.zip` reproduces doc pr/22 §6 exactly
+(634 fit pts, 50/634 = 7.9 % uncovered, 33.3 cm across 7 stretches).
+
+State at the start: **138 top-level `work*` dirs, 48 GB**, `/nfs/data/1` at
+87 % with 485 GB free — **no disk pressure**; this round was preparation for the
+next campaign, not an emergency. The tree regrew from the post-08-02 23 dirs /
+19.5 GiB in ~24 hours: docs pr/23, pr/24 and pr/25 plus their valfast gate arms,
+the master-merge gate (doc 69) and the test round (doc 70) all ran back to back
+and none were retired in flight.
+
+Round tooling (all in `scripts/retire/`, forked from the 08-02 round; state in
+`state-20260803/`, lists in `tier{V,1,2}_20260803.txt`). **Do not re-run the
+08-02 scripts for a later round** — `plan_20260802.py` hardcodes that round's
+survivor list and would treat everything added since (`work-r1ql-*`,
+`work-r2patrec-*`, the cath01 pair, `work-mrgB-post`, the live prod0803
+campaign) as a removal candidate. Fork instead.
+
+1. **`plan_20260803.py`** — three tiers with **different dispositions** (the
+   08-02 round had one), an explicit PROTECTED set, a hard error on any
+   unclassified dir, and four safety asserts. All four PASSed: **0** real SP
+   frames, **0** `nusel_labels`/`ql_labels`/`decisions*` dirs, **0** git-tracked
+   files, and **0** of the 13 029 symlinks outside the removal set resolve into
+   it. Every cross-directory edge from a candidate points *outward* into a KEEP
+   hub; the big inbound counts (`work-mcp1kall-vfprodoff` 2288,
+   `work-nuecc48-poc0` 192) are self-referential.
+2. **`lightcheck_20260803.py`** — the blocking pre-flight. **1270/1270** real
+   `opflash_apa*.tar.gz` in the removal set are byte-identical to a surviving
+   copy: `missing=0 differs=0`, and 0 matches needed the cross-family fallback.
+   (The 08-02 round found 8 differing out of 25 112, so a clean sweep was not
+   assumed.) It also refuses outright if an exception lands in a DROP-whole
+   tier-V arm, which has no archive to fall back on.
+3. **`archive_records_20260803.py`** — record layer of the 80-arm ARCHIVE set
+   into `archive/records/pr23-25-era-20260803/<group>/<tag>.tar.gz` +
+   `.links.txt` + `.manifest.tsv`: **818.4 MiB raw → 362 MB gz**. HEAVY
+   (dropped) = pctree / mabc zips / calib / npz / clusters **+ opflash** (per 2).
+   Integrity gate — tar members == manifest record count — **PASS 80/80**.
+4. **`retire_20260803.sh V,1,2`** — dry run by default. Guards: tier-aware
+   archive-present refusal, Bokeh interlock, PROTECTED-in-tier-file refusal, and
+   a **new** live-batch interlock (below).
+
+### The 284 — a pre-existing invariant violation this round fixed
+
+`find . -xtype l` was **284**, not 0, when the round started. All 284 were
+inside three tier-V roots (`work-nuecc48-vfprodoff` 192, `work-r2mc-vfprodoff`
+52, `work-r1qlmc-vfprodoff` 40) — relative links to `evt*` dirs that were never
+created there. That made "0 after the round" a *sharper* post-check than
+`relink_tags.py`'s own `repaired=0`: a nonzero result would have meant something
+outside the plan's model broke. It came back 0.
+
+### Two things the round changed about the tooling
+
+- **The live-batch interlock (new).** A `wire-cell`/runner batch was writing
+  into `work-nuecc48-prod0803` throughout, and 26 GB of NFS deletes alongside it
+  is exactly M5. The script refuses while such a batch runs, **scoped to
+  `sbnd_xin` command lines** — this box is shared and an unrelated user's
+  `wire-cell` (one was running out of `/nfs/data/1/xning`) must not be able to
+  block our housekeeping. `ALLOW_LIVE_JOBS=yes` overrides; used here because the
+  live jobs touched only PROTECTED arms and loadavg was 1.19 on 64 cores.
+- **Work in flight is auto-PROTECTED.** `work-pr116962-nocosmicveto` appeared
+  *during* the round, created by a runner reading `work-nuecc48-prod0803`. So an
+  unclassified dir is not necessarily a classification bug. Rule now: unclassified
+  **and** touched within `RETIRE_FRESH_HOURS` (default 6) ⇒ auto-PROTECT and say
+  so loudly; unclassified and stale ⇒ hard error, classify by hand.
+
+### PROTECTED — 3 dirs, never listed, never walked
+
+`work-nuecc48-prod0803` and `work-vfnuecc48-prod0803` (the owner's 2026-08-03
+campaign, named explicitly so no glob change can pull them in), plus the
+auto-protected `work-pr116962-nocosmicveto`.
+
+### KEEP — 24 dirs, 20.2 GiB
+
+BASE/HUB `work`, `work-mcp10`, `work-mcp1000`, `work-mcp1kall-d59k` (18.6 GiB,
+never touched); the pr/22 exhibit chain `work-oc19scan-old` +
+`work-pr22gap-{a,b,c,input}`; `work-mcp1kall-cath01` + `work-nuecc48-cath01`
+(pr/12); `work-nuecc48-{base,nuf,prsmoke,prsmoke2}`; `work-r1ql-*` +
+`work-r2patrec-*` (doc 67); the git-tracked `work-stmcamp-d66new` label stub;
+and `work-mrgB-post`.
+
+**`work-mrgB-post` is held deliberately** (168 MB) — it is the current-production
+48-event baseline until `work-nuecc48-prod0803` completes, at which point
+prod0803 supersedes it. Revisit next round.
+
+### TIER V — valfast, 34 dirs, 20.19 GiB — DROPPED whole, no archive
+
+`valfast/README.md` states the contract: *"valfast arms are transient. Record
+the `valfast_compare.sh` summary (with tags) in the round doc, then DELETE the
+`work-vf*-<tag>` and `work-*-vf<tag>` roots."* Every arm's compare summary is in
+docs pr/23, pr/24 or pr/25. Largest: `work-mcp1kall-vfprodoff` 4.9 GB, then
+eight ~1.68 GB `work-vfmcp1k-*` arms.
+
+The old production baseline pair `work-vfmcp1k-prod{off,on}` (3.4 GB) went with
+them, on the owner's 2026-08-03 call: the pr/24 `iso_endpoint` and pr/25 trio
+defaults flipped ON that day, so as an A-side it was already pre-flip and stale.
+
+**Exception — 3 arms were ARCHIVED instead of dropped**, because a citation scan
+across `docs/`, `valfast/`, `*.py`, `*.sh` found **zero** references, so their
+gate result existed nowhere else: `work-vfmcp1k-pr24i0` (1123 MB),
+`work-vfnuecc48-pr24r3a` (71 MB), `work-vfmcp1k-pr24r3a` (49 MB).
+
+### TIER 1 — docs pr/23–pr/25, 73 dirs, 6.27 GiB — archived, then removed
+
+All three campaigns are CLOSED and **shipped with the SBND production default
+ON** (pr/23 §9 flip 2026-08-02; pr/24 `iso_endpoint` 2026-08-03; pr/25 all three
+2026-08-03).
+
+| group | dirs | GiB | what it was |
+|---|---|---|---|
+| `pr25` | 22 | 4.26 | doc pr/25 cathode-rejoin / TGM-veto / shower-topo gates, incl. the two 1.66 GB `pr25s3r2-{dbgall,on50b}` arms |
+| `poc48` | 6 | 1.26 | the pr/23+24 48-event PR baseline hub `work-nuecc48-poc0` + the `poc48*` protect-over-clustering arms |
+| `pr23` | 24 | 0.60 | doc pr/23 protect-over-clustering pilot / cathode / v1 arms + the two `mcp1kall-pr23*` subsets |
+| `pr24` | 21 | 0.16 | doc pr/24 isochronous-shower-trunk rounds a/b/c, r2 and r3 incl. the flip arms |
+
+`work-nuecc48-poc0` was cited by three docs and was the 48-event hub, but it is
+superseded by `work-nuecc48-prod0803` — a fresh run over the same manifest at
+current defaults, fully self-contained (48 of its own SP frames, 100 self-links,
+no outward dependency on poc0).
+
+### TIER 2 — merge / test gate arms, 4 dirs, 0.34 GiB — archived, then removed
+
+`work-mrgA-pre`, `work-mrgdet-r1`, `work-mrgdet-r2` (doc 69 master merge) and
+`work-d70-eb` (doc 70 test round). Both gates are recorded in their docs.
+
+### What survives, what is lost
+
+**Survives**: every doc-quoted number (tsv, logs, `tracking-*.root` are in the
+record tarballs), all 1270 light files (proven byte-identical to surviving
+copies), all SP frames (none were ever in the removal set), and doc-table
+re-checkability.
+
+**Lost**: pctree/Bee-level re-analysis of these arms — the same class of loss as
+the two prior rounds, and permanent, since a tag names a *config*, not a build
+(see "These arms are not reproducible" above). For tier V it is total: those 31
+arms leave no record layer at all, by the valfast contract.
+
+### Totals
+
+| | dirs | GiB |
+|---|---|---|
+| start | 138 | 48 (du) |
+| KEEP | 24 | 20.2 |
+| PROTECTED | 3 | ~1.0 and growing |
+| TIER V dropped | 34 | 20.19 |
+| TIER 1 archived + removed | 73 | 6.27 |
+| TIER 2 archived + removed | 4 | 0.34 |
+| archive added | — | +0.35 |
+| **sbnd_xin after** | **27 work\*** | **28 GB total incl. `archive/` 4.2 GB** |
+
+---
 
 ## RETIREMENT ROUND 2026-08-02 — the pr/11..pr/22 era, 231 arms, 127 GiB
 
