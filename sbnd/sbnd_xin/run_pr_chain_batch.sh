@@ -180,6 +180,17 @@ case "${SBND_EVAL_DEMOTED_MAINS:-}" in
     1) CATH_TLA+=(--tla-code "evaluate_demoted_mains=true") ;;
     0) CATH_TLA+=(--tla-code "evaluate_demoted_mains=false") ;;
 esac
+# Exempt a flag_demoted_main cluster from TaggerCheckTGM's main_pair_rejects
+# veto (doc pr/25, SBND evt 320029): with tgm_main_pair on, that guard reads a
+# per-blob array that is all-zero on every demoted main by construction, so it
+# vetoed every demoted-main pair unconditionally, before any CASE-A/CASE-B
+# boundary geometry ran.  DESIGNED, NOT YET the SBND default -- changes cosmic
+# verdicts, owner sign-off pending.  Only meaningful WITH
+# SBND_EVAL_DEMOTED_MAINS=1 above.  Env: SBND_TGM_EXEMPT_DEMOTED_MAIN=1|0.
+case "${SBND_TGM_EXEMPT_DEMOTED_MAIN:-}" in
+    1) CATH_TLA+=(--tla-code "tgm_exempt_demoted_main=true") ;;
+    0) CATH_TLA+=(--tla-code "tgm_exempt_demoted_main=false") ;;
+esac
 # Act on that verdict (doc pr/20 Part I P4): drop a TGM/STM-tagged companion
 # from the neutrino's other_clusters, keeping any shorter than the floor.
 # Env: SBND_SKIP_COSMIC_COMPANIONS=1|0  SBND_COSMIC_COMPANION_MIN_LEN=<cm>.

@@ -1,13 +1,12 @@
-# doc pr/25 — cathode re-join direction-agreement fallback (ClusteringProtectBundle)
+# doc pr/25 — cathode re-join direction-agreement fallback (ClusteringProtectBundle) + TGM demoted-main veto (TaggerCheckTGM)
 
-Also documents the other two findings from the same Bee hand-scan round
-(320029, 321107) since they were investigated together; only this one has a
-shipped fix — see the status table below.
+Also documents a third finding from the same Bee hand-scan round (321107),
+investigated alongside these two; see the status table below.
 
 | evt | question | status |
 |---|---|---|
-| **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix designed + validated on a 13-event small group** (§1). C++ + jsonnet **uncommitted**, pending owner go-ahead. |
-| **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven: a structural TGM/demoted-main veto interaction, not a tuning question (§2). **Fix designed, not built** — needs its own small-group measurement round. |
+| **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`); SBND default left OFF pending owner go-ahead. |
+| **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven and **fix implemented + small-group measured** (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **Default-ON blocked on that gap, not on the original veto question.** |
 | **321107** | main track is a muon, tagged as an electron | mechanism fully traced: `is_shower_topology`, not `is_shower_trajectory`, made the call (§3). **No fix proposed.** |
 
 Repro base for all three: `sbnd_xin/work-vfmcp1k-prodon` (protect_bundle ON,
@@ -229,7 +228,7 @@ python3 pr_scores_table.py --root work-pr25-on  > /tmp/on.tsv   # diff the two
 
 ---
 
-## 2. Event 320029 — designed, not built
+## 2. Event 320029 — implemented, default OFF, small-group measured
 
 Owner-confirmed target: **cluster 30** (point (191.2, 190.8, 112.7) cm, Bee
 label `30004`) — a 37.0 cm demoted-main fragment whose two ends sit on two
@@ -254,32 +253,123 @@ never) — previously read as a physics fact, actually a code interaction
 between P3 (`evaluate_demoted_mains`, which opens the door) and this
 unrelated guard (which closes it again).
 
-### Fix sketch (not implemented)
+### Fix — `exempt_demoted_main_pairs`, default OFF
 
-A scoped exemption in `main_pair_rejects`, gated by a new default-OFF knob
-(`exempt_demoted_main_pairs`), mirroring `m_evaluate_demoted_mains` next to
-it — skip the veto when `cluster.get_flag(Flags::demoted_main)`. Do **not**
-touch `real_cluster_main` itself (read elsewhere; global re-stamp is a much
-bigger blast radius than a scoped exemption).
+`clus/src/TaggerCheckTGM.cxx`: a scoped exemption in `main_pair_rejects`,
+gated by a new default-OFF knob `exempt_demoted_main_pairs`, mirroring
+`m_evaluate_demoted_mains` next to it — skip the veto when
+`cluster.get_flag(Flags::demoted_main)`. `real_cluster_main` itself and
+`ClusteringUnmergeBundle::carve` are untouched (the array is read elsewhere;
+a global re-stamp would be a much bigger blast radius than this one-consumer
+exemption). Threaded through `cm.tagger_check_tgm(...)`
+(`cfg/pgrapher/common/clus.jsonnet`), both SBND `clus_pr()`/`pr()` levels in
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`, and the standalone
+`wct-pr-perevt.jsonnet` TLA layer (all four files required together — the
+doc pr/23 both-files trap). Compiled-config proof against the production
+pipeline (`switch_scope,...,tagger_check_tgm,...,tagger_output`, not the
+default empty pipeline, which never instantiates the TGM node): knob-off
+byte-identical to pre-change HEAD, knob-on inserts
+`"exempt_demoted_main_pairs" : true`. `wcdoctest-clus` 49/49 PASS.
 
-**Cluster 30's outcome once the veto is lifted is not predicted here** —
-downstream CASE-A (`TaggerCheckTGM.cxx:875-947`) forks on
-`out_vec_wcps.size()`, not yet measured for this cluster: 2 groups tags
-unconditionally (no length test); more groups applies a `0.45 * length_limit`
-floor a 37 cm chord would likely fail. This is exactly the kind of thing the
-small-group validation run would measure, not something to assert in advance.
+### Small-group measurement (result: fix works, AND surfaces a second gap)
 
-### Next round's small group (not yet run)
+**Positive/target — cluster 30, evt 320029.** With the exemption on, the
+`main_pair_rejects` reject line disappears and CASE-A geometry runs:
+`ngrp=2` (two extreme groups), `TGM=true`. `skip_cosmic_companions` (already
+SBND ON, doc pr/20 Part I P4) then correctly drops it: `companion cluster 30
+(L 38.5 cm, TGM=1 STM=0) dropped from other_clusters`. Net physics:
+`nu_sel_n_assoc` 5→3, `kine_reco_Enu_MeV` 766.6→639.6 (−127 MeV, cluster 30's
+charge no longer credited to the neutrino), `numu_score` 3.612→3.547.
+**Cluster 29** (1.0 cm) stays `TGM=false` in both arms, as expected — CASE-B,
+too short to reach any accept branch. Determinism: 3-way identical
+`mabc-pr.zip` content hash under `setarch x86_64 -R`, knob on.
 
-Positive/target: cluster 30 (expect it fires or is absorbed by the length
-floor — TBD) and cluster 29 (1.0 cm, expect it stays untagged regardless).
-Comparison: the 14 demoted-main STM-only convictions from the standing
-pr/20 Part I mcp1k census — re-run with the veto lifted, check whether TGM
-newly convicts and whether P4 (`skip_cosmic_companions`, already ON)
-correctly excludes the charge.
+**Comparison — the 14 demoted-main STM-only convictions** (doc pr/20 Part I
+§6 table: 283595, 281595, 489327, 394796, 73004, 169356, 317939, 315849,
+285467, 278684, 314507, 288639, 59003, 282899), same-binary two-arm A/B
+(`work-mcp1kall-vfprodoff` QL hub). Knob-off: byte-identical to before this
+change on all 15 events combined (`nusel-table.tsv` diff empty). Knob-on: **8
+of the 14 events pick up at least one new `TGM=true`** on a demoted main (one
+event, 283595, gets two — see below). Of the clusters that newly flip, **5
+are exact duplicates** of the cluster STM already convicted in that same
+event (TGM now runs first in the pipeline and gets there before STM does;
+`skip_cosmic_companions` drops the same cluster's charge either way — **zero**
+net score/energy change, confirmed against `pr_scores_table.py` output:
+283595/cluster 23, 281595/27, 317939/32, 59003/26, 282899/13). The remaining
+**6 events are byte-identical end-to-end, no TGM change at all**: 489327,
+394796, 73004, 169356, 285467, 314507.
 
-**Escalation rule 1**: changes cosmic verdicts — owner sign-off needed before
-implementation, same bar as flipping the §1 operating point.
+**The other 4 flips are a genuinely new finding, not duplicates**, and this is
+the part that blocks a default-ON decision:
+
+| evt | cluster | STM in OFF | npts | bbox diag | location | companion of nu-candidate bundle? | score effect |
+|---|---|---|---|---|---|---|---|
+| 283595 | 26 | 0 | 12 | 0.9 cm | z 500.4–501.0 (z-max wall) | no | none |
+| 315849 | 18 | 0 | 12 | 0.9 cm | y −198.1..−198.5 (bottom wall) | no | none |
+| 278684 | 18 | 0 | 14 | 1.6 cm | y 196.8–198.1 (top wall) | no | none |
+| 288639 | 15 | 0 | 8  | 1.3 cm | y 199.1–200.0 (top wall) | **yes** | `nu_sel_n_assoc` 10→9, `kine_reco_Enu_MeV` 808.3→811.9 (+3.6 MeV) |
+
+All four are **8-14 point debris specks sitting exactly at a detector wall**,
+not tracks. `WCT_TGM_DEBUG=1` on 288639/cluster 15 confirms the mechanism:
+`ngrp 2 ... mid_inside false len 5.2/5.2 cm` — `check_tgm`'s CASE-A branch
+`out_vec_wcps.size() == 2 → return true` (`TaggerCheckTGM.cxx:917`) has **no
+length test at all** when the two extreme-group midpoints fail to reach the
+FV interior; a speck with two "ends" ~1 cm apart, both sitting on a boundary,
+satisfies it trivially. This branch is pre-existing and untouched by this
+fix — it applies to any cluster, demoted or not — but it was **never
+reachable for a demoted main** before, because `main_pair_rejects` vetoed
+every demoted-main pair unconditionally first. Lifting that veto makes this
+gap newly relevant to a population (small, wall-hugging debris fragments)
+that `main_component_pairs` was never validated against. Only 288639's speck
+happens to sit inside the same flash bundle as a selected nu-candidate, so
+only one of the four moved a score — but that is a property of these
+particular 4 events, not a bound on the effect size in general.
+
+### Default-ON is blocked on the debris-speck gap, not the original veto question
+
+The veto exemption itself does exactly what §2's root-cause analysis
+predicted (cluster 30, cleanly). What it also does — convict tiny boundary
+specks that were never a design target of `check_tgm`'s CASE-A shortcut — is
+a **pre-existing gap** (CLAUDE.md: found alongside, not fixed in this
+change). Candidate co-requisite fix, described but **not implemented**: an
+absolute length floor on the `out_vec_wcps.size()==2` branch, or requiring
+`component_min_length` even when the component-restricted extreme search
+yields the fallback global-8-extremes groups. Either needs its own
+measurement round (does it exclude genuine short corner-clippers like the
+30cm-ish tracks `component_rescue` was built to protect, doc 33/pr20?)
+before it can be proposed as a change, and touches `check_tgm`'s CASE-A path
+shared with uBooNE/prototype, not an SBND-only knob.
+
+**Escalation rule 1**: changes cosmic verdicts — flipping `exempt_demoted_main_pairs`
+to the SBND default needs both an owner decision on the veto question AND,
+independently, a decision on the debris-speck gap above.
+
+### Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# target + comparison set, knob off / on (same binary, fresh tags)
+SBND_TGM_EXEMPT_DEMOTED_MAIN=0 ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25b-off data \
+  320029 283595 281595 489327 394796 73004 169356 317939 315849 285467 278684 314507 288639 59003 282899
+SBND_TGM_EXEMPT_DEMOTED_MAIN=1 ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25b-on  data \
+  320029 283595 281595 489327 394796 73004 169356 317939 315849 285467 278684 314507 288639 59003 282899
+
+python3 pr_scores_table.py --root work-pr25b-off --out /tmp/pr25b_off.tsv
+python3 pr_scores_table.py --root work-pr25b-on  --out /tmp/pr25b_on.tsv   # diff the two
+
+# mechanism check on a specific cluster (e.g. 288639/cluster 15)
+WCT_TGM_DEBUG=1 SBND_TGM_EXEMPT_DEMOTED_MAIN=1 PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25b-dbg data 288639
+grep "check_tgm dbg: cluster 15" work-pr25b-dbg/pr_evt288639/wct_pr_evt288639.log
+
+# determinism, knob on
+for i in 1 2 3; do
+  SBND_TGM_EXEMPT_DEMOTED_MAIN=1 setarch x86_64 -R env PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25b-det${i} data 320029
+  python3 ../../abtest/hash_archive.py work-pr25b-det${i}/pr_evt320029/mabc-pr.zip
+done
+```
 
 ---
 
@@ -291,13 +381,25 @@ implementation, same bar as flipping the §1 operating point.
   `git status` before writing, per the concurrent-sessions convention. If a
   reader finds no `pr/24_*.md`, it belongs to that other round, not a gap
   here.
-- **`run_pr_evt.sh` and `run_pr_chain_batch.sh` carry a concurrent session's
-  edits in the same file diff** (`SBND_DL_WEIGHTS` passthrough + a DL
-  main-cluster swap guard, unrelated to this doc). This doc's knob wiring
-  (`SBND_PROTECT_REJOIN_PERP/_ANGLE/_DIR_RADIUS/_DIR_NPTS`) is additive and
-  does not conflict, but committing either file right now would also commit
-  the other session's uncommitted work — left uncommitted for that reason,
-  on top of "commit only when asked."
+- **`run_pr_chain_batch.sh` and `cfg/pgrapher/experiment/sbnd/clus.jsonnet`
+  repeatedly carried a concurrent session's edits in the same file diff**
+  (`SBND_DL_WEIGHTS`/DL main-cluster swap guard, doc pr/24; then a second
+  round adding `protect_skip_iso_xext/_frac/_min_len`, also doc pr/24 —
+  isochronous-cluster split veto). §1's knob wiring landed clean via a
+  per-hunk `git diff | split | git apply --cached` (never `git add -A` on a
+  file another session is mid-edit on); §2's `SBND_TGM_EXEMPT_DEMOTED_MAIN`
+  wiring in `run_pr_chain_batch.sh` used the same technique. `sbnd/clus.jsonnet`
+  changed on disk mid-edit (a `Read`-before-`Edit` staleness warning) — the
+  concurrent session's iso-veto hunk landed in the SAME function-arg block my
+  §2 edit was touching; reread before editing further, verified the two
+  additions don't overlap line-for-line before applying.
+- **Build/install raced with the concurrent session's own edit to
+  `ClusteringProtectBundle.cxx`** (M3-shaped, but the cause was a live edit,
+  not a link race): `./wcb install` failed
+  `'m_skip_iso_xext' was not declared in this scope` even though the member
+  WAS declared in the file moments later — the other session's save landed
+  mid-compile. Re-running build+install once (already the M3 rule) picked up
+  the completed edit and succeeded.
 - **`git stash` on a shared tree sweeps in every other session's uncommitted
   changes, not just yours.** Used once here to get a pre-change compiled-config
   baseline; `stash pop` restored cleanly (verified: the 3 pre-existing stash
@@ -306,6 +408,18 @@ implementation, same bar as flipping the §1 operating point.
   content change, which read as a stale freshness proof until traced (see
   Verification). Prefer `git show HEAD:path > /home/xqian/tmp/baseline` per
   file for a future baseline compare — it never touches the working tree.
+- **First compiled-config proof for §2 was a vacuous pass**: `pipeline_names=[]`
+  (the default TLA) never instantiates `TaggerCheckTGM`, so a knob-off vs
+  knob-on diff came back empty for the WRONG reason (no node = nothing to
+  differ) rather than the right one (key-suppressed when off). Re-ran with
+  the actual production `pipeline_names` list
+  (`switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,
+  tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,
+  steiner_refresh,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,
+  tracking_visitor,tagger_output` — from `run_pr_chain_batch.sh`'s `PIPELINE`
+  default) and got a real byte-identical-off / key-present-on result. Same
+  root cause as the standing "doc pr/23 gotcha" above; a second, independent
+  near-miss of it in the same session is worth its own line.
 
 ## 3. Event 321107 — explained, no fix proposed
 
