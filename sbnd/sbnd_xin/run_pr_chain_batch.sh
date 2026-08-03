@@ -142,6 +142,20 @@ CATH_TLA=()
     CATH_TLA+=(--tla-code "protect_cathode_rejoin_dyz=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DYZ}")
 [ -n "${SBND_PROTECT_REJOIN_DIS:-}" ] && \
     CATH_TLA+=(--tla-code "protect_cathode_rejoin_dis=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DIS}")
+# Direction-agreement fallback for a dyz-only re-join failure (doc pr/25,
+# SBND evt 489327): DESIGNED, NOT YET the SBND default (cfg default = 0 =
+# disabled).  SBND_PROTECT_REJOIN_PERP in CM (0/unset = fallback off);
+# SBND_PROTECT_REJOIN_ANGLE in DEGREES (no cm conversion);
+# SBND_PROTECT_REJOIN_DIR_RADIUS in CM; SBND_PROTECT_REJOIN_DIR_NPTS a bare
+# point-count integer.
+[ -n "${SBND_PROTECT_REJOIN_PERP:-}" ] && \
+    CATH_TLA+=(--tla-code "protect_cathode_rejoin_perp=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_PERP}")
+[ -n "${SBND_PROTECT_REJOIN_ANGLE:-}" ] && \
+    CATH_TLA+=(--tla-code "protect_cathode_rejoin_angle=${SBND_PROTECT_REJOIN_ANGLE}")
+[ -n "${SBND_PROTECT_REJOIN_DIR_RADIUS:-}" ] && \
+    CATH_TLA+=(--tla-code "protect_cathode_rejoin_dir_radius=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DIR_RADIUS}")
+[ -n "${SBND_PROTECT_REJOIN_DIR_NPTS:-}" ] && \
+    CATH_TLA+=(--tla-code "protect_cathode_rejoin_dir_npts=${SBND_PROTECT_REJOIN_DIR_NPTS}")
 # Demoted-main flag on the outer un-merge (doc pr/20 Part I P2).  EMPTY = emit
 # no TLA = the job default null = C++ false = OFF.  Needs the Q/L stage to have
 # run with SBND_SAVE_WASMAIN=1, else the visitor warns and flags nothing.

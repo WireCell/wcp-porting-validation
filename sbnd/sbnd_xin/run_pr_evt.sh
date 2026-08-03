@@ -78,6 +78,10 @@ Usage: $(basename "$0") [mc|data] [-N n] [-p names] <idx|all>
             error).  -no-protect / SBND_PROTECT_BUNDLE=0 = the pre-pr/23 arm.
             Knob overrides: SBND_PROTECT_GRAPH,
             SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS (cm; 0 disables the re-join).
+            Direction-agreement fallback for a dyz-only failure (doc pr/25,
+            DESIGNED not yet the SBND default): SBND_PROTECT_REJOIN_PERP (cm;
+            0/unset disables), SBND_PROTECT_REJOIN_ANGLE (deg),
+            SBND_PROTECT_REJOIN_DIR_RADIUS (cm), SBND_PROTECT_REJOIN_DIR_NPTS.
   -bw l,h   beam window [l,h) in us on cluster_t0 (matched flash time); overrides
             the per-mode default (mc ${BEAM_WINDOW_MC}, data ${BEAM_WINDOW_DATA} = the
             experiment window, same as SBND Q/L beam_pref).  Since doc 56 this
@@ -234,6 +238,20 @@ PROT_TLA=()
     PROT_TLA+=(--tla-code "protect_cathode_rejoin_dyz=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DYZ}")
 [ -n "${SBND_PROTECT_REJOIN_DIS:-}" ] && \
     PROT_TLA+=(--tla-code "protect_cathode_rejoin_dis=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DIS}")
+# Direction-agreement fallback for a dyz-only re-join failure (doc pr/25,
+# SBND evt 489327): DESIGNED, NOT YET the SBND default (cfg default = 0 =
+# disabled).  SBND_PROTECT_REJOIN_PERP in CM (0 or unset = fallback off);
+# SBND_PROTECT_REJOIN_ANGLE in DEGREES (no unit conversion, unlike the CM
+# knobs); SBND_PROTECT_REJOIN_DIR_RADIUS in CM; SBND_PROTECT_REJOIN_DIR_NPTS
+# a bare point-count integer.
+[ -n "${SBND_PROTECT_REJOIN_PERP:-}" ] && \
+    PROT_TLA+=(--tla-code "protect_cathode_rejoin_perp=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_PERP}")
+[ -n "${SBND_PROTECT_REJOIN_ANGLE:-}" ] && \
+    PROT_TLA+=(--tla-code "protect_cathode_rejoin_angle=${SBND_PROTECT_REJOIN_ANGLE}")
+[ -n "${SBND_PROTECT_REJOIN_DIR_RADIUS:-}" ] && \
+    PROT_TLA+=(--tla-code "protect_cathode_rejoin_dir_radius=(import 'wirecell.jsonnet').cm*${SBND_PROTECT_REJOIN_DIR_RADIUS}")
+[ -n "${SBND_PROTECT_REJOIN_DIR_NPTS:-}" ] && \
+    PROT_TLA+=(--tla-code "protect_cathode_rejoin_dir_npts=${SBND_PROTECT_REJOIN_DIR_NPTS}")
 # Legacy-tree guard (doc pr/23 sec 4.2; cfg default TRUE = abort on a pctree
 # with no wasmain array).  SBND_REQUIRE_WASMAIN=0 declares an intentional
 # legacy-tree run (old scan sets / pinned hubs).
