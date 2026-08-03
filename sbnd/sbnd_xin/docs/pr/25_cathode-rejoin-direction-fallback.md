@@ -7,7 +7,7 @@ investigated alongside these two; see the status table below.
 |---|---|---|
 | **489327** | cathode crosser broken in two; the pr/23 re-join knob did not fire | **root cause proven, fix implemented + validated on a small group** (§1). **Committed** (toolkit `75c703da`, wcp-porting-img `c8d4e32`); SBND default left OFF pending owner go-ahead. |
 | **320029** | another cluster (30) looks like a TGM but was not tagged | root cause proven, fix implemented + small-group measured (§2): a structural TGM/demoted-main veto interaction, not a tuning question. The measurement surfaced a second, pre-existing `check_tgm` gap — see §2. **SBND DEFAULT ON** (owner 2026-08-02, impact judged small); the `check_tgm` gap remains an open, separate item. |
-| **321107** | main track is a muon, tagged as an electron | mechanism fully traced AND directly instrumented (§3): `is_shower_topology`, not `is_shower_trajectory`, made the call; isochrony is population-level irrelevant; the one remaining candidate threshold shows no natural separation across its 21-event blast radius and at least one segment flips verdict between two evaluations of the same fit. **No safe SBND-scoped fix found this round** — three candidate knobs were measured directly and rejected. Diagnostic instrument (`WCT_SHOWER_TOPO_DEBUG`) **committed, default off**. |
+| **321107** | main track is a muon, tagged as an electron | **mechanism fully explained** (§3, two rounds). `is_shower_topology` made the call, and its only measurement axis satisfies `dir_3·x̂ = sin θ` — at 88.55° (`dir3x = 0.9994`) it *is* the drift axis, so the wide halo (rms 8.34 cm in `dir_2` vs 0.40 cm in `dir_3`) **never entered the decision**: the flag fired on drift quantization noise (0.313 cm lattice vs a 0.4 cm cut). **The owner's proposed 2-D-projective-narrowness direction would not have changed this verdict.** 321107 is not exceptional — **86 of 91** long firings across 429 events sit in the same noise floor and it ranks 77/91. **No fix shipped, two rounds running**: a robust-statistic guard was pre-committed and then failed its own rule on the full manifest (short showers scatter 0.53–1.44; the statistic is length-dependent; both fallbacks fail, contiguity *inverts*). Open question handed to the owner: should a 249 cm segment be eligible for `kShowerTopology` at all (X₀ ≈ 14 cm)? Physics-relevant blast radius **10 nu-main segments in 10 events**. Instrument (`WCT_SHOWER_TOPO_DEBUG`) extended, **committed, default off**. |
 
 Repro base for all three: `sbnd_xin/work-vfmcp1k-prodon` (protect_bundle ON,
 the SBND production default since `f813e312`) and `work-vfmcp1k-prodoff`,
@@ -469,251 +469,341 @@ done
   same-segment claim needs the length continuity to back it up, not just
   co-occurrence in one event's guard table. n=1 is still sufficient to make
   the point; it is not evidence for a rate.
+- **A discriminant's threshold can sit inside the reconstruction's own
+  quantization, and then it measures nothing.** §3.3: reconstructed x is
+  quantized on a **0.313 cm** time-slice lattice, and
+  `segment_is_shower_topology`'s "large spread" cut is **0.4 cm** on an axis
+  that for an isochronous segment *is* the drift axis. The per-bucket RMS
+  median is 0.35 cm for essentially every long segment in the manifest — a
+  constant of the detector, not a property of any track. Before tuning any
+  spread threshold, check it against the granularity of the coordinate it is
+  measured in.
+- **`dir_3` is not "the transverse direction" — it is the drift-containing
+  one.** `dir_2 = x̂ × dir_1` has no x-component by construction, so
+  `dir_3 = dir_1 × dir_2` satisfies `dir_3·x̂ = sin(angle-to-drift)`. The
+  function measures spread *only* along `dir_3`. For an isochronous track
+  that means the visible halo (which lives in `dir_2`, in the wire plane) is
+  invisible to the test, and conversely the test is reading the one axis where
+  imaging is *unambiguous*. Anyone reasoning about this function from an event
+  display is looking at the wrong axis — check `dir3x` in the instrument first.
+- **A gap found in a blast-radius population is not evidence of a gap.**
+  §3.5: `rms_p90` showed a clean 0.60→1.17 cm separation on the 21-event
+  round-1 arm, with n=3 on the high side — and that population was selected
+  *because* it contained long shower-flagged segments. On the full 572-event
+  manifest the short-segment population fills the gap (27.6% below 0.7 cm),
+  the statistic turns out to be monotonic in segment length, and the gap's
+  position moves with the quantile (0.47/0.64/1.08 at p75/p90/p95). Two
+  rounds in a row the selected population produced a separation that the
+  general population did not have. **Write the stop rule before the wide run,
+  not after seeing it.**
+- **Test the fallback, don't assume it.** The "sustained, not one bucket"
+  argument sounds obviously right and is measurably wrong here: by absolute
+  contiguous wide-run length the noise-driven long segments score 6–12 cm
+  while genuine short showers median 3.0 cm, because scattered noise runs grow
+  with segment length. A physically-worded criterion can still invert.
 
-## 3. Event 321107 — investigated with a direct instrument; no safe fix found
+## 3. Event 321107 — mechanism fully explained; no safe fix found (two rounds)
 
 Main segment (`real_cluster_id` 13000): 415 fit points, 248.72 cm, PCA angle
-to drift-x **88.55°** — confirmed isochronous. `pdg=11`, `flag_shower=1`
-across all 415 points, bit-identical on `prodon`/`prodoff`.
+to drift-x **88.55°** — isochronous. `pdg=11`, `flag_shower=1` across all 415
+points, bit-identical on `prodon`/`prodoff`.
 
-**Correction to an earlier pass of this section**: the previous write-up's
-§3.4 ("associated-cloud contamination") and its `0.37` narrow-miss estimate
-were built on a 3-D nearest-fit-point proxy, not the code's actual 2-D
-voronoi + ghost-removed association. That proxy predicted the flag *should
-not* fire (0.72 cm spread < the 0.8 cm branch threshold) on the one event
-that matters, and it did fire — the proxy does not reproduce the mechanism.
-This round replaces every proxy-derived number with a direct measurement,
-via a new instrument (§3.4), and reaches a materially different conclusion.
+**Round 2 (this pass)** was opened by the owner's reading of two event
+displays: *the halo is an isochronous imaging artifact; the track is narrow in
+the projective view; can the function be improved?* The mechanism is now
+completely traced, and it is **not** what either the owner or round 1 thought.
+The headline result is counterintuitive and is the most useful thing in this
+section:
 
-### 3.1 Why an electron, not a muon — the owner's guess is ruled out twice
+> **The function never saw the halo.** The wide cloud that makes the segment
+> look like a shower by eye is *orthogonal to the only axis the test measures*
+> and contributes nothing to the decision. The flag fired on drift-direction
+> **quantization noise**.
+
+A second, systematic result follows: 321107 is **not an outlier**. Across 429
+events, 86 of 91 long shower-topology firings sit inside the same noise floor,
+and 321107 ranks 77th of 91. This is a property of the discriminant at long
+lengths, not a one-event accident — which is also why no threshold fixes it.
+
+**Two rounds, two corrections to earlier passes of this section** — both
+recorded in §3.6, both instances of the same trap: reasoning about the
+algorithm from a re-derivation instead of measuring it in place.
+
+### 3.1 Why an electron, not a muon — the owner's original guess, ruled out twice
 
 `NeutrinoTrackShowerSep.cxx:52-59`: `segment_is_shower_topology` runs first
 and short-circuits `segment_is_shower_trajectory`. Separately,
 `segment_is_shower_trajectory` (`PRSegmentFunctions.cxx:983-1078`) has a hard
-`length > 50cm → return false` guard at `:988` — this 249 cm track could
-never reach it regardless of order.
+`length > 50cm → return false` guard at `:988` — this 249 cm track could never
+reach it regardless of order.
 
 **The isochronous projection handling the owner remembered is real** —
 `PRSegmentFunctions.cxx:1050-1067`, the `angle_diff <= 10°` branch of
-`is_shower_trajectory` — it just never ran here: wrong function (topology
-fired first), and length-gated out of the right one anyway.
+`is_shower_trajectory`, which deliberately projects lengths onto `dir_2` to
+drop the drift-ambiguous axis — it just never ran here: wrong function
+(topology fired first), and length-gated out of the right one anyway.
 
 Once topology fires, `NeutrinoTrackShowerSep.cxx:117-135` hard-assigns
 `pdg=11`/`score=100` as literals — `segment_determine_dir_track`, the real
 muon/proton/pion PID call, is never attempted on this path.
 
-### 3.2 Isochrony is not the population-level driver
+### 3.2 The measured axis collapses onto the drift axis — so the halo is invisible
 
-`is_shower_topology`'s only angle-to-drift special case
-(`PRSegmentFunctions.cxx:2570-2578`) is `angle_deg < 7.5°` — drift-*parallel*,
-the opposite regime from 321107. At 88.55° the general branch always runs,
-using RMS spread along `dir_3`, which at this angle is ≈ the drift axis
-(`dir_3 · x̂ ≈ 0.9997`).
+`PRSegmentFunctions.cxx:2574-2584` builds the local frame as
 
-Census (`pr25_shower_topo_census.py population --arm work-vfmcp1k-prodon
---nu-only`), 324 nu-candidate main segments >50 cm across 444/572 `prodon`
-events (the other 128 have no `T_rec_charge` tree at all — no tracking
-output, not a census artifact), binned by angle to drift:
-
-| angle to drift | n | shower-flagged | rate |
-|---|---|---|---|
-| 0–30° | 16 | 1 | 6.2% |
-| 30–50° | 58 | 3 | 5.2% |
-| 50–65° | 72 | 1 | 1.4% |
-| 65–75° | 70 | 7 | 10.0% |
-| 75–85° | 74 | 4 | 5.4% |
-| 85–90° | 34 | 3 | 8.8% |
-
-Flat, within counting noise. **"Isochronous tracks get called showers" is
-not a population-level effect** — 321107 is an individual case, not an
-instance of an angle-dependent failure, and the owner's original framing of
-the question (mirrored in the previous pass of this doc) should be retired.
-
-### 3.3 The blast radius of any fix is small and exactly known
-
-`PRSegmentFunctions.cxx:2765-2772`'s long-track guard only runs on segments
-already flagged `kShowerTopology` with geometric length > 50 cm and can only
-demote them — so the population any change can possibly touch is exactly
-*that* set. Census over all clusters (not just nu-candidate mains) in the
-same 444 events: 1850 segments written to `T_rec_charge`, 841 shower-flagged,
-of which **21 exceed 50 cm, in 21 distinct events**:
-
-```
-286353 321107 53427 292643 281527 277276 387850 316729 62281 278420 404684
-57903  65289  350935 280972 315167 286681 278684 347085 287621 400504
+```cpp
+dir_2 = drift_dir_abs.cross(dir_1).norm();   // no x-component: lies in the wire plane
+dir_3 = dir_1.cross(dir_2);                  // => dir_3 . xhat = sin(angle-to-drift)
 ```
 
-This is the small group used below — the owner's own scoping request, not a
-new event selection.
+and the decision reads **only `std::get<2>`** — the RMS along `dir_3`.
+Components 0 and 1 are computed at `:2606-2613` and never read again.
 
-### 3.4 Direct instrument, not a proxy
+For an isochronous segment `sin θ → 1`, so `dir_3` *is* the drift axis. The
+instrument confirms it directly on this segment: **`dir3x = 0.9994`**.
 
-`segment_is_shower_topology` had **zero active log lines** before this round
-(one relevant `std::cout` existed, commented out, at `:2660`). Added an
-env-gated diagnostic (`WCT_SHOWER_TOPO_DEBUG=1`, default off, same idiom as
-`WCT_TGM_DEBUG`) emitting, per evaluation: the per-bucket `dir_3` RMS
-distribution (count over the 0.4 cm cut, median, p90 — not just the max),
-association coverage (`total_effective_length / geometric length`), which of
-the 5 disjunction branches fired, and the long-track guard's
-`total_length1/2` fractions. `clus/src/PRSegmentFunctions.cxx`.
+The halo lies in the orthogonal direction. Measured on the event's own 3-D
+point cloud (all 8153 points of cluster 13, in the code's own frame):
 
-Target (321107, cluster 13, seg 13000, L = 248.7 cm), measured directly:
+| axis | rms |
+|---|---|
+| `dir_2` (in wire plane — where the halo lives) | **8.34 cm** |
+| `dir_3` (drift — the *only* axis the test uses) | **0.40 cm** |
 
-```
-assoc_npts 8136  nbuckets 389  n_over0.4cm 134  rms_p50 0.36cm  rms_p90 0.50cm
-max_spread 1.24cm  lsl 80.4cm  tel 233.7cm  lsl/tel 0.344  tel/L 0.940  branch 2
-guard: total_length1 64.2cm (0.258·L)  total_length2 63.6cm (0.256·L)  demoted false
-```
+a ratio of **21**. And the halo does not leak into the measured axis at all —
+rms(`dir_3`) as a function of transverse distance:
 
-This directly refutes two of the three candidate mechanisms considered:
+| \|dir_2\| band | 0–1 | 1–2 | 2–5 | 5–10 | 10–20 | 20–99 cm |
+|---|---|---|---|---|---|---|
+| n points | 1026 | 846 | 2021 | 2428 | 1654 | 178 |
+| rms(`dir_3`) | 0.414 | 0.423 | 0.386 | 0.383 | 0.395 | 0.375 cm |
 
-- **Not sparse association** (candidate A, "the coverage denominator is
-  small"): `tel/L = 0.940` — 94% of the track's length has ≥2 associated
-  points. This is a well-covered segment, not a starved one.
-- **Not a single outlier bucket** (candidate B, "one bucket carries
-  `max_spread`"): 134 of 389 populated buckets (34%) exceed the 0.4 cm cut,
-  and the *median* bucket RMS (0.36 cm) already sits just under that cut. The
-  spread is broadly distributed across a third of the track, not concentrated
-  in one or two buckets that a robuster statistic would filter out.
+**Flat, from the core out to 24 cm.** Points 20 cm off the trajectory
+contribute exactly as much drift-direction spread as points on it.
 
-What remains is **candidate C**, the long-track guard's `0.25` fraction: the
-target genuinely sits close to it (0.258 / 0.256 vs 0.25) — a real
-near-miss, this time measured directly rather than inferred from a proxy.
+**Consequence — and this is the answer to the owner's question:** testing
+narrowness in the 2-D projected views *would not have changed this verdict*.
+The 3-D halo never entered the decision, so removing it cannot remove the
+flag. The good news is that the true cause is simpler.
 
-### 3.5 The 0.25 threshold has no natural break across the affected population
+*(Provenance: the two tables above are computed offline from the event's own
+Bee point cloud by replicating the code's frame construction — they
+characterise the data, not the algorithm's verdict. The load-bearing claim
+they support, that the measured axis is the drift axis, is independently
+confirmed in-code by `dir3x = 0.9994`.)*
 
-Re-running the same instrument over all 21 events plus ~9 muon controls that
-correctly stayed tracks (`pr25_shower_topo_census.py guard --arm
-work-pr25s3-dbg21`): 41 evaluations of an L>50cm shower-flagged segment, of
-which the *existing* guard already correctly demotes 6 (they are not part of
-the population below). The controls contribute **zero** guard-evaluated
-segments — the guard cannot touch a segment that never gets flagged in the
-first place, so "the controls are untouched" does not by itself validate any
-candidate, exactly as anticipated before running this.
+### 3.3 What actually fired: the 0.4 cm cut sits inside the drift lattice
 
-The 35 that survive, by `max(total_length1, total_length2) / L`:
+The reconstructed x of this cluster takes **28 distinct values over 8.44 cm,
+spaced 0.313 cm** — the time-slice thickness. The per-bucket RMS along a
+drift-aligned axis is therefore a lattice artifact of order 0.3–0.5 cm, and
+the code's "large spread" threshold is **0.4 cm**.
+
+Direct instrument output for the target (`WCT_SHOWER_TOPO_DEBUG=1`):
 
 ```
-0.570 0.398 0.375 0.369 0.361 0.357 0.353 0.353 0.338 0.304 0.304 0.300 0.300
-0.300 0.293 0.292 0.285 0.282 0.278 0.278 0.276 0.276 0.274 0.273 0.273 0.270
-0.270 0.268 0.268 0.265 0.265 0.259 0.258 0.258 0.256 0.250
+seg -1 L 248.7cm assoc_npts 8133 nbuckets 389 n_over0.4cm 134 n_over0.7cm 4
+       n_over0.8cm 3 n_over1.0cm 2 rms_p50 0.36cm rms_p75 0.43cm rms_p90 0.50cm
+       rms_p95 0.55cm max_spread 1.24cm maxcont 9.6cm lsl 80.4cm tel 233.7cm
+       lsl/tel 0.344 tel/L 0.940 dir3x 0.9994 branch 2
+seg -1 guard branch 2 L 248.7cm total_length1 64.2cm(0.258)
+       total_length2 63.6cm(0.256) demoted false final_shower true
 ```
 
-**Continuous from 0.250 to 0.570, no gap.** 321107 sits at the low end
-(0.258), tied with several others. **The 21 is a blast-radius population,
-not an error population** — the census identifies every segment a guard
-change could touch, not which ones are wrongly classified; some are almost
-certainly genuine showers. There is no truth label on this sample (M11/
-no-truth caveat, as in every prior round) to separate them, so there is no
-principled place to draw a raised threshold: any value that catches 321107
-also catches an a-priori-unknown number of the other 20 (genuine or not),
-and a value that catches only 321107 does not exist (277276 sits at the
-identical 0.250).
+Branch 2 is `max_spread > 0.8 && lsl/tel > 0.3 && tel >= 15cm`. Both live
+terms are artifacts:
 
-### 3.6 The discriminant is not stable at the margin
+- **`lsl/tel = 0.344` vs a 0.3 threshold** — a coin flip. The bucket-RMS
+  median is 0.36 cm against a 0.4 cm cut, so the count of "wide" buckets is
+  set by lattice noise. Across all 91 long firings in the 429-event run the
+  median bucket RMS is **0.35 cm** (range 0.33–0.61) — a universal constant of
+  the reconstruction, not a property of any segment.
+- **`max_spread = 1.24 cm` comes from 3 buckets out of 390** — indices
+  131/132/135, adjacent, spanning ~2 cm of a 249 cm track, each collecting
+  points from 5–6 different time slices. p90 of the same distribution is
+  0.50 cm.
 
-`TaggerCheckNeutrino.cxx` runs `clustering_points` + `separate_track_shower`
-**twice** per event — once before `improve_vertex`, once after
-(`:545` and `:673`). The instrument's per-segment identity field reads `-1`
-at this point in the pipeline (`Segment::id()` is not stamped until later,
-`NeutrinoPatternBase.cxx:1858`), so grouping is by event, and most events in
-the table contain more than one L>50cm shower-flagged segment — a demoted
-one and a surviving one in the same event is unremarkable on its own and
-does **not** by itself show a same-segment flip. Filtering to the case where
-the length is continuous enough across the two passes to be plausibly the
-same segment leaves **one clean instance, event 277276**: the fit shifts by
-~1 cm between passes and the verdict flips:
+The existing long-track guard (`:2816-2825`, the designed backstop for exactly
+this) missed by 0.008: `0.258` and `0.256` against its `0.25` threshold.
 
-| evt | pass-1 | pass-2 | verdict |
-|---|---|---|---|
-| 277276 | 140.4 cm (f=0.244, demoted) | 139.3 cm (f=0.250, survives) | flips |
+### 3.4 Population: 321107 is typical, not exceptional
 
-(65289 and 278684 also show "demoted" and "survives" rows in the same event,
-but at length pairs 150.3/69.5 cm and 109.6/59.2-59.3 cm — too far apart to
-be the same segment continuing between passes, more likely two distinct
-long segments in the same event, one genuinely a shower and one not. Listed
-here only so the raw counts in §3.5 are traceable; they are **not** claimed
-as flips.)
+Instrument run over the full 572-event valfast manifest (`work-pr25s3r2-dbgall`,
+all `rc=0`; 429 events produce at least one evaluation; 4327 distinct segment
+evaluations, 464 fired the disjunction — 91 with `L>50cm`, 373 with `L≤50cm`).
 
-This one instance is enough to make the point, even at n=1: the
-classification the guard produces for a fixed physical track is not
-necessarily stable across two evaluations of the *same* input a few
-centimeters apart. It does not by itself carry the rejection of candidate C
-— that rests on §3.5's continuous, gapless 0.250–0.570 distribution across a
-population with no truth labels — but it reinforces why tuning the `0.25`
-constant would not resolve the underlying issue: at least for this one
-segment, the constant sits inside a region the algorithm's own two passes
-do not agree on. Per CLAUDE.md §5's "a physics number looks wrong: report,
-don't tune", and per the selection rule fixed in this round's plan before
-any of the above was measured: **no candidate cleanly separates the target
-from its own population, so no threshold change is proposed.**
+`rms_p90` of the 91 long firings, sorted:
 
-### 3.7 Prototype comparison
+```
+0.42 ... 0.64   (86 values, a tight lump on the noise floor)
+1.18  1.67  2.46  2.46  10.86    (5 genuinely wide segments)
+```
 
-No divergence — `prototype_base/pid/src/ProtoSegment.cxx:319-471` (topology)
-and `:543-611` (trajectory) match the toolkit line-for-line on every
-threshold and the same `<7.5°` drift-parallel-only special case. This is not
-a porting bug; the behavior is original to the algorithm design, and the
-same-input verdict instability of §3.6 is therefore also original, not a
-toolkit regression.
+321107 sits at 0.50 — **rank 77 of 91**. So the long shower-topology category
+is, as a population, noise-driven: **86 of 91 (94.5%)** carry no spread
+evidence above the quantization floor.
 
-### 3.8 Conclusion — no fix this round; the instrument is the deliverable
+Physics-relevant blast radius (segments on the **nu-candidate main cluster**,
+where a verdict change moves a physics answer): **10 of 263** long segments
+across 10 events, i.e. ~2.3% of events — not the 91 raw firings.
 
-Three candidate default-OFF knobs were designed in advance of measurement
-(coverage floor, per-bucket-count spread statistic, raised long-track
-fraction) with an explicit selection rule committed before running the
-instrument. All three fail that rule: A and B are directly refuted on the
-target itself (§3.4); C shows no separation and, worse, sits on a
-demonstrably unstable discriminant (§3.5–3.6). Per the pre-committed rule,
-**no fix is shipped.**
+### 3.5 A fix was designed, pre-committed, measured — and all three forms fail
 
-What *is* shipped: the `WCT_SHOWER_TOPO_DEBUG` instrument itself
-(`clus/src/PRSegmentFunctions.cxx`, default off, zero behavior change either
-way — it only adds log lines) and `pr25_shower_topo_census.py`, both durable
-assets for the next pass at this problem.
+Round 2's hypothesis: strengthen the existing demote-only `L>50cm` guard by
+replacing the single-bucket `max_spread` extremum with a robust statistic
+(the q-quantile of the bucket RMS, `q=1.0` = legacy = byte-identical), so the
+"wide" evidence must be *sustained* rather than carried by 3 buckets in 390.
+On the 21-event round-1 arm this looked compelling: a clean gap at
+`rms_p90` 0.60 → 1.17 cm.
 
-**If pursued further**: `segment_is_shower_topology` already computes a
-per-bucket `dQ/dx` (`vec_dQ_dx`, `PRSegmentFunctions.cxx:2616`) that is
-currently **dead code** — read only for its `.size()`, never its values
-(`:2681`, `:2722`). A shower's dQ/dx profile (cascade multiplication) differs
-physically from a muon's (~constant, MIP-like) in a way none of the three
-candidates above used. Using it would be a genuine algorithm addition, not a
-threshold tune, and needs its own measurement round — not proposed here.
+**The selection rule was committed before the wider run** (the high side of
+that gap was n=3, from a population selected for containing long
+shower-flagged segments — the same shape as round 1's own n=3→n=1
+correction). The rule: adopt only if short (`L≤50cm`) firings — the population
+where nobody disputes real showers live — cluster at `p90 ≳ 1 cm`; stop if
+they scatter through 0.5–1.5 cm; and require the separation to survive at
+p75, p90 *and* p95.
+
+**All three conditions fail.**
+
+**(a) The short population scatters exactly as the stop-condition describes.**
+`rms_p90` of the 373 short firings: p10 **0.53**, p25 **0.67**, median
+**0.80**, p75 **1.07**, p90 **1.44**. And **103 of 373 (27.6%)** sit below
+0.7 cm — indistinguishable from the long lump. **20.6% sit below 0.64**, the
+long population's own gap. If `p90 ≈ 0.5` meant "not a shower", then a fifth
+of all short shower firings are also not showers — a claim there is no truth
+on this sample to support.
+
+**(b) The statistic is length-dependent, so the cut selects "long", not
+"not-a-shower".** In matched bucket-count bands the median `p90` falls
+monotonically — and so does the *scale-free* fraction of wide buckets, so this
+is not merely the `p90 → max` small-sample effect:
+
+| nbuckets | 0–20 | 20–40 | 40–80 | 80–160 | >160 |
+|---|---|---|---|---|---|
+| median `rms_p90` | 0.85 | 0.71 | 0.61 | 0.47 | 0.45 cm |
+| median `n_over0.8/nbuckets` | 0.125 | 0.081 | 0.056 | 0.020 | 0.012 |
+
+**(c) q-robustness fails.** The gap's position moves with the quantile —
+0.47 (p75), 0.64 (p90), 1.08 (p95) — and so does the demotion count: **89, 86,
+80 of 91**. A constant that must be chosen to place a cut is a tuned constant,
+whatever statistic it wears.
+
+**The two fallback forms fail too**, both tested rather than assumed:
+
+- *Fraction of buckets over the branch cut* (`n_over0.8/nbuckets`, the literal
+  "sustained, not one bucket"): the long values run continuously to 0.161; the
+  short median is **0.103**, sitting inside the long range. Complete overlap.
+- *Contiguity* (`maxcont`, the longest contiguous wide run — a quantity the
+  function already computes and discards): in absolute cm the long noise-floor
+  segments score **6–12 cm** while genuine short showers have median **3.0 cm**
+  and p90 6.0 cm. **The argument inverts** — by this measure the noise-driven
+  long segments look *more* shower-like than real showers, because scattered
+  noise runs grow with segment length.
+
+Per the pre-committed rule, **no fix is shipped.** Tuning any of these to
+convict 321107 would be exactly the move CLAUDE.md §5.7 forbids.
+
+### 3.6 Corrections to earlier passes of this section
+
+**Round 1 → round 2, candidate B ("robustify `max_spread`") was rejected on
+the wrong threshold.** Round 1 dismissed it because the spread was spread
+"across 134/389 buckets". That is `n_over0.4`. Branch 2's `max_spread`
+condition is `> 0.8`, where the count is **3/389** — it *is* a lone-outlier
+condition. Round 1 read the right number against the wrong cut and drew the
+opposite conclusion. Round 2 re-tested it properly (with `n_over0.7/0.8/1.0`
+added to the instrument) and it still fails — but for the well-established
+reason in §3.5, not the one round 1 gave.
+
+**Round 0 → round 1**: the original write-up's "associated-cloud
+contamination" and its `0.37` narrow-miss came from a 3-D nearest-fit-point
+proxy that predicted the flag *should not* fire on the one event that did.
+Withdrawn and replaced by the in-code instrument.
+
+Both are the same failure: a re-derivation of the algorithm is not a
+measurement of it. The instrument exists so this does not recur.
+
+### 3.7 Prototype comparison — faithful port, no divergence
+
+`prototype_base/pid/src/ProtoSegment.cxx:319-541` matches
+`segment_is_shower_topology` line-for-line: identical frame construction
+(same cross-product order, same `<7.5°` drift-*parallel* special case), the
+same five disjunction clauses with all 12 constants, and the same
+`>50cm / 0.25` long-track guard. WCP also computes and discards
+`vec_dQ_dx`'s values, RMS components 0 and 1, and `max_cont_length` — the last
+surviving there only in a commented-out print (`:538`). The behaviour
+described above is therefore **original to the algorithm design, not a porting
+bug** (M15 satisfied), and any change is a genuine algorithm addition
+requiring its own default-OFF knob.
+
+Two observations, reported not fixed (§5 tie-breaker): the in-tree
+`max_cont_length` is only updated when a wide run *ends*, so a run reaching the
+last bucket is never recorded; and `NeutrinoVertexFinder.cxx:2287/2327/2397`
+calls this function independently of `NeutrinoTrackShowerSep.cxx:53`, so any
+future knob must be threaded to **both** or the same segment is classified two
+ways within one event.
+
+### 3.8 Conclusion and the open question for the owner
+
+**Shipped this round**: the extended `WCT_SHOWER_TOPO_DEBUG` instrument
+(quantiles p50/p75/p90/p95, bucket counts at every branch threshold 0.4/0.7/
+0.8/1.0, `maxcont`, and `dir3x = |dir_3·x̂|`), default off, log-only, zero
+behavior change; and `pr25_spread_census.py`.
+
+**Not shipped**: any behavior change. Two rounds have now failed to find a
+threshold that separates these segments, and §3.4 explains why — there is
+nothing to separate. The evidence that fires the flag on 86 of 91 long
+segments is the same quantization floor in every one of them.
+
+**The real question is therefore not a threshold, and it is the owner's to
+answer**: *should a segment of this length be eligible for `kShowerTopology`
+at all?* An EM shower in liquid argon has X₀ ≈ 14 cm; a 249 cm shower does not
+exist, and the flag's own backstop already encodes that intuition with a
+`>50cm` scope. Making that scope decisive rather than conditional is a
+one-line, physically-motivated change — but it is an unconditional behavior
+change to a shared production path, so it needs (a) the owner's decision and
+(b) hand-scan truth on the **10 nu-main cases**, which is a tractable
+scan and would make the cut derivable instead of tuned. Recommended as the
+next round; not taken unilaterally (escalation rules 1 and 7).
+
+A second untouched lever remains: `vec_dQ_dx` (`:2616`) is dead code, and a
+shower's dQ/dx profile differs physically from a muon's in a way none of the
+spread statistics capture. Also a genuine algorithm addition, also needing its
+own measurement round.
 
 ### Verification performed
 
-- `./wcb build --notests -p && ./wcb install --notests -p`; freshness proof
-  (`local/lib/libWireCellClus.so` newer than the edit).
-- `./build/clus/wcdoctest-clus`: 49/49 pass, 565/565 assertions, 0 failed.
-- The instrument is a pure log addition behind `std::getenv`, read once into
-  a function-local `static const bool` — no control-flow change on any path,
-  so no compiled-config proof or byte-identical gate is needed (there is no
-  new jsonnet key; nothing is threaded to config).
-- Knob-on smoke: ran on the full 21-event population + 9 controls
-  (`work-pr25s3-dbg21`, `PR_JOBS=6`, all 30 events `rc=0`); the debug lines
-  are exactly what §3.4–3.6 quote.
-
-No cfg change, no default flip, no A/B gate — there is no behavior-affecting
-change in this section, by design (§3.8).
+- `./wcb build --notests -p && ./wcb install --notests -p`, both `rc=0`;
+  freshness proof — `local/lib/libWireCellClus.so` 20:39:29 newer than
+  `clus/src/PRSegmentFunctions.cxx` 20:38:59 (M1).
+- `./build/clus/wcdoctest-clus`: 49/49 cases, 565/565 assertions, 0 failed.
+- The instrument is a pure log addition behind `std::getenv`, read once into a
+  function-local `static const bool`; the one value it records inside the hot
+  loop (`dbg_dir3x`) is itself guarded by that flag. No control-flow change on
+  any path, no new jsonnet key, nothing threaded to config — so no
+  compiled-config proof and no byte-identical gate apply (there is no
+  behavior-affecting change in this section, by design).
+- Population run: full 572-event valfast manifest, `PR_JOBS=6`, **all 572
+  `rc=0`**; 429 events yielded at least one `segment_is_shower_topology`
+  evaluation (the rest have no segment reaching it with a non-empty
+  `associate_points` cloud).
 
 ### Repro
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
-# population census: angle-independence + exact blast-radius population
-python3 pr25_shower_topo_census.py population --arm work-vfmcp1k-prodon --nu-only
-python3 pr25_shower_topo_census.py population --arm work-vfmcp1k-prodon   # all clusters, the 21-event set
+# round 2: instrument over the full valfast manifest, then the decision tables
+WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=6 \
+  ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3r2-dbgall sim
+python3 pr25_spread_census.py --arm work-pr25s3r2-dbgall
 
-# direct instrument on the target
-WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=1 \
-  ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3-dbg1 data 321107
-grep "shower_topo dbg" work-pr25s3-dbg1/pr_evt321107/wct_pr_evt321107.log
+# physics-relevant blast radius (nu-candidate main clusters only)
+python3 pr25_shower_topo_census.py population --arm work-pr25s3r2-dbgall --nu-only
 
-# direct instrument on the full 21-event population + muon controls
-WCT_SHOWER_TOPO_DEBUG=1 PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1kall-vfprodoff work-pr25s3-dbg21 data \
-  286353 321107 53427 292643 281527 277276 387850 316729 62281 278420 404684 \
-  57903 65289 350935 280972 315167 286681 278684 347085 287621 400504 \
-  402880 65295 168614 48367 394642 291570 283771 319611 67746
+# the target's own instrument lines
+grep "shower_topo dbg" work-pr25s3r2-dbgall/pr_evt321107/wct_pr_evt321107.log
+
+# round 1 arms (21-event blast radius + controls), kept for provenance
 python3 pr25_shower_topo_census.py guard --arm work-pr25s3-dbg21
 ```
