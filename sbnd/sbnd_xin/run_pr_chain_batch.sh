@@ -222,6 +222,18 @@ case "${SBND_SKIP_COSMIC_COMPANIONS:-}" in
 esac
 [ -n "${SBND_COSMIC_COMPANION_MIN_LEN:-}" ] && \
     CATH_TLA+=(--tla-code "cosmic_companion_min_length=${SBND_COSMIC_COMPANION_MIN_LEN}")
+# DIAGNOSTIC ONLY.  SBND_NU_SKIP_COSMIC=0 clears both cosmic vetoes in
+# TaggerCheckNeutrino (per-main and per-bundle), so neutrino PR runs on an
+# in-window main that TGM/STM convicted.  This is how you get track_fit /
+# shower_track / vertices layers for an event whose only in-window object is a
+# cosmic (SBND evt 116962).  It is NOT an operating point -- production is
+# BOTH ON (docs/pr/3 sec. 8, pr/16 sec. 7).  Unset = no TLA = cfg default.
+case "${SBND_NU_SKIP_COSMIC:-}" in
+    0) CATH_TLA+=(--tla-code "nu_skip_cosmic=false")
+       CATH_TLA+=(--tla-code "nu_skip_cosmic_bundle=false") ;;
+    1) CATH_TLA+=(--tla-code "nu_skip_cosmic=true")
+       CATH_TLA+=(--tla-code "nu_skip_cosmic_bundle=true") ;;
+esac
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a
