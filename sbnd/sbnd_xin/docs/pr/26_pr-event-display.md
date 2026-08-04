@@ -12,11 +12,14 @@ valfast events. **No PR algorithm changes** in either stage.
 * **Stage 3** (§8) — **the cosmic answer**: `cosmict_flag` and its ten per-test
   flags replace two fields that were not it, and 22 never-computed fields come
   off the panel. Read §8 before trusting any "cosmic" number here.
+* **Stage 4** (§9) — the single-photon tagger's **discarded verdict**, §8.2's
+  port gap, closed behind the default-OFF knob `sp_photon_flag`.
 
 Two defects were found on the way and are written up in §5. §5.1 has since been
 fixed (toolkit `4c02b679`); §5.2 remains reported-not-fixed, per CLAUDE.md's
 rule on unrelated bugs found mid-task. A third — the single-photon tagger's
-verdict being discarded — is reported in §8.2 on the same terms.
+verdict being discarded — was reported in §8.2 on the same terms and is **now
+fixed in §9**.
 
 **Corrections in §8 to what §7 says**: `cosmic_flag`'s polarity is the opposite
 of what §7 states, and `cosmict_score` is never computed at all.
@@ -717,6 +720,9 @@ now carries the reason inline so the next person does not "restore" them.
 > field that the uBooNE tagger ntuple writes, so it is a behavior change needing
 > its own knob and gate.
 >
+> **Fixed in §9** (2026-08-03), on exactly those terms: knob `sp_photon_flag`,
+> C++ default false, gate arms `work-spflag-off` / `work-spflag-on`.
+>
 > **Severity, checked:** `photon_flag` has **no readers**. Its only non-assignment
 > occurrence anywhere in `clus/`, `root/` or `cfg/` is
 > `UbooneTaggerOutputVisitor.cxx:1078`'s `SCALAR_BR(photon_flag)`. Nothing in the
@@ -810,8 +816,10 @@ around (§5 rule 7).
 - The 22 dead fields are removed from **this display's dump only**.
   `UbooneTaggerOutputVisitor`'s ROOT branch list is untouched — the offline
   ntuple schema is shared with uBooNE analysis code.
-- `photon_flag`'s dropped verdict (§8.2) is **reported, not fixed**: it changes
-  a written TaggerInfo field and needs its own knob and gate.
+- `photon_flag`'s dropped verdict (§8.2) is **fixed in §9**, behind its own
+  default-OFF knob and gate. It stays out of the display's dump — with the knob
+  off the field is still not computed, and re-adding it would recreate the
+  `0.00`-reads-as-a-physics-answer defect §8.2 exists to remove.
 - No BDT retraining (doc pr/2 gap G1); no production config change;
   `pr_display` remains opt-in via `PR_EXTRA_STAGES`.
 
@@ -831,4 +839,148 @@ for p in sorted(glob.glob('work-prdisp-cosscan2/pr_evt*/calib-pr-evt*.json')):
     fl=''.join(str(int(t.get('cosmict_flag_%d'%i,0))) for i in range(1,10))+str(int(t['cosmict_flag_10_any']))
     fi=''.join(str(int(t['cosmict_%d_filled'%i])) for i in range(2,9))
     print('%-8s flag=%d fired=%s filled(2-8)=%s'%(p.split('evt')[-1].split('.')[0],t['cosmict_flag'],fl,fi))"
+```
+
+---
+
+# 9. Stage 4 — the single-photon tagger's verdict is no longer dropped
+
+§8.2 found `photon_flag` while sweeping for never-assigned fields and set it
+aside as the one entry in that list that is **a port gap rather than a legacy
+slot**: the field is dead in the toolkit not because its producer was never
+ported, but because the ported producer's answer is thrown away. This section
+closes it.
+
+## 9.1 The gap
+
+`TaggerCheckNeutrino::visit()` called the tagger and ignored what it said:
+
+```cpp
+pattern_algos.singlephoton_tagger(*pr_graph, main_cluster, final_main_vertex, ...);
+```
+
+where the prototype keeps the result (`NeutrinoID.cxx` lines 269-271):
+
+```cpp
+bool flag_sp = singlephoton_tagger(results.second);
+if (flag_sp){tagger_info.photon_flag = true;}
+```
+
+`PatternAlgorithms::singlephoton_tagger()` is a **complete** port — it runs, and
+it fills its ~90 `shw_sp_*` BDT features, which the nue scorer reads. Only the
+boolean return value had no destination, so `TaggerInfo::photon_flag` kept the 0
+that `init_tagger_info()` gives it, in every event ever reconstructed by this
+chain.
+
+Two things this is *not*:
+
+- **not a latching risk.** `tagger_info` is a fresh local in `visit()`
+  (`TaggerCheckNeutrino.cxx:738`) reset by `init_tagger_info()`, which is
+  `ti = TaggerInfo{}`. A `true` cannot survive into the next event. Checked
+  because `TrackFitting::m_tagger_info` *is* long-lived — the component builds
+  one `TrackFitting` in its constructor — and the prototype re-zeroes
+  explicitly (`NeutrinoID.cxx:3400`) rather than relying on construction.
+- **not a silent reco change.** `photon_flag` has **no readers** anywhere in
+  `clus/`, `root/` or `cfg/`. Its only non-assignment occurrence is
+  `UbooneTaggerOutputVisitor.cxx:1078`'s `SCALAR_BR(photon_flag)`, one branch of
+  the uBooNE tagger ntuple. Nothing branches on it.
+
+## 9.2 The knob
+
+`sp_photon_flag`, **C++ default false** = the legacy gap. On, the verdict is
+stored the way the prototype stores it.
+
+| layer | change |
+|---|---|
+| `clus/inc/WireCellClus/TaggerCheckNeutrino.h` | `bool m_sp_photon_flag{false}` |
+| `clus/src/TaggerCheckNeutrino.cxx` | capture `flag_sp`; `if (m_sp_photon_flag) { log; if (flag_sp) tagger_info.photon_flag = 1.0f; }`; `configure()` + `default_configuration()` round-trip |
+| `cfg/pgrapher/common/clus.jsonnet` | `tagger_check_neutrino(… sp_photon_flag=false)`, key-suppressed: `+ (if sp_photon_flag then { sp_photon_flag: true } else {})` |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | threaded through both entry points |
+| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | TLA `sp_photon_flag = false` |
+| `sbnd_xin/run_pr_chain_batch.sh` | `SBND_SP_PHOTON_FLAG=1\|0`; unset ⇒ no TLA |
+
+The `DEBUG` line fires **whenever the knob is on**, printing the verdict even
+when it is false — so a run proves the branch executed rather than leaving an
+all-zero column to be misread as verified. This is the same instrumentation
+lesson as §8.3's `cosmict_*_filled`.
+
+**Not the SBND default.** Flipping it changes a written output branch, which is
+the owner's call (CLAUDE.md escalation rule 1).
+
+## 9.3 Verification
+
+**Compiled-config gate.** Knob off, the compiled JSON is **byte-identical** to
+the same job compiled from `HEAD`'s cfg (HEAD copies of the three touched files
+shadowed onto the front of `WIRECELL_PATH`, so nothing else could differ). Knob
+on, the diff is exactly one line, in the `TaggerCheckNeutrino` `data`:
+
+```
+529a530
+> 			"sp_photon_flag" : true,
+```
+
+**Output gate**, 7 events (`388 10550 111412 122660 137238 163543 172230`),
+against `work-prdisp-cosscan2` — the §8 arm, built by the **pre-change binary**:
+
+| comparison | result |
+|---|---|
+| `work-spflag-off` vs `work-prdisp-cosscan2`, `hash_archive.py` field 1 on `pctree-pr-evt<ID>.tar.gz` + `mabc-pr.zip` | **14/14 PASS** |
+| `T_tagger`, every branch, evts 388 + 172230, reference vs off | **identical** (1216 branch-values each) |
+| `T_tagger`, off vs on | **one line moves**: `photon_flag[0]` 0 → 1 on evt 172230 |
+
+**The effect is visible on real data**, which §8's cosmic round could not claim:
+of the seven events, **evt 172230 returns `flag_sp = true`** and the other six
+false. Read straight out of the ntuple:
+
+```
+work-spflag-off  evt 388: 0    evt 172230: 0
+work-spflag-on   evt 388: 0    evt 172230: 1
+```
+
+`./build/clus/wcdoctest-clus`: 71 test cases, 809 assertions, SUCCESS.
+Freshness proof (M1): `local/lib/libWireCellClus.so` 18:30:47 is newer than the
+last source edit 18:29:30.
+
+That evt 172230 is single-photon-tagged is **an observation, not a validated
+physics claim** — it is the event of docs pr/5/7/9, a proton/vertex study, and
+nothing here checks whether the tag is correct. The gate proves the verdict now
+reaches the ntuple, not that the verdict is right.
+
+## 9.4 Scope
+
+- The display's dump is **unchanged**. With the knob off `photon_flag` is still
+  not computed, so emitting it would recreate exactly the defect §8.2 removed.
+  It belongs to whichever change flips the default.
+- No other TaggerInfo field, no reconstruction, no selection: 1215 of 1216
+  `T_tagger` branch-values are identical with the knob on.
+- The full valfast census (572 mcp1k + 47 nueCC48) was **not** run — per-fix
+  small-group validation, and the census is not authorized.
+
+## 9.5 Repro
+
+```bash
+cd sbnd_xin
+# knob off  -- must reproduce work-prdisp-cosscan2
+PR_EXTRA_STAGES=pr_display PR_JOBS=6 ./run_pr_chain_batch.sh \
+    work-nuecc48-prod0803 work-spflag-off data 388 10550 111412 122660 137238 163543 172230
+# knob on
+SBND_SP_PHOTON_FLAG=1 PR_EXTRA_STAGES=pr_display PR_JOBS=6 ./run_pr_chain_batch.sh \
+    work-nuecc48-prod0803 work-spflag-on  data 388 10550 111412 122660 137238 163543 172230
+
+HA=../../../abtest/hash_archive.py   # wcp-porting-img/abtest; compare FIELD 1 only
+for e in 388 10550 111412 122660 137238 163543 172230; do
+  for f in pctree-pr-evt$e.tar.gz mabc-pr.zip; do
+    a=$(python3 $HA work-prdisp-cosscan2/pr_evt$e/$f | awk '{print $1}')
+    b=$(python3 $HA work-spflag-off/pr_evt$e/$f      | awk '{print $1}')
+    [ "$a" = "$b" ] && echo "evt $e $f PASS" || echo "evt $e $f DIFF"
+  done
+done
+
+# the verdict, per event
+grep -h sp_photon_flag work-spflag-on/pr_evt*/wct_pr_evt*.log
+
+# the branch it lands in
+root -l -b -q -e 'TFile f("work-spflag-on/pr_evt172230/tracking-pr.root");
+  TTree*t=(TTree*)f.Get("T_tagger"); Float_t v; t->SetBranchAddress("photon_flag",&v);
+  t->GetEntry(0); printf("photon_flag=%g\n", v);'
 ```
