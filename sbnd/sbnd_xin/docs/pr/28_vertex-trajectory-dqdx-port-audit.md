@@ -18,7 +18,7 @@ bugs or plain defects, not legacy behaviour to preserve.
 | 4 | **the whole `clus/` sweep** — all 117 remaining raw `boost::out_edges` sites in 13 files | `4f2e7303` | **§10** |
 | 5 | **the residual 10** — `boost::edges` / `boost::vertices` / `graph_nodes` (32 loops, 12 files). **`T_tagger` is now fully deterministic on the 48-event manifest.** | `c05bc5f7` | **§11** |
 | 6 | **§4.1** the multi-track dQ/dx close weights get the prototype's ×5/3 scale-up. **Vertex-fit area closed by owner decision (§12.7).** | `01ff88b1` | **§12** |
-| 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped by owner decision (§13.7).** | `23bd6783` | **§13** |
+| 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped (§13.7). Owner accepted the result from the event display, and there is no knob to flip: the round is unconditional (§13.12).** | `23bd6783` | **§13** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
 read §3.1, §3.2, §3.3 rows a–e, §4.1, or §3b T1/T2/T3/T6 as open defects.
@@ -2103,6 +2103,9 @@ neutrino vertex moves **0.1434 cm**, and:
 > shower/track topology feeding `kine`. Whether 2.9 GeV is the *better* answer
 > for this event is a physics question this document does not settle — it is a
 > hand-scan / population question, deferred with the rest.
+> **RESOLVED (§13.12):** the owner compared the before/after Bee sets and ruled
+> the new reconstruction *"much better"*. The π⁰ and 2 909 MeV are accepted.
+> §13.11 separately establishes that the mechanism behind them is sound.
 
 `nusel-evt388.tsv` is **identical** — the bundle table, flash assignment, and
 the `nu-candidate` label do not move. Cost: **15 s → 13 s** wall (fewer
