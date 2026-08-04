@@ -1120,3 +1120,277 @@ document**, so every reach claim above remains an argument from the source.
   single-photon tagger's own audit is where that decision belongs.
 * **Tier B coverage is unchanged** (§1, §9). Dropping P2/P3/P4/P6/P7/P10/P13
   from the action list does not upgrade the reading behind them.
+
+---
+
+## §12 Implementation and validation — five knobs, 48 nueCC data events
+
+**What was asked.** The owner asked for fixes to **P1** and **P8**, for **P2**
+and **P4** to be improved using the 48 nueCC data events to inform the
+decision (*"for P4, we want to avoid major bugs"*), and for **F2** to be
+resolved by reading each of the three cases and choosing the best treatment.
+
+**What shipped.** Five config knobs, every one of them defaulting to the
+pre-pr/30 behaviour, plus unconditional log-only instrumentation. **The
+knob-off path is proven byte-identical** (§12.2). Nothing is turned on; every
+"should this ship on?" question is answered with a measurement below and left
+to the owner.
+
+### Repro
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# knob-off arm (production defaults) and the pre-change baseline
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-pr30-final data
+#   baseline = the same command with the pr/30 diff stashed and rebuilt at 6206c46b
+#   -> work-pr30-baseHEAD
+
+# knob-on arms.  The SBND operating point lives only in cfg (doc 68), so each
+# arm is a COPY of $TK/cfg with exactly one line of
+# cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet changed -- production cfg
+# is never edited.  ARMDIR below is scratch and is meant to be regenerated:
+#   p1    : fit_exclusion            = false -> true
+#   f2    : oov_prototype_parity     = false -> true
+#   p8    : graph_endpoint_strict    = false -> true
+#   p2off : first_seg_local_pca      = null  -> false
+#   p4off : other_seg_relaxed_accept = null  -> false
+# tmp_run_pr_chain_pr30.sh is run_pr_chain_batch.sh with line 54 changed to
+# honour $PR30_CFG, and nothing else (committed alongside this doc).
+ARMDIR=/home/xqian/tmp/pr30cfg          # regenerate: tar -cf - cfg | tar -x -C $ARMDIR/<arm>
+for a in p1 f2 p8 p2off p4off; do
+  PR30_CFG=$ARMDIR/$a/cfg PR_JOBS=6 \
+    ./tmp_run_pr_chain_pr30.sh work-nuecc48-prod0803 work-pr30-$a data
+done
+
+EVTS=$(ls work-pr30-final | sed -n 's/^pr_evt//p')
+python3 scripts/analysis/misc/pr_arm_compare.py work-pr30-baseHEAD work-pr30-final $EVTS
+python3 pr_scores_table.py --root work-pr30-<arm> --out <arm>.tsv
+```
+
+### §12.1 The five knobs
+
+Config keys on `TaggerCheckNeutrino`, threaded to `PatternAlgorithms`
+(and, for P8, to a process-wide policy struct because `PR::add_segment` is a
+free function with no component config in reach).
+
+| key | finding | C++ default | what ON does |
+|---|---|---|---|
+| `fit_exclusion` | **P1** | `false` | 27 `do_multi_tracking` sites pass `flag_exclusion=true` |
+| `graph_endpoint_strict` | **P8** | `false` | `add_segment` refuses an inconsistent connection |
+| `graph_endpoint_tol` | **P8** | `0.3` cm | positional stand-in for the prototype's wcpt-index equality |
+| `oov_prototype_parity` | **F2** | `false` | all three out-of-volume guards vote the prototype's way |
+| `first_seg_local_pca` | **P2** | `true` | *(default = production)*; `false` drops the local-PCA refinement |
+| `other_seg_relaxed_accept` | **P4** | `true` | *(default = production)*; `false` restores the prototype's clause |
+
+The first three default to `false` because they introduce **new** behaviour.
+The last two default to `true` because the behaviour they gate is **already
+production** — for those, the knob's purpose is that an unconditional,
+un-knobbed departure from the prototype could not previously be measured at
+all. Either way the defaults reproduce the pre-pr/30 tree exactly.
+
+**Not knobbed, deliberately, and commented at each site:**
+`NeutrinoPatternBase.cxx:1498` and `:1516` (`break_segments`) stay hard
+`false` — they are the toolkit's *correct* match to the prototype's own two
+`false` sites (`NeutrinoID_proto_vertex.h:722/751`, *"fit dQ/dx here, do not
+exclude others"*), and knobbing them would break the one place parity already
+holds. `NeutrinoPatternBase.cxx:1708` (`merge_nearby_vertices`) stays hard
+`false` because that function is **toolkit-only** (P6) and the prototype
+therefore has no answer for it — inventing one is what §5 rule 4 forbids.
+`NeutrinoVertexFinder.cxx:505` uses the 3-argument form on a **single-segment**
+local graph, where `update_association` has no other segment to exclude.
+
+### §12.2 The gate — knob-off is byte-identical
+
+Baseline arm produced by stashing the pr/30 diff, rebuilding at **`6206c46b`**,
+and running the 48 events; then the diff restored and rebuilt.
+
+| pair | mabc | pctree | `T_tagger`+`T_kine` | `nusel-evt*.tsv` |
+|---|---|---|---|---|
+| `work-pr30-baseHEAD` vs `work-pr30-final` | **48/48** | **48/48** | **48/48** | **48/48 byte-identical** |
+
+Compiled config, with the real `pipeline_names` TLA: the default job JSON is
+**byte-identical** to the pre-change tree (`cmp` clean) and contains **none**
+of the five keys; each knob-on cfg copy shows exactly its own key
+(`"fit_exclusion" : true`, …). `./build/clus/wcdoctest-clus`: **91 cases /
+963 assertions**, including two new revert-proven P8 cases (§12.7).
+Freshness proof done before every arm.
+
+### §12.3 What the divergences actually do — measured at the production point
+
+Counters are unconditional and run in the knob-**off** arm, which is what makes
+them a measurement of *reachability* rather than of the fix. 48 events, 47 of
+which build a PR graph (evt 116962 is TGM-tagged and builds none, by design).
+
+| finding | counter | 48-event total | events > 0 |
+|---|---|---|---|
+| **F2** site 1 `modify_segment_isochronous` | `oov_iso` | **0** | 0 |
+| **F2** site 2 `examine_vertices_1p` | `oov_dead` | **0** | 0 |
+| **F2** site 3 `examine_vertices_3` | `oov_uniq` | **1** | 1 (evt 54095) |
+| **P8** connections made | `addseg` | 5284 | 47 |
+| **P8** inconsistent | `ep_mismatch` | **108** | **22** |
+| **P2** endpoint refinements attempted | `pca_calls` | 2152 | 47 |
+| **P2** endpoint actually moved | `pca_moved` | **635 (29.5%)** | 47 |
+| **P2** largest single move | `pca_max_cm` | **9.90 cm** *(max over events, not a sum)* | — |
+| **P4** accepted by a prototype clause | `oseg_proto` | 29 | 19 |
+| **P4** accepted by the toolkit clause ALONE | `oseg_relaxed_only` | **9** | **8** |
+| **P4** rejected by all clauses | `oseg_reject` | 592 | 47 |
+
+### §12.4 Knob-on effects, 48 events
+
+| arm | events changed (mabc) | `nue_score` differs | sign flips +→− / −→+ | selected-vertex shift |
+|---|---|---|---|---|
+| `fit_exclusion=true` (**P1**) | **47/48** | 17/48 | **7 / 3** | median 0.70 cm, max **97.0 cm** |
+| `oov_prototype_parity=true` (**F2**) | **0/48** | 0/48 | 0 / 0 | 0 |
+| `graph_endpoint_strict=true` (**P8**) | 22/48 | 9/48 | **5 / 1** | median 0, max 77.5 cm |
+| `first_seg_local_pca=false` (**P2**) | 47/48 | 13/48 | 1 / 0 | median 0, max 86.8 cm |
+| `other_seg_relaxed_accept=false` (**P4**) | 7/48 | 2/48 | 0 / 0 | median 0, max 85.2 cm |
+
+**Arm provenance.** `work-pr30-final` (knob-off gate arm) and the
+`graph_endpoint_strict` arm ran on the **shipped** binary. The
+`fit_exclusion`, `oov_prototype_parity`, `first_seg_local_pca` and
+`other_seg_relaxed_accept` arms ran on an earlier build of the same branch that
+differs **only inside `PR::add_segment`'s P8 block** (where the consistency
+check sits relative to the `descriptor_valid()` early return, plus one
+diagnostic counter). None of those four knobs reaches that code, and the P8
+check is a no-op with `graph_endpoint_strict=false`, so the difference cannot
+touch their numbers — but the arm labels differ from a fresh re-run, and that
+is bookkeeping, not a defect.
+
+`numu_score` moves on 47/48 under P1 and `kine_reco_Enu` by a median of
+35.5 MeV (max 429 MeV). **No arm flips any event's `event_label`** — the
+cosmic/nu-candidate verdict is stable throughout; what moves is the selected
+vertex, the energy and the BDT scores.
+
+**Sign flips are counted on a nueCC sample**, so "+→−" is a lost signal event
+and "−→+" a recovered one. That framing is why P1 is reported below as a
+regression at this operating point rather than a fix.
+
+### §12.5 F2 — implemented, and it is **inert on this manifest**
+
+Each of the three sites was read against the prototype's own helper, and the
+result was not a judgement call: **all three toolkit defaults are the opposite
+of what the prototype actually returns** for a point with no readout.
+
+| site | toolkit's implicit vote | prototype's helper | parity |
+|---|---|---|---|
+| `NeutrinoOtherSegments.cxx:1253` | good / connected | `is_good_point` → `num_planes==0` → **false** (`ToyCTPointCloud.cxx:399-431`) | `n_bad++` — **exact** |
+| `NeutrinoStructureExaminer.cxx:1273` | dead | `get_closest_dead_chs` → channel absent from `dead_uchs/vchs/wchs` → **false** | `flag_dead=false` — **exact** |
+| `NeutrinoStructureExaminer.cxx:2552` | not unique (⇒ segment **removed**) | `get_closest_2d_dis` is a pure kd-tree 2-D distance, **no volume check** (`ProtoSegment.cxx:1094-1103`) | `num_unique++` — **directional inference**, flagged as such in the code |
+
+**And it fires essentially never.** Two of the three guards did not trip once
+in 48 events; the third tripped **once**, and the knob-on arm is byte-identical
+to the knob-off arm on all 48 events and all four artifact families. So F2 is a
+real code defect with **zero measured effect on nueCC data** — correctness
+bought on the code, not on a number. The population where it could matter is
+the cathode region and the readout-window edges, which this manifest barely
+populates.
+
+### §12.6 P8 — the check works, and what it caught is **not** a lost invariant
+
+108 firings across 22 of 48 events looked like the headline result. It is not,
+and the correction matters more than the original number.
+
+Running one high-count event (**38856**, 13 firings) under `WCT_DET_DEBUG=2`
+and correlating each WARN against the `add_segment` creation backtraces
+attributes **9 of 9 matched firings to a single call site**:
+`PatternAlgorithms::crawl_segment`. Reading it explains the rest
+(`NeutrinoStructureExaminer.cxx:892` and `:944`):
+
+```cpp
+auto path_points = do_rough_path(cluster, vtx_new_point, min_wcpt_point); // ends AT vtx_new_point
+...
+add_segment(graph, new_other_seg, flag_front ? vertex : other_v2, ...);   // attached to `vertex`
+...
+vertex->wcpt().point = vtx_new_point;                                     // :948 -- AFTER
+```
+
+The rebuilt segments terminate at `vtx_new_point`; the vertex is only *moved*
+to `vtx_new_point` after every connection has been made. **The inconsistency is
+transient and self-healing** — by the time `crawl_segment` returns, every one of
+those connections is consistent. The measured offsets fit: in all 104 logged
+calls exactly one vertex is at 0.000 cm and the other at 0.3–2.9 cm
+(median 1.18 cm), the scale of a crawl step, with nothing piled just above the
+0.3 cm tolerance.
+
+**Therefore `graph_endpoint_strict` is a false positive as placed** — it
+refuses legitimate connections in the middle of a repair, and the measurement
+shows the damage: 22/48 events change, **5 nue candidates lost against 1
+gained**. It must stay OFF. A check for a *persistent* violation would have to
+run at end-of-stage, not inside `add_segment`.
+
+The WARN and counter are retained as a **tripwire**: they cost nothing, they
+are on in production, and a firing from any call site other than
+`crawl_segment` would be the real thing. That is stated in the code so the next
+reader does not re-derive it.
+
+**Two corrections to my own work on the way to this, recorded because they
+each nearly became the conclusion:** (i) the first backtrace correlation
+matched zero firings and I read that as "these are all no-op re-calls" — it was
+a **unit error in the correlation script** (`WCT_DETA` prints internal units,
+the WARN prints cm); the measured re-entry count is **0**, so no call ever
+arrives with the segment already in the graph. (ii) The check was nevertheless
+moved after the `descriptor_valid()` early return, because guarding *a
+connection being made* is the correct semantics regardless — measured to change
+nothing here, and pinned by a doctest.
+
+### §12.7 Tests
+
+`clus/test/doctest_pr_graph_order.cxx` gains two cases, both revert-proven:
+
+* *"pr30 P8 inconsistent endpoints are counted only when a connection is
+  made"* — moving the check back above the `descriptor_valid()` early return
+  makes it fail (`CHECK( 2 == 1 )`, verified by actually reverting and
+  rebuilding).
+* *"pr30 P8 strict mode withholds the edge but keeps the vertices"* — pins that
+  strict refuses the **edge** (`num_edges == 0`) while still recording both
+  vertices (`num_vertices == 2`), which is what the prototype does.
+
+### §12.8 Recommendations — and what I am NOT recommending
+
+Nothing is proposed for a default flip. Concretely:
+
+* **P1 (`fit_exclusion`) — do NOT turn on at this operating point.** It is the
+  clearest port-fidelity gap in the document and the fix is now one config key,
+  but on 48 nueCC data events it is a **net regression**: 7 nue candidates lost
+  against 3 gained, `numu_score` moved on 47/48, the selected vertex moved by
+  up to 97 cm. That is not evidence that exclusion is wrong — it is evidence
+  that every cut downstream was tuned against the non-excluding fit. The
+  §3.1 unit question (prototype `y = (wire-offset)*pitch_u` vs toolkit
+  `raw_y = (wire-offset)/slope_yu`) is now **reachable** and should be settled
+  *before* anyone reads these numbers as physics: a dead code path is exactly
+  where a unit error survives.
+* **P8 (`graph_endpoint_strict`) — do NOT turn on.** §12.6. Keep the tripwire.
+* **F2 (`oov_prototype_parity`) — safe to turn on whenever you like**, and it
+  buys nothing measurable here (byte-identical on 48/48). The argument for
+  turning it on is fidelity and future-proofing, not a number.
+* **P2 (`first_seg_local_pca`) — keep it ON (production), now measurable.**
+  It moves an endpoint in 29.5% of attempts, by up to 9.9 cm, and turning it
+  off changes 47/48 events and loses 1 nue candidate net. It is doing real
+  work, and the data give no reason to remove it. It is now knobbed and
+  counted, which is what it lacked.
+* **P4 (`other_seg_relaxed_accept`) — keep it ON, and the "avoid major bugs"
+  question is answered: it is not admitting garbage.** Across 48 events the
+  toolkit-only clause admitted **9 segments in 8 events** — 9 out of 630
+  candidates (1.4%), against 592 rejections and 29 prototype-clause accepts.
+  Turning it off changes 7/48 events, moves `nue_score` on 2, and flips **no**
+  sign and **no** label. It is a small, well-behaved widening, not a leak.
+
+### §12.9 What this section does NOT claim
+
+* **The manifest is 48 nueCC data events.** It is not a population gate. The
+  owed valfast/1000 census is not discharged by anything here, and F2's
+  "0 firings" in particular is a statement about *this* manifest.
+* **No truth labels.** Sign flips are counted against the *current* production
+  answer, not against truth. "7 lost, 3 gained" under P1 means seven events
+  whose `nue_score` sign changed from + to −; on a nueCC sample that is the
+  bad direction, but it is not an efficiency measurement.
+* **P8's attribution rests on one event.** 9 of 13 firings in evt 38856 were
+  matched to a backtrace, all to `crawl_segment`; the remaining 4 and the other
+  21 events were not individually traced. The code reading generalises it, the
+  measurement does not.
+* **P1's reach is now measured; its correctness is not.** That the knob changes
+  47/48 events says nothing about whether the excluded fit is *better*.
+* **Nothing here revisits F4** (doc §10.5) — out of scope for this round and
+  still unadjudicated.
