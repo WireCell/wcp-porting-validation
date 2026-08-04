@@ -33,7 +33,7 @@ slice-start `x` convention (§14.9), and the owed valfast/1000 population gate
 | 6 | **§4.1** the multi-track dQ/dx close weights get the prototype's ×5/3 scale-up. **Vertex-fit area closed by owner decision (§12.7).** | `01ff88b1` | **§12** |
 | 8 | **§4.3 last row** `assemble_fitted_charge_2d` iterated a pointer-keyed map, making `charge_pred` run-dependent — the same-binary noise floor drops **593 → 2** leaves and `proj[]/charge_pred[]` to **zero**. **Both §11.8 container classes measured; §4.2/§4.3/§4.4 closed, §4.4 *settled*; and one newly-found pointer-ordered MUTATING traversal (`NeutrinoVertexFinder.cxx:2934`) fixed (§14.12).** | `22249ff4` | **§14** |
 | 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped (§13.7). Owner accepted the result from the event display, and there is no knob to flip: the round is unconditional (§13.12).** | `23bd6783` | **§13** |
-| 9 | **the shower-quantity nondeterminism §14.5 left** — `TrajectoryView::edges()` is an `unordered_set` hashed on `void*` node descriptors, and `Shower::get_total_length()`/`calculate_kinematics()` accumulated FP over it. **Same-binary repeat floor 1 → 0 leaves.** Plus §14.6's two live tie-only sites, the dead `GroupingHelper`, and the `SIZE_MAX` hazard closed as a class with a warn-once guard. **Two revert-proven doctests.** | `026a7501` + `84cd02e0` | **§15** |
+| 9 | **the shower-quantity nondeterminism §14.5 left** — `TrajectoryView::edges()` is an `unordered_set` hashed on `void*` node descriptors, and `Shower::get_total_length()`/`calculate_kinematics()` accumulated FP over it. **Same-binary repeat floor 1 → 0 leaves.** Plus §14.6's two live tie-only sites, the dead `GroupingHelper`, and the `SIZE_MAX` hazard closed as a class with a warn-once guard. **Two revert-proven doctests.** | `026a7501` + `84cd02e0` + `397b1517` | **§15** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
 read §3.1, §3.2, §3.3 rows a–e, §4.1, or §3b T1/T2/T3/T6 as open defects.
@@ -3142,22 +3142,67 @@ Round 8's own two gaps (the ident-ordered merge, the `:2934` sort) are **not**
 closed by this — they still need `TrackFitting` scaffolding and an event that
 exercises the back-to-back branch.
 
-### 15.8 What is deliberately NOT converted
+### 15.8 The twelve `NeutrinoShowerClustering` loops — triaged, four converted
 
-`Shower::get_num_main_segments()` (`PRShower.cxx:658`) still walks the raw
-address-hashed edge set. Its body is an unconditional integer count, so no walk
-order is observable and `ordered_edges()` would buy only a vector allocation. A
-comment now says so at the line, so it does not read as a missed site.
+The first version of this section listed the twelve raw `.edges()` / `.nodes()`
+loops in `NeutrinoShowerClustering.cxx` and left them as "the membership side,
+empirically stable, line numbers recorded". That was a placeholder, not a
+finding — "empirically stable on six events" is a much weaker statement than
+"the body cannot observe the walk order", and only the second one closes a site.
+Each loop is now read and classified on what its **body** does.
 
-The **twelve** raw `.edges()` / `.nodes()` loops in
-`NeutrinoShowerClustering.cxx` (`:51`, `:59`, `:181`, `:258`, `:317`, `:436`,
-`:1711`, `:1817`, `:1829`, `:1989`, `:2144`, `:2359`) are **not** touched. They
-are the shower *membership* side, and membership is empirically stable on this
-manifest — shower row order and every membership-derived leaf are identical
-between the two arms. They are the same latent class as §14.6's tie-only sites:
-recorded here with their line numbers as the starting point for whoever needs
-them, not swept blind. Converting a "pick best" loop there changes which element
-wins a tie, and that is an output change that must be measured, not assumed.
+| line | body | verdict |
+|---|---|---|
+| `:51` | `map_vertex_in_shower[vtx] = shower` | inert — one shower's vertices are distinct keys, so the writes never collide |
+| `:59` | `map_segment_in_shower[seg] = shower` | inert — same |
+| **`:181`** | `length_muons`/`length_others` **`+=`**, then `n_others >= 2*n_muons && length_others > 0.33*length_muons` | **observable** — an FP accumulation feeding a branch that retypes a long muon to an EM shower |
+| `:258` | `used_segments.insert(seg)` into an `IndexedSegmentSet` | inert — set insertion; the `size()==1` test that follows reads a count, not an order |
+| **`:317`** | `total_length +=`, `n_tracks++`, `vtx_segment_count[sv]++` | **observable** — `total_length` feeds the shower-acceptance cuts |
+| `:436` | `shower_vertices.insert(vtx)`, later used only via `count()` | inert |
+| `:1711` | `shower1_vertices.insert(vtx)`, used via `count()` | inert |
+| `:1817` | `shower1_vertices.insert(vtx)`, used via `count()` | inert |
+| **`:1829`** | `total_length +=` feeding `< 70 cm` / `< 60` / `< 65` / `< n_tracks*36`; **and** `if (max_length < length)` with **no tie-break** | **observable, twice** |
+| `:1989` | `shower_vertices.insert(vtx)`, used via `find()` | inert |
+| **`:2144`** | `ttl +=`, `ttrk +=`, then `ttrk > 3 cm && ttrk > 0.25*ttl` | **observable** — the EM composition test |
+| `:2359` | `shower_vertices.insert(vtx)`, used via `count()` | inert |
+
+**Eight are inert on an argument, not on a measurement** — set semantics, or
+`operator[]` writes to keys that are distinct by construction within one
+shower. Converting them would buy a vector allocation per call inside shower
+clustering and change nothing, so they stay on the raw set.
+
+**Four are converted** to `ordered_edges(…, graph)`, and every one is the same
+shape: an FP accumulation whose sum then crosses a **hard threshold**. That is a
+strictly worse class than round 9's headline defect — there the walk order moved
+the last bit of a reported number; here it can move a *cut*, and a cut decides
+shower membership or a particle type.
+
+`:1829` carried a second, independent defect: `if (max_length < length)` with a
+bare `<`, so two equal-length segments were separated by the walk order alone.
+`:181` (`:188`) and `:317` (`:327`) already tie-break the identical idiom on
+`sg1->id()`; `:1829` was the odd one out, and now matches its neighbours.
+
+**Measurement — byte-identical on this manifest, and that is the honest
+result.** Baseline re-run at `6ea51a3b` (the pr/29 terminal-filter flip landed
+between round 9 and this work and changed `cfg/`, so `work-r9a` is *not* a valid
+baseline — leaf counts move 179 266 → 191 686 on evt 388 from the flip alone):
+
+| pair | calib leaves | mabc | pctree | tagger+kine | nusel |
+|---|---|---|---|---|---|
+| `work-r10a` vs `work-r10b` (repeat, same binary) | **0** | 6/6 | 6/6 | 6/6 | identical |
+| `work-r10base` vs `work-r10a` (A/B) | **0** | 6/6 | 6/6 | 6/6 | identical |
+
+So no tie and no accumulation-order effect fired on these six events, and
+round 9's zero floor survives at the new operating point. Like `:2934` in
+§14.12, this is **a correctness fix bought on the code, not on a number** — the
+defect is real and reachable, its effect here is unmeasured because no event in
+this manifest produced an exact tie or a sum near one of those thresholds. The
+population where it would show is the same one the owed valfast/1000 gate covers.
+
+`Shower::get_num_main_segments()` (`PRShower.cxx:658`) also stays on the raw
+address-hashed set, for the same reason as the eight above: its body is an
+unconditional integer count. A comment now says so at the line, so it does not
+read as a missed site.
 
 ### 15.9 What remains after round 9
 
@@ -3165,8 +3210,9 @@ wins a tie, and that is an output change that must be measured, not assumed.
   stale since round 6, and rounds 7/8/9 do not discharge it. Round 9's A/B is
   ULP-only, so it does not move the physics, but the baseline is stale for
   other reasons.
-* **The twelve `NeutrinoShowerClustering.cxx` sites** (§15.8) — see the
-  correction below; the triage that was owed here is now done.
+* **The twelve `NeutrinoShowerClustering.cxx` sites are CLOSED** (§15.8):
+  eight inert on an argument about their bodies, four converted (plus one
+  untie-broken max at `:1829`), A/B byte-identical on the manifest.
 
   **CORRECTION.** This bullet originally also listed *"§14.6's three tie-only
   sites"* as remaining. That is wrong, and it is wrong in a way worth naming:
