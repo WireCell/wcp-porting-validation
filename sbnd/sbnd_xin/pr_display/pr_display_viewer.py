@@ -1,26 +1,40 @@
 #!/usr/bin/env python3
 """SBND pattern-recognition (PR) event display (Bokeh server).
 
-Stage 1: a read-only viewer for what the PR chain produced, built to drive
-tuning of the PR code over the 572 valfast events.  See
-sbnd_xin/docs/pr/26_pr-event-display.md.
+A read-only viewer for what the PR chain produced, built to drive tuning of the
+PR code over the 572 valfast events.  See sbnd_xin/docs/pr/26_pr-event-display.md.
 
-INPUT is one self-contained JSON per event, written by the `pr_display` stage
-(PrDisplayDump) of the PR chain:
+INPUT, stage 1 -- one self-contained JSON per event, written by the `pr_display`
+stage (PrDisplayDump) of the PR chain:
 
     PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh <ql_root> <out> data 388
     -> <out>/pr_evt<ID>/calib-pr-evt<ID>.json
 
-Nothing else is read.  In particular the display deliberately does NOT read
-tracking-pr.root: that file's T_proj_data has only its `cluster_id` branch
-(TTree::Branch refuses vector<vector<int> > without a compiled CollectionProxy
--- doc pr/26 sec 5), so the 2-D measurement is not in it.
+INPUT, stage 2 -- the PARTICLE-FLOW tree, read from the Bee zip written beside
+it (`mabc-pr.zip`, member `data/*/*-mc.json`) with stdlib zipfile.  That tree is
+the canonical PF product -- MultiAlgBlobClustering::fill_bee_pf_tree writes it,
+and it is the same one Bee shows -- so this display reads it rather than
+rebuilding it and risking a second, disagreeing answer.  Its node ids are
+`cluster_id*1000 + segment id`, exactly the calib JSON's segment ids; the
+`shower_id` field on each segment carries the same encoding, which is how one
+click on a shower node highlights all of that shower's segments.  No zip => the
+PF panel is empty and everything else still works.
+
+tracking-pr.root is still deliberately NOT read.  Its T_proj_data was empty of
+everything but `cluster_id` when this display was designed, and has since been
+repaired (doc pr/26 sec 5.1, toolkit 4c02b679) -- but it emits one row per
+CLUSTER TAG, so a cell claimed by two clusters appears twice, and it keys on the
+concatenated global channel rather than per-APA wire.  The dump's own `proj` is
+already in the display's coordinates; reading ROOT would add a dependency to
+re-derive what is here.
 
 LAYOUT
 
   Row 1 -- the three charge projections X-Y, Y-Z, X-Z, each carrying every
            layer below, individually toggleable.
-  Row 2 -- six panels, two columns (TPC 0 | TPC 1) x three rows (T-U, T-V,
+  Row 2 -- particle flow (click a particle to highlight it in all nine panels)
+           next to the event's selection numbers.
+  Row 3 -- six panels, two columns (TPC 0 | TPC 1) x three rows (T-U, T-V,
            T-W): the fitted 2-D charge as a heat map with the best-fit track
            drawn over it, i.e. the Magnify-tracking view for the neutrino
            interaction.
@@ -43,12 +57,19 @@ centre, projected onto each plane through the fitted points nearest it.
 
 Coordinates follow doc pr/7: positions in cm, wire coordinates are FRACTIONAL
 per-APA wire indices (integer = wire centre) and time is a slice index.
+
+The BDT scores shown here are produced with the uBooNE-TRAINED weight XMLs (the
+SBND config books those); they are availability and relative ranking only, not
+calibrated SBND scores.  The panel says so, and the dump carries the same string
+in `tagger.weights`.
 """
 
 import sys
 import os
+import re
 import glob
 import json
+import zipfile
 import argparse
 import math
 from collections import defaultdict
@@ -58,7 +79,9 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, Select, Button, Div, HoverTool,
                           CheckboxButtonGroup, TextInput, Toggle, Spacer,
-                          ColorBar, LinearColorMapper, BasicTicker)
+                          ColorBar, LinearColorMapper, BasicTicker,
+                          DataTable, TableColumn, HTMLTemplateFormatter,
+                          CDSView, AllIndices)
 from bokeh.palettes import Viridis256, Category20_20
 from bokeh.plotting import figure
 
@@ -135,6 +158,10 @@ det_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
 seg_src = {k: ColumnDataSource(data=dict(xs=[], ys=[], c=[], sid=[], pid=[],
                                          cid=[], shower=[]))
            for k in ("xy", "yz", "xz")}
+# The particle-flow highlight: the same polylines again, drawn as a fat halo
+# UNDER the coloured segments so the colour still reads through it.
+hl_src = {k: ColumnDataSource(data=dict(xs=[], ys=[]))
+          for k in ("xy", "yz", "xz")}
 
 RENDER = defaultdict(list)          # layer name -> [renderers], for toggling
 
@@ -158,6 +185,11 @@ for f, hx, hy in PROJ:
     RENDER["terminals"].append(
         f.scatter(hx, hy, source=term_src, marker="cross", size=7,
                   line_color="#ff7f0e", line_width=1.2, fill_color=None))
+    # Halo first: created before the segment glyph, so it renders beneath it.
+    # Amber, because it has to stay legible both over the dark associated-point
+    # cloud here and over the viridis charge cells in the 2-D panels.
+    f.multi_line(xs="xs", ys="ys", source=hl_src[key], line_color="#ffb000",
+                 line_width=9, line_alpha=0.85)
     r = f.multi_line(xs="xs", ys="ys", source=seg_src[key], line_color="c",
                      line_width=2.5, line_alpha=0.95)
     RENDER["trackfit"].append(r)
@@ -187,11 +219,16 @@ for apa in (0, 1):
         cell = ColumnDataSource(data=dict(w=[], s=[], q=[], qp=[], cid=[]))
         dead = ColumnDataSource(data=dict(w=[], s=[], h=[]))
         fit = ColumnDataSource(data=dict(xs=[], ys=[], c=[], sid=[]))
+        hl = ColumnDataSource(data=dict(xs=[], ys=[]))
         rd = f.rect(x="w", y="s", width=1.0, height="h", source=dead,
                     fill_color="#dddddd", line_color=None, fill_alpha=0.6)
         rc = f.rect(x="w", y="s", width=1.0, height=1.0, source=cell,
                     fill_color=dict(field="q", transform=CMAP),
                     line_color=None)
+        # Same halo-under-the-line trick as the projections: created before the
+        # fit polyline so the coloured track stays legible on top of it.
+        f.multi_line(xs="xs", ys="ys", source=hl, line_color="#ffb000",
+                     line_width=8, line_alpha=0.85)
         rf = f.multi_line(xs="xs", ys="ys", source=fit, line_color="c",
                           line_width=2.0, line_alpha=0.95)
         f.add_tools(HoverTool(renderers=[rc], tooltips=[
@@ -199,7 +236,7 @@ for apa in (0, 1):
             ("charge", "@q{0,0}"), ("pred", "@qp{0,0}"), ("cluster", "@cid")]))
         RENDER["dead"].append(rd)
         RENDER["trackfit2d"].append(rf)
-        panel[(apa, pl)] = dict(fig=f, cell=cell, fit=fit, dead=dead)
+        panel[(apa, pl)] = dict(fig=f, cell=cell, fit=fit, dead=dead, hl=hl)
 
 cbar_fig = figure(width=110, height=250, toolbar_location=None,
                   outline_line_color=None)
@@ -237,6 +274,43 @@ vtx_btn = Button(label="centre on vertex", width=140)
 status = Div(text="", width=1400)
 info = Div(text="", width=1400)
 
+# ---------------------------------------------------------------------------
+# Particle flow + event features
+# ---------------------------------------------------------------------------
+PDG_NAME = {11: "e-", -11: "e+", 13: "mu-", -13: "mu+", 22: "gamma",
+            211: "pi+", -211: "pi-", 2212: "p", 2112: "n", 321: "K+",
+            -321: "K-", 111: "pi0", 0: "?"}
+# kine_energy_info: how that particle's energy was measured.
+KINE_METHOD = {0: "dQ/dx", 1: "range", 2: "charge"}
+
+PF_EMPTY = dict(row=[], label=[], id=[], kind=[], ke=[], nseg=[], length=[])
+pf_src = ColumnDataSource(data=dict(PF_EMPTY))
+# Bokeh 3.9 repaints a DataTable ONLY through its CDSView's change signal, and
+# an all-rows Indices of the same length compares equal so nothing fires.  Keep
+# two distinct AllIndices() and flip between them after every .data assignment
+# (doc 58; nusel_display/nusel_scan_viewer.py carries the same fix).
+VIEW_A, VIEW_B = AllIndices(), AllIndices()
+_fmt = HTMLTemplateFormatter(template='<div style="font-family:monospace"><%= value %></div>')
+pf_table = DataTable(
+    source=pf_src, view=CDSView(filter=VIEW_A), width=620, height=260,
+    index_position=None, selectable=True, sortable=False,
+    columns=[TableColumn(field="label", title="particle", width=250, formatter=_fmt),
+             TableColumn(field="kind", title="kind", width=70, formatter=_fmt),
+             TableColumn(field="id", title="id", width=70, formatter=_fmt),
+             TableColumn(field="ke", title="KE (MeV)", width=80, formatter=_fmt),
+             TableColumn(field="nseg", title="nseg", width=55, formatter=_fmt),
+             TableColumn(field="length", title="L (cm)", width=70, formatter=_fmt)])
+pf_title = Div(text="<b>particle flow</b> "
+                    "<span style='color:#666'>&mdash; click a row to highlight it "
+                    "in all nine panels</span>", width=620)
+pf_clear_btn = Button(label="clear highlight", width=140)
+pf_note = Div(text="", width=620)
+
+feat_div = Div(text="", width=760)
+kine_div = Div(text="", width=760)
+bdt_toggle = Toggle(label="BDT sub-scores", active=False, width=160)
+bdt_div = Div(text="", width=760, visible=False)
+
 
 def toggle_layers(attr, old, new):
     on = {LAYERS[i][0] for i in layer_group.active}
@@ -255,6 +329,294 @@ layer_group.on_change("active", toggle_layers)
 # ---------------------------------------------------------------------------
 def seg_color(i):
     return Category20_20[i % 20]
+
+
+# ---------------------------------------------------------------------------
+# Particle flow: read the Bee zip's mc.json and flatten it
+# ---------------------------------------------------------------------------
+def read_pf_tree(calib_path):
+    """The jsTree node array from `mabc-pr.zip` beside the calib JSON.
+
+    Returns (nodes, note).  `note` explains an empty result rather than leaving
+    the panel silently blank.
+    """
+    zpath = os.path.join(os.path.dirname(os.path.abspath(calib_path)), "mabc-pr.zip")
+    if not os.path.isfile(zpath):
+        return [], "no <code>mabc-pr.zip</code> beside the calib JSON &mdash; no particle flow"
+    try:
+        with zipfile.ZipFile(zpath) as z:
+            members = [n for n in z.namelist() if n.endswith("-mc.json")]
+            if not members:
+                return [], ("<code>%s</code> has no <code>*-mc.json</code> member: the PR "
+                            "chain found no main vertex, so fill_bee_pf_tree wrote nothing"
+                            % os.path.basename(zpath))
+            return json.loads(z.read(sorted(members)[0])), ""
+    except Exception as exc:                       # a corrupt zip must not kill the page
+        return [], "could not read <code>%s</code>: %s" % (os.path.basename(zpath), exc)
+
+
+def flatten_pf(nodes, depth=0, out=None):
+    """Depth-first walk of the jsTree array -> flat rows carrying their depth."""
+    if out is None:
+        out = []
+    for n in nodes:
+        kids = n.get("children") or []
+        out.append(dict(id=int(n.get("id", -1)), text=str(n.get("text", "")),
+                        depth=depth, child_ids=[int(c.get("id", -1)) for c in kids]))
+        flatten_pf(kids, depth + 1, out)
+    return out
+
+
+def pf_rows(d, nodes):
+    """PF rows for the table, joined against the calib JSON's segments/showers."""
+    seg_ids = {s["id"] for s in d.get("segments", [])}
+    by_shower = defaultdict(list)
+    for s in d.get("segments", []):
+        if s.get("shower_id", -1) >= 0:
+            by_shower[s["shower_id"]].append(s["id"])
+    showers = {sh["id"]: sh for sh in d.get("showers", [])}
+
+    # Every column, always -- an empty dict makes the client read 0 rows as 1
+    # (doc 58 GOTCHA 1).
+    cols = {k: [] for k in PF_EMPTY}
+    flat = flatten_pf(nodes)
+    for i, n in enumerate(flat):
+        nid = n["id"]
+        if nid in by_shower:
+            kind = "shower"
+        elif nid in seg_ids:
+            kind = "track"
+        else:
+            # A pseudo-gamma node fill_bee_pf_tree inserts between a parent and
+            # an indirectly-connected shower.  Its id comes from that function's
+            # own counter and matches nothing here; it highlights via children.
+            kind = "gamma"
+        # nseg is what a click actually lights up -- for a gamma node that is
+        # its children's segments, not zero.
+        nseg = len(highlight_ids(d, nodes, nid))
+        sh = showers.get(nid)
+        if sh is not None:
+            ke, length = sh["kine_best"], sh["total_length"]
+        else:
+            m = re.search(r"([-+]?[0-9.]+)\s*MeV", n["text"])
+            ke = float(m.group(1)) if m else float("nan")
+            length = float("nan")
+        # Non-breaking spaces: plain leading spaces collapse in the table's HTML.
+        cols["row"].append(i)
+        cols["label"].append("   " * n["depth"] +
+                             ("└ " if n["depth"] else "") + n["text"])
+        cols["id"].append(nid)
+        cols["kind"].append(kind)
+        cols["ke"].append("" if ke != ke else "%.1f" % ke)
+        cols["nseg"].append(nseg)
+        cols["length"].append("" if length != length else "%.1f" % length)
+    return cols
+
+
+def highlight_ids(d, nodes, node_id):
+    """Segment ids to light up for one PF node id (recursing through gammas)."""
+    seg_ids = {s["id"] for s in d.get("segments", [])}
+    by_shower = defaultdict(list)
+    for s in d.get("segments", []):
+        if s.get("shower_id", -1) >= 0:
+            by_shower[s["shower_id"]].append(s["id"])
+    flat = {n["id"]: n for n in flatten_pf(nodes)}
+
+    picked, seen = set(), set()
+    stack = [node_id]
+    while stack:
+        nid = stack.pop()
+        if nid in seen:
+            continue
+        seen.add(nid)
+        if nid in by_shower:
+            picked.update(by_shower[nid])
+        if nid in seg_ids:
+            picked.add(nid)
+        if nid not in by_shower and nid not in seg_ids:
+            stack.extend(flat.get(nid, {}).get("child_ids", []))
+    return picked
+
+
+# ---------------------------------------------------------------------------
+# Event features
+# ---------------------------------------------------------------------------
+def _f(v, fmt="%.2f", missing="&mdash;"):
+    return missing if v is None else fmt % v
+
+
+def fill_features(d):
+    """The selection numbers, next to the picture."""
+    tag = d.get("tagger") or {}
+    kine = d.get("kine") or {}
+    mv = d.get("main_vertex")
+    mvv = next((v for v in d.get("vertices", []) if v.get("is_main")), None)
+
+    def chip(name, val, fmt="%.2f", tip=""):
+        return ("<span title='%s' style='display:inline-block;padding:2px 8px;margin:2px;"
+                "border:1px solid #ccc;border-radius:4px'>%s <b>%s</b></span>"
+                % (tip, name, _f(val, fmt)))
+
+    scores = "".join([
+        chip("nue_score", tag.get("nue_score"), "%.2f",
+             "nueCC BDT log-odds; -15 is the background-like default"),
+        chip("numu_score", tag.get("numu_score"), "%.2f", "numuCC BDT log-odds"),
+        chip("cosmict_score", tag.get("cosmict_score"), "%.2f",
+             "numu-BDT cosmic score -- NOT the cosmic tagger's own flag"),
+        chip("cosmic_flag", tag.get("cosmic_flag"), "%.0f",
+             "cosmic tagger top-level flag; 1 = cosmic-like (also its default)"),
+        chip("isFC", tag.get("match_isFC"), "%.0f", "fully contained"),
+    ])
+    ecal = "".join([
+        chip("reco Enu", kine.get("kine_reco_Enu"), "%.0f MeV"),
+        chip("add. energy", kine.get("kine_reco_add_energy"), "%.0f MeV",
+             "rest masses + binding energies added to the KE sum"),
+    ])
+    if kine.get("kine_pio_flag"):
+        ecal += chip("pi0 mass", kine.get("kine_pio_mass"), "%.0f MeV",
+                     "kine_pio_flag %s" % kine.get("kine_pio_flag"))
+
+    geom = "".join([
+        chip("segments", len(d.get("segments", [])), "%d"),
+        chip("showers", len(d.get("showers", [])), "%d"),
+        chip("vertices", len(d.get("vertices", [])), "%d"),
+    ])
+    if mv:
+        geom += ("<span style='display:inline-block;padding:2px 8px;margin:2px;"
+                 "border:1px solid #ccc;border-radius:4px'>nu vertex "
+                 "<b>(%.1f, %.1f, %.1f)</b> cluster <b>%s</b></span>"
+                 % (mv["x"], mv["y"], mv["z"], mv.get("cluster_id")))
+    if mvv is not None and "fit_distance" in mvv:
+        geom += chip("fit moved", mvv["fit_distance"], "%.2f cm",
+                     "distance from the seed point to the fitted vertex; "
+                     "0 means the 3-D vertex fit did not run or was reverted")
+
+    caveat = ""
+    if tag:
+        caveat = ("<div style='color:#a33;font-size:90%%;margin-top:2px'>BDT weights: %s</div>"
+                  % tag.get("weights", "unknown"))
+    if not tag and not kine:
+        caveat = ("<div style='color:#a33'>no <code>tagger</code>/<code>kine</code> block in "
+                  "this JSON &mdash; produced before doc pr/26 stage 2; re-run the "
+                  "<code>pr_display</code> stage to get them</div>")
+
+    feat_div.text = ("<b>selection</b><br>%s%s<br><b>energy</b><br>%s<br><b>topology</b><br>%s"
+                     % (scores, caveat, ecal, geom))
+
+    # --- per-particle energy breakdown ---
+    ke = kine.get("kine_energy_particle") or []
+    pdg = kine.get("kine_particle_type") or []
+    inf = kine.get("kine_energy_info") or []
+    inc = kine.get("kine_energy_included") or []
+    if not ke:
+        kine_div.text = ""
+    else:
+        td = "<td style='padding:0 14px 0 0'"
+        rows = []
+        for i in range(len(ke)):
+            rows.append(
+                "<tr>%s>%s</td>%s align=right>%.1f</td>%s>%s</td>%s align=center>%s</td></tr>"
+                % (td, PDG_NAME.get(pdg[i] if i < len(pdg) else 0, str(pdg[i])),
+                   td, ke[i],
+                   td, KINE_METHOD.get(inf[i] if i < len(inf) else -1, "?"),
+                   td, "&#10003;" if (i < len(inc) and inc[i] == 1) else ""))
+        kine_div.text = (
+            "<b>energy per particle</b> "
+            "<span style='color:#666'>&mdash; &#10003; = counted in reco Enu "
+            "(kine_energy_included == 1)</span>"
+            "<table style='font-family:monospace;font-size:92%%;border-collapse:collapse'>"
+            "<tr><th align=left style='padding:0 14px 0 0'>pdg</th>"
+            "<th align=right style='padding:0 14px 0 0'>KE (MeV)</th>"
+            "<th align=left style='padding:0 14px 0 0'>from</th>"
+            "<th style='padding:0 14px 0 0'>in Enu</th></tr>%s</table>" % "".join(rows))
+
+    # --- the sub-BDT decomposition, behind the toggle ---
+    subs = [(k, v) for k, v in sorted(tag.items())
+            if k.endswith("_score") and k not in
+            ("nue_score", "numu_score", "cosmict_score")]
+    if not subs:
+        bdt_div.text = "<i>no sub-scores in this JSON</i>"
+    else:
+        per_row = 4
+        rows = []
+        for i in range(0, len(subs), per_row):
+            cells = "".join(
+                "<td style='padding:0 6px 0 0'>%s</td>"
+                "<td align=right style='padding:0 18px 0 0'>%.2f</td>" % (k, v)
+                for k, v in subs[i:i + per_row])
+            rows.append("<tr>%s</tr>" % cells)
+        bdt_div.text = ("<table style='font-family:monospace;font-size:88%%;"
+                        "border-collapse:collapse'>%s</table>" % "".join(rows))
+
+
+# ---------------------------------------------------------------------------
+# Highlight
+# ---------------------------------------------------------------------------
+def set_highlight(seg_ids):
+    """Draw the halo layer over the chosen segments, in all nine panels."""
+    d = state.get("data") or {}
+    segs = [s for s in d.get("segments", []) if s["id"] in seg_ids]
+
+    cols = {k: dict(xs=[], ys=[]) for k in ("xy", "yz", "xz")}
+    for s in segs:
+        px = [p["x"] for p in s["points"]]
+        py = [p["y"] for p in s["points"]]
+        pz = [p["z"] for p in s["points"]]
+        for key, a, b in (("xy", px, py), ("yz", pz, py), ("xz", px, pz)):
+            cols[key]["xs"].append(a)
+            cols[key]["ys"].append(b)
+    for key in cols:
+        hl_src[key].data = cols[key]
+
+    # 2-D: split by the (apa, face) each point was fitted in, exactly as the
+    # `fit` layer does -- drawing a point with no recorded apa on APA 0 is the
+    # overlay bug doc pr/3 fixed.
+    nps = {(r["apa"], r["face"]): r["nticks_per_slice"]
+           for r in d.get("meta", {}).get("nticks_per_slice", [])}
+    hlcols = {k: dict(xs=[], ys=[]) for k in panel}
+    for s in segs:
+        runs = defaultdict(lambda: ([], [], []))
+        for p in s["points"]:
+            a, fc = p["apa"], p["face"]
+            if a < 0:
+                continue
+            n = nps.get((a, fc), 1)
+            u, v, w = runs[a]
+            u.append((p["pu"], p["pt"] / n))
+            v.append((p["pv"], p["pt"] / n))
+            w.append((p["pw"], p["pt"] / n))
+        for a, (u, v, w) in runs.items():
+            for pl, pts in ((0, u), (1, v), (2, w)):
+                key = (a, pl)
+                if key not in hlcols or len(pts) < 2:
+                    continue
+                hlcols[key]["xs"].append([q[0] for q in pts])
+                hlcols[key]["ys"].append([q[1] for q in pts])
+    for key in panel:
+        panel[key]["hl"].data = hlcols[key]
+
+
+def on_pf_select(attr, old, new):
+    if not new:
+        set_highlight(set())
+        pf_note.text = ""
+        return
+    i = new[0]
+    ids = pf_src.data["id"]
+    if i >= len(ids):
+        return
+    nid = ids[i]
+    d = state.get("data") or {}
+    picked = highlight_ids(d, state.get("pf_nodes") or [], nid)
+    set_highlight(picked)
+    pf_note.text = ("selected <b>%s</b> (id %d) &rarr; %d segment(s) highlighted"
+                    % (pf_src.data["kind"][i], nid, len(picked)))
+
+
+def on_pf_clear():
+    pf_src.selected.indices = []
+    set_highlight(set())
+    pf_note.text = ""
 
 
 def load(label):
@@ -404,6 +766,18 @@ def load(label):
     for key in panel:
         panel[key]["dead"].data = deadcols[key]
 
+    # --- particle flow (from the Bee zip) + event features -------------------
+    nodes, note = read_pf_tree(path)
+    state["pf_nodes"] = nodes
+    pf_src.selected.indices = []
+    pf_src.data = pf_rows(d, nodes)
+    # The view-filter flip is the ONLY thing that repaints the grid; assigning
+    # .data alone leaves the previous event's rows on screen (doc 58).
+    pf_table.view.filter = VIEW_B if pf_table.view.filter is VIEW_A else VIEW_A
+    pf_note.text = ("<span style='color:#a33'>%s</span>" % note) if note else ""
+    set_highlight(set())
+    fill_features(d)
+
     # --- centre + summary ---------------------------------------------------
     if mv:
         set_centre(mv["x"], mv["y"], mv["z"])
@@ -537,6 +911,10 @@ def on_vertex():
         apply_ranges()
 
 
+def on_bdt(attr, old, new):
+    bdt_div.visible = bool(new)
+
+
 event_select.on_change("value", on_event)
 prev_btn.on_click(step(-1))
 next_btn.on_click(step(+1))
@@ -544,6 +922,9 @@ zoom_btn.on_change("active", on_zoom)
 for w in (cx_in, cy_in, cz_in, half_in):
     w.on_change("value", on_centre)
 vtx_btn.on_click(on_vertex)
+pf_src.selected.on_change("indices", on_pf_select)
+pf_clear_btn.on_click(on_pf_clear)
+bdt_toggle.on_change("active", on_bdt)
 
 
 # ---------------------------------------------------------------------------
@@ -559,6 +940,9 @@ layout = column(
     row(layer_group),
     controls,
     info,
+    row(column(pf_title, pf_table, row(pf_clear_btn), pf_note),
+        Spacer(width=20),
+        column(feat_div, kine_div, bdt_toggle, bdt_div)),
     row(column(panel[(0, 0)]["fig"], panel[(0, 1)]["fig"], panel[(0, 2)]["fig"]),
         column(panel[(1, 0)]["fig"], panel[(1, 1)]["fig"], panel[(1, 2)]["fig"]),
         cbar_fig),

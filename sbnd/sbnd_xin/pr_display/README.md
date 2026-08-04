@@ -2,10 +2,18 @@
 
 A Bokeh event display for validating and improving the PR code: what the
 neutrino-PR chain reconstructed, in three 3-D projections plus the six
-Magnify-style 2-D views, all from one self-contained JSON per event.
+Magnify-style 2-D views, with the reconstructed **particle flow** and the
+**event features** that decide selection.
 
 Full write-up, including two defects found while building it:
 [`../docs/pr/26_pr-event-display.md`](../docs/pr/26_pr-event-display.md).
+
+Inputs, per event: `calib-pr-evt<ID>.json` (everything drawn) and, beside it,
+`mabc-pr.zip` — read **only** for its `data/*/*-mc.json` member, the
+particle-flow tree. That tree is the canonical one (`fill_bee_pf_tree` writes
+it, Bee shows it), so the display reads it rather than deriving a second answer
+that could disagree. No zip ⇒ the particle-flow panel is empty and everything
+else still works.
 
 ## 1. Produce the calib dump
 
@@ -31,8 +39,13 @@ PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
 ## 2. Serve
 
 ```bash
-./pr_display/serve_pr_display.sh 5017 work-prdisp-388/pr_evt*/calib-pr-evt*.json
+./pr_display/serve_pr_display.sh 5017 work-prdisp-388-pf/pr_evt388/calib-pr-evt388.json
 ```
+
+Pass the path **explicitly** when more than one `work-prdisp-*` arm exists: the
+script's default glob is `../work-prdisp-*/pr_evt*/calib-pr-evt*.json`, and two
+arms holding the same event both resolve to the label `evt388`, so one silently
+shadows the other.
 
 From a laptop:
 
@@ -49,7 +62,9 @@ wf_scan 5016.
 **Row 1 -- three charge projections** X-Y, Y-Z, X-Z, with the SBND active
 volume and the cathode plane drawn in red.
 
-**Row 2 -- six panels, two columns**: TPC 0 | TPC 1 x (T vs U, T vs V, T vs W).
+**Row 2 -- particle flow and event features.** See the two sections below.
+
+**Row 3 -- six panels, two columns**: TPC 0 | TPC 1 x (T vs U, T vs V, T vs W).
 Each shows the fitted 2-D charge as a heat map (colour = measured charge, 0 to
 the 99th percentile -- a handful of saturated cells would otherwise flatten
 every track) with the best-fit trajectory drawn over it in the segment's
@@ -71,6 +86,53 @@ of the neutrino interaction.
 `steiner` is off by default -- 6 k points per event drawn under everything else
 is noise until you go looking for it. `terminals` is a separate toggle so the
 subset can be seen without the skeleton.
+
+## Particle flow
+
+One row per node of the Bee particle-flow tree, indented by depth. **Click a row
+and that particle is traced in amber in all nine panels** -- the three
+projections and each of the six 2-D views.
+
+| kind | the row's id resolves to | what a click highlights |
+|---|---|---|
+| **shower** | a `shower_id` group in `segments[]` | every segment of that shower |
+| **track** | one segment id | that segment |
+| **gamma** | nothing (a pseudo-node the PF builder inserts before an indirectly-connected shower; its id comes from that builder's own counter) | its children's segments, recursively |
+
+The join is exact, not heuristic: both producers encode a node/segment as
+`cluster_id*1000 + segment index`, and `PrDisplayDump` puts the shower's node id
+on **every** segment of that shower as `shower_id`. Without that field a shower
+click would highlight only its start segment -- the 789 MeV shower in evt
+18255/388 spans **29**.
+
+`nseg` is what the click actually lights up, so a gamma pseudo-node reports its
+children's count rather than 0. A shower with `start_connection_type == 4` is
+dropped by the PF builder, so it has a row in `showers[]` and no PF node.
+
+`clear highlight` removes the trace.
+
+## Event features
+
+Beside the particle flow:
+
+- **selection** -- `nue_score`, `numu_score`, `cosmict_score`, `cosmic_flag`,
+  `isFC`. Note there is no "cosmic_score": `cosmic_flag` is the cosmic tagger's
+  own top-level boolean (**1 is also its default**, so 1 alone does not prove
+  the tagger ran) and `cosmict_score` is the numu-BDT cosmic score.
+- **energy** -- reconstructed neutrino energy and the added rest-mass/binding
+  term, plus the pi0 mass when one was identified.
+- **topology** -- segment / shower / vertex counts, the neutrino vertex, and
+  `fit moved`: how far the 3-D vertex fit displaced the vertex from its seed.
+  **0 cm means the fit did not run or was reverted** (doc pr/27 §12 lists the
+  three gates that cause it).
+- **energy per particle** -- the `kine_*` arrays, with ✓ marking the entries
+  actually summed into reco Enu.
+- **BDT sub-scores** -- all 39, behind a toggle.
+
+> **The BDT scores are UNCALIBRATED on SBND.** The config books the
+> uBooNE-trained weight XMLs (doc pr/2 gap G1); the numbers carry availability
+> and relative ranking only. The panel prints this in red and the dump carries
+> the same string in `tagger.weights` so it cannot be shown without it.
 
 ## Zoom and centring
 
@@ -112,8 +174,14 @@ introduced by this display; everything else in the dump is byte-identical
 across runs. See doc pr/26 sec 5.2. Do not read the per-cell
 measured-vs-predicted comparison as a stable number until that is fixed.
 
-## Not in stage 1
+## Not here yet
 
 Hand-scan label saving, batch pre-rendering, and any change to the PR
-algorithms themselves. This stage is read-only viewing plus the dump that
-feeds it.
+algorithms themselves. This is read-only viewing plus the dump that feeds it.
+
+One caveat worth knowing before the first multi-event serve: the particle-flow
+table carries the doc-58 `DataTable` refresh fix (view-filter flip after every
+`.data` assignment), but with a single event served that path has not been
+*observed* across an event step. Check it on a single-row or empty table --
+navigating a full one passes even when unfixed, because the surrounding reflow
+incidentally repaints the grid.

@@ -1,12 +1,18 @@
-# pr/26 — SBND PR event display, stage 1 (SBND evt 18255/388)
+# pr/26 — SBND PR event display (SBND evt 18255/388)
 
 A dedicated event display for validating and improving the neutrino
 pattern-recognition (PR) code, ahead of the tuning campaign over the 572
-valfast events. Stage 1 is **read-only viewing plus the dump that feeds it**:
-no PR algorithm changes.
+valfast events. **No PR algorithm changes** in either stage.
 
-Two defects were found on the way and are written up in §5. Neither is fixed
-here; both are reported, per CLAUDE.md's rule on unrelated bugs found mid-task.
+* **Stage 1** (§1–§6) — read-only viewing plus the dump that feeds it:
+  geometry, the PR graph, the Steiner skeleton, the six 2-D charge panels.
+* **Stage 2** (§7) — the **particle flow**, clickable to highlight one particle
+  in all nine panels, and the **event features** that decide selection
+  (reco Enu, nue/numu/cosmic scores, per-particle energies).
+
+Two defects were found on the way and are written up in §5. §5.1 has since been
+fixed (toolkit `4c02b679`); §5.2 remains reported-not-fixed, per CLAUDE.md's
+rule on unrelated bugs found mid-task.
 
 ## Repro
 
@@ -16,12 +22,16 @@ cd $SX
 
 # 1. the display's input: the PR chain with the (default-OFF) pr_display stage.
 #    ql_root is the owner's protected campaign -- READ ONLY; out_root is fresh.
+#    Stage 1 arm: work-prdisp-388.  Stage 2 arm (what is served now):
 PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
-  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-prdisp-388 data 388
-# -> work-prdisp-388/pr_evt388/calib-pr-evt388.json   (1.9 MB)
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-prdisp-388-pf data 388
+# -> work-prdisp-388-pf/pr_evt388/calib-pr-evt388.json   (1.9 MB)
+#    plus mabc-pr.zip beside it, whose data/0/0-mc.json is the particle flow
 
-# 2. serve it
-./pr_display/serve_pr_display.sh 5017 work-prdisp-388/pr_evt*/calib-pr-evt*.json
+# 2. serve it.  Pass the path EXPLICITLY: serve_pr_display.sh's default glob is
+#    ../work-prdisp-*/pr_evt*/calib-pr-evt*.json, and both arms above yield the
+#    label "evt388", so one would silently shadow the other.
+./pr_display/serve_pr_display.sh 5017 work-prdisp-388-pf/pr_evt388/calib-pr-evt388.json
 # laptop:  ssh -L 5017:localhost:5017 wcgpu1.phy.bnl.gov
 #          http://localhost:5017/pr_display_viewer
 ```
@@ -66,9 +76,9 @@ and mutates nothing.
                     dQdx_scale, dQdx_offset, length_unit:"cm",
                     charge_transform:"none" },
   "segments":     [ {id, cluster_id, particle_id, flag_shower, dirsign,
-                     is_main_cluster,
+                     is_main_cluster, shower_id,
                      points:[{x,y,z,dQ,dx,pu,pv,pw,pt,apa,face,reduced_chi2,rr}]} ],
-  "vertices":     [ {id, cluster_id, is_main, degree, fit:{...}} ],
+  "vertices":     [ {id, cluster_id, is_main, degree, fit_distance, fit:{...}} ],
   "main_vertex":  {x,y,z,cluster_id} | null,
   "track_shower": {x[],y[],z[], flag_shower[], cluster_id[], particle_id[]},
   "steiner":      [ {cluster_id, is_main_cluster, x[],y[],z[], flag_terminal[]} ],
@@ -386,3 +396,178 @@ source.
   protected arm run without it.
 - Not in stage 1: hand-scan label saving, batch pre-rendering, and any change
   to the PR algorithms themselves.
+
+---
+
+# Stage 2 — particle flow and event features
+
+Stage 1 showed *where* the charge and the fitted segments are. It could not
+answer *which particle is this* or *why was this event selected*, which is what
+the tuning campaign up to the neutrino vertex actually needs. Stage 2 adds both,
+still read-only, still behind the same default-OFF `pr_display` stage.
+
+## 7.1 The particle flow is READ, not rebuilt
+
+The PR chain already produces a particle-flow tree:
+`MultiAlgBlobClustering::fill_bee_pf_tree` writes it into the Bee zip as
+`mabc-pr.zip::data/0/0-mc.json`, in the prototype's jsTree node format, and it
+is what Bee shows. The display **reads that file** rather than deriving its own
+tree — a second producer of the same quantity would eventually disagree with the
+first, and the one that disagrees on a tuning display is the one that misleads.
+
+The join works because the two producers already agree on ids:
+
+```
+fill_bee_pf_tree (mc.json)          PrDisplayDump (calib JSON)
+  node id = cluster_id*1000           segment id = cluster_id*1000
+            + seg->id()                            + seg->get_graph_index()
+                        \                         /
+       NeutrinoPatternBase.cxx:2170: seg->set_id(edge_bundle.index)
+                       => the two are the same number
+```
+
+Verified on evt 388: `mc.json` node ids `23014 23032 81082 28053 23034` are all
+present in the calib JSON's segment id set.
+
+**What mc.json does not carry** is the rest of a shower. Its shower node names
+only the shower's *start* segment, but the 789 MeV shower here spans 29. So the
+dump gains one field — **`shower_id` on every segment**, `-1` when the segment
+is in no shower, otherwise the *same encoding* mc.json puts on its shower node:
+
+```
+click "e-  789 MeV" (mc.json node 23014)
+  -> segments with id == 23014            (1)
+   ∪ segments with shower_id == 23014     (29)   -> highlight 29 segments
+```
+
+Shower membership comes from `shower->fill_sets(..., flag_exclude_start_segment
+= false)`, not the per-segment flags: a segment absorbed into a shower from
+another cluster may carry none of `kShowerTrajectory` / `kShowerTopology` /
+`pdg == 11`. This is the same construction `dump_track_shower()` already used.
+
+Three node kinds appear in the table:
+
+| kind | id resolves to | highlight |
+|---|---|---|
+| `shower` | a `shower_id` group | every segment of the shower |
+| `track` | a segment id | that segment |
+| `gamma` | **nothing** | its children's segments, recursively |
+
+The `gamma` rows are the pseudo-nodes `fill_bee_pf_tree` inserts between a
+parent and an indirectly-connected shower (`start_connection_type` 2 or 3).
+Their ids come from that function's own `next_id` counter (6 and 7 on evt 388)
+and match no segment by construction — the display resolves them through their
+children rather than showing an inert row.
+
+A shower with `start_connection_type == 4` ("not clearly connected") is dropped
+by `fill_bee_pf_tree` entirely, so it has a row in the dump's `showers` block
+and **no PF node**. Evt 388 has one: id 27046, 4.8 MeV.
+
+## 7.2 What the dump gained
+
+`PrDisplayDump` grows three blocks and two fields. No new knob: the component is
+only instantiated when `pr_display` is named in `pipeline_names`, so none of it
+exists in a production job.
+
+```jsonc
+"segments": [ { …, "shower_id": 23014 | -1 } ],
+"vertices": [ { …, "fit_distance": 0.224 } ],   // cm, seed -> fitted vertex
+"showers":  [ {id, shower_id, particle_id,
+               kine_best, kine_range, kine_dQdx, kine_charge,   // MeV
+               flag_kinematics, start:{x,y,z}, end:{x,y,z},
+               start_connection_type, start_vertex_id,
+               num_segments, num_main_segments, total_length,   // cm
+               pio_id, pio_mass} ],
+"kine":     { kine_reco_Enu, kine_reco_add_energy, kine_nu_{x,y,z}_corr,
+              kine_energy_particle[], kine_particle_type[],
+              kine_energy_info[], kine_energy_included[],
+              kine_pio_* },                                     // MeV, cm
+"tagger":   { weights: "uboone-trained -- UNCALIBRATED on SBND (doc pr/2 gap G1)",
+              nue_score, numu_score, cosmict_score, cosmic_flag, match_isFC,
+              …9 numu sub-scores, …30 nue sub-scores, photon_flag }
+```
+
+`kine` is emitted verbatim — `NeutrinoKinematics.cxx` already divides by
+`units::MeV` / `units::cm` before storing, so rescaling it here would be a bug.
+
+**`fit_distance`** is how far `improve_vertex` / `MyFCN` moved the vertex off its
+seed point. A main vertex at 0 did not move, and doc pr/27 §12 lists the three
+reasons that happens (the `MyFCN.cxx:220` track/large-angle gate,
+`m_fit_vertex_min_seg_length`, and the post-hoc charge revert veto). Evt 388's
+main vertex moved **0.22 cm**.
+
+### There is no `cosmic_score`
+
+`TaggerInfo` has two different things, and the display shows both, named apart:
+
+| field | what it is | evt 388 |
+|---|---|---|
+| `cosmic_flag` | the cosmic tagger's own top-level boolean; **1 is also its default**, so 1 alone does not prove the tagger ran | 1 |
+| `cosmict_score` | the numu-BDT cosmic score (`NeutrinoTaggerInfo.h:1363`) | 0.00 |
+
+### The scores are UNCALIBRATED, and the dump says so
+
+SBND books the **uBooNE-trained** weight XMLs (`sbnd/clus.jsonnet`, doc pr/2 gap
+G1 — SBND retraining has not happened). The scores carry availability and
+relative ranking, not a calibrated SBND number. The caveat is a string *inside*
+`tagger.weights`, so it travels with the data and the panel prints it in red
+under the scores; a viewer cannot show the number without it.
+
+Ordering matters and is already right: `run_pr_chain_batch.sh` appends
+`PR_EXTRA_STAGES` **last**, after `numu_bdt_scorer` and `nue_bdt_scorer`, both of
+which write through `TrackFitting::get_tagger_info_mutable()`. Put `pr_display`
+earlier and every score would read 0.
+
+## 7.3 The display
+
+A new row between the projections and the 2-D panels:
+
+* **particle flow** — a `DataTable`, one row per mc.json node, indented by tree
+  depth, with kind / id / KE / nseg / length. **nseg is what a click actually
+  lights up**, so a gamma pseudo-node reports its children's count rather than 0.
+  Clicking a row draws an **amber halo** under the selected segments in **all
+  nine panels** — the three projections and each of the six 2-D panels, the
+  latter split by the `(apa, face)` each fit point was recorded in (drawing a
+  point with no recorded APA on APA 0 is the overlay bug doc pr/3 fixed). Amber
+  because it has to stay legible both over the dark associated-point cloud and
+  over the viridis charge cells.
+* **selection / energy / topology chips** — nue_score, numu_score,
+  cosmict_score, cosmic_flag, isFC; reco Enu and added energy; segment / shower /
+  vertex counts, the neutrino vertex and its `fit_distance`.
+* **energy per particle** — the `kine_*` arrays as a table, with ✓ marking the
+  entries actually summed into reco Enu (`kine_energy_included == 1`). Evt 388:
+  13 particles, 4 counted, 2108 MeV.
+* **BDT sub-scores** — all 39, behind a toggle so they do not dominate the page.
+
+The `DataTable` carries the doc-58 fix: every column is always emitted (an empty
+dict makes the client read 0 rows as 1), and `table.view.filter` flips between
+two fixed `AllIndices()` instances after each `.data` assignment, because in
+Bokeh 3.9 that view-change signal is the grid's *only* repaint channel.
+
+## 7.4 Verification
+
+| gate | result |
+|---|---|
+| **Compiled-config, production pipeline** | `PrDisplayDump` **absent** (0 occurrences); with `pr_display` appended it appears (2), and the two configs differ by **exactly** that inserted block — `diff` is a pure insertion, 633a634,653 |
+| **Freshness (M1)** | `local/lib/libWireCellClus.so` 17:32:58 > `PrDisplayDump.cxx` 17:32:10 > `PrDisplayDump.h` 17:30:38 |
+| **Dump regression** — new JSON vs the stage-1 arm, restricted to pre-existing keys | **identical**, with `proj[].charge_pred` excluded (§5.2; **464 / 13 507 = 3.4 %** of cells differ, inside the documented 6–10 % band) |
+| **PF join** — every mc.json node → ≥ 1 segment | 7 rows: `23014`→29, `23032`→27, `6`(gamma)→1 via child, `81082`→1, `7`(gamma)→1 via child, `28053`→1, `23034`(track)→1. **No node resolves to zero** |
+| **Scores read back from the served page** | nue_score **4.30**, numu_score **−2.48**, cosmict_score **0.00**, cosmic_flag **1**, reco Enu **2108 MeV** |
+| **Click behaviour, headless chromium** | 7 table rows render; clicking row 1 reports "selected shower (id 23014) → 29 segment(s) highlighted"; the BDT toggle reveals `mipid_score`; **no JS errors** |
+| `./build/clus/wcdoctest-clus` | 71 cases / 809 assertions **pass** |
+| Protected dirs (M13) | fresh arm `work-prdisp-388-pf`; nothing written under `work-prdisp-388`, `work-nuecc48-prod0803` or `work-vfnuecc48-prod0803` |
+
+**Not verified, stated rather than implied**: only one event is served, so the
+`DataTable` *refresh-on-event-change* path — the doc-58 failure mode — is
+exercised by construction (the filter flip runs on every `load()`) but has not
+been observed across an actual event step. First multi-event serve should check
+it, in single-row or empty-table mode (doc 58 GOTCHA 3: navigating a full table
+passes even unfixed, because the surrounding reflow incidentally repaints).
+
+## 7.5 Scope
+
+- No PF re-derivation in C++ — one producer, read by the display.
+- No SBND retraining of the BDT weights (doc pr/2 gap G1); the scores are shown
+  with the UNCALIBRATED label, not recalibrated.
+- §5.2 (`charge_pred` pointer-order nondeterminism) stays reported-not-fixed.
+- `pr_display` remains opt-in via `PR_EXTRA_STAGES`; no production config change.
