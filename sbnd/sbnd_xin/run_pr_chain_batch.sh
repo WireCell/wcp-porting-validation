@@ -147,6 +147,12 @@ CATH_TLA=()
 # the cfg default (null = OFF = byte-identical).  50 is the scan-supported
 # operating point; the guard measures segment_track_length(seg,0).
 [ -n "${SBND_SHOWER_TOPO_DEMOTE_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_topo_demote_len=${SBND_SHOWER_TOPO_DEMOTE_LEN}")
+# doc pr/31 sec 11 (F2, was P2): skip the stage-3
+# segment_determine_shower_direction call so a kShowerTopology segment keeps
+# the direction segment_is_shower_topology set -- the prototype's state.
+# EMPTY = no TLA = the cfg default (false = OFF = byte-identical).  Set to 1
+# for the arm that measures it.
+[ "${SBND_SHOWER_TOPO_PROTO_DIR:-}" = 1 ] && CATH_TLA+=(--tla-code "shower_topo_proto_dir=true")
 # doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
 # DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
 # cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max

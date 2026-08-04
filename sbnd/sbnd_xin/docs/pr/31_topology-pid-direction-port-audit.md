@@ -18,6 +18,12 @@ Fifteen divergences, ranked in §8 — **fourteen** after §10.11 withdraws P9.
 > well as the solutions"*. Fifteen findings become **nine**, each re-verified at
 > `6206c46b` and each with a proposed fix, knob name and gate. P9 is withdrawn
 > as not a divergence at all (§5.14). §10.13 corrects §3/§8.
+>
+> **→ F2 is now SHIPPED, default OFF — read §11.** Knob
+> `shower_topo_proto_dir`; knob-off gate PASS (48/48 pctree hashes +
+> `nusel-table.tsv`/`nusel-events.tsv` identical vs `work-pr30-f2on`); knob-on
+> moves `kine_reco_Enu` on 7 of 48 events and **changes no selection outcome**.
+> SBND default deliberately NOT flipped (§11.7).
 
 **Headline.** The skeleton is again a faithful port — the four entry points in
 order, the fixed 12-call map-repair sequence in order, and every cut constant
@@ -1009,7 +1015,7 @@ positions to do it — this is not a problem"* — disposes of **P11** cleanly
 | # | from | what it is | why it survives the filter | severity |
 |---|---|---|---|---|
 | **F1** | P1 + P3(4-mom) + P4 | the toolkit **rewrites `particle_4mom` at 15 reclassification sites** where the prototype writes type and mass and leaves the 4-momentum alone | one root cause, three shapes, and the guard is reproduced at exactly **one** site *with a comment paraphrasing it* — the signature of a lost line, not a design decision | **highest** |
-| **F2** | P2 | a 305-line direction analysis runs at a stage-3 call site the prototype does not have, overwriting the direction `is_shower_topology` set | the prototype's `determine_dir_shower_topology` is four live lines and **does not touch `flag_dir`**; no comment anywhere says why the toolkit substitutes a different function | **high** |
+| **F2** | P2 | a 305-line direction analysis runs at a stage-3 call site the prototype does not have, overwriting the direction `is_shower_topology` set | a **different function's body** was substituted for the one being ported — unconditional, undeclared, and it reaches production through `dirsign`. **Not** claimed to be the wrong physics: the prototype's own version says `// hack for now` (§10.3, corrected 2026-08-04). **Knob SHIPPED — §11** | **high** |
 | **F3** | P13 | `kShowerTopology` is set and never cleared, and four early returns skip `dirsign()` | **now proven live**: `segment_is_shower_topology` has 4 call sites, 1 in stage 3 and 3 in stage 4, so re-entry on the same segment is normal (closes §7 loose end 2) | **high** |
 | **F4** | P8 | `segment_median_dQ_dx` **filters** its sample where the prototype's structural counterpart `get_medium_dQ_dx` does not — and in `determine_dir_track` the median and the KS sample are now computed from **different sets** | the filter is defensible; the toolkit being inconsistent *with itself* is not, and it is invisible at the call site | medium-high |
 | **F5** | P6 | `dir3` hoisted out of the loop with a fallback that silently turns a 30 cm direction comparison into a 15 cm one | textbook hoist-with-changed-semantics; the correct hoist is unconditional and is still a hoist | medium |
@@ -1144,7 +1150,10 @@ blocks removed, is the whole of `determine_dir_shower_topology`
 (`ProtoSegment.cxx:1677-1710`):
 
 ```cpp
+double length = get_length();
+// hack for now                          <-- the prototype author's own words
 particle_type = 11;
+TPCParams& mp = Singleton<TPCParams>::Instance();
 particle_mass = mp.get_mass_electron();
 // (flag_dir block commented out; centre-of-associated-cloud block commented out)
 ```
@@ -1162,12 +1171,30 @@ overwriting `segment_is_shower_topology`'s answer for **every** topology shower.
 And `dirsign` is what the in/out maps of this stage and the vertex scorer of
 stage 4 read.
 
-**Why it is a bug and not an improvement.** The toolkit did not add a new
-algorithm; it moved an existing one to a place the prototype does not run it,
-and the moved call is not the port of the function that belongs there. The
-commented-out `flag_dir` block in the prototype shows the prototype author
-considered and rejected setting a direction here. There is no comment, knob or
-doc on the toolkit side.
+**Why it survives the filter — corrected 2026-08-04, and narrower than first
+written.** The original text here read *"the commented-out `flag_dir` block in
+the prototype shows the prototype author considered and rejected setting a
+direction here"*, and called F2 a bug on that basis. That over-reads the
+evidence, and the quote above omitted the line that shows why: the function
+opens with **`// hack for now`**. A self-declared hack with both of its
+direction blocks commented out reads at least as naturally as *tried and
+unfinished* as it does *considered and rejected*, and the toolkit's 305-line
+PCA may well be the better physics. Nobody has measured which is better, so
+neither claim is available.
+
+What is certain, and is what puts F2 on this list:
+
+* the toolkit substituted a **different function's body** for the one being
+  ported — `determine_dir_shower_topology` has a counterpart, and what got
+  inlined at `NeutrinoTrackShowerSep.cxx:121-135` is not it;
+* the substitution is **unconditional and undeclared** — no comment, no knob,
+  no doc entry on the toolkit side;
+* it **reaches production output** through `dirsign`, which this stage's in/out
+  maps and stage 4's vertex scorer both read.
+
+So the defensible verdict is *an unconditional, undeclared divergence with real
+reach, direction unknown* — which justifies a knob and an A/B, not a claim that
+the toolkit is wrong. That is exactly what §11 implements.
 
 **Solution.** Restore the prototype's branch under a knob:
 
@@ -1618,6 +1645,10 @@ this sits at the bottom of the list.
 Not a schedule — an ordering by (certainty × reach) ÷ cost, so that whoever
 picks this up starts where the argument is strongest and the diff smallest.
 
+> **Status update 2026-08-04:** **F2 was taken first, at the owner's
+> direction, and is SHIPPED default-OFF — see §11.** The ordering below is
+> unchanged for the remaining eight.
+
 | order | item | why here |
 |---|---|---|
 | 1 | **F5** (P6) | one line, prototype intent unambiguous, no interaction with anything else |
@@ -1672,3 +1703,219 @@ stage-3 knob on record is ON in the SBND job**, so "default OFF" here means
    in this section. §7 loose end 5 (the porting dictionary has no
    topology/PID/direction section) is *unchanged* and is now the natural
    follow-up: the nine items above are what that section should say.
+
+---
+
+## §11 F2 implemented — `shower_topo_proto_dir`, default OFF *(2026-08-04)*
+
+**What was asked.** Owner, after §10.3's corrected verdict: *"Can you work on a
+fix for P2 then first."* So this section ships the knob §10.3 argued for, and
+nothing else on the list. F1 and F3 are untouched.
+
+**What it is.** A default-OFF config knob that skips the stage-3
+`segment_determine_shower_direction` call, leaving a `kShowerTopology` segment
+with the direction `segment_is_shower_topology` set — the prototype's state.
+OFF reproduces today's path byte for byte; ON is the arm that measures the
+question §10.3 could only argue about.
+
+**It is a knob, not a verdict.** §10.3 stands: nobody has shown which direction
+estimate is better, and the prototype's own `determine_dir_shower_topology`
+says `// hack for now`. What this section establishes is that the question is
+now *measurable* and what the answer costs — 7 of 48 events move their
+reconstructed neutrino energy, and none of them change selection outcome.
+
+### §11.1 Repro
+
+```bash
+TK=/nfs/data/1/xqian/toolkit-dev/toolkit
+cd $TK && git rev-parse --short HEAD                 # 1e169602 (this change)
+                                                     # f8f2150a (the parent)
+wcbuild                                              # then the M1 freshness proof
+
+# compiled-config proof, both ways
+PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,\
+tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,\
+tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output"
+PIPE="pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
+wcsonnet --tla-code "$PIPE" cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet \
+  | grep -c shower_topo_proto_dir                    # 0  -- key absent when off
+wcsonnet --tla-code "$PIPE" --tla-code shower_topo_proto_dir=true \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet \
+  | grep -c shower_topo_proto_dir                    # 1  -- key present when on
+
+./build/clus/wcdoctest-clus                          # 91/91, rc=0
+
+# the two arms (48 nueCC events, ids from work-pr30-f2on)
+cd $TK/sbnd_xin
+IDS=$(ls -d work-pr30-f2on/pr_evt* | sed 's/.*pr_evt//' | sort -n | tr '\n' ' ')
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31-f2off48 data $IDS
+SBND_SHOWER_TOPO_PROTO_DIR=1 \
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31-f2on48  data $IDS
+
+# the per-segment mechanism on evt 388
+for a in off on; do
+  [ $a = on ] && E=1 || E=
+  SBND_SHOWER_TOPO_PROTO_DIR=$E PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31-disp-$a data 388
+done
+```
+
+### §11.2 The change
+
+Five files, all additive; nothing existing is edited except to add one `if`.
+
+| file | change |
+|---|---|
+| `clus/inc/WireCellClus/NeutrinoPatternBase.h` | `bool m_shower_topo_proto_dir{false}` on `PatternAlgorithms`, with the mutation audit and the F3 residual in the comment |
+| `clus/inc/WireCellClus/TaggerCheckNeutrino.h` | the same member on the component |
+| `clus/src/TaggerCheckNeutrino.cxx` | `configure()` / `default_configuration()` / the copy into `pattern_algos` — the three sites every stage-3 knob uses |
+| `clus/src/NeutrinoTrackShowerSep.cxx` | the call site, wrapped |
+| `cfg/pgrapher/common/clus.jsonnet` | `tagger_check_neutrino(..., shower_topo_proto_dir=false)` + key suppression |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | threaded through both `pr()` definitions |
+| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | TLA `shower_topo_proto_dir = false`, threaded — **the default is not flipped** |
+| `sbnd_xin/run_pr_chain_batch.sh` | `SBND_SHOWER_TOPO_PROTO_DIR=1` emits the TLA; empty emits nothing |
+
+The whole behavioural diff is:
+
+```cpp
+} else if (seg->flags_any(SegmentFlags::kShowerTopology)) {
+    if (!m_shower_topo_proto_dir) {
+        segment_determine_shower_direction(seg, particle_data, recomb_model,
+                                           "associate_points", m_mip_dqdx_median,
+                                           0.4*units::cm, m_mip_dqdx);
+    }
+    ...   // the particle-info block is UNCHANGED -- that is F1 shape B, not this
+}
+```
+
+**Why one `if` is the whole fix, and how that was checked rather than assumed.**
+`segment_determine_shower_direction` writes exactly one thing on the segment,
+twice — `segment->dirsign(0)` at entry (`PRSegmentFunctions.cxx:2209`) and
+`segment->dirsign(flag_dir)` at the end (`:2509`). Every other name it touches
+inside its 305 lines is a local. Its return value is discarded at this call
+site. Verified by enumerating every `segment->`/`seg->` write in `:2208-2512`;
+the two `dirsign` calls are the complete list. So suppressing the call
+suppresses precisely the direction overwrite and cannot leak anything else.
+
+**What is deliberately NOT in this change:** the 4-momentum and
+`particle_score(100)` writes in the same block. Those are F1 shape B and the
+dropped half of P3 respectively (§10.2, §10.11). Bundling them would make the
+arm below unattributable — the same coupling trap doc pr/28 §16.5 hit.
+
+### §11.3 Gate — knob OFF is byte-identical
+
+Baseline is **`work-pr30-f2on`**, the doc pr/30 §12.10 arm at parent
+`f8f2150a`. It is the right baseline and `work-vfnuecc48-0804` is not: the
+latter predates `oov_prototype_parity` becoming the SBND default, so comparing
+against it would show doc pr/30's flip, not this change.
+
+| gate | result |
+|---|---|
+| compiled config, knob off, vs `f8f2150a`'s `cfg/` | **byte-identical**, md5 `0c24101b93143a06e8e326298af821de` both sides |
+| compiled config, knob on | key present, +35 bytes — nothing else moves |
+| `nusel-table.tsv`, `work-pr31-f2off48` vs `work-pr30-f2on` | **identical** |
+| `nusel-events.tsv`, same pair | **identical** |
+| `pctree-pr-evt<ID>.tar.gz` member-content hashes, 48 events | **48/48 identical** (`abtest/hash_archive.py`, M2 — never `cmp` on the tarball) |
+| `./build/clus/wcdoctest-clus` | 91 cases / 963 assertions, **0 failed**, rc=0 |
+| M1 freshness | `local/lib/libWireCellClus.so` 14:17:10 > last source edit 14:15:45 |
+
+**Labels for re-checking later:** `work-pr31-f2off48` (knob off),
+`work-pr31-f2on48` (knob on), `work-pr30-f2on` (baseline),
+`work-pr31-disp-off` / `work-pr31-disp-on` (evt 388 with the PR display dump).
+
+### §11.4 What the knob does when ON — 48 nueCC events
+
+`work-pr31-f2on48` vs `work-pr31-f2off48`, same binary, same input hub
+`work-nuecc48-0804`, same 48 event ids.
+
+**Selection outcome does not move at all.**
+
+| quantity | changed / 48 |
+|---|---|
+| `event_label` (46 nu-candidate / 2 cosmic-tagged, both arms) | **0** |
+| `nu_evaluated`, `n_bundle`, `n_inbeam_bundle` | **0** |
+| selected bundle `t0` / `len` / `n_assoc` | **0** |
+| every cosmic flag (`cosmic_flag`, `cosmict_flag`, `cosmict_score`, `cosmict_10_score`) | **0** |
+| `nusel-table.tsv` and `nusel-events.tsv` (22 per-bundle columns) | **identical** |
+| `pctree-pr-evt<ID>.tar.gz` member hashes | **0 of 48 differ** |
+
+That last pair matters and is the same structural fact doc pr/28 §16.3b
+established: the whole delta is created **after** `tagger_check_neutrino` has
+picked its main cluster, so nothing upstream of that — including the point-cloud
+products — can see it.
+
+**What does move** is the reconstruction on the already-selected bundle:
+
+| quantity | moved / 48 | median abs | extremes |
+|---|---|---|---|
+| `kine_reco_Enu` | **7** | 4.0 MeV | **−754.4 MeV** (evt 360535), **+204.3 MeV** (evt 74544) |
+| `numu_score` | **8** | 0.76 | −1.455 (evt 74544), +0.932 (evt 360535) |
+| `nue_score` | **1** | 0.60 | −0.600 (evt 268067) |
+| neutrino vertex position | **1** | — | 0.78 cm (evt 256587) |
+
+`nue_score > 0` is **40 in both arms**; the 32 events sitting exactly at the
+`+4.301` saturation cap stay there and the two `br_filled` sentinels at `−15`
+stay too (doc pr/28 §16.5 — this sample structurally cannot resolve improvement
+above the cap, so read only the downward moves as information).
+
+**The two large energy moves are the finding worth a scan.** −754 MeV on evt
+360535 and +204 MeV on evt 74544 are not noise: the run-to-run floor on this
+manifest is **zero** over 17 columns (doc pr/28 §16.4). Whether either is an
+improvement is a hand-scan question, not a table question, and this document
+does not answer it.
+
+**No new processing problems.** 48/48 rc=0, zero E-level log lines, zero
+`DL vertex failed`, no new WARN family. Cost is nil: wall 404.5 → 406.9 s
+(**+0.6 %**), core 427.6 → 429.1 s (**+0.3 %**), mean peak RSS 1.525 → 1.525 GB
+(**+0.0 %**) — unsurprising, since the knob *removes* a 305-line PCA on some
+segments and the arithmetic is dominated by everything else.
+
+### §11.5 The mechanism, on evt 388
+
+`work-pr31-disp-off` vs `work-pr31-disp-on`, both with `PR_EXTRA_STAGES=pr_display`
+so the per-segment state is dumped (doc pr/26 stage 1).
+
+* 88 segments in each arm, 42 flagged shower.
+* **3 segments flip `dirsign`**: 59084 (`+1 → −1`), 92137 (`+1 → −1`),
+  92139 (`−1 → +1`). All three are shower-flagged, as expected — the knob only
+  gates the `kShowerTopology` branch.
+* `particle_id`, `shower_id` and `cluster_id` are unchanged on every segment
+  that exists in both arms; the shower list (12) and vertex list (133) keep
+  their lengths; the main vertex is identical to the last decimal.
+* **49 of 88 segment ids shift by one** (e.g. `27073 → 27072`, `53078 → 53077`).
+  `id = cluster_id*1000 + graph_index`, so this is graph-index drift: one fewer
+  segment is created somewhere earlier in the sequence. That is the propagation
+  path — a direction flip in stage 3 changes a later structural edit — and it is
+  worth naming because it means "3 dirsigns moved" **understates** the reach.
+* Downstream on this event: `kine_reco_Enu` 2811.06 → 2809.29 MeV,
+  `numu_score` −0.728 → −1.532, `nue_score` unchanged at the cap, and
+  `nusel-evt388.tsv` identical.
+
+### §11.6 Residual — what ON does *not* give you
+
+**Knob ON is prototype parity except in one corner, and that corner is F3.**
+Today the entry-side `segment->dirsign(0)` inside
+`segment_determine_shower_direction` masks a hole: the toolkit's
+`segment_is_shower_topology` skips `dirsign` entirely on its four early returns
+(`PRSegmentFunctions.cxx:2518-2529`), where the prototype clears `flag_dir` at
+`is_shower_topology`'s entry (`ProtoSegment.cxx:321`, *before* its early
+returns). With the knob ON that mask is gone.
+
+It bites only for a segment carrying a **stale** `kShowerTopology` flag — i.e.
+only in combination with **F3 (P13)**, which is the item that closes it. Not
+fixed here on purpose: mixing the two would make neither measurable. Anyone
+flipping `shower_topo_proto_dir` on before F3 lands should know this is open.
+
+Also not addressed, and unchanged from §10.3: **which direction estimate is
+better.** The numbers above say what changes and what it costs. They do not say
+which arm is right. That needs the two Bee sets and a scan, on the events in
+§11.4's table.
+
+### §11.7 SBND default: unchanged, deliberately
+
+`wct-pr-perevt.jsonnet` carries `shower_topo_proto_dir = false`. Unlike doc
+pr/30's `oov_prototype_parity` — flipped ON the same day because it was
+provably a port bug *and* provably free on this manifest — this one is neither:
+it is not established as a bug (§10.3), and it is not free (7 events move their
+energy, two of them by hundreds of MeV). Flipping it is a §5 rule 1 decision
+and it is the owner's, not this document's.
