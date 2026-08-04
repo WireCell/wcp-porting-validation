@@ -9,10 +9,17 @@ valfast events. **No PR algorithm changes** in either stage.
 * **Stage 2** (§7) — the **particle flow**, clickable to highlight one particle
   in all nine panels, and the **event features** that decide selection
   (reco Enu, nue/numu/cosmic scores, per-particle energies).
+* **Stage 3** (§8) — **the cosmic answer**: `cosmict_flag` and its ten per-test
+  flags replace two fields that were not it, and 22 never-computed fields come
+  off the panel. Read §8 before trusting any "cosmic" number here.
 
 Two defects were found on the way and are written up in §5. §5.1 has since been
 fixed (toolkit `4c02b679`); §5.2 remains reported-not-fixed, per CLAUDE.md's
-rule on unrelated bugs found mid-task.
+rule on unrelated bugs found mid-task. A third — the single-photon tagger's
+verdict being discarded — is reported in §8.2 on the same terms.
+
+**Corrections in §8 to what §7 says**: `cosmic_flag`'s polarity is the opposite
+of what §7 states, and `cosmict_score` is never computed at all.
 
 ## Repro
 
@@ -22,16 +29,19 @@ cd $SX
 
 # 1. the display's input: the PR chain with the (default-OFF) pr_display stage.
 #    ql_root is the owner's protected campaign -- READ ONLY; out_root is fresh.
-#    Stage 1 arm: work-prdisp-388.  Stage 2 arm (what is served now):
-PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
-  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-prdisp-388-pf data 388
-# -> work-prdisp-388-pf/pr_evt388/calib-pr-evt388.json   (1.9 MB)
+#    Stage 1 arm: work-prdisp-388.  Stage 2 arm: work-prdisp-388-pf.
+#    Stage 3 arm (what is served now) -- 7 events so the multi-event paths are
+#    testable; evt 388 is the one displayed:
+PR_EXTRA_STAGES=pr_display PR_JOBS=6 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-prdisp-cosscan2 data \
+      388 10550 111412 122660 137238 163543 172230
+# -> work-prdisp-cosscan2/pr_evt388/calib-pr-evt388.json   (1.9 MB)
 #    plus mabc-pr.zip beside it, whose data/0/0-mc.json is the particle flow
 
 # 2. serve it.  Pass the path EXPLICITLY: serve_pr_display.sh's default glob is
-#    ../work-prdisp-*/pr_evt*/calib-pr-evt*.json, and both arms above yield the
-#    label "evt388", so one would silently shadow the other.
-./pr_display/serve_pr_display.sh 5017 work-prdisp-388-pf/pr_evt388/calib-pr-evt388.json
+#    ../work-prdisp-*/pr_evt*/calib-pr-evt*.json, and FOUR arms now yield the
+#    label "evt388", so all but one would be silently shadowed.
+./pr_display/serve_pr_display.sh 5017 work-prdisp-cosscan2/pr_evt388/calib-pr-evt388.json
 # laptop:  ssh -L 5017:localhost:5017 wcgpu1.phy.bnl.gov
 #          http://localhost:5017/pr_display_viewer
 ```
@@ -471,7 +481,7 @@ exists in a production job.
 
 ```jsonc
 "segments": [ { …, "shower_id": 23014 | -1 } ],
-"vertices": [ { …, "fit_distance": 0.224 } ],   // cm, seed -> fitted vertex
+"vertices": [ { …, "fit_distance": 0.224 } ],   // cm, |fit.point - wcpt.point|
 "showers":  [ {id, shower_id, particle_id,
                kine_best, kine_range, kine_dQdx, kine_charge,   // MeV
                flag_kinematics, start:{x,y,z}, end:{x,y,z},
@@ -487,23 +497,46 @@ exists in a production job.
               …9 numu sub-scores, …30 nue sub-scores, photon_flag }
 ```
 
+> **Superseded by §8.** That `tagger` block shipped 22 fields that no code ever
+> assigns — they were displayed as `0.00` and read as physics answers. §8
+> replaces it with the computed subset plus the cosmic tagger's ten per-test
+> flags. The prose immediately below on `cosmic_flag` also had its **polarity
+> backwards**; §8.1 is the corrected account.
+
 `kine` is emitted verbatim — `NeutrinoKinematics.cxx` already divides by
 `units::MeV` / `units::cm` before storing, so rescaling it here would be a bug.
 
-**`fit_distance`** is how far `improve_vertex` / `MyFCN` moved the vertex off its
-seed point. A main vertex at 0 did not move, and doc pr/27 §12 lists the three
-reasons that happens (the `MyFCN.cxx:220` track/large-angle gate,
-`m_fit_vertex_min_seg_length`, and the post-hoc charge revert veto). Evt 388's
-main vertex moved **0.22 cm**.
+**`fit_distance`** is `|fit().point − wcpt().point|` (`PRVertex.h:84`) — the gap
+between a vertex's fitted position and its current Steiner seed point. Evt 388's
+main vertex reads **0.22 cm**.
 
-### There is no `cosmic_score`
+> **It is NOT "how far the 3-D vertex fit moved the vertex", and 0 does not mean
+> the fit did not run.** Corrected 2026-08-03 (doc pr/28). Both halves fail:
+> `TrackFitting::fit_point` moves `fit().point` for *every* vertex the vertex
+> fit did **not** fix, and `MyFCN::UpdateInfo` re-snaps `wcpt()` to the nearest
+> Steiner point for the ones it **did** — so the quantity is nonzero either way.
+> Measured on evt 388: **127 of 127** vertices have `fit_distance > 0`,
+> including degree-1 track ends that never reach `MyFCN` at all. For the main
+> vertex the 0.22 cm is the residual between the `MyFCN` optimum and the Steiner
+> node its seed was snapped to, not a fit displacement.
+>
+> The actual displacement is only in the trace log
+> (`improve_vertex: ... fit_vertex done, vertex moved 0.693 cm`, evt 388 pass 1).
+> **No artifact carries whether the vertex fit ran** — `PR::Fit::flag_fix`, the
+> flag that answers it, is dumped nowhere (doc pr/27 §14).
 
-`TaggerInfo` has two different things, and the display shows both, named apart:
+### There is no `cosmic_score` — **and the two substitutes shown here were both wrong**
 
-| field | what it is | evt 388 |
+Stage 2 showed `cosmic_flag` and `cosmict_score` in its place. Both choices were
+wrong, in different ways, and **§8 corrects them**:
+
+| field | stage-2 claim | actually |
 |---|---|---|
-| `cosmic_flag` | the cosmic tagger's own top-level boolean; **1 is also its default**, so 1 alone does not prove the tagger ran | 1 |
-| `cosmict_score` | the numu-BDT cosmic score (`NeutrinoTaggerInfo.h:1363`) | 0.00 |
+| `cosmic_flag` | "the cosmic tagger's own top-level boolean; 1 = cosmic-like" | **polarity inverted.** It is `!cosmict_flag_9`: 0 means cosmic-like. And it is a BDT *input feature*, not a verdict |
+| `cosmict_score` | "the numu-BDT cosmic score" | **never computed**, in the toolkit or the prototype — a legacy slot on a dead code path |
+
+The field that answers "did the cosmic tagger fire" is **`cosmict_flag`**. See
+§8.
 
 ### The scores are UNCALIBRATED, and the dump says so
 
@@ -533,7 +566,8 @@ A new row between the projections and the 2-D panels:
   over the viridis charge cells.
 * **selection / energy / topology chips** — nue_score, numu_score,
   cosmict_score, cosmic_flag, isFC; reco Enu and added energy; segment / shower /
-  vertex counts, the neutrino vertex and its `fit_distance`.
+  vertex counts, the neutrino vertex and its `fit_distance`. *(§8 replaces the
+  two cosmic chips with one `cosmic` verdict chip plus a per-test table.)*
 * **energy per particle** — the `kine_*` arrays as a table, with ✓ marking the
   entries actually summed into reco Enu (`kine_energy_included == 1`). Evt 388:
   13 particles, 4 counted, 2108 MeV.
@@ -564,6 +598,9 @@ been observed across an actual event step. First multi-event serve should check
 it, in single-row or empty-table mode (doc 58 GOTCHA 3: navigating a full table
 passes even unfixed, because the surrounding reflow incidentally repaints).
 
+> **Closed in §8.4** — the seven-event `work-prdisp-cosscan2` arm made the step
+> observable, and it passes.
+
 ## 7.5 Scope
 
 - No PF re-derivation in C++ — one producer, read by the display.
@@ -571,3 +608,217 @@ passes even unfixed, because the surrounding reflow incidentally repaints).
   with the UNCALIBRATED label, not recalibrated.
 - §5.2 (`charge_pred` pointer-order nondeterminism) stays reported-not-fixed.
 - `pr_display` remains opt-in via `PR_EXTRA_STAGES`; no production config change.
+
+---
+
+# Stage 3 — what the cosmic answer actually is
+
+*2026-08-03. Prompted by the owner reading the stage-2 panel: "since there is no
+cosmic_score, you should remove it. I guess cosmic_flag may not be the one. What
+is the score/flag for cosmics?"*
+
+Both instincts were right. Stage 2 put two fields on the panel in place of the
+`cosmic_score` the owner asked for; **neither was the cosmic answer**, and one of
+them was described with its polarity inverted. This section establishes what the
+toolkit really computes, removes everything it does not, and gives the display
+the decomposition that makes a cosmic tag actionable.
+
+## 8.1 The three things named "cosmic", and which one to read
+
+### `cosmict_flag` — the verdict
+
+`PatternAlgorithms::cosmic_tagger()` runs ten independent tests and ORs them
+(`clus/src/NeutrinoTaggerCosmic.cxx:1342-1347`):
+
+```cpp
+bool flag_cosmic = flag_cosmic_1 || … || flag_cosmic_9 || flag_cosmic_10_save;
+ti.cosmict_flag = flag_cosmic;
+```
+
+**This is the field to read.** It is the cosmic tagger's own answer, and it is
+what the prototype feeds the numu BDT as `cosmict_flag`.
+
+### `cosmic_flag` — not a verdict, and inverted
+
+The owner's suspicion was exactly right. `cosmic_flag` is written in one place
+only, inside the flag-9 block (`NeutrinoTaggerCosmic.cxx:1261-1264`; prototype
+`NeutrinoID_cosmic_tagger.h:781-783`):
+
+```cpp
+if (flagp_cosmic) {                       // event looks like vertical cosmic tracks
+    …
+    if (/* neutrino-like shower at the main vertex */) {
+        flagp_cosmic  = false;            // rescued
+        ti.cosmic_flag = true;            // <-- TRUE means NOT cosmic
+    } else {
+        ti.cosmic_flag = false;           // <-- FALSE means cosmic
+    }
+}
+if (flagp_cosmic) flag_cosmic_9 = true;
+```
+
+So `cosmic_flag == !cosmict_flag_9`, exactly. Three consequences:
+
+1. **Its polarity is the opposite of its name.** 0 is the cosmic-like value.
+   Stage 2's panel said "1 = cosmic-like". That was backwards.
+2. **It covers one of the ten tests**, not the tagger.
+3. **Its in-class default is 1** (`NeutrinoTaggerInfo.h:71`) and it is assigned
+   only inside `if (flagp_cosmic)`, so a 1 is ambiguous between *never tested*
+   and *tested and rescued*. `cosmic_filled` is the field that separates them,
+   which is why it is now dumped beside it.
+
+It is an input feature of the numu xgboost model (`m_xgb_vars[64]`), which is
+its only real job.
+
+### `cosmict_score` — never computed, anywhere
+
+Not merely zero on this event — **never assigned**, in either codebase:
+
+```
+$ grep -rn "cosmict_score *=" prototype_base/
+prototype_base/pid/src/NeutrinoID.cxx:3365:  tagger_info.cosmict_score = 0;   # init_tagger_info
+```
+
+That is the only write in the whole prototype, and the toolkit has none at all.
+The field is a **legacy slot of the uBooNE ntuple schema on a dead code path**:
+it belongs to `cal_numu_bdts()`, the pre-xgboost TMVA scorer, which **has no
+caller** — the prototype selects `cal_numu_bdts_xgboost()` unconditionally
+(`NeutrinoID.cxx:277`) and only that variant is ported. It survives in
+`uboone_bdt_app`'s branch list because the offline ntuple schema is frozen.
+
+*(Phrasing chosen deliberately: "legacy schema slot on a dead code path", not
+"dead field" — the latter invites someone to restore it.)*
+
+## 8.2 The same defect, 21 more times
+
+Checking `cosmict_score` exposed the pattern, so the sweep was run over every
+`_score` field the dump emitted:
+
+| family | emitted by stage 2 | actually computed | dead |
+|---|---|---|---|
+| numu sub-scores | 9 | **4** — `cosmict_10`, `numu_1`, `numu_2`, `numu_3` | 5 (`cosmict_2_4`, `3_5`, `6`, `7`, `8`) |
+| nue sub-scores | 30 | **15** — `br3_3/5/6`, `pio_2`, `stw_2/3/4`, `sig_1/2`, `lol_1/2`, `tro_1/2/4/5` | 15 |
+| top level | `cosmict_score`, `photon_flag` | — | 2 |
+
+The nue split has the same cause: `UbooneNueBDTScorer.cxx:1631-1645` fills
+exactly the fifteen the xgboost model consumes; the other fifteen belong to
+`cal_bdts()`, the prototype's `flag_bdt == 2` TMVA path, which is not ported.
+
+**All 22 dead fields are removed from the dump.** A displayed `0.00` that no code
+ever wrote is worse than an absent field: it reads as a physics answer. The C++
+now carries the reason inline so the next person does not "restore" them.
+
+> **`photon_flag` is different — it is a port gap, not a legacy slot.**
+> `TaggerCheckNeutrino.cxx:813` calls `singlephoton_tagger()` and **discards its
+> return value**, where the prototype does
+> `if (flag_sp) tagger_info.photon_flag = true;` (`NeutrinoID.cxx:271`). The
+> single-photon tagger's ~90 `shw_sp_*` features are filled; only its verdict is
+> dropped. Reported here, **not fixed in this change** — it alters a TaggerInfo
+> field that the uBooNE tagger ntuple writes, so it is a behavior change needing
+> its own knob and gate.
+
+## 8.3 What the dump and the display now carry
+
+**Removed**: `cosmict_score`, `cosmict_2_4/3_5/6/7/8_score`, the 15 legacy nue
+scores, `photon_flag`. **Added**:
+
+```jsonc
+"tagger": {
+  weights, nue_score, numu_score, match_isFC,
+  cosmict_flag,                       // THE VERDICT: OR of the ten tests
+  cosmic_flag, cosmic_filled,         // == !cosmict_flag_9, and "did test 9 run"
+  cosmict_flag_1 … cosmict_flag_9,    // which test fired
+  cosmict_flag_10: [ … ],             // per-candidate: one entry per near-front-face vertex
+  cosmict_flag_10_any,                // its OR (the tagger's own is a discarded local)
+  cosmict_2_filled … cosmict_8_filled,// did each test EVALUATE
+  …4 numu sub-scores, …15 nue sub-scores }
+```
+
+Two details that are easy to get wrong:
+
+* **Test 10 is per-candidate, not per-event.** `cosmict_flag_10` is a
+  `std::vector<float>` with one entry per vertex examined near the upstream
+  face, and the tagger ORs it into `cosmict_flag` through `flag_cosmic_10_save`,
+  a **local that is never stored**. Both the vector and a derived OR are
+  emitted, because an *empty* vector ("no candidate was ever examined") is a
+  different statement from an all-false one, and only the vector says which.
+* **`*_filled` is what makes the panel honest.** Tests 2–8 fill their feature
+  block only when their topology precondition is met. A 0 flag with `filled==0`
+  means **not evaluated**; with `filled==1` it means **evaluated and did not
+  fire**. Without this column every event on a neutrino-selected sample looks
+  identical, and an inactive tagger is indistinguishable from a quiet one.
+
+The display gains a **cosmic tagger** table: ten rows, `fired` and `ran`, rows
+that never ran greyed out, each row's tooltip stating the actual cut. The four
+selection chips become three — `nue_score`, `numu_score`, and a single `cosmic`
+chip reading **TAGGED** (red) or **not tagged**.
+
+| # | test | fires when |
+|---|---|---|
+| 1 | vertex outside FV | main vertex outside the FV shrunk by 1.5 cm |
+| 2 | single muon, wrong dir. | muon at the vertex, ≤2 muon tracks, <40 cm shower, weak/steep direction or >40–60° off beam, downward-going |
+| 3 | long-muon chain, wrong dir. | same test on a long-muon shower chain |
+| 4 | muon exits, >100° | muon's far end outside FV, >100° from beam, no connected showers |
+| 5 | long muon exits, >100° | same, for a chain |
+| 6 | back-to-back secondary | 2nd muon track weak-direction, exits FV, >170° from the first |
+| 7 | stopped muon + Michel | stopped µ with a Michel-like or near-back-to-back secondary, steep |
+| 8 | muon + exiting back-track | µ >100 cm, one track >165° from it leaving FV, everything else <12 cm |
+| 9 | vertical-track collection | cluster-PCA: most of the event's length vertical and reaching the top, not rescued by a neutrino-like shower |
+| 10 | front-face beam-aligned | vertex outside FV within 15 cm of the upstream face, beam-aligned weak-direction track >10 cm |
+
+## 8.4 Verification
+
+The stage-2 no-A/B argument carries over unchanged and is not re-derived:
+`PrDisplayDump` is instantiated only when `pr_display` is named in
+`pipeline_names`, so production never builds it (§7.4, first row).
+
+| gate | result |
+|---|---|
+| **Freshness (M1)** | `local/lib/libWireCellClus.so` **18:06:24** > `PrDisplayDump.cxx` **18:05:55** |
+| `./build/clus/wcdoctest-clus` | 71 cases / 809 assertions **pass** |
+| **Dead fields gone from the dump** | `cosmict_score`, `cosmict_2_4_score`, `mipid_score`, `photon_flag` all absent; `tagger` goes 47 → 37 keys |
+| **Dead fields gone from the page** | headless: `cosmict_score`, `mipid_score`, `cme_anc_score`, `photon_flag`, `cosmic_flag` none present |
+| **Cosmic table renders** | all ten rows, `fired`/`ran` columns, no JS errors |
+| **The `ran` column earns its place** | over 7 events, two (**388**, **172230**) read `filled = 1010001` — tests 2, 4, 8 **ran and did not fire** — and five read `0000000`, never evaluated. Without it all seven look identical |
+| **DataTable refresh across events — §7.4's open item, now CLOSED** | 7 events stepped with `next >`: **7 distinct row-sets**, row counts 3→13 (a 3-row table is doc 58 GOTCHA 3's discriminating case), and stepping back reproduces the first event's rows exactly |
+| **Protected dirs (M13)** | fresh arms `work-prdisp-388-cos`, `work-prdisp-cosscan`, `work-prdisp-cosscan2`; nothing written under `work-prdisp-388`, `work-prdisp-388-pf`, `work-nuecc48-prod0803`, `work-vfnuecc48-prod0803` |
+
+**Evt 388 reads `cosmict_flag = 0`** with all ten tests 0, `cosmic_filled = 0`,
+`cosmict_flag_10` empty — so its `cosmic_flag = 1` is the *default*, not a
+verdict. Exactly the ambiguity §8.1 describes, now visible on the panel.
+
+**Stated, not implied — no firing case was found.** All **14** events tried
+(388 plus 13 from `work-nuecc48-prod0803`) give `cosmict_flag = 0` with every
+test 0. On a nueCC-*selected* sample that is the expected direction, and the
+`ran` column proves the tagger is executing rather than silently inactive — but
+**the FIRED rendering path itself has not been exercised on real data.** It
+should be checked against a known cosmic before the flag decomposition is
+trusted in a scan. This is reported, not tuned around (§5 rule 7).
+
+## 8.5 Scope
+
+- The 22 dead fields are removed from **this display's dump only**.
+  `UbooneTaggerOutputVisitor`'s ROOT branch list is untouched — the offline
+  ntuple schema is shared with uBooNE analysis code.
+- `photon_flag`'s dropped verdict (§8.2) is **reported, not fixed**: it changes
+  a written TaggerInfo field and needs its own knob and gate.
+- No BDT retraining (doc pr/2 gap G1); no production config change;
+  `pr_display` remains opt-in via `PR_EXTRA_STAGES`.
+
+## 8.6 Repro
+
+```bash
+cd sbnd_xin
+PR_EXTRA_STAGES=pr_display PR_JOBS=6 ./run_pr_chain_batch.sh \
+    work-nuecc48-prod0803 work-prdisp-cosscan2 data 388 10550 111412 122660 137238 163543 172230
+./pr_display/serve_pr_display.sh 5017 work-prdisp-cosscan2/pr_evt388/calib-pr-evt388.json
+
+# the cosmic answer, per event
+python3 -c "
+import json,glob
+for p in sorted(glob.glob('work-prdisp-cosscan2/pr_evt*/calib-pr-evt*.json')):
+    t=json.load(open(p))['tagger']
+    fl=''.join(str(int(t.get('cosmict_flag_%d'%i,0))) for i in range(1,10))+str(int(t['cosmict_flag_10_any']))
+    fi=''.join(str(int(t['cosmict_%d_filled'%i])) for i in range(2,9))
+    print('%-8s flag=%d fired=%s filled(2-8)=%s'%(p.split('evt')[-1].split('.')[0],t['cosmict_flag'],fl,fi))"
+```

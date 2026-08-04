@@ -39,13 +39,13 @@ PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
 ## 2. Serve
 
 ```bash
-./pr_display/serve_pr_display.sh 5017 work-prdisp-388-pf/pr_evt388/calib-pr-evt388.json
+./pr_display/serve_pr_display.sh 5017 work-prdisp-cosscan2/pr_evt388/calib-pr-evt388.json
 ```
 
 Pass the path **explicitly** when more than one `work-prdisp-*` arm exists: the
-script's default glob is `../work-prdisp-*/pr_evt*/calib-pr-evt*.json`, and two
-arms holding the same event both resolve to the label `evt388`, so one silently
-shadows the other.
+script's default glob is `../work-prdisp-*/pr_evt*/calib-pr-evt*.json`, and
+every arm holding the same event resolves to the same label `evt388`, so all but
+one are silently shadowed. Four arms hold evt 388 today.
 
 From a laptop:
 
@@ -115,19 +115,51 @@ dropped by the PF builder, so it has a row in `showers[]` and no PF node.
 
 Beside the particle flow:
 
-- **selection** -- `nue_score`, `numu_score`, `cosmict_score`, `cosmic_flag`,
-  `isFC`. Note there is no "cosmic_score": `cosmic_flag` is the cosmic tagger's
-  own top-level boolean (**1 is also its default**, so 1 alone does not prove
-  the tagger ran) and `cosmict_score` is the numu-BDT cosmic score.
+- **selection** -- `nue_score`, `numu_score`, the **cosmic** verdict, `isFC`.
 - **energy** -- reconstructed neutrino energy and the added rest-mass/binding
   term, plus the pi0 mass when one was identified.
 - **topology** -- segment / shower / vertex counts, the neutrino vertex, and
-  `fit moved`: how far the 3-D vertex fit displaced the vertex from its seed.
-  **0 cm means the fit did not run or was reverted** (doc pr/27 §12 lists the
-  three gates that cause it).
+  `fit_distance` = `|fit().point - wcpt().point|`: the gap between the vertex's
+  fitted position and its current Steiner seed point.
+
+  > **Do not read this as "how far the 3-D vertex fit moved the vertex", and do
+  > not read 0 as "the fit did not run"** -- an earlier version of this file said
+  > both, and both are wrong (corrected 2026-08-03, doc pr/28). The trajectory
+  > fit moves `fit().point` for every vertex the vertex fit did *not* fix, and
+  > `MyFCN::UpdateInfo` re-snaps `wcpt()` for the ones it *did*, so the number is
+  > nonzero either way: 127 of 127 vertices on evt 388, degree-1 track ends
+  > included. **Nothing in the dump says whether the vertex fit ran** -- that is
+  > `PR::Fit::flag_fix`, which no artifact carries (doc pr/27 §14). Today the
+  > only source is the trace log (`improve_vertex: ... fit_vertex done, vertex
+  > moved ... cm`).
 - **energy per particle** -- the `kine_*` arrays, with ✓ marking the entries
   actually summed into reco Enu.
-- **BDT sub-scores** -- all 39, behind a toggle.
+- **BDT sub-scores** -- the 19 that are actually computed, behind a toggle.
+
+## The cosmic answer
+
+The field that says whether the cosmic tagger fired is **`cosmict_flag`**: the
+OR of its ten tests (`clus/src/NeutrinoTaggerCosmic.cxx`). The panel shows the
+verdict as one chip and the ten tests as a table -- **which one fired**, and
+**whether each one ran at all**.
+
+That second column is not decoration. Tests 2-8 only evaluate when their
+topology precondition is met, so a `0` means either "ran and did not fire" or
+"never ran", and on a neutrino-selected sample almost every row reads 0. Rows
+that never ran are greyed. Evt 388 and 172230 show tests 2, 4 and 8 running and
+not firing while the rest never run -- without the column those events are
+indistinguishable from an inactive tagger.
+
+Two fields that look like the cosmic answer and are not:
+
+| field | why not |
+|---|---|
+| `cosmic_flag` | a **BDT input feature**, exactly `!cosmict_flag_9` -- its polarity is the reverse of its name, it covers one of the ten tests, and its default is 1, so a 1 is ambiguous between "never tested" and "rescued". Shown only in the table, via test 9 |
+| `cosmict_score` | **never computed**, in the toolkit or the prototype. A legacy slot of the uBooNE ntuple schema belonging to the TMVA BDT path, which has no caller. Not dumped, not shown |
+
+The same sweep removed **22** never-assigned fields in total (5 numu sub-scores,
+15 nue sub-scores, `cosmict_score`, `photon_flag`) -- a displayed `0.00` that no
+code ever wrote reads as a physics answer. Full account: doc pr/26 §8.
 
 > **The BDT scores are UNCALIBRATED on SBND.** The config books the
 > uBooNE-trained weight XMLs (doc pr/2 gap G1); the numbers carry availability
@@ -179,9 +211,13 @@ measured-vs-predicted comparison as a stable number until that is fixed.
 Hand-scan label saving, batch pre-rendering, and any change to the PR
 algorithms themselves. This is read-only viewing plus the dump that feeds it.
 
-One caveat worth knowing before the first multi-event serve: the particle-flow
-table carries the doc-58 `DataTable` refresh fix (view-filter flip after every
-`.data` assignment), but with a single event served that path has not been
-*observed* across an event step. Check it on a single-row or empty table --
-navigating a full one passes even when unfixed, because the surrounding reflow
-incidentally repaints the grid.
+The particle-flow table's doc-58 `DataTable` refresh fix (view-filter flip after
+every `.data` assignment) **is now verified across event steps** -- seven events
+give seven distinct row-sets, counts 3 to 13, and stepping back reproduces the
+first exactly (doc pr/26 §8.4). It was carried as unverified through stage 2.
+
+Still unexercised: **no event tried so far has any cosmic test fire**, so the
+cosmic table's FIRED rendering has not been seen on real data. All 14 events
+from the nueCC-selected sample read `cosmict_flag = 0`, which is the expected
+direction for that sample -- check it against a known cosmic before relying on
+the decomposition in a scan.

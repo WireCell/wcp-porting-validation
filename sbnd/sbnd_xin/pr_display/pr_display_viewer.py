@@ -62,6 +62,20 @@ The BDT scores shown here are produced with the uBooNE-TRAINED weight XMLs (the
 SBND config books those); they are availability and relative ranking only, not
 calibrated SBND scores.  The panel says so, and the dump carries the same string
 in `tagger.weights`.
+
+THE COSMIC ANSWER is `cosmict_flag`: the OR of the cosmic tagger's ten tests
+(NeutrinoTaggerCosmic.cxx).  The panel shows the verdict and which test fired,
+plus whether each test ran at all -- on a neutrino-selected sample nearly every
+test reads 0 and only that second column separates a quiet tagger from an
+inactive one.  Two fields that look like cosmic answers are NOT:
+
+  cosmic_flag     a BDT input feature, exactly !cosmict_flag_9, written only
+                  inside the flag-9 block, with an in-class default of 1.  Its
+                  polarity is the opposite of what the name suggests and 1 is
+                  ambiguous between "never tested" and "rescued".
+  cosmict_score   never computed, on either the toolkit or the prototype -- a
+                  legacy slot of the uBooNE ntuple schema belonging to the
+                  TMVA BDT path, which has no caller.  Not dumped, not shown.
 """
 
 import sys
@@ -72,6 +86,7 @@ import json
 import zipfile
 import argparse
 import math
+import html
 from collections import defaultdict
 
 import numpy as np
@@ -308,8 +323,43 @@ pf_note = Div(text="", width=620)
 
 feat_div = Div(text="", width=760)
 kine_div = Div(text="", width=760)
+cos_div = Div(text="", width=760)
 bdt_toggle = Toggle(label="BDT sub-scores", active=False, width=160)
 bdt_div = Div(text="", width=760, visible=False)
+
+# The cosmic tagger's ten tests, in the order they are evaluated in
+# NeutrinoTaggerCosmic.cxx.  `filled` names the TaggerInfo field that says the
+# test was actually evaluated (None = the test always evaluates, or its own
+# convention applies -- see the notes on tests 9 and 10 below).
+COSMIC_TESTS = [
+    (1,  "vertex outside FV",          None,
+     "main vertex outside the fiducial volume shrunk by 1.5 cm"),
+    (2,  "single muon, wrong dir.",    "cosmict_2_filled",
+     "muon at the vertex: <=2 muon tracks, <40 cm of shower, weak/steep "
+     "direction or >40-60 deg off beam, and downward-going"),
+    (3,  "long-muon chain, wrong dir.", "cosmict_3_filled",
+     "same test applied to a long-muon shower chain instead of one segment"),
+    (4,  "muon exits, >100 deg",       "cosmict_4_filled",
+     "the muon's far end is outside the FV, >100 deg from the beam, with no "
+     "connected showers"),
+    (5,  "long muon exits, >100 deg",  "cosmict_5_filled",
+     "same, for a long-muon chain"),
+    (6,  "back-to-back secondary",     "cosmict_6_filled",
+     "second muon track has a weak direction, exits the FV, and is >170 deg "
+     "from the first"),
+    (7,  "stopped muon + Michel",      "cosmict_7_filled",
+     "stopped muon with a Michel-like or nearly back-to-back secondary, "
+     "pointing downward/steep"),
+    (8,  "muon + exiting back-track",  "cosmict_8_filled",
+     "muon >100 cm, one track >165 deg from it leaving the FV, everything "
+     "else <12 cm"),
+    (9,  "vertical-track collection",  "cosmic_filled",
+     "cluster-PCA: most of the event's length is vertical and reaches the top "
+     "of the detector, and no neutrino-like shower at the vertex rescued it"),
+    (10, "front-face beam-aligned",    None,
+     "a vertex outside the FV within 15 cm of the upstream face, with a "
+     "beam-aligned weak-direction track >10 cm"),
+]
 
 
 def toggle_layers(attr, old, new):
@@ -454,6 +504,65 @@ def _f(v, fmt="%.2f", missing="&mdash;"):
     return missing if v is None else fmt % v
 
 
+def fill_cosmic(tag):
+    """The cosmic tagger, test by test.
+
+    The point of the per-test breakdown is that `cosmict_flag` alone says an
+    event was tagged but not why, and a bare 0 is ambiguous in a second way: it
+    can mean the test ran and did not fire, or that its topology precondition
+    was never met so it never ran at all.  Both are shown, because on a
+    neutrino-selected sample almost every test reads 0 and only the `ran`
+    column distinguishes a quiet tagger from an inactive one.
+    """
+    if not tag:
+        cos_div.text = ""
+        return
+
+    v10 = tag.get("cosmict_flag_10") or []
+    rows = []
+    for num, name, filled_key, tip in COSMIC_TESTS:
+        fired = tag.get("cosmict_flag_%d" % num)
+        if num == 10:
+            fired = tag.get("cosmict_flag_10_any")
+            ran = "yes" if v10 else "no"
+        elif num == 1:
+            ran = "yes"          # test 1 has no precondition
+        else:
+            f = tag.get(filled_key)
+            ran = "&mdash;" if f is None else ("yes" if f else "no")
+
+        if fired:
+            mark, style = "FIRED", "color:#a33;font-weight:bold"
+        elif ran == "yes":
+            mark, style = "no", "color:#333"
+        else:
+            mark, style = "no", "color:#aaa"     # never evaluated: greyed out
+
+        # html.escape both, quote=True: a tooltip like "the muon's far end ..."
+        # would otherwise close the title='' attribute on its apostrophe and
+        # spill the rest of the string into the page as visible text.
+        rows.append(
+            "<tr title='%s' style='%s'>"
+            "<td style='padding:1px 10px 1px 0'>%d</td>"
+            "<td style='padding:1px 14px 1px 0'>%s</td>"
+            "<td style='padding:1px 14px 1px 0'>%s</td>"
+            "<td style='padding:1px 10px 1px 0'>%s</td></tr>"
+            % (html.escape(tip, quote=True), style, num,
+               html.escape(name, quote=True), mark, ran))
+
+    verdict = tag.get("cosmict_flag")
+    cos_div.text = (
+        "<b>cosmic tagger</b> <span style='color:#666'>&mdash; "
+        "cosmict_flag = <b>%s</b>, the OR of these ten. "
+        "Greyed rows never ran (no matching topology at the vertex).</span>"
+        "<table style='font-family:monospace;font-size:88%%;border-collapse:collapse'>"
+        "<tr><th align=left style='padding:1px 10px 1px 0'>#</th>"
+        "<th align=left style='padding:1px 14px 1px 0'>test</th>"
+        "<th align=left style='padding:1px 14px 1px 0'>fired</th>"
+        "<th align=left style='padding:1px 10px 1px 0'>ran</th></tr>%s</table>"
+        % ("&mdash;" if verdict is None else "%.0f" % verdict, "".join(rows)))
+
+
 def fill_features(d):
     """The selection numbers, next to the picture."""
     tag = d.get("tagger") or {}
@@ -462,18 +571,35 @@ def fill_features(d):
     mvv = next((v for v in d.get("vertices", []) if v.get("is_main")), None)
 
     def chip(name, val, fmt="%.2f", tip=""):
+        # escape the tooltip: an apostrophe in it closes title='' (see fill_cosmic)
         return ("<span title='%s' style='display:inline-block;padding:2px 8px;margin:2px;"
                 "border:1px solid #ccc;border-radius:4px'>%s <b>%s</b></span>"
-                % (tip, name, _f(val, fmt)))
+                % (html.escape(tip, quote=True), name, _f(val, fmt)))
+
+    # The cosmic answer is cosmict_flag -- the OR of the tagger's ten tests.
+    # There is no "cosmic score": the xgboost numu path folds every cosmic
+    # feature into numu_score instead, and the legacy cosmict_score is never
+    # computed (see the cosmic-tagger table below and doc pr/26 sec 7.5).
+    cflag = tag.get("cosmict_flag")
+    cos_chip = ("<span title='%s' style='display:inline-block;padding:2px 8px;"
+                "margin:2px;border:1px solid %s;border-radius:4px;background:%s'>"
+                "cosmic <b>%s</b></span>"
+                % (html.escape("cosmict_flag -- the cosmic tagger's verdict, the "
+                               "OR of its ten tests; see the table below for "
+                               "which one fired", quote=True),
+                   "#a33" if cflag else "#ccc",
+                   "#fdd" if cflag else "transparent",
+                   "&mdash;" if cflag is None else
+                   ("TAGGED" if cflag else "not tagged")))
 
     scores = "".join([
         chip("nue_score", tag.get("nue_score"), "%.2f",
-             "nueCC BDT log-odds; -15 is the background-like default"),
-        chip("numu_score", tag.get("numu_score"), "%.2f", "numuCC BDT log-odds"),
-        chip("cosmict_score", tag.get("cosmict_score"), "%.2f",
-             "numu-BDT cosmic score -- NOT the cosmic tagger's own flag"),
-        chip("cosmic_flag", tag.get("cosmic_flag"), "%.0f",
-             "cosmic tagger top-level flag; 1 = cosmic-like (also its default)"),
+             "nueCC BDT log-odds; -15 is the background-like default, "
+             "+4.30 the saturated signal-like one"),
+        chip("numu_score", tag.get("numu_score"), "%.2f",
+             "numuCC BDT log-odds; on the xgboost path this is also where "
+             "every cosmic feature ends up"),
+        cos_chip,
         chip("isFC", tag.get("match_isFC"), "%.0f", "fully contained"),
     ])
     ecal = "".join([
@@ -539,10 +665,12 @@ def fill_features(d):
             "<th align=left style='padding:0 14px 0 0'>from</th>"
             "<th style='padding:0 14px 0 0'>in Enu</th></tr>%s</table>" % "".join(rows))
 
+    # --- the cosmic tagger, test by test ---
+    fill_cosmic(tag)
+
     # --- the sub-BDT decomposition, behind the toggle ---
     subs = [(k, v) for k, v in sorted(tag.items())
-            if k.endswith("_score") and k not in
-            ("nue_score", "numu_score", "cosmict_score")]
+            if k.endswith("_score") and k not in ("nue_score", "numu_score")]
     if not subs:
         bdt_div.text = "<i>no sub-scores in this JSON</i>"
     else:
@@ -953,7 +1081,7 @@ layout = column(
     info,
     row(column(pf_title, pf_table, row(pf_clear_btn), pf_note),
         Spacer(width=20),
-        column(feat_div, kine_div, bdt_toggle, bdt_div)),
+        column(feat_div, kine_div, cos_div, bdt_toggle, bdt_div)),
     row(column(panel[(0, 0)]["fig"], panel[(0, 1)]["fig"], panel[(0, 2)]["fig"]),
         column(panel[(1, 0)]["fig"], panel[(1, 1)]["fig"], panel[(1, 2)]["fig"]),
         cbar_fig),
