@@ -1385,10 +1385,17 @@ Supporting changes:
 
 `boost::edges` / `boost::vertices` / `boost::adjacent_vertices` also appear in
 `SteinerGrapher.cxx`, `Graphs.cxx`, `PatternDebugIO.cxx`, `Facade_Util.cxx` and
-`PointTreeBuilding.cxx`. **These were checked and deliberately not touched**:
-`Clus::Graphs::Graph` is declared `adjacency_list<vecS, vecS, …>`
-(`Graphs.h:22-27`), so its descriptors are integer indices and its iteration
-order is already content-stable. Converting them would have been churn.
+`PointTreeBuilding.cxx`. **These were checked and deliberately not touched** —
+they walk *different graph types*, both of which already have integer
+descriptors and therefore content-stable iteration:
+
+| file | graph | declaration |
+|---|---|---|
+| `SteinerGrapher`, `Graphs.cxx`, `PatternDebugIO`, `Facade_Util` | `Clus::Graphs::Weighted::Graph` (reached via `Cluster::find_graph()`, `Facade_Mixins.h:347`) | `adjacency_list<vecS, vecS, …>`, `Graphs.h:22-27` |
+| `PointTreeBuilding` | `ICluster::cluster_graph_t` (`icluster->graph()`) | `adjacency_list<setS, vecS, …>`, `ICluster.h:167` — `setS` is the *out-edge* list; the **vertex** list is `vecS` |
+
+Converting either would have been churn. Only `PR::Graph`
+(`adjacency_list<setS, setS, …>`, `PRGraphType.h:91-98`) has pointer descriptors.
 
 ### 11.4 The sort key is sound — new unit test
 
@@ -1396,17 +1403,22 @@ order is already content-stable. Converting them would have been churn.
 `std::sort` is not stable, so **a duplicate index would silently fall back to the
 input order — pointer order — and make every conversion in rounds 3–5 a no-op
 while still looking converted.** New `clus/test/doctest_pr_graph_order.cxx`
-(4 cases, 22 assertions) pins:
+(5 cases, 25 assertions) pins:
 
 * node and edge indices are pairwise distinct;
 * both helpers really come back strictly ascending;
 * indices stay distinct across a `remove_vertex` + re-add cycle — indices come
   from a monotone counter in `GraphBundle` that never decrements
   (`PRGraph.cxx:24-26, 52-61`), so a removed index is never reissued;
+* **the `EdgeBundle` index survives the aliasing path of §11.7** — adding a
+  second segment between an already-connected vertex pair leaves
+  `first->get_graph_index() == second->get_graph_index()` (asserted) while the
+  edge indices `ordered_edges` sorts on stay pairwise unique (asserted). The two
+  facts are separate and this case pins both in one place;
 * `graph_nodes` and `ordered_nodes` hold the same *set*, so converting a call
   site changes order and nothing else.
 
-`./build/clus/wcdoctest-clus`: **75 cases / 833 assertions, all pass.**
+`./build/clus/wcdoctest-clus`: **76 cases / 836 assertions, all pass.**
 
 ### 11.5 Repro
 
@@ -1478,11 +1490,22 @@ iterating pointer-keyed containers. **That moved `kine_reco_Enu` on SBND evt
 239794 from 2930 to 1687 MeV** and 376 other branches with it — a genuine physics
 change, caught only because the A/B was run.
 
-Why: `SegmentIndexCmp` compares `Segment::get_graph_index()`, so the swap silently
-changed `find()`/`count()` from **pointer identity to index identity** — and a
-segment removed from the graph can have its edge index inherited by a later
-segment (`PRGraph.cxx:88-90`), so an index-keyed lookup can match a stale entry
-against a different live segment. Reverted; the container is now documented
+Why: `SegmentIndexCmp` compares `Segment::get_graph_index()`, so the swap
+silently changed `find()`/`count()` from **pointer identity to index identity** —
+and **that index is not unique across live `Segment` objects**:
+
+```cpp
+// PRGraph.cxx:86-89 -- PR::add_segment, "edge already existed" path
+g[desc].segment = seg;                  // displaces the previous segment
+seg->set_graph_index(g[desc].index);    // ...and hands the new one its index
+```
+
+Adding a segment between a vertex pair that already carries an edge does not
+create an edge; it *overwrites* the bundle and copies the existing index into the
+new segment. The displaced segment keeps that same index, so any `SegmentPtr`
+still held to it — which is exactly what `existing_segments` holds — now compares
+**equal** to a different live segment. Pinned by the fifth case of
+`doctest_pr_graph_order.cxx` (§11.4). Reverted; the container is now documented
 in `NeutrinoPatternBase.h` as pointer-keyed **on purpose**, with the reason.
 
 Its *iteration* needs no fix either: the loop body takes a running `min` over
@@ -1499,13 +1522,33 @@ check what the container is used for before changing how it is ordered.**
   vector ordering, with zero scalar movement measured. The owner's waiver for
   rounds 1–4 covers it; the population gate owed for §7–§10 now covers §11 too,
   and its baseline must be regenerated.
+  **Round 5 makes that gate cheaper to read.** Because the 48-event A/B showed
+  *zero* scalar movement, the expected §7–§11 diff against the pre-round-1
+  baseline is rounds 1–4's effects **plus vector reordering and nothing else**.
+  A checkable PASS criterion: every scalar matches the rounds-1–4 baseline, and
+  the only branches that differ are the ten `pio_2_v_*` / `shw_sp_pio_2_v_*` /
+  `stw_3_v_*` vectors, each a **permutation** of its baseline value
+  (`ttag_cmp5.py` reports this as `reorder=N value=0`).
 * **Stable ≠ correct**, as in §9.4/§10.6. Index order is *an* order; the
   prototype's equivalent loops walk pointer-keyed `std::map<ProtoVertex*, …>`,
   so its order is equally arbitrary and no parity is broken.
-* **Still open, and now the whole remaining determinism list:** the pointer-keyed
-  `std::map`/`std::set<T*>` declarations in `clus/src`. Round 5 audited only
-  those on the paths it touched (three fixed or documented: `m_clusters` already
-  had `ClusterPtrCmp`, `segments_set` removed, `existing_segments` documented).
-  The rest are unaudited — and §11.7 is the reason each must be judged on how it
-  is *used*, not converted in bulk.
+* **Still open — and it is now TWO classes, not one:**
+  1. **Pointer-keyed** `std::map`/`std::set<T*>` declarations in `clus/src`
+     (CLAUDE.md §2). Round 5 audited only those on the paths it touched
+     (`m_clusters` already had `ClusterPtrCmp`; `segments_set` removed;
+     `existing_segments` documented). The rest are unaudited.
+  2. **Index-keyed** containers — the class §11.7 discovered, and the one the
+     obvious fix for (1) walks straight into. Any `std::set`/`std::map` ordered
+     by `Segment::get_graph_index()` can alias two *live* segments, so it is
+     unsafe for identity lookup even though it is perfectly deterministic.
+     Pre-existing sites: `PRShower.h:223` (`ShowerSegmentMap`),
+     `NeutrinoShowerClustering.cxx:1676, 2167`, `NeutrinoTaggerSSM.cxx:608`,
+     `NeutrinoKinematics.cxx:93`, `PRSegmentFunctions.cxx:1916-1918` (three).
+     Related: `NeutrinoPatternBase.cxx:2159` does `seg->set_id(edge_bundle.index)`,
+     which hands two segments the same id under the same collision.
+     **Not touched in this round** (CLAUDE.md: an unrelated defect does not ride
+     along) — recorded so the next round starts from the right list.
+
+  §11.7 is why each site in both classes must be judged on how it is **used**,
+  never converted in bulk.
 * `boost::in_edges` does not occur anywhere in `clus/src`.
