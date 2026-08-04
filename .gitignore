@@ -35,3 +35,4 @@ rebase-scan
 # per-run scratch dirs (pdhd/work, sbnd_xin/work-mcp10-*, work-stmcamp-*, ...)
 work/
 work-*/
+workarea
