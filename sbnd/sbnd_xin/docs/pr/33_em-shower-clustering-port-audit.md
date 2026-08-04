@@ -901,6 +901,11 @@ Five kept.  F1–F4 are prototype-fidelity defects.  **F5 is not** — it is a
 house-rule violation with no prototype counterpart, and it is listed separately
 so that distinction is not smuggled past the owner.
 
+Five findings, **eight proposed knobs** — F1 splits two ways and F2 three ways,
+because a knob that moves two sites in opposite directions cannot tell the gate
+which site moved a decision.  §10.10 records the three amendments that produced
+that count.
+
 ---
 
 ### §10.2 F1 = P1 — restore `calculate_num_daughter_tracks` at both sites
@@ -946,13 +951,30 @@ Five substitutions, unchanged in count after re-verification, at HEAD anchors
 majority-vote type where the prototype reads the *start segment's* PID; `:525`
 runs the other way.  Every one is a muon veto.
 
-**Solution.** One knob `shower_pdg_from_start_segment`, C++ default `false`,
-flipping all five to the prototype's object.  They are one class and one
-mechanism, so one knob is right here — unlike F1, they all err the same way
-except `:525`, which the same knob inverts back.  Keep the toolkit's `std::abs`
-at `:170` **only if** the knob is off: the prototype's `!= 13` is exact, so
-under the knob `:170` must become an exact `!= 13` too, or PDG −13 still takes
-the wrong branch.
+**Solution — three knobs, by the same attribution criterion F1 uses.**  An
+earlier draft gave F2 one knob while conceding that `:525` inverts; that
+contradicts §10.2's own rule, so it is split.  All C++ default `false`:
+
+| knob | sites | change |
+|---|---|---|
+| `shower_pdg_from_start_segment` | `:170`, `:1247`, `:2911`, `:2927` | shower type → start segment's PID |
+| `shower_pdg_from_shower_type` | `:525` | start segment's PID → shower type (the inverted site) |
+| `shower_pdg_exact_muon_test` | `:170`, `:2193` | drop `std::abs`, matching the prototype's exact `!= 13` |
+
+The third knob is what classifies **`:2193`**, which §3's P2 prose mentioned (as
+`:2174`) but never placed in its table and which an earlier draft of §10 left
+neither kept nor dropped.  It is an `abs`-only divergence with **no** object
+substitution: prototype `em_shower.h:10` `get_particle_type() != 13` is exact,
+so a segment already in a shower with PDG **−13** is skipped by the prototype
+and **processed** by the toolkit.  The toolkit's extra `!sg->has_particle_info()`
+term at that site is not a divergence — a segment with no `ParticleInfo` has no
+PDG and takes the `continue` in both trees.
+
+`:170` appears in two knobs because both defects sit in one expression; with
+`shower_pdg_from_start_segment` on and `shower_pdg_exact_muon_test` off, `:170`
+reads the start segment but still tolerates −13, which is neither tree's
+behaviour.  Say so in the config comment: for prototype parity at `:170` both
+must be on.
 
 **Why it is a slip and not a convention** — and this is sharper than §3 said.
 There are now **four** sites where both trees read the shower type, not two:
@@ -985,11 +1007,30 @@ So a collision does not merely lose an invariant: it puts **four** showers into
 one π⁰ group and lets the second finder's mass **overwrite** the first's, in
 both the tagger and the event display.
 
-**Solution — the collision half only.**  Change the parameter to `int&` on
-`shower_clustering_with_nv`, `id_pi0_with_vertex` and `id_pi0_without_vertex`
-(`NeutrinoPatternBase.h:747-749`).  Knob `pi0_id_shared_allocator`, C++ default
-`false`: when off, snapshot `acc_segment_id` before `:3304` and restore it before
-`:3313`, reproducing today's byte-identical behaviour.
+**Solution — the collision half only, and `shower_clustering_with_nv` must stay
+by value.**  Change the parameter to `int&` on **`id_pi0_with_vertex` and
+`id_pi0_without_vertex` only** (`NeutrinoPatternBase.h:747-748`), and have
+`shower_clustering_with_nv` bind its own by-value copy to both.  Knob
+`pi0_id_shared_allocator`, C++ default `false`: when off, snapshot the copy
+before `:3304` and restore it before `:3313`.
+
+**Making `shower_clustering_with_nv` itself take `int&` would break the
+knob-off guarantee**, and an earlier draft of this section proposed exactly
+that.  `TaggerCheckNeutrino.cxx:602`'s local is passed **twice** — to
+`shower_clustering_with_nv` at `:769` *and* to `ssm_tagger` at `:829`, whose
+signature (`NeutrinoTaggerSSM.cxx:581`, and `:300` for the block builder) is
+already `int&`.  `ssm_tagger` **reads it as a seed**: `int temp_acc =
+acc_segment_id` (`:307`), then `temp_acc++` at `:382`, `:390`, `:393`, `:408`
+feeding `fill_ssmsp_pseudo_{1,2,3}`, i.e. the pseudo-particle ids written into
+`TaggerInfo` and out to the ssmsp tree, before writing back at `:414`.
+
+Today `ssm_tagger` receives **0**, because the by-value copy meant the π⁰
+increments never propagated back.  Widening `shower_clustering_with_nv` to a
+reference would shift every ssmsp pseudo-particle id by the number of π⁰s found
+in the event — **unconditionally, with the knob off**.  Keeping the entry
+point by value confines the sharing to the two finders and makes the knob-off
+path leak-free by construction rather than by a restore that has to be placed
+correctly.
 
 **The second half is not proposed.**  Seeding at 0 rather than at a global
 segment-id allocator is a separate divergence, and the toolkit has no global
@@ -1175,3 +1216,26 @@ claims do not survive re-verification.
   `cal_kine_charge` internals and the line-by-line arithmetic of
   `examine_shower_1` / `examine_showers` were not opened for this filter either.
   A sixth finding could live there.
+
+---
+
+### §10.10 Amendments to §10.2–§10.4 (self-review pass)
+
+Recorded rather than silently rewritten, so the reasoning is auditable.
+
+1. **F3's knob-off guarantee was false as first written** and is now corrected in
+   §10.4.  The original proposal widened `shower_clustering_with_nv` to `int&`;
+   that leaks the π⁰ increments into `ssm_tagger`, which already takes `int&`
+   and **seeds its pseudo-particle ids from the value** — an unconditional
+   output change with the knob off.  The fix is to widen only the two π⁰
+   finders.  This is the one amendment that would have bitten during
+   implementation.
+2. **F2 is three knobs, not one** (§10.3).  The one-knob version contradicted
+   §10.2's own attribution criterion at `:525`, which the single knob inverts.
+   The knob name also described only four of the five sites.
+3. **`:2193` is now classified.**  §3's P2 prose mentioned it (as `:2174`) but
+   left it out of the table, and §10's first draft neither kept nor dropped it.
+   It is an `abs`-only divergence and is folded into F2's third knob.
+
+Nothing in §10.1's five-way verdict changed: these are amendments to the
+proposed *fixes*, not to the filter.
