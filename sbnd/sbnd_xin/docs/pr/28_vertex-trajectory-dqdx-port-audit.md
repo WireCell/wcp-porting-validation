@@ -3572,3 +3572,33 @@ that lost the nue evaluation), then 4 and 36 (the two largest vertex moves).
 - **pr/28's own share is not isolated.** It is unconditional; only pr/29 has a
   reachable off arm (§14). The pr/28 half is reported as "everything else in the
   window", which also carries `sp_photon_flag` and the pr/26 commits.
+
+### §16.9 Owner verdict — **ACCEPTED** *(2026-08-04)*
+
+Owner, after scanning the two Bee sets of §16.7:
+
+> *"The new code is much better, we are good for now."*
+
+**What that settles.** The 2026-08-04 state — toolkit `6206c46b`, doc pr/28's
+unconditional fixes plus doc pr/29's three SBND-default-ON knobs — is the
+accepted SBND operating point, and `work-vfnuecc48-0804` /
+Bee `d85c7e44-82a3-467b-b0fa-6043b6f78f48` become the reference the *next*
+round is compared against, superseding `work-vfnuecc48-prod0803` /
+`32e31b8b` in that role. Both old arms stay protected (M13) — a baseline whose
+counterpart has been retired is not a comparison.
+
+The verdict is a **hand-scan judgement on 48 nueCC events**, and it is the only
+evidence on record that the direction of the change is *right* rather than
+merely deterministic and self-consistent. §16.5's numbers say what moved;
+this line says it moved the right way. Neither substitutes for the other.
+
+**What it does not settle** — §16.8 stands unchanged, and in particular:
+
+- the 572-event valfast manifest is still unrun (doc pr/29 §13.1), so the
+  cosmic-dominated population is unmeasured;
+- the two events that fell to the `br_filled` sentinel (122660, 469665) were
+  accepted as part of a net-better sample, **not individually cleared**;
+- D1+D12 vs D2 remains unseparated, and the pi0 question is untouched.
+
+**Docs pr/28 and pr/29 are closed for this round.** Anything above reopens them
+only with a new arm and a new tag.

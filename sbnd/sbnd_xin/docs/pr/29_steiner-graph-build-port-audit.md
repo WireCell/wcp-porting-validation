@@ -1789,6 +1789,14 @@ md5 in §12.5 is unaffected.
 
 ## §14 The 48-event nueCC re-processing — pr/29's share *(2026-08-04)*
 
+> **OWNER VERDICT: ACCEPTED** *(2026-08-04)* — after scanning the two Bee sets,
+> *"The new code is much better, we are good for now."* D1, D12 and D2 stay
+> SBND production defaults ON, and this document is closed for this round. The
+> verdict is a hand scan of 48 nueCC events; it does not clear §13.1's valfast
+> debt, does not separate D1+D12 from D2, and does not individually clear the
+> events that fell to the `br_filled` sentinel (§14.3). Full record: doc pr/28
+> §16.9.
+
 **Owner instruction.** *"Now, you can use the 48 nueCC events to do a round of
 new processing with the latest code … 1. compared to before, do we see any major
 changes? … 2. Any newly developed processing problems."*
