@@ -6,19 +6,20 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, plus **two rounds of fixes** the owner ordered
-after reading it. All six are unconditional — no knob: they are port-fidelity
-bugs, not legacy behaviour to preserve.
+**Status.** Audit + measurement, plus **three rounds of fixes** the owner ordered
+after reading it. All seven are unconditional — no knob: they are port-fidelity
+bugs or plain defects, not legacy behaviour to preserve.
 
 | round | items | toolkit commit | section |
 |---|---|---|---|
 | 1 | **§3.1** wrong point cloud · **§3.2** angle guard | `e6c51cc5` | **§7** |
 | 2 | **§3.3a** `clear_fit` wipes PID · **§3.3b** silent no-op reported as success · **§3.3c** charge-veto radius `0.6 → 0.3 cm` · **§3.3d** unsorted `out_edges` | `c89cb7b4` | **§8** |
+| 3 | **§3.3e** `improve_vertex`'s remaining unsorted `out_edges` — the two that mutate segments | `ea1a7e3d` | **§9** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
-read §3.1, §3.2 or the first four rows of §3.3 as open defects. **Still open**
-(all escalation rule 1, untouched): the remaining §3.3 rows, §3b T1–T8, §4.1,
-§4.2.
+read §3.1, §3.2 or §3.3 rows a–e as open defects. **Still open** (all escalation
+rule 1, untouched): §3.3's `flag_front` row and the rows after it, §3b T1–T8,
+§4.1, §4.2.
 
 **Headline.** The vertex-fixing mechanism the owner asked about is a **faithful
 port and it fires on SBND** — so it does *not* explain an off vertex (§1, §2).
@@ -303,7 +304,7 @@ giving `NaN`; `NaN > 15` is false, so that one silently *misses* an increment.
 | `+0.5` half-wire offset on stored `pu/pv/pw/pt` | present `:971` | dropped `:466-469` | benign *if* consumers agree — it is a global port convention (`TrackFitting.cxx:1315` also drops it) |
 | identity-by-index → identity-by-0.01 cm distance throughout `UpdateInfo` | `:900-935` | `MyFCN.cxx:417-451` | forced — toolkit `WCPoint` has no index field (`PRCommon.h:96-99`); two Steiner points within 0.01 cm would alias |
 | `m_fit_vertex_min_seg_length` | **no counterpart** (grep: zero hits) | `NeutrinoPatternBase.h:203` | toolkit-only; inert at its `0` default, but **SBND sets 1.0** |
-| **the `fitted_vertices` consumer loop** also iterates unsorted `boost::out_edges` — and unlike row (d) this one calls `segment_is_shower_topology` and `determine_dir_*`, which **do** affect output | — | `NeutrinoVertexFinder.cxx:2323` | **OPEN, order-dependent output path.** Found while fixing (a)–(d); pre-existing and outside the four items the owner listed, so deliberately not fixed in the same change (CLAUDE.md: unrelated defects do not ride along). **Worth its own round** |
+| **(e) FIXED §9** — **the `fitted_vertices` consumer loop** also iterates unsorted `boost::out_edges` — and unlike row (d) this one calls `segment_is_shower_topology` and `determine_dir_*`, which **do** affect output | — | `NeutrinoVertexFinder.cxx:2323` | **order-dependent output path**, i.e. genuine run-to-run nondeterminism (`setS` ⇒ *pointer* order). Found while fixing (a)–(d), fixed in its own round together with the two sibling loops at `:2374` and `:2176` |
 
 ## §3b Trajectory fitting
 
@@ -985,3 +986,92 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
 `work-vtxfit-388` (pre-§7) and `work-vtxfit388-fix` (post-§7, pre-§8) are both
 left on disk, so all three vertex positions can be served side by side.
+
+---
+
+## §9 §3.3e FIXED — `improve_vertex` has no unordered edge iteration left (toolkit `ea1a7e3d`)
+
+Owner instruction, after reading §8.5's "found but deliberately not fixed" note:
+*"can you fix [the `fitted_vertices` consumer loop] as well? Update the md file,
+commit and push."*
+
+### 9.1 Why this one is not cosmetic
+
+`sorted_out_edges` exists precisely because of this (`PRTrajectoryView.h:149-152`):
+
+> `boost::out_edges()` with `setS` iterates in **pointer order**.
+
+Pointer order is not stable across runs. Row (d) of §3.3 was safe to call
+byte-identical because its result feeds only a `size() == 3` test — a count
+cannot depend on order. The loop the owner flagged is a different animal: it
+**mutates** every segment it visits.
+
+Three loops were left in `improve_vertex`. All three are now
+`sorted_out_edges`:
+
+| site | what it does | order-sensitive? |
+|---|---|---|
+| `:2333` — the `fitted_vertices` consumer | `segment_is_shower_topology` (sets `kShowerTopology`) then `segment_determine_dir_track` (writes `dirsign`, `particle_info`, `particle_score`) | **yes — mutating** |
+| `:2374` — the `main_vertex` special case | `unset_flags(kShowerTopology)` plus `segment_determine_dir_track` on three separate branches | **yes — mutates harder** |
+| `:2176` — collects `main_vertex_segments` | feeds only a `size() == 3` test | no — byte-identical, fixed for consistency |
+
+The `:2374` sibling was not in the owner's message. It is the *same defect in the
+same function*, three screens below the flagged one, and leaving it would have
+left the nondeterminism hole open while the doc claimed it closed — so it is
+fixed here rather than logged as a fourth round. The `*it` dereferences inside it
+(`boost::source`/`boost::target`, six sites) were rewritten to the loop's
+`edesc`.
+
+**`improve_vertex` now contains zero `boost::out_edges` calls.** The rest of
+`NeutrinoVertexFinder.cxx` still has many; they are outside this audit's scope
+and are *not* claimed clean.
+
+### 9.2 Repro
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+for arm in work-vtxfit388-r3 work-vtxfit388-r3-rep; do
+  PR_EXTRA_STAGES=pr_display PR_JOBS=1 SBND_WCT_LOGLEVEL=trace \
+    ./run_pr_chain_batch.sh work-nuecc48-prod0803 $arm data 388
+done
+```
+
+`./build/clus/wcdoctest-clus` — **71/71 passed, 0 failed** (1 skipped).
+
+### 9.3 Result — inert on evt 388
+
+| | `-r2` (round 2) | `-r3` | `-r3-rep` |
+|---|---|---|---|
+| `main_vertex` | `(-163.1962, 31.4605, 426.1582)` | **identical** | **identical** |
+| `nue_score` / `numu_score` | 4.30094 / −1.85489 | **identical** | **identical** |
+| segments / vertices / showers | 84 / 127 / 13 | 84 / 127 / 13 | 84 / 127 / 13 |
+
+| comparison | leaf diffs (of 176 956) | where |
+|---|---|---|
+| `-r3` vs `-r3-rep` (**same binary**) | **268** | 264 `proj/charge_pred`, 2 `showers/kine_dQdx`, 2 `showers/total_length` |
+| `-r2` vs `-r3` (**sorting in/out**) | **275** | 265 `proj/charge_pred`, 2 each `kine_energy_info`, `kine_energy_particle`, `kine_particle_type`, `showers/kine_dQdx`, `showers/total_length` |
+
+275 against a 268-leaf same-binary floor, same field families: **inside the
+nondeterminism envelope**. On evt 388 the segments attached to each fitted vertex
+do not compete — the mutations are independent per segment — so the order never
+mattered here.
+
+> The noise floor is an *estimate*, and it moves: 356 leaves in §8.4, 268 here.
+> Always re-measure it in the same session as the comparison you are judging.
+
+### 9.4 What is and is not claimed
+
+* **Inert on this event is not "no-op".** The whole point is that the previous
+  code's output depended on heap addresses. An event where two legs of one
+  fitted vertex are classified in competition — one `segment_is_shower_topology`
+  call changing what the next leg's `calculate_num_daughter_showers` sees — would
+  have been genuinely irreproducible before this and is reproducible after.
+* **This makes results stable, not correct.** Sorting by edge index is *an*
+  order; the prototype's `map_vertex_segments` iteration order is a different
+  one. No claim is made that the two now agree — only that the toolkit's no
+  longer varies run to run.
+* **Not bit-identical** to `c89cb7b4` output in general (it is on evt 388). The
+  population gate owed for §7 and §8 now covers §9 too.
+* `NeutrinoVertexFinder.cxx` outside `improve_vertex` still iterates unsorted
+  out-edges in ~40 places. Unaudited, deliberately untouched.
