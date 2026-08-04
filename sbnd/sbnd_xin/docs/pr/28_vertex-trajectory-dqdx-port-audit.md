@@ -6,9 +6,17 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, plus **seven rounds of fixes** the owner ordered
+**Status.** Audit + measurement, plus **eight rounds of fixes** the owner ordered
 after reading it. All are unconditional — no knob: they are port-fidelity
 bugs or plain defects, not legacy behaviour to preserve.
+
+**This doc is now CLOSED.** Round 8 (§14) fixed the last item the owner listed,
+measured both container classes §11.8 left, and closed §4.2/§4.3/§4.4. What
+remains is recorded as *new* items with their own starting points, not as
+unfinished business here: the shower-quantity nondeterminism (§14.5), the
+`SIZE_MAX` index hazard (§14.7), the unconfirmed §11.7 mechanism (§14.8), the
+global slice-start `x` convention (§14.9), and the owed valfast/1000 population
+gate.
 
 | round | items | toolkit commit | section |
 |---|---|---|---|
@@ -18,6 +26,7 @@ bugs or plain defects, not legacy behaviour to preserve.
 | 4 | **the whole `clus/` sweep** — all 117 remaining raw `boost::out_edges` sites in 13 files | `4f2e7303` | **§10** |
 | 5 | **the residual 10** — `boost::edges` / `boost::vertices` / `graph_nodes` (32 loops, 12 files). **`T_tagger` is now fully deterministic on the 48-event manifest.** | `c05bc5f7` | **§11** |
 | 6 | **§4.1** the multi-track dQ/dx close weights get the prototype's ×5/3 scale-up. **Vertex-fit area closed by owner decision (§12.7).** | `01ff88b1` | **§12** |
+| 8 | **§4.3 last row** `assemble_fitted_charge_2d` iterated a pointer-keyed map, making `charge_pred` run-dependent — the same-binary noise floor drops **593 → 2** leaves and `proj[]/charge_pred[]` to **zero**. **Both §11.8 container classes measured; §4.2/§4.3/§4.4 closed, §4.4 *settled*; and one newly-found pointer-ordered MUTATING traversal (`NeutrinoVertexFinder.cxx:2934`) fixed (§14.12).** | `22249ff4` | **§14** |
 | 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped (§13.7). Owner accepted the result from the event display, and there is no knob to flip: the round is unconditional (§13.12).** | `23bd6783` | **§13** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
@@ -35,9 +44,12 @@ re-read in both trees and triaged; the owner ordered **T1, T2, T3, T6** fixed as
 bugs, kept **T4**'s toolkit behaviour (asking only that it be made robust /
 non-silent), and **dropped T5, T7, T8**. See §13.7.
 
-**Still open** (untouched by any ruling): §4.2 (set aside by the owner), §4.3,
-§4.4, and §11.8's two container classes — including
-`m_cluster_fitted_charge_2d`'s pointer comparator.
+~~**Still open** (untouched by any ruling): §4.2, §4.3, §4.4, and §11.8's two
+container classes — including `m_cluster_fitted_charge_2d`'s pointer
+comparator.~~ **All closed in round 8 — see §14.** `m_cluster_fitted_charge_2d`
+is FIXED (§14.1–14.4); §4.4 is SETTLED, not merely closed (§14.9); the two
+container classes are measured and classified, with nothing converted
+(§14.6, §14.7).
 
 **Headline.** The vertex-fixing mechanism the owner asked about is a **faithful
 port and it fires on SBND** — so it does *not* explain an off vertex (§1, §2).
@@ -474,7 +486,7 @@ charge pass that runs *after* the three geometry passes; it does not move
 trajectory points. It reaches the vertex only indirectly, through dQ/dx → track
 PID (`segment_do_track_pid`) → direction → the §6 vertex score.
 
-### §4.2 The uBooNE calibration chain is absent (flagged, not a defect claim)
+### §4.2 The uBooNE calibration chain is absent (flagged, not a defect claim) — **CLOSED (§14.10)**
 
 Present in the prototype, with **no counterpart anywhere** in
 `TrackFitting.cxx` (verified: `get_corr_factor`, `attenuation`,
@@ -500,7 +512,7 @@ still deserves a decision:
    dQ/dx and SBND supplies an uncorrected one, PID carries a systematic — which
    is a path from here to the vertex, via §5→§6.
 
-### §4.3 Other dQ/dx divergences
+### §4.3 Other dQ/dx divergences — **CLOSED (§14.10); its last row is FIXED (§14.4)**
 
 | what | prototype | toolkit | severity |
 |---|---|---|---|
@@ -510,9 +522,9 @@ still deserves a decision:
 | smearing constants hardcoded to uBooNE literals in C++ | derived from `TPCParams` | header `:41-43,52` | benign for SBND — config overrides all four (`sbnd_track_fitting.json:7-9,14`); latent for any detector run without such a file |
 | `pred <= 0` guards inside the chi2 sums | none | `:6837,6842,6847` | benign (prototype would give inf/NaN) |
 | wire search window `\|w−c\|≤10` vs `round(c)±10` | `:371,390,411` | `:6288-6289` | benign (the `nsigma=4` gate dominates) |
-| `assemble_fitted_charge_2d` iterates a **pointer-keyed** `std::map<Cluster*,…>`, last-writer-wins | no counterpart | `:1136-1152` | **toolkit-only nondeterminism**, already known — 10.2% of cells move between `setarch -R` runs (`PrDisplayDump.cxx:772-777`, doc pr/26 §5.2) |
+| `assemble_fitted_charge_2d` iterates a **pointer-keyed** `std::map<Cluster*,…>`, last-writer-wins | no counterpart | `:1136-1152` | **FIXED (§14)** — was toolkit-only nondeterminism, 10.2% of cells moving between `setarch -R` runs (`PrDisplayDump.cxx:772-777`, doc pr/26 §5.2). Now `PR::ClusterPtrCmp`; the same-binary `charge_pred` floor is **0**. |
 
-### §4.4 Open question, not settled
+### §4.4 Open question — **SETTLED in §14.9: `slice_index` is a slice START tick, and the 3-D side is on the same grid, so the window is not off centre**
 
 The time-bin convention differs and could not be closed from the fitting code
 alone. Prototype integrates `[tbin, tbin+1]` with `t_center` carrying `+0.5`
@@ -1540,6 +1552,13 @@ g[desc].segment = seg;                  // displaces the previous segment
 seg->set_graph_index(g[desc].index);    // ...and hands the new one its index
 ```
 
+> ⚠️ **The mechanism below did NOT reproduce — see §14.8.** Probing this exact
+> container at this exact call site on six events, **including evt 239794**,
+> finds *no* two segments sharing a graph index. The observation (the swap moved
+> `kine_reco_Enu` by 1.2 GeV) stands; the conclusion (judge each site by use,
+> never bulk-convert) stands and is reinforced; the *stated cause* is
+> **unconfirmed** and should not be cited as established.
+
 Adding a segment between a vertex pair that already carries an edge does not
 create an edge; it *overwrites* the bundle and copies the existing index into the
 new segment. The displaced segment keeps that same index, so any `SegmentPtr`
@@ -1577,11 +1596,15 @@ check what the container is used for before changing how it is ordered.**
 * **Stable ≠ correct**, as in §9.4/§10.6. Index order is *an* order; the
   prototype's equivalent loops walk pointer-keyed `std::map<ProtoVertex*, …>`,
   so its order is equally arbitrary and no parity is broken.
-* **Still open — and it is now TWO classes, not one:**
+* **Was "still open — and it is now TWO classes, not one". Both are now
+  MEASURED in §14.6/§14.7 — nothing converted, a verdict per site, and a
+  sharper rule (`SIZE_MAX`, not the inherit path, is the real hazard):**
   1. **Pointer-keyed** `std::map`/`std::set<T*>` declarations in `clus/src`
      (CLAUDE.md §2). Round 5 audited only those on the paths it touched
      (`m_clusters` already had `ClusterPtrCmp`; `segments_set` removed;
-     `existing_segments` documented). The rest are unaudited.
+     `existing_segments` documented). ~~The rest are unaudited.~~
+     **Audited in §14.6: 66 declarations, 63 never traversed, 3 traversed —
+     one benign, one tie-only, one outside this doc's subsystem.**
   2. **Index-keyed** containers — the class §11.7 discovered, and the one the
      obvious fix for (1) walks straight into. Any `std::set`/`std::map` ordered
      by `Segment::get_graph_index()` can alias two *live* segments, so it is
@@ -1845,9 +1868,9 @@ They are **accepted known divergences**, not pending work:
 over-apply the ruling: it is about *vertex fitting*. Still open and untouched —
 ~~**§3b T1–T8** (trajectory fitting: the dead charge-ratio veto, the wrong-index
 dead-channel lookup, the extra `form_map_graph`, …)~~ **— closed by round 7,
-§13**, **§4.2** (the absent uBooNE
-calibration chain, separately set aside), **§4.3**, **§4.4** (the unresolved
-time-bin convention), and **§11.8's two container classes**.
+§13**, ~~**§4.2** (the absent uBooNE calibration chain, separately set aside),
+**§4.3**, **§4.4** (the unresolved time-bin convention), and **§11.8's two
+container classes**~~ **— all closed by round 8, §14**.
 
 **Why this is a reasonable place to stop, on the evidence.** The area was not
 abandoned — it was worked and measured. The question that opened this document
@@ -2124,8 +2147,9 @@ toolkit divergence that is an improvement stays. Applying that:
 | **T8** | **dropped** | ULP-level ordering; not fixable without changing `Coord2D` |
 
 With §12.7 closing the vertex fit and this section closing the trajectory fit,
-**doc pr/28's §3, §3b and §4.1 are all disposed of.** What remains open is
-§4.2 (set aside), §4.3, §4.4, and §11.8's container classes.
+**doc pr/28's §3, §3b and §4.1 are all disposed of.** ~~What remains open is
+§4.2 (set aside), §4.3, §4.4, and §11.8's container classes.~~ **Those went in
+round 8 (§14); the doc is closed.**
 
 ### 13.8 Scope and what is NOT claimed
 
@@ -2327,3 +2351,501 @@ owner.
 **Still owed, and now more clearly:** a population pass. One event was accepted
 by eye; the valfast/1000 gate needs a regenerated baseline (stale since round 6,
 doubly so after round 7) before any efficiency statement can be made.
+
+---
+
+## §14 The last open items — nondeterminism FIXED, both container classes measured, §4.2–§4.4 closed (toolkit `22249ff4`, evt 18255/388 + 5 more)
+
+Owner instruction, after reading the round-7 report: *"the only thing left that
+we should look at is [the `m_cluster_fitted_charge_2d` nondeterminism] … Then
+the two container classes §11.8 left for a next round … for the rest, I think we
+can mark them closed. Unless you see a major bug etc."*
+
+So this round does three things: **fix** the nondeterminism, **measure** the two
+container classes rather than convert anything, and **close** §4.2/§4.3/§4.4 —
+with §4.4 *settled* rather than merely marked closed, because it was the only
+remaining open item that could have been a physics defect.
+
+### 14.1 The change — `clus/inc/WireCellClus/TrackFitting.h`, `clus/src/TrackFitting.cxx`
+
+Three edits, no new knob, no config:
+
+```cpp
+// TrackFitting.h -- the per-cluster snapshot map
+ std::map<Facade::Cluster*,
+          std::map<APAFacePlane, std::map<WireTime, FittedCharge2D>>,
++         PR::ClusterPtrCmp>
+     m_cluster_fitted_charge_2d;
+
+// TrackFitting.h -- the per-cell cluster association
+-    std::set<Facade::Cluster*> clusters;
++    std::set<Facade::Cluster*, PR::ClusterPtrCmp> clusters;
+```
+
+`PR::ClusterPtrCmp` (`PRShower.h:227-231`) orders by `get_cluster_id()`. It is
+the comparator `m_clusters` / `m_loaded_clusters` in the *same class* already
+use (`TrackFitting.h:591-592`), so nothing new is introduced.
+
+The second edit changes no output today, and for a stronger reason than "the
+consumer sorts": `PrDisplayDump::dump_proj` emits
+`min(cids)` (`:841-845` — sort, then `cids.front()`), and an ident-dedup cannot
+change a minimum. What it does **not** cover is worth stating, because the guard
+below does not reach it: this set's keys come from `global_rb_map`'s blobs, not
+from `m_cluster_filter`, and `enumerate_idents()` restarts at 1 **per grouping**
+(`MultiAlgBlobClustering.cxx:2444-2446` loops `ensemble.children()`), so a
+cross-grouping ident collision is structurally possible here in a way it is not
+for the map. Harmless for a minimum; **not** harmless for the next consumer that
+counts or enumerates the set. The comparator is there to make that consumer's
+order deterministic, not to make the set collision-proof.
+
+Third edit — an explicit guard rather than an assumption
+(`TrackFitting.cxx`, end of `fill_fitted_charge_2d`):
+
+```cpp
+auto held = m_cluster_fitted_charge_2d.find(m_cluster_filter);
+if (held != m_cluster_fitted_charge_2d.end() && held->first != m_cluster_filter) {
+    SPDLOG_LOGGER_WARN(s_log,
+        "fill_fitted_charge_2d: cluster ident {} is shared by two live clusters; "
+        "the earlier snapshot ({} plane group(s)) is being discarded", ...);
+}
+```
+
+**Why the guard, and why it can't fire.** Keying a *set* by ident degrades
+gracefully — a duplicate silently drops one cluster. Keying this *map of maps*
+by ident does not: the second cluster would discard the first's entire snapshot,
+every cell of it. That severity does not transfer from `m_clusters`' precedent,
+so it is checked rather than argued. It cannot fire because the map lives
+entirely inside one visitor's `visit()` — `TaggerCheckNeutrino` fills it, calls
+`assemble_fitted_charge_2d()` (`:886`) and hands the fitter over (`:889`) — and
+`Grouping::enumerate_idents()` runs only *between* visitors
+(`MultiAlgBlobClustering.cxx:2445`), never while entries are held. Idents are
+dense and unique at the instant of either write (doc 53).
+
+### 14.2 Blast radius — verified here, not inherited from `PrDisplayDump`
+
+`PrDisplayDump.cxx:784-787` asserts the merged map is diagnostic-only. That
+sentence was written in doc pr/26 and has been carried ever since; it is the one
+claim in this item nobody re-derived. Re-checked at this HEAD —
+`get_fitted_charge_2d()` has exactly **two** callers:
+
+| caller | what it does with it | reaches a verdict? |
+|---|---|---|
+| `PrDisplayDump.cxx:798` | the display's 2-D `proj[]` panels | no — dumper, default OFF |
+| `TaggerCheckSTM.cxx:746` | accumulates into `m_acc_fitted_charge`, merged at `:528` into the named `"stm"` `TrackFitting` slot for `SbndMagnifyTrackingVisitor` | no — gated on `save_stm_fit`, **C++ default false**, and `wct-pr-perevt.jsonnet:9` classes it as a *"pure diagnostic output"* |
+
+No tagger flag, no Bee layer, no pctree tensor reads it. **Confirmed
+diagnostic-only.** That is also why no A/B gate ever caught the defect.
+
+### 14.3 Repro and arms
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+for arm in work-p14-fix work-p14-fix-rep work-p14-fix-rep2; do
+  PR_EXTRA_STAGES=pr_display PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-nuecc48-prod0803 $arm data 388
+done
+python3 /home/xqian/tmp/leafdiff.py work-p14-fix/pr_evt388/calib-pr-evt388.json \
+                                    work-p14-fix-rep/pr_evt388/calib-pr-evt388.json
+```
+
+`./build/clus/wcdoctest-clus` — **76 cases / 896 assertions, all pass.**
+Freshness proof (M1): `local/lib/libWireCellClus.so` **09:58:38** >
+`clus/src/TrackFitting.cxx` **09:46:46** > `TrackFitting.h` **09:46:42**.
+
+The "before" arms are round 7's own same-binary repeats
+`work-tfix388-final2` / `-final3`, i.e. `23bd6783` unmodified — no new baseline
+run was needed and none of them was overwritten (M13).
+
+### 14.4 Result — the `charge_pred` noise floor goes to **zero**
+
+The defect's claim is run-to-run movement, so the demonstration is a
+**same-binary repeat**, not an A/B:
+
+| pair | binary | leaf diffs (of 179 266) | where |
+|---|---|---|---|
+| `final2` vs `final3` | `23bd6783` (**before**) | **593** | 591 `proj[]/charge_pred[]`, 1 `showers[]/kine_dQdx`, 1 `showers[]/total_length` |
+| `p14-fix` vs `-fix-rep` | fixed | **2** | 2 `showers[]/kine_dQdx` |
+| `p14-fix` vs `-fix-rep2` | fixed | **3** | 2 `showers[]/kine_dQdx`, 1 `showers[]/total_length` |
+| `-fix-rep` vs `-fix-rep2` | fixed | **3** | 2 `showers[]/kine_dQdx`, 1 `showers[]/total_length` |
+
+**`proj[]/charge_pred[]` is 0 in all three fixed pairs**, from 591. Every
+leaf-diff table in §7.4, §8.4, §9.3, §11.6, §12.5 and §13.6 had to carry a
+`charge_pred`-dominated noise floor of 268–825 leaves; on `23bd6783` itself the
+same-binary floor measured **413, 469 and 593** on different pairs (§13.4's
+arms and this round's) — the point is the *range*, not the largest. From here
+it is **2–3**.
+
+**Selection-level check, the same one rounds 4 and 5 closed with.** `cmp` on the
+artifacts the owner actually reads:
+
+| file | `work-tfix388-final3` (pre-fix) vs `work-p14-fix{,-rep,-rep2}` |
+|---|---|
+| `nusel-table.tsv` | **byte-identical**, all three |
+| `nusel-events.tsv` | **byte-identical**, all three |
+
+So "diagnostic-only" is not just a two-caller grep — the selection output is
+unchanged across the fix, and unchanged between repeats of it.
+
+**The A/B against pre-fix moves `charge_pred`, by construction —
+that is the fix, not a FAIL.** `final3` vs `p14-fix` is 655 leaf diffs, 651 of
+them `charge_pred`, the remaining 4 in the residual families below. The winner
+of a cross-cluster overlap is now *defined* (lowest cluster ident last) instead
+of arbitrary; a diff there is the expected signature.
+
+### 14.5 The residual — a *second*, smaller nondeterminism, and it is not diagnostic
+
+2–3 leaves survive: **`showers[]/kine_dQdx`** (2, every pair) and
+**`showers[]/total_length`** (0–1). These are **physics** leaves, not display
+ones, and they were already inside the old floor (§8.4 listed 2 `kine_dQdx` and
+1 `kine_reco_Enu`; §12.5 listed 1). Fixing `assemble_fitted_charge_2d` does not
+touch them, and this round makes them visible for the first time by removing the
+591 leaves that were burying them.
+
+**Not diagnosed here** — it is a new item, not one of the three the owner
+listed, and CLAUDE.md is explicit that an unrelated defect does not ride along.
+Recorded as the next determinism item with its own starting point: two shower
+quantities move while every vertex, segment, trajectory and tagger leaf is
+bit-stable, which points at shower *membership* order rather than at any fit.
+
+### 14.6 Class 1 — pointer-keyed containers: 116 declarations, 18 traversal sites, **2** that can move a result
+
+§11.8 left "the rest are unaudited". Censused at this HEAD: every ordered
+`std::map`/`std::set` in `clus/` keyed on `Cluster*` / `Blob*` / `Segment*` /
+`Vertex*` / `Shower*` **or on the `…Ptr` aliases** — `std::less<shared_ptr<T>>`
+compares `get()`, so a `std::set<SegmentPtr>` is address-ordered exactly like a
+`std::set<Segment*>` — minus those already carrying a comparator
+(`ClusterPtrCmp`, `cluster_less_functor`, `ClusterLess`, `SegmentIndexCmp`, …),
+then cross-checked for **both** range-`for` and iterator-based traversal:
+
+| | count |
+|---|---|
+| bare pointer/`Ptr`-keyed ordered containers | **116** |
+| distinct traversal loops over one of them | **18** |
+| …of which false positives (name reused in another scope, or the loop is commented out) | 2 |
+| …**order cannot be observed** | **11** |
+| …**tie-only** | **3** |
+| …**can move a result** | **2** |
+
+The 98 never-traversed declarations are compliant as they stand: CLAUDE.md §2's
+rule is about *iteration*, and they are pure `find`/`count`/`[]`/`erase`.
+
+**Order cannot be observed (11).** Removal/erase loops where each element is
+independent — `NeutrinoVertexFinder.cxx:1875` (`remove_segment`/`remove_vertex`),
+`:3718`, `:3873`, `NeutrinoDeghoster.cxx:617`,
+`NeutrinoShowerClustering.cxx:452/1960/2072` (`showers.erase`); pure counting
+(`:394`); a body that acts only on the single element equal to a
+previously-chosen maximum (`:418`); an independent per-segment side effect
+(`PRSegmentFunctions.cxx:2190`, one point cloud per segment); a running `min`
+over distances (`:1756`, and `NeutrinoVertexFinder.cxx:1850` — the §11.7 loop);
+an accumulation of exactly-representable `0.5`/`1.0` terms, so the FP sum is
+order-independent (`NeutrinoVertexFinder.cxx:602`); and one that copies into a
+vector which is **then explicitly sorted by segment id**
+(`NeutrinoShowerClustering.cxx:661`).
+
+**Tie-only (3)** — a strict `>` selection, so the *first* maximum wins and only
+an exact tie can flip:
+
+| site | selection |
+|---|---|
+| `NeutrinoVertexFinder.cxx:689` | nested loop over `map_in_segment_dirs` × `map_out_segment_dirs`, keeps the pair with `angle > max_angle` |
+| `NeutrinoVertexFinder.cxx:3511` | `snap_map` → `snapped`, later scanned for a min-z and scored |
+| `NeutrinoDeghoster.cxx:61` | copies into a vector, `std::sort`s by total length — `std::sort` is not stable, so equal-length clusters can swap, and the result is the deghost **processing order** |
+
+**Can move a result (2)** — the first is **FIXED in §14.12** on the owner's
+instruction; the second is reported, not fixed:
+
+* **`NeutrinoVertexFinder.cxx:2934` — the one worth calling a bug.**
+  `used_segments` (`:2839`, a bare `std::set<SegmentPtr>`) is traversed in
+  **address order** and the body **mutates**: `particle_info()->set_pdg(13)`,
+  `set_mass`, `unset_flags(kShowerTopology)`, and
+  `change_daughter_type(graph, vtx, sg1, 13, …)` at `:2942`/`:2945` — which
+  propagates the type change through the graph. A later iteration reads
+  `current_pdg` (`:2953`) that an earlier one may have written, so the outcome
+  depends on heap layout. This is the same defect class rounds 3–5 fixed at
+  `:2333`/`:2374`, and it survived because those rounds swept
+  `boost::out_edges` / `boost::edges` / `boost::vertices` / `graph_nodes` — not
+  `std::set<SegmentPtr>`. **The fix is `PR::IndexedSegmentSet`**, and §14.7's
+  census says it is safe here (the members come from `vertex_segments`, i.e.
+  graph edges, so every index is valid and unique). **FIXED — §14.12**, by
+  sorting the *iteration* rather than retyping the container, so `find()` at
+  `:2905` keeps pointer identity.
+* **`GroupingHelper.cxx:27`** — `orig_to_shadow` is traversed and each iteration
+  calls `original.separate(...)`, which **creates clusters**; creation order sets
+  their idents. Real, but a different subsystem (retile/shadow), not
+  vertex/trajectory/dQ-dx.
+
+So the "unaudited rest" is not a sweep waiting to happen — but it is not empty
+either, and the first census this round ran **missed the `…Ptr` aliases
+entirely** (66/3 instead of 116/18). Recorded so the next reader does not repeat
+the mistake: `std::set<SegmentPtr>` is a pointer-keyed container.
+
+### 14.7 Class 2 — index-keyed containers: the hazard is **`SIZE_MAX`**, not the inherit path
+
+§11.8 named six pre-existing sites and warned that the obvious fix for class 1
+walks into this class. Classified by **use**, per §11.7's rule:
+
+| site | container | used for | aliasing-sensitive? |
+|---|---|---|---|
+| `NeutrinoKinematics.cxx:93` | `map<SegmentPtr,ShowerPtr,SegmentIndexCmp>` | `find()` at `:175`, `:219` | yes — identity lookup |
+| `PRSegmentFunctions.cxx:1916-1918` | three caches | `find()` at `:1962`, `:1990`, `:2007` | yes — identity lookup |
+| `PRShower.h:223` `ShowerSegmentMap` (`TaggerCheckNeutrino.cxx:557`) | segment → shower | `count()`/`find()` throughout the taggers | yes — identity lookup |
+| `NeutrinoShowerClustering.cxx:1677` `map_segment_new_shower` | segment → shower | `operator[]` read at `:1803` | yes — identity lookup |
+| `NeutrinoShowerClustering.cxx:2167` `map_merge_seg_shower` | segment → shower | insert-dedup + iterate | yes — insert-dedup |
+| `NeutrinoTaggerSSM.cxx:608` `all_ssm_sg` | segment → flags | insert at `:701`, iterate at `:901` | insert-dedup only |
+
+Then measured, with a temporary probe (`WCT_SEGIDX_PROBE=1`, since reverted —
+`git checkout` of `PRGraph.{h,cxx}`, `NeutrinoKinematics.cxx`,
+`PRSegmentFunctions.cxx`, `NeutrinoVertexFinder.cxx`; `grep -rn "TEMP
+PROBE\|WCT_SEGIDX" clus/` is empty) on **six** events —
+**388, 239794, 172230, 271851, 54095, 163543**:
+
+| measurement | result |
+|---|---|
+| `PR::add_segment` "edge already existed" path fires (the §11.7 aliasing source) | **2 times in 6 events** — once in evt 388 (index 19), once in evt 163543; both displacing a *distinct* segment |
+| distinct `SegmentPtr` reachable at the kinematics stage (graph edges ∪ every shower's member sets) vs distinct `get_graph_index()` | **equal in all 6** — 75/78/46/57/81/57. **Zero** shadowed segments |
+| comparisons through `SegmentIndexCmp`/`VertexIndexCmp` involving an **unindexed** node | **0**, whole PR chain, all 6 events |
+
+So every currently index-keyed container is safe *on this manifest*: the
+displaced segment never survives to co-occur with its replacement.
+
+**But the census turned up a bigger hazard than the inherit path.**
+`PRSegment.h:153` and the vertex equivalent default `m_graph_index` to
+`std::numeric_limits<size_t>::max()`. **Every segment that has not yet been
+added to a graph carries the same index**, so *any* number of them compare
+equal. That is a far broader collision source than the rare "edge already
+existed" path, and it has a provable live site:
+
+```cpp
+// NeutrinoOtherSegments.cxx:451-460
+// Create segment (not yet in graph)
+auto new_seg = create_segment_for_cluster(cluster, dv, path_points);
+...
+existing_segments.push_back(new_seg);        // index is still SIZE_MAX here
+```
+
+`existing_segments` there is a `std::vector<SegmentPtr>` (iterated at `:332`,
+`:707` in insertion order — deterministic, correct as written). Converting *it*
+to an `IndexedSegmentSet` would collapse **every** not-yet-added segment into
+one entry. So the rule §11.7 stated by example has a sharper form:
+
+> **An index-keyed segment container is unsafe exactly when a segment can enter
+> it before `PR::add_segment` has given it an index.** `SIZE_MAX` is shared by
+> all of them. Check that before checking anything else.
+
+### 14.8 §11.7's *mechanism* did not reproduce — flagged, not silently corrected
+
+§11.7 attributes the 1.2 GeV `kine_reco_Enu` swing on SBND evt 239794 to index
+aliasing in `eliminate_short_vertex_activities`'s `existing_segments`. Probing
+that exact container at that exact call site
+(`NeutrinoVertexFinder.cxx:2289`, immediately before the call):
+
+| event | `existing_segments` distinct ptr | distinct index | shadowed | unindexed |
+|---|---|---|---|---|
+| 388, **239794**, 172230, 271851, 54095, 163543 | 1 call each | equal | **0** | **0** |
+
+On the cited event the set holds no two segments sharing an index, so an
+`IndexedSegmentSet` would have held exactly the same elements, and `find()` at
+`:1703`/`:1827`/`:2460` would have answered identically. The remaining
+difference is iteration order at `:1850` — and that loop takes a running `min`
+over three distances, which §11.7 itself calls order-insensitive.
+
+**What stands and what doesn't.** The *observation* (the swap moved
+`kine_reco_Enu` by 1.2 GeV, caught by the A/B) is a measurement and stands. The
+*conclusion* — judge each site by how it is used, never bulk-convert — is the
+right rule and is reinforced by §14.7. The *stated cause* is **not confirmed**
+and should not be cited as established. The likeliest alternative, given §14.7,
+is that the intermediate build also converted a container that holds
+not-yet-added segments (`NeutrinoOtherSegments.cxx:460` is the one such site,
+and it is confusingly *also* called `existing_segments`), where the `SIZE_MAX`
+collapse is certain rather than rare.
+
+Coverage limit, stated rather than glossed: the probe reports one call per
+event, at one site, on six events. It cannot prove the aliasing never happens —
+it shows it did not happen where the doc says it did.
+
+### 14.9 §4.4 SETTLED — `slice_index` is a slice **start** tick, and the two grids agree
+
+§4.4 asked one discriminating question: is the `time_slice` in
+`CoordReadout(apa, time_slice, channel)` the slice *start* tick or its *centre*?
+
+**It is the start tick**, and both producers agree:
+
+```cpp
+// PointTreeBuilding.cxx:326  and  aux/src/SamplingHelpers.cxx:286
+const auto& slice_index = slice->start() / tick;      // NOT an ordinal, NOT a centre
+```
+
+`Grouping::get_overlap_good_ch_charge` (`Facade_Grouping.cxx:901-913`) reads
+that array straight through, and `TrackFitting.cxx:795` uses it as the
+`CoordReadout` key — so `row.time` is a multiple of the slice span (4 ticks for
+SBND, `img.jsonnet:133`).
+
+**The answer to "is the erf window half a slice off centre" is no, because the
+3-D side is on the same grid**:
+
+| | anchor | grid |
+|---|---|---|
+| readout key `tbin = row.time` | `SamplingHelpers.cxx:286` | slice start tick |
+| ctpc point `x` | `SamplingHelpers.cxx:306` — `time2drift(…, slice->start())` | slice start tick |
+| the fit's data term | `TrackFitting.cxx:3518` — `scaling * (it->time - offset_t)` | slice start tick |
+| `t_center = offset_t + slope_t·x` | `TrackFitting.cxx:522-523` | same, no `+0.5·nt` |
+
+So a point where the fit puts it has `t_center == tbin`, and the symmetric window
+`[tbin − nt/2, tbin + nt/2]` (`TrackFitting.cxx:5216-5217`) is centred on it.
+Self-consistent.
+
+**What genuinely differs from the prototype is the bin convention, not an
+offset.** Put the two side by side and the point is one sentence: the prototype
+integrates `[tbin, tbin+1]` and gates on `fabs((tbin+0.5) − t_center)`
+(`PR3DCluster_dQ_dx_fit.h:164-168`) — a one-bin-wide window centred on
+`tbin+0.5`, the bin centre under **lower-edge** labelling. The toolkit
+integrates `[tbin ± nt/2]` and gates on `fabs(tbin − t_center)` — a one-bin-wide
+window centred on `tbin`, the bin centre under **centre** labelling. **Both are
+one-bin-wide windows centred on the bin centre.** They differ only in how bins
+are *labelled*, and the labelling is measurably consistent between the data side
+(`row.time`) and the model side (`t_center`) in the toolkit. This is the *same*
+deliberate convention change the toolkit already applies to wires, where it is
+documented in place (`TrackFitting.cxx:5205-5208`, `:5231` "All boundaries shift
+by -0.5 due to bin convention change") and compensated in the offset
+(`offset_u = -(center_u + 0.5·pitch_u)/pitch_u`, `:504`, `:510`, `:516`). The
+time offset carries no such term (`:523`) — and correctly so, because the time
+grid was never shifted in the first place.
+
+**Residual, flagged for the owner, deliberately not decided here (escalation
+rule 4).** Representing a slice's charge at its **start** rather than its centre
+is a *global imaging-time* convention (`SamplingHelpers.cxx:306`), applied
+identically to blob `x`, to the fit's data term and to this window. If the
+physically right choice is the slice centre, then every reconstructed `x` is
+biased by half a slice — 2 ticks = 1 µs ≈ **0.156 cm** at SBND's 1.563 mm/µs —
+uniformly, everywhere, and the dQ/dx window is merely one of many places it
+shows. It is **not** a dQ/dx port defect and fixing it here would be wrong.
+Two readings, both defensible: (a) the start tick is the correct label because
+the charge in a slice is attributed to when the slice *opened*, and the
+convention is at least uniform; (b) the charge is deposited over the whole span,
+so the centre is the unbiased estimator and the toolkit carries a systematic
+half-slice `x` offset. **And it is not a free correction either way**: a uniform
+half-slice offset is exactly the kind of term a *calibrated* drift velocity and
+`time_offset` absorb, so "fixing" the convention in isolation would desync the
+calibration that was tuned on top of it. Whoever schedules this has to move the
+convention and the calibration together. **§4.4 is closed as a dQ/dx question; the global
+convention is a separate item, and the owner's call.**
+
+### 14.10 §4.2 and §4.3 — closed
+
+Per the owner's instruction, with the state each is closed *in*:
+
+* **§4.2 — the uBooNE calibration chain.** Set aside by the owner in round 6 and
+  closed here. The absence stays documented as **accepted**, not as a pending
+  gap: these are uBooNE YZ / SCE / lifetime maps and their absence may well be
+  right for SBND. The one consequence worth keeping visible is the second
+  bullet of §4.2 — the stopping-particle PID templates came from uBooNE, so if
+  they presume a corrected dQ/dx, SBND carries a systematic through PID. Closed
+  as a *port* question; live as a *calibration* question if PID is ever retuned.
+* **§4.3 — the other dQ/dx divergences.** Closed. Its last row (the
+  `assemble_fitted_charge_2d` nondeterminism) is **FIXED** in §14.4. The rest
+  were already triaged benign, a toolkit *fix* of a prototype bug
+  (`connected_vec` at `:6708`), or multi-APA necessities with no prototype
+  counterpart.
+
+### 14.11 Scope and what is NOT claimed
+
+* **Six events, one detector.** The class-2 census is SBND nueCC only, one run
+  each. It shows no collapse *there*; the mechanism remains real (pinned by the
+  fifth case of `doctest_pr_graph_order.cxx`) and can bite on another topology.
+* **Nothing was converted.** No class-1 or class-2 container changed in this
+  round — deliberately. The 18 class-1 traversals and the `SIZE_MAX` hazard are
+  recorded, with a verdict each, for the owner to schedule.
+* **The class-1 census was wrong once and is corrected in place.** The first
+  pass matched only literal `T*` keys and reported 66 declarations / 3
+  traversals; it silently excluded every `std::set<SegmentPtr>` /
+  `std::map<VertexPtr,…>`, which are address-ordered just the same. The numbers
+  in §14.6 are the corrected 116 / 18. Any earlier quotation of 66/3 is void.
+* **`NeutrinoVertexFinder.cxx:2934` is fixed but its effect is unmeasured**
+  (§14.12): the enclosing branch never executed on these six events, so the
+  change is provably inert here and the fix rests on the code, not on a number.
+* **`GroupingHelper.cxx:27` is still open** — a real ordering dependence, left
+  alone because it is a different subsystem (CLAUDE.md: an unrelated defect does
+  not ride along).
+* **The fix is not bit-identical to `23bd6783`** and cannot be: it *defines* a
+  value that was previously arbitrary. Diagnostic-only (§14.2), which is why it
+  ships without a knob, on the same footing as rounds 1–7.
+* **`showers[]/kine_dQdx` / `total_length` still move run-to-run** (§14.5).
+  Every determinism claim in this doc, including this one, is bounded by that.
+* **Still owed, unchanged:** the valfast/1000 population gate with a regenerated
+  baseline. Rounds 6 and 7 both moved it; this round does not (diagnostic-only),
+  but it does not discharge it either.
+
+### 14.12 `NeutrinoVertexFinder.cxx:2934` FIXED — the pointer-ordered mutating traversal
+
+Owner, after reading §14.6: *"I think we need to fix [it], right?"* Yes.
+
+**The defect.** `used_segments` (`:2839`) is a bare `std::set<SegmentPtr>`, i.e.
+**address-ordered**, and the `:2934` loop body mutates:
+
+```cpp
+sg1->particle_info()->set_pdg(13);  sg1->particle_info()->set_mass(muon_mass);
+sg1->unset_flags(SegmentFlags::kShowerTopology);
+change_daughter_type(graph, vtx,       sg1, 13, muon_mass, …);   // :2942
+change_daughter_type(graph, other_vtx, sg1, 13, muon_mass, …);   // :2945
+```
+
+`change_daughter_type` propagates the type change through the graph, and a later
+iteration reads `current_pdg` at `:2953` that an earlier one may have written.
+So the outcome depended on heap layout. Same class as round 3's `:2333`/`:2374`;
+it survived rounds 3–5 because those swept `boost::out_edges` / `boost::edges` /
+`boost::vertices` / `graph_nodes`, never `std::set<SegmentPtr>`.
+
+**The fix, and why it is not the obvious one.** The obvious fix — retype the
+container as `PR::IndexedSegmentSet` — would also change `find()` at `:2905`
+from **pointer identity to index identity**, which is precisely the swap §11.7
+warns about. So the set stays pointer-keyed and only the *iteration* is ordered:
+
+```cpp
+std::vector<SegmentPtr> ordered_used_segments(used_segments.begin(), used_segments.end());
+std::sort(ordered_used_segments.begin(), ordered_used_segments.end(),
+          [](const SegmentPtr& a, const SegmentPtr& b) {
+              return a->get_graph_index() < b->get_graph_index();
+          });
+for (auto sg1 : ordered_used_segments) { … }
+```
+
+`find()` semantics are untouched; the sort key is unique here because every
+member came from `vertex_segments`, i.e. live graph edges (§14.7's census). A
+TRACE line reports the set size at every entry, so the >1 case — the only case
+where order can matter — is countable from a log rather than assumed.
+
+**Liveness — the honest result: the block never fires on this manifest.**
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+SBND_WCT_LOGLEVEL=trace PR_EXTRA_STAGES=pr_display PR_JOBS=6 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-p15-live data \
+  388 239794 172230 271851 54095 163543
+grep -c "back-to-back retype over" work-p15-live/pr_evt*/wct_pr_evt*.log
+```
+
+**0 occurrences on all six events** — the enclosing branch needs back-to-back
+muon or proton legs at one vertex (`angle > 165°`/`170°`, pdg 13 or 2212, length
+> 30/20 cm, `:2880-2893`) *and* `flag_skip` to survive, which no event here
+produces. So the change is **provably inert on this manifest**, and the A/B
+confirms it:
+
+| comparison | leaf diffs | where |
+|---|---|---|
+| evt 388, `work-p14-fix` → `work-p15-live` | **2** | 1 `showers[]/kine_dQdx`, 1 `showers[]/total_length` |
+| evts 239794 / 172230 / 271851 / 54095 | **2** each | same two families |
+| evt 163543 | **1** | `showers[]/total_length` |
+| `work-p15-idx` vs `work-p15-live` (**same binary**) | **3** | same two families |
+
+Every diff is inside §14.5's 2–3-leaf residual floor, and the same-binary pair
+produces *more* of them than the A/B does. **`nusel-evt<ID>.tsv` is
+byte-identical on all six events** (the arm-level `nusel-table.tsv` differs only
+because the arms hold 1 vs 6 events).
+
+**What is and is not claimed.** The defect was real and is closed. Its *effect*
+is unmeasured, because the path never executed here — this is a correctness fix
+bought on the code, not on a number. A `numu`-rich sample with back-to-back
+tracks at the neutrino vertex is where it would show; that is the population the
+owed valfast/1000 gate covers anyway.
