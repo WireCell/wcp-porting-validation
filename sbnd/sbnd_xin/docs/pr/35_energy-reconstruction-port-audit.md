@@ -17,9 +17,9 @@ instruction from the pr/29 round ("Please do not change any code yet") governs.
 > them. **P3 — one of the two headline findings — is already FIXED at HEAD** by
 > `026a7501`, which landed after the read; **P10 and P14 are RESOLVED** by
 > §10.7. Six are dropped as improvements over the prototype. The four survivors
-> are **not four knobs**: one physics knob (F1), one provably output-identical
-> perf change (F3), and two scoping questions that are the owner's to answer
-> (F2, F4). §10.6 shows this stage needs a **different gate artifact** from
+> are **not four knobs**: one physics knob (F1), one change whose class is
+> **UNSETTLED** (F3 — §10.11a), and two scoping questions that are the owner's
+> to answer (F2, F4). §10.6 shows this stage needs a **different gate artifact** from
 > every earlier round in the series.
 
 **Headline.** The `fill_kine_tree` skeleton is a faithful translation — the
@@ -1288,7 +1288,7 @@ optional.**
 | P1 | shower PDG read from an incompletely-refreshed cache | **KEEP — F1** | port defect; the toolkit reads a cache where the prototype reads live |
 | P2 | `cal_corr_factor` is a stub returning 1.0 | **KEEP — F2** | port gap; prototype's correction is live in production. **Different class** — §10.3 |
 | P3 | dQ/dx accumulated over a pointer-hashed unordered set | **RESOLVED** | **already fixed at HEAD** by `026a7501` — §10.7a |
-| P4 | segment path re-collects the whole 2-D charge map per call | **KEEP — F3** | the prototype hoisted, the toolkit did not. **Perf class** — §10.4 |
+| P4 | segment path re-collects the whole 2-D charge map per call | **KEEP — F3** | the prototype hoisted, the toolkit did not. Class **UNSETTLED** — §10.4, §10.11a |
 | P5 | neutrino vertex not SCE-corrected on SBND | **KEEP — F4** | port gap; the field is named `_corr` and is not corrected |
 | P6 | BFS shower double-count guard added | drop | toolkit better — the prototype double-counts on a cycle |
 | P7 | per-particle arrays index-ordered, not pointer-ordered | drop | toolkit better; reproducing the prototype's order would be an M4 regression |
@@ -1311,7 +1311,7 @@ and it differs from every previous round:
 |---|---|---|---|
 | **F1** | P1 + P8 | one default-OFF knob, `kine_shower_pdg_live` | byte-identical off + visible on (§10.6) |
 | **F2** | P2 | **owner scoping question**, not a knob | — |
-| **F3** | P4 | unconditional, provably output-identical | perf gate (wall + RSS) |
+| **F3** | P4 | unconditional **iff** §10.11a's check passes; a knob otherwise | perf gate (wall + RSS), or the F1 bar |
 | **F4** | P5 | **owner scoping question** (config already exists) | — |
 
 Presenting F2 and F3 as peers of F1 would smuggle two category changes past the
@@ -1353,8 +1353,11 @@ re-read. Fix (b) does not depend on that re-read; fix (a) would.
 This is the pr/33 GOTCHA 22 lesson applied prospectively rather than after the
 fact: **before widening a write, grep every other reader of the same field.**
 
-**Proposed knob.** `BeeKineConfig`-style member on the component that owns
-`fill_kine_tree`, C++ default `false`:
+**Proposed knob.** A new member on the **existing** `KineChargeOptions`
+(`NeutrinoPatternBase.h:37`, held as `PatternAlgorithms::m_kine_charge` at
+`:582`), which already carries this stage's tunables and is already wired from
+`TaggerCheckNeutrino`'s config (`:143` read, `:289` round-trip, `:605-607`
+push). No new struct is needed. C++ default `false`:
 
 ```cpp
 // false = today's cached read.  true = the prototype's live start-segment read.
@@ -1769,3 +1772,87 @@ the live PDG is correct whatever the refresh schedule is.
   `prototype_base/pid` as +5833/−989 over 26 files against the merge-base
   `a5fc0b9`. This stage's own files are clear of that diff (§0), but pr/28–pr/33
   have not been re-checked and this round does not do it.
+
+---
+
+### §10.11 Self-review amendments
+
+Written after §10.1–§10.10, on re-reading the code the survivors' *fixes* touch
+rather than the code the *findings* cite. Two of these change what F3 is.
+
+**(a) F3's class is UNSETTLED — §10.4's "output-identical by construction" is
+not established.** §5.6 proves the segment path's fresh locals and the shower
+path's cached members agree on the one field this stage reads (`.charge`, not
+`charge_err`). That is a statement about **what is read**. F3 additionally needs
+a statement about **when it was collected**, and §5.6 does not supply it. Two
+axes, checked:
+
+- **Cluster filter — clear.** `TrackFitting::collect_2D_charge`
+  (`TrackFitting.cxx:933`) iterates `m_charge_data` **unfiltered**. It does not
+  consult `m_cluster_filter`, unlike `dQ_dx_multi_fit`, which explicitly
+  switches to `m_cluster_charge_data` (`:5825-5831`). Cached members and fresh
+  locals are built from the same source by the same code.
+- **Growth — OPEN, and this is the one that matters.** `m_charge_data` is
+  append-only but it **does** grow: `m_charge_data_dirty` is set whenever a
+  cluster is added (`:253`, `:268`, `:385`, `:395`, `:414`) and the next
+  `prepare_data()` (`:406-407`, body `:724-930`) inserts that cluster's hits
+  (`:807`, `:868`). The cached members are filled **once** at
+  `NeutrinoShowerClustering.cxx:3261` and the lazy `if (m_charge_2d_u.empty())`
+  guard (`NeutrinoEnergyReco.cxx:242`, `:293`) **never invalidates them**.
+
+  So if any cluster is added between `:3261` and `fill_kine_tree`'s
+  `cal_kine_charge(seg, …)`, the segment path's fresh locals today see **more
+  charge** than the cached members would. Caching would then change segment
+  energies — a **behaviour change needing a knob**, not a perf change.
+
+**Discriminating check, to run before acting on F3**: instrument
+`m_charge_data.size()` at `NeutrinoShowerClustering.cxx:3261` and again at
+`NeutrinoKinematics.cxx:142` and compare, over the valfast manifest. Equal on
+every event ⇒ F3 is the perf change §10.4 describes. Any inequality ⇒ F3 is a
+behaviour change and takes F1's bar, not the perf bar. **Do not treat §10.4's
+claim as proven until this is run.** (This is the same shape of correction as
+pr/34 §10.9 — caught in self-review rather than after the owner acted on it.)
+
+**(b) F3's one-line patch, as §10.4 writes it, is a silent no-op.** Adding
+`if (m_charge_2d_u.empty()) collect_charge_maps(track_fitter);` at
+`NeutrinoEnergyReco.cxx:262` populates members that this overload **does not
+read**. The segment path declares locals at `:262-263` and passes *those*
+through to `kine_charge_from_maps` at `:274-276`, where the shower path passes
+`m_charge_2d_u` (`:243`). The real edit is three parts, not one:
+
+```cpp
+// NeutrinoEnergyReco.cxx:262-264 -> delete the four local declarations and the
+// unconditional collect; mirror the shower overload at :242 instead:
+if (m_charge_2d_u.empty()) collect_charge_maps(track_fitter);
+// ... and at :274-276, pass the MEMBERS:
+return kine_charge_from_maps(pcloud1, pcloud2, fudge_factor, recom_factor,
+                             m_charge_2d_u, m_charge_2d_v, m_charge_2d_w,
+                             m_map_apa_ch_plane_wires, grouping, …);
+```
+
+Applied as one line only, the change compiles, runs, gates byte-identical, and
+buys **nothing** — the collection still happens per call. An M1-shaped trap
+sitting in a proposal.
+
+**(c) F1 deliberately leaves a larger residual than its own bound covers.**
+§10.2 scopes the fix to the four `fill_kine_tree` reads and cites
+`NeutrinoEnergyReco.cxx:305`'s dispatch (`|particle_type| != 13 →
+calculate_kinematics`, else `calculate_kinematics_long_muon`) as a *reason* not
+to touch the cache. The consequence must be stated: **that dispatch is in this
+stage and keeps reading the cached value.** A stale cache there does not shift a
+published PDG by one rest mass — it sends the shower down the wrong kinematics
+branch and changes `kenergy_best` wholesale. F1's 139.6 MeV figure does not
+bound that. Closing it means either P8's cache write (which §10.2 shows leaks
+out of the stage) or a separate finding; neither is proposed here, and the
+counter of §10.2 would surface it, since a `cached != live` hit at `:109` is
+exactly the population at risk at `:305`.
+
+**(d) Two mechanics, checked.** `PR_EXTRA_STAGES` exists at committed
+`wcp-porting-img` HEAD (`run_pr_chain_batch.sh:117-128`, appending to
+`PIPELINE`), so §10.6's repro line is valid — note the runner is **modified in
+the working tree by the concurrent session**, and the committed version is the
+one quoted. And §10.2's knob home is corrected above: `KineChargeOptions` /
+`m_kine_charge` already exist and are already config-wired; there is no
+`BeeKineConfig` in this stage (that was pr/34's `BeePFConfig`), and
+`fill_kine_tree`'s signature (`NeutrinoPatternBase.h:841`) takes no config
+object, so inventing one would have been a second unnecessary change.
