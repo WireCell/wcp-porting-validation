@@ -614,7 +614,11 @@ advance by one **`tick_span`**, not by one. On SBND `tick_span` is **4**
 `img.jsonnet:133` `span=4`).
 
 `find(t ± 1)` asks for a slice starting one tick off the grid. **No blob starts
-there.** Both lookups miss unconditionally, on every point, on every event.
+there.** Both lookups miss on every point of every event — *given
+`tick_span ≥ 2`*, which is the honest statement of the precondition. Only a
+detector configured with one tick per slice would make `± 1` accidentally
+correct; SBND is at 4. That precondition is also exactly why a fix must read
+`get_nticks_per_slice()` rather than hard-code a stride (§10.1).
 
 **Four independent confirmations, all source-level — no run is needed:**
 
@@ -804,9 +808,13 @@ The `filter` column was added on 2026-08-04: **IN** = survives as a port defect
   before anyone acts on them — pr/28 §7.4 and §8.4 show why: the calib-JSON
   noise floor on this chain has been 268 and 356 leaves in two different
   sessions, so a same-binary repeat is mandatory before attributing anything.
-* **No ranking against physics.** D3 is ranked first because it changes the most
-  about the delivered graph, not because it is known to move a vertex, a score,
-  or an efficiency.
+* **No ranking against physics.** The order in §8 and §10.1 — **D12** first,
+  then D1, D3, D2, D7 — reflects how much of the delivered graph each row moves
+  and how certain the mechanism is, **not** any knowledge that one moves a
+  vertex, a score, or an efficiency more than another. (Before the 2026-08-04
+  revision this bullet ranked D3 first; D12 displaced it because a branch that
+  never executes is a larger and more certain defect than one that groups edges
+  differently.)
 * **No recommendation.** The porting dictionary has no Steiner section
   (`porting_dictionary.md:266` is an empty `⚠ xxx` placeholder), so under
   CLAUDE.md §5 rule 4 every divergence here is undocumented. Both readings are
@@ -892,9 +900,14 @@ elsewhere.
 
 **D7's fix is not local.** `make_points_cluster_skeleton` has **four** callers:
 `SteinerGrapher.cxx:204` (this one) and `clustering_deghost.cxx:274`, `:785`,
-`:796`. The density formula is shared with deghosting, so changing `+1` in place
-changes the deghost skeleton too — a stage this document did not audit. A fix
-must be a parameter or a Steiner-local copy.
+`:796`. **They resolve to the same body** — checked, because the call sites differ
+in arity (6 args here, 5 there) and two bodies would have made this a non-issue:
+`DynamicPointCloud.h:196-201` declares the function **once**, with
+`flag_wrap = false` and `step = 0.6*units::cm` defaulted, and
+`DynamicPointCloud.cxx:679` is its only definition. So the density formula at
+`:744` **is** shared with deghosting, and changing `+1` in place would change the
+deghost skeleton too — a stage this document did not audit. A fix must be a
+parameter or a Steiner-local copy.
 
 **D2 is the one row where the fix is a single argument** — pass the
 `disable_dead_mix_cell` that `create_steiner_tree` already holds down to
