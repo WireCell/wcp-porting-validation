@@ -11,6 +11,18 @@ patch. The behaviour-changing items would all alter production output
 unconditionally, i.e. CLAUDE.md **escalation rule 1** — they are reported and
 stop there.
 
+> **2026-08-04 — D1 and D12 are FIXED, default OFF; see §11.** Both ship as
+> config knobs whose off state is the historical behaviour (compiled config
+> byte-identical, md5 in §11.5), with 7 new doctests pinning the two convention
+> traps. On the event served on port 5017 (SBND evt 388) the legacy filter was
+> discarding **47.7%** of all Steiner terminals and leaving **24** clusters
+> below the two-terminal minimum; with both knobs on that is 20.0% and 3.
+> `numu_score` moves −3.199 → −2.166, the event label does not move, and the
+> pi0 candidate disappears — reported, not tuned. **Both are SBND PRODUCTION
+> DEFAULTS as of the owner flip on 2026-08-04** (*"these are improvements, or
+> bug fix, for SBND, right? They should be on"*): a bare run is now the fixed
+> chain. D2, D3 and D7 remain open.
+
 > **2026-08-04 revision — read §10 first.** The owner asked for the list to be
 > **filtered**: *"we can skip the ones that are improvements over the previous
 > prototype … only focus on the one that are bugs or missing from the port,"*
@@ -1019,3 +1031,239 @@ pick a different index of the same location. Not a defect.
   claim that the time-slice half "is ported" was wrong and is struck through in
   place. Anyone who read the earlier version took away that the toolkit lost one
   of the prototype's two slacks; it lost both.
+
+---
+
+## §11 D1 and D12 FIXED — shipped default OFF *(2026-08-04)*
+
+**Owner request.** *"Can we fix these … first? I assume this is D1 and D12.
+Please make the code more robust … please check on the event served in port
+5017."*
+
+**Status: SHIPPED. SBND PRODUCTION DEFAULT ON (owner flip, 2026-08-04).**
+
+They shipped default-OFF first, because turning either on changes production
+output unconditionally and that is CLAUDE.md §5 rule 1 — an owner decision, not
+mine. The owner made it the same day, on the reasoning that these are **port
+bugs and not tunable behaviour**: *"what do you mean by knob off, these two are
+improvements, or bug fix, for SBND, right? They should be on."* That is correct
+— the toolkit filter was strictly tighter than the prototype in two independent
+ways, with nothing on the other side of the trade.
+
+Mechanically the knobs remain, and that is deliberate: **the C++ defaults stay
+OFF** so uBooNE / ICARUS / PDHD / PDVD are untouched, and the ON state lives in
+the SBND operating point (`wct-pr-perevt.jsonnet`, doc 68 — a bare run *is*
+production). Setting both back to 0/false reproduces the pre-fix chain
+byte-for-byte at the config level (§11.5), which is what every legacy comparison
+needs. D2, D3 and D7 are untouched (§10.1 still lists them).
+
+### §11.1 What shipped
+
+| layer | change |
+|---|---|
+| `clus/inc/WireCellClus/Facade_Cluster.h`, `clus/src/Facade_Cluster.cxx` | `check_wire_ranges_match(..., int wire_tol = 0)` and `is_point_spatially_related_to_time_blobs(..., int wire_tol = 0, int slice_stride = 1)`. Both defaults ARE the previous literals. |
+| `clus/src/SteinerGrapher.h`, `.cxx` | `Config::terminal_wire_tol{0}`, `Config::terminal_adjacent_slice{false}`; new `nticks_per_slice_or_1(apa, face)`; `filter_by_reference_cluster` resolves the stride per (apa, face) through a memo. |
+| `clus/src/CreateSteinerGraph.cxx` | reads `terminal_wire_tol` / `terminal_adjacent_slice`, round-trips both in `default_configuration()`. |
+| `cfg/pgrapher/common/clus.jsonnet` | `cm.steiner()` gains both args, emitted with the key-suppression idiom. |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | threaded through `clus_pr()` **and** `pr()`, applied to `steiner` **and** `steiner_refresh`. |
+| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | **the SBND operating point: `steiner_terminal_wire_tol=1`, `steiner_terminal_adjacent_slice=true`.** |
+| `sbnd_xin/run_pr_chain_batch.sh` | env `SBND_STEINER_WIRE_TOL` / `SBND_STEINER_ADJ_SLICE`; unset ⇒ no TLA ⇒ the cfg default ⇒ **both on**. Set both to `0` for the legacy arm. |
+| `clus/test/doctest_steiner_terminal_filter.cxx` | **new**, 7 cases / 18 assertions. |
+
+**Both fixes are confined to the Steiner terminal filter.** They travel as
+arguments, not as edits to the shared helper's behaviour, so `get_extreme_wcps`
+— the other caller of the same C++ function, which the prototype gives **no**
+slack and **no** slice fallback — keeps taking the defaults and is untouched.
+That was the whole reason §10.1 said an in-place edit was the wrong shape.
+
+### §11.2 The robustness the owner asked for
+
+The traps are now encoded where the next reader will hit them, not only in this
+document:
+
+* **The half-open arithmetic is derived in a comment at the point of use**
+  (`Facade_Cluster.cxx`, `check_wire_ranges_match`): `index <= high + 1` with
+  `high = max - 1` gives `index < max + 1`, so the implementation adds
+  `wire_tol` to `u_max` and subtracts it from `u_min` and keeps the `<`. The
+  comment states in words that `<= max + wire_tol` would be loose on the high
+  side only. **A doctest fails if anyone writes it that way** (§11.3).
+* **The stride is never a literal.** `nticks_per_slice_or_1()` reads
+  `Grouping::get_nticks_per_slice().at(apa).at(face)`, the same accessor
+  `improvecluster_1.cxx:295` uses. Hard-coding 4 would work on SBND and be wrong
+  elsewhere — §10.1 named that risk and the code now cannot take it.
+* **Three guards, because this runs per terminal in a hot loop:** an unknown
+  apa or face returns 1 with a WARN instead of letting `std::map::at` throw out
+  of the filter; a non-positive span returns 1 rather than making the `±offset`
+  loop test the point's own slice twice; a negative `terminal_wire_tol` is
+  clamped to 0 in `configure()` with a warning, since a negative tolerance would
+  silently *shrink* the band.
+* **The terminal-count log line now echoes both knob values**
+  (`SteinerGrapher.cxx`, `create_steiner_tree`), so a log alone says which arm
+  produced a number. That is what made §11.4's measurement possible.
+
+### §11.3 Tests
+
+`clus/test/doctest_steiner_terminal_filter.cxx` — 7 cases, 18 assertions, all
+passing. They pin the boundary, not the feature:
+
+* **the `<= max + tol` discriminator.** With `tol=1` against a reference blob
+  covering wires 10–11, wire 12 is accepted and wire **13 is not**. The wrong
+  implementation accepts 13 and the case fails.
+* **symmetry.** The accepted set with `tol=1` is asserted to be *exactly*
+  `{9, 10, 11, 12}`. A band loose on one side only passes both single-wire cases
+  above and fails this one.
+* **D12 both ways.** A reference blob one slice away (tick 4, span 4) is **not**
+  found with the legacy step of 1 — pinning that the historical branch is dead —
+  and **is** found with a step of 4.
+* **the fallback stays one slice wide.** A blob two slices away is still not
+  found, so the fix widens the search by one slice, not unboundedly.
+* **composition.** A terminal that is one wire out *and* one slice away needs
+  both knobs; either alone leaves it rejected.
+
+`./build/clus/wcdoctest-clus`: **85 cases / 935 assertions, 0 failed.**
+
+### §11.4 Evidence on the event served on port **5017** (SBND run 18255 evt 388)
+
+Port 5017 is serving `work-tfix388-final/pr_evt388/calib-pr-evt388.json`, i.e.
+this event. Two fresh arms were run from the same Q/L root
+(`work-nuecc48-prod0803`) — new tags, nothing existing written (M13):
+
+```bash
+cd sbnd_xin
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display SBND_WCT_LOGLEVEL=trace \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-pr29-388-off  sim 388
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display SBND_WCT_LOGLEVEL=trace \
+  SBND_STEINER_WIRE_TOL=1 SBND_STEINER_ADJ_SLICE=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-pr29-388-on   sim 388
+```
+
+**The filter itself, summed over every call in the event:**
+
+| arm | calls | terminals in | kept | dropped | clusters left with <2 terminals |
+|---|---|---|---|---|---|
+| OFF (legacy) | 44 | 2901 | 1517 | **1384 (47.7%)** | **24** |
+| ON (`wire_tol=1`, `adjacent_slice=true`) | 42 | 2900 | 2320 | 580 (20.0%) | 3 |
+
+**The legacy filter was discarding nearly half of every cluster's Steiner
+terminals on this event, and leaving 24 clusters below the two-terminal minimum
+— i.e. with no Steiner tree at all.** That is the size of D1+D12 together.
+
+**Downstream, same event:**
+
+| quantity | OFF | ON |
+|---|---|---|
+| PR segments | 75 | **88** |
+| PR vertices | 118 | **131** |
+| steiner points (dumped) | 35 | 38 |
+| showers | 13 | 12 |
+| `nue_score` | 4.3009 | 4.3009 (unchanged) |
+| `numu_score` | −3.1994 | **−2.1661** |
+| `kine_reco_Enu` | 2900.5 MeV | 2865.6 MeV |
+| `kine_pio_flag` | **1** (mass 132.1 MeV) | **0** |
+| reconstructed particles | 13 | 11 |
+| event label / TGM / STM / FC | nu-candidate, 0/0/0 | **identical** |
+
+20 of 44 dumped tagger fields move. **The selection verdict does not**: the
+`nusel-table.tsv` files are identical line for line, both arms.
+
+**Reported, not tuned (§5 rule 7): the pi0 candidate disappears when the knobs
+are on** — `kine_pio_flag` 1 → 0, and a 132.1 MeV pi0 mass with it. On a
+knob that can only *add* terminals this is not self-evidently an improvement,
+and it is exactly the kind of number this document is not authorised to chase.
+It is one event.
+
+### §11.5 Gates
+
+* **The legacy arm is still reachable and still byte-identical.** Compiling the
+  SBND PR job three ways — from a `git archive HEAD cfg` tree (pre-change), from
+  the working tree with `-A steiner_terminal_wire_tol=0 -A
+  steiner_terminal_adjacent_slice=false`, and from the working tree bare:
+
+  | config | md5 |
+  |---|---|
+  | pre-change (HEAD) | `d90a93301f724b4592c082d9636a674a` |
+  | post-change, knobs forced off | `d90a93301f724b4592c082d9636a674a` |
+  | post-change, **bare = production** | `c9604b6c1d9aa1c4676ca7571d1c1dfb` |
+
+  So the flip did not strand the old chain: forcing both to 0/false gives the
+  pre-fix config **byte for byte**, which is what any pre-flip A/B needs.
+* **Compiled-config proof (M6).** `terminal_wire_tol: 1` and
+  `terminal_adjacent_slice: true` appear on **both** `CreateSteinerGraph` inodes
+  (`pr` and `prrefresh`) in the bare/production config, and on neither in the
+  forced-off one — 4 occurrences vs 0. Not a wrapper-level merge that vanishes.
+* **The bare compiled config is identical to the arm-ON config** measured in
+  §11.4, so the numbers there are production numbers, not a special arm.
+* **Freshness proof (M1).** `local/lib/libWireCellClus.so` 10:49 > last source
+  edit 10:48, and `nm` finds `nticks_per_slice_or_1` in the **installed** lib.
+* **Unit tests.** `./build/clus/wcdoctest-clus` 85/85.
+* **Determinism.** The knob-OFF arm was run **twice**
+  (`work-pr29-388-off`, `work-pr29-388-off2`): the two `calib-pr-evt388.json`
+  are **identical as JSON**, 0 of 44 tagger fields differing, same main vertex
+  to the last digit, same 2901/1517 terminal totals. **The noise floor on this
+  event is zero**, so every number in §11.4 is the knobs and nothing else.
+* **Reproduced on a second binary, after the flip.** The concurrent session
+  landed `22249ff4` and `026a7501` mid-session, so both arms were re-run
+  end-to-end through the runner on the rebuilt tree — `work-pr29-388-b2prod`
+  (bare = production) and `work-pr29-388-b2legacy`
+  (`SBND_STEINER_WIRE_TOL=0 SBND_STEINER_ADJ_SLICE=0`). **Every figure in §11.4
+  reproduces exactly**: 2901→1517 vs 2900→2320 terminals, 24 vs 3 starved
+  clusters, 75→88 segments, 118→131 vertices, `numu_score` −3.1994 → −2.1661,
+  `kine_reco_Enu` 2900.5 → 2865.6, pi0 flag 1 → 0, `nusel-table.tsv` identical.
+  That run also proves the runner path end-to-end: with no env set, the driver
+  now produces the fixed chain.
+
+### §11.6 One gate that could NOT be run, stated rather than glossed
+
+**A knob-OFF runtime A/B against the stored `work-tfix388-final` baseline is
+not attributable and was not claimed as a PASS.** My knob-OFF arm already
+differs from that baseline — 118 vs 119 vertices, 35 vs 31 dumped steiner
+points, `numu_score` −3.199 vs −2.835, main vertex moved 0.6 mm.
+
+That difference is **not** these knobs and **not** noise:
+
+* knobs off ⇒ the compiled config is byte-identical (md5 above) and every new
+  parameter defaults to the literal the code used before, so no instruction on
+  the knob-off path changed;
+* the same-binary repeat (§11.5) is byte-identical, so the chain is not drifting
+  run to run on this event.
+
+It is the binary. `work-tfix388-final` was produced at toolkit `23bd6783`; the
+runs above load a `local/lib` built from **`22249ff4`** (*"make the fitted-2D-charge
+merge and the back-to-back retype loop deterministic"*, doc pr/28 §14, run on
+this very event) and **`026a7501`** (*"order the shower edge walk by graph
+index — the PR display dump is now run-to-run identical"*, doc pr/28 §15) — two
+commits landed by a concurrent session in this shared tree while this work was
+in progress. Both are downstream of the Steiner stage and both, by their own
+titles, change the PR display dump. That fully accounts for the baseline
+difference and none of it is attributable here.
+
+Attributing a runtime difference to *this* change would need a tree holding only
+this change, which this working copy is not. **The valid measurement is arm-OFF
+vs arm-ON in §11.4** — same binary, same minute, one variable — and the
+same-binary repeat proves the comparison is not sitting on noise.
+
+### §11.7 What this does not settle
+
+* **One event.** 47.7% → 20.0% terminal loss is this event's number. A
+  population run is what would justify a default flip, and none was made.
+* **The two knobs were measured together, not separately.** §11.4 cannot say how
+  much of the segment 75 → 88 is D1 and how much is D12. Three more arms would;
+  they were not run.
+* **Direction of "better" rests on fidelity, not on a measurement.** The case
+  for ON is that these are port bugs: the prototype keeps these terminals, the
+  toolkit dropped them through a units error and a missing tolerance, and there
+  is nothing on the other side of the trade. That is the owner's reasoning and
+  it is sound. What has **not** been shown is that SBND *reconstruction* is
+  better — no efficiency, purity or vertex-resolution number moved in either
+  direction here, because none was measured. **The pi0 loss on evt 388 is the
+  one concrete counter-signal on record** (`kine_pio_flag` 1 → 0, a 132.1 MeV
+  candidate) and it should be looked at on a population before anyone treats
+  the flip as validated rather than merely correct.
+* **The obvious next step is a population run.** Both arms are reachable from
+  one runner (`SBND_STEINER_WIRE_TOL=0 SBND_STEINER_ADJ_SLICE=0` for legacy),
+  and the 572-event valfast manifest is the natural target: how many events move
+  label, how many gain or lose a pi0, and how the 24-starved-clusters number
+  scales. None of that was run for this document.
+* **D2, D3 and D7 remain open** exactly as §10.1 leaves them. In particular D2's
+  one-argument fix was deliberately **not** bundled in: separate defect,
+  separate knob, separate gate.

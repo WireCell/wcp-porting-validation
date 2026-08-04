@@ -165,6 +165,23 @@ fi
 # a rebuild; SBND_ISO_TUBE_R sets the axis-tube radius in cm.
 [ -n "${SBND_ISO_MIN_ASPECT:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_min_aspect=${SBND_ISO_MIN_ASPECT}")
 [ -n "${SBND_ISO_TUBE_R:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_tube_radius=${SBND_ISO_TUBE_R}")
+# Steiner TERMINAL filter fidelity (doc pr/29 D1 + D12).
+# **SBND PRODUCTION DEFAULT ON since the owner flip 2026-08-04** -- these are
+# port bugs, not tuning: the toolkit terminal filter was tighter than the WCP
+# prototype in two independent ways and was discarding 47.7% of all Steiner
+# terminals on evt 388.  EMPTY = emit no TLA = the cfg default = BOTH ON, so a
+# bare run is production (doc 68).  Set them to 0 for the pre-fix arm:
+#   SBND_STEINER_WIRE_TOL=0    drop the prototype's one wire of slack.
+#   SBND_STEINER_ADJ_SLICE=0   go back to stepping the adjacent-slice lookup by
+#                              1, which (the map key being in ticks, 4 per
+#                              slice on SBND) never resolves -- the dead branch.
+# Both together = the legacy arm every pre-flip comparison needs.
+[ -n "${SBND_STEINER_WIRE_TOL:-}" ] && \
+    CATH_TLA+=(--tla-code "steiner_terminal_wire_tol=${SBND_STEINER_WIRE_TOL}")
+case "${SBND_STEINER_ADJ_SLICE:-}" in
+    1) CATH_TLA+=(--tla-code "steiner_terminal_adjacent_slice=true") ;;
+    0) CATH_TLA+=(--tla-code "steiner_terminal_adjacent_slice=false") ;;
+esac
 # protect_bundle knob overrides (doc pr/23, validation only).  EMPTY = no TLA
 # = the cfg default = the SBND operating point.  The _XCUT/_DYZ/_DIS values
 # are in CM, converted via wirecell.jsonnet because the C++ takes INTERNAL
