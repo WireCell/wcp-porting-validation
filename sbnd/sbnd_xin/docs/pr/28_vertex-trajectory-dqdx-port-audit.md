@@ -6,7 +6,7 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, plus **five rounds of fixes** the owner ordered
+**Status.** Audit + measurement, plus **six rounds of fixes** the owner ordered
 after reading it. All are unconditional — no knob: they are port-fidelity
 bugs or plain defects, not legacy behaviour to preserve.
 
@@ -17,11 +17,21 @@ bugs or plain defects, not legacy behaviour to preserve.
 | 3 | **§3.3e** `improve_vertex`'s remaining unsorted `out_edges` — the two that mutate segments | `ea1a7e3d` | **§9** |
 | 4 | **the whole `clus/` sweep** — all 117 remaining raw `boost::out_edges` sites in 13 files | `4f2e7303` | **§10** |
 | 5 | **the residual 10** — `boost::edges` / `boost::vertices` / `graph_nodes` (32 loops, 12 files). **`T_tagger` is now fully deterministic on the 48-event manifest.** | `c05bc5f7` | **§11** |
+| 6 | **§4.1** the multi-track dQ/dx close weights get the prototype's ×5/3 scale-up. **Vertex-fit area closed by owner decision (§12.7).** | `01ff88b1` | **§12** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
-read §3.1, §3.2 or §3.3 rows a–e as open defects. **Still open** (all escalation
-rule 1, untouched): §3.3's `flag_front` row and the rows after it, §3b T1–T8,
-§4.1, §4.2.
+read §3.1, §3.2, §3.3 rows a–e or §4.1 as open defects.
+
+**The vertex-fit area is CLOSED.** After round 6 the owner ruled: *"I do not
+think that we need to worry about the remaining vertex fitting divergencies."*
+That closes §3.3's remaining rows (`flag_front`, the `+0.5` offset, identity-by-
+distance, `m_fit_vertex_min_seg_length`) and §5's vertex-fit suspects 5–6. They
+stay documented as **known, accepted divergences** — not as pending work, and
+not as defects to be rediscovered by a later audit. See §12.7.
+
+**Still open** (untouched, and *not* covered by that ruling — they are
+trajectory- and dQ/dx-side, not vertex-fit): §3b T1–T8, §4.2 (also set aside by
+the owner), §4.3, §4.4, and §11.8's two container classes.
 
 **Headline.** The vertex-fixing mechanism the owner asked about is a **faithful
 port and it fires on SBND** — so it does *not* explain an off vertex (§1, §2).
@@ -30,8 +40,10 @@ separately, that `clear_fit` was **discarding the PID of every leg of every
 fitted vertex** (§3.3a). Both are now fixed; together they move the evt 388
 neutrino vertex **0.854 cm** and remove **4 spurious vertex fits**. One confirmed
 behaviour-changing divergence in the **dQ/dx** fit (§4.1) and a missing uBooNE
-calibration chain (§4.2) remain open; neither moves the vertex directly, both
-reach it only through PID.
+calibration chain (§4.2) were both flagged; **§4.1 is now fixed (§12)** and §4.2 is the
+owner's call and set aside. Neither moves the vertex directly — measured, not
+assumed: §12 confirms the vertex is bit-identical across the §4.1 fix, which
+reaches selection only through dQ/dx → PID.
 
 ---
 
@@ -294,7 +306,13 @@ giving `NaN`; `NaN > 15` is false, so that one silently *misses* an increment.
 
 ### §3.3 Other vertex-fit divergences
 
-**Rows a–d are FIXED** in round 2 (§8); the rest are open.
+**Rows a–d are FIXED** in round 2 (§8), row (e) in round 3 (§9).
+
+> **The remaining rows are CLOSED by owner decision, not open work** (§12.7).
+> They were investigated, are understood, and are accepted as-is. The severity
+> labels below describe what each divergence *is*, not a queue. `flag_front` in
+> particular reads "behaviour-changing — **OPEN**" for the historical record;
+> read it as **accepted**.
 
 | what | prototype | toolkit | severity |
 |---|---|---|---|
@@ -405,7 +423,7 @@ fit; `:8688-8702` in `do_single_tracking`). The commented-out block at
 and re-enabling it would be strictly worse, since it omits `index`, `range` and
 `paf`. (This supersedes the "flagged, not fixed" note in doc pr/27 §2.)
 
-### §4.1 CONFIRMED behaviour-changing: the multi-fit close weights were not scaled up
+### §4.1 CONFIRMED behaviour-changing: the multi-fit close weights were not scaled up — **FIXED** (§12)
 
 The prototype uses **different regularisation weights in the multi-track fit than
 in the single-track fit**. The toolkit has only one set, and it is the
@@ -432,11 +450,11 @@ the author knew the multi fit needs stronger regularisation. So the toolkit's
 multi-track dQ/dx fit is under-regularised on the close-wire (overlap) term by a
 factor 5/3 relative to the prototype.
 
-**Not fixed — escalation rule 1** (it changes a constant, i.e. production output
-unconditionally). Note also that there is currently **no way to express the two
-separately**: one `set_parameter("close_ind_weight", …)` feeds both fits, so a
-fix needs either a second parameter pair or an internal ×5/3 in
-`dQ_dx_multi_fit` mirroring the existing lambda line.
+~~**Not fixed — escalation rule 1**~~ **FIXED in round 6, §12** — the owner read
+this section and asked for it. It changes a constant, so escalation rule 1 was
+satisfied by asking, not by a knob. Of the two options noted here — a second
+parameter pair, or an internal ×5/3 in `dQ_dx_multi_fit` mirroring the existing
+lambda line — §12.1 took the second, for the reasons given there.
 
 **Does this explain the off vertex? Not directly.** `dQ_dx_multi_fit` is the
 charge pass that runs *after* the three geometry passes; it does not move
@@ -521,12 +539,13 @@ itself, which is where the owner's instinct pointed:
    spurious vertex fits on evt 388 and is round 2's entire effect.
 4. ~~§3.3b — the "silent no-op reported as success" early returns.~~ **FIXED,
    §8**; measured inert on evt 388 (no guard ever fired).
-5. `fit_vertex_min_seg_length = 1.0` on *other* events (SBND-only, doc pr/9);
-   check with the §2 trace recipe on an event where the vertex looks wrong.
-   Inert on evt 388.
-6. `UpdateInfo` re-snapping `wcpt` to the nearest Steiner point
-   (`MyFCN.cxx:474`) — the seed is quantised onto the skeleton, and the 0.22 cm
-   `fit_distance` on evt 388's main vertex *is* that residual.
+5. ~~`fit_vertex_min_seg_length = 1.0` on *other* events~~ **CLOSED by owner
+   decision (§12.7).** SBND-only, doc pr/9; inert on evt 388. The §2 trace
+   recipe remains the way to check it if a future event warrants.
+6. ~~`UpdateInfo` re-snapping `wcpt` to the nearest Steiner point
+   (`MyFCN.cxx:474`)~~ **CLOSED by owner decision (§12.7).** The seed is
+   quantised onto the skeleton, and the 0.22 cm `fit_distance` on evt 388's main
+   vertex *is* that residual — understood and accepted.
 7. **§3b T1/T2 — the charge-ratio veto is dead in the multi-track path.** The
    guard that reverts a badly-fitted trajectory point to its pre-fit position
    never fires, because the point is compared against itself. Trajectory points
@@ -535,17 +554,25 @@ itself, which is where the owner's instinct pointed:
    after the first, silently rather than by failing.
 9. §3b T4 — an extra association rebuild drops points from the final trajectory
    before dQ/dx.
-10. §4.1 / §4.2 via PID → direction → vertex score — indirect, but real.
+10. ~~§4.1~~ **FIXED, §12** / §4.2 via PID → direction → vertex score — indirect,
+    but real. §12.3 measures the §4.1 half: on evt 388 the main vertex is
+    **bit-identical** across the fix, so the "indirect, but real" path is real
+    for *selection* (`numu_score` −0.173) and **not** for the vertex position
+    on this event.
 
 Note that §3.1 and T1 compound: `MyFCN` builds its PCA from a point cloud whose
 own quality guard (T1) is inoperative — except that under §3.1 it reads the
 Steiner path rather than that cloud at all. Fixing either one alone changes what
 the other sees, so they want separate gates and separate events.
 
-**Items 1–4 are now fixed** — the owner read this section and asked for §3.1/§3.2
-first (§7), then §3.3a–d (§8). **Items 5–10 remain open and are still escalation
-rule 1.** The compounding note above still stands for the open items: §3b T1 and
-the now-fixed §3.1 both feed the same cloud, so T1 must be gated on its own.
+**Items 1–4 are fixed** — the owner read this section and asked for §3.1/§3.2
+first (§7), then §3.3a–d (§8). **Items 5–6 are CLOSED by owner decision**
+(§12.7) — the vertex-fit area is done. **Item 10's §4.1 half is fixed** (§12),
+and it moved selection but *not* the vertex. **Items 7–9 (§3b T1–T4) and §4.2
+remain open** — trajectory and calibration, not vertex fit, so the ruling in
+§12.7 does not reach them. The compounding note above still stands for those:
+§3b T1 and the now-fixed §3.1 both feed the same cloud, so T1 must be gated on
+its own.
 
 **The single most useful next step** is making `flag_fix` observable. It is the
 one flag that answers "did the vertex fit run for this vertex", and today **no
@@ -1529,6 +1556,11 @@ check what the container is used for before changing how it is ordered.**
   the only branches that differ are the ten `pio_2_v_*` / `shw_sp_pio_2_v_*` /
   `stw_3_v_*` vectors, each a **permutation** of its baseline value
   (`ttag_cmp5.py` reports this as `reorder=N value=0`).
+  > ⚠️ **Superseded by round 6.** §12 changes the dQ/dx regulariser, which moves
+  > scalars throughout the dQ/dx → PID → kine chain by construction. The
+  > criterion above can no longer PASS and must not be read as a live FAIL
+  > signal. See §12.5 for what the gate should expect once §7–§12 are gated
+  > together.
 * **Stable ≠ correct**, as in §9.4/§10.6. Index order is *an* order; the
   prototype's equivalent loops walk pointer-keyed `std::map<ProtoVertex*, …>`,
   so its order is equally arbitrary and no parity is broken.
@@ -1552,3 +1584,261 @@ check what the container is used for before changing how it is ordered.**
   §11.7 is why each site in both classes must be judged on how it is **used**,
   never converted in bulk.
 * `boost::in_edges` does not occur anywhere in `clus/src`.
+
+---
+
+## §12 §4.1 FIXED — the multi-track dQ/dx close weights get their ×5/3 (toolkit `01ff88b1`, evt 18255/388)
+
+Owner instruction, after reading the open-items summary: *"We want to fix [§4.1]
+... we do not need to worry about these two [§3.3 `flag_front`, §4.2] ... please
+double check with prototype code, and note, we focus on this one event for now.
+No need to worry about the full sample validation. We will need to continue do
+some improvements on the algorithm before we need to look at a larger sample."*
+
+So: §4.1 only, prototype re-verified, evt 388 only, no population gate. The two
+set-aside items are marked as such in the status table rather than deleted.
+
+### 12.1 Prototype re-verification — all four numbers re-read this round
+
+Not taken from §4.1's earlier table; re-grepped in
+`/nfs/data/1/xqian/prototype-dev/wire-cell/pid/src/`:
+
+| | single (`PR3DCluster_dQ_dx_fit.h`) | multi (`PR3DCluster_multi_dQ_dx_fit.h`) | ratio |
+|---|---|---|---|
+| `dead_ind_weight` | `:870` 0.3 | `:759` 0.3 | 1 |
+| `dead_col_weight` | `:871` 0.9 | `:760` 0.9 | 1 |
+| **`close_ind_weight`** | `:873` **0.15** | `:762` **0.25** | **5/3** |
+| **`close_col_weight`** | `:874` **0.45** | `:763` **0.75** | **5/3** |
+| `lambda` | `:933` 0.0005 | `:793` 0.0008 | 8/5 |
+
+Two facts this re-read established that the earlier table did not state, and
+both matter:
+
+1. **The dead weights are *not* scaled.** 0.3/0.9 in both fits. So the fix is
+   specifically the *close* pair — scaling all four would have been wrong.
+2. **The functional forms legitimately differ between the two fits, and the
+   toolkit already ports each one correctly.** Single uses
+   `pow(2*overlap-1, 2)` (`:892-894`), multi uses `pow(overlap-0.5, 2)`
+   (`:783-785`) — the first is exactly 4× the second. The toolkit matches:
+   `TrackFitting.cxx:7604-7614` (single) and `:6779-6781` (multi). This is worth
+   pinning because `pow(2x-1,2)` vs `(x-0.5)²` *looks* like a porting slip and
+   is not; only the coefficient was wrong.
+
+**Call-path check** (that the scale-up lands on exactly the prototype's multi
+path and no further): `dQ_dx_multi_fit` (`TrackFitting.cxx:5746`) has exactly one
+caller, `do_multi_tracking:8267`; `dQ_dx_fit` (`:6904`) has exactly one caller,
+`do_single_tracking:8613`. No single-track case routes through the multi fit, so
+nothing outside the prototype's multi fit is touched.
+
+### 12.2 The change — `clus/src/TrackFitting.cxx`
+
+Internal ×5/3 in `dQ_dx_multi_fit`, **not** a second parameter pair:
+
+```cpp
+-    const double close_ind_weight = m_params.close_ind_weight;
+-    const double close_col_weight = m_params.close_col_weight;
++    const double close_ind_weight = m_params.close_ind_weight * 5.0 / 3.0;
++    const double close_col_weight = m_params.close_col_weight * 5.0 / 3.0;
+```
+
+Three reasons for that choice over a new knob:
+
+* it is the **same shape as the line 8 rows below**, `double lambda =
+  m_params.lambda*8.0/5.0; // adjusted for multi-track fitting` — the port
+  already expresses "multi needs stronger regularisation" this way, and the
+  single/multi ratio is a property of the algorithm, not of a detector;
+* the SBND config (`sbnd_track_fitting.json:43-44`) carries the **single-track**
+  values 0.15/0.45, so it stays byte-identical — no config change, nothing for
+  another detector to have to learn about;
+* a second knob pair would let the two drift apart, which is exactly how the
+  original divergence happened.
+
+**FP-exactness, verified rather than assumed.** Written left-to-right so it is
+`(0.15*5.0)/3.0`, which is exactly 0.25, and `(0.45*5.0)/3.0`, exactly 0.75 —
+checked with a standalone `printf("%.20g")` program, both `== 0.25` / `== 0.75`
+comparing true. (Here `*(5.0/3.0)` happens to be exact too, but the left-to-right
+form is what the lambda line uses and what §3's `43000 × 5/43` convention
+expects.) The multi fit therefore now runs on the prototype's literals bit for
+bit, not on a rounded approximation of them.
+
+**One liveness trace added**, at TRACE level, reporting how many overlap terms
+actually fired and with which weights. It exists because of the failure mode
+§12.3 guards against, and it is what makes that section's claim checkable.
+
+### 12.3 Liveness first — proving the term fires before reading any diff
+
+Every prior round in this doc had to defend against *attributing noise to a
+change*. Round 6 carries the opposite risk: a within-noise result read as
+success when the real cause is a stale library (M1) or a dead code path. So the
+liveness proof came first, from the trace line:
+
+```
+dQ_dx_multi_fit: close-wire regulariser fired on 562 of 864 plane-pair terms
+                 (145 3D positions); close_ind=0.25 close_col=0.75
+```
+
+Summed over all **145** `dQ_dx_multi_fit` calls on evt 388:
+
+| | fired / total overlap terms | weights in use |
+|---|---|---|
+| baseline | 62 685 / 88 464 (**70.9 %**) | `close_ind=0.15 close_col=0.45` |
+| fixed | 62 685 / 88 464 (**70.9 %**) | `close_ind=0.25 close_col=0.75` |
+
+Two things at once. The term is **live on 71 % of terms**, so a null result would
+have meant something was wrong. And the fired count is **identical to the unit**
+between arms — the `overlap > overlap_th` gate is untouched, only the
+coefficient moved. That is the cleanest possible isolation: the two binaries
+differ in two literals and nothing else.
+
+> **Arm construction (deliberate).** The baseline arm was built from the *same
+> source as the fixed arm with only the `* 5.0 / 3.0` removed* — liveness counter
+> and trace line included. It is behaviourally identical to `f07c0299` (counters
+> and a TRACE log cannot change FP arithmetic) but guarantees the A/B isolates
+> one edit. The `close_ind=0.15` line in the baseline log is the proof that the
+> intended baseline is what actually ran.
+
+### 12.4 Repro
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+for arm in work-dqdx388-base work-dqdx388-base-rep work-dqdx388-w53 work-dqdx388-w53-rep; do
+  PR_EXTRA_STAGES=pr_display PR_JOBS=1 SBND_WCT_LOGLEVEL=trace \
+    ./run_pr_chain_batch.sh work-nuecc48-prod0803 $arm data 388
+done
+python3 /home/xqian/tmp/leafdiff.py work-dqdx388-base/pr_evt388/calib-pr-evt388.json \
+                                    work-dqdx388-w53/pr_evt388/calib-pr-evt388.json
+```
+
+`./build/clus/wcdoctest-clus` — **76 cases / 836 assertions, all pass.**
+Freshness proof (M1): `local/lib/libWireCellClus.so` 07:57:05 >
+`clus/src/TrackFitting.cxx` 07:56:31, `file` confirms ELF (M3).
+
+| label | binary |
+|---|---|
+| `work-dqdx388-base` | close weights 0.15/0.45 (= `f07c0299` behaviour) |
+| `work-dqdx388-base-rep` | repeat, same binary — noise floor |
+| `work-dqdx388-w53` | close weights ×5/3 ⇒ 0.25/0.75 — what is committed |
+| `work-dqdx388-w53-rep` | repeat, same binary — noise floor |
+
+### 12.5 Result — dQ/dx moves well outside the noise floor; the vertex does not move at all
+
+**The effect clears the floor by a factor ~17, and — more decisively — it lands
+in field families the floor never touches:**
+
+| comparison | leaf diffs (of 176 956) | top families |
+|---|---|---|
+| `base` vs `base-rep` (**same binary**) | **357** | 356 `proj/charge_pred`, 1 `showers/kine_dQdx` |
+| `w53` vs `w53-rep` (**same binary**) | **651** | 647 `proj/charge_pred`, 2 `showers/kine_dQdx`, 2 `showers/total_length` |
+| **`base` vs `w53`** (**the fix**) | **10 799** | 8912 `proj/charge_pred`, **812 `segments/points/dQ`**, **810 `segments/points/reduced_chi2`**, **122 `vertices/fit/dQ`**, **120 `vertices/fit/reduced_chi2`**, 12 `showers/kine_dQdx`, 2 `kine_energy_particle`, 1 `kine_reco_Enu`, 1 `showers/kine_best` |
+
+`segments/points/dQ`, `reduced_chi2` and `vertices/fit/dQ` **never appear in
+either same-binary comparison**. The count alone would have been suggestive; the
+field families make it conclusive. Magnitude: **812 of 817** segment trajectory
+points changed `dQ`, median relative change **1.68 %**, max 124 %.
+
+**Determinism is intact on both sides** — `base` == `base-rep` and `w53` ==
+`w53-rep` on every scalar below, and `nusel-evt388.tsv` is identical in *all
+three* comparisons including the fix.
+
+**The vertex is bit-identical, as §4.1 predicted:**
+
+```
+main_vertex   base  (-163.1961948517943, 31.460485459387076, 426.15822898239566)
+              w53   (-163.1961948517943, 31.460485459387076, 426.15822898239566)   identical to the last digit
+```
+
+Topology unchanged: **84 segments, 127 vertices, 13 showers** in all four arms.
+
+**What did move — selection and kinematics, via dQ/dx → PID:**
+
+| field | base | w53 | delta |
+|---|---|---|---|
+| `nue_score` | 4.300936 | 4.300936 | **0** (identical) |
+| `numu_score` | −1.854887 | −2.028229 | **−0.173** |
+| `sig_2_score` | 0.587352 | 0.575374 | −0.012 |
+| `stw_2_score` | 0.518467 | 0.526259 | +0.008 |
+| `tro_1_score` | 0.143150 | 0.137883 | −0.005 |
+| `tro_4_score` | 0.182464 | 0.181392 | −0.001 |
+| `cosmict_flag` / `cosmic_flag` | 0 / 1 | 0 / 1 | 0 |
+| `kine_reco_Enu` | 2109.351 MeV | 2109.283 MeV | −0.068 MeV |
+| `kine_energy_particle` | — | — | 2 of 13 entries move (19.075→19.009, 0.2365→0.2345 MeV) |
+
+Exactly the five tagger scores that consume track PID move; every other tagger
+field is unchanged. The event keeps its classification and `nue_score` does not
+move at all — as in rounds 1 and 2.
+
+**Cost — none.** `Timer: Total wall-sec`, evt 388, `PR_JOBS=1`: base
+9.120 / 9.308 s, fixed 9.186 / 9.070 s. Within-arm spread exceeds the
+between-arm difference; the change is two multiplications hoisted out of the
+loop. **≈0 %.**
+
+### 12.6 Scope and what is NOT claimed
+
+* **One event, no gate — by instruction.** The owner explicitly waived
+  population validation for this round ("we focus on this one event for now ...
+  We will need to continue do some improvements on the algorithm before we need
+  to look at a larger sample"). Same standing as §7.5/§8.5.
+* **Not bit-identical**, and unlike round 5 this one moves **scalars** by
+  design. **This supersedes §11.8's gate PASS criterion** — that criterion said
+  every scalar must match the rounds-1–4 baseline, which a dQ/dx regulariser
+  change cannot satisfy. When §7–§12 are finally gated together, expect scalar
+  movement throughout the dQ/dx → PID → kine chain, and judge it against a
+  regenerated baseline rather than against §11.8's text.
+* **"Now matches the prototype" is not "now more correct."** Evt 388 has no
+  truth for dQ/dx. What is established is that the toolkit's multi-track fit now
+  uses the prototype's multi-track regularisation strength, FP-exactly, on the
+  path the prototype uses it. Whether SBND *wants* uBooNE's tuning is the same
+  open question §4.2 raises, and it is not settled here.
+* **The dQ/dx effect is large enough to matter for PID.** 1.68 % median on
+  segment `dQ` with a 124 % tail is not a cosmetic shift; `numu_score` moving
+  0.173 on a single event is the visible consequence. On a population this will
+  move events across selection cuts.
+* Untouched, as before: §3.3's `flag_front` and later rows, §3b T1–T8, §4.2,
+  §4.3, §4.4, and §11.8's two container classes. `flag_front` and §4.2 are now
+  explicitly **set aside by the owner**, not merely unqueued.
+* **Noticed, not fixed** (an unrelated defect does not ride along): `:6779-6781`
+  gates on `m_params.overlap_th` but hardcodes the matching `-0.5` offset in the
+  quadratic. At SBND's configured `overlap_th = 0.5` the two agree, which is why
+  this is invisible today; any other configured threshold would desynchronise
+  gate and offset. Pre-existing, one line, worth a look in a later round.
+
+### 12.7 Owner decision — the vertex-fit area is closed
+
+After round 6 the owner ruled: *"I do not think that we need to worry about the
+remaining vertex fitting divergencies, please feel free to make a note on the md
+file about this."*
+
+**What that closes.** Every remaining vertex-fit divergence in this document.
+They are **accepted known divergences**, not pending work:
+
+| item | where | status |
+|---|---|---|
+| `flag_front`: index identity vs 0.01 cm distance comparison (the distance form exists in the prototype but is commented out) | `MyFCN.cxx:395-398` ↔ prototype `:857-862` | accepted |
+| `+0.5` half-wire offset dropped on stored `pu/pv/pw/pt` | `MyFCN.cxx:466-469` ↔ `:971` | accepted — global port convention, `TrackFitting.cxx:1315` drops it too |
+| identity-by-index → identity-by-distance throughout `UpdateInfo` | `MyFCN.cxx:417-451` ↔ `:900-935` | accepted — forced, toolkit `WCPoint` has no index field |
+| `m_fit_vertex_min_seg_length` (toolkit-only; **SBND sets 1.0 cm**) | `NeutrinoPatternBase.h:203` | accepted — inert on evt 388, never fired |
+| `wcpt` re-snap to the nearest Steiner point (seed quantisation) | `MyFCN.cxx:474` | accepted — it *is* the 0.22 cm `fit_distance` residual |
+
+**What that does *not* close**, stated explicitly so a later reader does not
+over-apply the ruling: it is about *vertex fitting*. Still open and untouched —
+**§3b T1–T8** (trajectory fitting: the dead charge-ratio veto, the wrong-index
+dead-channel lookup, the extra `form_map_graph`, …), **§4.2** (the absent uBooNE
+calibration chain, separately set aside), **§4.3**, **§4.4** (the unresolved
+time-bin convention), and **§11.8's two container classes**.
+
+**Why this is a reasonable place to stop, on the evidence.** The area was not
+abandoned — it was worked and measured. The question that opened this document
+("the SBND neutrino vertex looks a bit off") produced four vertex-fit fixes
+across rounds 1–3, which together moved evt 388's neutrino vertex **0.854 cm**
+and removed **4 spurious vertex fits**; §1/§2 cleared the mechanism the owner
+originally suspected; and round 6 confirmed that even a substantial dQ/dx change
+leaves the vertex **bit-identical**. The remaining divergences are each either
+forced by a toolkit data-structure difference, a deliberate global port
+convention, or measured inert on the event in hand.
+
+**If the vertex is ever suspected again**, the recipes are all here and still
+valid: the §2 trace recipe (which vertices were fitted, skipped, or vetoed, and
+by which gate), the §7.6/§8.6 side-by-side display arms, and the row-by-row
+prototype anchors above. Reopening any row is a matter of re-reading the two
+trees at the cited lines, not of redoing the audit.
