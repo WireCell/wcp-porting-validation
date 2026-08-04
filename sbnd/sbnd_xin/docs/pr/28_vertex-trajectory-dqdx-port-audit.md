@@ -794,12 +794,31 @@ if (!sg->particle_info()) segment_is_shower_topology(sg, ...);
 ```
 
 With `m_particle_info` nulled by `clear_fit`, that gate was **always true**, so
-`segment_is_shower_topology` re-ran on legs the prototype skips. Downstream, a
-leg that had been identified as an electron came back with `pdg = 0`, so the
-`is_shower` test at `:2070` counted it as a **track** — and the vertex passed the
-`ntracks == 0 && vtx != main_vertex` filter that should have excluded it. The
-toolkit was fitting vertices the prototype never fits (measured: 4 such fits on
-evt 388, §8.3).
+`segment_is_shower_topology` re-ran on legs the prototype skips.
+
+But the re-run is **not** what removed the 4 fits — be precise here, because the
+loose version of this claim does not survive checking. The `is_shower` test is
+
+```cpp
+// NeutrinoVertexFinder.cxx:2070
+bool is_shower = sg->flags_any(kShowerTrajectory) || sg->flags_any(kShowerTopology)
+                 || (sg->particle_info() && std::abs(sg->particle_info()->pdg()) == 11);
+```
+
+`clear_fit` never touched either flag, so only the **third** term can flip when
+PID is preserved. And the flags were demonstrably *not* set on these legs: under
+the old code `:2327` did re-run `segment_is_shower_topology` on them, and they
+still counted as tracks — so that re-run did not set `kShowerTopology`. The
+measured chain is therefore:
+
+> PID survives `clear_fit` → `|pdg| == 11` at `:2070` is true → the leg is a
+> **shower**, not a track → `ntracks == 0` → the `:2077`
+> `ntracks == 0 && vtx != main_vertex` filter excludes the vertex.
+
+An electron leg had been coming back as `pdg = 0` and being counted as a track,
+so the toolkit fitted vertices the prototype never fits (measured: 4 such fits on
+evt 388, §8.3). Stopping the `:2327` re-run is a real second consequence of the
+same fix, but on this event it was inert.
 
 #### 8.1b — `UpdateInfo` reports whether it actually updated (`MyFCN.{h,cxx}`, `NeutrinoVertexFinder.cxx`)
 
@@ -914,7 +933,7 @@ at all across either round.
 
 | item | evidence | verdict on evt 388 |
 |---|---|---|
-| **(a) `clear_fit` PID** | the only remaining change once b/c/d are excluded; mechanism visible in the trace as the 8→4 fit-loop collapse | **the entire effect** |
+| **(a) `clear_fit` PID** | the only remaining change once b/c/d are excluded; mechanism visible in the trace as the 8→4 fit-loop collapse. **Inferred by elimination, not measured directly** — no arm was run with (a) alone reverted | **the entire effect** |
 | **(b) `UpdateInfo` bool** | `grep "UpdateInfo: Warning"` → **0 hits** in every arm: no guard ever fires | **provably inert** |
 | **(c) charge radius** | `-r2-noC` vs `-r2` agree on `main_vertex` **to all printed digits** and on every score exactly | **inert** (see leaf-diff below) |
 | **(d) `sorted_out_edges`** | feeds only `size()==3` | **byte-identical by construction** |
