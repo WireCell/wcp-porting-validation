@@ -942,6 +942,12 @@ the `TaggerCheckNeutrino` `data`.
 **Output gate**, 7 events (`388 10550 111412 122660 137238 163543 172230`),
 against `work-prdisp-cosscan2` — the §8 arm, built by the **pre-change binary**:
 
+> **Both gate arms predate the default flip.** They were produced when a bare
+> run of the driver meant OFF, so the arm names describe the knob, not the
+> command. To reproduce them now, `work-spflag-on` is the bare run and
+> `work-spflag-off` needs `SBND_SP_PHOTON_FLAG=0` — see §9.5. Same class of trap
+> as §8.4's `work-prdisp-388-cos`, which predates the `_filled` fields.
+
 | comparison | result |
 |---|---|
 | `work-spflag-off` vs `work-prdisp-cosscan2`, `hash_archive.py` field 1 on `pctree-pr-evt<ID>.tar.gz` + `mabc-pr.zip` | **14/14 PASS** |
