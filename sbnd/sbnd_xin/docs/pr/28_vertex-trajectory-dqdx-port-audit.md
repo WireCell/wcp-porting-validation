@@ -6,7 +6,7 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, plus **six rounds of fixes** the owner ordered
+**Status.** Audit + measurement, plus **seven rounds of fixes** the owner ordered
 after reading it. All are unconditional — no knob: they are port-fidelity
 bugs or plain defects, not legacy behaviour to preserve.
 
@@ -18,9 +18,10 @@ bugs or plain defects, not legacy behaviour to preserve.
 | 4 | **the whole `clus/` sweep** — all 117 remaining raw `boost::out_edges` sites in 13 files | `4f2e7303` | **§10** |
 | 5 | **the residual 10** — `boost::edges` / `boost::vertices` / `graph_nodes` (32 loops, 12 files). **`T_tagger` is now fully deterministic on the 48-event manifest.** | `c05bc5f7` | **§11** |
 | 6 | **§4.1** the multi-track dQ/dx close weights get the prototype's ×5/3 scale-up. **Vertex-fit area closed by owner decision (§12.7).** | `01ff88b1` | **§12** |
+| 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped by owner decision (§13.7).** | `23bd6783` | **§13** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
-read §3.1, §3.2, §3.3 rows a–e or §4.1 as open defects.
+read §3.1, §3.2, §3.3 rows a–e, §4.1, or §3b T1/T2/T3/T6 as open defects.
 
 **The vertex-fit area is CLOSED.** After round 6 the owner ruled: *"I do not
 think that we need to worry about the remaining vertex fitting divergencies."*
@@ -29,9 +30,14 @@ distance, `m_fit_vertex_min_seg_length`) and §5's vertex-fit suspects 5–6. Th
 stay documented as **known, accepted divergences** — not as pending work, and
 not as defects to be rediscovered by a later audit. See §12.7.
 
-**Still open** (untouched, and *not* covered by that ruling — they are
-trajectory- and dQ/dx-side, not vertex-fit): §3b T1–T8, §4.2 (also set aside by
-the owner), §4.3, §4.4, and §11.8's two container classes.
+**The trajectory-fit area is closed too, after round 7.** All of §3b T1–T8 were
+re-read in both trees and triaged; the owner ordered **T1, T2, T3, T6** fixed as
+bugs, kept **T4**'s toolkit behaviour (asking only that it be made robust /
+non-silent), and **dropped T5, T7, T8**. See §13.7.
+
+**Still open** (untouched by any ruling): §4.2 (set aside by the owner), §4.3,
+§4.4, and §11.8's two container classes — including
+`m_cluster_fitted_charge_2d`'s pointer comparator.
 
 **Headline.** The vertex-fixing mechanism the owner asked about is a **faithful
 port and it fires on SBND** — so it does *not* explain an off vertex (§1, §2).
@@ -352,9 +358,12 @@ solid and a reader deciding what to fix must know which is which:
 * **Independently re-read in both trees by the author**: everything in §1, §2,
   §3.1, §3.2, §3.3's first row, §4.1, §4.2, and **T5** below — plus the
   `saved_skip` MATCH that corrected §1.
-* **Reported by an audit pass and *not* independently re-verified**: **T1, T2,
-  T3, T4, T6, T7, T8**. The anchors and reasoning are recorded as given. Treat
-  them as leads to confirm before acting, not as established the way §3.1 is.
+* ~~**Reported by an audit pass and *not* independently re-verified**: **T1, T2,
+  T3, T4, T6, T7, T8**.~~ **Superseded — round 7 (§13.1) re-read all seven in
+  both trees.** Every row below is now first-tier. Two of them changed under
+  re-reading: T4 gained a *cause* (it compensates for a `reset_fit_prop`
+  divergence, so it is not gratuitous) and T5's claim that the prototype resets
+  `index` turned out to be wrong (see the corrected row).
 
 That distinction is not pedantry: this document's first draft carried a
 `saved_skip` "divergence" that a second look disproved (see §1). Re-read before
@@ -362,16 +371,20 @@ you fix.
 
 ### Behaviour-changing divergences
 
+**Round 7 disposition** (§13): T1, T2, T3, T6 **FIXED** (`23bd6783`); T4 kept
+with a non-silent counter; T5, T7, T8 **dropped** by owner decision. The rows
+below are the audit as written, annotated.
+
 | # | what | prototype | toolkit | note |
 |---|---|---|---|---|
-| **T1** | **The charge-ratio veto in `skip_trajectory_point` is dead in the multi-track path.** `pss_vec` is filled from `final_ps_vec` (already-fitted points), so the comparison point *is* the point under test ⇒ `ratio == 3`, `ratio_1 == 1` exactly ⇒ the cut is unreachable and the `p = ps_point` revert is a no-op. | `:429` passes `init_ps_vec`; cut at `PR3DCluster_trajectory_fit.h:745-750` | `TrackFitting.cxx:4704`, consumed `:5041` | The **single**-track caller (`:4513-4520`) passes pre-fit points and *is* correct — same function, two callers, one right. That asymmetry is what makes this a port slip rather than a design choice. Constants (`0.97`, `0.75`, `160/90/45°`, `0.5 cm`) all match. |
-| **T2** | `angle1` computed from fitted instead of initial points — same root cause as T1 | `PR3DCluster_trajectory_fit.h:768-769` | `TrackFitting.cxx:5182-5186` | |
-| **T3** | **Dead-channel plane-quantity lookup uses the loop position, not the fit index.** `m_3d_to_2d.find(i)` where `i` is the per-segment point position, but the map is keyed by the **global** `count`. For every segment after the first this *hits a valid but wrong point* rather than missing. | `PR3DCluster_trajectory_fit.h:780-782` uses `init_indices.at(i)` | `TrackFitting.cxx:5100-5105` | The toolkit's `skip_trajectory_point` signature (`:4849`) carries no index parameter at all. |
-| **T4** | **An extra `form_map_graph` runs before `dQ_dx_multi_fit`**, and it calls `set_fit_associate_vec`, which drops interior points whose summed plane quantity is 0 — i.e. it re-runs a point-dropping pass on the *final* post-`_3rd` trajectory, changing the output point count. | no `form_map` anywhere in `PR3DCluster_multi_dQ_dx_fit.h`; `:174-188` resets only | `TrackFitting.cxx:8257` | |
-| **T5** | **Fixed vertices no longer get their projections refreshed.** The prototype's `vtx->set_fit(...)` sits *outside* the `if (!flag_fit_fix)`; the toolkit puts the whole `pu/pv/pw/pt/paf/index` update *inside* it. | `:333-342` (verified: `set_fit` outside the guard) | `TrackFitting.cxx:3842-3901` | A fixed vertex's 3-D point does not move, so its projections are only *stale* if the transform context changed — but the prototype also resets `dQ`/`dx`/`reduced_chi2`/`index` here on every pass and the toolkit does not. Effect is subtler than T1–T4; flagged, not ranked with them. |
-| **T6** | `check_and_reset_close_vertices` **rebuilds the segment's fits to 2 points** (`segment->fits(generate_fits_with_projections(...))`); the prototype's inline equivalent resets only the two vertex fit points. | `:1383-1392` | `TrackFitting.cxx:1222-1227` | |
-| **T7** | `charge_div_method == 2` missing-key fallback: toolkit prefills `1/N` and `continue`s on unknown wpid, leaving `1/N`; the prototype's `if/else if` leaves the key absent so `operator[]` gives `0.0` (zero weight). Reachable in the single-track 2nd pass. | `:249, :269` | `TrackFitting.cxx:3670-3690`, `:4077` | |
-| **T8** | **`associated_2d_points` ordering differs**: `Coord2D` orders by `(apa,face,time,wire,channel,plane)`, the prototype's `pair<int,int>` by `(wire,time)`. Deterministic run-to-run, but it permutes the rows of `RU/RV/RW` and hence the FP accumulation order. | `:575,613,648` | `TrackFitting.h:282-290` | **Fidelity, not determinism** — it means the toolkit cannot be bit-identical to the prototype even with everything else fixed. |
+| **T1** — **FIXED §13** | **The charge-ratio veto in `skip_trajectory_point` is dead in the multi-track path.** `pss_vec` is filled from `final_ps_vec` (already-fitted points), so the comparison point *is* the point under test ⇒ `ratio == 3`, `ratio_1 == 1` exactly ⇒ the cut is unreachable and the `p = ps_point` revert is a no-op. | `:429` passes `init_ps_vec`; cut at `PR3DCluster_trajectory_fit.h:745-750` | `TrackFitting.cxx:4704`, consumed `:5041` | The **single**-track caller (`:4513-4520`) passes pre-fit points and *is* correct — same function, two callers, one right. That asymmetry is what makes this a port slip rather than a design choice. Constants (`0.97`, `0.75`, `160/90/45°`, `0.5 cm`) all match. |
+| **T2** — **FIXED §13** | `angle1` computed from fitted instead of initial points — same root cause as T1 | `PR3DCluster_trajectory_fit.h:768-769` | `TrackFitting.cxx:5182-5186` | |
+| **T3** — **FIXED §13** | **Dead-channel plane-quantity lookup uses the loop position, not the fit index.** `m_3d_to_2d.find(i)` where `i` is the per-segment point position, but the map is keyed by the **global** `count`. For every segment after the first this *hits a valid but wrong point* rather than missing. | `PR3DCluster_trajectory_fit.h:780-782` uses `init_indices.at(i)` | `TrackFitting.cxx:5100-5105` | The toolkit's `skip_trajectory_point` signature (`:4849`) carries no index parameter at all. |
+| **T4** — **KEPT §13.5** | **An extra `form_map_graph` runs before `dQ_dx_multi_fit`**, and it calls `set_fit_associate_vec`, which drops interior points whose summed plane quantity is 0 — i.e. it re-runs a point-dropping pass on the *final* post-`_3rd` trajectory, changing the output point count. | no `form_map` anywhere in `PR3DCluster_multi_dQ_dx_fit.h`; `:174-188` resets only | `TrackFitting.cxx:8257` | |
+| **T5** — **DROPPED §13.7** | **Fixed vertices no longer get their projections refreshed.** The prototype's `vtx->set_fit(...)` sits *outside* the `if (!flag_fit_fix)`; the toolkit puts the whole `pu/pv/pw/pt/paf/index` update *inside* it. | `:333-342` (verified: `set_fit` outside the guard) | `TrackFitting.cxx:3842-3901` | A fixed vertex's 3-D point does not move, so its projections are only *stale* if the transform context changed. **Correction (round 7):** this row originally said the prototype also resets `index` — it does not. `set_fit(p, 0, -1, pu, pv, pw, pt, -1)` zeroes `dQ`, sets `dx` and `reduced_chi2` to −1 and refreshes the projections; `index` is never touched. And `dQ_dx_multi_fit` rewrites vertex `dQ`/`dx`/`reduced_chi2` **unconditionally** for every vertex in `vertex_index_map`, fixed or not (`TrackFitting.cxx:6888-6891`), so no stale value reaches the output or PID. That is what closed T5 — see §13.7. |
+| **T6** — **FIXED §13** | `check_and_reset_close_vertices` **rebuilds the segment's fits to 2 points** (`segment->fits(generate_fits_with_projections(...))`); the prototype's inline equivalent resets only the two vertex fit points. | `:1383-1392` | `TrackFitting.cxx:1222-1227` | |
+| **T7** — **DROPPED §13.7** | `charge_div_method == 2` missing-key fallback: toolkit prefills `1/N` and `continue`s on unknown wpid, leaving `1/N`; the prototype's `if/else if` leaves the key absent so `operator[]` gives `0.0` (zero weight). Reachable in the single-track 2nd pass. | `:249, :269` | `TrackFitting.cxx:3670-3690`, `:4077` | |
+| **T8** — **DROPPED §13.7** | **`associated_2d_points` ordering differs**: `Coord2D` orders by `(apa,face,time,wire,channel,plane)`, the prototype's `pair<int,int>` by `(wire,time)`. Deterministic run-to-run, but it permutes the rows of `RU/RV/RW` and hence the FP accumulation order. | `:575,613,648` | `TrackFitting.h:282-290` | **Fidelity, not determinism** — it means the toolkit cannot be bit-identical to the prototype even with everything else fixed. |
 
 ### Benign / unknown
 
@@ -1830,8 +1843,9 @@ They are **accepted known divergences**, not pending work:
 
 **What that does *not* close**, stated explicitly so a later reader does not
 over-apply the ruling: it is about *vertex fitting*. Still open and untouched —
-**§3b T1–T8** (trajectory fitting: the dead charge-ratio veto, the wrong-index
-dead-channel lookup, the extra `form_map_graph`, …), **§4.2** (the absent uBooNE
+~~**§3b T1–T8** (trajectory fitting: the dead charge-ratio veto, the wrong-index
+dead-channel lookup, the extra `form_map_graph`, …)~~ **— closed by round 7,
+§13**, **§4.2** (the absent uBooNE
 calibration chain, separately set aside), **§4.3**, **§4.4** (the unresolved
 time-bin convention), and **§11.8's two container classes**.
 
@@ -1850,3 +1864,285 @@ valid: the §2 trace recipe (which vertices were fitted, skipped, or vetoed, and
 by which gate), the §7.6/§8.6 side-by-side display arms, and the row-by-row
 prototype anchors above. Reopening any row is a matter of re-reading the two
 trees at the cited lines, not of redoing the audit.
+
+---
+
+## §13 §3b T1/T2/T3/T6 FIXED — the trajectory fit's dead veto, wrong index, and destroyed trajectory (toolkit `23bd6783`, evt 18255/388)
+
+The owner read the §3b triage and ruled: **fix T1, T2, T3 and T6**; leave **T4**
+alone (*"the toolkit logic is OK, if you see a place to improve to make it more
+robust, it is fine to do"*); **drop T5, T7, T8**. The framing was explicit —
+*"I want to focus on bugs, not exactly the behavior change, since the latter, if
+improved, is OK in toolkit."* That is the line this section applies: a
+divergence where the toolkit does something *different and defensible* stays; a
+divergence where toolkit code cannot do what it was written to do is a bug and
+goes.
+
+Unconditional, no knob, same as rounds 1–6.
+
+### 13.1 The triage — all seven re-read, in both trees
+
+This supersedes §3b's second trust tier. Every row below was read at the cited
+lines in `prototype_base` and in the toolkit at `01ff88b1` before any edit.
+
+| # | verdict | why |
+|---|---|---|
+| **T1** | **bug — fix** | `examine_segment_trajectory` fills `pss_vec` from `final_ps_vec` (`:4709`) and passes `p = final_ps_vec[i]` (`:4715`). The point under test **is** the comparison point ⇒ same projections ⇒ `c1 == c2` on all three planes ⇒ `ratio` is exactly 3 and `ratio_1` exactly 1, for every point, always. The cut `ratio/3 < 0.97 \|\| ratio_1 < 0.75` is arithmetically unreachable and the `p = ps_point` revert is a no-op. Prototype passes `init_ps_vec` (`multi_track_fitting.h:429`). |
+| **T2** | **bug — fix (same line)** | `angle1` reads `pss_vec` (`:5084-5086`), so it measured the fold-back comparison on the *fitted* path instead of the initial one. Fixing T1's fill fixes T2. |
+| **T3** | **bug — fix** | `m_3d_to_2d.find(i)` uses the **per-segment loop position** while the map is keyed by the **global** `count` from `form_map_graph`. Not an "index missing in the toolkit" case: `init_indices` is built at `:3948`, is correct, and is handed to `fit_point` at `:3979` — it simply was not passed on. |
+| **T6** | **bug — fix** | `check_and_reset_close_vertices` replaced the segment's whole fit vector with **two** points (`:1231-1234`). The prototype (`:1383-1392`, and again at `:1158`) resets only the two vertex fit points. |
+| **T4** | **keep, make non-silent** | Not gratuitous: it *compensates*. See §13.5. |
+| **T5** | **drop** | Closed on evidence, and the audit row was wrong. See §13.7. |
+| **T7** | **drop** | The `continue`s at `:3717`/`:3747` are labelled multi-APA crash guards (S1.15, S2.2) with no prototype counterpart to diverge from; `1/N` is a saner fallback than zero weight. |
+| **T8** | **drop** | Consumers of `associated_2d_points` are accumulation loops and `.size()` checks only — no order-dependent branching. ULP-level fidelity, unfixable without changing the key type. |
+
+**The strongest evidence that T1 is a port slip and not a design choice** is
+inside the toolkit itself. Two independent tells:
+
+1. The **face-crossing guard** at `:4862-4872` exists to catch *"the fit may have
+   moved p to a different face than the reference point `pss_vec[i]`"*. Nobody
+   writes a guard against a case they intend to make impossible.
+2. The **single-track caller** (`:4499-4521`) passes pre-fit points and is
+   correct. Same function, two callers, one right — an asymmetry, not a policy.
+
+### 13.2 The change — `clus/src/TrackFitting.cxx`, `clus/inc/WireCellClus/TrackFitting.h`
+
+**T1 + T2 — one line.** `examine_segment_trajectory`'s comparison path:
+
+```cpp
+// was: pss_vec.push_back(std::make_pair(final_ps_vec[i], segment));
+pss_vec.push_back(std::make_pair(init_ps_vec[i], segment));
+```
+
+with the reference `(apa, face)` now taken from that same comparison point,
+mirroring the single-track caller and making the face-crossing guard live:
+
+```cpp
+// was: auto test_wpid = m_dv->contained_by(p);
+auto test_wpid = m_dv->contained_by(pss_vec[i].first);
+```
+
+`pss_vec` is not read again after this loop — the smoothing pass works on
+`fine_tracking_path` / `temp_fine_tracking_path` — so the blast radius is
+exactly `skip_trajectory_point`.
+
+**T3 — thread the global index.** `skip_trajectory_point` gains an `int index`
+parameter (the prototype has had one since `trajectory_fit.h:479`), and
+`examine_segment_trajectory` gains `const std::vector<int>& init_indices`:
+
+```cpp
+bool flag_skip = skip_trajectory_point(p, apa_face, i,
+                                       i < init_indices.size() ? init_indices[i] : -1,
+                                       pss_vec, fine_tracking_path);
+...
+if (m_3d_to_2d.find(index) != m_3d_to_2d.end()) {
+```
+
+The single-track caller passes `i` explicitly, because there `form_map`
+compacted `ptss` to the surviving points (`ptss = saved_pts`, `:3397`) so the
+loop position *is* the key — that path is unchanged by construction.
+
+**T6 — delete the rebuild.** The four lines that replaced `segment->fits()` with
+`generate_fits_with_projections(segment, {start, end})` are gone; only the two
+vertex fit points are reset, as in the prototype. This matters because
+`organize_segments_path_{2nd,3rd}` rebuild `curr_pts` **from
+`segment->fits()`** (`:1358-1361`), so the two-point collapse came back as a
+straight line between the vertices. Both organisers already take their endpoints
+from the vertex fits (`:1384-1401`), so the consistency the rebuild was reaching
+for is supplied downstream anyway.
+
+### 13.3 Liveness first — every fixed path proven to fire
+
+Round 6's rule again, and it matters more here: this round **turns on a cut that
+had never once fired**, so a null result would be indistinguishable from a
+stale library (M1). Trace lines, from `work-tfix388-fix-trace`:
+
+```
+examine_segment_trajectory: segment 2 -- 42 point(s) in, 42 kept, 3 charge-reverted,
+                            42 with a global index != loop position
+```
+
+Summed over **1168** `examine_segment_trajectory` calls / **14 840** points on
+evt 388:
+
+| what | count | share |
+|---|---|---|
+| **T1** — points the revived charge veto reverted (survivors only) | **2 146** | 14.5 % of points |
+| **T3** — points whose global index ≠ loop position | **12 373** | **83.4 %** of points, in 926 of 1168 calls |
+| points skipped by the angle/dead-plane gates | 456 | 3.1 % |
+| **T6** — `check_and_reset_close_vertices` firings | **2** | both on 2-point segments |
+| **T4** — points dropped by the pre-dQ/dx `form_map_graph` | **0** | inert on this event |
+
+Read that T3 row carefully: the dead-channel lookup was reading **the wrong
+point's plane quantities for 83 % of trajectory points**, or missing the map
+entirely — and a miss sets all three planes "dead", which opens the
+`angle > 45°` skip on any point past 45°. It failed in both directions.
+
+T6's two firings both landed on segments that already had exactly 2 fit points,
+so the collapse was a no-op *on this event*. The fix is still correct: the
+condition is on the two **vertex fit** points, which says nothing about how many
+interior points the segment has.
+
+### 13.4 Repro and arms
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+for arm in base base-rep t3only t12only fix fix-rep final; do
+  PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-tfix388-$arm data 388
+done
+# liveness (trace is needed for the clus.TrackFitting counters)
+PR_EXTRA_STAGES=pr_display PR_JOBS=1 SBND_WCT_LOGLEVEL=trace \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-tfix388-fix-trace data 388
+```
+
+`./build/clus/wcdoctest-clus` — **76 cases / 896 assertions, all pass.**
+Freshness proof (M1): `local/lib/libWireCellClus.so` **08:33:23** >
+`clus/src/TrackFitting.cxx` **08:32:42**. The two baseline arms ran at 08:0x
+against the **07:57:05** library, i.e. `01ff88b1` unmodified.
+
+| label | binary |
+|---|---|
+| `work-tfix388-base` / `-base-rep` | `01ff88b1` — noise floor |
+| `work-tfix388-t12only` | T1+T2 only (index still `i`) |
+| `work-tfix388-t3only` | T3 only (`pss_vec` still from `final_ps_vec`) |
+| `work-tfix388-fix` / `-fix-rep` | all four — what is committed |
+| `work-tfix388-final` | rebuilt from the restored source after the attribution edits — **proves no `TEMP ATTRIBUTION` residue survived** |
+| `work-tfix388-fix-trace` | same binary at `SBND_WCT_LOGLEVEL=trace`, liveness only |
+
+### 13.5 T4 — kept, and no longer silent
+
+The owner kept the toolkit's behaviour. Round 7 supplies the *reason* it is
+defensible, which the audit row lacked:
+
+| | prototype | toolkit |
+|---|---|---|
+| `reset_fit_prop()` on a segment | `fit_index_vec.resize(size, -1)` — `resize` only *extends*, so existing indices **survive** (`ProtoSegment.cxx:1007-1010`) | `for (auto& fit : m_fits) fit.reset();` — `PR::Fit::reset()` sets `index = -1` **on every point** (`PRCommon.h:131-135`) |
+| consequence before dQ/dx | indices reused directly by `dQ_dx_multi_fit` | indices must be rebuilt ⇒ the extra `form_map_graph` (`:8280`) |
+
+So the extra pass is **compensating, not gratuitous**. It is also arguably the
+better of the two: it re-derives the associations for the final post-`_3rd`
+positions, whereas the prototype feeds post-`_3rd` points with **pre-`_3rd`
+indices** — which, since `organize_segments_path_3rd` can *add* points
+(`multi_track_fitting.h:1265-1274`), would leave a `-1` and throw on
+`traj_pts.at(-1)`. That is a latent prototype-side fragility, recorded here and
+not acted on.
+
+The one real side effect is that `form_map_graph`'s zero-quantity point drop
+(`:3201`) re-runs on the **final** trajectory, which the prototype never does.
+The robustness improvement the owner allowed is to make that drop impossible to
+miss:
+
+```cpp
+if (n_fits_after != n_fits_before) {
+    SPDLOG_LOGGER_DEBUG(s_log,
+        "do_multi_tracking: pre-dQ/dx form_map_graph dropped {} of {} "
+        "trajectory point(s) with zero plane quantity", ...);
+}
+```
+
+Measured on evt 388: **0 dropped**. T4 is inert here, and if it ever is not, the
+log says so.
+
+### 13.6 Result — the fix is large, and it is all T1/T2
+
+Determinism holds on both sides (`base ≡ base-rep`, `fix ≡ fix-rep ≡ final` on
+every scalar below).
+
+| arm | segments | vertices | showers | seg points | main vertex (cm) | Δvtx | `nue_score` | `numu_score` |
+|---|---|---|---|---|---|---|---|---|
+| `base` | 84 | 127 | 13 | 817 | (−163.1962, 31.4605, 426.1582) | — | 4.3009 | −2.0282 |
+| `t3only` | 84 | 127 | 13 | 817 | (−163.1962, 31.4605, 426.1582) | 0.0000 | 4.3009 | −2.0282 |
+| `t12only` | 75 | 119 | 13 | 728 | (−163.2313, 31.4259, 426.2929) | **0.1434** | 4.3009 | **−2.8349** |
+| `fix` | 75 | 119 | 13 | 728 | (−163.2313, 31.4259, 426.2929) | **0.1434** | 4.3009 | **−2.8349** |
+
+**Attribution is clean: T1+T2 carry the entire effect on this event.**
+
+* **T3 alone is within the noise floor** — `base` vs `t3only` is 633 leaf diffs,
+  all in the known-noisy families (`proj[]/charge_pred` 631, `showers[]/kine_dQdx` 2),
+  against a same-binary floor of 662 (`base`/`base-rep`) and 584 (`fix`/`fix-rep`).
+  Despite 83 % of points having had a wrong key.
+* **T3 on top of T1/T2 is *not* inert**: `t12only` vs `fix` differs structurally
+  (179 254 vs 179 266 leaves) — 8 segments of **cluster 92** change point count
+  (33→18, 12→11, 18→13, 9→19, 13→27, 19→9, 27→20, 9→6) and segment ids
+  renumber. Cluster 92 is not the neutrino cluster; `main_vertex`, `tagger` and
+  the topology counts are identical between the two arms. The interaction is
+  real — with T1/T2 fixed the fitted points differ, so the dead-plane gate lands
+  on different points — it just does not reach this event's answer.
+* **T6 is a no-op here** (both firings on 2-point segments).
+
+**What moved in the physics.** Nine segments and eight vertices are gone, the
+neutrino vertex moves **0.1434 cm**, and:
+
+| field | base | fix |
+|---|---|---|
+| `numu_score` | −2.0282 | **−2.8349** |
+| `nue_score` | 4.3009 | 4.3009 (unchanged) |
+| `kine_reco_Enu` | 2109.28 MeV | **2909.80 MeV** |
+| `kine_pio_flag` | 0 | **1** |
+| `kine_pio_mass` | 0.0 | **125.71 MeV** |
+| sub-BDT scores moved | — | **16** (`br3_3`, `br3_5`, `br3_6`, `lol_2`, `numu_1`, `pio_2`, `sig_1`, `sig_2`, `stw_2`, `stw_3`, `stw_4`, `tro_1`, `tro_2`, `tro_4`, `tro_5`) |
+
+> ⚠️ **This is a big physics move and it is flagged, not tuned.** Evt 388 now
+> reconstructs a **π⁰** (`kine_pio_flag` 0 → 1, mass 125.7 MeV) and its
+> reconstructed neutrino energy rises **800 MeV**. That follows from the fix, it
+> was not fitted to: the charge veto that reverts a fitted point onto charge was
+> dead, and turning it on changes 14.5 % of trajectory points, which changes the
+> shower/track topology feeding `kine`. Whether 2.9 GeV is the *better* answer
+> for this event is a physics question this document does not settle — it is a
+> hand-scan / population question, deferred with the rest.
+
+`nusel-evt388.tsv` is **identical** — the bundle table, flash assignment, and
+the `nu-candidate` label do not move. Cost: **15 s → 13 s** wall (fewer
+segments), peak RSS flat at 1.53 GB.
+
+### 13.7 Owner decision — T4 kept, T5/T7/T8 dropped, trajectory area closed
+
+The owner's instruction was to separate *bugs* from *behaviour changes*: a
+toolkit divergence that is an improvement stays. Applying that:
+
+| # | ruling | standing status |
+|---|---|---|
+| **T4** | **kept** — the toolkit logic is OK; robustness improvement accepted (§13.5) | accepted divergence, now instrumented |
+| **T5** | **dropped** | and independently *closed on evidence*: `dQ_dx_multi_fit` rewrites vertex `dQ`/`dx`/`reduced_chi2` unconditionally (`:6888-6891`), so nothing stale reaches output or PID. The audit row's claim that the prototype resets `index` was wrong — corrected in place. |
+| **T7** | **dropped** | multi-APA crash guards with no prototype counterpart; `1/N` beats zero weight |
+| **T8** | **dropped** | ULP-level ordering; not fixable without changing `Coord2D` |
+
+With §12.7 closing the vertex fit and this section closing the trajectory fit,
+**doc pr/28's §3, §3b and §4.1 are all disposed of.** What remains open is
+§4.2 (set aside), §4.3, §4.4, and §11.8's container classes.
+
+### 13.8 Scope and what is NOT claimed
+
+* **One event.** Everything above is evt 18255/388. No population statement is
+  made or implied — and after a change of this size the owed valfast/1000 gate
+  needs a **regenerated** baseline, since the pre-round-7 one no longer
+  describes this code.
+* **NOT bit-identical, and not intended to be.** This is a behaviour change by
+  construction: it revives a cut that could not fire. §11.8's per-scalar PASS
+  criterion is superseded here exactly as it was by §12.
+* The `proj[]/charge_pred` family remains run-to-run noisy (~600 leaves,
+  same-binary) — a known open item, unrelated to this round and not touched.
+* The T3 interaction was measured only in the direction `t12only → fix`. A
+  T3-alone-then-T1 ordering was not run; the fixes ship together.
+* T6's correctness rests on the prototype reading, not on a measured effect —
+  its two firings on this event were no-ops.
+* Display arm regenerated on port 5017: **`work-tfix388-final`** (§13.9).
+
+### 13.9 The display
+
+Port **5017** now serves the post-fix event (M13: a fresh arm, the round-2 arm
+`work-vtxfit388-r2` it replaced is untouched):
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./pr_display/serve_pr_display.sh 5017 work-tfix388-final/pr_evt388/calib-pr-evt388.json
+# laptop: ssh -L 5017:localhost:5017 wcgpu1.phy.bnl.gov
+#         http://localhost:5017/pr_display_viewer
+```
+
+What to look at, given §13.6: the PR graph is **75 segments / 119 vertices**
+(was 84 / 127), the neutrino vertex has moved 0.1434 cm, and the particle-flow
+panel now reports a **π⁰** with `kine_reco_Enu` 2.91 GeV. The pre-fix arm for a
+side-by-side is `work-tfix388-base` — serve it on any free port.
