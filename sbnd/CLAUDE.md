@@ -1,7 +1,7 @@
 - base knowledge: /exp/sbnd/app/users/yuhw/claude-utilities
   - especially how to run things in sl7: /exp/sbnd/app/users/yuhw/claude-utilities/wct-in-sl7.md
 - in sl7, use a setup sript to setup ups products, LD_LIBRARY_PATH, WIRECELL_PATH etc.
-- local WCT: /exp/sbnd/app/users/yuhw/wire-cell-toolkit (branch `apply-pointcloud`; do NOT commit/push on my own — keep edits local for review)
+- local WCT: /exp/sbnd/app/users/yuhw/wire-cell-toolkit (branch `ap-yuhw`, forked from `apply-pointcloud` at 0442bc27 so we have full control; use `ap-yuhw` from now on. do NOT commit/push on my own — keep edits local for review)
 - local larwirecell: /exp/sbnd/app/users/yuhw/larsoft-wct036/v10_14_02/srcs/larwirecell (MRB tree; the ONLY larwirecell tree to use — do NOT use /exp/sbnd/app/users/yuhw/larwirecell)
 - delete transient "status marker" files (e.g. `SMOKE_STATUS`, exit-code/lar-exit stamps) after a run unless they contain important debug information; do not leave them in the tree.
 
