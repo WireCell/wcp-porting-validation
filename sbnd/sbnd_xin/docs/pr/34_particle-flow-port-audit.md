@@ -9,6 +9,17 @@ event.
 **Status.** **AUDIT ONLY. No code was changed.** Every item below is reported,
 none is fixed. Ranked list in §8.
 
+> **§10 added — owner filter, 14 → 5.** The owner asked for the P-list narrowed
+> to *bugs and things missing from the port*, dropping everything where the
+> toolkit improves on the prototype, with a proposed fix per survivor. **§10** is
+> that filter, re-verified at toolkit **`407c5ba9`**. Survivors:
+> **F1**=P1, **F2**=P2, **F3**=P3+P11 (one defect, not two), **F4**=P10,
+> **F5**=P12 — **five findings, five knobs**. **P9 and P13 are RESOLVED, not
+> merely dropped** (§10.7), closing loose ends §7.2, §7.4 and §7.6. Dropped as
+> improvements: P4, P5, P6, P7, P8, P14. Still **zero code changes**; §10.6
+> states the gate these knobs would need, which is **not** the gate the earlier
+> rounds used.
+
 **Headline.** The tree-*shaping* logic is a reasonable reimplementation, and two
 of its departures from the prototype are repairs of genuine prototype bugs. But
 the toolkit's track walk is **missing the prototype's main-cluster filter**
@@ -1021,3 +1032,487 @@ not reproduced; one is cosmetic.
 - **No recommendation is made on any item.** All fourteen are escalation rule 1
   — they change output unconditionally, in a display artifact the owner reads —
   and the call is the owner's.
+
+---
+
+## §10 Owner filter — 14 → 5
+
+**The ask.** *"For all these listed behavior changes, we can skip the ones that
+are improvements over the previous prototype, and only focus on the ones that
+are bugs or missing from the port."* Same filter previously applied to pr/30
+(14→4), pr/31 (15→9), pr/32 (12→4) and pr/33 (14→5).
+
+**Re-verification basis.** Everything below was re-read at toolkit
+**`407c5ba9`** — five commits past the `01ff88b1` of §3 — not taken from §3's
+text. Two provenance results, both new and both clean:
+
+```bash
+# toolkit side: the audited file did not move
+git -C toolkit log --oneline 01ff88b1..HEAD -- clus/src/MultiAlgBlobClustering.cxx   # (empty)
+git -C toolkit diff --stat 01ff88b1..HEAD -- clus/src/MultiAlgBlobClustering.cxx     # (empty)
+wc -l clus/src/MultiAlgBlobClustering.cxx                                            # 2683, both revs
+
+# prototype side: the OTHER program of this stage is pristine upstream
+cd toolkit/prototype_base/bee && git status -sb        # ## porting...origin/porting @ 58bc60a
+git merge-base HEAD origin/master                      # 8811c60e
+git diff 8811c60e..HEAD --stat -- '*WCReader*'         # (empty)  <-- WCReader.{cc,h} UNMODIFIED
+```
+
+**Every §3/§8 anchor in this document is still exact.** That is worth stating
+plainly: pr/32's anchors were four commits stale within a day and pr/33's were
+up to +19 lines stale with a *new* finding created underneath them. A clean
+anchor check is a result, not an absence of one.
+
+And §7.7's provenance proof now covers **both** prototype programs. §3 verified
+only that `pid`'s four `fill_*` functions are algorithm-pristine on the diverged
+`port` branch; `bee/WCReader.cc` — which carries P6's, P7's and P12's citations —
+had not been checked. It is on branch `porting`, and its diff against the
+`origin/master` merge-base `8811c60e` is **empty**. So this round's citations are
+sound on both sides. §7.7's warning about *earlier* rounds is untouched.
+
+### §10.1 The filter table
+
+| # | class in §8 | verdict | why |
+|---|---|---|---|
+| **P1** | port defect | **KEEP → F1** | One of two adjacent `continue` guards was ported. A dropped guard is the definition of missing-from-the-port. |
+| **P2** | port defect | **KEEP → F2** | The prototype's `used_vertices` pre-seed has no toolkit counterpart; the frontier check it feeds does. Half a barrier. |
+| **P3** | port defect | **KEEP → F3** | Real, and its mechanism is sharper than §3 states — see §10.4. Merged with P11. |
+| **P11** | port defect | **KEEP → F3** | **Not a separate finding.** P11's failure mode *is* P3's mechanism. §10.4. |
+| **P10** | port defect | **KEEP → F4** | The prototype memoizes on a member; the toolkit's map is call-local. One π⁰ renders twice. |
+| **P12** | port defect (display) | **KEEP → F5** | The name table is missing entries the prototype has, and its fallback destroys information the prototype preserves. |
+| P4 | port defect | **DROP** | §10.7a — the prototype's selector reads an uninitialized `bool` and returns an unchecked `nullptr` that corrupts tree entry 0. Its answer cannot be called the correct one. |
+| P5 | prototype bug not reproduced | **DROP** | The header already classes it so. |
+| P6 | deliberate | **DROP** | Keeping a high-energy daughter whose carrier is soft is an improvement. |
+| P7 | port defect (display) | **DROP** | §10.7b — pure top-level ordering in a display-only stage; not a dropped guard but an emergent consequence of assembly order. One-line reorder offered, not proposed. |
+| P8 | deliberate | **DROP** | Not listing unconnected fragments as primary particles is an improvement. |
+| P9 | port defect | **RESOLVED** | §10.7c — the collision is **unreachable**. Closes §7.4. |
+| P13 | port defect | **RESOLVED** | §10.7d — the two fields **cannot disagree**. Closes §7.6. |
+| P14 | cosmetic | **DROP** | Already classed cosmetic; §3 records it only as a warning about byte comparison. |
+
+**Five findings, five knobs.** Unlike pr/33 (5 findings → 8 knobs) no finding
+needs splitting here: each survivor moves one decision in one direction, and F3's
+two code edits are shown in §10.4 to be **not separately observable**, so one
+knob can still attribute.
+
+**All five are `BeePFConfig` knobs.** The struct is
+`MultiAlgBlobClustering.h:163-176`; each addition is a `bool …{false}` member
+plus one key-suppressed jsonnet line in `sbnd/clus.jsonnet`'s `bee_pf` block
+(§4), so the compiled config is byte-identical when off.
+
+### §10.2 F1 = P1 — restore the main-cluster guard on the track walk
+
+**Verified at HEAD.** `grep -n main_cluster` over `MultiAlgBlobClustering.cxx`
+returns exactly four hits: the declaration `:1090`, `:1609` and `:1620` inside
+the `flag_print` block of `build_seg_node`, and `:2574`, an unrelated comment in
+another function. Confirmed: the variable is computed and never used to filter.
+
+**Proposed knob:** `pf_track_main_cluster_only` (C++ default `false`).
+
+**On:** skip a segment whose cluster is not the main vertex's, at both BFS sites:
+
+| site | current | with the knob |
+|---|---|---|
+| `:1140` seed | `if (!seg \|\| used_segs.count(seg) \|\| conn4_skip_segs.count(seg)) continue;` | `… \|\| (cfg.pf_track_main_cluster_only && !same_cluster(seg)) ) continue;` |
+| `:1159` expansion | same predicate | same addition |
+
+**One subtlety that must not be got wrong.** The prototype's guard compares
+**cluster idents**, not cluster objects:
+
+```cpp
+if (sg->get_cluster_id() != main_vertex->get_cluster_id()) continue;   // NeutrinoID.cxx:1488
+```
+
+and `Grouping::separate` deliberately gives **every split product the parent's
+ident** (`Facade_Grouping.cxx:182`), as do the bundle splitters
+(`ClusteringUnmergeBundle.cxx:405`, `ClusteringProtectBundle.cxx:545`,
+`ClusteringRecoveringBundle.cxx:211`, all `parent*100+sub`). So ident-equality is
+strictly weaker than pointer-equality, and the two are **not interchangeable**.
+`same_cluster` must be written
+
+```cpp
+auto same_cluster = [&](PR::SegmentPtr s) {
+    const auto* c = s->cluster();
+    return main_cluster && c && c->get_cluster_id() == main_cluster->get_cluster_id();
+};
+```
+
+**A consequence for the existing diagnostic.** `:1609` computes
+`in_main_cluster` by **pointer** comparison
+(`seg_cluster == main_cluster`). That is the stricter test, so the
+`in_main_cluster=0` count that §7.1 proposes to measure P1's population with
+**over-reports** relative to the prototype's guard. Fix the diagnostic to the
+ident test in the same change, or §7.1's measurement will overstate F1.
+
+**Do not touch the shower loops** (§5.9): the prototype's asymmetry is by design.
+
+### §10.3 F2 = P2 — pre-seed the vertex set from every shower
+
+**Proposed knob:** `pf_shower_vertex_barrier` (C++ default `false`).
+
+**On:** at `:1130-1133`, seed `visited_vtxs` from the shower vertex sets, exactly
+as `used_segs` is already seeded from `shower_segs` at `:1131`:
+
+```cpp
+PR::IndexedVertexSet visited_vtxs;
+if (cfg.pf_shower_vertex_barrier) visited_vtxs = shower_vtxs;   // NEW; mirrors :1131
+visited_vtxs.insert(main_vertex);
+```
+
+`shower_vtxs` costs nothing to build — the loop at `:1108-1118` already calls
+`fill_sets(sv, ss, false)` per shower and currently **discards `sv`**. Collect it
+alongside `shower_segs`.
+
+**Where the barrier actually bites.** `visited_vtxs` is tested at `:1153`, at the
+top of the expansion, i.e. *after* a vertex has been pushed onto the frontier.
+Seeding it therefore stops expansion **through** a shower vertex while still
+allowing the segment that reaches it to be claimed — which is precisely the
+prototype's behaviour: its `:1611` check is also on `curr_vtx` at pop time, and
+its `:1597-1602` seed loop deliberately pushes shower segments (§3's aside).
+**Do not additionally filter at `:1140`/`:1159`** — that would be a second,
+stricter barrier the prototype does not have.
+
+**Interaction with F1 and F3, stated so the gate is readable.** F1 and F2 both
+*shrink* the toolkit's track set; F3 *re-parents* showers. Turning F2 on shrinks
+`vtx_incoming_seg`, which changes which branch each shower takes at `:1310`, so
+F2 and F3 are not independent in their effect on the emitted tree. They are still
+separately attributable because each is a distinct code edit with a distinct knob
+— but a combined-on arm is not the sum of two single-on arms, and the gate table
+should say so rather than imply additivity.
+
+### §10.4 F3 = P3 **and** P11 — one defect: `vtx_to_parent_shower` is half-populated
+
+§3 lists these as two findings. They are one, and the mechanism is more concrete
+than either entry states. From the fixed-point loop, verbatim at `:1227-1247`:
+
+```cpp
+PR::SegmentPtr parent_seg   = at_track ? vtx_incoming_seg.at(start_vtx) : nullptr;
+PR::ShowerPtr  parent_shower = (at_main || at_root) ? shower : nullptr;
+...
+for (const auto& vtx : sv) {
+    if (vtx == main_vertex) continue;
+    if (at_main || at_root) {
+        if (!root_reachable_vtxs.count(vtx)) {
+            root_reachable_vtxs.insert(vtx);
+            vtx_to_parent_shower[vtx] = parent_shower;      // <-- ONLY here
+            any_added = true;
+        }
+    } else {
+        if (!vtx_incoming_seg.count(vtx) && !root_reachable_vtxs.count(vtx)) {
+            vtx_incoming_seg[vtx] = parent_seg;             // <-- no parent-shower record
+            any_added = true;
+        }
+    }
+}
+```
+
+**`vtx_to_parent_shower` is written only in the root branch.** So:
+
+- a shower nested inside a **root-attached** shower resolves correctly — `:1335`
+  finds the vertex in `root_reachable_vtxs`, `:1337` finds its parent shower, and
+  the child nests under the parent shower, matching the prototype;
+- a shower nested inside a **track-attached** shower does **not**. Its start
+  vertex was written into `vtx_incoming_seg` at `:1244` pointing at the *track
+  segment*, so `:1310` matches first and the child is hung under the **track
+  segment**, one level too shallow and under the wrong particle.
+
+That second case is exactly P3's "a vertex that is both on the track path and
+inside a shower" — and the toolkit **manufactures that vertex class itself** at
+`:1244`. So §7.2's open question ("is that class ever populated?") is answered:
+it is populated by construction whenever any shower is track-attached and has
+more than its start vertex. **§7.2 is closed.**
+
+And P11's stated failure mode — "a shower whose start vertex lies inside a
+shower that is itself unresolved falls through to the root" — is the same
+half-population seen from the other side. One defect, one knob.
+
+**Proposed knob:** `pf_shower_parent_precedence` (C++ default `false`). Two
+edits, which must ship together:
+
+- **(a)** in the `else` branch at `:1243`, also record the parent shower:
+  ```cpp
+  if (!vtx_incoming_seg.count(vtx) && !root_reachable_vtxs.count(vtx)) {
+      vtx_incoming_seg[vtx] = parent_seg;
+      if (cfg.pf_shower_parent_precedence) vtx_to_parent_shower[vtx] = shower;
+      any_added = true;
+  }
+  ```
+- **(b)** at `:1310`, test the parent shower **first**, matching the prototype's
+  `map_vertex_in_shower`-first order at `:1655`, `:1680`, `:1720`:
+  ```cpp
+  auto ps_it = cfg.pf_shower_parent_precedence
+             ? vtx_to_parent_shower.find(start_vtx) : vtx_to_parent_shower.end();
+  if (ps_it != vtx_to_parent_shower.end()) { /* attach to ps_it->second */ }
+  else { auto it = vtx_incoming_seg.find(start_vtx); ... }   // unchanged
+  ```
+
+**Why one knob is still attributable — the pr/33 §10.2 criterion, checked.**
+
+- **(a) alone is inert.** Without (b), `:1310` still tests `vtx_incoming_seg`
+  first and never consults `vtx_to_parent_shower` for those vertices. Zero
+  observable change.
+- **(b) alone is a regression.** With `vtx_to_parent_shower` still empty for
+  track-attached shower vertices, inverting the test sends nothing new down the
+  shower branch and can only reach `:1358`'s "no parent found" → **root**, i.e.
+  hoisting showers *further* from their true parent than today.
+
+Neither half is independently meaningful, so a single knob cannot fail to
+attribute. This is the opposite finding from pr/33's F1/F2 and it is reached by
+the same test.
+
+**One implementation hazard, and why it is already handled.** `fill_sets`
+(`PRShower.cxx:410-419`) inserts **every** vertex in the shower's view including
+the shower's own start vertex — `flag_exclude_start_segment` filters *segments*
+only. A naive (a) would therefore make a shower its own parent. It does not,
+because the guard the line sits inside (`!vtx_incoming_seg.count(vtx)`) already
+excludes the start vertex: `at_track` is true precisely *because* that vertex is
+in `vtx_incoming_seg`. The root branch is safe for the mirror reason
+(`!root_reachable_vtxs.count(vtx)` at `:1236`, plus the `vtx == main_vertex`
+skip at `:1233`). **Write (a) inside the existing guard, not before it.**
+
+**Not proposed:** the first-claim-wins ordering dependence in the same loop
+(`:1236-1240`) is real but is P11's determinism residual, not this defect. It is
+inherited from shower construction order (§6) and belongs to pr/33's stage.
+
+### §10.5 F4 = P10 — one π⁰ node per π⁰, not per parent
+
+**Proposed knob:** `pf_pi0_node_per_id` (C++ default `false`).
+
+**On:** hoist the π⁰ grouping out of `append_showers`. `pi0_groups` is declared
+at `:1551` inside the lambda, which `:1489`, `:1635` and `:1661` invoke once per
+parent. Promoting it to a `fill_bee_pf_tree`-scope map keyed by π⁰ id, filled in
+a pass over `showers` before assembly, gives the prototype's
+`map_pio_id_saved_pair` semantics (`:1326`, `:1361`).
+
+**The structural obstacle, stated rather than waved at.** The prototype's flat
+`WCRecoTree` lets one π⁰ node be a daughter of two mothers; its explicit
+duplicate guard at `:1736-1737` exists for exactly that. A jsTree node lives in
+exactly one `children` array, so the toolkit **cannot** reproduce the shared
+node. The knob must therefore choose a single home for the split π⁰. The
+prototype's own choice is *first writer wins* — `fill_pi0_reco_tree` creates the
+node on the first daughter it reaches and every later daughter reuses it, so the
+π⁰ lands under the first daughter's parent in iteration order. Reproducing that
+gives prototype parity; choosing the higher-energy daughter's parent would be
+better physics and **would not** be parity.
+
+**This is escalation rule 4 (M15): both readings, no pick.** The knob ships with
+whichever the owner selects; the recommendation is *first-daughter parity*,
+because this stage's whole purpose is matching the panel the prototype draws.
+
+### §10.6 F5 = P12 — the PDG name table
+
+**Proposed knob:** `pf_pdg_name_prototype_fallback` (C++ default `false`).
+
+Corrected count first: `pf_pdg_to_name` (`:1024-1040`) is an **eleven**-entry
+switch — 11, −11, 13, −13, 22, 211, −211, 2212, 2112, 321, −321 — not the
+"ten-entry" of §3's P12 and §4.
+
+**On:** three additions, all inside that one function.
+
+| gap | prototype | fix |
+|---|---|---|
+| **111 (π⁰) absent** | `TDatabasePDG` → `"pi0"` | `case 111: return "pi0";` — a *track segment* PID'd as π⁰ currently renders `"particle"`. The π⁰ *node* is unaffected: it uses the literal at `:1562`. |
+| **nuclei → `"particle"`** | `pdg > 1e9` → `"Ar-40"` from Z and A (`WCReader.cc:529-547`) | decode Z/A the same way. These are the class `np_ke_min` exists for (`:1456`), so they are expected. |
+| **everything else → `"particle"`** | the PDG number as a string | `return std::to_string(pdg);` — Λ, Σ, deuteron stay diagnosable instead of collapsing to one label. |
+
+**Why a new knob rather than folding this into `prototype_names`.** The obvious
+home is the existing `prototype_names`, whose whole promise is prototype-style
+naming — but that knob is **already SBND-ON** (§4), so widening it changes SBND
+output with no off-state. That is escalation rule 1. A separate default-OFF knob
+keeps the A/B possible.
+
+**Leak check — the pr/33 F3 lesson, applied and cleared.** Before widening any
+shared helper, grep every other caller. `pf_pdg_to_name` has exactly three:
+`:1471`, `:1505`, `:1594`, all inside `fill_bee_pf_tree`. **No consumer outside
+this stage**, so the change cannot leak the way pr/33's F3 would have leaked into
+`ssm_tagger`.
+
+**Also worth fixing in the same change, and not knob-worthy:** the no-PID node
+text. The toolkit emits `"particle  0 MeV"` (`:1587-1588`); the prototype emits
+`PDGName(0)`, which `TDatabasePDG` does not know, hence the literal `"0"`, and
+`KE` of an all-zero 4-vector, hence `"0  0 MeV"`. Under the same knob this is one
+more line.
+
+### §10.7 The gate these knobs need is a different artifact
+
+**Read this before reusing any earlier round's gate language.** Every prior round
+in this series gated on `pctree-pr-evt*.tar.gz` member-content hashes via
+`abtest/hash_archive.py`, driven by `pr32_cmp.py`. **That gate is vacuous here.**
+The particle-flow tree is not in `pctree-pr`; all five knobs, on or off, leave
+that archive bit-identical. Quoting "48/48 byte-identical" from such a run would
+report a gate that tested nothing.
+
+The artifact under test is `mabc-pr.zip::data/0/0-mc.json` — the same path the
+Repro block already reads. The gate should be **two-sided**, which buys something
+this document currently cannot claim:
+
+| arm | `mc.json` | `pctree-pr` | what it establishes |
+|---|---|---|---|
+| knob **OFF** vs baseline | identical | identical | the byte-identical bar (§1 of CLAUDE.md) |
+| knob **ON** vs baseline | **differs** | **identical** | the **first empirical proof of the display-only claim** |
+
+The second row matters. The display-only verdict in this document's header rests
+entirely on the §5.7 source argument — that the prototype's two state mutations
+(`set_kine_charge`, `acc_segment_id++`) have no consumer. A knob-on arm that
+moves `mc.json` while leaving `pctree-pr` byte-identical converts that argument
+into a measurement.
+
+`mc.json` is plain JSON, so the comparison is a content hash of the extracted
+member — not `cmp` on the zip (M2). Note P14 in passing: coordinates are raw
+doubles, so toolkit-vs-toolkit comparison is exact; only toolkit-vs-*prototype*
+comparison would differ on every coordinate.
+
+**Nothing was run.** No arm exists; this section specifies the gate, it does not
+report one.
+
+### §10.8 Dropped and resolved, with reasons
+
+**a) P4 — DROPPED as an improvement, with an M15 residual.** The prototype's
+`find_incoming_segment` (`:1763-1783`) selects by fitted direction; the toolkit's
+`vtx_incoming_seg` records BFS arrival. The prototype's function declares
+`bool flag_start;` at `:1768` with an `if`/`else if` at `:1769-1772` that has
+**no `else`**, then reads it at `:1774`; and it returns `0` on no match, which
+all three call sites use unchecked, writing the shower's mother onto tree entry 0
+via `std::map::operator[]`. A selector that reads an uninitialized bool and
+corrupts an unrelated node cannot be called the correct answer, so "port it back"
+is not a coherent fix.
+
+*The residual, which is a real open question and not a proposed change:* on a BFS
+tree rooted at the neutrino vertex the two rules **coincide** whenever segment
+directions point outward along that tree, and diverge only where a direction was
+flipped or left weak. The prototype's answer then follows the reconstructed
+physics flow; the toolkit's follows topological distance from the vertex. Which
+is wanted is a physics call, undocumented in `porting_dictionary.md`, and per
+escalation rule 4 it is presented, not picked.
+
+**b) P7 — DROPPED as cosmetic, with a one-line option.** Top-level ordering in a
+display-only stage, and not a dropped guard: the prototype's order is an emergent
+consequence of `fill_particle_tree` running its track loop (`:1485`) before its
+shower loop (`:1523`), and the toolkit's is the emergent consequence of `:1661`
+preceding `:1666`. If the owner wants side-by-side parity when reading toolkit
+and prototype panels together, swapping those two blocks is a one-line change —
+offered here so the option is on the record, deliberately **not** seated beside
+F1 as a peer.
+
+**c) P9 — RESOLVED. The collision is unreachable. §7.4 CLOSED.**
+
+§3 states the unsafe case as "a cluster whose ident is 0". Three checks retire
+it, and a fourth retires a sharper variant §3 did not consider:
+
+1. **The unset default is `−1`, not 0.** `ident(int def = -1)`
+   (`Facade_Mixins.h:115-118`). A cluster whose ident was never written gives
+   `seg_display_id = -1*1000 + sid`, i.e. a **negative** id, which cannot collide
+   with `next_id ≥ 1`.
+2. **The root allocator starts at 1.**
+   `enumerate_idents(sort_order="tree", int start=1)`
+   (`Facade_Grouping.h:142`, body `Facade_Grouping.cxx:125-143`).
+3. **Every other ident writer is ≥ 1 or inherits.** The complete set, from
+   `grep -rn "set_ident(\|set_cluster_id(" --include=*.cxx --include=*.h .`:
+   `Facade_Grouping.cxx:141` (`id++` from 1), `:182` (`separate`, inherits),
+   `ClusteringFuncs.cxx:323` (inherits), `retile_cluster.cxx:611` (inherits),
+   `ClusteringUnmergeBundle.cxx:405`, `ClusteringProtectBundle.cxx:545`,
+   `ClusteringRecoveringBundle.cxx:211` (all `parent*100 + sub`, so ≥ 100 for
+   parent ≥ 1), `QLMatching.cxx:1312` (a later stage, after this fill),
+   `doctest_facades.cxx:21` (a test). **No path yields 0.**
+4. **The sharper variant, checked and also closed.** `seg_display_id` (`:1408`)
+   has a null-cluster branch that returns a **bare `sid`** — which *is* in
+   `next_id`'s range, and is a better collision candidate than ident 0. But every
+   `PR::Segment` construction site sets the cluster:
+   `NeutrinoPatternBase.cxx:197`, `TaggerCheckSTM.cxx:2460`,
+   `NeutrinoStructureExaminer.cxx:323`, `:467`, `:688` (all
+   `.cluster(&cluster)`), and `PRSegmentFunctions.cxx:544-545`
+   (`seg1->cluster(seg->cluster())`, inherits). The branch is defensive-only.
+
+P9's *fidelity* observation stands — the toolkit's synthetic ids are not the
+prototype's `cluster*1000 + acc_segment_id` — but with no collision it is a
+cosmetic difference in a display artifact, and it is dropped on that basis. Its
+inherited half (pr/33 P3's `acc_segment_id` by value) remains pr/33's F3.
+
+**d) P13 — RESOLVED. The two fields cannot disagree. §7.6 CLOSED.**
+
+§7.6 left open whether `ParticleInfo::m_kinetic_energy` and `m_four_momentum` can
+disagree. Reading `aux/src/ParticleInfo.cxx` end to end: they cannot.
+
+| mutator | what it maintains |
+|---|---|
+| `set_four_momentum` `:85-88` | `m_kinetic_energy = e() − m_mass` |
+| `set_kinetic_energy` `:90-111` | rebuilds the 4-vector at `E = KE + mass` |
+| `set_momentum` `:80-83` → `update_kinematics` `:113-118` | `E = √(p²+m²)`, `KE = E − m` |
+| `set_mass` (`ParticleInfo.h:70`) → `update_kinematics` | same |
+| comprehensive ctor `:24-41` | `E = KE + mass` |
+| 4-momentum ctor `:45-60` | `KE = e() − mass` |
+| default ctor `:12-20` | both zero |
+
+So `E = KE + mass > 0` whenever `KE > 0`, and the prototype's guard
+`if (sg->get_particle_4mom(3) > 0)` (`:1249`) would **always pass** on toolkit
+data. P13's stated premise — "a segment whose 4-momentum was never computed can
+still carry a non-zero `m_kinetic_energy`" — is therefore true for a different
+reason than §3 gives: not that the fields drift apart, but that **the toolkit has
+no *uncomputed* state to test for at all.** `ParticleInfo` sets the 4-vector the
+moment a KE exists.
+
+That is a real fidelity gap, but its entire observable frequency is "how often
+does the prototype skip `cal_4mom`" — which is **pr/31 P1's** territory, not this
+stage's, and pr/31 P1 is already tracked there. There is no fix that belongs in
+`fill_bee_pf_tree`: the display cannot test a state the data model does not
+carry. Dropped here, and §7.6 is closed rather than left open.
+
+**e) P5, P6, P8, P14 — dropped as already classed.** §3's own class column has
+them as prototype-bug-not-reproduced (P5), deliberate improvements (P6, P8) and
+cosmetic (P14). The filter changes nothing about them. P14 in particular is not a
+finding at all — it is a warning that toolkit-vs-prototype byte comparison will
+differ on every coordinate, which §10.7 restates where it is actionable.
+
+### §10.9 An unrelated finding, reported not fixed
+
+Found while closing P9; it is not a filter item and **must not** be folded into
+one (CLAUDE.md §5 tie-breaker: mention pre-existing bugs, do not fix them in the
+same change).
+
+**`enumerate_idents` at `:2445` is a no-op in the SBND production path.**
+
+```cpp
+grouping->enumerate_idents(m_clusters_id_order);      // MultiAlgBlobClustering.cxx:2445
+std::string m_clusters_id_order;                      // MultiAlgBlobClustering.h:418 — NO initializer
+```
+
+`m_clusters_id_order` is assigned only from the config key at `:151`, SBND's
+`clus.jsonnet` never sets `clusters_id_order`, and `enumerate_idents` returns
+immediately when `sort_order.empty()` (`Facade_Grouping.cxx:127`). **So the
+per-visitor renumbering never runs**; the only effective enumeration is the
+load-time `enumerate_idents()` at `:2332`.
+
+This matters beyond this document because at least five in-tree comments assert
+the per-visitor renumbering as an invariant that other reasoning rests on:
+`MultiAlgBlobClustering.h:260` and `:269`, `ClusteringFuncs.h:142`,
+`TrackFitting.cxx:1140`, `prov_check.cxx:22`, plus
+`sbnd/clus.jsonnet:40` and `:569` and
+`sbnd/wct-clus-matching-perevt.jsonnet:172`. It also bears directly on the
+`real_cluster_id` epoch analysis of doc 53.
+
+It does **not** change P9's verdict either way — idents stay ≥ 1 from the
+load-time enumeration — and no code is touched here. Whether the config key
+should be set, or the default changed, or the comments corrected, is the owner's
+call.
+
+### §10.10 What §10 does not claim
+
+- **No code was written, no build was run, no event was run.** The document
+  remains audit-only; §10 adds a filter and five proposed fixes, nothing more.
+- **No frequency is measured for any survivor.** §9's statement stands
+  unchanged: F1, F2, F3 and F4 are established from source. §7.1 and §7.3 remain
+  open. What §10 *does* close is §7.2 (F3's vertex class is populated by
+  construction, §10.4), §7.4 (P9, §10.8c) and §7.6 (P13, §10.8d).
+- **The knob names are proposals.** Each is stated with its exact edit site so
+  the owner can reject the name without rejecting the finding.
+- **F3's merge of P3 and P11 is a claim about mechanism**, verified from
+  `:1227-1247` and `:1310-1398` at `407c5ba9`. If `PRShower::fill_sets` and
+  `WCShower::fill_sets` return different vertex sets — never compared, §9 — the
+  merge holds but the population changes.
+- **§10.5's π⁰ home is unresolved by design** (M15). The knob cannot ship until
+  the owner picks first-daughter parity or highest-energy-daughter.
+- **The provenance result is stage-local, again.** `bee/WCReader.{cc,h}` being
+  pristine says nothing about the `pid` submodule's `port` branch, whose
+  +5833/−989 exposure across 26 files (§7.7) is untouched and remains the
+  series' highest-value follow-up.
+- **§10.7's gate has not been run.** It is a specification. Any future "byte
+  identical" claim for these knobs must name `mc.json`, not `pctree-pr`.
