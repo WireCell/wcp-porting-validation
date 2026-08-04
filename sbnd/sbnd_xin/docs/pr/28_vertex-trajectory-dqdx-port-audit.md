@@ -3165,8 +3165,16 @@ wins a tie, and that is an output change that must be measured, not assumed.
   stale since round 6, and rounds 7/8/9 do not discharge it. Round 9's A/B is
   ULP-only, so it does not move the physics, but the baseline is stale for
   other reasons.
-* **The twelve `NeutrinoShowerClustering.cxx` sites** (§15.8) and §14.6's three
-  tie-only sites — latent class, line numbers recorded.
+* **The twelve `NeutrinoShowerClustering.cxx` sites** (§15.8) — see the
+  correction below; the triage that was owed here is now done.
+
+  **CORRECTION.** This bullet originally also listed *"§14.6's three tie-only
+  sites"* as remaining. That is wrong, and it is wrong in a way worth naming:
+  §14.6's three tie-only sites are `NeutrinoVertexFinder.cxx:689`, `:3511` and
+  `NeutrinoDeghoster.cxx:61` — **all three were resolved by round 9 itself**
+  (§15.5: the first two fixed, the third found to have been correct since
+  `c05bc5f7`). Carrying them forward as open work double-counted the round's own
+  result. Nothing is owed there.
 * **`GroupingHelper.cxx`** is fixed but still dead; whoever revives
   `clustering_retile.cxx:162` inherits a determinism-clean function.
 * **`work-tfix388-r9` must be hand-added to the next retire round's
