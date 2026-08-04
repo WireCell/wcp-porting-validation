@@ -716,6 +716,13 @@ now carries the reason inline so the next person does not "restore" them.
 > dropped. Reported here, **not fixed in this change** — it alters a TaggerInfo
 > field that the uBooNE tagger ntuple writes, so it is a behavior change needing
 > its own knob and gate.
+>
+> **Severity, checked:** `photon_flag` has **no readers**. Its only non-assignment
+> occurrence anywhere in `clus/`, `root/` or `cfg/` is
+> `UbooneTaggerOutputVisitor.cxx:1078`'s `SCALAR_BR(photon_flag)`. Nothing in the
+> chain branches on it, so the gap writes a constant 0 into one ntuple branch and
+> changes no reconstruction or selection outcome. That is what makes it safe to
+> defer — not that it is unimportant to whoever reads that branch downstream.
 
 ## 8.3 What the dump and the display now carry
 
@@ -781,19 +788,22 @@ The stage-2 no-A/B argument carries over unchanged and is not re-derived:
 | **Cosmic table renders** | all ten rows, `fired`/`ran` columns, no JS errors |
 | **The `ran` column earns its place** | over 7 events, two (**388**, **172230**) read `filled = 1010001` — tests 2, 4, 8 **ran and did not fire** — and five read `0000000`, never evaluated. Without it all seven look identical |
 | **DataTable refresh across events — §7.4's open item, now CLOSED** | 7 events stepped with `next >`: **7 distinct row-sets**, row counts 3→13 (a 3-row table is doc 58 GOTCHA 3's discriminating case), and stepping back reproduces the first event's rows exactly |
-| **Protected dirs (M13)** | fresh arms `work-prdisp-388-cos`, `work-prdisp-cosscan`, `work-prdisp-cosscan2`; nothing written under `work-prdisp-388`, `work-prdisp-388-pf`, `work-nuecc48-prod0803`, `work-vfnuecc48-prod0803` |
+| **FIRED rendering** | forced `cosmict_flag=1`, `cosmict_flag_4=1`, `cosmict_flag_10=[0,1]` in a scratch copy of evt 388 served on a spare port: red **TAGGED** chip, bold red FIRED on rows 4 and 10, row 10's `ran` correctly `yes` from the non-empty vector. Synthetic input, discarded after; **no arm written** |
+| **Protected dirs (M13)** | fresh arms `work-prdisp-388-cos`, `work-prdisp-cosscan`, `work-prdisp-cosscan2`; nothing written under `work-prdisp-388`, `work-prdisp-388-pf`, `work-nuecc48-prod0803`, `work-vfnuecc48-prod0803`. **`work-prdisp-388-cos` predates the `_filled` fields** — it was built from the first of this round's two builds; use `work-prdisp-cosscan2`, not it, as the reference arm |
 
 **Evt 388 reads `cosmict_flag = 0`** with all ten tests 0, `cosmic_filled = 0`,
 `cosmict_flag_10` empty — so its `cosmic_flag = 1` is the *default*, not a
 verdict. Exactly the ambiguity §8.1 describes, now visible on the panel.
 
-**Stated, not implied — no firing case was found.** All **14** events tried
-(388 plus 13 from `work-nuecc48-prod0803`) give `cosmict_flag = 0` with every
-test 0. On a nueCC-*selected* sample that is the expected direction, and the
-`ran` column proves the tagger is executing rather than silently inactive — but
-**the FIRED rendering path itself has not been exercised on real data.** It
-should be checked against a known cosmic before the flag decomposition is
-trusted in a scan. This is reported, not tuned around (§5 rule 7).
+**Stated, not implied — no firing case was found in real data.** All **14**
+events tried (388 plus 13 from `work-nuecc48-prod0803`) give `cosmict_flag = 0`
+with every test 0. On a nueCC-*selected* sample that is the expected direction,
+and the `ran` column proves the tagger is executing rather than silently
+inactive. The FIRED rendering is verified against a **synthetic** input (row
+above), so the display path is sound — but **no real event has exercised it**,
+and the physics question "does the cosmic tagger fire where it should on SBND"
+is untouched by this round. It needs a known-cosmic sample. Reported, not tuned
+around (§5 rule 7).
 
 ## 8.5 Scope
 
