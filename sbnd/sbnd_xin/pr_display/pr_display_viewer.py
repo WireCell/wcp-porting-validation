@@ -367,13 +367,26 @@ def flatten_pf(nodes, depth=0, out=None):
     return out
 
 
-def pf_rows(d, nodes):
-    """PF rows for the table, joined against the calib JSON's segments/showers."""
-    seg_ids = {s["id"] for s in d.get("segments", [])}
+def pf_index(d, nodes):
+    """The join tables every PF lookup needs, built ONCE per event.
+
+    `pf_rows` needs a highlight count per row and `on_pf_select` needs the set
+    itself; rebuilding these inside either would be (rows x segments) per event
+    load, which only bites once the campaign starts stepping events.
+    """
     by_shower = defaultdict(list)
     for s in d.get("segments", []):
         if s.get("shower_id", -1) >= 0:
             by_shower[s["shower_id"]].append(s["id"])
+    return dict(seg_ids={s["id"] for s in d.get("segments", [])},
+                by_shower=by_shower,
+                flat={n["id"]: n for n in flatten_pf(nodes)})
+
+
+def pf_rows(d, nodes, idx=None):
+    """PF rows for the table, joined against the calib JSON's segments/showers."""
+    idx = idx or pf_index(d, nodes)
+    seg_ids, by_shower = idx["seg_ids"], idx["by_shower"]
     showers = {sh["id"]: sh for sh in d.get("showers", [])}
 
     # Every column, always -- an empty dict makes the client read 0 rows as 1
@@ -393,7 +406,7 @@ def pf_rows(d, nodes):
             kind = "gamma"
         # nseg is what a click actually lights up -- for a gamma node that is
         # its children's segments, not zero.
-        nseg = len(highlight_ids(d, nodes, nid))
+        nseg = len(highlight_ids(d, nodes, nid, idx))
         sh = showers.get(nid)
         if sh is not None:
             ke, length = sh["kine_best"], sh["total_length"]
@@ -413,14 +426,10 @@ def pf_rows(d, nodes):
     return cols
 
 
-def highlight_ids(d, nodes, node_id):
+def highlight_ids(d, nodes, node_id, idx=None):
     """Segment ids to light up for one PF node id (recursing through gammas)."""
-    seg_ids = {s["id"] for s in d.get("segments", [])}
-    by_shower = defaultdict(list)
-    for s in d.get("segments", []):
-        if s.get("shower_id", -1) >= 0:
-            by_shower[s["shower_id"]].append(s["id"])
-    flat = {n["id"]: n for n in flatten_pf(nodes)}
+    idx = idx or pf_index(d, nodes)
+    seg_ids, by_shower, flat = idx["seg_ids"], idx["by_shower"], idx["flat"]
 
     picked, seen = set(), set()
     stack = [node_id]
@@ -607,7 +616,8 @@ def on_pf_select(attr, old, new):
         return
     nid = ids[i]
     d = state.get("data") or {}
-    picked = highlight_ids(d, state.get("pf_nodes") or [], nid)
+    picked = highlight_ids(d, state.get("pf_nodes") or [], nid,
+                           state.get("pf_index"))
     set_highlight(picked)
     pf_note.text = ("selected <b>%s</b> (id %d) &rarr; %d segment(s) highlighted"
                     % (pf_src.data["kind"][i], nid, len(picked)))
@@ -769,8 +779,9 @@ def load(label):
     # --- particle flow (from the Bee zip) + event features -------------------
     nodes, note = read_pf_tree(path)
     state["pf_nodes"] = nodes
+    state["pf_index"] = pf_index(d, nodes)
     pf_src.selected.indices = []
-    pf_src.data = pf_rows(d, nodes)
+    pf_src.data = pf_rows(d, nodes, state["pf_index"])
     # The view-filter flip is the ONLY thing that repaints the grid; assigning
     # .data alone leaves the previous event's rows on screen (doc 58).
     pf_table.view.filter = VIEW_B if pf_table.view.filter is VIEW_A else VIEW_A
