@@ -1995,7 +1995,7 @@ interior points the segment has.
 ```bash
 wcbuild && ./build/clus/wcdoctest-clus
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-for arm in base base-rep t3only t12only fix fix-rep final; do
+for arm in base base-rep t3only t2only t12only fix fix-rep final final2; do
   PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
     ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-tfix388-$arm data 388
 done
@@ -2013,9 +2013,11 @@ against the **07:57:05** library, i.e. `01ff88b1` unmodified.
 |---|---|
 | `work-tfix388-base` / `-base-rep` | `01ff88b1` — noise floor |
 | `work-tfix388-t12only` | T1+T2 only (index still `i`) |
-| `work-tfix388-t3only` | T3 only (`pss_vec` still from `final_ps_vec`) |
+| `work-tfix388-t3only` | T3 only (`pss_vec` still from `final_ps_vec`) — with T6, which is a no-op here |
+| `work-tfix388-t2only` | T2 (+T3, T6) but **not** T1: `ps_point = p` and `apa_face` from `p` restore base's dead veto and inert face guard (§13.6a) |
 | `work-tfix388-fix` / `-fix-rep` | all four — what is committed |
 | `work-tfix388-final` | rebuilt from the restored source after the attribution edits — **proves no `TEMP ATTRIBUTION` residue survived** |
+| `work-tfix388-final2` | rebuilt again after the §13.6a split, from `git checkout`-restored source — 469 leaf diffs vs `final`, all in the noise families |
 | `work-tfix388-fix-trace` | same binary at `SBND_WCT_LOGLEVEL=trace`, liveness only |
 
 ### 13.5 T4 — kept, and no longer silent
@@ -2064,7 +2066,9 @@ every scalar below).
 | `t12only` | 75 | 119 | 13 | 728 | (−163.2313, 31.4259, 426.2929) | **0.1434** | 4.3009 | **−2.8349** |
 | `fix` | 75 | 119 | 13 | 728 | (−163.2313, 31.4259, 426.2929) | **0.1434** | 4.3009 | **−2.8349** |
 
-**Attribution is clean: T1+T2 carry the entire effect on this event.**
+**Attribution is clean: T1+T2 carry the entire effect on this event** — and
+§13.6a splits that pair, because "T1+T2" was as far as the arms above could
+resolve it and the answer turned out not to be the obvious one.
 
 * **T3 alone is within the noise floor** — `base` vs `t3only` is 633 leaf diffs,
   all in the known-noisy families (`proj[]/charge_pred` 631, `showers[]/kine_dQdx` 2),
@@ -2176,3 +2180,51 @@ re-attributions, not points vanishing.
 **Only this one event exists for round 7.** No population run was made, so there
 is no set of "events with a large move" to link — evt 388 is the whole sample.
 Finding others requires a small-group run against a pre-round-7 baseline.
+
+### 13.6a Splitting T1 from T2 — the π⁰ is **T2**, not T1
+
+§13.6 could only resolve the pair, because T1 and T2 share one line: both read
+`pss_vec`. The obvious reading — that the headline move comes from T1, the
+spectacular one that was arithmetically dead — is **wrong**.
+
+A fourth arm separates them. `work-tfix388-t2only` keeps the corrected
+`pss_vec` fill (so `angle1` is measured on the initial path = **T2 fixed**) but
+restores base behaviour for T1's two mechanisms: `ps_point = p` (charge veto
+dead again) and `apa_face` from `p` (face guard inert again). T3 and T6 are on
+in both it and `t3only`, and `t3only ≡ base`, so the two step-deltas below are
+exact isolations.
+
+| arm | fixes on | seg | vtx | pts | Δvtx (cm) | `numu_score` | `kine_reco_Enu` | `kine_pio_flag` |
+|---|---|---|---|---|---|---|---|---|
+| `base` | — | 84 | 127 | 817 | — | −2.0282 | 2109.3 | 0 |
+| `t3only` | T3+T6 | 84 | 127 | 817 | 0.0000 | −2.0282 | 2109.3 | 0 |
+| `t2only` | **T2**+T3+T6 | 83 | 125 | 786 | 0.2043 | −2.1573 | **2907.4** | **1** |
+| `t12only` | T1+T2+T6 | 75 | 119 | 728 | 0.1434 | −2.8349 | 2909.7 | 1 |
+| `fix` | all four | 75 | 119 | 728 | 0.1434 | **−2.8349** | 2909.8 | 1 |
+
+Step-deltas (`nue_score` is 4.3009 in every arm):
+
+| step | isolates | segments | vertices | vertex moves | `numu_score` | `kine_reco_Enu` |
+|---|---|---|---|---|---|---|
+| `t3only → t2only` | **T2** | 84 → 83 | 127 → 125 | 0.2043 cm | −2.028 → −2.157 | **2109 → 2907 MeV**, π⁰ appears |
+| `t2only → fix` | **T1** | 83 → 75 | 125 → 119 | 0.1973 cm | **−2.157 → −2.835** | 2907 → 2910 MeV |
+
+So the two bugs do different jobs, and neither is a subset of the other:
+
+* **T2 — the fold-back comparison angle — produces the π⁰ and the +800 MeV.**
+  One segment and two vertices change, 31 trajectory points move, and that is
+  enough to re-attribute a shower and put `kine_pio_flag` at 1. A *small*
+  topology change with a *large* downstream consequence.
+* **T1 — the revived charge veto — produces the bulk of the topology change**
+  (8 more segments, 6 more vertices, 58 more points) and the bulk of the
+  `numu_score` shift, but adds only 3 MeV to the energy. A *large* topology
+  change with a *small* energy consequence.
+* The vertex is not monotone: T2 moves it 0.2043 cm from base, then T1 moves it
+  0.1973 cm again, landing 0.1434 cm from base. The net is smaller than either
+  step — do not read the 0.1434 cm as "the size of the change".
+
+**Why this matters for review.** T1 is the dramatic finding (a cut that could
+never fire, 2 146 points reverted); T2 is one line of the same edit and reads
+like a footnote to it. On this event the footnote is what moved the physics.
+Any future population study should carry both labels separately rather than
+attributing to "the T1 fix".
