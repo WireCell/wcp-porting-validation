@@ -11,6 +11,17 @@ defined by doc pr/27 §9: charge → energy per segment and per shower, and the
 run.** Every finding below is the owner's call. The owner's standing
 instruction from the pr/29 round ("Please do not change any code yet") governs.
 
+> **§10 (added later) — OWNER FILTER: 14 → 4 findings.** Re-verified at toolkit
+> **`407c5ba9`**, eleven commits after the `23bd6783` this audit was written
+> against. **The anchors WERE stale this round** and §10.9 re-derives all of
+> them. **P3 — one of the two headline findings — is already FIXED at HEAD** by
+> `026a7501`, which landed after the read; **P10 and P14 are RESOLVED** by
+> §10.7. Six are dropped as improvements over the prototype. The four survivors
+> are **not four knobs**: one physics knob (F1), one provably output-identical
+> perf change (F3), and two scoping questions that are the owner's to answer
+> (F2, F4). §10.6 shows this stage needs a **different gate artifact** from
+> every earlier round in the series.
+
 **Headline.** The `fill_kine_tree` skeleton is a faithful translation — the
 two-pass walk, the `flag_reduce` rest-mass bookkeeping, the remaining-shower
 loop and its type-3 `included` encoding, and the whole π⁰ block all match. So
@@ -1220,3 +1231,541 @@ call, and the unordered container is unordered on every call.
   hidden behind an identical literal would not show up.
 - **The BDT feature vectors were not audited.** §2's severity note establishes
   only that `kine_reco_Enu` is consumed, and by which lines.
+
+---
+
+## §10 Owner filter — 14 → 4
+
+Same round the owner asked for on pr/30 (14 → 4), pr/31 (15 → 9), pr/32
+(12 → 4), pr/33 (14 → 5) and pr/34 (14 → 5): **drop the divergences where the
+toolkit improves on the prototype; keep only bugs and things missing from the
+port**, and give each survivor a concrete fix.
+
+### Re-verification basis, and the anchor result
+
+Re-verified against committed toolkit **`407c5ba9`** — eleven commits after the
+`23bd6783` §0 was written against. **Read at `git show HEAD:<file>`, never from
+the working tree**: twelve tracked files are dirty from a concurrent session in
+this checkout, three of them this stage's (`PRSegmentFunctions.cxx`,
+`TaggerCheckNeutrino.cxx`, `sbnd/clus.jsonnet`). Nothing in §10 is read from an
+uncommitted edit.
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+git rev-parse HEAD                                    # 407c5ba9
+git merge-base --is-ancestor 23bd6783 HEAD && echo linear
+git diff --stat 23bd6783..HEAD -- clus/src/NeutrinoEnergyReco.cxx \
+    clus/src/NeutrinoKinematics.cxx clus/src/PRSegmentFunctions.cxx \
+    clus/src/PRShower.cxx clus/inc/WireCellClus/PRShower.h \
+    clus/src/NeutrinoShowerClustering.cxx clus/src/TaggerCheckNeutrino.cxx \
+    cfg/pgrapher/experiment/sbnd/clus.jsonnet
+```
+
+**The anchors were stale.** Unlike pr/34, where the re-derivation came back
+clean, seven of this stage's files moved between the read and HEAD:
+
+| file | 23bd6783 → 407c5ba9 | effect on §3 |
+|---|---|---|
+| `NeutrinoEnergyReco.cxx` | unchanged, 348 lines | P2/P4 anchors **exact** |
+| `NeutrinoKinematics.cxx` | unchanged, 327 lines | P1/P5/P6/P7 anchors **exact** |
+| `PRShower.cxx` | +56/−29, 1247 → 1303 | **P3 FIXED**; P1/P8/P9 anchors shift |
+| `PRSegmentFunctions.cxx` | +25 | P10/P12 anchors shift +25 |
+| `NeutrinoShowerClustering.cxx` | +31 | P1's rewrite table shifts |
+| `TaggerCheckNeutrino.cxx` | +97 | P5/P13 anchors shift |
+| `PRShower.h` | +13 | `get_kine_best` unmoved at `:152` |
+
+§10.9 gives the re-derived table. The lesson is now three rounds old (pr/32's
+were 4 commits stale within a day; pr/33's up to +19 lines with a finding
+*created* underneath; pr/34's clean): **the answer varies, so the check is not
+optional.**
+
+---
+
+### §10.1 The filter
+
+| # | finding | verdict | why |
+|---|---|---|---|
+| P1 | shower PDG read from an incompletely-refreshed cache | **KEEP — F1** | port defect; the toolkit reads a cache where the prototype reads live |
+| P2 | `cal_corr_factor` is a stub returning 1.0 | **KEEP — F2** | port gap; prototype's correction is live in production. **Different class** — §10.3 |
+| P3 | dQ/dx accumulated over a pointer-hashed unordered set | **RESOLVED** | **already fixed at HEAD** by `026a7501` — §10.7a |
+| P4 | segment path re-collects the whole 2-D charge map per call | **KEEP — F3** | the prototype hoisted, the toolkit did not. **Perf class** — §10.4 |
+| P5 | neutrino vertex not SCE-corrected on SBND | **KEEP — F4** | port gap; the field is named `_corr` and is not corrected |
+| P6 | BFS shower double-count guard added | drop | toolkit better — the prototype double-counts on a cycle |
+| P7 | per-particle arrays index-ordered, not pointer-ordered | drop | toolkit better; reproducing the prototype's order would be an M4 regression |
+| P8 | long-muon path never writes `data.particle_type` | **folded into F1** | its whole residual *is* P1's staleness — §10.2 |
+| P9 | long-muon `start_point` takes `back()` when `dirsign()==0` | drop | toolkit better, and **decisively so** — §10.8c |
+| P10 | `!valid()` fit points skipped | **RESOLVED** | the guard is dead by construction — §10.7b |
+| P11 | one-fit-point segment throws in the prototype | drop | prototype bug not reproduced |
+| P12 | `cal_kine_range(double L)` null `TGraph` in the prototype | drop | prototype bug not reproduced |
+| P13 | `fill_kine_tree` moved after the taggers | drop | no present defect; §3 already bounds it. Forward constraint only |
+| P14 | `kine_best == 0` fallback folded into the accessor | **RESOLVED** | survey done, hazard not realised — §10.7c |
+
+**Four findings from five P-numbers** (F1 = P1 + P8). Three resolved, six
+dropped. The count is an output, not a target — pr/33 and pr/34 both landed on
+five and this one does not.
+
+**They are not four knobs.** This is the round's most useful structural result,
+and it differs from every previous round:
+
+| | finding | shape of the fix | done-bar |
+|---|---|---|---|
+| **F1** | P1 + P8 | one default-OFF knob, `kine_shower_pdg_live` | byte-identical off + visible on (§10.6) |
+| **F2** | P2 | **owner scoping question**, not a knob | — |
+| **F3** | P4 | unconditional, provably output-identical | perf gate (wall + RSS) |
+| **F4** | P5 | **owner scoping question** (config already exists) | — |
+
+Presenting F2 and F3 as peers of F1 would smuggle two category changes past the
+owner — the pr/33 GOTCHA 20 trap. They are labelled instead.
+
+---
+
+### §10.2 F1 = P1 + P8 — `kine_shower_pdg_live`
+
+**Why they merge.** §3 lists them separately, but P8's residual is stated in its
+own text: the `−13` case comes out consistent, and *"the residual exposure is
+the general one from P1: the field is a cache and this path does not refresh
+it."* That is not a second defect; it is the same defect seen from the writer's
+side instead of the reader's. One finding.
+
+**Why the fix is on the reader, not the cache.** There are two candidate edits
+and only one is correctly scoped:
+
+- **(a) refresh the cache** in `calculate_kinematics_long_muon` — i.e. add
+  `data.particle_type = …` beside the local at `PRShower.cxx:1224`. This
+  changes what **every** consumer of `Shower::get_particle_type()` sees, and
+  they are not all in this stage: `NeutrinoEnergyReco.cxx:305` dispatches on
+  it, and `MultiAlgBlobClustering.cxx:1522`/`:1539` feed it to `keep_node` in
+  the Bee particle-flow tree (doc pr/34's stage). A knob placed here leaks
+  out of the stage it is gated for.
+- **(b) read the live start segment** at the four `fill_kine_tree` sites
+  (`NeutrinoKinematics.cxx:109`, `:119`, `:274`, `:286`), which is exactly
+  what the prototype does (`kine.h:53 :67 :175 :187 :224 :242`).
+
+**(b) is the fix.** It is confined to this stage's four reads, it is what the
+translation note at `NeutrinoKinematics.cxx:31` claims is already happening,
+and — the property that matters — **it is correct independently of when the
+cache is refreshed.** That last point is not a convenience: §10.9 shows §3's
+`:3272` citation for "the last `calculate_shower_kinematics`" is stale, and at
+HEAD there are **two** such calls (`NeutrinoShowerClustering.cxx:3267` and
+`:3291`), so the refresh *schedule* P1's exposure analysis rests on needs a
+re-read. Fix (b) does not depend on that re-read; fix (a) would.
+
+This is the pr/33 GOTCHA 22 lesson applied prospectively rather than after the
+fact: **before widening a write, grep every other reader of the same field.**
+
+**Proposed knob.** `BeeKineConfig`-style member on the component that owns
+`fill_kine_tree`, C++ default `false`:
+
+```cpp
+// false = today's cached read.  true = the prototype's live start-segment read.
+bool kine_shower_pdg_live{false};
+```
+
+and at each of the four sites:
+
+```cpp
+const int pdg = (m_cfg.kine_shower_pdg_live && shower->start_segment()
+                 && shower->start_segment()->has_particle_info())
+                ? shower->start_segment()->particle_info()->pdg()
+                : shower->get_particle_type();
+```
+
+Note the `has_particle_info()` fallback keeps the knob-on path defined where
+the prototype's `get_particle_type()` would return 0 anyway (§5.11's argument,
+same shape).
+
+**Ship it with a counter.** The pr/32 F3 precedent (which came back 0/2219, and
+was the only reason that finding could be closed) applies exactly: count
+`cached != live` at `:109` and log the **pair**, not the count — §7.1 already
+explains why the `11`-vs-`211` cases and the cache-stuck-at-0 cases must be
+distinguishable. Zero hits over the 572-event valfast manifest demotes F1 to a
+§5 entry without anyone having to run an A/B.
+
+**Bound, unchanged.** Per `11` → `211` occurrence, `kine_reco_Enu` moves by the
+pion rest mass, 139.6 MeV. That is a per-occurrence bound, not an
+event-averaged bias.
+
+---
+
+### §10.3 F2 = P2 — `cal_corr_factor`: a gap, and a question, not a knob
+
+**This survivor is a different class and must be read as one.** It is kept
+because the prototype applies a calibration here and the toolkit applies none —
+that is squarely "missing from the port". But it has **no default-OFF knob that
+reproduces the prototype**, and proposing one would be the M15 trap this
+document already names in P2's own text:
+
+- part **(a)**, the seven hard-coded uBooNE U-plane wire ranges given a
+  `1/0.7` boost, is detector-specific and **must not** be ported to SBND;
+- part **(b)**, `gu·gv·gw`, is a general position correction whose three
+  `TGraph`s are **uBooNE calibration data** (`calib_{u,v,w}_corr.txt`).
+  Reproducing uBooNE's graphs on SBND would be worse than applying nothing.
+
+So the deliverable is not code. It is the escalation-rule-1 question, with the
+facts assembled so the owner can answer it in one pass:
+
+1. **Does SBND want a position-dependent charge correction at this point?**
+   The prototype's is applied per charge hit, inside the plane sums, before the
+   recombination division — so it is not equivalent to a global scale factor
+   and cannot be absorbed into the doc pr/10 recombination retune (§4).
+2. **If yes, is there an SBND calibration product it could read?** Unknown to
+   this audit and deliberately not guessed.
+
+**If and only if the answer to 1 is yes**, the implementable shape is a config
+key holding a calibration-file path, absent by default:
+
+```jsonnet
+[if kine_corr_files != null then 'kine_corr_files']: kine_corr_files,
+// C++ default: empty => cal_corr_factor returns 1.0, exactly today's behaviour.
+// Key omitted when unset => byte-identical pre-change compiled config.
+```
+
+The plumbing already exists — the stub's signature receives
+`IDetectorVolumes::pointer` and reaches the grouping — so this is a small
+change *once the data exists*. **Say plainly that it delivers nothing until it
+does.** Shipping the empty-default key alone would be a knob that can only ever
+be off, which is worse than no knob: it reads in the config as though the
+correction were available.
+
+**What is still not claimed:** the magnitude. Every toolkit `kine_charge`
+carries 1.0 where every prototype one carries a per-point factor; how much that
+is worth on SBND is unknown.
+
+---
+
+### §10.4 F3 = P4 — a perf change with a different done-bar
+
+Kept because the toolkit is *worse* than the prototype here, not better: the
+prototype hoists the 2-D charge collection into members via
+`collect_2D_charges()` once, and the toolkit's **shower** overload does the
+same (`NeutrinoEnergyReco.cxx:242`), but the **segment** overload builds fresh
+locals on every call (`:262-264`). `fill_kine_tree` calls it once per track
+segment, so the toolkit pays `O(n_track_segments × n_charge_hits)` where the
+prototype pays `O(n_charge_hits)`.
+
+**This is not a physics knob, and it must not be gated like one.** §5.6
+establishes that the two collections agree on everything this stage reads:
+`update_dQ_dx_data` mutates only `charge_err`, and `kine_charge_from_maps`
+reads only `.charge` (`:130`). So caching the maps the way the shower path
+already does is **output-identical by construction** — the fix is unconditional
+and needs no knob:
+
+```cpp
+// NeutrinoEnergyReco.cxx:262 — mirror the shower overload at :242
+if (m_charge_2d_u.empty()) collect_charge_maps(track_fitter);
+```
+
+Its done-bar is CLAUDE.md §4's **perf** block, not the behaviour-change block:
+byte-identical member hashes **plus** before/after wall and peak RSS from
+`timecmd.py` on a named manifest, with the labels quoted. A pure byte-identical
+PASS is necessary but not sufficient — it would not show the change did
+anything.
+
+One caveat to carry into that measurement: the two overloads collect at
+*different times* (shower at shower-clustering time, segment at
+`fill_kine_tree` time). §5.6's argument is what makes them interchangeable;
+if a future change makes `kine_charge_from_maps` read any field other than
+`.charge`, that argument dies and this becomes a correctness change.
+
+---
+
+### §10.5 F4 = P5 — SCE: also a question, and the config already exists
+
+Kept as a gap: the prototype applies `func_pos_SCE_correction` to the neutrino
+vertex **unconditionally** (`kine.h:3-9`, with
+`init_Pos_Efield_SCE_correction()` called unconditionally at
+`wire-cell-prod-nue.cxx:197`); the toolkit applies it only when a
+`clus_geom_helper` is configured, and SBND never configures one.
+
+Unlike F1 this needs **no new knob** — `clus_geom_helper` is already the knob,
+defaulting to `""` at `TaggerCheckNeutrino.cxx:295` (re-derived; §3 cites
+`:266`). So the finding reduces to two owner questions plus one thing that is
+worth doing either way:
+
+1. **Should SBND set `clus_geom_helper`?** That is a physics call about whether
+   an SCE correction belongs at this point on SBND at all — escalation rule 1,
+   not this audit's to make.
+2. **If not, the name still lies.** `kine_nu_{x,y,z}_corr` are published into
+   `T_kine` and into the PR display dump carrying `_corr` in the name while
+   holding the raw fitted vertex, and **nothing at runtime says so**. Renaming
+   a published tree branch is a downstream break and is not proposed. What is
+   proposed is one line that costs nothing:
+
+```cpp
+// NeutrinoKinematics.cxx:70 — the else branch already has the TODO comment
+SPDLOG_LOGGER_WARN(log, "fill_kine_tree: no geom_helper — kine_nu_*_corr are "
+                        "the RAW fitted vertex despite the _corr name");
+```
+
+A once-per-job warning turns a silent naming lie into a visible one. It changes
+no output value, so it is byte-identical on the artifact gate by inspection.
+
+---
+
+### §10.6 The gate — and why it is not the earlier rounds'
+
+**This is the round's other structural result.** pr/34 §10.7 established that
+the series' standard `pctree-pr-evt*.tar.gz` member-hash gate would PASS
+**vacuously** for a display-only stage. This stage is the *opposite* case, and
+the standard gate fails it for the opposite reason: `KineInfo` is not in the
+pctree at all. Neither prior answer transfers.
+
+`KineInfo` reaches exactly two artifacts, both verified at HEAD:
+
+| artifact | writer | carries |
+|---|---|---|
+| `T_kine` in the tracking ROOT file | `root/src/UbooneTaggerOutputVisitor.cxx:1089-1095` (SBND reuses it as-is — `sbnd/clus.jsonnet:1655`) | `kine_reco_Enu` + the parallel arrays |
+| `calib-pr-evt<ID>.json` | `clus/src/PrDisplayDump.cxx:455-470` (`dump_kine`) | the same, verbatim, already in MeV/cm |
+
+**Use the JSON.** `dump_kine` emits `kine_reco_Enu`, `kine_reco_add_energy`,
+`kine_nu_{x,y,z}_corr` and all four parallel arrays
+(`kine_energy_particle`, `kine_energy_info`, `kine_particle_type`,
+`kine_energy_included`) into a plain JSON file — **directly diffable, no
+archive, no embedded timestamps, so M2 does not apply and `hash_archive.py` is
+not needed.** The ROOT alternative is worse on every axis: ROOT files are not
+byte-comparable (compression settings and timestamps), so `T_kine` would need
+a tree-dump comparator that does not exist in `abtest/` today.
+
+The dump is a diagnostic stage and is off by default; enable it the way doc
+pr/26 and pr/28 did:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh <base-tag> <new-tag> data <evts>
+# gate:  diff  work/<a>/evt*/calib-pr-evt*.json  work/<b>/evt*/calib-pr-evt*.json
+```
+
+**Two-sided, as in pr/34 §10.7.** Knob-**off** identical satisfies the
+byte-identical bar. Knob-**on** must *differ* in the `kine_*` keys — for F1
+that is the first empirical evidence that the cache and the live PDG ever
+disagree, which today rests only on a source argument. If knob-on is also
+identical, F1's counter (§10.2) is the cheaper way to learn the same thing and
+should be run first.
+
+**One thing the JSON gate cannot see**: the BDT scores. `kine_reco_Enu` is numu
+XGBoost variable 69 (`UbooneNumuBDTScorer.cxx:507`) and is in the nue reader
+(`UbooneNueBDTScorer.cxx:332`, `:1660`). A `kine_reco_Enu` move that the JSON
+shows is a *score* move that the JSON does not show. Any F1 flip needs the
+score comparison too; scoping that is pr/27 §10's stage, not this one's.
+
+---
+
+### §10.7 Resolved outright — three, not merely dropped
+
+**(a) P3 is already FIXED at HEAD.** Commit **`026a7501`** ("clus: order the
+shower edge walk by graph index — the PR display dump is now run-to-run
+identical", doc pr/28 §15) landed *after* the `23bd6783` read and converted
+precisely the site P3 names. `PRShower.cxx:1134` is now `:1164`:
+
+```cpp
+// ordered_edges: this is the site that was actually caught.  Both
+// the `total_length +=` and the push order of vec_dQ/vec_dx are
+// observable -- cal_kine_dQdx() is a plain `kine_energy += dE` over
+// the vector (PRSegmentFunctions.cxx:1281), so the summation order
+// sets the last bit.  showers[1]/kine_dQdx moved 1314.124434586102
+// -> ...103 (rel 6.9e-16) between two `setarch -R` runs of the same
+// binary on SBND evt 388 (doc pr/28 sec 15).
+for (auto edesc : ordered_edges(*this, m_full_graph)) {
+```
+
+Two things follow. First, **P3 was real** — the comment records the measurement
+§7.3 asked for (two `setarch x86_64 -R` runs, same binary, SBND evt 388), and
+the drift is ULP-level (rel 6.9e-16), so it was *not* classification-changing on
+that event. §7.3 is closed. Second, the fix is **not** a spot fix: the same
+commit converted four more accumulating walks in this file, and the
+`this->edges()` occurrences remaining at HEAD are all benign —
+
+```
+:662   deliberate, with a comment: unconditional integer count, no order observable
+:671   .size()
+:746   .size()
+:954   .size()
+:1196  inside a comment
+:1205  inside a commented-out debug line
+```
+
+— so "P3 is fixed" is a checked claim about the file, not about one line.
+
+**Keep §6's row, though, with its meaning corrected.** The prototype still
+iterates `map_seg_vtxs`, a `std::map<ProtoSegment*,…>`, at `WCShower.cxx:448`
+and `:515`. The row moves from *both broken* to *toolkit fixed, prototype still
+pointer-ordered* — which means this site is **still not bit-comparable
+prototype↔toolkit**, and nobody should expect the two trees' `kenergy_dQdx` to
+agree to the last bit.
+
+**(b) P10's guard is dead by construction.** §7.4 asked whether a `Fit` can
+carry a real `dQ`/`dx` with `index < 0`, and noted correctly that
+`Fit::reset()` (`PRCommon.h`) clears `index` while **leaving `dQ`/`dx`
+untouched** — which makes the state constructible, not merely hypothetical. It
+is nonetheless unreachable at the point `segment_cal_kine_dQdx` runs, and the
+proof is `form_map_graph`:
+
+- every fit it pushes into `saved_fits` gets an index on **all three** paths —
+  middle points `TrackFitting.cxx:3238`, first point `:3247`/`:3252`, last
+  point `:3260`/`:3265`;
+- middle points whose three plane quantities sum to zero are **not pushed at
+  all** (`:3220`) — they are dropped, which is exactly what the drop counter at
+  `:8350-8360` reports;
+- `segment->set_fit_associate_vec(std::move(saved_fits), …)` (`:3275`) then
+  **replaces** the segment's fit vector wholesale.
+
+And both `reset_fit_prop()` sites are followed by `form_map_graph` inside the
+same function (`:3125` → the segment loop immediately below; `:8335` →
+`:8350`), over the **same** `get_segment_edges()` set that was just reset — so
+reset-set and refit-set are identical by construction, not by coincidence. The
+in-tree comment at `:8338` states this invariant explicitly ("`PR::Fit::reset()`
+clears index outright and they must be rebuilt here").
+
+⇒ `!fits[i].valid()` at `PRSegmentFunctions.cxx:1253` (re-derived; §3 cites
+`:1228`) is **never true**, and the surviving `dx <= 0` clause is already shown
+equivalent to the prototype by §2.4. **P10 moves to §5.** Same shape as pr/32's
+P7 — dead code — but proven by construction rather than measured.
+
+**(c) P14's hazard is not realised — the survey §7.7 asked for is done.** The
+question was whether any consumer tests `get_kine_best() == 0` to detect the
+"no reliable estimate" sentinel — `data.kenergy_best = 0` for a shower-flagged
+object with `start_connection_type != 1`, at **`PRShower.cxx:983`** (single-
+segment branch) and **`:1188`** (multi-segment), against the prototype's
+`WCShower.cxx:359`; §3 cites `:960` for the first, which is stale. The folded
+accessor (`PRShower.h:152-153`) makes such a test unreachable. Surveyed both
+trees:
+
+- **Toolkit** — `grep -rn 'get_kine_best()' clus/src clus/inc root/src`. Every
+  site that tests it uses the charge-fallback idiom
+  (`!= 0 ? get_kine_best() : get_kine_charge()`), which the folded accessor
+  reproduces exactly: ~30 sites in `NeutrinoTaggerNuE.cxx`, three in
+  `NeutrinoTaggerSinglePhoton.cxx`, `NeutrinoTaggerSSM.cxx:210`, and both
+  if/else forms in `NeutrinoShowerClustering.cxx:1672-1676` and `:2052-2064`
+  (both **do** have the `else` arm). **Zero** sites use the value for anything
+  else.
+- **Prototype** — the guarded idiom is the universal one: twelve
+  `Eshower = get_kine_best(); … else … get_kine_charge();` pairs in
+  `NeutrinoID_nue_tagger.h` (`:338 :560 :1014 :1676 :1830 :2291 :2496 :2765
+  :2917 :3162 :3461 :3861`), and the same in
+  `NeutrinoID_cosmic_tagger.h:93-98`, `:288-293`, `:362-368`, `:393-397`.
+  Nothing reads the sentinel.
+
+⇒ the toolkit's bare `shower->get_kine_best()` calls — including the ones
+`NeutrinoTaggerCosmic.cxx:83-84` asserts are "correct and sufficient
+everywhere" — are equivalent to the prototype's guarded pairs. **That assertion
+is now checked rather than asserted.** P14 moves to §5, and §7.7 is closed.
+
+---
+
+### §10.8 Dropped, with the reason
+
+**(a) P6, P11, P12 — the toolkit declines to reproduce a prototype bug.**
+Unchanged from §3, and §9 already says they are listed so a future
+"restore parity" pass does not undo them. P6 in particular means toolkit and
+prototype `kine_reco_Enu` **cannot** be expected to agree on an event with a
+cycle in the track graph — a diff there is not a defect.
+
+**(b) P7 — the toolkit is deterministic where the prototype is not.**
+Reproducing `std::set<ProtoSegment*>` iteration order would be a deliberate M4
+regression. Note the standing consequence: the prototype's `kine_reco_Enu` is a
+float sum in pointer order and is therefore **not reproducible run-to-run**,
+while the toolkit's is. With P3 now fixed too (§10.7a), this stage's output is
+run-to-run stable on the toolkit side — which is the prerequisite for the
+§10.6 gate to mean anything.
+
+**(c) P9 — dropped, and the evidence is stronger than §3 had.** §3 called the
+toolkit's choice "arguably better" and declined to rank them. It is not
+arguable. `WCShower`'s constructor (`prototype_base/pid/src/WCShower.cxx:7-30`)
+explicitly zeroes `start_point`:
+
+```cpp
+start_point.x = 0;  start_point.y = 0;  start_point.z = 0;
+```
+
+and `calculate_kinematics_long_muon` (`WCShower.cxx:288`) runs once per shower
+under the `flag_kinematics` latch — so it always sees a **fresh** shower. When
+`flag_dir == 0` the prototype therefore leaves `start_point` at the literal
+origin `(0,0,0)`, and the farthest-muon-vertex search at `:328` then measures
+distance from the origin, picking an essentially arbitrary vertex and setting
+`end_point` from it. The toolkit's `back()` (`PRShower.cxx:1275`) is a real
+point on the start segment.
+
+`dirsign() == 0` is plainly reachable — it is the member default
+(`PRSegment.h:158`, `int m_dirsign{0}`) and there are thirteen explicit
+`dirsign(0)` writes across `NeutrinoTrackShowerSep.cxx`,
+`PRSegmentFunctions.cxx` and `NeutrinoStructureExaminer.cxx`. So this is a
+**reachable prototype bug the toolkit does not reproduce**, which is the P11/P12
+class, not an undocumented coin-flip. Dropped on the same grounds.
+
+**(d) P13 — no present defect.** §3 already establishes the bound: the toolkit's
+BDT scorers are separate pipeline stages reading `tf->get_kine_info()` after
+`TaggerCheckNeutrino` has stored it, so nothing is starved. The exposure is
+forward-looking only — a *future* tagger reading `KineInfo` would read zeros —
+and `grep -n 'get_kine_info()'` returns five hits, none a tagger. That is a
+constraint to remember when the next tagger lands, not a change to make now.
+
+---
+
+### §10.9 Re-derived anchors (`23bd6783` → `407c5ba9`)
+
+§3's citations, corrected. Files not listed are unchanged.
+
+| what | §3 says | at `407c5ba9` |
+|---|---|---|
+| P1 cache write, single-segment branch | `PRShower.cxx:939` | **`:962`** |
+| P1 cache write, multi-segment branch | `PRShower.cxx:1050` | **`:1073`** |
+| P1 rewrite, `examine_shower_1` | `NeutrinoShowerClustering.cxx:1921` → recompute `:1934` | **`:1938` → `:1951`** |
+| P1 rewrite, `examine_showers` | `:2372` → recompute `:2374` | **`:2391` → `:2393`** |
+| P1 rewrite, `id_pi0_with_vertex` | `:2768`, guard `:2764` | **`:2787`, guard `:2783`** |
+| "the last `calculate_shower_kinematics`" | `:3272` (one call) | **`:3267` *and* `:3291` — TWO calls** |
+| P3 the unordered walk | `PRShower.cxx:1134` | **`:1164`, now `ordered_edges`** |
+| the deterministic helper it should have used | `PRShower.cxx:1209` | **`:1239`** |
+| P14 the `kenergy_best = 0` sentinel | `PRShower.cxx:960` | **`:983`** (nseg==1) *and* **`:1188`** (multi) |
+| P8 the long-muon local | `PRShower.cxx:1194` | **`:1224`** |
+| P9 the `dirsign` branch | `PRShower.cxx:1241-1246` | **`:1271-1276`** |
+| P10 the `!valid()` guard | `PRSegmentFunctions.cxx:1228` | **`:1253`** |
+| `segment_cal_kine_dQdx` | `PRSegmentFunctions.cxx:1214` | **`:1239`** |
+| §2.4 the dE clamp | `:1264-1268` | **`:1289-1293`** |
+| `cal_kine_dQdx(vQ,vx,recomb)` | `:1274` | **`:1299`** |
+| P12 `cal_kine_range` | `:1387` (fn), `:1407-1412` | **`:1412` (fn), `:1432-1437`** |
+| §2.2 `segment_cal_4mom` | `:1604-1634` | **`:1629-1660`** |
+| P5 `clus_geom_helper` default | `TaggerCheckNeutrino.cxx:266` | **`:295`** |
+| P5 the call site's comment | `:864` | **`:917`** |
+| P13 `init_tagger_info` | `:741` | **`:794`** |
+| P13 `match_isFC` | `:853` | **`:906`** |
+| P13 `fill_kine_tree` | `:861` | **`:914`** |
+
+**Exact, needing no correction**: everything in `NeutrinoEnergyReco.cxx`
+(P2 `:14-35`, the three call sites `:221 :276 :299`, `collect_charge_maps`
+`:226`, the shower cache test `:242`, P4's fresh locals `:262-264`, the latch
+`:303`) and everything in `NeutrinoKinematics.cxx` (P1 `:109 :119 :274 :286`,
+the translation note `:31`, P5 `:61-75`, P6 `:231-239`, P7 `:171 :205`,
+`kine_reco_Enu` `:301-305`) — both files are byte-identical across the eleven
+commits. `PRShower.h:152-153` (`get_kine_best`) is also unmoved.
+
+**The `:3272` correction is the one that matters**, and it is why F1's fix is
+scoped to the reader (§10.2): P1's exposure analysis is a claim about the order
+of PDG rewrites relative to the kinematics latch, and that ordering now has two
+call sites where §3 saw one. **Anyone re-opening P1's *frequency* question must
+re-read the ordering first.** F1's proposed fix is unaffected, because reading
+the live PDG is correct whatever the refresh schedule is.
+
+---
+
+### §10.10 What §10 does not claim
+
+- **No code was changed, no event was run, no gate was executed.** §10 is a
+  filter over §3 plus the re-verification in §10.7 and §10.9. The toolkit
+  working tree was read at `git show HEAD:` and not written to.
+- **P3's fix was verified by reading `026a7501` and the file at HEAD, not by
+  running the two `setarch` jobs.** The ULP measurement quoted in §10.7a is the
+  in-tree comment's, not this round's.
+- **No frequency is measured for F1**, and §10.9 shows its ordering premise
+  needs a re-read. The 139.6 MeV figure remains a per-occurrence bound.
+- **F2's magnitude is still not estimated**, and §10.3 deliberately declines to
+  propose a knob for it.
+- **F3 is argued output-identical, not measured so.** The argument is §5.6's
+  and it is only as strong as the claim that `kine_charge_from_maps` reads
+  `.charge` and nothing else.
+- **§10.7c's survey covers `get_kine_best()`. It does not cover
+  `get_kine_charge()` or `get_kine_range()`**, whose consumers were not
+  enumerated.
+- **The `pid` submodule re-check is still owed.** pr/34 §7.7 records
+  `prototype_base/pid` as +5833/−989 over 26 files against the merge-base
+  `a5fc0b9`. This stage's own files are clear of that diff (§0), but pr/28–pr/33
+  have not been re-checked and this round does not do it.
