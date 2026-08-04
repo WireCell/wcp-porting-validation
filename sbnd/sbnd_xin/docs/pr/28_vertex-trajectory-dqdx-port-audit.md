@@ -16,7 +16,7 @@ measured both container classes §11.8 left, and closed §4.2/§4.3/§4.4. Round
 them, the shower-quantity nondeterminism, turned out to be a **third** container
 class neither earlier sweep covered: `TrajectoryView::edges()` is a
 `std::unordered_set` hashed on heap addresses. **The PR display dump is now
-run-to-run identical: 0 leaf diffs over 954 324 leaves on six events**, down from
+run-to-run identical: 0 leaf diffs over 954 344 leaves on six events**, down from
 a floor of 1–3. What remains is recorded as *new* items with their own starting
 points, not as unfinished business here: the twelve `NeutrinoShowerClustering`
 membership sites (§15.8), the unconfirmed §11.7 mechanism (§14.8), the global
@@ -32,8 +32,8 @@ slice-start `x` convention (§14.9), and the owed valfast/1000 population gate
 | 5 | **the residual 10** — `boost::edges` / `boost::vertices` / `graph_nodes` (32 loops, 12 files). **`T_tagger` is now fully deterministic on the 48-event manifest.** | `c05bc5f7` | **§11** |
 | 6 | **§4.1** the multi-track dQ/dx close weights get the prototype's ×5/3 scale-up. **Vertex-fit area closed by owner decision (§12.7).** | `01ff88b1` | **§12** |
 | 8 | **§4.3 last row** `assemble_fitted_charge_2d` iterated a pointer-keyed map, making `charge_pred` run-dependent — the same-binary noise floor drops **593 → 2** leaves and `proj[]/charge_pred[]` to **zero**. **Both §11.8 container classes measured; §4.2/§4.3/§4.4 closed, §4.4 *settled*; and one newly-found pointer-ordered MUTATING traversal (`NeutrinoVertexFinder.cxx:2934`) fixed (§14.12).** | `22249ff4` | **§14** |
-| 9 | **the shower-quantity nondeterminism §14.5 left** — `TrajectoryView::edges()` is an `unordered_set` hashed on `void*` node descriptors, and `Shower::get_total_length()`/`calculate_kinematics()` accumulated FP over it. **Same-binary repeat floor 1 → 0 leaves.** Plus §14.6's two live tie-only sites, the dead `GroupingHelper`, and the `SIZE_MAX` hazard closed as a class with a warn-once guard. **Two revert-proven doctests.** | `026a7501` | **§15** |
 | 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped (§13.7). Owner accepted the result from the event display, and there is no knob to flip: the round is unconditional (§13.12).** | `23bd6783` | **§13** |
+| 9 | **the shower-quantity nondeterminism §14.5 left** — `TrajectoryView::edges()` is an `unordered_set` hashed on `void*` node descriptors, and `Shower::get_total_length()`/`calculate_kinematics()` accumulated FP over it. **Same-binary repeat floor 1 → 0 leaves.** Plus §14.6's two live tie-only sites, the dead `GroupingHelper`, and the `SIZE_MAX` hazard closed as a class with a warn-once guard. **Two revert-proven doctests.** | `026a7501` + `84cd02e0` | **§15** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
 read §3.1, §3.2, §3.3 rows a–e, §4.1, or §3b T1/T2/T3/T6 as open defects.
@@ -2937,7 +2937,7 @@ latent-class guard.
 | 3 | `PRShower.cxx` `add_shower()` | `shower.nodes()/edges()` → ordered | point-cloud row order |
 | 4 | `NeutrinoVertexFinder.cxx:655-656` | the two `map_{in,out}_segment_dirs` get `PR::SegmentIndexCmp` | tie-only |
 | 5 | `NeutrinoVertexFinder.cxx:3541` | `snapped` sorted by vertex graph index | tie-only |
-| 6 | `GroupingHelper.cxx:14` | `orig_to_shadow` ordered by `ident()` | **dead code** |
+| 6 | `GroupingHelper.{h,cxx}` | `orig_to_shadow` **and the returned map** ordered by `ident()` | **dead code** |
 | 7 | `PRGraph.h` / `PRShower.h` | `warn_unindexed()` on the index comparators | latent-class guard |
 
 ### 15.2 Root cause — `TrajectoryView::edges()` is hashed on heap addresses
@@ -2997,9 +2997,18 @@ evt163543: nleaf=103567 keyonly=0 valdiff=0
 TOTAL leaf diffs: 0
 ```
 
-**954 324 leaves across six events, zero of them run-dependent.** All
+**954 344 leaves across six events, zero of them run-dependent.** All
 `nusel-table.tsv` / `nusel-events.tsv` / `nusel-evt<ID>.tsv` identical between
-the two arms as well.
+the two arms as well — and the claim is checked on the other three artifact
+families rather than inferred from the A/B:
+
+```
+$ pr_arm_compare.py work-r9a work-r9b 388 239794 172230 271851 54095 163543
+SUMMARY 6 events | mabc identical 6/6 | pctree 6/6 | tagger+kine rows 6/6
+```
+
+So all four families — calib JSON, `mabc-pr.zip`, `pctree-pr-evt<ID>.tar.gz`,
+`T_tagger`+`T_kine` — are run-to-run identical, not just the display dump.
 
 ### 15.4 A/B vs round 8 — 14 leaves, all ULP, all in the two fixed quantities
 
@@ -3041,14 +3050,18 @@ plus `nusel-table.tsv`, `nusel-events.tsv` and all six `nusel-evt<ID>.tsv`
 
 ### 15.5 The three container sites — what was actually found
 
-**`GroupingHelper.cxx:14` is DEAD CODE.** Its only call site is commented out
+**`GroupingHelper.cxx` is DEAD CODE.** Its only call site is commented out
 (`clustering_retile.cxx:162`), and a repo-wide grep for
 `process_groupings_helper` finds nothing else but two `#include`s. The defect is
 real — the step-2 loop walks `orig_to_shadow` and calls `Grouping::separate()`,
 which **mints new clusters**, so an address-ordered walk let heap layout choose
 the idents the split products receive. It is fixed anyway (ordered by `ident()`,
 a total order among a grouping's children) so the defect cannot come back to
-life with the call site. **The fix is inert by construction and no gate applies
+life with the call site. **Both** maps are converted: `orig_to_shadow`, the walk
+that drives `separate()`, *and* `result`, the return value — leaving the latter
+address-keyed would only have moved the same defect one frame up, into whatever
+caller iterates it. That changes the declared return type in
+`GroupingHelper.h`, which is safe precisely because nothing calls it. **The fix is inert by construction and no gate applies
 to it** — that is a statement about reachability, not a measurement.
 
 **`NeutrinoDeghoster.cxx:61` was already deterministic — the earlier item list
@@ -3104,8 +3117,11 @@ independently and from inside the comparator rather than from an ad-hoc probe.
 
 ### 15.7 Tests — the round-8 gap is closed for round 9
 
-Two cases added to `clus/test/doctest_pr_graph_order.cxx` (78 cases / 918
-assertions, up from 76 / 896):
+Two cases added to `clus/test/doctest_pr_graph_order.cxx` — **78 cases / 918
+assertions with round 9's changes alone**, up from 76 / 896. (The concurrent
+session named in the Repro block has since added its own file to the same
+binary, so a `wcdoctest-clus` run today reports a larger total; 78 / 918 is the
+number attributable to this round.)
 
 * **`pr trajectory view ordered_edges sorts an address-hashed set by index`** —
   builds a chain graph and a `TrajectoryView` over it, and asserts
@@ -3153,6 +3169,14 @@ wins a tie, and that is an output change that must be measured, not assumed.
   tie-only sites — latent class, line numbers recorded.
 * **`GroupingHelper.cxx`** is fixed but still dead; whoever revives
   `clustering_retile.cxx:162` inherits a determinism-clean function.
+* **`work-tfix388-r9` must be hand-added to the next retire round's
+  `PROTECTED` list.** It is the evt-388 rerun at `026a7501` that the pr_display
+  viewer on port 5017 now serves (it replaces `work-tfix388-final`, which
+  predates round 8 and differs by 560 leaves, nearly all `proj[]/charge_pred`).
+  There is **no automatic protection**: `scripts/retire/retire_<date>.sh` reads
+  an explicit `PROTECTED` list written per round. A `RESERVED` marker file sits
+  in the dir, but `work-*` is git-excluded, so that marker lives on disk only —
+  this line is the part that survives.
 * **Round 8's two missing tests** (§14.12).
 * **§11.7's unconfirmed mechanism** (§14.8) and **the global slice-start `x`
   convention** (§14.9) — unchanged, both the owner's call.
