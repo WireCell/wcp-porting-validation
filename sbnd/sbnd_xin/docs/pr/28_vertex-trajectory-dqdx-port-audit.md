@@ -6,8 +6,8 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, plus **three rounds of fixes** the owner ordered
-after reading it. All seven are unconditional — no knob: they are port-fidelity
+**Status.** Audit + measurement, plus **four rounds of fixes** the owner ordered
+after reading it. All are unconditional — no knob: they are port-fidelity
 bugs or plain defects, not legacy behaviour to preserve.
 
 | round | items | toolkit commit | section |
@@ -15,6 +15,7 @@ bugs or plain defects, not legacy behaviour to preserve.
 | 1 | **§3.1** wrong point cloud · **§3.2** angle guard | `e6c51cc5` | **§7** |
 | 2 | **§3.3a** `clear_fit` wipes PID · **§3.3b** silent no-op reported as success · **§3.3c** charge-veto radius `0.6 → 0.3 cm` · **§3.3d** unsorted `out_edges` | `c89cb7b4` | **§8** |
 | 3 | **§3.3e** `improve_vertex`'s remaining unsorted `out_edges` — the two that mutate segments | `ea1a7e3d` | **§9** |
+| 4 | **the whole `clus/` sweep** — all 117 remaining raw `boost::out_edges` sites in 13 files | `4f2e7303` | **§10** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
 read §3.1, §3.2 or §3.3 rows a–e as open defects. **Still open** (all escalation
@@ -1075,3 +1076,177 @@ mattered here.
   population gate owed for §7 and §8 now covers §9 too.
 * `NeutrinoVertexFinder.cxx` outside `improve_vertex` still iterates unsorted
   out-edges in ~40 places. Unaudited, deliberately untouched.
+
+---
+
+## §10 The full `boost::out_edges` sweep — 117 sites, 13 files (toolkit `4f2e7303`)
+
+Owner instruction, after §9 flagged the rest of the file as unaudited: *"I think
+we should just go ahead fixing all these, these can only make things better,
+right?"* — and, mid-round: *"I do not worry about the changing the output at this
+point. This is a newly ported code, and we are doing the validation and
+improvement. After doing it, please run some events to check the cost."*
+
+### 10.1 Why "can only make things better" needed one qualification
+
+Two caveats were raised before starting, and the measurement settled both:
+
+1. **It changes output.** Sorting does not restore a known-correct answer; it
+   replaces an unstable choice with a stable one. §10.4 shows the change is real
+   and — on this manifest — confined to per-candidate diagnostic vectors.
+2. **`sorted_out_edges` allocates and sorts per call**, where the old code was a
+   bare iterator walk. Measured in §10.3: **no detectable cost**.
+
+### 10.2 What was converted, and the one strategy that worked
+
+**All 117** raw `boost::out_edges` iteration sites in `clus/src` (13 files) are
+now `sorted_out_edges`, joining the 50 already converted. **`clus/src` contains
+zero raw `boost::out_edges` iterations.**
+
+| file | sites |
+|---|---|
+| `NeutrinoVertexFinder.cxx` | 36 |
+| `NeutrinoTaggerNuE.cxx` | 22 |
+| `NeutrinoTaggerSinglePhoton.cxx` | 14 |
+| `NeutrinoTrackShowerSep.cxx` | 13 |
+| `NeutrinoStructureExaminer.cxx` | 9 |
+| `NeutrinoTaggerSSM.cxx` | 8 |
+| `TrackFitting.cxx` | 5 |
+| `NeutrinoPatternBase.cxx` | 3 |
+| `NeutrinoKinematics.cxx`, `NeutrinoTaggerNuMu.cxx` | 2 each |
+| `NeutrinoTaggerCosmic.cxx`, `NeutrinoShowerClustering.cxx`, `NeutrinoOtherSegments.cxx` | 1 each |
+
+The transformation that survived contact: **keep the range variable and change
+its type**, rather than deleting the declaration and inlining the call.
+
+```cpp
+-   auto edge_range = boost::out_edges(vd, graph);
+-   for (auto eit = edge_range.first; eit != edge_range.second; ++eit) {
+-       SegmentPtr sg = graph[*eit].segment;
++   const auto edge_range = sorted_out_edges(vd, graph);
++   for (auto eit : edge_range) {
++       SegmentPtr sg = graph[eit].segment;
+```
+
+Two earlier attempts that *deleted* the declaration both failed, because several
+functions declare one range and consume it in **two or more** later loops
+(`edge_range1`/`edge_range2` in `NeutrinoTrackShowerSep.cxx`). Keeping the
+variable makes reuse work automatically, preserves the original scoping exactly,
+and sorts **once** per declaration instead of once per loop.
+
+Two sites needed hands:
+
+* `NeutrinoStructureExaminer.cxx:40` — a `boost::edges` (all-edges) loop whose
+  binding names collided with a converted one. Restored; **out of scope**.
+* `NeutrinoStructureExaminer.cxx:2132` — already hand-rolled
+  `assign(begin,end)` + `std::sort` by `graph[e].index`, i.e. `sorted_out_edges`
+  written out longhand. Replaced by the helper.
+
+**Verification that no loop bound to the wrong vector:** every introduced
+`for (auto X : Y)` was checked to have a `const auto Y = sorted_out_edges(...)`
+declaration inside its own function (75 range-form + 117 inline-form). A
+name resolving to another function's vector cannot compile, and the build is
+clean.
+
+### 10.3 Cost — none measurable
+
+Serial, pinned, single-thread (`PR_JOBS=1`), the runner's comparable-wall mode:
+
+| event | baseline `ea1a7e3d` | swept | delta |
+|---|---|---|---|
+| 388 | 14 994 ms | 14 992 ms | −0.01 % |
+| 163543 | 10 080 ms | 10 093 ms | +0.13 % |
+| 172230 | 11 652 ms | 11 770 ms | +1.01 % |
+| 138009 | 10 807 ms | 10 706 ms | −0.93 % |
+| 116962 | 7 582 ms | 7 480 ms | −1.35 % |
+| 214469 | 22 440 ms | 22 357 ms | −0.37 % |
+| **total** | **77 555 ms** | **77 398 ms** | **−0.20 %** |
+
+48-event batch (`PR_JOBS=6`): **116 s → 117 s**.
+
+Both are inside run-to-run noise, and the sign is not even consistent. The
+reason the allocation does not show: PR-graph vertices have ~1–4 out-edges, and
+the type-change strategy sorts once per declaration where the old code walked
+the range once per loop. **Record the number as ≈0 %, not as "small".**
+
+### 10.4 Effect — 25 of 35 unstable T_tagger branches become deterministic
+
+The right measurement here is not A-vs-B, it is **run-to-run instability of each
+binary against itself**. Four 48-event arms, `work-oe{base,sweep}-nuecc48{,-rep}`,
+47 events with a `T_tagger`:
+
+| branch | baseline: events unstable | swept |
+|---|---|---|
+| `shw_sp_lol_1_v_angle` | 41 | **0** |
+| `numu_cc_1_length` / `_direct_length` / `_dQ_dx_cut` / `_medium_dQ_dx` | 24 each | **0** |
+| `numu_cc_1_n_daughter_all` | 23 | **0** |
+| `br3_6_v_length` / `_angle` / `_direct_length` | 20 each | **0** |
+| `numu_cc_1_particle_type`, `shw_sp_br3_6_v_*` | 18 each | **0** |
+| `lol_2_v_*`, `shw_sp_lol_2_v_*` | 9 each | **0** |
+| **`numu_cc_flag_1`** — an actual tagger **flag**, not a diagnostic | 1 | **0** |
+| `shw_sp_pio_2_v_dis2` / `_angle2` / `_acc_length` | 40 each | 40 |
+| `pio_2_v_dis2` / `_angle2` / `_acc_length` | 38 each | 38 |
+| `stw_3_v_angle` / `_dir_length` | 27 each | 22 |
+| `pio_2_v_flag`, `shw_sp_pio_2_v_flag` | 1 / 2 | 1 / 2 |
+
+**Unstable branches: 35 → 10. Branches made fully deterministic: 25.**
+
+A worked example, because it shows the hazard class precisely.
+`NeutrinoTaggerSinglePhoton.cxx:1857` (`lol_1`) collects a vertex's shower legs
+into `vtx_ss` and then does
+
+```cpp
+Vector dv1 = segment_cal_dir_3vector(vtx_ss.front(), ...);
+Vector dv2 = segment_cal_dir_3vector(vtx_ss.back(),  ...);
+double open_angle = dv1.angle(dv2) / M_PI * 180.0;
+```
+
+`front()`/`back()` of a vector filled in **pointer order** — so *which two legs
+define the opening angle* was decided by heap layout. This is the "collect into a
+vector" shape that pr/11's triage listed as order-*insensitive*; it is not, once
+anything downstream indexes the vector. It is unstable in 41/47 events on the
+baseline and stable in 0/47 after. `open_angle` feeds `flag_ov1` at a 36° cut,
+so it is a decision input, not only a dump.
+
+**No scalar decision branch moved between baseline and swept** across all 47
+events, and `nusel-table.tsv` / `nusel-events.tsv` (546 / 49 rows) are
+**byte-identical** between the two arms.
+
+### 10.5 The residual 10 — diagnosed, and not `out_edges`
+
+`pio_2` accumulates per-cluster track length over **all** graph edges
+(`NeutrinoTaggerNuE.cxx`, `NeutrinoTaggerSinglePhoton.cxx`):
+
+```cpp
+std::map<Facade::Cluster*, double> cluster_acc_length;
+for (auto [eit, eend] = boost::edges(ctx.graph); eit != eend; ++eit) {
+    ...
+    cluster_acc_length[sg1->cluster()] += segment_track_length(sg1);
+}
+```
+
+The map is only `find()`-ed, so pointer-keyed *iteration* is not the problem —
+the `+=` is. Floating-point addition is not associative, and `boost::edges`
+returns edges in pointer order for a `setS` graph, so `acc_length` differs in the
+last ulp between runs and moves candidates across the cut that gates
+`pio_2_v_dis2`/`_angle2`. This is pr/11's **float-accumulation** hazard applied
+to `boost::edges`, which this sweep did not touch.
+
+**Follow-up candidates, in order:** (1) accumulate `cluster_acc_length` in a
+stable order or over a sorted edge list — kills 6 of the 10; (2) `stw_3`, which
+improved 27 → 22 and so has a second source; (3) the 36 pointer-keyed
+`std::map`/`std::set<T*>` declarations still in `clus/src` (CLAUDE.md §2 forbids
+iterating these).
+
+### 10.6 Scope and what is NOT claimed
+
+* **Not bit-identical**, deliberately, and the owner waived the concern for this
+  round. The population gate owed for §7–§9 now covers §10.
+* **The remaining instability is larger than what was fixed, by event count.**
+  45/47 events still differ run-to-run, because `pio_2` alone touches ~40. The
+  honest headline is *25 of 35 branches*, not "determinism fixed".
+* **Stable ≠ correct** (as in §9.4): edge-index order is *an* order. The
+  prototype iterates pointer-keyed `std::set<ProtoSegment*>` at the equivalent
+  spots, so its order is equally arbitrary and no parity is broken — the same
+  argument pr/11 used at `broken_muon_id`.
+* `boost::edges`, `boost::in_edges` and `boost::adjacent_vertices` are untouched.
