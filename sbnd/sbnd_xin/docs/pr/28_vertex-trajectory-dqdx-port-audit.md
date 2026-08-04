@@ -6,19 +6,29 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, and — after the owner read it and asked for
-exactly these two — **§3.1 and §3.2 are now FIXED in the toolkit**, unconditionally
-(no knob: they are port-fidelity bugs, not legacy behaviour to preserve). See
-**§7** for the change and its measured effect on evt 388. Everything else below
-is still reported, not fixed.
+**Status.** Audit + measurement, plus **two rounds of fixes** the owner ordered
+after reading it. All six are unconditional — no knob: they are port-fidelity
+bugs, not legacy behaviour to preserve.
+
+| round | items | toolkit commit | section |
+|---|---|---|---|
+| 1 | **§3.1** wrong point cloud · **§3.2** angle guard | `e6c51cc5` | **§7** |
+| 2 | **§3.3a** `clear_fit` wipes PID · **§3.3b** silent no-op reported as success · **§3.3c** charge-veto radius `0.6 → 0.3 cm` · **§3.3d** unsorted `out_edges` | `c89cb7b4` | **§8** |
+
+Each fixed item is marked **FIXED** at its own section/table row below — do not
+read §3.1, §3.2 or the first four rows of §3.3 as open defects. **Still open**
+(all escalation rule 1, untouched): the remaining §3.3 rows, §3b T1–T8, §4.1,
+§4.2.
 
 **Headline.** The vertex-fixing mechanism the owner asked about is a **faithful
 port and it fires on SBND** — so it does *not* explain an off vertex (§1, §2).
-The audit found the vertex fit was reading the **wrong point cloud** (§3.1) —
-now fixed, and on evt 388 it moves the neutrino vertex **0.765 cm**. It also
-turned up one confirmed behaviour-changing divergence in the **dQ/dx** fit
-(§4.1) and a missing uBooNE calibration chain (§4.2); neither moves the vertex
-directly, both reach it only through PID. Those two remain open.
+The audit found the vertex fit was reading the **wrong point cloud** (§3.1) and,
+separately, that `clear_fit` was **discarding the PID of every leg of every
+fitted vertex** (§3.3a). Both are now fixed; together they move the evt 388
+neutrino vertex **0.854 cm** and remove **4 spurious vertex fits**. One confirmed
+behaviour-changing divergence in the **dQ/dx** fit (§4.1) and a missing uBooNE
+calibration chain (§4.2) remain open; neither moves the vertex directly, both
+reach it only through PID.
 
 ---
 
@@ -177,10 +187,14 @@ already been fixed on pass 1, so it retained `flag_fix` regardless.
 
 ---
 
-## §3 Vertex fit internals (`MyFCN`) — **two confirmed defects that move the vertex**
+## §3 Vertex fit internals (`MyFCN`) — **the confirmed defects that move the vertex**
+
+> **All defects in §3.1, §3.2 and the first four rows of §3.3 are FIXED**
+> (§7 round 1, §8 round 2). The findings are kept in their original form below
+> because they document *why* each change was made; the FIXED markers say which.
 
 §1 answered "is the vertex *held* fixed". This section audits the fit that
-*produces* the position, and it is where the audit found real problems. Both
+*produces* the position, and it is where the audit found real problems. All
 were re-verified by hand in both trees.
 
 Everything else in `MyFCN` matches: constructor constants
@@ -193,7 +207,7 @@ the 5000/8000 e⁻ charge-veto constants (FP-exact via `43000 × 5/43`, `× 8/43
 The `improve_vertex` call sequence was compared step by step: **no reordering,
 no missing step, no extra step.**
 
-### §3.1 **The PCA is computed on the wrong point cloud** (headline)
+### §3.1 **The PCA is computed on the wrong point cloud** (headline) — **FIXED** (`e6c51cc5`, §7)
 
 ```cpp
 // prototype  NeutrinoID_improve_vertex.h:538
@@ -227,7 +241,7 @@ the transverse constraint directions and the anchor point are derived from a
 skeleton whose nodes sit at blob centres, not from the trajectory the rest of the
 chain uses.
 
-### §3.2 Degenerate legs open the fit gate that should stay closed
+### §3.2 Degenerate legs open the fit gate that should stay closed — **FIXED** (`e6c51cc5`, §7)
 
 A segment with ≤1 point surviving the annulus pushes a `(0,0,0)` PCA direction
 placeholder (`MyFCN.cxx:96-116`). Both trees then loop over *all* entries when
@@ -277,16 +291,19 @@ giving `NaN`; `NaN > 15` is false, so that one silently *misses* an increment.
 
 ### §3.3 Other vertex-fit divergences
 
+**Rows a–d are FIXED** in round 2 (§8); the rest are open.
+
 | what | prototype | toolkit | severity |
 |---|---|---|---|
-| **`UpdateInfo` → `clear_fit` also wipes PID/direction**: toolkit's `Segment::clear_fit` additionally resets `m_dirsign=0`, `m_dir_weak=false`, `m_particle_score=100`, `m_particle_info=nullptr` | `ProtoSegment.cxx:1012-1040` (touches none of these) | `PRSegment.cxx:80-118`, called `MyFCN.cxx:460` | **behaviour-changing** — every vertex fit silently discards PID on all attached legs |
-| **Silent no-op reported as success**: three early `return`s in `UpdateInfo` (fit_pos outside a DV; missing wpid offsets; missing `steiner_pc`) abort before any write, yet `fit_vertex` still returns `true` | no counterpart | `MyFCN.cxx:294-298, 310-313, 351-355` | **behaviour-changing** — `improve_vertex` then re-tracks and may re-fit on an unmoved vertex |
-| `flag_front` criterion: index identity vs distance comparison (the distance form is present in the prototype but **explicitly commented out**) | `:857-862` | `MyFCN.cxx:373-376` | behaviour-changing |
-| charge-veto sampling radius | 0.3 cm (the default) | **0.6 cm** passed explicitly | behaviour-changing (different charge integral, same veto logic) |
+| **(a) FIXED §8** — **`UpdateInfo` → `clear_fit` also wipes PID/direction**: toolkit's `Segment::clear_fit` additionally resets `m_dirsign=0`, `m_dir_weak=false`, `m_particle_score=100`, `m_particle_info=nullptr` | `ProtoSegment.cxx:1012-1040` (touches none of these) | `PRSegment.cxx:80-118`, called `MyFCN.cxx:460` | **behaviour-changing** — every vertex fit silently discards PID on all attached legs. **Largest mover of the two rounds**; see §8.1a for the `:2327` mechanism |
+| **(b) FIXED §8** — **Silent no-op reported as success**: three early `return`s in `UpdateInfo` (fit_pos outside a DV; missing wpid offsets; missing `steiner_pc`) abort before any write, yet `fit_vertex` still returns `true` | no counterpart | `MyFCN.cxx:294-298, 310-313, 351-355` | **behaviour-changing** — `improve_vertex` then re-tracks and may re-fit on an unmoved vertex. Toolkit-only correctness fix, *not* port fidelity — the prototype has no such guards |
+| **(c) FIXED §8** — charge-veto sampling radius | 0.3 cm (the default, `ToyCTPointCloud.h:35`) | **0.6 cm** passed explicitly | **behaviour-changing** — 8× the sampled volume, so a different charge integral on *every* vertex fit; same veto logic |
+| **(d) FIXED §8** — second-loop `vertex_segments` refresh uses unsorted `boost::out_edges` where the first loop uses `sorted_out_edges` | — | `NeutrinoVertexFinder.cxx:2222-2229` | benign (feeds only a `size()==3` test) — fixed as hygiene, byte-identical by construction |
+| `flag_front` criterion: index identity vs distance comparison (the distance form is present in the prototype but **explicitly commented out**) | `:857-862` | `MyFCN.cxx:373-376` | behaviour-changing — **OPEN** |
 | `+0.5` half-wire offset on stored `pu/pv/pw/pt` | present `:971` | dropped `:466-469` | benign *if* consumers agree — it is a global port convention (`TrackFitting.cxx:1315` also drops it) |
 | identity-by-index → identity-by-0.01 cm distance throughout `UpdateInfo` | `:900-935` | `MyFCN.cxx:417-451` | forced — toolkit `WCPoint` has no index field (`PRCommon.h:96-99`); two Steiner points within 0.01 cm would alias |
 | `m_fit_vertex_min_seg_length` | **no counterpart** (grep: zero hits) | `NeutrinoPatternBase.h:203` | toolkit-only; inert at its `0` default, but **SBND sets 1.0** |
-| second-loop `vertex_segments` refresh uses unsorted `boost::out_edges` where the first loop uses `sorted_out_edges` | — | `NeutrinoVertexFinder.cxx:2222-2229` | benign today (feeds only a `size()==3` test) — but it is an iterated unordered edge set; keep it off any path that affects output |
+| **the `fitted_vertices` consumer loop** also iterates unsorted `boost::out_edges` — and unlike row (d) this one calls `segment_is_shower_topology` and `determine_dir_*`, which **do** affect output | — | `NeutrinoVertexFinder.cxx:2323` | **OPEN, order-dependent output path.** Found while fixing (a)–(d); pre-existing and outside the four items the owner listed, so deliberately not fixed in the same change (CLAUDE.md: unrelated defects do not ride along). **Worth its own round** |
 
 ## §3b Trajectory fitting
 
@@ -487,18 +504,20 @@ slice — behaviour-changing. If centre, the two agree.
 **Prime suspects**, in order — and note the first two are in the vertex fit
 itself, which is where the owner's instinct pointed:
 
-1. **§3.1 — the `MyFCN` PCA runs on the Steiner skeleton instead of the fitted
-   trajectory.** One line (`MyFCN.cxx:57-58`), directly biases the fitted vertex
-   position, and the toolkit already holds the correct cloud in
-   `Segment::fits()`. This is the single most likely cause of a systematically
-   off vertex.
-2. **§3.2 — degenerate legs count as 90° and open the fit gate.** The toolkit
-   fits vertices the prototype declines to. Combined with §3.1, the vertex both
-   moves more often than it should and moves to a slightly wrong place.
-3. **§3.3 — `UpdateInfo` wipes PID/direction on every attached leg** via the
-   toolkit's heavier `clear_fit`. That feeds §5→§6, i.e. *which* vertex is then
-   chosen.
-4. §3.3 — the "silent no-op reported as success" early returns.
+1. ~~**§3.1 — the `MyFCN` PCA runs on the Steiner skeleton instead of the fitted
+   trajectory.**~~ **FIXED, §7.** One line (`MyFCN.cxx:57-58`), directly biases
+   the fitted vertex position, and the toolkit already holds the correct cloud in
+   `Segment::fits()`. Confirmed the largest single mover of round 1: 0.765 cm on
+   evt 388.
+2. ~~**§3.2 — degenerate legs count as 90° and open the fit gate.**~~ **FIXED,
+   §7** — but measured **inert on evt 388**; kept as correct-port insurance for
+   topologies this event does not present.
+3. ~~**§3.3a — `UpdateInfo` wipes PID/direction on every attached leg**~~
+   **FIXED, §8.** This prediction was right and *understated*: it does feed
+   "which vertex is chosen", via the `:2327` gate — see §8.1a. It removed 4
+   spurious vertex fits on evt 388 and is round 2's entire effect.
+4. ~~§3.3b — the "silent no-op reported as success" early returns.~~ **FIXED,
+   §8**; measured inert on evt 388 (no guard ever fired).
 5. `fit_vertex_min_seg_length = 1.0` on *other* events (SBND-only, doc pr/9);
    check with the §2 trace recipe on an event where the vertex looks wrong.
    Inert on evt 388.
@@ -520,8 +539,10 @@ own quality guard (T1) is inoperative — except that under §3.1 it reads the
 Steiner path rather than that cloud at all. Fixing either one alone changes what
 the other sees, so they want separate gates and separate events.
 
-**§3.1 and §3.2 are now fixed** — the owner read this section and asked for both
-(§7). Items 3-10 remain open and are still escalation rule 1.
+**Items 1–4 are now fixed** — the owner read this section and asked for §3.1/§3.2
+first (§7), then §3.3a–d (§8). **Items 5–10 remain open and are still escalation
+rule 1.** The compounding note above still stands for the open items: §3b T1 and
+the now-fixed §3.1 both feed the same cloud, so T1 must be gated on its own.
 
 **The single most useful next step** is making `flag_fix` observable. It is the
 one flag that answers "did the vertex fit run for this vertex", and today **no
@@ -735,3 +756,232 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 The previous instance was serving `work-prdisp-cosscan2/pr_evt388/...`, which is
 a **pre-fix** dump; that arm is left on disk untouched, so the two can be served
 side by side on different ports to compare vertex placement directly.
+
+---
+
+## §8 §3.3a–d FIXED — round 2 (toolkit `c89cb7b4`), and its effect on evt 18255/388
+
+Owner instruction, after reading §3.3: *"Can you then fix these ... for the
+relevant ones, please double check with prototype code. After that, please
+update the md file, commit and push, rerun this 388 event served on display 5017
+port, restart the display."*
+
+**No knob**, for the same reason as §7 — and note (b) is a *toolkit-only
+correctness* fix rather than a port-fidelity one: the prototype has no
+counterpart guards to be faithful to.
+
+### 8.1 The changes
+
+Four files, `+53 / −26`. Every claim below was re-read in both trees before
+editing; prototype anchors are cited inline in the code.
+
+#### 8.1a — `Segment::clear_fit` no longer discards PID (`clus/src/PRSegment.cxx`)
+
+The prototype's `clear_fit()` (`ProtoSegment.cxx:1012-1040`) clears **only** the
+fit arrays and rebuilds `pcloud_fit`. `particle_type`, `flag_dir`, `dir_weak`
+and `particle_score` survive untouched. The toolkit additionally reset all four.
+
+The decisive scoping fact: **`clear_fit` has exactly one caller in each tree** —
+`MyFCN::UpdateInfo` (`MyFCN.cxx:482`; prototype `NeutrinoID_improve_vertex.h:943`).
+So this was never general bookkeeping: it discarded the PID of every leg of every
+**fitted vertex**, and nothing else.
+
+That is observable, and it is why this is the round's big mover:
+
+```cpp
+// NeutrinoVertexFinder.cxx:2327   (prototype :259 -> `if (sg->get_particle_type()==0)`)
+if (!sg->particle_info()) segment_is_shower_topology(sg, ...);
+```
+
+With `m_particle_info` nulled by `clear_fit`, that gate was **always true**, so
+`segment_is_shower_topology` re-ran on legs the prototype skips.
+
+But the re-run is **not** what removed the 4 fits — be precise here, because the
+loose version of this claim does not survive checking. The `is_shower` test is
+
+```cpp
+// NeutrinoVertexFinder.cxx:2070
+bool is_shower = sg->flags_any(kShowerTrajectory) || sg->flags_any(kShowerTopology)
+                 || (sg->particle_info() && std::abs(sg->particle_info()->pdg()) == 11);
+```
+
+`clear_fit` never touched either flag, so only the **third** term can flip when
+PID is preserved. And the flags were demonstrably *not* set on these legs: under
+the old code `:2327` did re-run `segment_is_shower_topology` on them, and they
+still counted as tracks — so that re-run did not set `kShowerTopology`. The
+measured chain is therefore:
+
+> PID survives `clear_fit` → `|pdg| == 11` at `:2070` is true → the leg is a
+> **shower**, not a track → `ntracks == 0` → the `:2077`
+> `ntracks == 0 && vtx != main_vertex` filter excludes the vertex.
+
+An electron leg had been coming back as `pdg = 0` and being counted as a track,
+so the toolkit fitted vertices the prototype never fits (measured: 4 such fits on
+evt 388, §8.3). Stopping the `:2327` re-run is a real second consequence of the
+same fix, but on this event it was inert.
+
+#### 8.1b — `UpdateInfo` reports whether it actually updated (`MyFCN.{h,cxx}`, `NeutrinoVertexFinder.cxx`)
+
+`UpdateInfo` is now `bool`. The three guards return `false`; the tail returns
+`true`. Both call sites became
+
+```cpp
+return results.first && fcn.UpdateInfo(results.second, cluster, track_fitter, dv);
+```
+
+The `&&` short-circuit reproduces the previous `if (results.first)` exactly —
+`UpdateInfo` is still never called on a failed fit.
+
+`fit_vertex`'s return feeds **three** consumers, all of which assume the vertex
+really moved: the `> 0.5 cm` re-track at `:2099`, `refit_vertices` at `:2229`,
+and `fitted_vertices` at `:2087` / `:2262` (whose consumer is the `:2318`
+direction/PID loop). When a guard fires, nothing was written — no `clear_fit`,
+no path change, no position change — so `false` is correct for all three at once.
+The prototype's `UpdateInfo` is `void` and cannot fail, so `flag_update == true`
+there always did mean "the vertex was updated"; this restores that invariant.
+
+#### 8.1c — charge-veto sampling radius `0.6 → 0.3 cm` (`NeutrinoVertexFinder.cxx`)
+
+```cpp
+// prototype NeutrinoID_improve_vertex.h:22-23  -- no radius argument
+double old_charge = ct_point_cloud->get_ave_3d_charge(vtx->get_fit_pt());
+// ToyCTPointCloud.h:35   double get_ave_3d_charge(WCP::Point& p, double radius = 0.3*units::cm);
+```
+
+`Facade_Grouping.h:315` carries the **same 0.3 cm default**; the toolkit passed
+`0.6` explicitly, present since `6b66163e` ("implement the fit_vertex function")
+with no comment or rationale. That is 8× the sampled volume, averaging in charge
+from well outside the vertex, on *every* vertex fit. The argument is now left
+implicit so the two defaults cannot drift apart.
+
+> This is the change with the widest reach across a population even though it is
+> measured inert on evt 388 (§8.3) — it perturbs the veto decision at every
+> vertex fit, and events sitting near the 5000/8000 e⁻ thresholds will flip.
+
+#### 8.1d — `sorted_out_edges` in the second `vertex_segments` refresh
+
+`NeutrinoVertexFinder.cxx:2223`, matching the first loop at `:2247`.
+**Byte-identical by construction**: the set feeds only a `size() == 3` test,
+which cannot depend on iteration order. Fixed as determinism hygiene.
+
+### 8.2 Repro
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+for arm in work-vtxfit388-r2 work-vtxfit388-r2-rep work-vtxfit388-r2-noC; do
+  PR_EXTRA_STAGES=pr_display PR_JOBS=1 SBND_WCT_LOGLEVEL=trace \
+    ./run_pr_chain_batch.sh work-nuecc48-prod0803 $arm data 388
+done
+```
+
+`./build/clus/wcdoctest-clus` — **71/71 passed, 0 failed** (1 skipped).
+Freshness proof (M1): `local/lib/libWireCellClus.so` 19:10:44 >
+`NeutrinoVertexFinder.cxx` 19:10:17, and `file` confirms ELF (M3).
+
+| label | binary |
+|---|---|
+| `work-vtxfit-388` | original baseline, pre-§7 (reused unchanged — M13) |
+| `work-vtxfit388-fix` | §7 only (§3.1+§3.2) — round 2's baseline |
+| `work-vtxfit388-r2-noC` | §7 + a + b + d, **radius left at 0.6** — isolates (c) |
+| `work-vtxfit388-r2` | §7 + a + b + c + d — what is committed |
+| `work-vtxfit388-r2-rep` | repeat of `-r2`, same binary — the nondeterminism yardstick |
+
+### 8.3 Result — the vertex moves a further 0.137 cm, and 4 spurious fits vanish
+
+```
+main_vertex   pre-§7 baseline  (-162.5332, 31.9991, 426.1712) cm
+              after §7        (-163.1355, 31.5351, 426.2557) cm   |d| = 0.765 cm
+              after §8        (-163.1962, 31.4605, 426.1582) cm   |d| = 0.854 cm cumulative
+                                                                        (+0.137 cm this round)
+```
+
+The bigger structural change is in the fit loop:
+
+| | after §7 | after §8 |
+|---|---|---|
+| `fit_vertex` calls in the traced loop | **8** | **4** |
+| distinct vertices fitted | 3 | **1** (the main vertex only) |
+| `fit_vertex made no update` | 2 | **0** |
+| `UpdateInfo` guard messages | 0 | 0 |
+| main vertex, every pass | 0.000 cm | 0.000 cm |
+| `skipping vertex fit` (the 1.0 cm cut) | 0 | 0 |
+
+The two extra vertices — at `(-168.70, 32.19, 441.22)` and
+`(-169.02, 31.67, 442.72)`, `nsegs=3` each, one of which was moving **1.039 cm**
+per pass — are no longer fitted at all. That is 8.1a working exactly as
+predicted: with PID preserved, their legs are correctly seen as showers,
+`ntracks` is 0, and the `:2077` filter excludes them. The prototype never fitted
+these vertices.
+
+Topology is unchanged across **all five** arms: **84 segments, 127 vertices,
+13 showers**.
+
+Selection:
+
+| field | pre-§7 | after §7 | after §8 |
+|---|---|---|---|
+| `nue_score` | 4.30094 | 4.30094 | 4.30094 (identical throughout) |
+| `numu_score` | −2.48440 | −2.37287 | **−1.85489** |
+| `cosmict_flag` | 0 | 0 | 0 |
+
+`numu_score` moves 0.518 this round — larger than round 1's 0.11 — but stays
+well negative and the event keeps its classification. `nue_score` has not moved
+at all across either round.
+
+### 8.4 Attribution: (a) does all of it; (b), (c), (d) are inert here
+
+| item | evidence | verdict on evt 388 |
+|---|---|---|
+| **(a) `clear_fit` PID** | the only remaining change once b/c/d are excluded; mechanism visible in the trace as the 8→4 fit-loop collapse. **Inferred by elimination, not measured directly** — no arm was run with (a) alone reverted | **the entire effect** |
+| **(b) `UpdateInfo` bool** | `grep "UpdateInfo: Warning"` → **0 hits** in every arm: no guard ever fires | **provably inert** |
+| **(c) charge radius** | `-r2-noC` vs `-r2` agree on `main_vertex` **to all printed digits** and on every score exactly | **inert** (see leaf-diff below) |
+| **(d) `sorted_out_edges`** | feeds only `size()==3` | **byte-identical by construction** |
+
+The (c) comparison needs the nondeterminism control, because its calib dumps are
+*not* leaf-identical:
+
+| comparison | leaf diffs (of 176 956) | where |
+|---|---|---|
+| `-r2` vs `-r2-rep` (**same binary**) | **356** | 351 `proj/charge_pred`, 2 `kine_energy_particle`, 2 `showers/kine_dQdx`, 1 `kine_reco_Enu` |
+| `-r2-noC` vs `-r2` (**radius in/out**) | **357** | 347 `proj/charge_pred`, 3 `kine_energy_particle`, 2 `kine_energy_info`, 2 `kine_particle_type`, 2 `showers/kine_dQdx`, 1 `kine_reco_Enu` |
+| either, `main_vertex` or any `*_score` | **0** | — |
+
+357 ≈ 356, in the same field families: the radius change sits **entirely inside
+the noise floor** two identical runs already produce (`assemble_fitted_charge_2d`
+`charge_pred` nondeterminism, doc pr/26 §5.2). `-r2` and `-r2-rep` are identical
+on `main_vertex` and every score.
+
+> **Method note, worth repeating from §7.4:** never attribute a calib-JSON diff
+> to a code change without re-running the *same* binary first. Here the noise
+> floor is 356 leaves; a 357-leaf diff would otherwise have looked like a result.
+
+### 8.5 Scope and what is NOT claimed
+
+* **One event, no gate.** Per the owner's instruction there is no valfast /
+  `abtest` run behind this. The change is **not bit-identical** and *will* move
+  other events — (c) especially, since it perturbs the veto at every vertex fit
+  even though it happened not to flip one here. A population gate is still owed
+  for §7 **and** §8 together, and the next valfast baseline must be regenerated.
+* **Inert on evt 388 ≠ inert.** (b) and (c) are unfired here, not proven
+  harmless. (b) fires only on pathological geometry (fit position outside every
+  detector volume, missing wpid entry, missing `steiner_pc`).
+* **The 4 removed fits are the prototype's behaviour, not an improvement claim.**
+  Evt 388 has no truth for the vertex position. What is established is that the
+  toolkit now fits the vertices the prototype fits, from the cloud the prototype
+  uses, with the prototype's charge-sampling radius.
+* Found but deliberately **not** fixed here: the `fitted_vertices` consumer loop
+  at `:2323` iterates unsorted `boost::out_edges` on a path that *does* affect
+  output (§3.3, last row). Outside the four listed items.
+
+### 8.6 The display
+
+Evt 388 on port 5017 re-served from the round-2 arm:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./pr_display/serve_pr_display.sh 5017 work-vtxfit388-r2/pr_evt388/calib-pr-evt388.json
+```
+
+`work-vtxfit-388` (pre-§7) and `work-vtxfit388-fix` (post-§7, pre-§8) are both
+left on disk, so all three vertex positions can be served side by side.
