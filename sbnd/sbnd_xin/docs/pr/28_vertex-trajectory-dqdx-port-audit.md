@@ -1735,7 +1735,14 @@ in field families the floor never touches:**
 `segments/points/dQ`, `reduced_chi2` and `vertices/fit/dQ` **never appear in
 either same-binary comparison**. The count alone would have been suggestive; the
 field families make it conclusive. Magnitude: **812 of 817** segment trajectory
-points changed `dQ`, median relative change **1.68 %**, max 124 %.
+points changed `dQ`, median relative change **1.68 %**.
+
+> **Do not quote a "max 124 %".** The largest *relative* changes are
+> small-denominator artifacts: the top five sit on points whose baseline `dQ` is
+> 1022–3716, against a **median |dQ| of 30 663** — i.e. 3–12 % of a typical
+> point, several of them straddling zero (`−1992.9 → 421.2`). The honest
+> scale-free statement is the median, plus: **126 of 812 points move by more
+> than 10 % of a typical `dQ`.**
 
 **Determinism is intact on both sides** — `base` == `base-rep` and `w53` ==
 `w53-rep` on every scalar below, and `nusel-evt388.tsv` is identical in *all
@@ -1790,8 +1797,9 @@ loop. **≈0 %.**
   uses the prototype's multi-track regularisation strength, FP-exactly, on the
   path the prototype uses it. Whether SBND *wants* uBooNE's tuning is the same
   open question §4.2 raises, and it is not settled here.
-* **The dQ/dx effect is large enough to matter for PID.** 1.68 % median on
-  segment `dQ` with a 124 % tail is not a cosmetic shift; `numu_score` moving
+* **The dQ/dx effect is large enough to matter for PID.** A 1.68 % median shift
+  on segment `dQ`, with 126 of 812 points moving more than 10 % of a typical
+  `dQ`, is not cosmetic; `numu_score` moving
   0.173 on a single event is the visible consequence. On a population this will
   move events across selection cuts.
 * Untouched, as before: §3.3's `flag_front` and later rows, §3b T1–T8, §4.2,
