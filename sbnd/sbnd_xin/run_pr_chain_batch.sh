@@ -114,6 +114,20 @@ TFJSON_TLA=()
 # protect only in the nue executable, wire-cell-prod-nue.cxx:1322).
 PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output"
 
+# PR_EXTRA_STAGES: comma-separated cm_by_name stages APPENDED to the pipeline
+# above.  EMPTY BY DEFAULT => the pipeline string, and therefore every compiled
+# config and every output of this driver, is unchanged.  Names resolve in
+# clus_pr's cm_by_name (cfg/pgrapher/experiment/sbnd/clus.jsonnet).
+#
+# Its reason for existing is the PR event display (doc pr/26):
+#   PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh <ql_root> <out> sim 388
+# appends PrDisplayDump, which writes pr_evt<ID>/calib-pr-evt<ID>.json next to
+# the usual outputs.  That stage is read-only, so an arm run with it must hash
+# identically to one run without -- which is the doc's gate.
+if [ -n "${PR_EXTRA_STAGES:-}" ]; then
+    PIPELINE="$PIPELINE,$PR_EXTRA_STAGES"
+fi
+
 # SBND PRODUCTION DEFAULT ON since the doc pr/23 sec 9 flip (owner 2026-08-02,
 # after the sec 8 fresh-tree gate: 0 event_label / nu_evaluated flips in 572
 # valfast events).  SBND_PROTECT_BUNDLE=0 removes both stages = the pre-pr/23
