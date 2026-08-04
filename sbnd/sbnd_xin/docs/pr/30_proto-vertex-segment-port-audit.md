@@ -14,7 +14,14 @@ porting dictionary has no proto-vertex section either (see §7.5). P1, P2, P3 an
 P4 would each alter production output unconditionally, which is §5 rule 1:
 the owner's call, not mine.
 
-> **→ If you want the short list, read §10.** The owner applied a filter on
+> **STATUS 2026-08-04: implemented and closed.** §12 has the five knobs, the
+> byte-identical gate and the 48-event measurements; **§12.10 records the owner
+> decision** — F2 flipped to a **SBND production default ON** (gated 48/48
+> byte-identical), P8 and P4 **closed with no fix owed**, P2 left at its
+> production default, and **P1 the only item still open**, blocked on the §3.1
+> unit question. Read §12.10 first, then §12.8.
+>
+> **→ For how the list got to four, read §10.** The owner applied a filter on
 > 2026-08-04 — *skip what is an improvement over the prototype, keep only bugs
 > or gaps in the port* — plus the clarification that where the toolkit lacks the
 > prototype's id/index information and substitutes geometry, that is accepted.
@@ -1394,3 +1401,93 @@ Nothing is proposed for a default flip. Concretely:
   47/48 events says nothing about whether the excluded fit is *better*.
 * **Nothing here revisits F4** (doc §10.5) — out of scope for this round and
   still unadjudicated.
+
+### §12.10 Owner decision, 2026-08-04 — F2 flipped ON, P8 and P4 closed
+
+The owner read §12.8 and adopted the recommendation. This section records what
+changed and what is now closed, so nothing here is re-litigated.
+
+**F2 `oov_prototype_parity` — SBND PRODUCTION DEFAULT ON.**
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` now sets it `true`. The
+C++ default stays `false`, so no other detector moves and the pre-flip arm is
+one edit away.
+
+| | |
+|---|---|
+| gate | `work-pr30-baseHEAD` vs **`work-pr30-f2on`** |
+| mabc / pctree / `T_tagger`+`T_kine` | **48/48 / 48/48 / 48/48** |
+| `nusel-evt*.tsv` | **48 compared, 0 differ** |
+| knob engaged | `PR30AUDIT … oov_parity=true` in **47/47** events that build a PR graph |
+| compiled config | one added key, `"oov_prototype_parity" : true`, and nothing else (`diff` against the knobs-off job JSON) |
+
+**The reason to land it now is that it is currently free.** The three guards
+fire once in total across 48 nueCC events (§12.3), so the flip is measurably
+byte-identical. The population where they *would* fire — the cathode region and
+the readout-window edges — is barely represented in this manifest. Landing the
+fidelity fix while it costs nothing is strictly cheaper than flipping it later,
+once it has become a real behaviour change needing its own A/B. The knob is
+engaged and inert, not absent: the `oov_parity=true` count above is the proof
+that this is a live-and-quiet flip rather than a no-op configuration.
+
+**P8 — CLOSED, no fix owed.** §12.6 established that the 108 firings are the
+`crawl_segment` transient and self-healing by the time that function returns.
+There is no invariant being lost, so there is nothing to repair. Two decisions
+follow and are now implemented:
+
+* the log line is **demoted from WARN to DEBUG** (`PRGraph.cxx`). At WARN it
+  emitted ~108 lines per 48 events of known-benign output, which trains a
+  reader to ignore the one channel that would matter if it ever fired from a
+  call site other than `crawl_segment`. The counter is unchanged, so the rate
+  is still in every `PR30AUDIT` line;
+* **`crawl_segment` is deliberately NOT "fixed".** Moving
+  `vertex->wcpt().point = vtx_new_point` (`NeutrinoStructureExaminer.cxx:948`)
+  above the `add_segment` calls would not be behaviour-preserving — `flag_front`
+  at `:901` is computed against the *old* vertex position — and there is no
+  defect to justify the risk. The check stays as a tripwire.
+
+`graph_endpoint_strict` remains available and remains **OFF**, with §12.6's
+measurement (22/48 events change, 5 nue candidates lost against 1 gained) as
+the standing reason not to use it.
+
+**P4 — CLOSED.** The owner's *"we want to avoid major bugs"* question is
+answered by the numbers rather than by an argument: the toolkit-only clause
+admitted **9 segments of 630 candidates in 8 of 48 events**, and turning it off
+flips **no** `nue_score` sign and **no** `event_label`. It is a small,
+well-behaved widening. `other_seg_relaxed_accept` stays at its `true` default
+and no further investigation is planned.
+
+**P2 — no action, and that is the decision.** It stays at its `true` default.
+It is now knobbed and counted, which was the actual gap; the data give no
+reason to remove something that moves an endpoint in 29.5% of attempts and
+whose removal costs a nue candidate.
+
+**P1 — the one item still open, and it is now blocked on a specific check.**
+`fit_exclusion` stays OFF. Before anyone interprets §12.4's first row as
+physics, the §3.1 transverse-coordinate question inside `update_association`
+must be settled:
+
+```cpp
+// prototype PR3DCluster_multi_track_fitting.h:1013
+double y = (wire - offset_u) * pitch_u;
+// toolkit  TrackFitting.cxx:2568
+double raw_y = (coord.wire - offset_u) / slope_yu;   // slope_yu = -sin(angle_u)/pitch_u
+```
+
+and the two feed different closest-2-D-distance helpers, each of which projects
+again. Until this round that whole path was **dead code** — precisely where a
+unit error survives unnoticed. The branch decides what §12.4 means:
+
+* compositions **agree** ⇒ "7 nue lost, 3 gained" is a real statement about a
+  fit whose downstream cuts were tuned without exclusion, and the next step is
+  the valfast/1000 manifest, because ten flips out of 48 does not establish the
+  sign of the net effect;
+* compositions **disagree** ⇒ the P1-on arm measured a unit bug, §12.4's first
+  row is void, and the fix is upstream of any A/B.
+
+No compute should be spent on P1 until that is known. This is read-only work
+plus a targeted unit test, not a campaign.
+
+**Still owed, unchanged by this round:** the valfast/1000 population gate with
+a regenerated baseline. Five more knobs now ride on it, all default-off except
+the SBND `oov_prototype_parity` flip recorded above, which is gated
+byte-identical here.
