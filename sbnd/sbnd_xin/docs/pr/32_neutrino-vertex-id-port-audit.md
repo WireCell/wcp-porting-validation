@@ -10,6 +10,13 @@ neutrino interaction point*.
 Every "this changes the output" below is an argument from source, not a
 measurement. Nothing here is a patch proposal.
 
+> **§10 (owner filter, 2026-08-04) supersedes §3 and §8 where they disagree.**
+> §1–§9 were written against toolkit `4f2e7303`. Re-verified against
+> **`f8f2150a`**, the twelve divergences filter to **four** (F1–F4) with
+> proposed solutions; **four more (P4, P8, P10, P11) were already fixed or
+> resolved between the two revisions** and are closed. §10.8 lists this doc's
+> own errors. Still no code changed this round.
+
 **Headline.** The scoring machinery is a faithful port — every term of
 `compare_main_vertices`, every rung of the `calc_conflict_maps` angle ladder,
 every term of `compare_main_vertices_global`, and the whole
@@ -861,3 +868,428 @@ stage's decisions more than most of P1–P12.
   §5 rule 4 forbids picking a reading on an undocumented divergence. Both
   readings are given for P2 and P6; the rest are stated as facts about the two
   sources.
+
+  *§10 lifts this restriction for the four findings the owner's filter keeps:
+  the owner asked for solutions, so §10 gives one per finding. Each is still a
+  default-OFF knob, not a change of the production path.*
+
+---
+
+## §10 Owner filter — twelve divergences to four, with solutions
+
+**The request.** *"Skip the ones that are improvements over the previous
+prototype implementation, and only focus on the ones that are bugs or missing
+from the port. Give a filtered list as well as the solutions."* Plus one
+standing pre-clearance, in the owner's words:
+
+> *"In the toolkit, we are missing id information for some data, so we have to
+> use positions to do it, this is not a problem."*
+
+That sentence resolves an entire class by itself — every place the toolkit
+replaces a prototype Steiner-**index** equality with a **position** comparison
+is cleared in advance and is not a divergence to report. It disposes of P6
+outright.
+
+**Which revision.** Everything below is re-derived against **`f8f2150a`**, the
+committed HEAD, via `git show f8f2150a:<path>` — *not* the working tree. A
+concurrent session is holding uncommitted edits to
+`clus/inc/WireCellClus/NeutrinoPatternBase.h` and
+`clus/src/NeutrinoTrackShowerSep.cxx` in this checkout, so working-tree line
+numbers for those two files are not reproducible. `NeutrinoVertexFinder.cxx`,
+`PRSegmentFunctions.cxx` and `TrackFitting.cxx` are clean at HEAD.
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit && git rev-parse --short HEAD   # f8f2150a
+mkdir -p /home/xqian/tmp/pr32
+for f in clus/src/NeutrinoVertexFinder.cxx clus/src/PRSegmentFunctions.cxx \
+         clus/src/TrackFitting.cxx clus/src/MyFCN.cxx \
+         clus/inc/WireCellClus/NeutrinoPatternBase.h \
+         clus/inc/WireCellClus/PRVertex.h clus/inc/WireCellClus/PRCommon.h ; do
+  git show f8f2150a:$f > /home/xqian/tmp/pr32/$(basename $f)
+done
+```
+
+### §10.1 The filter
+
+| # | verdict | why |
+|---|---|---|
+| **P1** | **KEEP → F1** | genuine port bug; **widened** — loose end 3 is now resolved and it bites at both sites |
+| P2 | drop | deliberate toolkit design (doc pr/4), *per the rule*; the tuning concern survives — §10.6 |
+| **P3** | **KEEP → F2** | genuine port bug; **three stacked changes at two sites**, with a root cause the doc did not reach |
+| P4 | **closed** | **already fixed** at HEAD — `22249ff4` |
+| P5 | drop | toolkit is deterministic, prototype is not — an improvement |
+| P6 | drop | **pre-cleared by the owner** (index → position); also removes prototype UB |
+| **P7** | **KEEP → F3** | latent bug, toolkit-only path, guard asymmetry |
+| P8 | **closed** | **already fixed** at HEAD — `026a7501` |
+| P9 | drop | the difference is **unobservable** — proven below |
+| P10 | **closed** | **already fixed** at HEAD — `c05bc5f7` |
+| P11 | **closed** | **resolved deliberately** and documented in the header — doc pr/28 §14.8 |
+| **P12** | **KEEP → F4** | genuinely missing from the port — but display-only, do it on demand |
+
+Twelve → **four**. Three of those four are code defects (F1, F2, F3); the
+fourth (F4) is a missing diagnostic with no algorithmic reach.
+
+---
+
+### §10.2 F1 (= P1) — the conflict and PCA angles are measured from the snapped vertex
+
+**Confirmed at HEAD**, and **wider than §3 states**.
+
+The two raw-`wcpt()` sites survive the revision drift:
+
+| site | HEAD anchor | prototype |
+|---|---|---|
+| `calc_conflict_maps` in-dirs | `NeutrinoVertexFinder.cxx:686` | `NeutrinoID_track_shower.h:1804` `get_fit_pt()` |
+| `calc_conflict_maps` out-dirs | `:694` | `:1808` `get_fit_pt()` |
+| `…_all_showers` PCA point cloud | `:388` | `:1468` `get_fit_pt()` |
+| `…_all_showers` axis projection | `:405-407` | `:1480` `get_fit_pt()` |
+| `…_all_showers` z tie-breaks | `:446`, `:459`, `:482`, `:526`, `:535-536` | `:1542`, `:1551`, `:1567`, `:1574` `get_fit_pt()` |
+| `…_all_showers` path endpoints | `:455` | `:1504-1505` `get_closest_wcpoint(get_fit_pt())` |
+
+The prototype uses `get_fit_pt()` at **every** one of those. So the finding is
+not "two functions"; it is **two functions and nine expressions**, of which the
+last row is arguably equivalent (snapping the fit point to the nearest Steiner
+node ≈ `wcpt` after `UpdateInfo`) and the other eight are not.
+
+**Loose end 3 is RESOLVED: `fit().valid()` IS true at this point.** §3 left this
+open and scoped P1 conditionally. Traced at HEAD:
+
+1. `Fit::valid()` is `index >= 0` (`PRCommon.h:145-148`).
+2. `TrackFitting::multi_trajectory_fit` fits the vertex and then explicitly
+   sets `vertex_fit.index = -1` (`TrackFitting.cxx:3896`) — a faithful port of
+   the prototype's `vtx->set_fit(init_p, 0, -1, …)`
+   (`PR3DCluster_multi_track_fitting.h:342`, third argument). Read alone, this
+   says every fitted vertex ends up *invalid*.
+3. But `do_multi_tracking` is not finished: under `if (flag_dQ_dx)` it calls
+   `reset_fit_prop()` on every vertex (preserving `flag_fix`) and then runs a
+   **third** `form_map_graph` (`:8350`), which re-assigns
+   `start_v->fit_index(count)` / `end_v->fit_index(count)` to every vertex
+   still carrying `-1` (`:3247-3265`).
+4. `Fit::reset()` clears `index`, `flag_fix`, `range` — **not `point`**
+   (`PRCommon.h:134-138`). The fitted position survives the reset.
+
+So after any `do_multi_tracking(…, flag_dQ_dx = true, …)` — which is what
+`improve_vertex` and stage 3 both run — every vertex attached to a fitted
+segment has `fit_index >= 0` and a fitted `fit().point`. **P1 therefore bites
+in the all-showers branch too**, not only in the main cluster, and the §3
+hedge ("if it is not, P1 does not bite at that site at all") can be struck.
+
+**Why it is a bug and not a choice.** The same file already reads the prototype
+quantity through `fit().valid() ? fit().point : wcpt().point` at fourteen
+expressions — `:886`, `:993`, `:1633-1634`, `:1789-1790`, `:2644`, `:2709`,
+`:2741`, `:2855`, `:3072`, `:3077`, `:3128`, `:3148` — while the nine
+expressions tabulated above read `wcpt()` raw. The file does not apply its own
+convention uniformly, and the prototype has exactly one convention.
+
+**Magnitude.** The gap is `Vertex::fit_distance()` (`PRVertex.h:85`) — the
+continuous fit minus its snap to the nearest Steiner node — because
+`MyFCN::UpdateInfo` writes both members (`MyFCN.cxx:487` `vtx_fit.point =
+fit_pos`, `:496` `vtx->wcpt().point = vtx_new_pt`). It is a lattice quantisation, not
+a fitted-vs-unfitted swap. It matters because these angles feed the
+`<35 / <70 / <85 / <110` ladder whose rungs are worth `+5 / +3 / +1 / +0.25`
+before the `/4`, against topology terms spaced `0.125` apart.
+
+#### Solution F1
+
+Add one knob, `vertex_dir_use_fit_point` (C++ default **false** = today's
+behaviour), on `TaggerCheckNeutrino` → `PatternAlgorithms`. When true, replace
+the nine raw reads with the file's own existing idiom, hoisted to one helper so
+there is a single convention:
+
+```cpp
+// Faithful port of ProtoVertex::get_fit_pt().  The prototype's ctor sets
+// fit_pt = wcpt (ProtoVertex.cxx:17-19), so get_fit_pt() is never
+// uninitialised; PR::Vertex has no such ctor, so the wcpt fallback stands in
+// for the un-fitted case.  doc pr/32 §10.2.
+static inline WireCell::Point vtx_fit_pt(const VertexPtr& v)
+{
+    return v->fit().valid() ? v->fit().point : v->wcpt().point;
+}
+```
+
+Leave `:455` (`do_rough_path`) alone: the prototype's own counterpart snaps to
+a Steiner node there, so `wcpt()` is the faithful read.
+
+**Watch item, not part of the fix.** `PR::Vertex` has no constructor
+initialising `m_fit.point` from `m_wcpt.point`, so a vertex created after the
+last fit and never fitted carries `fit().point == (0,0,0)` — the fallback is
+load-bearing, and dropping it (e.g. "just read `fit().point`, the prototype
+does") would put the origin into a score ladder. Initialising it in
+`make_vertex()` would be the closer port, but that reaches outside this stage.
+
+**Gate.** Not expected byte-identical when on — `fit_distance()` is nonzero on
+127/127 vertices of evt 388 (doc pr/28 A4). Standard nueCC48 arm.
+
+---
+
+### §10.3 F2 (= P3) — the shower-trajectory recheck, and why a naive parity patch would kill the block
+
+**Confirmed at HEAD**, `NeutrinoVertexFinder.cxx:2409-2410`, and the doc
+**understates it**: the same substitution appears at a **second site the doc
+does not list**, `:2337`.
+
+| | prototype | toolkit HEAD |
+|---|---|---|
+| outer gate, `improve_vertex` direction pass | `sg1->get_flag_shower_trajectory()` — **stored flag** (`NeutrinoID_improve_vertex.h:248`) | `segment_is_shower_trajectory(sg1, 10*units::cm, m_mip_dqdx)` — **recomputed** (`:2337`) |
+| outer gate, shower-traj recheck | `sg->get_flag_shower_trajectory()` — **stored flag** (`:287`) | `segment_is_shower_trajectory(sg, 10*units::cm, m_mip_dqdx)` — **recomputed** (`:2409`) |
+| inner test | `sg->is_shower_trajectory()` — recompute, **step 10 cm** default (`ProtoSegment.h:85`), internal scale **`50000/units::cm`** (`ProtoSegment.cxx:566`) | `segment_is_shower_trajectory(sg, **1.0 cm**, **m_mip_dqdx_median**)` (`:2410`) |
+
+Scale dictionary, so the third row is unambiguous: the prototype's *internal*
+`50000/units::cm` in `is_shower_trajectory` is the toolkit's `mip_dQ_dx`
+parameter (default `50000/units::cm`, SBND `m_mip_dqdx = 56000`). The
+prototype's `43e3/units::cm` is `m_mip_dqdx_median` (SBND 48000). So the
+**outer** toolkit call carries the faithful scale and the **inner** one does
+not — it passes the 43e3-analog where the function wants the 50000-analog.
+
+**The load-bearing observation.** The obvious parity patch — "make the inner
+call `(10*units::cm, m_mip_dqdx)` like the prototype" — **makes the whole block
+dead code**. With the outer gate also recomputing at `(10 cm, m_mip_dqdx)`, the
+inner `!segment_is_shower_trajectory(sg, 10 cm, m_mip_dqdx)` is the negation of
+a condition established one line earlier, so it is always false and the body
+never runs.
+
+The premise that argument rests on, stated so it can be attacked: the two calls
+are **adjacent lines** with nothing between them, and
+`segment_is_shower_trajectory` reads only `seg->fits()` and derived lengths /
+median dQ/dx — its one side effect is `seg->set_flags(kShowerTrajectory)`
+(`PRSegmentFunctions.cxx:1074`), which the function never reads back. So for
+fixed arguments it returns the same value twice.
+
+The 1.0 cm step is therefore not a typo: it is what keeps the block alive after
+the outer gate was changed from a flag read to a recomputation. **The two
+changes are one change**, and it must be undone as one.
+
+**Root cause — the toolkit's `kShowerTrajectory` flag cannot be cleared by the
+test that sets it.** This is why reading the stored flag was not an option for
+whoever wrote `:2409`:
+
+* prototype `is_shower_trajectory()` **resets then sets**: line 544
+  `flag_shower_trajectory = false;`, line 608 `… = true` if it fires. Every
+  call re-caches, including *demoting* a segment that no longer qualifies.
+* toolkit `segment_is_shower_trajectory()` **only sets** — `set_flags` at
+  `:1074`, no `unset_flags` anywhere in it.
+
+Explicit demotions *are* ported and are complete — prototype
+`set_flag_shower_trajectory(false)` at `NeutrinoID_track_shower.h:2058`,
+`:2102`, `:2109`, `:2178` map exactly onto toolkit `unset_flags` at
+`NeutrinoVertexFinder.cxx:1334`, `:1395`, `:1472` (the prototype's `:2102` and
+`:2109` are the two arms of one if/else that the toolkit hoists). Repo-wide at
+HEAD there are exactly one set and three unset sites. **The only missing clear
+is the one inside the test itself.**
+
+Consequence, in the prototype's own terms: the recheck block exists to say
+*"this leg was labelled a trajectory shower, but a fresh look says it is not —
+re-determine its direction as a track."* The prototype **also demotes the
+label**, so `get_flag_shower()` goes false downstream. The toolkit re-determines
+the direction and **leaves the segment labelled a shower**.
+
+#### Solution F2
+
+One knob, `shower_traj_recheck_parity` (C++ default **false**), doing three
+things together — they cannot be separated without killing the block:
+
+1. In `segment_is_shower_trajectory`, mirror the prototype's re-cache:
+   `if (flag) seg->set_flags(kShowerTrajectory); else seg->unset_flags(kShowerTrajectory);`
+2. At `:2337` and `:2409`, read the stored flag
+   (`sg->flags_any(SegmentFlags::kShowerTrajectory)`) instead of recomputing.
+3. At `:2410`, recompute at the prototype's parameters —
+   `segment_is_shower_trajectory(sg, 10*units::cm, m_mip_dqdx)`.
+
+With (1) and (2) in place the block is alive again for the prototype's reason:
+the stored flag is stale (it predates this pass's refit) and the fresh 10 cm
+test can disagree with it.
+
+**Blast radius — the reason this must be default-OFF and gated hard.** Step (1)
+changes a flag with **31 `kShowerTrajectory` occurrences in
+`NeutrinoTrackShowerSep.cxx` alone, every one of them a read**, plus
+`get_flag_shower()`-equivalent sites in `PrDisplayDump.cxx` and
+`MultiAlgBlobClustering.cxx`. It is not a local change. **`NeutrinoTrackShowerSep.cxx`
+is one of the two files the concurrent session is editing** — coordinate before
+touching it.
+
+**Gate.** nueCC48, knob-off must be byte-identical (steps 1–3 are all inside
+`if (m_shower_traj_recheck_parity)` / the flag-write branch), knob-on measured
+with a counter on how often the stored flag and the fresh test disagree.
+
+---
+
+### §10.4 F3 (= P7) — invalid-descriptor candidates keep score 0 and stay in the argmax
+
+**Confirmed at HEAD**, `compare_main_vertices`. The guard is applied to two
+loops and omitted from four places:
+
+| block | HEAD anchor | guarded? |
+|---|---|---|
+| proton-topology pre-pass | `:812` | **yes** |
+| z-prior + per-segment ladder | `:894` | **yes** |
+| `min_z` scan | `:888-890` | **no** |
+| fiducial `+0.5` | `:940-947` | **no** |
+| conflict `− conflicts/4` | `:950-953` | **no** |
+| argmax | `:956-963` | **no** |
+
+A candidate with an invalid descriptor reaches the argmax carrying
+`0 + (0.5 if in FV) − conflicts/4`, and real candidates routinely score
+negative because the z-prior and the conflict penalty are both subtractive. The
+unguarded `min_z` scan is the same defect one step earlier: such a candidate's
+z still sets the origin of everyone else's prior.
+
+**Reachability — argued, not measured.** Candidates are collected from
+`ordered_nodes(graph)` (`:2588`, `:2559`, `:2578`), so every one is
+descriptor-valid at collection; between collection and use only
+`examine_main_vertices_local` runs, and it retypes segments and pushes
+chain-end graph vertices — it does not call `remove_vertex`. On that reading
+the path is dead code. That is a control-flow argument, not a measurement, and
+this doc's §9 discipline says so out loud: **do not call the fix "free" or
+"byte-identical" — call it *expected* byte-identical and gate it like anything
+else.**
+
+#### Solution F3
+
+Filter once at function entry instead of sprinkling four more guards:
+
+```cpp
+// doc pr/32 §10.4: two loops guarded on descriptor_valid(), four not.
+// Filtering here makes the whole scorer see one candidate set.
+std::vector<VertexPtr> scored;
+for (auto vtx : vertex_candidates) if (vtx->descriptor_valid()) scored.push_back(vtx);
+```
+
+and score/argmax over `scored`. Knob `main_vertex_require_descriptor`, C++
+default **false**. Add a one-line DEBUG counter for how many candidates the
+filter drops — if it is 0 everywhere, the finding is confirmed dead and the
+knob can be retired rather than carried forever.
+
+---
+
+### §10.5 F4 (= P12) — `map_cluster_main_candidate_vertices` is not ported
+
+**Confirmed.** Prototype records the per-cluster candidate list before
+filtering (`NeutrinoID_track_shower.h:1332`) and exposes it
+(`NeutrinoID.h:1720`). Re-checked at HEAD: the toolkit has no equivalent, and
+**every** prototype consumer is an app-level output-tree filler —
+`wire-cell-prod-{nue,nnbar,nue-mt,pi0,nue-port}.cxx`. No algorithm reads it.
+
+It is the one item that literally matches *"missing from the port"* while
+changing no decision. Kept in the list because the owner's rule names it, and
+because it is exactly what a vertex-tuning display would need first — doc
+pr/27 §6 records this row as "candidate list, per-cluster and global →
+**nothing**".
+
+#### Solution F4
+
+Do **not** add a member to the algorithm classes. Emit it where the display
+already goes: one array in `PrDisplayDump` (default-OFF dumper, so this is a
+diagnostic-schema change, not a physics change), written from
+`determine_main_vertex` just before `examine_main_vertices_local` — the same
+point the prototype records it. **Implement on demand only**; it costs a
+schema bump and buys nothing until someone is tuning the pick.
+
+---
+
+### §10.6 Dropped, and why
+
+**P2 — the DL re-ranker.** Dropped **per the rule**, not because the question
+went away. It is a deliberate toolkit design (doc pr/27 §6, adopted in pr/4),
+the prototype's 177-line legacy path is retained and faithful (§2.8), and
+"prototype fidelity" is not the right frame for a component with no
+counterpart. **The reading (b) concern survives as a tuning item and must not
+be lost here:** `W_MAIN`, `W_CLEN` and the 4.0 acceptance floor were not
+derived on SBND, and the dominant term `s_dl × 1000` is scaled for uBooNE score
+magnitudes. That belongs with doc pr/2 gap G1, not with a port-fidelity fix.
+
+**P5 — candidate ordering.** The toolkit is deterministic (`ordered_nodes`,
+`IndexedVertexSet`) and the prototype is not (pointer-keyed `std::map`). That
+is an improvement. Its coupling to P7 is addressed by F3.
+
+**P6 — `flag_start`.** **Pre-cleared by the owner**: the toolkit lacks the
+Steiner-index information and must use positions. Independently, the prototype
+reads `flag_start` uninitialised when neither index matches
+(`NeutrinoID_track_shower.h:1627-1631`, and three more at `:119`, `:180`,
+`:343`/`:354`), so the toolkit also removes real UB.
+The third formulation (`find_vertices` order in the DL veto, `:3427`) is the
+same question asked a third way and agrees wherever the vertex is an endpoint.
+
+**P9 — degenerate-direction guards.** Dropped, and the doc's own hedge can be
+retired: the difference is **not observable**. §3 says the `continue` at
+`find_cont_muon_segment:1014` skips `max_ratio1` bookkeeping the prototype
+would still do. Re-read at HEAD: `max_ratio1` is written at `:1058` and its
+only reader is its own `>` comparison at `:1057`; after the loop it is never
+read (the prototype's only consumer, `if (max_ratio1 > 1.2 …) flag_cont =
+false;`, is commented out at `NeutrinoID_track_shower.h:2356-2357`). Both
+`max_ratio1` and `max_ratio1_length` are dead — the toolkit even `(void)`-casts
+the latter at `:1066`. Skipping dead bookkeeping changes nothing.
+
+---
+
+### §10.7 Already fixed or resolved since `4f2e7303` — closed
+
+All four determinism findings are gone at HEAD. `4f2e7303` and `f8f2150a` are
+the same day; the audit simply predates these commits.
+
+| # | what §3 reported | state at `f8f2150a` | fixed by |
+|---|---|---|---|
+| P4 | `used_segments` pointer-set iterated while the body mutates PID | sorted into `ordered_used_segments` by graph index before the loop, `:2967-2978`, with the reason in-code at `:2949` | `22249ff4` (doc pr/28 §14) |
+| P8 | `map_in/out_segment_dirs` pointer-keyed, argmax on ties | both declared `std::map<SegmentPtr, geo_vector_t, PR::SegmentIndexCmp>`, `:668-669` | `026a7501` (doc pr/28 §15) |
+| P10 | raw `boost::edges` driving `max_length_muon` | **zero** `boost::edges` remain in the file; `:790` is `ordered_edges(graph)` with the reason in-code at `:789` | `c05bc5f7` (doc pr/28 §11) |
+| P11 | `existing_segments` pointer-set, order-sensitivity unverified | **resolved deliberately**: the block at `:1841-1870` takes a running min over three distances — order-insensitive — and the container must stay pointer-keyed because `Segment::get_graph_index()` is not guaranteed unique. Rationale is in `NeutrinoPatternBase.h` above the `eliminate_short_vertex_activities` declaration | doc pr/28 §14.8 |
+
+P11 also answers **loose end 4** in full: it is a min-accumulation, not an
+ordering dependence, and the pointer keying is a considered decision with a
+written justification — leave it alone.
+
+---
+
+### §10.8 Corrections to this doc
+
+Found while re-verifying. Listed so the next reader does not inherit them.
+
+1. **§3 P10 says "three raw `boost::edges` remain".** There were **eight** at
+   `4f2e7303` (`:773`, `:1105`, `:1552`, `:1844`, `:2029`, `:2295`, `:3137`,
+   `:3515`). The three listed were the ones tabulated, not the ones present.
+   Moot at HEAD — all eight are `ordered_edges` — but the count was wrong when
+   written.
+2. **§3 P3 lists one recomputation site; there are two.** `:2337` in the
+   `improve_vertex` direction pass makes the same substitution as `:2409`
+   against prototype `NeutrinoID_improve_vertex.h:247`.
+3. **§3 P3 does not reach the root cause.** The recomputation is not
+   gratuitous: the toolkit's `kShowerTrajectory` cannot be cleared by the test
+   that sets it, so a flag read would return a monotone OR of every past call.
+   §10.3.
+4. **§7 loose end 3 is resolved, and the answer widens P1.** `fit().valid()` is
+   true after `do_multi_tracking` because the pre-dQ/dx `reset_fit_prop()` +
+   third `form_map_graph` re-assign every vertex a fit index. §10.2.
+5. **§7 loose end 4 is resolved** — P11, §10.7.
+6. **§3 P9's "bookkeeping differs" is unobservable** — `max_ratio1` has no
+   consumer after the loop. §10.6.
+7. **§3 P1's site list is incomplete** — nine expressions, not two functions'
+   worth of two. §10.2.
+8. **The `4f2e7303` banner at the top of this doc is stale** for §3's anchors
+   in the four closed findings. §1–§9 are still correct *as of that revision*;
+   §10 is the current-HEAD view.
+
+---
+
+### §10.9 What §10 still does not claim
+
+* **No event was run this round either.** No build, no A/B, no gate. F1's
+  "not byte-identical when on" is a prediction from `fit_distance() > 0`
+  measured in doc pr/28 A4, not a run of this knob.
+* **F3's unreachability is an argument from control flow**, not a measurement.
+  That is precisely why the counter is part of the proposed solution.
+* **F2's blast radius is counted, not measured** — 31 `kShowerTrajectory`
+  occurrences in `NeutrinoTrackShowerSep.cxx` is a grep, and how many change
+  answers is unknown until the knob runs.
+* **F2's "a naive inner-at-10 cm patch kills the block" is an argument from
+  purity**, not from a run. `segment_is_shower_trajectory` has one side effect
+  (`set_flags`) which it never reads back; if some future edit makes it read
+  its own flag, the argument stops holding.
+* **The four closed findings are closed on a code read**, not on a determinism
+  re-run. Doc pr/28 §11/§14/§15 carry those measurements; this doc only
+  verifies that the code at `f8f2150a` matches what they claim.
+* **Nothing outside stage 4 was re-audited.** `examine_direction`'s
+  PDG-reassignment ladder, the deghosting pair and the `examine_structure_*`
+  family remain as §9 left them.
+* **§4's SBND operating point is untouched by this filter.**
+  `vertex_z_prior_scale = 100` against the prototype's 200, and
+  `mip_dqdx_median = 48000` against 43e3, are still the biggest numbers in this
+  doc and are still deliberate config, not port defects.
