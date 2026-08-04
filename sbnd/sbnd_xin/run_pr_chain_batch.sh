@@ -175,6 +175,28 @@ for _pr32 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr32 _env _key _val
+# doc pr/31 sec 12: the sec 10.12 topology/PID/direction port fixes.  Same
+# tri-state contract as the pr/32 loop above (unset = cfg default, 1 = force
+# on, 0 = force off).
+#   F5 SBND_CONT_MUON_DIR3_30CM       cont-muon dir3 always at 30 cm
+#   F6 SBND_TRACK_COMP_EMPTY_ABSTAIN  empty comparison window abstains
+#   F3 SBND_SHOWER_TOPO_RESET         clear kShowerTopology/dirsign at entry
+#   F1 SBND_RECLASS_PRESERVE_4MOM     preserve 4-momentum at reclassification
+#   F4 SBND_DIR_TRACK_MEDIAN_LOCAL    median over the PID's own dQ/dx vector
+#   F7 SBND_EXAMINE_SHOWERS_VTX_BY_INDEX  order the examine_all_showers pair
+#                                     by graph index (dormant pending pr/30 F4)
+for _pr31 in \
+    "SBND_CONT_MUON_DIR3_30CM:cont_muon_dir3_30cm" \
+    "SBND_TRACK_COMP_EMPTY_ABSTAIN:track_comp_empty_abstain" \
+    "SBND_SHOWER_TOPO_RESET:shower_topo_reset" \
+    "SBND_RECLASS_PRESERVE_4MOM:reclass_preserve_4mom" \
+    "SBND_DIR_TRACK_MEDIAN_LOCAL:dir_track_median_local" \
+    "SBND_EXAMINE_SHOWERS_VTX_BY_INDEX:examine_showers_vertex_by_index" ; do
+    _env=${_pr31%%:*}; _key=${_pr31#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr31 _env _key _val
 # doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
 # DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
 # cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max

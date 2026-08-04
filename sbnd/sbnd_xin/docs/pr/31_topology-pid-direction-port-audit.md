@@ -1648,6 +1648,11 @@ picks this up starts where the argument is strongest and the diff smallest.
 > **Status update 2026-08-04:** **F2 was taken first, at the owner's
 > direction, and is SHIPPED default-OFF — see §11.** The ordering below is
 > unchanged for the remaining eight.
+>
+> **Status update 2026-08-04 (later): the round is DONE — see §12.**
+> F5/F6/F3/F1/F4 SHIPPED and SBND DEFAULT ON; F7 shipped dormant; F9
+> measured (self-loop vacuous, edge-aliasing live and open); F2 recommended
+> OFF (§12.10).
 
 | order | item | why here |
 |---|---|---|
@@ -1967,4 +1972,285 @@ Assets: `sbnd_xin/bee/pr31-f2/pr31_f2{off,on}.{zip,index.txt,prid-map.txt,url}`
 `work-pr31-f2on48`.
 
 **Still OFF pending the scan** (§11.7), and F3 should land before any flip
-(§11.6).
+(§11.6).  *(2026-08-04, later: F3 landed and is SBND ON; the residual is
+closed by measurement, and the formal recommendation is OFF — §12.10.)*
+
+---
+
+## §12 The §10.12 round implemented — five fixes SBND DEFAULT ON, F9 measured, F2 recommended OFF *(2026-08-04)*
+
+**What was asked.** The owner: *"implement the fixes as suggested by §10.12
+… use the 48 nueCC events as guidance and validations … we want to keep
+improvements and bug fixes for the production runs [i.e. turned on] … and
+provide a recommendation on whether we should turn on this knob for F2."*
+
+**What shipped** (toolkit + this repo, one commit each):
+
+| item | knob | C++ default | SBND production | result on nueCC48 |
+|---|---|---|---|---|
+| F5 (P6) | `cont_muon_dir3_30cm` | false | **ON** | null — bit-identical |
+| F6 (P7) | `track_comp_empty_abstain` | false | **ON** | null — bit-identical |
+| F3 (P13) | `shower_topo_reset` | false | **ON** | null — bit-identical |
+| F1 (P1+P3a+P4) | `reclass_preserve_4mom` | false | **ON** | null — bit-identical (after §12.5 rework; **fires on 47/48 events**) |
+| F4 (P8) | `dir_track_median_local` | false | **ON** | null — bit-identical |
+| F7 (P5) | `examine_showers_vertex_by_index` | false | **OFF** (dormant, pending pr/30 F4) | null — bit-identical |
+| F9 (P12) | — (counters only) | — | — | self-loop **0**; **edge-alias 35 on 23/48 events** — NOT vacuous, §12.6 |
+| F8 (P14) | — | — | — | unchanged; still doc pr/7's |
+| F2 (P2) | `shower_topo_proto_dir` (pre-existing, §11) | false | **OFF — recommended OFF, §12.10** | the §11.4 movers, unchanged by F3 |
+
+"Null" everywhere below means: 48/48 `pctree-pr` member-content hashes
+identical, `nusel-table.tsv` + `nusel-events.tsv` byte-identical, **every**
+`tracking-pr.root` `T_tagger`/`T_kine` leaf identical, and (checked for F1)
+every `mabc-pr.zip` member identical.
+
+### §12.1 Repro
+
+```bash
+TK=/nfs/data/1/xqian/toolkit-dev/toolkit
+cd $TK && git rev-parse --short HEAD        # this change; parent 407c5ba9
+wcbuild                                     # M1 freshness proof after
+./build/clus/wcdoctest-clus                 # 95 cases / 984 assertions, rc=0
+
+# compiled-config proofs (pipeline TLA required -- wcsonnet without it builds
+# no TaggerCheckNeutrino node).  Knobs-off config at the parent == md5
+# 3b6d0374b72f5d549daef754488e6d12 == this change with the six keys absent;
+# after the §12.8 flips the five keys compile to true and F7/F2 stay absent.
+PIPELINE="switch_scope,unmerge_bundle,unmerge_assoc,steiner,fiducialutils,\
+tagger_check_tgm,tagger_check_stm,tagger_check_fc,protect_bundle,steiner_refresh,\
+tagger_check_neutrino,numu_bdt_scorer,nue_bdt_scorer,tracking_visitor,tagger_output"
+PIPE="pipeline_names=[$(echo "$PIPELINE" | sed "s/[^,]\+/'&'/g")]"
+wcsonnet --tla-code "$PIPE" cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet \
+  | grep -o '"cont_muon_dir3_30cm" : [a-z]*'
+
+# arms (owner authorized 24 CPUs: PR_JOBS=12, two arms at a time)
+cd $TK/sbnd_xin
+IDS=$(ls -d work-pr32r2-allon48/pr_evt* | sed 's/.*pr_evt//' | sort -n | tr '\n' ' ')
+PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-off48 data $IDS
+SBND_CONT_MUON_DIR3_30CM=1      PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f5on48  data $IDS
+SBND_TRACK_COMP_EMPTY_ABSTAIN=1 PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f6on48  data $IDS
+SBND_SHOWER_TOPO_RESET=1        PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f3on48  data $IDS
+SBND_DIR_TRACK_MEDIAN_LOCAL=1   PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f4on48  data $IDS
+SBND_RECLASS_PRESERVE_4MOM=1    PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f1onb48 data $IDS
+SBND_EXAMINE_SHOWERS_VTX_BY_INDEX=1 PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f7on48 data $IDS
+SBND_SHOWER_TOPO_PROTO_DIR=1    PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f2on48  data $IDS
+SBND_SHOWER_TOPO_PROTO_DIR=1 SBND_SHOWER_TOPO_RESET=1 \
+  PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-f2f3on48 data $IDS
+SBND_CONT_MUON_DIR3_30CM=1 SBND_TRACK_COMP_EMPTY_ABSTAIN=1 SBND_SHOWER_TOPO_RESET=1 \
+SBND_RECLASS_PRESERVE_4MOM=1 SBND_DIR_TRACK_MEDIAN_LOCAL=1 \
+  PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-allonb48 data $IDS
+# after the cfg flips: bare run must equal the env-forced all-on arm
+PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr31r2-prod48 data $IDS
+
+# comparisons
+python3 pr32_cmp.py work-pr32r2-allon48 work-pr31r2-off48      # the gate
+python3 pr32_cmp.py work-pr31r2-off48   work-pr31r2-<arm>      # per knob
+python3 pr32_cmp.py work-pr31r2-allonb48 work-pr31r2-prod48    # bare == prod
+# T_tagger/T_kine leaf-level and mabc-pr.zip member comparisons: ad hoc uproot/
+# zipfile sweeps (this round; scripts /home/xqian/tmp/pr31r2/{arm_delta,root_leaf_cmp}.py,
+# not committed -- pr32_cmp.py's docstring line 3 promises the leaf compare but
+# does not implement it, a gap worth closing next round)
+```
+
+The crashed first F1 arm is preserved as the record of §12.5:
+`work-pr31r2-f1on48` (1/48 rc=0) and `work-pr31r2-allon48` (same build,
+1/48).  `work-pr31r2-off48b` re-proves the gate after the §12.5 rework
+(48/48 identical to `work-pr31r2-off48`), which is what keeps the
+pre-rework per-knob arms valid.
+
+### §12.2 The knobs and their threading
+
+Every knob follows the `shower_topo_proto_dir` pattern (§11.2): member +
+rationale in `NeutrinoPatternBase.h`, member in `TaggerCheckNeutrino.h`,
+three sites in `TaggerCheckNeutrino.cxx`, arg + key-suppression in
+`cfg/pgrapher/common/clus.jsonnet`, defaults + threading in BOTH `pr()`
+definitions of `sbnd/clus.jsonnet`, TLA + thread in `wct-pr-perevt.jsonnet`,
+and a runner env var — the pr/31 knobs use the pr/32 **tri-state loop**
+(unset = cfg default, 1 = force on, 0 = force off), which is what lets the
+gate arm force production knobs off without editing cfg/.
+
+Free-function transport, where the knob leaves `PatternAlgorithms`:
+
+* **F6, F4** ride `TrackPidOptions` (new fields `track_comp_empty_abstain`,
+  `dir_track_median_local`), filled by `track_pid_options()`.  F6 is passed
+  down to `do_track_comp` as a trailing arg at its 4 call sites (all inside
+  `segment_do_track_pid`).  F4's interior reach: the trajectory path
+  (`:1904`) already forwards `pid_opts`; the short-segment interior call
+  inside `segment_determine_shower_direction` did NOT forward, so that
+  function grew a trailing `median_local` and passes a locally-constructed
+  default `TrackPidOptions` carrying only this field — forwarding a caller's
+  full option set there would have unconditionally switched
+  `proton_dir_vote` et al. at that site.
+* **F3** is a trailing `reset` param on `segment_is_shower_topology`,
+  threaded at its 4 call sites (NTSS:54, NVF improve_vertex ×3).
+* **F5, F7, F1** live entirely in `PatternAlgorithms` methods — no threading.
+
+### §12.3 Gate — everything off is byte-identical (and the flips change nothing)
+
+| comparison | result |
+|---|---|
+| `work-pr31r2-off48` vs `work-pr32r2-allon48` (production at `407c5ba9`) | 48/48 hashes, both TSVs, all PR30/PR32 audit counters, **all 16 physics score columns** identical |
+| compiled config, knobs off | md5 `3b6d0374b72f5d549daef754488e6d12` == parent |
+| `work-pr31r2-off48b` vs `work-pr31r2-off48` (§12.5 rework identity) | 48/48 identical |
+| `work-pr31r2-prod48` (bare, after flips) vs `work-pr31r2-allonb48` | 48/48 identical — **bare run == production** (doc 68 invariant) |
+| `./build/clus/wcdoctest-clus` | 95 cases / 984 assertions, PASS |
+
+Wall/RSS: like-for-like pairs (arms run concurrently under the same load)
+differ by ≲ 1% core-time with identical 1.47 GiB peak RSS; cross-session
+differences up to ~9% are load noise from the 24-job schedule, not the knobs.
+
+### §12.4 Per-knob ON arms — all five fixes are NULL on nueCC48
+
+Every per-knob arm (`f5on`, `f6on`, `f3on`, `f4on`, `f1onb`, `f7on`, and the
+joint `allonb`) is **bit-identical to the off arm** on every persisted
+product: pctree hashes 48/48, both nusel TSVs, every `T_tagger`/`T_kine`
+leaf.  For F1 the `mabc-pr.zip` members were additionally checked: 0/48
+differ.
+
+Null does **not** mean the knobs are inert:
+
+* **F1 is proven engaged** — its first implementation crashed 47/48 events
+  at exactly the preserve-path states (§12.5), so the path fires on nearly
+  every event; the rewritten 4-momenta are simply never consumed by any
+  persisted output on this manifest.  The 4-momentum written at the fifteen
+  reclassification sites is, today, **write-only state** downstream of the
+  guards themselves.
+* **F5, F6, F4, F3, F7 have no engagement counter** (nothing crashes, so no
+  side channel).  For these, "null" bounds the reach at zero *observable*
+  firings on 48 events; the divergent input states (empty comparison window,
+  filtered-out fit sample, re-tested stale flag, short-reference/long-
+  neighbour pair, order-flipped vertex pair) are evidently rare.  A larger
+  manifest (572-event valfast) is where any of them would first show.
+
+The flips are therefore **safe by measurement** (they change no production
+number today) and justified by intent: each closes a latent divergence class
+that would otherwise surface as an unexplained A/B diff in some future
+sample, attributed to whatever change happened to be under test that day.
+
+### §12.5 F1 crashed on first contact — the toolkit-only invariant is real, and load-bearing
+
+* **Symptom.** The first F1-ON arm (`work-pr31r2-f1on48`) died on 47/48
+  events: `ParticleInfo: total energy cannot be less than rest mass`
+  (`aux/src/ParticleInfo.cxx` `validate_inputs`), thrown from
+  `TaggerCheckNeutrino::visit`.
+* **Root cause.** §10.2's helper sketch returned the preserved 4-momentum
+  *into the validating constructor*.  The two states the prototype holds as
+  a matter of course — all-zero (never computed) and an old on-shell
+  4-momentum carried across a mass change — are exactly the two states
+  `validate_inputs` forbids (`E < m`; energy-momentum relation).  §10.2
+  predicted the first ("any consumer choking on it was reading a
+  toolkit-only invariant") but did not follow through to *where* that
+  invariant is enforced: at construction, unconditionally.
+* **Why it hid.** The knob-off path never constructs those states, so the
+  gate, the doctests and every other arm were clean; only the ON arm could
+  reveal it — which is what per-knob arms are for.
+* **Fix.** `reclass_pinfo()` (NeutrinoTrackShowerSep.cxx) constructs a legal
+  rest-mass placeholder and then writes the carried value through
+  `set_four_momentum()` — the class's own **non-validating** setter — so KE
+  lands at `E − m` (i.e. `−m` for never-computed), which is precisely what a
+  prototype consumer subtracting mass sees.  The shared `aux` validator is
+  untouched (it even carries a commented-out "Allow zero 4-momentum as a
+  placeholder" block for exactly this state — left as the owner's call).
+  The 12 recompute sites collapsed to one-line `reclass_pinfo(...)` calls;
+  the 3 shape-C sites keep their legacy rest-mass expression verbatim on an
+  explicit else-branch.
+* **Verification.** `work-pr31r2-off48b` == `work-pr31r2-off48` 48/48 (the
+  rework's off-path is byte-identical), `work-pr31r2-f1onb48` completes
+  48/48 rc=0 and is null per §12.4.
+
+### §12.6 F9 measured — self-loop closes vacuous, edge-aliasing does NOT
+
+Two `PortAuditCounters` (`selfloop_segment`, `edge_aliased`) with bounded
+DEBUG logs in `PR::add_segment`, emitted per event on the new `PR31AUDIT`
+log line (same contract as PR30/PR32AUDIT).  On the off arm:
+
+* **`selfloop_segment` = 0 across all 48 events.**  The self-loop half of
+  F9 (§10.10 fact 1: `boost::degree` counts a self-loop twice) is **closed
+  as vacuous**, with the count on record.
+* **`edge_aliased` = 35 total on 23/48 events** (15 events ×1, 5 ×2, 1 ×3,
+  1 ×7).  The parallel-segment half is **REACHABLE AND LIVE**: a second
+  segment on an existing vertex pair silently takes over the first
+  segment's edge, orphaning it from graph iteration while it still holds a
+  descriptor it believes valid.  Every logged case so far has
+  `old nwcpts == new nwcpts`, consistent with a *successor object for the
+  same physical segment* (re-tracking) rather than a genuine 2-cycle — in
+  which case the overwrite is the intended semantics and the orphaned
+  object is garbage anyway — but that reading is inferred from the wcpt
+  counts, not proven by identity.  Per §10.10 the fix decision (reject?
+  `multisetS`?) is a graph-type change and is NOT taken here: **reported,
+  counted, left open.**  Next step when picked up: log the old/new segment
+  identities at a handful of sites and classify successor-vs-parallel.
+
+### §12.7 F2 + F3 jointly — F3 changes nothing under F2
+
+`work-pr31r2-f2f3on48` (F2+F3) vs `work-pr31r2-f2on48` (F2 alone, both at
+this HEAD): **48/48 identical on every product and leaf**.  And F2-alone at
+this HEAD reproduces §11.4's mover table to the last decimal (8 movers,
+−754.4 MeV on evt 360535, +204.3 on evt 74544, zero selection changes) — so
+the pr/32 flips did not change F2's phenomenology, and §11.6's residual
+(stale-flag segments keeping a direction once F2 removes the entry-side
+`dirsign(0)`) does not fire on this manifest.  The residual is now closed
+*by measurement in production*, since F3 is ON.
+
+### §12.8 The SBND operating point after this round
+
+`wct-pr-perevt.jsonnet`: `cont_muon_dir3_30cm`, `track_comp_empty_abstain`,
+`shower_topo_reset`, `reclass_preserve_4mom`, `dir_track_median_local` all
+**true** (owner's standing instruction: production keeps bug fixes and
+improvements); `examine_showers_vertex_by_index` and `shower_topo_proto_dir`
+**false**.  Bare-run == production re-proven (§12.3 last row).  The runner's
+tri-state env vars are the per-arm escape hatch.
+
+### §12.9 F7 and F8 — deliberately not moved
+
+* **F7** is implemented (site-local graph-index ordering ahead of the
+  asymmetric 165°/150° branches) but stays OFF: pr/30 F4 owns the
+  find_vertices-ordering decision and all three known order-sensitive
+  callers should move together.  Its ON arm is null on nueCC48 anyway.
+* **F8** remains doc pr/7's — re-stated, nothing new here.
+
+### §12.10 The F2 recommendation: keep it OFF
+
+The owner asked for a recommendation on `shower_topo_proto_dir`.
+**Recommendation: OFF — keep the toolkit's PCA direction.**  The grounds,
+in order of weight:
+
+1. **The owner's own filter for this round** was "keep improvements and bug
+   fixes".  F2-ON does not restore a prototype *decision* — the prototype's
+   `determine_dir_shower_topology` is a self-declared `// hack for now` with
+   both direction blocks commented out (§10.3).  The toolkit's 305-line PCA
+   is a real algorithm with declared inputs; on the discriminator of this
+   whole audit (intent vs accident) the *call site* was an accident but the
+   *algorithm* is the better-evidenced physics.  Turning F2 ON would remove
+   measured behaviour in favour of an explicitly unfinished one.
+2. **The residual that made F2 risky is gone.** §11.6's blocker — stale
+   directions surviving the skipped entry-side `dirsign(0)` — is closed by
+   F3 being production-ON, and measured not to fire regardless (§12.7).
+   So OFF is not "blocked", it is a free choice on the physics.
+3. **What ON would buy is unarbitratable here.** nueCC48 is real data — no
+   MC truth exists (the sample is the 2025-fall Lynn candidate set; the
+   only truth-bearing events in this validation universe are the 23 MC
+   events, 10 of them nu-evaluated).  The two big movers (evt 360535
+   −754 MeV, evt 74544 +204 MeV) change no selection outcome, and
+   `numu_score` moves in both directions without tracking the energy
+   (uncalibrated uBooNE weights, doc pr/2 gap G1).  The §11.8 Bee pair
+   remains the owner's instrument for overturning this recommendation by
+   hand-scan — the particle flow on those two events is the whole question.
+
+If the scan does favour ON: flip `shower_topo_proto_dir` in
+`wct-pr-perevt.jsonnet` only, and re-run the §11.5 display pair first —
+with F3 now ON the mechanism plot changes meaning (the entry-side reset is
+active in both arms).
+
+### §12.11 Status of the §10.12 order
+
+| item | status after this round |
+|---|---|
+| F5, F6, F3, F1, F4 | **SHIPPED, SBND DEFAULT ON** |
+| F2 | shipped §11; **recommended OFF (§12.10)**, owner's scan pending |
+| F7 | shipped dormant; waits on pr/30 F4 |
+| F8 | doc pr/7, unchanged |
+| F9 | self-loop closed vacuous; **edge-aliasing open** (§12.6) |
+
+The porting dictionary still has no topology/PID/direction section (§7
+loose end 5) — unchanged, and the §10 items plus this section are its raw
+material.
