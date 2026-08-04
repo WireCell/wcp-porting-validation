@@ -182,6 +182,17 @@ case "${SBND_STEINER_ADJ_SLICE:-}" in
     1) CATH_TLA+=(--tla-code "steiner_terminal_adjacent_slice=true") ;;
     0) CATH_TLA+=(--tla-code "steiner_terminal_adjacent_slice=false") ;;
 esac
+# Steiner EDGE-WEIGHT charge fidelity (doc pr/29 D2).  **SBND PRODUCTION
+# DEFAULT ON since the owner flip 2026-08-04**, same reasoning as the two
+# above: create_steiner_tree is called with disable_dead_mix_cell=false and the
+# toolkit dropped the argument before the edge-weight charge calculation, so
+# create_enhanced_steiner_graph's `= true` default won.  EMPTY = no TLA = the
+# cfg default = ON.  SBND_STEINER_EDGE_DEAD_MIX=0 restores the dropped
+# argument's effect for the pre-fix arm.
+case "${SBND_STEINER_EDGE_DEAD_MIX:-}" in
+    1) CATH_TLA+=(--tla-code "steiner_edge_charge_forward_dead_mix=true") ;;
+    0) CATH_TLA+=(--tla-code "steiner_edge_charge_forward_dead_mix=false") ;;
+esac
 # protect_bundle knob overrides (doc pr/23, validation only).  EMPTY = no TLA
 # = the cfg default = the SBND operating point.  The _XCUT/_DYZ/_DIS values
 # are in CM, converted via wirecell.jsonnet because the C++ takes INTERNAL

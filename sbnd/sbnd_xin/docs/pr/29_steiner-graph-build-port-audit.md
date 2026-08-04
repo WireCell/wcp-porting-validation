@@ -11,7 +11,7 @@ patch. The behaviour-changing items would all alter production output
 unconditionally, i.e. CLAUDE.md **escalation rule 1** — they are reported and
 stop there.
 
-> **2026-08-04 — D1 and D12 are FIXED, default OFF; see §11.** Both ship as
+> **2026-08-04 — D1 and D12 are FIXED, SBND DEFAULT ON; see §11.** Both ship as
 > config knobs whose off state is the historical behaviour (compiled config
 > byte-identical, md5 in §11.5), with 7 new doctests pinning the two convention
 > traps. On the event served on port 5017 (SBND evt 388) the legacy filter was
@@ -21,7 +21,34 @@ stop there.
 > pi0 candidate disappears — reported, not tuned. **Both are SBND PRODUCTION
 > DEFAULTS as of the owner flip on 2026-08-04** (*"these are improvements, or
 > bug fix, for SBND, right? They should be on"*): a bare run is now the fixed
-> chain. D2, D3 and D7 remain open.
+> chain.
+
+> **2026-08-04 second pass — D2 is FIXED and SBND-ON; D7 and D3 are now
+> DISMISSED. §10.1 is down to one open row. See §12 and §10.2.8/§10.2.9.**
+> Owner: *"I feel like D7 is not a problem, D2 should be fixed, is D3 a problem?
+> I assume toolkit is better right?"* and, on the knob, *"it should also be
+> default on. Since we are doing validation and improvements."*
+> * **D2 fixed** — `edge_charge_forward_dead_mix`, C++ default OFF (so no other
+>   detector moves), **SBND ON**. On evt 388 it alone moves segments 85 → 88,
+>   vertices 129 → 133, `numu_score` −0.905 → −0.728, `kine_reco_Enu` 2816.1 →
+>   2811.1 MeV; the event label does not move (§12.4). 4 new doctests pin the
+>   claim that the two `calc_charge_wcp` branches are not interchangeable.
+> * **D7 dismissed** — the toolkit resamples the path skeleton *finer* at the
+>   same 0.6 cm target. That is a strictly more accurate nearest-distance, not a
+>   lost behaviour (§10.2.8).
+> * **D3 dismissed, and the owner's reading is confirmed by the prototype
+>   itself** — the prototype groups by the **retiled** blob one step earlier, at
+>   flag=1, and only reaches for original mcells at flag=2 because that is the
+>   field which survives `delete new_cluster`. The toolkit's `steiner_pc` is a
+>   Dataset with no pointer to dangle, so it has no such constraint (§10.2.9).
+>   **But the dismissal comes with a coupling the owner should see: D1/D12,
+>   now ON, move this axis further from the prototype** — §10.2.9's last
+>   paragraph.
+>
+> **§13 collects everything still open** — the single-event measurement debt
+> behind all three flips, the two unaudited stages D3's dismissal leans on,
+> three source observations reported-not-fixed, and the still-empty porting
+> dictionary section.
 
 > **2026-08-04 revision — read §10 first.** The owner asked for the list to be
 > **filtered**: *"we can skip the ones that are improvements over the previous
@@ -121,6 +148,42 @@ grep -n "offset : {-1, 1}"      clus/src/Facade_Cluster.cxx            # :3302  
 
 # --- sec.10 / D11: is recover_steiner_graph reachable in the ported chain? ---
 grep -rn "recover_steiner_graph" prototype_base/pid/apps/ | grep -v "//"
+
+# --- sec.10.2.9 / D3: the prototype groups by the RETILED blob at flag=1 ---
+grep -n "establish_same_mcell_steiner_edges" prototype_base/pid/src/*.h prototype_base/pid/src/*.cxx
+sed -n '30,46p'  prototype_base/pid/src/PR3DCluster_graph.h    # flag==1: point_cloud, retiled
+sed -n '84,100p' prototype_base/pid/src/PR3DCluster_graph.h    # flag==2: point_cloud_steiner
+sed -n '50,58p'  prototype_base/pid/src/PR3DCluster_steiner.h  # delete new_cluster / temp_holder
+# the ONE other consumer of the steiner cloud's mcell, and its toolkit replacement
+sed -n '355,380p' prototype_base/pid/src/PR3DCluster_path.h    # get_two_boundary_wcps(2)
+sed -n '3423,3435p' clus/src/Facade_Cluster.cxx                # regular-PC scoring + terminal snap
+```
+
+**§12 (D2) is a code change and does have runs behind it.** Its repro:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild && ls -la ../local/lib/libWireCellClus.so     # M1 freshness proof
+./build/clus/wcdoctest-clus -tc="pr29 D2*"            # 4 cases / 12 assertions
+
+# compiled-config gate (sec.12.5): pre-D2 from HEAD vs working tree forced off
+mkdir -p /home/xqian/tmp/pr29d2cfg/base2
+git archive HEAD cfg | tar -x -C /home/xqian/tmp/pr29d2cfg/base2
+B=/home/xqian/tmp/pr29d2cfg/base2/cfg
+WIRECELL_PATH=$B:/nfs/data/1/xqian/toolkit-dev/wire-cell-data \
+  wcsonnet $B/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet | md5sum
+wcsonnet --tla-code steiner_edge_charge_forward_dead_mix=false \
+  sbnd_xin/wct-pr-perevt.jsonnet | md5sum          # must match the line above
+
+# the matched pair + the noise floor (sec.12.4)
+cd sbnd_xin
+SBND_STEINER_EDGE_DEAD_MIX=0 PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-pr29-388-d2off  data 388
+SBND_STEINER_EDGE_DEAD_MIX=0 PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-pr29-388-d2off2 data 388
+PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-pr29-388-d2on   data 388
+md5sum work-pr29-388-d2off{,2}/pr_evt388/calib-pr-evt388.json   # equal => zero floor
 ```
 
 ---
@@ -262,7 +325,10 @@ never path-checked. **Equivalent, verified.**
 
 ## §4 Divergences
 
-### D1 — the terminal filter lost the prototype's ±1 wire tolerance — **behaviour-changing, OPEN**
+### D1 — the terminal filter lost the prototype's ±1 wire tolerance — **behaviour-changing, FIXED**
+
+> **FIXED 2026-08-04, SBND DEFAULT ON — see §11.** Kept as the pre-fix
+> record; line anchors below are pre-fix.
 
 **This is a class of port bug, not a constant mismatch: one toolkit function
 serves two prototype call sites that use different tolerances, and it implements
@@ -327,19 +393,22 @@ removes a branch of the skeleton.
 > in**. That is the same question the wire ranges force — and it was asked there
 > and not here.
 
-### D2 — `disable_dead_mix_cell` is dropped on the edge-weight charge path — **mechanism confirmed, reach unverified, OPEN**
+### D2 — `disable_dead_mix_cell` is dropped on the edge-weight charge path — **mechanism confirmed, reach unverified, FIXED**
+
+> **FIXED 2026-08-04, SBND DEFAULT ON — see §12.** The entry below is the
+> pre-fix record; its `SteinerGrapher.cxx:92` anchor is the pre-fix line.
 
 `create_steiner_tree` is called with `disable_dead_mix_cell = false`
 (`CreateSteinerGraph.cxx:234`) and correctly forwards it to
 `find_steiner_terminals` (`SteinerGrapher.cxx:32`). It then calls
 
 ```cpp
-// SteinerGrapher.cxx:92-93   -- no disable_dead_mix_cell argument
+// SteinerGrapher.cxx:92-93 (PRE-FIX; now :105-113)  -- no disable_dead_mix_cell argument
 auto steiner_result = Graphs::Weighted::create_enhanced_steiner_graph(
     base_graph, steiner_terminals, original_pc, m_cluster, charge_config);
 ```
 
-and the parameter defaults to **`true`** (`SteinerGrapher.h:341`). It reaches
+and the parameter defaults to **`true`** (`SteinerGrapher.h:392`). It reaches
 `calculate_vertex_charges` (`SteinerGrapher.cxx:1021-1027`) → `calc_charge_wcp`,
 whose result is `Qs`/`Qt` in the edge-weight formula.
 
@@ -367,7 +436,14 @@ read, and none was made for this doc.
 Note also that this puts the toolkit on the branch that depends on **D10**'s
 unverified dead-plane representation — the two compound.
 
-### D3 — the steiner-graph same-blob pass groups by the wrong blobs, and drops the prototype's exclusion — **behaviour-changing, OPEN**
+### D3 — the steiner-graph same-blob pass groups by a different blob, and drops the prototype's exclusion — **DISMISSED**
+
+> **DISMISSED 2026-08-04 — see §10.2.9.** The two source readings below are
+> correct and are kept. What changes the verdict is context they lack: the
+> prototype groups by the RETILED blob one step earlier (flag=1, scored a
+> MATCH in §3), and reaches for original mcells at flag=2 only because
+> `point_cloud_steiner` outlives `delete new_cluster`. The heading's "wrong
+> blobs" is therefore too strong.
 
 The prototype's flag-2 pass needs each selected steiner point to know which
 **original-cluster** mcell contains it. `Create_steiner_tree:537-581` computes
@@ -492,7 +568,11 @@ claim is made that they coincide. Since neither graph permits parallel edges in
 practice (§D5), the *content* is the same set of edges — only the insertion
 order, and hence every downstream `out_edges` traversal, differs.
 
-### D7 — path-skeleton sampling density — **behaviour-changing at the threshold**
+### D7 — path-skeleton sampling density — **DISMISSED (improvement)**
+
+> **DISMISSED 2026-08-04 — see §10.2.8.** The toolkit samples the same path
+> finer than the prototype's own 0.6 cm target; a denser sample is a more
+> accurate nearest-distance, not a lost behaviour.
 
 Both trees resample the shortest path at 0.6 cm before using it as the
 path-proximity reference cloud. They step differently:
@@ -598,7 +678,10 @@ here and belongs with the downstream audit, not this one.
 > `recover_steiner_graph()` is **never called** by the production apps this port
 > targets. D11 is dismissed.
 
-### D12 — the ±1 time-slice fallback is dead code: the key is in **ticks**, not slices — **behaviour-changing, OPEN** *(added 2026-08-04)*
+### D12 — the ±1 time-slice fallback is dead code: the key is in **ticks**, not slices — **behaviour-changing, FIXED** *(added 2026-08-04)*
+
+> **FIXED 2026-08-04, SBND DEFAULT ON — see §11.** Kept as the pre-fix
+> record; line anchors below are pre-fix.
 
 **This is the same class of bug the owner's warning names, applied to the time
 axis instead of the wire axis: a loop that is shape-correct and unit-wrong.**
@@ -793,26 +876,36 @@ Per CLAUDE.md's tie-breaker — report, do not fix in the same change:
 ## §8 Summary table
 
 The `filter` column was added on 2026-08-04: **IN** = survives as a port defect
-(§10.1), **OUT** = dismissed, with the reason in §10.2.
+(§10.1), **OUT** = dismissed, with the reason in §10.2. The `fixed` column was
+added on the 2026-08-04 second pass.
 
-| # | what | severity | prototype | toolkit | tier | filter |
-|---|---|---|---|---|---|---|
-| **D12** | the ±1 time-slice fallback steps **ticks**, never resolves — dead code | **behaviour-changing** | `PR3DCluster_steiner.h:297-347` | `Facade_Cluster.cxx:3302` | 1 | **IN** |
-| **D3** | steiner same-blob edges grouped by retiled blob, and the null-mcell exclusion is absent | **behaviour-changing** | `PR3DCluster_steiner.h:542-563` + `PR3DCluster_graph.h:90-91` | `SteinerGrapher.cxx:854-861` | 1 | **IN** |
-| **D1** | terminal filter lost the ±1 wire tolerance (one function, two prototype tolerances) | **behaviour-changing** | `PR3DCluster_steiner.h:285-290, 310-315, 336-341` | `Facade_Cluster.cxx:3344-3354` | 1 | **IN** |
-| **D2** | `disable_dead_mix_cell` dropped on the edge-weight charge path | **behaviour-changing** (reach unverified) | `PR3DCluster_steiner.h:514, 521` | `SteinerGrapher.cxx:92` / `SteinerGrapher.h:341` | 1 / 2 | **IN** |
-| **D7** | path-skeleton sampled finer (`+1` vs floor) | behaviour-changing at the threshold | `PR3DCluster_steiner.h:214-226` | `DynamicPointCloud.cxx:744` | 1 | **IN** |
-| **D8** | containment additionally requires same APA and face | forced (multi-APA); reach unverified | no counterpart | `Facade_Cluster.cxx:3262-3266` | 2 | OUT — forced |
-| **D10** | dead plane = per-blob list vs per-wire uncertainty sentinel | forced; reach unverified, **same question as D2** | `PR3DCluster_steiner.h:984` | `Facade_Cluster.cxx:1027-1029` | 2 | OUT — see D2 |
-| **D4** | edge weight `float` → `double` | fidelity — blocks bit-identicality | `PR3DCluster.h:30` | `Graphs.h:22` | 1 (fact) | OUT — better |
-| **D6** | tree-edge dedup by vertex pair, not edge pointer | **toolkit fixes prototype nondeterminism** | `PR3DCluster_steiner.h:505-506` | `SteinerGrapher.cxx:969-997` | 1 | OUT — better |
-| **D5** | `setS` → `vecS` out-edge storage | structural, compensated | `PR3DCluster.h:33` | `Graphs.h:23-29` | 1 | OUT — equal |
-| **D9** | extreme points round-trip index → point → index | benign, latent | `PR3DCluster_steiner.h:395` | `SteinerGrapher.cxx:268` | 2 | OUT — benign |
-| **D11** | `recover_steiner_graph` not ported (the only MST) | gap; consumer impact unassessed | `PR3DCluster_steiner.h:77-180` | none | 1 | OUT — unreachable |
+| # | what | severity | prototype | toolkit | tier | filter | fixed |
+|---|---|---|---|---|---|---|---|
+| **D12** | the ±1 time-slice fallback steps **ticks**, never resolves — dead code | **behaviour-changing** | `PR3DCluster_steiner.h:297-347` | `Facade_Cluster.cxx:3302` | 1 | **IN** | **6ea51a3b**, SBND ON |
+| **D3** | steiner same-blob edges grouped by retiled blob, and the null-mcell exclusion is absent | **behaviour-changing** | `PR3DCluster_steiner.h:542-563` + `PR3DCluster_graph.h:90-91` | `SteinerGrapher.cxx:854-861` | 1 | **OUT** — see §10.2.9 | n/a |
+| **D1** | terminal filter lost the ±1 wire tolerance (one function, two prototype tolerances) | **behaviour-changing** | `PR3DCluster_steiner.h:285-290, 310-315, 336-341` | `Facade_Cluster.cxx:3344-3354` | 1 | **IN** | **6ea51a3b**, SBND ON |
+| **D2** | `disable_dead_mix_cell` dropped on the edge-weight charge path | **behaviour-changing** (reach unverified) | `PR3DCluster_steiner.h:514, 521` | `SteinerGrapher.cxx:92` (pre-fix) / `SteinerGrapher.h:392` | 1 / 2 | **IN** | **§12**, SBND ON |
+| **D7** | path-skeleton sampled finer (`+1` vs floor) | behaviour-changing at the threshold | `PR3DCluster_steiner.h:214-226` | `DynamicPointCloud.cxx:744` | 1 | **OUT** — see §10.2.8 | n/a |
+| **D8** | containment additionally requires same APA and face | forced (multi-APA); reach unverified | no counterpart | `Facade_Cluster.cxx:3262-3266` | 2 | OUT — forced | n/a |
+| **D10** | dead plane = per-blob list vs per-wire uncertainty sentinel | forced; reach unverified, **same question as D2** | `PR3DCluster_steiner.h:984` | `Facade_Cluster.cxx:1027-1029` | 2 | OUT — see D2 | n/a |
+| **D4** | edge weight `float` → `double` | fidelity — blocks bit-identicality | `PR3DCluster.h:30` | `Graphs.h:22` | 1 (fact) | OUT — better | n/a |
+| **D6** | tree-edge dedup by vertex pair, not edge pointer | **toolkit fixes prototype nondeterminism** | `PR3DCluster_steiner.h:505-506` | `SteinerGrapher.cxx:969-997` | 1 | OUT — better | n/a |
+| **D5** | `setS` → `vecS` out-edge storage | structural, compensated | `PR3DCluster.h:33` | `Graphs.h:23-29` | 1 | OUT — equal | n/a |
+| **D9** | extreme points round-trip index → point → index | benign, latent | `PR3DCluster_steiner.h:395` | `SteinerGrapher.cxx:268` | 2 | OUT — benign | n/a |
+| **D11** | `recover_steiner_graph` not ported (the only MST) | gap; consumer impact unassessed | `PR3DCluster_steiner.h:77-180` | none | 1 | OUT — unreachable | n/a |
 
 ---
 
 ## §9 What is NOT claimed
+
+> **Scope note added 2026-08-04.** §9 describes the **audit** (§0–§8, §10). It
+> is *not* superseded by the fixes: §11 and §12 are separate sections with their
+> own evidence, their own gates, and their own "what this does not settle"
+> (§11.7, §12.7). Concretely, the first bullet's "no event was run" is still
+> true of the audit — the runs live in §11.4 and §12.4 and are the only measured
+> claims in this file. The third bullet's "no recommendation" also still holds
+> of the audit: what changed is that the **owner** made three decisions on top
+> of it, each quoted where it was acted on.
 
 * **No measurement.** No event was run for this document. Every statement is a
   source read, and every "this changes the output" is a mechanism argument, not
@@ -857,6 +950,14 @@ had drifted (Repro block). **Five rows survive; seven are dismissed; one new
 defect — D12 — was found, and it is the highest-severity row in the document.**
 
 ### §10.1 IN — the five port defects
+
+> **Superseded by the 2026-08-04 second pass.** Of these five, **D12 and D1 are
+> fixed and SBND-ON** (§11, toolkit `6ea51a3b`), **D2 is fixed and SBND-ON**
+> (§12), and **D7 and D3 are dismissed** — §10.2.8 and §10.2.9, both at the
+> owner's reading. **Nothing in §10.1 is open.** The section is kept verbatim
+> below because the traps it names are the reason the three fixes look the way
+> they do, and because a later reader deserves the pre-fix reasoning rather than
+> a rewritten one. Read the `fixed` column of §8 for current status.
 
 Ranked by how much of the delivered product each moves. Each carries the trap a
 fix has to clear; **none of these is a patch, and no code was changed.**
@@ -1013,7 +1114,148 @@ extreme point is by construction a cluster point, so the query returns distance
 0. The only residual is a tie between two exactly-coincident points, which would
 pick a different index of the same location. Not a defect.
 
+#### §10.2.8 D7 — path skeleton resampled finer → **improvement, keep** *(added on the second pass)*
+
+Owner: *"I feel like D7 is not a problem."* Agreed, and the arithmetic says why.
+Both sides resample the shortest path at the same 0.6 cm target
+(`SteinerGrapher.cxx:202`, prototype `:206`) and differ only in how they round:
+
+| | count | spacing |
+|---|---|---|
+| prototype `:214-226` | `num_steps = floor(dis/step)` | `dis / floor(dis/step)` — **≥** 0.6 cm |
+| toolkit `DynamicPointCloud.cxx:744` | `num_points = floor(dis/step) + 1` | `dis / (floor(dis/step)+1)` — **<** 0.6 cm |
+
+The prototype *undershoots* its own target: asking for 0.6 cm spacing and
+delivering up to 1.2 cm on a segment just short of two steps. The toolkit never
+exceeds it. Since this cloud exists only to answer "how far is this terminal
+from the path", a denser sample is a strictly more accurate answer to that
+question — the reference curve is the same curve. **Nothing was lost in the
+port; the port rounds the better way.**
+
+The doubled endpoint (prototype adds it once in the loop and again at `:226`) is
+inert: a KD-tree returns the same nearest distance whether a point appears once
+or twice.
+
+What remains true, and stays as a caveat rather than a defect: the filter is
+`close_in_2d && dis_3d > 6 cm` with a 1.8 cm 2-D threshold
+(`SteinerGrapher.cxx:213-237`; **the thresholds themselves match the prototype
+exactly**), and finer sampling pushes *both* sides of that conjunction down. So
+a terminal sitting on either threshold can flip either way. That is the ordinary
+consequence of a more accurate distance, not evidence of a lost behaviour — and
+it is the same caveat that would attach to any resolution change.
+
+**This also retires the "fix is not local" problem.** §10.1 recorded that
+`make_points_cluster_skeleton` is shared with `clustering_deghost.cxx:274`,
+`:785`, `:796` through a single definition (`DynamicPointCloud.h:196-201`
+declares it once with defaults, `DynamicPointCloud.cxx:679` is the only body),
+so any change to `:744` would have silently altered the deghost skeleton too.
+Dismissing D7 means that shared body is left alone — the safest outcome
+available, and it happens to be the correct one.
+
+#### §10.2.9 D3 — same-blob grouping key → **the toolkit's choice is the prototype's own, one step earlier** *(added on the second pass)*
+
+Owner: *"is D3 a problem? I assume toolkit is better right?"* The evidence says
+yes, on both halves of the row, and the strongest argument is not a judgement
+call — it is what the prototype does at the *previous* call site.
+
+**(a) The grouping key.** The row's complaint was that the toolkit groups
+selected points by the blob they occupy in the **retiled** cluster
+(`majs[old_index]`, `SteinerGrapher.cxx:933-939`, on `m_cluster` — the retiled
+cluster, `CreateSteinerGraph.cxx:231`) while the prototype's flag=2 pass groups
+by an **original-cluster mcell** resolved by strict wire containment
+(`PR3DCluster_steiner.h:542-563`). Both statements are correct. What the
+original row missed is that **the prototype itself groups by the retiled blob at
+flag=1**:
+
+```cpp
+// PR3DCluster_steiner.h:27   -- called ON new_cluster, the retiled cluster
+new_cluster->establish_same_mcell_steiner_edges(gds, false);
+// PR3DCluster_graph.h:34,40  -- flag==1 branch
+WCP::WCPointCloud<double>& cloud = point_cloud->get_cloud();   // the RETILED cloud
+map_mcell_all_indices[cloud.pts.at(i).mcell]                   // the RETILED mcell
+```
+
+and §3 step 3 already scores that call a **MATCH**. So retiled-blob grouping is
+not a toolkit invention the prototype would reject; it is the prototype's own
+choice wherever it has a live retiled cluster to ask.
+
+**(b) Why flag=2 is different, and it is not a physics reason.**
+`point_cloud_steiner` is a persistent member of the **original** cluster, while
+the retiled cluster and the holder that owns its mcells are destroyed
+immediately after the tree is built:
+
+```cpp
+// PR3DCluster_steiner.h:53-56
+new_cluster->Del_graph();  new_cluster->Del_point_cloud();
+delete new_cluster;        delete temp_holder;
+```
+
+Storing retiled `SlimMergeGeomCell*` on a cloud that outlives them would dangle.
+The prototype's `WCPoint` has exactly one `mcell` field, so the original-mcell
+resolution at `:542-563` is what that field *has to* hold — a lifetime
+constraint, not a claim about which partition is right. The toolkit's
+`steiner_pc` is a `Dataset` of arrays with **no blob pointer at all**, so the
+constraint does not exist and the grouping is computed while the retiled cluster
+is alive. **Nothing was dropped; the thing that forced the prototype's hand is
+absent.**
+
+**(c) The missing exclusion is the same decision, not a second one.**
+`PR3DCluster_graph.h:90-91` skips every point whose `mcell` is null. Under the
+toolkit's key there is no null case — every selected point occupies exactly one
+retiled blob by construction. The exclusion was never a rule about which points
+deserve edges; it was the failure branch of a lookup that no longer happens.
+
+**(d) The one consumer that does read the association, and how the toolkit
+replaces it.** Sweeping the prototype for other readers of the *steiner* cloud's
+`mcell` turns up exactly one outside flag=2:
+
+```cpp
+// PR3DCluster_path.h:356-379   get_two_boundary_wcps(flag=2) -> point_cloud_steiner
+if (cloud.pts[i].mcell == 0) continue;
+if (cloud.pts[i].mcell->Estimate_total_charge() < 1500) continue;
+```
+
+called from `NeutrinoID.cxx:1152`, `:1170`, `NeutrinoID_proto_vertex.h:426`,
+`Cosmic_tagger.h:745,852,2999,3106`, `ToyFiducial.cxx:433,541`. The toolkit's
+`get_two_boundary_steiner_graph_idx` (`Facade_Cluster.cxx:3393-3460`) replaces
+both cuts deliberately: it scores boundaries on the **regular** PC, where blob
+charge and dead-wire counts are available, then snaps each to the nearest
+Steiner **terminal** — and its own comment names the substitution
+(`:3430-3435`, *"Terminals are the original cluster data points (mcell != null
+in the prototype)"*). So this is a known, documented structural substitution,
+**not** an unexamined gap. It is recorded here rather than opened as a row
+because it belongs to the vertex/boundary stage, which this document does not
+audit (§0); doc pr/30 is its home.
+
+**(e) The coupling the owner should see, and it points the other way.** In the
+prototype the terminal filter admits with **±1 wire slack and a t±1 slice
+fallback** (`:283-347`) while the flag=2 resolution is **strict and same-slice**
+(`:551-558`). A terminal admitted *only* by the slack or the adjacent slice
+therefore resolves to `mcell = 0` and is orphaned from same-blob edges. The
+prototype admits loosely and then orphans; the toolkit — now that D1 and D12 are
+ON — admits loosely and grafts. **The two fixes shipped in §11 widen this axis
+rather than narrow it.** That is not a reason to revisit them: each is the right
+call on its own filter, and (b) shows the orphaning is an artifact. But it means
+D3's dismissal is a dismissal *with* a stated interaction, and it is the reason
+the population run in §11.7 matters more than a single-event check.
+
+**What is still not claimed.** The two partitions genuinely differ wherever the
+retile subdivides an original blob (toolkit groups *fewer* points together) or
+merges/extends one into a dead region (toolkit groups *more*). Nobody measured
+which dominates on SBND, and this dismissal does not assert that the edge sets
+are close — only that the toolkit's rule is principled, is the prototype's own
+rule where the prototype is free to use it, and loses nothing that was
+deliberate.
+
 ### §10.3 What this revision does and does not claim
+
+> **Written before any code changed, and kept that way.** Its "still no
+> measurement / no recommendation / no patch" bullets describe the §10
+> pass. Three of the five §10.1 rows have since been acted on — D1 and D12
+> in §11, D2 in §12 — each with a measurement and a gate; the other two
+> were dismissed in §10.2.8/§10.2.9. `porting_dictionary.md:266` is still
+> an empty `⚠ xxx`, so the CLAUDE.md §5 rule 4 point below still stands
+> for the rows nobody has touched.
 
 * **Still no measurement.** §9 stands unchanged. D12 is proven at source level
   four ways, but *how many terminals it costs* is unmeasured, as are D1's,
@@ -1034,7 +1276,7 @@ pick a different index of the same location. Not a defect.
 
 ---
 
-## §11 D1 and D12 FIXED — shipped default OFF *(2026-08-04)*
+## §11 D1 and D12 FIXED — SBND DEFAULT ON *(2026-08-04)*
 
 **Owner request.** *"Can we fix these … first? I assume this is D1 and D12.
 Please make the code more robust … please check on the event served in port
@@ -1055,7 +1297,8 @@ OFF** so uBooNE / ICARUS / PDHD / PDVD are untouched, and the ON state lives in
 the SBND operating point (`wct-pr-perevt.jsonnet`, doc 68 — a bare run *is*
 production). Setting both back to 0/false reproduces the pre-fix chain
 byte-for-byte at the config level (§11.5), which is what every legacy comparison
-needs. D2, D3 and D7 are untouched (§10.1 still lists them).
+needs. D2, D3 and D7 were untouched by *this* commit; the second pass fixed
+D2 (§12) and dismissed D3 and D7 (§10.2.9, §10.2.8).
 
 ### §11.1 What shipped
 
@@ -1266,4 +1509,231 @@ same-binary repeat proves the comparison is not sitting on noise.
   scales. None of that was run for this document.
 * **D2, D3 and D7 remain open** exactly as §10.1 leaves them. In particular D2's
   one-argument fix was deliberately **not** bundled in: separate defect,
-  separate knob, separate gate.
+  separate knob, separate gate. *(Second pass: D2 is now fixed — §12 — and D3
+  and D7 are dismissed, §10.2.9 and §10.2.8. The separate gate promised here is
+  §12.5.)*
+
+---
+
+## §12 D2 FIXED — SBND DEFAULT ON *(2026-08-04, second pass)*
+
+**Owner instruction.** *"D2 should be fixed"*, and on the knob: *"for this one,
+it should also be default on. Since we are doing validation and improvements."*
+
+### §12.1 The defect, restated in one paragraph
+
+`create_steiner_tree` receives `disable_dead_mix_cell = false`
+(`CreateSteinerGraph.cxx:262`) and correctly forwards it to
+`find_steiner_terminals`. It then called `create_enhanced_steiner_graph`
+**without the argument**, so that function's `= true` default
+(`SteinerGrapher.h:392`) won and the `Qs`/`Qt` entering every steiner edge
+weight were computed on the other branch of `calc_charge_wcp`. The prototype
+computes them with the same `false` it was called with
+(`PR3DCluster_steiner.h:514`, `:521`, inheriting `Create_steiner_tree`'s
+parameter, passed `false` at `create_steiner_graph:46`). A dropped argument, not
+a decision — nothing in the toolkit ever chose `true` here.
+
+### §12.2 What shipped
+
+| where | what |
+|---|---|
+| `clus/src/SteinerGrapher.h` | `Config::edge_charge_forward_dead_mix{false}` |
+| `clus/src/SteinerGrapher.cxx` | `const bool edge_dead_mix = m_config.edge_charge_forward_dead_mix ? disable_dead_mix_cell : true;` passed to `create_enhanced_steiner_graph`; the value echoed in the entry TRACE line |
+| `clus/src/CreateSteinerGraph.cxx` | `configure()` reads the key; `default_configuration()` round-trips it |
+| `cfg/pgrapher/common/clus.jsonnet` | `cm.steiner(..., edge_charge_forward_dead_mix=false)` with the key-suppression idiom |
+| `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | declared and forwarded in **both** `clus_pr()` and `pr()`, applied to `steiner` **and** `steiner_refresh` |
+| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | **the SBND operating point: `steiner_edge_charge_forward_dead_mix = true`** |
+| `sbnd_xin/run_pr_chain_batch.sh` | `SBND_STEINER_EDGE_DEAD_MIX=0` for the pre-fix arm; empty = ON |
+
+**The C++ default stays `false`.** Turning it on unconditionally would move
+uBooNE, ICARUS, PDHD and PDVD as well, which is CLAUDE.md §5 rule 1. The SBND
+operating point lives in cfg (doc 68: a bare run **is** production), so on SBND
+a bare run now uses the prototype's charge and every other detector is
+byte-identical.
+
+### §12.3 Why it is a knob at all, given it is a bug fix
+
+Same reasoning as §11.1, plus one difference worth stating: **unlike D1 and D12,
+this one moves weights in *either* direction.** Those two could only ever *add*
+terminals — each restored a way to PASS a filter. D2 changes a charge that goes
+into a denominator, so an edge can get cheaper or dearer and the tree can gain
+or lose edges. That makes a reachable legacy arm more valuable here, not less.
+
+### §12.4 Evidence on SBND evt 388 (the event served on port 5017)
+
+Matched arms on one binary, `work-pr29-388-d2off` (`SBND_STEINER_EDGE_DEAD_MIX=0`)
+and `work-pr29-388-d2on` (bare = production). **D1 and D12 are ON in both**, so
+every number below is D2 and nothing else.
+
+| | D2 off | D2 on |
+|---|---|---|
+| PR segments | 85 | **88** |
+| PR vertices | 129 | **133** |
+| showers / steiner blocks / proj panels | 12 / 33 / 6 | 12 / 33 / 6 |
+| `numu_score` | −0.9050 | **−0.7282** |
+| `nue_score` | unchanged | unchanged |
+| `kine_reco_Enu` | 2816.1 MeV | 2811.1 MeV |
+| main vertex | (−163.176, 31.469, 426.429) | (−163.100, 31.575, 426.320) |
+| `nusel-table.tsv` | identical | identical |
+
+16 of 44 tagger fields move, all of them BDT sub-scores; the event label does
+not move and no pi0 flag changes. The main vertex shifts by **1.6 mm**.
+
+**Noise floor: zero.** The OFF arm was run twice
+(`work-pr29-388-d2off`, `work-pr29-388-d2off2`) and the two
+`calib-pr-evt388.json` are **md5-identical**
+(`190221b8bf42d23e0ad92a876942bdc0`). So the table above is the knob, not drift.
+
+### §12.5 Gates
+
+* **Legacy arm byte-identical.** Compiling the SBND PR job from a
+  `git archive HEAD cfg` tree (pre-D2, D1/D12 already ON) and from the working
+  tree with `-A steiner_edge_charge_forward_dead_mix=false`:
+
+  | config | md5 |
+  |---|---|
+  | pre-D2 (HEAD), bare | `d1e49000c3b148d15d99d1beab2eae47` |
+  | post-D2, D2 forced off | `d1e49000c3b148d15d99d1beab2eae47` |
+  | pre-D2 (HEAD), all pr/29 knobs off | `9a52a3f4c69a9652f33e448abb98a00e` |
+  | post-D2, all three forced off | `9a52a3f4c69a9652f33e448abb98a00e` |
+  | post-D2, **bare = production** | `a4e2beeb04682731d446b18f5dad9cd4` |
+
+  Both pre-existing arms survive the change **byte for byte**. (These md5s
+  differ from §11.5's because the shared tree moved — see §12.7.)
+* **Compiled-config proof (M6).** `edge_charge_forward_dead_mix: true` appears
+  on **both** `CreateSteinerGraph` inodes (`pr` and `prrefresh`) in the
+  production config alongside `terminal_wire_tol: 1` and
+  `terminal_adjacent_slice: true`; 2 occurrences bare, 0 forced-off. Not a
+  wrapper-level merge that vanishes (M6).
+* **Freshness proof (M1).** `local/lib/libWireCellClus.so` 11:24 > last source
+  edit 11:21.
+* **Unit tests.** `./build/clus/wcdoctest-clus` **89 cases / 948 assertions**,
+  all passing — 4 cases and 12 assertions of that are new
+  (`clus/test/doctest_steiner_edge_charge.cxx`).
+
+### §12.6 Tests
+
+The knob itself is a ternary; what needs pinning is the claim underneath it —
+that the two branches of `calc_charge_wcp` are **not** interchangeable. They
+select planes by independent predicates: `true` sums all three then subtracts
+**dead** planes (`charge_uncertainty > 1e10`), `false` sums only planes with a
+**nonzero** charge value. `doctest_steiner_edge_charge.cxx` pins both ways that
+can disagree and both ways it cannot:
+
+| case | configuration | result |
+|---|---|---|
+| live plane reading zero | q = (0, 5000, 5000), all live | 4082.5 vs 5000.0 — **and the returned boolean flips**, which is the half the terminal selection reads |
+| dead plane reading nonzero | q = (3000, 5000, 7000), U dead | 6082.8 vs 5259.9 |
+| all live, all nonzero | q = (3000, 5000, 7000) | **equal** |
+| dead plane also reading zero | q = (0, 5000, 7000), U dead | **equal** |
+
+The last two matter as much as the first two: without them the file would read
+as "this knob changes every point", which is not what §12.4 shows.
+
+### §12.7 What this does not settle
+
+* **One event, again.** Same limitation as §11.7, and the same remedy: the
+  572-event valfast manifest. D2 now has its own env switch
+  (`SBND_STEINER_EDGE_DEAD_MIX=0`), so a three-arm population run
+  (all-off / D1+D12 / all-three) is one runner invocation each.
+* **Reach was never measured, and still has not been.** §4's D2 entry said the
+  confirmed claim was the mechanism, not a count of affected points. That is
+  still true: nobody has counted how many SBND steiner points have a
+  live-but-zero or dead-but-nonzero plane. The evt-388 deltas show the answer is
+  not zero; they do not show what it is.
+* **A knob-OFF A/B against §11's `work-pr29-388-b2prod` is NOT attributable**,
+  for the same reason §11.6 gave. The concurrent session landed `397b1517` and
+  carries uncommitted edits in `NeutrinoPatternBase.h` and
+  `NeutrinoVertexFinder.cxx`, all of which my rebuild compiled in. `d2off`
+  therefore does **not** reproduce `b2prod` byte for byte, and the difference is
+  theirs, not D2's. This is why §12.4 uses a matched pair on one binary and a
+  same-binary repeat, and why the §12.5 md5s were recomputed from `HEAD`
+  rather than quoted from §11.5.
+* **D2 removes D10 from this path.** §10.2.5 dismissed D10 (dead-plane
+  representation) as "not an independent item here" because it only mattered
+  through the branch D2 put the toolkit on. With D2 ON, SBND no longer takes
+  that branch when weighting steiner edges, so D10's unverified
+  per-blob-list-vs-per-point-sentinel question is now inert **for this stage**.
+  It remains live in the ImproveCluster path, which this document does not
+  audit.
+
+---
+
+## §13 Everything still open, in one place *(2026-08-04)*
+
+Owner: *"For this md file, anything else that we missed?"* This section exists
+so the answer is not scattered across §9, §10.3, §11.7 and §12.7. Nothing here
+is new work that was done and hidden; it is work that was **not** done.
+
+### §13.1 The measurement debt — the largest gap in this file
+
+**Every measured number in this document comes from one event (SBND evt 388).**
+Three behaviour changes are now SBND production defaults on the strength of
+port fidelity plus a single-event sanity check. The 572-event valfast manifest
+is the natural target and all four arms are one env var each:
+
+| arm | env |
+|---|---|
+| pre-pr/29 legacy | `SBND_STEINER_WIRE_TOL=0 SBND_STEINER_ADJ_SLICE=0 SBND_STEINER_EDGE_DEAD_MIX=0` |
+| D1+D12 only | `SBND_STEINER_EDGE_DEAD_MIX=0` |
+| D2 only | `SBND_STEINER_WIRE_TOL=0 SBND_STEINER_ADJ_SLICE=0` |
+| production | *(bare)* |
+
+What it would answer, none of which is known today: how many events change
+`event_label`; how many gain or lose a pi0 (**evt 388 lost one** — §11.7, the
+single counter-signal on record); how the 24-starved-clusters number scales;
+and whether the D1+D12 and D2 effects add or partly cancel, since the two were
+measured against *different* baselines on *different* binaries.
+
+### §13.2 Audit coverage that was never claimed, and is now load-bearing
+
+* **The retile step is unaudited** (§0). §10.2.9 dismisses D3 partly on how the
+  retile relates original and retiled blobs. That dismissal is only as strong as
+  an unaudited assumption about `RetileCluster` vs `Improve_PR3DCluster_2`.
+* **The base-graph builders are unaudited** (§0). `find_graph("ctpc_ref_pid")`
+  vs `Create_graph(ct_point_cloud, point_cloud)` is scored a MATCH *in shape*
+  only (§3 step 2). Everything in §4 is about inputs to the solver; the biggest
+  input of all was not opened.
+* **Downstream consumers of `steiner_graph` / `steiner_pc` were never swept**
+  (§5.6, D11). §10.2.9(d) opened exactly one of them — `get_two_boundary_wcps(2)`
+  — and found a deliberate, in-code-documented substitution. **That one was
+  found by looking; nobody has looked at the rest.**
+* **D8 and D10 reaches are still unmeasured.** Both are dismissed as *forced*,
+  which is a statement about why the toolkit differs, not about how much. D10 is
+  now inert for this stage (§12.7) but not elsewhere.
+
+### §13.3 Three source observations from the second pass — reported, not fixed
+
+Per CLAUDE.md ("mention a pre-existing bug, do not fix it in the same change"):
+
+1. **No bounds guard on `majs[old_index]`.** `establish_same_blob_steiner_edges_steiner_graph`
+   (`SteinerGrapher.cxx:933`) indexes `major_indices()` with a key from
+   `result.old_to_new_index` and guards the *result* (`blob_node_idx >=
+   nodes.size()`) but never the *index*. It should hold by construction — both
+   live in the retiled cluster's `sv3d` point space — so this is a robustness
+   note, not a defect. An out-of-range read here would be silent.
+2. **The prototype buckets null-mcell points together at flag=1.**
+   `PR3DCluster_graph.h:40` inserts into `map_mcell_all_indices[nullptr]` with
+   no null skip (unlike flag=2, which skips at `:88`). Any point with no mcell
+   would be same-blob-connected to *every other* such point. Harmless if a
+   cluster's own cloud never has one — which is likely but was not checked.
+   **Prototype-side; no toolkit counterpart, since the toolkit's key is a blob
+   node index.**
+3. **The prototype iterates a pointer-keyed map in both same-blob passes.**
+   `std::map<SlimMergeGeomCell*, std::set<int>>`, iterated at
+   `PR3DCluster_graph.h:60` and `:99`. The edge *set* is order-independent, but
+   the insertion order into `same_mcell_steiner_edges` and into the boost graph
+   is not. This is the same class as D6 and reinforces §6's finding that the
+   **toolkit is the deterministic side of this port**; it is recorded because §6
+   audits toolkit determinism and never states the prototype's.
+
+### §13.4 The documentation debt
+
+`clus/docs/porting/porting_dictionary.md:266` — the Steiner Tree section — is
+**still an empty `⚠ xxx` placeholder.** It was the framing finding of this audit
+(§0) and it is now more urgent, not less: three divergences have been resolved
+in favour of the prototype (D1, D12, D2) and two in favour of the toolkit (D3,
+D7), and **none of those five decisions is written anywhere a future porter
+would look.** The next person to hit `check_wire_ranges_match` or the flag=2
+grouping will re-derive this from scratch, or "fix" it back. Filling that
+section is the smallest high-value item left in this document.
