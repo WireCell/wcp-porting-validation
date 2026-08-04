@@ -1429,10 +1429,16 @@ Three of these are results, not bookkeeping:
    §10.2 argued from the code that the third `form_map_graph` re-validates every
    vertex's fit index; 5047/5047 confirms it. P1 was live at **both** sites,
    including the all-showers branch, exactly as §10.2 predicted.
-2. **F1's magnitude is 0.613 cm mean, 11.41 cm max.** That is the size of the
-   Steiner quantisation, and it is the point the 10 cm direction vector is
-   measured *from*, against a ladder whose rungs are +5/+3/+1/+0.25 before the
-   `/4` and whose topology terms are 0.125 apart. Small, and not negligible.
+2. **F1's magnitude is 0.613 cm mean, 11.41 cm max — over all eleven
+   expressions, not over the ladder alone.** The counter fires on every call to
+   the helper, which includes the `pts.push_back` loop over *every* graph vertex
+   of the cluster in `compare_main_vertices_all_showers`; those reads feed a PCA
+   point cloud, not a direction vector or an argmax. So 0.613 cm is the mean
+   Steiner quantisation across the whole substituted population, and the subset
+   that actually feeds the `calc_conflict_maps` ladder was **not** separated.
+   Read it as "the substitution moves points by ~6 mm", not as "the conflict
+   ladder sees a 6 mm shift". Separating the two would need a per-site counter
+   and is not done here.
 3. **`f3_dropped == 0` over 2219 candidates makes P7 measured dead code.** §10.4
    could only offer a control-flow argument and explicitly refused to call the
    fix free; the counter is the measurement that argument was missing. The knob
@@ -1441,6 +1447,18 @@ Three of these are results, not bookkeeping:
 `f2_disagree = 22` is the direct evidence for F2: on 48 events the stored label
 and a fresh 10 cm test disagree 22 times, which is precisely the population the
 prototype's flag read and the toolkit's recomputation split on.
+
+**But read `f2_gate = 117` against `f2_body = 7` before weighting F2 heavily.**
+The outer gate is evaluated 117 times in 48 events and the recheck body runs 7 —
+so ~110 evaluations pass the gate and are then vetoed by the inner 1.0 cm test,
+and under parity the body runs 4 times instead of 7. This block is *rare*: it
+touches single digits of segments per 48 events on either setting. That matters
+because F2 is the one knob whose fix reaches outside this stage — the clearable
+`kShowerTrajectory` has 31 downstream readers in `NeutrinoTrackShowerSep.cxx` —
+so "byte-identical on 48 events" is thinner evidence here than for F1, F3 or F4:
+the block simply does not fire often enough on this manifest to exercise the
+flag's downstream consumers. F2 is the knob most in need of the 1000-event
+census (§11.8).
 
 ### §11.4 What each fix actually changed
 
@@ -1534,8 +1552,10 @@ clear, and the 48-event evidence that they do not move is `f2_demoted = 4` with
 ### §11.8 What is still NOT claimed
 
 * **48 events, not 1000.** The valfast/1000 population gate has been stale since
-  round 6 and now has four more knobs riding on it. "Byte-identical" here is a
-  statement about this manifest.
+  round 6, and the count of knobs riding on it is now **ten** — five from doc
+  pr/30 §12, one from pr/31 §11, four from here. That is past the point where
+  "stale baseline" is a footnote: regenerating it should be scheduled, not
+  mentioned. "Byte-identical" in §11.2 is a statement about this manifest only.
 * **`f3_dropped = 0` is 48 events of evidence, not a proof.** P7 stays behind a
   knob until a wider census agrees; retiring it is a decision, not a
   consequence.
