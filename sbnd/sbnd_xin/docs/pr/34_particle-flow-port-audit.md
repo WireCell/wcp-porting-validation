@@ -18,7 +18,8 @@ none is fixed. Ranked list in §8.
 > merely dropped** (§10.7), closing loose ends §7.2, §7.4 and §7.6. Dropped as
 > improvements: P4, P5, P6, P7, P8, P14. Still **zero code changes**; §10.6
 > states the gate these knobs would need, which is **not** the gate the earlier
-> rounds used.
+> rounds used. **§10.9 is RETRACTED** — the `enumerate_idents` no-op it reported
+> was a false negative from grepping a member name instead of a config key.
 
 **Headline.** The tree-*shaping* logic is a reasonable reimplementation, and two
 of its departures from the prototype are repairs of genuine prototype bugs. But
@@ -1462,37 +1463,47 @@ cosmetic (P14). The filter changes nothing about them. P14 in particular is not 
 finding at all — it is a warning that toolkit-vs-prototype byte comparison will
 differ on every coordinate, which §10.7 restates where it is actionable.
 
-### §10.9 An unrelated finding, reported not fixed
+### §10.9 RETRACTED — the per-visitor `enumerate_idents` does run
 
-Found while closing P9; it is not a filter item and **must not** be folded into
-one (CLAUDE.md §5 tie-breaker: mention pre-existing bugs, do not fix them in the
-same change).
+**This section originally reported that `enumerate_idents` at `:2445` is a no-op
+in the SBND production path. That was wrong and is withdrawn.** It is kept here,
+struck, because the way it was wrong is a reusable trap.
 
-**`enumerate_idents` at `:2445` is a no-op in the SBND production path.**
+**What was claimed.** `m_clusters_id_order` (`MultiAlgBlobClustering.h:418`) is
+an uninitialized `std::string`; `enumerate_idents` returns early on
+`sort_order.empty()` (`Facade_Grouping.cxx:127`); a grep of `cfg/` found no SBND
+setting; therefore `:2445` never runs and five in-tree comments rest on a false
+invariant.
 
-```cpp
-grouping->enumerate_idents(m_clusters_id_order);      // MultiAlgBlobClustering.cxx:2445
-std::string m_clusters_id_order;                      // MultiAlgBlobClustering.h:418 — NO initializer
+**Why it was wrong.** The **member** is `m_clusters_id_order` (plural
+*clusters*); the **config key it is read from is `cluster_id_order`** (singular),
+at `MultiAlgBlobClustering.cxx:149`. The `cfg/` grep was run on the member's
+spelling and returned a false negative. SBND sets the key at **three** sites:
+
+```
+cfg/pgrapher/experiment/sbnd/clus.jsonnet:372   cluster_id_order: 'tree',
+cfg/pgrapher/experiment/sbnd/clus.jsonnet:599   cluster_id_order: 'tree',
+cfg/pgrapher/experiment/sbnd/clus.jsonnet:1725  cluster_id_order: 'tree',
 ```
 
-`m_clusters_id_order` is assigned only from the config key at `:151`, SBND's
-`clus.jsonnet` never sets `clusters_id_order`, and `enumerate_idents` returns
-immediately when `sort_order.empty()` (`Facade_Grouping.cxx:127`). **So the
-per-visitor renumbering never runs**; the only effective enumeration is the
-load-time `enumerate_idents()` at `:2332`.
-
-This matters beyond this document because at least five in-tree comments assert
-the per-visitor renumbering as an invariant that other reasoning rests on:
+So `m_clusters_id_order == "tree"`, `enumerate_idents` runs after every visitor
+as documented, and **all five comments are correct**:
 `MultiAlgBlobClustering.h:260` and `:269`, `ClusteringFuncs.h:142`,
-`TrackFitting.cxx:1140`, `prov_check.cxx:22`, plus
-`sbnd/clus.jsonnet:40` and `:569` and
-`sbnd/wct-clus-matching-perevt.jsonnet:172`. It also bears directly on the
-`real_cluster_id` epoch analysis of doc 53.
+`TrackFitting.cxx:1140`, `prov_check.cxx:22`. Each was re-read with context;
+none is a passing mention — `TrackFitting.cxx:1136-1142` in particular rests a
+safety argument on it ("it runs only between visitors, so this cannot fire").
+Doc 53's measured 31% `real_cluster_id` epoch overlap is likewise consistent
+with the renumbering running, not with it being dead.
 
-It does **not** change P9's verdict either way — idents stay ≥ 1 from the
-load-time enumeration — and no code is touched here. Whether the config key
-should be set, or the default changed, or the comments corrected, is the owner's
-call.
+**Effect on §10.** None on the filter. It **strengthens** §10.8c: idents are
+actively re-enumerated from 1 immediately before each Bee dump, so P9's
+collision is unreachable by an even shorter argument than the four checks given
+there. No survivor, no drop and no proposed fix depended on this section.
+
+**The reusable trap.** A WCT component's config key and the member it lands in
+are routinely spelled differently. Grepping `cfg/` for the *member* name proves
+nothing. Take the key from the `cfg["..."]` expression at the read site — here
+`cfg["cluster_id_order"]` at `:149` — and grep for that.
 
 ### §10.10 What §10 does not claim
 
