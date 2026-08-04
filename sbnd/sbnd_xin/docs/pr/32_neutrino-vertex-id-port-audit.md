@@ -974,11 +974,12 @@ segment has `fit_index >= 0` and a fitted `fit().point`. **P1 therefore bites
 in the all-showers branch too**, not only in the main cluster, and the §3
 hedge ("if it is not, P1 does not bite at that site at all") can be struck.
 
-**Why it is a bug and not a choice.** The same file already reads the prototype
-quantity through `fit().valid() ? fit().point : wcpt().point` at fourteen
-expressions — `:886`, `:993`, `:1633-1634`, `:1789-1790`, `:2644`, `:2709`,
-`:2741`, `:2855`, `:3072`, `:3077`, `:3128`, `:3148` — while the nine
-expressions tabulated above read `wcpt()` raw. The file does not apply its own
+**Why it is a bug and not a choice.** `grep -n "fit().valid() ? "` on the
+`f8f2150a` snapshot returns **23 vertex-position reads** through the idiom
+(`:84`, `:886`, `:993`, `:1633-1634`, `:1789-1790`, `:2644`, `:2709`, `:2741`,
+`:2855`, `:3072`, `:3077`, `:3128`, `:3148`, `:3154`, `:3269`, `:3388`,
+`:3446`, `:3540`, `:3589`, `:3603`, `:3630`) against the nine expressions
+tabulated above that read `wcpt()` raw. The file does not apply its own
 convention uniformly, and the prototype has exactly one convention.
 
 **Magnitude.** The gap is `Vertex::fit_distance()` (`PRVertex.h:85`) — the
@@ -1098,6 +1099,30 @@ things together — they cannot be separated without killing the block:
 With (1) and (2) in place the block is alive again for the prototype's reason:
 the stored flag is stale (it predates this pass's refit) and the fresh 10 cm
 test can disagree with it.
+
+**Checked, because step (2) at `:2337` is the weaker half.** `:2337` sits inside
+`if (!sg1->particle_info())` — segments that have never been typed — so "read
+the stored flag" is only faithful if the flag means the same thing in both
+trees for such a segment. It does:
+
+* `segment_is_shower_topology` writes **only** `kShowerTopology`
+  (`PRSegmentFunctions.cxx:389`); the prototype's `is_shower_topology()` writes
+  only `flag_shower_topology` (`ProtoSegment.cxx:320`, `:454`, `:531`). Neither
+  touches the trajectory flag, so `:2316` does not contaminate `:2337`.
+* Stage 3 is a faithful port of the gating: toolkit
+  `NeutrinoTrackShowerSep.cxx:54-62` runs `segment_is_shower_topology`, then
+  `segment_is_shower_trajectory(seg, 10 cm, m_mip_dqdx)` **only if not
+  topology** — identical to prototype `separate_track_shower`
+  (`NeutrinoID_track_shower.h:9-22`).
+* A segment that was shower-**topology** in stage 3, or that was created after
+  stage 3, therefore never had the trajectory test run and carries **false** —
+  and it carries false on the prototype side too, because
+  `ProtoSegment`'s ctor initialises `flag_shower_trajectory(false)`
+  (`ProtoSegment.cxx:24`) exactly as the toolkit's flags zero-initialise.
+
+So the stored flag at `:2337` is "what stage 3 or a later explicit demotion
+left", identically on both sides, and step (2) is the faithful read rather than
+a silent reroute of untyped segments into `determine_dir_track`.
 
 **Blast radius — the reason this must be default-OFF and gated hard.** Step (1)
 changes a flag with **31 `kShowerTrajectory` occurrences in
