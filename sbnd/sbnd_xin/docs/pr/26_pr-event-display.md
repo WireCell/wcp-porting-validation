@@ -43,7 +43,7 @@ the set, and one of them is broken:
 | track/shower points | `shower_track` layer | — | ok |
 | PR vertices | `vertices` layer | `flag_vertex` | ok |
 | Steiner skeleton + terminals | — | — | **absent from both** |
-| 2-D measured charge | — | `T_proj_data` | **`T_proj_data` is empty except `cluster_id`** — §5.1 |
+| 2-D measured charge | — | `T_proj_data` | was **empty except `cluster_id`** when this display was designed — §5.1, fixed since |
 
 So the display would need three readers, one of which returns nothing. Instead
 the PR chain gains a `pr_display` stage writing the **union** into one
@@ -156,21 +156,47 @@ inside that sphere — the viewer loads no wire geometry, only the JSON.
 | Viewer | `py_compile` ok, `bash -n` ok, headless document build populates **28 of 28** CDS (28 440 rows), server returns 200 |
 | Protected dirs (M13) | nothing written under `work-vfnuecc48-prod0803/` or `work-nuecc48-prod0803/` |
 
-## 5. Two defects found on the way — REPORTED, NOT FIXED
+## 5. Two defects found on the way — 5.1 FIXED, 5.2 open
 
-### 5.1 `tracking-pr.root`'s `T_proj_data` has only one branch
+### 5.1 `T_proj_data` has only one branch — REGRESSION from upstream `5f684887`, **FIXED**
 
-**Symptom.** Every `tracking-pr.root` the PR chain has ever written contains a
-`T_proj_data` tree with only `cluster_id`. `channel`, `time_slice`, `charge`,
-`charge_err` and `charge_pred` are absent, so the Magnify-tracking 2-D view has
-no measurement to draw and `uproot` sees a one-branch tree. Confirmed on every
-`pr_evt*/tracking-pr.root` checked.
+> **Corrected and fixed 2026-08-03.** An earlier revision of this section said
+> the toolkit "generates no ROOT dictionaries at all" and that the breakage was
+> longstanding. **Both are wrong.** It generated one, and this is a dated
+> regression. Fixed by restoring `root/dict/LinkDef.h`; verification below.
+> The superseded reasoning is kept only where it is still a useful warning.
 
-**Root cause.** `TTree::Branch` refuses to create a branch for an STL
-collection with no *compiled* `CollectionProxy`, and **the toolkit generates no
-ROOT dictionaries at all** — there is no `LinkDef.h` anywhere in the tree, so
-`waft/smplpkgs.py`'s `bld.path.find_dir('dict')` finds nothing for any package.
-ROOT says so itself, in `stdout.log`:
+**Symptom.** `tracking-pr.root` contains a `T_proj_data` tree with only
+`cluster_id`. `channel`, `time_slice`, `charge`, `charge_err` and `charge_pred`
+are absent, so the Magnify-tracking 2-D view has no measurement to draw.
+
+**Root cause.** `TTree::Branch` refuses to create a branch for an STL collection
+with no *compiled* `CollectionProxy`. Until recently `root/dict/LinkDef.h`
+supplied exactly that, on its first three lines:
+
+```cpp
+#pragma link C++ class vector < vector<int> > +;
+#pragma link C++ class vector < vector<float> > +;
+#pragma link C++ class vector < vector<double> > +;
+```
+
+That file was **deleted by upstream commit `5f684887` ("moved to standalone
+wire-cell-sbnd-reco1", Tue Jul 28 2026)**, which moved the SBND reco1 art-file
+sources out of the toolkit and took `root/dict/` with them. The three `std`
+pragmas were collateral: they serve `root/`'s own three Magnify `T_proj_data`
+writers and have nothing to do with reco1. The commit reached
+`apply-pointcloud` in the 2026-08-03 master merge.
+
+The dated evidence is unambiguous:
+
+| file | written | `T_proj_data` branches | vs. merge |
+|---|---|---|---|
+| `work-r1ql-f2/nusel_evt12/tracking-stm.root` | Jul 30 19:35 | **6**, with data | before |
+| `work-vfnuecc48-prod0803/pr_evt388/tracking-pr.root` | Aug 3 12:00 | **1** | after |
+
+Both were written by the same ROOT 6.32.02 (`fVersion 63202`), by
+byte-identical branch code, from the same tree. The only variable is the
+dictionary. ROOT says so itself, in `stdout.log`:
 
 ```
 Error in <TTree::Branch>: The class requested (vector<vector<int> >) for the
@@ -190,6 +216,79 @@ null branch **without throwing**, so the writer's very next line still logs
 tree: the valfast gate hashes `mabc-pr.zip` and the pctree tarball and compares
 `T_tagger`/`T_kine` numerically, never `T_proj_data`.
 
+**Blast radius.** Wider than the PR chain. All three Magnify tracking writers —
+`SbndPrMagnifyTrackingVisitor`, `SbndMagnifyTrackingVisitor` (SBND
+`stm_magnify`) and `UbooneMagnifyTrackingVisitor` — declare the same
+`std::vector<std::vector<int>>` members and issue the same `Branch` calls, so
+**every `tracking-*.root` written after the merge landed loses `T_proj_data`,
+SBND and uBooNE alike**. (Inferred from the shared code path, verified directly
+only on the PR file.) A grep confirms those three are the *only* nested-STL
+`Branch` users in the tree, so nothing else is silently affected; the `float`
+and `double` pragmas have no current consumer.
+
+**The fix.** `root/dict/LinkDef.h` is restored, carrying **only** the three
+`std` pragmas — deliberately not the reco1 mirror classes, which belong to the
+standalone repo now. No build-file change was needed: both build systems
+auto-detect the file (`waft/smplpkgs.py:512`, and `cmake/WCTPackage.cmake:114`
+calling `wct_package_root_dict`), and `root/wscript_build` already carries
+`ROOTSYS` in `use`. The file itself opens with a comment explaining why those
+three pragmas exist, so the next merge has something to read.
+
+The `GetCollectionProxy() != nullptr` trap is worth keeping in mind: an
+*interpreted* class (`GetState() == 3`) returns a **non-null** proxy and still
+cannot be branched. Only `kHasTClassInit` (`== 4`) carries a *compiled* one.
+That false success signal is what made the earlier `GenerateDictionary` attempt
+look like it had worked.
+
+**Two things this is not.** Not `wire-cell`-specific: a bare `root -l -b -q`
+macro branching `vector<vector<int>>` fails identically. Not the orphan rootmap:
+stripping `local/lib` and `build/*` from `LD_LIBRARY_PATH` silences the
+`recob::Wire` warning and the branch still fails.
+
+**Verification of the fix** (owner-authorised 2026-08-03; landed as a behaviour
+change, not knob-gated — a dictionary is a link-time property of
+`libWireCellRoot`, and the change *restores* branches that were always intended):
+
+```bash
+cd toolkit && wcbuild                       # rc=0
+root -l -b -q /home/xqian/tmp/vvload.C      # against local/lib/libWireCellRoot.so
+#  -> STATE=4 (kHasTClassInit), branches created  (was STATE=3, NBRANCHES=0)
+cd sbnd_xin && PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-prdict-388 data 388
+```
+
+| check | result |
+|---|---|
+| M1 freshness | `LinkDef.h` 17:32:23 → `WireCellRootDict.cxx` 17:32:36 → `libWireCellRoot.so` 17:33:04 |
+| `T_proj_data` branches | **1 → 6**, all populated: 52 clusters, **13 821 cells** each in `channel`/`time_slice`/`charge`/`charge_err`/`charge_pred` |
+| ROOT errors in `stdout.log` | `CollectionProxy` **0** (was 5); `no member named 'Wire'` **0** (was 5) |
+| regenerated rootmap | 2756 B → **166 B**, `{ decls }` block now empty of larsoft/art |
+| **physics unmoved** | `mabc-pr.zip` `c285c96d…` **7 members** and `pctree-pr-evt388.tar.gz` `3ea67506…` **425 members** hash-identical to the protected `work-vfnuecc48-prod0803/pr_evt388`; `nusel-evt388.tsv` identical |
+| unit tests | `wcdoctest-clus` 71 cases / 809 assertions PASS |
+
+Gate labels: `work-prdict-388/pr_evt388` vs `work-vfnuecc48-prod0803/pr_evt388`.
+(When diffing `hash_archive.py` output, compare field 1 — the path column always
+differs between arms.)
+
+The ROOT cell count (13 821) and the display dump's (13 507) are **not expected
+to match**, and neither is wrong. `T_proj_data` emits one row per *cluster tag*,
+so a cell claimed by more than one cluster appears more than once — measured
+here as **1023 duplicate rows, 12 798 unique `(channel, time_slice)` pairs**.
+The dump instead keys cells by `(apa, face, plane)` + per-APA wire + slice, which
+separates the two drift faces that share a global channel number. Compare the
+two only after collapsing to a common key.
+
+`wcdoctest-root` no longer exists: `root/test/` has no doctest sources. The
+binary left in `build/` was a stale artifact of the reverted `ensure_stl_dict`
+attempt and still ran a test for a deleted knob; it was removed and waf
+correctly declines to relink it.
+
+**Merge watch item.** A future master merge can delete `root/dict/LinkDef.h`
+again exactly as silently as this one did. If it is restored, the file should
+carry a comment saying *why* those three `std` pragmas exist (they are `root/`'s,
+not reco1's), and it belongs on the post-merge check list — same failure mode as
+the `CLAUDE.md` relocation.
+
 **A wrong lead, recorded so it is not re-followed.** `tracking-stm.root` (STM
 chain) has all six branches and its StreamerInfo record contains
 `vector<vector<int> >`; `tracking-pr.root` has neither. The differentiating
@@ -198,36 +297,35 @@ after the tracking writer — a plausible story in which `TFile::WriteStreamerIn
 rewrites the record from scratch and drops any class not touched in that
 session. It is wrong. **Control: running the PR chain with `tagger_output`
 removed from the pipeline still yields a one-branch `T_proj_data`.** The
-missing streamer is a consequence of the branches never existing, not a cause.
-The STM files simply predate whatever changed. A `preserve_streamer_info` knob
-built on that story was implemented, tested, shown to change nothing, and
-removed.
+missing streamer is a consequence of the branches never existing, not a cause —
+and "the STM files simply predate whatever changed" turned out to be the whole
+answer, once the *whatever* was identified as `5f684887`. A
+`preserve_streamer_info` knob built on the streamer story was implemented,
+tested, shown to change nothing, and removed. **Lesson: comparing StreamerInfo
+lists measures the symptom. The date of the working file was the clue that
+mattered.**
 
-**Fix, not done here.** Two candidates, both outside this round:
+**A second dead end, also recorded.** Runtime dictionary generation —
+`gInterpreter->GenerateDictionary("vector<vector<int> >","vector")` — is not
+available here, so it is not an alternative to the LinkDef. It goes through
+ACLiC, whose `g++` invocation fails with
+`cc1plus: error: /wcwc/stage/root/spack-stage-root-6.32.02-…/include:
+Permission denied` — ROOT's own build-time include path, left in its compiler
+flags and no longer readable. It returns **rc = 0 regardless**, and
+`TClass::GetCollectionProxy()` then hands back an *interpreted* proxy, so both
+the return code and the obvious success check lie. Verified in a bare
+`root -l -b -q` macro as well as in the job.
 
-1. **Build-time dictionary** — add `root/dict/LinkDef.h` with
-   `#pragma link C++ class vector<vector<int> >+;`. `root/wscript_build`
-   already carries `ROOTSYS` in `use`, so `gen_rootcling_dict` would activate
-   cleanly. **This cannot be knob-gated**: every `WireCellRoot` consumer gets
-   it, including uBooNE's qlport gate chain. It would also regenerate
-   `libWireCellRoot.rootmap` — see the note below.
-2. **Runtime generation is not available on this machine.**
-   `gInterpreter->GenerateDictionary("vector<vector<int> >","vector")` goes
-   through ACLiC, whose `g++` invocation fails here:
-   `cc1plus: error: /wcwc/stage/root/spack-stage-root-6.32.02-…/include:
-   Permission denied` — ROOT's own build-time include path, left in its
-   compiler flags and no longer readable. It returns **rc = 0 regardless**, and
-   `TClass::GetCollectionProxy()` then hands back an *interpreted* proxy, so
-   both the return code and the obvious success check lie. Verified in a bare
-   `root -l -b -q` macro as well as in the job.
-
-**Unexplained, flagged not touched.** `build/root/libWireCellRoot.rootmap`
-exists, is dated 2026-07-30, contains larsoft/art forward declarations
-(`recob::Wire`, `sbnd::timing::DAQTimestamp`, …), and has **no producer in the
-build** — nothing generates a rootmap for this package. It is what emits
-`error: no member named 'Wire' in namespace 'recob'` in every ROOT session that
-touches this build tree. Enabling option 1 would overwrite it. Its origin
-should be established first.
+**The orphan rootmap, explained.** `build/root/libWireCellRoot.rootmap` and
+`local/lib/{libWireCellRoot.rootmap,WireCellRootDict_rdict.pcm}` are dated
+2026-07-30 and have no producer in the current build — they are **leftovers of
+the deleted `root/dict/`**, not a mystery. Their forward-declaration block still
+carries the reco1 larsoft/art classes whose headers left with `5f684887`, which
+is why every ROOT session touching this tree prints `error: no member named
+'Wire' in namespace 'recob'`. Restoring the LinkDef with only the three `std`
+pragmas regenerates them without those declarations and retires that noise too.
+They are stale but harmless: stripping them from `LD_LIBRARY_PATH` changes
+nothing about the branch failure.
 
 **This does not block the display**, which never reads `T_proj_data`.
 
@@ -260,10 +358,23 @@ sites — this dumper, the three Magnify tracking writers, and
 `TaggerCheckSTM`'s `stm_fit` record. No tagger verdict, Bee layer or pctree
 tensor depends on it, which is why no A/B gate has ever caught it.
 
-**Not fixed here** — the fix belongs in `TrackFitting` (iterate a
-cluster-id-ordered view) with its own gate. Until then, do not read the
-display's per-cell measured-vs-predicted comparison as a stable number. The
-caveat is stated in `pr_display/README.md` and in the source.
+**Not fixed here**, but the fix and its gate are both small. Sort the outer
+loop of `assemble_fitted_charge_2d` by `cl->get_cluster_id()` and iterate that
+order; `merge_fitted_charge_2d` (`:1154`) needs the same treatment if its input
+is ever pointer-ordered.
+
+**How to gate it — deliberately not the usual bar.** Do *not* ship this behind
+a default-OFF knob and do *not* try to prove byte-identical-vs-before: today's
+output disagrees **with itself** run to run, so there is no legacy path to
+preserve. The gate is the inverse of the check that found the bug — two runs
+under `setarch x86_64 -R` producing an identical `charge_pred`. Worth noting
+that the measurement *confirmed* the existing source comment's premise:
+`charge` and `charge_err` really are cluster-independent and were bit-identical
+across runs. Only `charge_pred` moves.
+
+Until then, do not read the display's per-cell measured-vs-predicted comparison
+as a stable number. The caveat is stated in `pr_display/README.md` and in the
+source.
 
 ## 6. Scope notes
 
