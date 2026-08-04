@@ -10,6 +10,16 @@ is **step 5 of the eight** in doc pr/27 §0, defined in doc pr/27 §7: assemble
 below is CLAUDE.md §5 rule 1 (it changes production output unconditionally) and
 is the owner's call.
 
+> **§10 (2026-08-04) applies the owner's filter: fourteen → five.**  Kept:
+> **F1 = P1** (wrong daughter-count callee, both sites), **F2 = P2** (whose PDG,
+> five sites), **F3 = P3** (π⁰ id collision — now with two live downstream
+> consumers), **F4 = P6** (`abs(pdg)==11`, **one** live site, not two), and
+> **F5 = P12** (`shower_less`'s address fallback — *a different class*: a
+> house-rule violation, not a prototype divergence).  **P7 is RESOLVED, not
+> merely dropped** — §7 loose end 3 is closed.  §10.8 records **eight
+> corrections to §3/§7/§8 of this doc**, including that every anchor below is up
+> to 19 lines stale (read at `f07c0299`, re-verified at `407c5ba9`).
+
 **Headline.** The control flow is an exact port and most of the arithmetic is
 faithful.  Fourteen behaviour-changing divergences follow.  Two dominate:
 
@@ -853,3 +863,315 @@ this stage.  P12 is a concrete mechanism, not a hypothetical.
   explains both of its sites, so manufacturing an interpretive tie there would
   misrepresent the evidence.  What P1 leaves to the owner is the choice of fix,
   not the question of whether it diverges.
+
+---
+
+## §10 Owner filter, 2026-08-04 — fourteen divergences to five
+
+**The ask.** Skip anything that is an improvement over the prototype; keep only
+what is a **bug** or **missing from the port**.  Same rule the owner applied to
+doc pr/32 §10 (twelve → four).
+
+**Re-verified at committed HEAD `407c5ba9`**, not at the `f07c0299` the audit was
+written against.  **Every §3 and §8 anchor in this doc is now stale by up to
++19 lines** — `397b1517` landed on this file after the read (3384 → 3403 lines).
+New anchors are given per finding below; §3's are left as written so the two
+revisions stay distinguishable.  Still **no code changed** in this section.
+
+### §10.1 The filter
+
+| # | verdict | why |
+|---|---|---|
+| **P1** | **KEEP — F1** | wrong callee at both sites; a port defect, not a redesign |
+| **P2** | **KEEP — F2** | five object substitutions in a muon veto, in both directions |
+| **P3** | **KEEP — F3** | by-value allocator ⇒ π⁰ id collision with a **live** downstream consumer |
+| P4 | drop | fixes a prototype shadowing bug — an improvement |
+| P5 | drop | toolkit-only addition with a stated rationale; neither bug nor gap |
+| P6 | **KEEP — F4** | but **one live site, not two** — §10.8 correction 3 |
+| P7 | **drop — RESOLVED** | §7 loose end 3 closed; the relocation moves *toward* the prototype |
+| P8 | drop | fixes the prototype's `fabs(pdg==13)` bug — an improvement |
+| P9 | drop | id→position, the class the owner pre-cleared in pr/32 |
+| P10 | drop | null-safety guards; degenerate reachability unmeasured |
+| P11 | drop | determinism tie-breaks — an improvement (and see correction 7) |
+| **P12** | **KEEP — F5**, different class | violates *our own* §2 determinism rule; prototype is `n/a` |
+| P13 | drop | anti-hang guards — an improvement |
+| P14 | drop | B.6; the owner has already ruled |
+
+Five kept.  F1–F4 are prototype-fidelity defects.  **F5 is not** — it is a
+house-rule violation with no prototype counterpart, and it is listed separately
+so that distinction is not smuggled past the owner.
+
+---
+
+### §10.2 F1 = P1 — restore `calculate_num_daughter_tracks` at both sites
+
+**Confirmed at HEAD, and the confirmation narrows the defect.**  Both toolkit
+implementations (`NeutrinoTrackShowerSep.cxx:178` and `:235`) are *faithful*
+ports of the prototype's two functions — both carry the full
+`get_flag_shower()` including the `abs(pdg)==11` term, both use the same BFS
+frontier, and `_tracks` carries the `length > length_cut` filter that `_showers`
+lacks.  **So P1 is purely a wrong-callee bug.  Nothing about the callees needs
+to change.**
+
+| site | HEAD anchor | now calls | counts | prototype | counts |
+|---|---|---|---|---|---|
+| `shower_clustering_connecting_to_main_vertex` | **`:289`** | `_showers(graph, main_vertex, sg)` (flag defaults `true`) | shower-flagged only | `_tracks(main_vertex, sg, true)` — `shower_clustering.h:140` | **everything**, `length > 0` |
+| `examine_showers` | **`:2205`** | `_showers(graph, main_vertex, sg, false).second` | **everything**, no length filter | `_tracks(main_vertex, sg, false).second` — `em_shower.h:17` | tracks only, `length > 0` |
+
+**Solution — two knobs, not one.**  The two sites err in *opposite* directions,
+so a single knob makes the A/B unable to attribute which site moved a decision:
+
+* `daughter_count_proto_main_vertex` → `:289` becomes
+  `calculate_num_daughter_tracks(graph, main_vertex, sg, /*count_shower=*/true, 0)`;
+* `daughter_count_proto_examine_showers` → `:2205` becomes
+  `calculate_num_daughter_tracks(graph, main_vertex, sg, /*count_shower=*/false, 0).second`.
+
+Both C++ default `false`.  Ship a counter per site reporting how often the
+restored value differs from the current one — `pair_result.first` at `:289`
+gates the proton skip through `<= 3`, so a count that never crosses the
+threshold is the cheap way to bound the reach that §7 loose end 1 left open.
+
+**Not an interpretive tie.**  §3 already argued this and it survives
+re-verification: no single design intent yields *shower-flagged only* at one
+site and *everything* at the other against a prototype that wants *everything*
+and *tracks only* respectively.  What is the owner's call is whether to restore
+or to keep and document — not whether it diverges.
+
+---
+
+### §10.3 F2 = P2 — read the start segment's PDG where the prototype does
+
+Five substitutions, unchanged in count after re-verification, at HEAD anchors
+**`:170`, `:525`, `:1247`, `:2911`, `:2927`**.  Four read the *shower's*
+majority-vote type where the prototype reads the *start segment's* PID; `:525`
+runs the other way.  Every one is a muon veto.
+
+**Solution.** One knob `shower_pdg_from_start_segment`, C++ default `false`,
+flipping all five to the prototype's object.  They are one class and one
+mechanism, so one knob is right here — unlike F1, they all err the same way
+except `:525`, which the same knob inverts back.  Keep the toolkit's `std::abs`
+at `:170` **only if** the knob is off: the prototype's `!= 13` is exact, so
+under the knob `:170` must become an exact `!= 13` too, or PDG −13 still takes
+the wrong branch.
+
+**Why it is a slip and not a convention** — and this is sharper than §3 said.
+There are now **four** sites where both trees read the shower type, not two:
+§10.8 correction 2 adds `:2550` and `:2585`.  So of nine comparable sites the
+trees agree on four and disagree on five, and the five disagreements point in
+two directions.  A convention would not do that.
+
+---
+
+### §10.4 F3 = P3 — share one π⁰-id allocator between the two finders
+
+**Confirmed, and the blast radius is larger than §3 recorded.**
+`TaggerCheckNeutrino.cxx:602` declares `int acc_segment_id = 0` and passes it
+**by value** to `shower_clustering_with_nv` (`:769`), which passes the same
+by-value parameter to `id_pi0_with_vertex` (`:3304` → `:2731`
+`int pio_id = acc_segment_id++`) and to `id_pi0_without_vertex` (`:3313` →
+`:3133-3134`).  The second finder therefore receives the value the first
+*started* with.  If both fire, both allocate `pio_id = 0`.
+
+§3 called consequence 2 "a lost invariant" because no consumer was found.  There
+are two, both live:
+
+* `NeutrinoTaggerNuE.cxx:574`, `:912`, `:1028` — `map_pio_id_showers[pio_id]`
+  feeds the nue tagger's π⁰ block (`pio_flag_pio` and the companion-shower list);
+* `MultiAlgBlobClustering.cxx:1552-1557` — Bee π⁰ **grouping** is keyed on
+  `map_shower_pio_id.at(sh)`, and `pi0_ke` is read from
+  `map_pio_id_mass.find(pi0_id)`.
+
+So a collision does not merely lose an invariant: it puts **four** showers into
+one π⁰ group and lets the second finder's mass **overwrite** the first's, in
+both the tagger and the event display.
+
+**Solution — the collision half only.**  Change the parameter to `int&` on
+`shower_clustering_with_nv`, `id_pi0_with_vertex` and `id_pi0_without_vertex`
+(`NeutrinoPatternBase.h:747-749`).  Knob `pi0_id_shared_allocator`, C++ default
+`false`: when off, snapshot `acc_segment_id` before `:3304` and restore it before
+`:3313`, reproducing today's byte-identical behaviour.
+
+**The second half is not proposed.**  Seeding at 0 rather than at a global
+segment-id allocator is a separate divergence, and the toolkit has no global
+segment-id allocator to hook — segment ids come from the graph index.  Restoring
+the prototype's "π⁰ ids are disjoint from every segment id" invariant would mean
+inventing one.  Recorded as a gap; **not** bundled into F3.
+
+---
+
+### §10.5 F4 = P6 — add the `abs(pdg)==11` term at `:797`
+
+**One live site, not two.**  §10.8 correction 3 shows the second site (`:1894`)
+feeds `n_showers`, which is `(void)`-cast at **`:1912`** in the toolkit and read
+nowhere in the prototype either — provably unobservable in both trees.
+
+The live site is `:797` in `shower_clustering_with_nv_from_vertices`:
+
+```cpp
+bool is_shower = seg->flags_any(kShowerTrajectory) || seg->flags_any(kShowerTopology);
+```
+
+against prototype `:1011` / `:1022`, where `get_flag_shower()` also returns true
+for `fabs(particle_type)==11`.  It is read **twice**, and both reads diverge:
+
+* `:803` — an electron-PID'd segment with neither flag is added to `acc_length`
+  by the prototype, skipped by the toolkit;
+* `:815` — `particle_type != 11 && !is_shower` adds to `acc_length1`.  **The
+  prototype excludes PDG −11 here and the toolkit does not**, because the
+  prototype's exclusion runs through `fabs(...)==11` inside
+  `get_flag_shower_dQdx()` while the toolkit's explicit test is `!= 11`.  §3 did
+  not name this sub-case.
+
+`acc_length` and `acc_length1` are compared at `:820`
+(`acc_length >= acc_length1`), which decides whether the cluster gets a centre
+point at all — so both reads feed one gate, in the same direction.
+
+**Solution.** One line, one knob `shower_flag_pdg_electron`, C++ default
+`false`: append
+`|| (seg->has_particle_info() && std::abs(seg->particle_info()->pdg()) == 11)`
+to `:797`.  That fixes `:803` and `:815` together.  Leave `:1894` alone and
+record it as dead.
+
+**And fix the dictionary, unconditionally.**  `porting_dictionary.md:222` maps
+`get_flag_shower()` → `flags_any(kShowerTrajectory | kShowerTopology)` with the
+`abs(pdg)==11` term simply absent.  That is a documentation bug, not a behaviour
+change, and it is what makes this class recur: five sites in this file already
+open-code the term correctly (`:105`, `:385`, `:1391`, `:1882`, `:2942`), so the
+dictionary is out of step with the code as well as with the prototype.  Correct
+it whether or not F4 ships.
+
+---
+
+### §10.6 F5 = P12 — `shower_less`'s address fallback (different class)
+
+**`:2848`** — `return a.get() < b.get();`, reached when two showers share a
+start-segment graph index or both have none.  It orders `map_shower_ray` and
+`map_shower_pair_mass_point`, i.e. π⁰ pairing.
+
+**This is not a prototype-fidelity finding.**  The prototype orders these by
+pointer everywhere; the toolkit is already strictly better.  It is kept because
+it violates CLAUDE.md §2's own determinism rule, which the rest of this file
+obeys — §6 clears every other container.
+
+**Reachability is not decided from source.**  Distinct showers get distinct
+start segments through the `map_segment_in_shower` guard, which
+`update_shower_maps` refreshes between sub-calls — but that guard is not
+consulted by `examine_showers`, which re-seats a start segment on an *existing*
+shower at `:2363`, and five shower-construction sites (`:1076`, `:1435`,
+`:1627`, `:1688`, `:2365`) pass a **throwaway local** `used_segments` rather
+than a shared one.  So the fallback is plausibly reachable and not demonstrably
+so.
+
+**Solution — the pr/32 F3 precedent.**  `Shower` already carries
+`m_shower_id`, assigned from a static atomic in the constructor
+(`PRShower.cxx:45`), and `IndexedShowerSet` already orders by it
+(`PRShower.h:223`).  Relative order within an event is preserved regardless of
+how events interleave across threads.  So the fix is one line —
+`return a->get_shower_id() < b->get_shower_id();` — behind
+`shower_less_id_tiebreak`, **shipped with a counter for fallback hits**.
+Expected byte-identical; that expectation rests on a control-flow argument, so
+the counter is what converts it into a measurement.  pr/32's P7 went the same
+route and came back 0 of 2219.
+
+---
+
+### §10.7 Dropped, with the reason each drop is safe
+
+* **P4** — the prototype's `max_length` shadowing bug.  Dropped as an
+  improvement.  **Doc-hygiene item kept**: it is not in the review doc's
+  "Prototype Bugs Fixed" table and should be added, alongside P8 which is.
+* **P5** — toolkit-only orphan rescue at `:730-760`.  An addition with a stated
+  rationale, neither a bug nor a gap.  Its L.1 hardcode is `0.511` against
+  `ParticleDataSet.cxx:66`'s `0.5109989461` — **2×10⁻⁶ relative, cosmetic**;
+  worth a cleanup commit, not a finding.
+* **P7 — RESOLVED, not merely dropped.**  §7 loose end 3 is closed.
+  `TrackFitting::collect_2D_charge` (`:933-990`) reads exactly two things:
+  `m_charge_data` and channel geometry.  `m_charge_data` is **never `.clear()`ed
+  or `.erase()`d anywhere in `TrackFitting.{cxx,h}`** — it only grows, via
+  `prepare_data()` on the dirty flag.  Its one transient mutation is
+  `charge_err`, raised by `update_dQ_dx_data()` (`:5373`) and restored by
+  `recover_original_charge_data()` (`:5406`) — and **`charge_err` appears zero
+  times in `NeutrinoEnergyReco.cxx`**, the sole consumer of the three maps
+  (`kine_charge_from_maps`, `:48`).  So collecting later can only make the map
+  *more complete*, which is the direction of the prototype's already-global
+  `main_cluster + other_clusters` bounding-box query.  The relocation moves
+  toward the prototype, not away.
+* **P8** — `fabs(pdg==13)`.  An improvement; already in the review doc's table.
+* **P9** — index-equality → nearest-distance.  This is the id→position class the
+  owner **pre-cleared in pr/32**, where it killed that doc's P6 outright.  Same
+  class, same drop.  **The empty-`fits()` sub-claim is dropped separately and
+  for a different reason**: it is a degenerate-input guard (the P10 family), its
+  reachability is unmeasured, and folding it under the pre-clearance would
+  overstate what that clearance covered.
+* **P10** — null guards.  Improvements; reachability of the degenerate inputs
+  unmeasured (§7 loose end 4 stands).
+* **P11** — five argmax tie-breaks.  Improvements.  See correction 7: the row
+  set is not a single-revision observation.
+* **P13** — anti-hang guards.  Improvements.
+* **P14** — B.6.  Already ruled.
+
+---
+
+### §10.8 Corrections to this doc's own §3, §7 and §8
+
+Written down because §3 was produced at a different revision and two of its
+claims do not survive re-verification.
+
+1. **All §3/§8 anchors are stale by up to +19 lines.**  `397b1517` landed after
+   the read (3384 → 3403).  Function heads at HEAD: `:76 :230 :473 :762 :1223
+   :1304 :1641 :2099 :2458 :2802 :3179`.
+2. **§3 P2's "two sites *do* match" is incomplete — there are four.**  `:2550`
+   and `:2585` in `id_pi0_with_vertex` read `shower->get_particle_type()` with
+   `abs`, and so does the prototype (`shower_clustering.h:743`, `:775`,
+   `fabs(...)!=13`).  They **match** and are not P2 sites.  The mismatch count
+   stays five; the denominator goes from seven to nine.  Note the consequence:
+   the prototype itself is inconsistent *between* its two π⁰ finders —
+   `id_pi0_with_vertex` reads the shower, `id_pi0_without_vertex` reads the
+   start segment — which is very likely how the toolkit's uniform reading arose.
+3. **§3 P6's second site is provably unobservable.**  `:1894`'s `is_shower`
+   feeds only `n_showers`, which is `(void)n_showers;` at **`:1912`**.  The
+   prototype's counterpart (`em_shower.h:508`) is equally dead — its gate at
+   `:531-532` reads `n_tracks` and `total_length` only.  GOTCHA 9 already said
+   `n_showers` is dead in the prototype; it is dead in the toolkit too, so the
+   divergence at that site cannot be observed.  **P6 is one live site.**
+4. **§3 P6 missed a live sub-case.**  The `:815` `acc_length1` test admits PDG
+   **−11** where the prototype excludes it — see §10.5.
+5. **§3 P3 understates the reach.**  "A lost invariant, not a confirmed bug" was
+   written because no consumer was found.  Two exist — `NeutrinoTaggerNuE.cxx`
+   and `MultiAlgBlobClustering.cxx` — see §10.4.  §9's third bullet is superseded.
+6. **§7 loose end 3 is closed** — §10.7's P7 entry.  §9's fourth bullet
+   ("P7 is half-verified") is superseded.
+7. **§3 P11's row set changed post-hoc.**  `397b1517` **created** the
+   `examine_shower_1` max-segment tie-break now at `:1900-1907` — after this
+   audit was written, with the doc pr/28 §15.8 rationale in the comment.  So
+   P11's five rows are not five observations of one revision.  Does not change
+   the drop.
+8. **§3.0 and P1's B.1 history survive unchanged.**  Re-read at HEAD: `:289` is
+   still `calculate_num_daughter_showers(graph, main_vertex, sg)`, and the
+   pre-B.1 form with the explicit `false` really was semantically identical to
+   the prototype's `_tracks(…, true)`.  Applying B.1 introduced the divergence.
+
+---
+
+### §10.9 What §10 does not claim
+
+* **Still no event was run and no code was changed.**  Every fix above is a
+  proposal with a knob name, not a patch.  No gate, no manifest, no label.
+* **The five kept findings are confirmed as divergences; their *frequency* is
+  not.**  F1's `<= 3` crossing rate, F2's shower-vs-start-segment disagreement
+  rate, F3's both-finders-fire rate and F5's fallback-hit rate are all
+  unmeasured — which is why every proposed fix above ships with a counter.
+* **"Expected byte-identical" is claimed only for F5**, and only as a
+  control-flow argument.  F1–F4 are expected to *change* output when on; that is
+  the point of them.
+* **P7's resolution is a source argument, not a measurement.**  It rests on
+  three greps stated explicitly in §10.7 so they can be re-run: `charge_err` in
+  `NeutrinoEnergyReco.cxx` (zero hits), `m_charge_data` clear/erase in
+  `TrackFitting.{cxx,h}` (zero hits), and the consumers of `m_charge_2d_*`
+  (`cal_kine_charge` only).  If any of those changes, P7 reopens.
+* **P12's reachability remains undecided** — §10.6 says so explicitly rather
+  than ranking it as likely or unlikely.
+* **The §0 "not audited" list is unchanged.**  `PRShower.cxx` ↔ `WCShower.cxx`,
+  `cal_kine_charge` internals and the line-by-line arithmetic of
+  `examine_shower_1` / `examine_showers` were not opened for this filter either.
+  A sixth finding could live there.
