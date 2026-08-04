@@ -393,6 +393,11 @@ commented out one line below. The toolkit keeps the tightened version
 `|fit_pt − wcpt| > 5 cm ⇒ use wcpt` fallback for the test point. See P11 for
 the one detail that differs.
 
+> **Narrower than it reads — see §10.13.** The toolkit keeps the *tightening*;
+> it does not keep the *boundary switch*. In the prototype, passing a tolerance
+> vector moves the test onto the `boundary_SCB_*` polygon family, not just an
+> inset of the same surface.
+
 ### 2.10 `neutrino_type`'s only live read is genuinely a print
 
 `NeutrinoTaggerNuE.cxx:45` and `:360` claim the prototype's `neutrino_type`
@@ -1586,3 +1591,45 @@ reconcile uBooNE numbers against this stage has to account for that.
 * **§10.9's coverage table is a grep of the branch-booking block**, not a run.
   It proves the branch is *booked*; it does not prove the writer is reached on
   any event.
+
+### 10.15 Amendments from self-review
+
+Three under-specifications in §10.2-§10.6, each of which would have let an
+implementer make a decision the owner did not make.
+
+**(a) F2's counter is two different measurements, and §10.3 named only the
+cheap one.** "At tagger entry" plus a citation of the `PR30AUDIT` blocks is
+ambiguous: those blocks *emit* at the end of `visit()`, while the population is
+per-segment and the eight skip-gates live in two translation units. They are
+not the same instrument:
+
+* **The population sweep — run this first.** One pass over the PR graph's
+  segments immediately before the tagger block (`TaggerCheckNeutrino.cxx:804`),
+  counting `(flags_any(kShowerTrajectory) || flags_any(kShowerTopology)) &&
+  !has_particle_info()`, emitted on the existing audit line. Answers *is the
+  population non-empty*, which is the only question that decides whether F2
+  exists. Cheap, one file, no sub-tagger edits.
+* **The eight per-site counters — only if the sweep is non-zero.** One at each
+  skip-gate (`NeutrinoTaggerNuE.cxx:396, :852, :897, :989, :1014, :4089,
+  :4274`, `NeutrinoTaggerSinglePhoton.cxx:1400`). Answers *which gate loses
+  segments*, which is what a fix has to be scoped against.
+
+Stated because whoever runs it will otherwise pick the cheap one and then the
+number will not attribute.
+
+**(b) F5's `eps` was left blank, and any non-zero value silently reintroduces
+the defect.** §10.6's patch reads `ray_length(...) < eps`. The prototype's test
+is **integer index identity**, so a tolerance turns it back into a proximity
+rule — just with a different threshold from `seg_endpoint_near`'s, which would
+be replacing one proximity test with another while claiming index parity.
+
+**Use exact equality**, `vtx->wcpt().point == seg->wcpts().front().point`. Both
+are copies of the same skeleton node; nothing between the graph build and the
+tagger does arithmetic on them. The assumption is checkable rather than
+assumed: ship the knob with a counter for the case where **neither** endpoint
+matches exactly. A non-zero count disproves the coincidence premise, and then
+F5 needs redesign rather than a wider tolerance.
+
+**(c) §2.9 now carries a forward pointer.** §10.13 narrows a §2 *positive*, and
+in a 1574-line doc a correction that lives only at the end reaches nobody who
+stops at §2. The pointer is inserted in §2.9 itself.
