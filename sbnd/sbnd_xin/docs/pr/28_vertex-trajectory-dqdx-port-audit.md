@@ -1973,6 +1973,13 @@ evt 388:
 | **T6** — `check_and_reset_close_vertices` firings | **2** | both on 2-point segments |
 | **T4** — points dropped by the pre-dQ/dx `form_map_graph` | **0** | inert on this event |
 
+> **On the 2 146.** The per-segment counter is incremented *after* the skip
+> gates, so it counts reverted points that **survived**. The raw trace carries
+> **2 668** `charge revert` lines, which additionally include reverts on points
+> that were then skipped, and reverts in the **single**-track path — where the
+> cut was already live and correct before this round. 2 146 is the number to
+> quote for "what the fix turned on"; do not read 2 668 − 2 146 as a discrepancy.
+
 Read that T3 row carefully: the dead-channel lookup was reading **the wrong
 point's plane quantities for 83 % of trajectory points**, or missing the map
 entirely — and a miss sets all three planes "dead", which opens the
