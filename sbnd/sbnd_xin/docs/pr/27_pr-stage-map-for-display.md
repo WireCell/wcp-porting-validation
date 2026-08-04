@@ -506,7 +506,8 @@ neutrino vertex. `find_proto_vertex` returns `false` if no segment survived
 | segment polyline | `Segment::fits()` | `calib-pr-*.json` `segments[].points[]`; Bee `track_fit-global` (**flat points, no grouping**) |
 | vertex position (fitted) | `Vertex::fit()` | `calib-pr-*.json` `vertices[]`; Bee `vertices-global` |
 | vertex position (pre-fit) | `Vertex::wcpt()` | **nothing** |
-| how far the fit moved a vertex | `Vertex::fit_distance()` `PRVertex.h:84` | **nothing** |
+| `fit_distance()` = \|fit − wcpt\| | `Vertex::fit_distance()` `PRVertex.h:84` | `calib-pr-*.json` `vertices[].fit_distance` (**not** a fit displacement — pr/28) |
+| whether the vertex fit ran (`flag_fix`) | `Vertex::flag_fix()` `PRVertex.h:74` | **nothing** — trace log only |
 | graph degree at a vertex | `boost::out_degree` | `calib-pr-*.json` `vertices[].degree` |
 | segment ↔ cluster provenance | `cluster_id*1000 + graph_index` | Bee encoded `real_cluster_id`; `calib-pr-*.json` `id` |
 | associated points per segment | `dpcloud("associate_points")` | Bee `shower_track-global`; `calib-pr-*.json` `track_shower` |
@@ -1202,7 +1203,8 @@ carries it, not that it is unavailable in memory.
 | | segment points, flat | Bee `track_fit-global` (q = `dQ*0.1−1000`) |
 | | vertices | `calib-pr-*.json` `vertices[]`; Bee `vertices-global` |
 | | associated points | Bee `shower_track-global`; `calib-pr-*.json` `track_shower` |
-| | pre-fit vertex position, `fit_distance()` | **nothing** |
+| | pre-fit vertex position; `flag_fix` (did the fit run) | **nothing** |
+| | `fit_distance()` = \|fit − wcpt\| | `calib-pr-*.json` `vertices[].fit_distance` (pr/28: not a fit displacement) |
 | **§5 PID/dir** | shower flag, PDG, `dirsign` | `calib-pr-*.json` `segments[]` |
 | | `dir_weak`, `particle_score` | **nothing** |
 | | per-point dQ, dx, chi2, 2-D projection | `calib-pr-*.json` `points[]`; `tracking-pr.root` `T_rec_charge` |
