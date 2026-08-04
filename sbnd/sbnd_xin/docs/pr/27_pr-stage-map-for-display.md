@@ -32,10 +32,26 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 ./run_pr_chain_batch.sh ...       # batch, also writes tracking-pr.root
 ```
 
+### How far to trust the anchors
+
 Anchors are `file:line` relative to `/nfs/data/1/xqian/toolkit-dev/toolkit/`.
-Every one was re-read at `11ef6f0b` before this doc was committed; they will
-drift as the tree moves, so treat the *function name* as authoritative and the
-line as a hint.
+Two tiers, and the difference matters:
+
+* **Function-definition anchors** (`compare_main_vertices` `:760`,
+  `do_multi_tracking` `:7712`, …) were **mechanically verified** at `11ef6f0b`
+  by grepping the definition out of each source file. Trust these.
+* **Call-site and inline-statement anchors** (the ordered sub-step tables, the
+  scoring-term tables, the threshold citations) were traced from the source but
+  only **spot-checked**, not individually re-read — the `compare_main_vertices`
+  weight ladder, the `calc_conflict_maps` angle ladder, the `MyFCN` gate, the
+  `improve_vertex` sequence and the DL rerank block were checked line by line;
+  the rest were not. Expect a few lines of drift in the unchecked ones.
+
+Spot-checking already caught two: the `MyFCN` fit gate is at `MyFCN.cxx:220`,
+not `:214`, and the DL rerank terms sit ~5 lines later than first recorded.
+Both are corrected here. **Treat the function or variable name as
+authoritative and the line number as a hint** — that is true even without the
+drift, since the tree moves.
 
 ---
 
@@ -770,16 +786,20 @@ fit points, `q = dQ * m_dQdx_scale + m_dQdx_offset`. Inference via
 The **rerank path** (default) is the one scorer in the whole chain that already
 computes a full per-term decomposition — and already logs it (`:3583-3595`):
 
+Weight constants are declared together at `:3535-3543`.
+
 | term | formula | weight | anchor |
 |---|---|---|---|
-| `s_dl` | `dl_score × m_dl_vtx_score_scale`, `dl_score = sigmoid(vtx) − sigmoid(bg)` ∈ [−1,+1] | scale 1000 | `:3549`, doc `:3428-3432` |
-| `s_snap` | `− min(2.0, snap_dis / 5 cm)` | — | `:3555` |
-| `s_fwd_z` | `− 0.25 × clamp((z − z_min)/400 cm, 0, 1)` | 0.25 | `:3560-3561` |
-| `s_clen` | `+ 2.0 × min(1, L_host / 60 cm)` | 2.0 | `:3570` |
-| `s_isol` | `− 2.0` if `L_host < 6 cm` and host ≠ main cluster | 2.0 | `:3573-3575` |
-| `s_main` | `+ 2.0` if host cluster == main cluster | 2.0 | `:3578` |
-| `s_fv` | `+ 0.5` if inside fiducial volume | 0.5 | `:3581-3587` |
-| **TOTAL** | sum, argmax; accept iff `>= m_dl_vtx_min_accept_score` (default **4.0**) | | `:3589`, `:3618-3619` |
+| `s_dl` | `dl_score × m_dl_vtx_score_scale`, `dl_score = sigmoid(vtx) − sigmoid(bg)` ∈ [−1,+1] | scale 1000 | `:3555`, definition comment `:3432` |
+| `s_snap` | `− min(W_SNAP_MAX, snap_dis / 5 cm)` | `W_SNAP_L` = 5 cm, `:3541` | `:3560` |
+| `s_fwd_z` | `− 0.25 × clamp(…)` | `W_FWD_Z` = 0.25, `:3543` | `:3565` |
+| `s_clen` | `+ 2.0 × min(1, L_host / 60 cm)` | `W_CLEN` = 2.0, `W_CLEN_L` = 60 cm, `:3536-3537` | `:3574` |
+| `s_isol` | `− 2.0` if `L_host < 6 cm` and host ≠ main cluster | `W_ISOL` = 2.0, `W_ISOL_L` = 6 cm, `:3538-3539` | `:3577-3579` |
+| `s_main` | `+ 2.0` if host cluster == main cluster | `W_MAIN` = 2.0, `:3535` | `:3582` |
+| `s_fv` | `+ 0.5` if inside fiducial volume | `W_FV` = 0.5, `:3540` | `:3585-3589` |
+| **TOTAL** | `s_dl + s_snap + s_fwd_z + s_clen + s_isol + s_main + s_fv`, argmax; accept iff `>= m_dl_vtx_min_accept_score` (default **4.0**) | | `:3592`, `:3620` |
+
+The full per-term line is already emitted at `:3603`.
 
 DL knobs, all in `clus/inc/WireCellClus/TaggerCheckNeutrino.h`: `m_dl_weights`
 (`:138`, empty = off), `m_dl_vtx_cut` (`:139`, 25 mm), `m_dl_vtx_rerank`
@@ -1096,7 +1116,7 @@ alternates between them, which is why they are easy to conflate.
 | objective | Σ over segments of squared **transverse distance** from the vertex to that segment's local PCA axis | three-plane projection χ² |
 | uses wire planes? | **no** — grep of `MyFCN.cxx` for `pu\|pv\|pw\|plane\|chi2` finds nothing in the objective | yes, U/V/W |
 | uses charge? | **only as a post-hoc veto** (below) | yes, in the division and the dQ/dx pass |
-| solver | `Eigen::BiCGSTAB`, `solveWithGuess(b, current_position)` `MyFCN.cxx:265-267` | Levenberg-style multi-point solve |
+| solver | `Eigen::BiCGSTAB` `MyFCN.cxx:270`, `solveWithGuess(b, current_position)` `:272` | Levenberg-style multi-point solve |
 | points used | the segment's **raw `wcpts()`** `:67-70`, not the fit points | the association cloud |
 
 ### `MyFCN` in detail
@@ -1120,15 +1140,17 @@ Constructed at `NeutrinoVertexFinder.cxx:1890` as
    are exactly the ones whose position the fit is solving for
 ```
 
-Then: `center` = surviving point nearest the vertex (`:94-97`); 3×3 covariance
-about `center`, eigen-decomposed (`:107-128`); eigenvalues sorted **descending**
-and each floored with `+(0.15 cm)²` (`:134-136`). Normal equations
-(`:221-247`): per segment build `R` with **row 0 zeroed** — no constraint along
-the track direction — and rows 1,2 the two transverse axes scaled by
-`sqrt(λ0/λk)`; accumulate `A += RᵀR`, `b += Rᵀ(R·center)`. Optional isotropic
-prior pulling toward the current position (`:250-263`). NaN ⇒ `fit_flag=false`
-(`:273-277`). `MyFCN::UpdateInfo` `:286` writes the result back and re-splits
-the attached segments' point lists (`default_dis_cut` 4 cm).
+Then: `center` = surviving point nearest the vertex (`:94`); 3×3 covariance
+about `center` (`:107`), eigen-decomposed with `SelfAdjointEigenSolver`
+(`:128`); eigenvalues reordered **descending** and each floored with
+`+(0.15 cm)²` (`:136-138`). Normal equations: per segment build `R` with **row
+0 zeroed** — no constraint along the track direction — and rows 1,2 the two
+transverse axes scaled by `sqrt(λ0/λk)`; accumulate `b += RᵀD`, `A += RᵀR`
+(`:250-251`). Optional isotropic prior pulling toward the current position,
+`R = I · sqrt(npoints) / vtx_constraint_range` (`:258-267`). Non-NaN solver
+error ⇒ `fit_flag = true` (`:274-276`). `MyFCN::UpdateInfo` `:286` writes the
+result back and re-splits the attached segments' point lists
+(`default_dis_cut` 4 cm).
 
 ### Three reasons a vertex does not move — what a display must surface
 
@@ -1332,8 +1354,11 @@ same change.
   in the code.** The real weights are the ⅛ / ¼-quantized terms in §6a above,
   plus a proton-topology term and a z-prior that the doc omits entirely.
 * Same file, `:148-151`: claims `determine_overall_main_vertex` sets
-  `kNeutrinoVertex`. It does not — the only setter in the tree is
-  `TaggerCheckNeutrino.cxx:853`.
+  `kNeutrinoVertex`. It does not. `grep -rn kNeutrinoVertex clus/` at
+  `11ef6f0b` returns exactly one `set_flags` call in the whole package —
+  `TaggerCheckNeutrino.cxx:853`; every other hit is a *read*
+  (`PrDisplayDump.cxx:241`, `MultiAlgBlobClustering.cxx:1012`) or the enum
+  declaration (`PRVertex.h:23`).
 * Same file: the `determine_overall_main_vertex_DL` signature predates the
   rerank path (omits `flag_rerank`, `dl_vtx_top_k`, `dl_vtx_min_accept_score`,
   `dl_vtx_score_scale`) — i.e. it documents a code path that is no longer the
