@@ -10,7 +10,14 @@ pure function of the 4-momenta they write.
 
 **Status.** AUDIT ONLY. No code changed, no patch proposed, no event run. Every
 "this changes the output" below is an argument from source, not a measurement.
-Fifteen divergences, ranked in §8.
+Fifteen divergences, ranked in §8 — **fourteen** after §10.11 withdraws P9.
+
+> **→ If you want the short list, read §10.** The owner applied the pr/30 filter
+> on 2026-08-04 — *"skip the ones that are improvements over the prototype, only
+> the ones that are bugs or missing from the port … suggest a filtered list as
+> well as the solutions"*. Fifteen findings become **nine**, each re-verified at
+> `6206c46b` and each with a proposed fix, knob name and gate. P9 is withdrawn
+> as not a divergence at all (§5.14). §10.13 corrects §3/§8.
 
 **Headline.** The skeleton is again a faithful port — the four entry points in
 order, the fixed 12-call map-repair sequence in order, and every cut constant
@@ -526,11 +533,19 @@ trees push the same pathological point to opposite ends of the distribution.
 
 ### P9 — `judge_no_dir_tracks_close_to_showers` queries different points
 
+> **WITHDRAWN by §10.11 (2026-08-04). This is not a divergence.** The premise
+> below — "neither `fits()` nor `wcpts()` is `point_vec`" — is wrong:
+> `ProtoSegment.h:16` declares
+> `std::vector<WCP::Point>& get_point_vec(){return fit_pt_vec;}`, so
+> `get_point_vec()` **is** the fitted points and `sg->fits()` is its faithful
+> counterpart. Restated in §5.14; §8's P9 row is struck. The paragraph is kept
+> so the mistake is legible.
+
 **Tier A. Unconditional.**
 
 Prototype (`:298`) iterates `sg->get_point_vec()` — the segment's path points.
-Toolkit (`:1419`) iterates `sg->fits()` — the fitted trajectory — with the
-prototype's accessor left in the source as a comment:
+Toolkit (`:1419`, `:1418` at HEAD) iterates `sg->fits()` — the fitted
+trajectory — with the prototype's accessor left in the source as a comment:
 
 ```cpp
 const auto& pts = sg->fits();//wcpts();
@@ -766,6 +781,23 @@ because the toolkit delegates to `IRecombinationModel` — doc pr/10's
 `PowerBoxRecombination`, already on record and SBND-default. Not a dropped
 constant.
 
+**5.14 `judge_no_dir_tracks_close_to_showers` queries the *same* points — P9
+withdrawn** *(added by §10.11, 2026-08-04)*. The prototype's accessor is a
+one-line alias for the fitted points:
+
+```cpp
+// prototype_base/pid/inc/WCPPID/ProtoSegment.h:16
+std::vector<WCP::Point >& get_point_vec(){return fit_pt_vec;};
+```
+
+`fit_pt_vec` is the same array `cal_4mom`, `get_length`, `get_medium_dQ_dx` and
+`is_shower_topology` all read, and the toolkit's `sg->fits()` is its port. So
+`const auto& pts = sg->fits();//wcpts();` at `NeutrinoTrackShowerSep.cxx:1418`
+is the porter **choosing correctly and leaving the rejected alternative in a
+comment** — the opposite of what §3's P9 read into it. Do not re-derive this;
+`get_point_vec` is named for what it returns in the prototype's *other*
+classes, not for `wcpt_vec`.
+
 ---
 
 ## §6 Determinism
@@ -821,10 +853,12 @@ declares three pointer-keyed maps at `:1916-1918` and they carry an explicit
    get iterated?** They are default-compared, i.e. pointer-ordered. Inside
    `clustering_points_segments`, which is Tier B here. Worth thirty seconds
    from someone who is already in that function.
-2. **Is `separate_track_shower` ever run twice on the same segment?** P13's
-   never-cleared flag only bites if it is. `TaggerCheckNeutrino.cxx` calls it
-   once per cluster and once per companion, which suggests no — but segments
-   can move between clusters across the PR chain's structural edits.
+2. ~~**Is `separate_track_shower` ever run twice on the same segment?**~~
+   **CLOSED — yes, and the question was aimed one level too high** (§10.4). What
+   matters is `segment_is_shower_topology`, which has **four** call sites:
+   `NeutrinoTrackShowerSep.cxx:54` (stage 3) and `NeutrinoVertexFinder.cxx:2311
+   :2357 :2430` (stage 4). Re-entry on the same segment is the normal path, so
+   P13's never-cleared flag is live, not latent.
 3. **`segment_cal_4mom`'s dead `MIP_dQdx` parameter** (§5.4) — either use it or
    drop it, but not while the call sites disagree about which scale to pass.
 4. **`kslike_compare` divides by zero** when a sample vector sums to zero;
@@ -854,7 +888,7 @@ Ranked by how much output moves, most first.
 | P6 | `dir3` hoisted out of the loop, condition changed | A | `:286-311` | unconditional, geometry |
 | P7 | empty comparison window returns "direction confirmed" | A | `PRSegmentFunctions.cxx:1334` | unconditional, degenerate |
 | P8 | median dQ/dx over a filtered sample set | A | `:1743`, `:891` | unconditional, PID |
-| P9 | `fits()` queried where the prototype queries `point_vec` | A | `NeutrinoTrackShowerSep.cxx:1419` | unconditional, geometry |
+| ~~P9~~ | ~~`fits()` queried where the prototype queries `point_vec`~~ — **WITHDRAWN**, `get_point_vec()` *is* `fit_pt_vec` (§5.14, §10.11) | — | `:1418` | not a divergence |
 | P10 | null-vertex path continues vs skips | A | `:84-87` | unconditional, degenerate |
 | P11 | start/end vertex by distance, not wcpt index | A | `:97-102`, `:359-381` | unconditional, degenerate |
 | P12 | `boost::degree` vs segment-set size (self-loops) | B | `:107-111` | unconditional, degenerate |
@@ -863,9 +897,18 @@ Ranked by how much output moves, most first.
 | P15 | three raw `boost::edges` loops | — | `NeutrinoTrackShowerSep.cxx:44 :75 :332` | judged benign |
 
 Every P-row is escalation rule 1 — it changes production output
-unconditionally, with no knob — so none of them is mine to fix. No
+unconditionally, with no knob — so none of them is mine to fix. ~~No
 recommendation is offered, per §5 rule 4 and the missing dictionary section
-(§7.5).
+(§7.5).~~
+
+> **Superseded, 2026-08-04.** That sentence was right for an audit-only
+> document. The owner's filter request (§10) authorizes the picks and the
+> proposed fixes, so **§10 does offer a recommendation** — nine survivors, each
+> with a code change, a default-OFF knob name, a gate and a bundling note, in
+> §10.12's suggested order. Escalation rule 1 is not weakened: nothing here is
+> applied, and each item still ships as a knob with a byte-identical gate. §7
+> loose end 5 (no topology/PID/direction section in the porting dictionary) is
+> unchanged, and §10's nine items are what that section should say.
 
 ---
 
@@ -880,8 +923,13 @@ recommendation is offered, per §5 rule 4 and the missing dictionary section
   `KolmogorovTest` on zero-bin histograms was not executed; the claim that the
   prototype abstains follows from `eval_ks_ratio`'s first line on all-zero
   inputs.
-* **P12's premise is unverified.** Whether the PR graph can carry a self-loop
-  at this stage was not established. If it cannot, P12 is vacuous.
+* **P12's premise is *half* verified** *(updated 2026-08-04, §10.10)*. The BGL
+  semantics were settled by execution against the PR graph's exact selectors:
+  a self-loop **is** accepted and `boost::degree` counts it **2**, and a
+  parallel edge is **rejected** with the second segment silently aliased onto
+  the first's edge. What remains unverified is *reachability* — whether any of
+  the 63 `PR::add_segment` call sites ever produces either. If neither is
+  reachable, P12 is vacuous; §10.10 names the one-count check that decides it.
 * **§6's three-loop verdict is judged, not proven.** No N-run identity test was
   run for this stage.
 * **Tier B pairs were not read line by line** — see §1 for the list.
@@ -890,4 +938,737 @@ recommendation is offered, per §5 rule 4 and the missing dictionary section
   verified at each site individually, but the surrounding branch conditions
   were not compared against the prototype's.
 * **Stage 4 was not audited** and is not claimed clean — see §0.
-* **No recommendation is made** on any divergence.
+* ~~**No recommendation is made** on any divergence.~~ **Superseded by §10**
+  (2026-08-04): nine of the fifteen now carry a proposed fix, a knob name and a
+  gate. Still not claimed there: that any fix was **implemented**, **built**,
+  **run** or **measured** — §10 is source-level reasoning and one 20-line BGL
+  test program, nothing more. No event was run for it either.
+
+---
+
+## §10 Owner filter, 2026-08-04 — the nine that are bugs or gaps
+
+**What was asked.** The owner read §3/§8 and applied the same filter used on
+doc pr/30:
+
+> *"skip the ones that are improvements over the previous prototype, and only
+> focus on the ones that are bugs or missing from the port … feel free to look
+> at the prototype code and use the logic and your understanding to suggest a
+> filtered list as well as the solutions."*
+
+So this section does two things §3 deliberately did not: it **picks** where §3
+recorded "both readings, not picked" (§5 rule 4 / M15 — the owner asking for a
+filtered list is what authorizes the pick, and both readings are kept
+underneath), and it **proposes a fix** for each survivor. §8's closing sentence
+("No recommendation is offered") is superseded here and corrected in place.
+
+**Method.** Every claim below was re-derived against toolkit **`6206c46b`** —
+§3 was written at `4f2e7303` — and against `prototype_base/`. Toolkit files
+were read from `git show HEAD:<file>`, not the working tree, because another
+session had `PRGraph.cxx` / `PRGraph.h` / `NeutrinoPatternBase.h` modified at
+the time. Two §3 claims did not survive re-verification and are corrected in
+§10.13. One premise was settled by **executing** a test rather than reading
+(§10.11 F9).
+
+**No code is changed by this section.** No gate is owed and none was run.
+
+### §10.0 The discriminator, and the two dispositions carried in from pr/30
+
+"Improvement vs bug" is not decided by whether the toolkit does *more* or
+*less* — on P2, P3 and P7 that test gives the wrong answer in both directions.
+The discriminator is the one pr/30 §10.2 established: **evidence of intent vs
+evidence of accident.**
+
+* *Evidence of intent* — a comment stating the reason, a config knob, a doc
+  reference, a stated deviation.
+* *Evidence of accident* — the prototype's guard reproduced at 1 of 12 sites
+  and nowhere else, the prototype's accessor left in the source as a comment, a
+  variable hoisted out of a loop with a silently changed fallback, a defensive
+  early return whose returned *value* was never chosen.
+
+Every survivor below carries at least one accident marker. Every drop carries
+an intent marker, or is not a divergence at all.
+
+**Where the owner's positional clearance reaches.** pr/30 §10's clarification —
+*"in the toolkit we are missing id information for some data, so we have to use
+positions to do it — this is not a problem"* — disposes of **P11** cleanly
+(start/end vertex by 3-D distance instead of `wcpt().index` equality). It does
+**not** reach two things, and this is the most reusable line in this section:
+
+1. **P5**, by pr/30 F4's own narrowing. There, `.first` is not naming a
+   position; it is selecting which of two *asymmetric* acceptance tests a
+   segment gets. A positional substitution is fine where `.first` means "an
+   end"; it is not fine where `.first` means "the branch with the relaxed
+   150° clause".
+2. **P12**, which substitutes a *semantic* quantity (count of incident graph
+   edges) for a different one (count of distinct segments at a vertex). Nothing
+   positional about it.
+
+### §10.1 The filtered list — nine items
+
+| # | from | what it is | why it survives the filter | severity |
+|---|---|---|---|---|
+| **F1** | P1 + P3(4-mom) + P4 | the toolkit **rewrites `particle_4mom` at 15 reclassification sites** where the prototype writes type and mass and leaves the 4-momentum alone | one root cause, three shapes, and the guard is reproduced at exactly **one** site *with a comment paraphrasing it* — the signature of a lost line, not a design decision | **highest** |
+| **F2** | P2 | a 305-line direction analysis runs at a stage-3 call site the prototype does not have, overwriting the direction `is_shower_topology` set | the prototype's `determine_dir_shower_topology` is four live lines and **does not touch `flag_dir`**; no comment anywhere says why the toolkit substitutes a different function | **high** |
+| **F3** | P13 | `kShowerTopology` is set and never cleared, and four early returns skip `dirsign()` | **now proven live**: `segment_is_shower_topology` has 4 call sites, 1 in stage 3 and 3 in stage 4, so re-entry on the same segment is normal (closes §7 loose end 2) | **high** |
+| **F4** | P8 | `segment_median_dQ_dx` **filters** its sample where the prototype's structural counterpart `get_medium_dQ_dx` does not — and in `determine_dir_track` the median and the KS sample are now computed from **different sets** | the filter is defensible; the toolkit being inconsistent *with itself* is not, and it is invisible at the call site | medium-high |
+| **F5** | P6 | `dir3` hoisted out of the loop with a fallback that silently turns a 30 cm direction comparison into a 15 cm one | textbook hoist-with-changed-semantics; the correct hoist is unconditional and is still a hoist | medium |
+| **F6** | P7 (value half) | the empty-comparison-window early return yields **"direction confirmed"** | the guard is right; the value `1.0` was never chosen — `0.0` abstains and matches the prototype | medium |
+| **F7** | P5 | the asymmetric 150°/165° acceptance in `examine_all_showers` is keyed on `find_vertices().first` | pr/30 F4's sibling — the one place the positional clearance provably does not reach (§10.0) | medium |
+| **F8** | P14 | the PID persistence gate | **already on record** as doc pr/7, DIAGNOSED, fix proposed and unimplemented; re-confirmed at `6206c46b`. No new solution offered here | medium, open |
+| **F9** | P12, widened | the PR graph **cannot represent** either degenerate topology the prototype's maps can: a self-loop counts **2** in `boost::degree` (verified by execution) and a second segment on an existing vertex pair is **silently aliased onto the first edge** (verified by execution) | not positional, not an improvement; but reachability is still unproven, so this is conditional | low, conditional |
+
+Six things are dropped and two more are dropped by half — §10.11.
+
+### §10.2 F1 — the `particle_4mom` rewrite family (P1 + P3's 4-mom half + P4)
+
+§3 reported these as three findings with, in P4's case, *opposite* polarity to
+P1. Re-reading both trees at HEAD, they are **one defect with three shapes**,
+and seeing that is what makes a single fix possible.
+
+**The root cause is the data model, and §3 named it without following it
+through.** The prototype's reclassification idiom mutates two members:
+
+```cpp
+// NeutrinoID_track_shower.h:372-374 — and identically at :407 :439 :462
+//                                      :508 :541 :578 :637 :873 :934 :951
+sg->set_particle_type(11);
+sg->set_particle_mass(mp.get_mass_electron());
+if (sg->get_particle_4mom(3)>0) sg->cal_4mom();
+```
+
+`particle_4mom` is a third, *independent* member. The guard reads "recompute
+the energy only if this segment already had one" — `particle_4mom[3] =
+kine_energy + particle_mass` (`ProtoSegment.cxx:1437-1444`), so `>0` means
+"previously computed". A segment that never had an energy keeps zero.
+
+The toolkit has no independent members. `particle_type`, `particle_mass` and
+the 4-momentum all live inside one `Aux::ParticleInfo`, and
+`seg->particle_info(pinfo)` **replaces the whole struct**. So every
+"set the particle type" in the prototype becomes "construct a new
+`ParticleInfo`" in the toolkit, which *forces a decision about the 4-momentum
+that the prototype never has to make*. Fifteen sites made that decision three
+different ways, and only one of them made it the prototype's way.
+
+**The three shapes, all re-derived at `6206c46b`:**
+
+| shape | sites (HEAD anchors) | what the toolkit writes | what the prototype writes |
+|---|---|---|---|
+| **A — unguarded recompute** | `NeutrinoTrackShowerSep.cxx:767 :792 :937 :979 :1021 :1047 :1110 :1163 :1206 :1285 :1373` (11) | `segment_cal_4mom(...)` unconditionally | `cal_4mom()` **only if** `get_particle_4mom(3)>0` |
+| **B — topology-branch recompute** | `:126` (1) | `segment_cal_4mom(...)` + a full `ParticleInfo` | `determine_dir_shower_topology` writes type and mass only — **no** 4-momentum |
+| **C — rest-mass overwrite** | `:423-427`, `:1458-1462`, `:1861-1865` (3) | `D4Vector(mass, 0, 0, 0)` — zero kinetic energy | `:257-261`, `:313-315`, `:1238-1239` — type and mass only, 4-momentum untouched |
+
+**Two sites get it right, and that is the accident marker.** `:661`
+(`improve_maps_one_in`) guards on `has_particle_info()` — *stricter* than the
+prototype's unguarded `:147`, so this one site diverges in the safe direction.
+`:806` reproduces the prototype's guard exactly **and comments it**:
+
+```cpp
+// Prototype calls cal_4mom() for ALL segments here (including showers) if energy>0.
+if (is_shower1 && sg1->has_particle_info() && sg1->particle_info()->energy() > 0) {
+```
+
+A porter who wrote that comment understood the guard. Its absence at the other
+eleven is not a design decision. Corroborating: the only surviving textual
+trace of `get_particle_4mom(3)` anywhere in `clus/` is a **commented-out** line
+at `NeutrinoShowerClustering.cxx:2771`.
+
+**Bucket reconciliation (unchanged from §3, re-checked at HEAD).** 14
+`segment_cal_4mom` sites = 1 topology (shape B) + 13 map-repair; prototype 12
+in-scope `cal_4mom()` sites; per-function counts match exactly, so no site is
+missing on either side.
+
+**Both readings, and the pick.** §3 logged shape C as M15 — the prototype's
+stale 4-momentum under a superseded hypothesis is arguably its own bug, and the
+toolkit's discard of a computed energy is arguably the toolkit's. That framing
+dissolves once A, B and C are read together: at all fifteen sites the prototype
+**does not write the 4-momentum**, and the toolkit writes one — sometimes a
+recomputed energy (A, B), sometimes a zero (C). The single rule that reproduces
+the prototype everywhere is *preserve the existing 4-momentum; recompute only
+where the prototype's guard passes*. The pick is therefore that the toolkit is
+wrong at all fifteen sites, in one way, not in two opposing ways.
+
+**Solution.** One knob, three per-shape behaviours. The fix is **not** a deleted
+line — declining to compute a 4-momentum still means constructing a
+`ParticleInfo`, so the old 4-momentum has to be carried forward explicitly.
+
+```cpp
+// NeutrinoPatternBase.h, member + get() in configure(), default preserves today's behaviour
+bool m_reclass_preserve_4mom{false};
+
+// helper, one place, used at all 15 sites
+static WireCell::D4Vector<double>
+reclass_4mom(SegmentPtr sg, int pdg, ..., bool preserve, bool proto_recomputes)
+{
+    if (!preserve) return segment_cal_4mom(sg, pdg, ...);            // today
+    const bool had = sg->has_particle_info() && sg->particle_info()->energy() > 0;
+    if (proto_recomputes && had) return segment_cal_4mom(sg, pdg, ...);  // shape A guard passes
+    if (had) return sg->particle_info()->four_momentum();            // carry forward
+    return WireCell::D4Vector<double>(0, 0, 0, 0);                   // never had one
+}
+```
+
+* shape **A** (11 sites): `proto_recomputes = true`.
+* shape **B** (`:126`): `proto_recomputes = false` — the prototype never
+  recomputes here.
+* shape **C** (3 sites): `proto_recomputes = false`, and the `(m,0,0,0)`
+  literal is replaced by the helper's return.
+
+Note the zero-return case changes the sign convention §3 flagged: a segment
+that never had a 4-momentum ends with `E = 0`, so `E − m = −m` for anyone who
+subtracts. That is exactly the prototype's state, and any consumer that breaks
+on it was reading a toolkit-only invariant.
+
+* **Knob**: `reclass_preserve_4mom`, C++ default `false`, key-suppressed in
+  jsonnet so the compiled config is byte-identical when off.
+* **Gate**: knob-off byte-identical on `abtest/events.txt`; knob-on smoke on
+  the `work-vfnuecc48-0804` arm — `kine_reco_Enu` is the column that must move,
+  and it is already tabulated per event by `pr_scores_table.py`, so the
+  before/after is a diff of two TSVs, not a new harness.
+* **Bundling**: F1 is self-contained. It must be validated **alone** — it is
+  the only survivor that moves reconstructed energy directly, and bundling it
+  with F2/F3 (which move direction, which moves energy indirectly) would make
+  the nueCC48 delta unattributable, exactly the coupling trap doc pr/28 §16.5
+  hit with pr/28-vs-pr/29.
+
+### §10.3 F2 — the stage-3 shower-direction call (P2)
+
+Re-verified at HEAD. The prototype calls `ProtoSegment::determine_shower_direction()`
+from **one** place in the entire tree, `NeutrinoID_track_shower.h:1532`, inside
+`compare_main_vertices_all_showers` — **stage 4**, and only on the all-showers
+path. The toolkit calls its port from two: `NeutrinoVertexFinder.cxx:506` (the
+faithful one) and `NeutrinoTrackShowerSep.cxx:123` (stage 3, no counterpart).
+
+What the prototype's stage-3 topology branch does, with the commented-out
+blocks removed, is the whole of `determine_dir_shower_topology`
+(`ProtoSegment.cxx:1677-1710`):
+
+```cpp
+particle_type = 11;
+particle_mass = mp.get_mass_electron();
+// (flag_dir block commented out; centre-of-associated-cloud block commented out)
+```
+
+It takes `start_n` and `end_n` and **uses neither** — both survive only inside
+the commented-out block. It does not touch `flag_dir`. The direction of a
+topology shower leaving stage 3 in the prototype is whatever
+`is_shower_topology`'s forward/backward large-spread comparison left there
+(`ProtoSegment.cxx:523-527`).
+
+The toolkit's inlined branch runs `segment_determine_shower_direction` first —
+305 lines of associated-point PCA, spread profiling and endpoint comparison
+(`PRSegmentFunctions.cxx:2208-2512`) — which sets `dirsign` on its own terms,
+overwriting `segment_is_shower_topology`'s answer for **every** topology shower.
+And `dirsign` is what the in/out maps of this stage and the vertex scorer of
+stage 4 read.
+
+**Why it is a bug and not an improvement.** The toolkit did not add a new
+algorithm; it moved an existing one to a place the prototype does not run it,
+and the moved call is not the port of the function that belongs there. The
+commented-out `flag_dir` block in the prototype shows the prototype author
+considered and rejected setting a direction here. There is no comment, knob or
+doc on the toolkit side.
+
+**Solution.** Restore the prototype's branch under a knob:
+
+```cpp
+// NeutrinoTrackShowerSep.cxx:121-135
+} else if (seg->flags_any(SegmentFlags::kShowerTopology)) {
+    if (!m_shower_topo_proto_dir) {
+        segment_determine_shower_direction(seg, ...);   // today
+    }
+    ... // particle info: see F1 shape B
+}
+```
+
+* **Knob**: `shower_topo_proto_dir`, default `false` (= today). When true, the
+  stage-3 call is skipped and the topology shower keeps the direction
+  `segment_is_shower_topology` set.
+* **Gate**: knob-off byte-identical; knob-on on nueCC48. The visible column is
+  the per-segment `dirsign` in the PR display dump (doc pr/26 stage 1 already
+  emits it) plus `kine_reco_Enu` / `nue_score` downstream.
+* **Bundling**: F2 and F3 both change what direction a topology shower leaves
+  stage 3 with. Validate separately, then jointly — per
+  [[project_staged_small_group_validation]], a small event group each before
+  any 572-event census.
+* **Cheap pre-check worth doing first**: count, on one event, how many segments
+  carry `kShowerTopology` at this point and how many have their `dirsign`
+  changed by the call. If it is a handful, F2 is cheap to settle; if it is most
+  of them, F2 is the largest single behaviour item in this document after F1.
+
+### §10.4 F3 — `kShowerTopology` is never cleared (P13), now proven live
+
+§3 raised this and could not say whether it bites, leaving §7 loose end 2 open
+("is `separate_track_shower` ever run twice on the same segment?"). **It does,
+and the question was aimed one level too high.** What matters is not
+`separate_track_shower` but `segment_is_shower_topology`, and at HEAD it has
+four call sites in two different stages:
+
+```
+clus/src/NeutrinoTrackShowerSep.cxx:54     separate_track_shower        (stage 3)
+clus/src/NeutrinoVertexFinder.cxx:2311                                  (stage 4)
+clus/src/NeutrinoVertexFinder.cxx:2357     gated on !sg->particle_info()  (stage 4)
+clus/src/NeutrinoVertexFinder.cxx:2430                                  (stage 4)
+```
+
+Stage 4 runs after stage 3 on the same segments, so re-entry is not a corner
+case — it is the normal path for any segment reaching those sites. **§7 loose
+end 2 is closed: yes.**
+
+The prototype's first two statements are assignments:
+
+```cpp
+// ProtoSegment.cxx:319-321
+bool WCPPID::ProtoSegment::is_shower_topology(bool tmp_val){
+  flag_shower_topology = tmp_val;      // <-- CLEARS on every entry (all callers pass false)
+  flag_dir = 0;                        // <-- CLEARS the direction, before any early return
+```
+
+The toolkit's are a local and a set-only flag write:
+
+```cpp
+// PRSegmentFunctions.cxx:2513-2530, :2901
+bool flag_shower_topology = tmp_val;                     // a LOCAL, not the flag
+if (fits.empty()) return false;                          // 4 early returns,
+if (!dpcloud_fit) return false;                          //   all BEFORE any mutation,
+if (!dpcloud_assoc) return false;                        //   so dirsign() is skipped
+if (assoc_npts == 0) return false;
+...
+if (flag_shower_topology) segment->set_flags(SegmentFlags::kShowerTopology);  // set-only
+segment->dirsign(flag_dir);
+```
+
+Two distinct losses, both confirmed at HEAD:
+
+1. **Stale flag.** A segment that was a topology shower on an earlier pass and
+   is not one now keeps `kShowerTopology`. Since the flag is what routes
+   `determine_direction` into the topology branch (and F2's extra call), a
+   stale flag also drags F2's behaviour onto a segment that no longer qualifies.
+2. **Stale direction.** A segment whose associated point cloud is empty leaves
+   the prototype undirected (`flag_dir = 0`, set before the return) and leaves
+   the toolkit with whatever direction it had, because the four early returns
+   are all before `segment->dirsign(flag_dir)`.
+
+**Solution.** Two lines, one knob:
+
+```cpp
+bool segment_is_shower_topology(SegmentPtr segment, bool tmp_val, ...) {
+    int flag_dir = 0;
+    bool flag_shower_topology = tmp_val;
+    if (m_shower_topo_reset) {                       // knob, default false
+        if (!tmp_val) segment->unset_flags(SegmentFlags::kShowerTopology);
+        segment->dirsign(0);                         // before the early returns
+    }
+    ...
+```
+
+then leave the tail as it is (the `if (flag_shower_topology) set_flags(...)`
+re-sets it when the answer is still yes).
+
+* **Knob**: `shower_topo_reset`, default `false`.
+* **The API already exists** — `Flagged::unset_flags(FlagsType)` clears exactly
+  the named bits and keeps the rest (`util/inc/WireCellUtil/Flagged.h:69`; do
+  **not** use `clear_flags()`, which zeroes every flag on the segment). So this
+  really is a two-line change.
+* **Gate**: knob-off byte-identical; knob-on on nueCC48, watching the count of
+  `kShowerTopology` segments at stage 4 (it can only go down) and `dirsign`.
+* **Bundling**: interacts with F2 (see §10.3). Also interacts with
+  `shower_topo_demote_len` (SBND = 50 cm), which sets `flag_shower_topology =
+  false` inside the guard at `:2885-2889` — with the flag never cleared, a
+  segment demoted on one pass can be re-promoted by a stale flag on the next.
+  That is worth one explicit check when this lands.
+
+### §10.5 F4 — the median dQ/dx sample set (P8)
+
+Re-verified, and the prototype side is sharper than §3 recorded. The toolkit's
+`segment_median_dQ_dx` is the structural port of the prototype's
+`get_medium_dQ_dx(int n1, int n2)`, and the two differ by a filter:
+
+```cpp
+// prototype ProtoSegment.cxx:689-699 — no filter, every index in range
+for (int i = n1 ; i<=n2; i++)
+  vec_dQ_dx.push_back(dQ_vec.at(i)/(dx_vec.at(i)+1e-9));
+
+// toolkit PRSegmentFunctions.cxx:888-893 — filtered
+for (int i = n1; i <= n2 && i < (int)fits.size(); i++) {
+    auto& fit = fits[i];
+    if (fit.valid() && fit.dx > 0 && fit.dQ >= 0)
+        vec_dQ_dx.push_back(fit.dQ / (fit.dx + 1e-9));
+}
+```
+
+The filter changes the vector length, so `nth_element` at `size()/2` selects a
+**different order statistic**, at all three toolkit call sites (`:1021` inside
+the trajectory-shower path, `:1743` inside `determine_dir_track`, and the
+`find_cont_muon_segment_nue` ratio, which is the port of the prototype's
+`get_medium_dQ_dx()` no-arg overload → `get_medium_dQ_dx(0, fit_pt_vec.size())`).
+
+**The part that survives the filter is not "the median differs" — it is that
+the toolkit is inconsistent with itself.** In `determine_dir_track` the
+prototype takes the median over *the very vector it hands to the PID*:
+
+```cpp
+// ProtoSegment.cxx:1573-1576
+std::vector<double> vec_dQ_dx = dQ_dx;      // <-- the same dQ_dx passed to do_track_pid
+std::nth_element(...);
+```
+
+The toolkit instead calls the shared helper, which rebuilds a *different*
+sample from `fits()`. And the two disagree about the pathological point in
+opposite directions: the toolkit's KS vector is initialised
+`std::vector<double> dQ_dx(npoints, 0)` and left at **0** wherever
+`fits[i].dx <= 0` (`:1683-1687`), while the median simply **drops** those
+points. So one bad fit is simultaneously "a zero" to the PID and "not there" to
+the median — a state neither tree intends.
+
+**Why the filter itself is not the bug.** Excluding `!valid()` fits is
+defensible, and the prototype's `dQ/1e-9` for `dx == 0` is a huge sentinel that
+drags the median toward the proton branch. Judged an improvement, kept.
+
+**Solution**, smallest first:
+
+1. **The self-consistency fix (recommended).** In `determine_dir_track`, take
+   the median over the local `dQ_dx` vector the PID receives, as the prototype
+   does — one line, no new helper:
+   ```cpp
+   std::vector<double> tmp = dQ_dx;   // instead of segment_median_dQ_dx(segment, start_n1, end_n1)
+   std::nth_element(tmp.begin(), tmp.begin()+tmp.size()/2, tmp.end());
+   double medium_dQ_dx = *std::next(tmp.begin(), tmp.size()/2);
+   ```
+   Note the unit consequence and check it: the local `dQ_dx` is in
+   charge/internal-length while `segment_median_dQ_dx` returns the same, and
+   `MIP_dQdx` is `m_mip_dqdx_median` (internal) — so the three comparisons
+   `>1.75×`, `<1.2×`, `<1.5×` keep their scale. Confirm this before landing;
+   the sec-7.8 SSM `get_scores` bug was exactly a factor-of-`units::cm` here.
+2. **Full prototype parity (not recommended without discussion)** additionally
+   drops the filter from `segment_median_dQ_dx` and writes `dQ/(dx+1e-9)`
+   unconditionally into the KS vector. That restores the prototype bit for bit
+   including its huge-value sentinel, which is an M15 call the owner should
+   make, not me.
+
+* **Knob**: `dir_track_median_local`, default `false`, covering (1) only.
+* **Gate**: knob-off byte-identical; knob-on on nueCC48. The observable is the
+  `pdg==0` recovery branch — count segments whose recovered `pdg_code` changes.
+* **Bundling**: independent of F1/F2/F3; affects PID, not directly energy.
+
+### §10.6 F5 — the hoisted `dir3` (P6)
+
+Re-verified line by line at HEAD; unchanged from §3 and unambiguous.
+
+```cpp
+// prototype NeutrinoID_track_shower.h:2402-2408 — inside the per-neighbour loop
+if (length > 30*units::cm || sg_length > 30*units::cm){
+  TVector3 dir3 = sg ->cal_dir_3vector(vtx->get_fit_pt(), 30*units::cm);
+  TVector3 dir4 = sg2->cal_dir_3vector(vtx->get_fit_pt(), 30*units::cm);
+  angle1 = (3.1415926 - dir3.Angle(dir4))/3.1415926*180.;
+}
+
+// toolkit NeutrinoTrackShowerSep.cxx:286-311 — hoisted above the loop
+WireCell::Vector dir3 = (sg_length > 30 * units::cm)
+                            ? segment_cal_dir_3vector(sg, vtx_pt, 30 * units::cm)
+                            : dir1;                       // <-- dir1 is the 15 cm direction
+```
+
+The hoist is correct in itself — `dir3` does not depend on the loop variable.
+The `? :` is not: the reachable case **short reference segment, long neighbour**
+(`sg_length ≤ 30 cm < length`) makes the toolkit compare a 15 cm direction
+against a 30 cm one where the prototype compares two 30 cm directions.
+`angle1` is one of the three alternatives in the `< 12.5°` test that decides
+whether a muon continues through a vertex, so this changes muon continuation.
+
+**Why it is a bug.** A hoist that changes a value is a translation slip, not a
+design choice; there is no comment, and the prototype's intent (compare like
+with like at 30 cm) is unambiguous.
+
+**Solution.** Keep the hoist, drop the conditional — one line, still an
+optimisation, no knob strictly required but one is owed because it is
+unconditional:
+
+```cpp
+WireCell::Vector dir3 = m_cont_muon_dir3_30cm
+    ? segment_cal_dir_3vector(sg, vtx_pt, 30 * units::cm)      // prototype
+    : ((sg_length > 30*units::cm) ? segment_cal_dir_3vector(sg, vtx_pt, 30*units::cm) : dir1);
+```
+
+* **Knob**: `cont_muon_dir3_30cm`, default `false`.
+* **Gate**: knob-off byte-identical; knob-on on nueCC48 — the observable is the
+  count of `find_cont_muon_segment_nue` non-null returns.
+* **Bundling**: independent. **Cheapest survivor to settle; do it first.**
+
+### §10.7 F6 — the empty comparison window (P7, value half only)
+
+```cpp
+// PRSegmentFunctions.cxx:1333-1336
+// If no points fall inside the comparison window, return "no direction signal" defaults.
+if (ncount == 0) {
+    return {1.0, 1e9, 1e9, 1e9};
+}
+```
+
+The comment says *"no direction signal"*; element 0 says the opposite.
+`segment_do_track_pid` reads it as `flag_forward = round(result_forward.at(0))`,
+so `1.0` means **this orientation passed the direction gate**. With no samples
+in either orientation both flags are 1, the both-pass branch runs, and the
+segment leaves with `flag_dir = -1`, `pdg = 13` (muon) and `particle_score =
+1e9`. A segment about which nothing is known becomes a directed muon.
+
+**The guard is an improvement and is kept.** The prototype constructs
+`TH1F("h1","h1",0,0,0)` and calls `KolmogorovTest` on zero-bin histograms; not
+crashing is better. What was never chosen is the returned value — the same
+literal is copy-pasted at the adjacent missing-dEdx-function return (`:1343`),
+which is the marker that it is a filler, not a decision.
+
+**Solution.** One character of meaning:
+
+```cpp
+if (ncount == 0) {
+    return {m_track_comp_empty_abstain ? 0.0 : 1.0, 1e9, 1e9, 1e9};
+}
+```
+
+`0.0` rounds to `flag_forward = 0` — abstain — which is what
+`eval_ks_ratio` returns for all-zero inputs (`ks1 - ks2 >= 0.0` → `false`),
+i.e. the prototype's degenerate answer.
+
+* **Knob**: `track_comp_empty_abstain`, default `false`. Apply to the
+  missing-dEdx return at `:1343` as well, or state why not.
+* **Gate**: knob-off byte-identical; knob-on on nueCC48.
+* **Caveat carried from §9**: the prototype's ROOT behaviour on zero-bin
+  histograms was **inferred, not executed**. If this item is going to be
+  actioned rather than filed, run the four-line ROOT snippet first — it is
+  cheaper than the A/B it would otherwise justify.
+* **Bundling**: independent, but it and F4 both land in the PID path; expect
+  their nueCC48 deltas to overlap on the same short segments.
+
+### §10.8 F7 — the asymmetric acceptance keyed on `find_vertices` order (P5)
+
+Both sides re-read at HEAD. The asymmetry is real and identical in both trees:
+
+```
+first  branch (num_s1, angles at .second):  max_angle > 165 || (max_angle > 150
+                                              && length_good_tracks < 3 cm
+                                              && length_good_tracks < 0.1*length_showers)
+second branch (num_s2, angles at .first):   max_angle > 165
+```
+
+prototype `NeutrinoID_track_shower.h:1073` vs `:1090`; toolkit
+`NeutrinoTrackShowerSep.cxx:1623` vs `:1647`. So the *tests* are ported
+faithfully; what differs is **which physical vertex lands in `.first`** —
+prototype by vertex id (`NeutrinoID_proto_vertex.h:3227-3243`), toolkit by
+proximity to the segment's first fit point (`PRGraph.cxx:105-141`, re-read at
+HEAD). A segment at 155° flips between reclassified and not depending purely on
+that.
+
+This is pr/30 F4 in a different file, and the two docs must agree: the
+positional clearance covers `.first` where it means "an end of the segment"; it
+does not cover `.first` where it selects a branch. **Do not fix this one in
+isolation** — pr/30 F4 named two callers, this is a third, and a change to
+`find_vertices`' ordering hits all of them at once.
+
+**Solution**, in order of preference:
+
+1. **Site-local, lowest risk.** Order the pair by a stable non-positional key
+   at this call site only, before the two branches:
+   ```cpp
+   auto pair_vertices = find_vertices(graph, good_track);
+   if (m_examine_showers_vertex_by_index && pair_vertices.first && pair_vertices.second
+       && pair_vertices.first->get_graph_index() > pair_vertices.second->get_graph_index())
+       std::swap(pair_vertices.first, pair_vertices.second);
+   ```
+   **Read the key honestly.** `PRVertex` has no `id()`; the only stable
+   identity it carries is `get_graph_index()` (`PRVertex.h:92`), the monotonic
+   `num_node_indices` counter assigned in `PR::add_vertex`. That is the *shape*
+   of the prototype's `get_id()` — a creation-order counter — but the two trees
+   create vertices in different orders, so this restores **a** deterministic
+   topological convention, not provably *the prototype's* one. Which of the two
+   physical vertices gets the relaxed 150° clause would still be a toolkit
+   choice; it would just stop depending on which end of the segment happens to
+   be nearer its first fit point. Say that in the commit message rather than
+   claiming parity.
+2. **Global**, i.e. change `find_vertices` to order by id — this is pr/30 F4's
+   decision, not this document's, and it is the one that must not be taken here
+   unilaterally.
+
+* **Knob**: `examine_showers_vertex_by_index`, default `false`, covering (1).
+* **Gate**: knob-off byte-identical; knob-on on nueCC48. The observable is
+  `n_good_tracks` going to 0 on the relaxed branch — a handful of events at
+  most, so this wants the 572-event valfast manifest to say anything about
+  population reach.
+* **Bundling**: with pr/30 F4. Whoever takes either should take both.
+
+### §10.9 F8 — the PID persistence gate (P14)
+
+Re-confirmed present at `6206c46b`. **No new solution is offered here**: this
+is doc `pr/7 — track-PID persistence divergence`, status DIAGNOSED, with a fix
+already written up and not implemented. What this audit adds is two knock-on
+effects to include in that fix's validation, both from §3-P14:
+
+* `determine_dir_shower_trajectory`'s else-branch tests
+  `segment->particle_info()->pdg() != 11` where the prototype tests the member
+  `particle_type != 11` — when the gate suppressed the write, the toolkit sees
+  absent or stale info and zeroes a direction the prototype may keep;
+* the failure-path score of `100.0` (`segment_do_track_pid:1600`) versus the
+  prototype's `0` (`ProtoSegment.cxx:1284-1286`), which is a **live sentinel**
+  in `examine_all_showers` (`if (sg->particle_score() != 100) tracks_score += …`,
+  toolkit `:1584` ↔ prototype `:1040`).
+
+The second is worth stating plainly because it cuts the other way from F1's
+family: here the toolkit's `100` is arguably the *correct* sentinel and the
+prototype's `0` lets a stale score into a sum. Recorded in doc pr/7, not picked
+here.
+
+### §10.10 F9 — the graph cannot represent two degenerate topologies (P12, widened)
+
+§3 filed P12 with an unverified premise ("whether the PR graph can carry a
+self-loop was not established") and only the self-loop half. Both halves were
+settled **by execution** — a 20-line program against the exact
+`adjacency_list` selectors the PR graph uses
+(`PRGraphType.h:91-98`: `boost::setS` out-edge list, `boost::setS` vertex list,
+`boost::undirectedS`):
+
+```
+$ g++ -std=c++17 -I local/include selfloop.cxx -o selfloop && ./selfloop
+ok1=1 ok2=1 ok3=0
+degree(a)=2 degree(b)=1 num_edges=2
+out_edges(a) count=2
+e1.idx=0 e3.idx=0 same_edge=1
+```
+
+Two facts, both now certain:
+
+1. **A self-loop is accepted and counts 2.** `boost::degree` on the self-looped
+   vertex returns 2 where the prototype's `map_vertex_segments[v].size()` — a
+   `std::set<ProtoSegment*>` into which the same segment is inserted twice —
+   returns 1. `start_n`/`end_n` gate the `== 1` free-end tests throughout
+   `determine_dir_track` and `determine_dir_shower_trajectory`, so such a
+   segment is scored differently in the two trees.
+2. **A parallel segment is silently aliased, and this was not in §3 at all.**
+   `boost::add_edge` on an existing vertex pair returns `added = false` and the
+   *existing* descriptor. `PR::add_segment` then executes
+   `seg->set_descriptor(desc)` (before the `if (added)`) and
+   `g[desc].segment = seg`, so the second segment takes over the first
+   segment's edge: the first is orphaned from graph iteration while still
+   holding a descriptor it believes is valid. The prototype's
+   `map_vertex_segments` holds **both** segments. So the toolkit cannot
+   represent a 2-cycle between two vertices; the prototype can.
+
+**What is still unproven is reachability.** `PR::add_segment` has no
+`vtx1 != vtx2` guard and no duplicate-pair guard, so both constructions are
+*permitted*; whether any of the 63 `add_segment` call sites ever produces one
+was not established, and no event was run. If neither is reachable, F9 is
+vacuous and should be closed as such — that is a legitimate outcome and is why
+this sits at the bottom of the list.
+
+**Solution — measure before fixing.**
+
+1. Add a `WCT_DET_DEBUG`-style counted warning inside `PR::add_segment` for
+   both cases (`vtx1 == vtx2`, and `added == false` with a *different* segment
+   already on the edge). Zero cost when off, and it is diagnostic only, so it
+   needs no knob and no gate.
+2. Run it over the nueCC48 arm. If both counts are 0 across 48 events, close
+   F9 as vacuous and record the count. If not, the fix follows the count: a
+   distinct-neighbour count in place of `boost::degree` at the `start_n`/`end_n`
+   sites for the self-loop case, and a real decision (reject? relax to
+   `multisetS`?) for the parallel case — the latter is a graph-type change and
+   is escalation rule 1 territory of its own.
+
+* **Note the existing comment at `PRGraph.cxx:87-91`** ("Inherit the existing
+  edge's graph index so `m_graph_index` is not left at `SIZE_MAX`") — the
+  aliasing branch is *known* and was hardened for a different reason (doc pr/28,
+  the `SIZE_MAX` class). Nobody appears to have asked what happens to the
+  segment that was already there.
+
+### §10.11 What was dropped, and why — one line each
+
+* **P9 — `fits()` vs `get_point_vec()`: not a divergence at all, and this is
+  the one §3 claim that must be withdrawn.** The prototype's accessor is
+  `std::vector<WCP::Point>& get_point_vec(){return fit_pt_vec;}`
+  (`ProtoSegment.h:16`) — it returns the **fitted** points, not the path points.
+  The toolkit's `sg->fits()` is therefore the faithful counterpart, and the
+  `//wcpts()` left in the source is the porter *rejecting* the wrong one. Moved
+  to §5 as 5.14; removed from §3 and §8.
+* **P3, score half** — `seg->particle_score(100.0)` at the topology branch
+  writes the toolkit's "PID not performed" sentinel where the prototype may
+  carry a stale non-100 score into `examine_all_showers`' `tracks_score` sum
+  (`:1584` ↔ `:1040`). That is the toolkit **fixing** a prototype defect.
+  Improvement, dropped. (The 4-momentum half of P3 is F1 shape B.)
+* **P7, guard half** — not crashing on zero-bin `TH1F` is an improvement;
+  only the returned value survives, as F6.
+* **P8, filter half** — excluding `!valid()` / `dx<=0` / `dQ<0` fits is
+  defensible and drops the prototype's `dQ/1e-9` sentinel; only the
+  self-inconsistency survives, as F4.
+* **P10 — the null-vertex path.** The prototype prints an error and falls
+  through, then evaluates `map_vertex_segments[nullptr]`, which
+  default-constructs an empty set (and **inserts a null key into the map** as a
+  side effect) and yields 0. The toolkit logs and `continue`s. Neither is
+  attractive, but the prototype's is not a model worth restoring, and
+  `PRGraph.cxx:117-122` documents a null vertex as an anticipated state.
+  Improvement, dropped. Residual, stated not fixed: the toolkit's segment
+  leaves with no direction and no PID where the prototype's leaves with a
+  garbage-input direction.
+* **P11 — start/end vertex by 3-D distance instead of `wcpt().index`
+  equality.** Exactly the owner's clearance in §10.0. Dropped.
+* **P15 — three raw `boost::edges` loops** (`NeutrinoTrackShowerSep.cxx:44 :75
+  :332`). §6 read all three and found no accumulator, argmax or cross-segment
+  state. Judged benign, dropped; the judgement is still "judged, not proven"
+  per §9.
+
+### §10.12 Suggested order of work
+
+Not a schedule — an ordering by (certainty × reach) ÷ cost, so that whoever
+picks this up starts where the argument is strongest and the diff smallest.
+
+| order | item | why here |
+|---|---|---|
+| 1 | **F5** (P6) | one line, prototype intent unambiguous, no interaction with anything else |
+| 2 | **F6** (P7) | one value, but run the ROOT zero-bin snippet first (§10.7) |
+| 3 | **F3** (P13) | two lines *if* `SegmentFlags` already has a clear; proven live; also de-risks F2 |
+| 4 | **F1** (P1+P3a+P4) | the largest reach and the only one that moves energy directly — but 15 sites and a helper, so it wants the earlier three out of the way first |
+| 5 | **F4** (P8) | one line, but check the `units::cm` scale before landing |
+| 6 | **F2** (P2) | do the segment count in §10.3 first; the count decides whether this is cheap or the biggest item here |
+| 7 | **F9** (P12) | instrument and measure; may close as vacuous |
+| 8 | **F7** (P5) | belongs with pr/30 F4, not on its own |
+| — | **F8** (P14) | already doc pr/7's; nothing new to do here |
+
+Every one of these is escalation rule 1 — unconditional production change — so
+each ships as a default-OFF knob with a knob-off byte-identical gate, exactly
+as §4's existing stage-3 knobs did. Note what §4 already says about that: **every
+stage-3 knob on record is ON in the SBND job**, so "default OFF" here means
+"off until the owner flips it in `wct-pr-perevt.jsonnet`", not "dormant".
+
+### §10.13 Corrections to earlier sections
+
+1. **P9 is withdrawn as a divergence** (§10.11). §3's P9 and §8's P9 row are
+   annotated in place and the finding is restated in §5.14. The divergence
+   count in §8 is therefore **14, not 15**.
+2. **§3's `NeutrinoTrackShowerSep.cxx` anchors have drifted 1–2 lines at
+   HEAD.** `c05bc5f7` ("clus: make T_tagger deterministic — sweep
+   boost::edges/vertices/graph_nodes", doc pr/28 §11) is the only commit
+   touching this file between `4f2e7303` and `6206c46b`: +22/−24. The drift is
+   not uniform, so the re-derived anchors are listed rather than a rule.
+   Verified at HEAD:
+
+   | §3 anchor | HEAD | what is there |
+   |---|---|---|
+   | `:662` | `:661` | `improve_maps_one_in`, guarded (guard itself at `:659`) |
+   | `:768 :793 :807` | `:767 :792 :806` | `improve_maps_shower_in_track_out` |
+   | `:938 :980 :1022 :1048 :1111 :1164 :1207 :1286` | `:937 :979 :1021 :1047 :1110 :1163 :1206 :1285` | `improve_maps_no_dir_tracks`, eight branches |
+   | `:1374` | `:1373` | `improve_maps_multiple_tracks_in` |
+   | `:428 :1463 :1867` | `:427 :1462 :1865` | P4/F1-shape-C rest-mass writes |
+   | `:1419` | `:1418` | P9's `sg->fits();//wcpts();` |
+   | `:1595-1605` | `:1593-1603` | P5/F7 `examine_all_showers` |
+   | `:1625` / `:1649` | `:1623` / `:1647` | the 150°/165° pair |
+   | `:1586` | `:1584` | the `particle_score() != 100` sentinel |
+   | `:123-135` | `:123-135` | unchanged — the topology branch |
+
+   `PRSegmentFunctions.cxx` was untouched between the two revisions, so every
+   §3 anchor in that file stands as written.
+3. **§7 loose end 2 is closed** — `segment_is_shower_topology` has four call
+   sites across two stages, so re-entry on the same segment is the normal path
+   (§10.4).
+4. **§8's closing sentence is superseded.** "No recommendation is offered, per
+   §5 rule 4 and the missing dictionary section" was correct for an audit-only
+   document; the owner's filter request authorizes the picks and the solutions
+   in this section. §7 loose end 5 (the porting dictionary has no
+   topology/PID/direction section) is *unchanged* and is now the natural
+   follow-up: the nine items above are what that section should say.
