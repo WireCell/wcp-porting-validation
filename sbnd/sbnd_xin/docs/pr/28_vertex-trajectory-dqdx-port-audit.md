@@ -2535,7 +2535,9 @@ independent — `NeutrinoVertexFinder.cxx:1875` (`remove_segment`/`remove_vertex
 `:3718`, `:3873`, `NeutrinoDeghoster.cxx:617`,
 `NeutrinoShowerClustering.cxx:452/1960/2072` (`showers.erase`); pure counting
 (`:394`); a body that acts only on the single element equal to a
-previously-chosen maximum (`:418`); an independent per-segment side effect
+previously-chosen maximum, where that maximum's tie-break is **id-based, not
+pointer-based** (`:407-410` compares `start_segment()->id()`), so the selection
+is order-independent too (`:418`); an independent per-segment side effect
 (`PRSegmentFunctions.cxx:2190`, one point cloud per segment); a running `min`
 over distances (`:1756`, and `NeutrinoVertexFinder.cxx:1850` — the §11.7 loop);
 an accumulation of exactly-representable `0.5`/`1.0` terms, so the FP sum is
@@ -2837,15 +2839,35 @@ confirms it:
 | evt 388, `work-p14-fix` → `work-p15-live` | **2** | 1 `showers[]/kine_dQdx`, 1 `showers[]/total_length` |
 | evts 239794 / 172230 / 271851 / 54095 | **2** each | same two families |
 | evt 163543 | **1** | `showers[]/total_length` |
-| `work-p15-idx` vs `work-p15-live` (**same binary**) | **3** | same two families |
+| `work-p15-idx` vs `work-p15-live` (two builds differing **only** in a TRACE guard) | **3** | same two families |
+| `work-p15-live` vs `-live-rep` (**genuinely the same binary**, `22249ff4`) | **1** | 1 `showers[]/kine_dQdx` |
 
-Every diff is inside §14.5's 2–3-leaf residual floor, and the same-binary pair
-produces *more* of them than the A/B does. **`nusel-evt<ID>.tsv` is
-byte-identical on all six events** (the arm-level `nusel-table.tsv` differs only
-because the arms hold 1 vs 6 events).
+Every diff is inside §14.5's 2–3-leaf residual floor. **`nusel-evt<ID>.tsv` is
+byte-identical on all six events**, and on the same-binary repeat too (the
+arm-level `nusel-table.tsv` differs only because the arms hold 1 vs 6 events).
+
+Two labelling points, because this doc's credibility rests on them (M1):
+`work-p15-idx` and `work-p15-live` are **not** the same binary — the TRACE guard
+was widened from `size() > 1` to unconditional between them, so the second build
+could report "the block never fires" rather than only "never fires with >1".
+The TRACE has no side effects and sits in a branch that never executes, but a
+"same binary" label that is not one is exactly the sort of thing a later reader
+builds on. `work-p15-live` vs `-live-rep` is the real same-binary repeat of
+`22249ff4`, and its floor is **1 leaf**.
+
+**Stable ≠ prototype-agreement**, as in §9.4, §10.6 and §11.8: graph-index order
+is *an* order. The prototype's counterpart loop walks its own pointer-keyed
+`std::map<ProtoSegment*, …>`, so its order is equally arbitrary — this buys
+reproducibility, not parity, and no prototype-agreement claim is made.
 
 **What is and is not claimed.** The defect was real and is closed. Its *effect*
 is unmeasured, because the path never executed here — this is a correctness fix
-bought on the code, not on a number. A `numu`-rich sample with back-to-back
+bought on the code, not on a number. **It also ships without a test**, and so
+does §14.1's ident-ordered merge: round 5 added `doctest_pr_graph_order.cxx` for
+its sort key, round 8 adds nothing. A revert-proven doctest on the merge order
+would need `TrackFitting` scaffolding that does not exist, and the `:2934` path
+is unexercised by any event in this manifest — but upstream `CLAUDE.md`'s "new
+code ships with tests" applies, and the gap is the owner's to accept, not
+mine to leave silent. A `numu`-rich sample with back-to-back
 tracks at the neutrino vertex is where it would show; that is the population the
 owed valfast/1000 gate covers anyway.
