@@ -6,15 +6,19 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + one measurement. **No toolkit C++ or jsonnet was changed.**
-Every divergence below is reported, not fixed: the behaviour-changing ones touch
-constants, which is CLAUDE.md escalation rule 1 (stop and ask).
+**Status.** Audit + measurement, and — after the owner read it and asked for
+exactly these two — **§3.1 and §3.2 are now FIXED in the toolkit**, unconditionally
+(no knob: they are port-fidelity bugs, not legacy behaviour to preserve). See
+**§7** for the change and its measured effect on evt 388. Everything else below
+is still reported, not fixed.
 
 **Headline.** The vertex-fixing mechanism the owner asked about is a **faithful
 port and it fires on SBND** — so it does *not* explain an off vertex (§1, §2).
-The audit did turn up one confirmed behaviour-changing divergence, in the
-**dQ/dx** fit (§4.1), and a missing uBooNE calibration chain (§4.2). Neither
-moves the vertex directly; both reach it only through PID.
+The audit found the vertex fit was reading the **wrong point cloud** (§3.1) —
+now fixed, and on evt 388 it moves the neutrino vertex **0.765 cm**. It also
+turned up one confirmed behaviour-changing divergence in the **dQ/dx** fit
+(§4.1) and a missing uBooNE calibration chain (§4.2); neither moves the vertex
+directly, both reach it only through PID. Those two remain open.
 
 ---
 
@@ -516,9 +520,8 @@ own quality guard (T1) is inoperative — except that under §3.1 it reads the
 Steiner path rather than that cloud at all. Fixing either one alone changes what
 the other sees, so they want separate gates and separate events.
 
-**None of these has been fixed.** §3.1 and §3.2 are one-line changes each, but
-both alter production output unconditionally, so they are escalation rule 1: the
-owner decides, and each needs its own knob-or-flip decision plus a valfast gate.
+**§3.1 and §3.2 are now fixed** — the owner read this section and asked for both
+(§7). Items 3-10 remain open and are still escalation rule 1.
 
 **The single most useful next step** is making `flag_fix` observable. It is the
 one flag that answers "did the vertex fit run for this vertex", and today **no
@@ -528,6 +531,8 @@ schema change, not a physics change) would put it in the display.
 
 ## §6 Correction issued alongside this audit
 
+*(this section predates §7 and is unaffected by it)*
+
 `fit_distance` is **not** "how far the 3-D vertex fit moved the vertex", and 0
 does **not** mean the fit did not run. It is `|fit().point − wcpt().point|`
 (`PRVertex.h:84`): the trajectory fit moves `fit().point` for every *unfixed*
@@ -536,3 +541,197 @@ nonzero either way — **127 of 127** vertices on evt 388, degree-1 track ends
 included. Corrected in `pr_display/README.md`, doc pr/26 and doc pr/27's payload
 tables. The viewer chip label is left to a follow-up (another session had the
 file open).
+
+---
+
+## §7 §3.1 and §3.2 FIXED — the change and its effect on evt 18255/388
+
+Owner instruction, after reading §3.1/§3.2 above: *"Can you fix these two? Double
+check it against Prototype, and then redo for the event 388 ... No need to do
+large A/B check. We just want to see its impact on this event first."*
+
+**No knob.** Both are port-fidelity defects — the toolkit read the wrong array
+and counted an angle the prototype does not count. A default-OFF knob would ship
+the owner's requested fix as a no-op. CLAUDE.md §1's prime directive protects
+*legacy behaviour the owner wants preserved*; escalation rule 1 was satisfied by
+asking, and the owner answered. Both changes are unconditional, in one file.
+
+### 7.1 The change — `clus/src/MyFCN.cxx`, toolkit commit `e6c51cc5`
+
+**§3.1 — `AddSegment` now reads the fitted trajectory.**
+
+```cpp
+-    // Get raw steiner points from segment (consistent with prototype's get_point_vec())
+-    const auto& wcpts = sg->wcpts();
++    const auto& fits = sg->fits();
+```
+
+Re-verified in both trees before editing: prototype `NeutrinoID_improve_vertex.h:538`
+is `WCP::PointVector& pts = sg->get_point_vec();`, and `ProtoSegment.h:16` is
+`std::vector<WCP::Point>& get_point_vec(){return fit_pt_vec;};` — the *fitted*
+cloud. The toolkit counterpart is `Segment::fits()` (`PRSegment.h:85-88`),
+populated by `multi_trajectory_fit` via `generate_fits_with_projections`
+(`TrackFitting.cxx:1226/1477/1645/1787`).
+
+**No fallback to `wcpts()` when `fits()` is empty**, deliberately. Every path
+into `fit_vertex` runs `do_multi_tracking` first (`NeutrinoVertexFinder.cxx:497,
+2042, 2099, 2115`), so a populated `fits()` is guaranteed by construction — the
+prototype relies on the same guarantee harder still, since its `:539`
+`pts.front()` on an empty `fit_pt_vec` is UB. A fallback would let a segment
+silently revert to the old buggy behaviour and would be invisible in the
+measurement. The pre-existing empty-guard is kept, now pointing at `fits()`: a
+segment with no fit contributes a zero direction and nothing to the solve, and —
+with §3.2 in place — nothing to `n_large_angles` either, exactly as the prototype
+treats a null direction.
+
+**Two-effect change, worth remembering.** `length` (`MyFCN.cxx:71-78`) is also
+computed front-to-back over the same cloud, and it selects the 1.5 cm vs 0.9 cm
+inner annulus radius at `:86`. Switching the cloud can therefore change the
+*inner radius* as well as the points. This matches the prototype, which computes
+`length` from the same `get_point_vec()` at `:539` — and both are straight-line
+front-to-back distances, not path sums. If a future event shows a surprise, this
+is the second place to look.
+
+**§3.2 — the angle now follows ROOT's `TVector3::Angle` exactly.**
+
+```cpp
+-    double angle = std::acos(dir1.dot(dir2)) * 180.0 / M_PI;
++    const double ptot2 = dir1.squaredNorm() * dir2.squaredNorm();
++    double angle = 0.0;
++    if (ptot2 > 0) {
++        double arg = dir1.dot(dir2) / std::sqrt(ptot2);
++        if (arg >  1.0) arg =  1.0;
++        if (arg < -1.0) arg = -1.0;
++        angle = std::acos(arg) * 180.0 / M_PI;
++    }
+```
+
+The `ptot2` normalisation is redundant for real segments (the PCA axes are
+explicitly unit-normalised at `:141-147`) but is kept so the arithmetic shape
+matches the prototype's and no question remains.
+
+**This is not simply a stricter gate.** It moves `n_large_angles` in *both*
+directions: null-direction pairs go 90° → 0° (fewer large angles, fewer fits),
+while near-anti-parallel pairs whose `dot` rounds below −1 go `NaN` → 180° (more
+large angles, more fits). The net on any given event is empirical.
+
+Both sites carry inline prototype file+line citations per CLAUDE.md §2.
+
+### 7.2 Repro
+
+```bash
+wcbuild && ./build/clus/wcdoctest-clus
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+for arm in work-vtxfit388-fix work-vtxfit388-fix31 work-vtxfit388-fix-rep; do
+  PR_EXTRA_STAGES=pr_display PR_JOBS=1 SBND_WCT_LOGLEVEL=trace \
+    ./run_pr_chain_batch.sh work-nuecc48-prod0803 $arm data 388
+done
+```
+
+`./build/clus/wcdoctest-clus` — **71/71 passed, 0 failed** (1 skipped) with both
+fixes in. Freshness proof (M1): `local/lib/libWireCellClus.so` 18:48:31 >
+`clus/src/MyFCN.cxx` 18:48:02.
+
+Arms, all on the same input `work-nuecc48-prod0803/ql_evt388`:
+
+| label | binary |
+|---|---|
+| `work-vtxfit-388` | baseline, pre-fix (the §2 arm, reused unchanged — M13) |
+| `work-vtxfit388-fix31` | §3.1 only (angle guard temporarily reverted) |
+| `work-vtxfit388-fix` | §3.1 + §3.2 — what is committed |
+| `work-vtxfit388-fix-rep` | repeat of `-fix`, same binary — the nondeterminism yardstick |
+
+> `work-vtxfit388-fix31-VOID-badbuild` is a **void** arm: its `wcbuild` hit M3
+> (the install race left `local/lib/libWireCellClus.so` as `data`, not ELF) while
+> the run still exited 0, so its binary is unknown. Renamed rather than deleted,
+> and re-run cleanly as `work-vtxfit388-fix31`. **Do not use it.**
+
+### 7.3 Result — the neutrino vertex moves 0.765 cm
+
+```
+main_vertex   baseline  (-162.5332, 31.9991, 426.1712) cm
+              fixed     (-163.1355, 31.5351, 426.2557) cm
+              delta     dx=-0.602  dy=-0.464  dz=+0.084   |d| = 0.765 cm
+```
+
+The trace shows *why*, and it is the §3.1 mechanism directly:
+
+| | baseline | §3.1 only | §3.1+§3.2 |
+|---|---|---|---|
+| fit attempts (cluster 23) | 4 | 4 | 4 |
+| **main vertex, 1st pass** | **moved 0.693 cm** | **moved 0.000 cm** | **moved 0.000 cm** |
+| main vertex, triggered >0.5 cm refit? | **yes** | no | no |
+| other vertex, 1st pass | moved 1.039 cm | 1.039 cm | 1.039 cm |
+| main vertex, final pass | 0.000 cm | 0.000 cm | 0.000 cm |
+| `fit_vertex made no update` | 1 | 1 | 1 |
+| `skipping vertex fit` (the 1.0 cm cut) | 0 | 0 | 0 |
+
+Read this carefully: the trace number is how far `wcpt()` — the Steiner seed —
+was re-snapped, so **0.000 cm means the fit's optimum already coincides with the
+current position**, not that the fit declined (it ran; `fit_vertex made no
+update` is the "declined" line and its count is unchanged at 1). Pre-fix, the
+vertex fit was *dragging the main vertex 0.693 cm off* and that drag was large
+enough to trigger a second re-track-and-refit. Post-fix it converges in place.
+That is exactly the shape of the owner's "the vertex looks a bit off" report.
+
+Topology is unchanged: **84 segments, 127 vertices, 13 showers** in all arms.
+
+Selection:
+
+| field | baseline | fixed |
+|---|---|---|
+| `nue_score` | 4.30094 | 4.30094 (identical) |
+| `numu_score` | −2.48440 | −2.37287 |
+| `cosmict_flag` | 0 | 0 |
+
+Both scores keep their sign and the event keeps its classification; `numu_score`
+shifts by 0.11 and stays well negative.
+
+### 7.4 Attribution: §3.1 does all of it, §3.2 is inert on this event
+
+`work-vtxfit388-fix31` and `work-vtxfit388-fix` agree on `main_vertex` to all
+printed digits and on every selection score exactly. Their calib dumps do differ
+— 1343 leaf values — but the difference is **entirely inside the known
+run-to-run nondeterminism envelope**, established by re-running the *same*
+binary:
+
+| comparison | leaf diffs | where |
+|---|---|---|
+| `-fix` vs `-fix-rep` (**same binary**) | 825 | 815 `proj/charge_pred`, plus `kine_energy_particle`, `kine_particle_type`, `showers/kine_dQdx`, `showers/total_length` |
+| `-fix31` vs `-fix` (**§3.2 in/out**) | 1343 | 1339 `proj/charge_pred`, 2 `showers/kine_dQdx`, 2 `showers/total_length` |
+| either comparison, `main_vertex` or any `*_score` | **0** | — |
+
+The §3.2 comparison touches a strict subset of the field families that two
+identical runs already disagree on, and the surviving shower numbers differ only
+in the last few ulp (`634.643497382151` vs `634.6434973821506`). This is
+`assemble_fitted_charge_2d`'s documented `charge_pred` nondeterminism (doc pr/26
+§5.2) propagating into dQ/dx, not an effect of the angle guard.
+
+So on evt 388, **§3.2 changes nothing measurable**. It is kept because it is the
+correct port and because §3.2's reachability argument is about topologies (a stub
+at a two-leg main vertex) that this event does not happen to present.
+
+### 7.5 Scope and what is NOT claimed
+
+* **One event, no gate.** Per the owner's instruction there is no valfast /
+  `abtest` run behind this. The fix is **not bit-identical** to the pre-fix
+  chain and will move other events; a population gate is still owed before it can
+  be called validated.
+* **"Moves 0.765 cm" is not "is now 0.765 cm more correct."** Evt 388 has no
+  truth here. What is established is that the fit no longer drags the main vertex
+  and that the point cloud it fits is now the one the prototype fits. Judging
+  the new position is a look at the display (§7.6) or a truth-matched sample.
+* The other open items — §3.3, §3b T1-T8, §4.1, §4.2 — are untouched.
+
+### 7.6 The display
+
+Evt 388 on port 5017 has been re-served from the post-fix arm:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+./pr_display/serve_pr_display.sh 5017 work-vtxfit388-fix/pr_evt388/calib-pr-evt388.json
+```
+
+The previous instance was serving `work-prdisp-cosscan2/pr_evt388/...`, which is
+a **pre-fix** dump; that arm is left on disk untouched, so the two can be served
+side by side on different ports to compare vertex placement directly.
