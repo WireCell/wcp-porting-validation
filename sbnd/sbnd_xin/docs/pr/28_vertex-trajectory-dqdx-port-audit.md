@@ -2153,3 +2153,26 @@ What to look at, given §13.6: the PR graph is **75 segments / 119 vertices**
 (was 84 / 127), the neutrino vertex has moved 0.1434 cm, and the particle-flow
 panel now reports a **π⁰** with `kine_reco_Enu` 2.91 GeV. The pre-fix arm for a
 side-by-side is `work-tfix388-base` — serve it on any free port.
+
+### 13.10 Bee links — evt 18255/388 before and after
+
+Uploaded on request, so the round-7 change can be examined in the 3-D display.
+Both sets are the PR chain's own `mabc-pr.zip` (layers: `clustering-global`,
+`shower_track-global`, `track_fit-global`, `vertices-global`, dead areas, and
+the `mc.json` particle-flow tree).
+
+| | binary | arm | Bee set |
+|---|---|---|---|
+| **before** | `01ff88b1` | `work-tfix388-base` | https://www.phy.bnl.gov/twister/bee/set/62ecc490-8ca7-4541-b08f-db2220f55b1f/event/list/ |
+| **after** | `23bd6783` | `work-tfix388-final` | https://www.phy.bnl.gov/twister/bee/set/7511876b-f244-48b5-8982-c71b95736408/event/list/ |
+
+What to compare, from §13.6: **84 → 75 segments**, **127 → 119 vertices**, the
+neutrino vertex 0.1434 cm away, and a **π⁰** now reconstructed
+(`kine_reco_Enu` 2109 → 2910 MeV). The `track_fit-global` layer is where the
+trajectory change lives — it shrank 38.6 kB → 34.7 kB while `shower_track-global`
+grew 290.7 kB → 315.7 kB, i.e. the moved points are track-to-shower
+re-attributions, not points vanishing.
+
+**Only this one event exists for round 7.** No population run was made, so there
+is no set of "events with a large move" to link — evt 388 is the whole sample.
+Finding others requires a small-group run against a pre-round-7 baseline.
