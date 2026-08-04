@@ -1702,38 +1702,79 @@ measured against *different* baselines on *different* binaries.
   which is a statement about why the toolkit differs, not about how much. D10 is
   now inert for this stage (§12.7) but not elsewhere.
 
-### §13.3 Three source observations from the second pass — reported, not fixed
+### §13.3 Three source observations — **one fixed, two closed by verification**
 
-Per CLAUDE.md ("mention a pre-existing bug, do not fix it in the same change"):
+Originally logged here as "reported, not fixed". The owner asked for them to be
+improved, so each was taken as far as it can go. Only one of the three was ever
+a toolkit defect; the other two are **prototype-side**, and `prototype_base/` is
+a read-only porting reference (CLAUDE.md §0), so the improvement available there
+is to prove the toolkit counterpart is immune and say so — which is what was
+done, rather than leaving a vague note.
 
-1. **No bounds guard on `majs[old_index]`.** `establish_same_blob_steiner_edges_steiner_graph`
-   (`SteinerGrapher.cxx:933`) indexes `major_indices()` with a key from
-   `result.old_to_new_index` and guards the *result* (`blob_node_idx >=
-   nodes.size()`) but never the *index*. It should hold by construction — both
-   live in the retiled cluster's `sv3d` point space — so this is a robustness
-   note, not a defect. An out-of-range read here would be silent.
-2. **The prototype buckets null-mcell points together at flag=1.**
-   `PR3DCluster_graph.h:40` inserts into `map_mcell_all_indices[nullptr]` with
-   no null skip (unlike flag=2, which skips at `:88`). Any point with no mcell
-   would be same-blob-connected to *every other* such point. Harmless if a
-   cluster's own cloud never has one — which is likely but was not checked.
-   **Prototype-side; no toolkit counterpart, since the toolkit's key is a blob
-   node index.**
-3. **The prototype iterates a pointer-keyed map in both same-blob passes.**
-   `std::map<SlimMergeGeomCell*, std::set<int>>`, iterated at
-   `PR3DCluster_graph.h:60` and `:99`. The edge *set* is order-independent, but
-   the insertion order into `same_mcell_steiner_edges` and into the boost graph
-   is not. This is the same class as D6 and reinforces §6's finding that the
-   **toolkit is the deterministic side of this port**; it is recorded because §6
-   audits toolkit determinism and never states the prototype's.
+**1. No bounds guard on `majs[old_index]` — FIXED** (toolkit, this commit).
+`establish_same_blob_steiner_edges_steiner_graph` guarded the *result*
+(`blob_node_idx >= nodes.size()`) but not the *index*. The contrast that makes
+this worth a guard rather than a comment: `form_cell_points_map`
+(`SteinerGrapher.cxx:626`) walks `point_idx < skd.npoints()` and **cannot** go
+out of range, while this loop's keys are base-graph vertex descriptors carried
+through `result.old_to_new_index` — a different, unbounded provenance. They
+should all be `sv3d` points by construction, so the guard is expected never to
+fire; the reason to add it is that an out-of-range read of `major_indices()`
+would be **silent**, corrupting a blob grouping rather than crashing.
+`get_blob_for_vertex` (`:855`) already guards its index the same way, so this
+makes the file self-consistent. **No behaviour change** — gated in §13.5.
 
-### §13.4 The documentation debt
+**2. The prototype's `nullptr` mcell bucket at flag=1 — CLOSED, the toolkit is
+structurally immune.** `PR3DCluster_graph.h:40` inserts into
+`map_mcell_all_indices[cloud.pts.at(i).mcell]` with no null skip, unlike flag=2
+which skips at `:88`. Any point with no mcell would be same-blob-connected to
+*every other* such point — a spurious clique. Whether WCP ever has such a point
+in a cluster's own cloud was not checked and cannot be fixed here.
+**The toolkit cannot express the bug:** `form_cell_points_map` keys on a blob
+**node index** obtained from `major_indices()`, checks `blob_node_idx >=
+nodes.size()`, and then checks the facade is non-null — three independent
+reasons there is no null bucket. Recorded as **K2/K5** in the porting dictionary
+so nobody ports the null-keyed shape across.
 
-`clus/docs/porting/porting_dictionary.md:266` — the Steiner Tree section — is
-**still an empty `⚠ xxx` placeholder.** It was the framing finding of this audit
-(§0) and it is now more urgent, not less: three divergences have been resolved
-in favour of the prototype (D1, D12, D2) and two in favour of the toolkit (D3,
-D7), and **none of those five decisions is written anywhere a future porter
-would look.** The next person to hit `check_wire_ranges_match` or the flag=2
-grouping will re-derive this from scratch, or "fix" it back. Filling that
-section is the smallest high-value item left in this document.
+**3. The prototype iterates pointer-keyed maps in both same-blob passes —
+CLOSED, recorded as a dictionary rule.** `std::map<SlimMergeGeomCell*,
+std::set<int>>` iterated at `PR3DCluster_graph.h:60` and `:99`. The edge *set*
+is order-independent, but the insertion order into `same_mcell_steiner_edges`
+and into the boost graph is not — the same class as D6's edge-descriptor sort,
+which compares an edge-property **pointer**. §6 audits toolkit determinism and
+never stated the prototype's; it does now, and the toolkit's `size_t`-keyed
+`form_cell_points_map` is written into the dictionary as **K2** with the reason,
+so the "simplify it to a `Blob*` key" refactor is pre-emptively answered.
+
+### §13.4 The documentation debt — **PAID**
+
+`clus/docs/porting/porting_dictionary.md:266` was an empty `⚠ xxx` placeholder
+and the framing finding of this audit (§0). **It is now filled**: the Steiner
+Tree section carries a 15-row WCP→WCT function/type mapping, **ten `K1`–`K10`
+known-divergence entries** covering every row of §8, and a table of the three
+config knobs with what each restores.
+
+The five decisions this document produced are now written where a porter will
+hit them:
+
+| dictionary | decision | direction |
+|---|---|---|
+| **K3** | ±1 wire slack is per-call-site, and `<= max + 1` is the wrong translation | toward the prototype (D1) |
+| **K4** | the adjacent-slice stride is `nticks_per_slice`, never a literal 4 | toward the prototype (D12) |
+| **K8** | `disable_dead_mix_cell` must reach the edge-weight charges | toward the prototype (D2) |
+| **K5** | flag=2 grouping by the retiled blob is correct; **do not reintroduce** the null-mcell exclusion | toward the toolkit (D3) |
+| **K7** | the finer path resampling is correct; the prototype undershoots its own target | toward the toolkit (D7) |
+
+K2 additionally carries §13.3's observations 2 and 3, and K6 records that
+`get_two_boundary_wcps(2)`'s two cuts are *replaced*, not dropped — the question
+§10.2.9(d) had to answer from scratch.
+
+### §13.5 Gate for the §13.3 fix
+
+The bounds guard is expected to be a no-op, and "expected" is not a gate.
+Re-running SBND evt 388 through the production chain on the rebuilt binary
+gives a `calib-pr-evt388.json` **md5-identical** to `work-pr29-388-d2on`'s
+(`7c9a0488552aa0deb2b0d14a5d81cd21`, arm `work-pr29-388-guard`), i.e. the guard
+never fired on this event and the D2 numbers in §12.4 stand unchanged.
+`wcdoctest-clus` 89/89, 948 assertions. No config file was touched, so every
+md5 in §12.5 is unaffected.
