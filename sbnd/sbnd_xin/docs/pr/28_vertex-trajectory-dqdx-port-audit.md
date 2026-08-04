@@ -6,17 +6,22 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, plus **eight rounds of fixes** the owner ordered
+**Status.** Audit + measurement, plus **nine rounds of fixes** the owner ordered
 after reading it. All are unconditional — no knob: they are port-fidelity
 bugs or plain defects, not legacy behaviour to preserve.
 
 **This doc is now CLOSED.** Round 8 (§14) fixed the last item the owner listed,
-measured both container classes §11.8 left, and closed §4.2/§4.3/§4.4. What
-remains is recorded as *new* items with their own starting points, not as
-unfinished business here: the shower-quantity nondeterminism (§14.5), the
-`SIZE_MAX` index hazard (§14.7), the unconfirmed §11.7 mechanism (§14.8), the
-global slice-start `x` convention (§14.9), and the owed valfast/1000 population
-gate.
+measured both container classes §11.8 left, and closed §4.2/§4.3/§4.4. Round 9
+(§15) then took the four items §14 had *recorded as new work* — and the first of
+them, the shower-quantity nondeterminism, turned out to be a **third** container
+class neither earlier sweep covered: `TrajectoryView::edges()` is a
+`std::unordered_set` hashed on heap addresses. **The PR display dump is now
+run-to-run identical: 0 leaf diffs over 954 324 leaves on six events**, down from
+a floor of 1–3. What remains is recorded as *new* items with their own starting
+points, not as unfinished business here: the twelve `NeutrinoShowerClustering`
+membership sites (§15.8), the unconfirmed §11.7 mechanism (§14.8), the global
+slice-start `x` convention (§14.9), and the owed valfast/1000 population gate
+(§15.9).
 
 | round | items | toolkit commit | section |
 |---|---|---|---|
@@ -27,6 +32,7 @@ gate.
 | 5 | **the residual 10** — `boost::edges` / `boost::vertices` / `graph_nodes` (32 loops, 12 files). **`T_tagger` is now fully deterministic on the 48-event manifest.** | `c05bc5f7` | **§11** |
 | 6 | **§4.1** the multi-track dQ/dx close weights get the prototype's ×5/3 scale-up. **Vertex-fit area closed by owner decision (§12.7).** | `01ff88b1` | **§12** |
 | 8 | **§4.3 last row** `assemble_fitted_charge_2d` iterated a pointer-keyed map, making `charge_pred` run-dependent — the same-binary noise floor drops **593 → 2** leaves and `proj[]/charge_pred[]` to **zero**. **Both §11.8 container classes measured; §4.2/§4.3/§4.4 closed, §4.4 *settled*; and one newly-found pointer-ordered MUTATING traversal (`NeutrinoVertexFinder.cxx:2934`) fixed (§14.12).** | `22249ff4` | **§14** |
+| 9 | **the shower-quantity nondeterminism §14.5 left** — `TrajectoryView::edges()` is an `unordered_set` hashed on `void*` node descriptors, and `Shower::get_total_length()`/`calculate_kinematics()` accumulated FP over it. **Same-binary repeat floor 1 → 0 leaves.** Plus §14.6's two live tie-only sites, the dead `GroupingHelper`, and the `SIZE_MAX` hazard closed as a class with a warn-once guard. **Two revert-proven doctests.** | `026a7501` | **§15** |
 | 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped (§13.7). Owner accepted the result from the event display, and there is no knob to flip: the round is unconditional (§13.12).** | `23bd6783` | **§13** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
@@ -2494,6 +2500,10 @@ of a cross-cluster overlap is now *defined* (lowest cluster ident last) instead
 of arbitrary; a diff there is the expected signature.
 
 ### 14.5 The residual — a *second*, smaller nondeterminism, and it is not diagnostic
+> **FIXED in round 9 (§15).** The cause was a *third* container class neither
+> round 4-5 nor round 8 covered: `TrajectoryView::edges()` is a
+> `std::unordered_set` hashed on `void*` node descriptors. The floor is now **0**.
+
 
 2–3 leaves survive: **`showers[]/kine_dQdx`** (2, every pair) and
 **`showers[]/total_length`** (0–1). These are **physics** leaves, not display
@@ -2583,6 +2593,10 @@ entirely** (66/3 instead of 116/18). Recorded so the next reader does not repeat
 the mistake: `std::set<SegmentPtr>` is a pointer-keyed container.
 
 ### 14.7 Class 2 — index-keyed containers: the hazard is **`SIZE_MAX`**, not the inherit path
+> **CLOSED AS A CLASS in round 9 (§15.6)** by a warn-once guard inside
+> `VertexIndexCmp`/`SegmentIndexCmp`/`ShowerIndexCmp`, plus a revert-proven
+> doctest pinning the collapse. Still 0 live firings on the six-event manifest.
+
 
 §11.8 named six pre-existing sites and warned that the obvious fix for class 1
 walks into this class. Classified by **use**, per §11.7's rule:
@@ -2871,3 +2885,274 @@ code ships with tests" applies, and the gap is the owner's to accept, not
 mine to leave silent. A `numu`-rich sample with back-to-back
 tracks at the neutrino vertex is where it would show; that is the population the
 owed valfast/1000 gate covers anyway.
+
+---
+
+## §15 — round 9: the shower-quantity nondeterminism, and the three container sites §14 left
+
+**Repro.**
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild && ./build/clus/wcdoctest-clus            # 78 cases / 918 assertions
+
+# The committed cfg, isolated from a concurrent session's in-flight edits:
+mkdir -p /home/xqian/tmp/r9cfg
+git -C /nfs/data/1/xqian/toolkit-dev/toolkit archive HEAD cfg | tar -x -C /home/xqian/tmp/r9cfg
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+EVTS="388 239794 172230 271851 54095 163543"
+# Two arms, SAME binary, no rebuild between them (see "same binary" below).
+for arm in work-r9a work-r9b; do
+  R9_CFG=/home/xqian/tmp/r9cfg/cfg PR_EXTRA_STAGES=pr_display PR_JOBS=6 \
+    ./tmp_run_pr_chain_r9.sh work-nuecc48-prod0803 $arm data $EVTS
+done
+python3 scripts/analysis/misc/calib_leaf_diff.py work-r9a work-r9b $EVTS
+python3 scripts/analysis/misc/calib_leaf_diff.py work-p15-live work-r9a $EVTS
+python3 scripts/analysis/misc/pr_arm_compare.py   work-p15-live work-r9a $EVTS
+grep -c "no graph index" work-r9a/pr_evt*/wct_pr_evt*.log     # SIZE_MAX guard: 0
+```
+
+`R9_CFG` and `tmp_run_pr_chain_r9.sh` exist only because a **second session was
+live in this tree** while this round ran, mid-edit on an unrelated Steiner
+terminal-filter knob; its `wct-pr-perevt.jsonnet` passed
+`steiner_terminal_wire_tol` into a `sbnd/clus.jsonnet` that did not declare it
+yet, so every event died at config compile. `tmp_run_pr_chain_r9.sh` is
+`run_pr_chain_batch.sh` with **one line changed** — `WIRECELL_PATH` made
+overridable — and `R9_CFG` points at `git archive HEAD cfg`, i.e. the
+**committed** config. The production runner is byte-untouched (M10). What this
+does *not* isolate is `local/lib`, which is shared: the library these arms ran
+against also contains that session's uncommitted C++. The A/B below is what
+shows it was inert — nothing outside the two shower quantities moved.
+
+### 15.1 The change
+
+Five sites, all read-only-to-physics except one, plus two tie-breaks and a
+latent-class guard.
+
+| # | file:line | what | class |
+|---|---|---|---|
+| 1 | `PRShower.cxx` `get_total_length()`, `get_total_length(Cluster*)`, `get_total_track_length()`, `calculate_kinematics()` | `this->edges()` → `ordered_edges(*this, m_full_graph)` | **the observed defect** |
+| 2 | `PRShower.cxx` `update_particle_type()` | same | same class, **not** rounding-confined |
+| 3 | `PRShower.cxx` `add_shower()` | `shower.nodes()/edges()` → ordered | point-cloud row order |
+| 4 | `NeutrinoVertexFinder.cxx:655-656` | the two `map_{in,out}_segment_dirs` get `PR::SegmentIndexCmp` | tie-only |
+| 5 | `NeutrinoVertexFinder.cxx:3541` | `snapped` sorted by vertex graph index | tie-only |
+| 6 | `GroupingHelper.cxx:14` | `orig_to_shadow` ordered by `ident()` | **dead code** |
+| 7 | `PRGraph.h` / `PRShower.h` | `warn_unindexed()` on the index comparators | latent-class guard |
+
+### 15.2 Root cause — `TrajectoryView::edges()` is hashed on heap addresses
+
+`PRTrajectoryView.h:113` returns `edge_unordered_set`, i.e.
+`std::unordered_set<edge_descriptor, EdgeDescriptorHash, …>`.
+`EdgeDescriptorHash` (`PRGraphType.h:126-143`) hashes the edge's two
+`node_descriptor`s — and the graph is
+`boost::adjacency_list<setS, setS, …>` (`PRGraphType.h:88`), so a
+`node_descriptor` **is a `void*`** (the header says so at `:99`). The bucket
+walk is therefore a function of heap layout and differs between runs of the
+identical binary.
+
+`Shower::get_total_length()` and `Shower::calculate_kinematics()` accumulated
+floating point over that walk:
+
+* `total_length += segment_track_length(seg)` — order sets the last bit;
+* `vec_dQ`/`vec_dx` were **pushed** in that order, and `cal_kine_dQdx()`
+  (`PRSegmentFunctions.cxx:1281`) is a plain `kine_energy += dE` over the
+  vector — so the push order sets the last bit of the energy too.
+
+This is why *only* shower leaves moved after round 8: rounds 4–5 swept
+`boost::out_edges`/`edges`/`vertices`/`graph_nodes`, and round 8 swept the
+pointer-keyed `std::map`/`std::set`, but **neither class contains
+`TrajectoryView::edges()`** — it is a third container, an unordered set keyed on
+addresses, and the helper to fix it (`PR::ordered_edges(view, g)`,
+`PRTrajectoryView.h:140`) already existed and was already used elsewhere in the
+same file (`fill_sets`, `fill_point_vector`).
+
+**The diagnosis was confirmed before any edit, not after.** The surviving
+round-8 leaf was measured for magnitude:
+
+```
+/showers[1]/kine_dQdx: 1314.124434586102 vs 1314.124434586103   rel = 6.9e-16
+```
+
+One ULP. Had it been a percent, the cause would have been shower *membership*
+and converting accumulation loops would have fixed nothing.
+
+### 15.3 Result — the display-dump floor is now **zero**
+
+Same binary, no rebuild between arms; `local/lib/libWireCellClus.so` mtime
+`10:49:38` verified identical before arm A, before arm B, and after arm B.
+
+| pair | leaf diffs |
+|---|---|
+| `work-p15-live` vs `-live-rep` (round 8, `22249ff4`) | **1** |
+| **`work-r9a` vs `work-r9b` (round 9)** | **0** |
+
+```
+evt388:    nleaf=179266 keyonly=0 valdiff=0
+evt239794: nleaf=176780 keyonly=0 valdiff=0
+evt172230: nleaf=147159 keyonly=0 valdiff=0
+evt271851: nleaf=146750 keyonly=0 valdiff=0
+evt54095:  nleaf=200822 keyonly=0 valdiff=0
+evt163543: nleaf=103567 keyonly=0 valdiff=0
+TOTAL leaf diffs: 0
+```
+
+**954 324 leaves across six events, zero of them run-dependent.** All
+`nusel-table.tsv` / `nusel-events.tsv` / `nusel-evt<ID>.tsv` identical between
+the two arms as well.
+
+### 15.4 A/B vs round 8 — 14 leaves, all ULP, all in the two fixed quantities
+
+`work-p15-live` (`22249ff4`) → `work-r9a`:
+
+| evt | leaves | families |
+|---|---|---|
+| 388 | 4 | 2 `kine_dQdx`, 2 `total_length` |
+| 239794 | 1 | `kine_dQdx` |
+| 172230 | 1 | `kine_dQdx` |
+| 271851 | 2 | `kine_dQdx`, `total_length` |
+| 54095 | 2 | `kine_dQdx`, `total_length` |
+| 163543 | 4 | 4 `kine_dQdx` |
+| **total** | **14** | **only `showers[]/kine_dQdx` and `showers[]/total_length`** |
+
+Largest relative move `1.02e-15`; smallest `1.13e-16`. Every one is a
+last-bit-of-a-double change in exactly the two quantities the fix *defines*.
+This is the whole A/B:
+
+```
+SUMMARY 6 events | mabc identical 6/6 | pctree 6/6 | tagger+kine rows 6/6
+```
+
+plus `nusel-table.tsv`, `nusel-events.tsv` and all six `nusel-evt<ID>.tsv`
+**byte-identical** to round 8. So:
+
+* **the selection is untouched** — no `numu_score` / `nue_score` / `T_kine` row
+  moved;
+* **item 2 of §15.1 did not fire** — `update_particle_type`'s
+  `shower_length > track_length` branch is the one converted site that can do
+  more than re-round (a flip retypes the start segment to an electron and
+  propagates). No particle type changed on any of the six events. It is
+  converted because a ULP *can* flip that comparison, not because one did;
+* **items 4 and 5 are inert here** — the `max_angle` pair search and the DL
+  snap-candidate ranking produced no diff, i.e. no exact tie occurred on this
+  manifest. Both are now decided by graph index instead of by heap layout;
+* **the second session's in-flight C++ is inert with its knobs off** — had it
+  not been, leaves outside the two shower families would have moved.
+
+### 15.5 The three container sites — what was actually found
+
+**`GroupingHelper.cxx:14` is DEAD CODE.** Its only call site is commented out
+(`clustering_retile.cxx:162`), and a repo-wide grep for
+`process_groupings_helper` finds nothing else but two `#include`s. The defect is
+real — the step-2 loop walks `orig_to_shadow` and calls `Grouping::separate()`,
+which **mints new clusters**, so an address-ordered walk let heap layout choose
+the idents the split products receive. It is fixed anyway (ordered by `ident()`,
+a total order among a grouping's children) so the defect cannot come back to
+life with the call site. **The fix is inert by construction and no gate applies
+to it** — that is a statement about reachability, not a measurement.
+
+**`NeutrinoDeghoster.cxx:61` was already deterministic — the earlier item list
+was wrong on this one.** `sortbysec` has carried an `ident()` tiebreaker since
+round 5 (`c05bc5f7`), which makes `std::sort` a total order regardless of the
+pointer-ordered input. Its neighbour `order_segments` (`:345`) uses
+`std::stable_sort` with the *untiebroken* `sortbysec1`, and the comment there
+claims the input is deterministic — **checked, and the claim holds**: the only
+caller (`:398`) passes `map_cluster_to_segments[cluster]`, whose push order comes
+from `ordered_edges(graph)` in `order_clusters`. Nothing to do at either line.
+
+**The two live tie-breaks were `NeutrinoVertexFinder.cxx`.** Both keep the first
+element reaching the extremum (strict `>`), so an exact tie was decided by
+allocation layout:
+
+* `:686-697` — the max-opening-angle search over incoming × outgoing legs. The
+  two maps are insert-and-iterate only, and the `operator[]` at `:719` uses a key
+  taken from the same map, so re-keying them on `SegmentIndexCmp` cannot change
+  what it finds.
+* `:3541` — the DL snap-candidate ranking. Here the container is **left
+  pointer-keyed on purpose** and only the *iteration* is sorted, exactly as in
+  §14.12: `snap_map.find()` at `:3534` must stay address identity, because an
+  index-keyed map would compare on `get_graph_index()` — see §15.6.
+
+### 15.6 The `SIZE_MAX` guard (§14.7 closed as a class, not per-site)
+
+`Segment::m_graph_index` and `Vertex::m_graph_index` default to
+`std::numeric_limits<size_t>::max()`, so under `SegmentIndexCmp`/`VertexIndexCmp`
+**every object not yet added to a graph compares equal to every other**. An
+`IndexedSegmentSet` handed two of them keeps one and silently drops the other,
+and `find()` on either returns whichever is held. §14.7 measured this as latent
+(0 live occurrences on six events) but left it a per-site worry.
+
+It is now a class-level guard: `PR::kUnindexed` is named
+(`PRGraph.h`), and both comparators call `warn_unindexed()` once per process
+when either operand carries the sentinel. `ShowerIndexCmp` gets the same
+treatment against **its own, different sentinel** — `kUnassignedShowerId = -1`,
+because showers are numbered by the clustering pass, not by graph insertion.
+
+Cost and correctness of the guard:
+
+* the hot path is two integer loads and two compares on values the comparator
+  already needed — `warn_unindexed` is `[[gnu::noinline, gnu::cold]]` and behind
+  `[[unlikely]]`, so it is not inlined into an O(n log n) inner loop;
+* the once-flag is `std::atomic<bool>` with `exchange`, not a plain `bool`:
+  wire-cell runs these comparators from several worker threads;
+* it is defined **in the header**, not `PRGraph.cxx`, because `wcdoctest-clus`
+  compiles its own subset of `clus/src` and does not link `libWireCellClus` — an
+  out-of-line definition fails to link the test binary.
+
+**Liveness: 0 firings across all six events**, confirming §14.7's probe result
+independently and from inside the comparator rather than from an ad-hoc probe.
+
+### 15.7 Tests — the round-8 gap is closed for round 9
+
+Two cases added to `clus/test/doctest_pr_graph_order.cxx` (78 cases / 918
+assertions, up from 76 / 896):
+
+* **`pr trajectory view ordered_edges sorts an address-hashed set by index`** —
+  builds a chain graph and a `TrajectoryView` over it, and asserts
+  `ordered_edges(view, g)` is strictly increasing on `EdgeBundle::index` and has
+  the same membership as the raw walk. **Revert-proven**: deleting the
+  `std::sort` from `PR::ordered_edges(view, g)` fails it with four assertion
+  errors (`4 < 3`, `3 < 2`, `2 < 1`, `1 < 0` — the raw bucket walk came back
+  exactly reversed). What it pins is the *helper*; a single-process test cannot
+  re-randomize the heap, so it cannot pin the call sites.
+* **`pr unindexed segments collapse in an index-ordered set`** — three fresh
+  `PR::Segment`s put in an `IndexedSegmentSet` yield `size() == 1`, and
+  `find()` on any of them answers with the single survivor; after
+  `PR::add_segment` puts all three in a graph, `size() == 3`. This pins the
+  §15.6 hazard itself, so "index-keyed sets are safe" can never be assumed
+  silently again.
+
+Round 8's own two gaps (the ident-ordered merge, the `:2934` sort) are **not**
+closed by this — they still need `TrackFitting` scaffolding and an event that
+exercises the back-to-back branch.
+
+### 15.8 What is deliberately NOT converted
+
+`Shower::get_num_main_segments()` (`PRShower.cxx:658`) still walks the raw
+address-hashed edge set. Its body is an unconditional integer count, so no walk
+order is observable and `ordered_edges()` would buy only a vector allocation. A
+comment now says so at the line, so it does not read as a missed site.
+
+The **twelve** raw `.edges()` / `.nodes()` loops in
+`NeutrinoShowerClustering.cxx` (`:51`, `:59`, `:181`, `:258`, `:317`, `:436`,
+`:1711`, `:1817`, `:1829`, `:1989`, `:2144`, `:2359`) are **not** touched. They
+are the shower *membership* side, and membership is empirically stable on this
+manifest — shower row order and every membership-derived leaf are identical
+between the two arms. They are the same latent class as §14.6's tie-only sites:
+recorded here with their line numbers as the starting point for whoever needs
+them, not swept blind. Converting a "pick best" loop there changes which element
+wins a tie, and that is an output change that must be measured, not assumed.
+
+### 15.9 What remains after round 9
+
+* **The valfast/1000 population gate with a regenerated baseline** — still owed,
+  stale since round 6, and rounds 7/8/9 do not discharge it. Round 9's A/B is
+  ULP-only, so it does not move the physics, but the baseline is stale for
+  other reasons.
+* **The twelve `NeutrinoShowerClustering.cxx` sites** (§15.8) and §14.6's three
+  tie-only sites — latent class, line numbers recorded.
+* **`GroupingHelper.cxx`** is fixed but still dead; whoever revives
+  `clustering_retile.cxx:162` inherits a determinism-clean function.
+* **Round 8's two missing tests** (§14.12).
+* **§11.7's unconfirmed mechanism** (§14.8) and **the global slice-start `x`
+  convention** (§14.9) — unchanged, both the owner's call.
