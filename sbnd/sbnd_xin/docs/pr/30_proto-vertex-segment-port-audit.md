@@ -807,7 +807,7 @@ not survive re-verification unchanged and are corrected in place below.
 | **F1** | P1 | `flag_exclusion` is never passed `true` | the toolkit does **less** than the prototype at 28 of 30 sites; the callee is fully ported and dead | **highest** |
 | **F2** | P9 | the out-of-volume skip has **three different, undeclared biases** at three in-scope sites | the guard is necessary, but no two sites agree on what an unevaluable point *means*, and none matches the prototype | **medium-high** |
 | **F3** | P8 | the endpoint-consistency check is not ported **and has no positional replacement** | a check the prototype had, dropped rather than translated — the one place clarification (1) does *not* cover | medium |
-| **F4** | P5, narrowed | the **two** callers in either tree that read `find_vertices(sg).first` as "the" vertex | at these two sites the prototype's `.first` is not expressing a positional concept, so the id→position clearance does not reach them | low-medium |
+| **F4** | P5, narrowed | the **two** callers in either tree that read `find_vertices(sg).first` as "the" vertex | at these two sites the prototype's `.first` is not expressing a positional concept, so the id→position clearance does not reach them; the two conventions name **opposite ends** of the second half of every broken segment (§10.5) | medium |
 
 Everything else is dropped — see §10.6.
 
@@ -975,6 +975,36 @@ the endpoint nearest the segment's front wcpt. Those are different vertices,
 and the substitution is not "position instead of id" — it is "a meaningful
 choice instead of an arbitrary one".
 
+**How often do the two conventions actually disagree? On exactly half of every
+break.** They coincide more often than "arbitrary vs. geometric" suggests,
+because prototype ids are handed out monotonically and vertices are usually
+created in path order — so for a segment whose start vertex is the older one,
+"lowest id" and "nearest the front wcpt" name the same vertex. `break_segments`
+makes this precise (`NeutrinoID_proto_vertex.h:732-741`):
+
+```cpp
+ProtoVertex *v3  = new ProtoVertex(acc_vertex_id, break_wcp, …); acc_vertex_id++;
+ProtoSegment *sg2 = new ProtoSegment(acc_segment_id, wcps_list1, …);  // start_v → break
+ProtoSegment *sg3 = new ProtoSegment(acc_segment_id, wcps_list2, …);  // break → end_v
+add_proto_connection(start_v, sg2, …);  add_proto_connection(v3, sg2, …);
+add_proto_connection(v3,      sg3, …);  add_proto_connection(end_v, sg3, …);
+```
+
+* **`sg2`** is bounded by `start_v` (pre-existing, lower id) and `v3` (created
+  just now, highest id). `sg2`'s wcpts run `start_v → break`, so the lowest-id
+  endpoint *is* the front one. **The two conventions agree.**
+* **`sg3`** is bounded by `v3` (highest id) and `end_v` (pre-existing, lower
+  id). `sg3`'s wcpts run `break → end_v`, so the lowest-id endpoint is the
+  **back** one. The prototype's `.first` is `end_v`; the toolkit's is `v3`.
+  **The two conventions name opposite ends.**
+
+So this is not a rare re-attachment corner case: **every break produces one
+segment of each kind**, and the second half of every broken track is a segment
+on which prototype `.first` and toolkit `.first` are the two different
+endpoints. If a single-photon shower's start segment is a `sg3`-type half —
+and a shower trunk broken off a parent track is exactly that — the two trees
+anchor `bad_reconstruction_2_sp` / `_3_sp` at opposite ends of it.
+
 **Both readings, and neither is obviously right.** (i) The toolkit is better:
 `.first` now has a defined geometric meaning, and a tagger anchoring on "the
 lower-id endpoint" was never intentional. (ii) The prototype's arbitrary choice
@@ -983,6 +1013,15 @@ toolkit silently re-anchors two live tagger tests; and "nearest the front wcpt"
 is not the same as "the shower start" either, so the toolkit's choice is
 principled but not obviously the intended one. Deciding this needs the
 single-photon tagger's own audit, not this document.
+
+**Scope note — F4's two sites are outside §0.** They live in
+`NeutrinoTaggerSinglePhoton.cxx`, which §0 puts out of scope along with the
+rest of the taggers. They surface here anyway because **P5's reach question is
+global by nature**: the changed contract is in `PRGraph.cxx`, a helper this
+stage owns, so bounding its consequences means leaving the stage. Read F4 as
+*"the reach sweep P5 owed, completed"* — **not** as a claim about tagger code
+that was audited. Nothing else in `NeutrinoTaggerSinglePhoton.cxx` was read,
+and per §10.9 the adjudication belongs to that file's own audit.
 
 **P5 as a whole is otherwise closed** by clarification (1), and §9's open
 "P5's reach is a sweep this audit did not do" is now discharged: the answer is
