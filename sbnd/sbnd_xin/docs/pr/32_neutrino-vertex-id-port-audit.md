@@ -6,10 +6,15 @@ finding) and pr/31 (topology / PID / direction). This one covers **step 4 of
 the eight** in doc pr/27 §0 — the stage that decides *which vertex is the
 neutrino interaction point*.
 
-**Status.** **AUDIT ONLY.** No code changed, no config changed, no event run.
-Every "this changes the output" below is an argument from source, not a
-measurement. Nothing here is a patch proposal.
+**Status.** §1-§9 were written **AUDIT ONLY** -- no code, no config, no event
+run -- and every "this changes the output" in them is an argument from source.
+**§10 filters, §11 implements**: four fixes shipped and turned on for SBND.
 
+> **§11 (implementation, 2026-08-04) is the current state: all four kept
+> findings are FIXED and are SBND PRODUCTION DEFAULTS ON** (toolkit
+> `407c5ba9`), each gated 48/48 byte-identical on the nueCC48 manifest.
+> §11.7 corrects §10.2's one substantive error.
+>
 > **§10 (owner filter, 2026-08-04) supersedes §3 and §8 where they disagree.**
 > §1–§9 were written against toolkit `4f2e7303`. Re-verified against
 > **`f8f2150a`**, the twelve divergences filter to **four** (F1–F4) with
@@ -1318,3 +1323,230 @@ Found while re-verifying. Listed so the next reader does not inherit them.
   `vertex_z_prior_scale = 100` against the prototype's 200, and
   `mip_dqdx_median = 48000` against 43e3, are still the biggest numbers in this
   doc and are still deliberate config, not port defects.
+
+---
+
+## §11 Implementation — all four fixed, **all four SBND production defaults ON**
+
+**Status: SHIPPED.** Toolkit **`407c5ba9`** (parent `1e169602`). This section
+supersedes §10 where they disagree; §10's one substantive error is corrected in
+§11.7.
+
+Each finding is a knob on `TaggerCheckNeutrino` → `PatternAlgorithms`, **C++
+default `false` = today's path**, and each is set **`true`** in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`. The flip is free on this
+manifest: every arm is byte-identical (§11.2), and every knob is nonetheless
+*engaged* rather than inert (§11.3).
+
+| knob | was | what it restores |
+|---|---|---|
+| `vertex_dir_use_fit_point` | P1 | eleven expressions measure from the continuous fit, not the Steiner snap |
+| `shower_traj_recheck_parity` | P3 | stored-flag gates, 10 cm inner test, and a **clearable** `kShowerTrajectory` |
+| `main_vertex_require_descriptor` | P7 | one candidate set across all six scoring blocks |
+| `main_vertex_candidate_flag` | P12 | `kMainCandidate`, the missing `map_cluster_main_candidate_vertices` |
+
+### §11.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit && git rev-parse --short HEAD   # 407c5ba9
+wcbuild                                   # BOTH build/ and local/lib -- see §11.6
+./build/clus/wcdoctest-clus               # 95 cases / 984 assertions
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# Arms.  The four env vars are TRI-STATE: unset = cfg default, 1 = force on,
+# 0 = force off -- which is what lets the gate arm turn them back off now that
+# the SBND operating point ships them on.
+SBND_MAX_JOBS=5 \
+SBND_VERTEX_DIR_USE_FIT_POINT=0 SBND_SHOWER_TRAJ_RECHECK_PARITY=0 \
+SBND_MAIN_VERTEX_REQUIRE_DESC=0  SBND_MAIN_VERTEX_CANDIDATE_FLAG=0 \
+  ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-pr32r2-off48 data
+# ... and 1/1/1/1 for work-pr32r2-allon48, plus the three single-knob arms.
+
+PR32_JOBS=16 python3 pr32_cmp.py work-pr32r2-off48 work-pr32r2-allon48
+```
+
+`pr32_cmp.py` (this round, committed here) compares pctree-pr **member-content**
+hashes via `abtest/hash_archive.py`, both nusel TSVs, and the PR30/PR32AUDIT
+counters. Two traps it now handles, both of which produced a wrong answer first:
+`hash_archive.py` prints the **file path** in its output, so hashing its stdout
+makes every arm "differ"; and `f1_mean_cm` is a per-event mean, so summing it
+over 48 events reports 28.9 cm for what is really 0.61 cm.
+
+### §11.2 Gate — every arm 48/48
+
+Baseline **`work-pr31-f2off48`**, the doc pr/31 §11 knob-off arm at the parent
+`1e169602`. (Not `work-pr30-f2on`, and emphatically not `work-vfnuecc48-0804`,
+which predates the `oov_prototype_parity` flip.)
+
+| comparison | pctree-pr member hashes | nusel-table / nusel-events |
+|---|---|---|
+| baseline vs `work-pr32r2-off48` | **48/48 identical** | identical |
+| `off48` vs `work-pr32r2-f1on48` | **48/48 identical** | identical |
+| `off48` vs `work-pr32r2-f2on48` | **48/48 identical** | identical |
+| `off48` vs `work-pr32r2-f34on48` | **48/48 identical** | identical |
+| `off48` vs `work-pr32r2-allon48` | **48/48 identical** | identical |
+
+Every `PR30AUDIT` counter is unchanged between baseline and knobs-off, which is
+the independent check that the knob-off path really is the old path and not a
+coincidence of hashes. 48/48 `rc=0` in every arm.
+
+Config:
+
+* knobs off vs `1e169602` `cfg/` — **byte-identical**, md5
+  `0c24101b93143a06e8e326298af821de` both sides;
+* knobs on — all four keys present, +162 bytes;
+* **after the SBND flip, the compiled config is IDENTICAL to the TLA-forced
+  all-on config**, so a bare production run *is* `work-pr32r2-allon48`. Confirmed
+  end to end on three events (`work-pr32r2-flip3`): `PR32AUDIT … knobs[use_fit_point=true
+  traj_parity=true require_desc=true cand_flag=true]` with no TLA, and the
+  pctree hashes match `allon48` on all three.
+
+**Scope of the claim.** "Byte-identical" here means the pctree-pr archive member
+contents and the two nusel tables, on 48 nueCC data events. It is not a
+statement about the 1000-event population — the valfast baseline is still stale
+(§11.8).
+
+### §11.3 Engaged, not inert — what the counters say
+
+Summed over the 48 events of `work-pr32r2-off48` (legacy) and
+`work-pr32r2-allon48`:
+
+| counter | legacy | all-on | reading |
+|---|---|---|---|
+| `f1_reads` / `f1_fit_valid` | 5047 / **5047** | 5047 / 5047 | **every** read has a valid fit |
+| `f1_mean_cm` | 0.613 | 0.612 | mean \|fit − wcpt\| |
+| `f1_max_cm` | 11.411 | 11.411 | worst single vertex |
+| `f2_gate` | 117 | 117 | outer-gate evaluations |
+| `f2_disagree` | **22** | 0 | stored flag vs a fresh 10 cm test |
+| `f2_body` | 7 | 4 | recheck body actually runs |
+| `f2_demoted` | 0 | **4** | segments the refresh takes out of shower-trajectory |
+| `f3_cand` / `f3_dropped` | 2219 / **0** | 2219 / 0 | invalid-descriptor candidates |
+| `f4_flagged` | 0 | **3774** | vertices marked `kMainCandidate` |
+
+Three of these are results, not bookkeeping:
+
+1. **`f1_fit_valid == f1_reads == 5047` settles §7 loose end 3 by measurement.**
+   §10.2 argued from the code that the third `form_map_graph` re-validates every
+   vertex's fit index; 5047/5047 confirms it. P1 was live at **both** sites,
+   including the all-showers branch, exactly as §10.2 predicted.
+2. **F1's magnitude is 0.613 cm mean, 11.41 cm max.** That is the size of the
+   Steiner quantisation, and it is the point the 10 cm direction vector is
+   measured *from*, against a ladder whose rungs are +5/+3/+1/+0.25 before the
+   `/4` and whose topology terms are 0.125 apart. Small, and not negligible.
+3. **`f3_dropped == 0` over 2219 candidates makes P7 measured dead code.** §10.4
+   could only offer a control-flow argument and explicitly refused to call the
+   fix free; the counter is the measurement that argument was missing. The knob
+   can be retired once a wider census agrees — recorded rather than done.
+
+`f2_disagree = 22` is the direct evidence for F2: on 48 events the stored label
+and a fresh 10 cm test disagree 22 times, which is precisely the population the
+prototype's flag read and the toolkit's recomputation split on.
+
+### §11.4 What each fix actually changed
+
+**F1.** One helper, `pr32_vtx_pt(v, use_fit)`, at eleven expressions:
+`calc_conflict_maps` in- and out-direction vectors (`NeutrinoVertexFinder.cxx`,
+prototype `:1804`/`:1808`); and in `compare_main_vertices_all_showers` the PCA
+point cloud (`:1468`), the axis projection (`:1480`), the four forward-z
+tie-breaks (`:1542`, `:1551`, `:1567`, `:1574`) and the Steiner path endpoints
+(`:1504-1505`). The fallback to `wcpt()` stays and is load-bearing.
+
+**F2.** Three coupled edits, plus one in a different file:
+
+* `pr32_shower_traj_gate()` at both outer gates — reads the stored flag under
+  parity, recomputes otherwise, and counts the disagreement on the legacy path
+  (asking for the fresh answer under parity would re-introduce the mutation the
+  knob removes);
+* the inner test at `(10 cm, m_mip_dqdx)` under parity, `(1.0 cm,
+  m_mip_dqdx_median)` otherwise;
+* `PR::g_shower_traj_refresh_flag` — a process-wide flag written once per event
+  by `TaggerCheckNeutrino`, the same transport as `g_graph_endpoint_policy` —
+  makes `segment_is_shower_trajectory` clear `kShowerTrajectory` on entry,
+  mirroring `ProtoSegment.cxx:544` *before* its own `length > 50 cm` early
+  return, so even the early-out path demotes.
+
+**F3.** A local filtered copy at function entry; the caller's
+`std::vector<VertexPtr>&` is never mutated.
+
+**F4.** `VertexFlags::kMainCandidate = 1<<2`, set in `determine_main_vertex` at
+the prototype's recording point, emitted by `PrDisplayDump` as
+`"main_candidate"`. A dump taken without the knob reads *no candidate
+information*, not *no candidates*.
+
+### §11.5 Tests
+
+`build/clus/wcdoctest-clus`: **95 cases / 984 assertions, 0 failed** (was
+91/963). Four new cases, and the F2 pair is **revert-proven**: replacing
+`if (g_shower_traj_refresh_flag)` with `if (false)` fails exactly
+*"clus pr32 F2 refresh clears the flag on a negative answer"* and nothing else.
+
+* the two `segment_is_shower_trajectory` flag polarities — monotone by default,
+  demoting under refresh, with `kShowerTopology` proven to survive (the clear is
+  bit-masked, not `clear_flags()`);
+* `kMainCandidate` is independent of `kNeutrinoVertex` in both directions —
+  `MultiAlgBlobClustering` and `PrDisplayDump` both branch on the latter alone
+  and would render every candidate as the neutrino vertex if the bits collided;
+* `fit_distance()` is `|fit − wcpt|`, an unfitted vertex reports
+  `valid() == false` with `fit().point == (0,0,0)` (which is why the fallback
+  exists), and `Fit::reset()` clears the index but **not** the point — the
+  property that lets the third `form_map_graph` re-validate an already-fitted
+  vertex.
+
+### §11.6 Two mistakes, recorded rather than hidden
+
+**A first set of five arms was voided.** In this tree
+`toolkit-dev/.envrc:26` puts every `toolkit/build/<pkg>` on `LD_LIBRARY_PATH`
+**before** `local/lib`, so wire-cell loads `build/clus/libWireCellClus.so`, not
+the installed copy. A `wcb build --targets=wcdoctest-clus` run to revert-prove a
+doctest — with the source deliberately reverted — relinked that library **under
+a running batch**: 7 events died with `E [sys] Failed to load …: file too
+short`, and events starting after the relink ran the reverted code. The dead
+arms are quarantined under `sbnd_xin/VOID-pr32-round1/` and were re-run as
+`work-pr32r2-*`. **Rule: builds and arms are mutually exclusive; check
+`pgrep -fc wire-cell` first.** This also corrects the long-standing note that
+`build/` is not on `LD_LIBRARY_PATH` — it is, and it wins.
+
+**F1's gap was first reported as 28.9 cm.** `f1_mean_cm` is a *per-event* mean;
+the comparison script summed it over 48 events. The true figure is
+**0.613 cm** mean, 11.41 cm max. Caught because 28.9 cm was physically
+implausible for a Steiner-lattice quantisation — the number looking wrong was
+the only signal.
+
+### §11.7 Correction to §10
+
+**§10.2 said to leave the `do_rough_path` call alone**, on the grounds that the
+prototype snaps to a Steiner node there so `wcpt()` is the faithful read. That
+is wrong: `do_rough_path` performs the snap **itself**, via
+`cluster.kd_steiner_knn(1, point, "steiner_pc")`
+(`NeutrinoPatternBase.cxx:97-104`). It is therefore the exact counterpart of the
+prototype's `get_closest_wcpoint(get_fit_pt())`, and the faithful argument is
+the fit point. F1 includes that site; the count is **eleven** expressions, not
+the nine §10.2 tabulated plus a spared tenth.
+
+Also: §10.3 listed one recomputation site in the doc body and found the second
+at `:2337` in the same section — both are fixed, and the fix depends on the flag
+becoming clearable, which is a change in `PRSegmentFunctions.cxx`, not in
+`NeutrinoVertexFinder.cxx`. The audit's blast-radius note stands: 31
+`kShowerTrajectory` reads in `NeutrinoTrackShowerSep.cxx` are downstream of that
+clear, and the 48-event evidence that they do not move is `f2_demoted = 4` with
+48/48 byte-identical output.
+
+### §11.8 What is still NOT claimed
+
+* **48 events, not 1000.** The valfast/1000 population gate has been stale since
+  round 6 and now has four more knobs riding on it. "Byte-identical" here is a
+  statement about this manifest.
+* **`f3_dropped = 0` is 48 events of evidence, not a proof.** P7 stays behind a
+  knob until a wider census agrees; retiring it is a decision, not a
+  consequence.
+* **F1 is byte-identical on this manifest but it is not a no-op.** It moves a
+  0.6 cm measurement point on 5047 reads. On a larger sample it should be
+  expected to change vertices; the right reading of §11.2 is "no event in this
+  48 crossed a ladder rung", not "this cannot change anything".
+* **`f2_disagree = 22` is not 22 changed events.** It is 22 gate evaluations
+  where the two answers differ; only 4 of them reached a demotion and none
+  changed an output here.
+* **No run-to-run repeat check** was done in this round. The arms are single
+  runs; the determinism evidence is doc pr/28's, not this doc's.
+* **`main_candidate` has no viewer yet.** `PrDisplayDump` emits the field; the
+  Bokeh PR display does not draw it.

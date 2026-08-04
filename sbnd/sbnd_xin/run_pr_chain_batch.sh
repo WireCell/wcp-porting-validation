@@ -153,6 +153,28 @@ CATH_TLA=()
 # EMPTY = no TLA = the cfg default (false = OFF = byte-identical).  Set to 1
 # for the arm that measures it.
 [ "${SBND_SHOWER_TOPO_PROTO_DIR:-}" = 1 ] && CATH_TLA+=(--tla-code "shower_topo_proto_dir=true")
+# doc pr/32 sec 11: the four stage-4 (neutrino vertex ID) port fixes.  These
+# are TRI-STATE on purpose -- unset = no TLA = whatever the cfg says, 1 = force
+# on, 0 = force off -- because once the SBND operating point flips them on, the
+# gate arm still has to be able to turn them back off without editing cfg/.
+#   F1 SBND_VERTEX_DIR_USE_FIT_POINT   conflict + all-showers geometry from the
+#                                      continuous fit, not the Steiner snap
+#   F2 SBND_SHOWER_TRAJ_RECHECK_PARITY improve_vertex shower-traj recheck:
+#                                      stored-flag gates, 10 cm inner test, and
+#                                      a clearable kShowerTrajectory
+#   F3 SBND_MAIN_VERTEX_REQUIRE_DESC   drop invalid-descriptor candidates
+#                                      before compare_main_vertices scores
+#   F4 SBND_MAIN_VERTEX_CANDIDATE_FLAG set kMainCandidate (diagnostic only)
+for _pr32 in \
+    "SBND_VERTEX_DIR_USE_FIT_POINT:vertex_dir_use_fit_point" \
+    "SBND_SHOWER_TRAJ_RECHECK_PARITY:shower_traj_recheck_parity" \
+    "SBND_MAIN_VERTEX_REQUIRE_DESC:main_vertex_require_descriptor" \
+    "SBND_MAIN_VERTEX_CANDIDATE_FLAG:main_vertex_candidate_flag" ; do
+    _env=${_pr32%%:*}; _key=${_pr32#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr32 _env _key _val
 # doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
 # DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
 # cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max
