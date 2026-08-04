@@ -1667,6 +1667,14 @@ is new work that was done and hidden; it is work that was **not** done.
 
 ### §13.1 The measurement debt — the largest gap in this file
 
+> **PARTLY PAID by §14** *(2026-08-04)* — 48 nueCC events, three arms
+> (production / pr/29-off / repeat) at one binary. It answers the `event_label`
+> question (0/48 move) and the starved-clusters scaling question (87 → 10
+> lines, 23 → 5 events), and it separates pr/29 as a whole from the rest of
+> the window. It does **not** separate D1+D12 from D2, does not cover the pi0
+> question, and 48 nueCC events are not the 572-event valfast manifest. The
+> text below stands as written for everything §14 does not reach.
+
 **Every measured number in this document comes from one event (SBND evt 388).**
 Three behaviour changes are now SBND production defaults on the strength of
 port fidelity plus a single-event sanity check. The 572-event valfast manifest
@@ -1778,3 +1786,127 @@ gives a `calib-pr-evt388.json` **md5-identical** to `work-pr29-388-d2on`'s
 never fired on this event and the D2 numbers in §12.4 stand unchanged.
 `wcdoctest-clus` 89/89, 948 assertions. No config file was touched, so every
 md5 in §12.5 is unaffected.
+
+## §14 The 48-event nueCC re-processing — pr/29's share *(2026-08-04)*
+
+**Owner instruction.** *"Now, you can use the 48 nueCC events to do a round of
+new processing with the latest code … 1. compared to before, do we see any major
+changes? … 2. Any newly developed processing problems."*
+
+The joint old-vs-new result for pr/28 + pr/29 together, the two gates it rests
+on, and the two Bee links are in **doc pr/28 §16** — not repeated here. This
+section covers only what is specific to this document: **how much of the change
+is pr/29's**, and what the Steiner warnings did.
+
+Method, gates and Bee links: doc pr/28 §16.1–§16.4, §16.7. The two facts this
+section leans on:
+
+- **clustering and Q/L are inert to the whole delta** — 96/96 archives
+  member-content identical (§16.3), so the Steiner stage sees byte-identical
+  input on both arms;
+- **the run-to-run noise floor is zero** — 0/48 events differ between two runs
+  of the same binary over 17 columns (§16.4). Everything below is signal.
+
+### §14.1 The attribution arm
+
+The three pr/29 knobs are all reachable from the runner, so a third arm at
+**the same HEAD binary** isolates them:
+
+```sh
+SBND_STEINER_WIRE_TOL=0 SBND_STEINER_ADJ_SLICE=0 SBND_STEINER_EDGE_DEAD_MIX=0 \
+  PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-0804 work-vfnuecc48-0804-pr29off data
+```
+
+That splits the aggregate cleanly in two, on one binary:
+
+| comparison | meaning | events changed | median \|Δ`E_ν`\| | max \|Δ`E_ν`\| | median Δvtx | max Δvtx |
+|---|---|---|---|---|---|---|
+| `0804` vs `0804-pr29off` | **pr/29 alone (D1+D12+D2)** | 47/48 | 40.2 MeV | 477 MeV | 0.54 cm | 121.7 cm |
+| `0804-pr29off` vs `prod0803` | pr/28 + everything else in the window | 47/48 | 75.2 MeV | 802 MeV | 1.67 cm | 121.8 cm |
+
+**Neither half dominates — and on three events they cancel almost exactly,
+which is the more interesting result.** The maximum vertex move within each
+half is ~122 cm, while the *net* old→new maximum is 62 cm (§16.5). Per event:
+
+| evt | pr/29 alone | rest alone | net old→new |
+|---|---|---|---|
+| 469665 | 121.71 cm | 121.80 cm | **4.16 cm** |
+| 122660 | 85.23 cm | 85.34 cm | **0.18 cm** |
+| 46363 | 44.97 cm | 44.97 cm | **0.00 cm** |
+
+The arm that is the outlier on these events is **HEAD with pr/29 off** — a
+configuration that has never been production. Read forward rather than
+backward, that says: on these events pr/28's changes *combined with the legacy
+terminal filter* would have relocated the vertex by 45–122 cm, and
+**D1/D12/D2 put it back**. The two fixes are coupled, not additive, and
+shipping pr/28 without pr/29 would have been the worst of the three states.
+
+This is the concrete form of the warning in §12.7 that the §11 and §12 numbers
+cannot be summed; it now also applies across documents. Any future attempt to
+attribute a change to one document alone needs its own matched arm — the
+subtraction is not valid.
+
+### §14.2 The starved-terminal warnings collapse — D1/D12 doing exactly what §11 predicted
+
+`create_steiner_tree: only N terminal(s) remain after filtering (need >=2),
+returning empty graph` is the log line emitted when
+`filter_steiner_terminals` throws away so many candidates that no tree can be
+built. That is the failure mode D1 and D12 were about.
+
+| | prod0803 | 0804 (HEAD) |
+|---|---|---|
+| lines | **87** | **10** |
+| events affected | **23 / 48** | **5 / 48** |
+| `produced no steiner_graph for assoc` | 1209 | 1133 |
+
+**78 of 87 starved filters are gone, and the number of affected events drops
+from 23 to 5.** §11 measured this on evt 388 as "24 starved clusters" and could
+not say how it scaled; it scales. This is the strongest population-level
+evidence in the document that D1/D12 were real defects and not a wash.
+
+The cost is visible too, and it is the same mechanism seen from the other side:
+more surviving terminals ⇒ larger Steiner graphs ⇒ **+12.1 % wall / +15.5 %
+core** over the 48 events (§16.6). Peak RSS is flat (−0.4 %). No new WARN or
+ERROR family appears, `rc` is 48/48, and there is no `DL vertex failed`.
+
+### §14.3 Where pr/29 changes a verdict, in both directions
+
+`nue_score = −15` is the `br_filled != 1` sentinel (mechanism in §16.5). The
+three-arm view of the events that reach it is the sharpest per-event statement
+this round produces:
+
+| evt | Bee idx | prod0803 | HEAD, pr/29 **off** | HEAD, production |
+|---|---|---|---|---|
+| 122660 | 14 | +4.301 | **−15.000** | −15.000 |
+| 268784 | 32 | +4.301 | **−15.000** | **+4.301** |
+| 469665 | 46 | +4.129 | −4.301 | **−15.000** |
+
+- **122660** loses its nue evaluation to the *other* half of the window; pr/29
+  neither causes nor repairs it.
+- **268784** is lost by that half and **recovered by pr/29** — with the Steiner
+  knobs off it hits the sentinel, with them on it is back at the saturated
+  maximum.
+- **469665** is pushed down by both halves, pr/29 the further of the two.
+
+Net over the sample, `nue_score > 0` counts: prod0803 **41**, HEAD-pr29off
+**39**, HEAD-production **40** — i.e. **pr/29 is worth +1 event against the
+rest of the window**, and the overall net is −1 vs the 08-03 baseline. On 48
+events these are single-event differences and are quoted as such; §5 rule 7
+applies (reported, not tuned).
+
+### §14.4 What this pays of §13.1
+
+§13.1 recorded that *"every measured number in this document comes from one
+event (SBND evt 388)"* and named four questions. Status after this round:
+
+| §13.1 question | status |
+|---|---|
+| how many events change `event_label` | **answered: 0 / 48** (§16.5) |
+| how the 24-starved-clusters number scales | **answered: 87 → 10 lines, 23 → 5 events** (§14.2) |
+| whether D1+D12 and D2 effects add or partly cancel | **partly answered** — pr/29 *as a whole* vs the rest partly cancels (§14.1). D1+D12 vs D2 individually is still unseparated; that needs a fourth arm. |
+| how many gain or lose a pi0 | **still open** — `pr_scores_table.py` does not carry the pi0 block; it needs `T_kine` or the display dump. |
+
+And the framing caveat stands: **48 nueCC events is not the 572-event valfast
+manifest.** This sample is selected for containing a neutrino, so it cannot
+speak to the cosmic-dominated population where a terminal-filter change is most
+likely to create a false candidate. §13.1 is *reduced*, not closed.

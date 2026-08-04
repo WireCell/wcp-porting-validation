@@ -284,6 +284,23 @@ outside the plan's model broke. It came back 0.
 campaign, named explicitly so no glob change can pull them in), plus the
 auto-protected `work-pr116962-nocosmicveto`.
 
+**Add to this list next round: the 2026-08-04 arms below.** They are the
+current old-vs-new pair with prod0803 and must not be retired while prod0803 is
+protected — a baseline with no counterpart is not a comparison.
+
+### 2026-08-04 — the nueCC48 re-processing round *(docs pr/28 §16, pr/29 §14)*
+
+| dir | GiB | what |
+|---|---|---|
+| `work-nuecc48-0804` | 0.33 | clustering + Q/L hub at toolkit `6206c46b`. **`evt<ID>/` are symlinks into `work-nuecc48-prod0803`** — imaging was not re-run (config-inert, and the 96/96 hash gate in pr/28 §16.3 proves the QL products are identical anyway). Retiring prod0803 would gut this dir. |
+| `work-vfnuecc48-0804` | 0.17 | PR arm, **production** (bare). The "new" side of the owner's Bee pair. |
+| `work-vfnuecc48-0804-rep` | 0.17 | byte-for-byte repeat of the above — the noise-floor arm. **0/48 events differ**; keep it, it is the evidence that every other number this round is attributable. |
+| `work-vfnuecc48-0804-pr29off` | 0.17 | `SBND_STEINER_{WIRE_TOL,ADJ_SLICE,EDGE_DEAD_MIX}=0` — the pr/29 attribution arm. |
+
+Bee assets: `bee/nuecc48-0804/nuecc48_0804.{zip,index.txt,prid-map.txt,url}`.
+The index map `diff`s clean against `bee/nuecc48-prod0803/nuecc48_prod0803.index.txt`,
+so Bee index *n* is the same event in the old and new sets.
+
 ### KEEP — 24 dirs, 20.2 GiB
 
 BASE/HUB `work`, `work-mcp10`, `work-mcp1000`, `work-mcp1kall-d59k` (18.6 GiB,

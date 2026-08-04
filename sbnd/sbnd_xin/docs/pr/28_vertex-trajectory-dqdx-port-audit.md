@@ -3335,3 +3335,218 @@ decision, stated so a later audit does not rediscover them as bugs:
   drift-velocity calibration, the FV bounds (`FV_xmin: -201.05 cm`, …) and the
   cathode-offset corrections were all established on top of it and would have to
   move together. That is a campaign, not a fix.
+
+## §16 The 48-event nueCC re-processing at HEAD — old vs new *(2026-08-04)*
+
+**Owner instruction.** *"Now, you can use the 48 nueCC events to do a round of
+new processing with the latest code … 1. compared to before, do we see any major
+changes? Note, we expect some changes 2. Any newly developed processing
+problems."* And, mid-round: *"For major changes, you can provide me two bee links
+old vs. new, so that I can scan them to judge."*
+
+This section is the joint result for **doc pr/28 and doc pr/29 together** —
+they cannot be separated in the aggregate, because pr/28 is unconditional. The
+Steiner-specific half is split out in **doc pr/29 §14** using a knobs-off arm;
+read the two together.
+
+### §16.1 Repro
+
+```sh
+cd sbnd_xin
+export SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod
+export SBND_WORK_ROOT=$PWD/work-nuecc48-0804   # evt<ID>/ symlinked to work-nuecc48-prod0803
+SBND_MAX_JOBS=6 ./run_ql_evt.sh data -calib -save-pctree all          # 48/48 ok
+
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-0804 work-vfnuecc48-0804     data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-0804 work-vfnuecc48-0804-rep data
+SBND_STEINER_WIRE_TOL=0 SBND_STEINER_ADJ_SLICE=0 SBND_STEINER_EDGE_DEAD_MIX=0 \
+  PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-0804 work-vfnuecc48-0804-pr29off data
+
+for a in work-vfnuecc48-prod0803 work-vfnuecc48-0804 \
+         work-vfnuecc48-0804-rep work-vfnuecc48-0804-pr29off; do
+  python3 pr_scores_table.py --root $a --sample $a --out /home/xqian/tmp/scores-$a.tsv
+done
+
+EVTS=$(awk 'NR>1{print $2}' bee/nuecc48-prod0803/nuecc48_prod0803.index.txt)
+python3 scripts/bee/make_pr_bee.py -q work-nuecc48-0804 -p work-vfnuecc48-0804 \
+    --allow-unevaluated -o bee/nuecc48-0804/nuecc48_0804.zip $EVTS
+./upload-to-bee.sh bee/nuecc48-0804/nuecc48_0804.zip
+```
+
+Baseline = `work-vfnuecc48-prod0803` (2026-08-03 12:00,
+[[project_nuecc48_prod0803_reference]]). New = `work-vfnuecc48-0804` at toolkit
+`6206c46b`. **`work-nuecc48-prod0803` and `work-vfnuecc48-prod0803` were not
+written into** (M13); the new hub only *symlinks* their `evt<ID>/` imaging.
+
+### §16.2 What is actually in the delta — say it before the numbers
+
+The two arms differ by **every commit from `11ef6f0b` to `6206c46b`**, not just
+pr/28 and pr/29:
+
+| commits | what |
+|---|---|
+| `e6c51cc5 … 397b1517` (11 commits) | **doc pr/28** — vertex fit, PID persistence, dQ/dx ×5/3, the charge veto / dead index / trajectory triple, and the whole determinism sweep. **All unconditional.** |
+| `6ea51a3b`, `f1e29f19`, `6206c46b` | **doc pr/29** — D1/D12 terminal filter, D2 edge charge. Knobs, SBND default ON; reachable off via three env vars (§14). |
+| `ddeafe73`, `38988d0c`, `dada0453`, `10a79f0d` | doc pr/26 PR event display — `PrDisplayDump` is only built when `pr_display` is in `pipeline_names`, which this arm does not use. **Inert here.** |
+| `15350cca` + **`635e3d38`** | `sp_photon_flag` **flipped ON**. It gates the single-photon tagger's *verdict store*, not a decision — but it is a production change in this window and is named here rather than folded into "pr/28". |
+| `4c02b679`, `90346793`, `11ef6f0b` | LinkDef nested-STL pragmas; unconditional `WireCellRoot` load; two diagnostic TLAs. No physics. |
+
+### §16.3 Gate 1 — clustering and Q/L are **inert** to the whole delta
+
+Every archive the PR job consumes was regenerated at HEAD and compared to the
+baseline hub with `hash_archive.py` (member content, M2):
+
+| artifact | events | result |
+|---|---|---|
+| `ql_evt<ID>/pctree-evt<ID>.tar.gz` | 48 | **48/48 identical** |
+| `ql_evt<ID>/mabc-all-apa.zip` | 48 | **48/48 identical** |
+| `mabc-apa{0,1}-face0.zip` (evt 388 spot check) | 1 | identical |
+
+**96/96 SAME, 0 DIFF.** So the entire old-vs-new difference below is produced
+inside the PR chain, on byte-identical input. This also retires a worry worth
+stating: pr/28's `boost::out_edges` sweep touched `Facade_Cluster.cxx` and
+`GroupingHelper.cxx`, which the *pre*-PR clustering also links — it moved
+nothing there.
+
+### §16.4 Gate 2 — the run-to-run noise floor is **zero**
+
+`work-vfnuecc48-0804` vs `work-vfnuecc48-0804-rep`, same binary, same input,
+17 columns (`event_label`, `nu_evaluated`, `nu_sel_t0_us`, `nu_sel_len_cm`,
+`nu_sel_n_assoc`, `nu_{x,y,z}_cm`, `numu_score`, `nue_score`, `cosmic_flag`,
+`cosmict_flag`, `cosmict_10_score`, `kine_reco_Enu_MeV`, `n_bundle`,
+`n_inbeam_bundle`, `n_cosmic_skipped`):
+
+> **0 / 48 events differ in any column.**
+
+This is the payoff of §11, §14 and §15 measured at population scale for the
+first time — the determinism work was previously verified on the display dump
+of one event. **Every number in §16.5 is therefore attributable**, which is
+exactly what §12.7 could not claim.
+
+### §16.5 Answer to question 1 — the major changes
+
+47 of 48 events move (the 48th, evt 116962, has no PR graph by design — see
+[[project_nuecc48_prod0803_reference]]). What moves and what does not:
+
+| quantity | events changed | median \|Δ\| | p90 | max |
+|---|---|---|---|---|
+| `event_label` | **0 / 48** | — | — | — |
+| `nu_evaluated`, `n_bundle`, `n_inbeam_bundle`, `n_cosmic_skipped` | **0 / 48** | — | — | — |
+| `cosmic_flag`, `cosmict_flag`, `cosmict_10_score` | **0 / 48** | — | — | — |
+| selected main `t0`, `len`, `n_assoc` | **0 / 48** | — | — | — |
+| neutrino vertex position | 45 / 47 | **1.76 cm** | 18.4 cm | 62.2 cm |
+| `numu_score` | **47 / 47** | 0.76 | 1.76 | 2.59 |
+| `nue_score` | 17 / 47 | 0.00 | 4.83 | 19.30 |
+| `kine_reco_Enu` | **47 / 47** | **90.8 MeV** | 301 MeV | 703 MeV |
+
+**The headline: the selection outcome did not move.** 46 `nu-candidate` +
+2 `cosmic-tagged`, the same events on both sides; the same bundle is selected
+with the same `t0`, length and associate count on every event. What moved is
+*where the vertex sits on that bundle*, and everything computed from it.
+
+Sample-level score summary:
+
+| | prod0803 | 0804 (HEAD) |
+|---|---|---|
+| `nue_score > 0` | 41 | **40** |
+| `nue_score` saturated at +4.301 | 35 | 32 |
+| `nue_score` at the −15 sentinel | 0 | **2** |
+| `numu_score > 0` | 12 | 10 |
+
+Crossings of zero: `nue_score` **7** events (3 gains, 4 losses ⇒ net −1),
+`numu_score` **12** events. On a 48-event nueCC sample a net −1 in
+`nue_score > 0` is one event of efficiency; it is **reported, not tuned**
+(CLAUDE.md §5 rule 7), and it is why the Bee pair below exists.
+
+**Read `+4.301` as saturation, not as a score.** It is
+`log10(1.9999/0.0001)` after the `±0.9999` clamp in
+`UbooneNueBDTScorer::cal_bdts_xgboost` — 35 of 47 baseline events sit exactly
+there, so the sample cannot resolve improvement above it. Only the downward
+moves carry information.
+
+The biggest movers, for scanning:
+
+| evt | Bee idx | Δ`nue_score` | Δ`numu_score` | Δ`E_ν` | Δvertex |
+|---|---|---|---|---|---|
+| 122660 | 14 | **+4.301 → −15.000** | +1.30 | −1 MeV | 0.18 cm |
+| 469665 | 46 | **+4.129 → −15.000** | +0.13 | +129 MeV | 4.16 cm |
+| 69314 | 8 | −4.274 → **+3.908** | −0.76 | +115 MeV | 2.41 cm |
+| 350186 | 36 | +2.015 → −4.301 | −0.77 | −70 MeV | **26.4 cm** |
+| 42280 | 4 | +4.301 → −0.524 | −0.98 | +290 MeV | **62.2 cm** |
+| 234638 | 25 | +0.731 → **+4.301** | +0.29 | +222 MeV | 2.73 cm |
+| 38856 | 3 | −1.210 → **+1.586** | −0.62 | −301 MeV | 19.1 cm |
+| 163543 | 18 | −4.207 → **−1.100** | −0.30 | −49 MeV | 16.3 cm |
+| 131357 | 15 | +4.301 → +0.863 | −0.84 | +26 MeV | 1.07 cm |
+| 388 | 0 | 0.000 | +1.76 | **+703 MeV** (2107.6 → 2811.1) | 0.72 cm |
+
+Evt 388 is the cross-check on the earlier single-event work: doc pr/29 §12.4
+measured `kine_reco_Enu` 2816.1 → 2811.1 MeV for **D2 alone** on top of
+D1+D12. The full stack takes it from the 08-03 baseline's **2107.6** to
+**2811.1** — i.e. nearly all of evt 388's +703 MeV is pr/28 plus D1/D12, and
+D2's own contribution is the −5 MeV already recorded. The two documents are
+consistent.
+
+**The `−15` sentinel is a real state, not a crash.** `nue_score = −15` ⟺
+`ti.br_filled != 1` (`UbooneNueBDTScorer.cxx:1925`), and `br_filled` is set at
+`NeutrinoTaggerNuE.cxx:4397`, *after* `nue_tagger`'s early return
+`if (!good_showers.count(max_shower) || !max_shower) return false;`
+(`:4308`). So on evts 122660 and 469665 the new reconstruction no longer
+presents a good max-energy shower at the main vertex, and the nue path bails
+before the BDT block. Both events still select the same bundle and stay
+`nu-candidate`; only the nue evaluation is skipped. **Whether that is right is
+a scan question, not a code question** — hence §16.7.
+
+### §16.6 Answer to question 2 — newly developed processing problems: **none found**
+
+| check | prod0803 | 0804 | verdict |
+|---|---|---|---|
+| `rc.txt` | 48/48 `rc=0` | 48/48 `rc=0` | no new failure |
+| `E`-level log lines | 0 | 0 | — |
+| `DL vertex failed` WARN | 0 | **0** | the SCN vertex is live on both arms; no silent geometric fallback |
+| `SbndPrMagnifyTrackingVisitor / Uboone*BDTScorer: no TrackFitting` | 5 lines | 5 lines | unchanged (evt 116962, no PR graph) |
+| `create_steiner_tree: only N terminal(s) remain after filtering` | **87 lines / 23 events** | **10 lines / 5 events** | **improved** — see doc pr/29 §14 |
+| `produced no steiner_graph for assoc` | 1209 | 1133 | improved |
+| no *new* WARN family appears | — | — | confirmed (the residual singleton categories are the known mid-word log tearing, [[project_wct_log_line_tearing]]) |
+| peak RSS | 1.538 GB median | 1.532 GB median | **−0.4 %** |
+| wall / core | 375 s / 384 s total | 420 s / 443 s total | **+12.1 % / +15.5 %** |
+
+The one honest cost is the **~12 % wall-time increase**, and it has an
+expected cause: D1/D12 restore terminals that the filter used to reject, so the
+Steiner graphs are larger. It is the same knob that removes 78 of the 87
+starved-filter warnings. No memory regression.
+
+### §16.7 The two Bee sets — old vs new
+
+Both built with the **same** `scripts/bee/make_pr_bee.py` (byte-identical since
+`ea1b781`, 2026-08-01 — verified by `git diff` across the tidy move), the same
+48 events in the same ascending order, and index maps that `diff` clean, so
+**Bee index *n* is the same event in both sets**:
+
+| | Bee set |
+|---|---|
+| **old** — `work-vfnuecc48-prod0803`, 2026-08-03 | <https://www.phy.bnl.gov/twister/bee/set/32e31b8b-1d2c-4282-b1a8-a4b61eb398a1/event/list/> |
+| **new** — `work-vfnuecc48-0804`, toolkit `6206c46b` | <https://www.phy.bnl.gov/twister/bee/set/d85c7e44-82a3-467b-b0fa-6043b6f78f48/event/list/> |
+
+Deliberately paired with `32e31b8b` (**pure production**) and *not* with
+`f3179953`: in the latter, Bee idx 13 is spliced from an
+`SBND_NU_SKIP_COSMIC=0` diagnostic arm, so scanning that pair would show the
+splice rather than the code. In both sets here idx 13 (evt 116962) carries
+**no PR layers on either side**, by design.
+
+Index files: `bee/nuecc48-0804/nuecc48_0804.{index,prid-map,url}.txt`.
+Suggested scan order is the §16.5 mover table — idx 14 and 46 first (the two
+that lost the nue evaluation), then 4 and 36 (the two largest vertex moves).
+
+### §16.8 What this round does **not** establish
+
+- **48 events, not 572.** This is the nueCC sample, selected for containing a
+  neutrino; it says nothing about the cosmic-dominated population. Doc pr/29
+  §13.1's valfast debt is *partly* paid, not cleared.
+- **No truth comparison.** Every statement above is old-vs-new. Whether the new
+  vertex is *closer to the true one* is what the Bee scan is for.
+- **The BDT weights are still uBooNE-trained** (doc pr/2 gap G1), so a
+  `nue_score` sign flip is a change in the *feature vector*, not evidence about
+  SBND selection efficiency.
+- **pr/28's own share is not isolated.** It is unconditional; only pr/29 has a
+  reachable off arm (§14). The pr/28 half is reported as "everything else in the
+  window", which also carries `sp_photon_flag` and the pr/26 commits.
