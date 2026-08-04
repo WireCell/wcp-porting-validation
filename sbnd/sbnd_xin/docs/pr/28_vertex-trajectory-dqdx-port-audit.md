@@ -2228,3 +2228,99 @@ never fire, 2 146 points reverted); T2 is one line of the same edit and reads
 like a footnote to it. On this event the footnote is what moved the physics.
 Any future population study should carry both labels separately rather than
 attributing to "the T1 fix".
+
+### 13.11 Is T2 supported by physics? — yes, and the old code was self-referential
+
+Asked directly by the owner after §13.6a showed T2 carries the π⁰. The answer
+is not a matter of taste; the cut has a definite meaning and the old code
+destroyed it.
+
+**What the cut is for.** Inside `skip_trajectory_point`,
+
+```
+angle   = kink at this point in the ACCEPTED OUTPUT path   (fine_tracking_path, fitted)
+angle1  = kink at the same place in the REFERENCE path     (ps_vec)
+if (angle > 160)          -> skip   // absolute: a fold-back is unphysical
+if (angle > angle1 + 90)  -> skip   // relative: did the FIT bend it far more than the input?
+```
+
+The relative arm is a **regression guard**, and the reason it exists is
+physical: real tracks *do* kink — scatters, decay vertices, a shower's first
+branch. An absolute angle cut alone would shave those off. The relative form
+tolerates a large `angle` **when the seed path already bent there** (a real
+feature), and fires when the fit invented the bend (an artifact). That only
+works if `angle1` comes from a reference the fit did not produce.
+
+**What the toolkit was doing.** With `pss_vec` filled from `final_ps_vec`,
+`angle1` was computed from the *fitted* path — the same path `angle` measures.
+Probe build (`work-tfix388-t2probe`, both references computed side by side),
+9 972 points on evt 388:
+
+| | median | mean | within 5° of `angle` |
+|---|---|---|---|
+| `angle` (fitted output) | 35.00° | 41.73° | — |
+| `angle1` from the **seed** path (prototype, now fixed) | **11.05°** | 19.72° | **10.9 %** |
+| `angle1` from the **fitted** path (old toolkit) | 39.16° | 50.59° | **61.7 %** |
+
+**`angle1_fit` was *bit-identical* to `angle` for 5 301 of 9 972 points (53 %)** —
+whenever no point had been skipped, `fine_tracking_path`'s last two entries
+*are* `final_ps_vec[i-1]` and `[i-2]`, so the two vectors are the same vectors.
+For those points the test was literally `angle > angle + 90`, which cannot fire.
+
+**The decisive slice.** Take the 180 points where the fit produced a severe kink
+(`angle > 120°`) — exactly the population the guard exists for:
+
+| reference for `angle1` | median `angle1` there | relative cut fires |
+|---|---|---|
+| seed path (fixed) | **42.04°** | **103** |
+| fitted path (old) | **128.25°** | 40 |
+
+The seed says *"the input was smooth here, the fit bent it 120°+"* — artifact.
+The fitted path says *"everything around here is bent 128°"* — no anomaly. **The
+artifact was excusing itself.** That is the failure mode, measured, not argued.
+
+Over all points the relative cut fires **372** times with the seed reference vs
+**46** with the fitted one, and the change is nearly one-directional:
+**327 seed-only, 1 fitted-only, 45 both.** The fix is a recovery of sensitivity,
+not a trade of one population for another.
+
+**Two honest qualifications.** The absolute `angle > 160°` fold-back arm never
+depended on `angle1` and fired 53 times either way — the old code was not
+defenceless, it had lost one of two arms. And none of this proves evt 388's π⁰
+is *correct*; it establishes that the mechanism producing it is the one the
+algorithm was designed around. The event-display check below is what settles
+the outcome.
+
+### 13.12 Owner verdict — accepted from the display; nothing to flip
+
+Having compared the §13.10 Bee sets, the owner ruled: *"the new one is actually
+much better than the old one. So these changes are all improvements."*
+
+**No configuration change is required, and none was made.** Round 7 shipped
+**unconditionally**, like rounds 1–6: `23bd6783` touches only
+`clus/src/TrackFitting.cxx` and `clus/inc/WireCellClus/TrackFitting.h` — it adds
+no `get(config, ...)` key, no `m_params` field, and no jsonnet. There is no
+default-OFF knob to turn on. **The SBND production chain has had the fixed
+behaviour since `23bd6783` was pushed**; `cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json`
+is untouched by this round (its last change is `564012fe`, unrelated), and every
+existing `skip_*` parameter keeps its value.
+
+So the production status of the four fixes is simply:
+
+| item | production state |
+|---|---|
+| T1 charge veto revived | **on** — unconditional, `23bd6783` |
+| T2 fold-back reference restored to the seed path | **on** — unconditional, `23bd6783` |
+| T3 dead-channel lookup keyed by the global index | **on** — unconditional, `23bd6783` |
+| T6 close-vertex reset keeps the trajectory | **on** — unconditional, `23bd6783` |
+| T4 zero-quantity drop | unchanged behaviour + a DEBUG counter |
+
+What the verdict *does* change is the standing of the numbers in §13.6/§13.6a:
+evt 388's **π⁰ and 2 909 MeV are now the accepted reconstruction**, not a
+flagged anomaly. The ⚠️ block in §13.6 stands as the record of what moved and
+why it was flagged at the time; it is resolved here, on the display, by the
+owner.
+
+**Still owed, and now more clearly:** a population pass. One event was accepted
+by eye; the valfast/1000 gate needs a regenerated baseline (stale since round 6,
+doubly so after round 7) before any efficiency statement can be made.
