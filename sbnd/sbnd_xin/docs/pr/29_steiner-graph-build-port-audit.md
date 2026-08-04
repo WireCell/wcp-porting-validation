@@ -7,14 +7,32 @@ toolkit."*
 **Status.** **Audit only. No code is changed and none is proposed.** The owner's
 instruction was explicit — *"Please do not change any code yet."* Every finding
 below carries an anchor on both sides and a severity verdict; nothing carries a
-patch. The three behaviour-changing items (**D1**, **D2**, **D3**) would all
-alter production output unconditionally, i.e. CLAUDE.md **escalation rule 1** —
-they are reported and stop there.
+patch. The behaviour-changing items would all alter production output
+unconditionally, i.e. CLAUDE.md **escalation rule 1** — they are reported and
+stop there.
+
+> **2026-08-04 revision — read §10 first.** The owner asked for the list to be
+> **filtered**: *"we can skip the ones that are improvements over the previous
+> prototype … only focus on the one that are bugs or missing from the port,"*
+> with a warning that the toolkit's half-open `[min,max)` wire convention
+> against the prototype's inclusive `[min,max]` *"may trick some code change."*
+> Acting on that, every row was re-read against the live tree. Result: **§10**
+> carries the filtered list — **five** rows survive as port defects, **seven**
+> are dismissed with the evidence that dismisses them, and **one new defect
+> (D12) was found by taking the convention warning seriously and applying it to
+> the *time* axis as well as the wire axis.** D12 also **falsifies a sentence in
+> D1's original write-up**, corrected in place and flagged there.
 
 **Headline.** The **algorithm is the same** — the toolkit vendors the same PAAL
 routines and its Voronoi/Dijkstra block is a character-for-character port (§2).
-The divergences are in the *inputs* to that algorithm, and the two largest are:
+The divergences are in the *inputs* to that algorithm, and the largest are:
 
+* **D12** — the ±1 **time-slice** fallback in the terminal filter is **dead
+  code**. `slice_index_min()` is in **ticks**, blobs are one slice = `tick_span`
+  ticks apart (SBND `nticks_live_slice: 4`), so `current_time_slice ± 1` can
+  never name a real slice. Every other adjacent-slice lookup in the toolkit —
+  including the one in the retile step that *produces* this very cluster — uses
+  `± tick_span`. Found only on the 2026-08-04 pass.
 * **D3** — the steiner-graph same-blob edge pass groups points by the **retiled
   cluster's own blob** instead of the prototype's **original-cluster mcell found
   by strict wire containment**, and the prototype's exclusion of points that
@@ -24,6 +42,12 @@ The divergences are in the *inputs* to that algorithm, and the two largest are:
   prototype call sites that use **different wire tolerances**, and it implements
   the wrong one for the Steiner terminal filter. Not an M7 `<`/`<=` issue — see
   the row.
+
+**D1 and D12 land on the same filter.** `flag_nearby_timeslice = true` is passed
+from exactly one place (`SteinerGrapher.cxx:291`, the terminal filter);
+`get_extreme_wcps` passes `false`. So the two independent tightenings — no wire
+slack, no adjacent-slice fallback — compound on the Steiner terminal set and
+nothing else.
 
 **A documentation finding that frames all the rest:** the porting dictionary's
 Steiner Tree section (`clus/docs/porting/porting_dictionary.md:266`) is an empty
@@ -45,6 +69,15 @@ cd /nfs/data/1/xqian/toolkit-dev/toolkit          && git rev-parse --short HEAD 
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img  && git rev-parse --short HEAD   # 408cca8
 # prototype_base -> /nfs/data/1/xqian/prototype-dev/wire-cell   (package pid/, WCPPID)
 
+# 2026-08-04 re-read (the sec.10 pass) was done at toolkit 23bd6783.  Every line
+# anchor in this document was re-validated first, and NONE had drifted -- this
+# command prints nothing, i.e. not one Steiner-family source changed between the
+# two commits:
+git diff --stat ea1a7e3d..HEAD -- \
+    clus/src/SteinerGrapher.cxx clus/src/SteinerGrapher.h \
+    clus/src/Facade_Cluster.cxx clus/src/CreateSteinerGraph.cxx \
+    clus/src/DynamicPointCloud.cxx clus/inc/WireCellClus/Graphs.h
+
 cd /nfs/data/1/xqian/toolkit-dev/toolkit
 
 # The two files that ARE the Steiner port
@@ -65,6 +98,17 @@ grep -n "out_edges\|std::set<.*\*>\|std::map<.*\*" \
 
 # The empty dictionary section
 sed -n '266p' clus/docs/porting/porting_dictionary.md
+
+# --- sec.10 / D12: the tick-vs-slice unit proof (all source, no run needed) ---
+grep -n "unit: tick"            clus/inc/WireCellClus/Facade_Blob.h    # :33 slice_index_min
+grep -n "slice_index_min"       aux/src/SamplingHelpers.cxx            # :90  islice->start()/tick
+grep -n "nticks_live_slice"     cfg/pgrapher/experiment/sbnd/clus.jsonnet  # :147  -> 4
+grep -n "tick_span"             clus/src/improvecluster_1.cxx          # :295, :313, :656, :697
+grep -n "aligned_tick\|tick_span" clus/src/retile_cluster.cxx          # :256, :508, :528
+grep -n "offset : {-1, 1}"      clus/src/Facade_Cluster.cxx            # :3302  <-- the defect
+
+# --- sec.10 / D11: is recover_steiner_graph reachable in the ported chain? ---
+grep -rn "recover_steiner_graph" prototype_base/pid/apps/ | grep -v "//"
 ```
 
 ---
@@ -117,6 +161,13 @@ whole of `Create_steiner_tree` ↔ `create_steiner_tree` +
 `get_extreme_wcps`, the Dijkstra/Voronoi block, and both graph type
 declarations. Findings **D1, D2 (mechanism), D3, D4 (the fact), D5, D6, D7,
 D11** and every row of §5 rest on this tier.
+
+**D12 is tier 1 and then some** — it is the one row in this document whose
+*mechanism* is closed by four mutually independent source facts (§4 D12, points
+1–4), two of which are the toolkit contradicting itself in the same call chain.
+Its unmeasured half is only the *count* of terminals affected. **D11's
+dismissal** (§10.2.4) is likewise tier 1: a complete grep of
+`prototype_base/pid/apps/`, not a sample.
 
 **Tier 2 — single-pass observation, stated as such.** **D2's *reach*** (how
 many real SBND points the two `calc_charge_wcp` branches actually separate),
@@ -248,8 +299,21 @@ reference blob in slices *t*, *t±1* are dropped by the toolkit and kept by the
 prototype. Terminals are the seeds of the whole tree, so a dropped terminal
 removes a branch of the skeleton.
 
-The ±1 time-slice half of the prototype's check **is** ported
-(`:3297-3313`, the `{-1, +1}` loop) — only the wire tolerance is missing.
+> ~~The ±1 time-slice half of the prototype's check **is** ported
+> (`:3297-3313`, the `{-1, +1}` loop) — only the wire tolerance is missing.~~
+>
+> **CORRECTION, 2026-08-04 — that sentence was wrong.** The `{-1, +1}` loop is
+> *present* but **inert**: it steps the map key by one **tick**, and the key is a
+> slice start, which advances by `tick_span` (4 on SBND). It never resolves. So
+> the toolkit drops **both** halves of the prototype's slack, not one. Written up
+> as **D12**; the two are independent defects on one filter and are listed
+> separately so either can be fixed alone.
+>
+> How the error was made, since it is the instructive part: the loop was read
+> for *shape* (`{-1, +1}` over `current_time_slice`) and the shape matched the
+> prototype exactly. What was never asked is what the loop variable is **counted
+> in**. That is the same question the wire ranges force — and it was asked there
+> and not here.
 
 ### D2 — `disable_dead_mix_cell` is dropped on the edge-weight charge path — **mechanism confirmed, reach unverified, OPEN**
 
@@ -518,6 +582,84 @@ function; `SteinerGrapher.h:299-300` records the omission:
 `steiner_graph_selected_terminal_indices`** — that consumer sweep was not done
 here and belongs with the downstream audit, not this one.
 
+> **2026-08-04 — the sweep was done, and it closes this row.** See §10.2.4:
+> `recover_steiner_graph()` is **never called** by the production apps this port
+> targets. D11 is dismissed.
+
+### D12 — the ±1 time-slice fallback is dead code: the key is in **ticks**, not slices — **behaviour-changing, OPEN** *(added 2026-08-04)*
+
+**This is the same class of bug the owner's warning names, applied to the time
+axis instead of the wire axis: a loop that is shape-correct and unit-wrong.**
+
+The prototype's terminal filter, having failed to find a containing mcell in the
+point's own time slice, retries in slice *t+1* and then *t−1*
+(`PR3DCluster_steiner.h:297-347`). Its map is keyed by slice number, so `+1` is
+the next slice.
+
+The toolkit reproduces the shape faithfully:
+
+```cpp
+// Facade_Cluster.cxx:3302-3305
+for (int offset : {-1, 1}) {
+    int adjacent_time_slice = current_time_slice + offset;
+    auto time_it_adj = face_it->second.find(adjacent_time_slice);
+```
+
+but its map is **not** keyed by slice number. It is keyed by
+`blob->slice_index_min()` (`Facade_Cluster.cxx:323`), and that field is
+documented in the struct as **`// unit: tick`** (`Facade_Blob.h:33`), produced as
+`islice->start()/tick` (`aux/src/SamplingHelpers.cxx:90`). Slice starts therefore
+advance by one **`tick_span`**, not by one. On SBND `tick_span` is **4**
+(`cfg/pgrapher/experiment/sbnd/clus.jsonnet:147` `nticks_live_slice: 4`, and
+`img.jsonnet:133` `span=4`).
+
+`find(t ± 1)` asks for a slice starting one tick off the grid. **No blob starts
+there.** Both lookups miss unconditionally, on every point, on every event.
+
+**Four independent confirmations, all source-level — no run is needed:**
+
+1. **The unit is declared.** `Facade_Blob.h:33`, `// unit: tick`, on the field
+   that becomes the map key.
+2. **The blob spans a whole slice.** `slice_index_max() - slice_index_min()` is
+   used across the tree as `ntime_ticks` — e.g. `TrackFitting.cxx:2713`,
+   `NeutrinoStructureExaminer.cxx:1210`, whose comment reads *"children()[0]
+   spans exactly one readout bin."* A half-open `[min, max)` tick interval one
+   slice wide means consecutive starts differ by exactly that width.
+3. **The toolkit's own idiom for "adjacent slice" is `± tick_span`, everywhere
+   else.** `improvecluster_1.cxx:656` `find(time_slice + tick_span)`, `:697`
+   `find(time_slice - tick_span)`, `:313` `for (…; time_slice += tick_span)`,
+   with the span taken from the canonical accessor
+   `m_grouping->get_nticks_per_slice().at(apa).at(face)` (`:295`).
+   `Facade_Cluster.cxx:3302` is the **only** `± 1` of its kind in the family.
+4. **The producer of this very cluster agrees.** `retile_cluster.cxx:256` snaps
+   retiled blobs onto the grid — `aligned_tick = round(t/tick_span)*tick_span` —
+   and `:508`/`:528` do *their* adjacent-slice lookups as
+   `time_slice ∓ tick_span`. The retile step and the filter that consumes its
+   output disagree about what "next slice" means, inside one call chain.
+
+Point 4 also settles the one thing that could have rescued the loop: the
+retiled and reference clusters share a grid, so it is not that the ±1 lands on
+some other valid key — there is no key one tick away at all.
+
+**Effect.** The prototype keeps a terminal if it is contained in a reference
+mcell in slice *t*, *t+1* **or** *t−1*. The toolkit keeps it only for *t*.
+Terminals near a blob's time boundary — exactly the ones a slice-boundary
+straddle would displace — are dropped. Same direction as D1, same filter, and
+the two stack: a terminal needs to satisfy a wire test that is one wire tighter
+on all six bounds *and* has lost two of its three chances to pass it.
+
+**Blast radius is exactly one call site.** `flag_nearby_timeslice = true` is
+passed only from `SteinerGrapher.cxx:291`
+(`is_point_spatially_related_to_reference` → `filter_by_reference_cluster`).
+`get_extreme_wcps` passes `false` (`Facade_Cluster.cxx:3106`) and so never
+enters the dead loop — it does not want the fallback anyway, matching
+`PR3DCluster_path.h:99-121`, which has no ±1 either. **So D12 cannot be
+dismissed as "compensated elsewhere," and equally it cannot leak into
+`get_extreme_wcps` when fixed.**
+
+**Unmeasured:** how many terminals actually sit at a slice boundary and would be
+rescued. The mechanism is proven; the count is not. Same standard as D2's reach.
+
 ---
 
 ## §5 Things that look like divergences and are not
@@ -634,19 +776,23 @@ Per CLAUDE.md's tie-breaker — report, do not fix in the same change:
 
 ## §8 Summary table
 
-| # | what | severity | prototype | toolkit | tier |
-|---|---|---|---|---|---|
-| **D3** | steiner same-blob edges grouped by retiled blob, and the null-mcell exclusion is absent | **behaviour-changing** | `PR3DCluster_steiner.h:542-563` + `PR3DCluster_graph.h:90-91` | `SteinerGrapher.cxx:854-861` | 1 |
-| **D1** | terminal filter lost the ±1 wire tolerance (one function, two prototype tolerances) | **behaviour-changing** | `PR3DCluster_steiner.h:285-290, 310-315, 336-341` | `Facade_Cluster.cxx:3344-3354` | 1 |
-| **D2** | `disable_dead_mix_cell` dropped on the edge-weight charge path | **behaviour-changing** (reach unverified) | `PR3DCluster_steiner.h:514, 521` | `SteinerGrapher.cxx:92` / `SteinerGrapher.h:341` | 1 / 2 |
-| **D7** | path-skeleton sampled finer (`+1` vs floor) | behaviour-changing at the threshold | `PR3DCluster_steiner.h:214-226` | `DynamicPointCloud.cxx:744` | 1 |
-| **D8** | containment additionally requires same APA and face | forced (multi-APA); reach unverified | no counterpart | `Facade_Cluster.cxx:3262-3266` | 2 |
-| **D10** | dead plane = per-blob list vs per-wire uncertainty sentinel | forced; reach unverified, **same question as D2** | `PR3DCluster_steiner.h:984` | `Facade_Cluster.cxx:1027-1029` | 2 |
-| **D4** | edge weight `float` → `double` | fidelity — blocks bit-identicality | `PR3DCluster.h:30` | `Graphs.h:22` | 1 (fact) |
-| **D6** | tree-edge dedup by vertex pair, not edge pointer | **toolkit fixes prototype nondeterminism** | `PR3DCluster_steiner.h:505-506` | `SteinerGrapher.cxx:969-997` | 1 |
-| **D5** | `setS` → `vecS` out-edge storage | structural, compensated | `PR3DCluster.h:33` | `Graphs.h:23-29` | 1 |
-| **D9** | extreme points round-trip index → point → index | benign, latent | `PR3DCluster_steiner.h:395` | `SteinerGrapher.cxx:268` | 2 |
-| **D11** | `recover_steiner_graph` not ported (the only MST) | gap; consumer impact unassessed | `PR3DCluster_steiner.h:77-180` | none | 1 |
+The `filter` column was added on 2026-08-04: **IN** = survives as a port defect
+(§10.1), **OUT** = dismissed, with the reason in §10.2.
+
+| # | what | severity | prototype | toolkit | tier | filter |
+|---|---|---|---|---|---|---|
+| **D12** | the ±1 time-slice fallback steps **ticks**, never resolves — dead code | **behaviour-changing** | `PR3DCluster_steiner.h:297-347` | `Facade_Cluster.cxx:3302` | 1 | **IN** |
+| **D3** | steiner same-blob edges grouped by retiled blob, and the null-mcell exclusion is absent | **behaviour-changing** | `PR3DCluster_steiner.h:542-563` + `PR3DCluster_graph.h:90-91` | `SteinerGrapher.cxx:854-861` | 1 | **IN** |
+| **D1** | terminal filter lost the ±1 wire tolerance (one function, two prototype tolerances) | **behaviour-changing** | `PR3DCluster_steiner.h:285-290, 310-315, 336-341` | `Facade_Cluster.cxx:3344-3354` | 1 | **IN** |
+| **D2** | `disable_dead_mix_cell` dropped on the edge-weight charge path | **behaviour-changing** (reach unverified) | `PR3DCluster_steiner.h:514, 521` | `SteinerGrapher.cxx:92` / `SteinerGrapher.h:341` | 1 / 2 | **IN** |
+| **D7** | path-skeleton sampled finer (`+1` vs floor) | behaviour-changing at the threshold | `PR3DCluster_steiner.h:214-226` | `DynamicPointCloud.cxx:744` | 1 | **IN** |
+| **D8** | containment additionally requires same APA and face | forced (multi-APA); reach unverified | no counterpart | `Facade_Cluster.cxx:3262-3266` | 2 | OUT — forced |
+| **D10** | dead plane = per-blob list vs per-wire uncertainty sentinel | forced; reach unverified, **same question as D2** | `PR3DCluster_steiner.h:984` | `Facade_Cluster.cxx:1027-1029` | 2 | OUT — see D2 |
+| **D4** | edge weight `float` → `double` | fidelity — blocks bit-identicality | `PR3DCluster.h:30` | `Graphs.h:22` | 1 (fact) | OUT — better |
+| **D6** | tree-edge dedup by vertex pair, not edge pointer | **toolkit fixes prototype nondeterminism** | `PR3DCluster_steiner.h:505-506` | `SteinerGrapher.cxx:969-997` | 1 | OUT — better |
+| **D5** | `setS` → `vecS` out-edge storage | structural, compensated | `PR3DCluster.h:33` | `Graphs.h:23-29` | 1 | OUT — equal |
+| **D9** | extreme points round-trip index → point → index | benign, latent | `PR3DCluster_steiner.h:395` | `SteinerGrapher.cxx:268` | 2 | OUT — benign |
+| **D11** | `recover_steiner_graph` not ported (the only MST) | gap; consumer impact unassessed | `PR3DCluster_steiner.h:77-180` | none | 1 | OUT — unreachable |
 
 ---
 
@@ -671,3 +817,192 @@ Per CLAUDE.md's tie-breaker — report, do not fix in the same change:
   so a decision about it may need that audit first.
 * **Downstream consumers of `steiner_graph` / `steiner_pc` were not swept.**
   That is what D11 and §5.6 both hand off.
+* **§10's dismissals are dismissals of *this* stage.** D8 and D10 in particular
+  are dismissed because of what they do (or cannot do) *here*; §10.2 says where
+  each remains live elsewhere.
+
+---
+
+## §10 Filtered list — bugs and gaps only *(added 2026-08-04)*
+
+**Owner request.** *"For all these listed behavior change, we can skip the ones
+that are improvements over the previous prototype … and only focus on the one
+that are bugs or missing from the port … Note there are some convention
+difference between the toolkit and prototype, for wire index, the toolkit's
+convention is `[)`, in which the higher side is not included, and the prototype
+convention is `[]`, both end included. This may trick some code change."*
+
+Every D-row was re-read against the live tree at toolkit `23bd6783`. No anchor
+had drifted (Repro block). **Five rows survive; seven are dismissed; one new
+defect — D12 — was found, and it is the highest-severity row in the document.**
+
+### §10.1 IN — the five port defects
+
+Ranked by how much of the delivered product each moves. Each carries the trap a
+fix has to clear; **none of these is a patch, and no code was changed.**
+
+| rank | # | one line | fix is confined to |
+|---|---|---|---|
+| 1 | **D12** | the ±1 adjacent-slice fallback counts **ticks**, so it never resolves — the branch is dead on every point of every event | `Facade_Cluster.cxx:3302` |
+| 2 | **D1** | the terminal filter lost the prototype's ±1 **wire** slack on all six bounds | `Facade_Cluster.cxx:3344-3354`, but **not** in place — see below |
+| 3 | **D3** | the steiner-graph same-blob pass groups by the **retiled** blob, and drops the prototype's "no original mcell ⇒ no edges" exclusion | `SteinerGrapher.cxx:854-861` |
+| 4 | **D2** | `disable_dead_mix_cell` is not forwarded, so the charge branch flips from the prototype's `false` to the default `true` | `SteinerGrapher.cxx:92` |
+| 5 | **D7** | the path skeleton is resampled **finer** than the prototype (`int(dis/step)+1` vs `int(dis/step)`) | `DynamicPointCloud.cxx:744`, **shared** — see below |
+
+**D12 and D1 are one filter, two independent tightenings.** Both live in
+`is_point_spatially_related_to_time_blobs`, which is reached with
+`flag_nearby_timeslice = true` from exactly one caller
+(`SteinerGrapher.cxx:291` → `filter_by_reference_cluster`). A terminal must now
+clear a wire test that is one wire tighter on each of six bounds, and it gets
+one chance instead of three to clear it. Both drop terminals; neither can drop
+fewer. **They are listed separately because either can be fixed alone**, and
+because they will need separate before/after counts to attribute anything.
+
+**The trap the owner named, and where it actually bites.** The half-open
+convention is *already correctly applied* in `check_wire_ranges_match` —
+`>= u_min && < u_max` is the right translation of the prototype's
+`>= low && <= high`, because `u_wire_index_max()` is exclusive (proof:
+`Facade_Blob.cxx:156` writes `b.u_wire_index_max()-1` to recover the last
+wire). **That is exactly why D1 is easy to mis-fix.** Restoring the prototype's
+±1 is *not* `<= u_max + 1`:
+
+```
+prototype (inclusive high)   index <= high + 1     with  high = u_max - 1
+=> toolkit (exclusive max)   index <  u_max + 1        NOT  index <= u_max + 1
+   and the low side          index >= u_min - 1        (unchanged in form)
+```
+
+A literal transcription of the `+1` would be **two** wires loose on the high
+side and one on the low — an asymmetry no one would notice in a diff. And a
+second trap on top: `check_wire_ranges_match` has **two** live callers with
+**different** tolerances — the terminal filter wants ±1, `get_extreme_wcps`
+(`Facade_Cluster.cxx:3106`, `flag_nearby_timeslice = false`) wants **none**, and
+matches the prototype today (`PR3DCluster_path.h:111-119`). Editing the shared
+function in place would silently change `get_extreme_wcps` too. **D3 would want
+a third caller, also with no tolerance** (`PR3DCluster_steiner.h:553-558` uses
+the strict bounds). So the shape that satisfies all three is a tolerance
+parameter defaulting to 0 — stated here as the constraint a fix must meet, not
+as a proposal.
+
+**D12's fix has the same shape of trap, on the other axis.** The stride is not
+a literal 4: it is per-apa/face, and the toolkit already has the accessor —
+`m_grouping->get_nticks_per_slice().at(apa).at(face)`, used at
+`improvecluster_1.cxx:295`. Hard-coding 4 would work on SBND and break
+elsewhere.
+
+**D7's fix is not local.** `make_points_cluster_skeleton` has **four** callers:
+`SteinerGrapher.cxx:204` (this one) and `clustering_deghost.cxx:274`, `:785`,
+`:796`. The density formula is shared with deghosting, so changing `+1` in place
+changes the deghost skeleton too — a stage this document did not audit. A fix
+must be a parameter or a Steiner-local copy.
+
+**D2 is the one row where the fix is a single argument** — pass the
+`disable_dead_mix_cell` that `create_steiner_tree` already holds down to
+`create_enhanced_steiner_graph` (`SteinerGrapher.cxx:92`), instead of letting
+`SteinerGrapher.h:341`'s `= true` default win. Note it also **removes D10 from
+this path** (§10.2.5).
+
+### §10.2 OUT — the seven dismissed, and what dismisses each
+
+#### §10.2.1 D6 — dedup by vertex pair, not edge pointer → **improvement, keep**
+
+The prototype sorts edge descriptors, whose `operator<` compares the
+edge-property **pointer** (`PR3DCluster_steiner.h:505-506`), so its insertion
+order into the steiner graph is heap-address dependent. The toolkit sorts on
+`vertex_pair` (`SteinerGrapher.cxx:969-997`) and says why in a comment. This is
+the toolkit being **reproducible where the prototype is not** — precisely the
+category the owner asked to skip. Reverting it would reintroduce an M4-class
+nondeterminism.
+
+#### §10.2.2 D4 — `float` → `double` edge weights → **improvement, keep**
+
+`double` is strictly more precise than the prototype's `float`
+(`PR3DCluster.h:30` ↔ `Graphs.h:22`). Its only cost is that the two trees can
+never be **bit**-identical — which matters for *validating* a port, not for the
+physics. Dismissed as an item to fix; **retained as a standing caveat**: no
+future D1/D2/D3/D7/D12 comparison should be scored on exact equality, only on
+counts and distributions.
+
+#### §10.2.3 D5 — `setS` → `vecS` out-edge storage → **verified equivalent**
+
+`setS` gave the prototype duplicate-edge rejection for free; the toolkit
+restores it with an explicit `boost::edge(a,b,g).second` test before **every**
+`add_edge` in the family — `SteinerGrapher.cxx:657`, `:682`, `:889`, `:1072`,
+four sites, all four checked. Resulting edge *sets* agree. Not a defect.
+
+#### §10.2.4 D11 — `recover_steiner_graph` not ported → **not reachable in the ported chain**
+
+This row was left open in the original audit pending a consumer sweep. **The
+sweep was done and it closes the row.** A complete grep of
+`prototype_base/pid/apps/` for live (non-commented) calls returns four hits, in
+two files:
+
+* `wire-cell-graph.cxx:475, :479`
+* `wire-cell-tracking.cxx:635, :639`
+
+and it is **commented out** in every STM app (`wire-cell-prod-stm.cxx:833`,
+`-port.cxx:962`, `wire-cell-stm.cxx:704`). The production apps this port
+targets — `wire-cell-prod-nue.cxx` and `wire-cell-prod-nue-port.cxx`, the latter
+being the one the SBND runners invoke (doc pr/36 §2.4) — **never call it.** So
+the toolkit is not missing a step the ported chain performs. `SteinerGrapher.h`'s
+"reserved for `recover_steiner_graph()` if that function is ported" comment is
+accurate and should stay. Dismissed as a gap; it is a correctly-scoped omission.
+
+#### §10.2.5 D10 — dead plane: per-blob list vs per-point sentinel → **not an independent item here**
+
+The divergence is real (`mcell->get_bad_planes()` ↔
+`charge_uncertainty(pt, plane) > 1e10`) and forced — the toolkit has no
+per-blob bad-plane list. But it lives **only** in `calc_charge_wcp`'s
+`disable_dead_mix_cell == true` branch, and **in the Steiner-build path the
+prototype never takes that branch**: `create_steiner_graph` passes `false` at
+both `PR3DCluster_steiner.h:27` and `:46`, and the toolkit passes `false` at
+`CreateSteinerGraph.cxx:210` and `:234`. The only way the `true` branch is
+reached here is **D2's dropped argument**. Fix D2 and D10 stops being reachable
+in this family — so it is not a separate thing to fix, it is D2's shadow.
+
+**Where D10 *is* live, stated so the dismissal is not read too broadly:** the
+ImproveCluster path genuinely uses `true` on both sides — prototype
+`ImprovePR3DCluster.cxx:19` takes the header default
+(`PR3DCluster.h:112`, `disable_dead_mix_cell = true`) and toolkit
+`improvecluster_2.cxx:107` passes `true` explicitly. That call is **faithful**,
+and the per-blob-vs-per-point semantic difference is real there. That path is
+out of scope for this document (§0) and cannot be closed without a data-model
+change.
+
+#### §10.2.6 D8 — containment also requires same APA and face → **forced, and correct**
+
+`Facade_Cluster.cxx:3262-3266` returns false if the point's APA or face is
+absent from the reference map. The prototype has no such test because uBooNE has
+one TPC — `old_time_mcells_map` is keyed by time slice alone. Matching a point
+against a reference blob in a *different* drift volume would be wrong physics on
+SBND. This is a required adaptation, not a lost check.
+
+#### §10.2.7 D9 — extreme-point index → point → index round trip → **benign; the one risk was checked and is absent**
+
+The stated risk was that `get_closest_point_index` might search a different
+scope than `get_extreme_wcps` scanned. **It does not:** `get_extreme_wcps`
+iterates `npoints()` and `get_closest_point_index` queries `kd3d()`
+(`Facade_Cluster.cxx:1354-1362`), both the default scope of the same cluster,
+and both are called on `m_cluster` (`SteinerGrapher.cxx:261`, `:268`). The
+extreme point is by construction a cluster point, so the query returns distance
+0. The only residual is a tie between two exactly-coincident points, which would
+pick a different index of the same location. Not a defect.
+
+### §10.3 What this revision does and does not claim
+
+* **Still no measurement.** §9 stands unchanged. D12 is proven at source level
+  four ways, but *how many terminals it costs* is unmeasured, as are D1's,
+  D2's, D3's and D7's reaches. Any fix needs a before/after on the same binary
+  first — pr/28 §7.4's 268-vs-356-leaf noise floor is why.
+* **The dismissals are evidence-backed, not judgement calls** — §10.2.4 rests on
+  a complete app-directory grep, §10.2.7 on reading both scope accessors,
+  §10.2.3 on all four guard sites. Where a dismissal is *scoped* rather than
+  absolute (D10, D8), the scope is stated.
+* **Still no recommendation and no patch.** `porting_dictionary.md:266` is still
+  an empty `⚠ xxx`, so CLAUDE.md §5 rule 4 still applies to all twelve rows.
+  §10.1's "fix is confined to" column names *where* a change would go and *which
+  trap it must clear* — deliberately not *what to write*.
+* **D12 is a correction to this document, not only an addition.** D1's original
+  claim that the time-slice half "is ported" was wrong and is struck through in
+  place. Anyone who read the earlier version took away that the toolkit lost one
+  of the prototype's two slacks; it lost both.
