@@ -14,6 +14,16 @@ porting dictionary has no proto-vertex section either (see §7.5). P1, P2, P3 an
 P4 would each alter production output unconditionally, which is §5 rule 1:
 the owner's call, not mine.
 
+> **→ If you want the short list, read §10.** The owner applied a filter on
+> 2026-08-04 — *skip what is an improvement over the prototype, keep only bugs
+> or gaps in the port* — plus the clarification that where the toolkit lacks the
+> prototype's id/index information and substitutes geometry, that is accepted.
+> Four of the fourteen survive: **F1 = P1** (`flag_exclusion` never passed
+> `true`), **F2 = P9** (the out-of-volume skip, now three sites with three
+> different undeclared biases), **F3 = P8** (the endpoint check dropped, not
+> translated), **F4** (the two `find_vertices(...).first` callers, a narrowed
+> P5). **P14 is resolved** at `f1e29f19`. §10.8 corrects three counts in §3/§8.
+
 **Headline.** The **control flow is a faithful port** — `find_proto_vertex`'s
 nine phases run in the prototype's order, and every cut constant I could pair
 across `init_first_segment`, `break_segments`, `examine_segment`,
@@ -767,3 +777,307 @@ addressed by someone else.
   about whether it is correct or complete.
 * **Nothing here is a knob-off byte-identicality claim.** No gate was run;
   none is owed, because no code changed.
+
+---
+
+## §10 Owner filter, 2026-08-04 — the four that are bugs or gaps
+
+**What was asked.** The owner read §3/§8 and applied a filter: *"skip the ones
+that are improvements over the previous prototype, and only focus on the ones
+that are bugs or missing from the port."* Two clarifications came with it, and
+both dispose of findings:
+
+1. **"In the toolkit we are missing id information for some data, so we have to
+   use positions to do it — this is not a problem."** The prototype identifies
+   graph endpoints by `wcpt().index` (a Steiner point-cloud index) and orders
+   its maps by `get_id()`. Where the toolkit substitutes a **geometric**
+   equivalent for either, that is an accepted design consequence, not a
+   divergence.
+2. Re-check both trees at current HEAD rather than trusting §3's anchors.
+
+**Method.** Every claim below was re-verified against toolkit **`f1e29f19`**
+(§3 was written at `ea1a7e3d`) and `prototype_base/`. Three §3 statements did
+not survive re-verification unchanged and are corrected in place below.
+**No code is changed by this section**, so no gate is owed and none was run.
+
+### §10.1 The filtered list — four items
+
+| # | id | what it is | why it survives the filter | severity |
+|---|---|---|---|---|
+| **F1** | P1 | `flag_exclusion` is never passed `true` | the toolkit does **less** than the prototype at 28 of 30 sites; the callee is fully ported and dead | **highest** |
+| **F2** | P9 | the out-of-volume skip has **three different, undeclared biases** at three in-scope sites | the guard is necessary, but no two sites agree on what an unevaluable point *means*, and none matches the prototype | **medium-high** |
+| **F3** | P8 | the endpoint-consistency check is not ported **and has no positional replacement** | a check the prototype had, dropped rather than translated — the one place clarification (1) does *not* cover | medium |
+| **F4** | P5, narrowed | the **two** callers in either tree that read `find_vertices(sg).first` as "the" vertex | at these two sites the prototype's `.first` is not expressing a positional concept, so the id→position clearance does not reach them | low-medium |
+
+Everything else is dropped — see §10.6.
+
+### §10.2 F1 (P1) — `flag_exclusion` — re-verified, one count corrected
+
+Re-run at `f1e29f19`:
+
+```bash
+grep -rhn "do_multi_tracking(" prototype_base/pid/src/NeutrinoID*.h \
+  | grep -v "^\s*[0-9]*:\s*//" | grep -c "true, true, true)"      # -> 28
+grep -rn "track_fitter\.do_multi_tracking(\|local_fitter\.do_multi_tracking(" \
+     clus/src/*.cxx | wc -l                                       # -> 31
+grep -rhn "track_fitter\.do_multi_tracking(\|local_fitter\.do_multi_tracking(" \
+     clus/src/*.cxx | grep -c "true, true, [a-z]*, true"          # -> 0
+```
+
+**Correction to §3.1 and §8: there are 31 toolkit call sites, not 32.** The
+32nd match in the original grep is a *comment* at `TrackFitting.cxx:1135`.
+Nothing else moves: 31 real sites, **all** passing `flag_exclusion = false`
+(`NeutrinoVertexFinder.cxx:500` calls the 3-argument form, whose default is
+also `false`). The prototype still shows 28 sites passing `true` and exactly
+**two live** sites passing `false` (`NeutrinoID_proto_vertex.h:722`, `:751`,
+both inside `break_segments`); a third such line at `:776` is inside a `/* */`
+block and does not count.
+
+One fact worth adding, because it strengthens the "dropped argument" reading
+over the "deliberate standardisation" one: **both signatures default
+`flag_exclusion` to `false`** —
+
+```cpp
+// prototype  PR3DCluster.h:182
+..., bool flag_dQ_dx_fit = true, bool flag_exclusion = false);
+// toolkit    TrackFitting.h:446
+..., bool flag_force_load_data = false, bool flag_exclusion = false, ...);
+```
+
+— so the prototype's 28 `true`s are all *explicit overrides of the same
+default*. The toolkit did not inherit a different default; it stopped writing
+the override. That is the signature of a lost argument during translation, not
+of a design decision, and there is still no comment at any of the 31 sites
+saying otherwise.
+
+**This is F1 and it is the item to act on first.** The recommendation is
+unchanged from §3.1: it is not a fix to apply silently, because turning
+exclusion on changes every fit in the stage. It wants a default-OFF knob and an
+A/B, plus the unit check flagged in §3.1 (the transverse-coordinate
+reconstruction inside `update_association` has never been exercised).
+
+### §10.3 F2 (P9) — the out-of-volume skip: a **third** site, and three different meanings
+
+§3.9 reported two sites with opposite bias. Re-reading at `f1e29f19` finds
+**three in-scope sites**, with **three distinct semantics** for the same
+unevaluable point:
+
+| site | function | code | an out-of-volume point is treated as… |
+|---|---|---|---|
+| `NeutrinoOtherSegments.cxx:1253-1259` | `modify_segment_isochronous` | `if (face()!=-1 && apa()!=-1) { … n_bad++ }` | **good** — it cannot increment `n_bad`, so the bridge is judged *connected* |
+| `NeutrinoStructureExaminer.cxx:1273` | `examine_vertices_1p` | `continue` before the `flag_dead=false; break;` | **dead** — `flag_dead` stays `true`, so the segment is judged to lie in a dead region |
+| `NeutrinoStructureExaminer.cxx:2552` | `examine_vertices_3` | `continue` before the uniqueness test | **not unique** — the point cannot contribute `num_unique`, so the segment is more likely to be *removed* |
+
+The prototype evaluates every step point in all three
+(`is_good_point(test_p, 0.2 cm, 0, 0)` /
+`get_closest_dead_chs(...)`, e.g. `NeutrinoID_proto_vertex.h:1645`), so none of
+the three matches it.
+
+**Why this is a bug and not an improvement.** The guard itself is *required* —
+`contained_by` returns `-1` outside the detector and the downstream
+`m_trigger_offsets.at(-1)` / `m_anodes.at(-1)` throws and aborts the job (the
+class-C crash shape, doc pr/11 §6.3; the comment at `NSE:1313-1317` names SBND
+MCP2025C evt 49951). Nobody disputes the guard. What is defective is that the
+**failure semantics were never chosen**: three sites in the same stage silently
+picked three different answers to "what does an unevaluable point mean", and at
+least two of them are the *permissive* answer, which is the direction that
+quietly admits geometry the prototype would have rejected.
+
+`examine_structure_4` (`NSE:539-546`) shows what the considered version looks
+like — it has the same guard *with a stated reason* ("terminals outside every
+TPC are rejected immediately — without this guard, `min_dis_{u,v,w}` stay at
+`1e9` and the 2D-distance criterion trivially passes"). That site is out of
+scope per §0 but is the model: the other three should each state, and justify,
+their polarity.
+
+**Reach is not measured.** How often an SBND fit point falls outside every
+volume is one instrumented count, and this document does not have it. The
+places it would matter most are the cathode region and the readout-window
+edges.
+
+### §10.4 F3 (P8) — the endpoint check is dropped, not translated
+
+Confirmed unchanged at `f1e29f19`: `PRGraph.cxx:41-92` `add_segment` links any
+two vertices with no consistency test, while the prototype refuses:
+
+```cpp
+// prototype NeutrinoID_proto_vertex.h:1952-1956
+if (pv->get_wcpt().index != ps->get_wcpt_vec().front().index &&
+    pv->get_wcpt().index != ps->get_wcpt_vec().back().index){
+  std::cout << "Error! Vertex and Segment does not match " << … ;
+  return false;
+}
+```
+
+**This is the one item the id→position clearance does not cover, and the reason
+is worth stating.** Clarification (1) accepts substituting geometry for an
+index *where the toolkit does the substitution*. Here it does not: there is no
+positional analogue of this check anywhere in `PRGraph.cxx` — the check is
+simply absent. The prototype's practical behaviour on a mismatch is *the
+connection is silently not made* (most callers ignore the return value); the
+toolkit's is *the connection is made*.
+
+**It interacts with F4.** `find_vertices` (`PRGraph.cxx:105-141`) decides its
+ordering by asking which endpoint's `wcpt()` is nearer the segment's **first**
+wcpt. That question is only meaningful if both vertices really do sit at the
+segment's two ends — exactly the invariant `add_segment` no longer enforces. A
+mis-attached vertex therefore does not announce itself; it silently produces a
+wrong `.first`, which is then consumed at the two sites in §10.5.
+
+**Not measured, and the evidence is weak in both directions.** No live path is
+known to produce a mismatch. The prototype's diagnostic would have printed if
+one did, which is weak evidence that none does — weak because nobody has
+confirmed the prototype was ever run with that path live on SBND-like geometry.
+The cheap version of this finding is a `SPDLOG_LOGGER_WARN` in `add_segment`
+when neither endpoint is within a tolerance of the segment's two ends: it costs
+nothing when the invariant holds and converts a silent corruption into a log
+line when it does not.
+
+### §10.5 F4 — the narrowed P5: exactly two order-sensitive callers, in both trees
+
+§9 recorded that P5's reach was never swept. It has been swept now.
+
+**The sweep.** `find_vertices(` has ~60 call sites in `clus/src`. Every one was
+checked for whether it uses `.first` / `.second` asymmetrically:
+
+* the large majority bind both and **re-derive** start/end from position
+  anyway — `NeutrinoTrackShowerSep.cxx:83,347`, `NeutrinoPatternBase.cxx:1218`
+  (`break_segments`, §3.11), `NeutrinoStructureExaminer.cxx:429-431`
+  (compares `.first` against a known vertex by pointer identity, which is
+  order-free);
+* `NeutrinoVertexFinder.cxx:3467` writes `bool flag_start = (v1 == min_vertex)`.
+  This *looks* order-sensitive and is **not a finding**: it is the positional
+  translation of the prototype's own idiom
+  `sg->get_wcpt_vec().front().index == vtx->get_wcpt().index`
+  (`NeutrinoID_DL.h:94-98`, and identically at
+  `NeutrinoID_final_structure.h:44`, `NeutrinoID_shower_clustering.h:974`,
+  `NeutrinoID_nue_tagger.h:1442`). This is precisely clarification (1), and the
+  toolkit version is in fact safer — the prototype leaves `flag_start`
+  **uninitialised** when neither branch matches;
+* **two sites read `.first` alone and use it as "the" vertex**, and they are the
+  same two in both trees:
+
+| | prototype | toolkit |
+|---|---|---|
+| | `NeutrinoID_singlephoton_tagger.h:167` `auto shw_vtx_main = find_vertices(sg_start).first;` | `NeutrinoTaggerSinglePhoton.cxx:2361` |
+| | `NeutrinoID_singlephoton_tagger.h:342` `auto shw_vtx = find_vertices(sg).first;` | `NeutrinoTaggerSinglePhoton.cxx:2440` |
+
+At both, the chosen vertex is passed straight to `bad_reconstruction_2_sp` and
+`bad_reconstruction_3_sp` as a geometric anchor, and the resulting flags feed
+the single-photon tagger.
+
+**Why this is not covered by clarification (1).** The prototype's `.first` here
+is *not* a positional concept being approximated. `find_vertices` in the
+prototype (`NeutrinoID_proto_vertex.h:3227-3243`) returns the first two
+elements of `map_segment_vertices[sg]`, ordered by `ProtoVertexCompare` on
+`get_id()` — i.e. **whichever endpoint was created first**. The toolkit returns
+the endpoint nearest the segment's front wcpt. Those are different vertices,
+and the substitution is not "position instead of id" — it is "a meaningful
+choice instead of an arbitrary one".
+
+**Both readings, and neither is obviously right.** (i) The toolkit is better:
+`.first` now has a defined geometric meaning, and a tagger anchoring on "the
+lower-id endpoint" was never intentional. (ii) The prototype's arbitrary choice
+is the one the single-photon tagger's cuts were **tuned against**, so the
+toolkit silently re-anchors two live tagger tests; and "nearest the front wcpt"
+is not the same as "the shower start" either, so the toolkit's choice is
+principled but not obviously the intended one. Deciding this needs the
+single-photon tagger's own audit, not this document.
+
+**P5 as a whole is otherwise closed** by clarification (1), and §9's open
+"P5's reach is a sweep this audit did not do" is now discharged: the answer is
+**two sites**, both listed above.
+
+### §10.6 What was dropped, and why — one line each
+
+Recorded as the **owner's** decision of 2026-08-04, not as a conclusion of this
+audit. §3's both-readings posture (CLAUDE.md §5 rule 4) is left intact above;
+this is the filter applied on top of it.
+
+**Accepted as improvements over the prototype** — toolkit-only additions, each
+verified still present at `f1e29f19`:
+
+* **P2** local-PCA endpoint refinement (`NeutrinoPatternBase.cxx:567-676`) —
+  the in-code rationale is explicit ("when the cluster curves near its end, the
+  true tip may lie around a corner and be missed"), commit `1eb097a9` *"fix a
+  bug and randomness"*.
+* **P3** the wider terminus-stub absorption (`:1472-1476`) — three commits of
+  refinement, the last (`6127bc31`) adding the 45° guard specifically so a
+  12.94 MeV Michel at ~79° is **not** eaten. That is the fingerprint of a fix
+  tuned against a real case, not of a drift.
+* **P4** the extra acceptance clause `0.72 / 15 cm / 1.05`
+  (`NeutrinoOtherSegments.cxx:558-560`) — a strict widening; it can only admit
+  segments the prototype rejected.
+* **P6** `merge_nearby_vertices` (0.1 cm) after breaking — re-enables, in
+  looser form, a cleanup the prototype defined and then commented out (§5.3).
+* **P7** the walk-halfway override (`:1299-1321`) — a break-oscillation fix
+  with no prototype counterpart.
+* **P10** the "no segments survived → return false" recovery — gives the
+  caller a fallback the prototype never had.
+* **P13** the kink-loop pass cap and stationarity detector — fire only where
+  the prototype would hang.
+
+**Accepted under clarification (1) — id information replaced by geometry:**
+
+* **P5** (except the two sites in §10.5) — `find_vertices` ordered by
+  proximity instead of by vertex id.
+* **P11** — `break_segments` determines start/end by distance instead of
+  `wcpt().index` equality. The toolkit also cannot reach the prototype's
+  null-dereference at `:615`, which is a second reason not to reproduce it.
+
+**Not a divergence to act on:**
+
+* **P12** — the `main_vertex` parameter is `nullptr` throughout this stage;
+  inert here by construction, and live only at the out-of-scope call sites.
+
+### §10.7 P14 is **resolved**, verified at `f1e29f19`
+
+§6 reported 13 raw pointer-ordered `boost::out_edges` at `ea1a7e3d` and noted a
+concurrent uncommitted sweep. That sweep has landed:
+
+```bash
+for f in clus/src/NeutrinoPatternBase.cxx clus/src/NeutrinoStructureExaminer.cxx \
+         clus/src/NeutrinoOtherSegments.cxx; do
+  echo -n "$f raw="; grep -c "boost::out_edges" $f
+done
+# -> 0, 0, 0
+```
+
+All 13 in-scope sites now use `sorted_out_edges`. `NeutrinoVertexFinder.cxx`
+retains 2 raw uses; that file is outside this audit's scope (§0) and is doc
+pr/28's territory. **P14 is closed** — the latent risk §6 described (the two
+first-edge sites resting on a degree guard several lines away) no longer
+exists, because the iteration is now ordered by construction rather than by
+invariant.
+
+### §10.8 Corrections to earlier sections
+
+Three §3/§8 statements did not survive re-verification and are corrected here
+rather than edited in place, so the original record stays readable:
+
+1. **§3.1 / §8 row 1: "32 toolkit call sites" → 31.** The 32nd grep match is a
+   comment at `TrackFitting.cxx:1135` (§10.2).
+2. **§3.9 / §8 row 9: "opposite bias at two sites" → three sites, three
+   distinct biases.** `NeutrinoStructureExaminer.cxx:2552`
+   (`examine_vertices_3`) was missed; it treats an unevaluable point as *not
+   unique*, a third polarity (§10.3).
+3. **§8 row 14 / §6: P14 is no longer latent — it is resolved** (§10.7).
+
+§9's "P5's reach is a sweep this audit did not do" is discharged by §10.5.
+Everything else in §9 still stands, in particular: **no event was run for this
+document**, so every reach claim above remains an argument from the source.
+
+### §10.9 What this section does not claim
+
+* **No code changed**, so no A/B gate is owed and none was run.
+* **F1's reach is still unmeasured.** How many SBND points carry a
+  cross-segment 2-D association for `update_association` to strip is one
+  instrumented run, and it has not been done.
+* **F2's rate is unmeasured.** How often a fit point lands outside every
+  detector volume on SBND is a count nobody has taken.
+* **F3 is unobserved.** No live path is known to attach a vertex to a segment
+  it does not end on; that is not the same as knowing none does.
+* **F4 is not adjudicated.** Both readings are given and neither is picked; the
+  single-photon tagger's own audit is where that decision belongs.
+* **Tier B coverage is unchanged** (§1, §9). Dropping P2/P3/P4/P6/P7/P10/P13
+  from the action list does not upgrade the reading behind them.
