@@ -3388,7 +3388,7 @@ pr/28 and pr/29:
 | `e6c51cc5 … 397b1517` (11 commits) | **doc pr/28** — vertex fit, PID persistence, dQ/dx ×5/3, the charge veto / dead index / trajectory triple, and the whole determinism sweep. **All unconditional.** |
 | `6ea51a3b`, `f1e29f19`, `6206c46b` | **doc pr/29** — D1/D12 terminal filter, D2 edge charge. Knobs, SBND default ON; reachable off via three env vars (§14). |
 | `ddeafe73`, `38988d0c`, `dada0453`, `10a79f0d` | doc pr/26 PR event display — `PrDisplayDump` is only built when `pr_display` is in `pipeline_names`, which this arm does not use. **Inert here.** |
-| `15350cca` + **`635e3d38`** | `sp_photon_flag` **flipped ON**. It gates the single-photon tagger's *verdict store*, not a decision — but it is a production change in this window and is named here rather than folded into "pr/28". |
+| `15350cca` + **`635e3d38`** | `sp_photon_flag` **flipped ON**. Verified write-only, not a gate: `singlephoton_tagger()` is called and its ~90 `shw_sp_*` features filled unconditionally; the knob only decides whether its return value is stored in `TaggerInfo::photon_flag` (`TaggerCheckNeutrino.cxx:833-841`), and `photon_flag` is read by exactly one consumer, the ntuple branch `UbooneTaggerOutputVisitor.cxx:1078`. No decision anywhere depends on it. Named here rather than folded into "pr/28" because it *is* a production change in this window. |
 | `4c02b679`, `90346793`, `11ef6f0b` | LinkDef nested-STL pragmas; unconditional `WireCellRoot` load; two diagnostic TLAs. No physics. |
 
 ### §16.3 Gate 1 — clustering and Q/L are **inert** to the whole delta
@@ -3407,6 +3407,27 @@ inside the PR chain, on byte-identical input. This also retires a worry worth
 stating: pr/28's `boost::out_edges` sweep touched `Facade_Cluster.cxx` and
 `GroupingHelper.cxx`, which the *pre*-PR clustering also links — it moved
 nothing there.
+
+### §16.3b Gate 1b — every per-bundle tagger verdict is **byte-identical**
+
+`pr_scores_table.py` reports one row per *event*; `event_label` is a priority
+rule *over bundles*, so a TGM/STM/FC/LM verdict could flip on a bundle the rule
+absorbs and the per-event table would show nothing. The bundle-level artifact
+is `nusel-table.tsv` — 22 columns per bundle, including `tgm stm fc stmfit lm
+npts_main npts_bundle len_main_cm n_frag flash_*`:
+
+```
+diff work-vfnuecc48-0804/nusel-table.tsv work-vfnuecc48-0804-rep/nusel-table.tsv   # noise
+diff work-vfnuecc48-prod0803/nusel-table.tsv work-vfnuecc48-0804/nusel-table.tsv   # old vs new
+```
+
+> **Both `diff`s are empty. `nusel-events.tsv` likewise, both pairs.**
+
+So the statement in §16.5 is stronger than "the label did not move": **every
+tagger verdict on every bundle of all 48 events is identical**, down to the
+flash association, point counts and lengths. Nothing in the pre-neutrino-ID
+part of the PR chain moved at all; the entire delta is created after
+`tagger_check_neutrino` picks its main cluster.
 
 ### §16.4 Gate 2 — the run-to-run noise floor is **zero**
 
@@ -3431,6 +3452,7 @@ exactly what §12.7 could not claim.
 | quantity | events changed | median \|Δ\| | p90 | max |
 |---|---|---|---|---|
 | `event_label` | **0 / 48** | — | — | — |
+| every `nusel-table.tsv` bundle column (`tgm stm fc stmfit lm npts len n_frag flash_*`) | **0 / 48** (§16.3b) | — | — | — |
 | `nu_evaluated`, `n_bundle`, `n_inbeam_bundle`, `n_cosmic_skipped` | **0 / 48** | — | — | — |
 | `cosmic_flag`, `cosmict_flag`, `cosmict_10_score` | **0 / 48** | — | — | — |
 | selected main `t0`, `len`, `n_assoc` | **0 / 48** | — | — | — |

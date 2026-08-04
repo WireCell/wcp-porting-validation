@@ -1804,6 +1804,9 @@ section leans on:
 - **clustering and Q/L are inert to the whole delta** — 96/96 archives
   member-content identical (§16.3), so the Steiner stage sees byte-identical
   input on both arms;
+- **every per-bundle tagger verdict is identical too** — `nusel-table.tsv`
+  and `nusel-events.tsv` `diff` empty, old vs new (§16.3b), so nothing the
+  Steiner change does reaches TGM/STM/FC/LM;
 - **the run-to-run noise floor is zero** — 0/48 events differ between two runs
   of the same binary over 17 columns (§16.4). Everything below is signal.
 
@@ -1824,9 +1827,15 @@ That splits the aggregate cleanly in two, on one binary:
 | `0804` vs `0804-pr29off` | **pr/29 alone (D1+D12+D2)** | 47/48 | 40.2 MeV | 477 MeV | 0.54 cm | 121.7 cm |
 | `0804-pr29off` vs `prod0803` | pr/28 + everything else in the window | 47/48 | 75.2 MeV | 802 MeV | 1.67 cm | 121.8 cm |
 
-**Neither half dominates — and on three events they cancel almost exactly,
-which is the more interesting result.** The maximum vertex move within each
-half is ~122 cm, while the *net* old→new maximum is 62 cm (§16.5). Per event:
+All three arms ran on **one binary**: `local/lib/libWireCellClus.so` mtime
+`08-04 11:44:10`, unchanged before, between and after the three runs, and
+newer than the newest source edit (`SteinerGrapher.cxx`, `11:41:30`) — M1, and
+the thing whose absence made §12.7 unattributable.
+
+**Neither half dominates — and on three events the two arms land on the same
+vertex while the off-arm lands somewhere else.** The maximum vertex move within
+each half is ~122 cm, while the *net* old→new maximum is 62 cm (§16.5). Per
+event:
 
 | evt | pr/29 alone | rest alone | net old→new |
 |---|---|---|---|
@@ -1834,12 +1843,19 @@ half is ~122 cm, while the *net* old→new maximum is 62 cm (§16.5). Per event:
 | 122660 | 85.23 cm | 85.34 cm | **0.18 cm** |
 | 46363 | 44.97 cm | 44.97 cm | **0.00 cm** |
 
-The arm that is the outlier on these events is **HEAD with pr/29 off** — a
-configuration that has never been production. Read forward rather than
-backward, that says: on these events pr/28's changes *combined with the legacy
-terminal filter* would have relocated the vertex by 45–122 cm, and
-**D1/D12/D2 put it back**. The two fixes are coupled, not additive, and
-shipping pr/28 without pr/29 would have been the worst of the three states.
+**Read the equal pairs correctly**: these are not two continuous displacements
+that happen to oppose. There are only **two** distinct vertex positions on each
+of these events — the 08-03 baseline and HEAD-production pick the *same* one,
+the pr/29-off arm picks a different candidate, and both columns are the same
+distance because both are measuring the same gap. (46363 is exactly 0.00 cm;
+that is identity, not cancellation.)
+
+The outlier arm is **HEAD with pr/29 off** — a configuration that has never
+been production. Read forward rather than backward: on these events pr/28's
+changes *combined with the legacy terminal filter* select a vertex 45–122 cm
+away, and **D1/D12/D2 select the original one**. The two fixes are coupled,
+not additive, and shipping pr/28 without pr/29 would have been the worst of the
+three states.
 
 This is the concrete form of the warning in §12.7 that the §11 and §12 numbers
 cannot be summed; it now also applies across documents. Any future attempt to
