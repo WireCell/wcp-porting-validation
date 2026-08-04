@@ -6,7 +6,7 @@ off**, and asked first to check one specific recalled prototype behaviour —
 trajectory points are fitted* — then widened it to *"anything weird on vertex
 fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 
-**Status.** Audit + measurement, plus **four rounds of fixes** the owner ordered
+**Status.** Audit + measurement, plus **five rounds of fixes** the owner ordered
 after reading it. All are unconditional — no knob: they are port-fidelity
 bugs or plain defects, not legacy behaviour to preserve.
 
@@ -16,6 +16,7 @@ bugs or plain defects, not legacy behaviour to preserve.
 | 2 | **§3.3a** `clear_fit` wipes PID · **§3.3b** silent no-op reported as success · **§3.3c** charge-veto radius `0.6 → 0.3 cm` · **§3.3d** unsorted `out_edges` | `c89cb7b4` | **§8** |
 | 3 | **§3.3e** `improve_vertex`'s remaining unsorted `out_edges` — the two that mutate segments | `ea1a7e3d` | **§9** |
 | 4 | **the whole `clus/` sweep** — all 117 remaining raw `boost::out_edges` sites in 13 files | `4f2e7303` | **§10** |
+| 5 | **the residual 10** — `boost::edges` / `boost::vertices` / `graph_nodes` (32 loops, 12 files). **`T_tagger` is now fully deterministic on the 48-event manifest.** | `c05bc5f7` | **§11** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
 read §3.1, §3.2 or §3.3 rows a–e as open defects. **Still open** (all escalation
@@ -1212,7 +1213,13 @@ so it is a decision input, not only a dump.
 events, and `nusel-table.tsv` / `nusel-events.tsv` (546 / 49 rows) are
 **byte-identical** between the two arms.
 
-### 10.5 The residual 10 — diagnosed, and not `out_edges`
+### 10.5 The residual 10 — first diagnosis, **since shown wrong** (see §11.1)
+
+> ⚠️ **This subsection's diagnosis did not survive §11's measurement.** It is
+> kept because the reasoning error is instructive, not because it is correct.
+> The FP-accumulation mechanism described here is real but was **not** what made
+> these ten branches unstable. The actual cause was a pointer-ordered *vertex*
+> loop three lines further down. §11.1 has the correction and the evidence.
 
 `pio_2` accumulates per-cluster track length over **all** graph edges
 (`NeutrinoTaggerNuE.cxx`, `NeutrinoTaggerSinglePhoton.cxx`):
@@ -1250,3 +1257,255 @@ iterating these).
   spots, so its order is equally arbitrary and no parity is broken — the same
   argument pr/11 used at `broken_muon_id`.
 * `boost::edges`, `boost::in_edges` and `boost::adjacent_vertices` are untouched.
+  → **swept in round 5, §11**, which also corrects this section's diagnosis of
+  the residual 10.
+
+---
+
+## §11 The residual 10 closed — `T_tagger` is deterministic on this manifest (toolkit `c05bc5f7`)
+
+Owner instruction: *"Can you focus on this issue [the residual 10 unstable
+branches] ... Please update the md file, commit and push."*
+
+**Result up front.** On the 48-event nueCC manifest, two runs of the same binary
+now produce **byte-identical `T_tagger` on every event**: 0 unstable branches,
+0 events differing, down from 10 branches / 45 of 47 events. `nusel-table.tsv`
+and `nusel-events.tsv` are identical between the repeat runs, and — separately —
+**identical to round 4's**, with **zero** scalar-branch differences anywhere in
+`T_tagger` or `T_kine` across all 47 events. The entire A/B effect of this round
+is the *ordering* of four per-candidate diagnostic vectors.
+
+### 11.1 §10.5 was wrong: it was loop order, not float accumulation
+
+§10.5 attributed the residual to `cluster_acc_length[...] += ...` accumulating
+over pointer-ordered `boost::edges`, i.e. last-ulp drift crossing a cut. That
+mechanism is real, but it was not the cause. **Three lines below the
+accumulation sits the loop that actually fills the output vectors:**
+
+```cpp
+std::map<Facade::Cluster*, double> cluster_acc_length;
+for (auto [eit, eend] = boost::edges(ctx.graph); eit != eend; ++eit) {   // <- §10.5 blamed this
+    ...  cluster_acc_length[sg1->cluster()] += segment_track_length(sg1);
+}
+
+for (const auto& vd : graph_nodes(ctx.graph)) {                          // <- the actual cause
+    ...
+    ti.pio_2_v_dis2.push_back(dis2 / units::cm);
+    ti.pio_2_v_angle2.push_back(back_angle);
+    ti.pio_2_v_acc_length.push_back(acc_length / units::cm);
+}
+```
+
+`PR::graph_nodes()` returns the **raw `boost::vertices()` order packaged as a
+vector** (`PRGraphType.cxx:6-8`) — pointer order. `PR::ordered_nodes()` is the
+sorted one. Despite the name, `graph_nodes` is *not* a determinism helper, and a
+sweep keyed on `boost::edges`/`boost::vertices` misses it entirely. So the loop
+that decides *the order of every `pio_2_v_*` entry* was pointer-ordered.
+
+Three call sites, and they map **one-to-one** onto the ten residual branches:
+
+| site | branches |
+|---|---|
+| `NeutrinoTaggerNuE.cxx:638` | `pio_2_v_dis2` `_angle2` `_acc_length` `_flag` |
+| `NeutrinoTaggerSinglePhoton.cxx:2058` | `shw_sp_pio_2_v_dis2` `_angle2` `_acc_length` `_flag` |
+| `NeutrinoTaggerNuE.cxx:2444` (`stw_3`) | `stw_3_v_angle` `_dir_length` |
+
+**Three sites, exactly ten branches, no remainder.**
+
+**The evidence that settles it** — the round-4 census was re-run with a
+classifier that asks whether two differing branches are *permutations* of each
+other (same multiset ⇒ pure reorder) or genuinely different numbers:
+
+```
+work-oesweep-nuecc48  vs  work-oesweep-nuecc48-rep
+   40  shw_sp_pio_2_v_acc_length   reorder= 40 value=  0
+   40  shw_sp_pio_2_v_angle2       reorder= 40 value=  0
+   40  shw_sp_pio_2_v_dis2         reorder= 40 value=  0
+   38  pio_2_v_acc_length          reorder= 38 value=  0
+   38  pio_2_v_angle2              reorder= 38 value=  0
+   38  pio_2_v_dis2                reorder= 38 value=  0
+   22  stw_3_v_angle               reorder= 22 value=  0
+   22  stw_3_v_dir_length          reorder= 22 value=  0
+    2  shw_sp_pio_2_v_flag         reorder=  2 value=  0
+    1  pio_2_v_flag                reorder=  1 value=  0
+```
+
+**`value = 0` everywhere.** Not one number ever changed — only their order. An
+FP last-ulp drift crossing a cut would have shown up as `value > 0` (a candidate
+entering or leaving the vector), and it never did. In hindsight the event counts
+alone should have been enough: a last-ulp coin flip landing in 38–40 of 47 events
+is not credible; a pointer-ordered `push_back` reordering a multi-entry vector in
+85 % of events is exactly what one expects.
+
+Also explained by the same mechanism: `stw_3_v_energy` and `_medium_dQ_dx` sit in
+the *same* pointer-ordered loop but were always stable — they push the **same
+scalar** on every iteration, so a permutation of them is invisible. And
+`pio_2_v_flag` moved in only 1–2 events because it is almost always all-`1.0`.
+
+**Method note for next time.** *Classify a difference before diagnosing it.*
+Reorder-vs-value is one line of code in the comparator and it would have pointed
+at the right loop immediately.
+
+### 11.2 What was converted
+
+**32 loops in 12 files** — 22 `boost::edges` → `ordered_edges`, 7
+`boost::vertices` → `ordered_nodes`, **3 `graph_nodes` → `ordered_nodes`**.
+`clus/src` now contains **zero** raw `boost::edges` / `boost::vertices` /
+`graph_nodes` iterations of the PR graph.
+
+| file | loops |
+|---|---|
+| `NeutrinoVertexFinder.cxx` | 10 |
+| `NeutrinoTrackShowerSep.cxx` | 5 |
+| `NeutrinoTaggerNuE.cxx` | 4 |
+| `NeutrinoPatternBase.cxx`, `NeutrinoTaggerCosmic.cxx` | 3 each |
+| `NeutrinoStructureExaminer.cxx`, `NeutrinoTaggerSinglePhoton.cxx` | 2 each |
+| `NeutrinoDeghoster.cxx`, `NeutrinoTaggerNuMu.cxx`, `NeutrinoTaggerSSM.cxx`, `TrackFitting.cxx` | 1 each |
+
+Supporting changes:
+
+* `PR::graph_nodes` / `ordered_nodes` / `ordered_edges` now take `const Graph&`
+  (bodies were already read-only); several tagger call sites hold a const graph
+  and could not bind otherwise. No `const_cast` was added.
+* `PRGraphType.h` — `graph_nodes()`'s doc comment now **warns in capitals** that
+  its order varies between runs and that it is not a determinism helper. That
+  misleading name is what hid these three sites through two prior rounds.
+* `TrackFitting.cxx:279` (`sync_from_graph`) had
+  `m_grouping = (*segments_set.begin())->cluster()->grouping()` over a
+  `std::set<shared_ptr<Segment>>` — i.e. *the lowest heap address decided which
+  grouping the fitter adopted*. Replaced with the first segment in edge-index
+  order. (Benign in practice — one grouping per graph — but it is the exact
+  shape CLAUDE.md §2 forbids.)
+* `NeutrinoVertexFinder.cxx:1837` — the Case-5 block re-walked **every graph
+  edge** once per (trajectory point × existing segment) pair just to ask "is this
+  segment still in the graph". Hoisted to one `unordered_set` snapshot per
+  segment. This is a pure speed fix; the test was already order-free.
+
+### 11.3 Verified no-ops — the graphs that were never at risk
+
+`boost::edges` / `boost::vertices` / `boost::adjacent_vertices` also appear in
+`SteinerGrapher.cxx`, `Graphs.cxx`, `PatternDebugIO.cxx`, `Facade_Util.cxx` and
+`PointTreeBuilding.cxx`. **These were checked and deliberately not touched**:
+`Clus::Graphs::Graph` is declared `adjacency_list<vecS, vecS, …>`
+(`Graphs.h:22-27`), so its descriptors are integer indices and its iteration
+order is already content-stable. Converting them would have been churn.
+
+### 11.4 The sort key is sound — new unit test
+
+`ordered_nodes`/`ordered_edges` sort on `NodeBundle::index`/`EdgeBundle::index`.
+`std::sort` is not stable, so **a duplicate index would silently fall back to the
+input order — pointer order — and make every conversion in rounds 3–5 a no-op
+while still looking converted.** New `clus/test/doctest_pr_graph_order.cxx`
+(4 cases, 22 assertions) pins:
+
+* node and edge indices are pairwise distinct;
+* both helpers really come back strictly ascending;
+* indices stay distinct across a `remove_vertex` + re-add cycle — indices come
+  from a monotone counter in `GraphBundle` that never decrements
+  (`PRGraph.cxx:24-26, 52-61`), so a removed index is never reissued;
+* `graph_nodes` and `ordered_nodes` hold the same *set*, so converting a call
+  site changes order and nothing else.
+
+`./build/clus/wcdoctest-clus`: **75 cases / 833 assertions, all pass.**
+
+### 11.5 Repro
+
+```bash
+wcbuild
+ls -la ../local/lib/libWireCellClus.so          # M1 freshness proof
+./build/clus/wcdoctest-clus
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-oe5c-nuecc48     data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-prod0803 work-oe5c-nuecc48-rep data
+
+# same-binary repeat census, with reorder/value classification
+python3 /home/xqian/tmp/ttag_cmp5.py work-oe5c-nuecc48 work-oe5c-nuecc48-rep
+# A/B against round 4
+python3 /home/xqian/tmp/ttag_cmp5.py work-oesweep-nuecc48 work-oe5c-nuecc48
+```
+
+Arms (M13, all fresh): `work-oe5c-nuecc48{,-rep}` (48 events),
+`work-oe5c-r{1,2}-t<evt>` (serial timing). Superseded intermediates kept for the
+record: `work-oe5-*` (before the hoist) and `work-oe5b-*` (the reverted
+comparator experiment in §11.7).
+
+### 11.6 Result
+
+**Determinism — same binary, run vs. its own repeat, 47 events with a `T_tagger`:**
+
+| | round 4 (`4f2e7303`) | round 5 |
+|---|---|---|
+| unstable `T_tagger` branches | 10 | **0** |
+| events with any `T_tagger` diff | 45 / 47 | **0 / 47** |
+| `nusel-table.tsv` / `nusel-events.tsv` | identical | identical |
+
+**A/B — round 4 vs round 5, same 47 events:**
+
+| | |
+|---|---|
+| scalar branches differing, `T_tagger` + `T_kine`, all events | **0** |
+| `nusel-table.tsv` (546 rows), `nusel-events.tsv` (49 rows) | **byte-identical** |
+| branches differing at all | the same 10, **`reorder` in 100 % of cases, `value` in 0** |
+
+So the round changes exactly what it was supposed to and nothing else: four
+per-candidate diagnostic vectors are now emitted in a stable order. No
+reconstructed quantity, flag, score or label moved on any event.
+
+**Cost — serial, pinned, `PR_JOBS=1`, WCT `Timer: Total wall-sec`, two replicates:**
+
+| event | round 4 | round 5 run 1 | round 5 run 2 |
+|---|---|---|---|
+| 388 | 8.892 | 8.708 | 8.738 |
+| 163543 | 4.032 | 3.919 | 3.876 |
+| 172230 | 5.723 | 5.784 | 5.661 |
+| 138009 | 4.653 | 4.739 | 4.724 |
+| 116962 | 1.448 | 1.499 | 1.522 |
+| 214469 | 16.293 | 16.211 | 16.640 |
+| **total** | **41.041 s** | **40.860 s (−0.44 %)** | **41.161 s (+0.29 %)** |
+
+Sign flips between replicates, and within-arm spread on evt 388 alone is ~12 %.
+**Record the cost as ≈0 %.** (The §11.2 hoist is why: an early build without it
+measured a consistent +1 % from re-sorting the whole edge list inside a
+triple-nested loop.)
+
+### 11.7 One near-miss worth recording
+
+An intermediate build also changed `existing_segments` in
+`eliminate_short_vertex_activities` from `std::set<SegmentPtr>` to the
+index-ordered `PR::IndexedSegmentSet`, on the reasoning that CLAUDE.md §2 forbids
+iterating pointer-keyed containers. **That moved `kine_reco_Enu` on SBND evt
+239794 from 2930 to 1687 MeV** and 376 other branches with it — a genuine physics
+change, caught only because the A/B was run.
+
+Why: `SegmentIndexCmp` compares `Segment::get_graph_index()`, so the swap silently
+changed `find()`/`count()` from **pointer identity to index identity** — and a
+segment removed from the graph can have its edge index inherited by a later
+segment (`PRGraph.cxx:88-90`), so an index-keyed lookup can match a stale entry
+against a different live segment. Reverted; the container is now documented
+in `NeutrinoPatternBase.h` as pointer-keyed **on purpose**, with the reason.
+
+Its *iteration* needs no fix either: the loop body takes a running `min` over
+three distances, which is order-insensitive. **CLAUDE.md §2's rule is about
+iteration, and swapping a comparator to satisfy it can change lookup semantics —
+check what the container is used for before changing how it is ordered.**
+
+### 11.8 Scope and what is NOT claimed
+
+* **Deterministic on this manifest, not proven deterministic.** 47 nueCC events,
+  one repeat each. Other topologies can still hold pointer-ordered paths this
+  manifest never reaches.
+* **Not bit-identical to round 4** — though the difference is now confined to
+  vector ordering, with zero scalar movement measured. The owner's waiver for
+  rounds 1–4 covers it; the population gate owed for §7–§10 now covers §11 too,
+  and its baseline must be regenerated.
+* **Stable ≠ correct**, as in §9.4/§10.6. Index order is *an* order; the
+  prototype's equivalent loops walk pointer-keyed `std::map<ProtoVertex*, …>`,
+  so its order is equally arbitrary and no parity is broken.
+* **Still open, and now the whole remaining determinism list:** the pointer-keyed
+  `std::map`/`std::set<T*>` declarations in `clus/src`. Round 5 audited only
+  those on the paths it touched (three fixed or documented: `m_clusters` already
+  had `ClusterPtrCmp`, `segments_set` removed, `existing_segments` documented).
+  The rest are unaudited — and §11.7 is the reason each must be judged on how it
+  is *used*, not converted in bulk.
+* `boost::in_edges` does not occur anywhere in `clus/src`.
