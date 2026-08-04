@@ -13,7 +13,9 @@ valfast events. **No PR algorithm changes** in either stage.
   flags replace two fields that were not it, and 22 never-computed fields come
   off the panel. Read §8 before trusting any "cosmic" number here.
 * **Stage 4** (§9) — the single-photon tagger's **discarded verdict**, §8.2's
-  port gap, closed behind the default-OFF knob `sp_photon_flag`.
+  port gap, closed by the knob `sp_photon_flag` — **now the SBND default**
+  (C++ default still false). `photon_flag` is therefore no longer one of §8.2's
+  never-assigned fields.
 
 Two defects were found on the way and are written up in §5. §5.1 has since been
 fixed (toolkit `4c02b679`); §5.2 remains reported-not-fixed, per CLAUDE.md's
@@ -721,7 +723,9 @@ now carries the reason inline so the next person does not "restore" them.
 > its own knob and gate.
 >
 > **Fixed in §9** (2026-08-03), on exactly those terms: knob `sp_photon_flag`,
-> C++ default false, gate arms `work-spflag-off` / `work-spflag-on`.
+> C++ default false, gate arms `work-spflag-off` / `work-spflag-on` — and then
+> **flipped to the SBND default** by the owner, so `photon_flag` is computed in
+> SBND production and is no longer a member of this section's list of 22.
 >
 > **Severity, checked:** `photon_flag` has **no readers**. Its only non-assignment
 > occurrence anywhere in `clus/`, `root/` or `cfg/` is
@@ -816,10 +820,10 @@ around (§5 rule 7).
 - The 22 dead fields are removed from **this display's dump only**.
   `UbooneTaggerOutputVisitor`'s ROOT branch list is untouched — the offline
   ntuple schema is shared with uBooNE analysis code.
-- `photon_flag`'s dropped verdict (§8.2) is **fixed in §9**, behind its own
-  default-OFF knob and gate. It stays out of the display's dump — with the knob
-  off the field is still not computed, and re-adding it would recreate the
-  `0.00`-reads-as-a-physics-answer defect §8.2 exists to remove.
+- `photon_flag`'s dropped verdict (§8.2) is **fixed in §9** behind its own knob
+  and gate, and that knob is now the **SBND default**. It is still absent from
+  the display's dump — a display change deferred to the next round, not a
+  statement that the field is dead.
 - No BDT retraining (doc pr/2 gap G1); no production config change;
   `pr_display` remains opt-in via `PR_EXTRA_STAGES`.
 
@@ -896,28 +900,44 @@ stored the way the prototype stores it.
 | `clus/src/TaggerCheckNeutrino.cxx` | capture `flag_sp`; `if (m_sp_photon_flag) { log; if (flag_sp) tagger_info.photon_flag = 1.0f; }`; `configure()` + `default_configuration()` round-trip |
 | `cfg/pgrapher/common/clus.jsonnet` | `tagger_check_neutrino(… sp_photon_flag=false)`, key-suppressed: `+ (if sp_photon_flag then { sp_photon_flag: true } else {})` |
 | `cfg/pgrapher/experiment/sbnd/clus.jsonnet` | threaded through both entry points |
-| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | TLA `sp_photon_flag = false` |
-| `sbnd_xin/run_pr_chain_batch.sh` | `SBND_SP_PHOTON_FLAG=1\|0`; unset ⇒ no TLA |
+| `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` | TLA `sp_photon_flag`, **`true` = the SBND operating point** |
+| `sbnd_xin/run_pr_chain_batch.sh` | `SBND_SP_PHOTON_FLAG=1\|0`; unset ⇒ no TLA ⇒ the cfg default (ON) |
 
 The `DEBUG` line fires **whenever the knob is on**, printing the verdict even
 when it is false — so a run proves the branch executed rather than leaving an
 all-zero column to be misread as verified. This is the same instrumentation
 lesson as §8.3's `cosmict_*_filled`.
 
-**Not the SBND default.** Flipping it changes a written output branch, which is
-the owner's call (CLAUDE.md escalation rule 1).
+**SBND DEFAULT ON** (owner 2026-08-03). The knob shipped default-OFF and was
+flipped in the same round once the gate below was in hand. The C++ default stays
+false, so every other detector is untouched; the operating point lives only in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` (doc 68), and
+`SBND_SP_PHOTON_FLAG=0` restores the pre-fix gap.
+
+The flip needs no new gate run: the compiled config at the new default is
+**identical to the one `work-spflag-on` was produced with**, and passing
+`sp_photon_flag=false` compiles byte-identically to `HEAD` — so §9.3's two arms
+are exactly the new production point and the legacy one.
 
 ## 9.3 Verification
 
-**Compiled-config gate.** Knob off, the compiled JSON is **byte-identical** to
-the same job compiled from `HEAD`'s cfg (HEAD copies of the three touched files
-shadowed onto the front of `WIRECELL_PATH`, so nothing else could differ). Knob
-on, the diff is exactly one line, in the `TaggerCheckNeutrino` `data`:
+**Compiled-config gate.** Against the same job compiled from `HEAD`'s cfg (HEAD
+copies of the three touched files shadowed onto the front of `WIRECELL_PATH`, so
+nothing else could differ):
+
+| SBND job compiled with | vs HEAD |
+|---|---|
+| `sp_photon_flag=false` (the legacy path, `SBND_SP_PHOTON_FLAG=0`) | **byte-identical** |
+| no TLA — i.e. the new SBND default | one line added |
+| `sp_photon_flag=true` | the same one line |
 
 ```
 529a530
 > 			"sp_photon_flag" : true,
 ```
+
+That one line is the whole config-level footprint of the flip, and it lands in
+the `TaggerCheckNeutrino` `data`.
 
 **Output gate**, 7 events (`388 10550 111412 122660 137238 163543 172230`),
 against `work-prdisp-cosscan2` — the §8 arm, built by the **pre-change binary**:
@@ -948,9 +968,11 @@ reaches the ntuple, not that the verdict is right.
 
 ## 9.4 Scope
 
-- The display's dump is **unchanged**. With the knob off `photon_flag` is still
-  not computed, so emitting it would recreate exactly the defect §8.2 removed.
-  It belongs to whichever change flips the default.
+- The display's dump is **unchanged in this round**, though the reason it was
+  held back is now gone: with the SBND default ON, `photon_flag` *is* computed,
+  so it is no longer one of §8.2's never-assigned fields and is eligible for the
+  panel. Adding it is a display change, not a physics one — left for the next
+  display round so this commit stays traceable to the fix.
 - No other TaggerInfo field, no reconstruction, no selection: 1215 of 1216
   `T_tagger` branch-values are identical with the knob on.
 - The full valfast census (572 mcp1k + 47 nueCC48) was **not** run — per-fix
@@ -960,10 +982,12 @@ reaches the ntuple, not that the verdict is right.
 
 ```bash
 cd sbnd_xin
-# knob off  -- must reproduce work-prdisp-cosscan2
-PR_EXTRA_STAGES=pr_display PR_JOBS=6 ./run_pr_chain_batch.sh \
+# knob off = the pre-fix gap -- must reproduce work-prdisp-cosscan2.
+# NOTE: the two arms below were produced BEFORE the default flip, when a bare
+# run meant OFF; with the flip, the =0 / =1 are what select the arms.
+SBND_SP_PHOTON_FLAG=0 PR_EXTRA_STAGES=pr_display PR_JOBS=6 ./run_pr_chain_batch.sh \
     work-nuecc48-prod0803 work-spflag-off data 388 10550 111412 122660 137238 163543 172230
-# knob on
+# knob on = the SBND default; a bare run (no SBND_SP_PHOTON_FLAG) is this arm
 SBND_SP_PHOTON_FLAG=1 PR_EXTRA_STAGES=pr_display PR_JOBS=6 ./run_pr_chain_batch.sh \
     work-nuecc48-prod0803 work-spflag-on  data 388 10550 111412 122660 137238 163543 172230
 

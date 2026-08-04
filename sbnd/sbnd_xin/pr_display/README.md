@@ -163,10 +163,10 @@ code ever wrote reads as a physics answer. Full account: doc pr/26 §8.
 
 `photon_flag` was the one entry in that list that is a **port gap** rather than
 a legacy slot -- the single-photon tagger ran and its verdict was discarded.
-That is fixed (doc pr/26 §9) behind `sp_photon_flag`, **default OFF**; the
-runner exposes it as `SBND_SP_PHOTON_FLAG=1`. It stays off the panel while the
-default is off, for the reason above: with the knob off the field is still not
-computed. It goes back on the panel in whichever change flips the default.
+That is fixed (doc pr/26 §9) by `sp_photon_flag`, **now the SBND default**
+(`SBND_SP_PHOTON_FLAG=0` restores the gap). So `photon_flag` is computed again
+and is no longer a dead field -- it is simply **not on the panel yet**, deferred
+to the next display round rather than dead. The other 21 stay dead.
 
 > **The BDT scores are UNCALIBRATED on SBND.** The config books the
 > uBooNE-trained weight XMLs (doc pr/2 gap G1); the numbers carry availability

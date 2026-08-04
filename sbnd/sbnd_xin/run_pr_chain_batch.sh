@@ -240,9 +240,11 @@ esac
 # TaggerInfo::photon_flag, the way prototype NeutrinoID.cxx:271 does.  The port
 # ran that tagger and filled its ~90 shw_sp_* BDT features but discarded the
 # return value, so the uBooNE tagger ntuple's photon_flag branch is a constant
-# 0.  NOT the SBND default (it changes a written output branch); nothing in the
-# chain reads the field, so ON moves that branch and nothing else.
-# Env: SBND_SP_PHOTON_FLAG=1|0.  Unset = no TLA = the cfg default (off).
+# 0.  SBND DEFAULT ON (owner 2026-08-03): nothing in the chain reads the field,
+# so it moves that one branch and nothing else -- 1215 of 1216 T_tagger
+# branch-values are identical across the flip (doc pr/26 sec. 9.3).
+# Env: SBND_SP_PHOTON_FLAG=1|0.  Unset = no TLA = the cfg default (now ON);
+# pass 0 to reproduce the pre-fix gap.
 case "${SBND_SP_PHOTON_FLAG:-}" in
     1) CATH_TLA+=(--tla-code "sp_photon_flag=true") ;;
     0) CATH_TLA+=(--tla-code "sp_photon_flag=false") ;;
