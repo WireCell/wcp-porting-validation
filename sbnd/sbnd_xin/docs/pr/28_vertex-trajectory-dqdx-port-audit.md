@@ -19,9 +19,9 @@ class neither earlier sweep covered: `TrajectoryView::edges()` is a
 run-to-run identical: 0 leaf diffs over 954 344 leaves on six events**, down from
 a floor of 1–3. What remains is recorded as *new* items with their own starting
 points, not as unfinished business here: the twelve `NeutrinoShowerClustering`
-membership sites (§15.8), the unconfirmed §11.7 mechanism (§14.8), the global
-slice-start `x` convention (§14.9), and the owed valfast/1000 population gate
-(§15.9).
+membership sites (§15.8), and the owed valfast/1000 population gate
+(§15.9) — §11.7 is closed by §15.10 and the slice-start `x` convention is
+accepted (§15.11).
 
 | round | items | toolkit commit | section |
 |---|---|---|---|
@@ -3232,5 +3232,106 @@ read as a missed site.
   in the dir, but `work-*` is git-excluded, so that marker lives on disk only —
   this line is the part that survives.
 * **Round 8's two missing tests** (§14.12).
-* **§11.7's unconfirmed mechanism** (§14.8) and **the global slice-start `x`
-  convention** (§14.9) — unchanged, both the owner's call.
+* **§11.7 is CLOSED** (§15.10) — re-run at HEAD, the retype now moves *nothing*
+  on evt 239794 (byte-identical across all four artifact families), so the
+  near-miss is historical, not a live hazard. The 1.2 GeV itself stays
+  unexplained and unreachable: it was measured against the round-5 tree.
+* **The global slice-start `x` convention is ACCEPTED** (§15.11) — owner's
+  decision 2026-08-04. Known, accepted convention, not a defect and not pending
+  work. Note the consequences recorded there: `time_offset` is a *bookkeeping*
+  constant (`-205 µs = -tick0_time`), not a fitted one, so nothing absorbs the
+  ≈0.156 cm; and an empirical cathode offset may contain ~0.31 cm of this
+  shape.
+
+### 15.10 §11.7 re-run at HEAD — the 1.2 GeV **observation** no longer reproduces either
+
+§14.8 showed §11.7's stated *mechanism* did not reproduce. This re-runs the
+experiment itself.
+
+**Repro.**
+
+```bash
+# arm B only -- arm A is work-r10a/pr_evt239794, already at HEAD 397b1517.
+# Retype the one container §11.7 names, in all three places it is declared:
+#   NeutrinoVertexFinder.cxx:2033   std::set<SegmentPtr> -> IndexedSegmentSet
+#   NeutrinoVertexFinder.cxx:1698   parameter type
+#   NeutrinoPatternBase.h:467       declaration
+wcbuild
+R9_CFG=/home/xqian/tmp/r10cfg/cfg PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
+  ./tmp_run_pr_chain_r9.sh work-nuecc48-prod0803 work-p117idx data 239794
+git checkout clus/src/NeutrinoVertexFinder.cxx clus/inc/WireCellClus/NeutrinoPatternBase.h
+```
+
+**Result — byte-identical, everywhere.**
+
+| | `work-r10a` (HEAD) | `work-p117idx` (retyped) |
+|---|---|---|
+| `kine_reco_Enu` | 2876.9893 MeV | **2876.9893 MeV** |
+| `kine_reco_add_energy` | 8.6 | 8.6 |
+| calib-dump leaves (185 421) | — | **0 differ** |
+| `mabc-pr.zip` content hash | `a84ccca3…` | **`a84ccca3…`** |
+| `pctree`, `T_tagger`+`T_kine`, `nusel-evt239794.tsv` | — | identical |
+
+§11.7 recorded *"2930 → 1687 MeV and 376 other branches with it"*. At HEAD the
+same swap on the same event moves **nothing at all**.
+
+**What this settles and what it does not.** It settles that §11.7 is now
+**historical**: no live code path depends on that container's comparator, so the
+"near-miss" is not a hazard anyone can trip today. It does **not** retroactively
+explain the 1.2 GeV — that measurement was taken against the round-5 tree and
+this run cannot reach back to it. Between then and now the tree absorbed rounds
+6–9 plus the pr/29 terminal-filter flip; the sweep in rounds 4–5 in particular
+made the surrounding loops index-ordered, which is the most plausible reason the
+comparator stopped mattering. That is a hypothesis, not a measurement, and it is
+labelled as one.
+
+**The rule §11.7 exists to carry is unaffected.** "Judge each container by how it
+is *used*; swapping a comparator can silently change `find()` from pointer
+identity to index identity" is still correct, is independently demonstrated by
+§15.6's doctest (three unindexed segments collapse to one in an
+`IndexedSegmentSet`), and is exactly why §15.5 sorted the *iteration* at
+`:3541` rather than re-keying the map. The rule never depended on this event.
+
+**§11.7 is closed.** Nothing is owed. Its `⚠️` block and the
+`NeutrinoPatternBase.h:445` note should be read as recording a historical
+observation, not a live risk.
+
+### 15.11 The global slice-start `x` convention — **ACCEPTED by the owner**
+
+§14.9 flagged, and deliberately did not decide, that blob `x` is
+`time2drift(…, slice->start())` — the tick the slice *opened*, not its centre —
+so every reconstructed `x` carries a uniform half-slice term, 2 ticks = 1 µs
+≈ **0.156 cm** at SBND.
+
+One fact was added when the item was put to the owner, and it cuts against
+§14.9's own hedge. §14.9 argued the term was probably absorbed because *"a
+calibrated drift velocity and `time_offset` absorb exactly this kind of term."*
+The actual value is
+
+```jsonnet
+local time_offset = -205 * wc.us;   // = -tick0_time  (sbnd/clus.jsonnet:21)
+```
+
+— a **bookkeeping constant**, minus the DAQ `tick0_time`, not a parameter fitted
+so that reconstructed `x` lands correctly. Nothing tuned could have absorbed the
+half slice, and a drift-velocity fit cannot either: a constant Δt moves the
+*intercept*, not the *slope*. Since `time2drift` applies the per-face `xsign`
+**after** adding the offset (`SamplingHelpers.cxx:247-256`), the displacement is
+away from each TPC's own anode, so the two halves of a cathode-crossing track
+move in opposite directions — a ~0.31 cm relative mismatch at the cathode, which
+overlaps the cathode-offset / distortion-map studies.
+
+**Owner's decision, 2026-08-04: accept the convention as-is.** It is recorded as
+a **known, accepted convention**, not a defect and not pending work — the same
+status §12.7 gives the remaining vertex-fit divergences. Consequences of the
+decision, stated so a later audit does not rediscover them as bugs:
+
+* reconstructed `x` is uniformly offset by ≈0.156 cm from a slice-centre
+  convention, in every SBND event, and that is **intended**;
+* any empirically measured cathode offset may contain a ~0.31 cm component of
+  this shape; it should not be attributed wholly to field distortion without
+  accounting for it;
+* the convention cannot be changed in isolation later — `time_offset`, the
+  drift-velocity calibration, the FV bounds (`FV_xmin: -201.05 cm`, …) and the
+  cathode-offset corrections were all established on top of it and would have to
+  move together. That is a campaign, not a fix.
