@@ -1919,3 +1919,52 @@ provably a port bug *and* provably free on this manifest — this one is neither
 it is not established as a bug (§10.3), and it is not free (7 events move their
 energy, two of them by hundreds of MeV). Flipping it is a §5 rule 1 decision
 and it is the owner's, not this document's.
+
+### §11.8 Bee sets for the scan — OFF vs ON on the eight movers
+
+Owner asked for the pair, to decide on-vs-off by scanning rather than by table.
+
+| arm | knob | Bee |
+|---|---|---|
+| **OFF** — today's toolkit (the stage-3 PCA call runs) | `shower_topo_proto_dir=false` | https://www.phy.bnl.gov/twister/bee/set/908c3ce5-d089-4b00-90ab-68d66701af32/event/list/ |
+| **ON** — the prototype's behaviour (call skipped) | `shower_topo_proto_dir=true` | https://www.phy.bnl.gov/twister/bee/set/2a421626-567a-4054-bc39-6bc95df09fe9/event/list/ |
+
+**The two sets carry the same 8 events in the same Bee-index order**, so index
+*n* is the same event in both tabs — verified, `pr31_f2off.index.txt` and
+`pr31_f2on.index.txt` are identical. Only the eight movers are packaged; the
+other 40 events of the manifest are bit-identical between the arms and would be
+noise in a scan.
+
+| Bee idx | event | `kine_reco_Enu` OFF → ON (MeV) | Δ | `numu_score` OFF → ON | `nue_score` | vertex |
+|---|---|---|---|---|---|---|
+| 0 | **360535** | 2213.4 → 1459.0 | **−754.4** | −1.353 → −0.421 | — | — |
+| 1 | **74544** | 2082.1 → 2286.3 | **+204.3** | −0.034 → −1.489 | — | — |
+| 2 | **256587** | 3835.9 → 3845.9 | +10.0 | −1.687 → −1.808 | — | 0.78 cm |
+| 3 | **268067** | 1036.0 → 1040.1 | +4.0 | +0.800 → +0.638 | +2.525 → +1.926 | — |
+| 4 | **46363** | 1850.8 → 1854.3 | +3.5 | −1.462 → −0.695 | — | — |
+| 5 | **388** | 2811.1 → 2809.3 | −1.8 | −0.728 → −1.532 | — | — |
+| 6 | **269774** | 2602.5 → 2603.4 | +0.9 | −0.940 → −1.702 | — | — |
+| 7 | **137238** | 1030.5 → 1030.5 | +0.0 | +1.270 → +1.329 | — | — |
+
+**Idx 0 and 1 are the whole question**; idx 2-7 move by ≤ 10 MeV and are
+included only so the scan sees the full population of what changed.
+
+Two things to hold in mind while scanning, both from §11.4:
+
+* **No selection outcome differs on any of these eight.** `event_label`,
+  `nu_evaluated`, the selected bundle and every cosmic flag are identical, and
+  so are both `nusel-*.tsv` files. What is being judged is the *reconstruction
+  on an already-selected bundle* — the particle flow and the energy — not
+  whether the event is kept.
+* **`numu_score` moves in both directions and does not track the energy.** On
+  idx 0 the energy falls 754 MeV while `numu_score` rises; on idx 1 the energy
+  rises 204 MeV while `numu_score` falls. The BDT weights are uBooNE-trained
+  and uncalibrated on SBND (doc pr/2 gap G1), so `numu_score` is not the
+  tiebreak — the particle flow in the display is.
+
+Assets: `sbnd_xin/bee/pr31-f2/pr31_f2{off,on}.{zip,index.txt,prid-map.txt,url}`
+(not git-tracked, by the existing convention). Arms `work-pr31-f2off48` /
+`work-pr31-f2on48`.
+
+**Still OFF pending the scan** (§11.7), and F3 should land before any flip
+(§11.6).
