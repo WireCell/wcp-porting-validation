@@ -7,10 +7,24 @@ dQ/dx) and ran through pr/29 (Steiner graph), pr/30 (proto-vertex + segment),
 pr/31 (topology/PID/direction), pr/32 (neutrino vertex ID), pr/33 (EM shower
 clustering), pr/34 (particle flow) and pr/35 (energy reconstruction).
 
-**Status. AUDIT ONLY. No code was changed, and no patch is proposed.** The
-owner's standing instruction for this series ("please do not change any code
-yet") governs. Every finding below is a question for the owner, not a decision
-taken.
+**Status. AUDIT ONLY. No code was changed.** The owner's standing instruction
+for this series ("please do not change any code yet") governs. Every finding
+below is a question for the owner, not a decision taken.
+
+> **§10 added — the owner filter, 13 → 7**, re-verified at toolkit
+> **`407c5ba9`** (§3 was written at `23bd6783`, twelve commits earlier). §10
+> keeps the bugs and the port gaps, drops the three findings where the toolkit
+> improves on the prototype, resolves two outright, and proposes a fix and an
+> exact edit site for each survivor. **Seven findings, five knobs** — the shapes
+> differ and §10.1a says how.
+>
+> Three things in §10 change §3 rather than extend it, and are flagged there:
+> **P12's stated mechanism is retracted** and replaced by a verified one with a
+> much larger plausible population (§10.3); **P11 is resolved as a
+> non-defect, and the "fix" §3 gestures at would be a regression** (§10.10a);
+> and **§2.9's parity claim is narrower than it reads** (§10.13). §6's
+> unexamined `muon_segs` was examined and is a third live site (§10.5), and P6
+> is 22 call sites, not one (§10.6).
 
 **Headline.**
 
@@ -1013,3 +1027,562 @@ mapped there is no longer a reason to defer it.
   until someone checks.
 * **Nothing was changed.** Zero toolkit files were modified this round;
   verified against a working tree that a concurrent session was editing.
+
+---
+
+## §10 The owner filter — 13 → 7
+
+**What this section is.** The owner's standing rule for this series: *drop the
+findings where the toolkit improves on the prototype; keep only the bugs and
+the things missing from the port, and propose a fix for each survivor.* Applied
+to pr/30 (14→4), pr/31 (15→9), pr/32 (12→4), pr/33 (14→5), pr/34 (14→5) and
+pr/35 (14→4). This round lands on **seven**. The count is an output, not a
+target.
+
+**Re-verification basis.** §3 was written against toolkit `23bd6783`. HEAD is
+now **`407c5ba9`**, twelve commits later. Every anchor below was re-derived at
+HEAD, and — because a concurrent session holds twelve modified toolkit files,
+two of them in this stage — **every file was read at `git show HEAD:<path>`,
+never from the working tree**. Snapshots in
+`/home/xqian/tmp/claude-25225/pr36f/`.
+
+**The staleness answer this round is nearly clean, and that is itself worth
+recording**, because the series' answer has varied: pr/32's anchors were four
+commits stale within a day, pr/33's were up to +19 lines *with a finding created
+underneath them*, pr/34's came back clean, pr/35's had seven files move over
+eleven commits.
+
+| file | 23bd6783 → 407c5ba9 | anchors |
+|---|---|---|
+| `NeutrinoTaggerCosmic.cxx` | **unchanged** (1353) | §3 anchors stand |
+| `NeutrinoTaggerNuMu.cxx` | **unchanged** (385) | stand |
+| `NeutrinoTaggerNuE.cxx` | **unchanged** (4414) | stand |
+| `NeutrinoTaggerSSM.cxx` | **unchanged** (1549) | stand |
+| `NeutrinoTaggerSinglePhoton.cxx` | **unchanged** (2533) | stand |
+| `NeutrinoKinematics.cxx`, `NeutrinoTaggerInfo.h` | **unchanged** | stand |
+| `TaggerCheckSTM.cxx`, `Clustering_Util.cxx` | **unchanged** | stand |
+| `root/src/Uboone{Nue,Numu}BDTScorer.cxx` | **unchanged** | stand |
+| `TaggerCheckNeutrino.cxx` | **940 → 1037** (+97, **0 deleted**) | **all shift, see §10.12** |
+| `TaggerCheckNeutrino.h` | 188 → 217 (+29, 0 deleted) | — |
+
+Only the driver moved, and it moved by pure insertion at four hunks
+(`@@ -81,0 +82,14 @@`, `@@ -222,0 +237,15 @@`, `@@ -512,0 +542,24 @@`,
+`@@ -891,0 +945,44 @@`). Every §3 anchor in that file above old line 512 shifts
+by exactly **+53**. §10.12 tabulates them.
+
+### 10.1 The filter
+
+| P | finding | verdict | why |
+|---|---|---|---|
+| P1 | `match_isFC` recomputed on a disagreeing FV | **KEEP → F1** | definition change on a live BDT input |
+| P2 | `singlephoton_tagger` drops SCE correction | **KEEP → F3** | port gap; the plumbing exists 30 lines away |
+| P3 | `broken_muon_id` sums floats in address order | **KEEP → F4** | merged with P5 + a third site §6 missed |
+| P4 | `neutrino_type` bitmask dropped | **KEEP → F7** | genuinely missing from the port (output branch) |
+| P5 | `mip_quality` iterates `std::set<ShowerPtr>` | **merged into F4** | same mechanism, same fix |
+| P6 | stem endpoint by proximity, not wcpt index | **KEEP → F5** | port defect — and **22 sites, not one** |
+| P7 | `3.1415926` vs `M_PI` | **DROP** | toolkit better; §3 already says do not "fix" it |
+| P8 | cluster count by pointer, not by id | **KEEP → F6** | latent port defect; co-located with F4's loop |
+| P9 | `numu_cc_1_*` arrays index-ordered | **DROP** | determinism improvement; reproducing it is an M4 regression |
+| P10 | `!ssm_sg` guard the prototype lacks | **DROP** | prototype bug not reproduced |
+| P11 | `stm_tol_vec` sized 6 vs 5 | **RESOLVED — and inverted** | the 6 is the *correct* translation; see §10.10a |
+| P12 | PDG gate requires `has_particle_info()` | **KEEP → F2, mechanism RETRACTED** | the divergence is real, §3's account of *why* is wrong; see §10.3 |
+| P13 | `photon_flag` knob-gated off on SBND | **RESOLVED** | the knob exists and is wired; see §10.10b |
+
+**Kept: 7. Resolved outright: 2. Dropped as improvements: 3.** P5 folded into
+P3, so thirteen entries produce seven findings.
+
+**Severity is re-ranked.** §8 put P1/P2/P3 at "high" and P12 at "low". F2 (was
+P12) is now the finding with the **largest plausible affected population** —
+if its measurement comes back non-zero it ranks first, above F1. It is listed
+second only to keep §3's headline readable; §10.3 states why.
+
+### 10.1a Findings are not knobs
+
+Seven findings do **not** mean seven default-OFF knobs. Presenting them as
+peers would smuggle two category changes past the owner — the pr/33 GOTCHA 20
+trap.
+
+| F | = P | shape | new knobs |
+|---|---|---|---|
+| F1 | P1 | knob implements **one of two readings**; the other is a threading decision | 2 keys, 1 knob |
+| F2 | P12 | **measurement first**, then a knob | 1 (+1 counter) |
+| F3 | P2 | plumbing; `clus_geom_helper` already exists | 1 gate bool (see §10.4) |
+| F4 | P3+P5+§6 | **M4 house-rule, prototype `n/a`** — *not* a fidelity fix | 1 |
+| F5 | P6 | 1 knob across **22 independent sub-taggers** ⇒ needs a per-site counter | 1 (+counter) |
+| F6 | P8 | one-line | 1 |
+| F7 | P4 | cheap fix, **unmeasured value** | 1 (+ a T_tagger branch) |
+
+**F4 is the one to read carefully.** It is a CLAUDE.md §2 determinism
+house-rule violation, not a port defect: the prototype does the same
+address-ordered thing. Flipping it moves the toolkit **further** from the
+prototype's order, not closer. Same class as pr/33's F5.
+
+### 10.2 F1 = P1 — `match_isFC`
+
+Anchor at HEAD: `TaggerCheckNeutrino.cxx:904-907` (was `:851-853`).
+
+§3's two readings stand and I still decline to pick (§5 rule 4, M15). What
+§10 adds is that **reading (i) is a knob and reading (ii) is not**, so they are
+not symmetric options:
+
+* **(i) mirror `TaggerCheckSTM`'s fiducial knob.** That component already has
+  the exact template: `m_use_fiducial = !config["fiducial"].isNull()`
+  (`TaggerCheckSTM.cxx:101`), `m_fv_tolerance` parsed at `:110-111`, members
+  declared at `:696-697`, used at `:2939-2940`. Add the same two keys to
+  `TaggerCheckNeutrino` and pass them through:
+
+  ```cpp
+  // TaggerCheckNeutrino.cxx:905, from
+  auto fc_result = Facade::cluster_fc_check(*main_cluster, m_dv);
+  // to
+  auto fc_result = Facade::cluster_fc_check(*main_cluster, m_dv,
+                                            m_use_fiducial ? m_fiducial : nullptr,
+                                            m_fv_tolerance);
+  ```
+
+  `cluster_fc_check`'s own comment (`Clustering_Util.cxx:108-110`) states the
+  `fiducial == nullptr` path is "the historical FiducialUtils path,
+  **bit-for-bit**" — so the knob is byte-identical while unset, by the callee's
+  documented contract rather than by our assertion.
+
+* **(ii) thread the upstream verdict from the matching stage.** No knob
+  reproduces this; it is a data-flow decision about whether this stage may
+  depend on the light-matching result. Out of scope for a default-OFF change.
+
+**Do the diagnostic before either.** §7.1 remains the highest-value cheap item
+in the round: one event, both FV definitions, compare `is_fc`. Agree on a
+sample ⇒ F1 collapses to a documentation fix and (ii) becomes moot.
+
+### 10.3 F2 = P12 — the mechanism in §3 is wrong, and the real one is bigger
+
+**This is the largest change §10 makes to §3, and §3's version must be retracted
+in words rather than quietly replaced.**
+
+§3's P12 says the divergence is a segment "whose PDG was set but whose
+`ParticleInfo` was never constructed", reachable via pr/31 P1's dropped
+`cal_4mom` guard. **That account does not survive.** Taking the eight
+skip-gates one at a time, they are of two shapes only —
+`if (!has_particle_info() || pdg() != 11) continue;` and
+`if (!has_particle_info()) continue;` followed by `pdg == 13 || pdg == 2212`.
+The prototype's `particle_type` member defaults to `0` (`ProtoSegment.cxx:29`),
+and `0` is neither 11 nor 13 nor 2212 — so on a segment with no type set,
+*both* trees skip. Identical. This is pr/33 GOTCHA 23's reasoning applied to
+the same idiom.
+
+**The real divergence is one level down, and it is verified.**
+`get_particle_type()` is **not a member read**:
+
+```cpp
+// prototype  pid/src/ProtoSegment.cxx:10-15
+int WCPPID::ProtoSegment::get_particle_type(){
+  if (get_flag_shower()){
+    particle_type = 11;   // shower are all treated as electron
+  }
+  return particle_type;
+}
+```
+
+Every prototype read coerces a **shower-flagged** segment to PDG 11 — **and
+mutates the member while doing it**, so the coercion latches on first read. The
+toolkit has no counterpart: `grep "treated as electron"` over
+`PRSegment.{h,cxx}` and `PRCommon.h` returns zero, and `has_particle_info()`
+(`PRSegment.h:81`) is a plain null test.
+
+So on a shower-flagged segment carrying no explicit `ParticleInfo`:
+
+| | prototype | toolkit |
+|---|---|---|
+| `if (type != 11) continue;` | type coerced to **11** ⇒ **processed as an electron** | no info ⇒ **skipped** |
+
+That is the opposite population from the one §3 named, and in an *nue* tagger
+it is the majority population, not a corner case.
+
+**The coupling is mutual and the toolkit gets the other half right.**
+`seg_is_shower` (`NeutrinoTaggerNuE.cxx:76-80`) does carry the
+`std::abs(pdg) == 11` term — the term pr/33 GOTCHA 3 found missing from
+`porting_dictionary.md:222`. The prototype's pair is a two-way latch
+(`flag_shower ⇒ pdg=11`, `pdg==11 ⇒ flag_shower`); the toolkit ported the
+second implication and not the first.
+
+**Verified vs not verified — kept separate on purpose.**
+
+* **Verified**: the coercion exists, mutates, and has no toolkit counterpart.
+  Also verified: **parity is not "widen the toolkit gate"**. Widening reproduces
+  the *read* and not the *latch*, and the latch is observable — a later
+  `seg_is_shower` on the same segment sees the written 11.
+* **NOT verified**: that the affected population is non-empty. The toolkit does
+  write PDG 11 explicitly at `NeutrinoShowerClustering.cxx:212`, `:432`, `:751`,
+  and shower clustering runs before the taggers. Whether that coverage is
+  *total* was not established, and I did not check it.
+
+**Discriminating check, to run before acting on F2.** At tagger entry, count
+segments satisfying
+`(flags_any(kShowerTrajectory) || flags_any(kShowerTopology)) && !has_particle_info()`.
+One counter line in the `PR30AUDIT` / `PR32AUDIT` pattern already in this file
+(`TaggerCheckNeutrino.cxx:946-969`, `:971-988`). **Zero over the sample ⇒ the eight
+skip-gates are equivalent and F2 resolves dead-by-construction, like pr/35's
+P10. Non-zero ⇒ F2 is live and that count is its magnitude.**
+
+**Fix, if the count is non-zero.** A default-OFF `pdg_shower_coercion` on the
+tagger stage: before the gates, for each segment, if `seg_is_shower(sg)` and
+`!sg->has_particle_info()`, construct a `ParticleInfo` with pdg 11. That
+reproduces the latch, not just the read. Sites: the eight gates are
+`NeutrinoTaggerNuE.cxx:396, :852, :897, :989, :1014, :4089, :4274` and
+`NeutrinoTaggerSinglePhoton.cxx:1400`.
+
+**§3's non-NuE site list is also wrong and should be struck.** P12 names
+`NeutrinoTaggerNuMu.cxx:199`, `NeutrinoTaggerCosmic.cxx:772`, `:815`,
+`NeutrinoTaggerSinglePhoton.cxx:2267` and `NeutrinoTaggerSSM.cxx:913`. All five
+are `int pdg = sg->has_particle_info() ? sg->particle_info()->pdg() : 0;`
+ternaries — which yield exactly the prototype's member default and are
+**faithful**. Of 54 `has_particle_info()` uses across the five tagger files,
+only **8** are skip-gates.
+
+### 10.4 F3 = P2 — SCE, and the plumbing is thirty lines away
+
+The cleanest fix in the round, because the driver already does it for the
+sibling call.
+
+```cpp
+// TaggerCheckNeutrino.cxx:876-885 — singlephoton_tagger gets no helper
+pattern_algos.singlephoton_tagger(*pr_graph, main_cluster, final_main_vertex,
+                                  showers, map_vertex_to_shower, …, m_dv,
+                                  tagger_info);
+
+// TaggerCheckNeutrino.cxx:938 — thirty lines below, in the same function
+kine_info = pattern_algos.fill_kine_tree(…, m_dv,
+        m_geom_helper,   // nullptr when clus_geom_helper is not configured
+        particle_data(), m_recomb_model);
+```
+
+`SpContext` already **has the slot** — `IClusGeomHelper::pointer geom_helper;
+// nullable; for SCE correction in entry point`
+(`NeutrinoTaggerSinglePhoton.cxx:116`) — and the construction hardwires it:
+`SpContext ctx{…, dv, nullptr};` (`:2219-2222`). The correction primitive
+exists too: `geom_helper->get_corrected_point(p, IClusGeomHelper::SCE, apa, face)`
+(`NeutrinoKinematics.cxx:65`).
+
+**Fix.** Add an `IClusGeomHelper::pointer` parameter to
+`singlephoton_tagger` (`NeutrinoPatternBase.h:816`), pass `m_geom_helper` from
+the driver, drop it into the `SpContext` slot, and apply it at the five sites
+the prototype corrects — `NeutrinoID_singlephoton_tagger.h:13` (nu vertex),
+`:103`, `:132` (track starts), `:222`, `:317` (shower starts) — plus the
+`max_shw_dis` pair at `:324`, `:327-328`, which is a distance between two
+*corrected* points and so is not fixed by correcting the coordinates alone.
+
+**Why a separate gate bool, not just `clus_geom_helper`.** SBND leaves
+`clus_geom_helper` at `""` (`TaggerCheckNeutrino.cxx:309`), so threading it is a
+no-op **today** and byte-identical. But the key is shared with `fill_kine_tree`:
+the day someone sets it for kine, the single-photon positions would move in the
+same commit, unannounced. Recommend a `sp_sce_correction` bool defaulting
+**false** so the two consumers stay independently gateable. Same reasoning that
+made pr/35 GOTCHA 10 a *config* gap rather than a silent one.
+
+Damage bound from §3 stands: `shw_sp_*` is not a BDT input on either side, so
+this moves the ntuple, not `nue_score`.
+
+### 10.5 F4 = P3 + P5 + the site §6 said it had not examined
+
+**§6 undercounted. `muon_segs` is a third live site, and it is a float sum.**
+§6 listed it (`NeutrinoTaggerNuE.cxx:3494`, inside `track_overclustering`) as
+"not examined … should be assumed to carry the same hazard until someone reads
+it". Read:
+
+```cpp
+// NeutrinoTaggerNuE.cxx:3494, :3519-3520
+std::set<SegmentPtr> muon_segs;
+…
+double stem_length_1 = 0;
+for (SegmentPtr s : muon_segs) stem_length_1 += segment_track_length(s);
+```
+
+`stem_length_1` feeds three hard cuts (`:3563` `> 6 cm`, `:3564` `> 40 cm`,
+`:3570` `> 40 cm`) and is pushed to the ntuple at `:3578`. Same shape as P3
+exactly. §7.8's own words — *"I did not look" is not evidence* — applied here
+and the assumption was right.
+
+The three live sites, and the two the doc already cleared:
+
+| site | container | iterated at | exposure |
+|---|---|---|---|
+| `:1394` `muon_segments` | `std::set<SegmentPtr>` | `:1518` | **two float sums** → `:1562-1574` cuts, `brm_Ep` |
+| `:1685` `connected_showers` | `std::set<ShowerPtr>` | `:1730` | first-wins booleans → `mip_quality_flag_inside_pi0` |
+| `:3494` `muon_segs` | `std::set<SegmentPtr>` | `:3520` | **one float sum** → `:3563-3570`, `tro_2_v_stem_length` |
+| `:1686` `tmp_pi0_showers` | — | never | `.count()`/`.size()` only — safe |
+| `:4264` `good_showers` | — | never | `.count()` only — safe |
+
+**Fix, and it is a type swap the tree already provides.** `IndexedSegmentSet =
+std::set<SegmentPtr, SegmentIndexCmp>` (`PRGraph.h:283`) and
+`IndexedShowerSet = std::set<ShowerPtr, ShowerIndexCmp>` (`PRShower.h:232`)
+exist, and `NeutrinoTaggerSSM.cxx:608` in this same stage already uses
+`SegmentIndexCmp`. One default-OFF `tagger_ordered_segment_sets` flipping all
+three declarations.
+
+**Class label, stated because it is not optional (pr/33 GOTCHA 20).** This is
+an **M4 / CLAUDE.md §2 house-rule violation, prototype `n/a`** — the prototype
+does the same address-ordered thing with `std::set<ProtoSegment*>`
+(`NeutrinoID_nue_tagger.h:1036`, iterated `:1139`). The hazard is *reproduced*,
+not introduced, and the fix makes the toolkit diverge **further** from the
+prototype's order. It belongs in the keep-list because address-ordered float
+accumulation is forbidden here regardless of provenance — not because it is a
+fidelity defect.
+
+Magnitude is still unmeasured; §7.2's M4 protocol (N runs under
+`setarch x86_64 -R`, compare `brm_acc_length`, `brm_acc_direct_length`,
+`brm_flag`, `tro_2_v_stem_length`, `nue_score`) settles all three sites at once.
+
+### 10.6 F5 = P6 — 22 sites, and the prototype's test is not implementable as written
+
+Two corrections to §3, both enlarging it.
+
+**(a) It is 22 call sites, not one.** `seg_endpoint_near` is called at
+`NeutrinoTaggerNuE.cxx:238, :370, :710, :979, :1151, :1383, :1998, :2557,
+:2981, :3188, :3413, :3834, :4316` (13) and
+`NeutrinoTaggerSinglePhoton.cxx:502, :712, :1003, :1126, :1793` (5), plus the
+two definitions. §3's `:4316` is the entry-point site only. This is the
+toolkit's *systematic* replacement of the prototype's wcpt-index rule across
+the whole stage.
+
+**(b) The prototype's rule cannot be transcribed, because the field is gone.**
+`WCPoint` in the toolkit is:
+
+```cpp
+// clus/inc/WireCellClus/PRCommon.h:96-110
+struct WCPoint {
+    WireCell::Point point;   // 3D point
+    // int uvw[3] = {-1,-1,-1}; // wire indices
+    // int index{-1};           // point index in some container
+    // FIXME: WCP had this, does WCT need it?
+};
+```
+
+`index` is **commented out**. So `main_vertex->get_wcpt().index ==
+sg->get_wcpt_vec().front().index` has no toolkit spelling, and
+`seg_endpoint_near` is a *forced* substitution, not a careless one. That changes
+what "fix it" means.
+
+**Fix.** `Segment::wcpts()` (`PRSegment.h:91`) and `Vertex::wcpt()`
+(`PRVertex.h:65`) both survive — only the integer id is gone. wcpts are discrete
+skeleton nodes, so index identity is position identity:
+
+```cpp
+// prototype NeutrinoID_nue_tagger.h:71-75 — wcpt INDEX identity.
+// WCPoint::index is commented out (PRCommon.h:99), so compare positions:
+// the wcpts are skeleton nodes, so identity is exact coincidence.
+const bool front_at_vertex =
+    !seg->wcpts().empty() &&
+    ray_length(Ray{vtx->wcpt().point, seg->wcpts().front().point}) < eps;
+Point test_p = front_at_vertex ? seg->fits().front().point
+                               : seg->fits().back().point;
+```
+
+Note both rules return a **fit** point (pr/31: `get_point_vec()` *is*
+`fit_pt_vec`); only the selection rule differs, so the fix is scoped to the
+selection.
+
+**Ship the knob with a per-site disagreement counter.** One
+`stem_endpoint_wcpt_parity` across 22 call sites in ~18 *independent*
+sub-taggers cannot tell the gate which sub-tagger moved — the attribution
+problem that forced pr/33's F1 into two knobs. A counter keyed by call site is
+cheaper than 22 knobs and answers §7.7 in the same run.
+
+A related precedent is already in-tree: `find_vertices`
+(`PRGraph.cxx:211-247`) resolves the same front/back question by comparing
+`vtx->wcpt().point` against `seg->wcpts().front().point` — i.e. the toolkit
+**already** does the wcpt-space comparison in the graph layer while the taggers
+do it in fit space. The fix aligns the two.
+
+### 10.7 F6 = P8 — cluster identity vs cluster id
+
+`tmp_clusters` is populated in F4's loop and tested at `:1566`, so one edit
+visits both:
+
+```cpp
+// NeutrinoTaggerNuE.cxx:1516 / :1521 / :1566
+std::set<Facade::Cluster*> tmp_clusters;          // prototype: std::set<int> tmp_ids
+    tmp_clusters.insert(mseg->cluster());         // prototype: tmp_ids.insert(cluster_id)
+    … tmp_clusters.size() > 1 …                   // prototype :1183
+```
+
+Fix: `std::set<int>` keyed on the cluster id, behind
+`broken_muon_cluster_id_count`. They agree iff cluster↔id is injective within
+the event; doc 53 (`project_real_cluster_id_epochs`) is why that is worth a
+knob rather than an assumption. Also note the container is pointer-keyed, so
+switching to ids removes an M4 hazard as a side effect — but it is never
+iterated, only `.size()`d, so that half is inert.
+
+### 10.8 F7 = P4 — `neutrino_type`
+
+Kept because a dropped output branch is a thing missing from the port, and
+§2.10's justification covers only *logic*. The fix is cheap: recompute the
+bitmask at the five prototype sites (`cosmic_tagger.h:861`,
+`numu_tagger.h:252`/`:254`, `nue_tagger.h:259`,
+`singlephoton_tagger.h:538`) behind `neutrino_type_bitmask`.
+
+**Two things the owner should weigh before spending anything on it.** Its value
+is unmeasured — §7.5's question (does anything downstream read the branch?) is
+unanswered, and if the answer is "nothing", F7 drops to §5. And the fix is not
+complete without a writer change: `neutrino_type` is **not booked in
+`T_tagger`** (grep = 0 hits in `UbooneTaggerOutputVisitor.cxx`), so computing it
+would not make it observable. Ranked last for both reasons.
+
+### 10.9 The gate — two artifacts, and neither alone is sufficient
+
+This series' recurring trap, in a third variant. pr/34: `pctree-pr` would have
+PASSed vacuously because the stage was display-only. pr/35: the same gate failed
+for the opposite reason — `KineInfo` is not in the pctree at all. Here:
+
+**The right primary gate is `T_tagger`, and it is already produced.**
+`tagger_output` is in the SBND PR chain's **default** pipeline string
+(`run_pr_chain_batch.sh:115`), so unlike pr/34 and pr/35 **no extra stage is
+needed** — the production runner emits the artifact as-is. Compare with the
+existing tool:
+
+```bash
+sbnd_xin/scripts/analysis/misc/tagger_tree_ab.py \
+    <armA>/tracking-*.root <armB>/tracking-*.root T_tagger
+```
+
+It diffs branch by branch, dtype- and jagged-aware, on **contents** — so M2
+(archive timestamps) does not apply to a ROOT file compared this way. Coverage
+was verified field by field for the survivors:
+
+| field | booked in `T_tagger`? |
+|---|---|
+| `shw_sp_*` (F3) | **yes**, 177 hits |
+| `brm_acc_length`, `brm_acc_direct_length` (F4) | **yes** |
+| `tro_2_v_stem_length` (F4) | **yes** |
+| `cme_angle_beam` (F5) | **yes** |
+| `mip_quality_flag_inside_pi0` (F4) | **yes** |
+| **`match_isFC` (F1)** | **NO — 0 hits** |
+| **`neutrino_type` (F7)** | **NO — 0 hits** |
+
+**So F1 is not gateable on `T_tagger`.** The branches are booked one at a time
+(574 explicit `t_tagger->Branch(` calls against 1024 `TaggerInfo` members), and
+`match_isFC{0}` (`NeutrinoTaggerInfo.h:1351`) is simply not among them. Its only
+outlet is the PR display dump: `out["match_isFC"] = t.match_isFC;`
+(`PrDisplayDump.cxx:523`, in `dump_tagger` `:507`), written to
+`calib-pr-evt<ID>.json` (`sbnd/clus.jsonnet` `pr_display.output_filename`) —
+the same artifact pr/35 landed on, and plain JSON, so directly diffable.
+
+**And the display dump is the wrong *primary* gate.** `dump_tagger` emits
+**45** keys — the two scores, the ten cosmic flags with their `_filled`
+companions, and the 19 XGBoost sub-scores. It carries none of `shw_sp_*`,
+`brm_*`, `tro_2_v_*` or `cme_*`. A gate run on `calib-pr-evt<ID>.json` alone
+would PASS on F3, F4 and F5 without looking at anything they move.
+
+**Gate for this stage = `T_tagger` via `tagger_tree_ab.py` for F2–F7, plus the
+`tagger` block of `calib-pr-evt<ID>.json` for F1.** Run `T_kine` as a third
+comparison if F3 lands, since `clus_geom_helper` is shared.
+
+### 10.10 Resolved outright
+
+**(a) P11 — resolved, and the doc came one step from recommending an
+inversion.** §3 asks whether the toolkit's `std::vector<double> stm_tol_vec(6, -1.5cm)`
+against the prototype's 5 entries is "a real behaviour change if it reads a
+sixth boundary". Both implementations were read.
+
+* Prototype `ToyFiducial::inside_fiducial_volume` (`pid/src/ToyFiducial.cxx`)
+  unpacks **five named slots**:
+  `[tx_ano, tx_cat, ty_bot, ty_top, tz]` — x-low, x-high, y-low, y-high, and a
+  **single** z applied to both faces. All five are `-1.5 cm`
+  (`NeutrinoID_cosmic_tagger.h:32`).
+* Toolkit `FiducialUtils::inside_fiducial_volume` (`FiducialUtils.cxx:79-121`)
+  branches on size: `>= 6` ⇒ `[x_lo, x_hi, y_lo, y_hi, z_lo, z_hi]`; `>= 3` ⇒
+  per-axis `[x, y, z]`; else uniform.
+
+The toolkit's size-6 vector is therefore **the correct translation** of the
+prototype's 5-slot layout, with `tz` written into both z faces. There is no
+sixth boundary and nothing is left untightened.
+
+**And the "fix" §3 gestures at would be a regression.** A 5-entry vector handed
+to the toolkit falls into the `>= 3` branch and is reinterpreted as *per-axis*
+— silently discarding entries 3 and 4 and reading `tv[2]` as z. With every
+entry equal to −1.5 cm the numbers coincide, but the semantics do not, and they
+would stop coinciding the moment anyone made the tolerances anisotropic. This
+is M7's shape (`<` vs `<=`): a toolkit/prototype difference that exists because
+the toolkit's convention is different, not because the port slipped.
+**P11 is not a defect. Do not "fix" it toward 5.** `NeutrinoTaggerNuE.cxx:2357`
+and `:2501` use the same 6-vector and are correct for the same reason.
+§7.4 is closed.
+
+**(b) P13 — `photon_flag`.** Not a divergence to fix: the knob exists, is
+documented in-file (`TaggerCheckNeutrino.cxx:868-875`), round-trips in
+`default_configuration()` (`:303`), logs unconditionally when on (`:889`), and
+SBND's `sp_photon_flag=false` is a *config* decision recorded in doc pr/26
+§8.2. §3 lists it "for completeness of the driver comparison", which is the
+right reason to have written it down and not a reason to keep it in a fix list.
+
+### 10.11 Dropped, with the reason
+
+* **P7** (`3.1415926` vs `M_PI`) — 1.8×10⁻⁸ relative. §3 already says "do not
+  fix it in the direction of the prototype"; the filter agrees.
+* **P9** (`numu_cc_1_*` index-ordered) — determinism improvement. Reproducing
+  the prototype's address order would be an M4 regression. Keep §3's operational
+  note: compare these arrays as **multisets**, not element by element.
+* **P10** (`!ssm_sg` guard) — prototype bug not reproduced. Do not restore.
+
+### 10.12 Re-derived anchors
+
+All `TaggerCheckNeutrino.cxx`; every other file's anchors are unchanged (§10
+header).
+
+| §3 cites | at HEAD `407c5ba9` | what |
+|---|---|---|
+| `:735-860` | **`:788-913`** | the tagger block |
+| `:751` | **`:804`** | `if (final_main_vertex)` gate on the whole block |
+| `:788-804` | **`:841-857`** | apa/face derivation (§2.7) |
+| `:832-839` | **`:885-892`** | `singlephoton_tagger` call + `photon_flag` knob |
+| `:833` | **`:886`** | `if (m_sp_photon_flag)` |
+| `:835` | **`:888`** | the comment; **the `photon_flag` write is `:891`**, not `:835`+53 — §2.1's citation was already off by three |
+| `:851-853` | **`:904-906`** | `cluster_fc_check` |
+| `:852` | **`:905`** | the call itself (P1 / §8 anchor) |
+| `:860` | **`:913`** | `if (final_main_vertex)` before `fill_kine_tree` |
+
+Rule: anything above old `:512` shifts **+53**; `:82-95`, `:237-251`,
+`:542-565` and `:945-988` are new.
+
+### 10.13 An observation that corrects a §2 *positive*
+
+Not promoted to a finding, but flagged because a wrong entry in §2 costs more
+than a wrong entry in §3 — a false positive tells a future reader not to look.
+
+**§2.9 says the toolkit "keeps the tightened boundary". It keeps the
+tightening; it does not keep the boundary switch.** In the prototype,
+passing a tolerance vector does not merely inset the volume — it switches which
+polygon family is tested. `ToyFiducial::inside_fiducial_volume` with
+`tolerance_vec == NULL` runs `pnpoly` against `boundary_xy_x` /
+`boundary_xz_x`; with a tolerance vector it runs against
+**`boundary_SCB_xy_x_array` / `boundary_SCB_xz_x_array`** — the space-charge
+boundary — after temporarily shifting those arrays and reverting them. Two
+different surfaces, not one surface at two insets.
+
+The toolkit's `FiducialUtils::inside_fiducial_volume` insets **the same**
+`m_sd.fiducial` in both branches (`FiducialUtils.cxx:82-84` and `:113-118`).
+
+Kept as an observation rather than a P for a reason that should be stated:
+`boundary_SCB_*` is a uBooNE-specific hard-coded array pair with no SBND
+counterpart, and SBND supplies its own `IFiducial` through config. There is no
+"restore the SCB family" fix available here. What the entry *does* mean is that
+§2.9's parity claim is narrower than it reads: the tolerance is faithful, the
+surface it is applied to is not the prototype's, and any future attempt to
+reconcile uBooNE numbers against this stage has to account for that.
+
+### 10.14 What §10 does not claim
+
+* **Still no event was run.** Every statement above is static reading at
+  `git show HEAD:`. F1's diagnostic, F2's population count, F4's M4 protocol and
+  F5's disagreement counter are all *proposed*, none executed.
+* **F2's population is not measured** — §10.3 separates the verified mechanism
+  from the unverified frequency deliberately, and the fix must not be
+  implemented before the counter runs.
+* **The filter does not re-audit §0's uncovered ground.** The ~30 sub-taggers
+  whose internal cut values were never compared (§7.3) are exactly as unaudited
+  after §10 as before it. A wrong constant inside one of them is still not
+  excluded.
+* **Nothing was built and no gate was run.** Zero toolkit files were modified;
+  the concurrent session's twelve dirty files were left untouched and were not
+  read.
+* **§10.9's coverage table is a grep of the branch-booking block**, not a run.
+  It proves the branch is *booked*; it does not prove the writer is reached on
+  any event.
