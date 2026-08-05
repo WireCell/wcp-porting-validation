@@ -264,7 +264,7 @@ short.
 
 | toolkit site | prototype writes the member? | verdict |
 |---|---|---|
-| `determine_overall_main_vertex:808` | **yes** — via `examine_main_vertices` (`NeutrinoID.cxx:455`, `:514` erase) **and** `check_switch_main_cluster` (`:941` swap) | **LIVE defect**, unreachable at the SBND operating point (§1) |
+| `determine_overall_main_vertex:808` | **yes** — via `examine_main_vertices` (`NeutrinoID.cxx:455`, `:514` erase) **and** `check_switch_main_cluster` (`:972` swap, via `swap_main_cluster`) | **LIVE defect**, unreachable at the SBND operating point (§1) |
 | `examine_main_vertices:803` | yes | takes `Facade::Cluster*&` and `ClusterVertexMap&` — **correct**; its writes die one frame up, at the row above |
 | `check_switch_main_cluster:806`, `_2:807` | yes | **correct as written** — each *returns* the new `main_cluster`; the loss is the caller's binding, not theirs |
 | `deghost_segments:842` | **no** — `NeutrinoID_deghost.h:187-188` only *reads* the map; the erase at `:38` is in `deghosting()`, and the toolkit's `deghosting:843` is **by reference** | **inert** (a wasted copy) |
