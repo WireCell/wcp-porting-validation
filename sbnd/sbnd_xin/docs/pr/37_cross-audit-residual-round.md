@@ -29,7 +29,7 @@ otherwise-headline source defect (§2) from *live* to *latent*.
 |---|---|---|---|
 | **1** | SBND accepts the DL vertex **47/48**; the whole traditional overall-main-vertex layer — including `compare_main_vertices_global`, verified term-for-term in pr/32 §2.5 — runs **0 times**. The DL re-ranker's 4.0 acceptance floor has **never rejected** | **measured** | closes pr/32 loose end 1 |
 | **2** | `determine_overall_main_vertex` takes its map and `main_cluster` **by value** while its DL twin one function above takes both **by reference**, so the main-cluster swap and the `examine_main_vertices` erases are discarded while `other_clusters` and the facade flag persist — an inconsistent state | source-verified, **reach 0/48** | latent; recommendation given |
-| **3** | **doc pr/33's owner filter was never implemented** — 5 findings, 8 named knobs, zero code; the only round of eight in that state | verified by grep | schedule |
+| **3** | **doc pr/33's owner filter was never implemented** — 5 findings, 8 named knobs, zero code; the only *completed* round in that state (pr/36 is also at zero but was filtered 2026-08-04 and is expected to be — §3) | verified by grep | schedule |
 | **4** | The prototype reference is branch `port` @ `53ca938`, **+5833/−989 over 26 files**, and pr/28–32 pin no SHA. Measured: the audited files' substantive diffs are 0–33 lines and all six live hunks triage to instrumentation or to **prototype bugs the toolkit is structurally immune to** | measured + source | citations **survive**; one-line process fix |
 | **5** | Determinism source sweep at HEAD is clean, and the repeat-run **floor is 0** across 59 890 ROOT leaves + every archive | **measured** | pr/28's zero survives six knob rounds |
 | **6** | Seven unaudited blocks the five docs name, ranked — `examine_structure_*` first, because it runs on SBND and *"can move vertices"* | inherited | schedule |
@@ -466,6 +466,15 @@ from `wct-pr-perevt.jsonnet` at HEAD:
 
 Every one of them was gated on **48 nueCC events**, and several on a *different*
 baseline from the others. Nineteen is not a footnote.
+
+**How the table was built, so the number can be re-derived rather than trusted.**
+The *total* is a mechanical count of boolean TLAs set away from the C++ default
+in `wct-pr-perevt.jsonnet` at HEAD (the grep is in the Repro block). The
+*per-doc split* is assigned **by knob name**, from each document's own §11/§12
+implementation section — not by scanning the `// doc pr/NN` comments, which is
+unreliable: a comment's attribution carries forward to every TLA below it until
+the next one, so a naive scan credits pr/23 with 30 TLAs and pr/35 with 18. If a
+re-run of the grep gives a different split, trust the knob names.
 
 Carried forward from the five documents, one line each, so they are in one place:
 
