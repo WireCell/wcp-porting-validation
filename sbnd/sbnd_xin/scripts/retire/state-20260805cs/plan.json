@@ -1,0 +1,337 @@
+{
+ "A": [
+  "work",
+  "work-mcp10",
+  "work-mcp1000",
+  "work-mcp1kall-d59k",
+  "work-nuecc48-0804",
+  "work-nuecc48-nuf",
+  "work-nuecc48-prod0803",
+  "work-oc19scan-old",
+  "work-pr33-allon48",
+  "work-pr33-f1aon48",
+  "work-pr33-f1bon48",
+  "work-pr33-f2aon48",
+  "work-pr33-f2bon48",
+  "work-pr33-f2con48",
+  "work-pr33-f3on48",
+  "work-pr33-f4on48",
+  "work-pr33-f5on48",
+  "work-pr33-freshchk",
+  "work-pr33-headchk",
+  "work-pr33-prod48",
+  "work-pr37b-repeatA",
+  "work-pr37b-repeatB",
+  "work-r1ql-f1",
+  "work-r1ql-f2",
+  "work-r1ql-first10",
+  "work-r2patrec-f1",
+  "work-vfnuecc48-prod0803"
+ ],
+ "D": [],
+ "R": [
+  "work",
+  "work-mcp10",
+  "work-mcp1000",
+  "work-mcp1kall-d59k",
+  "work-nuecc48-0804",
+  "work-nuecc48-nuf",
+  "work-nuecc48-prod0803",
+  "work-oc19scan-old",
+  "work-pr33-allon48",
+  "work-pr33-f1aon48",
+  "work-pr33-f1bon48",
+  "work-pr33-f2aon48",
+  "work-pr33-f2bon48",
+  "work-pr33-f2con48",
+  "work-pr33-f3on48",
+  "work-pr33-f4on48",
+  "work-pr33-f5on48",
+  "work-pr33-freshchk",
+  "work-pr33-headchk",
+  "work-pr33-prod48",
+  "work-pr37b-repeatA",
+  "work-pr37b-repeatB",
+  "work-r1ql-f1",
+  "work-r1ql-f2",
+  "work-r1ql-first10",
+  "work-r2patrec-f1",
+  "work-vfnuecc48-prod0803"
+ ],
+ "ARCHIVE": [
+  "work",
+  "work-mcp10",
+  "work-mcp1000",
+  "work-mcp1kall-d59k",
+  "work-nuecc48-0804",
+  "work-nuecc48-nuf",
+  "work-nuecc48-prod0803",
+  "work-oc19scan-old",
+  "work-pr33-allon48",
+  "work-pr33-f1aon48",
+  "work-pr33-f1bon48",
+  "work-pr33-f2aon48",
+  "work-pr33-f2bon48",
+  "work-pr33-f2con48",
+  "work-pr33-f3on48",
+  "work-pr33-f4on48",
+  "work-pr33-f5on48",
+  "work-pr33-freshchk",
+  "work-pr33-headchk",
+  "work-pr33-prod48",
+  "work-pr37b-repeatA",
+  "work-pr37b-repeatB",
+  "work-r1ql-f1",
+  "work-r1ql-f2",
+  "work-r1ql-first10",
+  "work-r2patrec-f1",
+  "work-vfnuecc48-prod0803"
+ ],
+ "KEEP": [
+  "work-nuecc48-prsmoke2",
+  "work-pr33-base48",
+  "work-pr33-off48",
+  "work-stmcamp-d66new",
+  "work-tfix388-r9"
+ ],
+ "KEEP_WHY": {
+  "work-stmcamp-d66new": "git-tracked nusel_labels/ hand-scan state (M13)",
+  "work-nuecc48-prsmoke2": "3 git-tracked runner scripts",
+  "work-tfix388-r9": "doc pr/28 sec.15.9 -- NOT reproducible from any surviving input",
+  "work-pr33-base48": "clean-source knob-off gate pair (A); interim baseline pre-campaign",
+  "work-pr33-off48": "clean-source knob-off gate pair (B); a gate is a PAIR"
+ },
+ "HUB": [],
+ "POSTBUILD": [],
+ "PROTECTED": [
+  "work-pr33-base48",
+  "work-pr33-off48",
+  "work-tfix388-r9"
+ ],
+ "RELEASED": [
+  "work-nuecc48-prod0803",
+  "work-pr33-allon48",
+  "work-pr33-f1aon48",
+  "work-pr33-f1bon48",
+  "work-pr33-f2aon48",
+  "work-pr33-f2bon48",
+  "work-pr33-f2con48",
+  "work-pr33-f3on48",
+  "work-pr33-f4on48",
+  "work-pr33-f5on48",
+  "work-pr33-freshchk",
+  "work-pr33-headchk",
+  "work-pr33-prod48",
+  "work-pr37b-repeatA",
+  "work-pr37b-repeatB",
+  "work-vfnuecc48-prod0803"
+ ],
+ "per": {
+  "work": {
+   "tot": 2927908056,
+   "keep": 497056237,
+   "nk": 420,
+   "nh": 3594
+  },
+  "work-mcp10": {
+   "tot": 100442835,
+   "keep": 18998555,
+   "nk": 89,
+   "nh": 110
+  },
+  "work-mcp1000": {
+   "tot": 7473642246,
+   "keep": 1318405346,
+   "nk": 1000,
+   "nh": 9000
+  },
+  "work-mcp1kall-d59k": {
+   "tot": 6178506038,
+   "keep": 350953912,
+   "nk": 7197,
+   "nh": 8000
+  },
+  "work-nuecc48-0804": {
+   "tot": 346405360,
+   "keep": 12211540,
+   "nk": 96,
+   "nh": 336
+  },
+  "work-nuecc48-nuf": {
+   "tot": 503642453,
+   "keep": 17329132,
+   "nk": 242,
+   "nh": 432
+  },
+  "work-nuecc48-prod0803": {
+   "tot": 850904009,
+   "keep": 85486157,
+   "nk": 240,
+   "nh": 624
+  },
+  "work-oc19scan-old": {
+   "tot": 125127058,
+   "keep": 1804487,
+   "nk": 30,
+   "nh": 90
+  },
+  "work-pr33-allon48": {
+   "tot": 247822029,
+   "keep": 23093841,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f1aon48": {
+   "tot": 247823064,
+   "keep": 23095564,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f1bon48": {
+   "tot": 247823595,
+   "keep": 23095753,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f2aon48": {
+   "tot": 247823334,
+   "keep": 23095807,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f2bon48": {
+   "tot": 247824412,
+   "keep": 23096185,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f2con48": {
+   "tot": 247823184,
+   "keep": 23095282,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f3on48": {
+   "tot": 247824212,
+   "keep": 23095892,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f4on48": {
+   "tot": 247822459,
+   "keep": 23094535,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-f5on48": {
+   "tot": 247823626,
+   "keep": 23095652,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr33-freshchk": {
+   "tot": 3131719,
+   "keep": 315450,
+   "nk": 9,
+   "nh": 3
+  },
+  "work-pr33-headchk": {
+   "tot": 3131845,
+   "keep": 315547,
+   "nk": 9,
+   "nh": 3
+  },
+  "work-pr33-prod48": {
+   "tot": 247821626,
+   "keep": 23093596,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr37b-repeatA": {
+   "tot": 248323258,
+   "keep": 23114595,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-pr37b-repeatB": {
+   "tot": 248324015,
+   "keep": 23115053,
+   "nk": 338,
+   "nh": 143
+  },
+  "work-r1ql-f1": {
+   "tot": 122843508,
+   "keep": 16048384,
+   "nk": 66,
+   "nh": 104
+  },
+  "work-r1ql-f2": {
+   "tot": 28952344,
+   "keep": 3376126,
+   "nk": 12,
+   "nh": 26
+  },
+  "work-r1ql-first10": {
+   "tot": 0,
+   "keep": 0,
+   "nk": 0,
+   "nh": 0
+  },
+  "work-r2patrec-f1": {
+   "tot": 174555438,
+   "keep": 22754019,
+   "nk": 106,
+   "nh": 169
+  },
+  "work-vfnuecc48-prod0803": {
+   "tot": 172969363,
+   "keep": 19430329,
+   "nk": 339,
+   "nh": 96
+  }
+ },
+ "cites": {},
+ "sp_dropped": {
+  "work": 360,
+  "work-mcp10": 10,
+  "work-mcp1000": 1000,
+  "work-nuecc48-prod0803": 48,
+  "work-r1ql-f1": 8,
+  "work-r1ql-f2": 2,
+  "work-r2patrec-f1": 13
+ },
+ "group": {
+  "work": "imaging-bases",
+  "work-mcp10": "imaging-bases",
+  "work-mcp1000": "imaging-bases",
+  "work-mcp1kall-d59k": "mcp1k-campaign",
+  "work-nuecc48-0804": "nuecc48-campaign",
+  "work-nuecc48-nuf": "nuecc48-campaign",
+  "work-nuecc48-prod0803": "nuecc48-campaign",
+  "work-nuecc48-prsmoke2": "nuecc48-campaign",
+  "work-oc19scan-old": "legacy-exhibits",
+  "work-pr33-allon48": "pr33-clean-source",
+  "work-pr33-base48": "pr33-clean-source",
+  "work-pr33-f1aon48": "pr33-clean-source",
+  "work-pr33-f1bon48": "pr33-clean-source",
+  "work-pr33-f2aon48": "pr33-clean-source",
+  "work-pr33-f2bon48": "pr33-clean-source",
+  "work-pr33-f2con48": "pr33-clean-source",
+  "work-pr33-f3on48": "pr33-clean-source",
+  "work-pr33-f4on48": "pr33-clean-source",
+  "work-pr33-f5on48": "pr33-clean-source",
+  "work-pr33-freshchk": "pr33-clean-source",
+  "work-pr33-headchk": "pr33-clean-source",
+  "work-pr33-off48": "pr33-clean-source",
+  "work-pr33-prod48": "pr33-clean-source",
+  "work-pr37b-repeatA": "pr37-floor",
+  "work-pr37b-repeatB": "pr37-floor",
+  "work-r1ql-f1": "mc-samples",
+  "work-r1ql-f2": "mc-samples",
+  "work-r1ql-first10": "mc-samples",
+  "work-r2patrec-f1": "mc-samples",
+  "work-stmcamp-d66new": "other",
+  "work-tfix388-r9": "legacy-exhibits",
+  "work-vfnuecc48-prod0803": "nuecc48-campaign"
+ }
+}
