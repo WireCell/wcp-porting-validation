@@ -14,8 +14,18 @@
 # itself, not just the summary of it.
 #
 # Format: <arm>  TAB  why it must survive  TAB  who cites it
+# Field 1 may hold SEVERAL whitespace-separated arm names (the vf37 lines did).
 # Housekeeping: when an arm is genuinely superseded, move its line to the
 # RETIRED section at the bottom with the date, do not delete it.
+#
+# 2026-08-05: THIS FILE IS NOW ACTUALLY READ.  Until today no script parsed it
+# -- retire_20260803.sh:30 hardcoded two names independently, so the "a new
+# round's driver must union its inline PROTECTED with every line below"
+# instruction above was aspirational.  retire_20260805.sh and
+# plan_20260805.py both parse field 1 and word-split it.  Ten of the seventeen
+# arms listed here were zero-citation, so a citation-driven tier rule would
+# have swept them; that is the failure this file exists to prevent and it came
+# within one round of happening.
 
 work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protection and it is not reproducible from any surviving input	doc pr/28 sec.15.9
 work-pr37b-repeatA	repeat-run determinism FLOOR at toolkit 2457320d, arm A (setarch -R, PR_EXTRA_STAGES=pr_display); the pair is the only floor measurement that covers the calib dump	doc pr/37 sec.6.2
@@ -23,15 +33,39 @@ work-pr37b-repeatB	same pair, arm B; a floor is a PAIR -- deleting either one de
 work-nuecc48-prod0803	the 48-event nueCC input root every pr/28-37 arm is generated from	doc pr/33 sec.11, doc pr/37 Repro
 work-vfnuecc48-prod0803	its valfast counterpart	scripts/retire/retire_20260803.sh
 
-# --- transient by policy, but NOT yet ------------------------------------
-# valfast/README.md's disposal rule says record the compare summary then delete
-# the arms.  These three are the doc pr/37 sec.2.5 floor measurement that
-# licenses promoting the valfast tree gate to HARD; they stay until the
-# population campaign has run against the promoted gate, because that is the
-# first thing that would re-open the question.  Owner's call to drop them after.
-work-vfmcp1k-vf37a work-vfnuecc48-vf37a work-vfr1qlmc-vf37a work-vfr2mc-vf37a	A/A' floor arm A, setarch -R	doc pr/37 sec.2.5
-work-vfmcp1k-vf37b work-vfnuecc48-vf37b work-vfr1qlmc-vf37b work-vfr2mc-vf37b	A/A' floor arm B, setarch -R (matched layout)	doc pr/37 sec.2.5
-work-vfmcp1k-vf37c work-vfnuecc48-vf37c work-vfr1qlmc-vf37c work-vfr2mc-vf37c	cross-layout arm C, ASLR ON -- the arm that tests the property the campaign needs	doc pr/37 sec.2.5
+# --- the clean-source reference family (added 2026-08-05) ----------------
+# doc pr/33 sec.11.2: every binary built before 2026-08-05 06:32 carried stale
+# build/clus objects and is NOT reproducible from committed source.  These are
+# the FIRST arms in this tree produced by a binary that corresponds to its
+# source, and until the re-processing campaign lands they are the only baseline
+# anything can legitimately be gated against.  Protected by mtime cutoff in
+# plan_20260805.py as well as by name here -- deliberately belt-and-braces,
+# because eight of them scan as zero-citation (doc pr/33:1352 writes the labels
+# inside line-wrapped braces, so a plain name scan misses them).
+work-pr33-base48	the clean-source reference; pr/33's knob-off gate is base48 vs off48 48/48 cross-binary	doc pr/33 sec.11.2, doc pr/37 sec.13
+work-pr33-off48 work-pr33-prod48 work-pr33-allon48	pr/33's knob-off / production / all-on arms -- the gate is the SET, not any one arm	doc pr/33 sec.11.1
+work-pr33-f1aon48 work-pr33-f1bon48 work-pr33-f2aon48 work-pr33-f2bon48 work-pr33-f2con48 work-pr33-f3on48 work-pr33-f4on48 work-pr33-f5on48	per-knob attribution arms; f4on48 is the only mover (17/48) and the rest are the evidence that the other seven are null	doc pr/33 sec.11.1
+work-pr33-headchk work-pr33-freshchk	controls of the three-build reproducibility proof that established the stale-binary finding	doc pr/33 sec.11.2
 
 # --- RETIRED (kept for provenance) ---------------------------------------
-# (none yet)
+# 2026-08-05 -- the twelve vf37 arms, RELEASED EARLY BY OWNER OVERRIDE.
+#
+# Read this before concluding the release condition was met: IT WAS NOT.  The
+# entry below used to say these arms stay "until the population campaign has
+# run against the promoted gate ... Owner's call to drop them after."  The
+# campaign has NOT run.  The owner released them anyway, explicitly, on
+# 2026-08-05, because doc pr/33 sec.11.2 established that they were produced by
+# the stale-object binary -- so no future run can be gated against them and the
+# condition could never be satisfied as written.  Their compare summary lives in
+# doc pr/37 sec.2.5 (0/629 exact, both address layouts) and doc pr/37 sec.13.5
+# records that the arms themselves are gone.
+#
+# THE SUCCESSOR IS OWED.  These were the only A/A' floor measurement on the
+# widened seven-tree gate.  The re-processing campaign must include a repeat
+# pair on the clean binary (two arms, no rebuild between, setarch -R, plus one
+# ASLR-on leg -- the pr37_a2_floor.sh shape) or the tree has no determinism
+# floor at all.  Tracked as precondition P3 in docs/work-tags.md.
+#
+# work-vfmcp1k-vf37a work-vfnuecc48-vf37a work-vfr1qlmc-vf37a work-vfr2mc-vf37a	A/A' floor arm A, setarch -R	doc pr/37 sec.2.5
+# work-vfmcp1k-vf37b work-vfnuecc48-vf37b work-vfr1qlmc-vf37b work-vfr2mc-vf37b	A/A' floor arm B, setarch -R (matched layout)	doc pr/37 sec.2.5
+# work-vfmcp1k-vf37c work-vfnuecc48-vf37c work-vfr1qlmc-vf37c work-vfr2mc-vf37c	cross-layout arm C, ASLR ON	doc pr/37 sec.2.5

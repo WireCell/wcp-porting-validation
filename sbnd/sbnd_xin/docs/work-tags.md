@@ -6,9 +6,17 @@ Repro:
 cd sbnd_xin
 ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TIDY round
                                  #   (216 before it) -- see that section below
-ls -d work* | wc -l              # 19 after the 2026-08-03 tidy round (27 after the
-                                 #   retirement round the same day, 138 before it; 23 after
+ls -d work* | wc -l              # 32 after the 2026-08-05 round (233 before it; 19 after
+                                 #   the 2026-08-03 tidy round, 27 after the retirement
+                                 #   round the same day, 138 before it; 23 after
                                  #   2026-08-02, 254 / 155 GiB before that, 15 after 2026-07-30)
+
+# the 2026-08-05 retirement round (see that section below):
+python3 scripts/retire/plan_20260805.py       # 2 tier lists + 7 safety asserts
+python3 scripts/retire/lightcheck_20260805.py # light/SP coverage proof (BLOCKING)
+RETIRE_JOBS=24 python3 scripts/retire/archive_records_20260805.py
+scripts/retire/retire_20260805.sh A,D         # dry run of the removal list
+cat scripts/retire/state-20260805/removed.tsv # what was ACTUALLY removed (new this round)
 cat scripts/README.md            # where every non-interface script now lives
 ls archive/*/ -d                 # 3 campaign archives + records/, 79 dirs
 find . -xtype l | wc -l          # 0 -- MUST stay 0, see "the symlink hazard" below.
@@ -203,6 +211,222 @@ the BNL twister server, and the source `work-*` arms for `pr20` and `pr23` were
 already deleted in the retirement round below — so those particular sets cannot
 actually be rebuilt. Five zips were git-tracked and are recoverable from history;
 the other 39 are not.
+
+---
+
+## RETIREMENT ROUND 2026-08-05 (LIGHT) — the stale-binary sweep, 201 arms, 19.5 GiB
+
+**STATUS: EXECUTED 2026-08-05 (`CONFIRM=yes retire_20260805.sh A,D`) — 201 dirs
+/ 19.5 GiB removed, refused=0, 233 → 32 survivors.** `sbnd_xin` 49 G → 30 G;
+`/nfs/data/1` free 532 G → 547 G. Broken symlinks 0 before and 0 after; no
+git-tracked file deleted; `removed.tsv` has 201 rows.
+
+### Why this round exists
+
+doc pr/33 §11.2: **every binary built before 2026-08-05 06:32 carried stale
+objects in `build/clus`** (a waf dependency miss, cured when pr/33's header edits
+forced the include-cone to recompile) and is **not reproducible from committed
+source**. Three independent clean builds of `2457320d` agree byte-for-byte; the
+Aug-4 library does not, and it was overwritten in place so it cannot be
+autopsied.
+
+That makes ~200 arms records of a build nothing future can be compared against.
+The owner's decision (2026-08-05) was to archive the record layer of every
+pre-cutoff **non-hub** arm and delete the arm. Not a disk-pressure round —
+532 G was free — a **structure** round: 233 flat `work-*` entries was the
+complaint, and the stale-binary finding is what made most of them safe to drop.
+
+### The partition — ordered priority, first match wins
+
+`HUB → POSTBUILD → PROTECTED → tier D → tier A`. **Order matters**: the classes
+are *not* disjoint. `work-nuecc48-prod0803` and `work-vfnuecc48-prod0803` are
+both input hubs *and* `PROTECTED.txt` entries, so an unordered five-predicate
+partition sums to 234 against a universe of 233. `plan_20260805.py` prints the
+multi-match set rather than absorbing it, and asserts the sum exactly.
+
+| class | dirs | disposition |
+|---|---|---|
+| HUB | 15 | keep — inbound symlinks, runner pins, or git-tracked |
+| POSTBUILD (`mtime ≥ 06:32`) | 14 | keep — the clean-source `work-pr33-*` family |
+| PROTECTED | 3 | keep — `work-pr37b-repeat{A,B}`, `work-tfix388-r9` |
+| **tier D** | **19** | **delete, no archive** — 12 released `vf37*` + 7 void/smoke/probe |
+| **tier A** | **182** | **archive record layer, then delete** |
+
+Archive: `archive/records/pr28-37-era-20260805/`, **1808.4 MiB raw → 810 MB on
+disk**, integrity gate **PASS 182/182**. `tracking-pr.root` is kept (~1.15 GiB of
+it) because it is one of the five families `pr33_cmp.py` compares and doc pr/37
+§2.2/§2.5's numbers are ROOT-leaf numbers; `pctree`, `mabc`, `calib-pr-evt*` and
+`*.npz` are dropped.
+
+### Four defects in the inherited machinery, fixed in the forks
+
+Each was live and each would have cost something:
+
+1. **`PROTECTED.txt` was never read by any script.** Its header claimed to be the
+   carry-forward registry a new round "must union"; `retire_20260803.sh:30`
+   hardcoded two names independently. And its documented `<arm> TAB why TAB who`
+   format is violated by its own three `vf37` lines, which pack **four**
+   whitespace-separated names into field 1 — a parser taking field 1 as one name
+   protects nothing. **Ten of its seventeen arms were zero-citation**, so a
+   citation-driven tier rule would have swept the pr/37 §2.5 floor. Now parsed,
+   field 1, word-split, by both the plan script and the driver.
+2. **A naive citation census deletes the new reference family.** doc pr/33
+   `:1352` writes the clean-binary labels brace-expanded *and wrapped across a
+   line break inside the braces*, so `work-pr33-f{1a,…}on48` scan as
+   zero-citation — 8 of the 14 arms that are now the only clean baseline. The
+   mtime cutoff is what actually saves them; ASSERT 5 makes it explicit and
+   ASSERT 6 brace-expands before counting.
+3. **The archive regex missed this era's calib dumps.** `plan_20260803.py:156`
+   and `archive_records_20260803.py:41` match `^calib-evt.*\.json$`, but pr/28–37
+   writes `calib-pr-evt<N>.json`. Unfixed, ~1 GiB of calib dumps would have been
+   **archived** contrary to `archive/records/README.md`. Verified after the fix:
+   `work-pr36-prod48`'s manifest shows 47 calib files `DROPPED`.
+4. **The broken-symlink check ran only *after* the `rm`.** `retire_20260803.sh:114`
+   fires after `:98`, and `relink_tags.py` cannot repair a link whose target is
+   gone — a tripwire, not an interlock. New **interlock 0** requires 0 before.
+
+Two more improvements: the Bokeh interlock now checks whether the viewer's
+command line **names a dir in the removal set** (the blanket refusal was both too
+strict — an owner with a viewer open could never run the round — and too loose,
+since a viewer on an unrelated tag was never the hazard); and
+`RETIRE_FRESH_HOURS` defaults to **0** rather than 6, because at 6 h this round
+would have silently auto-PROTECTED arms and masked a classification gap.
+
+### `removed.tsv` — the artifact no previous round produced
+
+Three rounds have deleted 484 directories and the only surviving record is the
+**pre-execution** `tier*.txt` intent files. `state-20260805/removed.tsv` records
+what actually happened: `iso_ts, dir, tier, MB, archive_tarball, dir_mtime,
+citations`, plus a header block with both repos' HEADs and pre/post
+`find -xtype l`, `du -sh` and `df`.
+
+### The mtime cutoff is a KEEP rule only — read this before reusing it
+
+**No arm in this tree carries a build fingerprint.** `grep -rl libWireCellClus`
+over the arms returns nothing, so directory mtime is the only proxy for which
+binary family produced an arm — and it is a proxy for *last touched*, not for run
+time. A post-rebuild `touch` would promote a stale arm; an arm whose content
+predates its dir mtime would be misclassified the other way.
+
+So the cutoff class **only ever KEEPs**. Every deletion is by explicit tier-list
+membership, reviewed in the dry run. Do not invert this into a "delete everything
+older than X" rule.
+
+Process item for the next round: have the runner write the `libWireCellClus.so`
+md5 into each arm. `scripts/runners/s4_nuecc48.sh:24` already computes it and
+prints it to stdout — writing it into the arm would make the next occurrence
+*detectable* instead of inferable.
+
+### Also: the cutoff is a TIMESTAMP, not a date
+
+06:32 is the first clean rebuild. `work-vfnuecc48-vf37c` ran at **06:24** and was
+stale-family. A date-granular rule would have misclassified all twelve `vf37`
+arms into the clean class — i.e. kept them for the wrong reason and, worse,
+offered them as a valid reference.
+
+---
+
+## THE HEAVY ROUND — standing plan, do not run until the campaign lands
+
+The 2026-08-05 round was deliberately the *light* half. What it left, and the
+conditions for taking it:
+
+**Preconditions.** Note first that *"the re-run's gate passed"* is **not a
+checkable condition**: every pre-cutoff arm is stale-binary, `work-pr33-base48`
+is a 48-event nueCC arm, and the re-run is 1090 events at a future HEAD with
+regenerated imaging and a new sample. There is nothing to gate it against —
+**the re-run is a new baseline, not a gated change.**
+
+* **P1** — fresh imaging roots exist, real (not symlinked) npz, expected counts
+* **P2** — fresh nusel/QL/PR roots at 1000 / 48 / 19 / 10 / 13, `rc=0`
+* **P3** — **a repeat-run A/A′ pair on the clean binary has re-established the
+  determinism floor on the widened seven-tree gate**, and both it and the product
+  inventory are written into a doc
+* **P4** — `find -xtype l | wc -l` == 0 *before* the round
+* **P5** — ASSERT 4 passes **with the hub inside the removal set**
+* **P6** — archive integrity PASS · **P7** — no live batch, no bokeh viewer
+
+**P3 is owed, and it is the real cost of the vf37 release.** Those twelve arms
+were the only A/A′ measurement on the widened gate, and the 2026-08-05 round
+deleted them without a successor. The campaign must include a repeat pair — two
+arms, same clean binary, no rebuild between, `setarch x86_64 -R`, plus one
+ASLR-on leg for the cross-layout question (the `pr37_a2_floor.sh` shape) — or
+this tree has no determinism floor at all.
+
+**Order is forced by the symlink DAG** — leaf arms before hubs, because
+`work-oc19scan-old` is the joint predecessor of *both* big hubs:
+
+```
+H0: work-pr22gap-{a,b,c,input} -> work-r1ql-first10 -> work-nuecc48-0804
+    -> work-mcp1kall-d59k -> work-nuecc48-nuf -> work-oc19scan-old   (LAST)
+    [re-run ASSERT 4 here]
+H1: work-mcp1000 (7.0 G)  ->  work (2.8 G)
+H2: work-nuecc48-prod0803 + work-vfnuecc48-prod0803;  then work-pr33-*
+```
+
+`work-mcp10` is **not** retirable — the 10/30-event hand-scan imaging is not in
+the re-run's sample list. `work-r1ql-f1/f2` and `work-r2patrec-f1` go only for
+whichever MC sample the re-run actually covers (owner 2026-08-05: **both**).
+
+**Hazard at H1 step 8.** `work/` is also the default `SBND_WORK_ROOT`
+(`_runlib.sh:18`), so after deletion any bare run silently recreates it. Either
+leave an empty `work/` with a README tombstone, or make `_runlib.sh` refuse when
+`SBND_WORK_ROOT` is unset.
+
+**The arm move (`arms/pr<NN>/`) belongs here, not in the light round.** Two
+reasons: (a) the light round already took the top level to 32 dirs — re-judge
+whether the move is still worth it; (b) `tidy_map_20260803.py:97-98` filters to
+`isfile or islink`, so **directories are excluded by construction** — the 08-03
+tidy suite cannot be reused as-is, and only `tidy_move_20260803.sh` transfers
+verbatim. And **do not rewrite the arm-name citations in `docs/`** — M13 protects
+the record, and `tidy_docfix`'s rules are script-path shaped so most citations
+would be missed anyway. Extend this file's index with a moved-arms table instead.
+
+### Prerequisites for the re-processing campaign (not this round)
+
+Owner decisions 2026-08-05: **all imaging regenerated**; five samples — mcp1k
+(1000 data) + nuecc48 (48) + **ncpi0 (19, new)** + r1qlmc (10) + r2mc (13) = 1090
+events; 24 CPUs available.
+
+Because imaging is regenerated, the campaign must write to **fresh roots**
+(`work-img-<sample>-cb0805`, `work-<sample>-cb0805`). Runner lines that hardcode
+an old root and need a new value:
+
+| file:line | what |
+|---|---|
+| `run_full1k_nusel.sh:43` | `IMGBASE=$SBND_DIR/work-mcp1000` — **hardcoded with no env override**, unlike `TAG`/`ROOT` at `:40-41`. The single most important edit |
+| `run_full1k_nusel.sh:6-7` | its *"imaging is NEVER regenerated"* comment becomes false |
+| `valfast/run_valfast.sh:77-82` | `pinned_qlroot()` — all four samples |
+| `valfast/run_valfast.sh:116-118` | nuecc48 manifest source **and** imaging source both move |
+| `scripts/runners/run_pr_geom_arm{,_dl}.sh`, `geom_ab_batch.sh:14` | `work-nuecc48-nuf` |
+| `pr37_regate.sh:67`, `dqdx_rr_sample/collect_proton_sample.py:54` | prod0803 / d59k |
+
+Two hazards to fix **before** the campaign:
+
+* **M13** — `_runlib.sh:18` defaults `SBND_WORK_ROOT` to `$SBND_DIR/work`, so any
+  imaging invocation that forgets the variable writes on top of 708 existing evt
+  dirs (53 inbound symlinks, 503 doc citations). Apply the `refuse_existing()`
+  idiom that already exists at `valfast/run_valfast.sh:92-94`.
+* **Naming** — `plan_20260803.py:85` classifies `work-<sample>-vf*` as tier V
+  (dropped whole, **no archive**). **Forbid the `-vf` infix for production
+  roots.** `plan_20260805.py` ASSERT 7 checks this and currently reports one
+  survivor matching it (`work-vfnuecc48-prod0803`), which is a legitimate
+  long-lived root — but a future round reusing that regex would drop it.
+
+Adding **ncpi0** as a fifth sample costs ~11 case statements / default lists
+across `valfast/run_valfast.sh` (`:52`, `:57`, `:59`, `:66-82`, `:83-90`,
+`:103-155`) and `valfast/valfast_compare{,_par}.sh`. The comparators
+(`vf_scores_diff.py`, `vf_tree_compare*.py`, `nusel_hash_compare.py`) are
+sample-agnostic — zero hits. Note the manifest cannot be derived the usual way:
+ncpi0 has no row in `docs/pr/11_scores-table.tsv`, and at N=19 the valfast
+subsetting has no point — just run all of them. Input is already staged at
+`input_files_reco1/nc-sideband_filtered_frameshift.root` (19 data events, runs
+18255/18259/18261/18345/18364) and wired to nothing.
+
+Noted, not fixed (pre-existing): **`scripts/runners/s4_nuecc48.sh` is broken** —
+`:9` `SRC=$R/work-nuecc48-oc19on` no longer exists and `:21` copies with
+`cp -n … 2>/dev/null`, so it would silently seed 48 empty event dirs and run an
+arm on nothing.
 
 ---
 

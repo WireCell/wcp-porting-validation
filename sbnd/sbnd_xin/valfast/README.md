@@ -119,9 +119,38 @@ refused (M13): new run ⇒ new tag.
 
 ## Validation (A/A′, 2026-08-05 — toolkit `2457320d`, doc pr/37 §2.5)
 
+> **⚠ STALE-BINARY, AND THE ARMS ARE GONE. Read before citing these numbers.**
+>
+> **The measurement stands; its status as a *reference* does not.** doc pr/33
+> §11.2 established that every binary built before **2026-08-05 06:32** carried
+> stale objects in `build/clus` and is not reproducible from committed source.
+> The `20:55:43` library below is in that family, so all three arms are
+> same-binary A/A′ measurements of a binary that no longer exists and cannot be
+> rebuilt. The cutoff is a **timestamp, not a date** — `work-vfnuecc48-vf37c`
+> ran at 06:24, before the first clean rebuild.
+>
+> **Nothing built after 06:32 may be gated against these arms.** The clean-source
+> reference is `work-pr33-base48`.
+>
+> **The arms were retired the same day** (retirement round 2026-08-05, tier D:
+> the owner released them from `PROTECTED.txt` ahead of the campaign, precisely
+> because no future run can be gated against them). This table is now the only
+> statement of the result — see `scripts/retire/state-20260805/removed.tsv`.
+>
+> **What survives unaffected:** the *gate promotion* below. Widening gate 1 to
+> all seven trees + calib and making it HARD is a property of the comparator,
+> not of the binary that produced these arms. `VF_CMP_LEGACY=1` still reverts it.
+>
+> **What is owed:** these were the **only** A/A′ floor measurement on the widened
+> gate. The re-processing campaign must include a repeat pair on the clean binary
+> — two arms, no rebuild between, `setarch -R`, plus one ASLR-on leg — or this
+> tree has no determinism floor. Tracked as precondition **P3** in
+> `docs/work-tags.md`.
+
 **Three** PR-tail arms at HEAD, one binary throughout (`libWireCellClus.so`
-mtime `2026-08-04 20:55:43`, verified before, between and after every arm), all
-four samples, `PR_EXTRA_STAGES=pr_display`, `-j 8`:
+mtime `2026-08-04 20:55:43`, verified before, between and after every arm — see
+the warning above for what that premise turned out to be worth), all four
+samples, `PR_EXTRA_STAGES=pr_display`, `-j 8`:
 
 | arm | address layout |
 |---|---|
@@ -146,10 +175,19 @@ one clean pair does not retire a documented noise floor.
 `calib 497/497` is the count of events that *have* a calib dump — i.e. that
 yield a PR result. See the manifest-drift caveat below.
 
-**Retained**, not deleted, contrary to the disposal rule below: these arms are
+~~**Retained**, not deleted, contrary to the disposal rule below: these arms are
 the measurement that licenses the hard gate, and they are listed in
 `scripts/retire/PROTECTED.txt` until the population campaign has run against
-the promoted gate.
+the promoted gate.~~
+
+**Superseded 2026-08-05 — the arms were deleted under the normal disposal rule
+after all.** The stale-binary finding (see the warning at the top of this
+section) means the release condition above could never be satisfied: an arm
+built by a binary that cannot be rebuilt from source is not something a future
+campaign can be gated against, so waiting for the campaign would have kept them
+forever for no benefit. The owner released them explicitly on 2026-08-05; their
+`PROTECTED.txt` lines moved to that file's RETIRED section with the override
+recorded as an override, not as a condition met.
 
 ## Validation (A/A′, 2026-08-02 — superseded, kept for provenance)
 
