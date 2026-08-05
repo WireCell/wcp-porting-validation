@@ -19,7 +19,7 @@ if [ "$ARM" = off ]; then
 fi
 setarch x86_64 -R /nfs/data/1/xqian/toolkit-dev/local/bin/wire-cell \
   -l stderr -l "$OUT/wct_nupr_evt$EVT.log:trace" -L trace \
-  --tla-str "input=$SX/work-nuecc48-nuf/ql_evt$EVT/pctree-evt$EVT.tar.gz" \
+  --tla-str "input=$SX/work-nuecc48-cb0805/ql_evt$EVT/pctree-evt$EVT.tar.gz" \
   --tla-code 'anode_indices=[0,1]' --tla-str "output_dir=$OUT" \
   --tla-code run=18253 --tla-code subrun=1 --tla-code event=$EVT \
   --tla-str reality=data --tla-code DL=4.0 --tla-code DT=8.8 \

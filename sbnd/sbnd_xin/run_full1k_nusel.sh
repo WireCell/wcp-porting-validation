@@ -3,10 +3,18 @@
 # MCP2025C data sample (input_files_reco1/staged-mcp2025c-1000evt/e0..e999),
 # one output root, N-way parallel, per-event rc + wall + peak-RSS recorded.
 #
-# Imaging is NEVER regenerated: work-mcp1kall-<tag>/evt<ID> is a symlink into
-# work-mcp1000/evt<ID> (M11/M13).  Everything downstream of imaging IS produced
-# fresh in this root: the Q/L step (run_nusel_evt.sh launches it because the
-# pctree is missing) and the PR tagger tail + label table.
+# Imaging is symlinked from IMGBASE/evt<ID>, never copied (M11/M13) -- ROOT/
+# evt<ID> is a symlink into $IMGBASE/evt<ID>.  Everything downstream of imaging
+# IS produced fresh in ROOT: the Q/L step (run_nusel_evt.sh launches it because
+# the pctree is missing) and the PR tagger tail + label table.
+#
+# CORRECTED 2026-08-05 (doc 71 campaign): the original comment here said
+# "imaging is NEVER regenerated", true only while work-mcp1000 stood as a
+# permanent hub.  That hub (and work-mcp1kall-d59k) was deleted in the
+# 2026-08-05 clean-slate retire round -- the whole point of this campaign is
+# to regenerate imaging fresh into IMGBASE (now an env var, see below) and
+# point ROOT at it.  The symlink mechanics below are unchanged; only the
+# claim that the source root is permanent is retracted.
 #
 # Flags: since doc 68 the SBND production operating point IS the config default
 # (cfg/pgrapher/experiment/sbnd/wct-{pr,clus-matching}-perevt.jsonnet), so the
@@ -30,6 +38,14 @@
 #             `cut -d' ' -f1 /proc/loadavg` after launch)
 # Env:
 #   TAG           output root suffix (default d59k) -> work-mcp1kall-<TAG>
+#                 (ignored if ROOT is set explicitly)
+#   ROOT          output root, overrides the TAG-derived work-mcp1kall-<TAG>
+#                 name entirely (2026-08-05 campaign: work-mcp1k-cb0805 -- the
+#                 old work-mcp1kall-d59k hub was deleted in the 2026-08-05
+#                 clean-slate retire round, doc 71)
+#   IMGBASE       imaging root to symlink evt<ID> from (default work-mcp1000,
+#                 also deleted 2026-08-05 -- MUST be set for any run after
+#                 that round, e.g. work-img-mcp1k)
 #   ENTRIES       explicit entry list, e.g. ENTRIES="10 12 15" for a smoke batch
 #                 (overrides nentries)
 # Internal:
@@ -38,9 +54,9 @@ set -u
 cd "$(dirname "$0")"
 SBND_DIR=$PWD
 TAG=${TAG:-d59k}
-ROOT=$SBND_DIR/work-mcp1kall-$TAG
+ROOT=${ROOT:-$SBND_DIR/work-mcp1kall-$TAG}
 STAGE=$SBND_DIR/input_files_reco1/staged-mcp2025c-1000evt
-IMGBASE=$SBND_DIR/work-mcp1000
+IMGBASE=${IMGBASE:-$SBND_DIR/work-mcp1000}
 MAP=$STAGE/entry_event_map.tsv
 TC=$(cd ../../abtest && pwd)/timecmd.py
 

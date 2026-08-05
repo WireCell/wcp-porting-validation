@@ -11,7 +11,7 @@ SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 ROOT=${ROOT:-/home/xqian/tmp/geomab}
 JOBS=${JOBS:-6}
 mkdir -p "$ROOT"
-EVTS=$(ls -d $SX/work-nuecc48-nuf/ql_evt* | sed 's#.*/ql_evt##' | sort -n)
+EVTS=$(ls -d $SX/work-nuecc48-cb0805/ql_evt* | sed 's#.*/ql_evt##' | sort -n)
 run_one() {
     local evt=$1 arm=$2
     PROUT="$ROOT/$evt/$arm" ARM=$arm "$SC/run_pr_geom_arm.sh" "$evt" > /dev/null 2>&1

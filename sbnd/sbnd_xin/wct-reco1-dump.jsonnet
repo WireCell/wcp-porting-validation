@@ -61,7 +61,8 @@
 //     -c wct-reco1-dump.jsonnet
 
 function(input, output_dir='.', entry='-1', caf_offset_mode='none', caf_offset_override='0',
-         wire_product='', badmask_product='', summary_product='', flash_process='Reco1')
+         wire_product='', badmask_product='', summary_product='', flash_process='Reco1',
+         frameshift_product='')
 // caf_offset_mode: none | product | auto | override (validated in C++)
 //
 // wire_product / badmask_product / summary_product: art branch names of the
@@ -74,6 +75,17 @@ function(input, output_dir='.', entry='-1', caf_offset_mode='none', caf_offset_o
 //   --tla-str summary_product='doubles_simtpc2d_wienersummary_DetSim.'
 // (see sbnd_xin/docs/67).  flash_process is the process name of the two
 // opflashtpc<N> products ('Reco1' in both data and MC to date).
+//
+// frameshift_product: art InputTag of the sbnd::timing::FrameShiftInfo
+// product consumed in caf_offset_mode=product.  Empty ('') => key omitted =>
+// the C++ default 'sbnd::timing::FrameShiftInfo_frameshift__FRAMESHIFT.'
+// (the 2025fall data reco1 files' process name).  Added 2026-08-05 (doc 71
+// campaign): the NCpi0 sideband file carries the SAME product under a
+// DIFFERENT process instance, '...__FILTERFRAMESHIFT.' (an extra filter
+// stage ran in that production), so
+//   --tla-str frameshift_product='sbnd::timing::FrameShiftInfo_frameshift__FILTERFRAMESHIFT.'
+// is required for that one file. Confirm the exact instance name per file
+// with a branch-name grep before assuming FRAMESHIFT -- do not guess.
 
 local g = import 'pgraph.jsonnet';
 
@@ -118,7 +130,7 @@ local flash_srcs = [
             // Only meaningful in override mode; C++ default 0.  Key omitted
             // otherwise => compiled config byte-identical to pre-override runs.
             [if caf_offset_mode == 'override' then 'caf_offset_override']: caf_override_ns,
-        },
+        } + (if frameshift_product != '' then { frameshift_product: frameshift_product } else {}),
     }, nin=0, nout=1)
     for n in [0, 1]
 ];

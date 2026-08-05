@@ -326,7 +326,33 @@ offered them as a valid reference.
 
 ---
 
-## THE HEAVY ROUND — standing plan, do not run until the campaign lands
+## THE HEAVY ROUND — standing plan, PARTIALLY SUPERSEDED 2026-08-05
+
+> **CORRECTED 2026-08-05 (doc 71 campaign).** Two different things happened to
+> the plan below, not one.
+>
+> **The DAG-ordered hub retirement (H0/H1/H2, the inbound-symlink table) never
+> ran as written.** A separate **clean-slate round**, same day, took a
+> different path to a similar end state: instead of retiring hubs in DAG order
+> while other arms still referenced them, it kept only 5 explicit survivors
+> (git-tracked scripts, hand-scan state, the pr/33 knob-off gate pair, one
+> non-reproducible doc-28 arm) and retired everything else, including every hub
+> named in the table below (`work-mcp1000`, `work`, `work-nuecc48-prod0803`,
+> `work-r1ql-f1/f2`, `work-oc19scan-old`) — 233 → 32 → 5 `work-*` dirs across
+> the light + clean-slate rounds. The table and DAG are kept below as planning
+> record; do not treat them as a log of what happened.
+>
+> **The "Prerequisites for the re-processing campaign" subsection below DID
+> run, and is now DONE** — see **doc 71** for the full account: five samples,
+> 1090 events, 100% success, new valfast manifest (521 events), P3
+> re-established (both arms PASS), three Bee links. `24 CPUs` below became
+> **32** (owner raised the cap before the campaign started). The prerequisite
+> edit list below is superseded by doc 71 §"Files touched" — three items
+> differ from the guess made here: `frameshift_product`/`-fsproduct` was the
+> actual NCpi0 fix (not a flag-only fix — the file needed a NEW jsonnet TLA,
+> doc 71 §3), `dqdx_rr_sample/collect_proton_sample.py` was deliberately **not**
+> repointed (its CONTROL cross-check root has no successor), and
+> `pr37_regate.sh` was already marked historical and correctly left alone.
 
 The 2026-08-05 round was deliberately the *light* half. What it left, and the
 conditions for taking it:
@@ -341,7 +367,9 @@ regenerated imaging and a new sample. There is nothing to gate it against —
 * **P2** — fresh nusel/QL/PR roots at 1000 / 48 / 19 / 10 / 13, `rc=0`
 * **P3** — **a repeat-run A/A′ pair on the clean binary has re-established the
   determinism floor on the widened seven-tree gate**, and both it and the product
-  inventory are written into a doc
+  inventory are written into a doc — **DONE 2026-08-05, doc 71 §6: three arms
+  (vf0805a/b/c), both matched-layout and cross-layout comparisons PASS,
+  47/47 events identical on every gate.**
 * **P4** — `find -xtype l | wc -l` == 0 *before* the round
 * **P5** — ASSERT 4 passes **with the hub inside the removal set**
 * **P6** — archive integrity PASS · **P7** — no live batch, no bokeh viewer
@@ -444,6 +472,51 @@ Noted, not fixed (pre-existing): **`scripts/runners/s4_nuecc48.sh` is broken** �
 `:9` `SRC=$R/work-nuecc48-oc19on` no longer exists and `:21` copies with
 `cp -n … 2>/dev/null`, so it would silently seed 48 empty event dirs and run an
 arm on nothing.
+
+---
+
+## CLEAN-SLATE ROUND 2026-08-05 — 32 → 5 dirs, 27 arms retired
+
+**STATUS: EXECUTED** (`retire_20260805cs.sh`, wcp-porting-img `01106cd` →
+committed here). Took a different path from the DAG-ordered hub retirement the
+heavy-round plan above describes: rather than retire hubs in dependency order
+while other arms still pointed at them, this round decided the **five
+survivors explicitly** — `work-nuecc48-prsmoke2` (3 git-tracked runner
+scripts), `work-pr33-base48`/`work-pr33-off48` (the knob-off gate pair, kept
+as the interim pre-campaign baseline), `work-stmcamp-d66new` (git-tracked
+hand-scan state, M13), `work-tfix388-r9` (doc pr/28 §15.9, not reproducible
+from any surviving input) — and retired everything else: 27 arms / archived to
+`archive/clean-slate-20260805/`, integrity PASS 27/27. `find -xtype l` == 0
+before and after; `du -sh sbnd_xin` and `df /nfs/data/1` both clean
+(`scripts/retire/state-20260805cs/removed.tsv`).
+
+Two asserts failed and were discharged before deletion, not bypassed (M13):
+three hand-scan label dirs (`work-mcp1kall-d59k/nusel_labels`, `work/ql_labels`,
+`work-mcp10/nusel_labels` — 10+3+5 tags) copied verbatim to
+`archive/records/labels/`; 351 archive symlinks resolving into `work-mcp10`/
+`work-mcp1000` materialized as hardlinks (`cp -al` — the 351 links resolve to
+only 40 distinct event dirs, so hardlinking cost 0 extra bytes vs. 1.75 GiB for
+byte copies) via `preserve_20260805cs.sh`.
+
+This is the state the 2026-08-05 reprocessing campaign (doc 71, below) built
+on: five pre-existing survivors, everything else generated fresh into
+`work-img-<sample>/` and `work-<sample>-cb0805/`.
+
+---
+
+## REPROCESSING CAMPAIGN 2026-08-05 — five samples, 1090 events, doc 71
+
+**STATUS: EXECUTED.** Toolkit `a1ea3789`. Imaging → Q/L → tagger tail → PR
+chain on **mcp1k (1000) + nuecc48 (48) + ncpi0 (19, new) + r1qlmc (10) +
+r2mc (13) = 1090 events, 100% success, 0 failures at any stage.** New valfast
+manifest (521 events, `nu_evaluated=1`, replacing the deleted-arm 629-event
+one). P3 determinism floor re-established (three arms, both matched- and
+cross-layout comparisons PASS). Three Bee links (nueCC48, NCpi0, mcp1k-50).
+Full account, repro block, and file-by-file diff list: **doc 71**.
+
+This closes precondition P3 from the heavy-round plan above and supersedes
+that plan's "Prerequisites for the re-processing campaign" subsection — see
+the CORRECTED blockquote at the top of that section.
 
 ---
 

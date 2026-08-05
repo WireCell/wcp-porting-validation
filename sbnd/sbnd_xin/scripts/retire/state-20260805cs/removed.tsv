@@ -1,0 +1,39 @@
+# retire_20260805cs.sh  tiers=A
+# started              2026-08-05T09:47:02-07:00
+# wcp-porting-img HEAD 01106cd
+# toolkit HEAD         a1ea3789
+# broken symlinks pre  0
+# du -sh sbnd_xin pre  0
+# df /nfs/data/1 pre   545G avail
+iso_ts	dir	tier	MB	archive_tarball	dir_mtime	citations
+2026-08-05T09:47:03-07:00	work	A	2822	work.tar.gz	2026-08-01T15:55:34-07:00	0
+2026-08-05T09:47:03-07:00	work-mcp10	A	98	work-mcp10.tar.gz	2026-07-23T16:12:52-07:00	0
+2026-08-05T09:47:03-07:00	work-mcp1000	A	7202	work-mcp1000.tar.gz	2026-07-23T05:43:50-07:00	0
+2026-08-05T09:47:04-07:00	work-mcp1kall-d59k	A	5986	work-mcp1kall-d59k.tar.gz	2026-07-26T13:02:47-07:00	0
+2026-08-05T09:47:04-07:00	work-nuecc48-0804	A	334	work-nuecc48-0804.tar.gz	2026-08-04T11:59:38-07:00	0
+2026-08-05T09:47:04-07:00	work-nuecc48-nuf	A	485	work-nuecc48-nuf.tar.gz	2026-07-29T19:20:20-07:00	0
+2026-08-05T09:47:04-07:00	work-nuecc48-prod0803	A	818	work-nuecc48-prod0803.tar.gz	2026-08-03T11:59:26-07:00	0
+2026-08-05T09:47:04-07:00	work-oc19scan-old	A	121	work-oc19scan-old.tar.gz	2026-08-02T12:08:31-07:00	0
+2026-08-05T09:47:04-07:00	work-pr33-allon48	A	239	work-pr33-allon48.tar.gz	2026-08-05T07:14:16-07:00	0
+2026-08-05T09:47:04-07:00	work-pr33-f1aon48	A	239	work-pr33-f1aon48.tar.gz	2026-08-05T06:37:08-07:00	0
+2026-08-05T09:47:04-07:00	work-pr33-f1bon48	A	239	work-pr33-f1bon48.tar.gz	2026-08-05T06:37:42-07:00	0
+2026-08-05T09:47:04-07:00	work-pr33-f2aon48	A	239	work-pr33-f2aon48.tar.gz	2026-08-05T07:07:31-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-f2bon48	A	239	work-pr33-f2bon48.tar.gz	2026-08-05T07:07:39-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-f2con48	A	239	work-pr33-f2con48.tar.gz	2026-08-05T07:09:01-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-f3on48	A	239	work-pr33-f3on48.tar.gz	2026-08-05T07:09:38-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-f4on48	A	239	work-pr33-f4on48.tar.gz	2026-08-05T07:10:36-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-f5on48	A	239	work-pr33-f5on48.tar.gz	2026-08-05T07:11:11-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-freshchk	A	4	work-pr33-freshchk.tar.gz	2026-08-05T06:53:17-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-headchk	A	4	work-pr33-headchk.tar.gz	2026-08-05T06:42:00-07:00	0
+2026-08-05T09:47:05-07:00	work-pr33-prod48	A	239	work-pr33-prod48.tar.gz	2026-08-05T07:16:22-07:00	0
+2026-08-05T09:47:05-07:00	work-pr37b-repeatA	A	240	work-pr37b-repeatA.tar.gz	2026-08-04T21:26:10-07:00	0
+2026-08-05T09:47:05-07:00	work-pr37b-repeatB	A	240	work-pr37b-repeatB.tar.gz	2026-08-04T21:28:39-07:00	0
+2026-08-05T09:47:05-07:00	work-r1ql-f1	A	119	work-r1ql-f1.tar.gz	2026-07-30T19:35:23-07:00	0
+2026-08-05T09:47:05-07:00	work-r1ql-f2	A	28	work-r1ql-f2.tar.gz	2026-07-30T19:35:47-07:00	0
+2026-08-05T09:47:05-07:00	work-r1ql-first10	A	1	work-r1ql-first10.tar.gz	2026-07-30T19:37:23-07:00	0
+2026-08-05T09:47:05-07:00	work-r2patrec-f1	A	169	work-r2patrec-f1.tar.gz	2026-07-30T17:17:07-07:00	0
+2026-08-05T09:47:05-07:00	work-vfnuecc48-prod0803	A	168	work-vfnuecc48-prod0803.tar.gz	2026-08-03T12:01:55-07:00	0
+# finished             2026-08-05T09:47:06-07:00
+# broken symlinks post 0
+# du -sh sbnd_xin post 0
+# df /nfs/data/1 post  565G avail

@@ -2,7 +2,8 @@
 # valfast A/B report: compare two valfast arms over the 629-event subset.
 #
 # Usage: valfast/valfast_compare.sh <tagA> <tagB> [sample ...]
-#   samples default: mcp1k nuecc48 r1qlmc r2mc
+#   samples default: mcp1k nuecc48 r1qlmc r2mc ncpi0 (ncpi0 added 2026-08-05,
+#   doc 71 campaign -- no legacy history, see run_valfast.sh header)
 #
 # Per sample, three gates (report by label -- quote this output in the doc):
 #   1. PR archives + trees + calib: vf_tree_compare_all.py, HARD
@@ -36,7 +37,7 @@ cd "$SBND_DIR" || exit 1
 A=${1:?usage: valfast_compare.sh <tagA> <tagB> [sample ...]}
 B=${2:?usage: valfast_compare.sh <tagA> <tagB> [sample ...]}
 shift 2
-SAMPLES=${*:-"mcp1k nuecc48 r1qlmc r2mc"}
+SAMPLES=${*:-"mcp1k nuecc48 r1qlmc r2mc ncpi0"}
 # Gate 1 is WIDE and HARD by default since 2026-08-05 (doc pr/37 sec.2.5
 # measured the floor at 0/629 on BOTH layouts).  VF_CMP_LEGACY=1 restores the
 # pre-promotion path exactly -- T_tagger/T_kine only, vectors as multisets,
@@ -50,6 +51,7 @@ nusel_root() {
         nuecc48) echo "work-nuecc48-vf$2";;
         r1qlmc)  echo "work-r1qlmc-vf$2";;
         r2mc)    echo "work-r2mc-vf$2";;
+        ncpi0)   echo "work-ncpi0-vf$2";;
     esac
 }
 

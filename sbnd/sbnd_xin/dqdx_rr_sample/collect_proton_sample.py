@@ -33,6 +33,17 @@ the old file's proton rows are dropped, so it is counted once.
 
 Nothing is re-run: every `tracking-stm.root` already exists.
 
+STALE 2026-08-05 (doc 71 campaign).  Both `work-mcp1kall-d59k` (ROOT) and
+`work-mcp1000b-d55ton` (CONTROL's control_root) were deleted in the
+2026-08-05 clean-slate retire round; this script cannot run against its
+defaults any more.  Deliberately NOT repointed to the campaign's
+work-mcp1k-cb0805: CONTROL's whole purpose is a bit-identical cross-check
+between two INDEPENDENT historical roots (d59k vs the doc-55 d55ton arms),
+and d55ton has no successor in this campaign's five samples -- there is
+nothing to check against.  --root/--control-root are already overridable on
+the command line; a future re-run needs a real d55ton-equivalent root before
+this script means anything again.
+
 Usage:
   cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
   python3 dqdx_rr_sample/collect_proton_sample.py --verbose

@@ -2,7 +2,7 @@
 # Extract an SBND reco1 art/LArSoft ROOT file into a standalone-chain
 # sample dir -- directly with the toolkit, no LArSoft.  Run with -h for help.
 #
-# Usage: ./run_reco1_dump.sh [-caf none|product|auto|override:<ns>] [-mc] [-t tag] [reco1.root]
+# Usage: ./run_reco1_dump.sh [-caf none|product|auto|override:<ns>] [-mc] [-t tag] [-fsproduct tag] [reco1.root]
 #   reco1.root  input art file; default: the single .root under input_files_reco1/
 #   -caf        frame_apply_at_caf mode for the opflash tensor-set metadata
 #               (default auto = ported FrameShift derivation, ~0.26 us low;
@@ -15,6 +15,12 @@
 #               (the default).  See docs/67_round2-patrec-10evt.md.
 #   -t          output tag; sample dir becomes input_files_reco1/extracted-<tag>/
 #               (default: input file basename up to the first '-')
+#   -fsproduct  art InputTag of the FrameShiftInfo product, for -caf product on
+#               a file where it was written under a non-default process
+#               instance (default: the 2025fall data literal
+#               'sbnd::timing::FrameShiftInfo_frameshift__FRAMESHIFT.'; the
+#               NCpi0 sideband file needs '...__FILTERFRAMESHIFT.' instead --
+#               verify with a branch-name grep, don't assume, doc 71)
 #
 # Output: input_files_reco1/extracted-<tag>/{frames-dnn.tar.bz2,opflash_apa{0,1}.tar.gz}
 #         (yuhw standalone-sample layout; ALL events of the art file)
@@ -61,8 +67,9 @@ INPUT=""
 WIRE_PRODUCT=""
 BADMASK_PRODUCT=""
 SUMMARY_PRODUCT=""
+FRAMESHIFT_PRODUCT=""
 
-usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -76,6 +83,8 @@ while [ $# -gt 0 ]; do
         -caf*) CAF_MODE="${1#-caf}"; shift ;;
         -t) TAG="$2"; shift 2 ;;
         -t*) TAG="${1#-t}"; shift ;;
+        -fsproduct) FRAMESHIFT_PRODUCT="$2"; shift 2 ;;
+        -fsproduct*) FRAMESHIFT_PRODUCT="${1#-fsproduct}"; shift ;;
         *) INPUT="$1"; shift ;;
     esac
 done
@@ -127,6 +136,7 @@ wire-cell \
     --tla-str "wire_product=${WIRE_PRODUCT}" \
     --tla-str "badmask_product=${BADMASK_PRODUCT}" \
     --tla-str "summary_product=${SUMMARY_PRODUCT}" \
+    --tla-str "frameshift_product=${FRAMESHIFT_PRODUCT}" \
     -c wct-reco1-dump.jsonnet
 
 echo

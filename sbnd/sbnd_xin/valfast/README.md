@@ -1,10 +1,40 @@
-# valfast — the 629-event fast PR-validation sample
+# valfast — the fast PR-validation sample
 
-Purpose: PR-chain development A/B gates used to run the full population
-(1000 MCP2025C data + 48 Lynn nueCC + 23 MC = 1071 events) even though only
-the events that actually yield PR results can move. This directory pins that
-subset — the **629 events with `nu_evaluated=1`** in the doc pr/11 census —
-plus a runner and a comparator, so a validation arm takes minutes, not hours.
+Purpose: PR-chain development A/B gates used to run the full population even
+though only the events that actually yield PR results can move. This
+directory pins that subset — the events with `nu_evaluated=1` — plus a
+runner and a comparator, so a validation arm takes minutes, not hours.
+
+> **CORRECTED 2026-08-05 (doc 71 campaign).** The manifest below is now
+> **521 events** (mcp1k 445, nuecc48 47, r1qlmc 4, r2mc 6, ncpi0 19/19 — a
+> new fifth sample), derived from `docs/pr/71_scores-table-cb0805.tsv` against
+> the fresh `work-<sample>-cb0805` roots, toolkit `a1ea3789`. The **629-event
+> manifest documented below is retained as history** — its source roots
+> (`work-mcp1kall-d59k`, `work-nuecc48-nuf`, `work-r1ql-first10`,
+> `work-r2patrec-f1`) were deleted in the 2026-08-05 clean-slate retire round,
+> so it is no longer reproducible or usable by `run_valfast.sh`, which now
+> reads `events-<sample>-cb0805.txt`. The drop (629 → 521, notably mcp1k
+> 572 → 445) reflects a genuinely different operating point — doc 68 moved
+> the SBND production flags from an explicit twelve-flag string to config
+> defaults, and the whole campaign runs on a clean, post-06:32 binary (doc
+> pr/33 §11.2) — not a bug in either number. See doc 71 for the full
+> derivation and the Bee/valfast repro block.
+>
+> Current repro:
+> ```bash
+> cd sbnd_xin
+> for s in ncpi0 r1qlmc nuecc48 r2mc mcp1k; do
+>   python3 pr_scores_table.py --root work-$s-cb0805 --sample $s \
+>       --out /tmp/$s-scores.tsv --summary
+> done
+> # merge into docs/pr/71_scores-table-cb0805.tsv, then per sample:
+> awk -F'\t' 'NR>1 && $15==1 {print $4}' /tmp/$s-scores.tsv | sort -n \
+>     > valfast/events-$s-cb0805.txt
+> M=input_files_reco1/staged-mcp2025c-1000evt/entry_event_map.tsv
+> awk -F'\t' 'NR==FNR {want[$1]=1; next} FNR>1 && ($4 in want) {print $1}' \
+>   valfast/events-mcp1k-cb0805.txt $M | sort -n > valfast/entries-mcp1k-cb0805.txt
+> wc -l valfast/events-*-cb0805.txt      # 19 + 4 + 47 + 6 + 445 = 521
+> ```
 
 ## Repro (derivation of the manifests)
 

@@ -57,6 +57,12 @@ AB=$SX/../../abtest
 
 SBND_DIR=$SX  # required by _runlib.sh (unused otherwise here: QLROOT/OUTROOT
               # are explicit args, not SBND_WORK_ROOT-derived).
+# _runlib.sh (2026-08-05) refuses to source when SBND_WORK_ROOT is unset AND
+# the default work/ is absent (M13 guard, doc 71) -- a false positive for
+# THIS script, which never reads $SBND_WORK_ROOT.  Give it a harmless
+# placeholder rather than weakening the guard for scripts that do use the
+# default (run_img_evt.sh, run_ql_evt.sh, run_nusel_evt.sh, run_pr_evt.sh).
+SBND_WORK_ROOT=${SBND_WORK_ROOT:-unused-see-QLROOT-OUTROOT-args}
 . "$SX/_runlib.sh"
 
 usage() {

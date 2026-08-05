@@ -2,7 +2,8 @@
 # valfast A/B report, chunk-parallel edition of valfast_compare.sh.
 #
 # Usage: valfast/valfast_compare_par.sh <tagA> <tagB> [sample ...]
-#   samples default: mcp1k nuecc48 r1qlmc r2mc
+#   samples default: mcp1k nuecc48 r1qlmc r2mc ncpi0 (ncpi0 added 2026-08-05,
+#   doc 71 campaign)
 #   VF_CMP_JOBS (default 8) parallel vf_tree_compare.py chunks per sample.
 #
 # Gates, pass/fail logic, and per-event output lines are IDENTICAL to
@@ -18,7 +19,7 @@ cd "$SBND_DIR" || exit 1
 A=${1:?usage: valfast_compare_par.sh <tagA> <tagB> [sample ...]}
 B=${2:?usage: valfast_compare_par.sh <tagA> <tagB> [sample ...]}
 shift 2
-SAMPLES=${*:-"mcp1k nuecc48 r1qlmc r2mc"}
+SAMPLES=${*:-"mcp1k nuecc48 r1qlmc r2mc ncpi0"}
 JOBS=${VF_CMP_JOBS:-8}
 # VF_CMP_WIDE=1: same contract as valfast_compare.sh -- all seven trees, exact,
 # plus the calib dump, and gate 1 becomes HARD.  Unset => unchanged behaviour.
@@ -38,6 +39,7 @@ nusel_root() {
         nuecc48) echo "work-nuecc48-vf$2";;
         r1qlmc)  echo "work-r1qlmc-vf$2";;
         r2mc)    echo "work-r2mc-vf$2";;
+        ncpi0)   echo "work-ncpi0-vf$2";;
     esac
 }
 

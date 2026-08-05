@@ -15,6 +15,20 @@ SBND_EVENTS=(2 9 11 12 14 18 31 35 41 42)
 # Root of the per-event work tree (work/evt<ID>, work/ql_evt<ID>, ...).
 # Default work/.  Export SBND_WORK_ROOT to land a reprocessing campaign in a
 # fresh tree instead of overwriting an existing one (e.g. work-fsprod).
+#
+# GUARD added 2026-08-05 (doc 71 campaign, M13).  work/ used to be a permanent
+# 708-evt-dir hub; it was deleted in the 2026-08-05 clean-slate retire round.
+# With it gone, a caller that simply forgets to export SBND_WORK_ROOT no
+# longer clobbers anything -- it silently CREATES a new work/ and a sample can
+# end up invisibly split across two roots.  Refuse that case outright; if
+# work/ already exists (the pre-2026-08-05 world, or a deliberate future
+# revival of it), behavior is unchanged -- this only fires for a *new* default
+# root, mirroring valfast/run_valfast.sh's refuse_existing() idiom in spirit
+# (there: refuse an existing tag; here: refuse a new implicit one).
+if [ -z "${SBND_WORK_ROOT:-}" ] && [ ! -d "$SBND_DIR/work" ]; then
+    echo "REFUSE: SBND_WORK_ROOT not set and default work/ does not exist -- set SBND_WORK_ROOT explicitly (M13; work/ was deleted 2026-08-05, see docs/work-tags.md and doc 71)" >&2
+    exit 1
+fi
 SBND_WORK_ROOT="${SBND_WORK_ROOT:-$SBND_DIR/work}"
 
 # input_files directory for a given mode, honoring SBND_SAMPLE.
