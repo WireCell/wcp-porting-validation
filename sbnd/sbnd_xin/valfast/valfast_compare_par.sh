@@ -20,6 +20,14 @@ B=${2:?usage: valfast_compare_par.sh <tagA> <tagB> [sample ...]}
 shift 2
 SAMPLES=${*:-"mcp1k nuecc48 r1qlmc r2mc"}
 JOBS=${VF_CMP_JOBS:-8}
+# VF_CMP_WIDE=1: same contract as valfast_compare.sh -- all seven trees, exact,
+# plus the calib dump, and gate 1 becomes HARD.  Unset => unchanged behaviour.
+# Gate 1 is WIDE and HARD by default since 2026-08-05 (doc pr/37 sec.2.5
+# measured the floor at 0/629 on BOTH layouts).  VF_CMP_LEGACY=1 restores the
+# pre-promotion path exactly -- T_tagger/T_kine only, vectors as multisets,
+# tree result INFORMATIONAL -- so every number in valfast/README.md and in the
+# round docs stays reproducible.
+if [ -n "${VF_CMP_LEGACY:-}" ]; then CMP=vf_tree_compare.py; WIDE=; else CMP=vf_tree_compare_all.py; WIDE=1; fi
 
 TMP=$(mktemp -d /home/xqian/tmp/vfcmp-par.XXXXXX) || exit 1
 trap 'rm -rf "$TMP"' EXIT
@@ -40,10 +48,9 @@ for s in $SAMPLES; do
     if [ ! -d "$ra" ] || [ ! -d "$rb" ]; then
         echo "[$s] MISSING ARM ($ra or $rb) -- FAIL"; fail=1; continue
     fi
-    # 1. PR archives (HARD gate) + trees (INFORMATIONAL) -- chunk-parallel.
-    #    Same interpretation as valfast_compare.sh: a rows=/= line with mabc==
-    #    and pctree== and a clean scores-diff is the known M4-residual
-    #    T_tagger vector instability, not a DIFF.
+    # 1. PR archives + all seven trees + calib -- ALL HARD, chunk-parallel.
+    #    Same contract as valfast_compare.sh (doc pr/37 sec.2.5); VF_CMP_LEGACY=1
+    #    reverts to the pre-2026-08-05 informational multiset compare.
     nlines=$(wc -l < "$VF/events-$s.txt")
     nj=$JOBS; [ "$nlines" -lt "$nj" ] && nj=$nlines
     rm -rf "$TMP/$s"; mkdir -p "$TMP/$s"
@@ -51,7 +58,7 @@ for s in $SAMPLES; do
     for c in "$TMP/$s"/chunk.*; do
         [ -s "$c" ] || continue
         # shellcheck disable=SC2046
-        ( python3 "$VF/vf_tree_compare.py" "$ra" "$rb" $(tr '\n' ' ' < "$c") \
+        ( python3 "$VF/$CMP" "$ra" "$rb" $(tr '\n' ' ' < "$c") \
               > "$c.out" 2>&1; echo $? > "$c.rc" ) &
     done
     wait
@@ -65,7 +72,11 @@ for s in $SAMPLES; do
     if grep -q 'mabc=≠\|pctree=≠\|MISSING' "$TMP/$s"/chunk.*.out; then
         echo "[$s] ARCHIVE DIFF -- hard gate FAIL"; fail=1
     elif [ $rc1 -ne 0 ]; then
-        echo "[$s] tree-feature instability only (archives identical) -- informational, see valfast/README.md"
+        if [ -n "$WIDE" ]; then
+            echo "[$s] TREE/CALIB DIFF -- hard gate FAIL (wide comparator)"; fail=1
+        else
+            echo "[$s] tree-feature instability only (archives identical) -- informational, see valfast/README.md"
+        fi
     fi
     # 2. physics columns (identical to valfast_compare.sh)
     if [ -f "$ra/vf-scores.tsv" ] && [ -f "$rb/vf-scores.tsv" ]; then

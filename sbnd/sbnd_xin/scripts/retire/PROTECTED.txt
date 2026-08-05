@@ -1,0 +1,37 @@
+# sbnd_xin — arms that must survive the next retire round
+#
+# WHY THIS FILE EXISTS.  Every retire round writes its own dated driver
+# (retire_20260730.sh, _20260802.sh, _20260803.sh), each with its own inline
+# PROTECTED="..." string.  Nothing carries forward automatically: an arm named
+# in one round's list is invisible to the next unless a human retypes it.  Doc
+# pr/28 sec.15.9 flagged that for work-tfix388-r9 and it has been carried by
+# memory ever since.  This file is the carry-forward list -- a new round's
+# driver must union its inline PROTECTED with every line below.
+#
+# It does NOT retire anything and is not executable.  Removing a line is a
+# decision to let that arm be swept; make it deliberately, and never remove one
+# because a doc "already has the numbers" -- CLAUDE.md M13 protects the record
+# itself, not just the summary of it.
+#
+# Format: <arm>  TAB  why it must survive  TAB  who cites it
+# Housekeeping: when an arm is genuinely superseded, move its line to the
+# RETIRED section at the bottom with the date, do not delete it.
+
+work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protection and it is not reproducible from any surviving input	doc pr/28 sec.15.9
+work-pr37b-repeatA	repeat-run determinism FLOOR at toolkit 2457320d, arm A (setarch -R, PR_EXTRA_STAGES=pr_display); the pair is the only floor measurement that covers the calib dump	doc pr/37 sec.6.2
+work-pr37b-repeatB	same pair, arm B; a floor is a PAIR -- deleting either one destroys the measurement, not half of it	doc pr/37 sec.6.2
+work-nuecc48-prod0803	the 48-event nueCC input root every pr/28-37 arm is generated from	doc pr/33 sec.11, doc pr/37 Repro
+work-vfnuecc48-prod0803	its valfast counterpart	scripts/retire/retire_20260803.sh
+
+# --- transient by policy, but NOT yet ------------------------------------
+# valfast/README.md's disposal rule says record the compare summary then delete
+# the arms.  These three are the doc pr/37 sec.2.5 floor measurement that
+# licenses promoting the valfast tree gate to HARD; they stay until the
+# population campaign has run against the promoted gate, because that is the
+# first thing that would re-open the question.  Owner's call to drop them after.
+work-vfmcp1k-vf37a work-vfnuecc48-vf37a work-vfr1qlmc-vf37a work-vfr2mc-vf37a	A/A' floor arm A, setarch -R	doc pr/37 sec.2.5
+work-vfmcp1k-vf37b work-vfnuecc48-vf37b work-vfr1qlmc-vf37b work-vfr2mc-vf37b	A/A' floor arm B, setarch -R (matched layout)	doc pr/37 sec.2.5
+work-vfmcp1k-vf37c work-vfnuecc48-vf37c work-vfr1qlmc-vf37c work-vfr2mc-vf37c	cross-layout arm C, ASLR ON -- the arm that tests the property the campaign needs	doc pr/37 sec.2.5
+
+# --- RETIRED (kept for provenance) ---------------------------------------
+# (none yet)

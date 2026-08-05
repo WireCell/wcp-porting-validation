@@ -2100,6 +2100,10 @@ differences up to ~9% are load noise from the 24-job schedule, not the knobs.
 
 ### §12.4 Per-knob ON arms — all five fixes are NULL on nueCC48
 
+> **CORRECTED 2026-08-05 — F3 is not null. See §12.12.** The heading and the
+> "every persisted product" claim below are wrong; the enumeration that
+> follows them is not. Everything this section actually opened was identical.
+
 Every per-knob arm (`f5on`, `f6on`, `f3on`, `f4on`, `f1onb`, `f7on`, and the
 joint `allonb`) is **bit-identical to the off arm** on every persisted
 product: pctree hashes 48/48, both nusel TSVs, every `T_tagger`/`T_kine`
@@ -2254,3 +2258,40 @@ active in both arms).
 The porting dictionary still has no topology/PID/direction section (§7
 loose end 5) — unchanged, and the §10 items plus this section are its raw
 material.
+
+---
+
+### §12.12 Correction — F3 is **not** null (doc pr/37 §2.3, 2026-08-05)
+
+**Symptom.** §12.4's heading says all five fixes are null on nueCC48 and its
+first sentence claims bit-identity "on every persisted product". Both are
+wrong for **F3 `shower_topo_reset`**, which is an SBND production default.
+
+**Root cause.** The sentence generalizes past what the gate opened. §12.3 is
+honest about the coverage — *"every `tracking-pr.root` `T_tagger`/`T_kine`
+leaf"* — but `tracking-pr.root` carries **seven** trees:
+`T_bad_ch Trun T_proj_data T_rec_charge T_proj T_tagger T_kine`. The movement
+landed in a third one.
+
+**Measurement** (doc pr/37 §2, `pr36_cmp.py`, no re-run — the arms already
+existed): `work-pr31r2-off48b` vs `work-pr31r2-f3on48` is **47/48** on trees,
+the one event being **evt 52672**, `T_rec_charge`, branch **`flag_shower`** —
+**23 of 501 entries flip 1 → 0**, contiguous at index 125–147. `mabc` 48/48,
+`pctree` 48/48, nusel TSVs 48/48, `T_tagger`/`T_kine` untouched, so §12.4's
+enumerated channels were all correctly reported.
+
+**Not a binary confound.** `work-pr31r2-off48` vs `off48b` — two same-config
+re-runs — is 48/48 on every tree and every branch, so the movement is F3's and
+not the §12.5 rework's build.
+
+**What survives.** The flip decision. No score, no verdict, no Bee member, no
+pctree entry and no nusel row moves; the §12.4 bullet's reasoning about the
+other four knobs is untouched. What changes is that F3 now has a **measured
+firing** on this manifest rather than a bounded-at-zero reach, and the
+"a larger manifest is where any of them would first show" sentence no longer
+applies to it.
+
+**Why it hid.** The comparator, not the physics — the same instrument gap doc
+pr/37 §2.1 traces across four rounds. `valfast/vf_tree_compare_all.py` (added
+2026-08-05) is the fix: all seven trees, exact, and it reproduces this exact
+line as its known-different calibration case.

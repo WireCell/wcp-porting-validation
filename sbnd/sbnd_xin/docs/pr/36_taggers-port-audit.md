@@ -802,6 +802,18 @@ recorded gap (doc pr/26 §8.2) with a knob already built, listed here only for
 completeness of the driver comparison. Note the asymmetry with `cosmic_flag`
 (§2.8): the prototype discards *that* one deliberately.
 
+> **CORRECTED 2026-08-05 (doc pr/37 §11.4) — the premise is stale: it is ON in
+> production, and there is no gap.** `clus.jsonnet:766`/`:2038` are `false`, but
+> those are the **module defaults**. Per doc 68 the SBND operating point lives
+> only in `wct-pr-perevt.jsonnet`, where **`:835` reads `sp_photon_flag = true`**
+> with a comment citing pr/26 §9.3's own gate (*1215 of 1216 `T_tagger`
+> branch-values identical; the one that moves is `photon_flag` 0 → 1 on evt
+> 172230*). So the toolkit sets the verdict where the prototype does. This is a
+> wrong **negative** in a P-list, produced by reading a knob's value from
+> `clus.jsonnet` instead of the operating point — the same mistake §10's knob
+> count exists to prevent. §10.10b's "RESOLVED — the knob exists and is wired"
+> understates it; the knob is not merely wired, it is on.
+
 ---
 
 ## §4 The SBND operating point — a calibration surface, not a port defect

@@ -1338,6 +1338,11 @@ default `false` = today's path**, and each is set **`true`** in
 manifest: every arm is byte-identical (§11.2), and every knob is nonetheless
 *engaged* rather than inert (§11.3).
 
+> **CORRECTED 2026-08-05 — "the flip is free on this manifest" is too strong;
+> see §11.9.** §11.2's table is right within the two columns it names, and the
+> re-gate confirms both. What no arm opened is `tracking-pr.root` and
+> `mabc-pr.zip`, and F1 and F2 move both. F3+F4 are clean everywhere.
+
 | knob | was | what it restores |
 |---|---|---|
 | `vertex_dir_use_fit_point` | P1 | eleven expressions measure from the continuous fit, not the Steiner snap |
@@ -1570,3 +1575,54 @@ clear, and the 48-event evidence that they do not move is `f2_demoted = 4` with
   runs; the determinism evidence is doc pr/28's, not this doc's.
 * **`main_candidate` has no viewer yet.** `PrDisplayDump` emits the field; the
   Bokeh PR display does not draw it.
+
+---
+
+### §11.9 Correction — what §11.2's two columns did not open (doc pr/37 §2.2, 2026-08-05)
+
+**Symptom.** §11's summary calls the flip *"free on this manifest"* and §11.2 is
+headed *"Gate — every arm 48/48"*. F1 and F2 move real artifacts.
+
+**Root cause — narrower than it looks, so state it precisely.** §11.2's table
+columns are *"pctree-pr member hashes"* and *"nusel-table / nusel-events"*, and
+its "Scope of the claim" paragraph limits itself to exactly those. **All four
+rows are correct as written, and the re-gate confirms every one of them:
+pctree 48/48 and nusel 48/48 on all four arms.** What over-claims is the
+heading and §11's one-line summary. The round's comparator, `pr32_cmp.py`,
+imports `uproot` **zero** times — while its docstring line 9 advertises a
+`T_tagger`/`T_kine` leaf compare — and never opens `mabc-pr.zip`, so those two
+channels were never in scope for any arm.
+
+**Measurement** (doc pr/37 §2, `pr36_cmp.py` over the surviving arms, no
+re-run):
+
+| arm | knob | trees identical | mabc identical | pctree | nusel |
+|---|---|---|---|---|---|
+| `f1on48` | `vertex_dir_use_fit_point` | **17/48** | **47/48** (evt 388) | 48/48 | 48/48 |
+| `f2on48` | `shower_traj_recheck_parity` | **35/48** | **45/48** (38856, 131357, 489330) | 48/48 | 48/48 |
+| `f34on48` | `main_vertex_require_descriptor` + `_candidate_flag` | **48/48** | **48/48** | 48/48 | 48/48 |
+| `allon48` | all four | **16/48** | **44/48** | 48/48 | 48/48 |
+
+F1's tree movement is dominated by `T_rec_charge['rr']` alone (30 of its 31
+events) — per-point residual range, which *should* follow the vertex — with
+`T_tagger` on 2 events and `T_kine` on 1. F2's reaches 109 `T_tagger` branches
+on evt 131357. The moved mabc members are `0-mc.json` and
+`0-shower_track-global.json` in every case, confirmed independently by plain
+`sha256` over extracted zip members.
+
+**What survives.** The knobs are behaviour changes doing what §11.4 says they
+do, and **the prime directive holds**: `work-pr31-f2off48` vs
+`work-pr32r2-off48` — the knob-off bar, across the two differently-named input
+roots — is **48/48 on all seven trees, every mabc member, pctree and the
+TSVs**, i.e. verified under a strictly wider instrument than this round used.
+`f34on48` stands untouched. §11.3's engagement counters are unaffected.
+
+**Not claimed.** There is **no generation control for pr/32** — no second
+`off48` arm exists, so unlike pr/31's `off48`/`off48b` identity these counts
+rest on one generation. And the arms predate `PR_EXTRA_STAGES=pr_display`, so
+the calib channel is 48 absent-side skips, not a pass.
+
+**Why it hid.** §11.8 already flagged the stale valfast baseline; the gap was
+one level lower than that — the per-event comparator itself. Fixed for the
+population campaign by `valfast/vf_tree_compare_all.py` (2026-08-05, all seven
+trees, exact, plus the calib dump), opt-in as `VF_CMP_WIDE=1`.

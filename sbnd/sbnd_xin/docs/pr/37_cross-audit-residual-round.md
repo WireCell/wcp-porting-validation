@@ -16,9 +16,14 @@ a "what is NOT claimed" section and most name blocks of code that were **never
 opened**. Nobody had read them *together*. This document does that, and it adds
 things none of them could have found from the inside.
 
-**No toolkit C++ or jsonnet is changed by this document.** Five measurements
-were run on already-installed binaries and already-existing artifacts; no build,
-no knob, no new gate on new code.
+**No toolkit C++ or jsonnet is changed by this document.** Rounds 1 and 2 ran
+five measurements on already-installed binaries and already-existing artifacts.
+Round 3 (2026-08-05) adds three fresh 629-event valfast arms — still the same
+binary, no build — and is the first round of this document to *change* anything:
+the valfast comparator (§2.5), four corrections written back into the documents
+they belong to (§11.3, §11.4, and the correction sections now appended to pr/31
+and pr/32), and one toolkit **documentation** line (`porting_dictionary.md`,
+§11.3). No knob, no C++, no jsonnet.
 
 > **Renumbering note.** Round 1 of this document (pushed as `63a9e17` …
 > `1e71ce2`) numbered its sections by *which half found them*. Round 2 merges
@@ -32,8 +37,10 @@ no knob, no new gate on new code.
 
 | § | finding | class | status |
 |---|---|---|---|
-| **2.2** | **Three of doc pr/32 §11.2's four "48/48 identical" rows are wrong.** `vertex_dir_use_fit_point` moves 31 of 48 events and `shower_traj_recheck_parity` 13 — up to 193 `T_tagger` branches, plus the Bee `mc.json` on 4 — while the `f34on48` row **stands**. **None of it was visible to `pr32_cmp.py`, which imports `uproot` zero times while its docstring advertises a `T_tagger`/`T_kine` leaf compare.** The *prime-directive* claim (knobs off ⇒ byte-identical) **holds** under the wider instrument | **measured** | gate language + instrument, **not** a production defect |
+| **2.2** | **doc pr/32 §11's *"the flip is free on this manifest"* is too strong.** `vertex_dir_use_fit_point` moves 31 of 48 events and `shower_traj_recheck_parity` 13 — up to 109 `T_tagger` branches on one event, plus the Bee `mc.json` on 4 — while F3+F4 is clean everywhere. **§11.2's table is right within the two columns it names** (pctree, nusel — both re-confirmed 48/48 on all four arms); what no pr/32 arm opened is `tracking-pr.root` and `mabc-pr.zip`, because `pr32_cmp.py` imports `uproot` **zero** times while its docstring advertises a `T_tagger`/`T_kine` leaf compare. The *prime-directive* claim (knobs off ⇒ byte-identical) **holds** under the wider instrument | **measured** | gate language + instrument, **not** a production defect |
 | **2.3** | **doc pr/31 §12.4's "all five fixes are NULL on nueCC48" is wrong.** `shower_topo_reset` (F3, SBND DEFAULT ON) flips **23 of 501** `T_rec_charge/flag_shower` entries on evt 52672. pr/31 §12.3 names its own coverage — *"every `tracking-pr.root` `T_tagger`/`T_kine` leaf"* — **two of that file's seven trees**; the movement landed in a third | **measured** | the conclusion survives, the words do not |
+| **2.5** | **The valfast gate is now as wide as the instrument that found the two rows above, and re-floored at HEAD.** It opened 2 of `tracking-pr.root`'s 7 trees as multisets, INFORMATIONAL, and no calib dump — so 2 of the 24 knobs ON were structurally invisible. Three fresh 629-event arms: the A/A′ floor is **0/629 exact on all seven trees, on BOTH address layouts**, where the 2026-08-02 record measured ~half the events differing. Gate 1 promoted to wide + HARD | **measured** | shipped, `VF_CMP_LEGACY=1` reverts |
+| **1.4** | **The valfast manifest is 21 % stale**: only **497 of 629** events still yield a PR result (mcp1k 442/572). All `rc=0`. **A large share is input vintage, not HEAD behaviour** — the one nueCC48 loss reconstructs fine at the same binary on production clustering. **The campaign must be run `-full`, not PR-tail** | **measured** | nothing proposed (escalation rule 7) |
 | **1.1** | SBND accepts the DL vertex **47/48**; the whole traditional overall-main-vertex layer — including `compare_main_vertices_global`, verified term-for-term in pr/32 §2.5 — runs **0 times**. The DL re-ranker's 4.0 acceptance floor has **never rejected** | **measured** | closes pr/32 loose end 1 |
 | **4** | **Three calibrations the prototype applies and the toolkit does not**, compounding on the same quantity, totalled by no document: `cal_corr_factor` is a stub returning **1.0** while the prototype's is live in production; `kine_nu_{x,y,z}_corr` carry the **raw** vertex; the single-photon SCE path is plumbed and off | source, **owner-accepted** | nothing proposed — recorded as one family |
 | **3** | **Two by-value boundaries in the same class.** `determine_overall_main_vertex` discards its map and `main_cluster` (latent, reach 0/48); `acc_segment_id` is copied **three deep** so both π⁰ finders mint ids from the same seed and `ssm_tagger` receives 0 — while the same header passes it `int&` to `ssm_tagger` 86 lines later | source-verified; **both-finders reach 0/48 measured** | closes pr/33 loose end 2 |
@@ -103,6 +110,24 @@ done
 # CRASHED (1 of 48 tracking files).  Use -allonb48 / -f1onb48, the re-runs.
 grep -c uproot pr32_cmp.py        # 0 -- while its docstring line 9 promises
                                   #      "tracking-pr.root T_tagger + T_kine leaves"
+
+# --- sec.2.5 (A2): widen the valfast gate, then re-floor it at HEAD ----------
+# THREE arms, one binary, all four samples; arm C varies ONLY the address layout.
+cd sbnd_xin
+LOGDIR=/home/xqian/tmp/pr37a2 ./pr37_a2_floor.sh          # vf37a/b setarch -R, vf37c ASLR on
+#   -> 629/629 rc=0 per arm; lib mtime 2026-08-04 20:55:43 before/between/after
+VF_CMP_JOBS=24 ./valfast/valfast_compare_par.sh vf37a vf37b   # matched layout
+VF_CMP_JOBS=24 ./valfast/valfast_compare_par.sh vf37a vf37c   # cross layout
+#   -> both VALFAST PASS: 629/629 mabc, pctree, trees(ALL,EXACT), calib 497/497
+VF_CMP_LEGACY=1 ./valfast/valfast_compare_par.sh vf37a vf37b  # pre-promotion path
+# calibrate the new comparator against a KNOWN-DIFFERENT pair (never A-vs-A only):
+python3 valfast/vf_tree_compare_all.py work-pr31r2-off48b work-pr31r2-f3on48 52672
+#   -> DIFF evt 52672 ... T_rec_charge['flag_shower']   (reproduces sec.2.3)
+
+# --- sec.1.4: how stale is the frozen manifest?  Input-controlled: doc pr/11's
+#     census ran the SAME driver over the SAME pinned hub at toolkit e154d50b.
+awk -F'\t' 'NR>1 && $1=="mcp1k" && $15==1' docs/pr/11_scores-table.tsv | wc -l   # 572
+python3 -c "import csv;r=list(csv.DictReader(open('work-vfmcp1k-vf37a/vf-scores.tsv'),delimiter='\t'));print(sum(1 for x in r if x['numu_score'] not in ('','nan')))"   # 442
 
 # --- sec.6: the run-to-run floor at HEAD, now including the calib dump --------
 setarch x86_64 -R env SBND_WCT_LOGLEVEL=debug PR_JOBS=5 PR_EXTRA_STAGES=pr_display \
@@ -287,6 +312,105 @@ measured at zero. Source-level plausibility has been a poor predictor of
 population in this series, in both directions — §2.3 is the case where it
 under-predicted.
 
+### §1.4 The valfast manifest is 21 % stale — measured, input-controlled
+
+**This is the largest single number in the round, and it is not a comparator
+finding.** valfast's 629-event manifest is frozen: `valfast/README.md` derives
+it once from doc pr/11's census (`nu_evaluated=1`) and states the consequence
+plainly — *"a change that flips a previously-unevaluated event into evaluation
+(or vice versa) is INVISIBLE to this gate by construction."* Eight
+implementation rounds later, that caveat has now been measured for the first
+time.
+
+**The comparison is input-controlled.** doc pr/11's Repro block runs
+`./run_pr_chain_batch.sh work-mcp1kall-d59k work-mcp1kall-pr11v3 data` at
+toolkit **`e154d50b`**. The §2.5 arm `work-vfmcp1k-vf37a` runs the **same
+driver** over the **same pinned hub** at **`2457320d`**. Same input, same
+config path, different binary.
+
+| sample | manifest (`nu_evaluated=1`) | evaluated at `2457320d` | lost | label of the lost |
+|---|---|---|---|---|
+| mcp1k | 572 | **442** | **130** | 128 `cosmic-tagged`, 2 `nu-candidate` |
+| nuecc48 | 47 | 46 | 1 | 1 `cosmic-tagged` |
+| r1qlmc | 5 | 4 | 1 | 1 `cosmic-tagged` |
+| r2mc | 5 | 5 | 0 | — |
+| **total** | **629** | **497** | **132 (21 %)** | |
+
+**What "lost" means, exactly.** Not a crash, not a deleted file, not a
+mis-reconstruction: **no neutrino candidate was scored.** `TaggerCheckNeutrino`
+declined to select a main cluster, so `TaggerInfo`/`KineInfo` were never filled
+— which is precisely the census's own `nu_evaluated` definition
+(`valfast/README.md`: set iff the log carries *"selected main cluster"*, and
+equivalent to a non-empty `numu_score` and `kine_reco_Enu_MeV`). Concretely, on
+evt 166650 at HEAD: 629/629 `rc=0`, `mabc-pr.zip` and `pctree-pr-evt*.tar.gz`
+written as usual, but `tracking-pr.root` contains **only `T_bad_ch`, `T_proj`,
+`Trun`** — `T_tagger`, `T_kine`, `T_rec_charge` and `T_proj_data` are absent —
+no `calib-pr` dump, and no BDT score, no `nue_score`, no reconstructed energy.
+The event ran to completion and produced no physics verdict.
+
+The mechanism is in the log: `no main cluster selected (20 mains, 2 in-window);
+skipping`, after both in-window candidates were taken by `nu_skip_cosmic_bundle`
+and `nu_skip_cosmic`. The **two `nu-candidate`** rows are the same shape — evt
+171050 and evt 282952 each have three in-window clusters and lose all three
+(`nu_skip_cosmic_bundle`, then `STM=true`, then `lm_flag=1`), while the
+event-level label stays `nu-candidate` because `nusel_extract`'s priority rule
+is computed on the **pre-PR** bundles and does not know what
+`TaggerCheckNeutrino` later declined.
+
+**A large share of it is input vintage, not HEAD behaviour — established on
+the nueCC48 case.** valfast's PR-tail mode reads *pinned* ql_roots that
+`valfast/README.md` itself flags as predating the pr/14–pr/20 clustering
+defaults. The one nueCC48 loss is **evt 271851**, and it is decisive because
+the same event can be run both ways at the same binary:
+
+| input root | `TaggerCheckNeutrino` at `2457320d` |
+|---|---|
+| `work-nuecc48-nuf` (valfast pinned, pre-pr/20) | 24 mains, 2 in-window; cluster 7 (13.0 cm) taken by `nu_skip_cosmic_bundle`, cluster 24 (**253.9 cm**) `TGM=true` — **no main cluster selected** |
+| `work-nuecc48-prod0803` (production clustering) | **selected main cluster 23 (t0 0.764 us, L 70.8 cm, 30 associated)** |
+
+The 253.9 cm object is the isochronous cosmic band still glued to the neutrino
+candidate — exactly doc pr/18's failure mode, fixed at `c7d7fbcd`
+(`protect_iso_band_xext`, **clustering** stage, SBND default ON), which the
+pinned hub predates. The event is healthy at HEAD; only valfast's frozen input
+loses it. **So the honest reading of the 132 is: today's PR chain measured
+against three-week-old clustering.** The mcp1k hub (`work-mcp1kall-d59k`) is of
+the same vintage, so the same mechanism plausibly accounts for much of its 130 —
+plausibly, not measured.
+
+**This changes how the campaign must be run.** PR-tail mode on the pinned hubs
+would gate the 24 knobs against clustering they were never tuned for and inherit
+~130 spurious dead events. Use **`-full`** (fresh nusel regeneration at the
+production operating point), or one `-full` arm reused by both sides via
+`VF_QLROOT_TAG` — which `run_valfast.sh` supports precisely so that a Q/L-side
+regeneration is not repeated per arm.
+
+**Direction is expected; magnitude is not established as correct.** The census
+epoch predates a deliberate cosmic-veto programme the owner shipped ON on
+purpose — the merge-aware TGM, the STM d66 package, the LM tagger, beam-window
+tagger gating, `nu_skip_cosmic_bundle`. A tightened veto *should* remove
+cosmic-dominated data events, and the asymmetry is exactly that shape: 22.7 %
+of mcp1k (cosmic-dominated data) against 2 % of nueCC48. **This document does
+not claim a regression and proposes nothing** (CLAUDE.md escalation rule 7 —
+report, do not tune). What it claims is that a 132-event change of population
+has never appeared in any round's gate, because no round's gate can see it.
+
+**Three consequences for the campaign.**
+
+1. The mcp1k arm's effective statistics are **442**, not 572. The other 130
+   events cost full runtime and contribute an empty score row to every compare.
+2. The blindness is **asymmetric**, and only one half is real. An event
+   *inside* the 629 that stops evaluating **is** caught — `T_tagger`, `T_kine`,
+   `T_rec_charge` and `T_proj_data` simply stop being written, which both
+   comparators report as a tree-presence difference. What no gate can see is an
+   event *outside* the 629 that starts evaluating: it is never run.
+3. It is **attributable for free**: the campaign's all-knobs-OFF arm re-runs the
+   same hub with the 24 knobs forced off, so the difference between its
+   evaluated count and 442 is the series' collective contribution, and the
+   difference between 572 and its count is everything else that changed since
+   `e154d50b`. No extra arm is needed.
+
+---
+
 ---
 
 ## §2 The gate is a different instrument every round
@@ -350,17 +474,22 @@ The knob-ON arms are where a claim breaks:
 | knob-ON pair | trees | mabc | the round said |
 |---|---|---|---|
 | pr/31 `off48b` → `allonb48` | **47/48** | 48/48 | *"all five fixes are NULL"* — **§2.3** |
-| pr/32 `off48` → `f1on48` | **17/48** | **47/48** | 48/48 — **wrong** |
-| pr/32 `off48` → `f2on48` | **35/48** | **45/48** | 48/48 — **wrong** |
-| pr/32 `off48` → `f34on48` | 48/48 | 48/48 | 48/48 — **stands** |
-| pr/32 `off48` → `allon48` | **16/48** | **44/48** | 48/48 — **wrong** |
+| pr/32 `off48` → `f1on48` | **17/48** | **47/48** | *"free on this manifest"* — **too strong** |
+| pr/32 `off48` → `f2on48` | **35/48** | **45/48** | *"free on this manifest"* — **too strong** |
+| pr/32 `off48` → `f34on48` | 48/48 | 48/48 | free — **stands, on every class** |
+| pr/32 `off48` → `allon48` | **16/48** | **44/48** | *"free on this manifest"* — **too strong** |
 | pr/34 `off48` → `allon48` | 48/48 | 39/48 (`mc.json` only) | display-only — **confirmed** |
 | pr/35 `off48` → `prod48` | 46/48 (`T_kine`, 2 evts) | 48/48 | 2/48 — **confirmed** |
 | pr/36 `off48` → `allon48` **(control)** | as §11.4 | 48/48 | **reproduces exactly** |
 
-**pr/32 in detail, per knob — three of its four rows are wrong and one stands.**
-pr/32 §11.2 makes four separate 48/48 claims, so the correction is per-arm, not
-collective. All four knobs are SBND production defaults.
+**pr/32 in detail, per knob — and be precise about what is wrong.** §11.2's
+table columns are *"pctree-pr member hashes"* and *"nusel-table / nusel-events"*,
+and its own "Scope of the claim" paragraph limits itself to exactly those. **All
+four of its rows are correct as written — the re-gate returns pctree 48/48 and
+nusel 48/48 on every arm.** What over-claims is §11.2's *heading* ("every arm
+48/48") and §11's summary sentence ("the flip is free on this manifest"), which
+generalize past the two columns to artifacts no pr/32 arm opened. The correction
+is per-arm, not collective. All four knobs are SBND production defaults.
 
 | knob | arm | what actually moves |
 |---|---|---|
@@ -444,7 +573,125 @@ four artifact families — `tracking-pr.root` leaves, `mabc-pr.zip` members,
 `pctree-pr` member content, and the nusel TSVs — i.e. `pr36_cmp.py` or its
 successor, never `pr32_cmp.py`. **Twelve** of the 24 production knobs — pr/29's
 3, pr/31's 5 and pr/32's 4 — were gated with an instrument that could not see two
-of those four families, and pr/30's 1 with a fourth tool again.
+of those four families, and pr/30's 1 with a fourth tool again. **Done — §2.5.**
+
+---
+
+### §2.5 The fix — the valfast gate widened, and re-floored at HEAD
+
+§2.4 leaves the campaign about to be gated by an instrument narrower than the
+one that produced §2.2 and §2.3. It was, in two ways:
+
+| valfast gate (before 2026-08-05) | covered | strength |
+|---|---|---|
+| 1 | `mabc-pr.zip` + `pctree-pr` member hashes | HARD |
+| 2 | `pr_scores_table.py` — **7 columns** (`numu_score`, `nue_score`, `cosmic_flag`, `cosmict_flag`, `cosmict_10_score`, `cosmict_score` (always 0), `kine_reco_Enu_MeV`) | HARD |
+| 3 | nusel archives, `-full` arms only | HARD |
+| 4 | `T_tagger`/`T_kine`, vector branches as **sorted multisets** | **INFORMATIONAL** |
+| — | the other **five** trees; `calib-pr-evt<ID>.json` | **not opened at all** |
+
+`grep -n "PR_EXTRA_STAGES\|calib" valfast/*.sh` returned nothing. So at least
+two of the 24 knobs ON were **structurally invisible**: pr/31's F3, whose only
+observable is `T_rec_charge/flag_shower` (§2.3), and pr/36's F1, whose only
+outlet is `match_isFC` in the calib block — *"not booked in `T_tagger`"*
+(pr/36 §10.9).
+
+**Why gate 4 was informational, and why that reason has expired.**
+`valfast/README.md` demoted it on a measured A/A′ of 2026-08-02: nueCC48 came
+back **9/47** multiset-identical, mcp1k **536/572**, with a named value flip
+(`shw_sp_lol_1_v_angle` 32.5 → 131.8 on r1qlmc evt 16), concluding that *"an
+exact comparison would false-DIFF ~half the events."* §6.2 measured the
+opposite on 48 events at `2457320d`. Different input roots, so not a controlled
+pair — hence a measurement rather than an inference.
+
+**Three arms, not two** (`pr37_a2_floor.sh`), one binary throughout
+(`libWireCellClus.so` mtime `2026-08-04 20:55:43`, checked before, between and
+after each), all four samples, `PR_EXTRA_STAGES=pr_display`, `-j 8`, 629/629
+`rc=0` each: `vf37a` and `vf37b` under `setarch -R` (matched layout, the
+README's own condition), `vf37c` with **ASLR on** (cross layout — the property
+a production campaign needs, since production arms are not run under `setarch`).
+Arm C kept `-j 8` deliberately: its purpose is to vary **one** thing.
+
+| pair | events | mabc | pctree | **trees (ALL, EXACT)** | calib | verdict |
+|---|---|---|---|---|---|---|
+| `vf37a` vs `vf37b` — matched layout | 629 | 629/629 | 629/629 | **629/629** | 497/497 | **VALFAST PASS** |
+| `vf37a` vs `vf37c` — **cross layout** | 629 | 629/629 | 629/629 | **629/629** | 497/497 | **VALFAST PASS** |
+
+**The floor is 0 where it used to be roughly half, and it holds across address
+layouts.** Both pairs also PASS under the legacy comparator. The 7
+`kine_reco_Enu_MeV` cells the 2026-08-02 record had to tolerate did **not**
+recur; the 1e-5 tolerance in `vf_scores_diff.py` is currently unexercised and
+is kept anyway — one clean pair does not retire a documented noise floor.
+
+Most of the intervening change is plausibly pr/36 F4, which swapped four
+address-ordered float sums in `NeutrinoTaggerNuE.cxx` to index-ordered sets
+(`shw_sp_lol_*` is in that family) and `tagger_ordered_segment_sets`, both SBND
+ON since `2457320d`. **Plausibly — the arms differ by more than those two
+knobs, and no per-knob attribution was run.** pr/36 §11 called F4's value
+*"run-to-run stability under a different address layout"* rather than fidelity;
+this is that claim measured at population scale, and it holds.
+
+**What shipped.** `valfast/vf_tree_compare_all.py` — a fork of
+`vf_tree_compare.py`, which is left byte-for-byte because the 2026-08-02 record
+cites its output (CLAUDE.md §2 fork-by-duplication). All seven trees, exact,
+plus the calib dump split into tagger/kine/other keys, all four comparisons
+routed through `pr36_cmp.py`'s own `_to_py`/`branch_equal` rather than a third
+hand-rolled one (§6.4 — that mistake has now produced two phantom regressions
+in two rounds). Gate 1 is **wide and HARD by default** in both drivers;
+`VF_CMP_LEGACY=1` restores the old path and the old semantics exactly.
+
+**Calibrated against a known-different pair**, not only A-vs-A — the trap §6.4
+is about. Pointed at `work-pr31r2-off48b` vs `f3on48` it reproduces §2.3 cold:
+
+```
+DIFF evt 52672  mabc== pctree== trees=≠ calib=absent  T_rec_charge['flag_shower']
+```
+
+Cost: ~3.6 s/event single-process, ~4 min/sample at `VF_CMP_JOBS=24`.
+
+**The tree moved under this measurement, and it turned the arms into an
+accidental gate.** A concurrent session began implementing doc pr/33 while the
+arms were building. Timeline, from file mtimes:
+
+| time | event |
+|---|---|
+| 05:43–05:55 | arm `vf37a` builds |
+| 05:58–06:10 | arm `vf37b` builds |
+| **06:02:35 / 06:02:52** | `cfg/pgrapher/{common,experiment/sbnd}/clus.jsonnet` edited (+31/+52 lines) — pr/33's **eight** knobs, all `false` |
+| 06:13–06:25 | arm `vf37c` builds |
+| 06:32:25 | `libWireCellClus.so` **reinstalled** |
+
+The runner's entry point is `$SX/wct-pr-perevt.jsonnet` (untouched, mtime
+2026-07-27), but `WIRECELL_PATH` puts `$TK/cfg` in the import path, so the
+edited `clus.jsonnet` files **were** compiled by every event that started after
+06:02:52 — **0 of arm A's 629, 250 of arm B's, all 629 of arm C's**.
+
+Both pairs are nonetheless **629/629 identical on every class**. So the A/A′
+floor doubles as a byte-identical gate on the concurrent session's cfg
+plumbing: pr/33's eight knobs, defaulted off with the key-suppression idiom,
+are **config-inert across 629 events on all four samples** — 250-vs-379 within
+arm B and 0-vs-629 across A-vs-C. That is a stronger config gate than any pr/33
+implementation round would have needed to run, obtained for free. It is also
+the reason the floor is trustworthy despite the tree moving: had the plumbing
+not been inert, the A-vs-C pair would have shown it.
+
+**The binary, by contrast, was constant and then was not.** All three arms ran
+against `libWireCellClus.so` mtime `2026-08-04 20:55:43`, stamped before,
+between and after each arm. It was replaced at **06:32:25**, seven minutes
+after the last arm finished. So these arms are internally valid and **can no
+longer be extended**: a fourth arm built today would be binary-confounded
+against them. Anything that needs to compare to this floor must re-run all of
+it.
+
+**Not claimed.** These are **PR-tail** arms on the pinned hubs, so the floor is
+a statement about the PR chain, not about the Q/L regeneration a `-full`
+campaign would add — and §1.4 is the reason the campaign must nonetheless be
+`-full`. `calib 497/497` counts only events that produce a dump; the 132 that
+no longer evaluate contribute no calib and no `T_tagger` to either side, so
+they are compared but they do not exercise those channels. And a floor of 0 on
+one pair per layout does not prove the instability is *gone* — it bounds it
+below what 629 events can see, which is exactly the bar the old record set and
+now fails to meet.
 
 ---
 
@@ -931,7 +1178,8 @@ elsewhere in this document trace back to pr/33's non-implementation:
   unfixed live address-ordered comparator, and pr/34's determinism verdict is
   explicitly conditional on it.
 * **§11.3** — pr/33 ordered a `porting_dictionary.md` correction
-  *unconditionally* ("whether or not F4 ships"), and it is still unmade.
+  *unconditionally* ("whether or not F4 ships"). **Made 2026-08-05** — the only
+  one of pr/33's three live consequences that is now closed.
 
 pr/33 is upstream of every shower quantity in `T_kine` and the Bee mc tree, and
 it is the largest block of accepted-but-unimplemented work in the series. Named
@@ -1009,10 +1257,14 @@ Carried forward from the nine documents, one line each, so they are in one place
 * **pr/29 §13.1** — D1+D12 has never been separated from D2; the pi0 question
   (evt 388 lost one) is open; the 24-starved-clusters number's scaling is only
   partially answered.
-* **pr/28 §15.9** — round 8's two missing tests; **`work-tfix388-r9` must be
-  hand-added to the next retire round's `PROTECTED` list** (there is no automatic
-  protection). Add **`work-pr37b-repeat{A,B}`** to the same list if the floor is
-  to stay re-checkable.
+* **pr/28 §15.9** — round 8's two missing tests. The `PROTECTED` half of that
+  item is **closed**: each retire round used to carry its own inline
+  `PROTECTED="..."` string with nothing propagating between rounds, so
+  `work-tfix388-r9` survived only because a human remembered it every time.
+  `scripts/retire/PROTECTED.txt` (2026-08-05) is now the carry-forward
+  registry — `work-tfix388-r9`, the `work-pr37b-repeat{A,B}` floor **pair**,
+  the two prod0803 input roots, and the vf37 arms — and a new round's driver
+  must union its inline list with that file.
 * **pr/30 §7.1/§7.2** — the `walk_history` asymmetry between the two
   `proto_extend_point` calls; and the `init_first_segment` main-cluster
   flag-vs-pointer warning, which §3.1 supplies a mechanism for.
@@ -1059,12 +1311,18 @@ strict regex (**parse per-key, not per-line** — pr/36 §11.5 recovered its swe
 that way), and it is the recorded cause of pr/35's three `stmfit` TSV columns,
 reproduced independently in §2.2.
 
-**§11.3 One unconditional fix, ordered and not made.** pr/33 §10.7:
-`clus/docs/porting/porting_dictionary.md:222` maps `get_flag_shower()` →
+**§11.3 One unconditional fix, ordered and not made — now made.** pr/33 §10.7:
+`clus/docs/porting/porting_dictionary.md:222` mapped `get_flag_shower()` →
 `flags_any(kShowerTrajectory | kShowerTopology)` with the `abs(pdg)==11` term
 simply absent — *"a documentation bug, not a behaviour change, and **it is what
-makes this class recur** … Correct it whether or not F4 ships."* **Verified
-unchanged at `2457320d`.**
+makes this class recur** … Correct it whether or not F4 ships."* **Fixed
+2026-08-05.** The prototype is three disjuncts, not two:
+`ProtoSegment.cxx:1305` is `flag_shower_trajectory || flag_shower_topology ||
+get_flag_shower_dQdx()`, and `get_flag_shower_dQdx()` (`:1309`) is *only*
+`fabs(particle_type)==11` — **despite its name it tests nothing about dQ/dx**,
+which is presumably how the term went missing in the first place. The row now
+carries all three, and `get_flag_shower_dQdx()` has a row of its own. This is
+the round's only toolkit-repo change and it is documentation.
 
 **§11.4 A P-row resting on the wrong config file.** pr/36 §3 P13 records
 `sp_photon_flag=false` as *"a known, recorded gap (doc pr/26 §8.2) with a knob
@@ -1076,7 +1334,8 @@ reads **`sp_photon_flag = true`** with a comment citing pr/26 §9.3's own gate
 `photon_flag` 0 → 1 on evt 172230"*). **So it is ON in production and P13's
 premise is stale.** A wrong *negative* in a P-list, produced by exactly the
 mistake §10's derivation rule exists to prevent — reading a knob's value from
-`clus.jsonnet` instead of the operating point.
+`clus.jsonnet` instead of the operating point. **Corrected in place in doc
+pr/36 P13, 2026-08-05.**
 
 **§11.5 Citation hazards in pr/33 and pr/34**, recorded because a future reader
 will otherwise quote withdrawn text:
@@ -1171,6 +1430,14 @@ premise of §6.2 and deserves evidence rather than assumption.
   firing.
 * **§10's count is knobs ON at one HEAD.** Not a claim that all 24 interact, nor
   that a valfast run would move any of them.
-* **Nothing here is implemented.** No toolkit C++ or jsonnet was changed by this
-  document; `git -C toolkit status --porcelain` carried only a concurrent
-  session's untracked files throughout.
+* **Almost nothing here is implemented.** No toolkit C++ or jsonnet was changed.
+  The one toolkit-repo edit is a markdown row in `porting_dictionary.md`
+  (§11.3). Everything else that changed lives in `wcp-porting-img`: the valfast
+  comparator and its two drivers (§2.5), `scripts/retire/PROTECTED.txt`, and
+  correction sections written back into docs pr/31, pr/32 and pr/36.
+* **§2.5 does not attribute the recovered determinism to a knob.** pr/36 F4 and
+  `tagger_ordered_segment_sets` are the plausible mechanism; the arms differ by
+  more than those two and no per-knob attribution was run.
+* **§1.4 proposes nothing and does not call the 132 a regression.** It is a
+  measured change of population between two binaries on identical input, with a
+  demonstrated input-vintage component and an unmeasured remainder.

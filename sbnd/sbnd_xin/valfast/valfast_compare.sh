@@ -5,9 +5,10 @@
 #   samples default: mcp1k nuecc48 r1qlmc r2mc
 #
 # Per sample, three gates (report by label -- quote this output in the doc):
-#   1. PR archives + trees: pr_arm_compare.py work-vf<s>-<tagA> vs -<tagB>
-#      (hash_archive.py member hashes of mabc-pr.zip + pctree-pr-evt*.tar.gz,
-#       numeric uproot compare of T_tagger/T_kine)
+#   1. PR archives + trees + calib: vf_tree_compare_all.py, HARD
+#      (hash_archive.py member hashes of mabc-pr.zip + pctree-pr-evt*.tar.gz;
+#       EXACT uproot compare of ALL SEVEN trees in tracking-pr.root; and
+#       calib-pr-evt<ID>.json split into tagger/kine/other keys)
 #   2. physics columns: vf_scores_diff.py on the two vf-scores.tsv
 #      (timing/RSS columns excluded by name; kine_reco_Enu_MeV compared with
 #       1e-5 relative tolerance -- the chain's documented noise floor)
@@ -16,6 +17,17 @@
 #      pctree-evt*.tar.gz + nusel_evt*/mabc-pr.zip
 # Exit 0 iff every gate that ran is identical. A knob-ON arm is EXPECTED to
 # differ -- this script reports, the doc interprets.
+#
+# Gate 1 was INFORMATIONAL and covered T_tagger/T_kine as sorted multisets until
+# 2026-08-05.  doc pr/37 sec.2.5 re-measured the A/A' floor at toolkit 2457320d:
+# 0 of 629 events differ, EXACT, on all seven trees, in BOTH a matched-layout
+# pair (setarch -R twice) and a cross-layout pair (setarch -R vs ASLR on).  The
+# instability that forced the multiset compare is gone, so the gate is now wide
+# and hard.  VF_CMP_LEGACY=1 restores the old path exactly.
+#
+# Build arms with PR_EXTRA_STAGES=pr_display or the calib channel is an
+# absent-side skip and pr/36 F1's match_isFC stays invisible (it is not booked
+# in T_tagger).
 set -u
 SBND_DIR=$(cd "$(dirname "$0")/.." && pwd -P)
 VF=$SBND_DIR/valfast
@@ -25,6 +37,12 @@ A=${1:?usage: valfast_compare.sh <tagA> <tagB> [sample ...]}
 B=${2:?usage: valfast_compare.sh <tagA> <tagB> [sample ...]}
 shift 2
 SAMPLES=${*:-"mcp1k nuecc48 r1qlmc r2mc"}
+# Gate 1 is WIDE and HARD by default since 2026-08-05 (doc pr/37 sec.2.5
+# measured the floor at 0/629 on BOTH layouts).  VF_CMP_LEGACY=1 restores the
+# pre-promotion path exactly -- T_tagger/T_kine only, vectors as multisets,
+# tree result INFORMATIONAL -- so every number in valfast/README.md and in the
+# round docs stays reproducible.
+if [ -n "${VF_CMP_LEGACY:-}" ]; then CMP=vf_tree_compare.py; WIDE=; else CMP=vf_tree_compare_all.py; WIDE=1; fi
 
 nusel_root() {
     case "$1" in
@@ -42,23 +60,24 @@ for s in $SAMPLES; do
     if [ ! -d "$ra" ] || [ ! -d "$rb" ]; then
         echo "[$s] MISSING ARM ($ra or $rb) -- FAIL"; fail=1; continue
     fi
-    # 1. PR archives (HARD gate) + trees (INFORMATIONAL).
-    #    vf_tree_compare.py compares vector branches as multisets, but even so
-    #    the T_tagger per-candidate FEATURE branches carry residual run-to-run
-    #    instability under setarch -R (M4 residual: fill-order permutations
-    #    everywhere, plus occasional single-angle value flips, e.g.
-    #    shw_sp_lol_1_v_angle on the vfsmk A/A' arms) while archives and score
-    #    columns are bit-stable.  The hard bar here is therefore the doc pr/20
-    #    one: archives + physics score columns.  A rows=/= line with mabc== and
-    #    pctree== and a clean scores-diff is the known instability, not a DIFF.
+    # 1. PR archives + all seven trees + calib -- ALL HARD (doc pr/37 sec.2.5).
+    #    Under VF_CMP_LEGACY=1 the tree half reverts to INFORMATIONAL, because
+    #    the 2026-08-02 A/A' measured fill-order permutations and occasional
+    #    value flips (shw_sp_lol_1_v_angle on the vfsmk arms) in the T_tagger
+    #    per-candidate feature branches.  That is history, not current
+    #    behaviour: the 2026-08-05 floor is 0/629 exact on both layouts.
     # shellcheck disable=SC2046
-    out1=$(python3 "$VF/vf_tree_compare.py" "$ra" "$rb" $(tr '\n' ' ' < "$VF/events-$s.txt"))
+    out1=$(python3 "$VF/$CMP" "$ra" "$rb" $(tr '\n' ' ' < "$VF/events-$s.txt"))
     rc1=$?
     echo "$out1"
     if echo "$out1" | grep -q 'mabc=≠\|pctree=≠\|MISSING'; then
         echo "[$s] ARCHIVE DIFF -- hard gate FAIL"; fail=1
     elif [ $rc1 -ne 0 ]; then
-        echo "[$s] tree-feature instability only (archives identical) -- informational, see valfast/README.md"
+        if [ -n "$WIDE" ]; then
+            echo "[$s] TREE/CALIB DIFF -- hard gate FAIL (wide comparator)"; fail=1
+        else
+            echo "[$s] tree-feature instability only (archives identical) -- informational, see valfast/README.md"
+        fi
     fi
     # 2. physics columns (vf_scores_diff.py = pr20_scores_diff.py fork with a
     #    1e-5 relative tolerance on kine_reco_Enu_MeV ONLY -- the documented
