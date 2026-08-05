@@ -7,9 +7,13 @@ pr/34 particle flow). This one covers **step 7 of the eight** in doc pr/27 §0,
 defined by doc pr/27 §9: charge → energy per segment and per shower, and the
 `KineInfo` summary tree.
 
-**Status. AUDIT ONLY. No code was changed. No knob was added. No event was
-run.** Every finding below is the owner's call. The owner's standing
-instruction from the pr/29 round ("Please do not change any code yet") governs.
+**Status. §11 SHIPPED (2026-08-04, toolkit `29e8e452`): F1
+`kine_shower_pdg_live` + counter, SBND PRODUCTION DEFAULT ON; F3 resolved as
+the perf class by the §10.11a measurement (0 growth over nueCC48) and shipped
+UNCONDITIONALLY with a staleness guard; F2 = owner-accepted gap (no code); F4 =
+raw vertex + runtime WARN (owner 2026-08-04, no SBND geom helper).** §§0–10
+below are the audit and filter records and are unchanged; §11 is the
+implementation round.
 
 > **§10 (added later) — OWNER FILTER: 14 → 4 findings.** Re-verified at toolkit
 > **`407c5ba9`**, eleven commits after the `23bd6783` this audit was written
@@ -21,6 +25,12 @@ instruction from the pr/29 round ("Please do not change any code yet") governs.
 > **UNSETTLED** (F3 — §10.11a), and two scoping questions that are the owner's
 > to answer (F2, F4). §10.6 shows this stage needs a **different gate artifact** from
 > every earlier round in the series.
+>
+> **§11 (added later) — the implementation round.** F3's class question is
+> ANSWERED by the §10.11a measurement (0 growth, 33/48 events engaged ⇒ perf
+> class, shipped unconditionally); F1's frequency question is ANSWERED by the
+> shipped counter (2/48 on nueCC48, both `cached=13 live=11`); F2 and F4 got
+> their owner answers on 2026-08-04 (accept the gap; raw vertex + WARN).
 
 **Headline.** The `fill_kine_tree` skeleton is a faithful translation — the
 two-pass walk, the `flag_reduce` rest-mass bookkeeping, the remaining-shower
@@ -1856,3 +1866,213 @@ one quoted. And §10.2's knob home is corrected above: `KineChargeOptions` /
 `BeeKineConfig` in this stage (that was pr/34's `BeePFConfig`), and
 `fill_kine_tree`'s signature (`NeutrinoPatternBase.h:841`) takes no config
 object, so inventing one would have been a second unnecessary change.
+
+---
+
+## §11 The implementation round — F1 shipped ON, F3 resolved and shipped, F2/F4 answered
+
+Owner instruction (2026-08-04): *"repeat what you did for the filtered list in
+[pr/34] … use nueCC 48 events to guide the decision … bug fix and improvements
+default on in SBND running."* Implemented at toolkit **`29e8e452`** (parent
+`ed414bd4`); wcp-porting-img: this commit.
+
+### §11.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+./wcb build --notests -p && ./wcb install --notests -p    # wcbuild expansion; M1 freshness proof after
+./build/clus/wcdoctest-clus                                # 984/984, twice (pre- and post-F3)
+
+cd sbnd_xin
+IDS=$(ls -d work-pr31r2-prod48/pr_evt* | sed 's/.*pr_evt//' | sort -n | tr '\n' ' ')
+# every arm carries PR_EXTRA_STAGES=pr_display: the gate artifact is
+# pr_evt<ID>/calib-pr-evt<ID>.json (sec 10.6) and the baselines don't have it
+PR_EXTRA_STAGES=pr_display PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr35-off48 data $IDS
+SBND_KINE_SHOWER_PDG_LIVE=1 PR_EXTRA_STAGES=pr_display PR_JOBS=12 \
+    ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr35-f1on48 data $IDS
+# (after the F3 unconditional edit + rebuild)
+PR_EXTRA_STAGES=pr_display PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr35-f3-48 data $IDS
+# (after the wct-pr-perevt.jsonnet flip)
+PR_EXTRA_STAGES=pr_display PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr35-prod48 data $IDS
+
+python3 pr35_cmp.py work-pr34-prod48 work-pr35-off48      # the byte-identical gate
+python3 pr35_cmp.py work-pr35-off48  work-pr35-f1on48     # F1 characterization
+python3 pr35_cmp.py work-pr35-off48  work-pr35-f3-48      # F3 byte-identity
+python3 pr35_cmp.py work-pr35-f1on48 work-pr35-prod48     # bare == production
+# F1 counter / F3 growth / F4 WARN harvest:
+grep -ah 'kine_shower_pdg cached' work-pr35-off48/pr_evt*/wct_pr_evt*.log
+grep -al 'charge data grew since cache' work-pr35-off48/pr_evt*/wct_pr_evt*.log
+grep -al 'RAW fitted vertex despite'    work-pr35-off48/pr_evt*/wct_pr_evt*.log
+```
+
+`pr35_cmp.py` is new this round (committed alongside this doc). Per event it
+compares the `calib-pr-evt<ID>.json` (byte compare; on a diff it names the
+moved top-level keys, kine vs non-kine), all `mabc-pr.zip` member hashes, the
+`pctree-pr` rollup hash, and the nusel TSV — because §10.6 showed
+`pr32_cmp.py`/`pr34_cmp.py` gate **nothing** for this stage (pctree does not
+carry KineInfo). It tolerates calib JSONs absent on the baseline side (the
+pre-pr/35 arms ran without `pr_display`) and reports them as skips, not diffs.
+
+### §11.2 What shipped
+
+| finding | shape | where |
+|---|---|---|
+| **F1** = P1+P8 | knob `kine_shower_pdg_live`, C++ default false, **SBND ON** | `KineChargeOptions::shower_pdg_live` (`NeutrinoPatternBase.h`); a `shower_kine_pdg` helper at the four `fill_kine_tree` sites (`NeutrinoKinematics.cxx`), used for the `kine_particle_type` push, the `!= 11` rest-mass check and the `== 2212` binding-energy check, per §10.2's exact shape (live read guarded by `has_particle_info()`) |
+| **F1 counter** | unconditional, knob-independent | logs the PAIR `kine_shower_pdg cached={} live={} shower_id={}` at info on every mismatch — the pr/32-F3 precedent; the 11-vs-211 and stuck-at-0 classes stay distinguishable (§7.1) |
+| **F3** = P4 | **unconditional** perf fix (no knob) + permanent staleness guard | segment `cal_kine_charge` overload (`NeutrinoEnergyReco.cxx`): the four fresh locals and the per-call `collect_2D_charge` are gone; `if (m_charge_2d_u.empty()) collect_charge_maps(...)` mirrors the shower overload and the MEMBERS are passed — §10.11b's real three-part edit, not the no-op one-liner |
+| **F3 guard** | shipped diagnostic | `m_charge_data_size_at_collect` recorded at cache time; the segment overload WARNs if `m_charge_data` has grown since (staleness would make this a behaviour question again — §11.5) |
+| **F4** = P5 | one WARN line (owner decision) | `fill_kine_tree`'s no-geom_helper else branch: `kine_nu_*_corr are the RAW fitted vertex despite the _corr name` |
+| **F2** = P2 | **no code** (owner decision) | §11.3 |
+
+Threading (the `kine_*` family precedent, not pr/34's `bee_pf` path):
+`TaggerCheckNeutrino` member + config read + `default_configuration()`
+round-trip + push into `pattern_algos.m_kine_charge`; `common/clus.jsonnet`
+`tagger_check_neutrino()` arg + key-suppression
+(`+ (if kine_shower_pdg_live then { kine_shower_pdg_live: true } else {})`);
+`sbnd/clus.jsonnet` `clus_pr()`/`pr()` args + pass-throughs;
+`wct-pr-perevt.jsonnet` TLA (**flipped `true`**, §11.6); runner tri-state env
+`SBND_KINE_SHOWER_PDG_LIVE` (unset = cfg default, 1 = force on, 0 = force off).
+
+### §11.3 The two owner decisions (2026-08-04)
+
+- **F2 (`cal_corr_factor` stub): ACCEPT THE GAP.** No position-dependent
+  charge correction on SBND at this point, pending an SBND calibration
+  product. No code — §10.3's analysis stands: no default-OFF knob reproduces
+  the prototype (its correction data is uBooNE calibration), and plumbing an
+  empty-default key would be a knob that can only ever be off. The stub keeps
+  returning 1.0; the magnitude on SBND remains unestimated.
+- **F4 (SCE vertex): RAW VERTEX + WARN.** No geom helper configured for SBND
+  (no SBND SCE parameter set exists in-tree). The WARN fires once per
+  `fill_kine_tree` call — measured on **46/48** events of `work-pr35-off48`
+  (the two silent ones, 116962 and 268784, never reach `fill_kine_tree`).
+  Log-only, artifact-inert by the §11.4 gate.
+
+### §11.4 The gate
+
+Compiled-config proofs (runner-equivalent TLAs incl. the full
+`pipeline_names`): knobs-off compile at the working tree ==
+worktree-at-`ed414bd4` compile, md5 `a066271b424b9bf54c370b4370221e5d` both;
+key absent when off, `kine_shower_pdg_live: true` lands on exactly the
+`TaggerCheckNeutrino:pr` node when on; post-flip bare compile == pre-flip
+TLA-forced compile, md5 `95f069d516cf8ff7ecc6ed10cb179db1` both. M1 freshness
+proven before each arm set (lib mtime > last source edit); wcdoctest-clus
+984/984 after each build.
+
+| comparison | calib-pr JSON | mabc members | pctree | nusel TSV |
+|---|---|---|---|---|
+| `work-pr34-prod48` vs `work-pr35-off48` | (baseline lacks calib) | **48/48** | **48/48** | 45/48 — see the tearing note |
+| `work-pr35-off48` vs `work-pr35-f1on48` | **45/47 — ONLY evts 137238, 469665, ONLY the `kine` key** | 48/48 | 48/48 | 48/48 |
+| `work-pr35-off48` vs `work-pr35-f3-48` | **47/47** | **48/48** | **48/48** | **48/48** |
+| `work-pr35-f1on48` vs `work-pr35-prod48` | **47/47** | **48/48** | **48/48** | **48/48** |
+
+(47 calib comparisons, not 48: evt 116962 has no PR and writes no calib JSON
+on either side.)
+
+**The three `stmfit` TSV flips vs the pr/34 baseline are NOT a regression.**
+The nusel `stmfit` column is parsed from the WCT log, and WCT tears long log
+lines mid-write (a known, documented behaviour — `nusel_extract.py` already
+carries a torn-line tolerance). On evts 52672 and 268067 the **baseline**
+arm's `check_stm_conditions: cluster N no STM fit: fully contained` line was
+spliced into another message (its `cluster N` prefix destroyed, defeating the
+prefix-based tolerance), so the extractor fell back to `eval`; on evt 219295
+the tear is in **this round's** arm and the fallback direction reverses. All
+verdict and label columns (`tgm/stm/fc/lm/label`) are 48/48 identical in every
+comparison; the flips are confined to the log-derived diagnostic column, in
+both directions, across arms of both binaries.
+
+### §11.5 F1 measured: 2/48, both `cached=13 live=11`, and the effect is small on this sample
+
+The unconditional counter fired on exactly two events of the 48 — the same
+two, knob on or off:
+
+```
+work-pr35-off48/pr_evt137238: fill_kine_tree: kine_shower_pdg cached=13 live=11 shower_id=0
+work-pr35-off48/pr_evt469665: fill_kine_tree: kine_shower_pdg cached=13 live=11 shower_id=1
+```
+
+Both are P1's staleness class realised: a shower whose cached `particle_type`
+still says muon (13) while the live start segment's `ParticleInfo` says
+electron (11). Knob-on moves the calib-pr `kine` block on exactly those two:
+
+- **evt 137238**: `kine_particle_type[0]` 13 → 11; `kine_reco_add_energy`
+  0.511 → 0 and `kine_reco_Enu` 1030.477 → 1029.966 MeV. The −0.511 MeV is
+  the **electron** rest mass, not the muon's: the stale cache only steered the
+  `pdg != 11` branch, while the mass added came from the live `ParticleInfo`.
+  Far below the 139.6 MeV per-occurrence bound of §10.2 — that bound is for
+  the 11-vs-211 class, which this sample does not contain.
+- **evt 469665**: `kine_particle_type[2]` 13 → 11 only (the shower enters via
+  the remaining-showers loop, which adds no rest mass — only proton binding
+  energy, not in play).
+
+Bee, pctree and the nusel TSVs are 48/48 untouched in the same comparison, so
+on this sample the flip moves **no BDT-visible quantity** — `kine_reco_Enu`
+moves 0.05% on one event and the published type array on two. §10.6's caveat
+stands in principle (an Enu move IS a score move; the calib JSON cannot see
+scores), but with the TSVs identical there is nothing to escalate here.
+
+**The §10.11c residual STANDS, now with its population measured.** These same
+two showers were dispatched to `calculate_kinematics_long_muon` by
+`NeutrinoEnergyReco.cxx`'s `|particle_type| != 13` test, which still reads the
+cache — a stale cache there sends the shower down the wrong kinematics branch
+and moves `kenergy_best` wholesale, which F1's reader-side fix deliberately
+does not touch (fixing it means P8's cache write, which leaks out of this
+stage — §10.2, GOTCHA 16). The counter is the tripwire: any `cached != live`
+pair is exactly the population exposed at that dispatch.
+
+### §11.6 F3 resolved: the growth axis is EMPTY on nueCC48 ⇒ perf class, shipped unconditionally
+
+§10.11a's discriminating check ran as a shipped diagnostic on
+`work-pr35-off48`: `m_charge_data.size()` at `collect_charge_maps` time vs at
+every segment `cal_kine_charge` call. **33/48 events engaged the check
+(debug-level equality lines); zero growth lines in all 48 logs.** No cluster
+is added between the cache fill and `fill_kine_tree` at the current pipeline —
+the cached members and the per-call fresh locals were provably identical
+inputs on every event of this manifest, which is the §10.4 perf class.
+
+The fix shipped is §10.11b's **three-part** edit (delete the fresh locals +
+lazy member collect + pass the members) — the one-line version is a no-op the
+amendment already called out. Gate: `work-pr35-off48` vs `work-pr35-f3-48`
+**48/48 identical on every artifact class including all 47 calib JSONs**.
+
+Perf, honestly: mean wall 16.8 s/evt (solo run) vs 16.5 s for the solo
+baseline arm `work-pr34-prod48`, peak RSS 1.47 GiB in every arm — **no
+measurable wall or RSS change on this manifest**. The removed work is
+O(n_track_segments × n_charge_hits) map rebuilding, real but below noise at
+nueCC48's segment counts. The done-bar satisfied here is byte-identity plus
+the honest statement; no speedup is claimed.
+
+The §10.11a check stays in the code as a **staleness guard**, upgraded to WARN:
+if a future pipeline change ever adds clusters after the cache fill, it will
+say `charge data grew since cache -- cached maps stale, kine_charge may be
+undercounting` instead of silently drifting. Zero firings expected while the
+invariant holds.
+
+### §11.7 The operating point
+
+`wct-pr-perevt.jsonnet` carries `kine_shower_pdg_live = true` — **SBND
+production runs the live read** (owner's standing instruction: bug fixes and
+improvements default on). The C++ default stays false (byte-identical for
+every other consumer); `SBND_KINE_SHOWER_PDG_LIVE=0` is the escape hatch. F3
+and the F4 WARN are unconditional; F2 is a documented gap, not a knob.
+Bare-run == production re-proven post-flip: `work-pr35-prod48` (bare, new
+binary) vs `work-pr35-f1on48` (env-forced, pre-F3 binary) is 48/48 identical
+on every artifact class — one comparison carrying both the doc-68 invariant
+and F3's byte-identity in the knob-on state.
+
+### §11.8 Residuals
+
+- **The `:305` dispatch residual** (§10.11c, restated in §11.5) — measured
+  population 2/48, tripwired by the counter, deliberately not fixed.
+- **F2's magnitude on SBND is still unestimated**; the gap is now
+  owner-accepted rather than merely open. Revisit if an SBND
+  position-calibration product appears.
+- **BDT-score visibility**: the calib JSON cannot see scores. On this sample
+  the TSVs are identical so nothing moved, but any future counter hit in the
+  11-vs-211 class moves `kine_reco_Enu` by 139.6 MeV and therefore both BDT
+  scores — the score-level comparison remains pr/27 §10's stage.
+- **`stmfit` column flakiness** (§11.4): log-tearing can flip
+  `eval`↔`contained` on any rerun; a TSV gate on that column alone is not
+  meaningful evidence of change. Verdict columns are the gate.
+- The **valfast frequency run** for the F1 counter (§10.2's 572-event
+  demotion test) has not been run; the counter accrues that data for free on
+  every future production batch.

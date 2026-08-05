@@ -218,6 +218,17 @@ for _pr34 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr34 _env _key _val
+# doc pr/35 sec 11: the sec 10 energy-reconstruction port fix.  Same tri-state
+# contract (unset = cfg default, 1 = force on, 0 = force off).  NOT display-
+# only: kine_reco_Enu is numu-BDT var 69 and in the nue reader.  Gate with
+# pr35_cmp.py on calib-pr-evt<ID>.json (PR_EXTRA_STAGES=pr_display) + the
+# nusel TSVs -- pctree does NOT carry KineInfo, pr32/pr34_cmp gate nothing.
+#   F1 SBND_KINE_SHOWER_PDG_LIVE  live start-segment PDG at the four
+#                                 fill_kine_tree sites (prototype parity)
+_val=${SBND_KINE_SHOWER_PDG_LIVE:-}
+[ "$_val" = 1 ] && CATH_TLA+=(--tla-code "kine_shower_pdg_live=true")
+[ "$_val" = 0 ] && CATH_TLA+=(--tla-code "kine_shower_pdg_live=false")
+unset _val
 # doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
 # DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
 # cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max
