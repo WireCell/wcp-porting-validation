@@ -32,7 +32,7 @@ no knob, no new gate on new code.
 
 | § | finding | class | status |
 |---|---|---|---|
-| **2.2** | **doc pr/32 §11.2's "every arm 48/48 identical" is wrong for its knob-ON arms.** Its four SBND-production knobs move `T_tagger` on 9 events, `T_kine` on 4, `T_rec_charge` on 32, and the Bee `mc.json` + `shower_track-global.json` on 4 — **none of it visible to `pr32_cmp.py`, which imports `uproot` zero times while its docstring advertises a `T_tagger`/`T_kine` leaf compare.** The *prime-directive* claim (knobs off ⇒ byte-identical) **holds** under the wider instrument | **measured** | gate language + instrument, **not** a production defect |
+| **2.2** | **Three of doc pr/32 §11.2's four "48/48 identical" rows are wrong.** `vertex_dir_use_fit_point` moves 31 of 48 events and `shower_traj_recheck_parity` 13 — up to 193 `T_tagger` branches, plus the Bee `mc.json` on 4 — while the `f34on48` row **stands**. **None of it was visible to `pr32_cmp.py`, which imports `uproot` zero times while its docstring advertises a `T_tagger`/`T_kine` leaf compare.** The *prime-directive* claim (knobs off ⇒ byte-identical) **holds** under the wider instrument | **measured** | gate language + instrument, **not** a production defect |
 | **2.3** | **doc pr/31 §12.4's "all five fixes are NULL on nueCC48" is wrong.** `shower_topo_reset` (F3, SBND DEFAULT ON) flips **23 of 501** `T_rec_charge/flag_shower` entries on evt 52672. pr/31 §12.3 names its own coverage — *"every `tracking-pr.root` `T_tagger`/`T_kine` leaf"* — **two of that file's seven trees**; the movement landed in a third | **measured** | the conclusion survives, the words do not |
 | **1.1** | SBND accepts the DL vertex **47/48**; the whole traditional overall-main-vertex layer — including `compare_main_vertices_global`, verified term-for-term in pr/32 §2.5 — runs **0 times**. The DL re-ranker's 4.0 acceptance floor has **never rejected** | **measured** | closes pr/32 loose end 1 |
 | **4** | **Three calibrations the prototype applies and the toolkit does not**, compounding on the same quantity, totalled by no document: `cal_corr_factor` is a stub returning **1.0** while the prototype's is live in production; `kine_nu_{x,y,z}_corr` carry the **raw** vertex; the single-photon SCE path is plumbed and off | source, **owner-accepted** | nothing proposed — recorded as one family |
@@ -90,6 +90,9 @@ for pair in \
   "work-pr30-baseHEAD   work-pr30-final"     `# pr/30 knob-ON`              \
   "work-pr31r2-off48b   work-pr31r2-allonb48"`# pr/31 knob-ON`              \
   "work-pr31r2-off48b   work-pr31r2-f3on48"  `# pr/31 F3 attribution`       \
+  "work-pr32r2-off48    work-pr32r2-f1on48"  `# pr/32 per knob: F1`         \
+  "work-pr32r2-off48    work-pr32r2-f2on48"  `#              F2`            \
+  "work-pr32r2-off48    work-pr32r2-f34on48" `#              F3+F4`         \
   "work-pr32r2-off48    work-pr32r2-allon48" `# pr/32 knob-ON`              \
   "work-pr34-off48      work-pr34-allon48"   `# pr/34 knob-ON`              \
   "work-pr35-off48      work-pr35-prod48"    `# pr/35 knob-ON`              \
@@ -206,9 +209,11 @@ pr/32 audited dead code. It did not. These all run inside `determine_main_vertex
 (per cluster, `TaggerCheckNeutrino.cxx:708`, `:732`, `:748`), which the DL path
 *requires* to have run first:
 
-* `compare_main_vertices` (`:2803`), `compare_main_vertices_all_showers`
-  (`:2763`), `examine_main_vertices_local` (`:2780`), `calc_conflict_maps`
-  (`:1055`, reached from `compare_main_vertices` at `:859`);
+* `compare_main_vertices` (`NeutrinoVertexFinder.cxx:859`),
+  `compare_main_vertices_all_showers` (`:422`), `examine_main_vertices_local`
+  (`:2971`), `calc_conflict_maps` (`:626`, called at `:1055`). *(Round 1 gave
+  these four garbled — the definition and call lines of `calc_conflict_maps`
+  were inverted and the other three transposed. These are HEAD's, re-read.)*
 * and pr/32's four shipped knobs are **engaged**, measured on the same run —
   evt 388 reports `f1_reads=104 f1_fit_valid=104 f1_mean_cm=0.5542 f2_gate=4
   f3_cand=50 f4_flagged=98`. They live in `improve_vertex` / `examine_direction`
@@ -337,7 +342,7 @@ log-line tearing, not a regression — reproduced here independently.
 paths — pr/30, pr/32, pr/34, pr/35 and pr/36 — are byte-identical to their
 baselines under an instrument strictly wider than any of them used, including all
 seven trees of `tracking-pr.root` and every `mabc-pr.zip` member. Say this first,
-because the two corrections below are about *language and instruments*, not about
+because the corrections below are about *language and instruments*, not about
 production output.
 
 The knob-ON arms are where a claim breaks:
@@ -345,22 +350,42 @@ The knob-ON arms are where a claim breaks:
 | knob-ON pair | trees | mabc | the round said |
 |---|---|---|---|
 | pr/31 `off48b` → `allonb48` | **47/48** | 48/48 | *"all five fixes are NULL"* — **§2.3** |
-| pr/32 `off48` → `allon48` | **16/48** | **44/48** | *"every arm 48/48 identical"* — **wrong sentence** |
+| pr/32 `off48` → `f1on48` | **17/48** | **47/48** | 48/48 — **wrong** |
+| pr/32 `off48` → `f2on48` | **35/48** | **45/48** | 48/48 — **wrong** |
+| pr/32 `off48` → `f34on48` | 48/48 | 48/48 | 48/48 — **stands** |
+| pr/32 `off48` → `allon48` | **16/48** | **44/48** | 48/48 — **wrong** |
 | pr/34 `off48` → `allon48` | 48/48 | 39/48 (`mc.json` only) | display-only — **confirmed** |
 | pr/35 `off48` → `prod48` | 46/48 (`T_kine`, 2 evts) | 48/48 | 2/48 — **confirmed** |
 | pr/36 `off48` → `allon48` **(control)** | as §11.4 | 48/48 | **reproduces exactly** |
 
-**pr/32 in detail, and read the class carefully.** Its four knobs
-(`vertex_dir_use_fit_point`, `shower_traj_recheck_parity`,
-`main_vertex_require_descriptor`, `main_vertex_candidate_flag`) are all SBND
-production defaults, and off-vs-allon moves:
+**pr/32 in detail, per knob — three of its four rows are wrong and one stands.**
+pr/32 §11.2 makes four separate 48/48 claims, so the correction is per-arm, not
+collective. All four knobs are SBND production defaults.
 
-* `T_rec_charge` on **32** events, `T_tagger` on **9** (1, 1, 3, 6, 9, 13, 64,
-  109 and **193** branches), `T_kine` on **4**;
-* `mabc-pr.zip` on **4** events — 388, 38856, 131357, 489330 — where both
-  `data/0/0-mc.json` and `data/0/0-shower_track-global.json` change. Verified
-  independently by plain `sha256` of the extracted zip members, not only through
-  the comparator.
+| knob | arm | what actually moves |
+|---|---|---|
+| `vertex_dir_use_fit_point` (F1) | `f1on48` | **31 of 48 events** — `T_rec_charge` on 31 (**`['rr']` alone on 30**, `['particle_id','rr']` on 1), `T_tagger` on 2, `T_kine` on 1, `mabc-pr.zip` on **evt 388** (`mc.json` + `shower_track-global.json`) |
+| `shower_traj_recheck_parity` (F2) | `f2on48` | **13 of 48** — `T_rec_charge` on 13 (**`['flag_shower']` alone on 10**, `+['particle_id']` on 3), `T_tagger` on 7, `T_kine` on 3, `mabc` on 3 (**38856, 131357, 489330**) |
+| `main_vertex_require_descriptor` + `main_vertex_candidate_flag` (F3+F4) | `f34on48` | **nothing — 48/48 on every class.** This row of pr/32 §11.2 **stands** |
+| all four | `allon48` | 32 of 48 — `T_rec_charge` 32, `T_tagger` 9 (1, 1, 3, 6, 9, 13, 64, 109 and **193** branches), `T_kine` 4, `mabc` 4 |
+
+**`T_rec_charge` moves one to three branches, never the tree**, and the two knobs
+have cleanly different signatures: F1 moves `rr` (a per-point residual range —
+recomputing when the vertex moves is exactly what it should do) and F2 moves
+`flag_shower`. In the joint arm the two superpose: of the 32 events, 18 are
+`['rr']`, 9 `['flag_shower','rr']`, 3 `['flag_shower','particle_id','rr']`, one
+`['particle_id','rr']` and one `['flag_shower']`. Read "moves `T_rec_charge` on
+32 events" as that, not as a whole tree turning over.
+
+The four `mabc-pr.zip` events (388, 38856, 131357, 489330) were verified
+independently by plain `sha256` over the extracted zip members, not only through
+the comparator.
+
+**No generation control is available for pr/32** — unlike pr/31 there is no
+second off arm, so `off48` vs `off48b` has no counterpart here. All five `r2`
+arms carry 48/48 `tracking-pr.root` files (pr/32 §11 records an earlier set as
+voided and quarantined under `VOID-pr32-round1/`), which is consistent with one
+generation but is not the same evidence pr/31's identity pair gives.
 
 **This is not a defect in the knobs.** They are behaviour changes with a measured
 0.613 cm mean fit-to-wcpt vertex gap; moving the vertex is what they are *for*,
@@ -387,9 +412,13 @@ NULL on nueCC48"*, and its §12 table records `shower_topo_reset` as
 contiguous indices 125–147, every one `1 → 0`. Everything else is identical:
 mabc 48/48, pctree 48/48, both nusel TSVs 48/48, and all six other trees.
 
-Attributed to **F3 alone**: `work-pr31r2-off48b` vs `work-pr31r2-f3on48`
-reproduces exactly the same single branch on the same event; `f1onb48`, `f2on48`,
-`f4on48`, `f5on48`, `f6on48`, `f7on48` are each 48/48.
+Attributed to **F3 alone**: a full `pr36_cmp.py` run of `work-pr31r2-off48b` vs
+`work-pr31r2-f3on48` reproduces exactly the same single branch on the same event
+and is 48/48 on everything else. The other six single-knob arms (`f1onb48`,
+`f2on48`, `f4on48`, `f5on48`, `f6on48`, `f7on48`) were checked **on that branch
+only** — each is identical to the off arm there — not given their own full runs.
+They are otherwise bounded by `allonb48`, whose only difference from off is this
+same branch.
 
 **No binary confound.** `work-pr31r2-off48` vs `work-pr31r2-off48b` — the
 §12.5-rework identity pair — is **48/48 on every artifact class including all
@@ -413,8 +442,9 @@ revisiting.
 The valfast/1000 gate in §10 must be run with a comparator that opens **all**
 four artifact families — `tracking-pr.root` leaves, `mabc-pr.zip` members,
 `pctree-pr` member content, and the nusel TSVs — i.e. `pr36_cmp.py` or its
-successor, never `pr32_cmp.py`. Four of the 24 production knobs were gated with
-an instrument that could not see two of those four families.
+successor, never `pr32_cmp.py`. **Twelve** of the 24 production knobs — pr/29's
+3, pr/31's 5 and pr/32's 4 — were gated with an instrument that could not see two
+of those four families, and pr/30's 1 with a fourth tool again.
 
 ---
 
@@ -1036,7 +1066,19 @@ simply absent — *"a documentation bug, not a behaviour change, and **it is wha
 makes this class recur** … Correct it whether or not F4 ships."* **Verified
 unchanged at `2457320d`.**
 
-**§11.4 Citation hazards in pr/33 and pr/34**, recorded because a future reader
+**§11.4 A P-row resting on the wrong config file.** pr/36 §3 P13 records
+`sp_photon_flag=false` as *"a known, recorded gap (doc pr/26 §8.2) with a knob
+already built"*, citing `clus.jsonnet:758`. At HEAD `clus.jsonnet:766` and
+`:2038` are indeed `false` — but those are the **module defaults**, and per doc
+68 the SBND operating point lives only in `wct-pr-perevt.jsonnet`, where `:835`
+reads **`sp_photon_flag = true`** with a comment citing pr/26 §9.3's own gate
+(*"1215 of 1216 `T_tagger` branch-values identical, the one that moves is
+`photon_flag` 0 → 1 on evt 172230"*). **So it is ON in production and P13's
+premise is stale.** A wrong *negative* in a P-list, produced by exactly the
+mistake §10's derivation rule exists to prevent — reading a knob's value from
+`clus.jsonnet` instead of the operating point.
+
+**§11.5 Citation hazards in pr/33 and pr/34**, recorded because a future reader
 will otherwise quote withdrawn text:
 
 * **pr/33's §3 and §8 anchors are stale by up to +19 lines and were left that way
@@ -1051,7 +1093,7 @@ will otherwise quote withdrawn text:
   by one** versus the file — round 1 shipped eight such and fixed them in
   `1e71ce2`. Read the file.
 
-**§11.5 The crashed pr/31 arms are a trap for exactly this kind of re-analysis.**
+**§11.6 The crashed pr/31 arms are a trap for exactly this kind of re-analysis.**
 `work-pr31r2-allon48` and `work-pr31r2-f1on48` hold **1 of 48** `tracking-pr.root`
 files — they are the arms pr/31 §12 records as having crashed on the
 `ParticleInfo` validator. The re-runs are `-allonb48` / `-f1onb48`. A comparator
@@ -1059,7 +1101,7 @@ pointed at the wrong one dies on a `FileNotFoundError`, which is the good case;
 a hash-only comparator would have silently compared 48 pctree files and reported
 a clean PASS.
 
-**§11.6 The tree moved under both rounds.** A concurrent session committed
+**§11.7 The tree moved under both rounds.** A concurrent session committed
 `29e8e452` during round 1 and `2457320d` before round 2. Every anchor here was
 re-read at `git show HEAD:`, and the binary and doctest mtimes (`20:55:43`,
 `20:55:45`) were checked before, between and after every arm. "Same binary" is a
@@ -1083,6 +1125,17 @@ premise of §6.2 and deserves evidence rather than assumption.
   holds** — verified here under a strictly wider instrument than the round used.
 * **§2.3 does not overturn pr/31's conclusion**, only its words. No score, no
   verdict, no Bee member and no pctree entry moves.
+* **Only pr/31's F3 was re-gated per knob.** The other four are bounded by
+  `allonb48` being 47/48 with that one branch as its only difference; they were
+  not each given their own `pr36_cmp.py` run.
+* **pr/34's display-only confirmation excludes the calib dump.** Its arms report
+  `calib-pr JSON: 0/0 (48 absent-side skips)` — they predate
+  `PR_EXTRA_STAGES=pr_display`. The claim is confirmed on trees, mabc, pctree and
+  the TSVs. The same caveat applies to every pr/30, pr/31, pr/32 and pr/34 row in
+  §2.2.
+* **pr/32's per-knob attribution has no generation control.** There is no second
+  pr/32 off arm; the 48/48-tracking-file counts are consistent with one
+  generation but are weaker evidence than pr/31's `off48` vs `off48b` identity.
 * **§1.1 is 48 nueCC events, not valfast.** *"DL accepts on SBND"* is a statement
   about this manifest and this operating point. A different `dl_vtx_cut`, a
   different weights file, or cosmics rather than nueCC could change it — and the

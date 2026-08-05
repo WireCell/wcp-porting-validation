@@ -42,6 +42,14 @@ run "GEN pr/31r2 off vs off-b (binary-generation control)" \
 run "ON  pr/31r2 off-b vs allon-b"  work-pr31r2-off48b  work-pr31r2-allonb48
 run "ATTRIB pr/31 F3 shower_topo_reset alone" \
                                     work-pr31r2-off48b  work-pr31r2-f3on48
+# pr/32 sec.11.2 makes FOUR separate 48/48 claims, so attribute per arm: F1 and
+# F2 each break it, F3+F4 genuinely stands.  No second off arm exists for pr/32,
+# so there is no generation control here (unlike the pr/31 pair above).
+run "ATTRIB pr/32 F1 vertex_dir_use_fit_point" \
+                                    work-pr32r2-off48   work-pr32r2-f1on48
+run "ATTRIB pr/32 F2 shower_traj_recheck_parity" \
+                                    work-pr32r2-off48   work-pr32r2-f2on48
+run "ATTRIB pr/32 F3+F4"            work-pr32r2-off48   work-pr32r2-f34on48
 run "ON  pr/32r2 off vs allon"      work-pr32r2-off48   work-pr32r2-allon48
 run "ON  pr/34   off vs allon"      work-pr34-off48     work-pr34-allon48
 run "ON  pr/35   off vs prod"       work-pr35-off48     work-pr35-prod48
