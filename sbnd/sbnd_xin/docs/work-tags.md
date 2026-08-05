@@ -353,16 +353,33 @@ arms, same clean binary, no rebuild between, `setarch x86_64 -R`, plus one
 ASLR-on leg for the cross-layout question (the `pr37_a2_floor.sh` shape) — or
 this tree has no determinism floor at all.
 
-**Order is forced by the symlink DAG** — leaf arms before hubs, because
-`work-oc19scan-old` is the joint predecessor of *both* big hubs:
+**Order is forced by the symlink DAG** — leaf arms before hubs. **Recomputed
+after the 2026-08-05 round, not carried over from the pre-round shape**, because
+the round changed it: `work-pr22gap-{a,b,c,input}` were tier A and are gone, and
+they were the **only** inbound links to `work-oc19scan-old`. Measured now:
+
+| hub | inbound symlinks | from |
+|---|---:|---|
+| `work-mcp1000` | **1045** | `work-mcp1kall-d59k` (1000) + `work-oc19scan-old` (45) |
+| `work` | 53 | `work-nuecc48-nuf`, `work-oc19scan-old` |
+| `work-nuecc48-prod0803` | 48 | `work-nuecc48-0804` |
+| `work-r1ql-f1` / `-f2` | 16 / 4 | `work-r1ql-first10` |
+| **`work-oc19scan-old`** | **0** | — **no longer a hub**; keep-by-citation only (2 docs) |
 
 ```
-H0: work-pr22gap-{a,b,c,input} -> work-r1ql-first10 -> work-nuecc48-0804
-    -> work-mcp1kall-d59k -> work-nuecc48-nuf -> work-oc19scan-old   (LAST)
-    [re-run ASSERT 4 here]
+H0: work-oc19scan-old (0 inbound, retirable NOW -- drops mcp1000 1045 -> 1000)
+    work-r1ql-first10  ->  releases work-r1ql-f1/f2
+    work-nuecc48-0804  ->  releases work-nuecc48-prod0803
+    work-mcp1kall-d59k ->  drops mcp1000 to 0
+    work-nuecc48-nuf   ->  drops work/ toward 0
+    [re-run ASSERT 4 here -- every H1 target must read 0]
 H1: work-mcp1000 (7.0 G)  ->  work (2.8 G)
 H2: work-nuecc48-prod0803 + work-vfnuecc48-prod0803;  then work-pr33-*
 ```
+
+**Re-measure this table before the heavy round rather than trusting it** — the
+2026-08-05 round is the proof that a retire round rewrites its own successor's
+DAG. The one-liner is in `plan_20260805.py`'s `inbound_targets()`.
 
 `work-mcp10` is **not** retirable — the 10/30-event hand-scan imaging is not in
 the re-run's sample list. `work-r1ql-f1/f2` and `work-r2patrec-f1` go only for

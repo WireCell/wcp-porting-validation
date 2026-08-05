@@ -1,4 +1,17 @@
 #!/bin/bash
+# !! THE ARMS THIS BUILT ARE GONE (2026-08-05) -- BUT THE RECIPE IS OWED. !!
+# vf37a/b/c were released from scripts/retire/PROTECTED.txt and deleted by the
+# retirement round 2026-08-05: they were produced by a pre-06:32 stale-object
+# binary, so nothing built after that can be gated against them (doc pr/33
+# sec.11.2, doc pr/37 sec.13).
+#
+# THIS SCRIPT IS THE TEMPLATE FOR THE SUCCESSOR THAT IS NOW OWED.  Those three
+# arms were the ONLY A/A' determinism floor on the widened seven-tree gate, and
+# the tree currently has none.  The re-processing campaign MUST re-run this
+# shape on the clean binary -- two setarch -R arms plus one ASLR-on leg --
+# before any knob campaign is gated.  Tracked as precondition P3 in
+# docs/work-tags.md.  Re-run it with fresh tags; do NOT reuse vf37a/b/c (M13).
+#
 # doc pr/37 sec.2.5 (A2) -- re-measure the valfast A/A' floor at toolkit HEAD
 # 2457320d, and decide whether the T_tagger/T_kine gate can be promoted from
 # INFORMATIONAL to HARD before the 24-knob population campaign.

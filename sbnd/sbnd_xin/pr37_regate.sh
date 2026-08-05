@@ -1,4 +1,15 @@
 #!/bin/bash
+# !! HISTORICAL AS OF 2026-08-05 -- THIS SCRIPT NO LONGER RUNS. !!
+# Every pr/30..pr/36 arm it pairs was archived and deleted by the retirement
+# round 2026-08-05 (the stale-binary sweep); it will die on a missing path.
+# Kept because it documents HOW doc pr/37 sec.2.2's numbers were produced, and
+# because its 15 arm-couples are the definition of what was re-gated.
+#   what was removed: scripts/retire/state-20260805/removed.tsv
+#   why:              docs/pr/37_cross-audit-residual-round.md sec.13
+# Do not "fix" it by repointing at surviving arms -- those are a different
+# binary family (pre-2026-08-05 06:32 builds are not reproducible from source),
+# so the comparison would not mean what this script was written to measure.
+#
 # doc pr/37 sec.2 -- re-gate every surviving 48-event arm pair of pr/30..pr/36
 # with pr36_cmp.py, the only comparator in the series that opens
 # tracking-pr.root.  No wire-cell run: every artifact already exists.

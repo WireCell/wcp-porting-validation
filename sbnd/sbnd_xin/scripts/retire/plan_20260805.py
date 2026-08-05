@@ -71,6 +71,20 @@ STATE = os.environ.get("RETIRE_STATE", os.path.join(SCR, "state-20260805"))
 os.makedirs(STATE, exist_ok=True)
 os.chdir(ROOT)
 
+# ---- M13 guard: once the round has RUN, plan.json IS the record -------------
+# It holds the sizes and citation counts of 201 dirs that no longer exist, and
+# it is what removed.tsv and the work-tags.md round section are checked against.
+# Re-running this script after the deletion would recompute over a 32-dir
+# universe and silently overwrite that record with an empty removal set.
+if os.path.exists(os.path.join(STATE, "removed.tsv")) and not os.environ.get("RETIRE_REPLAN"):
+    sys.stderr.write(
+        f"REFUSING: {STATE}/removed.tsv exists -- this round has already been\n"
+        f"executed and {STATE}/plan.json is now the record of what was removed\n"
+        f"(M13).  Re-running would overwrite it with a post-deletion universe.\n"
+        f"For a NEW round, fork this script with a new date and a new\n"
+        f"RETIRE_STATE.  To deliberately re-plan in place: RETIRE_REPLAN=1.\n")
+    sys.exit(3)
+
 # Same glob as retire_*.sh:120's survivor census -- includes the bare `work`.
 dirs = sorted(d for d in os.listdir('.')
               if d.startswith('work') and os.path.isdir(d) and not os.path.islink(d))
