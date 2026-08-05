@@ -255,6 +255,36 @@ for _pr36 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr36 _env _key _val
+# doc pr/33 sec 11: the sec 10 EM-shower-clustering port fixes.  Same
+# tri-state contract (unset = cfg default, 1 = force on, 0 = force off).
+# The stage is upstream of T_kine, the nue tagger pi0 block, and the Bee
+# PR layers (mc.json pi0 grouping + shower_track membership), so gate with
+# pr33_cmp.py (all trees + calib + per-member mabc + pctree + TSVs;
+# PR_EXTRA_STAGES=pr_display for the calib dump).  pctree and the
+# imaging-derived mabc members must never move; ssmsp_* movement in
+# T_tagger is the F3 scoping tripwire.
+#   F1a SBND_DAUGHTER_COUNT_PROTO_MAIN_VERTEX     _tracks callee, proton skip
+#   F1b SBND_DAUGHTER_COUNT_PROTO_EXAMINE_SHOWERS _tracks callee, daughter_length
+#   F2a SBND_SHOWER_PDG_FROM_START_SEGMENT  start-segment PDG at 4 sites
+#   F2b SBND_SHOWER_PDG_FROM_SHOWER_TYPE    shower type at the inverted site
+#   F2c SBND_SHOWER_PDG_EXACT_MUON_TEST     exact ==13 muon test at 2 sites
+#   F3  SBND_PI0_ID_SHARED_ALLOCATOR        shared pi0-id stream, no collision
+#   F4  SBND_SHOWER_FLAG_PDG_ELECTRON       is_shower gains abs(pdg)==11
+#   F5  SBND_SHOWER_LESS_ID_TIEBREAK        shower_less id tie-break (house rule)
+for _pr33 in \
+    "SBND_DAUGHTER_COUNT_PROTO_MAIN_VERTEX:daughter_count_proto_main_vertex" \
+    "SBND_DAUGHTER_COUNT_PROTO_EXAMINE_SHOWERS:daughter_count_proto_examine_showers" \
+    "SBND_SHOWER_PDG_FROM_START_SEGMENT:shower_pdg_from_start_segment" \
+    "SBND_SHOWER_PDG_FROM_SHOWER_TYPE:shower_pdg_from_shower_type" \
+    "SBND_SHOWER_PDG_EXACT_MUON_TEST:shower_pdg_exact_muon_test" \
+    "SBND_PI0_ID_SHARED_ALLOCATOR:pi0_id_shared_allocator" \
+    "SBND_SHOWER_FLAG_PDG_ELECTRON:shower_flag_pdg_electron" \
+    "SBND_SHOWER_LESS_ID_TIEBREAK:shower_less_id_tiebreak" ; do
+    _env=${_pr33%%:*}; _key=${_pr33#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr33 _env _key _val
 # doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
 # DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
 # cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max

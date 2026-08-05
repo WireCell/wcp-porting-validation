@@ -6,9 +6,13 @@
 is **step 5 of the eight** in doc pr/27 §0, defined in doc pr/27 §7: assemble
 `PR::Shower` objects, merge over-split ones, identify π⁰ pairs.
 
-**Status. AUDIT ONLY. No code was changed, no patch is proposed.** Every P-row
-below is CLAUDE.md §5 rule 1 (it changes production output unconditionally) and
-is the owner's call.
+**Status. IMPLEMENTED — §11 (2026-08-05) ships all five findings as eight
+knobs, ALL SBND ON** (toolkit `a1ea3789`; gate labels in §11.1).  Seven of
+the eight are measured NULL on nueCC48; F4 moves 17/48 events with no nusel
+verdict flips.  §11.2 records a discovery that outranks the round: the Aug-4
+baseline family (`work-pr35/36-*`) was produced by a **stale-object binary**
+that does not reproduce from committed source — `work-pr33-base48` is the
+first clean-source reference.
 
 > **§10 (2026-08-04) applies the owner's filter: fourteen → five.**  Kept:
 > **F1 = P1** (wrong daughter-count callee, both sites), **F2 = P2** (whose PDG,
@@ -1239,3 +1243,136 @@ Recorded rather than silently rewritten, so the reasoning is auditable.
 
 Nothing in §10.1's five-way verdict changed: these are amendments to the
 proposed *fixes*, not to the filter.
+
+## §11 Implementation round, 2026-08-05 — five findings / eight knobs SHIPPED, ALL SBND ON
+
+**Repro.**
+```
+# toolkit @ a1ea3789 (parent 2613aa41), wcp-porting-img @ this doc's commit
+cd toolkit && ./wcb build --notests -p && ./wcb install --notests -p
+./build/clus/wcdoctest-clus                                # 95 cases, 984/984 x2
+cd ../wcp-porting-img/sbnd/sbnd_xin
+# clean-source baseline (clean-HEAD binary, see §11.2):
+PR_EXTRA_STAGES=pr_display PR_JOBS=12 ./run_pr_chain_batch.sh \
+    work-nuecc48-0804 work-pr33-base48 sim $(cat /home/xqian/tmp/pr35/ids.txt)
+# knobs-off arm (pr/33 binary) and per-knob arms (SBND_<KNOB>=1), same form:
+PR_EXTRA_STAGES=pr_display PR_JOBS=12 ./run_pr_chain_batch.sh \
+    work-nuecc48-0804 work-pr33-off48 sim $(cat /home/xqian/tmp/pr35/ids.txt)
+python3 pr33_cmp.py work-pr33-base48 work-pr33-off48       # 48/48 EVERYTHING
+```
+Owner instruction (2026-08-05): the standard round — validate on nueCC48,
+bug fixes + improvements default ON in SBND, update the md, commit and push.
+Mid-round owner decision (AskUserQuestion): **re-baseline & continue** after
+the §11.2 discovery.
+
+### §11.1 What shipped and what it measured
+
+Eight knobs on `TaggerCheckNeutrino` → `PatternAlgorithms` (key-suppression
+idiom end-to-end; compiled knobs-off config md5 `c037031c…` == pre-round HEAD;
+flipped bare == env-forced-8 `2ad8013b…`).  Unconditional counters live in
+`Pr33AuditCounters` (`PRGraph.h`), emitted as one `PR33AUDIT` INFO line
+(field-by-field harvest on newline-stripped text; the line tears like
+PR36AUDIT — 47/47 PR events harvested).  Gate driver: `pr33_cmp.py` (all
+trees leaf-level + calib tagger/kine/display split + per-member mabc +
+pctree + TSVs; calibrated on the pr/36 F1 known-different pair, which it
+reproduces exactly).
+
+| knob | sites | counters (nueCC48, knobs-off arm) | knob-on vs off48 |
+|---|---|---|---|
+| F1a `daughter_count_proto_main_vertex` | `:289` | 3 calls; value-differ 2 evts (122660 ×2, 52672 ×1); **proton-skip verdict flips 0** | **48/48 byte-identical** |
+| F1b `daughter_count_proto_examine_showers` | `:2205` | 40 calls; value-differ 2 evts (122660, 423981) | **48/48 byte-identical** |
+| F2a `shower_pdg_from_start_segment` | `:170 :1247 :2911 :2927` | calls [73, 112, 50, 87]; disagreements only evt 137238 (`:170` ×1, `:1247` ×1) | **48/48 byte-identical** |
+| F2b `shower_pdg_from_shower_type` | `:525` (inverted site) | 1102 calls; disagreement only evt 137238 (×5) | **48/48 byte-identical** |
+| F2c `shower_pdg_exact_muon_test` | `:170 :2193` | `:2193` never disagrees (68 calls) | **48/48 byte-identical** |
+| F3 `pi0_id_shared_allocator` | the two π⁰ finders | with-vertex 10 π⁰ / 9 evts, without-vertex 1 (235435), **overlap 0** | **48/48 byte-identical**; ssmsp_* stable (the §10.10 scoping holds) |
+| F4 `shower_flag_pdg_electron` | `:796` | **147 firings / 35 events** | **17/48 events move** (below) |
+| F5 `shower_less_id_tiebreak` | `:2848` | fallback **reached: 2 hits, evt 235435** | **48/48 byte-identical** |
+
+**F4 is the round's one live mover.**  Movement is confined to shower-derived
+channels: `T_kine` (π⁰ block + `kine_energy_included/particle`), `T_tagger`
+`shw_sp_*`/`mgo_*`/`mgt_*`/`sig_*` families, `nue_score` on 4 events (111412,
+234638, 235435, 42280), the calib kine/tagger/display blocks, and the Bee
+`mc.json`/`shower_track` layers.  **No nusel verdict flips (TSVs 48/48
+identical); pctree, `steiner`, `proj` stable 48/48.**  Deepest single event:
+235435 (the displaced-vertex π⁰ event) where one `is_shower` flip cascades
+through the without-vertex finder into track refits (`T_rec_charge` x/y/z/q)
+and the `kine_nu_*_corr` vertex.  `work-pr33-allon48` (8 env-forced) moves
+**exactly the F4 mover set** — the other seven contribute nothing in
+combination — and equals `work-pr33-prod48` (bare, post-flip) 48/48.
+
+**F5's premise is corrected, not broken:** §10.6 argued the fallback was
+plausibly unreachable; it IS reachable (2 hits, evt 235435 — the one
+`id_pi0_without_vertex` event, where `shower_less` lives), and knob-on is
+byte-identical anyway (the same-index pair orders identically by id and by
+address there).  The counter stays as the tripwire; the knob's value is
+insurance against a future layout where it would not.
+
+F2's three-knob split earns its keep in attribution but all its measured
+disagreements sit in one event (137238) and none crosses a decision — the
+five-site inconsistency is real (the §10.3 slip-not-convention argument
+stands) but latent on this manifest.
+
+### §11.2 The stale-binary discovery — every pre-2026-08-05 baseline is non-reproducible
+
+**Symptom.** The knobs-off arm vs `work-pr36-prod48` (the pr/36 round's
+production baseline) FAILED wholesale: 1/48 trees identical, pctree and the
+imaging-derived `clustering-global` Bee layer moved, `T_proj_data` absent on
+events that lost their main vertex, 33/48 nusel rows changed.  First log
+divergence: `TaggerCheckTGM` out-of-scope mains 260 → 217 across the
+manifest (the `switch_scope` in-active-volume stamping), e.g. evt 10550's
+cluster 7 enters scope, gets TGM=true, and the neutrino selection then
+discards it — no main vertex at all.
+
+**Root cause (established by controls, mechanism inferred).**  Three
+independent builds of committed source — (a) incremental with the pr/33
+edits, (b) incremental after stashing them (clean `2457320d`), (c) clean
+`2457320d` with every `build/clus` object deleted first (129 TUs recompiled
+from scratch) — agree **byte-for-byte on every artifact**.  The pre-existing
+binary produced the other family, and kept doing so this morning:
+`work-vfnuecc48-vf37c` (the concurrent session's valfast arm, run 06:24,
+before the first rebuild at 06:32) still matches the Aug-4 family.  Inputs
+(`work-nuecc48-0804`, every file), wire-cell-data, every non-clus library
+(untouched since Aug 3), compiled config (md5 both ways), host, and
+allocator were identical across the families.  ⇒ The library that produced
+the Aug-4 arms did not correspond to its nominal source; the plausible
+mechanism is one or more stale objects in `build/clus` surviving incremental
+builds (a waf dependency miss), cured when the pr/33 header edits forced the
+whole include-cone to recompile.  The old `.so` was overwritten in place —
+it cannot be autopsied, and which TU was stale is not recoverable.
+
+**Why it hid.** Every round's gates compare arms built within one binary
+family; they were all internally consistent.  pr/37's determinism floor
+(FLOOR=0) measured run-to-run identity of ONE binary, not source→binary
+reproducibility.  Cross-build gates (pr/36 off vs pr/35 prod) compared two
+incremental builds sharing the same stale object.
+
+**Consequences.**  `work-pr33-base48` (clean-source, full-rebuild binary) is
+the new reference; `work-pr35-prod48`, `work-pr36-*`, `work-pr37*` and every
+older arm are records of the stale binary — kept (M13), but **not
+comparable to clean-source outputs**.  The pr/34–36 rounds' per-knob
+attributions were same-binary A/Bs and their *logic* stands; their absolute
+numbers (e.g. pr/36 F1's 6 movers) are re-checkable against the new family
+only by rerunning.  Owner decision 2026-08-05: re-baseline & continue; a
+broader revalidation of the pr/34–36 claims is a separate, owner-scheduled
+round.
+
+**Verification.**  `pr33_cmp.py work-pr33-base48 work-pr33-off48` = 48/48 on
+all five artifact families (cross-binary: base48 is the clean-HEAD
+full-rebuild binary, off48 the pr/33-edits binary) — this is simultaneously
+the round's knob-off gate and the proof that the pr/33 edits are inert when
+off.  Labels: `work-pr33-{base48,off48,f1aon48,f1bon48,f2aon48,f2bon48,
+f2con48,f3on48,f4on48,f5on48,allon48,prod48}`, logs and gate outputs in
+`/home/xqian/tmp/pr33/`.
+
+### §11.3 Residuals
+
+* The π⁰-id seeding-at-0 gap and `ssm_tagger`'s permanently-zero seed
+  (§10.4, pr/37 §3.2) are unchanged — F3 fixes only the collision half, as
+  scoped.
+* `porting_dictionary.md:222` was fixed unconditionally by the concurrent
+  session mid-round (`2613aa41`), closing §10.5's order and pr/37 §11.3.
+* §7 loose ends 1 and 2 are now measured (F1 counters; F3 finder counts on
+  the clean-binary family: 10-with/1-without, overlap 0).  Loose ends 4 and
+  5 stand.
+* The uncovered ground of §0 (examine_shower_1/examine_showers arithmetic,
+  PRShower.cxx↔WCShower.cxx) stands.
