@@ -229,6 +229,32 @@ _val=${SBND_KINE_SHOWER_PDG_LIVE:-}
 [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "kine_shower_pdg_live=true")
 [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "kine_shower_pdg_live=false")
 unset _val
+# doc pr/36 sec 11: the sec 10 tagger-stage port fixes.  Same tri-state
+# contract (unset = cfg default, 1 = force on, 0 = force off).  The gate is
+# TWO artifacts (doc pr/36 sec 10.9), neither alone sufficient: T_tagger in
+# tracking-pr.root (leaf compare, covers F3-F6 fields + scores) PLUS the
+# tagger block of calib-pr-evt<ID>.json (PR_EXTRA_STAGES=pr_display; the ONLY
+# outlet for F1's match_isFC -- it is NOT booked in T_tagger).  Gate with
+# pr36_cmp.py; pctree/mabc must never move.
+#   F1 SBND_NEUTRINO_CONSISTENT_FV     match_isFC on the STM/TGM/FC fiducial
+#   F3 SBND_SP_SCE_CORRECTION          single-photon SCE gate (OFF on SBND,
+#                                      owner 2026-08-04; vacuous, no helper)
+#   F4 SBND_TAGGER_ORDERED_SEGSETS     index-ordered accumulation sets (M4)
+#   F5 SBND_STEM_ENDPOINT_WCPT_PARITY  prototype wcpt stem-endpoint rule
+#   F6 SBND_BROKEN_MUON_CLUSTER_ID_COUNT  distinct cluster IDs, not pointers
+#   F7 SBND_NEUTRINO_TYPE_BITMASK      verdict bitmask + neutrino_type/I branch
+for _pr36 in \
+    "SBND_NEUTRINO_CONSISTENT_FV:neutrino_consistent_fv" \
+    "SBND_SP_SCE_CORRECTION:sp_sce_correction" \
+    "SBND_TAGGER_ORDERED_SEGSETS:tagger_ordered_segment_sets" \
+    "SBND_STEM_ENDPOINT_WCPT_PARITY:stem_endpoint_wcpt_parity" \
+    "SBND_BROKEN_MUON_CLUSTER_ID_COUNT:broken_muon_cluster_id_count" \
+    "SBND_NEUTRINO_TYPE_BITMASK:neutrino_type_bitmask" ; do
+    _env=${_pr36%%:*}; _key=${_pr36#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr36 _env _key _val
 # doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
 # DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
 # cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max

@@ -7,16 +7,21 @@ dQ/dx) and ran through pr/29 (Steiner graph), pr/30 (proto-vertex + segment),
 pr/31 (topology/PID/direction), pr/32 (neutrino vertex ID), pr/33 (EM shower
 clustering), pr/34 (particle flow) and pr/35 (energy reconstruction).
 
-**Status. AUDIT ONLY. No code was changed.** The owner's standing instruction
-for this series ("please do not change any code yet") governs. Every finding
-below is a question for the owner, not a decision taken.
+**Status. §11 SHIPPED (toolkit `2457320d`): F1/F4/F5/F6/F7 SBND
+PRODUCTION ON, F3 plumbed but OFF (owner), F2 measured dead-by-construction.**
+§§0–10 remain the audit record; §11 is the implementation round (owner
+instruction 2026-08-04: bug fixes + improvements default ON in SBND, validated
+on nueCC48).
 
 > **§10 added — the owner filter, 13 → 7**, re-verified at toolkit
 > **`407c5ba9`** (§3 was written at `23bd6783`, twelve commits earlier). §10
 > keeps the bugs and the port gaps, drops the three findings where the toolkit
 > improves on the prototype, resolves two outright, and proposes a fix and an
 > exact edit site for each survivor. **Seven findings, five knobs** — the shapes
-> differ and §10.1a says how.
+> differ and §10.1a says how.  **§11 implements the round**; its measurements
+> corrected several §10 counts (18 call sites not 22; four F4 sums not three;
+> the prototype's singlephoton neutrino_type write and its :222 SCE site are
+> commented out) — see §11.2.
 >
 > Three things in §10 change §3 rather than extend it, and are flagged there:
 > **P12's stated mechanism is retracted** and replaced by a verified one with a
@@ -1633,3 +1638,236 @@ F5 needs redesign rather than a wider tolerance.
 **(c) §2.9 now carries a forward pointer.** §10.13 narrows a §2 *positive*, and
 in a 1574-line doc a correction that lives only at the end reaches nobody who
 stops at §2. The pointer is inserted in §2.9 itself.
+
+---
+
+## §11 The implementation round — F1/F4/F5/F6/F7 SHIPPED SBND ON, F3 plumbed OFF, F2 dead by construction
+
+**Owner instruction (2026-08-04):** repeat the series' knob round for this
+doc's filtered list; validate on nueCC48; bug fixes and improvements default ON
+in SBND; update the md, commit and push.  Three scoping decisions were taken by
+the owner the same day (AskUserQuestion): **F1 = consistent FV, SBND ON**;
+**F3 = plumb the SCE helper but keep SBND OFF** (no SBND SCE helper exists;
+a separate gate bool keeps kine and single-photon independently switchable);
+**F7 = implement the bitmask AND book the T_tagger branch, ON** (branch booked
+only when the knob is on, so knob-off stays schema-identical).
+
+Toolkit commit **`2457320d`** (parent `29e8e452`); wcp-porting-img
+carries this doc, the runner tri-state block and the new gate driver
+`pr36_cmp.py`.
+
+### 11.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit           # at 2457320d
+./wcb build --notests -p && ./wcb install --notests -p
+./build/clus/wcdoctest-clus                        # 95/95 cases PASS
+
+SX=/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+cd $SX
+# knobs-off gate arm + per-knob arms (PR_JOBS=12, pairs of arms concurrent):
+PR_JOBS=12 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh \
+    work-nuecc48-0804 work-pr36-off48 data
+SBND_NEUTRINO_CONSISTENT_FV=1     ... work-pr36-f1on48   # same shape
+SBND_TAGGER_ORDERED_SEGSETS=1     ... work-pr36-f4on48
+SBND_STEM_ENDPOINT_WCPT_PARITY=1  ... work-pr36-f5on48
+SBND_BROKEN_MUON_CLUSTER_ID_COUNT=1 ... work-pr36-f6on48
+SBND_SP_SCE_CORRECTION=1 SBND_NEUTRINO_TYPE_BITMASK=1 ... work-pr36-f3f7on48
+# union of the flips, forced on the PRE-flip config:
+SBND_NEUTRINO_CONSISTENT_FV=1 SBND_TAGGER_ORDERED_SEGSETS=1 \
+SBND_STEM_ENDPOINT_WCPT_PARITY=1 SBND_BROKEN_MUON_CLUSTER_ID_COUNT=1 \
+SBND_NEUTRINO_TYPE_BITMASK=1     ... work-pr36-allon48
+# after the TLA flips, bare == production:
+PR_JOBS=12 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh \
+    work-nuecc48-0804 work-pr36-prod48 data
+
+python3 pr36_cmp.py work-pr35-prod48 work-pr36-off48     # the off gate
+python3 pr36_cmp.py work-pr36-off48  work-pr36-<arm>     # per-knob gates
+python3 pr36_cmp.py work-pr36-allon48 work-pr36-prod48   # doc-68 invariant
+```
+
+Scratch (build logs, compiled-config md5s, harvest scripts):
+`/home/xqian/tmp/pr36/`.
+
+### 11.2 What shipped, and the corrections measurement forced on §10
+
+| F | key(s) | SBND | C++ default |
+|---|---|---|---|
+| F1 | `fiducial` + `fv_tolerance` (via sbnd arg `neutrino_consistent_fv`) | **ON** | absent = legacy FiducialUtils |
+| F2 | — (population sweep + 11 per-gate counters only) | n/a | — |
+| F3 | `sp_sce_correction` (+ geom_helper param threaded into `singlephoton_tagger`) | **OFF** (owner) | false |
+| F4 | `tagger_ordered_segment_sets` | **ON** | false |
+| F5 | `stem_endpoint_wcpt_parity` | **ON** | false |
+| F6 | `broken_muon_cluster_id_count` | **ON** | false |
+| F7 | `neutrino_type_bitmask` (threaded to BOTH `tagger_check_neutrino` and `tagger_output`) | **ON** | false |
+
+Threading: `TaggerCheckNeutrino` gained `Clus::NeedFiducial` (the STM guard —
+`NeedFiducial::configure` runs only when the key is present — is copied
+verbatim); the F4-F7 switches live on `PatternAlgorithms`; counters live in
+`PR::g_pr36_audit` (PRGraph.h) and are emitted per event in a `PR36AUDIT` log
+line beside PR30/31/32AUDIT.  `cluster_fc_check` needed **no** change — its
+`fiducial`/`fv_tolerance` parameters already exist, defaulted, with the
+nullptr path documented bit-for-bit (`Clustering_Util.cxx:108-116`).
+
+**Corrections to §10, found while implementing (each verified in source):**
+
+* **F5 is 18 call sites, not 22** — 13 in NuE (`grep -c` counted the
+  definition line too) and 5 in SinglePhoton (two hits are comments).  All 18
+  pass a *vertex* fit point; none compares against a non-vertex point.
+* **F4 is FOUR sums, not three** — `track_overclustering` iterates the same
+  (grown) `muon_segs` set a second time for `tro_3_stem_length` (NuE `:3730`).
+  All four sites got the same knob-gated index-ordered iteration.
+* **The prototype's singlephoton `neutrino_type` write is commented out**
+  (`NeutrinoID_singlephoton_tagger.h:536-539`), so F7 reproduces FOUR live
+  writers (cosmic bit 1; numu bit 2 / nc bit 3, unconditional at numu_tagger's
+  end; nue bit 5), not five.  Branch type is `/I`
+  (`wire-cell-prod-nue-port.cxx:1485-1486`), init 0 (`NeutrinoID.cxx:58`).
+* **The prototype's `:222` SCE site is also commented out** — F3 corrects the
+  four live positions (nu vertex `:13`, proton `:103` / MIP `:132` track
+  starts, shower start `:317`); `max_shw_dis`/`shw_vtx_dis` then derive from
+  the corrected coordinates, matching `:318-330`.
+* **The §10.3 skip-gate census was short**: NuE `:396` is a *bare*
+  `!has_particle_info()` gate (no pdg clause) and three more pdg-11 gates
+  exist (`:1693 :1867 :2569`), so the counters cover 11 gates (10 NuE + 1
+  SP), and `NeutrinoShowerClustering` has **9** pdg-11 writers (5 `set_pdg`,
+  4 fresh constructions), not 3.
+
+### 11.3 The gate (two artifacts, as §10.9 prescribed)
+
+New driver **`pr36_cmp.py`**: leaf-level compare of *every* tree in
+`tracking-pr.root` (uproot; doubly-jagged branches canonicalized, NaN==NaN),
+the calib-pr JSON with the `tagger` block sub-keyed, mabc member hashes,
+pctree rollup, nusel TSVs.  `tagger_tree_ab.py` was not used as a gate — its
+exit code is 0 even when branches move.  Evt 116962 has no PR ⇒ calib
+comparisons are 47/47.
+
+* **Knobs-off vs production** (`work-pr35-prod48` vs `work-pr36-off48`):
+  **trees 48/48, calib 47/47, mabc 48/48, pctree 48/48, TSV 48/48** — all
+  counters and the F1 both-ways diagnostic are log-only, proven.
+* **Compiled config**: knobs-off md5 `95f069d516cf8ff7ecc6ed10cb179db1` ==
+  worktree at `29e8e452` (identical TLAs incl. full `pipeline_names`); with
+  the six TLAs forced, every key lands on `TaggerCheckNeutrino:pr` (and
+  `neutrino_type_bitmask` also on `UbooneTaggerOutputVisitor:pr`), F1
+  receiving exactly the STM objects: `BoxFiducial:sbnd_pr_fv`,
+  `[-25,-25,-30,-30,-50,-30]` mm.
+* **Doctests**: `wcdoctest-clus` 95/95 cases, 0 failures (three builds).  The
+  suite's assertion total moved 984↔983 between runs; attributed by a
+  stash-rebuild A/B to `pattern_recognition shower_clustering_with_nv [B]`,
+  whose CHECK count is data-dependent (one per `map_vertex_to_shower` entry)
+  and ASLR-order sensitive — pre-existing, not this round.
+* **`allon48` (env-forced union, pre-flip config) vs `prod48` (bare,
+  post-flip)**: **48/48 identical on every artifact class** (trees, calib 47/47, mabc, pctree, TSV) -- a bare runner invocation IS the production operating point.
+
+### 11.4 F1 measured — 6/48 events, all in the same direction
+
+The unconditional both-ways diagnostic (`PR36AUDIT match_isFC disagree`) and
+the calib gate agree: **6/48** events flip, every one **contained → exiting**
+(`match_isFC` 1→0) — the FiducialUtils sensitive-volume shell calling exiters
+contained, exactly the failure mode TaggerCheckSTM's comment documents (96/147
+on the STM 30-event sample).  Because `match_isFC` is numu XGBoost var 70,
+`numu_score` moves on all six; `nue_score` moves only on 137238 (the others
+sit at the +4.3009 nue cap):
+
+| evt | match_isFC | numu_score | nue_score |
+|---|---|---|---|
+| 54095  | 1→0 | −1.896 → −1.524 | capped |
+| 74544  | 1→0 | −0.034 → +0.157 | capped |
+| 137238 | 1→0 | +1.270 → +1.159 | +0.007 → −1.063 |
+| 168596 | 1→0 | −1.364 → −0.996 | capped |
+| 268784 | 1→0 | −0.166 → −0.508 | capped |
+| 360535 | 1→0 | −1.353 → −0.643 | capped |
+
+Movement is confined to the calib tagger block + the two score branches of
+`T_tagger`; mabc/pctree 48/48, and the nusel TSVs are 48/48 identical — **no
+selection verdict flips on this sample**.  `match_isFC`'s only artifact outlet
+remains the calib JSON (not booked in `T_tagger`), as §10.9 found.
+
+### 11.5 F2 resolved: dead by construction on nueCC48
+
+The §10.15a population sweep — one pass over the PR graph before the tagger
+block — counted **0 shower-flagged, ParticleInfo-less segments in 2998
+segments over all 47 PR events** (torn-line events recovered field-by-field;
+every event individually 0).  All 11 per-gate counters: 0.  The prototype's
+`get_particle_type()` coercion therefore has **no population to act on here**
+— `NeutrinoShowerClustering`'s nine pdg-11 writers cover the shower-flagged
+population totally on this sample — and F2 resolves like pr/35's P10: dead by
+construction, **no knob shipped**.  The sweep and gate counters stay in
+production as the tripwire; a future non-zero PR36AUDIT `f2_sweep` is the
+signal to revisit (the fix design — reproduce the LATCH, not the read — is in
+§10.3).
+
+### 11.6 F5 measured — premise CONFIRMED, two legitimate firings, ON
+
+Across all arms the 18 per-site counters show: **16 of 18 sites have an exact
+wcpt match on every call** (f5_disagree = 0).  Site 17
+(`low_energy_overlapping_sp`, SP) fired both counters **twice** — evts 268067
+and 350186, once each.  §10.15b's rule ("a non-zero neither-match count
+disproves the premise ⇒ redesign, never a tolerance") demanded classification
+before any flip, so the two events were re-run with a distance diagnostic:
+
+```
+evt 268067: d_front=4.77 cm  d_back=6.84 cm
+evt 350186: d_front=90.00 cm d_back=94.61 cm
+```
+
+Macroscopic distances, not arithmetic drift: the shower's start VERTEX is
+genuinely a different skeleton node from either end of its start segment (the
+indirectly-connected-shower population, `get_start_vertex_and_type()` type
+≠ 1).  In the prototype the integer index test fails on exactly this
+population and picks `back` — which is what the knob-on rule does.  **The
+coincidence premise stands** (zero near-miss firings anywhere), and the two
+disagreements are precisely where the prototype disagrees with the legacy
+proximity substitute.  Knob-on movement: those two events only, 4
+`shw_sp_lol_*` branches each (268067: `lol_2_v_angle, lol_3_angle_beam,
+lol_3_min_angle, lol_3_n_out`; 350186: `lol_3_angle_beam, lol_3_flag,
+lol_3_n_out, lol_flag`) — `shw_sp_*` is not a BDT input on either side (§3
+P2's bound), and the scores and TSVs are untouched.  **Flipped ON.**
+
+### 11.7 F4, F6, F3, F7 — three nulls and a schema branch
+
+* **F4 (`tagger_ordered_segment_sets`, ON)**: knob-on arm **48/48
+  byte-identical on every artifact**.  On this manifest the address order and
+  the index order of the four accumulation sets produce bit-identical sums —
+  the fix's value is run-to-run stability under a different address layout
+  (M4 house rule; the class label of §10.5 stands: this moves *further* from
+  the prototype's unreproducible order, deliberately).
+* **F6 (`broken_muon_cluster_id_count`, ON)**: 48/48 byte-identical;
+  `f6_id_vs_ptr_disagree` = 0 everywhere — cluster↔id is injective inside
+  `broken_muon_id`'s sets on this sample, so pointer-count == id-count.  The
+  knob makes the prototype's semantics explicit; the counter is the doc-53
+  epoch tripwire.
+* **F3 (`sp_sce_correction`, OFF — owner)**: the combined F3+F7 arm proves the
+  plumbing vacuous as expected: with the knob forced ON and
+  `clus_geom_helper` unset (SBND), **zero value branches moved** anywhere.
+  The correction becomes reachable the day SBND configures an SCE helper —
+  as its own explicit flip, not as a side effect of the kine key.
+* **F7 (`neutrino_type_bitmask`, ON)**: knob-on diff = **exactly one new
+  `T_tagger` branch (`neutrino_type/I`) on all 47 PR events and nothing
+  else** — no value branch, no calib key, no Bee/pctree/TSV movement.
+  Knob-off arms show the branch absent: schema-identical, as designed.
+
+### 11.8 Operating point and residuals
+
+After the TLA flips (`neutrino_consistent_fv`, `tagger_ordered_segment_sets`,
+`stem_endpoint_wcpt_parity`, `broken_muon_cluster_id_count`,
+`neutrino_type_bitmask` = true; `sp_sce_correction` stays false),
+`wct-pr-perevt.jsonnet` compiled bare equals the TLA-forced pre-flip config,
+and the bare `work-pr36-prod48` arm equals `work-pr36-allon48` (§11.3) — a
+bare runner invocation IS the production operating point (doc 68 invariant).
+Escape hatches: the runner tri-states (`SBND_NEUTRINO_CONSISTENT_FV=0` etc.).
+
+**Residuals, unchanged by this round:**
+
+* Reading (ii) for F1 — threading the upstream light-matching verdict itself —
+  remains open; the shipped knob is the consistent-recompute reading (§10.2).
+  The both-ways diagnostic keeps measuring the disagreement rate for free.
+* §0's uncovered ground (the ~30 sub-taggers' internal cut values, §7.3)
+  is exactly as unaudited as before.
+* F2's tripwire logic (sweep + 11 gates) is measurement on THIS sample; MC or
+  other-detector samples could populate it (watch PR36AUDIT `f2_sweep`).
+* The nusel `stmfit` TSV column remains log-tearing flaky (pr/35 §11.4);
+  this round's TSV comparisons happened to be clean 48/48 everywhere.
+* uBooNE-trained BDT weights + the §4 calibration surface (doc pr/2 G1) are
+  untouched: F1 moves an *input* to a network trained on the uBooNE
+  definition of that input — the 6-event movement is definitional
+  consistency, not retraining.
