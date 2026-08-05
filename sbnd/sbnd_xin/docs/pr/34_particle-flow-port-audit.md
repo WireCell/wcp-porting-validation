@@ -6,8 +6,12 @@ turns them into a *parent–child particle tree* rooted at the neutrino vertex �
 the thing the owner actually reads in the Bee particle-flow panel when judging an
 event.
 
-**Status.** **AUDIT ONLY. No code was changed.** Every item below is reported,
-none is fixed. Ranked list in §8.
+**Status.** §0–§10 are the audit (no code changed there). **§11 is the
+implementation round: all five §10 knobs are SHIPPED and are SBND PRODUCTION
+DEFAULTS ON (owner 2026-08-04)** — toolkit commit `ed414bd4`,
+gate `work-pr34-off48` vs `work-pr31r2-prod48` 48/48 on every artifact class.
+The display-only claim is now **measured**, not argued (§11.5). Ranked audit
+list in §8.
 
 > **§10 added — owner filter, 14 → 5.** The owner asked for the P-list narrowed
 > to *bugs and things missing from the port*, dropping everything where the
@@ -1365,6 +1369,10 @@ comparison would differ on every coordinate.
 **Nothing was run.** No arm exists; this section specifies the gate, it does not
 report one.
 
+> **§11 update: the gate specified here was built (`pr34_cmp.py`) and run.**
+> Both sides PASS — knob-off identical everywhere, knob-on moving only
+> `mc.json` — so the display-only claim is now a measurement. See §11.3/§11.5.
+
 ### §10.8 Dropped and resolved, with reasons
 
 **a) P4 — DROPPED as an improvement, with an M15 residual.** The prototype's
@@ -1507,6 +1515,10 @@ nothing. Take the key from the `cfg["..."]` expression at the read site — here
 
 ### §10.10 What §10 does not claim
 
+> **§11 update:** the first two bullets are superseded — the five fixes are
+> implemented, measured on nueCC48 and SBND-ON (§11), and every survivor now
+> has a measured frequency (§11.4), closing §7.1 by measurement as well.
+
 - **No code was written, no build was run, no event was run.** The document
   remains audit-only; §10 adds a filter and five proposed fixes, nothing more.
 - **No frequency is measured for any survivor.** §9's statement stands
@@ -1527,3 +1539,163 @@ nothing. Take the key from the `cfg["..."]` expression at the read site — here
   series' highest-value follow-up.
 - **§10.7's gate has not been run.** It is a specification. Any future "byte
   identical" claim for these knobs must name `mc.json`, not `pctree-pr`.
+
+---
+
+## §11 Implementation round — five knobs SHIPPED, ALL SBND PRODUCTION ON
+
+**The ask.** *"Can you repeat what you did for the filtered list in [this doc]?
+… I want bug fix and improvements to have default on in SBND running."* Same
+shape as the pr/30 §12 / pr/31 §12 / pr/32 §11 rounds, with the §10.7 gate
+substituted for the pctree gate those rounds used. Toolkit commit
+`ed414bd4` (parent `e3510525`); all five C++ defaults stay
+`false`, the SBND operating point (`wct-pr-perevt.jsonnet`) carries the five
+`true`s.
+
+**The owner decision this round required (§10.5, M15): F4's merged π⁰ home =
+the HIGHEST-ENERGY daughter's parent** — deliberately *not* the prototype's
+first-writer-wins. Recorded 2026-08-04. This is the one survivor that ships as
+an owner-chosen improvement rather than pure parity; everything else in this
+round restores prototype behaviour.
+
+### §11.1 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+./wcb build --notests -p && ./wcb install --notests -p    # M1 freshness proof after
+./build/clus/wcdoctest-clus                                # 984/984 assertions
+
+cd sbnd_xin
+IDS=$(ls -d work-pr31r2-prod48/pr_evt* | sed 's/.*pr_evt//' | sort -n | tr '\n' ' ')
+PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-off48 data $IDS
+SBND_PF_TRACK_MAIN_CLUSTER_ONLY=1     PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-f1on48 data $IDS
+SBND_PF_SHOWER_VERTEX_BARRIER=1       PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-f2on48 data $IDS
+SBND_PF_SHOWER_PARENT_PRECEDENCE=1    PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-f3on48 data $IDS
+SBND_PF_PI0_NODE_PER_ID=1             PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-f4on48 data $IDS
+SBND_PF_PDG_NAME_PROTOTYPE_FALLBACK=1 PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-f5on48 data $IDS
+SBND_PF_TRACK_MAIN_CLUSTER_ONLY=1 SBND_PF_SHOWER_VERTEX_BARRIER=1 \
+SBND_PF_SHOWER_PARENT_PRECEDENCE=1 SBND_PF_PI0_NODE_PER_ID=1 \
+SBND_PF_PDG_NAME_PROTOTYPE_FALLBACK=1 PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-allon48 data $IDS
+WCT_BEE_PF_PRINT=1                    PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-print48 data $IDS
+PR_JOBS=12 ./run_pr_chain_batch.sh work-nuecc48-0804 work-pr34-prod48 data $IDS   # bare, after the flips
+
+PY=/nfs/data/1/xqian/toolkit-dev/local/bin/python3
+$PY pr34_cmp.py work-pr31r2-prod48 work-pr34-off48        # the gate
+$PY pr34_cmp.py work-pr34-off48    work-pr34-<arm>        # per knob
+$PY pr34_cmp.py work-pr34-allon48  work-pr34-prod48       # bare == production
+```
+
+`pr34_cmp.py` is new this round (committed alongside this doc): per event it
+compares **all seven `mabc-pr.zip` member hashes with `data/0/0-mc.json`
+reported separately**, the `pctree-pr` rollup hash, and both nusel TSVs —
+because §10.7 showed `pr32_cmp.py`'s pctree gate is vacuous for this stage.
+(One footnote it handles: evt 116962 has no PR and therefore no `mc.json`
+member on either side; absent==absent counts as identical.)
+
+### §11.2 What shipped, and where each knob lives
+
+Five `BeePFConfig` bools (C++ default `false`), read from the `bee_pf` config
+array (`MultiAlgBlobClustering.cxx` `configure()`); per knob the thread is
+`MultiAlgBlobClustering.h` (struct member + rationale) → `configure()` →
+`fill_bee_pf_tree` edit sites exactly as specified in §10.2–§10.6 →
+`sbnd/clus.jsonnet` (`clus_pr()` + `pr()` signature defaults, pass-through, and
+a `[if <knob> then '<key>']: true` key-suppression line in the `bee_pf` block)
+→ `wct-pr-perevt.jsonnet` (TLA + pass-through, **flipped `true`**) →
+`run_pr_chain_batch.sh` (tri-state `SBND_PF_*` env loop, unset = cfg default,
+1 = force on, 0 = force off). `default_configuration()` deliberately does not
+enumerate `bee_pf` (it never did), so the compiled default config is untouched.
+
+Two §10 details that mattered in implementation:
+
+- **F1 compares cluster idents, not pointers** (§10.2), and the `:1609`
+  `in_main_cluster` diagnostic was switched to the ident test in the same
+  change — log-only, artifacts untouched (proven by the gate).
+- **F3(b)** is implemented as a precedence pre-check that `continue`s out of
+  the legacy resolution; the legacy `vtx_incoming_seg` path is textually
+  unchanged. A defensive self-parent test guards the (write-guard-excluded)
+  self case.
+
+### §11.3 The two-sided gate — both sides PASS
+
+| comparison | mc.json | other 6 mabc members | pctree-pr | nusel TSVs |
+|---|---|---|---|---|
+| `work-pr34-off48` vs `work-pr31r2-prod48` (knobs off vs pre-change production) | **48/48 identical** | 48/48 | **48/48 identical** | identical |
+| `work-pr34-print48` vs `work-pr34-off48` (`WCT_BEE_PF_PRINT=1` is log-only) | 48/48 identical | 48/48 | 48/48 | identical |
+| `work-pr34-allon48` vs `work-pr34-off48` | **9 events differ** | **48/48 identical** | **48/48 identical** | **identical** |
+| `work-pr34-prod48` vs `work-pr34-allon48` (bare run == production, doc 68) | 48/48 identical | 48/48 | 48/48 | identical |
+
+Compiled-config proofs: knobs-off `wct-pr-perevt.jsonnet` md5
+`d817c7bf688f3b9c9dc1190e97518dc3` == the same compile from a worktree at
+parent `e3510525` (byte-identical); the flipped bare config md5
+`9b77211645182b0dc3a94477daedd4bb` == the pre-flip compile with all five TLAs
+forced `true`, and all five `pf_*` keys appear in it. (Grep trap from pr/31,
+still live: compiled JSON spells keys `"pf_… " : true` with spaces, and
+`pf_pi0_node_per_id` contains a digit — `[a-z_]` character classes silently
+miss it.)
+
+Unit tests: `wcdoctest-clus` 95 cases / 984 assertions PASS at the shipped
+build; M1 freshness proof done (lib mtime 17:21 > last source edit 17:18).
+
+### §11.4 Per-knob results on nueCC48
+
+| knob | mc.json movers | reading |
+|---|---|---|
+| F1 `pf_track_main_cluster_only` | **0/48 (null)** | **§7.1 CLOSED by measurement**: the print arm shows `in_main_cluster=0` on **0 of 63** BFS-claimed track nodes across all 48 events (ident test). The guard has nothing to exclude on this manifest — the upstream unmerge/protect stages already confine the track walk to the main cluster. Null ≠ inert: the class is real in older samples (evt 388's tree spans clusters 23/28/81, §3 P1) — those predate the current operating point. |
+| F2 `pf_shower_vertex_barrier` | **5/48**: 38856, 122660, 219295, 423981, 489330 | Two effect classes. (a) A track segment formerly reached *through* a shower vertex drops out of the tree — evt 38856 loses `12040 proton 268 MeV` (child of `12044 proton 200 MeV`); same for 423981 (`proton 203 MeV`) and 489330 (`proton 115 MeV`). It vanishes rather than re-rooting because P8 (deliberate, owner-endorsed) drops disconnected fragments; the prototype would list it top-level. (b) On 122660/219295 the no-longer-reachable track node's own child shower hoists to top level (`gamma 9 MeV`/`gamma 21 MeV`), matching the prototype's fallback. Pseudo-node ids shift where allocation order changes. |
+| F3 `pf_shower_parent_precedence` | **6/48**: 69314, 122660, 234638, 246579, 267597, 423981 | The textbook case is evt 246579: the 6 MeV `gamma → e-` pair moves from *sibling of* the 38 MeV shower (both under `19074 proton`) to *nested inside* it — exactly the "one level too shallow, under the wrong particle" defect of §10.4. evt 69314 is an id-only shift (12→13): the re-parent resolves through the precedence path to the same parent, moving `next_id` allocation order. |
+| F4 `pf_pi0_node_per_id` | **0/48 (null)** | π⁰ census on the off arm: **13 π⁰ nodes over 12 events**, and the null *proves* none of them is one π⁰ id split across two parents (a split would have merged and moved `mc.json`). The engaged code path processed all 13 groups. The owner's home rule (highest-energy daughter's parent) therefore has no case to decide on this manifest. |
+| F5 `pf_pdg_name_prototype_fallback` | **0/48 (null)** | Engaged on every node (the fallback flag reaches all three `pf_pdg_to_name` callers), null because every PDG in these 48 events is in the 11-entry table and no no-PID (`"particle 0 MeV"`) node renders. The gaps it fills (π⁰-typed *track segments*, nuclei, exotics) simply do not occur here. |
+
+Perf: like-for-like arms, mean wall 19.0–20.1 s/event, peak RSS 1.47 GiB in
+every arm — flat, as a display-stage change must be.
+
+### §11.5 The display-only claim is now a MEASUREMENT
+
+§10.7's second row asked for exactly this: **F2 and F3 move
+`mc.json` on 9 distinct events while, in every one of the seven arms, the
+other six `mabc-pr.zip` members, all 48 `pctree-pr` archives and both nusel
+TSVs are byte-identical.** The §5.7 source argument (the stage's two prototype
+side effects have no consumer) is no longer the only support for the header's
+display-only verdict.
+
+### §11.6 F2×F3 interaction — measured, as §10.3 predicted
+
+The joint arm's mover set is exactly the union (5 ∪ 6 = 9, overlap
+{122660, 423981}). On the seven exclusive events the joint `mc.json` equals
+the respective single-knob arm's **hash-exactly**. On the two shared events
+all four arms (off / f2on / f3on / allon) differ pairwise — the combined
+effect is not the concatenation of the two diffs, which is what §10.3 meant by
+"a combined-on arm is not the sum of two single-on arms". Separately
+attributable, jointly non-additive.
+
+### §11.7 The operating point
+
+All five knobs are `true` in `wct-pr-perevt.jsonnet` (the single source of the
+SBND operating point, doc 68); C++ and `clus.jsonnet` defaults stay `false`;
+escape hatch per knob via the tri-state `SBND_PF_*` env loop. The bare run
+`work-pr34-prod48` is 48/48 identical to the env-forced `work-pr34-allon48`
+on every artifact class — a bare `./run_pr_chain_batch.sh` still reproduces
+production exactly.
+
+### §11.8 What §11 does not claim, and residuals
+
+- **No reconstruction number changed anywhere in this round** — that is the
+  point of the stage, and it is measured, not assumed (§11.5).
+- **F1/F4/F5 are validated-but-untested in their active direction** on this
+  manifest: the code paths run (engagement shown per knob in §11.4) but the
+  classes they fix are empty here. First sample with out-of-main-cluster
+  track walks, split π⁰s, or exotic PDGs exercises them for real; the Bee
+  panel is the place a wrong answer would show.
+- **F4's home rule is an owner-chosen improvement, not parity** (§10.5,
+  decision 2026-08-04). If prototype-panel parity is ever needed for a split
+  π⁰, first-writer-wins would have to be re-selected — one branch in the
+  merged-group emission.
+- **P8 composition is visible**: F2's dropped-node class (three protons above)
+  exists because the barrier (parity) meets P8's deliberate
+  no-disconnected-fragments rule (improvement). A reader comparing toolkit and
+  prototype panels side-by-side will see the prototype list those protons
+  top-level. That is P8 behaving as endorsed, not an F2 defect.
+- **§7.3 (shower-set equality between `PRShower::fill_sets` and the
+  prototype's) remains open** — nothing in this round measured it.
+- The `pid`-submodule provenance exposure (§7.7) is untouched and remains the
+  series' highest-value follow-up.

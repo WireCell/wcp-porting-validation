@@ -197,6 +197,27 @@ for _pr31 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr31 _env _key _val
+# doc pr/34 sec 11: the sec 10 particle-flow (Bee mc tree) port fixes.  Same
+# tri-state contract (unset = cfg default, 1 = force on, 0 = force off).
+# DISPLAY-ONLY stage: these move mabc-pr.zip::data/0/0-mc.json and nothing
+# else -- gate with pr34_cmp.py, NOT pr32_cmp.py (pctree gate is vacuous).
+#   F1 SBND_PF_TRACK_MAIN_CLUSTER_ONLY  track BFS keeps main-cluster idents only
+#   F2 SBND_PF_SHOWER_VERTEX_BARRIER    BFS never expands through a shower vtx
+#   F3 SBND_PF_SHOWER_PARENT_PRECEDENCE parent shower resolves before track seg
+#   F4 SBND_PF_PI0_NODE_PER_ID          one pi0 node per id (home = highest-E
+#                                       daughter's parent, owner 2026-08-04)
+#   F5 SBND_PF_PDG_NAME_PROTOTYPE_FALLBACK  pi0/nuclei/number PDG-name fallback
+for _pr34 in \
+    "SBND_PF_TRACK_MAIN_CLUSTER_ONLY:pf_track_main_cluster_only" \
+    "SBND_PF_SHOWER_VERTEX_BARRIER:pf_shower_vertex_barrier" \
+    "SBND_PF_SHOWER_PARENT_PRECEDENCE:pf_shower_parent_precedence" \
+    "SBND_PF_PI0_NODE_PER_ID:pf_pi0_node_per_id" \
+    "SBND_PF_PDG_NAME_PROTOTYPE_FALLBACK:pf_pdg_name_prototype_fallback" ; do
+    _env=${_pr34%%:*}; _key=${_pr34#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr34 _env _key _val
 # doc pr/24: isochronous first-segment endpoint finding.  SBND PRODUCTION
 # DEFAULT ON since the round-3 flip (owner 2026-08-03) -- EMPTY = no TLA = the
 # cfg default = ON at the C++ sizing defaults (40 cm min length, 25 cm max
