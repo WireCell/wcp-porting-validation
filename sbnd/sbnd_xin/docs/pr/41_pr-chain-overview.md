@@ -100,6 +100,12 @@ PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh <ql_root> <out_root> <data|si
 graph that stage fills) and never mutates state, so an arm with it hashes
 identically to one without on every other output. Full write-up: doc pr/26.
 
+The viewer also has a **dQ/dx panel** (doc pr/42): click a particle-flow row
+to plot its measured dQ/dx against the muon/proton/pion/kaon reference
+curves (tracks, residual range) or the 1x/2x MIP lines (showers, distance
+from the stem). The six 2-D wire-plane panels doc pr/26 built are hidden by
+default now (`--wire-planes` on the `bokeh serve` command restores them).
+
 ## 5. Trained-model loading — read this before trusting a score
 
 **Neither model was trained on SBND data.** Both are the stock uBooNE

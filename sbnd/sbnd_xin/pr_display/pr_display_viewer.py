@@ -32,12 +32,17 @@ LAYOUT
 
   Row 1 -- the three charge projections X-Y, Y-Z, X-Z, each carrying every
            layer below, individually toggleable.
-  Row 2 -- particle flow (click a particle to highlight it in all nine panels)
-           next to the event's selection numbers.
-  Row 3 -- six panels, two columns (TPC 0 | TPC 1) x three rows (T-U, T-V,
-           T-W): the fitted 2-D charge as a heat map with the best-fit track
-           drawn over it, i.e. the Magnify-tracking view for the neutrino
-           interaction.
+  Row 2 -- particle flow (click a particle to highlight it) next to the
+           event's selection numbers.
+  Row 3 -- dQ/dx panel (sbnd_xin/docs/pr/42): click a PF row above and its
+           dQ/dx-vs-distance profile appears here against the muon/proton/
+           pion/kaon reference curves (End mode, tracks) or the 1x/2x MIP
+           lines (Start mode, showers).  Mode auto-picks by particle kind;
+           override with the Start/End toggle, and use the segment dropdown
+           to step through a multi-segment shower.
+  Row 4 -- OFF BY DEFAULT (`--wire-planes` to restore): six panels, two
+           columns (TPC 0 | TPC 1) x three rows (T-U, T-V, T-W), the fitted
+           2-D charge as a heat map with the best-fit track drawn over it.
 
 LAYERS (each a toggle)
 
@@ -93,10 +98,10 @@ import numpy as np
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import (ColumnDataSource, Select, Button, Div, HoverTool,
-                          CheckboxButtonGroup, TextInput, Toggle, Spacer,
-                          ColorBar, LinearColorMapper, BasicTicker,
+                          CheckboxButtonGroup, RadioButtonGroup, TextInput, Toggle, Spacer,
+                          ColorBar, LinearColorMapper, BasicTicker, Span,
                           DataTable, TableColumn, HTMLTemplateFormatter,
-                          CDSView, AllIndices)
+                          CDSView, AllIndices, Range1d)
 from bokeh.palettes import Viridis256, Category20_20
 from bokeh.plotting import figure
 
@@ -112,7 +117,13 @@ DEFAULT_HALF = 30.0        # the "+-30 cm around the vertex" the display is for
 # ---------------------------------------------------------------------------
 ap = argparse.ArgumentParser()
 ap.add_argument("specs", nargs="*", help="calib-pr-evt*.json paths or globs")
+ap.add_argument("--wire-planes", action="store_true",
+                help="show the six 2-D wire-plane panels (hidden by default -- "
+                     "sbnd_xin/docs/pr/42: not useful for day-to-day PID work; "
+                     "replaced by the dQ/dx panel. Code path unchanged, just "
+                     "left out of the layout, so this flag brings it back.")
 args = ap.parse_args(sys.argv[1:])
+SHOW_WIRE_PLANES = args.wire_planes
 
 FILES = []
 for spec in args.specs:
@@ -148,9 +159,18 @@ state = dict(doc=None, label=None)
 # ---------------------------------------------------------------------------
 proj_kw = dict(height=340, width=430, tools="pan,wheel_zoom,box_zoom,reset,save",
                active_scroll="wheel_zoom")
-f_xy = figure(title="X-Y", **proj_kw)
-f_yz = figure(title="Y-Z", **proj_kw)
-f_xz = figure(title="X-Z", **proj_kw)
+# Explicit Range1d, not the figure()-default DataRange1d: DataRange1d
+# auto-refits to renderer data on every CDS push (e.g. the PF-highlight
+# source updated by on_pf_select/on_kine_select), which silently undid an
+# active "zoom" toggle on any particle-flow/energy-table click. Range1d only
+# ever moves when apply_ranges() sets it, so a toggled zoom now survives
+# every other control.
+f_xy = figure(title="X-Y", x_range=Range1d(*DET_BOX["x"]),
+              y_range=Range1d(*DET_BOX["y"]), **proj_kw)
+f_yz = figure(title="Y-Z", x_range=Range1d(*DET_BOX["z"]),
+              y_range=Range1d(*DET_BOX["y"]), **proj_kw)
+f_xz = figure(title="X-Z", x_range=Range1d(*DET_BOX["x"]),
+              y_range=Range1d(*DET_BOX["z"]), **proj_kw)
 f_xy.xaxis.axis_label, f_xy.yaxis.axis_label = "x (cm)", "y (cm)"
 f_yz.xaxis.axis_label, f_yz.yaxis.axis_label = "z (cm)", "y (cm)"
 f_xz.xaxis.axis_label, f_xz.yaxis.axis_label = "x (cm)", "z (cm)"
@@ -227,6 +247,7 @@ for apa in (0, 1):
     for pl in (0, 1, 2):
         f = figure(title="TPC %d   T vs %s" % (apa, PLANE_NAME[pl]),
                    width=560, height=250,
+                   x_range=Range1d(start=0, end=1), y_range=Range1d(start=0, end=1),
                    tools="pan,wheel_zoom,box_zoom,reset,save",
                    active_scroll="wheel_zoom")
         f.xaxis.axis_label = "%s wire index" % PLANE_NAME[pl]
@@ -259,6 +280,76 @@ cbar_fig.add_layout(ColorBar(color_mapper=CMAP, ticker=BasicTicker(desired_num_t
                              label_standoff=6, title="charge (e)"), "right")
 cbar_fig.xaxis.visible = cbar_fig.yaxis.visible = False
 cbar_fig.grid.visible = False
+
+# --- dQ/dx panel (sbnd_xin/docs/pr/42) --------------------------------------
+# Click a particle-flow row (track or shower) and its measured dQ/dx appears
+# here.  "End" mode plots residual range from the dumped `rr` (tracks, the
+# stopping/Bragg end); "Start" mode plots distance from the shower's own
+# start point (showers, the stem -- 1 vs 2 MIP separates e- from a converted
+# photon).  Mode auto-picks by PF node kind on every click; the RadioButtonGroup
+# only overrides it until the next click.  All dQ/dx here is e/cm, matching
+# points[].dQ / points[].dx directly -- no unit conversion, unlike the
+# reference-curve dump (PrDisplayDump::dump_dqdx_ref) which has its own trap.
+dqdx_src = ColumnDataSource(data=dict(x=[], y=[]))
+# The literal <=20 Shower::get_stem_dQ_dx samples the nue/single-photon
+# taggers cut on, converted back from MIP units to e/cm so they sit on the
+# same axis as the measured points.  Plotted at THIS segment's own point
+# positions (index-matched, capped to whichever list is shorter) -- exact
+# when the stem stayed within the start segment (the common case for a short
+# shower stem); if get_stem_dQ_dx had to walk into a downstream segment for a
+# short stem, the tail diamonds drift off the local x axis, which is a
+# faithful (not broken) picture: those samples genuinely came from a
+# different segment's points.
+dqdx_stem_src = ColumnDataSource(data=dict(x=[], y=[]))
+DQDX_REF_STYLE = {"muon": ("black", "solid"), "proton": ("saddlebrown", "solid"),
+                  "pion": ("seagreen", "dashed"), "kaon": ("purple", "dashed"),
+                  "electron": ("gray", "dotted")}
+dqdx_ref_src = {name: ColumnDataSource(data=dict(x=[], y=[])) for name in DQDX_REF_STYLE}
+
+f_dqdx = figure(title="dQ/dx", height=320, width=1150,
+               x_range=Range1d(start=0, end=35), y_range=Range1d(start=0, end=100000),
+               tools="pan,wheel_zoom,box_zoom,reset,save", active_scroll="wheel_zoom")
+f_dqdx.xaxis.axis_label = "residual range (cm)"
+f_dqdx.yaxis.axis_label = "dQ/dx (e/cm)"
+
+DQDX_REF_RENDER = {}
+for _name, (_color, _dash) in DQDX_REF_STYLE.items():
+    _r = f_dqdx.line(x="x", y="y", source=dqdx_ref_src[_name], line_color=_color,
+                     line_dash=_dash, line_width=1.6, legend_label=_name, visible=False)
+    DQDX_REF_RENDER[_name] = _r
+f_dqdx.legend.location = "top_right"
+f_dqdx.legend.click_policy = "hide"
+f_dqdx.legend.label_text_font_size = "8pt"
+f_dqdx.legend.background_fill_alpha = 0.6
+
+# Reference lines: do_track_comp's flat-MIP template (End mode) and the
+# 1x/2x shower-stem MIP scale (Start mode, e- vs converted-photon).  Span,
+# not a line CDS, so it spans the plot regardless of the current x_range.
+mip_flat_span = Span(location=50000, dimension="width", line_color="#2ca02c",
+                     line_dash="dashed", line_width=1.2, visible=False)
+mip1_span = Span(location=43000, dimension="width", line_color="#9467bd",
+                 line_dash="dotted", line_width=1.3, visible=False)
+mip2_span = Span(location=86000, dimension="width", line_color="#9467bd",
+                 line_dash="dashed", line_width=1.3, visible=False)
+f_dqdx.add_layout(mip_flat_span)
+f_dqdx.add_layout(mip1_span)
+f_dqdx.add_layout(mip2_span)
+
+f_dqdx.line(x="x", y="y", source=dqdx_src, line_color="#1f77b4", line_width=1.8)
+dqdx_pts_r = f_dqdx.scatter(x="x", y="y", source=dqdx_src, marker="circle", size=5,
+                            fill_color="#1f77b4", line_color=None)
+f_dqdx.add_tools(HoverTool(renderers=[dqdx_pts_r], tooltips=[
+    ("x (cm)", "@x{0.00}"), ("dQ/dx (e/cm)", "@y{0,0}")]))
+f_dqdx.scatter(x="x", y="y", source=dqdx_stem_src, marker="diamond", size=9,
+              fill_color="#ff7f0e", line_color="#7a3d00", line_width=1)
+
+dqdx_title = Div(text="<b>dQ/dx</b> <span style='color:#666'>&mdash; click a particle-flow "
+                      "row above; Start = distance from the shower's start point, "
+                      "End = residual range from the stopping end</span>", width=1150)
+dqdx_mode = RadioButtonGroup(labels=["Start (shower stem)", "End (track stopping)"],
+                             active=1, width=260)
+dqdx_seg_sel = Select(title="segment", options=[], value="", width=160)
+dqdx_caption = Div(text="", width=1150)
 
 
 # ---------------------------------------------------------------------------
@@ -751,6 +842,222 @@ def fill_features(d):
 
 
 # ---------------------------------------------------------------------------
+# dQ/dx panel (sbnd_xin/docs/pr/42)
+# ---------------------------------------------------------------------------
+def dqdx_segment_by_id(d, sid):
+    return next((s for s in d.get("segments", []) if s["id"] == sid), None)
+
+
+def dqdx_segment_options(idx, nid):
+    """Segment ids to offer in the dropdown for PF node `nid`, start first.
+
+    A shower node's start segment id IS `nid` itself (PrDisplayDump::pf_node_id
+    on start_segment(), the same encoding showers[].id and segments[].shower_id
+    use) -- so `nid in seg_ids` finds it directly for both track and shower
+    nodes; `by_shower` (built by pf_index) gives the rest of a shower's
+    segments.  A gamma/pi0 pseudo-node matches neither -- return [].
+    """
+    ids = list(idx.get("by_shower", {}).get(nid, []))
+    if nid in idx.get("seg_ids", set()) and nid not in ids:
+        ids.append(nid)
+    ids.sort(key=lambda sid: (sid != nid, sid))
+    return ids
+
+
+def _dqdx_valid_points(seg):
+    """Points with a defined dQ/dx.  PR::Fit defaults are dQ=-1, dx=0
+    (PRCommon.h) and the dump does not emit `index`, the only field
+    Fit::valid() checks -- so dx>0 and dQ>=0 is the only client-side guard.
+    """
+    return [p for p in seg.get("points", [])
+            if p.get("dx", 0) > 0 and p.get("dQ", -1) >= 0]
+
+
+def _dqdx_end_xy(seg):
+    """End mode: residual range from the dumped `rr`, oriented by dirsign.
+
+    Trust the dump's `rr` for dirsign != 0 -- PrDisplayDump.cxx orients it
+    correctly for BOTH +1 and -1 (a -1 direction means the stopping end sits
+    at fits[0], so rr=L IS the residual range there; do not "correct" it by
+    recomputing L.back()-L[i], that reverses the Bragg peak).  Only dirsign==0
+    is genuinely ambiguous (never observed in practice, but handled rather
+    than silently mis-plotted): fall back to raw arc length from fits()[0].
+    """
+    if seg.get("dirsign", 0) == 0:
+        xs, ys = [], []
+        acc, prev = 0.0, None
+        for p in seg.get("points", []):
+            if prev is not None:
+                acc += math.dist((p["x"], p["y"], p["z"]), (prev["x"], prev["y"], prev["z"]))
+            prev = p
+            if p.get("dx", 0) > 0 and p.get("dQ", -1) >= 0:
+                xs.append(acc)
+                ys.append(p["dQ"] / p["dx"])
+        return xs, ys, "direction undetermined (dirsign=0) -- x axis is raw arc length, not residual range"
+    xs, ys = [], []
+    for p in _dqdx_valid_points(seg):
+        rr = p.get("rr", -1)
+        if rr < 0:            # the -0.1 sentinel at a branching vertex end
+            continue
+        xs.append(rr)
+        ys.append(p["dQ"] / p["dx"])
+    return xs, ys, ""
+
+
+def _dqdx_start_xy(d, seg):
+    """Start mode: distance from the shower's own start point.
+
+    Orient the segment's own point order (fits() order, unrelated to `rr`)
+    by whichever end sits nearer showers[].start; recomputed from x/y/z here
+    rather than reusing `rr`, since `rr` is defined toward the STOPPING end
+    and Start mode wants the opposite end.
+    """
+    pts_all = seg.get("points", [])
+    if not pts_all:
+        return [], [], ""
+    showers = {sh["id"]: sh for sh in d.get("showers", [])}
+    sh = showers.get(seg["id"])
+    note = ""
+    reverse = False
+    if sh and sh.get("start"):
+        s = sh["start"]
+        d0 = math.dist((pts_all[0]["x"], pts_all[0]["y"], pts_all[0]["z"]), (s["x"], s["y"], s["z"]))
+        d1 = math.dist((pts_all[-1]["x"], pts_all[-1]["y"], pts_all[-1]["z"]), (s["x"], s["y"], s["z"]))
+        reverse = d1 < d0
+    else:
+        note = "no shower row for this segment -- distance measured from its own fits()[0]"
+    L = [0.0] * len(pts_all)
+    acc = 0.0
+    for i in range(1, len(pts_all)):
+        acc += math.dist((pts_all[i]["x"], pts_all[i]["y"], pts_all[i]["z"]),
+                         (pts_all[i - 1]["x"], pts_all[i - 1]["y"], pts_all[i - 1]["z"]))
+        L[i] = acc
+    if reverse:
+        L = [L[-1] - v for v in L]
+    xs, ys = [], []
+    for i, p in enumerate(pts_all):
+        if p.get("dx", 0) > 0 and p.get("dQ", -1) >= 0:
+            xs.append(L[i])
+            ys.append(p["dQ"] / p["dx"])
+    return xs, ys, note
+
+
+def clear_dqdx(msg=""):
+    dqdx_src.data = dict(x=[], y=[])
+    dqdx_stem_src.data = dict(x=[], y=[])
+    for src in dqdx_ref_src.values():
+        src.data = dict(x=[], y=[])
+    for r in DQDX_REF_RENDER.values():
+        r.visible = False
+    for span in (mip_flat_span, mip1_span, mip2_span):
+        span.visible = False
+    dqdx_caption.text = ("<span style='color:#a33'>%s</span>" % msg) if msg else ""
+
+
+def replot_dqdx():
+    d = state.get("data") or {}
+    sid = state.get("dqdx_seg_id")
+    seg = dqdx_segment_by_id(d, sid) if sid is not None else None
+    if seg is None:
+        clear_dqdx("no segment selected")
+        return
+
+    is_start = (dqdx_mode.active == 0)
+    meta = d.get("meta", {})
+    mip_med = meta.get("mip_dqdx_median", 43000.0)
+    mip_flat = meta.get("mip_dqdx_flat", 50000.0)
+
+    xs, ys, note = _dqdx_start_xy(d, seg) if is_start else _dqdx_end_xy(seg)
+    order = sorted(range(len(xs)), key=lambda i: xs[i])
+    xs, ys = [xs[i] for i in order], [ys[i] for i in order]
+    dqdx_src.data = dict(x=xs, y=ys)
+
+    ref = d.get("dqdx_ref")
+    for name, src in dqdx_ref_src.items():
+        show = (not is_start) and ref and name in ref
+        DQDX_REF_RENDER[name].visible = bool(show)
+        if show:
+            grid = ref["grid"]
+            gxs = [grid["start"] + i * grid["step"] for i in range(grid["n"])]
+            src.data = dict(x=gxs, y=ref[name])
+        else:
+            src.data = dict(x=[], y=[])
+
+    mip_flat_span.location = mip_flat
+    mip_flat_span.visible = not is_start
+    mip1_span.location = mip_med
+    mip1_span.visible = is_start
+    mip2_span.location = 2 * mip_med
+    mip2_span.visible = is_start
+
+    if is_start:
+        stem = (next((sh for sh in d.get("showers", []) if sh["id"] == seg["id"]), {})
+                or {}).get("stem_dqdx", [])
+        n = min(len(stem), len(xs))
+        dqdx_stem_src.data = dict(x=xs[:n], y=[v * mip_med for v in stem[:n]])
+    else:
+        dqdx_stem_src.data = dict(x=[], y=[])
+
+    f_dqdx.xaxis.axis_label = "distance from start (cm)" if is_start else "residual range (cm)"
+    default_x = (0, 20) if is_start else (0, 35)
+    f_dqdx.x_range.start, f_dqdx.x_range.end = default_x
+    ymax_candidates = list(ys) + ([2.2 * mip_med] if is_start else [1.1 * mip_flat])
+    if not is_start and ref:
+        for name in ("muon", "proton"):
+            if name in ref:
+                ymax_candidates.append(max(ref[name]))
+    ymax = max(ymax_candidates) if ymax_candidates else 100000.0
+    f_dqdx.y_range.start, f_dqdx.y_range.end = 0, max(ymax, 1.0) * 1.15
+
+    pdg = seg.get("particle_id")
+    caption = (
+        "segment <b>%d</b> &nbsp; pdg <b>%s</b> &nbsp; score <b>%s</b> &nbsp; "
+        "dirsign <b>%s</b> &nbsp; dir_weak <b>%s</b> &nbsp; length <b>%s cm</b> "
+        "&nbsp; n pts <b>%d</b>"
+        % (seg["id"], PDG_NAME.get(pdg, str(pdg)), _f(seg.get("particle_score"), "%.2f"),
+           seg.get("dirsign", "&mdash;"), seg.get("dir_weak", "&mdash;"),
+           _f(seg.get("length"), "%.1f"), len(xs)))
+    if note:
+        caption += " &nbsp; <span style='color:#a33'>%s</span>" % note
+    caption += (
+        "<div style='color:#666;font-size:85%'>reference curves: dQ/dx (e/cm) from "
+        "ParticleDataSet after Modified-Box recombination at 0.5 kV/cm, including the "
+        "retained undocumented 0.85 scale factor; ElectronDeDx is held flat into "
+        "rr&rarr;0 (particle_dataset.jsonnet). The dump's residual range differs from "
+        "the PID's own by +0.15cm minus a 0-1cm offset -- negligible except right at "
+        "the Bragg peak.</div>")
+    dqdx_caption.text = caption
+
+
+def set_dqdx_node(nid):
+    """Point the panel at PF node `nid` (or clear it if None/unmatched)."""
+    d = state.get("data") or {}
+    idx = state.get("pf_index") or {}
+    state["dqdx_node_id"] = nid
+    if nid is None or nid < 0:
+        dqdx_seg_sel.options = []
+        dqdx_seg_sel.value = ""
+        state["dqdx_seg_id"] = None
+        clear_dqdx("")
+        return
+    opts = dqdx_segment_options(idx, nid)
+    if not opts:
+        dqdx_seg_sel.options = []
+        dqdx_seg_sel.value = ""
+        state["dqdx_seg_id"] = None
+        clear_dqdx("no segment for this node (pseudo gamma/pi0 node -- no charge to plot)")
+        return
+    dqdx_seg_sel.options = [(str(sid), "%d%s" % (sid, "  (start)" if sid == nid else ""))
+                            for sid in opts]
+    default_sid = nid if nid in opts else opts[0]
+    is_shower = nid in idx.get("by_shower", {})
+    state["dqdx_seg_id"] = default_sid
+    dqdx_mode.active = 0 if is_shower else 1
+    dqdx_seg_sel.value = str(default_sid)
+    replot_dqdx()
+
+
+# ---------------------------------------------------------------------------
 # Highlight
 # ---------------------------------------------------------------------------
 def set_highlight(seg_ids):
@@ -813,6 +1120,7 @@ def on_pf_select(attr, old, new):
     picked = highlight_ids(d, state.get("pf_nodes") or [], nid,
                            state.get("pf_index"))
     set_highlight(picked)
+    set_dqdx_node(nid)
     pf_note.text = ("selected <b>%s</b> (id %d) &rarr; %d segment(s) highlighted"
                     % (pf_src.data["kind"][i], nid, len(picked)))
     # A click here supersedes any energy-table highlight; clear it without
@@ -827,6 +1135,7 @@ def on_pf_clear():
     pf_src.selected.indices = []
     kine_src.selected.indices = []
     set_highlight(set())
+    set_dqdx_node(None)
     pf_note.text = ""
     kine_note.text = ""
 
@@ -845,6 +1154,7 @@ def on_kine_select(attr, old, new):
     pf_id = pf_ids[i]
     if pf_id is None or pf_id < 0:
         set_highlight(set())
+        set_dqdx_node(None)
         kine_note.text = ("row %d: no matching reconstructed particle-flow node "
                           "&mdash; nothing to highlight" % i)
     else:
@@ -852,6 +1162,7 @@ def on_kine_select(attr, old, new):
         picked = highlight_ids(d, state.get("pf_nodes") or [], pf_id,
                                state.get("pf_index"))
         set_highlight(picked)
+        set_dqdx_node(pf_id)
         kine_note.text = ("selected <b>%s</b>, %s MeV (id %d) &rarr; %d segment(s) highlighted"
                           % (kine_src.data["pdg"][i], kine_src.data["ke"][i], pf_id, len(picked)))
     state["_suppress_select"] = True
@@ -1018,6 +1329,7 @@ def load(label):
     pf_table.view.filter = VIEW_B if pf_table.view.filter is VIEW_A else VIEW_A
     pf_note.text = ("<span style='color:#a33'>%s</span>" % note) if note else ""
     set_highlight(set())
+    set_dqdx_node(None)
     fill_features(d)
 
     # --- centre + summary ---------------------------------------------------
@@ -1157,6 +1469,15 @@ def on_bdt(attr, old, new):
     bdt_div.visible = bool(new)
 
 
+def on_dqdx_mode(attr, old, new):
+    replot_dqdx()
+
+
+def on_dqdx_seg(attr, old, new):
+    state["dqdx_seg_id"] = int(new) if new else None
+    replot_dqdx()
+
+
 event_select.on_change("value", on_event)
 prev_btn.on_click(step(-1))
 next_btn.on_click(step(+1))
@@ -1168,6 +1489,8 @@ pf_src.selected.on_change("indices", on_pf_select)
 pf_clear_btn.on_click(on_pf_clear)
 kine_src.selected.on_change("indices", on_kine_select)
 bdt_toggle.on_change("active", on_bdt)
+dqdx_mode.on_change("active", on_dqdx_mode)
+dqdx_seg_sel.on_change("value", on_dqdx_seg)
 
 
 # ---------------------------------------------------------------------------
@@ -1177,7 +1500,7 @@ header = Div(text="<h2>SBND PR event display</h2>", width=1400)
 controls = row(event_select, prev_btn, next_btn, Spacer(width=20),
                zoom_btn, cx_in, cy_in, cz_in, half_in, vtx_btn)
 
-layout = column(
+_rows = [
     header,
     row(f_xy, f_yz, f_xz),
     row(layer_group),
@@ -1187,11 +1510,19 @@ layout = column(
               row(pf_clear_btn), pf_note, kine_note),
         Spacer(width=20),
         column(feat_div, cos_div, bdt_toggle, bdt_div)),
-    row(column(panel[(0, 0)]["fig"], panel[(0, 1)]["fig"], panel[(0, 2)]["fig"]),
-        column(panel[(1, 0)]["fig"], panel[(1, 1)]["fig"], panel[(1, 2)]["fig"]),
-        cbar_fig),
-    status,
-)
+    column(dqdx_title, row(dqdx_mode, dqdx_seg_sel), f_dqdx, dqdx_caption),
+]
+# Wire-plane panels: hidden by default (sbnd_xin/docs/pr/42 -- not useful for
+# day-to-day PID work, replaced by the dQ/dx panel above), --wire-planes
+# restores them.  Construction and data-filling are unchanged either way;
+# this only decides whether the row is part of the served document.
+if SHOW_WIRE_PLANES:
+    _rows.append(
+        row(column(panel[(0, 0)]["fig"], panel[(0, 1)]["fig"], panel[(0, 2)]["fig"]),
+            column(panel[(1, 0)]["fig"], panel[(1, 1)]["fig"], panel[(1, 2)]["fig"]),
+            cbar_fig))
+_rows.append(status)
+layout = column(*_rows)
 
 curdoc().add_root(layout)
 curdoc().title = "SBND PR display"

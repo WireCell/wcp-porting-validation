@@ -1,12 +1,14 @@
 # SBND pattern-recognition (PR) event display
 
 A Bokeh event display for validating and improving the PR code: what the
-neutrino-PR chain reconstructed, in three 3-D projections plus the six
-Magnify-style 2-D views, with the reconstructed **particle flow** and the
+neutrino-PR chain reconstructed, in three 3-D projections, a **dQ/dx panel**
+for checking PID by eye, and (behind `--wire-planes`, hidden by default) the
+six Magnify-style 2-D views, with the reconstructed **particle flow** and the
 **event features** that decide selection.
 
 Full write-up, including two defects found while building it:
-[`../docs/pr/26_pr-event-display.md`](../docs/pr/26_pr-event-display.md).
+[`../docs/pr/26_pr-event-display.md`](../docs/pr/26_pr-event-display.md). The
+dQ/dx panel: [`../docs/pr/42_dqdx-panel.md`](../docs/pr/42_dqdx-panel.md).
 
 Inputs, per event: `calib-pr-evt<ID>.json` (everything drawn) and, beside it,
 `mabc-pr.zip` — read **only** for its `data/*/*-mc.json` member, the
@@ -64,12 +66,17 @@ volume and the cathode plane drawn in red.
 
 **Row 2 -- particle flow and event features.** See the two sections below.
 
-**Row 3 -- six panels, two columns**: TPC 0 | TPC 1 x (T vs U, T vs V, T vs W).
-Each shows the fitted 2-D charge as a heat map (colour = measured charge, 0 to
-the 99th percentile -- a handful of saturated cells would otherwise flatten
-every track) with the best-fit trajectory drawn over it in the segment's
-colour, and the dead-channel bands shaded. This is the Magnify-tracking view
-of the neutrino interaction.
+**Row 3 -- dQ/dx panel.** See the section below; full write-up doc pr/42.
+
+**Row 4, hidden by default (`--wire-planes` to show) -- six panels, two
+columns**: TPC 0 | TPC 1 x (T vs U, T vs V, T vs W). Each shows the fitted
+2-D charge as a heat map (colour = measured charge, 0 to the 99th percentile
+-- a handful of saturated cells would otherwise flatten every track) with the
+best-fit trajectory drawn over it in the segment's colour, and the
+dead-channel bands shaded. This is the Magnify-tracking view of the neutrino
+interaction. Construction and data-filling are unchanged whether the row is
+shown or not -- `--wire-planes` only decides whether it's part of the served
+layout.
 
 ## Layers (each a toggle)
 
@@ -110,6 +117,31 @@ children's count rather than 0. A shower with `start_connection_type == 4` is
 dropped by the PF builder, so it has a row in `showers[]` and no PF node.
 
 `clear highlight` removes the trace.
+
+## dQ/dx panel
+
+Click a particle-flow row (above) and its measured dQ/dx (`points[].dQ /
+points[].dx`, e/cm) is plotted against a reference. Which end matters
+depends on particle kind, so the mode auto-picks on every click and can be
+overridden:
+
+| mode | for | x axis | reference overlay |
+|---|---|---|---|
+| **End** | tracks (auto for a track-kind PF row) | residual range from the dumped `rr`, cm | muon/proton (solid) + pion/kaon (dashed) dQ/dx-vs-rr curves, plus the flat-MIP line |
+| **Start** | showers (auto for a shower-kind PF row) | distance from the shower's own start point, recomputed from `points[].x/y/z` | horizontal lines at 1x and 2x the MIP scale (e⁻ vs. converted-γ), plus the tagger's own `stem_dqdx` samples as diamonds |
+
+A shower's PF node id **is** its start segment's id (same encoding
+`showers[].id` / `segments[].shower_id` use), so clicking a shower plots that
+trunk by default; the **segment** dropdown lists the rest of the shower's
+segments (start segment first) for stepping through the others.
+
+The caption line under the plot gives the plotted segment's `particle_id`,
+`particle_score`, `dirsign`, `dir_weak`, fitted `length`, point count, and the
+reference-curve provenance (0.5 kV/cm Modified-Box recombination, the
+retained 0.85 scale factor -- **not** a calibrated absolute charge).
+Full write-up, including the unit-convention trap this panel had to get
+right and a plan-stage mistake caught before implementation:
+[`../docs/pr/42_dqdx-panel.md`](../docs/pr/42_dqdx-panel.md).
 
 ## Event features
 
