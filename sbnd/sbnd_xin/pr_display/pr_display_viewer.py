@@ -295,6 +295,13 @@ info = Div(text="", width=1400)
 PDG_NAME = {11: "e-", -11: "e+", 13: "mu-", -13: "mu+", 22: "gamma",
             211: "pi+", -211: "pi-", 2212: "p", 2112: "n", 321: "K+",
             -321: "K-", 111: "pi0", 0: "?"}
+# The inverse, plus both pf_pdg_to_name() naming conventions
+# (MultiAlgBlobClustering.cxx ~1044: "proton"/"neutron" under prototype_names,
+# "p"/"n" otherwise) -- the PF label text carries whichever the mc.json was
+# written with, so both must resolve to the same pdg.
+NAME_TO_PDG = {"e-": 11, "e+": -11, "mu-": 13, "mu+": -13, "gamma": 22,
+              "pi+": 211, "pi-": -211, "proton": 2212, "p": 2212,
+              "neutron": 2112, "n": 2112, "K+": 321, "K-": -321, "pi0": 111}
 # kine_energy_info: how that particle's energy was measured.
 KINE_METHOD = {0: "dQ/dx", 1: "range", 2: "charge"}
 
@@ -321,8 +328,28 @@ pf_title = Div(text="<b>particle flow</b> "
 pf_clear_btn = Button(label="clear highlight", width=140)
 pf_note = Div(text="", width=620)
 
+# The per-particle energy table (kine_energy_particle et al.): same
+# click-to-highlight as the PF table above, joined to a PF node by energy +
+# pdg (kine_pf_ids()) since the kine_* arrays carry no id of their own.  A row
+# with no match (e.g. a sub-threshold particle the PF tree never gave a node)
+# highlights nothing and says so, rather than guessing.
+KINE_EMPTY = dict(row=[], pdg=[], ke=[], frm=[], inc=[], pf_id=[])
+kine_src = ColumnDataSource(data=dict(KINE_EMPTY))
+KINE_VIEW_A, KINE_VIEW_B = AllIndices(), AllIndices()
+kine_table = DataTable(
+    source=kine_src, view=CDSView(filter=KINE_VIEW_A), width=620, height=220,
+    index_position=None, selectable=True, sortable=False,
+    columns=[TableColumn(field="pdg", title="pdg", width=70, formatter=_fmt),
+             TableColumn(field="ke", title="KE (MeV)", width=90, formatter=_fmt),
+             TableColumn(field="frm", title="from", width=70, formatter=_fmt),
+             TableColumn(field="inc", title="in Enu", width=60, formatter=_fmt)])
+kine_title = Div(text="<b>energy per particle</b> "
+                      "<span style='color:#666'>&mdash; &#10003; = counted in reco "
+                      "Enu (kine_energy_included == 1); click a row to highlight it "
+                      "in all nine panels</span>", width=620)
+kine_note = Div(text="", width=620)
+
 feat_div = Div(text="", width=760)
-kine_div = Div(text="", width=760)
 cos_div = Div(text="", width=760)
 bdt_toggle = Toggle(label="BDT sub-scores", active=False, width=160)
 bdt_div = Div(text="", width=760, visible=False)
@@ -497,6 +524,45 @@ def highlight_ids(d, nodes, node_id, idx=None):
     return picked
 
 
+def kine_pf_ids(d, idx, pdgs, ke_list):
+    """PF node id for each row of kine_energy_particle, or -1 if none matches.
+
+    The kine_* arrays carry no id of their own -- they are pushed by
+    NeutrinoKinematics.cxx's graph walk, a different traversal than the one
+    that built the PF tree, so the join happens here rather than in the dump.
+    A shower row's value is the exact same float as `showers[].kine_best`
+    (both `kine_best / MeV`), so it matches to 0.05 MeV.  A track row's PF
+    label instead TRUNCATES to an integer ("25.61 MeV" prints as "25 MeV",
+    verified against several events -- not rounded, so `floor(ke) == label`
+    is the right test, not nearest-integer).  pdg is required on both sides:
+    without it, unrelated particles a few hundred keV apart collide (doc
+    pr/26 pr_display click-highlight investigation, evt 489330).  Checked
+    against all 48 nueCC48 + 8 loaded mcp1k/nuecc48 events: 0 collisions.
+    """
+    shower_cands = [(sh["id"], sh["kine_best"], sh.get("particle_id"))
+                    for sh in d.get("showers", [])]
+    track_cands = []
+    flat = idx["flat"]
+    for nid in idx["seg_ids"]:
+        n = flat.get(nid)
+        if not n:
+            continue
+        m = re.match(r"\s*([A-Za-z][A-Za-z+-]*)\s+(-?\d+)\s*MeV", n["text"])
+        if not m:
+            continue
+        pdg = NAME_TO_PDG.get(m.group(1))
+        if pdg is not None:
+            track_cands.append((nid, int(m.group(2)), pdg))
+
+    out = []
+    for i, e in enumerate(ke_list):
+        pdg = pdgs[i] if i < len(pdgs) else None
+        matches = ([c for c in shower_cands if c[2] == pdg and abs(c[1] - e) <= 0.05] +
+                   [c for c in track_cands if c[2] == pdg and math.floor(e) == c[1]])
+        out.append(matches[0][0] if len(matches) == 1 else -1)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Event features
 # ---------------------------------------------------------------------------
@@ -643,27 +709,25 @@ def fill_features(d):
     pdg = kine.get("kine_particle_type") or []
     inf = kine.get("kine_energy_info") or []
     inc = kine.get("kine_energy_included") or []
+    kine_src.selected.indices = []
     if not ke:
-        kine_div.text = ""
+        kine_src.data = dict(KINE_EMPTY)
     else:
-        td = "<td style='padding:0 14px 0 0'"
-        rows = []
+        idx = state.get("pf_index") or pf_index(d, state.get("pf_nodes") or [])
+        pf_ids = kine_pf_ids(d, idx, pdg, ke)
+        cols = {k: [] for k in KINE_EMPTY}
         for i in range(len(ke)):
-            rows.append(
-                "<tr>%s>%s</td>%s align=right>%.1f</td>%s>%s</td>%s align=center>%s</td></tr>"
-                % (td, PDG_NAME.get(pdg[i] if i < len(pdg) else 0, str(pdg[i])),
-                   td, ke[i],
-                   td, KINE_METHOD.get(inf[i] if i < len(inf) else -1, "?"),
-                   td, "&#10003;" if (i < len(inc) and inc[i] == 1) else ""))
-        kine_div.text = (
-            "<b>energy per particle</b> "
-            "<span style='color:#666'>&mdash; &#10003; = counted in reco Enu "
-            "(kine_energy_included == 1)</span>"
-            "<table style='font-family:monospace;font-size:92%%;border-collapse:collapse'>"
-            "<tr><th align=left style='padding:0 14px 0 0'>pdg</th>"
-            "<th align=right style='padding:0 14px 0 0'>KE (MeV)</th>"
-            "<th align=left style='padding:0 14px 0 0'>from</th>"
-            "<th style='padding:0 14px 0 0'>in Enu</th></tr>%s</table>" % "".join(rows))
+            cols["row"].append(i)
+            cols["pdg"].append(PDG_NAME.get(pdg[i] if i < len(pdg) else 0,
+                                            str(pdg[i]) if i < len(pdg) else "?"))
+            cols["ke"].append("%.1f" % ke[i])
+            cols["frm"].append(KINE_METHOD.get(inf[i] if i < len(inf) else -1, "?"))
+            cols["inc"].append("✓" if (i < len(inc) and inc[i] == 1) else "")
+            cols["pf_id"].append(pf_ids[i])
+        kine_src.data = cols
+    # The view-filter flip is the ONLY thing that repaints the grid (doc 58).
+    kine_table.view.filter = KINE_VIEW_B if kine_table.view.filter is KINE_VIEW_A else KINE_VIEW_A
+    kine_note.text = ""
 
     # --- the cosmic tagger, test by test ---
     fill_cosmic(tag)
@@ -734,6 +798,8 @@ def set_highlight(seg_ids):
 
 
 def on_pf_select(attr, old, new):
+    if state.get("_suppress_select"):
+        return
     if not new:
         set_highlight(set())
         pf_note.text = ""
@@ -749,12 +815,49 @@ def on_pf_select(attr, old, new):
     set_highlight(picked)
     pf_note.text = ("selected <b>%s</b> (id %d) &rarr; %d segment(s) highlighted"
                     % (pf_src.data["kind"][i], nid, len(picked)))
+    # A click here supersedes any energy-table highlight; clear it without
+    # bouncing back through on_kine_select and erasing what was just set.
+    state["_suppress_select"] = True
+    kine_src.selected.indices = []
+    kine_note.text = ""
+    state["_suppress_select"] = False
 
 
 def on_pf_clear():
     pf_src.selected.indices = []
+    kine_src.selected.indices = []
     set_highlight(set())
     pf_note.text = ""
+    kine_note.text = ""
+
+
+def on_kine_select(attr, old, new):
+    if state.get("_suppress_select"):
+        return
+    if not new:
+        set_highlight(set())
+        kine_note.text = ""
+        return
+    i = new[0]
+    pf_ids = kine_src.data["pf_id"]
+    if i >= len(pf_ids):
+        return
+    pf_id = pf_ids[i]
+    if pf_id is None or pf_id < 0:
+        set_highlight(set())
+        kine_note.text = ("row %d: no matching reconstructed particle-flow node "
+                          "&mdash; nothing to highlight" % i)
+    else:
+        d = state.get("data") or {}
+        picked = highlight_ids(d, state.get("pf_nodes") or [], pf_id,
+                               state.get("pf_index"))
+        set_highlight(picked)
+        kine_note.text = ("selected <b>%s</b>, %s MeV (id %d) &rarr; %d segment(s) highlighted"
+                          % (kine_src.data["pdg"][i], kine_src.data["ke"][i], pf_id, len(picked)))
+    state["_suppress_select"] = True
+    pf_src.selected.indices = []
+    pf_note.text = ""
+    state["_suppress_select"] = False
 
 
 def load(label):
@@ -1063,6 +1166,7 @@ for w in (cx_in, cy_in, cz_in, half_in):
 vtx_btn.on_click(on_vertex)
 pf_src.selected.on_change("indices", on_pf_select)
 pf_clear_btn.on_click(on_pf_clear)
+kine_src.selected.on_change("indices", on_kine_select)
 bdt_toggle.on_change("active", on_bdt)
 
 
@@ -1079,9 +1183,10 @@ layout = column(
     row(layer_group),
     controls,
     info,
-    row(column(pf_title, pf_table, row(pf_clear_btn), pf_note),
+    row(column(pf_title, pf_table, kine_title, kine_table,
+              row(pf_clear_btn), pf_note, kine_note),
         Spacer(width=20),
-        column(feat_div, kine_div, cos_div, bdt_toggle, bdt_div)),
+        column(feat_div, cos_div, bdt_toggle, bdt_div)),
     row(column(panel[(0, 0)]["fig"], panel[(0, 1)]["fig"], panel[(0, 2)]["fig"]),
         column(panel[(1, 0)]["fig"], panel[(1, 1)]["fig"], panel[(1, 2)]["fig"]),
         cbar_fig),
