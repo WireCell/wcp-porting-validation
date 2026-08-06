@@ -1500,17 +1500,26 @@ header = Div(text="<h2>SBND PR event display</h2>", width=1400)
 controls = row(event_select, prev_btn, next_btn, Spacer(width=20),
                zoom_btn, cx_in, cy_in, cz_in, half_in, vtx_btn)
 
-_rows = [
-    header,
+# Left column: the 3-D projections + run controls. Right column: the
+# particle-flow / kine tables, tagger info, and the dQ/dx panel -- side by
+# side rather than stacked, so a wide browser window isn't left half-empty.
+left_col = column(
     row(f_xy, f_yz, f_xz),
     row(layer_group),
     controls,
     info,
+)
+right_col = column(
     row(column(pf_title, pf_table, kine_title, kine_table,
               row(pf_clear_btn), pf_note, kine_note),
         Spacer(width=20),
         column(feat_div, cos_div, bdt_toggle, bdt_div)),
     column(dqdx_title, row(dqdx_mode, dqdx_seg_sel), f_dqdx, dqdx_caption),
+)
+
+_rows = [
+    header,
+    row(left_col, Spacer(width=30), right_col),
 ]
 # Wire-plane panels: hidden by default (sbnd_xin/docs/pr/42 -- not useful for
 # day-to-day PID work, replaced by the dQ/dx panel above), --wire-planes
