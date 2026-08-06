@@ -342,13 +342,15 @@ fi
 # doc pr/24 round 5 (sec 18): examine_vertices_3's get_local_extension
 # recovery step has no check that it actually extends the vertex (rather than
 # retracting it toward the far endpoint) -- worst on an iso_endpoint-picked
-# isochronous seed.  SBND PRODUCTION DEFAULT OFF pending owner review of the
-# round-5 gate; =1 turns the guard on for validation, =0 is the (currently
-# no-op) explicit-off spelling.
-if [ "${SBND_V3_EXT_GUARD:-0}" = 1 ]; then
-    CATH_TLA+=(--tla-code "v3_extension_guard=true")
+# isochronous seed.  DEFAULT ON since the round-6 flip (owner 2026-08-06,
+# doc pr/24 sec 19.1) -- EMPTY = no TLA = the cfg default = ON.
+# SBND_V3_EXT_GUARD=0 restores the legacy (unguarded) get_local_extension for
+# an A/B; =1 is now a no-op kept so older runner invocations still mean what
+# they said.
+if [ "${SBND_V3_EXT_GUARD:-1}" = 0 ]; then
+    CATH_TLA+=(--tla-code "v3_extension_guard=false")
 else
-    [ "${SBND_V3_EXT_GUARD:-}" = 0 ] && CATH_TLA+=(--tla-code "v3_extension_guard=false")
+    [ "${SBND_V3_EXT_GUARD:-}" = 1 ] && CATH_TLA+=(--tla-code "v3_extension_guard=true")
 fi
 [ -n "${SBND_V3_EXT_MIN_GAIN:-}" ] && CATH_TLA+=(--tla-code "v3_extension_min_gain=${SBND_V3_EXT_MIN_GAIN}")
 # Steiner TERMINAL filter fidelity (doc pr/29 D1 + D12).

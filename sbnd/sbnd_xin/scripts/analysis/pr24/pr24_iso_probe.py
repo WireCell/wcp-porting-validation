@@ -25,8 +25,10 @@ Usage:
 """
 import argparse
 import glob
+import json
 import os
 import sys
+import zipfile
 from multiprocessing import Pool
 
 import numpy as np
@@ -339,6 +341,131 @@ def junction_scan(arm, ref, evts, straight_deg=15.0, jobs=8):
           % (nbad, len(evts), straight_deg, ref or "(no ref)"), file=sys.stderr)
 
 
+def _sheet_frame(arm, evt, cid):
+    """PCA frame of one img cluster's raw point cloud, from mabc-pr.zip.
+
+    Returns (centroid, basis[3x3] columns e0=axial,e1=transverse,e2=drift-ish,
+    points[N,3], charge[N]) or None if the cluster has too few img points.
+    real_cluster_id in `clustering-global.json` is the SAME numbering as
+    sub_cluster_id // SID_DIV in T_rec_charge (doc pr/24 sec 1).
+    """
+    zp = os.path.join(arm, "pr_evt%s" % evt, "mabc-pr.zip")
+    z = zipfile.ZipFile(zp)
+    d = json.loads(z.read("data/0/0-clustering-global.json"))
+    rc = np.array(d["real_cluster_id"])
+    m = rc == cid
+    if int(m.sum()) < 20:
+        return None
+    P = np.stack([np.array(d["x"])[m], np.array(d["y"])[m], np.array(d["z"])[m]], 1)
+    Q = np.array(d["q"])[m]
+    c = P.mean(0)
+    _, s, Vt = np.linalg.svd(P - c, full_matrices=False)
+    B = np.stack([Vt[0], Vt[1], Vt[2]], 1)
+    return c, B, P, Q
+
+
+def flank(arm, evt, span_frac=0.5, angle_deg=15.0, cid=None):
+    """doc pr/24 sec 19: is a fitted segment chain a genuine flank of the
+    sheet, or a jitter/noise reach?
+
+    Builds the host/longest cluster's img-cloud PCA frame (e0 = sheet axial
+    direction, e1 = transverse, e2 = drift-plane thickness -- same recipe as
+    the doc's sec 18.2 hand analysis) and reports, per fitted segment, its
+    mean transverse offset `t` and its direction relative to e0.  The FLANK
+    SCORE is the total fitted length in segments that are BOTH far from the
+    trunk (|t_mean| > span_frac * half the sheet's 2-98%-trimmed transverse
+    span) AND running parallel to it (within angle_deg of e0) -- i.e. a
+    second line alongside the trunk, not a short perpendicular twig or a
+    single noisy point. Plain |t| percentiles (as used in doc sec 11) do NOT
+    discriminate: they are dominated by the sheet's own width regardless of
+    whether the fit tracks a real flank.
+
+    Returns a dict for programmatic use (the sec 19.7 census); also prints a
+    human-readable report.
+    """
+    path = os.path.join(arm, "pr_evt%s" % evt, "tracking-pr.root")
+    f, t, tg, kin = _load(path)
+    vtx = (float(tg["nu_x"][0]), float(tg["nu_y"][0]), float(tg["nu_z"][0]))
+    tab = _cluster_table(t)
+    host, _ = _host_of(t, vtx)
+    target = cid if cid is not None else max(tab, key=lambda k: tab[k]["len"])
+    fr = _sheet_frame(arm, evt, target)
+    if fr is None:
+        print("evt=%s cluster=%s: <20 img points, skipped" % (evt, target))
+        return dict(event=evt, cluster=target, error="no img cloud")
+    c, B, P, Q = fr
+    e0 = B[:, 0]
+    pp = (P - c) @ B
+    t_lo, t_hi = np.percentile(pp[:, 1], 2), np.percentile(pp[:, 1], 98)
+    t_half = 0.5 * (t_hi - t_lo)
+
+    sids = [s for s in sorted(set(t["sub_cluster_id"].tolist()))
+            if s >= 0 and s // SID_DIV == target]
+    rows, flank_len, tot_len = [], 0.0, 0.0
+    for sid in sids:
+        m = t["sub_cluster_id"] == sid
+        x, y, z = t["x"][m], t["y"][m], t["z"][m]
+        if len(x) < 2:
+            continue
+        ln = _seg_len(x, y, z)
+        tot_len += ln
+        pts = np.stack([x, y, z], 1)
+        pf = (pts - c) @ B
+        tmean = float(pf[:, 1].mean())
+        v = pts[-1] - pts[0]
+        n = np.linalg.norm(v)
+        ang = float(np.degrees(np.arccos(np.clip(abs(float(np.dot(v / n, e0))), -1.0, 1.0)))) if n > 0 else 90.0
+        is_flank = abs(tmean) > span_frac * t_half and ang < angle_deg
+        if is_flank:
+            flank_len += ln
+        rows.append((sid, len(x), ln, tmean, float(pf[:, 0].min()), float(pf[:, 0].max()), ang, is_flank))
+
+    print("evt=%s cluster=%s (host=%s)  img n=%d  trunk axial span=%.1f cm  "
+          "transverse 2-98%% span=%.1f..%.1f cm (half=%.1f)"
+          % (evt, target, host, len(P), np.ptp(pp[:, 0]), t_lo, t_hi, t_half))
+    bins = np.linspace(np.percentile(pp[:, 1], 1), np.percentile(pp[:, 1], 99), 16)
+    hn, edges = np.histogram(pp[:, 1], bins=bins)
+    hq, _ = np.histogram(pp[:, 1], bins=bins, weights=Q)
+    print("  img transverse charge profile (t centre, n pts, sum q):")
+    for i in range(len(hn)):
+        cen = (edges[i] + edges[i + 1]) / 2
+        print("    t=%7.1f  n=%5d  q=%9.0f  %s" % (cen, hn[i], hq[i], "#" * int(hn[i] / max(1, hn.max() // 40))))
+    print("  segments (flag F = |t_mean|>%.1f*half AND angle<%.0f deg from trunk axis e0):"
+          % (span_frac, angle_deg))
+    for sid, npt, ln, tmean, amin, amax, ang, isf in sorted(rows, key=lambda r: -r[2]):
+        print("    seg %6d n=%4d L=%6.1f  t_mean=%7.2f  axial=[%7.1f,%7.1f]  angle-to-e0=%5.1f  %s"
+              % (sid, npt, ln, tmean, amin, amax, ang, "F" if isf else ""))
+    print("  FLANK SCORE: %.1f / %.1f cm total fitted length (%.0f%%)"
+          % (flank_len, tot_len, 100.0 * flank_len / max(tot_len, 1e-9)))
+    return dict(event=evt, cluster=target, host=host, img_n=len(P), t_half=t_half,
+                tot_len=tot_len, flank_len=flank_len,
+                flank_frac=flank_len / max(tot_len, 1e-9))
+
+
+def flank_census(arm, evts, span_frac=0.5, angle_deg=15.0, jobs=8):
+    """sec 19.7: how many of a manifest's events carry a parallel flank chain
+    in their vertex-host/longest cluster."""
+    import io
+    from contextlib import redirect_stdout
+    rows = []
+    for e in evts:
+        buf = io.StringIO()
+        try:
+            with redirect_stdout(buf):
+                r = flank(arm, e, span_frac, angle_deg)
+        except Exception as ex:
+            r = dict(event=e, error=str(ex)[:80])
+        rows.append(r)
+    good = [r for r in rows if "error" not in r]
+    flagged = [r for r in good if r["flank_frac"] > 0.10]
+    print("event\tcluster\ttot_len\tflank_len\tflank_frac", file=sys.stderr)
+    for r in sorted(good, key=lambda r: -r["flank_frac"]):
+        print("%s\t%s\t%.1f\t%.1f\t%.3f" % (r["event"], r["cluster"], r["tot_len"],
+                                             r["flank_len"], r["flank_frac"]), file=sys.stderr)
+    print("# %d/%d events readable, %d carry a flank chain > 10%% of fitted length"
+          % (len(good), len(rows), len(flagged)), file=sys.stderr)
+
+
 COLS = ["event", "sel_main", "sel_len", "swap", "cosmic", "enu", "vx", "vy", "vz",
         "host", "host_len", "host_npts", "host_xext", "host_yz",
         "long_id", "long_len", "long_xext", "long_yz",
@@ -356,10 +483,26 @@ def main():
                     help="report straight-through segment junctions (doc pr/24 round 3)")
     ap.add_argument("--vs", help="reference arm to compare junction counts against")
     ap.add_argument("--straight-deg", type=float, default=15.0)
+    ap.add_argument("--flank", help="doc pr/24 sec 19: transverse-flank report for one event")
+    ap.add_argument("--flank-census", action="store_true",
+                    help="doc pr/24 sec 19.7: flank score over --events (or every event in --arm)")
+    ap.add_argument("--flank-span-frac", type=float, default=0.5)
+    ap.add_argument("--flank-angle-deg", type=float, default=15.0)
     a = ap.parse_args()
 
     if a.detail:
         detail(a.arm, a.detail)
+        return
+
+    if a.flank:
+        flank(a.arm, a.flank, a.flank_span_frac, a.flank_angle_deg)
+        return
+
+    if a.flank_census:
+        evts = a.events or sorted(os.path.basename(p)[6:]
+                                  for p in glob.glob(os.path.join(a.arm, "pr_evt*"))
+                                  if os.path.isdir(p))
+        flank_census(a.arm, evts, a.flank_span_frac, a.flank_angle_deg, a.jobs)
         return
 
     if a.junctions:

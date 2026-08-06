@@ -24,9 +24,8 @@ RETRACTED by round 5 (§18.5) — the actual culprit is one main-cluster-only
 function.**
 
 **Round 5 (§18, 2026-08-06) — ROOT CAUSE FOUND AND FIXED, new knob
-`v3_extension_guard`, C++ default `false`, SBND jsonnet default `false`
-(ships OFF pending owner review).** Round 4's "somewhere in shared
-refinement code" was wrong in both halves of that sentence: the culprit is
+`v3_extension_guard`.** Round 4's "somewhere in shared refinement code" was
+wrong in both halves of that sentence: the culprit is
 `examine_vertices_3`/`get_local_extension`, a single main-cluster-only, two-
 vertex recovery step with no other production consumer, and it is *this*
 step — not `break_segments`/`find_other_segments` — that retracts the trunk
@@ -36,6 +35,19 @@ the vertex it started from, and nothing in either the toolkit or the
 prototype ever checked for that. Knob-on smoke test recovers 3.0/4.5/0.3 cm
 undershoot (from 10.8/8.4/10.9 cm), matching or beating the legacy arm's own
 0.6/0.0/0.2 cm baseline on two of three events. See §18 for the full record.
+
+**Round 6 (§19, 2026-08-06) — `v3_extension_guard` FLIPPED TO THE SBND
+PRODUCTION DEFAULT (owner: "you can put them on for SBND running"), plus a
+second, INDEPENDENT bug found and root-caused while answering the owner's
+follow-up about evt 271851's two-line display.** The flip is cfg-only (gate
+work-pr24r6-off48 vs work-pr24r5-off48, 48/48 events, 96/96 archives
+byte-identical; wcdoctest-clus 95/95). The two-line question is NOT explained
+by `v3_extension_guard` — the flank chain is present identically with the
+guard on or off — and led to a full bisect (7 rebuilds, `12d65f1d..HEAD`)
+that isolates a **separate, already-shipped, unconditional regression** to
+commit `23bd6783` (doc pr/28 T1/T2, the revived multi-track charge veto).
+See §19 for the full record, including why this is reported, not fixed, this
+round.
 
 **Round 1 status: NO FIX ADOPTED.** Both attempts were implemented, measured and then
 **removed at the owner's direction** (2026-08-02). Nothing from this round is
@@ -1406,7 +1418,265 @@ reading any on-screen comparison.
 
 1. Is the 271851 residual (4.5 cm, 54% recovered) acceptable to ship as-is,
    or does it need the §18.6 follow-up before this knob is trusted?
-2. Flip `v3_extension_guard` to the SBND production default, or leave it OFF
-   pending a wider scan? (Not flipped this round — parallels round 3's own
-   "what made `iso_endpoint` flippable" bar: a broader sample, not just the
-   three motivating events.)
+2. ~~Flip `v3_extension_guard` to the SBND production default, or leave it
+   OFF pending a wider scan?~~ **DECIDED 2026-08-06: flip** ("you can put
+   them on for SBND running") — done in §19.1.
+
+---
+
+# Round 6 (2026-08-06) — `v3_extension_guard` flipped to production; the 271851 two-line question is a SEPARATE, already-shipped bug, bisected to `23bd6783`
+
+Owner, after round 5: *"This is good, you can put them on for SBND running. The only
+question that I have is for evt 271851, why there are two separated upper vs. lower
+half. Note, when the initial fix was done for the doc, there is only one middle line
+instead of two top vs. bottom. `docs/pics/Screenshot 2026-08-02 at 9.50.20 PM.png`."*
+
+Two independent pieces of work follow: **§19.1** flips the round-5 knob (routine, gated
+the same way `iso_endpoint` was in §16); **§19.2-19.6** answer the 271851 question, which
+turns out to have nothing to do with the knob just flipped — it bisects to a single,
+already-merged, unconditional commit (`23bd6783`, 2026-08-04) that landed the day after
+the owner's `iso_endpoint` flip and the day after the screenshot.
+
+## 19.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+git diff --stat cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet   # the whole round-6 change: one line
+./scripts/cfg/compile_prjob_cfg.sh /nfs/data/1/xqian/toolkit-dev/toolkit/cfg /tmp/bare.json
+diff /tmp/pre-flip.json /tmp/bare.json      # -> exactly +"v3_extension_guard": true
+
+cd sbnd_xin
+# G2: bare flip reproduces the validated round-5 guard-on arm
+PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr24r6-flip3 data 42280 271851 350186
+# G3/G4: full 48-event manifest, off and bare(prod)
+SBND_MAX_JOBS=6 SBND_V3_EXT_GUARD=0 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr24r6-off48  data $(ls work-nuecc48-cb0805/pr_evt* -d | sed 's#.*pr_evt##')
+SBND_MAX_JOBS=6                     ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr24r6-prod48 data $(ls work-nuecc48-cb0805/pr_evt* -d | sed 's#.*pr_evt##')
+
+# the 271851 two-line question, reproducible with the new probe mode
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-pr24r5-guard3 --flank 271851
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-pr24r4-off3   --flank 271851   # legacy: 0% flank
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-pr24r6-prod48 --flank-census   # 48-event survey
+```
+
+## 19.1 `v3_extension_guard` flipped to the SBND production default
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`: `v3_extension_guard = false` →
+`true`; `v3_extension_min_gain` stays `null` (C++ default −1 cm, key suppressed either
+way). No C++ change — `m_v3_extension_guard{false}` is still the library default; only
+the SBND operating point flips it on, exactly the `iso_endpoint` idiom (§16).
+`sbnd_xin/run_pr_chain_batch.sh`'s `SBND_V3_EXT_GUARD` escape is rewritten the same way
+`SBND_ISO_ENDPOINT` was: unset now means the cfg default (ON), `=0` restores legacy,
+`=1` is a retained no-op.
+
+| # | check | result |
+|---|---|---|
+| G1 | compiled-config proof | bare compile adds exactly `"v3_extension_guard": true`; `--tla-code v3_extension_guard=false` compiles byte-identical to the pre-flip JSON |
+| G2 | bare run == the validated round-5 knob-on arm | `work-pr24r6-flip3` (bare TLAs) vs `work-pr24r5-guard3` (`SBND_V3_EXT_GUARD=1`), evts 42280/271851/350186: **3/3 events, 6/6 archives (`mabc-pr.zip` + `pctree-pr*.tar.gz`) byte-identical** via member-content hash |
+| G3 | legacy restorable, full manifest | `work-pr24r6-off48` (`SBND_V3_EXT_GUARD=0`) vs `work-pr24r5-off48` (round-5's pre-flip reference, same HEAD): **48/48 events, 96/96 archives byte-identical**; `nusel-events.tsv` diff empty |
+| G4 | population effect, bare vs off | `work-pr24r6-prod48` vs `work-pr24r6-off48`: `nusel-events.tsv`/`nusel-table.tsv` (`event_label`, bundle/flash counts) **identical across all 48 events** — no event gains or loses a `nu-candidate` label. Per-event probe (finer-grained: `nu_x/y/z`, `kine_reco_Enu`, vertex-host cluster) shows **exactly 2/48 events move**: see below. |
+| G5 | unit tests | `./build/clus/wcdoctest-clus`: **95/95 pass** |
+
+Binary is unchanged by a cfg-only flip; freshness re-confirmed after the archaeology
+rebuilds of §19.6 (`local/lib/libWireCellClus.so`, matched size/symbols to a fresh HEAD
+build, newer than any source edit — none this round touches C++).
+
+**G4 in detail — the two events that move, both on the diagnostic geometric-vertex arm
+(`dl_weights=` empty, CLAUDE.md M4: DL/SCN kept out of gates for bit-stability):**
+
+| evt | host (off → prod) | vertex (off → prod) | `kine_reco_Enu` (off → prod) |
+|---|---|---|---|
+| 271851 | **23 (214.8 cm) → 117 (34.1 cm)** — a main-cluster swap | (−157.07,14.47,331.74) → (−157.86,34.03,393.48) | 1687.0 → 1503.9 MeV |
+| 350186 | 6 → 6 (no swap) | (−23.42,76.60,368.90) → (−19.78,85.13,352.76) | 693.1 → 859.5 MeV |
+
+271851 losing its vertex to a 34 cm stub (cluster 117) is the same *class* of pathology
+§2/§4.2/§5 spent rounds 1-3 on — worth the owner's attention — but it is measured on the
+**diagnostic** geometric vertex, not the DL vertex SBND actually runs (§11: "the SBND
+production default *is* the DL vertex"). **Reported, not chased or tuned this round**
+(CLAUDE.md §5 tie-breaker); a DL-vertex-specific check of 271851 with the guard on is the
+natural follow-up if the owner wants one. 42280 does not move here because its nu-vertex
+sits elsewhere in the event; the guard's effect there is on the trunk's fitted extent
+(§18.4), not this event's reconstructed vertex.
+
+## 19.2 The 271851 two-line question is NOT `v3_extension_guard`
+
+Same img `real_cluster_id 23` (7807 points, PCA axial span 70.1 cm), fitted-segment
+transverse offset `t` against that frame:
+
+| arm | `iso_endpoint` | `v3_extension_guard` | n segs | fit length | flank chain present |
+|---|---|---|---|---|---|
+| `work-pr24r4-off3` | OFF (legacy) | — | 4 | 112.6 cm | **no** (0.0/112.6 cm, 0%) |
+| `work-pr24r4-on3` | ON | OFF | 16 | 214.5 cm | **yes** (53.6/214.5 cm, 25%) |
+| `work-pr24r5-guard3` | ON | ON | 17 | 214.8 cm | **yes** (53.8/214.8 cm, 25%) |
+
+The flank segments (`23024` 21.0 cm, `23025` 21.1 cm, `23026` 6.8 cm, `23019` 11.6 cm) sit
+at t̄ = 9.37/11.15/11.84/7.97 with the guard **off** and 9.39/11.14/11.84/7.97 with it
+**on** — the same chain, same positions, to within 0.02 cm. `v3_extension_guard` touches
+exactly two vertices of the main cluster (§18.3) and this chain is not one of them.
+**Turning the guard on or off makes no visible difference to this event's two-line
+display.** This is the single most useful fact for the owner's question and is why the
+rest of this section bisects code that has nothing to do with round 5's fix.
+
+## 19.3 What the second line actually is
+
+Segments `23024`/`23025`/`23026`/`23019` form a ~59 cm chain hanging off the junction at
+(−156.90, 16.04, 361.69), running axially from −19.5 to +25.3 cm — i.e. **parallel to the
+trunk over almost half its 70.1 cm length**, offset t ≈ +8…+12 cm from centerline. The
+trunk itself (`23001/23003/23027/23015/23016/23014/23012/23010`, t̄ ∈ [−1.3, +1.0])
+correctly spans the sheet's full axial extent (−33.5 … +32.2 cm) — the round-2/3 fix's
+single middle line, now complete.
+
+* **Charge supports it, weakly.** The img cloud's transverse charge profile is unimodal,
+  peaked at t ≈ −0.8, with a **weak shoulder at t ≈ +8** (324 pts / 3.84 Mq vs 291 pts /
+  3.85 Mq at t ≈ +6.8) — right where the flank sits — and no charge gap between t ≈ 0 and
+  t ≈ +11. Not a fit artifact reaching into empty space.
+* **It is not the round-1 symmetric two-edge V.** §1's pathology had segments at both
+  +10…+12 AND −9…−12; today there is no negative-side partner — only the +8…+12 flank.
+* **It is not a tomographic ghost of the trunk.** The pairwise 2-D projection-overlap
+  test (doc's `--detail` ghost check) shows the flank segments share pixels with trunk
+  segments in **at most one plane** (`23012` v=0.55, `23014` w=0.47; U degenerate as
+  expected for an isochronous cluster) — the ≥2-plane threshold that flags a real
+  tomographic double never fires. The flank's charge is genuinely different (v,w) pixels
+  from the trunk's.
+* **It is low-quality charge.** `23024`'s median dQ/dx is 539 e/cm vs 2700-10600 e/cm on
+  the trunk segments — consistent with §15.6's round-3 observation that the shower's
+  outer flank is real but thin charge, not noise and not signal-grade track.
+
+## 19.4 The screenshot documents the ORIGINAL problem, not a regression
+
+Pixel analysis of the lower-left sheet in
+`docs/pics/Screenshot 2026-08-02 at 9.50.20 PM.png` (PCA frame built from the navy
+point-cloud pixels in that region; transverse span −60…+87 px):
+
+| line | n px | t: p10 | t: median | t: p90 |
+|---|---|---|---|---|
+| magenta | 700 | −54 | **−39** | 188 (tail, see caveat) |
+| cyan | 1139 | 50 | **61** | 74 |
+
+**Two lines sitting at the sheet's edges (t ≈ −39 and t ≈ +50…+74 px), with nothing at
+t ≈ 0.** This is exactly §1's original description — "one at the very top and one at the
+bottom … nothing runs down the middle" — the two-edge-track pathology `iso_endpoint`
+(§9-§15) was built to fix, photographed on **2026-08-02**, one day *before* the owner's
+`iso_endpoint` production flip (`12d65f1d`, 2026-08-03, confirmed by commit timestamp)
+and two days *before* the commit this section bisects to (`23bd6783`, 2026-08-04).
+**This screenshot cannot be showing "one middle line" — it predates the fix that
+produces one.** The owner's recollection of a single middle line matches what
+`iso_endpoint` alone produces (§11: "a connected trunk chain … no segment pair sits at
+opposite sheet edges") and is consistent with §19.6 below: the second line the owner is
+asking about did not exist yet when this image was taken. (Caveat: the magenta p90 of
+188 px is a handful of stray pixels outside the tight sheet crop, not part of the line;
+the p10/median columns are the reliable summary. No unit-calibrated overlay was done
+between this image's pixel scale and the cm-based PCA frame used elsewhere in this
+section, so no claim is made about whether the screenshot's cyan edge is the same
+physical feature as today's flank chain — only that the image is temporally and
+structurally the pre-fix two-edge state, not a "one line became two" regression.)
+
+## 19.5 Bisection: the flank is a real, dated code change
+
+`work-pr24r5-guard3`'s flank score (25%, iso ON) does not match `work-pr24r4-off3`'s
+(0%, iso OFF) — but that comparison confounds `iso_endpoint` itself (which the owner
+already reviewed and flipped) with anything that changed since. To isolate "is this
+new since the fix the owner remembers," `12d65f1d` — literally the commit that flips
+`iso_endpoint` to the SBND production default, 2026-08-03, the same day as round 2/3's
+review — was checked out and rebuilt (`clus`/`cfg`/`root` only; 5 files added after that
+commit removed from the working tree for a clean link, restored afterward; freshness
+re-proven before and after).
+
+| commit | date | flank score, evt 271851 cluster 23 |
+|---|---|---|
+| `12d65f1d` (owner's `iso_endpoint` flip) | 2026-08-03 | **0.0 / 148.2 cm (0%)** |
+| `e6c51cc5` | 2026-08-04 | 0.0 / 148.2 cm (0%) |
+| `c89cb7b4` | 2026-08-04 | 0.0 / 148.2 cm (0%) |
+| `f07c0299` | 2026-08-04 | 0.0 / 148.2 cm (0%) |
+| `01ff88b1` | 2026-08-04 | 0.0 / 148.2 cm (0%) |
+| **`23bd6783`** | **2026-08-04** | **55.2 / 262.0 cm (21%) — REGRESSION** |
+| `026a7501` | 2026-08-04 | 55.2 / 262.0 cm (21%), identical to `23bd6783` |
+| HEAD (`b4b786b0`, round 5) | 2026-08-06 | 53.8-55.2 / 214.5-214.8 cm (25%/21%) |
+
+Seven builds bracket the regression to exactly one commit:
+**`23bd6783` — "clus: revive the multi-track charge veto, key the dead-channel lookup by
+the global index, keep the trajectory on a close-vertex reset (doc pr/28 T1/T2/T3/T6,
+SBND evt 388)"**, landed 2026-08-04 — one day *after* `iso_endpoint`'s flip and the
+owner's screenshot, and shipped **unconditionally** (its own commit message: "NOT
+bit-identical, by construction"). It is a **different bug in a different stage**
+(`TrackFitting.cxx`'s multi-track fit) than round 5's (`NeutrinoStructureExaminer.cxx`'s
+vertex-extension recovery) — the "two independent bugs, same symptom vocabulary" pattern
+this doc has hit before (round 5 vs the round-5-hypothesis-that-turned-out-wrong,
+§18.2a).
+
+**Mechanism, from reading the diff (`TrackFitting.cxx::examine_segment_trajectory` /
+`skip_trajectory_point`).** Before `23bd6783`, the charge-consistency comparison array
+`pss_vec` was built from `final_ps_vec` — the very same fitted points passed in for
+testing — so `ps_point` (the "reference" position) and `p` (the point under test) were
+identical by construction; the charge ratio test could never distinguish anything, and
+its `p = ps_point` "revert to the reference position" was an arithmetic no-op (this is
+exactly `NeutrinoOtherSegments`-family T1/T2 as described in the commit message; the
+prototype passes the *pre-fit* array here, `PR3DCluster_trajectory_fit.h:429`). The fix
+builds `pss_vec` from `init_ps_vec` — the pre-fit/rough points — instead, making the
+veto live for the first time: a trajectory sample whose FITTED position's local (u,v,w)
+charge disagrees with its PRE-FIT position's charge beyond a ratio threshold now gets
+reverted, snapped back to its rough/initial position instead of keeping the smoothed fit.
+On an isochronous sheet the charge is spread across ~20+ cm of transverse extent with no
+strong preferred line (§1's original finding), so several trajectory samples along the
+shower's charge-ambiguous flank can fail the new check and get reverted onto the flank's
+rough positions rather than staying on the fitted trunk centerline; once enough
+consecutive points survive there, downstream segmentation treats them as their own
+chain instead of smoothing them back onto the trunk. This reads as a plausible,
+code-grounded account of the mechanism, consistent with the bisection; it has not been
+confirmed with the same kind of direct instrumentation §18.2 used for round 5's fix (a
+`R6DBG`-style probe on `skip_trajectory_point`'s accept/revert decisions specifically on
+271851's flank points would be the way to nail it down further).
+
+**Not independently re-attributed within the commit.** `23bd6783` bundles four
+port-fidelity fixes (T1/T2 the revived veto, T3 the dead-channel-lookup indexing, T6 the
+close-vertex-reset scope) with no per-fix knob, so this round's bisection stops at
+commit granularity. The commit's own doc pr/28 §13 record states T1+T2 "carry all of it"
+and T3/T6 are noise-floor/no-op **on evt 388** — suggestive that T1/T2 is the driver here
+too (the mechanism above is a T1/T2 effect), but this has not been independently
+re-verified on 271851 specifically.
+
+**Per CLAUDE.md §5's tie-breaker ("pre-existing bug found while doing something else:
+report, do not fix in the same change") and §2 code norms (a production file with other
+live consumers stays untouched absent an explicit go-ahead), this is reported, not
+touched, this round.** It is also, notably, a fidelity fix already reviewed and merged
+unconditionally — reopening it is a bigger decision than this round's scope.
+
+## 19.6 Census: how common is a flank chain
+
+`pr24_iso_probe.py --flank-census` over the full `work-pr24r6-prod48` manifest (host or
+longest cluster per event, same flank-score definition as §19.2/§19.3):
+
+| flank_frac | events |
+|---|---|
+| > 10% | **5/46** readable: 271851 (25.0%), 268067 (13.8%), 174637 (11.1%), 214469 (11.0%), 42280 (10.6%) |
+| 0% | 41/46 |
+
+42280 (one of round 5's three motivating events) also carries a flank chain — consistent
+with round 4/5's own undershoot measurements on that event tracing back, at least in
+part, to this same mechanism rather than purely to the `examine_vertices_3` bug round 5
+fixed. Not chased further this round (§5 rule 7: recorded, not chased); a natural next
+step if the owner wants to pursue `23bd6783`'s side effect is to check whether these 5
+events' `nue_score`/`numu_score` are affected the way §19.1's 271851/350186 vertex moves
+were.
+
+## 19.7 What this round leaves behind
+
+Scratch arms under `sbnd_xin/` (all ephemeral, safe to discard once reviewed):
+`work-pr24r6-flip3` (G2), `work-pr24r6-off48`/`work-pr24r6-prod48` (G3/G4/§19.6, keep the
+pair together), `work-pr24r6-arch1` through `work-pr24r6-arch7` (the seven bisection
+builds' single-event runs, §19.5 — safe to discard, the flank-score table above is the
+record). No `work/`, `abtest/snap/`, `decisions*/`, or `ql_labels/` trees were touched
+(M13).
+
+## 19.8 Owner decision needed
+
+1. §18.9's item 1 (271851's residual 4.5 cm on `v3_extension_guard`) is still open.
+2. **New this round**: `23bd6783` (doc pr/28 T1/T2, revived multi-track charge veto) is a
+   dated, already-shipped, unconditional regression on isochronous showers — 271851 and
+   42280 both affected, 5/46 nueCC48 events carry a >10% flank chain, and 271851's
+   diagnostic-geometric-vertex host swaps onto a 34 cm stub with it (§19.1's G4 finding,
+   same effect family). Is this worth a dedicated round (with a knob, since it is a
+   behavior change to unconditional production code), or is the current fit-quality
+   acceptable given `23bd6783` was itself a deliberate prototype-fidelity correction?
+3. Should the DL vertex (the actual SBND production path) be checked on 271851 with
+   `v3_extension_guard` on, given §19.1's G4 finding was measured on the diagnostic
+   geometric vertex only?
