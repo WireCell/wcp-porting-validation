@@ -1670,13 +1670,22 @@ record). No `work/`, `abtest/snap/`, `decisions*/`, or `ql_labels/` trees were t
 ## 19.8 Owner decision needed
 
 1. §18.9's item 1 (271851's residual 4.5 cm on `v3_extension_guard`) is still open.
-2. **New this round**: `23bd6783` (doc pr/28 T1/T2, revived multi-track charge veto) is a
+2. ~~New this round: `23bd6783` (doc pr/28 T1/T2, revived multi-track charge veto) is a
    dated, already-shipped, unconditional regression on isochronous showers — 271851 and
    42280 both affected, 5/46 nueCC48 events carry a >10% flank chain, and 271851's
    diagnostic-geometric-vertex host swaps onto a 34 cm stub with it (§19.1's G4 finding,
    same effect family). Is this worth a dedicated round (with a knob, since it is a
    behavior change to unconditional production code), or is the current fit-quality
-   acceptable given `23bd6783` was itself a deliberate prototype-fidelity correction?
+   acceptable given `23bd6783` was itself a deliberate prototype-fidelity correction?~~
+   **ADDRESSED, doc pr/28 §17 (2026-08-06, toolkit `6b219d14`):** a dedicated round —
+   `skip_revert_iso_xext_cut`, default OFF, abstains from the veto's revert on an
+   isochronous cluster (blob-center drift-x extent below a cut). Fixes 271851
+   (flank 25%→9%) and 42280 (10.6%→4%) without moving evt 388's accepted result;
+   the other 3/5 census events have large-extent hosts and are untouched by design.
+   The flip decision itself is still open (doc pr/28 §17.7 item 1) — the population
+   footprint is broader than these two events and includes two large diagnostic-vertex
+   moves (469665, 122660) that are themselves already-flagged uncertain events
+   (doc pr/28 §16.9), not a clean new signal.
 3. Should the DL vertex (the actual SBND production path) be checked on 271851 with
    `v3_extension_guard` on, given §19.1's G4 finding was measured on the diagnostic
    geometric vertex only?
