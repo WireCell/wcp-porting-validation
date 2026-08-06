@@ -312,6 +312,70 @@ event (the knob is live), and the distance-table script re-run against
 Zero reversed showers across all 9 events with the knob on; most of the
 ambiguous "other" cases resolve to "ok" too (13 → 9).
 
+## Full-scale verification (2026-08-06): 48 nueCC + 19 NCπ0 events
+
+The 9-event gate above (G2/G3) covers only a subset of the NCπ0 sample and
+used the Bee `mc.json` distance table.  Owner asked to reprocess the **full**
+`nueCC48` (48 events) and **full** `NCπ0` (19 events, not just the 9 used for
+the fix gate) samples to confirm the fix at full population scale, with the
+SBND production default (now ON, no env override needed) — and using a more
+direct, sample-agnostic check than the `mc.json`/vertex-position heuristic:
+read `calib-pr-evt<ID>.json`'s own `showers[]` + `vertices[]` directly (the
+PR chain's `pr_display` stage output, not a Bee-display derivative), resolve
+each shower's `start_vertex_id` to that vertex's fit position, and flag
+`reversed` when `dist(end, start_vertex_pos) < 1e-6 cm` while
+`dist(start, start_vertex_pos)` is not — i.e. directly testing whether
+`end_point` collapsed onto the shower's own start vertex, the exact
+pre-fix defect, regardless of whether that vertex happens to be the neutrino
+vertex (so it also works for `nueCC48`, which has no π0/γ structure to
+anchor a "distance to neutrino vertex" heuristic).
+
+```bash
+cd sbnd_xin
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh \
+    work-ncpi0-cb0805  work-pr39-verify-ncpi0-19 data   # all 19 events
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh \
+    work-nuecc48-cb0805 work-pr39-verify-nuecc48 data   # all 48 events
+python3 check_shower_endpoint.py work-pr39-verify-ncpi0-19 work-pr39-verify-nuecc48
+```
+
+(`check_shower_endpoint.py` — new, ~50 lines, described above; committed
+alongside this doc so the Repro block above is directly runnable.)
+
+Both batches: `ok: 19/19` and `ok: 48/48`, zero failures
+(`===== batch summary =====` in each run's log).
+
+| sample | events | showers checked | ok | reversed |
+|---|---:|---:|---:|---:|
+| NCπ0 (all 19, `work-ncpi0-cb0805`) | 19 | 353 | 353 | **0** |
+| nueCC (all 48, `work-nuecc48-cb0805`) | 48 | 670 | 670 | **0** |
+| **total** | **67** | **1023** | **1023** | **0** |
+
+**Zero reversed showers across all 1023 showers in all 67 events** — full
+confirmation that the fix (now the SBND production default) eliminates the
+defect at population scale, not just on the original 9-event/32-reversed
+subsample. Per-event breakdown (all 67 rows, `ok`/`reversed`/`no_start_vertex`
+columns) is committed at `docs/pr/39_verify_endpoint_check.log`; every single
+row reads `reversed=0`.
+
+**Binary-provenance caveat, stated transparently (same concurrent-session
+situation as the flip section above):** at the time these two batches ran,
+`local/lib/libWireCellClus.so` (mtime 09:44) already carried the *first* of
+several uncommitted `TrackFitting.{cxx,h}` edits from a second live session
+(feedback_concurrent_sessions_same_tree); a *further* edit to
+`TrackFitting.{cxx,h}` plus `TrackFittingPresets.h`/`PatternDebugIO.cxx`
+landed only afterward (mtime 09:54, confirmed by `ls -la` after both batches
+completed) and was never built into the library used here — so a single,
+internally-consistent binary was used across all 67 events, and no rebuild
+happened mid-run. This is not a byte-identical A/B gate (no baseline
+comparison is claimed), so partial staleness of an unrelated file wouldn't
+invalidate it regardless; noted only for the record. The reversed/ok
+determination itself is a pointer-equality-derived topological fact
+(`vtx == m_start_vertex`) reflected as an exact position match, not a
+floating-point fit-quality comparison, so it is insensitive to whatever
+TrackFitting does to segment trajectories in any case. No file belonging to
+the other session was touched, staged, or rebuilt over.
+
 ## Verification
 
 - [x] Finding 1: mechanism confirmed by reading `mc.js`/`store.js`; owner to
@@ -323,6 +387,8 @@ ambiguous "other" cases resolve to "ok" too (13 → 9).
       run/evt citation was wrong — corrected above).
 - [x] Fix: knob-off byte-identical vs clean HEAD, 18/18 archives, 9 events.
 - [x] Fix: knob-on smoke run, 32/83 → 0/83 reversed showers, quoted above.
+- [x] Fix: full-scale confirmation, 48 nueCC + all 19 NCπ0 events (not just
+      the 9-event fix subsample), 0/1023 reversed showers, quoted above.
 - [x] `wcdoctest-clus` 95/95.
 - [x] No iterated pointer-keyed containers introduced (the new check is a
       single pointer-equality test against the already-held `m_start_vertex`,
@@ -334,7 +400,8 @@ ambiguous "other" cases resolve to "ok" too (13 → 9).
       and invalidated by a concurrent session's unrelated rebuild, discarded
       rather than used, see "SBND production default flip" above.
 - **Status: Finding 1 no toolkit action needed. Finding 2 FIXED, SBND
-  PRODUCTION DEFAULT ON** since 2026-08-06 (owner: "turn it on for SBND").
+  PRODUCTION DEFAULT ON** since 2026-08-06 (owner: "turn it on for SBND"),
+  confirmed at full population scale (0/1023 reversed showers, 67 events).
   Legacy behavior restorable via `SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX=0`
   or `--tla-code shower_endpoint_exclude_start_vertex=false`. Code lives in
   `toolkit` (fix `34fc09ca`, flip `2a432b82`); this doc + the
