@@ -353,6 +353,12 @@ else
     [ "${SBND_V3_EXT_GUARD:-}" = 1 ] && CATH_TLA+=(--tla-code "v3_extension_guard=true")
 fi
 [ -n "${SBND_V3_EXT_MIN_GAIN:-}" ] && CATH_TLA+=(--tla-code "v3_extension_min_gain=${SBND_V3_EXT_MIN_GAIN}")
+# doc pr/39: exclude a shower's own start vertex from the end_point
+# farthest-vertex search (prototype map_vtx_segs parity, same rule as
+# fill_sets's exclude_start_vertex, extended to calculate_kinematics{,_long_muon}).
+# EMPTY = no TLA = cfg default false = byte-identical.  Ships OFF pending
+# owner gate review -- SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX=1 to probe.
+[ "${SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX:-0}" = 1 ] && CATH_TLA+=(--tla-code "shower_endpoint_exclude_start_vertex=true")
 # Steiner TERMINAL filter fidelity (doc pr/29 D1 + D12).
 # **SBND PRODUCTION DEFAULT ON since the owner flip 2026-08-04** -- these are
 # port bugs, not tuning: the toolkit terminal filter was tighter than the WCP
