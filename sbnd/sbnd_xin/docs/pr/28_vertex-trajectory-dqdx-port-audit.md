@@ -47,7 +47,7 @@ evt 388 acceptance are verified UNCHANGED (§17.4).
 | 8 | **§4.3 last row** `assemble_fitted_charge_2d` iterated a pointer-keyed map, making `charge_pred` run-dependent — the same-binary noise floor drops **593 → 2** leaves and `proj[]/charge_pred[]` to **zero**. **Both §11.8 container classes measured; §4.2/§4.3/§4.4 closed, §4.4 *settled*; and one newly-found pointer-ordered MUTATING traversal (`NeutrinoVertexFinder.cxx:2934`) fixed (§14.12).** | `22249ff4` | **§14** |
 | 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped (§13.7). Owner accepted the result from the event display, and there is no knob to flip: the round is unconditional (§13.12).** | `23bd6783` | **§13** |
 | 9 | **the shower-quantity nondeterminism §14.5 left** — `TrajectoryView::edges()` is an `unordered_set` hashed on `void*` node descriptors, and `Shower::get_total_length()`/`calculate_kinematics()` accumulated FP over it. **Same-binary repeat floor 1 → 0 leaves.** Plus §14.6's two live tie-only sites, the dead `GroupingHelper`, and the `SIZE_MAX` hazard closed as a class with a warn-once guard. **Two revert-proven doctests.** | `026a7501` + `84cd02e0` + `397b1517` | **§15** |
-| 10 | **`skip_revert_iso_xext_cut`** — the round-7 charge veto's revert has no protection against an isochronous cluster's two charge samples overlapping instead of resolving. Default-OFF cluster-geometry gate, abstain (keep the fitted point) when the segment's cluster has small blob-center drift-x extent. **NOT a re-opening of round 7's own fix — evt 388 verified unchanged (§17.4).** | *(this commit)* | **§17** |
+| 10 | **`skip_revert_iso_xext_cut`** — the round-7 charge veto's revert has no protection against an isochronous cluster's two charge samples overlapping instead of resolving. Cluster-geometry gate, abstain (keep the fitted point) when the segment's cluster has small blob-center drift-x extent. C++ default OFF; **SBND PRODUCTION DEFAULT since 2026-08-06 (§17.8, 20 cm)**. **NOT a re-opening of round 7's own fix — evt 388 verified unchanged (§17.4).** | `6b219d14` + flip | **§17** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
 read §3.1, §3.2, §3.3 rows a–e, §4.1, or §3b T1/T2/T3/T6 as open defects.
@@ -4003,14 +4003,14 @@ found while doing something else; do not fix it in the same change).
 
 ### §17.7 Owner decision needed
 
-1. **Whether to flip `skip_revert_iso_xext_cut` for SBND**, and at what
+1. ~~Whether to flip `skip_revert_iso_xext_cut` for SBND, and at what
    threshold (this round measured only 20 cm = 200 raw units). For: fixes the
    two events the owner specifically asked about (271851, 42280) without
    touching round 7's accepted evt 388 result. Against: G5's population
    footprint is broader and, on two events, larger than the motivating case —
    469665 (150.9 cm) and 122660 (85.2 cm) — and those two are *already* the
    events round 9 (§16.9) flagged as accepted-but-not-individually-cleared,
-   not a clean new signal.
+   not a clean new signal.~~ **DECIDED 2026-08-06: flip at 20 cm. See §17.8.**
 2. **Whether the two prototype weaknesses in §17.5 are worth a dedicated
    round** — particularly item 1 (the dilution effect), which is a second,
    independent lever on the same isochronous-cluster problem that this round
@@ -4020,5 +4020,54 @@ found while doing something else; do not fix it in the same change).
    path — carried over from doc pr/24 §19.8 item 3, now with a second,
    independent knob asking the same question.
 4. Doc pr/24 §19.8's own item 2 (whether `23bd6783` deserved a dedicated
-   round) is **addressed by this round** — not closed, since item 1 above is
-   the flip decision that remains.
+   round) is **addressed by this round.**
+
+### §17.8 `skip_revert_iso_xext_cut` FLIPPED — the SBND production default (owner 2026-08-06)
+
+After reviewing the before/after Bee sets of the 13 population-affected events
+(§17.4 G5), the owner:
+
+> *"overall better, please turn it on for these for SBND, commit and push."*
+
+**The change** — `cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json`:
+`"skip_revert_iso_xext_cut": 200.0` (20 cm, the value gated throughout §17.4)
+added to the canonical file consumed by both `wct-pr-perevt.jsonnet`'s
+default `trackfitting_config` and `clus.jsonnet`'s two `trackfitting_config_file`
+sites — a single source of truth, so the flip is unconditional and universal
+across every SBND job that reads this file, not just the PR chain.
+
+**Proof the flip took effect, and nothing else changed.** A bare run (no
+`SBND_TRACKFIT_JSON` override) of evt 271851 against the now-edited canonical
+file, `work-pr28r10-flip`, hash-matches `work-pr28r10-on-271851` (§17.4 G2's
+already-gated test arm) **exactly**:
+
+```
+aba5f5f5…  mabc-pr.zip  work-pr28r10-flip/pr_evt271851
+aba5f5f5…  mabc-pr.zip  work-pr28r10-on-271851/pr_evt271851
+```
+
+No rebuild was needed — this is a cfg-only change; `local/lib/libWireCellClus.so`
+is unchanged since the round-10 commit (`6b219d14`). The legacy path stays
+reachable via `SBND_TRACKFIT_JSON` pointing at a copy without the key (already
+proven in G1: 48/48 events, 96/96 archives byte-identical with the key absent).
+
+**What is now the SBND production default**: every number in §17.4's G2-G5 —
+evt 271851 flank 25%→**9%**, evt 42280 flank 10.6%→**4%**, evt 388's vertex and
+`numu_score` bit-identical, 13/48 nueCC48 events with a real vertex/score move
+(three large: 469665 150.9 cm, 122660 85.2 cm, 30504 41.6 cm) — is now what
+SBND reconstructs by default, not a knob-on test arm.
+
+**Bee sets, all 13 population-affected events, uploaded on request:**
+
+| | Bee set |
+|---|---|
+| before (knob off, `work-pr28r10-off48b`) | https://www.phy.bnl.gov/twister/bee/set/6ed9eb53-1152-4a28-be81-1a28a9d1a60e/event/list/ |
+| after (knob on, `work-pr28r10-on48b` — now the default) | https://www.phy.bnl.gov/twister/bee/set/f1a546b7-3341-4577-8002-540cf672a006/event/list/ |
+
+Same event order in both sets (bee index → event): 0=469665, 1=122660,
+2=271851, 3=30504, 4=52672, 5=42280, 6=350186, 7=111412, 8=342199, 9=447477,
+10=10550, 11=90055, 12=400474 (`bee/pr28r10-changed13/before.index.txt`).
+
+**Not re-measured**: §17.7 items 2-3 are unaffected by the flip and remain
+open — the dilution weakness and the DL-production-vertex question are
+independent of whether this knob defaults on.
