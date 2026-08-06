@@ -339,6 +339,18 @@ fi
 # a rebuild; SBND_ISO_TUBE_R sets the axis-tube radius in cm.
 [ -n "${SBND_ISO_MIN_ASPECT:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_min_aspect=${SBND_ISO_MIN_ASPECT}")
 [ -n "${SBND_ISO_TUBE_R:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_tube_radius=${SBND_ISO_TUBE_R}")
+# doc pr/24 round 5 (sec 18): examine_vertices_3's get_local_extension
+# recovery step has no check that it actually extends the vertex (rather than
+# retracting it toward the far endpoint) -- worst on an iso_endpoint-picked
+# isochronous seed.  SBND PRODUCTION DEFAULT OFF pending owner review of the
+# round-5 gate; =1 turns the guard on for validation, =0 is the (currently
+# no-op) explicit-off spelling.
+if [ "${SBND_V3_EXT_GUARD:-0}" = 1 ]; then
+    CATH_TLA+=(--tla-code "v3_extension_guard=true")
+else
+    [ "${SBND_V3_EXT_GUARD:-}" = 0 ] && CATH_TLA+=(--tla-code "v3_extension_guard=false")
+fi
+[ -n "${SBND_V3_EXT_MIN_GAIN:-}" ] && CATH_TLA+=(--tla-code "v3_extension_min_gain=${SBND_V3_EXT_MIN_GAIN}")
 # Steiner TERMINAL filter fidelity (doc pr/29 D1 + D12).
 # **SBND PRODUCTION DEFAULT ON since the owner flip 2026-08-04** -- these are
 # port bugs, not tuning: the toolkit terminal filter was tighter than the WCP
