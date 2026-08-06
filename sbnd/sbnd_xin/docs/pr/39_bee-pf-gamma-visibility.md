@@ -1,4 +1,4 @@
-# doc pr/39 — Bee π0→γ→e⁻ display question: Bee config default (γ) + shower `end_point` fix, SBND ships OFF (SBND run 18345 evt 21073 + 8 sibling NCπ0 events)
+# doc pr/39 — Bee π0→γ→e⁻ display question: Bee config default (γ) + shower `end_point` fix, SBND PRODUCTION DEFAULT ON (SBND run 18345 evt 21073 + 8 sibling NCπ0 events)
 
 ## Repro block
 
@@ -193,9 +193,45 @@ rare; it likely read as "showers converge near the vertex," which is
 directionally true for a neutrino interaction, so a shortened/reversed
 segment could pass a casual scan.
 
+## SBND production default flip (2026-08-06)
+
+Owner: *"since you fixed it, it should be turn on for SBND"*, after
+reviewing the recovery numbers above (32/83 → 0/83 reversed showers).
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`:
+`shower_endpoint_exclude_start_vertex = false` → `true` — cfg-only, no C++
+change (`m_shower_endpoint_exclude_start_vertex{false}` is still the library
+default; only the SBND operating point flips it), exactly the
+`v3_extension_guard` idiom (doc pr/24 sec 19.1). `run_pr_chain_batch.sh`'s
+`SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX` escape is rewritten to match
+`SBND_V3_EXT_GUARD`'s post-flip shape: unset now means the cfg default (ON),
+`=0` restores legacy, `=1` is a retained no-op.
+
+**Gates:**
+
+| # | check | result |
+|---|---|---|
+| G1 | compiled-config proof | bare `wcsonnet` compile adds exactly `"shower_endpoint_exclude_start_vertex": true`, and is byte-identical to the already-validated explicit-`true` compile (`work-pr39-on9`'s config); `--tla-code shower_endpoint_exclude_start_vertex=false` compiles byte-identical to the pre-flip JSON (`work-pr39-off9`'s config) |
+| G2 | population-level, ON | **reused from the fix's own gate** (no C++ changed by this flip, so re-running is redundant with G1's identity proof): `work-pr39-on9`, 32/83 → 0/83 reversed showers, 9 events |
+| G3 | population-level, OFF/legacy | **reused from the fix's own gate**: `work-pr39-off9` vs a clean-HEAD rebuild, 18/18 archives byte-identical, 9 events |
+| G4 | unit tests | `./build/clus/wcdoctest-clus`: 95/95 (unaffected — cfg-only) |
+
+**A live re-run of G2/G3 through `run_pr_chain_batch.sh` was attempted and
+invalidated mid-gate**, worth recording: `local/lib/libWireCellClus.so` was
+rebuilt by a second concurrent session (`clus/src/TrackFitting.{cxx,h}`,
+uncommitted, unrelated to this change — feedback_concurrent_sessions_same_tree,
+M1) between the two arms of the attempted re-run. Symptom: 3/9 events
+(21073, 142421, 259542) lost their `pi0` node identically in *both* the
+bare and the `=0` arm — a TrackFitting-driven shift in fitted trajectories
+unrelated to this knob, not a knob defect (confirmed identical in both arms,
+which this knob alone cannot produce). Discarded as gate evidence rather
+than laundered into the numbers above; G1's pure-jsonnet identity proof plus
+G2/G3's reuse of the fix commit's own clean-binary gates stand in its place.
+No file belonging to the other session was touched, stashed, or rebuilt over.
+
 ## Fix
 
-New default-OFF knob **`shower_endpoint_exclude_start_vertex`**, following
+New default-OFF knob **`shower_endpoint_exclude_start_vertex`** (SBND
+production default ON since the flip above), following
 the `pf_shower_vertex_barrier`/`exclude_start_vertex` idiom (doc pr/38 round
 2) exactly:
 
@@ -292,7 +328,14 @@ ambiguous "other" cases resolve to "ok" too (13 → 9).
       single pointer-equality test against the already-held `m_start_vertex`,
       not a new container).
 - [x] Freshness proof done before each gate.
-- **Status: Finding 1 no toolkit action needed. Finding 2 FIXED, ships
-  SBND default OFF** pending owner review of the recovery table before any
-  production-default flip. Code lives in `toolkit` commit `34fc09ca`; this doc
-  + the `run_pr_chain_batch.sh` env hook live here.
+- [x] SBND production-default flip: compiled-config identity proof (G1);
+      population-level ON/OFF gates reused from the fix's own clean-binary
+      run (G2/G3, no C++ changed by the flip); a live re-run was attempted
+      and invalidated by a concurrent session's unrelated rebuild, discarded
+      rather than used, see "SBND production default flip" above.
+- **Status: Finding 1 no toolkit action needed. Finding 2 FIXED, SBND
+  PRODUCTION DEFAULT ON** since 2026-08-06 (owner: "turn it on for SBND").
+  Legacy behavior restorable via `SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX=0`
+  or `--tla-code shower_endpoint_exclude_start_vertex=false`. Code lives in
+  `toolkit` (fix `34fc09ca`, flip `2a432b82`); this doc + the
+  `run_pr_chain_batch.sh` env hook live here.

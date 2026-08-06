@@ -356,9 +356,16 @@ fi
 # doc pr/39: exclude a shower's own start vertex from the end_point
 # farthest-vertex search (prototype map_vtx_segs parity, same rule as
 # fill_sets's exclude_start_vertex, extended to calculate_kinematics{,_long_muon}).
-# EMPTY = no TLA = cfg default false = byte-identical.  Ships OFF pending
-# owner gate review -- SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX=1 to probe.
-[ "${SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX:-0}" = 1 ] && CATH_TLA+=(--tla-code "shower_endpoint_exclude_start_vertex=true")
+# SBND production default since 2026-08-06 (owner: "turn it on for SBND"),
+# exactly the v3_extension_guard idiom -- EMPTY = no TLA = the cfg default
+# (ON).  SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX=0 restores the legacy
+# (unguarded) end_point search for an A/B; =1 is now a no-op kept so older
+# runner invocations still mean what they said.
+if [ "${SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX:-1}" = 0 ]; then
+    CATH_TLA+=(--tla-code "shower_endpoint_exclude_start_vertex=false")
+else
+    [ "${SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX:-}" = 1 ] && CATH_TLA+=(--tla-code "shower_endpoint_exclude_start_vertex=true")
+fi
 # Steiner TERMINAL filter fidelity (doc pr/29 D1 + D12).
 # **SBND PRODUCTION DEFAULT ON since the owner flip 2026-08-04** -- these are
 # port bugs, not tuning: the toolkit terminal filter was tighter than the WCP
