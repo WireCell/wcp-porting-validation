@@ -490,6 +490,21 @@ case "${SBND_NU_SKIP_COSMIC:-}" in
     1) CATH_TLA+=(--tla-code "nu_skip_cosmic=true")
        CATH_TLA+=(--tla-code "nu_skip_cosmic_bundle=true") ;;
 esac
+# doc pr/40: track (proton/pion/muon) mis-identified as electron.  Same
+# tri-state contract (unset = cfg default, 1 = force on, 0 = force off).
+#   F1 SBND_TRACK_PID_PERSIST_DQDX     persist type+mass whenever pdg_code!=0
+#   F2 SBND_SHOWER_RECLASS_DQDX_GUARD  spare a decisively proton/muon-like
+#                                      segment from wholesale reclassification
+#   F3 SBND_SHOWER_TOPO_DQDX_GUARD     same guard inside the topology test
+for _pr40 in \
+    "SBND_TRACK_PID_PERSIST_DQDX:track_pid_persist_dqdx" \
+    "SBND_SHOWER_RECLASS_DQDX_GUARD:shower_reclass_dqdx_guard" \
+    "SBND_SHOWER_TOPO_DQDX_GUARD:shower_topo_dqdx_guard" ; do
+    _env=${_pr40%%:*}; _key=${_pr40#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40 _env _key _val
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a

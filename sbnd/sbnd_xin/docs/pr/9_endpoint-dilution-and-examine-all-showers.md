@@ -213,6 +213,15 @@ alongside pr/7 §5.
   unnecessary if F1 lands (the proton becomes a good track), but closes the
   class of events where even a strong proton is demoted by the :1594
   back-to-back checks.
+  **IMPLEMENTED, doc pr/40 F2 (2026-08-06)** — shipped as
+  `shower_reclass_dqdx_guard`, SBND production default ON, generalized to a
+  dQ/dx-decisiveness test (not just a stored 2212) and applied at
+  `examine_all_showers` AND its sibling `improve_maps_shower_in_track_out`'s
+  two reclassify loops.  F1 landing was NOT sufficient on its own for two of
+  doc pr/40's nine owner-reported cases (423981, 433451): both already had a
+  confidently stored proton, and were converted anyway because their
+  `is_dir_weak` score sat just above the 0.13 threshold — exactly the
+  "even a strong proton is demoted" class this note anticipated.
 - The pr/8 three-threshold calibration (0.25 vote / 0.13 dir-weak / 0.09
   rescue) should be done jointly WITH F1, since F1 shifts the score
   distribution of exactly the affected population.

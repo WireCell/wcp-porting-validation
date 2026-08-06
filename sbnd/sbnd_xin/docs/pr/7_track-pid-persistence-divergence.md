@@ -115,7 +115,13 @@ sits in the else) -> PCA vertexing, coin-flip end. Both pr/5 symptoms
 - The trace line prints `pdg=0` with no hint that a pdg was computed and
   dropped inside the call.
 
-## 5. Proposed fix (systematic, knob-gated) — NOT yet implemented
+## 5. Proposed fix (systematic, knob-gated) — IMPLEMENTED, doc pr/40 F1 (2026-08-06)
+
+Shipped as `track_pid_persist_dqdx`, SBND production default ON, exactly the
+shape below. See doc pr/40 for the gate results and the owner-reported
+symptom (track segments displaying as electron) this closes.
+
+Original proposal, for the record:
 
 Restore prototype persistence semantics in `segment_determine_dir_track`,
 behind a config knob (C++ default false = current behavior, byte-identical):
