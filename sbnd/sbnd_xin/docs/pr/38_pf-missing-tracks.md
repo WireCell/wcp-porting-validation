@@ -160,3 +160,123 @@ NOT display-only, so it needs its own knob, gate and score-shift review.
 A second residual divergence: a shower whose start vertex sits on an orphan
 segment attaches to root here; the prototype would attach it to the orphan
 via `find_incoming_segment`.  Display-only, cosmetic, out of scope.
+
+---
+
+# Round 2 (2026-08-05 evening) — owner regressions, corrected in place
+
+## Repro block
+
+```bash
+cd sbnd_xin
+# arm A: 43f1fe25 binary; arm B: corrected binary; both barrier OFF, same cfg
+SBND_PF_SHOWER_VERTEX_BARRIER=0 PR_JOBS=4 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr38b-off{A,B} sim 219295 234638 447477 489330   # + mcp1k -> off{A,B}mc
+# ON arm (cfg defaults):
+WCT_BEE_PF_PRINT=1 PR_JOBS=4 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr38b-on7 sim 219295 234638 447477 489330        # + mcp1k -> on7mc
+python3 pr38_cmp.py work-pr38b-offA work-pr38b-offB work-pr38b-on7
+# H1 (geometric vertex): SBND_DL_WEIGHTS= ./run_pr_chain_batch.sh ... 234638 / 55715
+```
+
+## Owner report (5 problems) and what each turned out to be
+
+1. **52657 8-MeV vertex proton absent** — claimed by the BFS, hidden by the
+   10-MeV KeepMC nucleon floor.  FIXED by the floor change (below).
+2. **447477 3.2-MeV vertex proton absent** — same.  FIXED.
+3. **234638 "totally messed up, no pi/protons"** — NOT the pr/38 knobs:
+   mc.json is byte-identical across base7/off7/on7 for this event.  See
+   "Session divergence" below.
+4. **489330 proton at root instead of under the pi+** — a genuine round-1
+   implementation error.  FIXED (below); the proton 115 MeV is now claimed by
+   the BFS with `parent=4019` (the pi+ 186 MeV).
+5. **55715 "clustered as one EM shower"** — NOT the pr/38 knobs (byte-identical
+   across arms); segs 15006 (proton) / 15037 (mu) carry `shower_id 15005` in
+   this session's reconstruction.  See "Session divergence".
+
+## Round-1 error and the corrected semantics (owner: NO new knobs)
+
+The round-1 barrier ("member-segment endpoint vertices") was WRONG for
+conn-1 showers: the prototype's barrier source `map_vtx_segs` NEVER holds the
+shower's start vertex — every write path skips it
+(`if (vtx == start_vertex) continue;`, WCShower.cxx:547 two-arg
+set_start_segment, and both loops of complete_structure_with_start_segment
+:708-716/:733-745) — *including* the conn-1 case where the start vertex is an
+endpoint of the start segment.  Round 1 re-included those, so 489330's
+junction 4017 (pi+ end = proton start = conn-1 e- 64 MeV start) stayed
+blocked.  Round 1's `find_vertices`-based build also silently skipped
+stale-descriptor shower segments (PRGraph.cxx:252 returns {}), weakening the
+barrier unpredictably.
+
+Corrected implementation, folded under the EXISTING pr/34 F2 knob (both
+round-1 knobs `pf_barrier_segment_vertices` / `pf_orphan_track_roots`
+REMOVED from C++, jsonnet and the runner):
+
+- `Shower::fill_sets` gains a defaulted `exclude_start_vertex` parameter
+  (PRShower.{h,cxx}); default false = view semantics, all other callers
+  byte-identical.  `fill_bee_pf_tree` passes
+  `exclude_start_vertex = cfg.pf_shower_vertex_barrier` — no graph lookups,
+  interiors block, attachment junctions traverse.
+- The orphan root-leaf safety net is now gated by `pf_shower_vertex_barrier`
+  as its no-silent-drop complement.
+- SBND `np_ke_min` 10 → **3 MeV** (owner decision 2026-08-05): sub-10-MeV
+  protons attached at the neutrino vertex must show.  `em_ke_min` 5 MeV
+  unchanged.  Side effect (expected): small conn-3 proton showers ≥3 MeV now
+  render (e.g. 219295's 4.5-MeV blip 49053; 234638's 3.3/5.5-MeV pairs).
+
+## Verification
+
+- `wcdoctest-clus` 984/984; freshness proof done.
+- **Binary gate PASS**: work-pr38b-off{A,Amc} (43f1fe25 binary) vs
+  work-pr38b-off{B,Bmc} (corrected binary), same compiled config, barrier
+  forced OFF: 7/7 events × {mabc-pr.zip, pctree, calib-pr, nusel} identical.
+- **Compiled-config diff vs HEAD** (full-pipeline TLA): exactly
+  `np_ke_min 10→3` + the two removed pr/38 keys.  Nothing else.
+- **ON arm** (work-pr38b-on7{,mc}) vs the pr/34-legacy ON (work-pr38-base7):
+  ONLY `data/0/0-mc.json` differs (6/7 events; 55715 unchanged);
+  calib-pr and nusel TSVs byte-identical 7/7 — display-only confirmed.
+  Trees: 219295 proton 97 MeV under pi+ 238; **489330 proton 115 MeV under
+  pi+ 186** (`ADD track-node seg=4044 parent=4019`); 56243 proton 173 MeV
+  under proton 124; 52657 proton 8 MeV and 447477 proton 3 MeV at the
+  neutrino vertex.
+- Note: on these 7 events the corrected-barrier-ON output coincides
+  byte-for-byte with the barrier-OFF output — no track BFS path crosses a
+  shower interior here; the barrier's only firings were the (wrong) junction
+  blocks the correction removed.
+
+## Session divergence (234638 / 55715) — measured, NOT a display bug
+
+`scratch_wcgpu1` is a symlink to this NFS tree: everything ran on ONE host.
+The owner's cb0805 morning round (10:43-11:22, reproducible ×4 incl. the
+vf0805a/b/c repeats) and every afternoon run (19:53+, reproducible ×3) use
+the same binary lineage, the same compiled config components (42==42), the
+same pr/33 knob states (PR33AUDIT), and the same input pctrees (mtimes
+predate the morning PR runs) — yet reconstruct differently: first log
+divergence at CreateSteinerGraph (79 vs 80 clusters, 1 vs 2 in-window mains,
+cluster-4 scope flip), and the main vertex moves:
+
+- 234638: (102.82,-6.68,363.97) morning vs (103.47,-5.01,365.97) afternoon.
+  H1 measured: the afternoon DL-mode vertex EQUALS the pure-geometric vertex
+  (SBND_DL_WEIGHTS= rerun is byte-compatible), i.e. the DL re-rank changed
+  nothing in the afternoon session but moved the vertex 2.3 cm in the
+  morning one.  Downstream, the pi+ 120/protons 123+262/pi0 156 structure
+  becomes two e- showers (proton seg absorbed with `shower_id 10067`).
+- 55715: DL engaged in both sessions ((-48.00,-38.21,482.13) vs
+  (-47.99,-38.10,481.43), 0.7 cm apart — M4's documented SCN
+  non-bit-stability) and that drift flips shower clustering: the pi+ 38 MeV
+  with an e- child becomes one e- 105 MeV shower absorbing segs 15006/15037.
+
+Consequence (procedural, owner-facing): the DL/SCN vertex is not stable
+across sessions, and near-threshold events flip topology wholesale.  PF
+displays and PF-tree validation must compare arms from a SINGLE production
+round; re-running "the same" chain later is not a byte-level reference.  The
+5017 display should be re-pointed at one consistent round (e.g. the
+work-pr38b-on7{,mc} arms for these 7 events, or a fresh full production).
+
+## Still open
+
+- kine_reco_Enu residual (round 1 §Residual) — unchanged; the
+  `fill_sets(..., exclude_start_vertex)` parameter added here is the intended
+  vehicle for that follow-up.
+- Whether SBND production PR should pin the geometric vertex for
+  reproducibility (or accept per-round DL variance) — owner decision.

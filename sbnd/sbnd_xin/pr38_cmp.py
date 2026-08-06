@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""doc pr/38 gate + recovery check.
+"""doc pr/38 gate + recovery check (round 2: knobs folded into
+pf_shower_vertex_barrier, corrected barrier semantics, np_ke_min 3 MeV).
 
-Knob-off gate: work-pr38-base7{,mc} (pre-fix binary) vs work-pr38-off7{,mc}
-(post-fix binary, SBND_PF_BARRIER_SEGMENT_VERTICES=0 SBND_PF_ORPHAN_TRACK_ROOTS=0)
-must be byte-identical on all four per-event artifacts.
+Knob-off gate: arm A (pre-change binary) vs arm B (post-change binary), both
+with SBND_PF_SHOWER_VERTEX_BARRIER=0 and the same compiled config, must be
+byte-identical on all four per-event artifacts.
 
-Knob-on check: work-pr38-on7{,mc} may differ from base ONLY in
-mabc-pr.zip::data/0/0-mc.json, and the locally-missing main-cluster
-non-shower segments must be recovered there (or claimed-but-KeepMC-floored,
-reported as such).
+Knob-on check: the ON arm may differ from A ONLY in
+mabc-pr.zip::data/0/0-mc.json, and the A-missing main-cluster non-shower
+segments must be recovered there (or claimed-but-KeepMC-floored at
+np_ke_min=3 MeV, reported as such).
 
-Usage: python3 pr38_cmp.py [base_suffix off_suffix on_suffix]
-       (defaults base7/off7/on7 + the mc counterparts)
+Usage: python3 pr38_cmp.py [base_arm off_arm on_arm]  (full work-* names,
+       'mc' appended for the mcp1k family; round 2: work-pr38b-offA
+       work-pr38b-offB work-pr38b-on7)
 """
 import hashlib
 import json
@@ -24,7 +26,7 @@ EVENTS = [
     ('219295', ''), ('234638', ''), ('447477', ''), ('489330', ''),
     ('52657', 'mc'), ('55715', 'mc'), ('56243', 'mc'),
 ]
-BASE, OFF, ON = (sys.argv[1:4] if len(sys.argv) >= 4 else ('base7', 'off7', 'on7'))
+BASE, OFF, ON = (sys.argv[1:4] if len(sys.argv) >= 4 else ('work-pr38-base7', 'work-pr38-off7', 'work-pr38-on7'))
 
 
 def archive_hash(path):
@@ -61,9 +63,9 @@ def mc_ids(path, evt):
 
 ok = True
 for evt, mc_sfx in EVENTS:
-    a = SX / f'work-pr38-{BASE}{mc_sfx}'
-    b = SX / f'work-pr38-{OFF}{mc_sfx}'
-    o = SX / f'work-pr38-{ON}{mc_sfx}'
+    a = SX / f'{BASE}{mc_sfx}'
+    b = SX / f'{OFF}{mc_sfx}'
+    o = SX / f'{ON}{mc_sfx}'
     # knob-off gate
     for f in (f'pr_evt{evt}/mabc-pr.zip', f'pr_evt{evt}/pctree-pr-evt{evt}.tar.gz'):
         same = archive_hash(a / f) == archive_hash(b / f)
