@@ -505,6 +505,26 @@ for _pr40 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr40 _env _key _val
+# doc pr/40 round 2: two follow-on defects from the pr/40 fix round (zero-KE
+# persistence stub, reclass_pinfo negative-KE stub) plus a proton-daughter
+# guard.  Same tri-state contract.  F4/F6 are SBND production default ON;
+# F5 is STILL default OFF (fires but reverted downstream -- see
+# porting_dictionary.md and doc pr/40 round 2; blocked pending round 3).
+#   F4 SBND_TRACK_PID_PERSIST_4MOM       segment_cal_4mom unconditionally
+#                                        instead of a rest-mass-only stub
+#   F5 SBND_SHOWER_PROTON_DAUGHTER_PION  electron -> pion when it fathers a
+#                                        PID'd, charge-confirmed proton
+#   F6 SBND_RECLASS_NEVER_COMPUTED_KE_FLOOR  never-computed reclass_pinfo
+#                                        reads KE==0, not KE==-mass
+for _pr40r2 in \
+    "SBND_TRACK_PID_PERSIST_4MOM:track_pid_persist_4mom" \
+    "SBND_SHOWER_PROTON_DAUGHTER_PION:shower_proton_daughter_pion" \
+    "SBND_RECLASS_NEVER_COMPUTED_KE_FLOOR:reclass_never_computed_ke_floor" ; do
+    _env=${_pr40r2%%:*}; _key=${_pr40r2#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r2 _env _key _val
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a

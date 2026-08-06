@@ -434,3 +434,253 @@ grep -c track_pid_persist_dqdx <(wcsonnet --tla-str input=/dev/null --tla-code '
   --tla-str output_dir=/tmp --tla-code run=1 --tla-code subrun=1 --tla-code event=1 --tla-str reality=data \
   cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet)  # 1 (now SBND default true)
 ```
+
+---
+
+# Round 2 — two follow-on defects from the pr/40 Bee display: F4 zero-energy muon (FIXED, SBND ON), F6 negative-KE stub (FIXED, SBND ON), F5 electron-fathers-proton (NOT fixed, blocked)
+
+## Repro block
+
+```bash
+cd sbnd_xin
+
+# G1: knob-off byte-identical, current HEAD, against work-pr40-on48
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r2-off48 data
+python3 ../../abtest/hash_archive.py work-pr40r2-off48/pr_evt<ID>/{mabc-pr.zip,pctree-pr-evt<ID>.tar.gz}  # vs work-pr40-on48, x48
+
+# G2/G4: knob-on population (F5 forced on too, for measurement only -- it is
+# NOT the SBND default; see Fix below)
+SBND_TRACK_PID_PERSIST_4MOM=1 SBND_SHOWER_PROTON_DAUGHTER_PION=1 SBND_RECLASS_NEVER_COMPUTED_KE_FLOOR=1 \
+  PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r2-on48 data
+python3 scripts/analysis/pr41/pr41_check.py work-pr40r2-off48 work-pr40r2-on48
+
+# flip verification (cfg-only change for F4/F6, no rebuild)
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r2-flip-verify data 174637
+python3 ../../abtest/hash_archive.py work-pr40r2-flip-verify/pr_evt174637/mabc-pr.zip work-pr40r2-on48/pr_evt174637/mabc-pr.zip
+
+./build/clus/wcdoctest-clus
+```
+
+## Symptom
+
+Owner, reviewing the Bee display of the just-shipped pr/40 fix
+(`https://www.phy.bnl.gov/twister/bee/set/52dd2243-4e7a-4d55-8831-db12c023d0d5/event/list/`):
+
+- *"for 174637, why the muon has a 0 energy??? this is not correct."*
+- *"for 256587, the reason that it is not an electron is that in the end of
+  the particle, there is a proton, which is high dQ/dx. These two require
+  taking a look to get them completely correct."*
+- Clarifying, on 256587 specifically: *"an electron cannot change to proton.
+  So the fact that we identified a proton should change it to pion instead
+  of electron. Not sure why it was labeled as electron to start with. But
+  this is the logic."*
+
+A third defect (F6, negative kinetic energy) was found incidentally while
+tracing the first; owner: *"Fix it in this round too."*
+
+## F4 — the rescued muon carries zero energy
+
+**Root cause.** `segment_determine_dir_track`'s final store
+(`PRSegmentFunctions.cxx`) gated the 4-momentum computation on the same
+free-end test that pr/40's F1 already stopped gating type+mass persistence
+on: when the test fails, the stored 4-momentum is a rest-mass-only stub
+(`E=mass, p=0`). `D4Vector[0]` is total energy E, and
+`Aux::ParticleInfo`'s constructor computes `kinetic_energy = E - mass` — so
+the stub reads **exactly 0 MeV**, always, for every segment pr/40's own F1
+fix newly rescues into having a stored PID. Evt 174637 seg 9050 (muon,
+25.8 cm) is exactly this case.
+
+`segment_cal_4mom` (the function that should have run instead) has **no
+actual free-end dependence** — its only direction coupling,
+`segment_cal_dir_3vector`, already degrades gracefully to a zero 3-vector
+when `dirsign()==0`. The free-end gate on it was external and unnecessary.
+
+**Fix — `track_pid_persist_4mom`** (`TrackPidOptions`,
+`PRSegmentFunctions.cxx`). When true, calls `segment_cal_4mom` unconditionally
+instead of the rest-mass stub. Owner-approved approach ("Always
+segment_cal_4mom") over a narrower `dirsign==0`-only condition.
+
+**Gates.**
+- G1 (knob off): **PASS, 48/48 events, 96/96 archives byte-identical**
+  (`work-pr40r2-off48` vs `work-pr40-on48`, `hash_archive.py`).
+- G2a (evt 174637 seg 9050): off=`(mu-, 0 MeV)`, on=`(mu-, 86 MeV)`. **PASS.**
+- G4 census (zero-MeV PF nodes, all 48 events): off=1, on=**0**. **PASS.**
+
+**Flip — SBND production default ON.** Bare single-event run (no env
+override, cfg-only change) hash-matches the gated `work-pr40r2-on48` result
+for evt 174637 exactly
+(`c5c850e34c8b22925acac2ac29ef60f24244eafd5f6918bf396273783dba68f4`).
+
+## F6 — `reclass_pinfo`'s never-computed path reads a negative energy
+
+**Root cause**, found while tracing F4. `reclass_pinfo`
+(`NeutrinoTrackShowerSep.cxx`) constructs a `(mass,0,0,0)` `ParticleInfo` and
+then, on its non-hadron (`!had`) path, calls
+`set_four_momentum(D4Vector(0,0,0,0))` — zeroing E below the mass, so
+`kinetic_energy() = 0 - mass`, a **negative** number. Reachable whenever
+`reclass_preserve_4mom` (SBND default **true** since pr/40) takes this
+branch with a placeholder object that was never actually assigned a computed
+4-momentum.
+
+**Fix — `reclass_never_computed_ke_floor`** (`PatternAlgorithms`,
+`reclass_pinfo`). When true, the non-hadron/never-computed path leaves the
+constructed `(mass,0,0,0)` 4-vector in place instead of zeroing it, so
+`kinetic_energy() == 0` rather than `-mass`. All 15 `reclass_pinfo` call
+sites thread the new flag.
+
+**Gates.**
+- G1: same run as F4 above, same PASS (both knobs off together).
+- Population: **not exercised on the 48-event nueCC48 manifest** — a
+  negative-energy PF-node census found 0/0 (off/on). This flip rests on
+  direct unit-test verification of `reclass_pinfo`'s `!had`/never-computed
+  path (`doctest_clus_knob_defaults.cxx`), not on population evidence; stated
+  explicitly rather than implying a population gate that wasn't actually
+  exercised.
+
+**Flip — SBND production default ON.** Verified by doctest only, per above;
+covered by the same G1/flip-verify byte-identical checks as F4 (both knobs
+flip together in the same cfg change and the same bare-run verification).
+
+## F5 — an electron cannot father a proton (NOT FIXED — knob stays OFF)
+
+**Root cause.** `set_default_shower_particle_info`
+(`NeutrinoPatternBase.cxx`, called from `examine_direction` at stage 4) is
+the single choke point where a shower-flagged segment still missing
+`particle_info` defaults to electron — mirroring the prototype's
+`ProtoSegment::get_particle_type()`, which unconditionally returns 11 for
+any shower segment. Neither function ever looks at the graph around the
+segment. Evt 256587 seg 11079 (labelled e−, 29.2 cm, median 1.26× MIP — in
+the deliberately ambiguous band between pr/40's muon/proton thresholds, so
+F2/F3 correctly declined it) **starts exactly at the neutrino vertex**
+(d=0.00 cm) and its **far end touches a PID'd, charge-confirmed proton**
+(segment 11080, 3.7 cm, median 3.72× MIP, d=0.00 cm) — a daughter an
+electron cannot physically produce.
+
+Population census (2209 electron-labelled segments, 48 events) shaped the
+rule's width:
+
+| rule | fires |
+|---|---|
+| any electron segment with a >1.75× MIP *neighbour* (naive) | 348 — rejected |
+| + PID'd proton specifically at the far end | 15 |
+| + near end **is** the neutrino vertex (graph identity) | 6 |
+| **+ proton daughter independently charge-confirmed (>1.75× MIP)** | **5** ← shipped rule |
+
+**Fix (as designed) — `shower_proton_daughter_pion`** (`PatternAlgorithms`,
+new helper `segment_has_proton_daughter` in `PRSegmentFunctions.cxx`). When
+true, relabels the candidate segment **pion (211)**, not proton — the
+owner's explicit correction ("the fact that we identified a proton should
+change it to pion instead of electron"), reasoning that the segment itself
+cannot BE the proton, only cannot be an electron given what it fathered.
+
+**Why it does not work end-to-end.** Tracing segment 11079's `particle_info`
+writes across the whole pipeline (`WCT_PID_WRITE_DEBUG`) found not one
+writer but a chain of four:
+
+| # | writer | effect |
+|---|---|---|
+| 1 | `NeutrinoTrackShowerSep.cxx:234` (`determine_direction`, stage 3) | `pdg 0 -> 11` — unconditional electron default, no `main_vertex` in scope yet |
+| 2 | `NeutrinoTrackShowerSep.cxx:929` ×2 | no-op (`11 -> 11`) |
+| 3 | `NeutrinoPatternBase.cxx` (`set_default_shower_particle_info`, this fix) | `pdg 11 -> 211` — **the fix fires correctly** |
+| 4 | `Shower::update_particle_type` (`PRShower.cxx:788-801`, called from 9 sites in `NeutrinoShowerClustering.cxx`) | `pdg 211 -> 11` — **reverts it** |
+
+Writer #4 unconditionally reasserts electron on a shower's `m_start_segment`
+whenever `shower_length > track_length`, with **no** PID or topology
+awareness — it runs after #3 in the same pass and silently undoes it. For
+256587 specifically, this revert fires: G2b measured off/on both `pdg=11,
+flag_shower=true` — **unchanged**. Population-wide, the override survives
+end-to-end in **only 1/2209** electron-labelled segments (evt 342199 seg
+72098) — the 1-in-2209 case where writer #4 happens not to fire on the same
+shower.
+
+**Gate G2b bar, corrected.** The original plan's pass bar required
+`flag_shower` to also flip `true -> false`; F5 as designed only ever touches
+`particle_info`/pdg, never the shower flags (Bee and `PrDisplayDump` both
+read pdg, not `flag_shower`, so this is what the owner's report is actually
+about) — the bar was loosened to `pdg == 211` only. Even under the corrected
+bar this still fails for 256587, because of the writer-#4 revert above, not
+because of an overly strict check.
+
+**Left OFF, not flipped.** `shower_proton_daughter_pion` remains SBND
+default false. Turning it on today would not fix the reported case and would
+only unpredictably touch the 1-in-2209 segments where writer #4 doesn't
+collide with it — not a safe or meaningful flip. `porting_dictionary.md` and
+the knob's own docstring (`NeutrinoPatternBase.h`) both record this
+end-to-end-broken state explicitly, so a future reader doesn't have to
+re-derive the writer chain from scratch.
+
+**Round 3** (not started): guard `Shower::update_particle_type` itself —
+most likely threading a `main_vertex`/graph-aware flag through its signature
+and its 9 `NeutrinoShowerClustering.cxx` call sites (same mechanical pattern
+already used for F6's 15 `reclass_pinfo` sites) so it does not clobber a
+start segment already carrying pdg 211.
+
+## Gates summary
+
+| # | gate | bar | verdict |
+|---|---|---|---|
+| G0 | freshness | `.so` mtime newer than last edit | PASS |
+| G1 | knob-off byte-identical | 48/48 events, 96/96 archives vs `work-pr40-on48` | **PASS** |
+| G2a | evt 174637 seg 9050 energy | 0 -> nonzero | **PASS** (86 MeV) |
+| G2b | evt 256587 seg 11079 pdg | 11 -> 211 | **FAIL** (writer #4 revert, see F5) |
+| G4 | census | zero-MeV PF nodes 1 -> 0; proton-daughter rule population effect | PASS (F4); 1/2209 (F5, informational only) |
+| G5 | unit tests | `wcdoctest-clus` | **PASS, 98/98 test cases, 1016/1016 assertions** |
+| G6 | compiled-config | keys present/absent correctly; flip verified against gated arm | **PASS** |
+
+## Flip — SBND production default (owner 2026-08-06)
+
+Owner: *"for these fixed bugs, we should have their knobs on for SBND as
+default."* Two of three are actually fixed:
+
+- **F4 `track_pid_persist_4mom`: SBND ON.** G1/G2a/G4 all pass.
+- **F6 `reclass_never_computed_ke_floor`: SBND ON.** Doctest-verified;
+  covered by the same G1 byte-identical run as F4.
+- **F5 `shower_proton_daughter_pion`: left OFF.** Not actually fixed end to
+  end (see above) — flipping it would not deliver the reported behavior and
+  CLAUDE.md's stop-and-ask rule for changing a knob's production default
+  applies only to changes that are known-correct; this one demonstrably
+  isn't yet.
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`'s F4/F6 TLA defaults
+flipped `false -> true`; F5 stays `false`. Verified with a bare single-event
+run (`work-pr40r2-flip-verify`, evt 174637, no rebuild needed — cfg-only
+change): hash-matches the already-gated `work-pr40r2-on48` result exactly.
+
+## Scope and what is NOT claimed
+
+- **256587 is still not fixed.** This round diagnosed it precisely (four
+  sequential writers, the last one previously unknown) but does not close
+  it. Round 3 is needed.
+- **F6's flip rests on unit-test evidence, not population evidence** — the
+  negative-KE precondition was not observed on the nueCC48 manifest in
+  either arm. Recorded explicitly rather than implied.
+- **F5's helper (`segment_has_proton_daughter`) and its doctest are
+  correct and unit-tested** — the defect is entirely in a downstream writer
+  this round did not touch, not in the new code.
+- `PrDisplayDump.h/.cxx` changes visible in the toolkit working tree during
+  this round (`sbnd_xin/docs/pr/42`, the dQ/dx display panel) are **not**
+  part of this round and are excluded from this round's commit — different,
+  already-documented, concurrent work.
+
+## `porting_dictionary.md` entry
+
+Existing pr/40 section's 256587 note ("not a bug", genuinely ambiguous
+median dQ/dx) superseded in part: the *topology* is not ambiguous, only the
+intra-segment charge test was the wrong instrument. New section: "
+`set_default_shower_particle_info`'s electron default never consults graph
+topology — `shower_proton_daughter_pion` is a designed divergence, not a
+port correction" — includes the full writer-chain finding and an explicit
+"do not flip this knob ON" until the round-3 guard lands.
+
+## Verification (how the owner re-checks)
+
+```bash
+cd sbnd_xin
+python3 scripts/analysis/pr41/pr41_check.py work-pr40r2-off48 work-pr40r2-on48
+python3 ../../abtest/hash_archive.py work-pr40r2-off48/pr_evt<ID>/mabc-pr.zip work-pr40-on48/pr_evt<ID>/mabc-pr.zip  # x48
+./build/clus/wcdoctest-clus
+grep -E "track_pid_persist_4mom|reclass_never_computed_ke_floor" <(wcsonnet --tla-str input=/dev/null --tla-code 'anode_indices=[0,1]' \
+  --tla-str output_dir=/tmp --tla-code run=1 --tla-code subrun=1 --tla-code event=1 --tla-str reality=data \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet)  # both true (now SBND default)
+```
