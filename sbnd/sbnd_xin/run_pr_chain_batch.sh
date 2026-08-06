@@ -90,6 +90,32 @@ esac
 mkdir -p "$OUTROOT"
 OUTROOT=$(cd "$OUTROOT" && pwd -P)
 
+# doc pr/38 round 3: the PR job re-applies switch_scope's pos_offset
+# correction, gated on reality -- so the PR reality MUST match the lineage of
+# the ql_root that produced the input pctree, or borderline scope / in-window
+# / PID decisions flip wholesale (234638 red-chord track, 55715 whole-event
+# EM-shower absorb).  Every run stamps its out_root; the check reads the
+# ql_root's stamp, falling back to the reality= field of its .batch_* markers
+# (rounds that predate the stamp).  Mismatch is fatal unless
+# SBND_ALLOW_REALITY_MISMATCH=1 (deliberate cross-lineage A/B only).
+echo "$REALITY" > "$OUTROOT/.lineage_reality"
+QL_REALITY=""
+if [ -f "$QLROOT/.lineage_reality" ]; then
+    QL_REALITY=$(cat "$QLROOT/.lineage_reality")
+else
+    mapfile -t _QLR < <(grep -sho 'reality=[a-z]*' "$QLROOT"/.batch_*.log 2>/dev/null | sort -u | sed 's/reality=//')
+    if [ "${#_QLR[@]}" -gt 1 ]; then
+        echo "WARN: ql_root has MIXED reality markers (${_QLR[*]}) -- lineage check skipped, verify by hand" >&2
+    elif [ "${#_QLR[@]}" -eq 1 ]; then
+        QL_REALITY="${_QLR[0]}"
+    fi
+fi
+if [ -n "$QL_REALITY" ] && [ "$QL_REALITY" != "$REALITY" ]; then
+    echo "ERROR: reality mismatch: ql_root lineage is '$QL_REALITY' but this run was given '$REALITY'." >&2
+    echo "       (doc pr/38 round 3; set SBND_ALLOW_REALITY_MISMATCH=1 only for a deliberate cross-lineage A/B)" >&2
+    [ "${SBND_ALLOW_REALITY_MISMATCH:-0}" = "1" ] || exit 1
+fi
+
 if [ $# -ge 1 ]; then
     EVENT_IDS=("$@")
 else

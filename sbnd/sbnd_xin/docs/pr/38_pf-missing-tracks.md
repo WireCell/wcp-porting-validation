@@ -246,6 +246,14 @@ REMOVED from C++, jsonnet and the runner):
 
 ## Session divergence (234638 / 55715) — measured, NOT a display bug
 
+> **RETRACTED by Round 3 (2026-08-05 night, below).** The divergence is the
+> `reality` TLA (pos_offset transverse calibration), not DL-vertex session
+> instability. The DL vertex is consumed only at stage 11
+> (TaggerCheckNeutrino) and cannot move the stage-4 CreateSteinerGraph
+> counts quoted here; the H1 "afternoon DL == geometric" result was a
+> sim==sim comparison. The byte-evidence in this section (base==off==on for
+> these two events; single-round comparison rule) still stands.
+
 `scratch_wcgpu1` is a symlink to this NFS tree: everything ran on ONE host.
 The owner's cb0805 morning round (10:43-11:22, reproducible ×4 incl. the
 vf0805a/b/c repeats) and every afternoon run (19:53+, reproducible ×3) use
@@ -280,3 +288,123 @@ work-pr38b-on7{,mc} arms for these 7 events, or a fresh full production).
   vehicle for that follow-up.
 - Whether SBND production PR should pin the geometric vertex for
   reproducibility (or accept per-round DL variance) — owner decision.
+
+# Round 3 (2026-08-05 night) — real root cause of the 234638/55715 "mess": the `reality` TLA. Round-2 DL claim RETRACTED
+
+## Repro block
+
+```
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+# discriminator (logs already on disk; 12/12 + 7/7 across 3 binary builds):
+for d in work-*/; do m=$d.batch_pr_evt234638.log; [ -f "$m" ] || continue; \
+  printf '%-28s %s ' "${d%/}" "$(grep -o 'reality=[a-z]*' $m)"; \
+  grep -ho 'kept [0-9]* of [0-9]* cluster(s) ([0-9]* in-window[^)]*)' \
+    ${d}pr_evt234638/stdout.log | head -1; done
+# decisive experiment (HEAD df40b2a4 binary, cb0805 input pctrees):
+PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr38c-data7   data 219295 234638 447477 489330
+PR_JOBS=3 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr38c-data7mc data 52657 55715 56243
+# gate: member-hash tsv/pctree/zip-sans-mc.json vs the cb0805 arms -> 7/7 SAME
+```
+
+## Retraction
+
+Round 2's "Session divergence" section attributed the 234638/55715
+reconstruction flips to DL/SCN-vertex session instability. That is wrong,
+on two independent grounds:
+
+1. **Pipeline order.** `dl_weights` is consumed only by TaggerCheckNeutrino
+   (stage 11; TaggerCheckNeutrino.cxx:189/:803 → NeutrinoVertexFinder.cxx:3499).
+   The first divergence is at CreateSteinerGraph (stage 4) — 79 vs 80
+   clusters, 1 vs 2 in-window mains — which no vertex-stage difference can
+   produce.
+2. **The H1 experiment was vacuous.** The `SBND_DL_WEIGHTS=` rerun that
+   "matched the afternoon lineage byte-for-byte" also ran `reality=sim`, so
+   it compared sim against sim. It said nothing about the DL vertex.
+
+## Root cause
+
+`run_pr_chain_batch.sh` takes `reality` as a required positional argument.
+The owner's production rounds (`work-nuecc48-cb0805`, `work-mcp1k-cb0805`,
+`work-vfnuecc48-vf0805{a,b,c}` — the arms behind the Bee uploads) passed
+`data`; every Claude-session validation arm (pr33-*, pr38-*, pr38b-*,
+h1geo-*) passed `sim`. `reality` gates the SBND **pos_offset transverse
+cathode calibration** (clus.jsonnet:93-102, gated in 6587ed51): corrected
+points shift by `pos_offset_a0 = (0,-0.11,+0.67) cm` (TPC0) /
+`a1 = (0,+0.11,-0.67) cm` (TPC1) in the PR job's switch_scope. Note 0.67 cm
+in z ≈ 2.2 W-wire pitches: the same charge cloud lands on different wires.
+
+Evidence (all on-disk, re-checkable via the Repro block):
+
+- The `reality` marker predicts the good/bad outcome 12/12 (234638) and 7/7
+  (55715) across three binary builds spanning 14 h; binary vintage predicts
+  nothing.
+- Good−bad point/vertex deltas equal the pos_offset vectors sign-for-sign
+  per TPC (e.g. 55715 "After improve vertex" (-480.017,-382.064,4821.32) mm
+  vs (-479.897,-381.022,4814.32) mm — exactly a0).
+- Both lineages read the *same* pctree file (md5 verified), itself produced
+  by the `reality=data` cb0805 QL round — so the sim-PR arms were
+  **mixed-lineage** (data-derived pctree, sim PR correction).
+- **Decisive**: rerunning all 7 events with `reality=data` at HEAD
+  (work-pr38c-data7{,mc}) reproduces the cb0805 reference **byte-identically**
+  on nusel TSV + pctree + every mabc-pr.zip member except mc.json, whose
+  diffs are exactly the intended pr/38 changes (round-2 recoveries confirmed
+  in the production lineage: 234638 +10028 under 10059; 447477 +11063;
+  489330 +4044 under 4019; 52657 +23006; 55715 +15006/+15037 under 15005).
+  Sole exception: 219295's TSV differs in ONE derived label (stmfit
+  eval→contained) because cb0805's wct log line was torn mid-write (known
+  log-tearing artifact) and nusel_extract.py could not match
+  "fully contained"; the physics artifacts are byte-identical.
+
+## Mechanism of the visible damage (sim arms, forensics)
+
+**234638 — the "red track connecting two tracks from two sides".** In the
+sim lineage the tiny cluster 4 (1.9 cm) survives scope → 2nd in-window main
++ 2nd beam flash group → 44/80 kept at Steiner → extra TGM → different
+candidate handling; on the shifted main cluster the vertex candidate moves
+2.3 cm ((102.82,-6.68,363.97) → (103.47,-5.01,365.97) — a different
+candidate wins; the shift is nonlinear amplification, not the 0.68-cm offset
+itself). The initial PR then builds segment 35 (calib id 10035): a 50-point,
+38.2-cm "S_traj" path from the pi+ tail (97.3,-21.3,389.6) to the shower
+trunk (111.1,7.5,378.0) — the closing chord of the vertex "V". 28/50 of its
+points carry essentially no charge (middle-third mean dQ ≈ 1000 vs ≈ 37000
+for the real pi+): a trajectory drawn through empty space — the red line.
+Downstream the whole main cluster is absorbed into e- showers 10067/10068
+(pi+ 211 disappears; the pr/38-recovered proton blip rides inside 10067).
+
+**55715 — "entire structure clustered as an EM shower".** One decision
+flips. Both lineages seed a candidate shower at the 11-point pi+ vertex stub
+(seg 15005) inside `shower_clustering_connecting_to_main_vertex`
+(NeutrinoShowerClustering.cxx:246; the pdg-211 skip gate at :341 needs
+median dQ/dx > 2.0×MIP and both arms sit at 1.66/1.67). The accept/reject
+logic (:387-449 good-track veto + topology cuts, FP-knife-edge on the
+shifted fits) rejects the candidate in the data lineage and accepts it in
+sim; :469 `set_pdg(11)` then coerces the pi+ (139.57 MeV, 38.5 MeV KE) to
+e- (0.511, 15.4 MeV) — the flip measured in print_segs_info at "After
+shower clustering with NV" — and `complete_structure_with_start_segment`
+(:349, prototype-parity unbounded connectivity BFS) has swept proton 15006,
+muon 15037 and shower 15007 into shower 15005. The owner's guess ("later EM
+shower PR code") named the right stage; the trigger is the input shift, not
+a code regression — the same binary byte-reproduces the good result under
+`reality=data`.
+
+## Procedural rule + guardrail
+
+PR arms MUST pass the same `reality` as the QL round that produced the
+input pctree. `run_pr_chain_batch.sh` now writes a `.lineage_reality`
+marker into its out_root and refuses (overridable warning) when the ql_root
+carries a marker with a different value; the cb0805/vf0805 rounds predate
+the marker, so the runner also greps the ql_root's own `.batch_*` markers
+as a fallback.
+
+## Owner decisions (report only)
+
+- `reality=data` on these MC samples contradicts the clus.jsonnet:96
+  comment (pos_offset is a data-measured calibration; "applying it to MC
+  would inject a spurious shift") but is the continuity lineage of every
+  reference, Bee upload and hand-scan. Whether MC rounds should ever move
+  to `sim` is an operating-point decision — not changed here.
+- The 5017 display should serve the data-lineage arms
+  (work-pr38c-data7{,mc}) for like-for-like comparison with the Bee sets.
+- Round 2's still-open items (kine_reco_Enu residual; vertex-mode pinning)
+  are unchanged, except the "DL not bit-stable across sessions" premise is
+  withdrawn — no session-instability evidence survives this round.
