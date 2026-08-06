@@ -835,18 +835,20 @@ round 2 — see G2b bar below).
   assertions**, both before and after the guard-structure fix (`return` ->
   `if`-guarded, see Fix above).
 
-## Flip — NOT done this round
+## Flip — SBND production default (owner: "flip it default on please")
 
-`shower_proton_daughter_pion` stays SBND default **false**. Gates are clean
-and the mechanism now demonstrably works end-to-end, but the owner's earlier
-"for these fixed bugs, we should have their knobs on for SBND as default"
-(round 2) was said about F4/F6 while F5 was explicitly the broken, do-not-
-flip case — reading it as standing authorization for a knob two commits ago
-documented "do not flip" is a stretch this doc declines to make on its own.
-Flipping now also means flipping two coupled code paths together (the
-original override AND this round's guard) behind one knob, worth stating
-explicitly rather than bundling silently into a general policy. Ready to
-flip on request.
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`'s `shower_proton_
+daughter_pion` TLA default flipped `false -> true`. Cfg-only change, no
+rebuild needed. Verified with a bare single-event run
+(`work-pr40r3-flip-verify`, evt 256587, no env override): hash-matches the
+already-gated `work-pr40r3-on48` result exactly
+(`c2095b1fd3e71a47fa65b9a24a96d1c42837b9747532c6dc49eb5717fb75bc3b`).
+
+All three doc pr/40 round-2/3 knobs (`track_pid_persist_4mom`,
+`shower_proton_daughter_pion`, `reclass_never_computed_ke_floor`) are now
+SBND production defaults, alongside round 1's original three
+(`track_pid_persist_dqdx`, `shower_reclass_dqdx_guard`,
+`shower_topo_dqdx_guard`).
 
 ## `porting_dictionary.md` / knob docstring updates
 
