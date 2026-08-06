@@ -684,3 +684,188 @@ grep -E "track_pid_persist_4mom|reclass_never_computed_ke_floor" <(wcsonnet --tl
   --tla-str output_dir=/tmp --tla-code run=1 --tla-code subrun=1 --tla-code event=1 --tla-str reality=data \
   cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet)  # both true (now SBND default)
 ```
+
+---
+
+# Round 3 — closes F5: guard `Shower::update_particle_type` against the proton-daughter-pion override (gate-clean, NOT flipped)
+
+## Repro block
+
+```bash
+cd sbnd_xin
+
+# demonstration: evt 256587 seg 11079 survives 211 end-to-end
+SBND_TRACK_PID_PERSIST_4MOM=1 SBND_SHOWER_PROTON_DAUGHTER_PION=1 SBND_RECLASS_NEVER_COMPUTED_KE_FLOOR=1 \
+  WCT_PID_WRITE_DEBUG=1 PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r3-dbg256587 data 256587
+grep "gidx=79 " work-pr40r3-dbg256587/pr_evt256587/stdout.log   # last write: 11 -> 211, no revert
+
+# G1: knob-off byte-identical -- true apples-to-apples needs a git-stash clean
+# reference, since F4/F6 are now SBND defaults (round 2) and work-pr40-on48
+# predates them
+git stash push -m "pr40r3-g1-clean-check" -- clus/inc/WireCellClus/PRShower.h clus/src/NeutrinoShowerClustering.cxx clus/src/PRShower.cxx
+wcbuild
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r3-cleanref48 data
+git stash pop
+wcbuild   # M1 freshness proof
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r3-off48 data
+python3 ../../abtest/hash_archive.py work-pr40r3-off48/pr_evt<ID>/{mabc-pr.zip,pctree-pr-evt<ID>.tar.gz}  # vs work-pr40r3-cleanref48, x48
+
+# G2/G4: population impact
+SBND_TRACK_PID_PERSIST_4MOM=1 SBND_SHOWER_PROTON_DAUGHTER_PION=1 SBND_RECLASS_NEVER_COMPUTED_KE_FLOOR=1 \
+  PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r3-on48 data
+python3 scripts/analysis/pr41/pr41_check.py work-pr40r3-off48 work-pr40r3-on48
+diff <(sort work-pr40r3-off48/nusel-table.tsv) <(sort work-pr40r3-on48/nusel-table.tsv)  # 0 lines
+
+./build/clus/wcdoctest-clus
+```
+
+## What this round does
+
+Round 2 traced F5 (`shower_proton_daughter_pion`) end-to-end: the override
+fires correctly at `set_default_shower_particle_info`
+(`NeutrinoPatternBase.cxx`, `pdg 11 -> 211`) but is silently reverted moments
+later by `Shower::update_particle_type` (`PRShower.cxx`, called from 8 sites
+in `NeutrinoShowerClustering.cxx`), which unconditionally reasserts electron
+on a shower's start segment whenever `shower_length > track_length`. Owner:
+*"Yes, I like the first option"* — guard the reassignment itself (skip it
+when a start segment is already a proton-daughter-confirmed pion) rather
+than broadening the length-majority classification's own criteria (which
+would touch every shower in the pipeline with a non-electron, non-proton
+PID'd segment, not just this case).
+
+**Why the guard is the narrower fix.** `update_particle_type`'s
+classification (`is_shower || is_not_proton`) only exempts a segment from
+`shower_length` if it is BOTH not shower-flagged AND specifically PID'd
+proton (2212) — every other pdg, including a freshly-relabelled pion (211),
+still counts toward `shower_length` regardless of flags. So the broader
+option (teach the classification to also recognize pion/muon as track-like)
+would change the shower/track majority vote for every shower with such a
+segment anywhere in the pipeline; the guard only intercepts the one
+reassignment this round's fix specifically produced.
+
+## Fix
+
+`Shower::update_particle_type` (`PRShower.h`/`.cxx`) gains two trailing
+parameters, both legacy-default (`nullptr`/`false` = byte-identical):
+`VertexPtr main_vertex` and `bool protect_proton_daughter_pion`. Every one
+of the 8 `NeutrinoShowerClustering.cxx` call sites already had both `graph`
+(reused via the Shower's own `m_full_graph` member, not a new parameter) and
+`main_vertex` in scope — no stage-3/stage-4 availability problem here, unlike
+F5's own choke point in round 2. Threaded as
+`update_particle_type(particle_data, recomb_model, m_mip_dqdx, main_vertex,
+m_shower_proton_daughter_pion, m_mip_dqdx_median)`.
+
+Inside the reassignment block, when the guard is active it re-derives
+`segment_has_proton_daughter(m_full_graph, m_start_segment, main_vertex,
+proton_daughter_mip_dqdx)` and, if it fires, skips the electron reassignment
+entirely (if-guarded, not an early `return` — keeps future additions to this
+function from being silently skipped for a protected shower).
+
+**MIP-scale finding, not just an implementation detail.** The function's
+existing `mip_dqdx` parameter (bound to `m_mip_dqdx` = 50000/units::cm, the
+flat-template amplitude used for the reassigned electron's 4-momentum) is a
+DIFFERENT scale than what F5's original check used
+(`m_mip_dqdx_median` = 43000/units::cm). Reusing `mip_dqdx` for the guard's
+re-check would have compared the proton daughter's dQ/dx against a 16%
+higher threshold (1.75×50000 vs 1.75×43000) than `set_default_shower_
+particle_info` used, meaning the guard could disagree with F5's own verdict
+on borderline daughters and silently fail to protect a segment F5 legitimately
+relabelled. A sixth parameter, `proton_daughter_mip_dqdx`, carries
+`m_mip_dqdx_median` in explicitly so the guard's re-check uses the SAME
+scale as the original decision. Do not simplify this back to reusing
+`mip_dqdx` — the two scales measure different things and the match is not
+coincidental.
+
+**Guard scope is broader than the reported case, by design.**
+`segment_has_proton_daughter` requires graph-identity emanation from
+`main_vertex`; three of the 8 call sites (`shower_clustering_in_other_
+clusters`, `examine_shower_1`, `examine_showers`) process showers in OTHER
+clusters, whose own main vertex is not the `main_vertex` argument passed in
+— for those, `find_vertices` simply won't match and the guard correctly
+returns false. This is why the population measurement (G4 below), not just
+the single-event demonstration, is the real check that the guard fires only
+where intended.
+
+## Demonstration — evt 256587 seg 11079
+
+`WCT_PID_WRITE_DEBUG` trace, all 3 round-2/3 knobs forced on:
+
+```
+gidx=79 pdg 0 -> 11    NeutrinoTrackShowerSep.cxx:234   (stage 3)
+gidx=79 pdg 11 -> 11   NeutrinoTrackShowerSep.cxx:929   (no-op) x2
+gidx=79 pdg 11 -> 211  NeutrinoPatternBase.cxx:176      (F5 fires)
+```
+
+No further write to `gidx=79` for the rest of the run — the
+`PRShower.cxx:801` revert that fired every time in round 2 does not fire
+here. Confirmed in the final `calib-pr-evt256587.json`: `particle_id: 211`,
+`flag_shower: true` (flags intentionally untouched, as designed since
+round 2 — see G2b bar below).
+
+## Gates
+
+- **G0 freshness**: `.so` mtime newer than every touched source file,
+  verified before each gate below (`wcbuild`, `ls -la`).
+- **G1 knob-off byte-identical**: **PASS, 48/48 events, 96/96 archives.**
+  `work-pr40r3-off48` (round-3 code, current SBND defaults: F4/F6 on, F5
+  off) vs `work-pr40r3-cleanref48` — a git-stash clean-HEAD (`11bbfd75`)
+  reference at the SAME defaults, built specifically because `work-pr40-on48`
+  (round 1's reference) predates F4/F6 and is no longer a valid "off"
+  baseline for this round's diff (confirmed: `work-pr40r3-off48`'s only
+  divergence from `work-pr40-on48`, evt 174637's `mabc-pr.zip`, hash-matches
+  round 2's `work-pr40r2-on48` exactly — fully explained by F4 being SBND
+  default now, not a round-3 regression; see "GOTCHA" in memory).
+- **G2a** (evt 174637, unaffected by this round): off=on=86 MeV. **PASS**,
+  confirms round 3 didn't disturb F4.
+- **G2b** (evt 256587 seg 11079): off `pdg=11`, on `pdg=211`. **PASS** — the
+  case this whole investigation started from is now fixed.
+- **G4 census**: PF nodes at 0 MeV: 0/0 (F4/F6 unaffected). Segments moved
+  `11 -> 211`: **exactly 2** (evt 256587 seg 11079 — newly fixed; evt 342199
+  seg 72098 — the one case that already survived in round 2's measurement).
+  Matches the round-2 population prediction (5/2209 upper bound on where the
+  rule *can* fire; not every one of the 5 is a shower's start segment with
+  `shower_length > track_length`, so 2 actually reaching the guarded branch
+  is consistent, not a discrepancy).
+- **Population regression check**: `nusel-table.tsv` off vs on, all 48
+  events, sorted diff: **0 lines** — zero verdict/feature-column impact
+  anywhere on the manifest beyond the 2 segments' own pdg.
+- **G5 unit tests**: `wcdoctest-clus` **98/98 test cases, 1016/1016
+  assertions**, both before and after the guard-structure fix (`return` ->
+  `if`-guarded, see Fix above).
+
+## Flip — NOT done this round
+
+`shower_proton_daughter_pion` stays SBND default **false**. Gates are clean
+and the mechanism now demonstrably works end-to-end, but the owner's earlier
+"for these fixed bugs, we should have their knobs on for SBND as default"
+(round 2) was said about F4/F6 while F5 was explicitly the broken, do-not-
+flip case — reading it as standing authorization for a knob two commits ago
+documented "do not flip" is a stretch this doc declines to make on its own.
+Flipping now also means flipping two coupled code paths together (the
+original override AND this round's guard) behind one knob, worth stating
+explicitly rather than bundling silently into a general policy. Ready to
+flip on request.
+
+## `porting_dictionary.md` / knob docstring updates
+
+Both the `shower_proton_daughter_pion` entry (`porting_dictionary.md`) and
+its docstring (`NeutrinoPatternBase.h`) — which round 2 explicitly marked
+"KNOWN BROKEN END-TO-END... do not flip" — are updated to record that the
+writer-chain is now closed, gates pass, and the knob is flip-ready pending
+owner request. The new `PRShower.h` docstring on `update_particle_type`
+documents the guard's own default-off, byte-identical contract.
+
+## Scope and what is NOT claimed
+
+- **Not flipped** — see above.
+- **The guard's `main_vertex` scoping to the immediate cluster is correct
+  behavior, not a limitation** — a shower in a different cluster has a
+  different main vertex, and the F5 relabeling rule was never meant to
+  apply there. Population measurement (G4) confirms no unintended firing.
+- **This closes F5 as a mechanism**, not as an open-ended guarantee that
+  every possible proton-daughter-pion case in the full detector will be
+  found — the underlying rule (5/2209 in this round's population framing)
+  was scoped and owner-approved in round 2; this round only makes that rule
+  reach the output reliably.
