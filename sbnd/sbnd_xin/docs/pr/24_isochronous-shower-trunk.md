@@ -10,6 +10,17 @@ the branch entirely. One number moved the wrong way and is reported, not tuned:
 §15.6/§16.2, evt 271851 on the diagnostic geometric arm. Round 1 below stands
 as the diagnosis record: both of its attempts were REJECTED and removed.
 
+**Round 4 (§17, 2026-08-06) — DIAGNOSIS ONLY, no code change, `iso_endpoint`
+default unchanged at `true`.** The owner reported the trunk still "does not
+cover the entire image" on three post-flip events (42280, 271851, 350186) and
+suspected the knob was off. It was not — round 4 shows the seed and the very
+first fit reach the image edge correctly, and the shortfall is manufactured
+**downstream**, in the universal (non-`iso_endpoint`-gated) multi-round
+refinement every cluster in every detector goes through. Same shape as round
+1: real defect found, root mechanism not yet safe to fix in one sitting,
+owner direction needed before touching shared code. See §17.10 for why this
+round stops at diagnosis.
+
 **Round 1 status: NO FIX ADOPTED.** Both attempts were implemented, measured and then
 **removed at the owner's direction** (2026-08-02). Nothing from this round is
 in the chain: the toolkit is back to its pre-round state and the compiled PR
@@ -794,3 +805,256 @@ cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-flip1 data 271851
 SBND_ISO_ENDPOINT=0 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-poc0 work-pr24r3-flipoff1 data 271851
 ```
+
+---
+
+# Round 4 (2026-08-06) — the trunk still stops short: a downstream regression, not an endpoint-pick bug
+
+**Status: DIAGNOSIS ONLY. No code changed. `iso_endpoint` stays `true` at its
+current tuning.** Owner report on three events served on the port-5017 PR
+display: "the end point of the track trajectory does not cover the entire
+image... it may be due to the knob was not on for the processing, but the
+problem can very well be deeper." The knob-off hypothesis is disproven; the
+"deeper" hypothesis is confirmed, and localized to code the knob does not
+gate.
+
+## 17.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# freshness proof, then the byte-identity + A/B pair (clean HEAD binary, df40b2a4-era):
+ls -la /nfs/data/1/xqian/toolkit-dev/local/lib/libWireCellClus.so
+PR_JOBS=3 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr24r4-on3  data 42280 271851 350186
+PR_JOBS=3 SBND_ISO_ENDPOINT=0 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr24r4-off3 data 42280 271851 350186
+
+# the premise check
+grep -h "iso endpoint" work-nuecc48-cb0805/pr_evt{42280,271851,350186}/wct_pr_evt*.log
+```
+
+`work-pr24r4-on3` reproduces `work-nuecc48-cb0805` (the arm served on 5017)
+byte-for-byte on `clustering-global`/`track_fit-global`/`vertices-global`
+inside `mabc-pr.zip` for all three events; only `0-mc.json` differs, because
+`work-nuecc48-cb0805` carries the extra `pr_display` pipeline stage — a
+harmless dump-only addition, not a reconstruction difference. So the coverage
+numbers below, measured on `work-nuecc48-cb0805`, are exactly what 5017 shows.
+
+## 17.1 The premise check: the knob was on
+
+`iso_endpoint = true` has been the SBND production default since `12d65f1d`
+(§16); the runner leaves it on unless `SBND_ISO_ENDPOINT=0`
+(`run_pr_chain_batch.sh:331`); and the gate **fired exactly once in each of
+the three events**, in the arm 5017 serves:
+
+```
+evt42280  iso endpoint: fired (L=125.4 cm, xext=10.6 cm, aspect=0.308, n=15121) A=(14.9,-12.7,91.7)   B=(25.6,14.9,211.6)  gain=11.6/22.7 cm walk=0.00/0.00 cm dperp=0.7/2.0 cm intube=true/true
+evt271851 iso endpoint: fired (L= 70.8 cm, xext= 7.5 cm, aspect=0.347, n= 7696) A=(-157.6,31.9,378.4) B=(-155.7,4.1,317.6) gain= 6.5/3.8 cm walk=0.00/0.00 cm dperp=0.2/0.1 cm intube=true/true
+evt350186 iso endpoint: fired (L= 49.0 cm, xext=12.8 cm, aspect=0.269, n= 2782) A=(-24.9,83.5,377.2)  B=(-14.0,83.8,335.3) gain= 1.3/4.4 cm walk=0.00/0.00 cm dperp=0.5/0.3 cm intube=true/true
+```
+(`work-nuecc48-cb0805/pr_evt<ID>/wct_pr_evt<ID>.log:196/168/185`; no
+`rejected by aspect` line anywhere; byte-identical in the newer
+`work-vfnuecc48-vf0805{a,b,c}`.) No log-level blind spot: DEBUG is on
+(`run_pr_evt.sh` invokes `-L debug`), and 280-310 other `D [...]` lines fire
+per event.
+
+Owner's "cluster 10" for 350186 does not match any id in the served output —
+the point sits in `cluster_id = real_cluster_id = 6`. Likely a 5017-display
+indexing artifact (Bee-side list position vs. PR cluster id); flagged, not
+chased this round.
+
+## 17.2 The real symptom: `iso_endpoint` ON is *worse* than legacy at the failing end
+
+Measured from `mabc-pr.zip`'s `0-clustering-global.json` (the img cloud) vs.
+`0-track_fit-global.json` (the delivered trajectory), same clean binary, same
+input, only `SBND_ISO_ENDPOINT` toggled:
+
+| evt | cluster | axis | image extent | **ON** fit extent | **OFF** fit extent | ON undershoot | OFF undershoot |
+|---|---|---|---|---|---|---|---|
+| 42280  | 8  | z | 88.4 … 212.2 | **99.2** … 211.9 | **89.0** … 211.9 | 10.8 cm | 0.6 cm |
+| 271851 | 23 | z | 315.4 … 379.0 | **323.8** … 378.3 | **315.4** … 378.5 | 8.4 cm | **0.0 cm** |
+| 350186 | 6  | z | 334.4 … 378.4 | **345.3** … 376.3 | **334.6** … 377.5 | 10.9 cm | 0.2 cm |
+
+This directly contradicts the round-2/3 framing that legacy "picks the widest
+wire-footprint pair, two corners on the sheet's edges" and that
+`iso_endpoint`'s job is to do better than that. On these three events legacy
+reaches the image edge almost exactly, and `iso_endpoint` — the production
+default — reaches 8-11 cm *less far*, over well-charged image points (evt
+42280's uncovered z∈[88,100) band alone: 357 cluster-8 points, median charge
+11-17k; 25.4% of the whole cluster's img points sit >5 cm from any delivered
+fit point, of any cluster). The owner's "the problem can very well be
+deeper" instinct was right on both counts: it is deeper than the endpoint
+pick, and on these events the endpoint pick is not even the wrong direction —
+downstream processing is what undoes it.
+
+## 17.3 Ruling out the two nearest suspects
+
+**Not the sheet-aspect gate.** The gate's `aspect` (2nd-PCA transverse over
+1st-PCA axial extent, both 2%-trimmed, on the SAME charge-qualified point set
+the legacy search uses) was independently recomputed offline from the raw img
+cloud (numpy power iteration, same algorithm) for all three clusters:
+
+| evt | C++ aspect (log) | independent recompute | C++ xext (log) | independent xext |
+|---|---|---|---|---|
+| 42280  | 0.308 | 0.313 | 10.6 cm | 10.6 cm |
+| 271851 | 0.347 | 0.349 | 7.5 cm | 7.5 cm |
+| 350186 | 0.269 | 0.269 | 12.8 cm | 12.8 cm |
+
+Matches to 2%. The independent axial/transverse extents in absolute terms:
+42280's cluster is 94-128 cm long (trimmed/full) and **29 cm wide** in its
+own transverse PCA direction — a genuine 2-D sheet by any reasonable
+definition, not a track the gate mis-admitted. (The `pr24_iso_probe.py`
+"iso-ratio" quoted elsewhere in this doc, e.g. cluster 8 = 0.028, measures a
+*different* object at a *different* time — the final ~406 cm merged main
+cluster *after* all downstream clustering, not the ~125 cm graph-cluster
+`iso_endpoint` gated *before* it. The two numbers were never comparable; the
+gate itself checks out.)
+
+**Not `iso_endpoint`'s own walk-in/qualification logic.** All three `fired`
+lines report `walk=0.00/0.00` — the axial-extreme search never had to retreat
+from spike-support filtering; the raw extreme was accepted on the first try.
+The 3-cm gap between the seed and the true image edge (e.g. 42280's A =
+z 91.7 vs. image z-min 88.4) is the *lateral-centering* step doing its job:
+among points within a 3 cm band of the axial extreme, it picks the one
+closest to the principal axis line, not the absolute-extreme point — exactly
+the trade this branch exists to make (round 2's whole motivation was to stop
+picking sheet-edge corners). That is a small, deliberate, few-cm effect. It
+does not explain an *additional* 7-11 cm loss on top of it.
+
+## 17.4 Localizing the loss: it happens after a correct first fit, downstream of `init_first_segment`
+
+Temporary `SPDLOG_LOGGER_DEBUG` checkpoints were added (not committed; source
+reverted to HEAD after this measurement, binary rebuilt clean and freshness-
+proven again before the §17.0 gate arms) at three points in
+`init_first_segment` (`NeutrinoPatternBase.cxx`): the raw endpoint pick, the
+Dijkstra rough-path front/back, and the post-`do_single_tracking` fit
+endpoints (`v1->fit().point` / `v2->fit().point`). On evt 42280 (single
+target cluster, cleanest case):
+
+```
+iso endpoint: fired ... A=(14.94,-12.71,91.73) B=(25.56,14.92,211.58)
+checkpoint 1  raw endpoints:   A=(14.94,-12.71,91.73) B=(25.56,14.92,211.58)
+checkpoint 2  Dijkstra rough:  front=(25.56,14.92,211.58) back=(14.94,-12.71,91.73) npts=79
+checkpoint 3  post-fit:        v1=(25.59,14.84,211.96)    v2=(14.57,-12.11,91.56)   fine_n=215
+```
+
+**The seed and the very first fit both land within 0.3-0.5 cm of the iso
+pick, i.e. ~3.3 cm of the true image edge — matching the legacy arm's own
+result to within the small, deliberate lateral-centering offset from §17.3.**
+Nothing is wrong yet. `init_first_segment` does its job correctly on this
+event, for both the endpoint pick and the trajectory fit.
+
+The loss appears afterward, in the do-multi-tracking / break / find-other-
+segments refinement loop every cluster (main or not, every detector) goes
+through after its first segment is built (`find_proto_vertex`,
+`NeutrinoPatternBase.cxx:2014` → `break_segments` → `find_other_segments` ×
+`nrounds_find_other_tracks` → `examine_structure_3` → final
+`do_multi_tracking`). Instrumenting `organize_segments_path`'s per-round
+end-vertex handling (the function `do_multi_tracking` calls to re-derive fit
+points from each segment's *rough* `wcpts()`, not its already-fitted path)
+shows the trunk's low-end vertex holding steady at the checkpoint-3 position
+for ~30 refinement rounds, then being **replaced outright** — a new `Vertex`
+object, a freshly re-run Dijkstra rough path (`wcpts_n` jumps from 18 to 74)
+— landing at z≈99, coincident with the moment `find_other_segments`
+processes newly-identified untagged fragments elsewhere in the same cluster
+(satellite clusters 26/27/30/32 get their own `init_first_segment` calls in
+the same log window). The identical instrumentation on the legacy (OFF) arm
+shows the *same kind* of replacement event, but landing within ~1 cm of its
+own (already-good) seed. So the replacement mechanism itself is shared and
+not obviously buggy — what differs is how far it retreats the two arms'
+seeds, and that difference (~1 cm legacy vs. ~7.5 cm iso) is the open
+question.
+
+**This mechanism is not gated by `iso_endpoint`.** `organize_segments_path`,
+`do_multi_tracking`, `break_segments`, and `find_other_segments` run
+identically regardless of the knob; the only thing the knob touches is where
+`init_first_segment` starts (§17.1's checkpoint 1). The regression this round
+found therefore cannot be fixed inside `find_iso_first_segment_endpoints` —
+that function is already doing what it is designed to do.
+
+## 17.5 Why this round stops at diagnosis
+
+Continuing to a fix would mean instrumenting and modifying `break_segments`
+and/or `find_other_segments` — prototype-ported, universally shared code that
+every cluster in every detector's PR chain runs through, with a kink-search
+loop (`segment_search_kink`, `proto_extend_point`) whose exact trigger for
+this asymmetric retreat is not yet identified. That is squarely the CLAUDE.md
+bar for stopping rather than iterating into a guess (§5 rule 5: an
+unexplained divergence gets reported, not chased into a fix) and for the
+fork-vs-generalize caution around production components with other live
+consumers (§2 Code): a same-session, not-fully-understood change to
+`break_segments` risks moving physics output for every event in every
+detector, silently. Round 1 of this same doc set this precedent — diagnosis
+without fix, explicit owner direction requested for the next round — and it
+applies again here.
+
+## 17.6 What's confirmed vs. what's open
+
+**Confirmed:**
+* The premise ("knob was off") is false; `iso_endpoint` fired correctly.
+* `iso_endpoint`'s endpoint pick and the immediate post-fit trajectory both
+  land close (~3 cm, by design) to the true edge — round 2/3's fix works as
+  intended at the point it operates.
+* The 8-11 cm shortfall on the display is manufactured **later**, in the
+  shared do-multi-tracking/break/find-other-segments loop, which replaces the
+  trunk's low-end vertex with one that has retreated much further than the
+  legacy arm's equivalent replacement.
+* The sheet-aspect gate is measuring correctly (independently recomputed);
+  this is not a gate-tuning problem.
+
+**Open, for the next round:**
+* Why does the shared refinement loop retreat the iso-derived seed ~7x
+  farther than the legacy seed on these events? Candidates to instrument
+  next: `segment_search_kink`'s dQ/dx-median test at the tip (does the small
+  iso-vs-legacy seed difference interact with a *nearby* find-other-segments
+  fragment to manufacture a kink where none exists on the legacy path?), and
+  whether the replacement is a genuine `break_segments` split (with the
+  91-99 cm piece surviving as an orphan that's later dropped) or a full
+  re-derivation via a different code path.
+* This may be the same failure family as round 3's own residual (§15.6,
+  271851 geometric arm): the endpoint rule manufacturing a low-quality tail
+  segment that a later stage mishandles. Worth checking together.
+* 350186's owner-quoted "cluster 10" display-id mismatch (§17.1).
+
+## 17.7 Gates run this round
+
+| check | result |
+|---|---|
+| freshness proof, clean HEAD binary | `libWireCellClus.so` rebuilt after reverting all diagnostic instrumentation; size byte-identical to the pre-instrumentation build |
+| `work-pr24r4-on3` vs `work-nuecc48-cb0805` (the 5017 arm) | `clustering-global`/`track_fit-global`/`vertices-global` identical, all 3 events; only `mc.json` differs (extra `pr_display` stage in the served arm) |
+| `work-pr24r4-on3` vs `work-pr24r4-off3` | `clustering-global` identical (upstream imaging unaffected, as expected); `track_fit-global`/`shower_track-global`/`vertices-global`/`mc.json` differ, all 3 events — confirms the knob has a real, measurable downstream effect |
+
+No production code changed this round, so no knob-off byte-identity gate on
+the 48-event manifest is required or was run.
+
+## 17.8 What this round leaves behind
+
+* This doc section (§17).
+* No code, no cfg, no new knob.
+* Scratch arms `work-pr24r4-on3`, `work-pr24r4-off3` (clean-binary, cited
+  above) and `work-pr24r4-dbgon2`/`dbgoff2` (instrumented-binary,
+  diagnostic-only — the `wct_pr_evt42280.log` files back the §17.4 quotes;
+  not gate evidence, not hand-scan records, safe to discard whenever).
+
+## 17.9 Runner hygiene note (found in passing, not fixed this round)
+
+`run_pr_chain_batch.sh:336-341`'s comment claims `SBND_ISO_MIN_ASPECT` /
+`SBND_ISO_TUBE_R` are inert unless `SBND_ISO_ENDPOINT=1`. Since the §16 flip
+that is stale: both TLAs are emitted whenever the corresponding env var is
+set, independent of `SBND_ISO_ENDPOINT`. Consequence: `SBND_ISO_ENDPOINT=0`
+plus one of them set produces `iso_endpoint=false` **and**
+`iso_endpoint_min_aspect=X` in the compiled config — not byte-for-byte the
+pre-`iso_endpoint` config, even though the intent was "legacy A/B". Also, any
+value of `SBND_ISO_ENDPOINT` other than `0`/`1` (typo, `true`, `yes`) falls
+through to the else-branch and silently means ON. Neither affects this
+round's arms (`SBND_ISO_MIN_ASPECT`/`SBND_ISO_TUBE_R` were not set).
+
+## 17.10 Owner decision needed
+
+Same shape as round 1 (§4): a real defect, found and localized to two
+specific stack frames, in code too central and too poorly understood (this
+session) to touch safely. Before a round 5 attempts a fix, the owner's call
+is which of §17.6's open items to chase first — the kink-interaction
+hypothesis is the most actionable, but it means instrumenting
+`break_segments`/`find_other_segments` directly, which is shared production
+code with no per-detector knob boundary to hide behind while iterating.
