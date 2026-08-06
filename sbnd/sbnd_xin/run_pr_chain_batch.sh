@@ -224,6 +224,23 @@ for _pr34 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr34 _env _key _val
+# doc pr/38: missing-track particle-flow fixes.  Same tri-state contract
+# (unset = cfg default, 1 = force on, 0 = force off).  DISPLAY-ONLY: move
+# mabc-pr.zip::data/0/0-mc.json and nothing else -- gate with pr34_cmp.py.
+#   F1 SBND_PF_BARRIER_SEGMENT_VERTICES  F2 barrier from member-segment
+#                                        endpoint vertices (prototype
+#                                        map_vtx_segs), not the view that also
+#                                        holds the detached conn-2/3 start vtx
+#   F2 SBND_PF_ORPHAN_TRACK_ROOTS        BFS-unreached non-shower main-cluster
+#                                        segments emitted as root-level leaves
+for _pr38 in \
+    "SBND_PF_BARRIER_SEGMENT_VERTICES:pf_barrier_segment_vertices" \
+    "SBND_PF_ORPHAN_TRACK_ROOTS:pf_orphan_track_roots" ; do
+    _env=${_pr38%%:*}; _key=${_pr38#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr38 _env _key _val
 # doc pr/35 sec 11: the sec 10 energy-reconstruction port fix.  Same tri-state
 # contract (unset = cfg default, 1 = force on, 0 = force off).  NOT display-
 # only: kine_reco_Enu is numu-BDT var 69 and in the nue reader.  Gate with
