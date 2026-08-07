@@ -17,7 +17,7 @@ segment-graph logic — "if inconsistency, it would be very difficult to
 maintain the two."*
 
 Layer 1 is this doc (Part B fix, `shower_long_muon_keep_type`).  Layer 2 is
-[doc pr/38](38_pf-missing-tracks.md) Round 3 (Part A fix,
+[doc pr/38](38_pf-missing-tracks.md) Round 4 (Part A fix,
 `pf_orphan_track_parentage`) — the two shipped together (same commit, same
 gate set); this doc carries the shared Repro block and gates.
 
@@ -137,7 +137,7 @@ still-muon 7024 is guard-excluded (F12) from the 7023-stub candidate
 shower, which shrinks to {7023, 7082}, fails `n_multi_vtx > 0`, and is
 never accepted — no fake e-, no pi0 pairing, muon chain intact.
 
-Part A (`pf_orphan_track_parentage`, doc pr/38 Round 3) independently makes
+Part A (`pf_orphan_track_parentage`, doc pr/38 Round 4) independently makes
 the PF assembly attach barrier-orphaned tracks by graph topology instead of
 flat roots — see that doc for its mechanism.  The two compose: in this
 event with B on, the muon shower's start vertex (v7013) is barrier-exempt,

@@ -416,7 +416,7 @@ as a fallback.
 
 ---
 
-# Round 3 (2026-08-07) — orphan parentage: flat roots → graph-faithful attachment
+# Round 4 (2026-08-07) — orphan parentage: flat roots → graph-faithful attachment
 
 Shared Repro block, gate arms and flip record: [doc pr/44](44_vertex-muon-misid-as-shower.md)
 (the two knobs shipped together).  This section carries the Part A mechanism.
