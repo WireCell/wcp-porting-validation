@@ -283,9 +283,14 @@ work-pr38b-on7{,mc} arms for these 7 events, or a fresh full production).
 
 ## Still open
 
-- kine_reco_Enu residual (round 1 §Residual) — unchanged; the
-  `fill_sets(..., exclude_start_vertex)` parameter added here is the intended
-  vehicle for that follow-up.
+- kine_reco_Enu residual (round 1 §Residual) — the `fill_sets(...,
+  exclude_start_vertex)` parameter added here is now actually threaded, in
+  doc pr/43 (`kine_shower_vertex_barrier`, `NeutrinoKinematics.cxx`
+  `fill_kine_tree`), which mirrors this round's `pf_shower_vertex_barrier`
+  fix + orphan safety net on the kine-BFS side. Mechanism-complete but
+  **not flipped**: pr/43's G3/G4 census showed the fix (combined with four
+  other PID knobs from the same round) moves `kine_reco_Enu` on 42/48
+  nueCC48 events, held for owner review rather than auto-flipped.
 - Whether SBND production PR should pin the geometric vertex for
   reproducibility (or accept per-round DL variance) — owner decision.
 
