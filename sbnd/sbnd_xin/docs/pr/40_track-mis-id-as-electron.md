@@ -1067,3 +1067,224 @@ PID): "Relabelling a shower segment's PDG does not make it stop being a Shower" 
   zero downstream verdict impact (G3), but not a case the owner looked at directly.
 - **This is not a general "clean up multi-membership shower artifacts" pass** -- only the
   specific mc.json/particle-flow consequences of F5's earlier relabelling are addressed.
+
+---
+
+# Round 5 -- three owner cases: three segment-level fixes implemented, gate-clean when
+off, but **G2 FAILS on all three and one causes a new regression** (NOT flipped, negative
+result)
+
+## Repro block
+
+```bash
+cd sbnd_xin
+
+# G1: knob-off byte-identical -- git-stash clean-HEAD reference
+git stash push -m "pr40r5-base48-gate" -- cfg/pgrapher/common/clus.jsonnet \
+  cfg/pgrapher/experiment/sbnd/clus.jsonnet cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet \
+  clus/inc/WireCellClus/NeutrinoPatternBase.h clus/inc/WireCellClus/PRSegmentFunctions.h \
+  clus/inc/WireCellClus/TaggerCheckNeutrino.h clus/src/NeutrinoShowerClustering.cxx \
+  clus/src/NeutrinoTrackShowerSep.cxx clus/src/PRSegmentFunctions.cxx clus/src/TaggerCheckNeutrino.cxx \
+  clus/test/doctest_clus_knob_defaults.cxx
+wcbuild   # hit the M1 link-order stale-.so trap here; cp build/clus/libWireCellClus.so local/lib/, re-run
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r5-base48 data
+git stash pop
+wcbuild   # M1 freshness proof again (hit the trap a second time on restore)
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r5-off48 data
+# 48/48 events, 96/96 archives (mabc-pr.zip + pctree-pr-evt<ID>.tar.gz), 0 mismatches
+
+# the three owner cases, all three knobs forced on
+SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD=1 SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD=1 \
+  SBND_SHOWER_TRAJ_STRAIGHT_GUARD=1 PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr40r5-cases data 84229
+SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD=1 SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD=1 \
+  SBND_SHOWER_TRAJ_STRAIGHT_GUARD=1 PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr40r5-cases data 54341 55715
+
+# isolation check for the 15005 regression (F11 alone)
+SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD=0 SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD=0 \
+  SBND_SHOWER_TRAJ_STRAIGHT_GUARD=1 PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 /home/xqian/tmp/pr40r5/verify-f11only data 55715
+# seg 15005: pdg 211 (all-off) -> pdg 11 (F11 alone). F11 owns the regression.
+
+./build/clus/wcdoctest-clus   # 100/100 test cases, 1035/1035 assertions
+```
+
+## Owner's three cases and the attribution (Phase 1)
+
+| run-evt | owner's point | owner's id | reading | topology |
+|---|---|---|---|---|
+| 18364-84229 | (73.0, 129.2, 380.0) | seg 19038 | electron -> muon? (stopping mu + Michel) | main vtx `19042`(d2) -> seg `19039` (e-, 4.9cm) -> vtx `19043`(d3) -> seg `19038` (e-, 21.2cm, owner's point) + 3.6cm shower stub `19040` |
+| 18255-54341 | (134.7, 168.6, 155.5) | seg 18007 | electron -> muon? (stopping mu + Michel) | main vtx `18002`(d2) -> seg `18005` (e-, 21.3cm) -> vtx `18004`(d3) -> `18006` (1.7cm, shower) + `18007` (1.7cm, mu-, owner's point) |
+| 18255-55715 | (-38.6, -37.5, 492.2) | seg 15007 | not-electron -> muon (exiting mu, pi+ parent is wrong) | main vtx `15003` -> seg `15005` (pi+, 6.1cm) -> vtx `15004`(d4) -> seg `15007` (e-, 14.7cm, `flag_shower` 1, owner's point) + `15006` (proton, 15.4cm) + `15035` (1.1cm) |
+
+Phase 1b's per-segment `WCT_PID_WRITE_DEBUG`/`WCT_PID_TRACE_DEBUG`/`WCT_SHOWER_TOPO_DEBUG`
+trace found **three independent mechanisms**, not one shared bug (owner: "Fix all three"):
+
+- **F9** (`84229`): F1's persist-on-dQ/dx rescue (`track_pid_persist_dqdx`,
+  `PRSegmentFunctions.cxx` `segment_determine_dir_track`) fires unconditionally once
+  `pdg_code != 0`, including on a segment whose own free-end direction test failed --
+  this is the round-1-introduced regression that turned 19038 from muon (pre-pr/40) into
+  electron. Bisected and confirmed necessary+sufficient with a single-knob-off arm.
+- **F10** (`54341`): `shower_clustering_connecting_to_main_vertex`
+  (`NeutrinoShowerClustering.cxx`) has three skip branches (`pdg==11`,
+  `pdg==2212 && dqdx`, `pdg==211 && dqdx`) but none for a long, straight track with no
+  confident PID yet -- so seg 18005 gets absorbed into the shower seeded downstream of it
+  before track PID ever gets a chance to run on it.
+- **F11** (`55715`): `segment_is_shower_trajectory` (`PRSegmentFunctions.cxx`) has no
+  straightness exemption at all (only `segment_is_shower_topology` got one, pr/40 F3) --
+  seg 15007, straight and MIP-like but under the 34cm absolute-length floor, gets the
+  trajectory-door shower flag regardless.
+
+None of the three measured segments reach the existing 34cm absolute-length threshold at
+`NeutrinoVertexFinder.cxx:1432-1447`; all three fixes therefore rely on the ratio branch
+(`direct_length > 0.93*length`), added as a new shared helper
+`segment_is_straight_long_track` (`min_length=10cm`, `min_direct=34cm`,
+`straight_ratio=0.93`). Prototype cross-check (`prototype_base/pid/`): none of the three
+sites have an analogous straightness/muon guard, and there is no Michel/stopping-muon rule
+anywhere in the PR chain (only in the downstream STM/cosmic taggers) -- all three are
+**designed divergences**, not port-fidelity fixes (M15).
+
+## Fix (implemented, gate-clean off, three new knobs)
+
+- **F9** `track_pid_persist_dqdx_electron_guard` -- narrows F1's rescue condition in
+  `segment_determine_dir_track`: the unconditional-persist branch is skipped specifically
+  when the would-be persisted pdg is 11 and the free-end direction test itself failed
+  (`pdg_code == 11 && !free_end_dir`). Everything else about F1 (`track_pid_persist_dqdx`)
+  is untouched, including the separate F4 `track_pid_persist_4mom` gate.
+- **F10** `shower_connect_main_vertex_straight_guard` -- adds a fourth skip branch to
+  `shower_clustering_connecting_to_main_vertex`'s existing three-branch guard: `if
+  (segment_is_straight_long_track(sg)) continue;`.
+- **F11** `shower_traj_straight_guard` -- `segment_is_shower_trajectory` gains a fourth,
+  default-`false` parameter; when true, a shower-trajectory verdict is overridden to
+  `false` if `segment_is_straight_long_track(seg)` also holds. Threaded only at
+  `NeutrinoTrackShowerSep.cxx`'s `separate_track_shower` call site (the one Phase 1
+  identified for 55715) -- the other three call sites
+  (`NeutrinoVertexFinder.cxx:93,2547-2548`, `PRSegmentFunctions.cxx:2705`) keep the 3-arg
+  form and default to the legacy `false`, out of this round's scope.
+
+Plumbing follows every prior pr/40 round exactly: `NeutrinoPatternBase.h` members ->
+`TaggerCheckNeutrino.{h,cxx}` (config read, `default_configuration()` round-trip,
+`pattern_algos.m_... =`) -> `cfg/pgrapher/common/clus.jsonnet` (key-suppression idiom) ->
+`cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet` threading (4 sites each, same
+shape as F7/F8) -> `run_pr_chain_batch.sh` tri-state env overrides -> doctest default-false
+assertions plus a 5-check hand-built-graph test case for `segment_is_straight_long_track`.
+
+## Demonstration -- the segment-level fix works, the Bee/mc.json outcome does not (G2)
+
+All three arms below use `work-pr40r5-cases` (all three knobs forced on):
+
+| case | segment pdg, intended | segment pdg, measured | mc.json PF tree, measured | verdict |
+|---|---|---|---|---|
+| 84229 | seg 19038 -> mu- | **mu- (13), correct** | still ONE node: `id=19039 'e- 89 MeV' end=[73.0,129.2,380.0]` -- unchanged from before the fix | **G2a FAIL** |
+| 54341 | seg 18005 -> mu- (stem), 18006/18007 -> e- child(ren) | seg 18005 = **proton (2212)**, 18007 = mu- (13) | split shape achieved: `id=18005 'proton 171 MeV'` -> children `18006 'e- 19 MeV'`, `18007 'mu- 11 MeV'` | **G2b FAIL** (shape right, stem label wrong) |
+| 55715 | seg 15007 -> mu-, seg 15005 unchanged (pi+) | seg 15007 = **mu- (13), correct**; seg 15005 = **e- (11), was pi+ (211)** | ONE node: `id=15005 'e- 105 MeV' start=[-48.0,-38.2,482.1] end=[-34.5,-38.2,496.8]` -- covers all of 15005+15006+15007, endpoint lands at the owner's clicked point | **G2c FAIL + regression** |
+
+## Root cause of the G2 failures
+
+The displayed Bee/mc.json outcome is decided at the **shower seeding/absorption
+boundary**, not at the segment's own pdg -- fixing a segment's pdg upstream of that
+boundary does not change what a `Shower` rooted at a neighbor renders:
+
+- `Shower::complete_structure_with_start_segment` (`PRShower.cxx:337-408`) flood-fills the
+  downstream sub-tree from a shower-seeded segment with **no per-segment shower test** --
+  once any neighbor is legitimately shower-flagged (84229's true 4.9cm stem `19039`;
+  55715's now-declassified-from-a-different-door `15007`... see below), the whole
+  downstream chain is swallowed regardless of the other members' own pdg.
+- `Shower::update_particle_type` (`PRShower.cxx:788`) then sets the **shower's start
+  segment** to pdg 11 whenever non-proton member length exceeds proton member length -- a
+  confident `mu-` member counts as shower length, same class of bug round 3's
+  `protect_proton_daughter_pion` guard fixed for a *different* trigger (a relabelled
+  pion daughter), but with no equivalent guard for a muon member.
+- A second, independent seeding path, `shower_clustering_with_nv_in_main_cluster`'s
+  `is_shower_seg` test (`NeutrinoShowerClustering.cxx:116-119`), is what actually reaches
+  84229 and 55715 -- **F10 only gates
+  `shower_clustering_connecting_to_main_vertex`**, a sibling function, so it does not
+  intercept this path at all. This is why 84229's fix (a different mechanism, F9) shows no
+  display change, and why 55715's absorption still happens even with F11 active.
+
+**84229** (G2a): 19038's own pdg is fixed by F9, but it is absorbed into the shower seeded
+by its neighbor 19039 (a genuine 4.9cm shower-flagged stub, correctly flagged, out of
+scope for any of the three fixes) via the flood-fill above -- the display cannot change
+without also touching the seeding/absorption boundary itself.
+
+**54341** (G2b): the split shape IS achieved (F10 correctly stops the 21.3cm stem from
+being absorbed into the downstream shower), but once un-shielded from the shower path, seg
+18005 goes through **ordinary track PID** for the first time -- not through any of the
+three round-5 guards -- and that PID concludes proton (2212) from the segment's own dQ/dx,
+which runs elevated (~1.55x MIP) plausibly from Bragg-peak rise near the stopping point.
+Confirmed by `WCT_PID_WRITE_DEBUG`: no logged transition through pdg 11 for this segment in
+the post-fix arm at all (unlike every other cluster-18 segment, which is logged going
+`0->11->11` via the normal shower-default path) -- 18005 is classified 0->2212 directly by
+track PID, bypassing the shower-labeling machinery the guards target. **This exposes a
+pre-existing gap in ordinary track PID** (no muon-vs-proton Bragg-peak discrimination for a
+short, high-dQ/dx track end) that the shower flag was incidentally masking, not a defect
+introduced by F9/F10/F11.
+
+**55715** (G2c, regression): isolated with a single-knob arm (`F11=1`, `F9=F10=0`) against
+an all-off baseline -- seg 15005 reads `pdg=211` with all three knobs off, and `pdg=11`
+with **F11 alone** on. F11 clearing 15007's shower-trajectory flag removes it as a shower
+seed at its own door, but `is_shower_seg` (`NeutrinoShowerClustering.cxx:116-119`) then
+re-seeds the shower one segment further up, at 15005 -- which the owner's Round-5 planning
+answer explicitly said must stay untouched ("Only 15007 becomes mu-"). **This is a genuine
+new regression against an explicit owner decision**, not merely an unmet display goal.
+
+## Gates
+
+- **G0 freshness**: `local/lib/libWireCellClus.so` newer than every touched source file.
+  Hit the M1 link-order stale-.so trap twice (once after the initial edits, once after the
+  `git stash pop` restore) -- both times fixed with `cp build/clus/libWireCellClus.so
+  local/lib/`, re-run `wcbuild`.
+- **G1 knob-off byte-identical**: **PASS, 48/48 events, 96/96 archives, 0 mismatches.**
+  `work-pr40r5-off48` (round-5 code, all three new knobs at their `false` default) vs
+  `work-pr40r5-base48` (git-stash clean-HEAD `3fa0aeb3` reference, same 48 events),
+  `abtest/hash_archive.py` member-content hashes.
+- **G2a/b/c**: **FAIL, all three** -- see Demonstration table above.
+- **G3/G4**: not run -- gated on G2 passing first (CLAUDE.md M13/§5 discipline: don't scale
+  up measurement on a fix that doesn't yet do what it's meant to).
+- **G5 unit tests**: `wcdoctest-clus` **PASS, 100/100 test cases, 1035/1035 assertions**
+  (round-5's new `segment_is_straight_long_track` case included).
+- **G6 compiled-config**: **PASS.** All three keys absent from the compiled JSON with the
+  knobs at their function defaults (`false`); all three present and `true` with
+  `wcsonnet --tla-code track_pid_persist_dqdx_electron_guard=true --tla-code
+  shower_connect_main_vertex_straight_guard=true --tla-code
+  shower_traj_straight_guard=true`.
+
+## Flip -- NOT flipped
+
+All three `wct-pr-perevt.jsonnet` TLA defaults stay `false`. G1/G5/G6 are clean, so the
+code is safe to land (byte-identical off, no build/test regression), but **G2 fails on
+every one of the three owner-reported cases**, and F11 introduces a **new regression
+against an explicit owner decision** (seg 15005 in 55715). CLAUDE.md §5 rule 5 ("an A/B
+gate FAILs and the diff is not explained by your intended change: report... and stop
+iterating") and rule 7 ("a physics number looks wrong: report, don't tune parameters to
+make it look right") both apply -- 54341's proton-vs-muon call is exactly that kind of
+number. This round is landed as infrastructure (the three knobs, the shared
+`segment_is_straight_long_track` helper, the attribution) but not as a fix.
+
+## `porting_dictionary.md` entries
+
+Three new sections recording F9/F10/F11 as designed divergences (no prototype anchor --
+confirmed against `prototype_base/pid/`), each explicitly marked **"segment-level fix
+only; does not reach the Bee/mc.json display outcome without also changing the shower
+seeding/absorption boundary (`PRShower.cxx:337-408`, `PRShower.cxx:788`,
+`NeutrinoShowerClustering.cxx:116-119`); not flipped; G2 open."**
+
+## Scope and what is NOT claimed
+
+- **This round does not fix any of the three owner-reported display cases.** The
+  segment-level pdg is corrected in all three (19038, 15007 confidently; 18005 changes but
+  not to the expected label), but the visible Bee/mc.json outcome only changed for 54341,
+  and even there not to the intended label.
+- **The 15005 regression is a real, confirmed defect** against the owner's explicit
+  Round-5 planning answer, not a hypothetical risk -- isolated to F11 alone via a clean
+  single-knob A/B, reported here rather than patched around.
+- **The 54341 "proton" outcome is not diagnosed as a bug in F9/F10/F11** -- it is ordinary
+  track PID running for the first time on a previously shower-shielded segment and calling
+  a plausible-but-unverified proton, likely from Bragg-peak dQ/dx rise. Whether that is the
+  right call physically is an open question for the owner, not something this round tunes.
+- **No F12/redesign attempted in this round.** The structural fix implied by the root-cause
+  analysis (teaching the seeding/absorption boundary itself about a confident non-electron
+  member, in the shape of round 4's F7 shower-dissolve) is a materially bigger change than
+  three surgical guards and needs its own scoping decision from the owner before
+  implementation.

@@ -542,6 +542,29 @@ for _pr40r4 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr40r4 _env _key _val
+# doc pr/40 round 5: muon mis-identified as electron, three owner-reported Bee
+# cases (84229, 54341, 55715), three independent mechanisms.  Same tri-state
+# contract.  All three default OFF pending gates.
+#   F9  SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD  narrows F1 -- no longer
+#                                                    rescues an undirected
+#                                                    electron guess
+#   F10 SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD  excludes a long,
+#                                                    straight candidate from
+#                                                    the main-vertex EM-shower
+#                                                    selection
+#   F11 SBND_SHOWER_TRAJ_STRAIGHT_GUARD              same straightness veto
+#                                                    on segment_is_shower_
+#                                                    trajectory that F3 gave
+#                                                    segment_is_shower_topology
+for _pr40r5 in \
+    "SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD:track_pid_persist_dqdx_electron_guard" \
+    "SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD:shower_connect_main_vertex_straight_guard" \
+    "SBND_SHOWER_TRAJ_STRAIGHT_GUARD:shower_traj_straight_guard" ; do
+    _env=${_pr40r5%%:*}; _key=${_pr40r5#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r5 _env _key _val
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a
