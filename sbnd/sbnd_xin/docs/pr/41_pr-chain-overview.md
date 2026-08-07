@@ -140,4 +140,4 @@ so treat it like any other CLAUDE.md §1 knob.
 - PR event display, field-by-field: doc pr/26; stage map: doc pr/27.
 - `nusel-evt<ID>.tsv` column semantics: `nusel_extract.py` module docstring.
 - Reality/lineage mismatch mechanics: doc pr/38 §round 3.
-- Muon/pion/shower PID mis-ID fixes (chain-aware proton veto, stale Shower-type cache, shower-trajectory dQ/dx guard, kine-tree PF-tree barrier parity): doc pr/40 (rounds 1-6), doc pr/43.
+- Muon/pion/shower PID mis-ID fixes (chain-aware proton veto, stale Shower-type cache, shower-trajectory dQ/dx guard, kine-tree PF-tree barrier parity): doc pr/40 (rounds 1-6). doc pr/43 covered the same family but was rolled back out of the code (too broad a census footprint); kept as an investigation record only.

@@ -1,5 +1,19 @@
 # doc pr/43 — four owner PID cases (18255: 142421 / 54351 / 56463 / 57661)
 
+**STATUS 2026-08-07: ROLLED BACK, not just defaulted off.** Owner judged the
+G3/G4 population/score movement (42/48 nueCC48 events) too broad for what the
+four cases needed and asked for the five knobs to be pulled from the code
+entirely, to be revisited later rather than left dead-OFF in the tree. All of
+F1 `muon_chain_proton_veto`, F2 `shower_type_cache_refresh`, F3/F3b
+`shower_traj_dqdx_guard`/`shower_traj_chain_pion`, F4
+`kine_shower_vertex_barrier` are reverted out of `toolkit` as of commit
+`225d7e7e` (revert of `4aabef3e`); `wcdoctest-clus` 100/100 clean post-revert,
+compiled-config grep confirms all five keys are gone. This doc is kept as the
+investigation record — the four cases, the root-cause traces, and the fix
+shapes below are still believed correct; only the "ship it, even OFF" call is
+reversed. Read this before re-attempting: the shapes below are a starting
+point, not a green light to reapply as-is.
+
 Also filed as pr/40 round 7 in spirit (same PID-mis-ID family), kept as its own
 numbered doc per the owner's request for a dedicated file. Cross-reference:
 [doc pr/40](40_track-mis-id-as-electron.md), [doc pr/38](38_pf-missing-tracks.md).
