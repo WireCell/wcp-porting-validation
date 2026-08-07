@@ -621,6 +621,24 @@ for _pr43r2 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr43r2 _env _key _val
+# doc pr/45 tri-state env overrides (unset = cfg default, 1 = force on,
+# 0 = force off):
+#   SBND_OTHER_SEG_EMPTY_2D_GUARD    find_other_segments: the -1.0 empty-2D-
+#                                    tree sentinel counts as "no information"
+#                                    instead of "distance zero" (isochronous
+#                                    tail beyond a cathode-crossing cluster's
+#                                    segment end can now seed a component)
+#   SBND_PSEUDO_SHOWER_TRACK_PAINT   Bee shower_track layer + PrDisplayDump:
+#                                    muon-typed (+-13) pseudo-showers paint
+#                                    as track, matching the PF tree verdict
+for _pr45 in \
+    "SBND_OTHER_SEG_EMPTY_2D_GUARD:other_seg_empty_2d_guard" \
+    "SBND_PSEUDO_SHOWER_TRACK_PAINT:pseudo_shower_track_paint" ; do
+    _env=${_pr45%%:*}; _key=${_pr45#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr45 _env _key _val
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
