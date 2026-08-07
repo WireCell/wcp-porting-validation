@@ -175,6 +175,12 @@ fi
 CATH_TLA=()
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+# doc pr/47 sec 8 (O1): wide-baseline cathode kink accept, degrees.  EMPTY =
+# no TLA = the job default (SBND ON at 25 deg since 2026-08-07).  0 = force
+# the C++ OFF path (legacy kink search, byte-identical); "null" also works
+# (omits the key entirely).  Skirt/baseline ride the C++ defaults 3/15 cm.
+# Env: SBND_CATHODE_WIDE_KINK_ANGLE=<deg|0|null>.
+[ -n "${SBND_CATHODE_WIDE_KINK_ANGLE:-}" ] && CATH_TLA+=(--tla-code "cathode_wide_kink_angle=${SBND_CATHODE_WIDE_KINK_ANGLE}")
 # doc pr/25 sec 3: long shower-topology demote length, cm.  EMPTY = no TLA =
 # the cfg default (null = OFF = byte-identical).  50 is the scan-supported
 # operating point; the guard measures segment_track_length(seg,0).

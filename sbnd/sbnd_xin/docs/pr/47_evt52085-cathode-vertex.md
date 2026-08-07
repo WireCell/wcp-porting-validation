@@ -1,11 +1,14 @@
 # doc pr/47 — evt 18255-52085: a true neutrino vertex ON the cathode
 
-**Status: ANALYSIS ONLY (2026-08-07).** No C++ or jsonnet is changed by this
-doc. No A/B gate applies and none is claimed. The one code experiment run
-here (`SBND_CATHODE_KINK_XCUT=0`, an existing runner knob, no rebuild) is a
-diagnostic, not a proposed change. **Recommendation: relax the cathode band,
-not the band's width — see §7 Options, O1.** The fix is deliberately left to
-a new session per the owner's request.
+**Status: FIX SHIPPED (2026-08-07, same day, follow-up session).** §1-§7 are
+the original analysis round (unchanged below; they described the tree at
+`03ccaaf3` with no code change). **§8 implements O1** as the
+`cathode_wide_kink_angle` knob — a fifth `segment_search_kink` accept path at
+cathode-crossing fit indices keyed on the skirt-excluded wide-baseline PCA
+turn angle — C++ default **OFF** (0 deg), **SBND production ON at 25 deg**.
+Knob-off gate `work-pr47f-base48` vs `work-pr47f-off48` byte-identical 48/48;
+knob-on footprint on the full 1000-event sample in §8.4. 52085's vertex is
+recovered 0.65 cm from truth.
 
 ## The owner's question, restated
 
@@ -31,6 +34,7 @@ a new session per the owner's request.
 | Closest miss | C4 criterion: `sum_angles` 18.79 vs required > 19 — misses by **0.21**, all three other C4 sub-conditions already pass |
 | Sample-wide cathode-crossing population (445/1000 events with a dump) | 53 crossing segments / 51 events; median turn 3.9 deg, p90 8.2 deg; only **2** events at turn >= 20 deg |
 | `SBND_CATHODE_KINK_XCUT=0` full-1000-event footprint | **11/1000 archive movers, 0/1000 nusel-verdict diffs** (§6.2) |
+| **§8 fix**: `cathode_wide_kink_angle=25` (SBND ON) | 52085 vertex recovered **0.65 cm** from truth; proton 243 MeV + mu- 253 MeV two-prong replaces the bogus "proton 560 MeV"; knob-off gate 48/48 byte-identical; footprint §8.4 |
 
 ## Repro block
 
@@ -84,6 +88,42 @@ python3 scripts/analysis/pr47/cathode_junction_census.py
 mkdir -p work-pr47-xcut0-1k
 PR_JOBS=24 SBND_CATHODE_KINK_XCUT=0 SBND_CATHODE_X=0 \
   bash run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr47-xcut0-1k data $(ls work-mcp1k-cb0805 | grep '^pr_evt' | sed 's/pr_evt//' | sort -n)
+
+# ---- sec 8 (fix round, toolkit HEAD = 20098cbf, the pr/47-fix commit) ------
+# Pre-edit baseline with the clean 03ccaaf3 binary, then the knob-off gate
+# with the new binary (SBND_CATHODE_WIDE_KINK_ANGLE=0 forces the C++ OFF
+# path; the runner knob is run_pr_chain_batch.sh, CATH_TLA block):
+PR_JOBS=6 bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr47f-base48 data
+# (edit + wcbuild + freshness proof + ./build/clus/wcdoctest-clus here)
+SBND_CATHODE_WIDE_KINK_ANGLE=0 PR_JOBS=6 \
+  bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr47f-off48 data
+# member-hash mabc-pr.zip + pctree per event (hash_archive.py) + byte-cmp the
+# merged nusel tsvs -> 48/48 artifacts identical, both tsvs identical (sec 8.3).
+
+# Knob-on smoke (bare run = production = ON at 25 deg):
+PR_JOBS=4 bash run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr47f-case data 52085
+
+# Knob-on full-1000-event footprint arm (sec 8.4):
+PR_JOBS=24 bash run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr47f-on1k data
+python3 scripts/analysis/pr47/on1k_compare.py   # movers + vertex + nusel diffs
+
+# sec 8.4 mover explanation: both-direction turn recompute over the 445
+# dumps (the census's skirt_turn_angle only measured neg->pos crossings),
+# and the 289559 threshold bracketing:
+python3 scripts/analysis/pr47/turn_bothdir.py
+for A in 0 35 60 179; do
+  SBND_CATHODE_WIDE_KINK_ANGLE=$A PR_JOBS=2 \
+    bash run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr47f-b289a$A data 289559
+done
+# member-hash each vs work-pr46-m1konb/pr_evt289559 -> SAME at 0 and 179,
+# DIFF at 35 and 60.
+
+# Compiled-config proof (both directions; wcsonnet needs the runner's
+# pipeline_names TLA or the tagger node is absent and the check is vacuous --
+# the pr/46 G5 gotcha):
+#   bare compile        -> TaggerCheckNeutrino data has cathode_wide_kink_angle: 25
+#   -A ..._angle=null   -> key absent, compiled JSON byte-identical to the
+#                          pre-change HEAD compile (verified via git worktree)
 ```
 
 ## 1. What is reconstructed: one segment sails straight through the true vertex
@@ -370,8 +410,10 @@ same HEAD `03ccaaf3`, same `work-mcp1k-cb0805` ql/clustering input) vs
 
 ## 7. Options (mechanism, insertion point, measured footprint, risk)
 
-None of these are implemented. Ranked by how directly each targets §3's
-actual finding (the accept-test thresholds, not the band).
+*(Written in the analysis round, kept verbatim.  **O1 was subsequently
+implemented — see §8.**  O2-O6 remain unimplemented.)*  Ranked by how
+directly each targets §3's actual finding (the accept-test thresholds, not
+the band).
 
 **O1 — change the test, not the band (recommended starting point).** Add a
 cathode-band-scoped *additional* accept path inside `segment_search_kink`
@@ -452,6 +494,149 @@ discriminator, tuned on this sample's 2-event tail, generalizes to data
 (where the transverse distortion is ~3x larger, docs/14 §Result) — would
 need a data cathode-crosser census, which does not exist yet (docs/18 is
 the closest, MC-baseline pipeline only).
+
+## 8. Fix (this round): `cathode_wide_kink_angle` — O1 implemented
+
+**Owner's framing for this round (2026-08-07):** the broad angle change is
+large but the local small-window angle change is not, presumably because of
+the cathode gap; if everything were connected, the local deflection would
+very likely be big too. So fix the *measurement* at the cathode — key the
+accept on the (wide-baseline) angle deflection — which (1) fixes these
+events and (2) leaves every non-cathode case alone, since the local angle
+deflection machinery is a major algorithm of the whole PR chain.
+
+### 8.1 Design
+
+A **fifth accept path** inside `segment_search_kink`, active only at
+cathode-crossing fit indices, keyed on §2's statistic:
+
+- New free helper `segment_cathode_wide_kink_accepts(fits, cathode_x,
+  angle_cut_deg, skirt, baseline)` (`clus/src/PRSegmentFunctions.cxx`,
+  declared in `PRSegmentFunctions.h` so it is doctest-able). For every
+  sign-change crossing of consecutive fit points across `x = cathode_x`
+  (both directions — note §6.1's census only measured neg→pos; the helper
+  handles both): collect each arm's points with arclength from the crossing
+  in `[skirt, skirt+baseline]` on that arm's own side (≥ 3 points per arm or
+  the crossing never fires), PCA each arm (`Facade::calc_pca_dir`, centroid
+  passed in, axis re-oriented along its own arm's chord = direction of
+  travel), and take the angle between the two directions: ~0 deg for a
+  straight through-going track. A pure transverse cathode offset *translates*
+  one arm but does not rotate a PCA axis, so the statistic is
+  distortion-tolerant by construction — the property that makes it safer on
+  data (~3x larger offset) than any local-window statistic. Same arithmetic
+  as the census script's `skirt_turn_angle` (post-orientation-fix); no
+  prototype counterpart (new algorithm, not a port).
+- If turn ≥ `angle_cut_deg`: accept at the crossing-adjacent index with the
+  larger |x − cathode_x|, stepped outward up to 2 indices to clear the
+  |x| < 0.5 cm slab margin (§5's in-slab blockers), clamped to the caller
+  contract `0 < save_i < fits.size()-1`.
+- In the scan loop the accept sits inside the `flag_check` block,
+  **immediately before the pr/20 cathode-veto `continue`** — so it works
+  whether or not the veto is on, inherits the legacy 1-cm end guards and the
+  `flag_check` latch, and the accepted index flows through the identical
+  post-accept machinery (direction averaging, straightness/`flag_switch`,
+  local dQ/dx) as the four legacy criteria. Everything is gated on
+  `cathode_wide_kink_angle > 0`: knob off ⇒ no precompute, no lookup, no
+  arithmetic touched.
+
+**Threshold 25 deg, angle-only.** Any value inside §6.1's measured empty gap
+(10-36 deg) separates the two-event tail from the 0-10 deg bulk; 25 leaves
+~12 deg margin below 52085 (36.8) and ~17 deg above the bulk p90 (8.2). No
+dQ/dx-asymmetry term: the distribution separates on angle alone, and an
+asymmetry requirement would reject genuine same-species kinks (a scattered
+muon). All three parameters are config knobs if retuning is ever needed.
+
+### 8.2 Knobs and threading (the `cathode_kink_xcut` value-knob pattern)
+
+| knob | C++ default | SBND production |
+|---|---|---|
+| `cathode_wide_kink_angle` (deg) | **0 = OFF** | **25** |
+| `cathode_wide_kink_skirt` (cm) | 3 | (default) |
+| `cathode_wide_kink_baseline` (cm) | 15 | (default) |
+
+`NeutrinoPatternBase.h` members (internal units) → `TaggerCheckNeutrino.{h,cxx}`
+(configure + `default_configuration()` echo + cm→internal forward) →
+`segment_search_kink` trailing params (both `break_segments` call sites,
+`NeutrinoPatternBase.cxx:1617/:1680`) → `cfg/pgrapher/common/clus.jsonnet`
+signature + null-suppression → `cfg/pgrapher/experiment/sbnd/clus.jsonnet`
+(4 sites, ON value beside `cathode_kink_xcut=5`) →
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` (TLA default 25 +
+forward) → runner `run_pr_chain_batch.sh` env
+`SBND_CATHODE_WIDE_KINK_ANGLE` (empty = ON, `0` = force off, `null` = omit
+key). Default pins in `clus/test/doctest_clus_knob_defaults.cxx`; five new
+synthetic-track doctests in `clus/test/doctest_prsegment.cxx` (straight
+never fires; 35-deg kink fires at 25 not 40 with the accept index clear of
+the slab; a 1.5 cm pure transverse offset does NOT fake a kink — the
+distortion-tolerance claim, tested; bends inside the skirt are invisible;
+short arm cannot fire; angle 0 disables).
+
+### 8.3 Gates
+
+- **Unit**: `./build/clus/wcdoctest-clus` — 106/106 cases, 1080 assertions
+  (5 new pr47 cases, 11 assertions).
+- **Compiled-config**: bare compile carries `cathode_wide_kink_angle: 25` in
+  the `pr` TaggerCheckNeutrino node; `-A cathode_wide_kink_angle=null`
+  removes the key and the compiled JSON is **byte-identical to the
+  pre-change HEAD compile** (git-worktree cross-compile).
+- **Knob-off output gate**: `work-pr47f-base48` (clean `03ccaaf3` binary,
+  production env) vs `work-pr47f-off48` (new binary,
+  `SBND_CATHODE_WIDE_KINK_ANGLE=0`): **48/48 events, mabc-pr.zip + pctree
+  member-hash identical (`hash_archive.py`), merged nusel tsvs
+  byte-identical.**
+- **Knob-on smoke** (`work-pr47f-case`, bare production run of 52085):
+  a new vertex at **(-0.56, 112.68, 80.77) = 0.65 cm from truth**
+  (baseline: nearest vertex 31.4 cm). The 137.6 cm "proton 560 MeV" track
+  becomes a genuine two-prong at the junction — **proton 243 MeV (the
+  35 cm arm, 2.49 MIP) + mu- 253 MeV (the 102 cm arm, 1.31 MIP)** — and the
+  main vertex moves from the far +x track end (101.4 cm from truth) to the
+  junction. This also collapses §4's end-to-end degeneracy for this event:
+  once the true junction vertex exists, the main-vertex choice is no longer
+  a coin flip between two endpoint candidates.
+
+### 8.4 Full-1000-event footprint (`work-pr47f-on1k` vs `work-pr46-m1konb`)
+
+Full 1000-event knob-on arm at the fix HEAD (`PR_JOBS=24`, run ok 1000 /
+failed 0) vs the production baseline `work-pr46-m1konb` (same clean-source
+`03ccaaf3` lineage, knob absent), member-hash per `hash_archive.py`:
+
+- **4/1000 archive-level movers** — every one confined to `mabc-pr.zip`'s
+  vertex/fit/PF layers (`0-mc.json`, `0-shower_track-global.json`,
+  `0-track_fit-global.json`, `0-vertices-global.json`); pctree and all other
+  members identical everywhere.
+- **0/1000 nusel diffs at BOTH granularities** (`nusel-events.tsv` and the
+  bundle-level `nusel-table.tsv`): the fix changes no selection outcome.
+- Mover-by-mover, against §6.1's census + a both-direction turn recompute
+  (the census's `skirt_turn_angle` only measured neg→pos crossings; 30 of
+  the 53 were unmeasured `nan`):
+  - **52085** — the target. New vertex at x = −0.56 (band), 0.65 cm from
+    truth; measured turn 36.8 deg. See §8.3.
+  - **349549** — turn 107.8 deg (census). Already fired legacy C1/C3
+    4.6 cm from its main vertex; the wide accept now also fires AT the
+    crossing (new band vertex x = 1.84), reorganizing 68→67 vertices.
+  - **409634** — TWO steep crossings, turn 62.1 and 96.7 deg
+    (both-direction recompute; census had `nan` — they are pos→neg). New
+    band vertex x = 1.48. This is pr/20's evt with the residual stub.
+  - **289559** — final vertex GEOMETRY byte-identical (all 11 positions
+    equal at full precision); only segment-id renumbering
+    (`real_cluster_id` 14002→14003 …) plus track_fit point jitter — the
+    signature of an extra break-and-refit that converges to the same
+    geometry. Threshold bracketing (single-event reruns
+    `work-pr47f-b289a{0,35,60,179}`): byte-identical to baseline at
+    angle=0 and angle=179, moves at 35 and at 60 ⇒ the break-time cloud
+    carries a genuine **≥ 60 deg** wide-baseline crossing kink that the
+    census's post-fit proxy cloud cannot see (its final-cloud second arm is
+    a 4.8 cm remnant, too short for the offline test). Zero net effect on
+    vertices, PF content (same particles/energies, tree order only) and
+    nusel.
+- Predicted-but-unmoved: 315497 (27.4 deg on the proxy cloud) and 406796
+  (20.2 deg, below the 25 cut) — consistent with the proxy-cloud caveat
+  (§6.1: `flag_check` walk state and break-time vs post-fit clouds).
+- Cost comparison: the pr/20 veto-off experiment (§6.2) moved 11/1000;
+  this accept path moves 4/1000, strictly fewer, all four explained by
+  measured ≥ 25 deg crossings, with zero selection-verdict changes — the
+  "does it break through-going tracks" answer is **no**: no mover is a
+  through-going track split (the bulk of the crossing population sits at
+  0-10 deg, far below the 25 deg cut).
 
 ## Caveats
 
