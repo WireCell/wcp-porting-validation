@@ -413,3 +413,98 @@ as a fallback.
 - Round 2's still-open items (kine_reco_Enu residual; vertex-mode pinning)
   are unchanged, except the "DL not bit-stable across sessions" premise is
   withdrawn — no session-instability evidence survives this round.
+
+---
+
+# Round 3 (2026-08-07) — orphan parentage: flat roots → graph-faithful attachment
+
+Shared Repro block, gate arms and flip record: [doc pr/44](44_vertex-muon-misid-as-shower.md)
+(the two knobs shipped together).  This section carries the Part A mechanism.
+
+## Symptom
+
+SBND 18255 evt 142421 (owner report, Bee set 73cd68ed idx 0): mu- 207 MeV
+(seg 7018), pi+ 196 MeV (7011) and proton 159 MeV (7012) all draw as
+top-level nodes at the neutrino vertex, though the graph chains 7012 off
+7011 (shared v7014) and hangs 7011/7018 off interior vertices of shower
+7023's arm (v7013/v7020).  Owner principle: the PF tree must mirror the
+image's segment-graph logic, strictly.
+
+## Root cause
+
+Three earlier fixes compose:
+
+1. pr/40 r6 F12 (`shower_absorb_track_guard`, SBND ON) correctly keeps the
+   three tracks out of shower 7023 — but the flood-fill still claims the
+   junction vertices into the shower's view (PRShower.cxx add_vertex before
+   the guard test).
+2. `pf_shower_vertex_barrier` (pr/34 F2, SBND ON) pre-seeds those
+   shower-view vertices into `visited_vtxs`; the pop-time check means the
+   BFS never expands there, so the three segments are never claimed.
+3. This doc's Round-1 orphan safety net then emits each unreached segment
+   as a **flat root with no parent and no children** (prototype
+   `mc_mother=0` parity) — even the 7011→7012 link is dropped.
+
+The state is UNREACHABLE in the prototype: with no F12, such tracks are
+absorbed into the shower (which was the pr/40 complaint).  F12 created a
+new topology class the flat net was never designed for.  Meanwhile the
+stage-1 fixed point had already computed the correct parent for every
+blocked vertex (`vtx_incoming_seg` / `vtx_to_parent_shower`) — and threw
+it away.
+
+## Fix
+
+`pf_orphan_track_parentage` (bee_pf block, C++ default **false**; inert
+unless `pf_shower_vertex_barrier` is also on).  A new anchoring pass runs
+after the shower-attachment loop, before assembly
+(`MultiAlgBlobClustering.cxx`, gated), over the same orphan selection as
+the flat net, in (display-id, graph-index) order:
+
+- endpoint vertex carries `vtx_incoming_seg` → child of that claimed TRACK
+  segment (inserted into `seg_parent`/`seg_children`/`seg_endpoints`, so
+  `build_seg_node`'s recursion renders it);
+- else endpoint in `vtx_to_parent_shower` → child of that SHOWER's
+  displayed leaf via a new `shower_child_segs` map, rendered inside
+  `make_shower_leaf` (the single construction site for all three leaf
+  shapes: direct leaf, pseudo-gamma wrapper, pi0 grouping) with the same
+  KeepMC `keep_node` convention as track children;
+- an anchored orphan is inserted into `used_segs` (bars the flat net from
+  re-emitting it) and extends `vtx_incoming_seg` at its far vertex, so
+  orphan-of-orphan chains (pi+ → proton) anchor in a later round of the
+  fixed point;
+- orphans with no anchor at all fall to the untouched flat net exactly as
+  before.
+
+Determinism: all new containers are Index-comparator keyed; the orphan
+sort tie-breaks equal display ids by `get_graph_index()` (PRGraph.h:315
+caveat).  One shared-text touch: `build_seg_node` is now forward-declared
+as a `std::function` next to `append_showers` and assigned at its original
+definition site (declaration mechanics only; first call happens at
+assembly, long after assignment).
+
+Anchored orphans switch endpoint convention from fits-front/back+dirsign
+to vertex fit points (`seg_endpoints`/`get_vtx_pt`) — intended: they are
+now claimed segments and render like every other claimed segment.
+
+Rule-order note: tracks resolve TRACK-anchor before SHOWER-anchor, the
+opposite of `pf_shower_parent_precedence`'s shower-first order *for
+showers* — deliberate asymmetry: a track continuing a track is the
+stronger topological statement, and the precedence knob's motivation
+(prototype `map_vertex_in_shower`-first reads) is specific to shower
+parent resolution.
+
+## Verification
+
+Single-event G2a (SBND 18255-142421, knob on, B off): exact strict tree —
+7011 under shower-leaf 7023 with 7012 chained beneath it, 7018 under
+shower-leaf 7023; three ANCHOR probe lines; no flat orphan roots; no
+duplicate emission (root loop skips seg_parent non-null entries;
+shower-anchored orphans never enter seg_parent; the flat net re-tests
+used_segs).  Gate results: doc pr/44.
+
+## Residual
+
+The Round-1/2 residual stands: `fill_kine_tree` (NeutrinoKinematics) has
+its own BFS + barrier and got no orphan-parentage treatment (pr/43's F4
+attempt at the kine side was rolled back with pr/43); display and energy
+accounting can still disagree for barrier-orphaned tracks.

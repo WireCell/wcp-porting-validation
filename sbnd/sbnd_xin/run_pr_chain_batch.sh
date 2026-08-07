@@ -585,6 +585,23 @@ for _pr40r6 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr40r6 _env _key _val
+# doc pr/38 Round 3 + doc pr/44 (2026-08-07): PF-tree/image consistency on
+# 18255-142421.  Same tri-state contract (unset = cfg default, 1 = force on,
+# 0 = force off).
+#   SBND_PF_ORPHAN_TRACK_PARENTAGE   barrier-orphaned PF track nodes attach by
+#                                    graph topology instead of flat roots
+#                                    (DISPLAY-ONLY: moves mc.json only)
+#   SBND_SHOWER_LONG_MUON_KEEP_TYPE  multi-segment long-muon pseudo-shower
+#                                    keeps its muon start segment (NOT display-
+#                                    only: PID/kine/pi0 pairing move)
+for _pr44 in \
+    "SBND_PF_ORPHAN_TRACK_PARENTAGE:pf_orphan_track_parentage" \
+    "SBND_SHOWER_LONG_MUON_KEEP_TYPE:shower_long_muon_keep_type" ; do
+    _env=${_pr44%%:*}; _key=${_pr44#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr44 _env _key _val
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
