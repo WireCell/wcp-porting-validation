@@ -565,6 +565,26 @@ for _pr40r5 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr40r5 _env _key _val
+# doc pr/40 round 6: the boundary-level fixes round 5's G2 measurement
+# demanded.  Same tri-state contract.  All three default OFF pending gates.
+#   F12 SBND_SHOWER_ABSORB_TRACK_GUARD           shower flood-fill no longer
+#                                                 absorbs a confident straight
+#                                                 non-electron track
+#   F13 SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD connecting_to_main_vertex no
+#                                                 longer force-sets a proton-
+#                                                 daughter pion to electron
+#   F14 SBND_MICHEL_STEM_MUON_RESCUE             Michel stopping-muon rescue
+#                                                 reaches a proton-called stem
+#                                                 at a multi-prong vertex
+for _pr40r6 in \
+    "SBND_SHOWER_ABSORB_TRACK_GUARD:shower_absorb_track_guard" \
+    "SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD:shower_connect_protected_pion_guard" \
+    "SBND_MICHEL_STEM_MUON_RESCUE:michel_stem_muon_rescue" ; do
+    _env=${_pr40r6%%:*}; _key=${_pr40r6#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r6 _env _key _val
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a

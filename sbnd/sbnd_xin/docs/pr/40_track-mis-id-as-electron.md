@@ -1288,3 +1288,191 @@ seeding/absorption boundary (`PRShower.cxx:337-408`, `PRShower.cxx:788`,
   member, in the shape of round 4's F7 shower-dissolve) is a materially bigger change than
   three surgical guards and needs its own scoping decision from the owner before
   implementation.
+
+# Round 6 -- the boundary-level fixes: F12 absorption guard + F14 Michel-stem rescue
+(F13 measured dead), all three owner cases fixed, owner-accepted residuals on the
+parent stubs
+
+## Repro block
+
+```bash
+cd sbnd_xin
+
+# Phase-1 traces (round-5 F11-only regression writer + 54341 proton writer)
+WCT_PID_WRITE_DEBUG=1 SBND_SHOWER_TRAJ_STRAIGHT_GUARD=1 PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 /home/xqian/tmp/pr40r6/trace-55715-f11only data 55715
+# -> "PID_WRITE_DEBUG set_pdg ... clus=15 gidx=5 pdg -> 11 at NeutrinoShowerClustering.cxx:connecting_to_main_vertex"
+
+# full-transition writer histories (WCT_PID_WRITE_DEBUG=2, new this round)
+WCT_PID_WRITE_DEBUG=2 PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 /home/xqian/tmp/pr40r6/trace2-55715-off data 55715
+WCT_PID_WRITE_DEBUG=2 SBND_SHOWER_TRAJ_STRAIGHT_GUARD=1 SBND_SHOWER_ABSORB_TRACK_GUARD=1 \
+  SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD=1 PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 /home/xqian/tmp/pr40r6/trace2-55715-on data 55715
+
+# the three owner cases, all six pr40 r5+r6 knobs forced on (G2 smoke arm)
+SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD=1 SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD=1 \
+  SBND_SHOWER_TRAJ_STRAIGHT_GUARD=1 SBND_SHOWER_ABSORB_TRACK_GUARD=1 \
+  SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD=1 SBND_MICHEL_STEM_MUON_RESCUE=1 \
+  PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr40r6-cases data 84229
+# (same env) ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr40r6-cases data 54341 55715
+
+# post-flip bare-config verification arm (NO env overrides = the production
+# defaults after this round's flip; also includes nueCC48 evt 10550 for the
+# hash-match against the gated on-arm)
+PR_JOBS=2 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr40r6-flipverify data 84229
+PR_JOBS=2 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr40r6-flipverify data 54341 55715
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r6-flipverify data 10550
+
+# G1 (knobs off byte-identical) -- see the G1 note below for why pr40r5-off48
+# is a valid clean-HEAD reference this round
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r6-off48 data
+# hash_archive.py member hashes, off48 vs work-pr40r5-off48, mabc-pr.zip + pctree
+
+# G3 (population, flip set forced on across the 48-event manifest)
+SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD=1 SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD=1 \
+  SBND_SHOWER_TRAJ_STRAIGHT_GUARD=1 SBND_SHOWER_ABSORB_TRACK_GUARD=1 SBND_MICHEL_STEM_MUON_RESCUE=1 \
+  PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r6-on48 data
+
+./build/clus/wcdoctest-clus
+```
+
+## Phase 1 -- the round-5 mechanism map was two-thirds wrong, traces first
+
+Round 5 hypothesized the 55715 regression came from `shower_clustering_with_nv_in_
+main_cluster`'s `is_shower_seg` re-seed and round 6's plan aimed a guard at
+`examine_showers`' re-root.  Both wrong -- the Phase-1 trace (existing round-1 probe)
+showed the writer is `shower_clustering_connecting_to_main_vertex`'s accept-time
+force-set (probe tag `connecting_to_main_vertex`):
+
+- **55715**: with F11 on, the straightness demotion (`NeutrinoVertexFinder.cxx:1445`)
+  correctly makes 15007 `mu-`; `connecting_to_main_vertex` then selects the unshielded
+  6.1 cm parent 15005 as its EM candidate (UNDER `segment_is_straight_long_track`'s
+  10 cm floor, so F10's straight branch cannot save it) and force-sets it to 11.
+- **54341**: 18005's 2212 is a direct `0->2212` (invisible to the +-11-filtered probe;
+  neighbors 18004/18006 show the examine_direction recomputes at `NeutrinoVertexFinder
+  .cxx:1807`, timing the write inside examine_direction, before the F8/F14 call site).
+- **84229**: `pf_shower_vertex_barrier=true` in SBND production; a segment excluded
+  from every shower view either joins the track BFS or lands in the doc pr/38 orphan
+  safety net (`MultiAlgBlobClustering.cxx`) -- guaranteed its own PF node either way
+  (19038 dirsign=-1, so the orphan `dirsign==0` skip does not bite).
+
+## Fix
+
+- **F12 `shower_absorb_track_guard`** -- per-segment exclusion inside
+  `Shower::complete_structure_with_start_segment` (`PRShower.cxx`), threaded to all 7
+  call sites: skip (and terminate the walk at) a confidently PID'd non-electron
+  (`pdg != 0 && |pdg| != 11`) that is `segment_is_straight_long_track`; do NOT claim it
+  in `used_segments`; exempt long-muon pseudo-showers (`get_particle_type()==13`).
+- **F13 `shower_connect_protected_pion_guard`** -- fifth skip branch in
+  `connecting_to_main_vertex` (`pdg==211 && segment_has_proton_daughter`).  **Measured
+  DEAD, never to be flipped** -- see below.
+- **F14 `michel_stem_muon_rescue`** -- new pass `override_michel_stem_muon`
+  (`NeutrinoPatternBase.cxx`, F8's call site): a `pdg==2212`, straight-long,
+  main-vertex-emanating stem with >=1 shower-like sibling at its stopping vertex
+  relabels `mu-` -- the toolkit's own Michel rescue rule (`NeutrinoVertexFinder.cxx`
+  "a stopped proton cannot produce a Michel electron") minus its two reach limits
+  (weak-direction only; stopping vertex degree exactly 2 -- 18005 has confident
+  direction and degree 4).
+
+Debug infra: `WCT_PID_WRITE_DEBUG=2` now logs EVERY pdg transition (the round-1 probe
+only logged +-11 ones, blind to 211->2212).  Physics-inert, kept.
+
+## Demonstration (work-pr40r6-cases, all six knobs on; the post-flip bare-config
+arm work-pr40r6-flipverify is identical on all three -- F13 confirmed inert)
+
+| case | owner ask | measured mc.json | verdict |
+|---|---|---|---|
+| 84229 | seg 19038 -> mu-, Michel child | `19039 'pi+ 38'` -> { `19038 'mu- 77'`, `19040 'e- 5'` } | **G2a PASS** (owner accepted 19039 pi+) |
+| 54341 | stem mu-, Michel child(ren) | `18005 'mu- 74'` -> { `18006 'e- 19'`, `18007 'mu- 11'` } | **G2b PASS** (exact) |
+| 55715 | 15007 mu-, 15005 untouched, 15006 proton kept | `15005 'proton 84'` -> { `15006 'proton 147'`, `15007 'mu- 60'`, `15035 'mu- 3'` } | **G2c PASS** (owner accepted 15005 proton) |
+
+**The two owner-accepted residuals, fully attributed** (WCT_PID_WRITE_DEBUG=2
+histories):
+
+- 19039 (84229): OFF `0->11` (F1's poisoned undirected electron persist,
+  `PRSegmentFunctions.cxx:2019`) then `11->11` reassert (`PRShower.cxx`).  ON (F9
+  removes the poison): `0->13` -- its own honest muon call -- then `13->211` at the
+  single-muon selection (`NeutrinoVertexFinder.cxx:1679`; 19038 wins the muon slot).
+  The 4.9 cm stub and 19038 are physically the same stopping muon split at a degree-3
+  vertex; a collinear-muon-fragments rule would be a new round.
+- 15005 (55715): OFF `0->2212` (own charge, `NeutrinoVertexFinder.cxx:1476`) ->
+  `2212->13` (Michel rescue at :1807, TRIGGERED BY 15007's WRONG e- LABEL) ->
+  `13->211` (single-muon demotion, :1679).  ON: `0->2212` and nothing else -- the
+  baseline pi+ was derivative of the bug being fixed; proton is the segment's own
+  call.  Matches the owner's original reading ("mislabeled pion due to an attached
+  proton").
+
+**F13 negative result**: 15005 is already 2212 at candidate-selection time, so a
+`pdg==211` guard cannot fire (confirmed: F11+F13 arm still shows the merged
+`e- 105 MeV` node; F11+F13+F12 fixes it).  The legacy `pdg==2212` skip band
+(`>1.45x MIP, nd<=3`) does not catch it either (its ratio sits in the 1.3-1.45
+window); F12's exclusion makes the candidate fail EM acceptance instead, which is
+sufficient.  Kept in-tree as a documented dead knob (doc pr/36 F2 precedent),
+default false, excluded from the flip.
+
+## Gates
+
+- **G0 freshness**: `wcbuild` x2 (round-6 code; then the WCT_PID_WRITE_DEBUG=2
+  widening); `local/lib/libWireCellClus.so` == `build/clus/` both times.  The M1
+  link-order trap did NOT recur this round.
+- **G1 knobs-off byte-identical**: **PASS, 48/48 events, 96/96 archives, 0
+  mismatches** (`work-pr40r6-off48` vs `work-pr40r5-off48`,
+  `abtest/hash_archive.py` member hashes, `mabc-pr.zip` + `pctree-pr-evt*.tar.gz`).
+  The r5 off arm is a valid clean-HEAD reference this round because round 5
+  flipped nothing: it was itself gated 48/48 vs the git-stash clean base at
+  `3fa0aeb3`, and HEAD `aab6ccce` is byte-wise that same source with the same
+  false defaults -- byte-identity is transitive.  (The round-3 lesson "a prior
+  arm stops being a valid reference once defaults change" does not bite here
+  precisely because no default changed in round 5.)
+- **G2a/b/c**: **PASS, all three** -- table above.
+- **G3 population**: **PASS -- nusel-table.tsv diff is 0 lines** across the 48-event
+  manifest (`work-pr40r6-off48` vs `work-pr40r6-on48`, flip set F9/F10/F11/F12/F14
+  forced on).  Zero verdict flips, zero score movement at table precision.
+- **G4 census** (off48 vs on48 calib JSON, 48 events): 26/48 events restructure,
+  fully decomposed -- 95 shower-membership-only reassignments + 126 renumbered-pair
+  + 86 length/combination knock-ons (F12's absorption changes), 19 flag-only clears
+  (F11's straightness population, 11-30 cm straight segments plus 2 short-segment
+  knock-ons on evt 256587), **42 pdg transitions dominated by the intended
+  11->13 direction (19 recoveries)**; counter-direction 13->11 is 7, of which 6 are
+  sub-cm score-100 never-PID'd stubs released to their own default-fill shower
+  (round 4's documented "secondary release" class) and 1 (evt 46363 seg 86123,
+  8.4 cm) is a genuine re-PID with confident score 0.30.  Long-muon pseudo-shower
+  count unchanged (2 off == 2 on) -- broken-muon reassembly intact, the F12
+  exemption works.
+- **G5 unit tests**: `wcdoctest-clus` **PASS 100/100 cases, 1042/1042 assertions**.
+- **G6 compiled-config**: **PASS** -- keys absent off (compiled JSON byte-identical
+  to HEAD; note the TaggerCheckNeutrino node only exists with the runner's
+  `pipeline_names` TLA -- grep the pipeline-enabled compile, not the bare one);
+  present exactly once each with the TLAs on.
+
+## Flip -- FLIPPED, all five knobs SBND PRODUCTION DEFAULT ON
+
+Owner pre-authorized during round-6 planning ("flip all if gates pass") and
+separately accepted the two parent-stub residuals (19039 pi+, 15005 proton) when
+asked.  G1 96/96 + G2 3/3 + G3 0-line diff met the pre-authorization bar ->
+`wct-pr-perevt.jsonnet` TLA defaults flipped: `track_pid_persist_dqdx_electron_
+guard`, `shower_connect_main_vertex_straight_guard`, `shower_traj_straight_guard`
+(the round-5 trio, whose flip round 5 explicitly deferred), `shower_absorb_track_
+guard`, `michel_stem_muon_rescue` all `false -> true`.
+`shower_connect_protected_pion_guard` (F13) stays `false` -- measured dead, never
+flip.
+
+Cfg-only flip verified with bare runs (no env overrides, `work-pr40r6-flipverify`):
+nueCC48 evt 10550 hash-matches the gated on-arm exactly (`mabc-pr.zip`
+`139918f0...`, `pctree` `3bf518d2...`), and all three owner-case `mc.json` trees
+are byte-wise the Demonstration table's.
+
+## Scope and not-claimed
+
+- The single-muon-per-cluster selection (`NeutrinoVertexFinder.cxx:1679` pion
+  demotion) is untouched; the two owner-accepted parent-stub labels (19039 pi+,
+  15005 proton) are its output on newly-honest inputs.  A collinear-muon-fragments
+  rule (19039+19038 are physically one muon) is a possible future round, not
+  attempted.
+- `shower_clustering_connecting_to_main_vertex`'s accept-time force-set and its
+  1.3-1.45x MIP proton-skip blind spot are documented (F13's negative result), not
+  changed.
+- The template competition's lack of an absolute quality gate (54341's original
+  proton call) is compensated by F14's topology rescue, not fixed at the source.
