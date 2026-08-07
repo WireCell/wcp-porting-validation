@@ -1525,6 +1525,11 @@ isolation** — pr/30 F4 named two callers, this is a third, and a change to
 
 ### §10.9 F8 — the PID persistence gate (P14)
 
+**IMPLEMENTED, doc pr/40 F1 (2026-08-06)**, as `track_pid_persist_dqdx`,
+SBND production default ON — triggered by an owner report of track segments
+displaying as electron in Bee, 4 of the 9 cases traced directly to this gate.
+Below is the state at the time this audit re-confirmed it, for the record.
+
 Re-confirmed present at `6206c46b`. **No new solution is offered here**: this
 is doc `pr/7 — track-PID persistence divergence`, status DIAGNOSED, with a fix
 already written up and not implemented. What this audit adds is two knock-on

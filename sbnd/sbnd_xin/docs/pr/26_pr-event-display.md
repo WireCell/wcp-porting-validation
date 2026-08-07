@@ -16,6 +16,9 @@ valfast events. **No PR algorithm changes** in either stage.
   port gap, closed by the knob `sp_photon_flag` — **now the SBND default**
   (C++ default still false). `photon_flag` is therefore no longer one of §8.2's
   never-assigned fields.
+* **Stage 5** (§10) — the **energy-per-particle table is now clickable**, the
+  same highlight-in-nine-panels behaviour the particle-flow table already had.
+  Display-only: no dump, no C++, no gate reopened.
 
 Two defects were found on the way and are written up in §5. §5.1 has since been
 fixed (toolkit `4c02b679`); §5.2 remains reported-not-fixed, per CLAUDE.md's
@@ -1014,3 +1017,80 @@ root -l -b -q -e 'TFile f("work-spflag-on/pr_evt172230/tracking-pr.root");
   TTree*t=(TTree*)f.Get("T_tagger"); Float_t v; t->SetBranchAddress("photon_flag",&v);
   t->GetEntry(0); printf("photon_flag=%g\n", v);'
 ```
+
+## 10.1 The energy table gained the same click-to-highlight the PF table has
+
+**Stage 5** — display-only, `pr_display_viewer.py`, no dump/C++ change. The
+"energy per particle" panel (`kine_energy_particle` et al.) was a static HTML
+table; clicking the particle-flow (PF) table already highlighted a particle in
+all nine panels, and the request was to do the same from the energy table.
+
+The obstacle: `kine_energy_particle` is pushed by `NeutrinoKinematics.cxx`'s
+own graph walk (`push_shower_kine`/`push_segment_kine`), a different traversal
+than the one that built the PF tree (`fill_bee_pf_tree`), so the dump carries
+no id linking a `kine_energy_particle` row back to a PF node or a segment.
+Adding one would mean a new field in `calib-pr-evt*.json` — touching
+`PrDisplayDump.cxx`/`NeutrinoKinematics.cxx`, both of which `vf_tree_compare_all.py`
+reads as a HARD valfast gate, and re-running every `calib-pr-evt*.json` in the
+tree (nothing already on disk would carry the new field) — for what is a
+viewer-only ask. Not done; see §10.3.
+
+**What was done instead**: `kine_pf_ids()` joins each energy-table row to a PF
+node **in Python, at display time**, on physics values already in the JSON —
+no new dump field, no re-processing, no gate to reopen.
+
+- A shower row's value is the exact same float as `showers[].kine_best` (both
+  `kine_best / MeV`) — matched to 0.05 MeV.
+- A track row has no per-segment KE anywhere else in the dump. Its only
+  representation is the PF label string (e.g. `"pi+  25 MeV"`), which
+  **truncates**, not rounds — confirmed against several events (`25.61 MeV`
+  reads as `"25 MeV"`, not `"26 MeV"`) — so the match is `floor(row_ke) ==
+  int(label)`.
+- **pdg is required on both sides**, not just a tiebreaker: without it, two
+  unrelated particles a few hundred keV apart collide (evt 489330: a 1.65 MeV
+  pdg-11 row false-matched two unrelated pdg-211 PF nodes at 1 and 2 MeV until
+  the pdg gate was added).
+
+Checked against all 48 nueCC48 events plus the 8 currently loaded on port 5017
+(741 energy-table rows total): **0 rows matched more than one PF node**.
+~37% of rows resolve to a PF node (275/741); the rest get `pf_id = -1` and the
+click note says so explicitly rather than highlighting the wrong thing —
+mostly the small `kine_energy_included == 3` knock-on showers that never got
+their own PF tree node in the first place (§7.1: the PF tree is *read*, not a
+1:1 mirror of every kine-tree entry).
+
+## 10.2 What changed in the display
+
+- The energy table is now a `DataTable` (was a `Div`-rendered HTML table),
+  with its own `ColumnDataSource`/`CDSView` pair (`kine_src`, `KINE_VIEW_A/B`)
+  — reusing the PF table's view for both would share the doc-58 repaint-flip
+  state and silently break one of the two tables' redraws.
+- Clicking a row calls the same `highlight_ids()` / `set_highlight()` the PF
+  table uses. Clicking in either table clears the other's selection (a
+  `state["_suppress_select"]` guard stops the clear from bouncing back and
+  erasing the highlight just set) — one highlight on screen at a time, no
+  visual ambiguity about which click produced it.
+- `kine_note` reports what got highlighted (particle, MeV, PF id, segment
+  count) or, for an unmatched row, says plainly that nothing did.
+
+## 10.3 Scope
+
+- No dump, no C++, no reconstruction change: `git -C toolkit status
+  --porcelain` shows only the pre-existing untracked symlink dirs.
+- Exact per-segment `kine_energy_particle` → PF-node linkage (closing the
+  ~63% unresolved rate above) needs a new dump field per §10.1 — a separate,
+  owner-approved round, not a side effect of this one.
+- No valfast gate reopened: `calib-pr-evt*.json` content is unchanged byte
+  for byte: `PrDisplayDump.cxx`/`NeutrinoKinematics.cxx` were not touched.
+
+## 10.4 Verification
+
+- `python3 -m py_compile pr_display/pr_display_viewer.py`: OK.
+- `bokeh serve` smoke run against evt 234638 (26 kine rows, the richest event
+  checked) and evt 489330 (the pdg-collision case): loads with no traceback;
+  the one Bokeh warning (`MISSING_RENDERERS` on the colour-bar figure) is
+  pre-existing and unrelated.
+- Collision check (`kine_pf_ids`, described above) over 52 events, 741 rows,
+  0 multi-matches.
+- Server on port 5017 restarted with the same 8 `calib-pr-evt*.json` args it
+  was already serving.

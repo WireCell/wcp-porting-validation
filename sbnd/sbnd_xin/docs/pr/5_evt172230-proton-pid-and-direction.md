@@ -133,6 +133,11 @@ proximity — did NOT fire here, proton is 12–26 cm from every shower fragment
 in all 3 views); `improve_maps_no_dir_tracks` Cases C/D (`pdg==2212` +
 `dQ_dx_rms > {1.0,0.75,0.4}×43e3` + anti-parallel to shower → electron) and
 Case H (`pdg==0`, `len<12cm`, `median/(43e3)>1.2`, anti-parallel → electron).
+`judge_no_dir_tracks_close_to_showers` and Cases C/D/H remain untouched;
+Case E (a sibling rule in the same function, muon-topology demotion, not
+listed here since it wasn't implicated in this event) got a dQ/dx guard in
+doc pr/40 F2 (2026-08-06) after a separate owner report traced SBND evt 388
+to it.
 
 ### 3c. Step 3 — the all-showers vertex path picks an end blindly
 

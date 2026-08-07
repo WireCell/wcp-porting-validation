@@ -90,6 +90,32 @@ esac
 mkdir -p "$OUTROOT"
 OUTROOT=$(cd "$OUTROOT" && pwd -P)
 
+# doc pr/38 round 3: the PR job re-applies switch_scope's pos_offset
+# correction, gated on reality -- so the PR reality MUST match the lineage of
+# the ql_root that produced the input pctree, or borderline scope / in-window
+# / PID decisions flip wholesale (234638 red-chord track, 55715 whole-event
+# EM-shower absorb).  Every run stamps its out_root; the check reads the
+# ql_root's stamp, falling back to the reality= field of its .batch_* markers
+# (rounds that predate the stamp).  Mismatch is fatal unless
+# SBND_ALLOW_REALITY_MISMATCH=1 (deliberate cross-lineage A/B only).
+echo "$REALITY" > "$OUTROOT/.lineage_reality"
+QL_REALITY=""
+if [ -f "$QLROOT/.lineage_reality" ]; then
+    QL_REALITY=$(cat "$QLROOT/.lineage_reality")
+else
+    mapfile -t _QLR < <(grep -sho 'reality=[a-z]*' "$QLROOT"/.batch_*.log 2>/dev/null | sort -u | sed 's/reality=//')
+    if [ "${#_QLR[@]}" -gt 1 ]; then
+        echo "WARN: ql_root has MIXED reality markers (${_QLR[*]}) -- lineage check skipped, verify by hand" >&2
+    elif [ "${#_QLR[@]}" -eq 1 ]; then
+        QL_REALITY="${_QLR[0]}"
+    fi
+fi
+if [ -n "$QL_REALITY" ] && [ "$QL_REALITY" != "$REALITY" ]; then
+    echo "ERROR: reality mismatch: ql_root lineage is '$QL_REALITY' but this run was given '$REALITY'." >&2
+    echo "       (doc pr/38 round 3; set SBND_ALLOW_REALITY_MISMATCH=1 only for a deliberate cross-lineage A/B)" >&2
+    [ "${SBND_ALLOW_REALITY_MISMATCH:-0}" = "1" ] || exit 1
+fi
+
 if [ $# -ge 1 ]; then
     EVENT_IDS=("$@")
 else
@@ -224,6 +250,10 @@ for _pr34 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr34 _env _key _val
+# doc pr/38 (2026-08-05 owner round 2): the two short-lived pr/38 knobs were
+# REMOVED -- their corrected behavior (barrier minus shower start vertices +
+# orphan root-leaf safety net) now lives under the existing
+# SBND_PF_SHOWER_VERTEX_BARRIER / pf_shower_vertex_barrier knob above.
 # doc pr/35 sec 11: the sec 10 energy-reconstruction port fix.  Same tri-state
 # contract (unset = cfg default, 1 = force on, 0 = force off).  NOT display-
 # only: kine_reco_Enu is numu-BDT var 69 and in the nue reader.  Gate with
@@ -309,6 +339,33 @@ fi
 # a rebuild; SBND_ISO_TUBE_R sets the axis-tube radius in cm.
 [ -n "${SBND_ISO_MIN_ASPECT:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_min_aspect=${SBND_ISO_MIN_ASPECT}")
 [ -n "${SBND_ISO_TUBE_R:-}" ] && CATH_TLA+=(--tla-code "iso_endpoint_tube_radius=${SBND_ISO_TUBE_R}")
+# doc pr/24 round 5 (sec 18): examine_vertices_3's get_local_extension
+# recovery step has no check that it actually extends the vertex (rather than
+# retracting it toward the far endpoint) -- worst on an iso_endpoint-picked
+# isochronous seed.  DEFAULT ON since the round-6 flip (owner 2026-08-06,
+# doc pr/24 sec 19.1) -- EMPTY = no TLA = the cfg default = ON.
+# SBND_V3_EXT_GUARD=0 restores the legacy (unguarded) get_local_extension for
+# an A/B; =1 is now a no-op kept so older runner invocations still mean what
+# they said.
+if [ "${SBND_V3_EXT_GUARD:-1}" = 0 ]; then
+    CATH_TLA+=(--tla-code "v3_extension_guard=false")
+else
+    [ "${SBND_V3_EXT_GUARD:-}" = 1 ] && CATH_TLA+=(--tla-code "v3_extension_guard=true")
+fi
+[ -n "${SBND_V3_EXT_MIN_GAIN:-}" ] && CATH_TLA+=(--tla-code "v3_extension_min_gain=${SBND_V3_EXT_MIN_GAIN}")
+# doc pr/39: exclude a shower's own start vertex from the end_point
+# farthest-vertex search (prototype map_vtx_segs parity, same rule as
+# fill_sets's exclude_start_vertex, extended to calculate_kinematics{,_long_muon}).
+# SBND production default since 2026-08-06 (owner: "turn it on for SBND"),
+# exactly the v3_extension_guard idiom -- EMPTY = no TLA = the cfg default
+# (ON).  SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX=0 restores the legacy
+# (unguarded) end_point search for an A/B; =1 is now a no-op kept so older
+# runner invocations still mean what they said.
+if [ "${SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX:-1}" = 0 ]; then
+    CATH_TLA+=(--tla-code "shower_endpoint_exclude_start_vertex=false")
+else
+    [ "${SBND_SHOWER_ENDPOINT_EXCLUDE_START_VERTEX:-}" = 1 ] && CATH_TLA+=(--tla-code "shower_endpoint_exclude_start_vertex=true")
+fi
 # Steiner TERMINAL filter fidelity (doc pr/29 D1 + D12).
 # **SBND PRODUCTION DEFAULT ON since the owner flip 2026-08-04** -- these are
 # port bugs, not tuning: the toolkit terminal filter was tighter than the WCP
@@ -433,6 +490,191 @@ case "${SBND_NU_SKIP_COSMIC:-}" in
     1) CATH_TLA+=(--tla-code "nu_skip_cosmic=true")
        CATH_TLA+=(--tla-code "nu_skip_cosmic_bundle=true") ;;
 esac
+# doc pr/40: track (proton/pion/muon) mis-identified as electron.  Same
+# tri-state contract (unset = cfg default, 1 = force on, 0 = force off).
+#   F1 SBND_TRACK_PID_PERSIST_DQDX     persist type+mass whenever pdg_code!=0
+#   F2 SBND_SHOWER_RECLASS_DQDX_GUARD  spare a decisively proton/muon-like
+#                                      segment from wholesale reclassification
+#   F3 SBND_SHOWER_TOPO_DQDX_GUARD     same guard inside the topology test
+for _pr40 in \
+    "SBND_TRACK_PID_PERSIST_DQDX:track_pid_persist_dqdx" \
+    "SBND_SHOWER_RECLASS_DQDX_GUARD:shower_reclass_dqdx_guard" \
+    "SBND_SHOWER_TOPO_DQDX_GUARD:shower_topo_dqdx_guard" ; do
+    _env=${_pr40%%:*}; _key=${_pr40#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40 _env _key _val
+# doc pr/40 round 2: two follow-on defects from the pr/40 fix round (zero-KE
+# persistence stub, reclass_pinfo negative-KE stub) plus a proton-daughter
+# guard.  Same tri-state contract.  F4/F6 are SBND production default ON;
+# F5 is STILL default OFF (fires but reverted downstream -- see
+# porting_dictionary.md and doc pr/40 round 2; blocked pending round 3).
+#   F4 SBND_TRACK_PID_PERSIST_4MOM       segment_cal_4mom unconditionally
+#                                        instead of a rest-mass-only stub
+#   F5 SBND_SHOWER_PROTON_DAUGHTER_PION  electron -> pion when it fathers a
+#                                        PID'd, charge-confirmed proton
+#   F6 SBND_RECLASS_NEVER_COMPUTED_KE_FLOOR  never-computed reclass_pinfo
+#                                        reads KE==0, not KE==-mass
+for _pr40r2 in \
+    "SBND_TRACK_PID_PERSIST_4MOM:track_pid_persist_4mom" \
+    "SBND_SHOWER_PROTON_DAUGHTER_PION:shower_proton_daughter_pion" \
+    "SBND_RECLASS_NEVER_COMPUTED_KE_FLOOR:reclass_never_computed_ke_floor" ; do
+    _env=${_pr40r2%%:*}; _key=${_pr40r2#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r2 _env _key _val
+# doc pr/40 round 4: two follow-on defects from round 2/3's F5 fix (relabels
+# pdg but not the shower flags; a muon fathering two protons is not
+# physical).  Same tri-state contract.  Both default OFF pending gates.
+#   F7 SBND_SHOWER_PROTON_DAUGHTER_PION_DISSOLVE  clear shower flags when F5
+#                                                  relabels a segment to pion
+#   F8 SBND_MUON_MULTI_PROTON_PION                muon -> pion when its far
+#                                                  end is a multi-proton
+#                                                  (>=2, charge-confirmed)
+#                                                  hadronic vertex
+for _pr40r4 in \
+    "SBND_SHOWER_PROTON_DAUGHTER_PION_DISSOLVE:shower_proton_daughter_pion_dissolve" \
+    "SBND_MUON_MULTI_PROTON_PION:muon_multi_proton_pion" ; do
+    _env=${_pr40r4%%:*}; _key=${_pr40r4#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r4 _env _key _val
+# doc pr/40 round 5: muon mis-identified as electron, three owner-reported Bee
+# cases (84229, 54341, 55715), three independent mechanisms.  Same tri-state
+# contract.  All three default OFF pending gates.
+#   F9  SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD  narrows F1 -- no longer
+#                                                    rescues an undirected
+#                                                    electron guess
+#   F10 SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD  excludes a long,
+#                                                    straight candidate from
+#                                                    the main-vertex EM-shower
+#                                                    selection
+#   F11 SBND_SHOWER_TRAJ_STRAIGHT_GUARD              same straightness veto
+#                                                    on segment_is_shower_
+#                                                    trajectory that F3 gave
+#                                                    segment_is_shower_topology
+for _pr40r5 in \
+    "SBND_TRACK_PID_PERSIST_DQDX_ELECTRON_GUARD:track_pid_persist_dqdx_electron_guard" \
+    "SBND_SHOWER_CONNECT_MAIN_VERTEX_STRAIGHT_GUARD:shower_connect_main_vertex_straight_guard" \
+    "SBND_SHOWER_TRAJ_STRAIGHT_GUARD:shower_traj_straight_guard" ; do
+    _env=${_pr40r5%%:*}; _key=${_pr40r5#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r5 _env _key _val
+# doc pr/40 round 6: the boundary-level fixes round 5's G2 measurement
+# demanded.  Same tri-state contract.  All three default OFF pending gates.
+#   F12 SBND_SHOWER_ABSORB_TRACK_GUARD           shower flood-fill no longer
+#                                                 absorbs a confident straight
+#                                                 non-electron track
+#   F13 SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD connecting_to_main_vertex no
+#                                                 longer force-sets a proton-
+#                                                 daughter pion to electron
+#   F14 SBND_MICHEL_STEM_MUON_RESCUE             Michel stopping-muon rescue
+#                                                 reaches a proton-called stem
+#                                                 at a multi-prong vertex
+for _pr40r6 in \
+    "SBND_SHOWER_ABSORB_TRACK_GUARD:shower_absorb_track_guard" \
+    "SBND_SHOWER_CONNECT_PROTECTED_PION_GUARD:shower_connect_protected_pion_guard" \
+    "SBND_MICHEL_STEM_MUON_RESCUE:michel_stem_muon_rescue" ; do
+    _env=${_pr40r6%%:*}; _key=${_pr40r6#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r6 _env _key _val
+# doc pr/38 Round 3 + doc pr/44 (2026-08-07): PF-tree/image consistency on
+# 18255-142421.  Same tri-state contract (unset = cfg default, 1 = force on,
+# 0 = force off).
+#   SBND_PF_ORPHAN_TRACK_PARENTAGE   barrier-orphaned PF track nodes attach by
+#                                    graph topology instead of flat roots
+#                                    (DISPLAY-ONLY: moves mc.json only)
+#   SBND_SHOWER_LONG_MUON_KEEP_TYPE  multi-segment long-muon pseudo-shower
+#                                    keeps its muon start segment (NOT display-
+#                                    only: PID/kine/pi0 pairing move)
+for _pr44 in \
+    "SBND_PF_ORPHAN_TRACK_PARENTAGE:pf_orphan_track_parentage" \
+    "SBND_SHOWER_LONG_MUON_KEEP_TYPE:shower_long_muon_keep_type" ; do
+    _env=${_pr44%%:*}; _key=${_pr44#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr44 _env _key _val
+# doc pr/43 round 2 tri-state env overrides (unset = cfg default, 1 = force
+# on, 0 = force off):
+#   SBND_SINGLE_MUON_PROTON_CHAIN_VETO  vertex muon selection walks the
+#                                       degree-2 chain for a disqualifying
+#                                       proton (a muon cannot end in one)
+#   SBND_SINGLE_MUON_LONG_MUON_CLAIM    long-muon chain claims the vertex
+#                                       muon slot; second pdg-13 arm -> pion
+#   SBND_PID_FLAG_RECONCILE             late reconciliation pass: forced-e-
+#                                       terminal rescue + stale shower-flag/
+#                                       wrapper cleanup on confirmed tracks
+for _pr43r2 in \
+    "SBND_SINGLE_MUON_PROTON_CHAIN_VETO:single_muon_proton_chain_veto" \
+    "SBND_SINGLE_MUON_LONG_MUON_CLAIM:single_muon_long_muon_claim" \
+    "SBND_PID_FLAG_RECONCILE:pid_flag_reconcile" ; do
+    _env=${_pr43r2%%:*}; _key=${_pr43r2#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr43r2 _env _key _val
+# doc pr/45 tri-state env overrides (unset = cfg default, 1 = force on,
+# 0 = force off):
+#   SBND_OTHER_SEG_EMPTY_2D_GUARD    find_other_segments: the -1.0 empty-2D-
+#                                    tree sentinel counts as "no information"
+#                                    instead of "distance zero" (isochronous
+#                                    tail beyond a cathode-crossing cluster's
+#                                    segment end can now seed a component)
+#   SBND_PSEUDO_SHOWER_TRACK_PAINT   Bee shower_track layer + PrDisplayDump:
+#                                    muon-typed (+-13) pseudo-showers paint
+#                                    as track, matching the PF tree verdict
+for _pr45 in \
+    "SBND_OTHER_SEG_EMPTY_2D_GUARD:other_seg_empty_2d_guard" \
+    "SBND_PSEUDO_SHOWER_TRACK_PAINT:pseudo_shower_track_paint" ; do
+    _env=${_pr45%%:*}; _key=${_pr45#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr45 _env _key _val
+# doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
+# 56463, 57661) -- one segment absorbed and missing from both the flow tree
+# and the energy sum, and three muon/pion mis-selections at the
+# single-muon-per-cluster rule and the topology shower test.  Same
+# tri-state contract.  All default OFF pending gates.
+#   F1  SBND_MUON_CHAIN_PROTON_VETO         multi-hop generalization of the
+#                                            muon-candidate loop's 1-hop
+#                                            proton veto
+#       SBND_SHOWER_TYPE_CACHE_REFRESH      keep Shower's cached
+#                                            particle_type in lock-step with
+#                                            update_particle_type's own
+#                                            segment relabel
+#       SBND_SHOWER_TRAJ_DQDX_GUARD         trust a confident non-electron
+#                                            track-PID conclusion inside
+#                                            segment_determine_shower_
+#                                            direction_trajectory instead
+#                                            of discarding it
+#       SBND_SHOWER_TRAJ_CHAIN_PION         companion to the above: relabel
+#                                            a main-vertex proton's short
+#                                            muon-pdg continuation chain to
+#                                            pion except the deepest,
+#                                            confirmed-muon segment
+#       SBND_KINE_SHOWER_VERTEX_BARRIER     kine-tree parity with pr/38's
+#                                            pf_shower_vertex_barrier;
+#                                            MOVES kine_reco_Enu when on
+for _pr43 in \
+    "SBND_MUON_CHAIN_PROTON_VETO:muon_chain_proton_veto" \
+    "SBND_SHOWER_TYPE_CACHE_REFRESH:shower_type_cache_refresh" \
+    "SBND_SHOWER_TRAJ_DQDX_GUARD:shower_traj_dqdx_guard" \
+    "SBND_SHOWER_TRAJ_CHAIN_PION:shower_traj_chain_pion" \
+    "SBND_KINE_SHOWER_VERTEX_BARRIER:kine_shower_vertex_barrier" ; do
+    _env=${_pr43%%:*}; _key=${_pr43#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr43 _env _key _val
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a

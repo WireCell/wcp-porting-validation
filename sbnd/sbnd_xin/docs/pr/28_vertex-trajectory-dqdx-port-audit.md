@@ -10,11 +10,12 @@ fitting, track trajectory and dQ/dx fitting compared to prototype code?"*
 after reading it. All are unconditional — no knob: they are port-fidelity
 bugs or plain defects, not legacy behaviour to preserve.
 
-**This doc is now CLOSED.** Round 8 (§14) fixed the last item the owner listed,
-measured both container classes §11.8 left, and closed §4.2/§4.3/§4.4. Round 9
-(§15) then took the four items §14 had *recorded as new work* — and the first of
-them, the shower-quantity nondeterminism, turned out to be a **third** container
-class neither earlier sweep covered: `TrajectoryView::edges()` is a
+Rounds 1–9 (§7–§15) are **CLOSED** — see the table below and §16.9's
+acceptance. Round 8 (§14) fixed the last item the owner listed, measured both
+container classes §11.8 left, and closed §4.2/§4.3/§4.4. Round 9 (§15) then
+took the four items §14 had *recorded as new work* — and the first of them, the
+shower-quantity nondeterminism, turned out to be a **third** container class
+neither earlier sweep covered: `TrajectoryView::edges()` is a
 `std::unordered_set` hashed on heap addresses. **The PR display dump is now
 run-to-run identical: 0 leaf diffs over 954 344 leaves on six events**, down from
 a floor of 1–3. What remains is recorded as *new* items with their own starting
@@ -22,6 +23,18 @@ points, not as unfinished business here: the twelve `NeutrinoShowerClustering`
 membership sites (§15.8), and the owed valfast/1000 population gate
 (§15.9) — §11.7 is closed by §15.10 and the slice-start `x` convention is
 accepted (§15.11).
+
+**Round 10 (§17, 2026-08-06) REOPENS this doc** — not to revisit round 7's
+T1/T2 fix, but to add a knob on top of it. Doc pr/24 round 6 (§19.5) bisected
+SBND evt 271851's "two separated upper vs. lower half" display to `23bd6783`
+(round 7, this doc's §13, T1/T2) and asked whether it merited its own round.
+The owner: *"Can you examine this … to make improvements over the prototype
+algorithm? Note, the main thing here is that this is an ISO case…"* Round 10
+finds that on an **isochronous** cluster the charge-consistency veto's revert
+has no protection the prototype ever needed, adds a default-OFF,
+cluster-geometry-gated abstain (`skip_revert_iso_xext_cut`), and reopens §16.9's
+"closed for this round" only for that addition — round 7's own fix and its
+evt 388 acceptance are verified UNCHANGED (§17.4).
 
 | round | items | toolkit commit | section |
 |---|---|---|---|
@@ -34,6 +47,7 @@ accepted (§15.11).
 | 8 | **§4.3 last row** `assemble_fitted_charge_2d` iterated a pointer-keyed map, making `charge_pred` run-dependent — the same-binary noise floor drops **593 → 2** leaves and `proj[]/charge_pred[]` to **zero**. **Both §11.8 container classes measured; §4.2/§4.3/§4.4 closed, §4.4 *settled*; and one newly-found pointer-ordered MUTATING traversal (`NeutrinoVertexFinder.cxx:2934`) fixed (§14.12).** | `22249ff4` | **§14** |
 | 7 | **§3b T1+T2** the multi-track charge veto was structurally dead · **T3** the dead-channel lookup used the loop position, not the global index · **T6** a close-vertex reset destroyed the segment's trajectory. **T4 kept as-is + made non-silent; T5/T7/T8 dropped (§13.7). Owner accepted the result from the event display, and there is no knob to flip: the round is unconditional (§13.12).** | `23bd6783` | **§13** |
 | 9 | **the shower-quantity nondeterminism §14.5 left** — `TrajectoryView::edges()` is an `unordered_set` hashed on `void*` node descriptors, and `Shower::get_total_length()`/`calculate_kinematics()` accumulated FP over it. **Same-binary repeat floor 1 → 0 leaves.** Plus §14.6's two live tie-only sites, the dead `GroupingHelper`, and the `SIZE_MAX` hazard closed as a class with a warn-once guard. **Two revert-proven doctests.** | `026a7501` + `84cd02e0` + `397b1517` | **§15** |
+| 10 | **`skip_revert_iso_xext_cut`** — the round-7 charge veto's revert has no protection against an isochronous cluster's two charge samples overlapping instead of resolving. Cluster-geometry gate, abstain (keep the fitted point) when the segment's cluster has small blob-center drift-x extent. C++ default OFF; **SBND PRODUCTION DEFAULT since 2026-08-06 (§17.8, 20 cm)**. **NOT a re-opening of round 7's own fix — evt 388 verified unchanged (§17.4).** | `6b219d14` + flip | **§17** |
 
 Each fixed item is marked **FIXED** at its own section/table row below — do not
 read §3.1, §3.2, §3.3 rows a–e, §4.1, or §3b T1/T2/T3/T6 as open defects.
@@ -3602,3 +3616,458 @@ this line says it moved the right way. Neither substitutes for the other.
 
 **Docs pr/28 and pr/29 are closed for this round.** Anything above reopens them
 only with a new arm and a new tag.
+
+---
+
+## §17 Round 10 — isochrony-gated abstain on the round-7 charge veto's revert
+
+**Why this round exists.** Doc pr/24 round 6 (§19.5) bisected SBND evt 271851's
+"two separated upper vs. lower half" display to `23bd6783` (round 7 above, this
+doc's §13, T1/T2) — one day *after* the `iso_endpoint` fix the owner was asking
+about, and shipped **unconditionally**. §19.8 asked the owner whether that
+regression deserved its own round. The owner:
+
+> *"Can you examine this … to make improvements over the prototype algorithm?
+> Note, the main thing here is that this is an ISO case, which may be able to
+> help to design the fix to improve."*
+
+This is **not** a re-litigation of round 7. `23bd6783` was a faithful port fix,
+reviewed and accepted by the owner on evt 388 (§13.12, §16.9). What it exposed
+is a limitation of the *algorithm* — the prototype's charge-consistency veto has
+no protection for the case where its two charge samples are not independent —
+that the prototype never had to confront because it never ran on the kind of
+isochronous EM-shower sheet SBND's `iso_endpoint`/`v3_extension_guard` chain
+(doc pr/24) was built to handle. Round 10 adds a default-OFF, cluster-geometry
+gate on top of round 7's fix; round 7's own fix is untouched and its evt 388
+result is verified unchanged (§17.4).
+
+### §17.0 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+# S1/S2 measurement + G2/G3 single-event arms
+SBND_TRACKFIT_JSON=/home/xqian/tmp/pr28r10/cfg/sbnd_track_fitting_on.json \
+    PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr28r10-on-271851 data 271851
+SBND_TRACKFIT_JSON=/home/xqian/tmp/pr28r10/cfg/sbnd_track_fitting_on.json \
+    PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr28r10-on-388 data 388
+python3 scripts/analysis/pr24/pr24_iso_probe.py work-pr28r10-on-271851 --flank 271851
+
+# G1: knob-off byte-identical (both at current HEAD, patch applied vs stashed)
+./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr28r10-off48b data
+# G4/G5: knob-on population
+SBND_TRACKFIT_JSON=/home/xqian/tmp/pr28r10/cfg/sbnd_track_fitting_on.json \
+    SBND_MAX_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr28r10-on48b data
+./build/clus/wcdoctest-clus -tc="clus knob defaults: TrackFitting skip_revert_iso_xext_cut is off"
+```
+
+`sbnd_track_fitting_on.json` = a copy of `cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json`
+with `"skip_revert_iso_xext_cut": 200.0` added (200 raw units = 20 cm,
+`units::cm=10`). The canonical in-tree file is untouched — this round ships a
+knob, not a flip; SBND production is unaffected until someone edits that file
+(§17.7).
+
+### §17.1 S1 — within `23bd6783`, T1 (the charge revert) drives 271851, not T2
+
+T1 mutates the fitted point (`skip_trajectory_point`'s `p = ps_point`,
+`TrackFitting.cxx:5100`); T2 changes `angle1`'s reference path (`:5137-5147`)
+and therefore which points the angle-based skips drop. Doc pr/24 §19.5 states
+this was **not** independently verified for 271851 — only the commit's own evt
+388 note was cited. Three single-event source edits at HEAD (`v3_extension_guard`
+on, matching the current SBND default), each `wcbuild` + freshness proof +
+run + `pr24_iso_probe.py --flank 271851` + restore:
+
+| arm | edit | isolates | flank score |
+|---|---|---|---|
+| HEAD (baseline) | — | both T1+T2 active | **25 % (53.8/214.8 cm)** |
+| `t12off` | `pss_vec` from `final_ps_vec` | both off | 12 % (21.8/183.6 cm) |
+| `t1off` | keep `init_ps_vec` fill; skip `p = ps_point` | **T1 off, T2 on** | **9 % (21.9/241.5 cm)** |
+| `t2off` | keep `init_ps_vec` for the veto; `final_ps_vec` for `angle1` | **T1 on, T2 off** | **32 % (55.7/176.0 cm)** |
+
+Disabling T1 alone drops the flank to 9 % — at or below the fully-disabled
+baseline (12 %), within the noise of a 15-segment classification. Disabling T2
+alone **raises** it to 32 %: T2's angle-based skip was catching some of the
+points T1's revert corrupts, so removing T2 while keeping T1 makes things
+worse, not better. **T1 is the driver.** This round's fix targets the revert
+(`p = ps_point`), not `angle1`.
+
+### §17.2 S2 — what actually happens at a revert, and what discriminates a flank from a healthy fit
+
+**Method.** `skip_trajectory_point`'s existing `SPDLOG_LOGGER_TRACE` (fires
+*before* the revert, so it logs the true pre-revert separation) was extended to
+also emit `p`, `ps_point`, the six per-plane charge sums, `t1`/`t2`/`u1`/`u2`/
+`v1`/`v2`/`w1`/`w2`, and the cluster's `ident()`. Run at `SBND_WCT_LOGLEVEL=trace`
+on evt 271851 (1586 reverts on cluster 23) and evt 388 (4345 reverts on its own
+cluster 23 — same numbering, unrelated cluster), joined offline against each
+cluster's PCA frame (the same one `pr24_iso_probe.py --flank` builds, `x`, `y`,
+`z` from `mabc-pr.zip`'s `0-clustering-global.json`).
+
+**Finding 1 — no teleport. Doc pr/24 §19.5's mechanism paragraph is RETRACTED.**
+That paragraph described the revert as an unbounded jump onto the sheet's
+flank, 8–12 cm away. Measured: revert distance (`|p - ps_point|`) has median
+0.43–0.44 cm and max 1.7 cm, on **both** events, and equally whether the
+reverted point ends up on the flank (`|t| > 5 cm` in cluster 23's frame) or
+not:
+
+| event | population | n | moved (cm): p10 / median / p90 |
+|---|---|---|---|
+| 271851 | flank (\|t\|>5) | 444 | 0.22 / 0.44 / 1.09 |
+| 271851 | non-flank | 1142 | 0.18 / 0.43 / 0.76 |
+| 388 | flank-frame (\|t\|>5) | 1170 | 0.23 / 0.45 / 0.78 |
+| 388 | non-flank-frame | 3175 | 0.16 / 0.37 / 0.74 |
+
+A **distance cap on a single revert would not fire** — no individual revert is
+large enough to trip one. The real mechanism, read back off this measurement:
+each revert nudges a point by <1 cm toward its own pre-fit position; the flank
+exists because **many consecutive points along a ~20–40 cm stretch already
+have pre-fit positions sitting off the eventual trunk line**, and each small
+revert individually blocks the multi-track fit's attempt to smooth that one
+point onto the trunk. The veto is not creating the flank; it is preventing its
+repair, one sub-centimeter step at a time, consistently, along the stretch.
+
+**Finding 2 — per-point local signals do not discriminate.** Two candidate
+per-revert gates were measured and both come back flat:
+
+- `t1 == t2` (fitted and comparison projections land on the identical
+  time-tick, i.e. locally isochronous by construction): **36 %** of 271851's
+  reverts, **39 %** of 388's — same order. *Within* 271851, the flank
+  population is not enriched relative to non-flank: 170/444 (38 %) of flank
+  reverts have `t1 == t2` vs 399/1142 (35 %) of non-flank reverts.
+- local displacement angle to the drift(x) axis (`arccos(|Δx|/|Δp|)`; 90° =
+  displacement purely transverse to drift): median 68.3° (271851 flank) vs
+  64.6° (271851 non-flank) vs 59.7° (388 flank-frame) vs 63.9° (388
+  non-flank-frame) — all four populations sit in the same 60–70° range, and
+  the fraction with angle > 75° is 0.32 / 0.30 / 0.25 / 0.30 respectively.
+  **No separation between the pathological event and the accepted one, or
+  between flank and non-flank points within either event.**
+
+A knob gated on either of these (the original plan's `skip_revert_iso_deg`)
+would fire at essentially the same rate on evt 388 as on 271851's flank —
+useless as a discriminator, and risking exactly the "selective revert of an
+accepted result" failure mode this round is required to avoid.
+
+**Finding 3 — the CLUSTER's real drift(x) extent discriminates cleanly.**
+Not a per-point quantity: the whole cluster's blob-center x-span (the measure
+`iso_band_like` already uses, `clustering_neutrino.cxx:83-95`, for an unrelated
+merge veto):
+
+| event | cluster | x(drift) extent | y extent | z extent |
+|---|---|---|---|---|
+| 271851 | 23 (the isochronous shower sheet) | **12.8 cm** | 39.0 cm | 63.6 cm |
+| 388 | 23 (round 7's accepted case, unrelated cluster) | **36.3 cm** | 21.1 cm | 75.3 cm |
+
+271851's cluster is genuinely thin in drift (x-extent 1/3–1/5 of its y/z
+footprint); 388's has real 3-D extent (x comparable to y). This is the
+discriminator the fix uses.
+
+**Calibration across the wider census** (from the fitted-trajectory `xext`
+column already computed by `pr24_iso_probe.py`'s `_cluster_table`, i.e. the
+same measure at the fit-point level, on all 5 events doc pr/24 §19.6 found
+carrying a >10 % flank chain):
+
+| event | flank % (§19.6) | longest-cluster x-extent |
+|---|---|---|
+| 271851 | 25.0 % | **12.6 cm** |
+| 42280 | 10.6 % | **11.7 cm** |
+| 174637 | 11.1 % | 48.4 cm |
+| 214469 | 11.0 % | 115.4 cm |
+| 268067 | 13.8 % | 75.7 cm |
+
+**Only 2 of the 5 flank events (271851, 42280) are isochronous by this
+measure.** The other three's flank chains sit inside clusters with substantial
+drift extent — a large-footprint object that happens to carry a thin,
+locally-flat sub-region is not what this fix targets, and it will not touch
+them (confirmed in §17.4's G4). This is not a shortfall to paper over: the
+owner's framing — *"this is an ISO case"* — names exactly the two events this
+measure catches, and the fix is scoped to that mechanism, not to "every event
+with any flank chain."
+
+### §17.3 The change — `skip_revert_iso_xext_cut`
+
+One knob, `double`, C++ default `-1` = off (unconditional revert, byte-identical
+to round 7). Threaded through the five sites this class's params use (no
+`IConfigurable`; reached via `TaggerCheckNeutrino`/`TaggerCheckSTM`'s
+`trackfitting_config_file` JSON loader, `set_parameter(name, double)`, raw
+internal units — `20 cm` is written as `200.0`):
+
+1. `clus/inc/WireCellClus/TrackFitting.h` — `Parameters::skip_revert_iso_xext_cut`
+2. `clus/src/TrackFitting.cxx` — `set_parameter`/`get_parameter` dispatch
+3. `clus/src/PatternDebugIO.cxx` — JSON round-trip, both directions (debug-dump
+   only, gated behind `WCT_DUMP_INIT_FIRST_SEGMENT`/`WCT_DUMP_TAGGER_INPUTS`,
+   not part of production output — confirmed no effect on G1)
+4. `clus/inc/WireCellClus/TrackFittingPresets.h` — explicit `-1` in the preset
+5. `clus/test/doctest_clus_knob_defaults.cxx` — pinned, revert-proven (§17.4 G6)
+
+The gate itself, `skip_trajectory_point`:
+
+```cpp
+if (ratio / 3.0 < m_params.skip_ratio_cut || ratio_1 < m_params.skip_ratio_1_cut) {
+    bool abstain_revert = false;
+    if (m_params.skip_revert_iso_xext_cut >= 0) {
+        double xext = /* cached per cluster->ident(): blob-center x-extent */;
+        abstain_revert = (xext < m_params.skip_revert_iso_xext_cut);
+    }
+    if (!abstain_revert) {
+        p = ps_point;   // unchanged when off, or when the cluster is not isochronous
+    }
+}
+```
+
+The blob-center x-extent is computed once per `cluster->ident()` and memoized
+in a `std::unordered_map<int, double>` member — **looked up and inserted only,
+never iterated**, so it carries none of the pointer-keyed-container ordering
+hazard CLAUDE.md's determinism rule targets (that rule is about iteration
+order, not about using a stable `int` key for O(1) lookup).
+
+### §17.4 Gates
+
+**Freshness discipline this round needed twice.** The first population attempt
+(`skip_revert_iso_xext_cut` freshly added) raced against an unrelated rebuild
+of the SAME package and hit M3 ("file too short") on 2/48 events — caught by
+checking `rc.txt`, discarded, and rerun after the rebuild settled (never judged
+success through a partial batch summary, M14). Separately, **the doc pr/24
+round-6 `work-pr24r6-prod48` reference is now STALE**: seven unconditional
+production commits (doc pr/33 through pr/39) landed on `apply-pointcloud`
+between round 6 (`b25bdcf1`) and this round, several of them SBND-default-ON
+cfg changes. A first hash comparison against that old reference showed 40/48
+events mismatched — not a regression, just the wrong baseline (M1's freshness
+discipline extended to A/B *references*, not just binaries). G1 below instead
+compares two same-HEAD builds: this round's patch applied vs the same four
+files `git stash`ed out, both rebuilt from the identical source otherwise.
+
+**G1 — knob off, byte-identical.** `work-pr28r10-off48b` (patch applied, no
+JSON override ⇒ C++ default `-1`) vs `work-pr28r10-cleanref48` (patch
+`git stash`ed, same HEAD commit otherwise), nueCC48 `cb0805`, member-content
+hash (`hash_archive.py`) of every `mabc-pr.zip` and `pctree-pr-evt*.tar.gz`.
+
+> **48/48 events, 96/96 archives byte-identical.**
+
+**G2 — knob on fixes the symptom on 271851, and the trunk stays intact.**
+`SBND_TRACKFIT_JSON=…on.json` (20 cm cut), evt 271851:
+
+| | flank score | longest segment |
+|---|---|---|
+| off | 25 % (53.8/214.8 cm) | `23024` split across several ≤22 cm pieces |
+| **on** | **9 % (21.9/241.5 cm)** | **`23024`, L=49.6 cm, t̄=2.4, axial [-9.8, 34.5]** |
+
+9 % is not literally zero — it is exactly S1's `t1off` ceiling (§17.1: what
+disabling every revert on this cluster achieves), because the residual segment
+(`23021`, L=21.9 cm, t̄=11.2) is present in the `t1off` control arm too and is
+therefore **not caused by the charge veto at all**; this fix cannot and does
+not claim to remove it (§17.6). What it does do: the trunk consolidates from
+several short, choppy segments into one 49.6 cm piece, and trunk-classified
+segments (`|t̄|` small) now span axial **-33.0 to +34.5 cm — 67.5 of the
+sheet's 70.1 cm** — up from a more fragmented pre-fix trunk. The fit is
+smoothing onto the trunk again, which is what the mechanism in §17.2 predicts.
+
+**G3 — round 7's own accepted case (evt 388) is, for its own selection
+outputs, unchanged; and the check is informative, not vacuous.** Same 20 cm
+cut, evt 388, compared against the SAME arm's knob-off run (`off48b`, not the
+old §13.6 numbers, which predate seven intervening production rounds — see
+above):
+
+| quantity | off | on | Δ |
+|---|---|---|---|
+| neutrino vertex | (-163.0996, 31.5755, 426.3197) | (-163.0996, 31.5755, 426.3197) | **exactly 0** |
+| `numu_score` | -0.7282 | -0.7282 | **exactly 0** |
+| `kine_reco_Enu` | 2810.42 MeV | 2807.74 MeV | -2.68 MeV (-0.1 %) |
+| segments (`sub_cluster_id` count) | 88 | 92 | +4 |
+
+Cluster 23 in evt 388 (the structure round 7's own T1/T2 fix was written
+against) has x-extent 36.3 cm — **above the 20 cm cut, so it is untouched by
+construction**, not just by measurement: re-running with trace-level logging,
+0 of its reverts are suppressed. The 92-vs-88 segment count and the 0.1 %
+`kine_reco_Enu` shift come from **other, smaller, incidentally-isochronous
+clusters elsewhere in the same event** — trace-level logging over the whole
+event counts **944 of 5289** reverts abstained (17.8 %), so this is a real,
+nonzero, measured effect, not a construction check that would pass regardless
+of what the knob does. It just is not on the structure round 7 was reviewed
+against, and the two selection-relevant outputs (vertex, `numu_score`) that
+determine whether an event is even classified as a neutrino candidate are
+bit-identical. **Round 7's accepted result survives; per CLAUDE.md §5 rule 5,
+had it not, this would stop here and be reported instead.**
+
+**G4 — census: 2 of 5 flank events drop, exactly the two the x-extent measure
+predicted (§17.2).**
+
+| event | flank off | flank on | host/long x-extent |
+|---|---|---|---|
+| 271851 | 25.0 % | **9 %** | 12.6 cm |
+| 42280 | 10.6 % | **4 %** | 11.7 cm |
+| 268067 | 13.8 % | 14 % (unchanged) | 75.7 cm |
+| 174637 | 11.1 % | 11 % (unchanged) | 48.4 cm |
+| 214469 | 11.0 % | 11 % (unchanged) | 115.4 cm |
+
+**G5 — population, reported not judged (no truth on this sample; CLAUDE.md
+§4).** Bare knob-on 48-event run (`work-pr28r10-on48b`) vs `off48b`:
+
+- Archive-level (`mabc-pr.zip` content hash): **46/48 events differ at all**
+  — the knob's isochronous-cluster abstain is common across the manifest, not
+  confined to the 5 flank-carrying events (consistent with G3's whole-event
+  944/5289 finding on evt 388).
+- Selection-relevant (`T_tagger` neutrino vertex or `numu_score`, from
+  `tracking-pr.root`): **13/48 events move**; the rest (34/48; one event,
+  116962, has no `T_tagger`/`T_kine` tree in either arm and was excluded) are
+  bit-identical on both quantities despite an archive-level diff — i.e. most
+  of the 46 are non-selection-relevant reshuffling elsewhere in the event.
+- Of the 13, most moves are small, but **three are large**: evt 469665
+  (vertex moves **150.9 cm**), evt 122660 (**85.2 cm**), evt 30504 (41.6 cm,
+  `kine_reco_Enu` 1212.5 → 606.2 MeV — nearly halved). Full list:
+
+  | event | Δvertex (cm) | `numu_score` off→on | `kine_reco_Enu` off→on |
+  |---|---|---|---|
+  | 469665 | 150.85 | 1.6255 → -0.5852 | 779.1 → 767.9 |
+  | 122660 | 85.23 | 0.8427 → -0.4459 | 1580.5 → 1576.4 |
+  | 271851 | 45.55 | -0.5469 → -0.1888 | 1503.9 → 1497.3 |
+  | 30504 | 41.60 | -0.5881 → 0.9147 | 1212.5 → 606.2 |
+  | 52672 | 33.74 | -0.4450 → -0.5633 | 1106.6 → 947.0 |
+  | 42280 | 21.63 | -2.2036 → -0.3320 | 2240.5 → 2048.6 |
+  | 350186 | 19.18 | -1.2167 → -1.1423 | 859.5 → 697.1 |
+  | 111412 | 17.44 | -0.4057 → -1.2766 | 969.1 → 925.3 |
+  | 342199 | 1.74 | -0.7021 → -1.2118 | 1481.3 → 1251.6 |
+  | 447477 | 0.10 | -0.4219 → -0.2510 | 1180.4 → 1176.1 |
+  | 10550, 90055, 400474 | 0.00 | `numu_score` moved, vertex did not | — |
+
+  **Cross-reference, not chased further:** evt 469665 and evt 122660 — the
+  *two largest movers here* — are the SAME two events §16.9 flagged as
+  "fell to the `br_filled` sentinel … accepted as part of a net-better sample,
+  **not individually cleared**" in round 9's own acceptance. That these are
+  already-known-uncertain events rather than two fresh, unrelated
+  destabilizations is worth the owner's attention alongside doc pr/24 §19.8's
+  own open item about `23bd6783`'s side effects on isochronous showers.
+- **Caveat, matching doc pr/24 §19.1's own:** all vertex/score numbers here are
+  from the diagnostic geometric-vertex path (`T_tagger`/`tracking-pr.root`),
+  not the real SBND production DL vertex. Whether these moves reproduce on
+  the DL path is unmeasured (doc pr/24 §19.8 item 3 asks the same question for
+  a different knob).
+
+**G6 — unit tests.** `./build/clus/wcdoctest-clus`: **96/96 passed** (was
+95/95 before this round's one addition). The new case pins the C++ default
+(`-1`) **and** the preset's explicit `-1`, round-trips `set_parameter`/
+`get_parameter`, and was **revert-proven**: temporarily setting the preset to
+`20` and rebuilding makes it fail (`CHECK( 20 == Approx( -1 ) )`), confirming
+the assertion is live before restoring.
+
+**G7 — compiled-config / round-trip proof.** `trackfitting_config_file` is a
+raw JSON read by `std::ifstream`, not part of the jsonnet-compiled config
+(doc's own header comment on `sbnd_track_fitting.json`), so the proof is: key
+absent ⇒ G1's 48/48 byte-identical IS the proof (the canonical in-tree file
+was never touched); key present ⇒ the trace-level 944-abstain count on evt 388
+(G3) and the doctest's `set_parameter`/`get_parameter` round-trip (G6) are the
+proof.
+
+### §17.5 What this reveals about the prototype — recorded, not changed
+
+Two genuine weaknesses in the veto surfaced while reading both trees this
+round. Neither is fixed here (CLAUDE.md §5 rule 7: report a pre-existing issue
+found while doing something else; do not fix it in the same change).
+
+1. **The "no comparison charge" fallback dilutes rather than excludes.** When
+   a plane's comparison charge `c2` is zero, `skip_trajectory_point` adds a
+   *neutral* `+1` to `ratio` and simply omits the plane from `ratio_1`
+   (`TrackFitting.cxx:5065/5076/5087`, and identically in the prototype,
+   `PR3DCluster_trajectory_fit.h:715-717/725-727/735-737`). On a genuinely
+   degenerate plane (not zero-charge, just uninformative — the U plane on an
+   isochronous cluster, `c1/c2 ≈ 1` because both samples integrate the same
+   overlapping blob) there is **no exclusion path at all**: the plane
+   contributes a free *agreement* vote to both terms, which *weakens* the
+   veto rather than strengthening it. An earlier design for this round
+   considered renormalizing `ratio`'s `/3.0` by the count of informative
+   planes — **that is the wrong sign**: it would make the veto fire *more* on
+   an isochronous cluster, not less, since dropping the diluting plane
+   removes exactly the term that currently masks disagreement on the other
+   two. Not touched.
+2. **The multi-track fit has no positional prior.** The normal equations in
+   both trees drop the `+ PMatrixT * pos_3D_init` regularizer term (commented
+   out, `PR3DCluster_trajectory_fit.h:302-304`; same structure in the toolkit's
+   `TrackFitting.cxx`), so nothing pulls an ill-conditioned solve back toward
+   the initial trajectory, and the only protection against a bad solve is a
+   NaN catch on the solver's own error estimate. This is upstream of the veto
+   entirely — it is why the fitted position can drift far enough from the
+   pre-fit one on a degenerate-direction cluster for the veto's *comparison*
+   to become meaningless in the first place. Not touched.
+
+### §17.6 Scope and what is NOT claimed
+
+- **Not a fix for every flank chain.** §17.2's census: 3 of the 5 events doc
+  pr/24 §19.6 found with a >10 % flank chain (174637, 214469, 268067) have
+  large-x-extent host clusters and are untouched by this knob (G4). Their
+  flank chains, if worth pursuing, have a different origin.
+- **Not a fix for 271851's residual 9 %.** §17.1's `t1off` control shows this
+  is not the charge veto's doing.
+- **Not independently re-verified per-plane.** §17.5 item 1 is read from the
+  code and the prototype, not measured with a dedicated instrumentation pass.
+- **Not a flip.** The knob ships at its C++ default (off); SBND's
+  `sbnd_track_fitting.json` is untouched by this round. §17.7 states the
+  evidence a flip decision would need.
+- **Diagnostic vertex only** for every G5 number (see G5's caveat).
+
+### §17.7 Owner decision needed
+
+1. ~~Whether to flip `skip_revert_iso_xext_cut` for SBND, and at what
+   threshold (this round measured only 20 cm = 200 raw units). For: fixes the
+   two events the owner specifically asked about (271851, 42280) without
+   touching round 7's accepted evt 388 result. Against: G5's population
+   footprint is broader and, on two events, larger than the motivating case —
+   469665 (150.9 cm) and 122660 (85.2 cm) — and those two are *already* the
+   events round 9 (§16.9) flagged as accepted-but-not-individually-cleared,
+   not a clean new signal.~~ **DECIDED 2026-08-06: flip at 20 cm. See §17.8.**
+2. **Whether the two prototype weaknesses in §17.5 are worth a dedicated
+   round** — particularly item 1 (the dilution effect), which is a second,
+   independent lever on the same isochronous-cluster problem that this round
+   did not pursue because the sign runs the wrong way for a naive fix.
+3. **Whether to check the real DL production vertex** on the 13 events G5
+   flags, given every number in G4/G5 is on the diagnostic geometric-vertex
+   path — carried over from doc pr/24 §19.8 item 3, now with a second,
+   independent knob asking the same question.
+4. Doc pr/24 §19.8's own item 2 (whether `23bd6783` deserved a dedicated
+   round) is **addressed by this round.**
+
+### §17.8 `skip_revert_iso_xext_cut` FLIPPED — the SBND production default (owner 2026-08-06)
+
+After reviewing the before/after Bee sets of the 13 population-affected events
+(§17.4 G5), the owner:
+
+> *"overall better, please turn it on for these for SBND, commit and push."*
+
+**The change** — `cfg/pgrapher/experiment/sbnd/sbnd_track_fitting.json`:
+`"skip_revert_iso_xext_cut": 200.0` (20 cm, the value gated throughout §17.4)
+added to the canonical file consumed by both `wct-pr-perevt.jsonnet`'s
+default `trackfitting_config` and `clus.jsonnet`'s two `trackfitting_config_file`
+sites — a single source of truth, so the flip is unconditional and universal
+across every SBND job that reads this file, not just the PR chain.
+
+**Proof the flip took effect, and nothing else changed.** A bare run (no
+`SBND_TRACKFIT_JSON` override) of evt 271851 against the now-edited canonical
+file, `work-pr28r10-flip`, hash-matches `work-pr28r10-on-271851` (§17.4 G2's
+already-gated test arm) **exactly**:
+
+```
+aba5f5f5…  mabc-pr.zip  work-pr28r10-flip/pr_evt271851
+aba5f5f5…  mabc-pr.zip  work-pr28r10-on-271851/pr_evt271851
+```
+
+No rebuild was needed — this is a cfg-only change; `local/lib/libWireCellClus.so`
+is unchanged since the round-10 commit (`6b219d14`). The legacy path stays
+reachable via `SBND_TRACKFIT_JSON` pointing at a copy without the key (already
+proven in G1: 48/48 events, 96/96 archives byte-identical with the key absent).
+
+**What is now the SBND production default**: every number in §17.4's G2-G5 —
+evt 271851 flank 25%→**9%**, evt 42280 flank 10.6%→**4%**, evt 388's vertex and
+`numu_score` bit-identical, 13/48 nueCC48 events with a real vertex/score move
+(three large: 469665 150.9 cm, 122660 85.2 cm, 30504 41.6 cm) — is now what
+SBND reconstructs by default, not a knob-on test arm.
+
+**Bee sets, all 13 population-affected events, uploaded on request:**
+
+| | Bee set |
+|---|---|
+| before (knob off, `work-pr28r10-off48b`) | https://www.phy.bnl.gov/twister/bee/set/6ed9eb53-1152-4a28-be81-1a28a9d1a60e/event/list/ |
+| after (knob on, `work-pr28r10-on48b` — now the default) | https://www.phy.bnl.gov/twister/bee/set/f1a546b7-3341-4577-8002-540cf672a006/event/list/ |
+
+Same event order in both sets (bee index → event): 0=469665, 1=122660,
+2=271851, 3=30504, 4=52672, 5=42280, 6=350186, 7=111412, 8=342199, 9=447477,
+10=10550, 11=90055, 12=400474 (`bee/pr28r10-changed13/before.index.txt`).
+
+**Not re-measured**: §17.7 items 2-3 are unaffected by the flip and remain
+open — the dilution weakness and the DL-production-vertex question are
+independent of whether this knob defaults on.

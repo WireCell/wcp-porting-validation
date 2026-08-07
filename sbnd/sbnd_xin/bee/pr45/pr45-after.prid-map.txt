@@ -1,0 +1,20 @@
+# PR cluster_id remap for bee/pr45/pr45-after.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+56463	0	14	11	flash-matched	18:3222, 11:1468
+56463	0	21	3	NO-FLASH-MATCH (fallback: dominant)	3:11
+56463	0	98	11	flash-matched	11:6
+56463	0	99	18	NO-FLASH-MATCH (fallback: dominant)	18:6
+56463	0	100	18	NO-FLASH-MATCH (fallback: dominant)	18:13
+56463	0	101	18	NO-FLASH-MATCH (fallback: dominant)	18:14
+56463	0	102	18	NO-FLASH-MATCH (fallback: dominant)	18:8
+56463	0	103	18	NO-FLASH-MATCH (fallback: dominant)	18:16
+56463	0	104	18	NO-FLASH-MATCH (fallback: dominant)	18:6
+56463	0	105	18	NO-FLASH-MATCH (fallback: dominant)	18:12
+56463	0	106	18	NO-FLASH-MATCH (fallback: dominant)	18:9
+56463	0	107	18	NO-FLASH-MATCH (fallback: dominant)	18:11
+56463	0	108	18	NO-FLASH-MATCH (fallback: dominant)	18:6
+56463	0	109	18	NO-FLASH-MATCH (fallback: dominant)	18:12
+56463	0	110	18	NO-FLASH-MATCH (fallback: dominant)	18:28
+56463	0	111	18	NO-FLASH-MATCH (fallback: dominant)	18:8
+56463	0	112	18	NO-FLASH-MATCH (fallback: dominant)	18:9
+56463	0	113	18	NO-FLASH-MATCH (fallback: dominant)	18:47
