@@ -639,6 +639,19 @@ for _pr45 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr45 _env _key _val
+# doc pr/46: long-muon stub bridge -- a short (< 6 cm) vertex stub's noisy
+# fitted direction blocks the long-muon chain walk at the 15 deg junction
+# test; the bridge accepts a > 35 cm MIP continuation up to 45 deg unless
+# the junction has another substantial (> 10 cm) track-like arm.
+#   SBND_LONG_MUON_STUB_BRIDGE       tri-state: unset = cfg default,
+#                                    1 = force on, 0 = force off
+for _pr46 in \
+    "SBND_LONG_MUON_STUB_BRIDGE:long_muon_stub_bridge" ; do
+    _env=${_pr46%%:*}; _key=${_pr46#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr46 _env _key _val
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
