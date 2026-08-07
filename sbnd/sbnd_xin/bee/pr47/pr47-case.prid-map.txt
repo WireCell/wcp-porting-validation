@@ -1,0 +1,35 @@
+# PR cluster_id remap for bee/pr47/pr47-case.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+52085	0	6	18	flash-matched	18:850, 5:429
+52085	0	21	18	flash-matched	18:6
+52085	0	22	18	flash-matched	18:8
+52085	0	23	18	flash-matched	18:7
+52085	0	24	18	flash-matched	18:13
+52085	0	25	18	flash-matched	18:12
+52085	0	26	18	flash-matched	18:202
+349549	1	12	19	flash-matched	19:1028, 7:381
+349549	1	18	2	NO-FLASH-MATCH (fallback: dominant)	2:11
+349549	1	19	18	flash-matched	18:2042
+349549	1	33	19	flash-matched	19:18
+349549	1	34	19	flash-matched	19:9
+349549	1	35	19	flash-matched	19:16
+349549	1	36	19	flash-matched	19:13
+349549	1	37	19	flash-matched	19:48
+349549	1	38	19	flash-matched	19:7
+349549	1	39	19	flash-matched	19:19
+349549	1	40	19	flash-matched	19:7
+349549	1	41	19	flash-matched	19:14
+349549	1	42	19	flash-matched	19:17
+349549	1	43	19	flash-matched	19:19
+349549	1	44	19	flash-matched	19:12
+349549	1	45	19	flash-matched	19:74
+349549	1	52	18	flash-matched	18:25
+349549	1	53	18	flash-matched	18:15
+349549	1	54	18	flash-matched	18:6
+349549	1	55	18	flash-matched	18:12
+349549	1	56	18	flash-matched	18:19
+349549	1	57	18	flash-matched	18:9
+349549	1	58	18	flash-matched	18:11
+349549	1	59	18	flash-matched	18:75
+349549	1	60	18	flash-matched	18:13
+349549	1	61	18	flash-matched	18:23
