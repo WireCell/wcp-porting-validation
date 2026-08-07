@@ -525,6 +525,23 @@ for _pr40r2 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr40r2 _env _key _val
+# doc pr/40 round 4: two follow-on defects from round 2/3's F5 fix (relabels
+# pdg but not the shower flags; a muon fathering two protons is not
+# physical).  Same tri-state contract.  Both default OFF pending gates.
+#   F7 SBND_SHOWER_PROTON_DAUGHTER_PION_DISSOLVE  clear shower flags when F5
+#                                                  relabels a segment to pion
+#   F8 SBND_MUON_MULTI_PROTON_PION                muon -> pion when its far
+#                                                  end is a multi-proton
+#                                                  (>=2, charge-confirmed)
+#                                                  hadronic vertex
+for _pr40r4 in \
+    "SBND_SHOWER_PROTON_DAUGHTER_PION_DISSOLVE:shower_proton_daughter_pion_dissolve" \
+    "SBND_MUON_MULTI_PROTON_PION:muon_multi_proton_pion" ; do
+    _env=${_pr40r4%%:*}; _key=${_pr40r4#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r4 _env _key _val
 # DL (SCN) neutrino-vertex weights (doc pr/24 attribution arms).  UNSET = emit
 # no TLA = the cfg default = the SBND operating point (DL vertex ON, doc pr/4).
 # SBND_DL_WEIGHTS='' selects the geometric vertex -- the arm that isolates a

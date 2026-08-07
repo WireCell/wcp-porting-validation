@@ -871,3 +871,199 @@ documents the guard's own default-off, byte-identical contract.
   found — the underlying rule (5/2209 in this round's population framing)
   was scoped and owner-approved in round 2; this round only makes that rule
   reach the output reliably.
+
+---
+
+# Round 4 — F7/F8: a pion stops being a Shower, a muon cannot father two protons
+
+## Repro block
+
+```bash
+cd sbnd_xin
+
+# G1: knob-off byte-identical -- git-stash clean-HEAD reference
+git stash push -m "pr40r4-base48-gate" -- cfg/pgrapher/common/clus.jsonnet \
+  cfg/pgrapher/experiment/sbnd/clus.jsonnet cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet \
+  clus/docs/porting/porting_dictionary.md clus/inc/WireCellClus/NeutrinoPatternBase.h \
+  clus/inc/WireCellClus/PRSegmentFunctions.h clus/inc/WireCellClus/TaggerCheckNeutrino.h \
+  clus/src/NeutrinoPatternBase.cxx clus/src/NeutrinoVertexFinder.cxx clus/src/PRSegmentFunctions.cxx \
+  clus/src/TaggerCheckNeutrino.cxx clus/test/doctest_clus_knob_defaults.cxx
+wcbuild
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r4-base48 data
+git stash pop
+wcbuild   # M1 freshness proof; cp build/clus/libWireCellClus.so local/lib/ once (link-order trap, see G0)
+
+# G1/G2/G3/G4: knob-off vs knob-on, all 48 nueCC48 events
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r4-off48 data
+SBND_SHOWER_PROTON_DAUGHTER_PION_DISSOLVE=1 SBND_MUON_MULTI_PROTON_PION=1 \
+  PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r4-on48 data
+python3 scripts/analysis/pr40r4/pr40r4_check.py work-pr40r4-off48 work-pr40r4-on48
+diff <(sort work-pr40r4-off48/nusel-table.tsv) <(sort work-pr40r4-on48/nusel-table.tsv)  # 0 lines
+
+./build/clus/wcdoctest-clus
+```
+
+## Symptom
+
+Owner, reviewing the round 2/3 Bee display of the `shower_proton_daughter_pion` (F5) fix:
+
+1. **evt 18306-256587**: *"the particle flow do show the pion+, but we do not see the
+   proton after it in the particle flow. Also the end point of this pion+ is at an
+   isolated piece. It seems that the EM shower were modified as pion, but not on the
+   individual tracks, this is a problem."*
+2. **evt 18255-489330**: *"in the particle flow, there is one muon --> two protons.
+   This is not physical, in this case, the muon should be changed to pion."*
+
+## Root cause 1 — F5 changes the pdg, not the shower membership (F7)
+
+`shower_proton_daughter_pion` (round 2/3) relabels a shower-flagged segment's `particle_id`
+11 -> 211 in `set_default_shower_particle_info` (`NeutrinoPatternBase.cxx`), but never
+touches `SegmentFlags::kShowerTrajectory`/`kShowerTopology`. Those flags are exactly what
+`shower_clustering_with_nv_in_main_cluster` (`NeutrinoShowerClustering.cxx:116-119`) tests:
+`is_shower_seg = flags_any(kShowerTrajectory) || flags_any(kShowerTopology) ||
+|pdg|==11`. A relabelled-but-still-flagged segment still satisfies the first two disjuncts,
+so a `Shower` object is still rooted there.
+
+Measured on evt 256587 seg 11079 (pi+, 29.1 cm): it owns a 3-segment shower whose OTHER
+members are seg 11080 (the charge-confirmed proton daughter, 3.7 cm, PID'd 2212 -- the very
+evidence F5 used to relabel 11079 in the first place) and seg 81153 (0.35 cm, cluster 81, a
+non-main-cluster fragment). Two consequences, exactly what the owner saw:
+
+- `fill_bee_pf_tree` (`MultiAlgBlobClustering.cxx:1173`) pre-claims every shower-owned
+  segment (`used_segs = shower_segs`) before the track BFS runs, so proton 11080 never gets
+  its own particle-flow node -- it is silently swallowed into the shower.
+- the pi+ Bee node's displayed `end` point is the SHOWER's end (`(-95.0, -10.1, 266.6)`, a
+  0.35 cm fragment absorbed from cluster 81) rather than segment 11079's own end
+  (`(-90.2, -17.2, 264.3)`) -- the "isolated piece" the owner flagged.
+
+## Root cause 2 — no proton-multiplicity veto on a muon (F8)
+
+Segment 4019 (mu-, 65.2 cm, evt 489330) has its far (non-neutrino-vertex) endpoint at a
+vertex where TWO charge-confirmed protons attach (seg 4018, 17.6 cm; seg 4044, 10.0 cm,
+both PID'd 2212 with median dQ/dx > 1.75x MIP). The prototype has no PID rule that
+consults a track's neighbor multiplicity at all -- there is nothing to "correct", this is
+new physics-motivated logic the owner requested directly.
+
+Segment 4019 sits behind a degree-2 kink vertex (4007) from a second muon segment (4043,
+28.4 cm, running to the neutrino vertex). **Owner decision:** relabel only 4019; 4043 stays
+mu-. (Asked directly during planning: propagating pion across the kink was rejected in
+favor of the narrower change.)
+
+## Fix
+
+**F7 `shower_proton_daughter_pion_dissolve`** (`NeutrinoPatternBase.cxx`,
+`set_default_shower_particle_info`): when the F5 override fires (or, on re-entry, when a
+segment is already 211 from a prior pass -- `examine_direction` runs more than once, so the
+OVERRIDE test widens to `pdg()==11 || (dissolve-knob-on && pdg()==211)` to make the clear
+idempotent), also `unset_flags(kShowerTrajectory)` / `unset_flags(kShowerTopology)`. With
+the flags gone, `is_shower_seg` at the shower-clustering seed no longer fires for that
+segment, so no `Shower` is rooted there and its neighbours stay ordinary tracks.
+
+**F8 `muon_multi_proton_pion`** (`NeutrinoPatternBase.cxx`, new
+`override_muon_multi_proton_pion`, called immediately after
+`set_default_shower_particle_info` in `examine_direction` -- same per-cluster `main_vertex`,
+same last-word-before-shower-clustering position): for every non-shower-flagged, PID'd-muon
+segment, test the new `segment_at_multi_proton_vertex` (`PRSegmentFunctions.h/.cxx`, sibling
+of F5's `segment_has_proton_daughter`) at EITHER endpoint other than `main_vertex`, with
+`min_protons=2`. On a fire, relabel to pion (211) via `segment_cal_4mom`. Both knobs are
+config keys threaded the same way as every other pr/40 knob (default `false`, key-suppressed
+when off).
+
+## Demonstration
+
+```
+=== F7 (evt 256587) ===
+  off: seg 11079 pdg=211 flag_shower=True  shower_id=11079
+  off: seg 11080 (proton) pdg=2212 flag_shower=False shower_id=11079
+  on:  seg 11079 pdg=211 flag_shower=False shower_id=-1
+  on:  seg 11080 (proton) pdg=2212 flag_shower=False shower_id=-1
+  on mc.json: node 11079 text='pi+  105 MeV' end=[-90.17, -17.17, 264.35]
+  on mc.json: children of 11079: [11080]        <- proton is now a PF child
+  VERDICT: proton 11080 is a direct PF child of pion 11079: True
+  VERDICT: node end is segment's OWN end (not shower fragment's): True
+
+=== F8 (evt 489330) ===
+  off: seg 4019 pdg=13
+  off: seg 4043 (sibling, should stay mu-) pdg=13
+  on:  seg 4019 pdg=211
+  on:  seg 4043 (sibling, should stay mu-) pdg=13   <- unchanged, as decided
+  on mc.json: node 4019 text='pi+  188 MeV'
+  on mc.json: node 4043 text='mu-  92 MeV'
+```
+
+Both owner-reported cases fixed exactly as specified.
+
+## Population census (48-event nueCC48, off vs on)
+
+Exactly 5 segments move, all attributable:
+
+| evt | seg | off pdg/flag_shower | on pdg/flag_shower | why |
+|---|---|---|---|---|
+| 256587 | 11079 | 211 / shower | 211 / **track** | F7 fires (owner case 1) |
+| 256587 | 81153 | 13 / track | **11** / track | released from the dissolved 11079-shower; no longer inherits the shower's member-pdg vote, defaults to electron on its own (non-main cluster, no `mc.json` visibility) |
+| 342199 | 72098 | 211 / shower | 211 / **track** | F7 fires (same class as case 1, not owner-reported but predicted by the round-2/3 population census of 2/2209) |
+| 342199 | 72096 | 13 / track | **11** / track | same release-from-dissolved-shower effect as 81153 (non-main cluster) |
+| 489330 | 4019 | 13 (mu-) | **211 (pi+)** | F8 fires (owner case 2) |
+
+The 81153/72096 secondary moves are a direct, expected consequence of dissolving a shower:
+a member segment that is itself independently shower-flagged, previously absorbed and
+majority-voted to the dissolved shower's pdg, is no longer absorbed and gets its own
+DEFAULT-fill pdg (11, ordinary shower default) instead. Both are on non-main clusters, so
+neither produces an `mc.json`/Bee visibility change -- but G3's `nusel-table.tsv` diff
+confirms they cause zero downstream verdict/feature impact either.
+
+## Gates
+
+- **G0 freshness**: `local/lib/libWireCellClus.so` newer than every touched source file,
+  verified before each gate. Hit the documented link-order stale-.so trap once (`local/lib`
+  preceded `build/clus` in the linker's `-L` search order after a prior session's
+  install left a stale copy there): `cp build/clus/libWireCellClus.so local/lib/` once,
+  then `wcbuild` succeeded.
+- **G1 knob-off byte-identical**: **PASS, 48/48 events, 96/96 archives.** `work-pr40r4-off48`
+  (current code, both round-4 knobs at their false default) vs `work-pr40r4-base48`
+  (git-stash clean-HEAD `9d5c6a9a` reference, same 48 events) -- `abtest/hash_archive.py`
+  member-content hashes of `mabc-pr.zip` + `pctree-pr-evt<ID>.tar.gz`: **0 mismatches**.
+- **G2a** (evt 256587 seg 11079): proton 11080 becomes a direct PF child, node end point is
+  the segment's own. **PASS.**
+- **G2b** (evt 489330 seg 4019/4043): 4019 -> pi+, 4043 stays mu-. **PASS.**
+- **G3 population**: `nusel-table.tsv` off vs on, 48 events, sorted diff: **0 lines** -- zero
+  verdict/feature-column impact anywhere on the manifest.
+- **G4 census**: exactly 5 segments move (table above), all attributed; zero unexplained
+  moves.
+- **G5 unit tests**: `wcdoctest-clus` **99/99 test cases, 1025/1025 assertions**.
+- **G6 compiled-config**: both keys absent from the compiled JSON with the knobs at their
+  function defaults (`false`); both present, `true`, with `--tla-code
+  shower_proton_daughter_pion_dissolve=true --tla-code muon_multi_proton_pion=true`.
+  Verified directly with `wcsonnet`.
+
+## Flip — SBND production default
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`'s `shower_proton_daughter_pion_dissolve`
+and `muon_multi_proton_pion` TLA defaults flipped `false -> true`. Cfg-only change, no
+rebuild needed. Verified with a bare 2-event run (`work-pr40r4-flip-verify`, evts 256587 +
+489330, no env override): both `mabc-pr.zip` hashes match the already-gated
+`work-pr40r4-on48` result exactly --
+`b6cfa864...c04c58b` (256587) and `a0980d7f...9e88b4` (489330).
+
+Both doc pr/40 round-4 knobs are now SBND production defaults, alongside all six of rounds
+1-3 (`track_pid_persist_dqdx`, `shower_reclass_dqdx_guard`, `shower_topo_dqdx_guard`,
+`track_pid_persist_4mom`, `shower_proton_daughter_pion`, `reclass_never_computed_ke_floor`).
+
+## `porting_dictionary.md` entries
+
+Two new sections (both designed divergences, no prototype anchor -- the prototype has
+neither a shower-dissolution-on-relabel mechanism nor a proton-multiplicity veto on track
+PID): "Relabelling a shower segment's PDG does not make it stop being a Shower" (F7) and
+"A muon segment cannot terminate in a multi-proton hadronic vertex" (F8).
+
+## Scope and what is NOT claimed
+
+- **No propagation across the degree-2 kink** (evt 489330 seg 4043 stays mu-) -- owner's
+  explicit choice, asked and answered during planning; not derived from any population
+  measurement.
+- **The two secondary moves (81153, 72096) are not independently owner-reviewed** -- they
+  are a mechanical, fully-explained consequence of F7 dissolving a shower, verified to have
+  zero downstream verdict impact (G3), but not a case the owner looked at directly.
+- **This is not a general "clean up multi-membership shower artifacts" pass** -- only the
+  specific mc.json/particle-flow consequences of F5's earlier relabelling are addressed.
