@@ -1,6 +1,10 @@
 # doc pr/43 — four owner PID cases (18255: 142421 / 54351 / 56463 / 57661)
 
-**STATUS 2026-08-07: ROLLED BACK, not just defaulted off.** Owner judged the
+**STATUS 2026-08-07 (round 2): the three remaining cases are re-fixed with
+three NEW, narrower knobs — see `# Round 2` below. Round 1 remains ROLLED
+BACK; nothing from it was re-applied as-is.**
+
+**STATUS 2026-08-07 (round 1): ROLLED BACK, not just defaulted off.** Owner judged the
 G3/G4 population/score movement (42/48 nueCC48 events) too broad for what the
 four cases needed and asked for the five knobs to be pulled from the code
 entirely, to be revisited later rather than left dead-OFF in the tree. All of
@@ -410,3 +414,159 @@ SBND_KINE_SHOWER_VERTEX_BARRIER=1 PR_EXTRA_STAGES=pr_display \
 # text against an off-arm, and pull numu_score/nue_score/kine_reco_Enu from
 # T_tagger/T_kine in tracking-pr.root (uproot) for both arms.
 ```
+
+
+# Round 2 (2026-08-07) — narrow re-attempt, three knobs, per-knob attribution
+
+Owner instruction: retry the three remaining cases; consider (1) simple
+in-chain bug fixes and (2) fixes on the Particle information at final PF
+formation; either way pdg / shower flags / shower cache / kine / Bee tree /
+display must stay CONSISTENT ("a track still displayed as Shower" is the
+named anti-pattern). Owner session answers: for 56463 the 411 cm track
+14005 IS the muon and 14006 → pi+ (round 1's F2 reading — 14005 as e- — is
+dropped); the late pass runs BEFORE the taggers (scores see corrected
+labels, full consistency over frozen scores); flip SBND ON same round iff
+zero nusel verdict flips and every moved event is attributed to its knob.
+
+## Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# Phase 0 baselines at HEAD 0e098f62 (pr/44 knobs ON):
+PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr43r2-head-mcp1k data 54351 56463 57661
+# G2 per-knob:
+SBND_SINGLE_MUON_PROTON_CHAIN_VETO=1 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr43r2-onK1 data 54351
+SBND_SINGLE_MUON_LONG_MUON_CLAIM=1   PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr43r2-onK2 data 56463
+SBND_PID_FLAG_RECONCILE=1            PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr43r2-onK3 data 57661
+# G3 censuses: 48-evt nueCC48 off/on arms + ncpi0-19 off/on arms; compare
+# data/0/0-mc.json trees + nusel-table.tsv per arm (census.py).
+```
+
+## Phase 0 — the baseline moved since round 1
+
+pr/44's `shower_long_muon_keep_type` (SBND ON since toolkit 78f77bd8)
+already changed case 3: segment 14005's pdg now stays 13 (round 1 measured
+11 with a stale shower cache of 13). At HEAD the event displays TWO muons —
+`14005 mu- 903` + `14006 mu- 166` — which matches the owner's round-2
+reading exactly ("second muon → pion", cluster 14006). Cases 2 and 4
+reproduce unchanged.
+
+## Root causes (all three verified by Phase-0 re-runs + code read)
+
+- **56463 — K2.** The single-muon selection (`NeutrinoVertexFinder.cxx`
+  `examine_direction`) SKIPS out-edges in `segments_in_long_muon`, so the
+  411 cm long-muon chain neither competes for nor claims the vertex muon
+  slot; 14006 wins as sole candidate and keeps pdg 13.
+- **54351 — K1.** The selection's proton veto is 1-hop; proton 17011 sits
+  behind the 2.7 cm stub 17005, so candidate 17007 (54.2 cm) wins by length
+  over 17010 (42.6 cm). A muon cannot terminate in a proton.
+- **57661 — K3.** `segment_determine_shower_direction_trajectory`
+  (`PRSegmentFunctions.cxx`) has two endpoint-degree branches that force
+  pdg 11 + sentinel score 100 WITHOUT ever calling track PID; seg 18007
+  (8.3 cm, Bragg-rising dQ/dx = stopping track) is forced e-, keeps
+  `flag_shower=True` and a single-segment wrapper Shower — the exact
+  stale-flag inconsistency class the owner named.
+
+## Fix — three default-OFF knobs (C++ default false = byte-identical)
+
+| # | knob | site | route |
+|---|---|---|---|
+| K1 | `single_muon_proton_chain_veto` | NVF selection loop | in-chain fix |
+| K2 | `single_muon_long_muon_claim` | NVF selection loop | in-chain fix |
+| K3 | `pid_flag_reconcile` | new late pass `reconcile_particle_flags` | final-formation fix |
+
+- **K1**: veto walks the bounded (≤3-hop) non-shower degree-2 continuation
+  chain (`segment_chain_has_proton`, restored from round 1 F1 verbatim); a
+  chain-vetoed candidate demotes to pion together with its stubs
+  (`segment_chain_continuation`) and the selection re-picks; a demote-all
+  guard falls back to legacy selection if the chain veto would leave no
+  muon at all.
+- **K2**: a long-muon out-edge claims the muon slot with the chain's summed
+  length (deterministic IndexedSegmentSet order); it is itself never
+  demoted; other pdg-13 arms demote through the existing conversion loop.
+- **K3**: called in `TaggerCheckNeutrino` AFTER `shower_clustering_with_nv`
+  and BEFORE the taggers, so tagger features, kine, Bee PF tree and PR
+  display all see one labeling. Rule 1: a main-vertex proton's degree-2
+  continuation chain ending in a forced-e- (pdg 11 + score sentinel 100)
+  terminal gets ordinary track PID re-run; a confident non-electron
+  conclusion is adopted, shower flags cleared, the single-segment wrapper
+  Shower dissolved (pi0-paired and cached-±13 long-muon showers exempt),
+  ≤15 cm pdg-13 stubs → pion. Rule 2 (consistency guard, main cluster):
+  confirmed track pdg (13/211/2212) with stale
+  kShowerTrajectory/kShowerTopology → flags cleared (pr/40 F7 precedent),
+  stale wrappers dissolved.
+
+Runner tri-states: `SBND_SINGLE_MUON_PROTON_CHAIN_VETO`,
+`SBND_SINGLE_MUON_LONG_MUON_CLAIM`, `SBND_PID_FLAG_RECONCILE`.
+
+## Demonstration (G2) — each knob alone fixes its case; all-on identical
+
+```
+evt 54351 (K1):  17007 pi+ 163 -> 17005 pi+ 8 -> 17011 proton 135; 17010 mu- 127   [owner: exact]
+evt 56463 (K2):  14005 mu- 903 (sole muon);  14006 pi+ 177                          [owner: exact]
+evt 57661 (K3):  18003 proton 113 -> 18005 pi+ 5 -> 18007 mu- 34;
+                 PID_RECONCILE trace: "terminal rescue seg (clus=18 idx=7) 11 -> 13,
+                 1 stub(s) -> 211" + "dissolve wrapper shower"; flag_shower cleared  [owner: exact]
+```
+
+## Gates
+
+- **G0** freshness: `local/lib/libWireCellClus.so` rebuilt+installed after
+  the last source edit, checked before every arm.
+- **G2**: 3/3 (above); all-on run byte-reproduces the per-knob trees.
+- **G3 per-knob attribution (the round-1 gap, now closed):**
+  - nueCC48, four separate on-arms vs `work-pr43r2-off48`: **K1 0/48, K2
+    0/48, K3 0/48, all-on 0/48 events moved**; `nusel-table.tsv` 0-diff on
+    every arm. The three topologies simply do not occur in the 48 nueCC
+    events.
+  - ncpi0-19 (`work-pr43r2-off19n` vs `work-pr43r2-onall19n`): **1/19
+    moved** — 142421, a single RETEXT `7023 'mu- 4 MeV' -> 'pi+ 4 MeV'`
+    (the 1.2 cm shared vertex stub; muon body `7024 mu- 332` and the whole
+    tree structure unchanged), nusel 0-diff. Single-knob isolation runs
+    prove **K2 is the sole mover** (K1-only and K3-only leave 7023 at mu-).
+    Attribution: the long-muon claim now competes at 142421's vertex and
+    the ambiguous stub demotes through the existing pion-conversion loop.
+    NOTE: this diverges from the pr/44-era display of the same event
+    (owner-accepted `7023 mu- 4`); flagged here rather than silently
+    shipped — the vertex-region stub label is physically ambiguous between
+    mu-/pi+ and the owner should veto the flip if `mu-` is preferred.
+- **G4**: `wcdoctest-clus` 1059/1059 assertions PASS (includes the three
+  new default-false pins).
+- **G5**: runner-TLA compile — knobs-off JSON byte-identical to
+  clean-HEAD compile (0-line diff); all three keys present in the
+  TaggerCheckNeutrino node when on.
+- **G1**: knobs-off vs git-stash clean-HEAD reference
+  (`work-pr43r2-off48` vs `work-pr43r2-cleanref48`, rebuilds strictly
+  sequenced around the reference batch): **48/48 events, 96/96 archives
+  byte-identical** (`hash_archive.py` member-content hashes, fields 1-2).
+
+## Flip — all three SBND PRODUCTION ON (same round)
+
+The owner's round-2 flip policy ("flip if zero nusel verdict flips and
+every moved event is attributed to its knob") is met: zero verdict flips on
+every arm, and the single moved event (142421, ncpi0-19) is isolated to K2
+by single-knob A/B. `wct-pr-perevt.jsonnet` TLA defaults flipped
+false→true for all three knobs (cfg-only change, no rebuild). Flip-verify:
+bare 3-event run (`work-pr43r2-flipverify`, no env overrides) hash-matches
+the gated all-on arm (`work-pr43r2-onall`) exactly on all three events:
+`54351 d187a737…`, `56463 3bb36872…`, `57661 2e997765…`.
+
+## Scope and what is NOT claimed
+
+- The 142421 stub relabel (`7023 mu- 4 → pi+ 4 MeV`) diverges from the
+  pr/44-era owner-accepted display of that event. It is attributed,
+  structure-preserving and nusel-neutral, but the owner may veto: setting
+  `single_muon_long_muon_claim=false` in `wct-pr-perevt.jsonnet` (or
+  `SBND_SINGLE_MUON_LONG_MUON_CLAIM=0`) restores `7023 mu-` while keeping
+  K1/K3.
+- K3's rule-1 walk is bounded to 3 hops and only fires behind main-vertex
+  protons; forced-electron terminals elsewhere in the graph (not behind a
+  proton chain) are out of scope this round.
+- The mcp1k manifest beyond the three case events was not censused (only
+  nueCC48 + ncpi0-19, matching the pr/44 validation scope).
+
+## Bee evidence
+
+`bee/pr43r2/pr43r2-before.zip` (Phase-0 HEAD baseline) and
+`bee/pr43r2/pr43r2-after.zip` (all three knobs on), idx 0/1/2 =
+54351/56463/57661 in both.

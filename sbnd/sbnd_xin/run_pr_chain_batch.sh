@@ -602,6 +602,25 @@ for _pr44 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr44 _env _key _val
+# doc pr/43 round 2 tri-state env overrides (unset = cfg default, 1 = force
+# on, 0 = force off):
+#   SBND_SINGLE_MUON_PROTON_CHAIN_VETO  vertex muon selection walks the
+#                                       degree-2 chain for a disqualifying
+#                                       proton (a muon cannot end in one)
+#   SBND_SINGLE_MUON_LONG_MUON_CLAIM    long-muon chain claims the vertex
+#                                       muon slot; second pdg-13 arm -> pion
+#   SBND_PID_FLAG_RECONCILE             late reconciliation pass: forced-e-
+#                                       terminal rescue + stale shower-flag/
+#                                       wrapper cleanup on confirmed tracks
+for _pr43r2 in \
+    "SBND_SINGLE_MUON_PROTON_CHAIN_VETO:single_muon_proton_chain_veto" \
+    "SBND_SINGLE_MUON_LONG_MUON_CLAIM:single_muon_long_muon_claim" \
+    "SBND_PID_FLAG_RECONCILE:pid_flag_reconcile" ; do
+    _env=${_pr43r2%%:*}; _key=${_pr43r2#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr43r2 _env _key _val
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
