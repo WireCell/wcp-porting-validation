@@ -1,10 +1,12 @@
 # doc pr/48 (2026-08-07) — back-to-back tracks with no angular kink
 
-**Status: analysis only. No C++ or jsonnet shipped this round** (owner's
-explicit instruction). A temporary, fully-reverted break-time diagnostic was
-built and run (§4); the toolkit tree ends this doc byte-identical to
-`20098cbf` (`git diff` empty, `wcdoctest-clus` 106/106, freshness proof
-re-verified after revert).
+**Status: IMPLEMENTED + SBND DEFAULT ON, round 2 (§9) — three knob families
+shipped, all five motivating events recover their neutrino vertex; off-gates
+48/48 + 19/19 byte-identical, 1k footprint 69/1000 movers all classified and
+examined, nusel diffs 0/1000.** §§1-8 are the round-1 analysis (2026-08-07,
+analysis-only at `20098cbf`), kept verbatim; §9 is the implementation round
+(same day), whose measured behavior refines §6's design in several places
+(§9.3).
 
 ## Repro block
 
@@ -403,11 +405,279 @@ above and should be scoped, gated, and validated separately.
   (constants like this are exactly the kind of "don't retune to fit motivating
   events" the project has already ruled on once, pr/47 §7).
 
+## 9. Implementation round (2026-08-07, toolkit commit 502cfd7e)
+
+### 9.1 Repro block
+
+```bash
+# build + unit tests (1148 doctest assertions incl. the new pr48 cases)
+wcbuild; ./build/clus/wcdoctest-clus
+
+# off-gates (knobs forced 0 must be byte-identical; base arms = clean 20098cbf binary)
+cd wcp-porting-img/sbnd/sbnd_xin
+PR_JOBS=6 bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr48-base48 data
+PR_JOBS=4 bash run_pr_chain_batch.sh work-ncpi0-cb0805  work-pr48-base19n data
+SBND_TWO_END_BREAK=0 SBND_KINK_WALK_DQDX_STOP=0 SBND_KINK_BREAK_PROTECT=0 \
+  PR_JOBS=6 bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr48-off48c data
+SBND_TWO_END_BREAK=0 SBND_KINK_WALK_DQDX_STOP=0 SBND_KINK_BREAK_PROTECT=0 \
+  PR_JOBS=5 bash run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr48-off19nc data
+
+# knob-on arms (footprint) + the 1k
+SBND_TWO_END_BREAK=1 SBND_KINK_WALK_DQDX_STOP=1 SBND_KINK_BREAK_PROTECT=1 \
+  PR_JOBS=12 bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr48-on48c data
+SBND_TWO_END_BREAK=1 SBND_KINK_WALK_DQDX_STOP=1 SBND_KINK_BREAK_PROTECT=1 \
+  PR_JOBS=5 bash run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr48-on19nc data
+SBND_TWO_END_BREAK=1 SBND_KINK_WALK_DQDX_STOP=1 SBND_KINK_BREAK_PROTECT=1 \
+  PR_EXTRA_STAGES=pr_display PR_JOBS=32 \
+  bash run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr48-on1kc data
+
+# compares: archive movers + vertex + nusel diffs, then class + per-case exam
+python3 scripts/analysis/pr48/on1k_compare.py  work-pr47f-on1k work-pr48-on1kc
+python3 scripts/analysis/pr48/mover_census.py  work-pr47f-on1k work-pr48-on1kc
+python3 scripts/analysis/pr48/teb_case_exam.py work-pr47f-on1k work-pr48-on1kc
+```
+
+Superseded labels (kept, never deleted): `work-pr48-{off48,off19n,on48,on19n,on1k}`
+(pre-footprint-round binary), `-{off48b,off19nb,on48b,on19nb,on1kb}`
+(`kink_dqdx_hot_ratio` round), `-{onT48,onW48,onP48}` (single-knob attribution,
+killed mid-run — possibly truncated, do not gate against).  The `c` labels are
+the final binary.
+
+### 9.2 What shipped (all default OFF in C++; SBND operating point in
+wct-pr-perevt.jsonnet after the gates below)
+
+- **`two_end_break`** (+ 15 `teb_*` sub-knobs) — the two-end residual-range
+  break pass, `PatternAlgorithms::break_two_end_dqdx`, run inside
+  `find_proto_vertex` after `examine_vertices` (`NeutrinoPatternBase.cxx`),
+  main cluster only.  Gates: exactly one segment longer than `teb_stub_max`
+  (4 cm), length ≥ `teb_min_len` (10 cm), **both fitted endpoints inside the
+  FV** (`FiducialUtils` via the grouping — two stopping ends is impossible
+  for a through-goer); length-adaptive two-end rise (max over 2/4/8 cm end
+  windows of the end median, referenced to `min(interior median, 1 MIP
+  median)` — the clamp is what reaches 56211, whose two-proton interior is
+  ~3x MIP); localization + acceptance per §9.3; break via `break_segment`
+  at the located fit point; the new vertex gets
+  `VertexFlags::kProtectedBreak` and the two arms
+  `SegmentFlags::kTwoEndBreakArm`.
+- **`kink_walk_dqdx_stop`** — 59335 fix (a): the C4/straightness
+  (`flag_search`) accepts no longer bypass `segment_search_kink`'s
+  local-dQ/dx walk gate, so `proto_extend_point` stops AT a dQ/dx-confident
+  kink instead of overshooting to the terminus.
+- **`kink_break_protect`** — 59335 fix (b): a break born from a C4 or A0
+  accept (criterion surfaced via a new nullptr-default out-param on
+  `segment_search_kink`) gets `kProtectedBreak`, so `examine_vertices_4`'s
+  unconditional < 2 cm stub-absorption floor cannot erase it.
+- **`kink_dqdx_hot_ratio`** (shared by both 59335 fixes, default 1.7x MIP
+  median) + **terminus scoping** — the footprint-control round (§9.3 item 5).
+  As designed, fix (a)'s bar was the walk gate's own 25/43 ≈ 0.58x MIP, which
+  nearly every C4 accept clears, and fix (b) protected ~100 interior stubs:
+  206/1000 movers on the first 1k arm.  Shipped: both fixes engage only at
+  `kink_dqdx_hot_ratio` (59335's kink reads 2.5x), fix (a) only when the kink
+  is within 3 cm of a fitted-track end, fix (b) only when the stub arm is
+  < 2 cm (`examine_vertices_4`'s own floor — protection exactly where the
+  erasure happens, nowhere else).  59335 is unchanged at every narrowing.
+- **Shared infra**: `VertexFlags::kProtectedBreak` — checked (skip-merge)
+  in `examine_structure_2`, `examine_structure_3`, `examine_vertices_1/2/4`,
+  `examine_structure_final_1/2`; every check is a no-op when the bit is
+  unset.  `examine_structure_final_1p/3` need no check (they relocate the
+  main vertex ONTO the surviving position).
+
+### 9.3 What the five events taught (design refinements vs §6)
+
+The §6 design survived contact with the events only after four measured
+corrections — each one an iteration on the real data, none visible to the
+round-1 proxies:
+
+1. **Stopping-template scores cannot localize.** `do_track_comp` windows
+   anchor at the vector end, so with a fixed window the per-arm score is
+   CONSTANT in the break index for all mid-track candidates, and with
+   full-arm windows it is still nearly flat for same-species junctions (any
+   prefix of a Bragg is a Bragg).  A blind argmin-J scan mislocated 57903 by
+   15 cm and 51513 by 32 cm in early iterations.  The junction's measured
+   markers localize instead: the **raw local dQ/dx minimum** (candidates,
+   deepest-3-point-mean first) for route R1, the **wide-baseline PCA turn
+   maximum** for route R2 (fallback only — the turn max sits at endpoint
+   bend artifacts on 51513/57903).  The templates remain the ACCEPTANCE
+   test at the located index (both arms must beat `eval_ks_ratio` + score
+   caps).
+2. **A dip floor separates junctions from dead regions.** 57903's deepest
+   dip (0.50x MIP mean-3, arc 64.8) is instrumental; its genuine junction
+   dip reads 0.83x.  Both particles sit at maximal residual range at a
+   junction, so a physical junction dip stays near MIP — `teb_dip_floor`
+   (0.6x MIP median) vetoes missing-charge dips.  Measured on all four
+   events the deepest above-floor raw-minimum IS the junction.
+3. **Short arms need a direction-flag waiver.** 56211's ~2-3 cm far arm
+   (2.8x MIP proton stub) fails `eval_ks_ratio` for lack of samples, not
+   physics: arms < 6 cm are held to the score cap and the absolute end
+   floor but not the strict stopping-vs-flat flag.
+4. **Creating the vertex is necessary, not sufficient — three separate
+   mechanisms then had to let it WIN:**
+   (a) `break_segment` does not set the new vertex's cluster; a
+   null-cluster vertex is invisible to `determine_main_vertex`'s candidate
+   loops.  The driver sets it.
+   (b) The arms' weak KS direction is a coin flip; landing "into the
+   junction" excludes wrong vertices inconsistently.  `determine_direction`
+   reconstructs each arm's outward direction from `kTwoEndBreakArm` + the
+   protected endpoint and lets it stand over a WEAK recompute (a dirsign
+   stamp cannot carry this — `shower_topo_reset` zeroes dirsign on every
+   segment in `separate_track_shower`).
+   (c) **The SCN-DL vertex rerank was the final mover on 3 of 4 events**:
+   the traditional chain, with (a)+(b) in place, selects the junction on
+   ALL FOUR back-to-back events — and `determine_overall_main_vertex_DL`
+   then switched 51513/56211/57485 to a DL vertex snapped onto a Bragg tip.
+   The mid-track back-to-back junction is precisely the topology the
+   image-based DL vertex cannot distinguish (that blind spot is why this
+   doc exists), so the DL rerank now never moves the main vertex OFF a
+   `kProtectedBreak` vertex (`NeutrinoVertexFinder.cxx`; a DL choice that
+   AGREES still passes; inert unless `two_end_break`).
+5. **The 59335 fixes needed terminus scoping to hold the footprint.**
+   Footprint evolution on the 1k, measured at each narrowing: 206/1000
+   (as-designed bars) → 119/1000 (`kink_dqdx_hot_ratio` 1.7x MIP) →
+   **69/1000** (terminus scoping, §9.2).  The teb pass itself contributes a
+   designed population (37 breaks); the excess was all fix-(a)/(b) refit
+   ripple on interior kinks that 59335 never needed.  nusel diffs were
+   0/1000 at every operating point.
+
+### 9.4 The five events, before → after (knobs on; tuned in
+/home/xqian/tmp/pr48/case5on* scratch arms, re-verified at the final binary
+in /home/xqian/tmp/pr48/case5onA and again on work-pr48-on1kc)
+
+| evt | baseline nu vertex | pr/48 nu vertex | anchor | dist |
+|---|---|---|---|---|
+| 51513 | far terminus (99.2,74.6,113.5) | **junction (45.3,46.6,138.4)**, break at arc 7.0 | Bragg est. arc 3-7 | at the estimate |
+| 56211 | arc-0 Bragg tip (92.7,-38.1,96.3) | **junction (88.5,-32.3,77.7)**, break at arc 19.1 | Bragg est. arc 19.5-20.4 | at the estimate |
+| 57903 | far end, 47.8 cm off | **(-16.5,-57.7,265.5)** | truth (-16.8,-57.1,265.1) | **0.81 cm** |
+| 59335 | terminus, 1.17 cm off | **(-172.7,46.8,79.0)** | truth (-172.5,47.0,78.8) | **0.37 cm** |
+| 57485 | far end, 47.1 cm off | **(-10.0,-105.6,46.4)** | owner guess (-9.8,-108.1,50.3) | **4.61 cm** |
+
+57485 note: the break lands at the algorithm's junction estimate (dip at
+arc 45.0, wide turn 62.2 deg at arc ~46 — the two independent markers
+agree), and the final vertex fit pulls it to 4.6 cm from the owner's
+eyeballed anchor.  The owner coordinate was itself flagged a guess ("not
+exactly back-to-back?"); the species step and both markers put the junction
+at arc 45-46 rather than 37.8.  Flagged for the owner's hand-scan verdict.
+
+59335 knob matrix (measured): fix (a) alone → 0.37 cm; fix (b) alone →
+0.12 cm (the ~1 cm proton stub survives as its own protected segment); both
+→ 0.37 cm.  Both ship ON.
+
+### 9.5 Gates
+
+- **Unit**: `wcdoctest-clus` 1148/1148 assertions (114 cases), incl. new
+  `doctest_two_end_break.cxx` (synthetic two-Bragg scan: mid-track junction
+  fires R1; near-far-end junction located; kinked weak-rise junction fires
+  R2 at the bend; single-Bragg / flat-MIP / short-segment never fire) and
+  wide-turn + knob-default cases.
+- **Compiled config**: knobs-off `wct-pr-perevt.jsonnet` compile (full
+  runner pipeline TLA) byte-identical to pre-change HEAD; knobs-on compile
+  carries all three keys in the `TaggerCheckNeutrino` node.
+- **Off-gate (byte-identical, final binary)**: `work-pr48-base48` (clean
+  `20098cbf` binary, production env) vs `work-pr48-off48c` (final binary,
+  three knobs forced 0): **48/48 mabc-pr.zip member-hash identical
+  (`hash_archive.py`), nusel tsvs byte-identical.**  Same on ncpi0:
+  `work-pr48-base19n` vs `work-pr48-off19nc`: **19/19 + nusel identical.**
+  (Earlier-binary off-gates `-off48`/`-off48b`/`-off19n`/`-off19nb` also
+  passed 48/48 + 19/19.)  Harness note: finishing individual events with a
+  second runner invocation overwrites the batch-merged `nusel-*.tsv` with
+  only its own events; regenerate with the runner's own
+  `nusel_extract.py --merge` call over all per-event tsvs before comparing.
+- **Footprint (knobs on, final binary)**:
+  - nueCC48 `work-pr48-on48c` vs base48: **8/48 movers, all F2-WALK refit
+    ripple, nusel identical** (owner-scanned set — no verdict flips).
+  - ncpi0 `work-pr48-on19nc` vs base19n: **4/19 movers (1 TEB-BREAK,
+    1 F3-PROTECT, 2 F2-WALK), nusel identical** (owner-scanned set).
+  - 1k `work-pr48-on1kc` vs the production arm `work-pr47f-on1k`:
+    **69/1000 movers — 37 TEB-BREAK, 1 F3-PROTECT, 31 F2-WALK;
+    nusel-events + nusel-table diffs 0/1000.**
+
+### 9.6 Movers, individually examined
+
+Full raw evidence: `scripts/analysis/pr48/mover_census.py` (class per mover,
+break diagnostics from the arm's log) and
+`scripts/analysis/pr48/teb_case_exam.py` (per-break main-vertex before/after
+vs the break point).  Classes: **TEB-BREAK** = the two-end break fired
+(designed population), **F3-PROTECT** = a protected kink-break vertex
+(59335 fix b), **F2-WALK** = neither log line — refit ripple from the walk
+stopping at a Bragg-hot terminus kink (59335 fix a).  WCT log lines can tear
+mid-write, so both scripts match on the line head only.
+
+**Owner-scanned movers (nueCC48 + ncpi0-19 + first-50): no nusel verdict
+flips anywhere.**  The 12 nueCC48/ncpi0 movers: 8 + 2 F2-WALK ripple, one
+ncpi0 TEB break (105946: genuine 44.9 cm + 3.4 cm two-Bragg split, rises
+4.7/5.3x MIP — selection kept the event's real nu vertex, the unselected
+degree-2 break vertex re-merged into a pre-existing vertex 2.9 cm away, and
+the near-region vertex set is identical to baseline: the designed decline
+path), one ncpi0 F3 protect (285567, vertex survives in the final dump).
+First-50 movers (8): the four motivating events (§9.4), 59335 (main vertex
+refined 0.82 cm), 50831 (TEB fired on a genuine 9.7/7.5 cm two-Bragg split,
+rises 5.0/4.4x MIP; selection declined, main vertex unmoved), 54341 (F3
+protect on a non-main cluster, main vertex unmoved), 58717 (TEB break,
+main vertex refined 2.1 cm onto the junction).
+
+**The 31 new (unscanned) TEB cases, each examined** (break diagnostics +
+main-vertex displacement; `teb_case_exam.py` output archived in the doc's
+review round):
+
+- **20 relocate the main vertex onto the junction** — the designed win.
+  Displacements 2.4-176 cm; the final vertex lands 0.3-5.5 cm from the
+  break point (final `do_multi_tracking` refit shifts it, same as 57485's
+  2.7 cm).  The two large jumps were spot-checked on the dQ/dx profile:
+  349461 (176 cm onto the junction of a 192 cm track + 4.6 cm stub, both
+  ends Bragg-rising) and 491483 (60 cm; junction dip 0.86x cluster median).
+- **10 declined-and-healed** — the break fired on a genuine two-end-rise
+  topology, `determine_main_vertex` kept its original choice, and the
+  unselected degree-2 break vertex was re-absorbed downstream; nusel and
+  the near-region structure match baseline.  This is the designed decline
+  path (the protect flag defends the vertex from *erasure while it can
+  still win selection*; an unselected junction vertex is not load-bearing).
+- **1 flagged for owner hand-scan — 321173**: the break is genuine
+  (junction dip 0.76x cluster median, termini 2.0x and 3.3x — a real
+  back-to-back split of a 151 cm track into 126/26 cm arms), but selection
+  declined the junction AND flipped the main vertex from the 2.0x terminus
+  to the 3.3x terminus (149 cm apart; the label stays nu-candidate in both
+  arms).  Neither baseline nor pr/48 puts this vertex at the junction, so
+  this is not a regression — but it is the one mover where the new choice
+  is not obviously at-least-as-good, and the 1k reco1 file is
+  truth-stripped (no `sim::` branches), so no truth adjudication was
+  possible.  Left for the owner's scan.
+
+Population sanity: 37 TEB breaks / 1000 events (3.7%) sits between the §5
+census's raw two-end-rise gate (2.2% of segments at 1.3x with no acceptance
+tier) and its looser turn-assisted tail (up to 1.25% + the rise-only
+population) — the designed order of magnitude, not a blowout.
+
+### 9.7 Files touched (toolkit)
+
+- `clus/inc/WireCellClus/{PRVertex,PRSegment}.h` — `kProtectedBreak`,
+  `kTwoEndBreakArm` flag bits.
+- `clus/inc/WireCellClus/PRSegmentFunctions.h`, `clus/src/PRSegmentFunctions.cxx`
+  — `TwoEndBreakOptions/Result`, `segment_two_end_break_scan`,
+  `segment_wide_turn_angle`, `segment_search_kink` walk-stop knob +
+  accept-criterion out-param.
+- `clus/inc/WireCellClus/NeutrinoPatternBase.h`, `clus/src/NeutrinoPatternBase.cxx`
+  — knob members, `break_two_end_dqdx` driver, `find_proto_vertex`
+  particle_data plumbing, F3 protect at the C4/A0 break site.
+- `clus/src/NeutrinoStructureExaminer.cxx` — protect-flag checks.
+- `clus/src/NeutrinoTrackShowerSep.cxx` — teb-arm outward-direction restore.
+- `clus/src/NeutrinoVertexFinder.cxx` — DL-rerank protected-vertex guard.
+- `clus/inc/WireCellClus/TaggerCheckNeutrino.h`, `clus/src/TaggerCheckNeutrino.cxx`
+  — component knobs + threading.
+- `cfg/pgrapher/common/clus.jsonnet`,
+  `cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
+  `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` — 4-layer knob
+  threading, key-suppressed; SBND operating point.
+- `clus/test/{doctest_two_end_break.cxx,doctest_prsegment.cxx,doctest_clus_knob_defaults.cxx}`.
+
 ## Files
 
 - This doc.
 - `scripts/analysis/pr48/backtoback_census.py` — the census script (§5).
 - `scripts/analysis/pr48/census_output.tsv` — its raw tail-population output.
+- `scripts/analysis/pr48/on1k_compare.py` — archive movers + per-mover vertex
+  diff + nusel diffs (§9.5).
+- `scripts/analysis/pr48/mover_census.py` — mover classification (§9.6).
+- `scripts/analysis/pr48/teb_case_exam.py` — per-break main-vertex
+  examination (§9.6).
 - Diagnostic instrumentation: **not committed** — added to
   `clus/src/{PRSegmentFunctions,NeutrinoPatternBase,NeutrinoStructureExaminer}.cxx`
   in the toolkit repo, run, and reverted (`git checkout --`) before this doc

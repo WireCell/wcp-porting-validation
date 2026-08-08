@@ -658,6 +658,22 @@ for _pr46 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr46 _env _key _val
+# doc pr/48: back-to-back track fixes (18255-51513/56211/57903/59335/57485;
+# nu vertex mid-segment on one unbroken track, dQ/dx rising at BOTH ends).
+# two_end_break = the two-end residual-range break pass;
+# kink_walk_dqdx_stop / kink_break_protect = the 59335 walk-overshoot +
+# EV4-absorption fixes.  Same tri-state contract: unset = cfg default,
+# 1 = force on, 0 = force off.
+#   SBND_TWO_END_BREAK / SBND_KINK_WALK_DQDX_STOP / SBND_KINK_BREAK_PROTECT
+for _pr48 in \
+    "SBND_TWO_END_BREAK:two_end_break" \
+    "SBND_KINK_WALK_DQDX_STOP:kink_walk_dqdx_stop" \
+    "SBND_KINK_BREAK_PROTECT:kink_break_protect" ; do
+    _env=${_pr48%%:*}; _key=${_pr48#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr48 _env _key _val
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
