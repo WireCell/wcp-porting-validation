@@ -246,7 +246,26 @@ python3 scripts/analysis/pr49/ghost_case_exam.py <base> <new>
 
 ## Operating point
 
-Both knobs C++ default OFF; SBND cfg TLAs default false ⇒ bare production
-run remains byte-identical to the pr/49 record (off-gates above).  The flip
-choice (defer / snap / both) is the owner's, informed by the decision table
-and the Bee hand-scan links.
+Both knobs C++ default OFF.  **Owner decision after the Bee hand-scan
+(2026-08-08, scanned on the two-set no-knob vs snap-only pair
+938c59ef… / c2da33c1…, 9 events): `vertex_kink_snap` SBND PRODUCTION ON;
+the defer knob stays OFF.**  Flip is one TLA in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`
+(`vertex_kink_snap = true`); numerics vks_* stay null (C++ defaults).
+
+Flip proofs (both byte-exact `cmp`, TLA set = the runner's incl. the full
+`pipeline_names` — TCN is not instantiated without it):
+- flipped bare compile == pre-flip compile with explicit
+  `-A vertex_kink_snap=true` (i.e. bare production now IS the validated
+  snap48a/snap50a arm config);
+- `-A vertex_kink_snap=false` (or `SBND_VERTEX_KINK_SNAP=false`) ==
+  pre-flip production bare — the sole-key legacy escape for A/B.
+- The `vertex_kink_snap` key appears exactly once in the flipped compile,
+  zero times pre-flip.
+
+Production expectation from the censuses: 4/98 sample-wide movers
+(172230 recovered; 163543, 422851, 55539 new corner-anchored vertices,
+all scanned), zero nusel diffs at either granularity.  The five
+defer-only events (131357, 342199, 360535, 469665 + the excluded 268067)
+remain at pr/49 behavior; `fit_blob_coverage_defer` stays available OFF
+for a future round.
