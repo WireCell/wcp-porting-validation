@@ -711,3 +711,133 @@ Full suite: 1192/1192.
   `fit_blob_coverage = 0` in `wct-pr-perevt.jsonnet` (the on48c/on50c arms
   are the ON-behavior validation record); the runner env
   `SBND_FIT_BLOB_COVERAGE=0` reproduces it per-run today.
+
+## Round 3 — scope-aware "foreign": only clusters OUTSIDE the fit deweight
+
+### Repro
+
+```bash
+# build + unit tests (toolkit @ 764c06f2)
+wcbuild; ./build/clus/wcdoctest-clus                     # 1194/1194
+
+# off-gates (knob off = production defaults)
+PR_JOBS=6 bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr49-off48d data
+PR_JOBS=6 bash run_pr_chain_batch.sh work-mcp1k-cb0805  work-pr49-off50d data \
+    $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+# member-hash + nusel vs the pr/48 production baselines (hash_archive.py)
+
+# on-arms
+SBND_FIT_BLOB_COVERAGE=0 PR_EXTRA_STAGES=pr_display PR_JOBS=6 \
+    bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr49-on48d data
+SBND_FIT_BLOB_COVERAGE=0 PR_EXTRA_STAGES=pr_display PR_JOBS=6 \
+    bash run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr49-on50d data \
+    $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+
+# census
+python3 scripts/analysis/pr49/ghost_case_exam.py work-pr49-off48d work-pr49-on48d
+python3 scripts/analysis/pr49/ghost_case_exam.py work-pr49-off50d work-pr49-on50d
+```
+
+Owner review of round 2 (2026-08-08) identified that its "foreign" was too
+broad: `is_cell_covered_by_foreign_blobs` treated EVERY other cluster in the
+grouping as a potential ghost claimant, including clusters fitted together
+with the current one in the same PR pattern graph.  Clusters that are part
+of the same fit are aware of each other — their shared projections are
+legitimate charge, not ghosts.  The owner's round-3 requirements:
+
+1. no out-of-scope overlap ⇒ no change;
+2. overlap from a cluster OUTSIDE the fitting scope ⇒ deweight —
+   **scope-only**: the owner explicitly chose to drop the 15 cm 3D far-gate
+   as a requirement (graph-scope membership replaces "not in the fitting
+   range"); a touching out-of-scope fragment's claim also deweights;
+3. dead-channel single-view charge covered by nobody ⇒ original weight
+   (already held in round 2 and still holds: both predicates false ⇒
+   untouched); the residual case — such a cell coincidentally covered by an
+   out-of-scope cluster — falls back to deweight, accepted by the owner.
+
+### What changed (toolkit, same `fit_blob_coverage` knob, still DEFAULT OFF)
+
+- New fitting-scope set `TrackFitting::m_cov_fit_scope` — every cluster
+  owning a segment in the current fit.  Rebuilt by
+  `rebuild_cov_fit_scope(seg)` at the top of each `form_map_graph` call
+  (the graph supplies all fitted clusters; deliberately NOT filtered by
+  `m_cluster_filter` — when a pass is filtered to one cluster's segments
+  the other graph clusters are still fitted together in the same pattern)
+  and each `form_map` call (single-tracking: the one segment's cluster,
+  plus any graph clusters — in the neutrino lifecycle `m_graph` is the
+  shared per-event pattern graph; the walk is fresh, NOT the
+  `m_cluster_edges` cache, which the single-tracking path never rebuilds
+  and would be stale there).  Knob-on only (`fit_blob_coverage >= 0`); the
+  legacy path takes no branch.  Membership-only pointer set (`.count()`),
+  never iterated ⇒ no determinism exposure.
+- `is_cell_covered_by_foreign_blobs` gains
+  `if (m_cov_fit_scope.count(other)) continue;` — an in-scope cluster's
+  claim never counts as foreign.  NOT usable instead: `m_clusters`
+  (polluted by `preload_clusters()` with every beam-flash cluster, none of
+  which need own a segment).
+- `fit_blob_coverage_ghost_dis` default 15 cm → **0 = disabled**
+  (scope-only).  The parameter survives as an optional additional 3D gate
+  (> 0 composes on top of the scope test), reachable via
+  `trackfitting_config_file`.
+- 57441 is unaffected by the narrowing: cluster 13 owns ZERO segments in
+  the event's PR output (the very fact, established in §7, that made
+  `update_association`/`m_fit_exclusion` unable to protect this event), so
+  it stays out-of-scope and its V-plane claim still deweights.
+- No jsonnet change (git diff on cfg/ empty ⇒ compiled configs identical
+  to the round-2-proven state by construction).
+
+### Unit tests
+
+`doctest_fit_blob_coverage.cxx` foreign-rule case rewritten for scope
+semantics: an out-of-scope claim deweights at ANY distance (fit point ON
+the claimant's points, ghost_dis 0); bringing the claimant INTO the scope
+(`rebuild_cov_fit_scope` with its segment) flips the same cell to
+not-foreign, and symmetrically pushes the previous cluster out; nobody's
+cells still stay; ghost_dis > 0 still composes; empty scope falls back to
+round-2 behaviour.  Default pins updated (ghost_dis 0).  Full suite:
+1194/1194.
+
+### Verification (round 3 results, labels *d; *c labels kept per M13)
+
+- Off-gates (scope binary, knob off = production defaults):
+  - work-pr49-off48d vs work-pr48-on48c: **48/48 mabc member-identical +
+    48/48 nusel identical**.
+  - work-pr49-off50d vs work-pr48-on1kc: **50/50 + 50/50**.
+- Knob-on smoke (evt 57441, off50d vs on50d): cluster-20 fit-vs-image max
+  **1.12 → 0.45 cm** (mean 0.30 → 0.28), identical to the round-2 fix;
+  sentinel strictly V-plane (u=0 v=630 w=0); main vertex UNCHANGED at
+  (-3.7,-195.4,416.6); segment 20000 splits into 20004+20005 (same 172
+  total fit points) with the junction break vertex at (-47.2,-145.8,410.7).
+- Mover census: **42/48 + 28/50 movers, every one sentinel-gated** (the
+  knob provably never fires without out-of-scope overlap).
+  **nusel-events: 0 diffs in all 98.**  nusel-table: 3 rows differ ONLY in
+  the log-parsed `stmfit` diagnostic column ('eval'↔'contained'), all
+  three traced to WCT log-line tearing clipping the
+  `check_stm_conditions:` prefix (e.g. off48d evt 268067:
+  "MEM: total: size=9.1tions: cluster 15 no STM fit: ..."); the tgm/stm/fc
+  verdict columns are identical everywhere.
+- **Scope exemption demonstrably working**: evt 48367 (round-2 mover,
+  1.64→1.14) no longer moves at all, and evt 388 cid 94's round-2 change
+  (1.21→0.38) reverts to 1.21→1.21 — their claimants own segments in the
+  same fit and are now exempt.  (388 still moves via other clusters.)
+- Round-2 "worse" movers re-examined: 172230 cid 5 (max 1.44→2.06, mean
+  0.352→0.354) and 52085 cid 6 (max 0.53→0.80 — softer than round 2's
+  0.94 — mean 0.355→0.362) are single-point max shifts with unchanged
+  means; 90055 cid 129 (0.46→1.27) is a 40-image-point fragment whose fit
+  grows 3→15 points, byte-for-byte the same numbers as round 2 (its
+  claimant is genuinely out-of-scope).
+- 38856 (the round-2b touching-neighbor restructuring case): with the
+  neighbor's claim re-admitted by the dropped far-gate but at ×0.1 weight,
+  cid 39 is flat (0.14→0.14) and NO fit restructuring recurs; the only tag
+  is cid 46 max 0.43→0.54 (1.1 mm).
+- pr/48 TEB population: accepted breaks (`found=true`) identical
+  (6=6 on the 50-sample, 0=0 on nueCC48).  Scan-attempt counts shift by
+  one on each sample, both downstream of intended fixes: on48d evt 469665
+  cluster 15 (the 5.07→1.69 ghost fix) newly qualifies for a scan and is
+  rejected; on50d 57441's split segments drop a scan that was found=false
+  in the base.
+- SBND operating point: knob remains DEFAULT OFF everywhere
+  (wct-pr-perevt TLA null); flip = one line (`fit_blob_coverage = 0`),
+  owner decision.  The on48d/on50d arms are the ON-behavior validation
+  record for the scope-aware semantics; round-2's on48c/on50c arms record
+  the superseded far-gate semantics.
