@@ -682,6 +682,20 @@ unset _pr48 _env _key _val
 if [ -n "${SBND_FIT_BLOB_COVERAGE:-}" ]; then
     CATH_TLA+=(--tla-code "fit_blob_coverage=${SBND_FIT_BLOB_COVERAGE}")
 fi
+# doc pr/50: suspend the pr/49 deweighting during find_proto_vertex (the
+# partition-forming stage) -- 172230-class near-vertex robustness.  Boolean
+# TLA: unset = cfg default (false = pr/49 behavior); true/false passed
+# verbatim.
+#   SBND_FIT_BLOB_COVERAGE_DEFER
+if [ -n "${SBND_FIT_BLOB_COVERAGE_DEFER:-}" ]; then
+    CATH_TLA+=(--tla-code "fit_blob_coverage_defer=${SBND_FIT_BLOB_COVERAGE_DEFER}")
+fi
+# doc pr/50: main-vertex kink-consistency snap (172230-class near-vertex
+# robustness).  Boolean TLA, same contract as the defer knob above.
+#   SBND_VERTEX_KINK_SNAP
+if [ -n "${SBND_VERTEX_KINK_SNAP:-}" ]; then
+    CATH_TLA+=(--tla-code "vertex_kink_snap=${SBND_VERTEX_KINK_SNAP}")
+fi
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
