@@ -216,7 +216,43 @@ prototype's structurally identical counterpart:
   change this event's outcome. This was checked directly against the
   mechanism, not assumed.
 
-### 5. Answering the two questions asked directly
+### 5. Sharper still: the association window overshoots cluster 20's own blob footprint
+
+Section 3 ruled out the `prepare_data` bounding-box pad as the entry point.
+A finer look at exactly where the contamination enters narrows it further.
+Restricting the `proj` block's V-plane cells to the ones each cluster's
+*own* fit actually claimed (`cluster_id == 20` vs. `cluster_id == 13`) shows
+the two sets are **completely disjoint — zero cells in common** — even
+though they sit inside the same coarse wire-index bounding box:
+
+```
+wire 830: cid20 slices 604-607
+wire 834: cid20 slices 599-603   |   cid13 slices 607-612
+wire 837: cid20 slices 597-599   |   cid13 slices 603-607
+wire 839: cid20 slices 595-597   |   cid13 slices 598-604   (one tick apart)
+wire 840: cid20 slice  595       |   cid13 slices 596-603
+```
+
+The two tracks' real footprints are **diagonally adjacent, not overlapping**
+— cluster 20's own cells end at wire 839/slice 597, cluster 13's begin at
+wire 839/slice 598, a one-tick gap. So the contamination does not enter
+because cluster 20's own track genuinely occupies those cells; it enters
+because `form_point_association`'s candidate-cell search window (`dis_cut`,
+the `nlevel`-hop neighbor expansion, `clus/src/TrackFitting.cxx:2109-2557`)
+**overshoots cluster 20's own blob footprint by a few wires/ticks** into
+cluster 13's immediately adjacent, exclusive territory. "The charge lookup
+is ownership-blind" (§4) is the structural reason this is *possible*;
+"the association window overshoots the true footprint by 1-3 cells" is the
+precise reason it *happens on this event*. This distinction is the basis for
+the blob-coverage fix design in the Fix section below.
+
+(Caveat on this evidence, carried into the Fix section: `cluster_id` here is
+**post-fit fit-claim provenance** — which cells each cluster's finished fit
+happened to use — not a direct query of `Facade::Blob` geometry. It is
+strong proxy evidence, not proof; see the Fix section for the direct check
+that still needs doing.)
+
+### 6. Answering the two questions asked directly
 
 - **"Does this have something to do with retiling?" — No.**
   `CreateSteinerGraph::mutate`'s retiled scratch cluster only donates
@@ -230,7 +266,7 @@ prototype's structurally identical counterpart:
 
 - **Is this a port regression?" — No.** Both codebases build the charge
   lookup identically (ownership-blind, rectangular, per-plane) and both have
-  the identical structurally-scoped-away defense (§4 above). This is a
+  the identical structurally-scoped-away defense (§4). This is a
   shared, pre-existing limitation of single-view charge lookup design in
   both the prototype and the port: when two physically separate tracks
   alias in exactly one of three projections over a shared arc, nothing in
@@ -256,11 +292,169 @@ owner did here.
 
 ## Fix (proposed — NOT implemented)
 
-Ranked by scope; both are default-OFF-knob proposals requiring their own
+Both options below are default-OFF-knob proposals requiring their own
 validation round (byte-identical off-gate + on-footprint mover census) per
-the operating manual §4, and neither has been prototyped or coded.
+the operating manual §4, and neither has been prototyped or coded. The
+owner reviewed both and prefers a refined version of option 2 — reuse the
+cluster's own already-tiled 3D blobs as the consistency check, rather than
+comparing candidate cells directly across planes. That refinement is
+written up first, as the recommended design; the cross-cluster
+`update_association` generalization is kept below it as the larger,
+structural alternative.
 
-### 1. Cross-cluster generalization of `update_association` (larger, structural)
+### 1. Own-blob-coverage down-weighting (recommended)
+
+**Idea**: a candidate 2D `(wire, time)` cell that is not covered by any of
+*this cluster's own* tiled blobs is untrustworthy — down-weight it — without
+needing to look at the other two planes at all. Blobs are already
+3-plane-consistent by construction (`RayGrid` tiling only forms a blob where
+a wire-range overlap exists across all three planes simultaneously), so
+"does this cell belong to one of my own blobs" is a cheaper proxy for
+"is this cell 3D-consistent with my own track" than re-deriving cross-plane
+consistency from scratch.
+
+**Empirical support, on this exact event**: §5 above shows cluster 20's own
+claimed V-plane cells and cluster 13's are completely disjoint — a
+membership test against cluster 20's own blob coverage would have excluded
+every contaminating cell while keeping every legitimate one. This is proxy
+evidence (post-fit fit-claim provenance, not a direct blob-geometry query —
+see §5's caveat), so the first step of any implementation is to confirm it
+directly: build the coverage index below from cluster 20's actual
+`children()` blobs (data already extracted read-only at
+`/home/xqian/tmp/pr49/pctree/` for this investigation) and re-check that
+wires 834-841 at slices 607-612 fall outside it.
+
+**The per-plane wire bound is exact, not a loose bounding box — checked
+directly against the tiling code, not assumed.** `Facade::Blob`
+(`clus/inc/WireCellClus/Facade_Blob.h:78-86`) caches
+`slice_index_min()/max()` and `u/v/w_wire_index_min()/max()`, copied
+verbatim from the RayGrid shape's strip bounds
+(`aux/src/SamplingHelpers.cxx:92-106`). `RayGrid::prune()`
+(`util/src/RayTiling.cxx:449-502`) tightens each wire-layer bound to the
+floor/ceil of the corner-polygon's projection onto that layer's pitch axis
+(`:498-499`). Because a blob region is a convex intersection of pitch-index
+slabs, the projection onto any *single* plane's axis is an interval, and
+`prune` sets the bound to exactly that interval — so every wire in
+`[u_wire_index_min, u_wire_index_max)` genuinely intersects the blob's 2D
+footprint in that one plane. The looseness one would normally worry about
+(bbox ⊋ true polygon) only shows up if you AND all three planes' ranges
+together as a 3D containment test — this design deliberately doesn't do
+that, it tests one plane's range at a time, so no polygon/corner refinement
+tier is needed. (Correcting an earlier assumption in this investigation:
+`Blob::corners()` — `Facade_Blob.h:94` — looked like an available exact-tier
+fallback, but the loading code that would populate `corners_` is commented
+out in `fill_cache`, `clus/src/Facade_Blob.cxx:137-148`, so `corners()`
+always returns empty at the facade level today. Moot here since the
+per-plane range is already exact, but worth not repeating as a design
+option elsewhere.)
+
+**The aggregation index this needs already exists, cached, and is already
+shared across the codebase — no duplication needed at all.**
+`Cluster::time_blob_map()` (`clus/inc/WireCellClus/Facade_Cluster.h:640-641`,
+type `apa → face → slice_start_tick → BlobSet`,
+`clus/inc/WireCellClus/Facade_ClusterCache.h:23-26`) is built lazily on
+first call and cached in the cluster's `ClusterCache`
+(`clus/src/Facade_Cluster.cxx:317-329`), scoped to that cluster's own
+`children()` blobs only. It is already a public, shared Facade::Cluster
+accessor — five other components already call it directly
+(`retile_cluster.cxx:492-533`, `improvecluster_1.cxx:613-730`,
+`connect_graph_closely.cxx:174-221,625-678`,
+`clustering_separate.cxx:3943-3952`, `SteinerGrapher.cxx:160-199,369`), so
+`TrackFitting` calling it too is the sanctioned reuse pattern, not an M10
+fork-by-duplication situation — M10 is about not extracting shared code out
+of a *production pass*, not about calling an existing shared data-facade
+method that many components already use. `TrackFitting.cxx` does not call
+it today (grep confirms). Two related, but not directly callable,
+precedents already exist on `Cluster` and shaped the design of the new
+predicate rather than being reused verbatim:
+`is_point_spatially_related_to_time_blobs` and `check_wire_ranges_match`
+(`clus/src/Facade_Cluster.cxx:3243-3327`, `:3333-3390`) — both take a point
+*index* (not a bare `(plane,wire,time)` triple) and AND all three planes
+together (this design needs a single-plane test), and the latter is
+`private` (`Facade_Cluster.h:744`). So the actual new code needed is small
+— roughly a 10-line single-plane predicate built on top of
+`time_blob_map()`, living directly in `TrackFitting.cxx` — not a duplicated
+20-line loop.
+
+**A genuine correctness blocker, not yet resolved, on par with the
+tolerance question below: the time key is not uniformly aligned across
+`form_point_association`'s three candidate-generation paths.** Candidate
+cells from the blob-neighbor branch carry `Coord2D.time =
+blob->slice_index_min()` (`TrackFitting.cxx:2206,2221,2258,2263,2268`) —
+this matches `time_blob_map()`'s key exactly. Candidates from the Steiner
+branch and the fallback branch instead carry a *floor-quantized* tick value
+(`floor(tick / cur_ntime_ticks) * cur_ntime_ticks`,
+`TrackFitting.cxx:2377,2521`), which is only guaranteed to land on a blob
+slice boundary if slice starts happen to be aligned to that grid on every
+face — not guaranteed (`Facade_Grouping.cxx:759-767`; the same class of
+misalignment already documented for `slice_stride` at
+`Facade_Cluster.h:680-687`). A naive `time_blob_map().at(time)` exact-key
+lookup would then silently read "not covered" for every Steiner- and
+fallback-derived candidate on a misaligned face — which would look like the
+fix working (contamination gone) while it was actually just discarding two
+of the three candidate sources wholesale. **This must be resolved before
+the design is trustworthy**: either snap via `std::map::lower_bound()` to
+find the blob-slice interval containing `coord.time`, or verify and assert
+alignment explicitly. Not yet done — flagged here as the concrete first
+technical task for an implementation, alongside the tolerance question.
+
+**Cost.** `time_blob_map()` build is O(nblobs·log nblobs), once per
+cluster, amortized across the whole `do_multi_tracking` call (the cache
+guard is a "have I built it" sentinel, not a validity check — safe here
+because `TrackFitting` only registers clusters and never restructures a
+cluster's blob children mid-call, `TrackFitting.cxx:7908-7917`, but this
+should be stated as an explicit assumption in any implementation). Each
+candidate-cell test is then a handful of map lookups plus a linear scan of
+the `BlobSet` at that slice (typically order 1-10 blobs) — not a scan of
+all blobs in the cluster. `RetileCluster::get_activity`
+(`clus/src/retile_cluster.cxx:117-186`, same own-`children()`-only pattern,
+building a dense per-slice-per-plane wire-hit array instead of a `BlobSet`
+map) is available as a cheaper alternative if per-cell map lookups ever
+prove to be a hot path.
+
+**One more composition caveat, from the same investigation**: dead/2-view
+blobs' re-derived shapes can spill past their true wire boundary
+(`sio/inc/WireCellSio/ClusterFileSource.h:86-90`), so the coverage check
+should exempt or special-case dead-plane blobs — consistent with the
+existing dead-plane rescue interaction noted below, and with
+`TrackFitting::prepare_data` already treating bad planes specially via
+`Grouping::is_blob_plane_bad` (`Facade_Grouping.cxx:1136-1171`, used at
+`TrackFitting.cxx:821-840`).
+
+**Landing site: `examine_point_association`, not `form_point_association`.**
+`TrackFitting::examine_point_association` (`clus/src/TrackFitting.cxx:2709-3068`)
+already owns exactly this kind of accept/reject-and-weight decision — the
+`charge_cut` filter and the `PlaneData::quantity` weight it computes already
+flow into the fit as a per-plane scaling factor in `fit_point`
+(`TrackFitting.cxx:3517-3526`, reduced when `quantity` is low). So
+"down-weight" already has a mechanism to hook into: reduce `quantity` for a
+plane whose kept cells are mostly outside the cluster's own blob coverage,
+rather than inventing a new weighting path. **One interaction that must be
+preserved, not overridden**: the dead-plane rescue already inside
+`examine_point_association` (`:2810-3068`) deliberately keeps single-plane
+charge when the *other two* planes are dead/empty. The blob-coverage check
+must compose with that rescue (run after it, or exempt rescued cells), not
+replace it — otherwise a legitimately single-plane-dominant point (a dead
+channel in the other two views) could be wrongly down-weighted.
+
+**The open parameter that decides whether this works is tolerance, and it
+must be measured, not guessed.** The adjacency in §5 is tight — cluster 20's
+own cells and cluster 13's exclusive cells are one tick apart at wire 839.
+A membership test with wire/slice tolerance ≥ 1-2 would re-admit exactly the
+contamination being excluded; a test with zero tolerance risks dropping
+legitimate edge-of-blob cells the fit currently benefits from (the existing
+`nlevel`-hop neighbor extension in `form_point_association` exists to reach
+real charge near blob boundaries and dead channels). This constant has to be
+tuned against real events, not asserted, and is the central open question
+for any implementation.
+
+**Complexity, honestly stated**: cheaper than option 2 below — no
+fit-ordering dependency, no access to other clusters needed, everything is
+local to the cluster already being fit. Still a real behavior change,
+needing the same default-OFF knob + full byte-identical gate bar as any
+other option here before any implementation or flip.
+
+### 2. Cross-cluster generalization of `update_association` (larger, structural alternative)
 
 Extend the comparison set inside `TrackFitting::update_association`
 (`clus/src/TrackFitting.cxx:2563-2680`) from "other segments of *this*
@@ -277,20 +471,6 @@ runs. No such fit-order dependency exists today; `do_multi_tracking` calls
 are per-cluster with no cross-cluster sequencing. Introducing one is a
 larger change to the pattern-recognition driver, not a local patch to
 `TrackFitting`, and would need its own design review before implementation.
-
-### 2. Cross-plane consistency check at candidate-cell time (smaller, narrower)
-
-In `form_point_association` / `examine_point_association`
-(`clus/src/TrackFitting.cxx:2109-3068`), down-weight or drop a candidate
-cell in one plane whose accepted match is not corroborated by a plausible
-candidate in at least one of the other two planes, instead of accepting
-single-view charge unconditionally. This targets the exact failure mode
-observed here (contamination isolated to one of three planes) without
-needing cross-cluster fit ordering. Still needs careful design: over-strict
-corroboration would penalize genuinely single-plane-dominant charge
-(e.g. near a dead channel in one of the other two planes), so it would have
-to compose with the existing dead-plane rescue in
-`examine_point_association` rather than override it.
 
 ### Explicitly not the fix
 
@@ -314,7 +494,12 @@ every other change in this tree does (CLAUDE.md §4):
   ncpi0-19) via `hash_archive.py` member comparison.
 - Knob-on smoke test on evt 57441 itself, showing the fit no longer detours
   at the V-plane-ghost location, quoted as a fit-vs-image position diff the
-  way §"Symptom" did above.
+  way §"Symptom" did above. If the blob-coverage design (option 1) is what
+  ships, additionally show the V-plane `PlaneData::quantity` for the
+  contaminated cells drop (or the cells disappear from the kept set
+  entirely) at fit indices 108-113, while U/W `quantity` is unchanged —
+  the direct evidence that the down-weighting fired where intended and
+  nowhere else.
 - A mover census against the current 1k production arm
   (`work-pr48-on1kc` or its successor) to confirm the change does not
   disturb the already-validated pr/48 back-to-back-break population
