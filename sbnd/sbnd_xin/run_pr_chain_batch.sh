@@ -674,6 +674,14 @@ for _pr48 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr48 _env _key _val
+# doc pr/49: own-blob-coverage down-weighting in the trajectory fit's 2D
+# charge association (18255-57441 V-plane projection ghost).  NUMERIC knob,
+# not tri-state: unset = cfg default; any value is passed through verbatim
+# (-1 = force off, 0 = force on strict, N > 0 = on with N cells tolerance).
+#   SBND_FIT_BLOB_COVERAGE
+if [ -n "${SBND_FIT_BLOB_COVERAGE:-}" ]; then
+    CATH_TLA+=(--tla-code "fit_blob_coverage=${SBND_FIT_BLOB_COVERAGE}")
+fi
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the

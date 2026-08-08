@@ -508,3 +508,206 @@ every other change in this tree does (CLAUDE.md §4):
 - `./build/clus/wcdoctest-clus` passing, plus new synthetic-track test
   coverage for whichever mechanism is chosen (a two-track-crossing-in-one-view
   synthetic case is the natural regression test).
+
+---
+
+## Implementation (round 2) — the `fit_blob_coverage` knob
+
+Implemented per the owner's request, with two refinements the validation
+rounds and the owner's mid-round clarification forced (§ "design
+iterations").  Final rule: a live candidate 2D cell that is OUTSIDE the
+fitted cluster's own blob coverage AND INSIDE the blob coverage of a
+foreign cluster that is 3D-DISTANT from the point being fit is classified a
+**foreign-ghost cell**; it **stays in the association but its least-squares
+weight in the trajectory fit is multiplied by `fit_blob_coverage_weight`**
+(deweight, not drop — owner: a dead-channel region can leave good
+single-view charge with no 3D image, which the fit must still use).  Cells
+covered by nobody, or claimed by a genuinely touching/crossing neighbor,
+keep full weight.
+
+### Repro block (round 2)
+
+```bash
+# build + unit tests (1192 assertions incl. 4 pr49 cases + knob-default pins)
+wcbuild; ./build/clus/wcdoctest-clus
+
+# off-gates (deweight binary, knob unset = production defaults)
+cd wcp-porting-img/sbnd/sbnd_xin
+PR_JOBS=6 bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr49-off48c data
+PR_JOBS=6 bash run_pr_chain_batch.sh work-mcp1k-cb0805  work-pr49-off50c data \
+    $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+
+# knob-on arms (footprint + calib dumps)
+SBND_FIT_BLOB_COVERAGE=0 PR_EXTRA_STAGES=pr_display PR_JOBS=6 \
+    bash run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr49-on48c data
+SBND_FIT_BLOB_COVERAGE=0 PR_EXTRA_STAGES=pr_display PR_JOBS=6 \
+    bash run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr49-on50c data \
+    $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+
+# census + per-mover exam
+python3 scripts/analysis/pr49/on_compare.py      work-pr49-off48c work-pr49-on48c
+python3 scripts/analysis/pr49/ghost_case_exam.py work-pr49-off48c work-pr49-on48c
+python3 scripts/analysis/pr49/on_compare.py      work-pr49-off50c work-pr49-on50c
+python3 scripts/analysis/pr49/ghost_case_exam.py work-pr49-off50c work-pr49-on50c
+```
+
+### What shipped (toolkit, apply-pointcloud)
+
+- Knob: `TrackFitting::Parameters::fit_blob_coverage` (double sentinel
+  following `skip_revert_iso_xext_cut`): `< 0` off (default, legacy path
+  byte-identical), `>= 0` on with value = wire/slice tolerance in cells
+  (0 = strict, the validated operating point — the 57441 contamination is
+  ONE cell away, so tolerance >= 1 re-admits it).  Companion numerics, both
+  riding C++ defaults (reachable via the `trackfitting_config_file` JSON):
+  `fit_blob_coverage_ghost_dis = 15 cm` — the 3D far-gate ("another cluster
+  not in the fitting range": 57441's claimant is 163 cm away; a touching
+  neighbor at a crossing is ~0-10 cm; `<= 0` disables the gate) — and
+  `fit_blob_coverage_weight = 0.1` (the ghost-cell weight; 1.0 = no-op,
+  0 = hard drop).  All three round-trip through
+  `set_parameter`/`get_parameter` and are pinned in `TrackFittingPresets`.
+- Predicates (`clus/src/TrackFitting.cxx`):
+  `is_cell_covered_by_own_blobs(cluster, apa, face, plane, wire, time, tol,
+  nticks)` — wire in the blob's exact half-open per-plane interval
+  `[min-tol, max+tol)` AND tick in `[slice_index_min - tol*nticks,
+  slice_index_max + tol*nticks)`, via the already-cached, already-shared
+  `Cluster::time_blob_map()`.  **The Fix section's time-key alignment
+  blocker is resolved by an interval search** (`lower_bound`/`upper_bound`
+  over the slice-start keys, then a per-blob interval check), so the
+  floor-quantized ticks of the Steiner/fallback candidate branches match
+  without any grid-alignment assumption.
+  `is_cell_covered_by_foreign_blobs(grouping, cluster, p, ghost_dis, ...)`
+  — the same test over every OTHER cluster in the grouping, accepted only
+  when that cluster's `get_closest_dis(p) > ghost_dis` (the kd query is
+  paid only by clusters that actually cover the cell).  Both are
+  order-invariant existential ORs — iterating the pointer-keyed BlobSet (or
+  the cluster list) cannot affect the result.
+- Classification site: `examine_point_association`'s three per-plane
+  `charge_cut` loops (guarded by knob-on && `!flag_end_point`), recording
+  into a new `PlaneData::deweighted_2d_points` set (empty on the legacy
+  path).  Exemptions: dead-derived cells (flag 0 — the dead-blob spill
+  caveat), rescue anchors (injected after the loops, never tested),
+  end/vertex points via `flag_end_point` (which also covers
+  `form_map_graph`'s dummy-segment vertex calls, where `segment->cluster()`
+  may be the wrong cluster).  The association sets, `quantity`, the
+  flag-reset and the dead-plane rescue are byte-identical to legacy — only
+  the weight changes.
+- Weight site: the six per-plane scaling loops (three in `fit_point`, the
+  multi-track path; three in `trajectory_fit`, the single-track path) —
+  `scaling *= fit_blob_coverage_weight` for cells in the deweighted set,
+  after the existing quantity-quality clause.  dQ/dx charge division is NOT
+  touched.  A `SPDLOG_LOGGER_DEBUG` sentinel per affected fit point
+  (`fit_blob_coverage: deweighted foreign live cells u=.. v=.. w=..`) makes
+  knob-on runs quotable.
+- Threading (route A, the `fit_exclusion` pattern): `TaggerCheckNeutrino`
+  key `fit_blob_coverage` (configure + default_configuration round-trip),
+  pushed per visit via `set_parameter`.  NOTE: the jsonnet key is the
+  single source of truth for the main knob — it overrides any
+  `trackfitting_config_file` value.  Scope: TaggerCheckNeutrino only;
+  TaggerCheckSTM's private fitter stays legacy.
+- jsonnet: `fit_blob_coverage=null` threaded through
+  `cfg/pgrapher/common/clus.jsonnet` `tagger_check_neutrino()` (key
+  suppressed when null => byte-identical), `cfg/pgrapher/experiment/sbnd/
+  clus.jsonnet` (`clus_pr` + `pr()`), `wct-pr-perevt.jsonnet` (TLA, still
+  null = OFF).  Runner env: `SBND_FIT_BLOB_COVERAGE` (numeric pass-through:
+  unset = cfg default, -1 = force off, 0 = force on strict, N > 0 =
+  tolerance N).
+
+### Design iterations — what the validation rounds forced
+
+1. **Strict own-coverage drop (superseded)**: drop every live cell outside
+   own-blob coverage.  Off-gates clean; 57441 fixed (fit-vs-image max for
+   cluster 20: 1.12 → 0.56 cm, sentinel all-V: u=0 v=761 w=0).  But
+   on-footprint 47/48 (nueCC48) / 34/50 (mcp1k-50): the strict rule also
+   drops legitimate near-boundary cells — real own-track charge that tiles
+   below threshold or sits just past the blob envelope, exactly what
+   `form_point_association`'s `nlevel`-hop window exists to reach —
+   perturbing fits event-wide, against the round's requirement ("no effect
+   when there is no overlap").  Superseded labels (kept per M13):
+   work-pr49-{off48,off50,on48,on50}.
+2. **Foreign-claim hard drop (superseded)**: drop only `!own && foreign`.
+   Off-gates clean (work-pr49-off48b vs work-pr48-on48c 48/48 +
+   work-pr49-off50b vs work-pr48-on1kc 50/50); 57441 improved further
+   (1.12 → 0.45 cm) but its main vertex RELOCATED onto the new junction
+   vertex; footprint 46/48 / 29/50 with nusel 0/98 and dominant
+   improvements (top: 4.95→1.53, 5.07→1.70 cm), yet the biggest "worse"
+   cases were tiny fragments (6-93 image points) whose fits restructured
+   after a genuinely TOUCHING neighbor (8.8 cm away) claimed their boundary
+   cells — a nearby neighbor's shared projection is not the ghost being
+   targeted.  Hard-dropping also conflicts with the dead-channel case the
+   owner then clarified (good single-view charge with no 3D image must
+   stay usable).  Superseded labels: work-pr49-{off48b,off50b,on48b,on50b}.
+3. **Final: 3D-far-gated deweight**: only foreign claims from clusters
+   > 15 cm away from the fit point count, and the cells are down-weighted
+   (×0.1), not removed.  Direct blob-geometry check on 57441's 26
+   contaminating V cells under the final rule: 20 deweighted including the
+   ENTIRE detour-driving far lobe (wires 834/837), 5 kept because they are
+   genuinely inside cluster 20's own blob projection (irreducible for any
+   own-image method), 1 kept as covered-by-nobody.
+
+### Pre-code confirmation (the Fix section's stated first step)
+
+Direct blob-geometry check against cluster 20's actual blobs
+(`pctree-pr-evt57441.tar.gz`, extracted read-only): cluster 20's own claimed
+V cells are covered **16/16**; of the 26 contaminating (cluster-13-claimed)
+V cells, **21/26 are outside** cluster 20's own coverage — including the
+entire far lobe (wires 834/837, the fit-idx 110-111 all-foreign cells) —
+and cluster 13's own blobs cover 25/26 of them (sanity).  The §5
+proxy-evidence caveat was right to flag the residual: the closest-adjacency
+cells are inside cluster 20's own projection and no own-image method can
+remove them.
+
+### Unit tests
+
+`clus/test/doctest_fit_blob_coverage.cxx` (4 cases, 36 assertions):
+half-open wire band ± tolerance per plane (catches the `<= max + tol`
+mistake), time-as-interval-search (the mid-slice-tick case fails against a
+naive exact-key `find`), own-(apa,face)-only + the 57441 shape in
+miniature, and the foreign rule (own kept / 3D-far foreign deweighted /
+covered-by-nobody kept / 3D-near foreign exempt / null grouping safe).
+Plus knob + companion default pins in `doctest_clus_knob_defaults.cxx`.
+Full suite: 1192/1192.
+
+### Verification (round 2 results, final deweight binary)
+
+- **Compiled-config proofs**: knob-off compile of `wct-pr-perevt.jsonnet`
+  byte-identical to the pre-change (HEAD-worktree) compile (empty diff);
+  knob-on (`-A fit_blob_coverage=0`) shows `"fit_blob_coverage": 0` in the
+  TaggerCheckNeutrino data block.
+- **Off-gates PASS** (knob off = production defaults):
+  work-pr49-off48c vs work-pr48-on48c **48/48** `mabc-pr.zip`
+  member-identical + **48/48** per-event nusel identical;
+  work-pr49-off50c vs work-pr48-on1kc **50/50 + 50/50**.  (The two
+  superseded binaries' off arms also passed the same gates: off48/off50 and
+  off48b/off50b, 48/48 + 50/50 each.)
+- **Knob-on smoke, evt 57441** (off50c vs on50c): cluster-20 fit-vs-image
+  max **1.12 → 0.45 cm** (mean 0.296 → 0.283); the trajectory moved up to
+  1.66 cm exactly at the old detour indices (108-113) and < 0.3 cm
+  elsewhere; sentinel strictly V-plane (168 fit points, u=0 **v=630** w=0)
+  — the diagnosed single-view ghost signature.  The straightened track
+  gains one break vertex at the junction (-46.8, -145.4, 410.8) — 1.6 cm
+  from the owner's reported detour position — and the **main vertex is
+  unchanged** at (-3.7, -195.4, 416.6) (the superseded hard-drop variant
+  had relocated it; the deweight does not).
+- **Mover census** (on vs off, final binary): nueCC48 **39/48** archive
+  movers, mcp1k-50 **26/50**; **nusel diffs 0/48 and 0/50 at both
+  granularities** — no selection-level change anywhere.  Every mover
+  carries the sentinel (foreign-ghost cells present — the knob never fires
+  without overlap, satisfying the round's requirement by construction).
+  Per-cluster fit-vs-image: 20 improved / 8 worse (nueCC48), 4 improved /
+  5 worse (mcp1k-50); largest improvements 4.95→1.53 and 5.07→1.70 cm
+  (multi-cm ghost detours removed); the "worse" tags are single-point max
+  shifts on large clusters with means unchanged (e.g. 172230 cid 5:
+  max +0.62 cm but mean 0.352→0.354 on 7638 image points) — no
+  fragment-restructure cases remain under the 3D gate.
+- **pr/48 TEB population undisturbed**: `break_two_end_dqdx` sentinel
+  counts identical off vs on for 51513/56211/57903/57485 (3=3) and 59335
+  (0=0); nusel 0/98 overall.
+- **SBND operating point: knob left OFF everywhere** (wct-pr-perevt TLA
+  `fit_blob_coverage = null`).  Rationale: `TrackFitting` is fundamental to
+  the whole PR chain, the on-footprint is broad (39/48 + 26/50 movers, all
+  overlap-gated and selection-neutral, but each a real fit change), and the
+  target event gains a new break vertex the owner should adjudicate on the
+  scanned Bee sample before production adoption.  To flip: set
+  `fit_blob_coverage = 0` in `wct-pr-perevt.jsonnet` (the on48c/on50c arms
+  are the ON-behavior validation record); the runner env
+  `SBND_FIT_BLOB_COVERAGE=0` reproduces it per-run today.
