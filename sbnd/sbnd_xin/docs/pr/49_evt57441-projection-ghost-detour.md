@@ -841,3 +841,65 @@ round-2 behaviour.  Default pins updated (ghost_dis 0).  Full suite:
   owner decision.  The on48d/on50d arms are the ON-behavior validation
   record for the scope-aware semantics; round-2's on48c/on50c arms record
   the superseded far-gate semantics.
+
+## SBND production flip — owner decision 2026-08-08
+
+`fit_blob_coverage = 0` is now the SBND production default
+(`wct-pr-perevt.jsonnet` TLA, toolkit 758e2e4d): the round-3
+scope-aware deweighting is ON for every bare run.  Owner rationale: net
+improvement on the validated samples (ghost detours fixed on 57441/469665/
+388/342199/..., zero nusel selection changes in 98 events, every mover
+sentinel-gated).
+
+Compiled-config proofs at the flip: bare compile is byte-identical to the
+explicit `-A fit_blob_coverage=0` compile with the production pipeline
+(i.e. a bare run IS the config the on48d/on50d validation arms ran), and
+`-A fit_blob_coverage=-1` (or `SBND_FIT_BLOB_COVERAGE=-1`) differs from
+bare in ONLY the `fit_blob_coverage` key — the legacy A/B escape hatch.
+The work-pr49-on48d/on50d arms are the ON-behavior validation record.
+
+### Open item (next session): 172230-class near-vertex robustness
+
+Scanned by the owner on the round-3 Bee set: evt 172230's fitted
+trajectory near the neutrino vertex no longer turns at the image kink, and
+the fitted dQ/dx there is low (the Bragg-like rise into the vertex is
+lost).  Root cause chain (all measured, this doc's round-3 investigation):
+
+1. All deweighting in this event fires at the far shower tip (~90 cm from
+   the vertex; claimants are <100-point out-of-scope debris fragments) and
+   entirely during round-1 main-cluster PR.
+2. `find_proto_vertex`'s recursive break partition is globally sensitive:
+   the tip-local trajectory change flips one break, and the whole
+   partition re-derives (round-1: 34 vs 33 segments; only the first two
+   segment rows identical).  The proto-vertex candidate at the true kink
+   position no longer exists in the knob-on graph (nearest candidate
+   2.7 cm away along the track).
+3. `determine_main_vertex` (and the DL rerank, whose image-based proposal
+   is identical in both arms) can only choose among surviving candidates
+   => vertex selected 2.7 cm off the true kink.
+4. `improve_vertex`/`fit_vertex` then anchors and refits the prongs at the
+   chosen (wrong) position — a LOCAL optimizer around the incident
+   segments, so it cannot recover the true kink; the final trajectory
+   misses the true kink by 1.4 cm, bends at the wrong place, and its
+   off-ridge path starves the dQ/dx division (the observed low dQ/dx).
+
+Fit-vs-image point metrics cannot see this failure mode (both paths lie
+on dense image; near-vertex max/mean essentially unchanged) — it is a
+topology error, visible to a human scan and to a kink-vs-vertex
+displacement check.  Candidate robustness directions to investigate next
+session:
+
+- **Perturbation side**: a minimum-claimant-size floor in the foreign test
+  (measured separation: genuine ghost claimants are 3947-pt/4-m,
+  3D-remote-large, and 194-pt clusters; 172230's harm is driven entirely
+  by <100-pt debris) — prevents debris from flipping breaks at all.
+- **Vertex side**: make vertex candidacy robust to re-partitioning — e.g.
+  a kink-vs-vertex consistency pass after main-vertex selection (if the
+  incident trajectory's curvature maximum is displaced >~1 cm from the
+  chosen vertex, snap/re-break there); the `examine_structure_1..4` family
+  (NeutrinoStructureExaminer.cxx, NeutrinoPatternBase.cxx:2488,
+  NeutrinoVertexFinder.cxx:2287/2408) is the natural home and was being
+  read when this session closed.
+- **Symptom side**: the low fitted dQ/dx adjacent to the main vertex with
+  unassigned image charge nearby is machine-detectable and could gate a
+  vertex re-search.
