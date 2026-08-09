@@ -13,6 +13,15 @@ the `unmerge_assoc` pipeline stage) that undoes exactly this merge, very early
 in the PR chain, and it was empirically confirmed to work for this event: see
 §13. Read §13 before acting on §4/§6's family-B conclusions.
 
+**Round 3 (§14):** dug into whether 18345-21073 specifically can be separated
+by tightening any connectivity threshold. It cannot — the connecting path has
+zero missing-charge steps at any resolution or plane, so there is nothing for
+a gap-tolerance threshold to reject. The path's sharp ~114° turn sits 2.65 cm
+from the PR-reconstructed main vertex with three distinct PR segments
+converging there — this looks like a genuine two-prong vertex, not a bridged
+gap, and probably should not count as "over-clustering" for this doc's
+purposes at all.
+
 ## Repro block
 
 ```bash
@@ -30,14 +39,20 @@ python3 scripts/analysis/pr53/plot_21073_gap.py
 # Round 2: does unmerge_assoc undo the family-B merge before the taggers run?
 ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-oc53-71372 data 71372
 grep ClusteringUnmergeBundle:prassoc work-oc53-71372/pr_evt71372/wct_pr_evt71372.log
+
+# Round 3: 21073 vertex-context figure (uses the existing PR output from the
+# unrelated earlier Bee-link task, work-bee-0809/pr_evt21073 -- no re-run needed)
+python3 scripts/analysis/pr53/plot_21073_vertex_context.py
 ```
 
 Verified against `work-ncpi0-cb0805` / `work-nuecc48-cb0805` (existing QL
 products, M11 — no re-imaging done) at toolkit `apply-pointcloud` HEAD
 `ba5bbe59`. Full output table: `docs/pr/53_pairs.tsv`. Scripts:
-`scripts/analysis/pr53/{oc53_probe.py,plot_21073_gap.py}`. Round-2 PR-chain
-output: `work-oc53-71372/` (fresh out_root, M13). Round-2 Bee link:
-`bee/oc53-71372/oc53-71372.url`.
+`scripts/analysis/pr53/{oc53_probe.py,plot_21073_gap.py,plot_21073_vertex_context.py}`.
+Round-2 PR-chain output: `work-oc53-71372/` (fresh out_root, M13). Round-2 Bee
+link: `bee/oc53-71372/oc53-71372.url`. Round-3 PR-level context comes from
+`work-bee-0809/pr_evt21073` (produced for an unrelated Bee-link request
+earlier in this session, same toolkit HEAD).
 
 Code cited below:
 ```bash
@@ -460,6 +475,110 @@ ahead of confirming the symptom actually reaches a current-HEAD Bee link.
 Family A (F1/F2/F3) and 21073 remain unaffected by this correction — neither
 goes through `clustering_isolated`'s `assoc` grouping (both endpoints share
 `assoc_cluster_main=1` in every family-A/charge-contiguous case, §3).
+
+---
+
+## 14. Round 3 (2026-08-09) — 21073: can the connectivity condition be tightened to separate A/B?
+
+Owner's question: "the blobs are not exactly connected, but close — I think
+the graph connecting code judges that they should be connected. Is it
+possible to reduce the condition to not connect them? This may not be
+possible, since there are many other cases we need to connect."
+
+**Short answer: no, not via any distance/gap-tolerance threshold — because
+there is no gap anywhere on the path connecting them for such a threshold to
+act on.** A shape-aware (kink/curvature) cut could in principle separate this
+specific pair, but it would be a fundamentally different, riskier kind of
+mechanism, and the evidence below suggests it targets exactly the physics
+case protect_overclustering must *not* touch: a real two-prong vertex.
+
+### 14.1 There is no gap on the connecting path, at any resolution or plane
+
+§7 checked the W plane at the 20 geodesic waypoints. This round redid it at
+**0.3 cm** resolution (finer than the 1 cm the toolkit itself uses) across
+**all three planes** (the full `is_good_point`/`test_good_point` criterion
+`connect_graph_relaxed` and `Separate_overclustering` both use, not just W):
+
+```
+42 sample points along the full 14.5cm geodesic (19 hops x ~2.2 samples each):
+  any-plane-missing (num_bad1 style): 0/42
+  all-3-planes-empty (a true "no charge anywhere" step): 0/42
+```
+
+Zero. Every one of `connect_graph_relaxed`'s thresholds (§6, §9's constant
+table) is a *tolerance on how many bad steps to forgive*. With zero bad steps
+present, there is nothing for `num_bad > 2`, `> 7`, the `0.75` ratio, or any
+tighter replacement to reject — **the path this pair is connected by was never
+subject to a bridging decision in the first place.** Tightening those
+constants (F1/F2/F3, §11) cannot touch this pair; they only affect edges that
+cross real holes, and this one does not cross any.
+
+### 14.2 The connecting path is not a straight bridge — it has a sharp turn, and the turn sits on the reconstructed vertex
+
+The geodesic's shape itself is informative: fit local direction (PCA over the
+first/last 6 waypoints) on either side of its apex (the point of maximum
+deviation from the A-B straight line, near (-33.71, 26.24, 364.95)) — the
+incoming and outgoing directions differ by **~114°**, a sharp kink, not a
+gentle curve.
+
+Checking the current-HEAD **PR-level** output (`work-bee-0809/pr_evt21073`,
+same run cited in §7) for what sits at that apex:
+
+- The reconstructed **main vertex** (`vertices-global`, `q=15000`) is
+  **2.65 cm** from the apex — closer to it than to either A (9.4 cm) or B
+  (7.9 cm).
+- Three distinct PR segments (`shower_track-global` `real_cluster_id` 11003,
+  11010, 11093) have points within a few cm of the apex, each occupying a
+  visually separate line in the figure below — not one segment with a kink in
+  it, but multiple segments converging on a common point.
+- A's nearest PR fit point (5.8 cm away, sparse coverage) sits on one of these
+  legs; B's nearest fit point (0.5 cm away, dense coverage) sits on a
+  different leg.
+
+![18345-21073: the charge path's turn sits 2.65cm from the PR main vertex; three PR segments converge there](53_21073_vertex_context.png)
+
+*(y,z) and (x,z) views. Grey = QL image charge. Blue/orange/green = three
+distinct PR `real_cluster_id` segments near the apex. Red star = PR main
+vertex (2.65 cm from the apex). Green diamond = the charge-path's turning
+point. Black stars = A, B. The (x,z) panel especially shows a clean two-prong
+"V" shape meeting at the vertex, with A on one leg and B on the other.
+Generated by `scripts/analysis/pr53/plot_21073_vertex_context.py`.*
+
+### 14.3 Interpretation
+
+This is not "clustering bridged a gap it shouldn't have." A and B sit on two
+different legs of what PatternRecognition's own vertex finder already
+identifies as a common vertex a few cm from the kink. The clustering-level
+`Cluster` object correctly contains both legs — that is exactly what a
+clustering stage is supposed to do with a genuine multi-prong vertex; *separating*
+A from B into different physics objects is the job of vertex/segment finding
+downstream (§7's `shower_track-global` data shows it already does this: A and
+B are on different `real_cluster_id`s once PR runs), not a job for
+`protect_overclustering`.
+
+**Could a shape-aware cut still separate them at the clustering stage?** In
+principle — a test on local direction change (e.g., "does the point cloud's
+tangent direction reverse by more than N° within a short arc length") could
+flag this specific 114° turn. But this is a structurally different tool than
+anything in `connect_graph_relaxed`/`Separate_overclustering` today (those
+test *whether charge is present*, not *whether the path is straight*), and
+the owner's own caveat applies with full force here: nuclear scattering
+kinks, decay vertices, and Compton-scattered shower prongs all produce
+similar sharp local turns and legitimately belong in one `Cluster` for
+PatternRecognition to sort out. A kink-angle veto tuned to catch this apex
+would need a very specific angle/arc-length/vertex-proximity combination to
+avoid vetoing real vertices elsewhere, and building it correctly requires the
+same kind of vertex-awareness NeutrinoVertexFinder already has — which
+argues for leaving this class of case to vertex-finding rather than teaching
+clustering a new, narrower copy of the same judgment.
+
+**Conclusion for F1–F3 (§11):** none of them should be expected to move
+18345-21073, and this pair should probably be pulled out of the "over-clustering"
+bucket entirely for the fix-session's acceptance criteria — it looks like
+correct clustering behavior on a genuine vertex, not a bug. If the owner's
+hand-scan tool is coloring an entire `Cluster` one color regardless of PR
+segment, that presentation choice — not the clustering algorithm — is what
+makes a correctly-handled vertex look like an error.
 
 ## Verification
 
