@@ -1,9 +1,10 @@
 # doc pr/54 — 18255-142421: a separated EM shower gets no fitted trajectory (silently discarded, not silently skipped)
 
-Status: fix SHIPPED as the default-OFF knob `other_seg_keep_isolated`
-(round 3, §12 below) + unconditional visibility counters; off-path proven
-byte-identical on both SBND manifests; production flip pending owner review
-of the Bee before/after pair. §§1-11 are the original investigation record,
+Status: fix SHIPPED as the knob `other_seg_keep_isolated` (round 3, §12
+below) + unconditional visibility counters; off-path proven byte-identical
+on both SBND manifests. **SBND PRODUCTION ON — owner flip 2026-08-09 after
+the Bee before/after hand-scan ("this was a bug"); C++ default stays false;
+flip proofs in §12.** §§1-11 are the original investigation record,
 unchanged.
 
 **Round 2 (below, §10):** this is one bug, not three. §8's F1-F3 are three
@@ -24,6 +25,8 @@ feature, not a parity fix. On 142421 the knob recovers the component (fit
 distance min 3.65 → 0.05 cm) and, in this event, is a strict superset: 44
 other clusters byte-identical, every pre-existing cluster-7 fit point
 preserved exactly, nusel unchanged. Bee before/after links in §12.
+**Owner flipped the knob SBND PRODUCTION ON same day** after scanning the
+pair — see §12's Operating point.
 
 ## Repro block
 
@@ -489,6 +492,31 @@ knob-on census (deferred, below) is what sizes that.
 - after (`other_seg_keep_isolated=true`):
   <https://www.phy.bnl.gov/twister/bee/set/d8639dc6-f6b6-4ddd-9a9a-79cbd8ee1eb0/event/list/>
 
+### Operating point — SBND PRODUCTION ON (owner flip, 2026-08-09)
+
+Owner scanned the Bee before/after pair and flipped the knob the same day
+("this was a bug"). The flip is one TLA in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`
+(`other_seg_keep_isolated = true`); the numeric floors stay null (C++
+defaults 25 points / 3 cm) and the **C++ default itself stays false** —
+the operating point lives only in cfg, per the single-source rule (doc 68).
+
+Flip proofs (all byte-exact `cmp`, runner TLA set incl. the full
+`pipeline_names` + `reality=data`):
+
+- flipped bare compile == pre-flip compile with explicit
+  `-A other_seg_keep_isolated=true` — i.e. bare production now IS the
+  validated `work-pr54-on142421` arm config;
+- `-A other_seg_keep_isolated=false` (or `SBND_OTHER_SEG_KEEP_ISOLATED=false`)
+  == pre-flip production bare — the sole-key legacy escape for A/B;
+- the `other_seg_keep_isolated` key appears exactly once in the flipped
+  compile, zero times pre-flip.
+
+Production expectation: events with well-supported isolated residuals gain
+fitted trajectories (`oseg_iso_keep` sentinel-gated, coordinates logged);
+142421-class strict-superset behaviour measured on the demo event; the
+sample-wide footprint census is the open item below.
+
 ### Verification (round 3)
 
 - Compiled-config proofs (runner TLA set incl. full `pipeline_names`,
@@ -508,10 +536,12 @@ knob-on census (deferred, below) is what sizes that.
 
 ### Open items (round 3)
 
-- Sample-wide knob-on census (48+50 manifests) deferred until after the owner
-  hand-scans the Bee pair — staged-small-group validation. The
-  `oseg_iso_drop` counter now measures the discard rate detector-wide in
-  every arm for free.
+- Sample-wide knob-on census (48+50 manifests): still open after the flip —
+  the owner flipped on the strength of the 142421 demo, so the production
+  footprint (how many events keep segments, whether any nusel variable
+  moves) is now the first thing the next 48/50 rerun will measure. The
+  `oseg_iso_keep`/`oseg_iso_drop` counters and sentinels make that census a
+  grep, no extra instrumentation.
 - The 25-point / 3 cm floors are first-cut: they cleanly separate this
   event's 664/47-point keeps from its 3-4-point drops, but the census should
   confirm the margin on other events before any flip.
