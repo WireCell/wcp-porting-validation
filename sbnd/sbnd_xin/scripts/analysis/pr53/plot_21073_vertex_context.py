@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 SB = '/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin'
 PR = os.path.join(SB, 'work-bee-0809/pr_evt21073/mabc-pr.zip')
 QL = os.path.join(SB, 'work-ncpi0-cb0805/ql_evt21073/mabc-all-apa.zip')
-out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(SB, 'docs/pr/53_21073_vertex_context.png')
+out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(SB, 'pics/53_21073_vertex_context.png')
 
 A = np.array([-36.5, 32.0, 367.5])
 B = np.array([-31.2, 28.8, 369.6])

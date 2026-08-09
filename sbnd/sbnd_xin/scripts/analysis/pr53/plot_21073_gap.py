@@ -25,7 +25,7 @@ SB = '/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin'
 QL = os.path.join(SB, 'work-ncpi0-cb0805/ql_evt21073')
 A = np.array([-36.5, 32.0, 367.5])
 B = np.array([-31.2, 28.8, 369.6])
-out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(SB, 'docs/pr/53_21073_gap.png')
+out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(SB, 'pics/53_21073_gap.png')
 
 z = zipfile.ZipFile(os.path.join(QL, 'mabc-all-apa.zip'))
 d = json.loads(z.read('data/0/0-img-global.json'))

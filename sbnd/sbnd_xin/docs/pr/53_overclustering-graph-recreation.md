@@ -1,8 +1,8 @@
-# doc pr/53 — SBND overclustering diagnosis: at least four distinct mechanisms (round 1 found two), none fixed by naive threshold tightening
+# doc pr/53 — SBND overclustering diagnosis: at least four distinct mechanisms (round 1 found two); round 5 designs one PR-input-graph fix that reaches all of them without touching clustering
 
-Status: investigation only. No C++ or jsonnet changed. Fixes are proposed
-below as default-OFF knobs for a future session; nothing in this doc is
-shipped.
+Status: investigation + design only. No C++ or jsonnet changed. Fixes are
+proposed below as default-OFF knobs for a future session; nothing in this doc
+is shipped.
 
 **Round 2 correction (below, §13):** Finding 2's original claim -- that
 `clustering_isolated`'s absorb permanently over-clusters the two 18255-71372
@@ -37,6 +37,23 @@ measurement across the 48-event manifest finds real residual cases, and two of
 them are confirmed by the PR log itself to be exactly the reader-side skip
 gate the round-4 code audit predicted. §15 has the full census, code citations,
 and a revised fix map.
+
+**Round 5 correction (§16):** §15.6 drew a wrong inference from a correct
+finding. `ClusteringNeutrino` being the *creator* of 422851/521075's edge does
+not mean `connect_graph_relaxed` (the downstream *net*, run by `protect_bundle`
+right before `tagger_check_neutrino`) is irrelevant to it — that is exactly
+backwards, and it is what the net is *for*. Owner-requested per-plane replays
+(figures below) show real gaps at the true neck for **every** pair, including
+422851 and 521075, both sitting exactly on the `num_bad1[0] > 2` floor that §6
+already identified as arithmetically unreachable below a 3 cm neck. §11's F2
+also used the wrong counter (`num_bad[0]`, only live in the non-strong
+branches) instead of the one the strong branch actually tests
+(`num_bad1[0] = 2` for both pairs) — its "F1+F2 together do not close 422851"
+conclusion is retracted. §16 consolidates into one design, constrained to the
+owner's requirement that no `clustering_*` merge pass change (so clustering and
+the STM/TGM/FC tagger verdicts stay byte-identical): a second, stricter
+`"relaxed"`-flavor graph used **only** by `protect_bundle`, the last
+cluster-splitting stage before `tagger_check_neutrino`.
 
 ## Repro block
 
@@ -88,16 +105,33 @@ python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 521075 -88.0 -33.
 python3 scripts/analysis/pr53/oc53_familyb_census.py work-nuecc48-cb0805 work-pr51-off48e
 grep -a ClusteringUnmergeBundle:prassoc work-pr51-off48e/pr_evt234638/wct_pr_evt234638.log
 grep -a ClusteringUnmergeBundle:prassoc work-pr51-off48e/pr_evt90055/wct_pr_evt90055.log
+
+# Round 5: per-plane gap figures for all 5 owner pairs (owner-requested direct
+# check of "is there really a gap" -- corrects the round-4 F1-F3 inference)
+S=scripts/analysis/pr53/plot_pair_gap.py
+python3 "$S" work-nuecc48-cb0805/ql_evt422851 -107.9 -55.1 344.6 -110.4 -61.9 350.0 \
+    "18255-422851" pics/53_422851_gap.png
+python3 "$S" work-ncpi0-cb0805/ql_evt521075  -88.0 -33.5 456.2  -84.9 -33.3 450.8 \
+    "18255-521075" pics/53_521075_gap.png
+python3 "$S" work-ncpi0-cb0805/ql_evt71372  -165.2 -129.9 226.4 -155.3 -103.1 229.0 \
+    "18255-71372 p1" pics/53_71372_p1_gap.png
+python3 "$S" work-ncpi0-cb0805/ql_evt71372  -161.5 -152.1 258.5 -159.8 -144.0 287.9 \
+    "18255-71372 p2" pics/53_71372_p2_gap.png
+python3 "$S" work-ncpi0-cb0805/ql_evt21073   -36.5  32.0 367.5  -31.2  28.8 369.6 \
+    "18345-21073" pics/53_21073_gap_planes.png
 ```
 
 Verified against `work-ncpi0-cb0805` / `work-nuecc48-cb0805` (existing QL
 products, M11 — no re-imaging done) at toolkit `apply-pointcloud` HEAD
 `ba5bbe59`. Full output table: `docs/pr/53_pairs.tsv`. Scripts:
-`scripts/analysis/pr53/{oc53_probe.py,plot_21073_gap.py,plot_21073_vertex_context.py}`.
+`scripts/analysis/pr53/{oc53_probe.py,plot_21073_gap.py,plot_21073_vertex_context.py,plot_pair_gap.py}`.
 Round-2 PR-chain output: `work-oc53-71372/` (fresh out_root, M13). Round-2 Bee
 link: `bee/oc53-71372/oc53-71372.url`. Round-3 PR-level context comes from
 `work-bee-0809/pr_evt21073` (produced for an unrelated Bee-link request
-earlier in this session, same toolkit HEAD).
+earlier in this session, same toolkit HEAD). Round 5's five figures live in
+`pics/` (`53_{422851,521075,71372_p1,71372_p2,21073_gap_planes}_gap.png`);
+the round-2/round-3 figures were moved there too (`git mv`) so all pr/53
+imagery is co-located — no new numbers, same toolkit HEAD.
 
 Round 4 verified at toolkit HEAD `a46a0b22` (unrelated pr/51 round-4 commit;
 nothing pr/53 touches was changed). New QL trace root `work-oc53r4-trace/`
@@ -197,6 +231,17 @@ between the main body and each fragment):
 | p1 | 27.33 cm | strong | 28 | 27/28 | 22 (27/18/19) | **yes** |
 | p2 | 10.70 cm | prolonged-U | 11 | 7/11 | 5 (1/4/5) | **yes** (`num_bad[W]>=3` veto fires) |
 
+![18255-71372 p1: large, unambiguous gap across the true neck](../../pics/53_71372_p1_gap.png)
+![18255-71372 p2: same, prolonged-U branch](../../pics/53_71372_p2_gap.png)
+
+*(Round 5, owner-requested.) Per-plane gap markers at the true neck for both
+71372 pairs — U/V/W each marked separately where a step has neither live
+charge nor a dead-channel excuse. Both already REJECT=True under today's
+unmodified `connect_graph_relaxed` test; the only reason either pair reaches
+final output is that `clustering_isolated`'s absorb bypasses this test
+entirely (below), not that the test is too permissive. Generated by
+`scripts/analysis/pr53/plot_pair_gap.py`.*
+
 Both bridges would be refused by `connect_graph_relaxed`'s own test — the
 graph is not too permissive here, `clustering_isolated`'s absorb bypasses it
 entirely at the QL stage. **§13 (round 2) found that this merge does not
@@ -207,6 +252,14 @@ owner would see in a Bee link generated from the full PR chain — read §13
 before drawing conclusions from this section.
 
 ## 5. Which pass actually drew the join, for family A
+
+**Superseded by §15.3/§16 — read those first.** The paragraph below was this
+session's round-1 guess at "the pass that first failed to split them"; round 4
+traced the actual creator with the `trace_bee` diagnostic and found it is
+`ClusteringNeutrino`, not `Separate_overclustering`. Left in place, marked, so
+two live answers do not silently coexist — see §15.3 for the measured answer
+and §16 for why that finding does not make `connect_graph_relaxed`/
+`protect_bundle` irrelevant to these two pairs after all.
 
 The joins are already present at QL output (`img-global`/`real_cluster_id`),
 i.e. before the PR-stage `ClusteringProtectBundle` ever runs. So the pass that
@@ -273,6 +326,23 @@ proximity components):
 | 422851 | 2.33 cm | strong | 3 | 2/3 | 0 (2/0/0) | no — arithmetically impossible |
 | 521075 | 2.84 cm | strong | 3 | 2/3 | 2 (2/0/2) | no — arithmetically impossible |
 
+**Both cases have `branch=strong`, and the strong branch's kill test reads the
+"all-3-planes-bad" column (`num_bad1[0]`, 2/3 for both), not the
+"relaxed-bad (U/V/W)" column (`num_bad[0]`, 0 for 422851) — §11's original F2
+proposal reasoned from the wrong column for 422851; see §16.** Owner-requested
+per-plane figures, marking each plane's gap status separately at the same true
+neck:
+
+![18255-422851: real U gap, V and W fully live, at the true 2.33cm neck](../../pics/53_422851_gap.png)
+![18255-521075: real U and W gap at the true 2.84cm neck](../../pics/53_521075_gap.png)
+
+*(Round 5.) Open triangle/diamond markers show which plane(s) failed at each
+1cm step (no live charge, no dead-channel excuse) along the true
+closest-approach neck between the two proximity components. 422851: U alone
+misses 2/3 steps, V and W fully live. 521075: U and W each miss 2/3 steps
+(only V fully live) — the stronger of the two cases, not the weaker one §11's
+original F2 text implied. Generated by `scripts/analysis/pr53/plot_pair_gap.py`.*
+
 Cross-check that family B never reaches this graph at all (§4's numbers,
 repeated for contrast): both 71372 necks *would* be rejected by this exact
 test, yet they are joined — by `clustering_isolated`, downstream.
@@ -311,7 +381,7 @@ The open question is whether that detour is genuine track topology or an
 imaging/ghost-charge artifact — a visual call, not a further connectivity
 check. See the figure below.
 
-![18345-21073: straight line crosses a real W gap; the actual connecting path does not](53_21073_gap.png)
+![18345-21073: straight line crosses a real W gap; the actual connecting path does not](../../pics/53_21073_gap.png)
 
 *(y,z) and (x,z) projections of the img-global charge in this cluster near
 the pair. Red dashed = straight line A→B, with red X marking the 4 steps that
@@ -319,6 +389,20 @@ are a true W gap (open red circles: the 3 steps that are W-ok). Solid green =
 the actual 14.5 cm charge-contiguous path connecting A and B, every point
 W-live. Generated by `scripts/analysis/pr53/plot_21073_gap.py`; repro command
 in the block below.*
+
+**Round 5 (owner-requested), same pair, general 3-plane replay** — the same
+`walk_and_score` machinery used for 422851/521075 below, run on this pair for
+consistency and to double-check no U/V gap was missed alongside the known W
+one:
+
+![18345-21073: direct-line 3-plane replay overlaid with the actual charge geodesic](../../pics/53_21073_gap_planes.png)
+
+*Same direct A→B line as above (dashed), now marking each plane's gap status
+separately (0/7 U-gap, 0/7 V-gap, 4/7 W-gap — matches the paragraph above
+exactly) plus the actual charge geodesic overlaid in solid blue, so this panel
+does not read as contradicting the figure above: the direct line's W gap is
+real, it is just not the path connectivity is via. Generated by
+`scripts/analysis/pr53/plot_pair_gap.py`.*
 
 ## 8. Why the MicroBooNE tuning does not transfer — quantified
 
@@ -397,14 +481,23 @@ needs; (b) surgical — enforce a minimum interior sample count (e.g. ≥5)
 independent of `dis`, so short necks get resolved without touching long-bridge
 behavior. Recommend (b), record (a) as fallback.
 
-**F2 — `relaxed_min_bad` (the floor, not the cap) + `relaxed_bad_ratio`.** The
-binding constraint at short distances is the `> 2` **floor**, not the `> 7`
-cap — lowering the cap alone changes nothing for a 3-step neck. Measured
-`num_bad[0]`: 521075 = 2/3, 422851 = 0/3. A floor of `>= 2` with ratio ~0.5
-rejects 521075 and leaves 422851 standing — the physically correct split,
-since 422851's neck has V+W live throughout with only U missing, a legitimate
-induction hole under the owner's own rule 2. **F1+F2 together do not close
-422851** — say so; it may need a different (ghost/topology) route.
+**F2 — `relaxed_min_bad` (the floor, not the cap) + `relaxed_bad_ratio`.**
+**Corrected in round 5 (§16) — the original text below read the wrong
+counter.** The binding constraint at short distances is the `> 2` **floor**,
+not the `> 7` cap — lowering the cap alone changes nothing for a 3-step neck.
+Both 422851 and 521075 have `branch=strong`, whose kill test is
+`num_bad1[0] > 7 || (num_bad1[0] > 2 && ...)` — **not** `num_bad[0]`, which
+only gates the non-strong (parallel/prolonged) branches. Measured
+`num_bad1[0]`: 422851 = **2/3**, 521075 = **2/3** — both sit on the floor, not
+just 521075. ~~Measured `num_bad[0]`: 521075 = 2/3, 422851 = 0/3. A floor of
+`>= 2` with ratio ~0.5 rejects 521075 and leaves 422851 standing — the
+physically correct split, since 422851's neck has V+W live throughout with
+only U missing, a legitimate induction hole under the owner's own rule 2.
+**F1+F2 together do not close 422851** — say so; it may need a different
+(ghost/topology) route.~~ **Retracted**: 422851's U-only gap is exactly as
+real as 521075's U+W gap under the counter the strong branch actually reads;
+a floor of `num_bad1[0] >= 2` is predicted (§16, pending F0 measurement) to
+reject both, not to selectively spare 422851.
 
 **F3 — plane-aware W authority (owner's rule 2) — the strongest finding here.**
 W has no prolonged inefficiency, so a step lacking both W charge and a W dead
@@ -443,9 +536,11 @@ decision; do not fold into F1–F4.
   422851/521075, `ClusteringClose` (i.e. no long-range bridge at all) for
   21073.
 - ~~Re-run `protect_bundle`/`relaxed` fresh through the PR chain for 422851 and
-  521075~~ — **closed by §15.4**: both remain merged in the final PR output;
-  `protect_bundle` does not catch either (it is a splitter operating on one
-  cluster's own graph, never a cross-cluster net — §15.4).
+  521075~~ — **closed by §15.4, corrected in §16**: both remain merged in the
+  final PR output; `protect_bundle` ran on 422851 and did not cut the
+  particular neck at `num_bad1[0]=2` (§15.4, §6), and never examined 521075's
+  cluster at all (`skip_convicted`). Not "never a cross-cluster net" — a
+  splitter is exactly the lever §16 designs against.
 - Classify 21073 with F0's census once implemented, since it cannot be
   resolved by a neck/path argument. (§14/§15.3 resolved 21073's specific
   question by a different route — genuine vertex, `ClusteringClose`-joined —
@@ -459,6 +554,12 @@ decision; do not fold into F1–F4.
 - **New (§15.5):** F0's census, generalized to also attribute
   `ClusteringNeutrino`/family-B-residual mechanisms, not just
   `connect_graph_relaxed`, if a broader detector-wide sweep is wanted.
+- **New (§16), the actual next-session job:** implement F0
+  (`relaxed_edge_census`) first, per §16.5 — it is the only way to (a) turn
+  §16.4's predicted 422851/521075 rejections into a measurement, (b) determine
+  whether the A/B component pair is a bridge in the full PR-stage component
+  graph, and (c) verify 21073's connecting geodesic really is immune before
+  any stricter rule ships.
 
 ---
 
@@ -609,7 +710,7 @@ same run cited in §7) for what sits at that apex:
   legs; B's nearest fit point (0.5 cm away, dense coverage) sits on a
   different leg.
 
-![18345-21073: the charge path's turn sits 2.65cm from the PR main vertex; three PR segments converge there](53_21073_vertex_context.png)
+![18345-21073: the charge path's turn sits 2.65cm from the PR main vertex; three PR segments converge there](../../pics/53_21073_vertex_context.png)
 
 *(y,z) and (x,z) views. Grey = QL image charge. Blue/orange/green = three
 distinct PR `real_cluster_id` segments near the apex. Red star = PR main
@@ -782,14 +883,42 @@ run's final `clustering-global` layer:
 | 71372 p1 | 92 | 69 | DIFFERENT (§13: `unmerge_assoc` split it) |
 | 71372 p2 | 19 | 64 | DIFFERENT (§13: `unmerge_assoc` split it) |
 
-421851/521075 use round-3's validated `work-pr51-off48e/pr_evt422851` (bare
+422851/521075 use round-3's validated `work-pr51-off48e/pr_evt422851` (bare
 off-arm) and a fresh bare run `work-oc53r4-pr/pr_evt521075` (no PR output
-existed for it before). This also answers §12's open item: `protect_bundle`
-(PR-stage) does **not** catch either all-APA-created join — consistent with
-15.1's finding that `protect_bundle` is a splitter operating on one cluster's
-own intra-cluster blob graph (`ClusteringProtectBundle.cxx:415,468` —
-`connected_blobs` + `separate`, no `merge_clusters`, no `take_children`), never
-a cross-cluster joiner.
+existed for it before).
+
+**Corrected in round 5 (§16) — the reasoning below was wrong.** §15.4
+originally read this as "consistent with `protect_bundle` being a splitter,
+never a joiner" — true but irrelevant: a splitter is *exactly* what would be
+wanted here, and it did run. The actual mechanism, from the log lines
+themselves:
+
+```
+$ grep -a ClusteringProtectBundle:pr work-pr51-off48e/pr_evt422851/wct_pr_evt422851.log
+<ClusteringProtectBundle:pr> cluster 1 (main): 848 blobs -> retained 768 + 3 fragment(s) holding 80
+<ClusteringProtectBundle:pr> split 1 bundle cluster(s) into 3 extra cluster(s) (0 cathode re-join(s), 0 convicted main(s) skipped, graph 'relaxed')
+
+$ grep -a ClusteringProtectBundle:pr work-oc53r4-pr/pr_evt521075/wct_pr_evt521075.log
+<ClusteringProtectBundle:pr> split 0 bundle cluster(s) into 0 extra cluster(s) (0 cathode re-join(s), 2 convicted main(s) skipped, graph 'relaxed')
+```
+
+**422851**: the relaxed graph *did* run on this cluster and *did* split it —
+768 blobs stayed together, 80 in 3 small fragments came off — but A and B both
+stayed in the retained piece. This is the connectivity-graph mechanism §16
+predicts: the neck between A and B passed (`num_bad1[0]=2`, one step short of
+the `>2` floor, §6), so no edge was cut there even though other, worse necks in
+the same 848-blob cluster were.
+
+**521075**: `protect_bundle` never examined this cluster at all — "2 convicted
+main(s) skipped" — a `TGM`/`STM`/`lm_flag`-convicted main is exempted by
+`m_skip_convicted` (`ClusteringProtectBundle.cxx:207,230`) regardless of
+connectivity. The debug line is an aggregate count across two separate loops
+in the file and does not name which cluster was skipped, so **whether 521075's
+own cluster (final cid 18) is one of the two skipped, or is simply
+out-of-window under `beam_window_only`, is not established** — that requires
+either per-cluster instrumentation or reading this event's TGM/STM/lm_flag
+scalars directly, neither done this round. Either way, S4 in §16 (scope) is
+the lever, not a new threshold rule.
 
 ### 15.5 Family B is only *partly* retired, not fully as §13 implied
 
@@ -867,25 +996,181 @@ estimate. §13's flat "family B is retired" is corrected to: *retired only
 where the absorbing/absorbed cluster still carries `Flags::main_cluster` when
 `unmerge_assoc` runs; a measurable, log-confirmed minority of cases are not.*
 
-### 15.6 Revised fix map
+### 15.6 Revised fix map — **superseded by §16, kept for history**
+
+**Round 5 correction: this section's central inference was wrong.** It is
+replaced below by §16's fix map; the table and paragraph immediately following
+are the original round-4 text, struck through where retracted, so the error is
+visible rather than silently edited away.
 
 | mechanism | pass | §11 knob that addresses it | status |
 |---|---|---|---|
-| sub-3cm arithmetic blind spot | `connect_graph_relaxed` (family A per §6, not the 422851/521075 pairs) | F1 | still applicable to whatever pass F0's census eventually attributes a real short-neck bridge to |
-| floor vs cap | `connect_graph_relaxed` | F2 | same caveat as F1 |
-| W-plane authority | `connect_graph_relaxed`/`Separate_overclustering` | F3 | same caveat as F1 |
-| `clustering_isolated` absorb, reader-side skip | `ClusteringIsolated` / `ClusteringUnmergeBundle` | F4 | **re-open** — §15.5 shows real, log-confirmed residual cases; not superseded by §13 after all, though the rate among decided cases (5-22%) is smaller than family A's apparent share |
-| **`ClusteringNeutrino` vertex/extrapolation merge (422851, 521075)** | `clustering_neutrino.cxx` | **none — F1-F3 do not touch this pass, and none was proposed** | **new open item** |
+| sub-3cm arithmetic blind spot | `connect_graph_relaxed` ~~(family A per §6, not the 422851/521075 pairs)~~ **§6's table IS 422851/521075 — self-contradiction, retracted** | F1 | applies directly to 422851/521075 (§16), not just to some other future-census pair |
+| floor vs cap | `connect_graph_relaxed` | F2 | **corrected in §11/§16**: F2 originally read `num_bad[0]` instead of the strong branch's actual `num_bad1[0]`; both pairs sit on the floor |
+| W-plane authority | `connect_graph_relaxed`/`Separate_overclustering` | F3 | unchanged — no new evidence either way this round |
+| `clustering_isolated` absorb, reader-side skip | `ClusteringIsolated` / `ClusteringUnmergeBundle` | F4 | **rewritten in §16** — F4's original form edits a `clustering_*` pass, now out of scope under the owner's no-clustering-change constraint |
+| **`ClusteringNeutrino` vertex/extrapolation merge (422851, 521075)** | `clustering_neutrino.cxx` | ~~none — F1-F3 do not touch this pass~~ **wrong: `ClusteringNeutrino` draws the edge, `connect_graph_relaxed`/`protect_bundle` is the net downstream of it — F1/F2 act on the net, §16** | resolved by §16 |
 
-F1–F3 were written against the wrong creator for the two events they were
+~~F1–F3 were written against the wrong creator for the two events they were
 meant to explain. They may still be correct fixes for whatever family-A-shaped
 pairs F0's planned census eventually attributes to `connect_graph_relaxed`
 itself, but 422851 and 521075 are not evidence for them and should not be used
-to validate them. The next investigation session's first job is a `judge_vertex`
-/ `ClusteringNeutrino`-focused read of the two flagged pairs (which branch,
-which threshold, is it a false positive on a real 3-prong topology like
-21073's) before any fix is designed for this pass — mirroring pr/51's
-`H1`/`H2` discipline of measuring the creator before writing a fix.
+to validate them.~~ **Retracted** — this conflates the pass that *draws* an
+edge with the pass that is supposed to *net* it; `connect_graph_relaxed` never
+claimed to be the creator, and being downstream of `ClusteringNeutrino` is
+exactly its job. The `judge_vertex`/`ClusteringNeutrino`-focused read named
+below is still worth doing to understand *why* the merge looked plausible
+enough to draw, but it is not a precondition for the net-side fix in §16 — see
+there for the false-positive risk (21073) that read would help retire.
+
+## 16. Round 5 (2026-08-09) — consolidated fix design, one lever, no clustering pass touched
+
+### 16.1 The owner's constraint
+
+Two requirements, stated directly this round: (1) do not alter clustering
+results or the STM/TGM/FC tagger verdicts; (2) the only thing to change is the
+graph handed to pattern recognition (`tagger_check_neutrino`), so as to
+minimize over-clustering there. Everything below is designed against that
+constraint, not against "fix over-clustering" in general.
+
+### 16.2 Why editing `connect_graph_relaxed` in place is disallowed
+
+The `"relaxed"` graph flavor (`make_graph_relaxed` → `connect_graph_relaxed`,
+`make_graphs.cxx:78-84`) is shared by four callers, in pipeline order:
+
+| caller | stage | runs relative to taggers |
+|---|---|---|
+| `clustering_examine_bundles` | end of QL per-face pipeline (`clus.jsonnet:101,217`) | before |
+| `ClusteringUnmergeBundle` | `unmerge_bundle`/`unmerge_assoc`, early PR chain (`:206,269`) | before |
+| `ClusteringRecoveringBundle` | PR chain (`:91,109`) | before |
+| `ClusteringProtectBundle` | `protect_bundle`, PR chain (`:249,415`) | **after** TGM/STM/FC, **before** `tagger_check_neutrino` |
+
+Editing `connect_graph_relaxed.cxx` itself would change all four callers —
+i.e. clustering output and tagger inputs — directly violating requirement (1).
+**The flavor name is the only per-caller channel that already exists**, and
+`protect_bundle` already exposes it as a config key
+(`ClusteringProtectBundle.cxx:117`, wired through jsonnet as
+`protect_graph_name`, `clus.jsonnet:1536`, `wct-pr-perevt.jsonnet:435`,
+`null ⇒ 'relaxed'`) — no new jsonnet plumbing is needed to select a different
+flavor for `protect_bundle` alone.
+
+### 16.3 Design: a second, stricter flavor, `"relaxed_strict"`, used only by `protect_bundle`
+
+Stage-by-stage effect of routing only `protect_bundle` to a stricter test:
+`examine_bundles` keeps `"relaxed"` ⇒ QL clustering byte-identical;
+`unmerge_bundle`/`unmerge_assoc` keep `"relaxed"` ⇒ early-PR tagger inputs
+byte-identical; TGM/STM/FC run before `protect_bundle` ⇒ their verdicts are
+computed on the unsplit clusters exactly as today, byte-identical; only
+`tagger_check_neutrino` and later stages see the finer partition. Off-state
+(`protect_graph_name=null`) is unaffected ⇒ compiled config identical to
+today for every existing detector/config.
+
+**Rules inside the strict copy** — supersede F1/F2 as corrected above, keep
+everything else:
+
+- **S1 — endpoint-honest denominator.** The last 1cm sample is always `p2`
+  itself and good by construction (§6), so the ratio test's denominator
+  becomes `num_steps - 1`, not `num_steps`.
+- **S2 — floor.** `num_bad1[0] > 2` → `>= 2` in the strong-branch kill test
+  (`connect_graph_relaxed.cxx:268`) and the equivalent floors in the
+  parallel/prolonged branches (`:285,289,293,297,300`).
+- **S3 — apply S1+S2 to all three path-check blocks, not just the first.**
+  The closest-pair block (`:268`) is not the only one that can keep a
+  component pair connected — the two Hough-extrapolated directional blocks
+  (dir1 `:384,389`, dir2 `:476,481`) are tested and MST'd **independently**
+  (`:509-530,548-578`) and their edges are added to the same graph. Tightening
+  only the closest-pair block can leave a component pair connected via a
+  surviving directional edge.
+- Unchanged this round: the `> 7` cap, the parallel/prolonged plane-specific
+  logic, and F3's W-authority proposal (no evidence yet that it matters for
+  the live pairs — keep as a separate, later knob if a future census shows
+  otherwise).
+- **S4 — scope is an existing knob, not new code.** `protect_bundle` already
+  skips TGM/STM/`lm_flag`-convicted clusters (`m_skip_convicted{true}`,
+  `:207,230`) and, under `beam_window_only`, out-of-window ones. §15.4 found
+  521075's cluster was skipped by one of these two gates but could not
+  determine which. Widening scope is a `protect_skip_convicted`/`beam_gate`
+  cfg decision for the owner plus a fresh census, not assumed here.
+
+**Family B (71372) under the same constraint.** F4's original form — a path
+test inside `clustering_isolated` — edits a `clustering_*` merge pass and is
+now **out of scope**. It does not need a new rule anyway: §4's figures show
+both 71372 necks already fail the *existing, unmodified* relaxed test
+(27/28 and 7/11 bad steps). What keeps them merged is that `protect_bundle`
+either never examines that cluster (scope) or the merge happened downstream of
+where `protect_bundle` can still see a bridgeable component pair. The
+in-constraint fix is the same lever as family A: get `protect_bundle` (any
+flavor) to actually examine the relevant clusters. F4 is rewritten to mean
+"scope", not "a new clustering_isolated rule."
+
+### 16.4 Predicted effect — stated as a prediction, not a measurement
+
+422851 and 521075 both give `num_bad1[0]=2`, `n_interior=2` after S1
+⇒ `2 >= 2 && 2 >= 0.75*2` ⇒ the neck edge is invalidated. 71372's necks are
+already invalidated today. 21073's connecting geodesic has zero missing-charge
+steps at any plane (§7) so S1/S2 change nothing for it *on that path*.
+
+**This is a prediction, not yet a measurement, for two structural reasons —
+both must be closed before claiming the design works:**
+
+1. **Killing one edge does not guarantee A and B end up disconnected.**
+   `connect_graph_relaxed` builds a component graph and spans it with an MST
+   (`:490-530`); invalidating the A-component/B-component edge only
+   disconnects them if that edge is a **bridge** (cut edge) of the component
+   graph — if some other surviving pair of edges chains the two components
+   together anyway, the strict rule changes nothing. 422851's PR-stage cluster
+   has 848 blobs (§15.4's log line); its component decomposition and whether
+   this specific pair is a bridge are unmeasured.
+2. **21073's immunity is asserted, not established.** §5's own table shows its
+   endpoint blobs are *not* linked by `connect_graph_closely` (Δslice 64,
+   `overlap_fast` False) — so its 14.5cm geodesic (§7) runs through
+   intermediate blobs, and whether that chain is entirely `connect_graph_closely`
+   edges or needs a `connect_graph_relaxed` inter-component edge was never
+   checked. If it needs one, a stricter relaxed test could split a genuine
+   two-prong vertex — the false positive the owner would care about most.
+
+### 16.5 Implementation order — F0 before the strict flavor, not after
+
+1. **F0 first** — `relaxed_edge_census`, a default-OFF, log-only debug knob
+   added to the existing (unmodified) `connect_graph_relaxed`: per
+   component-pair, print endpoints, distance, which of the three blocks,
+   branch, `num_steps`, `num_bad[0..3]`, `num_bad1[0]`, survived?, and whether
+   the pair is a bridge of the component graph. This closes both §16.4 gaps
+   with a measurement instead of a prediction, and is the same idea as the F0
+   already proposed in §11 — restated here as the mandatory first step, not an
+   optional nice-to-have.
+2. Add the `"relaxed_strict"` flavor per S1-S3, informed by what F0 shows is
+   actually needed. New flavor requires a branch in **all four** dv/pcts
+   dispatcher overloads in `Facade_Cluster.cxx` (`find_graph` ×2,
+   `graph_algorithms` ×2, `:2814-3011`) — missing one is a runtime `KeyError`,
+   not a compile error.
+3. Gates: `protect_graph_name=null` (off) byte-identical on the 48/50-event
+   member+nusel manifests used in pr/48-pr/51; `protect_graph_name='relaxed_strict'`
+   (on) = mover census + nusel deltas + hand scan against the owner's five
+   pairs. `wcdoctest-clus` per touched package before either gate.
+4. **Owner decision, recorded not chosen** (CLAUDE.md escalation rule 3, same
+   shape as the existing F5): fork-by-duplication (a new
+   `connect_graph_relaxed_strict.cxx`, full ~1000-line duplicate,
+   `connect_graph_relaxed.cxx` untouched — the project's default convention
+   for forking production components) vs. in-place generalization (a
+   defaulted tuning struct threaded through the existing function, much
+   smaller diff, legacy call sites textually unchanged). Both keep the four
+   existing callers byte-identical; they differ only in maintenance cost and
+   diff size.
+5. **Cost note, not a blocker.** Selecting `"relaxed_strict"` builds a full
+   relaxed-style graph a *second* time on the same `Cluster` objects (the PR
+   chain has already built `"relaxed"` earlier, in `unmerge_bundle`). Measure
+   wall/RSS during implementation on the 848-blob-class clusters.
+
+### 16.6 Fix map (supersedes §15.6)
+
+| mechanism | pass drawing the edge | net that should catch it | lever | status |
+|---|---|---|---|---|
+| `ClusteringNeutrino` vertex/extrapolation merge (422851, 521075) | `clustering_neutrino.cxx` (unchanged) | `connect_graph_relaxed` via `protect_bundle` | S1-S3 (`"relaxed_strict"`) | predicted to reject both, pending F0 (§16.4) |
+| `clustering_isolated` small→big absorb (71372 ×2) | `clustering_isolated.cxx` (unchanged) | same, `protect_bundle` | S4 (scope) — F4 rewritten | necks already fail the existing test; scope is what's blocking, not thresholds |
+| sub-3cm arithmetic blind spot (general) | whichever `clustering_*` pass draws a short-neck bridge | `connect_graph_relaxed` via `protect_bundle` | S1+S2 | same design, general case |
+| W-plane authority (F3) | — | `connect_graph_relaxed` via `protect_bundle` | separate later knob | no evidence yet it's needed for the live pairs; not folded into S1-S3 |
+| 21073 (genuine two-prong vertex) | `ClusteringClose` (§15.3) | — | **must not fire** | false-positive risk this design must be checked against (§16.4 item 2) before shipping |
 
 ## Verification
 
@@ -912,5 +1197,20 @@ reproduced the already-established §4/§14 answers before being trusted on the
 unknowns (§15.3); the family-B residual measurement's two positive cases were
 independently cross-checked against the PR log (§15.5).
 
+Round 5 is figures + a design, no code: five new per-plane gap figures
+(`plot_pair_gap.py`, extending round-4's `walk_and_score` replay with all
+three planes marked instead of one) using only existing QL products, no new
+processing; the two existing pr/53 figures were moved (`git mv`, not
+regenerated — identical bytes) into `pics/` alongside them; `protect_bundle`'s
+log lines for 422851/521075 are quoted verbatim from round 3/4's own PR runs,
+re-grepped, not re-run. §16's design is unimplemented — no C++, no jsonnet, no
+gate. Its predicted effect on 422851/521075 is explicitly labeled a
+prediction pending F0 (§16.4-16.5), not a measured result, because a
+structural gap (bridge-vs-chain in the MST'd component graph; 21073's
+unverified immunity) stands between "the neck edge would be cut" and "A and B
+end up in different final clusters." §11/§15.6's retracted claims are struck
+through in place rather than silently rewritten, per the escalation rule
+against picking silently when an earlier conclusion turns out wrong.
+
 Re-run the Repro block to reproduce every number in this doc, including all
-four rounds, from a clean shell.
+five rounds, from a clean shell.
