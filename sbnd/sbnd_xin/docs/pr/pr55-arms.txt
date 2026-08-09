@@ -1,0 +1,49 @@
+# doc pr/55 arm/epoch record -- re-check any pr55-cases.tsv number against these.
+#
+# toolkit HEAD when this doc's C++ instrumentation was added and all arms below
+# were run: a2118fd5 (doc pr/53 round 7, pre-pr/55 commit -- this session's
+# commit lands on top). Instrumentation: NeutrinoPatternBase.cxx do_rough_path
+# (sentinel "pr55 do_rough_path"), MultiAlgBlobClustering.cxx associate_points
+# branch (sentinel "pr55 shower_track layer") and fits() branch (sentinel
+# "pr55 track_fit layer") -- all SPDLOG_LOGGER_DEBUG, log-only, no behavior
+# change (proof: hash_archive.py match on mabc-pr.zip + pctree-pr-evt<N>.tar.gz,
+# nusel-evt<N>.tsv byte-diff, both vs the pre-instrumentation production arms
+# below, all three events).
+# libWireCellClus.so mtime after the final rebuild: 2026-08-09T15:41:07-07:00
+#
+# wcp-porting-img HEAD when arms were built: dd6452d (doc pr/53 round 7)
+#
+# Metrics/figures (pr55_metrics.py, pr55_figures.py) read PRODUCTION arms --
+# i.e. the CURRENT SBND default, relaxed_strict_img -- built in doc pr/53
+# round 7, NOT rerun for this doc (no code that pr55_metrics.py depends on
+# changed; only new log lines were added, proven log-only above):
+#
+#   142421, 71372  -> work-pr53r7-on19   (ncpi0-19 manifest;  ql_root=work-ncpi0-cb0805)
+#   269774         -> work-pr53r7-on48   (nueCC-48 manifest;  ql_root=work-nuecc48-cb0805)
+#   census (OC53CENSUS-S closest-pair edges, for reference only, not required
+#     by pr55_metrics.py): work-pr53r7-cen19, work-pr53r7-cen48
+#
+# Round-6 comparison arms (relaxed_strict, S5 off) used for the attribution
+# check in doc pr/55 sec 5 (owner-tagged cases appear near-identically in both
+# arms -> round 6 and round 7's membership-graph tightening do not touch these
+# symptoms, corroborating Q1's code-level finding):
+#
+#   142421, 71372  -> work-pr53r7-off19
+#   269774         -> work-pr53r7-off48
+#
+# Fresh arms built THIS session to fire and read the new DEBUG sentinels above
+# (identical inputs/config to the *-on19/on48 production arms; only the
+# libWireCellClus.so binary differs, by the log lines only):
+#
+#   142421, 71372  -> work-pr55-instr19b   (PR_JOBS=3, reality=data)
+#   269774         -> work-pr55-instr48b   (PR_JOBS=2, reality=data)
+#
+# Repro (from sbnd_xin/):
+#   PR_JOBS=3 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr55-instrXX data 142421 71372
+#   PR_JOBS=2 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr55-instrYY data 269774
+#   python3 scripts/analysis/pr55/pr55_metrics.py docs/pr --label production
+#   python3 scripts/analysis/pr55/pr55_figures.py pics
+#
+# Sentinel check:
+#   grep -ac "pr55 do_rough_path" work-pr55-instr19b/pr_evt142421/wct_pr_evt142421.log
+#   grep -a  "pr55 shower_track layer" work-pr55-instr19b/pr_evt142421/wct_pr_evt142421.log
