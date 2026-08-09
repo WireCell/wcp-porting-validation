@@ -1,0 +1,6 @@
+event	pair	A_xyz_cm	B_xyz_cm	img_cluster_id	family	assocA_id/main	assocB_id/main	real_id	blob_overlap_fast	dslice	neck_pts	neck_dist_cm	compA_n	compB_n	branch	num_steps	num_bad1_0	num_bad_0	num_bad_U	num_bad_V	num_bad_W	relaxed_graph_reject
+18345-21073	owner	(-36.5,32.0,367.5)	(-31.2,28.8,369.6)	7	A-graph	26/1	26/1	11	False	64	same-component(no-neck)	-	-	-	-	-	-	-	-	-	-	n/a-charge-contiguous
+18255-422851	owner	(-107.9,-55.1,344.6)	(-110.4,-61.9,350.0)	4	A-graph	59/1	59/1	1	False	-40	(-107.80,-57.07,344.55)<->(-108.74,-59.06,345.30)	2.33	42	1794	strong	3	2	0	2	0	0	False
+18255-521075	owner	(-88.0,-33.5,456.2)	(-84.9,-33.3,450.8)	10	A-graph	7/1	7/1	18	False	40	(-87.17,-36.03,451.20)<->(-85.29,-34.38,449.85)	2.84	4862	277	strong	3	2	2	2	0	2	False
+18255-71372	p1	(-165.2,-129.9,226.4)	(-155.3,-103.1,229.0)	9	B-clustering_isolated	63/1	56/0	19	False	120	(-164.07,-129.30,226.05)<->(-156.25,-103.23,228.60)	27.33	349	14	strong	28	27	22	27	18	19	True
+18255-71372	p2	(-161.5,-152.1,258.5)	(-159.8,-144.0,287.9)	9	B-clustering_isolated	63/1	51/0	19	False	20	(-150.32,-147.31,281.55)<->(-159.07,-144.11,286.80)	10.70	5448	15	prolonged-U	11	7	5	1	4	5	True
