@@ -1,8 +1,19 @@
-# doc pr/53 — SBND overclustering diagnosis: at least four distinct mechanisms (round 1 found two); round 5 designs one PR-input-graph fix that reaches all of them without touching clustering
+# doc pr/53 — SBND overclustering diagnosis: at least four distinct mechanisms (round 1 found two); round 5 designs one PR-input-graph fix; round 6 implements, validates and ships it
 
-Status: investigation + design only. No C++ or jsonnet changed. Fixes are
-proposed below as default-OFF knobs for a future session; nothing in this doc
-is shipped.
+Status: **round 6 SHIPPED, SBND PRODUCTION ON** (owner authorization
+2026-08-09, conditional on the validation below passing — it did). The
+`"relaxed_strict"` graph flavor of §16's design is implemented
+(fork-by-duplication, `clus/src/connect_graph_relaxed_strict.cxx`), selected
+only by `protect_bundle`, validated on 48 nueCC + 19 NCpi0 + 50 PR-data
+events (off-gates byte-identical 0/117; ON movers 19/48 + 8/19 + 0/50, nusel
+0/117; all 41 cluster splits causally attributed to a strict-killed edge with
+per-plane gap figures), and flipped to the SBND production default in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`
+(`protect_graph_name = 'relaxed_strict'`; legacy escape
+`-A protect_graph_name=relaxed` / `SBND_PROTECT_GRAPH=relaxed`). Both
+owner-flagged live pairs (18255-422851, 18255-521075) are split in the final
+output; 18345-21073 (genuine two-prong vertex) is untouched; the 18255-71372
+pairs stay separate. Rounds 1-5 below are the investigation record.
 
 **Round 2 correction (below, §13):** Finding 2's original claim -- that
 `clustering_isolated`'s absorb permanently over-clusters the two 18255-71372
@@ -54,6 +65,20 @@ owner's requirement that no `clustering_*` merge pass change (so clustering and
 the STM/TGM/FC tagger verdicts stay byte-identical): a second, stricter
 `"relaxed"`-flavor graph used **only** by `protect_bundle`, the last
 cluster-splitting stage before `tagger_check_neutrino`.
+
+**Round 6 (§17):** §16's design implemented, F0-first as specified: the
+`relaxed_edge_census` (env `WCT_RELAXED_EDGE_CENSUS`, log-only, proven
+byte-identical even when ON) measured all three §16.4 open questions before
+the strict flavor ran — (a) both live pairs' necks are **bridges** of the
+emitted component-edge graph with no directional-edge backup, so killing them
+disconnects A from B; (b) 21073's A/B share one closely-graph component, so
+no relaxed edge connects them and the strict flavor is structurally unable to
+split the pair; (c) **§15.4/§16.3-S4's scope hypothesis for 521075 was
+wrong** — its 464-blob cluster *was* examined by `protect_bundle` (the "2
+convicted main(s) skipped" were 1- and 3-blob TGM junk members, identified by
+the new per-cluster OC53SKIP log), and the neck simply passed the legacy
+floor. No scope change was needed anywhere. Full validation and the
+production flip: §17.
 
 ## Repro block
 
@@ -909,16 +934,18 @@ predicts: the neck between A and B passed (`num_bad1[0]=2`, one step short of
 the `>2` floor, §6), so no edge was cut there even though other, worse necks in
 the same 848-blob cluster were.
 
-**521075**: `protect_bundle` never examined this cluster at all — "2 convicted
-main(s) skipped" — a `TGM`/`STM`/`lm_flag`-convicted main is exempted by
+**521075** *(corrected in round 6 — §17.1)*:
+~~`protect_bundle` never examined this cluster at all — "2 convicted main(s)
+skipped" — a `TGM`/`STM`/`lm_flag`-convicted main is exempted by
 `m_skip_convicted` (`ClusteringProtectBundle.cxx:207,230`) regardless of
-connectivity. The debug line is an aggregate count across two separate loops
-in the file and does not name which cluster was skipped, so **whether 521075's
-own cluster (final cid 18) is one of the two skipped, or is simply
-out-of-window under `beam_window_only`, is not established** — that requires
-either per-cluster instrumentation or reading this event's TGM/STM/lm_flag
-scalars directly, neither done this round. Either way, S4 in §16 (scope) is
-the lever, not a new threshold rule.
+connectivity.~~ Round 6's per-cluster OC53SKIP instrumentation (exactly the
+"per-cluster instrumentation" this paragraph asked for) shows the two skipped
+items are TGM-convicted **junk members** of 1 and 3 blobs (idents 26, 28) —
+not the owner's cluster. The 464-blob owner cluster **was** examined by
+`protect_bundle` under the legacy `relaxed` graph and produced 0 splits
+because its A/B neck passed at `num_bad1[0]=2`, the same §6 blind-spot floor
+as 422851. S4 (scope) is **not** the lever for this event after all; S1+S2
+alone split it (§17.4).
 
 ### 15.5 Family B is only *partly* retired, not fully as §13 implied
 
@@ -1085,12 +1112,14 @@ everything else:
   logic, and F3's W-authority proposal (no evidence yet that it matters for
   the live pairs — keep as a separate, later knob if a future census shows
   otherwise).
-- **S4 — scope is an existing knob, not new code.** `protect_bundle` already
-  skips TGM/STM/`lm_flag`-convicted clusters (`m_skip_convicted{true}`,
-  `:207,230`) and, under `beam_window_only`, out-of-window ones. §15.4 found
-  521075's cluster was skipped by one of these two gates but could not
-  determine which. Widening scope is a `protect_skip_convicted`/`beam_gate`
-  cfg decision for the owner plus a fresh census, not assumed here.
+- **S4 — scope is an existing knob, not new code** *(corrected in round 6,
+  §17.1)*. `protect_bundle` already skips TGM/STM/`lm_flag`-convicted
+  clusters (`m_skip_convicted{true}`, `:207,230`) and, under
+  `beam_window_only`, out-of-window ones. ~~§15.4 found 521075's cluster was
+  skipped by one of these two gates but could not determine which.~~ Round
+  6's per-cluster skip log shows 521075's cluster was **not** skipped by
+  either gate (the skipped items were junk members); S4 turned out to be a
+  no-op for every owner pair, and no scope knob was changed.
 
 **Family B (71372) under the same constraint.** F4's original form — a path
 test inside `clustering_isolated` — edits a `clustering_*` merge pass and is
@@ -1103,7 +1132,7 @@ in-constraint fix is the same lever as family A: get `protect_bundle` (any
 flavor) to actually examine the relevant clusters. F4 is rewritten to mean
 "scope", not "a new clustering_isolated rule."
 
-### 16.4 Predicted effect — stated as a prediction, not a measurement
+### 16.4 Predicted effect — stated as a prediction, not a measurement *(round 6: measured, both gaps closed — §17.1, §17.4)*
 
 422851 and 521075 both give `num_bad1[0]=2`, `n_interior=2` after S1
 ⇒ `2 >= 2 && 2 >= 0.75*2` ⇒ the neck edge is invalidated. 71372's necks are
@@ -1111,7 +1140,9 @@ already invalidated today. 21073's connecting geodesic has zero missing-charge
 steps at any plane (§7) so S1/S2 change nothing for it *on that path*.
 
 **This is a prediction, not yet a measurement, for two structural reasons —
-both must be closed before claiming the design works:**
+both must be closed before claiming the design works** *(round 6 closed both:
+(1) both live necks measured as bridges with no directional backup; (2) 21073's
+A/B measured in the same closely-component — §17.1)*:
 
 1. **Killing one edge does not guarantee A and B end up disconnected.**
    `connect_graph_relaxed` builds a component graph and spans it with an MST
@@ -1172,6 +1203,238 @@ both must be closed before claiming the design works:**
 | W-plane authority (F3) | — | `connect_graph_relaxed` via `protect_bundle` | separate later knob | no evidence yet it's needed for the live pairs; not folded into S1-S3 |
 | 21073 (genuine two-prong vertex) | `ClusteringClose` (§15.3) | — | **must not fire** | false-positive risk this design must be checked against (§16.4 item 2) before shipping |
 
+## 17. Round 6 (2026-08-09) — implemented, validated on 48+19+50, SBND PRODUCTION ON
+
+Owner instruction this round: validate the §16 design, implement it, validate
+on the 48 nueCC + 19 NCpi0 + 50 PR-data manifests, examine large movers with
+the per-plane gap plots (more cases expected, especially EM-shower regions),
+and **if validation passes, flip the SBND default ON**. It passed; it is
+flipped.
+
+### 17.0 Repro block (round 6)
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+M50='$(awk "NR>1{print \$2}" docs/pr/mcp1k-50-cb0805.index.txt)'
+MOV48="388 10550 52672 111412 172230 174637 214469 219295 235435 267597 268067 269774 271851 350186 400474 422851 447477 469665 489330"
+MOV19="71372 142421 259542 359980 399860 463565 506746 521075"
+
+# 1. pristine-HEAD (3a202461) baselines -- REQUIRED fresh: pr/54's production
+#    flip means no pre-existing off-arm is today's bare
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53-base48a data
+PR_JOBS=32 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr53-base19a data
+PR_JOBS=32 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr53-base50a data <M50>
+# 2. F0 census on the 4 owner events (post-census-code build, log-only)
+WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53-f0a data 422851
+WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=4 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr53-f0b data 521075 71372 21073
+# 3. off/on arms (relaxed_strict via the pre-existing SBND_PROTECT_GRAPH env->TLA)
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53-off48a data       # + off19a, off50a
+SBND_PROTECT_GRAPH=relaxed_strict PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53-on48a data  # + on19a, on50a
+# 4. gates
+python3 scripts/analysis/pr49/on_compare.py work-pr53-base48a work-pr53-off48a     # 0/48 all lines; ditto 19/50
+python3 scripts/analysis/pr49/on_compare.py work-pr53-off48a  work-pr53-on48a      # movers; ditto 19/50
+# 5. census reruns on the 27 movers (both flavors; byte-identical to their arms)
+SBND_PROTECT_GRAPH=relaxed_strict WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=32 \
+    ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53-cen48 data $MOV48        # + cen19 on $MOV19
+WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=32 \
+    ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53-cenoff48 data $MOV48     # + cenoff19
+# 6. causal split validation + figures (pics/53_r6_*.png)
+python3 scripts/analysis/pr53/split_exam.py work-pr53-off48a work-pr53-on48a \
+    work-pr53-cenoff48 work-pr53-cen48 work-nuecc48-cb0805 pics $MOV48             # + the 19-arm variant
+# 7. post-flip bare smoke (after the cfg flip): == on48a member+pctree
+PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53-flipbare data 422851
+```
+
+### 17.1 F0 census — all three §16.4/§16.5 questions answered before the strict flavor ran
+
+`WCT_RELAXED_EDGE_CENSUS` (env-gated, log-only; static-local `getenv` in
+`connect_graph_relaxed.cxx`, precedent `clustering_cathode_connect.cxx:279`)
+prints per relaxed build: cluster signature, per-component bbox/size, every
+closest-pair test's endpoints/counters/branch/verdict, both directional
+blocks' counters, the emitted component-edge list, and each emitted edge's
+**bridge** status (DFS over the remaining emitted pairs). A companion
+per-cluster `OC53SKIP` debug line in `ClusteringProtectBundle.cxx` names
+which gate (`skip_convicted` vs beam-window) skipped a cluster. Proof it is
+log-only: the four census-ON outputs hash member-identical to the pristine
+baselines (`work-pr53-f0a/f0b` vs `work-pr53-base48a/base19a`).
+
+**(a) 422851 — the owner neck is a bridge.** The 848-blob PR cluster has 15
+closely-components; the owner pair is components 2↔11:
+
+```
+OC53CENSUS closest j=2 k=11 p1=(-107.95,-57.18,345.22) p2=(-108.89,-59.17,345.97) dis=2.33cm nsteps=3 strong=true nb=[0,2,0,0] nb1=[2,2,0,0] killed=false
+OC53CENSUS edge j=2 k=11 dis=2.33cm mst=true dir1=false dir2=false bridge=true
+```
+
+`nb1[0]=2` on a 3-step neck — exactly §6's blind-spot floor — and the edge is
+a bridge with **no** directional-edge backup, so the strict kill disconnects
+A's 42-point component. (Contrast pair 7↔11, the two big pieces: its closest
+edge also sits at `nb1[0]=2` and dies under strict, but its dir1/dir2 edges
+survive — parallel branch, `nb=1` — so the two big pieces stay together. The
+strict rule is conservative exactly where the directional evidence supports
+the join.)
+
+**(b) 521075 — never scope-blocked; §15.4's hypothesis corrected.** The two
+"convicted main(s) skipped" are junk members:
+
+```
+OC53SKIP member ident=26 nblobs=1 main=0 convicted TGM=1 STM=0 lm=0 -- never split
+OC53SKIP member ident=28 nblobs=3 main=0 convicted TGM=1 STM=0 lm=0 -- never split
+```
+
+The 464-blob owner cluster (7 components) **was** examined; the owner neck is
+components 0↔4, again on the floor, again a bridge with no dir backup:
+
+```
+OC53CENSUS closest j=0 k=4 p1=(-85.48,-34.49,450.52) p2=(-87.36,-36.14,451.87) dis=2.84cm nsteps=3 strong=true nb=[2,2,0,2] nb1=[2,2,0,2] killed=false
+OC53CENSUS edge j=0 k=4 dis=2.84cm mst=true dir1=false dir2=false bridge=true
+```
+
+No scope knob (`protect_skip_convicted`, `beam_gate`) was changed anywhere —
+S4 turned out to be a no-op for every owner pair.
+
+**(c) 21073 — structurally immune.** Its 890-blob cluster's A and B both lie
+in the same closely-component (component 7, 4048 points, bbox
+(-42.4,13.4,365.8)-(-24.9,43.5,398.2) containing both owner points) — no
+`connect_graph_relaxed` inter-component edge is involved in their
+connectivity, so no relaxed-test tightening can split them. Measured
+confirmation of §7/§14's charge-continuity finding, and the event indeed
+stayed byte-identical under the strict flavor (§17.4).
+
+### 17.2 Implementation
+
+Fork by full duplication (M10, the project default; the in-place
+generalization alternative from §16.5 item 4 was not taken):
+
+- **`clus/src/connect_graph_relaxed_strict.cxx`** — verbatim copy of
+  `connect_graph_relaxed` (lines 14-583 of the census-instrumented file; NOT
+  the `_pid` variant) with every kill test routed through one pure predicate:
+  `relaxed_strict_bad(nbad, num_steps, cap)` = `nbad > cap || (nbad >= 2 &&
+  nbad >= 0.75*(num_steps-1))` — S1 (interior-step denominator) + S2 (`>= 2`
+  floor), caps `>7`/`>9` and the `num_bad[3] >= 3` dead-W veto unchanged, S3
+  (applied in the closest-pair, dir1 and dir2 blocks alike). Candidate
+  generation, MST construction, the `<3cm` restore and edge emission are
+  byte-for-byte the same code. (Confirmed during design review: a killed pair
+  carries the `(-1,-1,1e9)` sentinel, so the `<3cm` restore at `:534` cannot
+  resurrect it — round 5's worry about that override was overstated.)
+- `clus/src/connect_graphs.h`, `clus/src/make_graphs.{h,cxx}` — declarations
+  + `make_graph_relaxed_strict` (closely + strict, same shape as
+  `make_graphs.cxx:78`).
+- `clus/src/Facade_Cluster.cxx` — `"relaxed_strict"` branch in **all four**
+  dv/pcts dispatchers (`find_graph` ×2, `graph_algorithms` ×2); flavor list
+  comment updated in `Facade_Cluster.h`.
+- `clus/inc/WireCellClus/Graphs.h` — public declaration of
+  `relaxed_strict_bad` (doctests cannot include private `clus/src` headers).
+- Tests: `clus/test/doctest_relaxed_strict.cxx` (4 cases, 203 assertions:
+  blind-spot closure, 1-interior-step immunity, long-path equivalence, and a
+  strict-⊇-legacy sweep proving no kill is ever relaxed);
+  `doctest_clus_knob_defaults.cxx` now pins ProtectBundle's
+  `graph_name == "relaxed"` C++ default. `wcdoctest-clus` 1489/1489.
+- C++ default stays `"relaxed"`; the operating point is cfg-only (doc 68).
+  No new jsonnet plumbing — `protect_graph_name` existed end-to-end, and the
+  runner's `SBND_PROTECT_GRAPH` env→TLA already accepts any flavor string.
+
+Cost (§16.5 item 5): under legacy, `protect_bundle` reused the `"relaxed"`
+graph cached by `TaggerCheckTGM` on the identical cluster; under strict it
+builds its own graph once per cluster. Measured on 422851:
+`ClusteringProtectBundle:pr` 11.8 ms → 71.6 ms, ~60 ms per event against a
+~5 s PR chain — negligible.
+
+### 17.3 Off-gates — byte-identical on all three manifests
+
+Bare runs of the new code (census code compiled in, env unset; strict flavor
+compiled in, not selected) against same-session pristine-HEAD baselines:
+
+| gate | member (`mabc-pr.zip`) | `nusel-events`/`-table` | `pctree-pr` |
+|---|---|---|---|
+| `work-pr53-base48a` vs `work-pr53-off48a` | 0/48 differ | 0/48, 0/48 | 0/48 |
+| `work-pr53-base19a` vs `work-pr53-off19a` | 0/19 differ | 0/19, 0/19 | 0/19 |
+| `work-pr53-base50a` vs `work-pr53-off50a` | 0/50 differ | 0/50, 0/50 | 0/50 |
+
+(`on_compare.py` for member+nusel; `abtest/hash_archive.py` loop for the
+pctree half it omits. 0/117 everywhere.)
+
+### 17.4 ON census — movers 19/48 + 8/19 + 0/50, nusel 0/117
+
+`SBND_PROTECT_GRAPH=relaxed_strict` arms vs the off arms:
+
+- **48 nueCC**: 19/48 archive movers; `nusel-events`/`nusel-table` **0/48**.
+- **19 NCpi0**: 8/19 movers; nusel **0/19**.
+- **50 PR data**: **0/50 movers** — not vacuous: all 50 logs carry
+  `graph 'relaxed_strict'`, and splits do fire (e.g. "split 1 bundle
+  cluster(s) into 2 extra"), but no final archive changed — the affected
+  fragments do not survive to the final output on this manifest.
+- No nusel row changed anywhere: the finer PR partition moved no selection
+  variable on 117 events.
+
+Owner-pair verdicts (final `real_cluster_id` at the owner points, OFF → ON):
+
+| pair | OFF | ON | verdict |
+|---|---|---|---|
+| 18255-422851 A/B | 1 / 1 | **76 / 1** | split ✓ (target) |
+| 18255-521075 A/B | 18 / 18 | **18 / 94** | split ✓ (target) |
+| 18255-71372 p1+p2 | 92/69, 19/64 | 92/69, 19/64 | already separate, unchanged ✓ |
+| 18345-21073 A/B | 11 / 11 | 11 / 11 | NOT split ✓ (genuine-vertex control; event byte-identical) |
+
+### 17.5 Causal split validation — 41/41 splits are strict-killed real gaps
+
+For every mover, two census reruns (legacy `work-pr53-cenoff48/19`, strict
+`work-pr53-cen48/19`; each hash-verified byte-identical to its arm) give the
+exact component-edge lists protect_bundle emitted under each flavor. The
+removed set (legacy-emitted − strict-emitted, per cluster, matched by cluster
+signature — in the legacy run protect_bundle reuses the graph TGM cached on
+the identical cluster) is the complete causal explanation of every split.
+`scripts/analysis/pr53/split_exam.py` matches each ON-arm fragment (≥5 pts)
+to its removed edge and replays the per-plane test at the exact C++ p1/p2:
+
+- **41 material splits** across the 27 movers (28 nueCC + 13 NCpi0), and
+  **all 41 are FLIP-CLOSEST**: a closest-pair edge the legacy test kept and
+  the strict test killed, each with the C++'s own counters quoted. 0
+  REMOVED-OTHER, 0 NO-CAUSAL-MATCH, 0 false positives (no split neck replays
+  clean on all planes).
+- The bulk sit exactly in the §6 blind spot (`nsteps=3`, `nb1[0]=2` — e.g.
+  388, 52672×3, 172230×3, 174637, 235435, 267597, 350186, 506746, 521075,
+  71372, 142421×2, 463565×3, 359980); the rest are near-floor ratio cases the
+  S1 denominator shift now reaches (219295 4/6, 268067 5/7, 271851 6/7,
+  469665 8/9, 399860 7/10, 400474 5/7, 259542 7/10).
+- Figures: `pics/53_r6_<evt>_off<cid>_frag<fragcid>.png` (41 files), split
+  fragment vs retained cluster with per-plane gap markers on the removed
+  edge. Largest movers: 172230 (fragments of 1730+974+234+91 pts — EM/cosmic
+  blobs hanging on sub-3cm two-bad-step necks), 142421 (484+334), 463565
+  (145+258+87+11), 269774 (285+146+245+24), 259542 (306+13), 219295 (200).
+  These are exactly the "more cases, particularly in the EM shower region"
+  the owner predicted; every one shows a real multi-plane gap at its neck.
+- 10550 is a mover with no material split: its removed edge separated
+  nothing ≥5 pts in the final output; the archive diff is downstream fit
+  shifts only.
+
+### 17.6 Production flip
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`:
+`protect_graph_name = null` → `'relaxed_strict'` (comment block records the
+owner authorization and the legacy escape). Proofs, byte-exact `cmp` on
+compiled JSON with the full production TLA set (`reality=data` +
+`pipeline_names` + run/event TLAs):
+
+- flipped bare == pre-flip compile with `protect_graph_name='relaxed_strict'`
+  (the two compiles differ in exactly the one `"graph_name"` string);
+- flipped + `-A protect_graph_name=relaxed` == pre-flip bare (sole-key legacy
+  escape restores the old production graph byte-exactly);
+- post-flip bare run on 422851 (`work-pr53-flipbare`) == `work-pr53-on48a`
+  member-identical on both `mabc-pr.zip` and `pctree-pr`, sentinel
+  `graph 'relaxed_strict'` with no env override — bare is production.
+
+### 17.7 Fix map (final; supersedes §16.6's status column)
+
+| mechanism | net | lever | outcome |
+|---|---|---|---|
+| `ClusteringNeutrino` merge (422851, 521075) | `protect_bundle` via `relaxed_strict` | S1+S2 (+S3 guard) | **both split in production**; necks were bridges, measured not assumed |
+| `clustering_isolated` absorb (71372 ×2) | `unmerge_assoc` (already production) | none needed | pairs already separate; unchanged under strict |
+| sub-3cm blind spot (general) | `protect_bundle` via `relaxed_strict` | S1+S2 | 41 sample-wide splits, all validated real gaps |
+| S4 scope | — | — | measured no-op for every owner pair; no scope knob changed |
+| F3 W-authority | — | not shipped | no evidence needed it; unchanged |
+| 21073 (genuine vertex) | — | must not fire | did not fire: same closely-component (structural), event byte-identical |
+
 ## Verification
 
 No production behavior change any round: no C++ or jsonnet was changed.
@@ -1212,5 +1475,22 @@ end up in different final clusters." §11/§15.6's retracted claims are struck
 through in place rather than silently rewritten, per the escalation rule
 against picking silently when an earlier conclusion turns out wrong.
 
-Re-run the Repro block to reproduce every number in this doc, including all
-five rounds, from a clean shell.
+Round 6 changes production: toolkit C++ (the new flavor + log-only census
+instrumentation) and one SBND cfg default. The off-state is proven
+byte-identical at every level: compiled-config `cmp` (the ON compile differs
+from bare in exactly one string), archive member + nusel + pctree hashes
+0/117 vs same-session pristine-HEAD baselines (`work-pr53-base*` vs
+`work-pr53-off*`), and the census env proven log-only by hashing census-ON
+outputs against baselines. The ON effect is measured, not predicted: every
+one of the 41 mover splits is causally matched to a strict-killed edge with
+the C++'s own counters (never the python replay alone), the two §16.4
+structural gaps were closed by the F0 census *before* the strict flavor was
+trusted, and the three §15.4/§16 claims the census overturned (521075's skip
+gate; S4 relevance; the §534-override worry) are corrected in place above
+with strikethrough. Freshness proofs (M1) preceded every build-dependent
+step; all arms ran from the same installed `local/lib` with no install during
+a live batch. `wcdoctest-clus` 1489/1489 including the new
+`doctest_relaxed_strict.cxx`.
+
+Re-run the Repro block (rounds 1-5) and §17.0's block (round 6) to reproduce
+every number in this doc from a clean shell.

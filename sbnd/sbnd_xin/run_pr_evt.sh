@@ -115,7 +115,10 @@ STM_FIT="${SBND_STM_FIT:-0}"
 # -no-protect / SBND_PROTECT_BUNDLE=0 = the pre-pr/23 arm.  Pipelines with
 # no tagger_check_neutrino anchor (-stm/-tgm, the identity gate) skip the
 # insertion silently unless -protect was explicit.
-# Knob overrides (validation only): SBND_PROTECT_GRAPH=relaxed|relaxed_pid,
+# Knob overrides (validation only):
+# SBND_PROTECT_GRAPH=relaxed|relaxed_pid|relaxed_strict -- cfg default is
+# 'relaxed_strict' since doc pr/53 round 6 (owner 2026-08-09);
+# SBND_PROTECT_GRAPH=relaxed is the legacy escape.
 # SBND_PROTECT_REJOIN_XCUT/_DYZ/_DIS in cm (0 disables the re-join pass).
 PROTECT="${SBND_PROTECT_BUNDLE:-1}"
 PROTECT_EXPLICIT=0
