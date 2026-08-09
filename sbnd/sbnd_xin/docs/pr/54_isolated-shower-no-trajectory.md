@@ -4,8 +4,13 @@ Status: fix SHIPPED as the knob `other_seg_keep_isolated` (round 3, §12
 below) + unconditional visibility counters; off-path proven byte-identical
 on both SBND manifests. **SBND PRODUCTION ON — owner flip 2026-08-09 after
 the Bee before/after hand-scan ("this was a bug"); C++ default stays false;
-flip proofs in §12.** §§1-11 are the original investigation record,
-unchanged.
+flip proofs in §12.** **Round 4 (§13): the production footprint census is
+DONE — 27/48 nueCC48 + 2/50 mcp1k50 events keep a segment, nusel 0/98 both
+granularities, but the 142421 "strict superset" outcome does NOT generalize:
+most affected clusters shift existing fit points by a small amount (median
+0.03–0.4 cm), and two events fully absorb a tiny orphan sub-cluster into the
+newly-connected structure. No knob change; observation only.** §§1-11 are
+the original investigation record, unchanged.
 
 **Round 2 (below, §10):** this is one bug, not three. §8's F1-F3 are three
 untested hypotheses for *which* of two discard paths caused this event's
@@ -102,6 +107,19 @@ python3 scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -p work-pr54-on142421  -
 
 # Round 3 prototype dead-accumulator proof (M15):
 grep -rn "residual_segment_candidates" /nfs/data/1/xqian/prototype-dev/wire-cell/   # 3 hits, no consumer
+
+# Round 4 -- the production footprint census (binary/HEAD unchanged since
+# round 3: libWireCellClus.so mtime 2026-08-09 10:26:34, HEAD 3a202461; bare
+# production IS the knob-on config since the round-3 flip, so these arms take
+# no env override):
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+PR_JOBS=5 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr54-on48a data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr54-on50a data \
+    $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+python3 scripts/analysis/pr49/on_compare.py work-pr54-off48a work-pr54-on48a
+python3 scripts/analysis/pr49/on_compare.py work-pr54-off50a work-pr54-on50a
+python3 scripts/analysis/pr54/census54.py   work-pr54-off48a work-pr54-on48a
+python3 scripts/analysis/pr54/census54.py   work-pr54-off50a work-pr54-on50a
 ```
 
 ---
@@ -536,17 +554,128 @@ sample-wide footprint census is the open item below.
 
 ### Open items (round 3)
 
-- Sample-wide knob-on census (48+50 manifests): still open after the flip —
-  the owner flipped on the strength of the 142421 demo, so the production
-  footprint (how many events keep segments, whether any nusel variable
-  moves) is now the first thing the next 48/50 rerun will measure. The
-  `oseg_iso_keep`/`oseg_iso_drop` counters and sentinels make that census a
-  grep, no extra instrumentation.
+- ~~Sample-wide knob-on census (48+50 manifests)~~ — **DONE, see §13.**
 - The 25-point / 3 cm floors are first-cut: they cleanly separate this
-  event's 664/47-point keeps from its 3-4-point drops, but the census should
-  confirm the margin on other events before any flip.
+  event's 664/47-point keeps from its 3-4-point drops; §13 reports the
+  margin distribution across the full census (observation only, not
+  retuned).
 - §10's six other fit-then-discard sites remain uncounted (only the
   find_other_segments pair got counters this round).
+
+## 13. Round 4 (2026-08-09) — the production footprint census
+
+The knob has been SBND production ON since §12's same-day flip, on the
+strength of a single-event demo. This round measures what §12 left open: how
+many production events actually keep an isolated residual segment, whether
+any nusel variable moves, and whether the 142421 "strict superset" outcome
+generalizes. No code or config changed this round — census only.
+
+### Labels and binary epoch
+
+`work-pr54-on48a` / `work-pr54-on50a` (new, this round) vs the existing round-3
+baselines `work-pr54-off48a` / `work-pr54-off50a`. Re-verified immediately
+before launch: `libWireCellClus.so` mtime unchanged at `2026-08-09 10:26:34`,
+toolkit HEAD unchanged at `3a202461` — same binary as round 3, no rebuild
+needed. Because the flip made bare production == knob-on, the "on" arms take
+no env override; they are plain bare runs of the same manifests as the OFF
+arms. Both arms `ok: N / failed: 0` (48/48, 50/50).
+
+### A free pre-census, made exact
+
+The unconditional F0 drop sentinel already logs `n_points`/`length` for every
+*rejected* candidate in the existing round-3 OFF-arm logs, so which events
+*would* keep a segment was predictable without a rerun: 27/48 nueCC48 events,
+2/50 mcp1k50 events (388, 30504, 38856, 42280, 46363, 54095, 74544, 81597,
+90055, 122660, 163543, 168596, 174637, 196649, 214469, 219295, 235435, 239794,
+246579, 256587, 269774, 271851, 350186, 360535, 422851, 433451, 489330; and
+48367, 56243). This is a **hard gate in both directions**, not just a guess:
+ON and OFF execute identically until the first candidate clears the floors, so
+a zero-passing-candidate event is *provably* byte-identical, and a mover
+*must* be one of these events. The ON-arm rerun (`census54.py`) confirms both
+directions exactly — **27/48 and 2/50 archive movers, matching the
+prediction event-for-event, bidirectional gate: PASS** on both manifests (no
+divergent archive outside the predicted set; no predicted event came back
+byte-identical). Ran-ON proof: PR30AUDIT `oseg_iso_keep` is nonzero in every
+one of those 29 event logs (`census54.py` §1).
+
+**Headline: this is a nue-CC-sample effect (27/48 = 56%), near-invisible in
+generic production (2/50 = 4%)** — expected, since the isolated-residual path
+exists to catch fragmented EM showers, which nue-CC events are full of and
+generic (mostly cosmic/numu) events mostly are not.
+
+### nusel
+
+`nusel-events.tsv`: **0/48**, **0/50** differ. `nusel-table.tsv`: **0/48**,
+**0/50** differ. Every numu_score / nue_score / T_kine / vertex-derived
+quantity is unchanged on both manifests — the recovered trajectories do not
+move any nusel output in this census.
+
+### Superset-at-scale — the 142421 outcome does NOT generalize
+
+142421 (§12) was a clean single-cluster demo: every pre-existing fit point
+survived at exactly 0.000 cm displacement. Run over all 29 movers
+(`census54.py` §4), that is the **exception, not the rule**:
+
+| manifest | clusters unchanged | clusters purely additive | clusters with existing points displaced |
+|---|---|---|---|
+| nueCC48 (27 movers) | 976 | 4 | **57** |
+| mcp1k50 (2 movers) | 50 | 3 | **1** |
+
+Where a mover's affected cluster gets a displaced-point entry, the magnitude
+is **small but real**: median displacement of pre-existing fit points is
+typically 0.03–0.4 cm (e.g. evt 42280 cluster 8: 613→741 pts, existing-point
+median 0.302 cm; evt 174637 cluster 9: median 0.000 cm, the closest to a true
+superset in this batch), with per-event max displacements up to ~8.9 cm on
+the id-`-1` (unassigned) fit-point bucket. Mechanism: the joint
+`do_multi_tracking` refit that runs when a segment is kept re-fits the whole
+cluster, so pre-existing points in the *same cluster* can shift a little —
+exactly the caveat §12 stated as untested; this census is what tests it.
+
+Two events additionally show a real **structural absorption**, not a
+displacement: a tiny 2-point orphan sub-cluster disappears entirely
+(`n 2->0`) and reappears near (not at) a neighboring cluster's new points —
+evt 90055 cluster 112's two points land 1.9/2.8 cm from the nearest cluster-11
+point after the keep grows cluster 11 by 103 points; evt 196649 cluster 41's
+two points land 4.3/4.5 cm from cluster 42. These are genuine re-partitions:
+a fragment too small to matter on its own gets swallowed once the newly-kept
+trajectory connects the region.
+
+**Answer to the owner's original question, refined**: the knob does not
+touch *other* clusters (confirmed again here — no cross-cluster contamination
+outside the predicted event set), but within an affected cluster it is not a
+strict no-op on existing fits — expect small (sub-mm to few-cm) shifts and,
+occasionally, a tiny orphan fragment absorbed into the newly-connected
+structure. Nusel is unaffected in every case measured so far (0/98).
+
+### Floor-margin distribution (observation only — floors not retuned)
+
+64 kept segments in nueCC48 (`n_points` min 25 / median 34 / max 316; `length`
+min 4.63 / median 11.07 / max 58.98 cm), 2 in mcp1k50 (31 and 42 points, 5.44
+and 17.52 cm). 32/64 nueCC48 keeps land within 10 points of the 25-point
+floor; only 1/66 total keeps lands within 2 cm of the 3 cm length floor — the
+point floor is the more frequently binding constraint of the two. No change
+made; this is what the census was asked to confirm before any future
+retuning discussion (§12's own open item).
+
+### Verdict
+
+Gate PASS on both manifests, nusel 0/98, no archive mover outside the
+predicted set. The knob's production footprint is measured and bounded: it
+fires in roughly half of nue-CC-like events and rarely elsewhere, recovers
+the intended trajectories, and leaves other clusters and nusel untouched,
+at the cost of small (not always zero) shifts to pre-existing fit points in
+the *same* cluster it touches, plus occasional absorption of tiny orphan
+fragments. This is reported, not tuned away.
+
+### Open items (round 4)
+
+- §10's six other fit-then-discard sites remain uncounted — the same
+  visibility gap this round's methodology could close for each, if any is
+  picked up as a future PR.
+- The small-shift-in-same-cluster and orphan-absorption behavior is new
+  information since the flip; it does not change the flip decision (nusel
+  unaffected) but is worth the owner's awareness for any hand-scan of
+  affected-cluster geometry beyond 142421.
 
 ## Verification
 
@@ -556,3 +685,8 @@ block above; the TRACE-log lines and PR30AUDIT line are already-existing
 products, quoted verbatim with their source files.
 Round 3 (the fix): see §12's Verification subsection — off-gates 0/48 + 0/50
 byte-identical, doctests, compiled-config proofs, demo arm.
+Round 4 (the census): see §13 — bidirectional gate PASS on both manifests
+(27/48 + 2/50 movers, exactly matching the OFF-log prediction), nusel 0/98
+both granularities, superset-at-scale table, floor-margin distribution.
+No code or config changed; `census54.py` + `on_compare.py` are the sources
+for every number, both reproducible from the Repro block above.
