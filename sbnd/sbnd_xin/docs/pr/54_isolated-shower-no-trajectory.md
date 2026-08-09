@@ -4,6 +4,15 @@ Status: investigation only. No C++ or jsonnet changed. Fixes are proposed
 below as default-OFF knobs for a future session; nothing in this doc is
 shipped.
 
+**Round 2 (below, §10):** this is one bug, not three. §8's F1-F3 are three
+untested hypotheses for *which* of two discard paths caused this event's
+component to be dropped, not three separate defects — F0 (visibility) is what
+would actually distinguish them. Separately, the same "fit computed, then
+silently discarded" pattern recurs in **at least six more places** across the
+fit stage, one of them (`init_first_segment`) more severe than either path
+found in §5, since its failure can silently zero out an entire cluster's PR
+output. See §10 for the full census.
+
 ## Repro block
 
 ```bash
@@ -44,6 +53,15 @@ sed -n '451,620p' clus/src/NeutrinoOtherSegments.cxx     # Step 9: fit, accept_p
 sed -n '620,713p' clus/src/NeutrinoOtherSegments.cxx     # Step 9 else-branch: isolated-residual discard
 sed -n '1391,1440p' clus/src/TaggerCheckNeutrino.cxx     # PR30AUDIT line (oseg_proto/relaxed/reject)
 sed -n '875,990p' clus/src/MultiAlgBlobClustering.cxx    # Bee shower_track/track_fit writers
+
+# Round 2, §10 census -- fit-then-discard sites elsewhere in the fit stage:
+sed -n '1100,1161p' clus/src/NeutrinoPatternBase.cxx     # init_first_segment: uncounted, unlogged discard
+sed -n '1928,2125p' clus/src/NeutrinoVertexFinder.cxx    # eliminate_short_vertex_activities
+sed -n '2745,2765p' clus/src/TaggerCheckSTM.cxx          # search_other_tracks
+sed -n '3080,3095p' clus/src/TaggerCheckSTM.cxx          # check_stm_conditions forward pass
+sed -n '8615,8645p' clus/src/TrackFitting.cxx            # do_multi_tracking point-level drop
+sed -n '9015,9045p' clus/src/TrackFitting.cxx            # do_single_tracking fit-output size-mismatch guard
+sed -n '39,68p' clus/inc/WireCellClus/PRGraph.h          # PortAuditCounters -- full existing counter list
 ```
 
 ---
@@ -229,8 +247,15 @@ inside main cluster 7). Recorded here so the fix session does not chase it.
 
 ## 8. Proposed fixes — NOT implemented this session
 
-Every one is a default-OFF knob whose off-path leaves the compiled config and
-graph byte-identical; gate = the SBND 48/50-event manifests used by pr/48-51.
+This is **one bug** — real structure gets a trajectory fit computed and then
+discarded with no way to see or count it — manifesting through two discard
+points found in §5. F1-F3 below are not three separate defects; they are
+three untested hypotheses for which of the two paths (or both) is responsible
+for *this* event's component, offered because attribution could not be proven
+without new logging (§5's caveat). F0 is what actually settles the question;
+F1-F3 should not be picked without it. Every knob below is default-OFF, its
+off-path leaving the compiled config and graph byte-identical; gate = the
+SBND 48/50-event manifests used by pr/48-51.
 
 **F0 — visibility first.** Uncomment the per-point trace at
 `NeutrinoOtherSegments.cxx:117-126` behind a debug knob, and add one
@@ -270,7 +295,44 @@ Recommend F0 first (pure instrumentation, closest to risk-free), then F2.
 Record F1 and F3 as candidates, not commitments — none is sized without F0's
 census.
 
-## 9. Open items
+## 10. Round 2 (2026-08-09) — the fit-then-discard pattern recurs at (at least) six more sites
+
+The owner asked, after §5-§8 above: is this really more than one bug, and does
+this class of silent discard happen anywhere else? Answer to the first: no,
+one bug (see the note added to §8). Answer to the second: yes. A read-only
+survey of every other call site of `TrackFitting::do_single_tracking` /
+`do_multi_tracking` in `clus/src/` (`grep -rln "do_single_tracking\|
+do_multi_tracking" clus/src/*.cxx`) found six more sites with the same shape
+— a real fit computed, then the candidate conditionally thrown away based on
+a quality/length/isolation test, with little or no way to see it happened.
+None of them is covered by any of the 16 existing `PortAuditCounters`
+(`clus/inc/WireCellClus/PRGraph.h:39-68`: `oov_isochronous/dead_scan/
+unique_scan`, `add_segment_calls/reentry`, `endpoint_mismatch/refused`,
+`pca_refine_calls/moved/move_um_sum/max`, `oseg_accept_proto/accept_relaxed/
+reject`, `selfloop_segment`, `edge_aliased`) — confirmed by direct read of
+each header field.
+
+| # | site | trigger | visibility |
+|---|---|---|---|
+| 1 | `init_first_segment`, `NeutrinoPatternBase.cxx:1122-1159` | `fine_path.size() <= 1` after `do_single_tracking` → `remove_segment`+`remove_vertex`×2; comment reads `// Tracking failed, clean up` | **zero log, zero counter.** Worst of the set: this is the *first* segment fit attempted for a cluster (`init_first_segment` is called from `find_proto_vertex` before `find_other_segments` ever runs, `NeutrinoPatternBase.cxx:2388-2391`), and there is no fallback for main/long clusters at the `TaggerCheckNeutrino.cxx:991,1029` call sites — so a failure here can silently zero out an entire cluster's PR output with no trace of why. |
+| 2 | `eliminate_short_vertex_activities`, `NeutrinoVertexFinder.cxx:1928-2125` | 4 length/isolation cuts (`<0.36cm`, `<0.5cm && degree>3`, `<0.1cm` near main vertex, isolated-vertex `n_good==0`) on stub segments just refit via `do_multi_tracking` (`:2724`) | zero log, zero counter |
+| 3 | `search_other_tracks`, `TaggerCheckSTM.cxx:2758-2762` | `fits().size() <= 1` after `do_single_tracking` → never added | zero log, zero counter |
+| 4 | `check_stm_conditions` forward pass, `TaggerCheckSTM.cxx:3087-3093` | `fits().size() <= 3` → candidate dropped, function returns false | DEBUG log only (cluster id + fit size), no counter |
+| 5 | `do_multi_tracking` point drop, `TrackFitting.cxx:8624-8642` | zero-plane-quantity trajectory points dropped (point-level, not whole-segment) | comment says "count so it is never silent" — only a DEBUG line (`n_fits_before/after`) actually exists, **no counter despite the comment's intent** |
+| 6 | `do_single_tracking` output guard, `TrackFitting.cxx:9028-9042` | fit-output size mismatch clears the fit (feeds sites 1 and 3's size checks) | WARN log (best of the set) — still no counter, so occurrences can't be aggregated across an event |
+
+`NeutrinoGraphAudit.cxx` and `NeutrinoStructureExaminer.cxx`'s `do_multi_tracking`
+call sites were checked and are a **different** shape — they re-fit *after* a
+topology decision is already made, and their removals are separately counted
+(`n_op1/2/3`) — not the same pattern, not added to this table.
+
+**Read on F0:** generalizes directly. The same shape (candidate fit, then
+conditionally discarded) recurs at 8 total sites now (2 in §5 + 6 here); a
+single shared counter/logging convention — not eight bespoke ones — is the
+right shape for a future fix session, rather than patching each site
+independently.
+
+## 11. Open items
 
 - Coordinate-level attribution of the specific discarded candidate(s) to the
   owner's exact component requires F0's instrumentation; not available this
@@ -281,6 +343,11 @@ census.
 - Not investigated: whether the owner's "missing gammas" framing implies a
   downstream physics effect (missed shower energy in `kine_reco_Enu` etc.) —
   out of scope for this doc, which is about the fit-stage mechanism only.
+- §10's census is from a read-only grep-and-read survey (one Explore pass),
+  not an exhaustive line-by-line audit of every `remove_vertex`/`remove_segment`
+  call in `clus/src/` — it is scoped to call sites reachable from the trajectory
+  fitter. A broader audit of every silent-discard shape in `clus/` (not just
+  fit-adjacent ones) was not attempted.
 
 ## Verification
 
