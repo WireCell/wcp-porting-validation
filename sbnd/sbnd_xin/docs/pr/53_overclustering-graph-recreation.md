@@ -1,4 +1,4 @@
-# doc pr/53 — SBND overclustering diagnosis: two distinct mechanisms, neither fixed by naive threshold tightening
+# doc pr/53 — SBND overclustering diagnosis: at least four distinct mechanisms (round 1 found two), none fixed by naive threshold tightening
 
 Status: investigation only. No C++ or jsonnet changed. Fixes are proposed
 below as default-OFF knobs for a future session; nothing in this doc is
@@ -22,6 +22,22 @@ converging there — this looks like a genuine two-prong vertex, not a bridged
 gap, and probably should not count as "over-clustering" for this doc's
 purposes at all.
 
+**Round 4 (§15):** with family B (round 2) and 21073 (round 3) both retired,
+the owner asked whether the remaining two pairs are really "the connectivity
+graph," or whether a mechanism was missed. Measured answer: missed. Neither
+live pair (422851, 521075) was ever touched by `connect_graph_relaxed` or
+`protect_overclustering` at all — the actual creating pass, traced with the
+existing `trace_bee` diagnostic on both events, is `ClusteringNeutrino`, a
+directional-extrapolation / vertex-consistency test that runs **after**
+`protect_overclustering` in the per-face pipeline and shares no code with it.
+§4/§6/§9/§11's whole "family A = the connectivity graph" framing, and F1–F3's
+proposed fixes, target a pass that never drew either edge. Family B is also
+only *partly* retired, not fully as §13 implied: a corrected, tolerance-gated
+measurement across the 48-event manifest finds real residual cases, and two of
+them are confirmed by the PR log itself to be exactly the reader-side skip
+gate the round-4 code audit predicted. §15 has the full census, code citations,
+and a revised fix map.
+
 ## Repro block
 
 ```bash
@@ -43,6 +59,35 @@ grep ClusteringUnmergeBundle:prassoc work-oc53-71372/pr_evt71372/wct_pr_evt71372
 # Round 3: 21073 vertex-context figure (uses the existing PR output from the
 # unrelated earlier Bee-link task, work-bee-0809/pr_evt21073 -- no re-run needed)
 python3 scripts/analysis/pr53/plot_21073_vertex_context.py
+
+# Round 4: attribute the creating pass for each pair (needs a -trace-bee QL
+# reprocessing first -- imaging/opflash reused from the existing sample dirs,
+# M11; fresh work-oc53r4-trace/ tag, M13)
+mkdir -p work-oc53r4-trace
+ln -sfn $PWD/work-nuecc48-cb0805/evt422851 work-oc53r4-trace/evt422851
+ln -sfn $PWD/work-ncpi0-cb0805/evt71372   work-oc53r4-trace/evt71372
+ln -sfn $PWD/work-ncpi0-cb0805/evt521075  work-oc53r4-trace/evt521075
+ln -sfn $PWD/work-ncpi0-cb0805/evt21073   work-oc53r4-trace/evt21073
+SBND_WORK_ROOT=$PWD/work-oc53r4-trace SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-2025fall-48evt-fsprod \
+  setarch x86_64 -R ./run_ql_evt.sh data 26 -trace-bee -save-pctree -save-rcid -save-assoc   # 422851
+for pair in "12:71372" "13:521075" "17:21073"; do
+  idx="${pair%%:*}"
+  SBND_WORK_ROOT=$PWD/work-oc53r4-trace SBND_INPUT_DIR=$PWD/input_files_reco1/extracted-ncpi0 \
+    setarch x86_64 -R ./run_ql_evt.sh data "$idx" -trace-bee -save-pctree -save-rcid -save-assoc
+done
+python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 71372  -165.2 -129.9 226.4 -155.3 -103.1 229.0 "control p1"
+python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 71372  -161.5 -152.1 258.5 -159.8 -144.0 287.9 "control p2"
+python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 21073  -36.5 32.0 367.5 -31.2 28.8 369.6 "control"
+python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 422851 -107.9 -55.1 344.6 -110.4 -61.9 350.0 "18255-422851"
+python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 521075 -88.0 -33.5 456.2 -84.9 -33.3 450.8 "18255-521075"
+
+# Round 4: final-product check for 521075 (no bare PR output existed before)
+./run_pr_chain_batch.sh work-ncpi0-cb0805 work-oc53r4-pr data 521075
+
+# Round 4: family-B residual census, 48-event nueCC manifest
+python3 scripts/analysis/pr53/oc53_familyb_census.py work-nuecc48-cb0805 work-pr51-off48e
+grep -a ClusteringUnmergeBundle:prassoc work-pr51-off48e/pr_evt234638/wct_pr_evt234638.log
+grep -a ClusteringUnmergeBundle:prassoc work-pr51-off48e/pr_evt90055/wct_pr_evt90055.log
 ```
 
 Verified against `work-ncpi0-cb0805` / `work-nuecc48-cb0805` (existing QL
@@ -53,6 +98,14 @@ Round-2 PR-chain output: `work-oc53-71372/` (fresh out_root, M13). Round-2 Bee
 link: `bee/oc53-71372/oc53-71372.url`. Round-3 PR-level context comes from
 `work-bee-0809/pr_evt21073` (produced for an unrelated Bee-link request
 earlier in this session, same toolkit HEAD).
+
+Round 4 verified at toolkit HEAD `a46a0b22` (unrelated pr/51 round-4 commit;
+nothing pr/53 touches was changed). New QL trace root `work-oc53r4-trace/`
+(fresh, M13; imaging/opflash symlinked from `work-nuecc48-cb0805`/
+`work-ncpi0-cb0805`, M11). New bare PR output `work-oc53r4-pr/pr_evt521075`
+(fresh, M13). Family-B census reuses round-3's validated bare PR arm
+`work-pr51-off48e` unmodified. New scripts:
+`scripts/analysis/pr53/{oc53_attrib.py,oc53_familyb_census.py}`.
 
 Code cited below:
 ```bash
@@ -385,16 +438,27 @@ decision; do not fold into F1–F4.
 
 ## 12. Open items for the fix session
 
-- Trace which upstream merge pass (`connect1`, `close`, `regular`, `extend`,
-  `isolated`) actually drew the family-A edges for 422851, 521075, and 21073 —
-  not identified here (§5).
-- Re-run `protect_bundle`/`relaxed` fresh through the PR chain for 422851 and
-  521075 (only 21073 was re-run this session) to confirm whether the PR-stage
-  net independently catches or misses them.
+- ~~Trace which upstream merge pass … actually drew the family-A edges for
+  422851, 521075, and 21073~~ — **closed by §15.3**: `ClusteringNeutrino` for
+  422851/521075, `ClusteringClose` (i.e. no long-range bridge at all) for
+  21073.
+- ~~Re-run `protect_bundle`/`relaxed` fresh through the PR chain for 422851 and
+  521075~~ — **closed by §15.4**: both remain merged in the final PR output;
+  `protect_bundle` does not catch either (it is a splitter operating on one
+  cluster's own graph, never a cross-cluster net — §15.4).
 - Classify 21073 with F0's census once implemented, since it cannot be
-  resolved by a neck/path argument.
+  resolved by a neck/path argument. (§14/§15.3 resolved 21073's specific
+  question by a different route — genuine vertex, `ClusteringClose`-joined —
+  but F0 itself was never implemented and would still generalize the method.)
 - Confirm the ~10% MicroBooNE dead-channel figure against a real
   `prototype_base/` source, or drop the numeric comparison to qualitative.
+- **New (§15.3):** a `judge_vertex`/`ClusteringNeutrino`-focused read of the
+  422851 and 521075 branches that actually fired — which threshold, is it a
+  false positive on a real multi-prong topology (as 21073 turned out to be) —
+  before any fix is proposed for this pass.
+- **New (§15.5):** F0's census, generalized to also attribute
+  `ClusteringNeutrino`/family-B-residual mechanisms, not just
+  `connect_graph_relaxed`, if a broader detector-wide sweep is wanted.
 
 ---
 
@@ -475,6 +539,16 @@ ahead of confirming the symptom actually reaches a current-HEAD Bee link.
 Family A (F1/F2/F3) and 21073 remain unaffected by this correction — neither
 goes through `clustering_isolated`'s `assoc` grouping (both endpoints share
 `assoc_cluster_main=1` in every family-A/charge-contiguous case, §3).
+
+**Round-4 correction to the paragraph above:** the 71372 anecdote generalizes
+less than this section implied. §15.5 measured, over the 48-event manifest,
+that `unmerge_assoc`'s reversal is conditional on `Flags::main_cluster` still
+being set when it runs — a real, log-confirmed minority of isolated-merges are
+never attempted by the visitor at all and remain merged in final output.
+"Family B is retired" should be read as "retired in the case this doc
+originally checked, and in most — not all — decidable cases on a 48-event
+sample," not as a general result. F4 is re-opened, not closed. See §15.5 for
+the measurement and the two confirmed counter-examples.
 
 ---
 
@@ -580,14 +654,263 @@ hand-scan tool is coloring an entire `Cluster` one color regardless of PR
 segment, that presentation choice — not the clustering algorithm — is what
 makes a correctly-handled vertex look like an error.
 
+## 15. Round 4 (2026-08-09) — the taxonomy was incomplete: a third mechanism (`ClusteringNeutrino`), and family B only partly retired
+
+Owner's question, after rounds 2–3 retired family B (§13) and 21073 (§14): *"if
+one of the two mechanisms is no longer an issue, did we miss a mechanism, or is
+graph creation the sole issue?"*
+
+**Short answer: a mechanism was missed. Neither surviving live pair goes
+through the connectivity graph at all.**
+
+### 15.1 `protect_overclustering` never draws an edge — "family A" named the net, not the creator
+
+`clustering_protect_overclustering.cxx` has no `merge_clusters` call anywhere
+in the file; its only structural operation is
+`grouping->separate(cluster, b2groupid, true)` (`:540`) — a **splitter**.
+`connect_graph_relaxed.cxx` is a graph *builder* (registered via
+`make_graphs.cxx`), producing a named `"relaxed"` graph consumed by
+`Cluster::connected_blobs(...)`; its edges are blob-to-blob **inside one
+cluster**, so its only possible effect on a join is negative — keeping a
+cluster whole that would otherwise split. Neither file can create the
+cross-cluster edge the owner is looking at. §5 already conceded the creating
+pass "was not identified" for family A; §11's F1–F3 nonetheless tune the net
+(`connect_graph_relaxed`'s `num_bad` floor/cap/ratio), not the creator.
+
+Confirmed independently: `is_good_point` — the charge-presence path test both
+`protect_overclustering` and `connect_graph_relaxed` use — appears in **no
+merge pass** in the SBND pipeline. Every actual joiner is pure distance ±
+angle (or, for `ClusteringNeutrino`, a directional/vertex heuristic — §15.3).
+Ranked by reach:
+
+| pass | file:line | reach | test |
+|---|---|---|---|
+| `extend_loop` flag=1 (prolong) | `clustering_extend.cxx:101,140` | **150 cm** | Hough-direction extrapolation only |
+| `isolated` small→big | `clustering_isolated.cxx:296,325` | **80 cm** | pure distance, no angle |
+| `isolated` small→small (remaining) | `clustering_isolated.cxx:392` | **50 cm** | pure distance |
+| `extend(flag=4)` | `clustering_extend.cxx:405` | 60→**80 cm** | escape hatch for long partners |
+| `parallel_prolong` | `clustering_parallel_prolong.cxx:89` | 35→**80 cm** | isochronous-direction escape |
+| `neutrino` | `clustering_neutrino.cxx:397` | **80 cm** | on *extrapolated* Hough clouds — §15.3 |
+| `regular` (×2) | `clustering_regular.cxx:91` | 60 cm / 30 cm | distance-scaled angle ladder |
+| `connect1` | `clustering_connect.cxx:617,653` | **unbounded** | infinite-*line* PCA distance, not a physical gap; SBND's `iso_max_dis=5cm` caps only the isochronous-relaxed branch |
+| `examine_bundles(use_flash_t0=true)` | `clustering_examine_bundles.cxx:162` | **unbounded** | flash-time coincidence only, no geometry (intended — undone by `unmerge_bundle`) |
+
+`close` (≤2 cm) and `separate`'s fragment re-absorb (0.5 cm) are the only
+genuinely near-neighbor joiners; `live_dead`/`deghost`/`cathode_connect`/
+`cathode_bundle_rescue` all require a structural precondition (shared dead
+region, 2-view charge overlap, cathode-plane cross-TPC geometry) beyond plain
+distance.
+
+### 15.2 SBND clusters twice; only the first pass has a protection net
+
+The per-face pipeline (`clus.jsonnet:269-323`) ends `... →
+protect_overclustering → neutrino → isolated → examine_bundles`. After Q/L
+charge-light matching a **second, all-APA pipeline** runs
+(`clus.jsonnet:459-529`): `switch_scope, extend(60cm), regular(60cm),
+regular(30cm), parallel_prolong(35cm), close, extend_loop(150cm prolong)`, then
+SBND-on `cathode_connect` and `cathode_bundle_rescue`, then
+`examine_bundles(use_flash_t0=true)` — **with no `protect_overclustering`
+anywhere in it.** A join drawn there faces no QL-stage net at all; the only
+later net is the PR-stage `protect_bundle`, which (§15.4) is also a splitter
+only. Every constant and measurement in §5/§6/§9/§11 is per-face-stage; this
+second pipeline was not in scope for any of them.
+
+### 15.3 The actual creator, measured: `ClusteringNeutrino`
+
+Using the existing `trace_bee` diagnostic (doc 51, default OFF, byte-identical
+— `cfg/.../sbnd/clus.jsonnet` `trace_sets()`, runner `-trace-bee`), a new
+script (`scripts/analysis/pr53/oc53_attrib.py`, reusing `stm_merge_attribution
+.py`'s layer-reader/coordinate-matching) walks every clustering step in
+pipeline order and reports the first step at which the owner's A/B points
+share a cluster.
+
+**Controls first** (both must reproduce the already-established answer before
+trusting the tool on the unknowns): 71372 p1/p2 → `ClusteringIsolated`
+(matches §4 exactly); 21073 → `ClusteringClose` (a tight, ≤2cm, iterative
+near-neighbor chain — consistent with §14's "zero missing-charge steps
+anywhere," not a long-range bridge). Both pass.
+
+**The two live pairs:**
+
+| pair | first joined at | stage |
+|---|---|---|
+| 422851 | `tr13_ClusteringNeutrino` | per-face, **after** `tr12_ClusteringProtectOverclustering` |
+| 521075 | `tr13_ClusteringNeutrino` | per-face, **after** `tr12_ClusteringProtectOverclustering` |
+
+Neither pair is ever in the same cluster at `tr12` — the QL-stage net runs one
+step before the edge that creates the problem even exists. Repro:
+
+```bash
+cd sbnd_xin
+python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 422851 \
+    -107.9 -55.1 344.6 -110.4 -61.9 350.0 "18255-422851"
+python3 scripts/analysis/pr53/oc53_attrib.py work-oc53r4-trace 521075 \
+    -88.0 -33.5 456.2 -84.9 -33.3 450.8 "18255-521075"
+```
+
+`ClusteringNeutrino` (`clus/src/clustering_neutrino.cxx`) is not a
+distance/angle bridge and shares essentially no logic with
+`connect_graph_relaxed`/`protect_overclustering`: for each candidate pair it
+builds an **extrapolated** point cloud from `vhough_transform` at the two
+extreme points (`:407-410`, 30 cm radius), then decides the merge from a chain
+of closest-point tests between clusters and their extrapolated clouds (`dis`,
+`dis1`, `dis2`, `dis3`, thresholds ranging ~0.5–12 cm direct and up to
+72–90 cm on the extrapolated-cloud sum, branch-dependent, `:775-970`) gated
+through `Cluster::judge_vertex()` (`Facade_Cluster.cxx:2546`) — a
+directional-occupancy **asymmetry** test at the candidate junction point (is
+charge one-sided from the test point, the signature of a real track end, vs.
+even on both sides). It never samples the bridge interior for missing charge
+the way `is_good_point` does; it is a vertex-recognition heuristic, and the
+pass comment block (`:377-379`, "two short ones, NC pi0 case... one short one
+and one big one, CC pi0 case") makes clear it is *designed* to merge
+multi-prong vertex topologies — which is exactly the class of thing the owner
+is complaining looks wrong in 422851/521075. Whether the two flagged joins are
+`judge_vertex` false positives or another `ClusteringNeutrino` branch entirely
+is not established this round; the finding here is *which pass*, not yet
+*which line inside it*.
+
+### 15.4 Final-product check: both live pairs remain merged in production output
+
+Reusing round-3's method (§13) on all five pairs, from a bare (=production) PR
+run's final `clustering-global` layer:
+
+| pair | A final cid | B final cid | status |
+|---|---|---|---|
+| 422851 | 1 | 1 | **SAME — still over-clustered in final output** |
+| 521075 | 18 | 18 | **SAME — still over-clustered in final output** |
+| 21073 | 11 | 11 | SAME (§14: correct — genuine vertex) |
+| 71372 p1 | 92 | 69 | DIFFERENT (§13: `unmerge_assoc` split it) |
+| 71372 p2 | 19 | 64 | DIFFERENT (§13: `unmerge_assoc` split it) |
+
+421851/521075 use round-3's validated `work-pr51-off48e/pr_evt422851` (bare
+off-arm) and a fresh bare run `work-oc53r4-pr/pr_evt521075` (no PR output
+existed for it before). This also answers §12's open item: `protect_bundle`
+(PR-stage) does **not** catch either all-APA-created join — consistent with
+15.1's finding that `protect_bundle` is a splitter operating on one cluster's
+own intra-cluster blob graph (`ClusteringProtectBundle.cxx:415,468` —
+`connected_blobs` + `separate`, no `merge_clusters`, no `take_children`), never
+a cross-cluster joiner.
+
+### 15.5 Family B is only *partly* retired, not fully as §13 implied
+
+Code audit: `clustering_isolated` has **one** merge site
+(`clustering_isolated.cxx:596-601`) fed by four pair-generation paths
+(small→big 80cm, small–small 5cm, small–small 50cm, **big↔big** 3cm); all four
+record `assoc_cluster_id`/`assoc_cluster_main`, and `merge_clusters` carries
+the pair through every later merge (`ClusteringFuncs.cxx:151-157`, `pcname`
+defaults to `"perblob"`). Nothing is permanent by *missing* provenance.
+
+**The permanence is reader-side.** `ClusteringUnmergeBundle.cxx:180` skips any
+cluster not flagged `Flags::main_cluster` — and the immediately preceding
+`unmerge_bundle` stage clears that flag on every companion it splits off
+(`ClusteringUnmergeBundle.cxx:403`). An isolated-merge living inside a
+flash-bundle companion, or inside a cluster that was never flash-matched at
+all (most cosmics), is **never undone** — its provenance is present, correct,
+and unread. Two further skip gates: `require_in_scope` (`:184`) and
+`nmain==0 ⇒ unusable` with no fallback in mode `real` (`:234-242,312-319`),
+which fires when `switch_scope` strands the group's representative out of
+volume.
+
+**Measured, 48-event nueCC manifest** (`work-nuecc48-cb0805` QL pctrees, which
+carry the `assoc_*` arrays under SBND's `save_assoc=true` production default,
+vs. round-3's validated bare PR arm `work-pr51-off48e`). New script
+`scripts/analysis/pr53/oc53_familyb_census.py`: for every QL cluster spanning
+>1 distinct `assoc_cluster_id` (an isolated-merge happened), match **every
+point** of each pre-merge subgroup — not just its centroid — against the final
+PR `clustering-global` layer within 1.5 cm, majority-vote per doc 51's
+`ids_at()` idiom; a subgroup needs ≥30% of its points to land within tolerance
+or the whole group is marked **ambiguous** and excluded rather than guessed.
+
+This caution mattered in practice: an earlier centroid-only version of this
+script falsely flagged a group (event 10550, QL cluster 12) as residual that
+the PR log proves `unmerge_assoc` actually *did* process — a small absorbed
+fragment's centroid simply landed nearer the large neighboring main cluster
+than its own (sparse) split-off remnant. The per-point/tolerance version does
+not make that mistake.
+
+```
+events scanned:              48
+events with >=1 isolated-merge: 48
+total isolated-merge groups:  459
+  ambiguous (excluded):        379   <- most subgroups' points don't
+                                          confidently survive to final output
+                                          at 1.5cm; see caveat below
+  resolved:                     76
+  RESIDUAL:                      4
+residual rate (of decided groups): 5.0%
+
+materiality filter (smaller subgroup >= 10 points):
+  decided: 9   resolved: 7   RESIDUAL: 2   -> 22.2%
+```
+
+**The two material RESIDUAL cases are confirmed by the PR log itself to be
+exactly the predicted skip-gate mechanism**, not an artifact of the matching
+method: neither QL cluster 14 (evt 234638) nor QL cluster 13 (evt 90055)
+appears **at all** in `ClusteringUnmergeBundle:prassoc`'s own per-cluster log
+lines for that event — `unmerge_assoc` never attempted them, exactly as
+predicted by the `Flags::main_cluster` gate in §15.5's code audit.
+
+```
+$ grep -a ClusteringUnmergeBundle:prassoc work-pr51-off48e/pr_evt234638/wct_pr_evt234638.log
+... cluster 3: ...   cluster 6: ...   cluster 7: ...   cluster 8: ...   cluster 10: ...   cluster 11: ...
+(cluster 14 never appears)
+```
+
+**Caveat, stated plainly:** 379/459 (83%) of raw groups are undecidable by
+this coordinate-matching method — most small absorbed fragments' points do not
+land within 1.5 cm of *any* final-output cluster, most plausibly because
+downstream fitting/Steiner/pruning stages relocate or drop them rather than
+carry them forward verbatim. That is a real limitation of this measurement,
+not evidence those cases are "resolved" — the 5.0%/22.2% rates are lower
+bounds on the true residual rate among decidable cases, not a full-population
+estimate. §13's flat "family B is retired" is corrected to: *retired only
+where the absorbing/absorbed cluster still carries `Flags::main_cluster` when
+`unmerge_assoc` runs; a measurable, log-confirmed minority of cases are not.*
+
+### 15.6 Revised fix map
+
+| mechanism | pass | §11 knob that addresses it | status |
+|---|---|---|---|
+| sub-3cm arithmetic blind spot | `connect_graph_relaxed` (family A per §6, not the 422851/521075 pairs) | F1 | still applicable to whatever pass F0's census eventually attributes a real short-neck bridge to |
+| floor vs cap | `connect_graph_relaxed` | F2 | same caveat as F1 |
+| W-plane authority | `connect_graph_relaxed`/`Separate_overclustering` | F3 | same caveat as F1 |
+| `clustering_isolated` absorb, reader-side skip | `ClusteringIsolated` / `ClusteringUnmergeBundle` | F4 | **re-open** — §15.5 shows real, log-confirmed residual cases; not superseded by §13 after all, though the rate among decided cases (5-22%) is smaller than family A's apparent share |
+| **`ClusteringNeutrino` vertex/extrapolation merge (422851, 521075)** | `clustering_neutrino.cxx` | **none — F1-F3 do not touch this pass, and none was proposed** | **new open item** |
+
+F1–F3 were written against the wrong creator for the two events they were
+meant to explain. They may still be correct fixes for whatever family-A-shaped
+pairs F0's planned census eventually attributes to `connect_graph_relaxed`
+itself, but 422851 and 521075 are not evidence for them and should not be used
+to validate them. The next investigation session's first job is a `judge_vertex`
+/ `ClusteringNeutrino`-focused read of the two flagged pairs (which branch,
+which threshold, is it a false positive on a real 3-prong topology like
+21073's) before any fix is designed for this pass — mirroring pr/51's
+`H1`/`H2` discipline of measuring the creator before writing a fix.
+
 ## Verification
 
-No build, no A/B gate — no C++ or jsonnet was changed in this session.
+No production behavior change any round: no C++ or jsonnet was changed.
 Round 1's numbers come from read-only analysis of existing QL products
 (`work-ncpi0-cb0805`, `work-nuecc48-cb0805`) plus a stand-alone Python replay
 of the toolkit's own path-test arithmetic. Round 2 additionally ran the
 production PR chain once, unmodified (`run_pr_chain_batch.sh ... data 71372`,
 bare = production, freshness-proofed against HEAD `ba5bbe59` per M1 in the
 earlier Bee-link task this session), to check a claim empirically rather than
-by code-reading alone. Re-run the Repro block to reproduce every number in
-this doc, including both rounds, from a clean shell.
+by code-reading alone.
+
+Round 4 used only already-shipped, default-OFF diagnostics (`trace_bee`, doc
+51) and bare (no-TLA-override) PR runs, both read-only with respect to
+production behavior: four fresh `-trace-bee -save-pctree -save-rcid
+-save-assoc` QL reprocessings into `work-oc53r4-trace/` (imaging/opflash
+symlinked from the existing `work-nuecc48-cb0805`/`work-ncpi0-cb0805` outputs,
+M11 — no re-imaging), one fresh bare PR run into `work-oc53r4-pr/` for 521075,
+and two new read-only analysis scripts
+(`scripts/analysis/pr53/oc53_attrib.py`, `oc53_familyb_census.py`). Toolkit
+HEAD `a46a0b22` throughout (unrelated pr/51 round-4 commit; nothing pr/53
+touches was changed by it). Both attribution-tool controls (71372, 21073)
+reproduced the already-established §4/§14 answers before being trusted on the
+unknowns (§15.3); the family-B residual measurement's two positive cases were
+independently cross-checked against the PR log (§15.5).
+
+Re-run the Repro block to reproduce every number in this doc, including all
+four rounds, from a clean shell.
