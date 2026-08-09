@@ -63,9 +63,19 @@ class Loader:
 
     def __init__(self, ql_evt_dir):
         self.dir = ql_evt_dir
-        evt = os.path.basename(ql_evt_dir).replace('ql_evt', '')
+        base = os.path.basename(ql_evt_dir.rstrip('/'))
+        evt = base.replace('ql_evt', '').replace('pr_evt', '')
         self.evt = evt
-        tgz = os.path.join(ql_evt_dir, 'pctree-evt%s.tar.gz' % evt)
+        # QL-stage dirs (ql_evt<N>) hold pctree-evt<N>.tar.gz; PR-stage dirs
+        # (pr_evt<N>, round 7) hold pctree-pr-evt<N>.tar.gz -- same schema
+        # (pointtrees/<evt>/live/{3d,scalar,perblob,ctpc_*,dead_*,steiner_pc,...}),
+        # just a different filename. Try both, QL name first (existing callers).
+        for cand in ('pctree-evt%s.tar.gz' % evt, 'pctree-pr-evt%s.tar.gz' % evt):
+            tgz = os.path.join(ql_evt_dir, cand)
+            if os.path.exists(tgz):
+                break
+        else:
+            raise FileNotFoundError('no pctree-{,pr-}evt%s.tar.gz under %s' % (evt, ql_evt_dir))
         self.tmp = tempfile.mkdtemp(prefix='oc53_')
         with tarfile.open(tgz) as t:
             t.extractall(self.tmp)
@@ -135,6 +145,24 @@ class Loader:
                             out[pi + 3] = 1
                             break
         return out
+
+    def img_closest_dis(self, pt_cm):
+        """3D distance (cm) from pt_cm to the nearest '3d' image point in this
+        cluster's pctree -- the Python analogue of the C++'s
+        Simple3DPointCloud::get_closest_dis(test_p) over the union of all
+        closely-components' point clouds (round 7 S5 candidate). Cached
+        cKDTree built lazily over the SAME '3d' PC blob_scalars()/assoc() use
+        (mm->cm), so 'has 3D image support' here matches what the graph
+        builder's own pt_clouds see -- not img-global (post-clustering,
+        wrong stage) and not a generic radius search."""
+        if not hasattr(self, '_img3d_tree'):
+            g = 'pointclouds/namedpcs/3d/arrays/'
+            P = np.c_[self.A(g + 'x'), self.A(g + 'y'), self.A(g + 'z')] / 10.0  # mm->cm
+            self._img3d_tree = cKDTree(P) if len(P) else None
+        if self._img3d_tree is None:
+            return 1e9
+        d, _ = self._img3d_tree.query(np.array(pt_cm, float))
+        return float(d)
 
     def blob_scalars(self, target_pt_cm):
         """Return the scalar PC row for the blob nearest target_pt_cm, plus

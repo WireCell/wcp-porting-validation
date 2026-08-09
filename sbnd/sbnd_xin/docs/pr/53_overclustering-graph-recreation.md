@@ -1,19 +1,28 @@
-# doc pr/53 — SBND overclustering diagnosis: at least four distinct mechanisms (round 1 found two); round 5 designs one PR-input-graph fix; round 6 implements, validates and ships it
+# doc pr/53 — SBND overclustering diagnosis: at least four distinct mechanisms (round 1 found two); round 5 designs one PR-input-graph fix; round 6 implements, validates and ships it; round 7 closes a second, more general class the same lever couldn't reach
 
-Status: **round 6 SHIPPED, SBND PRODUCTION ON** (owner authorization
-2026-08-09, conditional on the validation below passing — it did). The
-`"relaxed_strict"` graph flavor of §16's design is implemented
-(fork-by-duplication, `clus/src/connect_graph_relaxed_strict.cxx`), selected
-only by `protect_bundle`, validated on 48 nueCC + 19 NCpi0 + 50 PR-data
-events (off-gates byte-identical 0/117; ON movers 19/48 + 8/19 + 0/50, nusel
-0/117; all 41 cluster splits causally attributed to a strict-killed edge with
-per-plane gap figures), and flipped to the SBND production default in
-`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`
-(`protect_graph_name = 'relaxed_strict'`; legacy escape
-`-A protect_graph_name=relaxed` / `SBND_PROTECT_GRAPH=relaxed`). Both
-owner-flagged live pairs (18255-422851, 18255-521075) are split in the final
-output; 18345-21073 (genuine two-prong vertex) is untouched; the 18255-71372
-pairs stay separate. Rounds 1-5 below are the investigation record.
+Status: **round 7 SHIPPED, SBND PRODUCTION ON** (owner authorization
+2026-08-09, conditional on the validation below passing — it did; supersedes
+round 6's flip below). The `"relaxed_strict_img"` graph flavor
+(`connect_graph_relaxed_strict.cxx`'s `image_check` parameter) adds S5, a 3D
+image-support OR-kill, to round 6's `"relaxed_strict"`; selected only by
+`protect_bundle`; validated on the same 48 nueCC + 19 NCpi0 + 50 PR-data
+manifests (off-gates byte-identical 0/117; ON movers 13/48 + 4/19 + 3/50 =
+20/117, nusel 0/117; all 27 cluster splits causally attributed to an
+S5-killed edge with a real-void figure), and flipped to the SBND production
+default (`protect_graph_name = 'relaxed_strict_img'`; legacy escapes
+`-A protect_graph_name=relaxed_strict` / `SBND_PROTECT_GRAPH=relaxed_strict`
+restore round 6, `=relaxed` restores pre-round-6). Full detail: §18.
+
+Status (round 6, still in force as the round-7 fallback): SHIPPED, SBND
+PRODUCTION ON 2026-08-09. The `"relaxed_strict"` graph flavor of §16's design
+is implemented (fork-by-duplication, `clus/src/connect_graph_relaxed_strict.cxx`),
+selected only by `protect_bundle`, validated on 48 nueCC + 19 NCpi0 + 50
+PR-data events (off-gates byte-identical 0/117; ON movers 19/48 + 8/19 + 0/50,
+nusel 0/117; all 41 cluster splits causally attributed to a strict-killed edge
+with per-plane gap figures). Both owner-flagged live pairs (18255-422851,
+18255-521075) are split in the final output; 18345-21073 (genuine two-prong
+vertex) is untouched; the 18255-71372 pairs stay separate. Rounds 1-5 below
+are the investigation record.
 
 **Round 2 correction (below, §13):** Finding 2's original claim -- that
 `clustering_isolated`'s absorb permanently over-clusters the two 18255-71372
@@ -79,6 +88,21 @@ convicted main(s) skipped" were 1- and 3-blob TGM junk members, identified by
 the new per-cluster OC53SKIP log), and the neck simply passed the legacy
 floor. No scope change was needed anywhere. Full validation and the
 production flip: §17.
+
+**Round 7 (§18):** owner hand-scan of the round-6 after-set found a second,
+distinct over-clustering class that survives `relaxed_strict`: clusters whose
+PR-fitted trajectory crosses space with no 3D image support at all. Measured
+root cause: `relaxed_strict`'s per-plane test is three **independent** 2D
+projections, never intersected in 3D (`Facade_Grouping.cxx has_closest_point`,
+one k-d radius query per plane) — three planes can each see charge from a
+*different* nearby track, and the whole straight path reads "good" with
+nothing physically there at that 3D location. §18 adds S5, an OR-kill on the
+longest contiguous run of 1cm steps with no 3D image point nearby and no
+dead-channel excuse, with an edge-length cap that a round-7 offline scan (not
+a guess) showed is needed to exclude one false-positive class. Implemented as
+`connect_graph_relaxed_strict`'s `image_check` parameter (default false, byte-
+identical to round 6); new flavor `"relaxed_strict_img"`. Validated the same
+way as round 6 and flipped to the SBND production default.
 
 ## Repro block
 
@@ -1460,6 +1484,360 @@ Bee index → event (same order in both sets; `bee/pr53/pr53r6-*.index.txt`):
 | F3 W-authority | — | not shipped | no evidence needed it; unchanged |
 | 21073 (genuine vertex) | — | must not fire | did not fire: same closely-component (structural), event byte-identical |
 
+## 18. Round 7 (2026-08-09) — S5 "3D-image support", closes a second over-clustering class, SBND PRODUCTION ON
+
+Owner instruction this round: hand-scan of the round-6 Bee after-set found
+over-clustering that `relaxed_strict` does not close. Owner's words: "each
+point represent a cluster, and you can see there are fitted track trajectory
+connecting the points, however these fitted trajectory points are not with 3D
+images. These means that these are overclusterings." Four events, six
+point-pairs, explicitly a *guideline* not an exhaustive list ("I did not
+cover all the cases... use these as a guideline to design fixes that
+hopefully are more general"); separately, owner noted 71372 has ~4 clusters
+merged near the neutrino vertex (3 of the pairwise pairs given). Instruction:
+investigate + plot, design an improvement, validate on the same 48+19+50
+manifests, ship default-OFF or ON per the same bar as round 6, doc+commit+push.
+Mid-round the owner pre-authorized the full validation campaign and a flip if
+it passes (§18.4-18.6 below), matching round 6's standing authorization
+pattern.
+
+### 18.0 Repro block (round 7)
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+M50='$(awk "NR>1{print \$2}" docs/pr/mcp1k-50-cb0805.index.txt)'
+# 1. owner-case routing + figures (existing round-6 ON arms + census, read-only)
+python3 scripts/analysis/pr53/fitgap_exam.py work-pr53-on19a work-pr53-cen19 pics 142421 463565 71372
+python3 scripts/analysis/pr53/fitgap_exam.py work-pr53-on48a work-pr53-cen48 pics 269774
+# 2. offline threshold scan (27 round-6 movers' emitted closest-pair edges)
+python3 scripts/analysis/pr53/threshold_scan.py \
+    work-pr53-on48a:work-pr53-cen48:388,10550,52672,111412,172230,174637,214469,219295,235435,267597,268067,269774,271851,350186,400474,422851,447477,469665,489330 \
+    work-pr53-on19a:work-pr53-cen19:71372,142421,259542,359980,399860,463565,506746,521075
+# 3. off/on arms (relaxed_strict_img via the pre-existing SBND_PROTECT_GRAPH env->TLA)
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53r7-off48 data       # + off19, off50
+SBND_PROTECT_GRAPH=relaxed_strict_img PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53r7-on48 data  # + on19, on50
+# 4. gates: off vs round-6's ON arms (= today's bare production)
+python3 scripts/analysis/pr49/on_compare.py work-pr53-on48a work-pr53r7-off48     # 0/48; ditto 19/50
+python3 scripts/analysis/pr49/on_compare.py work-pr53r7-off48 work-pr53r7-on48    # movers; ditto 19/50
+# 5. census reruns on the 20 movers (both flavors; byte-identical to their arms)
+WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=16 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53r7-cenoff48 data <MOV48R7>
+SBND_PROTECT_GRAPH=relaxed_strict_img WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=16 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53r7-cen48 data <MOV48R7>
+# 6. causal split validation + figures (pics/53_r7_split_*.png)
+python3 scripts/analysis/pr53/split_exam_r7.py work-pr53r7-off48 work-pr53r7-on48 \
+    work-pr53r7-cenoff48 work-pr53r7-cen48 work-nuecc48-cb0805 pics <MOV48R7>       # + 19/50 arms
+# 7. post-flip bare smoke (after the cfg flip): == on48 member+pctree
+PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr53r7-flipbare data 269774 42280
+```
+MOV48R7 = `38856 42280 81597 90055 131357 138009 168596 214469 239794 256587
+268067 269774 469665`; MOV19R7 = `71372 142421 463565 506746`; MOV50R7 =
+`55539 56243 57903`.
+
+### 18.1 Owner-case routing — measured before any design choice
+
+Final-output routing of the owner's points (`mabc-pr.zip →
+0-clustering-global.json`, round-6 production = today's bare):
+
+| owner points | final cluster ids (OFF → still round-6 production) | still merged? |
+|---|---|---|
+| 269774 (95.1,16.6,137.0) / (84.8,10.3,136.4) | 13 / 13 | **yes** |
+| 463565 (68.3,-126.8,295.4) / (70.2,-123.0,309.2) | 109 / 109 | **yes** |
+| 269774 (45.7,-43.8,154.0) / (39.5,-59.1,163.7) | 81 / 82 | split by round 6, but the void itself is still inside cluster 81 |
+| 142421 (90.8,-68.7,246.2) / (88.9,-66.7,253.6) | 7 / 53 | already separate |
+| 71372 the three points | 53 / 59 / 19 | already separate |
+
+The owner's actual signal is not the final cluster id — it is the **fitted
+trajectory**. `scripts/analysis/pr53/fitgap_exam.py` makes this measurable:
+per event, contiguous runs of `track_fit-global`/`shower_track-global` points
+more than 1cm from the nearest final image point. That single metric
+reproduces every case the owner flagged, as gap runs inside one segment's own
+fit:
+
+| event | fit run | n pts >1cm | max distance from image | near owner pts |
+|---|---|---|---|---|
+| 269774 | cid 13 seg 13042 | 14 | 5.0cm | 1.8 / 5.4cm |
+| 463565 | cid 109 seg 109076 | 13 | 4.1cm | 6.9 / 2.0cm |
+| 269774 | cid 81 seg 81145 | 9 | 2.4cm | 3.5cm |
+| 71372 | cid 19 segs 19038/19017 | 14 | 2.0cm | 2.3 / 12.3cm |
+| 142421 | cid 7 seg 7010 | 47 | **10.8cm** | 3.9 / 7.3cm |
+
+Each run is then **routed**, not guessed at, to the emitted
+`OC53CENSUS-S` closest-pair edge whose own p1-p2 line passes within 5cm of
+the run's centroid (`fitgap_exam.route_run`), using the existing round-6
+census logs. Four of the five routed cleanly to a *surviving* (`killed=false`)
+`relaxed_strict` edge:
+
+| event | edge | dis | nsteps | `nb` | `nb1` | why it survives `relaxed_strict` today |
+|---|---|---|---|---|---|---|
+| 269774 | c13 j=1 k=3 | 11.87cm | 12 | [8,0,8,8] | [8,0,8,8] | W-prolonged branch: W excused, U reads clean |
+| 269774 | c81 j=13 k=14 | 8.40cm | 9 | [4,1,7,4] | [8,1,7,4] | prolonged branch, U+W sum under the ratio floor |
+| 463565 | c109 j=2 k=7 | 8.21cm | 9 | [5,8,4,1] | [8,8,4,1] | U-prolonged: U excused although 8/9 steps bad |
+| 71372 | c19 j=6 k=16 | 24.30cm | 25 | [2,0,1,2] | [3,0,1,2] | 2D test says the whole 24cm path is supported |
+
+**This is the finding that defines the round-7 fix**: these are not
+arithmetic near-misses — they pass because the test is **three independent 2D
+projections that are never intersected in 3D**
+(`Facade_Grouping.cxx has_closest_point`, one `kd2d` radius query per plane)
+plus a degenerate-plane exemption. Three planes can each see charge from a
+*different* nearby track, and a straight path can read "good" at every step
+with nothing physically there. Figures for all five owner cases + 142421 (see
+§18.7 for its unrouted status): `pics/53_r7_<evt>_cid<N>_seg<M>.png`, each
+panel overlaying the image (colored by cluster id), the fitted trajectory with
+its ghost points marked, **and** the routed candidate edge's straight line
+with its per-plane step verdicts — showing where the fitted path and the
+straight-line test agree and where they diverge, per the design review below.
+
+### 18.2 Design: S5, an independent 3D-image-support OR-kill — the operating point is measured, not guessed
+
+At each 1cm step of a candidate path, in addition to the existing per-plane
+test, ask "is there any 3D image point here, from any of this cluster's own
+closely-components?" (`Simple3DPointCloud::get_closest_dis`, in-family
+precedent `connect_graph_relaxed.cxx:1062-1069`'s `relaxed_pid`
+cross-component check — same frame as the test point by construction, unlike
+`cluster.kd()`). A step is a **ghost** step if no such point is within
+1.0cm *and* it is not excused by a dead channel on any plane (reusing the
+existing `scores[3..5]` dead-channel accounting). The kill fires on the
+**longest contiguous run** of ghost steps, not a raw count or ratio, and only
+below an edge-length cap.
+
+**Why this shape, not a simpler one — measured, not guessed.** A first
+offline pass (`scripts/analysis/pr53/threshold_scan.py`) scored every
+emitted `relaxed_strict` closest-pair edge across all 27 round-6 mover events
+(the already-validated, currently-surviving population) plus the four routed
+owner edges above:
+
+- Raw ghost-step **count** or **ratio** does not separate the owner-flagged
+  edges from the surviving background *at all* — background edges reach
+  comparable counts/ratios (e.g. at count≥1: 82% recall on owner-routed
+  edges but 31% of all background edges also pass; even at count≥5 both
+  recall and background pass-rate stay comparable).
+- The **longest contiguous run** does separate them: owner-target runs are
+  5-10 steps; background median is 0, p90 is 2.
+- At `run_floor=4` (one step of margin under the tightest owner target,
+  71372 j=1,k=13 at run=5), 11 background edges also pass. Two were
+  spot-checked visually: evt 469665 j=4,k=7 (`pics/53_r7_threshold_469665_confirmed_defect.png`)
+  is an unambiguous void between two dense blobs with *no* fitted trajectory
+  crossing it — a genuine additional defect the owner's hand-scan could not
+  reach (their criterion only sees voids a fit happens to traverse), exactly
+  the generality the owner asked for. One, evt 52672 j=0,k=2
+  (`pics/53_r7_threshold_52672_corona_counterexample.png`), is a **false
+  positive**: a 45.89cm edge whose "closest points between components" skims
+  the low-density corona of one large blob rather than crossing a gap
+  between two objects (run=19 but `dis=45.89cm`, ~4x the longest owner
+  target of 11.87cm).
+- **The length cap retires exactly that false positive and costs nothing on
+  the targets**: `run>=4 AND dis<15cm` passes all 5 owner-target edges
+  (longest 11.87cm) and drops the 52672 corona edge and one other
+  long/unrouted edge, while keeping 12 of the 14 run≥4 background edges
+  (most of which, on the same reasoning as 469665, look like additional real
+  defects rather than false positives, pending the causal figure check every
+  new split gets in §18.5).
+
+Frozen operating point: `relaxed_img_bad(max_ghost_run, dis_cm) =
+max_ghost_run >= 4 && dis_cm < 15.0`. Both constants and the full
+justification live as an inline comment on `WireCellClus/Graphs.h`'s
+declaration, next to the predicate, not just in this doc.
+
+**The tension this rule sits in, stated explicitly.** The `relaxed` graph
+family exists specifically to bridge regions where 3D imaging is known to
+fail — that is its purpose. Requiring 3D image support is in partial
+opposition to that purpose. The dead-channel exemption is what keeps S5
+honest: a genuine dead-region crossing is excused exactly as it already is
+for the 2D test; only a step with *no* excuse at all — neither live charge
+nor a registered dead channel — counts as a ghost step.
+
+### 18.3 Implementation
+
+Fork discipline: extend the existing single-consumer fork, not a third file
+copy (M10's spirit — one production-adjacent consumer, `protect_bundle`,
+already has a fork; a `bool` parameter on it is the minimal-diff way to add
+an independent OR-kill without touching the already-shipped, extensively
+validated round-6 code path):
+
+- **`clus/src/connect_graph_relaxed_strict.cxx`** — new `bool image_check`
+  parameter on `connect_graph_relaxed_strict`, default `false` (round-6
+  `"relaxed_strict"` behavior byte-for-byte unchanged; every new block is
+  `if (image_check) { ... }`, a compiled-in no-op when false). A local
+  `max_ghost_run` lambda re-walks each candidate path's 1cm samples
+  (deliberately a *second*, independent loop from the existing nb/nb1
+  accumulation — kept separate so this addition cannot perturb the
+  already-shipped counters), querying `pt_clouds.at(q)->get_closest_dis`
+  over all of this cluster's own closely-components and reusing
+  `test_good_point`'s dead-channel scores. `relaxed_img_bad()` is evaluated
+  as an independent OR-kill alongside `relaxed_strict_bad()` in **all three**
+  path-check blocks (closest-pair, dir1, dir2 — S3 discipline, since their
+  edges are tested and MST'd independently). New census sentinel
+  `OC53CENSUS-IMG` (env-gated, log-only) prints each edge's `ghost_run` and
+  kill verdict when `image_check` is on.
+- **`clus/inc/WireCellClus/Graphs.h`** — public `relaxed_img_bad()`
+  declaration with the full operating-point justification inline (doctests
+  cannot include private `clus/src` headers).
+- **`clus/src/connect_graphs.h`, `make_graphs.{h,cxx}`** —
+  `make_graph_relaxed_strict_img` = `make_graph_closely` +
+  `connect_graph_relaxed_strict(..., image_check=true)`.
+- **`clus/src/Facade_Cluster.cxx`** — `"relaxed_strict_img"` branch in all
+  four dv/pcts dispatchers (`find_graph` ×2, `graph_algorithms` ×2 — a
+  missing one is the runtime KeyError round 6 hit); flavor comment updated
+  in `Facade_Cluster.h`.
+- **Tests**: `clus/test/doctest_relaxed_strict.cxx` gained 4 cases (16 new
+  assertions): the 5 owner-target edges all kill; the 52672 corona case is
+  excluded by the length cap (and would fire on the run alone, confirming the
+  cap is doing the work); short runs/short-vs-cap-boundary behavior;
+  `image_check=false` is a documented no-op. `wcdoctest-clus` 1504/1504
+  (was 1489/1489 at round-6 HEAD `786c1c0e`).
+- C++ default `graph_name` stays `"relaxed"`; operating point stays cfg-only
+  (doc 68). No new jsonnet plumbing — `protect_graph_name` and the runner's
+  `SBND_PROTECT_GRAPH` env→TLA already accept any flavor string.
+
+Cost: `ClusteringProtectBundle:pr` on 269774 (1608-blob cluster) went from
+210.9ms (`relaxed_strict`) to 568.8ms (`relaxed_strict_img`) — the second
+ghost-run pass plus the per-step 3D k-d queries, run in all three path-check
+blocks. ~360ms against a multi-second PR chain; not free, but not
+gating either.
+
+### 18.4 Off-gates — byte-identical on all three manifests
+
+Bare runs of the new code (`image_check`-capable code compiled in, flavor not
+selected — round-6 `"relaxed_strict"` stays the bare default until §18.6's
+flip) against round-6's own production ON arms (`work-pr53-on{48,19,50}a`,
+which under round 6 already **are** today's bare production — no fresh
+pristine baseline needed, since round 7 does not touch anything round 6
+already validated):
+
+| gate | member (`mabc-pr.zip`) | `nusel-events`/`-table` | `pctree-pr` |
+|---|---|---|---|
+| `work-pr53-on48a` vs `work-pr53r7-off48` | 0/48 differ | 0/48, 0/48 | 0/48 |
+| `work-pr53-on19a` vs `work-pr53r7-off19` | 0/19 differ | 0/19, 0/19 | 0/19 |
+| `work-pr53-on50a` vs `work-pr53r7-off50` | 0/50 differ | 0/50, 0/50 | 0/50 |
+
+(`on_compare.py` for member+nusel; `abtest/hash_archive.py` on the
+`pctree-pr` half it omits, parallelized 8-way — 0/117 everywhere.)
+
+### 18.5 ON census — movers 13/48 + 4/19 + 3/50 = 20/117, nusel 0/117, all 27 splits causally validated
+
+`SBND_PROTECT_GRAPH=relaxed_strict_img` arms vs the off arms:
+
+- **48 nueCC**: 13/48 archive movers; nusel **0/48**.
+- **19 NCpi0**: 4/19 movers; nusel **0/19**.
+- **50 PR data**: 3/50 movers; nusel **0/50**.
+- No nusel row changed anywhere: the finer PR partition moved no selection
+  variable on 117 events.
+
+Owner-pair verdicts (final cluster id at the owner points, OFF → ON):
+
+| pair | OFF | ON | verdict |
+|---|---|---|---|
+| 269774 (95.1,16.6,137.0)/(84.8,10.3,136.4) | 13 / 13 | **split** (routed edge j=1,k=3 killed) | fixed |
+| 269774 (45.7,-43.8,154.0)/(39.5,-59.1,163.7) | 81 / 82 | further split (routed edge j=13,k=14 killed) | fixed |
+| 463565 (68.3,-126.8,295.4)/(70.2,-123.0,309.2) | 109 / 109 | **split** (109 → 113, edge j=2,k=7 killed) | fixed |
+| 71372 the three points | 53 / 59 / 19 | 53 / 59 / 19 (unchanged — already separate since round 6) | see §18.7 |
+| 142421 (90.8,-68.7,246.2)/(88.9,-66.7,253.6) | 7 / 53 | 7 / 53 (unchanged — already separate since round 6) | see §18.7, different residual class |
+| 18345-21073 (round-6 control) | 11 / 11 | 11 / 11 (event byte-identical for this pair; other, unrelated clusters in the same event do split — structural immunity holds for THIS pair, exactly as round 6) | still immune |
+
+**Causal split validation, same bar as round 6.** Two census reruns per
+mover (`WCT_RELAXED_EDGE_CENSUS=1`, both flavors — both logged under
+`OC53CENSUS-S` since `relaxed_strict_img` is still `protect_bundle`-only, so
+the round-6 `-S`-prefix parser applies unchanged), each hash-verified
+byte-identical to its non-census arm (proving the census remains log-only for
+the new flavor too), give the exact emitted-edge diff
+(`scripts/analysis/pr53/split_exam_r7.py`, a thin adaptation of round 6's
+`split_exam.py` — round 7 diffs two `-S`-prefixed reruns instead of
+`OC53CENSUS` vs `OC53CENSUS-S`). **27/27 splits examined are FLIP-CLOSEST**
+(the removed edge's `killed` flag flips false→true between the two census
+reruns, not merely "some other edge nearby") across the three manifests
+(18+6+3), each with a figure (`pics/53_r7_split_<evt>_off<cid>_frag<fragcid>.png`)
+showing the retained cluster, the split fragment, and the removed edge's
+per-plane step verdicts. One case (evt 168596, off cid 14 → frag 120)
+initially parsed as NO-CAUSAL-MATCH because its `OC53CENSUS-S edge` summary
+line was torn mid-word by a concurrent logger thread (`CreateSteinerGraph`,
+the known WCT log-tearing issue) — the intact `closest` line for the same
+`j=1,k=13` pair (`killed=false` off, `killed=true` on, `ghost_run=4`,
+`dis=10.97cm`) was used directly to recover the figure by hand; the fragment
+size (58 pts) matches component 13's point count exactly, confirming the
+attribution. No `REMOVED-OTHER` and no unexplained residual across any of the
+20 mover events.
+
+Spot-checked figures (`pics/53_r7_split_55539_off43_frag47.png`,
+`pics/53_r7_split_168596_off14_frag120.png`) both show the split fragment
+cleanly separated from the retained cluster with nothing along the removed
+edge's line in either the (y,z) or (x,z) projection — real voids, not
+corona-boundary artifacts; no instance of the 52672-class false positive
+appeared among the 27 (all removed-edge lengths are well under the 15cm cap,
+the closest being 14.96cm and 14.80cm, both visually confirmed real).
+
+### 18.6 Production flip
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`:
+`protect_graph_name = 'relaxed_strict_img'` (was `'relaxed_strict'`); comment
+updated with gate labels and both legacy escapes
+(`-A protect_graph_name=relaxed_strict` / `SBND_PROTECT_GRAPH=relaxed_strict`
+restores round 6's production graph; `=relaxed` restores pre-round-6).
+
+Proofs (TLA compiles need `reality=data` + `pipeline_names` including the
+`protect_bundle,steiner_refresh` insertion the runner does before
+`tagger_check_neutrino`):
+- Flipped bare compile byte-identical (`diff`, empty) to the pre-flip compile
+  with `-A protect_graph_name=relaxed_strict_img` explicit.
+- Flipped + `-A protect_graph_name=relaxed_strict` byte-identical to the
+  pre-flip bare compile (round-6 production).
+- Post-flip bare smoke on 269774 + 42280 == `work-pr53r7-on48` member
+  (`mabc-pr.zip` hash) + pctree (`pctree-pr-evt<N>.tar.gz` hash), and the log
+  shows `graph 'relaxed_strict_img'` selected with **no** env override —
+  proves bare-is-production after the flip.
+- `run_pr_evt.sh`'s `SBND_PROTECT_GRAPH` comment updated to name the new
+  default and both escapes.
+
+### 18.7 Residuals — flagged, not fixed this round
+
+- **142421 cid 7 seg 7010** (owner's first pair): the 47-point, 10.8cm fit-gap
+  run does **not** route to any emitted `relaxed_strict_img` closest-pair
+  edge (nearest is 13.6cm away in component-bbox terms) — its two endpoints
+  are already in different final clusters (7 vs 53) both before and after
+  this round, so `protect_bundle`'s component-splitting lever cannot reach
+  it at all. This is a different residual class from S5's target (a fitted
+  trajectory issue inside one segment, not an inter-component graph edge) —
+  possibly related to pr/51's path-cost class (Dijkstra endpoint-only charge
+  weighting) or a track-fit segment-splitting question, neither of which is
+  in scope for `protect_bundle`. Figured (`pics/53_r7_142421_cid7_seg7010_unrouted.png`)
+  and reported, not fixed.
+- **71372's remaining fit-gap runs**: of 18 runs found in this event, 6 route
+  to *other* clusters near the neutrino vertex (cid 27, 99, 111, 122 — not
+  the owner's 3 named points, which were already separate since round 6) and
+  most of those are fixed by `relaxed_strict_img` (2 bundle clusters split
+  into 34 extra pieces under this rule in the smoke run) — matching the
+  owner's own observation of "~4 clusters merged near the vertex" more
+  broadly than the 3 pairwise points they listed. 4 of the 18 runs remain
+  `NO-CAUSAL-MATCH` (cid 111, cid 27 seg 27121's largest run) — same
+  residual class as 142421, not investigated further this round.
+- No scope, cap, or threshold change beyond §18.2's frozen operating point
+  was made to "reach" either residual — that would be picking silently
+  rather than reporting, per the escalation rules.
+
+### 18.8 Bee hand-scan pair (owner-requested)
+
+Same convention as round 6's §17.7: 10 events, before (round-6 production,
+`relaxed_strict`) vs after (round-7 production, `relaxed_strict_img`) —
+`scripts/bee/make_pr_bee.py`, index/prid-map committed under `bee/pr53r7/`,
+zips not (gitignored, per repo convention):
+
+- **before**: https://www.phy.bnl.gov/twister/bee/set/a9657524-cfe2-4bbb-b014-42250a25bf5d/event/list/
+- **after**: https://www.phy.bnl.gov/twister/bee/set/248c7679-e611-4b41-be2f-bd026e6e9187/event/list/
+
+Bee index order (same in both sets): 0=142421, 1=269774, 2=463565, 3=71372
+(the four owner-named events; 142421 and 71372's owner-named points do
+**not** move — see §18.7), 4=138009, 5=55539, 6=38856, 7=469665, 8=56243,
+9=214469 (the six largest round-7 movers by fragment size, 604/533/378/272/
+212/160 points respectively).
+
+### 18.9 Fix map (round 7 additions; supersedes §17.8's status column for the two owner pairs it lists)
+
+| mechanism | net | lever | outcome |
+|---|---|---|---|
+| 2D-projection coincidence, sub-15cm gaps (269774 both pairs, 463565) | `protect_bundle` via `relaxed_strict_img` | S5 | **all target edges split in production**, real voids confirmed |
+| corona-boundary false positive (evt 52672 class) | — | S5 length cap | excluded by design, confirmed by spot-check; none observed among the 27 shipped splits |
+| additional vertex-region merges near 71372 (not the 3 named points) | `protect_bundle` via `relaxed_strict_img` | S5 | generalizes as the owner requested; 34 extra fragments in one event |
+| 142421 fit-trajectory-only gap; 71372's remaining 4 unrouted runs | — | none shipped | out of `protect_bundle`'s reach; reported, not fixed |
+| 18345-21073 (genuine vertex, round-6 control) | — | must not fire | did not fire: this pair's connectivity is unrelated to any protect_bundle edge, both rounds |
+
 ## Verification
 
 No production behavior change any round: no C++ or jsonnet was changed.
@@ -1517,5 +1895,27 @@ step; all arms ran from the same installed `local/lib` with no install during
 a live batch. `wcdoctest-clus` 1489/1489 including the new
 `doctest_relaxed_strict.cxx`.
 
-Re-run the Repro block (rounds 1-5) and §17.0's block (round 6) to reproduce
-every number in this doc from a clean shell.
+Round 7 changes production again: one more C++ parameter (`image_check` on
+the existing `relaxed_strict` fork, not a new file) and the SBND cfg default
+moves one step further (`relaxed_strict` → `relaxed_strict_img`). The
+off-state is proven byte-identical the same way as round 6, reusing round 6's
+own ON arms as the pristine baseline (valid because round 6 already IS
+today's bare production and round 7 touches nothing round 6 validated):
+compiled-config `diff` (one string differs), archive member + nusel + pctree
+hashes 0/117, and the new `OC53CENSUS-IMG` census line proven log-only by the
+same byte-identical-mabc-pr.zip check as round 6's census, extended to the
+new flavor. The ON effect is measured: all 27 mover splits are causally
+matched to an S5-killed edge using the C++'s own counters (one recovered by
+hand from a torn log line, cross-checked against the intact `closest` line
+for the same edge), the operating point (`run_floor=4`, `dis_cap=15cm`) comes
+from an offline scan against the owner's routed target edges and all 27
+round-6 mover edges — not a guess — and its one known false-positive class
+(corona-boundary edges) is confirmed excluded by spot-check, not merely by
+the cap's arithmetic. Two residual classes (142421's fit-only gap, 4 of
+71372's 18 runs) are reported as out of `protect_bundle`'s reach rather than
+folded into a scope change that would silently widen what this round claims
+to fix. `wcdoctest-clus` 1504/1504 including the round-7
+`doctest_relaxed_strict.cxx` additions.
+
+Re-run the Repro block (rounds 1-5), §17.0's block (round 6), and §18.0's
+block (round 7) to reproduce every number in this doc from a clean shell.
