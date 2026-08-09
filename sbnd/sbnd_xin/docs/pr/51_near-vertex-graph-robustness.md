@@ -1,8 +1,13 @@
-# doc pr/51 — near-vertex PR graph robustness: duplicated corridors, charge-less bridges, micro-stubs (131357 / 268067 / 360535)
+# doc pr/51 — near-vertex PR graph robustness: duplicated corridors, charge-less bridges, micro-stubs (131357 / 268067 / 360535 + round 2: 142421 / 285567 / 506746)
 
-Investigation only — **no code is changed in this round**.  The deliverable
-is the per-event root-cause analysis and the proposed fix design; the
-implementation is a future session (owner instruction 2026-08-08).
+Round 1 (2026-08-08, wcp `3c435d4`): investigation only — per-event
+root-cause analysis and the proposed fix design (§Findings through §Proposed
+fix below, unchanged).  **Round 2 (2026-08-09, this update): three new
+owner-flagged events analyzed, the fix implemented** — two default-OFF
+toolkit knobs, `main_vertex_graph_audit` (the four-op graph audit) and
+`dl_vtx_swap_guard` (the 506746 cross-cluster DL guard) — with off-gates and
+on-censuses on the 48 nueCC + 19 NCpi0 + 50 data manifests.  See §Round 2
+onward.
 
 ## Repro
 
@@ -180,7 +185,7 @@ Why existing passes cannot catch them:
   main-vertex determination settles and do not look at charge sharing or
   corridor overlap at all.
 
-## Proposed fix (future session): `main_vertex_graph_audit`
+## Proposed fix (round 1 design; IMPLEMENTED in round 2 with the measured deltas listed there): `main_vertex_graph_audit`
 
 One new default-OFF pass in the same empty pipeline window the snap uses
 (after `determine_overall_main_vertex[_DL]` — after the snap, before the
@@ -257,7 +262,7 @@ recursion.
   `fit_blob_coverage_defer`'s benefit without its 57441 cost.  To be
   measured in the fix round's census.
 
-## Verification (this round)
+## Verification (round 1)
 
 - No toolkit or config change was made; production (`vertex_kink_snap`
   ON, toolkit `ba5bbe59`) is untouched.
@@ -265,3 +270,370 @@ recursion.
   (`scripts/analysis/pr51/`) against the existing read-only arms
   `work-pr49-off48d` and `work-pr50-snap48a`; stage attribution reads the
   arms' `stdout.log` tables — no reruns were needed.
+
+---
+
+# Round 2 (2026-08-09) — three new events + implementation
+
+## Repro (round 2)
+
+```
+# new-event analysis: latest-PR outputs, owner batch work-bee-0809
+# (ql_root work-ncpi0-cb0805, reality=data, 4 events, rc=0 all)
+cd wcp-porting-img/sbnd/sbnd_xin
+for e in 142421 285567 506746; do
+  python3 scripts/analysis/pr51/vtx_struct.py  work-bee-0809 $e 15
+  python3 scripts/analysis/pr51/seg_overlap.py work-bee-0809 $e 15 0.6
+  python3 scripts/analysis/pr51/seg_overlap.py work-bee-0809 $e 15 1.4
+  python3 scripts/analysis/pr51/fit_ghost.py   work-bee-0809 $e 15
+  python3 scripts/analysis/pr51/ghost_runs.py  work-bee-0809 $e 0.8 3
+done
+# 506746 DL decision: single-event TRACE re-run (work-pr51-trace506746)
+SBND_WCT_LOGLEVEL=trace PR_JOBS=1 ./run_pr_chain_batch.sh \
+    work-ncpi0-cb0805 work-pr51-trace506746 data 506746
+grep -n "rerank\|swap\|switching" work-pr51-trace506746/pr_evt506746/wct_pr_evt506746.log
+
+# validation arms (final `c` round, toolkit at this round's commit):
+PR_JOBS=6 ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr51-base19n data   # pre-change baseline
+PR_JOBS=6 ./run_pr_chain_batch.sh <ql_root> work-pr51-off{48,19,50}c data [...]
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true PR_JOBS=6 ./run_pr_chain_batch.sh <ql_root> work-pr51-on{48,19,50}c data [...]
+SBND_DL_VTX_SWAP_GUARD=true      PR_JOBS=6 ./run_pr_chain_batch.sh <ql_root> work-pr51-guard{48,19,50}c data [...]
+python3 scripts/analysis/pr49/on_compare.py <base> <new>       # movers + nusel
+# knob-on threshold-calibration probes (op1/op2 eval lines are TRACE):
+#   work-pr51-trace268067{,b,c}, work-pr51-trace360535
+# NOTE grep -a for sentinels -- WCT log tearing puts binary bytes in logs.
+```
+
+## New-event findings (owner screenshots `docs/pics/Screenshot 2026-08-09 at 9.4*.png`)
+
+The owner flagged three more events "with some kind of issues near the
+neutrino vertex" on the latest PR code.  All three are in the 19-event
+NCpi0 set.  Quantities below: q = Bee display charge (ratios only),
+single-MIP band ~1600–3300 as in round 1.
+
+### 18255-142421 — improve_vertex micro-stubs: classes (c) + (b)
+
+Main PR cluster 7, main vertex (118.30, −69.37, 210.25) cm, three
+near-degenerate q=0 candidates within 1.53 cm.  Real 3-prong vertex
+(7011/7021/7024, all MIP-band, 63–212 cm) inflated to 5–6 prongs by:
+
+- **7081** (1.55 cm, 3 fit pts, med q 6387 ≈ 2.5×MIP) — the owner's
+  "displaced red point" 0.8–2.0 cm below/behind the apex; **created by
+  improve_vertex** (absent in the "After first round" table, present in
+  "After improve vertex"; final PID calls it a 938 MeV-mass track).
+- **7082** (1.64 cm, 4 pts) — back-pointing stub at 166.5° to the long
+  track 7024; also improve_vertex-created.
+- **7023** (1.17 cm, 3 pts, med q 0, 2/3 points q≤0) — pre-existing
+  charge-less micro-bridge, *shortened* 1.90→1.17 cm by improve_vertex.
+
+No duplicated corridors (no long-pair overlap ≥25% at 0.6 or 1.4 cm), no
+ghosts (fit-vs-image max ≤0.78 cm on every segment).
+
+### 18261-285567 — the full pathology zoo: classes (b) + (a)-variant + (c)
+
+Main PR cluster 8, the densest vertex of the set (5 PR vertices within
+2.8 cm, 15 within 15 cm).
+
+- **(b)** the cleanest charge-less bridge measured so far: **8031**
+  (7.5 cm fit, 13 pts, **11/13 points q≤0**, med 0, max 872 ≈ 0.3 MIP)
+  rides the full-MIP track **8015** (med 3192) at **77% @0.6 cm / 92%
+  @1.4 cm, 0.2° opening** — a zero-charge connectivity path laid exactly
+  on a charged track.
+- **(a)-variant** — duplicated corridors *without* charge splitting:
+  **8010/8032/8033** mutually 100% overlapped near-parallel shorts
+  (7–11°), each carrying **full MIP or above** (5616/2302/2126) — the
+  corridor's charge is double/triple-counted rather than split.  Round 1's
+  half-half split (360535) is therefore *evidence* of duplication, not its
+  definition; the op1 trigger stays overlap-based.
+- **(c)** improve_vertex stubs 81/82/83 (1.78/1.14/0.87 cm; 8082 also
+  charge-less at 2/3 points q≤0).
+
+Owner's "ghost corridors" reading is *refuted* (image support is fine —
+one 3-pt/1.2 cm run 8.8 cm out is all ghost_runs finds); duplication +
+bridge confirmed.  True prong count is 2–3.
+
+### 18255-506746 — NEW class (e): cross-cluster main-vertex mis-selection
+
+**Not a graph-shape failure.**  The first-round main cluster **13** is the
+flash-matched in-beam candidate (nusel main_id 13, 7471 pts, 163 cm,
+contained); the final main vertex sits on PR cluster **21**, **28.26 cm**
+from the nearest cluster-13 fit point (zero cluster-13 points within
+5 cm).  The owner's "fork" reading of the display is refuted: at the
+chosen (wrong) vertex, 21051↔21056 are **168° straight-through** — one
+continuous track cut in two, the classic vertex-on-a-through-track
+signature — with no overlap pairs and all arms ≥MIP.
+
+The TRACE re-run pins the mechanism to one decision
+(`work-pr51-trace506746/pr_evt506746/wct_pr_evt506746.log`):
+
+```
+determine_overall_main_vertex_DL: rerank mode, K=5
+DL rerank cand [voxel 0] cluster=21 pos=(54.2,-12.4,43.2)cm L=150.0cm snap=4.05cm
+  | dl=+575.7309 snap=-0.811 fwd_z=-0.000 clen=+2.000 isol=+0.000 main=+0.000 fv=+0.500
+  | TOTAL=+577.420
+determine_overall_main_vertex_DL: rerank selected cluster=21 snap_dis=4.05cm composite_score=577.4202
+determine_overall_main_vertex_DL: switching to DL vertex (dis=4.05 cm)
+```
+
+A single confident uBooNE-net voxel (raw score 0.576 → `s_dl = +575.7` at
+`dl_vtx_score_scale = 1000`) swamps every ±2 structural term — the 4.05 cm
+snap penalty (−0.81), the missing main-cluster bonus (+0 vs +2), the FV
+half-point — and the composite 577 ≥ 4.0 acceptance is a formality.  The
+main cluster is swapped 13→21 (`swap_main_cluster`,
+NeutrinoPatternBase.cxx:2946).  The correct candidate survives: 19 PR
+vertices remain on cluster 13 in the final graph.  This is the pr/52
+doc's "DL-wrong-accepted" failure class caught in the wild, and no graph
+audit can fix it — it needs its own guard (below).
+
+Cross-cutting: the pr/50 snap fired on none of the three events; the
+nusel tsv carries no truth-vertex columns (candidate degeneracy is the
+only distance we can quote); and for 506746 the nusel `main_id` (13) is
+the *first-round* main cluster while the final vertex sits on 21 — an
+ID-space trap for anyone joining those tables.
+
+### Latent bug flagged (NOT fixed here)
+
+Traditional `determine_overall_main_vertex` takes `Facade::Cluster*
+main_cluster` **by value** yet internally reassigns it via
+`swap_main_cluster` / `check_switch_main_cluster{,_2}`
+(NeutrinoVertexFinder.cxx:3798/:3841/:4367/:4377) — on the non-DL path a
+cluster-switch decision is computed and silently discarded, and
+`map_cluster_main_vertices[main_cluster]` stays keyed on the old cluster.
+The DL sibling takes `Cluster*&` and does propagate.  The asymmetry looks
+unintentional; surfacing per house rules (unrelated bug: mention, don't
+fix in this change).
+
+## Implementation (round 2)
+
+Two default-OFF knobs, both C++-default OFF ⇒ byte-identical, both
+threaded common→sbnd→TLA with key suppression and runner envs
+(`SBND_MAIN_VERTEX_GRAPH_AUDIT`, `SBND_DL_VTX_SWAP_GUARD`).
+
+### `main_vertex_graph_audit` (+ mvga_* numerics)
+
+The §Proposed-fix pass, with three design deltas measured off the new
+events:
+
+1. **Placement**: after the final `improve_vertex`, not before it
+   (TaggerCheckNeutrino.cxx `visit()`, before `clustering_points` /
+   `examine_direction`).  The round-1 sketch inherited the snap's
+   before-improve slot, but the micro-stubs the audit must absorb
+   (142421's 7081/7082, 285567's 81/82/83) are *created by*
+   improve_vertex — running before it would see nothing.
+2. **op3 gains a point-degeneracy sub-gate** (`mvga_stub_pts`, default 4):
+   3–4-point stubs make overlap fractions meaningless (142421), so a
+   terminal stub at the main vertex is absorbable when EITHER its corridor
+   overlap ≥ `mvga_dup_frac` OR it has ≤ mvga_stub_pts valid fit points.
+   The re-seat sub-case (131357) additionally requires the overlap gate
+   (not merely degeneracy) plus a collinear-continuation sibling
+   (`mvga_reseat_angle`, default 150°) and an unprotected main vertex.
+3. **op2 drops the round-1 "length > stub scale" floor**: 142421's 7023
+   (1.17 cm charge-less *bridge*, far vertex degree >1) must be
+   removable; terminal-vs-bridge is now the op2/op3 division of labor
+   (op2 = non-terminal only).
+
+Mechanics (toolkit `clus/src/NeutrinoGraphAudit.cxx`, method
+`PatternAlgorithms::main_vertex_graph_audit`): op1 deletes the
+lower-integrated-charge member of an overlapped pair
+(`path_overlap_fraction` ≥ `mvga_dup_frac` at `mvga_dup_tol`, shorter
+onto longer) and reconnects each orphaned endpoint to the survivor's
+nearest endpoint by a `do_rough_path` edge; op2 deletes a non-terminal
+segment with `segment_median_dQ_dx / m_mip_dqdx_median <
+mvga_bridge_mip` iff every side stays BFS-reachable from the main vertex
+or reconnects within `mvga_reconnect`; op3 as above (absorb =
+`examine_structure_final_1p` mechanics generalized to vertex degree > 2);
+op4 = one `do_multi_tracking(true,true,false,m_fit_exclusion,false,
+&cluster)` refit.  Guards: `kProtectedBreak` vertices never removed or
+re-seated; the main vertex never removed; the pass's own reconnect
+segments exempt from every op (no delete/recreate cycling); per-op edit
+cap 8; no recursion.  Every edit prints one `mvga:` DEBUG sentinel with
+the measured quantities; a fired pass prints a `mvga: fired` summary and
+an extra `print_segs_info` table ("After main vertex graph audit").
+Decision geometry is a pure free function (`path_overlap_fraction`,
+PRSegmentFunctions) with doctests
+(`clus/test/doctest_main_vertex_graph_audit.cxx`), the pr/50 pattern.
+
+### Operating-point calibration (measured, two iterations)
+
+The first on-census (intermediate `a`/`b` arms) exposed three round-1
+estimates that the data corrected:
+
+- **`mvga_dup_tol` 1.2 → 1.4 cm**: 360535's parallel pair is separated by
+  the fitter's ~1 cm ribbon distance and reads 0% overlap at 0.6 cm,
+  77–80% only at 1.4 cm — at 1.2 cm op1 never fired on the *defining*
+  round-1 event.  1.4 cm is the measured floor.
+- **NEW `mvga_dup_angle` (20°) op1 near-parallel guard**: widening the
+  tolerance to 1.4 cm makes a genuine small-opening-angle V mergeable (a
+  short prong hugging a long one within tol can reach 70% overlap), so
+  op1 now also requires the pair's chords to be (anti)parallel within
+  20° (folded to [0,90]).  All measured duplicates pass easily (268067
+  rider 13°, 285567 shorts 7–11°, 360535 pair ~13°); two 19-NCpi0
+  events whose 1.2 cm-round op1 merges were not individually validated
+  (56982, 463565) stopped firing under the guard — the surgical
+  direction.
+- **`mvga_bridge_mip` 0.33 → 0.5**: a knob-on TRACE probe of 268067
+  (`work-pr51-trace268067`; the new `mvga: op2 eval` TRACE lines print
+  every candidate's ratio without firing) measured the charge-less
+  bridge 15005 at **0.436 internal** — its Bee display "0.1 MIP" was
+  skewed by the affine display transform q = dQ×0.1 − 1000 — while the
+  genuine middle track 15015 reads **1.290**.  0.5 separates them; the
+  round-1 guess 0.33 missed the defining case.  (360535's op1 survivor
+  reads 1.073 ≈ full MIP *after* the op4 refit — the corridor charge is
+  recovered, the round-1 acceptance target.)
+
+### VOID intermediate arms + a new stale-binary gotcha
+
+`work-pr51-{on48a,on19a,on50a,off48b,off19b,off50b,on48b,on19b,on50b}`
+are calibration intermediates (defaults 1.2/0.33 for the `a` arms;
+1.4/20°/0.33 for the `b` arms) — superseded by the `c` round below and
+NOT part of the validation record.  **on48b is additionally corrupted**:
+a `./wcb build` (not install) ran while the batch was launching events,
+and the runtime's library search prefers `toolkit/build/<pkg>` over
+`local/lib` (the .envrc `LD_LIBRARY_PATH` loop / rpath), so three events
+dlopen'ed a half-relinked `libWireCellClus.so` ("file too short":
+271851/342199 rc=1, 360535 silently lost its plugin).  Sharper form of
+CLAUDE.md M1/M3: **neither build nor install while any batch is
+running** — the build tree is live production state here.
+
+### `dl_vtx_swap_guard` (506746)
+
+One guard in the DL **rerank** branch scoring loop
+(NeutrinoVertexFinder.cxx): a candidate hosted on a different cluster
+than the current main cluster is skipped (one `dl_swap_guard:` DEBUG
+sentinel each) before it can enter the acceptance.  If no candidate
+survives, `flag_pass` stays false and the normal traditional fallback
+runs — for 506746 that restores the vertex to the flash-matched cluster
+13.  Deliberately narrow: it does not touch the legacy (non-rerank)
+branch, does not re-weight the composite, and a same-cluster DL choice
+is entirely unaffected.  Whether SBND production should run with it ON
+is an owner operating-point decision (a cross-cluster swap is
+occasionally the *right* answer when the charge-based main-cluster pick
+is wrong; the census below measures how often the guard would fire).
+
+## Verification (round 2)
+
+All arms below: fresh labels under `sbnd_xin/`, driver
+`run_pr_chain_batch.sh`, 48 nueCC = ql_root `work-nuecc48-cb0805`,
+19 NCpi0 = `work-ncpi0-cb0805`, 50 data =
+`work-mcp1k-cb0805` + `docs/pr/mcp1k-50-cb0805.index.txt`.  Baselines:
+`work-pr50-snap48a` / `work-pr50-snap50a` (production at toolkit
+`ba5bbe59`) and `work-pr51-base19n` (19 NCpi0 rerun at `ba5bbe59`,
+this round, 19/19 rc=0).  Comparator:
+`scripts/analysis/pr49/on_compare.py` (hash_archive member hashes +
+nusel tsvs).
+
+**Off-gates (final binary, knob off) — all PASS byte-identical:**
+
+| gate | result |
+|---|---|
+| `work-pr51-off48c` vs `work-pr50-snap48a` | 0/48 archives differ, nusel 0/48 |
+| `work-pr51-off19c` vs `work-pr51-base19n` | 0/19, nusel 0/19 |
+| `work-pr51-off50c` vs `work-pr50-snap50a` | 0/50, nusel 0/50 |
+
+(Compiled-config proofs: knob-off JSON byte-identical to HEAD via a
+git-HEAD shadow cfg tree; `main_vertex_graph_audit` / `mvga_dup_angle` /
+`dl_vtx_swap_guard` keys present when on.  `wcdoctest-clus` 131/131
+cases incl. the new `doctest_main_vertex_graph_audit` +
+`doctest_clus_knob_defaults` pins.)
+
+**mvga on-census (`SBND_MAIN_VERTEX_GRAPH_AUDIT=true`), every mover
+sentinel-gated, zero nusel changes anywhere:**
+
+| arm | movers | nusel |
+|---|---|---|
+| `work-pr51-on48c` vs off48c | 14/48, all with `mvga:` sentinels, 48/48 rc=0 | 0/48 |
+| `work-pr51-on19c` vs off19c | 8/19, all sentinel-gated, 19/19 rc=0 | 0/19 |
+| `work-pr51-on50c` vs off50c | 8/50, all sentinel-gated, 50/50 rc=0 | 0/50 |
+
+Target-event acceptance (sentinels quoted from the on-arm logs):
+
+- **131357**: `op3 stub-reseat len=1.56cm overlap=1.00 cont_angle=172.5deg
+  reseat_dis=1.54cm` — final display: exactly 2 prongs (shower 12029 +
+  track 12049), main vertex 0.8 cm from the baseline image corner, the
+  1.5/3.2 cm satellite vertices gone (round-1 target: 2-prong star at
+  the corner ✓).
+- **268067**: `op1 dup-merge removed len=12.52cm sumdQ=1.13e6 overlap=0.95
+  vs survivor 84.70cm sumdQ=9.2e6` (the 15003 proton-corridor rider) +
+  `op3 stub-reseat len=0.51cm` (the 15050 micro-stub).  The roundabout
+  cycle through the shower fan is collapsed.  op2 measures the
+  charge-less bridge at 0.436 and *correctly declines to delete it*:
+  after the cycle collapse it is the only remaining connection to the
+  V_A/shower-fan prong (stranding guard: nearest reachable vertex
+  12.1 cm > `mvga_reconnect` 5 cm) — deleting it would orphan real
+  structure.
+- **360535**: `op1 dup-merge removed len=7.53cm sumdQ=3.33e5 overlap=0.77
+  vs survivor 8.22cm sumdQ=7.1e5 reconnects=1` — the parallel pair is
+  merged and the surviving connection reads dqdx_ratio **1.073 ≈ full
+  MIP** after the op4 refit (round-1 target: single full-MIP MAIN↔V2,
+  charge-splitting healed ✓).
+- **142421**: `op3 stub-absorb len=1.55cm nfit=3 gate=degenerate` — the
+  owner's displaced red point (7081) is gone.  Residual: the two
+  remaining 3–4-point micro-segments (7082/7023) attach to *satellite*
+  vertices 1.2–1.5 cm from the main vertex, outside op3's
+  main-vertex-incident scope — a possible future extension
+  (`mvga` satellite radius), recorded, not implemented.
+- **285567**: `op1 dup-merge removed len=7.52cm sumdQ=4.28e4 overlap=0.85
+  vs survivor 14.83cm sumdQ=1.12e6` (the zero-charge rider 8031 — op1's
+  charge rule catches it before op2 is needed) + a second op1 merge of
+  the 100%-overlapped short duplicates + `op3 stub-absorb len=1.78cm
+  overlap=0.75`.  Near-vertex display reduced to the real prongs plus
+  one 2-point residual at a satellite vertex.
+- **172230 / 57441 / snap movers**: no sentinels, byte-identical in the
+  on-arms (the audit only edits where its predicates fire).
+
+**dl_vtx_swap_guard census (`SBND_DL_VTX_SWAP_GUARD=true`):**
+
+| arm | guard sentinels | outcome movers | nusel |
+|---|---|---|---|
+| `work-pr51-guard50c` vs off50c | 29/50 events skip ≥1 cross-cluster voxel | **1/50** (48367) | 0/50 |
+| `work-pr51-guard48c` vs off48c | 10/48 events skip ≥1 | 3/48 (10550, 122660, 389538), all sentinel-gated | 0/48 |
+| `work-pr51-guard19c` vs off19c | 12/19 events skip ≥1 | 4/19 (37112, 314838, 506114, **506746**) | 0/19 |
+
+Cross-cluster voxels in the top-K are COMMON (the uBooNE net happily
+votes for cosmic clusters at low scores) but almost never win — the
+guard's outcome-level footprint is tiny.  48367: all five top-K voxels
+sat on non-main clusters (dl_score ≈ 0.0054 each); the guard skips all
+five, the traditional selector takes over.  **506746 is recovered**: the
+guard skips the one confident wrong voxel
+(`dl_swap_guard: skipping cross-cluster DL candidate voxel 0
+(dl_score=0.5757) cluster=21 != main 13`), the traditional path keeps
+cluster 13, and the final display is a clean 3-prong vertex on the
+flash-matched cluster — shower 13005 (151 cm), track 13006 (11 cm),
+shower 13007 (65 cm) — instead of a vertex 28 cm away on a
+through-going track of cluster 21.
+
+**Spot determinism/identity re-verify:** `work-pr51-on19d` (same binary
+modulo two TRACE-only log statements in the gated pass) vs
+`work-pr51-on19c`: **0/19 archives differ, nusel 0/19** — the c-round
+censuses are valid for the shipped binary.
+
+## Status + owner decision (round 2)
+
+Both knobs ship **C++ and config DEFAULT OFF** — production
+(`vertex_kink_snap` ON) is byte-identical, proven by the three off-gates
+above.  Flipping either (or both) in
+`wct-pr-perevt.jsonnet` is an owner decision after Bee hand-scans of:
+
+- mvga movers: 14/48 nueCC + 8/19 NCpi0 + 8/50 data (`work-pr51-on*c`),
+  headline events 131357 / 268067 / 360535 / 142421 / 285567 all match
+  their acceptance targets;
+- guard movers: 3/48 + 4/19 + 1/50 (`work-pr51-guard*c`), headline
+  506746 recovered; the 7 other movers are events whose DL winner sat on
+  a non-main cluster and now resolve traditionally — each needs a scan
+  verdict (a cross-cluster swap is occasionally correct).
+
+The knobs are independent; the arms above censused them separately.
+Zero nusel-level changes anywhere means the selection variables are
+untouched — this round is display/graph-topology only.
+
+Open items:
+
+- 142421/285567 residual 2–4-point micro-segments at *satellite*
+  vertices 1.2–1.5 cm from the main vertex (outside op3's
+  main-vertex-incident scope) — possible op3 satellite-radius extension.
+- The `determine_overall_main_vertex` by-value swap-discard latent bug
+  (round-2 findings §) — separate fix, needs its own gate.
+- pr/50 round's open question "do ops 1+2 subsume fit_blob_coverage_defer's
+  benefit on 342199/469665": 342199 IS an mvga mover in on48c
+  (sentinel-gated); 469665 is not in the 48-event manifest — assess at
+  the next 1k-scale census if the owner flips mvga on.

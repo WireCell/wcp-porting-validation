@@ -696,6 +696,19 @@ fi
 if [ -n "${SBND_VERTEX_KINK_SNAP:-}" ]; then
     CATH_TLA+=(--tla-code "vertex_kink_snap=${SBND_VERTEX_KINK_SNAP}")
 fi
+# doc pr/51: main-vertex graph audit (near-vertex graph-shape repair --
+# duplicate-corridor merge / charge-less-bridge removal / micro-stub absorb
+# + re-seat / one refit).  Boolean TLA, same contract as the snap knob.
+#   SBND_MAIN_VERTEX_GRAPH_AUDIT
+if [ -n "${SBND_MAIN_VERTEX_GRAPH_AUDIT:-}" ]; then
+    CATH_TLA+=(--tla-code "main_vertex_graph_audit=${SBND_MAIN_VERTEX_GRAPH_AUDIT}")
+fi
+# doc pr/51 (18255-506746): DL rerank cross-cluster swap guard.  Boolean
+# TLA, same contract.
+#   SBND_DL_VTX_SWAP_GUARD
+if [ -n "${SBND_DL_VTX_SWAP_GUARD:-}" ]; then
+    CATH_TLA+=(--tla-code "dl_vtx_swap_guard=${SBND_DL_VTX_SWAP_GUARD}")
+fi
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
