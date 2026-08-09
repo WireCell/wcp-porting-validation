@@ -1424,7 +1424,32 @@ compiled JSON with the full production TLA set (`reality=data` +
   member-identical on both `mabc-pr.zip` and `pctree-pr`, sentinel
   `graph 'relaxed_strict'` with no env override — bare is production.
 
-### 17.7 Fix map (final; supersedes §16.6's status column)
+### 17.7 Bee hand-scan pair (owner-requested)
+
+Ten events — the three owner over-clustering events first, then the seven
+largest movers — as a before (`work-pr53-off*` arms, legacy `relaxed`) /
+after (`work-pr53-on*` arms, `relaxed_strict`) pair, built with
+`scripts/bee/make_pr_bee.py` (pr/54 precedent), assets under `bee/pr53/`:
+
+- **before**: <https://www.phy.bnl.gov/twister/bee/set/3fa23bbd-141b-4022-9871-fc177835abef/event/list/>
+- **after**: <https://www.phy.bnl.gov/twister/bee/set/d712eb12-4bbd-4e01-8c6b-98d7da05db30/event/list/>
+
+Bee index → event (same order in both sets; `bee/pr53/pr53r6-*.index.txt`):
+
+| idx | event | why |
+|---|---|---|
+| 0 | 422851 | owner pair, split (§17.4) |
+| 1 | 71372 | owner pairs ×2, already separate, unchanged |
+| 2 | 521075 | owner pair, split |
+| 3 | 172230 | largest mover (fragments 1730+974+234+91 pts) |
+| 4 | 142421 | mover (484+334) |
+| 5 | 269774 | mover (285+146+245+24) |
+| 6 | 463565 | mover (145+258+87+11) |
+| 7 | 259542 | mover (306+13) |
+| 8 | 219295 | mover (200) |
+| 9 | 111412 | mover (158) |
+
+### 17.8 Fix map (final; supersedes §16.6's status column)
 
 | mechanism | net | lever | outcome |
 |---|---|---|---|
