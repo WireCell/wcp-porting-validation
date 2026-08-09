@@ -1,8 +1,10 @@
 # doc pr/54 — 18255-142421: a separated EM shower gets no fitted trajectory (silently discarded, not silently skipped)
 
-Status: investigation only. No C++ or jsonnet changed. Fixes are proposed
-below as default-OFF knobs for a future session; nothing in this doc is
-shipped.
+Status: fix SHIPPED as the default-OFF knob `other_seg_keep_isolated`
+(round 3, §12 below) + unconditional visibility counters; off-path proven
+byte-identical on both SBND manifests; production flip pending owner review
+of the Bee before/after pair. §§1-11 are the original investigation record,
+unchanged.
 
 **Round 2 (below, §10):** this is one bug, not three. §8's F1-F3 are three
 untested hypotheses for *which* of two discard paths caused this event's
@@ -12,6 +14,16 @@ silently discarded" pattern recurs in **at least six more places** across the
 fit stage, one of them (`init_first_segment`) more severe than either path
 found in §5, since its failure can silently zero out an entire cluster's PR
 output. See §10 for the full census.
+
+**Round 3 (below, §12):** the fix. §8's F0 (visibility counters, shipped
+unconditional) + a F2-shaped keep knob `other_seg_keep_isolated`, DEFAULT
+OFF. M15 check: the prototype *also* discards these candidates — its
+`residual_segment_candidates` accumulator is write-only, never consumed
+anywhere — so this is a toolkit-only extension of an unfinished prototype
+feature, not a parity fix. On 142421 the knob recovers the component (fit
+distance min 3.65 → 0.05 cm) and, in this event, is a strict superset: 44
+other clusters byte-identical, every pre-existing cluster-7 fit point
+preserved exactly, nusel unchanged. Bee before/after links in §12.
 
 ## Repro block
 
@@ -62,6 +74,31 @@ sed -n '3080,3095p' clus/src/TaggerCheckSTM.cxx          # check_stm_conditions 
 sed -n '8615,8645p' clus/src/TrackFitting.cxx            # do_multi_tracking point-level drop
 sed -n '9015,9045p' clus/src/TrackFitting.cxx            # do_single_tracking fit-output size-mismatch guard
 sed -n '39,68p' clus/inc/WireCellClus/PRGraph.h          # PortAuditCounters -- full existing counter list
+
+# Round 3 -- the fix (toolkit built with wcbuild, freshness-proven):
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+SBND_OTHER_SEG_KEEP_ISOLATED=true PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr54-on142421 data 142421
+grep -a "pr54 keep-isolated\|pr54 isolated-residual drop\|PR30AUDIT" \
+    work-pr54-on142421/pr_evt142421/wct_pr_evt142421.log
+python3 scripts/analysis/pr54/oc54_after.py         # recovery + superset check
+python3 scripts/analysis/pr54/plot_142421_after.py  # after figure
+
+# Round 3 off-gates:
+PR_JOBS=5 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr54-off48a data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr54-off50a data \
+    $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+python3 scripts/analysis/pr49/on_compare.py work-pr51-off48e work-pr54-off48a
+python3 scripts/analysis/pr49/on_compare.py work-pr51-off50e work-pr54-off50a
+
+# Round 3 Bee pair:
+python3 scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -p work-bee-0809       -o bee/pr54/pr54-before.zip 142421
+python3 scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -p work-pr54-on142421  -o bee/pr54/pr54-after.zip  142421
+./upload-to-bee.sh bee/pr54/pr54-before.zip   # -> set/36539378-7352-4ba0-ae76-6a0f0afc03a6
+./upload-to-bee.sh bee/pr54/pr54-after.zip    # -> set/d8639dc6-f6b6-4ddd-9a9a-79cbd8ee1eb0
+
+# Round 3 prototype dead-accumulator proof (M15):
+grep -rn "residual_segment_candidates" /nfs/data/1/xqian/prototype-dev/wire-cell/   # 3 hits, no consumer
 ```
 
 ---
@@ -349,8 +386,143 @@ independently.
   fitter. A broader audit of every silent-discard shape in `clus/` (not just
   fit-adjacent ones) was not attempted.
 
+## 12. Round 3 (2026-08-09) — the fix: `other_seg_keep_isolated`, DEFAULT OFF
+
+The owner asked for the fix, a Bee demonstration on 142421, and an answer to
+"does this only add fitted points, without changing other clusters' fits?".
+
+### M15 check first — the prototype has the same discard, unfinished
+
+The prototype's isolated-residual branch
+(`NeutrinoID_proto_vertex.h:1470-1475`) does not simply delete the candidate:
+it pushes `(cluster, v1_wcpt, v2_wcpt)` into `residual_segment_candidates` —
+and that accumulator is **write-only**: 3 grep hits in the whole prototype
+(declaration `NeutrinoID.h:2022`, the push, one doc line), zero consumers. So
+WCP discards these candidates too ("missing gammas" is a prototype behaviour
+as well), the toolkit port is faithful, and this fix is a toolkit-only
+extension of an unfinished prototype feature — not a parity correction. Cited
+inline at the branch.
+
+### The knob
+
+`other_seg_keep_isolated` (C++ default **false**) with floors
+`other_seg_keep_isolated_min_points` (default 25, terminal-graph component
+points) and `other_seg_keep_isolated_min_length` (default 3 cm, fitted track
+length). When ON and both floors pass, the isolated candidate is added to the
+cluster's graph as its own disconnected piece (its two endpoint vertices) and
+the cluster is refit jointly — exactly the shape of the accepted isochronous
+branch, including the same curvature/dQdx classification into the
+break-segments lists. Below either floor (the 3/4-point noise fragments), or
+with the knob off, the legacy discard runs unchanged. Keep decision is the
+doctest-covered free predicate `other_seg_keep_isolated_ok`
+(`PRSegmentFunctions.h`, defined in `NeutrinoOtherSegments.cxx`).
+
+§8's F0 ships alongside, unconditional (pure log/counter, cannot change
+outputs): new `PortAuditCounters` fields `oseg_isolated_drop` /
+`oseg_isolated_keep` on the PR30AUDIT line, an INFO sentinel
+(`pr54 keep-isolated:`) at every keep, and a DEBUG line
+(`pr54 isolated-residual drop:`) with point count / length / endpoints at
+every discard — closing §5's "no counter at all" gap and giving the
+detector-wide census for free in every future arm. §8's F1 and F3 were not
+taken (nothing in the demo needed them).
+
+Threading: `TaggerCheckNeutrino.{h,cxx}` → `NeutrinoPatternBase.h` members →
+`NeutrinoOtherSegments.cxx`; jsonnet through `pgrapher/common/clus.jsonnet`'s
+`tagger_check_neutrino` builder (key-suppression idiom),
+`sbnd/clus.jsonnet` (both blocks), `sbnd/wct-pr-perevt.jsonnet` (TLA), and
+the `SBND_OTHER_SEG_KEEP_ISOLATED[_MIN_POINTS,_MIN_LENGTH]` runner envs in
+`run_pr_chain_batch.sh`.
+
+**Commit provenance note.** A concurrent session committed pr/51 round 4
+(toolkit `a46a0b22`, wcp `39b52fd`, 10:27) while this round's edits were in
+flight, and — both knobs thread through the same files — swept this round's
+already-edited plumbing (`TaggerCheckNeutrino.{h,cxx}`,
+`NeutrinoPatternBase.h` members, the three jsonnet threading files, the
+runner env hook) into those commits. The pr/54 logic itself — counters,
+`other_seg_keep_isolated_ok` predicate, the keep/drop branch, the doctest —
+is toolkit `091815c4`. Nothing was lost or double-committed; the validated
+binary == `a46a0b22` + `091815c4`.
+
+### Demonstration on 18255-142421 (arm `work-pr54-on142421`, knob ON)
+
+The knob fires twice for cluster 7 — sentinels:
+
+```
+pr54 keep-isolated: cluster 7 n_points=664 length=98.05 cm v1=(114.9,-73.2,213.2) v2=(66.4,-83.7,274.1) cm
+pr54 keep-isolated: cluster 7 n_points=47  length=10.78 cm v1=(94.5,-74.4,235.1)  v2=(88.0,-74.4,238.1) cm
+```
+
+and still drops the sparse fragments (5 drops, all 3-4 points; PR30AUDIT:
+`oseg_iso_drop=5 oseg_iso_keep=2`). Note the round-0 partition itself changes
+once earlier keeps re-tag the residual set: the bare arm's discarded
+102-point candidate becomes a kept 664-point / 98 cm candidate spanning the
+region.
+
+Recovery (`oc54_after.py`, vs the §3 baseline):
+
+| metric | bare (`work-bee-0809`) | knob ON |
+|---|---|---|
+| component→fit min | 3.65 cm | **0.05 cm** |
+| component→fit median | 9.39 cm | **1.25 cm** |
+| component frac >5 cm from any fit | 0.974 | **0.005** |
+| owner point→fit min | 8.61 cm | **0.91 cm** |
+
+Figures: `54_142421_blob.png` (before) / `54_142421_blob_after.png` (after).
+
+### The superset question, answered empirically
+
+Per-cluster diff of `track_fit-global` bare vs knob-on (`oc54_after.py`):
+**44 of 46 cluster ids byte-unchanged**; only cluster 7 (808 → 1256 fit
+points) and the id −1 bucket (102 → 123) change, and in both **every
+pre-existing point survives at 0.000 cm displacement** — pure additions, in
+this event. `clustering-global` identical; `nusel-evt142421.tsv` identical.
+Caveat stated honestly: this strict-superset outcome is *not* a structural
+guarantee — the joint `do_multi_tracking` refit and the downstream
+vertex/shower stages may move existing cluster-internal fits in other events
+(other clusters stay per-cluster-isolated by construction). The sample-wide
+knob-on census (deferred, below) is what sizes that.
+
+### Bee before/after (the owner's requested demonstration)
+
+- before (bare, `work-bee-0809`):
+  <https://www.phy.bnl.gov/twister/bee/set/36539378-7352-4ba0-ae76-6a0f0afc03a6/event/list/>
+- after (`other_seg_keep_isolated=true`):
+  <https://www.phy.bnl.gov/twister/bee/set/d8639dc6-f6b6-4ddd-9a9a-79cbd8ee1eb0/event/list/>
+
+### Verification (round 3)
+
+- Compiled-config proofs (runner TLA set incl. full `pipeline_names`,
+  `reality=data`): knob-off compile byte-identical (`cmp`) to pristine-HEAD
+  cfg; knob-on differs in exactly the one key (`other_seg_keep_isolated`
+  appears once, zero when off).
+- `wcdoctest-clus` 1284/1284 (133 cases; new:
+  `doctest_other_seg_keep_isolated.cxx`, 2 cases / 9 assertions — OFF-default
+  pin, floor logic, inclusive boundaries).
+- Off-gates (knob compiled in, OFF; freshness-proven binary):
+  `work-pr54-off48a` vs `work-pr51-off48e` — **0/48** archives differ, nusel
+  0/48 both granularities; `work-pr54-off50a` vs `work-pr51-off50e` —
+  **0/50**, nusel 0/50. (References are pr/51 round-3's validated baselines,
+  themselves 0/48 & 0/50 against `work-pr50-snap48a`/`snap50a`.)
+- Demo run `work-pr54-on142421`: batch ok 1/0 failed, sentinels + PR30AUDIT
+  quoted above.
+
+### Open items (round 3)
+
+- Sample-wide knob-on census (48+50 manifests) deferred until after the owner
+  hand-scans the Bee pair — staged-small-group validation. The
+  `oseg_iso_drop` counter now measures the discard rate detector-wide in
+  every arm for free.
+- The 25-point / 3 cm floors are first-cut: they cleanly separate this
+  event's 664/47-point keeps from its 3-4-point drops, but the census should
+  confirm the margin on other events before any flip.
+- §10's six other fit-then-discard sites remain uncounted (only the
+  find_other_segments pair got counters this round).
+
 ## Verification
 
-No build, no A/B gate — nothing executable changed. `oc54_probe.py`'s numbers
-are reproducible from the Repro block above; the TRACE-log lines and PR30AUDIT
-line are already-existing products, quoted verbatim with their source files.
+Rounds 1-2 (investigation, §§1-11): no build, no A/B gate — nothing
+executable changed; `oc54_probe.py`'s numbers are reproducible from the Repro
+block above; the TRACE-log lines and PR30AUDIT line are already-existing
+products, quoted verbatim with their source files.
+Round 3 (the fix): see §12's Verification subsection — off-gates 0/48 + 0/50
+byte-identical, doctests, compiled-config proofs, demo arm.
