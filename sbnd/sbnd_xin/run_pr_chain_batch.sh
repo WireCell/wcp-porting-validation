@@ -703,11 +703,26 @@ fi
 if [ -n "${SBND_MAIN_VERTEX_GRAPH_AUDIT:-}" ]; then
     CATH_TLA+=(--tla-code "main_vertex_graph_audit=${SBND_MAIN_VERTEX_GRAPH_AUDIT}")
 fi
+# doc pr/51 round 3: op3 satellite-anchor radius (cm), the mvga numeric
+# knob that gets its own env (the rest ride the C++ defaults via
+# main_vertex_graph_audit alone).  Numeric TLA -- pass a bare cm value, e.g.
+# SBND_MVGA_SATELLITE=3.0.  Unset/empty omits the override (jsonnet default
+# null => byte-identical).
+#   SBND_MVGA_SATELLITE
+if [ -n "${SBND_MVGA_SATELLITE:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_satellite=${SBND_MVGA_SATELLITE}")
+fi
 # doc pr/51 (18255-506746): DL rerank cross-cluster swap guard.  Boolean
 # TLA, same contract.
 #   SBND_DL_VTX_SWAP_GUARD
 if [ -n "${SBND_DL_VTX_SWAP_GUARD:-}" ]; then
     CATH_TLA+=(--tla-code "dl_vtx_swap_guard=${SBND_DL_VTX_SWAP_GUARD}")
+fi
+# doc pr/51 round 3: apply the traditional main-vertex path's cluster-swap
+# decision instead of discarding it.  Boolean TLA, same contract.
+#   SBND_MAIN_VERTEX_SWAP_APPLY
+if [ -n "${SBND_MAIN_VERTEX_SWAP_APPLY:-}" ]; then
+    CATH_TLA+=(--tla-code "main_vertex_swap_apply=${SBND_MAIN_VERTEX_SWAP_APPLY}")
 fi
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree

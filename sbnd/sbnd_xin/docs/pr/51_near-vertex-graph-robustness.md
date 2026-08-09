@@ -2,12 +2,18 @@
 
 Round 1 (2026-08-08, wcp `3c435d4`): investigation only — per-event
 root-cause analysis and the proposed fix design (§Findings through §Proposed
-fix below, unchanged).  **Round 2 (2026-08-09, this update): three new
-owner-flagged events analyzed, the fix implemented** — two default-OFF
-toolkit knobs, `main_vertex_graph_audit` (the four-op graph audit) and
-`dl_vtx_swap_guard` (the 506746 cross-cluster DL guard) — with off-gates and
-on-censuses on the 48 nueCC + 19 NCpi0 + 50 data manifests.  See §Round 2
-onward.
+fix below, unchanged).  Round 2 (2026-08-09): three new owner-flagged events
+analyzed, the fix implemented — two default-OFF toolkit knobs,
+`main_vertex_graph_audit` (the four-op graph audit) and `dl_vtx_swap_guard`
+(the 506746 cross-cluster DL guard) — with off-gates and on-censuses on the
+48 nueCC + 19 NCpi0 + 50 data manifests.  **Round 3 (2026-08-09, this
+update): the two round-2 open items fixed** — `mvga_satellite` (op3 reaches
+terminal micro-stubs at satellite vertices, not just the main vertex) and
+`main_vertex_swap_apply` (the traditional main-vertex path's internal
+cluster-swap decision, previously silently discarded, can now be applied) —
+both DEFAULT OFF, plus before/after Bee links for a 16-event hand-scan.  See
+§Round 2 for the original three events and knobs; §Round 3 for the two
+fixes.
 
 ## Repro
 
@@ -626,14 +632,362 @@ The knobs are independent; the arms above censused them separately.
 Zero nusel-level changes anywhere means the selection variables are
 untouched — this round is display/graph-topology only.
 
-Open items:
+Open items (round 2; both closed in round 3 below):
 
-- 142421/285567 residual 2–4-point micro-segments at *satellite*
+- ~~142421/285567 residual 2–4-point micro-segments at *satellite*
   vertices 1.2–1.5 cm from the main vertex (outside op3's
-  main-vertex-incident scope) — possible op3 satellite-radius extension.
-- The `determine_overall_main_vertex` by-value swap-discard latent bug
-  (round-2 findings §) — separate fix, needs its own gate.
+  main-vertex-incident scope) — possible op3 satellite-radius extension.~~
+- ~~The `determine_overall_main_vertex` by-value swap-discard latent bug
+  (round-2 findings §) — separate fix, needs its own gate.~~
 - pr/50 round's open question "do ops 1+2 subsume fit_blob_coverage_defer's
   benefit on 342199/469665": 342199 IS an mvga mover in on48c
   (sentinel-gated); 469665 is not in the 48-event manifest — assess at
-  the next 1k-scale census if the owner flips mvga on.
+  the next 1k-scale census if the owner flips mvga on.  STILL OPEN.
+
+## Round 3 — the two round-2 bugs fixed, before/after Bee links
+
+The owner asked to fix, not just record, the two round-2 open findings
+(they are bugs, not open design questions), and to provide two Bee links
+(before = production knob-off, after = the full round-3 change with
+everything on) covering the six target events plus the ten biggest movers,
+for a hand-scan.
+
+### Bug 1 — op3 is main-vertex-incident only
+
+**Symptom.** 142421's stub 7082 (1.64 cm, 4 fits, 166.5° back-pointing) and
+285567's residual both sit on *satellite* vertices 1.17–1.2 cm from the
+main vertex, not on the main vertex itself — op3 walks
+`sorted_out_edges(main_vertex)` only, so it never sees them.
+
+**Root cause.** op3 had **no `m_mvga_radius` gate at all** (unlike op1/op2,
+which scope through `in_scope_segments()`); its only notion of "near the
+vertex" was literal incidence on `main_vertex`. There was also no explicit
+radius parameter for "how far from the main vertex is still near enough to
+touch" — extending op3 required adding one.
+
+**Fix.** New knob `mvga_satellite` (cm; C++ default `0`). In
+`NeutrinoGraphAudit.cxx` op3 now builds an **anchor list** — the main vertex
+first (re-seat eligible, exactly the round-2 logic), then, only when
+`mvga_satellite > 0`, every other main-cluster vertex within
+`mvga_satellite` of the *current* main-vertex position (`ordered_nodes`,
+`kProtectedBreak`-excluded, `boost::degree >= 2` so absorbing a stub can't
+disconnect anything) — absorb-only, never re-seated (the re-seat branch
+still names `main_vertex` explicitly throughout). The anchor list is
+re-derived every `while`-iteration since `mv_pt` moves on a re-seat. A stub
+whose far vertex is `main_vertex` itself is never touched (guards the
+main-vertex edge of an adjacent satellite from being read as a "stub"). A
+new `mvga: op3 eval` TRACE probe (op1/op2 had one, op3 didn't) reports
+anchor kind/distance for every candidate, which is what the radius below
+was measured from.
+
+**Measurement, not a guess** (`work-pr51-trace142421e`,
+`work-pr51-trace285567e`, `SBND_MVGA_SATELLITE=5.0` TRACE re-runs):
+
+```
+142421: mvga: op3 eval cluster=7 anchor=main d=0.00cm len=1.55cm nfit=3 overlap=0.67
+        mvga: op3 stub-absorb cluster=7 anchor=main d=0.00cm ... gate=degenerate   (7081)
+        mvga: op3 eval cluster=7 anchor=sat  d=1.17cm len=1.64cm nfit=4 overlap=0.75
+        mvga: op3 stub-absorb cluster=7 anchor=sat  d=1.17cm ... gate=overlap      (7082)
+        mvga: op2 bridge-removal cluster=7 len=1.17cm dqdx_ratio=0.474             (7023, op2's turf)
+        mvga: fired cluster=7 op1=0 op2=1 op3=2 (refit done)
+```
+
+All three of 142421's documented residuals are gone at `mvga_satellite=5`:
+7081 (main-anchor, unchanged from round 2), 7082 (satellite anchor, d =
+1.17 cm — the new capability), and 7023 (turns out to be op2's bridge, not
+an op3 stub at all — its "1.2–1.5 cm" round-2 characterization conflated
+the two). **285567 found nothing new at any radius up to 5 cm** — its
+`mvga: op3 eval` count and outcome are byte-identical with and without the
+satellite pass. Tracing why: its post-op1 residual segment (1.00 cm, 3
+fits, printed in `print_segs_info` as id 84) is one of op1's *own*
+reconnect stitches (`reconnects=1` on the second dup-merge) — `created`
+segments are deliberately exempt from every op, by design, to prevent
+delete/recreate cycling. The round-2 doc's "2-point residual at a
+satellite vertex" for 285567 was this protected reconnect edge, not a
+genuine leftover stub; the satellite extension correctly leaves it alone.
+
+**Shipped default stays `mvga_satellite = 0`** (main-vertex-only, i.e.
+byte-identical to round 2) — this is a knob *within* the already-OFF-by-
+default `main_vertex_graph_audit` pass, and must not silently change the
+behavior the owner already reviewed in round 2 the moment
+`main_vertex_graph_audit` is turned on. `2.0 cm` (covers the measured
+1.17 cm with margin, same order as `mvga_stub`'s own 2 cm ceiling) is the
+value used in every validation arm below and is what `-A mvga_satellite=`/
+`SBND_MVGA_SATELLITE` should be set to for a scan or eventual flip.
+
+### Bug 2 — the traditional path silently discards its own swap decision
+
+**Symptom.** None visible without a TRACE/code read — this is the "latent
+bug" flagged in round 2, not something scanned from an event.
+
+**Root cause.** `determine_overall_main_vertex`
+(`NeutrinoVertexFinder.cxx:4342`) took **both**
+`ClusterVertexMap map_cluster_main_vertices` and `Facade::Cluster*
+main_cluster` **by value**, while its DL sibling
+`determine_overall_main_vertex_DL` takes both **by reference**. Three
+internal call sites can reassign the local `main_cluster` —
+`examine_main_vertices` (which also *erases* map entries on its own by-ref
+copy), `check_switch_main_cluster`, and `check_switch_main_cluster_2`
+(dead in-tree; both live callers pass `flag_dev_chain=true`, which only
+reaches the first two) — and every one of those reassignments used to die
+at the by-value parameter's scope exit. Worse than a simple lost decision:
+`swap_main_cluster` (`NeutrinoPatternBase.cxx:2946`) is **not pure** — it
+unconditionally flips `Flags::main_cluster` on both clusters and mutates
+`other_clusters`, which *is* passed by reference all the way to the
+caller. So a firing swap left the job in a **half-applied state**: the
+persistent flags and `other_clusters` said the new cluster, while the
+caller's own `main_cluster` variable — used for every downstream call
+(`improve_vertex`, `main_vertex_graph_audit`, `clustering_points`,
+`shower_clustering_with_nv`, the taggers) — still said the old one, and
+`TaggerCheckNeutrino.cxx` filed the returned vertex under the stale key.
+
+**Why it hid.** SBND runs DL first; the traditional path only runs when
+`flag_dl_changed == false`, and even then its internal swap only fires
+under narrow gates (`flag_all_showers` at the current vertex, a
+significantly-longer alternate cluster, a close/collinear PCA match). The
+swap-discard census below shows it firing on 2/117 round-3 manifest
+events — real, but rare enough that round 1/2's per-event investigations
+never happened to land on one.
+
+**Fix.** `determine_overall_main_vertex`'s two parameters are now
+`ClusterVertexMap&` and `Facade::Cluster*&`, matching the DL sibling
+exactly (both moved together — fixing only the pointer would leave the
+map holding a stale entry `examine_main_vertices` had already erased on
+its own by-ref copy). The function body is textually untouched. The
+caller (`TaggerCheckNeutrino.cxx`) now passes **throwaway local copies**
+(`map_copy`, `mc_copy`), compares `mc_copy` to its own `main_cluster`
+after the call, logs one `mvsa:` DEBUG sentinel *in both states* (so the
+off-arms self-census how often the swap fires at all), and — only when
+`main_vertex_swap_apply` is true — syncs both `main_cluster` and
+`map_cluster_main_vertices` from the copies:
+
+```cpp
+ClusterVertexMap map_copy = map_cluster_main_vertices;
+Cluster* mc_copy = main_cluster;
+final_main_vertex = pattern_algos.determine_overall_main_vertex(
+    *pr_graph, map_copy, mc_copy, other_clusters, ..., true);
+if (mc_copy != main_cluster) {
+    SPDLOG_LOGGER_DEBUG(log, "mvsa: traditional path swapped main cluster {} -> {} ({})",
+                         main_cluster->get_cluster_id(), mc_copy->get_cluster_id(),
+                         m_main_vertex_swap_apply ? "applied" : "discarded");
+    if (m_main_vertex_swap_apply) { main_cluster = mc_copy; map_cluster_main_vertices = map_copy; }
+}
+```
+
+Knob off ⇒ `mc_copy`/`map_copy` are read then thrown away ⇒ bit-for-bit the
+pre-round-3 by-value semantics. The two doctests that call
+`determine_overall_main_vertex` directly (`doctest_pattern_recognition.cxx`,
+`doctest_tagger_check_neutrino.cxx`) now pass their own throwaway copies
+for the same reason — neither harness has a `main_vertex_swap_apply` knob
+layer, so they preserve exactly their pre-round-3 discard behavior.
+
+New knob `bool main_vertex_swap_apply` (C++ default `false`), same
+four-site pattern as every other knob in this file.
+
+### Repro (round 3)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+
+# satellite-radius measurement (TRACE, wide radius to find the ceiling):
+SBND_WCT_LOGLEVEL=trace SBND_MAIN_VERTEX_GRAPH_AUDIT=true SBND_MVGA_SATELLITE=5.0 PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr51-trace142421e data 142421
+SBND_WCT_LOGLEVEL=trace SBND_MAIN_VERTEX_GRAPH_AUDIT=true SBND_MVGA_SATELLITE=5.0 PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr51-trace285567e data 285567
+grep -a "mvga: op3 eval" work-pr51-trace*e/pr_evt*/wct_pr_evt*.log
+
+# validation arms (round 3, toolkit at this round's commit; both knobs off/on):
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51-off48e data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr51-off19e data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr51-off50e data $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51-sat048e data   # mvga_satellite unset = 0
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true PR_JOBS=6 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr51-sat019e data
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr51-sat050e data <50 ids>
+
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true SBND_MVGA_SATELLITE=2.0 SBND_DL_VTX_SWAP_GUARD=true SBND_MAIN_VERTEX_SWAP_APPLY=true \
+    PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51-all48e data
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true SBND_MVGA_SATELLITE=2.0 SBND_DL_VTX_SWAP_GUARD=true SBND_MAIN_VERTEX_SWAP_APPLY=true \
+    PR_JOBS=6 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr51-all19e data
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true SBND_MVGA_SATELLITE=2.0 SBND_DL_VTX_SWAP_GUARD=true SBND_MAIN_VERTEX_SWAP_APPLY=true \
+    PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr51-all50e data <50 ids>
+
+python3 scripts/analysis/pr49/on_compare.py <base> <new>   # movers + nusel
+# grep -a for every sentinel -- WCT log tearing puts binary bytes in logs (including
+# the "TaggerCheckNeutrino: selected main cluster" pre-upload check below).
+
+# Bee before/after (16 events: 6 targets + 10 movers, identical order):
+python3 scripts/bee/make_pr_bee.py -q work-nuecc48-cb0805 -q work-ncpi0-cb0805 -q work-mcp1k-cb0805 \
+    -p work-pr51-off48e -p work-pr51-off19e -p work-pr51-off50e \
+    -o bee/pr51r3/pr51r3-before.zip $(awk 'NR>1{print $2}' docs/pr/pr51r3-bee-16.index.txt)
+python3 scripts/bee/make_pr_bee.py -q work-nuecc48-cb0805 -q work-ncpi0-cb0805 -q work-mcp1k-cb0805 \
+    -p work-pr51-all48e -p work-pr51-all19e -p work-pr51-all50e \
+    -o bee/pr51r3/pr51r3-after.zip  $(awk 'NR>1{print $2}' docs/pr/pr51r3-bee-16.index.txt)
+./upload-to-bee.sh bee/pr51r3/pr51r3-before.zip
+./upload-to-bee.sh bee/pr51r3/pr51r3-after.zip
+```
+
+### Verification (round 3)
+
+**Off-gates (all knobs off, both fixes' code paths live) — all PASS
+byte-identical, member+nusel:**
+
+| gate | result |
+|---|---|
+| `work-pr51-off48e` vs `work-pr50-snap48a` | 0/48 archives differ, nusel 0/48 |
+| `work-pr51-off19e` vs `work-pr51-base19n` | 0/19, nusel 0/19 |
+| `work-pr51-off50e` vs `work-pr50-snap50a` | 0/50, nusel 0/50 |
+
+Fix 2 touches the production `TaggerCheckNeutrino::visit()` call path
+(not just an already-OFF sub-pass), so this off-gate is the load-bearing
+proof that the by-value→by-reference signature change plus the
+copy-then-conditionally-apply caller pattern is truly a no-op when
+`main_vertex_swap_apply=false`. `wcdoctest-clus` 131/131 (unchanged count
+— the two new knobs extend existing `CHECK_KNOB_*` test cases, not new
+`TEST_CASE`s). Compiled-config proofs: knob-off JSON byte-diff empty
+against a git-HEAD (round 2) shadow compile; `mvga_satellite` /
+`main_vertex_swap_apply` keys present and correctly valued when on.
+
+**Inertness of the op3 restructure (`mvga_satellite` unset ⇒ 0) — all PASS
+byte-identical against round 2's validated arms:**
+
+| arm | vs | result |
+|---|---|---|
+| `work-pr51-sat048e` | `work-pr51-on48c` | 0/48 archives differ, nusel 0/48 |
+| `work-pr51-sat019e` | `work-pr51-on19c` | 0/19, nusel 0/19 |
+| `work-pr51-sat050e` | `work-pr51-on50c` | 0/50, nusel 0/50 |
+
+This is the decisive regression check: the op3 anchor-list rewrite did not
+perturb a single one of round 2's already-Bee-reviewed movers.
+
+**Full-on census (`mvga_satellite=2.0`, `dl_vtx_swap_guard=true`,
+`main_vertex_swap_apply=true` — the "after" Bee arm — vs the round-3
+off-arms), every mover sentinel-gated, nusel unaffected:**
+
+| arm | movers | nusel |
+|---|---|---|
+| `work-pr51-all48e` vs off48e | 15/48 | 0/48 |
+| `work-pr51-all19e` vs off19e | 11/19 | 0/19 |
+| `work-pr51-all50e` vs off50e | 9/50 | 0/50 |
+
+Every mover fully reconciles against round 2's already-known sets plus the
+two round-3 fixes, with no unexplained residual:
+
+- 48-sample: the same 14 mvga movers as round 2, **+1 net-new**
+  (`122660`, round 2's sole additional guard mover — `10550`/`389538`
+  were already in the mvga set). `10550` additionally shows
+  `mvsa: ... (applied)` — see the guard/swap interaction below.
+- 19-sample: the same 8 mvga movers as round 2, **+2 net-new from the
+  guard** (`37112`, `506114` — `314838`/`506746` were already in the mvga
+  set), **+1 net-new from swap-apply alone** (`84229`, no mvga/guard
+  sentinel at all — a clean single-mechanism demonstration:
+  `mvsa: traditional path swapped main cluster 9 -> 19 (applied)`).
+- 50-sample: the same 8 mvga movers as round 2, **+1 net-new**
+  (`48367`, round 2's sole guard mover).
+
+**Guard/swap-apply interaction (new observation, not a bug):** with the
+guard on, more events lose their DL candidate and fall through to the
+traditional path — which can then trigger its *own* swap. `37112` and
+`10550` fire `mvsa: ... (applied)` in the full-on arm even though neither
+appears in round 2's guard outcome-movers *or* round 3's off-arm swap
+census (which only found `84229` in the 19-sample and nothing in the
+48-sample) — the guard being on is what routes them into the traditional
+path in the first place. Both are still archive-movers for other reasons
+(mvga/guard already fire there), so this doesn't add a new mover to the
+table above, but it is a real second-order effect of running the knobs
+together and is recorded here for the scan.
+
+**Swap-apply's own footprint measured on the off-arms** (guard off, so
+this is the traditional path's unassisted firing rate): `grep -a "mvsa:"`
+across all 117 round-3 off-arm events finds it firing exactly **2/117**
+(`work-pr51-off19e/pr_evt84229`: `9 -> 19`; `work-pr51-off50e/pr_evt51865`:
+`8 -> 15`). Of those two, `51865`'s swap fires and (with the knob on)
+*applies*, but the final archived output is **byte-identical either way**
+(`hash_archive` member diff empty) — a downstream step is insensitive to
+which of the two candidate clusters carries the `main_cluster` flag for
+this particular event, so the swap is real but outcome-inert here. `84229`
+is the one event in the full round-3 manifest where the fix visibly moves
+the display, and is included in the Bee set below.
+
+**Acceptance re-check, all six target events unchanged from round 2:**
+131357 (2-prong corner star), 268067 (cycle collapsed, bridge correctly
+kept), 360535 (pair merged to full-MIP), 506746 (guard-recovered
+flash-matched cluster). 142421 and 285567's outcomes are described above
+(142421 fully closed by the satellite extension; 285567 unchanged — its
+residual was a protected reconnect, not a bug).
+
+### Bee hand-scan set (16 events: 6 targets + 10 movers)
+
+Two uploads, identical event order (`docs/pr/pr51r3-bee-16.index.txt`),
+built with `scripts/bee/make_pr_bee.py` from the arms above — before =
+round-3 off-arms (knobs off, production-equivalent per the byte-identical
+off-gates), after = round-3 all-arms (`mvga_satellite=2.0`,
+`dl_vtx_swap_guard=true`, `main_vertex_swap_apply=true`).
+
+Selection: the 6 already-scanned targets, plus the 10 largest movers
+(by added+removed vertex-point count in the `on_compare.py` per-mover
+diff) from the combined 48+19+50 full-on census above, with a floor of
+≥2 events per sample so no sample goes unrepresented. The satellite-anchor
+knob class is covered by target `142421` (the only event in the whole
+manifest where `anchor=sat` fires); mvga and guard are covered by many of
+the 10; swap-apply is covered concretely by `10550` (triple mechanism) —
+the clean single-mechanism case `84229` (§ above) ranked below the
+magnitude cutoff and is not itself in the 16, but its sentinel is quoted
+above for the scan record.
+
+| idx | event | sample | why included |
+|---|---|---|---|
+| 0 | 131357 | nueCC48 | target — op3 stub re-seat |
+| 1 | 268067 | nueCC48 | target — op1+op3, op2 correctly declines |
+| 2 | 360535 | nueCC48 | target — op1 dup-merge |
+| 3 | 389538 | nueCC48 | mover — mvga+guard dual |
+| 4 | 10550 | nueCC48 | mover — mvga+guard+swap-apply triple |
+| 5 | 111412 | nueCC48 | mover — mvga+guard dual |
+| 6 | 38856 | nueCC48 | mover — mvga |
+| 7 | 142421 | NCpi0 | target — op3 main+satellite absorb, op2 bridge |
+| 8 | 285567 | NCpi0 | target — op1 dup-merge + op3 (satellite: no new effect) |
+| 9 | 506746 | NCpi0 | target — dl_vtx_swap_guard recovers flash-matched cluster |
+| 10 | 506114 | NCpi0 | mover — guard (net-new vs round 2) |
+| 11 | 314838 | NCpi0 | mover — mvga+guard dual |
+| 12 | 21073 | NCpi0 | mover — mvga |
+| 13 | 37112 | NCpi0 | mover — guard+swap-apply (guard reroutes to traditional path) |
+| 14 | 54175 | data50 | mover — mvga+guard dual |
+| 15 | 53713 | data50 | mover — mvga+guard dual |
+
+**Bee links** (`BROWSER=echo ./upload-to-bee.sh <zip> | tail -1`):
+
+- before (`work-pr51-off{48,19,50}e`, knobs off):
+  https://www.phy.bnl.gov/twister/bee/set/247f5352-63dc-48e4-b069-9e75bc7d1993/event/list/
+- after (`work-pr51-all{48,19,50}e`, everything on):
+  https://www.phy.bnl.gov/twister/bee/set/a63e7332-0b67-47a5-95a2-2267ac1973ab/event/list/
+
+### Status + owner decision (round 3)
+
+Both new knobs ship **C++ and config DEFAULT OFF**, proven byte-identical
+by the off-gates above (which also re-validate that Fix 2's signature
+change is a no-op on the production call path). `mvga_satellite` is a
+sub-knob of the already-OFF `main_vertex_graph_audit` pass and is
+independently `0` by default so round 2's already-reviewed behavior
+cannot silently change if `main_vertex_graph_audit` alone is flipped —
+`mvga_satellite` needs its own explicit value even after that flip.
+
+Flip decisions, after the owner's hand-scan of the two links above:
+
+- `mvga_satellite = 2.0` (cm) alongside `main_vertex_graph_audit` — closes
+  142421 fully; no effect on 285567 or any other round-2 mover (inertness
+  arms confirm 0/117 change from the round-2-validated behavior at
+  `mvga_satellite=0`, and the extension only ever fires on 142421 in the
+  whole 117-event manifest).
+- `main_vertex_swap_apply` — fires rarely (2/117 unassisted, 4/117 with
+  the guard also on) but is a genuine correctness fix: today the
+  traditional path can decide a cluster swap, partially apply it via
+  `swap_main_cluster`'s persistent flag/`other_clusters` side effects, and
+  then silently keep using the old cluster for every downstream step. Each
+  of the four `mvsa:`-firing events (`84229`, `51865`, `37112`, `10550`)
+  needs its own scan verdict, same as any cluster-identity mover.
+
+Open items (unchanged from round 2, still open):
+
+- pr/50 round's "do ops 1+2 subsume `fit_blob_coverage_defer`'s benefit on
+  342199/469665" — 469665 still isn't in the 48-event manifest; needs a
+  1k-scale census if the owner flips mvga on.
