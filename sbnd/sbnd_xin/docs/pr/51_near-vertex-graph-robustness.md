@@ -1,4 +1,4 @@
-# doc pr/51 — near-vertex PR graph robustness: duplicated corridors, charge-less bridges, micro-stubs (131357 / 268067 / 360535 + round 2: 142421 / 285567 / 506746)
+# doc pr/51 — near-vertex PR graph robustness: duplicated corridors, charge-less bridges, micro-stubs, path-cost short-cuts (131357 / 268067 / 360535 + round 2: 142421 / 285567 / 506746)
 
 Round 1 (2026-08-08, wcp `3c435d4`): investigation only — per-event
 root-cause analysis and the proposed fix design (§Findings through §Proposed
@@ -6,14 +6,22 @@ fix below, unchanged).  Round 2 (2026-08-09): three new owner-flagged events
 analyzed, the fix implemented — two default-OFF toolkit knobs,
 `main_vertex_graph_audit` (the four-op graph audit) and `dl_vtx_swap_guard`
 (the 506746 cross-cluster DL guard) — with off-gates and on-censuses on the
-48 nueCC + 19 NCpi0 + 50 data manifests.  **Round 3 (2026-08-09, this
-update): the two round-2 open items fixed** — `mvga_satellite` (op3 reaches
-terminal micro-stubs at satellite vertices, not just the main vertex) and
+48 nueCC + 19 NCpi0 + 50 data manifests.  Round 3 (2026-08-09): the two
+round-2 open items fixed — `mvga_satellite` (op3 reaches terminal
+micro-stubs at satellite vertices, not just the main vertex) and
 `main_vertex_swap_apply` (the traditional main-vertex path's internal
 cluster-swap decision, previously silently discarded, can now be applied) —
-both DEFAULT OFF, plus before/after Bee links for a 16-event hand-scan.  See
-§Round 2 for the original three events and knobs; §Round 3 for the two
-fixes.
+both DEFAULT OFF, plus before/after Bee links for a 16-event hand-scan.
+**Round 4 (2026-08-09, this update): the owner hand-scanned those links and
+rejected the result.** Rounds 2-3 fixed near-vertex GRAPH SHAPE; the
+reported symptom — a short, low-dQ/dx "short-cut" that skips the true
+direct connection near the main vertex on 131357/268067/285567/506746,
+sometimes visibly jumping between arms — is a PATH-COST problem the graph
+audit cannot see (§Round 4).  This round diagnoses the mechanism with a
+new default-OFF diagnostic probe (`rough_path_probe`, no production
+behavior change) and designs, but does not ship, the fix.  See §Round 2
+for the original three events and knobs, §Round 3 for the two graph-shape
+fixes, §Round 4 for the path-cost diagnosis and design.
 
 ## Repro
 
@@ -991,3 +999,295 @@ Open items (unchanged from round 2, still open):
 - pr/50 round's "do ops 1+2 subsume `fit_blob_coverage_defer`'s benefit on
   342199/469665" — 469665 still isn't in the 48-event manifest; needs a
   1k-scale census if the owner flips mvga on.
+
+## Round 4 — the short-cut is a path-COST problem, not a graph-shape problem
+
+The owner hand-scanned the round-3 Bee links and rejected the result.
+Quoting: *"the short-cut (due to shortest path), again has low dQ/dx"*,
+*"missing the main vertex"*, and *"I am asking to seek a fix to avoid this
+problem all together."* Four events, four screenshots
+(`sbnd_xin/docs/pics/Screenshot 2026-08-08 at 2.47.52 PM.png` [131357],
+`... 2.48.30 PM.png` [268067], `Screenshot 2026-08-09 at 9.43.50 AM.png`
+[285567], `... 12.37.34 PM.png` [506746]):
+
+- **131357** — the right track turns and connects to the other track by a
+  short low-dQ/dx link, giving a 3-prong vertex where truth is two tracks
+  sharing one vertex.
+- **268067** — near the vertex a low-dQ/dx (blue) segment short-cuts; the
+  track should run continuously and *then* reach the vertex.
+- **285567** — a fitted trajectory stretch with low dQ/dx not explained by
+  the image at all, plus a jump.
+- **506746** — the fitted trajectory takes a turn and misses the direct
+  connection; again the short-cut carries low dQ/dx.
+
+The owner already named the cause: *"since I use the shortest of path to
+start with … the shortest path is probably jump around, instead go
+straight and take a turn."* This round confirms that reading and makes it
+quantitative.
+
+### Why rounds 2-3 could not have fixed this
+
+`main_vertex_graph_audit`'s three ops are all delete-segment /
+reconnect-endpoint / re-seat-vertex, plus one `do_multi_tracking` refit
+(`NeutrinoGraphAudit.cxx`). Three structural facts make them blind to a
+path-cost pathology:
+
+1. **No op ever re-derives an existing segment's path.** `do_rough_path`
+   appears in the pass only inside `connect_direct`
+   (`NeutrinoGraphAudit.cxx:150-162`), only for brand-new edges — which
+   then enter the `created` set and are exempt from every op for the rest
+   of the pass.
+2. **The fitter cannot repair it either.**
+   `TrackFitting::organize_segments_path` seeds from `segment->wcpts()`
+   (`TrackFitting.cxx:1692-1716`). A wrong rough path is re-fitted, never
+   re-routed. `examine_end_ps_vec` trims unsupported points only at the two
+   ends; nothing inspects the interior.
+3. **The pathology is intra-segment.** op2 (charge-less-bridge removal)
+   needs the whole segment's median dQ/dx below `0.5 x mip_dqdx_median`
+   *and* both endpoints of degree >= 2. The short-cut here is a few-cm
+   stretch of an otherwise healthy track, so the segment median reads
+   normal and op2 never looks at it.
+
+### Root cause — measured, not assumed: H1 vs H2
+
+Two mechanisms in the toolkit can each produce a short, straight,
+low-dQ/dx near-vertex link, and they share almost no code:
+
+- **H1 — the Dijkstra cost model** cannot represent "follow the charge
+  around a corner." `do_rough_path` (`NeutrinoPatternBase.cxx:88-125`)
+  snaps both endpoints to the nearest Steiner point and runs plain
+  Dijkstra on `"steiner_graph"`. The only non-geometric term in that
+  graph's edge weight is (`SteinerGrapher.cxx:1145-1161`):
+  ```cpp
+  double weight_factor = factor1 + factor2 *
+      (0.5*Q0/(charge_source + Q0) + 0.5*Q0/(charge_target + Q0));
+  final_distance = geometric_distance * weight_factor;
+  ```
+  with `Q0=10000, factor1=0.8, factor2=0.4`
+  (`SteinerGrapher.cxx:92-95`) — charge is sampled at the two **endpoints
+  only**, never along the edge, and the dynamic range is hard-capped at
+  1.5x (Q->infinity gives 0.8, Q=0 gives 1.2). For a turn with equal legs
+  `L` and interior angle `theta`, the chord across it costs
+  `2L*sin(theta/2)` against a detour of `2L`, so detour/chord =
+  `1/sin(theta/2)`: 1.04 at 150 deg, 1.16 at 120 deg, 1.41 at 90 deg, 2.00
+  at 60 deg. Against a maximum defence of 1.5x, any turn sharper than
+  roughly 150 deg is structurally lost **once a gap-spanning edge exists**
+  (an inter-component bridge or a close-connection chain — Steiner nodes
+  only exist on charge, so Dijkstra cannot cut a corner unless some edge
+  already spans it).
+- **H2 — `examine_structure_1` straightens genuine turns on purpose**
+  (`NeutrinoStructureExaminer.cxx:66-167`): replaces a segment's path with
+  the straight line between its two ends when the line passes
+  `is_good_point(raw, apa, face, 0.2cm, 0, 0)` with `n_bad <= 1`, for
+  segments with `length < 5cm || (length < 8cm && dQ/dx > 1.5)`.
+  `is_good_point` counts **dead channels as good**
+  (`Facade_Grouping.cxx:536-553`), so a turn whose chord crosses a dead
+  region is blessed and straightened. Worse, the replacement mechanically
+  generates jumps: each sampled point on the straight line is snapped back
+  to the nearest Steiner point (`kd_steiner_knn`, `:129-146`), and where
+  the line crosses vacuum between two arms, consecutive samples can snap
+  alternately onto whichever arm is nearer.
+
+**Two supporting findings on the base-graph construction** (both apply
+regardless of which mechanism dominates a given event): graph construction
+admits up to ~7cm of charge-free straight line at full geometric discount
+(`connect_graph_ctpc.cxx:113-135`'s `num_bad` veto only kills a bridge at
+`num_bad > 7 || (num_bad > 2 && num_bad >= 0.75*num_steps)`; survivors keep
+their plain Euclidean weight); and the intended long-bridge penalty hook is
+dead code — `connect_graph.cxx:160-166` has *both* branches of
+`if (dis > 5cm)` identical, while the two directional variants immediately
+below (`:178-183`, `:192-197`) do apply `x1.2`. **This is M15 territory,
+not a porting bug**: the prototype has the identical
+both-branches-equal structure at `PR3DCluster_graph.h:466-471` (verified
+by direct read) — surfaced here, not "fixed."
+
+### The `rough_path_probe` diagnostic (default OFF, committed)
+
+Per the owner's direction to investigate with printouts before proposing a
+fix, a new knob `rough_path_probe` (C++ default `false` => immediate
+return => byte-identical; `clus/src/NeutrinoRoughPathProbe.cxx`, called
+from `TaggerCheckNeutrino.cxx` right after the `main_vertex_graph_audit`
+block) does three things, every line `SPDLOG_LOGGER_TRACE`, no graph/
+segment/fit ever mutated:
+
+- **P1 — path provenance** (heuristic, stated as such in the code and
+  every log line: there is no persistent per-segment origin tag in the
+  data model, and adding one at every `wcpts()`-writing call site across
+  four files is a much larger change than a diagnostic probe this round
+  warrants). Classifies each near-vertex segment structurally: `splice` if
+  an interior wcpt sits exactly on the main vertex (the mvga op3
+  signature); otherwise the RMS perpendicular deviation of interior wcpts
+  from the straight chord, normalized by chord length —
+  `straighten(rough_or_straight)` when that ratio is < 0.02 (H2 candidate,
+  but also matches a genuinely straight track — a known false-positive
+  mode, seen below), `rough(curved)` otherwise (H1 candidate — the
+  Dijkstra path visibly follows a bend).
+- **P2 — per-segment support + charge profile**: every consecutive wcpt
+  pair sampled at 0.3cm with `Grouping::test_good_point` at the tight
+  PR-level radius/ch_range (`0.2cm, 0` — `NeutrinoStructureExaminer.cxx:95`'s
+  own idiom, not the looser 0.6cm/1 graph-builder default), classified
+  live/dead/unsupported, plus the fitted dQ/dx ratio to
+  `m_mip_dqdx_median` and a heuristic flag for points that may still carry
+  `TrackFitting::dQ_dx_fill`'s `default_dQ_dx * dx` seed
+  (`TrackFitting.cxx:6068-6079`, ratio ~0.116) rather than a measured fit.
+- **P3 — counterfactual Dijkstra ladder**: builds one re-weighted scratch
+  copy of the cluster's `"steiner_graph"` per scale in `{0, 1, 2, 3, 5,
+  10}` (shared across every near-vertex segment in the cluster, both
+  because Design A below would build one penalized graph per cluster, not
+  per segment, and to get a real per-cluster cost number), re-weighting
+  every edge longer than 0.5cm by `w' = w * (1 + scale * bad_fraction)`
+  with `bad_fraction` the live=0/dead=0.25/unsupported=1 sampled fraction
+  of that edge's interior, then re-runs Dijkstra for each segment's
+  endpoint pair and reports the resulting path length, its directly
+  re-sampled unsupported length, and whether the path changed relative to
+  scale 0. Also reports `edges_scanned`/`scan_ms` for the one-time
+  per-cluster support scan (cost sizing for Design A).
+
+### Measurement: the four target events
+
+Run with `SBND_ROUGH_PATH_PROBE=true SBND_WCT_LOGLEVEL=trace
+./run_pr_chain_batch.sh <ql_root> <out_root> data <evt>` (`work-pr51-probe-nuecc48f`
+for 131357/268067, `work-pr51-probe-ncpi0f` for 285567/506746);
+`grep -a "rough_path_probe"` on each `pr_evt<ID>/wct_pr_evt<ID>.log`.
+
+**P1 provenance, all four events**: every near-vertex segment reads
+`rough(curved)` except three `straighten(rough_or_straight)` calls, all
+three of which are long (65-85cm) or very short (2-3 point) segments where
+the heuristic's known false-positive mode applies (a genuinely long
+straight main track, or too few points to have curvature at all) — **not**
+evidence of `examine_structure_1` authorship. H1 (the Dijkstra cost model)
+is the measured mechanism on all four target events; H2 is not ruled out
+in general (its structural argument in §Root cause stands on its own) but
+is not what wrote these four paths.
+
+**P3, the load-bearing measurement** — does today's production path
+actually carry an unsupported stretch, and does a modest penalty reroute
+it:
+
+| event | segment (len) | today unsup. len | first scale that reroutes | at that scale |
+|---|---|---|---|---|
+| 131357 | 9.09cm (seg `0x5555668111c0`) | 0.23cm | scale=1 | len 10.79->10.73cm (shrinks), unsup ->0cm |
+| 268067 | 84.70cm (seg `0x555565c4b8f0`, main track) | 1.22cm | scale=1 | len 98.61->98.94cm (+0.3cm), unsup ->0.45cm; fully clear by scale=5 |
+| 285567 | 44.74cm / 53.25cm (two long arms) | 0.19-0.22cm | scale=2 | unsup ->0cm, len +0.2-0.3cm each |
+| 285567 | 65.81cm (seg `0x55556c660f60`) | **2.18cm** | **none up to scale=10** | unchanged at every scale — open, see below |
+| 506746 | 65.53cm (seg `0x55556987c080`, main track) | 1.25cm | scale=1 | len 75.93->77.37cm (+1.4cm), unsup ->0cm |
+
+Three of the four target events (131357, 268067, 506746) show exactly the
+owner's report: the graph's own charge-support scan finds a real
+unsupported stretch on the segment that is live in production **today**,
+and a penalty scale of 1-2 (well inside the sizing estimate in §Root
+cause) reroutes it onto a fully-supported path, in one case (131357)
+*shrinking* the path while doing so — the shortest-distance route is not
+even the shortest-cost route once the unsupported stretch is priced in.
+This is the fix working as designed on the exact events the owner flagged.
+
+**285567's 65.81cm segment is an open residual**, reported honestly rather
+than folded into the "fixed" column: its 2.18cm unsupported stretch does
+not reroute at any tested scale, meaning no lower-cost alternative exists
+in the Steiner graph at all — the unsupported region is either genuinely
+unavoidable (a real gap the image cannot resolve on any path between
+those two endpoints) or the endpoint-snap itself is off. This is very
+plausibly the same stretch the owner flagged separately as *"not
+explained by the image at all, also a jump somehow"* — a gap-penalty fix
+alone will not close it, and it needs its own follow-up (does *any* image
+point exist between the two components, or is this a genuine
+detector-level hole).
+
+**Cost sizing** (the one-time per-cluster support scan, `edges_scanned`/
+`scan_ms`, all near-vertex-segment scopes but scanning the cluster's full
+`"steiner_graph"`): 131357 3281 edges / 2793 scanned / 8.1ms; 268067 2895
+/ 2411 / 5.5ms; 285567 (largest cluster seen) 9857 / 9192 / 69.6ms; 506746
+2019 / 1756 / 4.8ms. Roughly 7-8us/scanned-edge; even the largest cluster
+here costs well under a tenth of a second, small next to the multi-second
+imaging/fitting stages already in the pipeline — a per-cluster-once scan
+is affordable at production scale, though a 1k-event wall-time census is
+still owed before any flip (§Status below).
+
+### Proposed fix (designed this round, NOT shipped)
+
+**Design A — `steiner_gap_penalty`, a PR-only penalized Steiner graph
+flavor.** Build a second graph, `"steiner_graph_gap"`, same topology as
+`"steiner_graph"`, edges re-weighted exactly as P3's scratch copy above,
+built once per cluster (main and — for parity, so the effect isn't
+main-cluster-only in a way that shows up as baffling partial effects in a
+census — every cluster whose `do_rough_path` the knob is meant to change)
+at the point `create_steiner_tree` installs the base graph
+(`SteinerGrapher.cxx:130`, alongside the existing `give_graph` call), and
+must be confirmed to survive whatever `CreateSteinerGraph.cxx:194` calls
+"the final graph transfer" (or be rebuilt there) so it isn't silently
+dropped between grouping stages. `do_rough_path` selects
+`"steiner_graph_gap"` when the knob is on and the flavor exists, else
+`"steiner_graph"` unchanged — **nothing else moves**: the STM tagger
+(`TaggerCheckSTM.cxx:931,1245,1249,2747`), first-segment endpoint
+selection, `CreateSteinerGraph`'s terminal filtering, and every non-PR
+consumer keep the original graph, which is what keeps the knob-on census
+tractable. Guards: only edges > 0.5cm scanned (sub-blob edges cannot hide
+a gap, and this bounds the cost); the factor is capped so no edge becomes
+infinite and the graph stays connected; intra-blob Steiner edges are on
+charge by construction and are skipped. Knob default `scale = 0` => factor
+identically 1 => the penalized flavor is never built and `do_rough_path`
+never switches => byte-identical. Sizing: `scale = 1` already buys a 2x
+detour tolerance against a fully-unsupported chord (table in §Root cause),
+covering every turn down to 60 deg; the measurement above confirms `scale`
+in `{1, 2}` is enough on 3/4 target events specifically.
+
+**Design B — dead-only straight-line rejection in `examine_structure_1`.**
+Tighten the replacement's acceptance so a straight line whose support is
+**dead-only** is rejected, using the same three-tier probe applied at
+`NeutrinoStructureExaminer.cxx:95` where today a dead-blessed
+`is_good_point` returns `true`. Default-OFF knob; off, the existing
+`n_bad <= 1` test is textually untouched. Kept as a documented, ready
+design even though P1 measured H1 as this round's actual mechanism —
+H2's structural argument (dead-blessed straightening, mechanical jump
+generation) is real and independent of these four events, and a future
+event could implicate it specifically.
+
+**Explicitly rejected, with reasons:** raising `fit_blob_coverage` (it
+de-weights *foreign-claimed* cells; points covered by **nobody** are
+deliberately kept at full weight — the strict variant moved 47/48 nueCC
+events and was abandoned, `doctest_fit_blob_coverage.cxx:181-198` — this
+is a projection-ghost de-weighter, not an unsupported-point detector, and
+does not address a genuinely-empty short-cut at all); extending mvga op2
+(segment-granularity, cannot see an intra-segment stretch, per §Why
+rounds 2-3 could not have fixed this above).
+
+### Verification (round 4)
+
+- `wcdoctest-clus`: 131/131 (same count as round 3; the new knob extends
+  the existing `CHECK_KNOB_BOOL` table).
+- Compiled-config proof: knob-off compiled JSON is byte-identical to the
+  pre-round-4 (round-3 HEAD) baseline (`diff` empty, via a stash
+  round-trip on the three touched jsonnet files only); knob-on compiled
+  JSON contains the `rough_path_probe` key, absent when off (both via
+  `wcsonnet -S rough_path_probe=true|<absent>` on `wct-pr-perevt.jsonnet`).
+- Off-gate: `work-pr51-off48f` (probe + every other round-2/3 knob off)
+  vs `work-pr51-off48e` (round-3's own validated baseline, 48 nueCC
+  events) — `on_compare.py`: 0/48 archive-level differences, 0/48
+  nusel-events.tsv diffs, 0/48 nusel-table.tsv diffs. Earned, not assumed:
+  round 4 adds a new call site
+  (`pattern_algos.rough_path_probe(...)`) into `TaggerCheckNeutrino.cxx`'s
+  production call chain, so the claim needed its own gate run even though
+  the function itself is a single-line early return when off.
+- Freshness proof done before every A/B (`local/lib/libWireCellClus.so`
+  mtime newer than the last source edit) per M1.
+
+### Status + owner decision (round 4)
+
+`rough_path_probe` ships **default OFF**, diagnostic-only, no production
+behavior change — this round's deliverable is the measured diagnosis and
+the Design A/B writeup above, not a shipped fix (per the owner's own
+framing: "no need to update the code yet ... come up with the solution").
+
+**Open items for the next round:**
+
+- Implement Design A (`steiner_gap_penalty`) behind its own default-OFF
+  knob, with the off-gate + on-census + Bee re-scan discipline every prior
+  round in this doc used.
+- 285567's 65.81cm unrerouteable stretch (§Measurement above) needs its
+  own follow-up before claiming Design A closes 285567 — it may be a
+  genuine image gap, not a path-cost artifact.
+- A 1k-event wall-time census for the per-cluster Steiner re-weighting
+  cost, extrapolating from the 4.8-69.6ms-per-cluster range measured here.
+- `examine_structure_1`'s dead-channel-blessed straightening (H2) is a
+  real, independent-of-these-four-events finding; Design B stays a ready,
+  unimplemented design until an event specifically implicates it.

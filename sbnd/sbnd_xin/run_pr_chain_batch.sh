@@ -724,6 +724,28 @@ fi
 if [ -n "${SBND_MAIN_VERTEX_SWAP_APPLY:-}" ]; then
     CATH_TLA+=(--tla-code "main_vertex_swap_apply=${SBND_MAIN_VERTEX_SWAP_APPLY}")
 fi
+# doc pr/51 round 4: diagnostic-only rough-path probe (near-vertex short-cut
+# investigation, path-COST not graph-shape).  Boolean TLA, same contract.
+# No graph/fit/segment content is ever changed; every line is TRACE.
+#   SBND_ROUGH_PATH_PROBE
+if [ -n "${SBND_ROUGH_PATH_PROBE:-}" ]; then
+    CATH_TLA+=(--tla-code "rough_path_probe=${SBND_ROUGH_PATH_PROBE}")
+fi
+# doc pr/54: keep well-supported isolated residual segments in
+# find_other_segments (18255-142421 separated EM shower with no fitted
+# trajectory).  Boolean TLA, same contract; the two numeric floors ride the
+# C++ defaults (25 points / 3 cm) unless their own envs are set (bare
+# values: integer count, cm).
+#   SBND_OTHER_SEG_KEEP_ISOLATED
+if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_keep_isolated=${SBND_OTHER_SEG_KEEP_ISOLATED}")
+fi
+if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_POINTS:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_points=${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_POINTS}")
+fi
+if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH:-}" ]; then
+    CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_length=${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH}")
+fi
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
