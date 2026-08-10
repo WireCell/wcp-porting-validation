@@ -1,12 +1,16 @@
 # doc pr/56 — 2D wind/tick connectivity redesign for `connect_graph_relaxed_strict`'s gap test
 
-Status: **round 2 IMPLEMENTED, SBND PRODUCTION default still OFF (owner
+Status: **round 3 IMPLEMENTED, SBND PRODUCTION default still OFF (owner
 review pending before any flip).** §1-§6 below are the original design
-(unchanged as written except where round 2 explicitly overrides it). §7 is
-the round 2 implementation record: what was actually built, three
-owner-directed changes from the design as written, and measured results on
-the two named target events. Toolkit `a2a3c697`, wcp-porting-img `<WCP_SHA,
-this commit>`.
+(unchanged as written except where round 2/3 explicitly override it). §7 is
+the round 2 implementation record. §8 is round 3: two round-2 bugs fixed
+(4-connected BFS stencil, wrong slice-adjacency stride), one owner-reported
+false-positive rescued via a distance floor, adjacency widening tried and
+rejected (it breaks a kill target), a 117-event sample-wide census +
+fragment-count study, and a corrected 117-event byte-identical OFF gate.
+Toolkit round-2 `a2a3c697`, round-3 `<TOOLKIT_SHA, this commit, not yet
+pushed>`; wcp-porting-img round-2 `e85bd0f`, round-3 `<WCP_SHA, this
+commit>`.
 
 ## Repro block
 
@@ -36,6 +40,37 @@ grep -a "OC53CENSUS-S closest j=5 k=10\|OC53CENSUS-S closest j=5 k=11\|OC53CENSU
 # after-fix Bee set (both events, S6-on PR output):
 python3 scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -q work-nuecc48-cb0805 \
     -p work-pr56r2-on19 -p work-pr56r2-on48 -o bee/pr56r2/pr56r2-after.zip 71372 269774
+
+# round 3: sample-wide census (48 nueCC + 19 NC-pi0 + 50 PR-data), final
+# operating point (repaired baseline, U/V/W adjacency all (1,1), distance
+# floor 1.0cm):
+M50=$(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=6 \
+    ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr56r3-floor-cen48 data
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=6 \
+    ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr56r3-floor-cen19 data
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=6 \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr56r3-floor-cen50 data $M50
+
+# byte-identical OFF gate (bare, no env override), all three samples:
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr56r3-off48 data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr56r3-off19 data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr56r3-off50 data $M50
+python3 scripts/analysis/pr49/on_compare.py work-pr53r7-on48 work-pr56r3-off48
+python3 scripts/analysis/pr49/on_compare.py work-pr53r7-on19 work-pr56r3-off19
+python3 scripts/analysis/pr49/on_compare.py work-pr53r7-on50 work-pr56r3-off50
+
+# offline operating-point scan from the census logs (no rerun needed per
+# candidate point):
+python3 scripts/analysis/pr56/s6_scan.py work-pr56r3-floor-cen48 work-pr56r3-floor-cen19 \
+    work-pr56r3-floor-cen50 --near-touching 3.0
+
+# round-3 Bee set (both named targets + two representative sample-wide
+# fragmentation cases, final S6-on output):
+python3 scripts/bee/make_pr_bee.py \
+    -q work-ncpi0-cb0805 -q work-nuecc48-cb0805 -q work-nuecc48-cb0805 -q work-nuecc48-cb0805 \
+    -p work-pr56r3-floor-cen19 -p work-pr56r3-floor-cen48 -p work-pr56r3-floor-cen48 -p work-pr56r3-floor-cen48 \
+    -o bee/pr56r3/pr56r3-after.zip 71372 269774 122660 214469
 ```
 
 Two figures sent this session document the visual gap this design targets
@@ -370,9 +405,20 @@ the candidate's own 3D gap distance, so the 2-3cm target gaps get small
 seed sets automatically. The real slice-adjacency stride is **derived at
 runtime**, not assumed: the minimum positive difference between distinct
 `slice_index_min` values found among the seeded points (falls back to the
-SBND default of 4 only if no two distinct values are seen). Every run this
-round measured `slice_step=4`, confirming the derivation lands on the true
-config value rather than the fallback by coincidence.
+SBND default of 4 only if no two distinct values are seen).
+
+> **Correction (round 3):** the claim that follows in this paragraph in the
+> original round-2 text — "every run this round measured `slice_step=4`,
+> confirming the derivation lands on the true config value rather than the
+> fallback by coincidence" — is **false** and is retracted here rather than
+> silently edited away. Round 3 found `slice_step` values of 12, 16, 36, 44,
+> 48, 64, 76, 84, 100 and 204 on 11 of 93 S6-evaluated edges in the SAME
+> `work-pr56r2-on19/pr_evt71372` run this claim was based on — the "first
+> sorted adjacent gap between distinct `slice_index_min` values" rule above
+> is not the true stride whenever the seed region spans non-adjacent blobs.
+> See §8.1 for the fix and its effect (it does **not** change either of
+> round 2's own two verified target-edge kills — see §8.3 — so that specific
+> result stands; only this one supporting sentence was wrong).
 
 **The check** (`s6_planes_connected`, anonymous namespace,
 `connect_graph_relaxed_strict.cxx`): per plane, a bounded bidirectional BFS
@@ -503,3 +549,274 @@ authorized this round):
 - **Collateral-kill magnitude (all 15 of 15 survivors killed on 269774
   cid 13) is worth the owner's attention before considering a flip** — see
   §7.3. This is reported, not tuned away.
+
+## 8. Round 3 — repair, one owner-reported false positive fixed, sample-wide census
+
+Owner report that triggered this round: near `(x,y,z) = (-164.4,-171.0,
+226.1)`, an isochronous track was broken into two clusters by a signal gap
+in the U plane, attributed to a large EM shower's prolonged induction
+signal (not prolonged path *topology*, so the existing `angle1`/`angle2`
+excusal cannot fire for it) — not prolonged-topology inefficiency. Ask: use
+the 48 nueCC + 19 NC-pi0 + 50 PR-data samples to scan and tune, sample real
+vs. not-real gaps, and above all avoid breaking a long track into two.
+
+### 8.1 Event attribution corrected
+
+The reported coordinates are in event **71372**, not 269774 as first
+assumed: 269774 has no reconstructed charge within 110cm of that point;
+71372 has charge 0.03cm away (124 points in a 5cm cube), and its S6-killed
+edge there matches the report exactly — `j=12 k=13`, `dis=0.76cm`,
+`gap_u=true`, `gap_v=gap_w=false`, no excusal. Round-2's Bee set already had
+71372 at index 0.
+
+### 8.2 Two round-2 defects found and fixed (repair, before any tuning)
+
+Both manufacture false gaps; tuning on top of them would tune around a bug,
+not a physical effect, so both were fixed first and re-verified before any
+operating-point change.
+
+1. **The BFS was 4-connected, not 8-connected.** `s6_planes_connected`'s
+   stencil was `{(±1,0),(0,±slice_step)}` — von Neumann, not "±1 in both
+   wire and time" as assumed. Any non-axis-aligned 2D footprint disconnects
+   wherever the corner pixel doesn't fire. Fixed by generalizing the
+   stencil to a parametrized Chebyshev box (`dw` wires × `ds` slice-steps,
+   excluding the origin); `dw=ds=1` is the true 8-connected repair of round
+   2's intended behavior.
+2. **`slice_step` was derived by a wrong rule.** Round 2 took the first
+   adjacent gap in the sorted-unique list of seeded points' own
+   `slice_index_min` values — not the true stride whenever the seed region
+   spans non-adjacent blobs. Measured values of 12, 16, 36, 44, 48, 64, 76,
+   84, 100, 204 on 11 of 93 S6-evaluated edges in evt 71372 (all should have
+   been 4) — this directly falsifies round 2's own §7.2 claim that "every
+   run this round measured `slice_step=4`" (corrected in place there, this
+   round). Fixed: a blob's own `slice_index_max()-slice_index_min()` **is**
+   `span/tick`, i.e. the true `tick_span`, by construction
+   (`aux/src/SamplingHelpers.cxx:90-91`) — no cross-blob inference needed at
+   all. `slice_step` is now the minimum such span found among the seeded
+   blobs on either side, fallback 4 only if none is positive.
+
+**Repair-only re-verification** (both bugs fixed, adjacency still at the
+default `(1,1)`, no distance floor yet): re-ran both named events.
+269774's census is **byte-identical to round 2** — all 15 edges, all 15
+verdicts unchanged, including both named targets (`j=5 k=10` 2.00cm,
+`j=10 k=11` 2.69cm, both still `killed=true`). So round 2's target-edge
+result stands untouched by the repair. 71372 changed on 6 of 93 edges, one
+of them the reported case: `j=12 k=13` (0.76cm) flips from `killed=true`
+(round 2, spurious `gap_u` from the 4-connected stencil) to `killed=false`
+— the **repair alone already rescues the reported case**, with no further
+relaxation. The other 5 flipped edges (4.5-11.7cm) all show `gap_u=gap_v=
+gap_w=false` under the repair, i.e. the repaired 8-connected BFS finds no
+gap on any plane at all — consistent with round 2's 4-connectivity bug
+being the cause, not a second real effect. Cluster 19's fragment count
+improves from round 2's buggy 13 pieces to a repaired 11 (main-retained
+blob count unchanged at 1059).
+
+### 8.3 A third bug found in the diagnostics, fixed at the source
+
+The first cut of round 3's enriched census split each edge's per-plane data
+across separate `OC56CENSUS-2D plane` lines correlated with the edge's
+`OC56CENSUS-2D edge` line by matching `(blk,j,k)` across sequential log
+lines. Component indices `j,k` restart per cluster, so this key collides
+across different clusters processed within the same event — and
+`ClusteringProtectBundle` can process clusters concurrently, interleaving
+their log lines. Six of 67 logs in an early 48+19-sample run showed
+unpaired plane-line groups, proving the correlation broke somewhere.
+**Fixed at the source, not by patching the parser**: every field (including
+a `dw={1..4} × ds={1..4}` connectivity matrix per plane, so any candidate
+operating point is evaluable offline from one run) now lives on a single
+self-contained `OC56CENSUS-2D edge` line — nothing left to correlate. This
+is a diagnostics-only fix; it does not touch `two_d_gap_kill`'s actual
+kill decision, which was never affected (each call computes and returns its
+own verdict atomically; only the *offline log-parsing reconstruction* of
+that verdict was at risk). New script: `scripts/analysis/pr56/s6_scan.py`.
+
+### 8.4 Sample-wide census: the repair alone is not enough
+
+A census across all 117 events (`WCT_RELAXED_EDGE_CENSUS=1
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d`, repaired baseline, no floor)
+found 2089 S6-evaluated edges across 88 events, **74.2% killed overall**,
+53-89% depending on 3D-gap-distance bucket (53% at 0-1cm, rising to 89% at
+15-30cm). The aggregate rate is not by itself the metric that matters — S6
+only evaluates candidates that already survived S1-S5, a small, already
+curated pool — so the decisive check is the one the owner's own concern
+maps onto directly: **does turning S6 on break more real tracks than
+production does**, measured as `ClusteringProtectBundle`'s own `retained N
++ M fragment(s)` line, diffed per cluster between the bare (OFF) arm and
+the S6-on (repaired-baseline) arm, across every cluster large enough for
+`ClusteringProtectBundle` to log in all 117 events.
+
+**Result: 51 of 53 comparable clusters get MORE fragmented at the repaired
+baseline than production; 0 get fewer.** This is not confined to the two
+named events — e.g. evt 122660 cid 9 goes from 3 pieces (production) to 19;
+evt 239794 cid 2 from 5 to 18; evt 433451 cid 4 from 4 to 16. The bug repair
+fixes what it claims to fix (the two named controls, see §8.2) but does
+**not**, by itself, avoid the owner's stated "long track broken into two"
+failure mode at sample scale — it was never designed to; §8.2 only closed
+two implementation bugs, it did not address the operating point's
+aggressiveness.
+
+### 8.5 Adjacency widening: tried, and rejected — it breaks a kill target
+
+The natural next step, widening the per-plane BFS stencil beyond `(1,1)`
+(the owner's own suggestion, "U and V plane should have slightly relaxed 2D
+connectivity"), was implemented and tested at `(dw,ds)=(2,2)` on U/V (W left
+at `(1,1)` — W is the collection plane, has the least real signal
+inefficiency, and is never excused by design; a check confirmed that
+relaxing W's adjacency too erases most of its near-touching discriminating
+power entirely, e.g. `(4,4)` on all three planes drops the 0-1cm bucket's
+kill rate to 0/184 — treated as proof W should stay strict, not as a
+tuning candidate).
+
+**`(2,2)` on U/V rescues the 71372 target (0.76cm) — and also rescues
+269774's `j=10 k=11` control (2.69cm), which must stay killed.** Both are
+U-plane-only unexcused gaps (269774's V gap is present but excused by the
+angle test); pure wire/tick adjacency widening cannot distinguish them,
+since it responds to proximity in the 2D grid, not to 3D distance, and both
+edges' U-plane gaps happen to close at the same stencil size. Verified with
+a real pipeline rerun, not just the offline matrix estimate — this is
+exactly the binding-constraint tension identified before implementation
+began, and exactly the case the owner pre-approved a fallback for:
+
+> "If widening U adjacency alone can't separate them, use a 3D-gap floor."
+
+Adjacency widening on U/V is **not shipped**. All three planes remain at
+the repaired `(1,1)` baseline.
+
+### 8.6 Final operating point: a distance floor only
+
+`s6_dis_floor = 1.0cm`: below this 3D gap, S6 abstains outright (same
+"no evidence, no verdict" posture as the existing APA/face and empty-seed
+abstentions). A floor only ever *removes* kills strictly below it; it
+cannot change any verdict at or above it, so it is structurally incapable
+of re-breaking a kill target the way adjacency widening did. Chosen with
+margin on both sides of the two controls it has to separate (0.76cm
+rescued, 2.00cm and 2.69cm both untouched); 1.0-1.9cm all give the same
+separation, 1.0cm was kept as the simplest round number with the most
+margin toward the rescue side.
+
+**Controls, verified with real pipeline reruns (not the offline matrix
+estimate) at the final operating point** (repaired `(1,1)` adjacency on all
+three planes, `s6_dis_floor=1.0cm`):
+
+| control | dis | requirement | result |
+|---|---|---|---|
+| 71372 `j=12 k=13` (closest) | 0.76cm | must survive | **survives** (floor-abstained; no census line emitted for floor-abstained edges — see caveat below) |
+| 269774 `j=5 k=10` (closest) | 2.00cm | must stay killed | **killed=true** |
+| 269774 `j=10 k=11` (closest) | 2.69cm | must stay killed | **killed=true** |
+| 71372 near-vertex set (1.1-2.7cm, from doc pr/56 round 1) | — | must stay killed | all confirmed still killed (none of them are S6's own near-touching-only class besides the one named target) |
+
+Caveat: the floor's early return happens before the `oc53_census` log
+statement, so a floor-abstained edge emits **no** `OC56CENSUS-2D` line at
+all. The rescue was confirmed instead via the resulting
+`ClusteringProtectBundle` fragment count for cluster 19 (below), and by the
+absence of any `OC56CENSUS-2D edge blk=closest j=12 k=13` line in the final
+rerun where round 2 and the repair-only rerun both showed one.
+
+**Fragment counts, final operating point, both named events:**
+
+| event | cluster | production (OFF) | S6-on, repaired baseline (no floor) | S6-on, final (repair + floor 1.0cm) |
+|---|---|---|---|---|
+| 269774 | cid 13 | 521 + 20 = 21 pieces | 339 + 32 = 33 pieces | 339 + 30 = 32 pieces |
+| 71372  | cid 19 | 1482 + 3 = 4 pieces  | 1059 + 10 = 11 pieces | 1067 + 9 = 10 pieces |
+
+The floor rescues exactly one fragment on 71372 (11→10, +8 blobs reabsorbed
+into the main retained count) and two on 269774 (32→30); it does not touch
+269774's main-retained blob count at all (339 both with and without the
+floor) — expected, since neither of 269774's own gaps is below 1cm.
+
+### 8.7 The floor is a narrow, correct fix — not a sample-wide solution
+
+Re-running the full 117-event fragment-count diff at the final operating
+point (repair + floor 1.0cm): **49 of 57 comparable clusters still get more
+fragmented than production; 0 get fewer** — essentially unchanged from
+§8.4's repair-only 51/53. The floor removes exactly the sub-1cm class of
+false positive it was built for (confirmed on the two named events above)
+but the bulk of the sample-wide over-fragmentation comes from S6 kills at
+1-30cm, a range the floor does not touch and adjacency widening cannot
+touch without re-breaking a control (§8.5).
+
+**This is reported as the honest result, not tuned away further.** The
+owner's ask was to fix the specific reported case and scope-check it
+against the sample — both are done, and both point the same direction: S6,
+even after the round-3 repair and floor, remains far more aggressive than
+production if it were ever the default. That is a property of the current
+per-plane-gap-vote design (any S1-S5 survivor showing a real but small,
+possibly-3D-ambiguous single-plane discontinuity gets killed, and such
+candidates are common across the whole 1-30cm range, not rare), not
+something this round's scope (owner: "no need to worry other cases yet")
+asked to redesign. A charge-context-aware excusal (distinguish "real gap"
+from "gap embedded in dense nearby charge, like a large EM shower" more
+directly than an angle proxy) was offered as an alternative fallback and
+not chosen this round; it remains the natural next design if the owner
+wants S6 broadened beyond the two named cases.
+
+### 8.8 Verification
+
+**Freshness proof**: `local/lib/libWireCellClus.so` mtime `2026-08-09
+22:22:36` > last source edit `22:22:14`, for the final build.
+
+**`./build/clus/wcdoctest-clus`**: 145/145 test cases, 1594/1594 assertions
+passed, both after the repair and after the final floor-only build.
+
+**Byte-identical OFF gate — PASS 0/117** across all three samples (default
+`graph_name` unchanged, so this must be, and is, a clean pass):
+
+| sample | events | archive-level diffs | nusel-events.tsv diffs | nusel-table.tsv diffs |
+|---|---|---|---|---|
+| 48 nueCC | 48 | 0/48 | 0/48 | 0/48 |
+| 19 NC-pi0 | 19 | 0/19 | 0/19 | 0/19 |
+| 50 PR-data | 50 | 0/50 | 0/50 | 0/50 |
+
+Compared against the same production baseline arms round 2 used
+(`work-pr53r7-on{48,19,50}`), via `hash_archive.py` member-content hashing
+(never raw `cmp`/`md5sum` on archives) plus `nusel-evt*.tsv`.
+
+**Cost**, non-census production-representative timing (`MABC timing:
+ClusteringProtectBundle:pr`, single-run, not a profiled average):
+
+| event | production (OFF) | S6-on, final (repair + floor) |
+|---|---|---|
+| 269774 | 506.4 ms | 485.1 ms |
+| 71372  | 1015.7 ms | 845.7 ms |
+
+No regression on either named event (both slightly faster under S6-on,
+consistent with round 2's observation that killing more candidate edges
+reduces downstream MST/steiner work — not claimed as a real speedup, a
+single before/after pair is not a profile). Census-mode runs (used for all
+the diagnostic numbers above) are slower due to the diagnostic 16-point
+`dw×ds` matrix scan per plane per edge; that overhead is never present when
+`WCT_RELAXED_EDGE_CENSUS` is unset, which is every production run.
+
+**Bee set, final S6-on output** (owner-requested judgment cases: both named
+targets plus two representative sample-wide fragmentation examples from
+§8.4, so the owner can independently judge whether those are real
+gaps correctly found or over-aggressive kills):
+`https://www.phy.bnl.gov/twister/bee/set/e4bc3ea0-396c-49bc-821e-5e1f04993fb3/event/list/`
+— index 0 = 71372, 1 = 269774, 2 = 122660 (cid 9, 3→15 pieces), 3 = 214469
+(cid 16, 2→12 pieces). (`bee/pr56r3/pr56r3-after.{zip,index.txt,
+prid-map.txt}`.)
+
+### 8.9 Files touched this round
+
+`clus/src/connect_graph_relaxed_strict.cxx` only (stencil generalization,
+`slice_step` fix, single-line census redesign, `s6_dis_floor`, the
+`dw={1..4}×ds={1..4}` matrix diagnostic) — same one-file blast radius as
+round 2. New: `scripts/analysis/pr56/s6_scan.py` (offline operating-point
+scan/candidate evaluator against the census matrix). This doc.
+
+### 8.10 Open items / not done this round
+
+- **No default flip.** `graph_name` stays `relaxed_strict_img` in
+  production.
+- **Sample-wide over-fragmentation at the current operating point is real
+  and unresolved** (§8.7) — flagged for owner attention, not silently
+  tuned around. If broader relaxation is wanted, a charge-context-aware
+  excusal (§8.7) is the recommended next design, not further adjacency or
+  floor tuning on the current per-plane-gap-vote mechanism.
+- **No downstream (fitter/tagger/nusel) hand-scan of the final ON arms**
+  beyond the byte-identical OFF gate and the four named controls — the Bee
+  set above is the intended next check, same posture as round 2.
+- **The census diagnostic cannot show floor-abstained edges** (§8.6
+  caveat) — confirmed via the resulting fragment count instead; a future
+  round could log floor-abstentions explicitly if that gap matters for a
+  later study.
