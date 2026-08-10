@@ -8,9 +8,8 @@ the round 2 implementation record. §8 is round 3: two round-2 bugs fixed
 false-positive rescued via a distance floor, adjacency widening tried and
 rejected (it breaks a kill target), a 117-event sample-wide census +
 fragment-count study, and a corrected 117-event byte-identical OFF gate.
-Toolkit round-2 `a2a3c697`, round-3 `<TOOLKIT_SHA, this commit, not yet
-pushed>`; wcp-porting-img round-2 `e85bd0f`, round-3 `<WCP_SHA, this
-commit>`.
+Toolkit round-2 `a2a3c697`, round-3 `c68398c7` (committed, not yet pushed);
+wcp-porting-img round-2 `e85bd0f`, round-3 `475da3c` (pushed).
 
 ## Repro block
 
