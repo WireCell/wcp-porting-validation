@@ -11,6 +11,12 @@ path are untouched (dump-OFF byte-identical gate PASS 0/117, §4).
 Toolkit `e47b1486` (committed, not pushed); wcp-porting-img `5a529e0`
 (pushed).
 
+**Round 2 (sec 10)**: the remaining 395 PR events of the 1000-event data
+sample are processed (`work-pr57r2-scan395`), the first 50 are served on port
+**5019**, and a machine first-pass label set calibrated on the owner's 575
+round-1 labels is written to `overclustering_labels/claude-scan50/`. Sections
+1-9 below are round 1 and are left as the record of that round.
+
 ## Repro block
 
 ```bash
@@ -285,3 +291,225 @@ block's event lists).
   panel title, but `oc56_dump_check.py` currently just skips such plane
   records rather than checking them at the fallback stride -- worth
   extending if the cap ever actually bites.
+
+---
+
+## 10. Round 2 -- extension scan over the rest of the 1000-event data sample
+
+Status: **395 remaining PR events processed, first 50 served on port 5019 with
+a machine first-pass label set (`overclustering_labels/claude-scan50/`, 66
+pairs -> 55 good / 11 bad).** No algorithm change, no toolkit change: this
+round is arms, scripts and labels only.
+
+### 10.1 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# 1. the remaining 395 PR events of the 1000-event data sample.
+#    NOTE the graph flavor: it must match work-pr58-scan50 (doc pr/58's
+#    floor_w_override arm) or the new labels are not comparable with round 1's.
+EV=$(tail -n +51 valfast/events-mcp1k-cb0805.txt)
+PR_JOBS=32 SBND_PROTECT_GRAPH=relaxed_strict_img_2d_wfloor \
+WCT_RELAXED_EDGE_CENSUS=1 PR_OC56_SCAN_DUMP=1 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr57r2-scan395 data $EV \
+  > work-pr57r2-scan395.driver.log 2>&1
+
+# 2. the dump still does not lie (sec 5, on the new arm)
+python3 scripts/analysis/pr57/oc56_dump_check.py work-pr57r2-scan395
+
+# 3. calibrate the classifier on the owner's own labels, then label
+python3 scripts/analysis/pr57/oc56_autoscan.py calibrate \
+  --arm work-pr58-scan48 --arm work-pr58-scan19 --arm work-pr58-scan50
+python3 scripts/analysis/pr57/oc56_autoscan.py label \
+  --arm work-pr57r2-scan395 --tag claude-scan50 --first 50
+python3 scripts/analysis/pr57/oc56_autoscan.py verify \
+  --arm work-pr57r2-scan395 --tag claude-scan50
+
+# 4. render pair panels for off-browser inspection
+python3 scripts/analysis/pr57/oc56_render_pair.py \
+  --arm work-pr57r2-scan395 --first 50 --out /home/xqian/tmp/oc57r2_panels
+
+# 5. serve. Port is strictly $1 and --tag must follow it immediately.
+./overclustering_display/serve_overclustering_scan.sh 5019 --tag claude-scan50 \
+  $(awk -F'\t' 'NR>1{print $3}' docs/pr/pr57r2-scan50.index.txt)
+# ssh -L 5019:localhost:5019 wcgpu1.phy.bnl.gov
+# http://localhost:5019/overclustering_scan_viewer
+```
+
+Event list: `docs/pr/pr57r2-scan50.index.txt` (the 50 served events);
+per-pair feature table: `docs/pr/pr57r2-scan50-pairs.tsv`.
+
+### 10.2 How many events actually have PR results
+
+Of the 1000 data events, **445 have real PR output** -- the discriminator is
+the `TaggerCheckNeutrino: selected main cluster` log line, pinned in
+`valfast/events-mcp1k-cb0805.txt`. All 1000 have `rc=0`, `pctree-pr-*.tar.gz`,
+`mabc-pr.zip` and a `nusel` row, so **none of those is a "has PR" marker**;
+`calib-pr-evt*.json` matches the 445 only on arms run with
+`PR_EXTRA_STAGES=pr_display`.
+
+Round 1's 50 data events are the first 50 of those 445; this round processed
+the other **395**. Results: 395/395 `rc=0`, 1.4 GB, ~3 min wall at
+`PR_JOBS=32` (loadavg peaked at 23 on 64 cores). 249 events wrote an
+`oc56scan` dump and **184 are non-empty** -- an event only gets one when the
+relaxed-strict graph is actually built and reaches S6.
+
+`oc56_dump_check.py` on the new arm: **885 edges, 42480 matrix cells
+replayed, 0 mismatches, PASS**.
+
+### 10.3 What the owner's 575 labels actually say
+
+Joined per-edge to the round-1 dumps, 575/575 with zero misses
+(OK 458, good 71, bad 46; 536 pairs, of which 91 are good/bad):
+
+| feature | bad | good | OK |
+|---|---|---|---|
+| `Lmin` = shorter component PCA length | med **36.7 cm** | med 3.5 | med 3.4 |
+| `npmin` = smaller component npts | med **468** | med 31 | med 31 |
+| W-plane gap present | **2 / 46** | **68 / 71** | 202 / 458 |
+| local density (pts within 15 cm of the edge midpoint) | med 373 | med 816 | med **2033** |
+| `d_vtx` (edge midpoint -> reco nu vertex) | med 20.7 cm | med 50.4 | med 60.2 |
+| angle between component PCA axes | 47 deg | 44 deg | 44 deg |
+
+Three findings worth keeping:
+
+1. **The three prose rules are measurable.** "long track cut in the middle" =
+   large `Lmin` **and** large `npmin` with no W gap; "busy EM shower" = high
+   local density with short components; the axis-axis angle is useless
+   (44-47 deg in all three classes -- do not build a rule on it).
+2. **`d_vtx` alone does NOT mean good.** At pair level `d_vtx < 3 cm` is bad 9
+   / good 5, and among the pairs where the long-track-break rule fires, **all
+   8 labelled ones with `d_vtx < 3 cm` are bad**, at angles from 3 to 86 deg.
+   The owner does not want two substantial prongs cut apart at the vertex
+   either. So rule 2 must be evaluated *before* rule 3; a naive "near the
+   vertex => good" override costs 8 of 32 bad recall (measured).
+3. **A W-plane gap is very nearly an absolute "good" signal**: 253 pairs gap
+   in W, and exactly **one** of them is labelled bad (evt137238). This is
+   round 1's "W is the robust plane" stated as a number.
+
+### 10.4 The classifier
+
+`scripts/analysis/pr57/oc56_autoscan.py`. Verdicts are decided per component
+**pair** `(event, graph_call, j, k)` and written onto every edge of that pair,
+per the owner's round-1 point 2 (what matters is cluster-level separation, not
+the individual edge); `verify` asserts no pair carries mixed verdicts.
+
+```
+R2   bad   Lmin > 6 cm and npmin >= 50 and no W gap        (long-track break)
+R2d  bad   >=3 dead W wires spanning the seeds, no W gap,
+           Lmax > 40 cm, dis < 3 cm                        (owner's case (a))
+R3   good  W gap                                           (robust plane sees a hole)
+R1   OK    local density > 2000 and Lmin <= 6 cm           (busy EM shower)
+R4   good  everything else                                 (commit, don't hedge)
+```
+
+Measured against the owner's 575 labels (2026-08-10, 79 events):
+
+- good/bad agreement **89/91 = 97.8 %** in-sample, **88/91 = 96.7 %** under
+  leave-one-**event**-out cross-validation (refit per fold, so the honest
+  number is the CV one);
+- **good recall 59/59 = 100 %**, **bad recall 30/32 = 93.8 %**;
+- on OK-labelled pairs: 290 good / 67 bad / 88 OK. Calling an owner-OK pair
+  bad is sanctioned by round 1 ("if we judge some of these to be bad, it is
+  OK"), so it is only a weak tie-breaker in the fit, never traded against a
+  good/bad hit.
+
+The two misses are evt137238 (the single W-gap bad) and evt58717 (a 1.7 cm,
+10-point stub). Four candidate rules to catch them were tried and **all are
+refuted by the owner's own labels** -- recorded so they are not re-invented:
+
+| candidate | effect |
+|---|---|
+| `d_vtx < 2 cm => good` | bad recall 30 -> 24 |
+| kink at the vertex (`d_vtx < 3` and angle > 30) `=> good` | bad recall 30 -> 24 |
+| both long+populated `=> bad` even with a W gap (recovers evt137238) | good recall 59 -> 54 |
+| "soft" W gap (closes at larger `ds`) + long `=> bad` | good recall 59 -> 55, bad recall unchanged (24 such pairs: 4 good, 20 OK, **0 bad**) |
+
+### 10.5 Visual audit
+
+The classifier's own weak class is `bad`, so every pair it called bad was
+inspected. `oc56_render_pair.py` draws the same content as the Bokeh page --
+three 3-D projections with the two components, the grey context, the edge and
+the reco neutrino vertex, plus the U/V/W wire-vs-slice panels built from the
+dump's **own** fired/dead/seed cells -- as a PNG per pair.
+
+**16 of the 66 pairs were looked at: all 11 predicted bad, plus the 5
+highest-risk goods (large `Lmin` with a W gap, i.e. the evt137238 class).** The
+other 50 pairs carry machine labels only. That is a partial audit and is not presented as
+anything more.
+
+Outcome: **0 verdict overrides.** Every disagreement between the panel and the
+classifier was turned into a candidate rule and tested against the owner's
+labels first -- and the labels refuted it every time (the table in §10.4 is
+exactly that list). Concretely: evt61579 and evt66272 look like two prongs
+meeting at the neutrino vertex, and evt170814 looks like a track broken across
+a soft W gap; the owner's labels say all three classes are bad, bad and good
+respectively, which is what the classifier already produced.
+
+One threshold *was* moved by the audit: the dead-W branch floor `Ld` from 50 to
+40 cm. The calibration set is indifferent (89/91 for every `Ld` in [20, 60]),
+so this is the one number the owner's labels do not fix. At 50 it misses
+evt167112 -- a 47.6 cm track continuing past a 6-wire dead-W band with V never
+closing, which is the owner's case (a) drawn in full; at 30 it would also flip
+evt169356, a 2.8 cm stub at a track end that should stay good.
+
+### 10.6 The label set
+
+`overclustering_labels/claude-scan50/labels-evt<ID>.json` -- 41 events, 66
+pairs, 73 edge labels, in the viewer's exact schema and geometric key, so the
+port-5019 page shows them and the owner can overwrite any of them in place.
+
+- **55 good / 11 bad / 0 OK.** No pair in these 50 data events met the busy-EM-shower
+  test (density > 2000 with short components) -- the round-1 OK class came
+  overwhelmingly from the nueCC and NC-pi0 samples, not from PR-data events.
+- Every `comment` carries the rule that fired, a `conf=high|low` flag and all
+  the numeric features, so any label can be audited or reversed without
+  rerunning anything. 27 good and 1 bad are `conf=low` (the R4 residual and
+  R2d branches); the other 38 are `conf=high`.
+- The owner's own labels in `overclustering_labels/` root were **not touched**:
+  the directory listing plus mtimes hash identically before and after
+  (`1387f2c72942f439cec1c312ac80aba3`).
+
+The 11 bad pairs are in `docs/pr/pr57r2-scan50-pairs.tsv`. **Start with
+evt174224 c0 1-2**, which is *not* in that list: 84 cm and 175 cm components,
+2164 and 1295 points, axes 4 deg apart, drawn as one straight 260 cm muon in all
+three projections -- but W genuinely gaps (matrix all zeros), so R3 calls it
+good. It is the closest analogue in this sample to evt137238, the one W-gap pair
+the owner called bad. If that one is bad, the "W gap => good" rule needs a
+qualifier and §10.4's third candidate comes back into play.
+
+### 10.7 Experience notes
+
+- **`PR_JOBS`, not `SBND_MAX_JOBS`.** `run_pr_chain_batch.sh:908` overwrites
+  `BATCH_MAX` with `${PR_JOBS:-6}` immediately after `batch_init` read
+  `SBND_MAX_JOBS`. `run_pr_evt.sh` is the opposite. Docs in this tree that say
+  `SBND_MAX_JOBS=6 ./run_pr_chain_batch.sh` got 6 by coincidence.
+- **`serve_overclustering_scan.sh` has no option parser.** Port is `$1`,
+  `--tag` must be tokens 2-3, everything after is dump paths. Passing a glob
+  first silently binds the server to a garbage port; and the script's built-in
+  default glob still points at `work-pr56r4*-scan*`, which no longer exists --
+  it then serves an empty viewer rather than failing.
+- **Label keys are lossy by design.** The geometric key rounds to 0.01 cm while
+  the entry's `p1`/`p2` are full precision, which is what lets labels survive a
+  rerun. Any join back to a dump must use the rounded key.
+- **The tab-close auto-save does not work** (round-1 defect, still present and
+  deliberately not fixed here because the owner's port-5018 scan is live and
+  bokeh re-executes the app module per session):
+  `overclustering_scan_viewer.py:705` calls `flush_pending` from an
+  `on_session_destroyed` lambda, but Bokeh clears the module globals first, so
+  it raises `NameError` -- visible in `overclustering_display/serve5018.log`.
+  **Click *Save event labels*, or switch events, before closing the tab.**
+  Switching events flushes correctly (`load_event` -> line 384).
+
+### 10.8 Open items
+
+- 134 of the 184 events with dumps in `work-pr57r2-scan395` are not served or
+  labelled. The arm is on disk and `--first`/`--events-file` will extend the
+  scan without reprocessing.
+- The classifier is calibrated on 91 good/bad pairs from 79 events. Its bad
+  recall of ~94 % (CV 96.7 % overall) is what any downstream use of
+  `claude-scan50` must be discounted by -- these are machine first-pass labels
+  with a partial visual audit, not a hand scan.
+- The owner's label set was still growing while this was calibrated; rerunning
+  `calibrate` after the port-5018 scan finishes will move these numbers.

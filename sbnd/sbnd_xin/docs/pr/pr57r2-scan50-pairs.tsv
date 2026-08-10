@@ -1,0 +1,67 @@
+evt	call	j	k	nedge	Lmin	Lmax	Tmax	npmin	angle	gw	wdeadX	dis	dens	dvtx	verdict	conf	rule
+59929	0	0	1	1	1.26	137.24	0.56	24	2.7	1	0	1.43	156	137.5	good	high	R3 W-plane gap (robust plane sees a hole)
+60017	0	0	1	3	15.93	29.77	0.62	130	0.8	1	1	1.21	267	0.9	good	high	R3 W-plane gap (robust plane sees a hole)
+60669	0	0	1	1	3.54	18.26	2.07	46	40.7	1	4	0.68	447	2.0	good	high	R3 W-plane gap (robust plane sees a hole)
+60669	0	0	2	1	18.26	69.48	2.07	270	75.6	1	0	1.88	450	1.9	good	high	R3 W-plane gap (robust plane sees a hole)
+60669	0	1	2	1	3.54	69.48	0.90	46	65.3	1	4	0.69	443	2.0	good	high	R3 W-plane gap (robust plane sees a hole)
+61071	0	0	1	1	1.04	1.29	0.45	11	82.9	0	0	0.69	23	50.8	good	low	R4 residual, committed good
+61351	0	0	1	2	73.62	278.41	1.90	652	4.5	0	6	1.80	236	72.2	bad	high	R2 long-track break, no W gap
+61417	0	0	1	1	1.32	149.87	5.12	12	87.8	1	0	1.55	372	8.7	good	high	R3 W-plane gap (robust plane sees a hole)
+61579	0	1	2	2	17.70	24.35	0.71	179	16.3	0	0	1.67	306	0.6	bad	high	R2 long-track break, no W gap
+61579	1	1	2	1	1.28	6.85	0.79	12	10.2	1	0	3.32	417	39.1	good	high	R3 W-plane gap (robust plane sees a hole)
+61579	1	2	3	1	6.85	14.15	2.07	97	35.8	1	0	3.36	555	41.6	good	high	R3 W-plane gap (robust plane sees a hole)
+61579	1	3	4	1	6.59	14.15	2.07	59	22.8	1	0	0.69	495	52.9	good	high	R3 W-plane gap (robust plane sees a hole)
+61843	1	0	1	1	0.68	1.03	0.31	9	22.1	0	0	1.83	19	401.5	good	low	R4 residual, committed good
+61843	2	0	1	1	0.93	2.40	0.43	6	83.6	0	0	0.76	30	74.9	good	low	R4 residual, committed good
+63537	0	0	1	1	0.63	0.63	0.19	3	0.0	0	0	2.62	9	25.0	good	low	R4 residual, committed good
+63551	0	0	1	1	37.61	62.38	3.01	620	5.3	0	6	1.20	1017	9.1	bad	high	R2 long-track break, no W gap
+63559	0	0	1	1	1.31	157.06	0.76	11	64.0	1	0	1.65	126	41.9	good	high	R3 W-plane gap (robust plane sees a hole)
+63603	0	1	2	1	0.63	57.00	6.37	3	26.7	0	0	2.59	402	7.7	good	low	R4 residual, committed good
+63603	0	1	3	1	0.63	33.86	0.42	3	17.9	0	0	1.35	408	9.9	good	low	R4 residual, committed good
+64409	0	1	2	1	1.39	1.43	0.47	11	82.0	0	0	1.08	582	53.9	good	low	R4 residual, committed good
+64409	0	1	3	1	0.35	1.39	0.47	2	78.6	0	0	1.86	673	53.3	good	low	R4 residual, committed good
+64409	0	2	3	1	0.35	1.43	0.39	2	68.6	0	0	2.36	640	53.5	good	low	R4 residual, committed good
+64591	0	1	2	1	2.90	184.54	1.69	24	23.7	0	0	1.14	295	177.6	good	low	R4 residual, committed good
+64591	0	4	5	1	1.34	17.31	2.14	16	34.4	1	0	1.24	745	202.9	good	high	R3 W-plane gap (robust plane sees a hole)
+64591	0	4	6	1	14.65	17.31	2.14	348	22.1	1	0	1.55	816	199.0	good	high	R3 W-plane gap (robust plane sees a hole)
+64959	0	0	1	1	7.12	79.17	0.59	68	1.7	0	0	1.10	184	29.8	bad	high	R2 long-track break, no W gap
+64959	1	0	1	1	6.57	19.30	1.97	79	21.9	1	0	0.75	420	19.1	good	high	R3 W-plane gap (robust plane sees a hole)
+65053	0	0	1	1	8.43	113.70	1.62	176	56.8	1	0	3.95	280	7.1	good	high	R3 W-plane gap (robust plane sees a hole)
+65053	0	1	3	1	2.08	113.70	1.09	3	29.2	0	0	3.92	261	25.0	good	low	R4 residual, committed good
+65289	0	0	2	1	0.63	93.66	9.86	4	88.0	1	0	1.63	1142	22.6	good	high	R3 W-plane gap (robust plane sees a hole)
+66118	0	0	1	1	0.63	81.96	1.69	6	57.9	0	0	1.40	165	70.1	good	low	R4 residual, committed good
+66272	0	0	1	1	9.31	14.44	0.73	83	35.7	0	0	0.85	243	1.8	bad	high	R2 long-track break, no W gap
+67394	0	1	2	1	0.63	43.28	5.16	12	65.5	1	0	1.60	447	18.5	good	high	R3 W-plane gap (robust plane sees a hole)
+72586	0	0	1	1	87.07	215.72	1.34	1327	9.5	0	6	1.05	363	215.2	bad	high	R2 long-track break, no W gap
+73004	0	1	2	1	2.66	82.38	2.18	21	17.2	0	0	1.75	674	11.1	good	low	R4 residual, committed good
+166738	0	0	1	1	3.26	23.57	1.44	32	41.8	0	0	1.15	394	27.6	good	low	R4 residual, committed good
+166738	3	0	1	1	0.97	1.41	0.32	13	18.5	1	0	1.20	26	28.1	good	high	R3 W-plane gap (robust plane sees a hole)
+167112	0	0	1	1	5.69	47.58	2.87	57	25.6	0	6	2.27	226	45.2	bad	low	R2d dead-W band, induction-only gap
+167684	0	0	1	1	3.04	7.39	0.99	30	55.9	0	6	2.59	261	1.6	good	low	R4 residual, committed good
+167684	0	0	2	1	5.07	7.39	0.99	76	60.3	0	6	2.04	261	1.3	good	low	R4 residual, committed good
+168432	0	0	1	1	5.88	28.81	1.95	11	22.9	0	0	1.10	692	26.9	good	low	R4 residual, committed good
+168526	0	1	2	1	1.10	8.08	0.69	12	29.7	1	0	0.60	402	39.9	good	high	R3 W-plane gap (robust plane sees a hole)
+168526	0	1	7	1	0.68	1.10	0.31	9	68.3	0	0	1.05	464	40.1	good	low	R4 residual, committed good
+168526	0	2	7	1	0.68	8.08	0.69	9	88.3	1	0	1.25	554	39.0	good	high	R3 W-plane gap (robust plane sees a hole)
+169356	0	1	2	1	2.82	32.63	0.84	37	36.1	0	4	0.60	242	111.0	good	low	R4 residual, committed good
+169356	0	3	5	1	2.31	68.37	7.59	17	40.4	0	0	1.08	291	3.0	good	low	R4 residual, committed good
+169356	0	6	7	1	3.09	3.75	0.57	12	19.5	0	0	1.30	97	66.1	good	low	R4 residual, committed good
+169598	0	0	1	1	1.03	85.61	2.83	9	63.5	0	0	1.35	210	81.6	good	low	R4 residual, committed good
+169626	0	0	1	1	1.32	39.50	2.80	15	22.4	1	0	1.93	1203	44.6	good	high	R3 W-plane gap (robust plane sees a hole)
+169626	0	1	2	1	6.47	39.50	2.80	135	73.5	1	0	1.38	537	60.1	good	high	R3 W-plane gap (robust plane sees a hole)
+169626	0	3	4	1	1.41	37.33	2.61	16	85.8	0	0	2.27	1087	14.8	good	low	R4 residual, committed good
+169824	0	1	2	2	34.25	175.25	11.74	503	46.7	0	6	1.18	533	143.3	bad	high	R2 long-track break, no W gap
+170814	0	0	1	1	19.02	32.92	3.02	273	18.7	1	0	1.00	181	28.8	good	high	R3 W-plane gap (robust plane sees a hole)
+170880	0	0	1	1	9.20	17.62	1.52	33	11.2	0	0	3.90	332	15.9	good	low	R4 residual, committed good
+172266	0	1	2	1	2.71	116.12	2.32	16	8.3	1	0	1.00	143	114.0	good	high	R3 W-plane gap (robust plane sees a hole)
+172656	0	0	1	1	26.93	121.73	1.70	487	18.4	1	0	0.92	354	232.8	good	high	R3 W-plane gap (robust plane sees a hole)
+172656	0	2	3	1	9.20	109.63	1.36	201	42.8	1	0	1.11	334	0.8	good	high	R3 W-plane gap (robust plane sees a hole)
+172794	0	0	1	2	13.18	206.51	2.13	408	17.9	0	6	2.11	753	93.9	bad	high	R2 long-track break, no W gap
+172942	0	2	3	1	11.15	54.88	3.39	352	32.7	1	0	2.13	709	15.7	good	high	R3 W-plane gap (robust plane sees a hole)
+172942	0	2	7	1	1.84	54.88	3.39	4	31.9	0	0	3.33	649	10.2	good	low	R4 residual, committed good
+173058	0	0	1	1	0.92	0.97	0.31	10	47.5	1	0	0.97	21	44.0	good	high	R3 W-plane gap (robust plane sees a hole)
+173146	0	0	1	1	1.32	1.39	0.47	13	85.3	0	0	0.60	26	7.4	good	low	R4 residual, committed good
+173234	0	1	2	1	6.19	138.72	1.45	127	78.2	0	0	1.41	351	225.6	bad	high	R2 long-track break, no W gap
+174224	0	1	2	2	84.39	175.05	1.38	1295	4.2	1	1	1.65	461	146.7	good	high	R3 W-plane gap (robust plane sees a hole)
+174224	0	2	3	1	65.96	84.39	2.22	1295	2.3	0	6	1.21	418	62.5	bad	high	R2 long-track break, no W gap
+174224	1	0	1	1	0.94	0.94	0.19	6	0.0	0	0	1.57	14	309.5	good	low	R4 residual, committed good
