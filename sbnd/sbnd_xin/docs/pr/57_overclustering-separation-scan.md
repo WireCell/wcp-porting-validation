@@ -16,6 +16,10 @@ sample are processed (`work-pr57r2-scan395`), the first 50 are served on port
 **5019**, and a machine first-pass label set calibrated on the owner's 575
 round-1 labels is written to `overclustering_labels/claude-scan50/`. Sections
 1-9 below are round 1 and are left as the record of that round.
+**First thing to look at on 5019: evt174224 c0 1-2** -- labelled good, but it
+is drawn as one straight 260 cm muon cut where the W plane genuinely gaps. It
+is the one case that decides whether "W gap => good" needs a qualifier
+(sec 10.6).
 
 ## Repro block
 
@@ -415,6 +419,23 @@ Measured against the owner's 575 labels (2026-08-10, 79 events):
   OK"), so it is only a weak tie-breaker in the fit, never traded against a
   good/bad hit.
 
+Those figures pool three samples, while the deliverable is 50 pure PR-data
+events. Split by population, with the **shipped** operating point (not refit):
+
+| sample | good/bad pairs | agreement | good recall | bad recall |
+|---|---|---|---|---|
+| mcp1k PR-data (matches the deliverable) | 17 | 16/17 = 94.1 % | 6/6 | 10/11 |
+| nueCC + NC-pi0 | 74 | 73/74 = 98.6 % | 53/53 | 20/21 |
+
+The operating point generalizes -- refitting on mcp1k alone gives different
+thresholds (L=4, N=200, D=1200) but the *same* 16/17, so nothing is being
+carried over from the neutrino-MC samples that the data sample contradicts.
+Two caveats stay attached to the 94.1 %: n=17 is small, and the mcp1k sample
+contains only **8** W-gap pairs (5 good, 3 OK, 0 bad) -- so R3's headline
+evidence, 1 bad in 253 W-gap pairs, comes almost entirely from nueCC and
+NC-pi0. R3 is the rule most in need of confirmation on PR-data, and
+evt174224 c0 1-2 (sec 10.6) is the case that would confirm or break it.
+
 The two misses are evt137238 (the single W-gap bad) and evt58717 (a 1.7 cm,
 10-point stub). Four candidate rules to catch them were tried and **all are
 refuted by the owner's own labels** -- recorded so they are not re-invented:
@@ -463,6 +484,10 @@ port-5019 page shows them and the owner can overwrite any of them in place.
 - **55 good / 11 bad / 0 OK.** No pair in these 50 data events met the busy-EM-shower
   test (density > 2000 with short components) -- the round-1 OK class came
   overwhelmingly from the nueCC and NC-pi0 samples, not from PR-data events.
+  Zero is the expected outcome rather than a defect: the density floor sits at
+  the *median* of the calibration OK class, so the rule is deliberately
+  conservative by construction, and a cosmic-dominated data sample has few
+  busy showers to begin with.
 - Every `comment` carries the rule that fired, a `conf=high|low` flag and all
   the numeric features, so any label can be audited or reversed without
   rerunning anything. 27 good and 1 bad are `conf=low` (the R4 residual and
