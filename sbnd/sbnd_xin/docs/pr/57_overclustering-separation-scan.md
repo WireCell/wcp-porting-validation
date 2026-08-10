@@ -651,8 +651,15 @@ R4   good  everything else                                   (unchanged)
   `angle < 25 deg` is collinearity. This is what recovers evt174224 (Tmax 1.4,
   4 deg), evt172656 (1.7, 18 deg) and evt60017 (0.6, 1 deg) while leaving the
   fat or kinked nueCC/NC-pi0 W-gap goods (Tmax 12.7, 11.6, 6.7, 5.1 ...)
-  untouched. It is the least-supported branch in the whole rule set -- 8 W-gap
-  bads exist in total -- and is tagged `conf=low` accordingly.
+  untouched. It costs exactly one good: **evt122660 13-16** (nueCC), which is
+  thin (`Tmax 1.7`), collinear (8 deg) and substantial (`npmin 170`) and so
+  looks like a track pair by every feature R2w uses, but the owner called it
+  good -- so "leaves the nueCC/NC-pi0 W-gap goods untouched" holds for the fat
+  and kinked ones, not for that pair. It is also the branch that still does
+  *not* recover evt137238 (`Tmax 4.8`, 48 deg), the round-1 W-gap bad: fat and
+  kinked, so R2w declines by construction. R2w is the least-supported branch in
+  the whole rule set -- 8 W-gap bads exist in total, and one counter-example
+  already -- and is tagged `conf=low` accordingly.
 
 The grid search over the extended family arrives at these thresholds
 independently; they were not hand-set after the fact.
@@ -682,11 +689,22 @@ recall **9/20 -> 17/20**, good recall 27/27 both ways. That 93.6 % is in-sample
 (these corrections are what the rule was fitted on) -- the honest figure is the
 93.5 % CV.
 
-Three residual misses, all on PR-data: evt73004 1-2 and evt169356 6-7 are tiny
-pieces (npmin 21 and 12) hanging off a track, below any `npmin` floor that does
-not also flood the OK class; evt170814 0-1 has `Tmax = 3.0` and sits just above
-R2w's thin cut -- widening that cut to 3.5 cm would recover it but costs two
-nueCC goods (evt69314 at Tmax 2.4, evt269774 at 3.1), so it stays.
+**All six residual errors**, so the 47/52 and 85/86 above reconcile -- three
+are on the round-2 fifty, three are elsewhere:
+
+| sample | pair | truth | got | why |
+|---|---|---|---|---|
+| PR-data r2 | evt73004 1-2 | bad | good | tiny piece (npmin 21) off an 82 cm track |
+| PR-data r2 | evt169356 6-7 | bad | good | tiny pair (npmin 12, 3.1/3.7 cm) |
+| PR-data r2 | evt170814 0-1 | bad | good | `Tmax = 3.0`, just above R2w's thin cut |
+| PR-data r1 | evt58717 0-1 | bad | good | 1.7 cm / 10-point stub, kinked (74 deg) |
+| nueCC | evt137238 0-1 | bad | good | the original W-gap bad; `Tmax 4.8`, 48 deg -- fat and kinked, so R2w correctly declines |
+| nueCC | evt122660 13-16 | **good** | **bad** | the one good R2w costs (below) |
+
+The two tiny-piece misses sit below any `npmin` floor that would not also flood
+the OK class. evt170814 would be recovered by widening R2w's thin cut to
+3.5 cm, but that costs two nueCC goods (evt69314 at `Tmax 2.4`, evt269774 at
+3.1), so it stays at 2.0.
 
 ### 11.6 What is still not handled: the OK class
 
