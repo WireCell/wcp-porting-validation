@@ -8,8 +8,8 @@ doc pr/56 round 3 can be judged by eye and labelled good/OK/bad with a cause,
 building the statistics the next round of S6 tuning needs. No algorithm
 change: `two_d_connectivity_bad`, every shipped constant, and the S6 verdict
 path are untouched (dump-OFF byte-identical gate PASS 0/117, §4).
-Toolkit `e47b1486` (committed, not pushed); wcp-porting-img
-`<WCP_SHA>` (pushed, filled in below after this commit).
+Toolkit `e47b1486` (committed, not pushed); wcp-porting-img `5a529e0`
+(pushed).
 
 ## Repro block
 
