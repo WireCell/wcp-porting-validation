@@ -829,6 +829,17 @@ process_event() {
         cd "$PRDIR" || exit 1
         export LD_PRELOAD="$PYLIB"
         export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+        # doc pr/57: env-gated per-edge JSONL dump feeding
+        # overclustering_display (hand-scan of S6 2D-connectivity
+        # removals). PR_OC56_SCAN_DUMP=1 => WCT_OC56_SCAN_DUMP points at a
+        # per-event file under this event's own PRDIR; unset (default) =>
+        # unset, so the C++ side's Oc56DumpWriter stays disabled and every
+        # other batch invocation is unaffected -- same pattern as
+        # PR_EXTRA_STAGES / SBND_PROTECT_GRAPH above. Exported only inside
+        # this subshell, so parallel siblings each get their own event id.
+        if [ "${PR_OC56_SCAN_DUMP:-}" = "1" ]; then
+            export WCT_OC56_SCAN_DUMP="$PRDIR/oc56scan-evt${EVT_ID}.jsonl"
+        fi
         # PR_TIMEOUT (seconds, default 3600) bounds a single event.  A pattern-
         # recognition hang is real: SBND MCP2025C evt 352365 spun at 100% CPU with
         # byte-flat RSS for 8h17m in shower_clustering_with_nv_from_vertices and

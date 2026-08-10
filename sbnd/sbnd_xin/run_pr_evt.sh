@@ -286,6 +286,18 @@ process_event() {
 
     rm -rf "$PRDIR"; mkdir -p "$PRDIR"
 
+    # doc pr/57: env-gated per-edge JSONL dump feeding
+    # overclustering_display (hand-scan of S6 2D-connectivity removals).
+    # PR_OC56_SCAN_DUMP=1 => WCT_OC56_SCAN_DUMP points at a per-event file
+    # under this event's own PRDIR; unset (default) => unset, so the C++
+    # side's Oc56DumpWriter stays disabled and nothing changes for every
+    # other runner invocation, same pattern as PR_EXTRA_STAGES above.
+    if [ "${PR_OC56_SCAN_DUMP:-}" = "1" ]; then
+        export WCT_OC56_SCAN_DUMP="$PRDIR/oc56scan-evt${EVT_ID}.jsonl"
+    else
+        unset WCT_OC56_SCAN_DUMP
+    fi
+
     echo "[evt $EVT_ID] PR (pipeline=$PIPELINE_CODE) $PCT -> $PRDIR/mabc-pr.zip"
     rm -f "$LOG"
     # Preload only when the DL vertex can actually run, i.e. DL weights are set
