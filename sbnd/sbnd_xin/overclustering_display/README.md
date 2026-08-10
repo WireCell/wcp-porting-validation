@@ -86,9 +86,11 @@ would kill; toggle off to also label survivors (false negatives matter too).
 selected edge candidates for a merge, every other point this event's dump
 happens to carry in grey (context only -- not necessarily the whole event;
 see the doc for what's actually in scope), the edge itself as a black dashed
-line with `x` markers at its two closest-approach points. `zoom to edge`
-frames a box (at least ±30 cm) around the edge midpoint; `whole event` resets
-to the full detector volume.
+line with `x` markers at its two closest-approach points. Any **green** line
+is a component edge that the code actually emitted and that still holds this
+pair together (see *Pair connectivity* below). `zoom to edge` frames a box (at
+least ±30 cm) around the edge midpoint; `whole event` resets to the full
+detector volume.
 
 **Row 2 -- U-T, V-T, W-T**, for the edge's own APA/face. Green cells are real
 hits (what the BFS could step on); amber bands are dead-channel ranges;
@@ -108,18 +110,53 @@ information, and it turns a bare yes/no label into tuning data), the
 collinear, facing endpoints close; a SORT KEY, not a verdict), and the
 current label if one has been saved.
 
+**Pair connectivity** (doc pr/57 round 4) -- `killed` is a verdict on **one
+candidate edge**, but the scan's question is whether the two **components**
+should be apart, and those are not the same thing. One component pair is
+offered up to three independent candidates (`closest`, `dir1`, `dir2`), and
+even with all of them killed the pair can stay joined through a third
+component. The **`pair` column** answers the real question straight from the
+dump's `connectivity` record:
+
+| value | meaning |
+|---|---|
+| `SEP`   | the two components really did end up in different final pieces |
+| `dir`   | this same pair kept a direct emitted edge anyway — nothing was separated |
+| `via N` | joined only through N hops via other components |
+| `?`     | pre-round-4 dump: no connectivity record, so unknown (never read as "connected") |
+
+The line under the projections spells it out — which emitted edge, from which
+source, at what distance, and the full hop chain when the route is indirect —
+and lists this pair's other S6 candidates with their own `killed` verdicts.
+The surviving edges are drawn green in row 1. The **`separated pairs only`**
+toggle (default OFF) narrows the list to the pairs the code truly separated,
+which is the population the labels are about.
+
+Two caveats the display cannot fix, both quantified in doc pr/57 §12: an edge
+row exists only for candidates that reached the 2-D check, so **some real
+separations have no row at all**, and a `dir`/`via N` row is a candidate whose
+removal changed nothing.
+
 **Labels** -- pick **good** (removal correct, real gap), **OK** (removal
 defensible but marginal / ambiguous), or **bad** (removal WRONG, a real track
 got broken), a **cause** (induction inefficiency, dead channel, prolonged
-shower signal, genuine separation, other), and an optional comment, then
-**Save label**. Saved to
-`overclustering_labels/<tag>/labels-evt<ID>.json`, keyed on
-**geometry** -- `(event, blk, p1, p2 rounded to 0.01 cm)` -- not on
-`graph_call`/`j`/`k`: those are not reproducible across reruns (`graph_call`
-is a per-process atomic counter; `j`/`k` are cluster-local indices that
-collide across clusters in the same event, exactly the key doc pr/56 round 3
-had to stop using for the census log for this same reason). Save is an
-upsert -- it never touches any other saved label in the file.
+shower signal, genuine separation, other), and an optional comment. Picking a
+verdict stages it in memory immediately -- there is no per-edge save click,
+so you can work through an entire event's edge list back-to-back. The edge
+list's label column shows a staged-but-unsaved verdict with a trailing `*`;
+the status line above the plots tracks how many are labeled and how many are
+still unsaved. When you're done with the event (or whenever you like), click
+**Save event labels** once to flush every staged edit for that event to
+`overclustering_labels/<tag>/labels-evt<ID>.json` in a single write. Switching
+to a different event (via the selector or prev/next) auto-flushes first, and
+closing the browser tab flushes on session teardown too, so nothing staged is
+ever silently lost. Labels are keyed on **geometry** --
+`(event, blk, p1, p2 rounded to 0.01 cm)` -- not on `graph_call`/`j`/`k`:
+those are not reproducible across reruns (`graph_call` is a per-process
+atomic counter; `j`/`k` are cluster-local indices that collide across
+clusters in the same event, exactly the key doc pr/56 round 3 had to stop
+using for the census log for this same reason). The save is an upsert -- it
+never touches any other saved label already in the file.
 
 ## Conventions
 

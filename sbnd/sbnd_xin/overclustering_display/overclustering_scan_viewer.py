@@ -43,13 +43,28 @@ LAYOUT
            so revising it never costs a rerun). Defaults to "removed only",
            sorted by that score descending -- with up to ~170 removed
            edges in one event, the ordering is what makes the list usable.
-  Labels -- good / OK / bad, a cause, and a free-text comment, saved to
-           overclustering_labels/<tag>/labels-evt<ID>.json keyed on
-           geometry (event, blk, p1, p2 rounded to 0.01 cm), NOT on
-           graph_call/j/k -- those are not reproducible across reruns
-           (graph_call is a per-process atomic counter; j/k are
+  Labels -- good / OK / bad, a cause, and a free-text comment. Picking a
+           verdict stages it in memory right away (no per-edge click); the
+           table's label column shows staged-but-unsaved entries with a
+           trailing "*". One "Save event labels" click flushes every staged
+           edit for the current event to
+           overclustering_labels/<tag>/labels-evt<ID>.json in a single
+           write, keyed on geometry (event, blk, p1, p2 rounded to 0.01 cm),
+           NOT on graph_call/j/k -- those are not reproducible across
+           reruns (graph_call is a per-process atomic counter; j/k are
            cluster-local indices that collide across clusters, exactly the
            key doc pr/56 round 3 had to stop using for this reason).
+           Switching events (or closing the browser tab) auto-flushes first,
+           so nothing staged is ever silently lost.
+  Pair   -- doc pr/57 round 4. `killed` is a verdict on ONE candidate edge;
+           the scan's question is whether the two COMPONENTS should be apart.
+           They are not the same: a pair gets up to three candidates
+           (closest/dir1/dir2) and can also stay joined through a third
+           component. The `pair` table column and the line under the
+           projections answer the real question from the dump's
+           "connectivity" record -- SEP / dir / via N / ? (pre-round-4 dump) --
+           and the edges that still hold the pair together are drawn in green.
+           "separated pairs only" narrows the table to the true separations.
 """
 import argparse
 import glob
@@ -68,11 +83,13 @@ from bokeh.plotting import figure
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "scripts", "analysis", "pr57"))
 from oc56_dump_check import long_track_break_score  # noqa: E402
+import oc56_conn as CONN  # noqa: E402
 
 DET_BOX = dict(x=(-201.05, 201.05), y=(-199.312, 199.312), z=(0.85, 500.15))
 DEFAULT_HALF = 30.0
 PLANE_NAME = ("U", "V", "W")
 COLOR_A, COLOR_B, COLOR_CTX, COLOR_EDGE = "#1f77b4", "#d62728", "#bbbbbb", "#111111"
+COLOR_PATH = "#2ca02c"  # doc pr/57 round 4: edges that still connect the pair
 
 CAUSES = ["induction inefficiency", "dead channel", "prolonged shower signal",
           "genuine separation", "other"]
@@ -110,7 +127,8 @@ for p in PATHS:
     EVENTS.setdefault(evt_label(p), p)
 LABELS = sorted(EVENTS, key=lambda s: (len(s), s))
 
-state = dict(evt=None, label=None, edges=[], rows_of=[], sel_edge=None)
+state = dict(evt=None, label=None, edges=[], rows_of=[], sel_edge=None,
+            labels={}, pending={}, _suspend=False)
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +143,7 @@ class EventData:
         self.path = path
         self.components = {}
         self.edges = []
+        conn_recs = []
         with open(path) as fh:
             for line in fh:
                 line = line.strip()
@@ -135,6 +154,12 @@ class EventData:
                     self.components[(rec["graph_call"], rec["comp"])] = rec
                 elif rec["type"] == "edge":
                     self.edges.append(rec)
+                elif rec["type"] == "connectivity":
+                    conn_recs.append(rec)
+        # doc pr/57 round 4. Absent in any pre-round-4 dump -- the viewer must
+        # still open those, so every pair then reports "unknown" rather than
+        # silently reading as "connected".
+        self.conn = CONN.index_conn(conn_recs)
         for e in self.edges:
             ca = self.components.get((e["graph_call"], e["j"]))
             cb = self.components.get((e["graph_call"], e["k"]))
@@ -145,6 +170,11 @@ class EventData:
             e["_detail"] = detail
             e["_near_miss"] = near_miss_badge(e)
             e["_key"] = edge_key(evt_label(path), e)
+            e["_pair"] = CONN.pair_status(self.conn.get(e["graph_call"]),
+                                          e["j"], e["k"])
+        for e in self.edges:
+            e["_siblings"] = CONN.siblings(self.edges, e["graph_call"],
+                                           e["j"], e["k"], exclude=e)
 
     def context_points(self, exclude_keys, cap=20000):
         """All OTHER dumped components in this event (for the grey
@@ -218,10 +248,11 @@ def load_labels(label):
         return {}
 
 
-def save_label(label, key, entry):
-    """Upsert one edge's label into labels-evt<ID>.json. Never touches or
-    drops any other entry -- append-only in effect (M13: this is scan
-    output, not something a later run should silently overwrite)."""
+def save_event_labels(label, entries):
+    """Upsert a whole batch of edge labels into labels-evt<ID>.json in one
+    write. Never touches or drops any other entry -- append-only in effect
+    (M13: this is scan output, not something a later run should silently
+    overwrite)."""
     p = labels_path(label)
     data = {"event": label, "source": os.path.basename(EVENTS[label])}
     if os.path.isfile(p):
@@ -230,7 +261,7 @@ def save_label(label, key, entry):
                 data = json.load(fh)
         except (OSError, ValueError):
             pass
-    data.setdefault("labels", {})[key] = entry
+    data.setdefault("labels", {}).update(entries)
     with open(p, "w") as fh:
         json.dump(data, fh, indent=1, sort_keys=True)
     return p
@@ -254,6 +285,9 @@ ctx_src = ColumnDataSource(data=dict(EMPTY3))
 a_src = ColumnDataSource(data=dict(EMPTY3))
 b_src = ColumnDataSource(data=dict(EMPTY3))
 edge_src = ColumnDataSource(data=dict(x=[], y=[], z=[]))  # 2-point line, p1->p2
+# doc pr/57 round 4: the component edges that STILL connect this pair after
+# every emit decision -- one multi_line segment per hop, per projection.
+path_src = ColumnDataSource(data=dict(xs=[], ys=[], zs=[]))
 det_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
                                      xs_xz=[], ys_xz=[]))
 
@@ -267,6 +301,9 @@ for f, hx, hy in PROJ:
               fill_color=COLOR_A, line_color=None, fill_alpha=0.85)
     f.scatter(hx, hy, source=b_src, marker="circle", size=4,
               fill_color=COLOR_B, line_color=None, fill_alpha=0.85)
+    # surviving connection first, so the candidate under review draws on top
+    f.multi_line(xs="%ss" % hx, ys="%ss" % hy, source=path_src,
+                 line_color=COLOR_PATH, line_width=3, line_alpha=0.85)
     f.line(hx, hy, source=edge_src, line_color=COLOR_EDGE, line_width=2,
           line_dash="dashed")
     f.scatter(hx, hy, source=edge_src, marker="x", size=10,
@@ -302,13 +339,35 @@ for pi in range(3):
 event_select = Select(title="event", options=LABELS, value=LABELS[0] if LABELS else "", width=220)
 prev_evt_btn = Button(label="< prev evt", width=90)
 next_evt_btn = Button(label="next evt >", width=90)
-filter_toggle = Toggle(label="filter: removed only", active=True, button_type="primary", width=180)
+filter_toggle = Toggle(label="filter: removed / floor-blocked", active=True,
+                       button_type="primary", width=220)
+# owner: rejections beyond 5cm are reliably real gaps -- not worth scanning,
+# so hide them by default and keep the scan focused on the close/ambiguous
+# cases. Toggle off to see everything (e.g. to sanity-check a far edge).
+far_filter_toggle = Toggle(label="hide dis > 5cm", active=True,
+                           button_type="primary", width=140)
+# doc pr/58: confirmation pass -- once edges are labeled, narrow the table to
+# just the labeled verdict(s) under review, OK excluded either way. Both off
+# is the unfiltered (pre-existing) behavior; both on shows good+bad, i.e.
+# everything except OK/unlabeled.
+show_good_toggle = Toggle(label="show good only", active=False,
+                          button_type="success", width=130)
+show_bad_toggle = Toggle(label="show bad only", active=False,
+                         button_type="danger", width=130)
+# doc pr/57 round 4: the hand scan judges whether two COMPONENTS should be
+# separated, but a killed candidate often leaves them joined anyway (another
+# candidate for the same pair, or a route through a third component). This
+# narrows the table to the pairs the code really did separate -- the
+# population the labels are about. Default OFF: today's behavior unchanged.
+sep_filter_toggle = Toggle(label="separated pairs only", active=False,
+                           button_type="warning", width=170)
 sort_select = Select(title="sort by", options=[("score", "long-track-break score"),
                                                ("dis", "distance"), ("logged", "as logged")],
                     value="score", width=200)
 status = Div(text="Loading...", width=1150)
 
-edge_cols = ["idx", "blk", "j", "k", "planes", "dis", "killed", "near_miss", "score", "label"]
+edge_cols = ["idx", "blk", "j", "k", "planes", "dis", "killed", "pair",
+             "near_miss", "score", "label"]
 EDGE_EMPTY = {c: [] for c in edge_cols}
 edge_table_src = ColumnDataSource(data=dict(EDGE_EMPTY))
 edge_columns = [
@@ -318,7 +377,15 @@ edge_columns = [
     TableColumn(field="k", title="k", width=30),
     TableColumn(field="planes", title="gap planes", width=80),
     TableColumn(field="dis", title="dis (cm)", width=65),
-    TableColumn(field="killed", title="killed", width=55),
+    TableColumn(field="killed", title="killed", width=60,
+               formatter=HTMLTemplateFormatter(template="<b><%= value %></b>")),
+    # doc pr/57 round 4: SEP = the two components really did end up apart;
+    # dir = this same pair kept a direct edge anyway; via N = joined only
+    # through N hops; ? = pre-round-4 dump with no connectivity record.
+    TableColumn(field="pair", title="pair", width=60,
+               formatter=HTMLTemplateFormatter(
+                   template="<b style='color:<%= value == \"SEP\" "
+                            "? \"#b03030\" : \"#2ca02c\" %>'><%= value %></b>")),
     TableColumn(field="near_miss", title="near-miss", width=200),
     TableColumn(field="score", title="break score", width=80),
     TableColumn(field="label", title="label", width=70,
@@ -328,11 +395,18 @@ edge_table = DataTable(source=edge_table_src, columns=edge_columns, width=1150, 
                        selectable=True, index_position=None)
 
 # --- labeling panel ---------------------------------------------------------
+# Picking a verdict stages it in memory (state["pending"]) immediately -- no
+# per-edge save click. One "Save event labels" click at the end flushes every
+# staged edit for the current event to disk in a single write. Switching
+# events (or closing the server) auto-flushes first, so nothing is lost.
 verdict_group = RadioButtonGroup(labels=["good", "OK", "bad"], active=None, width=300)
 cause_group = RadioButtonGroup(labels=CAUSES, active=None, width=700)
 comment_input = TextInput(title="comment", width=700)
-save_btn = Button(label="Save label", button_type="success", width=120)
+save_btn = Button(label="Save event labels", button_type="success", width=160)
 label_status = Div(text="", width=1150)
+# doc pr/57 round 4: pair-level verdict for the selected edge -- separated or
+# not, and if not, which emitted edges still hold the two components together.
+conn_div = Div(text="", width=1150)
 
 zoom_edge_btn = Button(label="zoom to edge", width=120)
 zoom_event_btn = Button(label="whole event", width=120)
@@ -341,11 +415,25 @@ zoom_event_btn = Button(label="whole event", width=120)
 # ---------------------------------------------------------------------------
 # Rendering
 # ---------------------------------------------------------------------------
+def progress_text():
+    evt = state["evt"]
+    if evt is None:
+        return ""
+    n_removed = sum(1 for e in evt.edges if e["killed"])
+    labeled = len(set(state.get("labels", {})) | set(state.get("pending", {})))
+    n_pending = len(state.get("pending", {}))
+    unsaved = (" (<b>%d unsaved</b> -- click Save event labels)" % n_pending) if n_pending else ""
+    return ("Loaded <b>%s</b>: %d S6-evaluated edges, %d removed (killed). "
+            "%d labeled%s." % (state["label"], len(evt.edges), n_removed, labeled, unsaved))
+
+
 def load_event(label):
+    flush_pending(auto=True)
     evt = EventData(EVENTS[label])
     state["evt"] = evt
     state["label"] = label
     state["labels"] = load_labels(label)
+    state["pending"] = {}
     state["sel_edge"] = None
 
     (xl, xh), (yl, yh), (zl, zh) = DET_BOX["x"], DET_BOX["y"], DET_BOX["z"]
@@ -354,26 +442,53 @@ def load_event(label):
         xs_yz=[[zl, zh, zh, zl, zl], []],     ys_yz=[[yl, yl, yh, yh, yl], []],
         xs_xz=[[xl, xh, xh, xl, xl], [0, 0]], ys_xz=[[zl, zl, zh, zh, zl], [zl, zh]])
 
-    n_removed = sum(1 for e in evt.edges if e["killed"])
-    status.text = ("Loaded <b>%s</b>: %d S6-evaluated edges, %d removed (killed)."
-                  % (label, len(evt.edges), n_removed))
+    status.text = progress_text()
     refresh_table()
     clear_edge_panels()
 
 
-def refresh_table():
+def refresh_table(keep_selection=False):
     evt = state["evt"]
     if evt is None:
         edge_table_src.data = dict(EDGE_EMPTY)
         return
-    pool = [e for e in evt.edges if (e["killed"] or not filter_toggle.active)]
+    labels = state.get("labels", {})
+    pending = state.get("pending", {})
+
+    def verdict_of(e):
+        lab = pending.get(e["_key"]) or labels.get(e["_key"])
+        return lab["verdict"] if lab else None
+
+    # doc pr/58: "interesting" now also includes below-floor candidates
+    # that S6's W-plane-only logic WOULD kill if the 1cm distance floor
+    # didn't abstain first (killed_ignore_floor) -- exactly the case the
+    # floor-override scan is meant to review (e.g. evt 21073 j=6/k=7).
+    def interesting(e):
+        removed = e["killed"] or e.get("killed_ignore_floor") or not filter_toggle.active
+        if removed and far_filter_toggle.active and e["dis"] > 5.0:
+            return False
+        if not removed:
+            return False
+        # doc pr/57 round 4: only the pairs the code really separated.
+        # Unknown (pre-round-4 dump) is kept -- hiding rows we cannot judge
+        # would silently shrink the scan population.
+        if sep_filter_toggle.active and e["_pair"]["separated"] is False:
+            return False
+        if show_good_toggle.active or show_bad_toggle.active:
+            wanted = set()
+            if show_good_toggle.active:
+                wanted.add("good")
+            if show_bad_toggle.active:
+                wanted.add("bad")
+            return verdict_of(e) in wanted
+        return True
+    pool = [e for e in evt.edges if interesting(e)]
     if sort_select.value == "score":
         pool.sort(key=lambda e: -e["_score"])
     elif sort_select.value == "dis":
         pool.sort(key=lambda e: e["dis"])
     state["rows_of"] = pool
     cols = {c: [] for c in edge_cols}
-    labels = state.get("labels", {})
     for i, e in enumerate(pool):
         cols["idx"].append(i)
         cols["blk"].append(e["blk"])
@@ -383,13 +498,25 @@ def refresh_table():
                          if pi < len(e.get("gap", [])) and e["gap"][pi])
         cols["planes"].append(planes or "-")
         cols["dis"].append("%.2f" % e["dis"])
-        cols["killed"].append("yes" if e["killed"] else "no")
+        if e["killed"]:
+            cols["killed"].append("yes")
+        elif e.get("below_floor") and e.get("killed_ignore_floor"):
+            cols["killed"].append("floor")  # below s6_dis_floor; W-plane-only logic would kill it
+        else:
+            cols["killed"].append("no")
+        cols["pair"].append(CONN.short_token(e["_pair"]))
         cols["near_miss"].append(e["_near_miss"] or "-")
         cols["score"].append("%.1f" % e["_score"])
-        lab = labels.get(e["_key"])
-        cols["label"].append(lab["verdict"] if lab else "")
+        if e["_key"] in pending:
+            cols["label"].append(pending[e["_key"]]["verdict"] + " *")
+        elif e["_key"] in labels:
+            cols["label"].append(labels[e["_key"]]["verdict"])
+        else:
+            cols["label"].append("")
     edge_table_src.data = cols
-    edge_table_src.selected.indices = []
+    if not keep_selection:
+        edge_table_src.selected.indices = []
+    status.text = progress_text()
 
 
 def clear_edge_panels():
@@ -397,19 +524,53 @@ def clear_edge_panels():
     a_src.data = dict(EMPTY3)
     b_src.data = dict(EMPTY3)
     edge_src.data = dict(x=[], y=[], z=[])
+    path_src.data = dict(xs=[], ys=[], zs=[])
+    conn_div.text = ""
     for pi in range(3):
         panel[pi]["fired"].data = dict(w=[], s=[], h=[])
         panel[pi]["dead"].data = dict(w=[], s=[], h=[])
         panel[pi]["seeds_a"].data = dict(w=[], s=[])
         panel[pi]["seeds_b"].data = dict(w=[], s=[])
         panel[pi]["win"].data = dict(w=[], s=[])
+    state["_suspend"] = True
     verdict_group.active = None
     cause_group.active = None
     comment_input.value = ""
+    state["_suspend"] = False
     label_status.text = ""
 
 
+def show_pair_connectivity(e):
+    """doc pr/57 round 4: the pair-level answer for the selected candidate --
+    are components j and k still connected after every emit decision, and if
+    so by which edges. Those surviving edges are also drawn (green) in the
+    three projections, so 'which edge connects them' is visible and not just
+    asserted."""
+    st = e["_pair"]
+    xs, ys, zs = [], [], []
+    for _, _, ce in st["path"]:
+        q1, q2 = ce["p1"], ce["p2"]
+        xs.append([q1[0], q2[0]])
+        ys.append([q1[1], q2[1]])
+        zs.append([q1[2], q2[2]])
+    path_src.data = dict(xs=xs, ys=ys, zs=zs)
+
+    color = "#b03030" if st["separated"] else ("#777777" if not st["known"] else "#2ca02c")
+    parts = ["<span style='color:%s'><b>%s</b></span>"
+             % (color, CONN.describe(st, e["j"], e["k"]))]
+    sibs = e.get("_siblings", [])
+    if sibs:
+        parts.append("this pair's other S6 candidates: " + " &nbsp;|&nbsp; ".join(
+            "%s killed=%s %.2fcm" % (s["blk"], "yes" if s["killed"] else "no", s["dis"])
+            for s in sorted(sibs, key=lambda s: s["dis"])))
+    else:
+        parts.append("this pair's other S6 candidates: none "
+                     "(this is the only one that reached the 2-D check)")
+    conn_div.text = "<br>".join(parts)
+
+
 def show_edge(e):
+    stage_current()  # capture any in-progress edit on the edge we're leaving
     state["sel_edge"] = e
     evt = state["evt"]
     exclude = {(e["graph_call"], e["j"]), (e["graph_call"], e["k"])}
@@ -421,6 +582,7 @@ def show_edge(e):
                       z=[p[2] for p in e["_pts_b"]])
     p1, p2 = e["p1"], e["p2"]
     edge_src.data = dict(x=[p1[0], p2[0]], y=[p1[1], p2[1]], z=[p1[2], p2[2]])
+    show_pair_connectivity(e)
 
     by_plane = {p["plane"]: p for p in e.get("planes", [])}
     for pi in range(3):
@@ -453,17 +615,24 @@ def show_edge(e):
         panel[pi]["fig"].title.text = ("%s wire vs time slice -- apa=%d face=%d%s"
                                        % (PLANE_NAME[pi], e["apa"], e["face"], native))
 
-    lab = state.get("labels", {}).get(e["_key"])
+    pending_lab = state.get("pending", {}).get(e["_key"])
+    lab = pending_lab or state.get("labels", {}).get(e["_key"])
+    state["_suspend"] = True  # populating controls from a stored label is
+                              # not a user edit -- don't re-stage it as pending
     if lab:
         verdict_group.active = ["good", "OK", "bad"].index(lab["verdict"]) \
             if lab.get("verdict") in ("good", "OK", "bad") else None
         cause_group.active = CAUSES.index(lab["cause"]) if lab.get("cause") in CAUSES else None
         comment_input.value = lab.get("comment", "")
-        label_status.text = "Existing label loaded: <b>%s</b> / %s" % (lab["verdict"], lab.get("cause", ""))
     else:
         verdict_group.active = None
         cause_group.active = None
         comment_input.value = ""
+    state["_suspend"] = False
+    if lab:
+        tag = "Unsaved" if pending_lab else "Saved"
+        label_status.text = "%s label: <b>%s</b> / %s" % (tag, lab["verdict"], lab.get("cause", ""))
+    else:
         label_status.text = "No label yet for this edge."
     apply_zoom_edge()
 
@@ -526,39 +695,89 @@ def on_row_select(attr, old, new):
     show_edge(rows[idx])
 
 
-def on_save():
-    e = state["sel_edge"]
-    if e is None:
-        label_status.text = "No edge selected."
-        return
-    if verdict_group.active is None:
-        label_status.text = "Pick good / OK / bad before saving."
+def stage_current():
+    """Capture the verdict/cause/comment controls into state["pending"] for
+    whichever edge is currently shown -- so picking a verdict for one edge
+    and moving to the next never requires a click, and nothing is lost when
+    switching edges, events, or hitting Save. A verdict is required; a
+    comment/cause alone (no verdict) stages nothing, same as before."""
+    e = state.get("sel_edge")
+    if e is None or verdict_group.active is None:
         return
     verdict = ["good", "OK", "bad"][verdict_group.active]
     cause = CAUSES[cause_group.active] if cause_group.active is not None else ""
     entry = dict(verdict=verdict, cause=cause, comment=comment_input.value,
                 blk=e["blk"], j=e["j"], k=e["k"], dis=e["dis"], killed=e["killed"],
                 p1=e["p1"], p2=e["p2"], near_miss=e["_near_miss"], score=e["_score"])
-    state.setdefault("labels", {})[e["_key"]] = entry
-    dest = save_label(state["label"], e["_key"], entry)
-    label_status.text = "Saved <b>%s</b> -> %s" % (verdict, dest)
-    refresh_table()  # so the label column updates
+    if state.get("labels", {}).get(e["_key"]) == entry:
+        # identical to what's already on disk -- merely re-displaying a
+        # saved edge is not an edit, so don't mark it pending again
+        return
+    state.setdefault("pending", {})[e["_key"]] = entry
+
+
+def flush_pending(auto=False):
+    """Write every staged (unsaved) label for the CURRENT event to disk in
+    one batch upsert. `auto=True` is the silent flush done before switching
+    events, so an in-progress scan is never silently discarded."""
+    stage_current()
+    pending = state.get("pending", {})
+    label = state.get("label")
+    if not pending or label is None:
+        if not auto:
+            label_status.text = "Nothing unsaved -- pick good / OK / bad for at least one edge first."
+        return
+    dest = save_event_labels(label, pending)
+    state.setdefault("labels", {}).update(pending)
+    n = len(pending)
+    state["pending"] = {}
+    prefix = "Auto-saved" if auto else "Saved"
+    label_status.text = "%s %d label(s) for <b>%s</b> -> %s" % (prefix, n, label, dest)
+    refresh_table(keep_selection=True)
+
+
+def on_verdict_change(attr, old, new):
+    if state.get("_suspend"):
+        return
+    stage_current()
+    refresh_table(keep_selection=True)
+
+
+def on_cause_change(attr, old, new):
+    if state.get("_suspend"):
+        return
+    stage_current()
+    refresh_table(keep_selection=True)
+
+
+def on_comment_change(attr, old, new):
+    if state.get("_suspend"):
+        return
+    stage_current()
 
 
 event_select.on_change("value", on_event_change)
 prev_evt_btn.on_click(lambda: step_event(-1))
 next_evt_btn.on_click(lambda: step_event(+1))
 filter_toggle.on_change("active", on_filter_change)
+far_filter_toggle.on_change("active", on_filter_change)
+show_good_toggle.on_change("active", on_filter_change)
+show_bad_toggle.on_change("active", on_filter_change)
+sep_filter_toggle.on_change("active", on_filter_change)
 sort_select.on_change("value", on_sort_change)
 edge_table_src.selected.on_change("indices", on_row_select)
-save_btn.on_click(on_save)
+verdict_group.on_change("active", on_verdict_change)
+cause_group.on_change("active", on_cause_change)
+comment_input.on_change("value", on_comment_change)
+save_btn.on_click(lambda: flush_pending(auto=False))
 zoom_edge_btn.on_click(apply_zoom_edge)
 zoom_event_btn.on_click(apply_zoom_whole)
 
 # ---------------------------------------------------------------------------
 # Layout
 # ---------------------------------------------------------------------------
-controls = row(event_select, prev_evt_btn, next_evt_btn, filter_toggle, sort_select,
+controls = row(event_select, prev_evt_btn, next_evt_btn, filter_toggle, far_filter_toggle,
+              sep_filter_toggle, show_good_toggle, show_bad_toggle, sort_select,
               zoom_edge_btn, zoom_event_btn)
 proj_row = row(f_xy, f_yz, f_xz)
 panel_row = row(panel[0]["fig"], panel[1]["fig"], panel[2]["fig"])
@@ -567,9 +786,10 @@ label_row = column(row(Div(text="<b>verdict:</b>", width=70), verdict_group),
                    row(comment_input, save_btn),
                    label_status)
 
-layout = column(status, controls, proj_row, panel_row, edge_table, label_row)
+layout = column(status, controls, proj_row, conn_div, panel_row, edge_table, label_row)
 curdoc().add_root(layout)
 curdoc().title = "overclustering scan"
+curdoc().on_session_destroyed(lambda session_context: flush_pending(auto=True))
 
 if LABELS:
     load_event(LABELS[0])

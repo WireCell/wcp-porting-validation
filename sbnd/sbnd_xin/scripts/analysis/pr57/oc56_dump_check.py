@@ -36,6 +36,9 @@ import math
 import os
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import oc56_conn  # noqa: E402  (doc pr/57 round 4)
+
 try:
     import numpy as np
 except ImportError:
@@ -212,11 +215,88 @@ def iter_edges(arm_dir):
                 yield rec
 
 
+def iter_events(arm_dir):
+    """(logfile, [records]) per event -- needed for the round-4 checks, which
+    are per graph call rather than per edge."""
+    for logf in sorted(glob.glob(os.path.join(arm_dir, 'pr_evt*', 'oc56scan-evt*.jsonl'))):
+        recs = []
+        with open(logf) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    recs.append(json.loads(line))
+        yield logf, recs
+
+
+def check_connectivity(arm_dirs, max_report=10):
+    """doc pr/57 round 4, two independent checks on the connectivity record.
+
+    (a) Self-consistency: `final[]` comes from connected_components() on the
+        graph, `edges[]` is accumulated at the three emit sites. They must
+        agree about every pair or the record is buggy.
+    (b) Blind spot: an edge record is only written for candidates that reach
+        two_d_gap_kill (S1-S5 let them through, same APA/face, and either at
+        or above the 1cm floor or the W-override). So a pair can end up in
+        different final components with NO row in the scan table at all --
+        a separation the owner is never shown. Counted, not fixed."""
+    n_calls = n_pairs = n_sep = n_sep_nodump = 0
+    n_missing = 0
+    bad = []
+    for arm in arm_dirs:
+        for logf, recs in iter_events(arm):
+            conn = oc56_conn.index_conn(recs)
+            edges = [r for r in recs if r.get('type') == 'edge']
+            calls_with_edges = set(e['graph_call'] for e in edges)
+            n_missing += len(calls_with_edges - set(conn))
+            by_call = {}
+            for e in edges:
+                by_call.setdefault(e['graph_call'], set()).add(
+                    (min(e['j'], e['k']), max(e['j'], e['k'])))
+            for gc, rec in conn.items():
+                n_calls += 1
+                for msg in oc56_conn.check_consistency(rec):
+                    if len(bad) < max_report:
+                        bad.append('%s %s' % (os.path.basename(logf), msg))
+                final = rec.get('final', [])
+                dumped = by_call.get(gc, set())
+                for j in range(len(final)):
+                    for k in range(j + 1, len(final)):
+                        n_pairs += 1
+                        if final[j] == final[k]:
+                            continue
+                        n_sep += 1
+                        if (j, k) not in dumped:
+                            n_sep_nodump += 1
+    return dict(calls=n_calls, pairs=n_pairs, separated=n_sep,
+                separated_no_dumped_edge=n_sep_nodump,
+                calls_missing_record=n_missing, bad=bad)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('arm_dirs', nargs='+')
     ap.add_argument('--max-mismatches', type=int, default=10)
+    ap.add_argument('--conn-only', action='store_true',
+                    help='run only the round-4 connectivity checks')
     args = ap.parse_args()
+
+    if args.conn_only:
+        r = check_connectivity(args.arm_dirs, args.max_mismatches)
+        print('graph calls with a connectivity record: %d' % r['calls'])
+        print('graph calls with edge records but NO connectivity record: %d'
+              % r['calls_missing_record'])
+        print('component pairs: %d, of which separated: %d' % (r['pairs'], r['separated']))
+        print('separated pairs with NO dumped candidate edge (scan blind spot): '
+              '%d (%.1f%% of separations)'
+              % (r['separated_no_dumped_edge'],
+                 100.0 * r['separated_no_dumped_edge'] / max(r['separated'], 1)))
+        print('final[] vs edges[] disagreements: %d' % len(r['bad']))
+        for b in r['bad']:
+            print('  INCONSISTENT', b)
+        if r['bad']:
+            sys.exit(1)
+        print('PASS: every connectivity record agrees with its own emitted edge list.')
+        return
 
     if np is None:
         print('WARNING: numpy not importable -- long_track_break_score() is '

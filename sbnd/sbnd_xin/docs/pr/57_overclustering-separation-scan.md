@@ -732,3 +732,211 @@ cases exist; it is the classifier declining to model them.
   good. Given the owner examines both classes, a classifier that under-calls
   bad is worse than one that over-calls it; the round-3 rule trades 1 good for
   8 bads and that is the right direction for this task.
+
+## 12. Round 4 -- pair-level connectivity: what the scan was really labelling
+
+**Repro block** (all numbers in this section):
+
+```bash
+cd sbnd/sbnd_xin
+# 1. the four re-run arms (toolkit built with the round-4 dump record)
+for a in "48 work-nuecc48-cb0805" "19 work-ncpi0-cb0805" \
+         "50 work-mcp1k-cb0805" "395 work-mcp1k-cb0805"; do
+  set -- $a
+  PR_JOBS=32 SBND_PROTECT_GRAPH=relaxed_strict_img_2d_wfloor \
+  WCT_RELAXED_EDGE_CENSUS=1 PR_OC56_SCAN_DUMP=1 \
+    ./run_pr_chain_batch.sh $2 work-pr57r4-scan$1 data $(cat <event list>) \
+    > work-pr57r4-scan$1.driver.log 2>&1
+done
+# 2. gates
+python3 scripts/analysis/pr57/oc56_conn.py --selftest
+python3 scripts/analysis/pr57/oc56_dump_check.py --conn-only work-pr57r4-scan{48,19,50,395}
+# 3. the displays
+./overclustering_display/serve_overclustering_scan.sh 5018 <96 dumps>
+./overclustering_display/serve_overclustering_scan.sh 5019 --tag claude-scan50 <50 dumps>
+```
+
+### 12.1 The problem: `killed` is not the question the scan asks
+
+The display showed one **candidate edge** at a time and one bit about it,
+`killed`.  The hand scan judges something else: should these two **components**
+be apart.  Those come apart in two ways, both common:
+
+1. A component pair is offered **up to three independent candidates** --
+   `closest`, `dir1`, `dir2` (`connect_graph_relaxed_strict.cxx`, the
+   `two_d_gap_kill` call sites).  Killing one says nothing about the others.
+2. Even with every (j,k) candidate killed, j and k can stay in one piece
+   **through a third component**, j -- m -- k.
+
+So a row reading `killed=yes` can leave the two clusters fully joined, and a
+"bad, this track was cut" verdict then describes a cut that never happened.
+
+### 12.2 The new record
+
+`connect_graph_relaxed_strict.cxx` now writes a third JSONL record type, once
+per graph call, after the emit loop -- the earliest point at which the answer
+exists, and the reason this is a separate record rather than a field on the
+(much earlier) per-candidate records:
+
+```json
+{"type":"connectivity","graph_call":N,"cluster_id":C,"ncomp":12,"nfinal":4,
+ "final":[0,0,1,0,...],
+ "edges":[{"j":1,"k":5,"src":"mst","dis":1.10,"p1":[..],"p2":[..],"dup":false}, ...]}
+```
+
+- `final[c]` -- the final connected-component label of starting component `c`,
+  from `connected_components()` on the graph itself.
+- `edges[]` -- every component edge the call emitted, accumulated independently
+  at the three `add_edge` sites, with endpoints in the same frame as the dumped
+  component point clouds.  `dup` marks an emit whose vertex pair already
+  carried an edge.
+
+The two are computed independently, so `final[j]==final[k]` **must** hold
+exactly when j reaches k over `edges[]`.  That is gate 4 below, not a
+tautology.
+
+Everything is inside `if (oc56_dump_on)`; with `WCT_OC56_SCAN_DUMP` unset not
+one instruction of it runs.  The only edits outside those guards are three
+`if (!boost::edge(...).second)` rewritten as `const bool dup = ...; if (!dup)`,
+which is the same call, once, with its result named.
+
+`scripts/analysis/pr57/oc56_conn.py` turns a record plus a pair into
+`separated / direct / path / siblings`, and is imported by the viewer,
+`oc56_autoscan.py` and `oc56_dump_check.py` so all three agree by construction.
+It has a `--selftest` (direct, via-2-hops, separated, and a pre-round-4 dump
+degrading to unknown) -- it is the one piece whose silent bug would corrupt
+every comparison built on it.
+
+### 12.3 The display
+
+New **`pair`** column next to `killed`: `SEP` (really separated) / `dir` (this
+pair kept a direct edge anyway) / `via N` (joined through N hops) / `?`
+(pre-round-4 dump -- never silently read as "connected").  Under the
+projections, a line naming the surviving edge or the full hop chain, plus this
+pair's other candidates and their own `killed` verdicts.  The surviving edges
+are drawn **green** in the three 3-D views.  A `separated pairs only` toggle
+(default OFF) narrows the table to the true separations.
+
+### 12.4 The headline: a third of the `bad` labels were not separations
+
+648 labels, all joined to the re-run dumps with **0 orphans**:
+
+| set | verdict | n | really separated | killed but still joined | never killed at all |
+|---|---|---|---|---|---|
+| owner 5018 | **bad**  | 46  | **31 (67.4%)** | 7  | 8 |
+| owner 5018 | good | 71  | 70 (98.6%) | 1  | 0 |
+| owner 5018 | OK   | 458 | 283 (61.8%) | 112 | 63 |
+| claude-scan50 (owner-corrected) | **bad** | 27 | **25 (92.6%)** | 2 | 0 |
+| claude-scan50 | good | 27 | 26 (96.3%) | 0 | 1 |
+| claude-scan50 | OK | 19 | 15 (78.9%) | 0 | 4 |
+
+**15 of 46 `bad` labels on the 5018 set (33%) sit on a pair the code never
+separated** -- and 8 of those 15 are rows where nothing was removed at all
+(below the 1 cm floor, surfaced by the `killed_ignore_floor` filter, so S6
+*would* have killed them but did not).  `good` is almost untouched: 70/71 are
+real separations.  The error is one-sided and concentrated exactly where round
+3 already found the calibration was weakest.
+
+Concrete cases:
+
+```
+evt142421 closest killed=True  1.62cm -> STILL CONNECTED via 6 -> 9 -> 8   [6-9 mst 31.76cm, 9-8 mst 0.92cm]
+evt142421 dir2    killed=True  4.88cm -> STILL CONNECTED, direct mst edge dis=0.92 cm
+evt256587 closest killed=True  1.77cm -> STILL CONNECTED via 22 -> 25 -> 32 [22-25 mst 0.92cm, 25-32 mst 0.95cm]
+```
+
+Any rule fitted on `bad` without this filter was fitted on a population a third
+of which was mislabelled by construction, not by judgement.  The round-3
+thresholds should be refit on `bad AND SEP` before they are trusted further --
+**that refit is not done here**; this round delivers the information, not a new
+operating point.
+
+### 12.5 The blind spot the display still has
+
+An edge record exists only for candidates that reached `two_d_gap_kill` (S1-S5
+let them through, same APA/face, at-or-above the 1 cm floor or W-override).  So
+a pair can end up separated with **no row in the table at all**.  Measured over
+524 graph calls / 15971 component pairs in the four arms:
+
+- 12587 pairs ended separated; **11418 had no dumped candidate edge**.
+- Of those 11418, 7489 involve a component whose point cloud is not in the dump
+  either (it never took part in any dumped candidate), so their separation
+  distance is **not measurable from the dump** -- stated, not guessed.
+- Of the 3929 that are measurable: 0 below 1 cm, **96 at 1-3 cm, 142 at
+  3-5 cm**, 714 at 5-15 cm, 2977 beyond 15 cm.
+
+So within the viewer's own default reach (`dis <= 5 cm`) there are **238
+separations the scan can never show**, against 2983 dumped candidate edges.
+The bulk of the 11418 is components that were never plausibly connected --
+the raw 90.7% figure is not a 90.7% blind spot and should not be quoted as one.
+
+### 12.6 Gates
+
+| gate | result |
+|---|---|
+| 1. runs | 512/512 `rc=0` across the four arms |
+| 2. **label join** (edge-key sets old vs new, per event) | **0 differences over 2983 edge keys**; all 648 labels re-join, 0 orphans |
+| 3. physics outputs (`hash_archive.py` member content) | **1024/1024 archives identical** (`mabc-pr.zip` + `pctree-pr`), 512/512 `nusel` identical |
+| 4. record self-consistency (`final[]` vs BFS over `edges[]`) | **0 disagreements** over 524 graph calls / 15971 pairs |
+| 5. blind-spot census | §12.5 |
+| 6. unit tests | `wcdoctest-clus` 1593/1593; `oc56_conn.py --selftest` PASS |
+| 7. owner labels untouched | file list + content hash identical before/after restart, both label dirs |
+| 8. displays | 5018 and 5019 HTTP 200, no exceptions in the serve logs |
+
+**Reproducibility control, run before the 512.**  SCN/DL vertex is the SBND
+default and is not bit-stable (M4), and the standard `-A dl_weights=` gate
+recipe is unavailable here because the arms must correspond to the owner's
+labels.  So gate 3 alone would have been a joint test of the change, the tree
+state and run-to-run noise.  Two events (59929, 60017) were therefore run
+**twice with the new binary** into `work-pr57r4-ctlA` / `ctlB`: new-vs-new and
+new-vs-old both identical on all three output kinds.  Only then was gate 3
+interpretable -- and it passes.
+
+One trap on the way: comparing `hash_archive.py` output verbatim reports DIFF
+for identical archives, because the output line ends with the file path.  Hash
+**field 1 only** (`awk '{print $1, $2}'`).  Same shape as round 2's `ls`
+path-prefix false alarm.
+
+### 12.7 Arms, displays, files
+
+| arm | ql_root | events | replaces |
+|---|---|---|---|
+| `work-pr57r4-scan48` | `work-nuecc48-cb0805` | 48 | `work-pr58-scan48` |
+| `work-pr57r4-scan19` | `work-ncpi0-cb0805` | 19 | `work-pr58-scan19` |
+| `work-pr57r4-scan50` | `work-mcp1k-cb0805` | 50 | `work-pr58-scan50` |
+| `work-pr57r4-scan395` | `work-mcp1k-cb0805` | 395 | `work-pr57r2-scan395` |
+| `work-pr57r4-ctlA` / `ctlB` | `work-mcp1k-cb0805` | 2 each | reproducibility control |
+
+Old arms are untouched and remain valid for anything already cited against
+them.  **5018** serves the same 96 events as before (47 + 18 + 31), no `--tag`;
+**5019** the same 50, `--tag claude-scan50`.  The serve argument lists were
+built by string-substituting the arm name into the argv of the running
+processes (`/proc/<pid>/cmdline`), never by re-globbing -- 5018's list is not
+"every event in the arms" and a glob would have silently changed the set.
+
+Files: `clus/src/connect_graph_relaxed_strict.cxx` (toolkit);
+`scripts/analysis/pr57/oc56_conn.py` (new), `oc56_dump_check.py`
+(`--conn-only`), `oc56_autoscan.py` (`pair` feature/column),
+`overclustering_display/overclustering_scan_viewer.py`,
+`overclustering_display/README.md`.
+
+### 12.8 Experience notes
+
+- **Check what the label is attached to before fitting anything on it.** Three
+  rounds of rule-fitting ran on a `bad` population a third of which was not a
+  separation.  Nothing about the display made that visible; the information
+  simply was not dumped.
+- **When two things must agree, compute them independently and check.**
+  `final[]` from the graph vs `edges[]` from the emit sites cost ~15 lines and
+  turns "the display's reachability logic is probably right" into a measured 0
+  over 15971 pairs.
+- **Hash the hash, not the line.** `hash_archive.py` prints the path; including
+  it manufactures a DIFF on identical files. Second time this class of bug has
+  cost time on this doc (round 2's `ls` prefix).
+- **`A && B & C` backgrounds `A && B` and runs `C` in the original cwd.** The
+  second `serve` invocation silently started in the wrong directory. Use
+  absolute paths in backgrounded compound commands.
+- **A raw census ratio can be true and still misleading.** "90.7% of
+  separations have no dumped edge" reads like a catastrophic blind spot; the
+  distance breakdown turns it into 238 cases within the display's own reach.
+  Qualify before quoting.

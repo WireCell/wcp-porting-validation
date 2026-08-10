@@ -62,6 +62,15 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from oc56_dump_check import pca_length_axis, angle_between_deg  # noqa: E402
+import oc56_conn  # noqa: E402  (doc pr/57 round 4)
+
+
+def CONNST(rec, j, k):
+    """Pair-level connectivity, condensed to what the feature table needs:
+    the status dict plus its one-word token."""
+    st = oc56_conn.pair_status(rec, j, k)
+    st['token'] = oc56_conn.short_token(st)
+    return st
 
 SBND = os.path.normpath(os.path.join(HERE, '..', '..', '..'))
 
@@ -131,8 +140,8 @@ def arm_events(arm):
     return out
 
 
-def load_event(path):
-    comps, edges = {}, []
+def load_event(path, want_conn=False):
+    comps, edges, conn = {}, [], []
     with open(path) as fh:
         for line in fh:
             line = line.strip()
@@ -144,6 +153,11 @@ def load_event(path):
                     r['points'], dtype=float).reshape(-1, 3)
             elif r['type'] == 'edge':
                 edges.append(r)
+            elif r['type'] == 'connectivity':
+                conn.append(r)
+    if want_conn:
+        # doc pr/57 round 4; empty dict for any pre-round-4 dump
+        return comps, edges, oc56_conn.index_conn(conn)
     return comps, edges
 
 
@@ -193,7 +207,7 @@ def shown_in_viewer(rec):
 
 def pair_table(arm, evt, path, want_shown_only=True):
     """-> {(call, j, k): pair_dict} with features and the member edges."""
-    comps, edges = load_event(path)
+    comps, edges, conn = load_event(path, want_conn=True)
     vtx = nu_vertex(arm, evt)
     by_call = collections.defaultdict(list)
     for (call, _), P in comps.items():
@@ -220,7 +234,11 @@ def pair_table(arm, evt, path, want_shown_only=True):
                 Tmax=max(transverse_rms(A), transverse_rms(B)),
                 npmin=min(len(A), len(B)), npmax=max(len(A), len(B)),
                 angle=angle_between_deg(axa, axb),
-                gw=False, wdeadX=0, dis=1e9, dens=1e9, dvtx=-1.0)
+                gw=False, wdeadX=0, dis=1e9, dens=1e9, dvtx=-1.0,
+                # doc pr/57 round 4: did the code really separate this pair?
+                # `sep` is None on a pre-round-4 dump -- never conflate that
+                # with False.
+                sep=CONNST(conn.get(call), j, k))
         p['edges'].append(rec)
         p['gw'] = p['gw'] or bool(rec['gap'][2])
         p['wdeadX'] = max(p['wdeadX'], w_dead_crossing(rec))
@@ -412,8 +430,8 @@ def select_events(arm, first, events_file):
 def cmd_features(args):
     prm = parse_params(args.params)
     cols = ['evt', 'call', 'j', 'k', 'nedge', 'Lmin', 'Lmax', 'Tmax', 'npmin',
-            'angle', 'gw', 'wdeadX', 'dis', 'dens', 'dvtx', 'verdict', 'conf',
-            'rule']
+            'angle', 'gw', 'wdeadX', 'dis', 'dens', 'dvtx', 'pair', 'verdict',
+            'conf', 'rule']
     print('\t'.join(cols))
     for arm in args.arm:
         for evt, path in select_events(arm, args.first, args.events_file):
@@ -424,7 +442,8 @@ def cmd_features(args):
                     '%.2f' % p['Lmin'], '%.2f' % p['Lmax'], '%.2f' % p['Tmax'],
                     p['npmin'], '%.1f' % (p['angle'] if p['angle'] is not None else -1),
                     int(p['gw']), p['wdeadX'], '%.2f' % p['dis'],
-                    '%.0f' % p['dens'], '%.1f' % p['dvtx'], v, conf, rule]))
+                    '%.0f' % p['dens'], '%.1f' % p['dvtx'], p['sep']['token'],
+                    v, conf, rule]))
 
 
 def labels_path(tag, evt):
