@@ -817,6 +817,19 @@ pair's other candidates and their own `killed` verdicts.  The surviving edges
 are drawn **green** in the three 3-D views.  A `separated pairs only` toggle
 (default OFF) narrows the table to the true separations.
 
+One caveat on reading it: the chain shown for `via N` is the **shortest**
+route.  A pair joined by several independent routes shows only one of them, so
+the green line is *a* thing holding the two components together, not
+necessarily *the* thing -- killing it need not separate anything.  `SEP` is
+unaffected: it comes from `final[]`, i.e. the graph's own component labels, not
+from the route.
+
+Every event that carries a label is in the served list on both ports (79 of the
+96 on 5018, 41 of the 50 on 5019) -- checked explicitly after the restart, since
+"the labels re-join a dump" and "the labelled event is actually served" are
+different claims.  The 96 (rather than 117) is pre-existing: 21 of the round-1
+events produced no S6 candidate at all and were never in the 5018 argv.
+
 ### 12.4 The headline: a third of the `bad` labels were not separations
 
 648 labels, all joined to the re-run dumps with **0 orphans**:

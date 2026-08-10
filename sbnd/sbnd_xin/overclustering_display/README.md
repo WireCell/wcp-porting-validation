@@ -132,10 +132,13 @@ The surviving edges are drawn green in row 1. The **`separated pairs only`**
 toggle (default OFF) narrows the list to the pairs the code truly separated,
 which is the population the labels are about.
 
-Two caveats the display cannot fix, both quantified in doc pr/57 §12: an edge
-row exists only for candidates that reached the 2-D check, so **some real
-separations have no row at all**, and a `dir`/`via N` row is a candidate whose
-removal changed nothing.
+Three caveats, the first two quantified in doc pr/57 §12: an edge row exists
+only for candidates that reached the 2-D check, so **some real separations
+have no row at all**; a `dir`/`via N` row is a candidate whose removal changed
+nothing; and the chain shown for `via N` is the **shortest** route — other
+independent routes may also hold the pair together, so do not read the green
+line as the single thing keeping them joined. `SEP` itself is not affected: it
+comes from the graph's own final component labels, not from the route.
 
 **Labels** -- pick **good** (removal correct, real gap), **OK** (removal
 defensible but marginal / ambiguous), or **bad** (removal WRONG, a real track

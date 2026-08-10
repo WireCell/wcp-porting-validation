@@ -151,7 +151,11 @@ def describe(st, j, k):
         route = " -> ".join([str(st["path"][0][0])] + [str(b) for _, b, _ in st["path"]])
         hops = ", ".join("%d-%d %s %.2fcm" % (a, b, e["src"], e["dis"])
                          for a, b, e in st["path"])
+        # SHORTEST route -- other independent routes may also exist, so this
+        # is "a thing holding them together", not necessarily "the" thing.
+        # `separated` comes from final[], so the verdict is right either way.
         return ("pair j=%d k=%d -> STILL CONNECTED via %s   [%s]"
+                "   (shortest route; others may exist)"
                 % (j, k, route, hops))
     return ("pair j=%d k=%d -> INCONSISTENT: final[] says connected, "
             "no emitted chain reaches it" % (j, k))
