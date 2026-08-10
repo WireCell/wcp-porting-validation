@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""doc pr/57 round 2: machine first-pass labelling of S6 separation candidates.
+"""doc pr/57 rounds 2-3: machine first-pass labelling of S6 separation candidates.
 
 The owner hand-scanned 117 events on the port-5018 display (doc pr/57 sec 6)
 and stated the labelling rules in prose:
@@ -32,14 +32,17 @@ Two structural choices that follow from the owner's round-1 instructions:
 
 Usage:
     oc56_autoscan.py calibrate --arm work-pr58-scan48 --arm work-pr58-scan19 \
-        --arm work-pr58-scan50 --labels overclustering_labels
-      # fit thresholds on the owner's labels, print the confusion matrix
+        --arm work-pr58-scan50 --arm work-pr57r2-scan395 \
+        --labels overclustering_labels --labels overclustering_labels/claude-scan50
+      # fit thresholds on the owner's labels, print the confusion matrix AND
+      # the per-arm breakdown (--labels and --arm are both repeatable; the
+      # per-arm split is what round 2 got wrong -- see doc pr/57 sec 11.3)
 
     oc56_autoscan.py features --arm <arm> [--events-file f] > feat.tsv
       # per-pair feature table (for inspection / plotting)
 
     oc56_autoscan.py label --arm work-pr57r2-scan395 --tag claude-scan50 \
-        --first 50 [--params L=8,N=50,D=2000,L2=25]
+        --first 50 [--params L=6,N=50,Tw=2.0,Aw=25]
       # write overclustering_labels/<tag>/labels-evt<ID>.json for the first N
       # events (by event id) of the arm that have a non-empty dump
 
@@ -79,13 +82,11 @@ DENS_R = 15.0
 # "both components long and populated => bad even with a W gap" branch
 # (Lmin > 20, npmin >= 500) recovers evt137238 but costs 5 of 59 good recall.
 #
-# Ld=40 rather than 50 is the one threshold the calibration set does NOT fix:
-# good/bad agreement is 89/91 for every Ld in [20, 60]. It was set by the
-# visual audit -- evt167112 (a 47.6 cm track continuing past a 6-wire dead-W
-# band with V never closing) is the owner's bad case (a) and is missed at 50,
-# while Ld=30 would additionally flip evt169356, a 2.8 cm stub at a track end
-# that should stay good.
-DEFAULT_PARAMS = dict(L=6.0, N=50, D=2000.0, Wd=3, Ld=40.0, Dd=3.0)
+# ROUND 3 (after the owner corrected the round-2 labels): `Ld` is gone -- the
+# dead-W branch has no length floor, because evt167684 is a 7.4 cm pair the
+# owner called bad. `Nd`, `Tw`, `Aw` are new. See doc pr/57 sec 11.
+DEFAULT_PARAMS = dict(L=6.0, N=50, D=2000.0, Wd=3, Nd=20, Dd=3.0,
+                      Tw=2.0, Aw=25.0)
 
 CAUSE_INDUCTION = 'induction inefficiency'
 CAUSE_DEAD = 'dead channel'
@@ -241,17 +242,35 @@ def pair_table(arm, evt, path, want_shown_only=True):
 def classify(p, prm):
     """-> (verdict, cause, rule_name, confidence).
 
-    Order matters: rule 2 (long-track break) outranks rule 3 (near vertex),
-    because d_vtx alone does not separate good from bad in the owner's labels
-    (d_vtx < 3 cm is bad 11 / good 5).
+    Order matters twice over:
+
+    * rule 2 (long-track break) outranks rule 3 (near vertex), because d_vtx
+      alone does not separate good from bad -- pairs with d_vtx < 3 cm are bad
+      9 / good 5, and every labelled long-track-break pair inside 3 cm is bad.
+    * the dead-W and narrow-W branches must precede R3, or R3's blanket
+      "W gap => good" swallows them. Both were added in round 3 after the
+      owner's corrections showed R3 was the single biggest error source
+      (10 of 31 R3 goods came back bad on PR-data).
     """
     if p['Lmin'] > prm['L'] and p['npmin'] >= prm['N'] and not p['gw']:
         cause = CAUSE_DEAD if p['wdeadX'] >= prm['Wd'] else CAUSE_INDUCTION
         return 'bad', cause, 'R2 long-track break, no W gap', 'high'
-    if (p['wdeadX'] >= prm['Wd'] and not p['gw']
-            and p['Lmax'] > prm['Ld'] and p['dis'] < prm['Dd']):
-        # owner's bad case (a): dead-channel band in W, U/V distorted around it
-        return 'bad', CAUSE_DEAD, 'R2d dead-W band, induction-only gap', 'low'
+    if (p['wdeadX'] >= prm['Wd'] and p['npmin'] >= prm['Nd']
+            and p['dis'] < prm['Dd']):
+        # owner's bad case (a): dead-channel band in W, U/V distorted around
+        # it. Round 3: this fires even when W itself gaps (evt60669) and has
+        # no length floor at all (evt167684 is a 7.4 cm pair), both of which
+        # the round-2 corrections demanded.
+        return 'bad', CAUSE_DEAD, 'R2d dead-W band', 'high'
+    if (p['gw'] and p['Lmin'] > prm['L'] and p['npmin'] >= prm['N']
+            and p['Tmax'] < prm['Tw']
+            and p['angle'] is not None and p['angle'] < prm['Aw']):
+        # Round 3: a W gap is NOT unconditionally good. When both components
+        # are substantial, THIN (Tmax < 2 cm => tracks, not showers) and
+        # collinear, the owner calls it bad -- evt174224, evt172656, evt60017.
+        # Fat or kinked W-gap pairs stay good, which is what keeps the nueCC
+        # and NC-pi0 samples intact.
+        return 'bad', CAUSE_INDUCTION, 'R2w thin collinear pair across a W gap', 'low'
     if p['gw']:
         return 'good', CAUSE_GENUINE, 'R3 W-plane gap (robust plane sees a hole)', 'high'
     if p['dens'] > prm['D'] and p['Lmin'] <= prm['L']:
@@ -272,9 +291,13 @@ def load_owner_labels(labels_dir):
 
 
 def cmd_calibrate(args):
-    truth = load_owner_labels(args.labels)
-    print('owner labels: %d over %d files  %s' % (
-        len(truth), len(glob.glob(os.path.join(args.labels, 'labels-evt*.json'))),
+    dirs = args.labels if isinstance(args.labels, list) else [args.labels]
+    truth, nfiles = {}, 0
+    for d in dirs:
+        truth.update(load_owner_labels(d))
+        nfiles += len(glob.glob(os.path.join(d, 'labels-evt*.json')))
+    print('owner labels: %d over %d files from %s  %s' % (
+        len(truth), nfiles, ', '.join(dirs),
         dict(collections.Counter(truth.values()))))
 
     rows = []
@@ -289,14 +312,19 @@ def cmd_calibrate(args):
                 p['truth'] = ('bad' if 'bad' in labs else
                               'good' if 'good' in labs else 'OK')
                 p['nlab'] = len(labs)
+                p['arm'] = arm
                 rows.append(p)
     gb = [p for p in rows if p['truth'] in ('good', 'bad')]
     print('labelled pairs joined: %d (good/bad subset: %d)' % (len(rows), len(gb)))
 
-    grid = [dict(DEFAULT_PARAMS, L=float(L), N=N, D=float(D))
+    grid = [dict(DEFAULT_PARAMS, L=float(L), N=N, D=float(D), Nd=Nd,
+                 Tw=float(Tw), Aw=float(Aw))
             for L in (4, 6, 8, 10, 12)
             for N in (30, 50, 100, 200)
-            for D in (1200, 1600, 2000, 3000)]
+            for D in (1200, 2000, 3000)
+            for Nd in (12, 20, 50)
+            for Tw in (1.5, 2.0, 3.0, 0.0)      # 0.0 disables the narrow-W branch
+            for Aw in (20.0, 25.0, 40.0)]
 
     def fit(train):
         best = None
@@ -338,6 +366,21 @@ def cmd_calibrate(args):
             cvhit += classify(p, prm_e)[0] == p['truth']
     print('leave-one-EVENT-out CV good/bad agreement: %d/%d = %.1f%%'
           % (cvhit, tot, 100.0 * cvhit / max(tot, 1)))
+
+    # per-arm breakdown: the round-2 corrections showed that a number pooled
+    # over nueCC + NC-pi0 + PR-data hid a rule that only worked on two of them.
+    print('per-arm (fitted params, not refit per arm):')
+    for arm in args.arm:
+        sub = [p for p in gb if p['arm'] == arm]
+        if not sub:
+            continue
+        b = [p for p in sub if p['truth'] == 'bad']
+        g = [p for p in sub if p['truth'] == 'good']
+        print('  %-24s %2d/%-2d  bad %2d/%-2d  good %2d/%-2d' % (
+            os.path.basename(arm.rstrip('/')),
+            sum(1 for p in sub if classify(p, prm)[0] == p['truth']), len(sub),
+            sum(1 for p in b if classify(p, prm)[0] == 'bad'), len(b),
+            sum(1 for p in g if classify(p, prm)[0] == 'good'), len(g)))
     print('PARAMS=' + ','.join('%s=%g' % (k, v) for k, v in sorted(prm.items())))
     return prm
 
@@ -486,13 +529,16 @@ def main():
     for name in ('calibrate', 'features', 'label', 'verify'):
         s = sub.add_parser(name)
         s.add_argument('--arm', action='append', required=True)
-        s.add_argument('--labels', default=os.path.join(SBND, 'overclustering_labels'))
+        s.add_argument('--labels', action='append',
+                       default=None, help='label dir; repeatable')
         s.add_argument('--tag', default='claude-scan50')
         s.add_argument('--first', type=int, default=0)
         s.add_argument('--events-file', default='')
         s.add_argument('--params', default='')
         s.add_argument('--overrides', default='')
     args = ap.parse_args()
+    if not args.labels:
+        args.labels = [os.path.join(SBND, 'overclustering_labels')]
     {'calibrate': cmd_calibrate, 'features': cmd_features,
      'label': cmd_label, 'verify': cmd_verify}[args.cmd](args)
 

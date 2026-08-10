@@ -16,10 +16,14 @@ sample are processed (`work-pr57r2-scan395`), the first 50 are served on port
 **5019**, and a machine first-pass label set calibrated on the owner's 575
 round-1 labels is written to `overclustering_labels/claude-scan50/`. Sections
 1-9 below are round 1 and are left as the record of that round.
-**First thing to look at on 5019: evt174224 c0 1-2** -- labelled good, but it
-is drawn as one straight 260 cm muon cut where the W plane genuinely gaps. It
-is the one case that decides whether "W gap => good" needs a qualifier
-(sec 10.6).
+**Round 3 (sec 11)**: the owner rescanned those 50 events and corrected 27 of
+62 pairs -- my labels agreed on only 76.6 % of the good/bad pairs, with bad
+recall 9/20. Root cause was the "W gap => good" rule, measured on 245
+shower-rich nueCC/NC-pi0 pairs and applied to cosmic-dominated PR-data;
+evt174224 c0 1-2, flagged in sec 10.6 as the case that would decide it, came
+back **bad**. The classifier now carries a thin-and-collinear qualifier on that
+rule and a promoted dead-W branch: 95.7 % (93.5 % CV) over all 602 labelled
+pairs, bad recall 47/52.
 
 ## Repro block
 
@@ -538,3 +542,175 @@ qualifier and §10.4's third candidate comes back into play.
   with a partial visual audit, not a hand scan.
 - The owner's label set was still growing while this was calibrated; rerunning
   `calibrate` after the port-5018 scan finishes will move these numbers.
+
+---
+
+## 11. Round 3 -- the owner corrected the round-2 labels; what that taught
+
+Status: **the owner rescanned the 50 events on 5019 and changed 27 of my 62
+pairs.** My delivered labels agreed on **36/66 pairs (54.5 %)**, and on the 47
+pairs that ended up good or bad, **36/47 = 76.6 %** with **bad recall 9/20** --
+against the 97.8 % / 96.7 % CV the round-1 calibration had predicted. The
+corrections are now truth; this section is the post-mortem and the fix.
+`overclustering_labels/claude-scan50/` holds the owner's corrected verdicts
+(my machine `comment` strings are preserved underneath, which is what made the
+diff possible) and is **never rewritten by the tooling**.
+
+### 11.1 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 scripts/analysis/pr57/oc56_autoscan.py calibrate \
+  --arm work-pr58-scan48 --arm work-pr58-scan19 --arm work-pr58-scan50 \
+  --arm work-pr57r2-scan395 \
+  --labels overclustering_labels --labels overclustering_labels/claude-scan50
+```
+
+### 11.2 The shape of the errors
+
+Edge-level, mine -> owner's (73 edges):
+
+| my label | -> good | -> bad | -> OK |
+|---|---|---|---|
+| **good** (58) | 27 | **14** | 17 |
+| **bad** (15) | **0** | 13 | 2 |
+
+The asymmetry is the whole story. **Nothing I called bad came back good** --
+when the classifier committed to bad it was never wrong in the dangerous
+direction. Everything went wrong on the `good` side: I under-called bad by more
+than a factor of two. For a scan whose purpose is finding bad separations, that
+is the expensive failure.
+
+By the rule that fired:
+
+| rule | n | agreed | changed |
+|---|---|---|---|
+| R2 long-track break, no W gap | 14 | 12 | 2 -> OK |
+| R2d dead-W band | 1 | 1 | -- |
+| **R3 W-plane gap => good** | **31** | **16** | **10 -> bad**, 5 -> OK |
+| R4 residual, committed good | 27 | 11 | 4 -> bad, 12 -> OK |
+
+The `conf=high|low` flag I attached to every label was nearly worthless as a
+triage aid: `conf=high` agreed 28/45 (62 %), `conf=low` 12/28 (43 %). It
+tracked which rule fired, not whether the answer was right.
+
+### 11.3 Root cause: R3 was measured on the wrong population
+
+"A W-plane gap is very nearly an absolute good signal" (§10.3) was true of the
+sample it was measured on and false of the sample it was applied to:
+
+| sample | W-gap pairs | labelled bad |
+|---|---|---|
+| nueCC | 186 | 1 |
+| NC-pi0 | 59 | 0 |
+| PR-data round 1 | 8 | 0 |
+| **PR-data round 2** | **28** | **7 (25 %)** |
+
+§10.4 already flagged this ("R3 is the rule most in need of confirmation on
+PR-data") and §10.6 named **evt174224 c0 1-2** as the case that would decide
+it. That case came back **bad**, and so did five more W-gap pairs. The flag was
+right; the classifier shipped with the rule anyway because the calibration
+number said 96.7 %.
+
+**The transferable lesson: leave-one-event-out CV inside one sample does not
+estimate transfer to a different sample.** Every fold of that CV still contained
+245 nueCC/NC-pi0 W-gap pairs, so every fold agreed R3 was safe. The honest
+uncertainty was the 8-pair PR-data subsample, not the 91-pair pooled one. When a
+rule's evidence is concentrated in one population, the per-population count is
+the error bar -- and `calibrate` now prints a per-arm breakdown for exactly
+this reason.
+
+Physically, the sample difference is real, not a labelling artifact: nueCC and
+NC-pi0 events are shower-rich, where a W gap between two substantial components
+usually separates a shower from a track and is correct; PR-data events are
+cosmic-dominated, where the same signature is usually a muon cut in two.
+
+### 11.4 The fix
+
+Three changes, each traceable to specific corrected pairs:
+
+```
+R2   bad   Lmin > 6 cm and npmin >= 50 and no W gap          (unchanged)
+R2d  bad   >=3 dead W wires spanning the seeds, npmin >= 20,
+           dis < 3 cm                                        (PROMOTED)
+R2w  bad   W gap AND Lmin > 6 cm AND npmin >= 50
+           AND Tmax < 2 cm AND axis-axis angle < 25 deg      (NEW)
+R3   good  W gap                                             (now last-resort)
+R1   OK    local density > 2000 and Lmin <= 6 cm             (unchanged)
+R4   good  everything else                                   (unchanged)
+```
+
+- **R2d promoted**: the length floor `Ld` is deleted (evt167684 is a **7.4 cm**
+  pair the owner called bad) and it now fires even when W itself gaps
+  (evt60669, `wdeadX=4`). A dead-W band spanning the seeds is the signal by
+  itself -- the owner's bad case (a) -- and does not need a long track to
+  corroborate it.
+- **R2w is the qualifier R3 needed**: a W gap only survives as "good" if the
+  pair is *not* a thin, collinear pair of substantial components. `Tmax < 2 cm`
+  is the track/shower discriminator (both pieces thin => one track), and
+  `angle < 25 deg` is collinearity. This is what recovers evt174224 (Tmax 1.4,
+  4 deg), evt172656 (1.7, 18 deg) and evt60017 (0.6, 1 deg) while leaving the
+  fat or kinked nueCC/NC-pi0 W-gap goods (Tmax 12.7, 11.6, 6.7, 5.1 ...)
+  untouched. It is the least-supported branch in the whole rule set -- 8 W-gap
+  bads exist in total -- and is tagged `conf=low` accordingly.
+
+The grid search over the extended family arrives at these thresholds
+independently; they were not hand-set after the fact.
+
+### 11.5 Measured, on 602 labelled pairs from all four arms
+
+648 labels, 120 files (575 round-1 + 73 corrected round-2), 138 good/bad pairs:
+
+| | agreement | good recall | bad recall |
+|---|---|---|---|
+| round-2 rule (what shipped) | 125/138 = 90.6 % | 86/86 | 39/52 = 75 % |
+| **round-3 rule** | **132/138 = 95.7 %** | 85/86 = 98.8 % | **47/52 = 90.4 %** |
+| round-3, leave-one-event-out CV | 129/138 = 93.5 % | | |
+
+Per arm with the fitted parameters (not refit per arm), which is the check
+§10.4 should have led with:
+
+| arm | agreement | bad recall | good recall |
+|---|---|---|---|
+| `work-pr58-scan48` (nueCC) | 49/51 | 14/15 | 35/36 |
+| `work-pr58-scan19` (NC-pi0) | 23/23 | 6/6 | 17/17 |
+| `work-pr58-scan50` (PR-data r1) | 16/17 | 10/11 | 6/6 |
+| `work-pr57r2-scan395` (PR-data r2) | 44/47 | 17/20 | 27/27 |
+
+On the 50 corrected events alone: good/bad agreement **76.6 % -> 93.6 %**, bad
+recall **9/20 -> 17/20**, good recall 27/27 both ways. That 93.6 % is in-sample
+(these corrections are what the rule was fitted on) -- the honest figure is the
+93.5 % CV.
+
+Three residual misses, all on PR-data: evt73004 1-2 and evt169356 6-7 are tiny
+pieces (npmin 21 and 12) hanging off a track, below any `npmin` floor that does
+not also flood the OK class; evt170814 0-1 has `Tmax = 3.0` and sits just above
+R2w's thin cut -- widening that cut to 3.5 cm would recover it but costs two
+nueCC goods (evt69314 at Tmax 2.4, evt269774 at 3.1), so it stays.
+
+### 11.6 What is still not handled: the OK class
+
+19 of the 66 pairs are OK and the classifier produced **none** of them: 17 of my
+goods became OK. All-pair agreement is therefore 66.7 % even with the round-3
+rule, against 93.6 % on the good/bad subset. The density-based busy-shower test
+does not describe what OK means on PR-data -- the corrected OK pairs run from
+density 23 to 1203, i.e. sparse *and* dense. Since these labels are filtered out
+before analysis, this costs nothing today, but "0 OK" is not a claim that no OK
+cases exist; it is the classifier declining to model them.
+
+### 11.7 Scanning-experience notes
+
+- **The comment field is the audit trail that made this round possible.** The
+  viewer preserves `comment` when only the verdict button changes, so every
+  corrected label still carries `auto <verdict> conf=... [rule] <features>`.
+  The diff of predicted-vs-corrected, per rule and per feature, fell out for
+  free. Keep writing machine provenance into `comment`.
+- **Flag the rule you distrust, name the event that would falsify it, and put
+  it where it gets read.** §10.6's call-out of evt174224 is what turned a wrong
+  answer into a one-scan diagnosis instead of a silent error.
+- **Report per-population, never pooled.** A single agreement number over three
+  samples hid a rule that worked on two of them and failed on the third.
+- **Commit direction matters more than commit rate.** 0 of 15 bads came back
+  good. Given the owner examines both classes, a classifier that under-calls
+  bad is worse than one that over-calls it; the round-3 rule trades 1 good for
+  8 bads and that is the right direction for this task.
