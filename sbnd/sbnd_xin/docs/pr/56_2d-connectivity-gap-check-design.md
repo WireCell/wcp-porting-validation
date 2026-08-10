@@ -1,21 +1,41 @@
 # doc pr/56 — 2D wind/tick connectivity redesign for `connect_graph_relaxed_strict`'s gap test
 
-Status: **DESIGN ONLY, NOT YET IMPLEMENTED.** No `clus/` source changed, no
-knob added, no config touched. This is a proposal to review before any code
-is written. Everything below marked "to confirm during implementation" is an
-open item, not a verified fact.
+Status: **round 2 IMPLEMENTED, SBND PRODUCTION default still OFF (owner
+review pending before any flip).** §1-§6 below are the original design
+(unchanged as written except where round 2 explicitly overrides it). §7 is
+the round 2 implementation record: what was actually built, three
+owner-directed changes from the design as written, and measured results on
+the two named target events. Toolkit `a2a3c697`, wcp-porting-img `<WCP_SHA,
+this commit>`.
 
-## Repro block (supporting evidence for the motivating example)
+## Repro block
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
 
-# fresh single-event census rerun this design is grounded in (already run,
-# see docs/pr/pr55-arms.txt and this doc's §2 for how it was produced):
+# round 2 (this implementation): byte-identical OFF gate + S6-on runs for
+# the two named target events (fresh labels, both single-event reruns):
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr56r2-on19 data 71372
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr56r2-on48 data 269774
+
+# OFF gate (bare, no env override -- must match the existing production
+# baseline byte-for-byte since default graph_name is unchanged):
+PR_JOBS=1 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr56r2-off19 data 71372
+PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr56r2-off48 data 269774
+python3 ../../../abtest/hash_archive.py work-pr53r7-on19/pr_evt71372/mabc-pr.zip   work-pr56r2-off19/pr_evt71372/mabc-pr.zip
+python3 ../../../abtest/hash_archive.py work-pr53r7-on48/pr_evt269774/mabc-pr.zip work-pr56r2-off48/pr_evt269774/mabc-pr.zip
+
+# design-phase census rerun this doc's §1 motivating example is grounded in:
 #   WCT_RELAXED_EDGE_CENSUS=1 PR_JOBS=1 \
 #     ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr55-census269774 data 269774
 grep -a "OC53CENSUS-S closest j=5 k=10\|OC53CENSUS-S closest j=5 k=11\|OC53CENSUS-S closest j=10 k=11" \
     work-pr55-census269774/pr_evt269774/wct_pr_evt269774.log
+
+# after-fix Bee set (both events, S6-on PR output):
+python3 scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -q work-nuecc48-cb0805 \
+    -p work-pr56r2-on19 -p work-pr56r2-on48 -o bee/pr56r2/pr56r2-after.zip 71372 269774
 ```
 
 Two figures sent this session document the visual gap this design targets
@@ -201,6 +221,9 @@ rest of the file's branch-selection logic.
 
 ### 3.3 Open verification items (do not guess — confirm before coding)
 
+**All three resolved in round 2 (§7.1) — reading left below unchanged as
+the record of what was unknown before implementation started.**
+
 - **Exact `scores[]` index-to-plane mapping** used by `test_good_point`
   (`scores[0..2]` vs `scores[3..5]`, and which index pairs with which of
   U/V/W) — needed to keep S6's plane semantics consistent with the
@@ -217,10 +240,14 @@ rest of the file's branch-selection logic.
 
 ### 3.4 Kill rule and knob
 
-**Kill rule**: S6 fires (edge invalidated, same `invalidate_distance()`
-pattern S1-S3 and S5 already use) if **≥2 of the 3 planes** show a real
-(non-excused) gap. This matches the "≥2 views agree" convention already
-implicit in this file's own combined-quality weighting
+**Superseded in round 2 — owner's explicit instruction is ≥1, not ≥2 (see
+§7.2). Left as originally written below for the record of the design's own
+reasoning; §7.2 is authoritative for what shipped.**
+
+**Kill rule (as designed)**: S6 fires (edge invalidated, same
+`invalidate_distance()` pattern S1-S3 and S5 already use) if **≥2 of the 3
+planes** show a real (non-excused) gap. This matches the "≥2 views agree"
+convention already implicit in this file's own combined-quality weighting
 (`scores[0]+scores[3]+scores[1]+scores[4]+(scores[2]+scores[5])*2 < 3`
 gives W double weight, `:309`) and general LArTPC practice of requiring at
 least two independent 2D views to trust a 3D claim.
@@ -256,6 +283,10 @@ repo's default-OFF-knob bar (`CLAUDE.md` §1/§4).
 
 ## 5. Validation target (stated honestly — not yet proven)
 
+**Now confirmed in round 2 (§7.3) — both edges verified killed on a real
+rerun.** Left as originally written below for the record of the design-time
+hypothesis this confirms.
+
 `c5→c10` (2.0cm) and `c10→c11` (2.7cm) are this design's concrete target
 case: §1 already explains mechanistically why the *old* line-sampling test
 structurally cannot catch them (too few interior samples to ever reach the
@@ -273,9 +304,202 @@ test's "is anything within 0.6cm" question without ever meaning components
 j and k's own footprints touch — but this is a hypothesis to verify, not a
 result.
 
-## 6. Explicitly out of scope for this doc
+## 6. Explicitly out of scope for this doc (design phase)
 
 No code changes to `connect_graph_relaxed_strict.cxx`, `Graphs.h`, or any
-jsonnet config. No A/B gate. No default flip. No profiling run. Those are
-the next round(s), contingent on this design being reviewed and the §3.3
-open items being resolved first.
+jsonnet config. No A/B gate. No default flip. No profiling run. **§7 below
+is the next round** — code was written, gated, and measured on the two
+named target events; the default flip itself is still not done (owner
+review pending).
+
+## 7. Round 2 — implementation record
+
+Scope, per explicit owner instruction, narrower than §3 in three ways:
+(1) kill rule is **≥1** non-excused gap, not ≥2; (2) S6 is an
+**additional required** check ANDed on top of S1-S5, gated by its own knob
+(design already intended this — restated because "additional required"
+was the owner's own framing); (3) blast radius confined to **one file**,
+`connect_graph_relaxed_strict.cxx` (plus its two thin dispatch/factory
+wrappers), and verified against **exactly two named events** — 269774 (the
+`c5→c10`/`c10→c11` chain, §1) and 71372 (near-vertex `(-165.9,-155.0,
+221.7)`, cluster id 19). No other event, no sample-wide census, no default
+flip this round.
+
+### 7.1 §3.3 open items — resolved
+
+- **`scores[]` mapping CONFIRMED**: `test_good_point`
+  (`Facade_Grouping.cxx:585-613`) does `num_planes[pind]++` on
+  `has_closest_point`, **else** `if (get_closest_dead_chs(...))
+  num_planes[pind+3]++` — `0,1,2` = live per plane, `3,4,5` = dead per
+  plane, `0=U,1=V,2=W`. Mutually exclusive pairs; the existing caller's
+  `scores[k]+scores[k+3]` reading was already correct.
+- **`wire_charge_row` is unfiltered but pre-filtered upstream**:
+  `build_wire_cache` (`Facade_Grouping.cxx:934-953`) inserts every `ctpc_*`
+  row unconditionally; the dead cut already happened in
+  `PointTreeBuilding.cxx:295` (`charge.uncertainty() > m_dead_threshold` →
+  `continue`, strictly `>`). **Key presence in `wire_charge_row` IS the
+  live predicate** — no separate threshold needed, exactly the "reuse, don't
+  invent a number" requirement.
+- **UNIT TRAP FOUND AND AVOIDED**: `wire_charge_row`'s `time_slice` key is
+  `slice->start()/tick`, and slices start at `slicebin * tick_span * tick`
+  (`img/src/MaskSlice.cxx:264`) with SBND `tick_span=4`
+  (`cfg/pgrapher/experiment/sbnd/img.jsonnet:133`) — **valid keys are
+  multiples of 4 ticks, not every tick.** A naive per-tick BFS adjacency
+  would have silently missed ~3/4 of real cells and looked like it "worked"
+  (every plane reporting a gap) while actually just never finding any live
+  cell at all. The implementation **never computes an absolute tick value
+  and never assumes stride=1** — see §7.2 seeding route.
+
+### 7.2 What was actually built
+
+**Seeding avoids the unit trap entirely** by never calling
+`convert_3Dpoint_time_ch`. Real per-point accessors already carry the same
+global point index as the graph's connected-component point clouds:
+`Cluster::wire_index(global_idx, plane)` (`Facade_Cluster.h:272`) for the
+wire index, and `Cluster::blob_with_point(global_idx)->slice_index_min()`
+(`Facade_Cluster.h:253`, `Facade_Blob.h:76`) for the slice index — built by
+the *identical* expression as `wire_charge_row`'s key
+(`islice->start()/tick`, `aux/src/SamplingHelpers.cxx:90` vs
+`PointTreeBuilding.cxx:326`), so same unit and same values by construction,
+no conversion, no rounding risk.
+
+Points near the gap are gathered with the existing
+`Simple3DPointCloud::get_closest_wcpoints_radius(p, radius)`
+(`Facade_Util.h:150`), radius = `max(edge_dis, 1cm) + 2cm` — scales with
+the candidate's own 3D gap distance, so the 2-3cm target gaps get small
+seed sets automatically. The real slice-adjacency stride is **derived at
+runtime**, not assumed: the minimum positive difference between distinct
+`slice_index_min` values found among the seeded points (falls back to the
+SBND default of 4 only if no two distinct values are seen). Every run this
+round measured `slice_step=4`, confirming the derivation lands on the true
+config value rather than the fallback by coincidence.
+
+**The check** (`s6_planes_connected`, anonymous namespace,
+`connect_graph_relaxed_strict.cxx`): per plane, a bounded bidirectional BFS
+between the two components' seed cell-sets in (wire_index, time_slice)
+space, window = seed bbox ± 3 wires / ± 2 slice-steps, cell budget 4000
+(fails closed — an exhausted budget counts as a gap, never as connected). A
+cell is passable if `wire_charge_row(apa,face,plane,slice)` has `wind` as a
+key (live) **or** `is_wire_dead(apa,face,plane,wind,slice)` is true (dead
+channel folded directly into the connectivity predicate, not a bolt-on
+exception). Adjacency ±1 wire, ±1 slice-step (the derived stride).
+
+**Excusal**: U excused if the caller's already-computed `angle1 <
+wire_angle_tol`, V if `angle2 < wire_angle_tol` — the same wire-parallel
+test the file already runs for branch selection (`:341-351` in the
+original numbering), not re-detected. W is never excused.
+
+**Kill rule (as shipped, owner's instruction)**: `two_d_connectivity_bad`
+(`WireCellClus/Graphs.h`, pure, doctested) — `(gap_u && !excuse_u) ||
+(gap_v && !excuse_v) || gap_w`. **≥1**, not §3.4's original ≥2.
+
+**Knob**: new graph flavor `relaxed_strict_img_2d` — `bool two_d_check =
+false` parameter on `connect_graph_relaxed_strict`, plumbed exactly like
+`image_check` (new `make_graph_relaxed_strict_img_2d()` in
+`make_graphs.h/.cxx`, registered at the same 4 dispatch sites in
+`Facade_Cluster.cxx` that already carry `relaxed_strict_img`). Selecting it
+is a cfg-only `-A protect_graph_name=relaxed_strict_img_2d` (env
+`SBND_PROTECT_GRAPH=relaxed_strict_img_2d` via the existing runner
+plumbing) — **C++ default and jsonnet default both untouched**;
+`ClusteringProtectBundle`'s production `graph_name` stays
+`relaxed_strict_img`.
+
+**Diagnostics**: new `OC56CENSUS-2D` log line (gap/excuse per plane, slice
+step, verdict), env-gated by the same `WCT_RELAXED_EDGE_CENSUS`, same
+log-only pattern as the existing `OC53CENSUS-*` lines — no new env var.
+
+Files touched: `clus/src/connect_graph_relaxed_strict.cxx` (the BFS, the
+S6 lambda, three call sites in the closest-pair/dir1/dir2 blocks),
+`clus/src/connect_graphs.h` (new parameter), `clus/inc/WireCellClus/
+Graphs.h` (new pure predicate declaration + doc), `clus/src/make_graphs.h`
+/`.cxx` (new flavor factory), `clus/src/Facade_Cluster.cxx` (4 dispatch
+sites), `clus/test/doctest_relaxed_strict.cxx` (4 new `TEST_CASE`s for
+`two_d_connectivity_bad`, monotonicity included).
+
+### 7.3 Verification
+
+**Freshness proof**: `local/lib/libWireCellClus.so` mtime `2026-08-09
+21:25` > last source edit `21:20`. Hit the documented "new-symbol
+first-build link gotcha" (stale `local/lib` wins the linker's `-L` search
+order over the freshly-built `build/clus` on a brand-new symbol name) —
+fixed by copying `build/clus/libWireCellClus.so` into `local/lib` once,
+then a clean `wcbuild` succeeded.
+
+**`./build/clus/wcdoctest-clus`**: 145/145 test cases, 1594/1594 assertions
+passed (0 failed), including the 4 new `two_d_connectivity_bad` cases.
+
+**Byte-identical OFF gate — PASS 2/2.** Fresh bare reruns
+(`work-pr56r2-off19`, `work-pr56r2-off48`, no env override, default
+`graph_name` unchanged) vs. the existing production baseline arms
+(`work-pr53r7-on19`, `work-pr53r7-on48`):
+
+| event | `mabc-pr.zip` hash (`hash_archive.py`) | `nusel-evt<N>.tsv` |
+|---|---|---|
+| 71372  | identical (`37faaf63...`) | byte-identical |
+| 269774 | identical (`abe0487c...`) | byte-identical |
+
+**S6-on target-edge verification (269774)** — fresh `SBND_PROTECT_GRAPH=
+relaxed_strict_img_2d WCT_RELAXED_EDGE_CENSUS=1` rerun
+(`work-pr56r2-on48`), replaying the exact three pairs from §1/§5:
+
+```
+OC53CENSUS-S closest j=5  k=10 dis=2.00cm nsteps=2 ... killed=true   (was false)
+OC53CENSUS-S closest j=5  k=11 dis=5.80cm nsteps=6 ... killed=true   (unchanged, already killed)
+OC53CENSUS-S closest j=10 k=11 dis=2.69cm nsteps=3 ... killed=true   (was false)
+```
+
+Both target edges now killed. Every one of the 15 closest-pair candidates
+that survived S1-S5 for this cluster in the design-phase census is now
+killed by S6 (`OC56CENSUS-2D ... killed=true` x15) — a materially more
+aggressive outcome than the ≥2-of-3 design in §3.4 would likely have given
+(flagged as a real, not hypothetical, consequence of the owner's ≥1 rule,
+per the design doc's own §"risks to watch" from the implementation plan —
+not something to quietly loosen).
+
+**`ClusteringProtectBundle` split counts, before → after:**
+
+| event | cluster | before (main+frag) | after (main+frag) |
+|---|---|---|---|
+| 269774 | cid 13 | 521 + 20 = 21 pieces | 339 + 32 = 33 pieces |
+| 71372  | cid 19 | 1482 + 3 = 4 pieces  | 1059 + 12 = 13 pieces |
+
+Both target events split materially more than before, in the region the
+owner flagged, consistent with the design's intent.
+
+**Cost** (`MABC timing: ClusteringProtectBundle:pr`, single-run wall time,
+not a profiled average — noise-level, no regression observed):
+
+| event | before | after |
+|---|---|---|
+| 269774 | 568.8 ms | 510.3 ms |
+| 71372  | 958.5 ms | 885.1 ms |
+
+No wall-time regression on either target event (both runs came in slightly
+faster; treated as within run-to-run noise, not claimed as a real speedup
+— a single before/after pair on two events is not a performance profile).
+
+**Bee set, S6-on PR output, both events** (owner-requested, outward-facing,
+authorized this round):
+`https://www.phy.bnl.gov/twister/bee/set/08f06469-c0ce-4e6c-ad26-c0b10e964ec1/event/list/`
+— bee index 0 = 71372, index 1 = 269774
+(`bee/pr56r2/pr56r2-after.{zip,index.txt,prid-map.txt}`).
+
+### 7.4 Open items / not done this round
+
+- **No sample-wide census.** Only the two named events were run. The ≥1
+  kill rule's collateral effect on other events/detectors is unmeasured —
+  do not extrapolate the 269774/71372 split-count jump to "typical."
+- **No default flip.** `graph_name` stays `relaxed_strict_img` in
+  production; `relaxed_strict_img_2d` is opt-in via `-A
+  protect_graph_name=relaxed_strict_img_2d` / `SBND_PROTECT_GRAPH` only.
+- **No downstream (fitter/tagger/nusel) re-verification beyond the two
+  events' own nusel line**, which is identical to the OFF baseline for the
+  OFF gate by construction, but the **ON** run's downstream nusel was not
+  independently scanned — the ON runs' `nusel-evt*.tsv` exist in
+  `work-pr56r2-on{19,48}/` but were not diffed against anything (there is
+  no meaningful "before" nusel to diff against, since ON is a new graph
+  flavor, not a flip); a hand-scan of the Bee set above is the intended
+  next check.
+- **Collateral-kill magnitude (all 15 of 15 survivors killed on 269774
+  cid 13) is worth the owner's attention before considering a flip** — see
+  §7.3. This is reported, not tuned away.
