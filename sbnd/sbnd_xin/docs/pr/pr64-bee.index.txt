@@ -1,0 +1,9 @@
+# bee_idx	event
+# pr64-attr-before.zip / pr64-attr-after.zip  (collection/W class)
+0	314507
+1	170814
+# pr64-attr-mid.zip (S6+rescue on, S7 off -- attribution only)
+0	314507
+# pr64-ind-before.zip / pr64-ind-after.zip  (induction/U-V analogue)
+0	408534
+1	286681

@@ -1,0 +1,33 @@
+# pr64-s7top-before.zip / pr64-s7top-after.zip
+# all events out of the full 1000-event PR-data sample (work-pr64-scan1k) with
+# >=1 killed S7 (long_gap_kill, >=30cm) edge, per OC62CENSUS-S7, today's production.
+# before = SBND_PROTECT_GRAPH=relaxed_strict_img (S6+S7 both off, work-pr64-s7top-before)
+# after  = bare production (work-pr64-scan1k)
+# ranked by killed-S7-edge count, descending. evt287007 dropped: TaggerCheckNeutrino
+# selects no PR candidate in EITHER flavor (unrelated to S6/S7), degenerate dump.
+#
+# worked examples (doc pr/64 "Worked examples from the S7-kill census" section):
+#   idx 4 evt276836 -- drift-parallel track, ALL THREE planes gapped+prolonged,
+#     W convicts because U/V are excused and it cannot be.
+#   idx 6 evt174224 -- not prolonged; plain 6-wire W-only charge hole. Same cluster's
+#     next pair has a V-only gap 0.44cm closer that IS rescued -- cleanest single-event
+#     before/after contrast in the doc.
+#
+# bee_idx	event	s7_candidates	s7_killed
+0	288859	44	36
+1	314507	6	6
+2	169356	10	3
+3	286681	3	3
+4	276836	2	2	SEE WORKED EXAMPLE
+5	168614	3	1
+6	174224	1	1	SEE WORKED EXAMPLE
+7	288287	1	1
+8	292027	1	1
+9	315497	1	1
+10	319039	1	1
+11	349461	1	1
+12	393042	1	1
+13	394642	1	1
+14	395654	2	1
+15	400504	1	1
+16	408534	1	1
