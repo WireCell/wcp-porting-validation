@@ -1,5 +1,9 @@
 # doc pr/62 — S7: long-edge corridor connectivity (close the >=30cm blind spot)
 
+**SBND PRODUCTION ON, owner flip 2026-08-11** (toolkit commit below). Operating
+point `min_gapped_planes=1` (flavor `relaxed_strict_img_2d_rescue_long`) — see
+"Owner flip" section near the end.
+
 ## Repro block
 
 ```bash
@@ -240,18 +244,19 @@ already at 8 fragments pre-change). These three specifically deserve visual
 inspection before any flip decision — the Bee links above make that
 comparison directly (before = `work-pr62-off*`, after = `work-pr62-on*`).
 
-## Fix — what shipped, what did not
+## Fix — what shipped, what did not (round 1, DEFAULT NOT SELECTED)
 
 **Shipped, DEFAULT NOT SELECTED**: the S7 corridor check, the two new
 flavors, the pure predicate + doctest, the census instrumentation. SBND
-production cfg (`protect_graph_name = 'relaxed_strict_img_2d_rescue'`) is
-completely untouched — verified by `git status cfg/` showing zero diff.
+production cfg (`protect_graph_name = 'relaxed_strict_img_2d_rescue'`) was
+completely untouched at this point — verified by `git status cfg/` showing
+zero diff. *(Superseded below — round 2 flips production.)*
 
 **Not shipped / explicitly out of scope this round**:
-- No production flip. The 97.4% kill rate and the three large single-cluster
-  moves above are reasons for caution, not reasons to withhold the
-  measurement — this doc's job is to hand the owner the Bee before/after
-  and the numbers, not to decide.
+- No production flip yet. The 97.4% kill rate and the three large
+  single-cluster moves above are reasons for caution, not reasons to
+  withhold the measurement — this doc's job was to hand the owner the Bee
+  before/after and the numbers first, not to decide unilaterally.
 - `min_gapped_planes` is unfitted (no labels exist in this band); the doc
   reports both `=1` and `=2` because they turned out identical on this
   sample, not because either is validated as correct.
@@ -264,6 +269,55 @@ completely untouched — verified by `git status cfg/` showing zero diff.
   are sufficient to causally attribute every mover above, which was the
   round's actual deliverable. Follow-on work if the operating point needs
   refitting.
+
+## Owner flip, 2026-08-11 — SBND PRODUCTION ON
+
+Owner reviewed the 17-event Bee before/after (built from the
+`min_gapped_planes=1` arm, `work-pr62-on48`/`work-pr62-on19` — see Repro
+block) and instructed the flip to production default at that operating
+point, with the `=2` flavor kept as a legacy escape rather than default.
+
+**Change**: `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`,
+`protect_graph_name` default `'relaxed_strict_img_2d_rescue'` ->
+`'relaxed_strict_img_2d_rescue_long'`. No other file changed; the round-1
+C++/doctest is untouched, this is a cfg-only flip in the same file/line the
+doc pr/57 round-6 flip used (doc 68: SBND operating point lives only in
+this file).
+
+**Compiled-config proof** (M6; `wcsonnet`, no other TLAs — `graph_name` is
+the actual JSON key `protect_graph_name` threads to):
+
+```
+pre-edit bare:                                 graph_name = relaxed_strict_img_2d_rescue
+post-edit bare (no override):                  graph_name = relaxed_strict_img_2d_rescue_long
+post-edit + -A protect_graph_name=..._rescue:  graph_name = relaxed_strict_img_2d_rescue   (0-line diff vs pre-edit bare)
+pre-edit + -A protect_graph_name=..._long:     byte-identical to post-edit bare (0-line diff)
+```
+
+So the flip is exactly the explicit override already validated in the
+117-event on-arms above (`work-pr62-on48/19/50`) — a bare run of the new
+production cfg reproduces those on-arms' compiled config byte-for-byte, and
+the legacy escape (`-A protect_graph_name=relaxed_strict_img_2d_rescue`,
+env `SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue`) reproduces the
+pre-flip production graph byte-for-byte. No new A/B run needed: the on-arms
+already run above *are* the production-flip validation, since the flip
+changes no code, only which pre-validated flavor name the bare default
+points at.
+
+**Carried forward from round 1, now describing production behavior**:
+17/117 movers, nusel byte-identical everywhere, 97.4% S7 kill rate on
+evaluated candidates (aggressive — see the round-1 verification section
+above), fragmentation deltas quoted above including the three flagged
+large-magnitude moves (433451, 489330, 314838). These numbers do not change
+with the flip; the flip only changes which flavor a bare production run
+selects by default. The `=2` conservative flavor and the pre-pr/62 graph
+both remain one `-A protect_graph_name=...` away (legacy escapes above).
+
+`min_gapped_planes`/`gap_floor_cm` remain UNFITTED against hand-scan labels
+(round-1 caveat, unchanged by the flip) — this band has no equivalent of
+S6's 899-label fit yet. A follow-on scan in this style (pr/57 round 6's
+path) is the natural next round if the operating point needs refitting
+against real labels rather than the owner's visual Bee review.
 
 ## Cross-links
 
