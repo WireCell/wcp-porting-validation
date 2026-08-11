@@ -42,6 +42,15 @@ SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue PR_OC56_SCAN_DUMP=1 \
   WCT_PR59_ASSOC_CENSUS=1 PR_JOBS=1 \
   ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr59-gate2 data 142421
 
+# per-segment creation backtrace (pre-existing WCT_DET_DEBUG=2 facility,
+# PRGraph.cxx:20-24/193-212 -- not new this round, stderr-only fprintf,
+# no behavior/log-file effect; used for the "why segment 20 specifically"
+# analysis in sec 3.1):
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue PR_OC56_SCAN_DUMP=1 \
+  WCT_PR59_ASSOC_CENSUS=1 WCT_DET_DEBUG=2 PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr59-gate3 data 142421
+grep -A6 "WCT_DETA seg idx=20 " work-pr59-gate3/pr_evt142421/stdout.log
+
 # the swap, named directly:
 grep "pr59 assoc-census" work-pr59-gate2/pr_evt142421/wct_pr_evt142421.log
 
@@ -153,28 +162,68 @@ $ grep "pr59 assoc-census stage.*segment 20 fits_size" wct_pr_evt142421.log
 (empty)
 ```
 
-Cross-checked against the *original* (pre-instrumentation) log's
-`print_segs_info` output: the "After first round of main cluster PR" block
-(printed after `determine_main_vertex`, i.e. after `clustering_points:1012`
-already ran) already lists segment 20 (`Track -1 13 105.658 176.529 1 0`,
-64.9 cm) — so segment 20 is created somewhere inside
-`separate_track_shower` / `determine_direction` /
-`shower_determining_in_main_cluster` / `determine_main_vertex`, all of which
-execute strictly after cluster 7's one and only `clustering_points_segments`
-invocation. The second invocation, which would have picked it up, ran on
-cluster 106 instead because of the swap above. Zero Stage-C "won zero points"
-lines fired anywhere in the event (`grep -c "stageC" == 0`) — this rules out
-the 2D ghost-removal cascade (`PRSegmentFunctions.cxx:2991-3031`, documented
-as a live gap-source in general, see §5) as the mechanism *for this
-particular segment*; segment 20's gap is strictly a "never entered the
-competition at all" defect, one level simpler than a ghost-removal loss.
+### 3.1 Why segment 20 specifically, and not its siblings (`WCT_DET_DEBUG=2`)
 
-**Chain, stated plainly**: cluster 7 is main at `:1012` (gets associated) →
-segment 20 is created after `:1012` while cluster 7 is still main → cluster 7
-stops being main (silent DL swap to 106) before `:1202` → `:1202` associates
-106, not 7 → cluster 7, including segment 20, is permanently stuck with
-whatever `associate_points` state existed at `:1012` — which for segment 20
-is nothing, since it did not exist yet.
+Cluster 7's final segments split into two populations by *how* they were
+created, not merely *when*:
+
+**Pre-existing, correctly associated**: segments `9, 10, 11, 16, 17, 18, 19`
+(plus `4, 12, 15`, which later merge away and are not in the final graph)
+were all created by `find_proto_vertex` — confirmed via
+`WCT_DET_DEBUG=2`'s per-segment-creation backtrace+coordinate dump
+(`PRGraph.cxx:193-212`, `boost::add_edge` succeeds) — **before**
+`clustering_points:1012` ran, so they were in that call's `segs` list and
+won real points (Stage-A `terminals_seeded` 6-356 each, all nonzero).
+
+**Segment 20** is created *after* `:1012`, but by a specific mechanism that
+matters: the `WCT_DETA` backtrace for graph-index 20 is
+
+```
+WCT_DETA seg idx=20 nw=123 v1=(1176.7,-694.3,2097.8) v2=(1558.1,-394.7,2505.8) ...
+  bt[1] PatternAlgorithms::examine_vertices_1
+  bt[2] PatternAlgorithms::examine_vertices
+  bt[3] PatternAlgorithms::improve_vertex
+  bt[4] PatternAlgorithms::determine_main_vertex
+  bt[5] TaggerCheckNeutrino::visit
+```
+
+i.e. it is built *inside* the first round's `determine_main_vertex` call
+(`:1026`), by `examine_vertices_1`'s internal `improve_vertex` sub-step. That
+function (`NeutrinoStructureExaminer.cxx:1414-1521`) is a vertex-cleanup
+pass: when a degree-2 vertex sits between two short (<4 cm) segments that
+represent the same physical point, it **deletes both old segments and that
+vertex**, then builds one brand-new replacement via a fresh Steiner-graph
+search (`do_rough_path`) and `create_segment_for_cluster` +
+`add_segment` — a segment with **zero inherited history**, `associate_points`
+null by construction, same as any freshly `add_segment`-ed edge. Since the
+second `clustering_points` call never reaches cluster 7 (swapped to 106
+first), segment 20 never gets a chance to compete for points at all. Zero
+Stage-C "won zero points" lines fired anywhere in the event
+(`grep -c "stageC" == 0`), which rules out the 2D ghost-removal cascade
+(`PRSegmentFunctions.cxx:2991-3031`, a live gap-source in general, §5) for
+this segment specifically — it never entered the competition, one level
+simpler than losing it.
+
+**Segments 111 and 112** are created even later — after the swap, inside
+`shower_clustering_with_nv`'s call to `break_segment` — and are NOT missing
+points (9600 cluster-7 points in `shower_track-global` total, no null/empty
+sentinel for either). Their `WCT_DETA` backtrace shows the difference:
+`break_segment` (`PRGraph.cxx` via `make_segment`, called from
+`shower_clustering_with_nv_from_vertices`) takes an **already-associated**
+parent segment and splits its *existing* `associate_points` cloud in half by
+nearest-point (`PRSegmentFunctions.cxx:1087-1153`, lossless redistribution,
+no fresh competition needed) — so both children inherit real charge points
+regardless of how late they're born.
+
+**The rule, stated plainly**: a segment created by `add_segment`-ing a
+brand-new polyline (a merge/re-route, as `examine_vertices_1` does) after the
+cluster's last association pass is orphaned; a segment created by
+`break_segment` splitting an already-associated parent is not, because it
+inherits rather than competes. Segment 20 is the *only* segment in this event
+born the first way, in the narrow window between the one association pass
+and the swap — a coincidence of how many such re-routes happened to fire in
+that window, not a property of "graph-index 20" itself. A different event
+could just as easily orphan two or three such segments, or none.
 
 ## 4. Why it hid
 
@@ -215,6 +264,12 @@ implementer doesn't reach for the wrong lever):
   swap may be entirely correct (106's vertex may genuinely be the better
   neutrino vertex); only its *silence*, and its side effect of stranding the
   demoted cluster's post-swap segments, is the gap.
+- Segments born via `break_segment` (e.g. cluster 7's 111/112, §3.1) already
+  carry a real, correctly-inherited `associate_points` cloud — a Round-2 fix
+  that indiscriminately re-associates "every segment created after the last
+  pass" rather than specifically "every segment with a null/absent cloud"
+  would re-compete for and potentially reshuffle points that are already
+  correct, not just fill genuine gaps.
 - The 2D ghost-removal cascade (`PRSegmentFunctions.cxx:2991-3031`) is a
   second, independent, pre-existing way a point can be silently dropped
   (Voronoi-cell owner loses the 2-plane 2D-nearest contest and no other
