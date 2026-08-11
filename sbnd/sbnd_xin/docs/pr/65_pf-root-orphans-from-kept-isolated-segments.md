@@ -1,13 +1,21 @@
 # doc pr/65 — 18259-54095: particle-flow root gets orphan `mu-`/`e-` fragments that belong inside the main EM shower
 
-Status: **diagnosis only, no fix**. Round 1: root cause identified and isolated
-with a single-knob A/B. Round 2: traced *why* particle-flow formation misses
-these segments (the prototype's own design intention), measured that its own
-absorption algorithm would in fact claim every one of them, and recommends a
-three-rung fix (extend the existing absorber to reach them; extend it further
-in the prototype's own vocabulary if that's not enough; stop fabricating root
-nodes for whatever is still left). No code changed either round. Bee link:
+Status: **FIXED — rungs 1+3 implemented, validated on nueCC48, SBND
+PRODUCTION ON (owner flip 2026-08-11)**. Round 1: root cause identified and
+isolated with a single-knob A/B. Round 2: traced *why* particle-flow
+formation misses these segments (the prototype's own design intention),
+measured that its own absorption algorithm would in fact claim every one of
+them, and recommended a three-rung fix. Round 3: implemented rung 1
+(`shower_absorb_unreachable_main`) and rung 3 (`pf_orphan_audit_only`), both
+C++ default OFF; knob-off gate 0/48 byte-identical; on-census 21/48 movers,
+all sentinel-attributed, **0 unclaimed segments left anywhere** (rung 3 never
+fires); evt 54095: 12/12 fragments absorbed, shower 2334 → 2633 MeV, PF roots
+9 → 3. Rung 2 (connection_type=3 fallback) deferred — unexercised by every
+measured event. Owner's original Bee link:
 https://www.phy.bnl.gov/twister/bee/set/5f25ab42-db88-46d4-a53b-0730d1b531a7/event/2/
+Round 3 before/after (5 exhibit events, index `docs/pr/pr65-bee.index.txt`):
+- before: https://www.phy.bnl.gov/twister/bee/set/9a456e2f-6efc-4fdf-8790-05f506ec601b/event/list/
+- after:  https://www.phy.bnl.gov/twister/bee/set/66488268-5ddf-40f3-9a36-a74180d50abe/event/list/
 
 ## Symptom (owner report)
 
@@ -548,13 +556,158 @@ recommendations:
   good in the original pr/65 report. Rejected on that basis; kept as the
   fallback if the ladder's mover census turns out unacceptable.
 
+## Round 3 — implementation + validation (rungs 1+3, SBND PRODUCTION ON)
+
+### Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit/sbnd_xin
+
+# Arms (48-event nueCC48 set; base ran on the PRE-change binary):
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr65-base48 data
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr65-off48 data
+SBND_SHOWER_ABSORB_UNREACHABLE_MAIN=true SBND_PF_ORPHAN_AUDIT_ONLY=true \
+  PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr65-on48 data
+
+# Gates:
+python3 scripts/analysis/pr49/on_compare.py work-pr65-base48 work-pr65-off48  # 0/48
+python3 scripts/analysis/pr49/on_compare.py work-pr65-base48 work-pr65-on48   # 21/48 movers
+
+# Bee exhibits (5 events):
+python3 scripts/bee/make_pr_bee.py -q work-nuecc48-cb0805 -p work-pr65-base48 \
+  -o bee/pr65/pr65-before.zip 54095 90055 168596 256587 388
+python3 scripts/bee/make_pr_bee.py -q work-nuecc48-cb0805 -p work-pr65-on48 \
+  -o bee/pr65/pr65-after.zip  54095 90055 168596 256587 388
+```
+
+### What shipped (both knobs C++ default OFF; owner flip in SBND cfg only)
+
+**Rung 1 — `shower_absorb_unreachable_main`** (toolkit `clus`):
+
+- New pure-topology helper `PR::unreachable_segments(graph, root)`
+  (`PRGraph.h`/`PRGraph.cxx`): membership-only BFS from `root` over the PR
+  graph; returns every segment whose edge is unreachable, ordered by stable
+  graph index. Doctested (`clus/test/doctest_pr65_unreachable_segments.cxx`,
+  3 cases / 20 assertions: connected ⇒ empty, disconnected ⇒ exact component,
+  null/never-added root ⇒ everything).
+- `shower_clustering_with_nv` (`NeutrinoShowerClustering.cxx`) computes the
+  main-cluster unreachable set ONCE at entry (PR-graph topology is frozen for
+  the whole span of that function — no graph mutators in the file; the last
+  mutation, `main_vertex_graph_audit`, runs before the call at
+  `TaggerCheckNeutrino.cxx:1270`; this closes round 2's "topology stability"
+  open question) into transient `PatternAlgorithms` state, recomputed
+  unconditionally (empty when knob off). Sentinel log line:
+  `pr65 absorb_unreachable_main: N ... segment(s) offered ...`.
+- The six absorber guards (`:723 :801 :860 :1221 :1297 :1581` pre-edit) relax
+  `if (seg1->cluster() == main_cluster) continue;` to
+  `... && !m_absorb_unreachable_main_segs.count(seg1)` — empty set ⇒ predicate
+  identical ⇒ knob-off byte-identical by construction. The `!=` selector sites
+  (`:609 :620`), vertex-side sites (`:957 :1485`) and the TRACE block
+  (`:3376`) are untouched.
+- Knob threading is the standard 3-hop `PatternAlgorithms` pattern
+  (`NeutrinoPatternBase.h` + `TaggerCheckNeutrino.h/.cxx` get/echo/copy).
+
+**Rung 3 — `pf_orphan_audit_only`** (toolkit `clus`, `BeePFConfig`):
+
+- In `fill_bee_pf_tree`'s orphan net (`MultiAlgBlobClustering.cxx`), when on:
+  iterate the same unclaimed candidates WITHOUT the display filters
+  (`dirsign==0`, empty fits, KeepMC floors — segments those filters silently
+  drop today are named too), emit one
+  `pr65 pf-orphan-audit: unclaimed seg=... cluster=... pdg=... ke_mev=...`
+  log line each plus a summary count, and append **no node**. Legacy emission
+  branch textually untouched; inert unless `pf_shower_vertex_barrier` is on.
+- Deviation from round 2's `PortAuditCounters` suggestion, with reason: the
+  `PR30AUDIT` report line is emitted at the end of
+  `TaggerCheckNeutrino::visit()`, which runs *before* `fill_bee_pf_tree` — a
+  counter incremented in the net could never appear in that report. The MABC
+  log is the visibility surface.
+
+**Config**: `common/clus.jsonnet` builder arg + key-suppression merge;
+`sbnd/clus.jsonnet` threads both through both call-site blocks (tcn knob) and
+all four `bee_pf` hops (pf knob); `sbnd/wct-pr-perevt.jsonnet` TLAs; runner
+env hooks `SBND_SHOWER_ABSORB_UNREACHABLE_MAIN` / `SBND_PF_ORPHAN_AUDIT_ONLY`
+in `run_pr_chain_batch.sh` (boolean TLA, value verbatim). **Rung 2**
+(`connection_type=3` pseudo-gamma fallback) is NOT implemented — unexercised
+by every measured event (round 2 §4: rung 1 already claims 12/12; round 3:
+audit reports 0 unclaimed on all 48 events), deferred until a real event
+exercises it.
+
+### Validation
+
+- **Build/tests**: `wcbuild` clean; freshness proof
+  `local/lib/libWireCellClus.so` 13:33:00 > newest source edit 13:32:00;
+  `./build/clus/wcdoctest-clus` 1750/1750 assertions (was 1730; +20 new).
+- **Compiled-config proofs**: knob-off compiled JSON byte-identical to
+  pre-change (`diff` empty); knob-on shows both keys exactly once; post-flip
+  bare compile byte-identical to the validated on-arm compile
+  (FLIP-PROOF); `-A` escape TLAs restore the pre-change compile byte-exact
+  (ESCAPE-PROOF). Fixture: same TLA set as the runner, evt 54095 values.
+- **Knob-off gate** (`work-pr65-base48` [pre-change binary] vs
+  `work-pr65-off48` [new binary, knobs off]): **0/48** `mabc-pr.zip` archives
+  differ (member content hash), **0/48** `pctree-pr-evt*.tar.gz` differ,
+  nusel 0/48 at both granularities. PASS.
+- **Knob-on census** (`work-pr65-base48` vs `work-pr65-on48`): **21/48
+  archive movers, nusel 0/48** (PF/display + shower-kinematics level, no
+  nusel table change — same pattern as pr/54's own census). Bidirectional
+  attribution PASS with zero violations: every mover has a `pr65
+  absorb_unreachable_main` sentinel > 0; every sentinel-free event is
+  byte-identical. The one `keep-isolated>0` / sentinel-free event (271851,
+  kept segment in cluster 23) is byte-identical with 0 unclaimed — the kept
+  fragment is not a main-cluster orphan (legacy absorbers were never blocked
+  for it), consistent with round 2's "pr/54 is the producer of *main-cluster*
+  disconnection" reading.
+- **Rung 3 is everywhere-quiet**: `pr65 pf-orphan-audit` summary reports **0
+  unclaimed segments on every gated event** — rung 1 claims everything, no
+  PF-root node is fabricated and nothing is silently dropped. (The audit
+  summary is absent only on the one event with no PF stage output — the
+  known 47/48 `nu_evaluated` subset.)
+- **Headline event 18259-54095**: sentinel = 12 = exactly round 2's measured
+  orphan set; keep-isolated = 8 = round 1's component count. PF tree
+  top-level nodes **9 → 3** (`e-`, `gamma`, `proton`); all six stray roots
+  (`mu- 96`, `e- 9-40 MeV`) gone, absorbed into the main shower.
+
+### The round-2 energy question, answered
+
+Shower KE on 54095: **2334 MeV (before) → 2633 MeV (after), +299 MeV
+(+12.8%)**. The orphan charge was NOT already inside the reported figure —
+production has been *under-counting* this shower by the 234 orphaned fit
+points; the fix moves their charge in. (The `gamma 18 MeV` sibling re-reads
+as `gamma 15 MeV` — a small re-partition between the two showers.) This is a
+real, intended physics change in shower energy for events with kept-isolated
+main-cluster fragments; nusel tables did not move on any of the 48 events.
+
+### Bee before/after (5 exhibit events)
+
+| bee_idx | event | PF roots before → after |
+|---|---|---|
+| 0 | 54095 | 9 → 3 (headline: `mu- 96 MeV` + five `e-` strays absorbed, shower 2334→2633 MeV) |
+| 1 | 90055 | 12 → 2 |
+| 2 | 168596 | 9 → 3 |
+| 3 | 256587 | 11 → 4 |
+| 4 | 388 | 12 → 5 |
+
+- before (`work-pr65-base48`, pre-fix production):
+  https://www.phy.bnl.gov/twister/bee/set/9a456e2f-6efc-4fdf-8790-05f506ec601b/event/list/
+- after (`work-pr65-on48`, rungs 1+3 on):
+  https://www.phy.bnl.gov/twister/bee/set/66488268-5ddf-40f3-9a36-a74180d50abe/event/list/
+- index: `docs/pr/pr65-bee.index.txt`
+
+### Named consequence, restated post-measurement
+
+The cone absorber is geometry-only (round 2), so rung 1 can also absorb a
+genuinely disconnected main-cluster *track* in the cone. The 21-mover census
+did not attempt per-fragment PID truth attribution; the owner's Bee
+before/after review of the 5 exhibits is the hand-scan check on this. The
+`-A shower_absorb_unreachable_main=false` escape restores pre-fix production
+byte-exact if a bad absorption class surfaces later.
+
 ## Status
 
-Diagnosis only, both rounds. No code changed. No config changed (the one
-jsonnet edit made for round 1's A/B was reverted before commit — `git diff` on
-`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` is empty). Round 2's
-graph reconstruction and absorption-cone measurement are read-only, derived
-entirely from data already inside `work-pr65-pfprint/pr_evt54095/mabc-pr.zip`
-— no new work dir, no new run, nothing under `work/`, `abtest/snap/`, or
-`decisions*` touched (M13). Nothing to revalidate; the recommended ladder
-(rungs 1-3) is a design for a future implementing round, not shipped here.
+Rounds 1-2: diagnosis (no code). Round 3: rungs 1+3 SHIPPED, C++ defaults
+OFF, SBND production cfg ON (owner flip 2026-08-11, this round). Gate labels:
+`work-pr65-base48` / `work-pr65-off48` (0/48 PASS) / `work-pr65-on48` (21/48
+movers, attribution PASS). Rung 2 deferred, unexercised. New knobs:
+`shower_absorb_unreachable_main` (TaggerCheckNeutrino →
+`PatternAlgorithms`), `pf_orphan_audit_only` (`bee_pf` sub-config). Nothing
+under `abtest/snap/`, `decisions*`, or any existing `work-*` label touched;
+the three `work-pr65-{base,off,on}48` dirs are fresh tags (M13).

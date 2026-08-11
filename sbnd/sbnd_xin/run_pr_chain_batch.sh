@@ -755,6 +755,20 @@ fi
 if [ -n "${SBND_ASSOC_FULL_RECLUSTER:-}" ]; then
     CATH_TLA+=(--tla-code "assoc_full_recluster=${SBND_ASSOC_FULL_RECLUSTER}")
 fi
+# doc pr/65 round 3 (18259-54095 PF-root orphan mu-/e- fragments): rung 1
+# relaxes the shower absorbers' cluster()==main_cluster guards to a
+# main_vertex-reachability test so kept-isolated pr/54 residuals can be
+# absorbed; rung 3 replaces the orphan net's fabricated root-level PF node
+# with an audit log line (display-only, moves ONLY mc.json).  Boolean TLAs,
+# value passed verbatim (true/false), same contract as the pr/54 hook above.
+#   SBND_SHOWER_ABSORB_UNREACHABLE_MAIN
+#   SBND_PF_ORPHAN_AUDIT_ONLY
+if [ -n "${SBND_SHOWER_ABSORB_UNREACHABLE_MAIN:-}" ]; then
+    CATH_TLA+=(--tla-code "shower_absorb_unreachable_main=${SBND_SHOWER_ABSORB_UNREACHABLE_MAIN}")
+fi
+if [ -n "${SBND_PF_ORPHAN_AUDIT_ONLY:-}" ]; then
+    CATH_TLA+=(--tla-code "pf_orphan_audit_only=${SBND_PF_ORPHAN_AUDIT_ONLY}")
+fi
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
