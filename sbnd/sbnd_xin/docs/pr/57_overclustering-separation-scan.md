@@ -953,3 +953,412 @@ Files: `clus/src/connect_graph_relaxed_strict.cxx` (toolkit);
   separations have no dumped edge" reads like a catastrophic blind spot; the
   distance breakdown turns it into 238 cases within the display's own reach.
   Qualify before quoting.
+
+---
+
+## 13. Round 5 — the rest of the 1000-event sample, machine first pass, port 5020
+
+Status: **the 199 PR-data events of the 1000-event sample that have a dump, no
+label, and no display of their own are labelled and served on port 5020, tag
+`claude-scan223`.** No toolkit change, no re-run: the round-4 arms already on
+disk carry the dumps, and §10.8's `--events-file` path extends the scan without
+reprocessing. These are **machine first-pass labels**, to be corrected the way
+round 3 corrected round 2's.
+
+The population, from the 1000-event data sample: 445 events have real PR output
+(§10.2), 280 of those wrote a non-empty S6 dump, 57 already carry labels. That
+leaves 223 unlabelled dump-bearing events — of which **24 are already served on
+5018 (15) and 5019 (9)** and are excluded here at the owner's instruction, so
+that each event has exactly one display. **199 events go to 5020.**
+
+**The tag is `claude-scan223` for a 199-event display**, because the labels were
+computed over all 223 candidates before that cut: the directory holds 110 files
+/ 251 labels, of which 108 files / 248 labels are served. The two that are not
+(evt53361, evt55715) belong to events open on 5018/5019 and are served by no
+port. The name cannot be corrected in place (`mv` is unavailable in this
+session), so it is reconciled here rather than left to be rediscovered from a
+file count that does not match anything.
+
+### 13.1 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# the target set: mcp1k PR events with a non-empty dump and no label in either
+# overclustering_labels/ or overclustering_labels/claude-scan50/ -- 223 events,
+# minus the 24 already served on 5018/5019
+#   -> docs/pr/pr57r5-scan199.index.txt (199 events, all work-pr57r4-scan395:
+#      the 15 unlabelled scan50 events are exactly the 15 still open on 5018)
+#      docs/pr/pr57r5-scan223.index.txt (the full 223, before that cut)
+
+python3 scripts/analysis/pr57/oc56_autoscan.py calibrate \
+  --arm work-pr57r4-scan48 --arm work-pr57r4-scan19 \
+  --arm work-pr57r4-scan50 --arm work-pr57r4-scan395 \
+  --labels overclustering_labels --labels overclustering_labels/claude-scan50
+
+python3 scripts/analysis/pr57/oc56_autoscan.py features \
+  --arm work-pr57r4-scan50 --arm work-pr57r4-scan395 \
+  --events-file <the 223 ids>          > docs/pr/pr57r5-scan223-pairs.tsv
+# (pr57r5-scan199-pairs.tsv is that table filtered to the 199 served events)
+python3 scripts/analysis/pr57/oc56_autoscan.py label \
+  --arm work-pr57r4-scan50 --arm work-pr57r4-scan395 \
+  --events-file <the 223 ids> --tag claude-scan223
+python3 scripts/analysis/pr57/oc56_autoscan.py verify \
+  --arm work-pr57r4-scan50 --arm work-pr57r4-scan395 --tag claude-scan223
+
+python3 scripts/analysis/pr57/oc56_render_pair.py \
+  --arm work-pr57r4-scan50 --arm work-pr57r4-scan395 \
+  --events-file <the 223 ids> --only bad --out /home/xqian/tmp/oc57r5_panels
+
+./overclustering_display/serve_overclustering_scan.sh 5020 --tag claude-scan223 \
+  $(awk -F'\t' 'NR>1{print $3}' docs/pr/pr57r5-scan199.index.txt)
+# ssh -L 5020:localhost:5020 wcgpu1.phy.bnl.gov
+# http://localhost:5020/overclustering_scan_viewer
+```
+
+### 13.2 Lead with what the labels are attached to (§12.4's lesson applied)
+
+Over the 199 served events: of the **78 pairs this round calls `bad`, 26
+(33 %) sit on a pair the code never separated** — 24 kept a direct emitted
+edge, 1 is joined via 2 hops, 1 via 3. That is the same one-third §12.4
+measured on the owner's own `bad` set, reproduced here *before* anyone fits on
+these labels rather than after.
+
+| verdict | n pairs | `SEP` | still joined (`dir` / `via N`) |
+|---|---|---|---|
+| bad  | 78  | **52** | 26 |
+| good | 146 | 122 | 24 |
+| OK   | 5   | 0  | 5 |
+| all  | 229 | 174 | 55 (24 %) |
+
+Zero pairs came back `?`, so every dump in the served set is a round-4 dump
+and the token is real information, not a default.
+
+So that this survives contact with a future refit, `cmd_label` now writes the
+round-4 pair token into every label `comment`:
+
+```
+auto bad conf=high [R2 long-track break, no W gap] Lmin=6.7 ... severed=1 pair=dir
+```
+
+`severed` is the **pre-round-4** notion — every candidate of the pair was
+killed — and as this row shows it coexists with the two components remaining
+directly connected. Filter on `pair=SEP`, not on `severed=1`. With the token in
+the comment, the `bad AND SEP` refit §12.4 left open can be done on these
+labels after correction without rerunning anything.
+
+### 13.3 Operating point and the error bar that applies
+
+`calibrate` was re-run over all four arms against the owner's now-648 labels
+(120 files, both dirs). The grid search re-arrives at the round-3 point —
+`L=6, N=50, D=2000, Wd=3, Nd=20, Dd=3, Tw=2, Aw=25` — so nothing was retuned
+for this round:
+
+- pooled good/bad agreement 131/137 = 95.6 % in-sample, **93.4 % leave-one-event-out CV**;
+- good recall 84/85, bad recall 47/52.
+
+Per §11.7, the pooled number is *not* the one to quote here. This deliverable
+is 199 pure mcp1k PR-data events, so the applicable rows are the PR-data arms:
+
+| arm | agreement | bad recall | good recall |
+|---|---|---|---|
+| `work-pr57r4-scan50` (PR-data r1) | 16/17 | 10/11 | 6/6 |
+| `work-pr57r4-scan395` (PR-data r2, owner-corrected) | 44/47 | 17/20 | 27/27 |
+| **PR-data combined** | **60/64 = 93.8 %** | **27/31 = 87 %** | 33/33 |
+
+Discount these labels by ~13 % on the bad class, and note that the scan395 row
+is in-sample (round 3 fitted on it), so 87 % is optimistic.
+
+### 13.4 The label set
+
+`overclustering_labels/claude-scan223/` — over the 199 served events, **108
+events, 229 pairs, 248 edge labels: 146 good / 78 bad / 5 OK** (pair level;
+147/96/5 at edge level). The directory also holds two files for excluded events
+(§13.1), so it lists 110 files / 251 labels in total.
+
+- 108 of the 199 served events, not 199: the other 91 have a dump but no pair
+  passing the viewer's default filter (a removed-or-floor-blocked candidate
+  within 5 cm), so there is nothing to label. They are still served — an empty
+  event list is information, and the owner should see it rather than have the
+  set silently narrowed.
+- By rule: R2 long-track break 72, R3 W gap 83, R4 residual 63, R2d dead-W 3,
+  R2w thin-collinear-across-W 3, R1 busy shower 5. R2w and R2d — the two
+  round-3 branches with the least evidence behind them — fire on 6 pairs total,
+  so this round adds little to their support either way.
+- **`claude-scan223` must never appear in a `calibrate --labels` list.** It is
+  machine output; `load_owner_labels` + `truth.update()` would let it overwrite
+  the owner's verdicts for any shared key, and the fit would then be partly
+  fitted on itself.
+
+### 13.5 Visual audit — 5 of 79, and it is not more than that
+
+Same discipline as §10.5: panels rendered off-browser
+(`oc56_render_pair.py --only bad`, 79 PNGs), the classifier's weak class only,
+and a disagreement is a *candidate rule to test against the owner's labels*,
+never a free override. **0 overrides**; the five looked at all read the way the
+rule that fired says they should:
+
+| pair | rule | what the panel shows |
+|---|---|---|
+| evt287517 c0 0-1 | R2w | 108 cm + 32 cm, collinear 6°, thin, W gaps — the evt174224 class the owner called bad |
+| evt409634 c0 2-3 | R2w | one straight ~17 cm track in two pieces 1.6 cm apart; V and W both gap, U connected |
+| evt315497 c0 0-2 | R2d | 6-wire dead-W band sits exactly between the seeds, W passes through it, V gaps — bad case (a) drawn in full |
+| evt286681 c0 15-19 | R2 | two collinear (4°) thin pieces 4.4 cm apart in a dense region; U gaps only |
+| evt55715 c0 1-2 | R2 | 43° kink between two 7-9 cm pieces, V gaps only — **and `pair=dir`**: nothing was separated |
+
+The last row is §13.2 in one case: a `bad` verdict on a removal that changed
+nothing. (It is also one of the two out-of-scope events of §13.1 — the panels
+were rendered over all 223 before the cut to 199.)
+
+### 13.6 Gates
+
+| gate | result |
+|---|---|
+| 1. `oc56_conn.py --selftest` | PASS (18 cases) |
+| 2. `verify --tag claude-scan223` | 251 labels (all 110 files), **0 orphans**, 232 pairs, **0 mixed-verdict pairs** |
+| 3. owner label dirs untouched | `ls -la` + `md5sum` of `overclustering_labels/*.json` and `claude-scan50/*.json` hash identically before and after: `7952287a…` / `e24b1ee3…` |
+| 4. display | 5020 HTTP 200, **199 dump paths in argv**, all 108 in-scope labelled events inside the served set (the 2 out-of-scope files are the only ones outside it) |
+| 5. no re-run needed | arms unchanged; round-4 gates (§12.6) still carry the dumps |
+
+The only entries in `serve5020.log` are the known round-1
+`flush_pending` `NameError` on session teardown (§10.7), tripped by the two
+`curl` health checks. **Click *Save event labels*, or switch events, before
+closing the tab.**
+
+### 13.7 Notes
+
+- **One event, one display.** The 24 already open on 5018 (15, untagged) and
+  5019 (9, `claude-scan50`) are deliberately absent from 5020, so no event can
+  be scanned twice into two different tag dirs. Finish those 24 where they
+  already are. With this cut, 5018 + 5019 + 5020 together cover every
+  dump-bearing unlabelled PR event of the 1000-event sample exactly once.
+- Two label files in `claude-scan223/` (evt53361, evt55715) belong to excluded
+  events — labels were computed before the cut and `rm` is blocked in this
+  session, so they were left in place and named here instead. They are served
+  by no port; delete them with
+  `rm overclustering_labels/claude-scan223/labels-evt{53361,55715}.json` if you
+  want the tag to match the served set exactly.
+- Files touched, none committed: `scripts/analysis/pr57/oc56_autoscan.py`
+  (pair token in the label comment), `scripts/analysis/pr57/oc56_render_pair.py`
+  (`--events-file`, mirroring `oc56_autoscan.py`),
+  `docs/pr/pr57r5-scan{199,223}.index.txt`,
+  `docs/pr/pr57r5-scan{199,223}-pairs.tsv`, this section.
+
+## 14. Round 6 — fit the owner's full hand scan; the S6 rescue; `relaxed_strict_img_2d_rescue`
+
+# Status: TOOLKIT SHIPPED, DEFAULT NOT SELECTED. SBND production stays
+# `relaxed_strict_img` (S6 entirely off, sec 14.7) — the new flavor exists so
+# the owner can flip `protect_graph_name` after reading the final table.
+
+The owner completed the hand scan of all three displays (5018/5019/5020) on
+2026-08-10 and gave the spec (owner message, quoted in 14.2's mapping): the
+unit is the cluster **pair**, not the edge; bad separations come from dead-W
+bands with distorted U/V, direction-consistent tracks with prolonged-signal
+induction inefficiency, and U/V deserving a larger gap allowance than W; long
+tracks must not be broken (use direction consistency to jump gaps); inside a
+massive shower it does not matter (OK); **when genuinely hard, prefer
+connectivity over separation**. The acceptance criterion, verbatim: *"the
+final validation is the difference between my scan results vs. what you
+achieved... Hopefully zero."*
+
+### 14.1 Repro block
+
+```bash
+cd sbnd_xin
+# 1. one truth table from all three label dirs (899 labels, 230 events)
+python3 scripts/analysis/pr57/oc56_truth.py --out docs/pr/pr57r6-truth.tsv
+# 2. per-candidate features + connectivity from the round-4 arms (cache)
+python3 scripts/analysis/pr57/oc56_fit.py features --out /home/xqian/tmp/pr57r6_edges2.jsonl
+# 3. the fitted rescue rule, replayed at pair level against the truth table
+python3 scripts/analysis/pr57/oc56_fit.py evaluate --features /home/xqian/tmp/pr57r6_edges2.jsonl
+# 4. toolkit: wcbuild; ./wcb build --tests -p; ./build/clus/wcdoctest-clus
+# 5. off-gate (new binary, ROUND-4 flavor => byte-identical to round-4 arms)
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d_wfloor WCT_RELAXED_EDGE_CENSUS=1 \
+PR_OC56_SCAN_DUMP=1 PR_JOBS=12 ./run_pr_chain_batch.sh <ql_root> \
+  work-pr57r6-off12{d,e,f} data <12 events>   # then hash_archive.py compare
+# 6. on-arms: the rescue flavor over all 512 scanned events
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue WCT_RELAXED_EDGE_CENSUS=1 \
+PR_OC56_SCAN_DUMP=1 PR_JOBS=32 ./run_pr_chain_batch.sh <ql_root> \
+  work-pr57r6-scan{48,19,50,395} data $(cat <arm event list>)
+# 7. THE FINAL TABLE (owner verdict x achieved state + python==C++ check)
+python3 scripts/analysis/pr57/oc56_fit.py table \
+  --arm work-pr57r6-scan48 --arm work-pr57r6-scan19 \
+  --arm work-pr57r6-scan50 --arm work-pr57r6-scan395
+```
+
+### 14.2 The truth table (what the full scan says)
+
+`oc56_truth.py` joins every label against the round-4 dumps by the viewer's
+geometric key: **899 labels / 230 events -> 847 component pairs, 0 orphan
+labels, 0 pair-token mismatches** against the 5020 comments. Per population
+(verdict counts are pair-level, bad > good > OK dominance):
+
+| population | pairs | bad | good | OK |
+|---|---|---|---|---|
+| nueCC48 | 390 | 15 | 41 | 334 |
+| NCpi0 | 133 | 6 | 20 | 107 |
+| PR-data | 324 | 106 | 104 | 114 |
+
+By the round-4 pair token, the target sets are: **bad & SEP 89** (pairs to
+reconnect), **good & SEP 156** (must stay separated), bad & dir/via 38
+(already connected, must not regress), good & dir/via 9 (kill endorsed but
+the pair was never separated — excluded from the pair-level good set).
+
+Two owner label sets are **unsatisfiable triangles** — no assignment of
+"separate/connect" to the code's decisions can satisfy all three labels:
+
+- **evt394642 c0**: comps {0,2} joined by an emitted mst edge, 1 apart.
+  Owner: 0-1 good (keep separated) AND 1-2 bad (reconnect). Joining 1-2 puts
+  1 into {0,2}, violating 0-1; the 0-2 edge was never S6-killed, so no
+  rescue-side choice can cut it.
+- **evt60669 c0**: owner: 0-1 bad, 1-2 bad, 0-2 good. Joining both bad pairs
+  transitively joins 0-2.
+
+Owner rule 4 ("prefer connectivity over separation") decides both toward
+joining, and they are counted against `good` in every number below.
+
+### 14.3 The rescue rule (fitted in Python, round by round)
+
+Shape: **pure relaxation**. S6 v2 = S6 + a rescue pass over the candidates S6
+(or the wfloor override) killed, within the <= 5 cm display population. It can
+only un-kill, so the only way to damage a good pair is an explicit rescue —
+and the replay scores that, including transitive reconnection.
+
+The discriminators, each mapped to an owner principle, with the bracket cases
+that pinned the thresholds (all measured, `oc56_fit.py rescue()`):
+
+| branch | owner principle | fires when | pinned by (bad vs good) |
+|---|---|---|---|
+| dead-W band | case (a) | `dead_w>=3, np>=20`, gapped-plane coverage `>=0.65` | 59003 1-2, 60669 0-1 vs 316553 0-2 (cov 0.58), 282217 (np 15) |
+| W-robustness | case (c) | W gap only forgivable if `close_w<=2..3` + collinear `ab<15` + covered, or dead-explained | 286241 (ab 14) vs 61579 3-4 (ab 20); 170814/172656/407280 (close 3, ab<12) vs 21073 6-7 (ab 24) |
+| direction consistency | case (b), "jump gaps" | substantial (`L>4, np>=50`) + `ab<20` + coverage `>=0.90`; track-like W-clean down to cov 0.55 at `np>=55, ab<15` | 348471 (ab 13), 287621 (cov 0.59, ab 2) vs 400504 (ab 44), 348691 (ab 65) |
+| prolonged signal | case (b) | gapped-induction slope `>=5` (substantial) / `>=8` or ext `>=50` ticks (np>=15) / slope `>=15` collinear (np>=5) | 60017 (slope 6.5) vs 280972 (slope 2.1); 282385 0-2 (np 6, slope 20) |
+| big + tight | case (b)/(4) | W-clean, `np>=150, dis<2, close_g<=4`, cov `>=0.90` | 234638/316025/174928 (dis 1.4-1.8) vs 348691 (dis 2.28) |
+| co-location | new | footprints overlap `>=0.6` in **W + one more connected plane** | 290729, 400636 vs the W-gapped shower junctions (W-anchoring keeps 21073 6-7, 122660 14-17 out) |
+
+Two measured insights carry most of the separation:
+
+1. **Coverage** (`nw_sig/nw_span`): on bad pairs the gapped induction plane
+   has signal on essentially every wire across the span (cov ~1.0) — the
+   plane fails only *time*-contiguity, exactly what a prolonged/inefficient
+   induction response looks like. Genuine good separations have wires with
+   no signal at all (348691 0.91, 316553 0.58, 122660 9-10 0.42).
+2. **Co-location**: the residual bads that no per-plane evidence reached
+   (290729 stub-at-track-head, 400636 one huge object broken in V with the
+   vertex at the join) have the two components *overlapping* in the
+   connected views — pieces of one object, not end-to-end fragments. The
+   overlap branch is W-anchored because U+V-only overlap is common at shower
+   junctions the owner labels good.
+
+Python replay against the truth table (`evaluate`): **bad 124/127 connected,
+good 154/156 separated** — the two good losses are exactly the 14.2
+triangles. 228 of 1937 killed candidates rescued; 86 of 553 OK-SEP pairs
+reconnect (owner: free either way); total footprint 268 SEP pairs over
+109 of 272 dump-bearing events. The 3 bad residuals are in 14.6.
+
+Rejected on the way (so they are not re-invented): endpoint-vs-edge angles
+(`a_edge`/`b_edge`) — the closest-approach edge vector is transverse for
+near-parallel broken pieces, only the axis-axis `ab_local` carries signal;
+whole-population size-only rescue (kills 348691); un-anchored footprint
+overlap (kills four good Wonly-gap pairs); `axis_angle` fallback for the
+collinearity tests (leaks 269774 6-11 / 60669 0-2 through the W gate).
+
+### 14.4 The C++ (toolkit)
+
+- `Graphs::S6RescueInput` + `Graphs::two_d_rescue_ok()`
+  (`WireCellClus/Graphs.h`, impl `connect_graph_relaxed_strict.cxx`): the
+  predicate is a line-by-line port of `oc56_fit.py rescue()` — pure, doctest
+  `clus/test/doctest_two_d_rescue.cxx` (7 cases, 20 assertions, every case a
+  real bracket pair from 14.3's table).
+- `connect_graph_relaxed_strict(..., bool two_d_rescue=false)`: under the
+  gate, killed candidates <= 5 cm get their features measured at the kill
+  site (per-plane coverage/extent/slope/overlap from the same window scan
+  the dump does, `close_mx` from <= 3 extra diagonal-stencil BFS runs, local
+  PCA axes at the break points, cached per-component npmin/Lmin) and
+  `killed` flips back on rescue. Legacy path: not one new instruction
+  (everything is inside `if (two_d_rescue)` / `if (killed)`).
+- **Emission repair, rescue-flavor only**: the dir-MST records the pair's
+  *closest*-candidate tuple (`process_mst_deterministically`), so a killed
+  closest sets the recorded tuple to -1 and the pair silently loses every
+  dir emission — a rescued dir bridge would evaporate (evt286180 0-1, the
+  one labelled case; census over all 512 events: 5 pairs total, 0 good).
+  Under `two_d_rescue` only, a pair whose dir candidate was explicitly
+  rescued is emitted even when that gate is closed.
+- Flavor `relaxed_strict_img_2d_rescue` = `wfloor` + `two_d_rescue`
+  (`make_graphs.{h,cxx}`, all four dispatch tables in `Facade_Cluster.cxx`).
+  C++ default stays `relaxed`; SBND production cfg stays
+  `relaxed_strict_img`; the new flavor is reachable only by explicit
+  selection (`SBND_PROTECT_GRAPH` / `-A protect_graph_name`).
+- Feature-parity notes: `npmin` capped at 20000 to match the fit (whose
+  clouds were the strided dump records); `Lmin`/local axes use the full
+  clouds — the candidate-level python==C++ check in 14.5 is what proves the
+  differences never cross a threshold on this sample.
+- Dump: edge records gain `two_d_rescue/killed_pre_rescue/rescued` + a `v2`
+  feature block, so the offline checker verifies the port feature by
+  feature. `killed` stays the verdict actually returned.
+
+### 14.5 Gates
+
+| gate | result |
+|---|---|
+| 1. truth table | 899 labels -> 847 pairs, **0 orphan labels**, **0 pair-token mismatches** vs the 5020 comments |
+| 2. `oc56_conn.py --selftest` | PASS (18 cases) |
+| 3. `./build/clus/wcdoctest-clus` | 152/152 cases, 1614/1614 assertions, incl. `doctest_two_d_rescue` (7 cases / 20 assertions, all real bracket pairs) |
+| 4. off-gate (final binary, round-4 flavor `relaxed_strict_img_2d_wfloor`) | **12/12 byte-identical** to the round-4 arms — `hash_archive.py` member hashes of `mabc-pr.zip` + `pctree-pr-evt*.tar.gz`, `cmp` of `nusel-evt*.tsv`, and the dump edge-verdict sets; events 388/10550/137238/234638 (nueCC48), 18625/21073 (NCpi0), 60669/400636/285311/487853/290729/394642 (PR-data); arms `work-pr57r6-off12{d,e,f}` |
+| 5. on-arms | `work-pr57r6-scan{48,19,50,395}` — **512/512 rc=0** |
+| 6. python==C++ | per S6-killed candidate <= 5 cm in the new dumps, the C++ `rescued` bit vs this repo's `oc56_fit.py rescue()` on features re-derived from the same dump: **780 checked, 0 mismatches** |
+| 7. owner labels untouched | all three dirs hash-identical before/after everything: `89ed0802…` / `c54460be…` / `9e3315cf…` (`md5sum labels-evt*.json \| md5sum`) |
+
+(An earlier full run with the pre-emission-repair binary produced the same
+table except evt286180 0-1 — rescued but silently unemitted, sec 14.4 — which
+is how that repair was found; those arms were regenerated in place by the
+final binary, per-event, by the driver's own `rm -rf $PRDIR`.)
+
+### 14.6 The final table (owner scan vs achieved)
+
+One row per labelled pair, owner verdict x what `relaxed_strict_img_2d_rescue`
+actually did on the re-run (bad wants connected, good wants separated, OK is
+free by the owner's instruction):
+
+| population | bad -> connected | good(SEP) -> separated | good never-separated | OK (SEP / conn) |
+|---|---|---|---|---|
+| nueCC48 | 14/15 | 40/40 | 1 | 157 / 177 |
+| NCpi0 | **6/6** | **20/20** | 0 | 52 / 55 |
+| PR-data | 104/106 | 94/96 | 8 | 58 / 56 |
+| **TOTAL** | **124/127** | **154/156** | 9 | 267 / 288 |
+
+**The five disagreements, each one a decided case, not an open one:**
+
+| pair | owner | achieved | why it stays |
+|---|---|---|---|
+| evt394642 c0 0-1 | good | reconnected | 14.2 triangle: satisfying it would violate the owner's `bad` on 1-2 through the never-killed 0-2 edge. Connectivity preferred (owner rule 4). |
+| evt60669 c0 0-2 | good | reconnected | 14.2 triangle: 0-1 bad + 1-2 bad transitively join 0-2. Connectivity preferred. |
+| evt137238 c0 0-1 | bad | still separated | W-plane gap (close_w=2) on a shower+track pair with a 53° local kink at the break — every W-rescue branch that reaches it also reconnects owner-good W-gap pairs (21073 6-7, 122660 14-17, 61579 3-4). The owner's own round-1 census: W-gap pairs are good 253:1; this is the 1. |
+| evt285311 c0 0-1 | bad | still separated | 9-point fragment at a shower junction, U+V gapped; its measured signature is point-identical to owner-good tiny fragments (315167 4-6: same np, cov 1.0, close 3,2). Its sibling 0-2 IS reconnected. |
+| evt487853 c0 0-3 | bad | still separated | 4.83 cm pair (the farthest bad in the set), U never closes, coverage contaminated by a third component, footprint overlap only 0.63/0.38 — every branch wide enough to take it leaks good pairs. Its sibling 2-3 IS reconnected. |
+
+Renders for all five:
+`python3 scripts/analysis/pr57/oc56_render_pair.py --arm <arm> --events-file <evts> --out <dir>`
+(the topology descriptions above are from those panels, hand-checked).
+
+Against the owner's "hopefully zero": **the achievable zero is reached** —
+every remaining line is either unsatisfiable-by-the-labels-themselves
+(2, resolved by the owner's own connectivity tie-break) or was measured to
+cost more owner-good pairs than it recovers (3, brackets quoted in 14.3).
+
+### 14.7 Production flip and caveats
+
+- Production today: `wct-pr-perevt.jsonnet:452` `protect_graph_name =
+  'relaxed_strict_img'` — **S6 is entirely off in production**, so nothing
+  in this round changes any production byte. The flip, when the owner wants
+  the 2D check + rescue live, is one cfg edit:
+  `protect_graph_name = 'relaxed_strict_img_2d_rescue'` (legacy escapes
+  unchanged: `-A protect_graph_name=...` / `SBND_PROTECT_GRAPH`).
+- The rule was fitted on these 899 labels and validated on the same events
+  (the owner's stated criterion). Round 3's lesson stands: per-population
+  numbers are quoted above, PR-data dominates the bad set (106/127), and a
+  future sample shift (new detector conditions, MC) deserves a fresh census
+  before trusting the operating point unchanged.
+- The displays (5018/5019/5020) still serve the round-4 arms — the labels
+  belong to those dumps. To eyeball the rescue's effect, point a fresh
+  viewer at `work-pr57r6-scan*` (fresh tag if labelling).
