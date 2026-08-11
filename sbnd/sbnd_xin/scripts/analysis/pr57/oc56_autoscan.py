@@ -476,13 +476,21 @@ def cmd_label(args):
                     v = ov['verdict']
                     cause = ov.get('cause', cause)
                 severed = all(r['killed'] for r in p['edges'])
+                # doc pr/57 round 5: `severed` is the PRE-round-4 notion (every
+                # candidate of this pair was killed) and coexists with the two
+                # components still being joined through a third one -- exactly
+                # the population sec 12.4 found a third of the owner's `bad`
+                # labels sitting on. Record the round-4 pair token too, so any
+                # later fit can filter on `pair=SEP` instead of inheriting the
+                # error. Spaces stripped so the comment stays token-parseable.
+                pair_tok = p['sep']['token'].replace(' ', '')
                 comment = ('auto %s conf=%s [%s] Lmin=%.1f Lmax=%.1f Tmax=%.1f npmin=%d '
                            'ang=%.0f gapW=%d wdeadX=%d dis=%.2f dens=%.0f '
-                           'dvtx=%.1f nedge=%d severed=%d%s') % (
+                           'dvtx=%.1f nedge=%d severed=%d pair=%s%s') % (
                     v, conf, rule, p['Lmin'], p['Lmax'], p['Tmax'], p['npmin'],
                     p['angle'] if p['angle'] is not None else -1, int(p['gw']),
                     p['wdeadX'], p['dis'], p['dens'], p['dvtx'],
-                    len(p['edges']), int(severed), note)
+                    len(p['edges']), int(severed), pair_tok, note)
                 for r in p['edges']:
                     entries[edge_key(evt, r)] = dict(
                         verdict=v, cause=cause, comment=comment,

@@ -116,6 +116,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--arm', action='append', required=True)
     ap.add_argument('--first', type=int, default=0)
+    # doc pr/57 round 5: the same event-subset selector oc56_autoscan.py has,
+    # so a render run can be pinned to exactly the arm subset being labelled
+    # instead of "the first N of the arm".
+    ap.add_argument('--events-file', default='')
     ap.add_argument('--out', required=True)
     ap.add_argument('--only', default='')
     ap.add_argument('--min-lmin', type=float, default=-1.0)
@@ -126,7 +130,7 @@ def main():
     os.makedirs(args.out, exist_ok=True)
     n = 0
     for arm in args.arm:
-        for evt, path in A.select_events(arm, args.first, ''):
+        for evt, path in A.select_events(arm, args.first, args.events_file):
             for pk, p in sorted(A.pair_table(arm, evt, path).items()):
                 v = A.classify(p, prm)[0]
                 if args.only and v != args.only:

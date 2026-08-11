@@ -1,0 +1,233 @@
+evt	call	j	k	nedge	Lmin	Lmax	Tmax	npmin	angle	gw	wdeadX	dis	dens	dvtx	pair	verdict	conf	rule
+53361	0	0	1	1	4.88	120.11	2.55	61	75.1	0	0	1.79	187	120.4	SEP	good	low	R4 residual, committed good
+55715	0	0	2	1	1.04	6.73	0.54	4	68.6	0	0	4.68	193	261.5	via 2	good	low	R4 residual, committed good
+55715	0	1	2	1	6.73	8.69	1.00	70	42.8	0	0	0.75	193	261.1	dir	bad	high	R2 long-track break, no W gap
+174422	0	14	15	1	2.32	3.38	0.68	18	24.1	0	0	1.00	99	-1.0	dir	good	low	R4 residual, committed good
+174752	0	0	1	1	7.61	9.45	0.76	75	28.8	1	0	1.08	181	1.0	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+174928	0	0	1	1	33.83	84.81	2.20	495	46.6	0	0	1.75	419	3.6	SEP	bad	high	R2 long-track break, no W gap
+175896	0	4	6	1	1.78	22.79	1.16	18	29.2	1	0	1.98	404	8.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+175896	0	5	6	1	5.73	22.79	1.16	73	57.6	1	0	1.25	361	3.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+278046	0	1	2	1	0.35	20.55	1.41	4	52.9	0	6	0.96	543	12.2	dir	good	low	R4 residual, committed good
+278046	0	2	3	1	6.16	20.55	1.41	120	2.7	0	3	0.76	583	10.4	dir	bad	high	R2 long-track break, no W gap
+278420	0	1	3	1	5.28	84.88	5.40	16	12.8	0	0	1.51	603	74.5	SEP	good	low	R4 residual, committed good
+278420	0	3	4	1	1.29	84.88	5.40	18	41.1	1	0	0.60	396	84.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+278420	1	0	3	1	1.91	2.14	0.45	22	43.3	1	0	1.97	178	28.0	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+278420	1	1	4	1	1.52	10.24	1.21	19	50.5	0	0	1.67	192	7.4	SEP	good	low	R4 residual, committed good
+278785	0	0	2	1	0.00	192.74	1.97	1	-1.0	1	1	2.02	264	1.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+278785	0	1	2	1	2.08	192.74	1.97	12	69.9	1	1	1.18	264	2.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+278794	0	2	6	1	0.94	1.65	0.33	8	53.9	1	0	1.20	393	29.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+278794	0	2	7	1	1.65	12.49	0.79	15	20.7	0	0	1.65	393	27.0	SEP	good	low	R4 residual, committed good
+278794	0	3	5	1	0.92	12.42	1.20	8	72.4	1	0	3.06	393	20.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+278794	0	5	7	1	12.42	12.49	1.20	141	27.6	0	0	1.39	393	22.3	SEP	bad	high	R2 long-track break, no W gap
+279190	0	0	1	1	0.94	1.41	0.41	12	22.7	1	0	0.68	29	120.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	0	1	2	101.70	277.84	3.44	1053	4.3	0	6	1.13	290	192.2	SEP	bad	high	R2 long-track break, no W gap
+280972	0	3	4	1	3.13	30.25	1.69	30	70.7	1	0	0.76	1051	50.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	10	21	1	4.21	13.40	1.79	52	15.1	0	1	1.39	2283	42.3	via 3	OK	high	R1 busy EM shower
+280972	0	10	22	1	13.40	22.13	2.64	421	16.2	0	0	1.29	2119	43.8	via 2	bad	high	R2 long-track break, no W gap
+280972	0	11	16	1	24.52	90.60	15.88	863	47.5	1	0	1.56	1787	12.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	11	21	1	4.21	90.60	15.88	52	30.9	0	1	1.66	2439	41.9	via 2	OK	high	R1 busy EM shower
+280972	0	13	15	1	3.98	23.04	1.90	40	61.8	1	0	1.13	723	52.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	18	19	1	1.53	36.00	3.81	12	87.4	1	0	1.74	2272	43.0	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	18	20	1	0.98	1.53	0.32	7	72.5	1	0	1.40	2284	42.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	19	20	1	0.98	36.00	3.81	7	90.0	1	0	3.15	2255	43.0	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	23	24	1	1.53	7.20	1.40	16	37.5	1	0	2.19	165	68.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+280972	0	25	26	1	3.13	4.20	1.04	39	67.3	1	0	0.68	186	67.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+281485	0	0	5	1	12.72	14.49	1.08	101	45.0	1	0	4.56	669	10.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+281485	0	2	4	1	1.04	2.96	0.63	2	2.0	1	0	4.70	645	10.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+281485	0	4	5	1	2.96	14.49	1.08	35	7.1	1	0	1.00	657	9.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+281507	0	0	1	1	1.57	118.85	1.97	14	74.9	0	0	1.21	206	3.3	SEP	good	low	R4 residual, committed good
+281595	0	0	1	2	62.11	63.64	1.05	533	0.9	0	6	0.90	257	59.4	dir	bad	high	R2 long-track break, no W gap
+281639	0	0	1	1	6.58	31.72	1.17	111	29.2	1	0	0.68	472	23.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+281837	0	0	1	1	5.79	20.29	0.50	32	51.5	0	0	1.13	1261	8.0	SEP	good	low	R4 residual, committed good
+281837	0	0	2	1	20.29	94.89	5.54	168	67.6	0	0	4.77	1241	6.0	dir	bad	high	R2 long-track break, no W gap
+281837	0	1	2	1	5.79	94.89	5.54	32	39.0	0	0	1.01	1302	7.6	SEP	good	low	R4 residual, committed good
+281837	0	3	4	1	51.11	70.65	0.62	510	2.6	0	6	1.79	316	80.0	SEP	bad	high	R2 long-track break, no W gap
+281837	1	0	1	1	4.44	6.04	0.51	36	52.1	0	0	0.92	94	29.6	dir	good	low	R4 residual, committed good
+282072	0	0	3	1	3.62	296.78	9.75	28	10.4	1	0	3.64	143	298.5	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+282072	0	1	3	1	26.78	296.78	9.75	120	66.0	0	0	2.72	540	29.5	SEP	bad	high	R2 long-track break, no W gap
+282072	0	2	3	1	10.09	296.78	9.75	74	67.1	0	0	1.65	409	3.4	SEP	bad	high	R2 long-track break, no W gap
+282204	0	0	1	1	40.98	75.10	11.41	322	56.7	0	1	2.69	515	47.4	SEP	bad	high	R2 long-track break, no W gap
+282204	0	0	2	2	40.98	46.95	1.25	322	22.5	0	6	2.25	502	46.6	SEP	bad	high	R2 long-track break, no W gap
+282204	0	1	2	1	46.95	75.10	11.41	661	55.5	0	0	1.08	557	2.8	SEP	bad	high	R2 long-track break, no W gap
+282217	0	0	1	1	2.43	152.52	0.87	15	48.7	0	6	4.71	359	251.5	via 2	good	low	R4 residual, committed good
+282217	0	1	2	3	152.52	254.83	5.02	1464	9.0	0	6	0.90	360	251.8	dir	bad	high	R2 long-track break, no W gap
+282385	0	0	1	2	9.87	146.90	0.81	118	60.4	0	0	2.75	220	147.3	SEP	bad	high	R2 long-track break, no W gap
+282385	0	0	2	1	1.93	146.90	0.81	6	11.0	0	0	1.43	245	146.4	SEP	good	low	R4 residual, committed good
+282385	0	1	2	1	1.93	9.87	0.73	6	65.9	0	0	0.76	213	149.1	dir	good	low	R4 residual, committed good
+282899	0	0	1	1	23.91	130.95	1.12	273	26.7	0	0	1.30	367	22.8	SEP	bad	high	R2 long-track break, no W gap
+282979	1	1	2	1	0.63	0.94	0.19	6	0.0	1	0	1.51	14	83.8	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+283040	0	0	2	1	6.99	99.51	1.21	161	60.4	0	0	1.00	294	1.1	dir	bad	high	R2 long-track break, no W gap
+283040	0	1	2	2	16.16	99.51	1.21	218	27.2	0	6	1.66	325	101.2	SEP	bad	high	R2 long-track break, no W gap
+283463	0	0	1	1	0.69	13.10	1.38	6	71.3	1	0	0.94	316	11.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+283713	1	10	11	1	1.01	2.87	0.50	10	48.3	1	0	1.71	110	81.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+283713	1	19	20	1	2.17	14.02	1.70	25	34.0	1	0	1.13	443	175.8	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+284013	0	0	1	1	1.03	74.06	0.94	3	87.7	0	6	3.33	357	5.4	via 2	good	low	R4 residual, committed good
+284013	0	1	2	1	10.00	74.06	1.48	217	39.2	0	6	0.97	368	6.9	dir	bad	high	R2 long-track break, no W gap
+284200	0	0	2	1	8.44	21.36	1.69	98	24.0	0	0	1.35	486	40.8	SEP	bad	high	R2 long-track break, no W gap
+284200	0	1	2	1	0.71	21.36	1.69	4	32.7	1	0	1.14	501	30.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+284200	0	3	4	1	1.93	17.89	3.46	14	55.2	0	0	4.60	698	7.7	via 2	good	low	R4 residual, committed good
+284200	0	3	7	1	1.60	1.93	0.45	14	52.4	0	0	1.73	704	11.1	via 2	good	low	R4 residual, committed good
+284200	0	4	6	2	7.91	17.89	3.46	143	49.7	0	0	0.92	675	4.8	dir	bad	high	R2 long-track break, no W gap
+284200	0	4	7	1	1.60	17.89	3.46	14	75.4	0	0	3.18	704	9.3	via 2	good	low	R4 residual, committed good
+284769	0	0	1	1	6.16	102.32	2.30	23	22.4	0	0	1.39	765	88.0	SEP	good	low	R4 residual, committed good
+284769	0	1	2	1	102.32	255.92	6.16	2321	2.7	0	0	1.39	795	89.9	SEP	bad	high	R2 long-track break, no W gap
+284769	1	2	3	1	0.69	1.10	0.33	2	57.1	0	0	0.97	12	72.7	dir	good	low	R4 residual, committed good
+284794	0	1	2	1	135.63	263.97	3.47	1208	3.8	0	0	1.95	1603	104.9	SEP	bad	high	R2 long-track break, no W gap
+285069	2	0	1	1	1.12	1.24	0.32	8	86.4	1	0	1.65	20	312.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+285311	0	0	1	1	1.29	53.21	5.02	9	39.2	0	0	1.55	638	4.5	SEP	good	low	R4 residual, committed good
+285311	0	0	2	1	30.50	53.21	5.02	429	53.6	0	0	1.39	633	1.5	SEP	bad	high	R2 long-track break, no W gap
+285366	0	0	1	1	2.74	64.59	0.64	43	15.3	0	0	1.11	152	1.5	SEP	good	low	R4 residual, committed good
+285443	0	2	3	1	8.99	13.34	1.94	192	61.5	0	0	1.07	770	22.1	SEP	bad	high	R2 long-track break, no W gap
+285443	1	0	1	1	1.29	2.19	0.54	14	76.9	0	0	1.04	37	40.9	SEP	good	low	R4 residual, committed good
+285929	0	0	2	2	62.33	76.23	0.60	644	3.2	0	6	0.90	306	61.5	dir	bad	high	R2 long-track break, no W gap
+286180	0	0	1	1	17.10	26.98	1.06	203	26.4	0	0	4.92	316	29.5	SEP	bad	high	R2 long-track break, no W gap
+286191	0	0	3	1	9.01	107.60	1.69	21	1.9	0	1	2.61	490	49.0	SEP	good	low	R4 residual, committed good
+286241	0	0	1	1	6.24	209.16	2.13	66	27.3	1	0	0.76	230	284.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+286400	0	1	2	2	86.74	221.59	1.28	785	10.1	0	6	0.69	299	178.5	dir	bad	high	R2 long-track break, no W gap
+286681	0	3	11	1	4.64	28.13	4.84	79	69.7	0	0	4.14	1138	58.7	via 3	good	low	R4 residual, committed good
+286681	0	5	9	1	0.35	20.49	0.70	3	59.8	0	0	1.29	2227	55.4	via 2	OK	high	R1 busy EM shower
+286681	0	6	9	1	10.93	20.49	1.85	119	6.0	0	0	1.98	2106	55.4	via 3	bad	high	R2 long-track break, no W gap
+286681	0	7	11	1	28.13	107.27	13.83	1922	2.2	0	0	0.97	1921	33.7	dir	bad	high	R2 long-track break, no W gap
+286681	0	8	9	1	4.51	20.49	0.70	44	84.5	0	0	3.62	2270	54.3	via 2	OK	high	R1 busy EM shower
+286681	0	9	11	1	20.49	28.13	4.84	119	31.2	0	0	0.75	2387	51.2	dir	bad	high	R2 long-track break, no W gap
+286681	0	10	20	1	20.31	29.44	4.42	103	89.3	1	0	4.09	1508	26.8	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+286681	0	14	15	1	2.41	9.11	0.78	18	29.0	0	0	3.06	1732	42.3	via 2	good	low	R4 residual, committed good
+286681	0	14	16	1	2.41	2.83	0.57	18	21.6	0	0	0.90	1640	43.6	dir	good	low	R4 residual, committed good
+286681	0	15	19	1	9.11	17.75	0.80	72	4.2	0	0	4.37	1856	30.0	SEP	bad	high	R2 long-track break, no W gap
+286681	0	15	20	1	9.11	29.44	4.42	72	85.8	1	0	1.33	1916	32.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+286681	0	17	18	1	1.51	10.19	1.70	8	16.3	0	0	3.99	2283	42.5	via 2	OK	high	R1 busy EM shower
+286681	0	18	20	1	10.19	29.44	4.42	141	35.0	0	0	0.92	1615	44.7	dir	bad	high	R2 long-track break, no W gap
+286681	0	19	20	1	17.75	29.44	4.42	201	88.7	1	0	1.13	1673	27.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+286906	0	0	1	1	4.33	134.58	0.85	40	35.7	1	0	1.30	269	3.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+287517	0	0	1	1	32.15	108.46	1.85	588	5.9	1	0	0.69	418	30.5	SEP	bad	low	R2w thin collinear pair across a W gap
+287517	0	1	3	1	8.26	32.15	1.85	150	14.7	0	0	1.35	706	8.1	SEP	bad	high	R2 long-track break, no W gap
+287517	0	2	3	1	4.10	8.26	1.13	100	31.6	0	0	0.60	636	7.1	dir	good	low	R4 residual, committed good
+287621	0	0	2	1	15.47	73.66	12.61	59	22.4	0	0	1.95	414	63.7	SEP	bad	high	R2 long-track break, no W gap
+287621	0	1	2	1	21.12	73.66	12.61	68	24.0	0	1	1.95	487	37.3	SEP	bad	high	R2 long-track break, no W gap
+287621	0	2	3	1	3.09	73.66	12.61	32	80.7	0	0	0.97	207	51.6	dir	good	low	R4 residual, committed good
+287654	0	0	1	1	11.08	50.80	2.71	300	47.2	0	0	0.90	684	3.2	dir	bad	high	R2 long-track break, no W gap
+287654	0	2	4	1	1.15	8.77	0.67	10	80.5	0	0	1.20	98	47.6	SEP	good	low	R4 residual, committed good
+287830	0	0	1	1	1.77	10.74	1.01	17	34.0	0	0	1.55	327	169.9	SEP	good	low	R4 residual, committed good
+287830	0	0	3	1	0.94	1.77	0.55	8	78.9	1	0	1.80	327	169.5	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+287830	0	1	3	1	0.94	10.74	1.01	8	53.5	1	0	1.40	333	168.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+288287	0	2	3	1	114.59	135.59	14.13	1554	9.0	1	0	0.87	315	123.5	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+288287	0	3	4	1	0.00	114.59	1.19	1	-1.0	1	0	0.79	143	238.8	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+288287	1	0	1	1	1.97	2.33	0.29	9	5.6	0	8	3.27	21	21.7	SEP	good	low	R4 residual, committed good
+288639	0	1	2	1	57.68	81.88	1.81	473	89.3	1	0	1.98	405	2.1	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+288745	1	0	1	1	0.94	1.27	0.48	16	74.5	1	0	1.55	33	179.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+290052	0	0	1	1	10.98	85.22	3.54	85	82.4	0	0	1.55	351	2.1	SEP	bad	high	R2 long-track break, no W gap
+290729	0	0	1	1	9.37	110.50	2.54	112	87.6	0	0	1.51	246	110.5	SEP	bad	high	R2 long-track break, no W gap
+290729	0	1	2	1	0.35	110.50	2.54	2	36.9	1	1	1.13	255	79.1	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+291499	1	0	1	1	0.63	0.94	0.19	6	0.0	1	0	1.59	14	324.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+292005	0	0	1	1	1.28	50.00	3.76	12	87.7	1	0	1.21	336	10.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+292005	0	1	2	1	50.00	117.20	3.76	681	2.9	0	0	0.69	362	47.3	dir	bad	high	R2 long-track break, no W gap
+292027	0	0	3	1	1.67	6.74	1.51	19	89.6	0	0	1.05	363	54.7	SEP	good	low	R4 residual, committed good
+292027	0	0	4	1	0.98	6.74	1.51	7	59.8	1	0	1.29	274	58.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+292027	0	2	5	1	1.29	16.58	1.26	12	75.1	1	0	1.68	426	48.5	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+292027	0	3	4	1	0.98	1.67	0.52	7	45.1	1	0	3.80	307	56.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+292384	1	0	1	1	0.35	1.87	0.47	4	8.5	0	0	1.20	28	102.6	SEP	good	low	R4 residual, committed good
+292643	0	2	3	1	15.46	54.24	3.17	205	49.8	0	6	0.97	772	1.6	dir	bad	high	R2 long-track break, no W gap
+292643	1	0	1	1	1.11	15.00	1.24	12	55.6	1	0	2.49	256	39.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+314507	0	0	3	1	1.53	38.39	1.98	14	89.2	1	0	2.43	302	104.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+314507	0	1	3	1	1.74	38.39	1.98	10	32.3	1	0	3.55	194	64.5	via 2	good	high	R3 W-plane gap (robust plane sees a hole)
+314507	0	1	5	1	1.74	13.97	0.41	10	36.1	1	0	1.67	169	60.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+314507	0	2	4	1	1.91	20.09	0.42	20	35.6	1	0	0.98	110	19.2	via 2	good	high	R3 W-plane gap (robust plane sees a hole)
+315167	0	4	6	1	0.63	148.41	10.46	6	81.5	0	0	1.53	189	25.1	SEP	good	low	R4 residual, committed good
+315167	0	5	6	1	1.83	148.41	10.46	16	40.2	0	0	0.90	1079	18.1	dir	good	low	R4 residual, committed good
+315497	0	0	2	1	2.00	49.58	1.34	30	10.0	0	6	2.34	224	6.4	SEP	bad	high	R2d dead-W band
+315849	0	0	1	1	9.34	62.77	0.73	85	51.2	0	0	1.39	213	63.4	SEP	bad	high	R2 long-track break, no W gap
+316003	0	0	1	1	12.19	31.96	0.82	67	2.6	0	0	1.35	381	21.7	SEP	bad	high	R2 long-track break, no W gap
+316025	0	0	1	1	10.20	71.97	1.89	302	89.3	0	0	1.71	426	72.2	SEP	bad	high	R2 long-track break, no W gap
+316311	0	0	2	1	1.19	84.14	3.62	10	67.6	0	0	2.13	129	80.7	SEP	good	low	R4 residual, committed good
+316311	0	1	2	1	0.00	1.19	0.37	1	-1.0	0	0	2.42	126	81.2	SEP	good	low	R4 residual, committed good
+316553	0	0	1	2	110.84	143.77	1.25	1263	7.7	0	6	2.25	342	97.3	SEP	bad	high	R2 long-track break, no W gap
+316553	0	0	2	1	11.65	110.84	0.79	47	1.4	0	3	3.31	336	100.8	SEP	good	low	R4 residual, committed good
+316553	0	1	2	1	11.65	143.77	1.25	47	7.4	0	0	3.60	355	90.0	SEP	good	low	R4 residual, committed good
+316729	1	0	1	1	0.94	1.07	0.41	9	15.9	0	0	0.85	22	277.0	dir	good	low	R4 residual, committed good
+317741	0	0	1	1	1.47	8.70	0.69	17	76.7	1	0	0.60	117	0.8	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+317939	0	0	1	1	21.11	143.03	4.24	380	59.4	0	0	4.78	970	4.0	dir	bad	high	R2 long-track break, no W gap
+317939	1	2	4	1	2.46	37.43	1.85	24	26.3	0	0	1.38	771	32.2	SEP	good	low	R4 residual, committed good
+317939	1	3	4	1	0.63	37.43	1.85	6	60.1	1	0	1.97	284	52.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+317939	1	3	5	1	0.63	5.06	0.73	6	55.5	1	0	1.52	276	53.1	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+317939	1	4	5	1	5.06	37.43	1.85	66	30.7	1	0	1.99	277	53.1	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+317939	1	12	13	1	0.69	0.98	0.28	6	80.2	1	0	1.80	13	96.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+320667	1	0	1	1	1.92	19.04	1.07	18	64.0	0	0	1.11	243	152.3	SEP	good	low	R4 residual, committed good
+321107	0	0	1	1	4.16	221.24	8.52	43	34.1	0	6	2.19	261	219.4	SEP	bad	high	R2d dead-W band
+321173	0	1	2	1	1.12	24.23	0.96	12	70.8	0	0	0.79	219	148.3	dir	good	low	R4 residual, committed good
+321173	0	2	3	1	24.23	123.99	1.46	393	6.7	0	0	0.75	464	123.6	dir	bad	high	R2 long-track break, no W gap
+345633	0	0	5	1	97.04	100.30	10.94	1915	6.6	0	6	0.60	499	99.2	dir	bad	high	R2 long-track break, no W gap
+347085	0	5	6	1	2.01	11.96	1.87	18	80.4	0	0	3.29	439	13.8	SEP	good	low	R4 residual, committed good
+348471	0	0	1	1	28.71	55.41	3.88	906	16.5	1	0	2.27	1086	46.1	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+348471	0	0	2	1	51.44	55.41	3.88	472	69.5	0	0	1.66	314	8.2	SEP	bad	high	R2 long-track break, no W gap
+348471	0	3	4	1	5.67	9.47	1.31	77	76.4	0	0	1.31	686	78.8	SEP	good	low	R4 residual, committed good
+348691	0	0	1	1	53.86	351.61	4.67	1371	77.4	0	0	2.28	1128	4.6	SEP	bad	high	R2 long-track break, no W gap
+348691	0	1	2	2	16.72	351.61	4.67	362	22.5	1	0	4.71	865	1.5	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+348691	0	4	5	1	4.75	8.24	1.66	52	40.7	0	0	0.97	218	55.9	dir	good	low	R4 residual, committed good
+348713	0	0	1	1	33.71	88.61	1.75	656	55.1	0	0	1.11	343	0.6	SEP	bad	high	R2 long-track break, no W gap
+349241	0	1	2	1	5.74	49.56	1.09	49	74.5	0	0	1.11	195	3.3	SEP	good	low	R4 residual, committed good
+349461	0	1	2	1	9.36	182.06	7.17	27	22.5	0	0	2.11	644	177.2	SEP	good	low	R4 residual, committed good
+349549	0	0	1	1	3.41	33.69	0.77	31	17.8	1	0	0.60	193	6.1	via 2	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	1	2	1	1.04	3.05	0.54	9	14.0	1	0	1.59	1572	125.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	1	8	1	1.04	28.13	2.91	9	77.6	1	0	1.25	1579	124.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	2	6	1	3.05	12.72	2.33	30	73.7	1	0	1.87	1441	128.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	5	6	1	4.17	12.72	2.33	28	37.4	1	0	1.23	1412	128.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	5	8	1	4.17	28.13	2.91	28	54.9	1	0	1.76	1485	126.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	6	8	1	12.72	28.13	2.91	564	24.6	1	0	2.86	1400	128.2	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	7	9	1	1.03	9.05	1.70	12	56.0	1	0	0.92	1216	131.0	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	8	9	1	9.05	28.13	2.91	316	16.7	1	0	1.04	1349	121.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349549	1	20	21	1	0.94	1.16	0.36	9	38.8	1	0	1.84	703	140.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+349945	0	0	1	1	11.57	178.12	2.23	257	70.2	0	0	0.92	883	2.0	dir	bad	high	R2 long-track break, no W gap
+350297	0	0	1	2	37.23	195.47	2.14	349	1.8	0	6	1.09	248	1.6	SEP	bad	high	R2 long-track break, no W gap
+386948	0	2	3	1	5.24	16.02	1.02	90	23.2	1	0	0.92	845	55.0	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+386948	0	8	9	1	1.71	24.81	1.91	12	42.2	0	0	1.21	740	49.7	SEP	good	low	R4 residual, committed good
+388224	0	1	2	1	1.96	195.54	5.52	17	61.1	0	0	1.63	858	1.3	SEP	good	low	R4 residual, committed good
+388224	0	2	3	1	1.40	195.54	5.52	12	15.2	1	0	0.87	739	6.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+388224	0	2	4	1	1.93	195.54	5.52	7	13.5	0	0	1.11	971	6.5	SEP	good	low	R4 residual, committed good
+390864	0	0	1	1	1.14	174.27	1.88	14	44.0	1	0	1.29	453	73.1	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+392552	0	0	1	1	81.71	113.87	1.15	717	10.6	0	6	0.75	315	112.9	dir	bad	high	R2 long-track break, no W gap
+393042	0	1	2	1	165.01	240.31	2.61	3693	6.8	0	0	0.82	746	162.8	dir	bad	high	R2 long-track break, no W gap
+393212	0	0	1	1	5.76	28.52	1.62	87	60.1	0	0	1.97	646	51.1	SEP	good	low	R4 residual, committed good
+394532	0	0	2	1	4.77	10.18	1.07	34	30.0	0	0	1.11	368	79.9	SEP	good	low	R4 residual, committed good
+394532	0	1	2	1	8.55	10.18	1.07	143	31.7	1	0	0.94	368	88.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+394642	0	0	1	1	4.38	256.84	3.87	29	31.5	0	0	2.86	389	258.0	SEP	good	low	R4 residual, committed good
+394642	0	1	2	1	57.81	256.84	3.87	1254	3.7	0	2	1.09	922	3.0	SEP	bad	high	R2 long-track break, no W gap
+395610	0	0	1	2	56.37	118.40	0.91	513	5.1	0	6	1.86	277	122.5	SEP	bad	high	R2 long-track break, no W gap
+395654	0	2	3	1	7.18	133.52	2.68	28	3.5	0	0	0.97	418	119.6	dir	good	low	R4 residual, committed good
+399052	0	0	1	1	9.67	44.98	3.04	60	13.9	0	0	0.95	1318	43.4	dir	bad	high	R2 long-track break, no W gap
+399118	0	0	1	1	2.42	148.54	1.01	4	63.5	0	0	1.40	327	66.0	via 2	good	low	R4 residual, committed good
+399702	0	1	2	1	27.68	181.07	6.17	397	5.3	0	6	1.05	469	179.5	SEP	bad	high	R2 long-track break, no W gap
+400054	0	0	1	1	1.00	2.14	0.37	11	46.2	1	0	0.97	36	11.4	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+400460	0	0	1	1	77.95	97.77	3.40	1615	7.7	0	5	1.13	709	15.5	SEP	bad	high	R2 long-track break, no W gap
+400504	0	0	4	1	15.40	53.55	1.63	434	37.5	0	0	1.54	837	54.1	SEP	bad	high	R2 long-track break, no W gap
+400504	0	3	4	1	2.08	53.55	1.63	3	10.5	0	1	1.21	742	49.7	SEP	good	low	R4 residual, committed good
+400636	1	0	1	1	128.41	140.48	4.41	3306	2.9	0	0	1.35	965	1.5	SEP	bad	high	R2 long-track break, no W gap
+401626	0	0	1	1	2.17	19.99	1.76	16	88.2	1	0	2.44	226	31.7	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+406796	1	0	1	1	1.34	2.01	0.40	15	55.9	1	0	0.69	31	90.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+407280	0	0	2	1	1.73	186.28	1.17	8	72.4	1	0	0.79	280	31.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+407280	0	0	3	1	1.73	26.93	0.61	8	66.1	1	0	1.08	275	30.6	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+407280	0	1	3	1	10.40	26.93	0.72	94	85.2	1	0	0.69	212	3.5	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+407280	0	2	3	2	26.93	186.28	1.17	234	6.5	1	0	1.83	277	31.1	SEP	bad	low	R2w thin collinear pair across a W gap
+407280	0	2	4	2	103.18	186.28	1.17	1007	6.5	0	6	1.84	314	217.3	SEP	bad	high	R2 long-track break, no W gap
+409546	0	0	1	1	2.77	15.83	0.72	45	53.9	0	0	1.11	166	3.0	SEP	good	low	R4 residual, committed good
+409634	0	1	3	1	3.21	9.05	0.94	60	68.4	1	0	1.59	246	55.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+409634	0	2	3	1	7.95	9.05	0.87	107	13.6	1	0	1.59	305	49.0	SEP	bad	low	R2w thin collinear pair across a W gap
+409634	1	1	2	1	5.58	14.40	1.41	49	54.5	0	6	1.25	347	1.4	SEP	bad	high	R2d dead-W band
+409634	1	4	6	1	1.89	4.90	0.61	20	77.6	0	0	1.25	179	12.3	SEP	good	low	R4 residual, committed good
+409964	0	0	1	2	22.86	172.25	10.27	258	25.9	0	6	1.13	336	73.0	SEP	bad	high	R2 long-track break, no W gap
+410008	0	0	5	1	4.93	23.90	1.86	34	79.4	1	0	3.25	1373	173.3	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+410008	0	2	3	1	3.56	15.60	2.53	28	50.7	0	0	3.46	1356	171.8	SEP	good	low	R4 residual, committed good
+410008	0	2	5	1	3.56	4.93	0.54	28	7.5	0	0	1.39	1373	172.4	SEP	good	low	R4 residual, committed good
+410008	0	3	4	1	7.94	15.60	2.53	94	18.1	0	0	0.92	1161	170.0	dir	bad	high	R2 long-track break, no W gap
+410008	0	3	5	1	4.93	15.60	2.53	34	46.5	0	0	1.05	1312	172.0	SEP	good	low	R4 residual, committed good
+486687	0	0	1	3	60.68	212.90	2.54	825	10.6	0	0	0.85	260	211.2	dir	bad	high	R2 long-track break, no W gap
+486687	0	4	5	1	8.64	22.72	1.59	168	89.0	0	0	1.65	481	92.0	SEP	bad	high	R2 long-track break, no W gap
+487303	0	0	1	1	13.60	21.04	1.77	92	5.8	0	0	3.20	496	315.8	SEP	bad	high	R2 long-track break, no W gap
+487853	0	0	3	1	10.16	20.27	1.29	177	51.0	0	0	4.83	531	19.7	SEP	bad	high	R2 long-track break, no W gap
+487853	0	2	3	1	10.16	16.23	2.26	230	54.1	0	0	3.00	549	23.5	SEP	bad	high	R2 long-track break, no W gap
+487853	0	3	4	1	2.13	10.16	1.29	8	88.1	1	0	1.25	498	24.9	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+487853	0	3	5	1	0.35	10.16	1.29	2	68.3	1	0	1.29	526	25.1	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+488755	0	0	1	1	7.25	31.09	0.62	74	16.6	0	0	1.73	198	7.4	SEP	bad	high	R2 long-track break, no W gap
+489327	0	2	3	1	118.98	222.50	4.86	1812	5.5	0	6	1.42	394	116.5	SEP	bad	high	R2 long-track break, no W gap
+489503	0	0	2	1	0.63	129.30	6.08	6	73.7	1	0	1.40	275	129.5	SEP	good	high	R3 W-plane gap (robust plane sees a hole)
+489503	0	1	2	1	1.85	129.30	6.08	13	65.7	0	0	1.95	345	123.9	SEP	good	low	R4 residual, committed good
+490977	0	0	1	1	5.53	23.08	1.44	127	54.4	0	0	1.11	432	32.5	SEP	good	low	R4 residual, committed good
