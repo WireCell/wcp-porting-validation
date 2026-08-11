@@ -40,15 +40,29 @@ import oc56_autoscan as A  # noqa: E402
 
 SBND = A.SBND
 
-DEFAULT_ARMS = ['work-pr57r4-scan48', 'work-pr57r4-scan19',
-                'work-pr57r4-scan50', 'work-pr57r4-scan395']
+# doc pr/64 round 4 HARNESS FIX: the round-4 arms (work-pr57r4-scan*) were
+# generated with the retired 'relaxed_strict_img_2d_wfloor' flavor and predate
+# the pr/62 S7 production flip -- their connectivity records contain MST edges
+# that no longer exist in production (demonstrated: evt174224's phantom 82.7cm
+# comp1-3 edge, doc pr/64 round 3 caveat 2), so any REPLAY over them scores
+# against a graph that is not today's.  Defaults now point at post-pr/62 bare
+# production dumps: work-pr64r4-scan48/19 (regenerated 2026-08-11) and
+# work-pr64-scan1k (the full 1000-event PR-data pool, superset of the old
+# scan50+scan395 events).  The archived docs/pr/pr57r6-truth.tsv was built
+# from the r4 arms and stays as-is (scientific record); pass --arm to rebuild
+# against any arm set explicitly.
+DEFAULT_ARMS = ['work-pr64r4-scan48', 'work-pr64r4-scan19',
+                'work-pr64-scan1k']
 DEFAULT_LABEL_DIRS = ['overclustering_labels',
                       'overclustering_labels/claude-scan50',
                       'overclustering_labels/claude-scan223']
 POPULATION = {'work-pr57r4-scan48': 'nueCC48',
               'work-pr57r4-scan19': 'NCpi0',
               'work-pr57r4-scan50': 'PR-data',
-              'work-pr57r4-scan395': 'PR-data'}
+              'work-pr57r4-scan395': 'PR-data',
+              'work-pr64r4-scan48': 'nueCC48',
+              'work-pr64r4-scan19': 'NCpi0',
+              'work-pr64-scan1k': 'PR-data'}
 
 COLS = ['population', 'arm', 'tag', 'evt', 'call', 'j', 'k', 'nedge', 'nlab',
         'verdict', 'flip', 'pair', 'Lmin', 'Lmax', 'Tmax', 'npmin', 'angle',

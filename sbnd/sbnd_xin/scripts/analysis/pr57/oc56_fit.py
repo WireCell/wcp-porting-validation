@@ -468,8 +468,12 @@ def cmd_table(args):
     npair = 0
     for arm in args.arm:
         base = os.path.basename(arm.rstrip('/'))
-        pop = {'work-pr57r6-scan48': 'nueCC48', 'work-pr57r6-scan19': 'NCpi0'}.get(
-            base, 'PR-data' if 'scan' in base else base)
+        # doc pr/64 round 4: was a hardcoded {pr57r6-scan48/19} map that
+        # silently degraded to the raw basename for every other arm name --
+        # route through oc56_truth.POPULATION (single source) instead.
+        pop = POPULATION.get(base, 'nueCC48' if 'scan48' in base else
+                             'NCpi0' if 'scan19' in base else
+                             'PR-data' if 'scan' in base else base)
         for evt, path in A.arm_events(arm):
             comps, edges, conn = A.load_event(path, want_conn=True)
             pairs = {}

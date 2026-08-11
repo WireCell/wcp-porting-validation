@@ -1,0 +1,24 @@
+# doc pr/64 round 4 -- S6 W-plane long-track exception, before / after
+# before = work-pr64r4-off1k / work-pr64r4-off48 (today's bare production, new binary, knob OFF)
+# after  = work-pr64r4-on1k  / work-pr64r4-on48  (SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue_long_wtrack)
+# Movers on the FULL 1000-event PR-data sample are EXACTLY the three target
+# events; evt122660 is the only nueCC48 mover; NCpi0 0/19. nusel byte-identical
+# in all 1067 events.
+#
+# pr64r4-before: https://www.phy.bnl.gov/twister/bee/set/fa4f8d6b-3e78-46bc-bb1c-5ec774217fdc/event/list/
+# pr64r4-after:  https://www.phy.bnl.gov/twister/bee/set/e6e78f04-7e3a-4af3-bf77-b1af847d7630/event/list/
+# bee_idx  event    note
+0  174224   TARGET -- plain 6-wire W charge hole; FULLY rejoined ([0,0,1,1] -> [0,0,0,0]); PR ids 11 -> 10
+1  276836   TARGET -- drift-parallel track, only W convicts; pairs 1-3 + 6-10 rejoin (5 -> 3 groups); the 40deg S7 kink at 36.6cm stays split BY DESIGN; PR ids 13 -> 11
+2  314507   TARGET -- pair 4-5 (26.8cm) rejoins; its all-plane-voter S7 breaks remain BY DESIGN; PR ids 7 -> 5
+3  64959    DOUBLE-CHECK -- owner-labelled bad, deliberately FORGONE by the tightened gate (angle 21.9deg, Tmax 1.97); must look IDENTICAL before/after (PR ids 3 -> 3)
+#
+# pr64r4-48-before: https://www.phy.bnl.gov/twister/bee/set/e60f2d53-0810-4718-82c6-a4ecdc727903/event/list/
+# pr64r4-48-after:  https://www.phy.bnl.gov/twister/bee/set/1da5bb71-c3bf-47dc-b7c9-8e6019175c12/event/list/
+# bee_idx  event    note
+0  122660   DOUBLE-CHECK -- the tightening exists for this event. Owner-labelled
+#           good pair 13-16 (Tmax 1.73, angle 7.6) STAYS SPLIT on-arm (verified in
+#           the connectivity record). What DOES change: components 4/5/6 merge via
+#           three thin-collinear pairs (4-5 8.10cm ab=4.5, 4-6 0.92cm ab=3.7,
+#           5-6 1.20cm ab=5.6 -- owner verdict 'OK' on the labelled two,
+#           4-5 unlabelled). PR ids 42 -> 41.

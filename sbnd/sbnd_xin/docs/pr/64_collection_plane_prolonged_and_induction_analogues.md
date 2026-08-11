@@ -571,10 +571,177 @@ question, worth fixing before anyone trusts its replay output for future rescue 
   return before the dump write for `>=30cm` candidates) is structural to the current
   logging, not just a gap in this round's search.
 
-## Fix — none shipped
+## Fix — none shipped in Rounds 1-3
 
-No code change. No production flip. `git status cfg/ clus/` shows nothing from this
-round, including Round 3 (investigation + prototype script only, per explicit scope).
+Rounds 1-3: no code change, no production flip (investigation + prototype script
+only, per explicit scope). Round 4 below ships the fix.
+
+## Round 4 — implementation: `two_d_w_track_ok`, the harness fix, and deployment
+
+Owner request (2026-08-11): implement the Round 3 gate in C++, fix the stale
+validation harness (Caveat 2), correct the narrow-W-branch deficiency (Caveat 1),
+with the explicit success criterion "no regression against my existing scan, only
+recover these three events and similar cases — narrow, W-plane long-track". Owner
+selected the **tightened operating point** when offered the trade:
+
+> base R2w (`W sole voting plane && Lmin > 6cm && npmin >= 50 && Tmax < 2cm &&
+> angle < 25°`) **plus** (`Tmax < 1.7cm` OR `angle < 6°`)
+
+The tightening excludes evt122660's good pair 13-16 (`Tmax=1.73, angle=7.6°`) —
+zero good-pair regressions on the 899-label scan — at the cost of the two marginal
+recoveries 64959/172656 (angles 21.9°/18.4°, not clean-long-track topology).
+
+### Repro
+
+```bash
+# harness fix: regenerate the two label arms that predate the pr/62 S7 flip
+cd wcp-porting-img/sbnd/sbnd_xin
+PR_OC56_SCAN_DUMP=1 PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 \
+    work-pr64r4-scan48 data $(cat valfast/events-nuecc48-cb0805.txt)
+PR_OC56_SCAN_DUMP=1 PR_JOBS=32 ./run_pr_chain_batch.sh work-ncpi0-cb0805 \
+    work-pr64r4-scan19 data $(cat valfast/events-ncpi0-cb0805.txt)
+python3 scripts/analysis/pr57/oc56_fit.py features --out /home/xqian/tmp/pr64r4_edges.jsonl
+python3 scripts/analysis/pr64/wgate_sweep.py fresh-labels     # owner labels vs FRESH features
+# gates (byte-identity = member-content hash, never raw archive cmp)
+python3 scripts/analysis/pr64/pr64_gate.py work-pr64r4-scan48 work-pr64r4-off48
+python3 scripts/analysis/pr64/pr64_gate.py work-pr64r4-scan19 work-pr64r4-off19
+python3 scripts/analysis/pr64/pr64_gate.py work-pr64-scan1k   work-pr64r4-off1k
+# on-arms: SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue_long_wtrack + same env
+# doctest
+cd toolkit && ./build/clus/wcdoctest-clus -tc='s6 w-track*'
+```
+
+### The harness fix (Caveat 2, closed)
+
+`oc56_truth.py DEFAULT_ARMS` now points at post-pr/62 bare-production dumps:
+`work-pr64r4-scan48/19` (regenerated 2026-08-11, 66/66 events rc=0) +
+`work-pr64-scan1k` (the full 1000-event PR-data pool, superset of the old
+scan50+scan395 events). The archived `pr57r6-truth.tsv` stays untouched
+(scientific record; `--arm` selects the old arms explicitly). The hardcoded
+population map at `oc56_fit.py` (which silently degraded any unknown arm name to
+its raw basename) now routes through `oc56_truth.POPULATION`.
+
+Demonstrated fixed: evt174224 graph_call 0's fresh connectivity record contains
+only the `0-1` and `2-3` MST edges — the phantom 82.7cm `1-3` edge that made the
+old replay score this pair as "already handled" is gone from today's production,
+exactly as Round 3's Caveat 2 predicted.
+
+Fresh-feature label scoring (`wgate_sweep.py fresh-labels`, all 899 labels join
+today's production, **0 orphans**): of 378 W-gapped labelled pairs — bad 12,
+good 133, OK 233. The shipped tightened gate fires on **7/12 bad** (60017,
+60669×2 via R2d, 172656 — whose fresh `Tmax` lands just inside 1.7 — 174224,
+287517, 407280), **0/133 good**, and 5 OK pairs (54095 5-11 via R2d, 122660 4-6
+and 5-6, 48367 9-10, 409634 2-3 — owner-free verdicts, all expected movers).
+
+### The C++ (Caveat 1 corrected as designed: additive global-axis branch, shipped local branch untouched)
+
+- **`Graphs::two_d_w_track_ok(S6WTrackInput)`** (`Graphs.h`,
+  `connect_graph_relaxed_strict.cxx`): pure predicate, R2d (dead-W band,
+  `w_gap && dead_w>=3 && npmin>=20 && dis<3cm`, deliberately NOT sole-vote-gated —
+  the fitted evt60669 population has an induction plane also voting) then
+  tightened R2w. All thresholds `constexpr` in one block, in lockstep with
+  `wgate_sweep.py r2w_tight_fires()`.
+- **`s6_comp_stat` cache widened** to `S6CompStat{npoints, extent_cm, axis,
+  trms_cm}` — the top eigenvector and transverse RMS were already computed by the
+  existing per-component eigen-decomposition and discarded; keeping them is free
+  and strictly cheaper than the local-axis radius-query PCA the shipped rescue
+  uses. `trms` uses the (n-1) normalization to match the Python fit's `np.cov`.
+- **Composition**: after the existing rescue block, `if (w_track_excuse &&
+  killed)` — revive-only, no <= 5cm cap (276836's 5.97cm pair is in scope), sole
+  vote = `gap[2] && !(gap[0]&&!excuse_u) && !(gap[1]&&!excuse_v)` (identical to
+  the offline voter definition). The pinned `excused[3]={excuse_u,excuse_v,false}`
+  and the shipped `two_d_rescue_ok` W branch are byte-for-byte untouched. Same
+  dir-MST emission repair as the rescue (evt286180 class).
+- **Flavor**: `relaxed_strict_img_2d_rescue_long_wtrack` =
+  `_rescue_long` + `w_track_excuse=true`; new factory + all four
+  `Facade_Cluster.cxx` dispatch sites. C++ default stays OFF everywhere.
+- **Dump provenance**: `w_track`/`w_track_revived`/`v3{w_gap,w_sole,npmin,lmin,
+  tmax,ab_global,dead_w}` — absent unless the flavor enables it, so every
+  existing flavor's dump records are unchanged.
+- **Doctest** `clus/test/doctest_w_track.cxx`: 6 cases / 33 assertions — the
+  three target events, the protected 122660 pair, the forgone marginals, every
+  R2w boundary, the tightening's two branches, R2d boundaries + its `w_gap`
+  gate, sentinel behavior. Full `wcdoctest-clus`: 170 cases / 1783 assertions
+  pass.
+- **S7 untouched** — Round 3's null result stands (0/25 W-sole S7 kills pass any
+  gate).
+
+### Gates (labels reported; `pr64_gate.py` = member-content hashes of mabc-pr.zip + pctree tar.gz + exact-byte nusel tsv)
+
+- Freshness proof: `libWireCellClus.so` 2026-08-11 14:39 > last source edit
+  14:36; `wcbuild` + `./wcb install` rc=0.
+- **Off-gate** (new binary, knob off, vs pre-change same-day baselines):
+  - `work-pr64r4-scan48` vs `work-pr64r4-off48`: **47/47 identical, 0 movers**
+  - `work-pr64r4-scan19` vs `work-pr64r4-off19`: **19/19 identical, 0 movers**
+  - `work-pr64-scan1k` vs `work-pr64r4-off1k`: **990/1000 identical, 10 movers —
+    ALL attributed to doc pr/65's production flip, not this change** (pr/65's
+    cfg flip landed 13:53 PDT, after scan1k's 09:43 generation; every mover's
+    diff is confined to `mc.json` ± `shower_track-global.json` — exactly
+    pr/65's PF/shower-absorb footprint — with `absorb_unreachable_main` /
+    `orphan_audit_only` active in every off1k log and absent from every scan1k
+    log; pctree + nusel byte-identical in all 1000; knob-off dumps carry zero
+    `w_track` keys). Same situation as pr/53's "no pre-existing off arm is
+    today's bare"; `work-pr64r4-off1k` is today's bare baseline, and the
+    binary-level identity of THIS change is the 0/66 same-config result above.
+- **On-arm** (`SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue_long_wtrack`,
+  same binary, same config, vs the off arms — the clean knob isolation):
+  - `work-pr64r4-off1k` vs `work-pr64r4-on1k`: **997/1000 identical; the 3
+    movers are EXACTLY the target events** — 174224, 276836, 314507
+    (mabc + pctree only; nusel byte-identical in all 1000).
+  - `work-pr64r4-off48` vs `work-pr64r4-on48`: 46/47 identical; the 1 mover is
+    evt122660 (see below — the protected pair is NOT the thing that moved).
+  - `work-pr64r4-off19` vs `work-pr64r4-on19`: **19/19 identical, 0 movers.**
+- **Mover census / causal match** (every `w_track_revived` record in the on
+  arms): 6 events fire on the 1k sample — 174224 (1-2, closest+dir1+dir2),
+  276836 (1-3 at 5.97cm and 6-10 at 7.91cm, both beyond the old rescue's 5cm
+  reach), 314507 (4-5 at 26.78cm), plus 172656/287517/407280 whose pairs are
+  already connected in today's production (dir-block revives, no membership
+  change — which is why they are not movers). All revives are `w_sole=True`;
+  C++ full-cloud features match the Python strided-cloud fit to the printed
+  precision (174224: tmax 1.38 / ab 4.2 both sides). **R2d fired zero times**
+  in 1067 events — the shipped rescue's dead-W branch already handles that
+  band (evt60669's candidates never reach the exception), so R2d is a dormant
+  safety net, kept for its label fit but currently exercised only by the
+  doctest.
+- **Membership deltas** (connectivity records, off → on):
+  - 174224: `[0,0,1,1] → [0,0,0,0]` — the track is whole again.
+  - 276836: 5 groups → 3 (pairs 1-3, 6-10 rejoin; the 40° S7 kink at 36.6cm
+    stays split by design).
+  - 314507: 6 groups → 5 (pair 4-5; its all-plane-voter S7 breaks remain by
+    design).
+  - 122660: components 4/5/6 merge (pairs 4-6/5-6 owner-verdict OK, 4-5
+    unlabelled, all three thin-collinear, ab 3.7-5.6°); **the owner-labelled
+    good pair 13-16 stays split on-arm** (final groups 9 vs 10) — verified in
+    the connectivity record, not inferred.
+
+### Bee before/after (`docs/pr/pr64r4-bee.index.txt`)
+
+- **pr64r4-before** (today's bare, knob off):
+  https://www.phy.bnl.gov/twister/bee/set/fa4f8d6b-3e78-46bc-bb1c-5ec774217fdc/event/list/
+- **pr64r4-after** (W exception on):
+  https://www.phy.bnl.gov/twister/bee/set/e6e78f04-7e3a-4af3-bf77-b1af847d7630/event/list/
+  — idx 0 **174224**, 1 **276836**, 2 **314507**, 3 **64959** (forgone case,
+  must look identical).
+- **pr64r4-48-before**:
+  https://www.phy.bnl.gov/twister/bee/set/e60f2d53-0810-4718-82c6-a4ecdc727903/event/list/
+- **pr64r4-48-after**:
+  https://www.phy.bnl.gov/twister/bee/set/1da5bb71-c3bf-47dc-b7c9-8e6019175c12/event/list/
+  — **122660**, the one non-target mover: the protected good pair stays split;
+  what merges is the 4/5/6 component chain.
+
+### Production flip — SBND ON (owner pre-authorized "if the validation passes")
+
+`wct-pr-perevt.jsonnet` `protect_graph_name =
+'relaxed_strict_img_2d_rescue_long_wtrack'`. Cfg-only; C++ default stays OFF
+(doc 68 single-source). Proofs (full production `pipeline_names` incl.
+`protect_bundle` + `reality` TLA set):
+- post-flip bare compiled JSON **byte-exact `cmp`** == on-arm
+  `-A protect_graph_name=..._wtrack` config (the validated arms above ARE the
+  flipped production);
+- `-A protect_graph_name=relaxed_strict_img_2d_rescue_long` sole-key legacy
+  escape **byte-exact `cmp`** == pre-flip bare (restores pre-pr/64 production);
+- compiled-config proof: `"graph_name" : "..._rescue_long_wtrack"` appears
+  exactly once post-flip, zero pre-flip.
 
 ## Cross-links
 

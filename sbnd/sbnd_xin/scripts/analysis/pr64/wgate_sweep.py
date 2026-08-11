@@ -27,20 +27,26 @@ it does NOT change any C++ or config. Three modes:
                     evt174224 and does cost real good pairs, whereas R2w's
                     GLOBAL whole-component angle recovers it cleanly.
 
-*** STALENESS CAVEAT, read before trusting `sweep`'s numbers ***
-`oc56_fit.DEFAULT_ARMS` are all round-4 dumps that predate doc pr/62's S7
-production flip (2026-08-11). `sweep` uses `replay_separated()`, which walks
-each label arm's OWN cached graph edges -- for evt174224 pair 1-2 this graph
-still contains a stray 82.7cm MST edge that no longer exists in today's bare
-production (almost certainly killed once S7 started running), so the
-replay-based verdict for that specific pair does not reflect current
-production topology. `owner-labels` and `blast-radius` do NOT use replay
-(pure feature/label tabulation, or a fresh dump respectively) and are not
-subject to this. Treat `sweep` output as indicative, not decisive, until
-the label arms are regenerated post-pr/62 -- out of scope for this round.
+*** STALENESS CAVEAT -- FIXED in doc pr/64 round 4 ***
+Round 3 demonstrated that the then-default label arms (work-pr57r4-scan*)
+predate doc pr/62's S7 production flip: evt174224 pair 1-2's cached graph
+still contained a stray 82.7cm MST edge absent from today's production, so
+`sweep`'s replay-based numbers were indicative only. Round 4 regenerated the
+arms (oc56_truth.DEFAULT_ARMS now points at work-pr64r4-scan48/19 +
+work-pr64-scan1k, all post-pr/62 bare production) and added `fresh-labels`
+below, which re-scores the owner labels against features recomputed from the
+FRESH dumps. `owner-labels` (the archived pr57r6-truth.tsv features) is kept
+for comparison with the round-3 record.
+
+Round 4 also fixes the operating point: the owner chose the TIGHTENED gate
+(base R2w plus `Tmax < 1.7 OR angle < 6`), which protects evt122660's good
+pair at the cost of the marginal 64959/172656 recoveries. r2w_tight_fires()
+is the rule the C++ (Graphs::two_d_w_track_ok) ships; keep the two in
+lockstep.
 
 Usage:
     wgate_sweep.py owner-labels
+    wgate_sweep.py fresh-labels [--arm ...]
     wgate_sweep.py blast-radius [--arm work-pr64-scan1k]
     wgate_sweep.py sweep
 """
@@ -65,11 +71,21 @@ TRUTH_TSV = os.path.join(SBND, 'docs', 'pr', 'pr57r6-truth.tsv')
 # R2w / R2d thresholds, unchanged from oc56_autoscan.DEFAULT_PARAMS
 L, N, TW, AW = 6.0, 50, 2.0, 25.0
 WD, ND = 3, 20
+# doc pr/64 round 4 tightening (owner choice): protects evt122660.
+TW_TIGHT, AW_TIGHT = 1.7, 6.0
 
 
 def r2w_fires(row):
     Lmin, npmin, Tmax, ang = row['Lmin'], row['npmin'], row['Tmax'], row['angle']
     return Lmin > L and npmin >= N and Tmax < TW and ang is not None and ang < AW
+
+
+def r2w_tight_fires(row):
+    """The SHIPPED rule (Graphs::two_d_w_track_ok R2w branch) -- keep in
+    lockstep with the C++."""
+    if not r2w_fires(row):
+        return False
+    return row['Tmax'] < TW_TIGHT or row['angle'] < AW_TIGHT
 
 
 def r2d_fires(row):
@@ -188,6 +204,74 @@ def cmd_blast_radius(args):
                          p['dis'], rule))
     print('fully-killed, W-sole-voter-revivable pairs: %d  (good=%d bad=%d)'
           % (n_pairs, n_good, n_bad))
+
+
+def cmd_fresh_labels(args):
+    """doc pr/64 round 4: re-score the owner labels against features
+    recomputed from the FRESH (post-pr/62 bare production) arms -- the
+    harness-fix counterpart of `owner-labels`, which reads the archived
+    round-4 truth table.  Labels join by geometric edge key; labels whose
+    candidate no longer exists in today's production are counted as
+    unjoined (expected -- pr/62's S7 kills changed some MST candidates)."""
+    import oc56_truth
+    arms = args.arm or [os.path.join(SBND, a) for a in oc56_truth.DEFAULT_ARMS]
+    truth = oc56_truth.load_labels(oc56_truth.DEFAULT_LABEL_DIRS)
+    print('labels: %d   arms: %s' % (len(truth), [os.path.basename(a) for a in arms]))
+
+    joined = set()
+    cm = collections.defaultdict(lambda: [0, 0, 0, 0])  # verd -> [n, tight, base, r2d]
+    fp_tight, recovered, residual = [], [], []
+    for arm in arms:
+        for evt, path in A.arm_events(arm):
+            pt = A.pair_table(arm, evt, path, want_shown_only=False)
+            for pk, p in pt.items():
+                verds = []
+                for r in p['edges']:
+                    kk = A.edge_key(evt, r)
+                    if kk in truth:
+                        verds.append(truth[kk][0])
+                        joined.add(kk)
+                if not verds:
+                    continue
+                v = ('bad' if 'bad' in verds else
+                     'good' if 'good' in verds else 'OK')
+                if not p['gw']:
+                    continue
+                row = dict(p, evt=evt)
+                ft = r2w_tight_fires(row)
+                fb = r2w_fires(row)
+                fd = r2d_fires(row)
+                cm[v][0] += 1
+                if ft:
+                    cm[v][1] += 1
+                if fb:
+                    cm[v][2] += 1
+                if fd:
+                    cm[v][3] += 1
+                lab = (evt, p['j'], p['k'], p['Lmin'], p['Tmax'], p['npmin'],
+                       p['angle'] if p['angle'] is not None else -1, p['dis'])
+                if v == 'good' and (ft or fd):
+                    fp_tight.append(lab)
+                if v == 'bad':
+                    (recovered if (ft or fd) else residual).append(lab)
+    print('unjoined labels (candidate gone from today\'s production): %d'
+          % (len(truth) - len(joined)))
+    print('%-6s %5s %8s %8s %8s' % ('verd', 'n', 'TIGHT', 'base', 'R2d'))
+    for v in ('bad', 'good', 'OK'):
+        n, t, b, d = cm[v]
+        print('%-6s %5d %8d %8d %8d' % (v, n, t, b, d))
+    print('\nfresh-feature false positives under the SHIPPED tightened gate:')
+    for e, j, k, L_, T, n, a, d in fp_tight:
+        print('  evt%-8s %s-%s Lmin=%.1f Tmax=%.2f npmin=%d angle=%.1f dis=%.2f'
+              % (e, j, k, L_, T, n, a, d))
+    print('\nbad pairs recovered (tight R2w or R2d):')
+    for e, j, k, L_, T, n, a, d in recovered:
+        print('  evt%-8s %s-%s Lmin=%.1f Tmax=%.2f npmin=%d angle=%.1f dis=%.2f'
+              % (e, j, k, L_, T, n, a, d))
+    print('\nbad pairs NOT recovered (residual):')
+    for e, j, k, L_, T, n, a, d in residual:
+        print('  evt%-8s %s-%s Lmin=%.1f Tmax=%.2f npmin=%d angle=%.1f'
+              % (e, j, k, L_, T, n, a))
 
 
 def cmd_sweep(args):
@@ -319,6 +403,10 @@ def main():
     p2 = sub.add_parser('blast-radius')
     p2.add_argument('--arm', default='work-pr64-scan1k')
     p2.set_defaults(func=cmd_blast_radius)
+
+    p4 = sub.add_parser('fresh-labels')
+    p4.add_argument('--arm', action='append', default=None)
+    p4.set_defaults(func=cmd_fresh_labels)
 
     p3 = sub.add_parser('sweep')
     p3.add_argument('--features', default=os.path.expanduser('/home/xqian/tmp/pr57r6_edges2.jsonl'))
