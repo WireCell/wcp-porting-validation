@@ -182,14 +182,24 @@ j=13 k=16 dis=36.87cm gap=[true,true,false]  killed=true
 13 of 14 S7-evaluated candidates in that cluster killed at `min_gapped_planes=1`.
 
 **Movers over 117 events, both operating points give the IDENTICAL mover
-set** (whenever S7 fires at all in this sample, it fires with >=2
-non-excused gapped planes, not just exactly 1):
+set:**
 
 ```
 nueCC48 (off48 vs on48 / on2-48):  ARCHIVE 13/48, nusel 0/48
 ncpi0-19 (off19 vs on19 / on2-19): ARCHIVE  4/19, nusel 0/19
 PR-data50 (off50 vs on50 / on2-50): ARCHIVE  0/50, nusel 0/50
 ```
+
+**Correction (doc pr/63):** this doc originally attributed the identical
+mover sets to "S7 always fires with >=2 non-excused gapped planes in this
+sample, not just exactly 1" — that claim is **false**. The `OC62CENSUS-S7`
+census shows 49 of the 184 S7 kills fire with exactly 1 voting plane. The
+event-level mover *sets* are still identical between `min_gapped_planes=1`
+and `=2` (confirmed by directly comparing the two on-arms, not done here
+originally: `work-pr62-on48` vs `work-pr62-on2-48` ARCHIVE 1/48 differ,
+nusel 0/48; `on19` vs `on2-19` ARCHIVE 0/19, nusel 0/19) — so the flip below
+is unaffected — but the *reason* given was wrong. No re-validation of the
+flip itself was needed since nusel is unchanged both ways.
 17/117 events move; **nusel (final neutrino-selection scores/tags) is
 byte-identical in every event, both operating points** — only the
 `clustering-global`/`shower_track-global`/`track_fit-global`/`mc` display
