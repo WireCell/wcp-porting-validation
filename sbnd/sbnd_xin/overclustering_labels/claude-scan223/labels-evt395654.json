@@ -1,0 +1,28 @@
+{
+ "event": "evt395654",
+ "labels": {
+  "evt395654|closest|-18.37,97.23,234.67|-18.06,97.92,235.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=7.2 Lmax=133.5 Tmax=2.7 npmin=28 ang=4 gapW=0 wdeadX=0 dis=0.97 dens=418 dvtx=119.6 nedge=1 severed=0 pair=dir",
+   "dis": 0.9683587840772503,
+   "j": 2,
+   "k": 3,
+   "killed": false,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    -18.368998436370696,
+    97.23128126075066,
+    234.669651137916
+   ],
+   "p2": [
+    -18.0563984363707,
+    97.9241017679445,
+    235.2696509041753
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt395654.jsonl"
+}

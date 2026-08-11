@@ -1,0 +1,72 @@
+{
+ "event": "evt287621",
+ "labels": {
+  "evt287621|closest|125.59,74.24,352.73|125.91,74.93,352.13": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=3.1 Lmax=73.7 Tmax=12.6 npmin=32 ang=81 gapW=0 wdeadX=0 dis=0.97 dens=207 dvtx=51.6 nedge=1 severed=0 pair=dir",
+   "dis": 0.9683587840772179,
+   "j": 2,
+   "k": 3,
+   "killed": false,
+   "near_miss": "V closes @ dw=3,ds=4",
+   "p1": [
+    125.59424990473394,
+    74.24179426976286,
+    352.72960462351983
+   ],
+   "p2": [
+    125.90684990473395,
+    74.93461477695666,
+    352.1296048572605
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt287621|closest|91.52,92.86,399.38|91.52,94.59,400.28": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=15.5 Lmax=73.7 Tmax=12.6 npmin=59 ang=22 gapW=0 wdeadX=0 dis=1.95 dens=414 dvtx=63.7 nedge=1 severed=1 pair=SEP",
+   "dis": 1.951498634714285,
+   "j": 0,
+   "k": 2,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    91.52084990473394,
+    92.86158416383228,
+    399.3800000000124
+   ],
+   "p2": [
+    91.52084990473394,
+    94.59315770293293,
+    400.28000000000026
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt287621|closest|98.71,104.73,376.73|98.71,106.37,377.78": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=21.1 Lmax=73.7 Tmax=12.6 npmin=68 ang=24 gapW=0 wdeadX=1 dis=1.95 dens=487 dvtx=37.3 nedge=1 severed=1 pair=SEP",
+   "dis": 1.9523374042946517,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    98.71064990473393,
+    104.72589658629099,
+    376.72959527389247
+   ],
+   "p2": [
+    98.71064990473393,
+    106.37157919589541,
+    377.7800000000117
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt287621.jsonl"
+}

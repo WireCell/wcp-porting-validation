@@ -1,0 +1,28 @@
+{
+ "event": "evt291499",
+ "labels": {
+  "evt291499|closest|-94.61,72.81,325.57|-94.61,72.29,324.07": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.6 Lmax=0.9 Tmax=0.2 npmin=6 ang=0 gapW=1 wdeadX=0 dis=1.59 dens=14 dvtx=324.9 nedge=1 severed=1 pair=SEP",
+   "dis": 1.587450279690257,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    -94.6131214199558,
+    72.80935838217265,
+    325.56961572620236
+   ],
+   "p2": [
+    -94.6131214199558,
+    72.28974300177724,
+    324.06961631055407
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt291499.jsonl"
+}

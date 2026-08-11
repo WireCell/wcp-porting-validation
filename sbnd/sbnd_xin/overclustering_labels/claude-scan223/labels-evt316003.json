@@ -1,0 +1,28 @@
+{
+ "event": "evt316003",
+ "labels": {
+  "evt316003|closest|154.22,26.61,407.03|154.22,27.74,407.78": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=12.2 Lmax=32.0 Tmax=0.8 npmin=67 ang=3 gapW=0 wdeadX=0 dis=1.35 dens=381 dvtx=21.7 nedge=1 severed=1 pair=SEP",
+   "dis": 1.3532064031881763,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=4",
+   "p1": [
+    154.2234510371639,
+    26.61038440019113,
+    407.029583469988
+   ],
+   "p2": [
+    154.2234510371639,
+    27.73645837693298,
+    407.78000000001265
+   ],
+   "score": 11.309021208664689,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt316003.jsonl"
+}

@@ -1,0 +1,28 @@
+{
+ "event": "evt73004",
+ "labels": {
+  "evt73004|closest|-20.06,154.39,162.07|-21.62,155.17,162.22": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.7 Lmax=82.4 Tmax=2.2 npmin=21 ang=17 gapW=0 wdeadX=0 dis=1.75 dens=674 dvtx=11.1 nedge=1 severed=1",
+   "dis": 1.7530984593475996,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -20.058220515190424,
+    154.3889731042365,
+    162.06967942053873
+   ],
+   "p2": [
+    -21.621220515190437,
+    155.1685812952888,
+    162.220000000005
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt73004.jsonl"
+}

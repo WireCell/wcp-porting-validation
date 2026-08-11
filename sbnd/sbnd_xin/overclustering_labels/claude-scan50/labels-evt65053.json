@@ -1,0 +1,50 @@
+{
+ "event": "evt65053",
+ "labels": {
+  "evt65053|closest|-141.04,43.80,296.92|-143.85,45.18,299.32": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=8.4 Lmax=113.7 Tmax=1.6 npmin=176 ang=57 gapW=1 wdeadX=0 dis=3.95 dens=280 dvtx=7.1 nedge=1 severed=1",
+   "dis": 3.9490786364283865,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ ds=3; W closes @ ds=3",
+   "p1": [
+    -141.03723455422985,
+    43.79771506026507,
+    296.9200000000091
+   ],
+   "p2": [
+    -143.85063455422983,
+    45.18335661445387,
+    299.3200000000092
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt65053|closest|-151.35,52.11,311.92|-151.35,55.66,310.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.1 Lmax=113.7 Tmax=1.1 npmin=3 ang=29 gapW=0 wdeadX=0 dis=3.92 dens=261 dvtx=25.0 nedge=1 severed=1",
+   "dis": 3.915316284314888,
+   "j": 1,
+   "k": 3,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -151.35303455422985,
+    52.11156452034827,
+    311.9200000000096
+   ],
+   "p2": [
+    -151.35303455422985,
+    55.66205082912552,
+    310.26962168658974
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt65053.jsonl"
+}

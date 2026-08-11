@@ -1,0 +1,28 @@
+{
+ "event": "evt399118",
+ "labels": {
+  "evt399118|closest|-18.87,41.11,333.67|-18.25,40.25,332.77": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.4 Lmax=148.5 Tmax=1.0 npmin=4 ang=64 gapW=0 wdeadX=0 dis=1.40 dens=327 dvtx=66.0 nedge=1 severed=1 pair=via2",
+   "dis": 1.396737200632935,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    -18.87081048638971,
+    41.112820178056566,
+    333.66961257070307
+   ],
+   "p2": [
+    -18.245610486389715,
+    40.24679454406428,
+    332.76961292131415
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt399118.jsonl"
+}

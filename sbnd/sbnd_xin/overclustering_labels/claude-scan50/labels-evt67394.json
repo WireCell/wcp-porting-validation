@@ -1,0 +1,28 @@
+{
+ "event": "evt67394",
+ "labels": {
+  "evt67394|closest|42.57,169.68,399.23|41.00,169.50,398.93": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.6 Lmax=43.3 Tmax=5.2 npmin=12 ang=65 gapW=1 wdeadX=0 dis=1.60 dens=447 dvtx=18.5 nedge=1 severed=1",
+   "dis": 1.6009275267254046,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    42.56693097942315,
+    169.6778191357107,
+    399.2295865086168
+   ],
+   "p2": [
+    41.00393097942314,
+    169.50461400891223,
+    398.92958662548716
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt67394.jsonl"
+}

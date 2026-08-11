@@ -1,0 +1,28 @@
+{
+ "event": "evt400054",
+ "labels": {
+  "evt400054|closest|-159.91,-96.07,256.87|-160.22,-95.37,256.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.0 Lmax=2.1 Tmax=0.4 npmin=11 ang=46 gapW=1 wdeadX=0 dis=0.97 dens=36 dvtx=11.4 nedge=1 severed=1 pair=SEP",
+   "dis": 0.9683587840771942,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=3; W closes @ dw=2,ds=3",
+   "p1": [
+    -159.9098708066379,
+    -96.06564024631894,
+    256.8696424895107
+   ],
+   "p2": [
+    -160.2224708066379,
+    -95.37281973912516,
+    256.26964272325137
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt400054.jsonl"
+}

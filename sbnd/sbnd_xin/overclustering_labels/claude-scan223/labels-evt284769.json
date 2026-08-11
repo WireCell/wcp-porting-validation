@@ -1,0 +1,72 @@
+{
+ "event": "evt284769",
+ "labels": {
+  "evt284769|closest|102.58,49.13,205.43|102.27,49.99,205.13": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.7 Lmax=1.1 Tmax=0.3 npmin=2 ang=57 gapW=0 wdeadX=0 dis=0.97 dens=12 dvtx=72.7 nedge=1 severed=0 pair=dir",
+   "dis": 0.9683589668142052,
+   "j": 2,
+   "k": 3,
+   "killed": false,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    102.58210012883754,
+    49.12705088398202,
+    205.42966200685777
+   ],
+   "p2": [
+    102.26950012883752,
+    49.99307651797426,
+    205.1296621237281
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt284769|closest|130.40,-24.23,245.48|130.72,-25.35,246.23": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=102.3 Lmax=255.9 Tmax=6.2 npmin=2321 ang=3 gapW=0 wdeadX=0 dis=1.39 dens=795 dvtx=89.9 nedge=1 severed=1 pair=SEP",
+   "dis": 1.3880666753486217,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    130.40350012883752,
+    -24.22552446362637,
+    245.48000000000016
+   ],
+   "p2": [
+    130.71610012883752,
+    -25.351153639350038,
+    246.22964611249125
+   ],
+   "score": 94.08800704603516,
+   "verdict": "bad"
+  },
+  "evt284769|closest|131.03,-26.48,243.98|130.72,-25.35,243.23": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=6.2 Lmax=102.3 Tmax=2.3 npmin=23 ang=22 gapW=0 wdeadX=0 dis=1.39 dens=765 dvtx=88.0 nedge=1 severed=1 pair=SEP",
+   "dis": 1.3887791734645911,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    131.02870012883753,
+    -26.47719077463047,
+    243.98000000000016
+   ],
+   "p2": [
+    130.71610012883752,
+    -25.35115363935015,
+    243.22964728119473
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt284769.jsonl"
+}

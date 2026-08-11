@@ -1,0 +1,50 @@
+{
+ "event": "evt290729",
+ "labels": {
+  "evt290729|closest|-114.61,-130.19,122.17|-114.92,-129.93,123.22": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.3 Lmax=110.5 Tmax=2.5 npmin=2 ang=37 gapW=1 wdeadX=1 dis=1.13 dens=255 dvtx=79.1 nedge=1 severed=1 pair=SEP",
+   "dis": 1.1262553567200648,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "W closes @ dw=2,ds=3",
+   "p1": [
+    -114.60822604036282,
+    -130.18705022561872,
+    122.16969496429427
+   ],
+   "p2": [
+    -114.9208260403628,
+    -129.92706618667816,
+    123.22000000000381
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt290729|closest|-128.36,-105.94,105.37|-128.36,-107.15,106.27": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=9.4 Lmax=110.5 Tmax=2.5 npmin=112 ang=88 gapW=0 wdeadX=0 dis=1.51 dens=246 dvtx=110.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.509966936861297,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -128.3626260403628,
+    -105.93833247383631,
+    105.36970150903338
+   ],
+   "p2": [
+    -128.3626260403628,
+    -107.15076836142543,
+    106.26970115842235
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt290729.jsonl"
+}

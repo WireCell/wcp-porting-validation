@@ -1,0 +1,28 @@
+{
+ "event": "evt290052",
+ "labels": {
+  "evt290052|closest|109.54,-38.00,460.13|108.29,-38.69,460.73": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=11.0 Lmax=85.2 Tmax=3.5 npmin=85 ang=82 gapW=0 wdeadX=0 dis=1.55 dens=351 dvtx=2.1 nedge=1 severed=1 pair=SEP",
+   "dis": 1.5503225905273466,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    109.53721801959315,
+    -37.9951278956288,
+    460.1295627839374
+   ],
+   "p2": [
+    108.28681801959317,
+    -38.687948402822556,
+    460.7295625501967
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt290052.jsonl"
+}

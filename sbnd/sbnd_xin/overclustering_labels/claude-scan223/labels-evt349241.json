@@ -1,0 +1,28 @@
+{
+ "event": "evt349241",
+ "labels": {
+  "evt349241|closest|-121.56,-144.91,5.47|-120.62,-145.43,5.77": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=5.7 Lmax=49.6 Tmax=1.1 npmin=49 ang=74 gapW=0 wdeadX=0 dis=1.11 dens=195 dvtx=3.3 nedge=1 severed=1 pair=SEP",
+   "dis": 1.113314382113699,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "U closes @ ds=4",
+   "p1": [
+    -121.55597798443554,
+    -144.90948600349142,
+    5.469740426857261
+   ],
+   "p2": [
+    -120.61817798443553,
+    -145.42910138388675,
+    5.769740309986919
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt349241.jsonl"
+}

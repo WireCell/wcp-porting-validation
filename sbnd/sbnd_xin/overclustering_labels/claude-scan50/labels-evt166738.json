@@ -1,0 +1,50 @@
+{
+ "event": "evt166738",
+ "labels": {
+  "evt166738|closest|17.25,55.88,201.53|17.87,56.83,201.38": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=3.3 Lmax=23.6 Tmax=1.4 npmin=32 ang=42 gapW=0 wdeadX=0 dis=1.15 dens=394 dvtx=27.6 nedge=1 severed=1",
+   "dis": 1.149410626579487,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=3,ds=4",
+   "p1": [
+    17.248087862007292,
+    55.88205082912143,
+    201.52966352617221
+   ],
+   "p2": [
+    17.87328786200731,
+    56.834873256139915,
+    201.38000000000625
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt166738|closest|3.81,56.66,190.58|2.87,56.75,189.83": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.0 Lmax=1.4 Tmax=0.3 npmin=13 ang=19 gapW=1 wdeadX=0 dis=1.20 dens=26 dvtx=28.1 nedge=1 severed=1",
+   "dis": 1.2041594934233912,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ ds=2; W closes @ dw=2,ds=2",
+   "p1": [
+    3.8062878620073044,
+    56.6612820992024,
+    190.5800000000001
+   ],
+   "p2": [
+    2.8684878620073118,
+    56.748076463113236,
+    189.82966808411555
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt166738.jsonl"
+}

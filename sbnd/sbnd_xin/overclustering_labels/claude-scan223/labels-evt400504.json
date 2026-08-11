@@ -1,0 +1,50 @@
+{
+ "event": "evt400504",
+ "labels": {
+  "evt400504|closest|48.56,62.46,455.93|48.88,61.25,456.83": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=15.4 Lmax=53.6 Tmax=1.6 npmin=434 ang=37 gapW=0 wdeadX=0 dis=1.54 dens=837 dvtx=54.1 nedge=1 severed=1 pair=SEP",
+   "dis": 1.541985379442489,
+   "j": 0,
+   "k": 4,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    48.562453825631735,
+    62.463845647472205,
+    455.9295644201222
+   ],
+   "p2": [
+    48.87505382563173,
+    61.25140975988304,
+    456.82956406951115
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt400504|closest|48.56,63.24,462.98|48.56,62.12,462.53": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.1 Lmax=53.6 Tmax=1.6 npmin=3 ang=10 gapW=0 wdeadX=1 dis=1.21 dens=742 dvtx=49.7 nedge=1 severed=1 pair=SEP",
+   "dis": 1.212363576291156,
+   "j": 3,
+   "k": 4,
+   "killed": true,
+   "near_miss": "U closes @ dw=4",
+   "p1": [
+    48.562453825631735,
+    63.243015650106976,
+    462.9800000000003
+   ],
+   "p2": [
+    48.562453825631735,
+    62.11743539387551,
+    462.52956184897465
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt400504.jsonl"
+}

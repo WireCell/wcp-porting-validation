@@ -1,0 +1,28 @@
+{
+ "event": "evt345633",
+ "labels": {
+  "evt345633|closest|99.89,-41.37,249.68|99.89,-40.85,249.98": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=97.0 Lmax=100.3 Tmax=10.9 npmin=1915 ang=7 gapW=0 wdeadX=6 dis=0.60 dens=499 dvtx=99.2 nedge=1 severed=0 pair=dir",
+   "dis": 0.6000001780546522,
+   "j": 0,
+   "k": 5,
+   "killed": false,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    99.89284211208597,
+    -41.37242277505734,
+    249.68000000000774
+   ],
+   "p2": [
+    99.89284211208597,
+    -40.85280732718688,
+    249.98000000000775
+   ],
+   "score": 73.88318475463478,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt345633.jsonl"
+}

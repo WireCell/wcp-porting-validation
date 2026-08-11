@@ -1,0 +1,28 @@
+{
+ "event": "evt173058",
+ "labels": {
+  "evt173058|closest|-79.76,1.45,79.57|-80.07,1.62,80.47": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.9 Lmax=1.0 Tmax=0.3 npmin=10 ang=48 gapW=1 wdeadX=0 dis=0.97 dens=21 dvtx=44.0 nedge=1 severed=1",
+   "dis": 0.9683584795154909,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=2; W closes @ dw=2",
+   "p1": [
+    -79.76235998345282,
+    1.4488461412018319,
+    79.56971155988283
+   ],
+   "p2": [
+    -80.07495998345283,
+    1.622051268000316,
+    80.46971120927181
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt173058.jsonl"
+}

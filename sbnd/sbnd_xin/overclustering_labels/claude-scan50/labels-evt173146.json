@@ -1,0 +1,28 @@
+{
+ "event": "evt173146",
+ "labels": {
+  "evt173146|closest|-131.68,-71.04,247.72|-131.68,-70.52,247.42": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.3 Lmax=1.4 Tmax=0.5 npmin=13 ang=85 gapW=0 wdeadX=0 dis=0.60 dens=26 dvtx=7.4 nedge=1 severed=0",
+   "dis": 0.6000001780546915,
+   "j": 0,
+   "k": 1,
+   "killed": false,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    -131.6798964187976,
+    -71.03770377483494,
+    247.7200000000001
+   ],
+   "p2": [
+    -131.6798964187976,
+    -70.51808832696443,
+    247.42000000000013
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt173146.jsonl"
+}

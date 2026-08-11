@@ -1,0 +1,28 @@
+{
+ "event": "evt167112",
+ "labels": {
+  "evt167112|closest|-140.19,195.35,252.22|-139.88,194.23,250.27": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=low [R2d dead-W band, induction-only gap] Lmin=5.7 Lmax=47.6 Tmax=2.9 npmin=57 ang=26 gapW=0 wdeadX=6 dis=2.27 dens=226 dvtx=45.2 nedge=1 severed=1",
+   "dis": 2.2736680220518806,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -140.19429593227886,
+    195.35219095507668,
+    252.22000000000776
+   ],
+   "p2": [
+    -139.8816959322789,
+    194.22615226788344,
+    250.26964506065815
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt167112.jsonl"
+}

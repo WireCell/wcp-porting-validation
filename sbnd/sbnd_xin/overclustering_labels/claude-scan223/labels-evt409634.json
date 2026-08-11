@@ -1,0 +1,94 @@
+{
+ "event": "evt409634",
+ "labels": {
+  "evt409634|closest|2.00,176.78,228.53|2.00,176.26,230.03": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=3.2 Lmax=9.1 Tmax=0.9 npmin=60 ang=68 gapW=1 wdeadX=0 dis=1.59 dens=246 dvtx=55.9 nedge=1 severed=1 pair=SEP",
+   "dis": 1.5874502796902552,
+   "j": 1,
+   "k": 3,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    1.9988285923935938,
+    176.77922933444069,
+    228.52965300784143
+   ],
+   "p2": [
+    1.9988285923935938,
+    176.25961395404542,
+    230.02965242348978
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt409634|closest|5.12,171.50,238.88|4.81,172.28,237.53": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=low [R2w thin collinear pair across a W gap] Lmin=7.9 Lmax=9.1 Tmax=0.9 npmin=107 ang=14 gapW=1 wdeadX=0 dis=1.59 dens=305 dvtx=49.0 nedge=1 severed=1 pair=SEP",
+   "dis": 1.5902771815738634,
+   "j": 2,
+   "k": 3,
+   "killed": true,
+   "near_miss": "V closes @ dw=3; W closes @ dw=4",
+   "p1": [
+    5.124828592393593,
+    171.4962703030757,
+    238.88000000000017
+   ],
+   "p2": [
+    4.812228592393595,
+    172.27589603768132,
+    237.52964950173123
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt409634|closest|51.08,157.29,250.88|50.45,158.07,250.13": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2d dead-W band] Lmin=5.6 Lmax=14.4 Tmax=1.4 npmin=49 ang=55 gapW=0 wdeadX=6 dis=1.25 dens=347 dvtx=1.4 nedge=1 severed=1 pair=SEP",
+   "dis": 1.2496914703419704,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    51.07702859239359,
+    157.2934472065968,
+    250.88000000000017
+   ],
+   "p2": [
+    50.451828592393596,
+    158.07307564020888,
+    250.1296445931768
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt409634|closest|60.14,152.36,255.83|60.14,153.57,255.53": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.9 Lmax=4.9 Tmax=0.6 npmin=20 ang=78 gapW=0 wdeadX=0 dis=1.25 dens=179 dvtx=12.3 nedge=1 severed=1 pair=SEP",
+   "dis": 1.2489998844643382,
+   "j": 4,
+   "k": 6,
+   "killed": true,
+   "near_miss": "U closes @ dw=3; V closes @ dw=4",
+   "p1": [
+    60.142428592393586,
+    152.35730645586023,
+    255.8296423726403
+   ],
+   "p2": [
+    60.142428592393586,
+    153.56974234344938,
+    255.52964248951065
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt409634.jsonl"
+}

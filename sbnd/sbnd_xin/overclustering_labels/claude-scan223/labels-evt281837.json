@@ -1,0 +1,116 @@
+{
+ "event": "evt281837",
+ "labels": {
+  "evt281837|closest|149.84,-132.05,192.83|149.22,-132.83,192.98": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=5.8 Lmax=94.9 Tmax=5.5 npmin=32 ang=39 gapW=0 wdeadX=0 dis=1.01 dens=1302 dvtx=7.6 nedge=1 severed=1 pair=SEP",
+   "dis": 1.0105816469953395,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "V closes @ ds=3",
+   "p1": [
+    149.84100874366047,
+    -132.0455117471974,
+    192.82966691541213
+   ],
+   "p2": [
+    149.2158087436605,
+    -132.82512715810338,
+    192.9800000000001
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt281837|closest|151.72,-132.83,192.38|150.78,-132.39,192.83": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=5.8 Lmax=20.3 Tmax=0.5 npmin=32 ang=51 gapW=0 wdeadX=0 dis=1.13 dens=1261 dvtx=8.0 nedge=1 severed=1 pair=SEP",
+   "dis": 1.1266480223268227,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ ds=4",
+   "p1": [
+    151.7166087436605,
+    -132.82512702315302,
+    192.3800000000001
+   ],
+   "p2": [
+    150.77880874366048,
+    -132.39192200079432,
+    192.82966691541213
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt281837|closest|172.66,-129.97,200.63|172.66,-129.10,200.33": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=4.4 Lmax=6.0 Tmax=0.5 npmin=36 ang=52 gapW=0 wdeadX=0 dis=0.92 dens=94 dvtx=29.6 nedge=1 severed=0 pair=dir",
+   "dis": 0.9165153182623132,
+   "j": 0,
+   "k": 1,
+   "killed": false,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    172.66080874366048,
+    -129.96705022561574,
+    200.62966387678324
+   ],
+   "p2": [
+    172.66080874366048,
+    -129.10102459162349,
+    200.32966399365358
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt281837|closest|174.22,-172.06,249.53|173.91,-173.18,250.88": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=51.1 Lmax=70.6 Tmax=0.6 npmin=510 ang=3 gapW=0 wdeadX=6 dis=1.79 dens=316 dvtx=80.0 nedge=1 severed=1 pair=SEP",
+   "dis": 1.7858166139227354,
+   "j": 3,
+   "k": 4,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    174.22380874366047,
+    -172.0558960376373,
+    249.5296448269175
+   ],
+   "p2": [
+    173.91120874366047,
+    -173.1819347248463,
+    250.88000000000017
+   ],
+   "score": 45.46302818943831,
+   "verdict": "bad"
+  },
+  "evt281837|dir1|151.72,-132.83,192.38|147.65,-133.52,189.98": {
+   "blk": "dir1",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=20.3 Lmax=94.9 Tmax=5.5 npmin=168 ang=68 gapW=0 wdeadX=0 dis=4.77 dens=1241 dvtx=6.0 nedge=1 severed=1 pair=dir",
+   "dis": 4.770164561859266,
+   "j": 0,
+   "k": 2,
+   "killed": true,
+   "near_miss": "U closes @ ds=4; V closes @ ds=3",
+   "p1": [
+    151.7166087436605,
+    -132.82512702315302,
+    192.3800000000001
+   ],
+   "p2": [
+    147.65280874366047,
+    -133.51794699054562,
+    189.9800000000001
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt281837.jsonl"
+}

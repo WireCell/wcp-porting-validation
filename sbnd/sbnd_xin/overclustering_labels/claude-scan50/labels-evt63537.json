@@ -1,0 +1,28 @@
+{
+ "event": "evt63537",
+ "labels": {
+  "evt63537|closest|-196.37,45.44,232.57|-196.37,42.84,232.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.6 Lmax=0.6 Tmax=0.2 npmin=3 ang=0 gapW=0 wdeadX=0 dis=2.62 dens=9 dvtx=25.0 nedge=1 severed=1",
+   "dis": 2.6153400387832924,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -196.3696221720199,
+    45.442948348013985,
+    232.56965195600839
+   ],
+   "p2": [
+    -196.3696221720199,
+    42.844871446037224,
+    232.26965207287873
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt63537.jsonl"
+}

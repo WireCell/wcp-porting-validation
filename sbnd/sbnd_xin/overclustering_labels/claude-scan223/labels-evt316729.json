@@ -1,0 +1,28 @@
+{
+ "event": "evt316729",
+ "labels": {
+  "evt316729|closest|-67.69,183.75,404.32|-68.00,184.53,404.47": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.9 Lmax=1.1 Tmax=0.4 npmin=9 ang=16 gapW=0 wdeadX=0 dis=0.85 dens=22 dvtx=277.0 nedge=1 severed=0 pair=dir",
+   "dis": 0.8527727435075712,
+   "j": 0,
+   "k": 1,
+   "killed": false,
+   "near_miss": "V closes @ dw=2",
+   "p1": [
+    -67.68574342126341,
+    183.74748166950135,
+    404.3200000000125
+   ],
+   "p2": [
+    -67.9983434212634,
+    184.52666516717605,
+    404.4695849893024
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt316729.jsonl"
+}

@@ -1,0 +1,28 @@
+{
+ "event": "evt409546",
+ "labels": {
+  "evt409546|closest|-190.47,37.65,483.67|-189.85,36.78,483.97": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.8 Lmax=15.8 Tmax=0.7 npmin=45 ang=54 gapW=0 wdeadX=0 dis=1.11 dens=166 dvtx=3.0 nedge=1 severed=1 pair=SEP",
+   "dis": 1.109448227097392,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=3; V closes @ ds=4",
+   "p1": [
+    -190.4738702602964,
+    37.648717642093246,
+    483.66955413553205
+   ],
+   "p2": [
+    -189.8486702602964,
+    36.782692008101,
+    483.9695540186618
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt409546.jsonl"
+}

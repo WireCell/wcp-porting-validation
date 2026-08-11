@@ -1,0 +1,28 @@
+{
+ "event": "evt63551",
+ "labels": {
+  "evt63551|closest|62.79,7.82,250.58|62.79,8.86,249.98": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=37.6 Lmax=62.4 Tmax=3.0 npmin=620 ang=5 gapW=0 wdeadX=6 dis=1.20 dens=1017 dvtx=9.1 nedge=1 severed=1",
+   "dis": 1.2000003561093435,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    62.7909963411332,
+    7.817422847009388,
+    250.58000000000015
+   ],
+   "p2": [
+    62.7909963411332,
+    8.856653742750344,
+    249.98000000000016
+   ],
+   "score": 29.869264960782903,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt63551.jsonl"
+}

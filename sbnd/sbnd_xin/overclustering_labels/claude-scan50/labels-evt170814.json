@@ -1,0 +1,28 @@
+{
+ "event": "evt170814",
+ "labels": {
+  "evt170814|closest|43.21,-42.07,201.38|42.27,-41.89,201.68": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=19.0 Lmax=32.9 Tmax=3.0 npmin=273 ang=19 gapW=1 wdeadX=0 dis=1.00 dens=181 dvtx=28.8 nedge=1 severed=1",
+   "dis": 0.9997343810108674,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "W closes @ ds=3",
+   "p1": [
+    43.21138241129328,
+    -42.06564260501965,
+    201.3800000000001
+   ],
+   "p2": [
+    42.27358241129328,
+    -41.892437545696325,
+    201.68000000000012
+   ],
+   "score": 1.3781234328363998,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt170814.jsonl"
+}

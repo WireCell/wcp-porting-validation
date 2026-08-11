@@ -1,0 +1,28 @@
+{
+ "event": "evt399702",
+ "labels": {
+  "evt399702|closest|14.24,135.82,249.08|14.24,134.95,248.48": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=27.7 Lmax=181.1 Tmax=6.2 npmin=397 ang=5 gapW=0 wdeadX=6 dis=1.05 dens=469 dvtx=179.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.0532287521147814,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "U closes @ dw=3",
+   "p1": [
+    14.243238165004376,
+    135.81601188843987,
+    249.08000000000015
+   ],
+   "p2": [
+    14.243238165004376,
+    134.95039603582956,
+    248.4800000000077
+   ],
+   "score": 22.310586476415725,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt399702.jsonl"
+}

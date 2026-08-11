@@ -1,0 +1,50 @@
+{
+ "event": "evt61843",
+ "labels": {
+  "evt61843|closest|-24.22,-167.77,246.07|-24.22,-169.16,244.87": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.7 Lmax=1.0 Tmax=0.3 npmin=9 ang=22 gapW=0 wdeadX=0 dis=1.83 dens=19 dvtx=401.5 nedge=1 severed=1",
+   "dis": 1.8330302503772717,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    -24.21910907076357,
+    -167.77256274087773,
+    246.069646696843
+   ],
+   "p2": [
+    -24.21910907076357,
+    -169.15820375526536,
+    244.86964716432436
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt61843|closest|201.15,114.34,77.78|201.15,113.65,78.08": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.9 Lmax=2.4 Tmax=0.4 npmin=6 ang=84 gapW=0 wdeadX=0 dis=0.76 dens=30 dvtx=74.9 nedge=1 severed=0",
+   "dis": 0.7552891390516168,
+   "j": 0,
+   "k": 1,
+   "killed": false,
+   "near_miss": "V closes @ dw=2",
+   "p1": [
+    201.15070907076353,
+    114.33894755343803,
+    77.7800000000024
+   ],
+   "p2": [
+    201.15070907076353,
+    113.64579411907394,
+    78.08000000000004
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt61843.jsonl"
+}

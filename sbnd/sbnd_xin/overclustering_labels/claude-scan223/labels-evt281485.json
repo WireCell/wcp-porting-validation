@@ -1,0 +1,72 @@
+{
+ "event": "evt281485",
+ "labels": {
+  "evt281485|closest|-178.40,174.65,286.57|-179.02,179.16,287.77": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.0 Lmax=3.0 Tmax=0.6 npmin=2 ang=2 gapW=1 wdeadX=0 dis=4.70 dens=645 dvtx=10.9 nedge=1 severed=1 pair=SEP",
+   "dis": 4.7022212516798785,
+   "j": 2,
+   "k": 4,
+   "killed": true,
+   "near_miss": "W closes @ dw=4,ds=4",
+   "p1": [
+    -178.39687875721688,
+    174.65397293965992,
+    286.56963091934676
+   ],
+   "p2": [
+    -179.0220787572169,
+    179.15730623641966,
+    287.76963045186545
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt281485|closest|-179.02,179.16,287.77|-178.08,178.98,287.47": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=3.0 Lmax=14.5 Tmax=1.1 npmin=35 ang=7 gapW=1 wdeadX=0 dis=1.00 dens=657 dvtx=9.4 nedge=1 severed=1 pair=SEP",
+   "dis": 0.9997343576306166,
+   "j": 4,
+   "k": 5,
+   "killed": true,
+   "near_miss": "W closes @ dw=3,ds=3",
+   "p1": [
+    -179.0220787572169,
+    179.15730623641966,
+    287.76963045186545
+   ],
+   "p2": [
+    -178.08427875721688,
+    178.98410110962118,
+    287.46963056873574
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt281485|closest|-182.46,179.85,289.57|-179.02,179.85,286.57": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=12.7 Lmax=14.5 Tmax=1.1 npmin=101 ang=45 gapW=1 wdeadX=0 dis=4.56 dens=669 dvtx=10.6 nedge=1 severed=1 pair=SEP",
+   "dis": 4.563328056121003,
+   "j": 0,
+   "k": 5,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -182.46067875721687,
+    179.85012674361354,
+    289.5696297506434
+   ],
+   "p2": [
+    -179.0220787572169,
+    179.85012674361343,
+    286.56963091934676
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt281485.jsonl"
+}

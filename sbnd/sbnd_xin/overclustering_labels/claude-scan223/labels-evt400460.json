@@ -1,0 +1,28 @@
+{
+ "event": "evt400460",
+ "labels": {
+  "evt400460|closest|132.79,-76.36,247.58|133.10,-77.14,248.33": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=78.0 Lmax=97.8 Tmax=3.4 npmin=1615 ang=8 gapW=0 wdeadX=5 dis=1.13 dens=709 dvtx=15.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.125552406564837,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    132.79239440975704,
+    -76.3602681022859,
+    247.58000000000015
+   ],
+   "p2": [
+    133.104994409757,
+    -77.13948655208658,
+    248.32964529439886
+   ],
+   "score": 52.20584291462185,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt400460.jsonl"
+}

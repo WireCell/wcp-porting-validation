@@ -1,0 +1,28 @@
+{
+ "event": "evt321107",
+ "labels": {
+  "evt321107|closest|-125.74,195.35,250.12|-125.42,196.30,252.07": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2d dead-W band] Lmin=4.2 Lmax=221.2 Tmax=8.5 npmin=43 ang=34 gapW=0 wdeadX=6 dis=2.19 dens=261 dvtx=219.4 nedge=1 severed=1 pair=SEP",
+   "dis": 2.19242395125334,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -125.7373202595285,
+    195.3517807013803,
+    250.12000000000012
+   ],
+   "p2": [
+    -125.4247202595285,
+    196.3046137894649,
+    252.0696443594361
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt321107.jsonl"
+}

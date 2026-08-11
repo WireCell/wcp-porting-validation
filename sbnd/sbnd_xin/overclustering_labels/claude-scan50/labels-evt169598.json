@@ -1,0 +1,28 @@
+{
+ "event": "evt169598",
+ "labels": {
+  "evt169598|closest|159.62,196.96,186.68|158.99,198.00,187.28": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.0 Lmax=85.6 Tmax=2.8 npmin=9 ang=64 gapW=0 wdeadX=0 dis=1.35 dens=210 dvtx=81.6 nedge=1 severed=1",
+   "dis": 1.353098627100916,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    159.61671242367535,
+    196.9578175297745,
+    186.6800000000058
+   ],
+   "p2": [
+    158.99151242367537,
+    197.99704842551537,
+    187.28000000000583
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt169598.jsonl"
+}

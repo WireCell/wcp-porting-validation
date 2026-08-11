@@ -1,0 +1,28 @@
+{
+ "event": "evt66272",
+ "labels": {
+  "evt66272|closest|187.02,105.68,349.28|187.33,104.90,349.43": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=9.3 Lmax=14.4 Tmax=0.7 npmin=83 ang=36 gapW=0 wdeadX=0 dis=0.85 dens=243 dvtx=1.8 nedge=1 severed=0",
+   "dis": 0.852787449050824,
+   "j": 0,
+   "k": 1,
+   "killed": false,
+   "near_miss": "V closes @ dw=2",
+   "p1": [
+    187.01622291696157,
+    105.67829728880929,
+    349.28000000000026
+   ],
+   "p2": [
+    187.32882291696154,
+    104.89910171308843,
+    349.4296059090936
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt66272.jsonl"
+}

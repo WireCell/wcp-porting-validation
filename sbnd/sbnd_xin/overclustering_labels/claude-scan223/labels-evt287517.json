@@ -1,0 +1,72 @@
+{
+ "event": "evt287517",
+ "labels": {
+  "evt287517|closest|64.66,132.61,384.23|64.66,132.27,383.63": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=low [R2w thin collinear pair across a W gap] Lmin=32.2 Lmax=108.5 Tmax=1.9 npmin=588 ang=6 gapW=1 wdeadX=0 dis=0.69 dens=418 dvtx=30.5 nedge=1 severed=1 pair=SEP",
+   "dis": 0.6928201666437824,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "W closes @ dw=2",
+   "p1": [
+    64.66406935436115,
+    132.6119220008418,
+    384.2295923521339
+   ],
+   "p2": [
+    64.66406935436115,
+    132.26551174724486,
+    383.6295925858746
+   ],
+   "score": 25.642842434058817,
+   "verdict": "bad"
+  },
+  "evt287517|closest|69.67,138.93,362.78|69.67,140.06,363.53": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=8.3 Lmax=32.2 Tmax=1.9 npmin=150 ang=15 gapW=0 wdeadX=0 dis=1.35 dens=706 dvtx=8.1 nedge=1 severed=1 pair=SEP",
+   "dis": 1.3523617975218847,
+   "j": 1,
+   "k": 3,
+   "killed": true,
+   "near_miss": "U closes @ dw=4",
+   "p1": [
+    69.66566935436114,
+    138.9341396602385,
+    362.7800000000112
+   ],
+   "p2": [
+    69.66566935436114,
+    140.05974245317435,
+    363.5296004161875
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt287517|closest|69.67,146.04,360.68|69.67,145.52,360.38": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=4.1 Lmax=8.3 Tmax=1.1 npmin=100 ang=32 gapW=0 wdeadX=0 dis=0.60 dens=636 dvtx=7.1 nedge=1 severed=0 pair=dir",
+   "dis": 0.6000001780546127,
+   "j": 2,
+   "k": 3,
+   "killed": false,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    69.66566935436114,
+    146.03554938664723,
+    360.6800000000112
+   ],
+   "p2": [
+    69.66566935436114,
+    145.51593393877684,
+    360.3800000000112
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt287517.jsonl"
+}

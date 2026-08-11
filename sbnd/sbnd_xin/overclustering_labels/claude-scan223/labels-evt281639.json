@@ -1,0 +1,28 @@
+{
+ "event": "evt281639",
+ "labels": {
+  "evt281639|closest|-179.51,-80.13,272.47|-179.20,-80.13,273.07": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=6.6 Lmax=31.7 Tmax=1.2 npmin=111 ang=29 gapW=1 wdeadX=0 dis=0.68 dens=472 dvtx=23.4 nedge=1 severed=1 pair=SEP",
+   "dis": 0.6765489483483307,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "W closes @ dw=2,ds=3",
+   "p1": [
+    -179.50799335410508,
+    -80.13076858086092,
+    272.4696364122529
+   ],
+   "p2": [
+    -179.19539335410508,
+    -80.1307685808609,
+    273.0696361785122
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt281639.jsonl"
+}

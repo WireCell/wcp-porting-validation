@@ -1,0 +1,28 @@
+{
+ "event": "evt488755",
+ "labels": {
+  "evt488755|closest|156.78,-38.69,32.93|155.53,-37.65,33.53": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=7.3 Lmax=31.1 Tmax=0.6 npmin=74 ang=17 gapW=0 wdeadX=0 dis=1.73 dens=198 dvtx=7.4 nedge=1 severed=1 pair=SEP",
+   "dis": 1.733061006913743,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    156.77882871571626,
+    -38.687948402838785,
+    32.929729207304426
+   ],
+   "p2": [
+    155.52842871571627,
+    -37.64871764204806,
+    33.52972897356374
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt488755.jsonl"
+}

@@ -1,0 +1,28 @@
+{
+ "event": "evt316025",
+ "labels": {
+  "evt316025|closest|46.47,43.32,76.58|45.85,42.29,75.38": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=10.2 Lmax=72.0 Tmax=1.9 npmin=302 ang=89 gapW=0 wdeadX=0 dis=1.71 dens=426 dvtx=72.2 nedge=1 severed=1 pair=SEP",
+   "dis": 1.7061290030802603,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ ds=4",
+   "p1": [
+    46.472623636251754,
+    43.324845296186666,
+    76.58000000000239
+   ],
+   "p2": [
+    45.847423636251754,
+    42.285614265495425,
+    75.38000000000235
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt316025.jsonl"
+}

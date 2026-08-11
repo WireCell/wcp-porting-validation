@@ -1,0 +1,50 @@
+{
+ "event": "evt167684",
+ "labels": {
+  "evt167684|closest|8.88,-177.25,250.73|10.14,-176.39,248.63": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=3.0 Lmax=7.4 Tmax=1.0 npmin=30 ang=56 gapW=0 wdeadX=6 dis=2.59 dens=261 dvtx=1.6 nedge=1 severed=1",
+   "dis": 2.592970713823065,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    8.884856787946832,
+    -177.25204984159072,
+    250.72964435943612
+   ],
+   "p2": [
+    10.135256787946822,
+    -176.38602420759858,
+    248.62964517752852
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt167684|closest|8.88,-177.25,250.73|9.82,-175.78,249.68": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=5.1 Lmax=7.4 Tmax=1.0 npmin=76 ang=60 gapW=0 wdeadX=6 dis=2.04 dens=261 dvtx=1.3 nedge=1 severed=1",
+   "dis": 2.036989742217442,
+   "j": 0,
+   "k": 2,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    8.884856787946832,
+    -177.25204984159072,
+    250.72964435943612
+   ],
+   "p2": [
+    9.822656787946825,
+    -175.7796011706282,
+    249.68000000000774
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt167684.jsonl"
+}

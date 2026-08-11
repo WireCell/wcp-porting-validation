@@ -1,0 +1,50 @@
+{
+ "event": "evt292643",
+ "labels": {
+  "evt292643|closest|-22.74,-21.15,59.92|-22.43,-20.46,60.52": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=15.5 Lmax=54.2 Tmax=3.2 npmin=205 ang=50 gapW=0 wdeadX=6 dis=0.97 dens=772 dvtx=1.6 nedge=1 severed=0 pair=dir",
+   "dis": 0.9683588323528189,
+   "j": 2,
+   "k": 3,
+   "killed": false,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    -22.74208099342172,
+    -21.15458501743711,
+    59.92000000000004
+   ],
+   "p2": [
+    -22.429480993421723,
+    -20.461764645193544,
+    60.52000000000004
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt292643|closest|10.24,-8.64,78.68|10.86,-6.64,80.03": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.1 Lmax=15.0 Tmax=1.2 npmin=12 ang=56 gapW=1 wdeadX=0 dis=2.49 dens=256 dvtx=39.3 nedge=1 severed=1 pair=SEP",
+   "dis": 2.4861135120963684,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=4; W closes @ dw=3",
+   "p1": [
+    10.238080993421722,
+    -8.637025535582225,
+    78.68000000000004
+   ],
+   "p2": [
+    10.863280993421718,
+    -6.644999945123712,
+    80.02971085866072
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt292643.jsonl"
+}

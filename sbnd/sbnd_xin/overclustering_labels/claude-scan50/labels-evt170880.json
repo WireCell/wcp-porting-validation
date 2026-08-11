@@ -1,0 +1,28 @@
+{
+ "event": "evt170880",
+ "labels": {
+  "evt170880|closest|-129.29,-79.61,482.17|-129.29,-76.32,484.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=9.2 Lmax=17.6 Tmax=1.5 npmin=33 ang=11 gapW=0 wdeadX=0 dis=3.90 dens=332 dvtx=15.9 nedge=1 severed=1",
+   "dis": 3.9038445565491235,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -129.2932913725805,
+    -79.61115320045762,
+    482.1695547198839
+   ],
+   "p2": [
+    -129.2932913725805,
+    -76.320255791287,
+    484.26955390179137
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt170880.jsonl"
+}

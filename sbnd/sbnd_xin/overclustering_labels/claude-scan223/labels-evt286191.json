@@ -1,0 +1,28 @@
+{
+ "event": "evt286191",
+ "labels": {
+  "evt286191|closest|134.24,147.85,119.63|134.55,149.85,121.28": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=9.0 Lmax=107.6 Tmax=1.7 npmin=21 ang=2 gapW=0 wdeadX=1 dis=2.61 dens=490 dvtx=49.0 nedge=1 severed=1 pair=SEP",
+   "dis": 2.6056530954983126,
+   "j": 0,
+   "k": 3,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    134.23995426704613,
+    147.85397315909535,
+    119.62969543177562
+   ],
+   "p2": [
+    134.5525542670461,
+    149.84600833101507,
+    121.28000000000377
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt286191.jsonl"
+}

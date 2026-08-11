@@ -1,0 +1,28 @@
+{
+ "event": "evt347085",
+ "labels": {
+  "evt347085|closest|-73.56,162.79,286.42|-73.56,159.59,285.67": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.0 Lmax=12.0 Tmax=1.9 npmin=18 ang=80 gapW=0 wdeadX=0 dis=3.29 dens=439 dvtx=13.8 nedge=1 severed=1 pair=SEP",
+   "dis": 3.291188860927714,
+   "j": 5,
+   "k": 6,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -73.55759352184256,
+    162.78963480914553,
+    286.4200000000088
+   ],
+   "p2": [
+    -73.55759352184256,
+    159.5851269081947,
+    285.6696312699578
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt347085.jsonl"
+}

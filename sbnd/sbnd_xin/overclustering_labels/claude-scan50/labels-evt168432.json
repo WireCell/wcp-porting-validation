@@ -1,0 +1,28 @@
+{
+ "event": "evt168432",
+ "labels": {
+  "evt168432|closest|-105.79,-196.87,475.27|-105.17,-196.09,475.72": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=5.9 Lmax=28.8 Tmax=2.0 npmin=11 ang=23 gapW=0 wdeadX=0 dis=1.10 dens=692 dvtx=26.9 nedge=1 severed=1",
+   "dis": 1.0958446359394594,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=2",
+   "p1": [
+    -105.7915847653771,
+    -196.87102404300867,
+    475.26955740790163
+   ],
+   "p2": [
+    -105.1663847653771,
+    -196.09185660443032,
+    475.72000000000025
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt168432.jsonl"
+}

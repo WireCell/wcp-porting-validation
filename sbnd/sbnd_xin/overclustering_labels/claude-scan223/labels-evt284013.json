@@ -1,0 +1,50 @@
+{
+ "event": "evt284013",
+ "labels": {
+  "evt284013|closest|-45.19,-170.37,250.57|-45.50,-171.06,251.17": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=10.0 Lmax=74.1 Tmax=1.5 npmin=217 ang=39 gapW=0 wdeadX=6 dis=0.97 dens=368 dvtx=6.9 nedge=1 severed=0 pair=dir",
+   "dis": 0.9683587840772179,
+   "j": 1,
+   "k": 2,
+   "killed": false,
+   "near_miss": "U closes @ dw=3",
+   "p1": [
+    -45.18546125438052,
+    -170.37063964285431,
+    250.5696449437878
+   ],
+   "p2": [
+    -45.49806125438052,
+    -171.06346015004812,
+    251.16964471004712
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt284013|closest|-46.44,-173.32,252.07|-46.12,-170.63,250.12": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.0 Lmax=74.1 Tmax=0.9 npmin=3 ang=88 gapW=0 wdeadX=6 dis=3.33 dens=357 dvtx=5.4 nedge=1 severed=1 pair=via2",
+   "dis": 3.3327820051745944,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=3",
+   "p1": [
+    -46.43586125438051,
+    -173.3151267984279,
+    252.0696443594361
+   ],
+   "p2": [
+    -46.123261254380516,
+    -170.63024244230292,
+    250.1200000000077
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt284013.jsonl"
+}

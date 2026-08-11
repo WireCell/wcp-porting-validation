@@ -1,0 +1,28 @@
+{
+ "event": "evt400636",
+ "labels": {
+  "evt400636|closest|53.67,-7.77,255.98|53.67,-6.64,255.23": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=128.4 Lmax=140.5 Tmax=4.4 npmin=3306 ang=3 gapW=0 wdeadX=0 dis=1.35 dens=965 dvtx=1.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.3531451978850535,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    53.66603784941681,
+    -7.771039779403819,
+    255.98000000000016
+   ],
+   "p2": [
+    53.66603784941681,
+    -6.644999945117073,
+    255.22964260638105
+   ],
+   "score": 116.98265078811232,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt400636.jsonl"
+}

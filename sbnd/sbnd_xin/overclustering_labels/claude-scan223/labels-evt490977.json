@@ -1,0 +1,28 @@
+{
+ "event": "evt490977",
+ "labels": {
+  "evt490977|closest|153.35,12.41,179.03|152.72,11.71,178.43": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=5.5 Lmax=23.1 Tmax=1.4 npmin=127 ang=54 gapW=0 wdeadX=0 dis=1.11 dens=432 dvtx=32.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.109448067599171,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=4; V closes @ dw=4,ds=2",
+   "p1": [
+    153.3471082770466,
+    12.407564002709567,
+    179.02967229144787
+   ],
+   "p2": [
+    152.7219082770466,
+    11.714743495515743,
+    178.42967252518855
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt490977.jsonl"
+}

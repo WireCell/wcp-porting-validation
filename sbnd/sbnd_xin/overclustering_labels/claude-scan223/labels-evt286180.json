@@ -1,0 +1,28 @@
+{
+ "event": "evt286180",
+ "labels": {
+  "evt286180|dir1|176.85,-101.91,276.23|172.47,-103.90,275.18": {
+   "blk": "dir1",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=17.1 Lmax=27.0 Tmax=1.1 npmin=203 ang=26 gapW=0 wdeadX=0 dis=4.92 dens=316 dvtx=29.5 nedge=1 severed=1 pair=SEP",
+   "dis": 4.921511115434877,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    176.84584929891037,
+    -101.9078196842639,
+    276.2296344254571
+   ],
+   "p2": [
+    172.46944929891038,
+    -103.89946781389486,
+    275.1800000000086
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt286180.jsonl"
+}

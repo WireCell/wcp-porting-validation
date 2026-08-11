@@ -1,0 +1,28 @@
+{
+ "event": "evt174928",
+ "labels": {
+  "evt174928|closest|159.55,112.95,178.88|161.11,113.73,178.73": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=33.8 Lmax=84.8 Tmax=2.2 npmin=495 ang=47 gapW=0 wdeadX=0 dis=1.75 dens=419 dvtx=3.6 nedge=1 severed=1 pair=SEP",
+   "dis": 1.7531008610212275,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    159.55195317203496,
+    112.95295094022963,
+    178.8800000000001
+   ],
+   "p2": [
+    161.11495317203497,
+    113.7325631798029,
+    178.7296724083182
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt174928.jsonl"
+}

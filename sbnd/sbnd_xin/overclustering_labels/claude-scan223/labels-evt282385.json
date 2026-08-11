@@ -1,0 +1,94 @@
+{
+ "event": "evt282385",
+ "labels": {
+  "evt282385|closest|146.54,-117.24,337.28|146.85,-116.89,337.88": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.9 Lmax=9.9 Tmax=0.7 npmin=6 ang=66 gapW=0 wdeadX=0 dis=0.76 dens=213 dvtx=149.1 nedge=1 severed=0 pair=dir",
+   "dis": 0.7600782310351041,
+   "j": 1,
+   "k": 2,
+   "killed": false,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    146.53900743339437,
+    -117.23624861000971,
+    337.2800000000105
+   ],
+   "p2": [
+    146.85160743339435,
+    -116.88983822146247,
+    337.88000000001045
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt282385|closest|148.41,-116.28,340.13|146.85,-118.10,338.78": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=9.9 Lmax=146.9 Tmax=0.8 npmin=118 ang=60 gapW=0 wdeadX=0 dis=2.75 dens=220 dvtx=147.3 nedge=2 severed=1 pair=SEP",
+   "dis": 2.7515627957735953,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    148.41460743339434,
+    -116.28384520853288,
+    340.1296095320742
+   ],
+   "p2": [
+    146.85160743339435,
+    -118.1022739066259,
+    338.78000000001055
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt282385|closest|148.41,-116.28,340.13|147.16,-115.94,339.53": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.9 Lmax=146.9 Tmax=0.8 npmin=6 ang=11 gapW=0 wdeadX=0 dis=1.43 dens=245 dvtx=146.4 nedge=1 severed=1 pair=SEP",
+   "dis": 1.4295103858693239,
+   "j": 0,
+   "k": 2,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    148.41460743339434,
+    -116.28384520853288,
+    340.1296095320742
+   ],
+   "p2": [
+    147.16420743339435,
+    -115.937434954936,
+    339.5296097658149
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt282385|dir1|148.41,-116.28,340.13|146.54,-118.80,336.38": {
+   "blk": "dir1",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=9.9 Lmax=146.9 Tmax=0.8 npmin=118 ang=60 gapW=0 wdeadX=0 dis=2.75 dens=220 dvtx=147.3 nedge=2 severed=1 pair=SEP",
+   "dis": 4.887107762792672,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    148.41460743339434,
+    -116.28384520853288,
+    340.1296095320742
+   ],
+   "p2": [
+    146.53900743339437,
+    -118.79509495362095,
+    336.38000000001045
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt282385.jsonl"
+}

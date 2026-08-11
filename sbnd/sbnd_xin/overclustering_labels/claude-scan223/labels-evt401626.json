@@ -1,0 +1,28 @@
+{
+ "event": "evt401626",
+ "labels": {
+  "evt401626|closest|-135.49,-184.40,354.07|-135.81,-182.49,355.57": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=2.2 Lmax=20.0 Tmax=1.8 npmin=16 ang=88 gapW=1 wdeadX=0 dis=2.44 dens=226 dvtx=31.7 nedge=1 severed=1 pair=SEP",
+   "dis": 2.4449374095887904,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=4; W closes @ dw=4",
+   "p1": [
+    -135.4942078552841,
+    -184.40025491352486,
+    354.06960462351987
+   ],
+   "p2": [
+    -135.80680785528406,
+    -182.49499851874185,
+    355.56960403916815
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt401626.jsonl"
+}

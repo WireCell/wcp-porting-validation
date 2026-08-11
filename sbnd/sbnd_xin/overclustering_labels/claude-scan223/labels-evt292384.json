@@ -1,0 +1,28 @@
+{
+ "event": "evt292384",
+ "labels": {
+  "evt292384|closest|-13.26,-7.38,147.07|-13.26,-8.42,146.47": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.3 Lmax=1.9 Tmax=0.5 npmin=4 ang=8 gapW=0 wdeadX=0 dis=1.20 dens=28 dvtx=102.6 nedge=1 severed=1 pair=SEP",
+   "dis": 1.2000001223687025,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    -13.264132150404762,
+    -7.384615325516572,
+    147.06968526405586
+   ],
+   "p2": [
+    -13.264132150404762,
+    -8.423846086307297,
+    146.46968549779655
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt292384.jsonl"
+}

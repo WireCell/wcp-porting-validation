@@ -1,0 +1,28 @@
+{
+ "event": "evt53361",
+ "labels": {
+  "evt53361|closest|-18.08,-192.97,168.22|-16.52,-193.84,168.22": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=4.9 Lmax=120.1 Tmax=2.5 npmin=61 ang=75 gapW=0 wdeadX=0 dis=1.79 dens=187 dvtx=120.4 nedge=1 severed=1 pair=SEP",
+   "dis": 1.7870689659396544,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -18.080242711848836,
+    -192.97372222002394,
+    168.2200000000052
+   ],
+   "p2": [
+    -16.517242711848827,
+    -193.8401207940213,
+    168.22000000000008
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt53361.jsonl"
+}

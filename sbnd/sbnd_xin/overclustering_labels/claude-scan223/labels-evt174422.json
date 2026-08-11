@@ -1,0 +1,28 @@
+{
+ "event": "evt174422",
+ "labels": {
+  "evt174422|closest|6.31,164.83,192.23|5.37,165.17,192.23": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.3 Lmax=3.4 Tmax=0.7 npmin=18 ang=24 gapW=0 wdeadX=0 dis=1.00 dens=99 dvtx=-1.0 nedge=1 severed=0 pair=dir",
+   "dis": 0.9997344166312784,
+   "j": 14,
+   "k": 15,
+   "killed": false,
+   "near_miss": "U closes @ ds=3",
+   "p1": [
+    6.312181850188023,
+    164.82807558534628,
+    192.22966714915282
+   ],
+   "p2": [
+    5.374381850188007,
+    165.17448583894316,
+    192.22966714915285
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt174422.jsonl"
+}

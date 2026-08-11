@@ -1,0 +1,72 @@
+{
+ "event": "evt169356",
+ "labels": {
+  "evt169356|closest|141.20,150.02,179.78|141.20,150.80,180.53": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.3 Lmax=68.4 Tmax=7.6 npmin=17 ang=40 gapW=0 wdeadX=0 dis=1.08 dens=291 dvtx=3.0 nedge=1 severed=1",
+   "dis": 1.0813014502793012,
+   "j": 3,
+   "k": 5,
+   "killed": true,
+   "near_miss": "U closes @ dw=3",
+   "p1": [
+    141.20071743239723,
+    150.0192266154745,
+    179.78000000000557
+   ],
+   "p2": [
+    141.20071743239723,
+    150.79846031467136,
+    180.52967170709616
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt169356|closest|70.87,198.52,250.88|70.87,198.00,251.18": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.8 Lmax=32.6 Tmax=0.8 npmin=37 ang=36 gapW=0 wdeadX=4 dis=0.60 dens=242 dvtx=111.0 nedge=1 severed=0",
+   "dis": 0.6000001780547506,
+   "j": 1,
+   "k": 2,
+   "killed": false,
+   "near_miss": "V closes @ dw=2",
+   "p1": [
+    70.8657174323972,
+    198.51626738462795,
+    250.88000000000017
+   ],
+   "p2": [
+    70.8657174323972,
+    197.9966519367574,
+    251.18000000000015
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt169356|closest|96.81,178.08,220.58|97.75,177.30,221.03": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=3.1 Lmax=3.7 Tmax=0.6 npmin=12 ang=19 gapW=0 wdeadX=0 dis=1.30 dens=97 dvtx=66.1 nedge=1 severed=1",
+   "dis": 1.2997958159718914,
+   "j": 6,
+   "k": 7,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    96.81151743239721,
+    178.07846633344303,
+    220.58000000000683
+   ],
+   "p2": [
+    97.7493174323972,
+    177.29884471483578,
+    221.02965592959998
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt169356.jsonl"
+}

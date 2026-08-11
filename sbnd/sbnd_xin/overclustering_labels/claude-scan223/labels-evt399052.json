@@ -1,0 +1,28 @@
+{
+ "event": "evt399052",
+ "labels": {
+  "evt399052|closest|-134.29,-73.38,474.37|-133.98,-74.15,474.82": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=9.7 Lmax=45.0 Tmax=3.0 npmin=60 ang=14 gapW=0 wdeadX=0 dis=0.95 dens=1318 dvtx=43.4 nedge=1 severed=0 pair=dir",
+   "dis": 0.9527429798458312,
+   "j": 0,
+   "k": 1,
+   "killed": false,
+   "near_miss": "U closes @ dw=3",
+   "p1": [
+    -134.28917739748607,
+    -73.37576863571371,
+    474.36955775851277
+   ],
+   "p2": [
+    -133.9765773974861,
+    -74.15493627667186,
+    474.8200000000146
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt399052.jsonl"
+}

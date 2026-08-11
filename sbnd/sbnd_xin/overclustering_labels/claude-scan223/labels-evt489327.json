@@ -1,0 +1,28 @@
+{
+ "event": "evt489327",
+ "labels": {
+  "evt489327|closest|-59.25,106.50,250.42|-59.25,105.11,250.12": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=119.0 Lmax=222.5 Tmax=4.9 npmin=1812 ang=6 gapW=0 wdeadX=6 dis=1.42 dens=394 dvtx=116.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.417344482451589,
+   "j": 2,
+   "k": 3,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    -59.25381609078522,
+    106.49755058630016,
+    250.42000000000013
+   ],
+   "p2": [
+    -59.25381609078522,
+    105.1123194207756,
+    250.1200000000077
+   ],
+   "score": 91.2555582154151,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt489327.jsonl"
+}

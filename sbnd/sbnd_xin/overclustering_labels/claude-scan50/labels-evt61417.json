@@ -1,0 +1,28 @@
+{
+ "event": "evt61417",
+ "labels": {
+  "evt61417|closest|84.59,-88.74,393.83|83.34,-89.44,394.43": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.3 Lmax=149.9 Tmax=5.1 npmin=12 ang=88 gapW=1 wdeadX=0 dis=1.55 dens=372 dvtx=8.7 nedge=1 severed=1",
+   "dis": 1.5503225905273574,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ ds=4",
+   "p1": [
+    84.59153654194706,
+    -88.74423004757723,
+    393.82958861228303
+   ],
+   "p2": [
+    83.34113654194705,
+    -89.437050554771,
+    394.4295883785423
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt61417.jsonl"
+}

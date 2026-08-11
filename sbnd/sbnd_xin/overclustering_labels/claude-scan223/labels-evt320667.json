@@ -1,0 +1,28 @@
+{
+ "event": "evt320667",
+ "labels": {
+  "evt320667|closest|18.72,56.23,393.53|19.34,55.36,393.83": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.9 Lmax=19.0 Tmax=1.1 npmin=18 ang=64 gapW=0 wdeadX=0 dis=1.11 dens=243 dvtx=152.3 nedge=1 severed=1 pair=SEP",
+   "dis": 1.1094482270973192,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ ds=3",
+   "p1": [
+    18.715381524291097,
+    56.22846108272559,
+    393.5295887291533
+   ],
+   "p2": [
+    19.34058152429109,
+    55.36243544873339,
+    393.829588612283
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt320667.jsonl"
+}

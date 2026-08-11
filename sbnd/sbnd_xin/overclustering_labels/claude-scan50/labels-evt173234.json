@@ -1,0 +1,28 @@
+{
+ "event": "evt173234",
+ "labels": {
+  "evt173234|closest|104.95,-32.19,436.88|104.64,-33.23,435.98": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=6.2 Lmax=138.7 Tmax=1.4 npmin=127 ang=78 gapW=0 wdeadX=0 dis=1.41 dens=351 dvtx=225.6 nedge=1 severed=1",
+   "dis": 1.4095007689086654,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "U closes @ dw=4",
+   "p1": [
+    104.95162587888706,
+    -32.19300334550111,
+    436.8800000000003
+   ],
+   "p2": [
+    104.63902587888704,
+    -33.231739913442105,
+    435.9800000000135
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt173234.jsonl"
+}

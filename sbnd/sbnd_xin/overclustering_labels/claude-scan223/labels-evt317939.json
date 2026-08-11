@@ -1,0 +1,138 @@
+{
+ "event": "evt317939",
+ "labels": {
+  "evt317939|closest|-149.25,66.75,158.47|-149.25,68.05,158.92": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.5 Lmax=37.4 Tmax=1.8 npmin=24 ang=26 gapW=0 wdeadX=0 dis=1.38 dens=771 dvtx=32.2 nedge=1 severed=1 pair=SEP",
+   "dis": 1.3750517521921102,
+   "j": 2,
+   "k": 4,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -149.250752066321,
+    66.74717894422056,
+    158.46968082298287
+   ],
+   "p2": [
+    -149.250752066321,
+    68.04640177345841,
+    158.9200000000049
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt317939|closest|-157.69,61.38,177.37|-158.32,62.07,178.57": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.6 Lmax=5.1 Tmax=0.7 npmin=6 ang=55 gapW=1 wdeadX=0 dis=1.52 dens=276 dvtx=53.1 nedge=1 severed=1 pair=SEP",
+   "dis": 1.520155970035071,
+   "j": 3,
+   "k": 5,
+   "killed": true,
+   "near_miss": "V closes @ dw=4,ds=3; W closes @ dw=4",
+   "p1": [
+    -157.69095206632102,
+    61.37782001346932,
+    177.36967346015132
+   ],
+   "p2": [
+    -158.31615206632102,
+    62.07064052066316,
+    178.56967299266995
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt317939|closest|-157.69,61.55,177.07|-159.57,61.55,176.47": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.6 Lmax=37.4 Tmax=1.8 npmin=6 ang=60 gapW=1 wdeadX=0 dis=1.97 dens=284 dvtx=52.6 nedge=1 severed=1 pair=SEP",
+   "dis": 1.969232104022082,
+   "j": 3,
+   "k": 4,
+   "killed": true,
+   "near_miss": "V closes @ dw=4,ds=3",
+   "p1": [
+    -157.69095206632102,
+    61.551025140267754,
+    177.06967357702166
+   ],
+   "p2": [
+    -159.566552066321,
+    61.55102514026773,
+    176.46967381076232
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt317939|closest|-159.57,62.59,176.47|-159.25,62.33,178.42": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=5.1 Lmax=37.4 Tmax=1.8 npmin=66 ang=31 gapW=1 wdeadX=0 dis=1.99 dens=277 dvtx=53.1 nedge=1 severed=1 pair=SEP",
+   "dis": 1.992208069258036,
+   "j": 4,
+   "k": 5,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -159.566552066321,
+    62.590255901058434,
+    176.46967381076232
+   ],
+   "p2": [
+    -159.253952066321,
+    62.330636974997674,
+    178.4200000000055
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt317939|closest|-183.95,54.62,213.07|-183.95,53.06,212.17": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.7 Lmax=1.0 Tmax=0.3 npmin=6 ang=80 gapW=1 wdeadX=0 dis=1.80 dens=13 dvtx=96.3 nedge=1 severed=1 pair=SEP",
+   "dis": 1.8000001835530537,
+   "j": 12,
+   "k": 13,
+   "killed": true,
+   "near_miss": "W closes @ dw=3",
+   "p1": [
+    -183.949352066321,
+    54.62282006833111,
+    213.06965955258062
+   ],
+   "p2": [
+    -183.949352066321,
+    53.06397392714503,
+    212.16965990319164
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt317939|dir2|-131.12,89.26,135.67|-130.18,86.67,139.57": {
+   "blk": "dir2",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=21.1 Lmax=143.0 Tmax=4.2 npmin=380 ang=59 gapW=0 wdeadX=0 dis=4.78 dens=970 dvtx=4.0 nedge=1 severed=1 pair=dir",
+   "dis": 4.779064822528986,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ ds=3",
+   "p1": [
+    -131.11995206632102,
+    89.26384542801823,
+    135.66968970512886
+   ],
+   "p2": [
+    -130.182152066321,
+    86.66576852604162,
+    139.5696881858144
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt317939.jsonl"
+}

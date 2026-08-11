@@ -1,0 +1,28 @@
+{
+ "event": "evt393042",
+ "labels": {
+  "evt393042|closest|-31.17,-113.39,247.27|-30.85,-113.99,246.82": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=165.0 Lmax=240.3 Tmax=2.6 npmin=3693 ang=7 gapW=0 wdeadX=0 dis=0.82 dens=746 dvtx=162.8 nedge=1 severed=0 pair=dir",
+   "dis": 0.8167944733200914,
+   "j": 1,
+   "k": 2,
+   "killed": false,
+   "near_miss": "V closes @ dw=2",
+   "p1": [
+    -31.167024839855365,
+    -113.38615292616433,
+    247.26964622936163
+   ],
+   "p2": [
+    -30.85442483985537,
+    -113.99216672144784,
+    246.82000000000758
+   ],
+   "score": 121.89128361948987,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt393042.jsonl"
+}

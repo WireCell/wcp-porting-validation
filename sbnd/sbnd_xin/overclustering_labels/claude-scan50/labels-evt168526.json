@@ -1,0 +1,72 @@
+{
+ "event": "evt168526",
+ "labels": {
+  "evt168526|closest|-170.83,-105.16,73.12|-171.14,-104.55,74.17": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.7 Lmax=8.1 Tmax=0.7 npmin=9 ang=88 gapW=1 wdeadX=0 dis=1.25 dens=554 dvtx=39.0 nedge=1 severed=1",
+   "dis": 1.2517657962593947,
+   "j": 2,
+   "k": 7,
+   "killed": true,
+   "near_miss": "V closes @ dw=3; W closes @ dw=2",
+   "p1": [
+    -170.83146109057927,
+    -105.1587443228605,
+    73.12000000000225
+   ],
+   "p2": [
+    -171.14406109057927,
+    -104.5526914594499,
+    74.16971366354899
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt168526|closest|-171.46,-105.85,74.32|-171.46,-104.90,74.77": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.7 Lmax=1.1 Tmax=0.3 npmin=9 ang=68 gapW=0 wdeadX=0 dis=1.05 dens=464 dvtx=40.1 nedge=1 severed=1",
+   "dis": 1.0532937121555461,
+   "j": 1,
+   "k": 7,
+   "killed": true,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    -171.45666109057927,
+    -105.85156456015343,
+    74.32000000000228
+   ],
+   "p2": [
+    -171.45666109057927,
+    -104.89910171304678,
+    74.7697134298083
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt168526|closest|-172.08,-106.28,74.17|-172.08,-106.28,73.57": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.1 Lmax=8.1 Tmax=0.7 npmin=12 ang=30 gapW=1 wdeadX=0 dis=0.60 dens=402 dvtx=39.9 nedge=1 severed=1",
+   "dis": 0.5999997662593615,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "W closes @ dw=2",
+   "p1": [
+    -172.08186109057925,
+    -106.28474272743442,
+    74.16971366354899
+   ],
+   "p2": [
+    -172.08186109057925,
+    -106.28474272743442,
+    73.56971389728963
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt168526.jsonl"
+}

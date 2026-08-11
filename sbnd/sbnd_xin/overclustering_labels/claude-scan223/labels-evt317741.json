@@ -1,0 +1,28 @@
+{
+ "event": "evt317741",
+ "labels": {
+  "evt317741|closest|35.43,48.95,17.93|35.43,48.95,17.33": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.5 Lmax=8.7 Tmax=0.7 npmin=17 ang=77 gapW=1 wdeadX=0 dis=0.60 dens=117 dvtx=0.8 nedge=1 severed=1 pair=SEP",
+   "dis": 0.599999766259316,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "W closes @ dw=2",
+   "p1": [
+    35.434373731490886,
+    48.95384575717647,
+    17.929735050821527
+   ],
+   "p2": [
+    35.434373731490886,
+    48.95384575717644,
+    17.32973528456221
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt317741.jsonl"
+}

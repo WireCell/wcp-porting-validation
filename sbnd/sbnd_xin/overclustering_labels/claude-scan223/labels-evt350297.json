@@ -1,0 +1,50 @@
+{
+ "event": "evt350297",
+ "labels": {
+  "evt350297|closest|-102.09,79.65,252.22|-102.40,79.13,251.32": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=37.2 Lmax=195.5 Tmax=2.1 npmin=349 ang=2 gapW=0 wdeadX=6 dis=1.09 dens=248 dvtx=1.6 nedge=2 severed=1 pair=SEP",
+   "dis": 1.0852276783745698,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    -102.08612167118204,
+    79.65116625373469,
+    252.22000000000776
+   ],
+   "p2": [
+    -102.39872167118205,
+    79.13155067091391,
+    251.32000000000772
+   ],
+   "score": 37.02465212847894,
+   "verdict": "bad"
+  },
+  "evt350297|dir1|-102.09,79.65,252.22|-104.27,79.48,248.02": {
+   "blk": "dir1",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=37.2 Lmax=195.5 Tmax=2.1 npmin=349 ang=2 gapW=0 wdeadX=6 dis=1.09 dens=248 dvtx=1.6 nedge=2 severed=1 pair=SEP",
+   "dis": 4.739025361444113,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    -102.08612167118204,
+    79.65116625373469,
+    252.22000000000776
+   ],
+   "p2": [
+    -104.27432167118204,
+    79.47755134554316,
+    248.02000000000012
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt350297.jsonl"
+}

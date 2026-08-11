@@ -1,0 +1,28 @@
+{
+ "event": "evt393212",
+ "labels": {
+  "evt393212|closest|69.98,178.42,240.98|69.98,176.61,240.23": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=5.8 Lmax=28.5 Tmax=1.6 npmin=87 ang=60 gapW=0 wdeadX=0 dis=1.97 dens=646 dvtx=51.1 nedge=1 severed=1 pair=SEP",
+   "dis": 1.967553841128002,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=2",
+   "p1": [
+    69.98050389822595,
+    178.42488117535237,
+    240.98000000000746
+   ],
+   "p2": [
+    69.98050389822595,
+    176.60602420764266,
+    240.22964844989815
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt393212.jsonl"
+}

@@ -1,0 +1,72 @@
+{
+ "event": "evt287830",
+ "labels": {
+  "evt287830|closest|-2.38,54.97,174.07|-2.38,54.97,172.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.9 Lmax=1.8 Tmax=0.5 npmin=8 ang=79 gapW=1 wdeadX=0 dis=1.80 dens=327 dvtx=169.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.7999992987779478,
+   "j": 0,
+   "k": 3,
+   "killed": true,
+   "near_miss": "U closes @ dw=3,ds=3; V closes @ dw=3; W closes @ dw=2,ds=2",
+   "p1": [
+    -2.375134832451319,
+    54.96923032192653,
+    174.06967474572508
+   ],
+   "p2": [
+    -2.375134832451319,
+    54.96923032192647,
+    172.26967544694713
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt287830|closest|-2.69,54.97,174.07|-3.94,54.28,173.47": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.8 Lmax=10.7 Tmax=1.0 npmin=17 ang=34 gapW=0 wdeadX=0 dis=1.55 dens=327 dvtx=169.9 nedge=1 severed=1 pair=SEP",
+   "dis": 1.5503225905273958,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    -2.6877348324513166,
+    54.96923032192653,
+    174.06967474572508
+   ],
+   "p2": [
+    -3.9381348324513303,
+    54.27640981473271,
+    173.46967497946576
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt287830|closest|-3.00,53.76,172.57|-2.38,54.97,172.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=0.9 Lmax=10.7 Tmax=1.0 npmin=8 ang=54 gapW=1 wdeadX=0 dis=1.40 dens=333 dvtx=168.9 nedge=1 severed=1 pair=SEP",
+   "dis": 1.3967375384773968,
+   "j": 1,
+   "k": 3,
+   "killed": true,
+   "near_miss": "U closes @ dw=3,ds=2; V closes @ dw=3; W closes @ dw=2,ds=2",
+   "p1": [
+    -3.0003348324513373,
+    53.75679443433732,
+    172.5696753300768
+   ],
+   "p2": [
+    -2.375134832451319,
+    54.96923032192647,
+    172.26967544694713
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt287830.jsonl"
+}

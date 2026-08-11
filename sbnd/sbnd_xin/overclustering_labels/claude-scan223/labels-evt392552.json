@@ -1,0 +1,28 @@
+{
+ "event": "evt392552",
+ "labels": {
+  "evt392552|closest|-47.09,-122.83,251.32|-47.09,-122.13,251.02": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=81.7 Lmax=113.9 Tmax=1.2 npmin=717 ang=11 gapW=0 wdeadX=6 dis=0.75 dens=315 dvtx=112.9 nedge=1 severed=0 pair=dir",
+   "dis": 0.7546071554566254,
+   "j": 0,
+   "k": 1,
+   "killed": false,
+   "near_miss": "U closes @ dw=2",
+   "p1": [
+    -47.08978724663622,
+    -122.82562717603928,
+    251.32000000000772
+   ],
+   "p2": [
+    -47.08978724663622,
+    -122.13321692260438,
+    251.02000000000012
+   ],
+   "score": 43.03056720424786,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt392552.jsonl"
+}

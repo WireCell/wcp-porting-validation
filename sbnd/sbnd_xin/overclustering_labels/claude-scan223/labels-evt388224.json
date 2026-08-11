@@ -1,0 +1,72 @@
+{
+ "event": "evt388224",
+ "labels": {
+  "evt388224|closest|-67.39,-2.53,343.87|-66.76,-1.24,344.62": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.0 Lmax=195.5 Tmax=5.5 npmin=17 ang=61 gapW=0 wdeadX=0 dis=1.63 dens=858 dvtx=1.3 nedge=1 severed=1 pair=SEP",
+   "dis": 1.6250771374792279,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    -67.38646725032814,
+    -2.534871775152508,
+    343.8696085971115
+   ],
+   "p2": [
+    -66.76126725032813,
+    -1.2360594695330838,
+    344.6200000000002
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  },
+  "evt388224|closest|-68.01,0.06,338.17|-68.01,0.50,337.42": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.4 Lmax=195.5 Tmax=5.5 npmin=12 ang=15 gapW=1 wdeadX=0 dis=0.87 dens=739 dvtx=6.7 nedge=1 severed=1 pair=SEP",
+   "dis": 0.8655761565501182,
+   "j": 2,
+   "k": 3,
+   "killed": true,
+   "near_miss": "W closes @ dw=3,ds=3",
+   "p1": [
+    -68.01166725032813,
+    0.06320512682402976,
+    338.16961081764794
+   ],
+   "p2": [
+    -68.01166725032813,
+    0.4959934178550066,
+    337.4200000000002
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  },
+  "evt388224|closest|-69.89,-1.84,349.87|-70.51,-2.53,349.27": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.9 Lmax=195.5 Tmax=5.5 npmin=7 ang=14 gapW=0 wdeadX=0 dis=1.11 dens=971 dvtx=6.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.109448067599171,
+   "j": 2,
+   "k": 4,
+   "killed": true,
+   "near_miss": "V closes @ dw=2,ds=4",
+   "p1": [
+    -69.88726725032814,
+    -1.8420512679584795,
+    349.86960625970465
+   ],
+   "p2": [
+    -70.51246725032813,
+    -2.534871775152303,
+    349.26960649344534
+   ],
+   "score": 0.0,
+   "verdict": "OK"
+  }
+ },
+ "source": "oc56scan-evt388224.jsonl"
+}

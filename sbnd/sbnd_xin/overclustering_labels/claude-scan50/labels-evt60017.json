@@ -1,0 +1,72 @@
+{
+ "event": "evt60017",
+ "labels": {
+  "evt60017|closest|188.98,111.83,380.63|188.36,112.35,379.73": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=15.9 Lmax=29.8 Tmax=0.6 npmin=130 ang=1 gapW=1 wdeadX=1 dis=1.21 dens=267 dvtx=0.9 nedge=3 severed=1",
+   "dis": 1.2127961710211819,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "W closes @ dw=3",
+   "p1": [
+    188.9839540586939,
+    111.82730678502762,
+    380.629593754578
+   ],
+   "p2": [
+    188.35875405869393,
+    112.34692216542294,
+    379.72959410518905
+   ],
+   "score": 16.48075479414615,
+   "verdict": "bad"
+  },
+  "evt60017|dir1|188.98,111.83,380.63|185.55,112.09,377.48": {
+   "blk": "dir1",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=15.9 Lmax=29.8 Tmax=0.6 npmin=130 ang=1 gapW=1 wdeadX=1 dis=1.21 dens=267 dvtx=0.9 nedge=3 severed=1",
+   "dis": 4.670281830355934,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "W closes @ dw=3",
+   "p1": [
+    188.9839540586939,
+    111.82730678502762,
+    380.629593754578
+   ],
+   "p2": [
+    185.54535405869393,
+    112.08734831276801,
+    377.4800000000117
+   ],
+   "score": 11.198387439346012,
+   "verdict": "bad"
+  },
+  "evt60017|dir2|192.11,112.00,382.73|188.36,112.35,379.73": {
+   "blk": "dir2",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=15.9 Lmax=29.8 Tmax=0.6 npmin=130 ang=1 gapW=1 wdeadX=1 dis=1.21 dens=267 dvtx=0.9 nedge=3 severed=1",
+   "dis": 4.815754820542445,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "W closes @ dw=3",
+   "p1": [
+    192.10995405869392,
+    112.00051191182615,
+    382.72959293648563
+   ],
+   "p2": [
+    188.35875405869393,
+    112.34692216542294,
+    379.72959410518905
+   ],
+   "score": 10.976132931278368,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt60017.jsonl"
+}

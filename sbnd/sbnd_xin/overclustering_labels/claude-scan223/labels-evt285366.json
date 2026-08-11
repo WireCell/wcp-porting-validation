@@ -1,0 +1,28 @@
+{
+ "event": "evt285366",
+ "labels": {
+  "evt285366|closest|147.67,-76.27,484.43|148.61,-75.75,484.73": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=2.7 Lmax=64.6 Tmax=0.6 npmin=43 ang=15 gapW=0 wdeadX=0 dis=1.11 dens=152 dvtx=1.5 nedge=1 severed=1 pair=SEP",
+   "dis": 1.1133143821136957,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ ds=4",
+   "p1": [
+    147.67358021140936,
+    -76.27346091808538,
+    484.4295533174398
+   ],
+   "p2": [
+    148.61138021140937,
+    -75.75384553769001,
+    484.72955320056934
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt285366.jsonl"
+}

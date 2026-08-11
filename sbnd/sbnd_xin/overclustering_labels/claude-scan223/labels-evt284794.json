@@ -1,0 +1,28 @@
+{
+ "event": "evt284794",
+ "labels": {
+  "evt284794|closest|-47.95,31.07,375.67|-47.95,32.71,374.62": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=135.6 Lmax=264.0 Tmax=3.5 npmin=1208 ang=4 gapW=0 wdeadX=0 dis=1.95 dens=1603 dvtx=104.9 nedge=1 severed=1 pair=SEP",
+   "dis": 1.951508972234241,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "U closes @ dw=3",
+   "p1": [
+    -47.95419459233053,
+    31.06692282374802,
+    375.6695962088552
+   ],
+   "p2": [
+    -47.95419459233053,
+    32.71213863544811,
+    374.62000000000023
+   ],
+   "score": 110.56974760570188,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt284794.jsonl"
+}

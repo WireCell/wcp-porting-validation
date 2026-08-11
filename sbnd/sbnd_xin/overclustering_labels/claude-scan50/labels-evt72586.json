@@ -1,0 +1,28 @@
+{
+ "event": "evt72586",
+ "labels": {
+  "evt72586|closest|-20.14,-124.38,252.22|-20.14,-125.34,251.77": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=87.1 Lmax=215.7 Tmax=1.3 npmin=1327 ang=9 gapW=0 wdeadX=6 dis=1.05 dens=363 dvtx=215.2 nedge=1 severed=1",
+   "dis": 1.053903169965225,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "V closes @ dw=3",
+   "p1": [
+    -20.144177778008604,
+    -124.38447311479949,
+    252.22000000000776
+   ],
+   "p2": [
+    -20.144177778008604,
+    -125.3373066752572,
+    251.7696444763065
+   ],
+   "score": 50.23066793013008,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt72586.jsonl"
+}

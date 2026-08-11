@@ -1,0 +1,28 @@
+{
+ "event": "evt63559",
+ "labels": {
+  "evt63559|closest|184.60,129.32,85.73|184.60,129.23,84.08": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=high [R3 W-plane gap (robust plane sees a hole)] Lmin=1.3 Lmax=157.1 Tmax=0.8 npmin=11 ang=64 gapW=1 wdeadX=0 dis=1.65 dens=126 dvtx=41.9 nedge=1 severed=1",
+   "dis": 1.651989011704608,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=3",
+   "p1": [
+    184.59530030373742,
+    129.32102459165995,
+    85.72970863812422
+   ],
+   "p2": [
+    184.59530030373742,
+    129.23425418143148,
+    84.08000000000004
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt63559.jsonl"
+}

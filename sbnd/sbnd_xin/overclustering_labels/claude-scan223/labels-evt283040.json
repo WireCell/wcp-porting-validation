@@ -1,0 +1,72 @@
+{
+ "event": "evt283040",
+ "labels": {
+  "evt283040|closest|-6.47,105.03,168.37|-7.40,105.20,168.67": {
+   "blk": "closest",
+   "cause": "induction inefficiency",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=7.0 Lmax=99.5 Tmax=1.2 npmin=161 ang=60 gapW=0 wdeadX=0 dis=1.00 dens=294 dvtx=1.1 nedge=1 severed=0 pair=dir",
+   "dis": 0.9997343576305949,
+   "j": 0,
+   "k": 2,
+   "killed": false,
+   "near_miss": "V closes @ ds=3",
+   "p1": [
+    -6.4663524515123045,
+    105.02551196667847,
+    168.36967696626158
+   ],
+   "p2": [
+    -7.404152451512298,
+    105.1987170934769,
+    168.66967684939124
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt283040|closest|-64.30,114.12,251.02|-63.67,112.99,249.97": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=16.2 Lmax=99.5 Tmax=1.2 npmin=218 ang=27 gapW=0 wdeadX=6 dis=1.66 dens=325 dvtx=101.2 nedge=2 severed=1 pair=SEP",
+   "dis": 1.6616736164705934,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    -64.2973524515123,
+    114.1185760304817,
+    251.02000000000012
+   ],
+   "p2": [
+    -63.672152451512304,
+    112.99294779941025,
+    249.9696451775285
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  },
+  "evt283040|dir2|-65.86,114.38,254.17|-63.67,112.99,249.97": {
+   "blk": "dir2",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=16.2 Lmax=99.5 Tmax=1.2 npmin=218 ang=27 gapW=0 wdeadX=6 dis=1.66 dens=325 dvtx=101.2 nedge=2 severed=1 pair=SEP",
+   "dis": 4.934390186923201,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    -65.86035245151228,
+    114.37858881379802,
+    254.1696435413437
+   ],
+   "p2": [
+    -63.672152451512304,
+    112.99294779941025,
+    249.9696451775285
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt283040.jsonl"
+}

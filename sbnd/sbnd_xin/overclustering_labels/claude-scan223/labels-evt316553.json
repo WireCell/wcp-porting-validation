@@ -1,0 +1,94 @@
+{
+ "event": "evt316553",
+ "labels": {
+  "evt316553|closest|163.08,-144.34,251.33|163.39,-141.49,252.98": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=11.6 Lmax=110.8 Tmax=0.8 npmin=47 ang=1 gapW=0 wdeadX=3 dis=3.31 dens=336 dvtx=100.8 nedge=1 severed=1 pair=SEP",
+   "dis": 3.3147731670635756,
+   "j": 0,
+   "k": 2,
+   "killed": true,
+   "near_miss": "V closes @ dw=4",
+   "p1": [
+    163.0793724851371,
+    -144.34307574988514,
+    251.3296441256955
+   ],
+   "p2": [
+    163.39197248513713,
+    -141.48539699305599,
+    252.98000000000016
+   ],
+   "score": 9.38680510864605,
+   "verdict": "good"
+  },
+  "evt316553|closest|164.02,-145.38,250.13|164.02,-144.26,248.18": {
+   "blk": "closest",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=110.8 Lmax=143.8 Tmax=1.2 npmin=1263 ang=8 gapW=0 wdeadX=6 dis=2.25 dens=342 dvtx=97.3 nedge=2 severed=1 pair=SEP",
+   "dis": 2.2512560302656355,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    164.0171724851371,
+    -145.38230651067593,
+    250.1296445931768
+   ],
+   "p2": [
+    164.0171724851371,
+    -144.25667794222878,
+    248.18000000000015
+   ],
+   "score": 66.5650921512594,
+   "verdict": "bad"
+  },
+  "evt316553|closest|164.33,-139.15,241.73|164.33,-136.03,243.53": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=11.6 Lmax=143.8 Tmax=1.2 npmin=47 ang=7 gapW=0 wdeadX=0 dis=3.60 dens=355 dvtx=90.0 nedge=1 severed=1 pair=SEP",
+   "dis": 3.6000003671061074,
+   "j": 1,
+   "k": 2,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    164.3297724851371,
+    -139.14692194593204,
+    241.72964786554644
+   ],
+   "p2": [
+    164.3297724851371,
+    -136.02922966355987,
+    243.5296471643244
+   ],
+   "score": 6.17360887667841,
+   "verdict": "good"
+  },
+  "evt316553|dir1|164.02,-145.38,250.13|164.33,-143.22,245.78": {
+   "blk": "dir1",
+   "cause": "dead channel",
+   "comment": "auto bad conf=high [R2 long-track break, no W gap] Lmin=110.8 Lmax=143.8 Tmax=1.2 npmin=1263 ang=8 gapW=0 wdeadX=6 dis=2.25 dens=342 dvtx=97.3 nedge=2 severed=1 pair=SEP",
+   "dis": 4.868649206867013,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "",
+   "p1": [
+    164.0171724851371,
+    -145.38230651067593,
+    250.1296445931768
+   ],
+   "p2": [
+    164.3297724851371,
+    -143.21744664163685,
+    245.78000000000014
+   ],
+   "score": 0.0,
+   "verdict": "bad"
+  }
+ },
+ "source": "oc56scan-evt316553.jsonl"
+}

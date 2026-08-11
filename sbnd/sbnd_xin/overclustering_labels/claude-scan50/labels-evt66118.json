@@ -1,0 +1,28 @@
+{
+ "event": "evt66118",
+ "labels": {
+  "evt66118|closest|175.00,-16.95,173.18|175.94,-15.91,173.18": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=0.6 Lmax=82.0 Tmax=1.7 npmin=6 ang=58 gapW=0 wdeadX=0 dis=1.40 dens=165 dvtx=70.1 nedge=1 severed=1",
+   "dis": 1.3998104922357255,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=4,ds=3",
+   "p1": [
+    175.00226283299838,
+    -16.950517102652704,
+    173.18000000000535
+   ],
+   "p2": [
+    175.94006283299842,
+    -15.911286341862208,
+    173.18000000000535
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt66118.jsonl"
+}

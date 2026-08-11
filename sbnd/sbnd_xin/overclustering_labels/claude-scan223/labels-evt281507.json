@@ -1,0 +1,28 @@
+{
+ "event": "evt281507",
+ "labels": {
+  "evt281507|closest|-79.02,129.79,419.47|-79.02,128.67,419.02": {
+   "blk": "closest",
+   "cause": "genuine separation",
+   "comment": "auto good conf=low [R4 residual, committed good] Lmin=1.6 Lmax=118.8 Tmax=2.0 npmin=14 ang=75 gapW=0 wdeadX=0 dis=1.21 dens=206 dvtx=3.3 nedge=1 severed=1 pair=SEP",
+   "dis": 1.2125052676942754,
+   "j": 0,
+   "k": 1,
+   "killed": true,
+   "near_miss": "U closes @ dw=3; V closes @ dw=3",
+   "p1": [
+    -79.02087059367874,
+    129.79384509886637,
+    419.46957914578525
+   ],
+   "p2": [
+    -79.02087059367874,
+    128.6677688954673,
+    419.02000000000027
+   ],
+   "score": 0.0,
+   "verdict": "good"
+  }
+ },
+ "source": "oc56scan-evt281507.jsonl"
+}
