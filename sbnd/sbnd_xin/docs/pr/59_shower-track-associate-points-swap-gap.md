@@ -4,7 +4,9 @@ Status: **root cause confirmed by instrumented rerun. Log-only diagnostic
 sentinels added, byte-identical proven (§4). No fix, no new knob shipped this
 round** — owner chose "diagnose first" explicitly; the rescue fix is a
 follow-up (doc pr/60 or later), designed against the mechanism below instead
-of the earlier inference.
+of the earlier inference. Prototype comparison (§6, M15 check) confirms this
+is a genuine defect shared by both trees, not a toolkit divergence — the
+Round-2 fix needs no owner "which reading" call.
 
 **Headline finding**: segment graph-index 20 in cluster 7 (encoded `7020`,
 109 fitted points, `(155.8,-39.5,250.5) -> (117.9,-69.1,209.9)` cm — the
@@ -278,7 +280,81 @@ implementer doesn't reach for the wrong lever):
   null-cloud segments, would also re-expose that class and needs its own
   scoping decision.
 
-## 6. Verification (this round: sentinels only, log-only)
+## 6. Prototype comparison (M15 check — not a toolkit-introduced defect)
+
+CLAUDE.md M15: before treating a toolkit behavior as a bug, confirm it isn't
+an intentional prototype divergence, checking `porting_dictionary.md` /
+`neutrino_id_function_map.md` first. Neither documents this pattern — but
+the check below establishes something stronger than "unlisted, surface it":
+there is **no divergence to reconcile at all**. The prototype
+(`prototype_base/pid/src/`) has the identical structural gap, in all three
+places that matter.
+
+**`swap_main_cluster` is a byte-for-byte match**, `NeutrinoID.cxx:735-740`:
+
+```cpp
+void WCPPID::NeutrinoID::swap_main_cluster(WCPPID::PR3DCluster *new_main_cluster){
+  other_clusters.push_back(main_cluster);
+  main_cluster = new_main_cluster;
+  auto it1 = find(other_clusters.begin(), other_clusters.end(), main_cluster);
+  other_clusters.erase(it1);
+}
+```
+
+Same demote-and-erase, no re-association call, no log line.
+`neutrino_id_function_map.md:164` records the port as `explicit args` only —
+no behavior difference noted, and none exists: the toolkit's `main_cluster`
+(a by-reference local threaded through the call chain) plays exactly the
+role of the prototype's `main_cluster` (a class member `swap_main_cluster`
+reassigns directly).
+
+**`clustering_points(main)` runs on exactly the same two occasions.**
+Exhaustively grepping every `clustering_points(` call site across the whole
+prototype `pid/src/` tree finds four total, matching the toolkit's
+two-for-main/two-for-others structure — no third or final catch-all pass
+anywhere in the reconstruction chain. The toolkit's own call-order
+comparison table, `neutrino_id_function_map.md:520-542`, documents both:
+line 522 before shower/vertex work, line 542 "again" after `improve_vertex`
+— with `determine_overall_main_vertex_DL()` (the swap-capable call) sitting
+between both times, same as the toolkit.
+
+**`examine_vertices_1`'s new-segment path is also identical**,
+`NeutrinoID_proto_vertex.h:2966-2995`:
+
+```cpp
+temp_cluster->dijkstra_shortest_paths(v3->get_wcpt(),2);
+temp_cluster->cal_shortest_path(v2->get_wcpt(),2);
+ProtoSegment *sg2 = new WCPPID::ProtoSegment(acc_segment_id, temp_cluster->get_path_wcps(), temp_cluster->get_cluster_id()); acc_segment_id++;
+...
+add_proto_connection(v2, sg2, temp_cluster);
+add_proto_connection(v3, sg2, temp_cluster);
+del_proto_vertex(v1);
+del_proto_segment(sg);
+del_proto_segment(sg1);
+temp_cluster->do_multi_tracking(map_vertex_segments, map_segment_vertices, *ct_point_cloud, global_wc_map, flash_time*units::microsecond, true, true, true);
+```
+
+Deletes the two short segments, builds the replacement via a fresh
+Dijkstra/Steiner path (the direct analog of `do_rough_path`), refits
+(`do_multi_tracking`) — and never touches point-cloud association, matching
+`examine_vertices_1`'s `add_segment`-a-brand-new-polyline behavior in §3.1
+exactly. And `determine_main_vertex` (`NeutrinoID_track_shower.h:1286`)
+calls `improve_vertex(temp_cluster, false)` internally, in the first round —
+matching the toolkit's `determine_main_vertex → improve_vertex →
+examine_vertices → examine_vertices_1` chain that built segment 20 (§3.1) —
+so the prototype can create this exact class of orphan-prone segment
+*before* any swap has even happened, the same way segment 20 was.
+
+**Conclusion**: this is a genuine, previously-undocumented defect in the
+original WCP prototype algorithm, faithfully inherited by the port — not a
+toolkit regression, and not a case where a fix would fight an intentional
+prototype convention. Per the doc pr/54 precedent (a toolkit-only extension
+of an unfinished/buggy prototype behavior, not a parity fix), the Round-2
+fix in §5 is free to diverge from the prototype's behavior here without an
+owner "which reading do you want" call under M15 — there is only one
+reading, and both trees share it.
+
+## 7. Verification (this round: sentinels only, log-only)
 
 - `wcdoctest-clus`: **152/152 test cases, 1614/1614 assertions PASS**
   (`./build/clus/wcdoctest-clus`, post-`wcbuild`).
