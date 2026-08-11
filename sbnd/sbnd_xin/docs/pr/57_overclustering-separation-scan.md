@@ -1348,12 +1348,23 @@ cost more owner-good pairs than it recovers (3, brackets quoted in 14.3).
 
 ### 14.7 Production flip and caveats
 
-- Production today: `wct-pr-perevt.jsonnet:452` `protect_graph_name =
-  'relaxed_strict_img'` — **S6 is entirely off in production**, so nothing
-  in this round changes any production byte. The flip, when the owner wants
-  the 2D check + rescue live, is one cfg edit:
-  `protect_graph_name = 'relaxed_strict_img_2d_rescue'` (legacy escapes
-  unchanged: `-A protect_graph_name=...` / `SBND_PROTECT_GRAPH`).
+- **SBND PRODUCTION DEFAULT flipped to `relaxed_strict_img_2d_rescue`,
+  owner 2026-08-10** (`wct-pr-perevt.jsonnet:452`, toolkit commit below;
+  supersedes round 7's `relaxed_strict_img`). S6 (the per-plane 2D gap-kill)
+  plus the pure rescue in 14.3-14.4 are now live: compiled-config proof
+  `graph_name : "relaxed_strict_img_2d_rescue"` (single occurrence, in the
+  `protect_bundle` node only), `wcdoctest-clus` 152/152 re-run clean after
+  the flip. protect_bundle is the only consumer of this graph, so every
+  event this flavor does not touch stays byte-identical; the events it does
+  touch are exactly the ones tabulated in 14.6. Legacy escapes unchanged:
+  `-A protect_graph_name=relaxed_strict_img` (or `SBND_PROTECT_GRAPH=`)
+  restores round 7's graph, `=relaxed_strict` restores round 6, `=relaxed`
+  restores pre-round-6.
+- Bee links for the flipped-on reconstruction of the round-6 disagreement
+  set plus the owner's original round-7/pr-54 spot-check events (18345-21073,
+  18255-71372, 18255-521075, 422851, 142421, 269774, evt394642, evt60669,
+  evt137238, evt285311, evt487853) are recorded in the session log; each was
+  built from the corresponding `work-pr57r6-scan{48,19,395}/pr_evt*/mabc-pr.zip`.
 - The rule was fitted on these 899 labels and validated on the same events
   (the owner's stated criterion). Round 3's lesson stands: per-population
   numbers are quoted above, PR-data dominates the bad set (106/127), and a
