@@ -1,12 +1,14 @@
 # doc pr/59 — shower_track_global hole at cluster 7 seg 20 (run 18255-142421): a segment created after its cluster's only association pass, orphaned by a silent main-cluster swap
 
-Status: **root cause confirmed by instrumented rerun. Log-only diagnostic
-sentinels added, byte-identical proven (§4). No fix, no new knob shipped this
-round** — owner chose "diagnose first" explicitly; the rescue fix is a
-follow-up (doc pr/60 or later), designed against the mechanism below instead
-of the earlier inference. Prototype comparison (§6, M15 check) confirms this
-is a genuine defect shared by both trees, not a toolkit divergence — the
-Round-2 fix needs no owner "which reading" call.
+Status: **Round 1: root cause confirmed by instrumented rerun, log-only
+sentinels, byte-identical proven (§7). Round 2 (§8-§10): fix SHIPPED as
+`assoc_full_recluster`, DEFAULT OFF, owner flip not made this round.**
+Prototype comparison (§6, M15 check) established this is a genuine defect
+shared by both trees, not a toolkit divergence, so the Round-2 fix needed no
+owner "which reading" call. Round 2 gates: off-gate byte-identical 19/19
+(§9), on-gate rescues all 12 orphans across the 19-event manifest with zero
+regressions and zero nusel-verdict movers (§9), Bee links for both events the
+owner asked about (§10).
 
 **Headline finding**: segment graph-index 20 in cluster 7 (encoded `7020`,
 109 fitted points, `(155.8,-39.5,250.5) -> (117.9,-69.1,209.9)` cm — the
@@ -64,6 +66,65 @@ grep "pr59 assoc-census stage.*segment 20 fits_size" \
 python3 ../../abtest/hash_archive.py work-pr57r6-scan19/pr_evt142421/mabc-pr.zip
 python3 ../../abtest/hash_archive.py work-pr59-gate1/pr_evt142421/mabc-pr.zip
 python3 ../../abtest/hash_archive.py work-pr59-gate2/pr_evt142421/mabc-pr.zip
+```
+
+Round 2 (§8-§10 — the shipped `assoc_full_recluster` fix):
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# measurement before any fix code -- locate 71372's root orphans (§8.3):
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue WCT_PR59_ASSOC_CENSUS=1 \
+  WCT_DET_DEBUG=2 PR_JOBS=2 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr59r2-probe data 71372 142421
+grep -A6 "WCT_DETA seg idx=52 \|WCT_DETA seg idx=53 \|WCT_DETA seg idx=199 " \
+  work-pr59r2-probe/pr_evt71372/stdout.log
+
+# off-gate, full 19-event manifest (byte-identical proof, §9):
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue PR_JOBS=6 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr59r2-off19 data
+
+# on-gate, same manifest, knob on + census sentinel:
+SBND_PROTECT_GRAPH=relaxed_strict_img_2d_rescue SBND_ASSOC_FULL_RECLUSTER=true \
+  WCT_PR59_ASSOC_CENSUS=1 PR_JOBS=6 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr59r2-on19 data
+
+# per-event byte-identical hash check, off19 vs the pre-existing production baseline:
+for e in 105946 114446 142421 180801 18625 21073 259542 285567 314838 359980 \
+         37112 399860 463565 506114 506746 521075 56982 71372 84229; do
+  python3 ../../abtest/hash_archive.py work-pr57r6-scan19/pr_evt${e}/mabc-pr.zip
+  python3 ../../abtest/hash_archive.py work-pr59r2-off19/pr_evt${e}/mabc-pr.zip
+done
+
+# on-gate rescue evidence (pr55 sentinel count, must drop to 0 for a rescued event):
+for e in 142421 71372 285567 314838 506114 506746 399860; do
+  grep -ac "pr55 shower_track layer" work-pr59r2-off19/pr_evt${e}/wct_pr_evt${e}.log
+  grep -ac "pr55 shower_track layer" work-pr59r2-on19/pr_evt${e}/wct_pr_evt${e}.log
+done  # -a: these logs trip grep's binary-file heuristic without it (extended-ASCII long lines)
+
+# census: zero "[lost]" tags anywhere in the manifest is the regression watch:
+grep -a "pr59r2 recluster:.*\[lost\]" work-pr59r2-on19/pr_evt*/wct_pr_evt*.log  # must be empty
+
+# nusel verdict-mover check:
+diff <(sort work-pr59r2-off19/nusel-table.tsv) <(sort work-pr59r2-on19/nusel-table.tsv)  # empty
+
+# Bee bundles for the owner's two events, both arms:
+python3 scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -p work-pr59r2-off19 \
+  -o /home/xqian/tmp/pr59r2-off-71372-142421.zip 71372 142421
+python3 scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -p work-pr59r2-on19 \
+  -o /home/xqian/tmp/pr59r2-on-71372-142421.zip  71372 142421
+./upload-to-bee.sh /home/xqian/tmp/pr59r2-off-71372-142421.zip
+./upload-to-bee.sh /home/xqian/tmp/pr59r2-on-71372-142421.zip
+
+# compiled-config proof (off/on key presence), from the toolkit repo:
+cd ../../../../toolkit
+./build/apps/wcsonnet --tla-str input=dummy.tar.gz --tla-code "anode_indices=[0,1]" \
+  --tla-str output_dir=/tmp --tla-code run=1 --tla-code subrun=1 --tla-code event=1 \
+  --tla-str reality=data --tla-code "pipeline_names=['tagger_check_neutrino']" \
+  --tla-str save_tensors=/tmp/x.tar.gz \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet | grep -c assoc_full_recluster  # 0
+./build/apps/wcsonnet ... --tla-code assoc_full_recluster=true \
+  cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet | grep assoc_full_recluster    # present
 ```
 
 ## 1. Symptom
@@ -247,18 +308,16 @@ could just as easily orphan two or three such segments, or none.
   false positives/negatives and has to be redone as a geometric point-cloud
   comparison (§2) to trust.
 
-## 5. Fix — not shipped this round
+## 5. Fix — design (Round 1; superseded/shipped in §8-§9)
 
-Owner-selected shape for the follow-up round (not implemented here): an
-**additive, default-OFF knob** — after the PR stages complete, identify any
-segment in the final PR graph with a non-empty `fits()` but a null/absent
-`associate_points` cloud, and run one association pass for it; adopt the
-result **only** into segments that were previously null. Every
-already-associated segment (including cluster 106's, and cluster 7's
-first-pass segments 4/9/10/11/12/15/16/17/18/19) stays byte-identical. This
-needs its own gate and an owner flip, since — per `NeutrinoEnergyReco.cxx`
-§0 above — turning it on will move reconstructed charge/energy for affected
-segments, not just Bee display.
+Owner-selected shape (Round 1's plan, before the owner's two Round-2
+constraints below refined it further): an **additive, default-OFF knob** —
+after the PR stages complete, identify any segment with a non-empty `fits()`
+but a null/absent `associate_points` cloud, and run an association pass for
+it, adopting the result only into previously-null segments. This needs its
+own gate and an owner flip, since — per `NeutrinoEnergyReco.cxx` §0 above —
+turning it on moves reconstructed charge/energy for affected segments, not
+just Bee display.
 
 Two mechanisms this fix must NOT silently also touch (documented so a future
 implementer doesn't reach for the wrong lever):
@@ -266,19 +325,21 @@ implementer doesn't reach for the wrong lever):
   swap may be entirely correct (106's vertex may genuinely be the better
   neutrino vertex); only its *silence*, and its side effect of stranding the
   demoted cluster's post-swap segments, is the gap.
-- Segments born via `break_segment` (e.g. cluster 7's 111/112, §3.1) already
-  carry a real, correctly-inherited `associate_points` cloud — a Round-2 fix
-  that indiscriminately re-associates "every segment created after the last
-  pass" rather than specifically "every segment with a null/absent cloud"
-  would re-compete for and potentially reshuffle points that are already
-  correct, not just fill genuine gaps.
 - The 2D ghost-removal cascade (`PRSegmentFunctions.cxx:2991-3031`) is a
   second, independent, pre-existing way a point can be silently dropped
   (Voronoi-cell owner loses the 2-plane 2D-nearest contest and no other
   segment reclaims it) — it did not fire for segment 20 in this event (§3),
-  but any Round-2 fix that re-runs association broadly, rather than only for
+  but any fix that re-runs association broadly, rather than only for
   null-cloud segments, would also re-expose that class and needs its own
-  scoping decision.
+  scoping decision. **Round 2 measured this class directly for the first
+  time — see §8.3.**
+
+The owner pushed back on "isolated rescue" (call `clustering_points_segments`
+with just the orphan) before implementation started: `clustering_points_segments`
+is a *competition* (Voronoi + 2D ghost-removal) among exactly the segments
+handed to it, so an isolated orphan would win points by default with no
+already-good sibling able to contest — the fix has to re-compete the WHOLE
+cluster, not just the gap. That is what shipped; see §8.
 
 ## 6. Prototype comparison (M15 check — not a toolkit-introduced defect)
 
@@ -350,11 +411,11 @@ original WCP prototype algorithm, faithfully inherited by the port — not a
 toolkit regression, and not a case where a fix would fight an intentional
 prototype convention. Per the doc pr/54 precedent (a toolkit-only extension
 of an unfinished/buggy prototype behavior, not a parity fix), the Round-2
-fix in §5 is free to diverge from the prototype's behavior here without an
+fix (§8) is free to diverge from the prototype's behavior here without an
 owner "which reading do you want" call under M15 — there is only one
 reading, and both trees share it.
 
-## 7. Verification (this round: sentinels only, log-only)
+## 7. Verification (Round 1: sentinels only, log-only)
 
 - `wcdoctest-clus`: **152/152 test cases, 1614/1614 assertions PASS**
   (`./build/clus/wcdoctest-clus`, post-`wcbuild`).
@@ -380,6 +441,229 @@ reading, and both trees share it.
 - No iterated pointer-keyed containers introduced (all new maps keyed by
   `SegmentIndexCmp`/cluster id, matching existing file convention).
 
+## 8. Fix — Round 2, shipped (`assoc_full_recluster`, DEFAULT OFF)
+
+### 8.1 Owner's two constraints
+
+The owner reviewed §5's original "isolated rescue" shape and set two
+constraints before implementation:
+
+1. **The (re-)association must happen before track/shower separation** — not
+   bolted on at the very end of the PR chain, so the segment's shower/track
+   classification can actually consume the new cloud. Verified in code this
+   round: `segment_is_shower_topology` (`PRSegmentFunctions.cxx:3449-3450`)
+   hard-returns `false` on a null `associate_points` cloud, and
+   `segment_is_shower_trajectory` (`:1738`) returns false for any segment
+   longer than 50 cm. Segment 20 is 64.9 cm — **under the pre-fix behavior it
+   can never be classified as a shower by either route, ever, regardless of
+   when a rescue ran** — it is silently forced to read as a track. This is
+   the owner's constraint 1, made concrete.
+2. **When it fires, recreate the point cloud for the whole cluster** — delete
+   the old `associate_points` and establish new ones, not a rescue scoped to
+   the orphan alone. This matches the concern already on record in §5:
+   `clustering_points_segments` is a *competition* (Voronoi ownership by
+   graph-geodesic distance, then a 2-of-3-plane 2D ghost-removal contest)
+   among exactly the segments handed to it — an isolated orphan would win
+   points by default with no already-good sibling able to contest.
+
+### 8.2 Design and implementation
+
+New method `PatternAlgorithms::reassociate_cluster_orphans(Graph&,
+Facade::Cluster&, IDetectorVolumes::pointer)`
+(`clus/src/NeutrinoTrackShowerSep.cxx`, declared
+`clus/inc/WireCellClus/NeutrinoPatternBase.h`), gated on a new member
+`m_assoc_full_recluster` checked *inside* the function (matching the
+`main_vertex_graph_audit` idiom — the caller invokes it unconditionally):
+
+1. Collect the cluster's current segments via `ordered_edges(graph)`
+   (deterministic edge-index order, never pointer order).
+2. Record each segment's `associate_points` point count. **If none is zero,
+   return 0 immediately** — an untouched cluster is a byte-identical no-op
+   even with the knob on.
+3. Otherwise clear `associate_points` on **every** segment in the cluster
+   (owner constraint 2's "delete the old") and call
+   `clustering_points_segments(segments, dv)` once over the whole set — a
+   fresh full-cluster competition, reusing the existing, unmodified entry
+   point.
+4. For exactly the segments that were orphaned before the clear (owner
+   constraint 1's target, scoped so an already-correctly-classified sibling
+   is never touched): re-run the same two calls `separate_track_shower`'s
+   loop body makes — `segment_is_shower_topology(...)`, then, if not
+   topology-shower, `segment_is_shower_trajectory(...)` — with the identical
+   arguments. This is *before* every later consumer of `associate_points` or
+   the shower/track flags: `determine_direction`,
+   `shower_determining_in_main_cluster`, `deghosting`,
+   `shower_clustering_with_nv`.
+5. Emit a per-segment before/after point-count census
+   (`WCT_PR59_ASSOC_CENSUS=1`, the Round 1 sentinel) tagged `rescued` /
+   `moved` / `lost` whenever the helper does work — covering the *whole*
+   cluster, not just the orphans, because a clear-then-recompete can in
+   principle leave a previously-good segment at zero (a manufactured new
+   orphan) and that must be visible, not just the intended fix.
+
+Two call sites in `TaggerCheckNeutrino.cxx`, both unconditional (the knob
+check lives inside the method):
+
+- **P1**, immediately after each `determine_main_vertex` call (main cluster,
+  and both branches of the other-clusters loop). `determine_main_vertex`'s
+  internal `examine_structure_final_1/2/3` (measured this round, §8.3) and
+  `examine_vertices_1` (Round 1, §3.1) are exactly the mechanisms that
+  delete-and-replace segments with a brand-new polyline and no inherited
+  association — P1 catches the result the moment it can exist, before
+  `determine_direction`/`shower_determining_in_main_cluster`/`deghosting`
+  consume it.
+- **P2**, immediately after the existing second `clustering_points` call
+  (which only ever touched `main_cluster`), looped over `main_cluster` +
+  `other_clusters`. A safety net for two things P1 cannot reach: a segment
+  created inside `improve_vertex`/`main_vertex_graph_audit` (both run
+  between P1 and P2), and the original bug's own mechanism — `main_cluster`
+  silently repointed by `swap_main_cluster` since the first
+  `clustering_points` call, which otherwise leaves the demoted original main
+  cluster on its stale, first-round-only state forever. Still before
+  `shower_clustering_with_nv`.
+
+New config knob `assoc_full_recluster` (C++ default `false`), wired with the
+house `get(config, "assoc_full_recluster", m_assoc_full_recluster)` /
+`default_configuration()` round-trip / `pattern_algos.m_assoc_full_recluster =
+...` copy idiom (`TaggerCheckNeutrino.h`/`.cxx`, modeled on
+`other_seg_keep_isolated`), threaded through three jsonnet layers with the
+key-suppression idiom (`+ (if assoc_full_recluster then {
+assoc_full_recluster: true } else {})` — key omitted, byte-identical, when
+off):
+`cfg/pgrapher/common/clus.jsonnet`'s `tagger_check_neutrino(...)` →
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`'s two `clus_pr`-shaped functions →
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`'s top-level TLA
+(`assoc_full_recluster = false`). Runner: `SBND_ASSOC_FULL_RECLUSTER=1` (or
+`-A assoc_full_recluster=true` directly) in
+`run_pr_chain_batch.sh`, same tri-state-env-to-TLA contract as every other
+knob in that file.
+
+New doctest `TEST_CASE("pattern_recognition reassociate_cluster_orphans
+[A]")` (`clus/test/doctest_pattern_recognition.cxx`): manufactures an orphan
+by nulling one already-associated segment's cloud after a real
+`AfterClusteringPoints` run, confirms (a) knob off is a true no-op — returns
+0, cloud stays null — and (b) knob on rescues it (returns > 0, cloud
+non-null), and (c) a cluster with no orphan left is a true no-op on a second
+call.
+
+### 8.3 Round-2 measurements
+
+**71372's three orphans are born the same way as 142421's segment 20.**
+Round 1 only measured 142421 (segment 20, born inside `determine_main_vertex`
+via `examine_vertices_1`). Before writing any fix code this round, the same
+`WCT_DET_DEBUG=2` backtrace facility was run on 71372
+(`work-pr59r2-probe/pr_evt71372/stdout.log`): all three orphans (`19052`,
+`19053`, `136199`, i.e. graph indices 52, 53, 199) are created *inside*
+`determine_main_vertex`, via `examine_structure_final_1`, `_3`, and `_2`
+respectively (`create_segment_from_vertices` /
+`merge_two_segments_into_one` / `merge_vertex_into_another` — sibling
+structural-cleanup sub-steps of the same function `examine_vertices_1` came
+from). **Every orphan measured this round, across both events, is born
+at-or-before `determine_main_vertex` returns** — confirmed empirically, not
+assumed: P1 alone is sufficient for the whole manifest; P2 fired as a
+genuine no-op (0 rescued) everywhere in this 19-event run except where P1's
+own re-competition needed a second, post-deghosting pass (§9's evt399860
+note).
+
+**`break_segment`'s associate_points redistribution has no else branch** —
+correcting §3.1's stated rule. Reading `PRSegmentFunctions.cxx:1087-1153`
+this round: the entire redistribution sits inside `if
+(seg->dpcloud("associate_points"))`, with nothing outside it. A null-cloud
+parent therefore yields **two** null children, not "not orphaned" as §3.1
+implied from the single 142421 case (which happened to have no
+`break_segment`-born orphan to test this on). This is exactly what explains
+71372's `19052`/`19053` pair: `examine_structure_final_1` first creates one
+new segment (`52`) with no cloud, and it is subsequently split by
+`break_segment` into `52`/`53` — both inherit nothing, because there was
+nothing to inherit.
+
+**A distinct, pre-existing failure class survived the fix, correctly.**
+`evt399860`'s single residual `pr55 shower_track layer` sentinel (cluster 17,
+segment `17005`) is a *different* bug from the one this fix targets: the
+`WCT_PR59_ASSOC_CENSUS` Stage-A/Stage-C sentinels show it **does** enter
+`clustering_points_segments` (Stage-A seeds 2 terminals from its 7-9 fit
+points) but **loses the 2-of-3-plane 2D ghost-removal contest** every single
+time — the original pass and both of this fix's re-competes (P1 pre-deghost,
+P2 post-deghost). This is precisely the "2D ghost-removal cascade" flagged as
+a second, independent, out-of-scope gap in §5 (and confirmed there as *not*
+firing for segment 20 in 142421). `reassociate_cluster_orphans` handles this
+correctly by design: it attempts the full recompete (since the cluster has
+at least one orphan), the segment legitimately loses again, and the helper
+leaves it null rather than forcing a result — no crash, no infinite retry,
+and (per §9) zero effect on any other segment's final point cloud in that
+event.
+
+## 9. Verification (Round 2)
+
+- `wcdoctest-clus`: **153/153 test cases (+1 new), 1620/1620 assertions PASS**
+  (`./build/clus/wcdoctest-clus`, post-`wcbuild`); the new
+  `reassociate_cluster_orphans [A]` case rescues 1 segment on the uBooNE `[A]`
+  fixture and passes all three sub-checks (§8.2).
+- Freshness proof: `local/lib/libWireCellClus.so` mtime `21:10:34` after
+  `wcbuild`, all five edited/added sources (`NeutrinoTrackShowerSep.cxx`
+  `21:08:53`, `TaggerCheckNeutrino.cxx` `21:09:58`, `NeutrinoPatternBase.h`
+  `21:08:47`, `TaggerCheckNeutrino.h` `21:08:22`,
+  `doctest_pattern_recognition.cxx` `21:13:29`) strictly older.
+- **Compiled-config proof**: `wcsonnet` on
+  `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` with the job's minimal
+  required TLAs — `assoc_full_recluster` key absent with the knob off (0
+  occurrences), present as `"assoc_full_recluster" : true` with `-A
+  assoc_full_recluster=true` on; `diff` of the two compiled JSONs is exactly
+  that one added line.
+- **Off-gate, byte-identical**: full 19-event manifest
+  (`work-pr59r2-off19`, `PR_JOBS=6`) vs. the pre-existing production
+  `work-pr57r6-scan19` — `hash_archive.py` member-content hash **19/19
+  match** (M2: member-content hash, not raw md5/cmp on the zip); merged
+  `nusel-table.tsv` `diff` clean across all 19 events.
+- **On-gate** (`work-pr59r2-on19`, `SBND_ASSOC_FULL_RECLUSTER=true
+  WCT_PR59_ASSOC_CENSUS=1`, same 19 events):
+  - `pr55 shower_track layer` sentinel count, off → on:
+    142421 1→0, 71372 3→0, 285567 1→0, 314838 2→0, 506114 1→0, 506746 4→0,
+    **399860 1→1** (the separate ghost-removal-loss case, §8.3 — correctly
+    left alone). The other 12 events had 0 both ways (never touched this
+    manifest's `hash_archive.py` result at all — see next bullet).
+  - Per-event `mabc-pr.zip` hash, on vs. off: **DIFFERS for exactly the 6
+    events with a rescued orphan** (142421, 71372, 285567, 314838, 506114,
+    506746), **SAME for all 13 others including 399860** — the knob is a
+    true no-op on every cluster it does not need to touch, and even on
+    399860's cluster 17 (which *was* re-competed twice, since it still had
+    an orphan both times) the final per-segment point counts came out
+    byte-identical to the un-recompeted baseline.
+  - `pr59r2 recluster` census tally across the whole manifest: **12 segments
+    rescued** (142421:1, 71372:3, 285567:1, 314838:2, 506114:1, 506746:4 —
+    matches the sentinel deltas exactly), dozens more tagged `moved` (small
+    point-count shifts on already-good siblings from the fresh Voronoi
+    competition), **zero tagged `lost`** anywhere in the manifest — no
+    previously-populated segment was driven to zero.
+  - Direct per-segment point-count check on the two events the owner asked
+    about (`shower_track-global.json` inside `mabc-pr.zip`,
+    `real_cluster_id`-keyed): 142421 cluster 7 — `7020` (segment 20) 0 → 619
+    points, all six siblings shift by at most 21 points (`7009` 155→161,
+    `7010` 3244→3244, `7016` 679→680, `7017` 51→54, `7019` 702→681, `7111`
+    4853→4815), none reach zero; 71372 cluster 19 — shower-collapsed
+    `real_cluster_id` `19032` (the start segment the absorbed segments
+    report under, per the `id()`-based numbering gotcha) 2794 → 3404 points.
+  - `nusel-table.tsv`, on vs. off: **byte-identical across all 19 events** —
+    `diff` of the sorted merged tables is empty. Zero verdict movers; the
+    fix touches only `associate_points`/shower-classification flags, not any
+    variable nusel's selection reads.
+
+## 10. Bee links (both arms, both requested events)
+
+Built with `scripts/bee/make_pr_bee.py -q work-ncpi0-cb0805 -p <pr_root> -o
+<zip> 71372 142421` (both events evaluated a neutrino candidate — no
+degenerate-dump refusal) and uploaded via `upload-to-bee.sh`. Both sets carry
+the same two events in the same order (index 0 = 71372, index 1 = 142421),
+so the same Bee URL suffix (`/event/0/`, `/event/1/`) compares directly
+across links.
+
+- **Knob OFF** (`work-pr59r2-off19`, today's production behavior, the
+  `shower_track_global` hole still present on both events):
+  https://www.phy.bnl.gov/twister/bee/set/0dc8f7ac-d832-433b-92f9-e9c2c4c1c295/event/list/
+- **Knob ON** (`work-pr59r2-on19`, `assoc_full_recluster=true`, the fix from
+  §8):
+  https://www.phy.bnl.gov/twister/bee/set/720c176a-976d-4fb0-8d99-38c671d2189b/event/list/
+
 ## Gotchas carried forward
 
 - `track_fit` vs `shower_track` `real_cluster_id` numbering asymmetry (§2) —
@@ -391,6 +675,21 @@ reading, and both trees share it.
   debugging a "segment X exists in track_fit but nowhere else" symptom should
   check `WCT_PR59_ASSOC_CENSUS=1` first before assuming a ghost-removal
   (Stage-B) cause.
+- `break_segment`'s `associate_points` redistribution has no else branch
+  (§8.3) — a null-cloud parent yields two null children, not "safe by
+  construction" as an earlier draft of §3.1 implied from the single 142421
+  case. Check both children, not just the parent, when auditing a
+  `break_segment`-born pair.
+- A segment can enter `clustering_points_segments` and still end up null by
+  *losing* the 2-of-3-plane 2D ghost-removal contest (Stage-C) — this is a
+  different, still-open gap from the one `assoc_full_recluster` fixes
+  (§8.3's 399860/cluster-17/segment-5 case). `WCT_PR59_ASSOC_CENSUS=1`'s
+  Stage-A/Stage-C lines distinguish the two: "never appears in Stage-A" is
+  this doc's bug; "Stage-C 'won ZERO points'" is the other one.
+- `wct_pr_evt<N>.log` files trip `grep`'s binary-file heuristic (extended-ASCII,
+  very long lines) — the count silently comes back empty instead of `0`
+  unless you pass `-a`/`--text`. Cost real time working out why a `grep -c`
+  loop was returning blank instead of zero.
 
 Related: [[project_pr55_fit_vs_image]] (the existing `shower_track layer`
 sentinel that named the symptom but not the mechanism),

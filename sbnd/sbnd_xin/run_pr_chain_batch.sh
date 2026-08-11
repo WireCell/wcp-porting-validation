@@ -746,6 +746,15 @@ fi
 if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH:-}" ]; then
     CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_length=${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH}")
 fi
+# doc pr/59 round 2 (18255-142421 seg 20; 116944-71372 segs
+# 19052/19053/136199): per-cluster re-association rescue for a segment
+# created after its cluster's clustering_points pass, left with a null
+# associate_points cloud (zero shower_track-global points, energy fallback to
+# the sparse fit polyline).  Boolean TLA, same contract.
+#   SBND_ASSOC_FULL_RECLUSTER
+if [ -n "${SBND_ASSOC_FULL_RECLUSTER:-}" ]; then
+    CATH_TLA+=(--tla-code "assoc_full_recluster=${SBND_ASSOC_FULL_RECLUSTER}")
+fi
 # doc pr/43: four owner-reported PID cases on run 18255 (142421, 54351,
 # 56463, 57661) -- one segment absorbed and missing from both the flow tree
 # and the energy sum, and three muon/pion mis-selections at the
