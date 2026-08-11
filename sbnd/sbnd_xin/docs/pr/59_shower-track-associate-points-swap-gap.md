@@ -2,13 +2,16 @@
 
 Status: **Round 1: root cause confirmed by instrumented rerun, log-only
 sentinels, byte-identical proven (§7). Round 2 (§8-§10): fix SHIPPED as
-`assoc_full_recluster`, DEFAULT OFF, owner flip not made this round.**
-Prototype comparison (§6, M15 check) established this is a genuine defect
-shared by both trees, not a toolkit divergence, so the Round-2 fix needed no
-owner "which reading" call. Round 2 gates: off-gate byte-identical 19/19
-(§9), on-gate rescues all 12 orphans across the 19-event manifest with zero
-regressions and zero nusel-verdict movers (§9), Bee links for both events the
-owner asked about (§10).
+`assoc_full_recluster`. SBND PRODUCTION ON — owner flip 2026-08-10 (§11),
+C++ knob default itself stays `false`.** Prototype comparison (§6, M15
+check) established this is a genuine defect shared by both trees, not a
+toolkit divergence, so the Round-2 fix needed no owner "which reading" call.
+Round 2 gates: off-gate byte-identical 19/19 (§9), on-gate rescues all 12
+orphans across the 19-event manifest with zero regressions and zero
+nusel-verdict movers (§9), Bee links for both events the owner asked about
+(§10). Bare production now IS the validated `work-pr59r2-on19` arm,
+byte-proven directly (§11); legacy escape `-A assoc_full_recluster=false`
+restores the pre-flip byte-identical behavior.
 
 **Headline finding**: segment graph-index 20 in cluster 7 (encoded `7020`,
 109 fitted points, `(155.8,-39.5,250.5) -> (117.9,-69.1,209.9)` cm — the
@@ -663,6 +666,36 @@ across links.
 - **Knob ON** (`work-pr59r2-on19`, `assoc_full_recluster=true`, the fix from
   §8):
   https://www.phy.bnl.gov/twister/bee/set/720c176a-976d-4fb0-8d99-38c671d2189b/event/list/
+
+## 11. SBND production flip (owner, 2026-08-10)
+
+Owner, after reviewing §9's gate numbers and §10's Bee links: "flip it on for
+default for SBND production." `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`'s
+top-level TLA default changed `assoc_full_recluster = false` →
+`assoc_full_recluster = true` — the same flip mechanism as doc pr/54's
+`other_seg_keep_isolated` (TLA default flips; the C++ knob's own default
+inside `TaggerCheckNeutrino` stays `false`, so any OTHER caller of
+`tagger_check_neutrino(...)` that doesn't pass the arg is unaffected).
+
+- **Compiled-config proof**: bare `wcsonnet` compile (no `-A` override) now
+  emits `"assoc_full_recluster" : true`; `-A assoc_full_recluster=false`
+  (the legacy escape) omits the key entirely, and the resulting compiled
+  JSON is `diff`-clean against the pre-Round-2 compiled config saved during
+  §9's compiled-config proof — the escape hatch is byte-exact, not just
+  "close."
+- **Bare-production byte-proof**: reran evt142421 with zero env overrides
+  (`work-pr59-flip-bare19`, `PR_JOBS=1`) — `hash_archive.py` member-content
+  hash of `mabc-pr.zip` is **identical** to `work-pr59r2-on19`'s
+  (`d223c5c4...`). Bare production is not merely "expected to behave like"
+  the validated on-gate arm; it is now provably that exact config.
+- No further gate is needed beyond §9's: the flip changes which value a
+  jsonnet default arg carries, not any code path, and §9 already exercised
+  the knob at `true` across the full 19-event manifest.
+
+This is **not a byte-identical change to bare production going forward** —
+by design: any event with an orphaned segment (measured this round: 6 of 19
+in the current manifest) now gets it rescued. The legacy escape above
+reproduces the pre-flip byte-identical behavior for any A/B that needs it.
 
 ## Gotchas carried forward
 
