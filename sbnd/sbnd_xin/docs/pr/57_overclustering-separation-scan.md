@@ -1373,3 +1373,11 @@ cost more owner-good pairs than it recovers (3, brackets quoted in 14.3).
 - The displays (5018/5019/5020) still serve the round-4 arms — the labels
   belong to those dumps. To eyeball the rescue's effect, point a fresh
   viewer at `work-pr57r6-scan*` (fresh tag if labelling).
+- After the flip, the owner read two apparent "phantom trajectories" off the
+  post-flip Bee set (71372, 142421) and asked whether the flip had
+  over-clustered them. Both traced to causes unrelated to this flip
+  (cluster membership at the reported points is byte-identical pre/post
+  flip in both events) — see doc pr/61 for the full trace (Bee's
+  point-only rendering + cross-cluster PF stitching for 71372; the
+  pr/55-documented uncapped-MST `steiner_graph` routing, plus a deeper,
+  concurrently-diagnosed association gap in doc pr/59, for 142421).
