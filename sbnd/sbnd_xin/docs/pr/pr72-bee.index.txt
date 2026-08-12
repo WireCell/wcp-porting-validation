@@ -1,0 +1,12 @@
+# bee_idx	event
+# before (work-pr72-off48, es3_stub_guard=false, legacy): https://www.phy.bnl.gov/twister/bee/set/063dbd3d-2ae2-4fbf-8207-77856039e29f/event/list/
+# after  (work-pr72-on48,  es3_stub_guard=true, stub_max=7cm len_ratio=2.0 ang3_min=15 ang_ratio=1.0 require_terminal=true): https://www.phy.bnl.gov/twister/bee/set/91f74215-bbd0-4ba9-9b68-90085a734772/event/list/
+#
+# 117-event census (48 nueCC + 19 NC pi0 + 50 PR data) found exactly ONE
+# junction anywhere in the sample that the chosen operating point suppresses:
+# this event's own target junction. The "misses" population (a merge the
+# census flags as suspicious -- ang3>15 && deg_far==1 -- that the chosen
+# thresholds still let through) is EMPTY: es3_residual.tsv has 0 rows. No
+# second Bee set exists because there is nothing to show in it; this is
+# recorded explicitly per M13/no-silent-truncation rather than omitted.
+0	196649

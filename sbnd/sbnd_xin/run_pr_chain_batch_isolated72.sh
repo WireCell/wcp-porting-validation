@@ -50,7 +50,22 @@ set -u
 
 SX=$(cd "$(dirname "$0")" && pwd -P)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
-TK=$WCT_BASE/toolkit
+# doc pr/72 round 2: isolated-worktree copy for the ES3 merge census + knob
+# round -- TK points at a fresh git worktree pinned at clean HEAD (efef4535),
+# so census population/thresholds/A-B baselines are measured against a
+# fixed, reproducible commit rather than whatever the shared toolkit tree
+# happens to be mid-edited to at run time (M9). wire-cell-data/local/python
+# stay on the shared, read-only WCT_BASE. Never edit run_pr_chain_batch.sh
+# itself for this -- new file.
+TK=/home/xqian/tmp/claude-25225/-nfs-data-1-xqian-toolkit-dev-toolkit/3380281e-07e2-45fe-807e-ca889cf6946e/scratchpad/wt-pr72
+# doc pr/72 round 2 fix: the round-1 script never overrode PATH/
+# LD_LIBRARY_PATH, so `wire-cell` on line ~910 silently resolved through
+# direnv's inherited PATH to the SHARED tree's binary/libs (M1's vacuous-A/B
+# trap -- confirmed empirically: a census-on/off byte-identity check passed
+# with ZERO ES3CENSUS log lines, because both sides ran the shared
+# production binary, not this worktree's). $TK/local/bin must come first.
+export PATH=$TK/local/bin:$PATH
+export LD_LIBRARY_PATH=$TK/local/lib:${LD_LIBRARY_PATH:-}
 export WIRECELL_PATH=$TK/cfg:$WCT_BASE/wire-cell-data:$WCT_BASE/wire-cell-data/sbnd/photodet:${WIRECELL_PATH:-}
 export PYTHONPATH=$TK/pyutil/python:$WCT_BASE/local/python:$WCT_BASE/wire-cell-python:${PYTHONPATH:-}
 AB=$SX/../../abtest

@@ -1,0 +1,24 @@
+# PR cluster_id remap for bee/pr72/pr72-196649-after.zip
+# event	bee_idx	pr_cluster_id	img_cluster_id	note	img_constituents(id:npts)
+196649	0	11	7	flash-matched	7:9771
+196649	0	16	1	NO-FLASH-MATCH (fallback: dominant)	1:16
+196649	0	17	17	NO-FLASH-MATCH (fallback: dominant)	17:6
+196649	0	34	7	flash-matched	7:6
+196649	0	35	7	flash-matched	7:11
+196649	0	36	7	flash-matched	7:9
+196649	0	37	7	flash-matched	7:9
+196649	0	38	7	flash-matched	7:24
+196649	0	40	7	flash-matched	7:28
+196649	0	41	7	flash-matched	7:17
+196649	0	42	7	flash-matched	7:32
+196649	0	44	7	flash-matched	7:8
+196649	0	45	7	flash-matched	7:7
+196649	0	46	7	flash-matched	7:27
+196649	0	47	7	flash-matched	7:25
+196649	0	48	7	flash-matched	7:19
+196649	0	49	7	flash-matched	7:27
+196649	0	50	7	flash-matched	7:52
+196649	0	52	7	flash-matched	7:14
+196649	0	53	7	flash-matched	7:61
+196649	0	67	7	flash-matched	7:17
+196649	0	68	7	flash-matched	7:231
