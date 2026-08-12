@@ -6,10 +6,21 @@ Repro:
 cd sbnd_xin
 ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TIDY round
                                  #   (216 before it) -- see that section below
-ls -d work* | wc -l              # 32 after the 2026-08-05 round (233 before it; 19 after
-                                 #   the 2026-08-03 tidy round, 27 after the retirement
-                                 #   round the same day, 138 before it; 23 after
-                                 #   2026-08-02, 254 / 155 GiB before that, 15 after 2026-07-30)
+ls -d work* | wc -l              # 18 after the 2026-08-11 round (471 before it; 32 after
+                                 #   2026-08-05, 233 before it; 19 after the 2026-08-03
+                                 #   tidy round, 27 after the retirement round the same
+                                 #   day, 138 before it; 23 after 2026-08-02, 254 / 155 GiB
+                                 #   before that, 15 after 2026-07-30)
+du -sh sbnd_xin                  # 23G after the 2026-08-11 round (103G before it)
+
+# the 2026-08-11 retirement round (see that section below):
+python3 scripts/retire/plan_20260811.py           # explicit 18-name KEEP + 6 asserts
+RETIRE_JOBS=24 python3 scripts/retire/archive_records_20260811.py  # integrity PASS 454/454
+scripts/retire/retire_20260811.sh A               # dry run of the removal list
+python3 scripts/retire/thin_hubs_20260811.py      # Phase 4: hub-internal thinning, dry run
+cat scripts/retire/state-20260811/removed.tsv     # what was ACTUALLY removed
+diff <(awk -F'\t' 'NR>1{print $1"\t"$2}' docs/pr/nuecc48-prod0811.index.txt) \
+     <(awk -F'\t' 'NR>1{print $1"\t"$2}' docs/pr/nuecc48-cb0805.index.txt)  # bee_idx alignment proof
 
 # the 2026-08-05 retirement round (see that section below):
 python3 scripts/retire/plan_20260805.py       # 2 tier lists + 7 safety asserts
@@ -89,6 +100,193 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-11 — the pr/38-65 campaign sweep, 103G → 23G
+
+**STATUS: EXECUTED.** `CONFIRM=yes retire_20260811.sh A` (454 dirs, 69 GiB) +
+`thin_hubs_20260811.py` (Phase 4, 9.84 GiB inside 6 surviving hubs) — 471 → **18**
+`work-*` dirs, `sbnd_xin` **103G → 23G**, `/nfs/data/1` free 464G → 544G. Broken
+symlinks 0 before and after; no git-tracked file deleted; archive integrity
+**PASS 454/454**. Repro block at the top of this file.
+
+### Why this round exists
+
+The pr/38 through pr/65 campaign regrew the tree from the 2026-08-05
+clean-slate baseline (5 survivors) to 471 `work-*` dirs / 92 GiB, and current
+production moved three times in one day (2026-08-11: pr/62 S7 corridor flip
+`10063f4e`, pr/65 orphan-fix flip `2df05519`, pr/64 round-4 W-track flip
+`b38127a0`), making the whole pre-08-11 arm population non-comparable — every
+arm is one leg of an A/B whose verdict already lives in its doc. Two things
+rode along: archiving the overclustering hand-scan labels (untracked and
+`.gitignore`d — disk was their only copy) before any deletion, and delivering
+three fresh Bee scan sets at current production afterward.
+
+### M1 gate on the Bee sources
+
+Before building anything: `local/lib/libWireCellClus.so` was built **14:39:45**;
+7 `clus/`+`cfg/` files carried mtime **15:13:36** (after the build, before the
+15:15 pr/64 commit) — the reflog showed three bare `reset: moving to HEAD` at
+15:11-15:13, working-tree content already equal to HEAD. Ran `wcbuild` as the
+actual gate rather than trust the mtime read: **0 objects recompiled, rc=0** —
+confirms the 14:39 binary is genuinely `b38127a0`, so `work-pr64r4-on48/on19/on1k`
+(which ran 14:56-15:08, entirely after the build) are valid current-production
+Bee sources.
+
+### The KEEP set — 18 explicit names, not a dependency-graph inference
+
+Same shape as the 2026-08-05 clean-slate round: with imaging already
+regenerated and current production baked into `wct-pr-perevt.jsonnet`, the
+pre-08-11 arm population is a record layer, not an input set. `plan_20260811.py`
+(fork of `plan_20260805cs.py`) uses an explicit `KEEP_WHY` dict instead of hub
+inference — 5 `-img-` hubs (1090 inbound symlinks total, runner-pinned), 5
+`-cb0805` Q/L hubs (runner-pinned, **thinned**, see Phase 4), 3 current-production
+reference arms `work-pr64r4-{on48,on19,on1k}` (the Bee sources), 2 oc56
+scan-dump arms `work-pr64r4-{scan48,scan19}`, and 3 git-tracked/M13 arms
+(`work-stmcamp-d66new`, `work-nuecc48-prsmoke2`, `work-tfix388-r9`). The pr/33
+knob-off gate pair (`work-pr33-{base48,off48}`, `PROTECTED.txt` survivors of
+the cs round) was retired this round — superseded by the cb0805 campaign and
+every flip since; `PROTECTED.txt`'s active section was reconciled, moving the
+16-already-gone + 2-now-retired entries into its RETIRED section (it had drifted
+stale by 16 since the cs round and was never updated, contrary to its own
+housekeeping rule).
+
+### Two extra removal classes invisible to every prior round's `work*` glob
+
+- **`VOID-pr32-round1/`** (0.83 GiB, 6 dead pr/32 arms bundled under a
+  non-`work`-prefixed name) — added directly to `plan_20260811.py`'s universe
+  (verified: real dir, 0 symlinks inside, 0 git-tracked files), flows through
+  the normal archive-then-delete path.
+- **118 orphan `work-*.driver.log` files** (1.1 MiB) — records of arms deleted
+  by earlier rounds, not directories, invisible to every prior `plan_*.py`.
+  Tarred as one bundle (`scripts/retire/state-20260811/driver-logs.tar.gz`)
+  then removed.
+
+`scan-d59k/bee/` (694 MB, 9 Bee zips) is a third special case, dropped without
+archiving: all 9 already have a saved `.url` (checked — unlike the 2026-08-03
+round, which found only 12/44), so the sets are still live on the BNL twister
+server; the record layer and the hand-scan `.tsv`/`.txt` tables were separately
+copied to `archive/records/labels/scan-d59k/`.
+
+### Two inherited driver defects fixed, found live during exploration
+
+1. **Survivor census.** `retire_20260805.sh:188` / `retire_20260805cs.sh:195`
+   count `ls -d work* | wc -l`, which in this tree also counts the 118 orphan
+   `.driver.log` **files** and can never match the expected directory count.
+   `retire_20260811.sh` uses `find -maxdepth 1 -type d`.
+2. **Brace-expansion no-op.** `retire_20260805cs.sh:85` iterates
+   `tier{A}_20260805cs.txt` — bash leaves a single-element brace literal, so
+   the `cat` silently matches nothing and the Bokeh interlock unconditionally
+   prints "safe to proceed" even when a live viewer names a removal-set
+   directory. `retire_20260811.sh` iterates the real tier-list files built from
+   `$TIERS`, shared with the removal loop.
+
+### Phase 2 — overclustering hand-scan labels archived + committed
+
+`overclustering_labels/` (899 labels / 233 files across 230 events — owner
+round-1 + `claude-scan223` + `claude-scan50`, backing doc pr/57's 899-label
+gate) was untracked and `.gitignore`d (`*.json`), so disk was its only copy.
+Preserved two ways before any deletion: byte-identical copy to
+`archive/records/labels/overclustering_labels/` (`filecmp.dircmp` verified),
+and 230 files (scratch tags `battest`/`battest3`/`unittest`/`floortest`/
+`smoketest` excluded) committed to `wcp-porting-img` — `5fa6037`. The
+scan-d59k hand-scan `.tsv`/`.txt` tables were copied the same way.
+
+### Phase 3 — the sweep
+
+`plan_20260811.py`, 6 asserts, all PASS: SP-frame source survival (5/5 OK, only
+`work-img-mcp1k`'s SP layer actually drops, in Phase 4), hand-scan record
+archive-copy verification, no git-tracked file in the removal set, dangling-link
+dry run (0 of 6958 outside-set symlinks point into it), every KEEP name present,
+and (**new this round**) `overclustering_labels` archive-copy + git-tracked
+verification. `archive_records_20260811.py` (fork of the 08-05 script,
+24-way): **HEAVY gains two classes** — `tracking-pr.root` (its only consumer,
+`pr33_cmp.py`'s comparison families, is entirely retired this round) and
+`oc56scan-evt*.jsonl` (see the regression below) — archived 3.5 GiB raw → 406
+MiB gz, **integrity PASS 454/454**. `retire_20260811.sh A` (dry run, then
+`CONFIRM=yes`): 454 removed, 0 refused, 0 broken symlinks before or after, 0
+git-tracked deletions, 18 survivors (matches KEEP).
+
+### Phase 4 — hub thinning, 9.84 GiB
+
+`thin_hubs_20260811.py`, hard-refuses any path outside the 6 named roots, any
+`ql_evt*/` path other than `calib-evt*.json`, and any symlink. Inside the five
+`-cb0805` roots: the `pr_evt*/`+`nusel_evt*/` layers (stale 2026-08-05 PR/nusel
+output, superseded by the pr64r4 reference arms — 5.45+0.62 GiB heavy) and
+every `ql_evt*/calib-evt*.json` dump (2.74 GiB — never read by the PR chain or
+Bee builder) removed after archiving the record layer
+(`wct_pr_evt*.log`/`wct_nusel_evt*.log`/`nusel-evt*.tsv`/`tracking-stm.root`/
+`rc.txt`/`stdout.log`; 5 tarballs, **integrity PASS 5/5**, 167 MiB raw). Then
+`work-img-mcp1k/evt*/sp-frames*.tar.bz2` (1.23 GiB) after confirming
+`input_files_reco1/staged-mcp2025c-1000evt` covers all 1000 source events
+(1004 entries present).
+
+### A self-inflicted regression, found by the post-round verification, and its fix
+
+`oc56_truth.py`'s current `DEFAULT_ARMS` (comment dated 2026-08-11, i.e.
+written the same day as this round) is
+`['work-pr64r4-scan48', 'work-pr64r4-scan19', 'work-pr64-scan1k']` — **three**
+arms, not the two this round's KEEP set carried forward. `work-pr64-scan1k`
+(the full-1000-event oc56 population dump, superset of the old scan50+scan395
+events) was retired, and its `oc56scan-evt*.jsonl` dumps were dropped as HEAVY
+(not archived) by the very same-round `archive_records_20260811.py` reclass —
+so the content was gone, not just relocated. Post-round verification
+(`python3 scripts/analysis/pr57/oc56_truth.py --out ...`) caught it: `GATE
+orphan labels: 358 FAIL` (of 899 loaded), overwhelmingly the mcp1k-sample
+`claude-scan50` tag.
+
+Fix: regenerated the dump as a fresh, consistently-named arm —
+`work-pr64r4-scan1k` (matching the `-scan48`/`-scan19` naming already kept) —
+via `PR_JOBS=6 PR_OC56_SCAN_DUMP=1 ./run_pr_chain_batch.sh work-mcp1k-cb0805
+work-pr64r4-scan1k data`, bare (current production is the default compiled
+config, so no `SBND_*` override needed — same as how `on1k`/`scan48`/`scan19`
+were produced). [FILL IN: rc, event count, GATE result once complete —
+see the addendum below / commit history for the follow-up.]
+
+### Bee sets delivered — three links at current production (toolkit `b38127a0`)
+
+Built from the KEPT hubs, using the **frozen doc-71 event lists** so `bee_idx`
+stays comparable to the doc-71 scan (`diff` against
+`docs/pr/{nuecc48,ncpi0,mcp1k-50}-cb0805.index.txt`: **identical** on all
+three). `nu_evaluated` moved slightly since doc 71 across the pr/62+pr/64+pr/65
+flips:
+
+| sample | doc 71 | now | change |
+|---|---:|---:|---|
+| nueCC48 | 47/48 | 47/48 | none |
+| NCpi0 | 19/19 | 18/19 | lost 285567 |
+| mcp1k | 445/1000 | 444/1000 | lost 280853, 52613, 59723 · gained 281953, 48895 |
+
+285567 and 52613 (the only two of those inside the three frozen Bee lists) were
+included via `--allow-unevaluated`: 285567 unexpectedly still carries full PR
+layers (`shower_track-global`/`track_fit-global`/`vertices-global`/`mc`, just
+no selected-candidate marker); 52613 has image+clustering only (5 layers, no
+PR). Both probed as single-event zips (rc=0) before building the full sets.
+
+| set | events | source (ql × pr) | URL |
+|---|---:|---|---|
+| nueCC48 | 47/48 | `work-nuecc48-cb0805` × `work-pr64r4-on48` | `https://www.phy.bnl.gov/twister/bee/set/9e2a1a1e-b637-4be5-99b7-f49bf8c04c57/event/list/` |
+| NCpi0 | 18/19 evaluated, 19 built | `work-ncpi0-cb0805` × `work-pr64r4-on19` | `https://www.phy.bnl.gov/twister/bee/set/13900b8c-e48c-4ebb-8daa-da19e2e989b6/event/list/` |
+| mcp1k-50 | 49/50 evaluated, 50 built | `work-mcp1k-cb0805` × `work-pr64r4-on1k` | `https://www.phy.bnl.gov/twister/bee/set/f8203fcd-8f16-4aac-8576-cca0c7086d79/event/list/` |
+
+Record files: `bee/prod0811/{nuecc48,ncpi0,mcp1k50}-prod0811.{zip,index.txt,prid-map.txt,url}`
+(local only, `archive/`-style — the small `.index.txt`/`.prid-map.txt` records are
+git-tracked at `docs/pr/{nuecc48,ncpi0,mcp1k50}-prod0811.{index,prid-map}.txt`,
+following the `docs/pr/pr65-bee.index.txt` precedent).
+
+### Post-round checks
+
+`find . -xtype l` 0 before and after · `relink_tags.py` repaired=0 unresolved=0
+· `git status --short | grep '^ D'` empty · survivors 18 == KEEP · `du -sh` 23G
+· all four `run_{ql,nusel,pr,img}_evt.sh data` interfaces list correctly once
+`SBND_WORK_ROOT` is supplied (the bare-invocation M13 refusal when unset is
+pre-existing since 2026-08-05, not a regression — `work/` has not existed since
+before this round).
+
+### Gate labels for future re-checks
+
+`scripts/retire/state-20260811/{plan.json,removed.tsv,driver-logs.tar.gz}`,
+`archive/records/pr38-65-era-20260811/<group>/<tag>.{tar.gz,links.txt,manifest.tsv}`
+(454 arms + `cb0805-hubs/` for the Phase-4 record layer), `bee/prod0811/`.
 
 ## TIDY ROUND 2026-08-03 — the directory itself: 216 → 74 top-level entries
 

@@ -28,26 +28,42 @@
 # within one round of happening.
 
 work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protection and it is not reproducible from any surviving input	doc pr/28 sec.15.9
-work-pr37b-repeatA	repeat-run determinism FLOOR at toolkit 2457320d, arm A (setarch -R, PR_EXTRA_STAGES=pr_display); the pair is the only floor measurement that covers the calib dump	doc pr/37 sec.6.2
-work-pr37b-repeatB	same pair, arm B; a floor is a PAIR -- deleting either one destroys the measurement, not half of it	doc pr/37 sec.6.2
-work-nuecc48-prod0803	the 48-event nueCC input root every pr/28-37 arm is generated from	doc pr/33 sec.11, doc pr/37 Repro
-work-vfnuecc48-prod0803	its valfast counterpart	scripts/retire/retire_20260803.sh
 
-# --- the clean-source reference family (added 2026-08-05) ----------------
-# doc pr/33 sec.11.2: every binary built before 2026-08-05 06:32 carried stale
-# build/clus objects and is NOT reproducible from committed source.  These are
-# the FIRST arms in this tree produced by a binary that corresponds to its
-# source, and until the re-processing campaign lands they are the only baseline
-# anything can legitimately be gated against.  Protected by mtime cutoff in
-# plan_20260805.py as well as by name here -- deliberately belt-and-braces,
-# because eight of them scan as zero-citation (doc pr/33:1352 writes the labels
-# inside line-wrapped braces, so a plain name scan misses them).
-work-pr33-base48	the clean-source reference; pr/33's knob-off gate is base48 vs off48 48/48 cross-binary	doc pr/33 sec.11.2, doc pr/37 sec.13
-work-pr33-off48 work-pr33-prod48 work-pr33-allon48	pr/33's knob-off / production / all-on arms -- the gate is the SET, not any one arm	doc pr/33 sec.11.1
-work-pr33-f1aon48 work-pr33-f1bon48 work-pr33-f2aon48 work-pr33-f2bon48 work-pr33-f2con48 work-pr33-f3on48 work-pr33-f4on48 work-pr33-f5on48	per-knob attribution arms; f4on48 is the only mover (17/48) and the rest are the evidence that the other seven are null	doc pr/33 sec.11.1
-work-pr33-headchk work-pr33-freshchk	controls of the three-build reproducibility proof that established the stale-binary finding	doc pr/33 sec.11.2
+# --- the 2026-08-11 reference family (added 2026-08-11) -------------------
+# Current production is toolkit b38127a0 (pr/62 + pr/64 + pr/65 all flipped
+# ON). These supersede the pr/33 clean-source family below as the arms
+# anything is gated against -- see docs/work-tags.md "RETIREMENT ROUND
+# 2026-08-11".  Not name-protected here (plan_20260811.py's explicit KEEP_WHY
+# dict is the source of truth this round), listed for continuity so the next
+# round's human reader knows why they exist.
+# work-pr64r4-on48/on19/on1k    current-production PR reference (Bee sources)
+# work-pr64r4-scan48/scan19     oc56 truth-table dump arms
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+# 2026-08-11 -- the pr/33 clean-source family + pr/37b repeat pair +
+# nuecc48-prod0803/vfnuecc48-prod0803, SUPERSEDED.
+#
+# All were the pre-campaign reference: the pr/33 pair as "the only baseline
+# until the re-processing campaign lands" (see their entry below, dated
+# 2026-08-05) and prod0803/pr37b as the pr/28-37 era's input root and
+# determinism floor.  The re-processing campaign (doc 71, 2026-08-05) and the
+# pr/62+pr/64+pr/65 production flips since have superseded both roles --
+# current production is gated against work-pr64r4-{on48,on19,on1k} instead
+# (2026-08-11 reference family above).  work-pr37b-repeatA/B and
+# work-nuecc48-prod0803/work-vfnuecc48-prod0803 were already removed in the
+# 2026-08-05 clean-slate round; work-pr33-base48/off48 existed on disk again
+# at the 2026-08-11 round (regenerated after the cs round) and were retired
+# with this round's sweep, archived to
+# archive/records/pr38-65-era-20260811/pr30-39-era/.
+#
+# work-pr37b-repeatA	repeat-run determinism FLOOR at toolkit 2457320d, arm A (setarch -R, PR_EXTRA_STAGES=pr_display); the pair is the only floor measurement that covers the calib dump	doc pr/37 sec.6.2
+# work-pr37b-repeatB	same pair, arm B; a floor is a PAIR -- deleting either one destroys the measurement, not half of it	doc pr/37 sec.6.2
+# work-nuecc48-prod0803	the 48-event nueCC input root every pr/28-37 arm is generated from	doc pr/33 sec.11, doc pr/37 Repro
+# work-vfnuecc48-prod0803	its valfast counterpart	scripts/retire/retire_20260803.sh
+# work-pr33-base48	the clean-source reference; pr/33's knob-off gate is base48 vs off48 48/48 cross-binary	doc pr/33 sec.11.2, doc pr/37 sec.13
+# work-pr33-off48 work-pr33-prod48 work-pr33-allon48	pr/33's knob-off / production / all-on arms -- the gate is the SET, not any one arm	doc pr/33 sec.11.1
+# work-pr33-f1aon48 work-pr33-f1bon48 work-pr33-f2aon48 work-pr33-f2bon48 work-pr33-f2con48 work-pr33-f3on48 work-pr33-f4on48 work-pr33-f5on48	per-knob attribution arms; f4on48 is the only mover (17/48) and the rest are the evidence that the other seven are null	doc pr/33 sec.11.1
+# work-pr33-headchk work-pr33-freshchk	controls of the three-build reproducibility proof that established the stale-binary finding	doc pr/33 sec.11.2
 # 2026-08-05 -- the twelve vf37 arms, RELEASED EARLY BY OWNER OVERRIDE.
 #
 # Read this before concluding the release condition was met: IT WAS NOT.  The
