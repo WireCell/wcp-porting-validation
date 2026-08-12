@@ -1290,9 +1290,9 @@ to the explicit-TLA config this round's validated `work-pr64r7-on48`/
   follow-on round happens.
 
 ## Round 8 (2026-08-12) — root cause of the Round 7 "still open" 18625 blob
-found and fixed: `assoc_clear_on_merge`, implemented + validated, DEFAULT NOT
-SELECTED for SBND production (toolkit uncommitted this turn, wcp uncommitted
-this turn)
+found and fixed: `assoc_clear_on_merge`, implemented + validated, SBND
+PRODUCTION ON, owner flip 2026-08-12 (toolkit 7948238f + flip this turn, wcp
+2e96803 + flip this turn)
 
 ### Repro block
 
@@ -1461,13 +1461,23 @@ after https://www.phy.bnl.gov/twister/bee/set/da10ab0c-e6a7-4e1e-bd4b-a7899c0cd9
 (bee_idx 0=18625 demo/now-resolved, 1=54095, 2=174637, 3=389538). Index:
 `docs/pr/pr64r8-bee.index.txt`.
 
-### Status: DEFAULT NOT SELECTED for SBND production
+### Status: SBND PRODUCTION ON, owner flip 2026-08-12
 
-The C++ knob default stays `false`; `wct-pr-perevt.jsonnet` adds
-`assoc_clear_on_merge` as a genuine top-level function parameter, default
-`false` this round (unlike Round 7, no production flip was requested or
-made). Override for A/B: `-A assoc_clear_on_merge=true` (or
-`SBND_ASSOC_CLEAR_ON_MERGE=true`).
+Per owner confirmation of the round 8 validation above (byte-identical
+off-gate, `wcdoctest-clus` 176/176, nusel unaffected, 3/48 monotonic-only
+Enu movers, evt 18625 blob resolved), `assoc_clear_on_merge = true,` is now
+the `wct-pr-perevt.jsonnet` default. The C++ knob default itself stays
+`false`; the operating point lives only in cfg (doc 68). Legacy escape for
+A/B: `-A assoc_clear_on_merge=false` (or `SBND_ASSOC_CLEAR_ON_MERGE=false`)
+restores the pre-flip production bare, byte-exact.
+
+**Flip compile proof**: bare production run of evt 18625 (no env override,
+`work-pr64r8-bareflip18625`) has a `mabc-pr.zip` member-content hash
+byte-identical to the previously-validated `work-pr64r8-on18625`
+(`SBND_ASSOC_CLEAR_ON_MERGE=true`) arm — the flipped bare config really does
+reproduce what was validated, via an actual `tagger_check_neutrino`-
+instantiated production run rather than a raw jsonnet-compile grep (the
+known vacuous-proof trap from earlier rounds).
 
 ### Files
 
