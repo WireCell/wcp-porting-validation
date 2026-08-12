@@ -3,11 +3,12 @@
 (renumbered from a draft "pr/67" — that number landed on a different,
 concurrently-pushed investigation in the shared doc set; no relation.)
 
-## Status: FIXED. `es3_stub_guard` SHIPPED default OFF (toolkit, this commit),
-census script + Bee links in wcp-porting-img. Round 1 traced the cause; round
-2 (below) censuses it across 117 events, designs and validates a geometry/
-topology cut, and ships it as a knob. **No SBND production flip this round**
-— see "Accept/stop decision" below for the recommendation.
+## Status: FIXED, SBND PRODUCTION ON (owner flip 2026-08-12, toolkit fc9d1fcb).
+`es3_stub_guard` ships with C++ default OFF; the SBND cfg entry point
+(`wct-pr-perevt.jsonnet`) flips it ON, cfg-only, per the owner's review of
+the Bee before/after pair below. Round 1 traced the cause; round 2 censused
+it across 117 events and designed/validated the geometry/topology cut; the
+flip landed the same session after the owner reviewed the result.
 
 ## Repro block
 
@@ -457,14 +458,17 @@ was touched (`cfg/pgrapher/experiment/sbnd/*.jsonnet` and the shared
 production default changed anywhere; `es3_stub_guard` C++ default is `false`
 and no cfg file sets it to anything else.
 
-### SBND production flip — NOT in this round
+### SBND production flip — DONE, owner flip (2026-08-12)
 
-`es3_stub_guard` ships **default OFF** in both C++ and cfg. Per doc 68 the
-SBND operating point is the owner's call after reviewing the Bee before/after
-pair above. **Recommendation**: given the clean result (1/117, 0 selection
-flips, correct recovery, no tagger regression), this is a strong flip
-candidate — but the flip itself is deliberately left to the owner's decision,
-not made here.
+`es3_stub_guard = true` in `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`
+(toolkit `fc9d1fcb`), cfg-only per doc 68 — the C++ knob default itself stays
+`false`; legacy escape `-A es3_stub_guard=false` (or
+`SBND_ES3_STUB_GUARD=0`) restores the pre-flip production bare, byte-exact.
+Compile proof is a real run: bare production evt 196649 (no env override)
+has a `mabc-pr.zip` member-content hash
+(`0f4df72d5d2633d305ad1bf8d0157dd64e31b9b6edbec6774f0cc08c8c680e90`)
+byte-identical to the previously-validated `SBND_ES3_STUB_GUARD=1` arm
+(`work-pr72-on48`).
 
 ### Files touched this round
 
