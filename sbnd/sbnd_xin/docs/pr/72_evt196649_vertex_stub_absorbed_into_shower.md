@@ -4,8 +4,14 @@
 concurrently-pushed investigation in the shared doc set; no relation.)
 
 ## Status: TOPOLOGY FIXED + SBND PRODUCTION ON (owner flip 2026-08-12, toolkit
-fc9d1fcb); near-vertex GEOMETRY chain-audited round 3, `es3sg_vertex_fit`
-implemented and measured NEGATIVE, ships default OFF, not recommended.
+fc9d1fcb). Near-vertex GEOMETRY chain-audited round 3: `es3sg_vertex_fit`
+was implemented, measured NEGATIVE (blunter, not sharper), and then REMOVED
+(toolkit `60bad894` reverts `14528ce3`) — the owner's read, confirmed by the
+gate analysis, is that this vertex-fitting machinery is deliberately scoped
+by the prototype to genuine multi-prong/neutrino vertices, and forcing it
+onto a track-emerging-from-shower junction is not a case the prototype
+tries to handle. No code from round 3 remains in the tree; the diagnostic
+findings are kept below for the record.
 `es3_stub_guard` ships with C++ default OFF; the SBND cfg entry point
 (`wct-pr-perevt.jsonnet`) flips it ON, cfg-only, per the owner's review of
 the Bee before/after pair below. Round 1 traced the cause; round 2 censused
@@ -13,8 +19,11 @@ it across 117 events and designed/validated the geometry/topology cut; the
 flip landed the same session after the owner reviewed the result. Round 3
 (same session, owner follow-up: "the trajectory near the vertex is still a
 bit bended") traced the chain's vertex-fitting machinery, implemented the
-most targeted fix at the owner's request, and found it measurably worsens
-(not improves) the near-vertex deflection — see `## Round 3` below.
+most targeted fix at the owner's request, found it measurably worsens (not
+improves) the near-vertex deflection, and — since the prototype deliberately
+avoids applying this machinery outside genuine multi-prong/neutrino
+vertices — removed it. See `## Round 3` below for the full trace and
+measurement; the code itself is gone from the tree.
 
 ## Repro block
 
@@ -499,7 +508,7 @@ byte-identical to the previously-validated `SBND_ES3_STUB_GUARD=1` arm
 - `wcp-porting-img/sbnd/sbnd_xin/docs/pr/pr72-bee.index.txt` (new).
 - This doc.
 
-## Round 3 — chain audit for the near-vertex trajectory, `es3sg_vertex_fit` implemented, NEGATIVE on-arm result (DEFAULT OFF, no flip recommended)
+## Round 3 — chain audit for the near-vertex trajectory, `es3sg_vertex_fit` implemented, measured NEGATIVE, then REMOVED
 
 Owner follow-up after round 2's topology fix: "the track trajectory near the
 vertex is not ideal... if we do a fit with the two tracks, then we can have
@@ -668,27 +677,47 @@ compromise than the pre-fit geometry.
   second-order effect of the same knob on the target event's PF-object count;
   not investigated further this round.
 
-### Accept/stop decision: **STOP — do not flip, do not widen scope**
+### Accept/stop decision: **STOP and REMOVE — do not flip, do not widen scope**
 
 Per CLAUDE.md §5.7 (report a wrong physics number, don't tune to make it
 look right): the measured on-arm effect contradicts the design intent. The
 117-event census was **not run** — there is no decision the census would
 inform, since the single-event measurement already shows the mechanism moves
-in the wrong direction. `es3sg_vertex_fit` ships as a validated, byte-identical-when-off
-default-OFF knob (a complete, honestly-reported deliverable per this round's
-plan), but is **not recommended for further pursuit or flip**.
+in the wrong direction. `es3sg_vertex_fit` shipped as a validated,
+byte-identical-when-off default-OFF knob and was reported to the owner as a
+complete, honestly-negative result.
 
-### What this redirects attention to
+**Owner decision after review**: remove the code entirely, not merely leave
+it off. Rationale (owner's own, confirmed by the gate re-read above): the
+prototype deliberately keeps this vertex-position-fit machinery scoped to
+genuine multi-prong vertices and the neutrino vertex itself
+(`NeutrinoID_improve_vertex.h:81,696`) — it is not a case the prototype
+tries to handle at a track-emerging-from-shower junction, and the round's
+own negative measurement is consistent with forcing it there being the
+wrong move, not an implementation bug to fix. **Reverted in toolkit
+`60bad894` (clean `git revert` of `14528ce3`)** — every file, including the
+new `VertexFlags::kStubGuardJunction` bit and the `es3sg_vertex_fit` knob,
+is gone from the tree. Post-revert verification: `wcdoctest-clus` 180/180
+(same as round 2, pre-round-3 count); a fresh bare run of evt 196649
+hashes `0f4df72d5d2633d305ad1bf8d0157dd64e31b9b6edbec6774f0cc08c8c680e90` —
+byte-identical to round 2's `work-pr72-flipcheck` production baseline,
+confirming the tree is genuinely back to the pre-round-3 state, not just
+functionally equivalent.
 
-Of the four candidates scored this round, **A is now measured negative**.
-The chain audit's own finding — no smoothness/sharpness term anywhere in
-`TrackFitting::fit_point`, flat charge division (`charge_div_method`
-hardcoded to 1, the Gaussian `div_sigma` branch dead code), the shared
-≤0.8cm vertex charge ball, and the 1.8mm area-revert clamp — point at
-**Candidate C** (expose `charge_div_method`/`div_sigma`) and **Candidate D**
-(relax the area-revert near a vertex) as the levers that actually touch the
-mechanism responsible for the bend. Both are out of scope this round (wide
-blast radius, need their own gate sets) and are left for the owner's
+### What this redirects attention to (recorded for a future round, not pursued)
+
+Of the four candidates scored this round, **A is now measured negative and
+removed.** The chain audit's own finding — no smoothness/sharpness term
+anywhere in `TrackFitting::fit_point`, flat charge division
+(`charge_div_method` hardcoded to 1, the Gaussian `div_sigma` branch dead
+code), the shared ≤0.8cm vertex charge ball, and the 1.8mm area-revert
+clamp — makes **Candidate C** (expose `charge_div_method`/`div_sigma`) and
+**Candidate D** (relax the area-revert near a vertex) *plausible* levers
+worth instrumenting first (e.g. via the `det_fits(...)` dump points already
+in `do_multi_tracking` at `:8235/8283/8304/8417/8477/8481/8572`, to see
+exactly where a straightened seed loses its sharpness during the refit) —
+this is a hypothesis from the audit, not something this round measured.
+Neither was implemented; both are out of scope and left for the owner's
 decision on whether to pursue.
 
 ### Prototype comparison (M15 check)
@@ -711,7 +740,11 @@ charge/PID smoothing at multi-prong vertices generally; flagged for the
 owner as a separate item (introduced by `fca0f7cfd`, "continue dbug", no
 porting-dictionary entry).
 
-### Files touched this round
+### Files touched this round (implemented, measured, then reverted)
+
+Implemented in toolkit `14528ce3`, reverted in toolkit `60bad894`
+(`git revert 14528ce3`, clean, no manual conflict resolution). None of the
+following remain in the tree:
 
 - `clus/inc/WireCellClus/PRVertex.h` — new `VertexFlags::kStubGuardJunction`.
 - `clus/inc/WireCellClus/NeutrinoPatternBase.h` — `m_es3sg_vertex_fit`.
@@ -723,5 +756,7 @@ porting-dictionary entry).
   `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` — key-suppression
   plumbing, default OFF (no flip).
 - `clus/test/doctest_clus_knob_defaults.cxx` — new knob-default check.
+- `wcp-porting-img/sbnd_xin/run_pr_chain_batch.sh` — `SBND_ES3SG_VERTEX_FIT`
+  env bridge, removed in the same round.
 - `wcp-porting-img/sbnd/sbnd_xin/run_pr_chain_batch.sh` — `SBND_ES3SG_VERTEX_FIT`.
 - This doc.

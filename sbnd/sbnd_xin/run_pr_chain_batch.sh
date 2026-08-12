@@ -809,14 +809,6 @@ fi
 #   SBND_ES3SG_REQUIRE_TERMINAL (literal jsonnet "true"/"false")
 [ -n "${SBND_ES3SG_REQUIRE_TERMINAL:-}" ] && \
     CATH_TLA+=(--tla-code "es3sg_require_terminal=${SBND_ES3SG_REQUIRE_TERMINAL}")
-# doc pr/72 round 3: admit the junction es3_stub_guard protects into
-# improve_vertex's/MyFCN's two-track vertex position fit (sharper near-
-# vertex kink).  Same bool-TLA contract as SBND_ES3_STUB_GUARD; only takes
-# effect when es3_stub_guard is also true.
-#   SBND_ES3SG_VERTEX_FIT
-if [ -n "${SBND_ES3SG_VERTEX_FIT:-}" ]; then
-    CATH_TLA+=(--tla-code "es3sg_vertex_fit=${SBND_ES3SG_VERTEX_FIT}")
-fi
 # doc pr/65 round 3 (18259-54095 PF-root orphan mu-/e- fragments): rung 1
 # relaxes the shower absorbers' cluster()==main_cluster guards to a
 # main_vertex-reachability test so kept-isolated pr/54 residuals can be
