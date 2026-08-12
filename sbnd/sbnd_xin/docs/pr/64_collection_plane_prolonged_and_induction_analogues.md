@@ -754,3 +754,176 @@ and 5-6, 48367 9-10, 409634 2-3 — owner-free verdicts, all expected movers).
 - `clus/docs/clustering/parallel-prolong-analysis.md` — independent confirmation of
   SBND's W=0deg wire-angle convention, from an earlier/different clustering stage
   (`clustering_parallel_prolong`) that already reads all three plane angles including W
+
+## Round 5 (2026-08-11) — evt 18259-18625: "still missing clustering points at (142.1, 78.3, 176.5)"
+
+**Status: investigation + fix proposal only. No code change, no production
+flip.** The owner reports that after the round-4 flip a track segment in evt
+18259-18625 still shows missing clustering points near
+`(142.1, 78.3, 176.5)` cm. Round-4 declared 18625 a protected *good* pair
+(Caveat 1) rather than a target, so this is worth tracing precisely rather
+than assuming the fix is incomplete.
+
+### Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# fresh bare-production single-event rerun (cfg default = round-4 flavor,
+# same QL hub the *-cb0805 prid-maps were built from; fresh name per M13):
+PR_OC56_SCAN_DUMP=1 PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr64r5-verify data 18625
+
+# the read-only probe that produces every number below (arms + the uploaded
+# Bee set + the S6 edge dump + the owner's own label file):
+python3 scripts/analysis/pr64/probe_18625.py \
+  --arm work-pr64r5-verify/pr_evt18625 \
+  --bee bee/prod0811/ncpi0-prod0811.zip
+
+# owner's hand-scan verdict on the exact edge:
+grep -A2 '144.02,78.92,173.63' overclustering_labels/labels-evt18625.json
+```
+
+### Symptom, and four literal readings ruled out
+
+| candidate reading | measured | verdict |
+|---|---|---|
+| img charge with no clustering point nearby (a true imaging/clustering hole) | 0 orphan img points within 10 cm of the target; nearest clustering point **0.047 cm**, nearest img point 0.286 cm | ruled out |
+| a fitted trajectory with no charge under it (the pr/61 "phantom edge" class) | **0 of 662** track_fit points event-wide sit >2 cm from a clustering point | ruled out |
+| a PF segment created with zero associated (`shower_track`) points (the pr/59 class) | 25/37 segments in this event, but **65.6 % (764/1165) across the full 19-event NCpi0 arm** — the norm for this arm, not an 18625-specific defect | not event-specific, real but out of scope here (see "Separate observation" below) |
+| the neutrino loses the shower's reconstructed energy | `T_kine`: `kine_reco_Enu = 1499.34 MeV`, `kine_energy_particle` includes **717.24 MeV** (`particle_type=11`, `kine_energy_included=1`) against a truth γ→e⁻ of 717 MeV — matched to 0.01 MeV | ruled out |
+
+### Root cause — an S6 kill at the photon-conversion gap, and pr/64's gate is structurally inapplicable
+
+`ClusteringProtectBundle` (S6, doc pr/56/57) splits the neutrino's 6996-point
+image cluster into PR clusters **11** (3390 pts, muon+proton+vertex) and
+**126** (3169 pts, the converted-photon shower). The target coordinate is
+0.047 cm from a cluster-126 point, 2.4 cm from the split. The only bridge is
+killed at a **1.876 cm, pure-drift-direction** gap where **W is the sole
+voting plane** (`oc56scan-evt18625.jsonl`, `j=0 k=1 blk=closest graph_call=0`,
+reproduced identically across three independent runs this round — the two
+round-4 gate arms and the fresh rerun above):
+
+```
+dis=1.876cm  gap=[U,V,W]=[T,T,T]  excuse=[T,T]  dead_w=0
+killed_pre_rescue=true  rescued=false          <- pr/57 rescue declined
+w_track=true  w_track_revived=false            <- pr/64 declined
+v3: npmin=3062  lmin=52.48cm  tmax=12.75cm  ab_global=43.39deg
+```
+
+pr/64's tightened gate needs `tmax<2.0cm` (or `<1.7`) and `ab_global<25deg`
+(or `<6`). This pair misses by **6.4×** on thinness and **1.7×** on
+collinearity — not a near miss at the boundary, but a different population:
+`two_d_w_track_ok` is a thin/long/collinear-track rule (fitted to 174224-class
+tracks, `npmin` in the tens to low hundreds), and this pair has `npmin=3062`
+with a transverse spread an order of magnitude too wide to be a track. The
+dumped W fired-pixel map (below, 4-tick columns) shows the real gap: a clean
+~20-tick (~1.7 cm) break, same wire column (562-569 vs 578-599), `dead_w=0` —
+not a dead-channel artifact.
+
+```
+    562 ####..####................
+    563 ####..####................
+    ...
+    569 #.....####................
+    570 ......####................        <- gap opens: U/V bridge, W does not
+    ...
+    577 ......####................
+    578 .......###......#.........        <- second W blob begins (comp 126)
+    579 ......####.....####.......
+```
+
+### The blocking conflict — the owner's own label calls this cut correct
+
+`overclustering_labels/labels-evt18625.json` carries `verdict: "good"` on this
+exact edge (`144.02,78.92,173.63|145.89,78.92,173.63`, `dis=1.8756`) and on
+its `dir1` sibling, and this doc's own Caveat 1 (round 4) already names 18625
+as one of the 8 good pairs the tightened gate deliberately protects. This is
+the NC-π⁰ sample: a real 9.76 cm photon-conversion gap is *expected* physics
+here, not necessarily a defect. A nearest-axis test on the charge between the
+vertex and the conversion point splits 47/46 between the γ-axis and the
+27°-away µ-axis — genuinely ambiguous, not a clean call either way. **No rule
+change is proposed as a "fix" below without the owner first deciding whether
+this verdict should flip.**
+
+### An independent, literal match to the symptom — a Bee-layer inconsistency in the uploaded set
+
+Probing the actual uploaded Bee set the owner is looking at
+(`bee/prod0811/ncpi0-prod0811.zip`, produced today after the round-4 flip)
+turns up something that was **not** reproduced in any of this round's three
+fresh reruns, and is a more literal match to "a track segment missing its
+clustering points":
+
+- `clustering-global` in that zip has **cluster 11 alone, 6996 points** — no
+  cluster 126 at all; the entire 126-family of `real_cluster_id`s is absent.
+- `track_fit-global`, `shower_track-global`, and `vertices-global` in the
+  *same zip* all still reference **15 distinct `126xxx` segments**, including
+  `126042` (the e⁻ 717 MeV segment nearest the reported coordinate, which
+  still has 2614 associated points in `shower_track-global`).
+
+So in this specific uploaded set, a fitted, associated 126-family trajectory
+is drawn with **no underlying charge cloud at all** in the layer Bee uses for
+cluster coloring/selection — a stronger and more literal defect than the S6
+split itself, which (per `nusel_extract.py`'s own documented convention,
+`clustering-global` is filtered to `switch_scope`'s active/in-scope clusters)
+may be legitimate scope-filtering of a non-"main"-flagged shard rather than a
+bug in itself.
+
+**This could not be pinned down further this round**: the three fresh reruns
+here (`run_pr_chain_batch.sh`, same QL hub, same cfg default) all show cluster
+126 present in `clustering-global` with 3169 points, consistent with each
+other and with `track_fit`/`shower_track`. Whatever generated
+`ncpi0-prod0811.zip` is not `run_pr_chain_batch.sh` (its driver script was not
+found in this repo), and the difference between the two could be a genuine
+`switch_scope` behavior difference, a different beam-window/manifest option,
+or something else entirely. **Recommend as a next step**: identify the exact
+script/config that produced `ncpi0-prod0811.zip` (it landed in the 2026-08-11
+17:07 retirement-round commit, `e86a81b`, "delivered three fresh Bee scan sets
+at current production") and diff its `switch_scope` configuration against
+`run_pr_chain_batch.sh`'s.
+
+### Fix proposal — two families, nothing shipped
+
+**Family 1 — a shower-aware S6 branch (needs the label reversed).** A third
+branch of `Graphs::two_d_w_track_ok` (`clus/src/connect_graph_relaxed_strict.cxx`),
+reusing the `s6_comp_stat` memo round 4 already extended
+(`npoints`/`extent_cm`/`axis`/`trms_cm`): revive iff `w_sole_vote && dis <
+2.5cm && npmin >= 500 && dead_w == 0` **and** the two endpoint cells share the
+same W wire (`|Δwire| <= 1`) — i.e. the components are not separated in wire
+space at all, only in drift/tick. That last term is the discriminator that
+keeps this from becoming "revive every big pair" and is computable from data
+S6 already caches. Would ship as a new default-OFF flavor, never by widening
+the shipped R2w thresholds (which would silently reopen the validated
+round-4 operating point and its 0/133-good-pairs guarantee).
+
+**Family 2 — no code change (compatible with the existing "good" label).**
+The separation stands; the PF chain already claims the shower as its own
+particle and the energy is already counted (see above). The only genuine
+per-point residual inside the whole neutrino bundle is small: **17 of 6996**
+cluster-11 clustering points (in the merged-view `bee/prod0811` zip) have no
+PF-association point within 2 cm, concentrated in a 12-point blob at
+`x[142.8,143.7] y[78.3,79.8] z[172.9,174.7]` — 2.36 cm from the reported
+coordinate.
+
+**Recommendation: Family 2 (no action needed on the split) now; Family 1 only
+if the owner flips the 18625 label.** If flipped, Family 1 must go through the
+same process round 4 did before any flip — re-score all 899 labels against
+the new branch, a 1k-sample census of how many currently-killed S6 edges
+satisfy the shape, a byte-identical off-gate, and an on-arm mover census —
+not a threshold fitted to one event. Separately, the clustering-global/
+track_fit layer inconsistency above should be tracked down regardless of the
+label decision: it is a display-correctness question, not a physics-tuning
+one.
+
+### Separate observation — not part of this round
+
+Zero-association PF segments (the pr/59 class: a segment created after its
+cluster's only `clustering_points` association pass) are common in this arm:
+**65.6 % (764/1165) of all fitted segments across the 19-event NCpi0
+manifest** have zero associated points, evt18625 included (25/37) but not
+unusually so. Worth its own round; not fixed here.
+
+### Files
+
+- `scripts/analysis/pr64/probe_18625.py` (new) — the read-only probe behind
+  every number above.
