@@ -1,0 +1,37 @@
+bee_idx	event	sample	why
+0	131357	nuecc48	target: 2-track V restored (was 3-prong + corner stub); MV 0.94cm from true corner
+1	234638	nuecc48	r5 target re-check: MV 0.65cm from owner click (was 2.15), no vertex micro-track
+2	268067	nuecc48	r5 target re-check: MV 1cm closer to owner click; Enu +240 MeV
+3	256587	nuecc48	r5 core set (comparability)
+4	54095	nuecc48	r5 core set (pr/65 shower event)
+5	239794	nuecc48	r5 core set
+6	196649	nuecc48	r5 core set (pr/72 target cross-check)
+7	37112	ncpi0	r5 target re-check: stays clean; NEW 3-pt 0.6cm micro-track at MV (cosmetic)
+8	285567	ncpi0	r5 target re-check: MV ~2cm toward owner click; partition changes; Enu unchanged-ish
+9	506746	ncpi0	target: long track now reaches the vertex (was 6.4cm short); 1.8cm residual stub; Enu +502 MeV
+10	71372	ncpi0	r5 core set (pr/63 exhibit); Enu +215 MeV
+11	399860	ncpi0	r5 core set
+12	463565	ncpi0	r5 core set
+13	48367	data50	r5 core set + r6 mover (vtx 55cm, Enu -225 MeV)
+14	54341	data50	r5 core set
+15	55715	data50	r5 core set
+16	389538	nuecc48	r6 mover rank 1: nu-vtx 213cm (end-to-end flip on 221cm cluster), Enu +785 MeV
+17	122660	nuecc48	r6 mover: nu-vtx 85cm (also moved 82cm in accepted r5 flip)
+18	271851	nuecc48	r6 mover: nu-vtx 48cm (also moved 82cm in accepted r5 flip)
+19	38856	nuecc48	r6 mover: nu-vtx 46cm, Enu +232 MeV (also moved >10cm in accepted r5 flip)
+20	30504	nuecc48	r6 mover: nu-vtx 44cm (NEW vs r5)
+21	46363	nuecc48	r6 mover: nu-vtx 41cm (also moved >10cm in accepted r5 flip; -1.4GeV Enu at the scale-3 grid point, <150 MeV at the shipped point)
+22	163543	nuecc48	r6 mover: nu-vtx 37cm (also moved in accepted r5 flip)
+23	52672	nuecc48	r6 mover: nu-vtx 34cm (NEW vs r5)
+24	137238	nuecc48	r6 Enu mover +287 MeV (pr/67 target event)
+25	168596	nuecc48	r6 Enu mover +288 MeV
+26	360535	nuecc48	r6 Enu mover -255 MeV
+27	180801	ncpi0	r6 mover: nu-vtx 72cm (also moved 41cm in accepted r5 flip)
+28	359980	ncpi0	r6 mover: nu-vtx 31cm (also moved 40cm in accepted r5 flip)
+29	56982	ncpi0	r6 mover: nu-vtx 11cm, Enu +315 MeV (also moved 135cm in accepted r5 flip)
+30	84229	ncpi0	r6 Enu mover -610 MeV (also -601 -> +367 across r5)
+31	57575	data50	r6 mover rank 1 data: nu-vtx 285cm, Enu -212 MeV (NEW vs r5)
+32	51051	data50	r6 mover: nu-vtx 247cm (NEW vs r5)
+33	54175	data50	r6 mover: nu-vtx 179cm, Enu -337 MeV (NEW vs r5)
+34	52085	data50	r6 mover: nu-vtx 104cm, Enu -203 MeV (also moved 35cm in accepted r5 flip; pr/47 event)
+35	52657	data50	r6 mover: nu-vtx 99cm (NEW vs r5)

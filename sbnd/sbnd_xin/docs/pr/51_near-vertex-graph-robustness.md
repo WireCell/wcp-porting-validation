@@ -1522,3 +1522,421 @@ Open items:
   events moved at the display level; the scan set covers the largest.
 - `SteinerGrapher.cxx:134-139` moved-from-graph TRACE log (cosmetic,
   unrelated) — fix opportunistically next time that file is touched.
+
+---
+
+## Round 5 addendum (information only, 2026-08-12) — does a 2-prong neutrino vertex go through the vertex fit after the fix?
+
+Owner question against the round-5 "after" Bee set
+(`5137e681-…/event/1/`): *did that neutrino vertex go through a vertex
+fitting with 2 tracks, and if not, why does the `steiner_gap_penalty` fix not
+reach the vertex fit?*  **No code or config is changed by this section.**
+
+Which event `event/1` is depends on whether the Bee URL index is 0- or
+1-based: 0-based → idx 1 = **18255-234638** (the 2-prong target, and the one
+matching the owner's own words "2-track vertex"); 1-based → idx 0 =
+**18259-131357** (3-prong after the fix).  **Both were fitted** — 234638 with
+2 legs, 131357 with 3 — so nothing below depends on the numbering.  The text
+works 234638 through in detail because it is the 2-leg case.
+
+### Repro (addendum)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+# near-vertex structure of the arm that was uploaded to Bee ("after") and of
+# its pre-flip baseline ("before"):
+python3 scripts/analysis/pr51/vtx_struct.py work-pr51r5-flip48 234638 6.0
+python3 scripts/analysis/pr51/vtx_struct.py work-pr51r5-off48  234638 6.0
+# production main-vertex position (fit point, mm) -- flip48 == s2on:
+grep -a "After improve vertex" work-pr51r5-{off48,s2on-234638,flip48}/pr_evt234638/stdout.log
+# stage-D bracket, PRODUCTION arm (these sentinels are DEBUG, not TRACE):
+grep -an "TaggerCheckNeutrino timing: overall main vertex\|improve_vertex + examine_direction\|pr55 do_rough_path: cluster 10 \|sgp build: cluster 10 " \
+        work-pr51r5-flip48/pr_evt234638/wct_pr_evt234638.log
+# fit mechanics (nsegs, move distances) -- only the TRACE arms carry it
+# (SBND_WCT_LOGLEVEL=trace):
+grep -a "improve_vertex: cluster"  work-pr51r5-{probe,s2probe-}234638/pr_evt234638/wct_pr_evt234638.log
+for e in 131357 268067 506746; do \
+  grep -a "improve_vertex: cluster" work-pr51r5-s2probe-$e/pr_evt$e/wct_pr_evt$e.log | tail -8; done
+# SBND operating point of the one knob that can suppress the fit:
+grep -n fit_vertex_min_seg_length ../../../toolkit/cfg/pgrapher/experiment/sbnd/clus.jsonnet
+```
+
+Arm labels: `off48` = pre-flip production; `flip48` = bare post-flip
+production (**this is the arm in the Bee "after" set**); `s2on-234638` =
+single-event `SBND_STEINER_GAP_PENALTY=2`; `probe234638` / `s2probe-234638`
+= the same two configurations **plus `rough_path_probe` and TRACE logging**.
+
+### Short answer
+
+Two different questions were bundled together, and they have opposite
+answers:
+
+1. **Did the neutrino vertex get fitted?**  **Yes.**  `fit_vertex` ran on it
+   in the final `improve_vertex`, with its 2 incident legs, and it moved
+   (1.096 cm on the wcpt seat).  It ran in the *baseline* too.  The fix did
+   not remove a vertex fit.
+2. **Was it a fit "with 2 tracks"?**  **No — 1 track + 1 shower.**  The two
+   legs at the main vertex are `10032` (shower, 188 cm extent) and `10051`
+   (track, 34 cm).  `MyFCN` does not care: its `ntracks` counts *fittable
+   legs*, not track-typed segments (below).
+3. **Does the `steiner_gap_penalty` fix act inside the vertex fit?**  **No,
+   and it never could.**  The penalty lives only in `do_rough_path`; the
+   vertex fit is a downstream least-squares on the *fitted* trajectories that
+   never calls `do_rough_path`.  The fix reaches the vertex only *indirectly*
+   — by handing the fit a better skeleton to start from.
+
+### The chain, stage by stage
+
+```
+ (A) skeleton      find_proto_vertex / find_other_segments / examine_structure_*
+                   -> do_rough_path(cluster, p1, p2)          <-- steiner_gap_penalty acts HERE
+                      = Dijkstra on "steiner_graph"  (or, when scale>0, on the
+                        lazily built "steiner_graph_gap" copy with support-priced
+                        edge weights).  Output = segment wcpts (Steiner nodes).
+ (B) trajectory    TrackFitting::do_multi_tracking(...)  -> segment fits()
+ (C) MV choice     determine_main_vertex(): improve_vertex(..., search=false)
+                      [runs BEFORE the main vertex is chosen, so the eventual
+                       neutrino vertex is not yet main_vertex here]
+                   ... compare_main_vertices / DL rerank -> final_main_vertex
+ (D) polish        TaggerCheckNeutrino.cxx:1279
+                   improve_vertex(..., search_vertex_activity=true, final=true)
+                      -> fit_vertex -> MyFCN::FitVertex  (geometry only)
+                      -> MyFCN::UpdateInfo               (re-seat + re-fit)
+```
+
+The penalty is a property of the **graph edge weights** consumed at (A).
+Stage (D) touches no graph: `MyFCN::FitVertex` solves a 3×3 normal equation
+from the per-leg PCA of the *fit points*, and `MyFCN::UpdateInfo` rebuilds
+the near-vertex wcpts by **2 cm-step straight-line interpolation from the new
+vertex to the leg's PCA-center wcpt, each interpolated point snapped with
+`kd_steiner_knn(1, ·, "steiner_pc")`** (MyFCN.cxx:418-446) — a nearest-point
+snap onto the Steiner *cloud*, not a re-route through the Steiner *graph*.
+Then `clear_fit()` + `do_multi_tracking` re-fit the trajectories.
+
+Measured proof on 234638, **in the production arm `flip48` itself** — the
+`pr55 do_rough_path` and `sgp build` sentinels are DEBUG, so they are in the
+production log, no probe arm needed.  Stage D is bracketed by the two
+`TaggerCheckNeutrino timing:` DEBUG markers that straddle it:
+
+```
+699:[14:37:05.264] ... overall main vertex took 1413.383803 ms    ...TaggerCheckNeutrino.cxx:1252
+700:[14:37:05.661] ... improve_vertex + examine_direction took 396.319223 ms  ...cxx:1342
+```
+
+Those are **consecutive log lines** — not one `clus.NeutrinoPattern` line
+falls inside the window, so in particular **zero** `do_rough_path` calls.
+The last rough path for the main cluster is 2.3 s earlier at `14:37:02.950`
+(`flavor=steiner_graph_gap`, `first=(1038.9,-44.8,3666.8)` — i.e. routed
+*from* the main vertex, so the fix did reach the vertex region, at stage A).
+The gap-penalized graph was built once for this cluster
+(`sgp build: cluster 10 edges=7261 scanned=6703 penalized=213 scale=2.0
+scan_ms=35.2`, at `14:36:59.068`) and was already spent by the time the
+vertex was polished.  `s2probe` reproduces the same picture
+(last rough path `14:22:39.931`, stage-D window `14:22:41.658 → 41.866`).
+
+### The gates a vertex must clear to be fitted
+
+`improve_vertex` (NeutrinoVertexFinder.cxx:2493-2600), per graph vertex:
+
+| gate | rule | main vertex? |
+|---|---|---|
+| G1 | `vertex_segments.size() <= 2 && vtx != main_vertex` → skip | **exempt** |
+| G2 | `ntracks == 0 && vtx != main_vertex` → skip | **exempt** |
+| G3 | `flag_skip_two_legs && vertex_segments.size() <= 2` → skip | **NOT exempt** |
+
+`flag_skip_two_legs` is set when the *whole cluster* has zero track-typed
+segments ("all showers").  So the first way a 2-prong neutrino vertex is
+silently never fitted is an all-shower main cluster — **not** the case at
+234638, which carries the 34 cm track 10051.  (The second, and on SBND the
+more likely, way is `fit_vertex_min_seg_length`; see the next block.)
+
+Then `fit_vertex` (:2128):
+
+- `m_fit_vertex_min_seg_length` (doc pr/9 §11 F3c) drops legs whose **wcpt
+  path length** is below the cut, and if that leaves **≤2** legs it
+  **returns false outright — no fit at all** (:2166-2181; the rationale is
+  evt 172230, where excluding a stub from the MyFCN accumulation did not stop
+  it dragging the vertex through `do_multi_tracking` charge competition).
+  The C++ default is `0.0` = legacy include-all
+  (`doctest_clus_knob_defaults.cxx:180`), **but SBND sets it to 1.0 cm**
+  (`cfg/pgrapher/experiment/sbnd/clus.jsonnet:950` and `:2483`; cm → internal
+  at `TaggerCheckNeutrino.cxx:848`).  **This is the second, and the more
+  likely, way a 2-prong neutrino vertex silently never gets fitted**: it
+  needs only one extra sub-1 cm leg hanging off the vertex — then
+  `long_segments.size() (=2) < fit_segments.size() (=3)` and the `≤2`
+  branch fires.  It did **not** fire at 234638: after the fix the vertex has
+  exactly 2 legs, both ≫1 cm, so nothing is dropped and the early-return
+  block is never entered.
+- `if (vertex == main_vertex) fcn.set_enforce_two_track_fit(true)`.
+
+Then `MyFCN` (MyFCN.cxx:44-165, 204-305):
+
+- `AddSegment` reads `sg->fits()` (the *fitted* trajectory, doc pr/28 §3.1)
+  and keeps only points in an **annulus** around the vertex:
+  `(1.5 cm, 6 cm]` for legs longer than 3 cm, `(0.9 cm, 6 cm]` for shorter
+  ones.  A leg contributes to the fit only if ≥2 of its points land there.
+- `get_fittable_tracks()` counts exactly those legs — **it never tests
+  track-vs-shower**.  This is why "enforce two *track* fit" is satisfied at
+  234638 by one shower + one track.
+- Fit gate: `(ntracks > 2 && n_large_angles > 1) || (ntracks >= 2 &&
+  enforce_two_track_fit && n_large_angles >= 1)`, where a "large angle" is
+  >15° between two legs' leading PCA directions.  The main vertex therefore
+  needs only **2 fittable legs at >15°** — the second clause is precisely the
+  concession made *for* the neutrino vertex.
+- The solve is regularized by a 0.43 cm vertex constraint pulling toward the
+  seed, so the fit cannot travel far by construction.
+- `UpdateInfo` writes the continuous solution to `vtx->fit()`
+  (`flag_fix=true`) but snaps `vtx->wcpt()` to the nearest Steiner point.
+  **The `improve_vertex` TRACE lines print the snapped `wcpt`; the
+  `After improve vertex:` stdout line prints the continuous `fit()`.**  That
+  is why the TRACE positions look quantized and disagree with the stdout
+  position by a few mm — they are two different quantities, not a
+  disagreement.
+
+### What actually happened at 234638 (measured)
+
+Near-vertex structure, `vtx_struct.py … 6.0` (rcid = cluster·1000 + segment):
+
+| arm | main vertex (fit, cm) | legs within 6 cm |
+|---|---|---|
+| `off48` (before) | (104.05, −4.48, 365.70) | `10044` shower · `10058` track · **`10133` track, 3.25 cm** (the owner's short-cut micro-track), + a bare PR vertex 2.73 cm away |
+| `flip48` (after, **the Bee set**) | (103.85, −4.59, 365.75) | `10032` shower · `10051` track — nothing else |
+
+Final `improve_vertex` (TRACE arms; wcpt seats):
+
+| arm | fit call | result |
+|---|---|---|
+| `probe234638` (sgp off) | `fitting vertex (103.89,−4.48,366.68) nsegs=2` | moved **0.677 cm** → (104.20,−4.48,366.08); 2nd fit same; then a **refit pass `nsegs=3`** → no move |
+| `s2probe-234638` (sgp=2) | `fitting vertex (103.89,−4.48,366.68) nsegs=2` | moved **1.096 cm** → (103.27,−4.48,365.78); 2nd fit → (103.89,−5.00,365.78); **no refit pass** |
+
+Two readings of that table:
+
+- The vertex **was** fitted in both arms.  `fit_vertex` only reports "vertex
+  moved" when `MyFCN::FitVertex` returned `fit_flag=true`, which is reachable
+  *only* from inside the two-leg branch — so the `enforce_two_track_fit`
+  branch was provably taken, with 2 legs, in both.  With `nsegs=2` the first
+  clause (`ntracks > 2`) is unreachable, so a "vertex moved" line forces
+  `ntracks == 2` — i.e. **both** legs had ≥2 fit points in the 1.5-6 cm
+  annulus, the shower one included — **and** `n_large_angles ≥ 1`, i.e. the
+  two legs open by >15°.  Nothing about the fit was degenerate.
+- The baseline's extra **refit pass** is the micro-track: `refit_vertices`
+  only ever collects vertices where `search_for_vertex_activities` succeeded
+  *and* the vertex then has exactly 3 legs (:2700-2740).  Baseline recreated
+  the stub as vertex activity (`nsegs=3`); after the fix no vertex activity is
+  found, so the clean 2-leg vertex gets exactly one `fit_vertex` (plus the
+  `>0.5 cm` re-fit).  **The fix removed a spurious third fit, not the fit.**
+
+Production positions (`After improve vertex:`, `fit()`, mm):
+`off48` (1040.46, −44.769, 3657.03) → `flip48` (1038.49, −45.9465, 3657.53),
+**identical to `s2on-234638`** — a 0.23 cm move of the neutrino vertex.
+
+### The same check on the other five round-5 targets
+
+Every one of them was fitted at the final `improve_vertex`; none is a
+"skipped vertex" case (TRACE arms `s2probe-<evt>`, wcpt seats):
+
+| event | main cluster | fit call | moved |
+|---|---|---|---|
+| 131357 | 12 | `nsegs=3` | 0.467 cm → (41.84, 177.73, 138.38) |
+| 234638 | 10 | `nsegs=2` | 1.096 cm (then 2nd fit) |
+| 268067 | 15 | `nsegs=3`, + a 2nd vertex `nsegs=2` (no update) | 0.775 cm; plus a `nsegs=3` **refit pass** that moved it again |
+| 506746 | 21 | `nsegs=2`, + a 2nd vertex `nsegs=4` | 1.587 cm; 0.853 cm |
+
+So the answer to "was the neutrino vertex fitted?" is *yes* for both
+candidate readings of `event/1`, and for every other target in the set.
+
+### Why the fit still cannot rescue a near-vertex image gap
+
+`AddSegment`'s `vertex_protect_dis = 1.5 cm` means a >3 cm leg contributes
+only its **1.5-6 cm shoulder**: the fit extrapolates two straight shoulders
+back to their intersection and is blind to everything inside 1.5 cm of the
+vertex.  Combined with the 0.43 cm constraint, the vertex fit can *sharpen a
+corner* but can never bridge a sub-cm hole in the image — which is the
+round-4/round-5 open item at **285567** (2.02 cm genuine image gap): no
+vertex-fit tuning can close it, and neither can a path-cost knob, because
+there is no alternative path in the Steiner graph at any scale ≤ 10.
+
+### Caveat on the TRACE arms (flagged, not fixed)
+
+`rough_path_probe` is documented in round 4 as a diagnostic, but it is **not
+numerically inert**: `s2probe-234638` ends at wcpt (103.89,−5.00,365.78)
+where `s2on/flip48` report `fit()` (103.85,−4.59,365.75), and in the *first*
+`improve_vertex` (stage C) the probe arm fitted an `nsegs=3` vertex where the
+baseline fitted nothing.  Every position/structure claim above for
+**production** is therefore taken from `flip48`/`off48`; the probe arms are
+cited only for fit *mechanics* (which call ran, with how many legs).  Per §5
+tie-breaker this is reported, not fixed, in this section.
+
+### Consequence for future rounds
+
+If a near-vertex defect must be corrected *at the vertex*, `do_rough_path`
+knobs are the wrong lever — they act at stage (A) and are already spent by
+stage (D).  The levers that act at (D) are `vertex_kink_snap` (pr/50),
+`main_vertex_graph_audit` (pr/51 round 2/3), `fit_vertex_min_seg_length`
+(pr/9), and `MyFCN`'s own annulus/constraint constants.  Conversely, a
+stage-(A) fix like `steiner_gap_penalty` is the right lever when the *legs
+themselves* are mis-routed, because everything downstream — including the
+vertex fit — inherits the skeleton it produces.
+## Round 6 — `sgp_weak_scale`/`sgp_weak_qref`: weak-charge deficit term, the two round-5 residuals fixed
+
+The owner reviewed the round-5 Bee sets and flagged two residuals: 18259-131357
+still shows a 3-track vertex where the truth is a 2-track V, and 18255-506746's
+long pi+ track turns into a branch instead of going straight to the vertex.
+Ask: examine the round-5 fix for room to improve, fix these two, same
+validation/flip/doc/Bee bar as round 5.
+
+### Repro (round 6)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+# Diagnosis (read-only, round-5 arms): vtx_struct/seg_overlap on
+#   work-pr51r5-{s2probe,s5probe,probe,s2on,s5on}-{131357,506746}
+# Grid smoke (24 + 12 pts): SBND_SGP_WEAK_SCALE={1,2,3,5} x SBND_SGP_WEAK_QREF={1000..8000}
+for s in 1 2 3 5; do for q in 1000 2000 4000 6000 8000; do
+  SBND_SGP_WEAK_SCALE=$s SBND_SGP_WEAK_QREF=$q PR_JOBS=1 \
+    ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r6-w${s}q${q}-131357 data 131357
+done; done   # + same from work-ncpi0-cb0805 for 506746
+# Validation (PR_JOBS=32): off + censuses at (3,6000),(5,6000),(3,4000),(5,4000):
+M50=$(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r6-off48
+SBND_SGP_WEAK_SCALE=5 SBND_SGP_WEAK_QREF=6000 PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r6-w5on48
+python3 scripts/analysis/pr49/on_compare.py work-pr51r5-flip48 work-pr51r6-off48    # etc x9
+# nu-vtx/Enu census: uproot T_tagger nu_{x,y,z} + T_kine kine_reco_Enu row 0 (1 row = nu candidate)
+# Flip gates: bare (== w5on) and SBND_SGP_WEAK_SCALE=0 (== off), all 3 samples.
+```
+
+### Diagnosis: both residuals are weak-but-SUPPORTED charge chords
+
+The round-5 unsupported-fraction penalty is provably blind to both events: the
+probe P3 ladders are scale-invariant 0..10 on every offending segment (all
+sampled points live, `unsup=0`), and the round-5 s5 arms are byte-identical to
+s2 in both near-vertex tables. Raising `steiner_gap_penalty` cannot fix either.
+
+* **131357** (`work-pr51r5-s2probe-131357`): the reco MV sits 2.43 cm up the
+  proton arm from the true corner. The shower trunk (rcid 12015, 3.69 cm,
+  fit-point q 674-1276, `mean_dqdx_ratio` 0.873) takes a flat-z chord from the
+  MV to the shower base, cutting the true corner by 2.07 cm; the real corner
+  charge was collected into a dangling degree-1 stub (12077, 3.85 cm, q
+  1883-5388) by `find_other_segments` (s2probe log :3437-3443) — hence 3
+  prongs. The via-corner route (~5.4 cm, strong charge) loses to the chord
+  because the base steiner weight prices charge only as
+  `dist*(0.8+0.4*(0.5*Q0/(Qs+Q0)+0.5*Q0/(Qt+Q0)))`, Q0=10000
+  (SteinerGrapher.cxx:1147-1160) — max 1.5x preference.
+* **506746** (`work-pr51r5-s2probe-506746` log :6445-6884): the original
+  `init_first_segment` rough path ran from the shower end up INTO the shower
+  branch, hairpinned 133 deg, and `break_segments` planted the MV at the
+  hairpin kink — on the shower side, 2.96 cm off the pi+ back-line. The pi+
+  (21059, 66 cm) stops 6.36 cm short; a charge-starved connector (21066,
+  first fit points q = 18/238/633/1330) bridges to the MV. The shower trunk's
+  tail passes 0.50 cm off the pi+ back-line with real charge exactly where
+  the true vertex is — the direct corridor exists in the graph but the
+  hairpin route won on the round-5 weights.
+
+### The fix: thresholded charge-deficit term on the same gap flavor
+
+`clus/src/NeutrinoSteinerGapGraph.cxx` — inside the existing
+`steiner_gap_penalty > 0` gate (so `SBND_STEINER_GAP_PENALTY=0` still reverts
+everything to pre-round-5), when `sgp_weak_scale > 0` each scanned edge pays
+
+```
+w' = w * (1 + gap_scale*bad + weak_scale*deficit)
+deficit = 0.5*(max(0,1-q_s/qref) + max(0,1-q_t/qref))     # weak_charge_deficit()
+```
+
+with per-steiner-vertex charges recovered lazily once per cluster:
+steiner_pc row -> exact-match 1-NN into the default kd-tree
+(`get_closest_point_index`) -> `calc_charge_wcp(idx, 4000, false)` — the same
+call/flags the production steiner edge weighting used
+(CreateSteinerGraph.cxx:262 + pr/29 D2 forwarding, SBND ON). The threshold
+form is essential: the saturating base form gives chord deficit 0.91 vs
+corner 0.77, and a multiplicative penalty then hurts the LONGER good route
+more — provably unable to reroute (doctest pins the arithmetic).
+
+`weak_scale = 0` (C++ default) leaves the round-5 reweight statements verbatim
+=> byte-identical gap flavor. Extended `sgp build` sentinel adds
+`weak_scale/qref/weak_edges/nq/q25/q50/q75` fields only when on.
+
+Knobs (round-5 idiom, 6 jsonnet sites + driver envs
+`SBND_SGP_WEAK_SCALE`/`SBND_SGP_WEAK_QREF`): `sgp_weak_scale{0}`,
+`sgp_weak_qref{2000}` (charge units — calc_charge_wcp RMS scale, NOT cm).
+Doctests: 2 default pins + `weak_charge_deficit` cases + 131357
+chord-vs-corner arithmetic.
+
+### Grid (the two targets, 36 single-event arms `work-pr51r6-w<s>q<q>-<evt>`)
+
+Steiner-charge scale (sentinel): cluster q25/q50/q75 = 6304/9858/15120
+(131357 cl 12), 7832/12648/19190 (506746 cl 21) — the "weak" chord lives just
+BELOW MIP scale, so:
+
+| qref | 131357 | 506746 |
+|---|---|---|
+| 1000-2000 | no change (deficit never fires on the chord) | no change |
+| 4000 | no change | FIXED at s>=3 (MV onto pi+ line, long track reaches MV) |
+| 6000 | **s3: MV -> 0.51 cm from true corner (V + 0.4cm 7-pt residual); s5: perfect 2-track V, MV 0.94 cm from corner, stub GONE** | **s2-s5: long track reaches MV (dmin 0.3-0.4); 1.8-2.4 cm residual stub** |
+| 8000 | no change (chord AND corner both penalized — washes out) | fixed but MV drifts back shower-side at s3 |
+
+Only qref 6000 fixes both. Operating point: **(5.0, 6000)** — perfect V on
+131357, cleanest 234638 re-check (below).
+
+### Round-5 targets re-checked at (5,6000)
+
+* 234638: MV 0.65 cm from the owner click (round 5: 2.15 cm), no vertex
+  micro-track — improved.
+* 268067: MV 1 cm closer to the owner click; busy vertex micro-structure
+  comparable; Enu +240 MeV.
+* 37112: stays clean; a NEW 3-point 0.6 cm micro-track appears at the MV
+  (cosmetic; flagged for the owner scan).
+* 285567: MV moves ~2 cm toward the owner click; the multi-track partition
+  re-shuffles (display-level); the 2.02 cm genuine image gap remains open.
+
+### Validation (117 events, PR_JOBS=32; arms `work-pr51r6-*`)
+
+* **Off-gate**: `off{48,19,50}` vs `work-pr51r5-flip{48,19,50}` (current
+  production): **0/48, 0/19, 0/50 byte-identical** (archives + nusel).
+* **Compiled-config**: knob-off wcsonnet JSON byte-identical to git-HEAD
+  shadow with the full production TLA set; knob-on carries both keys once.
+* **wcdoctest-clus**: 1921/1921 (waf link-order quirk recurred verbatim for
+  the new symbol — pr/72 gotcha, fixed by refreshing local/lib + rebuild).
+* **On-census** (both grid scales at qref 6000 and 4000): nusel-events and
+  nusel-table **0/117 at every point**. Archive movers 109/117 (wide) — and
+  unlike round 5's write-up, this round also tabulated the ν-candidate
+  vertex (T_tagger nu_{x,y,z}) and kine_reco_Enu (T_kine), which the nusel
+  tables do not cover:
+
+| census (same metric everywhere) | nu-vtx >10cm | \|dEnu\|>100MeV | top vtx | top Enu |
+|---|---|---|---|---|
+| round-5 flip (ACCEPTED, off->s2on) | 7+3+7 = 17 | 16+9+5 = 30 | 135 cm | ±600 MeV |
+| round-6 (5,4000) | 6+5+9 = 20 | 20+7+11 = 38 | 247 cm | -706/+815 MeV |
+| round-6 (3,6000) | 9+3+11 = 23 | 17+8+19 = 44 | 247 cm | -1463 MeV (46363) |
+| round-6 **(5,6000) shipped** | 8+3+14 = 25 | 16+10+18 = 44 | 285 cm | +785 MeV (389538) |
+
+  The (5,6000) movers overlap majority-wise with the round-5 accepted set
+  (bistable events: 122660, 271851, 38856, 46363, 163543, 180801, 359980,
+  56982, 48367, 52085 recur); NEW >10cm movers vs round 5: nueCC 30504,
+  52672, 389538; data 51051, 52657, 54175, 57485, 57575, 59261, 59553.
+  Whether these moves are improvements is NOT decidable from magnitude
+  (pr/67 §11.8 — truth files not in this tree); all are in the Bee scan set
+  below. Escape is byte-exact if the owner's scan disqualifies any of them.
+* **Wall/RSS**: mean wall 26.6->26.6 s (48), 18.9->18.4 s (19),
+  19.3->20.2 s (50); RSS +<=9 MB on ~1.5 GB. Charge recovery adds nothing
+  measurable (scan_ms 8.4-9.7 per cluster 12/21 builds; 10-66 ms/event
+  totals, unchanged from round 5).
+* **Flip gate**: bare `flip{48,19,50}` vs `w5on{48,19,50}`: 0/48, 0/19, 0/50
+  byte-identical (archives + nusel) -- bare production == validated on-arms.
+* **Escape gate**: `SBND_SGP_WEAK_SCALE=0` `esc{48,19,50}` vs `off{48,19,50}`:
+  0/48, 0/19, 0/50 byte-identical -- the escape restores round-5 production exactly.
+
+### Status
+
+* Toolkit ef4c77ae (knob, DEFAULT OFF) + cba440fa (flip): SBND PRODUCTION ON at
+  (5.0, 6000) in `wct-pr-perevt.jsonnet` (owner instruction: round-5
+  requirements carried forward; the census cost is disclosed in the flip
+  comment and above, and every >10cm mover ships in the Bee set).
+* Bee (36 events: `docs/pr/pr51r6-bee-36.index.txt` — round-5 core 16 +
+  11 nueCC + 4 NCpi0 + 5 data movers), identical event order both sets:
+  * before (= round-5 production): https://www.phy.bnl.gov/twister/bee/set/fcb711d9-669a-4016-aef3-e0bceb90fe1d/event/list/
+  * after (= round-6 production): https://www.phy.bnl.gov/twister/bee/set/8c8dfbec-be98-4dea-8756-6e1cdc0dc7fd/event/list/
+* Open: 285567's 2.02 cm genuine image gap (round-4 item, unchanged);
+  37112's new 3-pt 0.6 cm micro-stub (cosmetic); a narrow near-vertex-only
+  variant of the weak-charge term (main-vertex-radius gate) if the owner
+  wants the mover footprint reduced while keeping both fixes.

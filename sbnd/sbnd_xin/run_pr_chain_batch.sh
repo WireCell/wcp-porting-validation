@@ -759,6 +759,15 @@ fi
 if [ -n "${SBND_SGP_POINT_RADIUS:-}" ]; then
     CATH_TLA+=(--tla-code "sgp_point_radius=${SBND_SGP_POINT_RADIUS}")
 fi
+# doc pr/51 round 6: weak-charge deficit term on the gap flavor.
+#   SBND_SGP_WEAK_SCALE  (0 = off; grid scales 1-5)
+#   SBND_SGP_WEAK_QREF   (charge units; C++ default 2000)
+if [ -n "${SBND_SGP_WEAK_SCALE:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_weak_scale=${SBND_SGP_WEAK_SCALE}")
+fi
+if [ -n "${SBND_SGP_WEAK_QREF:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_weak_qref=${SBND_SGP_WEAK_QREF}")
+fi
 # doc pr/54: keep well-supported isolated residual segments in
 # find_other_segments (18255-142421 separated EM shower with no fitted
 # trajectory).  Boolean TLA, same contract; the two numeric floors ride the
