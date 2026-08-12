@@ -1070,15 +1070,22 @@ S2, since it costs CPU and touches the component bookkeeping.
 
 ---
 
-# 11. Round 3 — S2 implemented, validated, and NOT flipped
+# 11. Round 3 — S2 implemented, validated, SBND PRODUCTION ON
 
-**Status: `iso_snap_min_dir_mag` is SHIPPED DEFAULT OFF (10.0 cm = legacy).**
+**Status: `iso_snap_min_dir_mag` = 4.0 cm is SBND PRODUCTION ON — owner flip
+2026-08-12** ("based on my scan, the overall is positive"), after the Bee
+before/after hand-scan of the three targets *and* all eight collateral
+neutrino-vertex movers of §11.7. The C++ knob default itself stays 10.0
+(legacy); the flip is cfg-only, in `wct-pr-perevt.jsonnet`. See §11.12 for the
+flip proof and the legacy escape.
+
 It fixes all three in-scope events and passes every mechanical gate — off-gate
-byte-identical 0/117, 0 unclaimed movers, 0 `nusel` selection flips. It is **not
-flipped on**, because it also moves the reconstructed neutrino vertex on 30 of
-117 events, 9 of them by more than 10 cm. That is S2's own abandon condition
-(§10.4) and it is a physics judgement, not a threshold — §11.7 is the decision
-the owner has to make, with Bee links in §11.11.
+byte-identical 0/117, 0 unclaimed movers, 0 `nusel` selection flips. **The
+accepted cost is in §11.7**: it also moves the reconstructed neutrino vertex on
+30 of 117 events, 9 of them by more than 10 cm. That was S2's own §10.4 abandon
+condition, and it was resolved the way this tree resolves such questions — by
+the owner's hand-scan, not by a threshold. Read §11.7 before treating any future
+vertex mover in this region as a regression.
 
 ## 11.0 Repro
 
@@ -1234,7 +1241,7 @@ isochronously-displaced branch:
 So the *arithmetic* hazard largely did not materialise. What did is §11.7, and
 it is a different problem.
 
-## 11.7 Why this is not flipped — the neutrino vertex moves
+## 11.7 The accepted cost — the neutrino vertex moves
 
 Measured from `T_tagger`'s `nu_x/nu_y/nu_z`, the authoritative reconstructed
 neutrino vertex (an earlier pass using the mode of the PF-root `start` values
@@ -1277,10 +1284,13 @@ Nor is it confined to the vertex path: 271851 (82 cm) and 180801 (45.9 cm) have
 `main_vertex` selection just as effectively as relocating a vertex, so gating
 the two paths separately would not have avoided this.
 
-**Two bars, and the stricter one is being invoked.** The owner's stated stop
-condition was a `nusel` **selection** flip — that did **not** happen (0/117).
-The bar that halted the flip is §10.4's own vertex-stability abandon condition,
-restated in the round-3 plan. Overruling it is a one-line decision.
+**Two bars, and the stricter one was invoked — then overruled on evidence.**
+The owner's stated stop condition was a `nusel` **selection** flip, which did
+**not** happen (0/117). The bar that held the flip back was §10.4's own
+vertex-stability abandon condition, restated in the round-3 plan. The owner
+hand-scanned the Bee sets of §11.11 — the three targets plus every collateral
+mover — and judged the overall effect positive, so the flip proceeded. That is
+the intended resolution path for a physics judgement, not a bypass of the gate.
 
 Deliberately **not** done: no `min |dir.x()|` cut and no maximum-displacement
 guard were added to suppress the movers. That would be a second behaviour change
@@ -1358,3 +1368,63 @@ Both arms are the **same binary**; the only difference is
 
 The three targets are idx 0/1 (nueCC48) and idx 0 (NCπ⁰). The other eight are
 the events §11.7 cannot call: they are the reason the knob is not flipped.
+
+## 11.12 The flip — SBND production ON at 4.0 cm
+
+**Owner flip 2026-08-12**, on the §11.11 hand-scan. One line of cfg, in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` only:
+
+```jsonnet
+iso_snap_min_dir_mag = 4.0,          // was null (= C++ default 10.0 = legacy)
+```
+
+`sbnd/clus.jsonnet` keeps `null` at all four of its sites, matching how
+`es3_stub_guard`, `shower_absorb_unreachable_main` and
+`other_seg_keep_isolated` are flipped in this tree: the PR chain compiles
+`wct-pr-perevt.jsonnet` (via the thin `sbnd_xin/wct-pr-perevt.jsonnet` wrapper
+that imports it through `WIRECELL_PATH`), and that is the only file production
+reads. **The C++ default is untouched at 10.0** — any non-SBND consumer, and any
+job that does not go through this cfg, still gets legacy behaviour.
+
+### Flip proof
+
+Bare production (no env override) must now BE the validated on-arm, and the
+documented escape must restore the pre-flip bare exactly. Both measured on the
+full 117 with `hash_archive.py` member content:
+
+| claim | arms | result |
+|---|---|---|
+| bare flipped production == validated on-arm | `on{48,19,50}` vs `flip{48,19,50}` | **0/48, 0/19, 0/50** |
+| legacy escape `-A iso_snap_min_dir_mag=10.0` == pre-flip bare | `off{48,19,50}` vs `esc{48,19,50}` | **0/48, 0/19, 0/50** |
+
+```bash
+# bare production, post-flip
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr67f-flip48 data
+# legacy A/B escape
+SBND_ISO_SNAP_MIN_DIR_MAG=10.0 PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr67f-esc48 data
+python3 scripts/analysis/pr49/on_compare.py work-pr67f-on48  work-pr67f-flip48   # 0/48
+python3 scripts/analysis/pr49/on_compare.py work-pr67f-off48 work-pr67f-esc48    # 0/48
+```
+
+Compiled-config proof: bare yields `"iso_snap_min_dir_mag" : 4`;
+`-A iso_snap_min_dir_mag=10.0` yields `10`.
+
+So the A/B escape hatch is real and byte-exact in both directions — a future
+round can recover the pre-pr/67 production output without reverting code.
+
+### 18255-58717 after the flip — unchanged, and why that is correct
+
+Asked for separately. 58717's `mabc-pr.zip` is **byte-identical** before and
+after the flip (member hash `c40c7852…` both sides), **zero** `pr67 iso-snap
+below-legacy` sentinels fired in it, and its numbers are static: owner point →
+nearest fit **2.59 cm**, uncovered W **1/34 (2.9%)**.
+
+That is §10.8 holding, not a failure: 58717's residual is **92% transverse**,
+and the only component near the charge has 2 terminals with `nnf = 0` — in 2-D
+it is genuinely indistinguishable from the trajectory already there, so there is
+no branch candidate for the isochronous snap to attach. It needs a
+*fitter-level* term pulling a trajectory transversally toward uncovered
+collection-plane charge, which remains out of scope.
+
+Bee (post-flip production):
+https://www.phy.bnl.gov/twister/bee/set/a05bebe6-8e6f-4375-9ec5-b0f24919cef4/event/list/
