@@ -421,6 +421,18 @@ process_event() {
         1) ISOGUARD_TLA=(--tla-code "nu_iso_band_guard=true") ;;
         0) ISOGUARD_TLA=(--tla-code "nu_iso_band_guard=false") ;;
     esac
+    # doc pr/66: record each nu_iso_band_guard refusal as per-blob provenance
+    # so the all-APA clustering chain -- which has no iso-band guard of its
+    # own -- declines to re-merge the exact pair the per-APA chain already
+    # refused.  SBND PRODUCTION ON, owner flip 2026-08-12; unset inherits that
+    # default.  SBND_NU_BAND_VETO=0 forces the legacy path (byte-identical
+    # pre-flip config), =1 forces on (a no-op today since the config default
+    # is already on).
+    local BANDVETO_TLA=()
+    case "${SBND_NU_BAND_VETO:-}" in
+        1) BANDVETO_TLA=(--tla-code "nu_band_veto=true") ;;
+        0) BANDVETO_TLA=(--tla-code "nu_band_veto=false") ;;
+    esac
     # doc pr/19 campaign pair (SBND config default OFF pending validation):
     # iso_cathode_guard = per-APA clustering_isolated declines the 80 cm
     # small->big absorb for near-cathode smalls; adopt_nu_fragments = all-APA
@@ -463,6 +475,7 @@ process_event() {
         "${CRESCUE_TLA[@]}" \
         "${VVETO_TLA[@]}" \
         "${ISOGUARD_TLA[@]}" \
+        "${BANDVETO_TLA[@]}" \
         "${OC_TLA[@]}" \
         "${KNOB_TLA[@]}" \
         -c "$JSONNET"
