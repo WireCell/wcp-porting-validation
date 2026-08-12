@@ -7,7 +7,16 @@ behavior is changed.** Two new config knobs ship: one is a log-only probe
 counterfactual (`pr_find_other_rounds`, inert only at its default 0 — it changes
 reconstruction output when set, and is not proposed for production).
 
-**Headline: the four cases are not one problem.** Three of them
+> **ROUND 2 (below, §9) SUPERSEDES THE HEADLINE AND §3/§4/§6 OF ROUND 1.**
+> Round 1 stopped at the first-segment endpoint and the branch-round budget.
+> Round 2 instruments the *inside* of `find_other_segments` (P5) and every
+> `remove_segment` call (P6), and finds that in **all four** events a branch
+> candidate **is** proposed at the owner's charge and is killed by one of two
+> filters — an isolated-residual floor counting 25 Steiner terminals, or the
+> step-8 "faked" cut. Read §9 first; §3–§6 are kept as the record of how the
+> conclusion was reached and of the measurements that still stand.
+
+**Headline (round 1): the four cases are not one problem.** Three of them
 (18264-137238, 18259-42280, 18345-21073) are *not* trajectory-stage failures at
 all — the owner's charge is associated, within 1 cm, to a segment the chain
 classified as an **EM shower**, which by design receives only a short trunk fit.
@@ -132,6 +141,12 @@ and re-run — see §4.)
 
 ### 3.1 — 18264-137238 @ (−122.0, 22.5, 423.2): a shower, and the chain says so
 
+> **Superseded by §9.3.1.** A branch candidate *was* proposed at this charge
+> (bbox 1.48 cm away) in both rounds; it was routed away from the owner's arm
+> and then dropped as an isolated residual. The `q = 15000` observation below
+> stands as a fact about the final state, but it is not the reason no
+> trajectory is there.
+
 **Symptom.** Owner: "why the fitted track trajectory is missing this piece (likely
 a track). Is that limited by not sufficient round of doing the branch searching?"
 Nearest fit point is 4.43 cm away and is an **interior** point of segment 143042,
@@ -176,6 +191,11 @@ its own round with its own evidence (dQ/dx profile, PCA linearity per doc pr/63'
 discriminator). No knob in the trajectory code will change this case.
 
 ### 3.2 — 18259-42280 @ (12.1, −13.6, 89.0): the pr/24 residual, and it is a shower boundary
+
+> **Superseded by §9.3.2 and §9.4.** The 3.4 cm is *not* mostly lateral
+> centring: 3.02 cm of it is axial, and the cause is the ±3 cm band's missing
+> axial penalty (§9.4). A 4.21 cm branch covering the owner's charge to within
+> 0.70 cm was fitted and discarded (§9.3.2).
 
 **Symptom.** Nearest fit point is 3.83 cm away and **is** the endpoint of segment
 8026 — a genuine axial undershoot at a tip.
@@ -224,6 +244,12 @@ plane view, and this cluster genuinely *is* isochronous (78.6° from drift), so
 `walk=0.00/0.00` is what rules it out.
 
 ### 3.4 — 18255-58717 @ (195.7, 76.4, 42.1): the one real track-coverage defect
+
+> **Amended by §9.3.4.** Both gates below are real and the P2 finding stands,
+> but the residual here is **92 % transverse** (−1.22 cm axial, +2.97 cm
+> perpendicular), so an axial extension recovers nothing: **0 of 236** image
+> points lie beyond the endpoint along the segment direction. F1 (§6) is
+> retracted on that measurement.
 
 **Symptom.** Nearest fit point 2.58 cm from the owner's point; the trajectory
 stops before the end of the charge. Owner: "in the main cluster where a couple
@@ -281,6 +307,12 @@ such check exists anywhere in the fitter.
 port error — the same shape as doc pr/24 round 5's `v3_extension_guard` finding.
 
 ## 4. The owner's two hypotheses, tested
+
+> **Scope correction, §9.5.** Hypothesis (b) is tested here only for point-level
+> *trimming* (P3) — that result is unchanged, and round 2's segment-level probe
+> (P6) is also negative. What neither watches is a branch rejected as a
+> *candidate* before `add_segment`, which is what actually happens in all four
+> events (§9.2).
 
 **Hypothesis (a): the endpoint-finding algorithm is not robust for the isochronous
 case.** *Partly true, but not the cause in three of four cases.* It fired
@@ -361,6 +393,10 @@ this round, per scope.
 
 ## 6. Proposed fixes — knob shape and validating gate, none implemented
 
+> **Superseded by §9.6**, which scores four candidates against all four events.
+> **F1 below is retracted** (§9.3.4). F2 stands. F3's premise is weakened by
+> §9.2.
+
 Only 58717 has a defect this round can propose a fix for. The other three need
 different rounds in different subsystems.
 
@@ -434,3 +470,332 @@ of either knob would need the full manifest gate first — neither is proposed.
 * Open for the owner to direct: F1 vs F2 for 58717; whether the three
   shower classifications in §3.1/3.2/3.3 are correct (a separate round); the
   `count_live_channels_between` divergence in §5 (M15, both readings recorded).
+
+---
+
+# 9. Round 2 — inside `find_other_segments`: the branch **is** found, then filtered out
+
+Round 2 was prompted by three owner questions on the round-1 write-up:
+
+1. *137238* — "why was this track segment missed, so that the track trajectory was
+   not fitted? I understand the W channels are fully covered."
+2. *42280* — "why is the initial end point not at the edge?"
+3. *58717* — "do you have some idea on how to fix it?"
+
+Round 1 could not answer (1): its per-round census (P4) reported only the segment
+count before and after each `find_other_segments` call, which cannot distinguish
+"no candidate existed there" from "a candidate was scored and rejected". Round 2
+adds that missing resolution and the answer is the same in all four events.
+
+## 9.0 Repro (round 2)
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+wcbuild > /home/xqian/tmp/pr67b/build2.log 2>&1; echo rc=$?
+./build/clus/wcdoctest-clus                       # 176/176, 1854 assertions
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# probe-ON  -> work-pr67-r48 / r19 / r1k     (SBND_TRAJ_COVER_PROBE=1)
+# probe-OFF -> work-pr67-s48 / s19 / s1k     (gate arms, new binary, knobs off)
+PR_JOBS=2 SBND_TRAJ_COVER_PROBE=1 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr67-r48 data 137238 42280
+PR_JOBS=1 SBND_TRAJ_COVER_PROBE=1 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr67-r19 data 21073
+PR_JOBS=1 SBND_TRAJ_COVER_PROBE=1 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr67-r1k data 58717
+
+grep 'pr67 fos' work-pr67-r48/pr_evt137238/wct_pr_evt137238.log | grep cluster=143
+grep 'pr54 isolated-residual drop' work-pr67-r48/pr_evt42280/wct_pr_evt42280.log
+```
+
+## 9.1 What round 2 adds
+
+Both are extensions of the existing `traj_cover_probe` knob (still default OFF,
+still log-only, gate PASS in §9.7).
+
+* **P5 — `find_other_segments` component census** (`NeutrinoOtherSegments.cxx`).
+  One line per connected component of untagged Steiner terminals, at each of the
+  three decision points that can kill it — the step-8 quality cut, the step-9
+  selection/routing, and the step-9 **re-evaluation** (a component that survived
+  step 8 is re-scored *in 2D only* against the segment just added). Each line
+  carries `npts`, `len`, `nnf` (`number_not_faked`), `max_dis` per plane, the
+  routed endpoints `A`/`B`, and the component's **bounding box** — the bbox is
+  what lets a hand-scanned coordinate be matched to a component at all.
+* **P6 — `remove_segment` sentinel** (`PRGraph.cxx`). Every call logs the
+  segment's fit-point count and both fitted endpoints. This tests the owner's
+  hypothesis (b) at the **segment** level, which round 1's P3 (point-level end
+  trimming) structurally could not.
+
+## 9.2 The common mechanism
+
+In **all four** events a branch candidate is proposed at the owner's charge. None
+survives. Distances below are from the owner's point (mapped to the clustering
+frame, §1) to the component's bounding box, and — for the three that were routed
+and fitted — to the fitted branch's own `v1→v2` chord.
+
+| event | cluster | component at the owner's charge | bbox dist | fate |
+|---|---|---|---|---|
+| 137238 | 143 | 10 terminals, routed 4.70 cm, fitted 7.75 cm, nnf 6→5 | 1.48 cm | routed away from the owner's arm (§9.3.1), then **isolated-residual drop** |
+| 42280 | 8 | 10 terminals, routed 4.38 cm, fitted 4.21 cm, nnf 9 | 0.00 cm | **isolated-residual drop** |
+| 21073 | 60 | 14 terminals, routed 4.34 cm, fitted 6.15 cm, nnf 2→1 | 0.65 cm | **isolated-residual drop** |
+| 58717 | 21 | 2 terminals, 2.93 cm, nnf 0 | 0.47 cm | **step-8 `nnf0_short`** — never routed, never fitted |
+
+The three isolated-residual drops are identical in shape, and each fires twice
+(once per branch-search round — which is the mechanical reason the round budget
+cannot help, independently of round 1's counterfactual):
+
+```
+pr54 isolated-residual drop: cluster 143 n_points=10 length=7.75 cm dir_mag=4.70 cm
+     v1=(-122.6,24.1,418.7) v2=(-122.3,26.7,414.8) cm
+pr54 isolated-residual drop: cluster 8   n_points=10 length=4.21 cm dir_mag=4.38 cm
+     v1=(14.3,-10.4,89.8)   v2=(12.1,-13.9,88.4) cm
+pr54 isolated-residual drop: cluster 60  n_points=14 length=6.15 cm dir_mag=4.34 cm
+     v1=(-31.5,24.1,369.5)  v2=(-32.8,26.1,365.9) cm
+```
+
+**Three gates stack, and every one of them is sized above these objects.**
+
+1. **Neither endpoint attaches to the existing graph.** `find_vertex_other_segment`
+   → `check_end_point` tries three widening passes, topping out at
+   `vtx_cut1 = 1.5 cm`, `vtx_cut2 = 3.0 cm` (6.0 cm for a degree-1 vertex), plus
+   a `< 90°` direction test; the segment-snap path uses `sg_cut1 = 2.0 cm`. The
+   branch ends are **1.8 – 8.8 cm** from the nearest fitted point of the same
+   cluster. So `v1_existed == v2_existed == false` and the code enters the
+   isolated-segment path.
+2. **The isochronous rescue on that path never runs.** `modify_vertex_isochronous`
+   / `modify_segment_isochronous` — machinery that exists for exactly this
+   topology — is behind
+   `dir_mag > 10 cm || (dir_mag > 8 cm && track_length > 13 cm)`.
+   The three branches have `dir_mag` **4.70 / 4.38 / 4.34 cm**. Not one of them
+   is large enough to be offered to it.
+3. **pr/54's keep-isolated escape hatch rejects them.** SBND production has
+   `other_seg_keep_isolated = true` with both thresholds `null`, i.e. the C++
+   defaults `min_points = 25`, `min_length = 3.0 cm`. The lengths (7.75 / 4.21 /
+   6.15 cm) all pass; **the point counts (10 / 10 / 14) all fail.** Note that
+   `number_points` here counts **Steiner terminals of the component**, not fitted
+   points — on a 4–8 cm branch that is an implicit length floor far above the
+   advertised 3 cm `min_length`, which is why the floor does not bind the way
+   pr/54's text reads.
+
+All three branches are near-perpendicular to drift (86.3° / 59.7° / 72.5°), i.e.
+this is the isochronous regime the owner identified.
+
+## 9.3 Per case
+
+### 9.3.1 — 137238: the component is found, but one route covers only one arm
+
+The component at the owner's charge (P5 `group=6`, round 1; `group=2`, round 2 —
+same bbox both times) spans
+`[-122.94,-122.01] x [22.15,26.65] x [414.82,421.72]`, whose nearest face is
+**1.48 cm** from the owner's point. So the search did see this charge.
+
+But it is routed away from it. Step 9 runs a single `do_rough_path(special_A,
+special_B)`, where `special_A` is the component's **boundary connection point**
+(the terminal carrying an MST edge across the tagged/untagged frontier) and
+`special_B` is simply the **farthest point from `special_A`**. Here
+`A = (-122.63,24.05,418.72)` sits in the *middle* of a nearly straight ~8 cm
+object: `B = (-122.32,26.65,414.82)` is 4.70 cm away on one side, and the
+owner's four Steiner terminals (z ≈ 420.8–421.7, y ≈ 22.1–22.8) are ~3.3 cm away
+on the other — **170° apart as seen from `A`**. One polyline from `A` to `B`
+traverses one arm. Measured: the owner's point projects to `t = -0.98` on the
+`v1→v2` chord, i.e. **off the end**, closest approach **4.78 cm**; the fitted
+branch's own near end lands 3.57 cm short of it.
+
+Then the branch dies anyway (§9.2). So 137238 has **two** independent reasons to
+produce nothing there, and fixing only the isolated-residual floor would leave
+the owner's charge ~4.8 cm from the nearest trajectory. This is the same *class*
+as round 1's "one polyline cannot cover a 2-D sheet" (§3.3), relocated from the
+first-segment endpoint to the component-routing step — and it is consistent with
+round 1's measurement that **0 %** of this cluster's W channels are fully
+uncovered.
+
+### 9.3.2 — 42280: the branch does cover the owner's charge
+
+`t = 0.79` on the chord — **interior** — closest approach **0.70 cm**. This is
+the cleanest case in the set: a 10-terminal, 4.21 cm branch with **nnf = 9 of
+10** (i.e. 9 of its points are un-shadowed on ≥2 planes, so it is well supported
+in 2D, not a projection artefact) is fitted and then discarded because 10 < 25.
+
+### 9.3.3 — 21073: covered, but weakly supported
+
+`t = 0.07` — interior — closest approach **1.52 cm**. Same drop, but the quality
+is much lower: **nnf = 2 of 14, falling to 1 of 14** on re-evaluation. Whatever
+floor is chosen in §9.6, this one is the hard case: it is genuinely hard to tell
+from a 2-D shadow of the neighbouring trajectory.
+
+### 9.3.4 — 58717: the residual is transverse, not axial
+
+Two findings, and the second **retracts round 1's proposed fix F1**.
+
+*The branch never gets routed.* The component 0.47 cm from the owner's point has
+**2 terminals, 2.93 cm, nnf = 0** — it dies at the step-8 quality cut
+(`nnf0_short`), one stage earlier than the other three. Two terminals with no
+un-shadowed points is below any defensible floor; there is no branch-level fix
+here.
+
+*The trajectory does not stop short — it runs alongside.* Decompose the
+first-segment endpoint `E = (196.68,77.45,39.08)` against the owner's point
+`(196.43,76.4,42.1)`:
+
+| component | value |
+|---|---|
+| along the segment direction | **−1.22 cm** (the owner's point is *behind* E) |
+| perpendicular to it | **+2.97 cm** |
+| total | 3.21 cm |
+
+The residual is **92 % transverse**. Across the whole of cluster 21, **no image
+point is more than 2.93 cm from a fitted trajectory** (median 0.57 cm, 90th
+percentile 1.92 cm) — the fit threads one side of a ~5 cm-wide tip blob (112
+image points within 6 cm of the owner's point, bbox 5.4 × 5.6 × 3.1 cm).
+
+Round 1's **F1** (`v3_iso_extension_fallback`: when the local Hough direction
+lands in the ±7.5° perpendicular band, extend along the segment's own end-to-end
+direction instead of returning the vertex unchanged) was tested here by direct
+computation and **would recover nothing**. The segment direction is well
+conditioned — 44.1° from drift, versus the 89.5° the Hough estimate returns, so
+the fallback is well posed exactly where the guard fires — but the max-projection
+search it feeds finds the endpoint is *already* the extreme: **0 of 236 image
+points lie beyond E** along that direction (furthest is −0.22 cm). **Any
+axial-extension fix is the wrong shape for this event.** The P2 finding itself
+(`get_local_extension` is a structural no-op in the isochronous case,
+`NeutrinoStructureExaminer.cxx:2426`, prototype-faithful) stands as a real
+limitation — it is simply not what costs coverage here.
+
+## 9.4 The 42280 endpoint question, answered
+
+Owner: *"why is the initial end point not at the edge?"*
+
+Not lateral centring, and not the Steiner snap. Measured against cluster 8's own
+principal axis (85.1° from drift, 14671 image points, axial span 112.0 cm):
+
+| quantity | value |
+|---|---|
+| axial coordinate of the image extreme | `s = 61.73` |
+| axial coordinate of the owner's point | `s = 61.03` |
+| axial coordinate of the chosen endpoint `A` | `s = 58.01` |
+| **`A` is inside the extreme by** | **3.73 cm** |
+| image points beyond `A` axially | **93 of 14671** |
+| `A`'s own distance from the axis (`d_perp`) | **0.28 cm** |
+| distance from `A` to the Steiner terminal it snapped to | **0.005 cm** |
+| Steiner terminals available beyond `A` | 10, reaching the full `s = 61.73` |
+| inward walk of the spike guard (probe `walk=`) | **0.00 / 0.00 cm** |
+
+So: the terminals reach the tip, the snap costs nothing, the spike guard does not
+walk in, and `A` is essentially *on* the axis — lateral centring did exactly its
+job. The 3.73 cm is the **±3 cm axial band itself**. `pick_end_point` finds the
+true axial extreme and then replaces it with the *laterally most central
+qualified point anywhere within ±3 cm axially of it*. On a sheet the most central
+point in that band is typically ~3 cm inside the tip, and **the band's selection
+carries no axial penalty term at all** — a point 3 cm inside and 0.1 cm off-axis
+beats a point at the tip and 0.4 cm off-axis. Reproduced directly: taking the
+image extreme and applying the band rule by hand lands at `s = 58.97`,
+`d_perp = 0.75`, i.e. 2.8 of the 3.7 cm.
+
+This is a real trade, not a bug: doc pr/24 §17.3 introduced the band specifically
+to stop the endpoint landing on a sheet-*corner*, and the probe line records the
+branch still gaining **11.3 / 12.2 cm** over what round 2 of pr/24 would have
+picked. What it does not do is stop 3 cm short of costing anything.
+
+The charge past `A` was then recovered anyway — as the 4.21 cm branch of §9.3.2,
+0.70 cm from the owner's point — and dropped. **The owner is looking at a piece
+that the chain both found and fitted, twice, and threw away both times.**
+
+## 9.5 P6 came back negative — hypothesis (b) still stands
+
+Round 1 reported that nothing was fitted and then removed, on the basis of P3
+(`examine_end_ps_vec`, point-level end trimming). That statement was about
+*trimming* and it is unchanged: sub-centimetre in three events, 2.5 cm in the
+fourth.
+
+P6 now tests the stronger claim — whether a whole fitted segment was deleted —
+and it is **also negative**. Across the four events (44 / 30 / 31 / 2
+`remove_segment` calls), every removal within 4 cm of an owner point belongs to
+the ordinary first-segment break/refit cycle: each shares its far endpoint with
+the others while the fit-point count steps down (137238: 82 → 92 → 90 → … → 26),
+which is `break_segments` splitting one long trajectory, not a branch being
+deleted. **No completed segment is deleted at the owner's charge in any of the
+four.**
+
+What round 2 changes is therefore a matter of *scope*, not a reversal: the branch
+is rejected as a **candidate**, before `add_segment` is ever called, which is a
+stage neither P3 nor P6 watches and which round 1 had no instrument for.
+
+## 9.6 Fix candidates — what each one actually recovers
+
+Still **no implementation**, per scope. What is new is that each candidate can now
+be scored against all four events instead of argued.
+
+| candidate | 137238 | 42280 | 21073 | 58717 |
+|---|---|---|---|---|
+| **G1** widen the isochronous-snap gate (`dir_mag > 10` / `>8 & len>13` → ~4 cm) | reaches it (4.70) | reaches it (4.38) | reaches it (4.34) | no — never routed |
+| **G2** lower `other_seg_keep_isolated_min_points` (25 → ~10) | insufficient alone | **yes** | yes, but admits nnf 1/14 | no |
+| **G3** gate keep-isolated on `nnf` instead of raw `number_points` | borderline (5–6/10) | **yes** (9/10) | **no** (1–2/14) | no |
+| **G4** route every arm when `special_A` is interior to its component | **the missing half** | n/a | n/a | no |
+
+**G1 is the strongest lead.** The isochronous attachment machinery already exists
+and is written for precisely this topology; the only reason it never runs on any
+of these three is a size gate set at roughly twice their length. Attaching a
+branch beats keeping it isolated — an attached branch becomes part of the graph
+and is refit jointly, whereas the keep-isolated path (G2/G3) adds a disconnected
+piece. **Untested**: whether `modify_*_isochronous` actually succeeds on a 4.5 cm
+branch is unknown, and a lower gate also exposes it to genuinely fake 2-D
+coincidences. It needs its own knob, its own census and its own gate.
+
+**G2 alone is blunt.** It recovers 42280 cleanly, but on 21073 it would admit a
+branch supported by 1–2 un-shadowed points out of 14, and on 137238 it recovers a
+branch whose route misses the owner's charge anyway.
+
+**G3 is the discriminator the code already computes and then ignores** —
+`other_seg_keep_isolated_ok` sees only `component_points` and `track_length`,
+never `number_not_faked`, even though `number_not_faked` is exactly "how many of
+these points are *not* explained as a 2-D shadow of an existing trajectory". It
+separates 42280 (9/10) from 21073 (1/14) correctly. It is not sufficient by
+itself for 137238.
+
+**G4 targets 137238 only** and is the one thing that would put a trajectory on
+that charge. `special_B` is defined as the farthest point from `special_A`; when
+`special_A` is interior to its component, the far side is never routed.
+
+**58717 needs none of these.** §9.3.4's decomposition says the residual is 92 %
+transverse — the trajectory is displaced ~3 cm sideways within the isochronous
+ambiguity rather than stopping short, and round 1's F1 is retracted. Round 1's
+**F2** (lowering `iso_endpoint_min_length` from 40 cm so the 21.4 cm cluster can
+use the isochronous endpoint branch at all) is untouched by round 2 and remains
+the only live idea for it, with the same warning: it needs doc pr/24 §15's
+`pr24_iso_probe.py --junctions` regression detector first.
+
+**Not a fix, and worth stating: none of this is upstream of the shower
+classification in a causal sense.** `find_other_segments` runs inside
+`find_proto_vertex`; the track/shower decision happens much later. Round 1's
+observation that three of the four owner points carry `q = 15000` is a fact about
+the final state, and the ordering is what is established here — not that the
+dropped branch caused the classification.
+
+## 9.7 Gates (round 2)
+
+| check | result |
+|---|---|
+| freshness proof (M1) | `libWireCellClus.so` 07:20:54 > last source edit 07:20:04 |
+| `./build/clus/wcdoctest-clus` | **176 test cases / 1854 assertions, all pass** |
+| probe-OFF (new binary) vs round-1 baseline, `mabc-pr.zip` member hash (M2) | **PASS 4/4** — `work-pr67-s48/s19/s1k` vs `work-pr67-base48/base19/base1k` |
+| probe-ON vs probe-OFF, same hash | **PASS 4/4** — `work-pr67-r48/r19/r1k` vs `work-pr67-s48/s19/s1k`; P5 and P6 are log-only, confirmed by measurement |
+
+Same deliberate omissions as §7, for the same reason: probe-ON and probe-OFF are
+hash-identical on all four events, so inertness rests on measurement rather than
+on a reachability argument.
+
+## 9.8 Caveats carried by round 2
+
+* **P6's flag is a process-global file-static.** `remove_segment` is a free
+  function with call sites in six files and no access to
+  `PatternAlgorithms::m_traj_cover_probe`, so `PR::set_traj_cover_probe()`
+  mirrors the knob into a `static bool` in `PRGraph.cxx`, set from
+  `TaggerCheckNeutrino::configure`. With per-face `TaggerCheckNeutrino`
+  instances the last `configure` wins. Harmless here — every instance got the
+  same value — but a configuration with one face on and another off would not
+  behave as written.
+* **`seg->id()` returns −1 throughout the PR graph**, so both P3 and P6 locate
+  their events geometrically rather than by segment id. Every attribution in §9
+  is by coordinate.
+* **P5's component bbox is over Steiner terminals**, which are sparser than the
+  image points; the bbox is a lower bound on the component's true extent.
