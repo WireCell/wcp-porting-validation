@@ -1067,3 +1067,294 @@ S2, since it costs CPU and touches the component bookkeeping.
   most general answer to §5's observation that nothing anywhere measures
   trajectory-vs-charge coverage, and it is the wrong first move: it would be a
   new stage in the chain rather than a threshold on an existing one.
+
+---
+
+# 11. Round 3 — S2 implemented, validated, and NOT flipped
+
+**Status: `iso_snap_min_dir_mag` is SHIPPED DEFAULT OFF (10.0 cm = legacy).**
+It fixes all three in-scope events and passes every mechanical gate — off-gate
+byte-identical 0/117, 0 unclaimed movers, 0 `nusel` selection flips. It is **not
+flipped on**, because it also moves the reconstructed neutrino vertex on 30 of
+117 events, 9 of them by more than 10 cm. That is S2's own abandon condition
+(§10.4) and it is a physics judgement, not a threshold — §11.7 is the decision
+the owner has to make, with Bee links in §11.11.
+
+## 11.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit && wcbuild
+env -u LD_LIBRARY_PATH ./build/clus/wcdoctest-clus
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+M50=$(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+
+# baselines at HEAD 60bad894, captured BEFORE any edit
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr67f-base48 data
+PR_JOBS=32 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr67f-base19 data
+PR_JOBS=32 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr67f-base50 data $M50
+# off arm (knob at its 10 cm default) and on arm (4.0), same three roots
+SBND_ISO_SNAP_MIN_DIR_MAG=4.0 PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr67f-on48 data
+
+python3 scripts/analysis/pr49/on_compare.py work-pr67f-base48 work-pr67f-off48   # off-gate
+python3 scripts/analysis/pr67/pr67_wcover.py work-pr67f-on48/pr_evt137238 \
+    --owner-point -122.0 22.5 423.2 --ql-dir work-nuecc48-cb0805/ql_evt137238
+```
+Census and vertex scripts: `/home/xqian/tmp/pr67f/{pr67_census,nuvtx,wcover_sweep}.py`.
+
+## 11.1 Why S2 alone, and why first
+
+§10 recommended S1 → S4 → S2 → S3, chosen to de-risk. Both legs of that
+argument are spent:
+
+* **The stated prerequisite is closed** (§11.2), so S2 is no longer the stage
+  with the largest unknown.
+* **21073 is reachable only through S2.** §10.2 measured it: S1 correctly drops
+  that component (`nnf` 2→1) and S4 leaves its endpoint pick unchanged at every
+  weight tested. "Fix these three" therefore *makes S2 mandatory*, and §10's
+  order puts the mandatory stage third.
+
+Owner selected S2-only. S1 and S4 remain documented fallbacks that between them
+fix 2 of 3 (42280 twice over, 137238 partially) and never reach 21073.
+
+## 11.2 §10.4's open prerequisite, closed by reading the code
+
+§10.4 required verifying "whether `modify_segment_isochronous` carries an
+equivalent angle test; if it does not, S2 needs its own angle guard". It does,
+and the two paths are **complementary, not redundant**:
+
+| path | distance guard | isochronous angle guard |
+|---|---|---|
+| `modify_vertex_isochronous` | caller, `< 6 cm` (`:740`, `:744`) | **caller only** — `\|angle(d1)−90°\| < 15°` at `:741`/`:745`; the callee has none |
+| `modify_segment_isochronous` | caller `< 6 cm` (`:762`, `:765`) | **callee only** — `:1429`, parameterised `angle_cut`, default 15° |
+
+So lowering the *size* gate never relaxes the *isochronous* requirement, and S2
+needed no new angle guard. That is also why the widening tiers can pass
+`angle_cut` 8 and 5: those tighten the callee's own test.
+
+## 11.3 The knob, and the operating point
+
+`iso_snap_min_dir_mag`, double **cm**, C++ default **10.0** = legacy, replacing
+the literal in the **first clause only** of `NeutrinoOtherSegments.cxx:721`. The
+second clause (`> 8 cm` && track length `> 13 cm`) and the `> 18 cm` / `> 36 cm`
+widening tiers are deliberately untouched — deriving them from the knob would
+put `0.8 × 100 = 80.00000000000001` on a candidate sitting exactly at 8 cm.
+
+Sweep on the three events (`work-pr67f-p{off,8,6,5,4}{a,b}`), reporting
+`owner point → nearest fit point` and uncovered W channels:
+
+| knob | 137238 | 42280 | 21073 |
+|---|---|---|---|
+| off (10.0) | 4.39 cm, 0/131 | 3.83 cm, 9/362 (2.5%) | 4.81 cm, 19/108 (17.6%) |
+| 8.0 | 4.39, 0/131 | 3.83, 9/362 | 5.63, 18/108 |
+| 6.0 | 4.39, 0/131 | 3.83, 9/362 | **1.21, 0/108 (0.0%)** |
+| 5.0 | 4.39, 0/131 | 3.83, 9/362 | **1.21, 0/108** |
+| **4.0** | **0.64, 0/131** | **0.26, 1/362 (0.3%)** | **1.38, 1/108 (0.9%)** |
+
+The three decisive branches sit at `dir_mag` **4.70 / 4.38 / 4.34 cm**, so the
+gate must be below 4.34 to admit all three; 4.0 is the round value with margin.
+Nothing here is tuned to these events beyond that.
+
+## 11.4 The three events, fixed
+
+At 4.0, all three clear the round-3 pass criterion:
+
+| event | owner→fit | uncovered W | fit points | sentinel path |
+|---|---|---|---|---|
+| 18264-137238 | 4.39 → **0.64 cm** | 0/131 → 0/131 | 515 → 537 | `vertex_v1`, dir_mag 4.70 |
+| 18259-42280 | 3.83 → **0.26 cm** | 9 → 1 (2.5%→0.3%) | 955 → 1101 | `vertex_v1`, dir_mag 4.38 |
+| 18345-21073 | 4.81 → **1.38 cm** | 19 → 1 (17.6%→0.9%) | 760 → 828 | `segment_v1`, dir_mag 4.34 |
+
+No segment came back with empty `fits()` in any of the three, so every recovered
+branch actually reaches the Bee `track_fit` layer rather than sitting in the
+graph contributing nothing.
+
+**137238 is gated on the owner-point distance, not on coverage.** Its W coverage
+was already 0/131 uncovered at baseline — its defect was never a missing W
+channel but a trajectory 4.4 cm away in 3-D. Reading the percentage there would
+have scored a no-op as a pass.
+
+**S3 was never needed.** §10.5 proposed routing both arms of 137238's component
+because `special_A` was interior and one route covered one arm. With S2 on, the
+event recovers directly (4.39 → 0.64 cm), so the second-arm work — and the
+candidate-doubling CPU cost it carried — is dropped. The `pr_find_other_rounds`
+counterfactual planned as its cheaper substitute was not needed either.
+
+## 11.5 Gates
+
+| gate | result |
+|---|---|
+| off-gate, `hash_archive.py` member content, vs pre-edit HEAD baselines | **0/48, 0/19, 0/50** |
+| off-gate `nusel` | 0/48, 0/19, 0/50 |
+| freshness (M1) | `libWireCellClus.so` 11:52:04 > last source edit 11:51:12 |
+| `wcdoctest-clus` | **180 cases / 1881 assertions**, 0 failed |
+| compiled-config (M6) | key **absent** when null, `"iso_snap_min_dir_mag" : 4` when set |
+| detectors touched | sbnd only (+ a null-defaulted param in `common/clus.jsonnet`) |
+
+Baselines were captured at HEAD **before** any edit — there was no HEAD-era 19
+or 50 arm, and capturing them afterwards would have voided the gate.
+
+`pr24_iso_probe.py --junctions` was **not** run: it detects endpoint-motion
+regressions and is inert for S2, which does not touch `pick_end_point`. It would
+be mandatory for S4.
+
+## 11.6 The census — 0 unclaimed
+
+The sentinel `pr67 iso-snap below-legacy` fires on a successful snap the legacy
+gate would have refused, so set *S* is exactly the knob's footprint.
+
+| sample | movers | *S* | unclaimed | `nusel` flips |
+|---|---|---|---|---|
+| nueCC48 | 36/48 | 36 | **0** | 0/48 |
+| NCπ⁰-19 | 14/19 | 14 | **0** | 0/19 |
+| PR data 50 | 2/50 | 2 | **0** | 0/50 |
+
+Movers equal *S* exactly in all three samples — no event changed where the code
+path did not execute, and no event executed the path without changing. That is
+the pr/65 bar met on the nose.
+
+*Attribution caveat:* the sentinel's own condition is `dir_mag <= 10 cm`, which
+also catches the **legacy second clause** (confirmed in the off arm, 42280,
+`dir_mag=9.78 seg_len=14.88`). Rather than re-cut the proven-identical binary,
+`pr67_census.py` re-classifies from the logged `dir_mag`/`seg_len`. The logged
+length is post-snap, so the 8–10 cm window is a proxy; every target branch sits
+at 4.3–4.7 cm, far below 8, so they are unambiguous.
+
+Snap-path split, 138 newly admitted snaps over the 117: **segment 102, vertex 36**.
+
+Conditioning — the §10.4/round-3 hazard was that `test_p` divides by `dir.x()`,
+guarded only against exact zero, and `dir.x()` is small *by construction* for an
+isochronously-displaced branch:
+
+* vertex path, 39 logged snaps: `|vtx_new − test_p|` median **0.34 cm**, max
+  2.51 cm — the kNN lands essentially on the projection, so the projection is
+  being respected, not overridden. Only **1 of 39** has `|dir.x| < 0.05`.
+* segment path: `|dir1.x|` median 0.32, min 0.0097 (one near-degenerate case).
+
+So the *arithmetic* hazard largely did not materialise. What did is §11.7, and
+it is a different problem.
+
+## 11.7 Why this is not flipped — the neutrino vertex moves
+
+Measured from `T_tagger`'s `nu_x/nu_y/nu_z`, the authoritative reconstructed
+neutrino vertex (an earlier pass using the mode of the PF-root `start` values
+was wrong — it read 18255-56982 as a 135 cm relocation when the true figure is
+1.28 cm; that event changed *which* candidate is main, not its position):
+
+| | knob 4.0 | knob 6.0 |
+|---|---|---|
+| events whose ν vertex moved | 30/117 | 19/117 |
+| moved > 10 cm | **9** | **4** |
+| moved 1–10 cm | 7 | 4 |
+| moved ≤ 1 cm | 14 | 11 |
+| largest move | **82.4 cm** (271851) | 82.2 cm (271851) |
+
+**Target-event effects and collateral are different phenomena and must not be
+averaged together.**
+
+*Targets.* 137238's vertex does **not** move. 21073's moves 0.74 cm. 42280's
+moves **62.7 cm** — from (20.6, 4.4, 150.2) to (14.4, −10.1, 89.5), i.e. **onto
+the owner's own reported uncovered charge at (12.1, −13.6, 89.0)**. That is the
+knob doing exactly what it was built to do, and the event's interpretation
+changes with it: `e⁻ 165/305/922/1009 MeV + proton 5 MeV` becomes `e⁻ 1805 MeV +
+5 γ + proton 71 MeV`. Whether that is a 62 cm improvement or a 62 cm regression
+is the question in §11.11.
+
+*Collateral.* Eight further events move > 10 cm with no owner complaint behind
+them: 271851 (82.4), 180801 (45.9), 10550 (43.4), 521075 (31.5), 30504 (23.0),
+111412 (22.4), 350186 (20.9), 46363 (11.6).
+
+Raising the gate does not buy safety. At 6.0 the footprint shrinks (36/117
+movers, 4 over 10 cm) but 271851 still moves 82 cm, 180801 still 45.9, and
+111412 moves **further** at 6.0 (49.2 cm) than at 4.0 (22.4 cm) — different snap
+sets produce different topologies, so the response is not monotonic. And 6.0
+fixes only 21073. There is no operating point that fixes the three events and
+leaves neutrino vertices alone; the movement is intrinsic to letting this
+attachment machinery see short branches, not an artifact of the threshold.
+
+Nor is it confined to the vertex path: 271851 (82 cm) and 180801 (45.9 cm) have
+**zero** vertex-path snaps. Splitting a parent segment changes downstream
+`main_vertex` selection just as effectively as relocating a vertex, so gating
+the two paths separately would not have avoided this.
+
+**Two bars, and the stricter one is being invoked.** The owner's stated stop
+condition was a `nusel` **selection** flip — that did **not** happen (0/117).
+The bar that halted the flip is §10.4's own vertex-stability abandon condition,
+restated in the round-3 plan. Overruling it is a one-line decision.
+
+Deliberately **not** done: no `min |dir.x()|` cut and no maximum-displacement
+guard were added to suppress the movers. That would be a second behaviour change
+hidden under one flag, and it would be tuning a parameter until the physics
+number looked acceptable (manual §5.7).
+
+## 11.8 The decisive measurement this round does NOT have
+
+Whether the 9 collateral moves are regressions is not decidable from movement
+magnitude. The number that would settle it is **distance to the true neutrino
+vertex, off vs on**, for 42280 and each collateral mover — nueCC48 and NCπ⁰ are
+MC, and prior rounds quote truth distances routinely (pr/47's 0.65 cm, pr/50's
+2.6 mm). The source reco1 art files carrying `sim::MCTrack` truth are not in
+this tree (`input_files_reco1/extracted-*` holds extracted frames only, and the
+dump logs do not record the source path), so it was not measured here. It is the
+first thing to do if the owner wants this flipped.
+
+## 11.9 What shipped
+
+Toolkit, all default OFF:
+
+* `clus/src/NeutrinoOtherSegments.cxx` — the knob at `:721`; `snap_path`
+  attribution; the `pr67 iso-snap below-legacy` sentinel; conditioning DEBUG
+  lines in both `modify_*_isochronous` (they fire for legacy snaps too, which is
+  what gave §11.6 its comparison distribution).
+* `clus/inc/WireCellClus/{NeutrinoPatternBase,TaggerCheckNeutrino}.h`,
+  `clus/src/TaggerCheckNeutrino.cxx` — the four plumbing hops. The component
+  member is bare cm and is scaled once at the copy; declaring it
+  `{10.0*units::cm}` there *and* scaling would give 100 cm and silently kill
+  every isochronous snap in the OFF arm, visible only to the off-gate.
+* `cfg/pgrapher/common/clus.jsonnet` + sbnd `clus.jsonnet` / `wct-pr-perevt.jsonnet`
+  — null-suppressed key, 6 sites.
+* `clus/test/doctest_clus_knob_defaults.cxx` — pins the 10.0 default, which is
+  what makes the double-scaling trap a test failure rather than a silent gate.
+* `run_pr_chain_batch.sh` — `SBND_ISO_SNAP_MIN_DIR_MAG` passthrough (wcp repo).
+
+## 11.10 Open
+
+* The truth-distance measurement of §11.8 — blocking for any flip.
+* S1 (`other_seg_keep_isolated_min_nnf`) and S4
+  (`iso_endpoint_band_axial_weight`) remain unbuilt (§10.3, §10.6). If S2 is
+  abandoned they are the fallback, fixing 42280 and partially 137238, never
+  21073. S1's cost is understated in §10.3: its 117-event `nnf` census is not
+  free, because the `pr54 isolated-residual drop` line does not log `nnf`.
+* 58717 remains out of scope (§10.8): 92% transverse residual.
+
+## 11.11 Bee — before / after
+
+Both arms are the **same binary**; the only difference is
+`SBND_ISO_SNAP_MIN_DIR_MAG=4.0`. `before` = knob off (= production today).
+
+| set | link |
+|---|---|
+| nueCC48 **before** | https://www.phy.bnl.gov/twister/bee/set/6309ef1b-091a-45e2-a107-2ab0fe508b14/event/list/ |
+| nueCC48 **after** | https://www.phy.bnl.gov/twister/bee/set/6dddaf41-f9db-4304-9522-3e2643648668/event/list/ |
+| NCπ⁰ **before** | https://www.phy.bnl.gov/twister/bee/set/e73ef5c7-e393-4e98-93d2-faada3f58bea/event/list/ |
+| NCπ⁰ **after** | https://www.phy.bnl.gov/twister/bee/set/74f5e27a-b0c4-4374-bdcc-37890d0b0d4b/event/list/ |
+
+`bee_idx` is the same in the before and after set of a pair, so
+`.../set/<uuid>/event/<idx>` compares like for like.
+
+| idx | event | set | what to look at |
+|---|---|---|---|
+| 0 | 18264-137238 | nueCC48 | **target** — trajectory reaches the charge, ν vertex unmoved |
+| 1 | 18259-42280 | nueCC48 | **target** — ν vertex moves 62.7 cm onto the reported charge |
+| 2 | 18255-271851 | nueCC48 | collateral, ν vertex 82.4 cm (largest) |
+| 3 | 18253-10550 | nueCC48 | collateral, 43.4 cm |
+| 4 | 18255-30504 | nueCC48 | collateral, 23.0 cm |
+| 5 | 18255-111412 | nueCC48 | collateral, 22.4 cm (49.2 cm at knob 6.0) |
+| 6 | 18255-350186 | nueCC48 | collateral, 20.9 cm |
+| 7 | 18255-46363 | nueCC48 | collateral, 11.6 cm |
+| 0 | 18345-21073 | NCπ⁰ | **target** — 17.6% → 0.9% uncovered W, ν vertex 0.74 cm |
+| 1 | 18255-180801 | NCπ⁰ | collateral, 45.9 cm |
+| 2 | 18255-521075 | NCπ⁰ | collateral, 31.5 cm |
+
+The three targets are idx 0/1 (nueCC48) and idx 0 (NCπ⁰). The other eight are
+the events §11.7 cannot call: they are the reason the knob is not flipped.

@@ -755,6 +755,15 @@ fi
 if [ -n "${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH:-}" ]; then
     CATH_TLA+=(--tla-code "other_seg_keep_isolated_min_length=${SBND_OTHER_SEG_KEEP_ISOLATED_MIN_LENGTH}")
 fi
+# doc pr/67 round 3 (S2): size gate on the isochronous snap in
+# find_other_segments -- the machinery that ATTACHES a short isochronously
+# displaced branch to its parent.  Bare value in cm; unset means the C++
+# default 10.0 (legacy), which is byte-identical to pre-pr/67.  The doc pr/67
+# branches sit at dir_mag 4.3-4.7 cm, so a value near 4 admits them.
+#   SBND_ISO_SNAP_MIN_DIR_MAG (cm)
+if [ -n "${SBND_ISO_SNAP_MIN_DIR_MAG:-}" ]; then
+    CATH_TLA+=(--tla-code "iso_snap_min_dir_mag=${SBND_ISO_SNAP_MIN_DIR_MAG}")
+fi
 # doc pr/59 round 2 (18255-142421 seg 20; 116944-71372 segs
 # 19052/19053/136199): per-cluster re-association rescue for a segment
 # created after its cluster's clustering_points pass, left with a null
