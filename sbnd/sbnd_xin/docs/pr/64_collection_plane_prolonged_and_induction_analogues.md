@@ -1075,3 +1075,216 @@ not an energy-reconstruction one.
 No new script this round — the probe was a short ad-hoc snippet (reproduced
 in the Repro block above) rather than a reusable tool; `probe_18625.py`
 (Round 5) remains the reusable one for the S6/energy/label checks.
+
+## Round 7 (2026-08-11) — `assoc_reassign_orphans` implemented, validated, SBND PRODUCTION ON; the specific 18625 blob is NOT fixed by it (root cause is different, correcting Round 6)
+
+**Status: Option B from Round 6 is implemented, demonstrated, validated on the
+48-event nueCC sample, and flipped ON for SBND production** (owner
+pre-authorization: "if validation passed, just turn on this knob"). **But**
+digging into *why* this event's specific reported blob survives the fix
+found that Round 6 named the wrong mechanism for it — corrected below.
+
+### Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# unit test (clus/test/doctest_pattern_recognition.cxx, new TEST_CASE):
+./build/clus/wcdoctest-clus -tc="pattern_recognition*assoc_reassign*"
+
+# log-only census (channel classification, no behavior change):
+WCT_PR64_ORPHAN_CENSUS=1 PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr64r7-census18625 data 18625
+grep "pr64 orphan-census tally" work-pr64r7-census18625/pr_evt18625/wct_pr_evt18625.log
+
+# evt 18625 demonstration, off vs on:
+PR_JOBS=1 ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr64r7-off18625 data 18625
+PR_JOBS=1 SBND_ASSOC_REASSIGN_ORPHANS=true \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr64r7-on18625-v2 data 18625
+
+# 48-event nueCC validation, off vs on (event list = work-nuecc48-cb0805's 48 ql_evt* dirs):
+SBND_MAX_JOBS=6 PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr64r7-off48 data <48 evts>
+SBND_MAX_JOBS=6 PR_JOBS=6 SBND_ASSOC_REASSIGN_ORPHANS=true \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr64r7-on48 data <48 evts>
+diff work-pr64r7-off48/nusel-table.tsv work-pr64r7-on48/nusel-table.tsv   # empty
+```
+
+### Implementation
+
+New default-OFF bool `reassign_orphans` (cfg key `assoc_reassign_orphans`),
+threaded through `clustering_points_segments`'s signature
+(`clus/inc/WireCellClus/PRSegmentFunctions.h:548`) exactly like Round 6's
+"Option B" proposal, mirroring the existing `assoc_full_recluster` (pr/59)
+knob's plumbing pattern end to end (`NeutrinoPatternBase.h`,
+`TaggerCheckNeutrino.h`/`.cxx`, `cfg/pgrapher/common/clus.jsonnet`,
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`). Threaded through
+**both** live call sites in `NeutrinoTrackShowerSep.cxx` — the main
+`clustering_points` pass (`:112`) **and** the pr/59 `reassociate_cluster_orphans`
+recluster path (`:166`), which is live in SBND production
+(`assoc_full_recluster=true`) — so a rescued segment gets the same
+association rule as the main pass, not a stale default.
+
+Mechanism, in `clus/src/PRSegmentFunctions.cxx` (Stage C, `:2961-3076`): a
+**second, independent pass** over the same graph vertices, run only when the
+knob or the `WCT_PR64_ORPHAN_CENSUS` diagnostic is set — it never touches the
+primary loop, so the knob-off path is byte-for-byte unchanged by construction
+(M10). For every vertex the primary pass left unclaimed, it:
+1. Recomputes the point's global per-plane 2D minimum via the existing F17
+   `global_kd2d` KD-trees, this time also capturing **which segment** achieves
+   it (a new parallel `global_kd2d_owner` table — the KD-tree's `knn(1,q)`
+   already returns the winning flat index, previously discarded).
+2. Restricts candidates to segments in the **same cluster** — a point whose
+   true winner is in a different cluster stays dropped, so cross-cluster
+   ghost rejection is unaffected by construction.
+3. Re-checks the candidate against a **duplicated** copy of the Stage-C
+   acceptance rule (`accept_for`, not shared with the primary chain — M10),
+   and assigns the point to the first same-cluster candidate that passes it,
+   in deterministic graph-index order.
+
+### Unit test
+
+New `TEST_CASE("pattern_recognition clustering_points assoc_reassign_orphans [A]")`
+in `clus/test/doctest_pattern_recognition.cxx`, alongside the existing pr/59
+`reassociate_cluster_orphans [A]` test it's modeled on. Checks two safety
+properties against real fixture geometry (no manufactured orphan needed):
+(1) knob off is a deterministic no-op — re-running `clustering_points`
+explicitly off reproduces the exact baseline per-segment counts; (2) knob on
+is monotonic-only-additive — every segment's `associate_points` count can
+only stay the same or grow. On fixture [A] this round's diagnostic run
+measured **7523 -> 8149 total associate_points (+626, +8.3%)** — the fix
+does something material even on the small unit-test cluster.
+`./build/clus/wcdoctest-clus`: **175/175 pass** (171 pre-existing/concurrent
++ 4 from an unrelated in-progress `doctest_nu_band_veto.cxx` a concurrent
+session is adding to this shared tree, per M9 — not committed by this round).
+
+### The census: confirms Round 6's *general* mechanism, corrects its claim about *this event's specific coordinate*
+
+`WCT_PR64_ORPHAN_CENSUS` classifies every point the primary pass drops into
+`no_terminal` (no Voronoi terminal reaches it) or `ghost_drop` (it had a
+candidate but lost Stage C), and tallies whether a same-cluster winner
+exists. On evt 18625, cluster 126 (the split shower cluster from Round 5):
+
+```
+pr64 orphan-census tally: cluster 126 no_terminal=0 ghost_drop=828 ghost_drop_same_cluster_winner=828 rescued=0
+```
+
+**All 828 ghost-dropped points in cluster 126 have a same-cluster winner** —
+the general Round-6 mechanism (Stage C drops instead of reassigning) is real
+and fires 828 times in this one cluster alone. This is what the knob fixes,
+and does fix: evt 18625's `shower_track-global` point count goes
+**6129 -> 6335 (+206 points)** on, cluster 126 drops from **13 -> 12**
+orphans (proxy: clustering-global points with no `shower_track-global` point
+within 2 cm), and `kine_reco_Enu` moves **1499.340 -> 1499.871 MeV**
+(+0.531 MeV — small on this event specifically, consistent with Round 6's
+"no measurable effect on this event" claim; see the 48-event numbers below
+for the aggregate effect elsewhere).
+
+**But none of the 828 rescued points, nor any of the remaining 12 orphans, are
+within 8 cm of the owner-reported (142.1, 78.3, 176.5).** The literal blob
+the owner pointed to in Bee is **not explained by Stage-C ghost removal at
+all** — a direct correction to Round 6's claim. Tracing it (a targeted,
+temporary per-point trace, not shipped — see Files) found:
+
+- The 12 target-proximate points **are** claimed by the primary pass, at the
+  cluster's single `clustering_points_segments` call, by segment with
+  graph-index **47** (not 42, as Round 6 assumed from proximity alone).
+- Segment 47 **does not exist** in the final PF output: `track_fit-global`
+  has zero `real_cluster_id=126047` rows, and cluster 126 ends the pipeline
+  with only **15** surviving segments (`126039,041,042,044-046,049,050,
+  055-057,060-063`) — 47 is gone.
+- `reassociate_cluster_orphans` (pr/59, live for cluster 126 —
+  confirmed by an entry trace, `n_segments=15` at the time it runs) does
+  **not** re-cluster cluster 126, because its trigger
+  (`any_orphan`: does any *current* segment have zero `associate_points`
+  points?) is false — all 15 surviving segments already have *some* points
+  of their own. The check has no way to notice that a *different*, no-longer-
+  existing segment's points were never redistributed.
+
+So the actual mechanism for this specific blob is: **a segment legitimately
+wins points during clustering, is later removed from the cluster's graph by
+some downstream restructuring step (not yet identified precisely — between
+the single clustering pass and the final PF/Bee dump), and nothing
+re-associates its orphaned points to a surviving neighbor.** This is a
+different bug from Round 6's Stage-C diagnosis, in a different place
+(segment-lifecycle / re-association-trigger gap, not Voronoi-vs-2D
+disagreement), and this round does **not** fix it.
+
+### 48-event nueCC validation
+
+Off-gate: **`nusel-table.tsv` byte-identical, 48/48 events** — the knob
+never moves selection variables. On-arm mover census: `mabc-pr.zip` content
+hash differs on **47/48** events (the 48th, evt116962, has no PF
+reconstruction / no `T_kine` tree at all on either arm — genuinely
+unaffected, not a gate miss). Every one of the 47 moved events'
+`kine_reco_Enu` moves **up** (never down — expected, since the rescue only
+ever adds a previously-dropped point, never removes one): mean **+10.7 MeV**,
+max **+51.9 MeV** (evt 46363: 1987.5 -> 2039.4 MeV). Top movers:
+
+| event | Enu before | Enu after | delta |
+|---|---|---|---|
+| 46363 | 1987.505 | 2039.386 | +51.881 |
+| 90055 | 2588.634 | 2638.482 | +49.848 |
+| 42280 | 2529.677 | 2578.654 | +48.977 |
+| 214469 | 2364.883 | 2400.845 | +35.962 |
+| 239794 | 2911.144 | 2939.670 | +28.526 |
+
+This is a **systematic, one-directional correction** consistent with fixing
+an under-count (points silently discarded by Stage C previously contributed
+zero charge to any segment's dQ/dx sum; now they're counted by their
+rightful segment), not noise — but it is a real, non-trivial shift in
+reconstructed energy across nearly the whole sample, reported here in full
+rather than summarized away.
+
+### Bee links (owner-requested before/after, evt 18625 + top 3 movers)
+
+- Before: https://www.phy.bnl.gov/twister/bee/set/18a01f59-73e0-4f6f-b3c9-1db8fddd1fbf/event/list/
+- After: https://www.phy.bnl.gov/twister/bee/set/47257fd1-a79e-4fb8-b3fe-aebca9861927/event/list/
+- bee_idx 0 = evt 18625 (the demonstration event; blob still visible, unresolved by this fix), 1 = evt 46363 (largest Enu mover, +51.9 MeV), 2 = evt 90055 (+49.8 MeV), 3 = evt 42280 (+49.0 MeV).
+
+### Flip
+
+Per owner pre-authorization, since the off-gate held cleanly (nusel
+untouched, 48/48) and the on-arm behaved as designed (monotonic, no crashes,
+no selection-variable movement): `assoc_reassign_orphans = true` in
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`, threaded to
+`clus.pr(...)`. C++ default stays `false`. Legacy escape:
+`-A assoc_reassign_orphans=false` (or `SBND_ASSOC_REASSIGN_ORPHANS=false`).
+Compile proof: `wcsonnet` on the bare production config with
+`pipeline_names` including `tagger_check_neutrino` (the pr/64-memory-recorded
+trap — a proof that doesn't instantiate the component is vacuous) shows the
+key present exactly once (`"assoc_reassign_orphans" : true`) post-flip,
+absent with the escape TLA, and the flipped bare compile is **byte-identical**
+to the explicit-TLA config this round's validated `work-pr64r7-on48`/
+`work-pr64r7-on18625-v2` arms actually used.
+
+### Still open
+
+- **The literal 18259-18625 blob at (142.1, 78.3, 176.5) remains unfixed.**
+  Its root cause (a legitimately-won segment removed from the graph after
+  clustering with no re-association pass) needs its own investigation round:
+  which step removes segment 47 (candidates: `determine_main_vertex`,
+  `improve_vertex`, deghosting, or a shower-absorption pass — not yet
+  isolated), and whether the fix is broadening `reassociate_cluster_orphans`'s
+  trigger (whole-cluster point-coverage check, not just per-segment
+  zero-count) or something narrower at the removal site itself.
+- The Round 5 open item (uploaded Bee zip's clustering-global layer merging
+  cluster 11/126 where every rerun this round split them, same as Round 5)
+  remains unexplained, unchanged by this round.
+
+### Files
+
+- `clus/src/PRSegmentFunctions.cxx`, `clus/inc/WireCellClus/PRSegmentFunctions.h`,
+  `clus/inc/WireCellClus/NeutrinoPatternBase.h`,
+  `clus/inc/WireCellClus/TaggerCheckNeutrino.h`, `clus/src/TaggerCheckNeutrino.cxx`,
+  `clus/src/NeutrinoTrackShowerSep.cxx` — the knob implementation.
+- `clus/test/doctest_pattern_recognition.cxx`,
+  `clus/test/doctest_clus_knob_defaults.cxx` — new/updated tests.
+- `cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
+  `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` — cfg plumbing + flip.
+- `run_pr_chain_batch.sh` (`SBND_ASSOC_REASSIGN_ORPHANS` env-to-TLA wiring).
+- No new analysis script this round (ad-hoc python + the existing
+  `probe_18625.py`); the "still open" segment-lifecycle trace used a
+  temporary, unshipped debug log (added, used, then reverted) rather than a
+  committed diagnostic — worth building into a reusable probe if the
+  follow-on round happens.

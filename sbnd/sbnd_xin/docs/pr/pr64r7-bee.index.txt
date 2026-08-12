@@ -1,0 +1,23 @@
+# doc pr/64 round 7 -- assoc_reassign_orphans (Stage-C same-cluster reassign),
+# before / after
+# before = work-pr64r7-off18625 + work-pr64r7-off48 (knob OFF, bare production)
+# after  = work-pr64r7-on18625-v2 + work-pr64r7-on48 (SBND_ASSOC_REASSIGN_ORPHANS=true)
+# nusel-table.tsv byte-identical 48/48 on the nueCC48 sample; mabc-pr.zip moves
+# 47/48 (48th has no PF reconstruction at all, unaffected on either arm); every
+# moved event's kine_reco_Enu goes UP (mean +10.7 MeV, max +51.9 MeV on this
+# sample). SBND PRODUCTION ON 2026-08-11.
+#
+# pr64r7-before: https://www.phy.bnl.gov/twister/bee/set/18a01f59-73e0-4f6f-b3c9-1db8fddd1fbf/event/list/
+# pr64r7-after:  https://www.phy.bnl.gov/twister/bee/set/47257fd1-a79e-4fb8-b3fe-aebca9861927/event/list/
+# bee_idx  event    note
+0  18625    DEMONSTRATION -- the owner-reported (142.1,78.3,176.5) blob event.
+#           shower_track-global total points 6129 -> 6335 (+206); cluster 126
+#           orphan proxy 13 -> 12. The blob itself is NOT resolved by this fix
+#           -- still 12 orphans within ~2.4-4.1cm of the target coordinate on
+#           the after arm too. See doc pr/64 round 7 "still open": that blob's
+#           root cause is a different, not-yet-fixed mechanism (segment 47
+#           legitimately wins these points, then is removed from cluster 126's
+#           graph before Bee/PF dump with no re-association pass).
+1  46363    Enu MOVER (largest on the 48-sample) -- 1987.505 -> 2039.386 MeV (+51.881)
+2  90055    Enu MOVER -- 2588.634 -> 2638.482 MeV (+49.848)
+3  42280    Enu MOVER -- 2529.677 -> 2578.654 MeV (+48.977)

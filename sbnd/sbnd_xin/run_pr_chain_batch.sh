@@ -755,6 +755,16 @@ fi
 if [ -n "${SBND_ASSOC_FULL_RECLUSTER:-}" ]; then
     CATH_TLA+=(--tla-code "assoc_full_recluster=${SBND_ASSOC_FULL_RECLUSTER}")
 fi
+# doc pr/64 round 7 (18259-18625: 12-18 pt blob at PF segment 126042's own
+# fit endpoint, present in img charge but absent from
+# shower_track/associate_points): reassign, instead of drop, a point that
+# loses (or never enters) clustering_points_segments' Stage-C ghost removal
+# to a SAME-cluster segment that actually wins the global 2D projection
+# contest.  Boolean TLA, same contract.
+#   SBND_ASSOC_REASSIGN_ORPHANS
+if [ -n "${SBND_ASSOC_REASSIGN_ORPHANS:-}" ]; then
+    CATH_TLA+=(--tla-code "assoc_reassign_orphans=${SBND_ASSOC_REASSIGN_ORPHANS}")
+fi
 # doc pr/65 round 3 (18259-54095 PF-root orphan mu-/e- fragments): rung 1
 # relaxes the shower absorbers' cluster()==main_cluster guards to a
 # main_vertex-reachability test so kept-isolated pr/54 residuals can be
