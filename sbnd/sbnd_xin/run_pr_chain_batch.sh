@@ -359,6 +359,15 @@ else
     [ "${SBND_V3_EXT_GUARD:-}" = 1 ] && CATH_TLA+=(--tla-code "v3_extension_guard=true")
 fi
 [ -n "${SBND_V3_EXT_MIN_GAIN:-}" ] && CATH_TLA+=(--tla-code "v3_extension_min_gain=${SBND_V3_EXT_MIN_GAIN}")
+# doc pr/67: LOG-ONLY trajectory-coverage probe (why the fitted trajectory does
+# not cover the image, worst in isochronous topologies).  Default OFF; the key
+# is suppressed in the compiled config unless set, so an unset run is
+# byte-identical.  SBND_TRAJ_COVER_PROBE=1 turns the diagnostic lines on.
+[ "${SBND_TRAJ_COVER_PROBE:-}" = 1 ] && CATH_TLA+=(--tla-code "traj_cover_probe=true")
+# doc pr/67 counterfactual: override find_proto_vertex's HARDCODED main-cluster
+# branch-search round budget (2).  DIAGNOSTIC ONLY -- a value > 0 changes
+# reconstruction output by design.  Unset = the hardcoded budget stands.
+[ -n "${SBND_PR_FIND_OTHER_ROUNDS:-}" ] && CATH_TLA+=(--tla-code "pr_find_other_rounds=${SBND_PR_FIND_OTHER_ROUNDS}")
 # doc pr/39: exclude a shower's own start vertex from the end_point
 # farthest-vertex search (prototype map_vtx_segs parity, same rule as
 # fill_sets's exclude_start_vertex, extended to calculate_kinematics{,_long_muon}).
