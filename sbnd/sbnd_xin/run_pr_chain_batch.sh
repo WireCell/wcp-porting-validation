@@ -740,6 +740,25 @@ fi
 if [ -n "${SBND_ROUGH_PATH_PROBE:-}" ]; then
     CATH_TLA+=(--tla-code "rough_path_probe=${SBND_ROUGH_PATH_PROBE}")
 fi
+# doc pr/51 round 5: steiner gap penalty (the H1 short-cut fix).  Numeric
+# TLAs, bare values (scale is dimensionless; the four sub-knobs are cm /
+# fractions and ride the C++ defaults 0.25 / 0.5 / 0.3 / 0.2 unless set).
+#   SBND_STEINER_GAP_PENALTY  (0 = off; validation scales 1-5)
+if [ -n "${SBND_STEINER_GAP_PENALTY:-}" ]; then
+    CATH_TLA+=(--tla-code "steiner_gap_penalty=${SBND_STEINER_GAP_PENALTY}")
+fi
+if [ -n "${SBND_SGP_DEAD_ALPHA:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_dead_alpha=${SBND_SGP_DEAD_ALPHA}")
+fi
+if [ -n "${SBND_SGP_MIN_EDGE:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_min_edge=${SBND_SGP_MIN_EDGE}")
+fi
+if [ -n "${SBND_SGP_SAMPLE_STEP:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_sample_step=${SBND_SGP_SAMPLE_STEP}")
+fi
+if [ -n "${SBND_SGP_POINT_RADIUS:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_point_radius=${SBND_SGP_POINT_RADIUS}")
+fi
 # doc pr/54: keep well-supported isolated residual segments in
 # find_other_segments (18255-142421 separated EM shower with no fitted
 # trajectory).  Boolean TLA, same contract; the two numeric floors ride the

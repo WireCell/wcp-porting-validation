@@ -1291,3 +1291,234 @@ framing: "no need to update the code yet ... come up with the solution").
 - `examine_structure_1`'s dead-channel-blessed straightening (H2) is a
   real, independent-of-these-four-events finding; Design B stays a ready,
   unimplemented design until an event specifically implicates it.
+
+## Round 5 — `steiner_gap_penalty` implemented and SBND PRODUCTION ON (owner pre-authorized flip, 2026-08-12)
+
+The owner re-flagged the short-cut class on the prod0811 Bee sets
+(9e2a1a1e = nueCC48, 13900b8c = NCpi0, both built from `work-pr64r4-on*`,
+two production flips older than today) with six events, and asked for the
+round-4 designed fix to be implemented, validated on the 48+19+50 manifests
+with no regressions, flipped for SBND production if clean, and returned as
+before/after Bee links.  One added requirement (owner, plan review): **no
+significant runtime penalty** from the new graph — an earlier penalized-graph
+attempt was very slow.
+
+### Repro (round 5)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+# Step 0 -- re-establish on today's baseline (work-pr67f-flip{48,19}, HEAD ff0d2720):
+for e in 131357 234638 268067; do SBND_ROUGH_PATH_PROBE=true SBND_WCT_LOGLEVEL=trace PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r5-probe$e data $e; done
+for e in 37112 285567 506746; do SBND_ROUGH_PATH_PROBE=true SBND_WCT_LOGLEVEL=trace PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr51r5-probe$e data $e; done
+grep -a "rough_path_probe P3" work-pr51r5-probe*/pr_evt*/wct_pr_evt*.log
+
+# smoke + acceptance (single events, scales 2 and 5; s2probe/s5probe re-measure today_unsup after the fix):
+SBND_STEINER_GAP_PENALTY=2 PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r5-s2on-131357 data 131357  # x6 evts x2 scales
+SBND_STEINER_GAP_PENALTY=2 SBND_ROUGH_PATH_PROBE=true SBND_WCT_LOGLEVEL=trace PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r5-s2probe-131357 data 131357
+
+# validation (off-gate + two on-censuses + flip/escape gates), PR_JOBS=32 on wcgpu1:
+M50=$(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r5-off48 data          # + off19, off50
+SBND_STEINER_GAP_PENALTY=2 PR_JOBS=32 ./run_pr_chain_batch.sh ... work-pr51r5-s2on{48,19,50} ...
+SBND_STEINER_GAP_PENALTY=5 PR_JOBS=32 ./run_pr_chain_batch.sh ... work-pr51r5-s5on{48,19,50} ...
+PR_JOBS=32 ./run_pr_chain_batch.sh ... work-pr51r5-flip{48,19,50} ...                  # bare, post-flip cfg
+SBND_STEINER_GAP_PENALTY=0 PR_JOBS=32 ./run_pr_chain_batch.sh ... work-pr51r5-esc{48,19,50} ...  # escape
+python3 scripts/analysis/pr49/on_compare.py <base> <new>
+# grep -a for sentinels (log tearing): "sgp build", "pr55 do_rough_path: ... flavor="
+
+# Bee (16 events: docs/pr/pr51r5-bee-16.index.txt):
+python3 scripts/bee/make_pr_bee.py -q work-nuecc48-cb0805 -q work-ncpi0-cb0805 -q work-mcp1k-cb0805 \
+  -p work-pr51r5-off48 -p work-pr51r5-off19 -p work-pr51r5-off50 -o bee/pr51r5/pr51r5-before.zip <16 evts>
+# after = same with -p work-pr51r5-flip{48,19,50}; ../../upload-to-bee.sh
+```
+
+### The six owner events, resolved and re-established (Step 0)
+
+Owner labels checked against the Bee server (event/N is 0-based):
+
+| owner slot | actual event | baseline (pr67f-flip) status | probe measurement |
+|---|---|---|---|
+| 9e2a…/14 "18259-131357" | 18259-131357 nueCC48 | STILL BROKEN (H1) | worst seg 14.4cm unsup 1.13cm, reroutes s3/s5; one seg reroutes at s1 with len SHRINK 11.14→11.08cm |
+| 9e2a…/24 "234538" | **18255-234638** (owner typo) | BROKEN (H1, new event) | 22.4cm seg unsup 1.77cm; full reroute at s1 |
+| 9e2a…/30 "18255-268067" | 18255-268067 nueCC48 | STILL BROKEN (H1) | main track 84.7cm unsup 1.61cm; s1 partial, s5 full |
+| 1390…/2 "18261-285567" | **18259-37112** (owner mislabel; 285567 is slot 11) | **ALREADY FIXED at today's baseline** | at prod0811 the MV was displaced 3.4cm to (-163.27,73.29,10.15) with a med-dQ/dx-430 segment (84072) cutting across the arms — exactly the owner's short-cut; the pr/67 flip moved the MV to the true corner (-166.23,71.94,7.85) and the cut is gone.  Probe today: no unsup, no reroute at any scale |
+| 1390…/11 "18261-285567" | 18261-285567 NCpi0 | COMPLICATED (owner: "if cannot deal with, OK") | the owner's multi-track point (45.4,-173.6,265.4) is 17cm from the reco MV (59.78,-176.36,273.86, identical prod0811/today); only a 2-point rcid-88111 fragment (med q 911) + 2 PR vertices live there — the structure bypasses it.  Round-4's 2.18cm un-reroutable stretch persists: no alternative exists in the Steiner graph at any scale ≤ 10 (genuine image gap, not a path-cost artifact) |
+| 1390…/17 "18255-506746" | 18255-506746 NCpi0 | STILL BROKEN (H1) | main track 65.5cm unsup 1.25cm; full reroute at s1 |
+
+### Implementation — Design B: lazy per-cluster penalized flavor
+
+New default-OFF knob family on TaggerCheckNeutrino → PatternAlgorithms
+(`steiner_gap_penalty` double 0=off; sub-knobs `sgp_dead_alpha` 0.25,
+`sgp_min_edge` 0.5cm, `sgp_sample_step` 0.3cm, `sgp_point_radius` 0.2cm, all
+inert at scale 0).  When scale > 0, `do_rough_path`
+(`NeutrinoPatternBase.cxx`) calls the new
+`PatternAlgorithms::ensure_steiner_gap_graph`
+(`clus/src/NeutrinoSteinerGapGraph.cxx`): lazily, ONCE per cluster, copy the
+installed `"steiner_graph"` (vecS copy preserves vertex↔steiner_pc indexing,
+`boost::edges` order deterministic), re-weight every edge ≥ 0.5cm by
+`w' = w·(1 + scale·bad_fraction)` with `bad_fraction = (n_unsup +
+0.25·n_dead)/n` sampled at 0.3cm via `Grouping::test_good_point(p_raw, apa,
+face, 0.2cm, 0)` — the round-4 probe's P3 scan verbatim (classify_point
+deliberately duplicated from NeutrinoRoughPathProbe.cxx, not refactored) —
+and `give_graph("steiner_graph_gap")` via the `graph_algorithms() const`
+const-cast caching precedent.  `do_rough_path` then routes on the gap flavor;
+the pr/55 sentinel prints `flavor=<name>` (render-identical when off).
+Nothing else moves: TaggerCheckSTM's verbatim fork, TrackFitting's reader,
+CreateSteinerGraph, and every other `"steiner_graph"` consumer keep the base
+graph.  Scale ≤ 0 is a first-line return: the flavor is never built, the
+flavor string is the same literal, byte-identical (proven below).  The scan
+core is a pure free function `gap_edge_bad_fraction` (PRSegmentFunctions.h,
+classifier injected) with its own doctest.
+
+Config threading: `common/clus.jsonnet` `tagger_check_neutrino` (+5 args,
+null-suppressed keys), sbnd `clus.jsonnet` `clus_pr`/`pr()`,
+`wct-pr-perevt.jsonnet` TLAs, driver envs `SBND_STEINER_GAP_PENALTY` /
+`SBND_SGP_*`.
+
+Two build notes: (1) the pr/72 waf link-order quirk recurred verbatim —
+first `./wcb build` failed linking `wcdoctest-clus` with `undefined
+reference to gap_edge_bad_fraction` while `nm` showed the symbol in the
+freshly built lib; refreshing `local/lib` with the fresh lib + rebuild
+cleared it (library install itself never wrong).  (2) `SteinerGrapher.cxx`
+:134-139 logs a moved-from graph (TRACE reports 0 vertices/0 edges) — noted,
+NOT fixed here (unrelated to this change).
+
+### Acceptance on the six (single-event arms, s2 vs s5)
+
+Near-vertex topology is IDENTICAL at s2 and s5 on all six; s5 differs only
+in residual unsupported length on 131357/268067:
+
+- **131357**: near-vertex table 4 segments (incl. the 2.2cm vertex
+  micro-track 12072) → 3 (trunk 12015, track 12016, 2.4cm shower 12077 at
+  the true corner).  Residual unsup 0.61cm @s2 → 0.00 @s5 (topology equal).
+- **234638**: the 3.25cm vertex micro-track 10133 — the owner's short-cut —
+  is GONE; clean 2-prong vertex (shower 10032 + track 10051).  1.77→0.42cm.
+- **268067**: the med-dQ/dx-202 charge-less bridge 15005 AND the
+  86%-overlap corridor rider 15003 are both gone from the vertex region;
+  the vertex now holds real Bragg-charge segments (med 6893/11007).
+  Main-track unsup 1.61→1.00 @s2 → 0.78 @s5.
+- **37112**: unchanged (already fixed at baseline), stays clean.
+- **285567**: all near-MV segments supported except the known 2.02cm
+  genuine-image-gap stretch (round-4 open residual, out of scope for a
+  path-cost fix — needs its own follow-up).
+- **506746**: main-track unsup 1.25→0.16cm @s2; MV unchanged
+  (54.07,-10.70,43.53).
+
+### Runtime (the owner's hard requirement) — measured, negligible
+
+- `sgp build` sentinel totals per event (sum over the 11-35 per-cluster
+  builds): 9.6 / 38.7 / 14.1 / 24.3 / 64.9 / 62.3 ms on the six targets,
+  against 13-17s event walls — < 0.5% everywhere.  Consistent with round
+  4's 7-8µs/edge sizing.
+- 117-event wall census (`.time.meta`, off vs s2on): mean delta +0.17s /
+  −0.21s / +0.56s on the 48/19/50 manifests (means 19-26s; sign flips with
+  machine load — pure noise).  Peak-RSS mean delta −0.3 / +2.0 / +1.2 MB on
+  ~1.5 GB (≤ 0.13%).
+- Dijkstra complexity unchanged (same graph size); build is lazy (only
+  PR-routed clusters pay) and cached (once per cluster).
+
+### Verification (round 5)
+
+`wcdoctest-clus` **184/184** (new `doctest_steiner_gap_penalty.cxx` 4 cases:
+uniform classifications, half-gap, nsteps rounding, chord-vs-arc arithmetic
+pinning the scale-2 operating point; `CHECK_KNOB_NUM` pins for
+`steiner_gap_penalty`=0 and the four `sgp_*` sub-knobs).  Compiled-config
+proof: knob-off wcsonnet JSON **byte-identical** to a git-HEAD shadow cfg
+tree under the same TLA set; knob-on contains `"steiner_gap_penalty": 2`
+exactly once.  Freshness proof before every A/B (lib mtime + `nm` symbol).
+
+**Off-gates (knob off, new binary) — all PASS byte-identical:**
+
+| gate | result |
+|---|---|
+| `work-pr51r5-off48` vs `work-pr67f-flip48` | 0/48 archives, nusel 0/48 |
+| `work-pr51r5-off19` vs `work-pr67f-flip19` | 0/19, nusel 0/19 |
+| `work-pr51r5-off50` vs `work-pr67f-flip50` | 0/50, nusel 0/50 |
+
+**On-censuses (vs the off arms) — nusel untouched everywhere:**
+
+| arm | archive movers | nusel |
+|---|---|---|
+| `work-pr51r5-s2on48` | 45/48 | 0/48 |
+| `work-pr51r5-s2on19` | 19/19 | 0/19 |
+| `work-pr51r5-s2on50` | 37/50 | 0/50 |
+| `work-pr51r5-s5on48` | 46/48 | 0/48 |
+| `work-pr51r5-s5on19` | 19/19 | 0/19 |
+| `work-pr51r5-s5on50` | 38/50 | 0/50 |
+
+The footprint is deliberately global: every `do_rough_path` call in every
+PR cluster now prices charge support, so any corridor with even one
+unsupported 0.3cm sample can reroute a few points — the movers are sub-cm
+fit/vertex churn in the display layers (`track_fit`/`vertices`/
+`shower_track`/`mc`), with **zero nusel-events/nusel-table diffs on all 117
+events at both scales** (the selection variables never moved).  This is a
+different footprint class from the mvga rounds (local graph edits): wide
+but shallow.
+
+**Operating point: scale = 2.0** — minimal scale with the full topology fix
+on every target (s5 buys only 131357's last 0.61cm of unsupported length at
+a strictly larger reroute allowance (6× vs 3× detour-vs-chord) and +2
+movers; the s5 arms are kept as the sensitivity record).
+
+**Flip + escape gates (post-flip `wct-pr-perevt.jsonnet`,
+`steiner_gap_penalty = 2.0`) — all PASS byte-identical:**
+
+| gate | result |
+|---|---|
+| `work-pr51r5-flip48` (bare) vs `work-pr51r5-s2on48` | 0/48, nusel 0/48 |
+| `work-pr51r5-flip19` (bare) vs `work-pr51r5-s2on19` | 0/19, nusel 0/19 |
+| `work-pr51r5-flip50` (bare) vs `work-pr51r5-s2on50` | 0/50, nusel 0/50 |
+| `work-pr51r5-esc48` (`SBND_STEINER_GAP_PENALTY=0`) vs `work-pr51r5-off48` | 0/48, nusel 0/48 |
+| `work-pr51r5-esc19` vs `work-pr51r5-off19` | 0/19, nusel 0/19 |
+| `work-pr51r5-esc50` vs `work-pr51r5-off50` | 0/50, nusel 0/50 |
+
+The flip is byte-exact in both directions: bare production IS the validated
+s2 census arm, and the `=0` escape restores pre-flip production exactly.
+
+### Bee hand-scan set (16 events: 6 targets + 10 movers)
+
+`docs/pr/pr51r5-bee-16.index.txt`; before = `work-pr51r5-off{48,19,50}`
+(≡ pre-flip production), after = `work-pr51r5-flip{48,19,50}` (bare post-flip
+production).  Movers ranked by added+removed census vertices; includes the
+pr/72 target 196649 and the pr/63 exhibit 71372 as cross-checks.
+
+- before: https://www.phy.bnl.gov/twister/bee/set/d8bda013-3b91-4110-bf50-4e4a1397b432/event/list/
+- after:  https://www.phy.bnl.gov/twister/bee/set/5137e681-3673-4b43-8284-5f5bc9d74d6e/event/list/
+
+| idx | event | sample | why |
+|---|---|---|---|
+| 0 | 131357 | nueCC48 | target |
+| 1 | 234638 | nueCC48 | target (owner "234538") |
+| 2 | 268067 | nueCC48 | target |
+| 3 | 256587 | nueCC48 | mover rank 1 (149) |
+| 4 | 54095 | nueCC48 | mover rank 2 (119; pr/65 event) |
+| 5 | 239794 | nueCC48 | mover rank 3 (109) |
+| 6 | 196649 | nueCC48 | mover rank 4 (96; pr/72 target cross-check) |
+| 7 | 37112 | NCpi0 | target (owner's mislabeled "285567"; already fixed at baseline) |
+| 8 | 285567 | NCpi0 | target (complicated; image-gap residual) |
+| 9 | 506746 | NCpi0 | target |
+| 10 | 71372 | NCpi0 | mover rank 1 (77; pr/63 exhibit cross-check) |
+| 11 | 399860 | NCpi0 | mover rank 2 (59) |
+| 12 | 463565 | NCpi0 | mover rank 3 (56) |
+| 13 | 48367 | data50 | mover rank 1 (20) |
+| 14 | 54341 | data50 | mover rank 2 (18) |
+| 15 | 55715 | data50 | mover rank 3 (14) |
+
+### Status + open items (round 5)
+
+`steiner_gap_penalty = 2.0` is **SBND PRODUCTION ON** (owner pre-authorized
+"if the validation works"; validation = the gate tables above).  C++ default
+stays 0 = legacy; every other detector is untouched.
+
+Open items:
+
+- 285567's 2.02cm image-gap stretch (round-4 open item, confirmed genuine):
+  needs its own investigation — is there ANY charge between the two
+  components, or is this a detector-level hole to bridge some other way.
+- The owner hand-scan of the 16-event before/after links above — 101/117
+  events moved at the display level; the scan set covers the largest.
+- `SteinerGrapher.cxx:134-139` moved-from-graph TRACE log (cosmetic,
+  unrelated) — fix opportunistically next time that file is touched.

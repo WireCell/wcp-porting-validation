@@ -1,0 +1,17 @@
+bee_idx	event	sample	why
+0	131357	nuecc48	target: 2-track vertex short-cut (owner event/14)
+1	234638	nuecc48	target: 2-track vertex micro-track short-cut (owner "234538", event/24)
+2	268067	nuecc48	target: charge-less bridge + corridor rider (owner event/30)
+3	256587	nuecc48	mover rank 1 (149 vtx diff)
+4	54095	nuecc48	mover rank 2 (119; pr/65 shower event)
+5	239794	nuecc48	mover rank 3 (109)
+6	196649	nuecc48	mover rank 4 (96; pr/72 target cross-check)
+7	37112	ncpi0	target: owner event/2 (mislabeled 285567); already fixed at baseline
+8	285567	ncpi0	target: owner event/11, complicated; known 2cm image-gap residual
+9	506746	ncpi0	target: main-track short-cut (owner event/17)
+10	71372	ncpi0	mover rank 1 (77; pr/63 exhibit cross-check)
+11	399860	ncpi0	mover rank 2 (59)
+12	463565	ncpi0	mover rank 3 (56)
+13	48367	data50	mover rank 1 (20)
+14	54341	data50	mover rank 2 (18)
+15	55715	data50	mover rank 3 (14)
