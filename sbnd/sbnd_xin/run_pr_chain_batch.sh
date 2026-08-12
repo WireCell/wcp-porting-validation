@@ -765,6 +765,17 @@ fi
 if [ -n "${SBND_ASSOC_REASSIGN_ORPHANS:-}" ]; then
     CATH_TLA+=(--tla-code "assoc_reassign_orphans=${SBND_ASSOC_REASSIGN_ORPHANS}")
 fi
+# doc pr/64 round 8 (same 18259-18625 blob: examine_structure_final_1/_1p/_3,
+# called unconditionally inside determine_main_vertex, merge a short/
+# duplicate/degenerate segment into a surviving neighbor without carrying its
+# associate_points forward).  When the deleted segment had non-empty
+# associate_points, clears the survivor's too, so pr/59's
+# reassociate_cluster_orphans any_orphan trigger correctly re-fires.  Boolean
+# TLA, same contract.
+#   SBND_ASSOC_CLEAR_ON_MERGE
+if [ -n "${SBND_ASSOC_CLEAR_ON_MERGE:-}" ]; then
+    CATH_TLA+=(--tla-code "assoc_clear_on_merge=${SBND_ASSOC_CLEAR_ON_MERGE}")
+fi
 # doc pr/65 round 3 (18259-54095 PF-root orphan mu-/e- fragments): rung 1
 # relaxes the shower absorbers' cluster()==main_cluster guards to a
 # main_vertex-reachability test so kept-isolated pr/54 residuals can be

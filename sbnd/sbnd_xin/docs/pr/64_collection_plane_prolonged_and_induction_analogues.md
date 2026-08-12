@@ -1288,3 +1288,197 @@ to the explicit-TLA config this round's validated `work-pr64r7-on48`/
   temporary, unshipped debug log (added, used, then reverted) rather than a
   committed diagnostic — worth building into a reusable probe if the
   follow-on round happens.
+
+## Round 8 (2026-08-12) — root cause of the Round 7 "still open" 18625 blob
+found and fixed: `assoc_clear_on_merge`, implemented + validated, DEFAULT NOT
+SELECTED for SBND production (toolkit uncommitted this turn, wcp uncommitted
+this turn)
+
+### Repro block
+
+```
+# root-cause trace (temporary instrumentation, added/used/reverted this round):
+cd sbnd_xin
+setarch x86_64 -R env WCT_PR64_BBOX_TRACE=1 WCT_PR64_TARGET_GIDX=<freshly-found> \
+  PR_JOBS=1 ./run_pr_chain_batch.sh work-ncpi0-cb0805 <tag> data 18625
+
+# implementation validation:
+PR_JOBS=1 ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr64r8-off18625 data 18625
+PR_JOBS=1 SBND_ASSOC_CLEAR_ON_MERGE=true \
+  ./run_pr_chain_batch.sh work-ncpi0-cb0805 work-pr64r8-on18625 data 18625
+SBND_MAX_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr64r8-off48 data <48 evts>
+SBND_MAX_JOBS=6 SBND_ASSOC_CLEAR_ON_MERGE=true \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr64r8-on48v2 data <48 evts>
+```
+
+### Root cause
+
+Traced the full removal chain for cluster 126/evt 18625 with temporary,
+env-gated, fully-reverted probes: a checkpoint scan across every stage of
+`TaggerCheckNeutrino::visit()` (built into `detg_dump`), a bbox-targeted
+trace inside `clustering_points_segments`' Stage-C loop
+(`PRSegmentFunctions.cxx`), and per-site removal probes in
+`NeutrinoStructureExaminer.cxx`. All built, run under `setarch x86_64 -R`
+for a self-consistent single-process trace, then `git checkout --`
+reverted — nothing from the trace itself shipped.
+
+Note: commit `095df966` (doc pr/66 round 2, also SBND PRODUCTION ON) landed
+between Round 7 and this investigation and changes every segment's global
+`graph_index` for a given event — Round 7's "graph-idx 47" is not reusable
+across sessions/commits and had to be rediscovered fresh via the bbox trace
+(it happened to still be 47 this time, a coincidence).
+
+**Confirmed chain** (cluster 126 here is an "other" beam-flash cluster, not
+`main_cluster`, but the code path is identical for both):
+
+1. `pattern_algos.clustering_points()` (the only call for this cluster) runs
+   Stage-C ghost removal and legitimately assigns 33 `associate_points` to a
+   short (6-wcpt) segment, including all 8 raw points inside the reported
+   bbox — confirmed **kept**, not dropped, by the primary Stage-C loop this
+   round. This contradicts Round 6/7's "ghost-drop" framing even further:
+   under current production code this specific segment is never even a
+   ghost-removal casualty.
+2. `pattern_algos.determine_main_vertex()` unconditionally calls
+   `examine_structure_final()`, which chains `_1`/`_1p`/`_2`/`_3`
+   (`NeutrinoStructureExaminer.cxx`). `_1p` (~line 2891) fires when a
+   cluster's main_vertex has exactly 2 connected, near-collinear (angle
+   > 175°) segments and one is short (< 6 cm): it merges the short
+   segment's `wcpts` into its neighbor, rebuilds ONLY the neighbor's "main"
+   point cloud (`create_segment_point_cloud(..., "main")`), then
+   `remove_segment` deletes the short segment outright. Confirmed by a
+   removal-site probe: `site=final_1p:short_sg2_deleted cid=126 gidx=47
+   nwcpts=6 nassoc=33` — the exact segment from step 1, with its full 33
+   associate_points, deleted here.
+3. **The bug**: `_1p` (and `_1`'s duplicate-segment-removal branch, and
+   `_3`'s self-loop-removal + main-connector-removal branches — same
+   pattern, not individually traced but fixed by construction below) never
+   touched `associate_points` on either side of the merge. The deleted
+   segment's associate_points (the actual charge/blob points) were simply
+   discarded; the survivor's associate_points was left exactly as it was
+   BEFORE the merge — stale, since it didn't cover the newly-absorbed
+   geometry.
+4. `pattern_algos.reassociate_cluster_orphans()` (pr/59, live in SBND prod
+   via `assoc_full_recluster=true`) runs right after `determine_main_vertex`
+   specifically to catch segments created/modified too late for the first
+   `clustering_points` pass — but its trigger is `any_orphan`: ANY segment
+   in the cluster has a NULL or EMPTY associate_points cloud. Here the
+   survivor already had SOME points from its own earlier association, so
+   `any_orphan` is false and the whole cluster's re-clustering never fired.
+   This is why the 12-point blob (a subset of the 33 lost points, closest to
+   the merge vertex) survived all the way to the final PF/Bee dump with no
+   segment owning it.
+
+This is unconditional, always-on production code — `examine_structure_final`
+has no knob and always runs inside `determine_main_vertex` for every
+cluster, main or other. It is not specific to pr/64's `assoc_reassign_orphans`
+mechanism (rounds 6/7) at all; those rounds' "ghost-drop" framing was a red
+herring for this specific event.
+
+### Implementation: `assoc_clear_on_merge`
+
+New default-OFF bool, threaded exactly like `assoc_reassign_orphans`:
+`PatternAlgorithms::m_assoc_clear_on_merge` (`NeutrinoPatternBase.h`),
+`TaggerCheckNeutrino::m_assoc_clear_on_merge` (config get/default_configuration/
+push), `cfg/pgrapher/common/clus.jsonnet` key-suppression idiom,
+`cfg/pgrapher/experiment/sbnd/clus.jsonnet` (`clus_pr` + the exported `pr()`
+wrapper), `wct-pr-perevt.jsonnet` (added as a genuine top-level function
+parameter — its parameter list runs from line 43 to line ~1400, and
+`assoc_reassign_orphans`/`assoc_full_recluster` are already parameters deep
+inside it, not locals; a first attempt that only threaded the TLA plumbing in
+`run_pr_chain_batch.sh` without adding the parameter itself failed every
+event with `RUNTIME ERROR: function has no parameter assoc_clear_on_merge`,
+caught and fixed before the real validation run), `run_pr_chain_batch.sh`
+(`SBND_ASSOC_CLEAR_ON_MERGE` env-to-TLA wiring).
+
+Mechanism: a new helper `pr64_clear_survivor_on_merge(enabled, loser,
+survivor)` in `NeutrinoStructureExaminer.cxx`, called at every segment-delete
+site inside `examine_structure_final_1`/`_1p`/`_3` (the duplicate-removal
+branch, both short-merge branches, and `_3`'s self-loop + main-connector
+deletions, using the segments extended toward the merge point as the
+survivor set). When the segment being deleted has a non-empty
+`associate_points` cloud, the designated survivor's `associate_points` is
+cleared (set to null) — nothing else. This makes pr/59's existing
+`any_orphan` trigger correctly see a gap and re-derive a real,
+geometry-consistent Voronoi+ghost-removal association for the whole cluster
+— no new competition logic, reuses the already-validated pr/59 machinery.
+Byte-identical off by construction (the helper no-ops unless
+`m_assoc_clear_on_merge` is true).
+
+### Unit test
+
+New `pattern_recognition determine_main_vertex assoc_clear_on_merge [A]` in
+`doctest_pattern_recognition.cxx`, run against real fixture geometry with two
+independently-built contexts (`determine_main_vertex` mutates the graph
+structurally, so unlike `clustering_points` it cannot be safely re-run on the
+same graph for an A/B comparison). Fires naturally on fixture [A] with no
+manufactured scenario needed: `nsegs 16 -> 16, null-cloud segments 0 -> 2,
+total associate_points 7516 -> 7291`. Safety property checked: turning the
+knob on can only ever ADD null-associate_points segments relative to knob
+off (`CHECK(n_null_on >= n_null_off)`) — the mechanism only clears a stale
+cloud, never fabricates or removes real association data itself.
+`wcdoctest-clus` 176/176 (was 175 + this new one; 1 concurrent-session
+doctest still not committed here, unrelated — M9).
+
+### Demonstration on evt 18625
+
+Off-gate: `work-pr64r8-off18625`'s `mabc-pr.zip` is member-hash identical to
+an independently-built current-HEAD baseline (my 8 changed files stashed,
+rebuilt, run, hash compared, then unstashed) — proves the knob-off path is
+truly inert on top of everything that landed since Round 7 (incl. pr/66),
+not just inert relative to a stale Round 7 baseline.
+
+Knob on (`work-pr64r8-on18625`): `shower_track-global` bbox points (the
+reported blob) **0 -> 8** — all 8 recovered, matching the traced segment's
+33-point associate_points cloud (of which 8 fall inside the reported bbox);
+total `shower_track-global` points 6335 -> 6368 (+33, the whole segment's
+cloud). `kine_reco_Enu` 1499.871 -> 1499.980 MeV (+0.108). **The literal
+18259-18625 blob at (142.1,78.3,176.5) reported by the owner is now
+resolved.**
+
+### 48-event nueCC validation
+
+`nusel-table.tsv` byte-identical 48/48 (selection untouched, sorted-diff
+0 lines). `mabc-pr.zip` moves on **3/48** (54095, 174637, 389538) — a much
+narrower footprint than Round 7's Stage-C mechanism (47/48), consistent with
+this being a rarer trigger (a specific structural-merge geometry, not every
+event's Stage-C competition). Every mover's `kine_reco_Enu` goes UP only:
+
+| event | off (MeV) | on (MeV) | delta |
+|---|---|---|---|
+| 54095 | 2991.456 | 2995.833 | +4.377 |
+| 174637 | 1017.618 | 1019.864 | +2.246 |
+| 389538 | 1744.944 | 1745.546 | +0.602 |
+
+Monotonic, small-magnitude, consistent with correcting an under-count (the
+mechanism only ever clears a cloud that pr/59 then re-derives with
+strictly-equal-or-more points, never fewer — same safety property the unit
+test checks directly).
+
+### Bee before/after (evt18625 + the 3 Enu movers)
+
+before https://www.phy.bnl.gov/twister/bee/set/a5dc3258-abc5-4f4a-85bc-43087d0df806/event/list/,
+after https://www.phy.bnl.gov/twister/bee/set/da10ab0c-e6a7-4e1e-bd4b-a7899c0cd9f7/event/list/
+(bee_idx 0=18625 demo/now-resolved, 1=54095, 2=174637, 3=389538). Index:
+`docs/pr/pr64r8-bee.index.txt`.
+
+### Status: DEFAULT NOT SELECTED for SBND production
+
+The C++ knob default stays `false`; `wct-pr-perevt.jsonnet` adds
+`assoc_clear_on_merge` as a genuine top-level function parameter, default
+`false` this round (unlike Round 7, no production flip was requested or
+made). Override for A/B: `-A assoc_clear_on_merge=true` (or
+`SBND_ASSOC_CLEAR_ON_MERGE=true`).
+
+### Files
+
+- `clus/src/NeutrinoStructureExaminer.cxx` — the fix (4 call sites) + the
+  `pr64_clear_survivor_on_merge` helper.
+- `clus/inc/WireCellClus/NeutrinoPatternBase.h`,
+  `clus/inc/WireCellClus/TaggerCheckNeutrino.h`,
+  `clus/src/TaggerCheckNeutrino.cxx` — the knob plumbing.
+- `clus/test/doctest_pattern_recognition.cxx`,
+  `clus/test/doctest_clus_knob_defaults.cxx` — new/updated tests.
+- `cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
+  `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` — cfg plumbing (no flip).
+- `run_pr_chain_batch.sh` (`SBND_ASSOC_CLEAR_ON_MERGE` env-to-TLA wiring).
+- `docs/pr/pr64r8-bee.index.txt` — Bee set index.

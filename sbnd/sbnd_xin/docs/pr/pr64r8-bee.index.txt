@@ -1,0 +1,26 @@
+# doc pr/64 round 8 -- assoc_clear_on_merge (clear a merge survivor's
+# associate_points on structural-merge deletion), before / after
+# before = work-pr64r8-off18625 + work-pr64r8-off48 (knob OFF, bare production)
+# after  = work-pr64r8-on18625 + work-pr64r8-on48v2 (SBND_ASSOC_CLEAR_ON_MERGE=true)
+# nusel-table.tsv byte-identical 48/48 on the nueCC48 sample; mabc-pr.zip moves
+# 3/48 (54095, 174637, 389538); every moved event's kine_reco_Enu goes UP
+# (+4.377, +2.246, +0.602 MeV) -- monotonic, matches the mechanism (clearing a
+# stale cloud only ever triggers pr/59's reassociate_cluster_orphans to ADD
+# previously-discarded points back, never removes any).  DEFAULT NOT SELECTED
+# for SBND production this round -- implemented + validated, not flipped.
+#
+# pr64r8-before: https://www.phy.bnl.gov/twister/bee/set/a5dc3258-abc5-4f4a-85bc-43087d0df806/event/list/
+# pr64r8-after:  https://www.phy.bnl.gov/twister/bee/set/da10ab0c-e6a7-4e1e-bd4b-a7899c0cd9f7/event/list/
+# bee_idx  event    note
+0  18625    DEMONSTRATION -- the owner-reported (142.1,78.3,176.5) blob event,
+#           root-caused in round 8 (segment legitimately wins these points via
+#           clustering_points, then examine_structure_final_1p absorbs it into
+#           its main-vertex neighbor and discards its associate_points with no
+#           re-derivation).  shower_track-global bbox points 0 -> 8 (all 8
+#           recovered, matching the traced segment's original 33-point
+#           associate_points cloud, of which 8 fall in the reported bbox);
+#           total shower_track-global points 6335 -> 6368 (+33).
+#           kine_reco_Enu 1499.871 -> 1499.980 MeV (+0.108).
+1  54095    Enu MOVER (largest on the 48-sample) -- 2991.456 -> 2995.833 MeV (+4.377)
+2  174637   Enu MOVER -- 1017.618 -> 1019.864 MeV (+2.246)
+3  389538   Enu MOVER -- 1744.944 -> 1745.546 MeV (+0.602)
