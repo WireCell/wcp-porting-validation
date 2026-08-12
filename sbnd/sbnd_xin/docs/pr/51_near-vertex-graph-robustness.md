@@ -1940,3 +1940,680 @@ Only qref 6000 fixes both. Operating point: **(5.0, 6000)** — perfect V on
   37112's new 3-pt 0.6 cm micro-stub (cosmetic); a narrow near-vertex-only
   variant of the weak-charge term (main-vertex-radius gate) if the owner
   wants the mover footprint reduced while keeping both fixes.
+
+### Follow-up (same day): did the vertex position actually MOVE, and by how much?
+
+Owner follow-up: *"when the vertex is fitted with one track and one shower,
+did the vertex position move? If not why?"*  **It moved — 0.42 cm net**, on
+the production arm, and the two things that keep it that small are named
+below.  New arm `work-pr51r5a-ivtrace234638c` = bare production **+ TRACE**,
+**gated byte-identical to `flip48`** before any number below was used.
+
+#### Repro (follow-up)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+# NOTE: round 6 landed the same day (toolkit ef4c77ae+cba440fa) and flipped
+# sgp_weak_scale=5.0 / sgp_weak_qref=6000 ON for SBND, so a bare run today is
+# round-6 production, NOT the round-5 point these follow-ups analyse.  Use the
+# documented escape to reproduce round 5:
+SBND_SGP_WEAK_SCALE=0 SBND_WCT_LOGLEVEL=trace PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r5a-ivtrace234638c data 234638
+# gate BEFORE using the trace (member content hash, never md5 of the zip):
+python3 ../../abtest/hash_archive.py work-pr51r5-flip48/pr_evt234638/mabc-pr.zip
+python3 ../../abtest/hash_archive.py work-pr51r5a-ivtrace234638c/pr_evt234638/mabc-pr.zip
+#   -> 5ae521be80c3d04c6ba86f2cf5822c1b8e51bab6abee3eebc03c06c96c996c74  both. PASS
+grep -a "improve_vertex: cluster 10\|UpdateInfo: Cluster: 10" \
+     work-pr51r5a-ivtrace234638c/pr_evt234638/wct_pr_evt234638.log
+# stiffness reproduction (offline MyFCN on the track_fit layer = Segment::fits()):
+python3 scripts/analysis/pr51/myfcn_offline.py work-pr51r5-flip48 234638 10032 10051
+```
+
+#### The measured move (production arm, gate PASS)
+
+`UpdateInfo` logs the *continuous* fit position in wire/tick units
+`(u, v, w, t)`; `improve_vertex` logs the *snapped* `wcpt` seat in cm.  Both
+appear, for the same two solves:
+
+| | u | v | w | t |
+|---|---|---|---|---|
+| entering stage D | 1171.860 | 1198.072 | 1221.431 | 1664.109 |
+| after solve 1 | 1170.570 | 1198.323 | 1220.392 | 1672.542 |
+| after solve 2 | 1171.125 | 1198.287 | 1220.911 | 1668.555 |
+
+Conversion, **derived from the geometry file and then validated on this
+event's own data** rather than assumed:
+
+- Plane angles read straight out of
+  `wire-cell-data/sbnd-wires-geometry-v0206.json.bz2`: U wires at **+60.00°**
+  from vertical, V at **−60.00°**, W vertical.  Measurement directions in
+  (y, z) are therefore `û_u = (±0.866, 0.5)`, `û_v = (∓0.866, 0.5)`,
+  `û_w = (0, 1)`, with `û_u + û_v = û_w` — which is exactly why the identity
+  `proj_u + proj_v = proj_w` must hold, and it does hold **exactly**, both on
+  the 20 cm baseline and on the sub-mm deltas below.  The overall sign of
+  `û_u` (wire ordering vs TrackFitting's `slope_yu`) is fixed empirically by
+  the 20 cm baseline: `û_u = (+0.866, +0.5)` reproduces the measured
+  `proj_u = −21.35 cm` to 0.4 %, the opposite sign gives `+6.09 cm`.  Only
+  the **sign** of Δy depends on this; |Δ| does not.
+- 1 wire = 0.3 cm (SBND pitch, `sbnd_track_fitting.json` header).
+- Drift: over a 20 cm baseline between two fitted vertices of cluster 10,
+  `Δt/Δx = −12.52 tick/cm` ⇒ 1 tick ≈ 0.078 cm = 0.5 µs × 1.563 mm/µs, the
+  config's `driftSpeed`.
+
+| | Δx | Δy | Δz | \|Δ\| |
+|---|---|---|---|---|
+| solve 1 | −0.674 | −0.267 | −0.312 | **0.789 cm** |
+| solve 2 (the `>0.5 cm` re-fit) | +0.319 | +0.102 | +0.156 | 0.369 cm |
+| **net** | **−0.355** | **−0.164** | **−0.156** | **0.418 cm** |
+
+Cross-check: reconstructing the entry position from the final one and the net
+delta gives **(104.204, −4.430, 365.909)**, which is exactly the
+`determine_main_vertex: cluster 10 main vertex pos=(104.2,−4.4,365.9)` line
+earlier in the same log.  The fit ended at
+`After improve vertex:(1038.49 −45.9465 3657.53)` = (103.849, −4.595,
+365.753) cm.
+
+**Do not read the `vertex moved 1.096 cm` log line as the fit displacement.**
+That line measures `wcpt` before vs after — the *Steiner-point seat*, which
+`UpdateInfo` re-snaps with `kd_steiner_knn(1,·)`; a 0.79 cm continuous move
+can hop the seat by 1.1 cm because the seat can only land on cloud points.
+The fit moved 0.79 cm, the seat moved 1.10 cm.
+
+#### Why only ~0.4 cm — the two brakes
+
+Offline reproduction of `MyFCN::AddSegment`/`FitVertex` on the production
+arm's `track_fit-global` layer (= `Segment::fits()`, the layer MyFCN reads —
+**not** `shower_track-global`, which is `associate_points`):
+
+| leg | seg len | pts in (1.5, 6] cm | λ0 | λ1 | λ2 | √(λ0/λ1) | √(λ0/λ2) |
+|---|---|---|---|---|---|---|---|
+| 10032 "shower" | 24.0 cm | 8 | 5.888 | 0.032 | 0.023 | 13.6 | 15.9 |
+| 10051 track | 34.2 cm | 8 | 5.527 | 0.077 | 0.038 | 8.5 | 12.1 |
+
+opening angle **65.4°** (gate >15°).
+
+1. **The shower leg is not the weak one.** Within 6 cm of the vertex the EM
+   trunk is as line-like as the track (λ1, λ2 sit essentially on the
+   `(0.15 cm)²` floor), so its weights are *larger* than the muon's.  A
+   1-track + 1-shower vertex here is geometrically a clean two-line
+   intersection.  Nothing was degenerate; that is not the brake.
+2. **The prior is the brake.**  `flag_vtx_constraint` adds an isotropic
+   `npoints/range²` term, `range = 0.43 cm`.  With `npoints = 16` that is
+   **86.5 cm⁻²**, against data stiffnesses of **55.5 / 244.9 / 355.8 cm⁻²**
+   — i.e. the prior *outweighs* the data in the softest direction (1.6×) and
+   is a quarter of it in the stiffest.  Re-solving at the converged vertex:
+   **0.143 cm** with the prior, **0.337 cm** without.  By construction this
+   fit is a *local polish*, never a relocation.
+3. **The 1.5 cm inner radius.**  `vertex_protect_dis` throws away every fit
+   point within 1.5 cm of the vertex, so both legs are extrapolated in from
+   their 1.5-6 cm shoulders.  The fit is therefore insensitive to exactly the
+   region the owner is looking at in Bee.
+
+So the honest summary for 234638: the neutrino vertex **was** fitted, by a
+genuine two-leg solve, and it **did** move — but by 0.42 cm, which is the
+design scale of `vtx_constraint_range`.  If the goal were a larger
+correction, `MyFCN`'s 0.43 cm prior (or the 1.5 cm protect radius) is the
+constant that would have to move — not anything in the Steiner-graph path
+cost.
+
+#### Two process notes from this follow-up
+
+- **Round 6 was landing mid-analysis.**  Two bare TRACE runs
+  (`work-pr51r5a-ivtrace234638`, `…b`) reproduced each other exactly but sat
+  **2.7 cm** from `flip48` (vertex (102.826, −6.382, 364.258) vs (103.849,
+  −4.595, 365.753)).  Cause: round 6 had already set
+  `wct-pr-perevt.jsonnet:1387` `sgp_weak_scale = 5.0 / sgp_weak_qref = 6000`
+  as the job default; the `sgp build` sentinel shows `penalized=1427` vs
+  round-5's `penalized=213` on cluster 10.  No byte-identity violation — the
+  round-6 `weak_on` guard is clean, the default was simply flipped.  Any A/B
+  against the **round-5** point must pass `SBND_SGP_WEAK_SCALE=0`.  **That
+  2.7 cm turned out to be the answer, not noise — see follow-up 5.**
+- **Gate before you quote.**  The first attempt at this measurement quoted
+  the probe arm; the second quoted an ungated re-run that turned out to be
+  round-6-on.  Only `…ivtrace234638c`, hash-gated against `flip48`, is used
+  above.  For the record the probe arm's stage-D trace *is* numerically
+  identical to production, and not by accident: `rough_path_probe` diverges
+  at **stage C** (it fits an `nsegs=3` vertex there where production fits
+  nothing), but both arms enter **stage D** from the same seed
+  `(103.89, −4.48, 366.68)` with the same `nsegs=2`, so the solves coincide.
+  That reasoning is what the earlier caveat was missing — but it is moot now
+  that a gate-passed arm exists.
+
+### Follow-up 2 — is the 0.43 cm constraint the reason the vertex barely moves?  (plot + standalone fit)
+
+Owner: *"there are still some residual distortions... the vertex fit would need
+a larger move.  Is that the reason the fit was constrained to be close?"*
+
+**Answer: the constraint is half the story, and not the half that matters.**
+Along the direction the vertex needs to move the prior *is* the dominant term
+— but removing it entirely still buys only **0.34 cm**, because the fit's own
+input, the track leg's 1.5-6 cm shoulder, is bent toward the current vertex
+and therefore agrees with the wrong answer.  The lever that produces the
+2.5 cm move is **`vertex_protect_dis`** (the 1.5 cm inner radius), not
+`vtx_constraint_range`.
+
+![evt 234638 vertex anatomy](51_evt234638_vertex_anatomy.png)
+
+#### Repro (follow-up 2)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin      # arm = work-pr51r5-flip48 (== Bee "after")
+python3 scripts/analysis/pr51/vtx_anatomy_plot.py work-pr51r5-flip48 234638 \
+        10032 10051 docs/pr/51_evt234638_vertex_anatomy.png
+python3 scripts/analysis/pr51/vtx_fit_standalone.py work-pr51r5-flip48 234638 10032 10051
+python3 scripts/analysis/pr51/myfcn_offline.py      work-pr51r5-flip48 234638 10032 10051
+```
+
+`vtx_fit_standalone.py` re-implements `MyFCN::AddSegment` + `FitVertex` in
+numpy (same annulus rule, same `+ (0.15 cm)^2` eigenvalue floor, same
+row-0-zeroed `R`, same `npoints/range^2` prior) so the annulus and the prior
+can be swept outside the toolkit.  It reads `track_fit-global`
+(= `Segment::fits()`, the layer MyFCN reads), `clustering-global` (the imaged
+charge) and `vertices-global`.  **Caveat**: the trajectories in the zip are
+the final ones, so this is a characterization at the converged vertex, not a
+bit-level replay of the in-toolkit solve.
+
+#### What the geometry says
+
+| measurement | shower leg 10032 | track leg 10051 |
+|---|---|---|
+| impact parameter of its 1.5-6 cm axis w.r.t. the production vertex | 0.17 cm | 0.27 cm |
+| … of its 6-18 cm axis | 0.30 cm | **2.44 cm** |
+| … of its 10-30 cm axis | 0.14 cm | **2.86 cm** |
+
+The shower is self-consistent at every scale.  **The track leg is not**: its
+straight body points 2.4-2.9 cm away from where its own near-vertex
+trajectory ends.
+
+*This is not circular* — a fair objection, since these are post-fit
+trajectories being used to criticize the fit.  The defence is that
+`MyFCN::UpdateInfo` only rewrites a leg out to `default_dis_cut = 4 cm`
+(MyFCN.h:62, and only the wcpts nearer the vertex than the chosen anchor).
+The 6-18 cm shoulder that produces the 2.4 cm impact parameter was never
+touched by the vertex fit, so it is an independent witness.  The plot's dashed blue line is that body axis extrapolated
+back; the solid blue trajectory leaves the vertex nearly horizontally for
+~1.5 cm and then hooks down onto it.
+
+Independent of any fit, the imaged charge says the same thing:
+
+- **14 `associate_points` of the track leg 10051** lie more than 1 cm *behind*
+  the production vertex along the backward leg-bisector; the backmost imaged
+  point is **1.93 cm** behind, and there is **no** imaged charge beyond 2.0 cm.
+  So the reconstructed vertex sits ~1.9 cm *inside* the muon's own charge, and
+  the tip of the charge is where the two body axes cross.
+- Taking the centroid of the backmost 1 % of the track leg's associate points
+  as an image-suggested vertex gives **(102.954, −6.247, 363.860)**,
+  **2.67 cm** from production — and it agrees with the two-body-axis crossing
+  (102.969, −6.044, 363.889) to **0.21 cm**.  The two agree to 2 mm — they are
+  not independent (both are estimates of the tip of the V), but they fail in
+  different ways, one from charge and one from trajectory geometry.
+
+#### Why the fit cannot get there — sweep of the two knobs
+
+Standalone MyFCN, **outer radius fixed at 18 cm in every row**, entries
+`|move| / distance to the image-suggested vertex` (cm).  Doing nothing scores
+2.67.
+
+| inner radius `r1` (outer = 18 cm) | prior 0.43 | 1.0 | 2.0 | 5.0 | no prior |
+|---|---|---|---|---|---|
+| 1.5 | 0.18 / 2.50 | 0.36 / 2.32 | 0.44 / 2.23 | 0.48 / 2.20 | 0.48 / 2.19 |
+| 2.0 | 0.50 / 2.19 | 0.84 / 1.84 | 0.96 / 1.72 | 1.00 / 1.68 | 1.00 / 1.67 |
+| 3.0 | 1.13 / 1.54 | 1.51 / 1.16 | 1.60 / 1.07 | 1.63 / 1.04 | 1.63 / 1.04 |
+| 4.0 | 1.92 / 0.77 | 2.18 / 0.50 | 2.23 / 0.45 | 2.25 / 0.44 | 2.25 / 0.43 |
+| 5.0 | 2.12 / 0.61 | 2.34 / 0.41 | 2.38 / 0.38 | 2.40 / 0.37 | 2.40 / 0.37 |
+| **6.0** | 2.20 / 0.48 | **2.45 / 0.25** | 2.50 / 0.22 | 2.52 / 0.21 | 2.52 / 0.21 |
+| 8.0 | 2.17 / 0.58 | 2.46 / 0.34 | 2.52 / 0.31 | 2.54 / 0.30 | 2.54 / 0.30 |
+
+The **actual production cell** is not in this table — it uses the production
+*outer* radius of 6 cm as well, and scores **0.14 / 2.79**: the shipped fit
+ends marginally **further** from the image-suggested vertex than doing
+nothing.
+
+Read down the first column: relaxing the prior moves the answer by at most
+0.3 cm.  Read across the `r1 = 6` row: excluding the bent inner shoulder moves
+it 2.2-2.5 cm.  **The inner radius is the lever; the prior is a second-order
+multiplier on top of it.**
+
+#### Why the prior nevertheless *looks* like the culprit
+
+The fit's stiffness matrix `A` (production annulus) has eigenvalues
+**55.5 / 244.9 / 355.8 cm⁻²**, and its softest eigenvector is **8° from the
+shower axis**.  The required 2.67 cm move is **13° from that same soft
+direction** — 2.60 of its 2.67 cm lie along it.  The prior contributes
+`npoints/range² = 16/0.43² = 86.5 cm⁻²` isotropically, i.e. **1.6× the data
+stiffness in exactly the direction that needs to move**.  So the owner's
+reading is right about the mechanics: along the axis that matters, the prior
+outvotes the data.  It is just that the data in that direction is *also*
+wrong, so unbinding the prior alone releases the vertex to a point 0.34 cm
+away rather than 2.7 cm.
+
+Geometrically: the vertex is well determined *transverse* to the shower; what
+is under-determined is *how far along the shower axis* it sits, and that is
+set entirely by where the track leg crosses.  A 2.4 cm error in the track's
+near-vertex direction therefore slides the vertex 2.5 cm along the shower.
+
+#### Open question — do NOT tune on this alone
+
+Two readings survive this evidence and I am not picking between them
+(CLAUDE.md §5.4/§5.7):
+
+1. **Reconstruction artifact.**  The near-vertex hook is the trajectory being
+   dragged to a vertex that was seeded too far forward; the true vertex is at
+   the charge tip, 2.7 cm back.  Under this reading `vertex_protect_dis`
+   (or an outer-shoulder direction estimate feeding `MyFCN`) is the fix.
+2. **Real deflection.**  The PF tree calls this leg `mu- 115 MeV`.  Multiple
+   scattering over the 6-18 cm lever gives θ₀ ≈ 4°, i.e. ~0.5-0.6 cm of
+   apparent impact parameter against **2.4 cm observed — roughly 4σ**.  The
+   hook *is* charge-supported (every fit point of it sits within 0.14-0.45 cm
+   of an imaged point), so this is not excluded; but on the numbers the
+   evidence leans **against** it, and reading 3 is the real competitor to
+   reading 1.
+3. **A distinct short prong swept into the muon's cloud** by
+   `form_point_association` — the micro-stub class rounds 1-3 of this doc
+   handled, which would need a different fix entirely.  Two tests on the 14
+   backward `associate_points`:
+   - *perpendicular residual to the muon's 6-18 cm body axis*: mean 0.70 cm,
+     rms **0.76 cm**, max 1.33 — i.e. **tighter** than the muon body's own
+     associate cloud (rms 1.49 cm over 120 points).  Not an off-axis blob.
+   - *imaged charge per point* (from `clustering-global`; note
+     `shower_track-global`'s `q` is a 0/15000 shower **flag**, not charge):
+     mean **7655** e vs **10278** for the muon body and **6939** for the
+     shower body.  **Below** the muon's own dQ/dx, so **not proton-like** — a
+     proton stub would sit well above it.
+   Neither test excludes a low-charge delta ray or a mis-assigned shower
+   start, and 1-2 cm from the vertex the two legs are too close for
+   collinearity to discriminate.  Reading 3 stays open.
+
+What tells them apart is not available in these products: nueCC48 carries no
+truth vertex in `mabc-pr.zip` (its `mc.json` layer is the *reconstructed* PF
+tree, every branch rooted at the reco vertex — do not mistake it for truth).
+The next step, if this is pursued, is a truth-matched sample or the owner's
+hand scan, not a knob sweep.  Note also that the "nearest imaged point" test
+is weak inside 3 cm of the vertex (87 imaged points within 3 cm of production,
+60 within 3 cm of the far crossing) — it cannot separate the two readings.
+
+#### If it is pursued
+
+A candidate default-OFF knob would be a *direction source* for `MyFCN`, not a
+looser prior: estimate each leg's near-vertex direction from an outer shoulder
+(e.g. `max(vertex_protect_dis, 5 cm)` to 18 cm) when the inner and outer axes
+disagree by more than some tolerance, keeping the 0.43 cm prior.  On this
+event that is the `r1 = 6, prior = 0.43` cell: a 2.20 cm move landing 0.48 cm
+from the image-suggested vertex.  Population cost is unknown and would need
+the usual 117-event census before any flip.
+
+### Follow-up 3 — *why* the existing fit does not reach that result: MyFCN reads back its own re-seat
+
+Owner: *"why does the existing vertex fit not lead to this result?"*  There is
+a specific, mechanical reason, and it is not the prior.
+
+#### The feedback loop
+
+`MyFCN::UpdateInfo` does two things after a successful solve (MyFCN.cxx:400-480):
+
+1. it picks, per leg, the wcpt closest to that leg's PCA centre **among wcpts
+   farther than `dis_cut` from the vertex**, where
+   `dis_cut = default_dis_cut = 4.0 cm` for any leg longer than 8 cm
+   (`MyFCN.h:62`, `max_dis > 2*default_dis_cut`);
+2. it **replaces the whole path from the vertex to that anchor** with a
+   straight interpolation from the new vertex position, 2 cm-stepped and
+   snapped to the Steiner cloud.
+
+So after every vertex fit, each long leg's **first ~4 cm is, by construction,
+a straight line pointing at wherever the vertex currently is.**
+`do_multi_tracking` then re-fits it to charge, which softens it but does not
+undo the topology.
+
+Now compare that radius with the window `MyFCN::AddSegment` reads on the *next*
+solve: **(1.5, 6] cm**.  On this event:
+
+| leg | pts in the (1.5, 6] window | of which inside the 4 cm re-seat | angle between its (1.5,6] axis and its (6,18] axis |
+|---|---|---|---|
+| track 10051 | 8 | **5** | **32.1°** |
+| shower 10032 | 8 | 4 | 2.9° |
+
+**Five of the eight points that set the muon's direction in the vertex fit lie
+inside the stretch the previous `UpdateInfo` drew as a straight line to the
+current vertex.**  The fit therefore measures, in large part, "the direction
+from the vertex to a point 4 cm out" — and concludes that the legs meet at the
+vertex.  It is a fixed point: wherever the vertex is, the fit confirms it.
+
+The tangent profile makes the boundary visible.  Local tangent of the muon leg
+versus its own 6-18 cm body axis, by radius:
+
+| r (cm) | 0.6 | 1.8 | 2.9 | 3.4 | 4.0 | 4.6 | **5.1** | 5.7 | 6.2 | 8.5 | 10.8 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| angle to body axis | 28° | 33° | 40° | 39° | 25° | 18° | **10°** | 3° | 3° | 2° | 3° |
+
+17-48° inside ~4.6 cm, 2-8° outside — the changeover sits exactly at the
+`default_dis_cut = 4 cm` re-seat radius.
+
+#### Why the shower does not suffer from it
+
+The same re-seat is applied to the shower leg (4 of its 8 window points are
+inside 4 cm), and it does no damage: its near and far axes agree to **2.9°**.
+A straight re-seat along an already-straight leg is a no-op.  **The re-seat is
+harmless when a leg is straight and self-confirming when it is bent** — which
+is why this shows up on the track leg only, and why the failure is invisible
+in the majority of events.
+
+#### So the causal chain is
+
+```
+vertex seeded ~2.5 cm forward of the charge tip
+      |
+      v
+UpdateInfo rewrites each leg's first 4 cm as a straight line to that vertex
+      |
+      v
+MyFCN's next solve reads (1.5, 6] cm -- 5 of 8 muon points from that rewrite
+      |
+      v
+measured leg directions cross AT the current vertex  (impact parameter 0.27 cm)
+      |
+      v
+unconstrained solve moves 0.34 cm; the 0.43 cm prior trims it to 0.14 cm
+      |
+      v
+converged, 2.67 cm from the charge tip
+```
+
+The prior is the *last* term in that chain and the smallest: it turns 0.34 cm
+into 0.14 cm.  Everything upstream of it had already decided the answer.
+
+#### What would actually break the loop
+
+In rough order of how surgical they are:
+
+1. **Estimate leg directions outside the re-seat radius.**  Raise
+   `vertex_protect_dis` (or add a separate direction window) to
+   `> default_dis_cut`, i.e. ≥ 4-5 cm, so the fit never measures a stretch it
+   wrote itself.  On this event `r1 = 6 cm` with the production prior gives a
+   2.20 cm move landing 0.48 cm from the charge tip; with `prior = 1.0 cm`,
+   2.45 cm and 0.25 cm.
+2. **Detect the loop instead of always avoiding it.**  Compare each leg's
+   inner and outer axis; only when they disagree by more than a tolerance
+   (32° here, 2.9° for the well-behaved shower leg) re-fit using the outer
+   axis.  This leaves every straight-leg event byte-identical, which matters
+   for the population cost.
+3. **Do not re-seat what the fit will read.**  Shrinking `default_dis_cut`
+   below `vertex_protect_dis` would remove the overlap entirely — but it also
+   changes what every downstream consumer of the wcpts sees, so it is the
+   least surgical of the three.
+
+None of this is implemented.  All three would need the standard default-OFF
+knob + 117-event census before any flip, and reading 3 of the previous section
+(a distinct prong absorbed into the muon's cloud) has to be closed out first —
+if the backward charge is not the muon's start, option 1 would move the vertex
+onto a delta ray.
+
+### Follow-up 4 — how to improve it: a staged, measured proposal (nothing implemented)
+
+Owner: *"what would be a good way to improve this?"*  This section proposes a
+success criterion first, then measures how large the problem is, then names one
+fix and two rejected alternatives.  **No code or config is changed here.**
+
+> **Read follow-up 5 first.**  The census below is on the **round-5** arms.
+> Round 6 landed the same day and is now SBND production; it *fixes 234638
+> outright* but leaves the population rate unchanged.  Follow-up 5 re-runs
+> everything on the current production point and revises the target list.
+> The mechanism, the success criterion and the proposed knob all survive; only
+> the event list changes.
+
+#### Repro (follow-up 4)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+python3 scripts/analysis/pr51/vtx_dir_bias_census.py \
+        work-pr51r5-flip48 work-pr51r5-flip19 work-pr51r5-flip50 \
+        --tsv docs/pr/51_vtx_dir_bias_census.tsv
+```
+
+Read-only: it consumes the existing flip arms' `mabc-pr.zip` and runs nothing.
+Per main vertex it takes every incident leg ≥ 10 cm and compares the PCA axis
+over the production window **(1.5, 6] cm** — which `UpdateInfo` rewrites out to
+`default_dis_cut = 4 cm` — with the axis over **(5, 18] cm**, which it never
+touches.
+
+#### Success criterion (agree this before implementing)
+
+1. **Primary, physics**: on the flagged events, the reconstructed ν vertex
+   moves *toward* the charge tip, judged by owner hand scan of a before/after
+   Bee pair.  There is no truth vertex in `mabc-pr.zip` (its `mc.json` layer is
+   the reconstructed PF tree), so either the owner's scan or a truth-matched
+   sample has to supply the reference.
+2. **Secondary, cost**: 117-event census with **zero** nusel flips and every
+   moved vertex attributable to the new sentinel — the same bar rounds 2-5 of
+   this doc were held to.
+3. **Gate**: knob OFF byte-identical on all three manifests
+   (`hash_archive.py` member hashes), knob ON reproducible.
+
+#### How common is it — the census (117 events, 92 with a usable main vertex)
+
+143 qualifying legs.  Angle between a leg's inner (fit-visible) and outer
+(re-seat-free) axis:
+
+| statistic | value |
+|---|---|
+| median | **4.0°** |
+| 75th percentile | 6.7° |
+| 90th percentile | 12.1° |
+| max | 33.0° |
+
+| gate | legs | vertices | fraction of vertices |
+|---|---|---|---|
+| > 10° | 22 | 21 | 22.8 % |
+| > 15° | 8 | 8 | 8.7 % |
+| **> 20°** | **5** | **5** | **5.4 %** |
+| > 25° | 4 | 4 | 4.3 % |
+| > 30° | 3 | 3 | 3.3 % |
+
+Impact parameter w.r.t. the reconstructed vertex: **inner** axis median
+0.17 cm (90 % 0.59) — the fit's own view is nearly always "consistent", which
+is the fixed point of follow-up 3; **outer** axis median 0.36 cm (90 % 1.07).
+
+The five legs above 20°:
+
+| arm | event | rcid | angle | imp inner | imp outer |
+|---|---|---|---|---|---|
+| flip50 | 58607 | 23001 | 33.0° | 0.17 | **2.89** |
+| flip48 | **234638** | 10051 | 31.9° | 0.27 | **2.40** |
+| flip19 | 21073 | 11006 | 30.5° | 0.59 | **2.74** |
+| flip19 | 37112 | 84077 | 26.1° | 0.77 | 1.49 |
+| flip19 | 180801 | 113101 | 22.9° | 0.52 | **2.44** |
+
+Two things this table settles.  **234638 is a tail case, not typical** — 2nd of
+143 legs — so nothing here justifies touching the default path.  And the metric
+independently re-finds events other rounds reached by hand: 21073 and 37112 are
+pr/67 events, 506746 (14.1°) is a pr/51 target, 55595 (14.1°) is pr/46's,
+58717 (15.5°) is pr/67's.  A blind geometric criterion rediscovering the
+hand-picked set is the strongest argument that it is measuring something real.
+
+#### The proposal: `mvfit_outer_dir`, disagreement-gated (default OFF)
+
+In `MyFCN::AddSegment`, when the knob is on, compute each leg's axis **twice** —
+once over the production window, once over `(max(vertex_protect_dis,
+mvfit_outer_dir_rmin), mvfit_outer_dir_rmax]` — and use the outer one **only
+for that leg, only when the two disagree by more than `mvfit_outer_dir_angle`**.
+
+Suggested defaults, all inert at the C++ default `mvfit_outer_dir = false`:
+
+| knob | default when on | why |
+|---|---|---|
+| `mvfit_outer_dir_rmin` | 5.0 cm | must exceed `UpdateInfo`'s `default_dis_cut` = 4 cm, or the loop persists |
+| `mvfit_outer_dir_rmax` | 18.0 cm | census window; enough lever, still local |
+| `mvfit_outer_dir_angle` | 20° | 5.4 % of vertices; 234638's track = 32°, its shower = 2.9° |
+| `mvfit_outer_dir_min_pts` | 5 | an outer window with too few points is noise |
+| `mvfit_outer_dir_min_len` | 10 cm | shorter legs have no re-seat-free region |
+
+Gating on disagreement (rather than always widening) is what keeps the
+population cost at 5 % instead of 100 %, and it is the same shape as
+`vertex_kink_snap` (pr/50) and `iso_snap_min_dir_mag` (pr/67): a narrow
+trigger, a default-OFF knob, an owner flip after a census.
+
+On 234638 the effect is measurable in advance from the standalone fit: the
+`r1 = 6, prior = 0.43` cell moves the vertex **2.20 cm**, landing **0.48 cm**
+from the charge tip (2.67 cm before).  With the prior relaxed to 1.0 cm it is
+2.45 cm / 0.25 cm — so a *small* companion relaxation of
+`vtx_constraint_range` is worth testing **once the direction is fixed**, but
+only then.
+
+#### Two alternatives that the measurements rule out
+
+- **Relax `vtx_constraint_range` alone.**  Follow-up 2's sweep: with the
+  production window, removing the prior *entirely* moves the vertex 0.34 cm.
+  The prior is the last and smallest term in the chain; on its own it buys
+  nothing.  It would also apply to every vertex in every event — maximum
+  population cost for ~3 mm of effect.
+- **Widen the fit window unconditionally.**  Median disagreement is 4.0°, so
+  for ~90 % of legs the outer axis is the same answer with fewer, noisier
+  points, and for showers it is actively worse (an EM trunk is straight over
+  6 cm and fans out beyond it — 10032's own outer axis is 2.9° from its inner
+  one *because* it is a clean trunk, which is not guaranteed).  Widening
+  unconditionally trades a 5 % gain for a 100 % perturbation.
+
+#### Deeper fix, deferred
+
+The honest root cause is that `UpdateInfo` writes into the radius the next
+`AddSegment` reads.  Fixing *that* — tagging the synthesized wcpts and having
+`AddSegment` skip them, or shrinking `default_dis_cut` below
+`vertex_protect_dis` — removes the loop instead of routing around it.  It is
+deferred because `default_dis_cut` is not private to the vertex fit: the
+re-seated wcpts feed every downstream consumer of the segment path.  Route
+around it first, measure, and revisit only if the gated fix proves too narrow.
+
+#### Prerequisite before any of this is coded
+
+Follow-up 2's **reading 3** must be closed: is the charge behind the vertex the
+muon's own start, or a short prong absorbed into its cloud?  The two tests run
+there (perpendicular residual 0.76 cm rms — collinear; charge 7655 e vs the
+muon body's 10278 — not proton-like) exclude a proton stub but not a delta ray
+or a mis-assigned shower start.  If it is the latter, `mvfit_outer_dir` would
+confidently move the vertex onto a delta ray on exactly the events it fires on.
+The cheapest way to close it is a hand scan of the five flagged events above —
+they are few enough for one Bee pair, and three of them (21073, 37112, 180801)
+already have owner scan history from pr/67.
+
+#### Suggested order of work
+
+1. Owner hand scan of the 5 flagged events (before-only Bee) → close reading 3.
+2. If confirmed: implement `mvfit_outer_dir` + sub-knobs, default OFF, with a
+   `doctest` on the angle gate and the axis selection.
+3. Off-gate (byte-identical, all three manifests), then knob-on census.
+4. Before/after Bee for the 5 targets + the top movers; owner flip decision.
+
+### Follow-up 5 — re-measured on round-6 production: 234638 is fixed, the mechanism is not
+
+Round 6 (`sgp_weak_scale = 5.0`, `sgp_weak_qref = 6000`, toolkit
+`ef4c77ae` + `cba440fa`) landed and was flipped SBND PRODUCTION ON while
+follow-ups 1-4 were being written.  Everything above analyses the **round-5**
+point (`work-pr51r5-flip48`, the Bee "after" arm).  This section redoes the two
+measurements that matter on today's production.
+
+#### Repro (follow-up 5)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+# single event at current HEAD (bare = round-6 production), gated against the
+# earlier accidental round-6 run to prove it is the production configuration:
+SBND_WCT_LOGLEVEL=trace PR_JOBS=1 \
+  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r6-prod234638 data 234638
+python3 ../../abtest/hash_archive.py work-pr51r6-prod234638/pr_evt234638/mabc-pr.zip
+#   -> e29e1ad8931da7e209b9f903fa2885c0ececc21873d623b5f7186cf2a9e9d82a
+#      identical to work-pr51r5a-ivtrace234638.  PASS
+python3 scripts/analysis/pr51/vtx_struct.py work-pr51r6-prod234638 234638 6.0
+python3 scripts/analysis/pr51/vtx_dir_bias_census.py \
+        work-pr51r6-flip48 work-pr51r6-flip19 work-pr51r6-flip50 \
+        --tsv docs/pr/51_vtx_dir_bias_census_r6.tsv
+```
+
+#### 234638: the upstream fix did what the vertex-fit knob would have
+
+| | vertex (cm) | distance to the image-suggested tip |
+|---|---|---|
+| round-5 production | (103.849, −4.595, 365.753) | **2.67 cm** |
+| **round-6 production** | **(102.826, −6.382, 364.258)** | **0.44 cm** |
+| (follow-up 4's proposed knob, `r1=6`, prior 0.43, predicted) | — | 0.48 cm |
+
+Round 6 moved the vertex **2.54 cm** and landed **0.44 cm** from the charge
+tip — within 4 mm of what the proposed vertex-fit knob was predicted to
+achieve, and it got there by fixing the *seed* rather than the *fit*.  The
+near-vertex topology changed too: the track leg is now rcid 10053 with a
+70 cm extent (was 10051, 34 cm) and the shower is 10063.
+
+This is exactly the causal chain of follow-up 3 read backwards: **seed the
+vertex correctly and the self-confirming re-seat never forms.**  It also
+argues strongly against reading 2 of follow-up 2: a genuine 2.4 cm physical
+deflection would not straighten out because the *rough path* changed, so the
+bend was reconstruction-dependent.  (Not a formal retirement — round 6 also
+re-cut the leg, 34 cm → 70 cm extent, so it is a different segment being
+compared.)
+
+#### The mechanism is not fixed — same census, round-6 arms
+
+143 qualifying legs in both rounds; **92** usable main vertices at round 5
+and **93** at round 6 (counted from the committed TSVs, not inferred).  The
+same four events are skipped in both — 116962, 52613, 58343, 59047 have no
+`vertices-global` layer, i.e. no neutrino vertex was found — so the two
+percentages share a denominator basis:
+
+| | round 5 | **round 6 (production)** |
+|---|---|---|
+| median angle(inner, outer) | 4.0° | **3.9°** |
+| 90th percentile | 12.1° | **12.6°** |
+| max | 33.0° | **74.3°** |
+| vertices > 20° | 5 / 92 (5.4 %) | 7 / 93 (7.5 %) |
+| vertices > 30° | 3 (3.3 %) | 3 (3.2 %) |
+| vertices > 40° | 0 | 2 (2.2 %) |
+
+**Read the counts, not the percentages.**  5 → 7 vertices above 20°
+(√5 ≈ 2.2, √7 ≈ 2.6) and 0 → 2 above 40° out of ~93 are *not* statistically
+distinguishable; nothing here says round 6 made the class worse.  What the
+table does support is that **the rate is unchanged — the mechanism survived a
+skeleton round that fixed its worst known instance** — and that the round-6
+worst case (74.3°, 5.07 cm outer impact parameter, event 57903) is larger than
+anything round 5 exhibited.  That single event, not the rate, is the reason to
+keep going: the rate at which `MyFCN` measures a leg direction inside its own
+re-seat is a property of the algorithm, not of any one skeleton.
+
+New worst offenders on production (TSV:
+`docs/pr/51_vtx_dir_bias_census_r6.tsv`):
+
+| arm | event | rcid | angle | imp inner | imp outer |
+|---|---|---|---|---|---|
+| flip50 | **57903** | 14001 | **74.3°** | 0.32 | **5.07** |
+| flip50 | **55539** | 18003 | 55.4° | 1.47 | **3.95** |
+| flip50 | 57903 | 14007 | 44.2° | 0.82 | **3.03** |
+| flip19 | **56982** | 22016 | 35.6° | 0.21 | **2.91** |
+| flip48 | 271851 | 23013 | 29.2° | 1.58 | 1.32 |
+| flip19 | 359980 | 75072 | 23.9° | 0.31 | 2.20 |
+| flip50 | 58607 | 23006 | 22.8° | 0.20 | 1.91 |
+
+`58607` survives from the round-5 list (33.0° → 22.8°, a different rcid — the
+segment was re-cut).  `57903` carries **two** legs above 44° and an outer-axis
+impact parameter of **5 cm**: if that vertex is misplaced by anything like that
+amount it is a far larger error than 234638 ever was, and it is present in
+production today.
+
+#### Revised recommendation
+
+The proposal of follow-up 4 stands unchanged in mechanism, knob design,
+success criterion and rejected alternatives.  What changes:
+
+1. **The hand-scan set is now** 57903, 55539, 56982, 271851, 359980, 58607 —
+   *not* the round-5 list.  Start with **57903** (74.3°, 5.07 cm, two legs):
+   it is both the worst case and the clearest test of whether the outer axis
+   is right or whether the leg is genuinely broken there.
+2. **Reading 3 of follow-up 2 is still the gate on coding anything** (is the
+   backward charge the leg's own start, or an absorbed prong?), and 57903 is a
+   better event to answer it on than 234638, which no longer exhibits the
+   defect.
+3. **Expect the skeleton rounds to keep moving the list, not to shrink it.**
+   Rounds 5 and 6 each fixed their target events by improving the seed; the
+   population rate held at 5-8 %.  That is the argument for fixing the
+   mechanism once rather than chasing seeds event by event — but it is also a
+   caution that any census taken against a moving production point ages
+   quickly, so re-run `vtx_dir_bias_census.py` at the start of the work rather
+   than trusting these tables.
+4. **234638 is closed as a live defect** and should be kept only as the worked
+   example — it is the event where the whole chain was measured end to end.
