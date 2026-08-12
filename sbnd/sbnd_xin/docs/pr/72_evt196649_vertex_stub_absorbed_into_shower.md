@@ -3,12 +3,18 @@
 (renumbered from a draft "pr/67" — that number landed on a different,
 concurrently-pushed investigation in the shared doc set; no relation.)
 
-## Status: FIXED, SBND PRODUCTION ON (owner flip 2026-08-12, toolkit fc9d1fcb).
+## Status: TOPOLOGY FIXED + SBND PRODUCTION ON (owner flip 2026-08-12, toolkit
+fc9d1fcb); near-vertex GEOMETRY chain-audited round 3, `es3sg_vertex_fit`
+implemented and measured NEGATIVE, ships default OFF, not recommended.
 `es3_stub_guard` ships with C++ default OFF; the SBND cfg entry point
 (`wct-pr-perevt.jsonnet`) flips it ON, cfg-only, per the owner's review of
 the Bee before/after pair below. Round 1 traced the cause; round 2 censused
 it across 117 events and designed/validated the geometry/topology cut; the
-flip landed the same session after the owner reviewed the result.
+flip landed the same session after the owner reviewed the result. Round 3
+(same session, owner follow-up: "the trajectory near the vertex is still a
+bit bended") traced the chain's vertex-fitting machinery, implemented the
+most targeted fix at the owner's request, and found it measurably worsens
+(not improves) the near-vertex deflection — see `## Round 3` below.
 
 ## Repro block
 
@@ -491,4 +497,231 @@ byte-identical to the previously-validated `SBND_ES3_STUB_GUARD=1` arm
 - `wcp-porting-img/sbnd/sbnd_xin/scripts/analysis/pr72/{es3_census,es3_analysis}.py`
   (new) — census parser + offline threshold-fit analysis.
 - `wcp-porting-img/sbnd/sbnd_xin/docs/pr/pr72-bee.index.txt` (new).
+- This doc.
+
+## Round 3 — chain audit for the near-vertex trajectory, `es3sg_vertex_fit` implemented, NEGATIVE on-arm result (DEFAULT OFF, no flip recommended)
+
+Owner follow-up after round 2's topology fix: "the track trajectory near the
+vertex is not ideal... if we do a fit with the two tracks, then we can have
+a much sharper vertex turn... in other events, we have vertex fitting
+techniques etc." — asking whether the chain's existing vertex-fitting
+machinery could sharpen the geometry now that the topology is correct.
+
+### Repro block
+
+```bash
+# worktree: none needed, shared tree was clean (git status --short) at round start
+cd /nfs/data/1/xqian/toolkit-dev/toolkit && wcbuild
+env -u LD_LIBRARY_PATH ./build/clus/wcdoctest-clus     # 180/180
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+# off-gate (default OFF, no override) -- 48-event sample
+PR_JOBS=6 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr72r3-off48 data
+python3 scripts/analysis/pr49/on_compare.py work-pr72-on48 work-pr72r3-off48   # must be 0/48
+
+# single-event on-arm smoke + trace
+SBND_ES3SG_VERTEX_FIT=true PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr72r3-smoke196649 data 196649
+SBND_ES3SG_VERTEX_FIT=true SBND_WCT_LOGLEVEL=trace PR_JOBS=1 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr72r3-trace196649 data 196649
+```
+
+### The mechanism traced: `MyFCN`/`improve_vertex`, and why it's gated away from this junction
+
+`MyFCN::UpdateInfo` (`clus/src/MyFCN.cxx:308-499`) is the only code in `clus/`
+that can sharpen a vertex turn: it PCA-fits each incident arm over an annulus
+that *excludes* the near-vertex cm (`vertex_protect_dis` 1.5cm/0.9cm to
+`fit_dis` 6cm, `MyFCN.cxx:88-104`), solves the vertex as the weighted
+intersection of those arm axes (`FitVertex`, `:204-306`), then rewrites both
+arms' `wcpts()` between the vertex and each arm's PCA-center point with a
+straight, Steiner-snapped interpolation (`UpdateInfo`, `:415-479`) before
+`clear_fit()` lets the next `do_multi_tracking` re-derive the fit from that
+straightened skeleton.
+
+Four gates keep it away from a degree-2, non-main junction:
+
+| # | gate | file:line |
+|---|---|---|
+| 1 | `vertex_segments.size() <= 2 && vtx != main_vertex → continue` | `NeutrinoVertexFinder.cxx:2546` |
+| 2 | `ntracks == 0 && vtx != main_vertex → continue` (shower-aware, per-vertex) | `:2558` |
+| 3 | `flag_skip_two_legs && size <= 2 → continue` (cluster-wide: true when every segment in the cluster is shower-flagged) | `:2511`, `:2559` |
+| 4 | `FitVertex`: needs `ntracks>2` **or** `enforce_two_track_fit`, which is set only when `vertex == main_vertex` | `MyFCN.cxx:241`, `:2193` |
+
+Gates 1 and 4 are **prototype-faithful** (`pid/src/NeutrinoID_improve_vertex.h:81,696`)
+— not a porting gap (M15). Re-reading the gate structure precisely: the fit
+is reachable **without any override** by any junction with **≥3** incident
+segments (gate 1 never fires, and `ntracks>2` alone can satisfy gate 4), and
+separately reachable **at the main/neutrino vertex specifically**, even at
+degree 2, via the `enforce_two_track_fit` override. **A degree-2, non-main
+junction — exactly the stub/trunk case here — is the one combination the
+gating excludes.** This is very likely what the owner is recalling from
+"other events": genuine multi-prong vertices, or the neutrino vertex itself,
+not a track emerging from a shower trunk. The measured result below is
+consistent with that reading: the PCA/two-line-intersection model implicit
+in `MyFCN` assumes two reasonably clean, well-separated track directions,
+which does not describe a stub meeting a diffuse shower.
+
+### Offline measurement before touching code
+
+Replicated `MyFCN::AddSegment`'s exact point selection + PCA on the round-2
+`on48` archive's fitted points (no rerun): stub 7 pts / trunk 9 pts in the
+1.5-6cm annulus, **annulus-to-annulus line angle 26.8°**, `n_large_angles=1`
+(passes `FitVertex`'s own 15° admission test). Solved `FitVertex`'s normal
+equations offline: predicted vertex displacement only ~0.1-0.36cm. This
+measurement showed the fit *would* engage productively if admitted — but, as
+established below, it measures a different geometric quantity (a PCA
+principal axis through annulus points) than what the subsequent charge-based
+refit actually produces at the vertex; it is not a reliable predictor of the
+final on-arm deflection.
+
+### Owner decision: implement Candidate A
+
+Per owner's explicit choice after reviewing the gate analysis and offline
+measurement (vs. diagnosis-only), implemented the most targeted candidate:
+admit the junction `es3_stub_guard` protects into the two-track vertex fit,
+without widening to all degree-2 junctions (Candidate B) or touching the
+fit's charge-division/area-revert internals (Candidates C/D, out of scope).
+
+**New knob** `es3sg_vertex_fit` (bool, C++ default `false`), inert unless
+`es3_stub_guard` is also on. **New vertex flag**
+`VertexFlags::kStubGuardJunction` (`PRVertex.h`, `1<<4`, additive, not reusing
+`kProtectedBreak`). Three sites:
+
+1. `NeutrinoStructureExaminer.cxx` (the declined-merge branch, `:682-696`):
+   marks the junction with the flag when `m_es3sg_vertex_fit`.
+2. `NeutrinoVertexFinder.cxx` improve_vertex's vertex loop (`:2546-2559`
+   originally): all three skip gates gain `&& !is_sg_junction`, where
+   `is_sg_junction = m_es3sg_vertex_fit && vtx->flags_any(kStubGuardJunction)`
+   — short-circuits false when the knob is off.
+3. `fit_vertex` (`:2193`): `enforce_two_track_fit` is also set when the
+   vertex carries the flag and the knob is on.
+
+Plumbed through `NeutrinoPatternBase.h`, `TaggerCheckNeutrino.{h,cxx}`,
+`cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet`,
+`run_pr_chain_batch.sh` (`SBND_ES3SG_VERTEX_FIT`), following the
+`es3_stub_guard` precedent exactly. `CHECK_KNOB_BOOL(cfg, "es3sg_vertex_fit", false)`
+added to `doctest_clus_knob_defaults.cxx`.
+
+### Gates
+
+- Freshness proof: `libWireCellClus.so` installed 10:37:49, after every
+  edited source file (10:34-10:35). `./build/clus/wcdoctest-clus`: **180/180**
+  passed (same count as round 2 — only the existing knob-defaults doctest
+  was extended, no new pure-function arithmetic to pin).
+- Compiled-config proof (M6): bare production compile — `es3sg_vertex_fit`
+  key **absent**; `--tla-code es3sg_vertex_fit=true` override — key
+  **present, `true`**.
+- **Off-gate, single-event exact**: `work-pr72r3-smoke196649-off/pr_evt196649/mabc-pr.zip`
+  hashes `0f4df72d5d2633d305ad1bf8d0157dd64e31b9b6edbec6774f0cc08c8c680e90`,
+  byte-identical to `work-pr72-flipcheck` (round 2's validated bare-production
+  arm); `pctree-pr-evt196649.tar.gz` likewise identical
+  (`a92d7454...1502144`).
+- **Off-gate, 48-event sample**: `work-pr72r3-off48` (bare, no override) vs.
+  `work-pr72-on48` (round 2's validated current-production arm),
+  `on_compare.py`: **0/48 archive-level differences, 0/48 `nusel-events.tsv`
+  diffs, 0/48 `nusel-table.tsv` diffs.**
+
+### On-arm result: the deflection got smaller, not larger — NEGATIVE
+
+`SBND_ES3SG_VERTEX_FIT=true` on evt 196649, trace-level log confirms V2/V3
+directly (not inferred): the junction reaches `improve_vertex` at **degree 2
+(`nsegs=2`)**, in both `improve_vertex` call sites (`flag_search_vertex_activity=false`
+from `determine_main_vertex`, and the final `flag_search_vertex_activity=true`
+call); `fit_vertex`/`UpdateInfo` fire and succeed (`UpdateInfo: Cluster: 11
+Update Vertex: ...` logged, `fit_vertex done` reported). The gate bypass and
+the `enforce_two_track_fit` override both worked exactly as designed.
+
+**Deflection angle, measured identically on both arms** (ball-centroid
+estimator matching `segment_cal_dir_3vector`, verified to reproduce the
+shipped `es3_stub_guard`'s own `ang3`/`ang10` to 0.07° on the off arm):
+
+| R (cm) | off (round 2 baseline) | on (`es3sg_vertex_fit=true`) |
+|---|---|---|
+| 2 | 27.3° | 15.2° |
+| 3 | 21.1° | 13.1° |
+| 5 | 18.4° | 13.7° |
+| 10 | 18.4° | 15.6° |
+| 15 | 16.7° | 15.0° |
+| 20 | 16.1° | 14.9° |
+
+**The fit made the near-vertex trajectory measurably straighter, the
+opposite of the intended "sharper turn".** Likely mechanism: `UpdateInfo`
+only writes a straight *seed* into the wcpts; the subsequent
+`do_multi_tracking` re-solves every point independently from 2D charge
+(`TrackFitting::fit_point`, no smoothness or sharpness term — confirmed
+absent in both the toolkit and the prototype this round, see the trajectory-fit
+comparison below), using the same shared-charge-cell mechanisms identified
+in this round's chain audit (flat `1/N` charge division at overlapping
+cells, `form_map_graph`'s ≤0.8cm min-radius charge ball at the vertex,
+the area-revert clamp at the first interior point). The straight seed does
+not survive the refit; if anything the refit converges to a blunter
+compromise than the pre-fit geometry.
+
+**Two side effects, reported as observations, not explained further:**
+- The main vertex (degree-1, the true neutrino vertex, untouched directly by
+  this knob) ended up at `(-53.7175, -21.5088, 193.682)` — coordinate-for-coordinate
+  the **pre-round-2** position, not round 2's `(-53.5009, -21.4557, 193.681)`.
+  Candidate explanation: `UpdateInfo` snaps the vertex marker to the nearest
+  Steiner point, and the small computed displacement (~0.1-0.36cm) may simply
+  land back on the same discrete Steiner-cloud point production originally
+  used, rather than any deliberate "undo". Not confirmed further.
+- The small `proton 7 MeV` / 0.575cm vertex-activity object (`real_cluster_id
+  11086`) that round 2's on-arm produced does not appear in this arm. A
+  second-order effect of the same knob on the target event's PF-object count;
+  not investigated further this round.
+
+### Accept/stop decision: **STOP — do not flip, do not widen scope**
+
+Per CLAUDE.md §5.7 (report a wrong physics number, don't tune to make it
+look right): the measured on-arm effect contradicts the design intent. The
+117-event census was **not run** — there is no decision the census would
+inform, since the single-event measurement already shows the mechanism moves
+in the wrong direction. `es3sg_vertex_fit` ships as a validated, byte-identical-when-off
+default-OFF knob (a complete, honestly-reported deliverable per this round's
+plan), but is **not recommended for further pursuit or flip**.
+
+### What this redirects attention to
+
+Of the four candidates scored this round, **A is now measured negative**.
+The chain audit's own finding — no smoothness/sharpness term anywhere in
+`TrackFitting::fit_point`, flat charge division (`charge_div_method`
+hardcoded to 1, the Gaussian `div_sigma` branch dead code), the shared
+≤0.8cm vertex charge ball, and the 1.8mm area-revert clamp — point at
+**Candidate C** (expose `charge_div_method`/`div_sigma`) and **Candidate D**
+(relax the area-revert near a vertex) as the levers that actually touch the
+mechanism responsible for the bend. Both are out of scope this round (wide
+blast radius, need their own gate sets) and are left for the owner's
+decision on whether to pursue.
+
+### Prototype comparison (M15 check)
+
+No joint/simultaneous multi-track fit with a smoothness or vertex-sharpness
+term exists in **either** tree — `PR3DCluster_multi_track_fitting.h`
+(prototype) and `TrackFitting::multi_trajectory_fit` (toolkit) both solve an
+independent 3-parameter LSQ per point, sharing the vertex only by identity
+(one `fit_index`, hard-copied into both arms' endpoints). The toolkit port
+is faithful on every load-bearing point. The "vertex fitting technique" the
+owner recalls is `MyFCN`/`improve_vertex`, confirmed above to be gated to
+main-vertex/multi-prong cases by design, matching the prototype
+(`NeutrinoID_improve_vertex.h:81,696`).
+
+One unrelated, pre-existing, undocumented divergence surfaced (not pursued):
+the toolkit's `dQ_dx_multi_fit` connects every incident segment to a shared
+vertex's regularizer row, while the prototype's equivalent code (an indexing
+quirk, `PR3DCluster_multi_dQ_dx_fit.h:723`) only connects the first. Affects
+charge/PID smoothing at multi-prong vertices generally; flagged for the
+owner as a separate item (introduced by `fca0f7cfd`, "continue dbug", no
+porting-dictionary entry).
+
+### Files touched this round
+
+- `clus/inc/WireCellClus/PRVertex.h` — new `VertexFlags::kStubGuardJunction`.
+- `clus/inc/WireCellClus/NeutrinoPatternBase.h` — `m_es3sg_vertex_fit`.
+- `clus/src/NeutrinoStructureExaminer.cxx` — flag-set on decline.
+- `clus/src/NeutrinoVertexFinder.cxx` — gate bypass + `enforce_two_track_fit`.
+- `clus/inc/WireCellClus/TaggerCheckNeutrino.h` + `clus/src/TaggerCheckNeutrino.cxx`
+  — knob plumbing.
+- `cfg/pgrapher/common/clus.jsonnet`, `cfg/pgrapher/experiment/sbnd/clus.jsonnet`,
+  `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` — key-suppression
+  plumbing, default OFF (no flip).
+- `clus/test/doctest_clus_knob_defaults.cxx` — new knob-default check.
+- `wcp-porting-img/sbnd/sbnd_xin/run_pr_chain_batch.sh` — `SBND_ES3SG_VERTEX_FIT`.
 - This doc.
