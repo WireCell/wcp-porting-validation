@@ -927,3 +927,151 @@ unusually so. Worth its own round; not fixed here.
 
 - `scripts/analysis/pr64/probe_18625.py` (new) — the read-only probe behind
   every number above.
+
+## Round 6 (2026-08-11) — the seam gap at (142.1, 78.3, 176.5): root cause found, fix proposed
+
+**Status: root cause identified, fix proposed. No code change, no production
+flip.** Supersedes Round 5's "Family 2" paragraph, which filed this as a minor
+17-point footnote under the S6 discussion. On closer look (owner pointed
+directly at the Bee set, comparing `img-global` vs `shower_track-global`
+layers), it is the precise, literal, and now fully explained answer to "a
+track segment missing its clustering points" — a real algorithmic gap,
+independent of the S6 split story, small in absolute size (12-18 points, no
+detectable energy impact) but cleanly diagnosed and worth fixing on its own
+merits.
+
+### Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# confirms which Bee set/event the owner is looking at:
+for f in bee/prod0811/*.url; do echo "$f: $(cat $f)"; done
+head -2 bee/prod0811/ncpi0-prod0811.index.txt   # bee_idx 0 = evt 18625
+
+# img-global vs shower_track-global, direct, in the exact uploaded zip
+# (ad-hoc probe this round -- not added as a script, see "Files" below):
+python3 - <<'PYEOF'
+import zipfile, json, numpy as np
+from scipy.spatial import cKDTree
+z = zipfile.ZipFile('bee/prod0811/ncpi0-prod0811.zip')
+L = lambda n: json.loads(z.read(f'data/0/0-{n}.json'))
+im, st = L('img-global'), L('shower_track-global')
+Pi = np.stack([im['x'], im['y'], im['z']], 1)
+Ps = np.stack([st['x'], st['y'], st['z']], 1)
+d, _ = cKDTree(Ps).query(Pi)
+T = np.array([142.1, 78.3, 176.5])
+orphan = Pi[d > 1.5]
+near = orphan[np.linalg.norm(orphan - T, axis=1) < 5]
+print(len(near), 'orphan img points within 5cm of the reported coordinate')
+print('bbox', near.min(0), near.max(0))
+PYEOF
+```
+
+### Root cause
+
+`shower_track-global` is filled directly from each PF segment's
+`dpcloud("associate_points")` (`clus/src/MultiAlgBlobClustering.cxx:884-899`,
+`use_associate_points` mode). That cloud is built once, for every segment in
+the event, by `clustering_points_segments`
+(`clus/src/PRSegmentFunctions.cxx:2742`), a three-stage Voronoi partition of
+each cluster's own point cloud:
+
+- **Stage A (terminal seeding, :2894-2916)**: each segment seeds Voronoi
+  "terminals" only from its **interior** fit points —
+  `for (size_t i = 1; i+1 < fits.size(); i++)` (:2896) explicitly skips the
+  first and last fit point of every segment's trajectory. A segment's own
+  endpoints never seed a terminal.
+- **Stage B (:2951)**: a graph-shortest-path Voronoi partition
+  (`Graphs::Weighted::voronoi`) assigns every point in the cluster to its
+  nearest terminal — a full partition, no gaps yet.
+- **Stage C (ghost removal, :2961-3060)**: each point's Voronoi-assigned
+  segment (`main_sg`) is re-checked against the true 2D wire-plane-projection
+  nearest segment (via `global_kd2d`, F17's global KD-tree spanning **all**
+  input segments, deliberately including other clusters' segments too, for
+  cross-cluster ghost detection). If `main_sg` doesn't win that check
+  (`flag_change`, :3017, stays `true`), the point is **dropped** — never
+  reassigned to whichever segment actually does win. `map_segment_points`
+  (filled at :3056-3057, read at :3070 by `create_segment_point_cloud` →
+  `associate_points`) only ever gains entries from points that passed this
+  check.
+
+**Traced to the exact spot**: the orphan blob (12-18 points, both in the
+uploaded zip and independently in a fresh rerun this round, same location) is
+centered at `(143.3, 79.0, 174.1)`, **0.1-0.7 cm from segment 126042's own
+trajectory endpoint** `(143.57, 79.25, 173.47)` — the reconstructed
+photon-conversion vertex (also present in `vertices-global`, and the same
+point named `real_cluster_id=-1` in `track_fit-global`'s vertex-marker rows).
+Because that endpoint is explicitly excluded from terminal-seeding
+(Stage A), and no other segment has a fit point close enough to win the
+Stage-C check there either (segment 11065, the muon track, is 5 cm away at
+its nearest; the other cluster-126 sub-segments are 15-19 cm away), the
+charge immediately around this vertex gets Voronoi-assigned to some distant
+terminal, fails the geometric re-check, and is dropped rather than handed
+to 126042 (the segment it actually belongs to) — even though 126042 is
+present in `segs` for this cluster and is the obvious rightful owner.
+
+This is a structural blind spot at **every** segment endpoint, most visible
+at vertices like this one where a shower trunk terminates and nothing else
+picks up the slack nearby. It is unrelated to the S6 split discussed in
+Round 5: 126042 is entirely within one PR cluster (126); this is a
+within-cluster association gap, not a cross-cluster one.
+
+### Fix proposal — two options, neither implemented
+
+**Option B (recommended) — make Stage C reassign, not just drop.** The F17
+global KD-tree query already identifies, per plane, the single input point
+that achieves the 2D-projection minimum (`res[0].first`, the flat index into
+the KD-tree's own arrays) — currently only its *distance* is kept
+(`min_2d_dis2`), the identity is discarded. Cheap, additive change: alongside
+`xs`/`ys` when building `global_kd2d` (:2864-2874), also append a parallel
+per-point owning-segment id; when a point fails the `main_sg` check
+(`flag_change == true`), look up which segment achieved the global 2D
+minimum via that parallel array, and if — and only if — that segment is a
+member of the **same cluster's** `segs` (never a foreign cluster's segment;
+cross-cluster ghost rejection is unaffected and stays exactly as strict as
+today), assign the point there instead of dropping it. This directly closes
+the seam-gap class in general (any two adjacent same-cluster segments whose
+graph-Voronoi and 2D-projection nearest-segment disagree near a shared
+vertex), not just the endpoint-starvation case specifically. O(1) extra work
+per already-computed KD-tree query; no new pass.
+
+**Option A (narrower alternative) — seed terminals at true dead-end
+endpoints.** Only seed a terminal at a segment's own first/last fit point
+when no other segment's fit point already exists within a small radius of it
+(i.e. it is a genuine trajectory dead end, like 126042's shower-terminating
+end here) — a shared vertex where two segments meet, each already covered by
+the other's interior terminals, would keep the current exclusion. Narrower
+in scope than Option B (only fixes dead-end starvation, not general seam
+disagreement), and needs a radius threshold choice to fit and validate.
+
+**Recommendation: Option B.** It fixes the general mechanism (Option A only
+patches one manifestation of it), needs no new tunable threshold, and cannot
+regress cross-cluster ghost rejection by construction (foreign-cluster
+winners are still dropped exactly as today — only same-cluster
+reassignment is new behavior). Both would ship as a new default-OFF boolean
+parameter threaded through `clustering_points_segments`'s signature
+(`clus/inc/WireCellClus/PRSegmentFunctions.h:548`) and its three call sites
+(`NeutrinoTrackShowerSep.cxx:112,166`, `NeutrinoVertexFinder.cxx:600`),
+byte-identical when off, per this repo's standard knob convention — same
+bar as pr/64 round 4's validation process (fit against a labeled sample if
+one exists or can be built for this class, byte-identical off-gate, on-arm
+mover/energy census) before any flip. No labels exist yet for this specific
+gap class; building a small hand-scan (a handful of events, comparing
+`img-global` vs `shower_track-global` orphan blobs at PF-graph vertices) is
+the natural first step of implementation, not skippable.
+
+### Why this doesn't move Round 5's S6/energy conclusions
+
+`kine_reco_Enu` and `kine_energy_particle` (Round 5) are computed from
+`T_rec_charge`/segment-level charge sums, not from the `associate_points`/
+`shower_track` display cloud — the 12-18 dropped points (a few percent of
+segment 126042's own ~2600 associated points) have no measurable effect on
+the quoted 717.24 MeV. This is a display/association-completeness defect,
+not an energy-reconstruction one.
+
+### Files
+
+No new script this round — the probe was a short ad-hoc snippet (reproduced
+in the Repro block above) rather than a reusable tool; `probe_18625.py`
+(Round 5) remains the reusable one for the S6/energy/label checks.
