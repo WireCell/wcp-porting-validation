@@ -112,7 +112,23 @@ def resample(poly, step):
 
 
 def wcells(ld, P, xbin):
-    """Map 3D points (cm) to {(apa, wchan)} and {(apa, wchan, xbin)}."""
+    """Map 3D points (cm) to {(apa, wchan)} and {(apa, wchan, xbin)}.
+
+    CAVEAT on `apa = 0 if x < 0 else 1` (the rule oc53_probe uses too): it is not
+    universally exact.  Measured against the events' own blob `wpid` (>>4,
+    WirePlaneId.cxx:37), the two SBND APAs OVERLAP in x within +/-33.5 cm, and the
+    sign rule agrees with `wpid` on only 82-99% of all points in a typical event.
+
+    It is safe here for two reasons, both checked in doc pr/67 sec 2 rather than
+    assumed: (a) none of the four target clusters straddles x = 0, so image points
+    and fit points at the same place always get the SAME apa and the uncovered
+    counts are internally consistent either way; (b) each target cluster's full x
+    range falls inside exactly one APA's range, so the absolute channel numbers are
+    right as well.  A cluster that DOES straddle x = 0, or that lives inside the
+    +/-33.5 cm overlap with points from both APAs, needs per-blob `wpid` here
+    instead of the sign rule -- otherwise neighbouring points land in different
+    per-apa channel fits and show up as spurious holes.
+    """
     ch, cell = set(), set()
     for p in P:
         x, y, z = p * 10.0                      # cm -> mm, the ctpc/wind units

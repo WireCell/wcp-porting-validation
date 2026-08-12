@@ -86,6 +86,21 @@ per-(apa,face) W wire index via `oc53_probe.Loader.wind()` (doc pr/53's fit agai
 the event's real `ctpc_a<A>f0pW` arrays), and reports W channels — and
 (channel, drift-x bin) cells — that carry image charge but no fit projection.
 
+**APA assignment, stated because the channel numbers depend on it.** The
+per-(apa,face) channel fit is selected by `apa = 0 if x < 0 else 1` on the
+T0-corrected x. That rule is **not universally exact**: measured on these events'
+own blobs (`wpid >> 4`, `WirePlaneId.cxx:37`), the two APAs overlap in
+x ∈ [−33.5, +33.5] cm, and the sign rule agrees with the blobs' own `wpid` on only
+82–99 % of all points. It is nevertheless correct for all four target clusters
+here, verified by range exclusion rather than assumed: apa0's blobs span
+x ≤ +33.5 and apa1's span x ≥ −33.5, and each target cluster's full x range
+(137238: [−133.9, −110.1]; 42280: [12.1, 28.1]; 21073: [−42.4, −24.9];
+58717: [182.9, 198.6]) lies inside exactly one of them. **No target cluster
+straddles x = 0**, so image points and fit points at the same place always receive
+the same APA and the uncovered counts are internally consistent regardless.
+A cluster that did straddle it would need per-blob `wpid` instead — noted in the
+script.
+
 Baseline numbers, production settings:
 
 | event | cluster | W channels with charge | **uncovered** | (chan, x-bin) cells | **uncovered** | longest uncovered W run |
@@ -124,11 +139,19 @@ not an endpoint.
 
 **Root cause.** The charge at that point *is* associated, at **0.08 cm**, to
 segment 143061 — and every associated point within 6 cm of the owner's point
-carries `q = 15000`, the Bee convention for **"painted shower"** (`q = 0` is
-"painted track"). Segment 143061 holds **1436 associated points and 19 fitted
-points**. That ratio is not a defect; it is what a shower classification means in
-this chain. The trajectory stops because the object stopped being treated as a
-track, not because an endpoint fell short or a search ran out of rounds.
+carries `q = 15000`. That is the shower marker, verified at the writer rather than
+taken from a docstring: `clus/src/MultiAlgBlobClustering.cxx:880` is literally
+`const double charge = is_shower ? 15000.0 : 0.0;`. Segment 143061 holds **1436
+associated points and 19 fitted points**. The trajectory stops because the object
+stopped being treated as a track, not because an endpoint fell short or a search
+ran out of rounds.
+
+*Read the 1436 : 19 ratio with doc pr/55's correction in mind*: a shower member's
+`associate_points` are filed under the **shower's start-segment id**
+(`MultiAlgBlobClustering.cxx:858`), so 143061's 1436 is an aggregate over the whole
+shower, not one segment's own cloud, and the ratio overstates any single segment's
+coverage. It is quoted here only as the scale of "associated but not fitted"; the
+classification verdict rests on the `q` value, which is per-point and unaffected.
 
 **Supporting negatives.** The endpoint story does not fit: the owner's point is
 13.3 cm from the nearest first-segment endpoint, i.e. mid-cluster, not at a tip.
@@ -277,7 +300,10 @@ primary end-trimmer. Near the owner's points the trims are:
 | 58717 | 8 | 2.52 cm |
 
 Sub-centimetre in three cases and 2.5 cm in the fourth — too small to account for
-3–6 cm shortfalls. Nothing large was fitted and then deleted.
+3–6 cm shortfalls. Nothing large was fitted and then deleted. (The P3 line also
+prints a segment id, but it comes back `-1` on every call, so these are
+*per-call* amputations located by geometry, not attributed to a named segment.
+Fixing the id would need a rebuild the analysis did not require.)
 
 **The owner's 137238 sub-hypothesis: "not sufficient rounds of branch searching".**
 *Conclusively disconfirmed.* `find_proto_vertex`'s `nrounds_find_other_tracks` is
@@ -382,10 +408,15 @@ PCA-linearity discriminators rather than from the trajectory code.
 | compiled-config proof, knobs on | both keys appear with correct values (`traj_cover_probe: true`, `pr_find_other_rounds: 6`) |
 | baseline provenance | zero commits between the baseline binary and the probe binary (`git log c955ca52..HEAD` empty); only pr/67 files modified — so the gate is a genuine probe-inertness claim |
 
-**Gates deliberately NOT run, and why.** No `abtest` PDHD/PDVD gate: the C++ edits
-are confined to `clus` code reached only through `TaggerCheckNeutrino`, which is
-SBND-only in this tree, and all four new/edited jsonnet parameters are
-key-suppressed when off (proven above). No 48/19/1000-event manifest sweep: the
+**Gates deliberately NOT run, and why.** No `abtest` PDHD/PDVD gate. The claim
+that earns this is the empirical one: **probe-ON vs probe-OFF is hash-identical on
+all four events**, and every new jsonnet parameter is key-suppressed when off
+(compiled-config `cmp`, above), so the probes are inert by construction and
+measurement rather than by argument. A reachability argument would be weaker than
+it first looks — `TrackFitting::examine_end_ps_vec`, which carries P3, is also
+reached from the STM fitter path, not only from `TaggerCheckNeutrino` — which is
+exactly why the inertness claim is grounded in the hash gate instead. No
+48/19/1000-event manifest sweep: the
 owner scoped this round to four events, and the probe-off byte-identity claim is
 carried by the compiled-config proof plus the 4-event hash gate. A production flip
 of either knob would need the full manifest gate first — neither is proposed.
