@@ -393,7 +393,7 @@ this round, per scope.
 
 ## 6. Proposed fixes — knob shape and validating gate, none implemented
 
-> **Superseded by §9.6**, which scores four candidates against all four events.
+> **Superseded by §9.6 and §10** (§10 is the staged plan).
 > **F1 below is retracted** (§9.3.4). F2 stands. F3's premise is weakened by
 > §9.2.
 
@@ -722,6 +722,10 @@ stage neither P3 nor P6 watches and which round 1 had no instrument for.
 
 ## 9.6 Fix candidates — what each one actually recovers
 
+> **Carried forward into §10**, which turns these into a staged plan with knob
+> shapes, gates, an order and abandon conditions. §10.2 adds a fourth candidate
+> (the endpoint band's missing axial penalty) that this table does not have.
+
 Still **no implementation**, per scope. What is new is that each candidate can now
 be scored against all four events instead of argued.
 
@@ -799,3 +803,267 @@ on a reachability argument.
   is by coordinate.
 * **P5's component bbox is over Steiner terminals**, which are sparser than the
   image points; the bbox is a lower bound on the component's true extent.
+
+---
+
+# 10. Proposed fix plan
+
+**Nothing here is implemented.** This section exists so the owner can authorise
+stages individually. Every stage below is a default-OFF knob whose off-state is
+byte-identical, and every stage names the gate that would validate it and the
+condition under which it should be abandoned.
+
+## 10.1 The bar every stage must clear
+
+Unchanged from §4 of the operating manual, restated because it drives the
+ordering:
+
+1. Knob-off byte-identical (`hash_archive.py` member hash) on the standard SBND
+   manifests — nueCC48, NCpi0-19, mcp1k-117 — plus the compiled-config proof.
+2. Knob-on census in which **every** mover is attributable to a new sentinel
+   line ("0 unclaimed"), the bar pr/65 set.
+3. `pr67_wcover.py` before/after on the four owner clusters — the owner's own
+   detection criterion, as a number.
+4. `nusel` stability on nueCC48 (48/48) and doctests for any pure predicate.
+
+## 10.2 Recovery matrix — what each stage actually fixes
+
+Every cell is measured, not estimated; the measurements are in §9 and §10.7.
+
+| stage | 137238 | 42280 | 21073 | 58717 |
+|---|---|---|---|---|
+| **S1** keep-isolated on evidence (`nnf`) | partial — branch kept, but it routes the wrong arm (§9.3.1) | **yes** (nnf 9) | **no**, and correctly (nnf 2→1) | no — never routed |
+| **S2** let the isochronous snap see short branches | attaches (4.70 cm) | attaches (4.38) | attaches (4.34) | no — never routed |
+| **S3** route both arms of a component | **the missing half** | n/a | n/a | no |
+| **S4** axial penalty in the endpoint band | n/a — iso branch gated out by `xext_frac` | **yes, on its own** | **no** — measured, pick unchanged for every weight tested | no |
+| — | | | | **nothing proposed** (§10.8) |
+
+Two overlaps are worth seeing before choosing: **S4 alone resolves 42280** (it
+moves the endpoint to within 0.55 cm of the owner's point, after which the branch
+of §9.3.2 is no longer needed and would be tagged as covered), and **S2 preempts
+S1** on the same branches — a branch that the isochronous snap attaches never
+reaches the keep-isolated test at all.
+
+## 10.3 S1 — keep an isolated residual on evidence, not on point count
+
+*Targets:* 42280 fully, 137238 partially. *Site:*
+`other_seg_keep_isolated_ok` (`PRSegmentFunctions.cxx:32`, declared
+`PRSegmentFunctions.h`) and its one call site
+`NeutrinoOtherSegments.cxx:808`.
+
+The predicate today is `component_points >= 25 && track_length >= 3.0 cm`.
+`number_not_faked` — the count of the component's points that are *not* explained
+as a 2-D shadow of an existing trajectory — is computed a few lines above, sits
+in the same `temp_segments[…]` struct the call site already reads, and is
+**ignored**. It is exactly the discriminator this decision needs. At the moment
+of the keep-isolated test the four values are:
+
+| event | `number_points` | `number_not_faked` | today | with an `nnf` clause |
+|---|---|---|---|---|
+| 42280 | 10 | **9** | dropped | kept |
+| 137238 | 10 | **5** | dropped | kept |
+| 21073 | 10→14 | **2 → 1** | dropped | still dropped |
+
+*Knob:* `other_seg_keep_isolated_min_nnf`, int, **C++ default 0 = clause
+disabled**. The predicate becomes a strict widening — an OR arm, never a new
+rejection:
+
+```cpp
+return (component_points >= min_points && track_length >= min_length)
+    || (min_nnf > 0 && number_not_faked >= min_nnf && track_length >= min_length);
+```
+
+Note the explicit `min_nnf > 0` test: with a bare `nnf >= min_nnf` a default of 0
+would accept everything, so the disabled state has to be checked, not implied.
+
+*Scan:* `min_nnf` over 3–8; 4 is the natural starting point (margin 1 below
+137238's 5, margin 2 above 21073's 2). Do not tune on four events — the scan is
+for the census, not for these.
+
+*Gate:* the §10.1 four, plus **new revert-proven doctest cases** in the existing
+`clus/test/doctest_other_seg_keep_isolated.cxx` — this is a pure function, so it
+is the cheapest test in the whole plan and there is no excuse for shipping it
+without one.
+
+*Risk:* low, and this is the reason to do it first. It rides a path that is
+**already in SBND production** (`other_seg_keep_isolated = true`); it only lowers
+the admission bar. A kept residual is added as a *disconnected* piece, so it
+cannot corrupt vertex topology the way an attachment can.
+
+*Abandon if:* the knob-on census shows the kept residuals are predominantly
+short 2-D coincidences (which `nnf` is supposed to prevent), or nueCC48 `nusel`
+moves.
+
+## 10.4 S2 — let the isochronous snap see short branches
+
+*Targets:* all three routed branches. *Site:* `NeutrinoOtherSegments.cxx:721`.
+
+```cpp
+if (dir_mag > 10 * units::cm ||
+    (dir_mag > 8 * units::cm && segment_track_length(new_seg) > 13 * units::cm)) {
+```
+
+Everything inside this block — `modify_vertex_isochronous`,
+`modify_segment_isochronous` — exists to connect a branch that is displaced from
+its parent *because* the topology is isochronous. It is the correct machinery for
+all three of our cases and **it never runs on any of them**: their `dir_mag` is
+4.70 / 4.38 / 4.34 cm against a gate at 8–10 cm.
+
+*Knob:* `iso_snap_min_dir_mag`, double cm, **C++ default 10.0 = legacy**
+(replacing the literal in the first clause only; the widening tiers at `>18 cm`
+and `>36 cm` are untouched).
+
+*Why this is safer than it looks, and what must be checked first:* the vertex-snap
+path applies its own isochronous test — the connecting vector must be within 15°
+of perpendicular-to-drift — so lowering the *size* gate does not remove the
+*isochronous* requirement. **Verify before implementing** whether
+`modify_segment_isochronous` carries an equivalent angle test; if it does not,
+S2 needs its own angle guard rather than relying on the caller.
+
+*Gate:* the §10.1 four, plus a sentinel on every successful snap below the legacy
+gate (cluster, `dir_mag`, which of the four snap paths fired, both endpoints), so
+the census can attribute movers.
+
+*Risk:* medium-high and genuinely unknown. Whether a 4.5 cm branch can be snapped
+stably has never been measured, and attaching changes graph topology — vertices,
+degrees, and therefore downstream vertex selection. This is the stage most likely
+to produce movers that are hard to attribute.
+
+*Abandon if:* snaps below the legacy gate succeed but produce vertices that
+`main_vertex` then prefers, i.e. if the fix moves neutrino vertices rather than
+just adding coverage.
+
+## 10.5 S3 — route both arms when the boundary point is interior
+
+*Targets:* 137238 only, and it is the only thing that puts a trajectory on that
+charge. *Site:* `NeutrinoOtherSegments.cxx` step 8/9.
+
+`special_A` is the component's boundary connection point; `special_B` is defined
+as merely *the farthest point from `special_A`*. When `special_A` is interior to
+its component, one `do_rough_path(A,B)` traverses one arm and the other is never
+routed. In 137238 the two arms are **170° apart** as seen from `A` and the
+owner's charge is on the unrouted one (§9.3.1).
+
+*Knob:* `other_seg_route_both_arms` (bool, default false) +
+`other_seg_arm_min_length` (double cm, default 3.0). When on: after `special_B`
+is chosen, find `special_C` = the farthest point from `A` among points with
+`(p − A)·(B − A) < 0`; if `|A − C| >= arm_min_length`, emit a second candidate
+`A→C` through the same step-9 machinery.
+
+*Shape note:* prefer routing twice within one step-9 iteration over splitting the
+component in step 7 — the component is the unit for `ncounts`, `sep_clusters`,
+`map_connection` and the re-evaluation loop, and splitting it perturbs all four.
+
+*Gate:* the §10.1 four. Determinism needs explicit attention: the far-arm search
+must have a deterministic tie-break exactly like `pick_end_point`'s.
+
+*Risk:* medium. It roughly doubles the candidate count in branched components,
+and every candidate costs a `do_single_tracking` plus a `do_multi_tracking`, so
+this stage has a real CPU cost that must be measured (`timecmd.py`, per §4 of the
+manual).
+
+*Do not start this before S1/S2 report*, because if the branch is going to be
+dropped anyway, routing its second arm changes nothing.
+
+## 10.6 S4 — give the endpoint band an axial penalty
+
+*Targets:* 42280 on its own; this is the direct answer to the owner's "why is the
+initial end point not at the edge?". *Site:* `pick_end_point` inside
+`find_iso_first_segment_endpoints` (`NeutrinoPatternBase.cxx`, the
+"laterally most central point of the end band" loop).
+
+Today the band picks `argmin(d_perp)` over all qualified points within ±3 cm
+axially of the extreme, with **no axial term** — so a point 3 cm inside and
+0.1 cm off-axis beats a point at the tip 0.4 cm off-axis.
+
+*Knob:* `iso_endpoint_band_axial_weight`, double, **C++ default 0.0 = today,
+byte-identical**. The band pick becomes
+`argmin(d_perp + w · (s_extreme − s_k))` (signed so the penalty is on axial
+*retreat*).
+
+*Measured response* (§10.7, cluster 8, all image points):
+
+| `w` | picked `s` | `d_perp` | gain | distance to the owner's point |
+|---|---|---|---|---|
+| 0.0 (today) | 58.97 | 0.75 | — | 2.50 cm |
+| 0.2 – 0.5 | 60.97 | 1.08 | +2.01 cm | **0.82 cm** |
+| 0.8 – 3.0 | 61.42 | 1.41 | +2.45 cm | **0.55 cm** |
+
+The response **saturates**: even at `w = 3` the pick never leaves 1.41 cm of the
+axis, though the band contains points out to 3.56 cm. That flat plateau is the
+safety argument — the knob is not sitting on a cliff. Propose `w = 0.5` as the
+scan centre, range 0.2–1.0.
+
+On 21073 the same scan leaves the pick **completely unchanged at every weight**,
+because the owner's charge there is 6.11 cm *off* the axis — confirming from a
+second direction that 21073's gap is transverse, not axial.
+
+*Gate:* the §10.1 four **plus, mandatorily, doc pr/24 §15's
+`pr24_iso_probe.py --junctions` regression detector.** This stage changes the
+first segment of every cluster the iso branch accepts, which is the widest blast
+radius in the plan. The specific failure to watch for is pr/24 round 3's: a
+mis-placed endpoint leaving a stub that `find_other_segments` then claims,
+producing a spurious near-0° junction mid-track.
+
+*Risk argument in its favour:* round 3's failure came from endpoints moving
+**inward**; this moves them **outward**, which is the direction round 3 wanted,
+and the round-2 probe already records the branch gaining 11.3/12.2 cm over the
+pre-round-3 behaviour. Outward motion also preserves the property round 3 relied
+on — that the endpoint "can never move inward, which is what makes 'cannot leave a
+stub for find_other_segments' true by construction".
+
+*Caveat on the numbers above:* they were computed on all image points of the
+cluster, not on the charge-qualified subset the C++ uses, and on one cluster.
+They establish the shape of the response, not the production value. The pr/24
+§15 38-cluster set is what must set `w`.
+
+## 10.7 Recommended order, and why
+
+**S1 → S4 → S2 → S3**, with a stop-and-report after each.
+
+**S1 first** not because it recovers the most, but because it is the experiment
+that de-risks everything after it. S1 is the narrowest change in the plan
+(strictly additive, on a path already live in SBND production, with a pure
+predicate that can be unit-tested), and it answers the question every later stage
+depends on: *is putting a trajectory on these small isochronous branches
+desirable at all?* If the S1 census shows it is not — spurious segments, `nusel`
+movers — then S2 and S3 are dead too, because they all end in the same place, and
+the plan stops having cost almost nothing.
+
+**S4 second**, because it independently resolves the one case with the clearest
+evidence (42280), it directly answers the owner's Q2, and its risk is
+characterised (flat plateau, safe direction of motion) — but it needs the pr/24
+junction detector, which is real work to stand up.
+
+**S2 third.** Best physics if it holds — an attached branch beats a disconnected
+one — but the largest unknown in the plan and the one most likely to move
+vertices.
+
+**S3 last, and conditionally.** Only if 137238's class still matters after S1 and
+S2, since it costs CPU and touches the component bookkeeping.
+
+## 10.8 What is deliberately NOT proposed
+
+* **No change to `get_local_extension`'s 7.5° perpendicular band**
+  (`NeutrinoStructureExaminer.cxx:2426`). It is prototype-faithful (M15) and
+  §9.3.4 measured that extending along the axis there recovers nothing.
+  Round 1's **F1 stays retracted.**
+* **No fix for 58717.** The residual is 92 % transverse: the trajectory is
+  displaced ~3 cm sideways within the isochronous ambiguity, and the only
+  component near the charge has 2 terminals with `nnf = 0` — i.e. in 2-D it is
+  genuinely indistinguishable from the trajectory already there. Addressing it
+  would need a *fitter-level* term that pulls a trajectory transversally toward
+  uncovered collection-plane charge, which is a far larger change than this
+  round's evidence supports. Recorded as the open item it is.
+* **No lowering of `iso_endpoint_min_length`** (round 1's F2). It is orthogonal
+  to everything above and still untested; keep it as a separate item with its own
+  scan, not folded into this plan.
+* **No change to the "faked" thresholds** (`search_range = 1.5 cm`,
+  `scaling_2d = 0.8`). These govern the tagging of every point in every cluster
+  in every event; nothing measured here justifies touching a parameter with that
+  reach.
+* **No coverage-driven re-offer pass** (a post-`find_proto_vertex` audit that
+  finds image regions far from any trajectory and re-proposes them). It is the
+  most general answer to §5's observation that nothing anywhere measures
+  trajectory-vs-charge coverage, and it is the wrong first move: it would be a
+  new stage in the chain rather than a threshold on an existing one.
