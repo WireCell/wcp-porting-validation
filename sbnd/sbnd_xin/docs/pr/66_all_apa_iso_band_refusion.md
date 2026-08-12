@@ -114,8 +114,8 @@ No speck sits within reach of *both* c19 and c20 at any all-APA stage's cut
 (the closest, c10, is 11.0 cm from c19 but 86.8 cm from c20 — both well outside
 `close`'s 1.2 cm and every other stage's tighter cuts). A single pairwise veto
 on the direct c19↔c20 edge is therefore geometrically sufficient for this
-event; a group-level exclusion is not required here (though see §5's fallback
-for other events).
+event; a group-level exclusion is not required here (though see §5.3's
+fallback-within-the-fallback for other events).
 
 **2.7 What the owner is actually looking at.** Mapping the 2853 nu-candidate
 points from `img-global` cluster 19 into the PR `clustering-global` layer:
@@ -177,58 +177,157 @@ the expected 1e1p topology exposes it.
 
 ## 5. Proposed fix (NOT implemented this round)
 
-**Step 1 — trace, before writing any code.** Per-stage Bee trace, the same tool
-doc pr/18 §2 used to name the original re-fuser, this time on the all-APA
-chain:
+Two designs, in preference order. Both need §5.1's trace for understanding and
+verification; only Design B (§5.3) needs it as a hard prerequisite for
+*correctness* — see the trade-off note at the end of §5.2.
+
+### 5.1 Trace (useful for both designs)
+
+Per-stage Bee trace, the same tool doc pr/18 §2 used to name the original
+re-fuser, this time on the all-APA chain:
 
 ```bash
 SBND_WORK_ROOT=$PWD/work-oc66-tr10550 SBND_TRACE_BEE=1 ./run_ql_evt.sh data 4
 ```
 
-This names which all-APA stage's pair test *first* connects the band and the
-nu — §2.5's `ClusteringClose:all` match is a static, untraced prediction, not a
-confirmed fuser; `extend`/`regular`/`parallel_prolong` run earlier in the same
-sequence and could fire on a different pair-test first.
+Names which all-APA stage's pair test *first* connects the band and the nu.
+§2.5's `ClusteringClose:all` match is a static, untraced prediction, not a
+confirmed fuser — `extend`/`regular`/`parallel_prolong` run earlier in the
+same sequence and could fire on a different pair-test first.
 
-**Step 2 — transplant the existing, already-validated predicate.** Duplicate
-(not extract, M10) `iso_band_like()` and `blob_center_xext()`
+### 5.2 Design A (preferred) — provenance: honor the decision `protect_iso_band_xext` already made
+
+Rather than re-deriving "is this a band vs. a drift-spanning cluster" a second
+time at the all-APA stage, have the per-APA stage record that it *already
+refused* this specific pair, and have every all-APA merge-pair test honor
+that record instead of re-judging geometry.
+
+**Architecture check (this corrects an earlier verbal claim in this
+investigation — worth stating plainly since it changes what's buildable).**
+Per-APA and all-APA clustering are **not** one continuous pass on one
+in-memory tree. They are two separate `MultiAlgBlobClustering` pnodes,
+joined by a `PointTreeMerging` pnode (`clus.jsonnet`'s `clus_all_apa`
+function, `local pcmerging = g.pnode({type: 'PointTreeMerging', ...})`), and
+the all-APA chain's *first* step, `ClusteringSwitchScope`
+(`clus/src/clustering_switch_scope.cxx`), explicitly **destroys and rebuilds
+every `Cluster` object** to apply the newly-available T0 correction
+(`cluster->add_corrected_points(...)` then `live_grouping.separate(cluster,
+..., true)` — the old `Cluster*` is invalid after this call). A plain
+in-memory marker on a `Cluster` would not survive this rebuild, and neither
+would an arbitrary custom-named per-blob array survive an *ordinary*
+`merge_clusters()` call anywhere in the pipeline — `ClusteringFuncs.cxx`'s
+`merge_clusters()` only forwards the small set of pcarrays named in its own
+parameter list or its internal `carry_pairs` allowlist
+(`{"assoc_cluster_id", "assoc_cluster_main"}` today), by explicit design
+(doc 52 Stage 2 defect D4: *"until now nothing could CARRY an existing
+per-blob array THROUGH a merge — so any provenance array died at the next of
+the 12 `merge_clusters()` call sites... Handled here, for the whole codebase
+at once, rather than per call site"*).
+
+**The good news:** this exact survival problem already has a working,
+precedented solution the codebase uses today for `real_cluster_id` /
+`assoc_cluster_id` — and both of the relevant allowlists carry an explicit
+invitation to extend them:
+
+- `clustering_switch_scope.cxx`'s `carry_anames` array (currently
+  `real_cluster_id`, `real_cluster_main`, `assoc_cluster_id`,
+  `assoc_cluster_main`, `real_cluster_was_main`), with the comment *"Any
+  future per-blob provenance array goes here and nowhere else."*
+- `ClusteringFuncs.cxx::merge_clusters()`'s `carry_pairs` array, the doc-52
+  fix for exactly "a provenance array written earlier must survive a later,
+  unrelated merge that doesn't know about it."
+
+**Design.** A new per-blob `"perblob"` int pcarray, e.g. `iso_band_refusal_id`:
+
+1. **Write** — at the point `protect_iso_band_xext` currently refuses a merge
+   and just `continue`s (`clustering_neutrino.cxx:1054-1066`), stamp every
+   blob of `cluster1` with `+N` and every blob of `cluster2` with `-N`, where
+   `N` is a small counter unique within that visitor invocation (no
+   cross-event or cross-ident collision risk — the array only needs to
+   distinguish refusal events within one QL run).
+2. **Carry** — add `"iso_band_refusal_id"` to both allowlists above (two
+   one-line additions, same pattern as the `real_cluster_id`/
+   `assoc_cluster_id` precedent), so the marker survives `switch_scope`'s
+   rebuild and any ordinary merge between the refusal point and wherever the
+   all-APA chain re-tests the pair.
+3. **Read** — a small shared helper (e.g.
+   `bool refused_pair(Cluster* c1, Cluster* c2)`, checking whether `c1`
+   carries some `+N` that `c2` carries as `-N` or vice versa), called right
+   before `boost::add_edge(...)` in **every** all-APA merge-pair loop
+   (`extend`, `regular`×2, `parallel_prolong`, `close`, `extend_loop`,
+   `cathode_connect`, `cathode_bundle_rescue`) — not just the one the trace
+   names. Marker line on refusal for greppability, same convention as the
+   existing pr/18 markers.
+
+**Why this doesn't need §5.1's trace as a hard prerequisite:** because the
+check is a cheap, uniform veto (an int/set lookup, no geometry) applied at
+every all-APA pair-test site, it is correct regardless of which stage
+actually fires first — unlike Design B, which re-derives geometry and must be
+placed at exactly the right stage to work. The trace remains valuable for
+*understanding and verifying* the fix (confirming the marker fires where
+expected, per §6), just not for correctness.
+
+**Trade-off vs. Design B:** narrower and more precise — it only blocks the
+*specific* pair `protect_iso_band_xext` already decided about, not a general
+geometric class, so it cannot introduce a new false-positive veto on an
+unrelated event. It does not duplicate `iso_band_like()`/`blob_center_xext()`
+a second time. Its coverage is bounded by where `protect_iso_band_xext`
+itself fires: an event whose band+non-band fusion happens *before*
+`ClusteringSeparate`/`ClusteringNeutrino` ever run in the per-APA chain would
+get no marker and no protection — Design B's geometric predicate has no such
+gap, at the cost of needing the trace to place it correctly and being a
+broader (if already-1000-event-validated) class of veto.
+
+### 5.3 Design B (fallback) — re-derive the geometric predicate at the all-APA stage
+
+Duplicate (not extract, M10) `iso_band_like()` and `blob_center_xext()`
 (`clus/src/clustering_neutrino.cxx:83-106`) into the merge-pair loop of the
-stage the trace names (prime suspect: `clustering_close.cxx:220-225`), behind
-the same two config keys and the same semantics doc pr/18 already validated:
-`protect_iso_band` (C++ default `false`) + `protect_iso_band_xext` (C++ default
-`0`, read only when the first is `true`). Key omitted when off ⇒
-byte-identical. Print the same style of unconditional marker line, gated on
-`protect_iso_band_xext > 0`, so every firing is greppable from harness stdout
-exactly like the per-APA guard's markers.
+stage §5.1's trace names (prime suspect: `clustering_close.cxx:220-225`),
+behind the same two config keys and the same semantics doc pr/18 already
+validated: `protect_iso_band` (C++ default `false`) + `protect_iso_band_xext`
+(C++ default `0`, read only when the first is `true`). Key omitted when off
+⇒ byte-identical. Print the same style of unconditional marker line, gated on
+`protect_iso_band_xext > 0`.
 
-**Step 3 — wire it to the all-APA instance only.**
-`cfg/pgrapher/experiment/sbnd/clus.jsonnet:467`, inside `clus_all_apa` — a new
-`wct-clus-matching-perevt.jsonnet` TLA arg (proposed name
-`bundle_iso_band_guard`, default `false` this round) plus an `SBND_*` runner
-escape in `run_ql_evt.sh`, mirroring `SBND_NU_ISO_GUARD`'s pattern. `cm.close()`
-(and the other candidate merge stages) are also called from `clus_per_face`
-(the per-APA chain); threading the same arg through that shared call site would
-change per-APA output and alter what `ClusteringSeparate`/`ClusteringNeutrino`
-see downstream, which would both break byte-identity for every other detector
-using these shared `clus.jsonnet` builders and interfere with the pr/18 guard's
-own inputs. The all-APA and per-APA call sites must take independent knobs.
+Wire it to the all-APA instance only: `cfg/pgrapher/experiment/sbnd/
+clus.jsonnet:467`, inside `clus_all_apa` — a new `wct-clus-matching-perevt.
+jsonnet` TLA arg (proposed name `bundle_iso_band_guard`, default `false` this
+round) plus an `SBND_*` runner escape in `run_ql_evt.sh`, mirroring
+`SBND_NU_ISO_GUARD`'s pattern. `cm.close()` (and the other candidate merge
+stages) are also called from `clus_per_face` (the per-APA chain); threading
+the same arg through that shared call site would change per-APA output and
+alter what `ClusteringSeparate`/`ClusteringNeutrino` see downstream, breaking
+byte-identity for every other detector using these shared `clus.jsonnet`
+builders. The all-APA and per-APA call sites must take independent knobs.
 
-**Fallback shape, documented but not currently needed (§2.6):** if a future
-event's trace shows a bridging speck connecting the band and the nu candidate
-through an intermediate member, a pairwise edge veto is insufficient — the
-correct form becomes group-level: *exclude any non-band member whose blob-center
-drift-x extent exceeds the knob from a flash-t0 (or geometric-proximity) group
-that also contains a band-like member*, rather than only refusing the direct
-edge.
+**Fallback-within-the-fallback, documented but not currently needed (§2.6):**
+if a future event's trace shows a bridging speck connecting the band and the
+nu candidate through an intermediate member, a pairwise edge veto is
+insufficient — the correct form becomes group-level: *exclude any non-band
+member whose blob-center drift-x extent exceeds the knob from a flash-t0 (or
+geometric-proximity) group that also contains a band-like member*, rather
+than only refusing the direct edge.
 
 ## 6. Verification plan (for when the fix is implemented)
+
+Applies to whichever design is chosen; Design A adds two items specific to the
+carry-forward plumbing (marked below).
 
 - **Knob-off byte-identity**: compiled-config `cmp` with the key absent; the
   `abtest` pdhd+pdvd clus-stage gate (`ab_compare.sh` OVERALL PASS); an SBND
   runtime hash check on 10550 with the new knob unset vs. today's
-  `work-nuecc48-cb0805`/`work-pr64r4-on48` hashes.
+  `work-nuecc48-cb0805`/`work-pr64r4-on48` hashes. For Design A specifically:
+  the two `carry_anames`/`carry_pairs` allowlist additions are unconditional
+  code (no config gate), so their byte-identity proof is that the array is
+  simply absent (no writer fires) when `protect_iso_band_xext` is off anywhere
+  in the config — confirm via `wcdoctest-clus` and the same runtime hash check.
 - **Compiled-config proof**: the new key present on the stage's `:all`
   instance, **absent** on its `:apa0` / `:apa1` instances.
+- **Design A only — carry-forward proof**: dump `iso_band_refusal_id` from the
+  QL `clustering-global` layer's `perblob` PC on a knob-on run of 10550 and
+  confirm it is present and matches the `+N`/`-N` convention on the (still
+  separate, pre-veto) band/nu clusters, i.e. the marker survived
+  `PointTreeMerging` + `ClusteringSwitchScope`'s rebuild intact.
 - `./build/clus/wcdoctest-clus` passes on both builds.
 - **Knob-on acceptance — measured, not assumed** (doc pr/18 §6 is the
   precedent: a clustering-level split was achieved there and the PR rows still
@@ -256,7 +355,18 @@ edge.
 
 ## 8. Open questions for the owner
 
-- Confirm the proposed knob name/shape (§5 step 3) before implementation.
-- Step 1's trace may surface a different first-fusing stage than
-  `ClusteringClose:all`; if so, this doc's §5 will be revised in a follow-up
-  round rather than silently building on an unconfirmed guess.
+- **Design A vs. Design B** (§5.2 vs §5.3): recommend Design A (provenance) —
+  narrower, no geometry re-derivation, doesn't need §5.1's trace for
+  correctness — but it rides on two allowlist extensions
+  (`clustering_switch_scope.cxx`'s `carry_anames`,
+  `ClusteringFuncs.cxx::merge_clusters()`'s `carry_pairs`) that are shared,
+  codebase-wide mechanisms also used by `real_cluster_id`/`assoc_cluster_id`;
+  confirm the owner is comfortable extending shared infrastructure for a
+  single-purpose marker before implementation.
+- Confirm the proposed config-knob name/shape (§5.3, Design B only —
+  Design A's marker carries no config knob of its own beyond
+  `protect_iso_band_xext` gating whether it is ever written).
+- §5.1's trace may surface a different first-fusing stage than
+  `ClusteringClose:all`; for Design B that changes where the predicate is
+  inserted, for Design A it only changes what the trace confirms (Design A's
+  check runs at every all-APA merge-pair site regardless).
