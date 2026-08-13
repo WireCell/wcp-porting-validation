@@ -27,6 +27,12 @@ The neutrino vertex is read from `T_tagger` nu_{x,y,z} row 0 of
 deliberately NOT the "most common root start point", which degenerates on a
 tree with one root.
 
+--cut-cm is NOT a tuned number and the answer does not depend on it.  Measured
+on the pr/74 arms: every anchored root sits <= 1 cm from the neutrino vertex
+(they ARE the vertex), and every dangling root found so far is >= 13.6 cm out.
+Anything in roughly [2, 13] cm gives the identical verdict; 3.0 is the middle
+of a wide plateau, not a threshold anyone fitted.
+
 Usage:
   pr74_pf_roots.py <ARM>                     # census one arm
   pr74_pf_roots.py <ARM_BASE> <ARM_NEW>      # diff two arms (gate form)

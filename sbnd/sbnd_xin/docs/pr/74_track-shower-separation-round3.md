@@ -129,7 +129,7 @@ because `conn_type == 1` selects the start point by `dirsign`
 
 | event | round-2 production | round 3 |
 |---|---|---|
-| **469665** | `gamma 322 MeV` root at 26.6 cm; 33008 orphaned | `15004 proton 78 MeV` → `15003 e- 487 MeV` from (25,64,283); 33008 nested |
+| **469665** | `gamma 322 MeV` root at 26.6 cm; 33008 orphaned; shower energy stale (see § 6) | `15004 proton 78 MeV` → `15003 e- 487 MeV` from (25,64,283); 33008 nested |
 | **90055** | 7 dangling roots incl. the 2020 MeV shower at 13.6 cm | `11045 e- 2061 MeV` from **(129,25,202) = the ν vertex**; 11043 + 4 pseudo-gammas + neutron all children |
 | **138009** | `neutron 4 MeV` root 104.6 cm out | nested under `12090 e- 1187 MeV`, which starts at the ν vertex |
 
@@ -187,8 +187,18 @@ gamma 795 MeV   start=(118,-70,209) end=(110,-71,220)   <- 14.3 cm, from the ν 
   e- 795 MeV    start=(110,-71,220) end=(85,-76,249)    <- 37.8 cm, OUTWARD
 ```
 
-Connection type stays 3, `kine_reco_Enu` is unchanged (+795.3 MeV vs off, same
-as round 2) — this is a pure geometry/direction correction.
+Connection type stays **3**, and `kine_reco_Enu` is unchanged (+795.3 MeV vs
+off, same as round 2) — this is a pure geometry/direction correction.
+
+**Why conn 3 here and conn 1 for K4's re-seat (§ 1)** — the two are opposite
+choices in the same round, on purpose. K4 absorbs a stem that is a *charged,
+continuous* connection between the vertex and the shower, so there is no gap
+to model: conn 1, no pseudo-gamma, start point taken from the stem itself. K5
+promotes a component the graph cannot reach at all; after the fix the anchor
+sits 14.3 cm from the shower start with nothing reconstructed in between, so
+the gap is real and conn 3's pseudo-gamma is the honest representation of it.
+The round-2 bug was not the conn type — it was that the "gap" was 0.0 cm
+because the anchor was the object's own endpoint.
 
 ---
 
@@ -322,12 +332,45 @@ All on the shipped round-3 binary. Freshness proof done before every A/B
 
 | event | Δ`kine_reco_Enu` | mechanism |
 |---|---|---|
-| 469665 | **+165.6 MeV** | shower KE 322 → 487 MeV: the absorbed stem's charge, which round 2 never counted |
-| 90055 | **−115.3 MeV** | shower KE 2020 → 2061 MeV, but the shower start moves to the ν vertex (`kine_pio_vtx_dis` 13.6 → 0.0, `kine_pio_theta_1` 83.3° → 19.5°, `kine_pio_mass` 213 → 46 MeV) and the π⁰ hypothesis follows |
+| 469665 | **+165.6 MeV** | shower KE 322 → 487 MeV — see the note below: this is the energy catching up to a membership round 2 had **already** changed |
+| 90055 | **−115.3 MeV** | shower KE 2020 → 2061 MeV, and the shower start moves to the ν vertex (`kine_pio_vtx_dis` 13.6 → 0.0, `kine_pio_theta_1` 83.3° → 19.5°, `kine_pio_mass` 213 → 46 MeV), so the π⁰ hypothesis follows |
 | 138009 | **−105.4 MeV** | almost entirely `kine_reco_add_energy` 219.9 → 114.3: the 104.6 cm-away blob was being counted **both** inside the shower charge and again as additional energy; re-parenting removes the double count |
 
-These are the first Enu changes K4 has ever produced — round 2's K4 could not
-change an energy at all, for the reason in § 1.
+**Precise statement of the 469665 / 90055 energy change** — it is not "charge
+that was never counted". Round 2 *did* absorb the stems into the shower's
+membership; the paint census proves it (469665 rcid 68054 went 1571 → 2536
+points, 90055 rcid 11044 went 7831 → 8176). What round 2 did **not** do is
+recompute the energy, because of the kinematics-flag skip in § 1. So the
+round-2 production arm was shipping, for these showers, **an energy that did
+not correspond to its own membership**: 322 MeV computed for 1571 points while
+the shower held 2536. Round 3's 487 MeV is the energy of the membership that
+was actually there. That is a worse round-2 defect than "undercounted", and it
+is stated that way deliberately.
+
+These are also the first Enu changes K4 has ever produced — round 2's K4 could
+not change an energy at all.
+
+### The recompute is confined to the re-seated shower
+
+`set_flag_kinematics(false)` unblocks `calc_kine_2` for one shower, but
+`calculate_shower_kinematics` loops over all of them and the second pass reuses
+the once-collected `m_charge_*` maps. Checked directly rather than inferred:
+comparing every **segment-encoded** PF node id (`cluster*1000 + gidx`; the
+small integer ids are `next_id++` pseudo-particles and renumber whenever tree
+shape changes) between round-2 and round-3 production on the three K4 events,
+
+- **90055**: 12 of 13 objects byte-identical in pdg and KE (11054 proton 174,
+  11043 e- 19, 146160 e- 49, 13061 e- 44, 115091 proton 84, …). Only the
+  re-seated shower changes, and its node id moves 11044 → 11045 because the id
+  is `seg_display_id(start_segment)`.
+- **469665**: 58018 e- 160 MeV, 67069 e- 48 MeV, 66044 e- 58 MeV, 33008 e- 7
+  MeV, 63031 e- 7 MeV, 15004 proton 78 MeV — all unchanged. Only 68054 →
+  15003.
+- **138009**: 12091 proton 222, 12092 mu- 6, 32033 e- 5, 39040 proton 4 — all
+  unchanged. Only 12015 → 12090.
+
+So a shower that was kinematics-complete and is not re-seated keeps its value
+exactly; the mechanism is confined, not merely un-caught by the gate.
 
 ---
 
