@@ -1,0 +1,25 @@
+bee_idx	event	sample	why
+0	57903	mcp1k	r7 mover rank 1: self-confirmed hairpin vertex (census 74/44 deg, both legs), fit gate was closed (inner axes 9.4 deg apart); robust axes open it, vertex moves 4.62 cm onto the muon line, leg 14001 re-cut into a genuine V; Enu -4 MeV
+1	56982	ncpi0	r7 mover: census 35.6 deg leg fires at 49.8 deg, vertex moves 2.23 cm; Enu +34 MeV (also moved in accepted r5/r6 flips)
+2	423981	nuecc48	r7 micro-mover: 82 cm leg fires at 22.8 deg on a >=3-leg vertex, tight prior holds it to 0.08 cm (the multiplicity design working)
+3	55539	mcp1k	r7 fired-but-vetoed: 74.7 deg substitution accepted, fit target failed the charge veto, restore hook reverted -- UNCHANGED (adjudicate: real defect out of reach, or correct veto?)
+4	58607	mcp1k	r7 no-fire: census 22.8 deg leg (r5-list survivor); at-fit-time windows agree, no substitution -- UNCHANGED
+5	271851	nuecc48	r7 no-fire: census 29.2 deg leg; at-fit-time windows agree -- UNCHANGED
+6	359980	ncpi0	r7 shower-leg control: census 23.9 deg but legs shower-typed, veto holds -- UNCHANGED
+7	235435	nuecc48	r7 shower-leg control: census 20.9 deg shower leg (outer axis already 0.19 cm from vertex) -- UNCHANGED
+8	131357	nuecc48	r5/r6 core: 2-track V (r6 target), must stay fixed
+9	234638	nuecc48	r5/r6 core: the vertex-fit worked example (follow-ups 1-5); r6 fixed the seed, r7 must not disturb it
+10	268067	nuecc48	r5/r6 core
+11	256587	nuecc48	r5/r6 core
+12	54095	nuecc48	r5/r6 core (pr/65 shower event)
+13	239794	nuecc48	r5/r6 core
+14	196649	nuecc48	r5/r6 core (pr/72 target cross-check)
+15	37112	ncpi0	r5/r6 core (micro-stub watch item)
+16	285567	ncpi0	r5/r6 core (2.02 cm image gap, open)
+17	506746	ncpi0	r5/r6 core (r6 target: long track reaches the vertex)
+18	71372	ncpi0	r5/r6 core (pr/63 exhibit)
+19	399860	ncpi0	r5/r6 core
+20	463565	ncpi0	r5/r6 core
+21	48367	mcp1k	r5/r6 core
+22	54341	mcp1k	r5/r6 core
+23	55715	mcp1k	r5/r6 core

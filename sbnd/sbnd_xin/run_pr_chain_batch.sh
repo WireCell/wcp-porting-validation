@@ -768,6 +768,27 @@ fi
 if [ -n "${SBND_SGP_WEAK_QREF:-}" ]; then
     CATH_TLA+=(--tla-code "sgp_weak_qref=${SBND_SGP_WEAK_QREF}")
 fi
+# doc pr/51 round 7: robust vertex fit (mvfit_robust + satellites).
+#   SBND_MVFIT_ROBUST      (true/false; escape for A/B: false)
+#   SBND_MVFIT_MAIN_ONLY   (true/false; C++ default true)
+#   SBND_MVFIT_MIN_LEN / RIN_MARGIN / ROUT_MIN / ROUT_MAX / PRIOR_RANGE (cm)
+#   SBND_MVFIT_ROUT_FRAC / ANGLE (deg) / MIN_PTS / MIN_ANISO
+for _pr51r7 in "SBND_MVFIT_ROBUST:mvfit_robust" \
+               "SBND_MVFIT_MAIN_ONLY:mvfit_main_only" \
+               "SBND_MVFIT_MIN_LEN:mvfit_min_len" \
+               "SBND_MVFIT_RIN_MARGIN:mvfit_rin_margin" \
+               "SBND_MVFIT_ROUT_FRAC:mvfit_rout_frac" \
+               "SBND_MVFIT_ROUT_MIN:mvfit_rout_min" \
+               "SBND_MVFIT_ROUT_MAX:mvfit_rout_max" \
+               "SBND_MVFIT_ANGLE:mvfit_angle" \
+               "SBND_MVFIT_MIN_PTS:mvfit_min_pts" \
+               "SBND_MVFIT_MIN_ANISO:mvfit_min_aniso" \
+               "SBND_MVFIT_PRIOR_RANGE:mvfit_prior_range"; do
+    _env=${_pr51r7%%:*}; _key=${_pr51r7#*:}; _val=${!_env:-}
+    if [ -n "$_val" ]; then
+        CATH_TLA+=(--tla-code "$_key=$_val")
+    fi
+done
 # doc pr/54: keep well-supported isolated residual segments in
 # find_other_segments (18255-142421 separated EM shower with no fitted
 # trajectory).  Boolean TLA, same contract; the two numeric floors ride the

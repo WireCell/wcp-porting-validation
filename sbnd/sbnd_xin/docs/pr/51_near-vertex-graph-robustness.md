@@ -2617,3 +2617,182 @@ success criterion and rejected alternatives.  What changes:
    than trusting these tables.
 4. **234638 is closed as a live defect** and should be kept only as the worked
    example — it is the event where the whole chain was measured end to end.
+## Round 7 — `mvfit_robust`: robust vertex fit (dynamic per-leg direction windows, disagreement-gated, multiplicity-aware), SBND PRODUCTION ON
+
+Owner ask after reviewing follow-ups 1-5: the `mvfit_outer_dir` sketch of
+follow-up 4 "may be too narrow" — design a ROBUST vertex-fit algorithm with
+(1) more corrective authority for distorted **2-track** vertices, (2) no
+disturbance of **>2-track** diverse-direction vertices (already precise), and
+(3) per-leg **DYNAMIC** direction-window length (a long track can use more
+length).  Then: identify cases, prototype the algorithm, implement, validate
+on 48+19+50, flip for SBND if clean, Bee links + top movers, doc, commit,
+push.
+
+### Repro (round 7)
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+# Phase A+B (read-only): offline census + prototype on current production arms
+python3 scripts/analysis/pr51/mvfit_proto.py work-pr51r6-flip48 work-pr51r6-flip19 \
+        work-pr51r6-flip50 --angle 20 --tsv docs/pr/51_mvfit_census.tsv -v
+# calibration on the round-5 arm (round 6 independently confirmed the target):
+python3 scripts/analysis/pr51/mvfit_proto.py work-pr51r5-flip48 --evt 234638 -v
+# Validation (PR_JOBS=32; the data|sim positional is REQUIRED):
+M50=$(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r7-off48 data          # x3 samples
+SBND_MVFIT_ROBUST=true PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr51r7-on48 data  # x3
+python3 scripts/analysis/pr49/on_compare.py work-pr51r6-flip48 work-pr51r7-off48       # off-gate, x3
+python3 scripts/analysis/pr49/on_compare.py work-pr51r7-off48  work-pr51r7-on48        # on-census, x3
+python3 scripts/analysis/pr51/nuvtx_census.py work-pr51r7-off48 work-pr51r7-on48       # nu-vtx/Enu, x3
+# smokes (fired set + controls): SBND_MVFIT_ROBUST=true PR_JOBS=1 ... work-pr51r7-on<evt> data <evt>
+# flip gates after the wct-pr-perevt.jsonnet flip: bare flip{48,19,50} == on-arms;
+# escape SBND_MVFIT_ROBUST=false esc{48,19,50} == off-arms.
+```
+
+### The defect being fixed (follow-ups 1-5, quantified)
+
+`MyFCN::UpdateInfo` rewrites each long leg's first 4 cm as a straight line to
+the current vertex; the next `AddSegment` measures that leg's direction from
+the (1.5, 6] cm window — mostly that same rewrite — so the fit self-confirms
+wherever the vertex is, and the 0.43 cm prior is only the last, smallest
+brake.  Worst case on today's production (data 57903): a genuine V whose
+vertex sits at a fold — the two legs' *inner* axes open only **9.4°** (both
+dragged onto the misplaced vertex, which also holds the `>15°` fit gate
+CLOSED), while their re-seat-free *outer* axes open **133.5°** with outer
+impact parameters of 5.1/3.0 cm.
+
+### The algorithm (design mapped to the owner's three requirements)
+
+Master knob `mvfit_robust` (C++ default **false** ⇒ `AddSegment` epilogue
+never runs, byte-identical).  When ON, per leg at fit time:
+
+1. **Dynamic window** (req. 3): a non-shower leg with fits-chord ≥
+   `mvfit_min_len` (10 cm) gets an outer annulus `(r_in, r_out]` with
+   `r_in = max(vertex_protect_dis, reseat + mvfit_rin_margin)` — `reseat`
+   mirrors UpdateInfo's own wcpt-space criterion exactly (4 cm iff the far
+   end is >8 cm) so the window provably clears anything a previous re-seat
+   wrote — and `r_out = clamp(mvfit_rout_frac·chord, 9, 18) cm`: a longer
+   track earns a longer lever.
+2. **Disagreement gate**: substitute only when the folded inner-vs-outer
+   axis angle > `mvfit_angle` (20°; census median 4°), the outer window has
+   ≥ `mvfit_min_pts` (5) points, and its anisotropy √(λ0/λ1) ≥
+   `mvfit_min_aniso` (3.0 — a fanning shower's outer window fails this
+   intrinsically; shower-typed legs are additionally vetoed by the
+   improve_vertex three-clause recipe).
+3. **Substitution scope**: only the leg's PCA dirs/vals + center are
+   replaced (`vec_points` stays production ⇒ `ntracks`, the fit gate's
+   ntracks side and the `npoints` prior weight are unchanged by
+   construction).  Substituted axes are hemisphere-oriented toward their
+   production counterparts (the 15° pair census is sign-sensitive).  Because
+   substitution happens BEFORE `FitVertex`'s pair-angle census, corrected
+   axes can OPEN the gate for the 57903 hairpin class — the fit that never
+   ran now runs.
+4. **Multiplicity-aware prior** (reqs. 1+2): iff ≥1 leg was substituted AND
+   exactly 2 legs are fittable, `vtx_constraint_range` relaxes 0.43 →
+   `mvfit_prior_range` (1.0 cm).  ≥3-leg vertices keep the 0.43 cm polish
+   prior — measured on 423981: an 82 cm leg fired at 22.8° and the tight
+   prior held the vertex to 0.08 cm.
+5. **Charge-veto interlock**: if the existing fit_vertex charge veto rejects
+   the fit position, a new `restore_production_pca()` reverts every
+   substitution before `UpdateInfo`, so a vetoed robust fit re-seats exactly
+   as production would (measured on 55539: fired at 74.7°, vetoed, restored
+   — output byte-identical to production).
+6. **Scope**: `mvfit_main_only` (default true) restricts to the main
+   (neutrino) vertex, gated by `vertex == main_vertex` in `fit_vertex`
+   (NOT by `enforce_two_track_fit`, which is set only after the AddSegment
+   loop).  Convergence needs no latch: after a substituted fit moves the
+   vertex, UpdateInfo straightens the inner stretch along the *corrected*
+   axis, so the next solve's windows agree (57903's second solve re-fired
+   once at a shrinking angle and settled).
+
+Implementation: pure-epilogue/pure-insertion discipline — every production
+statement in `MyFCN::AddSegment`/`FitVertex`/`UpdateInfo` and
+`PatternAlgorithms::fit_vertex` is textually unchanged; geometry helpers
+`mvfit_annulus_pca`/`mvfit_rout_dyn`/`mvfit_leg_disagrees` are free functions
+(PRSegmentFunctions.h, implemented in MyFCN.cxx) doctested without a cluster;
+index-aligned `std::vector` bookkeeping only.  Knobs follow the five-hop
+`fit_vertex_min_seg_length` template + 4-layer jsonnet key-suppression +
+driver envs `SBND_MVFIT_*`.
+
+### Phase A+B — cases and offline prototype (`mvfit_proto.py`)
+
+The committed census (`docs/pr/51_mvfit_census.tsv`, 78 fittable main
+vertices / 195 legs on the 117 current-production events, chosen point
+angle=20): **4 vertices fire (5.1%)**, every unfired vertex numerically
+untouched (solution distance 0.000 — the epilogue is inert unless the gate
+fires).  Fired: 57903 (both legs, gate-opened, predicted 4.61 cm), 56982
+(2.12), 58607 (1.19), 271851 (0.54).  The fired set is IDENTICAL for angle
+∈ {18, 20, 25}, aniso ∈ {2, 3, 4}, rout_frac ∈ {0.4, 0.5, 0.6}; only the
+2-leg prior ladder changes magnitude (57903: 2.34 / 4.61 / 5.67 cm at prior
+0.43 / 1.0 / 2.0 — the outer impact parameters are 5.07/3.03 cm, so 1.0 is
+the physical middle).
+
+**Calibration (known-answer test)**: on the round-5 arm, 234638 fires on the
+track leg only and lands **0.32 cm** from the charge tip that round-6
+production independently confirmed (round 6 itself landed 0.44 cm; follow-up
+4's fixed-window prediction was 0.48 cm).  On round-6 arms 234638 no longer
+fires — the r6 seed fix removed the disagreement, as it should.
+
+**Out of the vertex-fit's reach** (honest scope): census legs >20° at 55539
+(the fit needs ≥2 incident legs; it has 1 at census time), 359980 + 235435
+(shower-typed legs; 235435's outer axis already passes 0.19 cm from the
+vertex).  These are vertex-SEEDING cases (the rounds-1-6 class), not fit
+cases.
+
+### Validation (117 events, PR_JOBS=32; arms `work-pr51r7-*`)
+
+* **Compiled-config**: knob-off wcsonnet JSON byte-identical (cmp) to a
+  pure git-HEAD shadow compile with the full production TLA set; knob-on
+  carries `mvfit_robust` + satellites once, in tagger_check_neutrino data.
+* **wcdoctest-clus 1971/1971** (new `doctest_mvfit_robust.cxx`, 8 cases:
+  production-window parity, straight no-fire, 234638-shape elbow fires and
+  recovers the body axis, point-order/sign immunity, shower fan fails
+  anisotropy, sparse window, clamps, degenerate safety).  The pr/72 waf
+  link-order quirk recurred verbatim for the new free symbols (cp fresh lib
+  to local/lib + rebuild); freshness proof done.
+* **Off-gate**: `off{48,19,50}` vs `work-pr51r6-flip{48,19,50}` (current
+  production): **0/48, 0/19, 0/50 byte-identical** (archives + nusel tsvs).
+* **On-census**: nusel-events and nusel-table **0/117**.  TOTAL archive
+  footprint **3/117 events**, all sentinel-attributed:
+
+  | event | sample | Δvtx | ΔEnu | what happened |
+  |---|---|---|---|---|
+  | 18255-57903 | data50 | **4.62 cm** | −4 MeV | hairpin opened into a genuine V (offline predicted 4.61); leg 14001 re-cut, far end (−17,−45,294)→(−17,−58,315) |
+  | 18255-56982 | NCpi0 | **2.23 cm** | +34 MeV | census 35.6° leg fired at 49.8° |
+  | 423981 | nueCC | 0.08 cm | −2 MeV | ≥3-leg vertex, tight prior held (the multiplicity design) |
+
+  **Zero** ν-vtx movers >10 cm, **zero** |ΔEnu| > 100 MeV — for calibration,
+  the accepted round-5 flip measured 17+30 and round-6 25+44 on the same
+  metric.  This is the most surgical knob of the campaign.  55539 fired and
+  was charge-vetoed+restored (byte-identical output); 58607/271851 do not
+  fire in-toolkit (the offline replay over-predicted them from post-final
+  trajectories — documented caveat; at-fit-time windows agree).
+* **Wall/RSS**: mean wall 27.2→26.8 s (48), 19.1→19.2 s (19), 20.1→19.7 s
+  (50); RSS ±1 MB on ~1.5 GB.  Noise.
+* **Flip gate**: bare `flip{48,19,50}` == on-arms **0/117**; **escape
+  gate**: `SBND_MVFIT_ROBUST=false` `esc{48,19,50}` == off-arms **0/117**
+  (both byte-exact).
+
+### Bee (24 events, identical ordering; annotated index `docs/pr/pr51r7-bee-24.index.txt`)
+
+* before (round-6 production): <https://www.phy.bnl.gov/twister/bee/set/deb8abf5-6dce-48bc-94f9-178a99456620/event/list/>
+* after (round-7 production): <https://www.phy.bnl.gov/twister/bee/set/6ad431f4-c2aa-4509-b029-15d31114fbb6/event/list/>
+
+idx 0-2 = the three movers (57903 first); idx 3-7 = the
+fired-but-vetoed/no-fire/shower-control exhibits (all unchanged, for
+adjudication); idx 8-23 = the round-5/6 core 16 (all byte-unchanged by this
+knob, comparability).
+
+### Status
+
+* Toolkit: knob DEFAULT OFF + **SBND PRODUCTION ON** in
+  `wct-pr-perevt.jsonnet` (owner instruction: "if the validation pass, turn
+  on the knob for SBND").  Escape `SBND_MVFIT_ROBUST=false` restores round-6
+  production byte-exact (gate-proven).  wcp: `mvfit_proto.py`,
+  `nuvtx_census.py`, census TSV, driver envs, this section, Bee index.
+* Open items: 55539's 74.7° leg (fired, charge-vetoed — is the veto right
+  here? owner Bee adjudication, idx 3); 285567's 2.02 cm image gap
+  (rounds 4-6 item, untouched); the vertex-SEEDING out-of-reach cases
+  (55539/359980/235435) stay with the skeleton-round toolbox; optional
+  future: mvfit_main_only=false extension to secondary vertices (unexercised
+  this round, default keeps it main-only).
