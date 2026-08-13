@@ -1,0 +1,8 @@
+# doc pr/74 round 4 -- Bee.  ONE event: 506746 is the entire footprint of this
+# round (on-census 1/117 archive movers, 0/117 nusel flips, 0/117 vertex moves).
+# before (= today's production before the flip, byte-identical to round-3 production):
+#   https://www.phy.bnl.gov/twister/bee/set/38a3f6b7-f96d-422e-9a9f-7d344c927ea7/event/list/
+# after  (= round-4 production, K6 shower_traj_michel_stem ON):
+#   https://www.phy.bnl.gov/twister/bee/set/b31f462b-e91b-49d2-9d50-f53be7cd71ad/event/list/
+bee_idx	event	sample	what to look at in AFTER
+0	506746	NCpi0-19	The `e- 107 MeV` at the neutrino vertex (53.8,-11.8,40.6) is gone.  In its place: `21048 mu- 62 MeV` running from the vertex to its stopping point (45.8,-26.7,32.5) -- 20.4 cm at 1.57x MIP, charge elevated at the FAR end -- with `21056 e- 64 MeV` hanging off it as a child, the Michel, emitted at a 93 deg kink into a terminal 17.5 cm.  Second thing to check: the pi0.  kine_pio_mass 734.0 -> 150.8 MeV (true 135), opening angle 131 -> 31 deg, because the fake vertex electron had been distorting shower clustering.  Cost to weigh: kine_reco_Enu 2265 -> 2427 MeV (+162), mostly the clusters released by the shrinking 21050 shower (22058/76129: 32 -> 68 + 46 MeV) re-anchoring ~103 cm away as conn-2/3 pseudo-gammas -- a long anchor is normal here (54/113 production events already carry one over 50 cm), but this is the number to sanity-check.

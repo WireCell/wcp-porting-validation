@@ -245,6 +245,18 @@ overwritten to electron at `:2778`.
 
 ### Proposal (not implemented this round)
 
+> **SUPERSEDED by round 4** (`74_track-shower-separation-round4.md`). The
+> owner called this proposal in; what shipped is **K6
+> `shower_traj_michel_stem`**, and it is NOT the guard described below. Round
+> 4 § 2 shows the site named here cannot see the evidence this class needs
+> (`segment_is_shower_trajectory` has no main vertex, no graph and no
+> downstream context), and that the "all MIP-like" discriminant is the weaker
+> one: the muon here is at **1.57x** MIP, not 1.0x, and the test that actually
+> separates it is the **93 deg kink** at a degree-2 stopping vertex with a
+> terminal subtree. Round 4 also measured that the ordinary track PID
+> ABSTAINS on 21048, so no template-based gate was available. Read the
+> paragraph below as the round-3 hypothesis, not as the fix.
+
 A `shower_traj_mip_chain_guard`: refuse `kShowerTrajectory` on a chain rooted
 at the main vertex whose segments are **all** MIP-like (median in ~[0.8, 1.6]×
 MIP) over a total length above a floor (~25 cm), leaving the terminal sub-MIP
