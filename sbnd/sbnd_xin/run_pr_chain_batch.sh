@@ -768,6 +768,13 @@ fi
 if [ -n "${SBND_SGP_WEAK_QREF:-}" ]; then
     CATH_TLA+=(--tla-code "sgp_weak_qref=${SBND_SGP_WEAK_QREF}")
 fi
+# doc pr/73: per-edge DEBUG sentinel for the steiner_graph_gap scan.
+#   SBND_SGP_EDGE_PROBE  (literal jsonnet "true"/"false"; default off)
+# Log-only; emits one "sgp edge:" line per SCANNED edge.  Diagnostic runs only
+# -- it does not change reconstruction, but it does add ~1k lines per cluster.
+if [ -n "${SBND_SGP_EDGE_PROBE:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_edge_probe=${SBND_SGP_EDGE_PROBE}")
+fi
 # doc pr/51 round 7: robust vertex fit (mvfit_robust + satellites).
 #   SBND_MVFIT_ROBUST      (true/false; escape for A/B: false)
 #   SBND_MVFIT_MAIN_ONLY   (true/false; C++ default true)

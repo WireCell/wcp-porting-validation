@@ -1,8 +1,9 @@
 # doc pr/73 — why the fitted trajectory zigzags, and the low dQ/dx that follows
 
-**Scope: diagnosis only. No C++ and no jsonnet is changed by this round, so no
-A/B gate is run or claimed.** Every number below is read off Bee archives that
-already exist on disk.
+**Scope: diagnosis only — no reconstruction behaviour is changed.** Sections 1-4.8
+are read off Bee archives that already existed on disk. Section 4.9 adds one
+**default-OFF, log-only** knob, `sgp_edge_probe`, and two diagnostic runs; its
+gates are in §8.
 
 ## 0. Repro
 
@@ -17,10 +18,26 @@ python3 scripts/analysis/pr73/zigzag_anatomy.py --png docs/pr/73_evt57903_zigzag
 python3 scripts/analysis/pr73/zigzag_census.py work-pr51r7-on50 \
         --tsv docs/pr/73_zigzag_census_r7on50.tsv
 #   -> docs/pr/73_census_output.txt   (committed verbatim)
+
+# sec 4.9 -- the per-edge sentinel.  Two diagnostic runs of 18255-57903 with
+# the default-OFF, log-only knob sgp_edge_probe on, at the two qref values
+# that bracket the outcome.  Both are hash-identical to their no-probe arms.
+SBND_SGP_WEAK_SCALE=5 SBND_SGP_WEAK_QREF=6000 SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr73-probe-q6000 data 57903
+SBND_SGP_WEAK_SCALE=5 SBND_SGP_WEAK_QREF=4000 SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr73-probe-q4000 data 57903
+
+python3 scripts/analysis/pr73/sgp_edge_map.py \
+        work-pr73-probe-q6000/pr_evt57903/wct_pr_evt57903.log \
+        --tsv docs/pr/73_sgp_edges_57903_q6000.tsv \
+        --routes work-pr73-probe-q4000 work-pr73-probe-q6000
+#   -> docs/pr/73_sgp_edge_map_output.txt  (committed verbatim)
 ```
 
-Both scripts are read-only: they open each arm's `pr_evt*/mabc-pr.zip` and run
-nothing.
+All three scripts are read-only — they open each arm's `pr_evt*/mabc-pr.zip` (or
+its `wct_pr_evt*.log`) and run nothing. The two `run_pr_chain_batch.sh` lines are
+the only things that execute, and they write to fresh `work-pr73-probe-*` arms
+(M13: no existing label is touched).
 
 ## 1. The three cases
 
@@ -391,13 +408,90 @@ isochronous ribbon, and inside a ghost ribbon charge is not a reliable guide to
 which route is the real track — the fringe carries genuine reconstructed charge
 too.
 
-**Status of that last sentence: it is a mechanism hypothesis consistent with the
-measurements, not a proof.** What is measured is: which round moved the corridor
-(round 6, §4.3), how many edges each round penalized, what the two penalty
-formulas are, and the charge distributions above. What is *not* measured is where
-the penalized edges sit. Closing it needs a per-edge sentinel from the
-`ensure_steiner_gap_graph` scan (source/target position, `bad`, `deficit`) — a
-one-line log addition, and the natural companion to F1.
+That last sentence was written as a hypothesis. **It has since been tested with
+the per-edge sentinel, and it is half confirmed and half refuted** — §4.9.
+
+### 4.9 The hypothesis, tested: half confirmed, half refuted
+
+§4.8's account made two predictions. A default-OFF, log-only knob
+`sgp_edge_probe` (`NeutrinoSteinerGapGraph.cxx`) emits one DEBUG line per
+*scanned* edge — endpoints, midpoint, `w`, `bad`, both recovered vertex charges,
+`deficit` — so both can be checked. Event 57903 was re-run twice with the probe
+on, at `sgp_weak_qref` 6000 and 4000; both runs are **hash-identical**
+(`abtest/hash_archive.py`) to the corresponding no-probe arms
+(`work-pr51r7-on50` and `work-pr51r6-w5q4on50`), so the probe is inert.
+
+Cluster 14, 1033 scanned edges, ribbon = z ∈ [265.90, 314.03] cm (510 edges
+inside, 523 outside — the ribbon is defined geometrically, from the pre-round-5
+segment's extent, with no reference to any fit):
+
+**Prediction (a) — round 5's support term is blind inside the ribbon.
+CONFIRMED, and strongly.**
+
+| | edges with `bad > 0` | mean `bad` |
+|---|---:|---:|
+| inside the ribbon | 4 of 510 (**0.8 %**) | 0.0030 |
+| outside | 115 of 523 (**22.0 %**) | 0.0574 |
+
+A 19× difference in mean. A ghost ribbon really is fully supported in 2-D
+everywhere, so round 5's penalty cannot distinguish routes within it.
+
+**Prediction (b) — the flipping edges are concentrated inside the ribbon.
+REFUTED.** The 120 edges that are weak at `qref = 6000` but not at 4000 — the
+ones that flip this event's outcome — sit *outside*:
+
+| | flipping edges |
+|---|---:|
+| inside the ribbon | 21 of 510 (4.1 %) |
+| outside | 99 of 523 (18.9 %) |
+
+Only **17.5 %** of the flipping edges are inside the ribbon, against **49.4 %**
+of all scanned edges — an enrichment of **0.35×**, i.e. a 3× *depletion*.
+
+And the reason is measurable. The ribbon's steiner vertices are charge-**rich**,
+not charge-poor, because a ghost is dense:
+
+| min(q_a, q_b) | n | q10 | q25 | q50 | q75 |
+|---|---:|---:|---:|---:|---:|
+| inside the ribbon | 510 | 5627 | 8594 | **15264** | 25808 |
+| outside | 523 | 3882 | 5315 | **7766** | 11462 |
+
+**So the mechanism is the opposite of the guess.** Round 6 does not re-route
+*within* the ghost ribbon. It taxes the charge-poor, well-resolved *rest* of the
+cluster, and leaves the charge-rich ghost relatively cheap. The damage is a
+global re-route that relocates the vertex **into** the ribbon, not a local
+re-route inside it.
+
+**The structural finding, which is the part that generalises.** Mean weight
+multiplier `w'/w` at the SBND operating point (gap 2.0, weak 5.0):
+
+| pricing | inside ribbon | outside | outside/inside | outcome |
+|---|---:|---:|---:|---|
+| round 5, gap only | 1.0060 | 1.1148 | **1.108** | corridor survives |
+| round 6, qref 4000 | 1.1162 | 1.1968 | **1.072** | corridor survives |
+| round 6, qref 6000 | 1.1793 | 1.3524 | **1.147** | corridor **breaks** |
+
+Every row is > 1: **both** penalty terms under-price the ghost relative to the
+rest of the cluster, in every configuration tested. That is not a tuning
+accident — it is structural. A ghost ribbon is simultaneously *support*-rich (it
+projects onto charge in every plane by construction, so `bad → 0`) and
+*charge*-rich (it is dense, so `deficit → 0`). Both terms are built to make
+badly-evidenced routes expensive, and a ghost is the one region that looks
+maximally well-evidenced while carrying the least 3-D information.
+
+**What is still NOT established.** The out/in column orders correctly — the two
+surviving configurations are the two with the smallest ratio — but that is three
+points against a binary outcome, and a shortest path is decided by specific edge
+sequences, not by a mean over a region. A second, sharper attempt also failed to
+discriminate: pricing the two competing *routes* (edges within 1.5 cm of exactly
+one of them; 32 for the surviving corridor, 42 for the hairpin) gives a
+hairpin:corridor ratio of 1.122 under round 5 but **0.578 at qref 4000 and 0.583
+at qref 6000** — essentially identical across the two configurations whose
+outcomes differ. So that observable does not explain the flip either, and the
+"relative pricing" account remains a plausible story rather than a demonstrated
+mechanism. Settling it needs the actual shortest-path costs on the two graphs,
+i.e. a **path**-level sentinel inside `do_rough_path`, not an edge-level one.
+That is the next instrument, not another argument.
 
 ## 5. The owner's prototype question: is there special code in WCP?
 
@@ -542,6 +636,11 @@ everywhere.
   of which involves a fit.
 * Whether the compact-matrix overlap term is what collapses dQ at fold-backs
   (§4.4). Named as a suspect from code reading only.
+* **Why round 6's re-pricing flips the route.** §4.9 settles *where* the
+  penalised edges are (outside the ribbon, 3× depleted inside) and refutes the
+  within-ribbon story, but neither the region-level nor the route-level pricing
+  ratio discriminates the two outcomes. A path-level sentinel in `do_rough_path`
+  — the actual shortest-path cost on each graph — is the instrument that would.
 * Whether the round-5/6 vertex on 57903 is physically wrong. This doc measures
   trajectory smoothness and charge coverage; it does not adjudicate the vertex.
   Doc pr/51 §"footprint" already records 57903 as a round-7 mover.
@@ -550,10 +649,24 @@ everywhere.
 
 ## 8. Status
 
-* Diagnosis only. No code, no config, no gate.
+* Diagnosis only for reconstruction behaviour. One log-only instrument shipped
+  for §4.9: `sgp_edge_probe`, C++ default **false**.
+  * **Compiled-config off-gate**: `wcsonnet` on `wct-pr-perevt.jsonnet` with the
+    knob off is byte-identical (md5 `301ad49d…`) to the same config compiled from
+    a pristine `git archive HEAD` cfg tree at `ffd32072`; with the knob on the
+    *only* diff is the single added key.
+  * **Output off-gate**: both probe runs are hash-identical
+    (`abtest/hash_archive.py`, member content) to their no-probe references —
+    `work-pr73-probe-q6000` == `work-pr51r7-on50`
+    (`90055546a720ba7c…`) and `work-pr73-probe-q4000` == `work-pr51r6-w5q4on50`
+    (`8c988ce392873108…`). The probe is inert.
+  * `./build/clus/wcdoctest-clus`: 194 cases / 1973 assertions, 0 failed.
+    Knob default round-trip added to `doctest_clus_knob_defaults.cxx`.
+  * Freshness proof (M1) done before both runs.
 * Records committed: `73_evt57903_zigzag.png`, `73_anatomy_output.txt`,
-  `73_census_output.txt`, `73_zigzag_census_r7on50.tsv`, and the two scripts
-  under `scripts/analysis/pr73/`.
+  `73_census_output.txt`, `73_zigzag_census_r7on50.tsv`,
+  `73_sgp_edge_map_output.txt`, `73_sgp_edges_57903_q6000.tsv`, and the three
+  scripts under `scripts/analysis/pr73/`.
 * Related: doc pr/67 (isochronous coverage, `iso_snap_min_dir_mag`), doc pr/51
   rounds 5–7 (the knobs in §4.3), docs pr/49–50 (`fit_blob_coverage` — the
   precedent for a knob living inside the trajectory fit), doc pr/28 round 10

@@ -1,0 +1,79 @@
+log      : work-pr73-probe-q6000/pr_evt57903/wct_pr_evt57903.log
+cluster  : 14,  1033 scanned edges
+ribbon   : z in [265.90, 314.03] cm  (the pre-round-5 isochronous segment)
+           510 edges inside, 523 outside
+
+(a) ROUND 5 -- the unsupported-fraction term, bad > 0:
+    inside the ribbon       4 of  510 edges penalized  (  0.8 %)
+    outside               115 of  523 edges penalized  ( 22.0 %)
+    mean bad: inside 0.0030, outside 0.0574
+
+(b) ROUND 6 -- weak-charge term, deficit > 0 at the logged qref:
+    inside the ribbon      64 of  510 edges weak       ( 12.5 %)
+    outside               159 of  523 edges weak       ( 30.4 %)
+
+(c) THE FLIPPING EDGES -- weak at qref=6000 but NOT at qref=4000,
+    i.e. min(qa, qb) in [4000, 6000):
+    120 such edges in total
+    inside the ribbon      21 of  510 edges flip       (  4.1 %)
+    outside                99 of  523 edges flip       ( 18.9 %)
+
+    share of flipping edges that are inside the ribbon :  17.5 %
+    share of ALL scanned edges  that are inside the ribbon :  49.4 %
+    enrichment factor : 0.35x
+
+edge charge (min of the two endpoints), by region:
+                              n      q10      q25      q50      q75
+    inside the ribbon       510     5627     8594    15264    25808
+    outside                 523     3882     5315     7766    11462
+
+z profile of the flipping edges (2 cm bins, ribbon marked *):
+    z  223.0- 228.0  n=  59  bad>0   1  weak  19  flip  12
+    z  228.0- 233.0  n=  57  bad>0  11  weak  15  flip  12
+    z  233.0- 238.0  n=  44  bad>0   1  weak  18  flip  14
+    z  238.0- 243.0  n=  81  bad>0  16  weak   8  flip   8
+    z  243.0- 248.0  n=  85  bad>0  14  weak  31  flip  15
+    z  248.0- 253.0  n=  76  bad>0  50  weak  22  flip  14
+    z  253.0- 258.0  n=  65  bad>0  19  weak  18  flip   8
+    z  258.0- 263.0  n=  31  bad>0   0  weak  20  flip  14
+    z  263.0- 268.0  n=  24  bad>0   4  weak  11  flip   4
+  * z  268.0- 273.0  n=  30  bad>0   0  weak  13  flip   5
+  * z  273.0- 278.0  n=  23  bad>0   1  weak   3  flip   1
+  * z  278.0- 283.0  n=  44  bad>0   2  weak   8  flip   1
+  * z  283.0- 288.0  n=  53  bad>0   0  weak   4  flip   2
+  * z  288.0- 293.0  n=  80  bad>0   0  weak  13  flip   7
+  * z  293.0- 298.0  n=  32  bad>0   0  weak   6  flip   3
+  * z  298.0- 303.0  n=  28  bad>0   0  weak   6  flip   0
+  * z  303.0- 308.0  n=  60  bad>0   0  weak   1  flip   0
+  * z  308.0- 313.0  n= 132  bad>0   0  weak   1  flip   0
+    z  313.0- 318.0  n=  29  bad>0   0  weak   6  flip   0
+
+THE PRICE ACTUALLY PAID.  Mean weight multiplier w'/w by region,
+at gap scale 2.0 / weak scale 5.0 (the SBND operating point).
+What steers a shortest path is the RATIO outside:inside -- a term that
+taxes the non-ribbon part of the cluster makes the ribbon relatively
+cheaper, whichever way its own absolute number goes.
+                                        inside   outside    out/in
+  round 5            1 + 2.0*bad        1.0060    1.1148    1.1082
+  round 6 qref=4000  + 5.0*def          1.1162    1.1968    1.0722
+  round 6 qref=6000  + 5.0*def          1.1793    1.3524    1.1468
+
+  (deficit at qref=6000 is recomputed here from the logged qa/qb and must
+   reproduce the logged deficit column: max |diff| = 1.00e-04)
+
+THE DECISIVE TEST -- price the two competing ROUTES.
+  route A = work-pr73-probe-q4000  (qref 4000 outcome, one smooth segment)
+  route B = work-pr73-probe-q6000  (qref 6000 outcome, the hairpin pair)
+  edges within 1.5 cm of exactly one route: A-only 32, B-only 42
+
+                                        A-only    B-only       B/A
+  round 5            1 + 2.0*bad        1.0417    1.1692    1.1225
+  round 6 qref=4000  + 5.0*def          2.1096    1.2201    0.5783
+  round 6 qref=6000  + 5.0*def          2.3432    1.3652    0.5826
+
+  B/A < 1 means route B (the hairpin) is the cheaper one per unit
+  length under that pricing.  If the hypothesis is right this ratio
+  must fall as qref goes 4000 -> 6000, i.e. round 6 at qref 6000 is
+  what makes the hairpin route competitive.
+
+wrote docs/pr/73_sgp_edges_57903_q6000.tsv
