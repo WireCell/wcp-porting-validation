@@ -1,0 +1,46 @@
+  [skip] work-pr51r7-on50 evt 52613: "There is no item named 'data/0/0-track_fit-global.json' in the archive"
+  [skip] work-pr51r7-on50 evt 58343: "There is no item named 'data/0/0-track_fit-global.json' in the archive"
+  [skip] work-pr51r7-on50 evt 59047: "There is no item named 'data/0/0-track_fit-global.json' in the archive"
+wrote docs/pr/73_zigzag_census_r7on50.tsv
+arms: work-pr51r7-on50
+segments with >= 10 points and chord >= 5 cm: 124
+
+bin                  n  med ratio  p90 ratio   med fold%  med q_bee=0%
+iso < 10 deg        22      1.070      1.242       24.8%          0.0%
+iso >= 10 deg      102      1.031      1.111        9.1%          0.0%
+
+Spearman rank correlation with the fraction of q_bee == 0 points:
+   fold fraction (turn > 30 deg) : +0.14
+   path/chord ratio               : +0.26
+   isochronicity (90 - |angle|)   : +0.17
+Spearman with the path/chord ratio: fold +0.87, isochronicity +0.44
+
+worst 12 segments by fold fraction:
+arm                       event     seg     n    chord   ratio  isoDeg   fold%     q0%
+work-pr51r7-on50          48367   82053    43    20.86   1.199    14.5   48.8%    4.7%
+work-pr51r7-on50          48367   82055    13     5.90   1.209    38.3   45.5%    0.0%
+work-pr51r7-on50          48367   82050    25    11.31   1.255    22.7   43.5%    4.0%
+work-pr51r7-on50          57661   25018    21     9.48   1.284    24.9   42.1%   76.2%
+work-pr51r7-on50          54351   17005    14     5.21   1.463    28.4   41.7%   21.4%
+work-pr51r7-on50          52085   26008    19     9.73   1.104     4.9   41.2%    0.0%
+work-pr51r7-on50          54341   96032    25    13.39   1.092    19.9   39.1%    0.0%
+work-pr51r7-on50          55715   21017    15     7.45   1.099    22.4   38.5%    0.0%
+work-pr51r7-on50          56243   70038    16     8.07   1.109    34.6   35.7%    0.0%
+work-pr51r7-on50          55595    8010   344   184.32   1.117     5.7   35.1%    1.5%
+work-pr51r7-on50          48367   82054    17     6.53   1.443     1.7   33.3%   35.3%
+work-pr51r7-on50          53427   14003    20    10.59   1.069    26.8   33.3%    0.0%
+
+worst 12 segments by path/chord ratio:
+arm                       event     seg     n    chord   ratio  isoDeg   fold%     q0%
+work-pr51r7-on50          54351   17005    14     5.21   1.463    28.4   41.7%   21.4%
+work-pr51r7-on50          48367   82054    17     6.53   1.443     1.7   33.3%   35.3%
+work-pr51r7-on50          57903   14001    52    23.36   1.318     1.0   26.0%   11.5%
+work-pr51r7-on50          57661   25018    21     9.48   1.284    24.9   42.1%   76.2%
+work-pr51r7-on50          48367   82050    25    11.31   1.255    22.7   43.5%    4.0%
+work-pr51r7-on50          57903   14007    95    45.43   1.245     6.3   28.0%    0.0%
+work-pr51r7-on50          55539   18003    26    12.30   1.221    66.1   33.3%    7.7%
+work-pr51r7-on50          58607   23005    20     9.52   1.215     4.9   33.3%   80.0%
+work-pr51r7-on50          53361   27003    21     9.97   1.211    22.8   21.1%   14.3%
+work-pr51r7-on50          48367   82055    13     5.90   1.209    38.3   45.5%    0.0%
+work-pr51r7-on50          48367   82053    43    20.86   1.199    14.5   48.8%    4.7%
+work-pr51r7-on50          54175   55029    13     6.49   1.131    31.2   18.2%    0.0%
