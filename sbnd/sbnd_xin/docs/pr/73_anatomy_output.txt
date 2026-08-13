@@ -67,6 +67,26 @@ E4b -- charge coverage restricted to the CHANGED region only
   work-pr51r7-on50            963    10426110     31.0 %     46.8 %
 
 ==============================================================================
+E4d -- WHICH round?  Like-for-like over a FIXED z window
+==============================================================================
+  window: z in [265.90, 314.03] cm
+  arm                     npts    chord     path    ratio   bow_amp   jit_rms
+  work-pr67f-off50          83    48.13    49.38    1.026      1.90     0.081
+  work-pr51r5-flip50        83    47.57    49.20    1.034      1.93     0.082
+  work-pr51r6-flip50        54    23.52    31.86    1.355      5.91     0.259
+  work-pr51r6-flip50        64    31.33    37.80    1.206      5.18     0.303
+  work-pr51r7-on50          51    22.76    30.18    1.326      2.52     0.342
+  work-pr51r7-on50          60    28.28    35.40    1.252      2.94     0.273
+
+  pointwise divergence of the whole cluster-14 fit, arm vs arm:
+  pre-R5 -> R5   max deviation   0.69 cm; points > 1 cm:   0/176 old,   0/176 new
+  R5 -> R6       max deviation  11.02 cm; points > 1 cm:  70/176 old, 104/211 new
+  pre-R5 -> R6   max deviation  10.91 cm; points > 1 cm:  72/176 old, 107/211 new
+  -> round 5 leaves the corridor alone (max 0.69 cm, ZERO points > 1 cm).
+     Its per-segment ratio rises only because the vertex slid ~15 cm along
+     that unchanged corridor and segment 14003 absorbed a curved piece.
+
+==============================================================================
 E4c -- bow versus jitter: the two are different phenomena
 ==============================================================================
   degree-4 polynomial in arclength, per transverse component

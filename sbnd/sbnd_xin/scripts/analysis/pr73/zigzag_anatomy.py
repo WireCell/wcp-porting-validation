@@ -91,6 +91,34 @@ def frame(S):
     return u, e_dr, np.cross(u, e_dr)
 
 
+DEG = 4
+DEG_SWEEP = (2, 4, 6)
+
+
+def bow_jitter(S, deg):
+    chord = np.linalg.norm(S[0] - S[-1])
+    u = (S[-1] - S[0]) / chord
+    t = (S - S[0]) @ u
+    ex = np.array([1.0, 0.0, 0.0])
+    e1 = ex - np.dot(ex, u) * u
+    e1 /= np.linalg.norm(e1)
+    e2 = np.cross(u, e1)
+    perp = (S - S[0]) - np.outer(t, u)
+    SM = S[0] + np.outer(t, u)
+    res = np.zeros_like(S)
+    for e in (e1, e2):
+        c = perp @ e
+        f = np.polyval(np.polyfit(t, c, deg), t)
+        SM = SM + np.outer(f, e)
+        res = res + np.outer(c - f, e)
+    path = np.linalg.norm(np.diff(S, axis=0), axis=1).sum()
+    pb = np.linalg.norm(np.diff(SM, axis=0), axis=1).sum()
+    Lb = np.linalg.norm(SM[0] - SM[-1])
+    bow = float(np.abs(np.linalg.norm(SM - (S[0] + np.outer(t, u)), axis=1)).max())
+    return dict(chord=chord, ratio=path / chord, bow=bow, ratio_bow=pb / Lb,
+                ratio_jit=path / pb, jit_rms=float(np.linalg.norm(res, axis=1).std()))
+
+
 def turn_angles(S):
     st = np.diff(S, axis=0)
     n = np.linalg.norm(st, axis=1)
@@ -283,6 +311,63 @@ for arm, what in ARMS_57903:
 
 print()
 print('=' * 78)
+print('E4d -- WHICH round?  Like-for-like over a FIXED z window')
+print('=' * 78)
+# The per-segment path/chord of the E4 table is not like-for-like: the arms cut
+# the corridor into segments at different places, so a segment can inflate
+# purely by absorbing a curved piece from its neighbour.  Fix the window to the
+# pre-round-5 isochronous segment's own z extent and re-measure every arm's
+# polyline inside it.
+_Pa, _Ra, _ = fitlayer('work-pr67f-off50', 57903)
+_S0 = _Pa[_Ra == 14003]
+ZLO, ZHI = _S0[:, 2].min(), _S0[:, 2].max()
+print('  window: z in [%.2f, %.2f] cm' % (ZLO, ZHI))
+print('  %-22s %5s %8s %8s %8s %9s %9s'
+      % ('arm', 'npts', 'chord', 'path', 'ratio', 'bow_amp', 'jit_rms'))
+for arm, what in ARMS_57903:
+    P_, R_, _ = fitlayer(arm, 57903)
+    for s in sorted(set(R_[R_ >= 0].tolist())):
+        S = P_[R_ == s]
+        if len(S) < 10:
+            continue
+        idx = np.where((S[:, 2] >= ZLO) & (S[:, 2] <= ZHI))[0]
+        if len(idx) < 10:
+            continue
+        runs = np.split(idx, np.where(np.diff(idx) > 1)[0] + 1)
+        r = max(runs, key=len)
+        if len(r) < 10:
+            continue
+        W = S[r]
+        bj = bow_jitter(W, DEG)
+        print('  %-22s %5d %8.2f %8.2f %8.3f %9.2f %9.3f'
+              % (arm, len(W), bj['chord'], bj['chord'] * bj['ratio'], bj['ratio'],
+                 bj['bow'], bj['jit_rms']))
+
+print()
+print('  pointwise divergence of the whole cluster-14 fit, arm vs arm:')
+
+
+def _all(arm):
+    P_, R_, _ = fitlayer(arm, 57903)
+    return np.vstack([P_[R_ == t] for t in sorted(set(R_[R_ >= 0].tolist()))
+                      if (R_ == t).sum() >= 10])
+
+
+_A = _all('work-pr67f-off50')
+_B = _all('work-pr51r5-flip50')
+_C = _all('work-pr51r6-flip50')
+for lab, X, Y in (('pre-R5 -> R5', _A, _B), ('R5 -> R6', _B, _C), ('pre-R5 -> R6', _A, _C)):
+    dxy = np.min(np.linalg.norm(X[:, None, :] - Y[None, :, :], axis=2), axis=1)
+    dyx = np.min(np.linalg.norm(Y[:, None, :] - X[None, :, :], axis=2), axis=1)
+    print('  %-14s max deviation %6.2f cm; points > 1 cm: %3d/%d old, %3d/%d new'
+          % (lab, max(dxy.max(), dyx.max()), (dxy > 1).sum(), len(X),
+             (dyx > 1).sum(), len(Y)))
+print('  -> round 5 leaves the corridor alone (max 0.69 cm, ZERO points > 1 cm).')
+print('     Its per-segment ratio rises only because the vertex slid ~15 cm along')
+print('     that unchanged corridor and segment 14003 absorbed a curved piece.')
+
+print()
+print('=' * 78)
 print('E4c -- bow versus jitter: the two are different phenomena')
 print('=' * 78)
 # path/chord and the fold-back fraction both grow with path length, but a smooth
@@ -290,32 +375,6 @@ print('=' * 78)
 # demand different fixes.  Split them: fit a degree-4 polynomial in arclength to
 # each transverse component, then report path/chord OF the smooth curve and
 # path/chord of the raw path ABOUT that curve.
-DEG = 4
-DEG_SWEEP = (2, 4, 6)
-
-
-def bow_jitter(S, deg):
-    chord = np.linalg.norm(S[0] - S[-1])
-    u = (S[-1] - S[0]) / chord
-    t = (S - S[0]) @ u
-    ex = np.array([1.0, 0.0, 0.0])
-    e1 = ex - np.dot(ex, u) * u
-    e1 /= np.linalg.norm(e1)
-    e2 = np.cross(u, e1)
-    perp = (S - S[0]) - np.outer(t, u)
-    SM = S[0] + np.outer(t, u)
-    res = np.zeros_like(S)
-    for e in (e1, e2):
-        c = perp @ e
-        f = np.polyval(np.polyfit(t, c, deg), t)
-        SM = SM + np.outer(f, e)
-        res = res + np.outer(c - f, e)
-    path = np.linalg.norm(np.diff(S, axis=0), axis=1).sum()
-    pb = np.linalg.norm(np.diff(SM, axis=0), axis=1).sum()
-    Lb = np.linalg.norm(SM[0] - SM[-1])
-    bow = float(np.abs(np.linalg.norm(SM - (S[0] + np.outer(t, u)), axis=1)).max())
-    return dict(chord=chord, ratio=path / chord, bow=bow, ratio_bow=pb / Lb,
-                ratio_jit=path / pb, jit_rms=float(np.linalg.norm(res, axis=1).std()))
 
 
 print('  degree-%d polynomial in arclength, per transverse component' % DEG)

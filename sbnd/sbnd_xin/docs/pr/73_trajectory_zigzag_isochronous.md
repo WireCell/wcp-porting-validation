@@ -48,7 +48,8 @@ solves each trajectory point independently with no smoothness term and no ridge,
 so along any poorly-constrained direction the answer is whatever the *seed* said;
 and every anti-zigzag guard downstream measures the fitted point against that
 same seed, so a zigzagging seed shields itself. On 57903 the seed changed under
-pr/51 rounds 5–6 and the smooth answer that existed before them was lost (§4.3).
+pr/51 **round 6** and the smooth answer that survived round 5 intact was lost
+(§4.3; round 5 moved no point by more than 1 cm, §4.8 says why).
 
 **And the three cases are not the same shape.** §4.7 splits `path/chord` into a
 smooth large-amplitude excursion (a **bow**) and a small-amplitude sawtooth
@@ -169,15 +170,46 @@ and the vertex the segment ends on:
 | `work-pr51r6-flip50` | (−16.50, −70.36, 293.54) | **27.2° (hairpin)** | 44.2 % / 58.5 % |
 | `work-pr51r7-on50` | (−16.52, −65.92, 292.26) | 69.3° | 44.9 % / 57.5 % |
 
+**The per-segment `path/chord` in that first table is not like-for-like** — the
+arms cut the same corridor into segments at different places, so a segment can
+inflate purely by absorbing a curved piece from its neighbour. Fixing the window
+to the pre-round-5 segment's own z extent, [265.90, 314.03] cm, and re-measuring
+every arm's polyline inside it:
+
+| arm | npts | chord | path | `path/chord` | bow | jitter rms |
+|---|---:|---:|---:|---:|---:|---:|
+| `work-pr67f-off50` (pre-R5) | 83 | 48.13 | 49.38 | **1.026** | 1.90 | 0.081 |
+| `work-pr51r5-flip50` (R5) | 83 | 47.57 | 49.20 | **1.034** | 1.93 | 0.082 |
+| `work-pr51r6-flip50` (R6) | 54 | 23.52 | 31.86 | **1.355** | 5.91 | 0.259 |
+| `work-pr51r6-flip50` (R6) | 64 | 31.33 | 37.80 | **1.206** | 5.18 | 0.303 |
+| `work-pr51r7-on50` (R7) | 51 | 22.76 | 30.18 | 1.326 | 2.52 | 0.342 |
+| `work-pr51r7-on50` (R7) | 60 | 28.28 | 35.40 | 1.252 | 2.94 | 0.273 |
+
+and the pointwise divergence of the whole cluster-14 fit:
+
+| comparison | max deviation | points moved > 1 cm |
+|---|---:|---|
+| pre-R5 → R5 | **0.69 cm** | **0 of 176** |
+| R5 → R6 | 11.02 cm | 70 of 176 |
+| pre-R5 → R6 | 10.91 cm | 72 of 176 |
+
 Read together:
 
+* **Round 5 is not the culprit.** It leaves the corridor alone — 0.69 cm max
+  deviation, *zero* points moved by more than 1 cm — and like-for-like it costs
+  1.026 → 1.034 with the bow and jitter unchanged (1.90 → 1.93 cm, 0.081 →
+  0.082 cm rms). The 1.026 → 1.051 in the per-segment table is a **segmentation
+  artifact**: round 5 slid the main vertex 15 cm *along* that unchanged corridor,
+  so segment 14003 grew 48.13 → 60.80 cm by swallowing a curved piece that had
+  belonged to 14004.
+* **Round 6 is the whole regression** — see §4.8 for the mechanism.
 * Before pr/51 round 5, this region was **one smooth 48 cm segment at 0.6° from
   isochronous with `path/chord` 1.026** — *more* isochronous than today's
   and smooth. **Isochronicity alone therefore does not predict the zigzag.**
   The seed does.
-* Round 6 moved the main vertex 30.2 cm from its pre-round-5 position (43.9 cm
-  from round 5's) and converted a near-collinear vertex into a 27° hairpin; both
-  resulting legs zigzag (1.35 and 1.21). Round 7 opened the hairpin to 69° and
+* Round 6 moved the main vertex 43.9 cm from where round 5 left it (30.2 cm from
+  its pre-round-5 position) and converted a near-collinear vertex into a 27°
+  hairpin; both resulting legs zigzag (1.36 and 1.21). Round 7 opened the hairpin to 69° and
   reduced the excursion 6.85 → 3.93 cm — but those two residuals are measured
   about different chords (24.10 vs 23.36 cm), so read that as "smaller", not as
   a factor. The like-for-like number is the bow amplitude in §4.7: 5.94 → 2.52 cm.
@@ -200,7 +232,7 @@ Flat there too. Whatever the topology change bought elsewhere, on this event it
 bought no coverage — locally or globally — and cost trajectory smoothness.
 
 **This is a regression signal on shipped, owner-flipped SBND production knobs**
-(`steiner_gap_penalty`, `sgp_weak_scale`, doc pr/51 rounds 5–6), stated here
+(specifically `sgp_weak_scale`, doc pr/51 round 6 — **not** round 5, §4.3/§4.8), stated here
 rather than buried. It is *not* a claim that those rounds were wrong: they were
 validated on other events and their gates were clean. It is a claim that this
 event was collateral and that nobody looked at trajectory smoothness as a
@@ -266,6 +298,25 @@ entirely. The two bins above therefore merge two phenomena that need different
 fixes. Any population number used to size a fix should be recomputed with the
 §4.7 split; the F1 probe should emit `ratio_bow` and `ratio_jit` separately.
 
+### 4.6 The existing isochronous guard is cluster-level; the defect is segment-level
+
+`skip_revert_iso_xext_cut` (`:5392-5407`, SBND production 20 cm) abstains from
+`skip_trajectory_point`'s charge revert when the **cluster's** drift extent is
+small, on the reasoning (doc pr/28 round 10) that on an isochronous cluster the
+two charge samples being compared are the same overlapping blob.
+
+57903's cluster 14 spans **21.26 cm** in drift — 1.26 cm *above* the cut — so
+`abstain = false`, the revert is active, and the zigzag survives anyway. The
+extent is a max − min, so a per-cluster T0 offset cancels; the residual
+blob-centre-versus-point-cloud uncertainty is about one slice (0.31 cm), which
+leaves the conclusion standing but marginal.
+
+The reason the cluster is not isochronous while the segments are: segments 14001
+(1.0° from the drift-⊥ plane) and 14007 (6.3°) share cluster 14 with segment
+14006, which spans 19 cm in drift by itself. **The condition that matters is a
+property of the segment, and every isochronous test in the fit today is a
+property of the cluster.**
+
 ### 4.7 Bow versus jitter — the three cases are not the same shape
 
 Fit a degree-4 polynomial in arclength to each transverse component, then report
@@ -300,24 +351,53 @@ still has to arrive at the same displaced point. Fixing the vertex can.
 The prototype pins endpoints the same way (`multi_track_fitting.h:369-380`), so
 this is shared behaviour, not a porting divergence.
 
-### 4.6 The existing isochronous guard is cluster-level; the defect is segment-level
+### 4.8 Why round 6 and not round 5 — the two penalties price different things
 
-`skip_revert_iso_xext_cut` (`:5392-5407`, SBND production 20 cm) abstains from
-`skip_trajectory_point`'s charge revert when the **cluster's** drift extent is
-small, on the reasoning (doc pr/28 round 10) that on an isochronous cluster the
-two charge samples being compared are the same overlapping blob.
+Both rounds reweight edges of the same lazily-built `"steiner_graph_gap"` flavor
+consumed only by `do_rough_path` (`clus/src/NeutrinoSteinerGapGraph.cxx`), and
+the per-cluster build line in the event log says how many edges each one touched.
+Cluster 14, event 57903:
 
-57903's cluster 14 spans **21.26 cm** in drift — 1.26 cm *above* the cut — so
-`abstain = false`, the revert is active, and the zigzag survives anyway. The
-extent is a max − min, so a per-cluster T0 offset cancels; the residual
-blob-centre-versus-point-cloud uncertainty is about one slice (0.31 cm), which
-leaves the conclusion standing but marginal.
+| round | edges | scanned | penalized | of which weak-charge |
+|---|---:|---:|---:|---:|
+| 5 (`steiner_gap_penalty = 2.0`) | 1115 | 1033 | **119** (11.5 %) | — |
+| 6 (+ `sgp_weak_scale = 5.0`, `qref = 6000`) | 1115 | 1033 | **311** (30.1 %) | 223 |
 
-The reason the cluster is not isochronous while the segments are: segments 14001
-(1.0° from the drift-⊥ plane) and 14007 (6.3°) share cluster 14 with segment
-14006, which spans 19 cm in drift by itself. **The condition that matters is a
-property of the segment, and every isochronous test in the fit today is a
-property of the cluster.**
+The two terms measure different things (`:191`, `:200`):
+
+* **Round 5 — `gap_edge_bad_fraction`** samples the chord interior and asks
+  whether each sample point is *supported in 2-D*: `classify_point` (`:68-80`)
+  calls `grouping->test_good_point`, and returns "unsupported" only if no plane
+  has charge there. **An isochronous ghost ribbon is by construction fully
+  supported in 2-D everywhere** — that is exactly what makes it a ghost. So
+  `bad = 0` throughout the ribbon and round 5's penalty is a *no-op inside it*.
+  The 119 penalized edges must lie elsewhere in the cluster, and indeed round 5
+  moved the vertex 15 cm without moving the corridor at all (§4.3).
+* **Round 6 — `weak_charge_deficit`** (`:105-111`) prices an edge by the charge
+  at its two *endpoints* against `qref`:
+  `0.5·[max(0, 1 − q_a/q_ref) + max(0, 1 − q_b/q_ref)]`. That **does**
+  discriminate between routes inside the ribbon, because a ribbon's charge is not
+  uniform — it has a bright core and a broad low-charge ghost fringe. Cluster
+  14's own numbers: the log's steiner-vertex quantiles are
+  q25 = 6802, q50 = 10926, q75 = 15386 against `qref = 6000` (so `qref` sits near
+  the 20th percentile, and 223 of 1033 scanned edges = 22 % are weak); and image
+  charge per point in the isochronous stretch has q25 = 3228 / median = 10767
+  versus q25 = 4702 / median = 7068 in the rest of the cluster — a wider
+  distribution with a much heavier low-charge tail, over 112 image points per
+  drift slice versus 7.2.
+
+So round 6 is the first round whose penalty can re-route the path *within* the
+isochronous ribbon, and inside a ghost ribbon charge is not a reliable guide to
+which route is the real track — the fringe carries genuine reconstructed charge
+too.
+
+**Status of that last sentence: it is a mechanism hypothesis consistent with the
+measurements, not a proof.** What is measured is: which round moved the corridor
+(round 6, §4.3), how many edges each round penalized, what the two penalty
+formulas are, and the charge distributions above. What is *not* measured is where
+the penalized edges sit. Closing it needs a per-edge sentinel from the
+`ensure_steiner_gap_graph` scan (source/target position, `bad`, `deficit`) — a
+one-line log addition, and the natural companion to F1.
 
 ## 5. The owner's prototype question: is there special code in WCP?
 
@@ -385,7 +465,7 @@ follows.
 
 *Promoted above F2 by §4.7.* The endpoints are pinned to the vertex fit points,
 so a vertex off the charge ridge forces the bow, and the bow is 1.225 of 57903's
-1.347. §4.3 shows the smooth answer existed before pr/51 rounds 5–6 and was lost
+1.347. §4.3 shows the smooth answer survived pr/51 round 5 intact and was lost in round 6
 to a vertex move that bought no charge coverage either locally or globally.
 
 Two sub-options, in increasing order of intrusiveness:
@@ -399,7 +479,7 @@ Two sub-options, in increasing order of intrusiveness:
   flagged isochronous and let `fit_point` place them, then re-seat the vertex.
   Much more invasive: it changes the vertex, hence downstream selection.
 
-Both are entangled with pr/51 rounds 5–6, which are production and were validated
+Both are entangled with pr/51 round 6, which is production and was validated
 on other events. Flagged as an **owner decision**, with F1's numbers as the input.
 
 ### F2 — seed-independent smoothing on isochronous *segments*
