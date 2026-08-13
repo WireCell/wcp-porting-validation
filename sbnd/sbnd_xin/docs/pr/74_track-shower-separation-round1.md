@@ -8,9 +8,12 @@ https://www.phy.bnl.gov/twister/bee/set/c402d3ac-7e75-4fd7-8cc2-8b7ad2329f84/eve
 (bee_idx 0 = 90055, 3 = 469665, 4 = 142421, 5 = 53361).
 
 **Headline.** All four cases are **legacy / prototype-faithful** behaviour, not
-a cost of our SBND-local guards. Six of the SBND-ON shower knobs were ablated
-one at a time and all together on the two "shower mis-ID'd as track" events
-and the outcome did not change (§5). The one thing our own knobs do own is
+a cost of our SBND-local guards. On the two "shower mis-ID'd as track" events
+(90055, 469665) six SBND-ON shower knobs were ablated one at a time and all
+together and the outcome did not change (§5, with a compiled-config proof that
+each ablation really applied). For cases 2 and 3 no ablation arm was run — the
+"prototype-faithful" verdict there is a **code-reading** verdict, backed by the
+side-by-side prototype citations in §6. The one thing our own knobs do own is
 *cosmetic but consequential*: pr/40 round 6's `michel_stem_muon_rescue` paints
 90055's orphaned EM trunk `mu-` instead of `proton`, which is what turns a
 nueCC signal topology into a muon at the neutrino vertex.
@@ -202,7 +205,9 @@ MIP-like as a track can be — is relabelled by the third branch. There is
 **no length ceiling, no dQ/dx veto, and no charge-consistency test anywhere in
 the cascade.**
 
-**Prototype comparison: this is faithful.** `NeutrinoID_track_shower.h:1998`,
+**Prototype comparison: this is faithful** (code reading — no ablation arm was
+run on 53361, and no knob exists that would ablate this cascade).
+`NeutrinoID_track_shower.h:1998`,
 `:2001`, `:2004` are the same three branches with the same conditions
 (`get_flag_dir()==0`, `length<2.0*units::cm`,
 `fabs(get_particle_type())==13 || ==0`), and the prototype has no guard
@@ -256,7 +261,9 @@ an A/B arm. TSV: `docs/pr/74_pf_shape_census.tsv`.
 
 Each owner case is picked up by its own shape: 90055 → A
 (`11045: mu->e-:2020MeV`), 53361 → B (`27001: 119cm / rt 2.76cm`),
-142421 → B + C + D (`7013: 2975pts`), 469665 → C.
+142421 → C + D (`7013: 2975pts`), 469665 → C. 142421 also registers a B hit,
+but that hit is `111125: 76cm / rt 2.90cm` — a genuine 56 MeV EM shower, i.e.
+a **false positive** of the 3.0 cm cut, not the segment the owner asked about.
 
 Calibration for B's transverse cut: 53361's muon-called-electron is 2.76 cm;
 real EM showers in the same sample are 6.5 cm (90055 seg 11044, 142421 seg
@@ -285,6 +292,35 @@ Segment 11045 of 90055 across every arm:
 `proto48`. Conclusion: the SBND-ON guards change 90055's *label* (mu ↔ proton)
 and nothing else; they do not cause, and cannot fix, either case.
 
+**Compiled-config proof that the ablations actually applied.** Only two of the
+seven env vars produced an observable change (`SBND_MICHEL_STEM_MUON_RESCUE`,
+`SBND_SHOWER_TOPO_DQDX_GUARD`), so a null result on the other five would
+otherwise be indistinguishable from a knob that never threaded (M6). Checked
+directly against the compiled JSON — note the production `pipeline_names` TLA
+is required, or `tagger_check_neutrino` is not in the graph and *none* of these
+keys appears:
+
+```bash
+PL="['switch_scope',...,'tagger_check_neutrino',...,'tagger_output']"   # the runner's list
+wcsonnet --tla-str input=x --tla-code "anode_indices=[0,1]" --tla-str output_dir=/tmp \
+         --tla-code run=1 --tla-code subrun=1 --tla-code event=1 --tla-str reality=data \
+         --tla-code "pipeline_names=$PL" [--tla-code <knob>=false ...] wct-pr-perevt.jsonnet
+```
+
+| key | production compiled value | with the ablation TLA |
+|---|---|---|
+| `shower_topo_reset` | `true` | **absent** |
+| `shower_topo_demote_len` | `50` | **`0`** |
+| `shower_traj_straight_guard` | `true` | **absent** |
+| `shower_connect_main_vertex_straight_guard` | `true` | **absent** |
+| `shower_topo_dqdx_guard` | `true` | `true` (not ablated in that probe) |
+
+"Absent" is the key-suppression idiom working as designed: the jsonnet emits
+the key only when the knob is on, and every one of these has C++ default
+**false** (`NeutrinoPatternBase.h:894, 1029, 1035, 1184, 1215, 1315`), so an
+absent key means the knob is **off**. All five ablations therefore took effect;
+the null results are real null results, not plumbing failures.
+
 `shower_topo_demote_len = 50` deserves a separate note even though it explains
 none of the four cases. Because `separate_track_shower`
 (`NeutrinoTrackShowerSep.cxx:231`) only runs the trajectory test when the
@@ -302,15 +338,23 @@ here.
 |---|---|---|---|
 | `is_shower_trajectory` (>50 cm early return, 5-section wiggliness) | `PRSegmentFunctions.cxx:1711` | `ProtoSegment.cxx:543` | **faithful** |
 | `is_shower_topology` (5-branch spread, `<0.25·L` guard) | `PRSegmentFunctions.cxx:3612` | `ProtoSegment.cxx:319` | **faithful** |
-| `separate_track_shower` (topology first, trajectory only if clear) | `NeutrinoTrackShowerSep.cxx:210` | `NeutrinoID_track_shower.h:1` | **faithful** |
+| `separate_track_shower` (topology first, trajectory only if clear) | `NeutrinoTrackShowerSep.cxx:210` | `NeutrinoID_track_shower.h:9-21` — `is_shower_topology(); if (!get_flag_shower_topology()) is_shower_trajectory();` | **faithful**, verbatim ordering |
 | `examine_direction` `flag_shower_in` cascade (3 relabel branches) | `NeutrinoVertexFinder.cxx:1389-1409` | `NeutrinoID_track_shower.h:1998-2007` | **faithful** (case 3's gap is shared) |
 | `improve_vertex` topology re-examination, 0.09 / 0.06 score thresholds | `NeutrinoVertexFinder.cxx:2944-2982` | `NeutrinoID_improve_vertex.h:310-338` | **faithful** (toolkit recomputes `segment_is_shower_topology` where the prototype reads the cached flag — pr/32 §10.3) |
-| shower-formation BFS from the main vertex | `NeutrinoShowerClustering.cxx:90` | `NeutrinoID` shower clustering | **faithful** |
+| shower-formation BFS from the main vertex | `NeutrinoShowerClustering.cxx:90-140` | `NeutrinoID_shower_clustering.h:1654-1706` | **faithful** — same seeding from the main vertex, same `get_flag_shower() \|\| segments_in_long_muon` test, same "start the shower here, else descend to the daughter vertex", same `complete_structure_with_start_segment` afterwards. **Critically, the prototype has no stem-extension or start-segment backfill toward the vertex either** — so case 1's skipped trunk is a shared gap, not a dropped port step |
 | `shower_topo_demote_len`, `shower_topo_dqdx_guard`, `shower_traj_straight_guard`, `shower_reclass_dqdx_guard`, `shower_connect_main_vertex_straight_guard`, `michel_stem_muon_rescue` | pr/25, pr/40 | — | **SBND-local inventions, no counterpart** |
 
-`clus/docs/porting/porting_dictionary.md` was checked: none of the divergences
-above is listed as intentional, and none of the "faithful" rows is a candidate
-for a parity fix — they are correct ports of algorithms that have a real gap.
+`clus/docs/porting/porting_dictionary.md` was read (M15). Two entries bear on
+this doc and both **confirm** the reading above rather than contradicting it:
+`:617` states that `shower_reclass_dqdx_guard` / `shower_topo_dqdx_guard` "are
+designed divergences, not port corrections" — i.e. the dictionary already
+records them as SBND-local inventions, exactly as the last table row says; and
+`:222` pins `get_flag_shower()` as **three** disjuncts
+(`kShowerTrajectory || kShowerTopology || |pdg| == 11`), which is the test the
+shower-formation BFS applies and which segment 11045 fails on all three counts
+(§3.1). No divergence claimed above is listed as intentional, and none of the
+"faithful" rows is a candidate for a parity fix — they are correct ports of
+algorithms that have a real gap.
 
 ## Proposals
 
