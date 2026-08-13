@@ -1,9 +1,13 @@
 # doc pr/73 — why the fitted trajectory zigzags, and the low dQ/dx that follows
 
-**Scope: diagnosis only — no reconstruction behaviour is changed.** Sections 1-4.8
-are read off Bee archives that already existed on disk. Section 4.9 adds one
-**default-OFF, log-only** knob, `sgp_edge_probe`, and §§4.9-4.10 use it for six
-diagnostic runs; its gates are in §8.
+**Scope.** §§1-8 are the original **diagnosis** round: §§1-4.8 are read off Bee
+archives that already existed on disk, and §4.9 adds one **default-OFF,
+log-only** knob, `sgp_edge_probe`, used for six diagnostic runs (gates in §8).
+**§9 is round 2**, which implements §6's recommended fix **F3a** as a second
+default-OFF knob, `sgp_max_sep`. Round 2 changes no production behaviour
+either: the knob ships **OFF and is not flipped**, because the validation
+returned a negative result — see §9. The owner scoped round 2 to the **ISO case
+(18255-57903) only**; 53427/54351 (F2/F5) were not touched.
 
 ## 0. Repro
 
@@ -62,6 +66,35 @@ SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
 python3 scripts/analysis/pr73/seed_vs_fit.py work-pr73-seed-53427 53427 -24.6 -17.1 446.1
 python3 scripts/analysis/pr73/seed_vs_fit.py work-pr73-seed-54351 54351 -150.3 82.4 196.2
 #   -> docs/pr/73_seed_vs_fit_output.txt  (committed verbatim)
+
+# ---- sec 9 (round 2): F3a, the sgp_max_sep excursion guard --------------
+# A. the census.  No new C++: the SHIPPED sgp_edge_probe already routes the
+#    base flavor and logs the very quantity F3a thresholds, so the footprint
+#    is sized at zero behavioural risk BEFORE the guard exists.
+SBND_SGP_EDGE_PROBE=true PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr73f3a-audit48 data
+SBND_SGP_EDGE_PROBE=true PR_JOBS=32 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr73f3a-audit19 data
+SBND_SGP_EDGE_PROBE=true PR_JOBS=32 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr73f3a-audit50 data \
+        $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt)
+python3 scripts/analysis/pr73/sgp_maxsep_census.py \
+        work-pr73f3a-audit48 work-pr73f3a-audit19 work-pr73f3a-audit50 \
+        --tsv docs/pr/73_f3a_maxsep_census.tsv
+python3 scripts/analysis/pr73/sgp_maxsep_census.py work-pr73f3a-audit48 --evt 131357
+python3 scripts/analysis/pr73/sgp_maxsep_census.py work-pr73f3a-audit19 --evt 506746
+python3 scripts/analysis/pr73/sgp_maxsep_census.py work-pr73f3a-audit50 --evt 57903
+
+# B. the off / on arms (knob shipped; -1 = off, 3 = the doc's operating point)
+for a in "off:-1" "on:3"; do n=${a%%:*}; v=${a#*:}
+  SBND_SGP_MAX_SEP=$v PR_JOBS=32 ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr73f3a-${n}48 data
+  SBND_SGP_MAX_SEP=$v PR_JOBS=32 ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr73f3a-${n}19 data
+  SBND_SGP_MAX_SEP=$v PR_JOBS=32 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr73f3a-${n}50 data \
+        $(awk 'NR>1{print $2}' docs/pr/mcp1k-50-cb0805.index.txt); done
+
+# C. the verdicts
+python3 scripts/analysis/pr73/f3a_57903_check.py work-pr67f-off50 work-pr74r4-flip50 work-pr73f3a-on50
+python3 scripts/analysis/pr73/f3a_cost.py work-pr73f3a-off48 work-pr73f3a-on48 \
+        work-pr73f3a-off19 work-pr73f3a-on19 work-pr73f3a-off50 work-pr73f3a-on50
+python3 scripts/analysis/pr51/nuvtx_census.py work-pr73f3a-off50 work-pr73f3a-on50 --vtx-cm 10 --enu-mev 100
+python3 scripts/analysis/pr74/pr74_pf_roots.py work-pr73f3a-off19 work-pr73f3a-on19
 ```
 
 All six scripts are read-only — they open each arm's `pr_evt*/mabc-pr.zip` (or
@@ -606,6 +639,21 @@ excursion into it, and on this event it did.
 a candidate operating point to validate on the full manifests, not a settled
 number.
 
+> **Round-2 note on the provenance of these three rows.** They were taken from
+> `work-pr73-path-*`, which §8 certifies hash-identical to a **pre-pr/74-round-4**
+> configuration; the pr/74 r4 flip (2026-08-12) changed 506746's archive
+> (`de99a83c…` → `6166aa0f…`). Re-measuring all three at today's baseline was
+> therefore round 2's first act. **Result: null.** 131357 gives 76 calls / 34
+> moved / max 2.570 cm and 506746 gives 165 / 64 / 2.218 cm — identical to the
+> table above, because pr/74 r4's K6 acts in `examine_direction`, far
+> downstream of the router. 57903's causal call is still 4.850 cm. The rows
+> stand as written; the concern was legitimate and is measured, not assumed.
+>
+> **And the caveat was the right one.** §9 shows the 2.57 ↔ 4.85 separation is
+> real but does **not** generalise: across 117 events, 38 events carry vetoed
+> excursions *below* 57903's causal 4.850 cm and 10 carry larger ones, so no
+> threshold isolates the target. See §9.4.
+
 ### 4.11 The other two events: the seed is a lattice staircase, and the fit *removes* half of it
 
 §4.7 already separated the three cases: 57903 is a bow, 53427 and 54351 are
@@ -748,6 +796,15 @@ behaviour); candidate operating point **3 cm**, which on the sample measured
 keeps all 98 calls the round-6 fixes needed (max 2.57 cm) and rejects 57903's
 causal call (4.85 cm) and its four largest downstream legs (10.2–14.2 cm).
 
+> **IMPLEMENTED in round 2 (§9), and the answer is NO — shipped DEFAULT OFF,
+> not flipped.** F3a reaches the mechanism exactly as designed: at 3 cm it
+> restores 57903's corridor to the pre-round-5 arm to three decimals. But the
+> observable it thresholds does not select that event: 48 of 117 events change,
+> the ν-vertex moves >10 cm on four of them (247 cm on 18255-51051), and the
+> event whose vetoed excursion is nearest below the target's sits 0.8 % away.
+> The negative result is about `maxsep`, not about the threshold — read §9.4
+> before proposing a retune.
+
 Why this shape and not the obvious one: **capping the detour does not work.**
 §4.10 measures the fixes needing 30–40 % detours on short paths while 57903's
 damage needs only 4.6 % — the percentage criterion is *inverted* — and in
@@ -856,7 +913,9 @@ everywhere.
 
 ## 8. Status
 
-* Diagnosis only for reconstruction behaviour. One log-only instrument shipped
+* Diagnosis only for reconstruction behaviour **in round 1** (round 2 ships a
+  second knob, `sgp_max_sep`, also default OFF and also not flipped — §9).
+  One log-only instrument shipped
   for §4.9: `sgp_edge_probe`, C++ default **false**.
   * **Compiled-config off-gate**: `wcsonnet` on `wct-pr-perevt.jsonnet` with the
     knob off is byte-identical (md5 `301ad49d…`) to the same config compiled from
@@ -888,3 +947,224 @@ everywhere.
   rounds 5–7 (the knobs in §4.3), docs pr/49–50 (`fit_blob_coverage` — the
   precedent for a knob living inside the trajectory fit), doc pr/28 round 10
   (`skip_revert_iso_xext_cut`, §4.6).
+
+---
+
+## 9. Round 2 — F3a implemented as `sgp_max_sep`: it works on the target, and it is not shippable
+
+**Status: knob shipped C++ default OFF, SBND production NOT flipped.** The
+owner scoped this round to the ISO case, 18255-57903, and asked for the flip
+*if validation passed*. It did not. This section records what was built, the
+one number that decides it, and what to do instead.
+
+### 9.1 What was built
+
+`sgp_max_sep` (double, cm; C++ default **−1 = off**) in
+`PatternAlgorithms::do_rough_path` (`clus/src/NeutrinoPatternBase.cxx`). When
+the cap is ≥ 0 and the round-6 gap flavor is in use, the function also routes
+on the untouched base flavor and, if the penalized route's one-sided
+vertex-sampled Hausdorff distance to it exceeds the cap, **returns the base
+route instead**. Toolkit commit `44229720`.
+
+Three notes on the implementation, all load-bearing:
+
+* **The off-test is `< 0`, not the `<= 0` the other `sgp_*` knobs use.** `0` is
+  a meaningful cap here (reject any excursion at all), so it cannot double as
+  the off value. `-1 * units::cm` stays negative through the cm→internal
+  conversion.
+* **The metric was shipped verbatim, not "improved".** `maxsep` is *directed*
+  (gap→base) and sampled only at route **vertices**; it can miss a chord across
+  a base hairpin and can over-report where the base route is sparse. It is also
+  the exact expression that produced §4.10's 2.57 / 4.85 cm calibration, so
+  changing it would have invalidated the only calibration in existence.
+* **The guard cannot flip a feasibility verdict.** `Graphs.cxx`
+  `ShortestPaths::path()` never returns fewer than two entries — unreachable
+  yields `[src,dst,dst]`, `src==dst` yields `[dst,src]` — so every `size() < 2`
+  a caller can observe comes from the two early returns *above* flavor
+  selection. `NeutrinoGraphAudit.cxx:252,318` are therefore untouched by
+  construction, not by argument.
+
+### 9.2 The census came first, and needed no new code
+
+The shipped `sgp_edge_probe` already routes the base flavor and already logs
+`maxsep` per call. So the footprint was sized **before the guard existed**, at
+zero behavioural risk, over all 117 events (`sgp_maxsep_census.py`, TSV
+committed as `73_f3a_maxsep_census.tsv`, 9002 calls / 3860 route-moving):
+
+| cap cm | fire calls | of moved | events with ≥1 fire | nueCC48 | NCπ0-19 | mcp1k-50 |
+|---:|---:|---:|---:|---:|---:|---:|
+| 2.0 | 491 | 12.7 % | **76/113** | 45/47 | 18/19 | 13/47 |
+| **3.0** | **173** | **4.5 %** | **49/113** | 30/47 | 14/19 | 5/47 |
+| 4.0 | 64 | 1.7 % | 23/113 | 13/47 | 5/19 | 5/47 |
+| 5.0 | 23 | 0.6 % | 8/113 | 3/47 | 3/19 | 2/47 |
+| 6.0 | 12 | 0.3 % | 4/113 | 2/47 | 1/19 | 1/47 |
+
+Two things this settles immediately. **2 cm is excluded**: both round-6 fix
+events fire there (2.570 and 2.218 cm). And **the 3 cm footprint is 49/113
+events**, not the handful the n=3 sample suggested. The census turned out to be
+an accurate predictor — the ON arm produced **48** archive movers.
+
+*A discipline note, because it nearly went the other way.* A conjunction
+(`maxsep > cap` **and** base route length ≥ 50 cm) cuts 49 → 14. It was
+measured, and then dropped: the second parameter was chosen so the footprint
+landed under a bar set before the data arrived, and it does **not** improve the
+physics separation at all — the fix ceiling stays 2.570 cm at every length cut
+up to 60 cm, because 131357's ceiling calls are on 75–79 cm routes, not the
+short connectors the hypothesis assumed. Two fitted parameters against n=3
+ground-truth events is not a calibration.
+
+### 9.3 On the target, F3a works — completely
+
+`f3a_57903_check.py`, all numbers in the fixed window z ∈ [265.90, 314.03] cm
+(§4.3's like-for-like window), bow/jitter at degree 4:
+
+| | segs | npts | chord | path/chord | bow cm | jitter rms | q0 run | coverage ≤1.5 cm |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| pre-R5 (the good arm) | 1 | 82 | 47.38 | **1.026** | **1.86** | **0.081** | 0 | 30.287 % |
+| R7/pr74r4 = production | **2** | 51+60 | 22.76 / 28.28 | 1.326 / 1.252 | 2.52 / 2.94 | 0.342 / 0.273 | 5 | 30.995 % |
+| **`sgp_max_sep=3`** | **1** | **82** | **47.38** | **1.026** | **1.86** | **0.081** | **0** | **30.287 %** |
+
+The guard restores the corridor to the pre-round-5 answer **to three decimals
+on every quantity**, including charge coverage (30.2868 % and 47.0030 % within
+1.5 / 3.0 cm — identical to four decimals). The 69° hairpin is gone, the
+corridor is one 47.4 cm segment again, and the 5-point `q_bee == 0` run
+disappears. §4.7's claim that only a router-level fix can reach this bow is
+confirmed by construction.
+
+*One correction to the criterion.* The do-no-harm coverage floor was first
+transcribed as "≥ 30.3 %" from §4.3's rounded figure; the reference arm's true
+value is 30.2868 %, so the good arm failed its own floor by 0.013 points. The
+bar is set from the measured value. That is a transcription fix, not a
+relaxation — the floor still says "do not lose charge relative to the arm this
+doc names as correct."
+
+### 9.4 The number that decides it
+
+**The metric does not select the target.** Ranking the 49 firing events by
+their largest vetoed excursion:
+
+| event | largest veto (cm) | |
+|---|---:|---|
+| 69314 | 10.001 | a *second* instance of the defect (§9.5) |
+| 42280 | 7.332 | |
+| 18625 | 6.040 | |
+| 71372 | 5.896 | |
+| … | … | 6 more above the target |
+| **57903** | **4.850** | **the target** |
+| 74544 | 4.810 | **0.8 % below the target** |
+| 388 | 4.773 | |
+| **51051** | **4.765** | **ν-vertex moves 247 cm** |
+
+**Ten events carry larger excursions than the target's causal call, and 38 carry
+smaller ones.** The nearest event below sits 0.8 % away. There is no threshold
+that keeps 57903 and spares the rest — and 51051 makes the consequence concrete:
+an 0.085 cm difference in the observable, and a 247 cm neutrino-vertex move.
+
+This is a negative result about **`maxsep`**, not about the operating point.
+Retuning the cap cannot fix it; §9.7 says what could.
+
+### 9.5 The rest of the ON-arm evidence
+
+**Good, and genuinely so:**
+
+* **Off-gate PASS, 0/234 archives** (`mabc-pr.zip` + `pctree-*.tar.gz`, member
+  content, column 1 only) and **0/117 nusel** against today's production
+  (`work-pr74r4-flip{48,19,50}`). Compiled config with the knob off is
+  md5-identical (`6bab01819546835bf8a5ca59eb1ac8f0`) to the same config built
+  from a pristine `git archive HEAD` cfg tree; with the knob on the only diff
+  is the one added key. `wcdoctest-clus` 208 cases / 2057 assertions, 0 failed.
+* **Probe-reproduction gate PASS.** The restructure moved the §4.9-4.11 sentinel
+  under a shared gate, so its output was re-proven: on 57903 / 131357 / 506746,
+  all three log families (`sgp path:` 11/76/165, `sgp path sel:` 344/1399/2026,
+  `sgp path pt:` 618/2128/2470) are byte-identical between the pre-change and
+  post-change binaries, and all three archives hash to production. The six
+  committed analysis scripts keep working.
+* **Both round-6 fix events are byte-identical with the guard ON** — 131357
+  (`bcd599e604ad6900…`) and 506746 (`6166aa0fbe917439…`). F3a does not undo
+  what pr/51 rounds 5-7 shipped. This was the single most important protection
+  and it holds.
+* **nusel 0/117 flips** on the ON arm, all three manifests, despite 48 movers.
+* **Cost is negligible.** The behaviourally-identical pair (production → off
+  arm) shows +0.47 / −0.82 / −1.83 % wall with the sign flipping, which
+  calibrates the noise floor; the shipped pair (off → on) shows +2.52 / +3.80 /
+  −0.50 % wall, also sign-flipping, and RSS within ±0.06 % everywhere.
+  `wall_s` is integer-valued at ~20-27 s, so the resolution is ~±4 %: the
+  honest statement is "not resolvable above noise", which satisfies the
+  standing derived-graph cost requirement.
+
+**Not good:**
+
+* **48 of 117 events move.** Predicted 49 by the census; the footprint did not
+  collapse at the output.
+* **ν-vertex > 10 cm on 4 events** — 51051 (**247 cm**), 57903 (27.5, intended),
+  56982 (23.7), 463565 (14.2) — and **|ΔEnu| > 100 MeV on 14 events**, the
+  largest −1411 MeV (46363) and −1133 MeV (423981). These are primary physics
+  observables moving on events with no ground truth.
+* **PF roots: +2 dangling on 285567** (4 → 6: a 45 MeV neutron, four gammas of
+  6-17 MeV, a 21 MeV e−). This fails round 3's "must gain 0" bar outright.
+* **69314 is a second instance of the defect and is only half fixed.** Its
+  worst segment (140.65 cm chord, 6.0° from isochronous) improves from
+  path/chord 1.122 / bow 3.88 / jitter 0.727 to 1.067 / 3.34 / 0.321 — the
+  jitter more than halves — but a *new* 1.071-ratio segment appears elsewhere
+  in the same cluster. So the guard is not simply "more fix" either.
+
+That 69314 exists at all is worth stating separately: the defect §§4.2-4.10
+describe is **not unique to 57903**. Across the nueCC48 production arm the worst
+`path/chord` segments are consistently near-isochronous (3.7-7.6°), which is a
+population-level confirmation of the doc's thesis that the diagnosis round could
+not make.
+
+### 9.6 Bee
+
+`docs/pr/pr73f3a-bee.index.txt`. Two events, same order in both sets.
+
+* **before** (= production): https://www.phy.bnl.gov/twister/bee/set/dcef02cc-4d5d-488f-8f49-ee3549222019/event/list/
+* **after** (`sgp_max_sep=3`): https://www.phy.bnl.gov/twister/bee/set/49e62c9f-5043-4139-ae01-8f150aff39e4/event/list/
+
+idx 0 = 57903, the corridor restored. idx 1 = 51051, the 247 cm vertex move that
+the same 3 cm cap causes.
+
+### 9.7 What to do instead
+
+The excursion is the right *symptom* — §9.3 proves a router-level guard reaches
+the bow that §4.7 showed nothing downstream can remove. What is missing is a
+predicate that fires on **ghosts** rather than on **large excursions**, since
+§9.4 shows those two populations overlap almost completely.
+
+§4.10 C already named the variable and measured it: **drift-slice occupancy**.
+The harmed cluster carries 1.466 cm of object per drift slice (112 points per
+slice, 6.88 cm/slice on the isochronous sub-stretch); the two clusters round 6
+was built to fix carry 0.433 and 0.819. That is a ~2-3× separation on a
+*cluster* property, computed once, and it is the F3b direction. The natural next
+round is to use it as a **gate on F3a** — cap the excursion only where the
+cluster is ghost-like — rather than as a replacement penalty term. The census
+TSV and the arms are on disk, so sizing it needs no new runs on the router side.
+
+Two limits that will not go away and should be stated in any such round:
+
+* **n = 3 ground-truth events.** 57903 is known-harmed; 131357 and 506746 are
+  known-fixed. Everything else is unlabelled, and the census can prove the
+  *absence* of an effect (zero fires ⇒ byte-identical output) but never the
+  presence of a correct one.
+* **The guard is call-granular and all-or-nothing.** A single vertex 0.01 cm
+  over the cap discards the whole penalized route, including stretches that
+  fixed something. At 3 cm this never bit the two fix events; at a lower
+  operating point it would.
+
+### 9.8 Round-2 gate labels
+
+| gate | arms | result |
+|---|---|---|
+| compiled config, knob off | `git archive HEAD` cfg vs worktree | md5 `6bab0181…` **identical** |
+| compiled config, knob on | `-A sgp_max_sep=3` | only diff is the added key |
+| unit tests | `./build/clus/wcdoctest-clus` | 208 cases / 2057 assertions, rc=0 |
+| probe reproduction | `work-pr73f3a-audit*` → `work-pr73f3a-repro*` | 3 events × 3 log families **identical**; 3/3 archives == production |
+| off-gate | `work-pr74r4-flip{48,19,50}` → `work-pr73f3a-off{48,19,50}` | **0/234 archives, 0/117 nusel** |
+| on-arm movers | `work-pr73f3a-off*` → `work-pr73f3a-on*` | **48/117** archives; 175 guard fires in 49 events |
+| nusel | same | **0/117 flips** |
+| shipped-fix regression | 131357, 506746 vs `work-pr74r4-flip*` | **byte-identical** |
+| ν-vertex / Enu | same | >10 cm on 4; \|ΔEnu\|>100 MeV on 14 — **not attributable** |
+| PF roots | same | **+2 dangling on 285567 — FAIL** |
+| cost | off → on, `.time.meta` | wall not resolvable above noise; RSS ±0.06 % |
+
+**Verdict: `sgp_max_sep` stays C++ default −1 (off) and is not enabled for SBND.**

@@ -1,0 +1,27 @@
+doc pr/73 round 2 (F3a, sgp_max_sep) -- Bee sets, 2026-08-13
+============================================================
+Both sets carry the same two events in the same order.  Built with
+scripts/bee/make_pr_bee.py -q work-mcp1k-cb0805 -p <arm> -o <zip> 57903 51051
+
+BEFORE (knob off == SBND production today, arm work-pr73f3a-off50):
+  https://www.phy.bnl.gov/twister/bee/set/dcef02cc-4d5d-488f-8f49-ee3549222019/event/list/
+
+AFTER  (sgp_max_sep = 3 cm, arm work-pr73f3a-on50):
+  https://www.phy.bnl.gov/twister/bee/set/49e62c9f-5043-4139-ae01-8f150aff39e4/event/list/
+
+idx  event   what to look at
+---  ------  ---------------------------------------------------------------
+ 0   57903   THE TARGET, and the fix works.  In the fixed window
+             z in [265.90, 314.03] cm the corridor goes from TWO segments
+             (path/chord 1.326 & 1.252, bow 2.52 & 2.94 cm, jitter 0.342 &
+             0.273, a 69 deg hairpin) back to ONE 47.4 cm segment at
+             path/chord 1.026, bow 1.86 cm, jitter 0.081 -- numerically the
+             pre-round-5 arm, to three decimals.  The 5-point q_bee==0 run
+             disappears.  nu-vertex moves 27.5 cm, dEnu +99.7 MeV.
+
+ 1   51051   WHY THIS IS NOT SHIPPABLE.  The guard fired 3x on cluster 19,
+             vetoing a 4.765 cm excursion on a 313 cm route -- against the
+             target's causal 4.850 cm.  An 0.08 cm / 1.8 % difference in the
+             observable, and the consequence here is a 247 cm neutrino-vertex
+             move.  Nothing in the metric distinguishes the two.  This event
+             is the reason sgp_max_sep ships DEFAULT OFF.

@@ -844,6 +844,14 @@ fi
 if [ -n "${SBND_SGP_EDGE_PROBE:-}" ]; then
     CATH_TLA+=(--tla-code "sgp_edge_probe=${SBND_SGP_EDGE_PROBE}")
 fi
+# doc pr/73 round 2, fix F3a: cap (cm) on how far the round-6 penalized route
+# may stray from the unpenalized one in do_rough_path; over the cap the BASE
+# route is kept.  C++ default -1 = off (unbounded, legacy).
+#   SBND_SGP_MAX_SEP  (cm; -1 = off.  NB 0 is a real cap -- reject any
+#                      excursion -- so "off" is a NEGATIVE value, not 0.)
+if [ -n "${SBND_SGP_MAX_SEP:-}" ]; then
+    CATH_TLA+=(--tla-code "sgp_max_sep=${SBND_SGP_MAX_SEP}")
+fi
 # doc pr/51 round 7: robust vertex fit (mvfit_robust + satellites).
 #   SBND_MVFIT_ROBUST      (true/false; escape for A/B: false)
 #   SBND_MVFIT_MAIN_ONLY   (true/false; C++ default true)
