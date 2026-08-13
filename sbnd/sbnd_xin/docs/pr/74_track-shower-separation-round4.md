@@ -340,17 +340,43 @@ All on the shipped round-4 binary; freshness proof before every A/B
   `work-pr74r4-off*` → `work-pr74r4-on*`: **0 gained** on all three arms, and
   the dangling-root list is unchanged (`changed : 0`) everywhere. This is the
   gate round 3 built precisely because it is the metric this class of change
-  can break; K6 does not move it. (4 events unmeasurable — no `T_tagger`, no
-  selected neutrino candidate; pre-existing.)
+  can break; K6 does not move it. (4 events are unmeasurable by this gate — no
+  `T_tagger`, i.e. no selected neutrino candidate, pre-existing — but they are
+  **not uninspected**: `on_compare` finds their archives byte-identical
+  between the two arms, so their PF trees provably did not change.)
 - **ν-vertex census PASS** — `nu-vtx > 10 cm`: **0/117**. No sub-threshold
   movers either (`0.01 < dvtx ≤ 10 cm`: 0). **No vertex anywhere moves.**
 - **Energy** — `|ΔEnu| > 100 MeV`: **1/117**, the mover itself:
-  506746 `kine_reco_Enu` 2265.3 → 2427.3 MeV (**+162.0**), of which
-  +105.7 is `kine_reco_add_energy` (296.3 → 402.0) — the clusters released by
-  the shrinking 21050 shower being counted, with the 22058/76129 pair going
-  32.2 → 68.0 + 46.2 MeV. Reported, not tuned away: this is the honest
-  consequence of removing a fake 107 MeV primary electron, and it arrives
-  together with the π⁰ mass landing on 150.8 MeV (§ 4).
+  506746 `kine_reco_Enu` 2265.3 → 2427.3 MeV (**+162.0**). Fully decomposed
+  below; nothing in it is unattributed.
+
+### 6.3 Where the +162 MeV comes from
+
+`Enu = Σ(included-flag 1) + Σ(flag 3) + kine_reco_add_energy`, which closes
+exactly on both arms (OFF 1916.88 + 52.04 + 296.34 = 2265.26).
+
+| term | Δ | what it is |
+|---|---|---|
+| `kine_reco_add_energy` | **+105.66** | **the muon rest mass, to three decimals** (105.658). `push_segment_kine` adds `mass` for every non-electron track and nothing for a pdg-11 shower (`NeutrinoKinematics.cxx:186-190`). 21048 went shower-pdg-11 → track-pdg-13, so the neutrino energy now carries a rest mass that the mis-identified electron never did. This is a **correction, not a double count** — the opposite sign of round 3's 138009 finding, and it is arguably the second-most physical thing this round does. |
+| flag-3 particles | +77.07 | the fragments released by the shrinking 21050 shower, re-homed |
+| flag-1 particles | −20.72 | 107.3 → 63.0 and 145.6 → 102.1, minus the new 64.4 MeV Michel and friends |
+
+**Charge is conserved and the bookkeeping is clean.** Both arms hold the same
+79 segments totalling 468.9 cm; the only length that leaves the shower pool is
+**exactly the 20.4 cm muon** (368.3 → 347.9 cm). Every other affected segment
+moves *between* showers: 21051/21056 → the new Michel shower; 75120 →
+22058's; 76128/76129 and 77130 → their own; 70115 → 21050's.
+
+**The residual worth watching is the +77.07**, and it is an estimator effect,
+not new charge. Every shower here is charge-estimated (`kine_best ==
+kine_charge`). 21050 gives up 43.5 MeV (145.6 → 102.1) but its released
+fragments come back as 22058 32.2 → 68.0, 76129 46.2 and 77130 1.3 — a net
+**+39.8 MeV for the same charge**, because each shower re-associates its own
+point cloud and `kine_charge` is **not additive across a re-partition**
+(22058's shower gains one 0.40 cm segment but 3.9 cm of associated length).
+Small next to the +105.7, and unrelated to K6's predicate — but it is a
+property of shower splitting in general, not of this event, and it belongs
+with the § 8 open items.
 
 ### 6.1 Flip gates
 
@@ -392,5 +418,8 @@ index: `docs/pr/pr74r4-bee.index.txt`.
 - **`shower_traj_mip_chain_guard`** as originally proposed in round 3 § 3 is
   **withdrawn** — superseded by K6 and shown in § 2 to be unimplementable at
   the site it named.
+- **Shower-splitting energy non-additivity** (§ 6.3): re-partitioning one
+  shower's charge into several yields more charge-estimated energy than it
+  took out (+39.8 MeV here). Generic to shower splitting, not to K6.
 - The pr/75 `vertex_scoreboard` runner/toolkit skew (Repro block) will keep
   breaking `pr_display` on this branch until that toolkit change lands.
