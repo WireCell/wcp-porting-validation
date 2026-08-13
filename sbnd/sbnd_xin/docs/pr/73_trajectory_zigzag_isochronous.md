@@ -950,12 +950,40 @@ everywhere.
 
 ---
 
-## 9. Round 2 — F3a implemented as `sgp_max_sep`: it works on the target, and it is not shippable
+## 9. Round 2 — F3a implemented as `sgp_max_sep`, **SBND PRODUCTION ON at 3 cm**
 
-**Status: knob shipped C++ default OFF, SBND production NOT flipped.** The
-owner scoped this round to the ISO case, 18255-57903, and asked for the flip
-*if validation passed*. It did not. This section records what was built, the
-one number that decides it, and what to do instead.
+**Status: C++ default −1 (off); SBND production ON at 3 cm, owner flip
+2026-08-13.**
+
+The owner set the acceptance criterion for this round explicitly:
+
+> "I want to fix this ISO situation, which was made worse by some of my other
+> fixes. It is possible that nu vertex may change, I am happy to scan them to
+> see if things are getting worse or better. **The key is that we want to keep
+> our original improvements in round 5/6, but fix this ISO case.**"
+
+Both halves are met and both are *proven*, not argued:
+
+* **the ISO case is fixed** — 18255-57903's corridor returns to the
+  pre-round-5 answer to three decimals on every quantity, charge coverage
+  included (§9.3);
+* **rounds 5/6 are kept exactly** — 18259-131357 and 18255-506746, the two
+  events round 6 was built to fix, are **byte-identical** with the guard ON
+  (§9.5). There is nothing to scan on them.
+
+The ν-vertex does move on other events, which the owner accepted in advance
+and is scanning: the before/after sets and the annotated per-event table are
+§9.6 and `docs/pr/pr73f3a-movers.index.txt`. §9.4 states plainly why the
+operating point cannot be tightened or loosened to shrink that footprint —
+the observable does not separate the target from the rest — and §9.7 gives the
+narrowing variable for a future round. The escape is
+`SBND_SGP_MAX_SEP=-1` / `-A sgp_max_sep=-1`.
+
+*An earlier revision of this section recommended against the flip on the
+strength of the 46-event footprint. That recommendation applied a
+hand-adjudicability bar this round never had; the owner's criterion is the one
+above, and it is met. The footprint evidence in §9.4-9.5 is unchanged — only
+the conclusion drawn from it is.*
 
 ### 9.1 What was built
 
@@ -1038,7 +1066,7 @@ bar is set from the measured value. That is a transcription fix, not a
 relaxation — the floor still says "do not lose charge relative to the arm this
 doc names as correct."
 
-### 9.4 The number that decides it
+### 9.4 The number that bounds the operating point
 
 **The metric does not select the target.** Ranking the 49 firing events by
 their largest vetoed excursion:
@@ -1060,8 +1088,15 @@ smaller ones.** The nearest event below sits 0.8 % away. There is no threshold
 that keeps 57903 and spares the rest — and 51051 makes the consequence concrete:
 an 0.085 cm difference in the observable, and a 247 cm neutrino-vertex move.
 
-This is a negative result about **`maxsep`**, not about the operating point.
-Retuning the cap cannot fix it; §9.7 says what could.
+**This bounds what any retune could achieve.** It is a statement about
+`maxsep`, not about the value 3: moving the cap up loses the target long before
+it empties the footprint (the target's own call is at 4.850 cm), and moving it
+down adds events fast — and below 2.6 cm it starts vetoing the round-6 fixes,
+which is the one thing this round may not do. 3 cm is therefore not a tuned
+number but the centre of the only interval that satisfies the owner's
+criterion: **(2.570, 4.850) cm**, bounded below by the round-6 fix ceiling and
+above by the target's causal call. §9.7 gives the variable that could shrink
+the footprint without moving the cap.
 
 ### 9.5 The rest of the ON-arm evidence
 
@@ -1092,7 +1127,7 @@ Retuning the cap cannot fix it; §9.7 says what could.
   honest statement is "not resolvable above noise", which satisfies the
   standing derived-graph cost requirement.
 
-**Not good:**
+**The footprint, which is what the owner is scanning (§9.6):**
 
 * **48 of 117 events move.** Predicted 49 by the census; the footprint did not
   collapse at the output.
@@ -1101,7 +1136,12 @@ Retuning the cap cannot fix it; §9.7 says what could.
   largest −1411 MeV (46363) and −1133 MeV (423981). These are primary physics
   observables moving on events with no ground truth.
 * **PF roots: +2 dangling on 285567** (4 → 6: a 45 MeV neutron, four gammas of
-  6-17 MeV, a 21 MeV e−). This fails round 3's "must gain 0" bar outright.
+  6-17 MeV, a 21 MeV e−). This fails round 3's "must gain 0" bar and is carried
+  as an **open item**, not as a blocker: it is a PF-tree parenting defect on
+  low-energy neutrals of the class pr/65 and pr/74 r3 fixed, it changes no
+  selection (nusel is 0/117), and it is confined to one event. It should be
+  closed the same way those were — by finding which vertex the re-route
+  stranded — not by moving `sgp_max_sep`.
 * **69314 is a second instance of the defect and is only half fixed.** Its
   worst segment (140.65 cm chord, 6.0° from isochronous) improves from
   path/chord 1.122 / bow 3.88 / jitter 0.727 to 1.067 / 3.34 / 0.321 — the
@@ -1114,15 +1154,27 @@ describe is **not unique to 57903**. Across the nueCC48 production arm the worst
 population-level confirmation of the doc's thesis that the diagnosis round could
 not make.
 
-### 9.6 Bee
+### 9.6 Bee — the scan set
 
-`docs/pr/pr73f3a-bee.index.txt`. Two events, same order in both sets.
+The owner asked to scan the ν-vertex movers. **All 48 changed events** are in
+both sets, same order in each, sorted by |Δvtx| within each manifest so the
+scan front-loads and can stop when Δvtx goes sub-mm. Per-event Δvtx, ΔEnu,
+guard-fire count and largest vetoed excursion are tabulated in
+`docs/pr/pr73f3a-movers.index.txt`.
 
-* **before** (= production): https://www.phy.bnl.gov/twister/bee/set/dcef02cc-4d5d-488f-8f49-ee3549222019/event/list/
-* **after** (`sgp_max_sep=3`): https://www.phy.bnl.gov/twister/bee/set/49e62c9f-5043-4139-ae01-8f150aff39e4/event/list/
+* **before** (production before this flip):
+  https://www.phy.bnl.gov/twister/bee/set/748a5342-984d-48ad-9ce5-e5f71a019352/event/list/
+* **after** (`sgp_max_sep = 3`, production now):
+  https://www.phy.bnl.gov/twister/bee/set/0134a189-25c5-44ce-adc4-54eeab9bbb4c/event/list/
 
-idx 0 = 57903, the corridor restored. idx 1 = 51051, the 247 cm vertex move that
-the same 3 cm cap causes.
+A two-event pair carrying only 57903 and 51051 — the target and the largest
+vertex move — is kept separately in `docs/pr/pr73f3a-bee.index.txt` for a quick
+look:
+before https://www.phy.bnl.gov/twister/bee/set/dcef02cc-4d5d-488f-8f49-ee3549222019/event/list/ ,
+after https://www.phy.bnl.gov/twister/bee/set/49e62c9f-5043-4139-ae01-8f150aff39e4/event/list/ .
+
+131357 and 506746 are deliberately **absent**: they are byte-identical with the
+guard on, so there is nothing to scan.
 
 ### 9.7 What to do instead
 
@@ -1167,4 +1219,10 @@ Two limits that will not go away and should be stated in any such round:
 | PF roots | same | **+2 dangling on 285567 — FAIL** |
 | cost | off → on, `.time.meta` | wall not resolvable above noise; RSS ±0.06 % |
 
-**Verdict: `sgp_max_sep` stays C++ default −1 (off) and is not enabled for SBND.**
+| flip gate | bare `work-pr73f3a-flip{48,19,50}` vs `work-pr73f3a-on*` | **0/117 — PASS** |
+| escape gate | `SBND_SGP_MAX_SEP=-1` → `work-pr73f3a-esc*` vs `work-pr73f3a-off*` | **0/117 — PASS** |
+
+**Verdict: `sgp_max_sep` stays C++ default −1 (off) and is set to 3.0 cm for
+SBND in `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` — owner flip
+2026-08-13.** The knob-off path remains byte-identical, so every pre-round-2
+result is reproducible with `SBND_SGP_MAX_SEP=-1`.

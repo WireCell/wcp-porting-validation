@@ -1,0 +1,72 @@
+doc pr/73 round 2 -- sgp_max_sep = 3 cm, SBND PRODUCTION ON -- SCAN SET
+==============================================================================
+Every event whose output changed when the guard is ON: 48 of 117.
+Both sets carry the SAME events in the SAME order, so Bee index i is the
+same event in both.  Built 2026-08-13 from work-pr73f3a-{off,on}{48,19,50}.
+
+BEFORE (guard off == SBND production before this flip):
+  https://www.phy.bnl.gov/twister/bee/set/748a5342-984d-48ad-9ce5-e5f71a019352/event/list/
+AFTER  (sgp_max_sep = 3 cm == SBND production now):
+  https://www.phy.bnl.gov/twister/bee/set/0134a189-25c5-44ce-adc4-54eeab9bbb4c/event/list/
+
+Sorted by |dvtx| within each manifest, so the vertex movers come first and
+a scan can stop once dvtx goes sub-mm -- below that the change is charge
+assignment along the trajectory, not the vertex.
+
+idx  event     manifest    dvtx cm    dEnu MeV  fires  max veto  note
+------------------------------------------------------------------------------
+0    163543    nueCC48       58.21        81.7      7     3.295  
+1    52672     nueCC48       57.83       156.7      3     4.530  
+2    38856     nueCC48       29.93       -99.8      2     3.251  
+3    30504     nueCC48       22.39      -125.2      1     3.095  
+4    111412    nueCC48        5.60        -3.0      7     4.890  
+5    469665    nueCC48        3.11       248.4      3     4.157  
+6    423981    nueCC48        1.23     -1133.0      3     3.315  
+7    234638    nueCC48        1.16        56.9      5     3.464  
+8    268784    nueCC48        0.78      -154.7      6     3.084  
+9    74544     nueCC48        0.39       142.2      3     4.810  
+10   433451    nueCC48        0.33      -129.3      3     4.226  
+11   69314     nueCC48        0.17      -184.8      6    10.001  2nd instance of the same defect; partly fixed
+12   54095     nueCC48        0.16        -5.3      6     3.306  
+13   239794    nueCC48        0.14        23.9      6     3.571  
+14   246579    nueCC48        0.14         0.8      4     3.679  
+15   90055     nueCC48        0.13        -5.8      3     4.321  
+16   214469    nueCC48        0.05         6.3      5     3.472  
+17   256587    nueCC48        0.05         2.8      3     3.422  
+18   42280     nueCC48        0.05        -7.5      7     7.332  
+19   138009    nueCC48        0.00         0.2      1     3.465  
+20   196649    nueCC48        0.00        -0.2      1     3.319  
+21   342199    nueCC48        0.00         0.0      2     4.157  
+22   360535    nueCC48        0.00        -1.3      3     4.179  
+23   388       nueCC48        0.00       112.8      1     4.773  
+24   400474    nueCC48        0.00         0.0      2     5.713  
+25   447477    nueCC48        0.00        59.6      2     4.917  
+26   46363     nueCC48        0.00     -1411.4      3     3.663  
+27   489330    nueCC48        0.00        -1.1      4     4.978  
+28   81597     nueCC48        0.00         0.5      2     3.756  
+29   56982     NCpi0-19      23.68      -367.1      1     3.600  
+30   463565    NCpi0-19      14.17       221.9      7     3.269  
+31   399860    NCpi0-19       0.92       -13.0      2     5.060  
+32   18625     NCpi0-19       0.81         0.3      3     6.040  
+33   285567    NCpi0-19       0.51      -291.5      2     3.118  open item: +2 dangling PF roots (4 -> 6)
+34   142421    NCpi0-19       0.01       -11.0      3     3.863  
+35   105946    NCpi0-19       0.00         0.0      2     3.679  
+36   180801    NCpi0-19       0.00         0.0      1     3.600  
+37   21073     NCpi0-19       0.00        -3.9      2     3.426  
+38   259542    NCpi0-19       0.00        -0.8      7     3.666  
+39   314838    NCpi0-19       0.00        -3.3      3     4.583  
+40   359980    NCpi0-19       0.00        -0.7     13     4.157  
+41   521075    NCpi0-19       0.00        -4.7      2     3.600  
+42   71372     NCpi0-19       0.00      -311.2      6     5.896  
+43   51051     mcp1k-50     247.03        78.8      3     4.765  largest vertex move in the sample
+44   57903     mcp1k-50      27.52        99.7      1     4.850  THE TARGET: corridor restored to the pre-R5 answer
+45   55595     mcp1k-50       1.65       136.1      5     4.260  
+46   59025     mcp1k-50       0.23      -158.3      3     4.777  
+47   56463     mcp1k-50       0.10      -143.0      4     5.349  
+
+NOT in this set, deliberately: 18259-131357 and 18255-506746 -- the two
+events pr/51 round 6 was built to fix.  They are BYTE-IDENTICAL with the
+guard on, so there is nothing to scan: the round-5/6 improvements are kept
+exactly.  That was the owner's stated condition for this round.
+
+Escape, to reproduce any pre-flip result:  SBND_SGP_MAX_SEP=-1
