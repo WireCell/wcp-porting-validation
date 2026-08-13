@@ -265,13 +265,20 @@ shown.
 ### DL run-to-run stability — a correction to M4's scope
 
 CLAUDE.md **M4** says the DL/SCN vertex "is not bit-stable" and should be kept
-out of gates with `-A dl_weights=` empty. Measured here: evt 469665 run twice
-with DL **on** gives member-content hash `e9b32c92e910...` **both times** —
-identical. So on this chain and this box the DL path *is* run-to-run stable,
-and the gates below could be run at the production operating point (DL on)
-rather than on a DL-disabled arm. Recorded as an observation on one event, not
-a repeal of M4: whatever instability M4 was written for is not reproducing
-here, and the safe reading is that it was environment-dependent.
+out of gates with `-A dl_weights=` empty. That is why the gates above were run
+at the production operating point (DL **on**) instead, and the evidence for
+doing so is the gates themselves, not a side probe: **gate 4 is 48/48
+identical member-content hashes across two independently built binaries with
+DL on**, and gate 5 another 48/48. Forty-eight events agreeing bit-for-bit is
+what establishes stability here.
+
+The pre-check that made it worth trying was smaller and is reported as such:
+evt 469665 run twice with DL on gave hash `e9b32c92e910...` both times.
+
+Neither repeals M4. Whatever instability it was written for did not reproduce
+on this chain and this box, and the safe reading is that it was
+environment-dependent — so keep the `dl_weights=''` habit for gates unless you
+have re-measured, as here.
 
 ## 5. What is NOT established
 
