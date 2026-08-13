@@ -9,9 +9,12 @@ BEFORE (guard off == SBND production before this flip):
 AFTER  (sgp_max_sep = 3 cm == SBND production now):
   https://www.phy.bnl.gov/twister/bee/set/0134a189-25c5-44ce-adc4-54eeab9bbb4c/event/list/
 
-Sorted by |dvtx| within each manifest, so the vertex movers come first and
-a scan can stop once dvtx goes sub-mm -- below that the change is charge
-assignment along the trajectory, not the vertex.
+Sorted by |dvtx| within each manifest, so the vertex movers come first.
+DO NOT stop the scan at sub-mm dvtx.  That instruction was in an earlier
+revision of this file and it is wrong: four events with dvtx = 0.00 carry
+some of the largest changes in the set -- 46363 (dEnu -1411 MeV), 71372
+(-311), 388 (+113) and 447477 (+60 AND the pi0 tag lost).  Use the SCAN GUIDE
+below instead; it names the 14 events that genuinely need no scan.
 
 idx  event     manifest    dvtx cm    dEnu MeV  fires  max veto  note
 ------------------------------------------------------------------------------
