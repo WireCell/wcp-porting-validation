@@ -1226,3 +1226,80 @@ Two limits that will not go away and should be stated in any such round:
 SBND in `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` — owner flip
 2026-08-13.** The knob-off path remains byte-identical, so every pre-round-2
 result is reproducible with `SBND_SGP_MAX_SEP=-1`.
+
+### 9.9 What the 48 changed events actually are (scan guide)
+
+Repro:
+
+```bash
+python3 scripts/analysis/pr73/f3a_change_map.py            # classified table
+python3 scripts/analysis/pr73/f3a_change_map.py --movers   # slide vs relocate
+python3 scripts/analysis/pr73/f3a_change_map.py --evt 46363
+python3 scripts/analysis/pr73/f3a_change_map.py --tsv docs/pr/73_f3a_change_map.tsv
+```
+
+The owner asked what the 48 events *are*, so the hand scan knows what it is
+looking at. Full text in `docs/pr/pr73f3a-movers.index.txt` (appended below
+the index — the index rows are **not** reordered, so Bee position *i* still
+means the same event in both sets) and all columns in
+`docs/pr/73_f3a_change_map.tsv`.
+
+**Method note — the cluster-ident join is not trustworthy and was not used.**
+The obvious way to ask "did the guard act on the neutrino" is to compare
+`cluster.ident()` in the `sgp guard: … VETO` line against `main_id` in
+`nusel-evt<E>.tsv`. That join is wrong in general: idents are re-enumerated
+after every visitor (doc 53), so a mid-chain log line and the end-of-chain
+nusel dump can be different epochs. Here it disagreed with geometry on **7 of
+48** events. The classification instead tests the vetoed routes geometrically
+against `T_rec_charge` — the ν candidate's own fitted trajectory, the object
+Bee draws — which is epoch-free.
+
+**Two facts that bound the scan:**
+
+1. **The guard never touched an unrelated cosmic.** In all 48 events a vetoed
+   route lies *on* the ν candidate's fitted trajectory; the largest distance
+   from any vetoed route endpoint to that trajectory, over the whole set, is
+   **0.94 cm**. Every change is a change to the neutrino.
+2. **No event changes which bundle is the ν candidate** (0/48 `main_id`
+   swaps), so every Δvtx compares the same object to itself rather than two
+   different bundles.
+
+**Slide vs relocate.** For **11 of the 13** events with Δvtx > 1 cm, both the
+old and the new vertex sit on a trajectory the two arms agree on — each vertex
+is at most 2.24 cm from the *other* arm's trajectory. The drawn object is the
+same and only the chosen point along it moved: the scan question is "which
+point of this track is the vertex", not "is this the right object". The two
+genuine relocations are **57903** (the target — the corridor is rebuilt, which
+*is* the fix) and **30504** (old vertex 3.2 cm off the new trajectory).
+
+**51051 is the single endpoint flip** and the one unambiguous scan verdict in
+the set: the vertex moves from one end of a 301 cm vetoed route to the other
+(247 cm) and the main track re-PIDs π+ 591 MeV → μ 588 MeV with a 108 MeV
+proton appearing. Worth doing first.
+
+| class | n | meaning |
+|---|---|---|
+| A | 8 | ν vertex relocated > 10 cm |
+| B | 5 | ν vertex nudged 1–10 cm |
+| C | 32 | same vertex, different energy / PID |
+| D | 3 | nothing observable moved — skip (196649, 342199, 105946) |
+
+**Two GeV-scale Enu moves with a static vertex**, both worth opening:
+**46363** (idx 26) — vertex identical, Enu −1411 MeV because the 1802 MeV
+leading shower is re-measured to 356 MeV, π0 mass 236 → 105 MeV; and
+**423981** (idx 6) — vertex moves 1.2 cm, Enu −1133 MeV as four μ-typed
+35–100 MeV vertex tracks and a 410 + 204 MeV proton pair are dropped
+(`add_energy` 360 → 17 MeV).
+
+**Open item found by this analysis — the π0 mass trend points the wrong way.**
+27 of 48 events shift `kine_pio_mass` by >1 MeV and 15 by >30 MeV. Of the 15
+tagged in both arms with a >30 MeV move, **11 move away from the 135 MeV π0
+mass and 4 toward**; restricted to NCpi0-19 it is 2 toward, 4 away. Two events
+change the tag itself (447477 loses it, 55595 gains it). This is a flag, not a
+verdict — most of the 15 are nueCC48 events with no true π0, where the "π0
+mass" is a spurious two-shower pairing whose distance from 135 MeV measures
+nothing, and 11 vs 4 on n=15 is not significant. But it is the only aggregate
+in this round that points the wrong way, it costs nothing to check
+(`pio_mass_off` / `pio_mass_on` columns, no Bee needed), and if the NCpi0 scan
+confirms it, it is the narrowing variable for the next round — alongside the
+drift-slice occupancy of §9.7 and the +2 dangling PF roots on 285567.

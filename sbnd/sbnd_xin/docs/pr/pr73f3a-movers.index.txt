@@ -70,3 +70,169 @@ guard on, so there is nothing to scan: the round-5/6 improvements are kept
 exactly.  That was the owner's stated condition for this round.
 
 Escape, to reproduce any pre-flip result:  SBND_SGP_MAX_SEP=-1
+
+==============================================================================
+WHAT CHANGED, PER EVENT -- SCAN GUIDE (added 2026-08-13)
+==============================================================================
+Repro:  python3 scripts/analysis/pr73/f3a_change_map.py
+        python3 scripts/analysis/pr73/f3a_change_map.py --movers
+        python3 scripts/analysis/pr73/f3a_change_map.py --evt <E>
+        docs/pr/73_f3a_change_map.tsv   (all columns, one row per event)
+
+The rows above are NOT reordered -- Bee index i still means the same event in
+both sets.  This section groups the same 48 events by what a scan would see.
+
+TWO FACTS THAT SET THE SCOPE OF THE SCAN
+----------------------------------------
+1. The guard never touched an unrelated cosmic.  In all 48 events at least one
+   vetoed route lies ON the neutrino candidate's own fitted trajectory
+   (T_rec_charge): the largest distance from a vetoed route endpoint to that
+   trajectory, over the whole set, is 0.94 cm.  So every change below is a
+   change to the neutrino, not collateral damage elsewhere in the event.
+   (This is measured geometrically, not by joining the log's cluster ident to
+   nusel main_id -- idents are re-enumerated after every visitor, doc 53, and
+   that join disagrees with geometry on 7 of these 48.)
+2. No event changes WHICH bundle is the neutrino candidate (0/48 candidate
+   main_id swaps).  Every dvtx below therefore compares the same object to
+   itself; none of them is the artefact of comparing two different bundles.
+
+THE ONE STRUCTURAL QUESTION: SLIDE OR RELOCATE
+-----------------------------------------------
+For 11 of the 13 events with dvtx > 1 cm, both the old and the new vertex sit
+on a trajectory the two arms agree on -- each vertex is at most 2.24 cm from
+the OTHER arm's trajectory.  The drawn object is the same; only the chosen
+point along it moved.  The scan question there is "which point of this track
+is the vertex", not "is this the right object".
+
+Only two are genuine relocations onto different structure:
+  57903  (the target; the corridor itself is rebuilt -- that IS the fix)
+  30504  (old vertex 3.2 cm off the new trajectory)
+
+51051 is the single ENDPOINT FLIP: the vertex moved from one end of a 301 cm
+vetoed route to the other, 247 cm, and the main track re-PIDs pi+ 591 MeV ->
+mu 588 MeV with a 108 MeV proton appearing.  That is a track-direction
+decision, and it is the one event in the set where the scan verdict is
+unambiguous either way -- worth doing first.
+
+THE FOUR EVENTS WORTH OPENING EVEN IF NOTHING ELSE GETS SCANNED
+---------------------------------------------------------------
+  51051   idx 43  the 247 cm endpoint flip described above
+  57903   idx 44  the target
+  46363   idx 26  vertex identical, Enu -1411 MeV: the 1802 MeV leading shower
+                  is re-measured to 356 MeV and pi0 mass moves 236 -> 105 MeV
+                  (nearer the 135 MeV truth).  Fires are on 10-14 cm routes.
+  423981  idx 6   vertex moves 1.2 cm, Enu -1133 MeV: four mu-typed 35-100 MeV
+                  vertex tracks and a 410 + 204 MeV proton pair are dropped,
+                  add_energy 360 -> 17 MeV; pi0 mass 92 -> 103 MeV.
+
+pi0 MOVES MORE OFTEN THAN Enu DOES -- AND THE TREND IS UNFAVOURABLE
+-------------------------------------------------------------------
+27 of the 48 events shift kine_pio_mass by more than 1 MeV, 15 by more than
+30 MeV, and it is not confined to the NCpi0 manifest.  Two events change the
+pi0 TAG itself:
+  447477  idx 25  LOSES it (flag 1 -> 0): the second shower splits
+                  35.5 -> 25.7 + 39.3 + 33.7 MeV
+  55595   idx 45  GAINS it (flag 0 -> 1)
+
+Of the 15 events tagged in BOTH arms with a >30 MeV mass move, 11 move AWAY
+from the 135 MeV pi0 mass and only 4 move toward it:
+  toward:  30504 305->199, 111412 442->279, 46363 236->105, 239794 19->51
+  away:    163543 7->300, 71372 115->232, 268784 281->316, 56982 168->42,
+           69314 181->76, 234638 148->30, 38856 139->51, 399860 127->93,
+           469665 89->42, 42280 76->31, 52672 69->33
+Restricted to the NCpi0-19 manifest, where a pi0 is there by construction, it
+is 2 toward and 4 away.
+
+Read that as a flag, not a verdict.  Most of the 15 are nueCC48 events with no
+true pi0, so their "pi0 mass" is a spurious two-shower pairing whose distance
+from 135 MeV measures nothing; and 11 vs 4 on n=15 is not a significant sample.
+But it is the one aggregate in this round that points the wrong way, it is
+free to check (columns pio_mass_off / pio_mass_on of
+docs/pr/73_f3a_change_map.tsv -- no Bee needed), and if the NCpi0 scan
+confirms it the next round has its narrowing variable.
+
+CLASSIFICATION (dvtx = nu-vertex move; traj% = the larger of the two one-sided
+fractions of fitted trajectory points more than 1.5 cm from any point of the
+other arm; fires = vetoed routes touching the nu trajectory / total; nprt =
+distinct particle_id in T_rec_charge, off -> on)
+
+INTEGRITY
+  nu-candidate bundle main_id changes off->on in 0/48 events
+  a vetoed route touches the nu candidate's own fitted trajectory (<= 5 cm) in 48/48 events
+  the nusel main_id join agrees with that geometric test in 41/48 -- the 7 disagreements
+  are cluster-ident epoch skew (doc 53), so the geometric test is the one used below.
+
+=== A. VERTEX RELOCATED (>10 cm) : 8 events ===
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
+43   51051    mcp1k-50   3/3    247.03     78.8      -           0%  4/4   VERTEX SWAPPED TO THE OTHER END OF THE VETOED ROUTE; p 0->1, pi+ 1->0, mu 0->1
+0    163543   nueCC48    7/7     58.21     81.7      7->300      3%  5/5   e 1->7
+1    52672    nueCC48    3/3     57.83    156.7     69->33       1%  5/5   mu 0->1
+2    38856    nueCC48    2/2     29.93    -99.8    139->51      15%  5/5   mu 0->1, e 3->4
+44   57903    mcp1k-50   1/1     27.52     99.7      -          37%  5/4   p 0->1, pi+ 1->0
+29   56982    NCpi0-19   1/1     23.68   -367.1    168->42       0%  5/5   p 1->2, mu 1->0, e 3->5
+3    30504    nueCC48    1/1     22.39   -125.2    305->199      8%  5/5   mu 1->0
+30   463565   NCpi0-19   7/7     14.17    221.9    276->263      7%  5/5   p 0->1
+
+=== B. VERTEX NUDGED (1-10 cm) : 5 events ===
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
+4    111412   nueCC48    7/7      5.60     -3.0    442->279      8%  4/4   e 3->2
+5    469665   nueCC48    3/3      3.11    248.4     89->42       1%  4/5   p 1->0, pi+ 0->1, e 4->1
+45   55595    mcp1k-50   5/5      1.65    136.1      0->12       6%  4/5   p 1->0
+6    423981   nueCC48    3/3      1.23  -1133.0     92->103      9%  5/4   p 2->1, pi+ 1->0, mu 4->0
+7    234638   nueCC48    5/5      1.16     56.9    148->30       5%  5/5   mu 205->110 MeV
+
+=== C. SAME VERTEX, DIFFERENT ENERGY / PID : 32 events ===
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
+31   399860   NCpi0-19   2/2      0.92    -13.0    127->93       8%  5/5   p 2->0, pi+ 0->1
+32   18625    NCpi0-19   3/3      0.81      0.3      -           0%  4/4   
+8    268784   nueCC48    6/6      0.78   -154.7    281->316      2%  4/5   e 6->8
+33   285567   NCpi0-19   2/2      0.51   -291.5    245->219      0%  5/5   p 0->2, pi+ 1->0
+9    74544    nueCC48    3/3      0.39    142.2     72->73       6%  5/5   
+10   433451   nueCC48    3/3      0.33   -129.3     43->38      10%  4/5   e 50->28 MeV, e 2090->2078 MeV
+46   59025    mcp1k-50   3/3      0.23   -158.3      -           0%  5/4   pi+ 1->0
+11   69314    nueCC48    6/6      0.17   -184.8    181->76       9%  5/5   p 2->1
+12   54095    nueCC48    6/6      0.16     -5.3     40->52       5%  5/4   
+14   246579   nueCC48    4/4      0.14      0.8     61->64       7%  4/4   e 1688->1698 MeV
+13   239794   nueCC48    6/6      0.14     23.9     19->51      19%  5/5   e 2652->2675 MeV
+15   90055    nueCC48    3/3      0.13     -5.8     46->44       6%  4/4   
+47   56463    mcp1k-50   4/4      0.10   -143.0      -           0%  5/5   pi+ 174->168 MeV, mu 912->917 MeV
+18   42280    nueCC48    7/7      0.05     -7.5     76->31      31%  4/4   e 1->3
+17   256587   nueCC48    3/3      0.05      2.8     96->89      16%  5/4   
+16   214469   nueCC48    5/5      0.05      6.3    119->134     10%  5/5   e 1806->1812 MeV
+34   142421   NCpi0-19   3/3      0.01    -11.0     81->81       2%  5/5   p 812->801 MeV
+19   138009   nueCC48    1/1      0.00      0.2     35->35       3%  4/4   
+22   360535   nueCC48    3/3      0.00     -1.3     38->38       5%  4/4   
+23   388      nueCC48    1/1      0.00    112.8      -           5%  4/4   mu 0->1, e 4->3
+24   400474   nueCC48    2/2      0.00      0.0    248->248      2%  4/4   
+25   447477   nueCC48    2/2      0.00     59.6     29->0        9%  4/5   e 3->5
+26   46363    nueCC48    3/3      0.00  -1411.4    236->105      8%  4/4   e 2->3
+27   489330   nueCC48    4/4      0.00     -1.1      -           6%  5/5   
+28   81597    nueCC48    2/2      0.00      0.5      -           5%  4/4   
+36   180801   NCpi0-19   1/1      0.00      0.0    191->191      7%  5/5   
+37   21073    NCpi0-19   2/2      0.00     -3.9    217->234      1%  5/5   
+38   259542   NCpi0-19   7/7      0.00     -0.8    145->145      5%  4/4   
+39   314838   NCpi0-19   3/3      0.00     -3.3    257->256      6%  4/4   
+40   359980   NCpi0-19  13/13     0.00     -0.7    272->272      5%  5/5   
+41   521075   NCpi0-19   2/2      0.00     -4.7      -           2%  5/4   
+42   71372    NCpi0-19   6/6      0.00   -311.2    115->232      6%  5/5   e 6->4
+
+=== D. NOTHING MOVED -- SKIP : 3 events ===
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
+20   196649   nueCC48    1/1      0.00     -0.2      -           0%  4/4   
+21   342199   nueCC48    2/2      0.00      0.0    335->335      0%  5/5   
+35   105946   NCpi0-19   2/2      0.00      0.0     49->49       0%  4/4   
+
+idx  evt          dvtx oldV->new newV->old   route cm   maxsep  reading
+43   51051      247.03      0.03      0.27    301-313     4.76  vertex SLID along a track both arms agree on
+0    163543      58.21      0.30      0.08      40-78     3.29  vertex SLID along a track both arms agree on
+1    52672       57.83      0.13      0.45       9-50     4.53  vertex SLID along a track both arms agree on
+2    38856       29.93      0.40      0.75      51-99     3.25  vertex SLID along a track both arms agree on
+44   57903       27.52      6.54      2.49    106-106     4.85  vertex landed on a DIFFERENT structure
+29   56982       23.68      1.17      0.31      13-13     3.60  vertex SLID along a track both arms agree on
+3    30504       22.39      3.23      0.00      23-23     3.10  vertex landed on a DIFFERENT structure
+30   463565      14.17      2.24      1.11      12-71     3.27  vertex SLID along a track both arms agree on
+4    111412       5.60      0.90      0.00      10-95     4.89  vertex SLID along a track both arms agree on
+5    469665       3.11      0.15      0.27       4-27     4.16  vertex SLID along a track both arms agree on
+45   55595        1.65      0.46      0.30    197-211     4.26  vertex SLID along a track both arms agree on
+6    423981       1.23      0.20      0.33      31-36     3.31  vertex SLID along a track both arms agree on
+7    234638       1.16      0.41      0.31     43-160     3.46  vertex SLID along a track both arms agree on
