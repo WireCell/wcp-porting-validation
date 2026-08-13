@@ -22,6 +22,21 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 PORT=${1:-5017}
 shift || true
 
+# doc sbnd_xin/docs/pr/75: --scan-tag <name> selects the neutrino-vertex
+# hand-scan label set (../vertex_labels/<name>/).  Consumed here and passed
+# through; everything else stays a calib-JSON glob.
+VIEWER_OPTS=()
+REST=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --scan-tag) VIEWER_OPTS+=(--scan-tag "$2"); shift 2 ;;
+        --scan-tag=*) VIEWER_OPTS+=(--scan-tag "${1#*=}"); shift ;;
+        --wire-planes) VIEWER_OPTS+=(--wire-planes); shift ;;
+        *) REST+=("$1"); shift ;;
+    esac
+done
+set -- "${REST[@]+"${REST[@]}"}"
+
 if [ "$#" -gt 0 ]; then
     SPECS=("$@")
 else
@@ -38,4 +53,4 @@ exec "$BOKEH" serve --port "$PORT" \
     --allow-websocket-origin="127.0.0.1:${PORT}" \
     --allow-websocket-origin="wcgpu1.phy.bnl.gov:${PORT}" \
     --allow-websocket-origin="wcgpu1:${PORT}" \
-    "$HERE/pr_display_viewer.py" --args "${SPECS[@]}"
+    "$HERE/pr_display_viewer.py" --args "${VIEWER_OPTS[@]+"${VIEWER_OPTS[@]}"}" "${SPECS[@]}"

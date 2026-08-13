@@ -102,6 +102,7 @@ from bokeh.models import (ColumnDataSource, Select, Button, Div, HoverTool,
                           ColorBar, LinearColorMapper, BasicTicker, Span,
                           DataTable, TableColumn, HTMLTemplateFormatter,
                           CDSView, AllIndices, Range1d)
+from bokeh.events import Tap
 from bokeh.palettes import Viridis256, Category20_20
 from bokeh.plotting import figure
 
@@ -122,8 +123,19 @@ ap.add_argument("--wire-planes", action="store_true",
                      "sbnd_xin/docs/pr/42: not useful for day-to-day PID work; "
                      "replaced by the dQ/dx panel. Code path unchanged, just "
                      "left out of the layout, so this flag brings it back.")
+ap.add_argument("--scan-tag", default=None,
+                help="neutrino-vertex hand-scan label set: labels land in "
+                     "../vertex_labels/<tag>/labels-evt<ID>.json.  Omit and the "
+                     "viewer uses 'scan1' but REFUSES to write into it if it "
+                     "already holds labels -- CLAUDE.md M13, a scan record is "
+                     "never appended to by accident.  Pass the tag explicitly "
+                     "to continue an existing scan.")
 args = ap.parse_args(sys.argv[1:])
 SHOW_WIRE_PLANES = args.wire_planes
+# Explicit tag => the user meant this scan set, so writing into it is allowed
+# even when it already has labels.  Implicit => first write only.
+SCAN_TAG = args.scan_tag or "scan1"
+SCAN_TAG_EXPLICIT = args.scan_tag is not None
 
 FILES = []
 for spec in args.specs:
@@ -151,7 +163,9 @@ for p in PATHS:
     EVENTS.setdefault(evt_label(p), p)
 LABELS = list(EVENTS)
 
-state = dict(doc=None, label=None)
+state = dict(doc=None, label=None,
+             # neutrino-vertex hand scan (sbnd_xin/docs/pr/75)
+             vrows=[], vpicks=[], vsaved=None, vdirty=False)
 
 
 # ---------------------------------------------------------------------------
@@ -186,6 +200,11 @@ steiner_src = ColumnDataSource(data=dict(EMPTY3))
 term_src = ColumnDataSource(data=dict(EMPTY3))
 vtx_src = ColumnDataSource(data=dict(EMPTY3))
 mainvtx_src = ColumnDataSource(data=dict(EMPTY3))
+# Hand-scan overlays (sbnd_xin/docs/pr/75).  Deliberately NOT part of the
+# `vertices` layer toggle: turning the PR vertices off must not hide your own
+# picks, or you cannot check a pick against the bare charge.
+selvtx_src = ColumnDataSource(data=dict(EMPTY3))            # table row under the cursor
+pick_src = ColumnDataSource(data=dict(x=[], y=[], z=[], c=[], tag=[]))  # your ranked picks
 det_src = ColumnDataSource(data=dict(xs_xy=[], ys_xy=[], xs_yz=[], ys_yz=[],
                                      xs_xz=[], ys_xz=[]))
 # Segment polylines: one multi_line CDS per projection (the xs/ys pairs differ
@@ -237,6 +256,16 @@ for f, hx, hy in PROJ:
     RENDER["vertices"].append(
         f.scatter(hx, hy, source=mainvtx_src, marker="star", size=20,
                   fill_color="#e377c2", line_color="#7b2d6b", line_width=1.5))
+    # Hand-scan: the selected candidate (hollow amber ring) and the ranked
+    # picks (filled green, labelled with the rank).  Always visible.
+    f.scatter(hx, hy, source=selvtx_src, marker="circle", size=22,
+              fill_color=None, line_color="#ff8c00", line_width=2.5)
+    f.scatter(hx, hy, source=pick_src, marker="diamond", size=17,
+              fill_color="#2ca02c", fill_alpha=0.75,
+              line_color="#12591b", line_width=1.5)
+    f.text(x=hx, y=hy, text="tag", source=pick_src,
+           text_color="#12591b", text_font_size="10pt",
+           text_font_style="bold", x_offset=9, y_offset=-9)
 
 # --- the six 2-D panels -----------------------------------------------------
 PLANE_NAME = ("U", "V", "W")
@@ -478,6 +507,518 @@ COSMIC_TESTS = [
      "a vertex outside the FV within 15 cm of the upstream face, with a "
      "beam-aligned weak-direction track >10 cm"),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Neutrino-vertex hand scan (sbnd_xin/docs/pr/75)
+# ---------------------------------------------------------------------------
+# doc pr/52 sec 5.4 asked the scan to record a 3-D true-vertex POSITION rather
+# than a per-event correct/incorrect verdict, because the position is what both
+# (a) route classification and (b) a future DeepVtx fine-tune need.  This panel
+# produces exactly that.
+#
+# Candidate scores come from the `vertex_scoreboard` block of the calib dump
+# (knob vertex_scoreboard, see the C++ side).  When that block is absent the
+# table still works -- it just has no score columns to rank by, and the note
+# says so.  An absent scoreboard means NO SCOREBOARD WAS TAKEN; it never means
+# "this event has no candidates".
+
+VSCAN_EMPTY = dict(idx=[], pick=[], vid=[], clus=[], x=[], y=[], z=[], deg=[],
+                   main=[], cand=[], dl=[], snap=[], rerank=[], trad=[], dmain=[])
+vscan_src = ColumnDataSource(data=dict(VSCAN_EMPTY))
+# Same DataTable-refresh workaround the overclustering scan viewer needs
+# (sbnd_xin/docs/pr/58): Bokeh will not repaint formatted cells when .data is
+# swapped for a same-or-shorter row count, so the view filter is flipped after
+# every assignment to force it.
+vscan_view = CDSView(filter=AllIndices())
+vscan_table = DataTable(
+    source=vscan_src, view=vscan_view, width=1180, height=260,
+    index_position=None, selectable=True, sortable=False,
+    columns=[
+        TableColumn(field="pick", title="pick", width=45,
+                    formatter=HTMLTemplateFormatter(
+                        template='<b style="color:#2ca02c"><%= value %></b>')),
+        TableColumn(field="vid", title="vtx id", width=65),
+        TableColumn(field="clus", title="clus", width=45),
+        TableColumn(field="x", title="x", width=60),
+        TableColumn(field="y", title="y", width=60),
+        TableColumn(field="z", title="z", width=60),
+        TableColumn(field="deg", title="deg", width=42),
+        TableColumn(field="main", title="main", width=45),
+        TableColumn(field="cand", title="cand", width=45),
+        TableColumn(field="dl", title="DL score", width=80),
+        TableColumn(field="snap", title="snap cm", width=70),
+        TableColumn(field="rerank", title="rerank", width=70),
+        TableColumn(field="trad", title="trad", width=60),
+        TableColumn(field="dmain", title="d(main) cm", width=85),
+    ])
+
+# An event has 60-160 PR-graph vertices and 40-120 of them are main-vertex
+# CANDIDATES (measured on the nueCC48 dumps), so "candidates" is not a
+# scannable set.  The default is the main cluster PLUS every DL-snapped vertex
+# wherever it sits -- 4-36 rows on the same events, and by construction it can
+# never hide the failure class where the main CLUSTER itself is wrong, because
+# every vertex the DL pointed at is in the list regardless of cluster.
+VSCAN_FILTERS = ["main cluster + DL", "candidates", "all vertices"]
+vscan_filter = Select(title="show", options=VSCAN_FILTERS,
+                      value=VSCAN_FILTERS[0], width=175)
+VSCAN_SORTS = ["rerank total", "DL score", "trad score", "distance to main",
+               "cluster, id"]
+vscan_sort = Select(title="rank by", options=VSCAN_SORTS,
+                    value=VSCAN_SORTS[0], width=160)
+
+vscan_add_btn = Button(label="add pick", button_type="primary", width=100)
+vscan_undo_btn = Button(label="remove last", width=105)
+vscan_clear_btn = Button(label="clear picks", width=100)
+
+# Requirement 5: the true vertex need not BE a candidate.  A manual pick is
+# doc pr/52's Tier D -- an event no vertex-SELECTION tuning can fix, which must
+# be excluded from an acceptance fit rather than fitted against.  Adding one
+# sets not_a_candidate on the saved label automatically.
+vman_x = TextInput(title="manual x", value="", width=88)
+vman_y = TextInput(title="manual y", value="", width=88)
+vman_z = TextInput(title="manual z", value="", width=88)
+vman_add_btn = Button(label="add manual pick", button_type="warning", width=135)
+vman_centre_btn = Button(label="from centre", width=105)
+vman_tap = Toggle(label="tap fills coords", active=False, width=135)
+
+VCONF = ["certain", "likely", "unclear"]
+vconf_group = RadioButtonGroup(labels=VCONF, active=None, width=250)
+vscan_save_btn = Button(label="Save event label", button_type="success", width=150)
+
+vscan_title = Div(text="<b>neutrino vertex hand scan</b> "
+                       "<span style='color:#666'>&mdash; click a row to zoom to that "
+                       "candidate; <i>add pick</i> records it as your choice "
+                       "(first pick = 1st choice)</span>", width=1180)
+vscan_picks_div = Div(text="", width=1180)
+vscan_note = Div(text="", width=1180)
+
+
+def vscan_labels_dir():
+    return os.path.join(HERE, "..", "vertex_labels", SCAN_TAG)
+
+
+def vscan_label_path(label):
+    return os.path.join(vscan_labels_dir(), "labels-%s.json" % label)
+
+
+def vscan_tag_has_labels():
+    d = vscan_labels_dir()
+    return os.path.isdir(d) and bool(glob.glob(os.path.join(d, "labels-*.json")))
+
+
+def vscan_write_allowed():
+    """M13: never append to somebody else's scan record by accident.
+
+    An explicitly-passed --scan-tag is consent.  The implicit default may only
+    create a tag, never add to one that already holds labels.
+    """
+    return SCAN_TAG_EXPLICIT or not vscan_tag_has_labels()
+
+
+def vscan_load_label(label):
+    p = vscan_label_path(label)
+    if not os.path.isfile(p):
+        return None
+    try:
+        with open(p) as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+
+def vscan_done_count():
+    d = vscan_labels_dir()
+    if not os.path.isdir(d):
+        return 0
+    return sum(1 for lb in LABELS if os.path.isfile(vscan_label_path(lb)))
+
+
+def vscan_board(d):
+    """The scoreboard block, or {} when the knob was off."""
+    b = d.get("vertex_scoreboard")
+    return b if isinstance(b, dict) and b.get("filled") else {}
+
+
+def vscan_build_rows(d):
+    """One row per PR-graph vertex, joined to the scoreboard on vertex id."""
+    board = vscan_board(d)
+    by_id = {r["vertex_id"]: r for r in board.get("rows", [])}
+    mv = d.get("main_vertex") or {}
+    mvp = (mv.get("x"), mv.get("y"), mv.get("z")) if mv else None
+
+    rows = []
+    for v in d.get("vertices", []):
+        f = v["fit"]
+        sb = by_id.get(v["id"])
+        dm = (math.dist((f["x"], f["y"], f["z"]), mvp)
+              if mvp and None not in mvp else None)
+        rows.append(dict(
+            vid=v["id"], clus=v["cluster_id"],
+            x=f["x"], y=f["y"], z=f["z"],
+            deg=v.get("degree", 0),
+            is_main=bool(v.get("is_main")),
+            cand=bool(v.get("main_candidate")),
+            # None, not 0: "the DL had no opinion" is not "the DL scored zero".
+            dl=(sb["dl_score"] if sb and sb.get("dl_snapped") else None),
+            snap=(sb["snap_dis"] if sb and sb.get("dl_snapped") else None),
+            rerank=(sb["total"] if sb and sb.get("dl_snapped")
+                    and not sb.get("skipped_by_swap_guard") else None),
+            trad=(sb["trad_score"] if sb and sb.get("trad_scored") else None),
+            dmain=dm,
+        ))
+    return rows
+
+
+def _pick_key(p):
+    return ("manual", round(p["x"], 3), round(p["y"], 3), round(p["z"], 3)) \
+        if p["kind"] == "manual" else ("candidate", p["vertex_id"])
+
+
+def vscan_refresh_table():
+    rows = state.get("vrows") or []
+    picks = state.get("vpicks") or []
+    rank_of = {}
+    for i, p in enumerate(picks):
+        if p["kind"] == "candidate":
+            rank_of[p["vertex_id"]] = i + 1
+
+    if vscan_filter.value == VSCAN_FILTERS[0]:
+        mv = (state.get("data") or {}).get("main_vertex") or {}
+        mc = mv.get("cluster_id")
+        shown = [r for r in rows
+                 if (mc is not None and r["clus"] == mc)
+                 or r["dl"] is not None or r["is_main"] or r["vid"] in rank_of]
+    elif vscan_filter.value == VSCAN_FILTERS[1]:
+        shown = [r for r in rows
+                 if r["dl"] is not None or r["trad"] is not None
+                 or r["cand"] or r["is_main"] or r["vid"] in rank_of]
+    else:
+        shown = list(rows)
+    # A dump taken without the scoreboard AND without main_vertex_candidate_flag
+    # would filter down to nothing; showing everything is more honest than
+    # showing an empty table.
+    if not shown:
+        shown = list(rows)
+
+    key = vscan_sort.value
+    BIG = float("inf")
+    if key == "rerank total":
+        shown.sort(key=lambda r: -(r["rerank"] if r["rerank"] is not None else -BIG))
+    elif key == "DL score":
+        shown.sort(key=lambda r: -(r["dl"] if r["dl"] is not None else -BIG))
+    elif key == "trad score":
+        shown.sort(key=lambda r: -(r["trad"] if r["trad"] is not None else -BIG))
+    elif key == "distance to main":
+        shown.sort(key=lambda r: (r["dmain"] if r["dmain"] is not None else BIG))
+    else:
+        shown.sort(key=lambda r: (r["clus"], r["vid"]))
+
+    def fmt(v, f="%.2f"):
+        return "" if v is None else f % v
+
+    state["vshown"] = shown
+    vscan_src.data = dict(
+        idx=list(range(len(shown))),
+        pick=[str(rank_of.get(r["vid"], "")) for r in shown],
+        vid=[r["vid"] for r in shown],
+        clus=[r["clus"] for r in shown],
+        x=[fmt(r["x"], "%.1f") for r in shown],
+        y=[fmt(r["y"], "%.1f") for r in shown],
+        z=[fmt(r["z"], "%.1f") for r in shown],
+        deg=[r["deg"] for r in shown],
+        main=["*" if r["is_main"] else "" for r in shown],
+        cand=["y" if r["cand"] else "" for r in shown],
+        dl=[fmt(r["dl"], "%.4f") for r in shown],
+        snap=[fmt(r["snap"]) for r in shown],
+        rerank=[fmt(r["rerank"]) for r in shown],
+        trad=[fmt(r["trad"], "%.3f") for r in shown],
+        dmain=[fmt(r["dmain"]) for r in shown],
+    )
+    # doc pr/58 refresh fix -- see the CDSView comment above.
+    vscan_view.filter = AllIndices()
+
+
+def vscan_refresh_picks():
+    picks = state.get("vpicks") or []
+    pick_src.data = dict(
+        x=[p["x"] for p in picks], y=[p["y"] for p in picks],
+        z=[p["z"] for p in picks], c=[""] * len(picks),
+        tag=[str(i + 1) for i, _ in enumerate(picks)])
+    if picks:
+        bits = []
+        for i, p in enumerate(picks):
+            what = ("manual" if p["kind"] == "manual"
+                    else "vtx %d (clus %d)" % (p["vertex_id"], p["cluster_id"]))
+            bits.append("<b>%d.</b> %s at (%.1f, %.1f, %.1f)"
+                        % (i + 1, what, p["x"], p["y"], p["z"]))
+        manual = any(p["kind"] == "manual" for p in picks)
+        extra = ("&nbsp; <span style='color:#b8860b'>[not_a_candidate -- doc "
+                 "pr/52 Tier D, excluded from an acceptance fit]</span>"
+                 if manual else "")
+        vscan_picks_div.text = "picks: " + " &nbsp;|&nbsp; ".join(bits) + extra
+    else:
+        vscan_picks_div.text = ("picks: <i>none yet</i> &mdash; select a table row "
+                                "and press <i>add pick</i>, or type a position and "
+                                "press <i>add manual pick</i>.")
+
+
+def vscan_refresh_note():
+    d = state.get("data") or {}
+    board = vscan_board(d)
+    bits = []
+    if board:
+        bits.append("route <b>%s</b>" % html.escape(str(board.get("route", "?"))))
+        if board.get("dl_ran"):
+            bits.append("DL best %.3f vs accept %.2f"
+                        % (board.get("dl_best_score", 0.0),
+                           board.get("dl_min_accept_score", 0.0)))
+        if board.get("weights_missing"):
+            bits.append("<span style='color:#c00'>weights path not found</span>")
+    else:
+        bits.append("<span style='color:#c00'>no vertex_scoreboard in this dump</span> "
+                    "(run with <code>SBND_VERTEX_SCOREBOARD=true</code>) &mdash; "
+                    "no scoreboard was taken, which is not the same as "
+                    "&ldquo;no candidates&rdquo;")
+    saved = state.get("vsaved")
+    if state.get("vdirty"):
+        bits.append("<b style='color:#c60'>unsaved</b>")
+    elif saved:
+        bits.append("saved %s" % html.escape(str(saved.get("saved_utc", ""))))
+    if not vscan_write_allowed():
+        bits.append("<b style='color:#c00'>tag '%s' already holds labels; pass "
+                    "--scan-tag explicitly to add to it (M13)</b>" % html.escape(SCAN_TAG))
+    bits.append("tag <code>%s</code>, %d/%d events labelled"
+                % (html.escape(SCAN_TAG), vscan_done_count(), len(LABELS)))
+    vscan_note.text = " &nbsp;&middot;&nbsp; ".join(bits)
+
+
+def vscan_load(label):
+    """Called from load(): rebuild the table and restore any saved label."""
+    d = state.get("data") or {}
+    state["vrows"] = vscan_build_rows(d)
+    state["vpicks"] = []
+    state["vdirty"] = False
+    selvtx_src.data = dict(EMPTY3)
+    vscan_src.selected.indices = []
+
+    saved = vscan_load_label(label)
+    state["vsaved"] = saved
+    if saved:
+        by_id = {r["vid"]: r for r in state["vrows"]}
+        for p in saved.get("picks", []):
+            q = dict(kind=p.get("kind", "candidate"),
+                     vertex_id=p.get("vertex_id"),
+                     cluster_id=p.get("cluster_id", -1),
+                     x=p["x"], y=p["y"], z=p["z"])
+            # Re-read the scores from TODAY's dump for a candidate pick: the
+            # saved copy is the record of what was on screen then, and a
+            # silent disagreement between the two is worth seeing rather than
+            # papering over.
+            if q["kind"] == "candidate" and q["vertex_id"] in by_id:
+                r = by_id[q["vertex_id"]]
+                q.update(cluster_id=r["clus"], x=r["x"], y=r["y"], z=r["z"])
+            state["vpicks"].append(q)
+        conf = saved.get("confidence")
+        state["_vsuspend"] = True
+        vconf_group.active = VCONF.index(conf) if conf in VCONF else None
+        state["_vsuspend"] = False
+    else:
+        state["_vsuspend"] = True
+        vconf_group.active = None
+        state["_vsuspend"] = False
+
+    vman_x.value = vman_y.value = vman_z.value = ""
+    vscan_refresh_picks()
+    vscan_refresh_table()
+    vscan_refresh_note()
+
+
+def on_vscan_select(attr, old, new):
+    shown = state.get("vshown") or []
+    if not new or new[0] >= len(shown):
+        selvtx_src.data = dict(EMPTY3)
+        return
+    r = shown[new[0]]
+    selvtx_src.data = dict(x=[r["x"]], y=[r["y"]], z=[r["z"]], c=[""], tag=[r["vid"]])
+    # Requirement 2: clicking a candidate frames every panel on it.
+    set_centre(r["x"], r["y"], r["z"])
+    zoom_btn.active = True
+    apply_ranges()
+
+
+def _vscan_stage(pick):
+    picks = state.setdefault("vpicks", [])
+    if any(_pick_key(p) == _pick_key(pick) for p in picks):
+        return
+    picks.append(pick)
+    state["vdirty"] = True
+    vscan_refresh_picks()
+    vscan_refresh_table()
+    vscan_refresh_note()
+
+
+def on_vscan_add():
+    sel = vscan_src.selected.indices
+    shown = state.get("vshown") or []
+    if not sel or sel[0] >= len(shown):
+        return
+    r = shown[sel[0]]
+    _vscan_stage(dict(kind="candidate", vertex_id=r["vid"], cluster_id=r["clus"],
+                      x=r["x"], y=r["y"], z=r["z"]))
+
+
+def on_vman_add():
+    try:
+        x, y, z = float(vman_x.value), float(vman_y.value), float(vman_z.value)
+    except (TypeError, ValueError):
+        vscan_note.text = ("<b style='color:#c00'>manual pick needs all three of "
+                           "x, y, z in cm.</b>")
+        return
+    _vscan_stage(dict(kind="manual", vertex_id=None, cluster_id=-1, x=x, y=y, z=z))
+
+
+def on_vman_centre():
+    cx, cy, cz = centre()
+    vman_x.value, vman_y.value, vman_z.value = "%.1f" % cx, "%.1f" % cy, "%.1f" % cz
+
+
+def on_vscan_undo():
+    if state.get("vpicks"):
+        state["vpicks"].pop()
+        state["vdirty"] = True
+        vscan_refresh_picks()
+        vscan_refresh_table()
+        vscan_refresh_note()
+
+
+def on_vscan_clear():
+    if state.get("vpicks"):
+        state["vpicks"] = []
+        state["vdirty"] = True
+        vscan_refresh_picks()
+        vscan_refresh_table()
+        vscan_refresh_note()
+
+
+def on_vconf(attr, old, new):
+    # vscan_load() assigns .active while restoring a saved label, which fires
+    # this callback; without the guard a freshly-loaded, fully-saved event
+    # would immediately report itself unsaved.
+    if state.get("_vsuspend"):
+        return
+    state["vdirty"] = True
+    vscan_refresh_note()
+
+
+def vscan_tap(hx, hy):
+    """Tap-to-fill: a projection shows two of the three coordinates, so a tap
+    in two different panels pins a full 3-D position (requirement 5)."""
+    box = {"x": vman_x, "y": vman_y, "z": vman_z}
+
+    def cb(event):
+        if not vman_tap.active:
+            return
+        box[hx].value = "%.1f" % event.x
+        box[hy].value = "%.1f" % event.y
+    return cb
+
+
+def on_vscan_save():
+    label = state.get("label")
+    d = state.get("data") or {}
+    if not label:
+        return
+    if not vscan_write_allowed():
+        vscan_note.text = ("<b style='color:#c00'>refusing to write: tag '%s' already "
+                           "holds labels and was not passed explicitly (CLAUDE.md M13). "
+                           "Restart with --scan-tag %s to continue that scan, or a new "
+                           "tag to start a fresh one.</b>" % (html.escape(SCAN_TAG),
+                                                             html.escape(SCAN_TAG)))
+        return
+    picks = state.get("vpicks") or []
+    if not picks:
+        vscan_note.text = "<b style='color:#c00'>nothing to save: no picks staged.</b>"
+        return
+
+    board = vscan_board(d)
+    by_id = {r["vertex_id"]: r for r in board.get("rows", [])}
+    rows_by_id = {r["vid"]: r for r in (state.get("vrows") or [])}
+    mv = d.get("main_vertex") or {}
+    mvp = (mv.get("x"), mv.get("y"), mv.get("z")) if mv else None
+    meta = d.get("meta", {})
+
+    out_picks = []
+    for i, p in enumerate(picks):
+        rec = dict(rank=i + 1, kind=p["kind"], vertex_id=p["vertex_id"],
+                   cluster_id=p["cluster_id"], x=p["x"], y=p["y"], z=p["z"])
+        if mvp and None not in mvp:
+            rec["dis_to_main"] = math.dist((p["x"], p["y"], p["z"]), mvp)
+        if p["kind"] == "candidate":
+            r = rows_by_id.get(p["vertex_id"], {})
+            sb = by_id.get(p["vertex_id"], {})
+            # Copied INTO the label on purpose: a tuning fit then joins one
+            # file per event and never has to re-read the dump.
+            rec.update(is_main=r.get("is_main", False),
+                       main_candidate=r.get("cand", False),
+                       degree=r.get("deg", 0),
+                       dl_score=sb.get("dl_score") if sb.get("dl_snapped") else None,
+                       snap_dis=sb.get("snap_dis") if sb.get("dl_snapped") else None,
+                       rerank_total=sb.get("total") if sb.get("dl_snapped") else None,
+                       trad_score=sb.get("trad_score") if sb.get("trad_scored") else None,
+                       dl_winner=sb.get("dl_winner", False),
+                       trad_winner=sb.get("trad_winner", False))
+        out_picks.append(rec)
+
+    doc = dict(
+        event=label,
+        runNo=meta.get("runNo"), subRunNo=meta.get("subRunNo"),
+        eventNo=meta.get("eventNo"),
+        source=os.path.realpath(EVENTS[label]),
+        arm=os.path.basename(os.path.dirname(os.path.dirname(
+            os.path.realpath(EVENTS[label])))),
+        scan_tag=SCAN_TAG,
+        saved_utc=__import__("datetime").datetime.now(
+            __import__("datetime").timezone.utc).isoformat(timespec="seconds"),
+        confidence=(VCONF[vconf_group.active]
+                    if vconf_group.active is not None else None),
+        # doc pr/52 Tier D: a manual pick means the true vertex was not in the
+        # candidate set at all, so no vertex-SELECTION tuning can fix it.
+        not_a_candidate=any(p["kind"] == "manual" for p in picks),
+        main_vertex=(dict(x=mv.get("x"), y=mv.get("y"), z=mv.get("z"),
+                          cluster_id=mv.get("cluster_id")) if mv else None),
+        route=board.get("route"),
+        dl_best_score=board.get("dl_best_score"),
+        dl_min_accept_score=board.get("dl_min_accept_score"),
+        dl_score_scale=board.get("dl_score_scale"),
+        scoreboard_present=bool(board),
+        picks=out_picks,
+    )
+
+    dirn = vscan_labels_dir()
+    os.makedirs(dirn, exist_ok=True)
+    path = vscan_label_path(label)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as fh:
+        json.dump(doc, fh, indent=1, sort_keys=True)
+    os.replace(tmp, path)          # atomic: never leave a half-written record
+    state["vsaved"] = doc
+    state["vdirty"] = False
+    vscan_refresh_note()
+
+
+vscan_src.selected.on_change("indices", on_vscan_select)
+vscan_filter.on_change("value", lambda a, o, n: vscan_refresh_table())
+vscan_sort.on_change("value", lambda a, o, n: vscan_refresh_table())
+vscan_add_btn.on_click(on_vscan_add)
+vscan_undo_btn.on_click(on_vscan_undo)
+vscan_clear_btn.on_click(on_vscan_clear)
+vman_add_btn.on_click(on_vman_add)
+vman_centre_btn.on_click(on_vman_centre)
+vconf_group.on_change("active", on_vconf)
+vscan_save_btn.on_click(on_vscan_save)
+for _f, _hx, _hy in PROJ:
+    _f.on_event(Tap, vscan_tap(_hx, _hy))
 
 
 def toggle_layers(attr, old, new):
@@ -1179,6 +1720,10 @@ def load(label):
     state["label"] = label
     state["data"] = d
 
+    # Hand-scan panel first: it resets the picks, so a stale pick from the
+    # previous event can never be saved against this one.
+    vscan_load(label)
+
     meta = d["meta"]
     # (apa, face) -> ticks per slice, for pt -> slice
     nps = {(r["apa"], r["face"]): r["nticks_per_slice"]
@@ -1411,19 +1956,29 @@ def apply_ranges():
             P["fig"].x_range.start, P["fig"].x_range.end = min(cellw) - 5, max(cellw) + 5
             P["fig"].y_range.start, P["fig"].y_range.end = min(cells) - 5, max(cells) + 5
             continue
-        ws, ss = [], []
         key = ("pu", "pv", "pw")[pl]
         nps = {(r["apa"], r["face"]): r["nticks_per_slice"]
                for r in d.get("meta", {}).get("nticks_per_slice", [])}
-        for s in d.get("segments", []):
-            for p in s["points"]:
-                if p["apa"] != apa:
-                    continue
-                if (abs(p["x"] - cx) > h or abs(p["y"] - cy) > h
-                        or abs(p["z"] - cz) > h):
-                    continue
-                ws.append(p[key])
-                ss.append(p["pt"] / nps.get((apa, p["face"]), 1))
+        # doc sbnd_xin/docs/pr/75: GROW the search box until two fitted points
+        # are found rather than falling back to the panel's full extent.  The
+        # old fallback made the 2-D view useless exactly where it is most
+        # wanted -- on an isolated micro-stub candidate (the doc pr/51 class),
+        # which by construction has no fitted points within +-h.
+        ws, ss = [], []
+        for grow in (1.0, 2.0, 4.0, 8.0):
+            ws, ss = [], []
+            hh = h * grow
+            for s in d.get("segments", []):
+                for p in s["points"]:
+                    if p["apa"] != apa:
+                        continue
+                    if (abs(p["x"] - cx) > hh or abs(p["y"] - cy) > hh
+                            or abs(p["z"] - cz) > hh):
+                        continue
+                    ws.append(p[key])
+                    ss.append(p["pt"] / nps.get((apa, p["face"]), 1))
+            if len(ws) >= 2:
+                break
         if len(ws) >= 2:
             pad = 10
             P["fig"].x_range.start, P["fig"].x_range.end = min(ws) - pad, max(ws) + pad
@@ -1517,9 +2072,26 @@ right_col = column(
     column(dqdx_title, row(dqdx_mode, dqdx_seg_sel), f_dqdx, dqdx_caption),
 )
 
+# The hand-scan row (sbnd_xin/docs/pr/75) sits directly under the projections
+# it drives: clicking a candidate reframes all nine panels, so the table and
+# the pictures have to be visible at once.
+vscan_col = column(
+    vscan_title,
+    row(vscan_sort, vscan_filter, Spacer(width=20),
+        vscan_add_btn, vscan_undo_btn, vscan_clear_btn),
+    vscan_table,
+    row(vman_x, vman_y, vman_z, vman_centre_btn, vman_tap,
+        Spacer(width=15), vman_add_btn),
+    row(Div(text="<b>confidence</b>", width=85), vconf_group,
+        Spacer(width=25), vscan_save_btn),
+    vscan_picks_div,
+    vscan_note,
+)
+
 _rows = [
     header,
     row(left_col, Spacer(width=30), right_col),
+    vscan_col,
 ]
 # Wire-plane panels: hidden by default (sbnd_xin/docs/pr/42 -- not useful for
 # day-to-day PID work, replaced by the dQ/dx panel above), --wire-planes

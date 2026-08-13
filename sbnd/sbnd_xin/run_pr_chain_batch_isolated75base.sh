@@ -50,7 +50,18 @@ set -u
 
 SX=$(cd "$(dirname "$0")" && pwd -P)
 WCT_BASE=/nfs/data/1/xqian/toolkit-dev
-TK=$WCT_BASE/toolkit
+# doc sbnd_xin/docs/pr/75: isolated-worktree copy.  TK points at a git
+# worktree pinned at clean HEAD 40651cb2, because the shared toolkit tree is
+# being edited concurrently by another session -- building or installing there
+# would compile its half-finished work into local/lib and corrupt both
+# sessions' runs (CLAUDE.md M1).  wire-cell-data / python stay on the shared,
+# read-only WCT_BASE.  Never edit run_pr_chain_batch.sh for this -- new file.
+TK=/home/xqian/tmp/claude-25225/-nfs-data-1-xqian-toolkit-dev-toolkit/fdc8fb0f-ce5c-425b-9423-fd7986c44e42/scratchpad/wt-pr75-base
+# doc pr/72 round 2 gotcha: without these, `wire-cell` resolves through
+# direnv's inherited PATH/LD_LIBRARY_PATH to the SHARED tree's binary and libs
+# -- M1's vacuous-A/B trap.  $TK's own must come first.
+export PATH=$TK/local/bin:$PATH
+export LD_LIBRARY_PATH=$TK/local/lib:${LD_LIBRARY_PATH:-}
 export WIRECELL_PATH=$TK/cfg:$WCT_BASE/wire-cell-data:$WCT_BASE/wire-cell-data/sbnd/photodet:${WIRECELL_PATH:-}
 export PYTHONPATH=$TK/pyutil/python:$WCT_BASE/local/python:$WCT_BASE/wire-cell-python:${PYTHONPATH:-}
 AB=$SX/../../abtest
@@ -646,16 +657,11 @@ unset _pr44 _env _key _val
 #   SBND_SHOWER_CONN3_UNREACHABLE   K5 = pr/65 rung 2: conn-3 pseudo-gamma
 #                                   promotion of unreachable main-cluster
 #                                   segments (18306-142421 seg 7013)
-#   SBND_SHOWER_TRAJ_MICHEL_STEM    K6 (round 4): demote a main-vertex
-#                                   shower-trajectory stem to a stopping muon
-#                                   when its far end is a terminal, large-angle
-#                                   Michel (18255-506746 seg 21048)
 for _pr74 in \
     "SBND_SHOWER_IN_CASCADE_GUARD:shower_in_cascade_guard" \
     "SBND_MICHEL_STEM_MICHEL_CHECK:michel_stem_michel_check" \
     "SBND_SHOWER_STEM_BACKFILL:shower_stem_backfill" \
-    "SBND_SHOWER_CONN3_UNREACHABLE:shower_conn3_unreachable" \
-    "SBND_SHOWER_TRAJ_MICHEL_STEM:shower_traj_michel_stem" ; do
+    "SBND_SHOWER_CONN3_UNREACHABLE:shower_conn3_unreachable" ; do
     _env=${_pr74%%:*}; _key=${_pr74#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
@@ -671,14 +677,6 @@ unset _pr74 _env _key _val
 [ -n "${SBND_STEM_BACKFILL_MIP_HI:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_mip_hi=${SBND_STEM_BACKFILL_MIP_HI}")
 [ -n "${SBND_STEM_BACKFILL_MIN_SHOWER_LEN:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_min_shower_len=${SBND_STEM_BACKFILL_MIN_SHOWER_LEN}")
 [ -n "${SBND_CONN3_UNREACHABLE_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "conn3_unreachable_min_len=${SBND_CONN3_UNREACHABLE_MIN_LEN}")
-# doc pr/74 round 4 K6 scalar tunables.  EMPTY = no TLA = cfg default (null =
-# the C++ default: 15 cm / 45 cm / 1.3x / 40 cm / 40 deg).  Only read when
-# shower_traj_michel_stem is on.
-[ -n "${SBND_MICHEL_STEM_TRAJ_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "michel_stem_traj_min_len=${SBND_MICHEL_STEM_TRAJ_MIN_LEN}")
-[ -n "${SBND_MICHEL_STEM_TRAJ_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "michel_stem_traj_max_len=${SBND_MICHEL_STEM_TRAJ_MAX_LEN}")
-[ -n "${SBND_MICHEL_STEM_TRAJ_MIP_LO:-}" ] && CATH_TLA+=(--tla-code "michel_stem_traj_mip_lo=${SBND_MICHEL_STEM_TRAJ_MIP_LO}")
-[ -n "${SBND_MICHEL_STEM_TRAJ_MAX_FAR_LEN:-}" ] && CATH_TLA+=(--tla-code "michel_stem_traj_max_far_len=${SBND_MICHEL_STEM_TRAJ_MAX_FAR_LEN}")
-[ -n "${SBND_MICHEL_STEM_TRAJ_MIN_KINK_DEG:-}" ] && CATH_TLA+=(--tla-code "michel_stem_traj_min_kink_deg=${SBND_MICHEL_STEM_TRAJ_MIN_KINK_DEG}")
 # doc pr/43 round 2 tri-state env overrides (unset = cfg default, 1 = force
 # on, 0 = force off):
 #   SBND_SINGLE_MUON_PROTON_CHAIN_VETO  vertex muon selection walks the

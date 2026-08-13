@@ -44,6 +44,13 @@ PR_EXTRA_STAGES=pr_display PR_JOBS=1 \
 ./pr_display/serve_pr_display.sh 5017 work-prdisp-cosscan2/pr_evt388/calib-pr-evt388.json
 ```
 
+For a neutrino-vertex hand scan, add `--scan-tag <name>` (see below):
+
+```bash
+./pr_display/serve_pr_display.sh 5017 --scan-tag vtxscan1 \
+  "work-prdisp-vtx48/pr_evt*/calib-pr-evt*.json"
+```
+
 Pass the path **explicitly** when more than one `work-prdisp-*` arm exists: the
 script's default glob is `../work-prdisp-*/pr_evt*/calib-pr-evt*.json`, and
 every arm holding the same event resolves to the same label `evt388`, so all but
@@ -67,6 +74,10 @@ volume and the cathode plane drawn in red.
 **Row 2 -- particle flow and event features.** See the two sections below.
 
 **Row 3 -- dQ/dx panel.** See the section below; full write-up doc pr/42.
+
+**Row 3b -- neutrino vertex hand scan.** The candidate table, the pick
+controls and the label saver; full write-up
+[`../docs/pr/75_vertex-handscan-display.md`](../docs/pr/75_vertex-handscan-display.md).
 
 **Row 4, hidden by default (`--wire-planes` to show) -- six panels, two
 columns**: TPC 0 | TPC 1 x (T vs U, T vs V, T vs W). Each shows the fitted
@@ -205,6 +216,54 @@ to the next display round rather than dead. The other 21 stay dead.
 > and relative ranking only. The panel prints this in red and the dump carries
 > the same string in `tagger.weights` so it cannot be shown without it.
 
+## Neutrino vertex hand scan
+
+Doc pr/52 §5 wants scan labels that carry a **3-D vertex position** and the
+scores each candidate was judged on, so the DL acceptance layer
+(`dl_vtx_min_accept_score`, `dl_vtx_score_scale`, the seven `W_*` weights) can
+be re-tuned on SBND instead of the 36 uBooNE-era events it was fitted to.
+This row produces them. Full write-up: doc pr/75.
+
+The score columns come from the dump's `vertex_scoreboard` block, which needs
+the `vertex_scoreboard` knob. **The driver turns it on for you** whenever
+`PR_EXTRA_STAGES` names `pr_display`, so §1's command is all you need;
+`SBND_VERTEX_SCOREBOARD=false` reproduces a pre-pr/75 dump. Without the block
+the table still works, minus the score columns, and the note line says so --
+**an absent scoreboard means no scoreboard was taken, never "no candidates"**.
+
+| control | what |
+|---|---|
+| **table** | one row per PR-graph vertex: position, degree, `main` (the current ν vertex), `cand` (`main_candidate`), DL score, snap distance, rerank composite total, traditional score, distance to the current ν vertex |
+| **rank by** | rerank total (default), DL score, trad score, distance to main, cluster+id |
+| **show** | *main cluster + DL* (default), *candidates*, *all vertices* |
+| **row click** | reframes all nine panels on that candidate and rings it in amber |
+| **add pick** | records the selected row as your choice; picks are **ranked** (1st, 2nd, ...) and drawn as numbered green diamonds |
+| **manual x/y/z** | for when no candidate is the true vertex; `from centre` copies the current centre, `tap fills coords` lets a tap in a projection fill the two coordinates that panel shows (two taps in two panels = a full 3-D point) |
+| **confidence** | certain / likely / unclear |
+
+The default `show` filter is not conservatism: measured on the nueCC48 dumps an
+event has 63-162 PR-graph vertices of which **50-124** are main-vertex
+candidates, so "candidates" is not a scannable set. *main cluster + DL* gives
+4-36 rows and still lists **every DL-snapped vertex wherever it sits**, so the
+failure class where the main *cluster* is wrong can never be hidden by it.
+
+A manual pick sets `not_a_candidate` on the saved label. That is doc pr/52's
+Tier D -- the true vertex was never in the candidate set, so no vertex-*selection*
+tuning can fix that event and it must be excluded from an acceptance fit rather
+than fitted against. It is a pr/51 graph-robustness case.
+
+### Labels
+
+One file per event, `../vertex_labels/<scan-tag>/labels-evt<ID>.json`, written
+tmp+rename so a record is never half-written. Each pick carries its own scores,
+so a tuning fit joins one file per event and never re-reads the dump. Schema:
+doc pr/75 §3.
+
+> **A scan tag is a scientific record (CLAUDE.md M13).** Passing `--scan-tag`
+> explicitly is consent to write into that set. Without it the viewer uses
+> `scan1` and **refuses to write** if that directory already holds labels.
+> Start a new campaign with a new tag.
+
 ## Zoom and centring
 
 `zoom` reframes **all nine panels** to ±*half-width* around a centre; the
@@ -214,8 +273,11 @@ somewhere else.
 
 The 2-D panels have no wire geometry to project through (deliberately -- the
 viewer loads nothing but the JSON), so their window is derived from the fitted
-points inside the same 3-D sphere. If no fitted point is near the centre a
-panel falls back to its full extent rather than showing an empty box.
+points inside the same 3-D sphere. If fewer than two are found the search box
+GROWS (x1, 2, 4, 8) until two are; it used to fall back to the panel's full
+extent, which made the 2-D view useless exactly where it is most wanted -- on
+an isolated micro-stub candidate (the doc pr/51 class), which by construction
+has no fitted points within +-half-width (doc pr/75 §3).
 
 ## Conventions
 
@@ -247,8 +309,12 @@ measured-vs-predicted comparison as a stable number until that is fixed.
 
 ## Not here yet
 
-Hand-scan label saving, batch pre-rendering, and any change to the PR
-algorithms themselves. This is read-only viewing plus the dump that feeds it.
+Batch pre-rendering, and any change to the PR algorithms themselves. This is
+read-only viewing, the dump that feeds it, and the neutrino-vertex hand scan.
+
+*(Hand-scan label saving was in this list until doc pr/75 added it; the entry
+is kept here corrected rather than deleted, because the sentence "this is
+read-only viewing" is still true of everything except the label writer.)*
 
 The particle-flow table's doc-58 `DataTable` refresh fix (view-filter flip after
 every `.data` assignment) **is now verified across event steps** -- seven events
