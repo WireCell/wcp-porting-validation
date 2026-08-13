@@ -13,6 +13,18 @@ recording knob and the rest is a display.
 Toolkit: `vertex_scoreboard` knob + `PrDisplayDump` emitter + jsonnet + doctest.
 wcp-porting-img: the `pr_display` scan panel, the driver pass-through, this doc.
 
+> **The toolkit commit is on a BRANCH, not on `apply-pointcloud`.** `04b6e47d`,
+> parented on `40651cb2`, pushed as **`origin/pr75-vertex-scoreboard`**. It was
+> not landed on `apply-pointcloud` because a concurrent session held
+> uncommitted work in *every* file this round touches
+> (`NeutrinoPatternBase.h`, `TaggerCheckNeutrino.{h,cxx}`,
+> `NeutrinoVertexFinder.cxx`, all three jsonnet files,
+> `doctest_clus_knob_defaults.cxx`), and git stages whole files — committing
+> from the shared tree would have swept that unfinished pr/74 work in. The
+> branch is a clean fast-forward from `40651cb2`; land it with
+> `git merge --ff-only pr75-vertex-scoreboard` once the tree is free.
+> wcp-porting-img `dac67b2` is on `main` and pushed normally.
+
 ## Repro block
 
 ```bash
