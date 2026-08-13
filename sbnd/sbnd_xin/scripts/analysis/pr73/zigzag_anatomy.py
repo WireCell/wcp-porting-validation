@@ -256,6 +256,99 @@ for lo in np.arange(-1, Lc + 1, 2.0):
 
 print()
 print('=' * 78)
+print('E4b -- charge coverage restricted to the CHANGED region only')
+print('=' * 78)
+# Fix the region once, from the round-6 arm, then apply it unchanged to every
+# arm: the whole-cluster number of the previous block includes seg 14006, which
+# no knob moves, and that dilutes a local change.
+_P, _R, _ = fitlayer('work-pr51r6-flip50', 57903)
+_REG = np.vstack([_P[_R == 14001], _P[_R == 14007]])
+zlo, zhi = _REG[:, 2].min(), _REG[:, 2].max()
+print('  region: cluster %d image points with z in [%.2f, %.2f] cm'
+      % (CID if 'CID' in dir() else 14, zlo, zhi))
+print('  (the union z-range of round-6 segments 14001 and 14007)')
+print('  %-22s %8s %11s %9s %9s' % ('arm', 'nimg', 'charge', '<1.5 cm', '<3.0 cm'))
+for arm, what in ARMS_57903:
+    IP_, IQ_, IC_ = imglayer(arm, 57903)
+    P_, R_, _ = fitlayer(arm, 57903)
+    F = np.vstack([P_[R_ == t] for t in sorted(set(R_[R_ >= 0].tolist()))
+                   if (R_ == t).sum() >= 10])
+    m = (IC_ == 14) & (IP_[:, 2] >= zlo) & (IP_[:, 2] <= zhi)
+    dfit = np.min(np.linalg.norm(IP_[m][:, None, :] - F[None, :, :], axis=2), axis=1)
+    tot = IQ_[m].sum()
+    print('  %-22s %8d %11.0f %8.1f %% %8.1f %%'
+          % (arm, m.sum(), tot,
+             100 * IQ_[m][dfit < 1.5].sum() / tot,
+             100 * IQ_[m][dfit < 3.0].sum() / tot))
+
+print()
+print('=' * 78)
+print('E4c -- bow versus jitter: the two are different phenomena')
+print('=' * 78)
+# path/chord and the fold-back fraction both grow with path length, but a smooth
+# large-amplitude excursion (a bow) and a small-amplitude sawtooth (jitter)
+# demand different fixes.  Split them: fit a degree-4 polynomial in arclength to
+# each transverse component, then report path/chord OF the smooth curve and
+# path/chord of the raw path ABOUT that curve.
+DEG = 4
+DEG_SWEEP = (2, 4, 6)
+
+
+def bow_jitter(S, deg):
+    chord = np.linalg.norm(S[0] - S[-1])
+    u = (S[-1] - S[0]) / chord
+    t = (S - S[0]) @ u
+    ex = np.array([1.0, 0.0, 0.0])
+    e1 = ex - np.dot(ex, u) * u
+    e1 /= np.linalg.norm(e1)
+    e2 = np.cross(u, e1)
+    perp = (S - S[0]) - np.outer(t, u)
+    SM = S[0] + np.outer(t, u)
+    res = np.zeros_like(S)
+    for e in (e1, e2):
+        c = perp @ e
+        f = np.polyval(np.polyfit(t, c, deg), t)
+        SM = SM + np.outer(f, e)
+        res = res + np.outer(c - f, e)
+    path = np.linalg.norm(np.diff(S, axis=0), axis=1).sum()
+    pb = np.linalg.norm(np.diff(SM, axis=0), axis=1).sum()
+    Lb = np.linalg.norm(SM[0] - SM[-1])
+    bow = float(np.abs(np.linalg.norm(SM - (S[0] + np.outer(t, u)), axis=1)).max())
+    return dict(chord=chord, ratio=path / chord, bow=bow, ratio_bow=pb / Lb,
+                ratio_jit=path / pb, jit_rms=float(np.linalg.norm(res, axis=1).std()))
+
+
+print('  degree-%d polynomial in arclength, per transverse component' % DEG)
+print('  %-24s %6s %7s %7s %9s %10s %10s %9s'
+      % ('arm / event', 'seg', 'chord', 'ratio', 'bow_amp', 'ratio_bow', 'ratio_jit', 'jit_rms'))
+CASE_SEGS = ([(c['arm'], c['evt'], c['pt']) for c in CASES]
+             + [('work-pr51r7-on50', 57903, CASES[2]['pt']),
+                ('work-pr67f-off50', 57903, CASES[2]['pt'])])
+for arm, evt, pt in CASE_SEGS:
+    _d, s, S, _q = owner_segment(arm, evt, pt)
+    r = bow_jitter(S, DEG)
+    print('  %-24s %6d %7.2f %7.3f %9.2f %10.3f %10.3f %9.3f'
+          % ('%s / %d' % (arm.replace('work-', ''), evt), s, r['chord'],
+             r['ratio'], r['bow'], r['ratio_bow'], r['ratio_jit'], r['jit_rms']))
+print('  ratio_bow x ratio_jit = ratio.  57903 is bow-dominated; 53427/54351 are jitter.')
+print()
+print('  degree sensitivity (ratio_bow / ratio_jit) -- the split is NOT degree-free:')
+print('  %-24s %s' % ('', '   '.join('deg %d' % g for g in DEG_SWEEP)))
+for arm, evt, pt in CASE_SEGS[:3]:
+    _d, s, S, _q = owner_segment(arm, evt, pt)
+    print('  %-24s %s'
+          % ('%s / %d' % (arm.replace('work-', ''), evt),
+             '   '.join('%.3f/%.3f' % (lambda r: (r['ratio_bow'], r['ratio_jit']))(bow_jitter(S, g))
+                        for g in DEG_SWEEP)))
+print('  a quadratic cannot represent 57903\'s excursion and dumps it into "jitter";')
+print('  degrees >= 4 agree.  The bow claim rests on the raw transverse profile and')
+print('  on the endpoint pinning, not on this polynomial.')
+print('  NB multi_trajectory_fit pins both endpoints to vertex->fit().point and')
+print('  never fits them (TrackFitting.cxx:4246-4259), so a vertex off the charge')
+print('  ridge FORCES a bow -- interior-only smoothing cannot remove it.')
+
+print()
+print('=' * 78)
 print('E5 -- per-point q_bee and turn angle around each owner point')
 print('=' * 78)
 E5 = []

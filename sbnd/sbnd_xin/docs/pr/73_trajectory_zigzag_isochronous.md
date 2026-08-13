@@ -50,6 +50,15 @@ and every anti-zigzag guard downstream measures the fitted point against that
 same seed, so a zigzagging seed shields itself. On 57903 the seed changed under
 pr/51 rounds 5–6 and the smooth answer that existed before them was lost (§4.3).
 
+**And the three cases are not the same shape.** §4.7 splits `path/chord` into a
+smooth large-amplitude excursion (a **bow**) and a small-amplitude sawtooth
+(**jitter**). 57903 is bow-dominated (1.225 of its 1.347); 53427 and 54351 are
+almost pure jitter (1.040 of 1.055, 1.037 of 1.042). Because
+`multi_trajectory_fit` **pins both segment endpoints to `vertex->fit().point` and
+never fits them** (`:4246-4259`), a vertex sitting off the charge ridge *forces*
+a bow — no amount of interior smoothing can remove it. That is why the fix
+ranking in §6 puts the seed/vertex fix ahead of trajectory smoothing.
+
 ## 3. The chain, with the code
 
 Stage by stage, `clus/src/TrackFitting.cxx` unless stated:
@@ -168,12 +177,27 @@ Read together:
   The seed does.
 * Round 6 moved the main vertex 30.2 cm from its pre-round-5 position (43.9 cm
   from round 5's) and converted a near-collinear vertex into a 27° hairpin; both
-  resulting legs zigzag (1.35 and 1.21). Round 7 opened
-  the hairpin to 69° and halved the excursion (6.85 → 3.93 cm) but did not
-  remove it.
+  resulting legs zigzag (1.35 and 1.21). Round 7 opened the hairpin to 69° and
+  reduced the excursion 6.85 → 3.93 cm — but those two residuals are measured
+  about different chords (24.10 vs 23.36 cm), so read that as "smaller", not as
+  a factor. The like-for-like number is the bow amplitude in §4.7: 5.94 → 2.52 cm.
 * **Charge coverage is flat across all four arms** (44.2–44.9 % within 1.5 cm).
-  Whatever the topology change bought elsewhere, on this event it bought no
-  coverage and cost trajectory smoothness.
+
+The whole-cluster coverage number includes segment 14006, which no knob moves,
+so it dilutes a local change. Restricting to the **changed region only** —
+cluster-14 image points with z in [249.64, 314.23] cm, the union z-range of
+round-6 segments 14001 and 14007, an identical 963-point / 1.043 × 10⁷ e sample
+in every arm:
+
+| arm | charge within 1.5 cm of any fit point | within 3.0 cm |
+|---|---:|---:|
+| `work-pr67f-off50` | 30.3 % | 47.0 % |
+| `work-pr51r5-flip50` | 30.2 % | 46.8 % |
+| `work-pr51r6-flip50` | 30.1 % | 48.0 % |
+| `work-pr51r7-on50` | 31.0 % | 46.8 % |
+
+Flat there too. Whatever the topology change bought elsewhere, on this event it
+bought no coverage — locally or globally — and cost trajectory smoothness.
 
 **This is a regression signal on shipped, owner-flipped SBND production knobs**
 (`steiner_gap_penalty`, `sgp_weak_scale`, doc pr/51 rounds 5–6), stated here
@@ -234,6 +258,47 @@ per-event evidence, not the census.
 
 For orientation, fold fraction and `path/chord` are near-redundant (Spearman
 +0.87); isochronicity against `path/chord` is +0.44.
+
+**A second limitation of this census, from §4.7.** `path/chord` sums a bow and a
+sawtooth, and the fold-back fraction sees only the sawtooth — a 40° turn at a
+0.6 cm step is a 0.4 cm lateral kick, so the fold metric is blind to a 6 cm bow
+entirely. The two bins above therefore merge two phenomena that need different
+fixes. Any population number used to size a fix should be recomputed with the
+§4.7 split; the F1 probe should emit `ratio_bow` and `ratio_jit` separately.
+
+### 4.7 Bow versus jitter — the three cases are not the same shape
+
+Fit a degree-4 polynomial in arclength to each transverse component, then report
+`path/chord` **of** that smooth curve (`ratio_bow`) and `path/chord` of the raw
+path **about** it (`ratio_jit`); the two multiply to the total.
+
+| arm / event | seg | chord | `path/chord` | bow amplitude | `ratio_bow` | `ratio_jit` | jitter rms |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `pr64r4-on1k` / 53427 | 14002 | 190.00 | 1.055 | 10.80 | 1.015 | **1.040** | 0.314 |
+| `pr64r4-on1k` / 54351 | 17007 | 52.03 | 1.042 | 1.42 | 1.005 | **1.037** | 0.159 |
+| `pr51r6-flip50` / 57903 | 14001 | 24.10 | 1.347 | 5.94 | **1.225** | 1.099 | 0.258 |
+| `pr51r7-on50` / 57903 | 14001 | 23.36 | 1.318 | 2.52 | 1.136 | 1.159 | 0.342 |
+| `pr67f-off50` / 57903 | 14003 | 48.13 | 1.026 | 1.90 | 1.005 | 1.021 | 0.081 |
+
+* **57903 is a bow**, not a sawtooth: a monotone 5.94 cm excursion out and back,
+  with only 0.26 cm rms of jitter riding on it. Round 7 more than halved the bow
+  (5.94 → 2.52 cm) but raised the jitter (0.258 → 0.342 cm rms). The pre-round-5
+  segment had neither (1.005 / 1.021, jitter rms 0.081 cm).
+* **53427 and 54351 are jitter**, and their bows are physical: 53427's 10.80 cm
+  bow is spread over a 190 cm track and costs only 1.5 % of path length — that is
+  a real curving track, not a defect.
+
+**Why this changes the fix.** `multi_trajectory_fit` sets
+`init_ps.front()/back()` from `start_v->fit().point` / `end_v->fit().point`
+(`:4246-4247`) and then pushes those same vertex points into `final_ps` without
+ever calling `fit_point` on them (`:4253-4259`). The endpoints are *pinned*. With
+the main vertex 3–5 cm off the charge ridge (§4.2, top-right panel), the
+trajectory has no choice but to bow out to reach it. **Interior-only smoothing
+with pinned endpoints cannot fix 57903** — it would produce a cleaner curve that
+still has to arrive at the same displaced point. Fixing the vertex can.
+
+The prototype pins endpoints the same way (`multi_track_fitting.h:369-380`), so
+this is shared behaviour, not a porting divergence.
 
 ### 4.6 The existing isochronous guard is cluster-level; the defect is segment-level
 
@@ -300,7 +365,10 @@ prototype parity as justification.
 
 ## 6. Proposed fixes — shape and gate, none implemented
 
-Ranked by what the evidence above supports.
+Ranked by what the evidence above supports. **The ranking is split by §4.7**:
+57903 is a bow forced by a pinned endpoint and only F3 can reach it; 53427 and
+54351 are jitter and dQ assignment, which F2 and F5 can reach. There is no single
+fix for all three.
 
 ### F1 — segment-level trajectory-smoothness probe, log-only, default OFF
 
@@ -309,9 +377,32 @@ drift-⊥ plane, drift-slice occupancy, and — the important one — a counter 
 often the triangle-area test was **shielded by `area2`**, i.e. `area1 >
 area_ratio1 * c` held but `area1 > area_ratio2 * area2` did not. That counter is
 the direct test of §3.4's claim, which is currently an inference from the code
-rather than a measurement. Zero footprint; this should come first.
+rather than a measurement. Emit `ratio_bow` and `ratio_jit` (§4.7) separately,
+not just `path/chord`. Zero footprint; this should come first regardless of what
+follows.
 
-### F2 — recommended: seed-independent smoothing on isochronous *segments*
+### F3 — the fix for 57903: the seed, i.e. where the vertex sits
+
+*Promoted above F2 by §4.7.* The endpoints are pinned to the vertex fit points,
+so a vertex off the charge ridge forces the bow, and the bow is 1.225 of 57903's
+1.347. §4.3 shows the smooth answer existed before pr/51 rounds 5–6 and was lost
+to a vertex move that bought no charge coverage either locally or globally.
+
+Two sub-options, in increasing order of intrusiveness:
+
+* **F3a — add trajectory smoothness as a criterion in the near-vertex graph
+  work.** A candidate vertex that turns a near-collinear junction into a tight
+  hairpin *and* raises the incident segments' `ratio_bow` without raising local
+  charge coverage is a bad candidate. This is the honest fix and it lives where
+  the decision is made.
+* **F3b — let the endpoint move.** Unpin `init_ps.front()/back()` for segments
+  flagged isochronous and let `fit_point` place them, then re-seat the vertex.
+  Much more invasive: it changes the vertex, hence downstream selection.
+
+Both are entangled with pr/51 rounds 5–6, which are production and were validated
+on other events. Flagged as an **owner decision**, with F1's numbers as the input.
+
+### F2 — seed-independent smoothing on isochronous *segments*
 
 The criterion is per-**segment** (§4.6), not per-cluster: chord within
 `traj_iso_angle` (10°) of the drift-⊥ plane **and** chord ≥ `traj_iso_min_len`
@@ -319,26 +410,23 @@ The criterion is per-**segment** (§4.6), not per-cluster: chord within
 keeping the drift coordinate (which is well determined — 0.05 cm rms) and the
 along-track parameterisation, then re-run `dQ_dx_multi_fit` on the smoothed path.
 
-Two constraints from §4.2 that the implementation must respect:
+**Scope, stated honestly:** with endpoints pinned this addresses `ratio_jit`, not
+`ratio_bow`. It is therefore a fix for the 53427/54351 shape (jitter 1.037–1.040,
+rms 0.16–0.31 cm) and for the residual jitter round 7 left on 57903 (0.342 cm
+rms) — **not** for 57903's 5.94 cm bow, which needs F3.
+
+Two further constraints from §4.2:
 
 * the acceptance test cannot be "is it straighter" — a straight chord between the
-  current endpoints *loses* charge here. It must be a charge-coverage test:
-  accept the smoothed path only if the charge within a fixed tube does not drop;
-* the endpoints may themselves need to move, which reaches back into the vertex,
-  so the first version should smooth the interior only and leave endpoints pinned.
+  current endpoints *loses* charge here (23.1 % vs 36.6 %). It must be a
+  charge-coverage test: accept the smoothed path only if the charge within a
+  fixed tube does not drop;
+* the pre-round-5 arm sets the target: jitter rms 0.081 cm is what a well-seeded
+  isochronous segment looks like in this same detector and event.
 
 All knobs default OFF ⇒ key-suppressed in jsonnet ⇒ byte-identical when off.
 Gate: the standard three-manifest off-gate, a knob-on census with a per-fire
 sentinel, before/after Bee.
-
-### F3 — the source: revisit the isochronous seed
-
-§4.3 says the smooth answer for 57903 existed before pr/51 rounds 5–6 and was
-lost to a vertex move that bought no charge coverage on this event. Adding
-trajectory smoothness (or slice occupancy) as a *criterion* in the near-vertex
-graph work would be the honest fix rather than repairing the symptom downstream.
-It is also the most entangled: those rounds are production and were validated on
-other events. Flagged as an owner decision, not proposed.
 
 ### F4 — anisotropic prior in `fit_point` (the never-ported `PMatrix`)
 
@@ -359,7 +447,19 @@ everywhere.
 ## 7. What this doc does not establish
 
 * Whether the fit adds jitter of its own on top of the seed. F1 measures it; §4.3
-  only shows the seed dominates the *event-to-event* variation.
+  only shows the seed dominates the *event-to-event* variation. §4.7 gives the
+  jitter its own number (rms 0.08–0.34 cm) but does not attribute it.
+* Where exactly the bow/jitter boundary sits. The degree-4 polynomial of §4.7 is
+  a working split, not a physics model, and **it is not degree-independent**:
+  sweeping the degree 2 / 4 / 6 gives `ratio_bow`/`ratio_jit` of
+  1.010/1.044 → 1.015/1.040 → 1.017/1.037 for 53427 and
+  1.004/1.038 → 1.005/1.037 → 1.007/1.035 for 54351 (stable), but
+  **1.036/1.272 → 1.225/1.099 → 1.216/1.107 for 57903** — a quadratic cannot
+  represent the excursion at all and dumps it into "jitter". Degrees ≥ 4 agree.
+  The bow claim for 57903 does *not* rest on the polynomial: it rests on the raw
+  transverse profile (§4.2 table — a monotone 0 → −6.8 → 0 cm excursion with
+  within-bin spread ≤ 1 cm) and on the endpoint pinning at `:4246-4259`, neither
+  of which involves a fit.
 * Whether the compact-matrix overlap term is what collapses dQ at fold-backs
   (§4.4). Named as a suspect from code reading only.
 * Whether the round-5/6 vertex on 57903 is physically wrong. This doc measures

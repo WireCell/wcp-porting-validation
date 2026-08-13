@@ -56,6 +56,41 @@ E3 -- 18255-57903 seg 14001: the image is a ribbon (fit-independent)
      23.0      4       77154      -3.15      2.40   [-1.0, 0.0]
 
 ==============================================================================
+E4b -- charge coverage restricted to the CHANGED region only
+==============================================================================
+  region: cluster 14 image points with z in [249.64, 314.23] cm
+  (the union z-range of round-6 segments 14001 and 14007)
+  arm                        nimg      charge   <1.5 cm   <3.0 cm
+  work-pr67f-off50            963    10426110     30.3 %     47.0 %
+  work-pr51r5-flip50          963    10426110     30.2 %     46.8 %
+  work-pr51r6-flip50          963    10426110     30.1 %     48.0 %
+  work-pr51r7-on50            963    10426110     31.0 %     46.8 %
+
+==============================================================================
+E4c -- bow versus jitter: the two are different phenomena
+==============================================================================
+  degree-4 polynomial in arclength, per transverse component
+  arm / event                 seg   chord   ratio   bow_amp  ratio_bow  ratio_jit   jit_rms
+  pr64r4-on1k / 53427       14002  190.00   1.055     10.80      1.015      1.040     0.314
+  pr64r4-on1k / 54351       17007   52.03   1.042      1.42      1.005      1.037     0.159
+  pr51r6-flip50 / 57903     14001   24.10   1.347      5.94      1.225      1.099     0.258
+  pr51r7-on50 / 57903       14001   23.36   1.318      2.52      1.136      1.159     0.342
+  pr67f-off50 / 57903       14003   48.13   1.026      1.90      1.005      1.021     0.081
+  ratio_bow x ratio_jit = ratio.  57903 is bow-dominated; 53427/54351 are jitter.
+
+  degree sensitivity (ratio_bow / ratio_jit) -- the split is NOT degree-free:
+                           deg 2   deg 4   deg 6
+  pr64r4-on1k / 53427      1.010/1.044   1.015/1.040   1.017/1.037
+  pr64r4-on1k / 54351      1.004/1.038   1.005/1.037   1.007/1.035
+  pr51r6-flip50 / 57903    1.036/1.272   1.225/1.099   1.216/1.107
+  a quadratic cannot represent 57903's excursion and dumps it into "jitter";
+  degrees >= 4 agree.  The bow claim rests on the raw transverse profile and
+  on the endpoint pinning, not on this polynomial.
+  NB multi_trajectory_fit pins both endpoints to vertex->fit().point and
+  never fits them (TrackFitting.cxx:4246-4259), so a vertex off the charge
+  ridge FORCES a bow -- interior-only smoothing cannot remove it.
+
+==============================================================================
 E5 -- per-point q_bee and turn angle around each owner point
 ==============================================================================
   evt 53427 (f8203fcd idx 13) seg 14002, owner point at index 166 of 331
