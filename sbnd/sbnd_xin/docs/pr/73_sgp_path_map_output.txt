@@ -1,0 +1,40 @@
+log                        call  ngap nbase gap_on_gap gap_on_base base_on_gap base_on_base    detour      tax
+work-pr73-path-q4000          0    76    70    109.395    108.279    117.645    105.797     2.482    8.250
+                              1     3     3      2.834      2.834      2.834      2.834     0.000    0.000
+                              2     6     6      4.636      4.636      4.636      4.636     0.000    0.000
+work-pr73-path-q6000          0    75    70    114.123    110.668    132.360    105.797     4.871   18.237
+                              1    13     5     32.396     29.895     44.166     24.582     5.313   11.770
+                              2    79    66    105.613     99.657    151.640     89.236    10.421   46.027
+                              3    26    16     58.415     55.591    107.708     50.996     4.595   49.293
+                              4    55    52     46.389     43.567     53.139     41.828     1.739    6.750
+                              5     6     6      3.279      2.738      3.279      2.738     0.000    0.000
+                              6    49    46     41.249     40.064     47.998     38.325     1.739    6.749
+                              7    30    22     59.833     57.563    108.173     52.942     4.621   48.340
+
+detour = gap_on_base - base_on_base  (extra TRUE length the penalty bought)
+tax    = base_on_gap - gap_on_gap    (penalty the base route would have paid)
+
+==============================================================================
+CALL 0 -- the end-to-end rough path, head to head
+==============================================================================
+  work-pr73-path-q4000       detour +2.482 cm (+2.35 % of 105.80)   tax  8.250 ( 7.54 %)   maxsep 15.619 cm
+                             first=(-17.02,-58.39,312.82) last=(-35.15,-35.62,225.97)  n_gap=76 n_base=70
+  work-pr73-path-q6000       detour +4.871 cm (+4.60 % of 105.80)   tax 18.237 (15.98 %)   maxsep  4.850 cm
+                             first=(-17.02,-58.39,312.82) last=(-35.15,-35.62,225.97)  n_gap=75 n_base=70
+
+WHERE the penalized route departs from the base route (per-point offset)
+ribbon = z in [265.90, 314.03] cm
+
+  work-pr73-path-q4000
+    gap-route points off the base route by > 1 cm: 12 of 76
+      inside the ribbon    n=  9  mean offset  6.42 cm  max 15.62 cm
+      outside              n= 67  mean offset  0.17 cm  max  2.46 cm
+    z span of the departing points: [247.9, 307.4] cm
+    of which inside the ribbon: 8 of 12 (67 %)
+
+  work-pr73-path-q6000
+    gap-route points off the base route by > 1 cm: 10 of 75
+      inside the ribbon    n=  9  mean offset  1.67 cm  max  4.85 cm
+      outside              n= 66  mean offset  0.27 cm  max  3.03 cm
+    z span of the departing points: [232.3, 271.4] cm
+    of which inside the ribbon: 4 of 10 (40 %)

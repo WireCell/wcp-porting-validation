@@ -2,8 +2,8 @@
 
 **Scope: diagnosis only — no reconstruction behaviour is changed.** Sections 1-4.8
 are read off Bee archives that already existed on disk. Section 4.9 adds one
-**default-OFF, log-only** knob, `sgp_edge_probe`, and two diagnostic runs; its
-gates are in §8.
+**default-OFF, log-only** knob, `sgp_edge_probe`, and §§4.9-4.10 use it for six
+diagnostic runs; its gates are in §8.
 
 ## 0. Repro
 
@@ -32,11 +32,30 @@ python3 scripts/analysis/pr73/sgp_edge_map.py \
         --tsv docs/pr/73_sgp_edges_57903_q6000.tsv \
         --routes work-pr73-probe-q4000 work-pr73-probe-q6000
 #   -> docs/pr/73_sgp_edge_map_output.txt  (committed verbatim)
+
+# sec 4.10 -- the PATH-level sentinel (same knob).  Four runs: 57903 at both
+# qref values, plus the two events round 6 was built to fix, at production
+# settings.  All four are hash-identical to their no-probe arms.
+SBND_SGP_WEAK_SCALE=5 SBND_SGP_WEAK_QREF=6000 SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr73-path-q6000  data 57903
+SBND_SGP_WEAK_SCALE=5 SBND_SGP_WEAK_QREF=4000 SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr73-path-q4000  data 57903
+SBND_SGP_WEAK_SCALE=5 SBND_SGP_WEAK_QREF=6000 SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr73-path-131357 data 131357
+SBND_SGP_WEAK_SCALE=5 SBND_SGP_WEAK_QREF=6000 SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr73-path-506746 data 506746
+
+python3 scripts/analysis/pr73/sgp_path_map.py \
+        work-pr73-path-q4000/pr_evt57903/wct_pr_evt57903.log \
+        work-pr73-path-q6000/pr_evt57903/wct_pr_evt57903.log
+#   -> docs/pr/73_sgp_path_map_output.txt   (committed verbatim)
+python3 scripts/analysis/pr73/sgp_fix_design.py
+#   -> docs/pr/73_sgp_fix_design_output.txt (committed verbatim)
 ```
 
-All three scripts are read-only — they open each arm's `pr_evt*/mabc-pr.zip` (or
-its `wct_pr_evt*.log`) and run nothing. The two `run_pr_chain_batch.sh` lines are
-the only things that execute, and they write to fresh `work-pr73-probe-*` arms
+All five scripts are read-only — they open each arm's `pr_evt*/mabc-pr.zip` (or
+its `wct_pr_evt*.log`) and run nothing. The `run_pr_chain_batch.sh` lines are
+the only things that execute, and they write to fresh `work-pr73-{probe,path}-*` arms
 (M13: no existing label is touched).
 
 ## 1. The three cases
@@ -493,6 +512,84 @@ mechanism. Settling it needs the actual shortest-path costs on the two graphs,
 i.e. a **path**-level sentinel inside `do_rough_path`, not an edge-level one.
 That is the next instrument, not another argument.
 
+### 4.10 The causal chain, measured end to end — and what a fix has to satisfy
+
+§4.9's edge-level probe could not say why the re-pricing changes the *route*. A
+**path**-level sentinel does. Under the same `sgp_edge_probe` knob,
+`do_rough_path` now also routes on the untouched base flavor and prices each of
+the two routes under each of the two weightings. Optimality forces
+`base_on_base ≤ gap_on_base` and `gap_on_gap ≤ base_on_gap`, so two numbers
+carry all the information:
+
+* **detour** = `gap_on_base − base_on_base` — the extra *true* length the
+  penalty talked the router into accepting;
+* **tax** = `base_on_gap − gap_on_gap` — the penalty the base route would have
+  paid had it been kept. Tax is the pressure; detour is the damage.
+
+Four probe runs, all hash-identical to their no-probe references: 57903 at qref
+6000 and 4000, plus the two events round 6 was **built to fix**, 18259-131357
+and 18255-506746, at production settings.
+
+**The chain, on 57903.** Call 0 is the end-to-end route, before any vertex
+exists; everything after is downstream of it. Same endpoints in both runs:
+
+| | qref 4000 (good) | qref 6000 (production) |
+|---|---:|---:|
+| base route length | 105.797 cm | 105.797 cm |
+| **detour** | **+2.482 cm (+2.35 %)** | **+4.871 cm (+4.60 %)** |
+| **tax** | 8.250 (7.5 %) | **18.237 (16.0 %)** |
+
+Raising qref from 4000 to 6000 **doubles both**: twice the pressure, twice the
+geometric damage, on an identical routing problem. Then, with the corridor moved
+and the hairpin vertex created, call 1 routes the isochronous leg to it and
+accepts a **+5.313 cm detour on a 24.58 cm path — +21.6 %**, using 13 steiner
+vertices where the base route needs 5, wandering up to 10.2 cm away. **That is
+the bow, delivered by the router, before the trajectory fit ever runs.** §4.7
+measured the same bow at 5.94 cm on the fitted output; §3.4 explains why nothing
+downstream can remove it, and §4.7 why the pinned endpoint locks it in.
+
+**What a fix must satisfy.** The two events round 6 fixed contribute 98
+do_rough_path calls that moved the route. A guard must keep all of them and
+reject 57903's call 0:
+
+| statistic | fixes, max | 57903 call 0 | margin | verdict |
+|---|---:|---:|---:|---|
+| detour, % of base | 40.43 % | 4.60 % | — | **inverted** |
+| detour, cm | 4.18 | 4.87 | 1.17× | separates, too tight |
+| **max separation from the base route** | **2.57 cm** | **4.85 cm** | **1.89×** | **separates** |
+
+So the obvious fix — *cap the detour* — **does not work**. The fixes routinely
+need 30–40 % detours on short paths (131357 cluster 110: +40.4 % on a 1.39 cm
+path), which is far above anything 57903's damage needs. A **detour cap in
+percent is inverted**, and in centimetres the margin is 1.17× — not shippable.
+
+What does separate on this sample is the **geometric excursion**: how far the
+penalized route ever gets from the base route. Every one of the 98 fix calls
+stays within 2.57 cm; 57903's causal call goes to 4.85 cm and its downstream legs
+to 10.2 and 14.2 cm.
+
+**And the physical property behind that separation is drift-slice occupancy** —
+the §4.2 quantity, measured on the clusters the router actually worked on:
+
+| cluster | points | drift slices | points/slice | peak/median | cm of object per slice |
+|---|---:|---:|---:|---:|---:|
+| 57903 cl 14 — **harmed** | 1287 | 69 | 18.7 | **40.0** | 1.466 |
+| 131357 cl 12 — fixed | 1806 | 142 | 12.7 | 7.2 | 0.433 |
+| 506746 cl 21 — fixed | 1683 | 126 | 13.4 | 3.9 | 0.819 |
+
+and on 57903's isochronous sub-stretch alone: **786 points in 7 slices — 112
+points per slice, 6.9 cm of object per drift slice**. The harmed cluster is the
+only one carrying a ghost, and it carries a large one. The fixed clusters never
+exceed 0.82 cm/slice.
+
+That closes the loop with §4.9: a ghost is support-rich *and* charge-rich, so
+both penalty terms under-price it; the router is therefore free to make a large
+excursion into it, and on this event it did.
+
+**Caveat that governs the fix design: n = 3 events.** The 2.57 / 4.85 cm gap is
+a candidate operating point to validate on the full manifests, not a settled
+number.
+
 ## 5. The owner's prototype question: is there special code in WCP?
 
 **No — not in the fit.** `grep -in 'isochronous|prolonged|flag_para|degenerate|drift_dir'`
@@ -555,26 +652,49 @@ rather than a measurement. Emit `ratio_bow` and `ratio_jit` (§4.7) separately,
 not just `path/chord`. Zero footprint; this should come first regardless of what
 follows.
 
-### F3 — the fix for 57903: the seed, i.e. where the vertex sits
+### F3 — the fix for 57903: bound what the penalty may do to the route
 
-*Promoted above F2 by §4.7.* The endpoints are pinned to the vertex fit points,
-so a vertex off the charge ridge forces the bow, and the bow is 1.225 of 57903's
-1.347. §4.3 shows the smooth answer survived pr/51 round 5 intact and was lost in round 6
-to a vertex move that bought no charge coverage either locally or globally.
+*Promoted above F2 by §4.7, and given its shape by §4.10.* The endpoints are
+pinned to the vertex fit points, so a vertex off the charge ridge forces the bow;
+and §4.10 shows the bow is delivered by `do_rough_path` itself, at qref 6000, as
+a +21.6 % detour on the isochronous leg. The fix belongs at the router.
 
-Two sub-options, in increasing order of intrusiveness:
+**F3a — excursion guard on `do_rough_path` (recommended).** The path sentinel of
+§4.10 is already the decision rule: route on both flavors, and if the penalized
+route ever gets further than `sgp_max_sep` from the base route, keep the base
+route. Knob `sgp_max_sep`, C++ default **−1 = off** (unbounded, today's
+behaviour); candidate operating point **3 cm**, which on the sample measured
+keeps all 98 calls the round-6 fixes needed (max 2.57 cm) and rejects 57903's
+causal call (4.85 cm) and its four largest downstream legs (10.2–14.2 cm).
 
-* **F3a — add trajectory smoothness as a criterion in the near-vertex graph
-  work.** A candidate vertex that turns a near-collinear junction into a tight
-  hairpin *and* raises the incident segments' `ratio_bow` without raising local
-  charge coverage is a bad candidate. This is the honest fix and it lives where
-  the decision is made.
-* **F3b — let the endpoint move.** Unpin `init_ps.front()/back()` for segments
-  flagged isochronous and let `fit_point` place them, then re-seat the vertex.
-  Much more invasive: it changes the vertex, hence downstream selection.
+Why this shape and not the obvious one: **capping the detour does not work.**
+§4.10 measures the fixes needing 30–40 % detours on short paths while 57903's
+damage needs only 4.6 % — the percentage criterion is *inverted* — and in
+centimetres the margin is 1.17×. The excursion criterion separates by 1.89×
+because it measures how far the route *moves in space*, which is what makes a
+trajectory unfittable, rather than how much length it adds.
 
-Both are entangled with pr/51 round 6, which is production and was validated
-on other events. Flagged as an **owner decision**, with F1's numbers as the input.
+Cost: one extra `shortest_path` per `do_rough_path` call on penalized clusters.
+Bounded and easy to state: *the penalty may re-route, but never by more than
+N cm*.
+
+**F3b — price the ghost properly (the principled version).** §4.9 and §4.10
+together say the ghost is under-priced because it is simultaneously support-rich
+(`bad → 0`) and charge-rich (`deficit → 0`), and §4.10 gives the observable that
+separates a ghost from a resolved track: **drift-slice occupancy** — 6.9 cm of
+object per drift slice in 57903's ribbon (peak/median 40.0 for the cluster)
+versus 0.43 and 0.82 cm/slice for the two clusters round 6 fixed. A third term
+of the same shape as the other two, priced on local slice occupancy, would stop
+the ghost being the cheapest region in the cluster. More faithful to the physics,
+and more work: it needs a new per-edge quantity and its own scan.
+
+**F3c — let the endpoint move.** Unpin `init_ps.front()/back()` for isochronous
+segments and re-seat the vertex. Most invasive: it changes the vertex, hence
+downstream selection. Not recommended before F3a is measured.
+
+All three are entangled with pr/51 round 6, which is production and was validated
+on other events; F3a is the only one that can be shown, *before* it is turned on,
+to leave those validations intact — that is the argument for doing it first.
 
 ### F2 — seed-independent smoothing on isochronous *segments*
 
@@ -659,13 +779,19 @@ everywhere.
     (`abtest/hash_archive.py`, member content) to their no-probe references —
     `work-pr73-probe-q6000` == `work-pr51r7-on50`
     (`90055546a720ba7c…`) and `work-pr73-probe-q4000` == `work-pr51r6-w5q4on50`
-    (`8c988ce392873108…`). The probe is inert.
+    (`8c988ce392873108…`); and with the path sentinel added,
+    `work-pr73-path-q6000` == `work-pr51r7-on50`, `work-pr73-path-q4000` ==
+    `work-pr51r6-w5q4on50`, `work-pr73-path-131357` ==
+    `work-pr51r6-w5q6000-131357` (`bcd599e604ad6900…`) and
+    `work-pr73-path-506746` == `work-pr51r6-w5q6000-506746`
+    (`de99a83c683dcf7b…`). Six for six: the probe is inert.
   * `./build/clus/wcdoctest-clus`: 194 cases / 1973 assertions, 0 failed.
     Knob default round-trip added to `doctest_clus_knob_defaults.cxx`.
   * Freshness proof (M1) done before both runs.
 * Records committed: `73_evt57903_zigzag.png`, `73_anatomy_output.txt`,
   `73_census_output.txt`, `73_zigzag_census_r7on50.tsv`,
-  `73_sgp_edge_map_output.txt`, `73_sgp_edges_57903_q6000.tsv`, and the three
+  `73_sgp_edge_map_output.txt`, `73_sgp_edges_57903_q6000.tsv`,
+  `73_sgp_path_map_output.txt`, `73_sgp_fix_design_output.txt`, and the five
   scripts under `scripts/analysis/pr73/`.
 * Related: doc pr/67 (isochronous coverage, `iso_snap_min_dir_mag`), doc pr/51
   rounds 5–7 (the knobs in §4.3), docs pr/49–50 (`fit_blob_coverage` — the
