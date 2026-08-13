@@ -51,9 +51,20 @@ python3 scripts/analysis/pr73/sgp_path_map.py \
 #   -> docs/pr/73_sgp_path_map_output.txt   (committed verbatim)
 python3 scripts/analysis/pr73/sgp_fix_design.py
 #   -> docs/pr/73_sgp_fix_design_output.txt (committed verbatim)
+
+# sec 4.11 -- seed vs fit on the owner's other two points.  The probe now also
+# dumps the CHOSEN route unconditionally ("sgp path sel:"), which is what makes
+# the seed available on calls where the two flavors agree.
+SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr73-seed-53427 data 53427
+SBND_SGP_EDGE_PROBE=true PR_JOBS=2 \
+    ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr73-seed-54351 data 54351
+python3 scripts/analysis/pr73/seed_vs_fit.py work-pr73-seed-53427 53427 -24.6 -17.1 446.1
+python3 scripts/analysis/pr73/seed_vs_fit.py work-pr73-seed-54351 54351 -150.3 82.4 196.2
+#   -> docs/pr/73_seed_vs_fit_output.txt  (committed verbatim)
 ```
 
-All five scripts are read-only — they open each arm's `pr_evt*/mabc-pr.zip` (or
+All six scripts are read-only — they open each arm's `pr_evt*/mabc-pr.zip` (or
 its `wct_pr_evt*.log`) and run nothing. The `run_pr_chain_batch.sh` lines are
 the only things that execute, and they write to fresh `work-pr73-{probe,path}-*` arms
 (M13: no existing label is touched).
@@ -87,10 +98,15 @@ same seed, so a zigzagging seed shields itself. On 57903 the seed changed under
 pr/51 **round 6** and the smooth answer that survived round 5 intact was lost
 (§4.3; round 5 moved no point by more than 1 cm, §4.8 says why).
 
-**And the three cases are not the same shape.** §4.7 splits `path/chord` into a
+**But that sentence is exact only for 57903.** §4.7 splits `path/chord` into a
 smooth large-amplitude excursion (a **bow**) and a small-amplitude sawtooth
 (**jitter**). 57903 is bow-dominated (1.225 of its 1.347); 53427 and 54351 are
-almost pure jitter (1.040 of 1.055, 1.037 of 1.042). Because
+almost pure jitter (1.040 of 1.055, 1.037 of 1.042). §4.11 shows that on those
+two the fit **halves** the jitter it is handed (0.174 → 0.085 cm rms locally) —
+there the fit is the mitigation, not the cause, and what it is handed is a
+**lattice staircase**: steiner points exist only on the U×V wire-intersection
+grid crossed with the time slice (quanta 0.0866 / 0.15 / 0.312 cm), so any
+shortest path between two of them zigzags at that scale. Because
 `multi_trajectory_fit` **pins both segment endpoints to `vertex->fit().point` and
 never fits them** (`:4246-4259`), a vertex sitting off the charge ridge *forces*
 a bow — no amount of interior smoothing can remove it. That is why the fix
@@ -590,6 +606,71 @@ excursion into it, and on this event it did.
 a candidate operating point to validate on the full manifests, not a settled
 number.
 
+### 4.11 The other two events: the seed is a lattice staircase, and the fit *removes* half of it
+
+§4.7 already separated the three cases: 57903 is a bow, 53427 and 54351 are
+jitter. §4.10 traced the bow to the router. This section does the same for the
+jitter, **locally at the owner's two points** (±25 fitted points ≈ ±15 cm, not
+the long-track curvature), by dumping the `do_rough_path` route itself and
+comparing it with the fitted output. Both probe runs are hash-identical to
+production.
+
+| 18255-53427, local (28.6 cm) | n | `path/chord` | `ratio_jit` | jitter rms | max turn |
+|---|---:|---:|---:|---:|---:|
+| seed, as routed (steiner points) | 45 | 1.338 | 1.308 | 0.214 | **140°** |
+| seed, resampled at 0.6 cm | 66 | 1.194 | 1.184 | 0.174 | 113° |
+| **fitted trajectory** | 51 | **1.050** | **1.050** | **0.085** | 94° |
+
+| 18255-54351, local (26.7 cm) | n | `path/chord` | `ratio_jit` | jitter rms | max turn |
+|---|---:|---:|---:|---:|---:|
+| seed, as routed (steiner points) | 53 | 1.287 | 1.273 | 0.168 | **112°** |
+| seed, resampled at 0.6 cm | 59 | 1.206 | 1.193 | 0.153 | 96° |
+| **fitted trajectory** | 46 | **1.022** | **1.021** | **0.112** | 53° |
+
+**The fit is not the culprit here — it is the mitigation.** It halves the jitter
+(0.174 → 0.085 cm rms on 53427; 0.153 → 0.112 on 54351) and takes `path/chord`
+from 1.19 → 1.05 and 1.21 → 1.02. §2's blanket "the fit fails to remove the
+zigzag" is right for 57903's bow and **wrong for these two**: the fit removes
+about half of what it is handed. What survives is a residual, not an artefact of
+the fit.
+
+**Why the seed has that shape: the Steiner cloud is a lattice.** The seed's step
+lengths are not uniform (min 0.312, median 0.72–0.84, max 1.8–3.7 cm), and the
+per-axis increments are *quantised*:
+
+| axis | distinct \|Δ\| values on 53427 | quantum |
+|---|---|---|
+| drift x | 6 | **0.312 cm** = one drift slice (§4.2) |
+| y | 34 | **0.0866 cm** = pitch/(2√3) |
+| z | 10 | **0.15 cm** = pitch/2 |
+
+with the same quanta on 54351 (x ∈ {0.312, 0.313, 0.625, 0.626}, y multiples of
+0.0866, z multiples of 0.15). Those are exactly the U×V wire-intersection
+lattice at the SBND 3 mm pitch, crossed with the time-slice pitch. **Steiner
+points can only sit on that lattice, so a shortest path between two of them is a
+staircase**, and a staircase resampled at 0.6 cm has alternating 100–140° turns
+by construction. The measured seed jitter, 0.17–0.21 cm rms, is about half the
+lattice spacing — the amplitude you get for free from the discreteness.
+
+Two consequences worth stating:
+
+* the seed jitter is **not** a routing pathology and not a charge effect. There
+  is nothing to fix in `do_rough_path` for these two events: any path through a
+  lattice looks like this, and the near-degeneracy (a diagonal step costs less
+  than two axis steps, but only a little, and the charge weighting has just a
+  ±20 % dynamic range) means the router has almost no reason to prefer the
+  straight staircase over any other;
+* the residual after fitting still carries fold-backs — 94° and 53° maximum turn
+  between consecutive 0.6 cm steps — and §4.4 showed those coincide **point for
+  point** with the ~3× dQ collapse at the owner's coordinates, on a trajectory
+  that never leaves the charge (nearest image point 0.08–0.67 cm).
+
+So for 53427 and 54351 the target is not the seed and not the position fit. It
+is either (a) smoothing the lattice staircase before `dQ_dx_multi_fit` consumes
+it — the staircase is known-noise, it has no physical content — or (b) making
+the dQ assignment robust to a fold-back. Those are F2 and F5 respectively, and
+this section is the reason F2 is worth doing *despite* being useless for 57903.
+
 ## 5. The owner's prototype question: is there special code in WCP?
 
 **No — not in the fit.** `grep -in 'isochronous|prolonged|flag_para|degenerate|drift_dir'`
@@ -705,9 +786,15 @@ keeping the drift coordinate (which is well determined — 0.05 cm rms) and the
 along-track parameterisation, then re-run `dQ_dx_multi_fit` on the smoothed path.
 
 **Scope, stated honestly:** with endpoints pinned this addresses `ratio_jit`, not
-`ratio_bow`. It is therefore a fix for the 53427/54351 shape (jitter 1.037–1.040,
-rms 0.16–0.31 cm) and for the residual jitter round 7 left on 57903 (0.342 cm
-rms) — **not** for 57903's 5.94 cm bow, which needs F3.
+`ratio_bow`. It is therefore a fix for the 53427/54351 shape and for the residual
+jitter round 7 left on 57903 (0.342 cm rms) — **not** for 57903's 5.94 cm bow,
+which needs F3. §4.11 gives it a target and a ceiling: the seed handed to the fit
+is a **lattice staircase** (jitter 0.17–0.21 cm rms, 112–140° turns) that the fit
+already halves on its own (to 0.085–0.112 cm rms, 53–94°). Smoothing the seed
+before `dQ_dx_multi_fit` attacks known-noise with no physical content — the
+lattice quanta are 0.0866 / 0.15 / 0.312 cm — but the headroom left is only that
+last factor of two, so the case for F2 rests on the dQ recovery of §4.4, not on
+the geometry.
 
 Two further constraints from §4.2:
 
@@ -784,15 +871,19 @@ everywhere.
     `work-pr51r6-w5q4on50`, `work-pr73-path-131357` ==
     `work-pr51r6-w5q6000-131357` (`bcd599e604ad6900…`) and
     `work-pr73-path-506746` == `work-pr51r6-w5q6000-506746`
-    (`de99a83c683dcf7b…`). Six for six: the probe is inert.
+    (`de99a83c683dcf7b…`); and for §4.11, `work-pr73-seed-53427` and
+    `work-pr73-seed-54351` == `work-pr51r7-on50`
+    (`3c8e7c7bdce5621a…`, `0906e443a7128cba…`). Eight for eight: the probe is
+    inert.
   * `./build/clus/wcdoctest-clus`: 194 cases / 1973 assertions, 0 failed.
     Knob default round-trip added to `doctest_clus_knob_defaults.cxx`.
   * Freshness proof (M1) done before both runs.
 * Records committed: `73_evt57903_zigzag.png`, `73_anatomy_output.txt`,
   `73_census_output.txt`, `73_zigzag_census_r7on50.tsv`,
   `73_sgp_edge_map_output.txt`, `73_sgp_edges_57903_q6000.tsv`,
-  `73_sgp_path_map_output.txt`, `73_sgp_fix_design_output.txt`, and the five
-  scripts under `scripts/analysis/pr73/`.
+  `73_sgp_path_map_output.txt`, `73_sgp_fix_design_output.txt`,
+  `73_seed_vs_fit_output.txt`, and the six scripts under
+  `scripts/analysis/pr73/`.
 * Related: doc pr/67 (isochronous coverage, `iso_snap_min_dir_mag`), doc pr/51
   rounds 5–7 (the knobs in §4.3), docs pr/49–50 (`fit_blob_coverage` — the
   precedent for a knob living inside the trajectory fit), doc pr/28 round 10

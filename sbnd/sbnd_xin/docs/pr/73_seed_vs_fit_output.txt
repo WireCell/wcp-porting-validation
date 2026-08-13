@@ -1,0 +1,39 @@
+event 53427, arm work-pr73-seed-53427
+  fitted segment 14004: 311 points, chord 179.47 cm
+  matched rough path: cluster 14, 275 steiner points, endpoint mismatch 1.44 cm
+  seed step length: min 0.312 median 0.840 max 3.743 cm (steiner spacing, NOT uniform)
+
+                                       n    chord    ratio  ratio_bow  ratio_jit   jit_rms   jit_max  maxturn
+seed, as routed (steiner pts)        275   179.63    1.361      1.025      1.327     0.440     3.109      140
+seed, resampled at 0.6 cm            408   179.34    1.244      1.013      1.227     0.411     3.117      126
+FITTED trajectory (0.6 cm)           311   179.47    1.049      1.012      1.036     0.352     2.352       94
+
+LOCAL window: fitted points 122..172 (+-25, 28.6 cm of track) around the owner point
+                                       n    chord    ratio  ratio_bow  ratio_jit   jit_rms   jit_max  maxturn
+seed (steiner pts), local             45    29.19    1.338      1.023      1.308     0.214     0.927      140
+seed resampled 0.6 cm, local          66    29.15    1.194      1.009      1.184     0.174     0.824      113
+FITTED trajectory, local              51    28.56    1.050      1.001      1.050     0.085     0.350       94
+
+  fitted points vs the seed polyline: median 0.322 cm, p90 0.595, max 1.159
+  (the fit is allowed to move off the seed; what matters is whether the
+   SEED is already jittery, i.e. compare jit_rms of rows 2 and 3 above)
+
+event 54351, arm work-pr73-seed-54351
+  fitted segment 17009: 82 points, chord 48.20 cm
+  matched rough path: cluster 17, 89 steiner points, endpoint mismatch 0.82 cm
+  seed step length: min 0.313 median 0.715 max 1.800 cm (steiner spacing, NOT uniform)
+
+                                       n    chord    ratio  ratio_bow  ratio_jit   jit_rms   jit_max  maxturn
+seed, as routed (steiner pts)         89    47.58    1.261      1.007      1.252     0.206     1.032      141
+seed, resampled at 0.6 cm            100    47.19    1.171      1.004      1.166     0.186     0.909       87
+FITTED trajectory (0.6 cm)            82    48.20    1.015      1.002      1.013     0.094     0.633       53
+
+LOCAL window: fitted points 36..81 (+-25, 26.7 cm of track) around the owner point
+                                       n    chord    ratio  ratio_bow  ratio_jit   jit_rms   jit_max  maxturn
+seed (steiner pts), local             53    27.15    1.287      1.011      1.273     0.168     0.935      112
+seed resampled 0.6 cm, local          59    27.09    1.206      1.011      1.193     0.153     0.835       96
+FITTED trajectory, local              46    26.73    1.022      1.001      1.021     0.112     0.597       53
+
+  fitted points vs the seed polyline: median 0.409 cm, p90 0.614, max 0.982
+  (the fit is allowed to move off the seed; what matters is whether the
+   SEED is already jittery, i.e. compare jit_rms of rows 2 and 3 above)
