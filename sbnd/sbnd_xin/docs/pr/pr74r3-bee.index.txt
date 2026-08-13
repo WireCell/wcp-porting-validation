@@ -1,0 +1,16 @@
+# doc pr/74 round 3 -- Bee. SAME 7 events, SAME order as the round-2 index, so
+# the two sets step side by side.
+# before (= round-2 production, the set the owner scanned and filed Q1-Q3 against):
+#   https://www.phy.bnl.gov/twister/bee/set/a8264f65-b41d-488e-bdbb-08bd71fc195f/event/list/
+# after  (= round-3 production, this round's fixes):
+#   https://www.phy.bnl.gov/twister/bee/set/794952df-7fcc-4a60-9dfc-eaaf5e648082/event/list/
+# Only 4 of the 7 changed between the two sets (90055, 138009, 469665, 142421);
+# 350186 / 506746 / 53361 are carried unchanged to keep the indices aligned.
+bee_idx	event	sample	changed	what to look at in AFTER
+0	90055	nueCC48	YES	Q1: the 2020 MeV shower was a DANGLING PF root at (127,24,216) with 6 more orphans; now `11045 e- 2061 MeV` starts AT the nu vertex (129,25,202) -- kine_pio_vtx_dis 13.6 -> 0.0 cm -- and 11043 + the 4 pseudo-gammas + the neutron are its children again
+1	138009	nueCC48	YES	Q1: the 1184 MeV shower re-seats onto the absorbed 0.7cm crumb at the nu vertex and the 104.6cm-away neutron re-parents under it; kine_reco_add_energy 219.9 -> 114.3 MeV (a double count removed)
+2	350186	nueCC48	no	K2 Michel-rescue veto, unchanged from round 2
+3	469665	nueCC48	YES	Q1 (the owner's own coordinate): (5.8,110.8,381.2) = seg 33008. Was a top-level orphan gamma; now nests under `15003 e- 487 MeV`, which itself hangs off the Bragg proton 15004 and starts at the stem base (25,64,283). Shower KE 322 -> 487 MeV (the absorbed stem charge, never counted in round 2)
+4	142421	NC-pi0	YES	Q2 (the owner's own coordinate): (89.2,-71.8,242.0) = seg 7013. Direction REVERSED in round 2 (started at the far end 85,-76,249). Now `gamma 795 MeV` runs nu vertex (118,-70,209) -> (110,-71,220) and the e- runs OUTWARD to (85,-76,249)
+5	506746	NC-pi0	no	Q3 reference: the `21048 e- 107 MeV` the owner reads as muon+Michel. UNCHANGED by every pr/74 knob in both rounds -- pre-existing, diagnosed only (see round-3 doc SS Q3)
+6	53361	mcp50	no	K1 muon restored, unchanged from round 2. NOTE the 71 MeV proton blob at (-18,-193,169) is a PF root here -- attributed to a builder ordering limit, not to K1's logic (round-3 doc SS 53361)

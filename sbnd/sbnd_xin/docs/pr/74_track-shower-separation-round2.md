@@ -6,6 +6,14 @@ manifest (48 nueCC + 19 NC-π⁰ + 50 PR data), and flips all four knobs to
 SBND production. Toolkit `96054e1e` (knobs + probes) + `2638faa8` (K4
 iteration) + `064824c1` (flip); wcp `bf0016d` + `19e8ce9` (runner env).
 
+> **SUPERSEDED IN PART — read `74_track-shower-separation-round3.md`.** The
+> owner's scan of this round's Bee set found that K4 as shipped here strands
+> the absorbed stem's particle-flow children (3 events) and that K5 anchored
+> 142421's promoted shower to its own far end, reversing its direction. Both
+> are fixed in round 3 inside the same knob bodies (no cfg change; the four
+> knobs stay SBND production ON). Two claims below are corrected in place —
+> search for "CORRECTED by round 3" and "QUALIFIED by round 3".
+
 ## Repro block
 
 ```bash
@@ -103,6 +111,14 @@ which is exactly what K4 closes.
   PF: `e- 2020 MeV (11044)` directly at the vertex, no separate trunk node;
   paint: 11045's 345 points join the shower (11044 7831→8176 pts, bbox
   reaches the vertex).
+  > **CORRECTED by round 3 § 5.** "directly at the vertex" is WRONG: 11044
+  > kept `start = (127,24,216)`, 13.6 cm out, and it LOST ITS PARENT (11045
+  > stopped being a track segment, so the vertex it reached dropped out of
+  > `vtx_incoming_seg` and 11044 + 6 more objects became top-level PF roots).
+  > The paint half of this bullet is correct — and that is the trap: the paint
+  > layer was right and I read it as evidence about the PF tree. Round 3
+  > delivers the claim as written (`start = (129,25,202)`,
+  > `kine_pio_vtx_dis` 13.6 → 0.0 cm, `e- 2061 MeV`).
 - **K4 / 469665**: chain `gidx=1 2.2cm 1.72x -> absorb`,
   `gidx=3 27.6cm 1.11x -> absorb`, `gidx=4 3.8cm 3.71x -> stop` — the two
   mu- stem segments join the 322 MeV shower and the walk stops exactly at
@@ -139,6 +155,12 @@ which is exactly what K4 closes.
     identical).
   - **PF-orphan sweep over all 117 events**: the ONLY orphan-set change is
     142421 losing seg 7013 (the K5 fix). Zero stranded orphans anywhere —
+    > **QUALIFIED by round 3 § 4/§ 5.** True only for the metric used here:
+    > "painted object with NO node in `0-mc.json`". It cannot see a node that
+    > SURVIVES but loses its parent, which is the failure mode the owner
+    > reported. By that metric this same arm stranded 11 objects across 3
+    > events (90055 7, 469665 3, 138009 1). The gate that catches it is
+    > `scripts/analysis/pr74/pr74_pf_roots.py`, added in round 3.
     this metric drove the K4 iteration (first on-census stranded orphans in
     3 events: 268067 a 595 MeV proton branch, 285567 442 MeV of protons,
     56982 a fragment; the junction guard + `stem_backfill_mip_lo` closed
