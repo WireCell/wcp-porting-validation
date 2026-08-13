@@ -131,8 +131,13 @@ is the field that separates them. This closes the doc pr/52 §5.5 ops item
 
 ## 3. The scan panel
 
-`pr_display_viewer.py` gains a full-width row under the projections, and
-`--scan-tag <name>`.
+`pr_display_viewer.py` gains a panel at the foot of the **left** column —
+directly under the three projections it drives — and `--scan-tag <name>`.
+(It began as a full-width row beneath both columns; that forced it to clear
+the much taller right column, PF/kine tables plus the 320 px dQ/dx figure, so
+a screen-high empty band opened under the projections. Every scan widget is
+≤1180 px against the projections' 3×430 = 1290 px, so nesting it left needed
+no resizing.)
 
 - **Candidate table.** One row per PR-graph vertex, joined to the scoreboard:
   `pick, vtx id, clus, x, y, z, deg, main, cand, DL score, snap cm, rerank,
