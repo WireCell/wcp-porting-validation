@@ -617,6 +617,38 @@ for _pr44 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr44 _env _key _val
+# doc pr/74 round 2: track/shower separation fixes for the four owner cases.
+# Same tri-state contract (unset = cfg default, 1 = force on, 0 = force off).
+#   SBND_SHOWER_IN_CASCADE_GUARD    P1: refuse examine_direction's cascade
+#                                   e- relabel for a long AND MIP-like segment
+#                                   (18345-53361)
+#   SBND_MICHEL_STEM_MICHEL_CHECK   P2: F14 Michel rescue requires the far
+#                                   subtree to be Michel-sized (18255-90055)
+#   SBND_SHOWER_STEM_BACKFILL       K4: absorb the walked-past track stem
+#                                   between main vertex and each substantial
+#                                   EM shower (18255-90055, 18255-469665)
+#   SBND_SHOWER_CONN3_UNREACHABLE   K5 = pr/65 rung 2: conn-3 pseudo-gamma
+#                                   promotion of unreachable main-cluster
+#                                   segments (18306-142421 seg 7013)
+for _pr74 in \
+    "SBND_SHOWER_IN_CASCADE_GUARD:shower_in_cascade_guard" \
+    "SBND_MICHEL_STEM_MICHEL_CHECK:michel_stem_michel_check" \
+    "SBND_SHOWER_STEM_BACKFILL:shower_stem_backfill" \
+    "SBND_SHOWER_CONN3_UNREACHABLE:shower_conn3_unreachable" ; do
+    _env=${_pr74%%:*}; _key=${_pr74#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr74 _env _key _val
+# doc pr/74 round 2 scalar tunables.  EMPTY = no TLA = cfg default (null =
+# the C++ default: 40 cm / 1.3 / 40 cm).  Only read when the owning bool is on.
+[ -n "${SBND_SHOWER_IN_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "shower_in_max_len=${SBND_SHOWER_IN_MAX_LEN}")
+[ -n "${SBND_SHOWER_IN_MIP_HI:-}" ] && CATH_TLA+=(--tla-code "shower_in_mip_hi=${SBND_SHOWER_IN_MIP_HI}")
+[ -n "${SBND_MICHEL_STEM_MAX_FAR_LEN:-}" ] && CATH_TLA+=(--tla-code "michel_stem_max_far_len=${SBND_MICHEL_STEM_MAX_FAR_LEN}")
+[ -n "${SBND_STEM_BACKFILL_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_max_len=${SBND_STEM_BACKFILL_MAX_LEN}")
+[ -n "${SBND_STEM_BACKFILL_MIP_HI:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_mip_hi=${SBND_STEM_BACKFILL_MIP_HI}")
+[ -n "${SBND_STEM_BACKFILL_MIN_SHOWER_LEN:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_min_shower_len=${SBND_STEM_BACKFILL_MIN_SHOWER_LEN}")
+[ -n "${SBND_CONN3_UNREACHABLE_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "conn3_unreachable_min_len=${SBND_CONN3_UNREACHABLE_MIN_LEN}")
 # doc pr/43 round 2 tri-state env overrides (unset = cfg default, 1 = force
 # on, 0 = force off):
 #   SBND_SINGLE_MUON_PROTON_CHAIN_VETO  vertex muon selection walks the
