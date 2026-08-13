@@ -646,6 +646,7 @@ unset _pr74 _env _key _val
 [ -n "${SBND_SHOWER_IN_MIP_HI:-}" ] && CATH_TLA+=(--tla-code "shower_in_mip_hi=${SBND_SHOWER_IN_MIP_HI}")
 [ -n "${SBND_MICHEL_STEM_MAX_FAR_LEN:-}" ] && CATH_TLA+=(--tla-code "michel_stem_max_far_len=${SBND_MICHEL_STEM_MAX_FAR_LEN}")
 [ -n "${SBND_STEM_BACKFILL_MAX_LEN:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_max_len=${SBND_STEM_BACKFILL_MAX_LEN}")
+[ -n "${SBND_STEM_BACKFILL_MIP_LO:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_mip_lo=${SBND_STEM_BACKFILL_MIP_LO}")
 [ -n "${SBND_STEM_BACKFILL_MIP_HI:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_mip_hi=${SBND_STEM_BACKFILL_MIP_HI}")
 [ -n "${SBND_STEM_BACKFILL_MIN_SHOWER_LEN:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_min_shower_len=${SBND_STEM_BACKFILL_MIN_SHOWER_LEN}")
 [ -n "${SBND_CONN3_UNREACHABLE_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "conn3_unreachable_min_len=${SBND_CONN3_UNREACHABLE_MIN_LEN}")
