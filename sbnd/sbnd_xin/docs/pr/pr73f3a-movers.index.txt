@@ -76,6 +76,7 @@ WHAT CHANGED, PER EVENT -- SCAN GUIDE (added 2026-08-13)
 ==============================================================================
 Repro:  python3 scripts/analysis/pr73/f3a_change_map.py
         python3 scripts/analysis/pr73/f3a_change_map.py --movers
+        python3 scripts/analysis/pr73/f3a_change_map.py --pi0
         python3 scripts/analysis/pr73/f3a_change_map.py --evt <E>
         docs/pr/73_f3a_change_map.tsv   (all columns, one row per event)
 
@@ -119,42 +120,48 @@ THE FOUR EVENTS WORTH OPENING EVEN IF NOTHING ELSE GETS SCANNED
   51051   idx 43  the 247 cm endpoint flip described above
   57903   idx 44  the target
   46363   idx 26  vertex identical, Enu -1411 MeV: the 1802 MeV leading shower
-                  is re-measured to 356 MeV and pi0 mass moves 236 -> 105 MeV
-                  (nearer the 135 MeV truth).  Fires are on 10-14 cm routes.
+                  is re-measured to 356 MeV.  Fires are on 10-14 cm routes.
+                  (Its pi0 mass also moves 236 -> 105 MeV, but the photon pair
+                  changed too, so that number is not evidence either way.)
   423981  idx 6   vertex moves 1.2 cm, Enu -1133 MeV: four mu-typed 35-100 MeV
                   vertex tracks and a 410 + 204 MeV proton pair are dropped,
                   add_energy 360 -> 17 MeV; pi0 mass 92 -> 103 MeV.
 
-pi0 MOVES MORE OFTEN THAN Enu DOES -- AND THE TREND IS UNFAVOURABLE
--------------------------------------------------------------------
-27 of the 48 events shift kine_pio_mass by more than 1 MeV, 15 by more than
-30 MeV, and it is not confined to the NCpi0 manifest.  Two events change the
-pi0 TAG itself:
-  447477  idx 25  LOSES it (flag 1 -> 0): the second shower splits
+pi0: THE PAIRING CHANGES, THE MEASUREMENT MOSTLY DOES NOT
+---------------------------------------------------------
+kine_pio_mass moves by more than 30 MeV in 15 events that carry the tag in
+both arms.  That looks alarming until the pair itself is checked: in 13 of the
+15 the two photons being combined are DIFFERENT (E2 or the opening angle moves
+by a lot -- 163543 pairs 1057+11 MeV at 7 deg before and 820+113 MeV at 129 deg
+after; 30504 goes 244+110 at 138 deg to 33+1009 at 66 deg).  A different pair
+is a different quantity, not the same measurement gone worse, so a
+toward-135-MeV / away-from-135-MeV tally over those rows means nothing and is
+not reported here.
+
+Only TWO events keep the same pair and re-measure it:
+  239794  19 -> 51 MeV   (toward 135)
+  399860  127 -> 93 MeV  (away from 135)
+Two more change the tag itself:
+  447477  idx 25  LOSES it (flag 1 -> 0): its second shower splits
                   35.5 -> 25.7 + 39.3 + 33.7 MeV
   55595   idx 45  GAINS it (flag 0 -> 1)
 
-Of the 15 events tagged in BOTH arms with a >30 MeV mass move, 11 move AWAY
-from the 135 MeV pi0 mass and only 4 move toward it:
-  toward:  30504 305->199, 111412 442->279, 46363 236->105, 239794 19->51
-  away:    163543 7->300, 71372 115->232, 268784 281->316, 56982 168->42,
-           69314 181->76, 234638 148->30, 38856 139->51, 399860 127->93,
-           469665 89->42, 42280 76->31, 52672 69->33
-Restricted to the NCpi0-19 manifest, where a pi0 is there by construction, it
-is 2 toward and 4 away.
+So the scannable pi0 question is "were the right two showers paired", which is
+a Bee question, not "did the mass get worse", which the numbers cannot answer.
+Full table: f3a_change_map.py --pi0, and columns pio_mass_off / pio_mass_on of
+docs/pr/73_f3a_change_map.tsv.
 
-Read that as a flag, not a verdict.  Most of the 15 are nueCC48 events with no
-true pi0, so their "pi0 mass" is a spurious two-shower pairing whose distance
-from 135 MeV measures nothing; and 11 vs 4 on n=15 is not a significant sample.
-But it is the one aggregate in this round that points the wrong way, it is
-free to check (columns pio_mass_off / pio_mass_on of
-docs/pr/73_f3a_change_map.tsv -- no Bee needed), and if the NCpi0 scan
-confirms it the next round has its narrowing variable.
-
-CLASSIFICATION (dvtx = nu-vertex move; traj% = the larger of the two one-sided
-fractions of fitted trajectory points more than 1.5 cm from any point of the
-other arm; fires = vetoed routes touching the nu trajectory / total; nprt =
-distinct particle_id in T_rec_charge, off -> on)
+CLASSIFICATION
+--------------
+dvtx    nu-vertex move, cm.
+dEnu    kine_reco_Enu move, MeV.
+fires   vetoed routes touching the nu trajectory / total vetoed routes.
+npts    points in the nu candidate's fitted trajectory, off -> on.  This count
+        alone moves by up to 5% on events where NOTHING physical changed, so
+        trajectory-point churn is deliberately NOT part of the quiet test --
+        class D is defined purely by the physics observables:
+        dvtx <= 0.1 cm AND |dEnu| < 20 MeV AND |d pi0 mass| < 1 MeV.
+        Those 14 events need no scan.
 
 INTEGRITY
   nu-candidate bundle main_id changes off->on in 0/48 events
@@ -163,64 +170,65 @@ INTEGRITY
   are cluster-ident epoch skew (doc 53), so the geometric test is the one used below.
 
 === A. VERTEX RELOCATED (>10 cm) : 8 events ===
-idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
-43   51051    mcp1k-50   3/3    247.03     78.8      -           0%  4/4   VERTEX SWAPPED TO THE OTHER END OF THE VETOED ROUTE; p 0->1, pi+ 1->0, mu 0->1
-0    163543   nueCC48    7/7     58.21     81.7      7->300      3%  5/5   e 1->7
-1    52672    nueCC48    3/3     57.83    156.7     69->33       1%  5/5   mu 0->1
-2    38856    nueCC48    2/2     29.93    -99.8    139->51      15%  5/5   mu 0->1, e 3->4
-44   57903    mcp1k-50   1/1     27.52     99.7      -          37%  5/4   p 0->1, pi+ 1->0
-29   56982    NCpi0-19   1/1     23.68   -367.1    168->42       0%  5/5   p 1->2, mu 1->0, e 3->5
-3    30504    nueCC48    1/1     22.39   -125.2    305->199      8%  5/5   mu 1->0
-30   463565   NCpi0-19   7/7     14.17    221.9    276->263      7%  5/5   p 0->1
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  npts off->on  what changed
+43   51051    mcp1k-50   3/3    247.03     78.8      -          454->456    VERTEX SWAPPED TO THE OTHER END OF THE VETOED ROUTE; p 0->1, pi+ 1->0, mu 0->1
+0    163543   nueCC48    7/7     58.21     81.7      7->300     706->669    e 1->7
+1    52672    nueCC48    3/3     57.83    156.7     69->33      587->595    mu 0->1
+2    38856    nueCC48    2/2     29.93    -99.8    139->51      835->645    mu 0->1, e 3->4
+44   57903    mcp1k-50   1/1     27.52     99.7      -          237->207    p 0->1, pi+ 1->0
+29   56982    NCpi0-19   1/1     23.68   -367.1    168->42      629->622    p 1->2, mu 1->0, e 3->5
+3    30504    nueCC48    1/1     22.39   -125.2    305->199     551->557    mu 1->0
+30   463565   NCpi0-19   7/7     14.17    221.9    276->263     727->718    p 0->1
 
 === B. VERTEX NUDGED (1-10 cm) : 5 events ===
-idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
-4    111412   nueCC48    7/7      5.60     -3.0    442->279      8%  4/4   e 3->2
-5    469665   nueCC48    3/3      3.11    248.4     89->42       1%  4/5   p 1->0, pi+ 0->1, e 4->1
-45   55595    mcp1k-50   5/5      1.65    136.1      0->12       6%  4/5   p 1->0
-6    423981   nueCC48    3/3      1.23  -1133.0     92->103      9%  5/4   p 2->1, pi+ 1->0, mu 4->0
-7    234638   nueCC48    5/5      1.16     56.9    148->30       5%  5/5   mu 205->110 MeV
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  npts off->on  what changed
+4    111412   nueCC48    7/7      5.60     -3.0    442->279     496->489    e 3->2
+5    469665   nueCC48    3/3      3.11    248.4     89->42      448->442    p 1->0, pi+ 0->1, e 4->1
+45   55595    mcp1k-50   5/5      1.65    136.1      0->12      406->404    p 1->0
+6    423981   nueCC48    3/3      1.23  -1133.0     92->103     824->788    p 2->1, pi+ 1->0, mu 4->0
+7    234638   nueCC48    5/5      1.16     56.9    148->30      824->830    mu 205->110 MeV
 
-=== C. SAME VERTEX, DIFFERENT ENERGY / PID : 32 events ===
-idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
-31   399860   NCpi0-19   2/2      0.92    -13.0    127->93       8%  5/5   p 2->0, pi+ 0->1
-32   18625    NCpi0-19   3/3      0.81      0.3      -           0%  4/4   
-8    268784   nueCC48    6/6      0.78   -154.7    281->316      2%  4/5   e 6->8
-33   285567   NCpi0-19   2/2      0.51   -291.5    245->219      0%  5/5   p 0->2, pi+ 1->0
-9    74544    nueCC48    3/3      0.39    142.2     72->73       6%  5/5   
-10   433451   nueCC48    3/3      0.33   -129.3     43->38      10%  4/5   e 50->28 MeV, e 2090->2078 MeV
-46   59025    mcp1k-50   3/3      0.23   -158.3      -           0%  5/4   pi+ 1->0
-11   69314    nueCC48    6/6      0.17   -184.8    181->76       9%  5/5   p 2->1
-12   54095    nueCC48    6/6      0.16     -5.3     40->52       5%  5/4   
-14   246579   nueCC48    4/4      0.14      0.8     61->64       7%  4/4   e 1688->1698 MeV
-13   239794   nueCC48    6/6      0.14     23.9     19->51      19%  5/5   e 2652->2675 MeV
-15   90055    nueCC48    3/3      0.13     -5.8     46->44       6%  4/4   
-47   56463    mcp1k-50   4/4      0.10   -143.0      -           0%  5/5   pi+ 174->168 MeV, mu 912->917 MeV
-18   42280    nueCC48    7/7      0.05     -7.5     76->31      31%  4/4   e 1->3
-17   256587   nueCC48    3/3      0.05      2.8     96->89      16%  5/4   
-16   214469   nueCC48    5/5      0.05      6.3    119->134     10%  5/5   e 1806->1812 MeV
-34   142421   NCpi0-19   3/3      0.01    -11.0     81->81       2%  5/5   p 812->801 MeV
-19   138009   nueCC48    1/1      0.00      0.2     35->35       3%  4/4   
-22   360535   nueCC48    3/3      0.00     -1.3     38->38       5%  4/4   
-23   388      nueCC48    1/1      0.00    112.8      -           5%  4/4   mu 0->1, e 4->3
-24   400474   nueCC48    2/2      0.00      0.0    248->248      2%  4/4   
-25   447477   nueCC48    2/2      0.00     59.6     29->0        9%  4/5   e 3->5
-26   46363    nueCC48    3/3      0.00  -1411.4    236->105      8%  4/4   e 2->3
-27   489330   nueCC48    4/4      0.00     -1.1      -           6%  5/5   
-28   81597    nueCC48    2/2      0.00      0.5      -           5%  4/4   
-36   180801   NCpi0-19   1/1      0.00      0.0    191->191      7%  5/5   
-37   21073    NCpi0-19   2/2      0.00     -3.9    217->234      1%  5/5   
-38   259542   NCpi0-19   7/7      0.00     -0.8    145->145      5%  4/4   
-39   314838   NCpi0-19   3/3      0.00     -3.3    257->256      6%  4/4   
-40   359980   NCpi0-19  13/13     0.00     -0.7    272->272      5%  5/5   
-41   521075   NCpi0-19   2/2      0.00     -4.7      -           2%  5/4   
-42   71372    NCpi0-19   6/6      0.00   -311.2    115->232      6%  5/5   e 6->4
+=== C. SAME VERTEX, DIFFERENT ENERGY / PID : 21 events ===
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  npts off->on  what changed
+31   399860   NCpi0-19   2/2      0.92    -13.0    127->93      667->658    p 2->0, pi+ 0->1
+32   18625    NCpi0-19   3/3      0.81      0.3      -          714->713    
+8    268784   nueCC48    6/6      0.78   -154.7    281->316     881->882    e 6->8
+33   285567   NCpi0-19   2/2      0.51   -291.5    245->219     839->811    p 0->2, pi+ 1->0
+9    74544    nueCC48    3/3      0.39    142.2     72->73      762->798    
+10   433451   nueCC48    3/3      0.33   -129.3     43->38     1392->1282   e 50->28 MeV, e 2090->2078 MeV
+46   59025    mcp1k-50   3/3      0.23   -158.3      -          652->649    pi+ 1->0
+11   69314    nueCC48    6/6      0.17   -184.8    181->76      853->826    p 2->1
+12   54095    nueCC48    6/6      0.16     -5.3     40->52     1295->1273   
+14   246579   nueCC48    4/4      0.14      0.8     61->64     1108->1180   e 1688->1698 MeV
+13   239794   nueCC48    6/6      0.14     23.9     19->51      936->1129   e 2652->2675 MeV
+15   90055    nueCC48    3/3      0.13     -5.8     46->44     1149->1170   
+47   56463    mcp1k-50   4/4      0.10   -143.0      -          941->938    pi+ 174->168 MeV, mu 912->917 MeV
+18   42280    nueCC48    7/7      0.05     -7.5     76->31     1302->1030   e 1->3
+17   256587   nueCC48    3/3      0.05      2.8     96->89     1963->1855   
+16   214469   nueCC48    5/5      0.05      6.3    119->134    1121->1209   e 1806->1812 MeV
+23   388      nueCC48    1/1      0.00    112.8      -         1138->1101   mu 0->1, e 4->3
+25   447477   nueCC48    2/2      0.00     59.6     29->0       516->534    e 3->5
+26   46363    nueCC48    3/3      0.00  -1411.4    236->105    1002->1101   e 2->3
+37   21073    NCpi0-19   2/2      0.00     -3.9    217->234     889->899    
+42   71372    NCpi0-19   6/6      0.00   -311.2    115->232    1579->1539   e 6->4
 
-=== D. NOTHING MOVED -- SKIP : 3 events ===
-idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  traj%   nprt  what changed
-20   196649   nueCC48    1/1      0.00     -0.2      -           0%  4/4   
-21   342199   nueCC48    2/2      0.00      0.0    335->335      0%  5/5   
-35   105946   NCpi0-19   2/2      0.00      0.0     49->49       0%  4/4   
+=== D. NO PHYSICS OBSERVABLE MOVED -- SKIP : 14 events ===
+idx  evt      manifest  fires     dvtx     dEnu     pi0 mass  npts off->on  what changed
+34   142421   NCpi0-19   3/3      0.01    -11.0     81->81     1346->1337   p 812->801 MeV
+19   138009   nueCC48    1/1      0.00      0.2     35->35      655->617    
+20   196649   nueCC48    1/1      0.00     -0.2      -          807->804    
+21   342199   nueCC48    2/2      0.00      0.0    335->335     669->665    
+22   360535   nueCC48    3/3      0.00     -1.3     38->38      886->916    
+24   400474   nueCC48    2/2      0.00      0.0    248->248     842->841    
+27   489330   nueCC48    4/4      0.00     -1.1      -          841->802    
+28   81597    nueCC48    2/2      0.00      0.5      -          689->703    
+35   105946   NCpi0-19   2/2      0.00      0.0     49->49      520->526    
+36   180801   NCpi0-19   1/1      0.00      0.0    191->191     651->616    
+38   259542   NCpi0-19   7/7      0.00     -0.8    145->145     813->773    
+39   314838   NCpi0-19   3/3      0.00     -3.3    257->256     664->645    
+40   359980   NCpi0-19  13/13     0.00     -0.7    272->272     496->483    
+41   521075   NCpi0-19   2/2      0.00     -4.7      -          330->344    
+
 
 idx  evt          dvtx oldV->new newV->old   route cm   maxsep  reading
 43   51051      247.03      0.03      0.27    301-313     4.76  vertex SLID along a track both arms agree on
@@ -236,3 +244,29 @@ idx  evt          dvtx oldV->new newV->old   route cm   maxsep  reading
 45   55595        1.65      0.46      0.30    197-211     4.26  vertex SLID along a track both arms agree on
 6    423981       1.23      0.20      0.33      31-36     3.31  vertex SLID along a track both arms agree on
 7    234638       1.16      0.41      0.31     43-160     3.46  vertex SLID along a track both arms agree on
+
+pi0 block, events whose kine_pio_mass moves by more than 30 MeV
+with the tag set in BOTH arms.  RE-PAIRED means the photon pair
+itself changed (E2 or the opening angle moved a lot), so the mass
+is a different quantity -- not the same measurement gone worse.
+
+evt      manifest          mass           E1           E2      angle  reading
+163543   nueCC48       7->300    1057->820      11->113      7->129   RE-PAIRED
+52672    nueCC48      69->33      594->69        7->670     55->14    RE-PAIRED
+38856    nueCC48     139->51       25->66     1032->630     46->16    RE-PAIRED
+30504    nueCC48     305->199     244->33      110->1009   138->66    RE-PAIRED
+111412   nueCC48     442->279      73->877     863->75     122->97    RE-PAIRED
+469665   nueCC48      89->42      488->744     160->7       11->27    RE-PAIRED
+234638   nueCC48     148->30     1015->33       10->19      94->75    RE-PAIRED
+268784   nueCC48     281->316    1064->689      64->64      69->99    RE-PAIRED
+69314    nueCC48     181->76       97->98      462->18      58->134   RE-PAIRED
+239794   nueCC48      19->51     2652->2675     24->24       8->8     same pair, re-measured
+42280    nueCC48      76->31     1883->1791     11->48      26->3     RE-PAIRED
+46363    nueCC48     236->105    1802->357      11->48       4->6     RE-PAIRED
+56982    NCpi0-19    168->42      937->140      15->19      75->48    RE-PAIRED
+399860   NCpi0-19    127->93     1006->1021     26->26      37->34    same pair, re-measured
+71372    NCpi0-19    115->232     689->1975    480->68      11->35    RE-PAIRED
+
+  re-paired: 13    same pair re-measured: 2
+  evt 447477: pi0 TAG 1 -> 0
+  evt 55595: pi0 TAG 0 -> 1

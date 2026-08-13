@@ -1234,6 +1234,7 @@ Repro:
 ```bash
 python3 scripts/analysis/pr73/f3a_change_map.py            # classified table
 python3 scripts/analysis/pr73/f3a_change_map.py --movers   # slide vs relocate
+python3 scripts/analysis/pr73/f3a_change_map.py --pi0      # pairing vs re-measure
 python3 scripts/analysis/pr73/f3a_change_map.py --evt 46363
 python3 scripts/analysis/pr73/f3a_change_map.py --tsv docs/pr/73_f3a_change_map.tsv
 ```
@@ -1281,25 +1282,43 @@ proton appearing. Worth doing first.
 |---|---|---|
 | A | 8 | ν vertex relocated > 10 cm |
 | B | 5 | ν vertex nudged 1–10 cm |
-| C | 32 | same vertex, different energy / PID |
-| D | 3 | nothing observable moved — skip (196649, 342199, 105946) |
+| C | 21 | same vertex, different energy / PID |
+| D | 14 | **no physics observable moved — skip** |
+
+Class D is defined purely on the observables — Δvtx ≤ 0.1 cm **and** |ΔEnu| <
+20 MeV **and** |Δπ0 mass| < 1 MeV. Trajectory-point churn is deliberately
+excluded: the fitted point count alone moves by up to 5 % (e.g. 489330
+841 → 802, 180801 651 → 616) on events where every physics observable is
+static, so a few percent of "moved" points is re-sampling of the same track,
+not a track that bent, and it is not something a hand scan can adjudicate.
+The 14 skippable events are 142421, 138009, 196649, 342199, 360535, 400474,
+489330, 81597, 105946, 180801, 259542, 314838, 359980, 521075.
 
 **Two GeV-scale Enu moves with a static vertex**, both worth opening:
 **46363** (idx 26) — vertex identical, Enu −1411 MeV because the 1802 MeV
-leading shower is re-measured to 356 MeV, π0 mass 236 → 105 MeV; and
+leading shower is re-measured to 356 MeV; and
 **423981** (idx 6) — vertex moves 1.2 cm, Enu −1133 MeV as four μ-typed
 35–100 MeV vertex tracks and a 410 + 204 MeV proton pair are dropped
-(`add_energy` 360 → 17 MeV).
+(`add_energy` 360 → 17 MeV). Neither is a vertex question — 46363's vertex is
+identical (class C) and 423981's moves 1.2 cm (class B) — so both are
+energy-assignment scans, not vertex scans.
 
-**Open item found by this analysis — the π0 mass trend points the wrong way.**
-27 of 48 events shift `kine_pio_mass` by >1 MeV and 15 by >30 MeV. Of the 15
-tagged in both arms with a >30 MeV move, **11 move away from the 135 MeV π0
-mass and 4 toward**; restricted to NCpi0-19 it is 2 toward, 4 away. Two events
-change the tag itself (447477 loses it, 55595 gains it). This is a flag, not a
-verdict — most of the 15 are nueCC48 events with no true π0, where the "π0
-mass" is a spurious two-shower pairing whose distance from 135 MeV measures
-nothing, and 11 vs 4 on n=15 is not significant. But it is the only aggregate
-in this round that points the wrong way, it costs nothing to check
-(`pio_mass_off` / `pio_mass_on` columns, no Bee needed), and if the NCpi0 scan
-confirms it, it is the narrowing variable for the next round — alongside the
-drift-slice occupancy of §9.7 and the +2 dangling PF roots on 285567.
+**π0 — the pairing changes, the measurement mostly does not.**
+`kine_pio_mass` moves by more than 30 MeV in 15 events tagged in both arms,
+which reads as a degradation until the pair itself is checked: in **13 of the
+15 the two photons being combined are different**. 163543 pairs 1057 + 11 MeV
+at 7° before and 820 + 113 MeV at 129° after; 30504 goes 244 + 110 at 138° to
+33 + 1009 at 66°. A different pair is a different quantity, not the same
+measurement gone worse, so a toward-135-MeV / away-from-135-MeV tally over
+those rows would be meaningless and is not reported. Only **two** events keep
+the same pair and re-measure it — 239794 19 → 51 MeV (toward 135) and 399860
+127 → 93 MeV (away) — and two change the tag itself: **447477 loses it**
+(flag 1 → 0, its second shower splits 35.5 → 25.7 + 39.3 + 33.7 MeV) and
+**55595 gains it**. The scannable π0 question is therefore "were the right two
+showers paired", which Bee can answer, not "did the mass get worse", which
+these numbers cannot.
+
+An earlier revision of this subsection reported an 11-vs-4 away-from-135-MeV
+trend as an open item. That counted re-pairings as re-measurements and is
+withdrawn. Round 2's open items remain the +2 dangling PF roots on 285567 and
+the drift-slice occupancy narrowing variable of §9.7.

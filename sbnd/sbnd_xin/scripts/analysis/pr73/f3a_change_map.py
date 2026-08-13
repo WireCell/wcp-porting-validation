@@ -294,12 +294,19 @@ def nusel_delta(r):
 
 def classify(r):
     """Classify by what a scan would SEE, not by where the guard fired.
-    (Where it fired is an annotation -- see n_fire_touch / d_fire_traj.)"""
+    (Where it fired is an annotation -- see n_fire_touch / d_fire_traj.)
+
+    Deliberately NOT part of the quiet test: traj_moved_pct.  The fitted point
+    list also changes LENGTH between arms (npts moves by up to ~5% on events
+    whose every physics observable is static), so a few percent of "moved"
+    points is re-sampling of the same track, not a track that bent -- and it
+    is not something a physics scan can adjudicate.  It is reported as an
+    annotation instead.
+    """
     quiet = (r.get('dvtx', 9) <= VTX_QUIET and abs(r.get('denu', 9)) < ENU_QUIET
-             and abs(r.get('dpio', 9)) < PIO_QUIET
-             and max(r.get('moved_pct', 99), r.get('moved_pct_rev', 99)) < 1.0)
+             and abs(r.get('dpio', 9)) < PIO_QUIET)
     if quiet:
-        return 'D. NOTHING MOVED -- SKIP'
+        return 'D. NO PHYSICS OBSERVABLE MOVED -- SKIP'
     if r.get('dvtx', 0) > 10.0:
         return 'A. VERTEX RELOCATED (>10 cm)'
     if r.get('dvtx', 0) > 1.0:
@@ -314,6 +321,37 @@ def main():
         for r in rows:
             if r['evt'] == want:
                 verbose(r)
+        return
+    if '--pi0' in sys.argv:
+        print('pi0 block, events whose kine_pio_mass moves by more than 30 MeV')
+        print('with the tag set in BOTH arms.  RE-PAIRED means the photon pair')
+        print('itself changed (E2 or the opening angle moved a lot), so the mass')
+        print('is a different quantity -- not the same measurement gone worse.')
+        print()
+        print('%-8s %-9s %12s %12s %12s %10s  %s'
+              % ('evt', 'manifest', 'mass', 'E1', 'E2', 'angle', 'reading'))
+        rep = same = 0
+        for r in rows:
+            a, b = r['a'], r['b']
+            if not (a['pio_flag'] and b['pio_flag']):
+                continue
+            if abs(a['pio_mass'] - b['pio_mass']) <= 30:
+                continue
+            repaired = (abs(b['pio_ang'] - a['pio_ang']) > 20
+                        or abs(b['pio_e2'] - a['pio_e2']) > 0.5 * max(a['pio_e2'], 1))
+            rep += repaired
+            same += not repaired
+            print('%-8s %-9s %5.0f->%-5.0f %5.0f->%-5.0f %5.0f->%-5.0f %4.0f->%-4.0f  %s'
+                  % (r['evt'], r['man'], a['pio_mass'], b['pio_mass'],
+                     a['pio_e1'], b['pio_e1'], a['pio_e2'], b['pio_e2'],
+                     a['pio_ang'], b['pio_ang'],
+                     'RE-PAIRED' if repaired else 'same pair, re-measured'))
+        print()
+        print('  re-paired: %d    same pair re-measured: %d' % (rep, same))
+        flips = [(r['evt'], r['a']['pio_flag'], r['b']['pio_flag']) for r in rows
+                 if r['a']['pio_flag'] != r['b']['pio_flag']]
+        for e, x, y in flips:
+            print('  evt %s: pi0 TAG %d -> %d' % (e, x, y))
         return
     if '--movers' in sys.argv:
         print('%-4s %-8s %8s %9s %9s %10s %8s  %s'
@@ -374,7 +412,8 @@ def main():
     print()
 
     order = ['A. VERTEX RELOCATED (>10 cm)', 'B. VERTEX NUDGED (1-10 cm)',
-             'C. SAME VERTEX, DIFFERENT ENERGY / PID', 'D. NOTHING MOVED -- SKIP']
+             'C. SAME VERTEX, DIFFERENT ENERGY / PID',
+             'D. NO PHYSICS OBSERVABLE MOVED -- SKIP']
     groups = {}
     for r in rows:
         groups.setdefault(classify(r), []).append(r)
@@ -383,9 +422,9 @@ def main():
         if not rs:
             continue
         print('=== %s : %d events ===' % (g, len(rs)))
-        print('%-4s %-8s %-9s %5s %8s %8s %12s %6s %6s  %s'
+        print('%-4s %-8s %-9s %5s %8s %8s %12s %13s  %s'
               % ('idx', 'evt', 'manifest', 'fires', 'dvtx', 'dEnu', 'pi0 mass',
-                 'traj%', 'nprt', 'what changed'))
+                 'npts off->on', 'what changed'))
         for r in sorted(rs, key=lambda r: -r.get('dvtx', 0)):
             what = r.get('pdiff', '')
             if endpoint_flip(r):
@@ -396,12 +435,10 @@ def main():
             a, b = r['a'], r['b']
             pio = ('%4.0f->%-4.0f' % (a['pio_mass'], b['pio_mass'])
                    if (a['pio_flag'] or b['pio_flag']) else '     -      ')
-            print('%-4d %-8s %-9s %2d/%-2d %8.2f %8.1f %12s %5.0f%% %2d/%-2d  %s'
+            print('%-4d %-8s %-9s %2d/%-2d %8.2f %8.1f %12s %6d->%-6d %s'
                   % (r['idx'], r['evt'], r['man'], r['n_fire_touch'], r['n_fire'],
                      r.get('dvtx', 0), r.get('denu', 0), pio,
-                     max(r.get('moved_pct', 0), r.get('moved_pct_rev', 0)),
-                     r['npart'][0], r['npart'][1],
-                     what[:88]))
+                     r['npts'][0], r['npts'][1], what[:88]))
         print()
 
 
