@@ -1,0 +1,13 @@
+# doc pr/74 round 2 -- Bee before/after, identical event ordering.
+# before: https://www.phy.bnl.gov/twister/bee/set/5d9f306c-1988-45ec-bfa2-ff93b42f17b9/event/list/
+# after : https://www.phy.bnl.gov/twister/bee/set/a8264f65-b41d-488e-bdbb-08bd71fc195f/event/list/
+# All 7 movers of the 117-event on-census (every archive-level mover, no
+# selection).  "why" states the acting knob and what to look for.
+bee_idx	event	sample	why
+0	90055	nueCC48	OWNER CASE 1: K4 absorbs trunk 11045 (14.4cm, 3.21x MIP) into the 2020 MeV shower -- shower now starts at the nu vertex; K2 vetoes the Michel mu- (shower_track layer: trunk paints shower in AFTER)
+1	138009	nueCC48	K4 absorbs a 0.7cm MIP crumb into an EM shower (cosmetic; only non-owner K4 absorption in 117 events)
+2	350186	nueCC48	K2 vetoes a Michel mu- rescue (far subtree 45.6cm > 40 cap); stem stays proton; small vertex re-derivation (nvtx 63->64, sub-cm)
+3	469665	nueCC48	OWNER CASE 4: K4 absorbs the mu- chain 15003/15001 (1.11x/1.72x MIP) into the 322 MeV shower, walk stops at the vertex Bragg proton (3.71x); fragmentation gammas out of scope this round
+4	142421	NC-pi0	OWNER CASE 2: K5 promotes seg 7013 (41.9cm, 266->795 MeV) via conn-3 -- now painted shower AND in the PF tree; pr/65 audit reads 0 unclaimed
+5	506746	NC-pi0	K2 vetoes a Michel mu- rescue (far subtree 49.2cm > 40 cap); Enu +169 MeV
+6	53361	mcp50	OWNER CASE 3: K1 refuses the cascade e- relabel (113.9cm at 1.02x MIP) -- the muon is a muon again (mu- 280 MeV); nue_score drops to sentinel
