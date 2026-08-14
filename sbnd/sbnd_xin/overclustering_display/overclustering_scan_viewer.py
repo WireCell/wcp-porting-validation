@@ -43,7 +43,9 @@ LAYOUT
            so revising it never costs a rerun). Defaults to "removed only",
            sorted by that score descending -- with up to ~170 removed
            edges in one event, the ordering is what makes the list usable.
-  Labels -- good / OK / bad, a cause, and a free-text comment. Picking a
+  Labels -- separate / OK / connect (doc pr/58: UI wording; still stored on
+           disk as good/OK/bad -- see VERDICT_KEYS -- so existing label
+           files stay readable), a cause, and a free-text comment. Picking a
            verdict stages it in memory right away (no per-edge click); the
            table's label column shows staged-but-unsaved entries with a
            trailing "*". One "Save event labels" click flushes every staged
@@ -93,6 +95,14 @@ COLOR_PATH = "#2ca02c"  # doc pr/57 round 4: edges that still connect the pair
 
 CAUSES = ["induction inefficiency", "dead channel", "prolonged shower signal",
           "genuine separation", "other"]
+
+# doc pr/58: UI wording only. On-disk labels-evt<ID>.json files keep storing
+# the "good"/"OK"/"bad" verdict strings unchanged (so existing scan records
+# and any other reader of those files stay valid) -- VERDICT_KEYS is that
+# on-disk vocabulary, VERDICT_LABELS is what the radio buttons/table show.
+VERDICT_KEYS = ["good", "OK", "bad"]
+VERDICT_LABELS = ["separate", "OK", "connect"]
+VERDICT_DISPLAY_OF = dict(zip(VERDICT_KEYS, VERDICT_LABELS))
 
 # ---------------------------------------------------------------------------
 # CLI / inputs
@@ -348,12 +358,13 @@ far_filter_toggle = Toggle(label="hide dis > 5cm", active=True,
                            button_type="primary", width=140)
 # doc pr/58: confirmation pass -- once edges are labeled, narrow the table to
 # just the labeled verdict(s) under review, OK excluded either way. Both off
-# is the unfiltered (pre-existing) behavior; both on shows good+bad, i.e.
-# everything except OK/unlabeled.
-show_good_toggle = Toggle(label="show good only", active=False,
-                          button_type="success", width=130)
-show_bad_toggle = Toggle(label="show bad only", active=False,
-                         button_type="danger", width=130)
+# is the unfiltered (pre-existing) behavior; both on shows separate+connect,
+# i.e. everything except OK/unlabeled. Variable names keep the on-disk
+# "good"/"bad" vocabulary (VERDICT_KEYS); only the button text is renamed.
+show_good_toggle = Toggle(label="show separate only", active=False,
+                          button_type="success", width=140)
+show_bad_toggle = Toggle(label="show connect only", active=False,
+                         button_type="danger", width=140)
 # doc pr/57 round 4: the hand scan judges whether two COMPONENTS should be
 # separated, but a killed candidate often leaves them joined anyway (another
 # candidate for the same pair, or a route through a third component). This
@@ -364,6 +375,7 @@ sep_filter_toggle = Toggle(label="separated pairs only", active=False,
 sort_select = Select(title="sort by", options=[("score", "long-track-break score"),
                                                ("dis", "distance"), ("logged", "as logged")],
                     value="score", width=200)
+progress_div = Div(text="", width=1150)
 status = Div(text="Loading...", width=1150)
 
 edge_cols = ["idx", "blk", "j", "k", "planes", "dis", "killed", "pair",
@@ -399,7 +411,7 @@ edge_table = DataTable(source=edge_table_src, columns=edge_columns, width=1150, 
 # per-edge save click. One "Save event labels" click at the end flushes every
 # staged edit for the current event to disk in a single write. Switching
 # events (or closing the server) auto-flushes first, so nothing is lost.
-verdict_group = RadioButtonGroup(labels=["good", "OK", "bad"], active=None, width=300)
+verdict_group = RadioButtonGroup(labels=VERDICT_LABELS, active=None, width=300)
 cause_group = RadioButtonGroup(labels=CAUSES, active=None, width=700)
 comment_input = TextInput(title="comment", width=700)
 save_btn = Button(label="Save event labels", button_type="success", width=160)
@@ -427,6 +439,28 @@ def progress_text():
             "%d labeled%s." % (state["label"], len(evt.edges), n_removed, labeled, unsaved))
 
 
+def progress_bar_html():
+    """Rough progress through the served event list: how many of LABELS have
+    at least one saved label on disk (i.e. have been touched by a scan),
+    cheap to compute since it only reads the small labels-evt<ID>.json files
+    (same check step_event already does), not the full per-event dump."""
+    total = len(LABELS)
+    if total == 0:
+        return ""
+    done = sum(1 for lb in LABELS if load_labels(lb))
+    pct = 100.0 * done / total
+    cur = LABELS.index(state["label"]) + 1 if state.get("label") in LABELS else 0
+    return (
+        "<div style='width:100%%;background:#eee;border:1px solid #999;"
+        "border-radius:4px;height:18px;overflow:hidden;'>"
+        "<div style='width:%.1f%%;background:#2ca02c;height:100%%;'></div>"
+        "</div>"
+        "<div style='font-size:12px;color:#333;margin-top:2px;'>"
+        "%d / %d events labeled (%.0f%%) -- viewing #%d/%d: %s</div>"
+        % (pct, done, total, pct, cur, total, state.get("label") or "")
+    )
+
+
 def load_event(label):
     flush_pending(auto=True)
     evt = EventData(EVENTS[label])
@@ -443,6 +477,7 @@ def load_event(label):
         xs_xz=[[xl, xh, xh, xl, xl], [0, 0]], ys_xz=[[zl, zl, zh, zh, zl], [zl, zh]])
 
     status.text = progress_text()
+    progress_div.text = progress_bar_html()
     refresh_table()
     clear_edge_panels()
 
@@ -508,13 +543,37 @@ def refresh_table(keep_selection=False):
         cols["near_miss"].append(e["_near_miss"] or "-")
         cols["score"].append("%.1f" % e["_score"])
         if e["_key"] in pending:
-            cols["label"].append(pending[e["_key"]]["verdict"] + " *")
+            v = pending[e["_key"]]["verdict"]
+            cols["label"].append(VERDICT_DISPLAY_OF.get(v, v) + " *")
         elif e["_key"] in labels:
-            cols["label"].append(labels[e["_key"]]["verdict"])
+            v = labels[e["_key"]]["verdict"]
+            cols["label"].append(VERDICT_DISPLAY_OF.get(v, v))
         else:
             cols["label"].append("")
+    # doc pr/58: force a genuine clear-then-fill instead of one direct
+    # .data assignment. The "label" column is HTML-formatted, and Bokeh's
+    # DataTable has a long history of not repainting formatted cells when
+    # .data is swapped for a same-or-shorter row count -- a stale verdict
+    # can then sit in a cell (e.g. "connect" surviving a switch to an event
+    # where the row at that same position is really "separate") even though
+    # the underlying CDS/Python state is already fully correct. Clearing
+    # first invalidates any such cached cell before the real values land.
+    edge_table_src.data = dict(EDGE_EMPTY)
     edge_table_src.data = cols
-    if not keep_selection:
+    if keep_selection:
+        # doc pr/58: keep_selection preserves the SELECTION, not a row
+        # NUMBER -- pool can gain/lose/reorder rows right under a verdict
+        # edit (e.g. staging a verdict for a previously-unlabeled edge
+        # while "show separate/connect only" is active pulls it into the
+        # filtered pool at a new position). Re-locate the actually-selected
+        # edge by its geometry key so the highlighted row keeps showing the
+        # edge the verdict controls are bound to, instead of whatever edge
+        # now happens to occupy the old index.
+        sel = state.get("sel_edge")
+        sel_key = sel["_key"] if sel is not None else None
+        new_idx = next((i for i, e in enumerate(pool) if e["_key"] == sel_key), None)
+        edge_table_src.selected.indices = [new_idx] if new_idx is not None else []
+    else:
         edge_table_src.selected.indices = []
     status.text = progress_text()
 
@@ -620,8 +679,8 @@ def show_edge(e):
     state["_suspend"] = True  # populating controls from a stored label is
                               # not a user edit -- don't re-stage it as pending
     if lab:
-        verdict_group.active = ["good", "OK", "bad"].index(lab["verdict"]) \
-            if lab.get("verdict") in ("good", "OK", "bad") else None
+        verdict_group.active = VERDICT_KEYS.index(lab["verdict"]) \
+            if lab.get("verdict") in VERDICT_KEYS else None
         cause_group.active = CAUSES.index(lab["cause"]) if lab.get("cause") in CAUSES else None
         comment_input.value = lab.get("comment", "")
     else:
@@ -631,7 +690,8 @@ def show_edge(e):
     state["_suspend"] = False
     if lab:
         tag = "Unsaved" if pending_lab else "Saved"
-        label_status.text = "%s label: <b>%s</b> / %s" % (tag, lab["verdict"], lab.get("cause", ""))
+        label_status.text = "%s label: <b>%s</b> / %s" % (
+            tag, VERDICT_DISPLAY_OF.get(lab["verdict"], lab["verdict"]), lab.get("cause", ""))
     else:
         label_status.text = "No label yet for this edge."
     apply_zoom_edge()
@@ -669,11 +729,44 @@ def on_event_change(attr, old, new):
         load_event(new)
 
 
+def event_has_label_match(label):
+    """doc pr/58: whether `label`'s saved labels satisfy the current
+    show-separate/show-connect selection. With neither toggle active,
+    "satisfy" means "has at least one saved label of any verdict" -- reads
+    only the small labels-evt<ID>.json file, not the full dump, so this is
+    cheap to call for every candidate event while stepping."""
+    labs = load_labels(label)
+    if not labs:
+        return False
+    if show_good_toggle.active or show_bad_toggle.active:
+        wanted = set()
+        if show_good_toggle.active:
+            wanted.add("good")
+        if show_bad_toggle.active:
+            wanted.add("bad")
+        return any(v.get("verdict") in wanted for v in labs.values())
+    return True
+
+
 def step_event(d):
+    """doc pr/58: advance to the next/previous event with a saved label
+    matching the current show-separate/show-connect selection, skipping
+    events with nothing relevant to look at. Does not wrap around -- at
+    either end of the list, stepping further in that direction is a no-op
+    (besides a status note)."""
     if not LABELS:
         return
     i = LABELS.index(event_select.value)
-    event_select.value = LABELS[(i + d) % len(LABELS)]
+    j = i + d
+    while 0 <= j < len(LABELS):
+        if event_has_label_match(LABELS[j]):
+            event_select.value = LABELS[j]
+            return
+        j += d
+    status.text = ("No %s event matches the current label filter "
+                   "(already at the %s of the list)."
+                   % ("next" if d > 0 else "previous",
+                      "end" if d > 0 else "start"))
 
 
 def on_filter_change(attr, old, new):
@@ -692,7 +785,12 @@ def on_row_select(attr, old, new):
     rows = state.get("rows_of", [])
     if idx >= len(rows):
         return
-    show_edge(rows[idx])
+    e = rows[idx]
+    if e is state.get("sel_edge"):
+        # refresh_table's keep_selection re-set indices to this same edge's
+        # new row position -- nothing changed, don't re-run show_edge.
+        return
+    show_edge(e)
 
 
 def stage_current():
@@ -704,16 +802,22 @@ def stage_current():
     e = state.get("sel_edge")
     if e is None or verdict_group.active is None:
         return
-    verdict = ["good", "OK", "bad"][verdict_group.active]
+    verdict = VERDICT_KEYS[verdict_group.active]
     cause = CAUSES[cause_group.active] if cause_group.active is not None else ""
     entry = dict(verdict=verdict, cause=cause, comment=comment_input.value,
                 blk=e["blk"], j=e["j"], k=e["k"], dis=e["dis"], killed=e["killed"],
                 p1=e["p1"], p2=e["p2"], near_miss=e["_near_miss"], score=e["_score"])
+    pending = state.setdefault("pending", {})
     if state.get("labels", {}).get(e["_key"]) == entry:
-        # identical to what's already on disk -- merely re-displaying a
-        # saved edge is not an edit, so don't mark it pending again
+        # identical to what's already on disk -- nothing new to stage. But
+        # if an earlier edit THIS session (since staged, then reverted back
+        # to the saved value) left a stale entry in pending, drop it -- else
+        # the table's label column keeps reading that stale verdict forever
+        # while the controls (bound to the widgets, not to pending) already
+        # show the reverted value.
+        pending.pop(e["_key"], None)
         return
-    state.setdefault("pending", {})[e["_key"]] = entry
+    pending[e["_key"]] = entry
 
 
 def flush_pending(auto=False):
@@ -733,6 +837,7 @@ def flush_pending(auto=False):
     state["pending"] = {}
     prefix = "Auto-saved" if auto else "Saved"
     label_status.text = "%s %d label(s) for <b>%s</b> -> %s" % (prefix, n, label, dest)
+    progress_div.text = progress_bar_html()
     refresh_table(keep_selection=True)
 
 
@@ -786,7 +891,7 @@ label_row = column(row(Div(text="<b>verdict:</b>", width=70), verdict_group),
                    row(comment_input, save_btn),
                    label_status)
 
-layout = column(status, controls, proj_row, conn_div, panel_row, edge_table, label_row)
+layout = column(progress_div, status, controls, proj_row, conn_div, panel_row, edge_table, label_row)
 curdoc().add_root(layout)
 curdoc().title = "overclustering scan"
 curdoc().on_session_destroyed(lambda session_context: flush_pending(auto=True))
