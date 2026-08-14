@@ -1,0 +1,11 @@
+sample	run	subrun	event	rc	wall_s	core_s	timecmd_wall_s	maxrss_kb	dl_warn	event_label	n_bundle	n_inbeam_bundle	n_inbeam_flash	nu_evaluated	n_cosmic_skipped	nu_sel_t0_us	nu_sel_len_cm	nu_sel_n_assoc	nu_x_cm	nu_y_cm	nu_z_cm	numu_score	nue_score	cosmic_flag	cosmict_flag	cosmict_10_score	cosmict_score	kine_reco_Enu_MeV
+r1qlmc	31	88	5	0	5.808	3.147	12	1534468	0	nu-candidate	11	1	1	1	0	1.381	233.2	7	9.26495	-35.80672	333.3989	0.17829277	-15.0	1.0	1.0	0.7	0.0	800.382
+r1qlmc	32	10	6	0	4.134	0.742	10	1200388	0	no-beam-flash	13	0	0	0	0													
+r1qlmc	32	10	10	0	4.151	0.758	10	1201696	0	cosmic-tagged	14	1	1	0	1													
+r1qlmc	31	88	12	0	4.234	1.108	10	1196476	0	cosmic-tagged	17	1	1	0	1													
+r1qlmc	32	10	13	0	5.989	3.645	12	1533852	0	nu-candidate	12	2	2	1	1	0.875	58.0	0	47.992756	56.512577	468.63846	2.3175068	-15.0	1.0	0.0	0.7	0.0	452.09656
+r1qlmc	32	10	14	0	5.736	3.013	12	1530548	0	nu-candidate	13	1	1	1	0	1.119	114.3	2	-67.612366	-21.401176	498.11255	0.9917403	-15.0	1.0	0.0	0.7	0.0	545.4067
+r1qlmc	32	10	16	0	5.915	3.714	12	1531092	0	nu-candidate	17	1	1	1	0	1.306	87.7	12	15.063066	-161.27663	494.3604	1.2450222	-15.0	1.0	0.0	0.7	0.0	654.0387
+r1qlmc	32	10	21	0	4.180	0.880	10	1198648	0	cosmic-tagged	10	1	1	0	1													
+r1qlmc	32	10	39	0	4.223	0.887	10	1199760	0	cosmic-tagged	9	1	1	0	1													
+r1qlmc	32	10	43	0	4.319	0.976	10	1200264	0	no-beam-flash	16	0	0	0	0													

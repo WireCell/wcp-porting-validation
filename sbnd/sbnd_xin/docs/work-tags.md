@@ -6,12 +6,27 @@ Repro:
 cd sbnd_xin
 ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TIDY round
                                  #   (216 before it) -- see that section below
-ls -d work* | wc -l              # 18 after the 2026-08-11 round (471 before it; 32 after
-                                 #   2026-08-05, 233 before it; 19 after the 2026-08-03
-                                 #   tidy round, 27 after the retirement round the same
-                                 #   day, 138 before it; 23 after 2026-08-02, 254 / 155 GiB
-                                 #   before that, 15 after 2026-07-30)
-du -sh sbnd_xin                  # 23G after the 2026-08-11 round (103G before it)
+# COUNT work* DIRS THROUGH THE REAL PATH, NOT THE SYMLINK -- see the 2026-08-13
+# section's "defect 4": toolkit/sbnd_xin is a symlink, and neither find nor du
+# descends a symlink argument, so both silently report 0 from there.
+find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
+     -maxdepth 1 -name 'work*' -type d | wc -l
+                                 # 13 after the 2026-08-13 round (401 before it; 18 after
+                                 #   2026-08-11, 471 before it; 32 after 2026-08-05, 233
+                                 #   before it; 19 after the 2026-08-03 tidy round, 27
+                                 #   after the retirement round the same day, 138 before
+                                 #   it; 23 after 2026-08-02, 254 / 155 GiB before that,
+                                 #   15 after 2026-07-30)
+du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+                                 # 20G after the 2026-08-13 round (74G before it;
+                                 #   23G after 2026-08-11, 103G before it)
+
+# the 2026-08-13 retirement round (see that section below):
+python3 scripts/retire/plan_20260813.py           # explicit 13-name KEEP + 6 asserts
+RETIRE_JOBS=24 python3 scripts/retire/archive_records_20260813.py  # integrity PASS 388/388
+scripts/retire/retire_20260813.sh A               # dry run of the removal list
+cat scripts/retire/state-20260813/removed.tsv     # what was ACTUALLY removed
+# NO Phase 4 this round -- the five -cb0805 hubs are the prod0813 campaign's INPUT
 
 # the 2026-08-11 retirement round (see that section below):
 python3 scripts/retire/plan_20260811.py           # explicit 18-name KEEP + 6 asserts
@@ -100,6 +115,118 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-13 — the pr/66-75 campaign sweep, 74G → 20G
+
+**STATUS: EXECUTED.** `CONFIRM=yes retire_20260813.sh A` — 388 dirs / 53 GiB
+removed, refused=0, **401 → 13** `work-*` dirs, `sbnd_xin` **74G → 20G**,
+`/nfs/data/1` free 493G → 546G. Broken symlinks 0 before and after; no
+git-tracked file deleted; archive integrity **PASS 388/388**. Repro block at the
+top of this file. Full campaign account: **doc pr/76**.
+
+### Why this round exists
+
+The pr/51, pr/64, pr/66, pr/67, pr/72, pr/73, pr/74 and pr/75 campaigns regrew
+the tree from the 08-11 round's 18 survivors / 23 G to **401 dirs / 74 G** in
+two days. Every one of those arms is a leg of an A/B whose verdict already lives
+in its doc, and production has moved **82 clus/cfg commits** since the cb0805
+campaign, so none of them is comparable to anything current. The round cleared
+the disk for the **prod0813** campaign (doc pr/76), which then re-ran the PR
+stage over all five samples at the current operating point.
+
+### KEEP — 13 names (9.45 GiB), and why it is smaller than 08-11's 18
+
+Five `work-img-*` imaging hubs + five `work-*-cb0805` Q/L hubs + `work-tfix388-r9`
+(the sole active `PROTECTED.txt` line) + `work-stmcamp-d66new` and
+`work-nuecc48-prsmoke2` (git-tracked). The three `work-pr64r4-on*` reference arms
+and two `work-pr64r4-scan*` oc56 arms that 08-11 kept are **superseded** by the
+prod0813 arms and retire here.
+
+**The five `-cb0805` hubs changed role.** For 08-11 they were a record layer that
+Phase 4 could thin. The owner chose a **PR-stage-only** reprocessing for
+prod0813, so they are now the campaign's **INPUT** — their
+`ql_evt*/pctree-evt*.tar.gz` feed the PR chain and their
+`ql_evt*/mabc-all-apa.zip` feed the Bee builder. Hence:
+
+> **NO PHASE 4 THINNING THIS ROUND.** `thin_hubs_20260811.py` must not be
+> re-run. `work-img-mcp1k`'s remaining `icluster-apa*-masked.npz` (1.7 GiB) is a
+> genuine imaging input and is likewise out of scope.
+
+### The measured 20 G arithmetic
+
+`work*` 63.41 GiB + non-`work*` 10.02 GiB = the 74 G. KEEP 9.45 + floor 10.02 +
+~0.46 of new tarballs ⇒ **20 G**, measured, not projected. Note `input_files` is
+a **symlink** into `/nfs/data/1/yuhw/` — it shows as 2.4 G under `du -sh */`
+because the trailing slash dereferences it, but it is not this tree's footprint.
+
+### Four defects in the inherited machinery, fixed in the forks
+
+1. **`$BASE` was the symlink path, making three checks vacuous** — the one that
+   matters. Every prior round did `cd "$(dirname "$0")/../.." ; BASE=$PWD`.
+   Invoked through `toolkit/sbnd_xin` (a symlink, and the normal way in), `$PWD`
+   is the logical path, so `find "$BASE" …` descends nothing and `du -sh "$BASE"`
+   measures the link. Observed in this round's own execution log: **interlock 0
+   reported "0 broken symlinks" having scanned nothing** — it would report 0 with
+   the tree on fire — the survivor census printed `work* DIRS remaining: 0
+   (expect 13)` after a fully successful round, and `du` wrote `0` into
+   `removed.tsv`'s footer. `rm -rf "$BASE/$d"` was unaffected (only the final
+   component matters), so the deletion was correct and the *verification* was
+   blind. Fixed with `cd -P`; a corrected footer is appended to `removed.tsv`.
+2. **The driver-log block was dead and dangerous.** 08-11 tarred all 118
+   `work-*.driver.log` orphans and none returned, so the block matches nothing —
+   but with `$dlogs` empty, `du -cm $dlogs` degrades to `du -cm .` and reports
+   the whole 74 GB tree as the driver-log footprint. Deleted, not carried.
+3. **The `scan-d59k/bee` block was dead** (stripped to 2 MB in 08-11; its guard
+   now compares 0 zips to 0 urls). Deleted.
+4. **Interlock 2 self-trips.** `pgrep -f 'wire-cell |run_(ql|pr|nusel)_evt'`
+   matches any shell whose command line merely *contains* the pattern, including
+   the exploration shells used to prepare the round. Reproduced: 2 phantom
+   matches with no job running. The documented workaround
+   (`ALLOW_LIVE_JOBS=yes`) defeats the real M5 check, so a false positive here
+   trains the operator to disable the interlock. `grep -v` widened.
+
+Also: `plan_20260813.py`'s ASSERT 4 no longer skips hidden top-level entries
+(`.nutmp/`, `.tracetmp/`, created since 08-11; both hold 0 symlinks today, so
+this closes a blind spot rather than fixing a live break), and the KEEP table is
+now **sized** — 08-11 walked only the removal set, so every survivor printed
+`0 MB`, and the survivor sizes are exactly what the disk-target arithmetic rests
+on. A directory-mtime histogram is printed as a **sanity report that gates
+nothing**: the tree was fully regenerated after 08-11, so 382 of 401 dirs are
+under 48 h old and any cutoff coarse enough to be safe protects nearly the whole
+universe. The gate is the explicit KEEP dict, full stop.
+
+### Assert results
+
+All six PASS. ASSERT 2 is trivially clean this round — the tree's only label dir
+is `work-stmcamp-d66new/nusel_labels`, which is in KEEP, so **no
+archive-and-commit of hand-scan labels was owed** (unlike 08-11's
+`overclustering_labels` phase). `sbnd_xin/vertex_labels/` (tags `vtxscan1`,
+`uitest75`) and `overclustering_labels/` live outside `work-*` and were never at
+risk. ASSERT 4 walked 6958 symlinks, hidden dirs included, and found 0 pointing
+into the removal set.
+
+### Known cost, stated rather than discovered later
+
+`scripts/analysis/pr57/oc56_truth.py:54 DEFAULT_ARMS` loses **all three** of its
+arms: `work-pr64r4-scan48`/`scan19` retire here, and its third name
+`work-pr64-scan1k` was *already* stale (the disk had `work-pr64r4-scan1k`). The
+08-11 round justified reclassifying `oc56scan-evt*.jsonl` as HEAVY — dropped,
+not archived — precisely on the grounds that "the two arms `oc56_truth.py` cites
+are KEPT whole". That justification does not survive this round, so the oc56
+truth table is not recomputable until someone runs a fresh
+`PR_OC56_SCAN_DUMP=1` arm. Owner-confirmed.
+
+`PROTECTED.txt` housekeeping was done: the 2026-08-11 reference family moved to
+RETIRED, and the prod0813 arms added as **real tab-delimited lines**. The 08-11
+entry was a *comment* block, so the parser (field 1 of each non-comment line)
+never saw any of those five names — they were never actually protected.
+
+### Gate labels for future re-checks
+
+`scripts/retire/state-20260813/{plan.json,removed.tsv}`,
+`scripts/retire/tierA_20260813.txt`,
+`archive/records/pr66-75-era-20260813/<group>/<tag>.{tar.gz,links.txt,manifest.tsv}`
+(388 arms, 3395 MiB raw → 474 MB gz).
 
 ## RETIREMENT ROUND 2026-08-11 — the pr/38-65 campaign sweep, 103G → 23G
 

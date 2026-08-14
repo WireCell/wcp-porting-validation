@@ -29,17 +29,43 @@
 
 work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protection and it is not reproducible from any surviving input	doc pr/28 sec.15.9
 
-# --- the 2026-08-11 reference family (added 2026-08-11) -------------------
-# Current production is toolkit b38127a0 (pr/62 + pr/64 + pr/65 all flipped
-# ON). These supersede the pr/33 clean-source family below as the arms
-# anything is gated against -- see docs/work-tags.md "RETIREMENT ROUND
-# 2026-08-11".  Not name-protected here (plan_20260811.py's explicit KEEP_WHY
-# dict is the source of truth this round), listed for continuity so the next
-# round's human reader knows why they exist.
-# work-pr64r4-on48/on19/on1k    current-production PR reference (Bee sources)
-# work-pr64r4-scan48/scan19     oc56 truth-table dump arms
+# --- the prod0813 reference family (added 2026-08-13) ---------------------
+# Current production is toolkit 1e534c6f (80eeb592 + the pr/75 vertex_scoreboard
+# merge).  These are the PR arms every current Bee set and the live 5017 vertex
+# hand scan are built from, and -- unlike the 2026-08-11 family, which was
+# listed only as a comment and therefore invisible to the parser -- they are
+# name-protected here, tab-delimited, so a future round's plan script actually
+# sees them.  The five work-*-cb0805 Q/L hubs they read are protected by
+# plan_20260813.py's KEEP_WHY dict instead (they are campaign INPUT, not a
+# reference arm).
+work-nuecc48-prod0813 work-ncpi0-prod0813 work-mcp1k-prod0813	current-production PR reference; the three Bee sets and the vertex hand scan are built from these	doc pr/76, bee/prod0813/
+work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the same campaign; only surviving PR products for either MC sample	doc pr/76
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+# 2026-08-13 -- the 2026-08-11 reference family, SUPERSEDED.
+#
+# work-pr64r4-{on48,on19,on1k} (current-production PR reference / Bee sources)
+# and work-pr64r4-{scan48,scan19} (oc56 truth-table dumps) were retired by the
+# 2026-08-13 round, archived to archive/records/pr66-75-era-20260813/.  They
+# were never actually protected by this file -- the 2026-08-11 entry was a
+# COMMENT block, so the parser (which takes field 1 of each non-comment line)
+# never saw a single one of those five names.  That is why the prod0813 family
+# above is written as real tab-delimited lines instead.
+#
+# KNOWN COST, recorded rather than discovered later: scripts/analysis/pr57/
+# oc56_truth.py's DEFAULT_ARMS loses all three of its arms.  Two retire here;
+# the third name it lists, work-pr64-scan1k, was ALREADY stale (the disk had
+# work-pr64r4-scan1k).  The oc56 truth table is not recomputable until someone
+# runs a fresh PR_OC56_SCAN_DUMP=1 arm.  Owner-confirmed 2026-08-13.
+#
+# P3 (the determinism floor owed since 2026-08-05, see the vf37 entry at the
+# bottom) is PARTIALLY discharged by this round: work-gate0813-merged48 vs
+# work-gate0813-repeat48 is a matched-layout A/A' pair on the current binary
+# with no rebuild between -- 48/48 identical on pctree, mabc, rc AND the
+# log-derived nusel TSVs (run_pr_chain_batch.sh:1067 already runs each event
+# under `setarch x86_64 -R`, so both arms are ASLR-disabled).  What is STILL
+# owed is the cross-layout leg: one ASLR-ON arm compared against those two,
+# the pr37_a2_floor.sh shape.  Do not read "48/48" as the full floor.
 # 2026-08-11 -- the pr/33 clean-source family + pr/37b repeat pair +
 # nuecc48-prod0803/vfnuecc48-prod0803, SUPERSEDED.
 #
