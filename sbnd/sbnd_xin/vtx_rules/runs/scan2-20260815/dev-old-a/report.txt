@@ -1,0 +1,74 @@
+event        conf      dist_cm  ok@1cm  ok@3cm  reco_ok
+evt168526    likely       0.01     yes     yes      yes   Rule 1 on the disputed 21 cm link: the trail joining
+evt169356    likely       0.00     yes     yes      yes   Rule 1: deg-3 junction where the cyan MIP track from
+evt169620    certain      0.01     yes     yes      yes   Rule 1 textbook: three prongs leave 13002 and every 
+evt172266    likely       0.00     yes     yes      yes   Rule 1: deg-4 knot carrying a dark-red short stub (p
+evt172656    likely       6.14      no      no       no   Rule 1 + trap 2: the 10002 end shows a monotonic gre
+evt173146    certain      0.00     yes     yes      yes   Rule 1: deg-3 junction with a short orange->dark-red
+evt174224    likely       3.61      no      no      yes   The low-z end is multi-prong: 20008 is a deg-3 junct
+evt175016    unclear      0.00     yes     yes      yes   Rule 8: the whole cluster is a single 4-cm dark-red 
+evt18625     certain      0.01     yes     yes      yes   Rule 1: two tracks leave this deg-2 kink and both en
+evt278420    certain      0.00     yes     yes      yes   Rule 1: kink vertex carrying a dark-red micro-stub (
+evt278640    likely       0.00     yes     yes      yes   Rule 1: the single track rises monotonically cyan->g
+evt278785    certain      0.00     yes     yes      yes   Rule 1: at 5003 the track is cool cyan and carries t
+evt279643    unclear      0.09     yes     yes      yes   Rule 8: the entire cluster is a compact ~5 cm dark-r
+evt280972    likely       0.29     yes     yes      yes   Rule 1: deg-4 knot at the lowest-z end where the lon
+evt281485    unclear      4.03      no      no       no   Rule 8: just a lot of scattered dots with no track o
+evt281527    certain      0.48     yes     yes      yes   Rule 1: both arms get hotter away from the deg-2 jun
+evt284013    unclear      8.76      no      no       no   Rule 1: the single long track rises monotonically cy
+evt285564    likely      28.51      no      no       no   Rule 1: dQ/dx rises monotonically from dark blue at 
+evt286180    certain      0.01     yes     yes      yes   Rule 1 textbook: deg-3 hub 6003 with two short dark-
+evt286906    unclear      2.79      no     yes       no   Rule 8-ish: one straight MIP track whose far end is 
+evt287517    certain      1.05      no     yes       no   Rule 1 + rule 3: deg-3 junction 13015 with a ~5 cm d
+evt287830    likely       4.08      no      no      yes   Rule 1 with the two-Bragg trap in mind: deg-3 hub 16
+evt288745    certain      0.00     yes     yes      yes   Rule 1: deg-5 hub 23002 with a ~25 cm heavily-ionisi
+evt290294    likely       0.01     yes     yes      yes   Rule 1: deg-2 junction 12001 with a short dark-red p
+evt30504     unclear     37.74      no      no       no   Two-Bragg-ends trap and I could not resolve it: the 
+evt313781    likely      43.43      no      no       no   Rule 1: the single ~11 cm segment rises to dark red 
+evt314705    unclear      0.01     yes     yes      yes   Rule 8 territory - a 3 cm object plus scattered grey
+evt315013    likely      10.78      no      no      yes   The 180 cm track is uniform MIP with only a small or
+evt320865    likely      39.52      no      no       no   Rule 1 + rule 3: the 185 cm track ends dark red at 1
+evt347129    unclear         -      no      no       no   Rule 8 abstain: the cluster is disconnected grey fra
+evt37112     certain      0.75     yes     yes      yes   Rule 1: three-way junction whose every arm cools tow
+evt386332    likely       0.01     yes     yes      yes   Rule 1: deg-2 junction at lowest z with a short dark
+evt38856     likely      22.20      no      no       no   Rule 1 + degree: the long orange->dark-red track sto
+evt392552    likely       0.00     yes     yes      yes   Single 200 cm track; the 12000 end shows a graded gr
+evt394642    unclear      3.25      no      no       no   A single 300 cm MIP track with no Bragg rise at eith
+evt397722    likely       0.79     yes     yes      yes   Rule 1: the dark red belongs to the 5 cm stub 18003-
+evt401054    unclear         -      no      no      yes   Rule 8: the whole object is a ~5 cm compact blob of 
+evt405432    certain      0.01     yes     yes      yes   Rule 1: deg-3 junction at the lowest z, with a 15 cm
+evt406796    likely       2.48      no     yes       no   Two-Bragg-end case: hot at both ends with a cool gre
+evt408534    unclear     46.32      no      no       no   Cluster 9 is a featureless MIP track with no Bragg r
+evt42280     unclear     57.30      no      no      yes   The long dark-red track stops at low z (8017/8001) a
+evt437699    likely       0.01     yes     yes      yes   Rule 1: deg-4 vertex at the lowest-z end of the clus
+evt48367     likely       0.86     yes     yes      yes   The 140 cm track exits at the y~-199 cm bottom bound
+evt487303    certain      0.00     yes     yes      yes   Rule 1: the long track cools to blue as it approache
+evt488139    certain      0.01     yes     yes      yes   Same textbook pattern: cool blue arrival at the deg-
+evt492803    likely       0.00     yes     yes      yes   Rule 1 + trap note: the 230 cm track cools toward th
+evt492913    unclear      0.00     yes     yes      yes   Single ~48 cm MIP-level track with two deg-1 ends an
+evt493243    unclear      0.00     yes     yes      yes   One ~190 cm straight track, warm patches at both end
+evt55595     likely       1.22      no     yes       no   Rule 1/6: the low-z end holds a multi-vertex complex
+evt57883     certain      0.01     yes     yes       no   Rule 1 textbook: three segments leave 16004 and ever
+evt59093     likely       0.00     yes     yes      yes   Rule 1: the long track rises from cyan to yellow tow
+evt59247     likely       0.01     yes     yes      yes   Rule 1: dQ/dx rises to dark red at 15003, so that en
+evt61351     unclear    352.47      no      no      yes   Rule 1 over rule 2: 17001 is distinctly orange-red (
+evt61417     likely       0.00     yes     yes      yes   Rule 1: a ~20 cm uniformly red segment rises to dark
+evt62149     likely       0.01     yes     yes      yes   13002 is the only junction and the segment leaving i
+evt62721     unclear      0.01     yes     yes      yes   Rule 8 event - a compact hot spot with scattered gre
+evt64409     unclear     23.15      no      no      yes   Dense hadronic complex with no clean rule-1 reading;
+evt64717     likely       9.15      no      no      yes   Rule 1: a single short heavily-ionising track whose 
+evt64959     likely      45.31      no      no       no   19001 is the deg-2 junction where both MIP segments 
+evt90055     likely       0.00     yes     yes      yes   Rules 1+7: a short dark-red proton stub runs from th
+
+picks files written at: {'picks-0.json': '2026-08-15 12:54:54', 'picks-1.json': '2026-08-15 12:56:20', 'picks-2.json': '2026-08-15 12:55:03', 'picks-3.json': '2026-08-15 12:51:52'}
+scanned 60, answered 58 (97%), correct 36 (precision 62.1%, @3cm 69.0%)
+by VERTEX ID (no cross-arm refit artifact): 36 of 57 answered with a recorded truth id (63.2%)
+reconstruction on the same 60 events: 43 correct (71.7%)
+events where NO vertex in this arm is within 1 cm of the click: 5 (8.3%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
+
+confidence calibration (this is the number that decides the hand-back workflow):
+   certain  n= 14 answered= 14 correct= 13  (92.9%)
+   likely   n= 29 answered= 29 correct= 17  (58.6%)
+   unclear  n= 17 answered= 15 correct=  6  (40.0%)
+
+reco wrong on 28.3% of all events, 50.0% of the 16 the scanner declined or disagreed with -> enrichment x1.76

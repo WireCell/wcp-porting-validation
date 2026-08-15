@@ -379,25 +379,39 @@ until `picks.json` exists, so the picks are on disk before any truth is read.
 | answered | 16 / 20 (80%) |
 | correct @1 cm | **11 (68.8% precision)** |
 | correct @3 cm | 12 (75.0%) |
+| **correct by vertex id** (rescored, see F2) | **12 (75.0%)** |
 | reconstruction on the same 20 | **15 (75.0%)** |
 
 **The agent scanner is not better than the reconstruction.** At n=20 the
-difference is not itself significant, but "not better" is clear, and the next
-number is decisive.
+difference is not itself significant, but "not better" is clear.
 
-### The abstention does not work, and that is the finding
+> **Rescored after F2.** evt52085 was charged as a miss at 1.29 cm, but the
+> agent named vertex **6002** and the owner's recorded truth vertex **is 6002** —
+> the 1.29 cm is the arm-to-arm refit shift, not an error. By vertex id the scan
+> is 12/16, not 11/16. This is the only event of the 20 that changes.
 
-| stated confidence | answered | correct |
-|---|---|---|
-| certain | 3 | 2 (67%) |
-| likely | 10 | 7 (70%) |
-| unclear | 3 | 2 (67%) |
+### The abstention does not separate — but the evidence for that is thin
 
-**Flat.** The agent is exactly as wrong on the events it calls *certain* as on
-the ones it calls *unclear*. So "scan the new events and leave the unsure ones
-for me to correct" **does not hold**: the errors are not in the flagged subset,
-they are spread evenly through the confident ones. Until a confidence signal
-separates, the human would have to check everything, which is the work the
+| stated confidence | answered | correct @1 cm | correct by vertex id |
+|---|---|---|---|
+| certain | 3 | 2 (67%) | **3 (100%)** |
+| likely | 10 | 7 (70%) | 7 (70%) |
+| unclear | 3 | 2 (67%) | 2 (67%) |
+
+The original reading of this table — "flat, therefore the hand-back workflow
+cannot work" — was **overstated**, and the correction is worth stating plainly:
+the single event that separates the `certain` tier from the others is the same
+evt52085 that F2 shows was never wrong. On the corrected column the tiers do
+order correctly (100 / 70 / 67).
+
+What survives is much weaker: **the `certain` tier has n=3.** Three events
+cannot establish calibration in either direction. The honest conclusion from §7
+alone is that the abstention signal is *untested*, not that it is broken — and
+that is why §10 re-runs this at n=60 with enough events per tier to decide it.
+
+The rest of this section's reasoning is unaffected: the errors that remain are
+spread through the confident picks, so on this sample the human would still have
+to check most events, which is the work the
 exercise was meant to save.
 
 ### Where the agent and the reconstruction disagree
@@ -450,10 +464,293 @@ python3 vtx_rules/selfscan.py score --dir /home/xqian/tmp/selfscan1
 The picks and the scored output of the run quoted here are committed under
 `vtx_rules/runs/selfscan-20260815/`.
 
-## 8. Files
+## 9. Better eyes — the tooling round
+
+§7's verdict was "not yet", and the owner's response was a hypothesis about
+*why*: the scan was done on one flat PNG, whereas the real object is 3-D, needs
+the endpoints checked, needs zooming into the vertex region, and needs multiple
+views. This section tests that hypothesis rather than assuming it.
+
+### 9.1 What the five misses actually were
+
+Re-opening all five, four are information-presentation failures whose evidence
+was already in the dump, and one is not a scan error at all:
+
+| event | miss | diagnosis |
+|---|---|---|
+| evt282737 | 165.2 cm | **two** Bragg ends existed — the 175 cm muon stops at 21000, the 30 cm pion at 21001 — and the vertex 21003 is the junction both point away from. One segment was read; the connectivity was never seen. |
+| evt283991 | 127.7 cm | truth 15003 joins a flat 133 cm muon to a 16 cm proton that Braggs at its far end. It is also the *lower-z* end, so rule 2 agreed — the ends could not be told apart in the picture. |
+| evt399856 | 44.4 cm | dQ/dx is hot at **both** free ends and cold in the middle. Separating a monotone Bragg rise from a hot end blob needs the profile **shape**, not the end value. |
+| evt174637 | 10.6 cm | 23 candidates inside a 60 cm shower blob. The discriminator was a 26 cm track attached at 9006 that stops away from it — unreadable at full-event scale. |
+| evt52085 | 1.29 cm | **not a miss.** The right vertex was named; it sits 1.29 cm from the click because the label was taken on a different arm. See F2. |
+
+### 9.2 Five findings that change what success means
+
+**F1 — the candidate list was silently narrowed, and it cost 5.7 points of
+ceiling.** The frozen plan said "every PR-graph vertex"; `selfscan.prepare`
+filtered on `cluster_id != main`. Over 473 labels:
+
+```
+ceiling @1cm : main-cluster pool 92.0%   all-cluster pool 97.7%
+```
+
+evt59085 is exactly this — the §7 scan recorded "the real start looks like
+z=73, which is not in this cluster's candidate list" and abstained on an
+unanswerable question. One `if`, 5.7 points. Fixed.
+
+**F2 — the residual ceiling is a cross-arm refit shift, not a free-hand click.**
+The first reading of this was that the owner clicks somewhere near a vertex
+rather than on one. That is **wrong**, and the correct version matters more:
+
+```
+labels with a recorded truth vertex id and a deployed arm: 470
+  that id sits <=1cm from the click IN THE LABEL'S OWN ARM : 470 (100.0%)
+  that id sits <=1cm from the click IN THE DEPLOYED ARM    : 460 (97.9%)
+  that id is ABSENT from the deployed arm entirely         :   0 (0.0%)
+  arm-to-arm shift of the SAME vertex id: median 0.000 cm, p99 1.85, max 10.72
+                                          >1cm: 10 labels (2.1%)
+```
+
+The click is snapped, every time. What moves is the **vertex**. The labels were
+taken on `work-*-prod0813` (`min_accept = 4.0`); production and every pr/78–80
+measurement score against `work-*-ma10`. Changing `min_accept` changes which
+vertex is main, and by F5 `improve_vertex` refits the trajectories *after* that
+choice — so the same graph vertex id lands somewhere slightly different in the
+two arms. 2.1% of labels move by more than 1 cm.
+
+Three consequences:
+
+- The 97.7% all-cluster ceiling of F1 is now **fully accounted for**: 2.1%
+  cross-arm shift plus the handful of `not_a_candidate` manual picks. There is
+  no unexplained residual.
+- Scoring by distance charges a scanner for a refit it can neither see nor
+  control. `selfscan.py` now reports **both** the 1 cm distance number (kept as
+  the headline, so pr/78–79 comparability is not quietly broken) and a
+  `by vertex id` number, which is the same question without the artifact.
+- **This applies retroactively to every pr/78–80 number**, including §4's. At
+  2.1% it overturns no conclusion, but a procedure quoted as if it could reach
+  100% against these labels never could.
+
+**F3 — the engine's conclusion must never be shown to a scanner.** Run without
+the §3 step-9 reco cross-check on the §7 events, the engine scores **8/20**
+against the unaided eye's 11 and the reconstruction's 15, and is right on
+exactly **one** event where the reconstruction is wrong. Its *verdict* is worse
+than the eye. Its *evidence* — connectivity plus which end is hot — is precisely
+what the eye missed on three events. So the kit ships the evidence and never the
+verdict.
+
+**F4 — beating the reconstruction is not this round's target.** Eye-correct and
+engine-correct are largely disjoint, but their oracle union on those 20 events
+is 14/20, still under the reconstruction's 15. The goal is to stop the eye
+destroying events the pipeline already gets right, and to make confidence mean
+something.
+
+**F5 — contamination is deeper than §2 assumed, and it invalidates the shower
+branch.** `TaggerCheckNeutrino.cxx:1237-1469` fixes the order:
+`determine_main_vertex` → `determine_overall_main_vertex_DL` → `improve_vertex`
+(refits trajectories, re-runs PID) → `examine_direction(main_vertex)` →
+`shower_clustering_with_nv`. So `dirsign`, `dir_weak`, `points[].rr` (which
+`PrDisplayDump.cxx:447-454` reverses *according to* `dirsign`), the whole of
+`showers[]` including `start` and `stem_dqdx`, `is_main`, `main_candidate` and
+`is_main_cluster` are all **downstream of the vertex choice**. §3's R6/R7 read
+`showers[]` and are therefore contaminated — recorded here, not fixed.
+
+§2's decision to read neither `rr` nor `dirsign`, taken for polarity safety,
+turns out to be exactly the right blindness decision as well, and `vtx_geom.py`
+is reused unchanged.
+
+### 9.3 The three-tier rule, enforced in code
+
+| tier | fields | treatment |
+|---|---|---|
+| 1 safe | `meta`, `dqdx_ref`, `dead`, `steiner` xyz + `flag_terminal`, `track_shower` xyz, `vertices[].degree`, cluster ids, and arc length **recomputed by us** | shown freely |
+| 2 vertex-conditioned | fitted `points[]` xyz/dQ/dx, `segments[].length`, the start/end vertex connectivity, `particle_id` | shown, and flagged as conditioned. The scan is not executable without them, and it is what the owner looks at on port 5017. |
+| 3 the answer | `main_vertex`, `is_main`, `main_candidate`, `is_main_cluster`, `vertex_scoreboard`, `dirsign`, `dir_weak`, `rr`, `showers[]`, `kine`, `tagger`, and every field of `decide()` | **stripped**, not merely unrendered |
+
+`scankit.sanitize()` builds a whitelist copy of the dump and every renderer works
+only off that copy, so nothing in the kit can read `main_vertex` even by mistake.
+`assert_blind()` then greps the output as a check that `sanitize` is what ran.
+`scankit.py selftest` runs both over 25 dumps.
+
+### 9.4 The kit
+
+Each panel exists because a specific miss demanded it.
+
+| panel | what | the miss it answers |
+|---|---|---|
+| P1 overview | three projections **twice** — whole detector for containment, auto-framed to the event for resolution; per-segment colours; candidates from **every** cluster | the 50 cm event drawn across a 500 cm box; F1 |
+| P2 rotations | four 3-D viewpoints plus the event's own principal-axis frame | evt174637; a diagonal track is foreshortened in X-Y, Z-Y **and** X-Z at once, and rotating is the only fix |
+| P3 zoom (on demand) | `scankit.py zoom --vertex <id> --half-width <cm>`; attached segments in colour, everything else grey, an arrow per segment toward increasing dQ/dx | the owner's "zoom into the vertex region" |
+| P4 profiles | dQ/dx vs arc length from **both** ends, with the `dqdx_ref` stopping-muon and stopping-proton templates anchored at *each* end | evt399856, blob vs Bragg |
+| P5 cone | transverse RMS vs distance from each candidate apex, computed from the point cloud | rules 6–7, which can no longer read `showers[]` (F5) |
+| P6 evidence sheet | per candidate, all clusters: degree, position, and per attached segment the 5 cm end means at both ends with the far vertex named | evt282737, evt283991, evt174637 — all three are immediate from this table |
+
+P4 draws the templates at *both* ends deliberately: the panel poses the question
+("if this end were the stop, a proton would look like that") instead of
+answering it. P2 and P5 are skipped on events with too little structure to
+support them — a cone profile on a two-segment track is noise wearing the
+costume of evidence.
+
+### 9.5 The port-5017 viewer, patched
+
+The owner chose to make these the default view. Four additive changes;
+`on_vscan_save` and the 17-key label schema are **untouched**, and the saved
+document never serialises a table row wholesale, so the new column cannot leak
+into a label.
+
+1. **"Both ends (no dirsign)"** mode on the 1-D dQ/dx panel — arc length
+   recomputed from the fitted points, templates anchored at each end. The
+   existing End mode is oriented by `dirsign`, so when the reconstruction has
+   the direction wrong the Bragg peak is drawn at the wrong end with nothing on
+   screen to catch it. The caption now also prints the polarity-free two-end
+   reading **in every mode**, which is the one line that can contradict
+   `dirsign` on screen.
+2. **A per-segment table** — the panel showed one segment at a time through a
+   dropdown, so reading a 6-prong vertex meant six clicks and six remembered
+   numbers. Every segment's two-end dQ/dx now fits on one screen.
+3. **Direction arrows**, a toggleable layer, on by default: one arrow per
+   segment at its cooler end pointing at its hotter end. A segment whose ends
+   are within 1.3× gets **no** arrow — no opinion must not be drawn as one.
+4. **An `out/meas` column** in the hand-scan vertex table: of the attached
+   segments with both ends measured, how many get hotter going away. Rule 1 as
+   a measurement.
+
+> **Label epoch.** From this patch onward the viewer shows the rule-1 column, so
+> labels taken afterwards are **no longer independent of the rules being
+> validated**. The 481 existing labels are the only pre-patch reference set that
+> will ever exist. Any future validation must either use them, or state plainly
+> that it is validating against post-patch labels.
+
+## 10. Does better tooling help? — 120 blind events, measured
+
+### 10.1 Design
+
+§7 scanned 20 events with one scanner and one kit, which cannot separate a
+tooling effect from how one scanner happened to feel that day. This round runs
+**three scans over the identical 60 dev events**:
+
+| arm | kit | purpose |
+|---|---|---|
+| `dev-old-a` | old (one flat PNG + main-cluster candidate list) | |
+| `dev-old-b` | old, **again**, independent scanners | together with A, the **scanner-noise floor** |
+| `dev-new` | the §9.4 kit | the tooling delta, read against that floor |
+
+plus **`test-new`**, 60 events from the locked test half that are disjoint from
+§7's twenty and from dev, scanned once with the new kit — the held-out number.
+
+Every arm is scanned by four fresh subagents, 15 events each, handed
+`vtx_rules/scan_prompt.md` **verbatim**. The template carries no per-event text,
+so whoever launches a run cannot steer it toward events whose answers they know.
+
+**Protocol deviation, recorded rather than buried.** One `dev-old-b` worker
+cropped and upscaled `event.png` itself and left a `_zoom.py` behind, i.e. it
+manufactured zoom in the arm that is defined by not having it. `dev-old-a` is
+clean (checked: zero stray files). So **`old-a` vs `new` is the primary
+comparison** and `old-b` vs `new` is a second, weaker one whose old arm had
+partial zoom on 15 of its 60 events. They are reported separately, never pooled.
+
+### 10.2 The scanner-noise floor — and it is low
+
+```
+paired on 60 common events:  A = dev-old-a   B = dev-old-b
+  --- correct @1cm ---   A 36/60, B 37/60
+    both  34    neither  21
+    B only  3    A only  2      discordant 5     exact binomial p = 1.0000
+  --- correct by vertex id ---   A 36/60, B 38/60
+    both  34    neither  20
+    B only  4    A only  2      discordant 6     exact binomial p = 0.6875
+```
+
+Two independent scanners with the same kit agree on **55 of 60** events and
+their disagreements split evenly. Between-scanner variance is therefore small,
+and a tooling effect of more than a handful of discordant pairs in one direction
+is real rather than mood.
+
+### 10.3 The §7 calibration finding does not survive n=60
+
+This is the correction that matters most to the owner's actual question. §7
+concluded from three `certain` events that confidence was flat. At n=60, with
+the **old** kit — no new tooling at all:
+
+| arm | certain | likely | unclear |
+|---|---|---|---|
+| `dev-old-a` | 14 events, **92.9%** | 29 events, 58.6% | 15 answered, 40.0% |
+| `dev-old-b` | 12 events, **91.7%** | 30 events, 60.0% | 15 answered, 53.3% |
+
+**The tiers order, and they order steeply.** A `certain` tier at ~92% over ~22%
+of the sample is exactly the shape the hand-back workflow needs, and it was
+already there in §7's kit — §7 simply had three events in the tier and could not
+see it. The pre-declared secondary criterion (certain ≥90%, and ≥20 points above
+unclear) is **met on both old-kit arms**.
+
+Accuracy alone is not the whole criterion, though, so coverage is reported beside
+it from here on: `certain` is not a fixed-size stratum, and a scanner that spends
+the word freely could put half the sample there at a lower rate. A tier holding
+20% of events at 92% and one holding 60% at 85% are different products.
+
+For context on the same 60 dev events: the reconstruction gets **43/60 (71.7%)**,
+the old-kit scanners 36 and 37, and the §3 engine 28/43 answered when run without
+its reco cross-check. The eye beats the engine; neither beats the reconstruction.
+
+### 10.4 The new kit, on the same 60 dev events
+
+| | `dev-old-a` | `dev-old-b` | **`dev-new`** | reconstruction |
+|---|---|---|---|---|
+| answered | 58/60 | 57/60 | 59/60 | — |
+| correct @1 cm | 36 | 37 | **43** | **43** |
+| correct by vertex id | 36 | 38 | **43** | 43 |
+| answered-precision | 62.1% | 64.9% | **72.9%** | — |
+| triage enrichment | ×1.76 | ×2.16 | **×2.59** | — |
+
+The scanner goes from clearly below the reconstruction to **level with it**,
+43/60 either way. Paired, against a noise floor whose discordant split was 3:2:
+
+```
+old-a (clean) vs new :  new wins 10, old wins  3   discordant 13   p = 0.092
+old-b         vs new :  new wins  8, old wins  2   discordant 10   p = 0.109
+noise floor a vs b   :  B wins    3, A wins    2   discordant  5   p = 1.000
+```
+
+Both comparisons agree in direction and magnitude — the new kit wins about 3–4×
+as often as it loses, where two runs of the *same* kit split evenly. As
+pre-registered, no pass/fail threshold is applied: at n=60 neither two-sided
+exact test reaches 0.05 (95% CI on the new-kit win fraction: [0.46, 0.95] and
+[0.44, 0.97]). **The two comparisons are not pooled** — they share the `dev-new`
+arm, so they are not independent, and pooling them to 18:5 (p = 0.011) would be
+a fabricated significance.
+
+**Where the +7 comes from** (old-a vs new):
+
+```
+  reco RIGHT  n=43   old 33   new 37   (+4)   events the eye used to break
+  reco WRONG  n=17   old  3   new  6   (+3)   genuinely new correct answers
+  correct new-kit answers whose vertex is NOT in the largest cluster: 2  (F1)
+```
+
+Both halves moved. F4 predicted the round would be about not breaking what the
+pipeline already gets right; that is +4 of the +7, but the other +3 **doubles**
+the eye's yield on the events the reconstruction gets wrong — which is the half
+that has any value for finding reconstruction errors.
+
+**Calibration, with coverage:**
+
+| tier | coverage | answered | correct @1 cm | by vertex id |
+|---|---|---|---|---|
+| certain | 27/60 (45.0%) | 27 | 25 (**92.6%**) | 26 (**96.3%**) |
+| likely | 23/60 (38.3%) | 23 | 14 (60.9%) | 13 (56.5%) |
+| unclear | 10/60 (16.7%) | 9 | 4 (44.4%) | 4 (44.4%) |
+
+The new kit roughly **doubles the coverage of the `certain` tier** (45% against
+old-kit 20–23%) at the same ~92% accuracy — 96.3% by vertex id. That is the
+result that matters for the owner's workflow: it is not that the scanner became
+more accurate overall, it is that it became accurate *and knew when*.
+
+## 11. Files
 
 | file | what |
 |---|---|
+| `vtx_rules/scankit.py` | the §9.4 kit: sanitize + P1/P2/P4/P5/P6 + the `zoom` CLI + `selftest` |
+| `vtx_rules/scan_prompt.md` | the fixed scanner instruction, handed verbatim to every arm |
 | `vtx_rules/vtx_rules.py` | the decision procedure of §3 |
 | `vtx_rules/vtx_geom.py` | dQ/dx and Bragg-end primitives; reads neither `rr` nor `dirsign` |
 | `vtx_rules/vtx_io.py` | label loading, the 1 cm convention, dump helpers |

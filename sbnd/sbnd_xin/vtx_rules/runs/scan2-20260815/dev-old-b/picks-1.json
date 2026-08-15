@@ -1,0 +1,46 @@
+[
+  {"event": "evt281527", "vertex_id": 14002, "confidence": "likely",
+   "why": "Rule 1 two-Bragg-ends: a ~130 cm MIP track ends dark red at 14001 and a short ~13 cm orange/red stub ends at 14000; 14002 is the deg-2 junction both point away from."},
+
+  {"event": "evt284013", "vertex_id": 8032, "confidence": "likely",
+   "why": "Rule 1: the ~140 cm track ends orange (Bragg) at 8001, so the vertex is the other end; 8032 is the least-extreme (lowest-z) node of the 4-vertex knot there, i.e. where the long track meets the short dark-red stub running out to 8000."},
+
+  {"event": "evt285564", "vertex_id": 9007, "confidence": "likely",
+   "why": "Rule 1: a ~13 cm prong rises monotonically yellow-orange-dark red into 9004 (stopping proton) and a low-dQ/dx shower-like arm runs the other way to 9010; 9007 is the deg-2 junction they both leave from, and it is at lower z than 9004 (rule 2)."},
+
+  {"event": "evt286180", "vertex_id": 6003, "confidence": "certain",
+   "why": "Rule 1 textbook: deg-3 hub with two short dark-red prongs (to 6001 and 6004, both stopping protons) and one MIP track to 6000 - every attached segment gets hotter going away from 6003."},
+
+  {"event": "evt286906", "vertex_id": 41010, "confidence": "unclear",
+   "why": "Rule 8-ish: a single ~135 cm uniformly MIP track with no Bragg at either end; the only two candidates sit 2.8 cm apart at the low-z end, so I take the extreme tip 41010 but this is close to a coin flip between the two ids."},
+
+  {"event": "evt287517", "vertex_id": 13015, "confidence": "certain",
+   "why": "Rule 1: deg-3 hub where a ~145 cm muon (Bragg dark red at its far end 13000) meets a ~6 cm dark-red proton prong to 13001 and a short cool prong to 13016 - all three heat up away from 13015."},
+
+  {"event": "evt287830", "vertex_id": 16006, "confidence": "likely",
+   "why": "Rule 1: deg-3 hub at low z (19.7 cm) with three prongs, two of which end in clear Bragg peaks (dark red at 16013 and at 16009) and one long green prong to 16000; 16004 3.7 cm away is the hot tip of a stub, not the junction."},
+
+  {"event": "evt288745", "vertex_id": 23002, "confidence": "certain",
+   "why": "Rule 1: deg-5 hub whose own dQ/dx is green (MIP-level) with several dark-red prongs radiating outward, the longest ending dark red at 23000 - every attached segment gets hotter away from 23002."},
+
+  {"event": "evt290294", "vertex_id": 12001, "confidence": "likely",
+   "why": "Rule 1: a ~4 cm dark-red stub ends at 12002 (stopping proton) and a ~24 cm cyan/green MIP track runs to 12000; 12001 is the deg-2 junction and is at lower z than 12002 (rule 2)."},
+
+  {"event": "evt30504", "vertex_id": 11017, "confidence": "unclear",
+   "why": "Rules 1+7: a heavy backward track ends dark red at 11001 and a diffuse EM spray opens forward to z~250, so the vertex is at the heavy track's forward (cool) attachment, the deg-2 node 11017 at z=125; the 15 other candidates in the z=138-166 tangle are plausible alternatives I cannot separate from the projections alone."},
+
+  {"event": "evt313781", "vertex_id": 9000, "confidence": "likely",
+   "why": "Rule 1: the only visible ~11 cm segment rises to a dark-red Bragg end at 9001, so the vertex is the cool end, and 9000 is the deg-3 node of the three co-located candidates there."},
+
+  {"event": "evt314705", "vertex_id": 3001, "confidence": "unclear",
+   "why": "Rule 8: essentially an empty event - a 3.5 cm two-point stub plus unmeasured grey dots; the only readable direction is yellow at 3001 rising to dark red at 3000, so I take the cool end 3001 (also lower z), but this is near-guessing."},
+
+  {"event": "evt315013", "vertex_id": 15008, "confidence": "likely",
+   "why": "Rule 1: the ~205 cm track warms to green/orange at its low end (15000/15006/15007) and is cool cyan at the high end, so the vertex is the deg-3 node 15008 at the cool, lower-z end where a short green prong to 15001 also attaches."},
+
+  {"event": "evt320865", "vertex_id": 13000, "confidence": "likely",
+   "why": "Rule 1: the ~185 cm muon rises green-yellow-dark red into 13001 (clear stopping end), so the vertex is the far end; along that far end the chain runs 13000 (green, coolest point in the event) -> 13002 (orange) -> ... -> 13001 (dark red), so the segment heats monotonically away from 13000 and 13000 is the vertex."},
+
+  {"event": "evt347129", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8: the cluster is a ~7 cm blob of three vertices surrounded by disconnected grey (no-dQ/dx) fragments with no readable prong direction; the deg-2 node 53030 is the hot one, which contradicts placing the vertex there, so I abstain rather than invent a reason."}
+]

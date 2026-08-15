@@ -1,0 +1,46 @@
+[
+  {"event": "evt37112", "vertex_id": 84098, "confidence": "likely",
+   "why": "Rule 1: the deg-3 junction at the lowest-z end of the cluster, with a short dark-red stub running away from it to 84095 and a MIP-level track running away up-right toward 84096; both attached prongs get hotter away from it."},
+
+  {"event": "evt386332", "vertex_id": 12002, "confidence": "likely",
+   "why": "Rule 1 + rule 2: the only junction (deg 2) and the lowest-z point; a very hot short stub ends at 12001 and a longer MIP track leaves it and rises to orange only at its far end 12000, so both prongs stop away from 12002."},
+
+  {"event": "evt38856", "vertex_id": 12009, "confidence": "unclear",
+   "why": "Rule 1 on the one readable prong: the long track that ends dark red at 12013 must start at the blob, and it attaches at the low-y/low-z corner of the blob where the highest-degree vertex (deg 5) sits, which is also the apex of the activity that opens toward +z; the blob itself is too dense to check every segment."},
+
+  {"event": "evt392552", "vertex_id": 12001, "confidence": "likely",
+   "why": "Rule 1: single long track, monotone yellow-orange-red rise over the last ~20 cm into 12000 (a Bragg stop), track is cool cyan approaching 12001, so 12001 is the start end; rule 2 agrees (z=185 vs 294)."},
+
+  {"event": "evt394642", "vertex_id": 13004, "confidence": "likely",
+   "why": "Rule 2 + topology: the deg-3 junction in the tight knot of short stubs at the low-z end (z~1-6 cm) from which the single long MIP track runs away to 13000 at z=300 with no Bragg rise at the knot end."},
+
+  {"event": "evt397722", "vertex_id": 18003, "confidence": "likely",
+   "why": "Rule 1 + rule 2: deg-2 junction at the lowest z, with a short hot (red) stub ending at 18001 and a cool green MIP track running away to 18000 at the x=201 anode edge, so the hot end is the stub's stopping point, not the vertex."},
+
+  {"event": "evt401054", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8: the whole object is a ~5 cm all-dark-red blob with no readable direction and no separable prongs, so any click is as good as another and I abstain rather than invent a reason."},
+
+  {"event": "evt405432", "vertex_id": 15002, "confidence": "certain",
+   "why": "Rule 1 in its clean form: deg-3 junction at the lowest z with a short uniformly dark-red proton stub stopping at 15003 and a cool cyan/green MIP track leaving toward 15000 at the anode edge; every attached segment gets hotter going away."},
+
+  {"event": "evt406796", "vertex_id": 11001, "confidence": "likely",
+   "why": "Rule 1 + rule 2: deg-2 junction at the lowest z, short dark-red stub to 11002 and a ~90 cm track that stays cyan leaving it and rises to yellow/orange only at its far end 11000."},
+
+  {"event": "evt408534", "vertex_id": 9001, "confidence": "unclear",
+   "why": "Rule 1 by elimination: this cluster is a single straight ~85 cm track (9001-9002-9000) that warms toward 9000 at the x=201 anode edge, so 9001 is the cooler end; the dark-red Bragg end further up-left is a different cluster (candidate lists elsewhere in this worklist are complete per cluster while the panels draw all clusters), and no candidate here looks like a genuine multi-prong vertex."},
+
+  {"event": "evt42280", "vertex_id": 8009, "confidence": "unclear",
+   "why": "Rule 1 on the one clean prong: the dark-red track rises monotonically toward its low-z end near 8001/8017, so that end is a Bragg stop and the vertex is at its cool end, which terminates at the deg-3 junction 8009 where the dense shower-like activity begins; the z=140-200 blob holds several competing deg-3 junctions (8037, 8007) I cannot separate from this rendering."},
+
+  {"event": "evt437699", "vertex_id": 11005, "confidence": "likely",
+   "why": "Rule 7: the cluster is a shower-like object that is narrow at z~155 and fans out (y from -122 to -137) by z~235, so the apex is the low-z end, where the deg-4 vertex 11005 sits; rule 2 agrees."},
+
+  {"event": "evt48367", "vertex_id": 19001, "confidence": "likely",
+   "why": "Rule 2 + topology: the long track runs from the deg-2 junction 19001 in mid-detector down to 19000 at the y=-199 bottom edge (an exit, not a stop), and 19001 is the lower-z, non-boundary end."},
+
+  {"event": "evt487303", "vertex_id": 7000, "confidence": "likely",
+   "why": "Rule 1: a single curved track with a textbook monotone rise (green-yellow-orange-dark red) over its last ~20 cm into 7001/7002, so that end is the Bragg stop and the cool 7000 end is the start; only the end is certain, not that the neutrino vertex lies on this single-track object at all (rule 5)."},
+
+  {"event": "evt488139", "vertex_id": 14003, "confidence": "likely",
+   "why": "Rule 1 + rule 2: the track leaves the deg-2 junction 14003 cool and rises to orange/red at its far end 14000 (z=496), with a short hot stub to 14001 at the junction; 14003 is the lowest-z candidate."}
+]

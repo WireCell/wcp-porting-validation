@@ -1,0 +1,61 @@
+[
+  {"event": "evt168526", "vertex_id": 19003,
+   "confidence": "likely",
+   "why": "Rule 1 on the disputed 21 cm link: the trail joining 19003 to the hot knot brightens cyan->green->yellow into the orange/dark-red stub ends (19008/19011/19012), i.e. it is coolest at 19003, so 19003 is the origin end and 19013 a stopping end; 19003 is also the deg-4 junction where the two long MIP arms (19002, 19018) come together."},
+
+  {"event": "evt169356", "vertex_id": 16004,
+   "confidence": "likely",
+   "why": "Rule 1: deg-3 junction where the cyan MIP track from 16003 and the green/orange track to 16005 meet, with short stubs whose free ends go orange/red; both long arms brighten away from 16004, and it is the lower-z of the two junction candidates."},
+
+  {"event": "evt169620", "vertex_id": 13002,
+   "confidence": "certain",
+   "why": "Rule 1 textbook: three prongs leave 13002 and every one gets hotter outward - dark red at 13001 and at 13003 (stopping protons) and an orange Bragg tip at the far end 13000 of the long track."},
+
+  {"event": "evt172266", "vertex_id": 16004,
+   "confidence": "likely",
+   "why": "Rule 1: deg-4 knot carrying a dark-red short stub (proton, with 16006/16007 co-located) from which a MIP-level cyan/green track leaves toward the deg-1 dead end 16000; 16004 is also the lower-z end (z=68 vs 98)."},
+
+  {"event": "evt172656", "vertex_id": 10001,
+   "confidence": "likely",
+   "why": "Rule 1 + trap 2: the 10002 end shows a monotonic green->yellow->orange->dark-red rise into 10000 over the last ~10 cm (real Bragg stop, and 10003/10030/10000 are collinear track fragments, not prongs), so the cool cyan end 10001 - also far lower z (80 vs 195) - is the origin end."},
+
+  {"event": "evt173146", "vertex_id": 15002,
+   "confidence": "certain",
+   "why": "Rule 1: deg-3 junction with a short orange->dark-red prong stopping at 15001 (proton) and a MIP cyan track leaving to 15000; both point away and 15002 is the lowest-z candidate."},
+
+  {"event": "evt174224", "vertex_id": 20008,
+   "confidence": "likely",
+   "why": "The low-z end is multi-prong: 20008 is a deg-3 junction with stubs (20009, and 20010/20011 9 cm away) and a ~10 cm red proton prong (20001) hanging off the knot, while the long track stays MIP-cyan with only speckle to its exit at z=501 (no clean Bragg), so the vertex is the low-z knot and the muon goes forward in +z; rule 2 agrees."},
+
+  {"event": "evt175016", "vertex_id": 19001,
+   "confidence": "unclear",
+   "why": "Rule 8: the whole cluster is a single 4-cm dark-red stub with no readable direction - both ends are saturated red - so any candidate is as good as another; picked the deg-2, lower-z end."},
+
+  {"event": "evt18625", "vertex_id": 11076,
+   "confidence": "certain",
+   "why": "Rule 1: two tracks leave this deg-2 kink and both end dark red (11004) and orange-red (11005) at their far ends, so both point away from 11076, which is also the lowest-z candidate."},
+
+  {"event": "evt278420", "vertex_id": 18002,
+   "confidence": "certain",
+   "why": "Rule 1: kink vertex carrying a dark-red micro-stub (18077); the upper arm rises green->yellow->orange->dark red into 18000 (Bragg) and the lower arm also brightens toward 18001, i.e. every attached segment gets hotter away from 18002."},
+
+  {"event": "evt278640", "vertex_id": 17001,
+   "confidence": "likely",
+   "why": "Rule 1: the single track rises monotonically cyan->green->orange->dark red into 17000 over the last several cm (clean Bragg stop at the 17002/17000 end), so the cool end 17001 is the origin; rule 2 agrees (z=3 vs z=100), though this looks like it could equally be an entry point at the upstream face."},
+
+  {"event": "evt278785", "vertex_id": 5003,
+   "confidence": "certain",
+   "why": "Rule 1: at 5003 the track is cool cyan and carries two dark-red short stubs (5002/5025, proton-like), while the far end 5000 shows a clean green->yellow->orange->dark-red Bragg rise, so 5000 is the stop and 5003 the vertex; also 135 cm lower in z."},
+
+  {"event": "evt279643", "vertex_id": 20002,
+   "confidence": "unclear",
+   "why": "Rule 8: the entire cluster is a compact ~5 cm dark-red blob with no readable direction, so any of the four candidates is equivalent; picked the deg-3 junction at the centre."},
+
+  {"event": "evt280972", "vertex_id": 7010,
+   "confidence": "likely",
+   "why": "Rule 1: deg-4 knot at the lowest-z end where the long MIP track (exiting at z=501) and a short prong that reddens to dark red toward 7006 both leave; the hot prong points away from 7010 and the muon stays MIP."},
+
+  {"event": "evt281485", "vertex_id": 93096,
+   "confidence": "unclear",
+   "why": "Rule 8: just a lot of scattered dots with no track or shower axis I can read, and the cluster's only two candidates are 3 mm apart, so the pick carries no information."}
+]

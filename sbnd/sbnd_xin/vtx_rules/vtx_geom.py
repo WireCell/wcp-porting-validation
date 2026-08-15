@@ -124,6 +124,90 @@ def is_track(seg):
     return not seg.get("flag_shower")
 
 
+def principal_axes(pts):
+    """(centroid, [a1, a2, a3]) for a list of {x,y,z} dicts, a1 the longest.
+
+    Used to render an event in its own frame.  A track running diagonally is
+    foreshortened in all three of X-Y / Z-Y / X-Z at once, which is exactly the
+    case where a scanner cannot tell two vertices apart; rotating into the
+    cluster's own axes removes that failure mode rather than working around it.
+    """
+    import numpy as np
+    if len(pts) < 3:
+        return (None, None)
+    a = np.array([[p["x"], p["y"], p["z"]] for p in pts], dtype=float)
+    c = a.mean(axis=0)
+    # eigh on the covariance: symmetric, ascending eigenvalues, deterministic.
+    _, vecs = np.linalg.eigh(np.cov((a - c).T))
+    axes = [vecs[:, 2], vecs[:, 1], vecs[:, 0]]
+    # Sign is arbitrary out of eigh; fix it so a rerun of the same event draws
+    # the same picture (a flipped axis is a different picture to a scanner).
+    axes = [v if v[abs(v).argmax()] >= 0 else -v for v in axes]
+    return (tuple(c), [tuple(v) for v in axes])
+
+
+def cone_profile(pts, apex, axis=None, nbins=8):
+    """Transverse spread vs distance along the axis, from `apex`.
+
+    The blind-safe stand-in for `showers[]`.  Shower membership, `showers[].start`
+    and `stem_dqdx` are all produced by `shower_clustering_with_nv`, i.e. after
+    the reconstruction has already chosen its neutrino vertex, so none of them
+    may be shown to a blind scanner.  What the owner actually reads off the
+    screen -- "does this open out as it goes?" -- is recoverable from the point
+    cloud alone: a shower's transverse RMS grows with distance from its apex, a
+    track's does not.
+
+    Returns (axis, [(longitudinal_cm, transverse_rms_cm, n), ...]); the axis is
+    apex -> centroid of the points ahead of the apex unless one is given.
+    """
+    import numpy as np
+    if len(pts) < 4 or apex is None:
+        return (None, [])
+    a = np.array([[p["x"], p["y"], p["z"]] for p in pts], dtype=float)
+    o = np.array(apex, dtype=float)
+    d = a - o
+    if axis is None:
+        axis = d.mean(axis=0)
+    axis = np.array(axis, dtype=float)
+    n = np.linalg.norm(axis)
+    if n <= 0:
+        return (None, [])
+    axis = axis / n
+    lon = d @ axis
+    trans = np.linalg.norm(d - np.outer(lon, axis), axis=1)
+    fwd = lon > 0
+    if fwd.sum() < 4:
+        return (tuple(axis), [])
+    lo, hi = 0.0, float(lon[fwd].max())
+    if hi <= 0:
+        return (tuple(axis), [])
+    edges = np.linspace(lo, hi, nbins + 1)
+    out = []
+    for i in range(nbins):
+        m = fwd & (lon >= edges[i]) & (lon < edges[i + 1] if i < nbins - 1
+                                       else lon <= edges[i + 1])
+        k = int(m.sum())
+        if k < 2:
+            out.append((float(0.5 * (edges[i] + edges[i + 1])), None, k))
+        else:
+            out.append((float(0.5 * (edges[i] + edges[i + 1])),
+                        float(np.sqrt((trans[m] ** 2).mean())), k))
+    return (tuple(axis), out)
+
+
+def opening_trend(prof):
+    """One number out of `cone_profile`: transverse RMS in the far half minus
+    the near half, in cm.  Positive = opens out (shower-like).  None when too
+    few bins are measured to say -- which must not be read as "does not open"."""
+    ok = [(l, t) for l, t, k in prof if t is not None]
+    if len(ok) < 4:
+        return None
+    h = len(ok) // 2
+    near = sum(t for _, t in ok[:h]) / h
+    far = sum(t for _, t in ok[len(ok) - h:]) / h
+    return far - near
+
+
 def seg_direction(seg, at_end):
     """Unit vector pointing AWAY from the given end ("start" or "end").
 

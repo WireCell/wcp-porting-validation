@@ -1,0 +1,46 @@
+[
+  {"event": "evt168526", "vertex_id": 19003, "confidence": "likely",
+   "why": "Rule 1: deg-4 hub at lowest z (38) is where both long tracks (to 19002 at z=250 and to 19018 at z=224) and the short heavy prongs ending orange/red near 19008/19012 all emanate from, i.e. everything gets hotter going away from it."},
+
+  {"event": "evt169356", "vertex_id": 16004, "confidence": "likely",
+   "why": "Rule 1/5: 16004 is the real 3-D kink where a ~110 cm MIP track meets a ~60 cm greener track that gets hotter toward its stopping end 16005, plus a stub, and it is the lower-z junction (rule 2); the alternative end 16003 (deg 4) is rejected because it sits on the y~200 top face, so its three stubs are boundary fragments of an exiting track."},
+
+  {"event": "evt169620", "vertex_id": 13002, "confidence": "certain",
+   "why": "Textbook rule 1: three prongs all get hotter going away from 13002 - two short yellow->dark-red protons to 13001/13003 and one long MIP muon that only reddens at its far end 13000; 13002 is also the lowest-z node."},
+
+  {"event": "evt172266", "vertex_id": 16004, "confidence": "likely",
+   "why": "Rule 1: the only long track cools toward the deg-4 stub cluster at 16004 (z=68, lowest z) and brightens to yellow/orange at its far end where it reaches the x=-200 boundary."},
+
+  {"event": "evt172656", "vertex_id": 10002, "confidence": "likely",
+   "why": "Both ends of the single 250 cm track carry an endpoint hot spot (trap 2), so I use prong multiplicity: 10002 is a deg-4 node with three ~10-15 cm prongs (hadronic vertex), while the rejected alternative 10001 is a bare deg-1 end sitting at y=194.5, i.e. on the top face where a track enters/exits."},
+
+  {"event": "evt173146", "vertex_id": 15002, "confidence": "certain",
+   "why": "Rule 1: at the deg-3 node 15002 a ~28 cm prong runs orange->dark red away to 15001 (stopping proton) and a long MIP track runs away to the x=-200 boundary; 15002 is also the lowest-z candidate."},
+
+  {"event": "evt174224", "vertex_id": 20004, "confidence": "likely",
+   "why": "Rule 1: the ~10 cm dark-red prong to 20001 starts at 20004 (lowest z, 188) and the long MIP track to the z=500 boundary starts there too - the 2-3 cm stubs 20009/20011 hanging off 20008/20010 read as delta rays along the first 12 cm of that muon, not as fragments of a 22 cm proton, which rules out the alternative reading with the vertex at 20010."},
+
+  {"event": "evt175016", "vertex_id": 19001, "confidence": "unclear",
+   "why": "Rule 8: the whole cluster is a ~4 cm compact hot blob with no readable direction - all three candidates lie within 4 cm, so I take the central deg-2 node 19001 and claim no real discrimination."},
+
+  {"event": "evt18625", "vertex_id": 11076, "confidence": "certain",
+   "why": "Rule 1: 11076 is the apex of a clean V whose two arms each brighten monotonically away from it (yellow->dark red toward 11004, cyan->orange toward 11005), and it is the lowest-z candidate with the pi0-like shower activity opening downstream of it."},
+
+  {"event": "evt278420", "vertex_id": 18002, "confidence": "likely",
+   "why": "Rule 1/6: deg-3 node with a stub where a track brightening to orange at its far end 18000 meets a low-charge shower-like prong toward 18001; 18002 is the only junction in the cluster."},
+
+  {"event": "evt278640", "vertex_id": 17002, "confidence": "unclear",
+   "why": "The only multi-prong node: 17002 (deg 3) carries two ~5 cm stubs, one ending dark red at 17000, while the alternative end 17001 is a bare deg-1 point sitting on the z=0 detector face where a track enters/exits - prong multiplicity beats the rule-2 low-z preference here."},
+
+  {"event": "evt278785", "vertex_id": 5003, "confidence": "certain",
+   "why": "Rule 1: the long track leaves the deg-3 node 5003 as cyan MIP and brightens to orange at its stopping end 5000, and 5003 carries two short stubs and is the lowest-z candidate."},
+
+  {"event": "evt279643", "vertex_id": 20002, "confidence": "unclear",
+   "why": "Rule 8: the cluster is a compact blob and all four candidates lie within ~5 cm of each other, so the choice carries no information; I take the deg-3 node 20002."},
+
+  {"event": "evt280972", "vertex_id": 7010, "confidence": "likely",
+   "why": "Rule 1: 7010 is the deg-4 convergence at the lowest z (84) from which the long MIP track to the z=500 boundary, the prong toward 7006, and the 7012/7013/7011 chain all radiate; the ambiguity is that this cluster could be a cosmic with vertex-like debris at that hub."},
+
+  {"event": "evt281485", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8 abstention: a diffuse ~100 cm cloud of mostly grey (no-dQ/dx) dots with no track, apex or direction to read, so there is no evidence the candidate location is the interaction point at all."}
+]

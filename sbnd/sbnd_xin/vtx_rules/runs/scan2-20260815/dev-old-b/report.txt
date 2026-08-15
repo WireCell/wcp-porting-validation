@@ -1,0 +1,74 @@
+event        conf      dist_cm  ok@1cm  ok@3cm  reco_ok
+evt168526    likely       0.01     yes     yes      yes   Rule 1: deg-4 hub at lowest z (38) is where both lon
+evt169356    likely       0.00     yes     yes      yes   Rule 1/5: 16004 is the real 3-D kink where a ~110 cm
+evt169620    certain      0.01     yes     yes      yes   Textbook rule 1: three prongs all get hotter going a
+evt172266    likely       0.00     yes     yes      yes   Rule 1: the only long track cools toward the deg-4 s
+evt172656    likely     257.00      no      no       no   Both ends of the single 250 cm track carry an endpoi
+evt173146    certain      0.00     yes     yes      yes   Rule 1: at the deg-3 node 15002 a ~28 cm prong runs 
+evt174224    likely       0.01     yes     yes      yes   Rule 1: the ~10 cm dark-red prong to 20001 starts at
+evt175016    unclear      0.00     yes     yes      yes   Rule 8: the whole cluster is a ~4 cm compact hot blo
+evt18625     certain      0.01     yes     yes      yes   Rule 1: 11076 is the apex of a clean V whose two arm
+evt278420    likely       0.00     yes     yes      yes   Rule 1/6: deg-3 node with a stub where a track brigh
+evt278640    unclear    124.63      no      no      yes   The only multi-prong node: 17002 (deg 3) carries two
+evt278785    certain      0.00     yes     yes      yes   Rule 1: the long track leaves the deg-3 node 5003 as
+evt279643    unclear      0.09     yes     yes      yes   Rule 8: the cluster is a compact blob and all four c
+evt280972    likely       0.29     yes     yes      yes   Rule 1: 7010 is the deg-4 convergence at the lowest 
+evt281485    unclear         -      no      no       no   Rule 8 abstention: a diffuse ~100 cm cloud of mostly
+evt281527    likely       0.48     yes     yes      yes   Rule 1 two-Bragg-ends: a ~130 cm MIP track ends dark
+evt284013    likely       8.76      no      no       no   Rule 1: the ~140 cm track ends orange (Bragg) at 800
+evt285564    likely       1.32      no     yes       no   Rule 1: a ~13 cm prong rises monotonically yellow-or
+evt286180    certain      0.01     yes     yes      yes   Rule 1 textbook: deg-3 hub with two short dark-red p
+evt286906    unclear      2.79      no     yes       no   Rule 8-ish: a single ~135 cm uniformly MIP track wit
+evt287517    certain      1.05      no     yes       no   Rule 1: deg-3 hub where a ~145 cm muon (Bragg dark r
+evt287830    likely       4.08      no      no      yes   Rule 1: deg-3 hub at low z (19.7 cm) with three pron
+evt288745    certain      0.00     yes     yes      yes   Rule 1: deg-5 hub whose own dQ/dx is green (MIP-leve
+evt290294    likely       0.01     yes     yes      yes   Rule 1: a ~4 cm dark-red stub ends at 12002 (stoppin
+evt30504     unclear     37.74      no      no       no   Rules 1+7: a heavy backward track ends dark red at 1
+evt313781    likely      43.43      no      no       no   Rule 1: the only visible ~11 cm segment rises to a d
+evt314705    unclear      0.01     yes     yes      yes   Rule 8: essentially an empty event - a 3.5 cm two-po
+evt315013    likely      10.78      no      no      yes   Rule 1: the ~205 cm track warms to green/orange at i
+evt320865    likely      46.36      no      no       no   Rule 1: the ~185 cm muon rises green-yellow-dark red
+evt347129    unclear         -      no      no       no   Rule 8: the cluster is a ~7 cm blob of three vertice
+evt37112     likely       0.75     yes     yes      yes   Rule 1: the deg-3 junction at the lowest-z end of th
+evt386332    likely       0.01     yes     yes      yes   Rule 1 + rule 2: the only junction (deg 2) and the l
+evt38856     unclear     22.20      no      no       no   Rule 1 on the one readable prong: the long track tha
+evt392552    likely       0.00     yes     yes      yes   Rule 1: single long track, monotone yellow-orange-re
+evt394642    likely       3.25      no      no       no   Rule 2 + topology: the deg-3 junction in the tight k
+evt397722    likely       0.79     yes     yes      yes   Rule 1 + rule 2: deg-2 junction at the lowest z, wit
+evt401054    unclear         -      no      no      yes   Rule 8: the whole object is a ~5 cm all-dark-red blo
+evt405432    certain      0.01     yes     yes      yes   Rule 1 in its clean form: deg-3 junction at the lowe
+evt406796    likely       2.48      no     yes       no   Rule 1 + rule 2: deg-2 junction at the lowest z, sho
+evt408534    unclear     46.32      no      no       no   Rule 1 by elimination: this cluster is a single stra
+evt42280     unclear     36.17      no      no      yes   Rule 1 on the one clean prong: the dark-red track ri
+evt437699    likely       0.01     yes     yes      yes   Rule 7: the cluster is a shower-like object that is 
+evt48367     likely       0.86     yes     yes      yes   Rule 2 + topology: the long track runs from the deg-
+evt487303    likely     118.83      no      no      yes   Rule 1: a single curved track with a textbook monoto
+evt488139    likely       0.01     yes     yes      yes   Rule 1 + rule 2: the track leaves the deg-2 junction
+evt492803    likely       0.00     yes     yes      yes   Rule 1: a ~7 cm dark-red (Bragg) stub runs 16002->16
+evt492913    unclear      0.00     yes     yes      yes   Featureless ~46 cm MIP track with no Bragg at either
+evt493243    unclear      0.00     yes     yes      yes   A ~180 cm straight MIP track with no Bragg anywhere 
+evt55595     likely       1.22      no     yes       no   Rule 1: the ~185 cm MIP track terminates at 8004 and
+evt57883     certain      0.01     yes     yes       no   Rule 1 in its clean form: three prongs (to 16001, 16
+evt59093     certain      0.00     yes     yes      yes   Rule 1 + rule 3: a ~7 cm dark-red proton stub runs 1
+evt59247     likely       0.01     yes     yes      yes   Rule 1: the ~160 cm track rises monotonically green-
+evt61351     unclear      0.00     yes     yes      yes   A ~370 cm straight MIP track that exits at the x=-20
+evt61417     certain      0.00     yes     yes      yes   Rule 1 with a sharp kink: at 9002 the ~120 cm MIP ar
+evt62149     certain      0.01     yes     yes      yes   Trap 1 resolved: both far ends heat up (dark-red Bra
+evt62721     unclear      0.01     yes     yes      yes   Rule 8 case - the cluster is a ~2 cm blob of a few v
+evt64409     unclear      0.00     yes     yes      yes   Dense ~40 cm blob with 14 candidates and no clean pr
+evt64717     likely       9.15      no      no      yes   Rule 1: the single ~40 cm track rises monotonically 
+evt64959     unclear     45.31      no      no       no   The only vertex-like feature is the two-prong MIP ju
+evt90055     likely       0.00     yes     yes      yes   Rules 7+1: the whole dense object starts at z~202 an
+
+picks files written at: {'picks-0.json': '2026-08-15 12:51:53', 'picks-1.json': '2026-08-15 12:54:19', 'picks-2.json': '2026-08-15 12:51:12', 'picks-3.json': '2026-08-15 12:51:58'}
+scanned 60, answered 57 (95%), correct 37 (precision 64.9%, @3cm 73.7%)
+by VERTEX ID (no cross-arm refit artifact): 38 of 56 answered with a recorded truth id (67.9%)
+reconstruction on the same 60 events: 43 correct (71.7%)
+events where NO vertex in this arm is within 1 cm of the click: 5 (8.3%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
+
+confidence calibration (this is the number that decides the hand-back workflow):
+   certain  n= 12 answered= 12 correct= 11  (91.7%)
+   likely   n= 30 answered= 30 correct= 18  (60.0%)
+   unclear  n= 18 answered= 15 correct=  8  (53.3%)
+
+reco wrong on 28.3% of all events, 61.1% of the 18 the scanner declined or disagreed with -> enrichment x2.16

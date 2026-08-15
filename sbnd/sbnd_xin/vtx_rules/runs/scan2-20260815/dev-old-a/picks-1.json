@@ -1,0 +1,46 @@
+[
+  {"event": "evt281527", "vertex_id": 14002, "confidence": "certain",
+   "why": "Rule 1: both arms get hotter away from the deg-2 junction 14002 - the long track ends dark red at 14001 and the short stub to 14000 is orange, while 14002 itself sits in the cool green part."},
+
+  {"event": "evt284013", "vertex_id": 8032, "confidence": "unclear",
+   "why": "Rule 1: the single long track rises monotonically cyan->green->yellow->orange toward 8001, so 8001 is the Bragg stop; the cool end runs into the compact 8-cm blob of short segments and 8032 is the node the long track actually reaches (lowest z, so rule 2 agrees)."},
+
+  {"event": "evt285564", "vertex_id": 9010, "confidence": "likely",
+   "why": "Rule 1: dQ/dx rises monotonically from dark blue at 9010 through green and yellow to dark red at 9004 over the whole 30 cm, so 9004 is the stop and 9010 is the cool end the track points away from; 9010 is also the lowest-z candidate (rule 2)."},
+
+  {"event": "evt286180", "vertex_id": 6003, "confidence": "certain",
+   "why": "Rule 1 textbook: deg-3 hub 6003 with two short dark-red (several x MIP) stubs stopping at 6001 and 6004 plus a MIP-level track to 6000 - every attached segment is hotter away from 6003."},
+
+  {"event": "evt286906", "vertex_id": 41010, "confidence": "unclear",
+   "why": "Rule 8-ish: one straight MIP track whose far end is at the x=-201 detector boundary and whose interior end carries a hot tip (looks like a stop, not a vertex); both candidates are the same point 2 cm apart, so I take the lower-z one and flag it as close to a guess."},
+
+  {"event": "evt287517", "vertex_id": 13015, "confidence": "certain",
+   "why": "Rule 1 + rule 3: deg-3 junction 13015 with a ~5 cm dark-red proton stub stopping at 13001 and a 140 cm muon running away to a dark-red Bragg end at 13000 - both point away from 13015."},
+
+  {"event": "evt287830", "vertex_id": 16006, "confidence": "likely",
+   "why": "Rule 1 with the two-Bragg trap in mind: deg-3 hub 16006 has prongs to a dark-red end at 16013/16007, to an orange/red end at 16009, and a MIP prong to 16000 - the junction both hot ends point away from; also the lowest-z hub node (rule 2)."},
+
+  {"event": "evt288745", "vertex_id": 23002, "confidence": "certain",
+   "why": "Rule 1: deg-5 hub 23002 with a ~25 cm heavily-ionising arm that darkens to maroon at its far end 23000 plus several short stubs - everything radiates from 23002."},
+
+  {"event": "evt290294", "vertex_id": 12001, "confidence": "likely",
+   "why": "Rule 1: deg-2 junction 12001 with a short dark-red proton stub stopping at 12002 and a cooler MIP-level arm running to 12000; 12001 is also the lower-z of the two non-Bragg candidates (rule 2)."},
+
+  {"event": "evt30504", "vertex_id": 11017, "confidence": "unclear",
+   "why": "Two-Bragg-ends trap and I could not resolve it: the heavy track has a hot patch at its 11001 tip AND a sustained dark-red stretch just upstream of z~125, so I took the junction at z=125 (11017) where that heavy arm meets all the other short segments and the downstream EM cloud - but the profile is not monotonic to either end and 11001 as the shower apex is a live alternative."},
+
+  {"event": "evt313781", "vertex_id": 9000, "confidence": "likely",
+   "why": "Rule 1: the single ~11 cm segment rises to dark red at 9001 and is blue/cyan at the deg-3 node 9000, so 9001 is the stopping proton end and 9000 (where 9004 and 9015 also sit) is the vertex."},
+
+  {"event": "evt314705", "vertex_id": 3001, "confidence": "unclear",
+   "why": "Rule 8 territory - a 3 cm object plus scattered grey dots; the only signal is yellow at 3001 darkening to red at 3000, which with rule 2 (3001 lower z) puts the vertex at 3001, but this is close to a guess."},
+
+  {"event": "evt315013", "vertex_id": 15008, "confidence": "likely",
+   "why": "The 180 cm track is uniform MIP with only a small orange/red patch at the 15006 end, so by rule 1 the cool 15008 end is the vertex; it is also 120 cm lower in z (rule 2) and has satellite charge around it."},
+
+  {"event": "evt320865", "vertex_id": 13002, "confidence": "likely",
+   "why": "Rule 1 + rule 3: the 185 cm track ends dark red at 13001 (stopping muon), so the vertex is the opposite, cool end where the deg-2 junction 13002 carries a short extra stub to 13000."},
+
+  {"event": "evt347129", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8 abstain: the cluster is disconnected grey fragments strung along the x=-200 anode with no readable trajectory, and the three candidates sit inside one ~7 cm blob - any click would be invented."}
+]

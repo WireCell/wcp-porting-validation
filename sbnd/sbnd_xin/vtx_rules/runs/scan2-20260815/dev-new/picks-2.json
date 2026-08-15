@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt37112",
+  "vertex_id": 84098,
+  "confidence": "likely",
+  "why": "Rule 1/6: deg-3 junction at the lowest z (7.3 cm) with two proton stubs whose Bragg peaks (210k, 180k) sit at the far ends and nothing rising toward it, and the three downstream shower fragments (clus 9, 67, 85) all back-extrapolate to it."
+ },
+ {
+  "event": "evt386332",
+  "vertex_id": 12002,
+  "confidence": "certain",
+  "why": "Rule 1: deg-2 junction where a 30 cm muon runs off and Braggs at 12000 (116k) and a 6 cm proton runs the other way and Braggs at 12001 (199k); nothing rises toward 12002."
+ },
+ {
+  "event": "evt38856",
+  "vertex_id": 12009,
+  "confidence": "likely",
+  "why": "Rules 1+7: p5 cone from 12009 rises monotonically 2.5->26 cm (best apex of the EM complex) and the 69 cm proton (segs 12013+12030, kink at 12004) Braggs at 12013 while its 12009 end starts at 25k -- so 12004's clean '2 of 2 rise away' is a mid-track kink and the x2.09 'rise toward 12009' is a delta blob 6 cm out, not a Bragg."
+ },
+ {
+  "event": "evt392552",
+  "vertex_id": 12001,
+  "confidence": "likely",
+  "why": "Rule 1: only real cluster is one 244 cm muon; it is hotter (116k) at 12000 near the bottom wall where it stops and cooler (71k) at 12001, which sits in the detector interior, so the track comes out of 12001; low-z end too."
+ },
+ {
+  "event": "evt394642",
+  "vertex_id": 13004,
+  "confidence": "likely",
+  "why": "Rule 1/6 by default: the only junction (deg 3) with vertex-like activity -- pi+, mu and e stubs plus a 4 cm fragment within 5 cm -- at the launch point of the 319 cm MIP muon; caveat, it sits at z=4 on the upstream face so an entering rock muon cannot be excluded."
+ },
+ {
+  "event": "evt397722",
+  "vertex_id": 18003,
+  "confidence": "certain",
+  "why": "Rule 1: deg-2 junction with a 4.9 cm proton at 179k (stopping stub) on one side and a 66 cm MIP muon that exits the +x wall (x=201) on the other; lowest-z candidate."
+ },
+ {
+  "event": "evt401054",
+  "vertex_id": 11002,
+  "confidence": "certain",
+  "why": "Rule 1/6: the whole event is one 8 cm two-prong -- two heavily-ionising protons (214k, 182k) leaving a single deg-2 junction back to back, with three sub-cm blips within 12 cm of it."
+ },
+ {
+  "event": "evt405432",
+  "vertex_id": 15002,
+  "confidence": "certain",
+  "why": "Rule 1: deg-3 junction with an 18.8 cm proton Bragging at 15003 (207k) and a 1.1 cm proton stub, while the 88.6 cm muon leaves and exits the +x wall (x=201); the muon's x1.52 'rise toward' is vertex-region charge in its first 5 cm."
+ },
+ {
+  "event": "evt406796",
+  "vertex_id": 11001,
+  "confidence": "certain",
+  "why": "Rule 1 in its cleanest form: 2 of 2 attached segments rise away -- 93 cm muon Braggs at 11000 (121k) and 8.7 cm proton Braggs at 11002 (202k), nothing rises toward 11001."
+ },
+ {
+  "event": "evt408534",
+  "vertex_id": 23014,
+  "confidence": "likely",
+  "why": "Rule 1: deg-2 junction with a 25.3 cm proton Bragging monotonically to 207k at 23013, while the other prong is MIP and continues collinearly through 23012 -> clus 9 (9001/9002) and exits at x=201; the other object (clus 17) is a stopping muon with a Michel at 17010 that back-extrapolates to the top face, i.e. a cosmic."
+ },
+ {
+  "event": "evt42280",
+  "vertex_id": 8001,
+  "confidence": "certain",
+  "why": "Rules 1+7: lowest-z structure of the event -- a 4.4 cm proton stub at 199k hanging off a deg-2 junction at z=89, from which the whole 100 cm EM shower opens monotonically toward +z; nothing rises toward 8001."
+ },
+ {
+  "event": "evt437699",
+  "vertex_id": 11005,
+  "confidence": "certain",
+  "why": "Rule 1: deg-4 junction at the lowest z (155 cm) with an 11.5 cm proton Bragging away to 206k at 11009, a 2.1 cm proton stub at 173k, a 1.5 cm pi+ stub, and the 25 cm electron leaving toward the shower -- 0 of 4 segments rise toward it."
+ },
+ {
+  "event": "evt48367",
+  "vertex_id": 19001,
+  "confidence": "certain",
+  "why": "Rule 1 + convergence: the 177 cm muon leaves 19001 and exits the bottom wall (y=-198.6), a 0.6 cm pi+ stub sits on it, and the detached 84 cm EM shower (clus 82) back-extrapolates from its apex 82064 to within 0.2 cm of 19001."
+ },
+ {
+  "event": "evt487303",
+  "vertex_id": 7002,
+  "confidence": "certain",
+  "why": "Rule 1: deg-2 junction with a 122 cm muon that Braggs to 104k where it stops at 7000, and a 5.5 cm proton stub at 175-195k on the other side; nothing rises toward 7002."
+ },
+ {
+  "event": "evt488139",
+  "vertex_id": 14003,
+  "confidence": "certain",
+  "why": "Rule 1: deg-2 junction, 143.6 cm muon rises x3.05 away to 120k at 14000 and a 5.5 cm proton stub at 152-167k leaves the other side; lowest-z candidate at 427.5."
+ }
+]

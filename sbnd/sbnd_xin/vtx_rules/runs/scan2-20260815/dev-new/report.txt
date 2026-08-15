@@ -1,0 +1,74 @@
+event        conf      dist_cm  ok@1cm  ok@3cm  reco_ok
+evt168526    likely      21.57      no      no      yes   Rule 1: all three prongs at 19013 start sub-MIP ther
+evt169356    certain      0.00     yes     yes      yes   Clean V apex at the lowest z of the event: 61 cm pi 
+evt169620    certain      0.01     yes     yes      yes   Rule 1 unanimous: 3 of 3 prongs rise away (182 cm mu
+evt172266    certain      0.00     yes     yes      yes   Deg-4 hadronic knot: 12 cm proton rising away to 213
+evt172656    unclear    257.00      no      no       no   Leaning on the charge discontinuity at 10002 (256 cm
+evt173146    certain      0.00     yes     yes      yes   Deg-3 vertex with a 28.5 cm proton rising away to 17
+evt174224    likely       0.01     yes     yes      yes   Zoom shows 20004 as the common endpoint of the dark-
+evt175016    unclear      0.00     yes     yes      yes   Event is a handful of disconnected dots (rule 8); 19
+evt18625     certain      0.01     yes     yes      yes   Rule 1 unanimous 2 of 2: a 97 cm muon rising away to
+evt278420    likely       0.00     yes     yes      yes   Trap-2 read of p4: the 5 cm means at 18002 are infla
+evt278640    likely     124.63      no      no      yes   p4 shows the 5 cm prong falling 260k at 17000 to 40k
+evt278785    certain      0.00     yes     yes      yes   Deg-3 vertex with two very hot short protons (181k, 
+evt279643    likely       0.09     yes     yes      yes   Only real cluster in the event; p4 shows the 4.7 cm 
+evt280972    likely       0.29     yes     yes      yes   Zoom shows 7010 as the apex at the lowest z where ev
+evt281485    unclear     36.73      no      no       no   Rule 8 territory: disconnected low-dQ/dx fragments n
+evt281527    likely       0.48     yes     yes      yes   Rule 1: the 162 cm muon rises monotonically onto the
+evt284013    likely       0.01     yes     yes       no   Rule 1 + geometry: 8032 and 8007 are collinear fitte
+evt285564    likely      28.51      no      no       no   Rule 1: the event is one ~38 cm object that is MIP (
+evt286180    certain      0.01     yes     yes      yes   Three-prong junction: two heavily ionising protons (
+evt286906    likely       1.90      no     yes       no   The 135 cm muon leaves 9001 forward in +z and exits 
+evt287517    likely       1.05      no     yes       no   Deg-3 hadronic hub: the 6.1 cm proton rises monotoni
+evt287830    likely       0.01     yes     yes      yes   16004 is the apex of the star at the lowest z in the
+evt288745    certain      0.00     yes     yes      yes   Rule 1 on a deg-5 hadronic star: every one of the fi
+evt290294    likely       0.01     yes     yes      yes   Only junction in the event: a 3.9 cm 145k proton stu
+evt30504     likely       0.00     yes     yes       no   Rule 7: 11001 (z=88) is the upstream tip of the show
+evt313781    unclear     43.43      no      no       no   Everything in the event lies on one straight line in
+evt314705    unclear      0.01     yes     yes      yes   Rule 8-like: the only real object is one 3.6 cm 194k
+evt315013    likely       0.00     yes     yes      yes   Rule 3: the 15006/15000 end carries a 107k Bragg plu
+evt320865    certain     39.52      no      no       no   The 193 cm muon rises monotonically onto the black s
+evt347129    unclear     22.40      no      no       no   Event is broken into five fragments strung along a 1
+evt37112     likely       0.75     yes     yes      yes   Rule 1/6: deg-3 junction at the lowest z (7.3 cm) wi
+evt386332    certain      0.01     yes     yes      yes   Rule 1: deg-2 junction where a 30 cm muon runs off a
+evt38856     likely      22.20      no      no       no   Rules 1+7: p5 cone from 12009 rises monotonically 2.
+evt392552    likely       0.00     yes     yes      yes   Rule 1: only real cluster is one 244 cm muon; it is 
+evt394642    likely       3.25      no      no       no   Rule 1/6 by default: the only junction (deg 3) with 
+evt397722    certain      0.79     yes     yes      yes   Rule 1: deg-2 junction with a 4.9 cm proton at 179k 
+evt401054    certain      0.47     yes     yes      yes   Rule 1/6: the whole event is one 8 cm two-prong -- t
+evt405432    certain      0.01     yes     yes      yes   Rule 1: deg-3 junction with an 18.8 cm proton Braggi
+evt406796    certain      2.48      no     yes       no   Rule 1 in its cleanest form: 2 of 2 attached segment
+evt408534    likely       0.00     yes     yes       no   Rule 1: deg-2 junction with a 25.3 cm proton Braggin
+evt42280     certain      0.01     yes     yes      yes   Rules 1+7: lowest-z structure of the event -- a 4.4 
+evt437699    certain      0.01     yes     yes      yes   Rule 1: deg-4 junction at the lowest z (155 cm) with
+evt48367     certain      0.86     yes     yes      yes   Rule 1 + convergence: the 177 cm muon leaves 19001 a
+evt487303    certain      0.00     yes     yes      yes   Rule 1: deg-2 junction with a 122 cm muon that Bragg
+evt488139    certain      0.01     yes     yes      yes   Rule 1: deg-2 junction, 143.6 cm muon rises x3.05 aw
+evt492803    certain      0.00     yes     yes      yes   Rule 1: 16002 is the deg-2 junction where the 241 cm
+evt492913    unclear      0.00     yes     yes      yes   Only structure is one 50 cm flat-MIP track plus a co
+evt493243    unclear      0.00     yes     yes      yes   A single 189 cm muon, flat MIP end to end; 13000 lea
+evt55595     likely       1.22      no     yes       no   Vertex knot at x~-178, z~193-195: the 194 cm track s
+evt57883     certain      0.01     yes     yes       no   Rule 1 and the two-Bragg trap resolved: from 16004 a
+evt59093     certain      0.00     yes     yes      yes   The 114 cm muon rises x2.2 to 114k at 15003 where a 
+evt59247     certain      0.01     yes     yes      yes   Textbook stopping muon: the 158 cm track follows the
+evt61351     likely       0.00     yes     yes      yes   One 360 cm muon that exits the anode at x=-201; its 
+evt61417     certain      0.00     yes     yes      yes   Rule 1: from 9002 the 150 cm muon runs out through z
+evt62149     certain      0.01     yes     yes      yes   Perfect rule-1 signature - 2 of 2 attached segments 
+evt62721     unclear         -      no      no      yes   Rule 8: the entire event is a 3 cm doubled stub at 1
+evt64409     certain      0.00     yes     yes      yes   8001 is the apex of a hot V at the upstream tip of t
+evt64717     likely       9.15      no      no      yes   Cluster 17 is a single 48 cm chain (17003-17036-1700
+evt64959     unclear     45.31      no      no       no   Everything hugs the top wall (y~197-200) and the 91 
+evt90055     certain      0.00     yes     yes      yes   Upstream apex of the big shower: from 11002 a 19.6 c
+
+picks files written at: {'picks-0.json': '2026-08-15 12:55:33', 'picks-1.json': '2026-08-15 12:59:54', 'picks-2.json': '2026-08-15 12:51:11', 'picks-3.json': '2026-08-15 12:55:06'}
+scanned 60, answered 59 (98%), correct 43 (precision 72.9%, @3cm 79.7%)
+by VERTEX ID (no cross-arm refit artifact): 43 of 58 answered with a recorded truth id (74.1%)
+reconstruction on the same 60 events: 43 correct (71.7%)
+events where NO vertex in this arm is within 1 cm of the click: 5 (8.3%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
+
+confidence calibration (this is what decides the hand-back workflow -- read coverage and accuracy TOGETHER):
+   certain  coverage  27/60 (45.0%)  answered  27  correct  25 (92.6%)  by-vid  26 (96.3%)
+   likely   coverage  23/60 (38.3%)  answered  23  correct  14 (60.9%)  by-vid  13 (56.5%)
+   unclear  coverage  10/60 (16.7%)  answered   9  correct   4 (44.4%)  by-vid   4 (44.4%)
+
+reco wrong on 28.3% of all events, 73.3% of the 15 the scanner declined or disagreed with -> enrichment x2.59

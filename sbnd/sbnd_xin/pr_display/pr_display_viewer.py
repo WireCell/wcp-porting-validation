@@ -239,6 +239,20 @@ seg_src = {k: ColumnDataSource(data=dict(xs=[], ys=[], c=[], sid=[], pid=[],
 # UNDER the coloured segments so the colour still reads through it.
 hl_src = {k: ColumnDataSource(data=dict(xs=[], ys=[]))
           for k in ("xy", "yz", "xz")}
+# Direction arrows (sbnd_xin/docs/pr/80 sec 9).  One arrow per segment, drawn
+# at the COOLER end and pointing toward the hotter one -- i.e. the way the
+# particle was travelling, since a charged particle deposits more as it slows.
+# Computed from the fitted points, NOT from `dirsign`, so the arrow can and
+# sometimes does disagree with the reconstruction's own direction verdict; that
+# disagreement is the point.  A segment whose two ends are within 1.3x of each
+# other gets NO arrow: "no opinion" must never be drawn as an opinion.
+# multi_line + a rotated triangle rather than Bokeh's Arrow annotation, which
+# is one model per arrow and would mean ~300 models per event across three
+# panels.
+arrow_src = {k: ColumnDataSource(data=dict(xs=[], ys=[]))
+             for k in ("xy", "yz", "xz")}
+arrowhead_src = {k: ColumnDataSource(data=dict(x=[], y=[], angle=[]))
+                 for k in ("xy", "yz", "xz")}
 
 # --- dQ/dx-coloured track-fit points ----------------------------------------
 # The fitted trajectory POINTS, carrying their measured dQ/dx.  seg_src above
@@ -324,6 +338,16 @@ for f, hx, hy in PROJ:
         ("dQ/dx (e/cm)", "@dqdx{0,0}"), ("dQ (e)", "@dQ{0,0}"),
         ("dx (cm)", "@dx{0.000}"), ("resid. range (cm)", "@rr{0.0}"),
         ("segment", "@sid"), ("cluster", "@cid"), ("pdg", "@pid")]))
+
+    # Direction arrows, above the charge points so they stay readable over a
+    # dense Bragg peak, below the vertices so they never hide a candidate.
+    RENDER["arrows"].append(
+        f.multi_line(xs="xs", ys="ys", source=arrow_src[key],
+                     line_color="#1a7d32", line_width=2.0, line_alpha=0.9))
+    RENDER["arrows"].append(
+        f.scatter("x", "y", source=arrowhead_src[key], marker="triangle",
+                  size=10, angle="angle", fill_color="#1a7d32",
+                  line_color=None, fill_alpha=0.9))
 
     r_vtx = f.scatter(hx, hy, source=vtx_src, marker="circle", size=6,
                       fill_color=None, line_color="#111111", line_width=1.2)
@@ -437,6 +461,12 @@ DQDX_REF_STYLE = {"muon": ("black", "solid"), "proton": ("saddlebrown", "solid")
                   "pion": ("seagreen", "dashed"), "kaon": ("purple", "dashed"),
                   "electron": ("gray", "dotted")}
 dqdx_ref_src = {name: ColumnDataSource(data=dict(x=[], y=[])) for name in DQDX_REF_STYLE}
+# Both-ends mode draws every template TWICE -- once anchored at each physical
+# end -- so the panel poses the question ("if this end were the stop, a proton
+# would look like that") instead of answering it with the reconstruction's
+# direction verdict.  This is the second anchor.
+dqdx_ref2_src = {name: ColumnDataSource(data=dict(x=[], y=[]))
+                 for name in DQDX_REF_STYLE}
 
 f_dqdx = figure(title="dQ/dx", height=320, width=1150,
                x_range=Range1d(start=0, end=35), y_range=Range1d(start=0, end=100000),
@@ -445,10 +475,15 @@ f_dqdx.xaxis.axis_label = "residual range (cm)"
 f_dqdx.yaxis.axis_label = "dQ/dx (e/cm)"
 
 DQDX_REF_RENDER = {}
+DQDX_REF2_RENDER = {}
 for _name, (_color, _dash) in DQDX_REF_STYLE.items():
     _r = f_dqdx.line(x="x", y="y", source=dqdx_ref_src[_name], line_color=_color,
                      line_dash=_dash, line_width=1.6, legend_label=_name, visible=False)
     DQDX_REF_RENDER[_name] = _r
+    # No legend entry: it is the same particle hypothesis, mirrored.
+    DQDX_REF2_RENDER[_name] = f_dqdx.line(
+        x="x", y="y", source=dqdx_ref2_src[_name], line_color=_color,
+        line_dash=_dash, line_width=1.6, line_alpha=0.6, visible=False)
 f_dqdx.legend.location = "top_right"
 f_dqdx.legend.click_policy = "hide"
 f_dqdx.legend.label_text_font_size = "8pt"
@@ -478,10 +513,39 @@ f_dqdx.scatter(x="x", y="y", source=dqdx_stem_src, marker="diamond", size=9,
 dqdx_title = Div(text="<b>dQ/dx</b> <span style='color:#666'>&mdash; click a particle-flow "
                       "row above; Start = distance from the shower's start point, "
                       "End = residual range from the stopping end</span>", width=1150)
-dqdx_mode = RadioButtonGroup(labels=["Start (shower stem)", "End (track stopping)"],
-                             active=1, width=260)
+dqdx_mode = RadioButtonGroup(labels=["Start (shower stem)", "End (track stopping)",
+                                     "Both ends (no dirsign)"],
+                             active=1, width=400)
 dqdx_seg_sel = Select(title="segment", options=[], value="", width=160)
 dqdx_caption = Div(text="", width=1150)
+
+# --- every segment at once (sbnd_xin/docs/pr/80 sec 9) ----------------------
+# The dQ/dx panel shows ONE segment, reached through a dropdown, so reading
+# "which end does each particle stop at" for a 6-prong vertex meant six clicks
+# and remembering six numbers.  Three of the five misses in the first blind AI
+# scan were exactly that failure -- two Bragg ends in one cluster, only one of
+# them noticed.  This table is the whole event's direction evidence on one
+# screen.  dQ/dx here is the polarity-free 5 cm end mean, never `rr`.
+segtab_src = ColumnDataSource(data=dict(sid=[], cid=[], pdg=[], length=[],
+                                        v0=[], d0=[], v1=[], d1=[], verdict=[]))
+segtab_view = CDSView(filter=AllIndices())
+segtab_title = Div(text="<b>segments</b> <span style='color:#666'>&mdash; dQ/dx "
+                        "at each end, 5 cm mean, computed from the fitted points "
+                        "and NOT from dirsign/rr</span>", width=1180)
+segtab = DataTable(
+    source=segtab_src, view=segtab_view, width=1180, height=210,
+    index_position=None, selectable=True, sortable=False,
+    columns=[
+        TableColumn(field="sid", title="seg", width=70),
+        TableColumn(field="cid", title="clus", width=50),
+        TableColumn(field="pdg", title="pdg", width=60),
+        TableColumn(field="length", title="len cm", width=70),
+        TableColumn(field="v0", title="vtx A", width=70),
+        TableColumn(field="d0", title="dQ/dx @A", width=85),
+        TableColumn(field="v1", title="vtx B", width=70),
+        TableColumn(field="d1", title="dQ/dx @B", width=85),
+        TableColumn(field="verdict", title="stops at", width=260),
+    ])
 
 
 # ---------------------------------------------------------------------------
@@ -495,7 +559,10 @@ next_btn = Button(label="next >", width=80)
 LAYERS = [("trackfit", "track fit"), ("shower", "shower pts"),
           ("track", "track pts"), ("steiner", "steiner"),
           ("terminals", "terminals"), ("vertices", "vertices"),
-          ("dead", "dead (2-D)"), ("dqdx", "dQ/dx")]
+          ("dead", "dead (2-D)"), ("dqdx", "dQ/dx"),
+          # APPENDED, never inserted -- LAYER_DEFAULT indexes by key but the
+          # assert below still pins the historical positions.
+          ("arrows", "dQ/dx direction")]
 LAYER_KEYS = [k for k, _ in LAYERS]
 # Steiner off by default: 6k points per event drawn under everything else is
 # noise until you go looking for it.
@@ -505,7 +572,8 @@ LAYER_KEYS = [k for k, _ in LAYERS]
 # appended -- the trap that made "dQ/dx" an append-only addition above.  The
 # five names below reproduce that literal exactly.
 LAYER_DEFAULT = [LAYER_KEYS.index(k) for k in
-                 ("trackfit", "shower", "track", "vertices", "dead", "dqdx")]
+                 ("trackfit", "shower", "track", "vertices", "dead", "dqdx",
+                  "arrows")]
 assert LAYER_DEFAULT[:5] == [0, 1, 2, 5, 6], LAYER_DEFAULT
 layer_group = CheckboxButtonGroup(labels=[l for _, l in LAYERS],
                                   active=list(LAYER_DEFAULT))
@@ -655,6 +723,12 @@ vscan_table = DataTable(
         TableColumn(field="y", title="y", width=60),
         TableColumn(field="z", title="z", width=60),
         TableColumn(field="deg", title="deg", width=42),
+        # Owner rule 1 as a column: "k/m" = of the m attached segments whose
+        # ends are both measured, k get HOTTER going away from this vertex.
+        # 86.5% of hand-scanned true vertices read m/m here, against 31.9% of
+        # the other vertices in the same cluster (doc pr/80).  Evidence, not a
+        # ranking -- the table is never sorted by it.
+        TableColumn(field="outg", title="out/meas", width=75),
         TableColumn(field="main", title="main", width=45),
         TableColumn(field="cand", title="cand", width=45),
         TableColumn(field="dl", title="DL score", width=80),
@@ -764,10 +838,14 @@ def vscan_build_rows(d):
         sb = by_id.get(v["id"])
         dm = (math.dist((f["x"], f["y"], f["z"]), mvp)
               if mvp and None not in mvp else None)
+        _away, _meas, _n = vertex_outgoing(d, v["id"])
         rows.append(dict(
             vid=v["id"], clus=v["cluster_id"],
             x=f["x"], y=f["y"], z=f["z"],
             deg=v.get("degree", 0),
+            # "-" when nothing attached to this vertex has two measured ends:
+            # unmeasured is not zero, and must not read as "nothing points away".
+            outg=("%d/%d" % (_away, _meas)) if _meas else "-",
             is_main=bool(v.get("is_main")),
             cand=bool(v.get("main_candidate")),
             # None, not 0: "the DL had no opinion" is not "the DL scored zero".
@@ -1651,6 +1729,102 @@ def _dqdx_valid_points(seg):
             if p.get("dx", 0) > 0 and p.get("dQ", -1) >= 0]
 
 
+# --------------------------------------------------------------------------
+# Polarity-free direction evidence (sbnd_xin/docs/pr/80 sec 9).
+#
+# Everything below deliberately avoids `dirsign` and `rr`.  examine_direction()
+# runs LAST in TaggerCheckNeutrino.cxx:1460 and orients every segment relative
+# to the main vertex it has already chosen, and PrDisplayDump.cxx:447-454
+# reverses `rr` according to that verdict.  So "the Bragg peak is at the rr=0
+# end" is the reconstruction's own answer being read back, and when the
+# reconstruction has the direction wrong the End-mode panel shows the peak at
+# the wrong end with nothing on screen to catch it.  Arc length recomputed from
+# points[] has no convention to get backwards.
+BRAGG_WINDOW = 5.0       # cm averaged at each end
+MIN_POINTS_END = 3       # fewer than this and the end has NO opinion
+
+
+def _arclen(pts):
+    out, acc, prev = [], 0.0, None
+    for p in pts:
+        if prev is not None:
+            acc += math.dist((p["x"], p["y"], p["z"]),
+                             (prev["x"], prev["y"], prev["z"]))
+        prev = p
+        out.append(acc)
+    return out
+
+
+def seg_end_dqdx(seg, window=BRAGG_WINDOW):
+    """Mean dQ/dx within `window` of each physical end of the segment.
+
+    Returns (d_start_end, d_end_end, n0, n1) where "start"/"end" are the
+    points[0] / points[-1] ends, i.e. the start_vertex_id / end_vertex_id ends.
+    A mean is None when the end is UNMEASURED -- kept distinct from "low",
+    because collapsing the two is how a Bragg test silently inverts on a short
+    or badly fitted segment.
+    """
+    pts = seg.get("points") or []
+    if len(pts) < 2:
+        return (None, None, 0, 0)
+    s = _arclen(pts)
+    total = s[-1]
+    lo, hi = [], []
+    for si, p in zip(s, pts):
+        if not (p.get("dx", 0) > 0 and p.get("dQ", -1) >= 0):
+            continue
+        if si <= window:
+            lo.append(p["dQ"] / p["dx"])
+        if total - si <= window:
+            hi.append(p["dQ"] / p["dx"])
+    d0 = sum(lo) / len(lo) if len(lo) >= MIN_POINTS_END else None
+    d1 = sum(hi) / len(hi) if len(hi) >= MIN_POINTS_END else None
+    return (d0, d1, len(lo), len(hi))
+
+
+def vertex_outgoing(d, vid, ratio=1.3):
+    """Owner rule 1 as a measurement: of the segments attached to this vertex,
+    how many get HOTTER going away from it (i.e. stop somewhere else)?
+
+    Returns (n_away, n_measured, n_attached).  Measured on 481 hand-scan labels
+    (doc pr/80): 86.5% of the owner's vertices have every attached track
+    pointing away, against 31.9% of the other vertices in the same cluster --
+    the strongest single discriminator found.  It is shown as EVIDENCE, next to
+    the other columns; it is not a ranking and the table is not sorted by it.
+    """
+    away = meas = n = 0
+    for seg in d.get("segments", []):
+        ends = (seg.get("start_vertex_id"), seg.get("end_vertex_id"))
+        if vid not in ends:
+            continue
+        n += 1
+        d0, d1, _, _ = seg_end_dqdx(seg)
+        if d0 is None or d1 is None or d0 <= 0 or d1 <= 0:
+            continue
+        near, far = (d0, d1) if vid == ends[0] else (d1, d0)
+        meas += 1
+        if far / near >= ratio:
+            away += 1
+    return (away, meas, n)
+
+
+def _dqdx_both_xy(seg):
+    """Both-ends mode: dQ/dx vs raw arc length from the points[0] end.
+
+    No `rr`, no `dirsign`.  The x axis runs from the start_vertex_id end to the
+    end_vertex_id end, both named in the caption, so the reader decides which
+    end is the stop instead of being told.
+    """
+    pts = seg.get("points") or []
+    s = _arclen(pts)
+    xs, ys = [], []
+    for si, p in zip(s, pts):
+        if p.get("dx", 0) > 0 and p.get("dQ", -1) >= 0:
+            xs.append(si)
+            ys.append(p["dQ"] / p["dx"])
+    return xs, ys, ""
+
+
 def _dqdx_end_xy(seg):
     """End mode: residual range from the dumped `rr`, oriented by dirsign.
 
@@ -1741,25 +1915,44 @@ def replot_dqdx():
         return
 
     is_start = (dqdx_mode.active == 0)
+    is_both = (dqdx_mode.active == 2)
     meta = d.get("meta", {})
     mip_med = meta.get("mip_dqdx_median", 43000.0)
     mip_flat = meta.get("mip_dqdx_flat", 50000.0)
 
-    xs, ys, note = _dqdx_start_xy(d, seg) if is_start else _dqdx_end_xy(seg)
+    if is_both:
+        xs, ys, note = _dqdx_both_xy(seg)
+    elif is_start:
+        xs, ys, note = _dqdx_start_xy(d, seg)
+    else:
+        xs, ys, note = _dqdx_end_xy(seg)
     order = sorted(range(len(xs)), key=lambda i: xs[i])
     xs, ys = [xs[i] for i in order], [ys[i] for i in order]
     dqdx_src.data = dict(x=xs, y=ys)
 
+    seg_len = _arclen(seg.get("points") or [])[-1:] or [0.0]
+    seg_len = seg_len[0]
     ref = d.get("dqdx_ref")
     for name, src in dqdx_ref_src.items():
         show = (not is_start) and ref and name in ref
         DQDX_REF_RENDER[name].visible = bool(show)
+        DQDX_REF2_RENDER[name].visible = bool(show and is_both)
         if show:
             grid = ref["grid"]
             gxs = [grid["start"] + i * grid["step"] for i in range(grid["n"])]
-            src.data = dict(x=gxs, y=ref[name])
+            if is_both:
+                # Anchor one copy at each physical end, clipped to the segment.
+                keep = [(g, v) for g, v in zip(gxs, ref[name]) if g <= seg_len]
+                src.data = dict(x=[seg_len - g for g, _ in keep],
+                                y=[v for _, v in keep])
+                dqdx_ref2_src[name].data = dict(x=[g for g, _ in keep],
+                                                y=[v for _, v in keep])
+            else:
+                src.data = dict(x=gxs, y=ref[name])
+                dqdx_ref2_src[name].data = dict(x=[], y=[])
         else:
             src.data = dict(x=[], y=[])
+            dqdx_ref2_src[name].data = dict(x=[], y=[])
 
     mip_flat_span.location = mip_flat
     mip_flat_span.visible = not is_start
@@ -1776,8 +1969,18 @@ def replot_dqdx():
     else:
         dqdx_stem_src.data = dict(x=[], y=[])
 
-    f_dqdx.xaxis.axis_label = "distance from start (cm)" if is_start else "residual range (cm)"
-    default_x = (0, 20) if is_start else (0, 35)
+    if is_both:
+        f_dqdx.xaxis.axis_label = (
+            "arc length from the vtx-%s end (cm)  ->  vtx-%s end   "
+            "[recomputed, NOT residual range]"
+            % (seg.get("start_vertex_id"), seg.get("end_vertex_id")))
+        default_x = (0, max(seg_len * 1.02, 1.0))
+    elif is_start:
+        f_dqdx.xaxis.axis_label = "distance from start (cm)"
+        default_x = (0, 20)
+    else:
+        f_dqdx.xaxis.axis_label = "residual range (cm)"
+        default_x = (0, 35)
     f_dqdx.x_range.start, f_dqdx.x_range.end = default_x
     ymax_candidates = list(ys) + ([2.2 * mip_med] if is_start else [1.1 * mip_flat])
     if not is_start and ref:
@@ -1795,6 +1998,20 @@ def replot_dqdx():
         % (seg["id"], PDG_NAME.get(pdg, str(pdg)), _f(seg.get("particle_score"), "%.2f"),
            seg.get("dirsign", "&mdash;"), seg.get("dir_weak", "&mdash;"),
            _f(seg.get("length"), "%.1f"), len(xs)))
+    # The polarity-free reading, always shown -- including in End mode, where
+    # it is the one line that can contradict `dirsign` on screen.
+    _d0, _d1, _n0, _n1 = seg_end_dqdx(seg)
+    caption += (
+        "<br><span style='color:#333'>end dQ/dx (5 cm mean, no dirsign): "
+        "vtx <b>%s</b> end <b>%s</b> (n=%d) &nbsp;|&nbsp; vtx <b>%s</b> end "
+        "<b>%s</b> (n=%d) &nbsp;&rarr;&nbsp; %s</span>"
+        % (seg.get("start_vertex_id"), _f(_d0, "%.0f"), _n0,
+           seg.get("end_vertex_id"), _f(_d1, "%.0f"), _n1,
+           ("hotter at the vtx-%s end" % seg.get("end_vertex_id")
+            if _d0 and _d1 and _d1 / _d0 >= 1.3 else
+            "hotter at the vtx-%s end" % seg.get("start_vertex_id")
+            if _d0 and _d1 and _d0 / _d1 >= 1.3 else
+            "no separation between the ends -- this segment has no opinion")))
     if note:
         caption += " &nbsp; <span style='color:#a33'>%s</span>" % note
     caption += (
@@ -1949,6 +2166,77 @@ def on_kine_select(attr, old, new):
     state["_suppress_select"] = False
 
 
+def fill_segtab(d):
+    """Every segment's two-end dQ/dx on one screen (doc pr/80 sec 9)."""
+    rows = sorted(d.get("segments", []),
+                  key=lambda s: (-s.get("length", 0.0), s["id"]))
+    sid, cid, pdg, ln, v0, d0c, v1, d1c, ver = [], [], [], [], [], [], [], [], []
+    for s in rows:
+        a, b, _, _ = seg_end_dqdx(s)
+        A, B = s.get("start_vertex_id"), s.get("end_vertex_id")
+        if a is None or b is None or a <= 0 or b <= 0:
+            v = "unmeasured -- no opinion"
+        elif b / a >= 1.3:
+            v = "stops at vtx %s  (x%.2f)" % (B, b / a)
+        elif a / b >= 1.3:
+            v = "stops at vtx %s  (x%.2f)" % (A, a / b)
+        else:
+            v = "flat -- no separation"
+        # Plain text, not _f(): these columns carry no HTML formatter, so an
+        # "&mdash;" would render as those eight literal characters.
+        def _n(x, fmt="%.0f"):
+            return (fmt % x) if x is not None else "-"
+        sid.append(s["id"]); cid.append(s["cluster_id"])
+        pdg.append(PDG_NAME.get(s.get("particle_id"), str(s.get("particle_id"))))
+        ln.append(_n(s.get("length"), "%.1f"))
+        v0.append(A); d0c.append(_n(a))
+        v1.append(B); d1c.append(_n(b))
+        ver.append(v)
+    segtab_src.data = dict(sid=sid, cid=cid, pdg=pdg, length=ln, v0=v0,
+                           d0=d0c, v1=v1, d1=d1c, verdict=ver)
+    # Same repaint workaround the hand-scan table needs (doc pr/58).
+    segtab_view.filter = AllIndices()
+
+
+def fill_arrows(d, frac=0.35, cap=12.0):
+    """One arrow per segment, at its cooler end, pointing at its hotter end."""
+    shafts = {k: dict(xs=[], ys=[]) for k in ("xy", "yz", "xz")}
+    heads = {k: dict(x=[], y=[], angle=[]) for k in ("xy", "yz", "xz")}
+    for s in d.get("segments", []):
+        pts = s.get("points") or []
+        if len(pts) < 3:
+            continue
+        a, b, _, _ = seg_end_dqdx(s)
+        if a is None or b is None or a <= 0 or b <= 0:
+            continue
+        if max(b / a, a / b) < 1.3:
+            continue                    # no separation => no arrow, on purpose
+        L = _arclen(pts)
+        span = min(cap, max(frac * L[-1], 1.0))
+        if b > a:                       # hotter at points[-1]: travel 0 -> -1
+            tail = pts[0]
+            head = next((p for si, p in zip(L, pts) if si >= span), pts[-1])
+        else:
+            tail = pts[-1]
+            head = next((p for si, p in zip(reversed(L), reversed(pts))
+                         if L[-1] - si >= span), pts[0])
+        for key, hx, hy in (("xy", "x", "y"), ("yz", "z", "y"), ("xz", "x", "z")):
+            x0, y0 = tail[hx], tail[hy]
+            x1, y1 = head[hx], head[hy]
+            if x0 == x1 and y0 == y1:
+                continue                # degenerate in THIS projection only
+            shafts[key]["xs"].append([x0, x1])
+            shafts[key]["ys"].append([y0, y1])
+            heads[key]["x"].append(x1)
+            heads[key]["y"].append(y1)
+            # Bokeh's triangle marker points at +y, so subtract a quarter turn.
+            heads[key]["angle"].append(math.atan2(y1 - y0, x1 - x0)
+                                       - math.pi / 2.0)
+    for key in ("xy", "yz", "xz"):
+        arrow_src[key].data = shafts[key]
+        arrowhead_src[key].data = heads[key]
+
+
 def load(label):
     """Read one event's calib JSON and push every layer to its CDS."""
     path = EVENTS[label]
@@ -1965,6 +2253,10 @@ def load(label):
     # (apa, face) -> ticks per slice, for pt -> slice
     nps = {(r["apa"], r["face"]): r["nticks_per_slice"]
            for r in meta.get("nticks_per_slice", [])}
+
+    # --- per-segment direction table + on-canvas arrows ---------------------
+    fill_segtab(d)
+    fill_arrows(d)
 
     # --- detector box -------------------------------------------------------
     (xl, xh), (yl, yh), (zl, zh) = DET_BOX["x"], DET_BOX["y"], DET_BOX["z"]
@@ -2354,6 +2646,7 @@ right_col = column(
         Spacer(width=20),
         column(feat_div, cos_div, bdt_toggle, bdt_div)),
     column(dqdx_title, row(dqdx_mode, dqdx_seg_sel), f_dqdx, dqdx_caption),
+    column(segtab_title, segtab),
 )
 
 _rows = [
