@@ -1,0 +1,34 @@
+wrote runs/test-final-independent/events.tsv (331 rows)
+
+=== half=test  labels=331  arms={'deployed': 324, 'scanned': 7}
+excluded: 2 Tier-D (not_a_candidate), 18 R8 'just dots'
+scored: 311
+  production baseline on the same events : 237  (76.2%)
+  engine answered                        : 284  (answer-rate 91.3%)
+  engine PRECISION @1cm                  : 182  (64.1%)
+  engine precision @3cm                  : 189  (66.5%)
+  engine overall (abstain counts wrong)  : 182  (58.5%)
+  FLOOR, no exclusions: 285/331 answered, precision 63.9%, overall 55.0%
+
+rules that ANSWERED (precision among answered):
+   R1-outgoing                        n= 213  ok= 133   62.4%
+   R1-outgoing+R2-z                   n=  41  ok=  28   68.3%
+   R2-upstream+R2-z                   n=  20  ok=  18   90.0%
+   R6-shower-convergence              n=   7  ok=   1   14.3%
+   R6-shower-convergence+R2-z         n=   2  ok=   1   50.0%
+   R7-biggest-shower-start            n=   1  ok=   1  100.0%
+
+   by confidence tier:
+   conf:certain                       n= 221  ok= 135   61.1%
+   conf:likely                        n=  63  ok=  47   74.6%
+
+why the engine ABSTAINED (27 events, no claim made):
+   R2-upstream+R2-ambiguous           n=  12
+   R1-outgoing+R2-ambiguous           n=   9
+   R7-no-shower-start                 n=   3
+   R6-shower-convergence+R2-ambiguous n=   2
+   R0-no-main-cluster                 n=   1
+
+precision vs coverage, by confidence tier:
+   <= certain  answered  221 ( 71.1% of scored)  precision  61.1%
+   <= likely   answered  284 ( 91.3% of scored)  precision  64.1%

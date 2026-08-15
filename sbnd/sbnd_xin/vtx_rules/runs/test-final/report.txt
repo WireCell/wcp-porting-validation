@@ -1,0 +1,38 @@
+wrote runs/test-final/events.tsv (331 rows)
+
+=== half=test  labels=331  arms={'deployed': 324, 'scanned': 7}
+excluded: 2 Tier-D (not_a_candidate), 18 R8 'just dots'
+scored: 311
+  production baseline on the same events : 237  (76.2%)
+  engine answered                        : 192  (answer-rate 61.7%)
+  engine PRECISION @1cm                  : 160  (83.3%)
+  engine precision @3cm                  : 164  (85.4%)
+  engine overall (abstain counts wrong)  : 160  (51.4%)
+  FLOOR, no exclusions: 193/331 answered, precision 82.9%, overall 48.3%
+
+rules that ANSWERED (precision among answered):
+   R1-outgoing                        n= 141  ok= 118   83.7%
+   R1-outgoing+R2-z                   n=  26  ok=  24   92.3%
+   R2-upstream+R2-z                   n=  18  ok=  16   88.9%
+   R6-shower-convergence              n=   6  ok=   1   16.7%
+   R7-biggest-shower-start            n=   1  ok=   1  100.0%
+
+   by confidence tier:
+   conf:certain                       n= 148  ok= 120   81.1%
+   conf:likely                        n=  44  ok=  40   90.9%
+
+why the engine ABSTAINED (119 events, no claim made):
+   R1-outgoing+R9-disagree            n=  72
+   R1-outgoing+R2-z+R9-disagree       n=  15
+   R2-upstream+R2-ambiguous           n=  12
+   R1-outgoing+R2-ambiguous           n=   9
+   R7-no-shower-start                 n=   3
+   R6-shower-convergence+R2-ambiguous n=   2
+   R6-shower-convergence+R2-z+R9-disagree n=   2
+   R2-upstream+R2-z+R9-disagree       n=   2
+   R0-no-main-cluster                 n=   1
+   R6-shower-convergence+R9-disagree  n=   1
+
+precision vs coverage, by confidence tier:
+   <= certain  answered  148 ( 47.6% of scored)  precision  81.1%
+   <= likely   answered  192 ( 61.7% of scored)  precision  83.3%
