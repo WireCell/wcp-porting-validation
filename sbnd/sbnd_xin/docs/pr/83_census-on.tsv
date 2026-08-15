@@ -1,0 +1,13 @@
+arm	event	kind	cluster	segs	overlap	angle_or_ratio	len_a_or_path	len_b_or_chord
+work-nuecc48-pr83on	214469	fold	16	16050	0.087	5.1	27.2	5.4
+work-nuecc48-pr83on	246579	dup	19	19055/19104	0.864	2.1	12.8	24.1
+work-nuecc48-pr83on	269774	dup	13	13014/13016	1.000	5.6	14.1	16.3
+work-nuecc48-pr83on	46363	dup	19	19109/19108	0.704	17.2	15.8	16.5
+work-ncpi0-pr83on	359980	dup	75	75097/75096	0.821	7.3	16.4	24.6
+work-ncpi0-pr83on	506114	dup	19	19034/19025	0.810	18.2	11.9	11.9
+work-ncpi0-pr83on	506746	dup	13	13018/13014	0.950	3.8	11.5	15.9
+work-ncpi0-pr83on	521075	dup	18	18025/18027	0.955	8.5	12.9	14.6
+work-mcp1k-pr83on	315167	dup	8	8012/8013	0.727	18.5	12.6	15.7
+work-mcp1k-pr83on	350935	dup	11	11004/11001	1.000	4.0	13.4	251.4
+work-mcp1k-pr83on	404684	dup	9	9005/9004	0.741	4.5	15.8	61.5
+work-mcp1k-pr83on	64409	dup	8	8038/8043	1.000	14.2	10.3	16.4

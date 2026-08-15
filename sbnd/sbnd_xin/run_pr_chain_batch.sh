@@ -869,6 +869,14 @@ fi
 if [ -n "${SBND_SGP_MAX_SEP:-}" ]; then
     CATH_TLA+=(--tla-code "sgp_max_sep=${SBND_SGP_MAX_SEP}")
 fi
+# doc pr/83: orient break_segment() splits to the wcpt path (find_vertices)
+# instead of boost source/target; a reversed edge otherwise yields crossed
+# children with vertex fits on the wrong track ends and stacked duplicate
+# trajectories (mcp1k 283040/59899/72586).  C++ default false.
+#   SBND_BREAK_SEG_ORIENT  (literal jsonnet "true"/"false")
+if [ -n "${SBND_BREAK_SEG_ORIENT:-}" ]; then
+    CATH_TLA+=(--tla-code "break_seg_orient=${SBND_BREAK_SEG_ORIENT}")
+fi
 # doc pr/51 round 7: robust vertex fit (mvfit_robust + satellites).
 #   SBND_MVFIT_ROBUST      (true/false; escape for A/B: false)
 #   SBND_MVFIT_MAIN_ONLY   (true/false; C++ default true)
