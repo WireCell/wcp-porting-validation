@@ -1,0 +1,34 @@
+event        conf      dist_cm  ok@1cm  ok@3cm  reco_ok
+evt111412    likely       0.01     yes     yes      yes   Two short heavily-ionising prongs stop away from 180
+evt174637    certain      0.01     yes     yes      yes   Seg 9039 shows a textbook monotone rise over its las
+evt278794    likely       0.00     yes     yes      yes   The 126 cm track Bragg-peaks at 7000 (175k falling t
+evt280017    certain      0.01     yes     yes      yes   The only structure in the event is a deg-3 junction 
+evt282737    certain      0.26     yes     yes      yes   21003 is the single 48-degree junction of the event:
+evt283991    certain      0.00     yes     yes      yes   Seg 15004 rises smoothly 90k -> 305k along the brown
+evt284200    likely       0.00     yes     yes      yes   31036 is the junction of two heavy prongs, one of wh
+evt284235    unclear     40.94      no      no      yes   The geometric inverted-V apex near (z~139, y~-89) is
+evt286268    likely       0.01     yes     yes      yes   The 202 cm muon has its end deposit at 11000 (155k f
+evt316025    certain      0.01     yes     yes       no   16003 is a degree-5 junction carrying three short he
+evt349241    certain      0.01     yes     yes      yes   Rule 1 fully satisfied at the only real cluster: 150
+evt388       likely       0.00     yes     yes      yes   Rule 7 apex: in X-Z the whole 342 cm shower opens as
+evt388224    certain      7.50      no      no      yes   Rule 1 textbook: 3 of 4 segments rise away from 3011
+evt398414    unclear      0.00     yes     yes      yes   The event is a single 15.7 cm flat-MIP segment with 
+evt399856    certain     44.42      no      no      yes   Classic two-Bragg-ends trap resolved by rule 1: both
+evt400856    likely       0.01     yes     yes       no   12003 is the deg-2 junction where an 89 cm muon leav
+evt411460    unclear         -      no      no       no   Rule 8 abstention: cluster 6 is a single 21 cm curle
+evt52085     certain      1.29      no     yes       no   Rule 1 with both prongs measured: from 6002 a 104 cm
+evt59085     certain      5.68      no      no       no   All three attached segments show green arrows at the
+evt63427     certain      0.00     yes     yes      yes   Both arms of the 90 cm cluster Bragg away from the d
+
+picks files written at: {'picks-0.json': '2026-08-15 13:31:55', 'picks-1.json': '2026-08-15 13:24:15'}
+scanned 20, answered 19 (95%), correct 14 (precision 73.7%, @3cm 78.9%)
+by VERTEX ID (no cross-arm refit artifact): 15 of 19 answered with a recorded truth id (78.9%)
+reconstruction on the same 20 events: 15 correct (75.0%)
+events where NO vertex in this arm is within 1 cm of the click: 1 (5.0%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
+
+confidence calibration (this is what decides the hand-back workflow -- read coverage and accuracy TOGETHER):
+   certain  coverage  11/20 (55.0%)  answered  11  correct   7 (63.6%)  by-vid   8 (72.7%)
+   likely   coverage   6/20 (30.0%)  answered   6  correct   6 (100.0%)  by-vid   6 (100.0%)
+   unclear  coverage   3/20 (15.0%)  answered   2  correct   1 (50.0%)  by-vid   1 (50.0%)
+
+reco wrong on 25.0% of all events, 57.1% of the 7 the scanner declined or disagreed with -> enrichment x2.29

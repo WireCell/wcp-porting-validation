@@ -1,0 +1,5924 @@
+[
+ {
+  "event": "evt111412",
+  "key": [
+   "vtxscan-prod0813",
+   18259,
+   1,
+   111412
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-ma10/pr_evt111412/calib-pr-evt111412.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt111412",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 18000,
+    "cluster_id": 18,
+    "degree": 2,
+    "x": 154.61,
+    "y": 157.69,
+    "z": 207.44
+   },
+   {
+    "vertex_id": 18001,
+    "cluster_id": 18,
+    "degree": 3,
+    "x": 154.67,
+    "y": 79.61,
+    "z": 173.2
+   },
+   {
+    "vertex_id": 18002,
+    "cluster_id": 18,
+    "degree": 2,
+    "x": 156.86,
+    "y": 153.72,
+    "z": 205.4
+   },
+   {
+    "vertex_id": 18006,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 159.57,
+    "y": 72.17,
+    "z": 185.56
+   },
+   {
+    "vertex_id": 18007,
+    "cluster_id": 18,
+    "degree": 3,
+    "x": 157.07,
+    "y": 120.93,
+    "z": 189.56
+   },
+   {
+    "vertex_id": 18008,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 163.45,
+    "y": 123.66,
+    "z": 191.79
+   },
+   {
+    "vertex_id": 18010,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 153.56,
+    "y": 122.07,
+    "z": 191.64
+   },
+   {
+    "vertex_id": 18011,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 151.78,
+    "y": 157.84,
+    "z": 210.38
+   },
+   {
+    "vertex_id": 18014,
+    "cluster_id": 18,
+    "degree": 4,
+    "x": 156.26,
+    "y": 116.76,
+    "z": 190.23
+   },
+   {
+    "vertex_id": 18015,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 158.66,
+    "y": 119.66,
+    "z": 189.82
+   },
+   {
+    "vertex_id": 18016,
+    "cluster_id": 18,
+    "degree": 3,
+    "x": 157.3,
+    "y": 142.05,
+    "z": 202.14
+   },
+   {
+    "vertex_id": 18017,
+    "cluster_id": 18,
+    "degree": 2,
+    "x": 159.73,
+    "y": 143.17,
+    "z": 201.39
+   },
+   {
+    "vertex_id": 18018,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 159.18,
+    "y": 143.97,
+    "z": 198.39
+   },
+   {
+    "vertex_id": 18021,
+    "cluster_id": 18,
+    "degree": 3,
+    "x": 159.74,
+    "y": 135.83,
+    "z": 201.93
+   },
+   {
+    "vertex_id": 18022,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 161.06,
+    "y": 140.02,
+    "z": 198.27
+   },
+   {
+    "vertex_id": 18023,
+    "cluster_id": 18,
+    "degree": 3,
+    "x": 155.03,
+    "y": 89.05,
+    "z": 175.5
+   },
+   {
+    "vertex_id": 18024,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 159.41,
+    "y": 91.38,
+    "z": 179.35
+   },
+   {
+    "vertex_id": 18026,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 155.28,
+    "y": 73.3,
+    "z": 176.57
+   },
+   {
+    "vertex_id": 67067,
+    "cluster_id": 67,
+    "degree": 1,
+    "x": 157.77,
+    "y": 162.02,
+    "z": 202.15
+   },
+   {
+    "vertex_id": 67068,
+    "cluster_id": 67,
+    "degree": 2,
+    "x": 157.02,
+    "y": 158.88,
+    "z": 207.6
+   },
+   {
+    "vertex_id": 67070,
+    "cluster_id": 67,
+    "degree": 1,
+    "x": 158.48,
+    "y": 164.23,
+    "z": 206.27
+   },
+   {
+    "vertex_id": 75071,
+    "cluster_id": 75,
+    "degree": 1,
+    "x": 161.52,
+    "y": 149.58,
+    "z": 203.43
+   },
+   {
+    "vertex_id": 75072,
+    "cluster_id": 75,
+    "degree": 1,
+    "x": 163.11,
+    "y": 156.06,
+    "z": 206.75
+   },
+   {
+    "vertex_id": 75074,
+    "cluster_id": 75,
+    "degree": 2,
+    "x": 163.05,
+    "y": 153.64,
+    "z": 205.06
+   },
+   {
+    "vertex_id": 52037,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": 143.13,
+    "y": 179.66,
+    "z": 250.71
+   },
+   {
+    "vertex_id": 52038,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": 140.94,
+    "y": 179.68,
+    "z": 250.35
+   },
+   {
+    "vertex_id": 58049,
+    "cluster_id": 58,
+    "degree": 1,
+    "x": 162.69,
+    "y": 169.9,
+    "z": 217.21
+   },
+   {
+    "vertex_id": 58050,
+    "cluster_id": 58,
+    "degree": 1,
+    "x": 162.18,
+    "y": 171.93,
+    "z": 217.07
+   },
+   {
+    "vertex_id": 59051,
+    "cluster_id": 59,
+    "degree": 1,
+    "x": 163.76,
+    "y": 177.9,
+    "z": 212.25
+   },
+   {
+    "vertex_id": 59052,
+    "cluster_id": 59,
+    "degree": 1,
+    "x": 162.44,
+    "y": 177.42,
+    "z": 213.07
+   },
+   {
+    "vertex_id": 48029,
+    "cluster_id": 48,
+    "degree": 1,
+    "x": 124.53,
+    "y": 96.62,
+    "z": 207.11
+   },
+   {
+    "vertex_id": 48030,
+    "cluster_id": 48,
+    "degree": 1,
+    "x": 123.67,
+    "y": 95.97,
+    "z": 207.37
+   },
+   {
+    "vertex_id": 57047,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": 154.17,
+    "y": 168.57,
+    "z": 212.53
+   },
+   {
+    "vertex_id": 57048,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": 155.14,
+    "y": 168.65,
+    "z": 212.71
+   },
+   {
+    "vertex_id": 62057,
+    "cluster_id": 62,
+    "degree": 1,
+    "x": 166.26,
+    "y": 143.11,
+    "z": 201.39
+   },
+   {
+    "vertex_id": 62058,
+    "cluster_id": 62,
+    "degree": 1,
+    "x": 165.64,
+    "y": 143.09,
+    "z": 201.31
+   },
+   {
+    "vertex_id": 55043,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": 153.26,
+    "y": 180.31,
+    "z": 212.1
+   },
+   {
+    "vertex_id": 55044,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": 152.9,
+    "y": 180.38,
+    "z": 211.92
+   },
+   {
+    "vertex_id": 49031,
+    "cluster_id": 49,
+    "degree": 1,
+    "x": 136.49,
+    "y": 111.71,
+    "z": 181.3
+   },
+   {
+    "vertex_id": 49032,
+    "cluster_id": 49,
+    "degree": 1,
+    "x": 136.88,
+    "y": 111.74,
+    "z": 181.28
+   },
+   {
+    "vertex_id": 63059,
+    "cluster_id": 63,
+    "degree": 1,
+    "x": 168.42,
+    "y": 167.6,
+    "z": 203.8
+   },
+   {
+    "vertex_id": 63060,
+    "cluster_id": 63,
+    "degree": 1,
+    "x": 168.79,
+    "y": 167.53,
+    "z": 203.83
+   },
+   {
+    "vertex_id": 65063,
+    "cluster_id": 65,
+    "degree": 1,
+    "x": 184.74,
+    "y": 79.18,
+    "z": 178.29
+   },
+   {
+    "vertex_id": 65064,
+    "cluster_id": 65,
+    "degree": 1,
+    "x": 185.12,
+    "y": 79.21,
+    "z": 178.29
+   },
+   {
+    "vertex_id": 60053,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": 164.07,
+    "y": 100.14,
+    "z": 146.48
+   },
+   {
+    "vertex_id": 60054,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": 164.44,
+    "y": 100.12,
+    "z": 146.48
+   },
+   {
+    "vertex_id": 25027,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -148.71,
+    "y": 35.04,
+    "z": 271.84
+   },
+   {
+    "vertex_id": 25028,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -149.07,
+    "y": 35.04,
+    "z": 271.84
+   },
+   {
+    "vertex_id": 54041,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": 146.6,
+    "y": 88.02,
+    "z": 201.1
+   },
+   {
+    "vertex_id": 54042,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": 146.26,
+    "y": 88.01,
+    "z": 201.12
+   },
+   {
+    "vertex_id": 56045,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": 152.98,
+    "y": 77.71,
+    "z": 183.62
+   },
+   {
+    "vertex_id": 56046,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": 153.31,
+    "y": 77.7,
+    "z": 183.69
+   },
+   {
+    "vertex_id": 50033,
+    "cluster_id": 50,
+    "degree": 1,
+    "x": 140.32,
+    "y": 84.26,
+    "z": 197.25
+   },
+   {
+    "vertex_id": 50034,
+    "cluster_id": 50,
+    "degree": 1,
+    "x": 139.98,
+    "y": 84.27,
+    "z": 197.25
+   },
+   {
+    "vertex_id": 61055,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": 166.26,
+    "y": 81.65,
+    "z": 189.06
+   },
+   {
+    "vertex_id": 61056,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": 166.6,
+    "y": 81.69,
+    "z": 189.06
+   },
+   {
+    "vertex_id": 53039,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": 143.77,
+    "y": 77.52,
+    "z": 200.48
+   },
+   {
+    "vertex_id": 53040,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": 143.44,
+    "y": 77.49,
+    "z": 200.48
+   },
+   {
+    "vertex_id": 66065,
+    "cluster_id": 66,
+    "degree": 1,
+    "x": 193.77,
+    "y": 72.17,
+    "z": 164.78
+   },
+   {
+    "vertex_id": 66066,
+    "cluster_id": 66,
+    "degree": 1,
+    "x": 194.08,
+    "y": 72.19,
+    "z": 164.78
+   },
+   {
+    "vertex_id": 64061,
+    "cluster_id": 64,
+    "degree": 1,
+    "x": 176.0,
+    "y": 110.78,
+    "z": 187.01
+   },
+   {
+    "vertex_id": 64062,
+    "cluster_id": 64,
+    "degree": 1,
+    "x": 175.83,
+    "y": 110.78,
+    "z": 187.0
+   },
+   {
+    "vertex_id": 51035,
+    "cluster_id": 51,
+    "degree": 1,
+    "x": 141.55,
+    "y": 86.48,
+    "z": 209.81
+   },
+   {
+    "vertex_id": 51036,
+    "cluster_id": 51,
+    "degree": 1,
+    "x": 141.4,
+    "y": 86.5,
+    "z": 209.82
+   }
+  ]
+ },
+ {
+  "event": "evt174637",
+  "key": [
+   "vtxscan-prod0813",
+   18255,
+   1,
+   174637
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-ma10/pr_evt174637/calib-pr-evt174637.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt174637",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 9000,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -142.48,
+    "y": -57.93,
+    "z": 353.17
+   },
+   {
+    "vertex_id": 9004,
+    "cluster_id": 9,
+    "degree": 3,
+    "x": -143.56,
+    "y": -59.77,
+    "z": 335.45
+   },
+   {
+    "vertex_id": 9005,
+    "cluster_id": 9,
+    "degree": 2,
+    "x": -144.78,
+    "y": -59.75,
+    "z": 331.96
+   },
+   {
+    "vertex_id": 9006,
+    "cluster_id": 9,
+    "degree": 2,
+    "x": -166.58,
+    "y": -57.05,
+    "z": 297.44
+   },
+   {
+    "vertex_id": 9007,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -181.12,
+    "y": -72.24,
+    "z": 317.04
+   },
+   {
+    "vertex_id": 9010,
+    "cluster_id": 9,
+    "degree": 3,
+    "x": -144.54,
+    "y": -56.64,
+    "z": 329.88
+   },
+   {
+    "vertex_id": 9011,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -140.23,
+    "y": -59.64,
+    "z": 329.85
+   },
+   {
+    "vertex_id": 9012,
+    "cluster_id": 9,
+    "degree": 4,
+    "x": -156.47,
+    "y": -57.91,
+    "z": 312.57
+   },
+   {
+    "vertex_id": 9013,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -153.09,
+    "y": -54.45,
+    "z": 313.09
+   },
+   {
+    "vertex_id": 9014,
+    "cluster_id": 9,
+    "degree": 3,
+    "x": -160.62,
+    "y": -57.52,
+    "z": 306.15
+   },
+   {
+    "vertex_id": 9015,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -158.29,
+    "y": -56.45,
+    "z": 305.13
+   },
+   {
+    "vertex_id": 9016,
+    "cluster_id": 9,
+    "degree": 3,
+    "x": -141.7,
+    "y": -60.13,
+    "z": 340.39
+   },
+   {
+    "vertex_id": 9017,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -137.15,
+    "y": -61.46,
+    "z": 342.55
+   },
+   {
+    "vertex_id": 9018,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -156.75,
+    "y": -58.92,
+    "z": 317.24
+   },
+   {
+    "vertex_id": 9019,
+    "cluster_id": 9,
+    "degree": 4,
+    "x": -149.9,
+    "y": -57.53,
+    "z": 322.54
+   },
+   {
+    "vertex_id": 9020,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -148.34,
+    "y": -60.06,
+    "z": 320.15
+   },
+   {
+    "vertex_id": 9021,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -147.34,
+    "y": -59.78,
+    "z": 323.91
+   },
+   {
+    "vertex_id": 9022,
+    "cluster_id": 9,
+    "degree": 2,
+    "x": -185.45,
+    "y": -69.54,
+    "z": 309.36
+   },
+   {
+    "vertex_id": 9023,
+    "cluster_id": 9,
+    "degree": 2,
+    "x": -179.79,
+    "y": -71.54,
+    "z": 314.46
+   },
+   {
+    "vertex_id": 9025,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -136.94,
+    "y": -57.93,
+    "z": 338.33
+   },
+   {
+    "vertex_id": 9026,
+    "cluster_id": 9,
+    "degree": 3,
+    "x": -146.94,
+    "y": -58.12,
+    "z": 327.13
+   },
+   {
+    "vertex_id": 9027,
+    "cluster_id": 9,
+    "degree": 1,
+    "x": -145.75,
+    "y": -59.14,
+    "z": 328.67
+   },
+   {
+    "vertex_id": 45080,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": -122.71,
+    "y": -58.56,
+    "z": 364.91
+   },
+   {
+    "vertex_id": 45081,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": -118.25,
+    "y": -59.3,
+    "z": 373.37
+   },
+   {
+    "vertex_id": 45082,
+    "cluster_id": 45,
+    "degree": 3,
+    "x": -118.43,
+    "y": -58.63,
+    "z": 370.76
+   },
+   {
+    "vertex_id": 45083,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": -120.55,
+    "y": -60.47,
+    "z": 371.09
+   },
+   {
+    "vertex_id": 40066,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": -137.4,
+    "y": -59.85,
+    "z": 344.86
+   },
+   {
+    "vertex_id": 40069,
+    "cluster_id": 40,
+    "degree": 2,
+    "x": -135.27,
+    "y": -62.14,
+    "z": 350.73
+   },
+   {
+    "vertex_id": 40071,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": -137.77,
+    "y": -61.5,
+    "z": 351.41
+   },
+   {
+    "vertex_id": 47088,
+    "cluster_id": 47,
+    "degree": 1,
+    "x": -168.33,
+    "y": -76.72,
+    "z": 320.75
+   },
+   {
+    "vertex_id": 47089,
+    "cluster_id": 47,
+    "degree": 1,
+    "x": -163.76,
+    "y": -77.1,
+    "z": 322.15
+   },
+   {
+    "vertex_id": 47090,
+    "cluster_id": 47,
+    "degree": 2,
+    "x": -165.63,
+    "y": -76.4,
+    "z": 322.65
+   },
+   {
+    "vertex_id": 46084,
+    "cluster_id": 46,
+    "degree": 1,
+    "x": -124.93,
+    "y": -64.42,
+    "z": 347.89
+   },
+   {
+    "vertex_id": 46087,
+    "cluster_id": 46,
+    "degree": 1,
+    "x": -121.35,
+    "y": -65.18,
+    "z": 350.73
+   },
+   {
+    "vertex_id": 44078,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": -142.85,
+    "y": -51.68,
+    "z": 365.84
+   },
+   {
+    "vertex_id": 44079,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": -140.88,
+    "y": -51.65,
+    "z": 367.2
+   },
+   {
+    "vertex_id": 31048,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": -128.2,
+    "y": -58.84,
+    "z": 353.93
+   },
+   {
+    "vertex_id": 31049,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": -126.57,
+    "y": -57.9,
+    "z": 355.18
+   },
+   {
+    "vertex_id": 12028,
+    "cluster_id": 12,
+    "degree": 1,
+    "x": -57.99,
+    "y": 185.86,
+    "z": 341.65
+   },
+   {
+    "vertex_id": 12029,
+    "cluster_id": 12,
+    "degree": 1,
+    "x": -58.08,
+    "y": 184.65,
+    "z": 343.74
+   },
+   {
+    "vertex_id": 28042,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -114.32,
+    "y": -77.62,
+    "z": 367.97
+   },
+   {
+    "vertex_id": 28043,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -112.39,
+    "y": -78.15,
+    "z": 369.18
+   },
+   {
+    "vertex_id": 32050,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": -131.0,
+    "y": -64.49,
+    "z": 371.63
+   },
+   {
+    "vertex_id": 32051,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": -130.72,
+    "y": -66.21,
+    "z": 371.93
+   },
+   {
+    "vertex_id": 38062,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": -141.87,
+    "y": -53.47,
+    "z": 359.77
+   },
+   {
+    "vertex_id": 38063,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": -142.2,
+    "y": -55.27,
+    "z": 359.83
+   },
+   {
+    "vertex_id": 29044,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": -124.04,
+    "y": -59.85,
+    "z": 359.96
+   },
+   {
+    "vertex_id": 29045,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": -123.3,
+    "y": -60.98,
+    "z": 360.43
+   },
+   {
+    "vertex_id": 43076,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": -144.28,
+    "y": -53.41,
+    "z": 363.32
+   },
+   {
+    "vertex_id": 43077,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": -143.19,
+    "y": -53.46,
+    "z": 362.45
+   },
+   {
+    "vertex_id": 37060,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": -172.41,
+    "y": -55.58,
+    "z": 299.02
+   },
+   {
+    "vertex_id": 37061,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": -171.55,
+    "y": -55.61,
+    "z": 299.12
+   },
+   {
+    "vertex_id": 42074,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": -151.84,
+    "y": -61.18,
+    "z": 319.93
+   },
+   {
+    "vertex_id": 42075,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": -152.2,
+    "y": -60.84,
+    "z": 320.58
+   },
+   {
+    "vertex_id": 35056,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": -183.26,
+    "y": -37.05,
+    "z": 357.24
+   },
+   {
+    "vertex_id": 35057,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": -183.98,
+    "y": -37.27,
+    "z": 357.52
+   },
+   {
+    "vertex_id": 48091,
+    "cluster_id": 48,
+    "degree": 1,
+    "x": -130.51,
+    "y": -62.41,
+    "z": 341.0
+   },
+   {
+    "vertex_id": 48092,
+    "cluster_id": 48,
+    "degree": 1,
+    "x": -131.15,
+    "y": -62.12,
+    "z": 340.84
+   },
+   {
+    "vertex_id": 39064,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": -137.47,
+    "y": -60.06,
+    "z": 351.4
+   },
+   {
+    "vertex_id": 39065,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": -136.95,
+    "y": -59.63,
+    "z": 351.57
+   },
+   {
+    "vertex_id": 30046,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": -127.01,
+    "y": -52.78,
+    "z": 345.19
+   },
+   {
+    "vertex_id": 30047,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": -127.09,
+    "y": -52.45,
+    "z": 345.64
+   },
+   {
+    "vertex_id": 33052,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": -134.56,
+    "y": -63.9,
+    "z": 344.5
+   },
+   {
+    "vertex_id": 33053,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": -134.24,
+    "y": -63.44,
+    "z": 344.59
+   },
+   {
+    "vertex_id": 34054,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": -138.6,
+    "y": -64.37,
+    "z": 323.32
+   },
+   {
+    "vertex_id": 34055,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": -139.01,
+    "y": -64.38,
+    "z": 323.32
+   },
+   {
+    "vertex_id": 27040,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -113.56,
+    "y": -61.14,
+    "z": 377.6
+   },
+   {
+    "vertex_id": 27041,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -113.95,
+    "y": -61.15,
+    "z": 377.59
+   },
+   {
+    "vertex_id": 41072,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": -144.99,
+    "y": -57.92,
+    "z": 353.7
+   },
+   {
+    "vertex_id": 41073,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": -145.31,
+    "y": -57.91,
+    "z": 353.81
+   },
+   {
+    "vertex_id": 26038,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -110.34,
+    "y": -57.9,
+    "z": 387.63
+   },
+   {
+    "vertex_id": 26039,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -110.55,
+    "y": -58.16,
+    "z": 387.68
+   },
+   {
+    "vertex_id": 24034,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": -191.79,
+    "y": -29.23,
+    "z": 353.32
+   },
+   {
+    "vertex_id": 24035,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": -192.1,
+    "y": -29.21,
+    "z": 353.32
+   },
+   {
+    "vertex_id": 14032,
+    "cluster_id": 14,
+    "degree": 1,
+    "x": 34.87,
+    "y": 133.02,
+    "z": 431.52
+   },
+   {
+    "vertex_id": 14033,
+    "cluster_id": 14,
+    "degree": 1,
+    "x": 34.57,
+    "y": 133.04,
+    "z": 431.5
+   },
+   {
+    "vertex_id": 25036,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -108.75,
+    "y": -76.97,
+    "z": 400.4
+   },
+   {
+    "vertex_id": 25037,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -108.51,
+    "y": -76.98,
+    "z": 400.4
+   },
+   {
+    "vertex_id": 13030,
+    "cluster_id": 13,
+    "degree": 1,
+    "x": 6.73,
+    "y": -189.89,
+    "z": 347.83
+   },
+   {
+    "vertex_id": 13031,
+    "cluster_id": 13,
+    "degree": 1,
+    "x": 6.52,
+    "y": -189.95,
+    "z": 347.83
+   },
+   {
+    "vertex_id": 36058,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": -187.85,
+    "y": -34.69,
+    "z": 355.22
+   },
+   {
+    "vertex_id": 36059,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": -187.73,
+    "y": -34.79,
+    "z": 355.12
+   }
+  ]
+ },
+ {
+  "event": "evt278794",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   278794
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt278794/calib-pr-evt278794.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt278794",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 7000,
+    "cluster_id": 7,
+    "degree": 1,
+    "x": 64.24,
+    "y": -123.91,
+    "z": 130.84
+   },
+   {
+    "vertex_id": 7001,
+    "cluster_id": 7,
+    "degree": 1,
+    "x": 147.61,
+    "y": -52.36,
+    "z": 72.11
+   },
+   {
+    "vertex_id": 7002,
+    "cluster_id": 7,
+    "degree": 2,
+    "x": 132.75,
+    "y": -65.93,
+    "z": 82.16
+   },
+   {
+    "vertex_id": 50047,
+    "cluster_id": 50,
+    "degree": 1,
+    "x": 168.37,
+    "y": -40.33,
+    "z": 52.25
+   },
+   {
+    "vertex_id": 50049,
+    "cluster_id": 50,
+    "degree": 2,
+    "x": 168.22,
+    "y": -41.86,
+    "z": 54.41
+   },
+   {
+    "vertex_id": 50051,
+    "cluster_id": 50,
+    "degree": 3,
+    "x": 163.94,
+    "y": -46.01,
+    "z": 62.27
+   },
+   {
+    "vertex_id": 50053,
+    "cluster_id": 50,
+    "degree": 1,
+    "x": 160.36,
+    "y": -46.48,
+    "z": 65.34
+   },
+   {
+    "vertex_id": 50054,
+    "cluster_id": 50,
+    "degree": 1,
+    "x": 169.64,
+    "y": -44.72,
+    "z": 57.4
+   },
+   {
+    "vertex_id": 50055,
+    "cluster_id": 50,
+    "degree": 3,
+    "x": 163.87,
+    "y": -44.56,
+    "z": 59.65
+   },
+   {
+    "vertex_id": 50056,
+    "cluster_id": 50,
+    "degree": 1,
+    "x": 161.86,
+    "y": -45.86,
+    "z": 60.59
+   },
+   {
+    "vertex_id": 44037,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": 133.76,
+    "y": -93.24,
+    "z": 64.18
+   },
+   {
+    "vertex_id": 44038,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": 136.36,
+    "y": -85.58,
+    "z": 67.98
+   },
+   {
+    "vertex_id": 44039,
+    "cluster_id": 44,
+    "degree": 2,
+    "x": 135.76,
+    "y": -88.52,
+    "z": 67.69
+   },
+   {
+    "vertex_id": 49042,
+    "cluster_id": 49,
+    "degree": 1,
+    "x": 154.81,
+    "y": -48.93,
+    "z": 67.63
+   },
+   {
+    "vertex_id": 49043,
+    "cluster_id": 49,
+    "degree": 1,
+    "x": 149.8,
+    "y": -50.85,
+    "z": 70.41
+   },
+   {
+    "vertex_id": 49044,
+    "cluster_id": 49,
+    "degree": 2,
+    "x": 154.38,
+    "y": -49.15,
+    "z": 67.52
+   },
+   {
+    "vertex_id": 49045,
+    "cluster_id": 49,
+    "degree": 2,
+    "x": 151.76,
+    "y": -49.91,
+    "z": 68.81
+   },
+   {
+    "vertex_id": 55065,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": 199.86,
+    "y": -25.95,
+    "z": 43.63
+   },
+   {
+    "vertex_id": 55066,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": 196.99,
+    "y": -26.84,
+    "z": 43.87
+   },
+   {
+    "vertex_id": 28005,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 184.24,
+    "y": -38.7,
+    "z": 48.47
+   },
+   {
+    "vertex_id": 28006,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 183.63,
+    "y": -36.62,
+    "z": 48.57
+   },
+   {
+    "vertex_id": 52059,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": 164.8,
+    "y": -49.25,
+    "z": 57.73
+   },
+   {
+    "vertex_id": 52060,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": 163.81,
+    "y": -49.27,
+    "z": 57.5
+   },
+   {
+    "vertex_id": 37023,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": 65.16,
+    "y": -128.86,
+    "z": 115.57
+   },
+   {
+    "vertex_id": 37024,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": 65.61,
+    "y": -129.48,
+    "z": 115.71
+   },
+   {
+    "vertex_id": 29007,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": 170.43,
+    "y": -39.78,
+    "z": 58.88
+   },
+   {
+    "vertex_id": 29008,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": 169.68,
+    "y": -39.85,
+    "z": 58.84
+   },
+   {
+    "vertex_id": 54063,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": 171.81,
+    "y": -39.14,
+    "z": 48.08
+   },
+   {
+    "vertex_id": 54064,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": 172.31,
+    "y": -39.64,
+    "z": 48.08
+   },
+   {
+    "vertex_id": 45040,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": 176.76,
+    "y": -35.46,
+    "z": 43.05
+   },
+   {
+    "vertex_id": 45041,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": 176.37,
+    "y": -35.02,
+    "z": 42.92
+   },
+   {
+    "vertex_id": 39027,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": 152.79,
+    "y": -50.82,
+    "z": 86.64
+   },
+   {
+    "vertex_id": 39028,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": 153.0,
+    "y": -51.16,
+    "z": 86.23
+   },
+   {
+    "vertex_id": 43035,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": 168.88,
+    "y": -23.66,
+    "z": 81.47
+   },
+   {
+    "vertex_id": 43036,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": 168.78,
+    "y": -24.15,
+    "z": 81.34
+   },
+   {
+    "vertex_id": 51057,
+    "cluster_id": 51,
+    "degree": 1,
+    "x": 159.19,
+    "y": -43.03,
+    "z": 61.67
+   },
+   {
+    "vertex_id": 51058,
+    "cluster_id": 51,
+    "degree": 1,
+    "x": 159.54,
+    "y": -43.31,
+    "z": 61.66
+   },
+   {
+    "vertex_id": 53061,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": 171.46,
+    "y": -43.98,
+    "z": 57.08
+   },
+   {
+    "vertex_id": 53062,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": 171.08,
+    "y": -44.18,
+    "z": 57.15
+   },
+   {
+    "vertex_id": 31011,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 132.82,
+    "y": -41.0,
+    "z": 94.16
+   },
+   {
+    "vertex_id": 31012,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 132.4,
+    "y": -40.99,
+    "z": 94.13
+   },
+   {
+    "vertex_id": 35019,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": 116.76,
+    "y": -42.92,
+    "z": 32.78
+   },
+   {
+    "vertex_id": 35020,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": 116.35,
+    "y": -42.97,
+    "z": 32.78
+   },
+   {
+    "vertex_id": 34017,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": 125.08,
+    "y": -80.63,
+    "z": 75.88
+   },
+   {
+    "vertex_id": 34018,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": 125.33,
+    "y": -80.9,
+    "z": 75.9
+   },
+   {
+    "vertex_id": 38025,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": 51.09,
+    "y": -131.89,
+    "z": 127.29
+   },
+   {
+    "vertex_id": 38026,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": 50.76,
+    "y": -131.91,
+    "z": 127.31
+   },
+   {
+    "vertex_id": 32013,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": 132.29,
+    "y": -44.93,
+    "z": 55.88
+   },
+   {
+    "vertex_id": 32014,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": 131.98,
+    "y": -45.01,
+    "z": 55.88
+   },
+   {
+    "vertex_id": 13003,
+    "cluster_id": 13,
+    "degree": 1,
+    "x": -16.43,
+    "y": 30.58,
+    "z": 318.16
+   },
+   {
+    "vertex_id": 13004,
+    "cluster_id": 13,
+    "degree": 1,
+    "x": -16.74,
+    "y": 30.64,
+    "z": 318.12
+   },
+   {
+    "vertex_id": 41031,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": 159.0,
+    "y": -46.78,
+    "z": 76.03
+   },
+   {
+    "vertex_id": 41032,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": 158.7,
+    "y": -46.83,
+    "z": 75.99
+   },
+   {
+    "vertex_id": 33015,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": 129.45,
+    "y": -21.15,
+    "z": 42.08
+   },
+   {
+    "vertex_id": 33016,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": 129.17,
+    "y": -21.14,
+    "z": 42.08
+   },
+   {
+    "vertex_id": 42033,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": 168.29,
+    "y": -45.05,
+    "z": 93.44
+   },
+   {
+    "vertex_id": 42034,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": 168.55,
+    "y": -45.05,
+    "z": 93.44
+   },
+   {
+    "vertex_id": 40029,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": 156.63,
+    "y": -50.01,
+    "z": 78.98
+   },
+   {
+    "vertex_id": 40030,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": 156.76,
+    "y": -50.13,
+    "z": 78.98
+   },
+   {
+    "vertex_id": 36021,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": 99.56,
+    "y": -35.83,
+    "z": 39.57
+   },
+   {
+    "vertex_id": 36022,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": 99.55,
+    "y": -35.83,
+    "z": 39.57
+   }
+  ]
+ },
+ {
+  "event": "evt280017",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   280017
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt280017/calib-pr-evt280017.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt280017",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 8000,
+    "cluster_id": 8,
+    "degree": 1,
+    "x": 61.37,
+    "y": -40.43,
+    "z": 265.5
+   },
+   {
+    "vertex_id": 8001,
+    "cluster_id": 8,
+    "degree": 3,
+    "x": 65.12,
+    "y": -29.98,
+    "z": 263.27
+   },
+   {
+    "vertex_id": 8002,
+    "cluster_id": 8,
+    "degree": 1,
+    "x": 63.06,
+    "y": -28.42,
+    "z": 264.57
+   },
+   {
+    "vertex_id": 8029,
+    "cluster_id": 8,
+    "degree": 1,
+    "x": 65.33,
+    "y": -28.34,
+    "z": 262.93
+   },
+   {
+    "vertex_id": 32017,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": 72.05,
+    "y": -8.54,
+    "z": 293.3
+   },
+   {
+    "vertex_id": 32018,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": 72.67,
+    "y": -8.84,
+    "z": 293.57
+   },
+   {
+    "vertex_id": 37027,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": 105.46,
+    "y": -23.56,
+    "z": 291.88
+   },
+   {
+    "vertex_id": 37028,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": 105.52,
+    "y": -23.93,
+    "z": 292.36
+   },
+   {
+    "vertex_id": 27007,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": 55.36,
+    "y": -10.24,
+    "z": 308.19
+   },
+   {
+    "vertex_id": 27008,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": 55.7,
+    "y": -10.46,
+    "z": 308.22
+   },
+   {
+    "vertex_id": 30013,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": 9.13,
+    "y": 6.91,
+    "z": 221.58
+   },
+   {
+    "vertex_id": 30014,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": 9.37,
+    "y": 6.6,
+    "z": 221.58
+   },
+   {
+    "vertex_id": 31015,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 69.05,
+    "y": 1.33,
+    "z": 303.45
+   },
+   {
+    "vertex_id": 31016,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 68.69,
+    "y": 1.28,
+    "z": 303.41
+   },
+   {
+    "vertex_id": 36025,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": 80.29,
+    "y": -15.65,
+    "z": 312.71
+   },
+   {
+    "vertex_id": 36026,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": 79.94,
+    "y": -15.66,
+    "z": 312.73
+   },
+   {
+    "vertex_id": 33019,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": 72.79,
+    "y": -4.94,
+    "z": 326.78
+   },
+   {
+    "vertex_id": 33020,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": 73.1,
+    "y": -4.93,
+    "z": 326.78
+   },
+   {
+    "vertex_id": 28009,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 44.32,
+    "y": -4.86,
+    "z": 315.37
+   },
+   {
+    "vertex_id": 28010,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 44.03,
+    "y": -4.83,
+    "z": 315.37
+   },
+   {
+    "vertex_id": 13003,
+    "cluster_id": 13,
+    "degree": 1,
+    "x": -195.64,
+    "y": -97.43,
+    "z": 387.82
+   },
+   {
+    "vertex_id": 13004,
+    "cluster_id": 13,
+    "degree": 1,
+    "x": -195.92,
+    "y": -97.42,
+    "z": 387.82
+   },
+   {
+    "vertex_id": 26005,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": 61.53,
+    "y": -4.07,
+    "z": 294.08
+   },
+   {
+    "vertex_id": 26006,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": 61.26,
+    "y": -4.13,
+    "z": 294.07
+   },
+   {
+    "vertex_id": 29011,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": 11.83,
+    "y": -77.84,
+    "z": 305.11
+   },
+   {
+    "vertex_id": 29012,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": 11.56,
+    "y": -77.83,
+    "z": 305.1
+   },
+   {
+    "vertex_id": 34021,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": 75.29,
+    "y": -17.48,
+    "z": 234.03
+   },
+   {
+    "vertex_id": 34022,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": 75.5,
+    "y": -17.5,
+    "z": 234.05
+   },
+   {
+    "vertex_id": 35023,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": 78.07,
+    "y": -3.45,
+    "z": 205.6
+   },
+   {
+    "vertex_id": 35024,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": 77.95,
+    "y": -3.46,
+    "z": 205.65
+   }
+  ]
+ },
+ {
+  "event": "evt282737",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   282737
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt282737/calib-pr-evt282737.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt282737",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 21000,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": -88.86,
+    "y": -65.15,
+    "z": 249.77
+   },
+   {
+    "vertex_id": 21001,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": -14.74,
+    "y": 46.88,
+    "z": 120.94
+   },
+   {
+    "vertex_id": 21003,
+    "cluster_id": 21,
+    "degree": 2,
+    "x": -34.92,
+    "y": 47.68,
+    "z": 141.49
+   },
+   {
+    "vertex_id": 61011,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": -94.55,
+    "y": -67.85,
+    "z": 245.54
+   },
+   {
+    "vertex_id": 61012,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": -90.52,
+    "y": -65.75,
+    "z": 249.61
+   },
+   {
+    "vertex_id": 60009,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": -18.91,
+    "y": 54.69,
+    "z": 124.79
+   },
+   {
+    "vertex_id": 60010,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": -19.45,
+    "y": 54.75,
+    "z": 125.35
+   },
+   {
+    "vertex_id": 28007,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 27.91,
+    "y": 30.34,
+    "z": 205.86
+   },
+   {
+    "vertex_id": 28008,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 27.54,
+    "y": 30.34,
+    "z": 205.81
+   },
+   {
+    "vertex_id": 27005,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": 73.6,
+    "y": -180.19,
+    "z": 160.9
+   },
+   {
+    "vertex_id": 27006,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": 73.87,
+    "y": -180.16,
+    "z": 160.88
+   }
+  ]
+ },
+ {
+  "event": "evt283991",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   283991
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt283991/calib-pr-evt283991.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt283991",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 15000,
+    "cluster_id": 15,
+    "degree": 1,
+    "x": 154.2,
+    "y": -194.37,
+    "z": 107.04
+   },
+   {
+    "vertex_id": 15001,
+    "cluster_id": 15,
+    "degree": 1,
+    "x": 98.77,
+    "y": -91.23,
+    "z": 40.63
+   },
+   {
+    "vertex_id": 15002,
+    "cluster_id": 15,
+    "degree": 2,
+    "x": 153.03,
+    "y": -194.8,
+    "z": 105.67
+   },
+   {
+    "vertex_id": 15003,
+    "cluster_id": 15,
+    "degree": 2,
+    "x": 107.46,
+    "y": -101.2,
+    "z": 31.68
+   },
+   {
+    "vertex_id": 19006,
+    "cluster_id": 19,
+    "degree": 1,
+    "x": 201.17,
+    "y": -172.94,
+    "z": 24.07
+   },
+   {
+    "vertex_id": 19007,
+    "cluster_id": 19,
+    "degree": 1,
+    "x": 201.17,
+    "y": -173.36,
+    "z": 24.07
+   },
+   {
+    "vertex_id": 18004,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": -19.78,
+    "y": 19.05,
+    "z": 500.35
+   },
+   {
+    "vertex_id": 18005,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": -19.55,
+    "y": 19.07,
+    "z": 500.32
+   }
+  ]
+ },
+ {
+  "event": "evt284200",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   284200
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt284200/calib-pr-evt284200.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt284200",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 31034,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 189.78,
+    "y": -133.92,
+    "z": 478.37
+   },
+   {
+    "vertex_id": 31035,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 200.83,
+    "y": -126.22,
+    "z": 491.42
+   },
+   {
+    "vertex_id": 31036,
+    "cluster_id": 31,
+    "degree": 3,
+    "x": 197.4,
+    "y": -126.23,
+    "z": 471.81
+   },
+   {
+    "vertex_id": 31037,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 200.71,
+    "y": -126.11,
+    "z": 476.84
+   },
+   {
+    "vertex_id": 31038,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 201.09,
+    "y": -133.49,
+    "z": 477.64
+   },
+   {
+    "vertex_id": 31039,
+    "cluster_id": 31,
+    "degree": 2,
+    "x": 198.07,
+    "y": -126.1,
+    "z": 476.45
+   },
+   {
+    "vertex_id": 31040,
+    "cluster_id": 31,
+    "degree": 3,
+    "x": 199.93,
+    "y": -130.64,
+    "z": 475.73
+   },
+   {
+    "vertex_id": 31041,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 199.49,
+    "y": -130.62,
+    "z": 473.09
+   },
+   {
+    "vertex_id": 31049,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": 197.88,
+    "y": -126.62,
+    "z": 472.17
+   },
+   {
+    "vertex_id": 6000,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": 156.69,
+    "y": -110.18,
+    "z": 486.03
+   },
+   {
+    "vertex_id": 6001,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": 178.6,
+    "y": -120.85,
+    "z": 476.48
+   },
+   {
+    "vertex_id": 6002,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": 156.51,
+    "y": -109.23,
+    "z": 483.87
+   },
+   {
+    "vertex_id": 6003,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": 159.77,
+    "y": -112.16,
+    "z": 481.81
+   },
+   {
+    "vertex_id": 6004,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": 162.5,
+    "y": -115.76,
+    "z": 480.76
+   },
+   {
+    "vertex_id": 6005,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": 163.29,
+    "y": -117.18,
+    "z": 479.34
+   },
+   {
+    "vertex_id": 6006,
+    "cluster_id": 6,
+    "degree": 3,
+    "x": 168.51,
+    "y": -117.04,
+    "z": 479.11
+   },
+   {
+    "vertex_id": 6007,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": 161.92,
+    "y": -112.26,
+    "z": 479.09
+   },
+   {
+    "vertex_id": 6008,
+    "cluster_id": 6,
+    "degree": 3,
+    "x": 169.07,
+    "y": -117.18,
+    "z": 478.88
+   },
+   {
+    "vertex_id": 6009,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": 170.49,
+    "y": -118.01,
+    "z": 480.6
+   },
+   {
+    "vertex_id": 32042,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": 176.13,
+    "y": -120.07,
+    "z": 493.01
+   },
+   {
+    "vertex_id": 32043,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": 168.09,
+    "y": -117.58,
+    "z": 500.12
+   },
+   {
+    "vertex_id": 30032,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": 170.07,
+    "y": -117.41,
+    "z": 482.03
+   },
+   {
+    "vertex_id": 30033,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": 170.77,
+    "y": -118.7,
+    "z": 480.86
+   },
+   {
+    "vertex_id": 18014,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 152.26,
+    "y": -99.68,
+    "z": 497.48
+   },
+   {
+    "vertex_id": 18015,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 151.12,
+    "y": -99.98,
+    "z": 497.37
+   },
+   {
+    "vertex_id": 11010,
+    "cluster_id": 11,
+    "degree": 1,
+    "x": -187.07,
+    "y": -101.52,
+    "z": 468.52
+   },
+   {
+    "vertex_id": 11011,
+    "cluster_id": 11,
+    "degree": 1,
+    "x": -187.7,
+    "y": -101.87,
+    "z": 468.52
+   },
+   {
+    "vertex_id": 19016,
+    "cluster_id": 19,
+    "degree": 1,
+    "x": 159.85,
+    "y": -128.04,
+    "z": 499.01
+   },
+   {
+    "vertex_id": 19017,
+    "cluster_id": 19,
+    "degree": 1,
+    "x": 160.24,
+    "y": -128.16,
+    "z": 499.0
+   },
+   {
+    "vertex_id": 24026,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": 143.35,
+    "y": -76.94,
+    "z": 479.32
+   },
+   {
+    "vertex_id": 24027,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": 143.71,
+    "y": -76.97,
+    "z": 479.4
+   },
+   {
+    "vertex_id": 33045,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": 178.09,
+    "y": -123.61,
+    "z": 473.0
+   },
+   {
+    "vertex_id": 33046,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": 178.11,
+    "y": -123.24,
+    "z": 472.95
+   },
+   {
+    "vertex_id": 12012,
+    "cluster_id": 12,
+    "degree": 1,
+    "x": -1.81,
+    "y": -38.46,
+    "z": 13.58
+   },
+   {
+    "vertex_id": 12013,
+    "cluster_id": 12,
+    "degree": 1,
+    "x": -1.47,
+    "y": -38.51,
+    "z": 13.62
+   },
+   {
+    "vertex_id": 20018,
+    "cluster_id": 20,
+    "degree": 1,
+    "x": 170.5,
+    "y": -142.48,
+    "z": 472.43
+   },
+   {
+    "vertex_id": 20019,
+    "cluster_id": 20,
+    "degree": 1,
+    "x": 170.23,
+    "y": -142.48,
+    "z": 472.44
+   },
+   {
+    "vertex_id": 34047,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": -5.89,
+    "y": -29.79,
+    "z": 6.77
+   },
+   {
+    "vertex_id": 34048,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": -5.76,
+    "y": -29.75,
+    "z": 6.58
+   },
+   {
+    "vertex_id": 25028,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": 121.5,
+    "y": -102.55,
+    "z": 493.83
+   },
+   {
+    "vertex_id": 25029,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": 121.35,
+    "y": -102.39,
+    "z": 493.85
+   },
+   {
+    "vertex_id": 21020,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": 174.88,
+    "y": -154.7,
+    "z": 481.58
+   },
+   {
+    "vertex_id": 21021,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": 175.08,
+    "y": -154.72,
+    "z": 481.58
+   },
+   {
+    "vertex_id": 23024,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": 110.62,
+    "y": -103.75,
+    "z": 449.2
+   },
+   {
+    "vertex_id": 23025,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": 110.52,
+    "y": -103.83,
+    "z": 449.28
+   },
+   {
+    "vertex_id": 22022,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": 183.13,
+    "y": -99.85,
+    "z": 494.14
+   },
+   {
+    "vertex_id": 22023,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": 183.05,
+    "y": -99.8,
+    "z": 494.14
+   }
+  ]
+ },
+ {
+  "event": "evt284235",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   284235
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt284235/calib-pr-evt284235.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt284235",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 6000,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": -27.09,
+    "y": -110.08,
+    "z": 176.3
+   },
+   {
+    "vertex_id": 6001,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": -24.38,
+    "y": -108.95,
+    "z": 160.67
+   },
+   {
+    "vertex_id": 6003,
+    "cluster_id": 6,
+    "degree": 3,
+    "x": -24.9,
+    "y": -114.59,
+    "z": 170.46
+   },
+   {
+    "vertex_id": 6004,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": -24.08,
+    "y": -113.64,
+    "z": 164.54
+   },
+   {
+    "vertex_id": 74031,
+    "cluster_id": 74,
+    "degree": 1,
+    "x": -41.15,
+    "y": -122.22,
+    "z": 114.82
+   },
+   {
+    "vertex_id": 74032,
+    "cluster_id": 74,
+    "degree": 2,
+    "x": -31.8,
+    "y": -116.77,
+    "z": 120.91
+   },
+   {
+    "vertex_id": 74034,
+    "cluster_id": 74,
+    "degree": 2,
+    "x": -38.41,
+    "y": -122.88,
+    "z": 113.66
+   },
+   {
+    "vertex_id": 74036,
+    "cluster_id": 74,
+    "degree": 1,
+    "x": -32.4,
+    "y": -124.86,
+    "z": 117.82
+   },
+   {
+    "vertex_id": 75037,
+    "cluster_id": 75,
+    "degree": 1,
+    "x": -22.99,
+    "y": -136.53,
+    "z": 190.48
+   },
+   {
+    "vertex_id": 75038,
+    "cluster_id": 75,
+    "degree": 1,
+    "x": -22.71,
+    "y": -143.1,
+    "z": 198.88
+   },
+   {
+    "vertex_id": 75039,
+    "cluster_id": 75,
+    "degree": 2,
+    "x": -23.65,
+    "y": -141.96,
+    "z": 197.65
+   },
+   {
+    "vertex_id": 35023,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": -23.95,
+    "y": -134.86,
+    "z": 206.05
+   },
+   {
+    "vertex_id": 35024,
+    "cluster_id": 35,
+    "degree": 1,
+    "x": -22.4,
+    "y": -138.57,
+    "z": 206.81
+   },
+   {
+    "vertex_id": 38029,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": -35.84,
+    "y": -140.22,
+    "z": 92.66
+   },
+   {
+    "vertex_id": 38030,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": -35.11,
+    "y": -137.61,
+    "z": 94.55
+   },
+   {
+    "vertex_id": 36025,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": -23.34,
+    "y": -90.01,
+    "z": 137.77
+   },
+   {
+    "vertex_id": 36026,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": -23.99,
+    "y": -91.79,
+    "z": 140.48
+   },
+   {
+    "vertex_id": 31015,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": -17.55,
+    "y": -87.34,
+    "z": 142.5
+   },
+   {
+    "vertex_id": 31016,
+    "cluster_id": 31,
+    "degree": 1,
+    "x": -17.28,
+    "y": -86.98,
+    "z": 143.18
+   },
+   {
+    "vertex_id": 37027,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": -26.0,
+    "y": -124.39,
+    "z": 181.32
+   },
+   {
+    "vertex_id": 37028,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": -26.7,
+    "y": -124.3,
+    "z": 181.67
+   },
+   {
+    "vertex_id": 29011,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": -15.73,
+    "y": -85.42,
+    "z": 179.8
+   },
+   {
+    "vertex_id": 29012,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": -15.56,
+    "y": -85.37,
+    "z": 180.19
+   },
+   {
+    "vertex_id": 34021,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": -51.59,
+    "y": -148.08,
+    "z": 102.17
+   },
+   {
+    "vertex_id": 34022,
+    "cluster_id": 34,
+    "degree": 1,
+    "x": -51.92,
+    "y": -148.18,
+    "z": 102.16
+   },
+   {
+    "vertex_id": 28009,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -11.14,
+    "y": -154.79,
+    "z": 217.47
+   },
+   {
+    "vertex_id": 28010,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -10.81,
+    "y": -154.82,
+    "z": 217.48
+   },
+   {
+    "vertex_id": 33019,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": -38.65,
+    "y": -127.04,
+    "z": 110.03
+   },
+   {
+    "vertex_id": 33020,
+    "cluster_id": 33,
+    "degree": 1,
+    "x": -38.97,
+    "y": -127.06,
+    "z": 110.02
+   },
+   {
+    "vertex_id": 26005,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -7.08,
+    "y": -148.32,
+    "z": 182.19
+   },
+   {
+    "vertex_id": 26006,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -6.8,
+    "y": -148.3,
+    "z": 182.17
+   },
+   {
+    "vertex_id": 30013,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": -17.4,
+    "y": -99.21,
+    "z": 131.81
+   },
+   {
+    "vertex_id": 30014,
+    "cluster_id": 30,
+    "degree": 1,
+    "x": -17.15,
+    "y": -99.17,
+    "z": 131.82
+   },
+   {
+    "vertex_id": 32017,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": -32.4,
+    "y": -138.48,
+    "z": 114.21
+   },
+   {
+    "vertex_id": 32018,
+    "cluster_id": 32,
+    "degree": 1,
+    "x": -32.17,
+    "y": -138.5,
+    "z": 114.13
+   },
+   {
+    "vertex_id": 27007,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -8.02,
+    "y": -97.43,
+    "z": 137.75
+   },
+   {
+    "vertex_id": 27008,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -7.85,
+    "y": -97.42,
+    "z": 137.75
+   }
+  ]
+ },
+ {
+  "event": "evt286268",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   286268
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt286268/calib-pr-evt286268.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt286268",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 11000,
+    "cluster_id": 11,
+    "degree": 1,
+    "x": -94.38,
+    "y": -69.86,
+    "z": 183.19
+   },
+   {
+    "vertex_id": 11001,
+    "cluster_id": 11,
+    "degree": 2,
+    "x": -173.55,
+    "y": -110.14,
+    "z": 8.37
+   },
+   {
+    "vertex_id": 11023,
+    "cluster_id": 11,
+    "degree": 1,
+    "x": -172.92,
+    "y": -110.23,
+    "z": 8.71
+   },
+   {
+    "vertex_id": 45021,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": -79.14,
+    "y": -62.5,
+    "z": 208.35
+   },
+   {
+    "vertex_id": 45022,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": -78.56,
+    "y": -61.57,
+    "z": 208.84
+   },
+   {
+    "vertex_id": 40011,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": -176.09,
+    "y": -119.88,
+    "z": 44.88
+   },
+   {
+    "vertex_id": 40012,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": -175.88,
+    "y": -121.06,
+    "z": 44.92
+   },
+   {
+    "vertex_id": 38007,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": -174.9,
+    "y": -124.08,
+    "z": 24.62
+   },
+   {
+    "vertex_id": 38008,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": -174.17,
+    "y": -124.15,
+    "z": 24.52
+   },
+   {
+    "vertex_id": 41013,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": -180.17,
+    "y": -97.08,
+    "z": 18.41
+   },
+   {
+    "vertex_id": 41014,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": -179.8,
+    "y": -97.06,
+    "z": 18.29
+   },
+   {
+    "vertex_id": 19003,
+    "cluster_id": 19,
+    "degree": 1,
+    "x": 167.54,
+    "y": -48.0,
+    "z": 18.95
+   },
+   {
+    "vertex_id": 19004,
+    "cluster_id": 19,
+    "degree": 1,
+    "x": 167.85,
+    "y": -48.02,
+    "z": 18.81
+   },
+   {
+    "vertex_id": 44019,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": -132.6,
+    "y": -81.51,
+    "z": 110.53
+   },
+   {
+    "vertex_id": 44020,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": -132.28,
+    "y": -81.53,
+    "z": 110.52
+   },
+   {
+    "vertex_id": 42015,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": -191.68,
+    "y": -146.48,
+    "z": 51.22
+   },
+   {
+    "vertex_id": 42016,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": -191.93,
+    "y": -146.47,
+    "z": 51.22
+   },
+   {
+    "vertex_id": 39009,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": -175.71,
+    "y": -104.62,
+    "z": 2.03
+   },
+   {
+    "vertex_id": 39010,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": -175.55,
+    "y": -104.61,
+    "z": 2.06
+   },
+   {
+    "vertex_id": 43017,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": -154.77,
+    "y": -139.56,
+    "z": 76.34
+   },
+   {
+    "vertex_id": 43018,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": -154.78,
+    "y": -139.72,
+    "z": 76.34
+   },
+   {
+    "vertex_id": 20005,
+    "cluster_id": 20,
+    "degree": 1,
+    "x": 36.47,
+    "y": 194.59,
+    "z": 311.5
+   },
+   {
+    "vertex_id": 20006,
+    "cluster_id": 20,
+    "degree": 1,
+    "x": 36.55,
+    "y": 194.6,
+    "z": 311.5
+   }
+  ]
+ },
+ {
+  "event": "evt316025",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   316025
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt316025/calib-pr-evt316025.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt316025",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 16000,
+    "cluster_id": 16,
+    "degree": 1,
+    "x": 58.24,
+    "y": 112.83,
+    "z": 89.33
+   },
+   {
+    "vertex_id": 16001,
+    "cluster_id": 16,
+    "degree": 1,
+    "x": 44.29,
+    "y": 38.39,
+    "z": 83.51
+   },
+   {
+    "vertex_id": 16003,
+    "cluster_id": 16,
+    "degree": 5,
+    "x": 44.9,
+    "y": 39.96,
+    "z": 75.64
+   },
+   {
+    "vertex_id": 16004,
+    "cluster_id": 16,
+    "degree": 1,
+    "x": 42.82,
+    "y": 41.22,
+    "z": 74.55
+   },
+   {
+    "vertex_id": 16006,
+    "cluster_id": 16,
+    "degree": 1,
+    "x": 43.11,
+    "y": 42.27,
+    "z": 82.36
+   },
+   {
+    "vertex_id": 16049,
+    "cluster_id": 16,
+    "degree": 2,
+    "x": 45.07,
+    "y": 39.18,
+    "z": 78.04
+   },
+   {
+    "vertex_id": 16050,
+    "cluster_id": 16,
+    "degree": 1,
+    "x": 45.82,
+    "y": 40.08,
+    "z": 76.03
+   },
+   {
+    "vertex_id": 23013,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": 51.86,
+    "y": 27.07,
+    "z": 97.81
+   },
+   {
+    "vertex_id": 23014,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": 62.1,
+    "y": 23.81,
+    "z": 111.83
+   },
+   {
+    "vertex_id": 22011,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": -13.87,
+    "y": -42.89,
+    "z": 284.76
+   },
+   {
+    "vertex_id": 22012,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": -14.9,
+    "y": -40.59,
+    "z": 284.86
+   },
+   {
+    "vertex_id": 20007,
+    "cluster_id": 20,
+    "degree": 1,
+    "x": -58.12,
+    "y": 70.3,
+    "z": 250.4
+   },
+   {
+    "vertex_id": 20008,
+    "cluster_id": 20,
+    "degree": 1,
+    "x": -57.58,
+    "y": 69.33,
+    "z": 252.06
+   },
+   {
+    "vertex_id": 40021,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": 32.71,
+    "y": 94.58,
+    "z": 135.21
+   },
+   {
+    "vertex_id": 40022,
+    "cluster_id": 40,
+    "degree": 1,
+    "x": 31.79,
+    "y": 94.37,
+    "z": 136.07
+   },
+   {
+    "vertex_id": 46033,
+    "cluster_id": 46,
+    "degree": 1,
+    "x": 67.1,
+    "y": 93.38,
+    "z": 87.98
+   },
+   {
+    "vertex_id": 46034,
+    "cluster_id": 46,
+    "degree": 1,
+    "x": 67.1,
+    "y": 92.51,
+    "z": 88.28
+   },
+   {
+    "vertex_id": 52039,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": -9.15,
+    "y": -70.33,
+    "z": 301.26
+   },
+   {
+    "vertex_id": 52040,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": -8.34,
+    "y": -70.66,
+    "z": 301.42
+   },
+   {
+    "vertex_id": 55045,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": 75.55,
+    "y": 42.7,
+    "z": 101.7
+   },
+   {
+    "vertex_id": 55046,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": 76.17,
+    "y": 42.35,
+    "z": 101.48
+   },
+   {
+    "vertex_id": 39019,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": 39.6,
+    "y": 11.28,
+    "z": 68.48
+   },
+   {
+    "vertex_id": 39020,
+    "cluster_id": 39,
+    "degree": 1,
+    "x": 39.03,
+    "y": 11.29,
+    "z": 68.03
+   },
+   {
+    "vertex_id": 41023,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": 26.78,
+    "y": 110.61,
+    "z": 137.33
+   },
+   {
+    "vertex_id": 41024,
+    "cluster_id": 41,
+    "degree": 1,
+    "x": 27.4,
+    "y": 110.44,
+    "z": 137.03
+   },
+   {
+    "vertex_id": 37015,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": 51.16,
+    "y": 12.54,
+    "z": 70.87
+   },
+   {
+    "vertex_id": 37016,
+    "cluster_id": 37,
+    "degree": 1,
+    "x": 51.42,
+    "y": 11.93,
+    "z": 70.96
+   },
+   {
+    "vertex_id": 48037,
+    "cluster_id": 48,
+    "degree": 1,
+    "x": 107.74,
+    "y": 78.92,
+    "z": 43.58
+   },
+   {
+    "vertex_id": 48038,
+    "cluster_id": 48,
+    "degree": 1,
+    "x": 107.12,
+    "y": 78.9,
+    "z": 43.58
+   },
+   {
+    "vertex_id": 44029,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": 3.42,
+    "y": 57.78,
+    "z": 113.55
+   },
+   {
+    "vertex_id": 44030,
+    "cluster_id": 44,
+    "degree": 1,
+    "x": 3.89,
+    "y": 57.65,
+    "z": 113.69
+   },
+   {
+    "vertex_id": 56047,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": 95.32,
+    "y": 46.27,
+    "z": 112.63
+   },
+   {
+    "vertex_id": 56048,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": 95.73,
+    "y": 46.1,
+    "z": 112.72
+   },
+   {
+    "vertex_id": 54043,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": 64.29,
+    "y": 7.14,
+    "z": 89.0
+   },
+   {
+    "vertex_id": 54044,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": 63.95,
+    "y": 7.24,
+    "z": 89.01
+   },
+   {
+    "vertex_id": 53041,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": 12.31,
+    "y": 46.47,
+    "z": 128.12
+   },
+   {
+    "vertex_id": 53042,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": 12.0,
+    "y": 46.43,
+    "z": 128.23
+   },
+   {
+    "vertex_id": 38017,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": 47.94,
+    "y": 36.85,
+    "z": 33.86
+   },
+   {
+    "vertex_id": 38018,
+    "cluster_id": 38,
+    "degree": 1,
+    "x": 47.63,
+    "y": 36.76,
+    "z": 33.88
+   },
+   {
+    "vertex_id": 45031,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": 61.89,
+    "y": 123.78,
+    "z": 71.8
+   },
+   {
+    "vertex_id": 45032,
+    "cluster_id": 45,
+    "degree": 1,
+    "x": 62.19,
+    "y": 123.72,
+    "z": 71.85
+   },
+   {
+    "vertex_id": 43027,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": 12.42,
+    "y": 132.3,
+    "z": 121.26
+   },
+   {
+    "vertex_id": 43028,
+    "cluster_id": 43,
+    "degree": 1,
+    "x": 12.68,
+    "y": 132.23,
+    "z": 121.28
+   },
+   {
+    "vertex_id": 47035,
+    "cluster_id": 47,
+    "degree": 1,
+    "x": 94.11,
+    "y": 110.61,
+    "z": 115.26
+   },
+   {
+    "vertex_id": 47036,
+    "cluster_id": 47,
+    "degree": 1,
+    "x": 93.89,
+    "y": 110.6,
+    "z": 115.26
+   },
+   {
+    "vertex_id": 21009,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": -8.94,
+    "y": 69.93,
+    "z": 100.27
+   },
+   {
+    "vertex_id": 21010,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": -8.95,
+    "y": 69.79,
+    "z": 100.28
+   },
+   {
+    "vertex_id": 42025,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": 26.6,
+    "y": 24.12,
+    "z": 80.1
+   },
+   {
+    "vertex_id": 42026,
+    "cluster_id": 42,
+    "degree": 1,
+    "x": 26.5,
+    "y": 24.1,
+    "z": 80.12
+   }
+  ]
+ },
+ {
+  "event": "evt349241",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   349241
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt349241/calib-pr-evt349241.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt349241",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 15000,
+    "cluster_id": 15,
+    "degree": 1,
+    "x": -112.49,
+    "y": -98.56,
+    "z": 8.22
+   },
+   {
+    "vertex_id": 15002,
+    "cluster_id": 15,
+    "degree": 2,
+    "x": -118.53,
+    "y": -146.52,
+    "z": 4.23
+   },
+   {
+    "vertex_id": 15003,
+    "cluster_id": 15,
+    "degree": 1,
+    "x": -125.79,
+    "y": -143.4,
+    "z": 8.16
+   },
+   {
+    "vertex_id": 58020,
+    "cluster_id": 58,
+    "degree": 1,
+    "x": -111.81,
+    "y": -62.0,
+    "z": 12.11
+   },
+   {
+    "vertex_id": 58021,
+    "cluster_id": 58,
+    "degree": 1,
+    "x": -113.43,
+    "y": -63.51,
+    "z": 12.66
+   },
+   {
+    "vertex_id": 66036,
+    "cluster_id": 66,
+    "degree": 1,
+    "x": -159.69,
+    "y": -151.24,
+    "z": 19.18
+   },
+   {
+    "vertex_id": 66037,
+    "cluster_id": 66,
+    "degree": 1,
+    "x": -158.93,
+    "y": -150.98,
+    "z": 19.61
+   },
+   {
+    "vertex_id": 54012,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": -133.84,
+    "y": -144.58,
+    "z": 29.61
+   },
+   {
+    "vertex_id": 54013,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": -133.12,
+    "y": -144.48,
+    "z": 29.62
+   },
+   {
+    "vertex_id": 62028,
+    "cluster_id": 62,
+    "degree": 1,
+    "x": -172.32,
+    "y": -150.22,
+    "z": 22.24
+   },
+   {
+    "vertex_id": 62029,
+    "cluster_id": 62,
+    "degree": 1,
+    "x": -171.93,
+    "y": -150.38,
+    "z": 22.14
+   },
+   {
+    "vertex_id": 65034,
+    "cluster_id": 65,
+    "degree": 1,
+    "x": -62.4,
+    "y": -99.77,
+    "z": 24.43
+   },
+   {
+    "vertex_id": 65035,
+    "cluster_id": 65,
+    "degree": 1,
+    "x": -62.82,
+    "y": -99.77,
+    "z": 24.49
+   },
+   {
+    "vertex_id": 56016,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": -125.3,
+    "y": -140.24,
+    "z": 4.82
+   },
+   {
+    "vertex_id": 56017,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": -125.31,
+    "y": -139.87,
+    "z": 4.84
+   },
+   {
+    "vertex_id": 22006,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": 102.62,
+    "y": 172.01,
+    "z": 291.67
+   },
+   {
+    "vertex_id": 22007,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": 102.38,
+    "y": 172.11,
+    "z": 291.91
+   },
+   {
+    "vertex_id": 61026,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": -170.6,
+    "y": -127.11,
+    "z": 22.96
+   },
+   {
+    "vertex_id": 61027,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": -170.95,
+    "y": -127.09,
+    "z": 22.95
+   },
+   {
+    "vertex_id": 21004,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": 200.76,
+    "y": -186.81,
+    "z": 415.38
+   },
+   {
+    "vertex_id": 21005,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": 201.06,
+    "y": -186.76,
+    "z": 415.47
+   },
+   {
+    "vertex_id": 60024,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": -147.29,
+    "y": -130.5,
+    "z": 47.34
+   },
+   {
+    "vertex_id": 60025,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": -147.6,
+    "y": -130.5,
+    "z": 47.33
+   },
+   {
+    "vertex_id": 57018,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": -124.13,
+    "y": -156.52,
+    "z": 17.02
+   },
+   {
+    "vertex_id": 57019,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": -123.84,
+    "y": -156.43,
+    "z": 16.97
+   },
+   {
+    "vertex_id": 53010,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": -136.18,
+    "y": -149.1,
+    "z": 47.15
+   },
+   {
+    "vertex_id": 53011,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": -135.92,
+    "y": -149.11,
+    "z": 47.03
+   },
+   {
+    "vertex_id": 67038,
+    "cluster_id": 67,
+    "degree": 1,
+    "x": -167.91,
+    "y": -149.72,
+    "z": 17.32
+   },
+   {
+    "vertex_id": 67039,
+    "cluster_id": 67,
+    "degree": 1,
+    "x": -167.92,
+    "y": -150.0,
+    "z": 17.32
+   },
+   {
+    "vertex_id": 64032,
+    "cluster_id": 64,
+    "degree": 1,
+    "x": -92.17,
+    "y": -126.17,
+    "z": 20.62
+   },
+   {
+    "vertex_id": 64033,
+    "cluster_id": 64,
+    "degree": 1,
+    "x": -91.9,
+    "y": -126.16,
+    "z": 20.62
+   },
+   {
+    "vertex_id": 59022,
+    "cluster_id": 59,
+    "degree": 1,
+    "x": -141.56,
+    "y": -149.11,
+    "z": 50.9
+   },
+   {
+    "vertex_id": 59023,
+    "cluster_id": 59,
+    "degree": 1,
+    "x": -141.31,
+    "y": -149.11,
+    "z": 50.89
+   },
+   {
+    "vertex_id": 76040,
+    "cluster_id": 76,
+    "degree": 1,
+    "x": -113.22,
+    "y": -130.99,
+    "z": 2.65
+   },
+   {
+    "vertex_id": 76041,
+    "cluster_id": 76,
+    "degree": 1,
+    "x": -113.0,
+    "y": -130.98,
+    "z": 2.73
+   },
+   {
+    "vertex_id": 55014,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": -131.23,
+    "y": -107.7,
+    "z": 41.61
+   },
+   {
+    "vertex_id": 55015,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": -131.23,
+    "y": -107.88,
+    "z": 41.61
+   },
+   {
+    "vertex_id": 52008,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": -136.39,
+    "y": -140.25,
+    "z": 44.29
+   },
+   {
+    "vertex_id": 52009,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": -136.24,
+    "y": -140.29,
+    "z": 44.29
+   },
+   {
+    "vertex_id": 63030,
+    "cluster_id": 63,
+    "degree": 1,
+    "x": -95.83,
+    "y": -197.22,
+    "z": 21.22
+   },
+   {
+    "vertex_id": 63031,
+    "cluster_id": 63,
+    "degree": 1,
+    "x": -95.83,
+    "y": -197.31,
+    "z": 21.22
+   }
+  ]
+ },
+ {
+  "event": "evt388",
+  "key": [
+   "vtxscan-prod0813",
+   18255,
+   1,
+   388
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-ma10/pr_evt388/calib-pr-evt388.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt388",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 23001,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -161.08,
+    "y": 31.17,
+    "z": 426.02
+   },
+   {
+    "vertex_id": 23007,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -180.92,
+    "y": 31.66,
+    "z": 481.11
+   },
+   {
+    "vertex_id": 23008,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -175.4,
+    "y": 33.47,
+    "z": 461.68
+   },
+   {
+    "vertex_id": 23009,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -163.14,
+    "y": 31.39,
+    "z": 426.1
+   },
+   {
+    "vertex_id": 23010,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -185.0,
+    "y": 38.08,
+    "z": 497.5
+   },
+   {
+    "vertex_id": 23011,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -173.39,
+    "y": 30.06,
+    "z": 457.93
+   },
+   {
+    "vertex_id": 23012,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -175.27,
+    "y": 38.2,
+    "z": 482.36
+   },
+   {
+    "vertex_id": 23013,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -184.73,
+    "y": 29.05,
+    "z": 485.16
+   },
+   {
+    "vertex_id": 23014,
+    "cluster_id": 23,
+    "degree": 2,
+    "x": -184.05,
+    "y": 24.99,
+    "z": 499.12
+   },
+   {
+    "vertex_id": 23015,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -184.47,
+    "y": 33.72,
+    "z": 489.34
+   },
+   {
+    "vertex_id": 23017,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -179.02,
+    "y": 29.28,
+    "z": 471.7
+   },
+   {
+    "vertex_id": 23018,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -175.01,
+    "y": 32.81,
+    "z": 481.98
+   },
+   {
+    "vertex_id": 23019,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -154.3,
+    "y": 37.02,
+    "z": 444.49
+   },
+   {
+    "vertex_id": 23021,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -185.29,
+    "y": 32.63,
+    "z": 496.08
+   },
+   {
+    "vertex_id": 23022,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -180.09,
+    "y": 30.01,
+    "z": 476.27
+   },
+   {
+    "vertex_id": 23023,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -184.55,
+    "y": 32.49,
+    "z": 478.72
+   },
+   {
+    "vertex_id": 23025,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -174.26,
+    "y": 34.69,
+    "z": 465.05
+   },
+   {
+    "vertex_id": 23026,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -170.71,
+    "y": 31.86,
+    "z": 447.25
+   },
+   {
+    "vertex_id": 23027,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -168.26,
+    "y": 31.64,
+    "z": 451.89
+   },
+   {
+    "vertex_id": 23028,
+    "cluster_id": 23,
+    "degree": 4,
+    "x": -178.72,
+    "y": 29.64,
+    "z": 470.77
+   },
+   {
+    "vertex_id": 23029,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -178.31,
+    "y": 34.3,
+    "z": 466.3
+   },
+   {
+    "vertex_id": 23030,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -179.27,
+    "y": 29.09,
+    "z": 473.09
+   },
+   {
+    "vertex_id": 23032,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -187.24,
+    "y": 33.56,
+    "z": 495.82
+   },
+   {
+    "vertex_id": 23033,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -188.76,
+    "y": 33.24,
+    "z": 490.58
+   },
+   {
+    "vertex_id": 23034,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -183.07,
+    "y": 31.27,
+    "z": 479.23
+   },
+   {
+    "vertex_id": 23035,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -181.52,
+    "y": 38.68,
+    "z": 481.99
+   },
+   {
+    "vertex_id": 23036,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -181.02,
+    "y": 30.18,
+    "z": 478.44
+   },
+   {
+    "vertex_id": 23037,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -182.22,
+    "y": 34.69,
+    "z": 474.91
+   },
+   {
+    "vertex_id": 23038,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -188.53,
+    "y": 33.04,
+    "z": 495.6
+   },
+   {
+    "vertex_id": 23039,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -190.02,
+    "y": 29.52,
+    "z": 496.68
+   },
+   {
+    "vertex_id": 23040,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -183.4,
+    "y": 37.25,
+    "z": 481.87
+   },
+   {
+    "vertex_id": 23041,
+    "cluster_id": 23,
+    "degree": 2,
+    "x": -181.52,
+    "y": 39.56,
+    "z": 486.7
+   },
+   {
+    "vertex_id": 23042,
+    "cluster_id": 23,
+    "degree": 2,
+    "x": -183.32,
+    "y": 39.93,
+    "z": 495.29
+   },
+   {
+    "vertex_id": 23051,
+    "cluster_id": 23,
+    "degree": 4,
+    "x": -177.8,
+    "y": 30.23,
+    "z": 469.91
+   },
+   {
+    "vertex_id": 23052,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -177.4,
+    "y": 28.95,
+    "z": 468.86
+   },
+   {
+    "vertex_id": 23055,
+    "cluster_id": 23,
+    "degree": 4,
+    "x": -188.61,
+    "y": 29.27,
+    "z": 494.84
+   },
+   {
+    "vertex_id": 23058,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -185.11,
+    "y": 30.47,
+    "z": 480.48
+   },
+   {
+    "vertex_id": 23059,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -174.69,
+    "y": 35.78,
+    "z": 474.9
+   },
+   {
+    "vertex_id": 23060,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -176.33,
+    "y": 33.63,
+    "z": 473.0
+   },
+   {
+    "vertex_id": 23061,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -184.65,
+    "y": 29.67,
+    "z": 489.12
+   },
+   {
+    "vertex_id": 23062,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -188.52,
+    "y": 27.24,
+    "z": 495.64
+   },
+   {
+    "vertex_id": 23063,
+    "cluster_id": 23,
+    "degree": 3,
+    "x": -178.1,
+    "y": 29.21,
+    "z": 473.71
+   },
+   {
+    "vertex_id": 23064,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -175.15,
+    "y": 23.1,
+    "z": 475.14
+   },
+   {
+    "vertex_id": 23193,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -178.86,
+    "y": 28.99,
+    "z": 470.99
+   },
+   {
+    "vertex_id": 95157,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -155.12,
+    "y": 38.41,
+    "z": 463.2
+   },
+   {
+    "vertex_id": 95158,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -145.43,
+    "y": 44.31,
+    "z": 499.24
+   },
+   {
+    "vertex_id": 95161,
+    "cluster_id": 95,
+    "degree": 3,
+    "x": -153.32,
+    "y": 41.1,
+    "z": 472.89
+   },
+   {
+    "vertex_id": 95164,
+    "cluster_id": 95,
+    "degree": 3,
+    "x": -147.76,
+    "y": 44.02,
+    "z": 495.34
+   },
+   {
+    "vertex_id": 95167,
+    "cluster_id": 95,
+    "degree": 3,
+    "x": -149.92,
+    "y": 43.28,
+    "z": 488.62
+   },
+   {
+    "vertex_id": 95168,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -141.6,
+    "y": 31.77,
+    "z": 485.27
+   },
+   {
+    "vertex_id": 95169,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -151.69,
+    "y": 46.17,
+    "z": 497.94
+   },
+   {
+    "vertex_id": 95170,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -154.95,
+    "y": 38.42,
+    "z": 472.99
+   },
+   {
+    "vertex_id": 95171,
+    "cluster_id": 95,
+    "degree": 3,
+    "x": -150.28,
+    "y": 42.05,
+    "z": 484.29
+   },
+   {
+    "vertex_id": 95172,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -143.82,
+    "y": 43.19,
+    "z": 487.11
+   },
+   {
+    "vertex_id": 95177,
+    "cluster_id": 95,
+    "degree": 4,
+    "x": -146.45,
+    "y": 44.58,
+    "z": 497.38
+   },
+   {
+    "vertex_id": 95178,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -148.73,
+    "y": 48.51,
+    "z": 496.14
+   },
+   {
+    "vertex_id": 95181,
+    "cluster_id": 95,
+    "degree": 1,
+    "x": -143.54,
+    "y": 45.62,
+    "z": 498.09
+   },
+   {
+    "vertex_id": 91149,
+    "cluster_id": 91,
+    "degree": 1,
+    "x": -175.72,
+    "y": 38.11,
+    "z": 492.42
+   },
+   {
+    "vertex_id": 91150,
+    "cluster_id": 91,
+    "degree": 1,
+    "x": -175.83,
+    "y": 37.92,
+    "z": 500.84
+   },
+   {
+    "vertex_id": 83133,
+    "cluster_id": 83,
+    "degree": 1,
+    "x": -153.96,
+    "y": 42.25,
+    "z": 488.07
+   },
+   {
+    "vertex_id": 83134,
+    "cluster_id": 83,
+    "degree": 1,
+    "x": -154.06,
+    "y": 44.57,
+    "z": 492.22
+   },
+   {
+    "vertex_id": 59081,
+    "cluster_id": 59,
+    "degree": 1,
+    "x": -153.52,
+    "y": 44.98,
+    "z": 469.47
+   },
+   {
+    "vertex_id": 59082,
+    "cluster_id": 59,
+    "degree": 1,
+    "x": -152.44,
+    "y": 47.9,
+    "z": 470.82
+   },
+   {
+    "vertex_id": 81128,
+    "cluster_id": 81,
+    "degree": 1,
+    "x": -197.46,
+    "y": 82.27,
+    "z": 467.58
+   },
+   {
+    "vertex_id": 81129,
+    "cluster_id": 81,
+    "degree": 1,
+    "x": -195.93,
+    "y": 80.05,
+    "z": 468.4
+   },
+   {
+    "vertex_id": 61086,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": -151.09,
+    "y": 57.24,
+    "z": 477.84
+   },
+   {
+    "vertex_id": 61087,
+    "cluster_id": 61,
+    "degree": 1,
+    "x": -150.61,
+    "y": 57.88,
+    "z": 480.51
+   },
+   {
+    "vertex_id": 28067,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 100.45,
+    "y": -5.18,
+    "z": 248.99
+   },
+   {
+    "vertex_id": 28068,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 100.29,
+    "y": -2.91,
+    "z": 250.66
+   },
+   {
+    "vertex_id": 73112,
+    "cluster_id": 73,
+    "degree": 1,
+    "x": -179.33,
+    "y": 47.57,
+    "z": 500.04
+   },
+   {
+    "vertex_id": 73113,
+    "cluster_id": 73,
+    "degree": 1,
+    "x": -177.79,
+    "y": 45.71,
+    "z": 501.65
+   },
+   {
+    "vertex_id": 99188,
+    "cluster_id": 99,
+    "degree": 1,
+    "x": -154.4,
+    "y": 51.26,
+    "z": 467.14
+   },
+   {
+    "vertex_id": 99189,
+    "cluster_id": 99,
+    "degree": 1,
+    "x": -154.08,
+    "y": 51.64,
+    "z": 469.35
+   },
+   {
+    "vertex_id": 96182,
+    "cluster_id": 96,
+    "degree": 1,
+    "x": -148.55,
+    "y": 49.44,
+    "z": 497.96
+   },
+   {
+    "vertex_id": 96183,
+    "cluster_id": 96,
+    "degree": 1,
+    "x": -148.51,
+    "y": 48.08,
+    "z": 500.13
+   },
+   {
+    "vertex_id": 97184,
+    "cluster_id": 97,
+    "degree": 1,
+    "x": 103.47,
+    "y": -12.62,
+    "z": 248.95
+   },
+   {
+    "vertex_id": 97185,
+    "cluster_id": 97,
+    "degree": 1,
+    "x": 104.24,
+    "y": -13.97,
+    "z": 250.66
+   },
+   {
+    "vertex_id": 72108,
+    "cluster_id": 72,
+    "degree": 1,
+    "x": -176.09,
+    "y": 37.02,
+    "z": 490.72
+   },
+   {
+    "vertex_id": 72109,
+    "cluster_id": 72,
+    "degree": 1,
+    "x": -177.32,
+    "y": 36.38,
+    "z": 491.85
+   },
+   {
+    "vertex_id": 94155,
+    "cluster_id": 94,
+    "degree": 1,
+    "x": -143.64,
+    "y": 30.01,
+    "z": 486.97
+   },
+   {
+    "vertex_id": 94156,
+    "cluster_id": 94,
+    "degree": 1,
+    "x": -144.22,
+    "y": 30.89,
+    "z": 488.42
+   },
+   {
+    "vertex_id": 54071,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": -190.71,
+    "y": 35.62,
+    "z": 498.22
+   },
+   {
+    "vertex_id": 54072,
+    "cluster_id": 54,
+    "degree": 1,
+    "x": -192.3,
+    "y": 35.7,
+    "z": 498.8
+   },
+   {
+    "vertex_id": 75116,
+    "cluster_id": 75,
+    "degree": 1,
+    "x": -184.67,
+    "y": 20.34,
+    "z": 500.68
+   },
+   {
+    "vertex_id": 75117,
+    "cluster_id": 75,
+    "degree": 1,
+    "x": -183.9,
+    "y": 21.35,
+    "z": 501.5
+   },
+   {
+    "vertex_id": 66096,
+    "cluster_id": 66,
+    "degree": 1,
+    "x": -148.12,
+    "y": 64.96,
+    "z": 497.36
+   },
+   {
+    "vertex_id": 66097,
+    "cluster_id": 66,
+    "degree": 1,
+    "x": -148.51,
+    "y": 65.39,
+    "z": 498.69
+   },
+   {
+    "vertex_id": 55073,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": -193.96,
+    "y": 101.43,
+    "z": 495.16
+   },
+   {
+    "vertex_id": 55074,
+    "cluster_id": 55,
+    "degree": 1,
+    "x": -194.28,
+    "y": 100.29,
+    "z": 495.2
+   },
+   {
+    "vertex_id": 82130,
+    "cluster_id": 82,
+    "degree": 1,
+    "x": -187.54,
+    "y": 29.49,
+    "z": 500.8
+   },
+   {
+    "vertex_id": 82131,
+    "cluster_id": 82,
+    "degree": 1,
+    "x": -186.4,
+    "y": 29.4,
+    "z": 500.95
+   },
+   {
+    "vertex_id": 62088,
+    "cluster_id": 62,
+    "degree": 1,
+    "x": -151.2,
+    "y": 39.7,
+    "z": 448.12
+   },
+   {
+    "vertex_id": 62089,
+    "cluster_id": 62,
+    "degree": 1,
+    "x": -150.2,
+    "y": 39.49,
+    "z": 447.83
+   },
+   {
+    "vertex_id": 64092,
+    "cluster_id": 64,
+    "degree": 1,
+    "x": -129.94,
+    "y": 78.4,
+    "z": 489.52
+   },
+   {
+    "vertex_id": 64093,
+    "cluster_id": 64,
+    "degree": 1,
+    "x": -129.0,
+    "y": 78.0,
+    "z": 489.79
+   },
+   {
+    "vertex_id": 76118,
+    "cluster_id": 76,
+    "degree": 1,
+    "x": -187.32,
+    "y": 28.32,
+    "z": 498.1
+   },
+   {
+    "vertex_id": 76119,
+    "cluster_id": 76,
+    "degree": 1,
+    "x": -186.88,
+    "y": 27.54,
+    "z": 498.59
+   },
+   {
+    "vertex_id": 27065,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": 170.34,
+    "y": 171.41,
+    "z": 419.46
+   },
+   {
+    "vertex_id": 27066,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": 169.54,
+    "y": 171.33,
+    "z": 419.8
+   },
+   {
+    "vertex_id": 98186,
+    "cluster_id": 98,
+    "degree": 1,
+    "x": -153.25,
+    "y": 44.6,
+    "z": 461.61
+   },
+   {
+    "vertex_id": 98187,
+    "cluster_id": 98,
+    "degree": 1,
+    "x": -153.18,
+    "y": 45.29,
+    "z": 461.91
+   },
+   {
+    "vertex_id": 88143,
+    "cluster_id": 88,
+    "degree": 1,
+    "x": -140.26,
+    "y": 26.4,
+    "z": 494.32
+   },
+   {
+    "vertex_id": 88144,
+    "cluster_id": 88,
+    "degree": 1,
+    "x": -141.0,
+    "y": 26.42,
+    "z": 494.32
+   },
+   {
+    "vertex_id": 56075,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": -189.65,
+    "y": 36.42,
+    "z": 499.87
+   },
+   {
+    "vertex_id": 56076,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": -189.75,
+    "y": 36.05,
+    "z": 500.47
+   },
+   {
+    "vertex_id": 87141,
+    "cluster_id": 87,
+    "degree": 1,
+    "x": -134.66,
+    "y": 21.02,
+    "z": 497.98
+   },
+   {
+    "vertex_id": 87142,
+    "cluster_id": 87,
+    "degree": 1,
+    "x": -134.22,
+    "y": 20.85,
+    "z": 498.42
+   },
+   {
+    "vertex_id": 74114,
+    "cluster_id": 74,
+    "degree": 1,
+    "x": -180.05,
+    "y": 44.7,
+    "z": 491.98
+   },
+   {
+    "vertex_id": 74115,
+    "cluster_id": 74,
+    "degree": 1,
+    "x": -180.13,
+    "y": 44.14,
+    "z": 492.0
+   },
+   {
+    "vertex_id": 86139,
+    "cluster_id": 86,
+    "degree": 1,
+    "x": -172.95,
+    "y": 33.39,
+    "z": 494.14
+   },
+   {
+    "vertex_id": 86140,
+    "cluster_id": 86,
+    "degree": 1,
+    "x": -172.51,
+    "y": 33.4,
+    "z": 494.29
+   },
+   {
+    "vertex_id": 89145,
+    "cluster_id": 89,
+    "degree": 1,
+    "x": -159.23,
+    "y": 45.02,
+    "z": 492.28
+   },
+   {
+    "vertex_id": 89146,
+    "cluster_id": 89,
+    "degree": 1,
+    "x": -159.64,
+    "y": 45.05,
+    "z": 492.22
+   },
+   {
+    "vertex_id": 53069,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": -193.97,
+    "y": 8.68,
+    "z": 495.17
+   },
+   {
+    "vertex_id": 53070,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": -194.34,
+    "y": 8.52,
+    "z": 495.21
+   },
+   {
+    "vertex_id": 65094,
+    "cluster_id": 65,
+    "degree": 1,
+    "x": -145.5,
+    "y": 40.63,
+    "z": 493.02
+   },
+   {
+    "vertex_id": 65095,
+    "cluster_id": 65,
+    "degree": 1,
+    "x": -145.43,
+    "y": 40.24,
+    "z": 493.03
+   },
+   {
+    "vertex_id": 67098,
+    "cluster_id": 67,
+    "degree": 1,
+    "x": -162.93,
+    "y": 23.56,
+    "z": 443.9
+   },
+   {
+    "vertex_id": 67099,
+    "cluster_id": 67,
+    "degree": 1,
+    "x": -162.59,
+    "y": 23.75,
+    "z": 443.92
+   },
+   {
+    "vertex_id": 85137,
+    "cluster_id": 85,
+    "degree": 1,
+    "x": -131.62,
+    "y": 44.83,
+    "z": 487.73
+   },
+   {
+    "vertex_id": 85138,
+    "cluster_id": 85,
+    "degree": 1,
+    "x": -131.76,
+    "y": 45.19,
+    "z": 487.75
+   },
+   {
+    "vertex_id": 60084,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": -151.45,
+    "y": 57.78,
+    "z": 488.01
+   },
+   {
+    "vertex_id": 60085,
+    "cluster_id": 60,
+    "degree": 1,
+    "x": -151.82,
+    "y": 57.78,
+    "z": 487.99
+   },
+   {
+    "vertex_id": 58079,
+    "cluster_id": 58,
+    "degree": 1,
+    "x": -154.12,
+    "y": 84.08,
+    "z": 495.03
+   },
+   {
+    "vertex_id": 58080,
+    "cluster_id": 58,
+    "degree": 1,
+    "x": -153.98,
+    "y": 83.98,
+    "z": 494.7
+   },
+   {
+    "vertex_id": 68100,
+    "cluster_id": 68,
+    "degree": 1,
+    "x": -163.39,
+    "y": 33.0,
+    "z": 457.01
+   },
+   {
+    "vertex_id": 68101,
+    "cluster_id": 68,
+    "degree": 1,
+    "x": -163.04,
+    "y": 32.94,
+    "z": 457.03
+   },
+   {
+    "vertex_id": 84135,
+    "cluster_id": 84,
+    "degree": 1,
+    "x": -154.64,
+    "y": 44.42,
+    "z": 456.69
+   },
+   {
+    "vertex_id": 84136,
+    "cluster_id": 84,
+    "degree": 1,
+    "x": -154.64,
+    "y": 44.1,
+    "z": 456.53
+   },
+   {
+    "vertex_id": 80126,
+    "cluster_id": 80,
+    "degree": 1,
+    "x": -189.36,
+    "y": 41.43,
+    "z": 463.69
+   },
+   {
+    "vertex_id": 80127,
+    "cluster_id": 80,
+    "degree": 1,
+    "x": -189.02,
+    "y": 41.43,
+    "z": 463.64
+   },
+   {
+    "vertex_id": 79124,
+    "cluster_id": 79,
+    "degree": 1,
+    "x": -188.65,
+    "y": 29.0,
+    "z": 482.92
+   },
+   {
+    "vertex_id": 79125,
+    "cluster_id": 79,
+    "degree": 1,
+    "x": -188.94,
+    "y": 29.18,
+    "z": 482.96
+   },
+   {
+    "vertex_id": 90147,
+    "cluster_id": 90,
+    "degree": 1,
+    "x": -162.55,
+    "y": 33.76,
+    "z": 466.56
+   },
+   {
+    "vertex_id": 90148,
+    "cluster_id": 90,
+    "degree": 1,
+    "x": -162.85,
+    "y": 33.77,
+    "z": 466.59
+   },
+   {
+    "vertex_id": 69102,
+    "cluster_id": 69,
+    "degree": 1,
+    "x": -165.84,
+    "y": 44.98,
+    "z": 446.32
+   },
+   {
+    "vertex_id": 69103,
+    "cluster_id": 69,
+    "degree": 1,
+    "x": -165.58,
+    "y": 45.03,
+    "z": 446.32
+   },
+   {
+    "vertex_id": 71106,
+    "cluster_id": 71,
+    "degree": 1,
+    "x": -172.96,
+    "y": 33.42,
+    "z": 483.7
+   },
+   {
+    "vertex_id": 71107,
+    "cluster_id": 71,
+    "degree": 1,
+    "x": -173.17,
+    "y": 33.53,
+    "z": 483.78
+   },
+   {
+    "vertex_id": 77120,
+    "cluster_id": 77,
+    "degree": 1,
+    "x": -187.44,
+    "y": 33.93,
+    "z": 487.07
+   },
+   {
+    "vertex_id": 77121,
+    "cluster_id": 77,
+    "degree": 1,
+    "x": -187.41,
+    "y": 34.14,
+    "z": 487.08
+   },
+   {
+    "vertex_id": 57077,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": -153.88,
+    "y": -0.9,
+    "z": 413.44
+   },
+   {
+    "vertex_id": 57078,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": -153.92,
+    "y": -0.95,
+    "z": 413.37
+   },
+   {
+    "vertex_id": 78122,
+    "cluster_id": 78,
+    "degree": 1,
+    "x": -188.2,
+    "y": 37.61,
+    "z": 472.35
+   },
+   {
+    "vertex_id": 78123,
+    "cluster_id": 78,
+    "degree": 1,
+    "x": -188.14,
+    "y": 37.61,
+    "z": 472.35
+   },
+   {
+    "vertex_id": 70104,
+    "cluster_id": 70,
+    "degree": 1,
+    "x": -170.06,
+    "y": 31.71,
+    "z": 418.42
+   },
+   {
+    "vertex_id": 70105,
+    "cluster_id": 70,
+    "degree": 1,
+    "x": -170.06,
+    "y": 31.68,
+    "z": 418.41
+   }
+  ]
+ },
+ {
+  "event": "evt388224",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   388224
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt388224/calib-pr-evt388224.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt388224",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 3000,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -177.17,
+    "y": 56.92,
+    "z": 486.82
+   },
+   {
+    "vertex_id": 3001,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -63.98,
+    "y": -2.95,
+    "z": 345.49
+   },
+   {
+    "vertex_id": 3002,
+    "cluster_id": 3,
+    "degree": 3,
+    "x": -67.68,
+    "y": -0.09,
+    "z": 347.33
+   },
+   {
+    "vertex_id": 3004,
+    "cluster_id": 3,
+    "degree": 4,
+    "x": -66.77,
+    "y": -0.62,
+    "z": 344.34
+   },
+   {
+    "vertex_id": 3005,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -76.14,
+    "y": 9.68,
+    "z": 340.87
+   },
+   {
+    "vertex_id": 3007,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -79.62,
+    "y": 1.63,
+    "z": 377.67
+   },
+   {
+    "vertex_id": 3011,
+    "cluster_id": 3,
+    "degree": 4,
+    "x": -69.17,
+    "y": -0.14,
+    "z": 351.43
+   },
+   {
+    "vertex_id": 3012,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -72.62,
+    "y": 6.45,
+    "z": 339.34
+   },
+   {
+    "vertex_id": 3013,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -65.91,
+    "y": -2.08,
+    "z": 338.01
+   },
+   {
+    "vertex_id": 3026,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -65.12,
+    "y": 1.06,
+    "z": 345.07
+   },
+   {
+    "vertex_id": 80024,
+    "cluster_id": 80,
+    "degree": 1,
+    "x": -67.62,
+    "y": 0.89,
+    "z": 336.77
+   },
+   {
+    "vertex_id": 80025,
+    "cluster_id": 80,
+    "degree": 1,
+    "x": -67.9,
+    "y": 0.3,
+    "z": 338.46
+   },
+   {
+    "vertex_id": 26016,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -178.95,
+    "y": 15.38,
+    "z": 394.28
+   },
+   {
+    "vertex_id": 26017,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -179.34,
+    "y": 15.34,
+    "z": 394.33
+   },
+   {
+    "vertex_id": 25014,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -153.35,
+    "y": 26.85,
+    "z": 381.04
+   },
+   {
+    "vertex_id": 25015,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -152.99,
+    "y": 26.85,
+    "z": 381.03
+   },
+   {
+    "vertex_id": 27018,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -54.84,
+    "y": -41.56,
+    "z": 344.34
+   },
+   {
+    "vertex_id": 27019,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -55.2,
+    "y": -41.54,
+    "z": 344.34
+   },
+   {
+    "vertex_id": 28020,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -65.48,
+    "y": -7.82,
+    "z": 447.9
+   },
+   {
+    "vertex_id": 28021,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -65.37,
+    "y": -7.89,
+    "z": 447.86
+   }
+  ]
+ },
+ {
+  "event": "evt398414",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   398414
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt398414/calib-pr-evt398414.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt398414",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 18000,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 37.54,
+    "y": -197.96,
+    "z": 344.21
+   },
+   {
+    "vertex_id": 18001,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": 33.29,
+    "y": -183.3,
+    "z": 342.1
+   },
+   {
+    "vertex_id": 28002,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 184.1,
+    "y": 61.12,
+    "z": 313.65
+   },
+   {
+    "vertex_id": 28003,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": 183.38,
+    "y": 61.27,
+    "z": 313.87
+   }
+  ]
+ },
+ {
+  "event": "evt399856",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   399856
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt399856/calib-pr-evt399856.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt399856",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 3000,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -118.99,
+    "y": 98.32,
+    "z": 220.35
+   },
+   {
+    "vertex_id": 3001,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -134.56,
+    "y": 118.3,
+    "z": 164.62
+   },
+   {
+    "vertex_id": 3002,
+    "cluster_id": 3,
+    "degree": 2,
+    "x": -122.32,
+    "y": 102.17,
+    "z": 204.16
+   },
+   {
+    "vertex_id": 21003,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": -95.32,
+    "y": 70.76,
+    "z": 166.12
+   },
+   {
+    "vertex_id": 21004,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": -95.64,
+    "y": 70.79,
+    "z": 166.12
+   }
+  ]
+ },
+ {
+  "event": "evt400856",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   400856
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt400856/calib-pr-evt400856.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt400856",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 12000,
+    "cluster_id": 12,
+    "degree": 1,
+    "x": -101.23,
+    "y": -92.93,
+    "z": 409.2
+   },
+   {
+    "vertex_id": 12001,
+    "cluster_id": 12,
+    "degree": 1,
+    "x": -31.0,
+    "y": -39.91,
+    "z": 384.91
+   },
+   {
+    "vertex_id": 12003,
+    "cluster_id": 12,
+    "degree": 2,
+    "x": -101.19,
+    "y": -86.81,
+    "z": 409.42
+   },
+   {
+    "vertex_id": 18004,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": -197.72,
+    "y": 168.64,
+    "z": 85.74
+   },
+   {
+    "vertex_id": 18005,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": -198.03,
+    "y": 168.65,
+    "z": 86.26
+   },
+   {
+    "vertex_id": 36006,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": -14.44,
+    "y": -60.66,
+    "z": 376.66
+   },
+   {
+    "vertex_id": 36007,
+    "cluster_id": 36,
+    "degree": 1,
+    "x": -14.85,
+    "y": -60.68,
+    "z": 376.66
+   }
+  ]
+ },
+ {
+  "event": "evt411460",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   411460
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt411460/calib-pr-evt411460.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt411460",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p5-cone.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 6000,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": -25.15,
+    "y": 195.41,
+    "z": 367.85
+   },
+   {
+    "vertex_id": 6002,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": -26.91,
+    "y": 195.84,
+    "z": 368.36
+   },
+   {
+    "vertex_id": 6003,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": -35.22,
+    "y": 199.47,
+    "z": 366.64
+   },
+   {
+    "vertex_id": 6005,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": -36.7,
+    "y": 199.43,
+    "z": 366.77
+   },
+   {
+    "vertex_id": 6006,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": -34.88,
+    "y": 195.22,
+    "z": 364.85
+   },
+   {
+    "vertex_id": 6019,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": -28.09,
+    "y": 195.98,
+    "z": 368.43
+   },
+   {
+    "vertex_id": 26013,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -12.59,
+    "y": 189.97,
+    "z": 383.02
+   },
+   {
+    "vertex_id": 26014,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": -11.4,
+    "y": 189.38,
+    "z": 384.6
+   },
+   {
+    "vertex_id": 25011,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -11.23,
+    "y": 157.66,
+    "z": 384.7
+   },
+   {
+    "vertex_id": 25012,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": -11.51,
+    "y": 157.81,
+    "z": 384.83
+   },
+   {
+    "vertex_id": 28017,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -36.18,
+    "y": 199.2,
+    "z": 393.15
+   },
+   {
+    "vertex_id": 28018,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -36.47,
+    "y": 199.1,
+    "z": 393.22
+   },
+   {
+    "vertex_id": 24009,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": -9.58,
+    "y": 144.9,
+    "z": 382.42
+   },
+   {
+    "vertex_id": 24010,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": -9.34,
+    "y": 144.84,
+    "z": 382.42
+   },
+   {
+    "vertex_id": 23007,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -106.6,
+    "y": 184.91,
+    "z": 326.49
+   },
+   {
+    "vertex_id": 23008,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": -106.8,
+    "y": 184.85,
+    "z": 326.62
+   },
+   {
+    "vertex_id": 27015,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -19.92,
+    "y": 195.85,
+    "z": 324.22
+   },
+   {
+    "vertex_id": 27016,
+    "cluster_id": 27,
+    "degree": 1,
+    "x": -20.07,
+    "y": 195.73,
+    "z": 324.22
+   }
+  ]
+ },
+ {
+  "event": "evt52085",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   52085
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt52085/calib-pr-evt52085.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt52085",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 6000,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": -18.45,
+    "y": 99.48,
+    "z": 108.75
+   },
+   {
+    "vertex_id": 6001,
+    "cluster_id": 6,
+    "degree": 1,
+    "x": 81.83,
+    "y": 167.88,
+    "z": 52.62
+   },
+   {
+    "vertex_id": 6002,
+    "cluster_id": 6,
+    "degree": 2,
+    "x": -0.55,
+    "y": 112.69,
+    "z": 80.83
+   },
+   {
+    "vertex_id": 26013,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": 7.83,
+    "y": 199.86,
+    "z": 72.68
+   },
+   {
+    "vertex_id": 26014,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": 8.66,
+    "y": 190.49,
+    "z": 75.16
+   },
+   {
+    "vertex_id": 25011,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": 8.03,
+    "y": 115.88,
+    "z": 51.38
+   },
+   {
+    "vertex_id": 25012,
+    "cluster_id": 25,
+    "degree": 1,
+    "x": 8.03,
+    "y": 115.67,
+    "z": 51.08
+   },
+   {
+    "vertex_id": 24009,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": 0.77,
+    "y": 80.61,
+    "z": 135.56
+   },
+   {
+    "vertex_id": 24010,
+    "cluster_id": 24,
+    "degree": 1,
+    "x": 0.92,
+    "y": 80.92,
+    "z": 135.66
+   },
+   {
+    "vertex_id": 22005,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": 96.89,
+    "y": 168.34,
+    "z": 48.68
+   },
+   {
+    "vertex_id": 22006,
+    "cluster_id": 22,
+    "degree": 1,
+    "x": 96.56,
+    "y": 168.33,
+    "z": 48.68
+   },
+   {
+    "vertex_id": 21003,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": 25.84,
+    "y": 139.77,
+    "z": 62.48
+   },
+   {
+    "vertex_id": 21004,
+    "cluster_id": 21,
+    "degree": 1,
+    "x": 25.53,
+    "y": 139.69,
+    "z": 62.48
+   },
+   {
+    "vertex_id": 23007,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": 84.59,
+    "y": 163.01,
+    "z": 47.15
+   },
+   {
+    "vertex_id": 23008,
+    "cluster_id": 23,
+    "degree": 1,
+    "x": 84.59,
+    "y": 162.85,
+    "z": 47.15
+   }
+  ]
+ },
+ {
+  "event": "evt59085",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   59085
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt59085/calib-pr-evt59085.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt59085",
+  "files": [
+   "p1-overview.png",
+   "p2-3d.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 3000,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -7.09,
+    "y": 199.86,
+    "z": 72.62
+   },
+   {
+    "vertex_id": 3001,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -10.22,
+    "y": 188.23,
+    "z": 52.54
+   },
+   {
+    "vertex_id": 3003,
+    "cluster_id": 3,
+    "degree": 2,
+    "x": -5.45,
+    "y": 198.49,
+    "z": 71.48
+   },
+   {
+    "vertex_id": 3004,
+    "cluster_id": 3,
+    "degree": 3,
+    "x": -8.82,
+    "y": 191.03,
+    "z": 57.28
+   },
+   {
+    "vertex_id": 3005,
+    "cluster_id": 3,
+    "degree": 1,
+    "x": -11.25,
+    "y": 193.7,
+    "z": 54.94
+   },
+   {
+    "vertex_id": 28006,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -32.63,
+    "y": 199.08,
+    "z": 50.05
+   },
+   {
+    "vertex_id": 28007,
+    "cluster_id": 28,
+    "degree": 1,
+    "x": -30.24,
+    "y": 197.49,
+    "z": 49.8
+   },
+   {
+    "vertex_id": 84010,
+    "cluster_id": 84,
+    "degree": 1,
+    "x": -10.67,
+    "y": 185.81,
+    "z": 49.16
+   },
+   {
+    "vertex_id": 84011,
+    "cluster_id": 84,
+    "degree": 1,
+    "x": -10.28,
+    "y": 186.35,
+    "z": 49.29
+   },
+   {
+    "vertex_id": 29008,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": -14.81,
+    "y": 186.21,
+    "z": 52.44
+   },
+   {
+    "vertex_id": 29009,
+    "cluster_id": 29,
+    "degree": 1,
+    "x": -14.78,
+    "y": 186.2,
+    "z": 52.48
+   }
+  ]
+ },
+ {
+  "event": "evt63427",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   63427
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt63427/calib-pr-evt63427.json",
+  "dir": "/home/xqian/tmp/scan2/burned20-new/evt63427",
+  "files": [
+   "p1-overview.png",
+   "p4-dqdx.png",
+   "p6-evidence.txt"
+  ],
+  "candidates": [
+   {
+    "vertex_id": 18000,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": -116.12,
+    "y": -19.91,
+    "z": 145.46
+   },
+   {
+    "vertex_id": 18001,
+    "cluster_id": 18,
+    "degree": 1,
+    "x": -43.57,
+    "y": -17.55,
+    "z": 106.73
+   },
+   {
+    "vertex_id": 18002,
+    "cluster_id": 18,
+    "degree": 2,
+    "x": -86.82,
+    "y": -24.22,
+    "z": 111.64
+   },
+   {
+    "vertex_id": 26003,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": 180.59,
+    "y": -198.88,
+    "z": 406.39
+   },
+   {
+    "vertex_id": 26004,
+    "cluster_id": 26,
+    "degree": 1,
+    "x": 168.06,
+    "y": -198.4,
+    "z": 416.49
+   },
+   {
+    "vertex_id": 57011,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": 157.29,
+    "y": -190.77,
+    "z": 418.12
+   },
+   {
+    "vertex_id": 57012,
+    "cluster_id": 57,
+    "degree": 1,
+    "x": 157.56,
+    "y": -190.32,
+    "z": 418.48
+   },
+   {
+    "vertex_id": 53007,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": -6.44,
+    "y": -40.03,
+    "z": 128.06
+   },
+   {
+    "vertex_id": 53008,
+    "cluster_id": 53,
+    "degree": 1,
+    "x": -6.99,
+    "y": -39.98,
+    "z": 128.03
+   },
+   {
+    "vertex_id": 52005,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": -118.49,
+    "y": -65.57,
+    "z": 93.52
+   },
+   {
+    "vertex_id": 52006,
+    "cluster_id": 52,
+    "degree": 1,
+    "x": -118.28,
+    "y": -65.58,
+    "z": 93.52
+   },
+   {
+    "vertex_id": 56009,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": 175.12,
+    "y": -194.46,
+    "z": 413.78
+   },
+   {
+    "vertex_id": 56010,
+    "cluster_id": 56,
+    "degree": 1,
+    "x": 175.13,
+    "y": -194.64,
+    "z": 413.81
+   }
+  ]
+ }
+]

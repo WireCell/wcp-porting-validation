@@ -1,0 +1,41 @@
+[
+  {"event": "evt349241", "vertex_id": 15002,
+   "confidence": "certain",
+   "why": "Rule 1 fully satisfied at the only real cluster: 15002 is the deg-2 junction between two Bragg ends (52.8 cm muon rising 53k->128k into 15000, 9.1 cm proton stub hot at 15003), and the zoom shows both attached segments as green arrows."},
+
+  {"event": "evt388", "vertex_id": 23009,
+   "confidence": "likely",
+   "why": "Rule 7 apex: in X-Z the whole 342 cm shower opens as a clean V whose apex is 23009 at the lowest z (426 cm), with two ~24 cm prongs getting hotter away and a 2.1 cm 151k e/cm recoil stub sitting on the apex itself; downgraded from certain because the prongs could be hadronic (rule 4)."},
+
+  {"event": "evt388224", "vertex_id": 3011,
+   "confidence": "certain",
+   "why": "Rule 1 textbook: 3 of 4 segments rise away from 3011 - a 190 cm muon with a clean template-following Bragg at 3000, a 28.7 cm proton rising monotonically 35k->230k into 3007, and a pion that stops at 3004 where it makes a secondary star of short hot stubs."},
+
+  {"event": "evt398414", "vertex_id": 18001,
+   "confidence": "unclear",
+   "why": "The event is a single 15.7 cm flat-MIP segment with no dQ/dx gradient at either end, so the only real discriminator is that the 18000 end sits at y=-198.0 against the -200 wall and must be an exit/entry, leaving 18001 as the only end that can be an origin."},
+
+  {"event": "evt399856", "vertex_id": 3002,
+   "confidence": "certain",
+   "why": "Classic two-Bragg-ends trap resolved by rule 1: both prongs rise away from the deg-2 junction 3002 (46.3 cm arm climbing the muon template to 210k at 3001, 17.7 cm arm reaching 240k at 3000), so 3002 is the point they both point away from."},
+
+  {"event": "evt400856", "vertex_id": 12003,
+   "confidence": "likely",
+   "why": "12003 is the deg-2 junction where an 89 cm muon leaves and Braggs at 12001 while a 7 cm proton stub Braggs at its free end 12000; only 1 of 2 formally rises away and the muon carries a hot spike at the 12003 end itself, so the junction wins but less cleanly than the other two-prong events."},
+
+  {"event": "evt411460", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstention: cluster 6 is a single 21 cm curled MIP squiggle with no Bragg anywhere and both free ends (6006, 6000) reading red/flat, and its only apex-like point - the 6005/6003 hairpin - lies at y=199.4 against the 200 cm top wall, so there is no contained origin to name."},
+
+  {"event": "evt52085", "vertex_id": 6002,
+   "confidence": "certain",
+   "why": "Rule 1 with both prongs measured: from 6002 a 104 cm muon runs flat at MIP and Braggs to 125k at 6001 while a 36.1 cm proton falls monotonically from 330k at 6000 back to 90k at 6002, so both stop away from 6002."},
+
+  {"event": "evt59085", "vertex_id": 3004,
+   "confidence": "certain",
+   "why": "All three attached segments show green arrows at the deg-3 junction 3004 - a 6.3 cm stub climbing 39k->110k into 3001, a 5.8 cm prong rising to 79k at 3005, and a 19 cm MIP track running off to 3003 - the complete everything-comes-out-of-the-vertex signature."},
+
+  {"event": "evt63427", "vertex_id": 18002,
+   "confidence": "certain",
+   "why": "Both arms of the 90 cm cluster Bragg away from the deg-2 junction 18002: a 45.2 cm proton on the proton template reaching 220k at 18000 and a 44.3 cm muon flat at MIP then rising to 205k at 18001."}
+]

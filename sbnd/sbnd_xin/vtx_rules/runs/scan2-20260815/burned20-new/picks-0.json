@@ -1,0 +1,31 @@
+[
+  {"event": "evt111412", "vertex_id": 18001, "confidence": "likely",
+   "why": "Two short heavily-ionising prongs stop away from 18001 (18025 -> 18026 at 152-160k and 18003 -> 18006 rising to ~180k) while the only 'rises TOWARD' vote, seg 18021, is a 285k single-point spike inside 1 cm that crashes to ~50k and stays flat for 9 cm - a vertex blob, not a Bragg rise - so the shower apex 18023 10 cm up the stem is downstream of the real hadronic vertex."},
+
+  {"event": "evt174637", "vertex_id": 9006, "confidence": "certain",
+   "why": "Seg 9039 shows a textbook monotone rise over its last ~8 cm tracking the stopping-muon template up to 165k at 9022, with a 12.6 cm MIP tail (9031+9040) hanging off that same end - a Michel, so 9022 is the far end (rule 3) - and the muon's other end 9006 is a near-90-degree kink where the rest of the event (shower chain 9014/9012/9019...) departs, and it is also the lowest-z candidate."},
+
+  {"event": "evt278794", "vertex_id": 7001, "confidence": "likely",
+   "why": "The 126 cm track Bragg-peaks at 7000 (175k falling to MIP within 8 cm) so it starts at 7001, and 7001 is exactly where a 290k point-like deposit sits and where a fan of small fragment clusters (49, 50, 28, 55) begins - the intermediate 7002 is only a 12-degree kink with MIP dQ/dx on both sides and cannot be a vertex."},
+
+  {"event": "evt280017", "vertex_id": 8001, "confidence": "certain",
+   "why": "The only structure in the event is a deg-3 junction at 8001 from which an 11.5 cm proton rises monotonically 130k -> 205k and stops at 8000, plus a 1.7 cm 167k pi+ stub and a 3 cm MIP stub - everything comes out of 8001."},
+
+  {"event": "evt282737", "vertex_id": 21003, "confidence": "certain",
+   "why": "21003 is the single 48-degree junction of the event: a 29.6 cm heavily-ionising prong leaves it and Bragg-peaks to 250k at 21001 following the proton template, while the 175 cm muon leaves the other way and stops at 21000 with a 6.5 cm MIP fragment (cluster 61) 1.7 cm off its end - a Michel, so 21000 is the far end."},
+
+  {"event": "evt283991", "vertex_id": 15003, "confidence": "certain",
+   "why": "Seg 15004 rises smoothly 90k -> 305k along the brown proton template and stops at 15001, so it emanates from 15003, which is also where the 132.7 cm flat-MIP muon starts before exiting the detector bottom at y = -195."},
+
+  {"event": "evt284200", "vertex_id": 31036, "confidence": "likely",
+   "why": "31036 is the junction of two heavy prongs, one of which (31028, 12.8 cm) starts at the ~75k expected for a proton of that residual range and Bragg-peaks to 305k at 31034; the 46 cm MIP chain of cluster 6 extrapolates backwards to within ~3 cm of 31036, and 31036 is the lowest-z candidate of the whole corner activity."},
+
+  {"event": "evt284235", "vertex_id": 6003, "confidence": "unclear",
+   "why": "The geometric inverted-V apex near (z~139, y~-89) is rejected because both arms' hot ends face it (6004 rises smoothly to a stopping peak at 6001, 74030 is hot at 74032) and no vertex can emit two prongs that Bragg inward, leaving 6003 as the only multi-prong candidate with an away-vote and no toward-vote, corroborated by cluster 75's axis back-extrapolating to y = -114.6, exactly 6003's y - though the event is fragmented into three separated pieces and I am not far from guessing."},
+
+  {"event": "evt286268", "vertex_id": 11001, "confidence": "likely",
+   "why": "The 202 cm muon has its end deposit at 11000 (155k falling to MIP over ~10 cm, following the templates) so it starts at 11001, where a 0.7 cm proton stub is attached and a diffuse cloud of sub-cm fragments (clusters 38, 40, 41, 42) sits 17-38 cm away; my only reservation is that z = 8.4 cm is close enough to the upstream face that the track could have entered rather than started."},
+
+  {"event": "evt316025", "vertex_id": 16003, "confidence": "certain",
+   "why": "16003 is a degree-5 junction carrying three short heavily-ionising proton stubs (167k, 159k->187k, 82k) plus an 81 cm prong that leaves at a sub-MIP 30450 and rises 5x to 152k where it stops at 16000 - every attached prong gets hotter away from 16003."}
+]

@@ -851,8 +851,62 @@ strength of its `certain` tier alone.
 
 The named prediction registered in the plan — that the eye would keep making the
 R1-over-R2 ordering error even with the connectivity sheet in front of it — is
-**not** resolved by these numbers and needs the per-event failure taxonomy that
-§10.8 (the burned-20 diagnostic, run last) is for.
+resolved in §10.8, and the answer is no.
+
+### 10.8 The diagnostic — the original twenty, rescanned last
+
+Run only after §10.5 was scored and committed, because whoever launches it knows
+those answers. Two fresh subagents, new kit, same twenty events as §7.
+
+```
+answered 19/20, correct 14 @1cm, 15 by vertex id     (§7 old kit: 11 / 12)
+reconstruction on the same 20: 15
+```
+
+**Four of §7's five misses are fixed, and by the panel that was built for each:**
+
+| event | §7 | now | what fixed it |
+|---|---|---|---|
+| evt282737 | 21000, −165 cm | **21003 ✓** | the evidence sheet — the junction both Bragg ends point away from |
+| evt283991 | 15002, −128 cm | **15003 ✓** | the sheet: seg 15004 rising 90k → 305k away from it |
+| evt174637 | 9014, −10.6 cm | **9006 ✓** | the P4 profile: a textbook monotone rise on the 26 cm seg 9039 |
+| evt52085 | 6002 | **6002 ✓** | nothing — it was always right (F2) |
+| evt399856 | 3002, −44 cm | 3002, **still wrong** | — |
+
+So the registered prediction is **falsified**: the R1-over-R2 ordering error was
+a *visibility* problem, and showing the connectivity dissolved it.
+
+**What survives is more interesting, and it is a limit on the owner's rule 1.**
+All three `certain`-but-wrong picks on this set (evt399856, evt388224, evt59085)
+are events where **rule 1 fires cleanly and is wrong**. evt399856 is the clearest:
+dQ/dx is hot at both free ends and cold in the middle, so both prongs
+demonstrably rise *away* from the middle junction 3002 — rule 1 selects 3002
+unambiguously — and the owner picked 3001, the upstream free end. The scan is not
+misreading the evidence; the evidence says 3002 and the label says 3001.
+
+That produces the one inverted calibration in this round:
+
+| tier | coverage | by vertex id |
+|---|---|---|
+| certain | 11/20 (55%) | 8 (**72.7%**) |
+| likely | 6/20 (30%) | 6 (100%) |
+| unclear | 2 answered | 1 (50%) |
+
+`certain` below `likely`, against 95.5% on the held-out sixty. These twenty are
+not a random sample — they are §7's sample, which happened to contain several
+rule-1 traps — so this is not evidence that the held-out calibration is unstable.
+It is evidence of a specific, nameable hazard:
+
+> **Better evidence for a rule that is wrong on a case makes the scanner
+> confidently wrong rather than quietly wrong.** The old kit missed evt399856 at
+> low confidence; the new kit misses it at `certain`, because it can now *see*
+> that both prongs point away. Any future round that strengthens rule-1 evidence
+> should expect the confident-error rate on this class to go up, not down.
+
+The next round's target is therefore not the ordering — it is the class where a
+cold middle between two hot free ends means one scattered particle, not two
+emanating ones. That is a topology test (are the two prongs collinear through the
+junction?), and the fact that it is missing is why evt399856 survives.
 
 ## 11. Files
 
