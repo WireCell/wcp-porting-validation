@@ -1,0 +1,46 @@
+[
+  {"event": "evt10550", "vertex_id": 62078, "confidence": "unclear",
+   "why": "Rule 1 is silent almost everywhere in this diffuse all-flat event, and 62078 is the only vertex with a genuine rise-away segment (62052 climbs monotonically to 129k at 62076, so that particle stopped elsewhere) plus it is a 4-prong star; the 27 cm cluster 48 sits 26 cm upstream with every segment flat, so this is close to a guess."},
+
+  {"event": "evt166738", "vertex_id": 16002, "confidence": "certain",
+   "why": "Textbook rule 1: both attached segments rise away from 16002 - a 171 cm muon cooling from 122704 at its stopping end and an 81 cm proton cooling from a 198843 Bragg tip - and it is also the lowest-z candidate in the event."},
+
+  {"event": "evt168432", "vertex_id": 19002, "confidence": "likely",
+   "why": "Rule 1 at 19002: a 79.8 cm muon rises away to a 108269 stopping end and an 8.4 cm heavy prong rises away to 134111, i.e. two particles both stop elsewhere; the competing 3/3-rise-away vertex 49023 is 14 cm downstream and its arms are short sub-MIP shower prongs."},
+
+  {"event": "evt168614", "vertex_id": 5001, "confidence": "certain",
+   "why": "The 172.8 cm muon is flat at ~50000 over its whole length with no Bragg rise at either end (p4), so it exits at the y=199 top boundary and must START at the interior end 5001, where a 1.5 cm 145506 e/cm proton stub is attached."},
+
+  {"event": "evt168658", "vertex_id": 12001, "confidence": "likely",
+   "why": "The single 91 cm muon rises away from 12001 to a 115217 stopping end at 12000, both ends are interior so the track is contained, and 12001 additionally carries a 0.6 cm proton stub."},
+
+  {"event": "evt170880", "vertex_id": 13002, "confidence": "certain",
+   "why": "Rule 1 plus a 3-prong star: a 16.1 cm proton leaves 13002 and stops at 13000 with a clean 124046 -> 203053 Bragg rise, and two further short heavy stubs (110142 muon, pi+) hang off the same point."},
+
+  {"event": "evt171600", "vertex_id": 14001, "confidence": "likely",
+   "why": "The 354.8 cm muon rises away from 14001 (64340) to a 121510 stopping end at 14000, 14001 is the lowest-z end of the event with a 2.2 cm stub attached and a scatter of small fragments around it."},
+
+  {"event": "evt172942", "vertex_id": 54022, "confidence": "unclear",
+   "why": "The whole event is one collinear ~110 cm dashed chain (clear in the principal-frame panel) that is flat at 55-70k for 100 cm and then rises 66770 -> 118849 -> 266397 into a Bragg tip at 4000/4004, so it is a contained stopping proton and its origin is the upstream end, 54022 being the closest listed candidate there."},
+
+  {"event": "evt174752", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8: the entire event is a single straight ~17 cm MIP track (48010-48013-48011-14001-14000) with every segment flat and no second prong, so neither end is distinguishable and any click would be as good as any other."},
+
+  {"event": "evt175808", "vertex_id": 18002, "confidence": "certain",
+   "why": "Classic numuCC junction: a 9.5 cm proton leaves 18002 and stops at 18003 at 204467, while the 136 cm muon stays flat and exits at the x=-201 wall, so both attached particles originate here."},
+
+  {"event": "evt196649", "vertex_id": 11028, "confidence": "likely",
+   "why": "Rule 7 shower apex - 11028 is the upstream tip (z=198.5) of the 359 cm shower, with 2 of 3 segments rising away and a 28.8 cm electron trunk that leaves at 1.3 MIP and builds into the 196936 shower core downstream, the same signature as the other two nueCC events in this list."},
+
+  {"event": "evt21073", "vertex_id": 11004, "confidence": "likely",
+   "why": "The 100 cm track that stops at 11000 with a 139823 Bragg tip originates at 11004, and the big 176 cm EM shower (cluster 60) begins 4 cm away at the same point with its two 10.4 cm prongs hottest at 11004 and diluting outward."},
+
+  {"event": "evt239794", "vertex_id": 2003, "confidence": "certain",
+   "why": "Rule 1 in its purest form: 2 of 2 segments rise away from 2003 - a 26.5 cm proton to a 205244 Bragg stop and a 21.5 cm electron that leaves at 57465 and builds into the 257517 shower core - and 2003 is the lowest-z candidate in the event."},
+
+  {"event": "evt256587", "vertex_id": 11075, "confidence": "certain",
+   "why": "Same nueCC signature: a 32 cm proton leaves 11075 and terminates in a 182333 stub at 11020, while a 37 cm electron leaves at 49275 and rises x7.2 into the 354831 shower core, and 11075 is the upstream apex of the whole 734 cm cluster."},
+
+  {"event": "evt269774", "vertex_id": 87155, "confidence": "certain",
+   "why": "The X-Z view shows a clean V whose apex is exactly at 87155, the lowest-z point of the event; it carries the heaviest ionization present (a 7.6 cm 264681 e/cm proton stub) and a 24.7 cm prong rising away, with every other large cluster radiating downstream from it."}
+]

@@ -41,7 +41,37 @@ python3 vtx_rules/eval_rules.py --half test --independent --out vtx_rules/runs/t
 python3 vtx_rules/render_event.py \
     work-mcp1k-ma10/pr_evt287654/calib-pr-evt287654.json \
     --out /home/xqian/tmp/evt287654.png
+
+# --- round 2 (sec 9-10): the scan kit and the 120-event re-measurement -------
+
+# blindness + determinism of the kit, over 25 dumps
+python3 vtx_rules/scankit.py selftest
+
+# one event's full panel set, and a zoom on one of its vertices
+python3 vtx_rules/scankit.py prepare \
+    --dump work-mcp1k-ma10/pr_evt65289/calib-pr-evt65289.json \
+    --out /home/xqian/tmp/evt65289-kit --title evt65289
+python3 vtx_rules/scankit.py zoom \
+    --dump work-mcp1k-ma10/pr_evt65289/calib-pr-evt65289.json \
+    --vertex 19007 --half-width 8 --out /home/xqian/tmp/evt65289-z.png
+
+# the four arms.  Each `prepare` is deterministic; the scanning between
+# prepare and score is done by fresh subagents handed vtx_rules/scan_prompt.md
+# verbatim, so re-running it re-scans rather than replaying.
+python3 vtx_rules/selfscan.py prepare --half dev --n 60 --kit new  --workers 4 \
+    --out /home/xqian/tmp/scan2/dev-new
+python3 vtx_rules/selfscan.py prepare --half dev --n 60 --kit old  --workers 4 \
+    --out /home/xqian/tmp/scan2/dev-old-a          # and again -> dev-old-b
+python3 vtx_rules/selfscan.py prepare --half test --n 60 --kit new --workers 4 \
+    --seed 20260816 \
+    --exclude-manifest vtx_rules/runs/selfscan-20260815/manifest.json \
+    --out /home/xqian/tmp/scan2/test-new
+python3 vtx_rules/selfscan.py score   --dir /home/xqian/tmp/scan2/<arm>
+python3 vtx_rules/selfscan.py compare --a <old arm> --b <new arm>
 ```
+
+The committed picks under `vtx_rules/runs/scan2-20260815/` are the record of the
+runs quoted in §10; `score` and `compare` replay from them exactly.
 
 Everything here is read-only with respect to `vertex_labels/`. No C++, no
 jsonnet, no knob, no A/B gate: this round changes nothing in the reconstruction.
@@ -444,7 +474,7 @@ whose far end is deep downstream is more often a cosmic-like crosser than a
 neutrino daughter. Fixing the ordering is the obvious next round, and it must be
 fitted on dev and re-checked on a fresh blind draw, not on these 20.
 
-### Verdict on the owner's question
+### Verdict on the owner's question — as it stood at §7, and see §10
 
 **Not yet.** Autonomous scanning at this bar would produce a label set that is
 ~30% wrong with no way to tell which 30%. What the agent scan *can* be used for
@@ -454,6 +484,13 @@ today, because it is measured and safe:
   found 2 of the 5 reconstruction errors in 20 events;
 - **a second opinion on flagged events**, where the human makes the call;
 - **not** for generating labels that anything is then fitted to.
+
+> **This verdict is superseded by §10 and the reasoning behind it was wrong in
+> one specific way.** "No way to tell which 30%" rested on a `certain` tier of
+> three events. At n=60 that tier separates sharply, and with the §9 kit it
+> covers 45% of events at 92.6% (96.3% by vertex id) — so there *is* a way to
+> tell, and §7 could not see it. What survives is that the overall rate was not
+> good enough; §10 shows the tooling, not the procedure, was the reason.
 
 Repro:
 ```bash
@@ -745,6 +782,78 @@ old-kit 20–23%) at the same ~92% accuracy — 96.3% by vertex id. That is the
 result that matters for the owner's workflow: it is not that the scanner became
 more accurate overall, it is that it became accurate *and knew when*.
 
+### 10.5 The held-out arm — 60 test events, read once
+
+Disjoint from §7's twenty and from the dev sixty. Scanned once with the new kit,
+by four fresh subagents, and reported as it came out.
+
+| | `test-new` | reconstruction |
+|---|---|---|
+| answered | 59/60 | — |
+| correct @1 cm | 45 (76.3% precision) | **46 (76.7%)** |
+| **correct by vertex id** | **46 (78.0%)** | 46 |
+| triage enrichment | ×2.41 | — |
+
+**Parity replicates on held-out data.** 46 against 46. Dev was 43 against 43.
+
+**Calibration — the pre-declared secondary criterion, on the locked half:**
+
+| tier | coverage | correct @1 cm | by vertex id |
+|---|---|---|---|
+| certain | 22/60 (36.7%) | 21 (**95.5%**) | 21 (**95.5%**) |
+| likely | 26/60 (43.3%) | 18 (69.2%) | 18 (69.2%) |
+| unclear | 11 answered (20.0% coverage) | 6 (54.5%) | 7 (63.6%) |
+
+The bar was "certain ≥90% **and** ≥20 points above unclear". Result: **95.5% and
++41 points. PASSED**, on data never used for tuning.
+
+### 10.6 What that actually buys — and the part that does not work
+
+Reading the tiers as a workflow on these 60 events:
+
+- **Auto-accept the 22 `certain` picks** at 95.5%.
+- **Hand back the other 38.** Those 38 contain **12 of the 14 events the
+  reconstruction gets wrong** — so reviewing 63% of the sample surfaces 86% of
+  the reconstruction's errors.
+
+That is a real and useful division of labour, and it is what the owner asked
+for. But two qualifications belong next to it, not underneath it:
+
+**The `certain` tier is almost entirely the reco-agreement subset.** 21 of the
+22 certain picks agree with `main_vertex`. This is §4.1's selection effect
+arriving on its own rather than by construction: the scanner is confident where
+the reconstruction is also right, so the 95.5% is *not* evidence that the scanner
+could stand alone at 95.5%. As a **labelling accelerator** the certain tier
+works. As an **error finder** it contributes one event.
+
+**The scanner does find reconstruction errors — just not confidently.** On the
+14 events the reconstruction gets wrong it is right on **8 (57%)**, against 38 of
+46 (83%) where the reconstruction is right. But only one of those 8 was flagged
+`certain`-and-disagreeing (evt175808, a numuCC junction with a 9.5 cm proton
+leaving it — scanner right, reconstruction wrong). The rest land in `likely` or
+`unclear`, i.e. in the pile the human reviews anyway.
+
+**And §7's "it never confidently endorsed a wrong reconstruction" does not
+survive n=60.** It did so once here: one `certain` pick agreed with a
+`main_vertex` that was wrong. Once in 60 is a rate, not never.
+
+### 10.7 Verdict, replacing §7's
+
+**Yes, with a defined split.** The owner's original request — scan new events,
+hand back the doubtful ones — is supported by the measurement: 37% of events can
+be auto-accepted at ~95%, and the 63% handed back carry ~86% of the
+reconstruction's errors. The scan is at parity with the reconstruction overall
+(46/60 vs 46/60 held out, 43/60 vs 43/60 on dev), not better.
+
+What it is still **not** good for: generating labels that a model is then fitted
+to without review, and being trusted as an independent error-finder on the
+strength of its `certain` tier alone.
+
+The named prediction registered in the plan — that the eye would keep making the
+R1-over-R2 ordering error even with the connectivity sheet in front of it — is
+**not** resolved by these numbers and needs the per-event failure taxonomy that
+§10.8 (the burned-20 diagnostic, run last) is for.
+
 ## 11. Files
 
 | file | what |
@@ -759,8 +868,8 @@ more accurate overall, it is that it became accurate *and knew when*.
 | `vtx_rules/polarity_control.py` | §2 |
 | `vtx_rules/eval_rules.py` | scoring, per-rule tables, precision-vs-coverage |
 | `vtx_rules/render_event.py` | the PNG an agent opens with the Read tool; `--blind` hides the reco vertex and the engine pick |
-| `vtx_rules/selfscan.py` | the blind self-scan harness of §7 |
-| `vtx_rules/runs/` | the split, and the dev/test result TSVs |
+| `vtx_rules/selfscan.py` | the blind self-scan harness of §7 and §10; all-cluster candidate pool, `--kit old\|new`, per-worker picks with mtime audit, `compare` |
+| `vtx_rules/runs/` | the split, the dev/test result TSVs, and `scan2-20260815/` — the four arms of §10 |
 
 `.gitignore` carries a `test*` rule, so `vtx_rules/runs/test-final*` is committed
 with `git add -f`. Re-running the Repro block rewrites those files and **git will

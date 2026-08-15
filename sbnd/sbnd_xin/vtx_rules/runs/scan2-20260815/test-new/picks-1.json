@@ -1,0 +1,46 @@
+[
+  {"event": "evt282217", "vertex_id": 9002, "confidence": "certain",
+   "why": "Rule 1: seg 9007 is a textbook proton with a monotone brown-template Bragg rise from 60k at 9002 to 205k at 9003, so it starts at the deg-3 junction 9002, which is also the lowest-z candidate (z=25) and has no segment rising toward it."},
+
+  {"event": "evt282979", "vertex_id": 14001, "confidence": "unclear",
+   "why": "Rule 7/8 event: 30 shattered clusters with no track longer than 57 cm, and in the only coherent object (cluster 14) charge rises monotonically 14001 -> 14005 -> 14000, putting the shower apex at the low-z, low-charge end near 14001, which is the only candidate there with a rise-away and no rise-toward."},
+
+  {"event": "evt283713", "vertex_id": 17003, "confidence": "certain",
+   "why": "Rule 1 in its cleanest form: 2/2 segments rise away with zero rising toward, and the zoom shows two dark-red stopping hadrons (seg 17063 x6.76 to 210k, seg 17009 x1.61 to 192k) plus a MIP muon that exits at z=501, all radiating from this interior junction at z=35."},
+
+  {"event": "evt283771", "vertex_id": 21002, "confidence": "certain",
+   "why": "Rule 1: both attached segments rise away (10.6 cm proton to a 167k stop at 21003, 140 cm muon that leaves the detector at z=499.5), so the only junction in the event is where everything comes out of."},
+
+  {"event": "evt284769", "vertex_id": 16008, "confidence": "likely",
+   "why": "The 8.2 cm proton rises away x1.50 to a 215k stop at 16003 and a 129k pi+ stub sits on the same node, making 16008 the hadronic end of the long exiting muon chain; the only real competitor is 16002, 5 cm downstream, which has no hadron attached."},
+
+  {"event": "evt285366", "vertex_id": 13001, "confidence": "unclear",
+   "why": "The event is a single 68 cm track plus sub-cm fragments; rule 1 is unambiguous between the two candidates since dQ/dx rises 67k -> 92k away from 13001, though the fact that 13001 sits exactly on the x=200 boundary makes an entering particle a real alternative reading."},
+
+  {"event": "evt285567", "vertex_id": 8005, "confidence": "likely",
+   "why": "Rule 1 signature at a deg-4 node: 3 of 4 segments rise away (35 cm muon, and two e prongs) with zero rising toward, and the zoom shows a genuine multi-prong star at (58,-176,277); confidence held back only because 8020/8025/8007 are alternative fragments of the same vertex region within 5 cm."},
+
+  {"event": "evt286353", "vertex_id": 9002, "confidence": "certain",
+   "why": "Rule 1: 2 of 3 rise away and none toward, and the zoom shows a clean 3-prong apex (74 cm muon heading down to exit the bottom, 8 cm e prong, hot 1.9 cm proton stub) with the muon cool at this end and no Bragg anywhere along it."},
+
+  {"event": "evt286681", "vertex_id": 3002, "confidence": "likely",
+   "why": "3002 is the most upstream junction with two prongs rising away, and the apparent rise toward it on seg 3012 is the vertex-blob trap: the p4 profile spikes only in the first cm at the junction, dips to 25k mid-segment and rises again at the 3006 end, so that particle is emitted backward from 3002 and stops at 3006."},
+
+  {"event": "evt290052", "vertex_id": 8007, "confidence": "likely",
+   "why": "Rule 1: 2 of 3 rise away, none toward, with a 13 cm proton stopping at 169k at 8005 and a 152k proton stub, forming a real star in the zoom; the 77 cm partner track is backward-going in z, which is the only thing arguing against it."},
+
+  {"event": "evt291037", "vertex_id": 13001, "confidence": "certain",
+   "why": "Rule 1 plus rule 3: the 111 cm muon rises x2.76 away from 13001 to a 123k Bragg at 13000, with two sub-cm fragments sitting right at that stopping end as a Michel, so 13000 is the far end and 13001 (which also carries a pi+ stub) is the start."},
+
+  {"event": "evt291262", "vertex_id": 18001, "confidence": "certain",
+   "why": "Rule 1 plus rule 3: the 133 cm muon leaves 18001 at 42.5k and Braggs at 113k at 18002 where an 11 cm Michel-like e segment hangs off, while a proton stub and the 13 cm 112k stopping proton (18004->18005) converge on the same spot in the zoom."},
+
+  {"event": "evt291570", "vertex_id": 17001, "confidence": "unclear",
+   "why": "Two unconnected long tracks and no hadronic activity: I pick 17001 because it is the only track end that starts in the middle of the detector (the cluster-26 alternative begins exactly on the z=0 face, so that one is an entering particle), but the near-vertical direction of this track is atypical for a neutrino product."},
+
+  {"event": "evt292384", "vertex_id": 19002, "confidence": "certain",
+   "why": "Rule 1 plus rule 3: a 55 cm proton rises x2.02 away from 19002 to a 198k stop, the 383 cm muon runs the other way and Braggs at 115k at 19000 where three sub-cm Michel fragments sit, and 19002 is the lowest-z end of the whole chain."},
+
+  {"event": "evt292406", "vertex_id": 6001, "confidence": "likely",
+   "why": "Sparse event: 6001 is the interior end of the only fitted track (the other end is on the x=-200 anode), and a trail of unfitted fragments (39010, 36004) runs from it down to a 253k stopping proton stub at 37006, so the prongs converge here."}
+]

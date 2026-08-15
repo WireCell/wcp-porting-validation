@@ -1,0 +1,46 @@
+[
+  {"event": "evt409964", "vertex_id": 14003, "confidence": "certain",
+   "why": "Rule 1: 14003 is a 44-degree kink whose muon arm shows a clean template-matching Bragg rise ending at 14001 (126645) and whose second arm is hottest at the far end 14002, so both attached tracks cool toward 14003."},
+
+  {"event": "evt444187", "vertex_id": 19002, "confidence": "certain",
+   "why": "Sharp V apex where a 145 cm track that stops hot at 19000 (183708) meets the stem of the EM shower that fans out to low x, with 2 of 2 segments rising away and 19002 the lowest-z point of the V."},
+
+  {"event": "evt46363", "vertex_id": 19001, "confidence": "likely",
+   "why": "Rule 7: the event is one big EM shower and 19001 is its apex - the lowest-z tip of a 27 cm single-MIP stem (40039 e/cm, electron not photon) that rises to 84309 where the shower blows up at 19056/19050."},
+
+  {"event": "evt489330", "vertex_id": 4004, "confidence": "likely",
+   "why": "4004 is the lowest-z candidate and a clean two-prong apex in the principal frame, with nothing rising toward it; the 65.8 cm MIP arm and the shower arm both open forward in z, and the two stopping protons at 4010 are 49 cm downstream at the end of that arm."},
+
+  {"event": "evt490779", "vertex_id": 15001, "confidence": "unclear",
+   "why": "Near rule 8 - the event is only a 3.3 cm very hot (234854 e/cm) proton stub plus unconnected dots, so I take the deg-2 junction at its lower-z end as the best available click, with no directional evidence to separate the two ends."},
+
+  {"event": "evt490977", "vertex_id": 23004, "confidence": "likely",
+   "why": "The p4 profile of seg 23004 rises monotonically from ~20-70k at 23004 to a 160k Bragg peak near 23005, so the proton starts at 23004, which is also the deg-4 hub with three further short prongs; the 75 cm flat muon 30 cm away is unattached and shows no Bragg."},
+
+  {"event": "evt51513", "vertex_id": 16002, "confidence": "likely",
+   "why": "Two Bragg ends in one cluster (trap 1): the 67 cm muon follows the stopping-muon template into 16001 and the 6.5 cm prong peaks at 200k+ at 16000, and 16002 is the junction both point away from."},
+
+  {"event": "evt54341", "vertex_id": 18002, "confidence": "certain",
+   "why": "Rules 1 and 3 together: the 33 cm proton falls monotonically from a 300k Bragg peak at 18000 and the 22 cm muon rises along its template into 18003 where a short 8.7 cm Michel hangs off, so both prongs come out of 18002 (the shower fragments 25 cm downstream fit a pi0 gamma conversion)."},
+
+  {"event": "evt55715", "vertex_id": 15003, "confidence": "likely",
+   "why": "Compact deg-4 hub: four prongs including a 15.6 cm proton that rises away to a 177067 Bragg end at 15001 and a 2 cm stub, with nothing rising toward it."},
+
+  {"event": "evt56463", "vertex_id": 14002, "confidence": "likely",
+   "why": "The 516 cm track has a genuine 95-degree corner at 14002 (confirmed in the principal frame) that no muon can scatter through, and neither arm shows a Bragg rise at 14002 - both are at their coolest there - so both start at this local z-minimum and run forward in z."},
+
+  {"event": "evt61461", "vertex_id": 10007, "confidence": "likely",
+   "why": "10007 has nothing rising toward it (93 cm muon rises away to a 108123 stopping end at 10001, 11.5 cm prong rises away toward 10005) plus two short vertex stubs, and it sits 10 cm upstream of 10005 where that prong stops and the two protons star out."},
+
+  {"event": "evt63163", "vertex_id": null, "confidence": "unclear",
+   "why": "Abstain: the dQ/dx falls monotonically from a 219257 tip at 6003 back to 1.07 MIP at the z=500.3 detector wall, so the only long track is one stopping here and rule 3 puts the vertex at its far end - which is the wall, not a vertex - while the zoom shows the surrounding fragments scattered over a 50 cm ball with no common origin rather than a Michel blob or a hadronic star."},
+
+  {"event": "evt63551", "vertex_id": 6001, "confidence": "certain",
+   "why": "Rule 1 with nothing to contradict it: the single 98 cm muon cools toward 6001 and rises to a 112800 Bragg at 6000, and 6001 is the lowest-z end and carries a short proton stub."},
+
+  {"event": "evt65053", "vertex_id": 138013, "confidence": "likely",
+   "why": "Extrapolating the 116 cm muon backwards from its unattached start 6001 by the 10.8 cm gap lands within 3.4 cm of 138013, the deg-3 hub of the compact hadronic blob (5.3 cm prong at 133-145k), so the muon really starts there."},
+
+  {"event": "evt65267", "vertex_id": 15001, "confidence": "unclear",
+   "why": "Rule 8 territory - the whole event is one 8.7 cm segment plus a few sub-cm fragments in a 5 cm ball at the bottom of the detector; 15001 is the end sitting inside that fragment ball, but there is no readable direction."}
+]

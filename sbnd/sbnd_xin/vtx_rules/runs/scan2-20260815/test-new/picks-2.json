@@ -1,0 +1,46 @@
+[
+  {"event": "evt292533", "vertex_id": 3012, "confidence": "certain",
+   "why": "Rule 1: at this deg-3 junction the 270 cm muon and the 65.8 cm proton both get hotter going away (x2.62 to a 113985 end, x4.14 to a 206872 Bragg), and the muon's far end 3003 carries a short mu+e chain, i.e. a Michel, which by rule 3 marks it as the far end."},
+
+  {"event": "evt315497", "vertex_id": 14002, "confidence": "likely",
+   "why": "Rule 1: the only junction in the event with 2 of 2 segments rising away - the 256 cm muon and the 61 cm pi+ are both coolest here, and the pi+ ends in a x5.64 Bragg at 14001 surrounded by small EM fragments (pion decay/absorption); confidence capped because the whole event skims y~190-195 just under the top wall and the muon reaches the z=498 downstream wall, so a cosmic cannot be excluded."},
+
+  {"event": "evt316553", "vertex_id": 11001, "confidence": "unclear",
+   "why": "The overview shows one unbranched 263 cm track that exits the bottom wall at y=-198.6, so the only defensible interaction point is its other, free, interior end 11001 at the lowest z; 11002 is a mid-track fit split (the 89437 spike there is the split artifact, not a Bragg), and no second prong or shower exists to confirm a neutrino at all."},
+
+  {"event": "evt316729", "vertex_id": 8003, "confidence": "likely",
+   "why": "The zoom shows the 6.3 cm stub and the 25.3 cm proton lying on one nearly vertical line ending in a 184783 Bragg at 8001, so they are one ~30 cm stopping proton; the dQ/dx jumps 66617 -> 124669 across 8003 (a real junction, the excess being two tracks overlapping at a vertex) but is continuous across 8004, and the 114 cm muon leaves 8003 and stops at 8002 with a Michel."},
+
+  {"event": "evt317191", "vertex_id": 17002, "confidence": "likely",
+   "why": "Rule 1 at the event's only deg-3 junction: the 103 cm proton rises x2.84 away to a 180157 Bragg at 17000 and the 27.6 cm muon rises x1.60 away toward a 135922 stub at 17005, with the 77 cm pi+ flat, so two of three prongs point away and none points in."},
+
+  {"event": "evt320667", "vertex_id": 21002, "confidence": "likely",
+   "why": "Rule 1 gives 2 of 2 rising away here: a 15.8 cm proton with a 220911 Bragg at 21000 and a 140 cm pi+ that stops at 21003, where a 14.5 cm electron segment hangs off the stopping end (decay product), marking 21003 as the far end."},
+
+  {"event": "evt348713", "vertex_id": 7004, "confidence": "unclear",
+   "why": "The p4 profiles show the whole 129 cm chain is one particle rising monotonically from 50917 to a 197609 Bragg at 7000, so 7004 is its cool end - but 7004 sits at x=201.2, on the anode boundary, so this is an entering cosmic stopping in the detector rather than a neutrino vertex."},
+
+  {"event": "evt352233", "vertex_id": 6001, "confidence": "likely",
+   "why": "The single Bragg peak in this event is at 51025, where the p4 profile of the collinear cluster-51 segment rises monotonically along the stopping-muon template to 130000 while cluster 6 stays flat at MIP, so the ~131 cm muon stops there and 6001 is its cool end - and the separate 1.1 cm, 228312 e/cm proton blob sits 5 cm off 6001, giving the classic muon-plus-proton-stub vertex."},
+
+  {"event": "evt386948", "vertex_id": 90075, "confidence": "likely",
+   "why": "Rule 6/7 in an all-shower event: the two shower blobs (cluster 16 at y~163-192 and cluster 93 at y~133-137) back-extrapolate to a common point near (-17,139,361), a pi0, and 90075 is the nearest candidate to it - a junction carrying a 2 cm, 100279 e/cm stub and sitting at the cool end of the 27 cm track."},
+
+  {"event": "evt399118", "vertex_id": 16013, "confidence": "likely",
+   "why": "The overview shows a clean V whose apex is here: a 154 cm muon Bragging at 9000 and a 108 cm proton Bragging at 16012 both start within ~11 cm of this point, and 16013 is the lower-z of the two free ends and additionally carries a 4.5 cm, 223685 e/cm stopping-proton stub."},
+
+  {"event": "evt399328", "vertex_id": 12003, "confidence": "likely",
+   "why": "The p4 profiles show both segments attached to 12003 start at ~94000 e/cm right at that point (a vertex charge blob) and 12003 also carries a 0.6 cm proton stub; from it a 12 cm proton rises to a 135000 Bragg at 12000 while a soft arm collapses to ~7000 toward 12007, and both arms run downstream from the cluster's minimum-z point."},
+
+  {"event": "evt400460", "vertex_id": 18001, "confidence": "certain",
+   "why": "Rules 1 and 3 agree: the 165.6 cm muon is at MIP (52345) here and rises x2.04 to a 106801 Bragg at 18006, where an 8.4+3.3 cm electron hangs off the stopping end as a Michel, so 18006 is the far end and 18001, which is well inside the detector, is the start."},
+
+  {"event": "evt400474", "vertex_id": 18003, "confidence": "certain",
+   "why": "Classic nue-CC apex: this deg-4 vertex is at the minimum z of the big cluster, the 26.5 cm electron leaves it at 37290 and rises x3.79 into the 240 cm shower downstream, and it also carries a 31 cm proton and a 29 cm track, all fanning downstream from one point."},
+
+  {"event": "evt400592", "vertex_id": 14002, "confidence": "certain",
+   "why": "Textbook rule 1: at this deg-3 junction the 237 cm muon rises x1.83 away to a 95279 Bragg at 14000 and the 13.7 cm proton rises x1.39 away to a 158780 Bragg at 14001, so both prongs stop elsewhere and nothing points in."},
+
+  {"event": "evt409920", "vertex_id": 7001, "confidence": "unclear",
+   "why": "The event contains only one real object, a lone 7.4 cm stopping proton, with everything else sub-centimetre isolated dots; 7001 is its upstream end by beam direction (rule 2), but with no second prong and no shower this is close to a guess."}
+]

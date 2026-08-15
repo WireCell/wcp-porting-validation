@@ -1,0 +1,74 @@
+event        conf      dist_cm  ok@1cm  ok@3cm  reco_ok
+evt10550     unclear     41.03      no      no       no   Rule 1 is silent almost everywhere in this diffuse a
+evt166738    certain      0.00     yes     yes      yes   Textbook rule 1: both attached segments rise away fr
+evt168432    likely       7.11      no      no      yes   Rule 1 at 19002: a 79.8 cm muon rises away to a 1082
+evt168614    certain      0.01     yes     yes      yes   The 172.8 cm muon is flat at ~50000 over its whole l
+evt168658    likely       0.00     yes     yes      yes   The single 91 cm muon rises away from 12001 to a 115
+evt170880    certain      0.00     yes     yes      yes   Rule 1 plus a 3-prong star: a 16.1 cm proton leaves 
+evt171600    likely       0.17     yes     yes      yes   The 354.8 cm muon rises away from 14001 (64340) to a
+evt172942    unclear     91.39      no      no       no   The whole event is one collinear ~110 cm dashed chai
+evt174752    unclear         -      no      no       no   Rule 8: the entire event is a single straight ~17 cm
+evt175808    certain      0.01     yes     yes       no   Classic numuCC junction: a 9.5 cm proton leaves 1800
+evt196649    likely       5.77      no      no      yes   Rule 7 shower apex - 11028 is the upstream tip (z=19
+evt21073     likely       5.86      no      no      yes   The 100 cm track that stops at 11000 with a 139823 B
+evt239794    certain      0.00     yes     yes      yes   Rule 1 in its purest form: 2 of 2 segments rise away
+evt256587    certain      0.01     yes     yes      yes   Same nueCC signature: a 32 cm proton leaves 11075 an
+evt269774    certain      0.00     yes     yes      yes   The X-Z view shows a clean V whose apex is exactly a
+evt282217    certain      0.01     yes     yes      yes   Rule 1: seg 9007 is a textbook proton with a monoton
+evt282979    unclear    102.04      no      no       no   Rule 7/8 event: 30 shattered clusters with no track 
+evt283713    certain      0.47     yes     yes      yes   Rule 1 in its cleanest form: 2/2 segments rise away 
+evt283771    certain      0.00     yes     yes      yes   Rule 1: both attached segments rise away (10.6 cm pr
+evt284769    likely       0.01     yes     yes      yes   The 8.2 cm proton rises away x1.50 to a 215k stop at
+evt285366    unclear     66.93      no      no       no   The event is a single 68 cm track plus sub-cm fragme
+evt285567    likely       5.42      no      no      yes   Rule 1 signature at a deg-4 node: 3 of 4 segments ri
+evt286353    certain      1.37      no     yes       no   Rule 1: 2 of 3 rise away and none toward, and the zo
+evt286681    likely      17.56      no      no       no   3002 is the most upstream junction with two prongs r
+evt290052    likely       0.73     yes     yes      yes   Rule 1: 2 of 3 rise away, none toward, with a 13 cm 
+evt291037    certain      0.37     yes     yes      yes   Rule 1 plus rule 3: the 111 cm muon rises x2.76 away
+evt291262    certain      0.00     yes     yes      yes   Rule 1 plus rule 3: the 133 cm muon leaves 18001 at 
+evt291570    unclear      5.47      no      no       no   Two unconnected long tracks and no hadronic activity
+evt292384    certain      0.01     yes     yes      yes   Rule 1 plus rule 3: a 55 cm proton rises x2.02 away 
+evt292406    likely       0.00     yes     yes      yes   Sparse event: 6001 is the interior end of the only f
+evt292533    certain      0.01     yes     yes      yes   Rule 1: at this deg-3 junction the 270 cm muon and t
+evt315497    likely      56.38      no      no      yes   Rule 1: the only junction in the event with 2 of 2 s
+evt316553    unclear      0.00     yes     yes      yes   The overview shows one unbranched 263 cm track that 
+evt316729    likely       0.01     yes     yes       no   The zoom shows the 6.3 cm stub and the 25.3 cm proto
+evt317191    likely       0.00     yes     yes      yes   Rule 1 at the event's only deg-3 junction: the 103 c
+evt320667    likely       0.01     yes     yes       no   Rule 1 gives 2 of 2 rising away here: a 15.8 cm prot
+evt348713    unclear      0.01     yes     yes      yes   The p4 profiles show the whole 129 cm chain is one p
+evt352233    likely       0.01     yes     yes      yes   The 92.6 cm muon and the collinear 38.6 cm 'e' are o
+evt386948    likely       0.00     yes     yes       no   Rule 6/7 in an all-shower event: the two shower blob
+evt399118    likely       0.01     yes     yes       no   The overview shows a clean V whose apex is here: a 1
+evt399328    likely       0.01     yes     yes      yes   The p4 profiles show both segments attached to 12003
+evt400460    certain      0.01     yes     yes      yes   Rules 1 and 3 agree: the 165.6 cm muon is at MIP (52
+evt400474    certain      0.01     yes     yes      yes   Classic nue-CC apex: this deg-4 vertex is at the min
+evt400592    certain      0.01     yes     yes      yes   Textbook rule 1: at this deg-3 junction the 237 cm m
+evt409920    unclear      0.00     yes     yes      yes   The event contains only one real object, a lone 7.4 
+evt409964    certain      0.01     yes     yes      yes   Rule 1: 14003 is a 44-degree kink whose muon arm sho
+evt444187    certain      0.00     yes     yes      yes   Sharp V apex where a 145 cm track that stops hot at 
+evt46363     likely       0.01     yes     yes      yes   Rule 7: the event is one big EM shower and 19001 is 
+evt489330    likely       0.00     yes     yes      yes   4004 is the lowest-z candidate and a clean two-prong
+evt490779    unclear      0.01     yes     yes      yes   Near rule 8 - the event is only a 3.3 cm very hot (2
+evt490977    likely      29.55      no      no      yes   The p4 profile of seg 23004 rises monotonically from
+evt51513     likely       0.01     yes     yes      yes   Two Bragg ends in one cluster (trap 1): the 67 cm mu
+evt54341     certain      0.00     yes     yes      yes   Rules 1 and 3 together: the 33 cm proton falls monot
+evt55715     likely       5.93      no      no      yes   Compact deg-4 hub: four prongs including a 15.6 cm p
+evt56463     likely       0.00     yes     yes      yes   The 516 cm track has a genuine 95-degree corner at 1
+evt61461     likely       0.00     yes     yes      yes   10007 has nothing rising toward it (93 cm muon rises
+evt63163     unclear      0.00     yes     yes      yes   Genuinely ambiguous: the dQ/dx falls monotonically f
+evt63551     certain      0.50     yes     yes      yes   Rule 1 with nothing to contradict it: the single 98 
+evt65053     likely       0.00     yes     yes       no   Extrapolating the 116 cm muon backwards from its una
+evt65267     unclear      0.00     yes     yes      yes   Rule 8 territory - the whole event is one 8.7 cm seg
+
+picks files written at: {'picks-0.json': '2026-08-15 13:10:19', 'picks-1.json': '2026-08-15 13:10:51', 'picks-2.json': '2026-08-15 13:11:55', 'picks-3.json': '2026-08-15 13:10:07'}
+scanned 60, answered 59 (98%), correct 45 (precision 76.3%, @3cm 78.0%)
+by VERTEX ID (no cross-arm refit artifact): 46 of 59 answered with a recorded truth id (78.0%)
+reconstruction on the same 60 events: 46 correct (76.7%)
+events where NO vertex in this arm is within 1 cm of the click: 2 (3.3%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
+
+confidence calibration (this is what decides the hand-back workflow -- read coverage and accuracy TOGETHER):
+   certain  coverage  22/60 (36.7%)  answered  22  correct  21 (95.5%)  by-vid  21 (95.5%)
+   likely   coverage  26/60 (43.3%)  answered  26  correct  18 (69.2%)  by-vid  18 (69.2%)
+   unclear  coverage  12/60 (20.0%)  answered  11  correct   6 (54.5%)  by-vid   7 (63.6%)
+
+reco wrong on 23.3% of all events, 56.2% of the 16 the scanner declined or disagreed with -> enrichment x2.41
