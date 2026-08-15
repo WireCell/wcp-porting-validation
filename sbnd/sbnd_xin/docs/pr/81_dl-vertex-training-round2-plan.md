@@ -284,3 +284,95 @@ python3 calib_guard.py --name ft2u-fitscale --fit-scale --jobs 16 \
   `SBND_DL_VTX_SCORE_SCALE` deployment thread is warranted.
 - CP24 anchor after all guard changes: still exact (+0, 0 flips,
   ratios 1.000, fit multiplier 1.000).
+
+---
+
+# NEXT ROUND (pr/82 pre-plan) — the ~2000-event sample (owner, 2026-08-15)
+
+The owner will have ~2000 new events soon and will prepare scan results;
+this roughly TRIPLES the label count (473 → ~1400).  Ordered by value per
+label; steps 1–3 spend no labels on training and come first.  Gates and
+allocation fractions below are pre-registered NOW, before any new label
+is read (the point of writing this ahead of time).
+
+## Prerequisites (before anything is scored)
+
+- **P1. Our own harvest-enabled production pass** on the new events:
+  PR chain at the production operating point (min_accept=10, CP24,
+  `dl_vtx_harvest` ON), same recipe as the prod0813 `*-ma10k20-harv2`
+  arms, PR_JOBS≈32 (owner-granted).  Never score against someone else's
+  reco (M11).  Calib count must equal event count before the scan opens.
+- **P2. Scan per the pr/80 §11 runbook** (fresh label tag, M13; score by
+  vertex id; old-kit double-run noise floor).  Use the certain-tier
+  triage (95.5% precision over 37% coverage) to pre-answer the easy
+  third and route only ambiguous events to the owner.
+- **P3. Data-vs-MC stratification decided up front**: if these are
+  detector data (not MC), every split below stratifies by data/MC too,
+  and the data-only guard replay becomes the primary screen — a net
+  that helps MC but hurts data must not be invisible.
+
+## Step 1 — unbiased production measurement (free, highest value)
+
+The current 358/473 (75.7%) is measured on events that steered every
+knob decision since pr/33.  Score production on the fresh labels alone
+→ the honest operating-point number, ±1.3% instead of ±2%.  Report
+per-sample.  No decision hangs on it; it is the reference for
+everything after.
+
+## Step 2 — out-of-sample retest of every round-1/2 verdict (minutes)
+
+The new labels are a never-touched test set for everything already
+trained.  `calib_guard.py` replay (new labels only, `--events-file`) of:
+ft2u (−57 on old 473), hft1 (−20), hr3-deploy (−3), and the Phase A
+chooser head (+45 signal / unroutable).  Either the negative verdicts
+confirm out-of-sample or the guard itself was overfit to the old 473 —
+this validates the METHODOLOGY before it gates round 3.  Expected:
+confirmation; any sign flip is a stop-and-report finding.
+
+## Step 3 — fresh lockbox (the old one is spent)
+
+Before any new label enters a training pool: reserve 20–25% of the NEW
+labels, stratified by sample × corrective × (data/MC), seed recorded in
+the manifest.  Never read until a final candidate exists — restores the
+three-tier gate structure (train/val → guard screen → lockbox → live
+A/B) that has been running without a lockbox since pr/78.
+
+## Step 4 — training round 3 (the dose question, now answerable)
+
+Corrective pool grows ~115 → ~350.  The O(473) failure was gradients
+shifting CONFIDENCE but not learning GEOMETRY, and both confidence
+escape routes are now closed (softmax kills inflation structurally;
+the guard catches deflation).  Whether ~350 corrective examples teach
+geometry is exactly the open question.  The pipeline is committed and
+is a RERUN, not a rebuild:
+
+```
+build_dataset.py --harvest-roots <new arms> --inherit-manifest <lockbox col>
+train.py <hr3 recipe: --cand-softmax 1.0 --scale-anchor 1.0 --dense-weight 0.1 --lr0 1e-5>
+bash hr_guardsel.sh <arm>          # guard-in-loop checkpoint selection
+calib_guard.py <deploy CP>         # full-manifest screen
+# live A/B only if guard-positive; flip owner-gated as always
+```
+
+Start from the hr3 recipe (only arm to ever pass the OOF gate).  Known
+bias to respect: fold-max selection inflates OOF sums ~+1 — marginal
+gate passes are noise until the full-manifest screen.
+
+## Step 5 — revisit the two "real signal, can't use it" findings
+
+- **Chooser head at O(1100)**: the 16-dim exact features overfit at
+  O(362); at triple the training pool that may flip.  Rerun
+  `cand_head.py` unchanged.  If a formulation clears the pre-registered
+  ≥+5 anchored bar → STOP and present to the owner as a C++ proposal
+  (new inference path = owner decision).
+- **min_accept sweep at 3× statistics**: ±2-point effects currently
+  invisible become measurable; re-run the sweep on the fresh labels
+  before touching the knob (any change = owner flip decision).
+
+## Standing rules carried forward
+
+- CP24 anchor must stay exact after every `calib_guard.py` change.
+- runs/ and data/ never committed; scripts + docs only; `git add -f`
+  for `*.sh`.
+- No production flip, no wire-cell-data commit, no Bee upload without
+  the owner.
