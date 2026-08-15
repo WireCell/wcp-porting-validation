@@ -903,10 +903,34 @@ It is evidence of a specific, nameable hazard:
 > that both prongs point away. Any future round that strengthens rule-1 evidence
 > should expect the confident-error rate on this class to go up, not down.
 
-The next round's target is therefore not the ordering — it is the class where a
-cold middle between two hot free ends means one scattered particle, not two
-emanating ones. That is a topology test (are the two prongs collinear through the
-junction?), and the fact that it is missing is why evt399856 survives.
+**The class is real and unified — checked, not assumed.** Measuring the angle
+between prong directions at each wrongly-picked junction:
+
+| event | picked | truth | most back-to-back prong pair |
+|---|---|---|---|
+| evt399856 | 3002 | 3001 | **177°** (segs 3001, 3002) |
+| evt388224 | 3011 | 3004 | **176°** (segs 3026, 3027) |
+| evt59085 | 3004 | 3001 | **175°** (segs 3006, 3007) |
+
+All three are the same failure: the scanner named a point that is *interior* to a
+single scattered particle, where rule 1 is satisfied by construction because both
+halves of one track cool toward the middle.
+
+**But the obvious fix does not work, and it is worth saying so before anyone
+builds it.** Base-rating "has a ≥150° prong pair" over the dev half:
+
+```
+TRUTH vertices                        n= 107   >=150deg pair:  24 (22.4%)
+other deg>=2 vertices, same cluster   n= 299   >=150deg pair: 144 (48.2%)
+```
+
+A 2.2× enrichment *against* being the vertex — real signal, but **22.4% of true
+vertices are also collinear**, so as a veto it would discard roughly one correct
+answer in four and a half. This is pr/79 §8's lesson arriving again: an override
+of a mechanism that is right far more often than wrong needs precision this does
+not have. Collinearity belongs in the scan procedure as a **caution that lowers
+confidence**, not as a rule that eliminates a candidate — which is exactly the
+treatment §3 already gives owner rule 5.
 
 ## 11. Files
 

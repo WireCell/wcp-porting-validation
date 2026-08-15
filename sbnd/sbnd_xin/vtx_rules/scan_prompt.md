@@ -88,6 +88,16 @@ equally when they disagree.
   *monotonically* over the last few cm and follows the template curve. A single
   hot patch at an end is not the same thing. If a profile plot is available,
   look at the shape, not just the end value.
+* **Rule 1 is satisfied automatically at a point inside ONE track.** If dQ/dx is
+  hot at both free ends and cool in the middle, that can be a single scattered
+  particle whose two halves both cool toward the kink — and then "every prong
+  points away" is true of a point that is not a vertex at all. Before trusting a
+  clean rule-1 reading at a degree-2 junction, check whether the two prongs leave
+  it nearly **back-to-back** (roughly a straight line through it). Measured on
+  the development half, a ≥150° prong pair is about 2.2× more common at
+  non-vertices than at true ones — so it is a reason to **drop your confidence a
+  tier**, not a reason to eliminate the candidate: 22% of genuine vertices are
+  collinear too, and treating this as a veto would throw away real answers.
 
 ## What you report
 
