@@ -297,3 +297,152 @@ Files (this repo unless noted):
   untouched by this campaign.
 - Toolkit commits: `1d9454ed` (threading, byte-identical), `9c9d0a61`
   (min_accept flip), + the top_k comment close-out.
+
+---
+
+## 7. Step 4 — selector campaign on the 47-event gap: comprehensive NEGATIVE, no flip
+
+2026-08-15, follow-on to §5c / lesson 4.  Goal: harvest the measured
+selector headroom (47 selection-wrong at k=20).  Owner pre-authorized
+escalation to the pr/78 §9a adapter direction if the linear selector fell
+short.  Outcome up front: **every deployable formulation — six of them,
+including the adapter-screen on frozen net features and a nonlinear head —
+is net-NEGATIVE end-to-end under honest out-of-fold evaluation.  No C++
+knob was built, no live A/B was run (nothing passed the offline gate), and
+production is unchanged from §6.**  The campaign's product is the measured
+explanation of *why*, plus reusable tooling for the day the prerequisites
+change.
+
+### 7a. Repro block
+
+```
+cd dl_vtx_training
+ARMS="vtxscan-prod0813=work-nuecc48-ma10-k20 \
+      vtxscan-prod0813-ncpi0=work-ncpi0-ma10-k20 \
+      vtxscan-prod0813-mcp1k=work-mcp1k-ma10-k20"
+# chooser refit on the LIVE k20 rows (this is what §6 lesson 2 demands --
+# recorded rows are the exact features the C++ computed):
+python3 rank_fit.py --arm-roots $ARMS --l2 0.1           # 11-feature
+python3 rank_fit.py --arm-roots $ARMS --l2 0.1 --features 7terms
+# end-to-end deployment sim (live-anchored replay + oracle ceilings):
+python3 rank_sim.py --arm-roots $ARMS --l2 0.1 \
+    --tsv-prefix runs/ranksim-k20-l2p1-20260815
+# per-event router (logistic on 10 scoreboard-derived event features):
+python3 route_fit.py --arm-roots $ARMS --tsv runs/routefit-k20-20260815.tsv
+# frozen-net 16-dim penultimate features at candidate voxels
+# (rebuilt-cloud SCREEN -- see caveat in 7d):
+OMP_NUM_THREADS=1 python3 extract_feats.py --arm-roots $ARMS \
+    --out data/k20feats16-20260815 --jobs 24
+python3 route_fit.py --arm-roots $ARMS --extra-feats data/k20feats16-20260815
+```
+Folds/seed identical to `rank_fit.py` throughout (6-fold stratified
+(sample, corrective), seed 20260814); L2 sweep {0.03, 0.1, 0.3, 1.0}.
+One-sided rescue/demote and MLP probes were scratchpad scripts; their
+numbers are quoted in 7c and their formulations described there.
+
+### 7b. Decomposition of the 47 (verified against the k20 calibs)
+
+- **33/47 route=dl-rerank-reject** — final answer is the live traditional
+  winner.  On 12 of these the composite argmax over usable rows is ALREADY
+  the truth row: the acceptance gate discarded a correct pick.
+- **14/47 route=dl-rerank-accept** — on 5 the argmax is right and the final
+  answer still wrong: **post-selection refit drift**
+  (`snap_main_vertex_to_kink`/`improve_vertex` moved the vertex; e.g.
+  evt268067: argmax row 0.10 cm from truth, final 2.27 cm at a different
+  vertex_id).  Unreachable by any selector.
+- Ceiling decomposition (n=473, `rank_sim.py` oracle diagnostics):
+
+| operating point | correct |
+|---|---|
+| production (composite chooser + total≥10 router) | 358 |
+| oracle ROUTING, composite chooser | 383 (+25) |
+| oracle routing, refit 11-feature chooser (OOF) | 385 (+27) |
+| perfect chooser AND router over usable rows | 433 (+75) |
+| truth not within 1 cm of any usable row | 40 events |
+
+  Note the taxonomy's "selection-wrong 47 / ceiling 405" (§4) is
+  voxel-list-based; on the rows footing a perfect selector could in
+  principle reach 433.  But the oracle-routing rows show the *chooser* is
+  nearly saturated (+2 from refitting); the whole practical gap is
+  **routing** — knowing when to trust the DL-side pick.
+
+### 7c. Results — every formulation, end-to-end, vs the arm's 358
+
+Replay is live-anchored: whenever the replayed decision matches the arm's
+recorded behavior the prediction is the recorded final answer; row/trad
+stand-ins are used only on genuinely-changed events (trad stand-ins
+UNDERSTATE the live trad route, §6 lesson 1, so negative numbers here are
+if anything optimistic).  Anchoring imperfection: 3 `dl-veto-protected`
+events (baseline reproduces 355/473 + those 3).
+
+| formulation | nested-OOF | in-sample | notes |
+|---|---|---|---|
+| A: rank chooser, route frozen | 350 (−8) | 352 (−6) | 8 fixed / 14–16 regressed; L2 0.03 & 0.1 same |
+| B: rank chooser + rank-score router | 334–340 (−24..−18) | 336–339 | 91–115 reject→accept flips |
+| C: 7-term ablation of A/B | worse than A/B | — | chooser OOF 270/362 vs 281–282 (11-feat) |
+| router: logistic, 10 event features | 333 (−25) | 340 (−18) | composite chooser kept |
+| router + frozen-net x16 features | 340 (−18) | 340 | match quality median 0.001 cm |
+| one-sided rescue (reject→accept only) | −2 net | — | with and without x16: same |
+| one-sided demote (accept→reject only) | −1 net | — | with and without x16: same |
+| MLP router (h=8, x16, 3 restarts) | 336 (−22) | — | nonlinear adapter form |
+
+Chooser-level context: the 11-feature refit on live k20 rows is genuinely
+better at ranking — eligibility 156 → **362** events, OOF choice accuracy
+**281–282/362 vs 260 recorded / 246 composite-argmax** — but that +22
+lives mostly on reject-route events, where deployment either cannot act
+(variant A) or pays a routing tax that swamps it (variant B).
+
+### 7d. Why: the base rates require a precision no signal provides
+
+- On the 223 reject-route events with candidates: flipping to accept gains
+  on **20** and harms on **98** — a rescue rule needs ≳83% precision to
+  break even.  On the 250 accept-route events: demote gains **12**, harms
+  **84**.
+- Neither the 10 scoreboard-derived event features, nor the frozen CP24
+  net's 16-dim penultimate features at the winner voxel (the §9a adapter
+  substrate, linear AND small-MLP heads), carries that precision at
+  O(473) labels: every nested-OOF threshold the fits choose lands net
+  negative or null.
+- The legacy router (composite total ≥ 10, freshly retuned in §2) is
+  simply strong: a single threshold on a 7-term physics-motivated score,
+  already sitting at an interior optimum of its own grid (§4b of pr/78).
+- Adapter-screen caveat: features came from rebuilt clouds (the §3
+  transfer trap forbids *deploying* anything fit on them; live→rebuilt
+  voxel match was excellent — median 0.001 cm, p90 0.5 cm — so as a
+  *screen* it is informative).  A full adapter *training* round on rebuilt
+  clouds would face the same trap that sank ft2u, and the screen gives no
+  evidence the information exists to justify building the live-harvest
+  infrastructure first.
+
+### 7e. Verdict and the path that remains
+
+- **No flip; production stays exactly §6.**  R2 (C++ knob) and R3 (live
+  A/B) of the campaign plan were not run — the offline go/no-go gate
+  (≥ +5/473 OOF) failed in every formulation, and running a live A/B on a
+  knob that is negative offline on live-recorded features would spend a
+  production cycle to confirm a foregone conclusion.
+- The 47-event headroom is real but locked: harvesting it needs a routing
+  discriminator whose precision no currently-available signal supports.
+- Prerequisites for a future round (owner-level decisions):
+  1. **More labels** — a fresh hand scan grows both the fit budget and,
+     critically, an out-of-sample validation set (every number above is
+     tied to the same 473 labels the fits consumed; OOF is honest but a
+     fresh scan is the definitive check).
+  2. **Live feature harvest** — a log-only C++ knob recording per-candidate
+     net features into the scoreboard during a production run, so any
+     future learned component trains on the exact deployed distribution
+     (closes the §3 trap structurally).
+  3. A net retrained end-to-end on live-input clouds (blocked on 2).
+- Updated lesson 4: admission ≠ recovery (§4) and now *ranking ≠ routing*:
+  the chooser was never the bottleneck; the router is, and it is harder to
+  learn than to inherit.
+
+New files: `dl_vtx_training/rank_sim.py` (live-anchored deployment sim +
+oracle ceilings), `dl_vtx_training/route_fit.py` (per-event router fit),
+`dl_vtx_training/extract_feats.py` (frozen-net candidate-voxel features);
+extended: `rank_fit.py` (`--arm-roots/--features/--export-weights`,
+`build_folds`), `scn_vtx/io.py` (`parse_arm_roots`/`calib_path_in_roots`).
+Records: `runs/ranksim-k20-l2p1-20260815-{A,B}.tsv`,
+`runs/routefit-k20-20260815.tsv`, `data/k20feats16-20260815/` (473 npz).
+No toolkit change, no wire-cell-data change, no new arms (all analysis on
+the existing §4 k20 arms; prod0813 and labels untouched).

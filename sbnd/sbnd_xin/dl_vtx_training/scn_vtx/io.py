@@ -105,6 +105,31 @@ def calib_path_for_label(sbnd_root, label):
                         'calib-pr-evt%d.json' % evt)
 
 
+def parse_arm_roots(pairs, sbnd_root):
+    """['tag=path', ...] or a single bare path (applies to all tags) ->
+    {scan_tag_or_None: abs_root}.  Shared arm-root resolution (doc pr/79
+    step 4); same semantics as ab_vertex_compare.py --arm-roots."""
+    if len(pairs) == 1 and '=' not in pairs[0]:
+        return {None: os.path.join(sbnd_root, pairs[0])}
+    out = {}
+    for p in pairs:
+        tag, _, path = p.partition('=')
+        if not path:
+            raise ValueError('bad roots entry (want tag=path): %s' % p)
+        out[tag] = os.path.join(sbnd_root, path)
+    return out
+
+
+def calib_path_in_roots(roots, label):
+    """Calib path for a label inside an explicit arm root (ignoring the
+    label's recorded source arm)."""
+    root = roots.get(label['scan_tag']) or roots.get(None)
+    if root is None:
+        return None
+    evt = label['eventNo']
+    return os.path.join(root, 'pr_evt%d' % evt, 'calib-pr-evt%d.json' % evt)
+
+
 def load_scores_tsv(sbnd_root, name='mcp1k',
                     fname='products/prod0813/%s-scores-prod0813.tsv'):
     """eventNo -> row dict from the pr_scores_table.py TSV (numu_score,
