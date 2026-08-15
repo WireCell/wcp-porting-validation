@@ -1007,6 +1007,11 @@ unset _pr43 _env _key _val
 # DL-vertex effect from a PR-structure one.  Set-but-empty is honoured, hence
 # the ${VAR+x} test rather than ${VAR:-}.
 [ -n "${SBND_DL_WEIGHTS+x}" ] && CATH_TLA+=(--tla-str "dl_weights=${SBND_DL_WEIGHTS}")
+# DL re-rank operating point (doc pr/79 deployment A/B).  UNSET = no TLA = the
+# cfg defaults (min_accept 4.0, top_k 5, pinned in sbnd/clus.jsonnet since
+# 2026-07-30).  Numeric values, passed as --tla-code.
+[ -n "${SBND_DL_VTX_MIN_ACCEPT:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_min_accept_score=${SBND_DL_VTX_MIN_ACCEPT}")
+[ -n "${SBND_DL_VTX_TOP_K:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_top_k=${SBND_DL_VTX_TOP_K}")
 # DL main-cluster swap guard (doc pr/24).  EMPTY = no TLA = the cfg default
 # null = C++ 0/0 = OFF = the legacy DL vertex.  _MIN_LEN is in CM (the jsonnet
 # multiplies wc.cm); _MIN_FRAC is a bare fraction of the incumbent main
