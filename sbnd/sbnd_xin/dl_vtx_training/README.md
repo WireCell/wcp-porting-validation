@@ -95,6 +95,32 @@ final BatchNormReLU + last UNet decoder block (~7k of 7.2M params);
 `wire-cell-data/` (never overwrite the uBooNE file) and point the
 `dl_weights` TLA at it — config-only, A/B-able, owner-gated.
 
+## Round 2 (doc pr/77 S8): label-efficient strategy tools
+
+- `taxonomy.py` — classify every labeled event: correct / candidate-missing
+  (pr/51 graph territory, untrainable) / net-wrong / selection-wrong, per
+  sample (nueCC / NCpi0 / mcp1k data / numu50).
+- `tta_eval.py` — test-time augmentation over the x4 reflections;
+  `--data` = labeled eval vs single view; `--arm` = signal sweep (per-event
+  `tta_argmax_spread` disagreement) over all PR events.
+- `rank_fit.py` — pairwise-logistic candidate ranking on recorded scoreboard
+  features (~11 params, label-count-matched).
+- `scan_ranker.py` — active learning: logistic P(corrective) fitted on the
+  labeled events, applied to the unlabeled ones; outputs the
+  most-informative-first list for the ongoing scan.
+- `pseudo_labels.py` — measure production-vertex precision under confidence
+  cuts on the labeled events; freeze a pseudo-label snapshot from unlabeled
+  events passing a >=95%-precision cut (train-only, never validation;
+  `train.py --pseudo-data --pseudo-weight`).
+- `train.py --hard-negative <l>` — negative Gaussian at the production pick
+  on corrective events; `--consistency <w>` — label-free view-agreement
+  loss; lockbox events (manifest `lockbox=1`, `build_dataset.py --lockbox`)
+  are excluded from training and folds unless `--keep-lockbox`.
+- Sample identity: `build_dataset.py --numu-top K` selects the top-K
+  labeled mcp1k events by `numu_score` from
+  `products/prod0813/mcp1k-scores-prod0813.tsv` (caution: `nue_score` is a
+  -15 sentinel for most events -- never cut on numu>nue).
+
 ## Guard rails
 
 - `vertex_labels/` is read-only here (M13); snapshots freeze label mtimes in

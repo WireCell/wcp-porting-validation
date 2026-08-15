@@ -70,7 +70,8 @@ def d_argmax_cm(pred, coords, offset, truth):
     return float(np.linalg.norm(top[0, :3] - truth))
 
 
-def run_epoch(model, samples, device, criterion, optimizer=None):
+def run_epoch(model, samples, device, criterion, optimizer=None,
+              consistency=0.0):
     train = optimizer is not None
     model.train(train)
     losses, dists = [], []
@@ -85,6 +86,17 @@ def run_epoch(model, samples, device, criterion, optimizer=None):
             prediction = model([coords, ft])
             score = prediction[:, 1] - prediction[:, 0]
             loss = criterion(score, target)
+            w = float(meta['row'].get('weight', 1.0))  # S8c pseudo-labels < 1
+            if w != 1.0:
+                loss = loss * w
+            if consistency > 0:  # S8c: label-free view-agreement term
+                (c1, f1, p1), (c2, f2, p2) = samples.consistency_views(k)
+                pr1 = model([torch.LongTensor(c1), torch.FloatTensor(f1).to(device)])
+                pr2 = model([torch.LongTensor(c2), torch.FloatTensor(f2).to(device)])
+                s1 = pr1[:, 1] - pr1[:, 0]
+                s2 = pr2[:, 1] - pr2[:, 0]
+                loss = loss + consistency * criterion(
+                    s1[torch.from_numpy(p1)], s2[torch.from_numpy(p2)])
             loss.backward()
             optimizer.step()
         else:
@@ -115,6 +127,18 @@ def main():
     ap.add_argument('--no-jitter', action='store_true')
     ap.add_argument('--no-q-jitter', action='store_true')
     ap.add_argument('--dropout', action='store_true')
+    ap.add_argument('--hard-negative', type=float, default=0.0,
+                    help='S8b: negative-Gaussian weight at the production '
+                         'pick on corrective events (0 = off)')
+    ap.add_argument('--consistency', type=float, default=0.0,
+                    help='S8c: label-free view-agreement loss weight (0 = off)')
+    ap.add_argument('--keep-lockbox', action='store_true',
+                    help='include lockbox events (default: excluded from '
+                         'training AND folds)')
+    ap.add_argument('--pseudo-data', default=None,
+                    help='S8c: pseudo-label snapshot dir; its events join '
+                         'every fold TRAIN set (never validation)')
+    ap.add_argument('--pseudo-weight', type=float, default=0.25)
     ap.add_argument('--seed', type=int, default=20260814)
     ap.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
     args = ap.parse_args()
@@ -125,7 +149,7 @@ def main():
     with open(os.path.join(run_dir, 'config.json'), 'w') as fh:
         json.dump(vars(args), fh, indent=1, sort_keys=True)
 
-    rows = load_manifest(args.data)
+    rows = load_manifest(args.data, drop_lockbox=not args.keep_lockbox)
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
@@ -134,10 +158,19 @@ def main():
     else:
         splits = [(0, rows, [])]
 
+    pseudo_rows = []
+    if args.pseudo_data:
+        pseudo_rows = load_manifest(args.pseudo_data)
+        for r in pseudo_rows:
+            r['npz'] = os.path.join(os.path.abspath(args.pseudo_data), r['npz'])
+            r['weight'] = args.pseudo_weight
+        print('pseudo-labels: +%d train-only events at weight %.2f'
+              % (len(pseudo_rows), args.pseudo_weight))
+
     criterion = nn.MSELoss()
     sample_kw = dict(sigma=args.sigma, use_flips=not args.no_flips,
                      jitter=not args.no_jitter, q_jitter=not args.no_q_jitter,
-                     dropout=args.dropout)
+                     dropout=args.dropout, hard_negative=args.hard_negative)
 
     oof = {}  # evt -> best out-of-fold d_argmax at selected epoch
     for fold, train_rows, val_rows in splits:
@@ -152,7 +185,7 @@ def main():
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = optim.Adam(params, lr=args.lr0)
 
-        tr = VtxSamples(args.data, train_rows, train=True,
+        tr = VtxSamples(args.data, train_rows + pseudo_rows, train=True,
                         seed=args.seed + fold, **sample_kw)
         va = VtxSamples(args.data, val_rows, train=False,
                         seed=args.seed + fold, **sample_kw)
@@ -168,7 +201,8 @@ def main():
                 lr = args.lr0 * math.exp(-args.lrd * epoch)
                 for g in optimizer.param_groups:
                     g['lr'] = lr
-                tl, td, _ = run_epoch(model, tr, args.device, criterion, optimizer)
+                tl, td, _ = run_epoch(model, tr, args.device, criterion, optimizer,
+                                      consistency=args.consistency)
                 if len(va):
                     vl, vd, _ = run_epoch(model, va, args.device, criterion)
                 else:

@@ -105,6 +105,46 @@ def calib_path_for_label(sbnd_root, label):
                         'calib-pr-evt%d.json' % evt)
 
 
+def load_scores_tsv(sbnd_root, name='mcp1k',
+                    fname='products/prod0813/%s-scores-prod0813.tsv'):
+    """eventNo -> row dict from the pr_scores_table.py TSV (numu_score,
+    event_label, ...).  numu_score parsed to float, blank -> None.
+    Caution (doc pr/77 round 2): nue_score is the sentinel -15.0 for most
+    events -- use numu_score directly, never numu>nue."""
+    import csv
+    path = os.path.join(sbnd_root, fname % name)
+    out = {}
+    with open(path) as fh:
+        for r in csv.DictReader(fh, delimiter='\t'):
+            evt = int(r['event'])
+            ns = r.get('numu_score', '')
+            r['numu_score'] = float(ns) if ns not in ('', None) else None
+            out[evt] = r
+    return out
+
+
+def is_corrective(label, tol=1.0):
+    """Scanner disagreed with production: rank-1 pick moved by > tol cm from
+    the production main vertex, or the pick isn't a graph candidate at all."""
+    if label.get('not_a_candidate') or label.get('pick_kind') == 'manual':
+        return True
+    dis = label.get('dis_to_main')
+    return dis is not None and float(dis) > tol
+
+
+def sample_of_label(label, numu_events=None):
+    """Coarse sample name for reporting: nuecc / ncpi0 / mcp1k (data);
+    'numu50' if the event is in the provided numu_events set."""
+    tag = label.get('scan_tag') or ''
+    if 'ncpi0' in tag:
+        return 'ncpi0'
+    if 'mcp1k' in tag:
+        if numu_events and label['eventNo'] in numu_events:
+            return 'numu50'
+        return 'mcp1k'
+    return 'nuecc'
+
+
 def default_sbnd_root():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 

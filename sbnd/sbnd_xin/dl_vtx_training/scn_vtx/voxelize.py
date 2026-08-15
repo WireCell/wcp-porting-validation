@@ -68,12 +68,22 @@ def voxel_center_cm(coords, offset, resolution=RESOLUTION):
         + (offset + 0.5 * resolution).astype(np.float32)
 
 
-def gaussian_truth(coords, offset, truth_xyz, sigma=1.0, resolution=RESOLUTION):
-    """Per-voxel training target in [0,1]: exp(-(d/sigma)^2/2), d = distance
-    (cm) from the voxel centre to the truth vertex."""
+def gaussian_truth(coords, offset, truth_xyz, sigma=1.0, resolution=RESOLUTION,
+                   neg_xyz=None, neg_lambda=0.0):
+    """Per-voxel training target: exp(-(d/sigma)^2/2), d = distance (cm) from
+    the voxel centre to the truth vertex.
+
+    Hard negative (doc pr/77 S8b): a corrective label carries TWO facts --
+    where the vertex is AND where production wrongly put it.  With neg_xyz
+    set, subtract neg_lambda*exp(-(d_neg/sigma)^2/2) around the production
+    pick ("unlearn this spot"); clipped to [-1, 1], the score's range."""
     centers = voxel_center_cm(coords, offset, resolution)
     d = np.linalg.norm(centers - np.asarray(truth_xyz, dtype=np.float32), axis=1)
-    return np.exp(-0.5 * (d / float(sigma)) ** 2).astype(np.float32)
+    t = np.exp(-0.5 * (d / float(sigma)) ** 2)
+    if neg_xyz is not None and neg_lambda > 0.0:
+        dn = np.linalg.norm(centers - np.asarray(neg_xyz, dtype=np.float32), axis=1)
+        t = t - float(neg_lambda) * np.exp(-0.5 * (dn / float(sigma)) ** 2)
+    return np.clip(t, -1.0, 1.0).astype(np.float32)
 
 
 def top_k_voxels(pred, coords, offset, k=5, resolution=RESOLUTION):

@@ -87,9 +87,11 @@ def main():
     ap.add_argument('--guard-tol', type=float, default=1.0,
                     help='allowed d_argmax degradation on confirming events (cm)')
     ap.add_argument('--tsv', default=None)
+    ap.add_argument('--keep-lockbox', action='store_true',
+                    help='include lockbox events (must match the train run)')
     args = ap.parse_args()
 
-    rows = load_manifest(args.data)
+    rows = load_manifest(args.data, drop_lockbox=not args.keep_lockbox)
     base = make_model('cpu'); load_weights(base, args.baseline); base.eval()
 
     cp_of = {}
@@ -118,6 +120,7 @@ def main():
         tb, db, d5b, truth, calib_path = eval_weights(base, row, args.data)
         hb = snap_hit(tb, truth, calib_path, args.tol)
         rec = dict(evt=evt, tag=row['tag'], corrective=row['corrective'],
+                   sample=row.get('sample', ''),
                    manual=int(row['pick_kind'] == 'manual'),
                    d_argmax_base=db, d_top5_base=d5b,
                    snap_base='' if hb is None else int(hb))
@@ -149,6 +152,8 @@ def main():
         summary(key, lambda r: True, '%s d_argmax all' % tag)
         summary(key, lambda r: r['corrective'] == 1, '%s d_argmax corrective' % tag)
         summary(key, lambda r: r['corrective'] == 0, '%s d_argmax confirming' % tag)
+        for s in sorted({r['sample'] for r in out if r.get('sample')}):
+            summary(key, lambda r, s=s: r['sample'] == s, '%s d_argmax %s' % (tag, s))
     ng = sum(r.get('guard_fail', 0) for r in out)
     if any('guard_fail' in r for r in out):
         print('  confirmation guard failures (>%.1f cm worse): %d' % (args.guard_tol, ng))

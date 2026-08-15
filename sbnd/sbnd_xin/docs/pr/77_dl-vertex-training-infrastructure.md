@@ -1,9 +1,10 @@
 # doc pr/77 — DL neutrino-vertex fine-tuning infrastructure
 
-Status: **infrastructure round, shipped** (2026-08-14).  Python-only — no
-toolkit C++ or config change, no A/B burden, nothing flipped.  Practice
-training on the finished hand-scan tags; the serious campaign waits for the
-live 1000-event data scan.
+Status: **infrastructure round, shipped** (2026-08-14); **round 2 (S8e)
+executed same day** — 8a/8b/8c strategies run on 247+ labels incl. the
+numu50 data anchor.  Python-only — no toolkit C++ or config change, no A/B
+burden, nothing flipped.  Practice training on the finished hand-scan tags;
+the serious campaign waits for the live 1000-event data scan.
 
 Owner request: prepare the training/fine-tuning infrastructure for the DL
 vertex per doc pr/52, using `sbnd_xin/dl_vtx_training/` as the software
@@ -269,6 +270,168 @@ active-learning scan ordering (while the scan is still running, so it
 compounds) → 8b candidate-ranking head as the first training experiment on
 the mcp1k labels.
 
+### 8e. Round-2 execution (2026-08-14): results
+
+Owner go-ahead for 8a+8b+8c, with two corrections: the data sample with PR
+results is ~455 events (census: exactly **445**, all with scoreboards;
+`products/prod0813/events-mcp1k-prod0813.txt`), and the samples differ
+strongly, so a **numu50** anchor was built: the top-50 *labeled* mcp1k
+events by `numu_score` from `products/prod0813/mcp1k-scores-prod0813.tsv`
+(cut equivalent ≈ ≥2.43; beware `nue_score` is a −15.0 sentinel for
+387/445 events — never select on numu>nue).  The mcp1k label tag is
+**live and growing while this round ran** (176 at census → 181 at the
+taxonomy run → 197 at the ranker run); every TSV below records its own
+label count.  All results per sample throughout.
+
+Repro block (round 2), from `dl_vtx_training/`:
+
+```bash
+python3 build_dataset.py --name numu50 --tags vtxscan-prod0813-mcp1k --numu-top 50
+python3 build_dataset.py --name mix116 --tags vtxscan-prod0813 \
+    vtxscan-prod0813-ncpi0 vtxscan-prod0813-mcp1k --numu-top 50 --lockbox 0.2
+python3 taxonomy.py --tsv runs/taxonomy-20260814.tsv
+python3 tta_eval.py --data data/mix116 --tsv runs/tta-mix116.tsv
+python3 tta_eval.py --arm work-mcp1k-prod0813 --tsv runs/tta-signals-mcp1k.tsv
+python3 rank_fit.py --tsv runs/rankfit-20260814.tsv
+python3 scan_ranker.py --tta-tsv runs/tta-signals-mcp1k.tsv \
+    --tsv runs/scan-ranking-20260814.tsv
+python3 pseudo_labels.py --precision
+python3 pseudo_labels.py --build pseudo0 --margin 200 --dl-best 500 --snap 99.0
+python3 train.py --data data/mix116 --name ft1   --kfold 6 --epochs 30
+python3 train.py --data data/mix116 --name ft1hn --kfold 6 --epochs 30 --hard-negative 0.5
+python3 train.py --data data/mix116 --name ft1ps --kfold 6 --epochs 30 \
+    --pseudo-data data/pseudo0 --pseudo-weight 0.25
+python3 evaluate.py --data data/mix116 --run runs/<name> --tsv runs/<name>/eval.tsv
+```
+
+**8a taxonomy** (`runs/taxonomy-20260814.tsv`, 247 labels at run time,
+tol 1 cm; classes mutually exclusive, sum asserted):
+
+| sample | n | correct | cand-missing | net-wrong | sel-wrong |
+|---|---|---|---|---|---|
+| nueCC | 47 | 39 | 5 | 1 | 2 |
+| NCpi0 | 19 | 14 | 0 | 4 | 1 |
+| mcp1k (all) | 181 | 121 | 21 | 32 | 7 |
+| — numu50 | 50 | 45 | 3 | 0 | 2 |
+| **ALL** | **247** | **174** | **26** | **37** | **10** |
+
+Reading: of 73 misses, **51 % are net-wrong** (training can help), **36 %
+candidate-missing** (no training can help — pr/51 graph work), 14 %
+selection-wrong (rerank/snap stage).  The samples really do differ:
+**numu50 has zero net-wrong misses** — on beam-numu-like data the net is
+not the problem; the net-wrong class concentrates in the low-`numu_score`
+part of mcp1k and in NCpi0.  This reweights the program: for numu the
+payoff is graph+selection work, for shower-rich samples it is the net.
+
+**8a TTA** (`runs/tta-mix116.tsv`; x4 reflections, ensemble on the identity
+lattice, identity check passed): **a wash for accuracy** — snap-hit 82/116
+→ 82/116, medians 0.67→0.51 cm but tails sometimes blow up (an averaged
+heatmap can hop clusters; worst 357 cm).  Argmax moved >1 cm on 29 events:
+18 improved / 11 worsened (corrective slice: 8/3).  The per-event
+**disagreement signal is the real product**: `tta_argmax_spread` > 5 cm
+marks 36 events of which 27 (75 %) are production misses, vs 25 % below —
+a 3x error concentrator, fed into the 8c ranker.  Verdict: do NOT deploy
+TTA averaging; keep TTA disagreement as a flag.
+
+**8a checkpoint ensemble — negative**: the public uboone-dl-vtx repo ships
+code only (no .pth anywhere, no releases); CP24 in wire-cell-data is the
+only public checkpoint.  Sibling-checkpoint ensembling/disagreement is not
+buildable here; a future SBND fine-tune campaign produces its own siblings
+natively (every epoch is checkpointed).
+
+**8b candidate-ranking fit** (`runs/rankfit-20260814.tsv`, 253 labels at
+run time): 163 events have ≥2 usable candidates, **84** also have the truth
+reachable (the rest are single-candidate — no ranking information — or
+candidate-missing).  Pairwise logistic on the 7 recorded terms + raw
+dl_score + snap_dis + log1p(host_length) + trad_winner (11 params, term
+sum == recorded total closure asserted).  Out-of-fold candidate choice:
+**65/84 correct vs production's 61/84** (total-argmax also 61) — +6 on
+mcp1k (32→38), −2 nueCC, −1 numu50.  Largest weights: s_isol +0.52,
+dl_score/s_dl +0.37 each; s_snap and snap_dis ≈ 0 (the snap term buys
+nothing in this fit).  Honest caveats: 65-vs-61 on n=84 is ~1σ binomial —
+direction-setting, not a result; and the per-sample flips are exactly the
+heterogeneity the owner flagged.  Re-fit on the completed scan before
+drawing conclusions; the W_* knob round (§9) is how it would deploy.
+
+**8c active-learning scan ranking** (`runs/scan-ranking-20260814.tsv`,
+197 labeled / 248 unlabeled at run time): single "suspicion" heuristics
+mostly do NOT enrich: margin x1.1, dl_best x1.3, snap_dis x1.5,
+tta_spread x1.5 (top-quartile corrective rate vs 33 % base) — and
+**route=dl-rerank-reject events are LESS corrective (25 %) than accepts
+(34.8 %)**: the traditional fallback is usually fine; low DL confidence is
+not label-value.  Fitting instead of hand-weighting (the S8 principle):
+logistic P(corrective) on [log-margin, dl_best, snap_dis, route one-hots,
+tta_spread] reaches **5-fold CV AUC 0.773**, top-quartile enrichment
+**x2.0** (65.3 % corrective).  Dominant coefficients: log-margin −0.93,
+route_reject −0.52, dl_best −0.38, snap_dis +0.17, tta_spread +0.14.
+The TSV lists all 248 unlabeled events most-informative-first for the
+scan panel; scanning in this order roughly doubles corrective labels per
+scanned event at the top of the list.
+
+**8c pseudo-labels** (`pseudo_labels.py --precision`, 197 labeled):
+production is correct (≤1 cm) on 67.0 % of labeled events overall; the cut
+`route=accept AND margin≥200 AND dl_best≥500` measures **95.6 % precision
+on 45 labeled events** and passes 44 unlabeled → snapshot `data/pseudo0`
+(truth := production vertex, `is_pseudo=1`, cut + measured precision frozen
+in `cut.json`).  Pseudo events join only fold TRAIN sets at weight 0.25
+(`train.py --pseudo-data`), never validation.
+
+**8c consistency regularization**: implemented as a label-free
+view-agreement MSE between two independently jittered voxelizations,
+compared point-by-point (every input point maps to exactly one voxel in
+each view — no cross-lattice interpolation).  2-epoch smoke together with
+the hard-negative path: loss finite and stable, plumbing proven; full use
+deferred to the serious round.
+
+**8b training runs A/B/C** (mix116 minus 23 lockbox events = 93 events,
+6-fold stratified by sample x corrective, freeze=head, lr0=1e-6, 30
+epochs; out-of-fold `evaluate.py`, d_argmax in cm,
+`runs/{ft1,ft1hn,ft1ps}/eval.tsv`):
+
+| slice | baseline CP24 | ft1 plain | ft1hn hard-neg λ=0.5 | ft1ps +44 pseudo w=0.25 |
+|---|---|---|---|---|
+| all (93) | 0.73 / 41.1 / 173 | 0.74 / 64.8 / 476 | *identical to ft1* | 0.74 / 73.9 / 476 |
+| corrective (16) | 27.2 / 81.2 / 134 | 31.2 / **63.7** / **76** | *identical* | 31.2 / 63.7 / 76 |
+| confirming (77) | 0.67 / 12.6 / 173 | 0.70 / 67.8 / 476 | *identical* | 0.70 / 90.3 / 476 |
+| numu50 (40) | 0.72 / 35.2 / 173 | 0.91 / 87.7 / 476 | 0.91 / 87.7 / 476 | 1.07 / 146.6 / 476 |
+| guard failures | — | 11 | 11 | 14 |
+| snap-hit (1 cm) | 63/93 | 58/93 | 58/93 | 58/93 |
+
+Readings, all honest negatives at this label count:
+
+- **The do-no-harm guard rejects all three checkpoints** (11–14 confirming
+  events degraded >1 cm; snap-hit 63→58).  Same shape as round 1: the
+  corrective tail shrinks (p90 81→64, max 134→76) but confirmations pay
+  for it.
+- **ft1hn ≡ ft1 on every out-of-fold metric although the models differ**
+  (different checkpoint md5s, different best epochs): d_argmax is
+  *discrete* — it only changes when the winning voxel flips — and at
+  lr0=1e-6/7k-param head the hard-negative term (16 corrective events)
+  never flips an out-of-fold argmax.  The hard-negative machinery is
+  proven but unmeasurable at this scale/learning-rate; retry in the
+  serious round with `--freeze none` or larger lr before judging it.
+- **Pseudo-labels made things slightly worse** (guard 11→14, numu50 p90
+  87.7→146.6): 44 pseudo events at weight 0.25 add gradient mostly where
+  the net is already right — consistent with the confirmation-bias risk
+  §8c named; the labels arbitrating (not the pseudo cut) is what caught
+  it.
+- **The numu50 slice degrades the most** under every fine-tune — exactly
+  the sample where taxonomy found zero net-wrong misses.  Training a
+  mixed nueCC/NCpi0/numu cocktail on ~10² labels pushes the net toward
+  the shower-rich samples at the numu sample's expense; the serious round
+  should either train per-sample or up-weight numu confirming events.
+- **Lockbox (23 events) stays sealed**: every checkpoint was rejected on
+  the working set, so no selection decision exists to confirm; the seal
+  is opened the first time a candidate passes the guard.
+
+Bottom line of round 2: with O(100) labels the *gradient*-consuming ideas
+(8b/8c training arms) all fail the guard, while the *selection*-consuming
+ideas deliver — the taxonomy (invest in pr/51 graph work for numu;
+net work pays only on shower-rich samples), the x2.0 active-learning scan
+ordering, and the 95%-precision pseudo-label cut are the shipped products.
+This is the S8 principle confirmed empirically: spend labels on
+validation and selection, not on gradients.
+
 ## 9. Deferred (documented, not built this round)
 
 - **Exact-input dump knob** (toolkit C++, default-OFF): write `vec_xyzq`
@@ -290,11 +453,25 @@ the mcp1k labels.
 
 ## 10. Files / provenance
 
-- Package: `sbnd_xin/dl_vtx_training/` (this round).  Outputs under
+- Package: `sbnd_xin/dl_vtx_training/` (round 1).  Outputs under
   `data/practice66/`, `runs/` (uncommitted; `runs/parity-practice66.tsv`,
   `runs/rerank-grid-practice66.tsv`, `runs/qfeature-practice66.png`,
   `runs/ft0cpu/`; `runs/ft0/` is an aborted GPU duplicate of ft0cpu,
   ignore it).
+- Round 2 (S8e): new tools `taxonomy.py`, `tta_eval.py`, `rank_fit.py`,
+  `scan_ranker.py`, `pseudo_labels.py`; extensions in `build_dataset.py`
+  (`--numu-top`, `--event-list`, `--lockbox`, sample/prod_xyz manifest
+  columns), `dataset.py` (lockbox drop, sample-stratified folds,
+  hard-negative targets, consistency views), `train.py`
+  (`--hard-negative`, `--consistency`, `--pseudo-data/--pseudo-weight`,
+  lockbox exclusion), `evaluate.py` (per-sample summaries, lockbox),
+  `scn_vtx/io.py` (`load_scores_tsv`, `is_corrective`, `sample_of_label`),
+  `scn_vtx/voxelize.py` (negative-Gaussian target).  Outputs (uncommitted):
+  `data/{numu50,mix116,pseudo0}/`, `runs/taxonomy-20260814.tsv`,
+  `runs/tta-mix116.tsv`, `runs/tta-signals-mcp1k.tsv` (16 empty-cloud
+  events skipped), `runs/rankfit-20260814.tsv`,
+  `runs/scan-ranking-20260814.tsv`, `runs/{ft1,ft1hn,ft1ps}/`,
+  `runs/smoke-r2/`.
 - Verbatim sources: toolkit `pyutil/python/SCN/DeepVtx.py`,
   `pyutil/python/SCN_Vertex.py` (apply-pointcloud HEAD 2026-08-14);
   input assembly `clus/src/NeutrinoVertexFinder.cxx:4147-4179`; scoreboard
