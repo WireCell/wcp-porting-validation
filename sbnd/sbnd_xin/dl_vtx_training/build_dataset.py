@@ -13,8 +13,18 @@ overwritten -- new snapshot => new name.
 Usage:
   python3 build_dataset.py --name practice66 \
       --tags vtxscan-prod0813 vtxscan-prod0813-ncpi0
+
+doc pr/79 §11 -- harvest mode: --harvest-roots reads the EXACT live SCN input
+cloud from a dl_vtx_harvest arm's hv_cloud payload instead of rebuilding from
+vertices[]/segments[] (the rebuilt cloud is post-refit; the live net saw the
+pre-refit graph -- the ft2u transfer trap, doc pr/79 §3).  hv_cloud.q is
+ALREADY the scaled charge dQ*scale+offset; q_scale/q_offset ride along as
+provenance and are never re-applied.  --inherit-manifest copies the
+lockbox/sample/numu_score columns per (tag, evt) from an existing snapshot so
+the spent full473 lockbox is never redrawn.
 '''
 import argparse
+import csv
 import os
 import sys
 import numpy as np
@@ -44,6 +54,31 @@ def numu_top_events(sbnd_root, tags, k):
     return {evt for _, evt in cand[:k]}, dict((e, s) for s, e in cand)
 
 
+def harvest_cloud(calib, evt):
+    """calib of a dl_vtx_harvest arm -> (xyz, q, info), same contract as
+    vio.rebuild_cloud but sourced from the recorded live cloud.  Structure
+    asserts mirror verify_harvest.py.  Order is load-bearing -- never sort."""
+    sb = calib.get('vertex_scoreboard') or {}
+    if not sb.get('harvest'):
+        raise ValueError('evt%d: calib has no harvest payload '
+                         '(not a dl_vtx_harvest arm?)' % evt)
+    c = sb['hv_cloud']
+    x = np.array(c['x'], np.float32)
+    y = np.array(c['y'], np.float32)
+    z = np.array(c['z'], np.float32)
+    q = np.array(c['q'], np.float32)
+    if not (len(x) == len(y) == len(z) == len(q)):
+        raise ValueError('evt%d: hv_cloud length mismatch' % evt)
+    nvr = int(c['n_vertex_rows'])
+    if not (nvr == len(c['vertex_ids']) <= len(x)):
+        raise ValueError('evt%d: hv_cloud vertex block inconsistent' % evt)
+    xyz = np.stack([x, y, z], axis=1)
+    info = dict(n_vtx_points=nvr, n_seg_points=len(q) - nvr,
+                n_invalid_fit=-1,  # not applicable: cloud recorded, not rebuilt
+                dQdx_scale=float(c['q_scale']), dQdx_offset=float(c['q_offset']))
+    return xyz, q, info
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--name', required=True, help='snapshot name under data/')
@@ -63,7 +98,28 @@ def main():
                          'sample x corrective; excluded from ALL training and '
                          'model selection, reported once at the end)')
     ap.add_argument('--lockbox-seed', type=int, default=20260814)
+    ap.add_argument('--harvest-roots', nargs='+', default=None,
+                    help='doc pr/79 §11: tag=path pairs (or one bare path, '
+                         'relative to --sbnd-root) of dl_vtx_harvest arms; '
+                         'cloud comes from hv_cloud instead of rebuild_cloud')
+    ap.add_argument('--inherit-manifest', default=None,
+                    help='existing snapshot manifest.tsv: copy lockbox / '
+                         'sample / numu_score per (tag, evt) instead of '
+                         'recomputing; the event sets must match exactly')
     args = ap.parse_args()
+
+    if args.inherit_manifest and args.lockbox > 0:
+        print('--inherit-manifest and --lockbox are mutually exclusive '
+              '(inheriting exists precisely to avoid a fresh draw)')
+        return 1
+    harvest_roots = None
+    if args.harvest_roots:
+        harvest_roots = vio.parse_arm_roots(args.harvest_roots, args.sbnd_root)
+    inherit = None
+    if args.inherit_manifest:
+        with open(args.inherit_manifest) as fh:
+            inherit = {(r['tag'], int(r['evt'])): r
+                       for r in csv.DictReader(fh, delimiter='\t')}
 
     here = os.path.dirname(os.path.abspath(__file__))
     out_dir = os.path.join(here, 'data', args.name)
@@ -83,7 +139,7 @@ def main():
 
     numu_set, numu_scores = (set(), {})
     numu_name = 'numu50'
-    if any('mcp1k' in t for t in args.tags):
+    if inherit is None and any('mcp1k' in t for t in args.tags):
         numu_set, numu_scores = numu_top_events(
             args.sbnd_root, args.tags,
             args.numu_top or args.numu_flag or 10**9)
@@ -100,15 +156,28 @@ def main():
         if args.numu_top and 'mcp1k' in (label['scan_tag'] or '') \
                 and evt not in numu_set:
             continue
-        calib_path = vio.calib_path_for_label(args.sbnd_root, label)
-        calib = vio.load_calib(calib_path)
-        xyz, q, info = vio.rebuild_cloud(calib)
+        if harvest_roots is not None:
+            calib_path = vio.calib_path_in_roots(harvest_roots, label)
+            calib = vio.load_calib(calib_path)
+            xyz, q, info = harvest_cloud(calib, evt)
+        else:
+            calib_path = vio.calib_path_for_label(args.sbnd_root, label)
+            calib = vio.load_calib(calib_path)
+            xyz, q, info = vio.rebuild_cloud(calib)
         truth = label['truth_xyz']
         dis = label['dis_to_main']
         mv = label.get('main_vertex') or {}
         prod = np.array([mv.get('x', np.nan), mv.get('y', np.nan),
                          mv.get('z', np.nan)], dtype=np.float32)
-        sample = vio.sample_of_label(label, numu_set, numu_name)
+        if inherit is not None:
+            old = inherit.get((label['scan_tag'], evt))
+            if old is None:
+                print('MISSING in --inherit-manifest: tag=%s evt=%d'
+                      % (label['scan_tag'], evt))
+                return 1
+            sample = old['sample']
+        else:
+            sample = vio.sample_of_label(label, numu_set, numu_name)
         nscore = numu_scores.get(evt)
         npz = 'evt%d.npz' % evt
         np.savez_compressed(
@@ -119,6 +188,9 @@ def main():
             pick_kind=str(label['pick_kind']),
             not_a_candidate=label['not_a_candidate'],
             dis_to_main=-1.0 if dis is None else float(dis),
+            # dQdx_offset: dataset.py's charge_jitter needs it; older
+            # snapshots relied on its -1000.0 fallback matching by luck.
+            dQdx_offset=float(info['dQdx_offset']),
             calib_path=str(calib_path))
         rows.append(dict(
             evt=evt, tag=label['scan_tag'], arm=label['arm'],
@@ -131,10 +203,13 @@ def main():
             dis_to_main='%.4f' % (-1.0 if dis is None else dis),
             corrective=int(dis is not None and dis > 1e-9),
             sample=sample,
-            numu_score='' if nscore is None else '%.4f' % nscore,
+            numu_score=(inherit[(label['scan_tag'], evt)].get('numu_score', '')
+                        if inherit is not None
+                        else ('' if nscore is None else '%.4f' % nscore)),
             prod_x='%.6f' % prod[0], prod_y='%.6f' % prod[1],
             prod_z='%.6f' % prod[2],
-            lockbox=0,
+            lockbox=0 if inherit is None
+            else int(inherit[(label['scan_tag'], evt)]['lockbox'] or 0),
             label_saved_utc=label['saved_utc'],
             label_mtime='%.0f' % os.path.getmtime(label['label_path']),
             npz=npz))
@@ -154,6 +229,15 @@ def main():
                 n_lock += 1
         print('lockbox: %d/%d events flagged (stratified sample x corrective, '
               'seed %d)' % (n_lock, len(rows), args.lockbox_seed))
+
+    if inherit is not None:
+        got = {(r['tag'], r['evt']) for r in rows}
+        missing = sorted(set(inherit) - got)
+        if missing:
+            print('EVENT-SET MISMATCH vs --inherit-manifest, %d events of the '
+                  'inherited snapshot are absent here, e.g. %s'
+                  % (len(missing), missing[:5]))
+            return 1
 
     with open(os.path.join(out_dir, 'manifest.tsv'), 'w') as fh:
         fh.write('\t'.join(MANIFEST_COLS) + '\n')

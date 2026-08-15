@@ -735,3 +735,156 @@ env (truthy value auto-defaults `SBND_VERTEX_SCOREBOARD=true`; pr_display
 alone does NOT enable harvest).  New tools:
 `dl_vtx_training/{verify_harvest.py, case_census.py, scoreloss_terms.py,
 drift_probe.py}`.
+
+## 11. Step 8 — harvest-cloud fine-tune retry (hft1) + calibration-replay guard: NEGATIVE, no live A/B, no flip
+
+The owner-approved retry of the §3 fine-tune, with both §3 root causes
+closed by construction: train/eval on the EXACT live SCN input recorded by
+`dl_vtx_harvest` (closing the rebuilt-cloud distribution mismatch), and a
+new offline calibration-replay guard that screens the absolute-score
+behavior the §3 offline metrics were blind to.  **Outcome: the guard works
+(it retroactively kills ft2u), and it kills the retry too — even trained on
+the correct distribution, fine-tuning at O(473) labels buys score inflation,
+not ranking improvement.  No candidate reached a live A/B.  SBND production
+weights remain uBooNE CP24.**
+
+```
+# Repro (all from dl_vtx_training/; harvest arms = work-*-ma10k20-harv2, sec 10)
+# 1. snapshot from the live clouds (lockbox/sample columns INHERITED from
+#    full473 -- the spent lockbox is never redrawn):
+python3 build_dataset.py --name harv473 \
+    --tags vtxscan-prod0813 vtxscan-prod0813-ncpi0 vtxscan-prod0813-mcp1k \
+    --harvest-roots vtxscan-prod0813=work-nuecc48-ma10k20-harv2 \
+                    vtxscan-prod0813-ncpi0=work-ncpi0-ma10k20-harv2 \
+                    vtxscan-prod0813-mcp1k=work-mcp1k-ma10k20-harv2 \
+    --inherit-manifest data/full473/manifest.tsv
+# 2. fine-tune, exact ft2u recipe (sec 3 / pr/78 sec 5) with input swapped:
+FLAGS="--data data/harv473 --kfold 6 --epochs 18 --bn-freeze --min-cloud 16 --clip 5.0"
+for k in 0 1 2 3 4 5; do python3 train.py $FLAGS --name hft1 --fold $k \
+    --freeze none --lr0 1e-5 --device cpu > runs/hft1-f$k.log 2>&1 & done; wait
+python3 merge_oof.py runs/hft1
+python3 evaluate.py --data data/harv473 --run runs/hft1 --tsv runs/hft1/eval.tsv
+python3 train.py --data data/harv473 --name hft1-deploy --kfold 0 --epochs 1 \
+    --freeze none --lr0 1e-5 --bn-freeze --min-cloud 16 --clip 5.0   # E = median fold-best = 0
+# 3. calibration-replay guard (validate on cp24 + ft2u BEFORE trusting hft1):
+python3 calib_guard.py --name cp24 --tsv runs/calibguard-cp24-20260815.tsv
+python3 calib_guard.py --name ft2u --tsv runs/calibguard-ft2u-20260815.tsv \
+    --weights /nfs/data/1/xqian/toolkit-dev/wire-cell-data/sbnd/scn_vtx/sbnd-vtx-ft2u-full473-e10-CP9.pth
+python3 calib_guard.py --name hft1 --tsv runs/calibguard-hft1-20260815.tsv \
+    --weights runs/hft1-deploy/fold0/CP0.pth
+```
+
+### 11a. `data/harv473` — the live-distribution snapshot
+
+`build_dataset.py --harvest-roots` (new mode) reads `hv_cloud` in recorded
+order instead of `vio.rebuild_cloud`; `--inherit-manifest` copies the
+`lockbox`/`sample`/`numu_score` columns per (tag, evt) from `full473`
+verbatim — a fresh lockbox draw would have moved ft2u-trained events into
+"lockbox" and faked purity (the 95-event lockbox is SPENT after §5a's
+advisory read; the only gate left is a live A/B).  Verified: 473 npz;
+inherited columns identical; spot-checked npz `xyz`/`q` byte-equal to the
+calib `hv_cloud` arrays; snapshot also writes the `dQdx_offset` npz key
+(older snapshots silently relied on `dataset.py`'s -1000.0 fallback
+matching by luck).  The distribution shift the retry targets is real:
+n_cloud differs from the rebuilt full473 clouds on 272/473 events
+(swings -127..+101 points, median 0).
+
+### 11b. hft1 fine-tune: INERT on rank metrics
+
+Same recipe as ft2u (6-fold stratified seed 20260814, x4 reflections,
+sub-voxel + charge jitter, 18 epochs, lr0 1e-5, bn-freeze, clip 5.0,
+min-cloud 16), input = harv473.  Every fold's val d50 is EXACTLY its
+epoch-0 value for all 18 epochs (fold-best epoch 0 in all six folds by
+first-tie; train loss creeps 0.0089 -> 0.0081 with zero val transfer —
+1e-5 updates almost never move an argmax voxel).  OOF over the 378
+non-lockbox events:
+
+| metric (tol 1 cm) | CP24 baseline | hft1 OOF | delta |
+|---|---|---|---|
+| snap-hit | 165/378 | 165/378 | **+0** |
+| d_argmax p50 / p90 (cm) | 3.35 / 173.63 | 3.35 / 173.63 | +0 / +0 |
+| confirmation guard fails | — | 0 | — |
+
+ft2u's +8 OOF on the same labels (§3, pr/78) was therefore an artifact of
+the rebuilt post-refit cloud distribution, not a real gain the live cloud
+merely hid: evaluated on what the net actually eats, the identical recipe
+moves nothing.  Deploy build `runs/hft1-deploy/fold0/CP0.pth`
+(md5 e824c763c5d3459aa6b1a6ccadb124e7, 376 events x 1 epoch, kept on disk,
+NOT committed) exists so the guard could screen a concrete deployable.
+
+### 11c. `calib_guard.py` — the §3-mandated score-calibration guard, validated
+
+New `dl_vtx_training/calib_guard.py`: for each of the 473 labels, runs a
+weights file on `hv_cloud` through the exact production pyutil path
+(as `verify_harvest.py`), snaps the top-K voxels to the live candidate list
+(= the leading `n_vertex_rows` cloud points, which ARE `cand_vertices` in
+graph order — NeutrinoVertexFinder.cxx:4237-4247 — so the C++ first-min
+tie-break and graph_index iteration order are reproduced by cloud order),
+recomputes `s_dl`/`s_snap`/`s_fwd_z` (min_z_set is over the SNAPPED set,
+:4529, so it moves with the net), reuses the cluster/vertex-static
+`s_clen/s_isol/s_main/s_fv` from the recorded row (derived from harvest
+fields for newly-snapped candidates; counted as `approx`), and routes on
+`best total >= dl_vtx_min_accept_score` with rank_sim-style anchored
+outcomes (changed accept -> row stand-in; new reject -> trad stand-in via
+`hv_trad_main_vertex_id`, which UNDERSTATES the live trad route).
+
+Self-validation (mandatory, and it passed both directions):
+
+| weights | routes: rej->ACC / acc->REJ | top1 ratio (corr.) | predicted vs recorded 358 |
+|---|---|---|---|
+| CP24 (anchor) | 0 / 0 | 1.000 (p10-p90: 1.000-1.000) | **+0** (0 stand-ins, 0 approx) |
+| ft2u CP9 (known live -40) | **201** / 0 | 1.915 (1.256-2.052) | **-57** |
+| hft1 CP0 | **65** / 0 | 1.313 (1.018-1.354) | **-20** |
+
+CP24 reproduces the recorded pipeline exactly (score ratios 1.000
+everywhere, predicted == recorded, per-sample +0/+0/+0) — the replay is
+faithful.  ft2u reproduces the §3 live failure signature offline: massive
+reject->accept flip mass, ~x1.5-1.9 inflation, large negative delta, and
+the min_accept sweep confirms §3's attribution finding (no threshold
+rescues it: best is +0 at ma=20 == "never accept").  **This guard, run
+before §3's live A/B, would have killed ft2u for free.**  Standing rule
+satisfied: future net candidates are screened here first.
+
+### 11d. hft1 screen: FAIL — inflation survives the distribution fix
+
+hft1 at the production operating point (ma=10): 65/220 recorded rejects
+flip to accept, 45 of them onto a row >1 cm from truth; corrective-event
+raw-net top1 inflates x1.313 median after ONE epoch on the CORRECT
+distribution; predicted -20/473.  All 250 recorded accepts keep their
+winner (chooser stable) — the damage is purely acceptance-gate
+calibration, the same failure axis as ft2u at ~1/3 the dose.  Together
+with 11b: at this label scale the MSE-on-sigmoid-diff fine-tune raises
+absolute confidence on training-like events without improving the ranking
+— score inflation is intrinsic to the objective at this dose, not a
+rebuilt-cloud artifact.
+
+Joint-recalibration fallback (§ plan step 4): the min_accept sweep's best
+pair is (hft1, ma=12) at predicted +1/473 — and it decomposes to 0 newly
+accepted events + 7 recorded accepts pushed back to the (understated) trad
+stand-in.  That is pure threshold-tightening of the incumbent behavior,
+independent of anything hft1 learned; not a clean pair, not carried to a
+live A/B.  Per the step-4 gate: **stop.  No live arms were produced; the
+step-1 production state (min_accept=10, CP24 weights) stands.**
+
+### 11e. Verdict and what would change it
+
+- pr/77 round 2's "gradients don't pay at O(100)" now holds at O(473) ON
+  THE LIVE DISTRIBUTION — the strongest form of the negative: the two
+  mechanisms §3 offered as hope (fix the distribution, guard the
+  calibration) are both closed and the gain is +0/-20.
+- The guard is the reusable deliverable: any future candidate (more
+  labels, new objective, new architecture) gets a free pre-screen with a
+  validated CP24 anchor and a validated failure detector.
+- What would genuinely change the picture, in order of the §6/§7 evidence:
+  (a) O(1k+) fresh labels (scan_ranker.py priority order exists);
+  (b) a rank/margin objective that cannot move absolute scale (the §5
+  9b margin arm was closest; it failed guard for other reasons at O(378));
+  (c) new input features beyond (x,y,z,q) — now recordable via the §10
+  harvest knob without further C++.
+
+Artifacts: `data/harv473/` (snapshot, disk), `runs/hft1{,-deploy}/`
+(checkpoints, disk, not committed), `runs/hft1-f{0..5}.log`,
+`runs/hft1/eval.{tsv,log}`, `runs/hft1/oof_d_argmax.tsv`,
+`runs/calibguard-{cp24,ft2u,hft1}-20260815.{tsv,log}` (all under
+`dl_vtx_training/`, on disk per the runs/ convention).  Committed: this
+section, `calib_guard.py`, and the `build_dataset.py` harvest mode.
