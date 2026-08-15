@@ -146,6 +146,8 @@ def replay_rerank(sb, vox):
             s_stat = s_clen + s_isol + s_main + s_fv
             out['n_approx'] += 1
         tot = s_dl + s_snap + s_fwd_z + s_stat
+        out.setdefault('cands', []).append(
+            (ids[ci], s, s_snap + s_fwd_z + s_stat, cand[ci]))
         if tot > out['best_tot']:
             out.update(best_tot=tot, best_ci=ci)
     out.update(best_vid=ids[out['best_ci']], best_xyz=cand[out['best_ci']],
@@ -198,6 +200,14 @@ def replay_one(job):
                d_trad=('' if d_trad == '' else '%.3f' % d_trad),
                winner_match=int(rep['best_vid'] == rec_winner),
                route_new='dl-rerank-accept' if accept else 'dl-rerank-reject')
+    # internal (not TSV): per-candidate table for --fit-scale re-routing
+    rec['_cands'] = [(vid, dl, rest,
+                      float(np.linalg.norm(np.asarray(p) - truth)))
+                     for vid, dl, rest, p in rep['cands']]
+    rec['_scale0'] = float(sb.get('dl_score_scale') or 1000.0)
+    rec['_ma'] = float(sb['dl_min_accept_score'])
+    rec['_rec_winner'] = rec_winner
+    rec['_d_trad_f'] = d_trad if d_trad != '' else None
     if accept and rec_accept and rep['best_vid'] == rec_winner:
         pass                                    # full live answer (post-refit)
     elif accept:
@@ -224,13 +234,27 @@ def main():
     ap.add_argument('--jobs', type=int, default=16)
     ap.add_argument('--sweep-min-accepts', nargs='+', type=float,
                     default=[4.0, 6.0, 8.0, 10.0, 12.0, 15.0, 20.0])
+    ap.add_argument('--events-file', default=None,
+                    help='doc pr/81 B: file of eventNo (one per line) -- '
+                         'replay only these (guard-in-loop fold selection)')
+    ap.add_argument('--fit-scale', action='store_true',
+                    help='doc pr/81 C: fit a multiplicative score scale on '
+                         'CONFIRMING events matching CP24 top-1 calibration, '
+                         'and report the replay again at the fitted scale')
     ap.add_argument('--tsv', default=None)
     args = ap.parse_args()
+
+    keep_events = None
+    if args.events_file:
+        with open(args.events_file) as fh:
+            keep_events = {int(l.split()[0]) for l in fh if l.strip()}
 
     weights = args.weights or vio.default_weights()
     roots = vio.parse_arm_roots(args.arm_roots, args.sbnd_root)
     jobs = []
     for label in vio.iter_labels(args.sbnd_root, ALL_TAGS):
+        if keep_events is not None and label['eventNo'] not in keep_events:
+            continue
         path = vio.calib_path_in_roots(roots, label)
         if not path or not os.path.exists(path):
             print('MISSING calib for evt%d' % label['eventNo'])
@@ -315,6 +339,45 @@ def main():
                     n += int(r['d_trad'] != '' and float(r['d_trad']) <= args.tol)
         print('  min_accept %5.1f : predicted %3d/%d  (%+d vs recorded)'
               % (ma, n, len(recs), n - n_rec))
+
+    if args.fit_scale:
+        t_pairs = [(float(r['top1_new']), float(r['top1_rec']))
+                   for r in replayed if r['corrective'] == 0
+                   and r['top1_rec'] is not None
+                   and float(r['top1_rec']) > 0 and float(r['top1_new']) > 0]
+        med = pct([a / b for a, b in t_pairs], 50)
+        mult = 1.0 / med if med and np.isfinite(med) and med > 0 else 1.0
+        print('\n== fitted scale (confirming top-1 median ratio %.3f -> '
+              'scale multiplier %.3f, i.e. dl_vtx_score_scale %.0f) =='
+              % (med, mult, 1000.0 * mult))
+        n = n_flip = 0
+        for r in recs:
+            if '_cands' not in r:
+                n += r['ok_rec']
+                continue
+            rec_accept = r['route_rec'] == 'dl-rerank-accept'
+            best_tot, best = -np.inf, None
+            for vid, dl, rest, d in r['_cands']:
+                tot = dl * r['_scale0'] * mult + rest
+                if tot > best_tot:
+                    best_tot, best = tot, (vid, d)
+            if best_tot >= r['_ma']:
+                if rec_accept and best[0] == r['_rec_winner']:
+                    n += r['ok_rec']
+                else:
+                    n += int(best[1] <= args.tol)
+                n_flip += int(not rec_accept)
+            else:
+                if not rec_accept:
+                    n += r['ok_rec']
+                else:
+                    n += int(r['_d_trad_f'] is not None
+                             and r['_d_trad_f'] <= args.tol)
+                    n_flip += 1
+        ma0 = next((r['_ma'] for r in recs if '_ma' in r), 10.0)
+        print('  at (scale x%.3f, min_accept %.1f): predicted %d/%d (%+d vs '
+              'recorded), %d route flips'
+              % (mult, ma0, n, len(recs), n - n_rec, n_flip))
 
     if args.tsv:
         cols = ['evt', 'sample', 'corrective', 'route_rec', 'route_new',

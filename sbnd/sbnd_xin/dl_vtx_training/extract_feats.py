@@ -19,6 +19,11 @@ this is a SCREEN; any deployment fit must use live-harvested features
 centre and the nearest rebuilt-cloud voxel centre is stored per candidate
 so downstream fits can cut on it.
 
+doc pr/81 A1 -- `--harvest` mode lifts the caveat: the cloud comes from the
+calib's hv_cloud payload (the EXACT live SCN input, doc pr/79 §10), so the
+forward pass reproduces live inference bit-for-bit and match_dis is exactly
+0 for every candidate whose voxel_rank points into the recorded voxels[].
+
 Output: <out>/evt<ID>.npz with
     cand16      (n_usable, 16) penultimate features at each candidate voxel
     cand_score  (n_usable,)    rebuilt-cloud net score at that voxel
@@ -59,7 +64,7 @@ def get_model(weights):
 
 
 def one_event(task):
-    label_path, calib_path, out_path, weights = task
+    label_path, calib_path, out_path, weights, harvest = task
     import torch
     label = vio.load_label(label_path)
     calib = vio.load_calib(calib_path)
@@ -70,7 +75,16 @@ def one_event(task):
     if not usable:
         return (label['eventNo'], 'no-usable')
     voxels = sb.get('voxels') or []
-    xyz, q, _info = vio.rebuild_cloud(calib)
+    if harvest:
+        if not sb.get('harvest'):
+            return (label['eventNo'], 'no-harvest-payload')
+        c = sb['hv_cloud']
+        xyz = np.stack([np.array(c['x'], np.float32),
+                        np.array(c['y'], np.float32),
+                        np.array(c['z'], np.float32)], axis=1)
+        q = np.array(c['q'], np.float32)
+    else:
+        xyz, q, _info = vio.rebuild_cloud(calib)
     coords, ft, offset = vox.voxelize_event(xyz, q)
     model = get_model(weights)
     with torch.no_grad():
@@ -111,6 +125,9 @@ def main():
     ap.add_argument('--weights', default=vio.default_weights())
     ap.add_argument('--out', required=True)
     ap.add_argument('--jobs', type=int, default=24)
+    ap.add_argument('--harvest', action='store_true',
+                    help='doc pr/81 A1: forward on the calib hv_cloud (exact '
+                         'live input) instead of the rebuilt cloud')
     args = ap.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
@@ -128,7 +145,7 @@ def main():
             raise FileNotFoundError(cp)
         tasks.append((label['label_path'], cp,
                       os.path.join(out, 'evt%d.npz' % label['eventNo']),
-                      args.weights))
+                      args.weights, args.harvest))
 
     import multiprocessing as mp
     with mp.Pool(args.jobs) as pool:
