@@ -66,9 +66,9 @@ by VERTEX ID (no cross-arm refit artifact): 36 of 57 answered with a recorded tr
 reconstruction on the same 60 events: 43 correct (71.7%)
 events where NO vertex in this arm is within 1 cm of the click: 5 (8.3%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
 
-confidence calibration (this is the number that decides the hand-back workflow):
-   certain  n= 14 answered= 14 correct= 13  (92.9%)
-   likely   n= 29 answered= 29 correct= 17  (58.6%)
-   unclear  n= 17 answered= 15 correct=  6  (40.0%)
+confidence calibration (this is what decides the hand-back workflow -- read coverage and accuracy TOGETHER):
+   certain  coverage  14/60 (23.3%)  answered  14  correct  13 (92.9%)  by-vid  12 (85.7%)
+   likely   coverage  29/60 (48.3%)  answered  29  correct  17 (58.6%)  by-vid  18 (62.1%)
+   unclear  coverage  17/60 (28.3%)  answered  15  correct   6 (40.0%)  by-vid   6 (40.0%)
 
 reco wrong on 28.3% of all events, 50.0% of the 16 the scanner declined or disagreed with -> enrichment x1.76

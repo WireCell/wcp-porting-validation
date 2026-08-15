@@ -3,13 +3,13 @@ evt168526    likely      21.57      no      no      yes   Rule 1: all three pron
 evt169356    certain      0.00     yes     yes      yes   Clean V apex at the lowest z of the event: 61 cm pi 
 evt169620    certain      0.01     yes     yes      yes   Rule 1 unanimous: 3 of 3 prongs rise away (182 cm mu
 evt172266    certain      0.00     yes     yes      yes   Deg-4 hadronic knot: 12 cm proton rising away to 213
-evt172656    unclear    257.00      no      no       no   Leaning on the charge discontinuity at 10002 (256 cm
+evt172656    likely       6.14      no      no       no   Rule 3 removes 10002: the 7 cm prong there rises mon
 evt173146    certain      0.00     yes     yes      yes   Deg-3 vertex with a 28.5 cm proton rising away to 17
 evt174224    likely       0.01     yes     yes      yes   Zoom shows 20004 as the common endpoint of the dark-
 evt175016    unclear      0.00     yes     yes      yes   Event is a handful of disconnected dots (rule 8); 19
 evt18625     certain      0.01     yes     yes      yes   Rule 1 unanimous 2 of 2: a 97 cm muon rising away to
-evt278420    likely       0.00     yes     yes      yes   Trap-2 read of p4: the 5 cm means at 18002 are infla
-evt278640    likely     124.63      no      no      yes   p4 shows the 5 cm prong falling 260k at 17000 to 40k
+evt278420    likely      30.65      no      no      yes   Rule 1 plus rule 6: 18001 is the only end whose atta
+evt278640    unclear         -      no      no      yes   Abstain: the zoom shows the 5 cm 260k segment contin
 evt278785    certain      0.00     yes     yes      yes   Deg-3 vertex with two very hot short protons (181k, 
 evt279643    likely       0.09     yes     yes      yes   Only real cluster in the event; p4 shows the 4.7 cm 
 evt280972    likely       0.29     yes     yes      yes   Zoom shows 7010 as the apex at the lowest z where ev
@@ -60,15 +60,15 @@ evt64717     likely       9.15      no      no      yes   Cluster 17 is a single
 evt64959     unclear     45.31      no      no       no   Everything hugs the top wall (y~197-200) and the 91 
 evt90055     certain      0.00     yes     yes      yes   Upstream apex of the big shower: from 11002 a 19.6 c
 
-picks files written at: {'picks-0.json': '2026-08-15 12:55:33', 'picks-1.json': '2026-08-15 12:59:54', 'picks-2.json': '2026-08-15 12:51:11', 'picks-3.json': '2026-08-15 12:55:06'}
-scanned 60, answered 59 (98%), correct 43 (precision 72.9%, @3cm 79.7%)
-by VERTEX ID (no cross-arm refit artifact): 43 of 58 answered with a recorded truth id (74.1%)
+picks files written at: {'picks-0.json': '2026-08-15 13:00:55', 'picks-1.json': '2026-08-15 13:03:20', 'picks-2.json': '2026-08-15 12:51:11', 'picks-3.json': '2026-08-15 12:55:06'}
+scanned 60, answered 58 (97%), correct 42 (precision 72.4%, @3cm 79.3%)
+by VERTEX ID (no cross-arm refit artifact): 42 of 57 answered with a recorded truth id (73.7%)
 reconstruction on the same 60 events: 43 correct (71.7%)
 events where NO vertex in this arm is within 1 cm of the click: 5 (8.3%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
 
 confidence calibration (this is what decides the hand-back workflow -- read coverage and accuracy TOGETHER):
    certain  coverage  27/60 (45.0%)  answered  27  correct  25 (92.6%)  by-vid  26 (96.3%)
-   likely   coverage  23/60 (38.3%)  answered  23  correct  14 (60.9%)  by-vid  13 (56.5%)
-   unclear  coverage  10/60 (16.7%)  answered   9  correct   4 (44.4%)  by-vid   4 (44.4%)
+   likely   coverage  23/60 (38.3%)  answered  23  correct  13 (56.5%)  by-vid  12 (52.2%)
+   unclear  coverage  10/60 (16.7%)  answered   8  correct   4 (50.0%)  by-vid   4 (50.0%)
 
-reco wrong on 28.3% of all events, 73.3% of the 15 the scanner declined or disagreed with -> enrichment x2.59
+reco wrong on 28.3% of all events, 66.7% of the 15 the scanner declined or disagreed with -> enrichment x2.35

@@ -1,15 +1,15 @@
 paired on 60 common events:  A = dev-old-a   B = dev-new
 
-  --- correct @1cm ---   A 36/60, B 43/60
-    both  33    neither  14
+  --- correct @1cm ---   A 36/60, B 42/60
+    both  32    neither  14
     B only (B wins) 10   evt174224 evt284013 evt287830 evt30504 evt315013 evt401054 evt408534 evt42280 evt61351 evt64409
-    A only (A wins)  3   evt168526 evt278640 evt62721
-    discordant 13; the comparison rests on these alone
-    exact binomial p = 0.0923 (two-sided, H0: kit irrelevant)
+    A only (A wins)  4   evt168526 evt278420 evt278640 evt62721
+    discordant 14; the comparison rests on these alone
+    exact binomial p = 0.1796 (two-sided, H0: kit irrelevant)
 
-  --- correct by vertex id ---   A 36/60, B 43/60
-    both  33    neither  14
+  --- correct by vertex id ---   A 36/60, B 42/60
+    both  32    neither  14
     B only (B wins) 10   evt174224 evt284013 evt287830 evt30504 evt315013 evt401054 evt408534 evt42280 evt61351 evt64409
-    A only (A wins)  3   evt168526 evt278640 evt62721
-    discordant 13; the comparison rests on these alone
-    exact binomial p = 0.0923 (two-sided, H0: kit irrelevant)
+    A only (A wins)  4   evt168526 evt278420 evt278640 evt62721
+    discordant 14; the comparison rests on these alone
+    exact binomial p = 0.1796 (two-sided, H0: kit irrelevant)

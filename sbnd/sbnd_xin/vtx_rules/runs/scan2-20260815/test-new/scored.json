@@ -2,10 +2,10 @@
  "picks_written": {
   "picks-0.json": "2026-08-15 13:10:19",
   "picks-1.json": "2026-08-15 13:10:51",
-  "picks-2.json": "2026-08-15 13:11:55",
-  "picks-3.json": "2026-08-15 13:10:07"
+  "picks-2.json": "2026-08-15 13:12:44",
+  "picks-3.json": "2026-08-15 13:12:49"
  },
- "scored_at": "2026-08-15 13:12:14",
+ "scored_at": "2026-08-15 13:42:01",
  "rows": [
   {
    "event": "evt10550",
@@ -575,7 +575,7 @@
    "reco_ok": true,
    "reachable": true,
    "best": 0.006640211247401224,
-   "why": "The 92.6 cm muon and the collinear 38.6 cm 'e' are one object whose p4 profile rises monotonically along the stopping-muon template to 130000 at 51025, so that far end is the Bragg and 6001 is the cool start - and the 1.1 cm, 228312 e/cm proton stub (cluster 44) sits 5 cm off 6001, the classic muon+proton-stub vertex."
+   "why": "The single Bragg peak in this event is at 51025, where the p4 profile of the collinear cluster-51 segment rises monotonically along the stopping-muon template to 130000 while cluster 6 stays flat at MIP, so the ~131 cm muon stops there and 6001 is its cool end - and the separate 1.1 cm, 228312 e/cm proton blob sits 5 cm off 6001, giving the classic muon-plus-proton-stub vertex."
   },
   {
    "event": "evt386948",
@@ -830,7 +830,7 @@
    "reco_ok": true,
    "reachable": true,
    "best": 0.0025966916030126875,
-   "why": "The 516 cm track has a genuine 95-degree corner at 14002 that no muon can scatter through, and 14002 is the local z-minimum from which both arms run forward in z (98 cm exiting the y=200 top, 413 cm ending hot at 14000)."
+   "why": "The 516 cm track has a genuine 95-degree corner at 14002 (confirmed in the principal frame) that no muon can scatter through, and neither arm shows a Bragg rise at 14002 - both are at their coolest there - so both start at this local z-minimum and run forward in z."
   },
   {
    "event": "evt61461",
@@ -850,17 +850,17 @@
   {
    "event": "evt63163",
    "conf": "unclear",
-   "vid": 6002,
-   "dist": 0.0028526627386802252,
-   "ok": true,
-   "ok3": true,
-   "ok_vid": true,
+   "vid": null,
+   "dist": null,
+   "ok": false,
+   "ok3": false,
+   "ok_vid": false,
    "truth_vid": 6002,
    "reco": 0.0,
    "reco_ok": true,
    "reachable": true,
    "best": 0.0028526627386802252,
-   "why": "Genuinely ambiguous: the dQ/dx falls monotonically from a 219257 tip at 6003 back to 1.07 MIP at the z=500.3 wall, which reads as a track stopping here (Michel-like debris cloud around it, rule 3 says far end), yet a perfectly horizontal -z cosmic is implausible and 6002 is the low-z end with a hot proton stub and all the small fragments."
+   "why": "Abstain: the dQ/dx falls monotonically from a 219257 tip at 6003 back to 1.07 MIP at the z=500.3 detector wall, so the only long track is one stopping here and rule 3 puts the vertex at its far end - which is the wall, not a vertex - while the zoom shows the surrounding fragments scattered over a 50 cm ball with no common origin rather than a Michel blob or a hadronic star."
   },
   {
    "event": "evt63551",

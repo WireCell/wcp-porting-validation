@@ -36,7 +36,7 @@ evt316729    likely       0.01     yes     yes       no   The zoom shows the 6.3
 evt317191    likely       0.00     yes     yes      yes   Rule 1 at the event's only deg-3 junction: the 103 c
 evt320667    likely       0.01     yes     yes       no   Rule 1 gives 2 of 2 rising away here: a 15.8 cm prot
 evt348713    unclear      0.01     yes     yes      yes   The p4 profiles show the whole 129 cm chain is one p
-evt352233    likely       0.01     yes     yes      yes   The 92.6 cm muon and the collinear 38.6 cm 'e' are o
+evt352233    likely       0.01     yes     yes      yes   The single Bragg peak in this event is at 51025, whe
 evt386948    likely       0.00     yes     yes       no   Rule 6/7 in an all-shower event: the two shower blob
 evt399118    likely       0.01     yes     yes       no   The overview shows a clean V whose apex is here: a 1
 evt399328    likely       0.01     yes     yes      yes   The p4 profiles show both segments attached to 12003
@@ -55,20 +55,20 @@ evt54341     certain      0.00     yes     yes      yes   Rules 1 and 3 together
 evt55715     likely       5.93      no      no      yes   Compact deg-4 hub: four prongs including a 15.6 cm p
 evt56463     likely       0.00     yes     yes      yes   The 516 cm track has a genuine 95-degree corner at 1
 evt61461     likely       0.00     yes     yes      yes   10007 has nothing rising toward it (93 cm muon rises
-evt63163     unclear      0.00     yes     yes      yes   Genuinely ambiguous: the dQ/dx falls monotonically f
+evt63163     unclear         -      no      no      yes   Abstain: the dQ/dx falls monotonically from a 219257
 evt63551     certain      0.50     yes     yes      yes   Rule 1 with nothing to contradict it: the single 98 
 evt65053     likely       0.00     yes     yes       no   Extrapolating the 116 cm muon backwards from its una
 evt65267     unclear      0.00     yes     yes      yes   Rule 8 territory - the whole event is one 8.7 cm seg
 
-picks files written at: {'picks-0.json': '2026-08-15 13:10:19', 'picks-1.json': '2026-08-15 13:10:51', 'picks-2.json': '2026-08-15 13:11:55', 'picks-3.json': '2026-08-15 13:10:07'}
-scanned 60, answered 59 (98%), correct 45 (precision 76.3%, @3cm 78.0%)
-by VERTEX ID (no cross-arm refit artifact): 46 of 59 answered with a recorded truth id (78.0%)
+picks files written at: {'picks-0.json': '2026-08-15 13:10:19', 'picks-1.json': '2026-08-15 13:10:51', 'picks-2.json': '2026-08-15 13:12:44', 'picks-3.json': '2026-08-15 13:12:49'}
+scanned 60, answered 58 (97%), correct 44 (precision 75.9%, @3cm 77.6%)
+by VERTEX ID (no cross-arm refit artifact): 45 of 58 answered with a recorded truth id (77.6%)
 reconstruction on the same 60 events: 46 correct (76.7%)
 events where NO vertex in this arm is within 1 cm of the click: 2 (3.3%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
 
 confidence calibration (this is what decides the hand-back workflow -- read coverage and accuracy TOGETHER):
    certain  coverage  22/60 (36.7%)  answered  22  correct  21 (95.5%)  by-vid  21 (95.5%)
    likely   coverage  26/60 (43.3%)  answered  26  correct  18 (69.2%)  by-vid  18 (69.2%)
-   unclear  coverage  12/60 (20.0%)  answered  11  correct   6 (54.5%)  by-vid   7 (63.6%)
+   unclear  coverage  12/60 (20.0%)  answered  10  correct   5 (50.0%)  by-vid   6 (60.0%)
 
-reco wrong on 23.3% of all events, 56.2% of the 16 the scanner declined or disagreed with -> enrichment x2.41
+reco wrong on 23.3% of all events, 52.9% of the 17 the scanner declined or disagreed with -> enrichment x2.27

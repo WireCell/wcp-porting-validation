@@ -1,11 +1,11 @@
 {
  "picks_written": {
-  "picks-0.json": "2026-08-15 12:55:33",
-  "picks-1.json": "2026-08-15 12:59:54",
+  "picks-0.json": "2026-08-15 13:00:55",
+  "picks-1.json": "2026-08-15 13:03:20",
   "picks-2.json": "2026-08-15 12:51:11",
   "picks-3.json": "2026-08-15 12:55:06"
  },
- "scored_at": "2026-08-15 13:00:13",
+ "scored_at": "2026-08-15 13:41:59",
  "rows": [
   {
    "event": "evt168526",
@@ -69,9 +69,9 @@
   },
   {
    "event": "evt172656",
-   "conf": "unclear",
-   "vid": 10002,
-   "dist": 256.99683341987753,
+   "conf": "likely",
+   "vid": 10001,
+   "dist": 6.138573343943218,
    "ok": false,
    "ok3": false,
    "ok_vid": false,
@@ -80,7 +80,7 @@
    "reco_ok": false,
    "reachable": true,
    "best": 0.004291079143000163,
-   "why": "Leaning on the charge discontinuity at 10002 (256 cm muon flat MIP then a separate 7 cm prong rising 15k->217k plus an 11 cm wiggly prong), but the competing read - a cosmic muon stopping with a Bragg and a Michel at this same end (rule 3) - survives, the 7 cm prong being nearly collinear with the incoming muon."
+   "why": "Rule 3 removes 10002: the 7 cm prong there rises monotonically to 217k within 31 deg of the incoming muon (its own Bragg, level matching a muon not a proton) with an 11 cm Michel at the branch, so that is the far end; the zoom shows the 256 cm muon terminating exactly at 10001 where a 163-188k proton pair (cluster 53) originates - muon start plus hadronic prongs."
   },
   {
    "event": "evt173146",
@@ -145,23 +145,23 @@
   {
    "event": "evt278420",
    "conf": "likely",
-   "vid": 18002,
-   "dist": 0.004839779524986874,
-   "ok": true,
-   "ok3": true,
-   "ok_vid": true,
+   "vid": 18001,
+   "dist": 30.6513239372227,
+   "ok": false,
+   "ok3": false,
+   "ok_vid": false,
    "truth_vid": 18002,
    "reco": 0.0,
    "reco_ok": true,
    "reachable": true,
    "best": 0.004839779524986874,
-   "why": "Trap-2 read of p4: the 5 cm means at 18002 are inflated by an unresolved vertex blob (plus a 1.5 cm 151k proton stub), while both long prongs show their own multi-cm rises at their FAR ends (180k at 18000, 125k at 18001), i.e. both stop away from 18002."
+   "why": "Rule 1 plus rule 6: 18001 is the only end whose attached segment rises away (67316 -> 93110), and the zoom shows a fan of separate short fragments (clusters 79, 71, 61, 62, 72, 74) converging on it 11-13 cm away; 18002 scores 0 of 2 on rule 1 and carries a genuine monotone 8 cm rise to 225k, i.e. something stops there."
   },
   {
    "event": "evt278640",
-   "conf": "likely",
-   "vid": 17002,
-   "dist": 124.63483937829146,
+   "conf": "unclear",
+   "vid": null,
+   "dist": null,
    "ok": false,
    "ok3": false,
    "ok_vid": false,
@@ -170,7 +170,7 @@
    "reco_ok": true,
    "reachable": true,
    "best": 0.0035257595381069495,
-   "why": "p4 shows the 5 cm prong falling 260k at 17000 to 40k at 17002, so it is a proton starting at 17002 and stopping at 17000, with a 5.9 cm prong and a flat-MIP 129 cm muon also attached; no Bragg anywhere on the muon rules out the stopping-muon-plus-Michel reading."
+   "why": "Abstain: the zoom shows the 5 cm 260k segment continuing the 129 cm muon within 16 deg (and at a muon, not proton, level - 125k at 5 cm residual range), so 17002 is a stopping-muon end with a Michel (rule 3), the muon entering at the z=2.7 upstream face; nothing else in the event but two sub-cm dots, so no neutrino vertex is readable."
   },
   {
    "event": "evt278785",
@@ -320,7 +320,7 @@
    "reco_ok": false,
    "reachable": true,
    "best": 0.005533870648197692,
-   "why": "Deg-3 hadronic hub: the 6.1 cm proton rises monotonically to 262k at 13001 on the proton template and a 3.3 cm 101k stub leaves to 13016; the 143 cm muon starts 1 cm away at 13002, so this is a 1 cm coin-flip between 13015 and 13002."
+   "why": "Deg-3 hadronic hub: the 6.1 cm proton rises monotonically to 262k at 13001 on the proton template and a 3.3 cm 101k stub leaves to 13016, so 2 of 3 real prongs converge on 13015; the 1.1 cm 35k 'proton' linking it to 13002 is below MIP and is a fitter connector across one split vertex, not a particle."
   },
   {
    "event": "evt287830",

@@ -66,9 +66,42 @@ def _used(path):
         return {m["event"] for m in json.load(fh)}
 
 
+def _event_name(path):
+    """`.../pr_evt12345/calib-pr-evt12345.json` -> `evt12345`."""
+    b = os.path.basename(path)
+    for pre, suf in (("calib-pr-", ".json"), ("calib-", ".json")):
+        if b.startswith(pre) and b.endswith(suf):
+            return b[len(pre):-len(suf)]
+    return os.path.splitext(b)[0]
+
+
+def _targets_from_dumps(spec):
+    """Un-labelled calib dumps: a glob, a directory, or a file of paths.
+
+    This is the production path -- new events the owner has not scanned, where
+    there is no truth to score against and the deliverable is the triage list.
+    Everything downstream is identical; only `score` is unavailable, and
+    `review` takes its place.
+    """
+    if os.path.isdir(spec):
+        paths = sorted(glob.glob(os.path.join(spec, "**", "calib-*.json"),
+                                 recursive=True))
+    elif os.path.isfile(spec) and not spec.endswith(".json"):
+        with open(spec) as fh:
+            paths = [ln.strip() for ln in fh if ln.strip()
+                     and not ln.startswith("#")]
+    else:
+        paths = sorted(glob.glob(spec))
+    if not paths:
+        raise SystemExit("no calib dumps matched: %s" % spec)
+    return [dict(event=_event_name(p), key=None, dump=p) for p in paths]
+
+
 def prepare(half, n, out, seed, kit, workers, exclude_manifest,
-            only_manifest=None):
-    if only_manifest:
+            only_manifest=None, dumps=None):
+    if dumps:
+        targets = _targets_from_dumps(dumps)
+    elif only_manifest:
         # Re-scan an exact, previously-scanned event set (the §7 twenty) with a
         # different kit.  Diagnostic only: those events' answers are known to
         # whoever launches the run, so it must never be scored before the
@@ -77,21 +110,25 @@ def prepare(half, n, out, seed, kit, workers, exclude_manifest,
         labs = [L for L in vtx_io.load_labels()
                 if L["event"] in keep and baselines.deployed_dump_path(L)]
         labs.sort(key=lambda L: L["event"])
+        targets = [dict(event=L["event"], key=list(L["key"]),
+                        dump=baselines.deployed_dump_path(L)) for L in labs]
     else:
         labs = _labels(half, _used(exclude_manifest))
         rng = random.Random(seed)
         rng.shuffle(labs)
         labs = labs[:n]
         labs.sort(key=lambda L: L["event"])
+        targets = [dict(event=L["event"], key=list(L["key"]),
+                        dump=baselines.deployed_dump_path(L)) for L in labs]
 
     os.makedirs(out, exist_ok=True)
     manifest = []
-    for L in labs:
-        path = baselines.deployed_dump_path(L)
+    for T in targets:
+        path = T["dump"]
         with open(path) as fh:
             raw = json.load(fh)
         d = scankit.sanitize(raw)
-        scankit.assert_blind(d, L["event"])
+        scankit.assert_blind(d, T["event"])
 
         # The scorer's lookup table: every vertex, every cluster, always.
         cands = [dict(vertex_id=v["id"], cluster_id=v["cluster_id"],
@@ -100,36 +137,46 @@ def prepare(half, n, out, seed, kit, workers, exclude_manifest,
                  for v in scankit.candidates(d)
                  for p in [scankit.vertex_xyz(v)]]
 
-        ed = os.path.join(out, L["event"])
+        ed = os.path.join(out, T["event"])
         if kit == "new":
-            made = scankit.prepare(path, ed, title=L["event"])
+            made = scankit.prepare(path, ed, title=T["event"])
         else:
             # Faithful reproduction of the first round: one flat PNG, and a
             # worksheet listing only the main cluster's vertices.  Reproducing
             # the old arm honestly means reproducing its blind spot too.
             os.makedirs(ed, exist_ok=True)
             png = os.path.join(ed, "event.png")
-            render_event.render(raw, png, title=L["event"], blind=True)
+            render_event.render(raw, png, title=T["event"], blind=True)
             cid = vtx_io.main_cluster_id(raw)
             shown = [c for c in cands if c["cluster_id"] == cid]
             with open(os.path.join(ed, "candidates.txt"), "w") as fh:
                 fh.write("%s  cluster %s  %d candidates\n"
-                         % (L["event"], cid, len(shown)))
+                         % (T["event"], cid, len(shown)))
                 for c in shown:
                     fh.write("  vertex %-8s deg %-2s (%8.2f, %8.2f, %8.2f)\n"
                              % (c["vertex_id"], c["degree"], c["x"], c["y"],
                                 c["z"]))
             made = ["event.png", "candidates.txt"]
-        manifest.append(dict(event=L["event"], key=list(L["key"]), dump=path,
-                             dir=ed, files=made, candidates=cands))
+        # An empty PR graph is a real class on production input (reconstruction
+        # found no vertex at all).  Such an event is not scannable -- there is
+        # nothing to pick -- so it is kept in the manifest but left OUT of the
+        # worklists.  Handing a scanner a blank picture and then counting its
+        # non-answer would quietly move every denominator.
+        manifest.append(dict(event=T["event"], key=T["key"], dump=path,
+                             dir=ed, files=made, candidates=cands,
+                             scannable=bool(cands)))
 
     with open(os.path.join(out, "manifest.json"), "w") as fh:
         json.dump(manifest, fh, indent=1)
-    # Split into worker shards by position, so each worker gets a contiguous,
-    # reproducible slice and two runs of the same command shard identically.
-    per = (len(manifest) + workers - 1) // workers
-    for w in range(workers):
-        chunk = manifest[w * per:(w + 1) * per]
+    # Split the SCANNABLE events into worker shards by position, so each worker
+    # gets a contiguous, reproducible slice and two runs of the same command
+    # shard identically.
+    todo = [m for m in manifest if m["scannable"]]
+    skipped = [m for m in manifest if not m["scannable"]]
+    nw = max(1, min(workers, len(todo)))
+    per = (len(todo) + nw - 1) // nw
+    for w in range(nw):
+        chunk = todo[w * per:(w + 1) * per]
         if not chunk:
             continue
         with open(os.path.join(out, "worklist-%d.txt" % w), "w") as fh:
@@ -141,7 +188,15 @@ def prepare(half, n, out, seed, kit, workers, exclude_manifest,
     with open(os.path.join(out, "KIT"), "w") as fh:
         fh.write("%s\n" % kit)
     print("prepared %d blind events (kit=%s) in %s, %d worklists"
-          % (len(manifest), kit, out, min(workers, len(manifest))))
+          % (len(todo), kit, out, nw))
+    if skipped:
+        with open(os.path.join(out, "no-candidates.txt"), "w") as fh:
+            for m in skipped:
+                fh.write("%s\t%s\n" % (m["event"], m["dump"]))
+        print("%d event(s) have an EMPTY PR graph (no vertices at all) and are "
+              "not scannable; listed in no-candidates.txt and excluded from the "
+              "worklists: %s"
+              % (len(skipped), ", ".join(m["event"] for m in skipped[:8])))
     return 0
 
 
@@ -173,6 +228,23 @@ def _load_picks(out, need):
               "to score; a stub abstention is not an abstention."
               % (len(stub), ", ".join(sorted(stub)[:5])))
         return None, None
+    # A scanner subagent revises its picks file as it works, so scoring before
+    # it has finished captures an intermediate state that looks complete.  That
+    # happened on 2026-08-15 -- dev-new was scored at 43 and the worker's final
+    # answers were 42 -- and the only reason it was caught is that the mtimes
+    # are recorded here.  So: if a previous scored.json exists and any picks
+    # file is newer than it, say so loudly rather than silently reporting a
+    # different number than last time.
+    prev = os.path.join(out, "scored.json")
+    if os.path.exists(prev):
+        pt = os.path.getmtime(prev)
+        stale = [os.path.basename(f) for f in files if os.path.getmtime(f) > pt]
+        if stale:
+            print("NOTE: %s changed after the last scored.json was written (%s)."
+                  " The previous numbers were computed on an earlier state of "
+                  "the scan and are superseded by this run."
+                  % (", ".join(stale), time.strftime("%Y-%m-%d %H:%M:%S",
+                                                     time.localtime(pt))))
     missing = sorted(need - set(picks))
     if missing:
         print("picks missing for %d events (%s%s) -- refusing to score a "
@@ -183,16 +255,26 @@ def _load_picks(out, need):
     return picks, stamps
 
 
+def _scannable(manifest):
+    """Events a scanner could actually answer.  Manifests written before the
+    empty-PR-graph case was handled carry no `scannable` key, so fall back to
+    "has at least one candidate" rather than assuming True."""
+    return {ev for ev, m in manifest.items()
+            if m.get("scannable", bool(m.get("candidates")))}
+
+
 def score(out):
     with open(os.path.join(out, "manifest.json")) as fh:
         manifest = {m["event"]: m for m in json.load(fh)}
-    picks, stamps = _load_picks(out, set(manifest))
+    picks, stamps = _load_picks(out, _scannable(manifest))
     if picks is None:
         return 1
 
     labs = {L["event"]: L for L in vtx_io.load_labels()}
     rows = []
     for ev, m in sorted(manifest.items()):
+        if ev not in picks:
+            continue          # empty PR graph, nothing to score
         L = labs[ev]
         p = picks[ev]
         pos = None
@@ -304,6 +386,90 @@ def report(rows, out, stamps):
               % (100 * br, 100 * bd, len(dis), (bd / br) if br else 0))
 
 
+def review(out, tol=1.0):
+    """No truth available: turn the picks into a work list (doc pr/80 §12).
+
+    This is the production path.  On new events there is nothing to score
+    against, so the deliverable is the triage split the §10.5/§10.6 measurement
+    licenses:
+
+      * `certain` AND agrees with the reconstruction -> AUTO-ACCEPT candidates.
+        Measured 95.5% correct on 60 held-out events.  This tier is a labelling
+        accelerator, NOT an error finder -- 21 of its 22 members agreed with the
+        reconstruction, so it tells you where the pipeline is already right.
+      * everything else -> REVIEW.  On the held-out sixty that pile was 38 of 60
+        events and contained 12 of the 14 reconstruction errors.
+      * `certain` AND disagrees -> REVIEW FIRST.  Rare (1 in 60) and the one
+        that was seen was a genuine reconstruction error.
+
+    The reconstruction's own answer IS read here -- that is fine and necessary.
+    It was hidden from the *scanner*; the split is computed afterwards.
+    """
+    with open(os.path.join(out, "manifest.json")) as fh:
+        manifest = {m["event"]: m for m in json.load(fh)}
+    picks, stamps = _load_picks(out, _scannable(manifest))
+    if picks is None:
+        return 1
+
+    rows = []
+    for ev, m in sorted(manifest.items()):
+        if ev not in picks:
+            rows.append(dict(event=ev, vertex_id=None, conf='-',
+                             reco_sep_cm=None, agrees=False,
+                             bucket='no candidates (empty PR graph)',
+                             why='reconstruction found no vertex',
+                             dump=m['dump']))
+            continue
+        p = picks[ev]
+        pos = None
+        for c in m["candidates"]:
+            if c["vertex_id"] == p.get("vertex_id"):
+                pos = (c["x"], c["y"], c["z"])
+        with open(m["dump"]) as fh:
+            dump = json.load(fh)
+        reco = vtx_io.xyz(dump.get("main_vertex"))
+        sep = vtx_io.dist(pos, reco)
+        agrees = sep is not None and sep <= tol
+        conf = p.get("confidence", "-")
+        if p.get("vertex_id") is None:
+            bucket = "REVIEW (scanner abstained)"
+        elif conf == "certain" and agrees:
+            bucket = "auto-accept"
+        elif conf == "certain":
+            bucket = "REVIEW FIRST (confident disagreement)"
+        else:
+            bucket = "REVIEW"
+        rows.append(dict(event=ev, vertex_id=p.get("vertex_id"), conf=conf,
+                         reco_sep_cm=sep, agrees=agrees, bucket=bucket,
+                         why=p.get("why", ""), dump=m["dump"]))
+
+    order = {"REVIEW FIRST (confident disagreement)": 0,
+             "REVIEW (scanner abstained)": 1, "REVIEW": 2, "auto-accept": 3,
+             "no candidates (empty PR graph)": 4}
+    rows.sort(key=lambda r: (order[r["bucket"]], r["event"]))
+
+    print("%-12s %-8s %-9s %-38s %s"
+          % ("event", "conf", "vs reco", "bucket", "pick"))
+    for r in rows:
+        print("%-12s %-8s %-9s %-38s %s"
+              % (r["event"], r["conf"],
+                 ("%.1f cm" % r["reco_sep_cm"]) if r["reco_sep_cm"] is not None
+                 else "-", r["bucket"], r["vertex_id"]))
+    n = len(rows)
+    acc = [r for r in rows if r["bucket"] == "auto-accept"]
+    print("\n%d events: %d auto-accept (%.0f%%), %d to review (%.0f%%)"
+          % (n, len(acc), 100.0 * len(acc) / n, n - len(acc),
+             100.0 * (n - len(acc)) / n))
+    print("expected auto-accept accuracy ~95% at ~37% coverage, from the 60 "
+          "held-out events of doc pr/80 sec 10.5 -- NOT measured on this "
+          "sample, which has no truth. Treat as a prior, not a guarantee.")
+    with open(os.path.join(out, "review.json"), "w") as fh:
+        json.dump(dict(picks_written=stamps, reviewed_at=time.strftime(
+            "%Y-%m-%d %H:%M:%S"), rows=rows), fh, indent=1, default=str)
+    print("wrote %s" % os.path.join(out, "review.json"))
+    return 0
+
+
 def compare(a, b):
     """Paired old-vs-new (or old-vs-old) on the same events: discordant counts.
 
@@ -358,18 +524,27 @@ def main():
     p1.add_argument("--only-manifest",
                     help="re-scan exactly a previous manifest.json's events "
                          "(diagnostic; those answers are already known)")
+    p1.add_argument("--dumps",
+                    help="NEW, UNLABELLED events: a glob, a directory, or a "
+                         "file of calib-*.json paths.  Skips the label split "
+                         "entirely; use `review` afterwards, not `score`.")
     p1.add_argument("--out", required=True)
     p2 = sub.add_parser("score")
     p2.add_argument("--dir", required=True)
     p3 = sub.add_parser("compare")
     p3.add_argument("--a", required=True)
     p3.add_argument("--b", required=True)
+    p4 = sub.add_parser("review")
+    p4.add_argument("--dir", required=True)
+    p4.add_argument("--tol", type=float, default=1.0)
     a = ap.parse_args()
     if a.cmd == "prepare":
         return prepare(a.half, a.n, a.out, a.seed, a.kit, a.workers,
-                       a.exclude_manifest, a.only_manifest)
+                       a.exclude_manifest, a.only_manifest, a.dumps)
     if a.cmd == "score":
         return score(a.dir)
+    if a.cmd == "review":
+        return review(a.dir, a.tol)
     return compare(a.a, a.b)
 
 

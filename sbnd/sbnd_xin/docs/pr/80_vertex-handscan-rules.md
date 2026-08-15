@@ -1,22 +1,35 @@
 # doc pr/80 — a neutrino-vertex hand-scan procedure for an AI scanner
 
-**Status: qualified result, pre-declared bar MISSED.** The rules alone do *not*
-beat the reconstruction (64.1% vs 76.2% on the locked test half). Used as a
-**cross-check** against the reconstructed vertex they endorse **61.7% of events,
-on which the answer is right 83.3% of the time** against a 76.2% baseline on all
-scored events — but see §4.1: that 83.3% is the *reconstruction's* accuracy on
-the endorsed subset, not the rules' own. The 38% they decline is enriched
-**×1.48** in reconstruction errors, and that enrichment is the actual product.
-The pre-declared primary target — ≥90% precision at ≥40% answer-rate — was not
-met, and nothing was retuned after the test half was opened.
-
 Written in response to the owner's request to turn their hand-scan practice into
 an instruction a future AI session can follow, validated against the labels they
 have already produced, with "I am not sure" recorded explicitly.
 
+**Round 1 (§1–8) — rules as a selector: pre-declared bar MISSED.** The rules
+alone do *not* beat the reconstruction (64.1% vs 76.2% on the locked test half).
+Used as a cross-check they endorse 61.7% of events at an apparent 83.3% — but see
+§4.1: that is the *reconstruction's* accuracy on the endorsed subset, not the
+rules' own. The 38% declined is enriched **×1.48** in reconstruction errors, and
+that enrichment is the actual product. The primary target — ≥90% precision at
+≥40% answer-rate — was not met, and nothing was retuned after the test half was
+opened.
+
+**Round 2 (§9–11) — the constraint was the tooling, not the rules: bar MET.**
+Rebuilding what the AI scanner can *see* (3-D rotations, per-end dQ/dx profiles,
+on-demand zoom, a connectivity evidence sheet) took the blind eye from 36–37/60
+to **42/60 on dev and 45/60 held out**, against the reconstruction's 43 and 46 —
+close behind, not at parity. The pre-declared secondary criterion **passes**:
+the `certain` tier is **95.5% over 36.7% coverage**, +45 points above `unclear`.
+That licenses the owner's workflow: auto-accept ~37% of events, hand back the
+rest, and the handed-back pile carries **12 of the 14 reconstruction errors**.
+§10.9 records a scoring error found and corrected during the round; §11 is the
+runbook for repeating this on new files.
+
 ---
 
 ## Repro
+
+**To run this on new events, go straight to §11 — it is the runbook.** The block
+below reproduces the *measurements* in this document.
 
 ```bash
 cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
@@ -734,48 +747,41 @@ its reco cross-check. The eye beats the engine; neither beats the reconstruction
 | | `dev-old-a` | `dev-old-b` | **`dev-new`** | reconstruction |
 |---|---|---|---|---|
 | answered | 58/60 | 57/60 | 59/60 | — |
-| correct @1 cm | 36 | 37 | **43** | **43** |
-| correct by vertex id | 36 | 38 | **43** | 43 |
-| answered-precision | 62.1% | 64.9% | **72.9%** | — |
-| triage enrichment | ×1.76 | ×2.16 | **×2.59** | — |
+| correct @1 cm | 36 | 37 | **42** | **43** |
+| correct by vertex id | 36 | 38 | **42** | 43 |
+| answered-precision | 62.1% | 64.9% | **72.4%** | — |
+| triage enrichment | ×1.76 | ×2.16 | **×2.35** | — |
 
-The scanner goes from clearly below the reconstruction to **level with it**,
-43/60 either way. Paired, against a noise floor whose discordant split was 3:2:
+The scanner goes from clearly below the reconstruction to **within one event of
+it**, 42 against 43. Paired, against a noise floor whose discordant split was
+3:2:
 
 ```
-old-a (clean) vs new :  new wins 10, old wins  3   discordant 13   p = 0.092
-old-b         vs new :  new wins  8, old wins  2   discordant 10   p = 0.109
+old-a (clean) vs new :  new wins 10, old wins  4   discordant 14   p = 0.180
 noise floor a vs b   :  B wins    3, A wins    2   discordant  5   p = 1.000
 ```
 
-Both comparisons agree in direction and magnitude — the new kit wins about 3–4×
-as often as it loses, where two runs of the *same* kit split evenly. As
-pre-registered, no pass/fail threshold is applied: at n=60 neither two-sided
-exact test reaches 0.05 (95% CI on the new-kit win fraction: [0.46, 0.95] and
-[0.44, 0.97]). **The two comparisons are not pooled** — they share the `dev-new`
-arm, so they are not independent, and pooling them to 18:5 (p = 0.011) would be
-a fabricated significance.
+The new kit wins 2.5× as often as it loses, where two runs of the *same* kit
+split evenly. As pre-registered, no pass/fail threshold is applied: at n=60 the
+two-sided exact test does not reach 0.05. **The old-b arm is not quoted as a
+second comparison here** — it shares the `dev-new` arm with the primary one, so
+the two are not independent and pooling them would be a fabricated
+significance.
 
-**Where the +7 comes from** (old-a vs new):
-
-```
-  reco RIGHT  n=43   old 33   new 37   (+4)   events the eye used to break
-  reco WRONG  n=17   old  3   new  6   (+3)   genuinely new correct answers
-  correct new-kit answers whose vertex is NOT in the largest cluster: 2  (F1)
-```
-
-Both halves moved. F4 predicted the round would be about not breaking what the
-pipeline already gets right; that is +4 of the +7, but the other +3 **doubles**
-the eye's yield on the events the reconstruction gets wrong — which is the half
-that has any value for finding reconstruction errors.
+**Where the +6 comes from** (old-a vs new): both halves moved — the kit
+recovers events the eye used to break *and* roughly doubles its yield on the
+events the reconstruction gets wrong, which is the half that has any value for
+finding reconstruction errors. Two of the new kit's correct answers name a
+vertex outside the largest cluster, i.e. they exist only because of the F1
+all-cluster fix.
 
 **Calibration, with coverage:**
 
 | tier | coverage | answered | correct @1 cm | by vertex id |
 |---|---|---|---|---|
 | certain | 27/60 (45.0%) | 27 | 25 (**92.6%**) | 26 (**96.3%**) |
-| likely | 23/60 (38.3%) | 23 | 14 (60.9%) | 13 (56.5%) |
-| unclear | 10/60 (16.7%) | 9 | 4 (44.4%) | 4 (44.4%) |
+| likely | 23/60 (38.3%) | 23 | 13 (56.5%) | 12 (52.2%) |
+| unclear | 10/60 (16.7%) | 8 | 4 (50.0%) | 4 (50.0%) |
 
 The new kit roughly **doubles the coverage of the `certain` tier** (45% against
 old-kit 20–23%) at the same ~92% accuracy — 96.3% by vertex id. That is the
@@ -789,12 +795,15 @@ by four fresh subagents, and reported as it came out.
 
 | | `test-new` | reconstruction |
 |---|---|---|
-| answered | 59/60 | — |
-| correct @1 cm | 45 (76.3% precision) | **46 (76.7%)** |
-| **correct by vertex id** | **46 (78.0%)** | 46 |
-| triage enrichment | ×2.41 | — |
+| answered | 58/60 | — |
+| correct @1 cm | 44 (75.9% precision) | **46 (76.7%)** |
+| **correct by vertex id** | **45 (77.6%)** | 46 |
+| triage enrichment | ×2.27 | — |
 
-**Parity replicates on held-out data.** 46 against 46. Dev was 43 against 43.
+**The held-out arm replicates dev: within one event of the reconstruction**, 45
+against 46, where dev was 42 against 43. "At parity" is the wrong word for this
+and "close behind" is the right one — the scanner has not been shown to match
+the reconstruction, only to have stopped losing to it.
 
 **Calibration — the pre-declared secondary criterion, on the locked half:**
 
@@ -802,10 +811,11 @@ by four fresh subagents, and reported as it came out.
 |---|---|---|---|
 | certain | 22/60 (36.7%) | 21 (**95.5%**) | 21 (**95.5%**) |
 | likely | 26/60 (43.3%) | 18 (69.2%) | 18 (69.2%) |
-| unclear | 11 answered (20.0% coverage) | 6 (54.5%) | 7 (63.6%) |
+| unclear | 10 answered (20.0% coverage) | 5 (50.0%) | 6 (60.0%) |
 
 The bar was "certain ≥90% **and** ≥20 points above unclear". Result: **95.5% and
-+41 points. PASSED**, on data never used for tuning.
++45 points. PASSED**, on data never used for tuning. This is the one headline of
+the round that the correction in §10.9 did not move at all.
 
 ### 10.6 What that actually buys — and the part that does not work
 
@@ -827,8 +837,8 @@ could stand alone at 95.5%. As a **labelling accelerator** the certain tier
 works. As an **error finder** it contributes one event.
 
 **The scanner does find reconstruction errors — just not confidently.** On the
-14 events the reconstruction gets wrong it is right on **8 (57%)**, against 38 of
-46 (83%) where the reconstruction is right. But only one of those 8 was flagged
+14 events the reconstruction gets wrong it is right on **8 (57%)**, against 37 of
+46 (80%) where the reconstruction is right. But only one of those 8 was flagged
 `certain`-and-disagreeing (evt175808, a numuCC junction with a 9.5 cm proton
 leaving it — scanner right, reconstruction wrong). The rest land in `likely` or
 `unclear`, i.e. in the pile the human reviews anyway.
@@ -842,8 +852,8 @@ survive n=60.** It did so once here: one `certain` pick agreed with a
 **Yes, with a defined split.** The owner's original request — scan new events,
 hand back the doubtful ones — is supported by the measurement: 37% of events can
 be auto-accepted at ~95%, and the 63% handed back carry ~86% of the
-reconstruction's errors. The scan is at parity with the reconstruction overall
-(46/60 vs 46/60 held out, 43/60 vs 43/60 on dev), not better.
+reconstruction's errors. The scan is **close behind** the reconstruction overall
+(45/60 vs 46/60 held out, 42/60 vs 43/60 on dev), not at parity and not better.
 
 What it is still **not** good for: generating labels that a model is then fitted
 to without review, and being trusted as an independent error-finder on the
@@ -932,7 +942,143 @@ not have. Collinearity belongs in the scan procedure as a **caution that lowers
 confidence**, not as a rule that eliminates a candidate — which is exactly the
 treatment §3 already gives owner rule 5.
 
-## 11. Files
+### 10.9 A correction: the first scoring pass read a scan that was still moving
+
+The numbers in §10.4–10.7 were first computed, and committed, from picks files
+that a scanner subagent was **still revising**. Workers write their answers file
+as they go; a file with 15 substantive entries looks finished and is not. Three
+events changed after the first `score` ran (evt172656, evt278420 — repicked after
+zooming — and evt278640, which became an abstention).
+
+| | first reported | **corrected** |
+|---|---|---|
+| dev-new @1 cm | 43 | **42** |
+| test-new @1 cm | 45 | **44** |
+| test-new by vertex id | 46 | **45** |
+| old-a vs new discordant | 10:3, p = 0.092 | **10:4, p = 0.180** |
+
+The corrected reading is **"within one event of the reconstruction"**, not
+"parity" — the word used in the first write-up, and it was wrong. Everything
+downstream of that word has been changed.
+
+**What did not move:** the calibration result, which is the round's actual
+finding. `certain` is still 22/60 at 95.5%, the review pile is still 38 events
+holding 12 of the 14 reconstruction errors, and the noise floor is still 3:2.
+
+**How it was caught, and the guard now in place.** `score` writes each picks
+file's mtime into `scored.json`. Re-running after a refactor produced different
+numbers, and the stamps showed why. `score` now compares picks mtimes against
+any existing `scored.json` and prints an explicit supersession notice, so a
+second scoring pass can never quietly disagree with a first one again. The
+procedural rule is simpler: **do not score until every scanner has reported
+completion** — a stub-free file is not a finished one.
+
+## 11. Runbook — scanning NEW events
+
+This is the operational recipe. It is written to be executed by a future AI
+session from a standing start, given only "here are new files, run the scan".
+
+**What is different about new events: there is no truth.** The labelled path
+(`--half dev|test` → `score`) needs hand-scan labels. New files have none, so
+`prepare --dumps` replaces the split and **`review` replaces `score`**. Running
+`score` on unlabelled events is an error, not an option.
+
+### Step 1 — point it at the dumps
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+python3 vtx_rules/selfscan.py prepare --kit new --workers 4 \
+    --dumps '<dir>|<glob>|<file-of-paths>' \
+    --out /home/xqian/tmp/scan-<tag>
+```
+
+`--dumps` accepts a directory (searched recursively for `calib-*.json`), a glob,
+or a text file of paths one per line. Use a **fresh `--out`** every time (M13:
+never write into an existing run directory).
+
+It prints how many events are scannable and lists any with an **empty PR graph** —
+events where the reconstruction found no vertex at all. Those are written to
+`no-candidates.txt` and deliberately kept out of the worklists: there is nothing
+to pick, and handing a scanner a blank picture then counting its non-answer would
+move every denominator.
+
+### Step 2 — launch the scanners
+
+One subagent per `worklist-N.txt`, all launched together. Each gets the **same**
+prompt, which must:
+
+- tell it to read `vtx_rules/scan_prompt.md` **in full** and follow it;
+- name its worklist and its output path `picks-N.json`;
+- list the panels (`p6-evidence.txt` first, then `p1`, `p2`, `p4`, `p5`);
+- give it the zoom command, and encourage its use — it is the main thing the kit
+  adds over a flat picture:
+  `python3 vtx_rules/scankit.py zoom --dump <from worklist> --vertex <id> --half-width 8 --out <png>`;
+- forbid looking up the reconstruction's answer in the dump JSON
+  (`main_vertex`, `vertex_scoreboard`, `dirsign`, `rr`, `showers`);
+- say **do not write placeholder entries first**;
+- insist confidence means something — `certain` only where being wrong would be
+  a surprise.
+
+The exact prompt used for the §10 arms is the template; copy it verbatim and
+change only the worklist number and output path.
+
+> **Wait for every scanner to report completion before scoring.** A picks file
+> with a full set of substantive entries can still be revised — that is exactly
+> what produced the §10.9 correction. `score`/`review` will now print a
+> supersession notice if a picks file changed after the last scoring pass, but
+> the cheap fix is to wait for the completion notifications.
+
+### Step 3 — turn the picks into a work list
+
+```bash
+python3 vtx_rules/selfscan.py review --dir /home/xqian/tmp/scan-<tag>
+```
+
+This reads the reconstruction's answer (fine — it was hidden from the *scanner*;
+the split is computed afterwards) and buckets every event:
+
+| bucket | meaning | what to do |
+|---|---|---|
+| `REVIEW FIRST (confident disagreement)` | scanner is `certain` and disagrees with the reconstruction | look at these first — rare (1 in 60) and the one seen was a genuine reconstruction error |
+| `REVIEW (scanner abstained)` | no readable vertex | your call |
+| `REVIEW` | anything not `certain` | the bulk; on the held-out sixty this pile held 12 of the 14 reconstruction errors |
+| `auto-accept` | `certain` **and** agrees with the reconstruction | ~95% right at ~37% coverage on held-out data |
+| `no candidates (empty PR graph)` | reconstruction found no vertex | nothing to scan |
+
+Written to `review.json` alongside the printed table.
+
+**The auto-accept rate is a prior, not a guarantee.** 95.5% at 36.7% coverage
+comes from 60 held-out events (§10.5); it is *not* measured on your new sample,
+which has no truth. If the new sample differs in character — a different
+detector, a different generator, a different reconstruction epoch — the prior may
+not transfer, and the honest way to find out is to hand-scan ~30 of them and run
+`score`.
+
+### Step 4 — if you also want a measured number on the new sample
+
+Hand-scan a subset yourself into a **fresh** label tag, then:
+
+```bash
+python3 vtx_rules/selfscan.py score --dir /home/xqian/tmp/scan-<tag>
+```
+
+`score` needs those events to be present in `vtx_rules/vtx_io.TAGS`; add the new
+tag there. Everything else — the 1 cm convention, the vertex-id column, the
+calibration table — works unchanged.
+
+### Things that will bite
+
+- **Labels and dumps must come from the same arm.** F2: the same vertex id moves
+  between reconstruction arms because `improve_vertex` refits after the vertex is
+  chosen. Score by vertex id when they differ, and say which arm each came from.
+- **Blindness is checked, not assumed.** `scankit.py selftest` before a run;
+  `assert_blind` runs on every event inside `prepare` regardless.
+- **A new run is a new directory.** Never re-point `--out` at an old one.
+- **Labels taken on the patched port-5017 viewer are post-epoch** (§9.5) and are
+  no longer independent of the rules being validated.
+
+## 12. Files
 
 | file | what |
 |---|---|
@@ -946,7 +1092,7 @@ treatment §3 already gives owner rule 5.
 | `vtx_rules/polarity_control.py` | §2 |
 | `vtx_rules/eval_rules.py` | scoring, per-rule tables, precision-vs-coverage |
 | `vtx_rules/render_event.py` | the PNG an agent opens with the Read tool; `--blind` hides the reco vertex and the engine pick |
-| `vtx_rules/selfscan.py` | the blind self-scan harness of §7 and §10; all-cluster candidate pool, `--kit old\|new`, per-worker picks with mtime audit, `compare` |
+| `vtx_rules/selfscan.py` | the blind self-scan harness of §7 and §10, and the §11 production path: `prepare --dumps` for unlabelled events, `review` where `score` cannot run, all-cluster candidate pool, `--kit old\|new`, per-worker picks with an mtime supersession guard, `compare` |
 | `vtx_rules/runs/` | the split, the dev/test result TSVs, and `scan2-20260815/` — the four arms of §10 |
 
 `.gitignore` carries a `test*` rule, so `vtx_rules/runs/test-final*` is committed
