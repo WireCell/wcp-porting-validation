@@ -1,0 +1,1360 @@
+[
+ {
+  "event": "evt111412",
+  "key": [
+   "vtxscan-prod0813",
+   18259,
+   1,
+   111412
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-ma10/pr_evt111412/calib-pr-evt111412.json",
+  "png": "/home/xqian/tmp/selfscan1/evt111412.png",
+  "cluster_id": 18,
+  "candidates": [
+   {
+    "vertex_id": 18000,
+    "degree": 2,
+    "x": 154.61,
+    "y": 157.69,
+    "z": 207.44
+   },
+   {
+    "vertex_id": 18001,
+    "degree": 3,
+    "x": 154.67,
+    "y": 79.61,
+    "z": 173.2
+   },
+   {
+    "vertex_id": 18002,
+    "degree": 2,
+    "x": 156.86,
+    "y": 153.72,
+    "z": 205.4
+   },
+   {
+    "vertex_id": 18006,
+    "degree": 1,
+    "x": 159.57,
+    "y": 72.17,
+    "z": 185.56
+   },
+   {
+    "vertex_id": 18007,
+    "degree": 3,
+    "x": 157.07,
+    "y": 120.93,
+    "z": 189.56
+   },
+   {
+    "vertex_id": 18008,
+    "degree": 1,
+    "x": 163.45,
+    "y": 123.66,
+    "z": 191.79
+   },
+   {
+    "vertex_id": 18010,
+    "degree": 1,
+    "x": 153.56,
+    "y": 122.07,
+    "z": 191.64
+   },
+   {
+    "vertex_id": 18011,
+    "degree": 1,
+    "x": 151.78,
+    "y": 157.84,
+    "z": 210.38
+   },
+   {
+    "vertex_id": 18014,
+    "degree": 4,
+    "x": 156.26,
+    "y": 116.76,
+    "z": 190.23
+   },
+   {
+    "vertex_id": 18015,
+    "degree": 1,
+    "x": 158.66,
+    "y": 119.66,
+    "z": 189.82
+   },
+   {
+    "vertex_id": 18016,
+    "degree": 3,
+    "x": 157.3,
+    "y": 142.05,
+    "z": 202.14
+   },
+   {
+    "vertex_id": 18017,
+    "degree": 2,
+    "x": 159.73,
+    "y": 143.17,
+    "z": 201.39
+   },
+   {
+    "vertex_id": 18018,
+    "degree": 1,
+    "x": 159.18,
+    "y": 143.97,
+    "z": 198.39
+   },
+   {
+    "vertex_id": 18021,
+    "degree": 3,
+    "x": 159.74,
+    "y": 135.83,
+    "z": 201.93
+   },
+   {
+    "vertex_id": 18022,
+    "degree": 1,
+    "x": 161.06,
+    "y": 140.02,
+    "z": 198.27
+   },
+   {
+    "vertex_id": 18023,
+    "degree": 3,
+    "x": 155.03,
+    "y": 89.05,
+    "z": 175.5
+   },
+   {
+    "vertex_id": 18024,
+    "degree": 1,
+    "x": 159.41,
+    "y": 91.38,
+    "z": 179.35
+   },
+   {
+    "vertex_id": 18026,
+    "degree": 1,
+    "x": 155.28,
+    "y": 73.3,
+    "z": 176.57
+   }
+  ]
+ },
+ {
+  "event": "evt174637",
+  "key": [
+   "vtxscan-prod0813",
+   18255,
+   1,
+   174637
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-ma10/pr_evt174637/calib-pr-evt174637.json",
+  "png": "/home/xqian/tmp/selfscan1/evt174637.png",
+  "cluster_id": 9,
+  "candidates": [
+   {
+    "vertex_id": 9000,
+    "degree": 1,
+    "x": -142.48,
+    "y": -57.93,
+    "z": 353.17
+   },
+   {
+    "vertex_id": 9004,
+    "degree": 3,
+    "x": -143.56,
+    "y": -59.77,
+    "z": 335.45
+   },
+   {
+    "vertex_id": 9005,
+    "degree": 2,
+    "x": -144.78,
+    "y": -59.75,
+    "z": 331.96
+   },
+   {
+    "vertex_id": 9006,
+    "degree": 2,
+    "x": -166.58,
+    "y": -57.05,
+    "z": 297.44
+   },
+   {
+    "vertex_id": 9007,
+    "degree": 1,
+    "x": -181.12,
+    "y": -72.24,
+    "z": 317.04
+   },
+   {
+    "vertex_id": 9010,
+    "degree": 3,
+    "x": -144.54,
+    "y": -56.64,
+    "z": 329.88
+   },
+   {
+    "vertex_id": 9011,
+    "degree": 1,
+    "x": -140.23,
+    "y": -59.64,
+    "z": 329.85
+   },
+   {
+    "vertex_id": 9012,
+    "degree": 4,
+    "x": -156.47,
+    "y": -57.91,
+    "z": 312.57
+   },
+   {
+    "vertex_id": 9013,
+    "degree": 1,
+    "x": -153.09,
+    "y": -54.45,
+    "z": 313.09
+   },
+   {
+    "vertex_id": 9014,
+    "degree": 3,
+    "x": -160.62,
+    "y": -57.52,
+    "z": 306.15
+   },
+   {
+    "vertex_id": 9015,
+    "degree": 1,
+    "x": -158.29,
+    "y": -56.45,
+    "z": 305.13
+   },
+   {
+    "vertex_id": 9016,
+    "degree": 3,
+    "x": -141.7,
+    "y": -60.13,
+    "z": 340.39
+   },
+   {
+    "vertex_id": 9017,
+    "degree": 1,
+    "x": -137.15,
+    "y": -61.46,
+    "z": 342.55
+   },
+   {
+    "vertex_id": 9018,
+    "degree": 1,
+    "x": -156.75,
+    "y": -58.92,
+    "z": 317.24
+   },
+   {
+    "vertex_id": 9019,
+    "degree": 4,
+    "x": -149.9,
+    "y": -57.53,
+    "z": 322.54
+   },
+   {
+    "vertex_id": 9020,
+    "degree": 1,
+    "x": -148.34,
+    "y": -60.06,
+    "z": 320.15
+   },
+   {
+    "vertex_id": 9021,
+    "degree": 1,
+    "x": -147.34,
+    "y": -59.78,
+    "z": 323.91
+   },
+   {
+    "vertex_id": 9022,
+    "degree": 2,
+    "x": -185.45,
+    "y": -69.54,
+    "z": 309.36
+   },
+   {
+    "vertex_id": 9023,
+    "degree": 2,
+    "x": -179.79,
+    "y": -71.54,
+    "z": 314.46
+   },
+   {
+    "vertex_id": 9025,
+    "degree": 1,
+    "x": -136.94,
+    "y": -57.93,
+    "z": 338.33
+   },
+   {
+    "vertex_id": 9026,
+    "degree": 3,
+    "x": -146.94,
+    "y": -58.12,
+    "z": 327.13
+   },
+   {
+    "vertex_id": 9027,
+    "degree": 1,
+    "x": -145.75,
+    "y": -59.14,
+    "z": 328.67
+   }
+  ]
+ },
+ {
+  "event": "evt278794",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   278794
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt278794/calib-pr-evt278794.json",
+  "png": "/home/xqian/tmp/selfscan1/evt278794.png",
+  "cluster_id": 7,
+  "candidates": [
+   {
+    "vertex_id": 7000,
+    "degree": 1,
+    "x": 64.24,
+    "y": -123.91,
+    "z": 130.84
+   },
+   {
+    "vertex_id": 7001,
+    "degree": 1,
+    "x": 147.61,
+    "y": -52.36,
+    "z": 72.11
+   },
+   {
+    "vertex_id": 7002,
+    "degree": 2,
+    "x": 132.75,
+    "y": -65.93,
+    "z": 82.16
+   }
+  ]
+ },
+ {
+  "event": "evt280017",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   280017
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt280017/calib-pr-evt280017.json",
+  "png": "/home/xqian/tmp/selfscan1/evt280017.png",
+  "cluster_id": 8,
+  "candidates": [
+   {
+    "vertex_id": 8000,
+    "degree": 1,
+    "x": 61.37,
+    "y": -40.43,
+    "z": 265.5
+   },
+   {
+    "vertex_id": 8001,
+    "degree": 3,
+    "x": 65.12,
+    "y": -29.98,
+    "z": 263.27
+   },
+   {
+    "vertex_id": 8002,
+    "degree": 1,
+    "x": 63.06,
+    "y": -28.42,
+    "z": 264.57
+   },
+   {
+    "vertex_id": 8029,
+    "degree": 1,
+    "x": 65.33,
+    "y": -28.34,
+    "z": 262.93
+   }
+  ]
+ },
+ {
+  "event": "evt282737",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   282737
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt282737/calib-pr-evt282737.json",
+  "png": "/home/xqian/tmp/selfscan1/evt282737.png",
+  "cluster_id": 21,
+  "candidates": [
+   {
+    "vertex_id": 21000,
+    "degree": 1,
+    "x": -88.86,
+    "y": -65.15,
+    "z": 249.77
+   },
+   {
+    "vertex_id": 21001,
+    "degree": 1,
+    "x": -14.74,
+    "y": 46.88,
+    "z": 120.94
+   },
+   {
+    "vertex_id": 21003,
+    "degree": 2,
+    "x": -34.92,
+    "y": 47.68,
+    "z": 141.49
+   }
+  ]
+ },
+ {
+  "event": "evt283991",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   283991
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt283991/calib-pr-evt283991.json",
+  "png": "/home/xqian/tmp/selfscan1/evt283991.png",
+  "cluster_id": 15,
+  "candidates": [
+   {
+    "vertex_id": 15000,
+    "degree": 1,
+    "x": 154.2,
+    "y": -194.37,
+    "z": 107.04
+   },
+   {
+    "vertex_id": 15001,
+    "degree": 1,
+    "x": 98.77,
+    "y": -91.23,
+    "z": 40.63
+   },
+   {
+    "vertex_id": 15002,
+    "degree": 2,
+    "x": 153.03,
+    "y": -194.8,
+    "z": 105.67
+   },
+   {
+    "vertex_id": 15003,
+    "degree": 2,
+    "x": 107.46,
+    "y": -101.2,
+    "z": 31.68
+   }
+  ]
+ },
+ {
+  "event": "evt284200",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   284200
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt284200/calib-pr-evt284200.json",
+  "png": "/home/xqian/tmp/selfscan1/evt284200.png",
+  "cluster_id": 31,
+  "candidates": [
+   {
+    "vertex_id": 31034,
+    "degree": 1,
+    "x": 189.78,
+    "y": -133.92,
+    "z": 478.37
+   },
+   {
+    "vertex_id": 31035,
+    "degree": 1,
+    "x": 200.83,
+    "y": -126.22,
+    "z": 491.42
+   },
+   {
+    "vertex_id": 31036,
+    "degree": 3,
+    "x": 197.4,
+    "y": -126.23,
+    "z": 471.81
+   },
+   {
+    "vertex_id": 31037,
+    "degree": 1,
+    "x": 200.71,
+    "y": -126.11,
+    "z": 476.84
+   },
+   {
+    "vertex_id": 31038,
+    "degree": 1,
+    "x": 201.09,
+    "y": -133.49,
+    "z": 477.64
+   },
+   {
+    "vertex_id": 31039,
+    "degree": 2,
+    "x": 198.07,
+    "y": -126.1,
+    "z": 476.45
+   },
+   {
+    "vertex_id": 31040,
+    "degree": 3,
+    "x": 199.93,
+    "y": -130.64,
+    "z": 475.73
+   },
+   {
+    "vertex_id": 31041,
+    "degree": 1,
+    "x": 199.49,
+    "y": -130.62,
+    "z": 473.09
+   },
+   {
+    "vertex_id": 31049,
+    "degree": 1,
+    "x": 197.88,
+    "y": -126.62,
+    "z": 472.17
+   }
+  ]
+ },
+ {
+  "event": "evt284235",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   284235
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt284235/calib-pr-evt284235.json",
+  "png": "/home/xqian/tmp/selfscan1/evt284235.png",
+  "cluster_id": 36,
+  "candidates": [
+   {
+    "vertex_id": 36025,
+    "degree": 1,
+    "x": -23.34,
+    "y": -90.01,
+    "z": 137.77
+   },
+   {
+    "vertex_id": 36026,
+    "degree": 1,
+    "x": -23.99,
+    "y": -91.79,
+    "z": 140.48
+   }
+  ]
+ },
+ {
+  "event": "evt286268",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   286268
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt286268/calib-pr-evt286268.json",
+  "png": "/home/xqian/tmp/selfscan1/evt286268.png",
+  "cluster_id": 11,
+  "candidates": [
+   {
+    "vertex_id": 11000,
+    "degree": 1,
+    "x": -94.38,
+    "y": -69.86,
+    "z": 183.19
+   },
+   {
+    "vertex_id": 11001,
+    "degree": 2,
+    "x": -173.55,
+    "y": -110.14,
+    "z": 8.37
+   },
+   {
+    "vertex_id": 11023,
+    "degree": 1,
+    "x": -172.92,
+    "y": -110.23,
+    "z": 8.71
+   }
+  ]
+ },
+ {
+  "event": "evt316025",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   316025
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt316025/calib-pr-evt316025.json",
+  "png": "/home/xqian/tmp/selfscan1/evt316025.png",
+  "cluster_id": 16,
+  "candidates": [
+   {
+    "vertex_id": 16000,
+    "degree": 1,
+    "x": 58.24,
+    "y": 112.83,
+    "z": 89.33
+   },
+   {
+    "vertex_id": 16001,
+    "degree": 1,
+    "x": 44.29,
+    "y": 38.39,
+    "z": 83.51
+   },
+   {
+    "vertex_id": 16003,
+    "degree": 5,
+    "x": 44.9,
+    "y": 39.96,
+    "z": 75.64
+   },
+   {
+    "vertex_id": 16004,
+    "degree": 1,
+    "x": 42.82,
+    "y": 41.22,
+    "z": 74.55
+   },
+   {
+    "vertex_id": 16006,
+    "degree": 1,
+    "x": 43.11,
+    "y": 42.27,
+    "z": 82.36
+   },
+   {
+    "vertex_id": 16049,
+    "degree": 2,
+    "x": 45.07,
+    "y": 39.18,
+    "z": 78.04
+   },
+   {
+    "vertex_id": 16050,
+    "degree": 1,
+    "x": 45.82,
+    "y": 40.08,
+    "z": 76.03
+   }
+  ]
+ },
+ {
+  "event": "evt349241",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   349241
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt349241/calib-pr-evt349241.json",
+  "png": "/home/xqian/tmp/selfscan1/evt349241.png",
+  "cluster_id": 15,
+  "candidates": [
+   {
+    "vertex_id": 15000,
+    "degree": 1,
+    "x": -112.49,
+    "y": -98.56,
+    "z": 8.22
+   },
+   {
+    "vertex_id": 15002,
+    "degree": 2,
+    "x": -118.53,
+    "y": -146.52,
+    "z": 4.23
+   },
+   {
+    "vertex_id": 15003,
+    "degree": 1,
+    "x": -125.79,
+    "y": -143.4,
+    "z": 8.16
+   }
+  ]
+ },
+ {
+  "event": "evt388",
+  "key": [
+   "vtxscan-prod0813",
+   18255,
+   1,
+   388
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-nuecc48-ma10/pr_evt388/calib-pr-evt388.json",
+  "png": "/home/xqian/tmp/selfscan1/evt388.png",
+  "cluster_id": 23,
+  "candidates": [
+   {
+    "vertex_id": 23001,
+    "degree": 1,
+    "x": -161.08,
+    "y": 31.17,
+    "z": 426.02
+   },
+   {
+    "vertex_id": 23007,
+    "degree": 3,
+    "x": -180.92,
+    "y": 31.66,
+    "z": 481.11
+   },
+   {
+    "vertex_id": 23008,
+    "degree": 3,
+    "x": -175.4,
+    "y": 33.47,
+    "z": 461.68
+   },
+   {
+    "vertex_id": 23009,
+    "degree": 3,
+    "x": -163.14,
+    "y": 31.39,
+    "z": 426.1
+   },
+   {
+    "vertex_id": 23010,
+    "degree": 1,
+    "x": -185.0,
+    "y": 38.08,
+    "z": 497.5
+   },
+   {
+    "vertex_id": 23011,
+    "degree": 3,
+    "x": -173.39,
+    "y": 30.06,
+    "z": 457.93
+   },
+   {
+    "vertex_id": 23012,
+    "degree": 1,
+    "x": -175.27,
+    "y": 38.2,
+    "z": 482.36
+   },
+   {
+    "vertex_id": 23013,
+    "degree": 3,
+    "x": -184.73,
+    "y": 29.05,
+    "z": 485.16
+   },
+   {
+    "vertex_id": 23014,
+    "degree": 2,
+    "x": -184.05,
+    "y": 24.99,
+    "z": 499.12
+   },
+   {
+    "vertex_id": 23015,
+    "degree": 1,
+    "x": -184.47,
+    "y": 33.72,
+    "z": 489.34
+   },
+   {
+    "vertex_id": 23017,
+    "degree": 3,
+    "x": -179.02,
+    "y": 29.28,
+    "z": 471.7
+   },
+   {
+    "vertex_id": 23018,
+    "degree": 1,
+    "x": -175.01,
+    "y": 32.81,
+    "z": 481.98
+   },
+   {
+    "vertex_id": 23019,
+    "degree": 1,
+    "x": -154.3,
+    "y": 37.02,
+    "z": 444.49
+   },
+   {
+    "vertex_id": 23021,
+    "degree": 1,
+    "x": -185.29,
+    "y": 32.63,
+    "z": 496.08
+   },
+   {
+    "vertex_id": 23022,
+    "degree": 3,
+    "x": -180.09,
+    "y": 30.01,
+    "z": 476.27
+   },
+   {
+    "vertex_id": 23023,
+    "degree": 1,
+    "x": -184.55,
+    "y": 32.49,
+    "z": 478.72
+   },
+   {
+    "vertex_id": 23025,
+    "degree": 1,
+    "x": -174.26,
+    "y": 34.69,
+    "z": 465.05
+   },
+   {
+    "vertex_id": 23026,
+    "degree": 3,
+    "x": -170.71,
+    "y": 31.86,
+    "z": 447.25
+   },
+   {
+    "vertex_id": 23027,
+    "degree": 1,
+    "x": -168.26,
+    "y": 31.64,
+    "z": 451.89
+   },
+   {
+    "vertex_id": 23028,
+    "degree": 4,
+    "x": -178.72,
+    "y": 29.64,
+    "z": 470.77
+   },
+   {
+    "vertex_id": 23029,
+    "degree": 1,
+    "x": -178.31,
+    "y": 34.3,
+    "z": 466.3
+   },
+   {
+    "vertex_id": 23030,
+    "degree": 3,
+    "x": -179.27,
+    "y": 29.09,
+    "z": 473.09
+   },
+   {
+    "vertex_id": 23032,
+    "degree": 3,
+    "x": -187.24,
+    "y": 33.56,
+    "z": 495.82
+   },
+   {
+    "vertex_id": 23033,
+    "degree": 1,
+    "x": -188.76,
+    "y": 33.24,
+    "z": 490.58
+   },
+   {
+    "vertex_id": 23034,
+    "degree": 3,
+    "x": -183.07,
+    "y": 31.27,
+    "z": 479.23
+   },
+   {
+    "vertex_id": 23035,
+    "degree": 1,
+    "x": -181.52,
+    "y": 38.68,
+    "z": 481.99
+   },
+   {
+    "vertex_id": 23036,
+    "degree": 3,
+    "x": -181.02,
+    "y": 30.18,
+    "z": 478.44
+   },
+   {
+    "vertex_id": 23037,
+    "degree": 1,
+    "x": -182.22,
+    "y": 34.69,
+    "z": 474.91
+   },
+   {
+    "vertex_id": 23038,
+    "degree": 3,
+    "x": -188.53,
+    "y": 33.04,
+    "z": 495.6
+   },
+   {
+    "vertex_id": 23039,
+    "degree": 1,
+    "x": -190.02,
+    "y": 29.52,
+    "z": 496.68
+   },
+   {
+    "vertex_id": 23040,
+    "degree": 3,
+    "x": -183.4,
+    "y": 37.25,
+    "z": 481.87
+   },
+   {
+    "vertex_id": 23041,
+    "degree": 2,
+    "x": -181.52,
+    "y": 39.56,
+    "z": 486.7
+   },
+   {
+    "vertex_id": 23042,
+    "degree": 2,
+    "x": -183.32,
+    "y": 39.93,
+    "z": 495.29
+   },
+   {
+    "vertex_id": 23051,
+    "degree": 4,
+    "x": -177.8,
+    "y": 30.23,
+    "z": 469.91
+   },
+   {
+    "vertex_id": 23052,
+    "degree": 1,
+    "x": -177.4,
+    "y": 28.95,
+    "z": 468.86
+   },
+   {
+    "vertex_id": 23055,
+    "degree": 4,
+    "x": -188.61,
+    "y": 29.27,
+    "z": 494.84
+   },
+   {
+    "vertex_id": 23058,
+    "degree": 1,
+    "x": -185.11,
+    "y": 30.47,
+    "z": 480.48
+   },
+   {
+    "vertex_id": 23059,
+    "degree": 3,
+    "x": -174.69,
+    "y": 35.78,
+    "z": 474.9
+   },
+   {
+    "vertex_id": 23060,
+    "degree": 1,
+    "x": -176.33,
+    "y": 33.63,
+    "z": 473.0
+   },
+   {
+    "vertex_id": 23061,
+    "degree": 3,
+    "x": -184.65,
+    "y": 29.67,
+    "z": 489.12
+   },
+   {
+    "vertex_id": 23062,
+    "degree": 1,
+    "x": -188.52,
+    "y": 27.24,
+    "z": 495.64
+   },
+   {
+    "vertex_id": 23063,
+    "degree": 3,
+    "x": -178.1,
+    "y": 29.21,
+    "z": 473.71
+   },
+   {
+    "vertex_id": 23064,
+    "degree": 1,
+    "x": -175.15,
+    "y": 23.1,
+    "z": 475.14
+   },
+   {
+    "vertex_id": 23193,
+    "degree": 1,
+    "x": -178.86,
+    "y": 28.99,
+    "z": 470.99
+   }
+  ]
+ },
+ {
+  "event": "evt388224",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   388224
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt388224/calib-pr-evt388224.json",
+  "png": "/home/xqian/tmp/selfscan1/evt388224.png",
+  "cluster_id": 3,
+  "candidates": [
+   {
+    "vertex_id": 3000,
+    "degree": 1,
+    "x": -177.17,
+    "y": 56.92,
+    "z": 486.82
+   },
+   {
+    "vertex_id": 3001,
+    "degree": 1,
+    "x": -63.98,
+    "y": -2.95,
+    "z": 345.49
+   },
+   {
+    "vertex_id": 3002,
+    "degree": 3,
+    "x": -67.68,
+    "y": -0.09,
+    "z": 347.33
+   },
+   {
+    "vertex_id": 3004,
+    "degree": 4,
+    "x": -66.77,
+    "y": -0.62,
+    "z": 344.34
+   },
+   {
+    "vertex_id": 3005,
+    "degree": 1,
+    "x": -76.14,
+    "y": 9.68,
+    "z": 340.87
+   },
+   {
+    "vertex_id": 3007,
+    "degree": 1,
+    "x": -79.62,
+    "y": 1.63,
+    "z": 377.67
+   },
+   {
+    "vertex_id": 3011,
+    "degree": 4,
+    "x": -69.17,
+    "y": -0.14,
+    "z": 351.43
+   },
+   {
+    "vertex_id": 3012,
+    "degree": 1,
+    "x": -72.62,
+    "y": 6.45,
+    "z": 339.34
+   },
+   {
+    "vertex_id": 3013,
+    "degree": 1,
+    "x": -65.91,
+    "y": -2.08,
+    "z": 338.01
+   },
+   {
+    "vertex_id": 3026,
+    "degree": 1,
+    "x": -65.12,
+    "y": 1.06,
+    "z": 345.07
+   }
+  ]
+ },
+ {
+  "event": "evt398414",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   398414
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt398414/calib-pr-evt398414.json",
+  "png": "/home/xqian/tmp/selfscan1/evt398414.png",
+  "cluster_id": 18,
+  "candidates": [
+   {
+    "vertex_id": 18000,
+    "degree": 1,
+    "x": 37.54,
+    "y": -197.96,
+    "z": 344.21
+   },
+   {
+    "vertex_id": 18001,
+    "degree": 1,
+    "x": 33.29,
+    "y": -183.3,
+    "z": 342.1
+   }
+  ]
+ },
+ {
+  "event": "evt399856",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   399856
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt399856/calib-pr-evt399856.json",
+  "png": "/home/xqian/tmp/selfscan1/evt399856.png",
+  "cluster_id": 3,
+  "candidates": [
+   {
+    "vertex_id": 3000,
+    "degree": 1,
+    "x": -118.99,
+    "y": 98.32,
+    "z": 220.35
+   },
+   {
+    "vertex_id": 3001,
+    "degree": 1,
+    "x": -134.56,
+    "y": 118.3,
+    "z": 164.62
+   },
+   {
+    "vertex_id": 3002,
+    "degree": 2,
+    "x": -122.32,
+    "y": 102.17,
+    "z": 204.16
+   }
+  ]
+ },
+ {
+  "event": "evt400856",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   400856
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt400856/calib-pr-evt400856.json",
+  "png": "/home/xqian/tmp/selfscan1/evt400856.png",
+  "cluster_id": 12,
+  "candidates": [
+   {
+    "vertex_id": 12000,
+    "degree": 1,
+    "x": -101.23,
+    "y": -92.93,
+    "z": 409.2
+   },
+   {
+    "vertex_id": 12001,
+    "degree": 1,
+    "x": -31.0,
+    "y": -39.91,
+    "z": 384.91
+   },
+   {
+    "vertex_id": 12003,
+    "degree": 2,
+    "x": -101.19,
+    "y": -86.81,
+    "z": 409.42
+   }
+  ]
+ },
+ {
+  "event": "evt411460",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   411460
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt411460/calib-pr-evt411460.json",
+  "png": "/home/xqian/tmp/selfscan1/evt411460.png",
+  "cluster_id": 6,
+  "candidates": [
+   {
+    "vertex_id": 6000,
+    "degree": 1,
+    "x": -25.15,
+    "y": 195.41,
+    "z": 367.85
+   },
+   {
+    "vertex_id": 6002,
+    "degree": 2,
+    "x": -26.91,
+    "y": 195.84,
+    "z": 368.36
+   },
+   {
+    "vertex_id": 6003,
+    "degree": 2,
+    "x": -35.22,
+    "y": 199.47,
+    "z": 366.64
+   },
+   {
+    "vertex_id": 6005,
+    "degree": 2,
+    "x": -36.7,
+    "y": 199.43,
+    "z": 366.77
+   },
+   {
+    "vertex_id": 6006,
+    "degree": 1,
+    "x": -34.88,
+    "y": 195.22,
+    "z": 364.85
+   },
+   {
+    "vertex_id": 6019,
+    "degree": 2,
+    "x": -28.09,
+    "y": 195.98,
+    "z": 368.43
+   }
+  ]
+ },
+ {
+  "event": "evt52085",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   52085
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt52085/calib-pr-evt52085.json",
+  "png": "/home/xqian/tmp/selfscan1/evt52085.png",
+  "cluster_id": 6,
+  "candidates": [
+   {
+    "vertex_id": 6000,
+    "degree": 1,
+    "x": -18.45,
+    "y": 99.48,
+    "z": 108.75
+   },
+   {
+    "vertex_id": 6001,
+    "degree": 1,
+    "x": 81.83,
+    "y": 167.88,
+    "z": 52.62
+   },
+   {
+    "vertex_id": 6002,
+    "degree": 2,
+    "x": -0.55,
+    "y": 112.69,
+    "z": 80.83
+   }
+  ]
+ },
+ {
+  "event": "evt59085",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   59085
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt59085/calib-pr-evt59085.json",
+  "png": "/home/xqian/tmp/selfscan1/evt59085.png",
+  "cluster_id": 84,
+  "candidates": [
+   {
+    "vertex_id": 84010,
+    "degree": 1,
+    "x": -10.67,
+    "y": 185.81,
+    "z": 49.16
+   },
+   {
+    "vertex_id": 84011,
+    "degree": 1,
+    "x": -10.28,
+    "y": 186.35,
+    "z": 49.29
+   }
+  ]
+ },
+ {
+  "event": "evt63427",
+  "key": [
+   "vtxscan-prod0813-mcp1k",
+   18255,
+   1,
+   63427
+  ],
+  "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp1k-ma10/pr_evt63427/calib-pr-evt63427.json",
+  "png": "/home/xqian/tmp/selfscan1/evt63427.png",
+  "cluster_id": 18,
+  "candidates": [
+   {
+    "vertex_id": 18000,
+    "degree": 1,
+    "x": -116.12,
+    "y": -19.91,
+    "z": 145.46
+   },
+   {
+    "vertex_id": 18001,
+    "degree": 1,
+    "x": -43.57,
+    "y": -17.55,
+    "z": 106.73
+   },
+   {
+    "vertex_id": 18002,
+    "degree": 2,
+    "x": -86.82,
+    "y": -24.22,
+    "z": 111.64
+   }
+  ]
+ }
+]

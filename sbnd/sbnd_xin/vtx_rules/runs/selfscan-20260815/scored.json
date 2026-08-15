@@ -1,0 +1,222 @@
+[
+ {
+  "event": "evt111412",
+  "conf": "likely",
+  "vid": 18001,
+  "dist": 0.005696412647560028,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "d3 junction at the lowest-z end of the cluster; dense deposits there read as a stubby proton at the vertex, not a Bragg stop"
+ },
+ {
+  "event": "evt174637",
+  "conf": "unclear",
+  "vid": 9014,
+  "dist": 10.563357790574363,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "EM-shower cone widening toward +z; picked the d3 junction near the low-z apex, but the apex is diffuse"
+ },
+ {
+  "event": "evt278794",
+  "conf": "likely",
+  "vid": 7001,
+  "dist": 0.002561321206640114,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "single track, Bragg red at 7000 (z=131) so the vertex is the far end; dots continue upstream of 7001"
+ },
+ {
+  "event": "evt280017",
+  "conf": "likely",
+  "vid": 8001,
+  "dist": 0.0057119647026418405,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "only a short dense stub; 8001 is the d3 junction it hangs off"
+ },
+ {
+  "event": "evt282737",
+  "conf": "likely",
+  "vid": 21000,
+  "dist": 165.24119671814282,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": true,
+  "reco": 0.2591387800442206,
+  "why": "long track with a clear red Bragg at 21001, so the vertex is 21000 -- note this fights the upstream prior (21000 is at z=250)"
+ },
+ {
+  "event": "evt283991",
+  "conf": "likely",
+  "vid": 15002,
+  "dist": 127.72272532359389,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "~100 cm track, deep red at the 15001/15003 end; 15002 is the d2 junction at the opposite end"
+ },
+ {
+  "event": "evt284200",
+  "conf": "unclear",
+  "vid": null,
+  "dist": null,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "compact grey blob, almost no measured dQ/dx, 9 candidates within 20 cm -- the owner's 'just dots' case"
+ },
+ {
+  "event": "evt284235",
+  "conf": "unclear",
+  "vid": null,
+  "dist": null,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "many disconnected fragments; the main cluster is two vertices 2 cm apart with no readable direction"
+ },
+ {
+  "event": "evt286268",
+  "conf": "likely",
+  "vid": 11001,
+  "dist": 0.005669103096197333,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "Bragg at 11000 (z=183); 11001 is the d2 junction at the low-z end with extra dots around it"
+ },
+ {
+  "event": "evt316025",
+  "conf": "certain",
+  "vid": 16003,
+  "dist": 0.00577517407554339,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": false,
+  "reco": 2.528958442515134,
+  "why": "d5 junction; the MIP track leaves it and stops at 16000, and a separate dark-red proton stops away from it -- everything outgoing"
+ },
+ {
+  "event": "evt349241",
+  "conf": "unclear",
+  "vid": 15002,
+  "dist": 0.005226002092508212,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "small blob, one 50 cm stub; 15002 is the d2 junction at the lowest z where the dots concentrate"
+ },
+ {
+  "event": "evt388",
+  "conf": "likely",
+  "vid": 23009,
+  "dist": 0.004205972060157982,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "large shower blob at z 450-500 with a track entering at low z; 23009 (d3, z=426) sits at that entry point"
+ },
+ {
+  "event": "evt388224",
+  "conf": "likely",
+  "vid": 3004,
+  "dist": 0.0022973602421621866,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "long muon stops dark-red at 3000 (z=487) and a dark-red proton stops at 3007; both emanate from the d4 junction at z=344"
+ },
+ {
+  "event": "evt398414",
+  "conf": "unclear",
+  "vid": 18001,
+  "dist": 0.002234972322937751,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "a single 13 cm MIP stub, both ends degree 1, no direction information; took the lower-z end"
+ },
+ {
+  "event": "evt399856",
+  "conf": "likely",
+  "vid": 3002,
+  "dist": 44.419766353861775,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "d2 kink with a short dark-red segment stopping at 3000 and a longer one rising to orange at 3001 -- both point away"
+ },
+ {
+  "event": "evt400856",
+  "conf": "likely",
+  "vid": 12003,
+  "dist": 0.005146414795555102,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": false,
+  "reco": 6.122180194917379,
+  "why": "both outer ends dense; 12003 is the d2 junction and both attached segments have their rise at the far end"
+ },
+ {
+  "event": "evt411460",
+  "conf": "unclear",
+  "vid": null,
+  "dist": null,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": false,
+  "reco": 3.053116691283476,
+  "why": "everything inside a ~10 cm blob with 6 candidates spanning 3 cm in z; no direction readable at 1 cm tolerance"
+ },
+ {
+  "event": "evt52085",
+  "conf": "certain",
+  "vid": 6002,
+  "dist": 1.2853656127612467,
+  "ok": false,
+  "ok3": true,
+  "reco_ok": false,
+  "reco": 1.2876008811672857,
+  "why": "textbook vertex: MIP segment to 6001 and a dense proton segment stopping dark-red at 6000, meeting at the d2 kink"
+ },
+ {
+  "event": "evt59085",
+  "conf": "unclear",
+  "vid": null,
+  "dist": null,
+  "ok": false,
+  "ok3": false,
+  "reco_ok": false,
+  "reco": 4.176213547342808,
+  "why": "both offered candidates sit at the dense stopping end; the real start looks like z=73, which is not in this cluster's candidate list"
+ },
+ {
+  "event": "evt63427",
+  "conf": "certain",
+  "vid": 18002,
+  "dist": 0.00422429660188762,
+  "ok": true,
+  "ok3": true,
+  "reco_ok": true,
+  "reco": 0.0,
+  "why": "two segments both reddening away from the d2 junction at 18002 -- two particles stopping, one vertex"
+ }
+]

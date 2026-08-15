@@ -35,9 +35,13 @@ DQDX_LO, DQDX_HI = 0.0, 150000.0        # e/cm, the display's fixed ramp
 PROJ = [("x", "y", "X-Y"), ("z", "y", "Z-Y"), ("z", "x", "Z-X")]
 
 
-def render(dump, out, zoom=None, title=""):
+def render(dump, out, zoom=None, title="", blind=False):
     res = vtx_rules.decide(dump)
     cid = vtx_io.main_cluster_id(dump)
+    # blind=True hides BOTH the reconstructed vertex and the engine's pick.
+    # For a self-scan that is the whole point: the owner sees the reco star, but
+    # an AI that anchors on it produces labels that only confirm the reco, which
+    # is precisely the bias that makes a generated label set worse than none.
 
     meas = {"x": [], "y": [], "z": [], "c": []}
     grey = {"x": [], "y": [], "z": []}
@@ -76,14 +80,16 @@ def render(dump, out, zoom=None, title=""):
                             xytext=(3, 3), textcoords="offset points",
                             color="#111111", zorder=6)
 
-        mv = vtx_io.xyz(dump.get("main_vertex"))
+        mv = None if blind else vtx_io.xyz(dump.get("main_vertex"))
         if mv:
             d = dict(zip("xyz", mv))
             ax.plot(d[ha], d[hb], marker="*", ms=17, mfc="#e377c2",
                     mec="#7b2d6b", mew=1.3, zorder=7, label="reco vertex")
 
         pick = None
-        if res["decision"] == "answer":
+        if blind:
+            pass
+        elif res["decision"] == "answer":
             pick = (res["x"], res["y"], res["z"])
         elif res.get("guess_x") is not None:
             pick = (res["guess_x"], res["guess_y"], res["guess_z"])
@@ -110,10 +116,13 @@ def render(dump, out, zoom=None, title=""):
         cb.set_label("track-fit dQ/dx [e/cm]   (MIP 43000, 2x MIP 86000; "
                      "fixed range, not per-event)", fontsize=8)
 
-    head = "%s   |   %s / %s / conf=%s" % (title, res["branch"], res["rule"],
-                                           res["confidence"])
-    if res.get("reco_dis") is not None:
-        head += "   |   rules-vs-reco %.1f cm" % res["reco_dis"]
+    if blind:
+        head = "%s   |   BLIND: no reco vertex, no engine pick shown" % title
+    else:
+        head = "%s   |   %s / %s / conf=%s" % (title, res["branch"], res["rule"],
+                                               res["confidence"])
+        if res.get("reco_dis") is not None:
+            head += "   |   rules-vs-reco %.1f cm" % res["reco_dis"]
     fig.suptitle(head, fontsize=10)
     fig.savefig(out, dpi=110, bbox_inches="tight")
     plt.close(fig)
@@ -124,13 +133,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("dump")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--blind", action="store_true",
+                    help="hide the reco vertex and the engine pick (self-scan)")
     ap.add_argument("--zoom", type=float,
                     help="half-width in cm around the rules' pick")
     args = ap.parse_args()
     with open(args.dump) as fh:
         dump = json.load(fh)
     res = render(dump, args.out, args.zoom,
-                 title=os.path.basename(args.dump))
+                 title=os.path.basename(args.dump), blind=args.blind)
     print("wrote %s" % args.out)
     for note in res["notes"]:
         print("   %s" % note)

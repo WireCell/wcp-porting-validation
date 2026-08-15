@@ -358,7 +358,99 @@ simplest won.
 - Numbers are on the deployed `-ma10` arm for 473 labels and on the scanned
   arm for the 8 `-mc` labels, marked per row in the TSVs.
 
-## 7. Files
+## 7. Can an AI session scan by eye? — a blind self-scan, measured
+
+§4 measures the *engine*. The owner's actual question is whether an agent can
+scan new events and leave the doubtful ones for a human, so the scanner in
+question is an agent looking at rendered pictures — a different thing, with no
+reason to score alike.
+
+`vtx_rules/selfscan.py` measures it. `prepare` renders **blind** PNGs: no
+reconstructed vertex, no engine pick, only the dQ/dx-coloured points and the
+numbered candidate vertices, plus a worksheet of candidate ids, degrees and
+positions. A scanner that can see the reco star anchors on it, and labels that
+only confirm the reconstruction are worse than no labels. `score` refuses to run
+until `picks.json` exists, so the picks are on disk before any truth is read.
+
+**20 events drawn from the locked test half, seed 20260815, scanned blind:**
+
+| | |
+|---|---|
+| answered | 16 / 20 (80%) |
+| correct @1 cm | **11 (68.8% precision)** |
+| correct @3 cm | 12 (75.0%) |
+| reconstruction on the same 20 | **15 (75.0%)** |
+
+**The agent scanner is not better than the reconstruction.** At n=20 the
+difference is not itself significant, but "not better" is clear, and the next
+number is decisive.
+
+### The abstention does not work, and that is the finding
+
+| stated confidence | answered | correct |
+|---|---|---|
+| certain | 3 | 2 (67%) |
+| likely | 10 | 7 (70%) |
+| unclear | 3 | 2 (67%) |
+
+**Flat.** The agent is exactly as wrong on the events it calls *certain* as on
+the ones it calls *unclear*. So "scan the new events and leave the unsure ones
+for me to correct" **does not hold**: the errors are not in the flagged subset,
+they are spread evenly through the confident ones. Until a confidence signal
+separates, the human would have to check everything, which is the work the
+exercise was meant to save.
+
+### Where the agent and the reconstruction disagree
+
+|  | reco correct | reco wrong |
+|---|---|---|
+| agent right | 9 | **2** |
+| agent wrong | 4 | 1 |
+| agent abstained | 2 | 2 |
+
+Two useful facts. The agent **never confidently endorsed a wrong reconstruction
+answer** — on the 5 events the reconstruction got wrong it was right twice,
+abstained twice, and missed once by 1.3 cm (correct at the 3 cm tolerance). And
+it **broke 4 events the reconstruction already had right**, which is where the
+whole deficit lives.
+
+### One failure mode explains all four big misses
+
+Miss distances: **1.3, 10.6, 44.4, 127.7, 165.2 cm**. The 1.3 cm is a near miss
+on an otherwise textbook vertex. The four real misses share a single error: on a
+long track with a clear Bragg peak, the agent applied "the vertex is at the end
+opposite the rise" and took the far, downstream end, where the owner had picked
+the upstream one. That is **exactly the R1-over-R2 ordering error the engine
+made on evt287654** (§5).
+
+Both scanners fail the same way, from the same rule ordering, which makes it a
+correctable defect rather than noise: the Bragg verdict on a single long track
+is being trusted more than the upstream prior deserves, and a stopping track
+whose far end is deep downstream is more often a cosmic-like crosser than a
+neutrino daughter. Fixing the ordering is the obvious next round, and it must be
+fitted on dev and re-checked on a fresh blind draw, not on these 20.
+
+### Verdict on the owner's question
+
+**Not yet.** Autonomous scanning at this bar would produce a label set that is
+~30% wrong with no way to tell which 30%. What the agent scan *can* be used for
+today, because it is measured and safe:
+
+- **triage** — it never confidently endorsed a wrong reconstruction, and it
+  found 2 of the 5 reconstruction errors in 20 events;
+- **a second opinion on flagged events**, where the human makes the call;
+- **not** for generating labels that anything is then fitted to.
+
+Repro:
+```bash
+python3 vtx_rules/selfscan.py prepare --half test --n 20 --out /home/xqian/tmp/selfscan1
+# look at the PNGs, write picks.json, then:
+python3 vtx_rules/selfscan.py score --dir /home/xqian/tmp/selfscan1
+```
+The picks and the scored output of the run quoted here are committed under
+`vtx_rules/runs/selfscan-20260815/`.
+
+## 8. Files
 
 | file | what |
 |---|---|
@@ -369,7 +461,8 @@ simplest won.
 | `vtx_rules/baselines.py` | B0–B3b and the pr/79 reproduction gate |
 | `vtx_rules/polarity_control.py` | §2 |
 | `vtx_rules/eval_rules.py` | scoring, per-rule tables, precision-vs-coverage |
-| `vtx_rules/render_event.py` | the PNG an agent opens with the Read tool |
+| `vtx_rules/render_event.py` | the PNG an agent opens with the Read tool; `--blind` hides the reco vertex and the engine pick |
+| `vtx_rules/selfscan.py` | the blind self-scan harness of §7 |
 | `vtx_rules/runs/` | the split, and the dev/test result TSVs |
 
 `.gitignore` carries a `test*` rule, so `vtx_rules/runs/test-final*` is committed
