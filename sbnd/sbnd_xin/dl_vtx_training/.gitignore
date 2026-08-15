@@ -1,0 +1,4 @@
+# doc pr/77: snapshots and run outputs are derived data, never committed
+data/
+runs/
+__pycache__/
