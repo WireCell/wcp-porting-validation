@@ -100,10 +100,55 @@ layout.
 | **terminals** | only the terminal subset of that skeleton | `steiner[].flag_terminal` |
 | **vertices** | PR-graph vertices; the neutrino vertex is a large star | `vertices`, `main_vertex` |
 | **dead (2-D)** | dead-channel bands, 2-D panels only | `dead` |
+| **dQ/dx** | the fitted track points coloured by measured dQ/dx | `segments[].points[].dQ / .dx` |
 
 `steiner` is off by default -- 6 k points per event drawn under everything else
 is noise until you go looking for it. `terminals` is a separate toggle so the
 subset can be seen without the skeleton.
+
+## dQ/dx colour on the projections
+
+The **dQ/dx** layer draws the fitted trajectory *points* on top of the track-fit
+polylines, coloured by their own measured dQ/dx. This is the quantity that shows
+a track's **direction** -- the Bragg rise toward the stopping end, and the 1x vs
+2x MIP stem that separates an electron from a converted photon -- on the picture
+you are actually scanning, rather than one segment at a time in the 1-D panel.
+
+```bash
+# Repro: the numbers and colours in this section
+cd sbnd_xin
+./pr_display/serve_pr_display.sh 5018 --scan-tag <fresh-tag> \
+    "work-nuecc48-prod0813/pr_evt*/calib-pr-evt*.json"
+# evt 10550: 194 measured points, 4 grey, 830 .. 160965 e/cm
+```
+
+- **Units are e/cm, no conversion.** `points[].dx` is already divided by
+  `units::cm` in the dump (`PrDisplayDump.cxx` `fit_json`), so `dQ / dx` is
+  physical directly -- the same axis as the 1-D dQ/dx panel and as
+  `meta.mip_dqdx_median` (43000 e/cm).
+- **The range is FIXED at 0 .. 150000 e/cm (3.5x MIP), not autoscaled per
+  event.** A per-event autoscale makes every event look identical and destroys
+  the cross-event comparability a hand scan depends on. 150000 is measured, not
+  round: over 18601 fitted points in 34 prod0813 events the median is 50123 e/cm
+  (1.17 MIP), p90 2.71 MIP and p95 3.62 MIP, so 3.5x MIP saturates only ~5.5% of
+  points -- the tip of the Bragg peak, which should read hot anyway -- while MIP
+  sits at 29% of the ramp and 2x MIP at 57%. Retype **dQ/dx min / max** under the
+  colour bar to re-scale live.
+- **Points with no measurement are neutral grey**, never the bottom of the ramp.
+  `PR::Fit` defaults are `dQ = -1, dx = 0` (`PRCommon.h`), so the guard is
+  `dx > 0 and dQ >= 0` -- the same one the 1-D panel uses. Colouring "no
+  measurement" as "low dQ/dx" would be a lie in the panel used to judge
+  direction. Typically 0-2% of points.
+- With this layer on the polylines dim to 0.30 alpha so the ramp reads; toggling
+  it off restores them exactly (per-segment `Category20` colours, alpha 0.95).
+- Hover a point for dQ/dx, dQ, dx, residual range, segment, cluster and pdg.
+
+**This is not what wire-cell-bee3 shows.** bee3's `track_fit` layer colours by a
+dx-*un*normalised `q = dQ * 0.1 - 1000` -- the affine is baked in by
+`MultiAlgBlobClustering.cxx` from `sbnd/clus.jsonnet`'s `dQdx_scale` /
+`dQdx_offset` -- on a blue-to-red HSL ramp clipped at 9333. Since the fit step
+`dx` is ~0.6 cm and roughly constant, bee3's colour only *tracks* dQ/dx
+approximately. Here it is the real ratio.
 
 ## Particle flow
 
@@ -237,9 +282,28 @@ the table still works, minus the score columns, and the note line says so --
 | **rank by** | rerank total (default), DL score, trad score, distance to main, cluster+id |
 | **show** | *main cluster + DL* (default), *candidates*, *all vertices* |
 | **row click** | reframes all nine panels on that candidate and rings it in amber |
+| **marker tap** | tap a drawn vertex in any projection and **its row is selected** in this table, ringed in amber, and named in the note line |
 | **add pick** | records the selected row as your choice; picks are **ranked** (1st, 2nd, ...) and drawn as numbered green diamonds |
 | **manual x/y/z** | for when no candidate is the true vertex; `from centre` copies the current centre, `tap fills coords` lets a tap in a projection fill the two coordinates that panel shows (two taps in two panels = a full 3-D point) |
 | **confidence** | certain / likely / unclear |
+
+**Marker tap** is the reverse of a row click, for when you can see the vertex you
+care about but not find it among 60-160 rows. Only the drawn vertex glyphs are
+tappable, so the answer is an exact index join and a tap on empty space does
+nothing. Two deliberate behaviours:
+
+- **A tap does not reframe.** A row click re-centres and forces zoom on, because
+  you cannot see the vertex you clicked. Tapping its marker means you are already
+  looking at it, so moving the picture out from under you -- and overriding a
+  framing you set on purpose -- would be wrong. You still get the amber ring.
+- **A tap on a vertex the `show` filter hides opens the filter.** The default
+  filter shows 4-36 of an event's 60-160 vertices, so this is common; the viewer
+  switches `show` to *all vertices*, selects the row, and says so in the note
+  rather than letting the tap do nothing. Measured on nueCC48 evt 10550: 81 rows,
+  10 shown by default, 80 drawn markers.
+
+The tap is read-only with respect to `vertex_labels/<tag>/` -- only **Save event
+label** ever writes there.
 
 The default `show` filter is not conservatism: measured on the nueCC48 dumps an
 event has 63-162 PR-graph vertices of which **50-124** are main-vertex

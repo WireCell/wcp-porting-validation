@@ -52,8 +52,31 @@ LAYERS (each a toggle)
   track pts      associated 3-D points flagged track
   steiner        the Steiner skeleton (steiner_pc) of every cluster
   terminals      only the flag_steiner_terminal subset of that skeleton
-  vertices       PR graph vertices; the neutrino vertex is drawn larger
+  vertices       PR graph vertices; the neutrino vertex is drawn larger.
+                 TAP one to select its row in the hand-scan table below (an
+                 exact index join -- tapping empty space does nothing).  The
+                 tap deliberately does NOT re-centre or force zoom the way
+                 clicking a table row does: you are already looking at it.
   dead           dead-channel bands, 2-D panels only
+  dQ/dx          the fitted track points coloured by their own measured
+                 dQ/dx in e/cm (`segments[].points[].dQ / .dx`), on a FIXED
+                 0-150000 ramp with a shared colour bar under the panels.
+                 Fixed, not per-event autoscale: an autoscale makes every
+                 event look alike and destroys cross-event comparability
+                 during a scan.  Points with no measurement (PR::Fit
+                 defaults dQ=-1, dx=0) are neutral grey, never the bottom of
+                 the ramp.  With this layer on, the per-segment polylines
+                 dim to 0.30 alpha so the charge ramp reads; toggling it off
+                 restores them exactly.
+
+                 NB this is NOT what wire-cell-bee3 shows for track_fit
+                 points.  bee3 colours by a dx-UNnormalised
+                 `q = dQ * 0.1 - 1000` (MultiAlgBlobClustering.cxx baking in
+                 sbnd/clus.jsonnet's dQdx_scale/dQdx_offset), on a blue->red
+                 HSL ramp clipped at 9333.  Because the fit step dx is ~0.6 cm
+                 and roughly constant, bee3's colour only tracks dQ/dx
+                 approximately.  Here it is the real ratio, in the same e/cm
+                 as the 1-D dQ/dx panel and as meta.mip_dqdx_median.
 
 ZOOM.  "zoom" reframes all nine panels to +-R around a centre.  The centre is
 the identified neutrino vertex by default; type any (x, y, z) in cm into the
@@ -101,9 +124,9 @@ from bokeh.models import (ColumnDataSource, Select, Button, Div, HoverTool,
                           CheckboxButtonGroup, RadioButtonGroup, TextInput, Toggle, Spacer,
                           ColorBar, LinearColorMapper, BasicTicker, Span,
                           DataTable, TableColumn, HTMLTemplateFormatter,
-                          CDSView, AllIndices, Range1d)
+                          CDSView, AllIndices, Range1d, TapTool)
 from bokeh.events import Tap
-from bokeh.palettes import Viridis256, Category20_20
+from bokeh.palettes import Viridis256, Turbo256, Category20_20
 from bokeh.plotting import figure
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -217,6 +240,45 @@ seg_src = {k: ColumnDataSource(data=dict(xs=[], ys=[], c=[], sid=[], pid=[],
 hl_src = {k: ColumnDataSource(data=dict(xs=[], ys=[]))
           for k in ("xy", "yz", "xz")}
 
+# --- dQ/dx-coloured track-fit points ----------------------------------------
+# The fitted trajectory POINTS, carrying their measured dQ/dx.  seg_src above
+# flattens only x/y/z into per-segment polylines and throws dQ/dx away, and the
+# two existing per-point scatter layers (shower_src/track_src) come from the
+# `track_shower` block, which has no charge field at all -- so this is its own
+# source rather than a column added to an existing one.
+#
+# dQ (electrons) and dx (cm) are both already in the dump, PrDisplayDump.cxx
+# fit_json(): `j["dQ"] = fit.dQ; j["dx"] = fit.dx / cm;`.  dx is ALREADY divided
+# by units::cm there, so points[].dQ / points[].dx is physical e/cm directly --
+# the same quantity, same units, as the 1-D dQ/dx panel's y axis.  Do not divide
+# by units::cm again (the writer's own comment flags that trap).
+fitpt_src = ColumnDataSource(data=dict(x=[], y=[], z=[], dqdx=[], dQ=[], dx=[],
+                                       rr=[], sid=[], cid=[], pid=[]))
+# Fitted points with NO defined dQ/dx.  PR::Fit defaults are dQ=-1, dx=0
+# (PRCommon.h) and the dump does not emit `index`, the only field Fit::valid()
+# checks, so `dx > 0 and dQ >= 0` is the only client-side guard -- the same one
+# _dqdx_valid_points() uses for the 1-D panel.  These are drawn NEUTRAL GREY and
+# never at the bottom of the ramp: colouring "no measurement" as "low dQ/dx"
+# would be a lie in the one panel being used to judge track direction.
+fitpt_nodq_src = ColumnDataSource(data=dict(x=[], y=[], z=[], sid=[]))
+
+# Its own mapper -- deliberately NOT the 2-D panels' CMAP, which is reassigned
+# per event to the 99th percentile of proj[].charge.  A per-event autoscale
+# would make every event look identical and destroy the cross-event
+# comparability a hand scan depends on, so this range is FIXED and only ever
+# moves when the operator types a new one.
+# The top of the ramp is 150000 e/cm = 3.5x MIP, chosen from the measured
+# distribution rather than picked round: 18601 fitted points over 34 events
+# (25 nueCC48 + r1qlmc + r2mc, prod0813) give median 50123 e/cm (1.17 MIP),
+# p75 1.74 MIP, p90 2.71 MIP, p95 3.62 MIP, with a long tail to 26 MIP.  At
+# 3.5 MIP only 5.5% of points saturate -- the very tip of a Bragg peak, which
+# should read as "hot" anyway -- while MIP lands at 29% of the ramp and 2 MIP
+# at 57%, so the 1-vs-2 MIP shower-stem separation and the Bragg RISE that
+# gives a track its direction both have real colour contrast.  f_dqdx's y_range
+# (100000) would have clipped 14%.  Retype the max to re-scale live.
+DQDX_LOW, DQDX_HIGH = 0.0, 150000.0     # e/cm
+DQDX_CMAP = LinearColorMapper(palette=Turbo256, low=DQDX_LOW, high=DQDX_HIGH)
+
 RENDER = defaultdict(list)          # layer name -> [renderers], for toggling
 
 for f, hx, hy in PROJ:
@@ -250,12 +312,33 @@ for f, hx, hy in PROJ:
     f.add_tools(HoverTool(renderers=[r], tooltips=[
         ("segment", "@sid"), ("cluster", "@cid"),
         ("pdg", "@pid"), ("shower", "@shower")]))
-    RENDER["vertices"].append(
-        f.scatter(hx, hy, source=vtx_src, marker="circle", size=6,
-                  fill_color=None, line_color="#111111", line_width=1.2))
-    RENDER["vertices"].append(
-        f.scatter(hx, hy, source=mainvtx_src, marker="star", size=20,
-                  fill_color="#e377c2", line_color="#7b2d6b", line_width=1.5))
+    # dQ/dx points, drawn AFTER the polylines so they sit on top of them.
+    RENDER["dqdx"].append(
+        f.scatter(hx, hy, source=fitpt_nodq_src, marker="circle", size=4,
+                  fill_color="#9e9e9e", line_color=None, fill_alpha=0.6))
+    r_dq = f.scatter(hx, hy, source=fitpt_src, marker="circle", size=6,
+                     fill_color=dict(field="dqdx", transform=DQDX_CMAP),
+                     line_color=None, fill_alpha=0.95)
+    RENDER["dqdx"].append(r_dq)
+    f.add_tools(HoverTool(renderers=[r_dq], tooltips=[
+        ("dQ/dx (e/cm)", "@dqdx{0,0}"), ("dQ (e)", "@dQ{0,0}"),
+        ("dx (cm)", "@dx{0.000}"), ("resid. range (cm)", "@rr{0.0}"),
+        ("segment", "@sid"), ("cluster", "@cid"), ("pdg", "@pid")]))
+
+    r_vtx = f.scatter(hx, hy, source=vtx_src, marker="circle", size=6,
+                      fill_color=None, line_color="#111111", line_width=1.2)
+    r_mainvtx = f.scatter(hx, hy, source=mainvtx_src, marker="star", size=20,
+                          fill_color="#e377c2", line_color="#7b2d6b", line_width=1.5)
+    RENDER["vertices"].append(r_vtx)
+    RENDER["vertices"].append(r_mainvtx)
+    # Tap a drawn vertex to select its row in the hand-scan table below.  Bound
+    # to these two renderers ONLY: an exact index join, so the tap can never
+    # answer with the wrong vertex, and a tap on empty space does nothing.
+    f.add_tools(TapTool(renderers=[r_vtx, r_mainvtx]))
+    # Bokeh fades every UNselected glyph by default.  Without this, tapping one
+    # vertex visually erases the other 60-160 in the panel being scanned.
+    for _r in (r_vtx, r_mainvtx):
+        _r.nonselection_glyph = _r.glyph
     # Hand-scan: the selected candidate (hollow amber ring) and the ranked
     # picks (filled green, labelled with the rank).  Always visible.
     f.scatter(hx, hy, source=selvtx_src, marker="circle", size=22,
@@ -309,6 +392,26 @@ cbar_fig.add_layout(ColorBar(color_mapper=CMAP, ticker=BasicTicker(desired_num_t
                              label_standoff=6, title="charge (e)"), "right")
 cbar_fig.xaxis.visible = cbar_fig.yaxis.visible = False
 cbar_fig.grid.visible = False
+
+# --- the dQ/dx colour bar, under the three projections ----------------------
+# One shared horizontal bar rather than one per panel: three 430 px panels have
+# no room for a vertical bar each, and the scale is common to all three anyway.
+dqdx_cbar_fig = figure(width=1290, height=64, toolbar_location=None,
+                       min_border=0, outline_line_color=None)
+dqdx_cbar_fig.add_layout(
+    ColorBar(color_mapper=DQDX_CMAP, orientation="horizontal",
+             ticker=BasicTicker(desired_num_ticks=6), label_standoff=5,
+             title="track-fit dQ/dx (e/cm)   --   MIP 43000, 2x MIP 86000 "
+                   "(fixed range, not per-event)"), "below")
+dqdx_cbar_fig.xaxis.visible = dqdx_cbar_fig.yaxis.visible = False
+dqdx_cbar_fig.grid.visible = False
+# A figure carrying only a ColorBar layout has no glyph renderer, which Bokeh
+# reports as W-1000 MISSING_RENDERERS on every session.  An empty scatter is a
+# renderer and draws nothing, which keeps the served log clean.
+dqdx_cbar_fig.scatter(x=[], y=[], size=0)
+dqdx_lo_in = TextInput(title="dQ/dx min", value="%g" % DQDX_LOW, width=95)
+dqdx_hi_in = TextInput(title="dQ/dx max", value="%g" % DQDX_HIGH, width=95)
+dqdx_cbar_note = Div(text="", width=420)
 
 # --- dQ/dx panel (sbnd_xin/docs/pr/42) --------------------------------------
 # Click a particle-flow row (track or shower) and its measured dQ/dx appears
@@ -392,10 +495,18 @@ next_btn = Button(label="next >", width=80)
 LAYERS = [("trackfit", "track fit"), ("shower", "shower pts"),
           ("track", "track pts"), ("steiner", "steiner"),
           ("terminals", "terminals"), ("vertices", "vertices"),
-          ("dead", "dead (2-D)")]
+          ("dead", "dead (2-D)"), ("dqdx", "dQ/dx")]
+LAYER_KEYS = [k for k, _ in LAYERS]
 # Steiner off by default: 6k points per event drawn under everything else is
 # noise until you go looking for it.
-LAYER_DEFAULT = [0, 1, 2, 5, 6]
+#
+# By KEY, not by position.  This used to be the literal [0, 1, 2, 5, 6], which
+# silently re-points to different layers the moment one is inserted rather than
+# appended -- the trap that made "dQ/dx" an append-only addition above.  The
+# five names below reproduce that literal exactly.
+LAYER_DEFAULT = [LAYER_KEYS.index(k) for k in
+                 ("trackfit", "shower", "track", "vertices", "dead", "dqdx")]
+assert LAYER_DEFAULT[:5] == [0, 1, 2, 5, 6], LAYER_DEFAULT
 layer_group = CheckboxButtonGroup(labels=[l for _, l in LAYERS],
                                   active=list(LAYER_DEFAULT))
 
@@ -801,6 +912,13 @@ def vscan_load(label):
     state["vdirty"] = False
     selvtx_src.data = dict(EMPTY3)
     vscan_src.selected.indices = []
+    # A marker selection left over from the previous event would otherwise point
+    # at a vertex id that no longer exists.  Under _vsuspend so clearing it does
+    # not re-enter on_vtx_tap.
+    state["_vsuspend"] = True
+    vtx_src.selected.indices = []
+    mainvtx_src.selected.indices = []
+    state["_vsuspend"] = False
 
     saved = vscan_load_label(label)
     state["vsaved"] = saved
@@ -842,9 +960,89 @@ def on_vscan_select(attr, old, new):
     r = shown[new[0]]
     selvtx_src.data = dict(x=[r["x"]], y=[r["y"]], z=[r["z"]], c=[""], tag=[r["vid"]])
     # Requirement 2: clicking a candidate frames every panel on it.
+    #
+    # ...but NOT when the selection came from tapping the vertex's own marker in
+    # a projection.  You are already looking at it; re-centring would move the
+    # picture out from under you, and zoom_btn.active = True would override a
+    # framing you set deliberately.  The amber ring above is the confirmation.
+    # Clicking a table ROW keeps this behaviour unchanged.
+    if state.get("_tap_select"):
+        return
     set_centre(r["x"], r["y"], r["z"])
     zoom_btn.active = True
     apply_ranges()
+
+
+def on_vtx_tap(src, main):
+    """Tap a drawn vertex marker -> select its row in the hand-scan table.
+
+    `src` is vtx_src (ordinary PR vertices, whose `tag` column carries the
+    vertex id) or mainvtx_src (the single nu-vertex star).  The star's `tag` is
+    the CLUSTER id, not a vertex id -- main_vertex has no `id` field at all --
+    so `main` switches the lookup to the rows' own is_main flag instead.
+    """
+    def cb(attr, old, new):
+        # Same two reentrancy guards the rest of the file uses.
+        if state.get("_vsuspend") or state.get("_suppress_select"):
+            return
+        if not new:
+            return
+        rows = state.get("vrows") or []
+        if main:
+            want = next((r for r in rows if r["is_main"]), None)
+        else:
+            tags = src.data.get("tag") or []
+            if new[0] >= len(tags):
+                return
+            vid = tags[new[0]]
+            want = next((r for r in rows if r["vid"] == vid), None)
+        if want is None:
+            vscan_note.text = ("<b style='color:#c00'>tapped vertex is not in this "
+                               "event's vertex table.</b>")
+            return
+
+        def row_of():
+            shown = state.get("vshown") or []
+            return next((i for i, r in enumerate(shown) if r["vid"] == want["vid"]), None)
+
+        i = row_of()
+        switched = False
+        if i is None:
+            # The default "main cluster + DL" filter shows only 4-36 of an
+            # event's 60-160 vertices, so a tapped marker often has no row.  Open
+            # the filter up rather than letting the tap do nothing -- and say so,
+            # because this changes a control the operator set.
+            vscan_filter.value = VSCAN_FILTERS[2]        # "all vertices"
+            i = row_of()
+            switched = True
+        if i is None:
+            vscan_note.text = ("<b style='color:#c00'>vertex %s has no row even with "
+                               "the filter open.</b>" % want["vid"])
+            return
+
+        # Set-and-clear around the assignment, not in the callee: Bokeh fires
+        # selected.on_change synchronously here, but it does NOT fire at all when
+        # the tapped vertex is already the selected row -- and a flag cleared by
+        # the callee would then leak True and silently cost the NEXT genuine
+        # table-row click its reframe.
+        state["_tap_select"] = True
+        try:
+            vscan_src.selected.indices = [i]
+        finally:
+            state["_tap_select"] = False
+
+        shown = state.get("vshown") or []
+        def f(v, spec="%.1f"):
+            return "-" if v is None else spec % v
+        vscan_note.text = (
+            "<b>tapped vertex %s</b> &nbsp;&middot;&nbsp; cluster %s "
+            "&nbsp;&middot;&nbsp; (%s, %s, %s) cm &nbsp;&middot;&nbsp; rerank %s "
+            "&nbsp;&middot;&nbsp; DL %s &nbsp;&middot;&nbsp; <b>row %d of %d</b>%s"
+            % (want["vid"], want["clus"], f(want["x"]), f(want["y"]), f(want["z"]),
+               f(want["rerank"], "%.2f"), f(want["dl"], "%.4f"), i + 1, len(shown),
+               " &nbsp;&middot;&nbsp; <span style='color:#c60'>switched 'show' to "
+               "'all vertices' to reach it</span>" if switched else ""))
+    return cb
 
 
 def _vscan_stage(pick):
@@ -1020,6 +1218,12 @@ vscan_save_btn.on_click(on_vscan_save)
 for _f, _hx, _hy in PROJ:
     _f.on_event(Tap, vscan_tap(_hx, _hy))
 
+# Marker tap -> table row.  The three projections share these two CDSs, so one
+# binding each covers all of them.  This is additive: the figure-level Tap above
+# still fills the manual x/y/z boxes whenever `tap fills coords` is on.
+vtx_src.selected.on_change("indices", on_vtx_tap(vtx_src, False))
+mainvtx_src.selected.on_change("indices", on_vtx_tap(mainvtx_src, True))
+
 
 def toggle_layers(attr, old, new):
     on = {LAYERS[i][0] for i in layer_group.active}
@@ -1028,9 +1232,42 @@ def toggle_layers(attr, old, new):
         key = "trackfit" if name == "trackfit2d" else name
         for r in rs:
             r.visible = key in on
+    # With the dQ/dx points on top, the per-segment polyline colour underneath
+    # competes with the charge ramp for the same pixels, so dim it.  Restored on
+    # toggle off, so the picture returns EXACTLY to its pre-dQ/dx appearance.
+    # Set here rather than at construction because this is the one place layer
+    # state is decided, and it is called once at startup (bottom of the file) --
+    # which is also what keeps the alpha correct across an event change, since
+    # it lives on the glyph and not in the CDS.
+    dim = "dqdx" in on
+    for r in RENDER["trackfit"]:
+        r.glyph.line_alpha = 0.30 if dim else 0.95
 
 
 layer_group.on_change("active", toggle_layers)
+
+
+def on_dqdx_range(attr, old, new):
+    """Re-scale the dQ/dx colour ramp.  Bad input leaves the old range alone."""
+    try:
+        lo, hi = float(dqdx_lo_in.value), float(dqdx_hi_in.value)
+    except ValueError:
+        dqdx_cbar_note.text = ("<b style='color:#c00'>dQ/dx range needs two "
+                               "numbers &mdash; keeping %g to %g.</b>"
+                               % (DQDX_CMAP.low, DQDX_CMAP.high))
+        return
+    if not hi > lo:
+        dqdx_cbar_note.text = ("<b style='color:#c00'>dQ/dx max must exceed min "
+                               "&mdash; keeping %g to %g.</b>"
+                               % (DQDX_CMAP.low, DQDX_CMAP.high))
+        return
+    DQDX_CMAP.low, DQDX_CMAP.high = lo, hi
+    dqdx_cbar_note.text = ("<span style='color:#666'>range %g to %g e/cm "
+                           "(fixed; not per-event)</span>" % (lo, hi))
+
+
+dqdx_lo_in.on_change("value", on_dqdx_range)
+dqdx_hi_in.on_change("value", on_dqdx_range)
 
 
 # ---------------------------------------------------------------------------
@@ -1786,6 +2023,10 @@ def load(label):
     segs = d.get("segments", [])
     cols = {k: dict(xs=[], ys=[], c=[], sid=[], pid=[], cid=[], shower=[])
             for k in ("xy", "yz", "xz")}
+    # The same walk also fills the dQ/dx point layer: one row per fitted POINT,
+    # split into "has a measurement" and "does not" (see fitpt_src above).
+    fp = dict(x=[], y=[], z=[], dqdx=[], dQ=[], dx=[], rr=[], sid=[], cid=[], pid=[])
+    fn = dict(x=[], y=[], z=[], sid=[])
     for i, s in enumerate(segs):
         col = seg_color(i)
         px = [p["x"] for p in s["points"]]
@@ -1797,8 +2038,28 @@ def load(label):
             c["sid"].append(s["id"]); c["pid"].append(s["particle_id"])
             c["cid"].append(s["cluster_id"])
             c["shower"].append("yes" if s["flag_shower"] else "no")
+        for p in s["points"]:
+            # Same validity guard as _dqdx_valid_points() -- kept as one
+            # expression in both places on purpose, so the 3-D colouring and the
+            # 1-D panel can never disagree about which points are measured.
+            if p.get("dx", 0) > 0 and p.get("dQ", -1) >= 0:
+                fp["x"].append(p["x"]); fp["y"].append(p["y"]); fp["z"].append(p["z"])
+                fp["dqdx"].append(p["dQ"] / p["dx"])
+                fp["dQ"].append(p["dQ"]); fp["dx"].append(p["dx"])
+                # rr < 0 is the -0.1 sentinel at a branching vertex end.  It
+                # disqualifies a point from the residual-range AXIS of the 1-D
+                # panel, but says nothing about dQ/dx, so such points are
+                # coloured normally here and carry the sentinel into the hover.
+                fp["rr"].append(p.get("rr", -1))
+                fp["sid"].append(s["id"]); fp["cid"].append(s["cluster_id"])
+                fp["pid"].append(s["particle_id"])
+            else:
+                fn["x"].append(p["x"]); fn["y"].append(p["y"]); fn["z"].append(p["z"])
+                fn["sid"].append(s["id"])
     for key in cols:
         seg_src[key].data = cols[key]
+    fitpt_src.data = fp
+    fitpt_nodq_src.data = fn
 
     # --- 2-D panels ---------------------------------------------------------
     have = set()
@@ -2080,6 +2341,8 @@ vscan_col = column(
 # left half-empty.
 left_col = column(
     row(f_xy, f_yz, f_xz),
+    dqdx_cbar_fig,
+    row(dqdx_lo_in, dqdx_hi_in, Spacer(width=15), dqdx_cbar_note),
     row(layer_group),
     controls,
     info,
