@@ -2,9 +2,11 @@
 
 **Status: qualified result, pre-declared bar MISSED.** The rules alone do *not*
 beat the reconstruction (64.1% vs 76.2% on the locked test half). Used as a
-**cross-check** against the reconstructed vertex they reach **83.3% precision on
-the 61.7% of events they will speak about**, against a 76.2% baseline on the same
-events, and the 38% they decline is enriched ×1.43 in reconstruction errors.
+**cross-check** against the reconstructed vertex they endorse **61.7% of events,
+on which the answer is right 83.3% of the time** against a 76.2% baseline on all
+scored events — but see §4.1: that 83.3% is the *reconstruction's* accuracy on
+the endorsed subset, not the rules' own. The 38% they decline is enriched
+**×1.48** in reconstruction errors, and that enrichment is the actual product.
 The pre-declared primary target — ≥90% precision at ≥40% answer-rate — was not
 met, and nothing was retuned after the test half was opened.
 
@@ -79,6 +81,14 @@ The owner asked for staged tuning that eventually consumes every sample. That
 would make the final number a training number, so the staging happens **inside
 the dev half only** (20 → 60 → 150) and the test half was read once, at the end,
 with the configuration already frozen.
+
+> **`--limit N` takes the first N in (tag, run, subrun, event) order, not a
+> random N.** The stage-1 twenty are therefore all `vtxscan-prod0813` and the
+> stage-2 sixty spill into `-mc` / `-mcp1k`. The stages are useful for working
+> on a small set while iterating, but they are tag-ordered prefixes and so
+> **cannot** be read as drift detection across nested random samples; the
+> stage-1 84.2% vs stage-3 89.6% is mostly a change of sample, not of rules.
+> Only the dev-150 and test-331 numbers are quoted as results.
 
 ### Baseline reproduction gate — passes exactly
 
@@ -230,10 +240,11 @@ printed beside every headline.
 | scored | 141 | 311 |
 | production baseline on the same events | 106 (75.2%) | 237 (**76.2%**) |
 | **rules alone**, precision @ answer-rate | 64.7% @ 84.4% | **64.1% @ 91.3%** |
-| **rules + R9 cross-check**, precision | **89.6%** | **83.3%** |
+| **rules + R9 cross-check** — reco accuracy on the endorsed subset (§4.1) | **89.6%** | **83.3%** |
 | ...at answer-rate | 54.6% | 61.7% |
 | ...precision @3 cm | 90.9% | 85.4% |
-| reco-error enrichment on the abstained subset | ×1.8 | **×1.43** |
+| reco wrong: all scored / endorsed / declined | 24.8% / 10.4% / 42.2% | 23.8% / 16.7% / **35.3%** |
+| enrichment on the declined subset | ×1.70 | **×1.48** |
 
 Per step, on the test half:
 
@@ -248,6 +259,19 @@ Per step, on the test half:
 Why the engine declined, on the test half: R9 disagreement 92, z-ambiguity 23,
 no shower start 3, no main cluster 1.
 
+### 4.1 What the 83.3% is, and what it is not
+
+With the R9 cross-check on, the engine answers **only** where its independent
+pick coincides with `main_vertex`. The answered set is therefore *by
+construction* the reco-agreement subset, and every answered row has
+`dist_cm == prod_dist_cm`. So **83.3% is the reconstruction's accuracy on the
+subset the rules endorse — it is not the rules' own accuracy**, and the
+"+7.1 points over 76.2%" is a selection effect, not an improvement the rules
+produce. The rules contribute exactly one bit per event: endorse or decline.
+
+That bit is the deliverable, and the number that measures it is the enrichment,
+not the precision. The rules' own accuracy is the `--independent` row: 64.1%.
+
 ### Against the pre-declared bar
 
 - **Primary — ≥90% precision at ≥40% answer-rate: MISSED.** 83.3% at 61.7%.
@@ -261,14 +285,14 @@ no shower start 3, no main cluster 1.
 
 ### What is nonetheless useful
 
-1. **The cross-check is worth +7.1 points.** On the 61.7% of events where the
-   rules and the reconstruction agree, the answer is right 83.3% of the time
-   against 76.2% overall — and every one of the engine's confident errors is a
-   case where the reconstruction was wrong *in the same way*. The rules inherit
-   reconstruction failures; they do not manufacture new ones.
+1. **The endorse/decline bit is a usable triage.** Endorsed events carry a
+   16.7% reconstruction-error rate against 23.8% overall; declined events carry
+   35.3%. Read §4.1 first: the endorsed subset is *selected on* agreement, so
+   this is triage, not correction. The rules inherit reconstruction failures;
+   they do not manufacture new ones.
 2. **Disagreement is a scan-prioritisation signal.** On the test half the
-   reconstruction is wrong on 24.8% of events overall but **35.5%** of the ones
-   the rules decline — ×1.43 enrichment, in the same family as pr/78's
+   reconstruction is wrong on 23.8% of scored events but **35.3%** of the ones
+   the rules decline — ×1.48 enrichment, in the same family as pr/78's
    `scan_ranker` (×1.91 for corrective enrichment) but derived from physics
    rather than from a fit, and therefore not tied to the 473 labels the earlier
    fits consumed. That is directly usable against pr/79 §7e prerequisite 1
@@ -347,6 +371,11 @@ simplest won.
 | `vtx_rules/eval_rules.py` | scoring, per-rule tables, precision-vs-coverage |
 | `vtx_rules/render_event.py` | the PNG an agent opens with the Read tool |
 | `vtx_rules/runs/` | the split, and the dev/test result TSVs |
+
+`.gitignore` carries a `test*` rule, so `vtx_rules/runs/test-final*` is committed
+with `git add -f`. Re-running the Repro block rewrites those files and **git will
+not show them as dirty** — compare them by hand if you need to know whether the
+numbers moved.
 
 Determinism: two consecutive runs produce byte-identical TSVs, and both match
 the committed `vtx_rules/runs/dev-stage3/events.tsv`.

@@ -116,6 +116,13 @@ def evaluate(half, limit=None, out=None, quiet=False, crosscheck=True):
             continue                       # excluded from precision, see docstring
         c["scored"] += 1
         c["prod_ok"] += vtx_io.correct(prod)
+        # Endorse / decline split.  This is the routing product: how much more
+        # often is the RECONSTRUCTION wrong on the events the engine declines?
+        endorsed = res["decision"] == "answer"
+        c["endorsed" if endorsed else "declined"] += 1
+        if not vtx_io.correct(prod):
+            c["reco_wrong"] += 1
+            c["reco_wrong_endorsed" if endorsed else "reco_wrong_declined"] += 1
         if res["decision"] == "answer":
             c["answered"] += 1
             c["ok1"] += ok1
@@ -194,6 +201,25 @@ def report(c, per_rule, abstain_reason, rows, arms, half):
               % sum(abstain_reason.values()))
         for k in sorted(abstain_reason, key=lambda k: -abstain_reason[k]):
             print("   %-34s n=%4d" % (k, abstain_reason[k]))
+
+    # The routing product, and the caveat that makes the precision number
+    # readable.  With the R9 cross-check on, the engine only answers where it
+    # agrees with the reconstruction, so the answered set is BY CONSTRUCTION the
+    # reco-agreement subset: the precision below is the reconstruction's
+    # accuracy on an endorsed subset, not the rules' own accuracy.  The rules
+    # contribute one bit per event -- endorse or decline -- and THAT is what the
+    # enrichment measures.
+    base = c["reco_wrong"] / max(n, 1)
+    dec_rate = c["reco_wrong_declined"] / max(c["declined"], 1)
+    end_rate = c["reco_wrong_endorsed"] / max(c["endorsed"], 1)
+    print("\nrouting: how often the RECONSTRUCTION is wrong")
+    print("   all scored events   %4d/%4d  %5.1f%%" % (c["reco_wrong"], n,
+                                                       100.0 * base))
+    print("   engine ENDORSED     %4d/%4d  %5.1f%%"
+          % (c["reco_wrong_endorsed"], c["endorsed"], 100.0 * end_rate))
+    print("   engine DECLINED     %4d/%4d  %5.1f%%   enrichment x%.2f"
+          % (c["reco_wrong_declined"], c["declined"], 100.0 * dec_rate,
+             dec_rate / base if base else float("nan")))
 
     # Precision vs answer-rate, sliced by the engine's own confidence: this is
     # the curve that says whether the abstain branch is buying anything.

@@ -1,4 +1,4 @@
-wrote runs/test-final/events.tsv (331 rows)
+wrote vtx_rules/runs/test-final/events.tsv (331 rows)
 
 === half=test  labels=331  arms={'deployed': 324, 'scanned': 7}
 excluded: 2 Tier-D (not_a_candidate), 18 R8 'just dots'
@@ -32,6 +32,11 @@ why the engine ABSTAINED (119 events, no claim made):
    R2-upstream+R2-z+R9-disagree       n=   2
    R0-no-main-cluster                 n=   1
    R6-shower-convergence+R9-disagree  n=   1
+
+routing: how often the RECONSTRUCTION is wrong
+   all scored events     74/ 311   23.8%
+   engine ENDORSED       32/ 192   16.7%
+   engine DECLINED       42/ 119   35.3%   enrichment x1.48
 
 precision vs coverage, by confidence tier:
    <= certain  answered  148 ( 47.6% of scored)  precision  81.1%
