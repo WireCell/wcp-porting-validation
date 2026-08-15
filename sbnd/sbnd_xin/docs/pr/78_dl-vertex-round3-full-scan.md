@@ -451,3 +451,55 @@ respects. Composes with 9a/9b.
 flag (reuses `pseudo_labels.py` machinery); 9b is a new loss function on
 existing model outputs; 9a is the only one requiring new architecture code
 and a `DeepVtx` fork.
+
+## 9-EXECUTED (round C, same night): 9b built and measured, 9c empirically dead, 9a deferred
+
+### 9c — no anchor pool left (measured null)
+
+`pseudo_labels.py --precision` on today's labels: only **38** PR events
+remain unlabeled, and **zero** of them pass any ≥95%-precision confidence
+cut (every `dl_best>=500` cut has unlabeled yield 0 — the unscanned residue
+is exactly the low-confidence tail, partly *because* the scan followed the
+round-2 active-learning ordering).  The "~900 unscanned events" premise no
+longer holds post-scan; 9c was a round-2 idea whose window has closed.  It
+would apply again to any future large unlabeled pool (`data/pseudo1` holds
+the empty build as the record).
+
+### 9b — deployed-objective margin loss: built (`build_cands.py`,
+`dataset.py` candidate transform, `train.py --cands/--cand-margin`)
+
+Candidate sidecar `data/full473-cands`: 473 events, 156 margin-eligible
+(exactly rank_fit's eligibility, as designed).  The truth candidate's voxel
+score is required to beat every other candidate's by 0.1 (margin term added
+to the dense MSE; candidates ride through the same flip/jitter transforms
+as the truth).
+
+Arm `ft2c9b` (ft2u recipe + margin weight 1.0), OOF:
+
+| arm | guard fails | snap-hit | movers up/down | corrective p50/p90 |
+|-----|------------:|---------:|---------------:|-------------------:|
+| ft2u (reference) | 0 | 173 (+8) | 17 / 1 | 42.0 / 237.6 |
+| ft2c9b (margin 1.0) | 4 | **176 (+11)** | 24 / 6 | **41.3 / 226.7** |
+| ft2c9bw3 (margin 0.3) | 2 | 175 (+10) | 20 / 4 | 41.5 / 226.7 |
+
+The margin loss does exactly what §9b predicted — the biggest raw gain of
+all seven arms this round, concentrated on the deployed decision — but it
+buys gain with guard failures at every weight tried (4 at w=1.0, 2 at
+w=0.3; evt 71372 ncpi0 0.24→4.84 cm persists at both weights).  Nothing
+dominates plain ft2u's 0-fail/+8 point on both axes.  Verdict: **the
+deployed-objective loss is real and is the best raw-gain recipe, but on a
+do-no-harm-first policy ft2u remains the deployment choice**; a weight
+sweep below 0.3 (or margin loss on an adapter, 9a) is the natural
+follow-up if the owner wants to trade ~2 confirming events for ~3 extra
+corrective fixes.  The lockbox was NOT re-read for the round-C arms (it
+had already arbitrated ft2u; a second read would turn it into a selection
+set) — any round-C deployment candidate needs the owner's A/B instead.
+
+### 9a — deferred, with a reason beyond cost
+
+The adapter head's payoff path is "extra features for rank_fit" — but §4c
+showed the rank_fit gain is fully subsumed by the `min_accept` retune on
+this label set.  Until an A/B of §8 items (1)+(2) lands and the residual
+selection errors are re-measured, new rank_fit features have no measurable
+headroom; building the fork now would optimize a margin that may not
+exist.  Revisit after the §8 sequence.
