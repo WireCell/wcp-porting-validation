@@ -133,6 +133,7 @@ def prepare(half, n, out, seed, kit, workers, exclude_manifest,
         # The scorer's lookup table: every vertex, every cluster, always.
         cands = [dict(vertex_id=v["id"], cluster_id=v["cluster_id"],
                       degree=v.get("degree", 0),
+                      aliases=list(v.get("aliases") or []),
                       x=round(p[0], 2), y=round(p[1], 2), z=round(p[2], 2))
                  for v in scankit.candidates(d)
                  for p in [scankit.vertex_xyz(v)]]
@@ -277,10 +278,15 @@ def score(out):
             continue          # empty PR graph, nothing to score
         L = labs[ev]
         p = picks[ev]
-        pos = None
+        # A pick may name any member of a merged candidate group (scankit
+        # MERGE_R): the panels draw one circle for co-located vertices, so the
+        # alias ids are the same answer, not a different one.
+        pos, group = None, []
         for c in m["candidates"]:
-            if c["vertex_id"] == p.get("vertex_id"):
+            ids = [c["vertex_id"]] + list(c.get("aliases") or [])
+            if p.get("vertex_id") in ids:
                 pos = (c["x"], c["y"], c["z"])
+                group = ids
         d = vtx_io.dist(L["truth"], pos)
         with open(m["dump"]) as fh:
             dump = json.load(fh)
@@ -300,7 +306,7 @@ def score(out):
         # charges the scanner for a refit it can neither see nor control.
         # `ok_vid` is the same question asked without that artifact.
         ok_vid = (L["truth_vid"] is not None
-                  and p.get("vertex_id") == L["truth_vid"])
+                  and L["truth_vid"] in (group or [p.get("vertex_id")]))
         rows.append(dict(event=ev, conf=p.get("confidence", "-"),
                          vid=p.get("vertex_id"), dist=d,
                          ok=vtx_io.correct(d), ok3=vtx_io.correct(d, 3.0),
@@ -421,10 +427,15 @@ def review(out, tol=1.0):
                              dump=m['dump']))
             continue
         p = picks[ev]
-        pos = None
+        # A pick may name any member of a merged candidate group (scankit
+        # MERGE_R): the panels draw one circle for co-located vertices, so the
+        # alias ids are the same answer, not a different one.
+        pos, group = None, []
         for c in m["candidates"]:
-            if c["vertex_id"] == p.get("vertex_id"):
+            ids = [c["vertex_id"]] + list(c.get("aliases") or [])
+            if p.get("vertex_id") in ids:
                 pos = (c["x"], c["y"], c["z"])
+                group = ids
         with open(m["dump"]) as fh:
             dump = json.load(fh)
         reco = vtx_io.xyz(dump.get("main_vertex"))

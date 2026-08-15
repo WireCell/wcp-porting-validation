@@ -1,0 +1,65 @@
+event        conf     vs reco   bucket                                 pick
+evt280774    certain  37.8 cm   REVIEW FIRST (confident disagreement)  16002
+evt360535    certain  1.3 cm    REVIEW FIRST (confident disagreement)  7001
+evt423981    certain  1.5 cm    REVIEW FIRST (confident disagreement)  12003
+evt56982     certain  21.1 cm   REVIEW FIRST (confident disagreement)  22024
+evt59335     certain  1.1 cm    REVIEW FIRST (confident disagreement)  11002
+evt105946    likely   0.0 cm    REVIEW                                 14002
+evt137238    unclear  18.8 cm   REVIEW                                 143049
+evt142421    unclear  15.7 cm   REVIEW                                 108136
+evt167684    unclear  0.0 cm    REVIEW                                 10000
+evt174576    unclear  0.0 cm    REVIEW                                 5002
+evt180801    likely   77.4 cm   REVIEW                                 109074
+evt235435    likely   0.0 cm    REVIEW                                 2001
+evt268067    likely   9.0 cm    REVIEW                                 15006
+evt268784    likely   0.0 cm    REVIEW                                 13002
+evt280994    likely   0.0 cm    REVIEW                                 18002
+evt281214    likely   0.0 cm    REVIEW                                 60040
+evt283905    likely   0.0 cm    REVIEW                                 4001
+evt284657    likely   0.0 cm    REVIEW                                 5004
+evt287599    likely   0.0 cm    REVIEW                                 6003
+evt287654    unclear  54.6 cm   REVIEW                                 12003
+evt291064    likely   159.4 cm  REVIEW                                 14001
+evt292577    likely   64.0 cm   REVIEW                                 12000
+evt314838    likely   0.3 cm    REVIEW                                 18020
+evt319611    likely   0.0 cm    REVIEW                                 2002
+evt348691    likely   0.0 cm    REVIEW                                 9003
+evt351749    likely   0.0 cm    REVIEW                                 14001
+evt353223    likely   0.4 cm    REVIEW                                 15004
+evt359980    likely   0.0 cm    REVIEW                                 70078
+evt390842    likely   2.0 cm    REVIEW                                 3004
+evt391766    unclear  0.0 cm    REVIEW                                 17001
+evt402330    likely   0.0 cm    REVIEW                                 1008
+evt405740    unclear  0.0 cm    REVIEW                                 14001
+evt406752    unclear  0.0 cm    REVIEW                                 7007
+evt463565    unclear  30.2 cm   REVIEW                                 108102
+evt488755    likely   0.0 cm    REVIEW                                 9002
+evt506114    likely   0.0 cm    REVIEW                                 28058
+evt506746    likely   0.0 cm    REVIEW                                 21038
+evt521075    likely   0.0 cm    REVIEW                                 94055
+evt59899     unclear  33.7 cm   REVIEW                                 5004
+evt71372     likely   5.2 cm    REVIEW                                 19001
+evt74544     likely   0.0 cm    REVIEW                                 12001
+evt114446    certain  0.0 cm    auto-accept                            21001
+evt131357    certain  0.0 cm    auto-accept                            12006
+evt138009    certain  0.0 cm    auto-accept                            12117
+evt172230    certain  0.0 cm    auto-accept                            5009
+evt214469    certain  0.0 cm    auto-accept                            16013
+evt219295    certain  0.0 cm    auto-accept                            15003
+evt246579    certain  0.0 cm    auto-accept                            19006
+evt267597    certain  0.0 cm    auto-accept                            5007
+evt285311    certain  0.0 cm    auto-accept                            11002
+evt292027    certain  0.0 cm    auto-accept                            12002
+evt342199    certain  0.0 cm    auto-accept                            20006
+evt350297    certain  0.0 cm    auto-accept                            18002
+evt409942    certain  0.0 cm    auto-accept                            17004
+evt422851    certain  0.0 cm    auto-accept                            1005
+evt433451    certain  0.0 cm    auto-accept                            4007
+evt447477    certain  0.0 cm    auto-accept                            11001
+evt66646     certain  0.0 cm    auto-accept                            14002
+evt69314     certain  0.0 cm    auto-accept                            3004
+evt81597     certain  0.0 cm    auto-accept                            19006
+
+60 events: 19 auto-accept (32%), 41 to review (68%)
+expected auto-accept accuracy ~95% at ~37% coverage, from the 60 held-out events of doc pr/80 sec 10.5 -- NOT measured on this sample, which has no truth. Treat as a prior, not a guarantee.
+wrote /home/xqian/tmp/scan-mix60-20260815/review.json

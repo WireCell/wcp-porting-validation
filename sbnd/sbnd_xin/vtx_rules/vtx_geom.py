@@ -231,3 +231,72 @@ def seg_direction(seg, at_end):
     v = (b["x"] - a["x"], b["y"] - a["y"], b["z"] - a["z"])
     n = math.sqrt(sum(c * c for c in v))
     return tuple(c / n for c in v) if n > 0 else None
+
+
+# ---------------------------------------------------------------- round 3
+# Added for doc pr/80 round 3 (B1/B3/B4).  All of it is tier-1 safe: detector
+# geometry is a static property of SBND, and everything else is recomputed from
+# fitted points[].  Nothing here reads the reconstruction's verdict.
+
+# Active volume, matching scankit.DET_BOX (kept here as a plain literal rather
+# than imported, so this module stays free of a scankit dependency).
+DET_FACES = (("x-", "x", -201.05), ("x+", "x", 201.05),
+             ("y-", "y", -199.312), ("y+", "y", 199.312),
+             ("z-", "z", 0.85), ("z+", "z", 500.15))
+
+
+def face_distance(pt):
+    """(distance in cm to the nearest active-volume face, face name).
+
+    `pt` is a dict with x/y/z or a 3-tuple.  A point outside the box gives a
+    negative distance, which is not an error: fitted trajectories overshoot the
+    nominal boundary by a few mm routinely.
+    """
+    if isinstance(pt, dict):
+        p = {k: pt[k] for k in "xyz"}
+    else:
+        p = dict(zip("xyz", pt))
+    best, name = None, None
+    for nm, ax, val in DET_FACES:
+        d = abs(p[ax] - val)
+        if p[ax] < val and nm.endswith("-"):
+            d = p[ax] - val          # outside the low face -> negative
+        elif p[ax] > val and nm.endswith("+"):
+            d = val - p[ax]
+        if best is None or d < best:
+            best, name = d, nm
+    return best, name
+
+
+def seg_end_xyz(seg):
+    """((x,y,z) at the points[0] end, (x,y,z) at the points[-1] end)."""
+    pts = seg_points(seg)
+    if not pts:
+        return None, None
+    return ((pts[0]["x"], pts[0]["y"], pts[0]["z"]),
+            (pts[-1]["x"], pts[-1]["y"], pts[-1]["z"]))
+
+
+def angle_deg(u, v):
+    """Angle between two unit-ish vectors, in degrees, or None."""
+    if u is None or v is None:
+        return None
+    d = sum(a * b for a, b in zip(u, v))
+    nu = math.sqrt(sum(a * a for a in u))
+    nv = math.sqrt(sum(b * b for b in v))
+    if nu <= 0 or nv <= 0:
+        return None
+    return math.degrees(math.acos(max(-1.0, min(1.0, d / (nu * nv)))))
+
+
+def prong_angle(seg_a, seg_b, vid):
+    """Angle between two segments leaving the same vertex, in degrees.
+
+    180 deg means they leave back-to-back, i.e. the "vertex" lies on a straight
+    line through both -- the collinearity caution of doc pr/80 sec 10.8.
+    """
+    ea = end_name_of_vertex(seg_a, vid)
+    eb = end_name_of_vertex(seg_b, vid)
+    if ea is None or eb is None:
+        return None
+    return angle_deg(seg_direction(seg_a, ea), seg_direction(seg_b, eb))

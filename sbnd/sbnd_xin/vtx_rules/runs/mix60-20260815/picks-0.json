@@ -1,0 +1,46 @@
+[
+  {"event": "evt105946", "vertex_id": 14002, "confidence": "likely",
+   "why": "Rule 1 on the 48.8 cm heavy track: the p4 profile rises broadly and monotonically over the last ~12 cm into 200k at the 14000 end (real Bragg), while the 470k at 14002 is only a 2-point spike (vertex overlap charge, not a Bragg), so 14002 is the cool start end; it is also the lowest-z point of the track and sits ~8 cm from the low-z tip of the pi0 shower cluster 55, the expected photon-conversion gap."},
+
+  {"event": "evt114446", "vertex_id": 21001, "confidence": "certain",
+   "why": "Rule 1: the only real object is a 9.2 cm proton whose dQ/dx climbs monotonically along the proton template from 100k at 21001 to 310k at 21000, so it stops at 21000 and starts at 21001, which additionally carries a second 2.1 cm prong and is the lower-z end."},
+
+  {"event": "evt131357", "vertex_id": 12006, "confidence": "certain",
+   "why": "Rule 1 satisfied on both prongs at 12006: a 15.6 cm proton rises away x1.54 to a Bragg at 12001 and a 13.1 cm electron rises away x2.39 (42k at the start, shower-like 102k downstream), the two leaving at 87 degrees so this is not a collinear scatter, and 12006 is the lowest-z candidate in the event."},
+
+  {"event": "evt137238", "vertex_id": 143049, "confidence": "unclear",
+   "why": "I took the 4-prong hot star at 143049, where two short stopping protons (to 143050 at 205k and 143054 at 186k) both point away and no attached segment is hotter at the vertex than beyond it, but trap 3 applies hard here: the 143054/143056 prong pair is ~152 degrees apart and 143050-143049-143056-143055 forms a 26.7 cm chain hot at both free ends and cooler in the middle, so I dropped a tier; the long 82.5 cm track in cluster 7 enters at z=501 (detector face) and is screened out as a cosmic."},
+
+  {"event": "evt138009", "vertex_id": 12117, "confidence": "certain",
+   "why": "Rule 1 at the deg-3 hub 12117: a 30.9 cm proton rises away x1.81 into a Bragg at 12001 and, through the 0.8 cm link to 12002 (0.7 cm away, so I take the higher-degree junction), a 15.3 cm electron rises away x3.83 into a 297k shower core; this junction is the lowest-z point of the event and the overview shows the shower fanning out downstream from exactly here."},
+
+  {"event": "evt142421", "vertex_id": 108136, "confidence": "unclear",
+   "why": "Rule 7 on an NC-like event: the 508 cm cluster 7 with its 233 cm Bragg-terminated track is a cosmic (screened out), and the remaining small clusters form a cone from (110,-71,220) out to (33,-87,303) whose dense core sits at z=227-240, so back-tracking one shower-max length puts the apex at ~(114,-70,216); I take 108136, the deg-3 hub of a standalone cluster right at that apex, but the pi0 photon converts away from the true vertex so the real vertex may be upstream and unmarked."},
+
+  {"event": "evt167684", "vertex_id": 10000, "confidence": "unclear",
+   "why": "Rule 7 with rule 8 hovering: the whole event is one 16 cm object with flat ~1 MIP dQ/dx and no Bragg at either end, but two prongs leave 10000 at only ~32 degrees and the p4 profile shows a 2-MIP (85k) bump 2-3 cm from 10000, which reads as an e+e- pair overlapping at a photon conversion, so 10000 is the apex; the neutrino vertex itself is probably upstream of it and invisible."},
+
+  {"event": "evt172230", "vertex_id": 5009, "confidence": "certain",
+   "why": "Rule 1 with all three prongs non-decreasing away from 5009: a 10.8 cm proton 113k->141k, a 17.9 cm electron 49k->93k (x1.90, the classic MIP-start-then-shower), and a 4.6 cm stub, with the proton and electron 94 degrees apart; 5009 at z=19.7 is the most upstream candidate in the event and the rest of the shower marches downstream to z=169."},
+
+  {"event": "evt174576", "vertex_id": 5002, "confidence": "unclear",
+   "why": "The only substantial cluster runs boundary to boundary (one end on the anode at x=-195, the other on the bottom wall at y=-199) with flat MIP dQ/dx and no Bragg anywhere, which is my cosmic signature, and the only other charge is a dispersed fragment group with no readable direction (rule 8); I picked 5002 because it is the lowest-z candidate (z=11.4) and is a genuine ~90 degree two-prong junction with both prongs heading forward in z, but I would not be surprised to be wrong."},
+
+  {"event": "evt180801", "vertex_id": 109074, "confidence": "likely",
+   "why": "Rule 1 read off p4 rather than the 5 cm means: the 32.2 cm track rises monotonically 115k->230k toward the 109075 end (the final collapse to 50k is the fit overshooting the stopping point), so 109074 is the cool start; it is the lowest-z candidate at z=367.5, and the cluster-113 to cluster-15 shower axis back-extrapolates to (-20.6,-13.4,367), within a couple of cm of it."},
+
+  {"event": "evt214469", "vertex_id": 16013, "confidence": "certain",
+   "why": "Rule 1 perfect at 16013: an 84.7 cm track rises away x2.36 into a 178k Bragg at 16001 and a 27.4 cm electron rises away x4.81 into a 272k shower core at 16043, the two prongs 117 degrees apart, and 16013 at z=300.9 is the most upstream candidate in the whole event."},
+
+  {"event": "evt219295", "vertex_id": 15003, "confidence": "certain",
+   "why": "Rule 1 plus rule 2 at the apex of the V seen in X-Z: the 87.9 cm track cools toward 15003 (72k here vs 101k at its far end 15002, where it stops and knocks out a 7.1 cm 212k proton, i.e. a hadronic interaction, not the vertex), the whole shower blob fans out from 15003 to higher z, and 15003 at z=95.8 is the lowest-z candidate."},
+
+  {"event": "evt235435", "vertex_id": 2001, "confidence": "likely",
+   "why": "Rule 7 with the trap-3 caution: the 33.8 cm segment is far too heavily ionizing (3-6 MIP over 34 cm) to be a proton, and p4 shows dense blobs at both its ends with a 15 cm MIP stretch between them, which reads as vertex charge at 2001, an electron travelling ~15 cm as a MIP, then showering from 2015 onward and fanning out to z=236; 2001 is the lowest-z end and the whole structure moves upward and forward in z, so it is not a downward cosmic."},
+
+  {"event": "evt246579", "vertex_id": 19006, "confidence": "certain",
+   "why": "Rule 1 with both prongs rising away from 19006: a 10.2 cm proton 139k->211k stopping at 19019 and a 22.2 cm electron 69k->155k developing into the shower, 93 degrees apart, and 19006 at z=29.8 is the most upstream candidate in the event with the whole 484 cm shower cluster spreading downstream of it."},
+
+  {"event": "evt267597", "vertex_id": 5007, "confidence": "certain",
+   "why": "Rule 1 at the apex of the clean V in X-Z: both prongs are non-decreasing away from 5007 (the 80 cm track 74k->99k, which then interacts at 5001 producing the separate 6.5 cm 173k proton of cluster 96 three cm away, and the 15.8 cm shower prong 78k->83k), they leave 97 degrees apart, and 5007 at z=367.7 is the most upstream point of the event."}
+]

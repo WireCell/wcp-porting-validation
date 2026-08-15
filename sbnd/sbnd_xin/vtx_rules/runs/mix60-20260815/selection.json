@@ -1,0 +1,362 @@
+[
+ {
+  "event": "evt105946",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt114446",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "dev"
+ },
+ {
+  "event": "evt131357",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt137238",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt138009",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt142421",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "dev"
+ },
+ {
+  "event": "evt167684",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt172230",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt174576",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt180801",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt214469",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt219295",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt235435",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt246579",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt267597",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt268067",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt268784",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt280774",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt280994",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt281214",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt283905",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt284657",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt285311",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt287599",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt287654",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt291064",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt292027",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt292577",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt314838",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt319611",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt342199",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt348691",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt350297",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt351749",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt353223",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt359980",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt360535",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt390842",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt391766",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt402330",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt405740",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt406752",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt409942",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt422851",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt423981",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt433451",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt447477",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ },
+ {
+  "event": "evt463565",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "dev"
+ },
+ {
+  "event": "evt488755",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt506114",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt506746",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt521075",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt56982",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "test"
+ },
+ {
+  "event": "evt59335",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt59899",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt66646",
+  "tag": "vtxscan-prod0813-mcp1k",
+  "channel": "BNBincl",
+  "half": "dev"
+ },
+ {
+  "event": "evt69314",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt71372",
+  "tag": "vtxscan-prod0813-ncpi0",
+  "channel": "NCpi0",
+  "half": "dev"
+ },
+ {
+  "event": "evt74544",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "test"
+ },
+ {
+  "event": "evt81597",
+  "tag": "vtxscan-prod0813",
+  "channel": "nueCC",
+  "half": "dev"
+ }
+]

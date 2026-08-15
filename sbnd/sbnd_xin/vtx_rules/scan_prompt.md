@@ -99,6 +99,23 @@ equally when they disagree.
   tier**, not a reason to eliminate the candidate: 22% of genuine vertices are
   collinear too, and treating this as a veto would throw away real answers.
 
+* **A cluster that reaches a detector wall is not thereby a cosmic, and
+  screening it out will cost you events.** This is measured, not a guess: over
+  473 labelled events, the true neutrino vertex sits on a cluster with two or
+  more free ends at a detector face **3.0%** of the time, against **3.4%** for
+  candidate vertices drawn at random — a ratio of 1.12, which is no
+  discrimination at all. A quarter of all events contain such a cluster. The
+  round-3 scan lost evt142421 exactly this way: a 508 cm track with one end at
+  the `x+` face was set aside as "a cosmic", and the true vertex was **inside
+  that cluster**. There is no cosmic-rejection rule in this list. Do not invent
+  one — judge every cluster on its dQ/dx and its topology.
+
+* **Co-located vertices are one answer, not two.** Vertices within 0.8 cm of
+  each other are collapsed into a single candidate; the evidence sheet shows the
+  absorbed ids as "also called". Their attached segments are pooled, so the prong
+  count you see is the whole junction's. You will never be asked to choose
+  between two points you cannot tell apart in any panel.
+
 ## What you report
 
 Write a JSON list to the path you are given, one entry per event:

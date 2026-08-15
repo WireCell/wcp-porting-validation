@@ -1,0 +1,18 @@
+# these test-half events are no longer held out: an AI scanner read them in this run
+evt105946
+evt131357
+evt172230
+evt180801
+evt214469
+evt235435
+evt267597
+evt268784
+evt314838
+evt359980
+evt423981
+evt506114
+evt506746
+evt521075
+evt56982
+evt69314
+evt74544

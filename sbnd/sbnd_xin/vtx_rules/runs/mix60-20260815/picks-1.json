@@ -1,0 +1,46 @@
+[
+  {"event": "evt268067", "vertex_id": 15006, "confidence": "likely",
+   "why": "Rule 1 with the two-Bragg-ends trap: seg 15009 (74 cm) climbs monotonically to 195k at 15000 and seg 15011 climbs to 179k at 15007, so both heavy prongs stop away from 15006, and its cone profile is the only monotone one (far-near +16.6 cm); the EM spray hanging off 15004 6.7 cm downstream reads as a displaced photon conversion, but 15004 is a real competitor so not certain."},
+
+  {"event": "evt268784", "vertex_id": 13002, "confidence": "likely",
+   "why": "The event is a V whose apex sits at 13002/13006; I broke that 2.3 cm tie with the trap-3 collinearity check - at 13006 the pi+ stub and the 9.9 cm proton leave at 163 deg (nearly one straight line) whereas at 13002 the three prongs are mutually 52/71/74 deg, a genuine fan, and 13002 is also the lowest-z candidate in the cluster; 13019 is rejected because 3 of its 4 segments rise toward it."},
+
+  {"event": "evt280774", "vertex_id": 16002, "confidence": "certain",
+   "why": "Classic two-Bragg-ends resolution: seg 16001 falls monotonically from 360k at 16000 down to 90k at 16002 and seg 16003 rises to 145k at the 16003 end, so both prongs of this 96 cm chain get hotter going away from 16002, which is the only kink (136 deg opening) and has no competing candidate nearer than 38 cm."},
+
+  {"event": "evt280994", "vertex_id": 18002, "confidence": "likely",
+   "why": "Only one real object, a 120 cm track; rule 1 picks the cool end because the 5 cm mean is 118600 at 18000 against 69082 at 18002 and the profile decays over ~8 cm from the 18000 end, so 18000 is the stopping end - 18002 is also the low-z end and neither end sits on a wall, but a single flat-MIP track with no second prong leaves cosmic contamination possible."},
+
+  {"event": "evt281214", "vertex_id": 60040, "confidence": "likely",
+   "why": "Rule 1 plus the multi-prong star: five prongs radiate from 60040 at mutual angles of 72-102 deg, including two short heavy stubs (109k over 3.8 cm, 112k over 1.8 cm) and an 8.3 cm prong Bragg-stopping at 60029 (161k); the trap-3 test eliminates the 5.5 cm competitor 60038, where the 140 cm muon and the link back to 60040 leave at 175.6 deg, i.e. 60038 is a break point inside the muon, so I read the hot 7.6 cm link as vertex-region pile-up on the muon's first centimetres."},
+
+  {"event": "evt283905", "vertex_id": 4001, "confidence": "likely",
+   "why": "Rule 1 on a two-ended track: seg 4002 rises from 59311 at 4001 to 89264/120696 at the 4000 end, so the particle stops there and 4001 is the start; 4001 is also the lowest-z candidate, but it sits exactly on the x = -200 anode wall and the event is a single horizontal track at y = 110 with no second prong, so this is very likely an entering cosmic rather than a neutrino."},
+
+  {"event": "evt284657", "vertex_id": 5004, "confidence": "likely",
+   "why": "Rule 1 puts two real Bragg profiles pointing away from 5004 - seg 5006 climbs 73k to 185k stopping at 5002 and seg 5007 climbs 101k to 215k stopping at 5005 - but trap 3 fires: the 80 cm flat-MIP prong and the 19.8 cm pi+ leave 5004 at 155 deg and the dQ/dx along that line is monotone 42881 -> 61297 | 73104 -> 130862, i.e. it also reads as one muon entering at the z=497 wall and stopping at 5002, which drops this a tier; the 26.3 cm proton at 78 deg to both still needs a real interaction here."},
+
+  {"event": "evt285311", "vertex_id": 11002, "confidence": "certain",
+   "why": "Two clean Bragg profiles point away from 11002 - seg 11003 sits flat at MIP for 22 cm then climbs to 150k at 11003, and seg 11018 climbs to 145k at 11010 - so it is hot at both far ends and cool at the junction, which rules out the single-scattered-particle reading of the 146 deg prong pair; the stub fan at 11004 on the muon's stopping end is a Michel (rule 3, far end), and 11007 with its two short protons is 14 cm away."},
+
+  {"event": "evt287599", "vertex_id": 6003, "confidence": "likely",
+   "why": "Rule 1 read on a tiny event: the 36 cm track is flat MIP (57k-63k) and heads forward in +z to exit near z = 500, while a 3.3 cm stub uniformly at 167572 (4x MIP) hangs off 6003 as a short stopping proton, making 6003 the junction; 6004 is only 2.6 cm away but is the degree-1 far end of that stub."},
+
+  {"event": "evt287654", "vertex_id": 12003, "confidence": "unclear",
+   "why": "I can tell three stories and cannot separate them, so I let the ranked rules decide the 2.6 cm split: rule 1 is mildly negative at 12002 (the 56 cm track and the 6.5 cm link are both hotter AT it) and neutral at the 12003 three-prong fan (90/126/144 deg, no collinearity), and rule 2 also favours 12003 by 1.8 cm in z; against that, the 190k charge concentration sits at 12002, and the whole cluster reads equally well as a cosmic entering at z = 497 and stopping at 12002 with a Michel fan at 12003 (rule 3), which is why this is unclear. Cluster 88+89 was rejected as a candidate host because it is a straight line in the principal frame."},
+
+  {"event": "evt291064", "vertex_id": 14001, "confidence": "likely",
+   "why": "Rule 1 on the only substantial object: seg 14002 rises from 59147 at 14001 to 93568 at 14002 with a further 4.5 cm stub at 113066, so the particle stops at 14002/14000 and 14001 is the cool start, and 14001 is also by far the lowest-z candidate (z = 4.7); it sits in the cathode/upstream corner though, so an entering particle is quite possible."},
+
+  {"event": "evt292027", "vertex_id": 12002, "confidence": "certain",
+   "why": "Rule 1 at its cleanest, and the p4 shape confirms it is a Bragg and not a hot blob: seg 12007 climbs smoothly along the proton template from 90k at 12002 to 300k at 12003, a 25 cm proton stopping away from 12002, while the other prong is a 289 cm flat-MIP muon that runs through 12004 and exits at the x = 200 wall; the fragments within 12 cm (clusters 56/59/35) are flat-MIP degree-1 pieces with no vertex evidence of their own."},
+
+  {"event": "evt292577", "vertex_id": 12000, "confidence": "likely",
+   "why": "Rule 1 forces the choice between the only two real candidates: seg 12000 rises from 48745 at 12000 to 89350 at 12001, and the small fragment clusters 28/29/30/31 sit 14-17 cm from 12001 like a Michel/delta spray, so 12001 is the stopping end (rule 3) and 12000 is the start - but 12000 lies on the z = 500 downstream wall, so this is an entering backward track with no neutrino signature."},
+
+  {"event": "evt314838", "vertex_id": 18020, "confidence": "likely",
+   "why": "Rules 6/7 plus rule 1 agree: back-projecting the cluster-110 chain and the 23.9 cm cluster-13 shower stem both lands within a few cm of (26,155,140), and the 38 cm proton seg 18022 rises 108990 to 187167 stopping away at 18019, with the zoom showing 18020 as the extreme upstream apex of the whole fan; the residual doubt is purely which of the three sub-cm-separated ids (18020/18018/18096) is meant, and I chose the one the 38 cm segment attaches to."},
+
+  {"event": "evt319611", "vertex_id": 2002, "confidence": "likely",
+   "why": "Rule 1 rules out the stopping-cosmic reading: the 112 cm track is cooler at 2002 (51868) than at its far end, so it does not stop here, which means the 3.5 cm stub at 148572 is a separate short proton and 2002 is a three-prong junction; I held back from certain because the entire event hugs the x = -197 anode wall and the long track exits at the z = 500 / y = -192 corner."}
+]

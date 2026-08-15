@@ -1,0 +1,74 @@
+event        conf      dist_cm  ok@1cm  ok@3cm  reco_ok
+evt105946    likely       0.00     yes     yes      yes   Rule 1 on the 48.8 cm heavy track: the p4 profile ri
+evt114446    certain      0.01     yes     yes      yes   Rule 1: the only real object is a 9.2 cm proton whos
+evt131357    certain      0.00     yes     yes      yes   Rule 1 satisfied on both prongs at 12006: a 15.6 cm 
+evt137238    unclear     18.83      no      no      yes   I took the 4-prong hot star at 143049, where two sho
+evt138009    certain      0.76     yes     yes      yes   Rule 1 at the deg-3 hub 12117: a 30.9 cm proton rise
+evt142421    unclear     15.73      no      no      yes   Rule 7 on an NC-like event: the 508 cm cluster 7 wit
+evt167684    unclear      0.01     yes     yes      yes   Rule 7 with rule 8 hovering: the whole event is one 
+evt172230    certain      0.00     yes     yes      yes   Rule 1 with all three prongs non-decreasing away fro
+evt174576    unclear      0.42     yes     yes      yes   The only substantial cluster runs boundary to bounda
+evt180801    likely       0.01     yes     yes       no   Rule 1 read off p4 rather than the 5 cm means: the 3
+evt214469    certain      0.00     yes     yes      yes   Rule 1 perfect at 16013: an 84.7 cm track rises away
+evt219295    certain      0.00     yes     yes      yes   Rule 1 plus rule 2 at the apex of the V seen in X-Z:
+evt235435    likely       0.01     yes     yes      yes   Rule 7 with the trap-3 caution: the 33.8 cm segment 
+evt246579    certain      0.00     yes     yes      yes   Rule 1 with both prongs rising away from 19006: a 10
+evt267597    certain      0.00     yes     yes      yes   Rule 1 at the apex of the clean V in X-Z: both prong
+evt268067    likely       6.76      no      no       no   Rule 1 with the two-Bragg-ends trap: seg 15009 (74 c
+evt268784    likely       0.00     yes     yes      yes   The event is a V whose apex sits at 13002/13006; I b
+evt280774    certain      0.01     yes     yes       no   Classic two-Bragg-ends resolution: seg 16001 falls m
+evt280994    likely       0.00     yes     yes      yes   Only one real object, a 120 cm track; rule 1 picks t
+evt281214    likely       0.00     yes     yes      yes   Rule 1 plus the multi-prong star: five prongs radiat
+evt283905    likely       0.00     yes     yes      yes   Rule 1 on a two-ended track: seg 4002 rises from 593
+evt284657    likely       0.00     yes     yes      yes   Rule 1 puts two real Bragg profiles pointing away fr
+evt285311    certain      0.01     yes     yes      yes   Two clean Bragg profiles point away from 11002 - seg
+evt287599    likely       0.01     yes     yes      yes   Rule 1 read on a tiny event: the 36 cm track is flat
+evt287654    unclear      5.29      no      no       no   I can tell three stories and cannot separate them, s
+evt291064    likely       0.00     yes     yes       no   Rule 1 on the only substantial object: seg 14002 ris
+evt292027    certain      0.00     yes     yes      yes   Rule 1 at its cleanest, and the p4 shape confirms it
+evt292577    likely      63.98      no      no      yes   Rule 1 forces the choice between the only two real c
+evt314838    likely       0.30     yes     yes      yes   Rules 6/7 plus rule 1 agree: back-projecting the clu
+evt319611    likely       0.01     yes     yes      yes   Rule 1 rules out the stopping-cosmic reading: the 11
+evt342199    certain      0.01     yes     yes      yes   Rule 1 decided it: the 39.5 cm proton seg 20035 is c
+evt348691    likely       0.01     yes     yes      yes   Travel direction decided it rather than the raw rule
+evt350297    certain      0.01     yes     yes      yes   Rules 1 and 3: the only real object is a 258 cm muon
+evt351749    likely       6.60      no      no       no   Rule 1 on the only fitted object: the 7.5 cm proton 
+evt353223    likely       0.36     yes     yes      yes   Geometry decided it: the two real prongs, a 43.7 cm 
+evt359980    likely       0.41     yes     yes      yes   Read as an NC pi0: rule 1 puts the 13.1 cm heavily-i
+evt360535    certain      1.27      no     yes      yes   A clean two-prong V at the lowest-z candidate (z=81.
+evt390842    likely       0.00     yes     yes       no   Rule 1 on a single 434 cm track: p4 shows a textbook
+evt391766    unclear    115.52      no      no       no   I could not find an interaction point at all: cluste
+evt402330    likely       0.00     yes     yes      yes   The 4.1 cm and 9.7 cm pion pieces are one continuous
+evt405740    unclear      0.01     yes     yes      yes   Nearly nothing to work with: the only fitted object 
+evt406752    unclear      6.72      no      no       no   Rule 1 names 7007 and nothing else does: it is the o
+evt409942    certain      0.01     yes     yes      yes   The strongest possible rule-1 reading: a degree-5 ve
+evt422851    certain      0.01     yes     yes      yes   1005 is the apex of the whole event: the X-Z panel s
+evt423981    certain      0.00     yes     yes       no   Rule 1 at full strength on a degree-5 star: all thre
+evt433451    certain      0.00     yes     yes      yes   Rule 1 at full strength: 4007 is a degree-5 junction
+evt447477    certain      0.01     yes     yes      yes   Rule 1 with no violations at a degree-4 vertex: ever
+evt463565    unclear      0.01     yes     yes       no   The zoom at half-width 8/16 shows a ~52 degree kink 
+evt488755    likely       0.00     yes     yes      yes   Rule 1 is perfect here - p4 shows two independent, t
+evt506114    likely       0.01     yes     yes      yes   Rule 1 plus rule 2: p4 shows seg 28078 flat at ~80k 
+evt506746    likely       0.01     yes     yes      yes   Rule 3 settles it - the 20.4 cm muon on 21038 is hot
+evt521075    likely       0.00     yes     yes      yes   Rule 1 on the one clean track: the 23.8 cm proton cl
+evt56982     certain     12.25      no      no       no   Textbook rule 1 at a degree-5 vertex: nothing rises 
+evt59335     certain     64.78      no      no       no   Rule 1 with a decisive profile - p4 shows seg 11003 
+evt59899     unclear      1.23      no     yes       no   This is one straight 36 cm line sitting 4 cm off the
+evt66646     certain      0.01     yes     yes      yes   Rule 1 on the only junction in a 22 cm event: a 3.6 
+evt69314     certain      0.00     yes     yes      yes   Rule 1 as strongly as it gets: 3004 is degree 5 with
+evt71372     likely       5.21      no      no      yes   Rule 1 gives 19001 two of two prongs rising away and
+evt74544     likely       0.00     yes     yes      yes   Rule 1 fixes the apex of a 364 cm one-cluster shower
+evt81597     certain      0.00     yes     yes      yes   Rule 1 at the upstream apex: 19006 is degree 3 at z=
+
+picks files written at: {'picks-0.json': '2026-08-15 14:16:53', 'picks-1.json': '2026-08-15 14:20:47', 'picks-2.json': '2026-08-15 14:16:02', 'picks-3.json': '2026-08-15 14:15:32'}
+scanned 60, answered 60 (100%), correct 47 (precision 78.3%, @3cm 81.7%)
+by VERTEX ID (no cross-arm refit artifact): 43 of 60 answered with a recorded truth id (71.7%)
+reconstruction on the same 60 events: 46 correct (76.7%)
+events where NO vertex in this arm is within 1 cm of the click: 1 (1.7%) -- unanswerable by the distance metric; the click IS snapped, but to a vertex in the arm the label was taken on
+
+confidence calibration (this is what decides the hand-back workflow -- read coverage and accuracy TOGETHER):
+   certain  coverage  24/60 (40.0%)  answered  24  correct  21 (87.5%)  by-vid  20 (83.3%)
+   likely   coverage  26/60 (43.3%)  answered  26  correct  22 (84.6%)  by-vid  19 (73.1%)
+   unclear  coverage  10/60 (16.7%)  answered  10  correct   4 (40.0%)  by-vid   4 (40.0%)
+
+reco wrong on 23.3% of all events, 66.7% of the 15 the scanner declined or disagreed with -> enrichment x2.86

@@ -1,0 +1,46 @@
+[
+  {"event": "evt342199", "vertex_id": 20006, "confidence": "certain",
+   "why": "Rule 1 decided it: the 39.5 cm proton seg 20035 is coolest (87k) at 20006 and climbs monotonically along the p4 proton template to a 215k/300k Bragg at 20007, and seg 20036 also gets hotter going away toward the shower at 20008, so both real prongs point away from 20006; the two prongs leave at about 67 degrees so the collinear-kink trap does not apply, and 20006 is the lowest-z point of cluster 20."},
+
+  {"event": "evt348691", "vertex_id": 9003, "confidence": "likely",
+   "why": "Travel direction decided it rather than the raw rule-1 count: the 25.7 cm pion seg 9011 is MIP at 9003 and rises to about 100k approaching 9006, so it moves 9003 to 9006 and 9006 is a secondary hadronic star (proton Bragg to 280k at 9004 plus a second pion Bragg at 9007), while the 360 cm muon leaves 9003 forward and exits at z=500 with no monotone Bragg at the 9003 end, and the cluster-49 EM shower apex sits 8 cm away like a gamma conversion off the same vertex."},
+
+  {"event": "evt350297", "vertex_id": 18002, "confidence": "certain",
+   "why": "Rules 1 and 3: the only real object is a 258 cm muon whose 18000 end shows a textbook monotone Bragg in p4 (165k falling to MIP over the last 5 cm, hugging the stopping-muon template) while the 18002 end is flat MIP and carries a 3.3 cm 162k proton-like stub, so the muon starts at 18002, which is interior and points forward in +z rather than being a wall entry."},
+
+  {"event": "evt351749", "vertex_id": 14001, "confidence": "likely",
+   "why": "Rule 1 on the only fitted object: the 7.5 cm proton is 232k at 14000 and cooler 178k at 14001, so it stops at 14000 and starts at 14001, where a second 0.5 cm proton stub also attaches; I held back from certain because the surrounding event is a 60 cm wide cloud of sub-centimetre blips with no readable structure (heuristic 8) that could equally hide the true vertex."},
+
+  {"event": "evt353223", "vertex_id": 15004, "confidence": "likely",
+   "why": "Geometry decided it: the two real prongs, a 43.7 cm muon to 15001 and a 32 cm low-charge track to 15000, both terminate on the z=500 downstream wall and meet in a clean V whose apex is at z=480.7, so nothing in the event is upstream of that apex; 15002/15004/15009 are the same physical point within 1 cm and I took 15004 because it sits on the apex and holds the muon, which is also why I did not call it certain."},
+
+  {"event": "evt359980", "vertex_id": 70078, "confidence": "likely",
+   "why": "Read as an NC pi0: rule 1 puts the 13.1 cm heavily-ionising cluster-70 track leaving 70078 and Bragging to 138k at 70079, and that track is at 98 degrees to seg 21035 so it is a genuine separate prong and not a broken continuation; shower cluster 21 peaks at 124k (about 3x MIP, an e+e- overlap) at 21001 only 3.7 cm away and the second shower back-extrapolates from 75092 to within 16 degrees of the same spot, and since a proton cannot travel before depositing I put the vertex at the proton start rather than at the conversion point."},
+
+  {"event": "evt360535", "vertex_id": 7001, "confidence": "certain",
+   "why": "A clean two-prong V at the lowest-z candidate (z=81.6), visible directly in the X-Z panel: one arm is a 43 cm 2x-MIP track that exits the x=-200 wall at 7006 so it has no Bragg, the other climbs 65k to 379k over 30 cm into the shower core at 7044, which is rule 1 for an electron shower developing away from the vertex; 7044 itself has three segments rising toward it so it is the shower core, not the vertex, and the prongs are 34 degrees apart so the collinearity trap does not fire."},
+
+  {"event": "evt390842", "vertex_id": 3004, "confidence": "likely",
+   "why": "Rule 1 on a single 434 cm track: p4 shows a textbook monotone Bragg at the far end 3000 (190k falling to MIP within 5 cm on the stopping-muon template) and plain MIP at 3004, which also carries two short stubs (1.9 cm at 120k and 2.0 cm at 66k) that read as hadronic recoil; the hot patch at the 3002 junction is only 1-2 cm wide and is a blob, not a Bragg shape, so it does not compete, and I stopped short of certain because at z=9.5 an entering muon would look the same."},
+
+  {"event": "evt391766", "vertex_id": 17001, "confidence": "unclear",
+   "why": "I could not find an interaction point at all: clusters 17 and 24 are one track that enters at the z=0.1 face with flat MIP (no Bragg at 17001) and stops 280 cm later where seg 24005 climbs to 160k and seg 24007 falls 156k to 18k with a Michel-like 3.4 cm 9k hook, which rule 3 says is never the vertex, while the 17002 kink is a 163 degree back-to-back pair (the collinearity trap) and cluster 25 is a second track entering at z=1.9 and stopping; 17001 is only my best guess as the candidate nearest a vertex that lies upstream of the front face."},
+
+  {"event": "evt402330", "vertex_id": 1008, "confidence": "likely",
+   "why": "The 4.1 cm and 9.7 cm pion pieces are one continuous hadron running 1008 to 1003 to 1000 and Bragging to 143k at 1000, which makes 1003 an internal kink rather than a junction; 1008 is where that hadron and the 26.8 cm flat-MIP track actually meet, at 122 degrees, and that track stays flat because it exits the y=-200 wall at 1001, so rule 1 is satisfied at 1008, which is also the lowest-z candidate."},
+
+  {"event": "evt405740", "vertex_id": 14001, "confidence": "unclear",
+   "why": "Nearly nothing to work with: the only fitted object is a 23.9 cm flat 1.4x-MIP track whose 14000 end sits on the z=500 wall, so by elimination its interior end 14001 must be the origin, but neither end has a Bragg so rule 1 gives no real signal, and three unexplained sub-centimetre blips at z=451, 459 and 467 lie further upstream on roughly the same axis and could just as well mark the true vertex."},
+
+  {"event": "evt406752", "vertex_id": 7007, "confidence": "unclear",
+   "why": "Rule 1 names 7007 and nothing else does: it is the only vertex in the event with a segment rising away (the 26.5 cm track climbing 62k to a 102k stop at 7000) and none rising toward it. Two things pull my confidence right down to guessing: the prong pair at 7007 is 160 degrees, so this may be one scattered particle rather than a junction, and the 5.6 cm chain on the other side runs out at y=198.3, within 2 cm of the top wall, which would make the whole 32 cm object an entering particle that simply stops, with the real origin outside the detector near 7001."},
+
+  {"event": "evt409942", "vertex_id": 17004, "confidence": "certain",
+   "why": "The strongest possible rule-1 reading: a degree-5 vertex where 4 of the 5 attached segments rise away and not one rises toward it, with three short protons Bragging at 180k, 206k and 156k at their far ends and a 40.1 cm muon climbing 41k to 129k (x3.14) to its own stopping point, which is a hadronic star that cannot be anything but an interaction point."},
+
+  {"event": "evt422851", "vertex_id": 1005, "confidence": "certain",
+   "why": "1005 is the apex of the whole event: the X-Z panel shows every cluster (1 at z=346-389, 80 at z=392-410, then 83, 85 and 58 out to z=443) fanning downstream from this one point, and rule 1 holds there with a 6.5 cm 157k-to-198k proton stopping at 1010 and a 23.7 cm segment climbing 70k to 174k (x2.49) into the shower, with nothing rising toward it; the prongs are 57 degrees apart."},
+
+  {"event": "evt423981", "vertex_id": 12003, "confidence": "certain",
+   "why": "Rule 1 at full strength on a degree-5 star: all three measured prongs rise away and none rises toward, an 85 cm proton (51k to 79k) that ends in a secondary hadronic star at 12002, a 29.5 cm segment climbing 52k to 149k (x2.89) that feeds the EM shower beyond 12012, and a 29.9 cm backward prong at 55k to 111k; the prong pairs sit at 31, 93 and 99 degrees so no pair is near-collinear."}
+]

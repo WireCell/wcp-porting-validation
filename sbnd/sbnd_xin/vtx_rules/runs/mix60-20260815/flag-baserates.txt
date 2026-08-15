@@ -1,0 +1,27 @@
+... 100/473
+... 200/473
+... 300/473
+... 400/473
+
+473 labels with a usable dump and click
+
+B2 co-located vertex merging  (SHIPPED at r=0.8)
+  r=0.5 cm:  2974 merged groups; labels BROKEN (representative >1 cm from its click): 0
+  r=0.8 cm:  3901 merged groups; labels BROKEN (representative >1 cm from its click): 0
+  r=1.0 cm:  4374 merged groups; labels BROKEN (representative >1 cm from its click): 1
+  r=1.5 cm:  4945 merged groups; labels BROKEN (representative >1 cm from its click): 11
+
+B3 collinear(>=150 deg) + cold middle  (REJECTED: too rare)
+  at TRUE  vertices: 7/462 (1.52%)
+  at OTHER vertices: 8/15966 (0.05%)
+
+B1 boundary / containment  (REJECTED: no discrimination)
+  true vertex within 2 cm of a face: 22/462 (4.8%)
+  TRUE      vertices on a through-going cluster: 14/462 (3.0%)
+  CANDIDATE vertices on a through-going cluster: 557/16428 (3.4%)
+  ratio 1.12x -- a wall-touching cluster is essentially as likely to hold the vertex as any other
+  events with >=1 through-going cluster: 119/473 (25.2%)
+
+B4 fragments within 20 cm  (REJECTED: anti-correlated)
+  TRUE  vertices with >=1 fragment near: 385/462 (83.3%)
+  OTHER vertices with >=1 fragment near: 452/462 (97.8%)

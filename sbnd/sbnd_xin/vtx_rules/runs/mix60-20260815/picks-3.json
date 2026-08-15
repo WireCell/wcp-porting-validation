@@ -1,0 +1,46 @@
+[
+  {"event": "evt433451", "vertex_id": 4007, "confidence": "certain",
+   "why": "Rule 1 at full strength: 4007 is a degree-5 junction with zero prongs rising toward it, and p4 shows both proton prongs (seg 4112 and seg 4073) climbing monotonically along the proton template to 195k and 220k e/cm at their far free ends 4011 and 4012, while the 27 cm electron leaves it toward the big EM shower that opens out downstream; it is also the low-z apex (z=211) of the 325 cm cluster."},
+
+  {"event": "evt447477", "vertex_id": 11001, "confidence": "certain",
+   "why": "Rule 1 with no violations at a degree-4 vertex: every informative prong at 11001 cools toward it (the 7.4 cm proton peaks at 185k at 11005, the 6.5 cm mu at 104k at 11004, the 38.7 cm segment rises away to 11020), and P2 shows it as the apex at z=378 from which the whole shower spray at z=420-458 fans forward."},
+
+  {"event": "evt463565", "vertex_id": 108102, "confidence": "unclear",
+   "why": "The zoom at half-width 8/16 shows a ~52 degree kink at 108102 between two heavy prongs (a 5.3 cm proton at ~105k toward 108100 and a 6.2 cm proton rising to 161k Bragg at 108101), sitting at the most upstream tip of the event with the EM shower apex 13001 about 7 cm downstream as a displaced gamma conversion; but 108100 and 13001 are both within 10 cm and I could not separate them cleanly, so this is close to a guess between three ids in the same region."},
+
+  {"event": "evt488755", "vertex_id": 9002, "confidence": "likely",
+   "why": "Rule 1 is perfect here - p4 shows two independent, template-following Bragg peaks pointing away from 9002: the 8.2 cm proton falls from 250k at 9000 to about 30k at 9002, and the 32.3 cm muon leaves 9002 at about 60k and climbs to 140k at 9001, and there is no other junction in the event; but the two prongs leave 9002 at about 163 degrees, so I drop one tier for the collinearity trap."},
+
+  {"event": "evt506114", "vertex_id": 28058, "confidence": "likely",
+   "why": "Rule 1 plus rule 2: p4 shows seg 28078 flat at ~80k for 45 cm then climbing to 300k at 28059, so its start end 28058 (z=168) is the most upstream free end in the event, and the dense many-prong cluster 19 begins only 6 cm downstream at 19001 with a 2 MIP segment, which reads as a gamma converting just past the vertex; 19001 is the competing pick 6 cm away."},
+
+  {"event": "evt506746", "vertex_id": 21038, "confidence": "likely",
+   "why": "Rule 3 settles it - the 20.4 cm muon on 21038 is hotter at 21037 with a short 8+9.5 cm electron chain hanging off that same end, so 21037 is the stopping/Michel end and 21038 is the vertex end; 21038 is also a degree-4 junction at the lowest z (40.6) whose 75 cm prong leaves at 38k and only reaches 87k where it stars into protons at 21041, and the whole 69/13/64 shower spray lies along one ray from 21038."},
+
+  {"event": "evt521075", "vertex_id": 94055, "confidence": "likely",
+   "why": "Rule 1 on the one clean track: the 23.8 cm proton climbs from 110k at 94055 to a 225k Bragg at 94056, so 94055 is its start and the most upstream point of the event, and the zoom shows the shower cluster 18 beginning 6.6 cm downstream at 18001 with a 92k (2 MIP) pair-like segment, off the proton's line - a displaced conversion rather than the vertex; 18001 is the competing candidate."},
+
+  {"event": "evt56982", "vertex_id": 22024, "confidence": "certain",
+   "why": "Textbook rule 1 at a degree-5 vertex: nothing rises toward 22024 and three independent prongs rise away to genuine above-MIP stopping ends (22.1 cm proton to 188k at 22020, 13.8 cm proton to 113k at 22013, 11.3 cm segment to 86k at 22025), while the nearby 22018 is disqualified because seg 22040 rises toward it to 143k."},
+
+  {"event": "evt59335", "vertex_id": 11002, "confidence": "certain",
+   "why": "Rule 1 with a decisive profile - p4 shows seg 11003 flat at ~65k for 65 cm then spiking to 310k in the last centimetre at 11003, so the muon stops there and starts at 11002, where a short hot pi+/proton stub (127k out to 11000) also cools inward; 11002 is the only junction and the two prongs are 137 degrees apart, not collinear."},
+
+  {"event": "evt59899", "vertex_id": 5004, "confidence": "unclear",
+   "why": "This is one straight 36 cm line sitting 4 cm off the anode at x=-196 that has been fitted with two or three overlapping duplicate segments - the same low-z end reads 213893 on seg 5009 and 11847 on seg 5006 - so the dQ/dx evidence contradicts itself and rule 1 cannot be trusted; I take the low-z end 5004 because it is the only vertex with nothing rising toward it and rule 2 favours it, but I am close to guessing."},
+
+  {"event": "evt66646", "vertex_id": 14002, "confidence": "certain",
+   "why": "Rule 1 on the only junction in a 22 cm event: a 3.6 cm proton stub at 151k (3.5 MIP throughout, so near-stopping over its whole length) hangs off 14002 toward 14001, and an 18.6 cm MIP-level track leaves the same point and exits at z=498 - a proton plus a minimum-ionising prong from a common point is the signature, and neither free end can be the vertex."},
+
+  {"event": "evt69314", "vertex_id": 3004, "confidence": "certain",
+   "why": "Rule 1 as strongly as it gets: 3004 is degree 5 with zero prongs rising toward it and four long prongs all cooling into it - a 152 cm muon leaving at exactly MIP (44k) and rising to 83k, a 38 cm proton to 110k, a 32 cm pion to 118k and a 38 cm electron to 81k that hands off to the cluster-70 shower 3 cm further on."},
+
+  {"event": "evt71372", "vertex_id": 19001, "confidence": "likely",
+   "why": "Rule 1 gives 19001 two of two prongs rising away and none toward, and the zoom at half-width 12 shows the fan of tracks radiating from that point; the 17.4 cm muon of cluster 94 also starts 6 cm away at 94126 and stops at 94128 (rule 3), which corroborates the region, but 92119 sits only 5.2 cm away carrying the 59 cm exiting muon and I cannot separate the two ids."},
+
+  {"event": "evt74544", "vertex_id": 12001, "confidence": "likely",
+   "why": "Rule 1 fixes the apex of a 364 cm one-cluster shower: 12001/12006 (0.6 cm apart) is the lowest-z point at z=406, seg 12098 leaving 12006 rises from 52k to 132k as it enters the shower, and everything downstream of z=420 fans away from that tip with nothing rising toward it; only one prong is directionally informative though, since the 11 cm proton stub to 12016 sits at 3 MIP at both ends and says nothing about direction."},
+
+  {"event": "evt81597", "vertex_id": 19006, "confidence": "certain",
+   "why": "Rule 1 at the upstream apex: 19006 is degree 3 at z=358, the most upstream real vertex in the event, with nothing rising toward it - a 14 cm proton running out to a 170k (4 MIP) Bragg at 19013 and a 22.2 cm electron leaving at 66k and rising to 95k as it feeds the 268 cm shower that fans out over z=377-427."}
+]

@@ -1093,7 +1093,9 @@ calibration table — works unchanged.
 | `vtx_rules/eval_rules.py` | scoring, per-rule tables, precision-vs-coverage |
 | `vtx_rules/render_event.py` | the PNG an agent opens with the Read tool; `--blind` hides the reco vertex and the engine pick |
 | `vtx_rules/selfscan.py` | the blind self-scan harness of §7 and §10, and the §11 production path: `prepare --dumps` for unlabelled events, `review` where `score` cannot run, all-cluster candidate pool, `--kit old\|new`, per-worker picks with an mtime supersession guard, `compare` |
-| `vtx_rules/runs/` | the split, the dev/test result TSVs, and `scan2-20260815/` — the four arms of §10 |
+| `vtx_rules/pick_mix.py` | §13.1 — selects N unused events stratified by sample; writes the manifest-shaped `selection.json` that `prepare --only-manifest` consumes |
+| `vtx_rules/flag_baserates.py` | §13.3 — base rates for every proposed discriminator, over all 473 labels; the gate a tool proposal must pass before it is built |
+| `vtx_rules/runs/` | the split, the dev/test result TSVs, `scan2-20260815/` (the four arms of §10) and `mix60-20260815/` (§13: selection, picks, both scorings, review, the pre-declared bar) |
 
 `.gitignore` carries a `test*` rule, so `vtx_rules/runs/test-final*` is committed
 with `git add -f`. Re-running the Repro block rewrites those files and **git will
@@ -1102,3 +1104,175 @@ numbers moved.
 
 Determinism: two consecutive runs produce byte-identical TSVs, and both match
 the committed `vtx_rules/runs/dev-stage3/events.tsv`.
+
+---
+
+## 13. Round 3 — a fresh mixed sixty, and four proposed tools of which one survived
+
+Repro:
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+python3 vtx_rules/flag_baserates.py                      # the sec 13.3 table
+python3 vtx_rules/pick_mix.py /home/xqian/tmp/scan-<tag>  # 60 unused events
+python3 vtx_rules/selfscan.py prepare --kit new --workers 4 \
+    --only-manifest /home/xqian/tmp/scan-<tag>/selection.json \
+    --out /home/xqian/tmp/scan-<tag>
+# four scanner subagents, sec 11 step 2, scan_prompt.md verbatim
+python3 vtx_rules/selfscan.py review --dir /home/xqian/tmp/scan-<tag>
+python3 vtx_rules/selfscan.py score  --dir /home/xqian/tmp/scan-<tag>
+```
+
+> `pick_mix.py` selects events **not yet shown to any scanner**, by reading every
+> `runs/*/manifest.json`. Now that this run is committed, re-running it yields a
+> different sixty — by design. The sixty actually scanned are
+> `runs/mix60-20260815/selection.tsv`; that file is the record, not a re-run.
+>
+> Labelled events take `--only-manifest`, not §11's `--dumps`: `--dumps` discards
+> the label join key and disables `score`. New, unlabelled files still follow
+> §11 exactly.
+
+### 13.1 The sample, and why it had to cross the test half
+
+The owner asked for a mixed sixty — nueCC, NCpi0, numuCC — from events no AI
+scanner had seen, to confirm the §11 machinery runs. Composition: **20 nueCC**
+(`vtxscan-prod0813`), **12 NCpi0** (`-ncpi0`), **28 BNB-inclusive** (`-mcp1k`).
+
+The third bucket is a **proxy, not a channel**: the dumps carry no per-event
+truth interaction type, so a "numuCC" selection can only be an inclusive BNB
+selection. Stated rather than implied.
+
+After the §10 arms only **11 unused dev-half nueCC and 4 unused dev-half NCpi0
+events exist**, so 17 of the 60 (9 nueCC, 8 NCpi0) had to come from the test
+half and are no longer held out. All 28 BNB events are dev-half; the test half's
+214 unused `-mcp1k` events are untouched.
+
+### 13.2 Result: the machinery works, and the round-2 headline was not better
+
+Declared before scoring (`PREDECLARED.md` in the run dir): §10's 45/60 is not the
+bar, because the composition differs; the composition-independent check is the
+scanner against the reconstruction on the same events.
+
+```
+scanner  47/60 (78.3%)   reco  46/60 (76.7%)   60/60 answered, 0 abstentions
+```
+
+Set beside every earlier arm it is the highest absolute score and the only one
+above its own reconstruction baseline — but read the p-values below before
+quoting that as a result: the sample is differently composed, the reconstruction
+baseline differs with it, and 44/60 vs 47/60 is not a detectable difference.
+
+| arm | kit | scanner | reco | vs reco | `certain` |
+|---|---|---|---|---|---|
+| §7 blind 20 | old | 11/20 | 15 | −4 | 2/3 |
+| §10 dev-old-a | old | 36/60 | 43 | −7 | 13/14 |
+| §10 dev-old-b | old | 37/60 | 43 | −6 | 11/12 |
+| §10 dev-new | new | 42/60 | 43 | −1 | 25/27 |
+| §10 test-new | new | 44/60 | 46 | −2 | 21/22 |
+| §10 burned20 | new | 14/20 | 15 | −1 | 7/11 |
+| **§13 mix60** | new | **47/60** | 46 | **+1** | 21/24 |
+
+The pre-declared secondary bar — `certain` ≥ 90% — **fails at 87.5%** (21/24, 40%
+coverage) against §10.5's 95.5%. But the two arms have the **same 21 correct**;
+the scanner claimed `certain` twice more and both were wrong. Fisher on 21/22
+vs 21/24 gives **p = 0.61**, and 44/60 vs 47/60 gives **p = 0.67**. Neither
+number moved. The bar is recorded as failed because it was declared as a
+threshold, not because a change was detected.
+
+Per channel, which is where the flattening comes from:
+
+```
+channel     n      scanner        reco      certain tier
+nueCC      20   17 (85.0%)   18 (90.0%)   14/15 (93.3%)
+NCpi0      12    9 (75.0%)    9 (75.0%)    1/2  (50.0%)
+BNBincl    28   21 (75.0%)   19 (67.9%)    6/7  (85.7%)
+```
+
+On nueCC the `certain` tier is §10-like. On NCpi0 the scanner claimed `certain`
+twice in twelve events — it senses the topology is hard rather than being
+overconfident on it. Scanner and reconstruction move together across channels.
+
+**Auto-accept was 19/19 at 32% coverage, and that is not an independent
+measurement.** Auto-accept is defined as agreeing with the reconstruction, so its
+accuracy is the reconstruction's accuracy on the subset the scanner felt certain
+about — §4.1 again. A `certain` error escapes into auto-accept only when scanner
+and reconstruction are wrong *together*; that class exists here (evt56982,
+evt59335) and was routed to REVIEW FIRST only because the two wrong answers
+happened to differ.
+
+The five confident disagreements caught **two genuine reconstruction errors**
+(evt280774, evt423981), cost one false alarm (evt360535, 1.27 cm, correct at
+3 cm), and left two where both were wrong. Enrichment ×2.86.
+
+### 13.3 Four proposed tools, base-rated before any of them was built
+
+`vtx_rules/flag_baserates.py`, over all 473 labels. §10.8 is the reason this
+step exists: a flag that looked decisive on three hand-picked events turned out
+to be 2.2× enriched and useless as a veto.
+
+| proposal | measurement | verdict |
+|---|---|---|
+| **B1** boundary / containment | true vertices on a through-going cluster **3.0%** vs **3.4%** of candidates — ratio **1.12** | **REJECTED** |
+| **B2** merge co-located vertices | r=0.8 cm collapses **3901** groups over 473 labels and breaks **zero** (r=1.0 breaks 1, r=1.5 breaks 11) | **SHIPPED** |
+| **B3** collinear + cold middle | fires **7/462** at true vertices, **8/15966** elsewhere | **REJECTED — too rare** |
+| **B4** fragment / Michel census | **83.3%** of true vertices vs **97.8%** of others | **REJECTED — anti-correlated** |
+
+Twelve of the thirteen round-3 misses had the right vertex in the candidate list
+within 0.43 cm, so none of these is an admission problem. Worse, **B1 would have
+reinforced the error that motivated it**: evt142421 was lost because a 508 cm
+track with one end at the `x+` face was set aside as a cosmic, and the true
+vertex was *inside that cluster*. A containment flag would have endorsed the
+screening. B1 and B3 also fire on **none** of the misses they were proposed for.
+
+The measured non-result is itself the deliverable: **there is no cosmic-rejection
+rule in the owner's list, and the data says there should not be one.** That
+became a fifth entry in `scan_prompt.md`'s trap section, with the 3.0/3.4 numbers
+quoted, so the next scanner does not re-invent it.
+
+> B3 is worth one footnote. §10.8's caution says a ≥150° prong pair is 2.2× more
+> common at non-vertices. The **narrower** test here — collinear *and* cold in the
+> middle *and* both prongs rising away — runs the other way, 1.52% at true
+> vertices against 0.05% elsewhere. Two different tests, and at 7 versus 8
+> firings neither one supports changing the trap-3 wording. Recorded so it is not
+> rediscovered as a contradiction.
+
+### 13.4 What B2 actually buys
+
+The merge changes **no distance score**: all four affected picks were already
+within 0.76 cm of the click. What it fixes is the metric disagreement — scoring
+the same picks with an alias-aware candidate list moves **by-vertex-id from 43 to
+47**, exactly equal to the distance score:
+
+```
+before B2   distance 47/60   by vertex id 43/60
+after  B2   distance 47/60   by vertex id 47/60
+```
+
+So the round-3 vertex-id/distance gap was **entirely an artifact of offering the
+scanner a choice it could not see**. Note this is the reverse of §10, where
+vertex-id scoring was *looser* than distance because of the cross-arm refit
+(F2). Neither metric dominates: distance forgives a twin, vertex id forgives a
+refit. With B2 in place they agree.
+
+The evidence sheet's per-cluster tables stop at the eighth cluster, so merged
+groups in smaller clusters are listed in a short appendix at the end of the
+sheet. Without it the merge would be invisible on exactly the events where it is
+most common: of four smoke-test events, three had aliased candidates only in
+omitted clusters and showed zero alias lines before the appendix was added.
+
+Merging pools the group's connectivity (`attached_merged`), so the prong count
+shown is the whole junction's, and the sub-centimetre stubs *between* twins are
+reported separately rather than counted as prongs — without that, merging would
+hide segments, which is the opposite of the intent.
+
+### 13.5 Status and what is still open
+
+Not yet measured on a scan: B2 changes the *panels* too (candidate lists shrink
+16–33% on the affected events), and no scanner has yet worked from a merged
+picture. The 47→47 above is a rescoring of round-3 picks, not a new scan.
+
+The two failure classes that remain are the ones no proposal here addresses:
+**wrong-end polarity** (evt59335 at 64.8 cm and evt292577 at 64.0 cm are both
+"picked the other end of the right object" — the R1-over-R2 ordering defect
+deferred since round 1) and **objects split across clusters** (evt391766, 115 cm,
+where one track is clusters 17/24/25 and the truth is in 25).

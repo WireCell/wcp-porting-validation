@@ -34,7 +34,7 @@ handing over the answer in a costume.
 import argparse
 import copy
 import json
-
+import math
 import os
 import sys
 
@@ -49,6 +49,10 @@ import vtx_geom as G                                             # noqa: E402
 DQDX_LO, DQDX_HI = 0.0, 150000.0     # e/cm, the display's fixed ramp
 MIP = 43000.0                        # meta.mip_dqdx_median
 DET_BOX = dict(x=(-201.05, 201.05), y=(-199.312, 199.312), z=(0.85, 500.15))
+
+# Round 3, B2.  Vertices closer than this are one candidate.  See candidates()
+# for the measurement that picked 0.8 rather than 1.0 or 1.5.
+MERGE_R = 0.8
 
 # Orientation matched to pr_display_viewer.py:205-214 so a picture here and a
 # picture on port 5017 can be talked about in the same words.  The old
@@ -163,17 +167,90 @@ def attached(dump):
     return seg_of, {v["id"]: v for v in dump.get("vertices", [])}
 
 
-def candidates(dump):
+def candidates(dump, merge_r=None):
     """Every PR-graph vertex, all clusters, ordered cluster-by-size then id.
 
     The main-cluster-only filter this replaces capped the scanner at a 92.0%
     ceiling at 1 cm against 97.7% for the full pool (doc pr/80 sec 9, F1) -- the
     largest single lever in the tooling round, and it was one `if`.
+
+    Vertices within `merge_r` of each other are collapsed to one candidate
+    carrying the others as `aliases` (round 3, B2).  The scanner cannot see a
+    0.4 cm difference in any panel, so offering both as separate answers asks a
+    question the pictures do not contain -- and four of the sixty round-3 events
+    were scored wrong by vertex id for picking the twin of the labelled vertex
+    while being 0.30-0.76 cm from the click, i.e. right by every physical
+    standard.  Radius chosen by measurement, not taste: over all 473 labels,
+    0.8 cm collapses 3901 groups and breaks ZERO labels (no representative ends
+    up more than 1 cm from its click), while 1.0 cm breaks one and 1.5 cm
+    breaks eleven.
     """
+    r = MERGE_R if merge_r is None else merge_r
     order, _ = clusters_by_size(dump)
     rank = {c: i for i, c in enumerate(order)}
     out = [v for v in dump.get("vertices", []) if vertex_xyz(v)]
     out.sort(key=lambda v: (rank.get(v["cluster_id"], 1e9), v["id"]))
+    if r <= 0:
+        return out
+
+    # Single-link grouping in the sorted order, so the result depends only on
+    # the data.  Groups are small (a twin or two), so the quadratic scan is
+    # cheaper than building an index.
+    pos = {v["id"]: vertex_xyz(v) for v in out}
+    taken, merged = set(), []
+    for v in out:
+        if v["id"] in taken:
+            continue
+        grp = [v]
+        taken.add(v["id"])
+        for w in out:
+            if w["id"] in taken:
+                continue
+            if any(math.dist(pos[u["id"]], pos[w["id"]]) <= r for u in grp):
+                grp.append(w)
+                taken.add(w["id"])
+        # The most-connected member represents the group: it is the one whose
+        # attached segments the scanner is actually looking at.  Ties by lowest
+        # id so two runs agree.
+        rep = max(grp, key=lambda u: (u.get("degree", 0) or 0, -u["id"]))
+        rep = dict(rep)
+        rep["aliases"] = sorted(u["id"] for u in grp if u["id"] != rep["id"])
+        merged.append(rep)
+    merged.sort(key=lambda v: (rank.get(v["cluster_id"], 1e9), v["id"]))
+    return merged
+
+
+def group_ids(v):
+    """The vertex's own id plus any it absorbed."""
+    return [v["id"]] + list(v.get("aliases") or [])
+
+
+def attached_merged(dump, cands):
+    """rep vertex id -> (outgoing segments, segments internal to the group).
+
+    Merging vertices without merging their connectivity would HIDE segments --
+    the opposite of the intent.  A segment whose two ends are both inside one
+    group is a sub-centimetre stub between twins, not a prong, so it is reported
+    separately rather than counted as evidence for anything.
+    """
+    seg_of, _ = attached(dump)
+    out = {}
+    for v in cands:
+        ids = set(group_ids(v))
+        outgoing, internal, seen = [], [], set()
+        for vid in sorted(ids):
+            for s in seg_of.get(vid, []):
+                if s["id"] in seen:
+                    continue
+                seen.add(s["id"])
+                a, b = s.get("start_vertex_id"), s.get("end_vertex_id")
+                if a in ids and b in ids:
+                    internal.append(s)
+                else:
+                    outgoing.append(s)
+        outgoing.sort(key=lambda s: s["id"])
+        internal.sort(key=lambda s: s["id"])
+        out[v["id"]] = (outgoing, internal)
     return out
 
 
@@ -646,6 +723,7 @@ def sheet(dump, title):
     order, tot = clusters_by_size(dump)
     seg_of, vmap = attached(dump)
     cands = candidates(dump)
+    amerged = attached_merged(dump, cands)
     zs = sorted(vertex_xyz(v)[2] for v in cands)
     L = []
     L.append("%s   --   %d vertices in %d clusters" % (title, len(cands),
@@ -673,15 +751,32 @@ def sheet(dump, title):
         L.append("CLUSTER %s   %.1f cm total   %d vertices" % (c, tot[c], len(vs)))
         for v in sorted(vs, key=lambda v: vertex_xyz(v)[2]):
             p = vertex_xyz(v)
-            L.append("  vertex %-8s deg %-2s  (%8.1f, %8.1f, %8.1f)"
-                     % (v["id"], v.get("degree"), p[0], p[1], p[2]))
+            alias = v.get("aliases") or []
+            L.append("  vertex %-8s deg %-2s  (%8.1f, %8.1f, %8.1f)%s"
+                     % (v["id"], v.get("degree"), p[0], p[1], p[2],
+                        ("   [also called %s -- same point within %.1f cm, "
+                         "one candidate]" % (", ".join(str(a) for a in alias),
+                                             MERGE_R)) if alias else ""))
+            outgoing, internal = amerged.get(v["id"], (seg_of.get(v["id"], []),
+                                                       []))
+            if internal:
+                L.append("      (%d sub-cm stub%s between the co-located "
+                         "vertices not counted as prongs: %s)"
+                         % (len(internal), "" if len(internal) == 1 else "s",
+                            ", ".join(str(s["id"]) for s in internal)))
             away = toward = flat = unk = 0
-            for s in seg_of.get(v["id"], []):
-                end = G.end_name_of_vertex(s, v["id"])
+            gids = set(group_ids(v))
+            for s in outgoing:
+                # The segment may hang off an absorbed twin rather than off the
+                # representative, so ask the segment which id it actually holds.
+                own = next((i for i in (s.get("start_vertex_id"),
+                                        s.get("end_vertex_id")) if i in gids),
+                           v["id"])
+                end = G.end_name_of_vertex(s, own)
                 d0, d1, n0, n1 = G.end_dqdx(s)
                 near, far = (d0, d1) if end == "start" else (d1, d0)
                 nn, nf = (n0, n1) if end == "start" else (n1, n0)
-                far_vid = G.far_vertex(s, v["id"])
+                far_vid = G.far_vertex(s, own)
                 fv = vmap.get(far_vid)
                 if near is None or far is None:
                     verdict, unk = "unmeasured", unk + 1
@@ -699,11 +794,25 @@ def sheet(dump, title):
                             far_vid, (fv or {}).get("degree"), verdict))
             L.append("      => %d of %d attached segments rise away from this "
                      "vertex; %d rise toward it, %d flat, %d unmeasured"
-                     % (away, len(seg_of.get(v["id"], [])), toward, flat, unk))
+                     % (away, len(outgoing), toward, flat, unk))
     if len(order) > 8:
         L.append("")
         L.append("(%d further clusters omitted, all under %.0f cm)"
                  % (len(order) - 8, tot[order[8]]))
+    # The per-cluster tables above stop at the eighth cluster, so without this
+    # a scanner reading the sheet would never learn that a candidate it can see
+    # in the pictures absorbed a twin.  The merge must be visible wherever it
+    # happened, not only where the table happens to reach.
+    top = set(order[:8])
+    away = [v for v in cands if v.get("aliases") and v["cluster_id"] not in top]
+    if away:
+        L.append("")
+        L.append("merged candidates in the omitted clusters (same point within "
+                 "%.1f cm, one candidate each):" % MERGE_R)
+        for v in sorted(away, key=lambda v: (v["cluster_id"], v["id"])):
+            L.append("  cluster %-5s vertex %-8s also called %s"
+                     % (v["cluster_id"], v["id"],
+                        ", ".join(str(a) for a in v["aliases"])))
     return "\n".join(L) + "\n"
 
 
