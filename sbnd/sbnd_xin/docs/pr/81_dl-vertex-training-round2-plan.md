@@ -208,6 +208,54 @@ python3 cand_head.py --feats data/k20feats-harv-20260815 \
   Phase A closes as a confirmatory negative; no new C++ inference path
   proposed.
 
+## §B results — NEGATIVE: ranking objective kills inflation but pays in deflation
+
+Repro:
+
+```
+cd sbnd_xin/dl_vtx_training
+BASE="--data data/harv473 --kfold 6 --epochs 18 --freeze none --bn-freeze \
+      --min-cloud 16 --clip 5.0 --device cpu --cands data/harv473-cands \
+      --cand-softmax 1.0"
+# hr1: $BASE --dense-weight 0.0 --lr0 1e-5
+# hr2: $BASE --dense-weight 0.0 --lr0 3e-5 --scale-anchor 1.0
+# hr3: $BASE --dense-weight 0.1 --lr0 1e-5 --scale-anchor 1.0
+# (6 folds each, OMP_NUM_THREADS=2, logs runs/hr{1,2,3}-f{0..5}.log)
+bash hr_guardsel.sh hr1   # etc; logs runs/hr<arm>-guardsel/f<k>-E<E>.log
+# deploy (hr3 only, median guard-best epoch = 0 -> 1 epoch):
+python3 train.py --kfold 0 --epochs 1 --name hr3-deploy <hr3 flags>
+python3 calib_guard.py --name hr3-deploy \
+    --weights runs/hr3-deploy/fold0/CP0.pth --jobs 16 \
+    --tsv runs/calibguard-hr3-deploy-20260815.tsv
+```
+
+- **Objective works as designed**: across all 127 guard replays (3 arms ×
+  42 checkpoints + deploy), reject→ACCEPT inflation flips = **0**.  The
+  softmax-CE loss structurally cannot be paid by en-bloc score inflation
+  — the pr/79 failure mode is eliminated, not just detected.
+- **Ranking signal is real**: val median d_argmax moves for the first
+  time in the campaign (e.g. hr1 folds 1.31–1.47 cm vs the MSE arms'
+  frozen 1.99 cm), where 18 epochs of MSE never moved the argmax.
+- **But routing does not profit** — the loss is paid in DEFLATION on
+  corrective/hard events instead (corr top-1 ratio ×0.25 at E0, drifting
+  up with epochs), producing 2–10 accept→REJECT losses per fold:
+
+| arm | fold-best deltas (f0..f5) | sum | gate (>0, conf∈[0.9,1.1]) |
+|---|---|---|---|
+| hr1 (softmax, lr 1e-5) | 0 +1 0 +1 −1 −1 | 0 | FAIL (delta) |
+| hr2 (softmax+anchor, lr 3e-5) | −1 +1 +1 +1 −1 −1 | 0 | FAIL (delta) |
+| hr3 (softmax+anchor+D0.1, lr 1e-5) | 0 +1 +1 +1 −1 −1 | **+1** | pass (marginal) |
+
+- hr3 deploy screen (full 473, CP0): **−3** (28 acc→REJ, 0 rej→ACC,
+  corrective top-1 ×0.152); no min_accept point rescues it (best −1
+  @ ma=20).  The OOF +1 was fold-max selection noise.  **No live A/B**
+  per the pre-registered gate; no candidate weights staged.
+- Verdict: at O(473), "gradients don't pay" extends to the
+  deployment-aligned objective — the calibrated-ranking machinery
+  (`--cand-softmax/--scale-anchor/--dense-weight`, `hr_guardsel.sh`
+  guard-in-loop selection) is standing infrastructure for the next
+  larger-label round; nothing ships now.
+
 ## §C results — global scale calibration CANNOT rescue an inflated net
 
 Repro:

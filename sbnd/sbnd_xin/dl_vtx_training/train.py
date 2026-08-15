@@ -98,7 +98,7 @@ def d_argmax_cm(pred, coords, offset, truth):
 
 
 def run_epoch(model, samples, device, criterion, optimizer=None,
-              consistency=0.0):
+              consistency=0.0, frozen=None):
     train = optimizer is not None
     model.train(train)
     losses, dists = [], []
@@ -112,12 +112,40 @@ def run_epoch(model, samples, device, criterion, optimizer=None,
             optimizer.zero_grad()
             prediction = model([coords, ft])
             score = prediction[:, 1] - prediction[:, 0]
-            loss = criterion(score, target)
+            # doc pr/81 B: --dense-weight scales the legacy dense-MSE term
+            # (default 1.0 = byte-identical to the pr/77 recipe)
+            loss = criterion(score, target) * getattr(model, 'dense_weight', 1.0)
             w = float(meta['row'].get('weight', 1.0))  # S8c pseudo-labels < 1
             if w != 1.0:
                 loss = loss * w
-            cm = getattr(model, 'cand_margin', 0.0)
+            cs = getattr(model, 'cand_softmax', 0.0)
             ci = meta.get('cand_idx')
+            if cs > 0 and ci is not None:
+                # doc pr/81 B: per-event softmax CE over the CANDIDATE voxel
+                # scores.  Invariant to a uniform additive score shift -- the
+                # loss cannot be paid by en-bloc confidence inflation (the
+                # pr/79 sec 11 failure mode).
+                vi = torch.from_numpy(ci)
+                ti = meta['cand_truth_i']
+                valid = vi >= 0
+                if ti >= 0 and bool(valid[ti]) and int(valid.sum()) >= 2:
+                    idx = vi[valid]
+                    pos = int(valid[:ti + 1].sum()) - 1
+                    loss = loss + cs * torch.nn.functional.cross_entropy(
+                        score[idx].unsqueeze(0), torch.tensor([pos]))
+            sa = getattr(model, 'scale_anchor', 0.0)
+            if sa > 0 and frozen is not None:
+                # doc pr/81 B: pin the absolute score scale to the frozen
+                # CP24 calibration on the SAME augmented voxelization, over
+                # the frozen net's top-20 voxels (where the acceptance gate
+                # lives), while the ranking term reorders.
+                with torch.no_grad():
+                    pf = frozen([coords, ft])
+                    sf = pf[:, 1] - pf[:, 0]
+                m = min(20, len(sf))
+                top = torch.topk(sf, m).indices
+                loss = loss + sa * torch.mean((score[top] - sf[top]) ** 2)
+            cm = getattr(model, 'cand_margin', 0.0)
             if cm > 0 and ci is not None:
                 # S9b: deployed-objective margin -- the truth candidate's
                 # voxel score must beat every other candidate's by 0.1
@@ -197,6 +225,17 @@ def main():
                          'enables the deployed-objective margin loss')
     ap.add_argument('--cand-margin', type=float, default=0.0,
                     help='S9b: weight of the candidate margin term (0 = off)')
+    ap.add_argument('--cand-softmax', type=float, default=0.0,
+                    help='doc pr/81 B: weight of the per-event softmax-CE '
+                         'over candidate voxel scores (0 = off; needs '
+                         '--cands)')
+    ap.add_argument('--scale-anchor', type=float, default=0.0,
+                    help='doc pr/81 B: weight of the frozen-CP24 score-scale '
+                         'anchor on the top-20 frozen voxels (0 = off; '
+                         'roughly doubles epoch time)')
+    ap.add_argument('--dense-weight', type=float, default=1.0,
+                    help='doc pr/81 B: weight of the legacy dense-MSE term '
+                         '(1.0 = pr/77 recipe)')
     ap.add_argument('--bn-freeze', action='store_true',
                     help='round 3: keep BatchNorm layers in eval mode during '
                          'training (frozen running stats; fixes the '
@@ -264,6 +303,18 @@ def main():
         bn_snap = bn_stats_snapshot(model) if args.bn_freeze else None
         model.grad_clip = args.clip
         model.cand_margin = args.cand_margin
+        model.cand_softmax = args.cand_softmax
+        model.scale_anchor = args.scale_anchor
+        model.dense_weight = args.dense_weight
+        # frozen CP24 for the scale anchor: kept OUT of the model's module
+        # tree (a submodule would leak its params into the checkpoint)
+        frozen = None
+        if args.scale_anchor > 0:
+            frozen = make_model(device=args.device)
+            load_weights(frozen, vio.default_weights())
+            frozen.train(False)
+            for p in frozen.parameters():
+                p.requires_grad = False
         n_train, n_total = set_freeze(model, args.freeze)
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = optim.Adam(params, lr=args.lr0)
@@ -292,7 +343,8 @@ def main():
                 for g in optimizer.param_groups:
                     g['lr'] = lr
                 tl, td, _ = run_epoch(model, tr, args.device, criterion, optimizer,
-                                      consistency=args.consistency)
+                                      consistency=args.consistency,
+                                      frozen=frozen)
                 if bn_snap is not None:
                     bn_stats_restore(model, bn_snap)
                 if len(va):
