@@ -95,7 +95,7 @@ CP24 on the rebuilt cloud vs the recorded `vertex_scoreboard.voxels[]`
 
 Verdict: good enough for the practice round; deviant events are visible in
 the TSV and can be excluded or reweighted.  If the serious round wants
-byte-exact inputs, the fix is the deferred dump knob (§7), not silent
+byte-exact inputs, the fix is the deferred dump knob (§9), not silent
 training.
 
 ## 4. Augmentation menu (owner's request + additions)
@@ -166,7 +166,110 @@ bulk — no gross out-of-distribution pathology.  A quantitative uBooNE
 comparison would need a uBooNE-era reference histogram (not in hand);
 revisit only if fine-tuning stalls.
 
-## 8. Deferred (documented, not built this round)
+## 8. Label-efficient strategies — what O(100) labels can buy (2026-08-14)
+
+Owner question after the practice run: hand-scan labels will stay at an
+order of magnitude of 100 for the foreseeable future, MC truth at scale
+comes later — is there anything achievable *now*?  The practice run itself
+defines the regime: plain fine-tuning on ~10² labels moves tails, not
+medians, and trips the do-no-harm guard.  The unifying principle for
+everything below: **spend labels on validation and selection; spend other,
+cheaper signals on gradients.**  Ordered by what each idea needs, not by
+novelty.
+
+### 8a. Zero new labels — achievable immediately
+
+- **Failure taxonomy before any training.**  §6 already showed the 18
+  misses are net/candidate failures, not threshold failures.  Split them
+  further, per event, into (i) *net-wrong* — the truth vertex has a
+  candidate in the scoreboard `rows[]` but the net's heat sits elsewhere;
+  (ii) *candidate-missing* — no PR-graph candidate within snap tolerance of
+  truth (no amount of net training helps; this is pr/51 graph territory);
+  (iii) *snap/tolerance* — heat is right, snapping picks a wrong neighbour.
+  All three are computable today from the scoreboard + labels
+  (`rerank_replay.py` has the join).  This decides where the investment
+  goes before a single gradient step.
+- **Test-time augmentation (TTA).**  Run inference 4× under the §4
+  reflections (plus a few sub-voxel shifts), map heat back to the original
+  frame, average.  A cheap ensemble from one checkpoint — no training, no
+  new labels; the 66 labels *evaluate* it rather than train it.  If it
+  wins offline, production deployment is a config/pyutil knob round
+  (default OFF, inference-path change), ~4× inference cost on one event.
+- **Checkpoint ensemble / disagreement.**  The public uBooNE campaign has
+  sibling checkpoints around CP24; averaging their heatmaps (or using
+  their *disagreement* as an uncertainty flag for the rerank stage) is
+  free modulo downloading them.  Same evaluate-don't-train logic as TTA.
+
+### 8b. Stretching the labels we have
+
+- **Candidate-ranking objective instead of dense regression.**  The
+  deployed decision is *which scoreboard candidate wins*, a choice among
+  ~2–10 discrete options — far lower-dimensional than a dense heatmap.
+  Train with a margin loss (`score(truth candidate) >
+  score(others) + m`) on candidate-pooled net features, or just a small
+  calibration head on the frozen net.  A ~10-parameter decision problem is
+  matched to a ~10²-label budget in a way 7.2M-param MSE regression is not.
+- **Hard negatives from corrective events.**  The 15 corrective labels
+  carry *two* facts each: where the vertex is AND where production wrongly
+  put it.  Plain MSE uses only the first.  Adding a negative Gaussian at
+  the production pick ("unlearn this spot") roughly doubles the gradient
+  signal per corrective label, and targets exactly the mistakes the owner
+  scanned to find.  Small change to `gaussian_truth()` + a manifest column
+  (the production pick is already in the labels' rank-1-vs-pick delta).
+- **Labels as selection currency, not gradients.**  With O(100) labels the
+  statistically strongest use is *choosing between* models trained on
+  other signals (MC, pseudo-labels, TTA variants) — a binomial comparison
+  on 66 events resolves ~10 % differences, which is plenty for model
+  selection even when it is far too noisy for gradient descent.  Concrete
+  rule for the serious round: a strictly held-out label subset that never
+  touches a gradient or an early-stopping decision.
+- **Learned rerank weights.**  The 7 composite terms are recorded per row;
+  fitting the 7 `W_*` by logistic regression / LASSO on the labels (the
+  QL flag-penalty precedent) is a 7-parameter fit — perfectly sized.  §6
+  says thresholds are not the practice-sample bottleneck, so this waits
+  for mcp1k statistics, but the harness (`rerank_replay.py --grid` with
+  `--w-*` multipliers) already exists.
+
+### 8c. Gradients from the ~900 unscanned events
+
+- **Confident pseudo-labels.**  The confirming rate is high (51/66 ≈ 77 %
+  overall, and much higher when the rerank margin is large).  Select
+  unscanned events where independent signals agree — high DL score, small
+  snap distance, large margin over the runner-up candidate — and use the
+  *production* vertex as a pseudo-label, weighted below hand labels.
+  Risk is confirmation bias (the net re-learns its own habits); the guard
+  is that pseudo-labels only ever enter training, never validation, and
+  the held-out hand labels arbitrate.
+- **Consistency regularization (FixMatch-style).**  On unlabeled events,
+  penalize disagreement between the net's heatmaps under reflection/jitter
+  views of the same event.  Needs zero labels, uses all 1000 events, and
+  directly attacks a real observed failure mode (predictions that flip
+  under symmetry are wrong on at least one side).
+- **Active learning: steer the remaining scan.**  The scan is still
+  running — the ordering of the remaining events is a free choice.
+  Corrective labels are the scarce resource (15/66 ≈ 1-in-4 so far);
+  ranking unscanned events by disagreement signals (TTA variance,
+  checkpoint disagreement, small rerank margin, large DL-to-candidate
+  distance) concentrates the owner's remaining scan effort where labels
+  are most informative.  Output: a ranked event list for the scan panel,
+  computable today from existing scoreboards.
+
+### 8d. The MC path, sharpened
+
+When large SBND MC arrives, truth vertices are free at scale — but the
+right use is **pretrain on SBND MC, select on data labels**: fine-tune
+CP24 on MC truth first (this fixes the uBooNE→SBND domain shift that no
+amount of data labels can address at O(100)), then use the hand-scan
+labels exclusively for data-vs-MC domain checks and checkpoint selection.
+The infrastructure is already MC-ready: `build_dataset.py` only needs a
+truth source instead of a label tag.
+
+**Recommended order** (all pre-MC): 8a taxonomy → 8a TTA evaluation → 8c
+active-learning scan ordering (while the scan is still running, so it
+compounds) → 8b candidate-ranking head as the first training experiment on
+the mcp1k labels.
+
+## 9. Deferred (documented, not built this round)
 
 - **Exact-input dump knob** (toolkit C++, default-OFF): write `vec_xyzq`
   verbatim right after the assembly loop
@@ -185,7 +288,7 @@ revisit only if fine-tuning stalls.
   corrective improvement subject to zero guard failures, then Bee hand-scan
   of movers before any `dl_weights` flip.
 
-## 9. Files / provenance
+## 10. Files / provenance
 
 - Package: `sbnd_xin/dl_vtx_training/` (this round).  Outputs under
   `data/practice66/`, `runs/` (uncommitted; `runs/parity-practice66.tsv`,
