@@ -176,6 +176,15 @@ case ",${PR_EXTRA_STAGES:-}," in
     *,pr_display,*) : "${SBND_VERTEX_SCOREBOARD:=true}" ;;
 esac
 
+# doc sbnd_xin/docs/pr/79 sec 10: harvest requires the scoreboard, so a
+# truthy SBND_DL_VTX_HARVEST defaults the board on too (explicit
+# SBND_VERTEX_SCOREBOARD still wins).  pr_display alone does NOT enable
+# harvest -- it is opt-in, so the pr/26 sec 6 hash-identity claim for
+# scoreboard-only dumps keeps holding.
+case "${SBND_DL_VTX_HARVEST:-}" in
+    true|1) : "${SBND_VERTEX_SCOREBOARD:=true}" ;;
+esac
+
 # SBND PRODUCTION DEFAULT ON since the doc pr/23 sec 9 flip (owner 2026-08-02,
 # after the sec 8 fresh-tree gate: 0 event_label / nu_evaluated flips in 572
 # valfast events).  SBND_PROTECT_BUNDLE=0 removes both stages = the pre-pr/23
@@ -795,6 +804,14 @@ fi
 #   SBND_VERTEX_SCOREBOARD
 if [ -n "${SBND_VERTEX_SCOREBOARD:-}" ]; then
     CATH_TLA+=(--tla-code "vertex_scoreboard=${SBND_VERTEX_SCOREBOARD}")
+fi
+# doc sbnd_xin/docs/pr/79 sec 10: live-feature harvest (SCN input cloud +
+# discarded traditional-path features into the scoreboard dump).  Boolean
+# TLA, same contract.  Requires the scoreboard; a truthy value defaults
+# SBND_VERTEX_SCOREBOARD=true near the PR_EXTRA_STAGES block above.
+#   SBND_DL_VTX_HARVEST
+if [ -n "${SBND_DL_VTX_HARVEST:-}" ]; then
+    CATH_TLA+=(--tla-code "dl_vtx_harvest=${SBND_DL_VTX_HARVEST}")
 fi
 # doc pr/51 round 3: apply the traditional main-vertex path's cluster-swap
 # decision instead of discarding it.  Boolean TLA, same contract.

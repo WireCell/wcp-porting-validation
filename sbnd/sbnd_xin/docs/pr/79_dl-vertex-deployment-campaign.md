@@ -446,3 +446,292 @@ Records: `runs/ranksim-k20-l2p1-20260815-{A,B}.tsv`,
 `runs/routefit-k20-20260815.tsv`, `data/k20feats16-20260815/` (473 npz).
 No toolkit change, no wire-cell-data change, no new arms (all analysis on
 the existing §4 k20 arms; prod0813 and labels untouched).
+
+## 8. Step 5 — refit-drift guard: FALSIFIED before implementation
+
+The §7 decomposition left one untouched failure mode: accept-route events
+where the composite pick was within tolerance but the post-accept refit
+(`snap_main_vertex_to_kink` / final `improve_vertex`) drifted the final
+vertex off truth (5 events, e.g. 268067: pick 0.10 cm from truth, final
+2.27 cm).  The natural fix — a deterministic guard reverting the refit when
+it moves the vertex more than X cm — was base-rated on the recorded k20 arms
+before writing any C++:
+
+```
+cd sbnd_xin/dl_vtx_training
+python3 drift_probe.py            # -> runs/driftprobe-20260815.log
+```
+
+On the 250 accept-route events, comparing the accepted row's snapped
+position vs the recorded final vertex: the refit **helps 28** (row wrong,
+final correct) and **harms 5** (row correct, final wrong); moved-distance
+median 0.34 cm, p90 1.31 cm.  The guard is net-negative at every threshold
+(X=0.5 cm: −23; X=2 cm: −2; X=3 cm: 0 acting on 3 events).  The same probe
+on the **reject** route (trad-winner row vs final): helps **50**, harms
+**6**.  Both post-selection refits are strongly net-positive; the 5+6
+drifted events are the accepted cost of a 78:11-favorable heuristic.
+CLOSED — no knob, no arm.  This is the third guard-shaped idea killed by
+base rates in this doc (after §7's rescue/demote): any override of a
+mechanism that is right 5–9× more often than wrong needs a precision no
+current signal provides.
+
+## 9. Step 6 — per-case campaign on the 33 reject-route selection-wrong events (round 1: diagnosis)
+
+The §7 verdict — no global learned rule clears the routing-precision bar —
+left one measured path to the 47: convert the reject-route 33 into
+topology-gated deterministic fixes, the pr/40–74 pipeline.  Round 1 is the
+case census and root-cause pass; NO behavior change ships in this round.
+
+### 9a. Repro
+
+```
+cd sbnd_xin/dl_vtx_training
+# case book (read-only over the recorded k20 arms):
+python3 case_census.py            # -> docs/pr/79_case_census.tsv + aggregates
+# stage-1 per-term decomposition (needs a dl_vtx_harvest arm, sec 10):
+python3 scoreloss_terms.py
+# trace-level exemplar re-runs (fresh out_roots; M13):
+PR_JOBS=2 PR_EXTRA_STAGES=pr_display SBND_WCT_LOGLEVEL=trace \
+SBND_DL_VTX_MIN_ACCEPT=10.0 SBND_DL_VTX_TOP_K=20 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-hvdiag0815-trace  data 59085 286655
+  # + work-hvdiag0815-trace2 for 287654 59261 283463 169774
+```
+
+Enumeration: `runs/ab-ma10k20-marg-20260815.tsv` fields `cls_new`/`route_new`
+(the live k20 taxonomy; `runs/taxonomy-20260815.tsv` is the prod0813/k5 arm
+and must NOT be used).  Triage join: `runs/rankfit-k20-20260815.tsv`
+`total_argmax_ok`.
+
+### 9b. The mechanism partition of the 33
+
+Decision tree per event (columns in `79_case_census.tsv`): final on a
+different cluster than the truth row → SWAP; else trad winner == truth row →
+TRAD-HAD-IT; else truth row never stage-1 scored → CAND-MISS; else →
+SCORE-LOSS.  (180801's final vertex is not in rows[]; its cluster decodes
+from `final_vertex_id/1000` → SWAP.)
+
+| class | n | mechanism | evidence |
+|---|---|---|---|
+| SWAP | 13 | final answer sits on a different cluster than the near-truth candidate | 5 via `compare_main_vertices_global` cluster swap (hv_global), 8 inherited a wrong main cluster from upstream |
+| SCORE-LOSS | 10 | same cluster; truth scored by `compare_main_vertices` and lost the argmax | per-term decomposition below |
+| CAND-MISS | 6 | same cluster; truth vertex never entered the stage-1 candidate list | 4 never `main_candidate`-flagged, 1 flagged-then-dropped, 1 (52085) re-classified: identity-correct, position 1.29 cm |
+| TRAD-HAD-IT | 4 | trad winner == truth row; post-selection refit moved the final off truth | closed by base rates (sec 8: reject-route refit helps 50 : harms 6) |
+
+Prior-art flag: 52085 (pr/47), 53361 (pr/74 §3.3), 55595 (pr/46) are
+previously-fixed case events still selection-wrong at k20 — 52085 is now a
+1.29 cm near-miss of the CORRECT vertex (the pr/47 fix works; the residual
+is position, not selection), 53361/55595 are SWAP/CAND-MISS respectively.
+
+### 9c. SCORE-LOSS: per-term census — structural, NOT proposable as a narrow knob
+
+`scoreloss_terms.py` reconstructs the six additive blocks of
+`compare_main_vertices` (NeutrinoVertexFinder.cxx:1059-1294) for the truth
+row vs the winning row from the harvest fields (sec 10).  All 10 events:
+
+```
+evt351749 gap +0.194 | confl +0.125  z +0.069
+evt285467 gap +0.370 | z +0.495  confl -0.125
+evt411460 gap +0.119 | segs +0.125
+evt315849 gap +0.125 | confl +0.125
+evt402880 gap +0.449 | segs +0.250  bonus +0.250  z -0.051
+evt166804 gap +0.054 | z -0.196  segs +0.125  confl +0.125
+evt404684 gap +0.438 | segs +0.500  z -0.312  bonus +0.250
+evt56211  gap +0.441 | segs +0.250  confl +0.125  bonus +0.125
+evt291064 gap +0.110 | z -0.390  segs +0.250  confl +0.125
+evt63359  gap +0.352 | proton -0.250  segs +0.250  bonus +0.250
+```
+
+The winner beats truth on segment count/type (`segs`, 7/10) and small
+conflict penalties (6/10); truth's upstream-z edge (6/10) never covers the
+gap.  No single misfiring term — the prototype-ported additive scorer
+structurally prefers busier vertices, and the truth interaction vertex is
+often the quieter one.  Reweighting these terms is a global behavior change
+on every event (the §7 base-rate wall again) and the weights are
+prototype-ported constants (M15): NOT proposed at O(473) evidence.  The DL
+side already ranks 6 of these 10 right (they are §7b acceptance-wrong
+events).
+
+### 9d. SWAP: two sub-shapes; the min-length swap guard FALSIFIED by exact replay
+
+Route census over the 13 (hv_global from the sec 10 harvest arm):
+
+- **5 via the global swap** (`check_switch_main_cluster` →
+  `compare_main_vertices_global`, runs only when the main-cluster vertex is
+  all-showers): 59085 (swap 31.5 cm shower cluster → 0.7 cm track stub,
+  scores 1.091 vs 1.375), 286655 (50 cm shower cluster → 8.9 cm stub,
+  0.707 vs 1.048), 71178 (truth cluster absent from the global candidate
+  set), 314507 (lost by 0.007!), 174752.  Trace-proven mechanism on
+  59085/286655: the global scorer's track-vs-shower asymmetry (0.25 vs
+  0.125/segment) + upstream-z prior + pointing bonus favor small upstream
+  track fragments over the genuine shower cluster.
+- **8 inherited**: the wrong (longer) main cluster was already chosen
+  upstream of the vertex stage; the global scorer never ran.  Final clusters
+  are typically the longest track in the bundle (284/92/127/154/50/41/14/125
+  cm vs truth clusters 32/27/4/113/14/15/10/32 cm) — the classic
+  "vertex eaten by the wrong cluster" family.  Bundle-level main-cluster
+  identification is out of scope for a narrow knob (owner-declined
+  territory, cf. evt444187).
+
+The obvious narrow knob — veto a global swap onto a cluster shorter than X
+cm — was base-rated by EXACT replay before implementation: over all 473
+labels, 16 events swap main via the global scorer; predicting the vetoed
+outcome as the pre-swap main vertex position:
+
+```
+X=1: 3 fires, net +0 (1 gain / 1 loss)     X=8:  7 fires, net -1 (1/2)
+X=3: 4 fires, net +0 (1/1)                 X=10: 9 fires, net +0 (2/2)
+X=5: 5 fires, net -1 (1/2)                 X=15: 11 fires, net -1 (2/3)
+```
+
+Net <= 0 at every threshold (relative variants identical): when the global
+scorer is confused enough to pick a stub, the pre-swap all-showers vertex is
+usually also off-truth (281485, 409634, 71178: veto lands wrong anyway), and
+the guard breaks currently-correct swaps (281639, 284235, 359980...).
+FALSIFIED — the fifth guard-shaped idea killed by measured base rates in
+this doc.  Gains limited to 59085 + 286655 would require a guard so
+specific it is two-event overfit.
+
+### 9e. CAND-MISS: fragments into one-off mechanisms
+
+Trace-level exemplar runs (`work-hvdiag0815-trace{2,4}`, Repro in 9a):
+
+| evt | mechanism (trace-proven) |
+|---|---|
+| 287654, 283463, 55595 | truth vertex (deg 1–3) NEVER proposed to `examine_main_vertex_candidate` — the pre-examine candidate source (`determine_main_vertex` build, :3300-3360) does not contain it; the cluster then takes the single-candidate (287654, 55595) or a 2-candidate branch elsewhere |
+| 59261 | truth vertex examined 3× by `examine_main_vertex_candidate` and rejected (flag_in / ntracks gate); cluster then single-candidate elsewhere |
+| 169774 | truth vertex flagged `main_candidate` but lost `compare_main_vertices_all_showers` (non-additive scorer) |
+| 52085 | re-classified: the CORRECT vertex wins (pr/47 fix works); post-refit position is 1.29 cm from truth (tol 1.0) — a position residual, not a selection error |
+
+Largest sub-shape is 3 events, and a fix ("propose more candidates") would
+enlarge stage-1 candidate lists on every event AND still face the 9c scorer
+preference to win — not proposable at this evidence level.
+
+### 9f. Round-1 verdict: NO deployable narrow knob survives the base rates
+
+Every named fix idea was base-rated with exact replays BEFORE
+implementation, using the sec 10 harvest fields — and every one measured
+net <= 0 on the 473:
+
+1. accept-route refit-drift guard: helps 28 / harms 5 → dead (sec 8);
+2. reject-route refit-drift guard: helps 50 / harms 6 → dead (sec 8);
+3. global-swap min-length guard: net <= 0 at every threshold (9d);
+4. stage-1 score reweighting: no misfiring term to fix (9c), global change;
+5. candidate-source widening: <= 3-event yield behind the 9c wall (9e).
+
+This is the per-case mirror of the §7 selector verdict: the remaining 33
+are not latent bugs with topology-shaped fixes (those were harvested by
+pr/40–74); they are graded judgment losses where the legacy heuristics are
+right 5–9x more often than wrong, so every cheap override loses on the
+population.  Per the campaign plan's stop condition, NO knob is forced: no
+C++ behavior change ships from this round (the sec 10 harvest knob is
+recording-only).  The measured paths that remain are the owner-level ones
+of §7e — a fresh hand scan (validation + evidence scale for any scorer
+retune) and learned components trained on the sec 10 live harvest — plus
+one new concrete lead: the 8 "inherited main cluster" SWAP events make
+bundle-level main-cluster identification the single biggest labeled block
+(8/33), if that logic is ever revisited.
+
+## 10. Step 7 — `dl_vtx_harvest`: the live feature-harvest knob (recording only, DEFAULT OFF) + harvest arms
+
+The §7e prerequisite "live feature harvest" is now implemented: a bool knob
+`dl_vtx_harvest` on TaggerCheckNeutrino (C++ default **false**; requires
+`vertex_scoreboard`, WARNs and stays inert without it) that records into
+the per-event calib JSON everything a future learned component needs to
+train on the LIVE deployed distribution — closing the §3 ft2u trap
+structurally.  Recording only: no decision reads any harvested field.
+
+### 10a. Repro
+
+```
+# knob-on production (runner auto-enables the scoreboard):
+cd sbnd_xin
+PR_JOBS=24 PR_EXTRA_STAGES=pr_display SBND_DL_VTX_HARVEST=true \
+SBND_DL_VTX_MIN_ACCEPT=10.0 SBND_DL_VTX_TOP_K=20 \
+  ./run_pr_chain_batch.sh work-<sample>-cb0805 work-<sample>-ma10k20-harv2 data
+# verification:
+cd dl_vtx_training
+python3 ab_vertex_compare.py --arm-roots ...=work-*-ma10k20-harv2 \
+  --base-roots ...=work-*-ma10-k20 --numu-manifest data/full473/manifest.tsv \
+  --tsv runs/ab-harv2-vs-k20-20260815.tsv
+python3 verify_harvest.py --arm ../work-mcp1k-ma10k20-harv2 --events 166804 59085 ...
+```
+
+### 10b. What is recorded (calib `vertex_scoreboard`, only when the knob is ON)
+
+Board level: `harvest` (gate echo); **`hv_cloud`** = the EXACT live SCN
+input cloud pre-voxelization — `{x,y,z,q}` float arrays in build order
+(order load-bearing, never sorted), `n_vertex_rows` + `vertex_ids[]` (the
+leading block aligns 1:1 with rows[].vertex_id; the rest are
+segment-interior fit points), `q_scale`/`q_offset` (the dQdx transform);
+`hv_trad_main_vertex_id` (the traditional answer at DL entry);
+**`hv_global`** = `compare_main_vertices_global`'s candidates
+(`{vertex_id, cluster_id, x, y, z, score, is_main_cluster, in_fv, winner}`,
+previously invisible — the scorer that decides reject-route cluster swaps);
+`hv_single_candidate_ids[]` / `hv_all_showers_winner_ids[]` (vertices chosen
+without the additive scorer — board-level ID lists, deliberately NOT rows:
+harvest must not create rows[] the pr/75 baseline would not have, or
+rows-based candidate-set identity across arms breaks — caught when v1 arms
+showed rows_same 216/473; fixed, harv2 shows **473/473**).
+
+Row level (`hv_filled` marks rows that went through the stage-1 proton
+block): `hv_n_proton_in/out`, `hv_z_prior`, `hv_n_tracks`, `hv_n_showers`,
+`hv_in_fv`, `hv_conflicts` (scalar only — sub-features live in
+`calc_conflict_maps` locals, exposing them would refactor production code),
+`hv_reduced_chi2` (computed by the vertex fit, never before recorded).
+
+### 10c. Gates (all PASS)
+
+- Compiled config OFF: byte-identical, bare AND `-A vertex_scoreboard=true`
+  variants, pre-change worktree vs post (wcsonnet, real production
+  `pipeline_names` incl. `tagger_check_neutrino,pr_display`).  ON:
+  `"dl_vtx_harvest"` appears exactly once.
+- Knob-off binary A/B: 92 events over three samples
+  (`work-hvgate0815-{pre,post}-{nuecc48,ncpi0,mcp1k50}`, pre = stashed HEAD
+  8d573520 build), every product byte-identical — calib JSON and nusel TSV
+  by `cmp`, `mabc-pr.zip` + `pctree-*.tar.gz` by `hash_archive.py` member
+  content.  Two archives were written corrupt (one per side, different
+  events — transient writer fault, stable-on-disk zlib error; both events
+  re-run clean and proven identical: `work-hvgate0815-post-mcp1k3r`,
+  `-pre-mcp1k1r2`).  Same-binary determinism probe first
+  (`work-hvgate0815-det{1,2}`): all products identical run-to-run.
+- Scoreboard-on/harvest-off calib: byte-identical to pre-change
+  (`work-hvgate0815-off2` vs `-det1`).
+- Knob-ON smoke (`work-hvgate0815-on{1,3}`): sentinel log
+  `dl_vtx_harvest on: cloud N pts (V vertex rows)`; payload well-formed on
+  accept and reject routes; **recording-only proof**: rows[] SET identical
+  ON vs OFF, ON calib with harvest keys stripped == OFF calib byte-for-byte,
+  non-calib products hash-identical; ON repeat-run deterministic.
+- `wcdoctest-clus` 208/2062 PASS incl. new `dl_vtx_harvest=false`
+  knob-defaults entry; freshness proofs at every rebuild.
+
+### 10d. The harvest arms and the headline verification
+
+Arms `work-{nuecc48,ncpi0,mcp1k}-ma10k20-harv2` (production operating point
+min_accept=10 + behavior-null top_k=20 for the richer voxels[], doc §4;
+knob ON; all rc=0; 47+19+445 calibs; mcp1k arm 3.1 GB — calibs grow to
+~1–7 MB, opt-in arms only.  The first-pass `-harv` arms are superseded by
+the rows-contract fix and kept on disk as the record of that catch).
+
+- **Recording-only at scale**: `runs/ab-harv2-vs-k20-20260815.{tsv,log}` —
+  473/473 labels, 358 → 358 (+0), 0 fixed, 0 regressed, 0 route flips,
+  candidate-set identical 473/473, provenance (10.0, 20).
+- **EXACT live-inference reproduction** (`verify_harvest.py`): voxelizing
+  `hv_cloud` with the pyutil `SCN_Vertex` math and running the production
+  CP24 net offline reproduces the recorded top-20 voxels — positions AND
+  scores — **bit-for-bit** on every spot-checked event (8 events across
+  routes and cloud sizes 50–480 pts).  A future fine-tune trains on
+  literally the deployed input distribution; the §3 rebuilt-cloud failure
+  mode cannot recur for cloud-level features.  (TTA-spread and net-internal
+  features are now computable offline from the same clouds — no further
+  C++ needed for the §7e step-2 program.)
+
+Toolkit: `PRVertexScoreboard.h`, `NeutrinoPatternBase.h`,
+`TaggerCheckNeutrino.{h,cxx}`, `NeutrinoVertexFinder.cxx` (fills all inside
+`if (m_vtx_harvest)`), `PrDisplayDump.cxx` (emission gated on
+`board.harvest`), `doctest_clus_knob_defaults.cxx`; cfg threading with the
+key-suppression idiom in `common/clus.jsonnet`, BOTH sbnd `clus.jsonnet`
+entry points, and `wct-pr-perevt.jsonnet`.  Runner: `SBND_DL_VTX_HARVEST`
+env (truthy value auto-defaults `SBND_VERTEX_SCOREBOARD=true`; pr_display
+alone does NOT enable harvest).  New tools:
+`dl_vtx_training/{verify_harvest.py, case_census.py, scoreloss_terms.py,
+drift_probe.py}`.
