@@ -257,6 +257,9 @@ knob adds one `find_vertices` call per break — O(1).
   doctest + cfg plumbing), `f24639d9` (SBND production flip ON).
 - wcp-porting-img: this doc + `scripts/pr83_dup_metric.py` +
   `scripts/pr83_ab_compare.py` + the `SBND_BREAK_SEG_ORIENT` runner mapping.
+- Bee (8 changed events, index `83_bee.index.txt`):
+  before <https://www.phy.bnl.gov/twister/bee/set/804e92bc-b4de-435c-9ebb-cbfaadf80b5e/event/list/>,
+  after <https://www.phy.bnl.gov/twister/bee/set/0e31e8d3-cf18-45f6-a4fe-07748f4afbc7/event/list/>.
 - Not addressed here (recorded for a future round): the 12 persisting short
   near-parallel prong pairs (§6.2, different class); the toolkit's
   non-sticky `find_other_segments` tags divergence

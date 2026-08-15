@@ -1,0 +1,12 @@
+# doc pr/83 bee sets (8 changed events, before = knob off, after = knob on)
+# before: https://www.phy.bnl.gov/twister/bee/set/804e92bc-b4de-435c-9ebb-cbfaadf80b5e/event/list/
+# after:  https://www.phy.bnl.gov/twister/bee/set/0e31e8d3-cf18-45f6-a4fe-07748f4afbc7/event/list/
+# bee_idx	event
+0	283040
+1	59899
+2	72586
+3	285564
+4	353223
+5	394796
+6	66712
+7	400474
