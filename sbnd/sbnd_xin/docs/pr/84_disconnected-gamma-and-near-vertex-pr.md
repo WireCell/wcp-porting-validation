@@ -299,6 +299,15 @@ Three cross-links worth recording:
 ROUND" for the ~2000-event DL-vertex sample, and pr/83 was claimed the same minute by
 the concurrent duplicate-trajectory session.)*
 
+**Continued in doc pr/85** (`85_near-vertex-pr-quality.md`), which takes this
+section over from the PR-graph side rather than the particle-tree side: it
+measures the same stubs as *interposed segments* between the neutrino vertex and
+its prongs (21 events), names the two operations that create them
+(`snap_main_vertex_to_kink` and the final `improve_vertex`, both running **after**
+every `examine_*` pass), and shows that `main_vertex_graph_audit` op3 cannot reach
+them because of its `degree(far_vertex) == 1` terminal-only line — which is the
+missing detail in P5 above.
+
 ### The dropped-residual sub-family
 
 `other_seg_keep_isolated_ok` (`NeutrinoOtherSegments.cxx:33-38`) requires
