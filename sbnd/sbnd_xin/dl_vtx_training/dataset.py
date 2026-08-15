@@ -25,8 +25,11 @@ class VtxSamples:
 
     def __init__(self, snapshot_dir, event_rows, sigma=1.0, use_flips=True,
                  jitter=True, q_jitter=True, dropout=False, train=True,
-                 seed=0, hard_negative=0.0):
+                 seed=0, hard_negative=0.0, cands_dir=None):
         self.dir = snapshot_dir
+        # S9b: sidecar dir from build_cands.py; when set, meta carries the
+        # candidates' voxel row indices for the deployed-objective margin loss
+        self.cands_dir = cands_dir if train else None
         self.rows = list(event_rows)
         self.sigma = float(sigma)
         self.flips = FLIPS if (use_flips and train) else FLIPS[:1]
@@ -57,8 +60,20 @@ class VtxSamples:
             dQdx_offset = float(f.get('dQdx_offset', -1000.0)) \
                 if 'dQdx_offset' in f else -1000.0
 
+        # S9b: candidate positions ride through the same transforms
+        cands, cand_truth_i = None, -1
+        if self.cands_dir is not None:
+            cpath = os.path.join(self.cands_dir, 'evt%d.npz' % row['evt'])
+            if os.path.exists(cpath):
+                with np.load(cpath) as cf:
+                    ci = int(cf['truth_i'])
+                    if ci >= 0:
+                        cands = cf['cand_xyz'].astype(np.float32)
+                        cand_truth_i = ci
+
         # transform truth and the production pick identically with the cloud
-        tp = np.stack([truth, prod])
+        extra = [truth, prod] + ([c for c in cands] if cands is not None else [])
+        tp = np.stack(extra)
         xyz, tp = apply_flip(xyz, tp, flip)
         if self.dropout:
             xyz, q = point_dropout(xyz, q, self.rng)
@@ -75,8 +90,36 @@ class VtxSamples:
         coords, ft, offset = voxelize_event(xyz, q)
         target = gaussian_truth(coords, offset, truth, sigma=self.sigma,
                                 neg_xyz=neg, neg_lambda=self.hard_negative)
+
+        cand_idx = None
+        if cands is not None:
+            cand_idx = self._voxel_rows_of(tp[2:], coords, offset)
         return coords, ft, target, dict(row=row, flip=flip, offset=offset,
-                                        truth=truth)
+                                        truth=truth, cand_idx=cand_idx,
+                                        cand_truth_i=cand_truth_i)
+
+    @staticmethod
+    def _voxel_rows_of(pts, coords, offset, resolution=RESOLUTION):
+        """Voxel row index of each point: its own voxel if occupied, else the
+        nearest occupied voxel in the 3^3 neighborhood, else -1."""
+        lut = {tuple(c): m for m, c in enumerate(coords)}
+        centers = coords.astype(np.float32) * resolution + offset \
+            + resolution / 2.0
+        out = np.full(len(pts), -1, dtype=np.int64)
+        for n, p in enumerate(pts):
+            base = np.floor((p - offset) / resolution).astype(np.int64)
+            best, best_d = -1, np.inf
+            for dx in (0, -1, 1):
+                for dy in (0, -1, 1):
+                    for dz in (0, -1, 1):
+                        m = lut.get((base[0]+dx, base[1]+dy, base[2]+dz))
+                        if m is None:
+                            continue
+                        d = float(np.linalg.norm(centers[m] - p))
+                        if d < best_d:
+                            best, best_d = m, d
+            out[n] = best
+        return out
 
 
     def consistency_views(self, k):

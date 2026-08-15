@@ -1,12 +1,15 @@
 # doc pr/78 — neutrino-vertex round 3 on the full hand scan: DL retrain, re-rank refit, pre-DL diagnosis
 
 **Status (2026-08-15): round 3 EXECUTED on the completed mcp1k scan (407/445
-labeled).  Selection stage: rank_fit now beats production at McNemar p=0.044
-and the (min_accept, scale) operating point is no longer optimal — both are
-concrete config/knob proposals.  Pre-DL: the candidate-missing class is NOT
-graph work — 47/50 events have a PR-graph vertex exactly at truth and the
-admission bottleneck is `dl_vtx_top_k=5` (raising it to 20 would admit 28/50).
-Training arms: see §5.  Owner decisions requested in §8.**
+labeled).  Headlines: (a) the ft2u fine-tune is the FIRST to pass both the
+do-no-harm guard and the sealed lockbox (+8/378 OOF, +2/95 lockbox, 0 guard
+fails) — a deployment checkpoint is staged; (b) `dl_vtx_min_accept_score`
+4→10 gains +15/470 and CAPTURES THE ENTIRE learned-ranking gain (the two do
+not stack, §4c); (c) the candidate-missing class is an ADMISSION gap, not
+graph work — 47/50 events have a PR-graph vertex exactly at truth,
+bottlenecked by `dl_vtx_top_k=5`; (d) the round-2 active-learning scan
+ranking validated out of time at AUC 0.778.  Optimal-approach ranking and
+owner decisions: §8.**
 
 Continues doc pr/77 (infrastructure + rounds 1–2).  All tools live in
 `sbnd_xin/dl_vtx_training/`; every number below traces to a TSV under
@@ -53,6 +56,20 @@ for k in 0 1 2 3 4 5; do
 done
 python3 merge_oof.py runs/<name>
 python3 evaluate.py --data data/full473 --run runs/<name> --tsv runs/<name>/eval.tsv
+
+# S6: round B (from the round-A reading)
+#   ft2hn: $FLAGS --freeze none --lr0 1e-5 --hard-negative 0.5
+#   ft2m3: $FLAGS --freeze linear --lr0 3e-6
+
+# S7: stacked-selection 2x2 + pick-policy bound
+python3 stack_sim.py --tsv runs/stack-sim-20260815.tsv
+python3 topk_replay.py --taxonomy runs/taxonomy-20260815.tsv --pick-sim \
+    --tsv runs/topk-picksim-20260815.tsv
+
+# S8: ONE-TIME lockbox read (ft2u only) + deployment build
+python3 lockbox_eval.py --data data/full473 --run runs/ft2u | tee runs/ft2u/lockbox.log
+python3 train.py --data data/full473 --name ft2u-deploy --kfold 0 --epochs 10 \
+    --freeze none --lr0 1e-5 --bn-freeze --min-cloud 16 --clip 5.0
 ```
 
 ## 1. Census — what the completed scan gives us
@@ -163,6 +180,27 @@ Config-only change, but a production behavior change ⇒ owner-gated (§8).
 Caveat: replay assumes route/candidates fixed while only the acceptance
 threshold moves; a real A/B run must confirm.
 
+### 4c. The two selection gains DO NOT stack (`stack_sim.py`)
+
+2×2 replay — chooser (composite | rankfit-OOF) × acceptance (4.0 | 10.0),
+same acceptance semantics as production, rankfit acting only on its 156
+eligible events (`runs/stack-sim-20260815.tsv`):
+
+| min_accept | chooser   | correct/473 |
+|-----------:|-----------|------------:|
+| 4.0 | composite | 268  (production) |
+| 4.0 | rankfit   | 280  (+12) |
+| 10.0 | composite | **283  (+15)** |
+| 10.0 | rankfit   | 283  (+15) |
+
+The learned ranking and the stricter acceptance fix (almost exactly) the
+same events: the composite's wrong picks are concentrated on marginal
+accepts that min_accept=10 re-routes to the traditional winner.  For
+deployment this is decisive: **the config-only acceptance retune captures
+the entire measured selection gain, and the C++ rerank-weights knob adds
+nothing on top of it** — proposal 3 is demoted to "only if (1) is
+declined".
+
 ## 5. DL-vertex training arms (round A)
 
 ### 5a. Two real bugs the bigger dataset exposed (both fixed in train.py)
@@ -200,7 +238,65 @@ RTX 4090s, 3 folds each; ft2w/ft2 on CPU).
 | ft2u | none (7.2M) | 1e-5 | the original t48k campaign lr |
 | ft2w | none | 1e-5 | `--upweight numu100:conf:3.0` (numu do-no-harm pressure in-loss) |
 
-RESULTS_PLACEHOLDER_ROUND_A
+### 5c. Round-A results (out-of-fold on the 378 non-lockbox events)
+
+`evaluate.py` per arm (`runs/<arm>/eval.{log,tsv}`); guard = confirming
+events whose tuned d_argmax is >1 cm worse than CP24; snap-hit = events
+with d_argmax ≤ 1 cm:
+
+| arm | guard fails | snap-hit (base 165) | movers >1cm up/down | corrective p50 (base 44.2) | nuecc p90 (base 35.9) | ncpi0 p90 (base 62.6) | numu100 p90 (base 54.9) |
+|-----|------------:|--------------------:|--------------------:|------:|------:|------:|------:|
+| ft2 (head, 1e-6)  | 0 | 165 (+0) | 0 / 0 | 44.2 | 35.9 | 62.6 | 54.9 |
+| ft2u (none, 1e-5) | **0** | **173 (+8)** | 17 / 1 | 42.0 | 25.6 | 43.3 | 37.0 |
+| ft2w (ft2u + numu-upweight ×3) | 2 | 175 (+10) | 19 / 5 | 42.0 | 25.6 | 43.3 | 37.0 |
+
+- **ft2 is bit-inert**: every one of the 378 events identical to baseline
+  to 0.01 cm.  Verified non-vacuous (7/137 checkpoint tensors differ from
+  CP24, val_loss creeps down) — at lr 1e-6 the head moves but no argmax
+  ever flips.  Round 2's discreteness explanation reproduced at 4× the
+  data; this lr/freeze regime is dead and stays dead.
+- **ft2u is the first fine-tune in three rounds to pass the do-no-harm
+  guard**: +8 snap-hits, ZERO confirming events degraded, every sample's
+  tail improves (nueCC p90 36→26, NCpi0 62→43, numu100 55→37).  What
+  changed vs round 2: 3× the labels, lr 1e-5 with all 7.2M params free
+  (argmaxes can actually flip), BN stats frozen, degenerate clouds
+  excluded, gradients clipped.
+- **ft2w** (numu confirming ×3 up-weight) buys +2 more snap-hits at the
+  price of 2 guard failures (evt 286400: 146→187 cm on an already-lost
+  event; evt 292005: 0.48→1.55 cm), and its numu100 p50 is *not* better
+  than ft2u's (0.72 vs 0.64) — the upweight is neutral-to-slightly-negative
+  here.  The round-2 "cocktail pushes the net off numu" effect did not
+  recur at 473 labels even without the upweight.
+
+### 5d. Round-B results and the lockbox verdict
+
+Round B from the Round-A reading (same base flags):
+
+| arm | recipe | guard fails | snap-hit |
+|-----|--------|------------:|---------:|
+| ft2m3 | freeze=linear, lr 3e-6 (diverged-probe retry) | 0 | 165 (+0) — inert |
+| ft2hn | ft2u + `--hard-negative 0.5` | 2 | 168 (+3) |
+
+- The linear probe is argmax-inert even at a stable lr — capacity, not lr,
+  is what ft2/ft2m3 lack.  Only full unfreeze moves this net.
+- Hard negatives are **net-negative even at the argmax-flipping lr** (+3
+  with 2 guard failures vs plain ft2u's +8 with 0).  Round 2's "HN will
+  bite once the lr can flip argmaxes" prediction is refuted; the idea is
+  retired.
+
+**Lockbox read (ONE-TIME, on ft2u only** — chosen on OOF metrics before the
+seal was broken; `runs/ft2u/lockbox.log`): baseline snap-hit 41/95;
+per-fold checkpoints +0..+2 with at most 1 guard fail in one fold; pooled
+per-event median over the 6 fold checkpoints **+2 snap-hits, 0 guard
+failures**.  The +2.1% lockbox gain rate matches the +2.1% OOF rate —
+**ft2u passes, the first fine-tune in three rounds to clear both bars.**
+
+Deployment build: `runs/ft2u-deploy/fold0/CP9.pth` — the ft2u recipe on all
+378 non-lockbox events, no folds, 10 epochs (≈ the median fold-selected
+epoch).  To A/B: copy under a NEW name into `wire-cell-data/` (never
+overwrite `t48k-m16-l5-lr5d-res0.5-CP24.pth`) and point the `dl_weights`
+TLA at it.  Production flip is the owner's call; expected effect from
+OOF+lockbox: ~+2% absolute snap-hit on data events, no measured harm.
 
 ## 6. Pre-DL diagnosis — the candidate-missing class is an ADMISSION gap, not a graph gap
 
@@ -235,35 +331,54 @@ production did not):
 
 Raising `dl_vtx_top_k` 5→20 is config-only and would make ~28 events
 *available* to the reranker (admission is necessary, not sufficient — the
-rerank must still choose them, which is exactly what §4a improves; and more
-candidates also give the rerank more chances to go wrong on
-currently-correct events).  **Proposal for an owner-gated A/B, not flipped
-here** (§8).
+rerank must still choose them; and more candidates also give the rerank
+more chances to go wrong on currently-correct events).
+
+The realized recovery cannot be simulated offline: a pick-policy check
+(`topk_replay.py --pick-sim`, `runs/topk-picksim-20260815.tsv`) shows
+DL-score-alone selection reaches only 226/473 vs the composite's 322/473 —
+the geometric terms carry much of the selection power, and their values for
+the newly admitted candidates are not recorded anywhere.  (The dl-argmax
+policy is also k-independent by construction — the max-score candidate is
+always the top-1 voxel's snap — so that number is a policy baseline, not a
+k-scan.)  The honest statement: **k=20 admission recovers ≤28/50; the
+realized number needs one real PR rerun of the 445 events with
+`dl_vtx_top_k=10/20` into a fresh work dir** — the concrete next-round
+experiment (§8).
 
 ## 7. Files
 
-New round-3 tools (committed): `pre_dl_diag.py`, `topk_replay.py`,
-`merge_oof.py`; extended: `train.py` (`--upweight`, `--bn-freeze`,
-`--min-cloud`, `--clip`, per-fold `oof_fold<k>.tsv`), `build_dataset.py`
-(`--numu-flag`), `taxonomy.py` (`--numu-manifest`), `scn_vtx/io.py`
-(`sample_of_label` numu_name).  Uncommitted outputs: `data/full473`,
+New round-3 tools (committed): `pre_dl_diag.py`, `topk_replay.py` (incl.
+`--pick-sim`), `stack_sim.py`, `lockbox_eval.py`, `merge_oof.py`; extended:
+`train.py` (`--upweight`, `--bn-freeze`, `--min-cloud`, `--clip`, per-fold
+`oof_fold<k>.tsv`), `build_dataset.py` (`--numu-flag`), `taxonomy.py`
+(`--numu-manifest`), `scn_vtx/io.py` (`sample_of_label` numu_name),
+`README.md`.  Uncommitted outputs: `data/full473`,
 `runs/taxonomy-20260815.tsv`, `runs/rankfit-20260815.tsv`,
 `runs/rerank-grid-full473{,-ext}.tsv`, `runs/pre-dl-diag-20260815.tsv`,
-`runs/topk-replay-20260815.tsv`, `runs/ranker-retrospective-20260815.txt`,
-`runs/ft2*/`.
+`runs/topk-replay-20260815.tsv`, `runs/topk-picksim-20260815.tsv`,
+`runs/stack-sim-20260815.tsv`, `runs/ranker-retrospective-20260815.txt`,
+`runs/ft2*/` (each: fold CPs + eval.tsv; `runs/ft2u/lockbox.log`;
+`runs/ft2u-deploy/fold0/CP9.pth` = the staged deployment checkpoint).
 
-## 8. Owner decisions requested
+## 8. The optimal-approach ranking (owner decisions)
 
-1. **`dl_vtx_min_accept_score` 4.0 → 10.0** (config-only): +15/470 on the
-   full scan replay (§4b).  Needs a real A/B (behavior change).
-2. **`dl_vtx_top_k` 5 → 10 or 20** (config-only): admits 15–28 of the 50
-   candidate-missing events (§6).  Interacts with (1) and (3); suggest
-   testing combined.
-3. **Configurable rerank weights** (`dl_vtx_rerank_weights`, default-OFF
-   toolkit knob): the fitted ranking is +15/156 over production at p=0.044
-   (§4a).  C++ change under the usual byte-identical-off bar.
-4. **Fine-tuned net deployment**: see §5 verdict.
-5. The 38 still-unlabeled PR events: the round-2 ranking (§2) orders them.
+Every direction measured this round, ordered by verified gain per unit of
+deployment risk (473-label replays and OOF/lockbox training results;
+"gain" = correctly-chosen vertices at 1 cm):
+
+| # | direction | measured gain | change needed | caveat |
+|---|-----------|--------------|---------------|--------|
+| 1 | `dl_vtx_min_accept_score` 4.0 → 10.0 | **+15/470** (replay, interior optimum) | config value only | needs one real A/B rerun to confirm route stability |
+| 2 | fine-tuned net (ft2u recipe) | **+8/378 OOF, +2/95 lockbox, 0 guard fails anywhere** | new weights file + `dl_weights` TLA | orthogonal to (1) — net gain is at the voxel stage, (1) at acceptance |
+| 3 | `dl_vtx_top_k` 5 → 10/20 | ≤15–28/50 admission (upper bound) | config value only | realized gain unknown offline (§6); test WITH (1), which guards the added candidates |
+| 4 | learned rerank weights knob | +12/473 alone but **+0 on top of (1)** (§4c) | default-OFF C++ knob | demoted: redundant with (1); revisit only if (1) declined |
+| 5 | hard negatives / linear probe / head-only | 0 or negative | — | retired with evidence (§5) |
+
+Suggested sequence: A/B of (1) alone → A/B of (1)+(2) → PR rerun with
+(1)+(3) on the 445 events to measure the top_k realized recovery.  The 38
+still-unlabeled PR events: the round-2 active-learning ranking (§2,
+out-of-time-validated) orders them for scanning.
 
 ## 9. Candidate ideas for a future round (proposed, not built)
 

@@ -30,8 +30,15 @@ ALL_TAGS = ['vtxscan-prod0813', 'vtxscan-prod0813-ncpi0', 'vtxscan-prod0813-mcp1
 CLASSES = ['correct', 'candidate-missing', 'net-wrong', 'selection-wrong']
 
 
-def numu50_set(here):
-    """The frozen numu50 snapshot defines the 50-numu reporting subset."""
+def numu50_set(here, manifest=None):
+    """The frozen numu50 snapshot defines the 50-numu reporting subset.
+    round 3: pass a snapshot manifest with a `sample` column to use its
+    numu<K>-flagged rows instead (e.g. data/full473 -> numu100)."""
+    if manifest:
+        with open(manifest) as fh:
+            import csv
+            return {int(r['evt']) for r in csv.DictReader(fh, delimiter='\t')
+                    if r.get('sample', '').startswith('numu')}
     path = os.path.join(here, 'data', 'numu50', 'manifest.tsv')
     if not os.path.exists(path):
         return set()
@@ -75,10 +82,13 @@ def main():
     ap.add_argument('--tol', type=float, default=1.0)
     ap.add_argument('--tol2', type=float, default=3.0, help='loose tolerance')
     ap.add_argument('--tsv', default=None)
+    ap.add_argument('--numu-manifest', default=None,
+                    help='snapshot manifest whose numu<K> sample column '
+                         'defines the numu reporting subset (round 3)')
     args = ap.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
-    numu = numu50_set(here)
+    numu = numu50_set(here, args.numu_manifest)
 
     recs = []
     for label in vio.iter_labels(args.sbnd_root, args.tags):

@@ -121,6 +121,22 @@ final BatchNormReLU + last UNet decoder block (~7k of 7.2M params);
   `products/prod0813/mcp1k-scores-prod0813.tsv` (caution: `nue_score` is a
   -15 sentinel for most events -- never cut on numu>nue).
 
+## Round 3 (doc pr/78): full-scan tools
+
+- `pre_dl_diag.py` — for the taxonomy's candidate-missing events, distance
+  from truth to the nearest graph vertex / segment point / cloud point;
+  buckets admission-gap / on-track / off-graph.
+- `topk_replay.py` — re-run the net and simulate `dl_vtx_top_k` admission
+  (smallest k whose snapped candidate set reaches truth).
+- `merge_oof.py runs/<name>` — merge per-fold `oof_fold<k>.tsv` written by
+  fold-parallel `train.py --fold k` launches.
+- `train.py` round-3 flags: `--bn-freeze` (restore pretrained BN running
+  stats after every epoch; tiny clouds otherwise NaN them), `--min-cloud N`
+  (drop degenerate clouds from train folds), `--clip C` (grad-norm clip),
+  `--upweight sample:conf|corr|all:W` (per-sample loss weight).
+- `build_dataset.py --numu-flag K` — flag the top-K mcp1k events by
+  numu_score as sample `numu<K>` without filtering the rest.
+
 ## Guard rails
 
 - `vertex_labels/` is read-only here (M13); snapshots freeze label mtimes in

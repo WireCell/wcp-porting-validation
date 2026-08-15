@@ -132,15 +132,15 @@ def is_corrective(label, tol=1.0):
     return dis is not None and float(dis) > tol
 
 
-def sample_of_label(label, numu_events=None):
+def sample_of_label(label, numu_events=None, numu_name='numu50'):
     """Coarse sample name for reporting: nuecc / ncpi0 / mcp1k (data);
-    'numu50' if the event is in the provided numu_events set."""
+    `numu_name` if the event is in the provided numu_events set."""
     tag = label.get('scan_tag') or ''
     if 'ncpi0' in tag:
         return 'ncpi0'
     if 'mcp1k' in tag:
         if numu_events and label['eventNo'] in numu_events:
-            return 'numu50'
+            return numu_name
         return 'mcp1k'
     return 'nuecc'
 

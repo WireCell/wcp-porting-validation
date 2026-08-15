@@ -65,6 +65,33 @@ def set_freeze(model, mode):
     return n_train, total
 
 
+def bn_stats_snapshot(model):
+    """round 3 (doc pr/78): tiny clouds can leave a single active site at the
+    deepest UNet level; the unbiased batch variance is then 0/0 and the BN
+    running stats go NaN -- train-mode forwards stay finite (batch stats) but
+    every eval-mode forward NaNs.  SCN's BN autograd asserts train mode in
+    backward, so eval-mode BN training is not an option; instead we snapshot
+    the pretrained running stats and restore them after every training epoch
+    (--bn-freeze): batch-stat training exactly as before, frozen stats for
+    every eval and every saved checkpoint."""
+    snap = {}
+    for name, m in model.named_modules():
+        for attr in ('running_mean', 'running_var'):
+            t = getattr(m, attr, None)
+            if t is not None:
+                snap[(name, attr)] = t.detach().clone()
+    return snap
+
+
+def bn_stats_restore(model, snap):
+    with torch.no_grad():
+        for name, m in model.named_modules():
+            for attr in ('running_mean', 'running_var'):
+                t = getattr(m, attr, None)
+                if t is not None:
+                    t.copy_(snap[(name, attr)])
+
+
 def d_argmax_cm(pred, coords, offset, truth):
     top = top_k_voxels(pred, coords, offset, k=1)
     return float(np.linalg.norm(top[0, :3] - truth))
@@ -89,6 +116,21 @@ def run_epoch(model, samples, device, criterion, optimizer=None,
             w = float(meta['row'].get('weight', 1.0))  # S8c pseudo-labels < 1
             if w != 1.0:
                 loss = loss * w
+            cm = getattr(model, 'cand_margin', 0.0)
+            ci = meta.get('cand_idx')
+            if cm > 0 and ci is not None:
+                # S9b: deployed-objective margin -- the truth candidate's
+                # voxel score must beat every other candidate's by 0.1
+                vi = torch.from_numpy(ci)
+                ti = meta['cand_truth_i']
+                valid = vi >= 0
+                if bool(valid[ti]) and int(valid.sum()) >= 2:
+                    st = score[vi[ti]]
+                    others = vi[valid.clone()]
+                    others = others[others != vi[ti]]
+                    if len(others):
+                        viol = torch.relu(0.1 - (st - score[others]))
+                        loss = loss + cm * viol.mean()
             if consistency > 0:  # S8c: label-free view-agreement term
                 (c1, f1, p1), (c2, f2, p2) = samples.consistency_views(k)
                 pr1 = model([torch.LongTensor(c1), torch.FloatTensor(f1).to(device)])
@@ -98,6 +140,10 @@ def run_epoch(model, samples, device, criterion, optimizer=None,
                 loss = loss + consistency * criterion(
                     s1[torch.from_numpy(p1)], s2[torch.from_numpy(p2)])
             loss.backward()
+            clip = getattr(model, 'grad_clip', 0.0)
+            if clip > 0:
+                torch.nn.utils.clip_grad_norm_(
+                    [p for p in model.parameters() if p.requires_grad], clip)
             optimizer.step()
         else:
             with torch.no_grad():
@@ -139,6 +185,26 @@ def main():
                     help='S8c: pseudo-label snapshot dir; its events join '
                          'every fold TRAIN set (never validation)')
     ap.add_argument('--pseudo-weight', type=float, default=0.25)
+    ap.add_argument('--min-cloud', type=int, default=0,
+                    help='round 3: drop events with fewer cloud points than '
+                         'this from TRAINING folds (they stay in val).  A '
+                         '3-voxel cloud reaches the deepest UNet level as a '
+                         'single site and NaNs the forward (evt 171892).')
+    ap.add_argument('--clip', type=float, default=0.0,
+                    help='round 3: clip_grad_norm_ max norm (0 = off)')
+    ap.add_argument('--cands', default=None,
+                    help='S9b: candidate sidecar dir from build_cands.py; '
+                         'enables the deployed-objective margin loss')
+    ap.add_argument('--cand-margin', type=float, default=0.0,
+                    help='S9b: weight of the candidate margin term (0 = off)')
+    ap.add_argument('--bn-freeze', action='store_true',
+                    help='round 3: keep BatchNorm layers in eval mode during '
+                         'training (frozen running stats; fixes the '
+                         'tiny-cloud NaN running_var corruption)')
+    ap.add_argument('--upweight', default=None,
+                    help="round 3: '<sample>:<conf|corr|all>:<w>' e.g. "
+                         "'numu100:conf:3.0' -- multiply the loss weight of "
+                         "matching manifest rows (sample column)")
     ap.add_argument('--seed', type=int, default=20260814)
     ap.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
     args = ap.parse_args()
@@ -150,6 +216,20 @@ def main():
         json.dump(vars(args), fh, indent=1, sort_keys=True)
 
     rows = load_manifest(args.data, drop_lockbox=not args.keep_lockbox)
+    if args.upweight:
+        samp, which, w = args.upweight.split(':')
+        w = float(w)
+        n_up = 0
+        for r in rows:
+            if r.get('sample', '') != samp:
+                continue
+            if which == 'conf' and r['corrective']:
+                continue
+            if which == 'corr' and not r['corrective']:
+                continue
+            r['weight'] = float(r.get('weight', 1.0)) * w
+            n_up += 1
+        print('upweight: %d rows (sample=%s %s) x%.1f' % (n_up, samp, which, w))
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
@@ -181,12 +261,22 @@ def main():
 
         model = make_model(device=args.device)
         load_weights(model, args.weights)
+        bn_snap = bn_stats_snapshot(model) if args.bn_freeze else None
+        model.grad_clip = args.clip
+        model.cand_margin = args.cand_margin
         n_train, n_total = set_freeze(model, args.freeze)
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = optim.Adam(params, lr=args.lr0)
 
+        if args.min_cloud > 0:
+            kept = [r for r in train_rows if int(r['n_cloud']) >= args.min_cloud]
+            if len(kept) != len(train_rows):
+                print('[fold %d] min-cloud %d: dropped %d train events'
+                      % (fold, args.min_cloud, len(train_rows) - len(kept)))
+            train_rows = kept
         tr = VtxSamples(args.data, train_rows + pseudo_rows, train=True,
-                        seed=args.seed + fold, **sample_kw)
+                        seed=args.seed + fold, cands_dir=args.cands,
+                        **sample_kw)
         va = VtxSamples(args.data, val_rows, train=False,
                         seed=args.seed + fold, **sample_kw)
         print('[fold %d] train %d events (%d views), val %d events; '
@@ -203,6 +293,8 @@ def main():
                     g['lr'] = lr
                 tl, td, _ = run_epoch(model, tr, args.device, criterion, optimizer,
                                       consistency=args.consistency)
+                if bn_snap is not None:
+                    bn_stats_restore(model, bn_snap)
                 if len(va):
                     vl, vd, _ = run_epoch(model, va, args.device, criterion)
                 else:
@@ -230,7 +322,11 @@ def main():
                   % (fold, best[1], best[0]))
 
     if oof:
-        with open(os.path.join(run_dir, 'oof_d_argmax.tsv'), 'w') as fh:
+        # fold-parallel launches (--fold k) write per-fold files so the
+        # processes don't clobber each other; merge_oof.py combines them.
+        oof_name = ('oof_d_argmax.tsv' if args.fold < 0
+                    else 'oof_fold%d.tsv' % args.fold)
+        with open(os.path.join(run_dir, oof_name), 'w') as fh:
             fh.write('evt\td_argmax_cm\n')
             for evt in sorted(oof):
                 fh.write('%d\t%.3f\n' % (evt, oof[evt]))

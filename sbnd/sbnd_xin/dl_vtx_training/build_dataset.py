@@ -54,6 +54,10 @@ def main():
     ap.add_argument('--numu-top', type=int, default=0,
                     help='keep only the top-K mcp1k-tag events by numu_score '
                          '(non-mcp1k tags unaffected)')
+    ap.add_argument('--numu-flag', type=int, default=0,
+                    help='round 3: flag the top-K mcp1k-tag events by '
+                         'numu_score as sample=numu<K> WITHOUT filtering '
+                         '(the whole tag is kept)')
     ap.add_argument('--lockbox', type=float, default=0.0,
                     help='fraction of events flagged lockbox=1 (stratified by '
                          'sample x corrective; excluded from ALL training and '
@@ -78,10 +82,14 @@ def main():
             keep_events = {int(t) for t in args.event_list.split(',')}
 
     numu_set, numu_scores = (set(), {})
+    numu_name = 'numu50'
     if any('mcp1k' in t for t in args.tags):
         numu_set, numu_scores = numu_top_events(
-            args.sbnd_root, args.tags, args.numu_top or 10**9)
-        if not args.numu_top:
+            args.sbnd_root, args.tags,
+            args.numu_top or args.numu_flag or 10**9)
+        if args.numu_flag:
+            numu_name = 'numu%d' % args.numu_flag
+        elif not args.numu_top:
             numu_set = set()
 
     rows = []
@@ -100,7 +108,7 @@ def main():
         mv = label.get('main_vertex') or {}
         prod = np.array([mv.get('x', np.nan), mv.get('y', np.nan),
                          mv.get('z', np.nan)], dtype=np.float32)
-        sample = vio.sample_of_label(label, numu_set)
+        sample = vio.sample_of_label(label, numu_set, numu_name)
         nscore = numu_scores.get(evt)
         npz = 'evt%d.npz' % evt
         np.savez_compressed(
