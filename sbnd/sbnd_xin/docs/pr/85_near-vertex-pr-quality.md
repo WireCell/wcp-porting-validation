@@ -750,3 +750,108 @@ baselines:
 - evt66272 / evt319611: op1 side-effects flagged for owner hand-check
   (Bee idx 16 / 13).
 - Mode 1a-CUT and 1b STRADDLE remain out of scope (§7 Q5).
+
+---
+
+## 11. Addendum (2026-08-15) — the 2-D overlay, and two blind spots it found
+
+The owner asked for the near-vertex pictures to be drawn **over the 2-D
+measurement** rather than on the reconstruction alone. Doing so exposed two
+places where the §2 census under-reports, both of them properties of the
+census's own constants rather than of the reconstruction.
+
+### 11.0 Repro
+
+```bash
+cd sbnd_xin
+# one PNG per event: U/V/W, wire index vs slice, for the APA holding the vertex
+python3 pr85_panels2d.py /home/xqian/tmp/pr85-2d 268067 349945 38856 38856:12106
+```
+
+`pr85_panels2d.py` needs no wire geometry: `proj[]` in the calib dump *is* the
+measurement (`wire`, `slice`, `charge` per apa/plane) and every fitted point
+already carries `pu/pv/pw` and `pt`. Coordinates and the growing-window recipe
+are taken from `pr_display_viewer.py:2370-2540` verbatim so a picture here and
+port 5017 can be discussed in the same words. Three conversions are load-bearing
+and each one, if wrong, produces the *same* misleading picture — a polyline
+offset from the charge, read as "the PR does not follow real charge":
+
+- `points[].pt` is in **ticks**, `proj[].slice` is in **slices**; divide by
+  `meta.nticks_per_slice` keyed on `(apa, face)` (SBND: 4).
+- points with `apa < 0` are dropped, never defaulted to APA 0 (doc pr/3).
+- dead bands are in slice units — `s0/s1`, not `t0/t1`.
+
+**Alignment gate, run before reading anything off a 2 cm stub:** render one long
+unambiguous track at full extent (`HALF=400`) and confirm the polyline rides a
+charge ridge along its whole length in all three planes. A tick/slice or APA
+error is glaring on a 43 cm track and invisible-but-fatal on a 2.3 cm stub.
+`ALIGNCHECK-evt38856` (segment 12030, 43.5 cm) passes in U, V and W.
+
+`proj[]` is deliberately **not** filtered by `cluster_id`: a mode-1 CUT prong
+lives in a different cluster from the click (evt407280: click in cluster 51,
+the 128.8 cm prong in cluster 16), so filtering would erase exactly the evidence
+the overlay exists to show.
+
+### 11.1 Blind spot A — the 3–10 cm band between `STUB` and `LONG`
+
+§2 counts a segment as clutter when it is shorter than `STUB = 3.0` cm, and as a
+prong when it is longer than `LONG = 10.0` cm. A non-incident segment **between**
+those is counted as neither. The overlay made this visible immediately on
+evt349945, whose clicked vertex 18011 has degree 2 but **four** segments with
+charge within 3 cm:
+
+| seg | length | charge→click | incident |
+|---|---|---|---|
+| 18017 | 11.78 cm | 0.00 | yes |
+| 18016 | 4.44 cm | 0.00 | yes |
+| **18013** | **8.27 cm** | 0.38 | **no** |
+| **18003** | **3.11 cm** | 1.10 | **no** |
+
+Measured over the same 462 events: **20 have at least one non-incident segment
+in the 3–10 cm band touching the click, 3 have two or more.** Against §2.2's 32 +
+35 that is a ~4 % under-count, not a reinterpretation — the two modes stand — but
+the §2 numbers should be read as a **lower bound**, and any future re-tuning of
+`STUB`/`LONG` must re-derive them rather than reuse them.
+
+Distribution of segments whose charge comes within 3 cm of the click, over the
+462 (this is the raw crowding number, independent of any length cut):
+
+| segments touching the click | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|
+| events | 131 | 170 | 103 | 32 | 15 | 10 | 1 |
+
+### 11.2 Blind spot B — scoring at the click cannot see clutter that mis-picked the vertex
+
+§2.1 scores at the owner's click on purpose, so that ugly topology is not
+confounded with a wrongly chosen vertex. The cost of that choice is now
+measured. **evt38856** is clean at the click — vertex 12004, degree 2, two long
+prongs (12013 at 25.6 cm and 12030 at 43.5 cm), no stubs, nothing detached — and
+the census therefore records it as a non-event. But the reconstruction put
+`main_vertex` at **12106, 30.1 cm away**, and *that* vertex carries seven
+segments within 3 cm, four of them not incident:
+
+| seg | length | charge→vertex | incident |
+|---|---|---|---|
+| 12082 | 3.48 cm | 0.00 | yes |
+| 12083 | 1.94 cm | 0.00 | yes |
+| 12084 | 7.33 cm | 0.00 | yes |
+| 12008 | 15.37 cm | 1.79 | no |
+| 12018 | 12.79 cm | 1.79 | no |
+| 12017 | 4.31 cm | 2.55 | no |
+| 12036 | 2.98 cm | 2.99 | no |
+
+This is the §1 symptom in full, sitting at the vertex the pipeline actually
+chose. The census is structurally blind to it: `b1 = 30.1` cm puts the event in
+pr/80's mis-picked-vertex class, and pr/85 never looks there.
+
+So §2.3's "the defect is not an artefact of a mis-picked vertex" remains true as
+stated — the base rates x1.00 / x1.08 are measured on the 318 click==reco events
+and are unaffected — but the converse was never established and is false: **there
+is near-vertex clutter that only appears at mis-picked vertices.** Whether it is
+a cause of the mis-pick or a consequence of it is not answered here.
+
+### 11.3 Follow-up
+
+A round that scores at **both** the click and the reco `main_vertex`, over the
+149 degree-1 events of §8.1 and the `b1 > 1 cm` events excluded here, would close
+both blind spots at once. Not started; no knob is proposed on this evidence.
