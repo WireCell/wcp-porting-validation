@@ -1,8 +1,9 @@
 # doc pr/85 — near-vertex PR quality: the interposed stub
 
-**Status: investigation only. Nothing is implemented — no C++, no jsonnet, no
-knob.** The one experiment run here uses `-A` overrides on knobs that already
-exist.
+**Status: §§1–9 investigation (2026-08-15 morning); §10 implementation round
+(same day) — Q1+Q2+Q4 SBND PRODUCTION ON (toolkit `bc0227cb` + `412b4e93`),
+Q3 ships as code default OFF.** The §5 experiment uses `-A` overrides on
+knobs that already existed.
 
 Owner report (2026-08-15), from the neutrino-vertex hand scan:
 
@@ -454,3 +455,298 @@ the graph topology at the vertex.
 - The 11 labels whose click is further than 1 cm from any PR-graph vertex are
   not analysed here. They are the events where the vertex is not a candidate at
   all — doc pr/78 §3's admission gap, measured there and not re-opened.
+
+---
+
+## 10. Implementation round (2026-08-15) — Q1 + Q2 + Q3, Q4 as sweep
+
+Owner instruction: implement §7's improvements, validate on nueCC48 + NCpi0 +
+mcp1k, flip SBND production on gate pass (pre-authorized), before/after Bee
+links for the six events and the top movers.  Scope chosen by the owner:
+**Q1 + Q2 + Q3 together, Q4 as a sweep adopted only if cleanly positive.**
+
+### 10.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# Stage A -- the six events, per-knob arms (baseline = work-pr85-b2)
+export SBND_WCT_LOGLEVEL=debug PR_EXTRA_STAGES=pr_display PR_JOBS=3
+SBND_VKS_CARRY_PRONG=1.5 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr85i-q3 data 59685 280972 278785
+SBND_MAIN_VERTEX_GRAPH_AUDIT=true SBND_MVGA_SATELLITE=3.0 SBND_MVGA_INTERPOSED=true \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr85i-q12 data 59685 280972 278785
+# (repeat each with work-nuecc48-cb0805: 360535 437699; work-ncpi0-cb0805: 314838;
+#  work-pr85i-all = both env sets together)
+
+# the census, scored on any arm (PR85_DUMP_ROOT unset = the original 462-event census)
+PR85_DUMP_ROOT=work-pr85i-all python3 pr85_near_vertex_census.py
+
+# byte-identity gate between two arms (hash_archive member rollup, never paths)
+python3 scripts/pr85_hash_gate.py work-ncpi0-pr83on work-ncpi0-pr85ioff
+```
+
+### 10.1 What was built
+
+Three default-OFF knobs (C++ defaults; jsonnet key-suppression at every layer;
+`doctest_clus_knob_defaults.cxx` pins; runner envs `SBND_MVGA_INTERPOSED`,
+`SBND_MVGA_INTERPOSED_ANGLE`, `SBND_VKS_CARRY_PRONG`):
+
+| knob | default | what it does |
+|---|---|---|
+| `mvga_interposed` (+ `mvga_interposed_angle`, 150°) | false | **Q1.** op3's `degree(far)==1` line (`NeutrinoGraphAudit.cxx`) becomes a classifier: an interposed stub at the **main-vertex anchor only**, under `mvga_stub`, far vertex not `kProtectedBreak`, and collinear within `mvga_interposed_angle` of a far prong, has ALL far prongs spliced through the stub's wcpts onto the main vertex; the stub is removed and the far vertex (degree 0) dropped.  Sentinel `mvga: op3 stub-interposed`, TRACE probe `mvga: op3 eval-interposed`. |
+| `vks_carry_prong` (cm) | 0 = off | **Q3.** In `snap_main_vertex_to_kink` (production ON), after the break, when `best.arc` < threshold every arm at the OLD vertex is spliced through the residual's wcpts onto the new main vertex, the residual removed, the old vertex dropped — the interposed stub is never created.  `best.arc` **is wcpt-space** (arms are built from `sg->wcpts()`, `cum[]` arclength — §7 Q3's "fit-space" caveat was wrong and is corrected here), so the measured 0.93/1.07 cm arcs are directly the threshold scale.  Sentinel `snap_main_vertex_to_kink: CARRY`. |
+| (no new knob) | — | **Q2.** flip `main_vertex_graph_audit=true` + `mvga_satellite=3.0`, gated on the §10.4 mover adjudication. |
+
+Both edits share one splice implementation, `carry_prong_verify` /
+`carry_prong_execute` (`PRSegmentFunctions.{h,cxx}`): SegmentPtr identity
+preserved (fits/flags/particle_info survive; wcpts respliced; refit by the
+pass's existing trailing `do_multi_tracking`), all-or-nothing pre-verification
+(0.01 cm endpoint wcpt matches on every chain, far vertex valid and distinct,
+`find_segment(far, anchor) == nullptr` — the examine_structure B.7 setS-alias
+landmine), decline leaves the graph exactly as production.
+`merge_vertex_into_another` was rejected for this job: it deletes and re-routes
+prongs via an **unchecked** `create_segment_from_vertices` (silent prong drop)
+and loses fits/flags/particle_info.
+
+### 10.2 Stage A — the six events
+
+Sentinels: CARRY fired on exactly the two SNAP events (59685 arc 0.93 cm,
+1 arm; 280972 arc 1.07 cm, 2 arms); `stub-interposed` fired on 59685
+(len 1.18 cm, vf_deg 2, far_angle 175.2°) in the Q1+Q2 arm.  Census tuples per
+arm (stubs / interposed prongs at the click):
+
+| event | baseline | Q3 only | Q1+Q2 | combined |
+|---|---|---|---|---|
+| evt59685 | 1 / 1 | **0 / 0** | **0 / 0** | **0 / 0** |
+| evt280972 | 3 / 1 | **0 / 0** | 1 / 1 | **0 / 0** |
+| evt278785 | 2 / 0 | 2 / 0 | 2 / 0 | 2 / 0 |
+| evt314838 | 2 / 1 | 2 / 1 | 1 / 1 | 1 / 1 |
+| evt360535 | 1 / 2 | 1 / 2 | 1 / 2 | 1 / 2 |
+| evt437699 | 2 / 0 | 2 / 0 | 1 / 0 | 1 / 0 |
+| **total** | **11 / 5** | 6 / 3 | 6 / 4 | **5 / 3** |
+
+Three observations worth the table:
+
+- **Q3 at source beats repair-after.** On 280972 the carry does not just
+  remove the residual — the two sibling stubs (0.78, 1.40 cm) never form
+  either: 3 stubs → 0.  The Q1+Q2 arm on the same event absorbs two stubs and
+  still leaves the interposed one (7158, re-fit to 0.23 cm).
+- **Every survivor in the combined arm is a named class**: 278785's pair
+  (2.25/2.21 cm) sits above the `mvga_stub` 2.0 cm ceiling (§10.5's sweep);
+  314838's stub meets its far prong at **82.5°** (trace probe,
+  `work-pr85i-tr314838`) — a genuine corner the 150° collinearity gate is
+  *supposed* to decline, absorbing it would fabricate a straight-through
+  connection; 360535 is the degree-1 main-vertex anchor documented at §10.1
+  as out of scope (`incident.size() < 2`).
+- The reseat on 314838 (0.72 cm move, the §7 Q2 risk case) reproduces
+  exactly as in §5.1.
+
+### 10.3 Gates (labels; every PASS re-checkable)
+
+- **Gate 0**: `wcbuild` rc=0; freshness `libWireCellClus.so` 16:44 > last
+  edit 16:38; `wcdoctest-clus` 2069/2069; compiled production config with
+  knobs off **byte-identical** to the pre-change HEAD render
+  (scratch `pr85-cfg-base.json` == `pr85-cfg-off.json`); knobs on, all five
+  keys appear with their values (`pr85-cfg-on.json`).
+- **Gate 1** (knob-off byte identity vs the pr/83 production reference arms,
+  `scripts/pr85_hash_gate.py`, mabc-pr.zip + pctree per event):
+  - NCpi0: `work-ncpi0-pr83on` vs `work-ncpi0-pr85ioff` — **PASS 38/38**.
+  - nueCC48: `work-nuecc48-pr83on` vs `work-nuecc48-pr85ioff` — **PASS 94/94**.
+  - mcp1k: (§10.3-TBD)
+  - mcp1k: `work-mcp1k-pr83on` vs `work-mcp1k-pr85ioff` — **PASS 890/890**.
+  - **Total 1022/1022 archives byte-identical with every knob off**, proving
+    `vks_carry_prong=0` inert inside the production-ON snap pass and the op3
+    accept-block restructure control-flow-identical.
+
+### 10.4 Stage B and the mover adjudication — the round's pivot
+
+The first full-knob 57-event arm (`work-pr85i-all57`: Q1+Q2+Q3, reseat at its
+150° default) cleaned the topology (stubs 95→45 summed over matched events)
+but the **mover adjudication against the owner's hand labels** — the exact
+check doc pr/51 R3 left undone — found two >1 cm regressions, and per-knob
+attribution arms (`work-pr85i-q3x` / `-q12x`) split them cleanly:
+
+| event | base→arm click-to-main | attributed to |
+|---|---|---|
+| evt280017 | 0.00 → 1.64 cm | **op3 stub-reseat** (`reseat_dis=1.69`) — pre-existing Q2 machinery |
+| evt174114 | 0.00 → 1.51 cm | **Q3 CARRY** (arc 0.55; post-carry refit + improve_vertex drift off the corner, main lands 1.56 cm from the SNAP corner it sat 0.06 cm from in baseline) |
+
+The full CARRY ledger (10 firings on the 57): 4 better / 6 worse by
+click-to-main, net **zero** at the 1 cm correctness bar (gains 316025
+2.53→0.40, loses 174114), while the same snap residuals are cleaned by Q1's
+interposed absorb with ≤0.25 cm vertex motion (mvga runs AFTER the final
+improve_vertex, so nothing re-polishes the vertex off its point; CARRY runs
+before it, and the local optimizer wanders on the carried graph).  And both
+label-set reseat firings moved the vertex OFF the owner's click (280017
+1.64 cm, 314838 0.60 cm — §5.1's "0.60 cm move is the whole risk" is hereby
+adjudicated: **adverse**).
+
+**Operating point chosen (the owner's authorized iteration):**
+`main_vertex_graph_audit=true, mvga_satellite=3.0, mvga_interposed=true,
+mvga_reseat_angle=0` (absorb-only op3) — **Q3 ships as code, default OFF**
+(its ledger above is the reason; a future round could revisit with a turn
+floor).  New runner envs `SBND_MVGA_RESEAT_ANGLE`, `SBND_MVGA_STUB` added for
+this and the §10.5 sweep.
+
+**Candidate-config Stage B** (`work-pr85i-cand57`, 57/57 rc=0), scored at the
+owner's clicks vs the HEAD baseline `work-pr85-head57`:
+
+- topology, summed over matched events: **stubs 95→45, interposed prongs
+  26→17, CUT 9→9, STRADDLE 3→3**; 36 events improve, zero worsen except
+  the one flagged below.
+- movers: 12 events with main-vertex motion >0.1 cm.  **Every mover ≥0.5 cm
+  moves TOWARD the click** (48367 0.85→0.00, 400504 1.30→0.00, 394642
+  1.49→0.66, 411460 3.05→1.88, 316025 2.53→2.09); the worst adverse move is
+  **0.27 cm** (click-resolution scale).  Both §10.4-table regressions are
+  gone (174114: 0.25 cm; 280017: 0.00 — its 1.69 cm stub is now absorbed
+  in place, strictly better than the reseat).
+- three events leave the census's 1 cm click-match (284637, 409546, 411460)
+  — in all three the main vertex itself is unmoved (0.00/0.04 cm) or moves
+  toward the click (411460, 1.20 cm closer); what vanished is a *clutter
+  vertex near the click*, which is the fix working.
+- the one adverse tuple: evt66272 gains a 1a-CUT because **op1** (pre-existing
+  dup-corridor merge) removed a genuine 100%-overlap duplicate (3.49 cm,
+  1.5e5 dQ vs the 11.1 cm / 9.1e5 survivor) and the census now sees the
+  survivor prong with no path to the clicked vertex.  Correct removal,
+  connectivity-presentation cost; main vertex untouched; recorded, not fixed
+  here.
+
+### 10.5 Q4 sweep — `mvga_stub` fitted against this population, 2.5 adopted
+
+§7 Q4's objection was that 2.0 cm "was not fitted against this population";
+this sweep is the fit.  On top of the §10.4 candidate config, over the same
+57 events (`work-pr85i-s23`, `work-pr85i-s25`, 57/57 rc=0 each):
+
+| | cand (2.0) | 2.3 | 2.5 |
+|---|---|---|---|
+| stubs (matched sum) | 45 | 38 | **35** |
+| interposed / cut / straddle | 17 / 9 / 3 | same | same |
+| adverse movers | — | none | none |
+
+The only mover in either arm is evt138009, 0.43 cm **toward** the click
+(0.75→0.54).  2.5's three extra removals over 2.3 (59247 ×2, 61461 ×1) cost
+nothing; evt268067 — doc pr/51's own charge-less-bridge event — gets its
+2.29 cm interposed stub absorbed (carried 2 prongs, 168.0°) with the main
+vertex byte-identical in position across all four arms.  278785's 2.21/2.25 cm
+pair is *still* declined at 2.5 — by the overlap/collinearity gates, not the
+ceiling — so raising further only adds risk: **2.5 adopted, 3.0 not pursued.**
+
+### 10.6 Stage C round 1 — the marginal-overlap class, two more knob values
+
+Full-sample knob-on arms at the §10.5 config (`work-*-pr85ion`, 1000+48+19
+events, rc=0 everywhere; footprint 139/1000 + 12/47 + 7/19).  nueCC48 nue
+ledger: **two signal events recovered, none lost** — evt268067 (pr/51's own
+poster event) goes nue −15.0 → **+1.28** with its cosmict flag cleared 1→0,
+evt38856 goes −2.8 → **+4.3**; the three other nue changes stay on their side
+of zero.  Zero >1 cm vertex movers on nueCC48/NCpi0.  Wall/RSS medians
+unchanged (22–23 s, 1.47 GB).
+
+mcp1k, however, produced four adverse >1 cm movers — and they share one
+signature, visible in the sentinel line itself:
+
+```
+mvga: op3 stub-absorb ... nfit=4 overlap=0.75    (172090 0.00->1.68, 168614 0.00->1.53,
+                                                  286353 2.00->3.06, 285971 0.00->0.96)
+```
+
+Across ALL 143 Stage-C absorbs: 114 fired at overlap=1.00 (every adjudicated
+one clean), 21 at exactly (nfit=4, overlap=0.75) — the class containing every
+adverse mover.  A 4-point stub at 3/4 overlap is not a pure duplicate; it
+carries real charge, and deleting it shifts the op4 refit under the vertex.
+These enter through the **degeneracy gate** (`nfit <= mvga_stub_pts` = 4), so
+no overlap threshold alone can stop them.  Two existing-knob values close
+exactly this class and nothing else observed:
+
+- `mvga_dup_frac = 0.8` — the overlap gate now rejects 0.75;
+- `mvga_stub_pts = 3` — the degeneracy bypass no longer admits 4-point stubs.
+
+Verification arm (`work-pr85i-v2chk`, the 4 adverse + 4 clean-firing events):
+all three pure-adverse movers now 0.00 (no firing); 286353 drops to a 0.46 cm
+move (its 0.75-absorb is declined, a legitimate 151.0° interposed absorb
+remains); every clean firing survives — 280017's overlap=1.00 absorb, 48367's
+win (0.85→**0.00** on the click), 66272 and 174114 unchanged (174114's stub
+now removed by op1 at overlap=1.00: with `stub_pts=3` op1 no longer skips
+4-point segments — same removal, different op).
+
+Final operating point for the flip:
+```
+main_vertex_graph_audit = true
+mvga_satellite = 3.0
+mvga_interposed = true
+mvga_reseat_angle = 0     // absorb-only; both label-set re-seats were adverse (§10.4)
+mvga_stub = 2.5           // fitted by the §10.5 sweep
+mvga_dup_frac = 0.8       // §10.6: marginal-overlap absorbs are the adverse-mover class
+mvga_stub_pts = 3         // §10.6: closes the degeneracy bypass for 4-point stubs
+```
+(`vks_carry_prong` stays at its C++ default 0 = OFF.)
+
+### 10.7 Stage C round 2 (flip config) — PASS
+
+Fresh full-sample arms `work-*-pr85ion2` (1000 + 48 + 19 events, rc=0
+everywhere) at the §10.6 final operating point, vs the same `work-*-pr85ioff`
+baselines:
+
+- **Movers**: the four §10.6 adverse movers are gone (172090 / 168614 /
+  285971 move 0.00; 286353 down to 0.46 cm).  The only remaining >1 cm
+  movers with calib: 400504 (1.30 → **0.00** on the click), 348515 (an event
+  whose vertex is 55 cm off in both arms — noise on a lost event), 180801
+  (77 cm off in both arms, moves 1.0 cm *toward* the click).
+- **57-label census** (merged over the three on2 arms): stubs **95→42**,
+  interposed prongs **26→17**, CUT 9→9, STRADDLE 3→3; the single worse
+  tuple is the adjudicated §10.4 evt66272 op1 case; the three click-unmatch
+  events are the adjudicated benign clutter-removals.
+- **nueCC48**: the §10.6 recoveries persist (268067 nue −15.0 → +1.28 with
+  cosmict cleared; 38856 −2.8 → +4.3); no nue-positive event lost.
+- **Footprint**: mcp1k 126/1000, nueCC48 21/48, NCpi0 6/19 events differ
+  (mabc member hash).
+- **Tagger-flip ledger** (the §4-plan hand-check items, all in the Bee set):
+  cosmict 1→0 recoveries on 405234 + 268067; cosmict 0→1 on 169774 (vertex
+  already 11.8 cm off in both arms), 59753 / 62561 (no hand label, clean
+  overlap=1.00 absorbs), and **319611 — the one flagged concern: its vertex
+  sits exactly on the owner's click in both arms, an op1 dup-merge
+  (overlap=1.00, reconnects=1) removed a genuine duplicate, and the cosmic
+  tagger then flipped.  Bee idx 13; owner hand-check requested.**
+- **Runtime/RSS**: mcp1k medians 15 s / 1.15 GB (off) vs 16 s / 1.15 GB
+  (on2), p90 identical; small samples unchanged.
+- **Post-flip smoke**: after the production flip commit, a bare six-event
+  rerun (`work-pr85i-postflip`, no env overrides) is byte-identical to the
+  flip-config arms — 12/12 archives.
+
+### 10.8 Ship record
+
+- toolkit `apply-pointcloud`: `bc0227cb` (knobs, DEFAULT OFF) +
+  `412b4e93` (SBND production flip: `main_vertex_graph_audit=true,
+  mvga_satellite=3.0, mvga_interposed=true, mvga_reseat_angle=0,
+  mvga_stub=2.5, mvga_dup_frac=0.8, mvga_stub_pts=3`;
+  `vks_carry_prong` stays OFF).
+- wcp-porting-img `main`: this doc §10, `pr85_near_vertex_census.py`
+  `PR85_DUMP_ROOT` extension, `scripts/pr85_hash_gate.py`, runner envs
+  (`SBND_MVGA_INTERPOSED`, `SBND_MVGA_INTERPOSED_ANGLE`,
+  `SBND_VKS_CARRY_PRONG`, `SBND_MVGA_RESEAT_ANGLE`, `SBND_MVGA_STUB`,
+  `SBND_MVGA_DUP_FRAC`, `SBND_MVGA_STUB_PTS`), `docs/pr/85_bee.index.txt`.
+- Bee sets (18 events, index in `docs/pr/85_bee.index.txt`):
+  - before (production baseline):
+    https://www.phy.bnl.gov/twister/bee/set/bae7f8e2-5a56-439c-8d62-ea3c3b7145ba/event/list/
+  - after (flip config):
+    https://www.phy.bnl.gov/twister/bee/set/e1424225-d475-4e2b-a63d-ffa5e6e128b7/event/list/
+- Arms kept for re-checking: `work-pr85i-{q3,q12,all,q3x,q12x,v2chk,tr314838}`
+  (Stage A / attribution), `work-pr85i-{all57,cand57,s23,s25}` (Stage B +
+  sweep), `work-*-pr85ioff` / `work-*-pr85ion` / `work-*-pr85ion2`
+  (Gate 1 + Stage C), `work-pr85i-postflip` (smoke).
+  `work-pr85i-stub23` is an aborted partial launch — ignore it.
+
+### 10.9 Residuals and follow-ups
+
+- **Q3 `vks_carry_prong` ships OFF** with its §10.4 ledger; a future round
+  could revisit with a turn-strength floor (the one >1 cm adverse CARRY,
+  174114, had the weakest turn of the ten firings: 33.6°).
+- 278785's 2.21/2.25 cm stub chain survives every configuration — declined
+  by the overlap/collinearity gates, not the ceiling.
+- 314838 keeps one 82.5° stub: a genuine corner the collinearity gate is
+  designed to decline.
+- evt360535's degree-1 anchor class (§8.1's 149 events) remains its own
+  round.
+- evt66272 / evt319611: op1 side-effects flagged for owner hand-check
+  (Bee idx 16 / 13).
+- Mode 1a-CUT and 1b STRADDLE remain out of scope (§7 Q5).

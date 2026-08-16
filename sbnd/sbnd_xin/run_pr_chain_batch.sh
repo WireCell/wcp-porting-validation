@@ -792,6 +792,52 @@ fi
 if [ -n "${SBND_MVGA_SATELLITE:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_satellite=${SBND_MVGA_SATELLITE}")
 fi
+# doc pr/85: op3 stub-length ceiling (cm), for the Q4 sweep.  Numeric TLA,
+# unset/empty omits (C++ default 2.0).
+#   SBND_MVGA_STUB
+if [ -n "${SBND_MVGA_STUB:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_stub=${SBND_MVGA_STUB}")
+fi
+# doc pr/85: op1/op3 overlap-fraction gate and op3 point-degeneracy ceiling.
+# The pr/85 full-sample adjudication found every adverse >1 cm mover was a
+# terminal absorb at overlap=0.75 nfit=4 (admitted by the degeneracy gate)
+# while every clean absorb ran at overlap=1.00 -- 0.8/3 blocks exactly that
+# class.  Numeric TLAs, unset/empty omits (C++ defaults 0.7 / 4).
+#   SBND_MVGA_DUP_FRAC
+#   SBND_MVGA_STUB_PTS
+if [ -n "${SBND_MVGA_DUP_FRAC:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_dup_frac=${SBND_MVGA_DUP_FRAC}")
+fi
+if [ -n "${SBND_MVGA_STUB_PTS:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_stub_pts=${SBND_MVGA_STUB_PTS}")
+fi
+# doc pr/85: op3 re-seat collinearity threshold (deg).  0 DISABLES the
+# re-seat sub-case (absorb-only op3) -- the pr/85 mover adjudication found
+# both label-set re-seat firings moved the vertex OFF the owner's click
+# (280017: 1.64 cm, 314838: 0.60 cm).  Numeric TLA, unset/empty omits.
+#   SBND_MVGA_RESEAT_ANGLE
+if [ -n "${SBND_MVGA_RESEAT_ANGLE:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_reseat_angle=${SBND_MVGA_RESEAT_ANGLE}")
+fi
+# doc pr/85: op3 interposed-stub absorb at the main-vertex anchor (boolean;
+# inert unless main_vertex_graph_audit) + its far-end collinearity angle
+# (deg, C++ default 150).  Same contracts as the mvga knobs above.
+#   SBND_MVGA_INTERPOSED
+#   SBND_MVGA_INTERPOSED_ANGLE
+if [ -n "${SBND_MVGA_INTERPOSED:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_interposed=${SBND_MVGA_INTERPOSED}")
+fi
+if [ -n "${SBND_MVGA_INTERPOSED_ANGLE:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_interposed_angle=${SBND_MVGA_INTERPOSED_ANGLE}")
+fi
+# doc pr/85: carry the old vertex's arms through the snap residual below
+# this arc (cm).  Numeric TLA -- pass a bare cm value, e.g.
+# SBND_VKS_CARRY_PRONG=1.5.  Unset/empty omits the override (jsonnet
+# default null => byte-identical).
+#   SBND_VKS_CARRY_PRONG
+if [ -n "${SBND_VKS_CARRY_PRONG:-}" ]; then
+    CATH_TLA+=(--tla-code "vks_carry_prong=${SBND_VKS_CARRY_PRONG}")
+fi
 # doc pr/51 (18255-506746): DL rerank cross-cluster swap guard.  Boolean
 # TLA, same contract.
 #   SBND_DL_VTX_SWAP_GUARD

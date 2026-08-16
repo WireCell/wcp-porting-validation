@@ -1,0 +1,24 @@
+# doc pr/85 implementation-round bee sets (18 events; before = production
+# baseline / knobs off, after = flip config).  Sources: work-*-pr85ioff vs
+# work-*-pr85ion2 arms, ql layers from work-*-cb0805.
+# before: https://www.phy.bnl.gov/twister/bee/set/bae7f8e2-5a56-439c-8d62-ea3c3b7145ba/event/list/
+# after:  https://www.phy.bnl.gov/twister/bee/set/e1424225-d475-4e2b-a63d-ffa5e6e128b7/event/list/
+# bee_idx	event	why
+0	59685	pr/85 six: 1a-VIA, 103 cm prong behind a 1.18 cm stub -- cleaned
+1	280972	pr/85 six: both modes, 3 stubs -- cleaned
+2	360535	pr/85 six: degree-1 anchor, documented residual (unchanged)
+3	278785	pr/85 six: 2.25/2.21 cm stub chain, declined by overlap/angle gates (unchanged)
+4	437699	pr/85 six: deg-4 stub chain -- 1 of 2 absorbed
+5	314838	pr/85 six: reseat case; reseat now disabled, absorb only
+6	268067	nueCC48 RECOVERY: nue -15.0 -> +1.28, cosmict 1 -> 0 (pr/51's poster event)
+7	38856	nueCC48 RECOVERY: nue -2.8 -> +4.3
+8	400504	vertex mover: 1.30 cm -> 0.00 on the owner's click
+9	316025	vertex mover toward click + nue -4.3 -> -15
+10	353223	numu -1.20 -> +1.13 (also in the pr/83 set)
+11	349945	largest numu change: -0.92 -> +2.34
+12	170880	numu 0.55 -> -2.11, stub-cleanup event
+13	319611	COSMICT 0 -> 1 with vertex exactly on the click -- the one flagged concern, please hand-check
+14	405234	cosmict 1 -> 0 recovery
+15	174114	the Q3/CARRY adjudication case; ships with 0.25 cm move via op1
+16	66272	op1 dup-merge disconnect case (census CUT), please hand-check
+17	59753	cosmict 0 -> 1, no hand label, 0.84 cm absorb

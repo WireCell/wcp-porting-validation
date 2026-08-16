@@ -62,6 +62,21 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
 import baselines                                   # noqa: E402
 import vtx_io                                      # noqa: E402
 
+# pr/85 implementation round: PR85_DUMP_ROOT=<out_root> scores a re-run arm
+# (its pr_evt<N>/calib-pr-evt<N>.json dumps) at the same hand-scan clicks
+# instead of the deployed -ma10 dumps.  Unset (default) => identical to the
+# original census.  Events the arm did not run simply drop out (path None),
+# exactly like labels without a deployed dump.
+DUMP_ROOT = os.environ.get("PR85_DUMP_ROOT")
+
+
+def dump_path_of(label):
+    if DUMP_ROOT:
+        p = os.path.join(DUMP_ROOT, "pr_evt%d" % label["eventNo"],
+                         "calib-pr-evt%d.json" % label["eventNo"])
+        return p if os.path.exists(p) else None
+    return baselines.deployed_dump_path(label)
+
 TOUCH = 3.0        # cm, "this segment's charge is at the vertex"
 STUB = 3.0         # cm, a segment this short is clutter, not a prong
 LONG = 10.0        # cm, a prong this long is a real object and should be attached
@@ -217,7 +232,7 @@ def graph_path(dump, seg_of, src_vid, dst_vid, max_hops=6):
 # --------------------------------------------------------------------- rows
 def scan_one(label):
     """Every near-vertex measurement for one labelled event, or None."""
-    dump_path = baselines.deployed_dump_path(label)
+    dump_path = dump_path_of(label)
     with open(dump_path) as fh:
         dump = json.load(fh)
     click = label["truth"]
@@ -300,7 +315,7 @@ def scan_one(label):
 
 
 def rows():
-    labs = [L for L in vtx_io.load_labels() if baselines.deployed_dump_path(L)]
+    labs = [L for L in vtx_io.load_labels() if dump_path_of(L)]
     return labs, [scan_one(L) for L in labs]
 
 
