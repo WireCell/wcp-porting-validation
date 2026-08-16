@@ -11,15 +11,31 @@ ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TID
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
-                                 # 13 after the 2026-08-13 round (401 before it; 18 after
-                                 #   2026-08-11, 471 before it; 32 after 2026-08-05, 233
-                                 #   before it; 19 after the 2026-08-03 tidy round, 27
-                                 #   after the retirement round the same day, 138 before
-                                 #   it; 23 after 2026-08-02, 254 / 155 GiB before that,
-                                 #   15 after 2026-07-30)
+                                 # 18 after the 2026-08-16 round + its same-day
+                                 #   follow-up (216 before it, regrown from
+                                 #   08-13's 13); 13 after 2026-08-13 (401
+                                 #   before it; 18 after 2026-08-11, 471 before
+                                 #   it; 32 after 2026-08-05, 233 before it; 19
+                                 #   after the 2026-08-03 tidy round, 27 after
+                                 #   the retirement round the same day, 138
+                                 #   before it; 23 after 2026-08-02, 254 / 155
+                                 #   GiB before that, 15 after 2026-07-30)
 du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-                                 # 20G after the 2026-08-13 round (74G before it;
-                                 #   23G after 2026-08-11, 103G before it)
+                                 # 23G after the 2026-08-16 round + follow-up
+                                 #   (158G before it; 20G after 2026-08-13,
+                                 #   74G before it; 23G after 2026-08-11, 103G
+                                 #   before it)
+
+# the 2026-08-16 retirement round + same-day follow-up (see that section below):
+python3 scripts/retire/plan_20260816.py           # explicit 27-name KEEP + 7 asserts
+RETIRE_JOBS=24 python3 scripts/retire/archive_records_20260816.py  # integrity PASS 189/189
+scripts/retire/retire_20260816.sh A               # dry run of the removal list
+python3 scripts/retire/thin_dlruns_20260816.py    # dl_vtx_training/runs *.pth sweep, dry run
+python3 scripts/retire/preserve_and_drop_campaigns_20260816.py  # 3 old archives, dry run
+python3 scripts/retire/followup2_20260816.py      # same-day "latest+input only" trim, dry run
+cat scripts/retire/state-20260816/removed.tsv          # work* sweep, what was ACTUALLY removed
+cat scripts/retire/state-20260816/dlruns-removed.tsv    # dl_vtx_training *.pth, what went
+cat scripts/retire/state-20260816/followup2-removed.tsv # follow-up trim, what went
 
 # the 2026-08-13 retirement round (see that section below):
 python3 scripts/retire/plan_20260813.py           # explicit 13-name KEEP + 6 asserts
@@ -115,6 +131,181 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-16 — the pr/79-86 campaign sweep, 158G → 23G
+
+**STATUS: EXECUTED, in two stages.** Stage 1 (the planned round):
+`CONFIRM=yes retire_20260816.sh A` — 189 dirs / 69.76 GiB removed from
+`work-*`, archive integrity **PASS 189/189**; `thin_dlruns_20260816.py`
+dropped 2195 `.pth` / 58.81 GiB from `dl_vtx_training/runs`;
+`preserve_and_drop_campaigns_20260816.py` preserved 22 `nusel_labels/` trees
+(verified byte-identical) then dropped the three old campaign archives, 3.2
+GiB. Stage 2, same day, owner-requested follow-up: `followup2_20260816.py`
+archived-then-dropped 9 more `work-*` dirs, 3.98 GiB. **Broken symlinks 0
+before and after every step; no git-tracked file deleted; every deletion
+archived and integrity-checked first.** `sbnd_xin` **158G → 23G**, `work-*`
+**216 → 18** dirs. Full campaign account: **doc pr/86** (this round is
+housekeeping, not a new investigation — no new doc number spent).
+
+### Why this round exists
+
+The pr/79 (dl_vtx_harvest deployment), pr/83 (`break_seg_orient`), pr/85
+(interposed stub) and pr/86 (interposed splice, two rounds — §14 and §15)
+campaigns regrew the tree from the 08-13 round's 13 survivors / 20G to 216
+`work-*` dirs / 158G in three days, and the pr/77-81 DL-vertex fine-tune
+campaign left 2194 per-epoch checkpoints (59G) that 08-13 never had to
+account for.
+
+### Stage 1 — the same three-requirement shape as every prior round
+
+KEEP started at 27 names (17.0 GiB), driven by three owner requirements
+(hand-scan results, the live display, latest production), not just
+infrastructure:
+
+- **Infrastructure** (13 names, unchanged rationale from 08-13): 5 imaging
+  hubs + 5 `-cb0805` Q/L hubs (**verified this round**: every existing PR
+  arm, including the newest, reads
+  `reading file=.../work-<s>-cb0805/ql_evt<N>/pctree-evt<N>.tar.gz` — the
+  hubs remain the PR chain's live input) + `work-tfix388-r9` +
+  `work-stmcamp-d66new` + `work-nuecc48-prsmoke2`.
+- **Hand scan + live display** (8 names): `vertex_labels/` (483 labels, 6
+  tags) records `source` inside a `-prod0813` arm for every label;
+  `baselines.py:36 deployed_dump_path()` resolves exactly 473 dumps
+  (407+47+19) through the three *plain* `-ma10` arms (the 12
+  `-ma10ft2u`/`-ma10-k20`/`-ma10k20-harv*` variants are unreachable from the
+  label loader and were never kept); `work-r1qlmc-prod0813` +
+  `work-r2mc-prod0813` are **live on bokeh :5017/:5018**.
+- **Latest production** (6 names): `work-{mcp1k,nuecc48,ncpi0}-pr87ion3` =
+  doc pr/86 §15 knobs-on at the config that became SBND production (toolkit
+  `771f075b`); `work-pr87-postflip-{mcp1k,nuecc48,ncpi0}` (21 events) is the
+  **only physical evidence** the shipped jsonnet reproduces `pr87ion3` — §15.4
+  asserts "42/42 archives ≡ pr87ion3" but never names the arm. Verified
+  independently this round: the round-2 sentinel `mvga: op3
+  splice-straighten cluster=9 carried=2 straightened=2 reach=10.65cm`
+  appears identically in `work-nuecc48-pr87ion3` and
+  `work-pr87-postflip-nuecc48`, absent from `pr87off7`/`pr86ion`/`prod0813`.
+
+**The `PROTECTED.txt` near-miss.** `plan_20260813.py` parsed `PROTECTED.txt`
+into `PROT_LISTED` but only ever printed it (`RELEASED = PROT_LISTED - KEEP`)
+or intersected it with `KEEP` for the driver's interlock 3 — `tier()` never
+consulted it. `PROTECTED.txt` was edited *after* the 08-13 round ran, adding
+five `prod0813` lines; a straight fork of that plan script would have printed
+all five as "RELEASED" and swept them. Fix: `plan_20260816.py` adds **ASSERT
+7**, a read-only check that `PROT_LISTED - KEEP` is empty — deliberately not
+a `tier()` refactor, so the script deleting 189 dirs wasn't also exercising a
+rewritten classifier for the first time. All 7 asserts PASSed; ASSERT 7
+specifically: `0 -- PASS (6 PROTECTED.txt names, all in KEEP)`.
+
+**`dl_vtx_training/runs` — every trained arm checked against its doc verdict,
+all rejected.** 20 large training arms (2.9–4.9 GiB each) span the whole
+pr/77-81 campaign. Checked each: `ft0/ft1/ft1hn/ft1ps` (round 1, pr/77 §8e —
+"ft1hn ≡ ft1 on every out-of-fold metric", hard-negative machinery inert);
+`ft2/ft2m3/ft2c9b*/ft2hn/ft2w` (round 3, pr/78 — "ft2 is bit-inert: every one
+of the 378 events identical to baseline"); `ft2u`/`ft2u-deploy` (the one arm
+staged for deployment; pr/79 §3: "REJECTED, −40/473 marginal live");
+`hft1`/`hft1-deploy` (pr/79 §11: "NEGATIVE, no live A/B, no flip");
+`hr1`/`hr2`/`hr3`/`hr3-deploy` (pr/81 round 2 — hr1 FAIL, hr2 FAIL, hr3 "pass
+(marginal)" on OOF but deploy screen −3, "nothing ships now"). **Nothing from
+the entire fine-tune campaign is in SBND production** — what shipped is two
+knobs (`dl_vtx_min_accept_score` 4→10, `dl_vtx_harvest` recording-only),
+neither reads a checkpoint. Owner-confirmed: dropped **all** 2195 `.pth`
+files (58.81 GiB), kept every `config.json`/`*.log`/`*.tsv`/`*.json` (2.3
+MiB) — every number the docs quote survives; only the ability to reload a
+rejected net without retraining is lost, and nothing rejected needs
+reloading.
+
+**The three old campaign archives** (`tgm-docs29-39`, `aborted-d54`,
+`stm-docs40-49`, 1.25 GiB after Stage 1's `work-*` sweep) held 22
+`nusel_labels/` trees with no other copy. `preserve_and_drop_campaigns_20260816.py`
+copied all 22 to `archive/records/labels/<campaign>/<tag>/`, verified
+byte-identity with `filecmp.dircmp` on every one, **then and only then**
+removed the three archives.
+
+### Stage 2 — same-day follow-up: "only the latest one, plus input to achieve it"
+
+After Stage 1 landed at 27G, the owner asked to reduce `work-*` further:
+keep, per sample, only the single latest production arm and the Q/L/imaging
+input that built it — narrower than Stage 1's three-requirement KEEP.
+`work-{mcp1k,nuecc48,ncpi0}-pr87ion3`'s input is the `-cb0805`/`-img` hubs
+(already KEEP), which makes three families no longer "latest or input":
+
+```
+work-{mcp1k,nuecc48,ncpi0}-prod0813        the prior production reference
+work-{mcp1k,nuecc48,ncpi0}-ma10            DL-vertex deployed-baseline arm
+work-pr87-postflip-{mcp1k,nuecc48,ncpi0}   the byte-identity proof arm
+```
+
+`work-{r1qlmc,r2mc}-prod0813` are **unchanged** — `-prod0813` *is* their
+latest (no pr83/85/86/87 arm exists for either), and both are live on the
+bokeh viewers.
+
+**Trade-off, confirmed with the owner before running:** 481 of 483 vertex
+hand-scan labels have `source` inside a `-prod0813` dump for these three
+samples. The label JSON itself is self-contained (`main_vertex`, `picks[]`,
+scores — the same precedent already established when `uitest75`/`vtxscan1`'s
+arm, `work-prdisp-vtx48`, was lost earlier) and **survives**, but the
+underlying calib dump those scans were made against does not — no more
+re-rendering `pr85_panels2d.py` / `pr86_kink_census.py` against those
+events. `baselines.deployed_dump_path()` stops resolving, so the 473-event
+DL-vertex analysis set (docs pr/77-81) is no longer re-derivable; the
+already-built `dl_vtx_training/data/*` snapshots (kept, 20M) still back
+every number those docs quote.
+
+Safety checks run and PASSed before `followup2_20260816.py` touched
+anything: 0 git-tracked files inside the 9 dirs, 0 `nusel_labels`/`ql_labels`
+dirs inside them, 0 symlinks anywhere in the tree pointing into them, and
+both live viewers reference only `r1qlmc`/`r2mc-prod0813` (confirmed by
+reading the actual `pgrep` process lines, not a substring match against the
+shell's own command). Same archive-then-delete pattern as Stage 1: record
+layer archived to `archive/records/pr79-86-era-20260816/<group>/` and
+integrity-verified before `rm -rf`.
+
+### The measured 23G arithmetic
+
+`work-*` 88G → **13G** (18 dirs) + `dl_vtx_training` 59G → **26M** +
+`archive/` 8.1G → **7.3G** (three old campaigns dropped, `records/` kept
+whole and grew by the new era's 401M) + `input_files_reco1` 1.9G (untouched,
+input data) + `bee/` 0.7G (untouched) + misc 0.2G = **23G**, measured, not
+projected.
+
+### Known cost, stated rather than silently absorbed
+
+- **~78 arms have no textual record anywhere** beyond doc pr/86's
+  collective/ledger prose (set-diff of the pre-round `ls -1d work-*` against
+  every mention in `docs/`, `scripts/`, `*.sh`, `*.py`): the 15
+  `work-*-pr87off{2..6}` v2–v6 knobs-off gates, the 36 `work-pr86r2{a..l}-*`
+  round-2 iteration arms, the 9 `work-pr86b{1s5,2s8,3c10}-*` and 12
+  `work-pr86b-l{5,10}a{130,150}-*` sweep grids, plus assorted pr83/pr85
+  probes. Doc pr/86 §15.3's "iteration ledger (8 binaries; every intermediate
+  arm left in place)" names no per-binary label, so the ledger's rows lose
+  their arms — accepted, the verdicts are in the doc and the adopted point
+  (5/15/1.0) survives as `pr87ion3`.
+- `work-*-pr86ioff` (2 dirs, aborted partial arms — doc pr/86 §14.7 says to
+  ignore them) and the five `work-*-pr85ion2` arms (doc pr/85's epoch, its
+  gate PASS is now the only surviving record) retired with no loss beyond
+  what the docs already absorbed.
+- **Stage 2's cost** (vertex-scan dumps and the DL-vertex analysis set for
+  mcp1k/nuecc48/ncpi0) is above, and is a deliberate narrowing of Stage 1's
+  KEEP, not an oversight.
+- `scripts/analysis/pr57/oc56_truth.py`'s `DEFAULT_ARMS` situation
+  (unresolved since 08-13) is unchanged by this round.
+
+### `PROTECTED.txt` — rewritten for the new state
+
+`work-{mcp1k,nuecc48,ncpi0}-prod0813` and `work-{r1qlmc,r2mc}-prod0813` moved
+from the RETIRED-eligible set to a **RETIRED** note (mcp1k/nuecc48/ncpi0, now
+actually gone) vs kept live (r1qlmc/r2mc, still current). `pr87ion3` and
+`pr87-postflip-*` (mcp1k/nuecc48/ncpi0 only) added as real tab-delimited
+lines so the *next* round's ASSERT 7 sees them too — closing the exact gap
+this round's ASSERT 7 was written to catch.
+
+### Gate labels for future re-checks
+
+`scripts/retire/state-20260816/{plan.json,removed.tsv,dlruns-removed.tsv,followup2-removed.tsv}`,
+`scripts/retire/tierA_20260816.txt`,
+`archive/records/pr79-86-era-20260816/<group>/<tag>.{tar.gz,links.txt,manifest.tsv}`
+(198 arms total across both stages), `archive/records/labels/{tgm-docs29-39,stm-docs40-49}/<tag>/nusel_labels/`
+(22 trees, verified byte-identical to their pre-removal originals).
 
 ## RETIREMENT ROUND 2026-08-13 — the pr/66-75 campaign sweep, 74G → 20G
 

@@ -1,0 +1,12 @@
+# followup2_20260816.py -- latest+input trim, owner-confirmed
+# wcp-porting-img HEAD f80005b
+dir	group	bytes	archive_tarball	dir_mtime
+work-mcp1k-ma10	ma10-family	1702439051	work-mcp1k-ma10.tar.gz	2026-08-15T06:37:59-07:00
+work-mcp1k-prod0813	prod0813-arms	1743874914	work-mcp1k-prod0813.tar.gz	2026-08-13T20:42:44-07:00
+work-ncpi0-ma10	ma10-family	98561116	work-ncpi0-ma10.tar.gz	2026-08-15T06:31:49-07:00
+work-ncpi0-prod0813	prod0813-arms	98558562	work-ncpi0-prod0813.tar.gz	2026-08-13T20:31:36-07:00
+work-nuecc48-ma10	ma10-family	267213155	work-nuecc48-ma10.tar.gz	2026-08-15T06:31:13-07:00
+work-nuecc48-prod0813	prod0813-arms	263554747	work-nuecc48-prod0813.tar.gz	2026-08-13T20:31:08-07:00
+work-pr87-postflip-mcp1k	pr87-postflip	42071218	work-pr87-postflip-mcp1k.tar.gz	2026-08-16T00:44:26-07:00
+work-pr87-postflip-ncpi0	pr87-postflip	11542273	work-pr87-postflip-ncpi0.tar.gz	2026-08-16T00:44:41-07:00
+work-pr87-postflip-nuecc48	pr87-postflip	47130517	work-pr87-postflip-nuecc48.tar.gz	2026-08-16T00:44:12-07:00

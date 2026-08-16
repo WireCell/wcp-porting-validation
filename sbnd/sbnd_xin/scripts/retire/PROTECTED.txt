@@ -29,19 +29,51 @@
 
 work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protection and it is not reproducible from any surviving input	doc pr/28 sec.15.9
 
-# --- the prod0813 reference family (added 2026-08-13) ---------------------
-# Current production is toolkit 1e534c6f (80eeb592 + the pr/75 vertex_scoreboard
-# merge).  These are the PR arms every current Bee set and the live 5017 vertex
-# hand scan are built from, and -- unlike the 2026-08-11 family, which was
-# listed only as a comment and therefore invisible to the parser -- they are
-# name-protected here, tab-delimited, so a future round's plan script actually
-# sees them.  The five work-*-cb0805 Q/L hubs they read are protected by
-# plan_20260813.py's KEEP_WHY dict instead (they are campaign INPUT, not a
-# reference arm).
-work-nuecc48-prod0813 work-ncpi0-prod0813 work-mcp1k-prod0813	current-production PR reference; the three Bee sets and the vertex hand scan are built from these	doc pr/76, bee/prod0813/
-work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the same campaign; only surviving PR products for either MC sample	doc pr/76
+# --- the pr87ion3 reference family (added 2026-08-16) ----------------------
+# Current production is toolkit 771f075b (doc pr/86 sec.15, the owner flip).
+# work-{mcp1k,nuecc48,ncpi0}-pr87ion3 is the knobs-on arm at exactly that
+# config -- name-protected here for the same reason the 2026-08-13 prod0813
+# family was: so the NEXT round's ASSERT 7 (plan_20260816.py) sees it and
+# cannot silently sweep it the way the 2026-08-11 family almost was.  The
+# work-{mcp1k,nuecc48,ncpi0}-cb0805 Q/L hubs it reads are protected by
+# KEEP_WHY instead (campaign INPUT, not a reference arm).  Note:
+# work-pr87-postflip-{mcp1k,nuecc48,ncpi0} -- the 21-event byte-identity
+# proof this arm rests on -- is itself RETIRED as of the SAME DAY's follow-up
+# round; see below.  Its claim ("42/42 archives == pr87ion3", doc sec.15.4)
+# is not re-verifiable on disk any more, only in the doc text.
+work-mcp1k-pr87ion3 work-nuecc48-pr87ion3 work-ncpi0-pr87ion3	current-production PR reference (toolkit 771f075b)	doc pr/86 sec.15
+
+# --- the r1qlmc/r2mc prod0813 family (added 2026-08-13, still active) -----
+# No pr83/85/86/87 arm exists for either MC sample -- prod0813 remains their
+# latest and only PR product.  Also LIVE on the bokeh viewers, ports 5017/5018.
+work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 campaign; only surviving PR products for either MC sample; LIVE on bokeh :5017/:5018	doc pr/76
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+# 2026-08-16 -- work-{mcp1k,nuecc48,ncpi0}-prod0813 and the three plain
+# -ma10 arms, SUPERSEDED / narrowed by owner request.
+#
+# The 2026-08-13 prod0813 family above named all five -prod0813 arms.  Same
+# day as the pr87ion3 round, the owner asked to narrow work* further to "only
+# the latest one, as well as input to achieve it" per sample.  pr87ion3 is
+# the latest for mcp1k/nuecc48/ncpi0 and its input is the cb0805/img hubs
+# (already KEEP), so -prod0813 and -ma10 for those three samples are no
+# longer "latest or input" and retired here (followup2_20260816.py, archived
+# to archive/records/pr79-86-era-20260816/{prod0813-arms,ma10-family}/).
+# r1qlmc/r2mc-prod0813 are UNCHANGED -- see the active entry above.
+#
+# COST, owner-confirmed before running: 481 of 483 vertex_labels/ entries
+# have `source` inside one of these -prod0813 dumps; the label JSON itself
+# (main_vertex, picks[], scores) is self-contained and survives, but the
+# underlying calib dump those scans were made against does not -- no more
+# re-rendering pr85_panels2d.py / pr86_kink_census.py against those events.
+# baselines.py's deployed_dump_path() (which rewrote -prod0813 -> -ma10) no
+# longer resolves, so the 473-event DL-vertex analysis set (docs pr/77-81) is
+# not re-derivable; the already-built dl_vtx_training/data/* snapshots still
+# back every number those docs quote.
+#
+# work-mcp1k-prod0813 work-nuecc48-prod0813 work-ncpi0-prod0813	SUPERSEDED by work-*-pr87ion3; vertex_labels/ source is now unopenable for these events, labels themselves survive	doc pr/86 sec.15, docs/work-tags.md 2026-08-16
+# work-mcp1k-ma10 work-nuecc48-ma10 work-ncpi0-ma10	SUPERSEDED by work-*-pr87ion3; baselines.deployed_dump_path() no longer resolves	docs/pr/77-81, docs/work-tags.md 2026-08-16
+# work-pr87-postflip-mcp1k work-pr87-postflip-nuecc48 work-pr87-postflip-ncpi0	the 21-event proof pr87ion3 == bare production; dropped in the SAME follow-up round as "not latest or input" -- the claim survives only in doc pr/86 sec.15.4 text now, not on disk	doc pr/86 sec.15.4, docs/work-tags.md 2026-08-16
 # 2026-08-13 -- the 2026-08-11 reference family, SUPERSEDED.
 #
 # work-pr64r4-{on48,on19,on1k} (current-production PR reference / Bee sources)
