@@ -59,6 +59,15 @@ TAGS_HARV3 = ["vtxscan-harv3-nuecc48", "vtxscan-harv3-ncpi0",
 # training by the doc pr/88 sec 7 gate (39/40 = 97.5%), not by a human.
 TAGS_MCP2K = ["vtxscan-mcp2k"]
 
+# doc pr/88 sec 8.6: the 299 gated auto-accept picks, materialised as labels
+# so `build_dataset.py` can read them at all.  A SEPARATE tag on purpose --
+# these are AI-scanner picks admitted by the sec 7 gate (39/40 = 97.5%), not
+# events a human looked at, and every record carries `label_source:
+# "ai-scanner"` so the distinction survives being pooled into a --tags line.
+# The 40 calibration events are NOT here: the owner labelled them, the scanner
+# was wrong on one, and the owner's pick wins.
+TAGS_MCP2K_AUTO = ["vtxscan-mcp2k-auto"]
+
 TOL = 1.0            # cm, the pr/78/79 headline tolerance
 TOL_LOOSE = 3.0      # cm, the column printed beside it
 

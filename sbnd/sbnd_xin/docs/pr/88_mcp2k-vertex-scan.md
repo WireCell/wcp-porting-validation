@@ -609,16 +609,32 @@ Quote the right column for whatever you build: the 473 was never filtered, so
 the old number and the new one are not the same kind of thing until both go
 through `--drop-unscannable`.
 
-Verified consumable:
+Verified consumable — **the whole mcp2k half, 516 events**, after §8.6:
 
 ```
-python3 dl_vtx_training/build_dataset.py --name pr88_dotstest \
-    --tags vtxscan-mcp2k \
-    --harvest-roots vtxscan-mcp2k=work-mcp2k-harv3 --drop-unscannable
-→ wrote 217 events (99 corrective, 118 confirming)
+python3 dl_vtx_training/build_dataset.py --name pr88_pool_mcp2k \
+    --tags vtxscan-mcp2k vtxscan-mcp2k-auto \
+    --harvest-roots vtxscan-mcp2k=work-mcp2k-harv3 \
+                    vtxscan-mcp2k-auto=work-mcp2k-harv3 --drop-unscannable
+→ wrote 516 events (101 corrective, 415 confirming)
   "only dots" events (longest fitted segment < 5.0 cm): 2 DROPPED
     evt102247 evt177360
 ```
+
+The two dropped events are precisely `evt102247` (2.4 cm) and `evt177360`
+(3.5 cm), the two that `scannability.py`'s docstring names as the known cost
+of the 5 cm operating point — an independent confirmation that the duplicated
+cut in `build_dataset.py` agrees with the original.
+
+Two traps in that command line. The `--harvest-roots` key is the **scan tag**,
+not the arm name — `calib_path_in_roots` does `roots.get(label['scan_tag'])`
+and returns `None` for a wrong key, which surfaces as a `TypeError` deep in
+`load_calib` rather than as an error naming the key. And `corrective` in the
+manifest is `dis_to_main > 1e-9`, *any* nonzero separation rather than the
+1 cm tolerance, so 2 of the 299 auto labels are counted corrective despite
+agreeing with the reconstruction inside tolerance — a reporting column, not a
+training input, but do not read 101 as "101 events where the reconstruction
+was wrong".
 
 Two notes on that command. The `--harvest-roots` key is the **scan tag**
 (`vtxscan-mcp2k=`), not the arm name — `calib_path_in_roots` does
@@ -628,6 +644,54 @@ the key. And the two dropped events are precisely `evt102247` (2.4 cm) and
 `evt177360` (3.5 cm), the two that `scannability.py`'s docstring names as the
 known cost of the 5 cm operating point — an independent confirmation that the
 duplicated cut in `build_dataset.py` agrees with the original.
+
+### 8.6 The gated auto-accepts existed only as review rows
+
+The §7 gate admitted the 341-event auto-accept tier. Nothing could consume
+it. `build_dataset.py` loads labels through `iter_labels`, which globs
+`vertex_labels/<tag>/labels-evt*.json` — and an auto-accept pick has no such
+file; it is a row in a wave's `review.json` and nothing else.
+`vtx_io.TAGS_MCP2K`'s own comment says so plainly ("the other 339 mcp2k
+labels are auto-accepted scanner picks and live in the scan run dirs, not
+here") without drawing the consequence: **the round's headline pool of 993
+was, at that point, 217 events a trainer could actually load.** A gate that
+admits labels nothing can read has not delivered labels.
+
+`vtx_rules/materialize_auto_labels.py` closes it — 341 rows → **299** label
+files under the fresh tag `vtxscan-mcp2k-auto`:
+
+```
+auto-accept rows: 341
+  skipped 40 already labelled by the owner (owner's pick wins)
+  skipped  2 'only dots'
+wrote 299 labels
+```
+
+Three deliberate properties:
+
+- **A separate tag, and provenance inside every record.** These are
+  AI-scanner picks admitted by a statistical gate, not human labels. Each
+  carries `label_source: "ai-scanner"`, the `label_gate` string naming the
+  39/40 measurement, the scanner's confidence and its stated reasoning. Tag
+  name alone is too easy to lose in a `--tags` line.
+- **The owner's label always wins**, enforced by event id rather than by tag
+  precedence. The 40 calibration events are in *both* sets and **the scanner
+  was wrong on one of them**; writing an auto label for a calibration event
+  would silently reintroduce that error and leave two label files for one
+  event. `TAGS_MCP2K`'s "disjoint events, so pooling cannot duplicate a key"
+  reasoning stops holding the moment a second tag exists.
+- **Never overwrites** (M13): an existing destination file is an error, not
+  an update.
+
+**Still open for the combined 976 build.** `vtxscan-harv3-delta` spans two
+arms (19 events on `work-mcp1k-harv3`, 5 on `work-nuecc48-harv3`), and
+`--harvest-roots` maps *one* root per tag while ignoring the label's own
+recorded arm. So the mcp2k half (516) builds and the current-epoch half (460)
+does not, in one invocation. Today this fails loudly — none of the 5 nuecc48
+event ids exists under the mcp1k arm, so it is a `FileNotFoundError` — but
+the mechanism is silent by construction: an id present in both arms would
+load the wrong event's dump against the right label. That is the training
+round's fix to make (pr/82 §6), not this round's.
 
 ### 8.3 The dots filter had no caller on the training path
 
