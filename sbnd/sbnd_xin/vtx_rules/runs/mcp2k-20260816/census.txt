@@ -16,3 +16,9 @@ unserved residue (612):
   auto-accept         301  scannable  299
 
 HIGH-YIELD RESIDUE (instalment 7): 24
+
+--- after instalment 7 (2026-08-16) ---
+owner labels: 242
+  corrective 112 (46.3%)
+  served 257, declined 15
+combined training snapshot: data/pr88_pool_combined, 999 events

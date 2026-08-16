@@ -36,6 +36,7 @@ MANIFEST_COLS = ['evt', 'tag', 'arm', 'runNo', 'subRunNo', 'n_cloud',
                  'n_vtx_points', 'n_seg_points', 'n_invalid_fit',
                  'truth_x', 'truth_y', 'truth_z', 'pick_kind',
                  'not_a_candidate', 'dis_to_main', 'corrective',
+                 'label_source',
                  'sample', 'numu_score', 'prod_x', 'prod_y', 'prod_z',
                  'lockbox', 'label_saved_utc', 'label_mtime', 'npz']
 
@@ -182,6 +183,7 @@ def main():
 
     rows = []
     n_dots = []
+    written = {}
     for label in vio.iter_labels(args.sbnd_root, args.tags):
         evt = label['eventNo']
         if keep_events is not None and evt not in keep_events:
@@ -190,7 +192,8 @@ def main():
                 and evt not in numu_set:
             continue
         if harvest_roots is not None:
-            calib_path = vio.calib_path_in_roots(harvest_roots, label)
+            calib_path = vio.calib_path_in_roots(harvest_roots, label,
+                                                 args.sbnd_root)
             calib = vio.load_calib(calib_path)
             xyz, q, info = harvest_cloud(calib, evt)
         else:
@@ -219,11 +222,27 @@ def main():
             sample = vio.sample_of_label(label, numu_set, numu_name)
         nscore = numu_scores.get(evt)
         npz = 'evt%d.npz' % evt
+        # doc pr/88 §8.7: the npz name is the event number ALONE, no tag.
+        # Pooling tags across arms is therefore one id collision away from a
+        # silent overwrite -- two manifest rows, one npz, the second label's
+        # cloud sitting under the first label's truth.  vtx_io.load_labels
+        # guards this in its own key ("eventNo alone is one collision from
+        # wrong"); nothing guarded it here.  Checked BEFORE savez, because
+        # after the write the evidence is gone: a silently halved dataset
+        # trains fine and scores wrong.
+        if npz in written:
+            print('EVENT ID COLLISION: %s written by both tag=%s and tag=%s. '
+                  'The second write would overwrite the first silently; '
+                  'disambiguate the npz name before pooling these tags.'
+                  % (npz, written[npz], label['scan_tag']))
+            return 1
+        written[npz] = label['scan_tag']
         np.savez_compressed(
             os.path.join(out_dir, npz),
             xyz=xyz, q=q, truth_xyz=truth, prod_xyz=prod,
             eventNo=evt, runNo=label['runNo'] or -1, subRunNo=label['subRunNo'] or -1,
             arm=str(label['arm']), scan_tag=str(label['scan_tag']),
+            label_source=str(label['label_source']),
             pick_kind=str(label['pick_kind']),
             not_a_candidate=label['not_a_candidate'],
             dis_to_main=-1.0 if dis is None else float(dis),
@@ -239,6 +258,7 @@ def main():
             truth_x='%.6f' % truth[0], truth_y='%.6f' % truth[1],
             truth_z='%.6f' % truth[2], pick_kind=label['pick_kind'],
             not_a_candidate=int(label['not_a_candidate']),
+            label_source=label['label_source'],
             dis_to_main='%.4f' % (-1.0 if dis is None else dis),
             corrective=int(dis is not None and dis > 1e-9),
             sample=sample,

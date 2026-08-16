@@ -74,6 +74,12 @@ def load_label(path):
         eventNo=doc['eventNo'], runNo=doc.get('runNo'), subRunNo=doc.get('subRunNo'),
         arm=doc.get('arm'), scan_tag=doc.get('scan_tag'), saved_utc=doc.get('saved_utc'),
         source=doc.get('source'), confidence=doc.get('confidence'),
+        # doc pr/88 §8.6: 'human' unless the record says otherwise.  Carried
+        # all the way into the manifest and the npz because the tag name is
+        # the only other thing that distinguishes an AI-scanner pick admitted
+        # by a gate from an event a human actually looked at, and a tag name
+        # does not survive being pooled into a --tags line.
+        label_source=doc.get('label_source') or 'human',
         not_a_candidate=bool(doc.get('not_a_candidate', False)),
         truth_xyz=np.array([p1['x'], p1['y'], p1['z']], dtype=np.float32),
         pick_kind=p1.get('kind'), pick_vertex_id=p1.get('vertex_id'),
@@ -120,13 +126,38 @@ def parse_arm_roots(pairs, sbnd_root):
     return out
 
 
-def calib_path_in_roots(roots, label):
+BY_LABEL_ARM = '@arm'
+
+
+def calib_path_in_roots(roots, label, sbnd_root=None):
     """Calib path for a label inside an explicit arm root (ignoring the
-    label's recorded source arm)."""
+    label's recorded source arm).
+
+    doc pr/88 §8.6: a tag maps to ONE root, which `vtxscan-harv3-delta`
+    breaks -- it holds 19 events on `work-mcp1k-harv3` and 5 on
+    `work-nuecc48-harv3`, because it is the tag for events a human
+    re-answered wherever they lived.  Mapping it to either arm alone raises
+    FileNotFoundError today (no event id is present in both), but the
+    mechanism is silent by construction: an id in both arms would load the
+    wrong event's dump against the right label.
+
+    So a tag may map to the literal `@arm`, meaning "resolve from the
+    label's own recorded arm".  It is OPT-IN PER TAG on purpose.  Forcing an
+    explicit arm is the whole point of harvest mode everywhere else -- doc
+    pr/79 §11 exists because labels taken on one arm must be paired with
+    dumps from the arm the live net actually saw (the F2 trap, pr/80 §..).
+    Making per-label arms the default would quietly reintroduce exactly the
+    mismatch this mode was built to prevent."""
     root = roots.get(label['scan_tag']) or roots.get(None)
     if root is None:
         return None
     evt = label['eventNo']
+    if os.path.basename(root) == BY_LABEL_ARM:
+        arm = label.get('arm')
+        if not arm:
+            raise ValueError('evt%d: tag %s maps to %s but the label records '
+                             'no arm' % (evt, label['scan_tag'], BY_LABEL_ARM))
+        root = os.path.join(sbnd_root or os.path.dirname(root), arm)
     return os.path.join(root, 'pr_evt%d' % evt, 'calib-pr-evt%d.json' % evt)
 
 

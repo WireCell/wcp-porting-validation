@@ -46,14 +46,14 @@ before the owner scanned. 39/39 excluding the one Tier-D event, but 97.5% is
 the number of record. The 341-event auto-accept tier is admitted to training
 on this gate, not on a human's say-so.
 
-**Scanner confidence, on 174 owner labels** (doc pr/88 sec 7.1): certain
+**Scanner confidence, on the 174 owner labels available when it was measured** (doc pr/88 sec 7.1): certain
 86.4% / likely 35.0% / unclear 14.6%. Steeper than pr/80's, and the reason
 `likely`/`unclear` are not admitted as labels.
 
 ## Owner review
 
-219 labels over six port-5017 instalments (233 served, 14 declined), **100
-corrective (45.7%)** against a ~21% base rate. Yield by tier:
+242 labels over SEVEN port-5017 instalments (257 served, 15 declined), **112
+corrective (46.3%)** against a ~21% base rate. Yield by tier:
 
 ```
 REVIEW FIRST      70-100%      abstained     67%
@@ -91,3 +91,11 @@ their precision is unmeasured. Admitting them would add confirming labels
 only; whether that is worth 40 owner-minutes of calibration depends on
 whether confirming volume is the training constraint, which the 339
 just-admitted auto-accepts will answer for free.
+
+## The training input
+
+`dl_vtx_training/data/pr88_pool_combined/` — **999 events** (213 corrective,
+786 confirming; 700 human, 299 AI-scanner), built from all six tags across
+four arms with `--drop-unscannable`. Provenance and the two open questions
+(no lockbox drawn; 449 unvalidated carried labels) travel with the snapshot
+in its `PROVENANCE.md`, and the build is doc pr/88 §8.7.

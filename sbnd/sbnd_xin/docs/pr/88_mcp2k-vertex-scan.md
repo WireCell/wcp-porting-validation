@@ -1,10 +1,9 @@
 # doc pr/88 — hand-scanning the mcp2k vertices with the round-3 kit
 
-**Status: IN PROGRESS.** Phases 0–2 complete and recorded below; Phase 3
-(the owner's port-5017 pile) and Phase 4 (the auto-accept calibration fork)
-are pending. No C++, no jsonnet, no knob, no production flip — **no A/B gate
-applies to any part of this round**, stated so its absence is not read as an
-omission.
+**Status: COMPLETE.** All phases done; the training input is built and
+described in §8.7. No C++, no jsonnet, no knob, no production flip — **no A/B
+gate applies to any part of this round**, stated so its absence is not read as
+an omission.
 
 Doc pr/82 processed 2000 new MCP2025C **data** events into `work-mcp2k-harv3`
 and deliberately stopped before its §5, the scan. This is that scan. The
@@ -575,7 +574,7 @@ untracked, as every prior tag's do (`*.json` is gitignored and no scan tag
 has ever had a tracked label file); panels are not kept, being ~380 MB and
 regenerable from the dumps.
 
-### 8.1 Final census — 845 scanned, 219 owner labels
+### 8.1 Final census — 845 scanned, 242 owner labels
 
 ```
 REVIEW                                  418  (49.5%)
@@ -586,7 +585,7 @@ REVIEW FIRST (confident disagreement)    37   (4.4%)
 
 Owner review ran to **seven** instalments, not the one ~120-event pile the
 plan budgeted — the owner asked for more work each time a pile came back.
-233 events served, 219 labelled, 14 declined, **100 corrective (45.7%)**
+257 events served, 242 labelled, 15 declined, **112 corrective (46.3%)**
 against a ~21% base rate.
 
 Fill-tier yield by instalment: 38.9 / 52.0 / 58.8 / 56.5 / 43.2%. I predicted
@@ -598,25 +597,26 @@ is recorded because it was wrong, not because it was close.
 
 | | n | after the dots cut |
 |---|---:|---:|
-| owner-reviewed mcp2k labels | 219 | 217 |
+| owner-reviewed mcp2k labels | 242 | 240 |
 | auto-accept, admitted on the §7 gate | 341 | 339 |
 | overlap (the calibration draw is in both) | −40 | −40 |
-| **mcp2k total** | **520** | **516** |
+| **mcp2k total** | **541** | **539** |
 | current-epoch labels (`TAGS_HARV3`) | 473 | 460 |
-| **combined pool** | **993** | **976** |
+| **combined pool** | **1014** | **999** |
 
 Quote the right column for whatever you build: the 473 was never filtered, so
 the old number and the new one are not the same kind of thing until both go
 through `--drop-unscannable`.
 
-Verified consumable — **the whole mcp2k half, 516 events**, after §8.6:
+Verified consumable — the whole mcp2k half, **539 events**, after §8.6
+(the full 999-event combined build is §8.7):
 
 ```
-python3 dl_vtx_training/build_dataset.py --name pr88_pool_mcp2k \
+python3 dl_vtx_training/build_dataset.py --name pr88_pool_mcp2k_v2 \
     --tags vtxscan-mcp2k vtxscan-mcp2k-auto \
     --harvest-roots vtxscan-mcp2k=work-mcp2k-harv3 \
                     vtxscan-mcp2k-auto=work-mcp2k-harv3 --drop-unscannable
-→ wrote 516 events (101 corrective, 415 confirming)
+→ wrote 539 events (113 corrective, 426 confirming)
   "only dots" events (longest fitted segment < 5.0 cm): 2 DROPPED
     evt102247 evt177360
 ```
@@ -653,7 +653,7 @@ it. `build_dataset.py` loads labels through `iter_labels`, which globs
 file; it is a row in a wave's `review.json` and nothing else.
 `vtx_io.TAGS_MCP2K`'s own comment says so plainly ("the other 339 mcp2k
 labels are auto-accepted scanner picks and live in the scan run dirs, not
-here") without drawing the consequence: **the round's headline pool of 993
+here") without drawing the consequence: **the round's headline pool of 1014
 was, at that point, 217 events a trainer could actually load.** A gate that
 admits labels nothing can read has not delivered labels.
 
@@ -707,7 +707,7 @@ always printed whether or not they are dropped. Impact:
 
 | pool | labels | unscannable |
 |---|---:|---:|
-| mcp2k owner-reviewed | 219 | 2 |
+| mcp2k owner-reviewed | 242 | 2 |
 | mcp2k auto-accept | 341 | 2 |
 | current epoch (473) | 473 | 13 |
 
@@ -759,6 +759,84 @@ block of confirming labels move training at this composition" — and training
 round 3 answers that for free with the 341 auto-accepts just admitted. If
 confirming volume turns out to be the constraint, the draw is a 40-minute
 follow-up; if it is not, 40 owner-minutes were saved.
+
+### 8.7 The training input: `data/pr88_pool_combined`, 999 events
+
+The round's deliverable. Full provenance travels with the snapshot in
+`dl_vtx_training/data/pr88_pool_combined/PROVENANCE.md` — this is the
+summary.
+
+```
+python3 dl_vtx_training/build_dataset.py --name pr88_pool_combined \
+  --tags vtxscan-mcp2k vtxscan-mcp2k-auto vtxscan-harv3-nuecc48 \
+         vtxscan-harv3-ncpi0 vtxscan-harv3-mcp1k vtxscan-harv3-delta \
+  --harvest-roots vtxscan-mcp2k=work-mcp2k-harv3 \
+                  vtxscan-mcp2k-auto=work-mcp2k-harv3 \
+                  vtxscan-harv3-nuecc48=work-nuecc48-harv3 \
+                  vtxscan-harv3-ncpi0=work-ncpi0-harv3 \
+                  vtxscan-harv3-mcp1k=work-mcp1k-harv3 \
+                  vtxscan-harv3-delta=@arm \
+  --drop-unscannable
+→ wrote 999 events (213 corrective, 786 confirming)
+  "only dots" events (longest fitted segment < 5.0 cm): 15 DROPPED
+```
+
+1014 labels − 15 dots = 999. 700 human, **299 AI-scanner**.
+
+| tag | n | corrective | source |
+|---|---:|---:|---|
+| `vtxscan-mcp2k` | 240 | 111 | human, this round |
+| `vtxscan-mcp2k-auto` | 299 | 2 | AI, §7 gate |
+| `vtxscan-harv3-mcp1k` | 375 | 79 | human |
+| `vtxscan-harv3-nuecc48` | 42 | 6 | human |
+| `vtxscan-harv3-delta` | 24 | 10 | human |
+| `vtxscan-harv3-ncpi0` | 19 | 5 | human |
+
+**Three fixes this build needed**, each of which would have failed quietly:
+
+**`@arm`, for the one tag that spans two arms.** `--harvest-roots` maps one
+root per tag; `vtxscan-harv3-delta` holds 19 events on `work-mcp1k-harv3` and
+5 on `work-nuecc48-harv3`. A tag may now map to the literal `@arm`, resolving
+each label to its own recorded arm. Opt-in **per tag**: forcing an explicit
+arm is the entire point of harvest mode everywhere else — pr/79 §11 exists so
+labels are paired with the dumps the live net actually saw — and making
+per-label arms the default would quietly reintroduce the mismatch that mode
+was built to prevent. Verified: the manifest shows delta resolving 19/5
+across the two arms.
+
+**A collision guard on the npz name.** `build_dataset.py` writes `evt%d.npz`,
+event number *alone*, no tag. Pooling six tags across four arms is therefore
+one id collision away from a silent overwrite — two manifest rows, one npz,
+the second label's cloud sitting under the first label's truth.
+`vtx_io.load_labels` guards this in its own join key ("eventNo alone is one
+collision from wrong"); nothing guarded it here. Now checked **before**
+`savez`, because after the write the evidence is gone. The 1014 ids are in
+fact distinct, so the guard fires on nothing today — which is the only time
+it can be added honestly.
+
+**`label_source` carried into the manifest and the npz.**
+`materialize_auto_labels.py` argued that a tag name "is too easy to lose in a
+`--tags` line" — and then the tag name was the only thing that distinguished
+the 299 gated AI picks, because `load_label` never extracted the field. Now
+`human` / `ai-scanner` per row and per npz, so the training round can weight
+or ablate without re-deriving it from tag strings.
+
+**Two things the training round must decide, flagged not fixed:**
+
+1. **No lockbox is drawn** (`lockbox` = 0 for all 999). The current-epoch 473
+   were never built into a snapshot — `harv473` is the *prod0813* tags on
+   prod0813 arms — so there is nothing to `--inherit-manifest` from, and
+   `--inherit-manifest` keys on `(scan_tag, evt)`, which the epoch
+   relabelling changed for every row. A fresh draw here would produce a
+   *different* held-out set from the one pr/79–81 already spent, quietly
+   contaminating any held-out claim compared against those numbers. How the
+   old lockbox carries across the relabelling is an open question, and no
+   held-out result from this snapshot means anything until it is answered.
+2. **449 of the 473 current-epoch labels are an unvalidated carry** (pr/82
+   §4.3: bulk-written in one second, the pre-registered ≥95% blind re-scan
+   never ran). That is ~45% of this pool. Correctly out of scope for a scan
+   round; **not** out of scope for a training input, and it is the largest
+   single quality unknown in the 999.
 
 ### Protocol deviations, recorded as they happen
 
