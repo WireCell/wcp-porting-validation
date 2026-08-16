@@ -54,6 +54,16 @@ EOF
 # (c) per-stage wall time on the surviving mcp1k arms
 find work-mcp1k-pr87ion3 -name .time.meta | xargs cat | awk -F= '/wall_s/{print $2}' | sort -n \
   | awk '{a[NR]=$1} END{print "PR median", a[int(NR/2)], "p90", a[int(0.9*NR)], "max", a[NR]}'
+
+# (d) the harvest census behind sec 1.3(a):  511 dumps, 0 with harvest fields
+python3 - <<'EOF'
+import glob, json
+for a in ("work-nuecc48-pr87ion3", "work-ncpi0-pr87ion3", "work-mcp1k-pr87ion3"):
+    fs = sorted(glob.glob(f"{a}/pr_evt*/calib-pr-evt*.json"))
+    h = sum(any(k.startswith("hv_") or k == "harvest"
+                for k in (json.load(open(f)).get("vertex_scoreboard") or {})) for f in fs)
+    print(a, len(fs), "dumps,", h, "with harvest fields")
+EOF
 ```
 
 ### 0b. Smoke tests run for this plan (all PASS, 2026-08-16)
@@ -144,8 +154,10 @@ after pr83/85/86 rather than before.
 **(a) The DL features do not exist at the current binary — for any sample.**
 `dl_vtx_harvest` defaults OFF (`toolkit/cfg/pgrapher/experiment/sbnd/
 wct-pr-perevt.jsonnet:1617`, `clus.jsonnet:1437,2940`, key-suppressed so OFF is
-byte-identical), and the surviving `work-*-pr87ion3` arms were run without it —
-verified: zero `hv_*` keys in any of their 511 dumps. The harvest arms that did
+byte-identical), and the surviving `work-*-pr87ion3` arms were run without it.
+**Census (§0 block d): 511 dumps — 47 nuecc48 + 19 ncpi0 + 445 mcp1k — all 511
+carry a `vertex_scoreboard`, and 0 carry any `hv_*` or `harvest` key.** The
+harvest arms that did
 have them (`work-*-ma10k20-harv2`) were retired on 2026-08-16 with the calib
 class explicitly *dropped, not archived*.
 
@@ -237,6 +249,13 @@ Then assert, and **stop if any fails**:
 4. `frame_apply_at_caf` values are **not** all ≡ 0 mod 256 — that pattern is the
    `-caf auto` fallback signature and is how yuhw's bad ncpi0 extraction was
    caught (doc 71 §3). The first 1k spans 245–3322 ns; the smoke event is 2205.0.
+
+**The gate deliberately runs *after* staging, not before.** The authoritative RSE
+comes from the staged per-event metadata, so the 2.6 GB / ~4 min of staging is
+spent before the assertions can fire. That is the first-1k precedent
+(`stage_all.sh:4-8` calls itself "deliberately a barrier before imaging") and it
+is cheap; the ordering is intentional, not an oversight. Imaging — the expensive
+stage — is what the gate actually protects.
 
 **If assertion 2 fails**, the fix is not to rename events: it is to key the work
 dirs by `run_subrun_event` for this sample, which changes every downstream path
