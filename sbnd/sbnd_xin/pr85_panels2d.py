@@ -220,17 +220,38 @@ def render(dump, out, vid, title_head, half_note=""):
     return out
 
 
+def dump_for(ev, labs):
+    """Path to this event's calib dump.
+
+    PANELS_DUMP_ARMS=<dir>[:<dir>...] overrides the deployed arm, first match
+    wins.  doc pr/86 needs this: baselines.deployed_dump_path points at the
+    -ma10 arm, which predates the doc pr/83 and pr/85 production flips, so a
+    picture drawn from it is not the reconstruction anyone is running.  It also
+    lets an event with no hand label be rendered at all.
+    """
+    arms = os.environ.get("PANELS_DUMP_ARMS")
+    if arms:
+        for arm in arms.split(":"):
+            p = os.path.join(SX, arm, "pr_evt%d" % ev, "calib-pr-evt%d.json" % ev)
+            if os.path.exists(p):
+                return p
+        raise SystemExit("no dump for evt%d under %s" % (ev, arms))
+    return baselines.deployed_dump_path(labs[ev])
+
+
 def main():
     outdir = sys.argv[1]
     os.makedirs(outdir, exist_ok=True)
-    labs = {L["eventNo"]: L for L in vtx_io.load_labels()
-            if baselines.deployed_dump_path(L)}
+    labs = {L["eventNo"]: L for L in vtx_io.load_labels()}
     for spec in sys.argv[2:]:
         ev, _, want = spec.partition(":")
         ev = int(ev)
-        L = labs[ev]
-        with open(baselines.deployed_dump_path(L)) as fh:
+        L = labs.get(ev)
+        with open(dump_for(ev, labs)) as fh:
             dump = json.load(fh)
+        if not want and L is None:
+            raise SystemExit("evt%d has no hand label -- give an explicit "
+                             "vertex id as evt:vid" % ev)
         if want:
             vid, note = int(want), "  vertex %s (chosen)" % want
         else:

@@ -855,3 +855,13 @@ a cause of the mis-pick or a consequence of it is not answered here.
 A round that scores at **both** the click and the reco `main_vertex`, over the
 149 degree-1 events of §8.1 and the `b1 > 1 cm` events excluded here, would close
 both blind spots at once. Not started; no knob is proposed on this evidence.
+
+**Done in doc pr/86** (`86_orphan-segments-at-the-vertex.md`). It drops the
+`STUB`/`LONG` band entirely (an **orphan** is any non-incident segment whose
+charge reaches the vertex), scores at both anchors, and finds that 19 of 69
+affected events are visible only at the reco anchor — invisible to this census
+by construction. Two results bear on §7 here: mvga op3 iterates only the
+anchor's own out-edges, so **107 of 178 orphans are outside its reach at any
+knob value**; and the ceiling §10.5 fitted to 2.5 cm was fitted on a population
+this doc's own `STUB = 3.0` had pre-filtered, while the orphan-connecting hop
+distribution runs to 5 cm and then stops.
