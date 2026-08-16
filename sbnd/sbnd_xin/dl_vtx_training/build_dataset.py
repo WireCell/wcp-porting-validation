@@ -124,6 +124,17 @@ def main():
                          'sample x corrective; excluded from ALL training and '
                          'model selection, reported once at the end)')
     ap.add_argument('--lockbox-seed', type=int, default=20260814)
+    ap.add_argument('--lockbox-events', default=None,
+                    help='doc pr/89 sec 7: file of eventNo (one per line); '
+                         'flag exactly these lockbox=1.  Exists because '
+                         '--lockbox stratifies on sample x corrective and '
+                         '`sample` collapses every mcp2k tag to nuecc '
+                         '(io.py sample_of_label), so a tier-stratified '
+                         'held-out draw must happen OUTSIDE this script and '
+                         'arrive as a pre-registered explicit list.  '
+                         'Mutually exclusive with --lockbox; allowed with '
+                         '--inherit-manifest (an explicit list is not a '
+                         'fresh draw -- it overrides inherited lockbox).')
     ap.add_argument('--harvest-roots', nargs='+', default=None,
                     help='doc pr/79 §11: tag=path pairs (or one bare path, '
                          'relative to --sbnd-root) of dl_vtx_harvest arms; '
@@ -144,6 +155,10 @@ def main():
     if args.inherit_manifest and args.lockbox > 0:
         print('--inherit-manifest and --lockbox are mutually exclusive '
               '(inheriting exists precisely to avoid a fresh draw)')
+        return 1
+    if args.lockbox_events and args.lockbox > 0:
+        print('--lockbox-events and --lockbox are mutually exclusive '
+              '(one explicit list or one stratified draw, never both)')
         return 1
     harvest_roots = None
     if args.harvest_roots:
@@ -288,6 +303,26 @@ def main():
                 n_lock += 1
         print('lockbox: %d/%d events flagged (stratified sample x corrective, '
               'seed %d)' % (n_lock, len(rows), args.lockbox_seed))
+
+    if args.lockbox_events:
+        with open(args.lockbox_events) as fh:
+            lock_set = {int(l.split()[0]) for l in fh
+                        if l.strip() and not l.startswith('#')}
+        have = {r['evt'] for r in rows}
+        missing = sorted(lock_set - have)
+        if missing:
+            print('LOCKBOX-EVENTS NOT IN SNAPSHOT: %d listed events absent, '
+                  'e.g. %s -- a held-out list naming events the pool does '
+                  'not hold is a broken pre-registration, not a subset'
+                  % (len(missing), missing[:5]))
+            return 1
+        n_lock = 0
+        for r in rows:
+            if r['evt'] in lock_set:
+                r['lockbox'] = 1
+                n_lock += 1
+        print('lockbox: %d/%d events flagged from explicit list %s'
+              % (n_lock, len(rows), args.lockbox_events))
 
     if inherit is not None:
         got = {(r['tag'], r['evt']) for r in rows}

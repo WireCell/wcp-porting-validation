@@ -134,17 +134,29 @@ def run_epoch(model, samples, device, criterion, optimizer=None,
                     loss = loss + cs * torch.nn.functional.cross_entropy(
                         score[idx].unsqueeze(0), torch.tensor([pos]))
             sa = getattr(model, 'scale_anchor', 0.0)
+            ma = getattr(model, 'max_anchor', 0.0)
+            if (sa > 0 or ma > 0) and frozen is not None:
+                with torch.no_grad():
+                    pf = frozen([coords, ft])
+                    sf = pf[:, 1] - pf[:, 0]
             if sa > 0 and frozen is not None:
                 # doc pr/81 B: pin the absolute score scale to the frozen
                 # CP24 calibration on the SAME augmented voxelization, over
                 # the frozen net's top-20 voxels (where the acceptance gate
                 # lives), while the ranking term reorders.
-                with torch.no_grad():
-                    pf = frozen([coords, ft])
-                    sf = pf[:, 1] - pf[:, 0]
                 m = min(20, len(sf))
                 top = torch.topk(sf, m).indices
                 loss = loss + sa * torch.mean((score[top] - sf[top]) ** 2)
+            if ma > 0 and frozen is not None:
+                # doc pr/89 Arm B: EVENT-LEVEL max anchor.  pr/81-B's voxel
+                # anchor above pins the frozen top-20 voxels' scores, which
+                # forbids exactly the reordering the ranking term must
+                # perform -- that is why hr3 paid in corrective-event
+                # deflation.  Live acceptance consumes ONE scalar
+                # (best_score vs dl_vtx_min_accept_score,
+                # NeutrinoVertexFinder.cxx:4733), so anchor max(score) to
+                # max(frozen score) and leave the argmax free to move.
+                loss = loss + ma * (score.max() - sf.max()) ** 2
             cm = getattr(model, 'cand_margin', 0.0)
             if cm > 0 and ci is not None:
                 # S9b: deployed-objective margin -- the truth candidate's
@@ -167,6 +179,15 @@ def run_epoch(model, samples, device, criterion, optimizer=None,
                 s2 = pr2[:, 1] - pr2[:, 0]
                 loss = loss + consistency * criterion(
                     s1[torch.from_numpy(p1)], s2[torch.from_numpy(p2)])
+            sw = float(meta['row'].get('source_weight', 1.0))
+            if sw != 1.0:
+                # doc pr/89: unlike 'weight' above (dense-term only, kept
+                # for byte-compat with pr/77-81 runs), this multiplies the
+                # TOTAL per-event loss -- every term or none.  sw == 0 rows
+                # never reach here (dropped from training folds in main;
+                # a zero-grad Adam step would still move params along
+                # decayed momentum, so weight-0 must mean absent).
+                loss = loss * sw
             loss.backward()
             clip = getattr(model, 'grad_clip', 0.0)
             if clip > 0:
@@ -233,6 +254,12 @@ def main():
                     help='doc pr/81 B: weight of the frozen-CP24 score-scale '
                          'anchor on the top-20 frozen voxels (0 = off; '
                          'roughly doubles epoch time)')
+    ap.add_argument('--max-anchor', type=float, default=0.0,
+                    help='doc pr/89 Arm B: weight of the EVENT-LEVEL max '
+                         'anchor (max_new - max_frozen)^2 -- preserves the '
+                         'one scalar acceptance consumes while leaving the '
+                         'argmax free to reorder (0 = off; the deflation '
+                         'fix for the pr/81-B voxel anchor)')
     ap.add_argument('--dense-weight', type=float, default=1.0,
                     help='doc pr/81 B: weight of the legacy dense-MSE term '
                          '(1.0 = pr/77 recipe)')
@@ -244,6 +271,15 @@ def main():
                     help="round 3: '<sample>:<conf|corr|all>:<w>' e.g. "
                          "'numu100:conf:3.0' -- multiply the loss weight of "
                          "matching manifest rows (sample column)")
+    ap.add_argument('--source-weight', default=None,
+                    help="doc pr/89: '<label_source>:<w>' e.g. 'ai:0.0' -- "
+                         "weight the TOTAL loss of rows by manifest "
+                         "label_source ('ai' = 'ai-scanner').  w=0 drops "
+                         "the rows from training folds entirely (they stay "
+                         "in val, fold assignment unchanged -- the 999 vs "
+                         "700-human ablation twin).  --upweight cannot do "
+                         "this: it keys on `sample`, which io.py collapses "
+                         "to nuecc for every mcp2k row.")
     ap.add_argument('--seed', type=int, default=20260814)
     ap.add_argument('--device', default='cuda' if torch.cuda.is_available() else 'cpu')
     args = ap.parse_args()
@@ -269,6 +305,22 @@ def main():
             r['weight'] = float(r.get('weight', 1.0)) * w
             n_up += 1
         print('upweight: %d rows (sample=%s %s) x%.1f' % (n_up, samp, which, w))
+    if args.source_weight:
+        src, _, sw = args.source_weight.rpartition(':')
+        sw = float(sw)
+        src = {'ai': 'ai-scanner'}.get(src, src)
+        n_sw = 0
+        for r in rows:
+            if (r.get('label_source') or 'human') == src:
+                r['source_weight'] = sw
+                n_sw += 1
+        if n_sw == 0:
+            print('source-weight: NO rows match label_source=%s -- refusing '
+                  'to run an ablation that ablates nothing' % src)
+            return 1
+        print('source-weight: %d rows (label_source=%s) x%.2f%s'
+              % (n_sw, src, sw,
+                 ' (dropped from training folds, kept in val)' if sw == 0 else ''))
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
@@ -305,11 +357,12 @@ def main():
         model.cand_margin = args.cand_margin
         model.cand_softmax = args.cand_softmax
         model.scale_anchor = args.scale_anchor
+        model.max_anchor = args.max_anchor
         model.dense_weight = args.dense_weight
-        # frozen CP24 for the scale anchor: kept OUT of the model's module
-        # tree (a submodule would leak its params into the checkpoint)
+        # frozen CP24 for the scale/max anchors: kept OUT of the model's
+        # module tree (a submodule would leak its params into the checkpoint)
         frozen = None
-        if args.scale_anchor > 0:
+        if args.scale_anchor > 0 or args.max_anchor > 0:
             frozen = make_model(device=args.device)
             load_weights(frozen, vio.default_weights())
             frozen.train(False)
@@ -324,6 +377,12 @@ def main():
             if len(kept) != len(train_rows):
                 print('[fold %d] min-cloud %d: dropped %d train events'
                       % (fold, args.min_cloud, len(train_rows) - len(kept)))
+            train_rows = kept
+        kept = [r for r in train_rows
+                if float(r.get('source_weight', 1.0)) != 0.0]
+        if len(kept) != len(train_rows):
+            print('[fold %d] source-weight 0: dropped %d train events '
+                  '(still in val)' % (fold, len(train_rows) - len(kept)))
             train_rows = kept
         tr = VtxSamples(args.data, train_rows + pseudo_rows, train=True,
                         seed=args.seed + fold, cands_dir=args.cands,

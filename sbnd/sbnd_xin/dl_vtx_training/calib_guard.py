@@ -156,13 +156,13 @@ def replay_rerank(sb, vox):
 
 
 def replay_one(job):
-    evt, sample, corrective, calib_path, truth, tol = job
+    evt, sample, tag, corrective, calib_path, truth, tol = job
     calib = vio.load_calib(calib_path)
     sb = calib.get('vertex_scoreboard') or {}
     ans = recorded_answer(calib, sb)
     ok_rec = int(ans is not None
                  and np.linalg.norm(ans - np.asarray(truth, float)) <= tol)
-    rec = dict(evt=evt, sample=sample, corrective=corrective, ok_rec=ok_rec,
+    rec = dict(evt=evt, sample=sample, tag=tag, corrective=corrective, ok_rec=ok_rec,
                route_rec=sb.get('route', ''), best_rec=sb.get('dl_best_score'),
                top1_rec=(sb.get('voxels') or [{}])[0].get('dl_score'),
                ok_new=ok_rec, route_new=sb.get('route', ''), standin='',
@@ -229,6 +229,11 @@ def main():
     ap.add_argument('--weights', default=None,
                     help='candidate .pth (default: production CP24)')
     ap.add_argument('--arm-roots', nargs='+', default=HARV_ARMS)
+    ap.add_argument('--tags', nargs='+', default=None,
+                    help='label tags to replay (default: taxonomy.ALL_TAGS, '
+                         'the pr/79-era list -- whose default --arm-roots '
+                         'were archived 2026-08-16, so round-4 runs must '
+                         'pass both).  doc pr/89 phase 0.')
     ap.add_argument('--sbnd-root', default=vio.default_sbnd_root())
     ap.add_argument('--tol', type=float, default=1.0)
     ap.add_argument('--jobs', type=int, default=16)
@@ -252,14 +257,15 @@ def main():
     weights = args.weights or vio.default_weights()
     roots = vio.parse_arm_roots(args.arm_roots, args.sbnd_root)
     jobs = []
-    for label in vio.iter_labels(args.sbnd_root, ALL_TAGS):
+    for label in vio.iter_labels(args.sbnd_root, args.tags or ALL_TAGS):
         if keep_events is not None and label['eventNo'] not in keep_events:
             continue
-        path = vio.calib_path_in_roots(roots, label)
+        path = vio.calib_path_in_roots(roots, label, args.sbnd_root)
         if not path or not os.path.exists(path):
             print('MISSING calib for evt%d' % label['eventNo'])
             return 1
         jobs.append((label['eventNo'], vio.sample_of_label(label),
+                     label.get('scan_tag') or '',
                      int(vio.is_corrective(label)), path,
                      np.asarray(label['truth_xyz'], float), args.tol))
     print('calib_guard %s: %d labeled events, weights=%s'
@@ -313,10 +319,14 @@ def main():
           'row %d, trad %d | approx-term candidates %d'
           % (n_rec, len(recs), n_new, len(recs), n_new - n_rec,
              st_row, st_trad, napx))
-    for s in ('nuecc', 'ncpi0', 'mcp1k'):
-        sr = [r for r in recs if r['sample'] == s]
-        print('    %-6s %3d -> %3d  (%+d) of %d'
-              % (s, sum(r['ok_rec'] for r in sr), sum(r['ok_new'] for r in sr),
+    # Per-tag, not per-sample: sample_of_label collapses every mcp2k tag to
+    # 'nuecc' (io.py sample_of_label fall-through), so on the round-4 pool
+    # the sample axis is meaningless and the tag axis is the real stratum.
+    for t in sorted({r['tag'] for r in recs}):
+        sr = [r for r in recs if r['tag'] == t]
+        print('    %-24s %3d -> %3d  (%+d) of %d'
+              % (t or '(no tag)', sum(r['ok_rec'] for r in sr),
+                 sum(r['ok_new'] for r in sr),
                  sum(r['ok_new'] - r['ok_rec'] for r in sr), len(sr)))
 
     print('\n== min_accept sweep (same replays, chooser fixed) ==')
@@ -380,7 +390,7 @@ def main():
               % (mult, ma0, n, len(recs), n - n_rec, n_flip))
 
     if args.tsv:
-        cols = ['evt', 'sample', 'corrective', 'route_rec', 'route_new',
+        cols = ['evt', 'sample', 'tag', 'corrective', 'route_rec', 'route_new',
                 'standin', 'ok_rec', 'ok_new', 'best_rec', 'best_new',
                 'top1_rec', 'top1_new', 'winner_match', 'd_row', 'd_trad',
                 'n_approx']

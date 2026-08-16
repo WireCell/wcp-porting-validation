@@ -1,8 +1,10 @@
-# doc pr/89 — DL vertex round 4 on the 999-label pool (PLAN, not yet executed)
+# doc pr/89 — DL vertex round 4 on the 999-label pool
 
-Status: **plan only.** No code changed, no knob moved, no arm run. Written
-2026-08-16 after doc pr/88 delivered `dl_vtx_training/data/pr88_pool_combined`
-(999 labels). Execution is the next session.
+Status: **EXECUTING** (§11, started 2026-08-16). §§1–10 are the pre-registered
+plan, written 2026-08-16 after doc pr/88 delivered
+`dl_vtx_training/data/pr88_pool_combined` (999 labels), and are left as
+written; every deviation forced by reality is recorded in §11, never patched
+back into the plan text.
 
 ## Repro
 
@@ -618,3 +620,222 @@ in pr/81 Step 3 and pr/82 §6 Step 3, never executed.
   composite total bit-identical, since the term is a literal `+ 0.0`.
 - Commits in `wcp-porting-img` (toolkit knobs in `toolkit`, M9). Nothing pushed
   and no production flip without the owner.
+
+---
+
+## 11. Execution log (2026-08-16, this session)
+
+Environment fact discovered at start: `~/work/scratch_wcgpu1` is a **symlink
+to `/nfs/data/1/xqian`** — one tree, already on the GPU host (`wcgpu1`, 2×
+RTX 4090, direnv python with torch 2.5.1+cu121 + sparseconvnet working).
+Training nevertheless runs on **CPU**, like hr3 did: these clouds are small
+enough that GPU launch overhead loses (measured 0.047 s CPU vs 0.185 s CUDA
+per forward), and staying on CPU keeps the hr3 dose replay device-identical.
+
+### 11.0 Repro (execution)
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+T="--tags vtxscan-mcp2k vtxscan-mcp2k-auto vtxscan-harv3-nuecc48 \
+   vtxscan-harv3-ncpi0 vtxscan-harv3-mcp1k vtxscan-harv3-delta"
+R="--arm-roots vtxscan-mcp2k=work-mcp2k-harv3 vtxscan-mcp2k-auto=work-mcp2k-harv3 \
+   vtxscan-harv3-nuecc48=work-nuecc48-harv3 vtxscan-harv3-ncpi0=work-ncpi0-harv3 \
+   vtxscan-harv3-mcp1k=work-mcp1k-harv3 vtxscan-harv3-delta=@arm"
+X="--exclude-events dl_vtx_training/heldout-pr89.txt"
+W="--ipw-file dl_vtx_training/runs/ipw-mcp2k-20260816.tsv"
+cd dl_vtx_training
+
+# scan pile (sec 6):    python3 ../vtx_rules/ragree_pile.py --runs ../vtx_rules/runs/mcp2k-20260816 \
+#                           --out ../vtx_rules/runs/mcp2k-ragree-20260816/pile     # seed 20260817
+# seal (sec 7):         build_dataset.py --name pr89_pool ... --inherit-manifest \
+#                           data/pr88_pool_combined/manifest.tsv --lockbox-events heldout-pr89.txt
+# IPW weights:          python3 ipw_weights.py --runs ../vtx_rules/runs/mcp2k-20260816 \
+#                           --tsv runs/ipw-mcp2k-20260816.tsv
+# preflight 8.2:        python3 calib_guard.py --name cp24-pr89 $T $R --tsv runs/calibguard-cp24-pr89-20260816.tsv
+# preflight 8.3:        python3 calib_guard.py --name ft2u-pr89 $T $R \
+#                           --weights .../sbnd-vtx-ft2u-full473-e10-CP9.pth \
+#                           --events-file <non-held-out list> --tsv runs/calibguard-ft2u-pr89-20260816.tsv
+# closure:              python3 rerank_replay.py $T --closure
+# Arm A grid:           python3 rerank_replay.py $T --grid --min-accepts 6 8 9 10 11 12 14 \
+#                           --scales 500 750 1000 1500 2000 $X $W --prod-point 10.0 1000 \
+#                           --tsv runs/armA-grid-20260816.tsv
+# Arm A swap guard:     ... --grid --min-accepts 10 --scales 1000 --swap-guard --tsv runs/armA-swapguard-20260816.tsv
+# Arm C features:       python3 ../vtx_rules/rule1_feature.py --dumps <labelled-dump list> \
+#                           --tsv runs/topo-pr89-20260816.tsv
+# Arm C C1:             ... --grid --min-accepts 10 --scales 1000 --topo-file runs/topo-pr89-20260816.tsv \
+#                           --topo-sweep 0 0.25 0.5 1 1.5 2 3 4.5 6 $X $W --tsv runs/armC-wtopo-20260816.tsv
+# Arm D D1:             python3 arm_d_probe.py $T $R $W --tsv runs/armd-d1-20260816.tsv
+# Arm B:                ./pr89_train.sh hr4 ; ./pr89_train.sh hr4-hum --source-weight ai:0.0 ; \
+#                       ./pr89_train.sh hr4-maxa --scale-anchor 0.0 --max-anchor 1.0
+```
+
+### 11.1 Tooling the plan under-budgeted (§5 said two code changes; it was eight)
+
+All in this repo, default-off / back-compatible; existing invocations
+byte-identical:
+
+1. `calib_guard.py --tags` (+ per-tag report; `taxonomy.ALL_TAGS` left
+   untouched as the pr/79-era record). Its default `--arm-roots` point at
+   arms archived 2026-08-16, so round-4 runs pass both.
+2. `build_dataset.py --lockbox-events` — explicit pre-registered held-out
+   list; `--lockbox` stratifies on `sample × corrective` and `sample`
+   collapses every mcp2k row to `nuecc`, so a tier-stratified draw cannot
+   come from it.
+3. `train.py --max-anchor` (Arm B event-level anchor) and
+   `train.py --source-weight` (label_source weighting; w=0 drops rows from
+   training folds entirely — a zero-grad Adam step still moves parameters
+   along decayed momentum, so weight-0 must mean absent — while fold
+   assignment and val membership stay identical: the ablation twin).
+4. `rerank_replay.py`: `--topo-file/--w-topo/--topo-center/--topo-sweep`
+   (the 8th term), `--ipw-file`, `--prod-point`, `--exclude-events`,
+   `--swap-guard`.
+5. New `arm_d_probe.py` (drift_probe.py left as the pr/79 record),
+   `ipw_weights.py`, `vtx_rules/rule1_feature.py`,
+   `vtx_rules/ragree_pile.py`, `pr89_train.sh`.
+
+**Plan correction (§4 Arm A):** `calib_guard.py --fit-scale` is a 1-D fit at
+the recorded min_accept; the real `(min_accept, scale)` grid is
+`rerank_replay.py --grid`, and that is what Arm A ran on.
+
+### 11.2 The seal (§7) — executed
+
+- `data/pr89_pool`: event set verified identical to `pr88_pool_combined`
+  (999 rows, zero non-lockbox column diffs), built with `--inherit-manifest`
+  so nothing was redrawn. The §8.5 build traps re-exercised: `@arm` resolved,
+  no npz collision, `label_source` present, same 15 dots dropped.
+- **Held-out: 80 events, seed 20260818**, list in
+  `dl_vtx_training/heldout-pr89.txt` (committed), tier-stratified 1/3 of the
+  **owner-labelled** mcp2k pool events: auto-accept 40→13, REVIEW-disagree
+  153→51, REVIEW FIRST 36→12, abstained 11→4; 38 corrective.
+- **Deviation from §7, stated:** "sized for ≈±3" needs ~200 events, but only
+  240 owner mcp2k labels exist and §5's stricter rule (AI labels never in
+  held-out) wins; holding out 200 would also gut the corrective training
+  dose the round exists to test. The 80 confirm direction free of selection
+  bias (±≈5 absolute at 1σ); the effect size is carried by the live A/B over
+  all labels, which is pr/79's rule anyway.
+- The 91 spent full473-lockbox events: located in the 999 by
+  `(runNo, subRunNo, evt)`, all harv3-tagged, **none** in the new lockbox —
+  §1.4's carry claim verified, exclusion now checkable.
+- Every selection-bearing offline run below excludes the 80
+  (`--exclude-events`); denominators are therefore **924 truth-reachable
+  non-held-out** events (934 labelled − 10 not-a-candidate).
+
+### 11.3 Preflight (§8) — all three PASS
+
+1. **Field availability**: 880/880 mcp2k dumps carry every pr/82 §1.3a board
+   and row key, `harvest: true` on all (pr/82's "879" is stale by one; 880
+   is the current count). Route census: accept 437 / reject 400 / not-run
+   34 / veto-protected 9. Caveat absorbed: `hv_global.ran` is true on only
+   **55/880**, so the swap-guard's global-swap population is small.
+2. **CP24 anchor EXACT**: 1004 replayed / 10 anchored, **0 route flips**,
+   every score ratio 1.000 at p10/p50/p90, predicted delta **+0**, per-tag
+   all +0 (`runs/calibguard-cp24-pr89-20260816.tsv`). The min_accept sweep
+   on the anchor run already shows 10.0 as the optimum (12/15/20 lose 3–8).
+3. **ft2u CP9 reproduces out-of-sample** on the 934 non-held-out events:
+   corrective top-1 inflation **×1.909** median (confirming ×1.293), **249
+   reject→accept flips**, predicted **−95/934** — the pr/79 failure
+   signature at the same rate as the original −57/473. The guard screen is
+   NOT overfit (`runs/calibguard-ft2u-pr89-20260816.tsv`).
+
+Closure on the 999: `max |Σ terms − total| = 0` over 2868 DL-snapped rows.
+
+### 11.4 Arm A — recalibration NULL; swap guard +3/0
+
+- **The production point (10.0, 1000) is the exact optimum of the 35-point
+  grid** on the 924; best challenger −4, every alternative negative
+  (`runs/armA-grid-20260816.tsv`). §1.1's coupling is real, but the shipped
+  point already sits on the maximum: **gate not passed, arm closed.** This
+  also supplies the anti-hollowness control for Arm C below.
+- **`dl_vtx_swap_guard` ON: 3 fixed / 0 broken** (evts 169724, 180645,
+  55740), +0.32 IPW points (`runs/armA-swapguard-20260816.tsv`). One-sided
+  but far below the ≥+1.5 gate on its own; a candidate rider for the owner,
+  not a live-A/B claimant. Replay approximation stated in the tool: recorded
+  `s_fwd_z` used (the C++ recomputes min_z over survivors; max effect 0.25).
+
+### 11.5 Arm C — C0 impossible as chosen, restated PASS; C1 +12 at W_TOPO=3
+
+- **C0 deviation, forced:** the owner chose extraction of the archived
+  prod0813/ma10 arms, but the retirement tarballs contain **only logs and
+  nusel tables — zero calib dumps** (verified: 6411 files, 0 JSONs;
+  `tar tzf | grep -c calib` = 0 on both families). pr/80's own dumps are
+  deleted, so literal C0 is impossible, not merely inconvenient. Fallback
+  (the alternative offered and not chosen, now the only option): the same
+  contrast on the current epoch.
+- **C0 restated, PASS in shape**: on 923 non-held-out labels with a
+  graph-candidate truth pick, `purity==1.0 & n_decisive≥1` hits **81.8%
+  (547/669) of truth vertices vs 23.6% (360/1523) of other main-cluster
+  candidates** (voting-vertex denominator; all-candidate denominator 62.4%
+  vs 9.3%). The published 86.5/31.9 shape reproduces with a 58-point gap on
+  primitives that are literally pr/80's own (`outgoing_purity`). Definition
+  frozen: vote-gated `frac`, no-vote contributes nothing.
+- **C1, at the frozen production point (10.0/1000), sealed events excluded:**
+  sweep of `W_TOPO ∈ {0…6}` through the exact replay
+  (`runs/armC-wtopo-20260816.tsv`): best **W_TOPO=3.0 → 577/924 vs 565,
+  net +12 raw, +1.27 IPW points; 16 fixed / 4 broken (4:1)**. Center-0.5
+  variant peaks lower (+11 at 6.0). Feature coverage: 1653 of 21023
+  candidate vertices carry a decisive vote (7.9%) — the pr/88-P6 no-vote
+  discipline is load-bearing.
+- **Mechanism**: 15 of 16 fixes are **reject→accept flips** — the topo bonus
+  lifts the correct candidate over min_accept on events where the uBooNE
+  net sits at the §1.1 degenerate floor. The term supplies routing evidence
+  exactly where the net is blind.
+- **Anti-hollowness control**: a uniform threshold loosening of the same
+  magnitude *loses* events (min_accept 8/1000 → −14, 6/… worse; §11.4
+  grid), so the +12 is the differential topology signal, not a threshold
+  move in disguise.
+- **Confound splits (pre-registered)**: fixed winners are 13× frac=1.0
+  single/double-vote non-collinear + 3 collinear-flagged + 1 frac=0.5; all
+  4 broken winners are single-vote frac=1.0 **non**-collinear — the failure
+  mode is one misleading Bragg vote, not the §10.8 collinearity confound.
+- **Selection-noise caveat**: 16 swept values, max picked; pr/81's fold-max
+  lesson says treat the margin over the +10 bar as soft until the held-out
+  read and live A/B.
+- **C1 clears its pre-registered bar (net ≥ +10, help:harm 4:1, not
+  threshold-reproducible). C2 (the C++ `W_TOPO` knob) is a STOP-and-present:
+  no C++ written; owner decision pending.**
+
+### 11.6 Arm D — D1 measured; the reject route is NOT the adjustment stage
+
+Full-pool probe (`runs/armd-d1-20260816.tsv`, 1009 labelled events, IPW):
+
+- **Accept route (the clean measurement of the §4-b stage): net +87−5 = +82
+  on 592 events at 17:1**, p50 move 0.378 cm, p90 1.355 cm, max 7.4 cm —
+  the plan's +50/342 shape at larger n.
+- **Reject route: net +118 on 407 events, but p90 displacement is 243 cm** —
+  those moves are downstream re-selection (a different main vertex chosen
+  after the rerank rejected), not the 5/15 cm-reach
+  snap/improve/graph-audit geometry. **D2's radius sweep may only be
+  credited with the small-move component**; crediting the stage with the
+  reject-route +118 would be a category error.
+- broken list (9 total, worst 0.3→4.7 cm) is in the TSV.
+- D2 (vks/mvga reach sweep) requires live reruns (the stage is C++
+  geometry, not offline-replayable) plus TLA exposure for `vks_radius` /
+  `mvga_radius` in `wct-pr-perevt.jsonnet` — pending, competes for the live
+  A/B against Arm C.
+
+### 11.7 The §6 owner scan — SERVED, awaiting the owner
+
+- Draw: **seed 20260817, 40 of the 228 scannable REVIEW-agree events**, zero
+  previously labelled (verified), record in
+  `vtx_rules/runs/mcp2k-ragree-20260816/pile/{draw,pile}.json`.
+- Viewer: port **5019** (5017/5018 were still occupied by live servers —
+  restarting them costs every open session its token, pr/88 §1.6), scan tag
+  **`vtxscan-mcp2k-ragree`** (fresh tag, M13).
+- IPW weights v1 (`runs/ipw-mcp2k-20260816.tsv`): auto 1.006 /
+  disagree 1.092 / FIRST 1.028 / abstained 3.769 / **REVIEW-agree UNDEF**
+  (251/845 events carry weight nothing can claim until this scan lands).
+  Anchoring caveat stated: the owner will know every served event is one
+  where the scanner agreed with the reconstruction.
+
+### 11.8 Arm B — RUNNING
+
+Launched (18 parallel CPU fold jobs, `pr89_train.sh`): `hr4` (hr3 recipe
+verbatim on the sealed 919-event training pool), `hr4-hum`
+(`--source-weight ai:0.0`, the fold-identical 700-human ablation twin),
+`hr4-maxa` (`--max-anchor 1.0` replacing `--scale-anchor`, the §4-B
+deflation fix). 18 epochs, 6-fold, seed 20260814. Screens to follow, in
+order: guard-in-loop checkpoint selection (`runs/hr4-folds/fold*.txt`
+val lists written from the sealed pool), full-manifest `calib_guard`, OOF at
+the frozen point with the newly-accepted-and-correct decomposition + the
+CP24-same-threshold control, one sealed held-out read, live A/B only if it
+wins the round.
