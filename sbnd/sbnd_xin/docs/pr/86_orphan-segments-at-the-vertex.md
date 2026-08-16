@@ -270,7 +270,7 @@ mvga fired in every one of the ten. The op3 lines:
 | 423981 | `eval-interposed len=1.48cm vf_deg=5 far_angle=130.1deg` | collinearity, by 19.9° |
 | 30504 | `eval anchor=sat d=1.26cm len=1.65cm nfit=4 overlap=0.75` | **`mvga_dup_frac = 0.8` rejects 0.75** |
 | 67394 | `stub-interposed len=0.39cm vf_deg=5 carried=4 far_angle=163.2deg` | **fired** — and 5 orphans remain |
-| 463565, 283595, 316025 | `stub-absorb ... gate=overlap` | fired; orphans remain |
+| 463565, 283595, 316025 | `stub-absorb ... gate=overlap` | fired; orphans remain — as in 67394, at a *different* vertex from the one still carrying them |
 | **175896, 349945, 281214** | *no op3 line at all* | see §5.3 |
 
 Three findings, in order of how actionable they are:
@@ -296,9 +296,16 @@ Three of the ten produce no op3 line whatsoever. op3's first three gates —
 there is completely invisible.
 
 `prongs.empty()` (`:421`) is excluded by the census: in all three the far vertex
-demonstrably carries the orphan prongs. `segment_track_length` (default
-`flag = 0`) computes geometric length from the same fits the dump reports, so
-the ceiling should not be silently disagreeing with the dump's 1.13 / 1.48 cm.
+demonstrably carries the orphan prongs.
+
+The ceiling is excluded by reading both length measures, because assuming they
+agree is exactly the pr/84 §8.2 mistake. `segment_track_length(seg)` with its
+default `flag = 0` and `dir_perp = (0,0,0)` sums `|fits[i+1].point -
+fits[i].point|` over the segment's fits (`PRSegmentFunctions.cxx:1286-1297`),
+and `PrDisplayDump` writes `j["length"]` as the same accumulation over the same
+`fits` (`PrDisplayDump.cxx:441-446, 468`). **They are the same measure**, so
+op3's ceiling is not silently disagreeing with the dump's 1.13 / 1.48 cm.
+
 **That leaves `kProtectedBreak` on the far vertex as the leading candidate** —
 the flag `snap_main_vertex_to_kink` (pr/50) and the two-end break (pr/48) set
 precisely to stop later passes undoing a deliberate break.
