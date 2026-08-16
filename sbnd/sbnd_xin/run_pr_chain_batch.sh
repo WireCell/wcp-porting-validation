@@ -200,6 +200,13 @@ fi
 CATH_TLA=()
 [ -n "${SBND_CATHODE_KINK_XCUT:-}" ] && CATH_TLA+=(--tla-code "cathode_kink_xcut=${SBND_CATHODE_KINK_XCUT}")
 [ -n "${SBND_CATHODE_X:-}" ]         && CATH_TLA+=(--tla-code "cathode_x=${SBND_CATHODE_X}")
+# doc pr/89 Arm D2: post-DL adjustment reach, cm.  EMPTY = no TLA = the cfg
+# default null = the C++ defaults (vks 5.0 / mvga 15.0) = byte-identical.
+# The TLAs already exist and are fully threaded (wct-pr-perevt.jsonnet:1977,
+# :1989); these envs only expose them to a batch A/B.
+# Env: SBND_VKS_RADIUS=<cm> SBND_MVGA_RADIUS=<cm>.
+[ -n "${SBND_VKS_RADIUS:-}" ]  && CATH_TLA+=(--tla-code "vks_radius=${SBND_VKS_RADIUS}")
+[ -n "${SBND_MVGA_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_radius=${SBND_MVGA_RADIUS}")
 # doc pr/47 sec 8 (O1): wide-baseline cathode kink accept, degrees.  EMPTY =
 # no TLA = the job default (SBND ON at 25 deg since 2026-08-07).  0 = force
 # the C++ OFF path (legacy kink search, byte-identical); "null" also works
