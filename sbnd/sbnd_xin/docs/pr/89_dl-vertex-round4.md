@@ -813,7 +813,29 @@ Full-pool probe (`runs/armd-d1-20260816.tsv`, 1009 labelled events, IPW):
   `mvga_radius` in `wct-pr-perevt.jsonnet` — pending, competes for the live
   A/B against Arm C.
 
-### 11.7 The §6 owner scan — SERVED, awaiting the owner
+### 11.7a The §6 owner scan — DONE; the baseline is CLOSED at 80.9% ± 1.8
+
+The owner scanned all 40 (2026-08-16, tag `vtxscan-mcp2k-ragree`; labelled
+set verified identical to the committed draw). **REVIEW-agree stratum:
+production-correct 36/40 = 90.0% ± 4.7%** — the blind stratum was benign,
+near the top of the §1.2 interval, and all 4 corrective picks are graph
+candidates (no manual).
+
+**The §1.2 IPW production baseline on the 845-event mcp2k arm collapses
+from [53.3%, 83.0%] to 80.9% ± 1.8 points** (stratified 1σ; weights
+`runs/ipw-mcp2k-closed-20260816.tsv`, per-stratum p = auto 99.7 / agree
+90.0 / disagree 49.7 / FIRST 22.2 / abstained 53.8). Beats the ±3 target.
+Two honesty notes: (i) the auto stratum's 99.7% is measured against labels
+that are 88% AI picks; substituting the owner-calibrated 97.5% for that
+stratum gives **≈80.0%** — quote the pair, not one number; (ii) it sits
+coherently beside the frozen-473 production number (78.6%, pr/82 §12.6).
+
+**Quasi-fresh check of Arm C**: the 40 were not available when W_TOPO=3 was
+selected. Including them (`runs/armC-wtopo-withragree-20260816.tsv`, topo
+features extended to their dumps): **+14 raw / +2.0 IPW points vs +12 on
+the selection set** — the fresh events move the same direction.
+
+### 11.7 The §6 owner scan — SERVED, awaiting the owner *(superseded by 11.7a)*
 
 - Draw: **seed 20260817, 40 of the 228 scannable REVIEW-agree events**, zero
   previously labelled (verified), record in
