@@ -80,11 +80,13 @@ shipped configuration:
 
 Two consequences, both load-bearing:
 
-1. **evt268067 is no longer in the population.** pr/85's flip cleaned its reco
-   vertex (degree 4, zero orphans) and moved it 1.52 cm off the click, which is
-   why the click anchor now reports *more* orphans — it is anchoring on a
-   neighbour. It is excluded from the top 10 and its post-flip state is
-   §8.3's own item.
+1. ~~**evt268067 is no longer in the population.**~~ **WRONG — corrected in
+   §10.2.** Its reco vertex does have degree 4 and zero *orphans*, but the owner
+   pointed out that it still carries the defect, and the §10 measurement
+   confirms it: two prongs, 74.3 cm and 11.9 cm, both stop **8.98 cm** short of
+   the vertex and their missing stretch is drawn by segment 15082 (9.14 cm).
+   The orphan metric cannot see that shape at all. 268067 is squarely in the
+   population; it is only outside the *orphan* top 10.
 2. **Each of the three is defective at a different anchor.** That is not a
    detail; it decides the whole design of the search (§2.1).
 
@@ -359,7 +361,14 @@ vertex has.
 
 ---
 
-## 7. Proposals
+## 7. Proposals — SUPERSEDED BY §12
+
+**These were written before the owner named the other two defects (§10, §11)
+and before they set the priority: "the straight track missing vertex is the
+main problem that I want to attack".** Q1, Q4 and Q5 survive into §12
+unchanged in substance; Q2 and Q3 are re-framed there as consequences of a
+single measurement rather than as two independent knobs. Read §12 instead;
+this section is kept so the reasoning that led to it stays on the record.
 
 All default OFF. **None is implemented and none is gated.** Each names the gate
 it would need. Ordered by evidence strength, not by ease.
@@ -480,3 +489,266 @@ against 12 % for degree 4. Larger than this doc's 69 events and still its own ro
   `sbnd_xin/pr86_orphan_census.py`, `sbnd_xin/pr85_panels2d.py` (a
   `PANELS_DUMP_ARMS` override so panels can be drawn from a chosen arm), this
   doc, and a pointer line in doc pr/85 §11.3.
+
+---
+
+## 10. The straight track that misses the vertex — the owner's main target
+
+After reading §§1-9 the owner named a second defect, which the orphan census
+cannot see and which they have since set as the priority:
+
+> "a track connecting to the vertex did not go through the last track segment,
+> but merge to another track"
+> …
+> "the straight track missing vertex is the main problem that I want to attack"
+
+with three worked examples: **281214** ("plot clearly shows this"), **268067**
+("same thing happened"), and **349945** ("one track did not reach vertex, but
+should be").
+
+### 10.1 Why §2 is blind to it
+
+The prong's final stretch is not the prong's any more, so the prong **ends
+short of the vertex** — outside the 3 cm `TOUCH` radius. There is no
+non-incident segment at the vertex to count. The event scores clean.
+
+`pr86_merged_prong_census.py` detects it geometrically, with no truth and no
+charge model. A prong `P` qualifies when all of:
+
+| condition | value | why |
+|---|---|---|
+| `len(P)` | ≥ 5.0 cm | a real prong, not a fragment |
+| gap `P` → vertex | 3.0 < g ≤ 10.0 cm | starts exactly where the orphan census stops seeing |
+| `P` **ends** there | arclength to its own end ≤ 2.0 cm | a hairpin passing by must not read as an end |
+| `P` **aims** at the vertex | extension within 25° | a prong that stops short but points elsewhere lost nothing |
+| the gap is **already drawn** | ≥ 70 % of it within 1.5 cm of another segment `Q` that itself reaches the vertex | `Q` is the track `P` was merged into |
+
+**Gate.** The script's first output reproduces the owner's own two examples
+before any other number is emitted:
+
+```
+evt281214  prong 60029   absorbed into 60043   : found (gap 5.93 cm, cover 1.00)
+evt268067  prong 15009   absorbed into 15082   : found (gap 8.98 cm, cover 1.00)
+gate: PASS
+```
+
+### 10.2 The population
+
+| | |
+|---|---|
+| cases (prong × anchor) | **90** |
+| distinct prongs | 65 — **63 not owned by another round**, over **47 events** |
+| **events the orphan census scores CLEAN at that anchor** | **34** |
+| gap, prong end → vertex | median 5.93 cm (quartiles 4.50 / 7.41, range 3.20–9.89) |
+| prong length | median 15.5 cm; **27 ≥ 20 cm, 17 ≥ 50 cm**, max 229 cm |
+| aim angle | median 13.1°, 75th percentile 18.8° |
+| absorber incident on the vertex | 81 of 90 |
+| absorber in a different cluster | 4 of 90 |
+
+**The vertex being right does not protect against it: 26 prongs across 20
+events have `b1` ≤ 1 cm** — the reconstruction put the vertex exactly where the
+owner clicked, and a track still stops short of it.
+
+Top cases, `*` = vertex correct (`b1` ≤ 1 cm):
+
+| | event | vertex | prong | length | gap | aim | absorbed into |
+|---|---|---|---|---|---|---|---|
+| | 284145 | 11005 | 11034 | 229.1 cm | 4.67 | 14.1° | 11032 (2.80 cm) |
+| | 276836 | 11002 | 11004 | 221.1 cm | 7.19 | 1.7° | 11003 (7.82 cm) |
+| | 399702 | 27001 | 27002 | 209.2 cm | 8.20 | 4.4° | 27003 (9.50 cm) |
+| | 61579 | 20003 | 20054 | 133.3 cm | 3.78 | 7.3° | 20053 (3.92 cm) |
+| \* | 345633 | 8014 | 8011 | 98.6 cm | 7.36 | 3.9° | 8032 (7.62 cm) |
+| \* | 281837 | 63046 | 63029 | 93.7 cm | 3.43 | 7.0° | 63033 (3.52 cm) |
+| \* | 73004 | 15003 | 15001 | 91.5 cm | 6.12 | 18.2° | 15003 (6.99 cm) |
+| \* | 21073 | 11001 | 11005 | 86.9 cm | 5.86 | 6.7° | 11008 (10.40 cm) |
+| \* | 174928 | 9003 | 9001 | 86.0 cm | 3.53 | 18.8° | 9003 (3.62 cm) |
+| \* | 168432 | 19001 | 19001 | 79.9 cm | 6.92 | 18.1° | 19002 (7.93 cm) |
+| | **268067** | 15079 | 15009 | 74.3 cm | 8.98 | 20.8° | 15082 (9.14 cm) |
+| | **281214** | 60040 | 60029 | 64.8 cm | 5.93 | 7.0° | 60043 (8.01 cm) |
+
+### 10.3 What the absorber actually is — the result that unifies the round
+
+The absorber is **not** a long neighbouring track that swallowed the prong.
+It is a short segment occupying almost exactly the missing stretch:
+
+> **`absorber_len / gap` = 1.04 median (quartiles 1.02 / 1.14).**
+
+And in **69 of 90 cases** it shares a vertex with the prong *and* is incident
+on the anchor. So the topology is:
+
+```
+vertex ---- absorber ---- V1 ---- prong
+        (= the prong's own last stretch, made a segment in its own right)
+```
+
+**That is doc pr/85's interposed segment, at 3–10 cm instead of under 2.5 cm.**
+The prong's end lands outside the 3 cm `TOUCH` radius purely *because* the
+interposed piece is longer, which is exactly why neither pr/85 nor §2 could see
+it. Pooling the two measurements over prongs of 5 cm or more:
+
+| interposed-segment length | cases | |
+|---|---|---|
+| under 2.5 cm | 57 (33 %) | mvga op3 **can** reach these |
+| 2.5 – 5 cm | 62 (36 %) | |
+| 5 – 10 cm | 47 (27 %) | |
+| ≥ 10 cm | 6 (3 %) | |
+
+**Two thirds of the defect sits above the production ceiling.** The single
+constant `mvga_stub = 2.5` cm is what separates the part that gets fixed from
+the part that does not.
+
+---
+
+## 11. The other two shapes
+
+### 11.1 Class A — the collinear hand-off (owner's original sentence 1)
+
+The last stretch exists, is incident on the vertex, and the prong hangs off its
+far end while continuing *straight through* it. Every Class-A prong is also an
+orphan, so this is a refinement of §2, not a new population. Turn angle at the
+intermediate vertex, over the 101 one-hop orphans:
+
+| turn | 0–30° | 30–60° | 60–90° | 90–120° | 120–150° | 150–180° |
+|---|---|---|---|---|---|---|
+| cases | 7 | 11 | 15 | 15 | 35 | **18** |
+
+18 are collinear (≥150°, the same test `mvga_interposed_angle` applies), of
+which **7 hand off through a real ≥2.5 cm segment** — evt61843 (25.3 cm prong,
+160.4°), evt268784 (10.6 cm, 163.8°), evt402330 (9.7 cm, 152.4°), evt411460
+(8.7 cm, 153.1°).
+
+The bulk sits at **120–150°**, just *below* the collinearity requirement. That
+is the same margin the §5.2 trace showed op3 declining on (139.8°, 130.1°), now
+seen as a distribution rather than two anecdotes.
+
+### 11.2 Class C — charge arms vs graph degree
+
+The owner on evt38856: *"one of the track has a very large angle turn, which is
+not right. It should be a **3-track vertex**."*
+
+Measured without being told — cluster the directions from the vertex to every
+fitted point in the shell 1 cm ≤ r ≤ 6 cm, 25° separation:
+
+```
+evt38856  vertex 12106  graph degree 2  charge arms 3   <- the owner's answer
+```
+
+Over all 949 anchors:
+
+| | anchors | |
+|---|---|---|
+| arms **==** degree | 747 (79 %) | the graph agrees with the charge |
+| arms **>** degree | **107 (11 %)** | the graph is missing arms |
+| arms **<** degree | 95 (10 %) | |
+
+79 % agreement is what makes the 11 % meaningful — this is a calibrated
+metric, not a detector tuned to find something. Worst cases: evt463565
+(degree 1, **7 arms**), evt21073 / evt30504 / evt67394 / evt166870 / evt172656 /
+evt172788 / evt316025 (+3 each).
+
+Class C is **not** a superset of A and B: evt268067 has degree 4 and 4 arms and
+is still a clean Class B, because its two prongs are handed off *along* one of
+those arms. The three are reported side by side.
+
+---
+
+## 12. Proposals, revised — supersedes §7
+
+Re-ordered on the owner's priority: **Class B first.** All default OFF, none
+implemented, none gated.
+
+### P1 — `mvga_interposed_len`: raise the interposed ceiling, separately from the absorb ceiling
+
+§10.3 is the argument: two thirds of the defect is an interposed segment
+between 2.5 and 10 cm, and `mvga_stub` is the only thing standing between it
+and the pass that already knows how to fix it. But `mvga_stub` governs **two
+different operations** — the terminal *absorb* (delete a stub) and the
+interposed *splice* (re-route prongs through it). pr/85 §10.6 showed the absorb
+is where adverse movers live, and §10.5 fitted 2.5 for that reason.
+
+So do **not** raise `mvga_stub`. Add a separate ceiling used only by the
+interposed branch (`NeutrinoGraphAudit.cxx:405-462`), defaulting to
+`mvga_stub` so the knob-off path is byte-identical. The splice preserves
+SegmentPtr identity and re-fits; it does not delete charge, which is why it is
+the safer of the two to widen.
+
+*Gate:* full-sample knob-on arm at 2.5 (control) / 5.0 / 10.0; pr/85 §10.4
+mover adjudication against the hand labels; nueCC48 nue-score ledger; the four
+pr/85 §10.6 adverse movers must stay at 0.00.
+*Measurement to watch:* Class-B case count (90) and the §10.3 pooled histogram.
+
+### P2 — fit `mvga_interposed_angle` against the distribution, not the anecdote
+
+150° was set in pr/85 §10.1 without a fit. §11.1 now shows the population piles
+up at **120–150°**, immediately below it, and §5.2 caught two live declines at
+139.8° and 130.1°. This is the same proposal as §7 Q2 but with a distribution
+behind it instead of two events.
+
+*Risk, unchanged:* lowering it admits genuine corners. That is what the mover
+adjudication is for.
+*Gate:* sweep 150 / 140 / 130 in the same arm as P1 — they interact, and
+testing them separately would mis-attribute the result.
+
+### P3 — `mvga_decline_log` (instrumentation, no behaviour change)
+
+Unchanged from §7 Q1 and now more clearly the enabler: op3's first three gates
+(`:395` ceiling, `:397` invalid, `:407` `kProtectedBreak`) `continue` before any
+logging, so 3 of the 10 §3 events have no explanation at all. Neither P1 nor P2
+can be evaluated honestly while a whole class of declines is mute.
+
+*Gate:* log-only at TRACE; still prove byte-identity with
+`scripts/pr85_hash_gate.py` on one arm.
+**Do this one first.**
+
+### P4 — `mvga_dup_frac`: a second discriminator, not a moved threshold
+
+Unchanged from §7 Q4. 0.8 was set in pr/85 §10.6 to reject the
+`(nfit=4, overlap=0.75)` adverse-mover class; it also declines evt30504. Find
+what separates them — most plausibly the number of prongs carried, since an
+absorb that reconnects several prongs is not the same edit as one that deletes
+a duplicate.
+
+*Gate:* the four pr/85 §10.6 adverse movers stay at 0.00 **and** evt30504
+improves, in one arm.
+
+### P5 — a Class-C arm-count guard is **not** proposed yet
+
+§11.2 is a good diagnostic (79 % agreement, and it reproduced the owner's
+"3-track vertex" unprompted) but it is a *measurement*, not a repair: knowing a
+vertex is missing an arm does not say which segment to split or where. Proposing
+a knob on it now would be proposing a number with no mechanism. It is offered
+as a **validation metric for P1 and P2** — if they work, `arms > degree` should
+fall from 107 — and as the natural seed for a later round.
+
+### P6 — nothing is proposed for CUT
+
+Unchanged from §7 Q5. 55 orphans, 37 of them cross-cluster; no PR-graph edit
+can attach a segment clustering never put in the same object. Still the larger
+problem by count.
+
+### Explicitly not re-proposed
+
+Unchanged from §7: `es3sg_vertex_fit` (pr/72 R3, measured blunter, reverted);
+`fit_exclusion` (pr/30 P1); `graph_endpoint_strict` (pr/30 P8); any
+`merge_nearby_vertices` radius from fit-space distances (pr/84 §8.2);
+`vks_carry_prong` as it stands (pr/85 §10.4, NEGATIVE).
+
+### Sequencing
+
+P3 → P1 + P2 together in one swept arm → P4. P1 and P2 must be swept jointly:
+a case declined on angle will not be rescued by a wider ceiling, and vice
+versa, so a one-at-a-time sweep would score both as ineffective.
+
+---
+
+## 13. Verification (§§10-12)
+
+- All three owner examples are reproduced by the census as a **gate** printed
+  before any other number: 281214 and 268067 as Class B, 38856 as
+  `degree 2, charge arms 3`. `gate: PASS`.
+- 511 dumps scored, 0 errors.
+- The Class-C metric agrees with the graph on 79 % of 949 anchors, which is
+  what licenses reading the 11 % disagreement as signal.
+- Panels for the twelve §10.2 cases are in `/home/xqian/tmp/pr86-classb/`
+  (regenerate with the §0 recipe, substituting these event:vertex pairs).
+- Still investigation only: no C++ or jsonnet changed.
