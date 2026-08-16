@@ -27,6 +27,19 @@ LABELS_ROOT = os.path.join(BASE, "vertex_labels")
 TAGS = ["vtxscan-prod0813", "vtxscan-prod0813-ncpi0",
         "vtxscan-prod0813-mcp1k", "vtxscan-prod0813-mc"]
 
+# doc pr/82 sec 4.1: the same scans carried onto the current-production arms
+# (work-*-harv3), plus `vtxscan-harv3-delta` for the events the carry-forward
+# declined and a human re-answered.
+#
+# These are NOT in TAGS, on purpose.  They cover the SAME EVENTS as the
+# prod0813 tags above, so a default holding both would hand every unfiltered
+# consumer -- baselines.py, selfscan.py score, build_dataset.py -- roughly 922
+# labels with duplicate event keys and quietly wrong denominators.  There is no
+# error message for that; the numbers just come out wrong.  Callers that want
+# the current epoch ask for it: load_labels(tags=vtx_io.TAGS_HARV3).
+TAGS_HARV3 = ["vtxscan-harv3-nuecc48", "vtxscan-harv3-ncpi0",
+              "vtxscan-harv3-mcp1k", "vtxscan-harv3-delta"]
+
 TOL = 1.0            # cm, the pr/78/79 headline tolerance
 TOL_LOOSE = 3.0      # cm, the column printed beside it
 

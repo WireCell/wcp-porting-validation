@@ -34,13 +34,27 @@ import vtx_io                                                    # noqa: E402
 
 
 def deployed_dump_path(label):
-    """The min_accept=10 arm's dump for this label, or None if it has none.
+    """The deployed arm's dump for this label, or None if it has none.
 
-    Only the four `-prod0813` arms have an `-ma10` counterpart; the 8
+    Only the four `-prod0813` arms have a deployed counterpart; the 8
     `vtxscan-prod0813-mc` labels (r1qlmc / r2mc) do not, which is exactly why
     the deployed-arm sample is 473 and not 481 -- the same 473 doc pr/79 used.
+
+    2026-08-16 (doc pr/82 sec 4.4): the rewrite target moved `-ma10` ->
+    `-harv3`.  The `-ma10` and `-prod0813` arms were archived that morning with
+    the calib class DROPPED, not archived, so this function returned None for
+    all 483 labels until this change.  `-harv3` is the same production
+    operating point (min_accept 10.0, top_k 5) with `dl_vtx_harvest` on, and
+    scripts/analysis/pr82/onoff_gate.py shows it is identical to the
+    harvest-OFF `-pr87ion3` arm once the recording-only keys are stripped.
+
+    WHAT THIS CANNOT RESTORE: B0's original 358/473 was measured on `-ma10`,
+    whose dumps no longer exist.  `-harv3` sits on a LATER pattern recognition
+    (toolkit 771f075b, pr83/85/86 on), so a B0 recomputed here is a new
+    measurement of the current arm, not a reproduction of the pr/79 number.
+    Do not report the two as the same quantity.
     """
-    dep = label["arm"].replace("-prod0813", "-ma10")
+    dep = label["arm"].replace("-prod0813", "-harv3")
     p = os.path.join(vtx_io.BASE, dep, "pr_evt%d" % label["eventNo"],
                      "calib-pr-evt%d.json" % label["eventNo"])
     return p if os.path.exists(p) else None

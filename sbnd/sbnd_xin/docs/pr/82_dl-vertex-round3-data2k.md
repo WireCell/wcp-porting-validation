@@ -1,9 +1,13 @@
 # doc pr/82 — DL-vertex round 3: the 2000-event data sample, the harvest gap, and relabelling the three existing samples
 
-**Status: PLAN. Nothing large-scale has been processed.** Four smoke tests were
-run (§0b) and all pass; every number in §1 and §2 is measured, not projected from
-another doc. No production flip, no knob change, no C++ or jsonnet edit is
-proposed here.
+**Status: §§2–4 EXECUTED 2026-08-16 — see §12 for what actually ran and what it
+measured.** §§1–11 below are the plan as written before execution and are left
+unedited except where §12 supersedes them; every pre-registered gate in §9 was
+run and its verdict is recorded. §5 (the ~890-event scan of the new sample) and
+§6 (training round 3) are **not** executed — the owner scoped this round to
+processing, harvest, relabelling and the review display.
+
+No production flip, no knob change, no C++ or jsonnet edit was made.
 
 This is the round pre-registered as "pr/82" in doc pr/81's `# NEXT ROUND`
 section. It is written against the tree as it exists on 2026-08-16, which differs
@@ -463,9 +467,16 @@ is a measurement of the owner's own past scanning, not a doc quote):
 890-event hand scan is therefore ~20 h of the owner's time — which is the reason
 the AI-fleet + adjudication split is the plan rather than a preference.
 
-**Ports.** 5017 and 5018 are occupied right now by live `pr_display_viewer.py`
+**Ports.** ~~5017 and 5018 are occupied right now by live `pr_display_viewer.py`
 instances on `work-r{1qlmc,2mc}-prod0813`. Do not stop them; serve the new scan
-on a free port (5019+, noting `overclustering_display` also defaults to 5018).
+on a free port (5019+, noting `overclustering_display` also defaults to 5018).~~
+
+**SUPERSEDED 2026-08-16 by owner instruction (§12.4):** the execution round was
+told to serve the review pile on **5017 specifically**, so the
+`vtxscan-prod0813-mc` viewer that held it (pid 2871669, 8 labels saved, last
+write 2026-08-15 10:07) was stopped. Its 8 labels are on disk and untouched; the
+verbatim relaunch command is recorded in §12.4 so that scan can resume at any
+time. **5018 was not touched.**
 
 ---
 
@@ -574,7 +585,10 @@ Written down now, before any new label is read.
 - M13 — every new artifact gets a fresh tag/dir. `vertex_labels/vtxscan-prod0813*`
   is a historical record and is not modified by this round.
 - M16 — scratch under `/home/xqian/tmp/`, never `/tmp`.
-- Do not stop or restart the bokeh viewers on 5017/5018.
+- ~~Do not stop or restart the bokeh viewers on 5017/5018.~~ **Amended
+  2026-08-16:** 5017 was taken over on explicit owner instruction (§12.4); the
+  rule still stands for **5018**, which is untouched and still serving
+  `uitest-dqdx` on `work-r1qlmc-prod0813`.
 
 ## 11. Files
 
@@ -587,3 +601,295 @@ Written down now, before any new label is read.
 | `vertex_labels/vtxscan-harv3-*` | **new tags** — carried + re-scanned labels |
 | `dl_vtx_training/data/harv3` | the round-3 training snapshot |
 | `dl_vtx_training/data/{harv473,full473,*-cands,k20feats*}` | **kept** — the old-epoch comparison |
+
+---
+
+# 12. Execution log — 2026-08-16
+
+Everything below actually ran. Owner scope for this round: process the new 2000
+so its hand-scan and DL-feature products exist, produce the same for the three
+existing samples, relabel those three from the existing scans, and serve the
+events needing owner eyes on port 5017. §5's scan of the new sample and §6's
+training round 3 are deliberately **not** in this round.
+
+Owner authorised **32-way** parallelism explicitly, above CLAUDE.md §2's ~6-way
+routine cap. M5's hazard is *truncated output*, not slowness, so every stage is
+followed by a count-and-rc check rather than a trusted exit code (§12.5). Peak
+load observed was **34.5** on a 64-core box; nothing was truncated.
+
+## 12.1 Task B — the harvest arms (§3) — DONE
+
+```bash
+for s in nuecc48 ncpi0 mcp1k; do
+  PR_JOBS=32 PR_EXTRA_STAGES=pr_display SBND_DL_VTX_HARVEST=true \
+    ./run_pr_chain_batch.sh work-$s-cb0805 work-$s-harv3 data
+done
+```
+
+`SBND_DL_VTX_MIN_ACCEPT` and `SBND_DL_VTX_TOP_K` are deliberately **not** set.
+pr/79 §10a's harvest recipe passed `TOP_K=20`, and copying that would have been
+a mistake here: a non-default `top_k` changes the rerank candidate set, so the
+arm would no longer be production and gate 1 below could not run at all. Bare
+defaults (10.0 / 5) are production since pr/79, and `run_pr_chain_batch.sh:184`
+auto-defaults the scoreboard.
+
+| arm | events | rc=0 | calib dumps | vs `pr87ion3` | wall | size |
+|---|---:|---:|---:|---|---:|---:|
+| `work-nuecc48-harv3` | 48 | 48 | **47** | 47 ✓ | 1m15s | 261 MB |
+| `work-ncpi0-harv3` | 19 | 19 | **19** | 19 ✓ | 29s | 97 MB |
+| `work-mcp1k-harv3` | 1000 | 1000 | **445** | 445 ✓ | 10m37s | 3.1 GB |
+
+Total 12m21s for 1067 events, 3.5 GB. (The 48→47 and 1000→445 shortfalls are
+not losses: only events where PR selects a main cluster emit a calib dump, and
+the counts match the harvest-OFF reference arm exactly.)
+
+### Gate 1 — ON == OFF: **PASS, 511/511**
+
+New script `scripts/analysis/pr82/onoff_gate.py` (none existed —
+`scripts/retire/gate_cmp_arms.py` deliberately *excludes* the calib JSON, and
+pr/79 §10c / §0b test 4 were done by hand on a handful of events).
+
+```
+work-nuecc48-harv3 vs -pr87ion3 : common  47, identical-after-strip  47, DIFF 0
+work-ncpi0-harv3   vs -pr87ion3 : common  19, identical-after-strip  19, DIFF 0
+work-mcp1k-harv3   vs -pr87ion3 : common 445, identical-after-strip 445, DIFF 0
+```
+
+The strip is a **prefix rule** (`hv_*`, plus the literal `harvest`) applied
+recursively, not a hand-listed key set, so a future harvest field cannot make
+this gate fail for the wrong reason. Comparison is on canonical JSON, never file
+bytes (M2). The gate also asserts each ON dump really carries `harvest: true` —
+without that an inert knob would make it pass vacuously (the M1 shape).
+
+**This is the load-bearing result of the round.** It establishes that
+`dl_vtx_harvest` is recording-only at toolkit `771f075b`, which is what licenses
+§4's carry-forward to join against the harvest arms.
+
+### Gate 3 — bit-exact live reproduction (`verify_harvest.py`): **PASS**
+
+| arm | EXACT | not applicable |
+|---|---:|---|
+| nuecc48 | **47 / 47** | — |
+| ncpi0 | **19 / 19** | — |
+| mcp1k | **429 / 429** | 16 |
+
+Every voxel position **and** score reproduces from the recorded `hv_cloud`
+through CP24. The 16 mcp1k exclusions are **not** failures: they carry
+`dl_ran: false`, `route: dl-not-run`, zero rows, zero voxels and zero cloud
+points — the DL vertex finder never ran, so there is nothing to reproduce.
+`verify_harvest.py` has no case for that and reports it as `no hv keys in rows`;
+worth a follow-up patch, but the harvest recipe is not implicated.
+
+**None of the 16 is a labelled event.** All 473 labelled events, and all 449
+carried ones, have a non-empty `hv_cloud` — checked explicitly, because a
+labelled event with no cloud would silently drop a training row.
+
+### Gate 4 — the §4.0 re-measurement on the harvest arms: **PASS, exact**
+
+Re-running §0 block (b) against `-harv3` instead of `-pr87ion3`:
+
+```
+Counter({'exact': 449, 'loose': 15, 'broken': 9})  zero: 380  median 0.0
+vertex_id: same 449, moved 21
+production correct@1cm: 358 / 473
+```
+
+Identical in every digit to the planning-time measurement. §1's numbers
+therefore stand as the operative figures; there is no second set to track.
+
+## 12.2 Task C — relabelling (§4) — DONE
+
+New `vtx_rules/carry_labels.py`. **449 of 473 labels carried**, into three fresh
+tags; the 24 that did not are §12.4's review pile.
+
+| tag | carried |
+|---|---:|
+| `vertex_labels/vtxscan-harv3-nuecc48` | 42 |
+| `vertex_labels/vtxscan-harv3-ncpi0` | 19 |
+| `vertex_labels/vtxscan-harv3-mcp1k` | 388 |
+
+Of the 449: **380 bit-identical** vertex fits, **7 changed `vertex_id`** while
+keeping the point. `vertex_labels/vtxscan-prod0813*/` is untouched (mtimes still
+2026-08-14/15) and remains the historical record.
+
+**Why the join is on position, not `vertex_id`.** Both directions were measured
+on this data and the id-join is wrong both ways:
+
+- 7 events keep the point and renumber the id — an id-join calls those *lost*
+  and sends a human something with nothing to decide.
+- **evt283040 keeps id 2000 while that id now names a point 117.5 cm away** — an
+  id-join calls that *clean* and silently carries the label to the wrong place.
+  That single event is the whole case. (It is in the review pile anyway: its
+  nearest vertex is 1.34 cm from the click, past `TOL`.)
+
+Position it is, with the id change recorded as provenance so an id-audit stays
+possible. Every carried label gains a `carried_from` block: old tag, old arm,
+old path, old `vertex_id`, the original `truth`, the re-anchor distance, and
+`vertex_id_changed`.
+
+### The one substantive finding: 63 carried picks have no scoreboard row
+
+The original labels carried the board's `dl_score` / `trad_score` /
+`dl_winner` / … columns on `picks[0]` for **470 of 473** events. Carried onto the
+new arm the equivalent is **386 of 449**, and chasing the gap turned up
+something real rather than a bug:
+
+| how the row was found | n |
+|---|---:|
+| the final vertex is itself a scored row | 372 |
+| the row the *original* label was built from (`improve_vertex` renumbered) | 5 |
+| a row within 1 cm of the final position | 9 |
+| **no row at all — the reranker never scored this vertex** | **63** |
+
+**55 of those 63 are in the MAIN cluster.** So on 14% of the carried set the
+human's answer is a vertex the current reranker did not even score — an
+*admission* gap, the same class pr/78 §3 identified as `dl_vtx_top_k`-limited,
+now measured post-pr83/85/86 and on the main cluster specifically. It is a
+better-defined target than the 91-event selector gap in §1.2: a selector cannot
+choose what was never admitted.
+
+`carry_labels.py` records which of the four routes each label used
+(`carried_from.row_join`) and leaves the `dl_*`/`trad_*` fields **absent** for
+the 63 rather than writing zeros — a fabricated zero would turn an admission gap
+into apparent data.
+
+### §4.4 — `baselines.py` repaired
+
+`deployed_dump_path()` now rewrites `-prod0813` → `-harv3` (was `-ma10`, deleted
+2026-08-16 with the calib class dropped, so it had been returning `None` for all
+483). Verified working:
+
+```
+half=all   labels=481   with a deployed arm=473
+deployed operating points seen (min_accept, top_k): [(10.0, 5)]
+B0 deployed main_vertex     answered 472   correct@1cm 358  75.8%
+```
+
+The operating point printing as exactly `(10.0, 5)` is the independent
+confirmation that `-harv3` is the production point. **B0's 358 is a new
+measurement of the current arm, not a reproduction of pr/79's 358 on `-ma10`** —
+that arm's dumps are gone. The docstring says so, because the coincidence is
+otherwise an invitation to an hour of confusion.
+
+### Tag registration — deliberately not done
+
+The `vtxscan-harv3-*` tags are **not** added to `vtx_io.TAGS`; a new
+`vtx_io.TAGS_HARV3` holds them and callers pass it explicitly. The carried
+labels cover the *same events* as the prod0813 tags, so a default holding both
+would hand every unfiltered consumer (`baselines.py`, `selfscan.py score`,
+`build_dataset.py`) ~922 labels with duplicate event keys and quietly wrong
+denominators — with no error anywhere.
+
+## 12.3 Task A — the new 2000 events (§2)
+
+Staged dir `input_files_reco1/staged-mcp2025c-2nd-2000evt/`, sample `mcp2k`.
+
+**Staging: 2000/2000 OK, 4m11s at 32-way**, via new `stage_all_2k.sh`. Flat
+index `e0..e999` ← part1 entry *i*, `e1000..e1999` ← part2 entry *i−1000*, held
+in one place in the script and written into `PROVENANCE.txt`.
+
+### The uniqueness gate (§2.1): **PASS, all four assertions**
+
+```
+map rows: 2000 (expected 2000)
+A1 distinct (run,subrun,event): 2000 / 2000  OK
+A2 distinct bare event ids     : 2000 / 2000  OK
+A3 overlap with first 1k       : 0            OK
+A4 caf_ns range 245..3341, all==0 mod 256: False  OK
+run/subrun census: [((18255,1), 1450), ((18259,1), 550)]
+```
+
+The caf range 245–3341 ns sits right on the first 1k's 245–3322, so the
+`FrameShiftInfo` product read genuinely, and A4's `-caf auto` fallback signature
+is absent.
+
+**Two defects in this doc's own §2.1 map-builder snippet, both verified against
+the existing 1k and both fixed in `check_uniqueness.py`:**
+
+1. **It crashes.** `'*_metadata.json'` matches *two* archive members
+   (`opflash_tensorset_<EVT>_metadata.json` and
+   `opflash_tensor_<EVT>_0_metadata.json`, the latter just `{"name":"opflash"}`),
+   so two JSON documents land on one stream:
+   `json.decoder.JSONDecodeError: Extra data`.
+2. **Wrong schema even if it ran.** It emits space-separated `run subrun event
+   caf` with no entry column and no header, but `run_full1k_nusel.sh:66` is
+   `awk -F'\t' '$1==e {print $4}'`. Every lookup would miss — and a missed
+   lookup is **not an error**: the worker writes `rc=90 no-event-map-row` and
+   `exit 0`, so a 2000/2000 silent skip reports as a completed batch.
+
+The corrected builder reproduces the existing 1k map byte-for-byte.
+
+### A third instance of the same silent-skip trap, in the runner fork
+
+`run_full1k_nusel.sh:127` dispatches workers by **name**:
+`xargs ... "$SBND_DIR/run_full1k_nusel.sh" --worker {}`. A straight copy to
+`run_full1k_nusel_2k.sh` leaves that line pointing at the *original*, whose
+`STAGE`/`MAP` are hardcoded to the 1000-event dir — so entries 1000–1999 would
+each hit `rc=90 no-event-map-row`, exit 0, and half the sample would vanish with
+the batch reporting success. Fixed, with the reason in a comment at the line.
+
+## 12.4 The review display — port 5017, 24 events
+
+The owner asked for the events needing their eyes on **5017 specifically**. That
+port was held by an in-progress MC scan; the owner confirmed the takeover before
+it happened, so §5 and §10's "do not restart the viewers on 5017/5018" is
+amended in place above rather than left standing against what this round did.
+
+**What was stopped, and how to bring it back.** pid 2871669,
+`--scan-tag vtxscan-prod0813-mc` over `work-r{1qlmc,2mc}-prod0813`, 8 labels
+saved, last write 2026-08-15 10:07. Those 8 labels are on disk and untouched —
+only the browser session was lost. Verbatim relaunch:
+
+```bash
+cd .../sbnd_xin && ./pr_display/serve_pr_display.sh 5017 \
+  --scan-tag vtxscan-prod0813-mc \
+  'work-r1qlmc-prod0813/pr_evt*/calib-pr-evt*.json' \
+  'work-r2mc-prod0813/pr_evt*/calib-pr-evt*.json'
+```
+
+(also saved at `/home/xqian/tmp/pr82/5017-relaunch.sh`, with the raw command
+line at `5017-previous-cmdline.txt`). **5018 was not touched** and still serves
+`uitest-dqdx`.
+
+**What is now on 5017:**
+
+```bash
+mapfile -t DUMPS < /home/xqian/tmp/pr82/delta-dumps.txt   # 24, worst first
+./pr_display/serve_pr_display.sh 5017 --scan-tag vtxscan-harv3-delta "${DUMPS[@]}"
+```
+
+`http://localhost:5017/pr_display_viewer` (HTTP 200, clean log). Events are
+ordered **worst re-anchor first**, so the 16.6 cm case is the landing page.
+Picks are written to `vertex_labels/vtxscan-harv3-delta/` — a **fresh** tag.
+
+That freshness is not cosmetic: the viewer keys label files on event id alone
+(`labels-evt<ID>.json`, no arm in the name), and an explicit `--scan-tag` is
+treated as consent that *disables* the M13 write guard. Passing
+`--scan-tag vtxscan-prod0813` here would have overwritten the owner's original
+47 labels in place, with the guard that exists to prevent exactly that disarmed
+by the flag itself.
+
+`docs/pr/82-delta-scan.md` is the companion sheet: one row per event with the
+re-anchor distance, old and new `vertex_id`, the distance from the old answer to
+what production currently picks, the route, and the old truth coordinates — so
+the question being asked is "where is the vertex now", not a cold re-scan.
+
+Composition: **19 mcp1k + 5 nueCC48, 0 NCpi0** — all 19 NCpi0 labels carried
+exactly. 9 are beyond 3 cm, 15 between 1 and 3 cm. At the owner's measured
+~30 s/event this is ~15 minutes of scanning.
+
+## 12.5 Completeness checks (the M5 mitigation for 32-way)
+
+Every stage was followed by a count-and-rc check before the next started, since
+M5's failure mode is silent truncation rather than a non-zero exit:
+
+| stage | expected | observed |
+|---|---|---|
+| harvest arms | 1067 events | 1067 `rc=0`, dumps 47/19/445 = the `pr87ion3` counts |
+| staging | 2000 entries | `2000 OK`, 2000 `e<i>/` dirs |
+| uniqueness | 4 assertions | 4/4 PASS, run/subrun census 1450 + 550 = 2000 |
+
+Peak load 37 on 64 cores; no stage was run concurrently with another
+wire-cell stage. Exit codes captured as `cmd > log 2>&1; echo rc=$?`, never
+through a pipe (M14).
+
