@@ -851,6 +851,27 @@ fi
 if [ -n "${SBND_MVGA_INTERPOSED_DEG1:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_interposed_deg1=${SBND_MVGA_INTERPOSED_DEG1}")
 fi
+# doc pr/86 round 2 R1: op3 post-carry straighten reach past the junction
+# (cm; C++ default 0 = concatenation verbatim).  Numeric TLA, unset/empty
+# omits (jsonnet default null => byte-identical).
+#   SBND_MVGA_SPLICE_STRAIGHTEN
+if [ -n "${SBND_MVGA_SPLICE_STRAIGHTEN:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_splice_straighten=${SBND_MVGA_SPLICE_STRAIGHTEN}")
+fi
+# doc pr/86 round 2 R2: op3.5 junction-collapse radius around the main
+# vertex (cm; C++ default 0 = pass skipped).  Numeric TLA, unset/empty
+# omits (jsonnet default null => byte-identical).
+#   SBND_MVGA_APPROACH_COLLAPSE
+if [ -n "${SBND_MVGA_APPROACH_COLLAPSE:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_approach_collapse=${SBND_MVGA_APPROACH_COLLAPSE}")
+fi
+# doc pr/86 round 2: R1/R2 straight-chain charge-veto radius (cm; C++
+# default 0 = the prototype 0.2 cm).  Numeric TLA, unset/empty omits
+# (jsonnet default null => byte-identical).
+#   SBND_MVGA_STRAIGHTEN_RADIUS
+if [ -n "${SBND_MVGA_STRAIGHTEN_RADIUS:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_straighten_radius=${SBND_MVGA_STRAIGHTEN_RADIUS}")
+fi
 # doc pr/85: carry the old vertex's arms through the snap residual below
 # this arc (cm).  Numeric TLA -- pass a bare cm value, e.g.
 # SBND_VKS_CARRY_PRONG=1.5.  Unset/empty omits the override (jsonnet

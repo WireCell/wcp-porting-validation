@@ -1,0 +1,25 @@
+# doc pr/86 sec 15 (round 2) bee sets (17 events; before = round-1
+# production epoch work-*-pr86ion, after = round-2 flip work-*-pr87ion3;
+# ql layers from work-*-cb0805).  Round 2 moves FIT POINTS (unlike round 1):
+# near-vertex track_fit max displacement 2.81 cm on 349945 (15% of points
+# > 1 cm), 2.26 cm on 281214 -- the round-1 sets never exceeded 1.45 cm.
+# before: https://www.phy.bnl.gov/twister/bee/set/8c2aa82d-52ec-4813-b605-b503bb6410fa/event/list/
+# after:  https://www.phy.bnl.gov/twister/bee/set/5f2baf3f-c189-47c1-9033-90e38f5bfdc2/event/list/
+# bee_idx	event	why
+0	349945	OWNER EXEMPLAR "direct track to vertex still not there": approach was 3 hops / 14 cm polyline over 5.8 cm (ratio 2.42); now 1 hop / ratio 1.16 -- collapse + created-splice + straighten chain
+1	281214	owner exemplar: near-vertex kink 164 -> 38 deg, zigzag gone
+2	38856	OWNER EXEMPLAR "large-angle turn / 3-track vertex": merged-prong kinks 86/84 -> ~61/52 deg; straight attach at the vertex, elbows pushed off-vertex; residual turn is charge-limited (real bend) -- please re-check
+3	268067	concatenation kink 129 -> 43 deg (round-1 splice made it WORSE, round 2 straightens it)
+4	122660	round-1 named nue loss (still nue -15, unchanged): kink 99 -> 51 deg -- geometry now cleaner at the reco vertex
+5	163543	3-splice chain event: kink 73 -> 55; nue stays positive (0.52 -> 0.14, WATCH)
+6	285567	kink 122 -> 77, zigzag 1.9 -> 1.29
+7	271851	kink 116 -> 67, zigzag 3.65 -> 1.58
+8	30504	P4 satellite event: zigzag 1.6 -> 1.09
+9	67394	was ADVERSE at v6 (op3 absorbed a fresh collapse product, vertex moved 1.02 cm) -- FIXED at v7/v8: vertex restored, please confirm it looks unchanged
+10	168432	straighten fired, kink 61 -> 54; vertex on click
+11	423981	kink 78 -> 67 (the 130.1 deg round-1 admission, now straightened)
+12	61579	mild REGRESSION: kink 34 -> 58 (straighten + refit developed an elbow) -- please eyeball
+13	73004	mild REGRESSION: kink 70 -> 79 -- please eyeball
+14	59553	cosmict 1 -> 0 flip (cosmic tag REMOVED) -- please hand-check
+15	319611	cosmict 1 -> 0 flip (the pr/85 hand-check event again) -- please hand-check
+16	21073	residual CONTROL, unchanged: absorber 10.40 cm sits just over the interposed ceiling 10 (deferred; ceiling 15 would admit it)

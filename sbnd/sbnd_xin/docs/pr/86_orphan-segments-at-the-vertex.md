@@ -5,7 +5,14 @@ day) — §12's P1+P1b+P2+P3+P4 implemented and SBND PRODUCTION ON
 (`mvga_interposed_len=10, mvga_interposed_angle=130, mvga_interposed_deg1=true,
 mvga_sat_dup_frac=0.7`; toolkit knobs default OFF).  Full-sample Class-B cases
 90→48, orphans 118→82, zero events worse, zero adverse movers; nueCC48 +4 nue
-recoveries / 1 named loss (122660, §14.5).**
+recoveries / 1 named loss (122660, §14.5).
+§15 round 2 (2026-08-16) — owner hand-check found §14's repair invisible
+(graph relabel, no fit-point motion); round 2 makes it visible: three new
+knobs SBND PRODUCTION ON (`mvga_splice_straighten=5, mvga_approach_collapse=15,
+mvga_straighten_radius=1.0`; C++ defaults OFF).  Near-vertex kink≥60° events
+60→43 (pre-round-1: 39), zigzag ratio≥1.5 12→6, 349945's approach 3 hops/2.42
+→ 1 hop/1.16, fit points finally move (≤2.8 cm); knobs-off 2134/2134
+byte-identical, ZERO adverse movers, zero nue-score sign changes.**
 
 The owner looked at the 2-D measurement overlays for `18255-268067`,
 `18304-38856` and `18255-349945`, confirmed all three have a bad PR graph near
@@ -977,3 +984,187 @@ click or the reco vertex right?), **idx 8 evt59335** and **idx 9 evt62281**
    around it at degree-1 but the interaction is worth knowing.
 5. §8's items (555 dumpless events, 18 unmatched `main_vertex`, pr/85 §8.1
    degree-1 b1 correlation) stand unchanged.
+
+---
+
+## 15. Round 2 — making the repair visible (2026-08-16)
+
+Owner hand-check of the §14 Bee sets: "the improvements are not as clear";
+specifically 349945's direct track to the vertex is still not there and
+38856's large-angle turn near the vertex is still there ("should be a
+3-track vertex").  Owner adjudication (round-2 kickoff): 38856's vertex
+POSITION is right — the repair is a straight attach at the current reco
+vertex; 349945's target is the 175 cm track (seg18009).
+
+### 15.0 Repro
+
+```bash
+cd sbnd_xin
+# validation arms (v8 binary, toolkit a9b85f35+..+round-2 commits):
+PR_JOBS=32 PR_EXTRA_STAGES=pr_display ./run_pr_chain_batch.sh \
+    work-<s>-cb0805 work-<s>-pr87off7 data          # knobs off (Gate 1)
+SBND_MVGA_SPLICE_STRAIGHTEN=5 SBND_MVGA_APPROACH_COLLAPSE=15 \
+SBND_MVGA_STRAIGHTEN_RADIUS=1.0 PR_JOBS=32 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-<s>-cb0805 work-<s>-pr87ion3 data
+python3 scripts/pr85_hash_gate.py work-<s>-pr86ion work-<s>-pr87off7   # PASS
+python3 scripts/pr86_movers.py    work-<s>-pr86ion work-<s>-pr87ion3   # rc=0
+PR86_DUMP_ARMS=work-mcp1k-pr87ion3:work-nuecc48-pr87ion3:work-ncpi0-pr87ion3 \
+    python3 pr86_kink_census.py --top 10                               # new metrics
+```
+
+### 15.1 Why §14 was invisible (three-agent diagnosis)
+
+1. **The splice is a relabel.**  `carry_prong_execute`
+   (PRSegmentFunctions.cxx:4194-4237) CONCATENATES wcpt chains; the op4
+   whole-cluster refit that already runs after every op
+   (NeutrinoGraphAudit.cxx "op4") seeds from `segment->wcpts()`
+   (TrackFitting.cxx organize_segments_path), so the junction kink survives
+   the regularized fit.  Byte-diff of the §14 Bee zips: QL layers 18/18
+   identical (same arm by construction); across all 18 events no track_fit
+   point moved > 1.45 cm and ~99% of rendered point mass was identical.
+   The visible delta was one vertex dot and a colour boundary.
+2. **The metric was blind to both owner shapes.**  The Class-B census
+   requires aim ≤ 25° (pr86_merged_prong_census.py AIM_ANGLE): 349945's
+   175 cm track aims 49.9° away and reaches main only via a 14 cm
+   3-segment zigzag over 5.76 cm — invisible.  §14's "classB 2→0" for
+   349945 counted two ~6.5 cm shower fragments (bee-index mislabel,
+   corrected in 86_bee.index.txt; ditto bee_idx 12 / 61579).  And splices
+   MOVED kinks from graph vertices INTO segments where vertex-degree
+   metrics cannot see them: new in-segment-kink census (§15.3) measures
+   the ≥60° near-vertex band at 39 (pre-§14) → 60 (post-§14).
+3. **Knob-widening headroom was nil** (census replay on pr86ion):
+   satellite splice +0 (all satellite residuals outside mvga_satellite=3
+   or another cluster), ceiling→15 +3 events (21073/111412/219295,
+   absorbers 10.40/10.88/10.43), angle→120° +3 events.  20/48 residual
+   Class-B and 20/82 orphans are click-vs-main anchor disagreement
+   (vertex selection, not repair; 15 "orphans" are already main-incident);
+   33/82 orphans have no graph path (upstream clustering).
+4. **The prototype straightens when merging through a vertex**
+   (examine_structure_2, NeutrinoID_examine_structure.h:76-165: straight
+   line, 0.6 cm steps, is_good_point charge veto, Steiner snap, refit) and
+   concatenates only already-collinear merges.  §14's concatenate-only
+   splice diverged from prototype idiom.  es2 is ported
+   (NeutrinoStructureExaminer.cxx:284-479) but runs EARLY; improve_vertex
+   builds the zigzags after it, and mvga is the last graph-editing pass.
+
+### 15.2 What shipped (toolkit, C++ defaults OFF; fork-by-duplication of the
+### es2 recipe into NeutrinoGraphAudit.cxx — examiner file untouched)
+
+- **R1 `mvga_splice_straighten` (cm, 0=off)** — after each op3 carry, the
+  merged chain from the anchor to the first point ≥ (stub arc + reach) is
+  re-derived with the es2 recipe; charge-veto failure keeps the
+  concatenated chain (real bends are preserved — the 38856 lesson as
+  physics, not geometry).
+- **R2 `mvga_approach_collapse` (cm radius, 0=off)** — op3.5: late es2
+  merge on degree-2, non-protected, non-main junction vertices within the
+  radius, iterated to a fixed point (co-located-endpoint B.7 case skipped,
+  stated divergence).  Plus the **op3↔op3.5 interleave**: op3 re-runs
+  after any pass in which op3.5 fired (a collapse can turn the next
+  junction into an exact splice case; knob off ⇒ single pass ⇒
+  byte-identical).
+- **`mvga_straighten_radius` (cm, 0 = prototype 0.2)** — the charge-veto
+  radius.  0.2 vetoes every long-stub straighten (the ridge deviates
+  ~1.6 cm from the chord); 1.0 is grid-validated.
+- **Created-stub splice** (re-entry passes only): op1/op2 reconnect
+  products, `created`-exempt since pr/51 (and the §14.9#4 starvation),
+  become splice stubs after an op3.5 fire — with the far-angle gate
+  REPLACED by a per-prong charge-verified straighten gate (349945's elbow
+  reads far_angle 52.6°, yet the straight chord is charge-covered; carry
+  exactly the prongs that verify, junction survives for the rest;
+  terminal absorb of created/collapse products declines
+  reason=created-terminal).  A wcpt-fallback centroid direction (created
+  segments carry no fits) is gated on created ∧ (round-2 knob on).
+- Instrumentation: DEBUG `op3 splice-straighten` / `op3.5
+  approach-collapse` / `op3 created-splice`; TRACE declines
+  (charge-veto / created-terminal).
+- **R3 `pr86_kink_census.py`** (new script; §10 censuses frozen):
+  metric (i) max in-segment turn (2 cm chord windows) within 6 cm of the
+  reco anchor; metric (ii) per long segment (≥15 cm) ending 2-10 cm from
+  the anchor: graph-path/gap ratio + end-aim angle (no aim cut).
+  Validated before use: reproduces 349945 as the top event (ratio 2.42,
+  aim 56°) and quantifies §14's kink relocation (≥60° band 39→60).
+
+### 15.3 Iteration ledger (8 binaries; every intermediate arm left in place)
+
+| binary | change | verdict |
+|---|---|---|
+| v1 | R1+R2 as planned (veto 0.2) | straighten works where it fires (281214 164→38°) but 0.2 cm vetoes every long stub; Gate-1 PASS 2134/2134 (superseded) |
+| v2 | + `mvga_straighten_radius` | 0.6/1.0 unlock 268067 144→43, 285567 100→40, 122660 (1.0 only) 99→51; 349945 partial — zigzag junctions collapse but the elbow vertex is deg-3 |
+| v3 | op3↔op3.5 interleave | re-entry works; 349945's elbow stub (op1-created, 3.06 cm) still invisible: `created`-exempt.  Angle-120 probe NEGATIVE (172788 kink 22→86 — a real bend spliced; production stays 130) |
+| v4 | created stubs released on re-entry (splice-only) | admitted but silently declined: created segments have no fits ⇒ zero-magnitude direction ⇒ far_angle 0 |
+| v5 | wcpt-fallback direction (created-only) | 349945's elbow reads far_angle 52.6° — a REAL doubling-back, angle gate correctly declines under its own semantics; wrong question though |
+| v6 | created-splice charge gate (per-prong) | 349945 RESOLVED at radius 1.0: 3 hops/2.42 → 1 hop/1.16.  Stage C found ONE adverse (67394, 1.02 cm off click): op3's terminal absorb deleted a fresh op3.5 collapse product (nfit=0 overlap=1.00) |
+| v7 | collapse products join `created` | 67394 fixed; v6 Gate-1 then FAILED mcp1k 2/2000 (284145, 319611): the v5 fallback also fired for created PRONGS at knobs-off (prongs are collected unfiltered) |
+| **v8** | fallback gated on (straighten>0 ∨ collapse>0) | **SHIPPING.  Gate-1 PASS 2134/2134; all bars green (§15.4)** |
+
+Sweep (110 affected events = reco kink≥40° or zigzag≥1.3 in the pr86ion
+census): straighten {5,8} × collapse {10,15} at radius 1.0 are
+statistically indistinguishable (kink≥60: 43/43/44; zz≥1.3: 10/10/10) —
+the charge veto is the binding constraint, correctly.  Adopted the minimal
+point 5/15/1.0.  Radius probes: 1.0 uniquely required by 349945+122660;
+zero adverse at every grid point.
+
+### 15.4 Stage C (full 3 samples, arms work-*-pr87ion3 vs work-*-pr86ion;
+### knobs-off arms work-*-pr87off7)
+
+- **Gate 1**: 96/96 + 38/38 + 2000/2000 = **2134/2134 archives
+  byte-identical**, rc=0 1067/1067 (shipping binary).  Footprint knobs-on:
+  ~38 events (19+7+50 archive diffs).
+- **Movers** (pr86_movers.py, rc checked directly — §15.5): mcp1k 25
+  (toward 11 / on 10 / away 4), nuecc48 5, ncpi0 2 — **ZERO ADVERSE**.
+- **Scores**: zero nue-score sign changes in any sample; §14's recoveries
+  preserved (268784/400474/423981 at 4.30; 268067 4.11→2.64 and 163543
+  0.52→0.14 dip but stay positive — WATCH); 122660 unchanged at −15 (no
+  further loss; its geometry is now clean).  pr/85's four adverse events:
+  nue/numu identical except 286353 numu 1.707→1.742 with < 0.05 cm vertex
+  motion.  Two cosmict 1→0 flips (59553, 319611 — hand-check).
+- **New metrics, full sample (493 reco-anchored)**: kink ≥60° band
+  **60→43** (§14 had pushed it 39→60 — round 2 undoes the relocation
+  almost entirely); 40-60 47→58 (absorbed from above); zigzag candidates
+  51→42, ratio≥1.5 **12→6**; no-path 18 unchanged (upstream).
+- **Rendered geometry** (the §15.1 acceptance): near-vertex track_fit
+  max NN displacement 2.81 cm on 349945 (15% of points > 1 cm), 2.26 cm
+  on 281214, 1.28 on 38856, 1.14 on 122660 — vs § 14's ≤ 1.45 cm global
+  maximum.
+- **Runtime/RSS** (mcp1k 1000, .time.meta): knobs-on ≡ knobs-off at
+  20.0 s median / p90 23.0 s / RSS 1173 MB median — zero knob cost (the
+  +2 s vs the §14 epoch appears identically in the byte-identical
+  knobs-off arm ⇒ machine load, not code).
+- **Post-flip bare smoke**: 21 events, 42/42 archives ≡ pr87ion3.
+- Flip compiled-diff proof: exactly the 3 new keys (no duplicate-param
+  shadowing).
+
+### 15.5 Traps recorded
+
+- gojsonnet duplicate-param check re-done at flip (clean this time).
+- `cmd | tail; echo rc=$?` reports tail's rc (M14) — the v6 ADVERSE lived
+  in the counts line while "rc=0" printed; movers now run unpiped.
+- Gate-1 on the SHIPPING binary is non-negotiable: v6's knobs-off leak
+  (fallback on created prongs) was caught ONLY by the re-run.
+- The runner's reality TLA is lineage-checked (cb0805 = data, not sim).
+- .time.meta is key=value, not JSON.
+
+### 15.6 Bee (17 events, index docs/pr/86_bee2.index.txt)
+
+- before (§14 production): https://www.phy.bnl.gov/twister/bee/set/8c2aa82d-52ec-4813-b605-b503bb6410fa/event/list/
+- after (this flip): https://www.phy.bnl.gov/twister/bee/set/5f2baf3f-c189-47c1-9033-90e38f5bfdc2/event/list/
+- Hand-check requests: idx 0/1/2 (the owner's events — is the direct
+  track/3-track vertex now right?), idx 9 (67394 restored), idx 12/13
+  (mild kink regressions 61579/73004), idx 14/15 (cosmict 1→0 flips
+  59553/319611).
+
+### 15.7 Residuals
+
+1. 21073 stands (ceiling 15 would admit its 10.40 cm absorber — deferred,
+   one-event headroom).
+2. 277298/315167/404684-class: kinks the charge veto genuinely refuses to
+   straighten (real bends) — correct behavior, listed for the record.
+3. Click-vs-main anchor disagreement class (20 Class-B / 20 orphans) is a
+   VERTEX-SELECTION question, out of scope here.
+4. No-graph-path orphans (33) are upstream clustering (CUT class).
+5. 61579/73004 mild kink regressions (34→58, 70→79) — hand-check; if the
+   owner dislikes them the straighten can be narrowed, but both are
+   zigzag-free events where the refit redistributed charge.
+6. 280752/50831 §14 "would-fire" cases remain unexplained no-fires
+   (kProtectedBreak or graph-state-at-op3-time suspected; 2-event TRACE
+   rerun still pending).

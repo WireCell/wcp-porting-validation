@@ -22,3 +22,18 @@
 15	38856	owner "should be a 3-track vertex" -- orphans 4->1 (139.8 deg decline admitted)
 16	30504	P4 satellite absorb (anchor=sat d=1.26, the pr/85 dup_frac casualty) -- orphans 5->4
 17	21073	residual, UNCHANGED: interposed segment 10.40 cm, just over the ceiling
+#
+# CORRECTIONS (sec 15 round-2 investigation, 2026-08-15; entries above kept
+# verbatim as the round-1 record):
+# bee_idx 2 (349945): "one track did not reach vertex -- classB 2->0" is a
+#   MISLABEL.  The 175 cm track the owner means (seg18009) was untouched by
+#   round 1 (endpoint 5.76 cm short before AND after, aiming 49.9 deg away;
+#   the census aim<=25 gate cannot see it).  The "2->0" counted two ~6.5 cm
+#   shower fragments at the same vertex.  Fixed for real in round 2
+#   (86_bee2.index.txt idx 0).
+# bee_idx 12 (61579): "133 cm track re-reaches the vertex" is a MISLABEL --
+#   the 133 cm segment already touched the vertex (0.00 cm) in the before
+#   arm.  What actually merged was the 22.2 cm prong + 3.9 cm stub.
+# Also: round-1 rendered-geometry effect was ~nil by construction (the
+#   splice concatenates already-drawn points; op4 refit seeds from them) --
+#   see doc sec 15.1.
