@@ -117,6 +117,30 @@ def enrichment(vals, corr, frac=0.25, larger_is_suspicious=True):
     return top.mean(), c.mean(), k
 
 
+def _emit(args, recs, ordered):
+    """TSV + top-15 print for the doc pr/88 apply-only path (no labels)."""
+    print('\n== top 15 events to scan next (rule-based `suspicion` score; '
+          'no fitted P without labels) ==')
+    for r in ordered[:15]:
+        print('  evt%-8d score=%.2f margin=%s dl_best=%.0f snap=%.2f route=%s'
+              % (r['evt'], r['score'],
+                 'inf' if not np.isfinite(r['margin']) else '%.0f' % r['margin'],
+                 r['dl_best'], r['snap_dis'], r['route']))
+    if args.tsv:
+        cols = ['evt', 'p_corrective', 'score', 'margin', 'n_cand', 'dl_best',
+                'snap_dis', 'tta_spread', 'route', 'labeled', 'corrective']
+        with open(args.tsv, 'w') as fh:
+            fh.write('\t'.join(cols) + '\n')
+            for r in ordered:
+                fh.write('\t'.join(
+                    ('' if r[c] is None
+                     or (isinstance(r[c], float) and not np.isfinite(r[c]))
+                     else ('%.4f' % r[c] if isinstance(r[c], float)
+                           else str(r[c])))
+                    for c in cols) + '\n')
+        print('\nwrote %s (most suspicious first)' % args.tsv)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--sbnd-root', default=vio.default_sbnd_root())
@@ -134,9 +158,22 @@ def main():
             for r in csv.DictReader(fh, delimiter='\t'):
                 tta[int(r['evt'])] = float(r['tta_argmax_spread'])
 
+    # doc pr/88: applying a VALIDATED ranking to a brand-new arm is the whole
+    # point of the tool, and such an arm has no labels at all -- `iter_labels`
+    # raises FileNotFoundError on a missing tag dir, which made the apply-only
+    # case impossible.  Validate on one arm, apply to another; the validation
+    # block below degrades to "not measured here" rather than pretending.
     labeled = {}
-    for label in vio.iter_labels(args.sbnd_root, [args.tag]):
-        labeled[label['eventNo']] = int(vio.is_corrective(label, tol=args.tol))
+    tagdir = os.path.join(args.sbnd_root, 'vertex_labels', args.tag or '')
+    if args.tag and os.path.isdir(tagdir):
+        for label in vio.iter_labels(args.sbnd_root, [args.tag]):
+            labeled[label['eventNo']] = int(vio.is_corrective(label,
+                                                              tol=args.tol))
+    else:
+        print('APPLY-ONLY: no labels for tag %r -- signal validation is NOT '
+              'measured on this arm.  The ranking below rests on the '
+              'validation run separately against a labelled arm; quote that '
+              'number, not this run.' % args.tag)
 
     recs = []
     for path in sorted(glob.glob(os.path.join(
@@ -154,6 +191,16 @@ def main():
     unl = [r for r in recs if not r['labeled']]
     print('PR events %d: labeled %d (corrective %d), unlabeled %d'
           % (len(recs), len(lab), sum(r['corrective'] or 0 for r in lab), len(unl)))
+
+    # doc pr/88: with no labelled events every enrichment is 0/0.  Printing a
+    # table of nan invites someone to read it as a measurement, so skip it and
+    # fall back to the rule-based `suspicion` score, which carries fixed scales
+    # taken from the labelled-set distributions and needs no fit.
+    if not lab:
+        for r in recs:
+            r['p_corrective'] = ''
+        _emit(args, recs, sorted(recs, key=lambda r: -r['score']))
+        return 0
 
     print('\n== signal validation on labeled events (top-quartile corrective '
           'enrichment vs base rate) ==')

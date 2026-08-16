@@ -1,0 +1,61 @@
+[
+  {"event": "evt105074", "vertex_id": 23001,
+   "confidence": "likely",
+   "why": "Rule 1: the 468 cm track's only Bragg-shaped end is 23000 (124447 e/cm at z=438), so the cool 52019 end at z=1.3 is the start; rule 2 agrees (lowest z); the crossing 141 cm track is a separate near-vertical object that only touches it."},
+
+  {"event": "evt105140", "vertex_id": 6000,
+   "confidence": "likely",
+   "why": "Rule 1: p4 shows a textbook monotone stopping-muon rise to 250000 e/cm over the last 3 cm at the 6002 end, so the flat-MIP 6000 end is where the track began."},
+
+  {"event": "evt105316", "vertex_id": 20004,
+   "confidence": "certain",
+   "why": "Rule 1 in its strong form at a degree-5 knot: every prong long enough to measure rises away (6.4 cm proton to 196509 at 20007, 15 cm track feeding the 32 cm muon that Braggs to 115335 at 20000); the three 'flat' prongs are all under 9 cm so their two 5 cm windows overlap."},
+
+  {"event": "evt105492", "vertex_id": 9001,
+   "confidence": "likely",
+   "why": "Rule 1 plus the hot-patch test: p4 shows a broad Bragg-shaped 120-130k plateau decaying away from the 9002 end, while the 9001 end is a single isolated 110000 point on an 80k baseline, i.e. vertex charge rather than a stopping rise."},
+
+  {"event": "evt156313", "vertex_id": 22005,
+   "confidence": "unclear",
+   "why": "Three disconnected sub-cm blobs strung along z from 1.9 to 41 cm at the same x,y with no dQ/dx gradient anywhere; only rule 2 (beam runs +z, so the lowest-z end is the start) picks a side, and that is close to a guess."},
+
+  {"event": "evt157215", "vertex_id": 19000,
+   "confidence": "certain",
+   "why": "The event contains a single 0.3 cm cluster and exactly one candidate vertex, so the answer is forced; there is nothing else in the detector to choose between."},
+
+  {"event": "evt157281", "vertex_id": 7011,
+   "confidence": "certain",
+   "why": "Rule 1 in its strong form: both prongs rise away, the 14.2 cm proton climbing monotonically to 190680 at 7001 and the 213 cm muon Bragging to 122852 at 7000, and the two prongs leave 7011 about 109 degrees apart so this is not the collinear degree-2 trap."},
+
+  {"event": "evt158227", "vertex_id": 11001,
+   "confidence": "unclear",
+   "why": "A 227 cm track that is flat MIP end to end (61056 vs 56380 is noise, and p4 shows no Bragg at either end), so rule 1 says nothing and only rule 2 (lower z) picks the 11001 end; a tie-break stretched over 214 cm is barely evidence."},
+
+  {"event": "evt159569", "vertex_id": 49046,
+   "confidence": "certain",
+   "why": "Rule 1 at a degree-5 knot: the 14.2 cm proton rises monotonically away to 205263 at 49039 and the 22.7 cm shower rises away to 123343 at 49036, with three sub-5 cm hadron stubs pooled at the same point and the 68 cm MIP track starting 10 cm away."},
+
+  {"event": "evt160031", "vertex_id": 15001,
+   "confidence": "likely",
+   "why": "Rules 1 and 3 together: the 361 cm muon Braggs to 117052 at 15000 and five sub-cm Michel-like stubs sit around that stopping end, so the cool 47967 end at z=0.9 is the start."},
+
+  {"event": "evt160537", "vertex_id": 13005,
+   "confidence": "likely",
+   "why": "The 2.5 cm 207646 e/cm stub to 13019 is a stopping hadron and a hadron has to be born at a vertex, so 13005 is where it started; from there the 44 cm chain runs beam-forward through 13003 to the z=500 face, while no end of that chain shows a Bragg in p4."},
+
+  {"event": "evt162143", "vertex_id": 8010,
+   "confidence": "likely",
+   "why": "Rule 1 on the two informative prongs: p4 shows textbook proton Braggs at the far ends of both (255000 at 8003 and 240000 at 8011), both pointing away from 8010; the third 40 cm prong is hotter at 8010, which I am reading as vertex-charge overlap rather than a real rise, hence not certain."},
+
+  {"event": "evt162473", "vertex_id": 24006,
+   "confidence": "unclear",
+   "why": "Four sub-cm blobs ordered along z from 80 to 119 cm with no measured dQ/dx gradient and no track to read a direction from; rule 2 picks the lowest-z candidate but this is close to guessing."},
+
+  {"event": "evt163309", "vertex_id": 19001,
+   "confidence": "likely",
+   "why": "Rules 1 and 3: p4 shows a genuine monotone Bragg decaying from 155000 over the first 15 cm at the 19000 end, with two sub-cm Michel-like stubs sitting at that same end, so the cool 58399 end at z=8 is the start."},
+
+  {"event": "evt163771", "vertex_id": 8001,
+   "confidence": "certain",
+   "why": "Rules 1 and 3 plus the hot-patch test: the 106 cm muon Braggs at 8002 and carries a 3.6 cm Michel stub there, while the 8001 end is a lone 240000 spike on a 45k baseline, i.e. unresolved vertex charge, and 8001 sits well inside the volume rather than on a wall."}
+]

@@ -1,0 +1,61 @@
+[
+  {"event": "evt292524", "vertex_id": 9002,
+   "confidence": "certain",
+   "why": "Rule 1: both prongs cool toward 9002 at 66 deg apart, the pi+ shows a clean monotone Bragg rise to 101778 stopping at 9003, and the zoom shows the EM shower cluster 79 radiating from the same point at the lowest candidate z (155 cm)."},
+
+  {"event": "evt292568", "vertex_id": 9003,
+   "confidence": "certain",
+   "why": "Rule 1 hadronic star confirmed in zoom: two dark-red protons leave 9003 and stop (31 cm one at 146765, 6.9 cm stub at 256091) while the 236 cm muon is coolest here and runs forward in z."},
+
+  {"event": "evt292722", "vertex_id": 10004,
+   "confidence": "certain",
+   "why": "Rule 1: zoom shows a 15.5 cm proton rising monotonically away from 10004 to 218625 at its stopping end 10005 and the 94.5 cm muon leaving cool, with a Michel-like shower on the muon's far end 10003 (rule 3)."},
+
+  {"event": "evt292788", "vertex_id": 13002,
+   "confidence": "certain",
+   "why": "p4 shows both prongs on template: the 69 cm proton falls monotonically from 200000 at 13000 to 50000 at 13002 and the 95 cm muon rises to a 150000 Bragg at 13003, which also carries a 6.9 cm Michel; the zoom shows a clean two-prong junction."},
+
+  {"event": "evt292810", "vertex_id": 2004,
+   "confidence": "certain",
+   "why": "Rule 1: all three long prongs (mu, p, pi+) start near 15000-25000 e/cm at 2004 and rise away, the muon following the stopping template to 175000 at 2005; the hot knot at 2002 is the downstream pion re-interaction."},
+
+  {"event": "evt293470", "vertex_id": 1000,
+   "confidence": "likely",
+   "why": "The Michel shower (cluster 62) sitting on a genuine monotone Bragg rise at 1001 fixes that as the stopping end (rule 3), and the trajectory through 1002 is a smooth arc with no kink, so the track starts at 1000, where the high 5 cm mean is only a 1-2 point spike."},
+
+  {"event": "evt293536", "vertex_id": 15002,
+   "confidence": "likely",
+   "why": "Zoom shows a three-prong star at the lowest z with a 3.6 cm proton stub at 196820 e/cm plus two short hot branches, but rule 1 reads 0 of 3 away with one rising toward it and 15005 sits only 3.7 cm off, so I drop a tier."},
+
+  {"event": "evt293734", "vertex_id": 12002,
+   "confidence": "certain",
+   "why": "Zoom shows a clean 3-prong junction: an 8 cm dark-red proton stub at 151212-171881 e/cm together with a 44 cm muon and a 35 cm pi+, and every other candidate in the event is a bare free end."},
+
+  {"event": "evt294174", "vertex_id": 16002,
+   "confidence": "certain",
+   "why": "Rule 1: the zoom shows a sharp V apex with both prongs cool at 16002 and rising away (246 cm muon to a Bragg at 16000 that also carries a Michel, plus the shower chain toward 16017), at the lowest-z candidate 159.9 cm."},
+
+  {"event": "evt294922", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8: 30 clusters of isolated dots with no readable direction and a longest fitted object of 3.5 cm, so I abstain rather than invent a reason."},
+
+  {"event": "evt315955", "vertex_id": 17002,
+   "confidence": "certain",
+   "why": "p4 shows both prongs on template away from 17002 (54 cm proton falling from 320000 at its stop 17000, 36 cm muon rising to 190000 at its stop 17001) and the zoom shows the cool V apex at 109 deg."},
+
+  {"event": "evt316065", "vertex_id": 11001,
+   "confidence": "likely",
+   "why": "The 70 cm muon shows its Bragg rise at 11002 with an 8.7 cm Michel attached there (rule 3), so the start is 11001, which also carries a 2.6 cm pi+ stub; downgraded because the point sits at z=3 on the upstream face."},
+
+  {"event": "evt316197", "vertex_id": 17000,
+   "confidence": "certain",
+   "why": "The lone 35 cm track rises monotonically along the proton template from 43000 at 17000 to 170000 at 17001, so it stops at 17001 and must start at 17000 (rule 1); the zoom shows nothing else within 10 cm of that cool free end."},
+
+  {"event": "evt316811", "vertex_id": 8036,
+   "confidence": "certain",
+   "why": "Rule 1: zoom shows a cool V apex with a 14.7 cm dark-red proton rising away to 203677 at 8001 and a 69 cm muon rising away to 133950 at 8000, opening at 126 deg."},
+
+  {"event": "evt316987", "vertex_id": 9001,
+   "confidence": "likely",
+   "why": "Zoom shows a tight multi-prong knot where the 151 cm muon (rising away to 115187 at 9000) and a 2.1 cm proton stub meet; downgraded because the 68 cm proton attaches to 9007 only 2 cm away and I cannot separate the two junction points."}
+]

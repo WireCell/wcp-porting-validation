@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt287662",
+  "vertex_id": 20002,
+  "confidence": "likely",
+  "why": "Only junction in the event (deg 2, 66 deg opening); both prongs read hot AT it, which is symmetric vertex charge pile-up rather than two unrelated particles stopping 0.5 cm apart, and the alternatives are bare deg-1 free ends."
+ },
+ {
+  "event": "evt287770",
+  "vertex_id": 20002,
+  "confidence": "certain",
+  "why": "Rule 1 clean: 2 of 2 prongs rise away -- a 123 cm muon with a monotone Bragg to 120k at its far end and a 50 cm proton reaching 250k at its far end, with clearly different ionization on the two sides of the kink."
+ },
+ {
+  "event": "evt287794",
+  "vertex_id": 5003,
+  "confidence": "likely",
+  "why": "Deg-3 hub where a 51 cm track and a short very hot stopping-proton stub (108k-117k, peak 180k) both rise away, with the 118 cm muon joining 5.7 cm along at 5008; location certain, but 5007 sits 0.82 cm off and just missed the merge, so the id is not."
+ },
+ {
+  "event": "evt287926",
+  "vertex_id": 21026,
+  "confidence": "likely",
+  "why": "Both ends of the 381 cm MIP muon carry a short hot tip, so rule 1 is a wash (x1.01/x1.15, both flat); beam direction decides it -- the other end would need a 300 cm backward muon -- and the small hadronic blobs concentrate around this low-z end."
+ },
+ {
+  "event": "evt288012",
+  "vertex_id": 10023,
+  "confidence": "certain",
+  "why": "Rule 1 at a deg-3 vertex: all three zoom arrows green, with a 28.6 cm prong rising x9.95 from 16390 to 163036 at its far end, plus a 2 cm 255689 e/cm proton blob 13 cm away."
+ },
+ {
+  "event": "evt289246",
+  "vertex_id": 16002,
+  "confidence": "certain",
+  "why": "Textbook two-prong V: a 100 cm MIP muon exiting the z=499 wall and a 16 cm dark-red proton rising x1.41 to 177446; the only other activity is a fragment cloud with no apex sitting on the y=200 top wall."
+ },
+ {
+  "event": "evt289464",
+  "vertex_id": 11002,
+  "confidence": "certain",
+  "why": "Rule 1 as strong as it gets: deg-4 star with 3 of 4 prongs rising away -- 299 cm muon to 108797, 12.7 cm proton to 211277, 42.5 cm proton to 210791 -- confirmed by three green arrows in the zoom."
+ },
+ {
+  "event": "evt289508",
+  "vertex_id": 17008,
+  "confidence": "likely",
+  "why": "The 80.5 cm track has its real monotone Bragg (to 195k over 20 cm) at the far end and only a 2 cm spike here, so it is born at this deg-4 point, which is also where the dense fan of 200k-300k proton stubs attaches and the lowest-z vertex of that blob."
+ },
+ {
+  "event": "evt289862",
+  "vertex_id": 5000,
+  "confidence": "unclear",
+  "why": "Whole event is one curved 16 cm MIP fragment in the detector corner; the second half averages ~75k against ~48k for the first, so it cools toward this end, but the trend rests on one 218k point plus weak means and rule 2 points the other way."
+ },
+ {
+  "event": "evt290542",
+  "vertex_id": 6001,
+  "confidence": "certain",
+  "why": "The 181 cm track has a clean monotone Bragg to 270k at its far end and rises away from here x2.43, this deg-2 point also carries a stub aimed straight at an isolated 545846 e/cm blob, and the track runs downstream from it."
+ },
+ {
+  "event": "evt290588",
+  "vertex_id": 14003,
+  "confidence": "certain",
+  "why": "Rule 1 perfect: 3 of 3 prongs rise away from this deg-3 vertex, two of them short protons ending at 193812 and 140427, all three arrows green in the zoom."
+ },
+ {
+  "event": "evt290718",
+  "vertex_id": 8001,
+  "confidence": "likely",
+  "why": "Single 498 cm flat-MIP track; the other end sits on the z=500 face while this end is 33 cm inside the upstream face and far from every other wall, so the track must have been created here, and rules 1 and 2 both agree."
+ },
+ {
+  "event": "evt291072",
+  "vertex_id": 21076,
+  "confidence": "likely",
+  "why": "Lowest-z vertex of a messy shower event and the only one with rule-1 support -- 2 of 3 prongs rise away, to 193258 and to 205090 -- while the competing shower-cone apex 17 cm downstream has 0 of 3 and all-red arrows."
+ },
+ {
+  "event": "evt292370",
+  "vertex_id": 17002,
+  "confidence": "certain",
+  "why": "The 150 cm muon shows its genuine 15-20 cm Bragg decline at the far end and only a one-point spike here, and a 3 cm 290768 e/cm proton stub hangs off this deg-2 point at ~90 degrees; lowest-z candidate too."
+ },
+ {
+  "event": "evt292436",
+  "vertex_id": 11002,
+  "confidence": "certain",
+  "why": "Rule 1: 2 of 2 rise away, a 236 cm MIP track leaving and a 10.3 cm proton reaching 200548, with three further hadronic fragments (including a 5.8 cm proton rising to 116926) within 6 cm of the point."
+ }
+]

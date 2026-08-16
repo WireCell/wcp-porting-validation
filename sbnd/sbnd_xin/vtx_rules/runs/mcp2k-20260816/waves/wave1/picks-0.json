@@ -1,0 +1,61 @@
+[
+  {"event": "evt100080", "vertex_id": 17001,
+   "confidence": "unclear",
+   "why": "Only a single 38 cm track with flat MIP dQ/dx at both ends; rule 2 (low z, 0.9 vs 36.3) and the marginally cooler end pick 17001, but this is close to a coin flip."},
+
+  {"event": "evt100135", "vertex_id": 14006,
+   "confidence": "certain",
+   "why": "Rule 1: 421 cm muon leaves 14006 flat and exits at z=500 while the 20 cm proton rises monotonically away to a 128k Bragg at 14007, so both prongs point away from 14006."},
+
+  {"event": "evt100157", "vertex_id": 5003,
+   "confidence": "unclear",
+   "why": "Rule 1 gives 5003 (1/1 rising away, clean stopping-muon Bragg at 5001), but the track is a steeply downward muon whose start sits exactly on the x=-200 anode face, so the real neutrino may be in the sub-cm blobs near (-194,-5,93)."},
+
+  {"event": "evt100222", "vertex_id": 14006,
+   "confidence": "likely",
+   "why": "Rule 1 plus rule 3 at 14006: 108 cm muon leaving it stops at 14000 with a 10 cm Michel, an 11 cm proton stub rises to 212k, and the cluster-116/108 shower fan extrapolates back to it; the competing kink at 113166 has only two prongs."},
+
+  {"event": "evt100245", "vertex_id": 12003,
+   "confidence": "certain",
+   "why": "Rule 1 perfect: both prongs rise away from 12003 - 64 cm pion stopping at 90k at 12002 and 11.8 cm proton with a textbook monotone Bragg to 190k at 12001, opening 122 degrees so not the collinear trap."},
+
+  {"event": "evt100322", "vertex_id": 16001,
+   "confidence": "likely",
+   "why": "Contained 150 cm track; the 16000 end carries a hot tip plus a 2.2 cm MIP blob 5 cm away reading as a Michel (rule 3), so 16000 is the far end and the low-z, beam-forward end 16001 is the vertex."},
+
+  {"event": "evt100420", "vertex_id": 14003,
+   "confidence": "certain",
+   "why": "Rule 1 perfect with no incoming leg: a 11.7 cm proton rises monotonically off 14003 to a 285k Bragg at 14001 and a 116 cm muon rises away to a 215k Bragg at 14000, the two prongs opening 110 degrees."},
+
+  {"event": "evt100421", "vertex_id": 6000,
+   "confidence": "unclear",
+   "why": "Rule 1 leaves only 6000 (1/1 rising away, weak Bragg at 6002), but the 247 cm track runs downward and strongly backward in z from the x=-200 anode face, so this is very likely a cosmic and the neutrino is not readable."},
+
+  {"event": "evt100564", "vertex_id": 8002,
+   "confidence": "certain",
+   "why": "Rule 1 plus rule 3: the 144 cm muon rises away from 8002 to a 220k Bragg at 8000 with a Michel blob 7 cm off that end, and a 15 cm proton stub at 3x MIP leaves 8002 at 100 degrees."},
+
+  {"event": "evt100728", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 case: the whole event is six isolated sub-5 cm dots spread over 200 cm of z with no junction, no Bragg and no readable direction, so any click would be invented rather than reasoned."},
+
+  {"event": "evt101004", "vertex_id": 2000,
+   "confidence": "unclear",
+   "why": "Only 8 cm of charge at the top wall; dQ/dx rises upward (57k to 83k) so the lower end 2000 is the start by rule 1, but a 0.9 cm blob sits 7 cm further down on the same vertical line and could be the true start."},
+
+  {"event": "evt101224", "vertex_id": 12000,
+   "confidence": "unclear",
+   "why": "12000 is the only candidate with rule-1 support (52 cm track starts sub-MIP there and rises to a Bragg at the floor), but a 5 cm 4x-MIP proton stub with several blips sits 44 cm away and is an equally plausible vertex region."},
+
+  {"event": "evt101454", "vertex_id": 13025,
+   "confidence": "certain",
+   "why": "Rule 1 plus rule 3: a 6.4 cm 4x-MIP proton stub and a 225 cm forward pion both leave 13025, the pion stopping at 13008 with an 11 cm segment and a blob 3 cm away as the Michel."},
+
+  {"event": "evt101466", "vertex_id": 7001,
+   "confidence": "likely",
+   "why": "Single 6.7 cm proton whose profile falls monotonically from a 285k Bragg at 7000 down to 140k at 7001, so 7001 is the start end, and it is also the lowest-z candidate (rule 2)."},
+
+  {"event": "evt101498", "vertex_id": 10002,
+   "confidence": "likely",
+   "why": "Both prongs leave 10002 at MIP and end in template-matching Bragg peaks (300k at 10000, 205k at 10001), which one particle cannot do, but the 176 degree back-to-back geometry is the collinearity trap so I drop a tier."}
+]

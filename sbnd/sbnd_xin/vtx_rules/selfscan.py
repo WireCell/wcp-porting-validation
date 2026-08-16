@@ -236,16 +236,26 @@ def _load_picks(out, need):
     # are recorded here.  So: if a previous scored.json exists and any picks
     # file is newer than it, say so loudly rather than silently reporting a
     # different number than last time.
-    prev = os.path.join(out, "scored.json")
-    if os.path.exists(prev):
+    #
+    # doc pr/88: this used to key on `scored.json` ALONE, so it was dead on the
+    # production path -- `review` writes `review.json` and never `scored.json`,
+    # and `score` is unavailable on a `--dumps` run.  A re-run of `review`
+    # after a worker revised its picks therefore reported different buckets
+    # with no warning at all: exactly the §10.9 failure, on the one path where
+    # nothing else can catch it.  Check both artifacts.
+    for name in ("scored.json", "review.json"):
+        prev = os.path.join(out, name)
+        if not os.path.exists(prev):
+            continue
         pt = os.path.getmtime(prev)
         stale = [os.path.basename(f) for f in files if os.path.getmtime(f) > pt]
         if stale:
-            print("NOTE: %s changed after the last scored.json was written (%s)."
+            print("NOTE: %s changed after the last %s was written (%s)."
                   " The previous numbers were computed on an earlier state of "
                   "the scan and are superseded by this run."
-                  % (", ".join(stale), time.strftime("%Y-%m-%d %H:%M:%S",
-                                                     time.localtime(pt))))
+                  % (", ".join(stale), name,
+                     time.strftime("%Y-%m-%d %H:%M:%S",
+                                   time.localtime(pt))))
     missing = sorted(need - set(picks))
     if missing:
         print("picks missing for %d events (%s%s) -- refusing to score a "
@@ -264,18 +274,38 @@ def _scannable(manifest):
             if m.get("scannable", bool(m.get("candidates")))}
 
 
-def score(out):
+def score(out, partial=False, tags=None):
+    """Score a scan against hand-scan labels.
+
+    `partial` exists for the doc pr/88 production shape: on a NEW sample the
+    owner reviews a subset, so only part of a run dir is ever labelled, and
+    the default path here raises `KeyError` on the first unlabelled event.
+    It is opt-in and it PRINTS ITS DENOMINATOR, because the failure it would
+    otherwise invite is the worst kind available here -- a precision quoted
+    over whichever events happened to be labelled, read as if it were the
+    whole scan.  `tags` selects the label pool (a new sample's tag is not in
+    `vtx_io.TAGS` and must not be added to it -- doc pr/82 §12.2).
+    """
     with open(os.path.join(out, "manifest.json")) as fh:
         manifest = {m["event"]: m for m in json.load(fh)}
     picks, stamps = _load_picks(out, _scannable(manifest))
     if picks is None:
         return 1
 
-    labs = {L["event"]: L for L in vtx_io.load_labels()}
+    labs = {L["event"]: L for L in vtx_io.load_labels(tags=tags)}
+    unlabelled = sorted(ev for ev in picks if ev not in labs)
+    if unlabelled and not partial:
+        print("%d of %d scanned events have no label in %s -- refusing to "
+              "score.  Pass --partial to score only the labelled subset (it "
+              "will print the denominator), or add the missing labels."
+              % (len(unlabelled), len(picks), tags or "vtx_io.TAGS"))
+        return 1
     rows = []
     for ev, m in sorted(manifest.items()):
         if ev not in picks:
             continue          # empty PR graph, nothing to score
+        if ev not in labs:
+            continue          # --partial: unlabelled, counted below
         L = labs[ev]
         p = picks[ev]
         # A pick may name any member of a merged candidate group (scankit
@@ -314,10 +344,21 @@ def score(out):
                          reco=reco, reco_ok=vtx_io.correct(reco),
                          reachable=vtx_io.correct(best), best=best,
                          why=p.get("why", "")))
+    if unlabelled:
+        print("PARTIAL SCORE: %d of %d scanned events are labelled (%.1f%%); "
+              "%d unlabelled events are excluded from EVERY number below.  "
+              "This is a precision over the labelled subset only -- it is not "
+              "the scan's accuracy, and it is only an unbiased estimate if "
+              "that subset was drawn at random.\n"
+              % (len(rows), len(picks), 100.0 * len(rows) / max(1, len(picks)),
+                 len(unlabelled)))
     report(rows, out, stamps)
     with open(os.path.join(out, "scored.json"), "w") as fh:
         json.dump(dict(picks_written=stamps, scored_at=time.strftime(
-            "%Y-%m-%d %H:%M:%S"), rows=rows), fh, indent=1, default=str)
+            "%Y-%m-%d %H:%M:%S"), partial=bool(unlabelled),
+            n_scanned=len(picks), n_labelled=len(rows),
+            unlabelled=unlabelled, label_tags=tags, rows=rows),
+            fh, indent=1, default=str)
     return 0
 
 
@@ -542,6 +583,14 @@ def main():
     p1.add_argument("--out", required=True)
     p2 = sub.add_parser("score")
     p2.add_argument("--dir", required=True)
+    p2.add_argument("--partial", action="store_true",
+                    help="score only the events that carry a label, and print "
+                         "the denominator.  For a new sample where the owner "
+                         "reviewed a subset (doc pr/88).")
+    p2.add_argument("--tags", nargs="+", default=None,
+                    help="label tags to score against (default vtx_io.TAGS). "
+                         "A new sample's tag lives outside TAGS on purpose -- "
+                         "doc pr/82 §12.2.")
     p3 = sub.add_parser("compare")
     p3.add_argument("--a", required=True)
     p3.add_argument("--b", required=True)
@@ -553,7 +602,7 @@ def main():
         return prepare(a.half, a.n, a.out, a.seed, a.kit, a.workers,
                        a.exclude_manifest, a.only_manifest, a.dumps)
     if a.cmd == "score":
-        return score(a.dir)
+        return score(a.dir, a.partial, a.tags)
     if a.cmd == "review":
         return review(a.dir, a.tol)
     return compare(a.a, a.b)

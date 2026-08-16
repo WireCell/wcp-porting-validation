@@ -1,0 +1,61 @@
+[
+  {"event": "evt390744", "vertex_id": 11001,
+   "confidence": "unclear",
+   "why": "Close to guessing: the only object is a 230 cm muon with no Bragg at either end and rule 1 flat (x1.15); 11001 is picked because the fragment at the 11002 end (47029, 5.5 cm away) lies 13 degrees off the muon's backward extension, i.e. the track continuing past a truncated fit rather than a prong radiating from a junction."},
+
+  {"event": "evt390810", "vertex_id": 12002,
+   "confidence": "likely",
+   "why": "Rule 1 via p4: the 29 cm muon's last points at the 12003 end spike to ~160000 straight onto the stopping-muon template, and 12003 is degree 1 so nothing can bleed charge into it, so 12003 is the stop and the vertex is 12002, whose own 5 cm mean is inflated by its 1.6 cm second prong."},
+
+  {"event": "evt391063", "vertex_id": 22001,
+   "confidence": "unclear",
+   "why": "Rule 8 event - a single 5.8 cm proton stub whose p4 profile is a symmetric U (200000 at both ends, 46000 in the middle) so no direction is readable; 22001 is only picked because the sub-cm fragment clump lies 8.5 cm off that end versus 12 cm off the other."},
+
+  {"event": "evt391415", "vertex_id": 11002,
+   "confidence": "certain",
+   "why": "Rule 1 in its clean form: at the deg-2 junction 11002 the 77 cm muon rises away x2.53 with a monotone Bragg onto the muon template at 11001 and the 17 cm proton rises away x1.52 to 162000 at 11003, with the two prongs opening ~131 degrees so it is not a scatter kink."},
+
+  {"event": "evt391513", "vertex_id": 8009,
+   "confidence": "certain",
+   "why": "Rule 1 plus rule 2: the 425 cm muon is nearly horizontal and strongly +z (beam-like, not cosmic-vertical), rises away from 8009 x2.26 with its Bragg spike at the 8000 end, and 8009 carries a 2.3 cm dark-red 162000 proton stub at the most upstream z in the event."},
+
+  {"event": "evt391756", "vertex_id": 11003,
+   "confidence": "likely",
+   "why": "Compact 22 cm two-prong L with 11003 the only junction (opening ~124 degrees); p4 puts a sharp 168000 Bragg spike at the far end 11000 and a mild rise toward the far end 11001, so both prongs stop away from 11003."},
+
+  {"event": "evt391777", "vertex_id": 14005,
+   "confidence": "certain",
+   "why": "Rule 1 at a degree-4 star: the 37 cm proton rises away x2.31 to a 212000 Bragg at 14000 and the 14 cm muon rises away x1.50, and the zoom shows four prongs radiating from one point with the proton reddening outward."},
+
+  {"event": "evt391843", "vertex_id": 4002,
+   "confidence": "likely",
+   "why": "4002 joins a flat-MIP 31 cm track (exiting the x=+200 anode) to a 4.8 cm 136000 proton at ~73 degrees; the muon's apparent rise at 4002 is a single point, i.e. proton overlap not a Bragg, and 4002 is 22 cm upstream of the other end with a trail of fragments beside it."},
+
+  {"event": "evt391899", "vertex_id": 5002,
+   "confidence": "certain",
+   "why": "Rule 1 after removing the collinearity trap: of the two junctions in the chain 5004 opens 177 degrees (a fit break in one straight track) while 5002 is a real 115 degree kink where the 92 cm muon rises away x2.01 and the 38 cm pion rises away x1.44 into a 239000 stopping blob at 5001."},
+
+  {"event": "evt392009", "vertex_id": 6002,
+   "confidence": "certain",
+   "why": "Rule 3 then rule 1: clusters 6 and 58 are one collinear ~360 cm track whose far end 58018 shows a x5.30 rise plus a 13 cm electron segment, i.e. a stopping muon with a Michel, so the vertex is the 77 degree kink at 6002 where a 70 cm proton branches off and rises away x2.34 to a 218000 Bragg."},
+
+  {"event": "evt392174", "vertex_id": 3002,
+   "confidence": "likely",
+   "why": "The evidence sheet reads 0 of 2 rising away from 3002, but p4 shows that rise is spiky (40k/135k/45k/275k/155k) - the hot-patch trap from the adjacent proton - while the 4.8 cm proton rises monotonically to 265000 at 3001; the zoom shows a 110 degree kink with cyan MIP at the vertex and the muon heading downstream from the lowest-z candidate."},
+
+  {"event": "evt392262", "vertex_id": 6001,
+   "confidence": "likely",
+   "why": "A single 42 cm all-MIP track with no Bragg anywhere that exits the z=500 downstream wall, so the start is the upstream end 6001, which is also the degree-2 end carrying a 1.9 cm stub with a further fragment 6 cm upstream of it."},
+
+  {"event": "evt392327", "vertex_id": 14002,
+   "confidence": "certain",
+   "why": "Rule 1 at a three-prong star: the 144 cm muon rises away x1.80 to a 128000 Bragg at 14000 while two dark-red short hadronic prongs (9 cm proton at 185000 and 4.6 cm pion at 172000) leave the same point, which is also the most upstream candidate."},
+
+  {"event": "evt392417", "vertex_id": 19002,
+   "confidence": "likely",
+   "why": "Rule 7 topology - the zoom shows 19002 as the apex with no charge upstream of it and three prongs fanning out in +z (three of them ending on the z=500 wall), with the deg-4 vertex 19004 sitting 17 cm downstream on one of those prongs; dQ/dx is flat everywhere so rule 1 gives no help either way."},
+
+  {"event": "evt392527", "vertex_id": 13003,
+   "confidence": "certain",
+   "why": "Rule 1 with both prongs: at 13003 the 100 cm MIP muon rises away x1.33 and the 7.3 cm proton rises away x1.33 to a 191000 Bragg at 13001, opening ~103 degrees, and it is the most upstream point with the muon running +z to the wall."}
+]

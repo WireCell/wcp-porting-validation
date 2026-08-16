@@ -847,9 +847,20 @@ def selftest():
     """Blindness + determinism, over whatever dumps are reachable."""
     import glob
     import hashlib
-    paths = sorted(glob.glob(os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "work-mcp1k-ma10", "pr_evt*", "calib-pr-evt*.json")))[:25]
+    # doc pr/88: was `work-mcp1k-ma10`, archived 2026-08-16 with the calib
+    # class dropped, so this globbed nothing and the selftest returned 1 with
+    # "no dumps found" -- i.e. the blindness check was silently unrunnable.
+    # `-harv3` is the current-production arm, the same rewrite baselines.py:57
+    # already carries.  Fall through the candidate arms so a future retirement
+    # degrades to the next one instead of disarming the check again.
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    paths = []
+    for arm in ("work-mcp1k-harv3", "work-mcp2k-harv3", "work-nuecc48-harv3"):
+        paths = sorted(glob.glob(os.path.join(
+            root, arm, "pr_evt*", "calib-pr-evt*.json")))[:25]
+        if paths:
+            print("selftest arm: %s" % arm)
+            break
     if not paths:
         print("no dumps found"); return 1
     bad = 0

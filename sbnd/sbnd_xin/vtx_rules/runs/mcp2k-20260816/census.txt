@@ -1,0 +1,18 @@
+scanned events: 845
+  REVIEW                                         418  (49.5%)
+  auto-accept                                    341  (40.4%)
+  REVIEW (scanner abstained)                      49  (5.8%)
+  REVIEW FIRST (confident disagreement)           37  (4.4%)
+
+owner labels: 219
+  corrective 100 (45.7%)  confirming 119
+  served across 6 instalments: 233  labelled: 219  declined: 14
+
+unserved residue (612):
+  REVIEW FIRST          4  scannable    4
+  abstained            26  scannable    3
+  REVIEW disagree      30  scannable   17
+  REVIEW agree        251  scannable  228
+  auto-accept         301  scannable  299
+
+HIGH-YIELD RESIDUE (instalment 7): 24

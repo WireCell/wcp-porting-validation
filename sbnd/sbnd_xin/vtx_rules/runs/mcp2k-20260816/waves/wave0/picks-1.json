@@ -1,0 +1,46 @@
+[
+  {"event": "evt280329", "vertex_id": 40025, "confidence": "likely",
+   "why": "Rule 1: the 88 cm pi+ and this 28.8 cm proton both leave the same junction and get hotter away from it (stopping at 12003 and at 40027 with a 235k Bragg); the 4 cm zoom shows the pi+ line extrapolated to x=166.4 passes within 0.3 cm of 40025, its own fit end 12001 being truncated 2.6 cm short across a charge gap."},
+
+  {"event": "evt281325", "vertex_id": 42048, "confidence": "likely",
+   "why": "Kinked (130 deg) two-prong junction: an 11.7 cm MIP trunk goes one way, a hot 102k 3.7 cm proton stub plus the whole opening chain of shower fragments goes the other (+z), and this is the apex end of that cone (rules 6-7)."},
+
+  {"event": "evt316021", "vertex_id": 5004, "confidence": "certain",
+   "why": "Rule 1 in its purest form: a three-prong star where all three segments rise away, two protons ending at 190k and 204k Bragg peaks plus a 122 cm muon, and it is the lowest-z candidate."},
+
+  {"event": "evt317407", "vertex_id": 12005, "confidence": "certain",
+   "why": "Rule 1: degree-4 junction from which a 363 cm muon rises x3.3 to its Bragg stop at 12000 and a 31 cm proton chain rises monotonically 89k->152k to its stop at 12004, with two sub-cm stubs at the point."},
+
+  {"event": "evt317911", "vertex_id": 25001, "confidence": "likely",
+   "why": "Single forward-going 64 cm MIP that begins at the z=0.5 upstream face with a 2.7 cm stub attached (degree 2) and is cooler here than at its interior end 25000, so rules 1 and 2 agree on this end."},
+
+  {"event": "evt318549", "vertex_id": 4001, "confidence": "certain",
+   "why": "The only track is a 7.4 cm proton whose profile falls monotonically 235k -> 113k along the proton template from the 4000 end, so 4000 is the Bragg stop and the particle starts at 4001."},
+
+  {"event": "evt321983", "vertex_id": 21008, "confidence": "likely",
+   "why": "Only genuine junction in a diffuse event: three prongs, the 4.4 cm one rising monotonically 33k->118k to a stopping end at 21013 and the 17.6 cm one also rising away; the two hot proton stubs 150 cm away share no common point (15 cm apart, unaligned)."},
+
+  {"event": "evt322181", "vertex_id": 8002, "confidence": "certain",
+   "why": "Rule 1: a 6.6 cm proton rises monotonically 117k -> 232k from this point to its Bragg stop at 8001 while a 71 cm MIP muon leaves flat, and it is the lowest-z candidate."},
+
+  {"event": "evt348088", "vertex_id": 8001, "confidence": "likely",
+   "why": "Interior start of a 316 cm straight MIP that runs +z and exits the z=500 wall, with two sub-cm blobs 9 and 19 cm away; no Bragg anywhere (the end values are single-point spikes), so direction comes from the wall-free end plus rule 2."},
+
+  {"event": "evt355106", "vertex_id": null, "confidence": "unclear",
+   "why": "Abstain: the only structure is a muon entering the y=+200 top face, Bragg-rising to a stop at 7000 with a 21 cm Michel hanging off that same end (rule 3 forbids it), and the remaining candidates are two sub-cm blobs on the Michel."},
+
+  {"event": "evt389533", "vertex_id": 12001, "confidence": "unclear",
+   "why": "Single wall-to-wall MIP (from z=1.8 on the upstream face to the y=-200 bottom at z=183, continuing as cluster 17) with a flat profile and no Bragg at either end; picked the upstream end on rule 2 alone, rule 1 weakly disagrees."},
+
+  {"event": "evt390942", "vertex_id": 13001, "confidence": "certain",
+   "why": "Rule 1: a 36 cm proton rises 91k -> 172k away from this point to its Bragg stop at 13000, plus a 4.6 cm MIP stub and a cloud of sub-cm fragments within 8 cm of the junction."},
+
+  {"event": "evt392693", "vertex_id": 11001, "confidence": "unclear",
+   "why": "288 cm MIP with both ends interior but hot only in 1-5 cm spikes that overshoot the muon template (artefacts, not Bragg peaks), so dQ/dx gives no direction; picked the upstream end because the track runs beam-forward (rule 2)."},
+
+  {"event": "evt392988", "vertex_id": 14003, "confidence": "certain",
+   "why": "Degree-3 junction carrying a 6.4 cm 190k proton and a 1.6 cm 269k proton stub, with the 38 cm MIP leaving it and cooling away toward the bottom-downstream corner; the elevated dQ/dx at the point is vertex pile-up, not a stop."},
+
+  {"event": "evt395033", "vertex_id": 10003, "confidence": "certain",
+   "why": "Two-prong vertex at 117 deg: a 34.8 cm proton rises 97k -> 155k away to its stop at 10002 while a 15.9 cm MIP cools away toward the anode, and it is the lowest-z candidate."}
+]

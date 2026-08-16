@@ -1,0 +1,33 @@
+[
+  {"event": "evt52352", "vertex_id": 17001,
+   "confidence": "unclear",
+   "why": "Rule 8 event: 11 clusters all under 3 cm scattered over 100 cm with no readable direction; 17001 is simply the end of the one segment in the event that has any dQ/dx measurement at all (2.8 cm, 217k e/cm, flat), and nothing distinguishes it from 17000."},
+
+  {"event": "evt52605", "vertex_id": 51017,
+   "confidence": "likely",
+   "why": "Rule 7: principal frame a1-a2 shows a narrow tip at 51017 opening monotonically into a fan by cluster 11, charge rising 51k -> 79k/107k along the way and z running 289 -> 314, so the apex is the upstream free tip 51017."},
+
+  {"event": "evt52693", "vertex_id": 18002,
+   "confidence": "unclear",
+   "why": "Event is one 370 cm straight through-going track (transverse RMS < 3 cm over 225 cm, no Bragg at either end); 18002 is the only junction where rule 1 holds (2 of 3 prongs rise away, 0 toward) with both prongs starting in a charge gap, but it sits on the line so this is close to a guess."},
+
+  {"event": "evt52759", "vertex_id": 16001,
+   "confidence": "certain",
+   "why": "Rule 1 textbook: both prongs rise away to Bragg peaks - 16.5 cm proton reaching 305k at 16000 and 4.5 cm proton reaching 243k at 16002 - meeting at 16001 with a 58 deg opening, so it is not the collinear-kink trap."},
+
+  {"event": "evt53130", "vertex_id": 8002,
+   "confidence": "certain",
+   "why": "Rule 1: the 16.6 cm proton rises monotonically away from 8002 (68k -> 230k, on the proton template) and stops at 8001, while the 30 cm MIP muon exits at z=500; the two prongs open at 83 deg."},
+
+  {"event": "evt53658", "vertex_id": 15002,
+   "confidence": "certain",
+   "why": "Rule 1 with three prongs radiating: 19.3 cm proton Bragg to 293k at 15000, a 16.8 cm proton Bragg to 230k at 15004 starting 4 cm off 15002, and a flat-MIP 73 cm pion exiting at z=1."},
+
+  {"event": "evt53793", "vertex_id": 37015,
+   "confidence": "certain",
+   "why": "Rule 1 at the only degree-3 junction: 11.9 cm proton rising away to 226k at 37020, a 27.8 cm pion, and a 92 cm muon that continues through 37018/37011 into cluster 12 and stops with a Bragg 400 cm downstream."},
+
+  {"event": "evt54332", "vertex_id": 16002,
+   "confidence": "likely",
+   "why": "Rule 1 at the four-proton knot: 7 cm proton rising away to 208k at 16008 plus a 3 cm 177k stopping stub, the one adverse segment (72 cm mu, 18k) excluded as a degree-4 junction fade at 16004; 16002 also has the tightest cone apex in p5 (0.5 cm RMS at 4 cm, far-near +2.5) and sits in dark-red charge, while 16004 sits in a hole."}
+]

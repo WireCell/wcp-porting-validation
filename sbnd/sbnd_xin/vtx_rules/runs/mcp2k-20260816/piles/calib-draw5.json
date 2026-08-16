@@ -1,0 +1,27 @@
+{
+ "seed": 20260820,
+ "drawn_from_n": 214,
+ "n": 9,
+ "instalment": "inst5",
+ "partial": true,
+ "waves": [
+  "wave0",
+  "wave1",
+  "wave2",
+  "wave3",
+  "wave4",
+  "wave5"
+ ],
+ "events": [
+  "evt240636",
+  "evt323171",
+  "evt352664",
+  "evt391777",
+  "evt396355",
+  "evt397927",
+  "evt406125",
+  "evt410566",
+  "evt415186"
+ ],
+ "purpose": "doc pr/88 Phase 4: auto-accept precision on mcp2k (pr/82 sec 9 gate 5)"
+}

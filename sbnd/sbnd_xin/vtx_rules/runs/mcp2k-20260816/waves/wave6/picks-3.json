@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt69232",
+  "vertex_id": 20004,
+  "confidence": "likely",
+  "why": "Rule 1: seg20005 is a textbook monotone Bragg (43k->270k, proton template) stopping at deg-1 20001, so it starts at 20004; the 20004-20006-20002-20008 chain is collinear with the 228cm MIP muon that exits at z=499, so the muon starts at 20004 too, and seg20006 also rises away."
+ },
+ {
+  "event": "evt69254",
+  "vertex_id": 4003,
+  "confidence": "certain",
+  "why": "Rule 1 all-away: all three prongs at 4003 are cool there and hot at their far ends - seg4010 32cm rises 27k->217k on the proton template to 4000, seg4021 5k->258k to 4023, seg4020 7k->71k to 4001."
+ },
+ {
+  "event": "evt69306",
+  "vertex_id": 9001,
+  "confidence": "certain",
+  "why": "Rule 1 + rule 3: the lone 78.7cm track is flat MIP from 9001 and rises monotonically to 128k in the last 5cm at 9000, and the 5.4cm stub hanging off that same stopping end is a Michel, so 9000 is the far end and 9001 (mid-volume, lower z) is the start."
+ },
+ {
+  "event": "evt69386",
+  "vertex_id": 4001,
+  "confidence": "likely",
+  "why": "The whole event is one 11.8cm proton-like track; it is hottest at 4000 (180-207k, tracking the proton template from that end) and coolest at 4001, so it ranges out at 4000 and starts at 4001, which is also the low-z end nearest the loose blips."
+ },
+ {
+  "event": "evt69556",
+  "vertex_id": 18001,
+  "confidence": "likely",
+  "why": "Zoom shows 18001-18002-18000 is one straight line (8 degree kink), so deg-2 18002 is a fake break inside a single 150-230k proton; it is hottest at 18000 (226k) so it stops there and starts at the cooler, lower-z free end 18001."
+ },
+ {
+  "event": "evt69666",
+  "vertex_id": 15001,
+  "confidence": "certain",
+  "why": "Rule 1 with two Braggs pointing away from 15001: seg15040 (196cm) is MIP then rises to 160k at 15000 on the stopping-muon template, and seg15044 (53cm) dips to 85k then rises monotonically to 215k at 15008 on the proton template."
+ },
+ {
+  "event": "evt69936",
+  "vertex_id": 14000,
+  "confidence": "certain",
+  "why": "Rule 3: seg14001 (51.5cm) is MIP ~60k then peaks at 155k at the 14002 end with the erratic 18cm Michel chain hanging off it, so 14002 is the far end; the other end 14000 is the junction where the muon rises away plus a 2.5cm 97k proton stub."
+ },
+ {
+  "event": "evt70010",
+  "vertex_id": 8000,
+  "confidence": "likely",
+  "why": "The only track in the event is flat MIP with delta spikes from 8000 and climbs a clean stopping-muon Bragg 60k->215k at 8001, so rule 1 names 8000; 8000 lies 3cm off the y=-200 bottom face and the track runs backward in z, but nothing enters upward through the floor, so 8000 is the closest candidate to the interaction point on either reading."
+ },
+ {
+  "event": "evt70128",
+  "vertex_id": 15001,
+  "confidence": "likely",
+  "why": "Rule 1 and rule 2 agree: the 245cm track leaves 15001 at 71k and reaches 117k with a 240k tip at 15000, and 15000 is mid-volume so nothing could have entered there, leaving 15001 (low z, forward and upward-going) as the start."
+ },
+ {
+  "event": "evt70178",
+  "vertex_id": 12002,
+  "confidence": "certain",
+  "why": "Rule 1 all-away at a real 106 degree junction: seg12001 rises 127k->333k on the proton template to 12000 and seg12002 is MIP in its middle and rises to 122k at 12001; the 255k spike in the first 2cm at 12002 is compact vertex charge, not a range-out shape."
+ },
+ {
+  "event": "evt70186",
+  "vertex_id": 11002,
+  "confidence": "certain",
+  "why": "Rule 1 gives 2/2 rising away at a 110 degree junction: seg11001 (170cm) leaves at MIP and Braggs to 140k at 11000, seg11007 (54cm) leaves at 56k and rises to 128k at 11004 whose 6.7cm stub is the decay product."
+ },
+ {
+  "event": "evt70222",
+  "vertex_id": 12002,
+  "confidence": "likely",
+  "why": "Two-candidate contest I resolved against the letter of rule 1: the sheet marks seg12003 rising TOWARD 12002 (x1.35), but that segment is 40-60k with no Bragg at either end, so it is vertex-region charge rather than a range-out, whereas from 12002 the 48cm proton (155k at 12006) and the 34.6cm MIP both leave forward in z while everything leaves 12004 at 125-130 degrees backward."
+ },
+ {
+  "event": "evt70288",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 8 abstain: no cluster in the event exceeds 1.4cm - just six isolated sub-2cm blips at or below MIP spread over 90cm, with no track, no direction and no dQ/dx gradient for any rule to act on."
+ },
+ {
+  "event": "evt70538",
+  "vertex_id": 26002,
+  "confidence": "unclear",
+  "why": "Clusters 26, 19 and 67 are one continuous curved track with dQ/dx rising monotonically 27k->33k->54k->112k, so it ranges out at the 67 blob and starts at 26002; but that start is 8cm below the top face at z=6 with the track heading downward, which reads just as well as an entering cosmic with no visible neutrino at all, and 19001 is only 7cm away in the adjacent cluster."
+ },
+ {
+  "event": "evt70612",
+  "vertex_id": 8002,
+  "confidence": "likely",
+  "why": "Two Bragg ends in one cluster (295k at 8000 on the proton template, 185k with a reddening last 5cm at 8001) and 8002 is the junction they both point away from, 2/2 rising away; dropped a tier because the prongs leave 8002 at 172 degrees and 8002 sits on the cathode."
+ }
+]

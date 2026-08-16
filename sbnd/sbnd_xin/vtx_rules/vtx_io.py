@@ -40,6 +40,25 @@ TAGS = ["vtxscan-prod0813", "vtxscan-prod0813-ncpi0",
 TAGS_HARV3 = ["vtxscan-harv3-nuecc48", "vtxscan-harv3-ncpi0",
               "vtxscan-harv3-mcp1k", "vtxscan-harv3-delta"]
 
+# doc pr/88: the owner's review of the mcp2k scan (`work-mcp2k-harv3`, the
+# 2000-event MCP2025C data sample of doc pr/82 sec 2).  174 events, hand-scanned
+# across six port-5017 instalments.
+#
+# Kept out of TAGS for the SAME reason as TAGS_HARV3, but note the reason is
+# different in kind: these are DISJOINT events, not a re-labelling, so pooling
+# them would not duplicate an event key.  What it would do is silently change
+# every denominator in every pr/78-82 number -- "358/473", "372/473", the
+# lockbox fractions -- by enlarging the set those were measured over.  Ask for
+# the pool you mean:
+#     load_labels(tags=vtx_io.TAGS_HARV3)                    # the old 473
+#     load_labels(tags=vtx_io.TAGS_MCP2K)                    # the new 174
+#     load_labels(tags=vtx_io.TAGS_HARV3 + vtx_io.TAGS_MCP2K)  # training pool
+#
+# The 174 are the REVIEWED core.  The other 339 mcp2k labels are auto-accepted
+# scanner picks and live in the scan run dirs, not here -- they are admitted to
+# training by the doc pr/88 sec 7 gate (39/40 = 97.5%), not by a human.
+TAGS_MCP2K = ["vtxscan-mcp2k"]
+
 TOL = 1.0            # cm, the pr/78/79 headline tolerance
 TOL_LOOSE = 3.0      # cm, the column printed beside it
 

@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt172463",
+  "vertex_id": 14002,
+  "confidence": "likely",
+  "why": "Rule 1 junction: deg-3 vertex at the cool end of a 190 cm muon that Braggs to 113k at 14000, with a 7.5 cm pi+ and a 2.4 cm e stub attached and lowest z in the cluster."
+ },
+ {
+  "event": "evt172498",
+  "vertex_id": 5002,
+  "confidence": "likely",
+  "why": "Rule 1 junction of a muon exiting the y- face and a 6.6 cm 140-200k proton stopping at 5001; the two prongs open at 123 deg and 5002 is the lowest-z candidate."
+ },
+ {
+  "event": "evt172548",
+  "vertex_id": 10000,
+  "confidence": "unclear",
+  "why": "Rule 8 event: four isolated sub-cm dots plus one 4.1 cm 187k proton and no readable direction; I name the proton end nearest the fragment centroid rather than abstain."
+ },
+ {
+  "event": "evt172617",
+  "vertex_id": 17007,
+  "confidence": "certain",
+  "why": "Rule 1 fully satisfied: 3 of 3 prongs rise away - a 178 cm muon, a 28.9 cm proton Bragging to 210k at 17006, and a 4.3 cm 170k proton stub."
+ },
+ {
+  "event": "evt172762",
+  "vertex_id": 15001,
+  "confidence": "certain",
+  "why": "Trap check on a fully contained 320 cm muon: the 15000 end has a broad monotone Bragg rise over 10 cm to 155k, the 15001 end only a 1-2 point hot patch, so 15001 is the start and it is the lowest-z candidate."
+ },
+ {
+  "event": "evt172850",
+  "vertex_id": 12002,
+  "confidence": "certain",
+  "why": "Rule 1 junction: a 53 cm MIP muon leaving through the x+ face and a 5.6 cm proton whose profile rises 165k to 270k away from 12002; prongs open at 63 deg so no collinearity trap."
+ },
+ {
+  "event": "evt173049",
+  "vertex_id": 9010,
+  "confidence": "certain",
+  "why": "Hard dQ/dx discontinuity at 9010 in p4 (muon 54k against proton 148k) plus a sharp kink in the zoom, and the 9.2 cm proton rises away to 206k at 9001."
+ },
+ {
+  "event": "evt173093",
+  "vertex_id": 18010,
+  "confidence": "unclear",
+  "why": "Diffuse multi-fragment EM event; 12001 sits at 2.5x MIP so it is a photon conversion and not the vertex, and the shower axis back-extrapolates upstream past this lobe onto a sub-cm cluster that p6 does not name, so this is the closest nameable proxy."
+ },
+ {
+  "event": "evt173108",
+  "vertex_id": 25002,
+  "confidence": "certain",
+  "why": "Rule 1 junction: a 37 cm muon leaving through the y+ face and a 5.3 cm 138k pi+ stub meeting at 93 deg, at z=12.3 the most upstream candidate in the event."
+ },
+ {
+  "event": "evt173340",
+  "vertex_id": 7003,
+  "confidence": "certain",
+  "why": "Contained 91 cm muon with a textbook monotone Bragg rise to 190k at 7000 following the stopping-muon template, and only a single-point spike at 7003, which is also the lowest-z candidate."
+ },
+ {
+  "event": "evt173438",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 8 abstention: the entire event is three sub-cm dots strung along the x- face with no segments, no dQ/dx gradient and no readable direction."
+ },
+ {
+  "event": "evt173450",
+  "vertex_id": 14001,
+  "confidence": "unclear",
+  "why": "The whole event is one 7 cm e stub that is hot at both ends and cool in the middle; 14001 wins only on marginally lower z and a marginally cooler end, so this is close to a coin flip."
+ },
+ {
+  "event": "evt173488",
+  "vertex_id": 7001,
+  "confidence": "likely",
+  "why": "The only structure in the event is a 2.1 cm 210k proton at z=14 with the remaining blobs fanning downstream of it; note its two ends 7000/7001 are 1.9 cm apart and un-merged, so the position is much better determined than the id."
+ },
+ {
+  "event": "evt173585",
+  "vertex_id": 15002,
+  "confidence": "certain",
+  "why": "Rule 1 fully satisfied at a deg-3 vertex: a 199 cm muon Bragging to 115k at 15000, a 5.7 cm 200k proton and a 2.0 cm 169k pi+ all leaving 15002."
+ },
+ {
+  "event": "evt173620",
+  "vertex_id": 11003,
+  "confidence": "likely",
+  "why": "Two-Bragg-ends trap: 11001 (200k) and the 11002/11000 arm (160k) both point away from the 11003 kink, which itself carries a hot blob; rule 2 favours the upstream 11001 but is not allowed to overturn rule 1."
+ }
+]

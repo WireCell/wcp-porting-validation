@@ -1,0 +1,46 @@
+[
+  {"event": "evt178225", "vertex_id": 9000, "confidence": "likely",
+   "why": "Rule 1: p4 shows seg 9004 rising monotonically over its last 5 cm to 150k at 9001 (continuing into the 4.6 cm 175k stub to 9003), a genuine Bragg, so 9001/9003 is the stopping end and 9000 is the cool end everything points away from; every rival candidate is a 0-prong sub-cm blob with no dQ/dx opinion."},
+
+  {"event": "evt178350", "vertex_id": 15001, "confidence": "unclear",
+   "why": "p4 shows 154 cm of flat MIP with no Bragg at either end, so the 1.33x rule-1 ratio carries no real signal and this is a near-tie; I break it with rule 2, taking the lower-z end 15001 (z=359) over 15000 (z=501)."},
+
+  {"event": "evt178388", "vertex_id": 6013, "confidence": "certain",
+   "why": "Rule 1 at the deg-2 junction: the 36 cm track's dQ/dx rises away and peaks near 6001, the 3.6 cm 212k e/cm proton stub stops at 6000 pointing +z, and the shower debris (33003/35007/37011/36009) lies off 6013 toward +x; the prong pair opens at 111 deg so the collinearity trap does not apply."},
+
+  {"event": "evt178445", "vertex_id": 8002, "confidence": "certain",
+   "why": "Deg-4 junction where p4 shows seg 8001 as a textbook monotone stopping-proton profile falling from 247k at 8000 back to MIP at 8002, the 34.5 cm shower runs away to 8001, and three satellite blob pairs sit within 15 cm."},
+
+  {"event": "evt178535", "vertex_id": 2000, "confidence": "likely",
+   "why": "p4 shows the 16.5 cm segment rising over its last 4 cm to 175k at 2001 along the stopping template, so 2001 is the stopping end; rule 1 leaves 2000 as the start, and the two satellite dots lie further +z as rule 2 would expect."},
+
+  {"event": "evt178548", "vertex_id": 13001, "confidence": "likely",
+   "why": "p4 shows 100 cm of flat MIP with no Bragg at either end, so the 1.31x reading at 13001 is vertex-region charge rather than a stop; 13001 is ringed by five separate sub-cm hadronic blobs from 5 to 40 cm away while nothing sits at the other end."},
+
+  {"event": "evt178570", "vertex_id": 19003, "confidence": "certain",
+   "why": "Rule 1 textbook, confirmed on p4: the 7.1 cm pi+ climbs monotonically to 215k at 19004 and the 44 cm proton falls monotonically from 235k at 19005 along the proton template, so both stop away from 19003, with a MIP muon as the third prong."},
+
+  {"event": "evt178645", "vertex_id": 15002, "confidence": "likely",
+   "why": "p4 shows seg 15002 rising monotonically over its last 8 cm to 210k at 15001, tracking the stopping-muon template, so 15001 is the stop and rule 1 leaves 15002, which also carries a 2.4 cm stub and blob 61005 5 cm away."},
+
+  {"event": "evt178865", "vertex_id": 2001, "confidence": "certain",
+   "why": "Rule 3: p4 shows the 228 cm muon falling from 185k right at 2000 along the stopping template, and two Michel-like blobs (19002, 20004) sit on that same end, so 2000 is the far end and the MIP end 2001 at z=244 is the vertex."},
+
+  {"event": "evt178885", "vertex_id": 9001, "confidence": "certain",
+   "why": "The two-Bragg-ends trap resolved on p4: 9004 carries the 199 cm muon's genuine Bragg plus a 6.5 cm Michel, while the 6.7 cm proton beside 9001 climbs monotonically to 285k as it runs away from 9001, which is also ringed by four sub-cm blobs."},
+
+  {"event": "evt178907", "vertex_id": 9002, "confidence": "likely",
+   "why": "Deg-2 junction opening at 105 deg, far too wide for the collinearity trap, with a 24 cm heavily-ionising 2.8x MIP proton on one prong and a MIP muon on the other; it is also the lowest-z point of the cluster."},
+
+  {"event": "evt178931", "vertex_id": 8001, "confidence": "likely",
+   "why": "p4 kills the apparent Bragg at 8002 - the 97k mean is one 155k spike, not a monotone rise - while the track sits at MIP near 8001, so it starts there, and the 7.8 cm shower fragment falls monotonically from 87k at 8001 to 2k, marking a shower apex at the same point."},
+
+  {"event": "evt179048", "vertex_id": 17001, "confidence": "likely",
+   "why": "The 357 cm spine is one straight track (successive segment directions agree to 2.6 and 4.5 deg, so the collinearity trap disqualifies 17010/17004/17006, and p4 shows 17004's 96k is a delta spike that falls back to 30k); the far end 17003 has the real Bragg plus an 8.3 cm Michel, leaving the MIP start 17001."},
+
+  {"event": "evt179054", "vertex_id": 22001, "confidence": "certain",
+   "why": "Rule 1 fully satisfied at the deg-3 vertex and confirmed on p4: the 114 cm proton falls monotonically from 235k at 22000 along the proton template and the 64 cm pi+ climbs to 120k at 22003, so both stop away from 22001, which is also the lowest-z junction."},
+
+  {"event": "evt179246", "vertex_id": 14001, "confidence": "certain",
+   "why": "p4 shows the 158 cm muon falling from 148k right at the 14000 end along the stopping template, so that end is the stop; 14001 is the MIP start and sits amid a hadronic spray including a 285k e/cm proton blob 31 cm off."}
+]

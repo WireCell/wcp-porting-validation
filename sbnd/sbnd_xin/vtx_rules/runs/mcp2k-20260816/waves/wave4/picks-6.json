@@ -1,0 +1,61 @@
+[
+  {"event": "evt400029", "vertex_id": 15004,
+   "confidence": "certain",
+   "why": "Rule 1 clean at a ~116-degree kink: the 25.9 cm proton Braggs to 209k at 15005 and the 206 cm muon Braggs to 102k at 15000, both cooling into 15004."},
+
+  {"event": "evt400117", "vertex_id": 15002,
+   "confidence": "certain",
+   "why": "Rule 1 with an ~86-degree kink: p4 shows the 47.8 cm proton rising monotonically to 305k at 15001 while the muon leaves MIP-flat, and the rival 15003 is a 172-degree collinear scatter point (trap 3)."},
+
+  {"event": "evt400185", "vertex_id": 26006,
+   "confidence": "unclear",
+   "why": "p4 shows seg 26004 rising along the stopping-muon template over the last 5 cm into 26008, so by rule 3 that is the far end and 26006 is the origin - the only candidate in this badly fragmented event with any rises-away."},
+
+  {"event": "evt400239", "vertex_id": 5001,
+   "confidence": "likely",
+   "why": "p4 is flat MIP with no Bragg at either end so rule 1 is silent; 5002 is a 171-degree collinear scatter and 5000 lies on the z=500 face, leaving 5001 as the only interior free end, and it is also the lowest-z candidate (rule 2)."},
+
+  {"event": "evt400251", "vertex_id": 17003,
+   "confidence": "certain",
+   "why": "Three-prong star where p4 shows both measurable prongs cool at 17003 (65k) and Bragg at their far ends (310k at 17002, 150k at 17001), plus a 188k proton stub - rule 1 with nothing rising toward it."},
+
+  {"event": "evt400273", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstention: the entire event is two isolated sub-cm blips 33 cm apart with no track, no direction and no dQ/dx gradient to read."},
+
+  {"event": "evt400349", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstention: five isolated stubs of 2 cm or less scattered across the whole detector, no cluster with two connected segments and nothing with a readable direction."},
+
+  {"event": "evt400427", "vertex_id": 8001,
+   "confidence": "likely",
+   "why": "Two ~190k proton stubs sit 3.9 cm apart in a cloud of cold blips, and p4 shows cluster 8's proton falling monotonically from 275k at 8000 to 100k at 8001, so 8001 is its origin end and the closest end to the companion stub."},
+
+  {"event": "evt400779", "vertex_id": 18003,
+   "confidence": "likely",
+   "why": "Rule 1 is 2 of 2 rising away with genuine monotone Bragg rises at both far ends (275k at 18001, 165k at 18002), but the two prongs leave 18003 at 177 degrees so the trap-3 collinearity caveat drops this a tier."},
+
+  {"event": "evt401197", "vertex_id": 9001,
+   "confidence": "likely",
+   "why": "p4 shows two hot lumps with the dQ/dx minimum 3.4 cm from 9001 and 6.5 cm from 9000, so the point both halves cool toward sits nearer 9001, which is also the interior end of this 10 cm heavy blob."},
+
+  {"event": "evt401241", "vertex_id": 24004,
+   "confidence": "unclear",
+   "why": "Only interior deposit in an event of three disconnected fragments is the 219k proton stub, with a companion blip just past 24005 implying travel outward from 24004, but the stub is flat at both ends so there is no real directional evidence."},
+
+  {"event": "evt402077", "vertex_id": 15003,
+   "confidence": "certain",
+   "why": "Three prongs radiate from 15003 with a 157k proton stub at it, and p4 shows the 33.3 cm muon MIP-flat at 15003 rising monotonically to 170k at 15004, so everything cools into this junction."},
+
+  {"event": "evt403023", "vertex_id": 59032,
+   "confidence": "unclear",
+   "why": "p4 shows dQ/dx continuous and monotone across 11002 into 11003 (MIP to 145k to 390k), so cluster 11 is one particle Bragging at 11003 and 11002 is a far end not a junction; the remaining structure is a shower opening in +x/+z from the hot 120-168k apex at 59032 (rule 7)."},
+
+  {"event": "evt403397", "vertex_id": 8002,
+   "confidence": "certain",
+   "why": "Rule 1 at a ~98-degree kink: p4 shows the 92.5 cm muon Bragging to 155k at 8000 and the 19.4 cm proton rising monotonically along the proton template to 245k at 8004, both MIP-cool at 8002."},
+
+  {"event": "evt403441", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstention: five isolated sub-cm blips in two loose pairs, no segment longer than half a centimetre and no readable direction anywhere in the event."}
+]

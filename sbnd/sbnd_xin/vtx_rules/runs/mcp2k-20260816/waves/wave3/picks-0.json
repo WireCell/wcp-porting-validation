@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt283591",
+  "vertex_id": 14002,
+  "confidence": "certain",
+  "why": "Rule 1: V-junction where a 269 cm flat-MIP muon (no Bragg at either end) meets an 8 cm 3x-MIP proton stub at ~80 deg; both prongs get hotter away from 14002."
+ },
+ {
+  "event": "evt283833",
+  "vertex_id": 16011,
+  "confidence": "likely",
+  "why": "Rule 1 on the p4 profile: the 5 cm proton falls monotonically 320k->180k from 16010 to 16011, so it stops at 16010 and starts at 16011, which sits inside the loose cloud of soft fragments; the 466 cm cluster-11 track is straight (175 deg at 11004) wall-to-wall MIP with no Bragg at either end."
+ },
+ {
+  "event": "evt283849",
+  "vertex_id": 7008,
+  "confidence": "certain",
+  "why": "Rule 1: zoom shows the 128 cm muon leaving 7008 cool (MIP all the way to the z=498 downstream face, no Bragg) while the 39 cm proton rises monotonically away from 7008 to a 280k Bragg at 7005; the 5 cm mean at the muon end is only junction charge."
+ },
+ {
+  "event": "evt284047",
+  "vertex_id": 5002,
+  "confidence": "certain",
+  "why": "Only structure in the event is a single 19.5 cm stopping proton whose profile falls monotonically along the brown template from 260k at 5000 to ~90k at 5002, so 5002 is the start end (and it is also the lower-z end)."
+ },
+ {
+  "event": "evt284206",
+  "vertex_id": 10007,
+  "confidence": "certain",
+  "why": "Rules 6+7: deg-7 apex of the only real structure, p5 cone RMS rises monotonically 0.2->4.0 cm away from 10007 (best far-near +2.0 cm of all apexes) and a 4.4 cm 4x-MIP proton stub hangs off the same point."
+ },
+ {
+  "event": "evt284866",
+  "vertex_id": 16002,
+  "confidence": "certain",
+  "why": "Rule 1: 352 cm muon is flat MIP with no Bragg at either end (exits at x=200/z=500 corner) and the 11 cm proton rises monotonically 80k->280k away from 16002 to its Bragg at 16001; prongs 79 deg apart."
+ },
+ {
+  "event": "evt285350",
+  "vertex_id": 18002,
+  "confidence": "certain",
+  "why": "Rule 1 in its cleanest form: both prongs rise away from 18002 (75 cm muon to a 185k Bragg at 18000, 15 cm proton to a 320k Bragg at 18003), the two prongs are 92 deg apart, and 18002 is the lowest-z candidate."
+ },
+ {
+  "event": "evt285680",
+  "vertex_id": 37013,
+  "confidence": "certain",
+  "why": "Rule 1: zoom shows a clean ~92 deg V at 37013 with both prongs cool at the vertex - a MIP arm that exits the top wall and a heavy hadron arm that darkens monotonically through 37014 to a 218k stop at 37011, with three sub-cm fragments scattered around the same point."
+ },
+ {
+  "event": "evt286076",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 8: nothing but 17 isolated sub-1.2 cm blue/green dots spread over ~100 cm in two loose clumps, no connected segment, no direction and no dQ/dx gradient anywhere - any click is as good as any other, so I abstain."
+ },
+ {
+  "event": "evt286120",
+  "vertex_id": 34000,
+  "confidence": "certain",
+  "why": "Forced choice: the whole event is a single 0.4 cm blob at (106.6,-48.2,300.5) and 34000 is the only candidate vertex in the list, so no other id can be named."
+ },
+ {
+  "event": "evt286296",
+  "vertex_id": 22002,
+  "confidence": "likely",
+  "why": "Only multi-prong junction in the event: a 9 cm proton rises 90k->250k monotonically away from 22002 to a Bragg at 22001, and the other two prongs are MIP-cool at their far ends with their hot patch confined to the dense junction core; the whole cluster hugs the x=-200 anode so the reading is not clean."
+ },
+ {
+  "event": "evt286489",
+  "vertex_id": 13002,
+  "confidence": "certain",
+  "why": "Rule 1: the only deg-3 junction, with a 10 cm proton rising 90k->245k away to a Bragg at 13003, an 18 cm pi+ ending hot at 13000, and a 33 cm flat-MIP muon leaving through the x=-201 anode face."
+ },
+ {
+  "event": "evt287374",
+  "vertex_id": 17000,
+  "confidence": "unclear",
+  "why": "Rule 1 applied to the only real cluster: the 123 cm muon is flat MIP from 17000 and rises to a 420k Bragg at 17001, so 17000 is its start; but 17000 sits in the z=501/y=-194 corner and the track runs backward in z, so I am close to guessing between this and the handful of unreadable blobs at z=130-156."
+ },
+ {
+  "event": "evt287464",
+  "vertex_id": 31021,
+  "confidence": "certain",
+  "why": "Rule 1: 31021 is a V apex with 2 of 2 prongs rising away (20 cm proton to a 151k stop at 31019, 7 cm heavy stub to a 152k stop at 31020), and the 41 cm MIP muon of cluster 8 extrapolates backwards from its 8000 end to within ~1 cm of 31021."
+ },
+ {
+  "event": "evt287638",
+  "vertex_id": 4000,
+  "confidence": "likely",
+  "why": "Rule 3 decides it: the 111 cm track follows the stopping-muon template up to 200k over its last 10 cm at 4001 with two blobs beside that end reading as a Michel, so 4001 is the far end and 4000 is the start; no other candidate in the event has any rule-1/6/7 support."
+ }
+]

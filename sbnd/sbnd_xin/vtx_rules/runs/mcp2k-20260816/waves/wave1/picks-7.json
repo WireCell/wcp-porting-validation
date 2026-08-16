@@ -1,0 +1,33 @@
+[
+  {"event": "evt173671", "vertex_id": 7001,
+   "confidence": "likely",
+   "why": "Rule 1 + rule 3: the lone 373 cm muon cools toward 7001 (53k vs 86k) and the opposite end 7002 carries the Bragg rise plus a 2.6 cm Michel-like e stub, so 7002 is the far/stopping end and 7001 (also lowest z) is the origin."},
+
+  {"event": "evt173819", "vertex_id": 14002,
+   "confidence": "certain",
+   "why": "Rule 1 textbook: deg-4 junction at the lowest z of the cluster with 3 of 4 prongs rising away (mu x1.34, pi+ x1.83, e-shower x1.59) plus a 2.4 cm 480k proton stub; the 67 cm muon's far end 14007 carries a Michel, confirming that end is downstream."},
+
+  {"event": "evt173827", "vertex_id": 23001,
+   "confidence": "unclear",
+   "why": "Rule 8 territory: the whole event is one 2.6 cm 229k proton stub plus a single sub-cm dot at z=5, no dQ/dx gradient at all, so I fall back on rule 2 and take the lower-z end of the stub; this is close to a coin flip."},
+
+  {"event": "evt173912", "vertex_id": 2003,
+   "confidence": "certain",
+   "why": "Rule 1 at a deg-3 junction: the 57 cm muon rises away x1.70 to a Bragg end at 2000 and the p4 profile shows the 5 cm 'pi+' peaking at 250k near 2004 and cooling into 2003, so both real prongs plus the 1.8 cm proton stub point away from 2003."},
+
+  {"event": "evt173978", "vertex_id": 7001,
+   "confidence": "unclear",
+   "why": "No rule-1 signature anywhere: the event is one ~40 cm fragmented chain with a hot 150-170k core mid-way and cool extremes, and every prong is flat or hotter at its own junction; I take 7001 as the narrow upstream tip of a forward-opening object on rule 2 and rule 7 alone, which is close to a guess."},
+
+  {"event": "evt174164", "vertex_id": 16007,
+   "confidence": "likely",
+   "why": "Rule 3 breaks the two-hot-ends trap: the 267 cm track's downstream end 16006 has a gradual template-matching muon Bragg with short e prongs hanging off it (Michel), while 16007 has only a 2 cm 210k proton-like spike, a 9 cm e prong and all the nearby debris, and it is 250 cm lower in z."},
+
+  {"event": "evt174302", "vertex_id": 7001,
+   "confidence": "likely",
+   "why": "Rule 1 on a single 128 cm stopping track (clusters 7+43 are collinear and touch): seg 43003 rises monotonically over the last 10 cm to 155k at 43007, so that is the stopping end and the cool, lowest-z end 7001 is the origin."},
+
+  {"event": "evt174311", "vertex_id": 3002,
+   "confidence": "certain",
+   "why": "Rule 1 textbook: deg-3 junction with two 8-9 cm protons whose profiles rise monotonically away to 290k and 310k Bragg peaks at 3001 and 3003, plus an 82 cm muon leaving forward, so every prong points away from 3002."}
+]

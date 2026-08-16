@@ -40,6 +40,31 @@ MANIFEST_COLS = ['evt', 'tag', 'arm', 'runNo', 'subRunNo', 'n_cloud',
                  'lockbox', 'label_saved_utc', 'label_mtime', 'npz']
 
 
+# doc pr/88: the owner's "only dots" cut, after scanning instalment 1 --
+# "there are many events in there, there are only dots.  In this case, they
+# are impossible to hand scan the true vertices, so I just skipped them.  For
+# our later fine tuning etc, we should filter out this kind of events."
+#
+# An event with no fitted object long enough to carry a direction has no
+# readable vertex, so whatever position its label holds is noise that a net
+# will happily fit.  The cut and its validation against the owner's own
+# skip/label behaviour live in vtx_rules/scannability.py; this is a
+# DELIBERATE DUPLICATE of the two lines that matter rather than an import,
+# because vtx_rules is decoupled from this directory on purpose (see the
+# vtx_rules/vtx_io.py docstring) and a cross-import would let an edit there
+# silently move a training denominator here.
+#
+# UNSCANNABLE_LONGEST_CM MUST TRACK scannability.DEFAULT_LONGEST_CM (5.0).
+# If you change one, change both -- there is no assertion that can catch it.
+UNSCANNABLE_LONGEST_CM = 5.0
+
+
+def longest_segment_cm(calib):
+    """Longest single fitted segment in the event, cm."""
+    return max([float(s.get('length') or 0.0)
+                for s in (calib.get('segments') or [])] or [0.0])
+
+
 def numu_top_events(sbnd_root, tags, k):
     """Top-k labeled mcp1k events by numu_score (doc pr/77 round 2: the
     owner's 50-numu data anchor; deterministic, ties broken by eventNo)."""
@@ -102,6 +127,13 @@ def main():
                     help='doc pr/79 §11: tag=path pairs (or one bare path, '
                          'relative to --sbnd-root) of dl_vtx_harvest arms; '
                          'cloud comes from hv_cloud instead of rebuild_cloud')
+    ap.add_argument('--drop-unscannable', action='store_true',
+                    help='drop "only dots" events -- longest fitted segment '
+                         '< %.1f cm, i.e. nothing a vertex can be read from '
+                         '(doc pr/88).  DEFAULT OFF so every pr/77-82 '
+                         'snapshot rebuilds byte-for-byte; the count present '
+                         'is always reported either way.  Round-3 training '
+                         'pools should pass it.' % UNSCANNABLE_LONGEST_CM)
     ap.add_argument('--inherit-manifest', default=None,
                     help='existing snapshot manifest.tsv: copy lockbox / '
                          'sample / numu_score per (tag, evt) instead of '
@@ -149,6 +181,7 @@ def main():
             numu_set = set()
 
     rows = []
+    n_dots = []
     for label in vio.iter_labels(args.sbnd_root, args.tags):
         evt = label['eventNo']
         if keep_events is not None and evt not in keep_events:
@@ -164,6 +197,12 @@ def main():
             calib_path = vio.calib_path_for_label(args.sbnd_root, label)
             calib = vio.load_calib(calib_path)
             xyz, q, info = vio.rebuild_cloud(calib)
+        # Counted always, dropped only on request -- an unreported drop and a
+        # silent inclusion are both ways to get a denominator wrong.
+        if longest_segment_cm(calib) < UNSCANNABLE_LONGEST_CM:
+            n_dots.append(evt)
+            if args.drop_unscannable:
+                continue
         truth = label['truth_xyz']
         dis = label['dis_to_main']
         mv = label.get('main_vertex') or {}
@@ -246,6 +285,12 @@ def main():
     ncorr = sum(r['corrective'] for r in rows)
     print('\nwrote %d events (%d corrective, %d confirming) -> %s'
           % (len(rows), ncorr, len(rows) - ncorr, out_dir))
+    if n_dots:
+        print('"only dots" events (longest fitted segment < %.1f cm): %d %s'
+              % (UNSCANNABLE_LONGEST_CM, len(n_dots),
+                 'DROPPED' if args.drop_unscannable
+                 else 'KEPT -- pass --drop-unscannable to remove them'))
+        print('  ' + ' '.join('evt%d' % e for e in sorted(n_dots)[:20]))
     return 0
 
 

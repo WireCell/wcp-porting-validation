@@ -1,0 +1,61 @@
+[
+  {"event": "evt67026", "vertex_id": 17002,
+   "confidence": "certain",
+   "why": "Rule 1: at 17002 the 258 cm muon leaves flat/cool and the 54 cm proton rises monotonically away to 187k e/cm and stops at 17001; prongs meet at ~92 deg, not collinear."},
+
+  {"event": "evt67802", "vertex_id": 14001,
+   "confidence": "likely",
+   "why": "Only real object is a 61 cm track whose dQ/dx falls monotonically from 150k over the first 8 cm at the 14000 end (stopping there), so the start end 14001 is the vertex; no second prong to confirm."},
+
+  {"event": "evt67868", "vertex_id": 16002,
+   "confidence": "certain",
+   "why": "Degree-5 star: 105 cm muon and 51 cm proton both rise away (to 139k and 191k) and stop elsewhere, plus two very hot 2-4 cm proton stubs right at the point - textbook rule-1 vertex."},
+
+  {"event": "evt67898", "vertex_id": 10002,
+   "confidence": "certain",
+   "why": "Rule 1 at the only junction: 221 cm muon flat leaving toward the z wall and a 9 cm proton rising away to 193k stopping at 10001; prongs ~95 deg apart."},
+
+  {"event": "evt67928", "vertex_id": 9001,
+   "confidence": "certain",
+   "why": "Both attached segments rise away (mu Bragg 133k at 9000, pi+ Bragg 160k at 9005) and they leave at ~61 deg, so this is a genuine V and not the collinear one-track trap."},
+
+  {"event": "evt67942", "vertex_id": 22000,
+   "confidence": "unclear",
+   "why": "Single 91 cm flat MIP track, no Bragg at either end; 22001 sits exactly on the y=+200 face so I take the free mid-volume end 22000, but its last dQ/dx point collapses to 10k, which looks like fit truncation that could be hiding a Bragg."},
+
+  {"event": "evt68280", "vertex_id": 22003,
+   "confidence": "certain",
+   "why": "156 cm muon rises away to a clean falling Bragg at 22000 and a 4.6 cm dark-red 191k proton stub hangs off the same junction; the muon end 22003 is only a one-point hot spike."},
+
+  {"event": "evt68308", "vertex_id": 6002,
+   "confidence": "certain",
+   "why": "Three prongs from one point: 107 cm muon out to the anode, a 6 cm 190k proton stub, and an 84 cm pi+ that rises away and ends in a pi->mu->e chain at 6004/6005."},
+
+  {"event": "evt68346", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstain: 21 clusters all under 1 cm, no fitted segment anywhere in the event and no readable direction, so any click would be as good as any other."},
+
+  {"event": "evt68726", "vertex_id": 13001,
+   "confidence": "unclear",
+   "why": "Event is only scattered sub-cm blobs plus one hot 2 cm 200k proton stub; I take that stub as the interaction point but its two ends are indistinguishable, so I picked the lower-z end."},
+
+  {"event": "evt68748", "vertex_id": 47014,
+   "confidence": "unclear",
+   "why": "The 390 cm cluster is one straight muon (the 13002 junction is 180 deg collinear) entering near the cathode/z wall and stopping with a 425k Bragg at 13001, so I take the separate 11 cm track and its cooler, lower-z end 47014."},
+
+  {"event": "evt68830", "vertex_id": 11001,
+   "confidence": "likely",
+   "why": "The 114 cm muon runs beam-forward and exits the y=-197 bottom face, so its other end 11001 is the production point; it carries a 2.5 cm 157k proton stub and shows only spiky vertex contamination, not a monotone Bragg."},
+
+  {"event": "evt69006", "vertex_id": 11002,
+   "confidence": "certain",
+   "why": "Degree-3 junction where a 145 cm muon leaves at MIP and stops with a 185k Bragg at 11000 and a 34 cm proton rises away to 145k at 11003, with a spray of small fragments around the same point."},
+
+  {"event": "evt69144", "vertex_id": 13002,
+   "confidence": "certain",
+   "why": "Rule 1 kink at ~80 deg: 120 cm muon leaves cool toward the z=499 wall while the proton rises away to 119k and continues into a 185k stub stopping at 13001."},
+
+  {"event": "evt69152", "vertex_id": 5005,
+   "confidence": "certain",
+   "why": "Both prongs point away from 5005 at ~107 deg: the 127 cm muon is MIP here and rises going away, and the 35 cm proton stops with a falling 147k Bragg profile at 5000."}
+]

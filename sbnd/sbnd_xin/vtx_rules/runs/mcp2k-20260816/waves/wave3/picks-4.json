@@ -1,0 +1,61 @@
+[
+  {"event": "evt320575", "vertex_id": 5001,
+   "confidence": "likely",
+   "why": "Rule 1 on the p4 profile: the 9 cm two-segment cluster is one proton rising monotonically 150k->258k->315k from 5001 through the 89 deg scatter at 5003 to its stop at 5000, so 5001 is the cool starting end, and the small e stub of cluster 17 sits roughly opposite the proton from it."},
+
+  {"event": "evt320925", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstention: five isolated sub-cm blobs spread over ~40 cm with every segment unmeasured, no track, no shower apex and no readable direction anywhere, so any click would be as good as any other."},
+
+  {"event": "evt321015", "vertex_id": 16049,
+   "confidence": "certain",
+   "why": "Rule 1 at a 3-prong: 13.8 cm proton rises monotonically 75k->230k to its stop at 16004 and the 51 cm muon leaves at MIP, while the third prong is a pi+ that stops at 16001 and decays to the 9.8 cm muon braggging at 16005; 56 deg kink, not collinear."},
+
+  {"event": "evt321169", "vertex_id": 16001,
+   "confidence": "likely",
+   "why": "Rule 7 plus rule 1: 16001 is the narrow apex of the EM shower that opens from 16 cm wide at z=220 to 32 cm wide at z=237, and the 13.5 cm stalk cools toward it (62860 far, 51625 here); the rival 25007 is 6.7 cm away, does not touch it in the tight zoom, and is the HOT end of its own segment."},
+
+  {"event": "evt321235", "vertex_id": 11005,
+   "confidence": "likely",
+   "why": "Rule 1 at the only 4-prong: three protons (48.9, 9.0, 4.4 cm) all start near MIP at 11005 and rise monotonically to 230k/230k/265k Bragg stops, while 11007 is excluded as a 158 deg through-going kink; downgraded because the surviving MIP arm runs 206 cm backward to the z=0 face."},
+
+  {"event": "evt321367", "vertex_id": 3002,
+   "confidence": "likely",
+   "why": "Clean 3-prong Y with the 14 cm heavily-ionising prong rising away from 3002 (95k->200k) while the 47 cm mu and 27 cm pi leave at MIP, and the chain of small clusters running out to x=-130 back-points at 3002 within 12 deg; only likely because that prong peaks mid-segment rather than at its end, and the sheet reads 0 of 3 rise away."},
+
+  {"event": "evt321629", "vertex_id": 10003,
+   "confidence": "certain",
+   "why": "Rule 1 satisfied by all three prongs: the 173 cm muon leaves at MIP and Braggs at 10000, the 19.6 cm proton dips then rises to 230k at 10005, and the 8.9 cm stub rises to 185k at 10004, so every attached segment stops away from 10003."},
+
+  {"event": "evt321741", "vertex_id": 16004,
+   "confidence": "certain",
+   "why": "Two-Bragg-ends trap resolved at the junction they both point away from: the 106 cm muon leaves 16004 at 55k and Braggs to 130k at 16001, and the 42.7 cm proton leaves at 60k and rises through 16002 to 230k at 16000; the two prongs meet at 104 deg, not collinear, and a 2.2 cm stub is attached too."},
+
+  {"event": "evt321849", "vertex_id": 21005,
+   "confidence": "likely",
+   "why": "The 175 cm muon is flat MIP with no Bragg at 21005 and runs forward to z=495, so it starts there, and the 10 cm proton attached at the same point rises 137k->205k away from it; preferred over the rival junction 28013, whose 47.5 cm proton profile is dropout-ridden and non-monotone and whose 32 cm mu is flat, and because ten small clusters sit within 40 cm of 21005 and none near 28013."},
+
+  {"event": "evt321895", "vertex_id": 7008,
+   "confidence": "certain",
+   "why": "Rule 1 perfect 3 of 3 with large ratios: both short protons leave 7008 at 40-45k and rise monotonically to 230k Bragg stops at 7001 and 7005, and the 74 cm pi+ leaves at MIP and Braggs at 7002; p1 shows the textbook three-pronged star."},
+
+  {"event": "evt321937", "vertex_id": 22010,
+   "confidence": "unclear",
+   "why": "Collinearity trap in its purest form: the two prongs at 22010 meet at 180.0 deg and the tight zoom shows only a ~1.4 cm fit step with no third prong or stub, so although both ends Bragg away from it the event is a single straight 246 cm track and I am close to guessing."},
+
+  {"event": "evt322135", "vertex_id": 15029,
+   "confidence": "certain",
+   "why": "Rule 1 with both prongs rising away at a 117 deg junction: the 13.8 cm proton climbs 155k->265k to its Bragg stop at 15003 and the 245 cm muon leaves at MIP and Braggs to 165k at 15000; 15029 is also the most upstream point at z=8.8 cm."},
+
+  {"event": "evt322269", "vertex_id": 7002,
+   "confidence": "certain",
+   "why": "Two hot ends (124k at 7000, 152k at 7001) both point away from 7002, which the 8 cm zoom shows as a clean 93 deg V of a forward-going 146 cm muon that Braggs at 7000 and a 5.7 cm proton stub; not the collinear case."},
+
+  {"event": "evt322663", "vertex_id": 2002,
+   "confidence": "likely",
+   "why": "Rule 1 2 of 2 rising away at a 59 deg V that the zoom shows to be the cool top end of the track: a 154 cm muon leaves 2002 at 33k and Braggs to 117k at 2000, and a 16.7 cm pion stops hot at 2003 and decays to the 8.6 cm muon at 2001; only likely because the muon runs almost transverse to the beam."},
+
+  {"event": "evt322707", "vertex_id": 11002,
+   "confidence": "certain",
+   "why": "Rule 1 3 of 3 rising away: the 72 cm proton falls from 190k at its stop at 11000 back to 78k here, the 62 cm muon leaves at MIP and Braggs to 170k at 11003, and the 28 cm pi+ leaves cool; p1 shows a clean three-pronged star."}
+]

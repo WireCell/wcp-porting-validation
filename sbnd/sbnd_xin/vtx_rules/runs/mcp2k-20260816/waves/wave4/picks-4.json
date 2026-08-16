@@ -1,0 +1,61 @@
+[
+  {"event": "evt396805", "vertex_id": 6002,
+   "confidence": "certain",
+   "why": "Rule 1: only junction in a fully contained 77 cm event, a clean deg-3 star (prong pairs 85-100 deg) whose pi+ prong Braggs away to 111712 and whose other two prongs leave cooling."},
+
+  {"event": "evt396816", "vertex_id": 18004,
+   "confidence": "likely",
+   "why": "Rule 7: compact all-electron tangle with no readable track direction; cone opening rises fastest and most monotonically from 18004 (far-near +3.6 cm vs +2.1 for the other deg-3 hub 18005, 2.6 cm away)."},
+
+  {"event": "evt396829", "vertex_id": 27012,
+   "confidence": "unclear",
+   "why": "Rule-1 trap: the only deg-3 candidate 17004 is a 3 cm delta-ray split on an exactly collinear (180 deg) flat-MIP track running wall to wall, so I took instead the contained low-z end of the isolated 26 cm MIP that sits inside the sub-cm fragment cloud."},
+
+  {"event": "evt396882", "vertex_id": 12000,
+   "confidence": "likely",
+   "why": "Rule 1 with p4 shape: textbook stopping profile, flat MIP for 47 cm then a monotone Bragg to 250000 at 12005, so the cool 56793 end 12000 is where the particle started."},
+
+  {"event": "evt396927", "vertex_id": 15004,
+   "confidence": "certain",
+   "why": "Rule 1 in its strongest form: deg-3 star with 3 of 3 prongs rising away (two protons to 167319 and 130460, muon to 93033), confirmed by three green arrows in the zoom."},
+
+  {"event": "evt396949", "vertex_id": 27003,
+   "confidence": "likely",
+   "why": "Rule 1 plus the two-Bragg-ends trap resolved: p4 shows a monotone stopping-muon rise to 170000 at 27001 and a separate proton profile rising to 190680 at 27002, both pointing away from 27003; tier dropped because the prong pair opens 152 deg."},
+
+  {"event": "evt396971", "vertex_id": 10003,
+   "confidence": "certain",
+   "why": "Rule 1: deg-3 junction with three distinct prong directions, a 27 cm proton Bragging away to 211659 and a 7 cm pi+ Bragging away to 131897."},
+
+  {"event": "evt397005", "vertex_id": 19006,
+   "confidence": "certain",
+   "why": "Rule 1 seen only in the zoom: 19006 is a real 3-prong knot with a 1.8 cm 207936 e/cm proton stub and a short e stub beside the long pion, while the apparent kink at 19005 is 169 deg, i.e. a scatter on the same 139 cm track that stops with a Michel far downstream."},
+
+  {"event": "evt397103", "vertex_id": 8002,
+   "confidence": "certain",
+   "why": "Rule 1 at a genuine 107 deg junction: an 8.5 cm hadron stub Bragging away to 124416 plus a 34.6 cm flat-MIP muon that leaves through the y=-200 wall, and it is the lowest-z candidate of the only structured cluster."},
+
+  {"event": "evt397190", "vertex_id": 10001,
+   "confidence": "certain",
+   "why": "Rules 1 and 3 agree: the 174 cm track is fully contained (so not an entering cosmic), Braggs to 94350 at 10003 where a 13.6 cm MIP Michel branch hangs off at 102 deg, so the cool 49525 end 10001 is the start."},
+
+  {"event": "evt397379", "vertex_id": 13003,
+   "confidence": "certain",
+   "why": "Rule 1 at a 125 deg junction: a 143 cm muon rising away to 114564 and a 13 cm proton sitting at 173736-191654 throughout, a classic muon-plus-proton vertex."},
+
+  {"event": "evt397401", "vertex_id": 16005,
+   "confidence": "certain",
+   "why": "Rule 1 plus rule 3: 2 of 3 prongs rise away at an 84 deg junction with a 1.7 cm 128165 e/cm stub, while 16007 is 169 deg collinear and the far end 16004/16003 carries the Michel of the 139 cm stopping muon."},
+
+  {"event": "evt397476", "vertex_id": 23005,
+   "confidence": "unclear",
+   "why": "Rule 6 by elimination: cluster 18 is a 178 deg flat-MIP wall-to-wall track and the 209 cm track is flat MIP starting exactly on the z=0 face, so the only convergence is at 23005 where a hot 9.7 cm proton-like segment and four small fragments cluster; the backward-muon reading keeps me from calling it likely."},
+
+  {"event": "evt397487", "vertex_id": 19004,
+   "confidence": "unclear",
+   "why": "Rule 8 territory - almost no charge in the event; picked the very hot sub-cm proton-like deposit at the lowest z (7.4 cm) over the only alternative, a sub-MIP 7.6 cm fragment lying on the y=200 top wall. Close to a guess."},
+
+  {"event": "evt397542", "vertex_id": 6001,
+   "confidence": "likely",
+   "why": "Rule 1 with p4 shape: dQ/dx follows the stopping-proton template monotonically from 205604 at 6000 down to ~116000 at the far end, so the particle starts at the cool end; the 161 deg break at 6002 is a scatter within one 23.6 cm proton, which is why I take 6001 rather than 6002 (2.5 cm apart)."}
+]

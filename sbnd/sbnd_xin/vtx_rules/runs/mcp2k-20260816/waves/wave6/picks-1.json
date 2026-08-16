@@ -1,0 +1,61 @@
+[
+  {"event": "evt57346", "vertex_id": 16001,
+   "confidence": "likely",
+   "why": "Rule 1 on the only real cluster: the 385 cm track is 44k e/cm at 16001 and 106k with a falling Bragg profile at 16000, so 16001 is the cool end; only a deg-1 end though, and the nearby sub-cm blobs sit off-axis along the track like deltas, so not certain."},
+
+  {"event": "evt57577", "vertex_id": 13002,
+   "confidence": "certain",
+   "why": "Rule 1 clean at a deg-2 junction: 213 cm muon rises 54k->115k away to a Bragg at 13000 and a 32 cm proton rises 99k->204k away on the proton template to 13003, prongs 75 degrees apart, zoom shows a clean V."},
+
+  {"event": "evt57709", "vertex_id": 13002,
+   "confidence": "likely",
+   "why": "Rule 1: the 88 cm proton-like track is 82k at 13002 and 206k at 13000, so 13002 is its upstream cool start and the lowest-z candidate of the whole structure; the competing deg-4 vertex 20016 is all-flat sub-11 cm segments sitting 19 cm off the track."},
+
+  {"event": "evt57742", "vertex_id": 10016,
+   "confidence": "certain",
+   "why": "Rule 1 at a deg-2 kink: the 144 cm muon shows a textbook monotone Bragg rise to 220k over the last 15 cm at the far end 10000, and a 5 cm stub rises 48k->165k away toward 10003."},
+
+  {"event": "evt58006", "vertex_id": 8003,
+   "confidence": "unclear",
+   "why": "The two candidates swap depending on the panel: the rule-1 line favours 58053 (2 of 2 away) over 8003 (2 of 3), but 58053's charge is entirely sub-MIP fragments while 8003 is a deg-3 junction with a 40 cm track stopping hot at 8001; 8003's three prongs also all run backward in z, so this is close to a guess."},
+
+  {"event": "evt58072", "vertex_id": 15026,
+   "confidence": "certain",
+   "why": "Rule 1 at a deg-2 kink: a 6 cm stub falls 325k->130k away from 15026 (stops at 15005) while the 109 cm muon leaves flat at MIP and exits the bottom wall; a 4x-MIP 6 cm stub is a proton, not a delta."},
+
+  {"event": "evt58325", "vertex_id": 13002,
+   "confidence": "certain",
+   "why": "Rule 1 at a deg-2 kink: 79 cm muon rises 41k->118k away with the Bragg at 13000, plus a 4.8 cm proton stub flat at 184k (4.3x MIP) going the other way; zoom shows a dark-red stub off a cyan MIP track."},
+
+  {"event": "evt58919", "vertex_id": 5002,
+   "confidence": "certain",
+   "why": "Rule 1 at a deg-3 star: 114 cm muon rises 60k->125k away, plus a 5.4 cm proton at 200k and a 2.2 cm stub at 214k; rule 3 corroborates, a small Michel-like cluster sits 5 cm from the muon's far end 5000."},
+
+  {"event": "evt65266", "vertex_id": 5000,
+   "confidence": "certain",
+   "why": "Trap 3 avoided: the deg-2 vertex 5003 that reads 2-of-2-away has its prongs 167 degrees apart, while p4 shows the 104k at 5000 is only 2 cm of proton-stub contamination on a flat MIP track that Braggs at 5001, so 5000 with its 213k 3 cm proton stub is the vertex."},
+
+  {"event": "evt65948", "vertex_id": 8031,
+   "confidence": "certain",
+   "why": "Rule 1 perfect: 3 of 3 prongs rise away at a deg-3 star, two of them stopping protons (124k->169k over 9.8 cm and 100k->208k over 24.7 cm) plus a 23 cm MIP muon."},
+
+  {"event": "evt66278", "vertex_id": 13002,
+   "confidence": "certain",
+   "why": "Rule 1 at a deg-3 junction: p4 shows one prong rising monotonically to 360k at 13001 and the other peaking at 215k near 13000 and falling to 75k at the vertex, so all three prongs point away from 13002."},
+
+  {"event": "evt66366", "vertex_id": 22001,
+   "confidence": "certain",
+   "why": "Rule 1 at the interior upstream end of a 320 cm chain: an 8.3 cm proton rises monotonically 130k->280k away to 22002, while the muon arm is flat MIP with only a one-point junction spike and exits the z=500 wall with no Bragg."},
+
+  {"event": "evt66872", "vertex_id": 7002,
+   "confidence": "likely",
+   "why": "Rule 1 partially: a genuine 56 degree kink where a long low-dQ/dx arm meets a hot 130k 10 cm prong, and the arm's apparent rise at the junction is only a 1.5 cm spike; the nearby cluster-50 bundle is ruled out as a competitor because its prongs at 50025 are 175 and 158 degrees apart (one straight object, trap 3), but every p4 profile here is a hot patch rather than a monotone Bragg so this is not certain."},
+
+  {"event": "evt66900", "vertex_id": 15003,
+   "confidence": "certain",
+   "why": "Rule 1 at a deg-4 hadronic star: 40 cm muon 47k->99k, 32 cm proton 103k->194k, 29 cm pion 64k->112k all rise away, and the fourth 11 cm prong rises away too once its overlapping windows are read."},
+
+  {"event": "evt66944", "vertex_id": 5002,
+   "confidence": "certain",
+   "why": "Trap 3 avoided: the 2-of-2-away vertex 5004 has prongs 169 degrees apart, while p4 shows a 4.9 cm proton falling 258k->155k away from 5002 and the 52 cm muon Bragging to 168k at 5005 with an 11 cm Michel hanging off that far end."}
+]

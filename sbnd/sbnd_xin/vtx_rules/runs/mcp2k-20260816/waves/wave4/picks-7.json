@@ -1,0 +1,18 @@
+[
+  {"event": "evt405201", "vertex_id": 20001, "confidence": "certain",
+   "why": "Rule 1 in the profiles rather than the 5cm table: the 25cm proton rises monotonically to 191k at 20003 and the 330cm muon Braggs hard at 20000, so both start at this V (42 deg apart, lowest-z end); the hot 5cm mean here is vertex-region overlap, and 20002 is a 162 deg fake junction inside the muon."},
+  {"event": "evt405707", "vertex_id": 17013, "confidence": "likely",
+   "why": "Rule 1 on the only cleanly fitted segment in the junction: the 32cm proton rises monotonically 80k to 280k away from here and stops at 17006, and nothing rises toward this point; 17003 (2.8cm away, where the muon terminates) is the alternative, so not certain."},
+  {"event": "evt405927", "vertex_id": 21001, "confidence": "likely",
+   "why": "Zoom shows 21002 is a spurious break inside a perfectly straight 65cm track (170 deg prong pair, the rule-1 trap), and the track Braggs cleanly at 21000, so it must start at 21001, whose single 190k terminal point reads as a vertex blob."},
+  {"event": "evt405971", "vertex_id": 6001, "confidence": "unclear",
+   "why": "Whole event is one 3.8cm 136k stub plus one isolated blip, no readable direction (rule 8); picked the lower-z end of the stub by the rule-2 tie-break only, so this is close to a coin flip."},
+  {"event": "evt406125", "vertex_id": 8003, "confidence": "certain",
+   "why": "Degree-3 vertex with all prongs pointing away: 20cm proton rising to 95k at 8005, 87cm MIP muon, and a 1.5cm 127k stub, sitting at the upstream end of the fragment swarm; the zoom shows a clean two-prong V."},
+  {"event": "evt406147", "vertex_id": 22011, "confidence": "certain",
+   "why": "Textbook 61 deg V: a 57cm proton rising to 224k at 22004 and a 354cm muon that Braggs at 116k at 22000, both cooling toward this point, and every downstream vertex (22005/22007/22009) has its segments rising back toward it."},
+  {"event": "evt406367", "vertex_id": 12000, "confidence": "likely",
+   "why": "Only junction in the event: the 65cm MIP track terminates here with no Bragg, and two short hot hadronic stubs (2.1cm at 77k, 8.3cm peaking at 96k) leave from the same point; the muon runs slightly backward in z, which costs a tier."},
+  {"event": "evt406631", "vertex_id": 62033, "confidence": "unclear",
+   "why": "Cluster 18 is a dead-straight 298cm MIP from the y- wall to the x- wall with no prong and no Bragg anywhere, so no vertex structure in it; only other object is this 3.8cm 82k blob, chosen over the two smaller blobs, essentially a guess."}
+]

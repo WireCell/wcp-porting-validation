@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt393791",
+  "vertex_id": 7003,
+  "confidence": "unclear",
+  "why": "Rule 3: the 129cm chain ends in a template-matching Bragg at 7005 with a 6cm Michel to 7001, so that is the far end, and 7000 sits on the y=200 top face; 7003 is the remaining 3-prong junction (1.6cm 160k stub of ambiguous origin) but the whole cluster reads equally well as one stopping muon, hence unclear."
+ },
+ {
+  "event": "evt393835",
+  "vertex_id": 12001,
+  "confidence": "likely",
+  "why": "Single 220cm flat-MIP muon with no Bragg at either end; 12000 sits on the z=498 downstream face so it is an exit point, leaving the interior end 12001 (also the lower-z end, rule 2) as the only plausible start."
+ },
+ {
+  "event": "evt393935",
+  "vertex_id": 16001,
+  "confidence": "certain",
+  "why": "Rule 1: the 295cm muon has a clean monotone template-matching Bragg peak (160k falling over 15cm) at 16000 and is at MIP at 16001, so 16001 is the cool start; it is also the interior, lowest-z end, zoom shows a clean single-prong origin."
+ },
+ {
+  "event": "evt394167",
+  "vertex_id": 11056,
+  "confidence": "likely",
+  "why": "Rule 1: 3-prong star at 11056 with zero segments rising toward it (zoom shows three green arrows) - an 18cm prong hot at its free tip 11001, a 32cm flat MIP chain to 11005, and a 28.5cm electron that rises x2.5 into the EM fan at 11002; tier dropped because two prongs are near back-to-back."
+ },
+ {
+  "event": "evt394255",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 8: the whole event is a scatter of sub-5cm fragments spread over 60cm in x and 30cm in z with no track, no cone and no readable direction, so any click is as good as any other and I abstain."
+ },
+ {
+  "event": "evt394363",
+  "vertex_id": 18001,
+  "confidence": "likely",
+  "why": "Rule 2 + topology: the 93cm muon exits the z=501 downstream face at 18000, so its interior low-z end 18001 is the start, and it is surrounded within 10-15cm by short hot fragments (5cm segment with a clean monotone proton-like rise, plus two sub-cm blobs) that read as vertex activity."
+ },
+ {
+  "event": "evt394396",
+  "vertex_id": 7001,
+  "confidence": "likely",
+  "why": "Collinearity trap rules out 7002 (its two long prongs leave at 176 degrees, a single 172cm track with a 4.5cm MIP delta stub), 7000 sits on the z=500 downstream face, so the interior lowest-z end 7001 is the muon start."
+ },
+ {
+  "event": "evt394407",
+  "vertex_id": 18004,
+  "confidence": "unclear",
+  "why": "Rule 1 + rule 2: the 260cm track has a genuine template-following Bragg rise over its last 15cm at 18005, which fixes its direction as +z from 18004, and 18004 is by far the lowest-z candidate; unclear because 18004 sits on the upstream z=0 face, where an entering particle looks identical."
+ },
+ {
+  "event": "evt394836",
+  "vertex_id": 5001,
+  "confidence": "likely",
+  "why": "Rule 1 on the only object in the event: a 4.6cm 5x-MIP proton stub whose dQ/dx peaks at 318k at the 5000 end and falls to ~200k at 5001, so 5001 is the cool start and also the lower-z end."
+ },
+ {
+  "event": "evt395012",
+  "vertex_id": 10005,
+  "confidence": "certain",
+  "why": "Rule 1 textbook: 3-prong star with nothing rising toward it - a 49cm MIP muon rising x1.57 to a Bragg at 10001, a 10cm 200k proton stopping at 10000 and a 3.7cm 218k proton stub, all leaving 10005 in well-separated directions (zoom confirms)."
+ },
+ {
+  "event": "evt395089",
+  "vertex_id": 21004,
+  "confidence": "certain",
+  "why": "Rule 1: a 4-prong star at 21004 with zero segments rising toward it - a 24.8cm MIP muon rising x2.66 into a Bragg at 21002, a 9.1cm proton rising x1.64 into a Bragg at 21001, plus a 10.9cm proton and a 5.3cm pion, and the small-fragment spray fans away from it."
+ },
+ {
+  "event": "evt395277",
+  "vertex_id": 3002,
+  "confidence": "unclear",
+  "why": "Rule 1 gives 3002 (2 of 2 prongs rise away, 55k in the middle) but only 3001 is a genuine monotone template Bragg - the 3000 end is a 2cm hot patch, not a rise - so the two-Bragg reading is weak; unclear for the 174 degree prong pair, with 3000 the live alternative 10cm away."
+ },
+ {
+  "event": "evt395298",
+  "vertex_id": 56020,
+  "confidence": "certain",
+  "why": "Rule 1: 56020 has a 14.9cm proton leaving it with a textbook monotone template Bragg rise 80k->205k stopping at 56015, plus a 2.7cm 125k stub, and back-extrapolating the 182cm MIP track from 15001 by 5.7cm lands exactly on 56020 at about 97 degrees to the proton."
+ },
+ {
+  "event": "evt395443",
+  "vertex_id": 5003,
+  "confidence": "certain",
+  "why": "Clean V apex at 5003 with a 3.1cm 181k proton stub attached: one prong runs 49cm to a genuine proton Bragg (220k over the last 4cm) at 5001, the other runs 63cm at MIP to the z=499 downstream face; the hot ends at 5003 itself are the vertex blob, not a rise."
+ },
+ {
+  "event": "evt395485",
+  "vertex_id": 6001,
+  "confidence": "likely",
+  "why": "Elimination plus rule 2: the 130cm chain is flat MIP end to end with no Bragg, 6002 and 6004 are 171-degree straight-through points with delta stubs, and 6000 sits on the y=200 top face, leaving the interior lowest-z tip 6001 as the start."
+ }
+]

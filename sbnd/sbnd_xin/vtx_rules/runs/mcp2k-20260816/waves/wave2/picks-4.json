@@ -1,0 +1,61 @@
+[
+  {"event": "evt236192", "vertex_id": 10000,
+   "confidence": "likely",
+   "why": "Rule 1: the lone 106 cm track has a textbook monotone Bragg rise over its last 10 cm at 10002 (with a sub-cm blob 25011 sitting 10 cm off that end like a Michel), so the cool end 10000 is the origin; both ends are contained, so the track started inside, but with only one prong I cannot exclude the vertex being elsewhere."},
+
+  {"event": "evt236610", "vertex_id": 12002,
+   "confidence": "certain",
+   "why": "Rule 1 in its cleanest form: degree-3 junction with 3 of 3 segments rising away - two short heavily-ionising protons (12006 rising monotonically to 300k at 12001, 12007 peaking at 217k) plus a 33 cm muon that cools all the way from 12000 into the junction."},
+
+  {"event": "evt237292", "vertex_id": 10003,
+   "confidence": "likely",
+   "why": "Both long muons cool into the same 4 cm junction region and stop hot at their far ends (10000 at 100k, 10001 at 137k with a 10 cm e-like cluster 70 hanging off it - rule 3 Michel), and 10003 is the degree-4 hub of short p/e/pi stubs that the two long prongs radiate from; the 10002/10004 alternatives sit 2-4 cm away."},
+
+  {"event": "evt237380", "vertex_id": 2002,
+   "confidence": "unclear",
+   "why": "Only a bare 17 cm MIP track exists; the apparent rule-1 signal at 2002 is a single terminal hot point, not a monotone Bragg (trap 2), and the opposite end 2000 lies at x=-200.9 on the anode face, so I read 2002 as the contained origin with the exiting end at the wall - close to a guess."},
+
+  {"event": "evt237446", "vertex_id": 12005,
+   "confidence": "certain",
+   "why": "Rule 1: degree-2 junction with 2 of 2 rising away - a 7 cm proton whose dQ/dx climbs to 270k and stops at 12002, and a 46 cm MIP muon running off to 12000; the two prongs leave at ~83 degrees so this is not the collinear-kink trap."},
+
+  {"event": "evt237710", "vertex_id": 14001,
+   "confidence": "likely",
+   "why": "The nominal rule-1 winner 14000 sits in the z=500/cathode corner where the first 15 cm read a sub-MIP 15-25k (a boundary charge-loss artefact, not real cooling), so the only contained end of this 117 cm MIP track is 14001, which carries a short stub at a clear angle and is the lower-z end (rule 2)."},
+
+  {"event": "evt237798", "vertex_id": 14005,
+   "confidence": "certain",
+   "why": "Rule 1 plus rule 3: the 250 cm muon path cools monotonically from its textbook Bragg stop at 14003 all the way back through 14007 to 14005, where two short heavily-ionising prongs sit (4.7 cm at 125k, 5.9 cm rising to 230k); 14005 is also the most upstream point at z=68."},
+
+  {"event": "evt239118", "vertex_id": 6001,
+   "confidence": "likely",
+   "why": "Rule 1 on a single 9 cm proton: dQ/dx is ~170k at the 6000 end and falls steadily to MIP at 6001, so the proton stops at 6000 and starts at 6001, which is also the lower-z end (rule 2); with one prong and nothing else in the event the pick rests entirely on that profile."},
+
+  {"event": "evt239404", "vertex_id": 22005,
+   "confidence": "likely",
+   "why": "22005 is the apex of a clear ~71 degree V: the 110 cm muon leaves it and stops at 22000 with a steep Bragg (253k, decaying over 20 cm), while the other prong runs 12 cm through 22006 to 22001; the 22006 alternative is only 4.7 cm away and is itself a kink inside that short prong."},
+
+  {"event": "evt240196", "vertex_id": 2003,
+   "confidence": "likely",
+   "why": "2003 is the junction where a 29 cm MIP muon exiting at the anode (x=-201) meets a 2.7 cm dark-red 221k proton stub; the rise is far too abrupt over the last cm to be a stopping-muon Bragg, but the 31 degree kink leaves the single-scattered-particle reading open."},
+
+  {"event": "evt240372", "vertex_id": 16006,
+   "confidence": "certain",
+   "why": "Rule 1 with three prongs radiating: a 12 cm proton rising to 220k at 16001, a 49 cm pion rising to 145k at 16007, and a long muon running away to its own Bragg stop at 16000; 16006 is also the most upstream candidate at z=62."},
+
+  {"event": "evt240636", "vertex_id": 12022,
+   "confidence": "certain",
+   "why": "Rule 1: a 14 cm proton leaves 12022 and stops at 12003 at 200-235k, while a 266 cm MIP muon leaves the same point and exits at z=501 with no Bragg anywhere; 12022 is the lowest-z point of the cluster and the two prongs open at ~57 degrees."},
+
+  {"event": "evt241626", "vertex_id": 13001,
+   "confidence": "certain",
+   "why": "Rule 3 decides it: the far end 13000 carries the muon's Bragg peak (170k, hairpin of hot orange points) with a short low-dQ/dx Michel segment hanging off that same end, so the vertex is the opposite, contained, most-upstream end 13001, which carries a small non-collinear stub."},
+
+  {"event": "evt242000", "vertex_id": 14003,
+   "confidence": "certain",
+   "why": "Rule 1: 16 cm proton rising monotonically to 350k and stopping at 14001, a 2.8 cm stub, and a 163 cm MIP muon leaving 14003 and exiting at the y=200 top wall - every prong gets hotter away from 14003, the lowest-z point of the cluster."},
+
+  {"event": "evt242022", "vertex_id": 16000,
+   "confidence": "unclear",
+   "why": "The only real cluster is a 335 cm track that is flat MIP for 320 cm and then follows the stopping-muon template up to 270k at 16001, so rule 1 puts the origin at 16000 - but 16000 sits on the z=498 downstream face, which would require a backward-going muon, and the only other structure is a handful of sub-cm 13k blobs 30-40 cm off the stopping end with no readable topology."}
+]

@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt415186",
+  "vertex_id": 19002,
+  "confidence": "certain",
+  "why": "Rule 1 at a deg-3 junction: 83cm muon leaves flat at MIP, a 9cm hadron rises monotonically 50k->240k away from it into a Bragg, plus a 205k stub."
+ },
+ {
+  "event": "evt415564",
+  "vertex_id": 17002,
+  "confidence": "likely",
+  "why": "The 132cm muon Braggs hard (290k decaying over 30cm) at the far end 17000, so it starts at 17002, which is also the 106-degree kink, the charge maximum of the tangle and the lowest z."
+ },
+ {
+  "event": "evt417100",
+  "vertex_id": 25002,
+  "confidence": "unclear",
+  "why": "Event is one 167cm flat-MIP track with no Bragg; 25000 sits exactly on the z=501.0 downstream face so 25002 is the only interior end, but rule 1 weakly points the other way."
+ },
+ {
+  "event": "evt417496",
+  "vertex_id": 19002,
+  "confidence": "certain",
+  "why": "Rule 1 on the only real cluster: the 29cm proton follows the brown stopping-proton template from 230k at 19000 down to 90k, so it starts at 19002."
+ },
+ {
+  "event": "evt417782",
+  "vertex_id": 14001,
+  "confidence": "likely",
+  "why": "The whole event is one straight 11.6cm proton whose dQ/dx rises monotonically 70k->300k toward 14000, so it starts at 14001, which is also the lowest z (34cm)."
+ },
+ {
+  "event": "evt47058",
+  "vertex_id": 11002,
+  "confidence": "certain",
+  "why": "Fully contained 179cm muon with a broad Bragg decay at 11000 and flat MIP out of 11002, which is the lower z and carries a sub-cm blob 4.9cm away."
+ },
+ {
+  "event": "evt47212",
+  "vertex_id": 2001,
+  "confidence": "likely",
+  "why": "Convergence at one point: a 78cm proton chain rising 68k->186k that Braggs at 2000 starts here, a 140k 4.1cm stub attaches, and the cluster-105 shower trunk arrives from 5cm away; held at likely because 2126 and 105091 sit within 5cm."
+ },
+ {
+  "event": "evt47278",
+  "vertex_id": 6004,
+  "confidence": "certain",
+  "why": "Textbook rule 1: deg-4 star, three of four prongs rise away (27cm pion 65k->118k, 14cm proton 128k->216k, 41cm muon 48k->100k), cool at the vertex and red at every tip."
+ },
+ {
+  "event": "evt473358",
+  "vertex_id": 19003,
+  "confidence": "likely",
+  "why": "Only multi-prong vertex in the event; all three prongs are cooler at 19003 than at their far ends and seg 19006 peaks at 106k where it stops at 19005."
+ },
+ {
+  "event": "evt473886",
+  "vertex_id": 2001,
+  "confidence": "likely",
+  "why": "Event is a single 4.1cm proton stub whose dQ/dx falls monotonically 205k->168k toward 2001, so it stops at 2000 and starts at 2001, which is also the lower z."
+ },
+ {
+  "event": "evt474370",
+  "vertex_id": 8001,
+  "confidence": "certain",
+  "why": "Contained 118cm muon: 160k Bragg decaying to MIP within 10cm at 8000, flat MIP out of 8001, which is the lower z and has a blob 8.8cm away."
+ },
+ {
+  "event": "evt474612",
+  "vertex_id": 5001,
+  "confidence": "likely",
+  "why": "A compact 143k proton deposit 2.5cm from 5001 falls to 72k at 5001 and collapses to MIP beyond, so the proton starts at 5001; 5001 is also lowest z with a 3.3cm blob 6.6cm away."
+ },
+ {
+  "event": "evt474678",
+  "vertex_id": 25006,
+  "confidence": "likely",
+  "why": "Both prongs rise away: a 7.2cm proton Bragging at 313k and a 95.6cm muon Bragging at 155k with a Michel hanging off that far end, which rule 3 says is never the vertex."
+ },
+ {
+  "event": "evt475096",
+  "vertex_id": 26017,
+  "confidence": "unclear",
+  "why": "Only real junction (74-degree V apex) and lowest z by 60cm, but the event has no Bragg anywhere, dQ/dx is noisy 25-115k and the two prongs disagree on rule 1."
+ },
+ {
+  "event": "evt475140",
+  "vertex_id": 10001,
+  "confidence": "likely",
+  "why": "Single 153cm flat-MIP track; 10000 lies exactly on the z=501.0 downstream face so it exits there, and the interior end 10001 carries a blob 8.2cm away."
+ }
+]

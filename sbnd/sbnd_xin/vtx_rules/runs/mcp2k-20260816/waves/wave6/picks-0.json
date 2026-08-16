@@ -1,0 +1,92 @@
+[
+ {
+  "event": "evt54475",
+  "vertex_id": 20002,
+  "confidence": "unclear",
+  "why": "Rule1/trap: the 130cm cluster is ONE straight MIP track (76cm mu, flat ~50k) plus a 3cm-offset low-charge ghost duplicate; the only structure is a 1.8cm 2.6-MIP stub at the low-z junction 20002 (z=440.6) while the other end 20001 sits on the z=500 wall -- I pick the upstream junction but the stopping-cosmic reading fits about as well."
+ },
+ {
+  "event": "evt54508",
+  "vertex_id": 10003,
+  "confidence": "certain",
+  "why": "Rule1: clean ~117deg V of two very hot (3-5 MIP) proton prongs meeting at 10003, dQ/dx lowest at the junction (134k) and rising to both free ends (192k/210k) -- two protons out of one point, not one scattered track."
+ },
+ {
+  "event": "evt54629",
+  "vertex_id": 15002,
+  "confidence": "unclear",
+  "why": "Cluster 15 is one straight 133cm particle entering at the z=0 upstream face (15001, clean end, no vertex activity) with dQ/dx rising monotonically to a textbook proton Bragg at 15000; the only hadronic-vertex-like point is 15002 where a 9.2cm Bragg-terminated prong branches off, so I name it but the incoming leg cools away from it."
+ },
+ {
+  "event": "evt55220",
+  "vertex_id": 17002,
+  "confidence": "likely",
+  "why": "Clean ~90deg two-prong V at 17002, the lowest-z point of the cluster: a MIP muon rises away from it (x1.40) and exits the z=500 wall, and a very hot 3.7-MIP blob sits right at the junction on the second prong."
+ },
+ {
+  "event": "evt55278",
+  "vertex_id": 21002,
+  "confidence": "certain",
+  "why": "Rule1/6: 21002 is a junction of two very hot (2.5-4.8 MIP) proton prongs at the lowest z of the cluster, and the 131cm flat-MIP track of cluster 13 ends 4.6cm away pointing straight into it -- three prongs radiating from one point."
+ },
+ {
+  "event": "evt55322",
+  "vertex_id": 18002,
+  "confidence": "certain",
+  "why": "Rule1: textbook 3-prong vertex at the cluster's lowest z -- two short dark-red 3-3.5 MIP proton prongs (4.9 and 8.7 cm) plus a 213cm MIP muon leaving upward/downstream and exiting the y=200 wall."
+ },
+ {
+  "event": "evt55443",
+  "vertex_id": 7000,
+  "confidence": "unclear",
+  "why": "Rule8-like event: 23 clusters all sub-cm dots with no readable direction anywhere; the single real deposit is a 3.3cm 5-MIP proton at the centre of the dot concentration, so I name its lower-z end, but the end choice is a coin flip."
+ },
+ {
+  "event": "evt55542",
+  "vertex_id": 5004,
+  "confidence": "certain",
+  "why": "Rule1: 5004 is where a 5cm proton starts (monotone Bragg rise 105k->250k to its stopping end 5001) and where a fully contained 261cm flat-MIP muon starts, the muon Bragging at its far end 5000; 5005 is only a fit break in the muon."
+ },
+ {
+  "event": "evt55740",
+  "vertex_id": 17001,
+  "confidence": "certain",
+  "why": "Rule1: at 17001 a 9.7cm proton starts with a textbook monotone Bragg (140k->290k) into 17002 at 84deg, while the 168cm track leaving it is flat MIP with no Bragg and simply exits the y=200 top wall; 17001 is also the lowest-z structure in the event."
+ },
+ {
+  "event": "evt56180",
+  "vertex_id": 18048,
+  "confidence": "likely",
+  "why": "Zoom shows a clean ~90deg V at 18048: a 91cm flat-MIP muon leaves it for the x=-201 wall while a 50cm proton leaves the other way (18048->18004->18000, 17deg fit-break bend) and Braggs monotonically to 190k at 18000; the 300k at 18048 is a 2-point vertex blob on a flat 70-90k leg, not a Bragg."
+ },
+ {
+  "event": "evt56521",
+  "vertex_id": null,
+  "confidence": "unclear",
+  "why": "Rule 8 abstain: the entire event is three sub-cm isolated dots at y=-184 spread over 10cm near the bottom wall, with no segment, no direction and no dQ/dx gradient to read -- any click would be as good as any other."
+ },
+ {
+  "event": "evt56763",
+  "vertex_id": 10001,
+  "confidence": "likely",
+  "why": "Rule7/2: compact 25cm spray whose cone apex and lowest-z point is 10001 (z=103), with the spray (10004, 10000, 10005, cluster 36) opening downstream from it; the 12.4cm 2-MIP proton-like prong leaving 10001 gets hotter toward its far end 10004."
+ },
+ {
+  "event": "evt56939",
+  "vertex_id": 8002,
+  "confidence": "certain",
+  "why": "Rule1: sharp 106deg V at the cluster's lowest-z point -- a 49cm proton leaves 8002 with a monotone Bragg rise (99k->143k) stopping at 8001, and a 176cm flat-MIP muon leaves the same point and exits the y=-200 bottom wall."
+ },
+ {
+  "event": "evt56972",
+  "vertex_id": 17004,
+  "confidence": "unclear",
+  "why": "Messy 40cm all-'e' object hugging the x=200 anode; the only genuine multi-prong branch point is 17004 (3 prongs), with a 33cm leg Bragging at 17001 and shower fragments piled at the x~200 end -- rule 1 favours 17008 but that is a collinear 168deg pair with a duplicate prong and an unphysical 13k e/cm reading (gap artifact)."
+ },
+ {
+  "event": "evt57280",
+  "vertex_id": 21015,
+  "confidence": "likely",
+  "why": "The whole event is one perfectly straight 25.5cm stopping proton (255k Bragg at 21000, falling along the proton template to ~120k at the other end); the 1.9cm stub is collinear at 180deg so it is the proton's own first cm, making 21015 the free end where the proton started."
+ }
+]

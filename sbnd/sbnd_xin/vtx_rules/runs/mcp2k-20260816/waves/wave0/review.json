@@ -1,0 +1,611 @@
+{
+ "picks_written": {
+  "picks-0.json": "2026-08-16 10:59:23",
+  "picks-1.json": "2026-08-16 11:00:27",
+  "picks-2.json": "2026-08-16 11:00:40",
+  "picks-3.json": "2026-08-16 11:03:11"
+ },
+ "reviewed_at": "2026-08-16 11:03:45",
+ "rows": [
+  {
+   "event": "evt317407",
+   "vertex_id": 12005,
+   "conf": "certain",
+   "reco_sep_cm": 13.459058144825411,
+   "agrees": false,
+   "bucket": "REVIEW FIRST (confident disagreement)",
+   "why": "Rule 1: degree-4 junction from which a 363 cm muon rises x3.3 to its Bragg stop at 12000 and a 31 cm proton chain rises monotonically 89k->152k to its stop at 12004, with two sub-cm stubs at the point.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt317407/calib-pr-evt317407.json"
+  },
+  {
+   "event": "evt102643",
+   "vertex_id": null,
+   "conf": "unclear",
+   "reco_sep_cm": null,
+   "agrees": false,
+   "bucket": "REVIEW (scanner abstained)",
+   "why": "Heuristic 8: all four candidates are isolated single sub-cm dots spread 200-300 cm apart with no fitted segment and no readable direction anywhere in the event, so any click is as good as any other.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt102643/calib-pr-evt102643.json"
+  },
+  {
+   "event": "evt355106",
+   "vertex_id": null,
+   "conf": "unclear",
+   "reco_sep_cm": null,
+   "agrees": false,
+   "bucket": "REVIEW (scanner abstained)",
+   "why": "Abstain: the only structure is a muon entering the y=+200 top face, Bragg-rising to a stop at 7000 with a 21 cm Michel hanging off that same end (rule 3 forbids it), and the remaining candidates are two sub-cm blobs on the Michel.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt355106/calib-pr-evt355106.json"
+  },
+  {
+   "event": "evt47894",
+   "vertex_id": null,
+   "conf": "unclear",
+   "reco_sep_cm": null,
+   "agrees": false,
+   "bucket": "REVIEW (scanner abstained)",
+   "why": "Abstaining under heuristic 8 - every one of the 13 clusters is sub-centimetre, giving 14 isolated dots scattered over a 40x60x70 cm region with no fitted track, no dQ/dx gradient and no direction to read.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt47894/calib-pr-evt47894.json"
+  },
+  {
+   "event": "evt70472",
+   "vertex_id": null,
+   "conf": "unclear",
+   "reco_sep_cm": null,
+   "agrees": false,
+   "bucket": "REVIEW (scanner abstained)",
+   "why": "The only real object is a 424cm flat-MIP vertical track running wall to wall in y with no Bragg at either end (a cosmic); every other cluster is a sub-6cm isolated blip scattered over 150cm with nothing converging, so any click would be a guess.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt70472/calib-pr-evt70472.json"
+  },
+  {
+   "event": "evt96636",
+   "vertex_id": null,
+   "conf": "unclear",
+   "reco_sep_cm": null,
+   "agrees": false,
+   "bucket": "REVIEW (scanner abstained)",
+   "why": "Heuristic 8: every cluster is a sub-1cm isolated blip and the ten of them are scattered over the whole detector (z 42 to 411, x -145 to +118) with no track, no dQ/dx gradient and nothing converging anywhere.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt96636/calib-pr-evt96636.json"
+  },
+  {
+   "event": "evt100640",
+   "vertex_id": 3002,
+   "conf": "likely",
+   "reco_sep_cm": 0.00510154539315833,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Rule 1: the 40.6 cm mu shows a monotone template-following Bragg rise to 130k at 3001, so it cools toward 3002, where a 2.1 cm 133k proton stub also attaches; the 151 deg prong pair drops it one tier.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt100640/calib-pr-evt100640.json"
+  },
+  {
+   "event": "evt156093",
+   "vertex_id": 65011,
+   "conf": "unclear",
+   "reco_sep_cm": 148.06058760942085,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "The 8001/65012 pair is a 175 deg break in one continuous 255 cm track, not a junction, and 8000 is a clean monotone Bragg stop, leaving 65011 as the only non-stopping free end and the lowest-z point; but its 105k tip peaks 1.5 cm in, so it could equally be a cosmic entering near the cathode.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt156093/calib-pr-evt156093.json"
+  },
+  {
+   "event": "evt167703",
+   "vertex_id": 11001,
+   "conf": "likely",
+   "reco_sep_cm": 0.0073402692507855295,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "The only real track (32.8 cm, 100-130k proton-like) declines monotonically away from its Bragg stop at 11000, so 11001 is its start, and a blip cloud from the surrounding shower sits there including 92048 at 3.7 cm.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt167703/calib-pr-evt167703.json"
+  },
+  {
+   "event": "evt173643",
+   "vertex_id": 3001,
+   "conf": "likely",
+   "reco_sep_cm": 0.0065924841214126785,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "3001 is the mid-volume end of a flat-MIP 145 cm track that exits at the z=500 downstream face, and a cloud of 1-3 cm blips (30012, 28008, 32016, 75020) sits within 7-8 cm of it; the 200k proton stub 70 cm away is unattached to anything.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt173643/calib-pr-evt173643.json"
+  },
+  {
+   "event": "evt175893",
+   "vertex_id": 11003,
+   "conf": "likely",
+   "reco_sep_cm": 0.006413835833019922,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Deg-3 junction in an otherwise shower-only event: a 3.5 cm 94k stub one way, a 15 cm e-shower plus a 6.5 cm mu the other, and a 4.5 cm 105k prong tipped at 270k (stopping proton) 9 cm along the stub direction; the 164 deg pair keeps it off certain.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt175893/calib-pr-evt175893.json"
+  },
+  {
+   "event": "evt178841",
+   "vertex_id": 12002,
+   "conf": "likely",
+   "reco_sep_cm": 0.00394132507307034,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Rule 1 with two independent Braggs: the 381 cm muon is flat MIP for 350 cm and rises monotonically to 235k at 12000, while the 7.4 cm prong rises to 158k at 12001, so both cool toward 12002, which sits at the lowest z with the muon running forward in z.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt178841/calib-pr-evt178841.json"
+  },
+  {
+   "event": "evt242484",
+   "vertex_id": 9001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.006673866325355359,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "The far end carries a smooth 8-point Bragg tail (141k down to 80k over 4.3 cm at 9000) plus a 0.9 cm Michel-like blip 5.7 cm beyond, so by rule 3 that end is the stopping end and 9001 is the start; but a lone 276 cm track starting 15 cm below the top wall and going down at 46 deg reads just as well as a stopping cosmic.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt242484/calib-pr-evt242484.json"
+  },
+  {
+   "event": "evt279213",
+   "vertex_id": 9000,
+   "conf": "unclear",
+   "reco_sep_cm": 41.97997774489308,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "Rule 1 on the only fitted object: the 42 cm track shows a clean monotone template-following Bragg rise (50k to 245k over the last 3.5 cm) at 9001, so it is the stopping end and the track cools all the way toward 9000; low confidence because that leaves a single prong with no second prong anywhere and the remaining candidates are structureless sub-cm blips.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt279213/calib-pr-evt279213.json"
+  },
+  {
+   "event": "evt280329",
+   "vertex_id": 40025,
+   "conf": "likely",
+   "reco_sep_cm": 0.005134894330193107,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Rule 1: the 88 cm pi+ and this 28.8 cm proton both leave the same junction and get hotter away from it (stopping at 12003 and at 40027 with a 235k Bragg); the 4 cm zoom shows the pi+ line extrapolated to x=166.4 passes within 0.3 cm of 40025, its own fit end 12001 being truncated 2.6 cm short across a charge gap.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt280329/calib-pr-evt280329.json"
+  },
+  {
+   "event": "evt281325",
+   "vertex_id": 42048,
+   "conf": "likely",
+   "reco_sep_cm": 0.004954580411412416,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Kinked (130 deg) two-prong junction: an 11.7 cm MIP trunk goes one way, a hot 102k 3.7 cm proton stub plus the whole opening chain of shower fragments goes the other (+z), and this is the apex end of that cone (rules 6-7).",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt281325/calib-pr-evt281325.json"
+  },
+  {
+   "event": "evt317911",
+   "vertex_id": 25001,
+   "conf": "likely",
+   "reco_sep_cm": 0.004441840719630476,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Single forward-going 64 cm MIP that begins at the z=0.5 upstream face with a 2.7 cm stub attached (degree 2) and is cooler here than at its interior end 25000, so rules 1 and 2 agree on this end.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt317911/calib-pr-evt317911.json"
+  },
+  {
+   "event": "evt321983",
+   "vertex_id": 21008,
+   "conf": "likely",
+   "reco_sep_cm": 138.8934332206972,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "Only genuine junction in a diffuse event: three prongs, the 4.4 cm one rising monotonically 33k->118k to a stopping end at 21013 and the 17.6 cm one also rising away; the two hot proton stubs 150 cm away share no common point (15 cm apart, unaligned).",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt321983/calib-pr-evt321983.json"
+  },
+  {
+   "event": "evt348088",
+   "vertex_id": 8001,
+   "conf": "likely",
+   "reco_sep_cm": 0.0060271573137854195,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Interior start of a 316 cm straight MIP that runs +z and exits the z=500 wall, with two sub-cm blobs 9 and 19 cm away; no Bragg anywhere (the end values are single-point spikes), so direction comes from the wall-free end plus rule 2.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt348088/calib-pr-evt348088.json"
+  },
+  {
+   "event": "evt389533",
+   "vertex_id": 12001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.00496499029341497,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Single wall-to-wall MIP (from z=1.8 on the upstream face to the y=-200 bottom at z=183, continuing as cluster 17) with a flat profile and no Bragg at either end; picked the upstream end on rule 2 alone, rule 1 weakly disagrees.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt389533/calib-pr-evt389533.json"
+  },
+  {
+   "event": "evt392693",
+   "vertex_id": 11001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.004296747553796122,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "288 cm MIP with both ends interior but hot only in 1-5 cm spikes that overshoot the muon template (artefacts, not Bragg peaks), so dQ/dx gives no direction; picked the upstream end because the track runs beam-forward (rule 2).",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt392693/calib-pr-evt392693.json"
+  },
+  {
+   "event": "evt395079",
+   "vertex_id": 15001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.0050961038472615485,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Only substantial object is a 218 cm flat-MIP track with no Bragg at either end; 15001 is its interior (cool, non-wall) termination, but p6 scored every segment flat so rule 1 has no opinion, and the nearby blip cloud spans 40 cm - too diffuse to be one vertex.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt395079/calib-pr-evt395079.json"
+  },
+  {
+   "event": "evt395837",
+   "vertex_id": 22000,
+   "conf": "unclear",
+   "reco_sep_cm": 131.32124513640827,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "A 135 cm track runs from the anode wall to this interior end; p4 shows the apparent rise at 22000 is one hot bin and not a monotone Bragg, so this is equally a stopping cosmic with a Michel (the 2.5 cm e-stub 7 cm away) as it is a vertex.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt395837/calib-pr-evt395837.json"
+  },
+  {
+   "event": "evt403309",
+   "vertex_id": 11001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.006121350481966888,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Heuristic 8 territory: the whole event is one flat 36 cm e-segment in the bottom/downstream corner plus two sub-cm blips, with no dQ/dx gradient and no readable direction; 11001 is named only because it is the end not sitting on the z=500 wall.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt403309/calib-pr-evt403309.json"
+  },
+  {
+   "event": "evt409514",
+   "vertex_id": 8001,
+   "conf": "likely",
+   "reco_sep_cm": 2.4625655016807775,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "The whole cluster is a single 31 cm stopping proton - p4 rises monotonically from 95000 to 200000 at 8000 - so 8001 is its cool start end and therefore the interaction point; nothing else in the event is larger than a blip.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt409514/calib-pr-evt409514.json"
+  },
+  {
+   "event": "evt473952",
+   "vertex_id": 18002,
+   "conf": "unclear",
+   "reco_sep_cm": 48.76892495555696,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "18002 has both prongs MIP at the junction and hot far ends, but p4 shows those hot ends are 1-2 cm spikes rather than monotone Braggs, and the 18001 zoom shows this same track turning roughly 90 deg twice within 20 cm - so the kink at 18002 is not distinctive against the track's own wiggle.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt473952/calib-pr-evt473952.json"
+  },
+  {
+   "event": "evt499423",
+   "vertex_id": 11003,
+   "conf": "likely",
+   "reco_sep_cm": 3.338627185528357,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "Heuristic 7: p4 shows the 24.6 cm electron trunk runs flat at MIP for its first 13 cm out of 11003 and then jumps to 90000-140000 for the last 10 cm, i.e. a single track that starts here and then showers, so 11003 is the apex; it is also the only degree-2 junction and carries a pi+ stub, but a 28-cluster blob keeps it off certain.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt499423/calib-pr-evt499423.json"
+  },
+  {
+   "event": "evt51128",
+   "vertex_id": 22001,
+   "conf": "likely",
+   "reco_sep_cm": 47.28785073537472,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "The zoom shows dQ/dx rising monotonically along the whole chain 22001 -> 22002 -> 22000, so cluster 22 is one fully contained 64 cm stopping particle whose Bragg is at 22000; both ends are interior, making 22001 the cool start and the only contained-track vertex in the event.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt51128/calib-pr-evt51128.json"
+  },
+  {
+   "event": "evt52121",
+   "vertex_id": 11002,
+   "conf": "unclear",
+   "reco_sep_cm": 0.003374554914568503,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Best of a bad set: 11002 is a real T-junction with an off-axis stub and 2 of 3 prongs rising away, but its two long prongs leave at 170 deg and p4 confirms a genuine monotone Bragg on the stopping-muon template peaking at 230000 near 11001, so the whole 93 cm chain reads as one particle that entered at the bottom wall (11000) with delta rays along it.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt52121/calib-pr-evt52121.json"
+  },
+  {
+   "event": "evt52220",
+   "vertex_id": 14001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.0054307760314111645,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "The event is one 178 cm flat-MIP track with its far end on the anode wall; 14001 is the interior termination and has no Bragg, which would make it a start, but rule 1 returns no opinion on a flat track and the five nearby blips do not converge on it.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt52220/calib-pr-evt52220.json"
+  },
+  {
+   "event": "evt53881",
+   "vertex_id": 12001,
+   "conf": "likely",
+   "reco_sep_cm": 4.861988240349217,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "Single 81cm track: dQ/dx is continuous across the break 12002 (76k vs 81k) and the 5cm stub is flat 80k with no Bragg of its own, so 12002 is a spurious break and the cool free end 12001 is the track start; the only Bragg is at 12000.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt53881/calib-pr-evt53881.json"
+  },
+  {
+   "event": "evt68654",
+   "vertex_id": 4001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.005683188222723096,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Event is only scattered sub-3cm blips; the one physics object is a 2.1cm 237k proton stub at the lowest z, with diffuse MIP blips about 10cm downstream that could be a gamma conversion, so I take the proton stub end but this is close to guessing.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt68654/calib-pr-evt68654.json"
+  },
+  {
+   "event": "evt70084",
+   "vertex_id": 20008,
+   "conf": "likely",
+   "reco_sep_cm": 2.3775047929014916,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "The 98cm muon shows a clean monotone Bragg rise to 150k along the stopping-muon template at its far end 20001, so it starts at 20008, and the EM shower leaves the same junction the other way at 113 degrees; the only ambiguity is 20033 2.4cm away.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt70084/calib-pr-evt70084.json"
+  },
+  {
+   "event": "evt71642",
+   "vertex_id": 10151,
+   "conf": "likely",
+   "reco_sep_cm": 0.006501152084977425,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "Collinear-break trap at 10007: dQ/dx is continuous across it (91k vs 108k) with a 170 degree prong pair, while independently the 56cm shower stem back-points to within 4cm of 10151, whose cone opens monotonically (11 to 55cm RMS, far-near +13.6) unlike 10007, and which is also the muon attachment and the lowest-z point.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt71642/calib-pr-evt71642.json"
+  },
+  {
+   "event": "evt71778",
+   "vertex_id": 21001,
+   "conf": "likely",
+   "reco_sep_cm": 0.005155487862356992,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "277cm beam-aligned muon whose downstream end sits at the z=498 wall and therefore cannot Bragg, so the free upstream end 21001 is the start; several blips lie in the same z~247 plane around it.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt71778/calib-pr-evt71778.json"
+  },
+  {
+   "event": "evt75730",
+   "vertex_id": 11001,
+   "conf": "likely",
+   "reco_sep_cm": 0.006309472657714913,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "The only substantial track is a 60cm proton with a clean template-matching Bragg at 11000, and its dQ/dx at 11001 (82k) is exactly what a 60cm residual range predicts, so it starts at 11001 where a two-point hot patch marks extra vertex charge.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt75730/calib-pr-evt75730.json"
+  },
+  {
+   "event": "evt80672",
+   "vertex_id": 2001,
+   "conf": "unclear",
+   "reco_sep_cm": 0.0038619127238915174,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "The whole event is one straight flat-MIP trail from z=1.1 to z=37.7 with no Bragg and no dQ/dx gradient at either end, so nothing but beam direction (rule 2, a tie-break not a selector) picks the upstream end 2001 over 21005.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt80672/calib-pr-evt80672.json"
+  },
+  {
+   "event": "evt90487",
+   "vertex_id": 8001,
+   "conf": "likely",
+   "reco_sep_cm": 0.006582725128379904,
+   "agrees": true,
+   "bucket": "REVIEW",
+   "why": "The only real object in the event is an 8.3cm proton whose dQ/dx follows the proton template from 190k at 8000 down to 85k at 8001, so the proton starts at 8001 and that is the interaction point.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt90487/calib-pr-evt90487.json"
+  },
+  {
+   "event": "evt98353",
+   "vertex_id": 13003,
+   "conf": "likely",
+   "reco_sep_cm": 6.524370150065325,
+   "agrees": false,
+   "bucket": "REVIEW",
+   "why": "Low-energy knot at z~2: 13003 is the deg-2 apex where a 6.7cm proton leaves and stops at 13000 with a 248k Bragg while a MIP prong leaves the other way at 102 degrees, the 170k reading on both prongs at 13003 being shared vertex charge.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt98353/calib-pr-evt98353.json"
+  },
+  {
+   "event": "evt105426",
+   "vertex_id": 10002,
+   "conf": "certain",
+   "reco_sep_cm": 0.003639639063562758,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Two independent monotone Bragg ends on different particle types (p rises x2.52 to 171k at 10000 over its whole 22 cm, mu rises x1.81 to 128k in the last 5 cm at 10001) with the cool minimum at the 10002 junction they both point away from.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt105426/calib-pr-evt105426.json"
+  },
+  {
+   "event": "evt161043",
+   "vertex_id": 8002,
+   "conf": "certain",
+   "reco_sep_cm": 0.006965073301016331,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1 at a 72 deg junction: the 11.6 cm heavy prong spikes to 360k at its far end 8000 (stopping proton) while the 19.4 cm MIP prong leaves the other way, and both prongs carry a charge blob in their first bin at 8002.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt161043/calib-pr-evt161043.json"
+  },
+  {
+   "event": "evt169067",
+   "vertex_id": 10024,
+   "conf": "certain",
+   "reco_sep_cm": 0.0053453639326674265,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1: the 228 cm muon has a monotone 175k Bragg rise over the last 25 cm at 10000, so it cools all the way back to 10024, which sits mid-volume at the lowest z with a 7 cm off-axis blip 40018 and nothing continuing past it.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt169067/calib-pr-evt169067.json"
+  },
+  {
+   "event": "evt177366",
+   "vertex_id": 12004,
+   "conf": "certain",
+   "reco_sep_cm": 0.006628385148455874,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Textbook three-prong vertex with 56/71/97 deg openings, all prongs forward in z: a 20.1 cm proton rising x1.53 to 181k at 12005, a 10.7 cm proton, and a 24.7 cm MIP muon, all radiating from 12004.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt177366/calib-pr-evt177366.json"
+  },
+  {
+   "event": "evt177536",
+   "vertex_id": 77017,
+   "conf": "certain",
+   "reco_sep_cm": 0.005007329688285392,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Cross-cluster pooling: 77016 and 17001 are 9.4 cm apart, so cluster 77 and 17 are one ~400 cm muon that stops at 17004 (x2.29 rise, with the 12 cm and 4.8 cm sub-MIP Michel segments beyond it), and it leaves 77017 at 101 deg from a 24 cm proton that Braggs to 163k at 77015.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt177536/calib-pr-evt177536.json"
+  },
+  {
+   "event": "evt180544",
+   "vertex_id": 10005,
+   "conf": "certain",
+   "reco_sep_cm": 0.004811207264605033,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Degree-4 junction with well-spread 24-116 deg openings, including an 18.8 cm proton that rises x5.86 from 34k at the vertex to 197k at 10001; nothing else in the event competes.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt180544/calib-pr-evt180544.json"
+  },
+  {
+   "event": "evt316021",
+   "vertex_id": 5004,
+   "conf": "certain",
+   "reco_sep_cm": 0.004626766663210135,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1 in its purest form: a three-prong star where all three segments rise away, two protons ending at 190k and 204k Bragg peaks plus a 122 cm muon, and it is the lowest-z candidate.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt316021/calib-pr-evt316021.json"
+  },
+  {
+   "event": "evt318549",
+   "vertex_id": 4001,
+   "conf": "certain",
+   "reco_sep_cm": 0.0064275699282529825,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "The only track is a 7.4 cm proton whose profile falls monotonically 235k -> 113k along the proton template from the 4000 end, so 4000 is the Bragg stop and the particle starts at 4001.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt318549/calib-pr-evt318549.json"
+  },
+  {
+   "event": "evt322181",
+   "vertex_id": 8002,
+   "conf": "certain",
+   "reco_sep_cm": 0.0047253998722182385,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1: a 6.6 cm proton rises monotonically 117k -> 232k from this point to its Bragg stop at 8001 while a 71 cm MIP muon leaves flat, and it is the lowest-z candidate.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt322181/calib-pr-evt322181.json"
+  },
+  {
+   "event": "evt390942",
+   "vertex_id": 13001,
+   "conf": "certain",
+   "reco_sep_cm": 0.0016745788891491403,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1: a 36 cm proton rises 91k -> 172k away from this point to its Bragg stop at 13000, plus a 4.6 cm MIP stub and a cloud of sub-cm fragments within 8 cm of the junction.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt390942/calib-pr-evt390942.json"
+  },
+  {
+   "event": "evt392988",
+   "vertex_id": 14003,
+   "conf": "certain",
+   "reco_sep_cm": 0.005385807568653043,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Degree-3 junction carrying a 6.4 cm 190k proton and a 1.6 cm 269k proton stub, with the 38 cm MIP leaving it and cooling away toward the bottom-downstream corner; the elevated dQ/dx at the point is vertex pile-up, not a stop.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt392988/calib-pr-evt392988.json"
+  },
+  {
+   "event": "evt395033",
+   "vertex_id": 10003,
+   "conf": "certain",
+   "reco_sep_cm": 0.004189736410298533,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Two-prong vertex at 117 deg: a 34.8 cm proton rises 97k -> 155k away to its stop at 10002 while a 15.9 cm MIP cools away toward the anode, and it is the lowest-z candidate.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt395033/calib-pr-evt395033.json"
+  },
+  {
+   "event": "evt395209",
+   "vertex_id": 4001,
+   "conf": "certain",
+   "reco_sep_cm": 0.005328855383761862,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1 at a genuine 57 deg V: the 26.9 cm proton starts near 30000 here and climbs monotonically along the proton template to 300000 at 4002, while the long muon leaves the other way; 4001 is also the lowest-z point in the event.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt395209/calib-pr-evt395209.json"
+  },
+  {
+   "event": "evt396420",
+   "vertex_id": 10025,
+   "conf": "certain",
+   "reco_sep_cm": 0.006889030407044728,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1 at a 121 deg kink: the 13.6 cm proton is sub-MIP (35000) at 10025 and rises to 290000 at 10000 following the proton template, and the 64 cm muon is flat MIP where it meets the vertex before exiting the top wall.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt396420/calib-pr-evt396420.json"
+  },
+  {
+   "event": "evt402209",
+   "vertex_id": 7002,
+   "conf": "certain",
+   "reco_sep_cm": 0.004947644935567778,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Textbook rule 1 three-prong star: all three segments are coolest at 7002 and get hotter away - 46.7 cm proton Bragging to 250000 at 7000, a second proton to the anode, and a muon that stops with a rise at 7001; the zoom shows green at the junction and red at every tip.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt402209/calib-pr-evt402209.json"
+  },
+  {
+   "event": "evt404189",
+   "vertex_id": 5002,
+   "conf": "certain",
+   "reco_sep_cm": 0.003574847616374113,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1 at a 103 deg V (collinear only in the X-Y projection, not in 3-D): the 51 cm proton starts at 75000 here and climbs the proton template to 330000 at 5001, and the 185 cm muon is flat MIP at the vertex before exiting the top wall.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt404189/calib-pr-evt404189.json"
+  },
+  {
+   "event": "evt47784",
+   "vertex_id": 17003,
+   "conf": "certain",
+   "reco_sep_cm": 0.005431964148261846,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule 1 three-prong: a 33 cm proton falling from 300000 at 17001 and a 6.8 cm proton rising to 225000 at 17004 both start near 65000 at 17003, with a 218 cm MIP muon leaving for the bottom wall; the zoom is a clean cool-centred star at low z.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt47784/calib-pr-evt47784.json"
+  },
+  {
+   "event": "evt66652",
+   "vertex_id": 22001,
+   "conf": "certain",
+   "reco_sep_cm": 0.004200268883696264,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Rule-1 junction: a 254cm MIP muon starts here and stops with a Bragg at 22000, while a 9.6cm stopping proton (78k rising to 255k along the proton template) starts 2cm away at 95018 and a 1.7cm 127k stub sits on the same point.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt66652/calib-pr-evt66652.json"
+  },
+  {
+   "event": "evt79491",
+   "vertex_id": 6002,
+   "conf": "certain",
+   "reco_sep_cm": 0.0039860665546413284,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Textbook rule-1 apex: a 75cm MIP muon and a 44cm proton leave 6002 at 83 degrees and both terminate in clean template-matching Bragg peaks (92k and 209k) at their far ends, with a blip 9cm off the vertex.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt79491/calib-pr-evt79491.json"
+  },
+  {
+   "event": "evt91367",
+   "vertex_id": 7019,
+   "conf": "certain",
+   "reco_sep_cm": 0.004870824551736394,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Clean V apex: a 334cm flat-MIP beam-aligned track exiting the anode leaves 7019 one way and a 7.8cm 134-160k stopping proton leaves at 99 degrees the other, both cooling toward 7019, which is also the lowest-z point of the event.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt91367/calib-pr-evt91367.json"
+  },
+  {
+   "event": "evt94546",
+   "vertex_id": 13001,
+   "conf": "certain",
+   "reco_sep_cm": 0.004862289543838272,
+   "agrees": true,
+   "bucket": "auto-accept",
+   "why": "Strongly asymmetric ends on the 344cm muon: a 200k Bragg falling along the template over 10cm at 13000 (5cm mean 124k) versus only a 4cm 130k uptick at 13001 (5cm mean 59k), so it stops at 13000 and starts at 13001, which additionally carries two short stubs of vertex activity.",
+   "dump": "/nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin/work-mcp2k-harv3/pr_evt94546/calib-pr-evt94546.json"
+  }
+ ]
+}

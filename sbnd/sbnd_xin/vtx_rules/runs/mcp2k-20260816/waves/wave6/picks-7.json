@@ -1,0 +1,25 @@
+[
+  {"event": "evt74784", "vertex_id": 8002, "confidence": "unclear",
+   "why": "Muon Bragg at 8000 follows the stopping template monotonically over 25 cm so the track began at 8002, whose end is only a 2-cm hot patch plus a 5.5-cm stub; every junction in the chain is 168-180 degrees with no kink, so this is close to a guess."},
+
+  {"event": "evt74854", "vertex_id": 15001, "confidence": "unclear",
+   "why": "A single flat 141-cm MIP track with no Bragg at either end; 15000 sits exactly on the z=500 wall so I take the contained end 15001, but the dQ/dx profile gives almost no evidence either way."},
+
+  {"event": "evt75004", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8: the whole event is five isolated sub-cm blobs with no charge between them even at half-width 40 cm, so there is no readable direction or apex; abstaining rather than inventing a reason."},
+
+  {"event": "evt75040", "vertex_id": 17007, "confidence": "certain",
+   "why": "Rule 1: three prongs radiate from 17007 at wide angles, one a 6.2-cm proton-template Bragg rising to 285000 at its tip, while the 156-cm muon stops at the far end 17004 which also carries a Michel-like 8.6-cm electron."},
+
+  {"event": "evt75052", "vertex_id": 10002, "confidence": "likely",
+   "why": "Rule 1 with 2 of 2 rising away: a 26-cm proton-template Bragg stopping at 10000 and a 71-cm muon Bragg stopping at 10001 both point away from 10002; dropped one tier because the prong pair leaves it at about 168 degrees."},
+
+  {"event": "evt75135", "vertex_id": 14020, "confidence": "certain",
+   "why": "Rule 1: a 19.8-cm proton stopping at 14005 (210000, template match) and a 147-cm muon stopping at 14003 both rise away from 14020, the prongs leave it at about 100 degrees, and a Michel stub sits at the muon far end."},
+
+  {"event": "evt75206", "vertex_id": 10003, "confidence": "unclear",
+   "why": "A vertex plainly sits in this 5-cm junction (a 15.9-cm prong with a hot 97060 tip and a 15.7-cm prong both rise away from 10003), but the 278-cm muon's first fit point is 10004, 4.7 cm away, so the id itself is near a coin flip."},
+
+  {"event": "evt75316", "vertex_id": 15002, "confidence": "certain",
+   "why": "Rule 1: a sharp V at 15002 where a 137-cm muon meets a 31-cm proton whose dQ/dx rises monotonically along the proton template to 235000 at 15004; prongs at about 104 degrees, and 15023 is only a collinear mid-point of that proton."}
+]

@@ -1,0 +1,33 @@
+[
+  {"event": "evt389225", "vertex_id": 9004,
+   "confidence": "certain",
+   "why": "Rule 1 clean at a ~109 deg (non-collinear) deg-2 kink: the 32 cm proton rises monotonically along the proton template to 270k at 9005, and the 176 cm muon is 110k at 9003 versus 46k at 9004, so both attached segments cool toward 9004 and 9003 is a stopping end."},
+
+  {"event": "evt389379", "vertex_id": 10001,
+   "confidence": "likely",
+   "why": "Only real object is a lone 159 cm muon; the 10000 end shows an extended red Bragg region over the last ~8 cm (124k mean) while 10001 sits at 68k and at lower z, so rule 1 plus rule 2 put the vertex at 10001, but there is no second prong to corroborate."},
+
+  {"event": "evt390215", "vertex_id": 8001,
+   "confidence": "unclear",
+   "why": "Rule 8 event: all that exists is a 3.2 cm stub whose two end-means are identical (163500/163500, same six points) plus scattered sub-cm blobs, so I take the cooler lower-z end of the stub (115k at 8001 against a ~150k interior); the on-axis blob 38006 4 cm further upstream is the alternative but is separated by a real charge gap."},
+
+  {"event": "evt390216", "vertex_id": 13003,
+   "confidence": "certain",
+   "why": "Rule 1 at a 60 deg deg-2 junction: the 204 cm muon leaves at 53k and the 38 cm pi+ leaves at 78k rising monotonically to a 165k Bragg at 13006, which then continues as a 9 cm mu and a 1.2 cm e -- a textbook pi-mu-e chain fixing 13006 as the far end."},
+
+  {"event": "evt390370", "vertex_id": 7003,
+   "confidence": "certain",
+   "why": "Rule 1 2-of-2 at a 97 deg kink: the 39 cm proton climbs monotonically along the proton template to 172k at 7001, and the 191 cm muon's other end 7000 carries a 2.5 cm MIP-level Michel stub after its own Bragg, so both prongs point away from 7003."},
+
+  {"event": "evt390391", "vertex_id": 4001,
+   "confidence": "certain",
+   "why": "Degree-3 vertex with the 73 cm muon leaving at 32k (below MIP) and an 11.8 cm proton rising monotonically to 290k at 4003 plus a 6 cm hot hadron stub to 4008 -- rule 1 satisfied with a genuine three-prong star."},
+
+  {"event": "evt390634", "vertex_id": 1007,
+   "confidence": "certain",
+   "why": "Rule 1 3-of-3: two back-to-back stopping protons whose profiles rise monotonically from ~20k at 1007 to 250k at 1008 and 315k at 1000, plus the long track leaving at 26k; the far end 1009 shows a pi+ Bragg feeding a 14.5 cm decay muon, so the low-z end is the far end and rule 2 must not overturn this."},
+
+  {"event": "evt390743", "vertex_id": 17004,
+   "confidence": "certain",
+   "why": "Degree-3 star with two short protons at 155-280k pointing away (17009 falls from 280k at 17006 to 100k at 17004) and a 60 cm pi+ leaving at exactly MIP and rising away to 17001 -- rule 1 satisfied on all three prongs."}
+]

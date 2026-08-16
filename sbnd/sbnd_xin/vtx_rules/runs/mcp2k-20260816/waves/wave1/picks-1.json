@@ -1,0 +1,61 @@
+[
+  {"event": "evt101554", "vertex_id": 13002,
+   "confidence": "certain",
+   "why": "Rule 1 clean: the only deg-2 junction with 2/2 prongs rising away - a 244 cm muon with a sharp Bragg spike at its far end 13000 and a 46 cm shower-like segment rising toward 13003; zoom shows a wide-angle V (~120 deg), not a collinear kink."},
+
+  {"event": "evt101675", "vertex_id": 11009,
+   "confidence": "certain",
+   "why": "Two-Bragg-ends trap resolved: 11010 has a textbook monotone stopping rise to 165k at 11004 and the 152 cm pi+ ends hot at 11002, and the 3-D panel shows 11009 is the L-corner both point away from (2/2 rise away); it is also the most upstream candidate (z=66.8) with both prongs heading forward in z."},
+
+  {"event": "evt101828", "vertex_id": 33028,
+   "confidence": "likely",
+   "why": "Positive evidence at 33028: seg 33021 rises monotonically 70k->220k onto the stopping-proton template at 33027, leaving a ~104 deg V with a ~118 cm MIP chain (33020/32/22013) that exits at x=200. The competing cluster-18 knot is excluded on geometry, not on wall-touching: 18001, 18004, 18006, 18002 and 18000 all lie within 1.4 cm of one straight line over 388 cm, the p5 cone panel gives transverse RMS under 2 cm from every apex out to 250 cm, and the 18004/18006 zooms show the line running straight through both - so those 'junctions' are trap-3 points inside a single trajectory with small side stubs."},
+
+  {"event": "evt102247", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 - the whole event is sub-cm fragments (largest cluster 2.4 cm) scattered over ~30 cm with no readable direction, no measurable dQ/dx gradient anywhere, so any click is as good as any other and I abstain rather than invent a reason."},
+
+  {"event": "evt102841", "vertex_id": 11029,
+   "confidence": "certain",
+   "why": "Rule 1 with a dQ/dx discontinuity at the junction: the 22 cm proton runs 250k->110k onto the proton template into 11029 while the 49 cm muon leaves it at 67k and rises to ~90-110k at 11001, so two different particles both stop away from 11029; zoom shows a real kink in X-Z, not a smooth track."},
+
+  {"event": "evt103061", "vertex_id": 4001,
+   "confidence": "unclear",
+   "why": "Only real object in the event is a 1.8 cm proton stub at 187k e/cm; I take 4001 as the vertex end because the sub-cm stub 71012 sits 2.4 cm from it making a two-prong junction, but the two ends are 1.8 cm apart with flat dQ/dx and I am close to guessing between them."},
+
+  {"event": "evt103193", "vertex_id": 2001,
+   "confidence": "unclear",
+   "why": "The event is one 10 cm squiggle hugging the bottom wall; dQ/dx is hot at both ends and cool in the middle so rule 1 is genuinely flat (1.24x), and I fall back on rule 2's upstream tie-break (z=89.9 vs 96.4) - essentially a coin flip."},
+
+  {"event": "evt103204", "vertex_id": 20002,
+   "confidence": "certain",
+   "why": "Rule 1: 53 cm proton rises monotonically 55k->315k onto the proton template at 20003 while the 116 cm pi+ leaves at MIP; zoom confirms a ~93 deg V, p1 shows no competing structure anywhere else in the detector, and 20002 is the most upstream candidate (z=154)."},
+
+  {"event": "evt103391", "vertex_id": 9003,
+   "confidence": "certain",
+   "why": "Three-prong star with 3/3 rising away and every far end showing a genuine template-following Bragg - muon to 175k at 9001, proton to 300k at 9005, pion to 185k at 9004 - and the zoom shows three arrows radiating from 9003 with both hot branches heating up away from it."},
+
+  {"event": "evt103798", "vertex_id": 92087,
+   "confidence": "unclear",
+   "why": "Fragmented shower event where every segment is flat MIP and no dQ/dx asymmetry exists; I take 92087 by rule 6 as the highest-degree (deg 3) junction and the point the arms toward cluster 17, cluster 89 and the cluster-91 knot all radiate from, but this is close to a guess."},
+
+  {"event": "evt103952", "vertex_id": 21008,
+   "confidence": "certain",
+   "why": "Three-prong star with 3/3 rising away, and the p4 profiles confirm the shapes are real Bragg rather than hot patches - proton climbing the template 110k->235k into 21010, muon falling 230k->MIP from 21003, pi+ falling 190k->MIP from 21007 - well clear of the 315 cm through-going track, which carries no vertex signature."},
+
+  {"event": "evt104216", "vertex_id": 10004,
+   "confidence": "certain",
+   "why": "Hadronic star: two proton prongs at 130-207k e/cm (one with a clean monotone rise to 207k at 10006) plus a 155 cm MIP muon all meeting at one point; the muon's apparent rise into 10004 is vertex-region charge pileup from the two overlapping protons, the zoom shows an unmistakable three-prong junction, and p1 shows nothing else in the detector."},
+
+  {"event": "evt104260", "vertex_id": 52029,
+   "confidence": "likely",
+   "why": "Rule 1 read off the profile rather than the 5 cm means: seg 52018 falls monotonically 195k->35k from 52028 to 52029, so the proton stops at 52028 and starts at 52029 (where the sub-cm stub 51026 also sits); the 205 cm cluster is a stopping track whose only junction is a 170 deg collinear kink, i.e. trap 3, not a vertex."},
+
+  {"event": "evt104304", "vertex_id": 13001,
+   "confidence": "certain",
+   "why": "Rule 1: the 183 cm muon has a sharp Bragg to 215k at 13000 and sits at MIP into 13001, and the 10.7 cm second prong ends dark red at 175k at 13003; the zoom shows a clean ~95 deg V in Z-Y at the most upstream candidate (z=221)."},
+
+  {"event": "evt104920", "vertex_id": 9003,
+   "confidence": "certain",
+   "why": "Rule 1: 16.7 cm proton rises monotonically 90k->300k along the proton template to 9004 while the 203 cm muon leaves at MIP and exits the top face; zoom confirms a clean ~61 deg V and p1 shows no other structure in the detector."}
+]

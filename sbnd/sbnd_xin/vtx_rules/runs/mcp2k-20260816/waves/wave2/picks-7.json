@@ -1,0 +1,18 @@
+[
+  {"event": "evt282837", "vertex_id": 2003, "confidence": "likely",
+   "why": "Rule 1: the 139cm muon seg2004 Braggs monotonically into 2001 (91311 vs 57339) so its origin end is 2003; a particle running 2005->2003->2001 would have to turn ~140 deg, so the muon cannot come through the stub from 2005, and it leaves 2003 at 37 deg from that stub."},
+  {"event": "evt282909", "vertex_id": 75085, "confidence": "unclear",
+   "why": "Whole event is one collinear 110cm chain; 4108 is rule-1 negative (0 of 3 away, 1 toward) so I dropped it, and I could not decide whether cluster 4's stopping track is a product of a vertex at 4014 or a particle entering at the x=-200 wall; 75085 wins on the two quantified rules (strongest rise-away in the event, x2.21, and lowest z) and is the apex of the cluster-75 spray."},
+  {"event": "evt283013", "vertex_id": 14001, "confidence": "unclear",
+   "why": "Only a single 116cm track lying along the bottom wall at y=-199, both ends degree 1; p4 shows it flat at 45-50k over the whole 116cm with no terminal rise at either end, so it is through-going and there is no direction to read, leaving rule 2 alone to pick the low-z end."},
+  {"event": "evt283035", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8: the event is four isolated sub-cm dots at z=443-489 with no segment, no direction and no topology of any kind, so any click is as good as any other and I abstain rather than invent a reason."},
+  {"event": "evt283299", "vertex_id": 11003, "confidence": "certain",
+   "why": "The zoom shows seg11003 kinking ~100 deg at (x=-20,y=14.5,z=229) with its last 6.5cm dark-red saturated and a fan of ~15 low-energy fragments radiating from that point while a 319cm muon leaves it forward in +z; 11003 is the nearest candidate to that interaction point at 8.8cm against 21cm for 11002, and the 350k e/cm peak there is past single-track saturation, so it is vertex activity and not a Bragg peak."},
+  {"event": "evt283525", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8: six isolated sub-cm dots near z=480-494 and nothing else in the event, no segments and no readable direction, so I abstain rather than pick one blob over another."},
+  {"event": "evt283568", "vertex_id": 18002, "confidence": "certain",
+   "why": "Rule 1 in its clean form at a degree-4 star: seg18001 (98.2cm) rises away x2.78 to a 212545 stop, seg18003 (32.1cm) rises away x1.32, seg18004 (6.4cm proton) reads 168880 here and 215294 away, seg18008 (59.1cm mu) is flat, and no segment rises toward it; the zoom shows four prongs leaving one point."},
+  {"event": "evt283590", "vertex_id": 7023, "confidence": "likely",
+   "why": "Rule 1 read off p4 rather than the p6 means: the 5.1cm prong to 7001 starts at 42k at 7023 and peaks at 170k as a stopping proton, the 5.0cm prong to 7000 also cools toward 7023, so all prongs of this only degree-3 junction get hotter away from it; the event is small and fragmented so I stop short of certain."}
+]

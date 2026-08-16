@@ -1,0 +1,61 @@
+[
+  {"event": "evt392649", "vertex_id": 7001,
+   "confidence": "certain",
+   "why": "Rule 1: fully contained 110 cm track with a monotone template-following Bragg rise to 140k at 7000, so 7001 is the cool start end; zoom shows a clean free end with nothing else attached."},
+
+  {"event": "evt392669", "vertex_id": 5003,
+   "confidence": "likely",
+   "why": "The p6 rule-1 win at 5002 is manufactured by a segment-junction artifact (both p4 curves dive to ~0 there) on a 171 deg collinear pair, so I took the genuine ~93 deg kink at 5003, the lowest-z point of the cluster, with both prongs going forward in z and the Bragg+Michel end at 5007 as the far end."},
+
+  {"event": "evt392759", "vertex_id": 10001,
+   "confidence": "certain",
+   "why": "Rule 1: 126.6 cm muon rises away x2.60 to a Bragg at 10000 while a 2.6 cm 158k proton stub sits on the vertex, with more hot proton fragments within 10 cm in the zoom."},
+
+  {"event": "evt392891", "vertex_id": 16000,
+   "confidence": "unclear",
+   "why": "Rule 1 plus the p4 shape: the 229 cm muon has a genuine monotone Bragg to 140k at 16001, so 16000 is the cool end, but 16000 sits on the y=-200 floor and that reading needs an upward and backward-going particle, which is why I am not confident."},
+
+  {"event": "evt392900", "vertex_id": 10001,
+   "confidence": "likely",
+   "why": "Rule 1 at a junction: the 40 cm muon is flat MIP with no Bragg at either end and exits the bottom wall, while a 2.7 cm dark-red 116k proton stub hangs on 10001, so the track starts there."},
+
+  {"event": "evt392901", "vertex_id": 15004,
+   "confidence": "likely",
+   "why": "Two-Bragg resolution of trap 1: a 183 cm prong with a hard 220k Bragg at 15005 and a 32 cm prong with a 115k Bragg at 15011 both point away from 15004, which also carries a hot orange patch of vertex charge in the X-Z zoom."},
+
+  {"event": "evt393089", "vertex_id": 19001,
+   "confidence": "certain",
+   "why": "Rule 1 at a clean 53 deg kink: a 6.2 cm 188k-213k stopping proton meets a 15 cm MIP track at 19001, both prongs forward in z, confirmed by zoom."},
+
+  {"event": "evt393119", "vertex_id": 10001,
+   "confidence": "likely",
+   "why": "Rule 1 vertex region is unambiguous - a 177 cm flat-MIP muon exiting the z=500 wall plus a textbook 56 cm proton rising 70k to 250k on the proton template - and of the two ends 1.5 cm apart I took 10001 because no charge can lie upstream of the interaction point."},
+
+  {"event": "evt393133", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8: the longest cluster is 8.5 cm and the event is two loose scatters of sub-cm blobs with no connected structure and no readable direction, so any click is as good as any other and I abstain rather than invent a reason."},
+
+  {"event": "evt393485", "vertex_id": 4002,
+   "confidence": "certain",
+   "why": "Rule 1 at a 96 deg V: a 116 cm flat-MIP muon exiting the z=500 wall and a 54.5 cm proton rising to 190k both point away from 4002, which is also the lowest-z candidate."},
+
+  {"event": "evt393505", "vertex_id": 21012,
+   "confidence": "likely",
+   "why": "Hot-blob trap: the 196k quoted at 21012 is a single 740k point, while the real monotone Bragg to 160k is at 21013, so the contained 156 cm muon starts at 21012 and runs 25 deg from the beam; the competing 318 cm dead-straight cluster has no Bragg at either end."},
+
+  {"event": "evt393538", "vertex_id": 8002,
+   "confidence": "certain",
+   "why": "Rule 1 with 2 of 2 prongs rising away at a 74 deg V: a 20.5 cm proton climbing 90k to 235k on the proton template plus a track whose charge peaks 25 cm away at 8004, both pointing away from 8002."},
+
+  {"event": "evt393581", "vertex_id": 6001,
+   "confidence": "likely",
+   "why": "Hot-blob trap: the 62796 at 6001 is one 165k point on an otherwise flat-MIP 74 cm track with no Bragg anywhere, and the zoom shows five sub-cm blobs within 15 cm of 6001, so the muon starts there and runs forward in z to exit the z=500 face."},
+
+  {"event": "evt393727", "vertex_id": 20003,
+   "confidence": "unclear",
+   "why": "Rule 1 plus the p4 shape: the 141 cm track rises over its last 10 cm onto the stopping-muon template at 20001, so the far end 20003 is the vertex even though it lies on the x=+200 anode; the anti-beam direction that implies is why this stays unclear."},
+
+  {"event": "evt393758", "vertex_id": 17002,
+   "confidence": "certain",
+   "why": "Rule 1 at a 60 deg V: an 8.1 cm dark-red proton rising 127k to 190k and a 54.9 cm flat-MIP muon exiting the x=-200 anode both point away from 17002, the lowest-z candidate."}
+]

@@ -1,0 +1,57 @@
+[
+  {"event": "evt76350", "vertex_id": 12002,
+   "confidence": "likely",
+   "why": "Rule 1 plus geometry: 12002 is the most upstream point of the branched cluster (z=329.4), a genuine 3-prong fan (prong angles 104/62/60 deg, no back-to-back pair), nothing rises toward it, its 13.9cm prong runs 88k->136k away and stops at 12009, and the two other prongs are hot 4cm stubs; the rival 12029 was demoted because its two strong prongs leave at 169 deg (collinear trap)."},
+
+  {"event": "evt76866", "vertex_id": 9001,
+   "confidence": "likely",
+   "why": "Only real object is one 20.5cm segment; its p4 profile is flat ~50k MIP and the 75k at the 9000 end is a single 215k spike (hot-blob trap, not a Bragg), but a 1.1cm low-charge stub sits 2.6cm off 9000 like a Michel/delta at the far end (rule 3), and 9001 is the lower-z end."},
+
+  {"event": "evt76888", "vertex_id": 18002,
+   "confidence": "certain",
+   "why": "Rule 1 in its cleanest form: a flat ~55k MIP muon leaves 18002 and exits the z+ wall while an 11.6cm proton leaves the other way with a monotone 100k->220k rise along the proton template, stopping at 18001; prongs 86 deg apart, zoom shows a clean cyan/dark-red V."},
+
+  {"event": "evt76998", "vertex_id": 17002,
+   "confidence": "certain",
+   "why": "Single fully-contained 201cm track with a textbook monotone Bragg decay 200k->55k over 8cm at the 17000 end, so it stops there; the 17003 split is only a 5 deg kink, and 17002 is the cool flat-MIP start at the lowest z (the 170k two-point spike there follows a dip to 10k and is an endpoint artifact)."},
+
+  {"event": "evt77328", "vertex_id": 16002,
+   "confidence": "certain",
+   "why": "Rule 1: both prongs leave 16002 (lowest z, 222.3) getting hotter away - a flat-MIP muon that continues collinearly through 16004 for 320cm and exits at z=499.8, and a 28cm proton (seg16008 plus cluster-36 seg36011) rising 100k->220k and stopping at 36012; prongs 91 deg apart."},
+
+  {"event": "evt77702", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "The only structure is a 348cm flat-MIP track entering the y+ wall and ending in a single dark-red Bragg blob at 21002 (last 8cm rising to 135k plus a 4cm 215k stub that the zoom shows is the same hook, not a second prong), so everything is hotter AT that point and rule 1 fails; no other candidate carries any positive vertex evidence, so I abstain rather than invent one."},
+
+  {"event": "evt77846", "vertex_id": 12002,
+   "confidence": "certain",
+   "why": "Rule 1: a 158.9cm flat-MIP muon with no Bragg at either end leaves 12002 and exits the y+ wall, while a 14.4cm proton leaves the other way rising monotonically 95k->210k on the proton template and stopping at 12001; prongs 95 deg apart, zoom is a clean cyan/dark-red V."},
+
+  {"event": "evt77878", "vertex_id": 8032,
+   "confidence": "certain",
+   "why": "Rule 1 with two protons: 8032 (lowest z in the cluster) has two dark-red 'p' prongs both rising away and stopping (70k->280k at 8008, 230k at 8009) plus a 149cm flat-MIP muon that exits the z+ wall; the muon's 131k reading is a 3cm spike in the vertex blob, and the zoom shows a clean two-red-plus-one-cyan fan."},
+
+  {"event": "evt77978", "vertex_id": 53008,
+   "confidence": "certain",
+   "why": "Rule 1: a 9.7cm proton leaves 53008 (lowest z, 357.3) and stops at 53006 with a monotone 255k->155k decline toward the vertex, while the other prong is flat ~50k MIP and continues into cluster 15's 140cm segment to make a ~165cm muon exiting at z=498.9; prongs 93.5 deg apart in 3-D."},
+
+  {"event": "evt78120", "vertex_id": 2000,
+   "confidence": "likely",
+   "why": "The two-Bragg-ends rule fixes the location beyond doubt - cluster 2 rises to 265k over its last 15cm at 2001 (stopping muon) and cluster 35 rises 55k->400k on the proton template at 35006 (stopping proton), and a single scattered particle cannot Bragg at both ends - but the cold junction they both point away from is represented by two uncollapsed candidates 1.6cm apart in different clusters (2000 and 35005), so the id itself is a coin flip and I take 2000 as the kink point in the larger cluster."},
+
+  {"event": "evt78242", "vertex_id": 8002,
+   "confidence": "certain",
+   "why": "Rule 1: 8002 (lowest z, 66.7) launches a 161cm flat-MIP muon on one side and, on the other, a ~106cm heavily-ionising track - seg8007 continues collinearly into cluster 74's 76.4cm 'p' which rises 85k->280k along the proton template and stops at 74015; prongs 78 deg apart."},
+
+  {"event": "evt78259", "vertex_id": 12003,
+   "confidence": "likely",
+   "why": "Small 30cm event whose only structure is a 45 deg V with apex 12003 at the lowest z (445.0) and both arms running downstream; both arms read hot in the last ~2cm at the apex, which I take as vertex-blob pile-up in the 5cm window rather than a Bragg since each arm is MIP-like beyond it."},
+
+  {"event": "evt78582", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 case: the whole event is three isolated sub-cm dots spread over ~50cm with no fitted segments, no dQ/dx direction and no 3-D or profile panels at all, so any click would be as good as any other and I abstain."},
+
+  {"event": "evt78682", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 case: the whole event is five isolated sub-cm dots in the x+/y-/z- detector corner with no fitted segments and no readable direction, so there is nothing to decide between them and I abstain."}
+]

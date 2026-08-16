@@ -1,0 +1,46 @@
+[
+  {"event": "evt174352", "vertex_id": 11001, "confidence": "certain",
+   "why": "Rule 1 at a deg-3 junction: 10 cm proton Braggs away to 168k at 11003, hot 2.4 cm pi+ stub, and the 66 cm muon leaves and rises to its own stop at 11000/11006."},
+
+  {"event": "evt174661", "vertex_id": 7002, "confidence": "certain",
+   "why": "Rule 1 clean: both prongs rise away (26 cm proton x2.03 to 216k, 125 cm muon x1.78), 93 deg opening so not the collinear trap, and it is the low-z end."},
+
+  {"event": "evt174770", "vertex_id": null, "confidence": "unclear",
+   "why": "Rule 8: the whole event is four isolated sub-cm blobs with no segment, no direction and no readable topology, so any click is as good as another."},
+
+  {"event": "evt174771", "vertex_id": 15003, "confidence": "certain",
+   "why": "Degree-7 star in the zoom: stopping proton to 15001, stopping pi+ rising away x2.02 to 15006, plus the 212 cm muon leaving forward; textbook multi-prong vertex."},
+
+  {"event": "evt174795", "vertex_id": 19000, "confidence": "unclear",
+   "why": "Neither end Braggs (the 19000 end is one 175k point dropping to MIP in 2 cm), so no stopping end exists; 19000 is the only interior endpoint, its blob reading as vertex charge, while 19001 sits in the y wall."},
+
+  {"event": "evt174896", "vertex_id": 13005, "confidence": "certain",
+   "why": "Deg-3 junction where the 18 cm proton rises away x1.34 to 132k at 13004 and the 204 cm pion rises away x1.97 to its stop at 13000."},
+
+  {"event": "evt174993", "vertex_id": 7002, "confidence": "likely",
+   "why": "The 147 cm track has a monotone Bragg to 280k at 7001, so it starts at the cool interior end 7002, which also carries a short e stub and nearby blobs."},
+
+  {"event": "evt175057", "vertex_id": 13003, "confidence": "certain",
+   "why": "Rule 1 with 2 of 2 rising away: 48 cm proton x2.23 to 189k at 13004 and 172 cm muon x1.62 forward; the muon later stops with a Michel-like stub at 13007."},
+
+  {"event": "evt175094", "vertex_id": 5002, "confidence": "certain",
+   "why": "Kink where the 9.6 cm proton rises away to 172k at 5001 while the 110 cm muon leaves and exits the x wall; several vertex blobs sit within 15 cm."},
+
+  {"event": "evt175117", "vertex_id": 17003, "confidence": "certain",
+   "why": "Deg-3 junction with two very hot short protons (114k and 260k) pointing away plus a 28 cm track rising away x1.72 to its stop at 17001."},
+
+  {"event": "evt175814", "vertex_id": 11002, "confidence": "certain",
+   "why": "Hot 6.4 cm stopping proton at 11002 with the 401 cm muon rising away x1.78 to a Bragg at 11000, where two small clusters sit as a Michel (rule 3 far end)."},
+
+  {"event": "evt175952", "vertex_id": 10005, "confidence": "certain",
+   "why": "Deg-7 star: 36 cm proton rises away x2.59 to 213k at 10002, three pions rise away, and the 312 cm muon leaves; the zoom shows a clean multi-prong hub."},
+
+  {"event": "evt176150", "vertex_id": 8001, "confidence": "likely",
+   "why": "Two clusters start 2.7 cm apart at z about 2: the 134 cm track (rises away x5.04) and a 12 cm proton stopping at 170k; 8001 is the muon start of that V."},
+
+  {"event": "evt176260", "vertex_id": 15002, "confidence": "likely",
+   "why": "V apex with a dense charge blob read hot by both prongs, the 312 cm muon running forward to a Bragg at 15000, lowest z, and small satellite clusters around it."},
+
+  {"event": "evt176502", "vertex_id": 109123, "confidence": "unclear",
+   "why": "Very fragmented shower event; 109123 is the lowest-z deg-4 hub with 2 prongs rising away and a shower-like cone, but the 50 cm Bragg proton starts 50 cm away at 109168."}
+]

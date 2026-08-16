@@ -1,0 +1,57 @@
+[
+  {"event": "evt91917", "vertex_id": 17006,
+   "confidence": "certain",
+   "why": "Rule 1 clean: deg-2 junction where a 285 cm muon and an 18 cm proton both get hotter away (proton to 191k at its stop), 68 deg apart so not the collinear trap, and it sits at the low-z end where a dozen small shower fragments pile up."},
+
+  {"event": "evt92134", "vertex_id": 18012,
+   "confidence": "certain",
+   "why": "Rule 1 textbook: 2 of 2 prongs rise away from the kink -- 88 cm proton stopping at 168k and 107 cm muon stopping at 85k -- opening angle 132 deg so it is a genuine junction, not a scatter."},
+
+  {"event": "evt92159", "vertex_id": 4001,
+   "confidence": "unclear",
+   "why": "At half-width 6 the 250k at 4001 is a single terminal point with MIP charge immediately next to it, so it is a hot patch not a Bragg -- the muon is flat at both ends and rule 1 is silent, which also removes the stopping-muon premise the Michel reading of the 5.7 cm stub needs; I take 4001 because it is the only end that is a real terminus, sits at the lowest z, and has six sub-cm clusters within 20 cm, but this is barely better than a guess."},
+
+  {"event": "evt92225", "vertex_id": 14001,
+   "confidence": "certain",
+   "why": "Rule 1: both prongs rise away -- 8.9 cm proton climbing monotonically to 230k at 14003 and a 143 cm muon whose Bragg is at the far end 14000; the 52 deg opening rules out the single-scattered-track trap."},
+
+  {"event": "evt92684", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstention: the whole event is three isolated sub-2 cm blobs hundreds of cm apart with no track, no direction and nothing to read -- any click would be as good as any other."},
+
+  {"event": "evt92904", "vertex_id": 15002,
+   "confidence": "likely",
+   "why": "Both free ends of this 27 cm cluster are hot (145k at 15001 over a 10 cm monotone rise, 190k in the last 1.5 cm at 15000) with a MIP-level middle, so the junction they both point away from is 15002; dropped one tier because the two prongs leave it at ~171 deg, the collinear trap."},
+
+  {"event": "evt92907", "vertex_id": 11001,
+   "confidence": "unclear",
+   "why": "Not a rule-8 abstain because unlike the other blob events this one has a discriminator -- a single 2.2 cm 220k e/cm (5x MIP) stopping-hadron stub with two sub-cm blips 4 and 26 cm away, the only energy concentration in the detector -- so I take its lower-z end; but with four dots and no readable direction the choice between its two ends is near guessing."},
+
+  {"event": "evt92992", "vertex_id": 3001,
+   "confidence": "likely",
+   "why": "Rule 1 on a single-prong cluster: dQ/dx climbs monotonically along the whole 64 cm from 3001 to a 265k proton Bragg at 3000 that tracks the proton template, so the cool low-z end 3001 is the start; 3002 is only a 154 deg fit kink 6 cm in."},
+
+  {"event": "evt93105", "vertex_id": 9002,
+   "confidence": "certain",
+   "why": "Degree-3 junction with a 58 cm proton rising away to 206k, a 40 cm pion rising away to 98k, and a 145 cm muon leaving at MIP toward the top wall -- classic multi-prong neutrino vertex, no collinearity issue at degree 3."},
+
+  {"event": "evt93234", "vertex_id": null,
+   "confidence": "unclear",
+   "why": "Rule 8 abstention: five sub-cm blobs scattered over a 50 cm region with no connecting track, no shower apex and no readable direction in any projection."},
+
+  {"event": "evt93545", "vertex_id": 11002,
+   "confidence": "certain",
+   "why": "Single 37 cm proton whose profile follows the stopping-proton template all the way to 209k at 11000, so rule 1 puts the vertex at the cool low-z end 11002; only two candidates exist and the shape is unambiguous."},
+
+  {"event": "evt93677", "vertex_id": 16002,
+   "confidence": "certain",
+   "why": "Degree-4 junction: two protons and a pion stub all dark red and rising away (196k, 172k, 133k) plus a 55 cm muon leaving at exactly MIP and stopping at 116k -- every prong points away from 16002."},
+
+  {"event": "evt93696", "vertex_id": 7002,
+   "confidence": "certain",
+   "why": "Degree-4 junction where the 98 cm muon leaves at 22k and rises x4.9 to its stop and the 32 cm pion leaves at 46k and rises x3.1, with a hot 7 cm proton and a short e stub also attached -- strongest possible rule-1 reading."},
+
+  {"event": "evt93776", "vertex_id": 9001,
+   "confidence": "likely",
+   "why": "The two muon halves meet at 9002 at 177 deg -- one straight MIP track, so 9002 is a segmentation break whose 4 cm sub-MIP stub reads as a delta ray; the vertex is the muon's interior low-z terminus 9001, which carries a hot end point and a small companion cluster 6 cm away, while the far end exits at z=499."}
+]
