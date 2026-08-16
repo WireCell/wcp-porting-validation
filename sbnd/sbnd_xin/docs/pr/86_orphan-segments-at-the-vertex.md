@@ -1,7 +1,11 @@
 # doc pr/86 — orphan segments at the neutrino vertex: the top 10 over the 1000-event sample
 
-**Status: investigation only. No C++ or jsonnet is changed. §7's proposals are
-proposals; none is implemented and none has been gated.**
+**Status: §§1-13 investigation (2026-08-15); §14 implementation round (same
+day) — §12's P1+P1b+P2+P3+P4 implemented and SBND PRODUCTION ON
+(`mvga_interposed_len=10, mvga_interposed_angle=130, mvga_interposed_deg1=true,
+mvga_sat_dup_frac=0.7`; toolkit knobs default OFF).  Full-sample Class-B cases
+90→48, orphans 118→82, zero events worse, zero adverse movers; nueCC48 +4 nue
+recoveries / 1 named loss (122660, §14.5).**
 
 The owner looked at the 2-D measurement overlays for `18255-268067`,
 `18304-38856` and `18255-349945`, confirmed all three have a bad PR graph near
@@ -752,3 +756,224 @@ versa, so a one-at-a-time sweep would score both as ineffective.
 - Panels for the twelve §10.2 cases are in `/home/xqian/tmp/pr86-classb/`
   (regenerate with the §0 recipe, substituting these event:vertex pairs).
 - Still investigation only: no C++ or jsonnet changed.
+
+---
+
+## 14. Implementation round (2026-08-15) — §12 executed, SBND PRODUCTION ON
+
+Owner request: implement §12, validate on the three samples with 32 CPUs, flip
+if validation passes.  All of P1/P1b/P2/P3/P4 shipped; the flip is live.
+
+### 14.0 Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# Gate 1 knob-off byte identity (final binary), per sample:
+python3 scripts/pr85_hash_gate.py work-mcp1k-pr85ion2   work-mcp1k-pr86off3
+python3 scripts/pr85_hash_gate.py work-nuecc48-pr85ion2 work-nuecc48-pr86off3
+python3 scripts/pr85_hash_gate.py work-ncpi0-pr85ion2   work-ncpi0-pr86off3
+
+# Stage C scorecards (census on the knob-on arms; PR86_DUMP_ARMS added §14.1):
+PR86_DUMP_ARMS="work-mcp1k-pr86ion:work-nuecc48-pr86ion:work-ncpi0-pr86ion" \
+  python3 pr86_merged_prong_census.py --json /home/xqian/tmp/pr86_merged_C.json
+PR86_DUMP_ARMS="work-mcp1k-pr86ion:work-nuecc48-pr86ion:work-ncpi0-pr86ion" \
+  python3 pr86_orphan_census.py --json /home/xqian/tmp/pr86_rows_C.json
+
+# Mover adjudication vs the hand labels (new this round):
+python3 scripts/pr86_movers.py work-mcp1k-pr85ion2 work-mcp1k-pr86ion
+python3 scripts/pr83_ab_compare.py work-nuecc48-pr85ion2 work-nuecc48-pr86ion
+```
+
+Binary: toolkit working tree of this commit, `local/lib/libWireCellClus.so`
+2026-08-15 20:20, doctest 2076/2076.
+
+### 14.1 What was built
+
+Four knobs, all C++ **default OFF** (byte-identical), one instrumentation
+change, one harness extension:
+
+- **P3 — op3 decline log** (no knob).  Every formerly-silent `continue` in
+  op3's candidate loop now emits a TRACE line
+  `mvga: op3 decline cluster= anchor= len= reason=<ceiling|far-invalid|
+  far-is-main|interposed-not-main|protected|ceiling-terminal|deg1-terminal>`.
+- **P1 — `mvga_interposed_len`** (cm, 0 = use `mvga_stub`): a separate
+  candidate ceiling for the interposed **splice** only, hoisted per-anchor
+  (`is_main && m_mvga_interposed && len > m_mvga_stub`); the terminal absorb
+  re-applies `m_mvga_stub` (`reason=ceiling-terminal`), so the pr/85 §10.6
+  adverse-mover class stays closed.
+- **P1b — `mvga_interposed_deg1`** (bool): admits **degree-1 main anchors**
+  into op3 for the splice only (`incident.size()==1`); the terminal branch
+  re-imposes ≥ 2 (`reason=deg1-terminal`).  Found during Stage A: the
+  `incident.size() < 2` anchor gate is a terminal-absorb argument that does
+  not apply to the splice, and **26 of the 86 Class-B cases sit at a
+  degree-1 anchor** — including `b1 ≤ 1 cm` events (21073, 168432) where the
+  vertex is exactly right.
+- **P4 — `mvga_sat_dup_frac`** (fraction, 0 = use `mvga_dup_frac`): a
+  satellite-anchor-only overlap threshold.  The §5.3-adjacent question
+  resolved immediately once the pr/85 round-1 logs were read: **all four
+  pr/85 §10.6 adverse absorbs were `anchor=main d=0.00`** (172090/168614/
+  286353/285971, all `nfit=4 overlap=0.75`), while evt30504's wanted absorb
+  is `anchor=sat d=1.26` — pr/85's global `dup_frac=0.8` over-reached to
+  satellites.  0.7 restores the pre-pr/85 threshold there only.
+- **P2** — no new code; `mvga_interposed_angle` swept (§14.4).
+- Harness: `PR86_DUMP_ARMS` env override in `pr86_orphan_census.py`
+  (colon-list of arms, first match wins; default unchanged — also rescopes
+  `pr86_merged_prong_census.py`, which imports `find_dumps()`), and
+  `scripts/pr86_movers.py` — the pr/85 §10.4 mover adjudication, scripted:
+  every main-vertex mover between two arms scored click→main on both sides
+  against `vtx_io.load_labels()`; `ADVERSE` = lands > 1 cm further off the
+  click; exit 1 on any ADVERSE.
+
+Threading (each knob at every site): `NeutrinoPatternBase.h` →
+`TaggerCheckNeutrino.{h,cxx}` (configure / default_configuration / handoff,
+`units::cm` on len only) → `cfg/pgrapher/common/clus.jsonnet` (signature +
+key-suppression) → `sbnd/clus.jsonnet` (4 sites) → `sbnd/wct-pr-perevt.jsonnet`
+(TLA + forward) → `doctest_clus_knob_defaults.cxx` pins →
+`run_pr_chain_batch.sh` envs `SBND_MVGA_INTERPOSED_LEN /
+SBND_MVGA_INTERPOSED_DEG1 / SBND_MVGA_SAT_DUP_FRAC`.
+
+### 14.2 Gates 0-1
+
+- **Gate 0**: build rc=0, freshness proof (lib 20:20 > last edit 20:19),
+  `wcdoctest-clus` **2076/2076**, compiled production config (with the full
+  `pipeline_names` TLA — without it the compile lacks `tagger_check_neutrino`
+  entirely and proves nothing) byte-identical pre-change vs post-change tree;
+  all four keys render via `--tla-code`.  (`-A` passes strings, not numbers.)
+- **Gate 1**: fresh knob-off arms `work-{mcp1k,nuecc48,ncpi0}-pr86off3` vs
+  the pr/85 flip arms `work-*-pr85ion2`: **PASS 2134/2134 archives**
+  (2000+96+38, `mabc-pr.zip` + pctree), rc=0 1067/1067.  This proves the
+  ceiling restructure, the anchor-gate rewrite, the `dup_frac_eff` rewrite
+  and the decline log all inert inside the **production-ON** mvga pass.
+  (`work-*-pr86ioff` = aborted partial arms, `work-*-pr86off2` = complete
+  PASS arms for the pre-P1b binary; both superseded, left in place.)
+
+### 14.3 Stage A — the probe that redirected the round twice
+
+25 decisive events (top-10 orphans + §10.2 Class-B tops + the four pr/85
+adverse events), widest point, TRACE.  25/25 rc=0.
+
+- The splice fires where predicted; on the probe set Class-B cases fall
+  34 → 18 (len+angle+sat) → **12** with deg1, orphans 38 → 31; nothing worse.
+- **All three owner examples fully repaired**: 268067 2→0, 281214 2→0, and
+  349945 2→0 — the last only via P1b, and for a reason the decline log
+  exposed: op1's dup-merge on that cluster (overlap 1.00 survivor 4.44 cm)
+  leaves the main anchor with one *eligible* edge (the reconnected segment
+  is in the `created` exemption set), so op3 was mute there at any ceiling.
+- The P3 log explained every §5.3 mystery: 349945/175896/316025 decline at
+  satellite anchors on `reason=ceiling` (satellite interposed is NOT opened
+  this round); 21073's only candidate is **10.40 cm ≥ the 10 cm ceiling**
+  (the absorber is the 10.40 cm §10.2 entry — the tail of the distribution,
+  deliberately not chased); 463565's interposed evaluations sit at 71°
+  (a genuine corner; its defect is vertex selection, not the splice).
+
+### 14.4 Stage B — the corner sweep on the 93 affected events
+
+Union of the 61 unowned orphan events + 47 Class-B events; 4 corner arms
+(`len ∈ {5,10} × angle ∈ {150,130}`, deg1=true + sat=0.7 riding), 372/372
+rc=0, arms `work-pr86b-<arm>-<root>`:
+
+| arm | Class-B 86→ | orphans 102→ | arms>deg 36→ | movers | ADVERSE |
+|---|---|---|---|---|---|
+| **l10a130** | **44** | **68** | **27** | 13 | **0** |
+| l10a150 | 44 | 92 | 30 | 5 | 0 |
+| l5a130 | 74 | 68 | 31 | 12 | 0 |
+| l5a150 | 74 | 92 | 34 | 3 | 0 |
+
+The factorization is clean: **len drives Class-B** (the 5–10 cm bin is half
+the defect), **angle drives the orphan/Class-A hand-offs** (the 120–150°
+pile-up of §11.1), and they compose.  No event is worse on either census in
+any arm; every mover in every arm is ≤ 0.28 cm; zero adverse.  The 140°
+midpoint was not run: both corners are clean and 140 would decline 423981
+(130.1°) for no measured protection.  **Operating point: len=10, angle=130,
+deg1=true, sat=0.7.**
+
+### 14.5 Stage C — full three samples at the operating point
+
+Arms `work-{mcp1k,nuecc48,ncpi0}-pr86ion`, 1067/1067 rc=0.
+
+- **Footprint**: 49 events differ (32 mcp1k / 13 nueCC48 / 4 NCpi0).
+- **Census, full sample**: Class-B cases **90 → 48**, Class-B events 49 → 32,
+  orphans **118 → 82**, orphan events 69 → 50, `arms > degree` (the §12 P5
+  validation metric) 62 → 50.  **Zero events worse on either census.**
+- **Movers**: 15 total ≥ 0.05 cm across all samples, largest 0.28 cm,
+  **zero ADVERSE**; the four pr/85 §10.6 adverse events moved exactly
+  **0.00 cm** (the P4 gate).  evt30504 improves (orphans 5→4) — P4's other
+  gate.  TSVs: `docs/pr/86_ab-{mcp1k,nuecc48,ncpi0}.tsv`,
+  `docs/pr/86_movers-*.tsv`.
+- **nueCC48 nue ledger** (crossings of 0): **+4 / −1**.
+  Gains: 163543 (−4.3 → +0.52; three splices 8.91/8.09/2.87 cm — a chain of
+  interposed segments), 268784 (−15 → +4.3; deg1/sat), 400474 and 423981
+  (−15 → +4.3; angle).  268067 strengthens 1.28 → 4.11 (len).
+- **The named loss: evt122660** (nue +4.3 → −15, vertex unmoved).
+  Attribution is exact: a 5.02 cm splice at 153.4° fires at len=10 in every
+  arm and is absent at len=5.  The census view is the sobering part: 122660
+  is *itself a Class-B case* — prong 9010 (11.8 cm) ends 4.95 cm short of
+  reco vertex 9013, absorber 9019 (5.02 cm) covers the gap — but the owner's
+  click sits **on the far vertex the splice dissolved** (`b1 = 4.95`).  The
+  splice performed the textbook §10.3 repair *at a mis-picked vertex* and
+  entrenched the mis-pick: §2.5's correlation biting at repair time.  No
+  ceiling avoids it while keeping the owner's own examples (268067 needs
+  9.14 cm, 349945 needs 7.68 cm; len=5 forfeits both to save this one).
+  Shipped with the loss on the record; owner hand-check requested (Bee).
+- **cosmict flips**: 3 cleared (174114, 402330, 61579 — all with score
+  improvements), 2 set (59335: one 1.10 cm splice at 145.5°, numu improves
+  1.18→2.05, event already 65.6 cm from the click epoch; 62281: numu
+  −1.66 → +3.73).  Both new tags are owner hand-check items.
+- **Runtime**: mcp1k median wall 18 s → 18 s, median peak RSS 1.15 GB →
+  1.15 GB.  Neutral.
+
+### 14.6 The flip
+
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` production block:
+`mvga_interposed_len = 10, mvga_interposed_angle = 130,
+mvga_interposed_deg1 = true, mvga_sat_dup_frac = 0.7`.  Compiled-diff proof:
+exactly those four keys appear, nothing else changes.  Post-flip bare smoke
+(no env overrides) on the 25 probe events + 122660 + 163543: byte-identical
+to the Stage-C arms (§14.7).
+
+*Trap for the record*: gojsonnet accepts **duplicate function parameters and
+silently binds the first** — the first flip attempt left the pr/85
+`mvga_interposed_angle = null` line in place above the new `= 130` and the
+compiled JSON silently dropped the angle.  The compiled-diff proof caught it.
+
+### 14.7 Verification ledger
+
+- Gate 1 PASS 2134/2134 (arms named in §14.2).
+- Stage C rc=0 1067/1067; zero adverse movers; zero census regressions.
+- Post-flip bare smoke: 27/27 events byte-identical to the validation arms
+  (`pr85_hash_gate` on the `work-pr86-postflip-*` arms vs `work-*-pr86ion`).
+- Doctest 2076/2076 (includes the four new default pins).
+- M13: all new work went into fresh arms (`pr86off2/off3, pr86a, pr86a2,
+  pr86b-*, pr86ion, pr86-postflip-*`); nothing existing was touched.
+  `work-*-pr86ioff` are aborted partial arms from a mid-round binary
+  restart — ignore them.
+
+### 14.8 Hand-check requests + Bee
+
+Before (production pr/85 epoch) and after (this flip) sets, 18 events, index
+in `docs/pr/86_bee.index.txt`:
+
+- before: https://www.phy.bnl.gov/twister/bee/set/7683144b-d2dd-4ad6-9bc3-58ce96fc1baf/event/list/
+- after:  https://www.phy.bnl.gov/twister/bee/set/eb0a509d-5705-4634-ac71-e27a4c9ba48c/event/list/
+
+Priority items: **idx 7 evt122660** (the named nue loss — is the owner's
+click or the reco vertex right?), **idx 8 evt59335** and **idx 9 evt62281**
+(new cosmict tags).
+
+### 14.9 Residuals (recorded, not chased)
+
+1. **Satellite-anchor interposed splices** — 349945-class declines at
+   `anchor=sat reason=ceiling` (175896, 316025, 283595) and 67394's
+   click-anchor defect (the click vertex is a satellite 0.4 cm from main).
+   Opening the splice at satellites is a distinct design decision.
+2. **21073** — its interposed segment is 10.40 cm, just over the ceiling;
+   widening past 10 was declined (the §4/§10.3 distributions end there).
+3. **Vertex-confidence gating** — 122660 shows a structurally-correct splice
+   can entrench a mis-picked vertex; a future round could gate wide splices
+   on vertex confidence (or run after a vertex re-check).
+4. **op1-created interaction** — op1's reconnect products are `created`-set
+   exempt, which can starve the same-restart op3 anchor loop; P1b works
+   around it at degree-1 but the interaction is worth knowing.
+5. §8's items (555 dumpless events, 18 unmatched `main_vertex`, pr/85 §8.1
+   degree-1 b1 correlation) stand unchanged.

@@ -114,6 +114,28 @@ OWNED = {
 EXEMPLARS = {268067: (0, 5), 38856: (4, 0), 349945: (3, 1)}   # (reco, click)
 
 
+# doc pr/86 implementation round: PR86_DUMP_ARMS=<arm>[:<arm>...] rescopes the
+# census onto re-run arms (first match wins, same as ARMS).  The root label is
+# inferred from the arm name; unmatched names fall back to "mcp1k".  Default
+# (unset) behavior unchanged.  Modeled on pr85_panels2d.py's PANELS_DUMP_ARMS.
+def _arms():
+    env = os.environ.get("PR86_DUMP_ARMS")
+    if not env:
+        return ARMS
+    out = []
+    for arm in env.split(":"):
+        arm = arm.strip()
+        if not arm:
+            continue
+        root = "mcp1k"
+        for cand in ("nuecc48", "ncpi0", "mcp1k"):
+            if cand in arm:
+                root = cand
+                break
+        out.append((root, arm))
+    return out
+
+
 # ------------------------------------------------------------------ dumps
 def find_dumps():
     """{eventNo: (root_name, arm, path)} over the post-flip arms.
@@ -122,7 +144,7 @@ def find_dumps():
     map keyed on the id is unambiguous.
     """
     out = {}
-    for root, arm in ARMS:
+    for root, arm in _arms():
         for p in sorted(glob.glob(os.path.join(HERE, arm,
                                                "pr_evt*", "calib-pr-evt*.json"))):
             ev = int(re.search(r"calib-pr-evt(\d+)", p).group(1))

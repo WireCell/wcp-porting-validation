@@ -1,0 +1,24 @@
+# doc pr/86 implementation-round bee sets (18 events; before = production
+# pr/85 epoch work-*-pr85ion2, after = this flip work-*-pr86ion; ql layers
+# from work-*-cb0805).
+# before: https://www.phy.bnl.gov/twister/bee/set/7683144b-d2dd-4ad6-9bc3-58ce96fc1baf/event/list/
+# after:  https://www.phy.bnl.gov/twister/bee/set/eb0a509d-5705-4634-ac71-e27a4c9ba48c/event/list/
+# bee_idx	event	why
+0	268067	owner example: 2 prongs handed off through a 9.14 cm segment -- classB 2->0, nue 1.28->4.11
+1	281214	owner example ("plot clearly shows this") -- classB 2->0
+2	349945	owner example ("one track did not reach vertex") -- classB 2->0 via deg1 (op1-created starvation)
+3	163543	nue RECOVERY -4.30 -> +0.52: chain of 3 interposed segments (8.91/8.09/2.87 cm) spliced
+4	268784	nue RECOVERY -15 -> +4.30 (deg1/sat)
+5	400474	nue RECOVERY -15 -> +4.30 (angle)
+6	423981	nue RECOVERY -15 -> +4.30 (angle; the 130.1 deg decline of sec 5.2)
+7	122660	THE NAMED LOSS nue +4.30 -> -15: textbook classB splice at a vertex 4.95 cm off the click -- please hand-check which vertex is right
+8	59335	COSMICT 0 -> 1 (1.10 cm splice at 145.5 deg; event already 65.6 cm from click epoch) -- please hand-check
+9	62281	COSMICT 0 -> 1 with numu -1.66 -> +3.73 -- please hand-check
+10	174114	cosmict 1 -> 0 recovery
+11	402330	cosmict 1 -> 0 recovery, numu -1.36 -> +0.59
+12	61579	cosmict 1 -> 0, classB 2->0 (133 cm track re-reaches the vertex)
+13	73004	classB 4->0 (91.5 cm track, vertex-on-click event)
+14	168432	classB 4->0 via deg1 (b1=0.00 -- vertex exactly right, 79.9 cm track re-attached)
+15	38856	owner "should be a 3-track vertex" -- orphans 4->1 (139.8 deg decline admitted)
+16	30504	P4 satellite absorb (anchor=sat d=1.26, the pr/85 dup_frac casualty) -- orphans 5->4
+17	21073	residual, UNCHANGED: interposed segment 10.40 cm, just over the ceiling

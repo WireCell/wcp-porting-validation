@@ -830,6 +830,27 @@ fi
 if [ -n "${SBND_MVGA_INTERPOSED_ANGLE:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_interposed_angle=${SBND_MVGA_INTERPOSED_ANGLE}")
 fi
+# doc pr/86: interposed-splice candidate ceiling, cm (C++ default 0 = use
+# mvga_stub; widens only the splice, never the terminal absorb).  Numeric
+# TLA, unset/empty omits (jsonnet default null => byte-identical).
+#   SBND_MVGA_INTERPOSED_LEN
+if [ -n "${SBND_MVGA_INTERPOSED_LEN:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_interposed_len=${SBND_MVGA_INTERPOSED_LEN}")
+fi
+# doc pr/86 P4: satellite-anchor op3 overlap threshold (fraction; C++
+# default 0 = use mvga_dup_frac everywhere).  Numeric TLA, unset/empty
+# omits (jsonnet default null => byte-identical).
+#   SBND_MVGA_SAT_DUP_FRAC
+if [ -n "${SBND_MVGA_SAT_DUP_FRAC:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_sat_dup_frac=${SBND_MVGA_SAT_DUP_FRAC}")
+fi
+# doc pr/86 P1b: interposed splice at degree-1 main anchors (boolean; C++
+# default false).  Boolean TLA, unset/empty omits (jsonnet default false
+# => key suppressed => byte-identical).
+#   SBND_MVGA_INTERPOSED_DEG1
+if [ -n "${SBND_MVGA_INTERPOSED_DEG1:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_interposed_deg1=${SBND_MVGA_INTERPOSED_DEG1}")
+fi
 # doc pr/85: carry the old vertex's arms through the snap residual below
 # this arc (cm).  Numeric TLA -- pass a bare cm value, e.g.
 # SBND_VKS_CARRY_PRONG=1.5.  Unset/empty omits the override (jsonnet
