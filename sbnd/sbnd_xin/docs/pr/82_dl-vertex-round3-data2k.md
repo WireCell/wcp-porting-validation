@@ -1057,27 +1057,112 @@ The guard rescues a degenerate `examine_end_ps_vec` result by falling back to
 `pts`, but **never checks that `pts` is itself non-empty**. An empty `pts` gives
 an empty `ps_vec`, and `.front()` on an empty vector is undefined behaviour.
 
-**Not fixed in this round, deliberately.** It is pre-existing in current
-production (`771f075b`), unrelated to anything this round changed — no C++ or
-jsonnet was touched — and CLAUDE.md's rule is to surface such a bug rather than
-fold it into an unrelated change. A fix is also not a one-liner by this tree's
-standards: any `clus` behaviour change needs the default-OFF knob plus a
-byte-identical A/B gate on every affected detector. Worth its own round;
-evt54629 of `work-mcp2k-cb0816` is a standing 29-second reproducer, and the
-`ps_vec.empty()` early return is the obvious candidate.
+### FIXED — on the owner's instruction, and gated
 
-Impact on this round: **1 event of 2000 (0.05%)** has no PR products. It is not
-in any label set and does not affect any number above.
+The paragraph that stood here said the fix belonged to its own round. The owner
+asked for the protection directly ("can you provide a protection for this
+one-event segfaults"), so it was written, gated, and shipped inside this round.
+Recording the reversal rather than editing the reasoning away: the deferral was
+the right *default*, not a finding.
+
+**The trap is two-step, and neither step is wrong alone.** `examine_end_ps_vec`
+*deliberately* returns an empty list when the whole path drains as face-invalid
+— `TrackFitting.cxx:1985-1993` says so in its own comment: "returning an empty
+list lets the caller (`organize_ps_path`) fall back to the original `pts` rather
+than handing back an out-of-detector point". The `size() <= 1` fallback
+implements exactly that contract. What neither side states is that the fallback
+needs `pts` to be non-empty, and at the `:8870` call site `pts` was just rebuilt
+from `ptss`, which can come back empty. Both empty ⇒ `ps_vec.front()` on nothing.
+
+**The fix** (toolkit, `clus/src/TrackFitting.cxx`) is an early return in
+`organize_ps_path` when `pts` is empty, plus the companion guard in
+`examine_end_ps_vec` whose own `ps_list.front()`/`.back()` (`:1949`, `:1998`)
+are unguarded for the same input. No knob. **A default-OFF knob is the rule for
+a behaviour change; this is not one** — the early-out fires only on an input
+where the current code has no defined behaviour at all, so there is no legacy
+path to preserve. That is a claim about the *whole* sample, not about evt54629,
+which is why it was gated rather than asserted.
+
+**Gate — `gate_cmp_arms.py`, member-content hashing (M2), fixed vs pre-fix
+binary:**
+
+| arm | events | artifacts | differing |
+|---|---:|---:|---:|
+| `work-nuecc48-harv3` | 48 | 192 | **0** |
+| `work-ncpi0-harv3` | 19 | 76 | **0** |
+| `work-mcp1k-harv3` | 1000 | 4000 | **0** |
+| **total** | **1067** | **4268** | **0** |
+
+`GATE PASS -- 0/1000 events differ on reconstruction output, byte-identical by
+member content`, and the non-gating `nusel-*.tsv` legs came back 0 differing
+too. Freshness proof (M1): source last written 10:03:28, `local/lib/
+libWireCellClus.so` installed 10:04:11, earliest arm-B event dir 10:13:13 — the
+comparison arm ran under the fixed library, the reference arms under the
+unfixed one.
+
+**Reproducer-first test**, `clus/test/doctest_clus_organize_ps_path_empty.cxx`:
+2 cases / 7 assertions, covering both `organize_ps_path` overloads (including
+`end_point_limit = 0`, the `:8870` call site that crashed) and all four
+`flag_start`/`flag_end` combinations. It is **revert-proven** in the strong
+sense — the guards are reached before any member or the segment is touched, so
+the deliberately-null `shared_ptr<PR::Segment>` means removing the fix crashes
+the runner instead of failing politely. `./build/clus/wcdoctest-clus` 211/211.
+
+**A discarded gate run, recorded so the number is not quietly reused.** The
+first mcp1k leg was launched and *then* the library was rebuilt twice underneath
+it (revert for the proof, restore) while it was still running. It spanned three
+binaries and returned 11 unattributable `rc=1`. That is not evidence of
+anything; it was discarded and re-run into a fresh directory
+(`/home/xqian/tmp/pr82/gate-mcp1k2`) with no rebuild during. The nuecc48 and
+ncpi0 legs finished before the first rebuild and are untouched by this.
+
+Impact on this round: evt54629 was re-run into `work-mcp2k-harv3` in place
+(owner: "no need to repeat the entire production, just add this event back"),
+so the arm is **2000/2000 `rc=0`, 880 dumps**. Bee for that event alone:
+<https://www.phy.bnl.gov/twister/bee/set/29e1933e-309e-4a8b-aca5-50259eb3d96d/event/list/>
 
 ## 12.8 Where this leaves the tree
 
 **Disk.** `sbnd_xin` goes from the **23 G** yesterday's retirement round reached
-to **~62 G**. The new sample is ~38.6 G of that and the harvest arms 3.5 G. The
-retirable layer, when the owner wants it back: the PR arms' non-calib products
-(`pctree-pr-*.tar.gz`, `mabc-pr.zip`, `tracking-pr.root`) and the Q/L root's
-`pctree-evt*.tar.gz` — the scan and the DL training both read only
-`pr_evt*/calib-pr-evt*.json` (~1.5 G of the 6.0 G PR arm). That is the owner's
-call, not this round's.
+to **~62 G**. The new sample is ~38.6 G of that and the harvest arms 3.5 G.
+
+**CORRECTION (2026-08-16, same day).** An earlier draft of this section called
+the PR arms' non-calib products "the retirable layer, when the owner wants it
+back", on the reasoning that the scan and the DL training read only
+`calib-pr-evt*.json`. **That was wrong and the advice is withdrawn.** Measured
+composition of `work-mcp2k-harv3` (6.0 GB):
+
+| class | files | size | consumer |
+|---|---:|---:|---|
+| `calib-pr-evt*.json` | 880 | 0.54 GB | the scan, `build_dataset.py`, the viewer |
+| `pctree-pr-evt*.tar.gz` | 2000 | **4.42 GB** | **`gate_cmp_arms.py` GATING class**, pr36/37/38 comparisons |
+| `mabc-pr.zip` | 2000 | 0.46 GB | **`gate_cmp_arms.py` GATING class**, and the Bee upload source |
+| `tracking-pr.root` | 2000 | 0.24 GB | pr32/33/36/37 comparisons, `ttag_cmp5.py` |
+| logs | 6000 | 0.19 GB | `nusel_extract.py` parses them for the label table |
+
+The two largest classes are precisely the two inputs `gate_cmp_arms.py` gates a
+byte-identity A/B on (`pctree` + `mabc` + `rc`). Deleting them would not free
+"unused" space — it would permanently remove this arm's ability to be A/B-gated
+again, which is the mechanism every claim in this tree rests on. That loss has
+already been taken once knowingly: `PROTECTED.txt` records that dropping
+`work-pr87-postflip-*` left its "42/42 archives == pr87ion3" claim alive only in
+doc prose, not on disk.
+
+It was also falsified immediately: the Bee link for evt54629 (§12.7) was
+produced from `mabc-pr.zip` in that very layer, the same day the layer was
+called retirable.
+
+**Correct characterisation: `work-mcp2k-harv3` is live campaign input, not a
+spent by-product, and nothing in it is safely retirable while this round is
+open.** If disk pressure becomes real, the defensible candidates are the
+*regenerable* upstream stages, and each costs the wall time to rebuild:
+`work-mcp2k-cb0816` (17 GB, regenerable from imaging), `work-img-mcp2k` (13 GB,
+regenerable from staging), staging itself (2.6 GB, regenerable from yuhw's two
+art files). But "regenerable" is not "free", the Q/L hub is the input any PR
+re-run needs — this round re-ran evt54629 through it — and the owner's own
+standing rule from the last retire round is *keep the latest and the input to
+achieve it*. Under that rule the whole `mcp2k` chain is KEEP. Any retirement
+here is a fresh owner decision, not a follow-on from this round.
 
 **Ready for §5/§6 whenever the owner wants them, and not started:**
 - ~879 unscanned `mcp2k` calib dumps + 38 never-scanned `mcp1k` dumps (§1.4).
