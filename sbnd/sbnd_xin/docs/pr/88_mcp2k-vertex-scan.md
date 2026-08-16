@@ -566,12 +566,135 @@ anything pr/80 measured — 86.4 / 35.0 / 14.6 against §10.4's 92.6 / 56.5 /
   vindicated by measurement rather than by assumption. Those events keep
   their scanner picks in `review.json` and enter no training pool.
 
-## 8. Phase 5 — pending
+## 8. Phase 5 — the round closes
 
-To be filled in: the tier census over all 845, the ~120-event pile served on
-5017 under the fresh tag `vtxscan-mcp2k`, the blind 40-event auto-accept
-calibration draw, and the pre-registered fork (≥90% admits the auto-accept
-tier to the label pool; <90% does not).
+Record committed at wcp `e9dcf9c`, under
+`vtx_rules/runs/mcp2k-20260816/` — every wave's picks, `review.json` and
+manifest, every served pile, every calibration draw. Label JSONs stay
+untracked, as every prior tag's do (`*.json` is gitignored and no scan tag
+has ever had a tracked label file); panels are not kept, being ~380 MB and
+regenerable from the dumps.
+
+### 8.1 Final census — 845 scanned, 219 owner labels
+
+```
+REVIEW                                  418  (49.5%)
+auto-accept                             341  (40.4%)
+REVIEW (scanner abstained)               49   (5.8%)
+REVIEW FIRST (confident disagreement)    37   (4.4%)
+```
+
+Owner review ran to **seven** instalments, not the one ~120-event pile the
+plan budgeted — the owner asked for more work each time a pile came back.
+233 events served, 219 labelled, 14 declined, **100 corrective (45.7%)**
+against a ~21% base rate.
+
+Fill-tier yield by instalment: 38.9 / 52.0 / 58.8 / 56.5 / 43.2%. I predicted
+after instalment 3 that this tier would decay as the ranker's hot end was
+consumed. It did not — instalment 4 was the best of the round. The prediction
+is recorded because it was wrong, not because it was close.
+
+### 8.2 The training pool
+
+| | n | after the dots cut |
+|---|---:|---:|
+| owner-reviewed mcp2k labels | 219 | 217 |
+| auto-accept, admitted on the §7 gate | 341 | 339 |
+| overlap (the calibration draw is in both) | −40 | −40 |
+| **mcp2k total** | **520** | **516** |
+| current-epoch labels (`TAGS_HARV3`) | 473 | 460 |
+| **combined pool** | **993** | **976** |
+
+Quote the right column for whatever you build: the 473 was never filtered, so
+the old number and the new one are not the same kind of thing until both go
+through `--drop-unscannable`.
+
+Verified consumable:
+
+```
+python3 dl_vtx_training/build_dataset.py --name pr88_dotstest \
+    --tags vtxscan-mcp2k \
+    --harvest-roots vtxscan-mcp2k=work-mcp2k-harv3 --drop-unscannable
+→ wrote 217 events (99 corrective, 118 confirming)
+  "only dots" events (longest fitted segment < 5.0 cm): 2 DROPPED
+    evt102247 evt177360
+```
+
+Two notes on that command. The `--harvest-roots` key is the **scan tag**
+(`vtxscan-mcp2k=`), not the arm name — `calib_path_in_roots` does
+`roots.get(label['scan_tag'])` and returns `None` for a wrong key, which
+surfaces as a `TypeError` deep in `load_calib` rather than as an error about
+the key. And the two dropped events are precisely `evt102247` (2.4 cm) and
+`evt177360` (3.5 cm), the two that `scannability.py`'s docstring names as the
+known cost of the 5 cm operating point — an independent confirmation that the
+duplicated cut in `build_dataset.py` agrees with the original.
+
+### 8.3 The dots filter had no caller on the training path
+
+`scannability.py`'s own docstring says the cut is "a filter for the TRAINING
+POOL, applied at `build_dataset.py` time." It was not. Its only importer was
+`build_review_pile.py`, so the owner's instruction — *"for our later fine
+tuning etc, we should filter out this kind of events"* — was implemented for
+**serving** and not for **training**, and the docstring asserted otherwise.
+
+Now wired in as `--drop-unscannable`, **default OFF** so every pr/77–82
+snapshot still rebuilds unchanged, with the count of "only dots" events
+always printed whether or not they are dropped. Impact:
+
+| pool | labels | unscannable |
+|---|---:|---:|
+| mcp2k owner-reviewed | 219 | 2 |
+| mcp2k auto-accept | 341 | 2 |
+| current epoch (473) | 473 | 13 |
+
+17 of 1033, 1.6% — small, and the larger share is in the *old* pool, which
+was never filtered either. Round-3 training should pass the flag.
+
+The cut is a deliberate duplicate of two lines rather than a cross-import:
+`vtx_rules/` is decoupled from `dl_vtx_training/` on purpose (the
+`vtx_io.py` docstring), and an import would let an edit there silently move a
+training denominator here. `UNSCANNABLE_LONGEST_CM` must track
+`scannability.DEFAULT_LONGEST_CM`; nothing asserts it.
+
+### 8.4 Instalment 6 is the filter's cleanest evidence
+
+Instalment 6 returned **0 `not_a_candidate` out of 45**, against 1–3 in every
+prior instalment (1, 2, 1, 2, 3). Instalment 6 was the first built with
+`--drop-unscannable`. `not_a_candidate` is what the owner records when no
+PR-graph vertex is near enough to pick — which is exactly what an event with
+no readable object looks like from the scan UI.
+
+### 8.5 The residue, and instalment 7
+
+After six instalments the enriched material was nearly gone. Instalment 7
+serves **all 24 scannable events that remain in the high-yield tiers** — 4
+`REVIEW FIRST`, 3 abstentions, 17 ranker-hot disagreements — and that closes
+the tier. No calibration draw: the §7 gate is settled and re-drawing would
+only dilute the instalment.
+
+```
+              total  scannable
+REVIEW FIRST      4     4
+abstained        26     3      <- 23 of the 26 are "only dots"
+REVIEW disagree  30    17
+REVIEW agree    251   228      <- never sampled
+auto-accept     301   299
+```
+
+**The one unmeasured class.** The 228 scannable `REVIEW`-agreeing events —
+scanner picked what the reconstruction picked, but at `likely`/`unclear`
+confidence — have **zero owner labels**: every fill tier selected on
+`not agrees`, so none was ever served. A 40-event calibration could admit all
+228, the way §7's did for auto-accept.
+
+It is not proposed here, on grounds of composition rather than cost. Those
+228 would be **confirming** labels, and the pool is already
+100 corrective / 419 confirming after the auto-accept admission. The question
+that decides it is not "what is that class's precision" but "does another
+block of confirming labels move training at this composition" — and training
+round 3 answers that for free with the 341 auto-accepts just admitted. If
+confirming volume turns out to be the constraint, the draw is a 40-minute
+follow-up; if it is not, 40 owner-minutes were saved.
 
 ### Protocol deviations, recorded as they happen
 
