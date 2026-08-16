@@ -127,6 +127,13 @@ why §5's auto-accept tiering cannot be back-fitted to it.
 
 ### 1.2 …but production still picks the wrong one on a quarter of them
 
+> **PARTLY SUPERSEDED by §12.6.** The 358 and the 91-event gap below are measured
+> against the **stale** prod0813-epoch truth. After the owner re-scanned the 24
+> events the carry-forward declined, the current-epoch figures are
+> **372/473 (78.6%)** and a **98-event** selector gap over **470** available.
+> Use 358 only when comparing to pr/79; use 372 for any statement about the
+> current arm.
+
 Scoring the current arm's `main_vertex` against the same 473 truths:
 
 ```
@@ -599,7 +606,7 @@ Written down now, before any new label is read.
 | `work-{nuecc48,ncpi0,mcp1k}-harv3` | harvest arms of the existing samples (§3) |
 | `vtx_rules/carry_labels.py` | **new** — the §4.1 carry-forward |
 | `vertex_labels/vtxscan-harv3-*` | **new tags** — carried + re-scanned labels |
-| `dl_vtx_training/data/harv3` | the round-3 training snapshot |
+| `dl_vtx_training/data/harv3` | the round-3 training snapshot — **NOT built this round**; it belongs to §6, which the owner scoped out |
 | `dl_vtx_training/data/{harv473,full473,*-cands,k20feats*}` | **kept** — the old-epoch comparison |
 
 ---
@@ -667,11 +674,14 @@ without that an inert knob would make it pass vacuously (the M1 shape).
 
 ### Gate 3 — bit-exact live reproduction (`verify_harvest.py`): **PASS**
 
-| arm | EXACT | not applicable |
-|---|---:|---|
-| nuecc48 | **47 / 47** | — |
-| ncpi0 | **19 / 19** | — |
-| mcp1k | **429 / 429** | 16 |
+| arm | dumps | verifiable | EXACT | not applicable |
+|---|---:|---:|---:|---:|
+| nuecc48 | 47 | 47 | **47** | 0 |
+| ncpi0 | 19 | 19 | **19** | 0 |
+| mcp1k | 445 | 429 | **429** | 16 |
+| **total** | **511** | **495** | **495** | **16** |
+
+(445 mcp1k dumps = 429 verifiable + 16 `dl-not-run`.)
 
 Every voxel position **and** score reproduces from the recorded `hv_cloud`
 through CP24. The 16 mcp1k exclusions are **not** failures: they carry
@@ -744,9 +754,34 @@ something real rather than a bug:
 **55 of those 63 are in the MAIN cluster.** So on 14% of the carried set the
 human's answer is a vertex the current reranker did not even score — an
 *admission* gap, the same class pr/78 §3 identified as `dl_vtx_top_k`-limited,
-now measured post-pr83/85/86 and on the main cluster specifically. It is a
-better-defined target than the 91-event selector gap in §1.2: a selector cannot
-choose what was never admitted.
+now measured post-pr83/85/86 and on the main cluster specifically.
+
+**Is this just the selector gap seen twice?** Checked rather than assumed,
+because the obvious reading — "unadmitted ⇒ production misses" — would make the
+finding a restatement of §1.2 rather than a new target. Crossing `row_join`
+against whether production picks the truth, over the 449 carried:
+
+| | production right | production wrong |
+|---|---:|---:|
+| has a scored row (386) | 323 | 63 |
+| **no row (63)** | **35** | **28** |
+
+`P(production wrong | no-row) = 44.4%` vs `P(production wrong | has-row) =
+16.3%` — a 2.7× enrichment, so the two gaps are **correlated but not the same
+gap**, and both halves of that matter:
+
+- **35 of the 63 unadmitted events, production still gets right.** Not being
+  scored by the reranker is therefore not fatal — the traditional/anchored
+  routes recover more than half of them. Admission is a real handicap, not a
+  guaranteed loss.
+- **Of the 91 production misses on the carried set, only 28 (31%) are
+  admission failures; 63 (69%) are on vertices the reranker DID score and
+  ranked below its winner.** So the selector gap remains the larger target,
+  and the earlier framing of admission as "a better-defined target than the
+  91-event gap" would have been wrong — it is a distinct and smaller one.
+
+Worth pursuing as a separate lever (a `dl_vtx_top_k` widening changes only the
+28), not as a replacement for selector work.
 
 `carry_labels.py` records which of the four routes each label used
 (`carried_from.row_join`) and leaves the `dl_*`/`trad_*` fields **absent** for
@@ -828,6 +863,30 @@ The corrected builder reproduces the existing 1k map byte-for-byte.
 each hit `rc=90 no-event-map-row`, exit 0, and half the sample would vanish with
 the batch reporting success. Fixed, with the reason in a comment at the line.
 
+Verified rather than assumed, with a two-entry smoke before the full run:
+`ENTRIES="0 1999"` — entry **1999** specifically, because it is the only cheap
+test that exercises the part2 half of the map. Both resolved
+(`entry=0 evt=171099`, `entry=1999 evt=175931`), both `rc=0`, neither `rc=90`.
+Entry 0's event id matches §0b smoke test 1 exactly.
+
+### The measured chain
+
+| stage | driver | wall | result | size |
+|---|---|---:|---|---:|
+| stage | `stage_all_2k.sh 2000 32` | 4m11s | **2000/2000 OK** | 2.6 GB |
+| uniqueness | `check_uniqueness.py --build` | s | **4/4 assertions PASS** | — |
+| imaging | `xargs -P 32 … run_img_evt.sh data 1` | 11m33s | **2000/2000**, 8000/8000 npz, 0 truncated | 13 GB |
+| Q/L + nusel | `run_full1k_nusel_2k.sh 2000 32` | 27m03s | **2000/2000 `rc=0`**, 2000 pctree | 17 GB |
+| PR + harvest | `run_pr_chain_batch.sh … work-mcp2k-harv3 data` | see below | see below | see below |
+
+**Imaging completeness was checked on products, not directories.** The event dir
+is created before the npz are written, so a killed or short job leaves a dir
+behind and a `ls -d evt*` count reads full while the sample is truncated — which
+is precisely M5's shape. Observed mid-run: 1306 dirs against 1300 completed
+`icluster-apa0-active.npz`. The bar is **four npz per event** (`apa{0,1}` ×
+`{active,masked}`, the layout of the reference `work-img-mcp1k` hub) plus a
+`-size -1k` scan for truncation. Final: 8000/8000, zero undersized.
+
 ## 12.4 The review display — port 5017, 24 events
 
 The owner asked for the events needing their eyes on **5017 specifically**. That
@@ -892,4 +951,138 @@ M5's failure mode is silent truncation rather than a non-zero exit:
 Peak load 37 on 64 cores; no stage was run concurrently with another
 wire-cell stage. Exit codes captured as `cmd > log 2>&1; echo rc=$?`, never
 through a pipe (M14).
+
+
+## 12.6 The owner's 24-event scan — collected, and what it changed
+
+All 24 were scanned and saved to `vertex_labels/vtxscan-harv3-delta/` the same
+day. Classifying each decision against the label it replaced:
+
+| what the owner did | n | reading |
+|---|---:|---|
+| re-picked the **same physical vertex** (moved exactly as far as the re-anchor) | **15** | the carry-forward was merely conservative — `improve_vertex` pushed the fit past 1 cm and nothing else changed |
+| **manual** pick within 0.6–2.2 cm of the old answer, `not_a_candidate: true` | **3** | the old answer stands but the current graph has **no vertex there at all** — a reconstruction failure, and exactly what the >3 cm bucket exists to surface |
+| chose a **materially different vertex** | **6** | the old label no longer describes the event |
+
+### This retro-justifies TOL = 1.0 and the held-back loose bucket
+
+Four of the six different-vertex events — **166870 (1.45 cm), 283040 (1.34),
+72586 (1.89), 286353 (2.48)** — had a re-anchor **inside 3 cm**. A policy of
+"carry anything under 3 cm" would have written four wrong labels silently, with
+nothing downstream able to detect it. Two of those are not close calls: on
+72586 and 286353 the owner's answer is **299.9 cm** and **258.7 cm** from the
+old one — a different cluster entirely.
+
+evt283040 is the event §12.2 flagged for the id-join: `vertex_id` 2000 survived
+while naming a point 117.5 cm away. The owner's answer is 1.69 cm from the old
+one and *not* the vertex nearest to it. So both defences were load-bearing —
+position-join caught what id-join would have missed, and the 1 cm hold-back
+caught what position-join alone would have carried.
+
+### Two headline numbers move
+
+**Production accuracy was understated.** §1.2's `358/473` is measured against
+*stale* truth. On the corrected current-epoch set it is **372/473 = 78.6%** —
+14 events where production was already right and the old label was the thing
+that had gone out of date. Any comparison against pr/79's 358 must use 358, and
+any statement about the current arm must use 372; they are not the same
+quantity measured twice.
+
+**The headroom statement, restated on corrected truth:**
+
+```
+vertex AVAILABLE within 1 cm : 470 / 473    (3 are not_a_candidate -- no vertex exists)
+production CHOOSES it        : 372 / 473
+selector gap                 :  98
+```
+
+So §1.2's "91-event gap" becomes **98**, and the denominator is now honest: on
+**3** events the correct vertex is not in the graph at all, so no selector and
+no net can ever win them. 98 is the real ceiling for selection work on this
+sample; of it, 28 are the admission subset of §12.2 and the remaining ~70 are
+vertices the reranker scored and ranked below its winner.
+
+**The current-epoch label set is complete: 473 labels** — 449 carried + 24
+re-scanned — all on `work-*-harv3`, all with a live `hv_cloud`, spread
+`vtxscan-harv3-{nuecc48 42+5, ncpi0 19, mcp1k 388+19, delta 24}`. Pass them as
+`vtx_io.TAGS_HARV3`, never mixed with the `vtxscan-prod0813*` originals.
+
+
+## 12.7 Task A completed — `work-mcp2k-harv3`
+
+| stage | wall | result | size |
+|---|---:|---|---:|
+| PR + harvest + display | 21m10s | **2000/2000 run, 1999 `rc=0`, 1 `rc=139`** | 6.0 GB |
+
+**879 calib dumps** (43.95% yield, against the 44.5% mcp1k prior — only events
+where PR selects a main cluster emit one). Every dump carries `harvest: true` at
+the production operating point (`min_accept 10.0`, `top_k 5`); the first one
+checked has a 340-point `hv_cloud`.
+
+**Zero `PR_TIMEOUT` (rc=124).** Worth stating explicitly because
+`run_pr_chain_batch.sh:1180-1183` records an MCP2025C event that once spun
+8h17m and stalled a whole 1000-event batch; the 3600 s cap was never reached
+here, so the 879 is a clean yield number and not "yield minus timeouts".
+
+**Whole-sample totals: 2.6 GB staged + 13 GB imaging + 17 GB Q/L + 6.0 GB PR =
+~38.6 GB**, 64 minutes of wall clock across four stages at 32-way.
+
+### The one failure: evt54629 segfaults, deterministically, in production code
+
+`rc=139` (SIGSEGV), zero-byte `mabc-pr.zip` and `pctree-pr-evt54629.tar.gz`,
+29 s in, 2.3 GB RSS. **Re-running the single event reproduces it exactly** — not
+a parallelism artifact, not an M5 truncation.
+
+```
+#6  D3Vector<double>::x ()                       util/inc/WireCellUtil/D3Vector.h:108
+#8  TrackFitting::organize_ps_path (...)         clus/src/TrackFitting.cxx:2071
+#9  TrackFitting::do_single_tracking (...)       clus/src/TrackFitting.cxx:8870
+#10 PatternAlgorithms::find_other_segments (...) clus/src/NeutrinoOtherSegments.cxx:561
+#11 PatternAlgorithms::find_proto_vertex (...)   clus/src/NeutrinoPatternBase.cxx:2885
+#12 TaggerCheckNeutrino::visit
+```
+
+`TrackFitting.cxx:2065-2071` reads:
+
+```cpp
+std::vector<WireCell::Point> ps_vec = examine_end_ps_vec(segment, pts, true, true);
+if (ps_vec.size() <= 1) ps_vec = pts;
+
+pts.clear();
+{
+    WireCell::Point p1 = ps_vec.front();   // <-- line 2071
+```
+
+The guard rescues a degenerate `examine_end_ps_vec` result by falling back to
+`pts`, but **never checks that `pts` is itself non-empty**. An empty `pts` gives
+an empty `ps_vec`, and `.front()` on an empty vector is undefined behaviour.
+
+**Not fixed in this round, deliberately.** It is pre-existing in current
+production (`771f075b`), unrelated to anything this round changed — no C++ or
+jsonnet was touched — and CLAUDE.md's rule is to surface such a bug rather than
+fold it into an unrelated change. A fix is also not a one-liner by this tree's
+standards: any `clus` behaviour change needs the default-OFF knob plus a
+byte-identical A/B gate on every affected detector. Worth its own round;
+evt54629 of `work-mcp2k-cb0816` is a standing 29-second reproducer, and the
+`ps_vec.empty()` early return is the obvious candidate.
+
+Impact on this round: **1 event of 2000 (0.05%)** has no PR products. It is not
+in any label set and does not affect any number above.
+
+## 12.8 Where this leaves the tree
+
+**Disk.** `sbnd_xin` goes from the **23 G** yesterday's retirement round reached
+to **~62 G**. The new sample is ~38.6 G of that and the harvest arms 3.5 G. The
+retirable layer, when the owner wants it back: the PR arms' non-calib products
+(`pctree-pr-*.tar.gz`, `mabc-pr.zip`, `tracking-pr.root`) and the Q/L root's
+`pctree-evt*.tar.gz` — the scan and the DL training both read only
+`pr_evt*/calib-pr-evt*.json` (~1.5 G of the 6.0 G PR arm). That is the owner's
+call, not this round's.
+
+**Ready for §5/§6 whenever the owner wants them, and not started:**
+- ~879 unscanned `mcp2k` calib dumps + 38 never-scanned `mcp1k` dumps (§1.4).
+- A complete 473-label current-epoch set with live harvest features on every
+  event, reachable as `vtx_io.TAGS_HARV3`.
+- `build_dataset.py --harvest-roots <tag>=work-<sample>-harv3 --tags ...` will
+  now resolve, which it could not this morning.
 
