@@ -1368,3 +1368,12 @@ Base-size note (also from the cold review): the flip evidence is 2
 scored movers out of 407 labels + 3 actively-tested non-events + the
 kinematic attributions above — a judgement call on a thin base, stated
 as such, not a measurement.
+
+The general principle both sessions converged on today (record it once,
+symmetric): **a metric moving is not evidence of harm any more than a
+metric staying still is evidence of safety — both need the mechanism.**
+dvtx = 0.0 hid three real kinematic changes here; Enu −25% looked like a
+regression and was the fix; and the concurrent session's four passing
+gates coexisted with a cluster sitting 33 cm inside the wrong TPC.
+Neither a moved nor an unmoved number means anything until the question
+"what physically happened?" has a per-event answer.
