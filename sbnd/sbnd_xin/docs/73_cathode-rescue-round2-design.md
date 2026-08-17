@@ -1,16 +1,21 @@
 # 73 — Cathode bundle rescue, round 2: the residual one-sided crossers
 
-**Status: IMPLEMENTED + ALL FOUR KNOBS SBND PRODUCTION ON — but the PR round
-(§11) is ADVERSE and the flip is under review.**
-(owner decision 2026-08-17, on §5–§6). Toolkit `17a9929a` (code) + `8464c354` (the flip).
+**Status: IMPLEMENTED, C++ knobs shipped default OFF — briefly SBND PRODUCTION
+ON, now TURNED BACK OFF pending a round 3.**
+Toolkit `17a9929a` (code), `8464c354` (the flip), **`f3706c45` (the revert,
+owner instruction 2026-08-17: "turn off the four knobs for SBND default …
+we need fix these four knobs first")**.
 
-> **Read §11 before relying on this.** The full PR chain, run on the 9 events the
-> knobs fix, removes the neutrino candidate entirely from **5 of them** and breaks
-> a previously-good trajectory fit in a 6th. The cause is the round-2 rescue, not
+> **Why the revert — §11.** The full PR chain on the 9 events the knobs fix
+> removes the neutrino candidate entirely from **5 of them** and breaks a
+> previously-good trajectory fit in a 6th. The cause is the round-2 rescue, not
 > the PR chain: the join makes the in-beam main long enough to be tagged TGM/STM,
 > and the cosmic veto then discards the only in-window main. Two of the five
 > (398115, 237798) are legitimate purifications; 51128 and 78242 are not.
-> §11.7 recommends turning the production flip back OFF pending a round 3.
+>
+> The revert is gate-proven **byte-identical** to the pre-round-2 baseline (§11.9),
+> and the knobs remain fully usable via
+> `SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM}=1`.
 
 **This is NOT bit-identical.** It is a behaviour change delivered as config. The
 escape to the pre-round-2 baseline is
@@ -1035,3 +1040,88 @@ Round-3 directions, in the order the evidence supports them:
    match hundreds of µs away is wrong; 78242 (857 µs) and 65053 (582 µs) are the
    cases to test a cap against.
 Bee for the three: `311a2d2e-1dac-4fb5-bd91-05685a6d8184`.
+
+### 11.8 Two owner follow-ups
+
+**"Should `TaggerCheckNeutrino` also examine the demoted main?" (65289)** —
+There is a real case for it, and the two events where the neutrino is lost both
+have a demoted main that looks like a candidate:
+
+| event | demoted main | verdicts | note |
+|---|---|---|---|
+| 65289 | cluster 18 | `TGM=false`, `STM=0`, **`FC=true`** | in-window, contained, ~118 cm chord |
+| 51128 | cluster 28 | `TGM=false`, `STM=0`, **`FC=true`** | in-window, contained |
+| 51128 | cluster 27 | `TGM=false`, `STM=0`, `FC=false` | 64.5 cm chord |
+
+`FC=true`, in the beam window, and untagged by both cosmic taggers is exactly
+the profile of a neutrino candidate. The verdicts already exist — doc pr/20 P3
+computes them via `evaluate_demoted_mains` — so the information is free; only the
+`Flags::main_cluster` gate at `TaggerCheckNeutrino.cxx:808` keeps them out. And
+the admission pattern is already established: the doc pr/16 design-A guard
+admits an untagged in-window main ≥ 15 cm past the bundle veto, which cluster 27
+would clear. So the asymmetry (taggers see demoted mains, the selector does not)
+is arguably an oversight rather than a design.
+
+**But it should be a separate, independently-gated change, and it should come
+after the cathode fix, not as part of it.** Three reasons:
+* **Blast radius.** Demoted mains exist in most events, not just the ~12 per 1000
+  where the rescue fires. This changes candidate selection detector-wide and needs
+  its own default-OFF knob plus a full census gate — a much larger commitment than
+  the four cathode knobs.
+* **It would mask the defect.** On 65289 it is still unknown whether the 248 cm
+  merged object is one track. Promoting a runner-up would restore a candidate
+  while leaving a possibly-wrong merge in place, and would make the round-3 A/B
+  unreadable.
+* **The cathode fix removes most of the need.** Round-3 direction 3 (do not demote
+  a longer untagged in-window main) recovers 51128 at the source. 65289 would
+  still benefit — but only if its join is correct, which is the open question.
+
+It is also PR-chain code, so it belongs to whoever owns that chain (§11.7 item 3).
+
+**"For 78242, are you implying it is a PR problem?" — No, and there is now
+positive evidence.** The re-segmentation happens inside PR, but PR is executing
+correctly on a different input. The test: **can PR fit across a cathode junction
+at all?** Of the ON-arm events that still have a PR graph, three have a fitted
+main with charge on both sides of the cathode:
+
+| event | fitted main, x range | crossing segment | verdict |
+|---|---|---|---|
+| 281165 | −32.0 … +7.3 | `16005` spans −22.3 → **+7.3** | one continuous segment **crosses** |
+| 319913 | −39.2 … +7.9 | `8001` spans −35.7 → **+7.9** | one continuous segment **crosses** |
+| 78242 | −102.2 … +67.5 | none — two disjoint groups | **71 cm hole at the junction** |
+
+So PR fits straight across the cathode when the join is good, and 78242 is the
+lone failure. That makes the hole **evidence against the join, not against PR** —
+consistent with 78242's far half being matched **857 µs** away, the largest |dt0|
+of the nine.
+
+**Useful by-product: a fit that refuses to cross the junction is a signal the
+join is wrong.** That is a cheap round-3 validation check, and unlike the join
+metric of §5.6 it cannot be satisfied by merging alone.
+
+### 11.9 The revert (owner instruction, 2026-08-17)
+
+All four SBND production defaults set back to `false` in
+`cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet` (the TLA block)
+and `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (`clus_all_apa` and `all_apa`
+defaults). Toolkit `f3706c45`. **The C++ is untouched** — the knobs and the
+far-half containment veto stay in `clustering_cathode_bundle_rescue.cxx`,
+default OFF as originally shipped.
+
+Gate: the knobs-off default compiles **byte-identical** to HEAD compiled with the
+runner escape `SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM}=0`
+(`cmp`, 54115 B) — and that escape was itself gate-proven equal to the
+pre-round-2 baseline at flip time, so this restores the validated baseline
+exactly. Compiled-config proof in the other direction: all four keys
+(`rescue_allow_in_beam_far`, `rescue_geom_first`, `rescue_pierce_test`,
+`rescue_dest_beam_for_new`) are absent from the bare config and reappear as
+`true` when the runner passes the TLAs, so the knobs stay fully usable for
+round 3.
+
+```bash
+# both halves of the proof
+wcsonnet -A input=. -S anode_indices='[0,1]' -A output_dir=. -S run=0 -S subrun=0 \
+         -S event=0 -A reality=data \
+         cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet   # no rescue_* keys
+# ... same with -S rescue_geom_first=true etc.                          # keys present
+```
