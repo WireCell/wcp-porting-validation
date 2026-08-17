@@ -399,6 +399,37 @@ process_event() {
         1) CRESCUE_TLA+=(--tla-code "cathode_rescue_unmatched=true") ;;
         0) CRESCUE_TLA+=(--tla-code "cathode_rescue_unmatched=false") ;;
     esac
+    # Cathode bundle rescue ROUND 2 (docs/73): four independent openings of a
+    # measured blocker behind the 10 in-beam events doc 72 §A found still cut at
+    # the cathode.  ALL FOUR are SBND config default FALSE -- unset inherits
+    # that, so an ordinary run is unaffected.  =1 turns one on for an A/B arm.
+    #   SBND_RESCUE_IN_BEAM     class A (2 evts): far half may be in-beam
+    #   SBND_RESCUE_GEOM_FIRST  class B (6 evts): drop the dt0 window behind a
+    #                           tightened geometry (the widest-reaching knob)
+    #   SBND_RESCUE_PIERCE      class C (2 evts): cathode-piercing agreement
+    #                           replaces the conn angle where conn is drift-
+    #                           dominated or too short to define a direction
+    #   SBND_RESCUE_PIERCE_CUT  <cm> operating point of that test (default 8)
+    #   SBND_RESCUE_DEST_BEAM   round-2 pairs adopt the BEAM bundle instead of
+    #                           the length-based a/b/c/d rule
+    case "${SBND_RESCUE_IN_BEAM:-}" in
+        1) CRESCUE_TLA+=(--tla-code "rescue_in_beam_far=true") ;;
+        0) CRESCUE_TLA+=(--tla-code "rescue_in_beam_far=false") ;;
+    esac
+    case "${SBND_RESCUE_GEOM_FIRST:-}" in
+        1) CRESCUE_TLA+=(--tla-code "rescue_geom_first=true") ;;
+        0) CRESCUE_TLA+=(--tla-code "rescue_geom_first=false") ;;
+    esac
+    case "${SBND_RESCUE_PIERCE:-}" in
+        1) CRESCUE_TLA+=(--tla-code "rescue_pierce_test=true") ;;
+        0) CRESCUE_TLA+=(--tla-code "rescue_pierce_test=false") ;;
+    esac
+    [ -n "${SBND_RESCUE_PIERCE_CUT:-}" ] && \
+        CRESCUE_TLA+=(--tla-code "rescue_pierce_cut=${SBND_RESCUE_PIERCE_CUT}*10")  # cm -> wc units
+    case "${SBND_RESCUE_DEST_BEAM:-}" in
+        1) CRESCUE_TLA+=(--tla-code "rescue_dest_beam_for_new=true") ;;
+        0) CRESCUE_TLA+=(--tla-code "rescue_dest_beam_for_new=false") ;;
+    esac
     # Separate vertex veto (doc pr/15): per-APA separate() un-splits a
     # neutrino-vertex "V" (run 18255 evt 56463, nu cut in two at its vertex).
     # SBND production default is ON; unset inherits that config default.

@@ -1,0 +1,42 @@
+docs/73 round 2 -- cathode bundle rescue, before/after on the events the four
+round-2 knobs fix.  SAME event order in both sets, so Bee event N is the same
+event in each: open them in two tabs and flip.
+
+  BEFORE (all four knobs OFF -- byte-identical to the cb0805/cb0816 production
+  arms, verified by member-content hash on all 12 signal events):
+    https://www.phy.bnl.gov/twister/bee/set/5f6b0455-b7ab-4bd0-b32e-71d4021537e2/event/list/
+
+  AFTER (rescue_in_beam_far + rescue_geom_first + rescue_pierce_test +
+  rescue_dest_beam_for_new, all ON):
+    https://www.phy.bnl.gov/twister/bee/set/bf5b75dc-2bbf-46bd-989b-e2d304afc4cf/event/list/
+
+Layer to look at: clustering-global.  In BEFORE the in-beam bundle main stops
+dead at x = 0; in AFTER it continues into the other TPC.  img-global is the raw
+image (t0 = 0) and is the SAME in both -- the beam flash sits at t ~ 0, so the
+raw image already shows one consistent track through the cathode; the defect was
+only ever in which bundle Q/L put each half.
+
+bee idx  event    missing cm  admitted by            dest t0 (us)
+  0      398115   325         rescue_in_beam_far     1.857
+  1      237798   141         rescue_in_beam_far     1.567
+  2      281165    94         rescue_geom_first      0.861
+  3       65289    88         rescue_pierce_test     1.746
+  4       78242    74         rescue_geom_first      1.907
+  5       65053    74         rescue_geom_first      0.735
+  6       51128    54         rescue_pierce_test     1.670
+  7      317427    48         rescue_geom_first      0.912
+  8      319913     9         rescue_geom_first      0.745
+
+Every destination t0 is inside the SBND beam window [0.2, 2.2) us -- i.e. the
+joined crosser went into the BEAM bundle, which is what makes each of these a fix
+rather than merely a merge.
+
+NOT fixed, and why (printed by the pass's own tracer, CATHODE_RESCUE_DEBUG=1):
+  493439  the pair is now correctly seated (dis 1.94 cm, piercing agreement
+          2.01 cm) but the two halves' own directions disagree -- tt_hough 31.0,
+          tt_pca 40.0 deg against angle_cut 10.  doc 72's estimator called the
+          same pair collinear to 1.2 deg.  Unresolved, see docs/73 sec 5.4.
+  167964  fails the HARD gates: far tip 7.15 cm from the cathode (cut 5), drift
+          8.04 cm (cut 8).
+  167744  fails the HARD gates: beam tip 5.11 cm (cut 5), drift 13.03 cm (cut 8).
+          Outside doc 72's production working point to begin with.
