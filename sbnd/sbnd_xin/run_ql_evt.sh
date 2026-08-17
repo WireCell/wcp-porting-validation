@@ -430,6 +430,13 @@ process_event() {
         1) CRESCUE_TLA+=(--tla-code "rescue_dest_beam_for_new=true") ;;
         0) CRESCUE_TLA+=(--tla-code "rescue_dest_beam_for_new=false") ;;
     esac
+    # Round 3 (docs/73 sec 12): the beam-side donor must BE its bundle's
+    # matched main (evt 51128: a 3.8 cm associated fragment displaced the
+    # real 57.7 cm main).  SBND config default FALSE; unset inherits that.
+    case "${SBND_RESCUE_BEAM_MAIN:-}" in
+        1) CRESCUE_TLA+=(--tla-code "rescue_beam_main_only=true") ;;
+        0) CRESCUE_TLA+=(--tla-code "rescue_beam_main_only=false") ;;
+    esac
     # Separate vertex veto (doc pr/15): per-APA separate() un-splits a
     # neutrino-vertex "V" (run 18255 evt 56463, nu cut in two at its vertex).
     # SBND production default is ON; unset inherits that config default.

@@ -402,6 +402,21 @@ fi
 # is suppressed in the compiled config unless set, so an unset run is
 # byte-identical.  SBND_TRAJ_COVER_PROBE=1 turns the diagnostic lines on.
 [ "${SBND_TRAJ_COVER_PROBE:-}" = 1 ] && CATH_TLA+=(--tla-code "traj_cover_probe=true")
+# docs/73 sec 12 (round 3).  Both SBND config default FALSE; unset inherits
+# that, =1/=0 forces for an A/B arm.
+#   SBND_NU_FALLBACK_DEMOTED   when NO candidate survives TaggerCheckNeutrino's
+#                              primary loop, consider demoted mains (evt 65289)
+#   SBND_ESVA_IGNORE_EMPTY_2D  eliminate_short_vertex_activities case 5: the
+#                              empty-2D-index sentinel is "no information", not
+#                              "covered" (evt 78242 cross-cathode junction)
+case "${SBND_NU_FALLBACK_DEMOTED:-}" in
+    1) CATH_TLA+=(--tla-code "nu_fallback_demoted_mains=true") ;;
+    0) CATH_TLA+=(--tla-code "nu_fallback_demoted_mains=false") ;;
+esac
+case "${SBND_ESVA_IGNORE_EMPTY_2D:-}" in
+    1) CATH_TLA+=(--tla-code "esva_ignore_empty_2d=true") ;;
+    0) CATH_TLA+=(--tla-code "esva_ignore_empty_2d=false") ;;
+esac
 # doc pr/67 counterfactual: override find_proto_vertex's HARDCODED main-cluster
 # branch-search round budget (2).  DIAGNOSTIC ONLY -- a value > 0 changes
 # reconstruction output by design.  Unset = the hardcoded budget stands.
