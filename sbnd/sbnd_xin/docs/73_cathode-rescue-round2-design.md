@@ -856,39 +856,80 @@ therefore not an accident of these 9 events; it is what the knobs do.
 ### 11.4 The owner's three questions
 
 **Q1 — 65289: two clusters in the bundle, one is STM; why is the other
-discarded? Is it because it is not identified as main?** *Yes, exactly that.*
+discarded? Is it because it is not identified as main? And is this a bug the
+four knobs introduced, or was it always there?** *Yes to the first; and it is
+**pre-existing behaviour, not a regression from the knobs**.*
+
 The two are cluster **13** (the merged main, L 248.1 cm, `STM=1`) and cluster
 **18**, a **demoted main** — a cluster that was a bundle main before the flash
-merge. `evaluate_demoted_mains` re-adds cluster 18 to the *tagger* evaluation
-list (it is scored: `TGM=false`, `STM=0`, `FC=true`), but
-`TaggerCheckNeutrino`'s candidate loop iterates only *current* mains that are
-in-window, and it reports `14 mains, 1 in-window` — cluster 13 alone. Once
-`nu_skip_cosmic` drops cluster 13 there is **no fallback**: nothing promotes a
-demoted main or an associated cluster into the empty candidate slot. So the
-survivor is discarded not on its merits but because it never entered the
-competition.
+merge. `evaluate_demoted_mains` (doc pr/20 Part I, P3) re-adds cluster 18 to the
+*tagger* evaluation list, and it is scored there: `TGM=false`, `STM=0`,
+`FC=true`. But `TaggerCheckNeutrino`'s candidate loop opens with
+`if (!cluster->get_flag(Flags::main_cluster)) continue;`
+(`clus/src/TaggerCheckNeutrino.cxx:808`), so a demoted main is never a
+*candidate*. The log's `14 mains, 1 in-window` counts cluster 13 alone.
+
+**The multi-main machinery the owner remembers does exist and is working.** Same
+loop, lines 807–870: `nu_skip_cosmic` is applied **per main**, with the comment
+saying so explicitly — *"Per-main, so a cosmic-tagged longest bundle does not
+veto a clean runner-up"* — and when two in-window mains survive the vetoes it
+keeps the longer and logs `in-window bundle cluster N ... not selected`. There is
+also a real safety valve: `nu_skip_cosmic_bundle_min_length`, doc pr/16 design A,
+set to **15 cm in SBND production** (`cfg/.../sbnd/clus.jsonnet:927`), which
+spares an untagged in-window main ≥ 15 cm from the bundle veto.
+
+None of that is touched by the four knobs. 65289 simply has **one** in-window
+main, and the merge turned that one into an STM; there was no runner-up to fall
+back to. The pre-existing asymmetry it exposes — the taggers can see demoted
+mains (P3) but the neutrino selector cannot — predates this round and is
+unchanged by it.
+
+**But note what this means for 51128 (Q3):** the 15 cm guard is exactly the
+safety valve for "a cosmic-tagged bundle-mate should not kill a real neutrino",
+and it **could not fire**, because the guard only applies to clusters that are
+still `main_cluster`. The merge demoted the 57.7 cm neutrino out of main status
+*before* the guard was reachable. So the knobs did not break the protection —
+they stepped around it. The two clusters that did reach the guard were 1.2 cm,
+far under 15.
 
 **Q2 — 78242: `track_fit-global` is missing part of the neutrino, an EM shower
-and part of the long track.** The join did extend the fitted object across the
-cathode (main cid 8 → 17, fit now spans x −102.2 → +67.5 cm). But it **broke
-fitting that previously worked**. Points per 20 cm bin in the main cluster:
+and part of the long track. Owner: "I thought the rescue would ADD the activity
+from the other TPC — why is something missing?"** Both are true at once: the far
+half *was* added, and a stretch that used to be fit is now unfit. The charge is
+not lost — the fit is. Resolved by segment (`real_cluster_id`) rather than by
+bin, which is what makes it legible:
 
-| x bin (cm) | −60,−40 | −40,−20 | −20, 0 |
-|---|---|---|---|
-| `track_fit` OFF | 74 | 63 | 61 |
-| `track_fit` ON | **17** | **0** | **0** |
-| `shower_track` OFF/ON | 472 | 288 | 316 |
+| arm | `track_fit` segments of the main cluster |
+|---|---|
+| OFF (cid 8) | `8007` x −102.2…−90.3 · `8005` x −90.3…−54.8 · **`8004` x −54.8…−1.4 (169 pts)** · `8006` x −54.8…−50.1 |
+| ON (cid 17) | `17017` x −102.2…−90.4 · `17007` x −90.4…−54.2 · **(nothing)** · `17011` x +15.5…+16.6 · **`17012` x +16.3…+67.5 (206 pts, the added far half)** |
 
-The charge is still there — `shower_track` is unchanged in those bins and
-continuous from −120 to +80 — but the fitted trajectory now has a **40 cm hole**
-on the beam side of the cathode where it used to be solid. Overall the join added
-~1490 points to `shower_track` (1680 → 3170) and only 41 to `track_fit`
-(320 → 361): PR reclassifies the newly attached material as shower rather than
-track, and loses the beam-side stretch it had already fit. This is a real
-regression in the fit, not a display artifact, and it is caused by the merge.
-(The EM shower's absence from `track_fit` is by design — showers live in
-`shower_track`; the *long-track* hole is the defect.) Note this event's far half
-is matched **857 µs** away.
+So the join **did** add the other TPC: segment `17012`, 1489 charge points and 206
+fit points over x +1.2…+67.5, which did not exist before. What vanished is
+OFF's segment `8004` — the 54 cm of the beam-side track running up to the cathode
+— and it has no counterpart in the ON arm at all.
+
+**The charge in that stretch is untouched and still labelled *track*.** In
+`shower_track` the beam-side segment is essentially identical between arms
+(`8005` x −90.6…−0.9, 1494 pts → `17007` x −90.6…−0.9, 1498 pts), and a
+track/shower split by `q` shows 472/288/316 **track** points and **zero** shower
+points in the x = −60…0 bins *in both arms*. The newly attached far half is the
+opposite: 380/550/414/145 points at x > 0, **all shower, zero track**.
+
+Net effect: the unfit region is roughly **x ∈ [−54.8, +16.3]**, about 71 cm
+straddling the cathode — i.e. **the fit no longer crosses the junction it was
+created to make.** It fits the far half, it fits the upstream part of the beam
+half, and it drops the join. Re-running pattern recognition on the merged cluster
+re-segmented it and did not reproduce `8004`.
+
+(The EM shower's absence from `track_fit` is by design — `track_fit` holds fitted
+trajectories, showers live in `shower_track`. The *long-track* hole is the
+defect.) This event's far half is matched **857 µs** away.
+
+*Correction to an earlier reading of this event:* the beam-side loss is **not**
+PR "reclassifying the material as shower" — that happens only to the newly
+attached far half. The beam-side points keep their track label and lose only
+their trajectory segment.
 
 **Q3 — 51128: the neutrino is gone; should the fix consider clusters other than
 the beam-flash-matched one?** *Yes — this is the clearest defect of the round,
@@ -980,9 +1021,16 @@ Round-3 directions, in the order the evidence supports them:
    every loss).
 2. **Require the beam-side donor to be substantial** — a `min_beam_donor_len`
    guard would decline 51128 (3.8 cm) and 281165 (21.6 cm) outright.
-3. **Give `nu_skip_cosmic`/`nu_skip_cosmic_bundle` a fallback** so a vetoed main
-   promotes the next in-window candidate instead of emptying the event (65289).
-   This one is a PR-side change and belongs to whoever owns that chain.
+3. **Do not demote a longer, untagged in-window main below a rescued join.**
+   SBND already runs the doc pr/16 design-A guard at 15 cm, which exists to stop
+   a cosmic bundle-mate killing a real neutrino; on 51128 it never got the
+   chance, because demotion removed the 57.7 cm neutrino from `main_cluster`
+   before the guard could see it. Preserving main status is a Q/L-side fix in
+   *this* component and is preferable to changing `TaggerCheckNeutrino` — no
+   PR-chain change is needed, and §11.4 Q1 shows the selector logic is sound.
+   (A separate, genuinely PR-side question — should the neutrino selector see
+   demoted mains the way the taggers already do via P3? — predates this round;
+   raise it with whoever owns that chain rather than folding it in here.)
 4. **Bound `rescue_geom_first` by |dt0|.** Unlimited, it asserts that a flash
    match hundreds of µs away is wrong; 78242 (857 µs) and 65053 (582 µs) are the
    cases to test a cap against.
