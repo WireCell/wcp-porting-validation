@@ -1,14 +1,18 @@
 # doc pr/90 — unbroken kink, wrong neutrino vertex (mcp1k 320865, 172832, 61681)
 
-**Status: investigation only. Nothing is implemented, no knob is added, no
-config is touched.** The owner reviewed a Bee link of these three events and
-asked for a root-cause investigation and a proposed solution. A follow-up
-round (§3b, §0.1) added a temporary `WCT_TEB_DUMP`-gated diagnostic dump to
-`segment_two_end_break_scan`, rebuilt, and reran evt 320865 into a scratch
-out_root to resolve the one open mechanism from the first round; the
-instrumentation was reverted from the toolkit tree immediately after capture
-(§0.1 has the diff and the freshness proof both ways). §6 lists the
-proposals and the gate each would need before any code change ships.
+**Status: §§0–7 are the original investigation (unchanged below); §8 is
+round 2, the owner-requested implementation + validation of the §6
+proposals — COMPLETE.** Outcome: both knobs implemented default-OFF
+(`teb_turn_min_arm_frac`, `teb_second_max`); knobs-off path gate-proven
+byte-identical on all 1067 events (mcp1k 1000 + nueCC48 48 + NCpi0 19) on
+the shipping binary; `teb_turn_min_arm_frac = 0.4` (v2 two-tier preference
+semantics, §8.7) validated live — the single mover in 1067 events is the
+target 320865, toward, 37.3 → 1.2 cm, zero ADVERSE — and is **SBND
+PRODUCTION ON** (§8.9). `teb_second_max` confirmed §3a's mechanism but
+measured NEGATIVE on its own motivating events (§8.5) and **stays OFF**;
+172832/61681 are unchanged in production (§8.10). A first-round hard-filter
+semantics for knob 1 FAILED live adjudication (5 ADVERSE, §8.6) and was
+replaced — the v1/v2 arms are both retained.
 
 ## 0. Repro
 
@@ -444,8 +448,280 @@ itself (separate from `break_two_end_dqdx`) would be the way to check it.
 
 ## 7. Summary table
 
+(Round-2 note: the "proposed next step" column below is round 1's; the
+executed outcome per event is §8.10.)
+
 | evt | mechanism | status | proposed next step |
 |---|---|---|---|
-| 320865 | `two_end_break` fires, breaks at a spurious 4-pt/1.94cm-arm PCA turn 47cm short of the true corner (confirmed via instrumentation, §0.1/§3b) | segmentation failure, mechanism resolved | `turn_min_arm_frac` knob (default 0/off) + targeted census + A/B (§6) |
-| 172832 | `two_end_break` gate declines (`n_long != 1`) | segmentation failure | new default-OFF gate-widening knob + its own A/B (§6) |
+| 320865 | `two_end_break` fires, breaks at a spurious 4-pt/1.94cm-arm PCA turn 47cm short of the true corner (confirmed via instrumentation, §0.1/§3b) | segmentation failure, mechanism resolved — **FIXED in §8, SBND ON** | `turn_min_arm_frac` knob (default 0/off) + targeted census + A/B (§6) |
+| 172832 | `two_end_break` gate declines (`n_long != 1`) — §3a inference CONFIRMED live in §8.5 | segmentation failure — gate-widening measured NEGATIVE (§8.5), unchanged in production | new default-OFF gate-widening knob + its own A/B (§6) |
 | 61681  | `two_end_break` gate declines; but DL vertex already near-exact | refinement-scale, not segmentation | lower priority; possibly moot once DL/topology tuning (pr/89) improves acceptance near this geometry |
+
+## 8. Round 2 — implementation + validation (owner-requested)
+
+The owner asked for the §6 fix to be implemented and validated on the
+48-event nueCC + 19-event NCpi0 + 1000-event data samples (mcp2k excluded),
+with every other changed event checked fix-vs-regression, and the knob
+flipped ON for SBND if validation passes.
+
+### 8.0 Repro
+
+```bash
+# toolkit: both knobs added (see 8.1), built with wcbuild; freshness proofs:
+#   v1 binary: libWireCellClus.so 2026-08-17 06:35:41 > last source edit 06:33:45
+#   v2 binary: libWireCellClus.so 2026-08-17 07:12:46 > last source edit 07:11:35
+# unit tests: ./build/clus/wcdoctest-clus -> 210/210 cases PASS on both binaries
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+export PR_JOBS=32 PR_EXTRA_STAGES=pr_display SBND_DL_VTX_HARVEST=true
+# knobs-off arms (byte-identity gate legs), all three samples:
+./run_pr_chain_batch.sh work-mcp1k-cb0805   work-mcp1k-pr90off   data
+./run_pr_chain_batch.sh work-nuecc48-cb0805 work-nuecc48-pr90off data
+./run_pr_chain_batch.sh work-ncpi0-cb0805   work-ncpi0-pr90off   data
+python3 scripts/analysis/pr64/pr64_gate.py work-<sample>-harv3 work-<sample>-pr90off
+# round-1 (v1 filter semantics, §8.6 — FAILED adjudication, arms retained):
+SBND_TEB_TURN_MIN_ARM_FRAC=0.4 ./run_pr_chain_batch.sh work-<sample>-cb0805 work-<sample>-pr90on data
+python3 scripts/analysis/pr64/pr64_gate.py work-<sample>-pr90off work-<sample>-pr90on
+python3 scripts/pr90_movers.py work-mcp1k-pr90off work-mcp1k-pr90on   # --tags harv3 default
+# round-2 (v2 two-tier semantics, §8.7-8.8 — the shipped binary):
+./run_pr_chain_batch.sh work-<sample>-cb0805 work-<sample>-pr90off2 data
+SBND_TEB_TURN_MIN_ARM_FRAC=0.4 ./run_pr_chain_batch.sh work-<sample>-cb0805 work-<sample>-pr90on2 data
+python3 scripts/analysis/pr64/pr64_gate.py work-<sample>-harv3  work-<sample>-pr90off2
+python3 scripts/analysis/pr64/pr64_gate.py work-<sample>-pr90off2 work-<sample>-pr90on2
+python3 scripts/pr90_movers.py work-mcp1k-pr90off2 work-mcp1k-pr90on2
+# smoke arms: work-mcp1k-pr90smoke1 (v1, frac=0.45 + secmax=15, 3 evts),
+# work-mcp1k-pr90smoke2 (v1, frac=0.4, 3 evts),
+# work-mcp1k-pr90smoke3 (v2, frac=0.4, 13 evts = the 11 v1 movers + 172832 + 61681)
+```
+
+### 8.1 What was implemented (toolkit, both default-OFF)
+
+**Knob 1 — `teb_turn_min_arm_frac`** (dimensionless fraction of
+`teb_turn_baseline`, C++ default 0 = legacy). In route R2's `k_turn` argmax
+(`clus/src/PRSegmentFunctions.cxx`, inside `segment_two_end_break_scan`),
+an index's arms are "well-formed" when BOTH PCA arms' achievable arclength
+(bounded by the segment end, beyond the skirt) reaches
+`frac * turn_baseline` — closed-form from cumulative arclength
+(`cum[k] - skirt` / `L - cum[k] - skirt`), no PCA re-collection needed.
+
+The knob went through two semantics this round; the SHIPPED one is the
+second:
+
+- **v1 (§8.6, tested and rejected)**: hard eligibility filter — starved
+  indices simply excluded from the argmax.
+- **v2 (§8.7, shipped)**: two-tier preference — a first argmax pass runs
+  over well-formed indices only, and its winner is kept ONLY if it clears
+  `teb_turn_angle` on its own; otherwise the legacy unrestricted argmax
+  (starved candidates included) stands unchanged.
+
+Either way only R2's argmax inside this scan is affected; R1 (dip),
+`segment_search_kink`, and the shared `segment_wide_turn_angle` helper are
+untouched (§4's rejection of any blanket rule stands).
+
+**Knob 2 — `teb_second_max`** (cm, C++ default 0 = legacy). The §6
+gate-widening: `break_two_end_dqdx`'s entry gate
+(`clus/src/NeutrinoPatternBase.cxx`) tolerates additional long
+(`> teb_stub_max`) segments as long as exactly ONE segment exceeds this cap
+(that one becomes the candidate). 0 = legacy strict `n_long != 1` gate.
+
+Threading follows the pr/86 five-layer pattern: `TwoEndBreakOptions` field
+(knob 1) / caller-only member (knob 2, like `teb_stub_max`);
+`TaggerCheckNeutrino` members + `configure()` get + `default_configuration()`
+echo + cm→internal copy; `PatternAlgorithms` mirrors;
+`doctest_clus_knob_defaults.cxx` default-OFF checks (both keys); jsonnet
+args + key-suppression in `cfg/pgrapher/common/clus.jsonnet`, both SBND
+`clus.jsonnet` layers, and `wct-pr-perevt.jsonnet` TLA (default null).
+Runner escapes `SBND_TEB_TURN_MIN_ARM_FRAC` / `SBND_TEB_SECOND_MAX` added to
+`run_pr_chain_batch.sh`. The existing `break_two_end_dqdx` debug log line
+gains `nlong=/armfrac=/secmax=` fields (log-only, not gated content).
+
+### 8.2 Off-path proofs
+
+- **Compiled-config**: full 15-stage runner pipeline compiled pre-change vs
+  post-change with knobs off — `cmp` **byte-identical**; the
+  `abtest/compile_all_cfg.sh` + `cmp_cfg.sh` sweep over all 16 live
+  SBND/PDHD/PDVD jobs also PASSes (0 normdiff everywhere). With the knob
+  TLAs set, exactly the two new keys appear, once each. (Note:
+  `compile_all_cfg.sh`'s own `sbnd_pr` slice omits the
+  `tagger_check_neutrino` stage from `pipeline_names`, so the full-pipeline
+  compile above is the one that actually exercises the new keys.)
+- **Unit tests**: `./build/clus/wcdoctest-clus` 210/210 cases PASS,
+  including the two new default-OFF knob checks.
+- **Byte-identity gate (the §6 requirement)**: `pr64_gate.py`
+  (mabc-pr.zip + pctree tar member-content hashes + exact-byte nusel tsv)
+  vs the harv3 production arms, knobs off: v1 binary **1067/1067 identical,
+  0 movers** (arms `work-{mcp1k,nuecc48,ncpi0}-pr90off`); shipping v2
+  binary gate in §8.8 (arms `work-*-pr90off2`). The full-pipeline
+  compiled-config `cmp` was re-verified byte-identical after the v2 edits.
+
+### 8.3 Census of currently-firing events (harv3 arms, 1067 logs)
+
+`grep -a "BROKE cluster" work-*-harv3/pr_evt*/wct_pr_evt*.log`:
+**38 events fire** `break_two_end_dqdx` in production (37 mcp1k, 1 NCpi0,
+0 nueCC48). By route: 24 route-1 (dQ/dx dip) — knob 1 cannot touch these
+(R1 is evaluated first and its dip index is the break) — and 14 route-2
+(turn). Of the 14 route-2 breaks, **11 sit on a starved arm** (shorter arm
+4.3–6.1 cm — the same signature as 320865's idx 8): evts 283905, 291064,
+281214, 285443, 59261, 59247, 319611, 320865, 64921, 64503, 72586. The
+three healthy route-2 breaks have shorter arms of 35.9 cm (278420),
+18.4 cm (172942) and 69.0 cm (349461).
+
+**Operating point** chosen from this table: `frac = 0.4` (required
+achievable span ≥ 14 cm of the 35 cm baseline, i.e. break index ≥ 17 cm
+from both ends). This excludes every starved-arm break (≤ 6.1 cm, margin
+> 2×) while keeping the borderline-but-genuine 172942 break (18.4 cm arm =
+15.4 cm span; the §6 illustrative 0.7 — and even 0.45 — would have clipped
+it) and admitting 172832's true corner (21.6 cm from its far end). The §6
+worry that 0.7 was too tight was real.
+
+### 8.4 Smoke, shipping config (`frac=0.4` only) — `work-mcp1k-pr90smoke2`
+
+| evt | d(main vtx, hand-scan truth) harv3 | pr90smoke2 | note |
+|---|---|---|---|
+| 320865 | 37.29 cm | **1.22 cm** | break idx 8 → **84** (s=52.4 cm, turn 33.1°, arms 52.4/146.3 cm) — the §3b true-corner region |
+| 172832 | 20.35 cm | 20.35 cm (byte-identical) | gate still declines (knob 2 off) — knob independence confirmed |
+| 61681 | 4.36 cm | 4.36 cm (byte-identical) | same |
+
+### 8.5 Knob 2 (`teb_second_max=15`) smoke — NEGATIVE, stays OFF
+
+`work-mcp1k-pr90smoke1` (frac=0.45 + secmax=15) did confirm §3a's inferred
+mechanism directly: with the cap set, both 172832 and 61681 now enter the
+pass (`nlong=2` in the new log field) — the gate WAS the blocker. But after
+admission the scan's own route selection does not find the true corner:
+
+- **172832**: R2's wide-baseline turn at the eligible indices tops out at
+  18.3° < the 25° accept, so route R1 wins with a dQ/dx dip at fit idx 140
+  (84 cm from the front; truth corner is ~106 cm in). Main vertex moves
+  20.35 → **21.65 cm** from truth — **ADVERSE** by the pr/78/79 1 cm bar
+  (+1.30 cm).
+- **61681**: R1 dip at idx 166 (6.1 cm from the far end); 4.36 → 4.64 cm —
+  churn within the bar, no benefit (§5 already called this event
+  refinement-scale).
+
+Per the pr/81 precedent (measured-negative, no live A/B spent), knob 2
+ships implemented but **default OFF and NOT flipped**; fixing the
+172832 class needs different point-selection physics after admission (the
+dip route dominates and its deepest dip is not the corner), not just the
+gate. The knob 1 live A/B below therefore runs with `frac=0.4` ONLY.
+
+### 8.6 Live A/B round 1 — v1 filter semantics FAIL adjudication
+
+Arms `work-{mcp1k,nuecc48,ncpi0}-pr90on` (v1 binary, `frac=0.4`), gated
+against the pr90off arms with `pr64_gate.py`: **11 movers, all mcp1k, all
+inside the §8.3 starved-arm census set** (nueCC48 48/48 and NCpi0 19/19
+identical — footprint containment exactly as predicted). But the per-event
+outcome was NOT "the break moves to the healthy corner": for 10 of the 11
+the restricted argmax topped out below the 25° accept, so the v1 filter
+**removed the break entirely**; only 320865 got a moved break (idx 84,
+33.1°).
+
+`pr90_movers.py` vs the harv3-epoch labels (7 of 11 labelled):
+
+| evt | moved (cm) | click→main off → on | verdict | note |
+|---|---|---|---|---|
+| 291064 | 159.36 | 159.36 → **0.00** | toward | removing the spurious starved break (idx 7, 27.4°) let the main vertex land exactly on the click; numu 1.75→3.17 |
+| 320865 | 38.43 | 37.29 → **1.22** | toward | the §3b fix proper |
+| 64503 | 43.61 | 0.00 → 43.61 | **ADVERSE** | b1=0.00 — owner-approved vertex WAS the starved break (idx 68, arm 5.5 cm) |
+| 319611 | 3.31 | 0.00 → 3.31 | **ADVERSE** | b1=0.00, and cosmict_flag flips 0→1 |
+| 59247 | 1.12 | 0.00 → 1.12 | **ADVERSE** | b1=0.00, marginal (+0.12 cm over the bar) |
+| 59261 | 4.47 | 83.34 → 87.68 | **ADVERSE** | both far off truth either way |
+| 72586 | 3.53 | 297.40 → 300.35 | **ADVERSE** | both hopeless (cosmic-scale) |
+
+Unlabelled movers 281214/283905/285443/64921: break removed, main vertex
+unmoved (dvtx = 0.0), Enu shifts up to 210 MeV.
+
+**Verdict: FAIL** (5 ADVERSE vs the zero-ADVERSE bar). The decisive
+evidence is the three b1=0.00 rows: **genuine, owner-approved corners DO
+sit 4–5.5 cm from a segment end with starved PCA arms** — indistinguishable
+by span from 320865's spurious idx 8 (5.3 cm). This is §4's 61681 lesson
+recurring in live data: span is not a validity discriminator. The v1 arms
+are retained (`work-*-pr90on`) as the record of this negative.
+
+### 8.7 v2: two-tier preference (shipped semantics)
+
+What actually separates the fixable class from the harmful one in the §8.6
+table is not the starved candidate itself but **whether a well-formed
+competitor above threshold exists**: 320865's healthy-arm argmax reaches
+33.1° ≥ 25°, while for all five ADVERSE events (and 291064) the healthy-arm
+argmax tops out at 4.3–20.8° < 25°. So v2 keeps the starved-arm candidates
+as the fallback and only PREFERS the well-formed winner when it clears
+`teb_turn_angle` on its own:
+
+```cpp
+if (opt.turn_min_arm_frac > 0) {
+    // pass 1: argmax over indices with both arms >= frac * baseline achievable
+    ...
+    if (turn_max < opt.turn_angle) { k_turn = -1; turn_max = 0; }  // no well-formed corner
+}
+if (k_turn < 0) {
+    // pass 2: legacy unrestricted argmax (byte-identical when knob off)
+    ...
+}
+```
+
+Consequences, verified on the 13-event smoke `work-mcp1k-pr90smoke3`
+(11 v1 movers + 172832 + 61681, v2 binary, `frac=0.4`): **12/13
+byte-identical to pr90off; the only mover is 320865** (break idx 8 → 84).
+All three owner-approved near-end breaks (64503/319611/59247) and 291064's
+fallback break are preserved bit-for-bit. The cost, stated explicitly:
+**291064's §8.6 fix is forgone** — its class (spurious starved break with
+NO healthy corner above threshold) cannot be told apart from
+64503/319611/59247's class (genuine starved break, same signature) by any
+geometry this round measured; killing those breaks is off the table, so
+291064 stays at production behavior (159 cm off, as today).
+
+### 8.8 Live A/B round 2 — v2, `frac=0.4`, 1067 events: PASS
+
+Arms `work-{mcp1k,nuecc48,ncpi0}-pr90off2` / `-pr90on2`, both on the
+shipping v2 binary, `pr64_gate.py` throughout:
+
+- **Knobs-off byte-identity vs harv3 production**: mcp1k 1000/1000,
+  nueCC48 48/48, NCpi0 19/19 — **1067/1067 identical, 0 movers**. The v2
+  restructure of the argmax loop leaves the knob-off path bit-exact.
+- **Knob-on vs knobs-off**: **1066/1067 identical; the single mover IS the
+  target event** (mcp1k 320865, `mabc-pr.zip`; nueCC48 and NCpi0 fully
+  untouched).
+- **Adjudication** (`pr90_movers.py`, harv3-epoch labels, 407 compared):
+  `evt 320865 moved 38.43 cm, click→main 37.29 → 1.22, toward` —
+  **1 mover, 0 ADVERSE**. Exit 0.
+- **Score deltas** (`pr83_ab_compare.py`): only 320865 changes — numu
+  2.83→3.48, nue −15.00→−4.30, Enu 674→754 MeV, cosmict unchanged.
+
+### 8.9 Flip decision: `teb_turn_min_arm_frac = 0.4` SBND PRODUCTION ON
+
+All §6-required gates held (byte-identical off on the full 1067-event
+manifest, live A/B with the mover set fully adjudicated, zero ADVERSE, the
+one mover is the target event moving onto the click), so per the owner's
+request the knob is ON in SBND production:
+`cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet` TLA default
+`teb_turn_min_arm_frac = 0.4` (cfg-only commit; escapes
+`SBND_TEB_TURN_MIN_ARM_FRAC` / `-A` restore legacy).
+
+- Compiled-config proof: full-pipeline compile of the flipped config vs the
+  pre-change tree differs by exactly one line —
+  `+ "teb_turn_min_arm_frac": 0.4`.
+- Bare-config verification: evt 320865 rerun with NO env overrides
+  (`work-mcp1k-pr90bare`) is member-hash-identical to the validated
+  `pr90on2` arm (mabc-pr.zip rollup `3e0c2ccf…`, pctree 425 members
+  `a3455f2a…`, nusel byte-identical) — bare run == production == the
+  validated arm (doc 68 single-source rule).
+
+**NOT flipped**: `teb_second_max` stays OFF (§8.5 negative). Its
+production default is C++ 0 / jsonnet null — byte-identical, escape-only.
+
+### 8.10 Where this leaves the three motivating events, and the residual class
+
+| evt | production before | production after the flip | status |
+|---|---|---|---|
+| 320865 | vertex 37.3 cm off truth (spurious idx-8 break) | **1.2 cm** (break at the true corner) | **FIXED, validated live** |
+| 172832 | 20.4 cm off (gate declines) | unchanged | NOT fixed — §8.5: admission alone breaks at the wrong dip (ADVERSE); needs point-selection physics after admission |
+| 61681 | 4.4 cm off (gate declines; DL near-exact) | unchanged | refinement-scale (§5), deliberately untouched |
+
+Residual classes for a future round, with the §8.6 live evidence attached:
+(a) 172832-class — gate-widening admits the segment but R1's deepest dip
+is not the corner and R2's wide turn is below threshold there; (b)
+291064-class — a spurious starved-arm break with NO healthy corner above
+threshold; killing it fixed 291064 completely (159 → 0 cm) but the same
+kill breaks the owner-approved b1=0 vertices of 64503/319611/59247, so a
+kill rule needs a discriminator beyond arm span (dQ/dx template quality at
+the candidate? DL-vertex confirmation?). Both classes are documented
+negatives, not proposals.

@@ -767,6 +767,21 @@ for _pr48 in \
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
 done
 unset _pr48 _env _key _val
+# doc pr/90 round 2: two refinements of the two_end_break pass (mcp1k
+# 320865/172832/61681 -- unbroken kink, wrong nu vertex).
+# teb_turn_min_arm_frac: route R2's turn argmax only considers indices whose
+# PCA arms can each span this fraction of teb_turn_baseline (dimensionless).
+# teb_second_max: the entry gate tolerates extra >stub prongs when exactly
+# one segment exceeds this cap (cm).  Numeric TLAs, unset/empty omits
+# (jsonnet default null => C++ default 0 = legacy => byte-identical).
+#   SBND_TEB_TURN_MIN_ARM_FRAC
+#   SBND_TEB_SECOND_MAX
+if [ -n "${SBND_TEB_TURN_MIN_ARM_FRAC:-}" ]; then
+    CATH_TLA+=(--tla-code "teb_turn_min_arm_frac=${SBND_TEB_TURN_MIN_ARM_FRAC}")
+fi
+if [ -n "${SBND_TEB_SECOND_MAX:-}" ]; then
+    CATH_TLA+=(--tla-code "teb_second_max=${SBND_TEB_SECOND_MAX}")
+fi
 # doc pr/49: own-blob-coverage down-weighting in the trajectory fit's 2D
 # charge association (18255-57441 V-plane projection ghost).  NUMERIC knob,
 # not tri-state: unset = cfg default; any value is passed through verbatim
