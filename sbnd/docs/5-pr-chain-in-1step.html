@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PR chain in the 1-step workflow</title>
+<style>
+:root{
+  --bg:#fbfbfa; --fg:#1c1c1a; --muted:#63635e; --rule:#dededa;
+  --card:#ffffff; --code-bg:#f2f2ef; --accent:#2f6f4f; --warn:#8a4b1c;
+  --bad:#9c2b2b; --ok:#2f6f4f; --new:#3a4fa0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16171a; --fg:#e6e6e2; --muted:#9b9b95; --rule:#2f3237;
+    --card:#1d1f23; --code-bg:#22252a; --accent:#7fc39b; --warn:#e0a56a;
+    --bad:#e88b8b; --ok:#7fc39b; --new:#96aaf0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16171a; --fg:#e6e6e2; --muted:#9b9b95; --rule:#2f3237;
+  --card:#1d1f23; --code-bg:#22252a; --accent:#7fc39b; --warn:#e0a56a;
+  --bad:#e88b8b; --ok:#7fc39b; --new:#96aaf0;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 24px 120px}
+h1{font-size:1.9rem;line-height:1.25;margin:0 0 .3em;letter-spacing:-.01em}
+h2{font-size:1.3rem;margin:2.6em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--rule)}
+h3{font-size:1.02rem;margin:1.8em 0 .5em}
+h4{font-size:.94rem;margin:1.4em 0 .4em;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p{margin:.7em 0}
+.lede{color:var(--muted);font-size:1.05rem;margin-bottom:0}
+code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{background:var(--code-bg);padding:.1em .35em;border-radius:3px;font-size:.87em}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:6px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+pre code{background:none;padding:0;font-size:1em}
+.scroll{overflow-x:auto;margin:1em 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:560px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+   border-bottom:1.5px solid var(--rule);white-space:nowrap}
+td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem}
+tr.new td{background:color-mix(in srgb, var(--new) 9%, transparent)}
+.tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.05em;
+     padding:.1em .45em;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.tag.have{color:var(--ok);border:1px solid var(--ok)}
+.tag.miss{color:var(--bad);border:1px solid var(--bad)}
+.tag.add{color:var(--new);border:1px solid var(--new)}
+.tag.warn{color:var(--warn);border:1px solid var(--warn)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin:1.2em 0}
+.card h3{margin-top:0}
+.note{border-left:3px solid var(--warn);padding:2px 0 2px 14px;margin:1.2em 0;color:var(--fg)}
+.note strong{color:var(--warn)}
+.key{border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin:1.2em 0}
+.key strong{color:var(--accent)}
+ul,ol{padding-left:1.4em;margin:.6em 0}
+li{margin:.3em 0}
+.meta{color:var(--muted);font-size:.83rem;margin-top:.4em}
+.cols{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:800px){.cols{grid-template-columns:1fr 1fr}}
+figure{margin:1.4em 0}
+figcaption{color:var(--muted);font-size:.8rem;margin-top:.5em}
+hr{border:0;border-top:1px solid var(--rule);margin:2.5em 0}
+.small{font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Running the PR chain in our 1-step workflow</h1>
+<p class="lede">A component-level map of Xin's pattern-recognition (PR) chain, what our 1-step
+<code>wcls-img-clus-matching-xin</code> job already runs, and exactly what is missing to close the gap.</p>
+<p class="meta">Reference: <code>sbnd_xin/docs/pr/41_pr-chain-overview.md</code> ·
+toolkit <code>ap-yuhw</code> @ <code>06a02ccb</code> · install <code>/exp/sbnd/app/users/yuhw/opt</code>
+(libs dated 2026-08-06) · written 2026-08-17</p>
+
+<div class="key">
+<strong>The headline.</strong> Our 1-step job <em>already instantiates the PR node</em> — the same
+<code>MultiAlgBlobClustering</code> instance (<code>clus_pr</code>) that Xin's 2-step chain runs — and already
+executes 8 of its 15 production stages. Turning on the full chain (neutrino tagger, both BDT scorers,
+the ROOT writers) is a <strong>5-name edit to one list</strong> in
+<code>wcls-img-clus-matching-xin.jsonnet</code>. Every C++ component it needs is compiled into our
+installed <code>libWireCellClus.so</code> / <code>libWireCellRoot.so</code>. Three environment-level things
+are genuinely missing, and they are listed in <a href="#gaps">§7</a>.
+</div>
+
+<h2 id="chains">1. The two chains</h2>
+
+<p>Xin's chain is split at the Q/L matching boundary and hands off through files. Ours is one
+<code>lar</code> process that keeps the whole thing in memory.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>Xin's 2-step</th><th>Our 1-step</th></tr></thead>
+<tbody>
+<tr><td><strong>Stage A</strong></td>
+    <td>imaging + per-APA clustering + Q/L matching<br><span class="small"><code>run_ql_evt.sh</code> →
+        <code>wct-clus-matching-standalone.jsonnet</code></span></td>
+    <td rowspan="2">one graph: imaging → clustering → Q/L → PR → labeler<br>
+        <span class="small"><code>wcls-img-clus-matching-xin.fcl</code> →
+        <code>wcls-img-clus-matching-xin.jsonnet</code></span></td></tr>
+<tr><td><strong>Stage B</strong></td>
+    <td>PR tail on the persisted tree<br><span class="small"><code>run_pr_chain_batch.sh</code> →
+        <code>wct-pr-perevt.jsonnet</code></span></td></tr>
+<tr><td><strong>Handoff</strong></td>
+    <td class="mono">ql_evt&lt;ID&gt;/pctree-evt&lt;ID&gt;.tar.gz<br>ql_evt&lt;ID&gt;/opflash_apa{0,1}.tar.gz</td>
+    <td>in-memory <code>ITensorSet</code> on a pgraph edge</td></tr>
+<tr><td><strong>Charge input</strong></td>
+    <td>dumped <code>.npz</code> via <code>ClusterFileSource</code></td>
+    <td><code>recob::Wire</code> via <code>wclsCookedFrameSource</code> (artROOT direct)</td></tr>
+<tr><td><strong>Light input</strong></td>
+    <td>dumped tar.gz via <code>TensorFileSource</code></td>
+    <td><code>recob::OpFlash</code> via <code>wclsOpFlashSource</code> (artROOT direct)</td></tr>
+<tr><td><strong>Driver</strong></td>
+    <td><code>bash</code> per event, <code>wire-cell -c</code>, <code>PR_JOBS</code> parallelism</td>
+    <td><code>lar -n 1 --nskip k</code> per event, taskset-pinned worker pool</td></tr>
+<tr><td><strong>Truth labeling</strong></td>
+    <td>none in-chain</td>
+    <td><code>wclsTensorSetLabeler</code> (needs the art event → 1-step only)</td></tr>
+</tbody></table>
+</div>
+
+<p>The 1-step's structural advantage is that the labeler and the PR taggers see the same
+in-memory tree, so truth labels and tagger verdicts are attached to the identical clustering. Its
+structural cost is that per-event jsonnet TLAs are unavailable — the config is compiled once per
+<code>lar</code> process — which is where the RSE problem in <a href="#gaps">§7</a> comes from.</p>
+
+<h2 id="graph">2. WCT graph components in the 1-step, in order</h2>
+
+<p>These are pgraph <em>nodes</em>. Read them as the top-level dataflow; the clustering algorithms
+themselves are not nodes, they are visitors configured inside the three MABC nodes (<a href="#cm">§3</a>).</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>Component type</th><th>Instance</th><th>×</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="mono">wclsCookedFrameSource</td><td class="mono">sigs</td><td>1</td>
+    <td>art <code>recob::Wire</code> (<code>simtpc2d:dnnsp</code> / <code>sptpc2d:gauss</code>) → <code>IFrame</code>, ×50 scale</td></tr>
+<tr><td>2</td><td class="mono">FrameFanout</td><td class="mono">sig_fanout</td><td>1</td>
+    <td>1 frame → 2 per-anode frames, retagging <code>gauss</code>→<code>gauss&lt;ident&gt;</code></td></tr>
+<tr><td>3</td><td class="mono">wclsOpFlashSource</td><td class="mono">tpc0, tpc1</td><td>2</td>
+    <td>art <code>recob::OpFlash</code> → <code>ITensorSet</code> [nflash × 313]</td></tr>
+<tr><td>4</td><td colspan="2">imaging pipe — <code>img.jsonnet per_anode('multi-3view', full_deghost=true)</code></td><td>2</td>
+    <td><code>ChargeErrorFrameEstimator</code>, <code>CMMModifier</code>, <code>FrameQualityTagging</code>,
+        <code>FrameMasking</code>, <code>MaskSlices</code>, <code>GridTiling</code>,
+        <code>BlobClustering</code>, <code>BlobGrouping</code>, <code>ChargeSolving</code>×3,
+        <code>LocalGeomClustering</code>, <code>ProjectionDeghosting</code>×3,
+        <code>InSliceDeghosting</code>×3, <code>GlobalGeomClustering</code>.
+        <strong>2 output ports</strong>: 0 = live (active + multi-active), 1 = dead (masked 2-view)</td></tr>
+<tr><td>5</td><td class="mono">PointTreeBuilding</td><td class="mono">nodeNo…-0</td><td>2</td>
+    <td>ICluster live+dead → point-cloud tree; <code>BlobSampler</code> live (<code>stepped</code>) + dead (<code>center</code>);
+        injects the hand-declared dead Y-Z region</td></tr>
+<tr><td>6</td><td class="mono">MultiAlgBlobClustering</td><td class="mono">…-0 (per-APA)</td><td>2</td>
+    <td>16 clustering modules — <a href="#cm-apa">§3.1</a></td></tr>
+<tr><td>7</td><td class="mono">FlashTensorToOpticalPCs</td><td class="mono">flash_attach-N</td><td>2</td>
+    <td>port 0 cluster tree + port 1 opflash matrix → tree with flash PCs attached</td></tr>
+<tr><td>8</td><td class="mono">QLMatching</td><td class="mono">matching_joint</td><td>1</td>
+    <td>joint charge/light matching over both APAs; merges the per-APA trees; sets
+        <code>cluster_t0</code>, <code>matched_flash_gid</code>, <code>flag_main_cluster</code>,
+        <code>lm_flag</code>. Uses <code>semi-analytical-sbnd.json</code>, <code>drift_speed</code> 1.563 mm/µs</td></tr>
+<tr><td>9</td><td class="mono">MultiAlgBlobClustering</td><td class="mono">clus_all_apa</td><td>1</td>
+    <td>10 clustering modules, <code>premerged=true</code> — <a href="#cm-all">§3.2</a></td></tr>
+<tr><td>10</td><td class="mono">MultiAlgBlobClustering</td><td class="mono">clus_pr</td><td>1</td>
+    <td><strong>the PR node.</strong> Today 10 modules of the 15-stage production pipeline —
+        <a href="#cm-pr">§3.3</a></td></tr>
+<tr><td>11</td><td class="mono">wclsTensorSetLabeler</td><td class="mono">clus_all_apa</td><td>1</td>
+    <td>larwirecell <code>WireCellAIML</code>: MC truth association (SCE fwd + diffusion smearing),
+        nugraph HDF5, tagger Bee sets, RSE stamping</td></tr>
+<tr><td>12</td><td class="mono">TensorFileSink</td><td class="mono">clus_all_apa</td><td>1</td>
+    <td>terminal; writes <code>trash-all-apa.tar.gz</code> (labeled pctree, <code>dump_mode=false</code>)</td></tr>
+<tr><td>—</td><td class="mono">BeeSink</td><td class="mono">mabc_shared</td><td>1</td>
+    <td>shared sink: nodes 6 and 9 write into one <code>mabc.zip</code>.
+        <span class="tag warn">note</span> node 10 does <em>not</em> — see <a href="#gaps">§7 G4</a></td></tr>
+</tbody></table>
+</div>
+
+<pre><code>sigs ──FrameFanout──┬── img[0] ═(live,dead)═ PTB[0] ─ MABC[0] ─ flash_attach[0] ─┐
+                    └── img[1] ═(live,dead)═ PTB[1] ─ MABC[1] ─ flash_attach[1] ─┤
+opflash[n] ─────────────────────────────────────────────(port 1) flash_attach[n] │
+                                                                                 ▼
+                        matching_joint (QLMatching) ── clus_all_apa (MABC) ── clus_pr (MABC)
+                                                                                 │
+                                          labeler ── TensorFileSink (trash-all-apa.tar.gz)
+</code></pre>
+
+<h2 id="cm">3. CM modules called by each MABC</h2>
+
+<p>A <code>MultiAlgBlobClustering</code> node holds an ordered <code>pipeline:</code> list of
+<code>IClusteringMethod</code> / visitor components. All three of our MABC instances are configured
+from <code>cfg/pgrapher/common/clus.jsonnet</code>'s <code>clustering_methods()</code> factory, wrapped by
+<code>cfg/pgrapher/experiment/sbnd/clus.jsonnet</code>.</p>
+
+<h3 id="cm-apa">3.1 Per-APA MABC — <code>clus_per_face</code>, 16 modules</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>jsonnet</th><th>Component type</th><th>SBND operating point</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="mono">pointed()</td><td class="mono">ClusteringPointed</td><td>—</td></tr>
+<tr><td>2</td><td class="mono">live_dead()</td><td class="mono">ClusteringLiveDead</td><td><code>dead_live_overlap_offset=2</code></td></tr>
+<tr><td>3</td><td class="mono">extend()</td><td class="mono">ClusteringExtend</td><td><code>flag=4</code>, 60 cm, <code>length_2_cut</code> 15 cm, <code>num_dead_try=1</code></td></tr>
+<tr><td>4</td><td class="mono">regular('-one')</td><td class="mono">ClusteringRegular</td><td>60 cm, no extend</td></tr>
+<tr><td>5</td><td class="mono">regular('_two')</td><td class="mono">ClusteringRegular</td><td>30 cm, extend on</td></tr>
+<tr><td>6</td><td class="mono">parallel_prolong()</td><td class="mono">ClusteringParallelProlong</td><td>35 cm</td></tr>
+<tr><td>7</td><td class="mono">close()</td><td class="mono">ClusteringClose</td><td>1.2 cm</td></tr>
+<tr><td>8</td><td class="mono">extend_loop()</td><td class="mono">ClusteringExtendLoop</td><td><code>num_try=3</code></td></tr>
+<tr><td>9</td><td class="mono">separate()</td><td class="mono">ClusteringSeparate</td><td><code>max_hull_points=100000</code>, <code>sbnd_boundary_tag</code>, <code>vertex_veto</code> <strong>ON</strong> (doc pr/15)</td></tr>
+<tr><td>10</td><td class="mono">connect1()</td><td class="mono">ClusteringConnect1</td><td><code>iso_max_dis=5 cm</code> (SBND-only cap)</td></tr>
+<tr><td>11</td><td class="mono">deghost()</td><td class="mono">ClusteringDeghost</td><td>—</td></tr>
+<tr><td>12</td><td class="mono">examine_x_boundary()</td><td class="mono">ClusteringExamineXBoundary</td><td>—</td></tr>
+<tr><td>13</td><td class="mono">protect_overclustering()</td><td class="mono">ClusteringProtectOverclustering</td><td>—</td></tr>
+<tr><td>14</td><td class="mono">neutrino()</td><td class="mono">ClusteringNeutrino</td><td><code>protect_iso_band</code> ON, <code>xext=20 cm</code> (doc pr/18)</td></tr>
+<tr><td>15</td><td class="mono">isolated()</td><td class="mono">ClusteringIsolated</td><td><code>length_cut=15 cm</code>, <code>save_assoc_id=true</code>; cathode guard OFF (doc pr/19)</td></tr>
+<tr><td>16</td><td class="mono">examine_bundles()</td><td class="mono">ClusteringExamineBundles</td><td>geometric (no flash T0 yet)</td></tr>
+</tbody></table>
+</div>
+
+<h3 id="cm-all">3.2 All-APA MABC — <code>clus_all_apa</code>, 10 modules (post-Q/L)</h3>
+<p class="small">Runs after matching, so every cluster carries <code>cluster_t0</code>. The merge steps all
+set <code>use_flash_t0=true</code>: they only merge clusters coincident in flash time.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>jsonnet</th><th>Component type</th><th>SBND operating point</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="mono">switch_scope()</td><td class="mono">ClusteringSwitchScope</td><td><code>T0Correction</code> → <code>x_t0cor</code> scope (<code>use_sce=false</code> in <em>both</em> realities)</td></tr>
+<tr><td>2</td><td class="mono">extend()</td><td class="mono">ClusteringExtend</td><td><code>flag=4</code>, 60 cm, flash-T0 gated</td></tr>
+<tr><td>3</td><td class="mono">regular('1')</td><td class="mono">ClusteringRegular</td><td>60 cm</td></tr>
+<tr><td>4</td><td class="mono">regular('2')</td><td class="mono">ClusteringRegular</td><td>30 cm</td></tr>
+<tr><td>5</td><td class="mono">parallel_prolong()</td><td class="mono">ClusteringParallelProlong</td><td>35 cm</td></tr>
+<tr><td>6</td><td class="mono">close()</td><td class="mono">ClusteringClose</td><td>1.2 cm</td></tr>
+<tr><td>7</td><td class="mono">extend_loop()</td><td class="mono">ClusteringExtendLoop</td><td><code>num_try=3</code></td></tr>
+<tr><td>8</td><td class="mono">cathode_connect()</td><td class="mono">ClusteringCathodeConnect</td><td>ON. <code>tip_touch_cut=4 cm</code>, <code>crosser_pca_angle=20°</code> (doc pr/20)</td></tr>
+<tr><td>9</td><td class="mono">cathode_bundle_rescue()</td><td class="mono">ClusteringCathodeBundleRescue</td><td>ON + <code>rescue_unmatched</code> ON (doc pr/14, pr/17); fragment adoption OFF</td></tr>
+<tr><td>10</td><td class="mono">examine_bundles()</td><td class="mono">ClusteringExamineBundles</td><td><code>use_flash_t0</code>, <code>flags_from_longest</code>; collapses each flash bundle to one cluster</td></tr>
+</tbody></table>
+</div>
+<p class="small">Our entry config additionally sets <code>save_real_cluster_id=true</code> and
+<code>save_assoc_cluster_id=true</code> here, so the flash-merge and isolated-grouping provenance
+survives serialization — without it the PR stage's <code>unmerge_bundle</code> logs "no flash-merge
+provenance … not split" and the taggers judge merged-across-the-cathode geometry.</p>
+
+<h3 id="cm-pr">3.3 PR MABC — <code>clus_pr</code>: what we run vs. the 15-stage production chain</h3>
+<p>This is the crux. Xin's <code>run_pr_chain_batch.sh</code> passes a 15-name
+<code>pipeline_names</code>; our <code>wcls-img-clus-matching-xin.jsonnet:180</code> passes 8 names. The
+production default in <code>wct-pr-perevt.jsonnet</code> itself is 10 (it includes
+<code>protect_bundle</code> + <code>steiner_refresh</code>).</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>jsonnet name</th><th>Component type</th><th>1-step today</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="mono">switch_scope</td><td class="mono">ClusteringSwitchScope</td><td><span class="tag have">yes</span></td>
+  <td>re-establish the active-volume scope filter + T0 correction (also what re-creates the in-scope set the Bee dump keys on)</td></tr>
+<tr><td>2</td><td class="mono">unmerge_bundle</td><td class="mono">ClusteringUnmergeBundle</td><td><span class="tag have">yes</span></td>
+  <td>undo the Q/L flash-time merge → prototype <code>main_cluster</code> + <code>additional_clusters</code>. <code>mode='real'</code></td></tr>
+<tr><td>3</td><td class="mono">unmerge_assoc</td><td class="mono">ClusteringUnmergeBundle</td><td><span class="tag have">yes</span></td>
+  <td>inner un-merge: undo the per-APA <em>isolated grouping</em> (<code>assoc_cluster_id</code>)</td></tr>
+<tr><td>4</td><td class="mono">steiner</td><td class="mono">CreateSteinerGraph</td><td><span class="tag have">yes</span></td>
+  <td>Steiner tree per in-window cluster; the substrate every tagger fit walks</td></tr>
+<tr><td>5</td><td class="mono">fiducialutils</td><td class="mono">MakeFiducialUtils</td><td><span class="tag have">yes</span></td>
+  <td>dead-region / SP-quality helper used by TGM and FC</td></tr>
+<tr><td>6</td><td class="mono">tagger_check_tgm</td><td class="mono">TaggerCheckTGM</td><td><span class="tag have">yes</span></td>
+  <td>through-going muon. <code>sbnd_pr_fv</code> box + margins, chord-charge, component rescue, <code>main_component_mode='real'</code></td></tr>
+<tr><td>7</td><td class="mono">tagger_check_stm</td><td class="mono">TaggerCheckSTM</td><td><span class="tag have">yes</span></td>
+  <td>stopping muon; runs the TrackFitting dQ/dx fit. <code>mip_dqdx=56000</code>, <code>sbnd_track_fitting.json</code></td></tr>
+<tr><td>8</td><td class="mono">tagger_check_fc</td><td class="mono">TaggerCheckFC</td><td><span class="tag have">yes</span></td>
+  <td>fully-contained verdict (orthogonal — not a veto)</td></tr>
+<tr class="new"><td>9</td><td class="mono">protect_bundle</td><td class="mono">ClusteringProtectBundle</td><td><span class="tag add">add</span></td>
+  <td>uBooNE's <em>second</em> graph examination (<code>Protect_Over_Clustering</code>): split each beam bundle at graph-component boundaries, with cathode re-join. <strong>SBND production default since 2026-08-02</strong></td></tr>
+<tr class="new"><td>10</td><td class="mono">steiner_refresh</td><td class="mono">CreateSteinerGraph</td><td><span class="tag add">add</span></td>
+  <td><code>replace=false</code> — rebuild only the Steiner products <code>protect_bundle</code> purged. Must immediately follow it</td></tr>
+<tr class="new"><td>11</td><td class="mono">tagger_check_neutrino</td><td class="mono">TaggerCheckNeutrino</td><td><span class="tag add">add</span></td>
+  <td><strong>the neutrino tagger.</strong> Proto-vertex/segment building, topology+PID+direction, EM-shower clustering, particle flow, energy reco, DL (SCN) or geometric main vertex. Fills <code>TaggerInfo</code>, <code>KineInfo</code>, the PR graph and the <code>TrackFitting</code> slot</td></tr>
+<tr class="new"><td>12</td><td class="mono">numu_bdt_scorer</td><td class="mono">UbooneNumuBDTScorer</td><td><span class="tag add">add</span></td>
+  <td>4 TMVA BDTs + 1 XGBoost → <code>numu_score</code>, <code>cosmict_score</code>. Geometry-free <code>TaggerInfo</code> consumer</td></tr>
+<tr class="new"><td>13</td><td class="mono">nue_bdt_scorer</td><td class="mono">UbooneNueBDTScorer</td><td><span class="tag add">add</span></td>
+  <td>30 TMVA BDTs + 1 XGBoost → <code>nue_score</code>. Must run <em>after</em> numu</td></tr>
+<tr class="new"><td>14</td><td class="mono">tracking_visitor</td><td class="mono">SbndPrMagnifyTrackingVisitor</td><td><span class="tag add">add</span></td>
+  <td>creates <code>tracking-pr.root</code>: Magnify-style <code>T_rec_charge</code> / <code>T_proj_data</code> / <code>T_bad_ch</code> / <code>Trun</code> from the PR graph. <strong>In <code>WireCellRoot</code></strong></td></tr>
+<tr class="new"><td>15</td><td class="mono">tagger_output</td><td class="mono">UbooneTaggerOutputVisitor</td><td><span class="tag add">add</span></td>
+  <td>appends <code>T_tagger</code> + <code>T_kine</code> to <code>tracking-pr.root</code> in <strong>UPDATE</strong> mode → must be last</td></tr>
+<tr><td>—</td><td class="mono">stm_magnify</td><td class="mono">SbndMagnifyTrackingVisitor</td><td><span class="tag warn">opt</span></td>
+  <td>diagnostic STM-fit dump (<code>tracking-stm.root</code>); needs <code>save_stm_fit=true</code>. Xin's batch driver deliberately omits it</td></tr>
+<tr><td>—</td><td class="mono">pr_display</td><td class="mono">PrDisplayDump</td><td><span class="tag miss">absent</span></td>
+  <td>Bokeh event-display dump (<code>calib-pr-evt&lt;ID&gt;.json</code>). <strong>Not present in our toolkit checkout at all</strong> — see <a href="#gaps">§7 G5</a></td></tr>
+</tbody></table>
+</div>
+
+<div class="key">
+<strong>Ordering is load-bearing</strong>, not stylistic: cosmic verdicts must be taken on
+<em>unsplit</em> clusters (prototype <code>wire-cell-prod-stm.cxx:806</code>) while
+<code>protect_bundle</code> exists only in the nue executable (<code>wire-cell-prod-nue.cxx:1322</code>) —
+hence 9–10 sit between the cosmic taggers and the neutrino tagger.
+<code>steiner_refresh</code> must follow <code>protect_bundle</code> immediately;
+<code>nue</code> after <code>numu</code>; <code>tagger_output</code> after <code>tracking_visitor</code>
+because it reopens the same ROOT file.
+</div>
+
+<h2 id="cfg">4. The fcl and jsonnet we actually run</h2>
+
+<div class="scroll">
+<table>
+<thead><tr><th>File</th><th>Path</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td class="mono">wcls-img-clus-matching-xin.fcl</td><td class="mono">sbnd/</td>
+  <td>art job. <code>process_name: wclssig2img</code>, one producer <code>sig2img</code> of type
+      <code>WireCellToolkit</code>. Plugins: Gen, Img, Clus, Pgraph, Sio, <strong>Root</strong>, Larsoft, Aux,
+      Match, AIML. Inputers: <code>wclsCookedFrameSource:sigs</code>,
+      <code>wclsOpFlashSource:tpc0/tpc1</code>, <code>wclsTensorSetLabeler:clus_all_apa</code>.
+      <code>params.reality</code>, the opflash labels, and the <code>structs</code> tag block are the
+      MC↔data switch</td></tr>
+<tr><td class="mono">wcls-img-clus-matching-xin.jsonnet</td><td class="mono">sbnd/</td>
+  <td><strong>the entry config we edit.</strong> Builds the whole graph of <a href="#graph">§2</a>;
+      <code>pipeline_names</code> for the PR node is at line 180</td></tr>
+<tr><td class="mono">img.jsonnet</td><td class="mono">toolkit cfg/pgrapher/experiment/sbnd/</td><td>imaging, <code>multi-3view</code> + <code>full_deghost</code></td></tr>
+<tr><td class="mono">clus.jsonnet</td><td class="mono">toolkit cfg/pgrapher/experiment/sbnd/</td>
+  <td>SBND clustering + <strong>all three MABC makers</strong> (<code>per_apa</code>,
+      <code>all_apa</code>, <code>pr</code>), <code>cm_by_name</code>, <code>sbnd_pr_fv</code>, the
+      reality table</td></tr>
+<tr><td class="mono">qlmatching.jsonnet</td><td class="mono">toolkit cfg/pgrapher/experiment/sbnd/</td><td><code>flash_attach</code> + <code>matching_joint</code></td></tr>
+<tr><td class="mono">cathode_fiducial.jsonnet</td><td class="mono">toolkit cfg/pgrapher/experiment/sbnd/</td><td>0.5 cm cathode FV for matching</td></tr>
+<tr><td class="mono">simparams.jsonnet</td><td class="mono">toolkit cfg/pgrapher/experiment/sbnd/</td><td>anodes, <code>nticks</code>, drift speed 1.563 mm/µs</td></tr>
+<tr><td class="mono">particle_dataset.jsonnet</td><td class="mono">toolkit cfg/pgrapher/experiment/sbnd/</td><td>dE/dx reference tables for STM / neutrino</td></tr>
+<tr><td class="mono">sbnd_track_fitting.json</td><td class="mono">toolkit cfg/pgrapher/experiment/sbnd/</td><td>TrackFitting parameters, resolved at runtime through <code>WIRECELL_PATH</code></td></tr>
+<tr><td class="mono">setup-ap.sh</td><td class="mono">sbnd/</td><td>env: <code>setup-local-opt.sh</code> + toolkit cfg prepended + photodet dir</td></tr>
+<tr><td class="mono">run-harness.sh</td><td class="mono">production-prep/…-mc-1000file-…/scripts/</td><td>batch driver: work-stealing cursor, <code>taskset</code>-pinned workers, per-event cwd, <code>summary.csv</code></td></tr>
+</tbody></table>
+</div>
+
+<h4>The 2-step counterparts, for reference</h4>
+<div class="scroll">
+<table>
+<thead><tr><th>File</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td class="mono">sbnd_xin/wct-pr-perevt.jsonnet</td>
+  <td>a one-line re-export of <code>toolkit cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet</code>
+      — <strong>the canonical version is in our toolkit</strong>, so the two chains cannot drift</td></tr>
+<tr><td class="mono">sbnd_xin/clus.jsonnet</td><td>likewise a re-export of the toolkit's</td></tr>
+<tr><td class="mono">sbnd_xin/run_pr_chain_batch.sh</td>
+  <td>the 15-name <code>PIPELINE</code> string, ~60 <code>SBND_*</code> tri-state TLA knobs,
+      <code>PR_JOBS</code>, the reality-lineage guard, and the per-event "DL vertex failed" grep</td></tr>
+</tbody></table>
+</div>
+
+<p>Because <code>wct-pr-perevt.jsonnet</code> is already in our toolkit, we have a second, cheaper option:
+run the 2-step's PR job <em>as-is</em> on a pctree our 1-step writes. See <a href="#plan">§8</a>.</p>
+
+<h2 id="files">5. File-level input and output</h2>
+
+<h3>5.1 Input</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>Chain</th><th>File</th><th>Contents used</th></tr></thead>
+<tbody>
+<tr><td>1-step</td><td class="mono">…reco1.root (artROOT)</td>
+  <td><code>recob::Wire</code> (MC <code>simtpc2d:dnnsp</code>; data <code>sptpc2d:gauss</code>+<code>wiener</code>),
+      <code>simtpc2d:wienersummary</code>, <code>simtpc2d:badmasks</code>,
+      <code>recob::OpFlash</code> <code>opflashtpc0/1</code>; and for the labeler
+      <code>MCTruth</code> / <code>MCParticle</code> / <code>SimEnergyDeposit</code></td></tr>
+<tr><td>2-step B</td><td class="mono">ql_evt&lt;ID&gt;/pctree-evt&lt;ID&gt;.tar.gz</td>
+  <td>TensorDM tar of the post-Q/L point-cloud tree: live+dead groupings, per-cluster
+      <code>3d</code> PCs, per-cluster scalars (<code>ident</code>, <code>cluster_t0</code>,
+      <code>matched_flash_gid</code>, <code>flag_main_cluster</code>, <code>lm_flag</code>),
+      perblob <code>real_cluster_id</code>/<code>_main</code> and
+      <code>assoc_cluster_id</code>/<code>_main</code>, root <code>opflash</code> PC.
+      <strong>Read via <code>TensorFileSource</code>, prefix <code>clustering_</code></strong></td></tr>
+</tbody></table>
+</div>
+<p class="note"><strong>Not persisted:</strong> the per-cluster <em>scope filter</em> is runtime state.
+It is why every PR pipeline must start with <code>switch_scope</code>, and why
+<code>nusel_extract.py</code> has to read <code>mabc-pr.zip</code> to recover the in-scope set.</p>
+
+<h3>5.2 Output — what the 1-step writes today</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>File</th><th>Written by</th><th>Contents</th><th>Harness</th></tr></thead>
+<tbody>
+<tr><td class="mono">mabc.zip</td><td><code>BeeSink mabc_shared</code> ← MABC per-APA + all-APA + labeler</td>
+  <td>Bee JSON under <code>data/&lt;n&gt;/</code>: <code>img</code>, <code>clustering</code> (per-APA,
+      <code>individual</code>), <code>clustering-global</code>, <code>op</code>/flash,
+      <code>channel-deadarea</code>, plus the labeler's <code>tagger_stm/tgm/fc</code> sets and
+      (MC) truth sets</td><td><strong>kept</strong></td></tr>
+<tr><td class="mono">mabc-pr.zip</td><td><code>MABC clus_pr</code> (own <code>bee_zip</code>)</td>
+  <td>the PR-stage <code>clustering</code> layer = exactly the in-scope clusters. Would additionally
+      carry <code>track_fit</code>, <code>shower_track</code>, <code>vertices</code> and the
+      <code>mc</code> particle-flow tree once <code>tagger_check_neutrino</code> is on</td>
+  <td><span class="tag miss">deleted</span></td></tr>
+<tr><td class="mono">trash-all-apa.tar.gz</td><td><code>TensorFileSink clus_all_apa</code></td>
+  <td>the <em>labeled</em> pctree (post-PR, post-labeler), <code>dump_mode=false</code></td>
+  <td><span class="tag miss">deleted</span></td></tr>
+<tr><td class="mono">nugraph.h5</td><td>labeler</td><td>nugraph tensors (+truth for MC)</td><td><span class="tag miss">deleted</span></td></tr>
+<tr><td class="mono">lar.log</td><td>art / spdlog</td><td>TGM/STM/FC verdicts per cluster, MABC timings, RSE line</td><td>kept on failure</td></tr>
+</tbody></table>
+</div>
+
+<h3>5.3 Output — what the full PR chain adds</h3>
+<div class="scroll">
+<table>
+<thead><tr><th>File</th><th>Tree / layer</th><th>Information available</th></tr></thead>
+<tbody>
+<tr><td class="mono" rowspan="4">tracking-pr.root</td>
+  <td class="mono">T_tagger</td>
+  <td><strong>~580 branches, ONE entry per event.</strong> All <code>TaggerInfo</code> fields:
+      <code>numu_score</code>, <code>nue_score</code>, <code>cosmict_score</code>,
+      <code>numu_cc_flag*</code>, and the whole uBooNE sub-score family
+      (<code>cosmic_*</code>, <code>gap_*</code>, <code>mip_quality_*</code>, <code>br*</code>,
+      <code>stw_*</code>, <code>vis_*</code>, <code>lol_*</code>, <code>tro_*</code>,
+      <code>pio_*</code>, <code>sig_*</code>, <code>ssmsp_*</code>), plus the reconstructed vertex
+      <code>nu_x/nu_y/nu_z</code></td></tr>
+<tr><td class="mono">T_kine</td>
+  <td>ONE entry per event: <code>kine_reco_Enu</code>, <code>kine_reco_add_energy</code>,
+      per-particle vectors <code>kine_energy_particle</code> / <code>kine_particle_type</code> /
+      <code>kine_energy_info</code> / <code>kine_energy_included</code>, the π⁰ block
+      (<code>kine_pio_mass</code>, both γ energies/angles), corrected vertex</td></tr>
+<tr><td class="mono">T_rec_charge, T_proj_data, T_bad_ch</td>
+  <td>Magnify-style projections of the PR fit: 3-D fit points with dQ/dx
+      (<code>0.1·dQ − 1000</code>), per-point APA from <code>PR::Fit::paf</code>, two-TPC
+      concatenated-per-plane channels, dead-channel time ranges</td></tr>
+<tr><td class="mono">Trun</td><td><code>runNo</code>, <code>subRunNo</code>, <code>eventNo</code> —
+      <strong>the only place RSE appears</strong>; <code>T_tagger</code>/<code>T_kine</code> have no RSE branch</td></tr>
+<tr><td class="mono">mabc-pr.zip</td><td>Bee layers <code>track_fit</code>, <code>shower_track</code>, <code>vertices</code>, <code>mc</code></td>
+  <td><code>track_fit</code>: PR-graph trajectory + vertex fit points.
+      <code>shower_track</code>: associated points, q=15000 shower / q=0 track, per-particle
+      <code>real_cluster_id = cluster·1000 + seg</code>.
+      <code>vertices</code>: PR graph vertices, main vertex q=15000.
+      <code>mc</code>: particle-flow jsTree (PDG names, integer MeV, 5/10 MeV display floors)</td></tr>
+<tr><td class="mono">nusel-evt&lt;ID&gt;.tsv</td><td>—</td>
+  <td>built <em>post hoc</em> by <code>nusel_extract.py</code> from pctree + <code>mabc-pr.zip</code> + the log.
+      One row per qualifying bundle (main-flagged <em>and</em> in-scope) with label
+      TGM / STM / LM / nu-candidate / not-tagged / no-bundle, and an <code>fc</code> column.
+      <strong>Not a WCT output</strong> — it needs the pctree, so the 1-step must be made to write one</td></tr>
+<tr><td class="mono">tracking-stm.root</td><td><code>T_rec_charge</code> etc.</td><td>optional STM-fit diagnostic (<code>save_stm_fit=true</code>)</td></tr>
+</tbody></table>
+</div>
+
+<h2 id="gaps">6. Verified gaps and blockers</h2>
+
+<p>Everything below was checked against this machine, not inferred.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>Item</th><th>Status</th><th>Consequence &amp; fix</th></tr></thead>
+<tbody>
+<tr><td><strong>G0</strong></td><td>C++ components</td><td><span class="tag have">all present</span></td>
+  <td><code>TaggerCheckNeutrino</code> + <code>ClusteringProtectBundle</code> in
+      <code>opt/lib/libWireCellClus.so</code>; <code>UbooneNumuBDTScorer</code>,
+      <code>UbooneNueBDTScorer</code>, <code>SbndPrMagnifyTrackingVisitor</code>,
+      <code>UbooneTaggerOutputVisitor</code> in <code>libWireCellRoot.so</code>. The fcl already
+      loads <code>WireCellRoot</code>. <strong>No rebuild needed.</strong></td></tr>
+<tr><td><strong>G1</strong></td><td>nue XGBoost weights</td><td><span class="tag miss">missing</span></td>
+  <td><code>uboone/weights/XGB_nue_seed2_0923.xml</code> is <strong>not in our
+      <code>wire-cell-data</code> clone</strong> (41 of the 42 named files are there;
+      <code>numu_scalars_scores_0923.xml</code> is present). <code>nue_bdt_scorer</code> will fail or
+      return a null <code>nue_score</code>. Fix: pull it into
+      <code>/exp/sbnd/app/users/yuhw/wire-cell-data</code> from Xin's
+      <code>$WCT_BASE/wire-cell-data</code>, or run numu-only first.</td></tr>
+<tr><td><strong>G2</strong></td><td>DL (SCN) neutrino vertex</td><td><span class="tag miss">unavailable</span></td>
+  <td>The <code>.pth</code> weights <em>are</em> present
+      (<code>uboone/scn_vtx/t48k-m16-l5-lr5d-res0.5-CP24.pth</code>) and <code>libWCPPyUtil.so</code> is
+      installed, but the Python path is dead: our container python is
+      <code>wire-cell-python/venv/bin/python3</code> <strong>3.9.15</strong> with
+      <strong>no <code>torch</code>, no <code>sparseconvnet</code>, no <code>SCN</code></strong>. Xin gets
+      these from <code>$WCT_BASE/local/python</code> on wcgpu1.
+      <code>NeutrinoVertexFinder.cxx:3715</code> catches the failure and WARNs
+      <code>"DL vertex failed: …"</code>, falling back to the geometric vertex — <strong>silently, per
+      event</strong>. Fix options: (a) accept geometric and set <code>dl_weights=''</code> explicitly so
+      the fallback is a decision not an accident; (b) install torch+sparseconvnet+SCN into a py3.9
+      venv and add <code>pyutil/python</code> to <code>PYTHONPATH</code> plus
+      <code>LD_PRELOAD=libpython3.9.so.1.0</code>. <strong>(a) for the first pass.</strong></td></tr>
+<tr><td><strong>G3</strong></td><td>RSE in the PR ROOT output</td><td><span class="tag warn">design gap</span></td>
+  <td><code>SbndPrMagnifyTrackingVisitor</code> reads <code>runNo</code>/<code>subRunNo</code>/<code>eventNo</code>
+      from <em>config only</em> — there is no <code>rse_from_ident</code> like the MABC nodes have. Our
+      1-step compiles the jsonnet once with all three = 0, so every
+      <code>tracking-pr.root</code> would carry <code>Trun</code> = 0/0/0. And
+      <code>T_tagger</code>/<code>T_kine</code> carry no RSE at all. Fix options: (a) name output files
+      by RSE in the harness (it already greps the RSE from the log) and treat the filename as the
+      key; (b) thread the real RSE in through the fcl <code>params</code> per <code>lar</code>
+      invocation — possible because the harness runs one event per process, but it must look the RSE
+      up first; (c) add <code>rse_from_ident</code> to the two ROOT visitors (cleanest, small C++
+      change). <strong>(a) now, (c) as the real fix.</strong></td></tr>
+<tr><td><strong>G4</strong></td><td>PR Bee layers land in a separate zip</td><td><span class="tag warn">config gap</span></td>
+  <td><code>clus_pr</code>'s MABC has <strong>no <code>bee_sink</code> parameter</strong> — unlike
+      <code>per_apa</code>/<code>all_apa</code> it always writes its own
+      <code>mabc-pr.zip</code>. Our harness currently deletes that file
+      (<code>run-harness.sh:82</code>). Fix: either keep and merge both zips with
+      <code>merge_bee.py</code>, or add a <code>bee_sink</code> pass-through to
+      <code>clus_pr</code> so PR layers join the shared <code>mabc.zip</code> — nicer for Bee, since
+      the PR and clustering layers then share one event index.</td></tr>
+<tr><td><strong>G5</strong></td><td><code>PrDisplayDump</code> / <code>pr_display</code></td><td><span class="tag miss">absent</span></td>
+  <td>Not in our toolkit checkout — neither the C++ nor a <code>cm_by_name</code> entry. So doc pr/26's
+      local Bokeh display and doc pr/75's vertex scoreboard are <strong>not reachable</strong> for us,
+      and <code>calib-pr-evt&lt;ID&gt;.json</code> cannot be produced. It is read-only and optional, so
+      it blocks nothing but the hand-scan tooling. Needs a merge from Xin's tree if we want it.</td></tr>
+<tr><td><strong>G6</strong></td><td>No pctree written before the PR node</td><td><span class="tag warn">config gap</span></td>
+  <td><code>clus_all_apa</code> is called with <code>tensor_outname</code> unset, so the 1-step never
+      persists a post-Q/L pctree — only the post-labeler <code>trash-all-apa.tar.gz</code>. That
+      blocks <code>nusel_extract.py</code> (which wants the pre-PR tree) and blocks the
+      run-2-step-on-1-step-output option. One-line fix: pass
+      <code>tensor_outname='pctree-evt.tar.gz'</code>.</td></tr>
+<tr><td><strong>G7</strong></td><td>Cost</td><td><span class="tag warn">unmeasured</span></td>
+  <td><code>tagger_check_neutrino</code> is by far the heaviest stage in the 2-step (it does the
+      proto-vertex/segment build, EM-shower clustering, particle flow and energy reco). The
+      13,217-event 1-step run cost ~71 s/event on 261.5 core-hours <em>without</em> it. The full PR
+      chain will cost materially more — <strong>must be measured on a 10-event pilot before any
+      scale run.</strong></td></tr>
+<tr><td><strong>G8</strong></td><td>Doc drift</td><td><span class="tag warn">stale</span></td>
+  <td><code>sbnd/CLAUDE.md</code> documents an <code>enable_downstream_pr</code> toggle at the top of
+      <code>clus.jsonnet</code>. <strong>That key no longer exists</strong> — the PR tail was moved out
+      of <code>clus.jsonnet</code> into the entry config. Also
+      <code>wcls-img-clus-matching-xin.jsonnet:219</code> claims sim tagger Bee coords are
+      <code>x_sce/y_sce/z_sce</code>, but <code>reality:'sim'</code> ⇒ <code>use_sce=false</code> ⇒
+      <code>['x_t0cor','y','z']</code>.</td></tr>
+</tbody></table>
+</div>
+
+<h2 id="plan">7. Two routes, and a proposed order</h2>
+
+<div class="cols">
+<div class="card">
+<h3>Route A — extend the 1-step in place</h3>
+<p>Add the 5 (or 7, with <code>protect_bundle</code>+<code>steiner_refresh</code>) names to
+<code>pipeline_names</code> in <code>wcls-img-clus-matching-xin.jsonnet</code>:</p>
+<pre><code>pipeline_names=[
+  'switch_scope','unmerge_bundle','unmerge_assoc',
+  'steiner','fiducialutils',
+  'tagger_check_tgm','tagger_check_stm','tagger_check_fc',
+  'protect_bundle','steiner_refresh',
+  'tagger_check_neutrino',
+  'numu_bdt_scorer','nue_bdt_scorer',
+  'tracking_visitor','tagger_output',
+]</code></pre>
+<p><strong>Pros:</strong> one edit; labeler truth and PR verdicts on the identical tree; no extra
+I/O; harness unchanged apart from keeping new outputs.<br>
+<strong>Cons:</strong> hits G1, G2, G3, G4 immediately; no per-event TLA knobs, so all ~60
+<code>SBND_*</code> switches become compile-time choices in our entry config.</p>
+</div>
+
+<div class="card">
+<h3>Route B — write a pctree, run the 2-step PR job on it</h3>
+<p>Set <code>tensor_outname</code> on <code>clus_all_apa</code> (G6), then run the canonical
+<code>toolkit cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet</code> per event —
+the same file Xin's driver runs.</p>
+<p><strong>Pros:</strong> bit-comparable with Xin's chain by construction; per-event TLAs work, so real
+run/subrun/event reach <code>Trun</code> (G3 dissolves); <code>nusel_extract.py</code> and
+<code>pr_scores_table.py</code> work unmodified.<br>
+<strong>Cons:</strong> a second process and a ~pctree-sized file per event; the truth labels and the
+PR verdicts live in different files.</p>
+</div>
+</div>
+
+<div class="key">
+<strong>Recommendation.</strong> Do <strong>B first as the reference</strong>, then <strong>A</strong>
+and check A against B. B is nearly free (one jsonnet argument plus a second <code>wire-cell</code>
+call, and its jsonnet is already in our tree), it side-steps G3 and G4 entirely, and it gives us the
+ground truth to validate A against. Then A is what we actually run at scale, once it reproduces B.
+This is the same 1-step ≡ 2-step equivalence argument that already worked for the
+clustering+matching half.
+</div>
+
+<h4>Suggested sequence</h4>
+<ol>
+<li><strong>Unblock G1</strong> — copy <code>XGB_nue_seed2_0923.xml</code> into our
+    <code>wire-cell-data</code>. Cheap, and without it <code>nue_score</code> is meaningless.</li>
+<li><strong>Decide G2</strong> — I suggest setting <code>dl_weights=''</code> explicitly for now, so the
+    geometric vertex is a recorded choice rather than a silent per-event fallback. Installing
+    torch+sparseconvnet+SCN is a separate, self-contained task if we want the DL vertex.</li>
+<li><strong>G6</strong> — one-line <code>tensor_outname</code>, giving us a pctree.</li>
+<li><strong>Route B pilot, 10 events</strong> — <code>wct-pr-perevt.jsonnet</code> with the full
+    15-name pipeline. Measures G7. Produces <code>tracking-pr.root</code> +
+    <code>mabc-pr.zip</code> + <code>nusel-evt*.tsv</code> with correct RSE.</li>
+<li><strong>Route A pilot, same 10 events</strong> — compare <code>T_tagger</code> leaf-by-leaf and
+    the <code>mabc-pr.zip</code> layers against step 4. Any difference is a real 1-step/2-step
+    divergence, not noise.</li>
+<li><strong>Fix G4</strong> — add <code>bee_sink</code> to <code>clus_pr</code> so PR Bee layers share
+    <code>mabc.zip</code> and the event index stays aligned.</li>
+<li><strong>Fix G3 properly</strong> — <code>rse_from_ident</code> in the two ROOT visitors, so
+    Route A's ROOT output is self-identifying.</li>
+<li><strong>Scale</strong>, once 4≡5 and the per-event cost is known.</li>
+</ol>
+
+<h4>Open questions for you</h4>
+<ul>
+<li><strong>DL vertex:</strong> live with the geometric vertex, or invest in the torch/SCN install?
+    Note the SCN net is uBooNE-trained either way.</li>
+<li><strong>BDT scores:</strong> both weight sets are uBooNE-trained and unretrained on SBND — usable
+    for availability and relative ranking, not as calibrated probabilities. Is that the intended use
+    here, or is SBND retraining part of the plan?</li>
+<li><strong><code>protect_bundle</code>:</strong> include it (SBND production default since 2026-08-02)
+    or start from the pre-pr/23 8-stage chain to keep the comparison against our existing 13k-event
+    run clean?</li>
+<li><strong>Scope:</strong> is the target a pilot for development, or a production-scale rerun of the
+    13,217-event MC sample with scores attached?</li>
+</ul>
+
+<hr>
+<p class="small">Sources: <code>sbnd_xin/docs/pr/41_pr-chain-overview.md</code>;
+toolkit <code>cfg/pgrapher/experiment/sbnd/{clus,img,qlmatching,wct-pr-perevt}.jsonnet</code>;
+<code>cfg/pgrapher/common/clus.jsonnet</code>;
+<code>clus/src/NeutrinoVertexFinder.cxx</code>;
+<code>root/src/{UbooneTaggerOutputVisitor,SbndPrMagnifyTrackingVisitor}.cxx</code>;
+<code>sbnd_xin/{run_pr_chain_batch.sh,run_ql_evt.sh,nusel_extract.py}</code>;
+ai-helper issue 11 harness.</p>
+
+</div>
+</body>
+</html>
