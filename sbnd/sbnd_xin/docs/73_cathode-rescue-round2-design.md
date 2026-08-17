@@ -1140,12 +1140,64 @@ is large — so it is *triggered* by the round-2 join, not independent of it. Th
 neutrino vertex is unchanged between arms at `(−90.4, 8.7, 66.6)`, and the event
 keeps its candidate, so this one is a quality defect rather than a loss.
 
-**Next thing to check (round 3), not yet done:** whether the far half is
-graph-connected to the beam half across the cathode dead gap. If the rescue
-merges the two clusters without creating a graph edge between them, the far half
-is an isolated component to the separation — which would explain a straight
-muon segment being called a shower, and would be a defect in *this* component,
-not in PR.
+### 11.8.1 Is the far half graph-connected across the cathode gap? — **YES. Lead disproven.**
+
+Checked on owner request. The "isolated component" hypothesis above is **wrong**;
+recorded here rather than deleted, because it was the obvious guess and the next
+person will have it too.
+
+**Evidence 1 — the connected-component count does not change.**
+`component_extreme_wcps` (`clus/src/TaggerCheckTGM.cxx:544-663`) reports
+`comp_pts.size()` = connected components from `connected_blobs`, and `n_used` =
+those above `component_min_length` (10 cm):
+
+| arm | main | components | above 10 cm | extreme groups |
+|---|---|---|---|---|
+| OFF | cid 8 (beam half only, 1680 pts) | 2 | **1** | 5 |
+| ON | cid 17 (merged, 3170 pts) | 2 | **1** | 5 |
+
+The ON cluster carries an extra **67 cm / 1489-point** far half. Were it a
+separate component it would be far above the 10 cm floor and the count would
+read **2 above 10 cm**. It reads 1, unchanged — the far half was absorbed into
+the single large component.
+
+**Evidence 2 — TGM's extreme pair spans both halves.** `check_tgm` on the merged
+cluster forms `CASE-B pair (1,4)` with a **straight chord of 312.0 cm**. The
+merged object is ~300 cm end to end and each half alone is ≤ 155 cm, so a 312 cm
+chord can only run from one half's far end to the other's. Both halves are
+therefore in the same component's extreme set. (That pair is then rejected for
+*"unsupported run > 30 cm"* — simply because a straight 312 cm chord does not
+follow a gently curving 300 cm track; it deviates ~20 cm mid-chord. TGM=false is
+the right answer and this is not the defect.)
+
+**The join geometry is good on every measure that matters:**
+
+| quantity | value |
+|---|---|
+| nearest 3-D approach across the cathode | **2.16 cm** — *smallest of the three crossers* (281165: 4.09, 319913: 2.14) |
+| transverse alignment of that nearest pair | Δy 0.0 cm, Δz 0.6 cm |
+| **local** direction agreement, ±30 cm of the cathode | **3.8°** (beam 58.3°, far 62.1° in the x–z plane) |
+| end-to-end direction difference | 10.7° — the track's own curvature over 300 cm, not a junction kink |
+
+Note the local-vs-end-to-end distinction: judging this join on end-to-end
+directions would call it a 10.7° mismatch and condemn it. Locally at the
+junction the two halves agree to **3.8°**, which is what a single muon looks
+like.
+
+**So the cause of the 100 % shower labelling is still unknown.** It is not
+disconnection, not the gap size, not a junction kink, and not point density
+(far half ~10 points per cm of path, beam half ~11). What is established:
+
+* the far half is **in the same cluster, the same connected component, and the
+  same PR graph** (it forms segment `17012`);
+* it is nonetheless labelled **100 % shower** while the beam half of the same
+  muon is 100 % track;
+* 281165 and 319913, whose far halves are labelled 100 % track, differ mainly in
+  **size** — 218 and 84 points against 1489.
+
+Size is the one axis that still separates the working cases from the broken one,
+so the next probe is whether the track/shower separation's behaviour on a
+rescued far half depends on its length — not on how it was attached.
 
 ### 11.9 The revert (owner instruction, 2026-08-17)
 
