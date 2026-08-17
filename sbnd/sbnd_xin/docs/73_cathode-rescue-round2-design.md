@@ -66,12 +66,36 @@ SBND_RESCUE_IN_BEAM=1 SBND_RESCUE_GEOM_FIRST=1 SBND_RESCUE_PIERCE=1 \
     ./run_ql_batch.sh -j 8 -f /home/xqian/tmp/cbr2_mcp1k.txt
 ```
 
-**Binary provenance.** Every arm in this doc: toolkit HEAD `91b78d67` +
-the round-2 patch, `local/lib/libWireCellClus.so` mtime `2026-08-17 08:14:46`.
-Both arms of every comparison come from that one binary, so an OFF/ON delta is
-attributable to these knobs and to nothing else in the tree. (A concurrent
-session shares this working tree and moved HEAD `a681b3e1` → `91b78d67`
-mid-round; hence the explicit record.)
+**Binary provenance.** Every arm in this doc: toolkit HEAD `91b78d67` + the
+round-2 patch, built by one `wcbuild` at **08:14:46**. Both arms of every
+comparison come from that one binary, so an OFF/ON delta is attributable to these
+knobs and to nothing else in the tree. (A concurrent session shares this working
+tree and moved HEAD `a681b3e1` → `91b78d67` mid-round; hence the explicit record.)
+
+**Correction, and it matters for every freshness proof in this tree.** An earlier
+draft of this paragraph cited `local/lib/libWireCellClus.so`, following CLAUDE.md
+M1 (*"wire-cell loads plugins from `local/lib`, not `build/`"*). **That is not
+what happens here.** direnv puts the `build/*` directories *ahead* of `local/lib`
+in `LD_LIBRARY_PATH`, and `/proc/<pid>/maps` on a live job shows
+
+```
+/nfs/data/1/xqian/toolkit-dev/toolkit/build/clus/libWireCellClus.so
+```
+
+so the **build tree** is what is actually mapped. Two consequences:
+
+* a freshness proof must stat `build/clus/libWireCellClus.so`; stat-ing
+  `local/lib` checks a file the job may never open;
+* `./wcb build` **alone** is enough to swap the library under a running campaign —
+  `install` is not required to break one. M1's remedy (always `wcbuild`) is still
+  right, but its stated reason is incomplete.
+
+Nothing in this doc is invalidated: `wcbuild` writes both trees in one
+invocation, so the 08:14:46 `local/lib` timestamp and the `build/clus` library the
+arms actually loaded came from the same compile. The 08:14:46 `build/clus`
+library no longer exists on disk — a concurrent session rebuilt over it at
+09:01:50, after every arm here had finished (the last, the mcp1k census, at
+~08:50). That is also what killed the §8 `pierce_cut` 10/12 cm arms.
 
 ## 2. What exists today
 
