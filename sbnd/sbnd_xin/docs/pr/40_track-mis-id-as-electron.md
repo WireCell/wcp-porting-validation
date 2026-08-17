@@ -1476,3 +1476,396 @@ are byte-wise the Demonstration table's.
   changed.
 - The template competition's lack of an absolute quality gate (54341's original
   proton call) is compensated by F14's topology rescue, not fixed at the source.
+
+---
+
+# Round 7 -- census + owner Bee scan, mislabeling confirmed in both cases, TWO
+proposed fixes written up but NOT implemented this round (investigate-and-
+document only, per owner scope)
+
+## Repro block
+
+```bash
+cd sbnd_xin
+
+# Phase 0 item zero -- the pr/90 self-check on 320865 (does the pr/90
+# teb_turn_min_arm_frac break, shipped hours earlier the same day, PRODUCE
+# the electron?)
+SBND_TEB_TURN_MIN_ARM_FRAC=0 WCT_SHOWER_TOPO_DEBUG=1 WCT_PID_WRITE_DEBUG=2 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr40r7-teboff data 320865
+SBND_TWO_END_BREAK=0 WCT_SHOWER_TOPO_DEBUG=1 WCT_PID_WRITE_DEBUG=2 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr40r7-nobreak data 320865
+
+# Phase 0 -- writer-site traces (WCT_PID_WRITE_DEBUG=2, WCT_SHOWER_TOPO_DEBUG=1)
+./run_pr_chain_batch.sh work-mcp1k-cb0805 work-pr40r7-trace data 320865
+./run_pr_chain_batch.sh work-cbr3-census-on work-pr40r7-trace2k data 54629
+
+# Phase 1 -- census reruns, full manifest (no event-id list = every ql_evt<ID>
+# under the QL root; NOTE: for mcp1k this is the full 1000, not the
+# nu_evaluated=1 subset some retired arms used -- see the G0 note below on
+# why those retired arms could not be reused as-is)
+PR_JOBS=16 ./run_pr_chain_batch.sh work-mcp1k-cb0805   work-pr40r7cen-mcp1k   data
+PR_JOBS=8  ./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr40r7cen-nuecc48 data
+PR_JOBS=6  ./run_pr_chain_batch.sh work-ncpi0-cb0805   work-pr40r7cen-ncpi0   data
+
+python3 scripts/analysis/pr40/pr40r7_census.py \
+  work-pr40r7cen-mcp1k work-pr40r7cen-nuecc48 work-pr40r7cen-ncpi0 \
+  --min-len 20 --out /home/xqian/tmp/pr40r7/census_full.tsv
+
+# Phase 2 -- Bee scan set, top-50 rows / 45 unique events
+python3 scripts/bee/make_pr_bee.py \
+  -q work-mcp1k-cb0805 -q work-nuecc48-cb0805 -q work-ncpi0-cb0805 \
+  -p work-pr40r7cen-mcp1k -p work-pr40r7cen-nuecc48 -p work-pr40r7cen-ncpi0 \
+  -o bee/pr40r7/pr40r7-scan.zip <45 event ids, ranked>
+./upload-to-bee.sh bee/pr40r7/pr40r7-scan.zip
+```
+
+## Symptom
+
+Owner (2026-08-17): SBND events **54629** (mcp2k) and **320865** (mcp1k) each
+show a **long, track-like object reconstructed and displayed as an electron**,
+evidenced by the object's own track signature (dQ/dx).  Owner asked to
+investigate, find more cases across the sample, generate Bee links for a hand
+scan, add the round onto this doc, and propose solutions -- explicitly
+**investigate-and-document only this round**: no C++/jsonnet change, no gate,
+no flip.  (Superseding an earlier framing in the planning transcript that had
+assumed standing "flip ON if gates pass" authorization from the pr/90 round
+carried over automatically -- it does not; each round is scoped separately.)
+
+The `nu-candidate` row of each event's per-bundle nusel TSV (one row per flash
+bundle; do not read the last row) confirms both are genuinely long selected
+neutrino main clusters:
+
+| evt | sample | main cluster | npts | length |
+|---|---|---|---|---|
+| 54629 | mcp2k | 15 | 2495 | 156.0 cm |
+| 320865 | mcp1k | 13 | 3109 | 207.1 cm |
+
+## Phase 0 item zero -- 320865 is a same-day pr/90 side-effect, not an
+independent pr/40 bug
+
+320865's mislabeled segment (13001) exists only because `teb_turn_min_arm_frac`
+(pr/90 round 2, shipped hours earlier the same day) splits the cluster's
+198.6 cm segment.  Three configurations of the same event, reading per-segment
+pdg/flag_shower/length/dQ/dx straight from `tracking-pr.root:T_rec_charge`
+(validated exact against `pr_display`'s calib JSON, 71/71 segments, 0
+mismatch -- no `PR_EXTRA_STAGES=pr_display` rerun needed anywhere this round):
+
+| configuration | main-cluster long segments (>5cm) | electron present? |
+|---|---|---|
+| **current production** (`teb_turn_min_arm_frac=0.4`) | 13001: 48.05cm, `pdg=11`, 1.76xMIP; 13002: 153.27cm, `pdg=13` (muon) | **YES** (13001) |
+| `SBND_TEB_TURN_MIN_ARM_FRAC=0` (pre-round-2 legacy break location) | 13001: 7.35cm, `pdg=2212` (proton); 13002: 193.55cm, `pdg=13` (muon) | no -- proton stub + correctly-labelled muon |
+| `SBND_TWO_END_BREAK=0` (break stage fully disabled) | 13000: 200.48cm, `pdg=13` (muon), one segment | no -- one clean muon |
+
+**Fully unbroken, the whole 200 cm object is one correctly-labelled muon.**
+The electron only appears once the break lands at the *correct* kink location
+(pr/90's own round-2 fix) and produces a 48.05 cm arm that sits narrowly
+outside two existing pr/40 guards (below).  This is reported plainly rather
+than folded silently into "a pr/40 bug": **the pr/90 round-2 fix, itself
+correct and already SBND production, has a same-day side effect on 320865's
+PID.**  54629 (a different sample, unrelated to any pr/90 knob) stands as the
+round's independent case.
+
+## Phase 0 -- writer-site attribution (`WCT_PID_WRITE_DEBUG=2` +
+`WCT_SHOWER_TOPO_DEBUG=1`)
+
+**320865 / seg 13001 -- exactly the hypothesized site, confirmed by trace.**
+Three sites in this codebase set `kShowerTopology`/`kShowerTrajectory`; two are
+already guarded (F3 `shower_topo_dqdx_guard`, `PRSegmentFunctions.cxx:4303`;
+F11 `shower_traj_straight_guard`, `:2103`).  The trace shows the third:
+
+```
+TOPO_REEXAM id=-1 clus=13 gidx=1 enter pdg=211 score=0.164
+PID_WRITE_DEBUG setter id=-1 clus=13 gidx=1 pdg 211 -> 13  at PRSegmentFunctions.cxx:2927
+TOPO_REEXAM id=-1 clus=13 gidx=1 after-pid pdg=13 score=0.160
+PID_WRITE_DEBUG set_pdg id=-1 clus=13 gidx=1 pdg -> 11  at NeutrinoVertexFinder.cxx:topo-escape(M5)
+```
+
+`NeutrinoVertexFinder.cxx:3288-3327` (`improve_vertex`'s topology re-exam)
+re-derives PID, gets `pdg=13` (muon) at `score=0.160`, then its own escape
+branch only *declines* the electron override when `pdg==13 && score<0.06` --
+0.160 fails that bar, so it force-sets `pdg=11` anyway.  **No straightness or
+dQ/dx test at all on this path.**  13001 misses F3's `demote_len=50cm` by
+1.95 cm and `1.75xMIP` by 0.6% -- a near-miss, but this third site was simply
+never gated by either existing knob.
+
+**54629 -- hypothesis (an unconditional `segment_determine_dir_track` write)
+was WRONG; trace found three DIFFERENT, previously unnamed sites**, one per
+segment:
+
+```
+PID_WRITE_DEBUG setter id=-1 clus=15 gidx=7  pdg 0  -> 11  at NeutrinoVertexFinder.cxx:1659   (seg 15007, 31.0cm)
+PID_WRITE_DEBUG setter id=-1 clus=15 gidx=11 pdg 13 -> 11  at NeutrinoVertexFinder.cxx:1714   (seg 15011, 94.6cm)
+PID_WRITE_DEBUG setter id=-1 clus=20 gidx=13 pdg 13 -> 11  at NeutrinoShowerClustering.cxx:1401 (seg 20013, 113.0cm)
+```
+
+- **`NeutrinoVertexFinder.cxx:1659`** (inside `examine_direction`): the branch
+  `if (flag_shower_in && current_sg->dirsign()==0 && !is_shower)` sets `pdg=11`
+  unconditionally.  This is a **coverage gap in the EXISTING pr/74 P1 guard**
+  (`shower_in_cascade_guard`, already SBND ON): that guard's
+  `segment_shower_in_cascade_vetoed` call is wired **three lines down**, into
+  the sibling `else if (flag_shower_in)` branch that tests
+  `abs(cur_pdg)==13 || cur_pdg==0` -- it was never wired into this
+  `dirsign()==0` branch, which is reached first and returns before the guarded
+  branch is ever considered.
+- **`NeutrinoVertexFinder.cxx:1714`** (same function, `examine_direction`'s
+  "many/long daughter showers" wholesale-reclass block): when a segment sits
+  at a vertex with `num_daughter_showers>=4` (or long daughter showers) and an
+  **angle mismatch** with a neighbor exceeds 135-155 deg (three sub-conditions),
+  it force-sets `pdg=11` -- overwriting an already-correct `pdg=13`.  No charge
+  or straightness test.
+- **`NeutrinoShowerClustering.cxx:1401`** (inside
+  `shower_clustering_connecting_to_main_vertex`, setting a new shower's
+  `start_seg` direction/type): `if (pdg==0 || abs(pdg)==13)` unconditionally
+  writes `pdg=11`.  No charge or straightness test.  (Distinct from the
+  `total_length<70cm`-gated accept-time force-set named in earlier pr/40
+  rounds -- this fires earlier, on `start_seg` specifically.)
+
+All three of 54629's long pdg-11 segments have **decisively nonzero,
+MIP-scale median dQ/dx** (1.15x, 1.19x, 1.42x MIP) and
+**`segment_is_straight_long_track` returns TRUE on every one** -- the single
+geometry-only lever fires universally across both events regardless of the
+charge value:
+
+| evt | seg | L (cm) | D/L | med dQ/dx xMIP(43000) | flag_shower | writer site |
+|---|---|---|---|---|---|---|
+| 54629 | 15007 | 31.00 | 0.974 | 1.42 | 0 | `NeutrinoVertexFinder.cxx:1659` |
+| 54629 | 15011 | 94.59 | 0.980 | 1.15 | 0 | `NeutrinoVertexFinder.cxx:1714` |
+| 54629 | 20013 | 113.02 | 0.956 | 1.19 | 0 | `NeutrinoShowerClustering.cxx:1401` |
+| 320865 | 13001 | 48.05 | 0.942 | 1.76 | 1 | `NeutrinoVertexFinder.cxx:3320` (topo-escape M5) |
+
+**Note, not chased this round**: 54629's neutrino candidate is `fc=0` /
+`stmfit=eval` (not fully contained) -- the PID mislabel is real regardless,
+but the owner may separately want to ask whether this candidate is even a
+contained neutrino.
+
+## MIP-scale correction (affects reading any pr/40 threshold table)
+
+`pr40_seg_pid.py` and this doc's own round-1 table use `MIP=56000`.  Every
+C++ knob actually binds to **`m_mip_dqdx_median = 43000`** e/cm (e.g. F3's
+`segment_dqdx_spares_electron_reclass` call passes the function's own
+`mip_dqdx_median` parameter, and the calib dump's `meta.mip_dqdx_median` is
+43000).  This round uses 43000 throughout.  `pr40_seg_pid.py`'s 56000 is a
+latent scale bug -- flagging here rather than fixing the script, since round 3
+already spent time on exactly this class of mismatch (`m_mip_dqdx` 50000 vs
+`m_mip_dqdx_median` 43000) and a wrong MIP silently shifts every 1.2x/1.75x
+verdict by 30%.
+
+## Census -- new tool, no rerun of the pr_display stage needed
+
+`tracking-pr.root:T_rec_charge` (written unconditionally by every PR arm)
+carries `real_cluster_id`, `particle_id`, `flag_shower`, `q`, `nq`, `x/y/z` --
+validated exact against the `pr_display` calib JSON (71/71 segments, 0
+mismatch, `work-r2mc-prod0813`).  `dQ/dx = (q+1000)*10/nq` e/cm; length = sum
+of consecutive fit-point distances.  New script
+`scripts/analysis/pr40/pr40r7_census.py` reads this directly across an arbitrary
+number of arms -- no `PR_EXTRA_STAGES=pr_display` rerun required at all.  It
+differs from the existing `pr40_seg_pid.py` in three ways: reads
+`T_rec_charge` instead of calib JSON; reports `flag_shower` as a **column**,
+not a `!flag_shower` cut (`pr40_seg_pid.py`'s cut would have EXCLUDED 320865's
+own case -- it is Family B, `flag_shower=1`); uses the correct 43000 MIP scale.
+
+**Fresh PR reruns, current production, no env overrides**, over the full
+authorized manifest (ended up covering more than planned -- see the G0 note
+below on why the previously-existing `work-vf*-cbr3on` arms could not be
+reused):
+
+| sample | events run | rc=0 | with a nu-candidate |
+|---|---|---|---|
+| mcp1k | 1000 (the full QL sample, not just a 445-event subset) | 1000/1000 | 522 |
+| nueCC48 | 48 | 48/48 | 48 |
+| NCpi0-19 | 19 | 19/19 | 19 |
+
+**mcp2k (54629's own sample) is explicitly NOT covered** -- owner's scoping
+decision; state this gap plainly rather than imply full coverage.
+
+Selection: `particle_id==11 AND is_main_cluster AND length>20cm`.  **Result:
+212 candidate segments** across the manifest (78 mcp1k, 105 nueCC48, 29
+ncpi0) -- muon-like (<1.2xMIP): 90; ambiguous (1.2-1.75xMIP, the
+deliberately-uncut dead band per the evt-256587 precedent): 78; proton-like
+(>=1.75xMIP): 43; no dQ/dx evidence: 1.  Ranked by
+`length x max(0, 1-|xMIP-1|) x (1.0 if geometrically straight-long else 0.3)`
+so a long, ~1xMIP, straight segment sorts first.  **320865/13001 IS in this
+census** (rank 49/212, xMIP=1.76 near the proton-like edge) -- direct
+cross-validation that the predicate catches the round's own motivating case.
+Interestingly, **evt 138009** (nueCC48) also appears at rank 16/212
+(seg 12094, 41.6cm, flag_shower=1, xMIP=0.84) -- this is one of the events the
+owner separately flagged as "multiple tracks" in a prior review, an
+independent hint the two symptom reports may share a mechanism.
+
+Full ranked TSV: `scripts/analysis/pr40/pr40r7_census.py`'s output at
+`/home/xqian/tmp/pr40r7/census_full.tsv` (not committed -- scratch; regenerate
+with the Repro block's command against `work-pr40r7cen-{mcp1k,nuecc48,ncpi0}`,
+named above and not yet registered in `docs/work-tags.md` -- that file is a
+dated retirement/campaign log, not a running index, and this round doesn't
+own a retirement round to add a proper entry in; the arm names and their
+provenance live in this Repro block instead).
+
+**G0 note -- why the retired-and-rebuilt `work-vf*-cbr3on` arms could not be
+reused as census input**: `work-vfmcp1k-cbr3on`, `work-vfnuecc48-cbr3on`, and
+`work-vfncpi0-cbr3on` all predate the 2026-08-17 14:50 cathode-rescue-round-3
+flip (`2d8c9e5a`) -- built 13:25-13:38.  A single-event spot check
+(nueCC48 evt 10550) showed a hash MISMATCH against a fresh current-production
+rerun (mcp1k evt 320865 happened to match by coincidence -- that event's
+topology never touches the cathode-rescue path, which is why an earlier,
+narrower check missed the staleness).  Fresh reruns were built instead (the
+table above); this is the reason the mcp1k pass covers the full 1000 rather
+than reusing the retired 445-event subset.
+
+A concurrent session separately flagged (then, after direct verification,
+retracted) a suspicion that the *compiled binary* (not just the arm) was
+stale relative to `812c7add`'s three cathode-rescue C++ fixes.  Checked
+directly this round: `strings build/clus/libWireCellClus.so` contains the
+round-3 knob keys and their full runtime log-format strings (not just a
+static literal), and the source files' actual filesystem mtimes (12:39:08)
+predate the `.so`'s build mtime (12:39:42) by 34 seconds -- the .so is
+current.  The false alarm traced to comparing against the commit's timestamp
+(12:41:28) rather than the source files' actual mtime -- the same class of
+trap CLAUDE.md's M1 correction warns about, in the opposite direction.  Noted
+here since it is a recurring failure mode worth a general callout, not because
+it changed anything about this round's arms.
+
+## Bee scan set for the owner
+
+Top 50 ranked segments -> **45 unique events** (several events carry more than
+one flagged segment), most-flagrant-first, **5 rows below the cut dropped**
+(the 212-candidate full list has 167 more beyond what's linked here -- available
+in the census TSV named above if the owner wants a deeper pass after this one).
+
+**Link**: `https://www.phy.bnl.gov/twister/bee/set/5c5018d6-6db6-45b9-81f7-0338eda9741d/event/list/`
+
+Bee-index order (event -> flagged segment(s), length, xMIP; `*` = one of the
+round's two motivating events):
+
+| idx | evt | seg(s) | L (cm) | xMIP |
+|---|---|---|---|---|
+| 0 | 350935 | 11001 | 251.4 | 1.09 |
+| 1 | 283713 | 17006 | 252.8 | 1.17 |
+| 2 | 55595 | 8005 | 193.8 | 1.28 |
+| 3 | 407280 | 16010 | 128.8 | 1.14 |
+| 4 | 281837 | 13002 | 124.3 | 1.16 |
+| 5 | 55539 | 23005 | 108.9 | 1.13 |
+| 6 | 314507 | 51007, 17002 | 61.7, 32.3 | 1.04, 1.57 |
+| 7 | 64921 | 11002 | 84.9 | 1.35 |
+| 8 | 71222 | 22007 | 73.2 | 1.28 |
+| 9 | 316025 | 16009 | 81.7 | 1.36 |
+| 10 | 395610 | 28002 | 53.3 | 1.05 |
+| 11 | 285567 | 8035 | 47.5 | 1.15 |
+| 12 | 280972 | 7159 | 46.0 | 1.18 |
+| 13 | 401450 | 24076, 24074 | 38.7, 27.9 | 1.06, 1.07 |
+| 14 | 290729 | 12007 | 50.7 | 1.30 |
+| 15 | 138009 | 12094, 12095 | 41.6, 43.1 | 0.84, 1.75 |
+| 16 | 395060 | 24012 | 39.7 | 1.12 |
+| 17 | 286191 | 63011 | 35.3 | 1.04 |
+| 18 | 348471 | 12007 | 53.5 | 1.40 |
+| 19 | 69314 | 3015 | 38.4 | 1.19 |
+| 20 | 30504 | 11080, 11020 | 42.9, 41.6 | 1.29, 1.68 |
+| 21 | 286681 | 72038 | 36.7 | 1.19 |
+| 22 | 90055 | 13048 | 29.8 | 1.18 |
+| 23 | 293149 | 4001 | 26.4 | 1.10 |
+| 24 | 56982 | 22111 | 24.2 | 0.93 |
+| 25 | 321371 | 18004 | 25.8 | 1.15 |
+| 26 | 349461 | 71014 | 40.4 | 1.47 |
+| 27 | 352233 | 51012 | 38.6 | 1.45 |
+| 28 | 234638 | 10030 | 28.9 | 1.28 |
+| 29 | 214469 | 16057 | 27.4 | 1.27 |
+| 30 | 389538 | 19041 | 39.5 | 1.53 |
+| 31 | 277298 | 17003 | 45.0 | 1.60 |
+| 32 | 349549 | 12012 | 35.2 | 1.50 |
+| 33 | 433451 | 4031 | 27.3 | 1.36 |
+| 34 | 278684 | 10003 | 20.5 | 1.19 |
+| 35 | 292643 | 18009 | 22.9 | 1.29 |
+| 36 | 315167 | 8006 | 42.4 | 1.63 |
+| 37 | 268067 | 15084 | 21.9 | 1.29 |
+| 38 | 239794 | 2080 | 21.5 | 1.32 |
+| 39 | 386948 | 16005 | 23.2 | 1.41 |
+| 40 | 64409 | 8113 | 24.8 | 1.47 |
+| 41 | 437699 | 11024 | 24.9 | 1.47 |
+| 42 | 348691 | 51079 | 20.3 | 1.36 |
+| 43 | 54095 | 17044 | 20.7 | 1.38 |
+| 44 | **320865*** | 13001 | 48.1 | 1.76 |
+
+(54629 itself is not in this Bee set -- see the mcp2k scope note above; its
+Bee links are recorded separately in the pr90r4-{before,after} sets in
+`docs/pr/90_unbroken-kink-mcp1k.md` sec 10.10, and its three writer sites are
+fully attributed above with no Bee scan needed to confirm them.)
+
+Owner verdicts should be recorded per event/segment under a **fresh** tag
+(`overclustering_labels/pr40r7-scan/`, auto-created on first save by
+`overclustering_display/serve_overclustering_scan.sh`) -- never into an
+existing label dir (M13).
+
+## Proposed fixes -- NAMED, NOT IMPLEMENTED this round
+
+Per owner scope, these are documented candidates for a follow-up round, after
+the Bee scan confirms which census hits are real instances of the mechanism.
+
+- **Candidate 1 (320865 class)** -- `shower_topo_reexam_straight_guard`
+  (proposed name): a third skip branch in
+  `NeutrinoVertexFinder.cxx:3288-3327`'s topology re-exam, same shape as F10
+  (`shower_connect_main_vertex_straight_guard`) / F11
+  (`shower_traj_straight_guard`) -- decline the flag-set/`pdg=11` write when
+  `segment_is_straight_long_track(sg)` is true.  `false` = legacy =
+  byte-identical when off.  Given the Phase 0 item-zero finding, this should
+  be framed as a **defensible safety net**, not "the fix for 320865" -- the
+  segment only exists because of a same-day pr/90 side effect, and the
+  cleanest long-term fix may instead be on the pr/90 side (e.g. widening the
+  break's own quality check so a sub-`shower_topo_demote_len` arm is treated
+  more conservatively).  Flag both options to the owner rather than picking.
+- **Candidate 2 (54629 class)** -- THREE separate proposed guards, since
+  Phase 0 found three distinct, previously-unnamed writer sites rather than
+  the single hypothesized one:
+  - `examine_direction_dirsign_shower_in_guard` (proposed name):
+    extend pr/74's existing `shower_in_cascade_guard` predicate
+    (`segment_shower_in_cascade_vetoed`) to also cover the
+    `dirsign()==0` branch at `NeutrinoVertexFinder.cxx:1659` -- today the
+    guard is wired only into the sibling `abs(pdg)==13||pdg==0` branch three
+    lines down.  This is the smallest, most surgical of the three: reusing an
+    ALREADY-SHIPPED, ALREADY-ON knob's own predicate at a second call site,
+    not a new mechanism.
+  - `daughter_shower_angle_reclass_straight_guard` (proposed name): guard the
+    `num_daughter_showers>=4` / angle-mismatch wholesale reclass at
+    `NeutrinoVertexFinder.cxx:1714` with `segment_is_straight_long_track`,
+    same shape as F10/F11.
+  - `shower_connect_start_seg_straight_guard` (proposed name): guard the
+    `start_seg` direction/type write at
+    `NeutrinoShowerClustering.cxx:1401` (`pdg==0 || abs(pdg)==13` ->
+    unconditional electron) the same way.
+  All three reuse the same, already-proven-universal geometry lever
+  (`segment_is_straight_long_track`, fires on every long pdg-11 segment found
+  this round, both events) rather than a new charge threshold -- consistent
+  with round 3's own lesson about not inventing a fourth MIP scale.
+
+None of these five names are implemented, gated, or wired into config this
+round.  A follow-up round should re-run the same trace method on a
+representative subset of the owner's confirmed Bee-scan verdicts before
+committing to any one shape, exactly as this round's own Phase 0 found the
+original single-mechanism hypothesis for 54629 wrong.
+
+## Stale statements in this doc, annotated (found this session, not previously
+flagged)
+
+- The H1 (line 1) says "three fixes" -- the doc now documents 14+ knobs
+  across seven rounds.
+- Round 2's `## Flip` (line ~631) says F5 `shower_proton_daughter_pion` was
+  "left OFF" -- superseded by round 3 (line ~838), which flips it ON; current
+  config confirms `true`.
+- Round 5's `## Flip -- NOT flipped` (line ~1253) says all three round-5 TLA
+  defaults "stay false" -- superseded by round 6 (line ~1450), which flips
+  all three ON; current config confirms `true`.
+
+## Scope and not-claimed
+
+- No C++, jsonnet, or config change shipped this round -- owner explicitly
+  scoped this round to investigation + documentation + a Bee scan for
+  confirmation first.
+- The five proposed-fix names above are NOT gated, NOT tested, NOT wired into
+  any component -- they are documented candidates only.
+- 212 census candidates found; only the top 50 (45 unique events) went into
+  the Bee set -- the remaining 167 are in the (uncommitted, scratch) full TSV
+  and available for a deeper pass if the first 45 don't exhaust the owner's
+  scanning budget.
+- mcp2k is not covered by the census (54629's own sample) -- a future round
+  extending the census there is a candidate follow-up, not attempted here.
+- 54629's containment status (`fc=0`, `stmfit=eval`) is noted but not
+  investigated -- a separate question from the PID mislabel.
