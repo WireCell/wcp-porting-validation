@@ -1,9 +1,14 @@
 # doc pr/90 — unbroken kink, wrong neutrino vertex (mcp1k 320865, 172832, 61681)
 
-**Status: investigation only. Nothing is implemented, no knob is added, no config
-is touched, nothing was rerun.** The owner reviewed a Bee link of these three
-events and asked for a root-cause investigation and a proposed solution. §6
-lists the proposals and the gate each would need before any code change.
+**Status: investigation only. Nothing is implemented, no knob is added, no
+config is touched.** The owner reviewed a Bee link of these three events and
+asked for a root-cause investigation and a proposed solution. A follow-up
+round (§3b, §0.1) added a temporary `WCT_TEB_DUMP`-gated diagnostic dump to
+`segment_two_end_break_scan`, rebuilt, and reran evt 320865 into a scratch
+out_root to resolve the one open mechanism from the first round; the
+instrumentation was reverted from the toolkit tree immediately after capture
+(§0.1 has the diff and the freshness proof both ways). §6 lists the
+proposals and the gate each would need before any code change ships.
 
 ## 0. Repro
 
@@ -59,6 +64,83 @@ six labels: `not_a_candidate: true`, manual pick at `cluster_id: -1` — the
 scanner rejected every reco candidate). Kink census cross-reference:
 `docs/pr/86_r2-kink-after.json` (different arm, `work-mcp1k-pr87ion3`, same
 three events, corroborating turn magnitudes independently).
+
+### 0.1 Instrumentation used to resolve the 320865 mechanism (§3b)
+
+The first round of this investigation (below) could not explain, from static
+JSON dumps alone, why `segment_two_end_break_scan`'s turn route picked fit
+index 8 for the break on 320865 instead of an index near the independently
+measured true corner. That called for actually looking at the live
+`seg->fits()` array and the live `segment_wide_turn_angle` scan, not more
+inference from `calib-pr` JSON. Toolkit repo (`/nfs/data/1/xqian/toolkit-dev/toolkit`,
+branch `apply-pointcloud`):
+
+```diff
+--- a/clus/src/PRSegmentFunctions.cxx
++++ b/clus/src/PRSegmentFunctions.cxx
+@@ -10,6 +10,7 @@
+ #include <chrono>
+ #include <cmath>
+ #include <cstdlib>
++#include <fstream>
+ #include <list>
+ #include <numeric>
+ #include <set>
+@@ -593,6 +594,27 @@ namespace WireCell::Clus::PR {
+         res.idx_dip = k_dip;
+         res.idx_turn = k_turn;
+         res.turn_deg = turn_max;
++
++        // TEMPORARY diagnostic dump for doc sbnd_xin/docs/pr/90 (evt320865
++        // k_turn mystery).  Off unless WCT_TEB_DUMP is set to an output path;
++        // byte-identical to legacy when unset.  To be reverted after use.
++        if (const char* dumpenv = std::getenv("WCT_TEB_DUMP")) {
++            std::ofstream ofs(dumpenv, std::ios::app);
++            ofs << "# SEG N=" << N << " L=" << L/units::cm
++                << "cm k_dip=" << k_dip << " k_turn=" << k_turn
++                << " turn_max=" << turn_max << "\n";
++            for (size_t k = 0; k < N; k++) {
++                const double t = (opt.turn_angle > 0)
++                    ? segment_wide_turn_angle(fits, k, opt.turn_skirt, opt.turn_baseline)
++                    : 0.0;
++                ofs << k << " " << cum[k]/units::cm << " "
++                    << fits[k].point.x()/units::cm << " "
++                    << fits[k].point.y()/units::cm << " "
++                    << fits[k].point.z()/units::cm << " "
++                    << dqdx[k] << " " << t << " " << (arm_ok(k)?1:0) << "\n";
++            }
++        }
++
+         if (k_dip < 0 && k_turn < 0) return res;
+```
+
+Gated purely on an unset-by-default `getenv`, matching the existing
+`WCT_DET_DEBUG` convention elsewhere in `clus/`; byte-identical to legacy
+when the env var is unset, so this is not a behavior change. Build + freshness
+proof (M1):
+
+```bash
+cd toolkit && wcbuild
+ls -la --time-style=full-iso clus/src/PRSegmentFunctions.cxx ../local/lib/libWireCellClus.so
+# lib mtime 2026-08-17 06:10:29 > source edit mtime 2026-08-17 06:09:54 -- fresh
+```
+
+Single-event rerun into a fresh out_root, `reality=data` (M9/M13-adjacent —
+new scratch dir, nothing existing touched):
+
+```bash
+cd sbnd_xin
+rm -f /home/xqian/tmp/teb_dump_320865.txt
+WCT_TEB_DUMP=/home/xqian/tmp/teb_dump_320865.txt PR_JOBS=1 SBND_WCT_LOGLEVEL=debug \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-mcp1k-kink90 data 320865
+```
+
+After capturing `/home/xqian/tmp/teb_dump_320865.txt` (§3b), the diff was
+reverted (`git checkout -- clus/src/PRSegmentFunctions.cxx`) and `wcbuild`
+rerun to restore the clean production `libWireCellClus.so` — the toolkit
+working tree carries no trace of this round. The scratch out_root
+`work-mcp1k-kink90/` (2.2 MB, untracked, same convention as every other
+`work-*` arm) is left in place for reproducibility.
 
 ---
 
@@ -139,10 +221,12 @@ at once a second long-ish prong exists anywhere else in the cluster.
 **Caveat:** this is inferred from the *final* segment inventory and the
 absence of a log line; the gate is evaluated earlier, inside
 `find_proto_vertex`, so the pre-gate topology at that moment is not directly
-observed here. A `WCT_DET_DEBUG=2` single-event rerun (§6) would confirm it
-directly.
+observed here. Unlike §3b, this was not instrumented this round — a
+`WCT_DET_DEBUG=2` single-event rerun (same method as §0.1, applied to
+172832/61681 instead) would confirm the pre-gate topology directly and is
+the natural next step before implementing the §6 gate-widening proposal.
 
-### 3b. 320865 — the break DOES fire, but lands at the wrong point
+### 3b. 320865 — the break DOES fire, and instrumentation now shows exactly why it lands at the wrong point
 
 Unlike the other two, the log shows the pass firing and succeeding:
 
@@ -160,27 +244,54 @@ measured true corner). The break landed ~5 cm from the segment front — 2.4 cm
 from the current (wrong) reco main vertex — not near the true corner ~40–53 cm
 in.
 
-**An attempt to explain the mechanism did not succeed and is reported
-honestly rather than asserted.** Reconstructing the pre-break fit array by
-concatenating the two post-break segments' points from `calib-pr-evt320865.json`
-(`segments[13001].points` + `segments[13002].points[1:]`, oriented via their
-shared `start_vertex_id`/`end_vertex_id` = vertex 13002, the current wrong
-main vertex) and re-running the exact `segment_wide_turn_angle` scan with
-production defaults (`teb_turn_skirt=3cm`, `teb_turn_baseline=35cm`,
-`arm_ok` gate `min_arm=1.8cm`/`min_arm_pts=4`) gives a **global argmax at
-s≈53 cm with angle≈33°** — correctly near the true corner, not at index 8
-(which scores only ≈12° in this reconstruction). The reconstruction also
-doesn't reproduce the log's reported `turn=38.1deg` value at any index.
+**First-round attempt (superseded below).** Reconstructing the pre-break fit
+array by concatenating the two post-break segments' points from
+`calib-pr-evt320865.json` did not reproduce index 8 as the turn-angle argmax,
+so that round of the doc left the mechanism unresolved rather than guess. The
+`calib-pr` JSON's `segments[].points` turned out not to be a reliable stand-in
+for the live `seg->fits()` array (§0.1) — the fix was to look at the real
+array directly.
 
-This means either (a) the `calib-pr` JSON's `segments[].points` is not
-exactly the same array as the live `seg->fits()` TrackFitting used at that
-point, or (b) the acceptance-tier stopping-template scoring
-(`do_track_comp` over `accept_range`, not the raw turn angle) is what
-actually selected index 8 over the higher-turn candidates near the true
-corner, with the turn-angle argmax only entering as one of several rejected
-proposals. **Distinguishing these needs an instrumented single-event rerun
-(§6), not further static analysis** — the doc stops here rather than
-guessing.
+**Resolved via instrumentation (§0.1).** The dump of the live `fits()` array
+and the live `segment_wide_turn_angle(k)` value at every index (production
+`teb_turn_skirt=3cm`, `teb_turn_baseline=35cm`) shows the mechanism directly.
+Two local maxima compete for the `k_turn` argmax — a genuine one near the
+independently-measured true corner, and a spurious one right at the front of
+the segment, at fit index 8, that happens to score *higher*:
+
+| idx | s (cm) | turn (deg) | arm A: n pts, span (cm) | arm B: n pts, span (cm) |
+|---|---|---|---|---|
+| 7  | 4.73  | 36.31 | 3, **1.46** | 56, 34.22 |
+| **8**  | **5.34**  | **38.06** | **4, 1.94** | **57, 34.76** |
+| 9  | 5.96  | 33.97 | 5, 2.49 | 57, 34.74 |
+| 84 | 52.35 | 33.10 | 57, 34.22 | 55, 34.68 |
+| 85 | 52.89 | 33.04 | 57, 34.19 | 54, 34.00 |
+| 86 | 53.45 | 33.02 | 57, 34.30 | 55, 34.16 |
+| 87 | 54.04 | 33.01 | 56, 33.79 | 55, 34.16 |
+| 88 | 54.64 | 32.95 | 56, 34.11 | 56, 34.70 |
+
+At the true corner (idx 84–88, s≈52–55 cm — matching the independently
+measured turn region and the hand-scan truth vertex to within a few cm) both
+PCA arms are well-formed: ~56 points spanning ~34 cm, close to the requested
+35 cm baseline, and they agree stably at ~33°.
+
+At the winning index 8, arm A is **degenerate**: only 4 points spanning
+**1.94 cm** — because the segment simply doesn't have 35 cm of track in front
+of index 8 (the front of the segment is only 5.3 cm from index 8), so
+`segment_wide_turn_angle`'s window-collection loop (`PRSegmentFunctions.cxx:335-376`)
+silently accepts whatever points fall in the truncated `[skirt, skirt+baseline]`
+range rather than requiring the window be full. A 4-point PCA direction over
+1.94 cm of track is dominated by local fit wiggle, not by the track's true
+heading, and this particular wiggle happens to read 38.06° against the (well-
+formed) arm B — 5° *higher* than the genuine 33° corner 47 cm downstream. The
+argmax search (`k_turn`, a plain `if (t > turn_max)` scan with no arm-quality
+weighting, `PRSegmentFunctions.cxx:583-591`) has no way to prefer the
+well-supported candidate over the noisy one, and the noisy one wins by
+2–5° of accumulated PCA jitter.
+
+This confirms the general failure mode identified independently in §4's
+407-event census (spurious near-end PCA turns) as the *specific, live*
+mechanism for 320865, with exact numbers rather than inference.
 
 ### 3c. Ruled out: `vertex_kink_snap` reach
 
@@ -220,6 +331,16 @@ exactly the geometry a span guard is built to suppress as a *spurious*
 near-end PCA artifact. **Arc-length span cannot distinguish a true end-
 adjacent corner from a spurious one; this is not a usable discriminator on
 its own**, and no blanket wide-turn-angle knob is proposed as a result.
+
+§3b's instrumented evidence sharpens this rather than contradicting it: the
+spurious peak that actually won on 320865 has an arm span of **1.94 cm**
+against a 35 cm baseline (5.5% of requested) — nowhere close to the 61681
+true corner's already-short-but-real 2.1 cm arm on a *shorter* production
+baseline in that case. A guard scoped to *how starved the PCA window is
+relative to what it asked for*, evaluated only inside the existing
+`segment_two_end_break_scan` caller (not as a new blanket rule over every
+segment in the event, which is what this section's census tested and
+rejected), is a narrower and better-targeted lever — see §6.
 
 ## 5. 61681 is refinement-scale; 320865/172832 are true segmentation failures
 
@@ -264,21 +385,35 @@ default-OFF knob (e.g. `teb_allow_second_prong`), gated by:
   breaks elsewhere in the 45% of events that already have some segment
   crossing a naive turn threshold (§4).
 
-**For the 320865 class (break fires, wrong location):** the mechanism itself
-is unresolved (§3b). The concrete next step is an instrumented rerun before
-any fix is designed:
+**For the 320865 class (break fires, wrong location):** the mechanism is now
+confirmed (§3b, §0.1): `segment_wide_turn_angle`'s PCA window silently accepts
+a truncated arm near a segment end instead of requiring it be (close to) the
+full requested baseline, so a 4-point/1.94 cm degenerate PCA reading can
+outscore a well-formed 56-point/34 cm one by a few degrees of pure fit
+jitter. The proposed fix is scoped to the `k_turn` argmax eligibility test
+inside `segment_two_end_break_scan` (`PRSegmentFunctions.cxx:583-591`), not a
+blanket rule over all segments (§4 already rejected that as too broad):
 
-```bash
-cd sbnd_xin
-WCT_DET_DEBUG=2 PR_EXTRA_STAGES=pr_display PR_JOBS=1 SBND_WCT_LOGLEVEL=trace \
-  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-mcp1k-kink90 data 320865
-```
-
-(fresh `out_root`, `reality=data`, per the pr/83 precedent for this exact
-instrumentation). That would show whether `do_track_comp`'s acceptance-tier
-scoring — not the raw turn angle — is what actually selects candidate index 8
-over the higher-turn candidates near the true corner, which is the live
-hypothesis from §3b.
+- Add a new `TwoEndBreakOptions` field, e.g. `turn_min_arm_frac` (fraction of
+  `turn_baseline` each PCA arm must span to be eligible), **default 0 = off,
+  current unguarded behavior, byte-identical**.
+- When set (e.g. to 0.7, i.e. require ≥24.5 cm of the 35 cm baseline on both
+  arms), index 8's 1.94 cm arm A (5.5% of baseline) would be excluded from
+  the `k_turn` argmax search, leaving the well-formed true-corner region
+  (idx 84–88, ~97% of baseline on both arms) as the winner.
+- This directly and only affects the R2/turn route already in
+  `segment_two_end_break_scan`, so it can only change behavior on events
+  where `break_two_end_dqdx` already fires — it does not touch 172832/61681
+  (§3a, gate never reached) and does not touch `segment_search_kink`'s
+  independent accept ladder (§3c note below on `flag_switch`).
+- Required before any default flip: byte-identical A/B on `abtest/events.txt`
+  with `turn_min_arm_frac=0` (must be a no-op), then a targeted census of
+  every event where `break_two_end_dqdx` currently fires — how many of those
+  breaks currently land on a short-arm candidate like idx 8, and does
+  `turn_min_arm_frac≈0.7` move all of them into better agreement with
+  hand-scan truth without ever changing an otherwise-correct break — then a
+  hand-scan-labeled sample per pr/79 before any default flip. This last step
+  is not done in this doc; §0.1's dump only covers the one event.
 
 **Explicitly not proposed:**
 - Relaxing the four hard-coded `segment_search_kink` accept thresholds
@@ -291,9 +426,12 @@ hypothesis from §3b.
   investigation supports.
 - Widening `vks_radius` alone — ruled out in §3c, the snap isn't the failing
   mechanism here.
-- Shipping the bare wide-turn-angle threshold from §4 as a knob — the
-  footprint (16–45% of events depending on threshold) and the span-guard's
-  event-dependent sign flip make it unsafe without much more work.
+- Shipping the bare wide-turn-angle threshold from §4 as a blanket knob over
+  all segments — the footprint (16–45% of events depending on threshold) and
+  the span-guard's event-dependent sign flip (§4) make that unsafe without
+  much more work. `turn_min_arm_frac` above is deliberately scoped narrower
+  (inside the existing R2 route, only where `break_two_end_dqdx` already
+  runs) to avoid this failure mode.
 
 One additional untested but plausible contributor, flagged per M15 rather
 than picked silently: the WCT-only `flag_switch` stability guards in
@@ -308,6 +446,6 @@ itself (separate from `break_two_end_dqdx`) would be the way to check it.
 
 | evt | mechanism | status | proposed next step |
 |---|---|---|---|
-| 320865 | `two_end_break` fires, breaks at wrong index (mechanism unresolved) | segmentation failure | `WCT_DET_DEBUG=2` rerun (§6) |
+| 320865 | `two_end_break` fires, breaks at a spurious 4-pt/1.94cm-arm PCA turn 47cm short of the true corner (confirmed via instrumentation, §0.1/§3b) | segmentation failure, mechanism resolved | `turn_min_arm_frac` knob (default 0/off) + targeted census + A/B (§6) |
 | 172832 | `two_end_break` gate declines (`n_long != 1`) | segmentation failure | new default-OFF gate-widening knob + its own A/B (§6) |
 | 61681  | `two_end_break` gate declines; but DL vertex already near-exact | refinement-scale, not segmentation | lower priority; possibly moot once DL/topology tuning (pr/89) improves acceptance near this geometry |
