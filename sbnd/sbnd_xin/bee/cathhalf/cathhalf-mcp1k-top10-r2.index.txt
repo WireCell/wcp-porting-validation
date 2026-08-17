@@ -1,0 +1,13 @@
+# Bee set: https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/list/
+# selection: kind in {other-flash,UNMATCHED}, disp>=20 cm, ranked by missing_len
+# bee_idx	event	kind	missing_len_cm	disp_cm	matched_len_cm	gap2d_cm	angle_deg	t0_matched_us	apa_matched	y_cath	z_cath	bee_url
+0	409546	other-flash	198.7	62.5	79.6	6.22	1.0	-1111.0	1	121.3	359.8	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/0/
+1	347371	other-flash	197.5	112.3	203.7	1.54	1.1	-317.1	0	103.4	160.4	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/1/
+2	286114	other-flash	194.1	47.0	112.2	2.40	1.2	-632.8	1	122.4	314.1	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/2/
+3	61997	other-flash	176.4	74.8	254.5	1.39	3.4	-477.8	0	32.4	62.4	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/3/
+4	389588	other-flash	153.5	50.3	53.3	7.58	2.1	-1073.0	1	-163.0	45.3	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/4/
+5	282871	UNMATCHED	148.3	33.3	248.0	1.82	4.2	213.3	1	40.7	132.8	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/5/
+6	167112	other-flash	146.9	91.5	68.7	5.27	3.8	-1048.0	1	-153.2	92.8	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/6/
+7	58755	other-flash	143.2	58.4	126.9	4.37	2.1	-989.5	1	-26.4	191.0	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/7/
+8	281595	other-flash	124.7	52.2	66.9	2.08	0.6	-914.4	0	-137.0	24.9	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/8/
+9	405234	other-flash	116.4	31.9	112.5	2.45	1.7	-1022.0	1	67.7	481.7	https://www.phy.bnl.gov/twister/bee/set/fb72bebd-5724-414d-9265-6d3fc51e918f/event/9/
