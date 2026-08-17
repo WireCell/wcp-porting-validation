@@ -716,6 +716,29 @@ production default is C++ 0 / jsonnet null — byte-identical, escape-only.
 | 172832 | 20.4 cm off (gate declines) | unchanged | NOT fixed — §8.5: admission alone breaks at the wrong dip (ADVERSE); needs point-selection physics after admission |
 | 61681 | 4.4 cm off (gate declines; DL near-exact) | unchanged | refinement-scale (§5), deliberately untouched |
 
+### 8.11 Bee links (owner review, built 2026-08-17)
+
+Zips built with `scripts/bee/make_pr_bee.py` from the §8.8 arms
+(`/home/xqian/tmp/pr90_bee/pr90-{before,after,variants}.zip` + index/prid-map
+files alongside):
+
+- **before** (production = `work-mcp1k-pr90off2`), events in Bee-index order
+  320865, 172832, 61681, 291064, 64503, 319611, 59247, 172942:
+  `https://www.phy.bnl.gov/twister/bee/set/bcdf1c77-c5c0-413d-80d2-4f9a3d0c4ae9/event/list/`
+- **after** (flipped production = `work-mcp1k-pr90on2`), same 8 events:
+  `https://www.phy.bnl.gov/twister/bee/set/0ba37dff-6f79-48ec-bfc5-4a5251c139fb/event/list/`
+  Only index 0 (320865) differs from "before" — the §8.8 single-mover claim,
+  inspectable. Indices 3–7 are the preserved-break events: 291064 (the
+  residual spurious starved break, unchanged), 64503/319611/59247 (the
+  owner-approved b1=0 near-end breaks v1 would have destroyed), 172942 (the
+  18.4 cm-arm genuine break the 0.4 operating point deliberately keeps).
+- **variants** (the two REJECTED designs, NOT production): 172832 + 61681
+  from `work-mcp1k-pr90smoke1` (knob 2 ON — the gate admits and breaks at
+  the wrong dip, §8.5) and 291064 + 64503 + 319611 from `work-mcp1k-pr90on`
+  (v1 filter — removing the starved breaks fixes 291064 but destroys
+  64503/319611, §8.6):
+  `https://www.phy.bnl.gov/twister/bee/set/d4bdce6e-0108-4b49-bb28-bfb9943d222b/event/list/`
+
 Residual classes for a future round, with the §8.6 live evidence attached:
 (a) 172832-class — gate-widening admits the segment but R1's deepest dip
 is not the corner and R2's wide turn is below threshold there; (b)
