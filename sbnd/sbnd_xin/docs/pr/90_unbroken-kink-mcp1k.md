@@ -1377,3 +1377,18 @@ regression and was the fix; and the concurrent session's four passing
 gates coexisted with a cluster sitting 33 cm inside the wrong TPC.
 Neither a moved nor an unmoved number means anything until the question
 "what physically happened?" has a per-event answer.
+
+### 10.10 Bee links (owner verification of round 4, built 2026-08-17)
+
+Zips `/home/xqian/tmp/pr90_bee/pr90r4-{before,after,r3demo}.zip`.
+
+- **before** = production without round 4 (`work-mcp1k-pr90r4offb`),
+  Bee-index order 291064, 64503, 281214, 283905, 285443, 172832, 61681:
+  `https://www.phy.bnl.gov/twister/bee/set/fd2ce7fd-42f3-440a-8e86-c4339c0a9b2e/event/list/`
+- **after** = shipped production (`work-mcp1k-pr90r4on2`, D4 veto ON),
+  same events, same order:
+  `https://www.phy.bnl.gov/twister/bee/set/cf93ed27-8a57-42ad-90ad-58da6fed7b62/event/list/`
+- **r3demo** = the NOT-shipped D1+D3 arm (`work-mcp1k-pr90r4on`),
+  Bee-index order 172832, 61681, 59335 (its fixes) then 285531, 283091,
+  349835 (three of its ADVERSE relocations — why it stays OFF):
+  `https://www.phy.bnl.gov/twister/bee/set/4e1726a3-0a6f-4005-acea-5e01342ddd57/event/list/`
