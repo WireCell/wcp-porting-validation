@@ -265,3 +265,283 @@ knob adds one `find_vertices` call per break — O(1).
   non-sticky `find_other_segments` tags divergence
   (`NeutrinoOtherSegments.cxx:56` vs prototype `PR3DCluster` member —
   measured NOT to be the generator of these events' duplicates).
+
+## 8. Round 2 (2026-08-17) — the stacked-prong class the round-1 fix does not cover
+
+**This round's root cause is a DIFFERENT mechanism from §3's title defect.**
+`break_seg_orient` (round 1, shipped SBND production ON 2026-08-15) is
+unaffected and stays on. Owner report: mcp1k data event **138009** still
+shows "multiple tracks" stacked on one track, and asked for a scan of the
+1000-event sample for more cases. **Scope, owner-decided: investigate +
+document only this round — no code, no knob, no production flip.**
+
+### 8.0 Repro block
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+
+# census (free — reads existing production PR arms, no reruns):
+python3 scripts/pr83r2_census.py \
+    work-vfnuecc48-cbr3on work-vfmcp1k-cbr3on work-vfncpi0-cbr3on \
+    --tsv docs/pr/83_r2-census.tsv
+
+# extractor cross-validation (against the 9 events that still carry both
+# calib-pr-evt*.json and mabc-pr.zip):
+python3 scripts/pr83_dup_metric.py work-r1qlmc-prod0813 work-r2mc-prod0813
+
+# controls (base + 2 mechanism probes, 8 class-A events):
+NUE="138009 168596 268784 74544"; MC="349945 64409 174224 281837"
+PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-vfcbr3on  work-pr83r2-base-nue      data $NUE
+PR_JOBS=4 ./run_pr_chain_batch.sh work-mcp1kall-vfcbr3on work-pr83r2-base-mc      data $MC
+SBND_MVGA_INTERPOSED=false    PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-vfcbr3on  work-pr83r2-nointerp-nue   data $NUE
+SBND_MVGA_INTERPOSED=false    PR_JOBS=4 ./run_pr_chain_batch.sh work-mcp1kall-vfcbr3on work-pr83r2-nointerp-mc    data $MC
+SBND_MVGA_SPLICE_STRAIGHTEN=0 PR_JOBS=4 ./run_pr_chain_batch.sh work-nuecc48-vfcbr3on  work-pr83r2-nostraight-nue data $NUE
+SBND_MVGA_SPLICE_STRAIGHTEN=0 PR_JOBS=4 ./run_pr_chain_batch.sh work-mcp1kall-vfcbr3on work-pr83r2-nostraight-mc  data $MC
+```
+
+Freshness proof: `local/lib/libWireCellClus.so` timestamped 2026-08-17
+12:39:42, source files (`TaggerCheckNeutrino.cxx`/`NeutrinoVertexFinder.cxx`,
+the round-3 cathode-rescue commit) edited 12:39:08 — the .so postdates the
+edits; `strings` on the .so finds the round-3 knobs' compiled log strings.
+Reads current SBND production (toolkit `apply-pointcloud` HEAD `2d8c9e5a`).
+
+### 8.1 Sample identity
+
+**138009 is a nueCC48 event, not a member of the 1000-event data sample.**
+The 1000-event MCP2025C data sample
+(`input_files_reco1/staged-mcp2025c-1000evt`) is PR'd at 445/1000 events in
+`work-vfmcp1k-cbr3on/` (the other 555 have never had the PR stage run); it is
+censused separately below, alongside nueCC48 and NCpi0 — the same three-sample
+manifest §6 used (511 events total).
+
+### 8.2 Census — 511 PR'd events, current production, from `mabc-pr.zip`
+
+No surviving PR arm at ≥200 events still carries `calib-pr-evt*.json` (both
+`work-*-pr83on` from round 1 and everything since have been superseded or
+retired). Worked around it: `scripts/pr83r2_census.py` extracts per-segment
+fitted geometry straight from each event's `mabc-pr.zip` →
+`data/0/0-track_fit-global.json` (the Bee display payload, keyed by
+`real_cluster_id`), then reapplies §1's exact metric (overlap ≥ 0.7 @ 1.4 cm,
+chord angle < 20°, min length 10 cm).
+
+**Extractor validated**: on the 9 events that still carry both files
+(`work-r1qlmc-prod0813` 4 + `work-r2mc-prod0813` 5), the Bee segment set is
+identical to the calib `segments` list — same ids, same point counts, 0
+bee-only, 0 calib-only, 0 length mismatch > 0.05 cm. Feeding the Bee-derived
+segments through `pr83_dup_metric.py`'s own `analyze_event()` unchanged
+reproduces 138009's 12 pairs exactly.
+
+| arm (sample) | events PR'd | events with ≥1 dup-pair finding |
+|---|---|---|
+| `work-vfmcp1k-cbr3on` (1000-evt data sample) | 445 (425 with a track_fit layer — see below) | 6 |
+| `work-vfnuecc48-cbr3on` (nueCC48) | 47 | 7 |
+| `work-vfncpi0-cbr3on` (NCpi0) | 19 | 4 |
+
+20/445 mcp1k events have no `track_fit-global.json` in their `mabc-pr.zip`
+(19 checked: `rc=0`, no `nu-candidate` row in `nusel-evt*.tsv` — the tagger
+found nothing to write a track_fit layer for; 1 checked (`391854`) does have
+a `nu-candidate` row but it is a 7.1 cm 43-point stub, likely below whatever
+size floor the display visitor applies). Not investigated further — a
+coverage caveat on the extractor, not a defect claim.
+
+**17 (event, cluster) findings. Crosstab against each event's
+`wct_pr_evt<ID>.log` for `mvga: op3 ... carried>=2` on the SAME cluster: 8
+co-locate exactly (class A), 9 do not (class B).**
+
+Full table: `docs/pr/83_r2-census.tsv`.
+
+- **Class A — 8, new, mvga-carry co-located.**
+
+  | event | sample | cluster | dup pairs | segs | sum fitted len | longest member |
+  |---|---|---|---|---|---|---|
+  | 138009 | nueCC48 | 12 | 12 | 6 | 204 cm | 43 cm |
+  | 168596 | nueCC48 | 14 | 1 | 2 | 71 cm | 40 cm |
+  | 268784 | nueCC48 | 13 | 1 | 2 | 49 cm | 30 cm |
+  | 74544 | nueCC48 | 12 | 1 | 2 | 66 cm | 38 cm |
+  | 349945 | mcp1k | 18 | 2 | 4 | 58 cm | 18 cm |
+  | 64409 | mcp1k | 8 | 2 | 4 | 68 cm | 25 cm |
+  | 174224 | mcp1k | 20 | 1 | 2 | 185 cm | 168 cm |
+  | 281837 | mcp1k | 63 | 1 | 2 | 38 cm | 28 cm |
+
+- **Class B — 9, no carry, not diagnosed this round.** nueCC48 `246579`
+  (clus 19), `269774` (13), `46363` (19); mcp1k `350935` (clus 11, a **251 cm**
+  duplicated segment — a long-track shape, not the short prong-pair class
+  below), `404684` (9, 62 cm, cathode-crossing); NCpi0 `359980`, `506114`,
+  `506746`, `521075`. The four NCpi0 findings match §6.2's post-round-1 NCpi0
+  count of 4 exactly — consistent with being the same "short near-parallel
+  prong pair" residual class §6.2 already deferred.
+
+Specificity: across all 511 events, **41 (event, cluster) sites** carry ≥2
+prongs via mvga op3; only **8 (~20%)** show the stacked-duplicate metric. A
+future fix therefore cannot simply disable every carry ≥ 2 without pricing
+what the other 33 sites' pr/86 benefit costs — see §8.4.
+
+Context only, **not attributable**: §6.2 counted 11 dup-pair events
+post-round-1 vs 17 now, but that delta spans pr/79, pr/85, pr/86, pr/89, pr/90
+and the doc-73 cathode-rescue rounds; §6's `work-*-pr83on` arms are retired,
+so no apples-to-apples arm survives to attribute the delta to any one change.
+
+### 8.3 Root cause — mvga op3's interposed-splice carry, and why op1 misses it
+
+138009 cluster 12's `wct_pr_evt138009.log`:
+
+```
+mvga: op3 created-splice    cluster=12 stub_arc=15.87cm carried=2 vf_kept=0
+mvga: op3 splice-straighten cluster=12 carried=2 straightened=2 reach=26.49cm
+mvga: op3 stub-interposed   cluster=12 len=3.05cm vf_deg=3 carried=2 far_angle=168.9deg
+mvga: op3 splice-straighten cluster=12 carried=4 straightened=3 reach=35.43cm
+mvga: op3 stub-interposed   cluster=12 len=8.33cm vf_deg=5 carried=4 far_angle=167.2deg
+mvga: fired cluster=12 op1=0 op2=0 op3=4 (refit done)
+```
+
+`carried=2` then `carried=4` = the six stacked prongs
+(12088/12091/12092/12093/12094/12095), all fitted from main vertex 12117
+`(-103.3, 162.1, 81.5)`, 12 duplicate pairs at overlap 0.73–1.00 / angle
+2–15°, 204 cm of fitted length on a ~43 cm trunk. The PF tree books them as
+six separate electrons (673+78+105+102+518+188 MeV) plus a 223 MeV proton →
+`kine_reco_Enu = 1973.6 MeV` for what is physically one shower trunk.
+
+**Mechanism** (`clus/src/NeutrinoGraphAudit.cxx`, doc pr/85 2026-08-15 +
+pr/86 2026-08-16): op3's interposed-stub absorb (pr/85) deletes an interposed
+stub and re-attaches **every** far prong directly to the anchor
+(`carried_prong_execute` — this is `carried`); op3's round-2
+`splice-straighten` (pr/86 §15) then re-derives each carried prong's
+near-anchor stretch straight over `reach` = 26–35 cm — so N carried prongs
+each acquire the *same* trunk geometry near the anchor. `op1=0` on every
+class-A event: op1 (the pre-existing duplicate-corridor merge, §3-adjacent
+but pr/51-era, unrelated to `break_seg_orient`) runs **before** op3 in the
+same pass, and `in_scope_segments()` explicitly skips the `created` set —
+"segments created by this pass's own reconnects are exempt from every op ...
+no delete/recreate cycling." The spliced prongs are structurally invisible to
+the merge that would otherwise have caught them. Confirmed empirically: every
+one of the 8 class-A events logs `op1=0`.
+
+### 8.4 Controls — which half of the mechanism generates the stacking
+
+Both `carried_prong_execute` (the far-prong reattach, pr/85) and
+`splice-straighten` (the near-anchor re-derivation, pr/86) run inside the
+same `if (m_mvga_interposed) { ... }` block; `SBND_MVGA_SPLICE_STRAIGHTEN=0`
+is the narrower env knob (skips only the straighten step in principle),
+`SBND_MVGA_INTERPOSED=false` the broad one (declines the whole interposed
+pathway). Both wired in `run_pr_chain_batch.sh`. All 8 class-A events, base
+byte-identical to production first (`hash_archive.py` PASS 8/8 mabc+pctree
+before either control is read):
+
+| event | dup pairs base→interp-off→straighten-off | `kine_reco_Enu` MeV base→interp-off→straighten-off |
+|---|---|---|
+| 138009 | 12 → **0** → **0** | 1973.6 → **1441.3** → **1441.3** |
+| 168596 | 1 → **0** → **0** | 3151.4 → **1465.5** → 2727.0 |
+| 268784 | 1 → **0** → 3 (**worse**) | 2381.9 → **1696.8** → 2324.5 |
+| 74544 | 1 → **0** → **0** | 2828.5 → **2197.4** → **2197.4** |
+| 349945 | 2 → **0** → 1 | 990.1 → **501.8** → 561.1 |
+| 64409 | 2 → 1 (class B, pre-existing) → 1 (same) | 1386.9 → 1095.4 → 1095.4 |
+| 174224 | 1 → **0** → 1 (unchanged) | 831.2 → **257.7** → 829.9 |
+| 281837 | 1 → **0** → **0** | 1275.4 → **911.6** → 1065.2 |
+
+**`SBND_MVGA_INTERPOSED=false` is the clean, reliable control: 8/8 class-A
+findings clear to 0.** The one residual (`64409`, dropping from 2 pairs / 4
+segs to 1 pair / 2 segs) is pre-existing and unrelated to the carry: its log
+shows op1 firing normally (`op1 dup-merge cluster=8 removed seg len=4.13cm
+... overlap=1.00@14.0mm ... reconnects=0`), and the leftover pair is a short
+(27/16 cm) near-parallel prong of the §6.2/§8.2-class-B shape, not the
+interposed-splice pathology.
+
+**`SBND_MVGA_SPLICE_STRAIGHTEN=0` is unreliable**: it clears 4/8 (matching
+the interposed-off numbers exactly on 138009/74544, but only partially on
+168596/281837 — cleared as a *dup-pair metric* but with a much smaller Enu
+recovery, meaning the geometry still overlaps below the 1.4 cm / 0.7 metric
+threshold even though it no longer counts as a "duplicate pair"), leaves 2
+untouched or nearly so (`174224` unchanged, `349945` only reduced 2→1), and
+makes one **worse** (`268784`: 1 pair → 3 pairs — disabling only the
+straighten step while still doing the carry apparently produces a *less*
+straight, *more* dispersed set of near-anchor stretches that newly overlap
+each other). Every class-A event's `kine_reco_Enu` under `interp-off` drops
+substantially (966–1656 MeV), which is the double-count being removed rather
+than inferred.
+
+**Conclusion: the carry itself is the generator, not the straightening.** A
+fix should decline the interposed carry above some prong count, not merely
+skip straightening a carry that still happens.
+
+`numu_score`/`nue_score` also move under `interp-off` (e.g. 138009:
+0.109 → −0.129; 174224: 3.04 → −0.36) — expected: these are genuinely
+different reconstructions once the double-counted energy is gone, the same
+pattern §6.3 saw for round 1's fix ("the score change reflects honest
+inputs, not a regression mechanism"). No adjudication against hand labels
+was done this round — investigation only, no knob to gate on those labels
+yet.
+
+### 8.5 Fix design (not implemented this round)
+
+**`mvga_carry_max`** (int, default `0` = unlimited = legacy): decline the
+interposed absorb/splice when it would carry more than this many far prongs.
+`1` keeps the stub as the shared trunk — the physically correct topology
+(main → stub → far vertex → N prongs) — and removes the double count at
+source, consistent with §8.4's finding that the carry (not the straighten)
+is the generator. Cost: of the 41 carry-sites measured full-sample (§8.2),
+33 do not show the stacking metric; capping carry at 1 would decline all of
+them too, giving back some of pr/86's measured benefit (Class-B 90→48,
+orphans 118→82, +4 nue recoveries per the pr/86 SBND-flip commit message) —
+that trade needs its own A/B before shipping, not assumed here.
+
+Touch list for whoever implements it: `clus/src/NeutrinoGraphAudit.cxx` (the
+`m_mvga_interposed` block — `carried_prong_execute` / the `carried` counter),
+`clus/inc/WireCellClus/NeutrinoPatternBase.h` (member, alongside
+`m_mvga_splice_straighten`), `clus/src/TaggerCheckNeutrino.cxx` (`get()` +
+`default_configuration()` round-trip + `pattern_algos.` thread),
+`cfg/pgrapher/common/clus.jsonnet` (arg + key-suppression idiom),
+`cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet` (TLA thread, left
+OFF), `clus/test/doctest_clus_knob_defaults.cxx` (pin the default), and a
+`SBND_MVGA_CARRY_MAX` mapping in `run_pr_chain_batch.sh`. Gates it would owe
+(CLAUDE.md §4): knob-off byte-identical over the 511-event manifest
+(`hash_archive.py` rollup), knob-on census 8 → 0 with zero new findings via
+`scripts/pr83r2_census.py`, a `numu_score`/`nue_score`/`kine_reco_Enu`/vertex
+A/B with >1 cm movers adjudicated against
+`dl_vtx_training/data/full473/manifest.tsv`, and
+`./build/clus/wcdoctest-clus`.
+
+### 8.6 Class B — characterised, not diagnosed
+
+Nine findings with no mvga carry co-located. Four (NCpi0) match §6.2's
+post-round-1 residual count exactly and are almost certainly the same short
+(11–25 cm) near-parallel prong-pair class already deferred there. Three more
+(nueCC48 `246579`/`269774`/`46363`) are the same shape (24–37 cm sum length,
+2-seg findings). Two do not fit that pattern and are flagged for a future
+round: `350935` (mcp1k, clus 11) is a **251 cm** duplicated segment on what
+its short x-range (−20.6 … −15.5 cm) suggests is a single long track, not a
+near-vertex prong pair; `404684` (mcp1k, clus 9, 62 cm) is cathode-crossing
+(x range −10.0 … +12.5 cm), the one class-B finding where the doc-73
+cathode-rescue-round-3 knobs (`esva_ignore_empty_2d` etc., SBND production ON
+as of `2d8c9e5a`) are in scope and un-investigated here. No code, no root
+cause claimed — per CLAUDE.md §5's tie-breaker, named for the owner rather
+than fixed in this round.
+
+### 8.7 Bee evidence
+
+`docs/pr/83_bee-r2.index.txt` (does **not** overwrite round 1's
+`83_bee.index.txt`, M13):
+
+- Class A, production vs `SBND_MVGA_INTERPOSED=false` (the control, not a
+  shipped fix): before
+  <https://www.phy.bnl.gov/twister/bee/set/0bb602a3-6c51-4792-ae8a-d0740730a631/event/list/>,
+  after
+  <https://www.phy.bnl.gov/twister/bee/set/9aff3fea-24ac-4815-a6d5-ccb35931e6a9/event/list/>
+  (idx 0–7 = 138009/168596/268784/74544/349945/64409/174224/281837).
+- Class B exemplars (production only):
+  <https://www.phy.bnl.gov/twister/bee/set/8f3f427f-ee93-4c9a-8fb8-a1c02a148919/event/list/>
+  (idx 0–2 = 350935/404684/246579).
+
+### 8.8 Records
+
+- `scripts/pr83r2_census.py` — the validated `mabc-pr.zip` extractor + mvga
+  carry-site crosstab (this round's tool; supersedes nothing — used alongside
+  `pr83_dup_metric.py`, not instead of it, wherever `calib-pr-evt*.json`
+  still exists).
+- `docs/pr/83_r2-census.tsv` — all 17 findings, member segment ids included.
+- `docs/pr/83_bee-r2.index.txt` — links above.
+- Work arms (fresh labels, nothing written under an existing one, M13):
+  `work-pr83r2-{base,nointerp,nostraight}-{nue,mc}` (8 events × 3 arms × 2
+  samples). Not retired by this round; not protected either — ordinary
+  scratch, safe to clean up in a future retire pass.
+- No toolkit commit this round (no code changed). `wcp-porting-img`: this
+  doc section + the four files above.
