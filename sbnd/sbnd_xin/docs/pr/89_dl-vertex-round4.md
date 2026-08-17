@@ -1112,3 +1112,142 @@ round: (1) the offline rerank replay under-models the acceptance boundary
 (row-coordinate bias, §11.13) — fix the ruler or select live; (2)
 retraining at O(10³) labels regresses one-directionally (§11.11) — the
 next retrain attempt needs qualitatively more labels, not better dosing.
+
+## 13. Round 5 (owner-requested 2026-08-17) — salvage attempt on the residue
+
+Owner directive: try (1) selection-only s_topo or a centered term
+(center ≈ 0.5), (2) the swap-guard rider — hoping for a net vertex gain,
+with live validation (the lockbox is spent and §11.13 showed the offline
+replay ruler cannot be trusted at the acceptance boundary).
+
+### 13.1 The free derivation — selection-only is EXACTLY computable from round 4
+
+Because the round-4 arms share candidate sets and s_topo ≥ 0 at center 0
+(acceptance can only flip reject→accept), a variant that keeps the
+topo-informed argmax but leaves the ACCEPTANCE decision on the 7-term max
+has a live outcome already observed event-by-event:
+
+- base acceptance passed (`dl-rerank-accept` / `dl-veto-protected`) →
+  selection-only winner = the topo arm's winner, and every downstream step
+  (veto, snap, improve) sees what the topo arm saw → final = TOPO arm's.
+- base acceptance failed → selection-only fails too → final = BASE arm's.
+
+Repro: `python3 dl_vtx_training/selonly_derive.py` (also classifies the
+c05 variant, which is NOT exactly derivable: s_topo' = 3·(frac−0.5) can be
+negative, so acceptance and argmax both move).
+
+### 13.2 Results — both topo variants fail Gate A; no C++, no topo live runs
+
+**Selection-only (exact), correct@1.0 cm:**
+
+| sample  |    n | base | sel | net | base@1.5 | sel@1.5 |
+|---------|-----:|-----:|----:|----:|---------:|--------:|
+| mcp2k   |  541 |  429 | 427 |  −2 |      431 |     432 |
+| nuecc48 |   47 |   41 |  40 |  −1 |       41 |      40 |
+| ncpi0   |   19 |   15 |  15 |  ±0 |       15 |      15 |
+| mcp1k   |  407 |  316 | 317 |  +1 |      320 |     322 |
+| **ALL** | 1014 |  801 | 799 | **−2** |  807 | **809** |
+
+IPW 77.75% → 77.56%.  One fix (mcp1k 276836, 225.3 cm → 0.49 cm) vs three
+regressions (69666 0→4.15, 92225 0→1.01, 360535 0→1.61 cm).
+
+**The near-miss pattern is the round's finding:** at tol 1.5 cm the same
+variant is **+2** — its big movers pick the RIGHT vertex but the fitted
+final position lands 1.0–1.5 cm from the label truth (292436
+228.4→1.036 cm; 400856 6.12→1.127 cm; 75729 3.99→1.317 cm), and two of
+the three "regressions" are 1.01/1.61 cm.  The topology signal's residual
+value is throttled by post-selection position refinement
+(improve_vertex/snap around the newly chosen winner), not by selection.
+Chasing it means a position-refinement round, not more selection terms.
+
+**c05 (w=3, center=0.5), bounded:** of 1014 events, 612 resolve to the
+topo arm, 392 to base/reject, 10 UNKNOWN (would need a live run);
+exact-subset net **−3**.  Even the best case over the unknowns cannot
+reach the +3 gate.  No live run spent.
+
+**Gate A verdict: selection-only −2 (needs ≥ +3), c05 −3 — both FAIL.
+The Arm C residue is CLOSED at the registered 1.0 cm metric.**
+
+### 13.3 Swap-guard rider — live A/B KILLS it (−36); second ruler failure confirmed
+
+Repro:
+```bash
+./ab_pr89r5_swap.sh     # 1014 events, SBND_DL_VTX_SWAP_GUARD=true vs work-*-pr89base
+# scored: runs/ab-pr89r5swap-{mcp2k,nuecc48,ncpi0,mcp1k}-20260817.tsv
+```
+All 1014 event-runs rc=0, zero `DL vertex failed`.
+
+| sample  |   n | base | swap | net |
+|---------|----:|-----:|-----:|----:|
+| mcp2k   | 541 |  429 |  411 | −18 |
+| nuecc48 |  42 |   36 |   34 |  −2 |
+| ncpi0   |  19 |   15 |    9 |  −6 |
+| mcp1k   | 388 |  307 |  297 | −10 |
+| **ALL** | 990 |  787 |  751 | **−36** (6 fixed / 42 regressed) |
+
+The offline replay's "+3 fixed / 0 broken" (§11's Arm A rider) becomes −36
+live: excluding non-main-cluster candidates from the acceptance flips
+events `accept→reject` (34 on mcp2k alone), discarding correct DL vertices
+(regressions up to 403 cm).  Same failure mode as §11.13, opposite
+direction — the row-coordinate ruler cannot be trusted on EITHER side of
+the acceptance boundary.  **Rider closed; `dl_vtx_swap_guard` stays
+default OFF.**
+
+### 13.4 Owner-requested joint retune — production is a verified local optimum
+
+Owner directive: with >900 labels, jointly fine-tune the rerank composite
+(6 geometric weights, w_topo, center, min_accept, scale), constrained to
+stay near production (no zeroed/sign-flipped terms; weights within
+[0.5, 2]; one-step threshold/scale moves).
+
+Method (`dl_vtx_training/rerank_tune.py`): terms from the pr89topo dumps
+(all 8 per candidate + raw dl_score + frac/votes); each candidate theta's
+(route, winner) decisions are scored with an **outcome-calibrated ruler**
+— the live final vertex of whichever of the three arms
+(pr89base/pr89topo/pr89swap) actually took that decision — replacing the
+row-coordinate proxy §11.13 discredited.  Unobserved decisions count as
+INCORRECT (pessimistic floor).  Closure: at theta = production the replay
+reproduces the live base arm's route+winner on **1014/1014** events, 0
+uncovered — the scoring core is exact where it claims to be.
+
+Repro:
+```bash
+python3 dl_vtx_training/rerank_tune.py --search --tsv runs/rerank-tune-pr89r5-20260817.tsv
+# + pairwise scan (inline, sec 13.4 text): all 45 parameter pairs
+```
+
+Results:
+- **Coordinate ascent: no single-parameter move improves on production**
+  (801/1014).  The ascent terminates at the production point itself.
+- **Pairwise scan (822 two-parameter configs): 0 beat production**, even
+  as a pessimistic floor.  Within the 149 fully-covered configs — where
+  the ruler is exact and no pessimism applies — production is *exactly*
+  optimal.
+- Coverage census: 149 fully covered / 328 blind on 1–20 events / 390
+  blind on >20 (the heavily-blind region is threshold/scale moves whose
+  counterfactual outcomes no arm observed; evaluating those honestly
+  needs new live arms — and the two threshold-boundary directions we DID
+  buy live runs for, topo-inflation and swap-guard, both came back
+  negative).
+
+**Verdict: with the current 1014 labels and live-calibrated outcomes, the
+production rerank point is a confirmed local optimum of its own
+parameterization.**  The composite's headroom is not in its weights: it
+is in (a) the ~1 cm position-refinement residue of §13.2 and (b) label
+volume (§11.11's retrain wall).
+
+### 13.5 Round-5 verdict
+
+| candidate | method | result | ships |
+|---|---|---|---|
+| selection-only s_topo | exact derivation from live arms | −2/1014 (+2 at tol 1.5 — sub-tolerance residue) | no |
+| centered s_topo (c=0.5) | bounded derivation | −3 exact-subset, cannot reach gate | no |
+| swap-guard rider | live A/B (1014 evts) | **−36** (6 fixed/42 regressed) | no — closed |
+| joint near-production retune | outcome-calibrated search (1-D + all pairs) | production exactly optimal in covered region | no change |
+
+No net vertex gain exists in this residue at the registered 1.0 cm
+metric.  The two documented levers for a future gain: **post-selection
+position refinement** (three genuine topology rescues land at 1.0–1.5 cm;
+§13.2) and **label volume** for the DL component (§11.11).  A fresh
+sealed lockbox is required before any future tuning round (this one is
+spent, and rounds 4–5 selected on the full 1014).
