@@ -1,7 +1,16 @@
 # 73 — Cathode bundle rescue, round 2: the residual one-sided crossers
 
-**Status: IMPLEMENTED + VALIDATED + ALL FOUR KNOBS SBND PRODUCTION ON**
+**Status: IMPLEMENTED + ALL FOUR KNOBS SBND PRODUCTION ON — but the PR round
+(§11) is ADVERSE and the flip is under review.**
 (owner decision 2026-08-17, on §5–§6). Toolkit `17a9929a` (code) + `8464c354` (the flip).
+
+> **Read §11 before relying on this.** The full PR chain, run on the 9 events the
+> knobs fix, removes the neutrino candidate entirely from **5 of them** and breaks
+> a previously-good trajectory fit in a 6th. The cause is the round-2 rescue, not
+> the PR chain: the join makes the in-beam main long enough to be tagged TGM/STM,
+> and the cosmic veto then discards the only in-window main. Two of the five
+> (398115, 237798) are legitimate purifications; 51128 and 78242 are not.
+> §11.7 recommends turning the production flip back OFF pending a round 3.
 
 **This is NOT bit-identical.** It is a behaviour change delivered as config. The
 escape to the pre-round-2 baseline is
@@ -754,4 +763,227 @@ the two false merges.
 event; 167964 and 167744, which fail the hard tip/drift gates. And the PR-side
 effect of the rejoined halves is unmeasured — this round was Q/L-only by owner
 direction, so what the taggers do with the recovered charge needs a PR round.
+
+**That PR round is §11, and it is ADVERSE. Read it before relying on the flip.**
+
+---
+
+## 11. The PR round — the flip costs the neutrino in 5 of 9 events
+
+Owner request 2026-08-17, after the flip: *"run the PR chain on them and provide
+me the bee link — I want to confirm the PR state for these events."* Then, on
+seeing the displays, three specific questions (65289, 78242, 51128) and the
+diagnosis *"these problems were not PR problems, but with the previous fix in the
+cathode crossing tracks."* **That diagnosis is correct.** Every finding below is
+caused by the round-2 rescue, not by anything in the PR chain.
+
+**These are DATA events** (owner). There is no truth, and no guarantee any of
+them contains a neutrino.
+
+### 11.1 Repro
+
+```bash
+cd .../sbnd/sbnd_xin
+EVTS="398115 237798 281165 65289 78242 65053 51128 317427 319913"
+# Q/L with the pctree the PR chain reads (round 2 never wrote it: QL_EXTRA is new)
+ROOT=$PWD/work-cbr2-prql-off QL_EXTRA=-save-pctree \
+  SBND_RESCUE_IN_BEAM=0 SBND_RESCUE_GEOM_FIRST=0 SBND_RESCUE_PIERCE=0 \
+  SBND_RESCUE_DEST_BEAM=0 ./run_ql_batch.sh -j 6 $EVTS
+ROOT=$PWD/work-cbr2-prql-on  QL_EXTRA=-save-pctree ./run_ql_batch.sh -j 6 $EVTS
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-cbr2-prql-off work-cbr2-pr-off data $EVTS
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-cbr2-prql-on  work-cbr2-pr-on  data $EVTS
+```
+
+Both arms from ONE binary: toolkit HEAD `8464c354`,
+`build/clus/libWireCellClus.so` 2026-08-17 09:42:58, no clus source newer. 9/9
+`rc=0` in both arms. Bee: `bee/cbr2/cbr2-pr-beforeafter.index.txt`.
+
+Gates on the Q/L inputs, member-content hash (`hash_archive.py`), **9/9 each**:
+OFF-arm `pctree-evt<ID>.tar.gz` == production `cb0805`/`cb0816`; OFF-arm mabc ==
+production; ON-arm mabc == the validated `work-cbr2-contain` arm. The pctree gate
+is the one that matters — it is the file `run_pr_chain_batch.sh` actually reads,
+and gating only `mabc-all-apa.zip` would have checked the display instead of the
+PR input. *Instrument note:* `hash_archive.py` prints
+`<content-hash> <size> <path>`; hashing whole lines compares filenames and fails
+9/9 for the wrong reason.
+
+### 11.2 The headline
+
+**5 of 9 events lose the neutrino candidate entirely** — `TaggerCheckNeutrino`
+selects nothing where it previously selected a main.
+
+| event | join: beam cm + far cm @ far t0 | merged main L | tag | PR selection OFF → ON |
+|---|---|---|---|---|
+| 398115 | 75.0 + 342.9 @ **0.529 µs (in beam)** | 414.7 | TGM | L 341.9 → **none** |
+| 237798 | 252.6 + 164.8 @ **0.393 µs (in beam)** | 417.2 | TGM | L 252.4 → **none** |
+| 317427 | 286.7 + 143.6 @ 109.1 µs | 429.1 | TGM | L 286.7 → **none** |
+| 51128 | **3.8** + 283.9 @ 6.68 µs | 287.1 | TGM | L 57.7 → **none** |
+| 65289 | 160.2 + 88.9 @ −2.77 µs | 248.1 | STM | L 159.2 → **none** |
+| 281165 | 21.6 + 121.5 @ 276.7 µs | 138.4 | — | L 19.2 → L 138.4 |
+| 78242 | 201.8 + 149.7 @ **857.2 µs** | 314.4 | — | L 166.8 → L 314.4 |
+| 65053 | 46.9 + 94.2 @ 581.6 µs | — | — | L 113.9 → L 113.9 (unchanged) |
+| 319913 | 55.0 + 9.6 @ 28.9 µs | 64.4 | — | L 55.0 → L 64.4 |
+
+**Correction to §10 and to the first cut of the Bee index.** The `label` column
+of `nusel-evt<ID>.tsv` (`nu-candidate` / `TGM` / `STM` / `no-bundle`) and
+`TaggerCheckNeutrino`'s selection are **two different notions of "main"** — the
+`run_pr_chain_batch.sh` header says so explicitly ("the T_tagger row is NOT
+joinable to a nusel-evt<ID>.tsv main_id", because `unmerge_bundle` renumbers).
+Reading `label` as the PR outcome mis-scores two events: 65053 shows
+`nu-candidate → STM` in `nusel` while `TaggerCheckNeutrino` selects the *same*
+main `6 (L 113.9 cm)` in both arms, and 281165 shows `no-bundle` while PR does
+select a neutrino — its bundle simply moved from flash gid 0 (APA0) to gid
+1000007 (APA1), the same ~0.86 µs scintillation seen by the other APA. Score PR
+outcomes on the `selected main cluster` log line, never on `label`.
+
+### 11.3 The single mechanism behind all five losses
+
+Identical chain every time, and none of its links is a PR defect:
+
+1. the rescue joins the two halves, so the in-beam main gets **longer**;
+2. at 248–429 cm the object reaches through-going or stopping-muon size (SBND is
+   ~200 cm of drift per TPC, so a genuine cathode crosser tops out near 400 cm);
+3. `TaggerCheckTGM`/`TaggerCheckSTM` tag it cosmic — **correctly, for the object
+   they are shown**;
+4. `nu_skip_cosmic` skips that main, and it is the **only** in-window main;
+5. `TaggerCheckNeutrino: no main cluster selected` → no neutrino at all.
+
+The rescue's whole purpose is to make the in-beam main longer. Step 2 is
+therefore not an accident of these 9 events; it is what the knobs do.
+
+### 11.4 The owner's three questions
+
+**Q1 — 65289: two clusters in the bundle, one is STM; why is the other
+discarded? Is it because it is not identified as main?** *Yes, exactly that.*
+The two are cluster **13** (the merged main, L 248.1 cm, `STM=1`) and cluster
+**18**, a **demoted main** — a cluster that was a bundle main before the flash
+merge. `evaluate_demoted_mains` re-adds cluster 18 to the *tagger* evaluation
+list (it is scored: `TGM=false`, `STM=0`, `FC=true`), but
+`TaggerCheckNeutrino`'s candidate loop iterates only *current* mains that are
+in-window, and it reports `14 mains, 1 in-window` — cluster 13 alone. Once
+`nu_skip_cosmic` drops cluster 13 there is **no fallback**: nothing promotes a
+demoted main or an associated cluster into the empty candidate slot. So the
+survivor is discarded not on its merits but because it never entered the
+competition.
+
+**Q2 — 78242: `track_fit-global` is missing part of the neutrino, an EM shower
+and part of the long track.** The join did extend the fitted object across the
+cathode (main cid 8 → 17, fit now spans x −102.2 → +67.5 cm). But it **broke
+fitting that previously worked**. Points per 20 cm bin in the main cluster:
+
+| x bin (cm) | −60,−40 | −40,−20 | −20, 0 |
+|---|---|---|---|
+| `track_fit` OFF | 74 | 63 | 61 |
+| `track_fit` ON | **17** | **0** | **0** |
+| `shower_track` OFF/ON | 472 | 288 | 316 |
+
+The charge is still there — `shower_track` is unchanged in those bins and
+continuous from −120 to +80 — but the fitted trajectory now has a **40 cm hole**
+on the beam side of the cathode where it used to be solid. Overall the join added
+~1490 points to `shower_track` (1680 → 3170) and only 41 to `track_fit`
+(320 → 361): PR reclassifies the newly attached material as shower rather than
+track, and loses the beam-side stretch it had already fit. This is a real
+regression in the fit, not a display artifact, and it is caused by the merge.
+(The EM shower's absence from `track_fit` is by design — showers live in
+`shower_track`; the *long-track* hole is the defect.) Note this event's far half
+is matched **857 µs** away.
+
+**Q3 — 51128: the neutrino is gone; should the fix consider clusters other than
+the beam-flash-matched one?** *Yes — this is the clearest defect of the round,
+and the owner's reading is exactly right.* The beam-side donor `c11` is a
+**3.8 cm fragment**, not the bundle's neutrino, which is a *different* cluster
+(L 57.7 cm, `selected main cluster 22` in the OFF arm). Sequence:
+
+1. rescue joins `c11` (3.8 cm, beam) to `c8` (283.9 cm cosmic, t0 6.68 µs);
+2. F4 `rescue_dest_beam_for_new` puts the 287.1 cm result in the **beam** bundle;
+3. longest-cluster-wins makes it the bundle **main**, demoting the real 57.7 cm
+   neutrino to associated;
+4. `TaggerCheckTGM` tags the merged main → `nu_skip_cosmic` skips it, and
+   `nu_skip_cosmic_bundle` then skips the two remaining in-window clusters
+   (`L 1.2 cm` each) *because they share flash bundle gid 1000004 with a
+   cosmic-tagged main*;
+5. `no main cluster selected (23 mains, 3 in-window)`.
+
+The real neutrino is not even in the skip log — demotion removed it from the
+candidate list before the veto ran. A 3.8 cm fragment was allowed to decide the
+fate of a 57.7 cm neutrino interaction.
+
+### 11.5 Root cause, stated once
+
+The rescue picks the beam-side donor by **cathode geometry alone**. It never asks
+(a) whether that donor is the bundle's main or a minor fragment, nor (b) what
+attaching a large far half does to the *rest* of the destination bundle. F4 then
+forces the result into the beam bundle, where "longest = main" hands the bundle
+to the newly created cosmic and the bundle-level veto discards everything else
+in-window.
+
+This is the same failure shape as the false-merge bug of §6.3, one level up:
+there, the geometry inspected two tip points while the merge re-materialised a
+whole cluster; here, the geometry inspects two clusters while the merge
+re-organises a whole *bundle*. **Check the object the code modifies.** The
+round-2 gates could not have caught it — the join metric (§5.6) scored "did the
+missing half end up in the beam bundle", which is *true* in all 9 cases and is
+precisely how the neutrino gets killed.
+
+**The assertion that would have caught it, for the next round:** a Q/L-stage
+change must be scored on **"does PR still select a neutrino main?"**, never on
+"did the clusters merge as intended". Merging as intended is the *premise* of the
+damage here, so no amount of Q/L-side checking can see it. This is the PR-stage
+twin of §6.3's complement assertion (every event with no log line must be
+byte-identical): both work by checking an object the change was not reasoning
+about. Cost is small — the PR chain is ~20 s/event on an existing pctree, so the
+whole 12-event census is minutes. Round 2 skipped it only because PR was out of
+scope by owner direction, which was the right call at the time and is why this
+sat undetected for a day rather than being a gate failure.
+
+### 11.6 What is and is not a win
+
+Not all five losses are wrong. The two events whose far half is **itself in the
+beam window** — 398115 (0.529 µs) and 237798 (0.393 µs) — are genuine
+cathode-crossing muons in the beam window; joining them is right, 415/417 cm is a
+through-going muon, and TGM is the correct verdict. For those the pre-fix
+`nu-candidate` was the artifact and the flip is a **purification**.
+
+The rest need a hand scan, and two are already indefensible: 51128 (a 3.8 cm
+donor kills a 57.7 cm neutrino) and 78242 (fit broken over 40 cm, far half
+matched 857 µs away). 317427, 65289, 281165 and 65053 join far halves whose own
+flashes are 109 / −2.8 / 277 / 582 µs away — `rescue_geom_first` asserts those
+flash matches were all wrong, which is a strong claim with no independent
+evidence behind it.
+
+### 11.7 Recommendation (owner call — §5 rules 1 and 7)
+
+**Consider setting the four SBND production defaults back OFF pending a round 3.**
+The flip is currently ON in production and, on the only 9 events where its
+behaviour has been examined end-to-end, it removes the neutrino candidate from 5
+and demonstrably damages 2 more.
+
+**The production harm rate is UNMEASURED — do not read "1%" out of this.** The
+rescue fires on 12 events per 1000 (mcp1k), but that is the *firing* rate, not
+the harm rate; the harm rate is 12/1000 × (fraction of firings that are harmful),
+and the second factor is unknown. These 9 events are doc 72's **signal** set,
+selected precisely because a beam bundle was visibly cut at the cathode — i.e.
+enriched for the exact condition that drives the mechanism of §11.3 — so 5/9 is
+not an estimate of anything in a random sample. The 12 census firings include 4
+events never scanned end-to-end (169758, 395060, 291064, 486907). Measuring the
+real rate means running the PR chain over the full census, both arms.
+
+Escape, no rebuild needed: `SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM}=0`.
+
+Round-3 directions, in the order the evidence supports them:
+
+1. **Do not let a rescued join displace a bundle's existing main.** If the
+   destination bundle already has a longer, in-window, non-cosmic main, the
+   merged object should not take the main slot (51128, and the mechanism behind
+   every loss).
+2. **Require the beam-side donor to be substantial** — a `min_beam_donor_len`
+   guard would decline 51128 (3.8 cm) and 281165 (21.6 cm) outright.
+3. **Give `nu_skip_cosmic`/`nu_skip_cosmic_bundle` a fallback** so a vetoed main
+   promotes the next in-window candidate instead of emptying the event (65289).
+   This one is a PR-side change and belongs to whoever owns that chain.
+4. **Bound `rescue_geom_first` by |dt0|.** Unlimited, it asserts that a flash
+   match hundreds of µs away is wrong; 78242 (857 µs) and 65053 (582 µs) are the
+   cases to test a cap against.
 Bee for the three: `311a2d2e-1dac-4fb5-bd91-05685a6d8184`.
