@@ -12,8 +12,9 @@ the existing rescue did not fire. Round 1 of this doc (2026-08-17, design only)
 attributed the misses and proposed three extensions. This is round 2: the
 implementation, four corrections to round 1's design, and the measurement.
 
-**Result: 9 of the 12 signal events are fixed**, every one of them into the beam
-bundle. Knob-off is byte-identical to the production arms on all 12 (member
+**Result: 9 of the 12 signal events are fixed** (8 of the 10 at doc 72's
+production working point), every one of them into the beam bundle, all measured
+by a PR-free join metric. Knob-off is byte-identical to the production arms on all 12 (member
 content hash). Bee before/after in §7.
 
 ## 1. Repro
@@ -32,11 +33,17 @@ CATHODE_RESCUE_DEBUG=1 SBND_RESCUE_IN_BEAM=1 SBND_RESCUE_GEOM_FIRST=1 \
     SBND_RESCUE_PIERCE=1 SBND_RESCUE_DEST_BEAM=1 ROOT=$PWD/work-cbr2-on2 \
     ./run_ql_batch.sh -j 6 -f /home/xqian/tmp/cbr2_signal.txt
 
+# 281165 / 167744 live only in the LOOSENED search, so make its rows first
+BCS_GAP2D=25 BCS_ANGLE=30 BCS_P_MIN_LEN=5 BCS_P_MIN_PTS=10 BCS_CATH_NEAR=15 \
+BCS_P_CATH_NEAR=12 BCS_DIRX_MIN=0.2 \
+python3 scripts/analysis/cathode/beam_cathode_split.py --arm work-mcp2k-cb0816 \
+        --out /home/xqian/tmp/cbr2_loose2k.tsv --jobs 8
+
 # did the missing half JOIN the in-beam main?  (PR-free; reads only the Q/L zip)
 python3 scripts/analysis/cathode/cbr_join_metric.py \
     --baseline work-mcp1k-cb0805 --baseline work-mcp2k-cb0816 --test work-cbr2-on2 \
     --rows products/beam-cathode-split-mcp1k.tsv \
-    --rows products/beam-cathode-split-mcp2k.tsv
+    --rows products/beam-cathode-split-mcp2k.tsv --rows /home/xqian/tmp/cbr2_loose2k.tsv
 
 # per-knob ablation (F4 on throughout -- it is a destination fix, not an admission one)
 for a in f1:SBND_RESCUE_IN_BEAM f2:SBND_RESCUE_GEOM_FIRST f3:SBND_RESCUE_PIERCE; do
@@ -263,12 +270,24 @@ destination t0 against the rescue's own log):
 
 | | OFF arm | ON arm |
 |---|---|---|
-| JOINED-BEAM | 0 | **8** |
+| JOINED-BEAM | 0 | **9** |
 | JOINED-COSMIC | 0 | 0 |
-| NOT-JOINED | 10 | 2 |
+| NOT-JOINED | 12 | 3 |
 
-(the metric covers the 10 events carried in the doc-72 products; 281165 also fires
-`new-path-beam`, giving **9 of 12**.)
+All twelve are measured by the join metric, not by the rescue log. 281165 and
+167744 are not in the doc-72 products (they came from the loosened working
+point), so the loosened search is re-run and fed in as a third `--rows` file —
+otherwise those two would have been scored on the *weaker* evidence (a beam
+destination in the log) while §5 makes exactly that distinction its centrepiece.
+Their rows: `281165 main 16 p_cid 8 p_ext 94.4`, `167744 main 13 p_cid 12
+p_ext 99.6`.
+
+Two ways of reporting the numerator, both honest:
+
+* **8 of 10** at doc 72's production working point (the set doc 72 §A reports as
+  10 events in 3000);
+* **9 of 12** including 281165 and 167744, which are genuine but were lost to doc
+  72's own search cuts rather than to the reconstruction.
 
 ### 5.2 Per-knob ablation
 
@@ -449,6 +468,22 @@ Every destination t0 is inside `[0.2, 2.2) µs`.
   pr/20 comment cites 183 of them); instrumenting that touches a production file,
   so it is raised here rather than done unasked.
 
+  Swept **downward** on the signal set, which is the direction that matters (the
+  census bounds it from above):
+
+  | `SBND_RESCUE_PIERCE_CUT` | events firing / 12 |
+  |---|---|
+  | 6 cm | 9 |
+  | 7 cm | 9 |
+  | 8 cm (default) | 9 |
+
+  The fixed set is flat over 6–8 cm, i.e. the operating point is not perched on a
+  threshold. **The 10 cm and 12 cm arms are not reported**: they were launched
+  just as a concurrent session began a `wcb install`, and every job in them died
+  on `failed to load plugin: WireCellRoot` (rc≠0 on 12/12 and 6/12). They are not
+  evidence of anything and were not re-run, because re-running would have used a
+  different binary from every other arm in this doc.
+
 ## 9. Open items
 
 1. **evt493439's 31° vs 1.2°** (§5.4) — two estimators disagree on a hand-checked
@@ -459,13 +494,18 @@ Every destination t0 is inside `[0.2, 2.2) µs`.
    That is arguably a `beam_pref` (doc 22) failure, and fixing it there would
    remove the need for F2 on those events. Note the ablation moved both of them
    out of round 1's "class B" reading anyway.
-3. **Class A is not a light-reconstruction failure at all.** On 398115 and 237798
-   both flashes exist, both are in the beam window, and Q/L matched each half to
-   its own side's flash correctly — the halves were then left in different bundles.
-   On evt237798 both became separately in-beam mains, so PR ran twice on half a
-   track. If the two in-beam flashes are the two APAs' views of the *same*
-   scintillation, grouping at flash level before Q/L matching is cleaner than
-   re-joining the charge afterwards.
+3. **Class A is not a light-reconstruction failure at all, and the census makes
+   the case much sharper.** On 398115 and 237798 both flashes exist, both are in
+   the beam window, and Q/L matched each half to its own side's flash correctly —
+   the halves were then left in different bundles. On evt237798 both became
+   separately in-beam mains, so PR ran twice on half a track.
+
+   The strongest evidence is in §6.1, not in the signal set: two of the four new
+   census firings (169758, 395060) have their two halves matched to flashes
+   **3 ns apart** (1.376/1.379 µs and 1.077/1.078 µs). Two flashes 3 ns apart are
+   not two scintillations — they are the two APAs' views of one. Grouping them at
+   flash level *before* Q/L matching would dissolve this whole class, and would be
+   cleaner than re-joining the charge afterwards as F1 does.
 4. **Hand-scan the four census events** (§6.1 Bee sets) before any production
    flip. They are the whole cost side of the ledger: 4 events in 1000 that the
    knobs newly touch and that are not in the doc-72 signal set.

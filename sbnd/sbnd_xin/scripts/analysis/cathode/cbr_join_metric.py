@@ -90,7 +90,12 @@ def moves(root, evt):
         t0s = [float(x) for x in re.findall(r't0 ([-\d.]+) us', line)]
         g = re.findall(r'gid (\d+)', line)
         if not m or len(t0s) < 2 or len(g) < 3:
-            out.append((None, None, 'unparsed'))
+            # pass 2 ("unmatched rescue round") names one gid and one t0: the
+            # orphan has neither, and the destination is always the beam half.
+            if 'unmatched rescue round' in line and t0s:
+                out.append((int(g[0]) if g else None, t0s[0], 'unmatched-adopt'))
+            else:
+                out.append((None, None, 'unparsed'))
             continue
         dest = int(g[2])
         dt0 = t0s[0] if int(g[0]) == dest else t0s[1]
@@ -104,7 +109,6 @@ def main():
     ap.add_argument('--test', required=True)
     ap.add_argument('--rows', required=True, action='append')
     ap.add_argument('--kind', default='MISSING')
-    ap.add_argument('--extra', default='', help='comma-separated extra events (evt:main:pcid)')
     a = ap.parse_args()
 
     rows = []
