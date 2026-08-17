@@ -936,6 +936,12 @@ PR "reclassifying the material as shower" — that happens only to the newly
 attached far half. The beam-side points keep their track label and lose only
 their trajectory segment.
 
+**§11.8 carries the resolved diagnosis** — the join here is geometrically
+excellent (a dead-straight line through the cathode), and the defect is that
+**100 % of the rescued far half is labelled EM shower** while the beam half of
+the same muon stays 100 % track. Read §11.8 before this table; an intermediate
+answer that blamed the join was retracted there.
+
 **Q3 — 51128: the neutrino is gone; should the fix consider clusters other than
 the beam-flash-matched one?** *Yes — this is the clearest defect of the round,
 and the owner's reading is exactly right.* The beam-side donor `c11` is a
@@ -1078,26 +1084,68 @@ after the cathode fix, not as part of it.** Three reasons:
 
 It is also PR-chain code, so it belongs to whoever owns that chain (§11.7 item 3).
 
-**"For 78242, are you implying it is a PR problem?" — No, and there is now
-positive evidence.** The re-segmentation happens inside PR, but PR is executing
-correctly on a different input. The test: **can PR fit across a cathode junction
-at all?** Of the ON-arm events that still have a PR graph, three have a fitted
-main with charge on both sides of the cathode:
+**"For 78242, are you implying it is a PR problem?" — and "so what IS the
+problem?"**
 
-| event | fitted main, x range | crossing segment | verdict |
-|---|---|---|---|
-| 281165 | −32.0 … +7.3 | `16005` spans −22.3 → **+7.3** | one continuous segment **crosses** |
-| 319913 | −39.2 … +7.9 | `8001` spans −35.7 → **+7.9** | one continuous segment **crosses** |
-| 78242 | −102.2 … +67.5 | none — two disjoint groups | **71 cm hole at the junction** |
+**RETRACTION.** An earlier answer in this section called the 71 cm fit hole
+*"evidence against the join"*. **That was wrong**, on two counts, and the
+geometry disproves it.
 
-So PR fits straight across the cathode when the join is good, and 78242 is the
-lone failure. That makes the hole **evidence against the join, not against PR** —
-consistent with 78242's far half being matched **857 µs** away, the largest |dt0|
-of the nine.
+*First, the join is excellent.* The merged main's trajectory runs dead straight
+through the cathode — mean (y, z) per 10 cm slab:
 
-**Useful by-product: a fit that refuses to cross the junction is a signal the
-join is wrong.** That is a cheap round-3 validation check, and unlike the join
-metric of §5.6 it cannot be satisfied by merging alone.
+| x slab | −20…−10 | −10…0 | ‖ | 0…+10 | +10…+20 |
+|---|---|---|---|---|---|
+| y | 16.3 | 17.8 | ‖ | 19.2 | 20.8 |
+| z | 174.8 | 190.4 | ‖ | 205.4 | 222.0 |
+
+dz/dx is ~15.5 cm per 10 cm before the cathode and ~16 cm after; dy/dx is ~1.4
+on both sides. One continuous straight line from (−102, 16, 79) to
+(+67, 23, 322), ~300 cm long. There is nothing wrong with this merge.
+
+*Second, the "PR crosses fine elsewhere" comparison was too weak to carry the
+conclusion.* 281165 and 319913 do cross, but only to x = +7.3 and +7.9 — far
+halves of **218 and 84 points**. 78242's far half is **1489 points reaching
++67.5**. Those two never tested a substantial far half.
+
+**The actual problem: the rescued far half is classified as an EM SHOWER.**
+Track/shower labelling of the selected main, by side of the cathode:
+
+| event | beam half (x < 0) | far half (x > 0) |
+|---|---|---|
+| 281165 | 2071 track, 0 shower | 218 track, 0 shower |
+| 319913 | 524 track, 0 shower | 84 track, 0 shower |
+| **78242** | **1681 track, 0 shower** | **0 track, 1489 shower — 100 %** |
+
+Every point of the newly joined far half is labelled shower, while the beam half
+of the *same straight muon* stays 100 % track. 78242 is the only one of the three
+where this happens — and the only one whose far half is big enough to matter.
+
+That misclassification is what propagates into the display the owner saw:
+
+* the far half renders as shower, not as fitted track;
+* the PR graph is reorganised — the vertex that sat at the cathode end of the
+  track in the OFF arm, `(−1.4, 18.4, 197.1)`, **disappears**, and new vertices
+  appear at `(+15.5, 24.1, 228.8)` / `(+16.3, 21.1, 223.5)`;
+* no fitted segment covers x = −54 → +16, which includes the 54 cm that *was*
+  fit before (OFF segment `8004`).
+
+So "missing an EM shower as well as part of the long track" is **one** defect,
+not two: the far half became a shower, and the trajectory through the junction
+was lost when the object was re-fit around that labelling.
+
+**Is it a PR problem?** The misclassification happens in PR's track/shower
+separation, but it fires only on rescued far-half charge and only when that half
+is large — so it is *triggered* by the round-2 join, not independent of it. The
+neutrino vertex is unchanged between arms at `(−90.4, 8.7, 66.6)`, and the event
+keeps its candidate, so this one is a quality defect rather than a loss.
+
+**Next thing to check (round 3), not yet done:** whether the far half is
+graph-connected to the beam half across the cathode dead gap. If the rescue
+merges the two clusters without creating a graph edge between them, the far half
+is an isolated component to the separation — which would explain a straight
+muon segment being called a shower, and would be a defect in *this* component,
+not in PR.
 
 ### 11.9 The revert (owner instruction, 2026-08-17)
 
