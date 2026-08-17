@@ -782,6 +782,27 @@ fi
 if [ -n "${SBND_TEB_SECOND_MAX:-}" ]; then
     CATH_TLA+=(--tla-code "teb_second_max=${SBND_TEB_SECOND_MAX}")
 fi
+# doc pr/90 round 4 (sec 9.5 D1/D3/D4): chain-topology gate admission
+# (boolean TLA true/false), route R3 local-turn threshold (deg) + activity
+# floor (x mip median), and the R2 bragg-veto turn (deg).  Unset/empty
+# omits (jsonnet default false/null => C++ default = legacy =>
+# byte-identical).
+#   SBND_TEB_CHAIN_TOPOLOGY (true/false)
+#   SBND_TEB_R3_TURN
+#   SBND_TEB_R3_HOT
+#   SBND_TEB_BRAGG_VETO_TURN
+if [ -n "${SBND_TEB_CHAIN_TOPOLOGY:-}" ]; then
+    CATH_TLA+=(--tla-code "teb_chain_topology=${SBND_TEB_CHAIN_TOPOLOGY}")
+fi
+if [ -n "${SBND_TEB_R3_TURN:-}" ]; then
+    CATH_TLA+=(--tla-code "teb_r3_turn=${SBND_TEB_R3_TURN}")
+fi
+if [ -n "${SBND_TEB_R3_HOT:-}" ]; then
+    CATH_TLA+=(--tla-code "teb_r3_hot=${SBND_TEB_R3_HOT}")
+fi
+if [ -n "${SBND_TEB_BRAGG_VETO_TURN:-}" ]; then
+    CATH_TLA+=(--tla-code "teb_bragg_veto_turn=${SBND_TEB_BRAGG_VETO_TURN}")
+fi
 # doc pr/49: own-blob-coverage down-weighting in the trajectory fit's 2D
 # charge association (18255-57441 V-plane projection ghost).  NUMERIC knob,
 # not tri-state: unset = cfg default; any value is passed through verbatim

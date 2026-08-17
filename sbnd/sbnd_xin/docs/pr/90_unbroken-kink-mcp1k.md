@@ -1042,3 +1042,329 @@ off-vs-on A/B with every mover adjudicated against harv3-epoch labels
 | 64503 / 281214 / 283905 | broken (owner: should not be) | vertex activity / overlap ends; turns 26.5–26.8° | D4 (veto) |
 | 285443 / 59261 / 72586 | broken (owner: no need, tolerable) | marginal accepts | D4 lands them veto/keep/keep — all on the tolerated side |
 | 319611 / 59247 / 172942 / 64921 | correct breaks kept (owner-confirmed) | genuine junctions, turns ≥ 32.5° | unaffected by D1–D4 |
+
+## 10. Round 4 — D1/D3/D4 implementation + validation (2026-08-17, owner-requested)
+
+### 10.0 Scope: D1+D3+D4 implemented; D2 deferred
+
+Owner request: "implement the designed fix, validate with the 3 samples,
+if validated turn them on for SBND as default."  Implemented as three
+default-OFF knobs (five-layer pattern, same as round 2):
+
+- **`teb_chain_topology`** (bool, D1): when the entry gate sees
+  `n_long > 1`, admit iff the cluster's segment graph is a **simple path**
+  (every vertex degree ≤ 2 AND a single connected chain,
+  n_vertices = n_edges + 1 — the owner's "still a line, no 3-track
+  vertex") and the candidate is the **strictly unique longest** segment.
+  Chain-admitted candidates are scanned by route R3 ONLY (the legacy dip
+  route on this class breaks at an ordinary MIP fluctuation, §8.5), so
+  admission additionally requires both R3 knobs.
+- **`teb_r3_turn` / `teb_r3_hot`** (deg / ×MIP-median, D3): route R3 =
+  `segment_chain_turn_break_scan` (new, `PRSegmentFunctions.cxx`): break
+  at the largest 10 cm-baseline turn (`t10`, production 3 cm skirt) that
+  carries a vertex-activity spot ≥ `teb_r3_hot` × MIP-median within
+  ±2 cm, refined to the ±2 cm activity argmax (subject to arm_ok), with a
+  **well-formed preference tier** (§10.3).  Both > 0 enables.
+- **`teb_bragg_veto_turn`** (deg, D4): inside the standard scan, an
+  accepted **route-2** break with `turn < teb_bragg_veto_turn` is vetoed
+  unless its SHORT-arm end is Bragg-consistent — peak ≥ 2.0×MIP-median
+  AND contiguous >1.5×MIP hot extent from that end ≤ (peak − 1) cm/MIP
+  over an 8 cm window (§10.3 recalibration of the §9.4b sketch).  R1
+  (dip) accepts untouched.
+
+**D2 (`vertex_bridge_retract`) is deferred**, per §9.5's own fallback
+clause ("D3 covers it if D2 is not adopted"): D2 and D3 both ON would
+double-modify the same 61681 junction, and the D3 smoke landing (§10.5:
+61681 final main vertex 4.36 → 2.97 cm) covers the target.  If the owner
+wants the last ~2.5 cm, D2 remains fully specified in §9.5 for a future
+round.
+
+### 10.1 Repro
+
+```bash
+cd toolkit && wcbuild          # freshness: local/lib/libWireCellClus.so 09:01 > last edit
+./build/clus/wcdoctest-clus    # 210/210 cases, 2100 assertions
+
+# compiled-config proof (full 15-stage pipeline + pr_display; the
+# compile_all_cfg.sh sbnd_pr slice omits tagger_check_neutrino):
+#   pre-change (cfg stashed) vs post-change knobs-off -> cmp BYTE_IDENTICAL
+#   knobs-on (-S teb_chain_topology=true -S teb_r3_turn=18.0
+#             -S teb_r3_hot=1.6 -S teb_bragg_veto_turn=30.0)
+#   -> exactly the 4 new keys appear (once each)
+
+cd sbnd_xin
+# smoke (14 calibration/target events), knobs ON:
+PR_JOBS=14 PR_EXTRA_STAGES=pr_display SBND_DL_VTX_HARVEST=true \
+  SBND_TEB_CHAIN_TOPOLOGY=true SBND_TEB_R3_TURN=18.0 SBND_TEB_R3_HOT=1.6 \
+  SBND_TEB_BRAGG_VETO_TURN=30.0 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-mcp1k-pr90r4smoke2 data \
+  172832 61681 320865 291064 64503 281214 283905 285443 59261 72586 \
+  319611 59247 172942 64921
+# full arms (same env; OFF arm drops the four SBND_TEB_* r4 envs):
+#   work-{mcp1k,nuecc48,ncpi0}-pr90r4offb   (knobs off, gate vs harv3)
+#   work-{mcp1k,nuecc48,ncpi0}-pr90r4on     (knobs on)
+# gates: scripts/analysis/pr64/pr64_gate.py <a> <b>
+# movers: scripts/pr90_movers.py work-*-pr90r4offb work-*-pr90r4on --tags harv3
+```
+
+(A first OFF arm `work-mcp1k-pr90r4off` was killed ~10 min in when the
+§10.3 recalibrations forced a rebuild; its partial dir is dead weight —
+`rm` was blocked by session permissions — and was replaced by
+`work-mcp1k-pr90r4offb` on the shipping binary.)
+
+### 10.2 Implementation notes
+
+- `TwoEndBreakOptions` gains `bragg_veto_turn`, `r3_turn`, `r3_hot`;
+  `TwoEndBreakResult` gains `route3`, `bragg_vetoed`, `veto_peak`,
+  `veto_extent`.  The caller debug line now prints
+  `routes=(r1,r2,r3) ... chain={} vetoed={} vpeak={}xMIP vext={}cm`.
+- D1's degree census maps (pointer-valued) vertex descriptors but is
+  never iterated — only insertion-order-independent aggregates (size,
+  running max) are read.  Unique-longest uses strict `>`; ties decline.
+- The R3 scan is pure measurement; the caller's break_segment path
+  (cluster association, `kTwoEndBreakArm` arm flags, `kProtectedBreak`)
+  is shared with R1/R2 unchanged.
+- Config plumbing: `common/clus.jsonnet` (args + key-suppression),
+  `sbnd/clus.jsonnet` (4 sites), `sbnd/wct-pr-perevt.jsonnet` (TLA args +
+  passthrough), runner escapes `SBND_TEB_CHAIN_TOPOLOGY` /
+  `SBND_TEB_R3_TURN` / `SBND_TEB_R3_HOT` / `SBND_TEB_BRAGG_VETO_TURN`.
+- `doctest_clus_knob_defaults` checks all four keys' OFF defaults.
+
+### 10.3 Two recalibrations forced by in-code measurement (v1 smoke → v2)
+
+The first smoke (`work-mcp1k-pr90r4smoke1`, thresholds exactly as §9.4b/
+§9.5 sketched: hot=1.8, veto extent ≤ peak) failed two events, both for
+measurement-definition reasons, and both fixes replicate offline on the
+§9.1 batch A/B scan-side dumps (`/home/xqian/tmp/pr90_dumps/`, dqdx
+column in e/mm, MIP-median = 4300 e/mm):
+
+1. **64503 escaped the D4 veto by 4%.**  The in-code profile (8 cm
+   window from the short-arm end, contiguous >1.5×MIP extent) reads
+   peak 3.44×MIP / extent 3.3 cm — `extent ≤ peak` holds, unlike the
+   §9.4 offline sketch numbers (2.9/3.6).  Recalibrated to
+   **`extent ≤ peak − 1 cm`**: all five sub-30° owner verdicts veto
+   (64503 with 16% margin), and every bright-compact Bragg keeps ≥ 10%
+   slack under the in-code definition (320865 3.14/1.94, 319611
+   6.65/2.78, 59247 3.09/0.60, 172942 2.60/0.00, 72586 6.62/1.35) —
+   though all keeps are turn-protected (≥ 30°) and never consult it.
+   In-code sub-30° table: 291064 3.24/7.5, 64503 3.44/3.3, 281214
+   4.13/7.3, 283905 4.80/7.8, 285443 1.71/0.0 — five vetoes.
+2. **172832's R3 broke at the starved near-Michel t10 spike** (fit idx
+   207, 3.5 cm from the Michel end, t10 = 27.4° — the same §3b
+   starved-window jitter at 10 cm scale — outbidding the true 19–23.5°
+   junction plateau).  The activity corroboration cannot guard it: the
+   Michel's own EM charge reads 2.3–2.4×MIP there.  Fix = the same
+   two-tier idiom as the shipped `turn_min_arm_frac`: a **well-formed
+   preference tier** (both t10 windows fully achievable: ≥ skirt +
+   10 cm = 13 cm from each end) runs first; only if it is empty does the
+   unrestricted tier run.  172832's plateau is well-formed → tier 1
+   picks t10=23.5° at s=108.6, refined to the 3.0×MIP activity spot at
+   idx 178.  61681's genuine 54° corner sits 4.9 cm from the junction
+   end (tier 1 empty: mid-track t10 is 5–7°) and correctly falls through
+   to tier 2 — but its ±2 cm activity window only catches the 1.76×MIP
+   *edge* of the activity blob, so the **operating point** (not code)
+   moves `teb_r3_hot` 1.8 → **1.6**; the refine then lands idx 171,
+   1.25 cm past the click (vs the 4.36 cm production junction).
+
+### 10.4 Off-path proofs
+
+- `wcdoctest-clus` 210/210 (2100 assertions) on the shipping binary.
+- Compiled-config, full 15-stage(+pr_display) pipeline: pre-change vs
+  post-change knobs-off `cmp` **BYTE_IDENTICAL**; knobs-on adds exactly
+  `teb_chain_topology, teb_r3_turn, teb_r3_hot, teb_bragg_veto_turn`.
+- Byte-identity run gate on the 1067-event manifest: §10.6.
+
+### 10.5 Smoke, shipping code + operating point (chain=true, r3_turn=18, r3_hot=1.6, bragg_veto=30) — `work-mcp1k-pr90r4smoke2`
+
+Main-vertex distance to the owner click (harv3 labels; 14/14 events ok):
+
+| evt | class | production (harv3) | knobs ON | mechanism observed |
+|---|---|---|---|---|
+| 172832 | fix target | 20.35 cm | **0.49 cm** | chain admit, R3 tier 1: break idx 178 = the 3.0×MIP activity spot, 0.20 cm from the click |
+| 61681 | fix target | 4.36 cm | **2.97 cm** | chain admit, R3 tier 2: break idx 171, 1.25 cm past the click |
+| 291064 | D4 kill | 159.36 cm | **0.00 cm** | vetoed (27.4°, 3.24/7.5) — the §8.6 forgone fix recovered |
+| 64503 | D4 kill | 0.00* | 43.61* | vetoed (26.7°, 3.44/3.3); *label is the reco-anchored click the owner ruled WRONG (§9.0) — the move off it is the sanctioned correction, Bee below |
+| 281214 | D4 kill | 0.00 | 0.00 | vetoed (26.5°, 4.13/7.3); main vertex stays |
+| 283905 | D4 kill | 0.00 | 0.00 | vetoed (26.8°, 4.80/7.8); main vertex stays |
+| 285443 | D4 kill (preferred) | 0.00 | 0.00 | vetoed (25.5°, peak 1.71 < 2); main vertex stays |
+| 59261 | tolerable keep | 83.34 | 83.34 | turn 30.0 = threshold, kept (owner: either way) |
+| 72586 | keep | 297.40 | 297.40 | 33.2° ≥ 30, kept (labels far from break region, §9.4) |
+| 320865 | round-2 fix | 1.22 | 1.22 | 33.1° ≥ 30, kept — round-2 result preserved |
+| 319611 / 59247 / 64921 | keeps | 0.00 | 0.00 | 65.8/32.5/43.6° ≥ 30, kept |
+| 172942 | keep | 29.61 | 29.61 | 34.9° ≥ 30, kept |
+
+Every §9.4b owner verdict is honored; the only main-vertex movers are the
+three intended fixes (172832, 61681, 291064) and the owner-sanctioned
+64503 correction.
+
+**QL-epoch caveat on 291064** (flagged by the concurrent
+cathode-bundle-rescue session, doc 73 round 3): every number in this
+round is on QL epoch `cb0805` (frozen root `work-mcp1k-cb0805`).  291064's
+*current Q/L input contains a false cathode merge* (≈1370 APA1 points
+re-materialised 33 cm inside TPC0 by a mis-matched cosmic T0) that their
+upcoming containment veto will remove — so 291064's "0.00 cm" is a claim
+about this QL epoch, and a future re-production can move it without any
+teb_* knob changing.  None of the other 13 calibration events overlaps
+that session's touched set (398115, 237798, 281165, 65289, 78242, 65053,
+51128, 317427, 319913, 486907 — checked).
+
+### 10.6 Full A/B round A (all three knob families ON) — gates PASS, movers FAIL for D1+D3
+
+Arms (all on the shipping binary; the 16 ON-arm events that died in the
+concurrent session's 09:20:41 build window — `libWireCellClus.so: file
+too short`, evts 386794–388972 — were re-run on the codegen-identical
+new lib and the nusel tsv re-merged):
+
+- `work-mcp1k-pr90r4offb` / `work-mcp1k-pr90r4on` (1000/1000 each)
+- `work-nuecc48-pr90r4off` / `-on` (48/48), `work-ncpi0-pr90r4off` / `-on` (19/19)
+
+**Byte-identity gates (knobs off) — ALL PASS:**
+
+- mcp1k: vs `work-mcp1k-harv3` 999/1000 (single mover = 320865
+  `mabc-pr.zip`, exactly the shipped round-2 fix harv3 predates); vs
+  `work-mcp1k-pr90on2` (= current production) **1000/1000 identical**.
+- nueCC48 vs harv3: 48/48.  NCpi0 vs harv3: 19/19.
+
+**Off-vs-on movers (pr90_movers, harv3 labels) — FAIL for the R3 family:**
+47 movers > 0.05 cm in mcp1k (labels 473, compared 407): **21 ADVERSE, 8
+toward, 3 away, 17 on**; nueCC48 0 movers; NCpi0 1 benign (18625,
+R3 break elsewhere on the cluster, main vertex 0.00 → 0.35 cm).
+Attribution:
+
+- **D4-caused**: toward 291064 (159.36 → 0.00 — the §8.6 forgone fix,
+  headline); ADVERSE 349461 (0.00 → 122.49! §10.7) and 64503
+  (0.00 → 43.61 — *whitelisted*: its label is the reco-anchored click the
+  owner ruled wrong, §9.0; the §8.6 v1 arm showed the same move).
+- **R3-caused**: toward 59335 (66.00 → 0.00 AND cosmict 1→0 — the pr/48
+  motivating event, un-tagged as cosmic), 172832 (20.35 → 0.49), 175808
+  (9.39 → 0.93), 348515 (56.18 → 46.43), 285665 (89.14 → 85.68), 61681
+  (4.36 → 2.97); **ADVERSE 19**, of which five are large relocations of
+  owner-approved b1=0 vertices — 285531 (0 → 141.37), 283091 (0 →
+  110.61), 281505 (0 → 94.06), 391260 (0 → 87.52), 66118 (0 → 66.60) —
+  plus 170814 (0 → 49.57), 486247 (14.38 → 58.56), 314507, 349835, and
+  ten 1–7 cm movers, including two cosmict 0→1 flips (487853, 405234).
+
+**Root cause of the R3 failure** (measured, `/home/xqian/tmp/
+pr90r4_r3_anatomy.txt`): the D1 admission is satisfied by *every*
+simple-path chain with a second >4 cm prong — 126 clusters in 1000
+events, 64 of which carry some interior spot with t10 ≥ 18° and ≥1.6×MIP
+charge within 2 cm (delta rays, scatters, hairpins).  The ADVERSE and
+toward classes overlap completely in every local scalar (t10 19–154°
+both; 2–3-segment chains both; second-prong 3–99 cm both; short-arm
+3–21 cm both): what separates them is only whether production was
+already right (b1 = 0) — which the algorithm cannot know.  The break
+itself is often harmless (17 "on" events), but the kProtectedBreak
+vertex competes in main-vertex determination and sometimes wins.  This
+is the §8.6/§4 lesson a third time, now for D3: *no single local
+geometric/charge signature separates a true interior junction from an
+energetic delta ray*; selection (not refinement) is again the wrong
+lever (pr/89 round 4/5 finding).
+
+### 10.7 Decisions after round A
+
+1. **D1 (`teb_chain_topology`) and D3 (`teb_r3_*`) stay DEFAULT OFF —
+   not flipped.**  Net-negative live: 19 ADVERSE vs 6 toward on labels.
+   The knobs remain in the code (byte-identical off, gate-proven) for a
+   future vertex-anchored redesign (§9.5 D2 — which cannot create
+   competing far vertices by construction — or an R3 gated by the
+   scorer/DL side rather than admission-side).  172832 and 61681 stay
+   unfixed in production for now; the R3 toward evidence (59335!) is
+   recorded for the owner.
+2. **D4 (`teb_bragg_veto_turn`) needs a near-end scope before it can
+   flip**: unscoped, it vetoed 349461's healthy mid-track break (turn
+   29.2°, shorter arm 69 cm — one of §8.3's three "healthy" route-2
+   breaks) and moved its owner-anchored vertex 122 cm.  The §9.4b
+   calibration set is exclusively near-end breaks (short arms
+   4.3–6.1 cm), where "is the short piece a real second particle with
+   its own Bragg to its tip?" is the question the end profile answers; a
+   69 cm-arm break's distant end profile says nothing about its
+   junction.  Fix: the veto is evaluated only when the break's shorter
+   arm < **15 cm** (2.5× above the largest calibration kill arm, below
+   172942's 18.4 cm — itself turn-protected).  Revalidation as a
+   D4-only ON arm: §10.8.
+
+### 10.8 D4-only revalidation (near-end scope, `teb_bragg_veto_turn=30` alone) — PASS
+
+Rebuild (lib `build/clus/libWireCellClus.so` 09:42:58 — note the M1
+correction now in shared memory: jobs map the BUILD tree, freshness
+proofs stat `build/<pkg>/`, and `./wcb build` alone swaps the lib under
+a running campaign), `wcdoctest-clus` 210/210.
+
+- **Smoke** (`work-mcp1k-pr90r4smoke3`, 14 events): five kills vetoed
+  (unchanged from §10.5); **349461 break RESTORED** (out of scope, main
+  vertex 0.00) and 278420 untouched; every keep unchanged.
+- **Full arms** (`work-{mcp1k,nuecc48,ncpi0}-pr90r4on2`, all clean):
+  nueCC48 48/48 and NCpi0 19/19 **byte-identical** off-vs-on (zero
+  footprint); mcp1k **995/1000 identical, movers EXACTLY the five
+  vetoed events** {281214, 283905, 285443, 291064, 64503}, all
+  `mabc-pr.zip` only.
+- **Asserted invariants** (per the concurrent session's "check the
+  object the code modifies" lesson): (1) every veto line shows a
+  near-end candidate (turn indices 7/8 of 70–165 cm segments; 64503 idx
+  68/50.7 cm — calibration arms 4.6–5.5 cm); (2) the complement — every
+  event with NO veto line is byte-identical to OFF, **including 349461**
+  (the §10.7 regression, now among the 995); zero route-3 breaks, zero
+  chain admissions.
+- **Label-scored movers: exactly 2.** 291064 toward, 159.36 → 0.00 cm
+  (numu 1.749 → 3.171); 64503 0.00 → 43.61 cm against its
+  owner-invalidated label (§9.0) — the sanctioned correction (numu
+  −0.495 → 0.841, Enu 420 → 256).
+- **Non-events actively tested**: 281214/283905/285443 main vertex
+  0.00 → 0.00 (numu 1.864→1.831 / −2.888→−2.131 / 1.079→1.750; Enu
+  728→678 / 408→389 / 839→629 — the segmentation change feeds
+  kinematics; 285443's −25% Enu is the largest and its veto is the
+  owner's preferred side, §9.4b).
+
+### 10.9 Flip decision
+
+**`teb_bragg_veto_turn = 30.0` SBND PRODUCTION ON** (owner request:
+"if validated, turn them on for SBND as default" — D4 is the validated
+subset).  `teb_chain_topology` / `teb_r3_turn` / `teb_r3_hot` ship
+DEFAULT OFF, not flipped (§10.6/§10.7 net-negative live).  Toolkit
+commits: fbcf068c (knobs, DEFAULT OFF) + the cfg flip commit; the
+`common/clus.jsonnet` plumbing rode in the concurrent session's
+17a9929a (attribution note in fbcf068c).
+
+### 10.8b Kinematic verdicts on the vetoed five (concurrent-session cold review item)
+
+A vertex that does not move is not an event that does not change: D4
+merges segments, so PID/energy move with the vertex sitting still.  Per
+event, from the `kine` blocks (off → on2):
+
+- **285443** (Enu 839 → 629, −25%): the change is one number — the
+  muon, 408 → 198 MeV — and its `kine_energy_info` flips 0 → 1: with
+  the spurious break removed, the 72.7 cm track is treated as a
+  contained stopping muon and gets the RANGE-based energy, and 198 MeV
+  is exactly the range expectation for 72.7 cm.  The 408 was the
+  broken-topology artifact.  The −25% IS the fix.
+- **281214** (Enu 728 → 678): the 258 MeV "electron" (the broken-off
+  fragment read as an EM shower, which paired into a FAKE pi0:
+  `pio_flag` 1 → 0, `pio_mass` 132 → 0) becomes a 207 MeV muon of the
+  unbroken track.  Removes a spurious pi0 from the record.
+- **283905** (Enu 408 → 389): two muon pieces (272 + 30) become one
+  283 MeV muon; −19 MeV is merge bookkeeping on the owner-ruled ("should
+  not break") topology.
+- **291064** (Enu 615 → 541): vertex relocation to the owner click
+  (159.36 → 0.00) re-anchors the energy sums.
+- **64503** (Enu 420 → 256): the 35 MeV "pion" (the broken stub) is
+  absorbed into the muon (136 → 147) and `kine_reco_add_energy` drops
+  245 → 106 with the 43.6 cm vertex relocation.  **Reframed per the
+  cold review: this event is UNSCORED, not adverse** — its harv3 label
+  is the reco-anchored click the owner ruled wrong (§9.0), so the
+  ledger reads 1 toward + 1 unscored-resting-on-hand-scan, not 1/1.
+  Note its numu score crosses zero (−0.50 → +0.84): under a
+  0-threshold convention that is a selection-state change (it does not
+  cross the WCP-conventional 0.9); flagged for the owner's Bee pass.
+
+**Correction to the §10.5 QL-epoch caveat**: the concurrent session
+hash-verified that `work-mcp1k-cb0805`'s 291064 Q/L input is CLEAN
+(member hash identical to their knobs-OFF arm; worst cathode overshoot
+−0.10 cm) — the false merge existed only in their experimental knobs-ON
+arm.  The 159.36 → 0.00 result stands on its own; the caveat is
+conditional strictly on a FUTURE re-production adopting their
+containment veto.
+
+Base-size note (also from the cold review): the flip evidence is 2
+scored movers out of 407 labels + 3 actively-tested non-events + the
+kinematic attributions above — a judgement call on a thin base, stated
+as such, not a measurement.
