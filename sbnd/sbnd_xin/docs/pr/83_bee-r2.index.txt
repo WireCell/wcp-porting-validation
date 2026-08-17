@@ -2,8 +2,17 @@
 # class A (8 events): production ("before") vs SBND_MVGA_INTERPOSED=false
 # control ("after-nointerp"). The control is NOT the shipped fix -- no knob
 # exists yet -- it demonstrates which mechanism generates the stacking.
-# before: https://www.phy.bnl.gov/twister/bee/set/0bb602a3-6c51-4792-ae8a-d0740730a631/event/list/
-# after-nointerp: https://www.phy.bnl.gov/twister/bee/set/9aff3fea-24ac-4815-a6d5-ccb35931e6a9/event/list/
+# before: https://www.phy.bnl.gov/twister/bee/set/79f60a2e-d5b7-4461-9ada-81208403762b/event/list/
+# after-nointerp: https://www.phy.bnl.gov/twister/bee/set/47292f54-6ec7-4784-a5c0-eac3b8a0a9f3/event/list/
+#
+# NOTE: the first upload of these three sets (0bb602a3.../9aff3fea.../
+# 8f3f427f...) was BROKEN -- only bee_idx 0 rendered, idx 1+ were empty.
+# Cause: the per-event mabc-pr.zip member names are `data/<idx>/<idx>-<file>`
+# (the numeric prefix inside the filename must match the directory), and the
+# combiner script only renumbered the directory, leaving every member's
+# filename prefixed `0-` regardless of idx. Fixed in
+# scripts/pr83r2_census.py's sibling combiner; re-uploaded, links above are
+# the corrected sets. Do not use the old links.
 # bee_idx	event	sample
 0	138009	nueCC48
 1	168596	nueCC48
@@ -15,7 +24,7 @@
 7	281837	mcp1k
 #
 # class B (3 exemplars, production only, no diagnosis this round):
-# https://www.phy.bnl.gov/twister/bee/set/8f3f427f-ee93-4c9a-8fb8-a1c02a148919/event/list/
+# https://www.phy.bnl.gov/twister/bee/set/608d6105-22f6-4ed1-b379-3b7021f15053/event/list/
 # bee_idx	event	sample
 0	350935	mcp1k (251 cm duplicated segment, clus 11)
 1	404684	mcp1k (62 cm duplicated segment, clus 9, cathode-crossing)

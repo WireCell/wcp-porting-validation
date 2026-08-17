@@ -523,13 +523,21 @@ than fixed in this round.
 
 - Class A, production vs `SBND_MVGA_INTERPOSED=false` (the control, not a
   shipped fix): before
-  <https://www.phy.bnl.gov/twister/bee/set/0bb602a3-6c51-4792-ae8a-d0740730a631/event/list/>,
+  <https://www.phy.bnl.gov/twister/bee/set/79f60a2e-d5b7-4461-9ada-81208403762b/event/list/>,
   after
-  <https://www.phy.bnl.gov/twister/bee/set/9aff3fea-24ac-4815-a6d5-ccb35931e6a9/event/list/>
+  <https://www.phy.bnl.gov/twister/bee/set/47292f54-6ec7-4784-a5c0-eac3b8a0a9f3/event/list/>
   (idx 0–7 = 138009/168596/268784/74544/349945/64409/174224/281837).
 - Class B exemplars (production only):
-  <https://www.phy.bnl.gov/twister/bee/set/8f3f427f-ee93-4c9a-8fb8-a1c02a148919/event/list/>
+  <https://www.phy.bnl.gov/twister/bee/set/608d6105-22f6-4ed1-b379-3b7021f15053/event/list/>
   (idx 0–2 = 350935/404684/246579).
+
+Note: the first upload of all three sets was broken — only `bee_idx 0`
+rendered, the rest were empty. Cause: Bee's per-event member names are
+`data/<idx>/<idx>-<file>` (the numeric filename prefix must match the
+directory index), and the combiner script used to build these multi-event
+zips only renumbered the directory, leaving every member's filename prefixed
+`0-` regardless of idx — so idx 1–7 pointed Bee at files with the wrong
+names. Fixed and re-uploaded; the links above are the corrected sets.
 
 ### 8.8 Records
 
