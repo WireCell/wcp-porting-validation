@@ -9,8 +9,9 @@ production flip; that is the owner's call on the §6 census.
 > a cosmic matched hundreds of µs away is dragged 33 cm through the cathode, so
 > charge on one TPC's wires ends up in the other TPC. §6.3 is the diagnosis, §5.5
 > the fix (`far_contain_tol`, round 1's condition 3, which was designed and then
-> never implemented). The nine fixes of §5.1 are unaffected. **Do not flip any
-> knob on until §5.5 is validated.**
+> never implemented). **§5.5 is now implemented and validated (§5.6): both false
+> merges are rejected, all nine fixes survive, and no cluster crosses the cathode
+> anywhere.** The knobs still ship OFF pending the owner's read of §6.
 
 doc 72 §A found 10 events in 3000 where the in-beam bundle main is cut at the
 cathode and the raw image plainly continues into the other TPC.
@@ -381,10 +382,8 @@ estimator is right is the natural next step, and is cheaper than loosening a cut
 
 ### 5.5 The containment veto — round 1's condition 3, restored
 
-**Status: written, NOT yet validated.** The build is blocked on a concurrent
-session's 1000-event campaign holding the shared `local/lib`; this section is
-recorded now so the finding is durable, and will be re-stated with gate results
-once the arm runs.
+**Status: IMPLEMENTED and VALIDATED** (pointed validation §5.6, census §6.4).
+Toolkit `17a9929a`, build 09:20:47 (`build/clus/libWireCellClus.so`).
 
 `far_stays_in_tpc()`: for a pair admitted by any round-2 path, every point of the
 **far half**, shifted into the destination-T0 frame, must stay on its own side of
@@ -427,6 +426,53 @@ runs. Note the 11-event sample is small — the tracer prints the measured overs
 on every rejection, so a clipped genuine rescue shows up as a printed line rather
 than as a silent loss.
 
+### 5.6 Pointed validation of the containment veto
+
+13 events — the 9 fixes, the 2 false merges, and the 2 clean census firings —
+knobs all on, arm `work-cbr2-contain`. Build 09:20:47 (`build/clus`, the file
+actually mapped; see the provenance note in §1).
+
+| check | result |
+|---|---|
+| `./build/clus/wcdoctest-clus` | **PASS** — 210 cases, 2101 assertions |
+| events still firing | **11** — the 9 fixes + 169758 + 395060 |
+| containment rejections | **2**, both printed |
+| join metric | **JOINED-BEAM 9 / 9** |
+| any cluster crossing the cathode | **none** |
+
+The veto prints what it measured, so a rejection is never silent:
+
+```
+[cbrsel] c12 far half leaves its own TPC by 33.3 cm under the destination T0 (tol 1.0) -> reject   (evt486907)
+[cbrsel] c24 far half leaves its own TPC by 33.0 cm under the destination T0 (tol 1.0) -> reject   (evt291064)
+```
+
+Per-event overshoot past the cathode, before and after the veto — the two false
+merges collapse from 33 cm to −0.10 cm (i.e. inside their own TPC), and **not one
+of the eleven good firings moves by so much as 0.01 cm**:
+
+| event | before | after |
+|---|---|---|
+| 398115 / 237798 / 65289 / 78242 / 65053 / 317427 / 319913 / 169758 / 395060 | −1.65 … −0.02 | unchanged |
+| 281165 | +0.05 | +0.05 |
+| 51128 | +0.55 | +0.55 |
+| **291064** | **+33.46** | **−0.10** |
+| **486907** | **+33.79** | **−0.10** |
+
+The prediction in §5.5 was made before the build and is reproduced exactly,
+including that evt51128 keeps the thinnest margin (0.45 cm to the 1 cm bound).
+
+### 5.7 Why the pointed validation was enough
+
+The owner's call, and it is right: the veto can only ever *reject* a pair on the
+round-2 path, so it cannot create a firing, cannot touch the legacy path, and
+cannot alter a knob-off run. Its whole possible effect on the mcp1k census is to
+remove firings from the six already enumerated, and all six were run explicitly
+above. §6.1's re-run is therefore a confirmation, not a discovery.
+
+Run anyway, because the lesson of §6.3 is that reasoning about what code *can* do
+is exactly what missed a physical impossibility once already.
+
 ## 6. Gates
 
 | gate | result |
@@ -436,7 +482,8 @@ than as a silent loss.
 | compiled config, knobs OFF | **byte-identical** to `git archive HEAD cfg` — `cmp` on the full 54200-byte compiled JSON |
 | compiled config, knobs ON | all four keys present, `pierce_cut` threads through as 70 (= 7 cm at `SBND_RESCUE_PIERCE_CUT=7`) |
 | knob-off Q/L output, 12 signal events | **byte-identical** to the `work-mcp1k-cb0805` / `work-mcp2k-cb0816` production arms — member-content hash (`hash_archive`), 12/12 |
-| firing census, mcp1k 1000 events, OFF vs ON, one binary | **6 new firings, 0 legacy firings lost, 992/1000 byte-identical** — §6.1 |
+| firing census, mcp1k 1000 events, OFF vs ON | **4 new firings with the veto, 0 legacy firings lost, 988/988 non-firing events byte-identical** — §6.4 |
+| containment veto, pointed validation | **PASS** — 9/9 fixes kept, both false merges rejected, nothing crosses the cathode — §5.6 |
 
 The knob-off hash gate is stronger than it needs to be: it shows both that the
 restructuring left the legacy accept path alone **and** that the current binary
@@ -483,6 +530,35 @@ Hand-scan set (same event order in both, `clustering-global` is the layer):
 * BEFORE: `https://www.phy.bnl.gov/twister/bee/set/788bbab5-5b69-45b0-a657-0c2538528ac3/event/list/`
 * AFTER: `https://www.phy.bnl.gov/twister/bee/set/022f34d3-6d3f-453f-aaec-61ebe101032a/event/list/`
   (bee idx 0-3 = 169758, 291064, 395060, 486907)
+
+### 6.4 Census with the containment veto — the final numbers
+
+mcp1k 1000 events re-run with the veto on (`work-cbr2-c1kon2`, build 09:20:47):
+
+| arm | firing events | new vs OFF |
+|---|---|---|
+| OFF (legacy pr/14 path) | 8 | — |
+| ON, no containment veto | 14 | 65053, 65289, 169758, 395060, **291064**, **486907** |
+| **ON, with the veto** | **12** | 65053, 65289, 169758, 395060 |
+
+The veto removes **exactly** the two false merges, and **no legacy firing is
+lost**. So the round's cost side over mcp1k is **4 new firings in 1000 events**,
+of which two are doc-72 signal events and two (169758, 395060) are the clean
+class-A pairs whose halves are matched 3 ns apart.
+
+**The complement check — the one that would have caught §6.3.** Hash every event
+OFF vs ON and require that any event *without* a rescue log line be byte-identical:
+
+| | byte-identical | differs |
+|---|---|---|
+| events that fire | 8 | 4 |
+| events that do NOT fire | **988** | **0** |
+
+Zero quiet-but-changed. That assertion is worth more than its result: §6.3's bug
+lived precisely in the gap between "the checks I print" and "everything else", and
+a gate that only inspects the pairs it logs can never close it. (The previous
+census had 2 quiet-but-changed events, both traced to the chain's run-to-run
+nondeterminism — §6.2; this run happened to reproduce them.)
 
 ### 6.3 Two of the four new firings are FALSE MERGES (owner, hand scan)
 
