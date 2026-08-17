@@ -1,17 +1,12 @@
 # 73 — Cathode bundle rescue, round 2: the residual one-sided crossers
 
-**Status: IMPLEMENTED (toolkit `44aec999`) + VALIDATED on the signal set (§5) +
-knob-off byte-identical (§4). ALL FOUR KNOBS SHIP DEFAULT OFF.** No SBND
-production flip; that is the owner's call on the §6 census.
+**Status: IMPLEMENTED + VALIDATED + ALL FOUR KNOBS SBND PRODUCTION ON**
+(owner decision 2026-08-17, on §5–§6). Toolkit `17a9929a` (code) + `8464c354` (the flip).
 
-> **OPEN — a fifth gate is written but not yet validated.** The owner hand-scanned
-> the §6.1 census set and found that **2 of the 4 new firings are false merges**:
-> a cosmic matched hundreds of µs away is dragged 33 cm through the cathode, so
-> charge on one TPC's wires ends up in the other TPC. §6.3 is the diagnosis, §5.5
-> the fix (`far_contain_tol`, round 1's condition 3, which was designed and then
-> never implemented). **§5.5 is now implemented and validated (§5.6): both false
-> merges are rejected, all nine fixes survive, and no cluster crosses the cathode
-> anywhere.** The knobs still ship OFF pending the owner's read of §6.
+**This is NOT bit-identical.** It is a behaviour change delivered as config. The
+escape to the pre-round-2 baseline is
+`SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM}=0`, which omits every key and
+restores a byte-identical compiled config (verified by `cmp`, §9).
 
 doc 72 §A found 10 events in 3000 where the in-beam bundle main is cut at the
 cathode and the raw image plainly continues into the other TPC.
@@ -23,9 +18,14 @@ implementation, four corrections to round 1's design, and the measurement.
 
 **Result: 9 of the 12 signal events are fixed** (8 of the 10 at doc 72's
 production working point), every one of them into the beam bundle, all measured
-by a PR-free join metric. Knob-off is byte-identical to the production arms on all 12 (member
-content hash). Bee before/after in §7.
+by a PR-free join metric. Knob-off is byte-identical to the production arms on all
+12 (member content hash). Bee before/after in §7.
 
+> The owner hand-scanned the §6.1 census set and found that **2 of the 4 new
+> firings were false merges** — a cosmic dragged 33 cm through the cathode.
+> §6.3 is the diagnosis, §5.5 the fix (`far_contain_tol`, round 1's condition 3,
+> designed and then never implemented), §5.6/§6.4 the validation. Both are now
+> byte-identical to production again.
 ## 1. Repro
 
 ```bash
@@ -708,3 +708,50 @@ Every destination t0 is inside `[0.2, 2.2) µs`.
 5. **PR-side effect is unmeasured** by design this round. The rescued halves reach
    PR as part of the beam bundle main; what the taggers then do with them needs a
    PR round.
+
+
+## 10. The production flip (owner decision, 2026-08-17)
+
+All four knobs flipped to SBND production ON in
+`cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet` (the TLA block
+that IS the SBND operating point, doc 68) and in `sbnd/clus.jsonnet`'s
+`clus_all_apa` / `all_apa` defaults, so a caller that threads nothing inherits
+production. `rescue_pierce_cut` stays `null` ⇒ the C++ default 8 cm, which is the
+validated point (§8: flat over a 6–8 cm sweep).
+
+**Gates on the flip itself:**
+
+| gate | result |
+|---|---|
+| compiled config, bare production defaults | all four keys present and `true` |
+| compiled config, escape (`…=0` on all four) | **byte-identical** to the pre-round-2 baseline (`cmp` on the full compiled JSON) |
+| bare run == the validated arm | **4/4 member-content hashes match** |
+
+The bare-run check is the one that matters for doc 68's "the operating point lives
+only in cfg, so a bare run *is* production" invariant. Running with **no**
+`SBND_RESCUE_*` environment at all:
+
+| event | moves | matches |
+|---|---|---|
+| 65289 | 1 | the all-knobs-on arm, hash `b727216a…` |
+| 51128 | 1 | the all-knobs-on arm, hash `a8781cc1…` |
+| 291064 | 0 | the knobs-**off** arm, hash `cce0fcea…` (containment veto holds) |
+| 486907 | 0 | the knobs-**off** arm, hash `9b42fa64…` (containment veto holds) |
+
+So production now reproduces the validated behaviour exactly, including declining
+the two false merges.
+
+**What production gains and costs**, from §5.1 and §6.4:
+
+* **gains** 9 of 12 one-sided crossers rejoined, every one into the beam bundle;
+* **costs** 4 new firings per 1000 events on mcp1k (2 of them the doc-72 signal
+  events 65289/65053; the other 2, 169758 and 395060, are class-A pairs whose
+  halves are matched 3 ns apart), 0 legacy firings lost, and all 988 non-firing
+  events byte-identical.
+
+**Not carried by the flip, and still open** (§5.4, §9 items): 493439, where doc
+72's estimator and the rescue's disagree (1.2° vs 31°) on the same hand-checked
+event; 167964 and 167744, which fail the hard tip/drift gates. And the PR-side
+effect of the rejoined halves is unmeasured — this round was Q/L-only by owner
+direction, so what the taggers do with the recovered charge needs a PR round.
+Bee for the three: `311a2d2e-1dac-4fb5-bd91-05685a6d8184`.
