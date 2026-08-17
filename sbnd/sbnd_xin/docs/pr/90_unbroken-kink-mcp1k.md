@@ -894,6 +894,30 @@ template scores (64503's short arm scores *better*, 0.55, than
 59247's 0.708), the rise ratios (kill 1.35/1.73 vs keep 1.60/1.70/1.94 —
 interleaved), and arm span (§8.6).
 
+**Micro-scan Bee links for the six (built 2026-08-17, zips
+`/home/xqian/tmp/pr90_bee/pr90-micro-{break,nobreak}.zip`).** Same six
+events, same Bee-index order 281214, 64921, 285443, 283905, 59261, 72586:
+
+- **break present** (production, `work-mcp1k-pr90off2`):
+  `https://www.phy.bnl.gov/twister/bee/set/e27d3c67-4778-4200-b213-f59f94bed640/event/list/`
+- **break removed** (the §8.6 v1 arm, `work-mcp1k-pr90on`):
+  `https://www.phy.bnl.gov/twister/bee/set/a99f2a95-abc6-4f41-8096-4bac22960a58/event/list/`
+
+Per-event break coordinates (all route-2, near-end):
+281214 (−30.3, −32.4, 418.9) 5.4 cm from one end of a 77.8 cm track;
+64921 (60.3, 169.3, 164.4) 4.4 cm / 88.7 cm;
+285443 (−81.9, 47.8, 495.9) 4.6 cm / 72.7 cm;
+283905 (−136.8, 109.3, 243.0) 4.9 cm / 112.9 cm;
+59261 (97.3, 129.8, 176.9) 4.9 cm / 89.5 cm;
+72586 (−60.7, −195.0, 58.3) 6.1 cm / 311.5 cm.
+The scan question per event: is the short piece beyond the break a real
+second particle (own Bragg to its tip ⇒ break correct, KEEP), or is the
+end brightness vertex activity / overlap on a single track (⇒ break
+spurious, KILL, and where is the true vertex)? 59261 and 72586 do carry
+harv3 labels but the clicks are 83 / 297 cm away from the break region and
+do not adjudicate it. The recorded verdicts become the calibration labels
+for D4's threshold.
+
 ### 9.5 Fix designs for the next session (all default-OFF; not implemented here)
 
 **D1 — `teb_chain_topology` (bool): line-topology gate admission.**
