@@ -1199,6 +1199,112 @@ Size is the one axis that still separates the working cases from the broken one,
 so the next probe is whether the track/shower separation's behaviour on a
 rescued far half depends on its length — not on how it was attached.
 
+### 11.8.2 Step-by-step through the PR chain on 78242 (owner request)
+
+Repro — both arms, one event, per-segment PID trace un-gated:
+
+```bash
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display WCT_PID_TRACE_DEBUG=1 SBND_WCT_LOGLEVEL=trace \
+  ./run_pr_chain_batch.sh work-cbr2-prql-on  work-cbr2-pr-on-dbg  data 78242
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display WCT_PID_TRACE_DEBUG=1 SBND_WCT_LOGLEVEL=trace \
+  ./run_pr_chain_batch.sh work-cbr2-prql-off work-cbr2-pr-off-dbg data 78242
+```
+
+#### (1) What the PR chain is fed — nothing is missing
+
+`run_pr_chain_batch.sh` consumes `ql_evt<ID>/pctree-evt<ID>.tar.gz` (plus the
+opflash tarballs for RSE). Comparing the two arms' pctrees: **220 tensors each,
+identical datapath structure, zero paths present in one and not the other, zero
+count differences.** What it carries:
+
+| group | contents |
+|---|---|
+| live 3-D | per-blob `x, y, z, t`, `x_t0cor`, `y_cor`, `z_cor`, per-plane `u/v/w charge_val + charge_unc`, `u/v/w wire_index`, `wpid` |
+| live per-APA charge maps | `ctpc_a{0,1}f0p{U,V,W}` — charge, charge_err, cident, slice_index, wind, x, y — **both APAs present** |
+| live dead maps | `dead_winds_a{0,1}f0p{U,V,W}`, `dead_gap_a0f0pW` |
+| cluster_scalar | `ident`, `cluster_t0`, `flash`, `matched_flash_gid`, `flag_main_cluster`, `flag_associated_cluster`, `lm_flag` |
+| perblob | `real_cluster_id`, `real_cluster_main`, `real_cluster_was_main`, `assoc_cluster_id`, `assoc_cluster_main`, `isolated` |
+| blob scalar | centre, charge, npoints, wire-index ranges, slice range, wpid |
+| light | `flash`, `opflash`, `light`, `flashlight` |
+| dead grouping | scalar, corner, cluster_scalar |
+
+So the merged cluster reaches PR complete, with **both** APAs' charge and dead
+maps. No input is lost by the rescue.
+
+#### (2) Where the trajectory is lost — inside `tagger_check_neutrino`
+
+Pipeline: `switch_scope → unmerge_bundle → unmerge_assoc → steiner →
+fiducialutils → tagger_check_tgm → tagger_check_stm → tagger_check_fc →
+protect_bundle → steiner_refresh → tagger_check_neutrino → numu_bdt → nue_bdt →
+tracking_visitor → tagger_output`.
+
+ON-arm timeline for the merged main (cluster 17):
+
+| time | stage | what happens |
+|---|---|---|
+| 55.853 | steiner | cluster 17 graph = **2499 vertices, 4451 edges**; `do_rough_path` runs from `(674.6, …)` to `(−962.2, …)` mm — i.e. **+67.5 cm to −96.2 cm, across the cathode**. Graph is joined. |
+| **57.772** | **`main_cluster initial PR`** (1936 ms) | segments are created and fitted. The trace shows **`Seg 132.53 cm Track … pdg 13, KE 320.6 MeV`** — the junction piece — alongside `Seg 122.02 cm` (far half) and `Seg 60.18 cm` (beam half). **All Track, all muon. No `S_traj` anywhere on the long segments.** |
+| 57.891 | other_clusters PR | |
+| 57.903 | deghosting | 12 ms |
+| **58.858** | **`overall main vertex`** (955 ms) | ← graph rebuilt around the chosen vertex |
+| **59.478** | **`improve_vertex + examine_direction`** (620 ms) | ← graph rebuilt again |
+| 59.538 | `shower_clustering_with_nv` | 60 ms |
+| 59.573 | Bee dump | cluster 17 dumps segments **7, 11, 12, 17 only** |
+
+The Bee dump iterates **PR-graph edges** (`ordered_edges(*pr_graph)`,
+`MultiAlgBlobClustering.cxx:846`), so only segments still in the graph appear.
+Segment ids **8, 9, 10, 13, 14, 15, 16 were created and are gone** — the
+132.53 cm junction segment among them.
+
+**Contrast with OFF, which is clean:**
+
+| arm | segments created for the main | segments surviving to the dump |
+|---|---|---|
+| OFF (cid 8) | ids 4, 5, 6, 7 | **all 4** — `8004`=169 fitted pts, `8005`=101, `8006`=11, `8007`=34 |
+| ON (cid 17) | ids 7 … 17 | **4** — `17007`=103, `17011`=12, `17012`=206, `17017`=34 |
+
+OFF's `8004` (169 fitted points, x −54.8 … −1.4) is exactly the stretch the ON
+arm ends up missing, and OFF keeps every segment it makes.
+
+**Not a fitting failure.** The doc pr/55 sentinels for an empty `fits()` or a
+missing `associate_points` cloud fire **zero times** in either arm. Every
+surviving segment has both. The junction segment was *fitted* — 132.53 cm of it
+— and then **removed from the PR graph** by one of the two vertex stages between
+57.772 and 59.573.
+
+#### (3) Why the far half paints as shower
+
+The `shower_track` layer's rule (`MultiAlgBlobClustering.cxx:866-878`):
+
+```
+is_shower = (segment ∈ seg_to_shower)          // shower membership is authoritative
+         || kShowerTrajectory || kShowerTopology || |pdg| == 11
+```
+
+The PID trace settles which disjunct fires: the far-half segments are **`Track`,
+`pdg 13`, KE 298 MeV** — so `kShowerTrajectory`, `kShowerTopology` and the
+`pdg == 11` test are all **false**. The far half is therefore painted shower
+**solely because `shower_clustering_with_nv` absorbed its segments into a shower
+object.** SBND runs `pseudo_shower_track_paint = true`
+(`wct-pr-perevt.jsonnet:1302`), which repaints a shower as track when the
+shower's `get_particle_type()` is ±13 — that override did not fire, so the shower
+is not typed as a muon.
+
+**Summary of the causal chain for 78242**
+
+1. The rescue joins the halves — geometry excellent (§11.8.1), inputs complete.
+2. The Steiner graph spans the cathode; `main_cluster initial PR` fits the whole
+   object, including a 132.5 cm junction segment, and calls every long segment a
+   **muon track**.
+3. `overall main vertex` / `improve_vertex` rebuild the graph and the junction
+   segment does not survive → the 71 cm hole in `track_fit`.
+4. `shower_clustering_with_nv` absorbs the far half into a shower object → all
+   1489 far-half points paint as EM shower despite being PID'd as muon track.
+
+Steps 3 and 4 are the two places to instrument in round 3. Both are downstream of
+a join this doc now considers sound, so neither is fixed by tightening the
+rescue's admission gates.
+
 ### 11.9 The revert (owner instruction, 2026-08-17)
 
 All four SBND production defaults set back to `false` in
