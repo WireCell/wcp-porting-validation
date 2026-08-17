@@ -918,6 +918,66 @@ harv3 labels but the clicks are 83 / 297 cm away from the break region and
 do not adjudicate it. The recorded verdicts become the calibration labels
 for D4's threshold.
 
+### 9.4b Owner micro-scan verdicts (2026-08-17) and the calibrated D4 rule
+
+Owner verdicts on the six: **281214 not to break; 64921 OK to break;
+285443 no need to break (though); 283905 should not break; 59261 no need
+to break (though); 72586 no need to break, but OK.** Encoded as: hard KILL
+= 281214, 283905 (joining 291064, 64503); KEEP = 64921 (joining 319611,
+59247, 172942); tolerable-either-way = 285443, 59261, 72586.
+
+Full 11-event calibration (turn = the accepted route-2 turn at the
+production break, from the §8.3 census log lines; peak / hot-extent from
+the §9.4 profiles):
+
+| evt | owner | turn (°) | end peak (×MIP) | hot extent (cm) | shape-only rule (§9.4) | turn<30° | combined |
+|---|---|---|---|---|---|---|---|
+| 291064 | KILL | 27.4 | 3.0 | 8.2 | veto ✓ | veto ✓ | veto ✓ |
+| 64503 | KILL | 26.7 | 2.9 | 3.6 | veto ✓ | veto ✓ | veto ✓ |
+| 281214 | KILL | 26.5 | 3.5 | 7.7 | veto ✓ | veto ✓ | veto ✓ |
+| 283905 | KILL | 26.8 | 4.2 | 6.9 | veto ✓ | veto ✓ | veto ✓ |
+| 285443 | no-need | 25.5 | 0.9 | 0 | keep (ok) | veto (ok) | veto (ok, preferred) |
+| 59261 | no-need | 30.0 | 3.5 | 2.5 | keep (ok) | keep (ok) | keep (ok) |
+| 72586 | no-need, OK | 33.2 | 5.9 | 1.3 | keep (ok) | keep (ok) | keep (ok) |
+| 64921 | KEEP | 43.6 | 2.5 | 7.8 | **veto ✗ FAILS** | keep ✓ | keep ✓ |
+| 319611 | KEEP | 65.8 | 4.4 | 2.8 | keep ✓ | keep ✓ | keep ✓ |
+| 59247 | KEEP | 32.5 | 2.5 | 0.9 | keep ✓ | keep ✓ | keep ✓ |
+| 172942 | KEEP | 34.9 | 1.0 | 0 | keep ✓ | keep ✓ | keep ✓ |
+
+Two findings:
+
+1. **The §9.4 shape-only candidate (hot-extent > peak) is refuted**:
+   64921's genuine junction (owner: OK to break) has the same dim-extended
+   end profile (2.5×MIP over 7.8 cm) as the hard kills 281214/291064 —
+   dQ/dx end shape alone cannot separate them. (This mirrors §4's and
+   §8.6's lesson: no single geometric/charge scalar has been sufficient.)
+2. **The accepted turn angle separates perfectly**: every hard KILL
+   clusters just above the 25° accept threshold (26.5–27.4°), every KEEP
+   is ≥ 32.5° (and the shipped 320865 fix breaks at 33.1°). A genuine
+   back-to-back junction turns hard; the spurious accepts are
+   threshold-hugging soft bends.
+
+**Calibrated D4 rule** (supersedes the §9.5 D4 draft): veto an accepted
+route-2 break iff
+
+```
+turn_at_break < teb_bragg_veto_turn (≈ 30°)
+AND NOT bragg_consistent(short-arm end)      # peak ≥ 2.0×MIP AND hot-extent(cm) ≤ peak(×MIP)
+```
+
+Scores 4/4 hard kills, 4/4 keeps, and lands all three tolerables on their
+preferred side (285443 vetoed, 59261/72586 kept). Margins at 30°: highest
+kill 27.4° (−8.7%), lowest keep 32.5° (+8.3%); the one boundary event
+(59261, 30.0°, tolerable either way) sits exactly at threshold. The
+Bragg-consistency conjunct exists so that a future sub-30° break with a
+genuinely bright-compact stopping stub (none in this sample) is NOT
+vetoed — the turn cut alone would take it. Route-1 (dip) breaks are
+untouched. Vetoing 291064 restores its §8.6 fix (main vertex 159 → 0 cm);
+the other vetoes (64503/281214/283905/285443) change segmentation and, per
+the §8.6 v1 arm, move no main vertex except through downstream score
+changes — the full A/B + movers gate re-checks that at implementation
+time.
+
 ### 9.5 Fix designs for the next session (all default-OFF; not implemented here)
 
 **D1 — `teb_chain_topology` (bool): line-topology gate admission.**
@@ -956,13 +1016,15 @@ dip route, §8.5); 61681 → ≤ ~1.2 cm (D2 is the preferred fix there; D3
 covers it if D2 is not adopted).
 
 **D4 — `teb_bragg_veto`: the keep/kill rule for near-end R2 breaks.**
-Veto an R2 accept whose short-arm outer end fails Bragg-consistency
-(§9.4 rule: hot-extent(cm) > peak(×MIP), evaluated over the ~8 cm end
-window). Would kill 291064 (recovering the §8.6 forgone 159 → 0 cm fix)
-and 64503 while preserving 319611/59247/172942. Prerequisites before any
-flip: owner micro-scan of the six unlabelled movers (§9.4), a census
-evaluation over all 38 firing events, then the standard full-manifest
-A/B + movers gates.
+CALIBRATED in §9.4b against all 11 owner verdicts (the original
+shape-only draft here was refuted there by 64921): veto an accepted R2
+break iff `turn_at_break < teb_bragg_veto_turn (≈30°)` AND the short-arm
+end is not Bragg-consistent (`peak ≥ 2.0×MIP` and
+`hot-extent(cm) ≤ peak(×MIP)` over the ~8 cm end window). Kills 291064
+(recovering the §8.6 forgone 159 → 0 cm fix), 64503, 281214, 283905
+(+285443, preferred) while preserving 319611/59247/172942/64921/72586.
+Remaining prerequisites: the standard full-manifest A/B + movers gates at
+implementation time.
 
 Validation bar for all four (per §8 precedent): byte-identical off-gates
 on the 1067-event manifest, targeted smoke on the named events, full
@@ -976,6 +1038,7 @@ off-vs-on A/B with every mover adjudicated against harv3-epoch labels
 | 320865 | **FIXED** (1.2 cm, §8) | starved-arm PCA jitter outbidding the true corner | shipped (`teb_turn_min_arm_frac=0.4` ON) |
 | 172832 | 20.4 cm off | muon→Michel line; gate declines; junction is activity+turn, invisible to dip/wide-turn routes | D1 + D3 |
 | 61681 | 4.4 cm off | junction vertex floats 4.4 cm past the click on a charge-less (0.25–0.32×MIP) fit bridge | D2 (or D1+D3) |
-| 291064 | 159 cm off (spurious break kept) | end "rise" is an extended dim plateau, not a Bragg | D4 |
-| 64503 | broken (should not be, owner ruling) | end rise is vertex activity, not proton-bright | D4 |
-| 319611 / 59247 / 172942 | correct breaks kept | genuine compact Bragg ends | unaffected by D1–D4 |
+| 291064 | 159 cm off (spurious break kept) | end "rise" is an extended dim plateau, not a Bragg; turn 27.4° (threshold-hugging) | D4 (veto) |
+| 64503 / 281214 / 283905 | broken (owner: should not be) | vertex activity / overlap ends; turns 26.5–26.8° | D4 (veto) |
+| 285443 / 59261 / 72586 | broken (owner: no need, tolerable) | marginal accepts | D4 lands them veto/keep/keep — all on the tolerated side |
+| 319611 / 59247 / 172942 / 64921 | correct breaks kept (owner-confirmed) | genuine junctions, turns ≥ 32.5° | unaffected by D1–D4 |
