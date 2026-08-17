@@ -4,6 +4,14 @@
 knob-off byte-identical (§4). ALL FOUR KNOBS SHIP DEFAULT OFF.** No SBND
 production flip; that is the owner's call on the §6 census.
 
+> **OPEN — a fifth gate is written but not yet validated.** The owner hand-scanned
+> the §6.1 census set and found that **2 of the 4 new firings are false merges**:
+> a cosmic matched hundreds of µs away is dragged 33 cm through the cathode, so
+> charge on one TPC's wires ends up in the other TPC. §6.3 is the diagnosis, §5.5
+> the fix (`far_contain_tol`, round 1's condition 3, which was designed and then
+> never implemented). The nine fixes of §5.1 are unaffected. **Do not flip any
+> knob on until §5.5 is validated.**
+
 doc 72 §A found 10 events in 3000 where the in-beam bundle main is cut at the
 cathode and the raw image plainly continues into the other TPC.
 `ClusteringCathodeBundleRescue` (doc pr/14 + pr/17 + pr/19) already exists to fix
@@ -347,6 +355,54 @@ the close regime — the one protection against merging two unrelated tracks tha
 happen to touch near the cathode — so it is **not** done here. Resolving which
 estimator is right is the natural next step, and is cheaper than loosening a cut.
 
+### 5.5 The containment veto — round 1's condition 3, restored
+
+**Status: written, NOT yet validated.** The build is blocked on a concurrent
+session's 1000-event campaign holding the shared `local/lib`; this section is
+recorded now so the finding is durable, and will be re-stated with gate results
+once the arm runs.
+
+`far_stays_in_tpc()`: for a pair admitted by any round-2 path, every point of the
+**far half**, shifted into the destination-T0 frame, must stay on its own side of
+the cathode within `far_contain_tol`. The side is derived from the same `dirx`
+`far_xshift()` already uses (`SIGN = -dirx`, so a face's volume is the side where
+`(x - cathode_x) * dirx < 0`), so it introduces no new geometry assumption.
+
+**`far_contain_tol = 1 cm`, and it is not a resolution tolerance.** Measured over
+**3463 per-APA cluster parts in 300 production events**, legitimate charge never
+crosses the cathode *at all* — max overshoot **0.00 cm**. x is derived from drift
+time inside the cluster's own wire volume, so it is hard-clipped at the plane.
+Anything past the cathode is therefore `v_drift × (T0 error)`, and the tolerance
+converts directly into a bound on how wrong the destination-T0 hypothesis may be:
+
+| `far_contain_tol` | admits a T0 error up to |
+|---|---|
+| 1 cm | 6.4 µs |
+| 3 cm | 19 µs |
+
+Since `rescue_geom_first` exists *precisely* to admit large-|dt0| pairs, this is
+the main thing bounding that hypothesis, so tighter is strictly better here — 3 cm
+would pass any false merge whose T0 error is under 19 µs. (An earlier draft used
+3 cm on "it sits in the measured gap"; the owner pushed for 1 cm, and the
+production distribution above says the owner is right.)
+
+Predicted effect, from the measured post-merge overshoot of every round-2 firing
+(the merged-cluster maximum, which is an upper bound on the far half's own):
+
+| event | overshoot past the cathode | verdict at 1 cm |
+|---|---|---|
+| 398115, 237798, 281165, 65289, 78242, 65053, 317427, 319913 | −1.65 … +0.05 cm | keep |
+| 51128 | **+0.55 cm** | keep (0.45 cm margin) |
+| 169758, 395060 | −0.30, −0.02 cm | keep |
+| **291064** | **+33.46 cm** | **reject** |
+| **486907** | **+33.79 cm** | **reject** |
+
+So the veto is predicted to remove exactly the two false merges and keep all nine
+fixes. evt51128 carries the thinnest margin and is the one to watch when the arm
+runs. Note the 11-event sample is small — the tracer prints the measured overshoot
+on every rejection, so a clipped genuine rescue shows up as a printed line rather
+than as a silent loss.
+
 ## 6. Gates
 
 | gate | result |
@@ -394,11 +450,51 @@ apart** — the class-A signature (two APAs' views of one scintillation) in its
 purest form. 291064 and 486907 are F2 events with the far half matched +556 and
 +990 µs away. All four merge into the beam bundle.
 
+> **291064 and 486907 are FALSE MERGES.** The owner hand-scanned this set and
+> caught it in one look; see §6.3. The fix is §5.5. Do not read the four as a
+> single benign population.
+
 Hand-scan set (same event order in both, `clustering-global` is the layer):
 
 * BEFORE: `https://www.phy.bnl.gov/twister/bee/set/788bbab5-5b69-45b0-a657-0c2538528ac3/event/list/`
 * AFTER: `https://www.phy.bnl.gov/twister/bee/set/022f34d3-6d3f-453f-aaec-61ebe101032a/event/list/`
   (bee idx 0-3 = 169758, 291064, 395060, 486907)
+
+### 6.3 Two of the four new firings are FALSE MERGES (owner, hand scan)
+
+**A cluster's charge sits on the wires of one TPC, so its x cannot cross the
+cathode.** The owner read the §6.1 Bee set and saw exactly that: a track from one
+TPC running through the cathode plane after the merge. Measured:
+
+| event | far half | its t0 | x under its own t0 | x after the merge | past the cathode |
+|---|---|---|---|---|---|
+| 486907 | APA0, 1826 pts | 989.99 µs | [−201.3, −121.2] | **[−87.3, +33.3]** | **33.8 cm into TPC1** |
+| 291064 | APA1, 1370 pts | 555.87 µs | [+53.7, +180.3] | **[−33.0, +93.6]** | **33.5 cm into TPC0** |
+
+Both are F2 (`rescue_geom_first`) merges. The give-away is that each far half's
+**raw** x (t0 = 0) already runs past the cathode — only possible if its true t0 is
+genuinely hundreds of µs positive. They are cosmics, and forcing the beam T0 on
+them is unphysical. They are not missing halves at all.
+
+**Root cause, and it is an omission in the implementation, not in the design.**
+Round 1's F2 listed four conditions; condition 3 was *"the far half's corrected x
+under the beam T0 must lie inside its own TPC (all 12 candidates satisfy this; it
+is a cheap veto against absurd merges)"*. §5 records dropping condition 4 and why.
+**Condition 3 was never implemented and its absence was never recorded.** The
+geometric test only ever inspects the two TIP points; the merge then
+re-materializes the WHOLE far cluster under the destination T0, and nothing
+re-checked it.
+
+**Why every gate in §6 missed it.** The byte-identical gate, the firing census,
+the per-knob ablation and the join metric all passed. Each asks *"did the output
+change in the way I expected?"*. None asks *"is the output physically possible?"*.
+That is the general lesson of this round: **check the object the code modifies
+(the whole cluster), not the object you reasoned about (the two tips)** — and
+prefer a check a wrong answer cannot survive over a check that merely looks
+unsurprising.
+
+The nine fixed events of §5.1 are all clean (§5.5 table), so the fix removes the
+two false merges without touching them.
 
 ### 6.2 The two events that moved without a rescue move — resolved
 
