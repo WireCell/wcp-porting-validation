@@ -207,6 +207,12 @@ CATH_TLA=()
 # Env: SBND_VKS_RADIUS=<cm> SBND_MVGA_RADIUS=<cm>.
 [ -n "${SBND_VKS_RADIUS:-}" ]  && CATH_TLA+=(--tla-code "vks_radius=${SBND_VKS_RADIUS}")
 [ -n "${SBND_MVGA_RADIUS:-}" ] && CATH_TLA+=(--tla-code "mvga_radius=${SBND_MVGA_RADIUS}")
+# doc pr/89 Arm C (C2, owner-approved): rule-1 topology term in the DL rerank
+# composite.  EMPTY = no TLA = C++ default 0 = term never computed =
+# byte-identical.  The offline C1 replay selected weight 3.0, center 0.
+# Env: SBND_DL_VTX_TOPO_WEIGHT=<w> SBND_DL_VTX_TOPO_CENTER=<c>.
+[ -n "${SBND_DL_VTX_TOPO_WEIGHT:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_topo_weight=${SBND_DL_VTX_TOPO_WEIGHT}")
+[ -n "${SBND_DL_VTX_TOPO_CENTER:-}" ] && CATH_TLA+=(--tla-code "dl_vtx_topo_center=${SBND_DL_VTX_TOPO_CENTER}")
 # doc pr/47 sec 8 (O1): wide-baseline cathode kink accept, degrees.  EMPTY =
 # no TLA = the job default (SBND ON at 25 deg since 2026-08-07).  0 = force
 # the C++ OFF path (legacy kink search, byte-identical); "null" also works

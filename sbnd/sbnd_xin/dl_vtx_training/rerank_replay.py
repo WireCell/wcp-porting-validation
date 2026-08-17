@@ -62,6 +62,10 @@ def closure(evs):
             if not r.get('dl_snapped'):
                 continue
             tot = sum(float(r[t]) for t in TERMS)
+            # doc pr/89 C2: dumps from a dl_vtx_topo_weight != 0 arm carry an
+            # eighth recorded term; absent (every pre-C2 dump and every
+            # knob-off arm) it contributes exactly 0.0 here.
+            tot += float(r.get('s_topo') or 0.0)
             worst = max(worst, abs(tot - float(r['total'])))
             n += 1
     print('closure over %d DL-snapped rows: max |sum(terms) - total| = %.3g' % (n, worst))

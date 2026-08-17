@@ -849,7 +849,7 @@ the selection set** — the fresh events move the same direction.
   Anchoring caveat stated: the owner will know every served event is one
   where the scanner agreed with the reconstruction.
 
-### 11.8 Arm B — RUNNING
+### 11.8 Arm B — first run NaN-POISONED, guard added, rerun as `hr4b*`
 
 Launched (18 parallel CPU fold jobs, `pr89_train.sh`): `hr4` (hr3 recipe
 verbatim on the sealed 919-event training pool), `hr4-hum`
@@ -861,3 +861,96 @@ val lists written from the sealed pool), full-manifest `calib_guard`, OOF at
 the frozen point with the newly-accepted-and-correct decomposition + the
 CP24-same-threshold control, one sealed held-out read, live A/B only if it
 wins the round.
+
+**Incident (2026-08-16): 17 of the 18 folds died at epoch 0 with
+`loss=nan`** (hr3 on full473 had zero NaNs; only `hr4-hum` fold 4 trained
+clean). Diagnosis, reproduced deterministically by replaying fold 4's exact
+seed/order with per-step instrumentation
+(`/home/xqian/tmp/pr89/nan-fold4*.log`):
+
+- First non-finite loss at **step 1281, evt 176810 (ai-scanner label, 20-pt
+  cloud, jittered view extent (10, 4, 18) voxels)** — the model FORWARD
+  returns all-NaN on that one view while the weights are still finite.
+- Mechanism = the pr/78 NaN class, now inside training: a cloud that
+  collapses to a **single active site at the deepest UNet level** makes
+  train-mode BN's unbiased batch variance 0/0. One nan `backward()` then
+  poisons every weight irreversibly (constant d50 ≈ 40 cm from that step).
+- Why hr4 and not hr3: the mcp2k additions carry 15–30-point clouds
+  (pool minimum n_cloud = 15; full473's tiny-cloud tail was absent).
+  `--min-cloud 16` cannot catch it: the collapse depends on the jittered
+  spatial extent, not the point count (the no-jitter scan flags only 1/999).
+- **Fix: a nan-guard in `train.py run_epoch`** — skip the step (loudly, with
+  evt id) when the loss or the post-backward grad norm is non-finite. A run
+  that never produces nan is bit-identical to before the change; the guard
+  is a fix of undefined behaviour (a poisoned run measures nothing), same
+  rationale as the pr/82 evt-54629 rule.
+- Failed artifacts kept as the record: `runs/hr4*/` + `runs/hr4*-f*.log`.
+  Rerun launched under **fresh names `hr4b`, `hr4b-hum`, `hr4b-maxa`** (same
+  recipes, same seed, same folds); all downstream screens run on `hr4b*`.
+
+### 11.9 Arm D — D2 radius sweep NEGATIVE at every point (closed)
+
+The pre-registered D2 sweep ran live on the 308 labelled accept-route
+non-held-out mcp2k events (fresh roots `work-mcp2k-pr89d2-{base,w825,w1240,
+t310}`, radius TLAs via `SBND_VKS_RADIUS`/`SBND_MVGA_RADIUS`; 308/308 calib
+dumps per arm, 0 DL failures). Paired per-event scoring against
+`pr89d2-base` (`ab_vertex_compare.py`, tol 1.0 cm,
+`runs/ab-pr89d2-{w825,w1240,t310}-20260817.tsv`):
+
+| arm | (vks, mvga) cm | net | fixed | regressed |
+|---|---|---|---|---|
+| w825  | (8, 25)  | **−6** | 0 | 6 |
+| w1240 | (12, 40) | **−7** | 0 | 7 |
+| t310  | (3, 10)  | **−5** | 0 | 5 |
+
+Candidate sets identical to base 308/308, route flips 0 — the deltas are
+purely the adjustment stage's reach, and widening OR tightening it only
+breaks events. Matches the §11.6 headroom analysis (19/30 near-misses were
+already within reach and stayed wrong). **D2 CLOSED: production radii (5/15
+cm) stay.** No knob change ships from Arm D.
+
+### 11.10 C2 — owner APPROVED (2026-08-17); implemented, default OFF
+
+Owner: *"C2 is good, and should be added in any case on top of other
+improvements."* Implemented as `dl_vtx_topo_weight` / `dl_vtx_topo_center`
+(TaggerCheckNeutrino → `PatternAlgorithms::determine_overall_main_vertex_DL`),
+C++ defaults 0/0 = the term is never computed = byte-identical legacy.
+
+- **Port** (`clus/src/NeutrinoVertexFinder.cxx`, `topo_rule1_vote`): the
+  frozen C1 definition — attached track-like segments (neither shower
+  flag), fitted arc length ≥ 5 cm, end-window (5 cm, ≥ 3 valid points,
+  `dx > 0 && dQ >= 0`) mean dQ/dx ratio ≥ 1.3 ⇒ decisive; vote counts
+  "Bragg end away from this vertex"; `s_topo = w × (frac − center)` only
+  when ≥ 1 vote. Stated approximation: computed from rerank-time `fits()`,
+  while the offline feature used the final dump geometry — the live A/B is
+  the arbiter.
+- **Scoreboard**: rows gain `s_topo`/`topo_frac`/`topo_votes`, board gains
+  `dl_topo_weight`/`dl_topo_center`; all keys emitted only when the knob is
+  on (`topo_used` gate, same pattern as `harvest`), so knob-off calib JSON
+  is byte-identical. `rerank_replay.py --closure` extended to add a recorded
+  `s_topo` when present.
+- **cfg**: knob threaded `common/clus.jsonnet` →
+  `sbnd/clus.jsonnet` → `sbnd/wct-pr-perevt.jsonnet` TLAs (null-omission);
+  runner envs `SBND_DL_VTX_TOPO_WEIGHT`/`_CENTER`. Compiled-config proof:
+  knob-off compile is `cmp`-byte-identical to the pre-change compile; knob-on
+  differs by exactly the two new keys
+  (`/home/xqian/tmp/pr89/cfg-c2-{pre,off,on}.json`).
+- **Gates**: `wcdoctest-clus` 2089/2089 PASS; freshness proof done
+  (lib 19:21 > edits 19:05). Knob-off byte-identity A/B on 6 mcp2k events
+  (3 accept + 3 reject routes: 101828 180645 93105 / 322861 67942 49415),
+  A = stashed-baseline lib at `c3741088`, B = C2 lib, knob off both sides
+  (`work-mcp2k-c2gate-{a,b}`): **PASS — 24 products identical** (calib
+  JSON byte-`cmp`; `mabc-pr.zip` + `pctree-pr-*.tar.gz` member-content
+  hash via `hash_archive.py`; nusel TSV byte-`cmp`).
+- **Knob-on smoke** (`work-mcp2k-c2smoke`, `SBND_DL_VTX_TOPO_WEIGHT=3.0`,
+  evts 101828 + 322861): board carries `dl_topo_weight: 3.0`; accept-route
+  winner 33028 gains `s_topo = +3.000` (frac 1.0, 1 vote); on 322861 both
+  candidates are no-vote (`topo_frac −1, votes 0`) and `s_topo = 0` exactly
+  — the pr/88-P6 no-vote discipline live. **Port fidelity**:
+  `rule1_feature.py --dumps` on the smoke dumps reproduces the live C++
+  (frac, votes) on all 3 snapped rows.
+- Gates NOT run and why: abtest pdhd/pdvd img/clus and the uBooNE qlport
+  chain do not execute `tagger_check_neutrino`/`PrDisplayDump` scoreboard
+  paths (SBND-only PR pipeline); the shared-library change is confined to
+  those components, and the knob-off branch adds no arithmetic to the
+  legacy expression (`score += s_topo` is inside `if (weight != 0)`).

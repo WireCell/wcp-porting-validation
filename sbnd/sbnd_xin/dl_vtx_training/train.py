@@ -188,11 +188,29 @@ def run_epoch(model, samples, device, criterion, optimizer=None,
                 # a zero-grad Adam step would still move params along
                 # decayed momentum, so weight-0 must mean absent).
                 loss = loss * sw
+            # doc pr/89 Arm B: a cloud small enough to collapse to a single
+            # active site at the deepest UNet level makes train-mode BN's
+            # unbiased variance 0/0 (the pr/78 NaN class, now IN training:
+            # the mcp2k additions have 15-30-point clouds, full473 did not).
+            # One nan backward poisons every weight irreversibly -- 17/18
+            # hr4 folds died at epoch 0 this way.  Skip the step, loudly;
+            # a run that never produces nan is bit-identical to before.
+            if not torch.isfinite(loss):
+                print('[nan-guard] skipped evt %s view %s: non-finite loss'
+                      % (meta['row'].get('evt', '?'), k))
+                optimizer.zero_grad()
+                continue
             loss.backward()
             clip = getattr(model, 'grad_clip', 0.0)
             if clip > 0:
-                torch.nn.utils.clip_grad_norm_(
+                gnorm = torch.nn.utils.clip_grad_norm_(
                     [p for p in model.parameters() if p.requires_grad], clip)
+                if not torch.isfinite(gnorm):
+                    print('[nan-guard] skipped evt %s view %s: non-finite '
+                          'grad norm (finite loss %.4g)'
+                          % (meta['row'].get('evt', '?'), k, float(loss)))
+                    optimizer.zero_grad()
+                    continue
             optimizer.step()
         else:
             with torch.no_grad():
