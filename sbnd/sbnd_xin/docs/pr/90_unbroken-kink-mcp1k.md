@@ -12,7 +12,13 @@ PRODUCTION ON** (§8.9). `teb_second_max` confirmed §3a's mechanism but
 measured NEGATIVE on its own motivating events (§8.5) and **stays OFF**;
 172832/61681 are unchanged in production (§8.10). A first-round hard-filter
 semantics for knob 1 FAILED live adjudication (5 ADVERSE, §8.6) and was
-replaced — the v1/v2 arms are both retained.
+replaced — the v1/v2 arms are both retained. **§9 is round 3** (owner
+physics input + instrumented profiles): the residual mechanisms are now
+fully resolved — 172832's junction is vertex-activity + a 23.5° local turn
+(invisible to the dip/wide-turn routes), 61681's junction floats 4.4 cm
+past the true vertex on a charge-less fit bridge, and the keep/kill
+discriminator for near-end breaks is Bragg-consistency (hot-extent vs
+peak) — with four designed fixes (D1–D4, §9.5) for the next session.
 
 ## 0. Repro
 
@@ -747,4 +753,205 @@ threshold; killing it fixed 291064 completely (159 → 0 cm) but the same
 kill breaks the owner-approved b1=0 vertices of 64503/319611/59247, so a
 kill rule needs a discriminator beyond arm span (dQ/dx template quality at
 the candidate? DL-vertex confirmation?). Both classes are documented
-negatives, not proposals.
+negatives, not proposals. **Superseded by §9**, which resolves both
+classes with owner physics input and instrumented profiles, and designs
+the fixes.
+
+## 9. Round 3 — owner physics input, instrumented profiles, fix designs (2026-08-17; implementation deferred to the next session)
+
+### 9.0 Owner input (verbatim intent, 2026-08-17)
+
+1. **172832 is a muon → Michel decay**, not a back-to-back particle pair:
+   the Michel at the muon's end is what creates the extra prong. The whole
+   cluster is still a *line* — there is no 3-track vertex — so the gate
+   should tolerate it.
+2. **61681 is a clear 2-track topology**; "something weird happened near
+   the short track region."
+3. Of the §8.11 preserved-break events, **291064 AND 64503 should NOT be
+   broken**; 319611, 59247 and 172942 are OK. The discriminator is
+   **consistency between a Bragg peak and the dQ/dx** — a small high-dQ/dx
+   spot at a track end can be ordinary *vertex activity* at the neutrino
+   vertex, and must not be read as a stopping-particle Bragg.
+
+Point 3 corrects the §8.6 adjudication: 64503's `b1=0.00` label was
+reco-anchored (the pr/85 caveat in action — the owner clicked the displayed
+break vertex, and now overrides it). So of §8.6's five ADVERSE, 64503 was
+actually a *correct* kill by v1, and the true regressions were
+319611/59247 (+ the two noise rows). The v1 filter still fails (it cannot
+tell those apart), and the shipped v2 preference remains the right call —
+but the future kill rule (§9.4/D4) now has a clean target set:
+kill {291064, 64503}, keep {319611, 59247, 172942}.
+
+### 9.1 Repro (instrumented rerun, same method as §0.1)
+
+The §0.1 `WCT_TEB_DUMP` diagnostic was temporarily re-added to
+`segment_two_end_break_scan` (identical shape, one extra column: the
+10 cm-baseline `segment_wide_turn_angle` `t10` next to the production
+35 cm `t35`), built with `wcbuild` (freshness: lib 08:06:35 > edit
+08:06:04), and run:
+
+```bash
+cd sbnd_xin
+# batch A -- production defaults (12 currently-firing events):
+WCT_TEB_DUMP=/home/xqian/tmp/pr90_dumps/batchA.txt PR_JOBS=1 \
+  PR_EXTRA_STAGES=pr_display SBND_DL_VTX_HARVEST=true \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-mcp1k-kink90c data \
+  320865 291064 64503 319611 59247 172942 59261 72586 281214 283905 285443 64921
+# batch B -- gate-widened so 172832/61681 reach the scan:
+WCT_TEB_DUMP=/home/xqian/tmp/pr90_dumps/batchB.txt PR_JOBS=1 \
+  PR_EXTRA_STAGES=pr_display SBND_DL_VTX_HARVEST=true SBND_TEB_SECOND_MAX=15 \
+  ./run_pr_chain_batch.sh work-mcp1k-cb0805 work-mcp1k-kink90d data 172832 61681
+```
+
+Dumps at `/home/xqian/tmp/pr90_dumps/batch{A,B}.txt` (one block per scan
+call, matched to events by segment length; format: idx, s(cm), x, y, z,
+dqdx, t35, t10, arm_ok). Topology/graph numbers below come from the
+production `work-mcp1k-pr90off2/pr_evt<ID>/calib-pr-evt<ID>.json` dumps.
+The instrumentation was reverted from the source tree immediately after
+capture (`git status` clean for this file). NOTE on the binary: a
+concurrent session had in-flight edits under `clus/` at revert time, so
+`local/lib` was deliberately NOT rebuilt — the installed lib still carries
+the env-gated dump (byte-identical with `WCT_TEB_DUMP` unset; the §8
+gates all used earlier clean binaries, 06:35/07:12); the next routine
+`wcbuild` restores exact-HEAD binaries.
+
+### 9.2 172832 anatomy: the junction is vertex activity + a local turn, not a dip
+
+Production graph (calib JSON): a pure chain — vtx 21000 (deg 1, far end)
+—127.2 cm seg 21001 (pid 13)— vtx 21002 (deg 2, **current main vertex**,
+20.35 cm from the click) —13.1 cm seg 21021 (pid 211, the Michel)— vtx
+21001 (deg 1). Every vertex has degree ≤ 2: the cluster is a line, exactly
+as the owner said. **The click sits ON seg 21001 at fit idx 177/213,
+0.20 cm off the trajectory** — i.e. the true topology is
+[~104 cm prong] → **nu vertex** → [~21 cm muon] → Michel.
+
+The scan-side dump (batch B, N=214, L=127.7 cm) shows why both existing
+routes miss it:
+
+- **R1 (dip)**: the winning "deepest dip" at idx 140 (s=84.0 cm) is
+  q = 0.77×MIP — one of half a dozen equal-depth downward fluctuations of
+  an ordinary MIP track (0.72–0.79 at idx 134/139/160/169/174-175). It is
+  not a junction signature; the two-Bragg valley model does not apply.
+- **The true junction is BRIGHT, not a valley**: idx 176–179 read 1.27,
+  1.81, **2.50**, 2.00 ×MIP — vertex activity exactly at the click
+  (idx 178, d = 0.19 cm), just as the owner's note predicts.
+- **The local turn finds it**: `t10` (10 cm baseline) plateaus at
+  **19–23.5°** over s ≈ 101–110 cm, centered on the click, against a
+  5–7° mid-track baseline. The production `t35` tops out at 18.3° there
+  (< the 25° accept) because the 35 cm arms average the corner away —
+  and t35's *unrestricted* argmax is yet another starved near-end artifact
+  (26.5° at idx 206, 3.7 cm from the Michel end).
+
+### 9.3 61681 anatomy: the junction vertex floats past the true vertex on a charge-less bridge
+
+Production graph: chain vtx 2000 —109.5 cm seg 2001 (pid 13)— vtx 2002
+(deg 2, **main vertex**, 4.36 cm from click) —11.2 cm seg 2002 (pid 2212,
+Bragg 6.3×MIP at its far end vtx 2001)— a genuine 2-track topology. The
+"weird thing near the short track region", from the fit-point profiles:
+
+- The muon's trajectory passes **through the click at idx 173/183
+  (0.36 cm)** and keeps going: idx 174–178 read 1.7–3.1×MIP (the vertex
+  activity region), then idx 179–181 read **14.4k–17.2k ≈ 0.25–0.32×MIP —
+  essentially charge-less** — and the junction vertex 2002 sits at the end
+  of that empty tail, 4.36 cm past the click.
+- The proton mirrors it: its first 4 points (leaving the junction) are the
+  same sub-MIP bridge (0.32–0.63×MIP), then the same activity spike
+  (2.2–2.8×MIP), then a clean MIP proton to its Bragg.
+- No existing pass can see this: `fit_distance` = 1.32 (healthy), the
+  kink-accept ladder fails on its angle criteria (§3c/§6), and dQ/dx is
+  never consulted for vertex *placement*. The scan-side dump confirms the
+  turn signature: `t10` climbs 18→24→31→38→44→**54°** approaching the
+  click (t10's window can no longer form inside the last ~2 cm).
+
+### 9.4 The Bragg-vs-vertex-activity discriminator, measured
+
+End profiles of the break-adjacent segment end (q in MIP units, s = cm
+from that end; from batch A), with the owner's keep/kill labels:
+
+| evt | class | end q̄(0–1 cm) | peak | hot extent (>1.5×MIP, contiguous from end) | shape |
+|---|---|---|---|---|---|
+| 291064 | KILL | 2.8 | 3.0 | **> 8.2 cm** (never returns to MIP) | dim, extended plateau — not a Bragg |
+| 64503 | KILL | 2.75 | 2.9 | 3.6 cm | dim, moderate — not proton-bright |
+| 319611 | KEEP | 3.3 | **4.4** | 2.8 cm | bright, compact — proton Bragg |
+| 59247 | KEEP | 2.0 | 2.5 | 0.9 cm | very compact stub Bragg |
+| 172942 | KEEP | 1.0 | — | 0 (end at MIP; mid-segment break) | n/a |
+
+Candidate rule that separates all five labelled events:
+**hot-extent (cm) > peak (×MIP) ⇒ vertex-activity/overlap, veto the
+break** (a genuine Bragg concentrates its charge: bright relative to its
+length). KILL: 291064 (8.2 > 3.0), 64503 (3.6 > 2.9). KEEP: 319611
+(2.8 < 4.4), 59247 (0.9 < 2.5), 172942 (no hot end). Closest margin is
+64503-vs-319611 (~25%); with only five labels this is a *candidate*, not
+an operating point. The six unlabelled §8.6 movers under the same rule:
+281214 (2.9 peak / ~8 cm — kill-like), 64921 (2.4 / ~8 cm — kill-like),
+285443 (end at MIP; its 1.29 "rise" is marginal — kill-like), 283905
+(4.2 / ~2.9 cm + a 1.6–1.8 plateau — ambiguous), 59261 (3.5 / ~2.5 cm +
+plateau — ambiguous), 72586 (5.9 spike, compact — keep-like). These need
+an owner micro-scan before any threshold is frozen.
+
+Note the simple metrics that do NOT work, measured: the scan's own
+template scores (64503's short arm scores *better*, 0.55, than
+59247's 0.708), the rise ratios (kill 1.35/1.73 vs keep 1.60/1.70/1.94 —
+interleaved), and arm span (§8.6).
+
+### 9.5 Fix designs for the next session (all default-OFF; not implemented here)
+
+**D1 — `teb_chain_topology` (bool): line-topology gate admission.**
+Replace the rejected bare length cap (`teb_second_max`, §8.5) with the
+owner's actual criterion: when `n_long > 1`, admit iff the main cluster's
+segment graph is a **simple path** (every vertex degree ≤ 2 — "still a
+line, no 3-track vertex") and the candidate is the unique longest
+segment. 172832 (deg 1,2,1) and 61681 (deg 1,2,1) both qualify;
+a genuine multi-prong vertex (any degree-3 vertex) never does.
+
+**D2 — `vertex_bridge_retract` (new examiner pass): charge-supported
+junction retraction — the 61681 fix.** For a degree-2 junction on the
+main cluster whose incident fit tails are BOTH sub-MIP (measured
+signature: ≥ 2–3 consecutive points < 0.5×MIP spanning ≥ 1.5 cm on each
+side), retract the junction along the shared trajectory through the
+charge-less bridge and the contiguous vertex-activity blob to the first
+MIP-supported point, preferring the local `t10` maximum inside the
+retraction window. Measured target: 61681's junction moves 4.36 →
+≤ ~0.4 cm from the click (the retraction path idx 182→173 crosses
+exactly the 0.25–0.32×MIP bridge then the 1.7–3.1× activity blob to the
+54°-turn point). Fires on plain production topology — no gate change
+needed — and is inert wherever both tails carry track-level charge.
+
+**D3 — `teb_r3_*`: a turn+activity route for chain-admitted candidates
+ONLY — the 172832 fix.** For candidates admitted via D1 (never for the
+legacy `n_long == 1` path — zero footprint on the 38 existing breaks by
+construction), replace the dip/wide-turn routes with the signature both
+events actually show at their true vertex: break at the argmax of `t10`
+(10 cm baseline, windows well-formed) subject to
+`t10 ≥ teb_r3_turn` (measured: 23.5° and 54° at the clicks vs 5–7°
+mid-track; propose ~18°) AND a local vertex-activity corroboration
+`max q within ±2 cm ≥ teb_r3_hot` (measured: 2.50× and 2.31×; propose
+~1.8×MIP), with the break index refined to the activity maximum.
+Measured landing: 172832 → 0.2–1.6 cm from the click (vs 21.7 cm via the
+dip route, §8.5); 61681 → ≤ ~1.2 cm (D2 is the preferred fix there; D3
+covers it if D2 is not adopted).
+
+**D4 — `teb_bragg_veto`: the keep/kill rule for near-end R2 breaks.**
+Veto an R2 accept whose short-arm outer end fails Bragg-consistency
+(§9.4 rule: hot-extent(cm) > peak(×MIP), evaluated over the ~8 cm end
+window). Would kill 291064 (recovering the §8.6 forgone 159 → 0 cm fix)
+and 64503 while preserving 319611/59247/172942. Prerequisites before any
+flip: owner micro-scan of the six unlabelled movers (§9.4), a census
+evaluation over all 38 firing events, then the standard full-manifest
+A/B + movers gates.
+
+Validation bar for all four (per §8 precedent): byte-identical off-gates
+on the 1067-event manifest, targeted smoke on the named events, full
+off-vs-on A/B with every mover adjudicated against harv3-epoch labels
+(zero unexplained ADVERSE), owner micro-scan where labels are missing.
+
+### 9.6 Status after round 3
+
+| evt | production today | mechanism (final) | designed fix |
+|---|---|---|---|
+| 320865 | **FIXED** (1.2 cm, §8) | starved-arm PCA jitter outbidding the true corner | shipped (`teb_turn_min_arm_frac=0.4` ON) |
+| 172832 | 20.4 cm off | muon→Michel line; gate declines; junction is activity+turn, invisible to dip/wide-turn routes | D1 + D3 |
+| 61681 | 4.4 cm off | junction vertex floats 4.4 cm past the click on a charge-less (0.25–0.32×MIP) fit bridge | D2 (or D1+D3) |
+| 291064 | 159 cm off (spurious break kept) | end "rise" is an extended dim plateau, not a Bragg | D4 |
+| 64503 | broken (should not be, owner ruling) | end rise is vertex activity, not proton-bright | D4 |
+| 319611 / 59247 / 172942 | correct breaks kept | genuine compact Bragg ends | unaffected by D1–D4 |
