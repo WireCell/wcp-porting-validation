@@ -954,3 +954,161 @@ C++ defaults 0/0 = the term is never computed = byte-identical legacy.
   paths (SBND-only PR pipeline); the shared-library change is confined to
   those components, and the knob-off branch adds no arithmetic to the
   legacy expression (`score += s_topo` is inside `if (weight != 0)`).
+
+### 11.11 Arm B — CLOSED NEGATIVE at the first screen (guard-in-loop)
+
+Repro:
+```bash
+cd dl_vtx_training
+for arm in hr4b hr4b-hum hr4b-maxa; do ./hr4_guardsel.sh $arm; done
+# summaries: runs/<arm>-guardsel/f<k>-E<E>.log (126 logs, all rc=0)
+```
+
+- The `hr4b*` rerun (nan-guard in `train.py`, §11.8) trained clean: all 18
+  folds to CP17, **zero poisoned folds**; the guard fired only on the three
+  known pr/78-class events (176810, 101004, 414288), a few dozen skipped
+  steps total.  Fold-0 val medians: hr4b 1.28 cm, hr4b-hum 1.20 cm,
+  hr4b-maxa 1.76 cm.
+- Guard-in-loop checkpoint selection (`hr4_guardsel.sh`, the pr/81 script
+  re-pointed at the round-4 `--tags/--arm-roots` and `runs/hr4-folds/`
+  val lists; E ∈ {0,2,5,8,11,14,17} × 6 folds × 3 arms = 126 replays):
+  **guard-predicted delta ≤ 0 in 125/126 cells** (lone +2 at hr4b f2/E0,
+  matched by hr4b-hum f2/E0 — one-cell noise).  Per-arm sums at the best
+  epoch per fold: hr4b ≈ −9, hr4b-hum ≈ −8, hr4b-maxa −17 falling to −46
+  with more epochs.
+- The failure is one-directional: **`reject→ACCEPT = 0` in every cell** —
+  a retrained net never rescues a rejected event; `accept→REJECT` grows
+  monotonically with training (corrective raw-net top-1 ratio collapses to
+  ~0.14 at E0).  This is pr/79/pr/81's fine-tune regression, reproduced at
+  O(999): retraining moves scores *down* relative to CP24's calibration on
+  exactly the events production currently gets right.
+- The 999-vs-700 ablation is answered inside the screen: hr4b and hr4b-hum
+  are near-identical fold-by-fold — the 299 AI labels neither help nor
+  hurt; the bottleneck is not label provenance.  `--max-anchor`
+  (hr4b-maxa) is strictly worse (4/6 folds picked E0 = barely moved off
+  init, and still regressed).
+- Per the pre-registered screen order (§11.0): no checkpoint proceeds to
+  full-manifest guard or OOF; **no lockbox read spent on Arm B**; Arm B
+  contributes nothing to the live A/B.
+
+### 11.12 The sealed held-out read — SPENT (once) on the sole survivor
+
+The surviving candidate after A (null), B (negative), D (negative) is
+exactly C1/C2: `dl_vtx_topo_weight = 3.0`, center 0, at the frozen
+production point (10.0/1000).  Both evaluated settings (w=0 reference,
+w=3.0) were frozen before the read; no selection freedom was exercised.
+
+Repro:
+```bash
+cd dl_vtx_training
+# exclusion = full six-tag label universe (1014 events) minus the sealed 80
+python3 rerank_replay.py $T --grid --min-accepts 10 --scales 1000 \
+  --topo-file runs/topo-pr89-20260816.tsv --topo-sweep 0 3.0 \
+  --prod-point 10.0 1000 --ipw-file runs/ipw-mcp2k-closed-20260816.tsv \
+  --exclude-events <universe-minus-heldout list> \
+  --tsv runs/heldout-read-pr89-clean-20260817.tsv
+```
+
+- **Result (80 sealed events, 75 truth-reachable, 5 not-a-candidate):
+  w=0 → 27/75 (IPW 37.63%); w=3.0 → 29/75 (IPW 39.89%) = +2 raw,
+  +2.26 IPW points.**  Direction and size match the selection set
+  (+12/924, +2.0 IPW) — no selection-bias signature.  As pre-stated in
+  §11.2, the 80 confirm direction (±≈5 at 1σ); the effect size is carried
+  by the live A/B.
+- Execution note: the first invocation used exclusion = pool-minus-heldout
+  (919), which leaked the 15 `--drop-unscannable` dot events into the
+  denominator (95 loaded).  Corrected in the same read to exclusion =
+  universe-minus-heldout (934) → exactly the 80.  Both TSVs kept
+  (`heldout-read-pr89-20260817.tsv` superseded by `-clean-`); the same two
+  pre-registered points were evaluated both times — the correction removed
+  events, revealed nothing new, and constitutes one read.
+
+### 11.13 The live A/B — topo term NET NEGATIVE live; offline +12 did NOT transfer
+
+Repro:
+```bash
+./ab_pr89_live.sh          # 1014 label-universe events x 2 arms, toolkit a681b3e1
+# arms: work-{mcp2k,nuecc48,ncpi0,mcp1k}-pr89base vs work-*-pr89topo
+#   (identical envs; candidate adds SBND_DL_VTX_TOPO_WEIGHT=3.0 only)
+cd dl_vtx_training
+python3 ab_vertex_compare.py --tags ... --tol 1.0   # runs/ab-pr89topo-<sample>-20260817.tsv
+```
+All 8 runs completed rc=0 per event (2028/2028), zero `DL vertex failed`,
+candidate sets identical to baseline in every sample.
+
+**Result (correct within 1.0 cm of label truth, final vertex):**
+
+| sample  |    n | base | topo | net | IPW base % | IPW topo % |
+|---------|-----:|-----:|-----:|----:|-----------:|-----------:|
+| mcp2k   |  541 |  429 |  423 |  −6 |      77.03 |      76.00 |
+| nuecc48 |   47 |   41 |   39 |  −2 |      87.23 |      82.98 |
+| ncpi0   |   19 |   15 |   15 |  ±0 |      78.95 |      78.95 |
+| mcp1k   |  407 |  316 |  316 |  ±0 |      77.64 |      77.64 |
+| **ALL** | 1014 |  801 |  793 | **−8** | **77.75** | **76.99** |
+
+Non-carried subset (565 events): −7.  nuecc48 Wilson 95%: base
+41/47 [74.8, 94.0]% → topo 39/47 [69.9, 91.1]%.  IPW delta −0.76 points.
+
+**Mechanism decomposition (mcp2k, from the scoreboards of both arms):**
+
+| mechanism                                   |   n | net |
+|---------------------------------------------|----:|----:|
+| flip reject→accept (acceptance inflation)   |  34 |  −4 |
+| same accept route, winner changed (selection)|   4 |  −2 |
+| all unchanged-route events                  | 503 |  ±0 |
+
+`s_topo = 3·frac ≥ 0` (center 0) can only ADD score, so it pushes
+previously-rejected winners over `min_accept = 10.0`; live, those forced
+acceptances mostly replace a correct traditional vertex with a wrong DL
+winner.  The within-route selection effect is genuinely promising — the two
+big movers landed at 1.04 cm (from 228.4) and 1.32 cm (from 3.99), just
+OVER the 1.0 cm tolerance, and one of the two selection "regressions" is
+0 → 1.01 cm — but at the registered tol it nets −2.
+
+**Why offline said +12: the replay's row-coordinate bias.**  The offline
+replay scores every candidate at its recorded scoreboard-row position,
+i.e. BEFORE `snap_main_vertex_to_kink` + the final `improve_vertex`.  Its
+baseline is therefore diluted (offline w=0 predicts 317/541 correct on
+mcp2k where the live baseline is 429/541): events production actually gets
+right are counted wrong offline, which (a) manufactures phantom fixes
+(5 of the 12 offline-predicted mcp2k fixes were already correct live) and
+(b) hides real breaks (a break cannot register on an event the model
+already counts as wrong).  Checked directly: on the 11 live mcp2k
+regressions the offline replay reproduces 5 as predicted breaks, calls 4
+"already wrong at w=0" (dilution), and misses 2 to feature drift
+(rerank-time C++ frac votes where the dump-time offline frac had no vote
+— the §11.10 approximation; it is real but SECONDARY).
+
+**Consequence for §11.12:** the sealed held-out read was made with the
+same offline ruler and inherits the same bias; its +2 is superseded by
+the live A/B, which is the pre-registered arbiter (§10).
+
+**Verdict: DO NOT flip production.**  `dl_vtx_topo_weight` stays merged
+and DEFAULT OFF (toolkit a681b3e1) — nothing harmful ships.  The rule-1
+signal itself remains strong (C0: 81.8% vs 23.6%); what failed is the
+COUPLING of an add-only term to the acceptance threshold, plus an offline
+selection ruler that under-models the acceptance boundary.  Candidate
+follow-ups for a future round, all owner-gated: (i) selection-only
+s_topo (argmax includes the term, threshold on the 7-term sum) — today's
+data says within-route selection transfers well; (ii) centered term
+(`dl_vtx_topo_center` ≈ 0.5 makes s_topo signed — the knob already
+exists); (iii) close Arm C.  Any re-selection must reckon with the spent
+lockbox and the demonstrated replay bias (select live or fix the ruler).
+
+## 12. Round verdict (2026-08-17)
+
+| arm | verdict | ships |
+|-----|---------|-------|
+| A recalibration | NULL — production (10.0, 1000) is the grid optimum | nothing; swap-guard rider (3 fixed/0 broken, +0.32 IPW) parked, owner-gated |
+| B retrain | NEGATIVE — guard-in-loop kills all 3 variants; reject→ACCEPT = 0 in 126/126 cells; 999-vs-700 ablation: AI labels not the bottleneck, retraining is (§11.11) | nothing |
+| C topology | Offline +12 did NOT transfer: live A/B −8/1014 (−0.76 IPW) via add-only acceptance inflation + offline row-coordinate bias (§11.13) | C2 knob merged DEFAULT OFF (toolkit a681b3e1); no flip |
+| D adjustment | D1 measurement only; D2 radius sweep NEGATIVE (§11.9) | nothing |
+
+Production is unchanged by this round.  The round's durable products:
+the C2 knob + `topo_frac/topo_votes` harvest fields, the pr89_pool seal +
+IPW machinery, the train.py nan-guard (§11.8), the closed IPW baseline
+80.9% ± 1.8 (§11.7a), and two methodological findings that gate the next
+round: (1) the offline rerank replay under-models the acceptance boundary
+(row-coordinate bias, §11.13) — fix the ruler or select live; (2)
+retraining at O(10³) labels regresses one-directionally (§11.11) — the
+next retrain attempt needs qualitatively more labels, not better dosing.
