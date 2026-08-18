@@ -730,6 +730,26 @@ unset _pr84 _env _key _val
 [ -n "${SBND_PF_TOUCH_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_max=${SBND_PF_TOUCH_MAX}")
 [ -n "${SBND_PF_TOUCH_CROSS_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_cross_max=${SBND_PF_TOUCH_CROSS_MAX}")
 [ -n "${SBND_CONN3_STITCH_MAX:-}" ] && CATH_TLA+=(--tla-code "conn3_stitch_max=${SBND_CONN3_STITCH_MAX}")
+# doc pr/40 round 9 -- the rounds-7+8 straight-track PID guard family + the
+# B2 cross-cluster bridge.  Tri-state bools (unset = cfg default, 1 = force
+# on, 0 = force off) + two scalars (EMPTY = no TLA = cfg default: C++
+# 25 deg / 1.8 cm).  pf_track_bridged_clusters is the PF-side gate widening
+# that lets the track BFS traverse an nv-bridged cluster.
+for _pr40r9 in \
+    "SBND_SHOWER_CONNECT_FROM_VERTICES_STRAIGHT_GUARD:shower_connect_from_vertices_straight_guard" \
+    "SBND_SHOWER_CONNECT_START_SEG_STRAIGHT_GUARD:shower_connect_start_seg_straight_guard" \
+    "SBND_EXAMINE_DIRECTION_DIRSIGN_SHOWER_IN_GUARD:examine_direction_dirsign_shower_in_guard" \
+    "SBND_DAUGHTER_SHOWER_ANGLE_RECLASS_STRAIGHT_GUARD:daughter_shower_angle_reclass_straight_guard" \
+    "SBND_SHOWER_TOPO_REEXAM_STRAIGHT_GUARD:shower_topo_reexam_straight_guard" \
+    "SBND_SHOWER_NV_BRIDGE_TRACK:shower_nv_bridge_track" \
+    "SBND_PF_TRACK_BRIDGED_CLUSTERS:pf_track_bridged_clusters" ; do
+    _env=${_pr40r9%%:*}; _key=${_pr40r9#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr40r9 _env _key _val
+[ -n "${SBND_SFV_KINK_MAX:-}" ] && CATH_TLA+=(--tla-code "sfv_kink_max=${SBND_SFV_KINK_MAX}")
+[ -n "${SBND_SHOWER_NV_BRIDGE_MAX_GAP:-}" ] && CATH_TLA+=(--tla-code "shower_nv_bridge_max_gap=${SBND_SHOWER_NV_BRIDGE_MAX_GAP}")
 # doc pr/74 round 4 K6 scalar tunables.  EMPTY = no TLA = cfg default (null =
 # the C++ default: 15 cm / 45 cm / 1.3x / 40 cm / 40 deg).  Only read when
 # shower_traj_michel_stem is on.

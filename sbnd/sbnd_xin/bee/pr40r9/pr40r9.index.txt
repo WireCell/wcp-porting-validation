@@ -1,0 +1,66 @@
+# doc sbnd_xin/docs/pr/40 round 9 -- A/B Bee sets (2026-08-18), 51 events:
+#   the 45-event round-7 Bee scan set (same order, idx 0-44)
+#   + idx 45-47: round-8 owner events 286906 / 409546 / 521075
+#   + idx 48-50: the three ON-arm re-segmentation movers 163543 / 174637 / 235435
+# BEFORE (knobs off = previous production; V1 gate vs pre-change binary
+#         PASS 6/6, arms work-pr40r9-off-{mcp1k,nuecc48,ncpi0}):
+#   https://www.phy.bnl.gov/twister/bee/set/ae0253c4-ce14-4bea-a387-14a5fffaa59e/event/list/
+# AFTER  (7 knobs ON; FLIPPED SBND PRODUCTION ON 2026-08-18; V3 bare-run
+#         composition gate vs these arms PASS 200/200 archives,
+#         arms work-pr40r9-on-{mcp1k,nuecc48,ncpi0}):
+#   https://www.phy.bnl.gov/twister/bee/set/7b48de57-9bb2-4ff1-a3c8-abb1bea4b094/event/list/
+# 25 of the 51 differ between the sets (mabc/mc.json only; nusel tables and
+# pctree byte-identical everywhere).  5 further movers are NOT in this set
+# (116962 137238 350186 360535 nueCC48; 259542 ncpi0) -- arms on disk.
+# bee_idx  event   status
+0	350935	unchanged
+1	283713	changed (guard-family PID fix)
+2	55595	unchanged
+3	407280	BRIDGED gap=0.68cm; 128.8cm 1.14xMIP seg 16010 (Bee idx 3 flagrant case)
+4	281837	changed (guard-family PID fix)
+5	55539	changed (guard-family PID fix)
+6	314507	changed (guard-family PID fix)
+7	64921	changed (guard-family PID fix)
+8	71222	changed (guard-family PID fix)
+9	316025	unchanged
+10	395610	unchanged
+11	285567	unchanged
+12	280972	unchanged
+13	401450	changed (guard-family PID fix)
+14	290729	unchanged
+15	138009	unchanged
+16	395060	changed (guard-family PID fix)
+17	286191	changed (guard-family PID fix)
+18	348471	unchanged
+19	69314	unchanged
+20	30504	unchanged
+21	286681	changed (guard-family PID fix)
+22	90055	changed (guard-family PID fix)
+23	293149	unchanged
+24	56982	unchanged
+25	321371	changed (guard-family PID fix)
+26	349461	changed (guard-family PID fix)
+27	352233	changed (guard-family PID fix)
+28	234638	unchanged
+29	214469	unchanged
+30	389538	changed (guard-family PID fix)
+31	277298	changed (guard-family PID fix)
+32	349549	unchanged
+33	433451	unchanged
+34	278684	unchanged
+35	292643	unchanged
+36	315167	unchanged
+37	268067	unchanged
+38	239794	unchanged
+39	386948	changed (guard-family PID fix)
+40	64409	unchanged
+41	437699	unchanged
+42	348691	changed (guard-family PID fix)
+43	54095	unchanged
+44	320865	knob-5 topo-reexam: seg 13001 e-/shower -> pi+ track
+45	286906	BRIDGED gap=1.39cm; seg 9002 e-63MeV -> pi+48MeV, muon 9001 mu-308MeV restored to PF+Enu
+46	409546	BRIDGED gap=1.28cm; seg 9000 e-90.9MeV -> mu-63.9MeV (uniform rule; owner "could be an electron" noted)
+47	521075	must-NOT-touch (gap 2.92cm): byte-identical, no bridge, no guard
+48	163543	re-segmentation mover inside nueCC shower (new segs 14120/14122/14124, one mu-); nusel unchanged
+49	174637	re-segmentation mover, new segs 9096-9102 in nueCC shower; nusel unchanged
+50	235435	re-segmentation mover; NEW straight-long e- seg 2054 (38.6cm 1.57xMIP) + new proton 2057; nusel unchanged -- owner attention requested
