@@ -20,3 +20,9 @@
 # bee_idx	event	note
 0	169658	13.2 cm ghost beside 270.6 cm vertex track, ratio 0.35
 1	284206	pair 10045/10049, 20.6/26.6 cm stems, ratio 0.18
+#
+# r4b addendum (mvga_proj_angle=25, 284206 stem 3 -> 1):
+# set 5: 284206 BEFORE (= r4 state, 2 stem tracks)
+# URL: https://www.phy.bnl.gov/twister/bee/set/67ac7176-17bc-467e-bca0-2a4ec8093954/event/list/
+# set 6: 284206 AFTER (1 stem + 4.4 cm proton stub)
+# URL: https://www.phy.bnl.gov/twister/bee/set/83cd2283-243d-4430-bba7-cb60de95ef15/event/list/
