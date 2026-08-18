@@ -551,5 +551,158 @@ names. Fixed and re-uploaded; the links above are the corrected sets.
   `work-pr83r2-{base,nointerp,nostraight}-{nue,mc}` (8 events × 3 arms × 2
   samples). Not retired by this round; not protected either — ordinary
   scratch, safe to clean up in a future retire pass.
-- No toolkit commit this round (no code changed). `wcp-porting-img`: this
-  doc section + the four files above.
+- Toolkit commit this round: two new opt-in TRACE diagnostics (§9.1), no
+  behavior change. `wcp-porting-img`: this doc section + the four files
+  above.
+
+## 9. Round 2 continued (2026-08-17 pm) — class B root cause and fix design
+
+Owner asked to dig into §8.6's 9 undiagnosed class-B findings and propose a
+fix (design only, not implemented). **Result: two distinct, well-evidenced
+mechanisms account for 7 of the 9; the remaining 2 resist this round's
+instrumentation and are left open.**
+
+### 9.1 New diagnostics (committed, opt-in, byte-identical when off)
+
+Two additions to `clus/src/NeutrinoGraphAudit.cxx` / `TaggerCheckNeutrino.cxx`,
+both proven byte-identical to production on every event they touched
+(`hash_archive.py` PASS on all 12 reruns below, before and after each build):
+
+- **Four new TRACE lines inside op1** (the existing duplicate-corridor
+  merge): `op1 scope` + `op1 scope-member` (which segments were even
+  `in_scope_segments()` this pass, and the main-vertex point `mvga_radius`
+  is centered on), `op1 angle` (the computed chord angle whenever the
+  overlap gate passed — previously silent), `op1 find-vertices-failed` and
+  `op1 reconnect-infeasible` (the two remaining silent `continue` sites).
+  Gated at `SPDLOG_LOGGER_TRACE` — invisible at production's `debug` level,
+  visible with `SBND_WCT_LOGLEVEL=trace`, no code path changed.
+- **`dup_stage_census()`** (new, `TaggerCheckNeutrino.cxx`, gated on a new
+  env var `WCT_DUP_STAGE_DEBUG`, independent of the existing `WCT_DET_DEBUG`
+  checksum tool): at 5 pipeline checkpoints (`overall_main_vertex`,
+  `snap_main_vertex_to_kink`, `main_vertex_graph_audit`,
+  `improve_vertex`/`examine_direction`, `shower_clustering_with_nv`) scans
+  **every** pair of segments on `main_cluster` — unscoped, unlike op1 — with
+  op1's own metric (path-point fraction within 1.4 cm, chord angle), logging
+  any pair clearing overlap 0.5 (looser than production's 0.8, to see a pair
+  *approaching* duplication) plus an unconditional segment-count line per
+  checkpoint. Answers "does this duplicate already exist, and is it in
+  op1's scope, at each named stage" without per-segment coordinate matching.
+
+Repro:
+```bash
+SBND_WCT_LOGLEVEL=trace WCT_DUP_STAGE_DEBUG=1 PR_JOBS=1 ./run_pr_chain_batch.sh \
+    <ql_root> <out> data <event>
+```
+Freshness/gates: `wcbuild` four times this round (one per instrumentation
+addition), each followed by `./build/clus/wcdoctest-clus` (2105/2105 PASS
+every time) and a hash-identity rerun of the affected event(s) before reading
+any new TRACE line.
+
+### 9.2 Mechanism A — op1's `mvga_radius` scope excludes the duplicate (6/9)
+
+`246579, 269774, 46363, 359980, 506114, 521075` — **including all four NCpi0
+findings.** In every one of these, op1's own `op1 scope-member` listing (the
+segments actually inside `mvga_radius` = 15 cm of the main vertex) does
+**not** contain the two segments my census flags as a duplicate pair — by
+length, and for 246579 (the only case with 3+ in-scope segments, so worth
+checking beyond "only 1 candidate exists") independently confirmed with
+`dup_stage_census`: the exact pair (12.8/24.1 cm, **overlap 0.86, angle
+2.1°** — a textbook duplicate, well clear of even the pre-pr/86 0.7
+threshold) is present **from the very first checkpoint** (`overall_main_vertex`,
+before `main_vertex_graph_audit` even runs) and **unchanged** through every
+later checkpoint — op1 simply never sees it. Distance from the main vertex
+to the nearer endpoint of each member: 19.8 cm and 21.4 cm — **5–7 cm outside
+the 15 cm radius**, not a large excursion.
+
+For 359980/506114/521075/46363, op1's scope contains only **1** segment
+each (`n_in_scope=1`) — a pair evaluation is structurally impossible; the
+duplicate lives entirely outside the audited window. 269774's scope has 2
+segments (24.75/7.64 cm, overlap 0.29 — correctly declined, a real non-dup
+pair) but the actual duplicate (14.1/16.3 cm) is a *different* pair,
+likewise outside scope.
+
+Exact overlap/angle for all 6 (final Bee geometry, `pr83r2_census.py`
+metric): 246579 0.86/2.1°, 269774 1.00/5.6°, 46363 0.70/17.2°, 359980
+0.82/7.3°, 506114 0.81/18.2°, 521075 0.96/8.5°. Five of six clear even
+production's raised 0.8 threshold comfortably — **scope, not threshold, is
+what excludes them.**
+
+### 9.3 Mechanism B — op1's threshold, raised by pr/86, is stricter than the census's (1/9)
+
+`404684` only. Op1 evaluates this *exact* pair — confirmed by matching
+lengths (18.13/61.52/15.78 cm in scope; 15.78/61.52 cm the flagged pair) —
+computes **overlap 0.74**, and declines because production sets
+`mvga_dup_frac = 0.8` (`wct-pr-perevt.jsonnet`, pr/86 §10.6 P4: "close the
+marginal-overlap gap", raised from the C++ default 0.7 for an unrelated
+purpose). The census script (and doc 83 round 1's `pr83_dup_metric.py`, its
+comment claiming "same constants as NeutrinoGraphAudit op1" is now **stale**
+post-pr/86) used 0.7. `dup_stage_census` confirms the geometry is stable —
+final overlap 0.741 matches op1's mid-pipeline 0.74 almost exactly, so this
+is not a timing artifact: **op1 saw this pair and declined it purely on the
+now-stricter threshold.**
+
+### 9.4 Unresolved (2/9): `350935`, `506746`
+
+`dup_stage_census`, run unscoped over the whole main cluster at all 5
+checkpoints, found **no** pair clearing overlap 0.5 at any checkpoint for
+either event, yet the final Bee output shows one (350935: 251.4/13.4 cm,
+overlap 1.00; 506746: 15.9/11.5 cm, overlap 0.95). `main_cluster`'s ident is
+stable across checkpoints in the log (17 and 21 respectively) but does
+**not** match the final Bee `cluster_id` (11 and 13) — so whatever the Bee
+dump reports as the duplicated cluster is not straightforwardly the same
+object my checkpoints tracked as `main_cluster`, and/or the duplication is
+introduced by something after `shower_clustering_with_nv` (the last
+graph-mutating call before the taggers) that the added checkpoints do not
+cover — a global multi-segment refit is the leading candidate but is not
+confirmed. 350935's 420-point, 251 cm single segment is far more heavily
+fitted than anything visible at `shower_clustering_with_nv` time (2
+segments, unremarkable point counts), consistent with a late, whole-cluster
+refit reshaping already-merged segments into an apparently duplicated pair
+— but this is a hypothesis, not a proven mechanism. Left open; not attributed
+to Mechanism A or B.
+
+### 9.5 Fix design (not implemented this round)
+
+Two independent, narrowly-targeted knobs, matching the two confirmed
+mechanisms — deliberately **not** a single "raise everything" change, since
+op1's current scope and threshold were each set for reasons unrelated to
+this defect (mvga_radius bounds an expensive near-vertex audit; 0.8 closed a
+different marginal-overlap gap in pr/86) and loosening either broadly risks
+re-litigating that tuning:
+
+- **`mvga_op1_radius`** (default `0` = use `mvga_radius`, legacy): a
+  separate scope radius for op1 only, decoupled from op2/op3's near-vertex
+  focus (op1 is a global graph-correctness check — "no two segments should
+  double-book the same charge" — not inherently a *near-vertex* one, unlike
+  op2/op3 which are specifically about vertex activities). §9.2's measured
+  excursion (5–7 cm past 15 cm) suggests 25 cm would already catch 246579;
+  the fully general fix is `mvga_op1_radius = -1` meaning **unscoped** (scan
+  the whole main cluster, as `dup_stage_census` already does for free) —
+  simplest to reason about, and the 511-event manifest's op1 cost is already
+  small (§8's runtime numbers were RSS/wall neutral with op1 active).
+- **`mvga_op1_dup_frac`** (default `0` = use `mvga_dup_frac`, legacy): a
+  separate overlap threshold for op1's own merge decision, distinct from
+  `mvga_dup_frac`'s other consumer (op3's satellite-anchor absorb gate,
+  `mvga_sat_dup_frac`'s fallback). Set to the pre-pr/86 0.7 to recover
+  404684 without touching op3's pr/86-tuned behavior at all.
+
+Both are op1-only, additive (nothing about op2/op3/op3.5 changes), and
+should compose: with both set, 6/9 (§9.2) + 1/9 (§9.3) = **7 of 9 class-B
+findings should merge cleanly**, leaving only 350935/506746 (§9.4) for a
+future round once their mechanism is understood.
+
+Touch list: `clus/src/NeutrinoGraphAudit.cxx` (op1's `in_scope_segments()`
+radius check and the `frac < m_mvga_dup_frac` gate — two one-line changes to
+consult the new members when set), `clus/inc/WireCellClus/NeutrinoPatternBase.h`
+(two new members alongside `m_mvga_radius`/`m_mvga_dup_frac`),
+`clus/src/TaggerCheckNeutrino.cxx` (`get()` + `default_configuration()` +
+`pattern_algos.` thread), `cfg/pgrapher/common/clus.jsonnet` (key-suppression
+idiom), `cfg/pgrapher/experiment/sbnd/{clus,wct-pr-perevt}.jsonnet` (TLA
+thread, left OFF), `clus/test/doctest_clus_knob_defaults.cxx`. Gates it would
+owe: knob-off byte-identical over the 511-event manifest; knob-on census
+6/9+1/9 → 0 (via `pr83r2_census.py`, cross-checked against `dup_stage_census`
+TRACE); a `numu_score`/`nue_score`/`kine_reco_Enu`/vertex A/B on the 7
+recovered events (NCpi0's untouched-in-round-1 status makes it the most
+informative arm to watch here — all 4 of its class-B findings are Mechanism
+A); `./build/clus/wcdoctest-clus`. **Not proposed**: any change addressing
+§9.4 — mechanism unknown, no knob to design yet.
