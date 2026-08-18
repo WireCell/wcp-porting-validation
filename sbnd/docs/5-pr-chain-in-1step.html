@@ -1251,6 +1251,61 @@ pointing it at a 1-step zip must pass the PR layer explicitly.</div>
 comparable to Xin's <code>nusel-table.tsv</code>, which is a provenance argument rather than a physics
 one.</p>
 
+<h3 id="pf-regression">7.6 Regression: the merge made truth hostage to reco (fixed 2026-08-18)</h3>
+
+<div class="note"><strong>The §7.4 merge silently dropped the truth tree on most events.</strong>
+Moving the truth particle tree into the merged <code>mc</code> tied it to the reco half, and
+<code>fill_bee_pf_tree</code> returns early when there is no PR graph, no <code>TrackFitting</code> or
+no main vertex — while the call site skipped the function entirely without a <code>TrackFitting</code>.
+Those are exactly the events the neutrino tagger declines, i.e. <em>most</em> of them. Measured on the
+run-925-23 pilot: <strong>6 of 10 events had no <code>mc.json</code> at all.</strong> It was easy to
+miss because their <code>truth_trackid_labeled</code> / <code>truth_unlabeled</code> <em>point</em>
+layers were still present — only the particle tree vanished.</div>
+
+<p>The fix is not "emit an empty file": all six broken events <em>had</em> truth, and only the reco was
+missing. Priority is now <strong>truth+reco → truth alone → empty</strong>, with empty reserved for
+when neither exists. Three separate places were dropping the tree, so all three had to change:</p>
+<ul>
+<li>the upstream truth tree is fetched <strong>before</strong> the reco availability checks;</li>
+<li>every "no reco" path funnels through one <code>emit_without_reco()</code> bail-out that writes the
+    upstream nodes when there are any;</li>
+<li>the call-site <code>if (!tf) continue</code> is gone — <code>fill_bee_pf_tree</code> has to run in
+    order to emit the truth-only case.</li>
+</ul>
+<p>Plus a per-set <code>emit_empty</code> (default false, so other configs are unchanged) which also
+makes the flush stop skipping empty trees; SBND's <code>clus_pr</code> sets it, so the layer exists for
+every event.</p>
+
+<h4>Verified at Bee's own <code>mc/</code> endpoint, all 10 events</h4>
+<div class="scroll">
+<table>
+<thead><tr><th>evt</th><th>ν cand</th><th>nodes</th><th>first node</th></tr></thead>
+<tbody>
+<tr><td>2</td><td>no</td><td>2</td><td class="mono">1 numu QE CC Etot 569.0 MeV Edep 0.0 MeV</td></tr>
+<tr><td>4</td><td><strong>yes</strong></td><td>2</td><td class="mono">1 numu MEC CC Etot 953.2 MeV Edep 803.1 MeV</td></tr>
+<tr><td>6</td><td>no</td><td>1</td><td class="mono">1 numu QE CC Etot 317.7 MeV Edep 33.7 MeV</td></tr>
+<tr><td>9</td><td><strong>yes</strong></td><td>3</td><td class="mono">1 numu RES CC Etot 796.4 MeV Edep 0.0 MeV</td></tr>
+<tr><td>11</td><td>no</td><td>4</td><td class="mono">1 numu RES CC Etot 1333.6 MeV</td></tr>
+<tr><td>18</td><td><strong>yes</strong></td><td>2</td><td class="mono">1 numu MEC NC Etot 1121.1 MeV Edep 176.6 MeV</td></tr>
+<tr><td>20</td><td><strong>yes</strong></td><td>2</td><td class="mono">1 numu QE CC Etot 1170.8 MeV Edep 862.1 MeV</td></tr>
+<tr><td>22</td><td>no</td><td>3</td><td class="mono">1 numu QE NC Etot 422.3 MeV Edep 0.0 MeV</td></tr>
+<tr><td>24</td><td>no</td><td>2</td><td class="mono">1 numu QE CC Etot 1332.8 MeV Edep 286.9 MeV</td></tr>
+<tr><td>25</td><td>no</td><td>2</td><td class="mono">1 numu QE CC Etot 1559.9 MeV Edep 13.7 MeV</td></tr>
+</tbody></table>
+</div>
+<p><strong><code>mc.json</code> coverage 10/10, was 4/10.</strong> HTTP 200 on every event. The
+recovered content is not trivial — evt 11 carries <strong>4</strong> interactions and evt 2 two
+(rockbox multi-ν events), all previously discarded.
+BEE: <a href="https://www.phy.bnl.gov/twister/bee/set/c946a64f-41a5-4dbb-b4f3-4b6fb91d4905/event/list/">c946a64f</a>
+(vs the pre-fix <a href="https://www.phy.bnl.gov/twister/bee/set/b3deef1c-91dd-4fcf-8b08-20a972bbb04c/event/list/">b3deef1c</a>,
+same 10 events).</p>
+
+<p class="note"><strong>Two things this table also shows, unrelated to the fix.</strong> Several events
+read <code>Edep 0.0 MeV</code> — the interaction exists but deposits nothing visible (rock/dirt ν), so
+"has a truth ν node" is <em>not</em> the same as "has visible truth charge" if these are used for
+selection studies. And the genuinely-empty branch (neither truth nor reco, e.g. data with no
+candidate) is coded but <strong>not exercised</strong> by this MC test.</p>
+
 <h2 id="adopted">8. Route A adopted (2026-08-17)</h2>
 
 <p>Until now every full-chain run used a <em>scratch copy</em> of the entry config; the repo still
