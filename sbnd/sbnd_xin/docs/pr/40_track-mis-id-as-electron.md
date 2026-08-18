@@ -1869,3 +1869,387 @@ flagged)
   extending the census there is a candidate follow-up, not attempted here.
 - 54629's containment status (`fc=0`, `stmfit=eval`) is noted but not
   investigated -- a separate question from the PID mislabel.
+
+---
+
+# Round 8 (2026-08-18) -- owner verdicts on the round-7 predictions; cross-cluster
+writer traced (static, not yet runtime-confirmed); gap-jump + PF-particle fix
+design, NOT IMPLEMENTED
+
+## Repro block
+
+```bash
+cd sbnd_xin
+
+# All analysis this round reads ALREADY-EXISTING arm output -- zero PR chain
+# reruns (see "Why no reruns this round" below).  Arms used:
+#   work-pr91r2-prod-mc, work-pr91r2-prod-ncpi0   (toolkit cca9f167)
+#   work-pr40r7cen-{mcp1k,nuecc48,ncpi0}          (round 7, 2026-08-17)
+# Per-event calib JSON: work-pr91r2-prod-{mc,ncpi0}/pr_evt<ID>/calib-pr-evt<ID>.json
+# Round-7 census (uncommitted scratch): /home/xqian/tmp/pr40r7/census_full.tsv
+
+# gap metrics + segment dQ/dx/straightness for 286906/409546/521075 --
+# python3 reading calib-pr-evt<ID>.json's steiner/track_shower/segments/
+# vertices blocks directly (no new script committed this round; the
+# one-off snippets are quoted inline below so the owner can re-run them).
+
+# 45-Bee-event straight_long cross-check against round 7's own TSV column:
+python3 - <<'PY'
+import csv
+bee45 = [350935,283713,55595,407280,281837,55539,314507,64921,71222,316025,
+         395610,285567,280972,401450,290729,138009,395060,286191,348471,
+         69314,30504,286681,90055,293149,56982,321371,349461,352233,234638,
+         214469,389538,277298,349549,433451,278684,292643,315167,268067,
+         239794,386948,64409,437699,348691,54095,320865]
+rows = list(csv.DictReader(open('/home/xqian/tmp/pr40r7/census_full.tsv'), delimiter='\t'))
+byevt = {}
+for r in rows: byevt.setdefault(int(r['evt']), []).append(r)
+n_straight = sum(1 for e in bee45 if byevt.get(e) and
+                  max(byevt[e], key=lambda r: float(r['length_cm']))['straight_long'] == 'True')
+print(f"{n_straight}/{len(bee45)} Bee events have straight_long=True on their dominant segment")
+PY
+```
+
+## Symptom (owner scan, 2026-08-18)
+
+Owner scanned three events from doc pr/91's Bee set (idx 9/10/21 of
+`pr91r2.index.txt`, the "rung-2-class predictions, still unscanned" flagged
+by doc pr/84 round 2 §11's cross-cluster F1-rung-2 census) and gave verdicts:
+
+> 286906, a gap between the long muon and the vertex, this should be one
+> single muon. Note, if we have a long track pointing at the vertex, they
+> could be 1. EM shower, then gamma 2. hadron track, then neutron hadron
+> track 3. muon, then likely real gap in SP etc. If the long muon is not
+> pointing or relevant to the nu vertex, this long muon should not be
+> counted in the PF or energy reconstruction, since it is very likely to be
+> a different event
+> 409546, seems to be OK, since the track is short, so it could be an
+> electron.
+> 521075, this is good, the EM shower is clearly a gamma, the PF is good.
+
+Owner directive for this round: update the doc's understanding and proposed
+fix; **investigation and design only**, implementation deferred to the next
+round (matching every prior pr/40 round's scoping discipline). Owner also
+set the general principle bounding the fix's location: the fix belongs
+**after** the neutrino vertex is determined -- direction-match the
+disconnected object against the *determined* vertex, jump the gap if it
+matches, then fix the PF particle. Explicitly **not** in scope: the earlier
+imaging-stage severing (`clustering_separate`/`ClusteringProtectOverclustering`)
+-- 286906's underlying gap is a signal-processing inefficiency and the owner
+states plainly that stage is not fixable.
+
+## Why no reruns this round
+
+A peer Claude session is concurrently editing `NeutrinoShowerClustering.cxx`
+/ `PRShower.cxx` (doc pr/91 round 3, the `complete_structure_with_start_
+segment` frontier-walk bug) and has an uncommitted edit in
+`run_pr_chain_batch.sh` in this shared `wcp-porting-img` repo. To avoid any
+collision this round runs **zero PR chain reruns**: every measurement below
+reads already-existing arm output (`work-pr91r2-prod-{mc,ncpi0}`, toolkit
+`cca9f167`) plus static code reading. The mechanism attribution below is
+therefore **high-confidence but not yet runtime-trace-confirmed** --
+`WCT_PID_WRITE_DEBUG=2 WCT_SHOWER_TOPO_DEBUG=1` single-event reruns on
+286906/409546 are the first item for the *next* round, once the peer's
+runner-script edit has landed.
+
+## Mechanism -- one write site explains all three events
+
+All three flagged objects (286906 shower on segs 9002+9003, 409546 shower on
+seg 9000, 521075 shower 18007) carry `start_connection_type == 2` --
+cross-cluster directional association, one shower object anchored at a
+vertex that belongs to the *main* cluster while its own segment(s) live in a
+different `Facade::Cluster`. There is exactly one place in the codebase that
+**creates** a conn-2 shower from a fresh (not-yet-classified) track segment:
+`PatternAlgorithms::shower_clustering_with_nv_from_vertices`
+(`clus/src/NeutrinoShowerClustering.cxx:1302`). (The other four conn-2 write
+sites the grep turns up -- `:3497/:3503/:3951/:3954` -- are pi0 vertex
+re-anchoring on shower objects that already exist; ruled out, not relevant
+to a fresh track-to-electron mislabel.)
+
+`shower_clustering_with_nv_from_vertices` already does almost exactly what
+the owner is asking for. It runs a Hough-angle search from each
+other-cluster's steiner point cloud to the nearest main-cluster vertex
+(`:1440-1524`): computes an angle between the cluster's local direction and
+the line to the vertex, refined with a `2 cm`-radius local-center vector when
+the raw angle is small; accepts the association at `angle < 60`, or
+`angle` in `[50,60]` only if `dis < 6 cm` (`:1523-1524`). This **is** the
+direction-match-against-the-determined-vertex test the owner is describing,
+already running after `main_vertex` is fixed, already spanning the gap as an
+association (`shower->set_start_vertex(vertex, 2)`, `:1533`).
+
+The bug is narrower than "no such mechanism exists." Once the directional
+match accepts, `:1601-1620` unconditionally overwrites the anchoring
+segment's PID with no straightness or dQ/dx test at all:
+
+```cpp
+// NeutrinoShowerClustering.cxx:1601-1620 (shower_clustering_with_nv_from_vertices)
+int pdg = 0;
+if (start_seg->has_particle_info() && start_seg->particle_info()) {
+    pdg = start_seg->particle_info()->pdg();
+}
+if (pdg == 0 || std::abs(pdg) == 13) {         // <- no length/direct/dQdx test
+    auto four_momentum = segment_cal_4mom(start_seg, 11, particle_data, recomb_model, m_mip_dqdx);
+    auto pinfo = std::make_shared<Aux::ParticleInfo>(11, particle_data->get_particle_mass(11),
+                                                       particle_data->pdg_to_name(11), four_momentum);
+    start_seg->particle_info(pinfo);
+}
+```
+
+This is the same shape of hole that pr/40 rounds 5-6 already closed at three
+sibling sites with a `segment_is_straight_long_track` guard: F10
+`shower_connect_main_vertex_straight_guard` (`NeutrinoShowerClustering.cxx
+:813`, a *same*-cluster connecting-to-main-vertex site), F11
+`shower_traj_straight_guard` (`PRSegmentFunctions.cxx:2103`), F13's
+proton-daughter-pion guard (`NeutrinoShowerClustering.cxx:831-834`). This
+cross-cluster site was simply never given the same treatment.
+
+## Per-event evidence
+
+**286906** (main vertex cluster 41; the object lives in cluster 9,
+`is_main_cluster=0`):
+
+| seg | L (cm) | direct/L | med dQ/dx (xMIP) | pdg | flag_shower | role |
+|---|---|---|---|---|---|---|
+| 9001 | 126.89 | 0.987 | 1.19 | 13 | 0 | the muon body -- NOT in the shower, NOT in PF, NOT in kine |
+| 9002 | 8.68 | 0.994 | 1.20 | 11 | 0 | shower's `start_segment` -- the mislabel site |
+| 9003 | 5.22 | 0.933 | 0.73 | 11 | 1 | absorbed into the same shower |
+
+`segment_is_straight_long_track` (`length>10cm`, `direct>=34cm` or
+`direct/length>0.93`) evaluates **true** on seg 9001 alone (126.89 cm,
+direct 125.26 cm, ratio 0.987) and seg 9002 is too short to qualify in
+isolation, but it is collinear with 9001 across their shared vertex 9002
+(the vertex and segment IDs coincide, unrelated): **4.9 deg kink**, **0.28
+cm RMS transverse residual** over the combined 133.9 cm arc, dQ/dx 1.19x vs
+1.20x MIP on the two halves -- one straight, MIP-scale object split by the
+graph into "the muon" and "the shower's anchor". (seg 9002's own 1.2026x
+MIP sits 0.26% above the F2 guard's 1.2 "muon-like" threshold -- a
+coincidence, not load-bearing; the collinearity is the robust evidence.)
+
+**409546** (main vertex cluster 41; object in cluster 9, `is_main_cluster=0`):
+
+| seg | L (cm) | direct/L | med dQ/dx (xMIP) | pdg | flag_shower |
+|---|---|---|---|---|---|
+| 9000 | 15.78 | 0.977 | 2.73 | 11 | 0 |
+
+Same writer, no leftover track piece (cluster 9 here is only this one
+segment) -- a cleaner instance of the identical bug, without 286906's
+"orphaned muon body" symptom. Owner's "seems OK, it's short, could be an
+electron" is a read of PID plausibility; it does not settle the separate
+graph/PF-accounting question this round investigates. Recorded here rather
+than resolved by fiat -- flagged as an open question below.
+
+**521075** (main vertex cluster 94; shower 18007 in cluster 18): 18
+segments, 15 in the main cluster, `kine_best=674.5 MeV` -- a genuine
+multi-pronged cascade. Its one long/straight member (seg 18026, 27.7 cm,
+ratio 0.866, 2.31x MIP) is a normal bremsstrahlung/conversion sub-track
+inside a real shower, not a lone dominant object. Correctly a shower;
+untouched by anything proposed below.
+
+## Gap metric -- point-cloud closest approach, not fitted-vertex distance
+
+Fitted-vertex-to-vertex distance gives **1.89 cm** (286906) / **2.80 cm**
+(409546) / **3.94 cm** (521075) -- a thin, unsafe margin sitting right
+against doc pr/84 round 2's own proven-**ADVERSE** 2.5-2.9 cm bridges
+(nueCC 38856, the `conn3_stitch_max` 3 cm sweep that fragmented a 1244 MeV
+electron and flipped `nue` 3.25 -> -3.45).
+
+The **steiner / track_shower point-cloud** closest approach between the two
+clusters is a cleaner, less fit-biased metric:
+
+| evt | steiner cl-to-cl (cm) | track_shower cloud (cm) | verdict |
+|---|---|---|---|
+| 286906 | 1.387 | 1.297 | must bridge |
+| 409546 | 1.277 | 1.109 | must bridge |
+| 521075 | 2.916 | 2.837 | must NOT bridge |
+
+A full **1.5 cm margin** separates the two must-fix cases (1.11-1.39 cm)
+from the must-not-touch case (2.84-2.92 cm) on this metric, vs. ~0.9 cm and
+sitting on top of the adverse band on the fitted-vertex metric. **Proposal:
+gate any next-round gap-jump on point-cloud closest approach at
+~1.5-2.0 cm**, not vertex-fit distance -- satisfies "the cut should be as
+small as possible" while clearing both required cases with margin.
+
+**`conn3_stitch_max` (the existing graph-bridge knob, SBND production =
+1 cm) cannot reach either case regardless of radius.**
+`stitch_disconnected_main_cluster` (`NeutrinoGraphAudit.cxx:1658`) only
+iterates segments with `is_main_cluster==true`; cluster 9 in both events has
+`is_main_cluster=0`. This is a structurally different code path
+(cross-cluster directional association vs. same-cluster stitch) -- raising
+`conn3_stitch_max` is not the fix and should not be proposed next round.
+
+## PF / energy omission -- a second, separable bug, already present today
+
+Independent of the pdg mislabel: 286906's 127 cm muon (seg 9001) sits in a
+`Facade::Cluster` that is never the nusel main cluster. Under SBND
+production knobs (`pf_track_main_cluster_only=true`,
+`pf_shower_vertex_barrier=true`, `pf_orphan_track_parentage=true`) it is
+invisible to `fill_bee_pf_tree`'s main-vertex BFS
+(`MultiAlgBlobClustering.cxx`) and to `fill_kine_tree`'s BFS+shower walk
+(`NeutrinoKinematics.cxx`) -- both gate on `same_cluster()` /
+`used_vertices` unconditionally in every orphan-rescue path that exists
+today (`pf_orphan_track_parentage`'s rescue included). Today the muon
+contributes **zero** PF nodes and **zero MeV** to `kine_reco_Enu`, silently
+-- exactly the failure mode the owner names ("should not be counted in the
+PF or energy reconstruction... if not relevant", except here it *is*
+relevant and is being dropped anyway).
+
+Worth stating plainly: `kine_energy_included` (values 1 vs 3) is
+**advisory only** -- `NeutrinoKinematics.cxx:330-334` sums every element of
+`kine_energy_particle` into `kine_reco_Enu` regardless of the `included`
+flag. "Should not be counted in energy reconstruction" therefore cannot be
+implemented by writing `included=3`; only actual omission from
+`kine_energy_particle` (today's default, silent, and in 286906's case
+wrong) achieves that.
+
+## The "hadron -> neutron" carrier the owner asked for already exists
+
+`MultiAlgBlobClustering.cxx:1805-1833` (`append_pseudo_shower`) already
+assigns a conn-2/3 pseudo-parent PDG **2112 (neutron)** whenever the wrapped
+shower's own PDG is not 11/22 (gamma pseudo-parent otherwise):
+
+```cpp
+const int pdg = (std::abs(sh->get_particle_type()) == 11 ||
+                 std::abs(sh->get_particle_type()) == 22) ? 22 : 2112;
+```
+
+Nothing new is needed for the owner's "hadron track -> neutron hadron
+track" case -- it is already implemented display-side. The actual gap is
+entirely upstream: getting a genuinely hadronic disconnected object correctly
+PID'd (not force-set to 11) so this existing carrier logic ever sees it.
+
+## 45-event Bee census cross-check (existing round-7 data, zero rerun)
+
+Round 7's own census TSV already carries a `straight_long` column. Re-read
+against the 45-event Bee scan set (idx list in round 7's Bee table above):
+**40 of 45** have `straight_long=True` on their dominant flagged segment --
+the same-shape pathology (a straight, MIP-scale object mislabeled electron)
+is systemic across the sample, not confined to this one writer site.
+
+**Caveat, stated plainly rather than merged into one number**: round 7's
+census predicate required `is_main_cluster` (`particle_id==11 AND
+is_main_cluster AND length>20cm`), which structurally **excludes**
+286906/409546 (cluster 9, `is_main_cluster=0` in both). The 45-event
+population and the {286906, 409546} pair are two overlapping-in-mechanism
+but non-identical populations: the 45-event set is dominated by
+same-cluster reclassification writers (the unguarded branches in
+`NeutrinoVertexFinder.cxx examine_direction`, `:1634` and `:1667-1715`, and
+similar sites), while 286906/409546 are this round's cross-cluster
+`shower_clustering_with_nv_from_vertices` site. Both need the same shape of
+fix (a straightness/dQ-dx guard before the pdg=11 write, reusing
+`segment_is_straight_long_track` as F10/F11/F13 already do) but at different
+call sites -- this round only designs the cross-cluster one; the 45-event
+population is flagged as the same-cluster analogue for a follow-up round,
+not attempted here.
+
+## Comprehensive fix design (named, NOT implemented this round)
+
+Two parts, matching the owner's own two-clause ask ("jump the gap" + "fix
+the PF particle").
+
+**Part A -- PID guard (small, mirrors existing precedent).** Add a
+`segment_is_straight_long_track` test (reusing the existing helper, no new
+logic) into `shower_clustering_with_nv_from_vertices`'s pdg-write block
+(`NeutrinoShowerClustering.cxx:~1601-1620`), same shape as F10/F11/F13:
+decline the `pdg==0||pdg==13 -> 11` overwrite when the candidate (or its
+collinear continuation across the shared vertex, per 286906's 9001+9002
+pattern) tests straight and long. Proposed knob name
+`shower_connect_from_vertices_straight_guard`, C++ default `false`, key
+omitted when off => byte-identical. **This alone fixes the mislabel for
+both 286906 and 409546** -- it does not by itself connect anything or fix
+the PF/energy omission.
+
+**Part B -- the gap-jump + PF fix. Two candidate shapes; this round
+presents both rather than choosing (owner input wanted before next round
+commits):**
+
+- **B1 -- display/energy patch, no graph edit.** Leave the PR graph as two
+  separate `Facade::Cluster`s. When Part A declines the electron
+  conversion, additionally (a) extend the PF-tree orphan rescue --
+  `pf_orphan_track_parentage`'s `same_cluster()` gate is unconditional
+  today (`MultiAlgBlobClustering.cxx`, both orphan pools) -- to also walk a
+  declined-electron association's own cluster, and (b) extend
+  `fill_kine_tree`'s BFS (`NeutrinoKinematics.cxx`) the same way so the
+  muon's KE is actually summed. Same shape/risk class as doc pr/84's F1/F2
+  (display+kinematics only, no fit/PID side effects). Does **not**
+  literally "connect the track to the main cluster" -- it is a bookkeeping
+  fix layered on top of a graph that stays split, so anything downstream
+  that queries graph connectivity (rather than walking the PF/kine trees)
+  still sees two objects.
+- **B2 -- the graph bridge the owner actually asked for.** Reuse the
+  *already-computed* directional match from
+  `shower_clustering_with_nv_from_vertices` (the same angle/distance test
+  gating Part A) to trigger a real cross-cluster bridge: extend
+  `connect_direct`/`create_segment_for_cluster`
+  (`NeutrinoPatternBase.cxx`) -- today scoped to a single `Facade::Cluster`
+  because `do_rough_path`'s Dijkstra runs on that cluster's own
+  `"steiner_graph"` -- to build a direct bridge segment across the
+  point-cloud gap when it is small (this round's proposed ~1.5-2.0 cm
+  point-cloud threshold) and the candidate is straight/MIP-like. Because
+  the gap is a signal-processing hole with no charge to route through (per
+  owner), a straight-line bridge segment is the natural shape here, not
+  `do_rough_path` routing -- consistent with how `connect_direct` already
+  falls back safely when routing fails. This is the structurally correct
+  fix: once merged, every downstream PID/PF/kine consumer sees one
+  continuous track and needs no special-casing on either end. **Higher
+  risk/effort**: no code path in this codebase today merges two
+  `Facade::Cluster`s or creates a segment that crosses that boundary --
+  this is new machinery, not an existing-knob extension, and needs its own
+  design review (does the bridge segment get its own `Facade::Cluster`
+  reassignment, or do the two clusters merge; how does this interact with
+  the `Facade::Cluster`-scoped assumptions baked into `do_rough_path`,
+  `mvga`, and `conn3_stitch_max` elsewhere in the same pipeline).
+
+**Recommendation for next round: B2**, on the strength of the owner's own
+framing ("modify the Graph") and because B1 leaves exactly the kind of
+graph/display divergence doc pr/84 rounds 1-3 spent three rounds cleaning up
+(mc.json moving independently of the underlying graph). But B2's cost and
+architectural novelty should be confirmed with the owner before committing,
+rather than assumed.
+
+## Open questions for the owner (next round should get an answer before
+implementing)
+
+1. **B1 vs B2** -- accept the graph-bridge scope and cost of B2, or start
+   with the lower-risk B1 display/energy patch and revisit B2 later?
+2. **If B2**: does the bridge segment simply move into the main
+   `Facade::Cluster` (folding the smaller cluster's charge into the main
+   one), or should the two clusters be formally merged? This affects every
+   other `Facade::Cluster`-scoped mechanism in the pipeline (mvga,
+   `conn3_stitch_max`, `do_rough_path`) and is worth deciding once rather
+   than per-site.
+3. **Threshold**: confirm the proposed ~1.5-2.0 cm point-cloud
+   closest-approach cut (vs. 1.11-1.39 cm for the two must-fix cases,
+   2.84-2.92 cm for the must-not-touch case) -- or does the owner want a
+   different margin / a different metric entirely?
+4. **409546**: bridge it under the same rule as 286906 (this round's
+   evidence says it is the identical writer bug), or treat "seems OK, could
+   be an electron" as an owner override that should exempt it from Part A
+   too? The round-8 default assumption is: fix the writer bug uniformly
+   (Part A applies to both), and let B1/B2 decide independently whether
+   409546's now-correctly-PID'd object is worth graph-connecting (it may
+   end up staying displayed as a short, disconnected, correctly-labelled
+   object either way, since it has no leftover track body like 286906's
+   9001) -- flagging this reading for owner confirmation rather than
+   assuming it.
+
+## Scope and not-claimed
+
+- No C++, jsonnet, or config change this round -- owner explicitly scoped
+  this round to investigation, understanding, and fix design; implementation
+  deferred to the next round.
+- Mechanism attribution (`shower_clustering_with_nv_from_vertices`,
+  `:1601-1620`) is **static-code-read, not yet runtime-trace-confirmed** --
+  no `WCT_PID_WRITE_DEBUG`/`WCT_SHOWER_TOPO_DEBUG` rerun was done this round
+  (see "Why no reruns this round" above). First item for the next round.
+- Zero PR chain reruns this round; all evidence comes from arms that already
+  existed before this round started (`work-pr91r2-prod-{mc,ncpi0}` at
+  toolkit `cca9f167`, `work-pr40r7cen-*` from round 7).
+- Neither Part A's guard shape nor B1/B2 is gated, tested, or wired into any
+  component -- both are documented candidates only, with open questions
+  above that the owner should answer before the next round picks one.
+- The 45-event Bee census cross-check is a re-read of round 7's own
+  (uncommitted, scratch) TSV -- no new census script, no new manifest run.
+  The same-cluster analogue of this round's cross-cluster fix (the writers
+  behind that 40/45 population) is named but not designed this round.
+- 521075 confirmed unaffected by anything proposed here; no action needed
+  on it.

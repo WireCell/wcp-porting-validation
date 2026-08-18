@@ -1,0 +1,29 @@
+# doc pr/91 sec 11 -- before/after Bee sets for shower_walk_visited_parity.
+# One event (168596, nueCC48) -- the only mover in the 67-event round-3 gate.
+#
+# BEFORE (knob off = the PREVIOUS production, byte-identical to
+#         work-pr91r4-off-nuecc48, gate PASS vs a genuinely rebuilt
+#         pre-change binary -- 6/6 archives):
+#   https://www.phy.bnl.gov/twister/bee/set/241f8846-8fcc-49da-8a0e-9550d2ff863b/event/list/
+# AFTER  (shower_walk_visited_parity = true).  FLIPPED SBND PRODUCTION ON
+#         2026-08-18 -- this arm IS production now; bare-run composition
+#         gate vs it PASS=134/134 (both samples):
+#   https://www.phy.bnl.gov/twister/bee/set/10d7a469-ee1d-4912-a2a0-6220ca44c0d7/event/list/
+#
+# What to look for: the 7.7cm electron stub (shower 3 / node 14072, formerly
+# a separate conn-1 shower feeding a spurious pi0 at mass 114.06 MeV) is now
+# absorbed into the 2039 MeV electron's own shower -- shower count 17 -> 16,
+# no pi0 node.  kine_reco_Enu moves -0.3% (2331.29 -> 2324.26 MeV): the
+# borrowed-charge correction, previously double-counted through the
+# ownership-free kine_charge 0.6cm sum.
+#
+# bee_idx  event   sample   status
+0   168596  nueCC48  CHANGED: spurious pi0 (33.5 MeV shower + embedded 21.5 MeV stub, mass 114.06) gone; stub absorbed into the 2039 MeV electron shower; shower count 17->16
+#
+# Arms: work-pr91r4-{off,on,bare}-{nuecc48,ncpi0}.  Gate: scripts/pr85_hash_gate.py.
+# 67-event population gate (48 nueCC + 19 NCpi0): V2 knob-on vs knob-off --
+# nueCC48 PASS=95/96 (168596 is the ONE mover, mabc-pr.zip only, pctree
+# untouched); NCpi0 (the pi0-veto sample) PASS=38/38, ZERO movers -- no
+# genuine two-gamma pi0 was disturbed.  Both samples' nusel-table.tsv are
+# byte-identical (zero score/label movers).  See doc sec 11 for the full
+# gate writeup and the WCT_SHOWER_WALK_DEBUG probe trace.
