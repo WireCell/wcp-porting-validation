@@ -591,3 +591,439 @@ Ordered by how well the evidence supports them.
 - Permanent probes now in the tree: `WCT_SHOWER_CREATE_DEBUG` (pr/84 r3),
   `WCT_SHOWER_CONTENT_DEBUG`, `WCT_SHOWER_MERGE_DEBUG`,
   `WCT_SHOWER_ENDPOINT_DEBUG` (this round).
+- Round 2 (§10): `work-pr91r3-probe168596-nue`, hub `work-nuecc48-cb0805`,
+  toolkit `4ff9870f`, probe-neutrality 4/4 vs `work-pr91r2-on-nue`.
+- Round 2 (§10): `work-pr91r3-probe168596-nue`, hub `work-nuecc48-cb0805`,
+  toolkit `4ff9870f`, probe-neutrality 4/4 vs `work-pr91r2-on-nue`.
+
+
+---
+
+## 10. Round 2 — 168596: why the pieces inside the 2039 MeV electron were never clustered into it
+
+Owner question (2026-08-18), after §2b shipped: *"this electron which is inside
+the big EM shower should be clustered by the big EM shower; in this event there
+are 2 pieces not clustered, can you explain why?"*
+
+**Repro.** Fresh label, probes on, one event:
+
+```
+cd wcp-porting-img/sbnd/sbnd_xin
+WCT_SHOWER_CREATE_DEBUG=1 WCT_SHOWER_CONTENT_DEBUG=1 \
+WCT_SHOWER_MERGE_DEBUG=1 WCT_SHOWER_ENDPOINT_DEBUG=1 \
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display \
+./run_pr_chain_batch.sh work-nuecc48-cb0805 work-pr91r3-probe168596-nue data 168596
+```
+
+Toolkit `4ff9870f` (= SBND production). Right-binary proof: the run emitted 20
+`SHOWER_CREATE_DEBUG`, 112 `SHOWER_CONTENT`, 36 `SHOWER_MERGE` and 291
+`SHOWER_ENDPOINT` lines (the installed lib had to carry the probe format
+strings). Probe neutrality vs the production arm `work-pr91r2-on-nue`:
+`calib-pr-evt168596.json` and `nusel-evt168596.tsv` byte-identical, `mabc-pr.zip`
+and `pctree-pr-evt168596.tar.gz` PASS under `hash_archive.py` member hashes —
+**4/4, no output moved**.
+
+### 10.1 Every shower that was NOT absorbed into the 2039 MeV electron
+
+`examine_shower_1`'s second half is the only pass that can pull an existing
+shower into the main conn-1 shower. All five non-trivial candidates and their
+verdicts, from one probe run (`NeutrinoShowerClustering.cxx:2734-2772`).
+Distances are per associate point against the big shower's 5436-point cloud.
+
+| candidate | displayed | conn | own len | median dist | frac < 3 cm | **verdict** | margin |
+|---|---|---|---|---|---|---|---|
+| `14072` | `e- 21 MeV` (the fake π⁰ γ) | 1 | 7.70 cm | **1.88 cm** | **0.96** | `conn1_vtx_outside_parent` | graph, not geometric |
+| `123140` | `e- 14 MeV` | 2 | **2.85 cm** | 16.82 cm | **0.50** | `len_lt_3cm` | **1.5 mm** short |
+| `130160` | `e- 23 MeV` | 2 | 4.58 cm | 6.69 cm | 0.00 | `geometry_fail` | angle1 88.8° vs 15° |
+| `128147` | `e- 33 MeV` (the real π⁰ γ) | 2 | 9.80 cm | 12.00 cm | 0.00 | `geometry_fail` | min_dis 85.8 cm vs 28 |
+| `69107` | `e- 6 MeV` | 3 | 2.47 cm | 7.16 cm | 0.00 | `len_lt_3cm` | — |
+
+Only two of the five are actually *inside* the big shower's charge: `14072`
+(96 % of its points within 3 cm) and, partially, `123140` (50 %). **Those are
+the two this section reads as the owner's "2 pieces"** — but note `123140`'s
+cloud is bimodal (median 16.8 cm), so if the intended pair was instead
+`14072` + `128147` (the π⁰'s two daughters), `128147`'s verdict is the
+`geometry_fail` row above and its 85.8 cm stand-off is genuine, not a bug.
+
+`123140` misses a hard length cut by **1.5 mm** (2.852 vs 3.000 cm) even though
+its start vertex 14051 *is* a node of the big shower — a conn-2 shower hanging
+directly off the parent, killed before any geometry is looked at.
+
+The rest of §10 is about `14072`, whose rejection is not geometric at all.
+
+### 10.2 The mechanism: a vertex that is in the view but was never walked
+
+`shower_clustering_with_nv_in_main_cluster` (`:512-576`) walks out from the main
+vertex; on each branch the first shower-flagged segment roots its own shower and
+the walk stops there. Four showers were seeded in the main cluster:
+
+```
+SHOWER_CREATE_DEBUG site=nv_in_main_cluster shower_id=0 start_seg=14060 conn=1 start_vtx_gidx=17
+SHOWER_CREATE_DEBUG site=nv_in_main_cluster shower_id=1 start_seg=14042 conn=1 start_vtx_gidx=27
+SHOWER_CREATE_DEBUG site=nv_in_main_cluster shower_id=2 start_seg=14094 conn=1 start_vtx_gidx=27
+SHOWER_CREATE_DEBUG site=nv_in_main_cluster shower_id=3 start_seg=14072 conn=1 start_vtx_gidx=52
+```
+
+Shower 2 — the future 2039 MeV electron — was born at **vertex 14027**.
+`Shower::set_start_vertex` calls `this->add_vertex(vtx)` (`PRShower.cxx:177`),
+so 14027 entered the view at that instant. The initial
+`complete_structure_with_start_segment` then explicitly refuses to enqueue
+`m_start_vertex` (`PRShower.cxx:479-486`, `:526`, `:532`), and the other three
+segments at 14027 (`14042`, `14093`, `14070`) were all already in the shared
+`used_segments`. **14027 is therefore a node of the view that was never
+expanded.**
+
+Later, `examine_showers` merges the 31.8 cm stem `14168` into shower 2, retargets
+it (`:3114-3119`) and re-floods with a **fresh** used-set:
+
+```cpp
+shower->add_segment(sg);
+shower->set_start_vertex(main_vertex, 1);
+shower->set_start_segment(sg);
+IndexedSegmentSet tmp_used_segments;                       // fresh — not the shared set
+shower->complete_structure_with_start_segment(tmp_used_segments, ...);
+```
+
+The fresh set is why `14168`, `14093` and `14174` — all consumed as track
+segments by the seeding BFS — *are* members of shower 2 in the final output.
+`used_segments` does **not** permanently bar a segment. What bars it is the
+**vertex frontier**: the walk enqueues a vertex only when
+`!this->has_node(v)` (`PRShower.cxx:527`, `:533`). Processing segment `14093`
+the walk sees its two vertices 14017 (already a node) and **14027 (already a
+node — put there by `set_start_vertex` at creation, never expanded)** and
+enqueues neither. The 4.74 cm proton-PID segment `14070` that hangs off 14027
+is never examined, so vertex **14052** — and with it `14072` and `14095` —
+never enter the view.
+
+Measured, from the content probe (shower 2: 60 segments, 96 distinct vertices
+touched, **0 orphan nodes**):
+
+- `14070` member? **no**.  `14095` member? **no**.
+- vertex 14051 in the view? **yes**.  vertex **14052 in the view? no**.
+- nearest view vertex to 14052: **14027, at 4.46 cm**.
+
+Everything downstream follows. Two separate gates ask the same pure
+graph-membership question and both reject `14072`:
+
+- `examine_showers`' absorb block (`:3138`) — `conn_type1 == 1 && start_vtx1 != main_vertex && shower_vertices.count(start_vtx1)`; this is how showers 0 and 1 (start vertices 14017 and 14027, both nodes) *were* absorbed.
+- `examine_shower_1` (`:2739`) — `conn_type1 == 1 && shower_vertices.find(start_vtx1) == end()` → the `conn1_vtx_outside_parent` line above.
+
+The stub's charge is 96 % within 3 cm of the parent's charge and its start
+vertex is 4.46 cm from the parent's nearest vertex. **Neither gate consults any
+of that.** `shower_absorb_track_guard` is *not* involved: it needs
+`min_length = 10 cm` (`segment_is_straight_long_track`) and `14070` is 4.74 cm —
+a useful negative, since §5 blamed that guard for the analogous 53057 case at
+14.22 cm.
+
+### 10.3 This is a porting divergence, and it is the pr/38 one
+
+The frontier prune itself is faithful — the prototype does the same thing
+(`WCShower.cxx:735-742`: already in `map_vtx_segs` ⇒ insert but do not enqueue).
+The divergence is **what seeds that visited-set**:
+
+| | start vertex enters the view? |
+|---|---|
+| prototype `WCShower::set_start_vertex` (`WCShower.cxx`) | **no** — assigns `start_vertex` and `start_connection_type` only; `map_vtx_segs` untouched |
+| toolkit `Shower::set_start_vertex` (`PRShower.cxx:177`) | **yes** — calls `this->add_vertex(vtx)` |
+
+So in the prototype 14027 is absent from `map_vtx_segs`, the re-flood *enqueues*
+it, the walk continues through `14070` to 14052, and the conn-1 membership gate
+at `NeutrinoID_em_shower.h:579` then **passes** — `14072` is absorbed into the
+big shower and no π⁰ is ever built from it.
+
+This is the same toolkit-only divergence already recorded in doc pr/38 and in
+`PRShower.h:178-186`, where its known consequence was confined to what
+`fill_sets` returns. The new finding is that it also **prunes the flood-fill
+frontier**, permanently walling off a branch — a much larger blast radius than
+pr/38 recorded. Per M15 this is surfaced, not fixed: it is a real divergence
+whose repair changes production output and needs its own default-OFF knob.
+
+Two candidate repairs, neither implemented, neither costed:
+
+1. **Frontier-only fix** — let `complete_structure_with_start_segment` enqueue a
+   node that has never been *expanded*, rather than one that is merely present
+   (track expanded-vertices separately from view membership). Narrow, and
+   restores prototype reachability without touching `set_start_vertex`.
+2. **Divergence fix** — stop `set_start_vertex` adding the vertex. Closer to the
+   prototype but changes `fill_sets`, every BFS barrier built from a shower's
+   node set, and §2b's own orphan bookkeeping. Much wider.
+
+Option 1 is the one to cost first.
+
+### 10.4 What this section does not claim
+
+- No knob, no threshold change, no flip — diagnosis only.
+- Only 168596 was measured. No population estimate for either gate, and no
+  claim about how often a shower's creation vertex ends up unexpanded.
+- `examine_merge_showers` emitted **zero** `tag=merge_showers` lines on this
+  event, so §10 says nothing about that pass here (consistent with §4: it only
+  merges conn-2 into conn-1, and `14072` is conn-1).
+- `examine_shower_1` entered with `flag_skip=1`, i.e. its first half was
+  suppressed and only the second half — the block traced above — ran.
+- Why `123140` is 2.85 cm rather than longer (a fragmentation question) was not
+  investigated.
+- The claim that the seeding BFS reached 14052 via `14070` is read off the
+  BFS layer order in the creation trace; the probe does not print
+  `used_segments` directly. It does not affect §10.2's conclusion, which rests
+  on the measured view membership of 14027/14052.
+
+### 10.5 The 3 cm cut gates shower OBJECTS, not segments
+
+A natural misreading of §10.1 is that EM clustering refuses short pieces. It
+does not. Shower 2 (the 2039 MeV electron) has **30 of its 60 member segments
+shorter than 3 cm**, down to **0.09 cm**, totalling 29.48 cm — including
+cross-cluster fragments (`90128` 0.09 cm, `80118` 0.16 cm, `62100` 0.30 cm …).
+There are two different routes into a shower and only one of them is gated:
+
+- **Route A — graph-connected.** `complete_structure_with_start_segment`
+  (`PRShower.cxx:442`) floods the PR graph and swallows every connected segment.
+  It has **no length test and no geometry test** — its only exclusions are
+  `used_segments` and `shower_absorb_track_guard` (≥10 cm, non-electron). This is
+  how those 30 sub-3 cm segments got in.
+- **Route B — already promoted to its own `PR::Shower`.** Then only the
+  shower-to-shower merge passes can attach it, and `get_total_length() < 3 cm`
+  (`:2740`) applies. `get_total_length()` sums the *whole candidate shower*.
+
+So the operative question for `123140` is not "why was it cut" but **"why was it
+a separate shower object at all?"** — and the answer is that it is in **cluster
+123**, never graph-connected to cluster 14, so Route A could never reach it.
+`shower_clustering_with_nv_from_vertices` promoted it to a conn-2 shower seated
+on main-cluster vertex 14051 (`:1548-1588`, probe site `nv_from_vertices_break`).
+
+That promotion also **closed the other door**: `update_shower_maps` (`:239`)
+rebuilds `used_shower_clusters` from every segment in every shower, and
+`shower_clustering_in_other_clusters` — which runs later (`:4096`) and absorbs
+free other-cluster material into showers — opens with
+
+```cpp
+if (used_shower_clusters.find(cluster) != used_shower_clusters.end()) continue;   // :1936
+if (map_cluster_length[cluster] < 4 * units::cm) continue;                        // :1937
+```
+
+Cluster 123 is already claimed, so the cone absorber never considers it; and at
+2.85 cm it would have failed the 4 cm cluster-length gate anyway. `123140`
+therefore had exactly **one** door in the whole chain — `examine_shower_1`'s
+3 cm total-length gate — and missed it by 1.5 mm.
+
+The design logic is visible once the two routes are separated: **inside a
+cluster, connectivity is the evidence, so no size gate is needed; across
+clusters there is no connectivity evidence, so size and geometry stand in for
+it.** A small EM fragment sitting inside a big shower but imaged into its own
+cluster has neither, which is the structural gap. Nothing here is a divergence —
+the prototype carries the same three `get_total_length() < 3*units::cm` tests
+(`NeutrinoID_em_shower.h:581`, `NeutrinoID_shower_clustering.h:498/512`, the
+latter two with its own `// too short ...` comment), and `id_pi0_with_vertex`
+has no length gate in either tree.
+
+---
+
+## 11. Round 3 — the 168596 fix: `shower_walk_visited_parity`, SBND PRODUCTION ON
+
+### 0. Repro
+
+```bash
+cd /nfs/data/1/xqian/toolkit-dev/toolkit
+# check `pgrep -f wire-cell` first (shared tree); wcbuild + install
+wcbuild
+ls -la local/lib/libWireCellClus.so                    # M1 freshness: 2026-08-18 12:04:08
+./build/clus/wcdoctest-clus                             # 210/210, 0 failed
+
+cd /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
+for s in nuecc48 ncpi0; do
+  SBND_SHOWER_WALK_VISITED_PARITY=0 PR_JOBS=32 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-$s-cb0805 work-pr91r4-off-$s data
+  SBND_SHOWER_WALK_VISITED_PARITY=1 WCT_SHOWER_WALK_DEBUG=1 \
+  PR_JOBS=32 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-$s-cb0805 work-pr91r4-on-$s data
+done
+python3 scripts/pr85_hash_gate.py work-pr91r4-off-nuecc48 work-pr91r4-on-nuecc48
+python3 scripts/pr85_hash_gate.py work-pr91r4-off-ncpi0   work-pr91r4-on-ncpi0
+diff work-pr91r4-off-nuecc48/nusel-table.tsv work-pr91r4-on-nuecc48/nusel-table.tsv
+diff work-pr91r4-off-ncpi0/nusel-table.tsv   work-pr91r4-on-ncpi0/nusel-table.tsv
+
+# after the flip: bare-run composition gate
+for s in nuecc48 ncpi0; do
+  PR_JOBS=32 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-$s-cb0805 work-pr91r4-bare-$s data
+done
+python3 scripts/pr85_hash_gate.py work-pr91r4-on-nuecc48 work-pr91r4-bare-nuecc48
+python3 scripts/pr85_hash_gate.py work-pr91r4-on-ncpi0   work-pr91r4-bare-ncpi0
+```
+
+### 1. Why the divergence exists — sourced, not open
+
+Round 2 (sec 10.3) left the answer as "surfaced, not fixed" and flagged the
+frontier prune as a much larger blast radius than doc pr/38 recorded. There is
+**no recorded reason** for the divergence -- it is an unflagged authorship
+artifact, not an intentional toolkit choice:
+
+- `git log -L 172,184:clus/src/PRShower.cxx` shows `this->add_vertex(vtx)` in
+  the **very first commit of the file** (`ce3f1ebd`, "Latest chapter on PR
+  infrastructure"), when the method was still `Shower::start_vertex(VertexPtr)`
+  with no `type` argument. It has never been touched since except to add a
+  null guard (`f639218b`).
+- The port audit table records the method as **"Equivalent; see §2.7
+  null-check"**
+  (`clus/docs/patternrecognition/prvertex_prsegment_prshower_review.md:100`);
+  §2.8 raised only the missing `nullptr` guard. `porting_dictionary.md` does
+  not list `set_start_vertex` at all.
+- Root cause: `PR::Shower` derives from `TrajectoryView`, whose node set does
+  double duty as both view MEMBERSHIP and flood-fill VISITED. The prototype
+  keeps the two separate: `start_vertex` is a bare pointer,
+  `map_vtx_segs` is the visited set, and
+  `WCPPID::WCShower::set_start_vertex` (`WCShower.cxx:529-532`) assigns the
+  pointer and connection type only.
+
+Per M15 this makes it a *fixable* divergence, not a deliberate one.
+
+**Prototype invariant.** Every key of `map_vtx_segs` is a vertex incident to a
+member segment, inserted only by `set_start_segment(seg,map)`
+(`WCShower.cxx:542-550`, explicitly skips `start_vertex`),
+`add_segment(seg,map)` (`:694-701`), `add_shower` (`:681-692`, merges the
+absorbed shower's own segment→vertex map) and the walk itself (`:703-755`).
+The start vertex is never a key while it is the start vertex.
+
+### 2. The fix: `shower_walk_visited_parity` (C++ default OFF)
+
+One semantic change: *the flood-fill's frontier test becomes "has this vertex
+been walked", not "is this vertex present in the view."*
+
+`clus/inc/WireCellClus/PRShower.h` gains a private
+`std::set<node_descriptor> m_walked_nodes` — the toolkit analogue of
+`map_vtx_segs`' key set, membership-tested only, never iterated, so it
+introduces no pointer-order dependence — and
+`complete_structure_with_start_segment` gains a trailing
+`bool walk_visited_parity = false`.
+
+`clus/src/PRShower.cxx` — bookkeeping is unconditional (pure state, no
+behaviour change on its own); only the frontier predicate is knob-gated:
+
+| site | change |
+|---|---|
+| `set_start_vertex` | `add_vertex(vtx)` unchanged — deliberately **not** recorded in `m_walked_nodes`. This is the whole fix. |
+| `set_start_segment` | records the two endpoints it adds (already skips `m_start_vertex`) |
+| `add_segment` | records both endpoints when `flag_include_vertices`; this branch has NO `!= m_start_vertex` guard on `add_vertex` itself, so the bookkeeping adds its own guard to avoid marking the CURRENT start vertex walked (which would wrongly survive a later re-seat) |
+| `add_shower` | merges the absorbed shower's own `m_walked_nodes` — mirrors the prototype's `add_shower` merging the absorbed shower's segment→vertex map, so an imported orphan node stays unwalked |
+| `complete_structure`, initial seed | records the start segment's two endpoints as it pushes them (unconditional, as the prototype does) |
+| `complete_structure`, worklist frontier | `const bool unseen = walk_visited_parity ? !m_walked_nodes.count(vd) : !this->has_node(vd);` — the `!= m_start_vertex` guards are unchanged, so the CURRENT start vertex is still never walked, exactly as in the prototype |
+
+A vertex is recorded in `m_walked_nodes` the moment it is enqueued, so it can
+be pushed at most once per walk — termination is unchanged.
+
+Env-gated probe `WCT_SHOWER_WALK_DEBUG` (stderr, byte-neutral): one
+`SHOWER_WALK rewalk` line per node the parity predicate re-enqueues that
+`has_node` would have pruned.
+
+**Threading** mirrors `shower_endpoint_skip_orphan_vtx` exactly:
+`NeutrinoPatternBase.h` + `TaggerCheckNeutrino.h` members, `configure` read,
+`default_configuration` round-trip, pass-through to `pattern_algos`, all
+8 `complete_structure_with_start_segment` call sites in
+`NeutrinoShowerClustering.cxx`, doctest pin, `cfg/pgrapher/common/clus.jsonnet`
+(signature + key-suppression), sbnd `clus.jsonnet` (2 defaults + 2
+pass-throughs), `wct-pr-perevt.jsonnet`, and the runner's tri-state loop
+(`SBND_SHOWER_WALK_VISITED_PARITY`, contract `0`/`1`).
+
+**Why this design, not the alternatives named in sec 10.3.** Not a
+start-vertex-only special case: the visited-set semantic covers both a former
+start vertex and an `add_shower`-imported foreign node with one rule, and the
+probe confirms the extra reach over the special case never fires in this
+sample (exactly one re-expansion total, a former start vertex — see below).
+Not "stop `set_start_vertex` calling `add_vertex`" (sec 10.3 option 2): that
+would touch `fill_sets`, every BFS barrier built from a shower's node set, and
+the two existing endpoint knobs' own point-of-use workarounds — much wider
+than needed. **Robustness / physics**: the fix makes the walk strictly more
+absorptive, so containment matters. `shower_absorb_track_guard` (SBND ON,
+pr/40 F12) already refuses a confidently-PID'd long straight non-electron and
+terminates the walk there — tracks cannot be swallowed by this fix; only short
+stubs sitting inside the shower cone can, and in 168596 the newly-reachable
+piece is a 4.74 cm proton stub, well under the 10 cm guard threshold and
+physically inside the EM shower.
+
+### 3. Validation — 67-event sample (nueCC48 + NCpi0 19), fresh binary
+
+**V1 — knob off is byte-identical to a genuine pre-change build.** Rather than
+trust a possibly stale pre-existing arm (the round-1 cross-binary trap), the
+pre-fix source was `git stash`ed, rebuilt, and run on 3 spot events (168596 +
+2 others) as `work-pr91r4-prechange-ref`; the post-fix binary (knob off) was
+then run on the same 3 events as `work-pr91r4-postchange-ref`. **PASS — all
+6 archives byte-identical.**
+
+**V2 — knob on, all 67 events.** `work-pr91r4-on-{nuecc48,ncpi0}` vs
+`work-pr91r4-off-{nuecc48,ncpi0}`, member-content hashes over `mabc-pr.zip` +
+`pctree-pr-evt<ID>.tar.gz`:
+
+- **nueCC48 (48 events, 96 archives): PASS=95/96 — exactly ONE mover, evt
+  168596's `mabc-pr.zip`.** Its pctree tarball is unchanged.
+- **NCpi0 (19 events, 38 archives) — the pi0-veto sample: PASS=38/38, zero
+  movers.** No genuine two-gamma pi0 was disturbed by making the walk more
+  absorptive.
+- Both samples' merged `nusel-table.tsv` are **byte-identical** (`diff` rc=0)
+  — zero score/label movers, zero `nu-candidate` status changes anywhere in
+  67 events.
+
+**168596 mechanism, confirmed by probe.** `WCT_SHOWER_WALK_DEBUG` fires
+**exactly once** across all 67 events:
+
+```
+SHOWER_WALK rewalk shower_id=2 via_seg=14093 vtx=14027
+```
+
+— precisely the round-2 diagnosis: shower 2 (the 2039 MeV electron) re-walks
+its own former start vertex 14027 via member segment 14093. Downstream:
+
+| | off (legacy) | on (fixed) |
+|---|---|---|
+| shower count | 17 | 16 |
+| `pio_mass` | 114.05835... (spurious pi0) | all `-1.0` (sentinel, no pair) |
+| `kine_reco_Enu` | 2331.291 MeV | 2324.257 MeV (−0.3%) |
+| `nusel-evt168596.tsv` | — | byte-identical to off |
+
+Mechanism (a) predicted in sec 10.3 fired: `examine_showers`' re-flood
+(`:3119`) reaches 14052 via the newly-walked 14027→14070 edge, absorbs
+segment 14072 directly, and the `:3138` absorb block removes the now-subsumed
+shower — no separate shower survives to reach `id_pi0_with_vertex`, so the
+pairing never has a second candidate to pair the 2039 MeV electron's charge
+against. The small `kine_reco_Enu` drop is the borrowed-charge correction:
+14072's points, previously double-counted through the ownership-free
+`dis_cut = 0.6 cm` 2-D sum (sec 1/round-2 finding), are now credited once, as
+genuine shower members.
+
+**Acceptance criteria (set before the run) — met:**
+
+| sample | criterion | result |
+|---|---|---|
+| NCpi0 (19) | no genuine two-gamma pi0 destroyed | zero movers — met trivially |
+| nueCC48 (48) | `kine_reco_Enu` stable, no `nu-candidate` status lost, movers enumerated | 1 event moves, `nusel` unchanged, Enu −0.3% |
+| 168596 | spurious pi0 gone | confirmed, mechanism traced |
+
+"pi0 count unchanged" was explicitly **not** the bar — 168596's pi0 is
+*supposed* to disappear, and it is the only one that does.
+
+**V3 — bare-run composition gate**, after flipping `wct-pr-perevt.jsonnet`'s
+`shower_walk_visited_parity` to `true`: a bare run (no `-A`/env override) vs
+`work-pr91r4-on-*`, all 67 events. **PASS on 134/134 archives**, both
+`nusel-table.tsv` byte-identical. The SBND operating point stays
+single-sourced in cfg (doc 68).
+
+### 4. FIX SHIPPED: SBND PRODUCTION ON (toolkit, owner-authorized 2026-08-18)
+
+C++ default stays `false` (`m_shower_walk_visited_parity{false}` in
+`NeutrinoPatternBase.h`); `cfg/pgrapher/experiment/sbnd/wct-pr-perevt.jsonnet`
+flips it `true`. Compiled-config proof (M6): bare compile of
+`wct-pr-perevt.jsonnet` shows `"shower_walk_visited_parity" : true` in the
+output; the pre-flip compile showed the key absent (suppressed, default
+`false`).
+
+### 5. What this round does not claim
+
+- No population estimate beyond the 67-event sample — the O(1000) numu gate
+  and the `shower_endpoint_skip_orphan_vtx` population gate (sec 2b "STILL
+  OWED") are both still owed, unaffected by this round.
+- `123140` (sec 10, missed the 3 cm total-length gate by 1.5 mm) is untouched
+  — a different gate, in a different cluster.
+- No change to `set_start_vertex`, `fill_sets`, or the two existing endpoint
+  knobs (`shower_endpoint_exclude_start_vertex`,
+  `shower_endpoint_skip_orphan_vtx`).
+- The `add_shower`-imported-node reach of the fix (vs a start-vertex-only
+  special case) is real in the code but never fired in this 67-event sample —
+  exactly one re-expansion total, and it was a former start vertex.

@@ -711,13 +711,17 @@ unset _pr74 _env _key _val
 # doc pr/84 round 2.  Tri-state bools (unset = cfg default, 1 = on, 0 = off)
 # + scalar radii in cm (EMPTY = no TLA = cfg default).  F1/F2 are
 # display-only (move mc.json only); conn3_stitch_max moves fits + PF.
+# SBND_SHOWER_WALK_VISITED_PARITY (doc pr/91 round 3) joins the same
+# tri-state loop below -- unrelated to the pr/84 knobs above it but the
+# contract is identical.
 for _pr84 in \
     "SBND_PF_DIRECT_WHEN_TOUCHING:pf_direct_when_touching" \
     "SBND_PF_TOUCH_CROSS_MAIN:pf_touch_cross_main" \
     "SBND_PF_PSEUDO_GAP_FROM_MAIN:pf_pseudo_gap_from_main" \
     "SBND_SHOWER_DEDUP_START_SEG:shower_dedup_start_seg" \
     "SBND_SHOWER_ENDPOINT_SKIP_ORPHAN_VTX:shower_endpoint_skip_orphan_vtx" \
-    "SBND_PF_UNIQUE_NODE_IDS:pf_unique_node_ids" ; do
+    "SBND_PF_UNIQUE_NODE_IDS:pf_unique_node_ids" \
+    "SBND_SHOWER_WALK_VISITED_PARITY:shower_walk_visited_parity" ; do
     _env=${_pr84%%:*}; _key=${_pr84#*:}; _val=${!_env:-}
     [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
     [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
