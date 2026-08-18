@@ -1,0 +1,39 @@
+# doc pr/83 round 2 bee sets (2026-08-17)
+# class A (8 events): production ("before") vs SBND_MVGA_INTERPOSED=false
+# control ("after-nointerp"). The control is NOT the shipped fix -- no knob
+# exists yet -- it demonstrates which mechanism generates the stacking.
+# before: https://www.phy.bnl.gov/twister/bee/set/79f60a2e-d5b7-4461-9ada-81208403762b/event/list/
+# after-nointerp: https://www.phy.bnl.gov/twister/bee/set/47292f54-6ec7-4784-a5c0-eac3b8a0a9f3/event/list/
+#
+# NOTE: the first upload of these three sets (0bb602a3.../9aff3fea.../
+# 8f3f427f...) was BROKEN -- only bee_idx 0 rendered, idx 1+ were empty.
+# Cause: the per-event mabc-pr.zip member names are `data/<idx>/<idx>-<file>`
+# (the numeric prefix inside the filename must match the directory), and the
+# combiner script only renumbered the directory, leaving every member's
+# filename prefixed `0-` regardless of idx. Fixed in
+# scripts/pr83r2_census.py's sibling combiner; re-uploaded, links above are
+# the corrected sets. Do not use the old links.
+# bee_idx	event	sample
+0	138009	nueCC48
+1	168596	nueCC48
+2	268784	nueCC48
+3	74544	nueCC48
+4	349945	mcp1k
+5	64409	mcp1k
+6	174224	mcp1k
+7	281837	mcp1k
+#
+# class B (3 exemplars, production only, no diagnosis this round):
+# https://www.phy.bnl.gov/twister/bee/set/608d6105-22f6-4ed1-b379-3b7021f15053/event/list/
+# bee_idx	event	sample
+0	350935	mcp1k (251 cm duplicated segment, clus 11)
+1	404684	mcp1k (62 cm duplicated segment, clus 9, cathode-crossing)
+2	246579	nueCC48 (short near-parallel prong pair, doc 83 sec 6.2 class)
+#
+# class B unresolved pair only (sec 9.4 -- 350935 + 506746, production
+# only; the 2 of 9 that dup_stage_census could NOT attribute to Mechanism
+# A/B, mechanism unknown):
+# https://www.phy.bnl.gov/twister/bee/set/4e9e6863-8bf0-4943-8dc3-3d9c22513561/event/list/
+# bee_idx	event	sample
+0	350935	mcp1k (clus 11 in Bee / 17 during pattern recognition -- ident mismatch, see sec 9.4)
+1	506746	NCpi0 (clus 13 in Bee / 21 during pattern recognition -- ident mismatch, see sec 9.4)

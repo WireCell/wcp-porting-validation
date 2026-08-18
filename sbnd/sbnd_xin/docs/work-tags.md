@@ -11,20 +11,31 @@ ls -1 | wc -l                    # 74 top-level entries after the 2026-08-03 TID
 # descends a symlink argument, so both silently report 0 from there.
 find /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin \
      -maxdepth 1 -name 'work*' -type d | wc -l
-                                 # 18 after the 2026-08-16 round + its same-day
-                                 #   follow-up (216 before it, regrown from
-                                 #   08-13's 13); 13 after 2026-08-13 (401
-                                 #   before it; 18 after 2026-08-11, 471 before
-                                 #   it; 32 after 2026-08-05, 233 before it; 19
-                                 #   after the 2026-08-03 tidy round, 27 after
-                                 #   the retirement round the same day, 138
-                                 #   before it; 23 after 2026-08-02, 254 / 155
-                                 #   GiB before that, 15 after 2026-07-30)
+                                 # 30 after the 2026-08-17 round (178 before it,
+                                 #   regrown from 08-16's 18); 18 after the
+                                 #   2026-08-16 round + its same-day follow-up
+                                 #   (216 before it, regrown from 08-13's 13);
+                                 #   13 after 2026-08-13 (401 before it; 18
+                                 #   after 2026-08-11, 471 before it; 32 after
+                                 #   2026-08-05, 233 before it; 19 after the
+                                 #   2026-08-03 tidy round, 27 after the
+                                 #   retirement round the same day, 138 before
+                                 #   it; 23 after 2026-08-02, 254 / 155 GiB
+                                 #   before that, 15 after 2026-07-30)
 du -sh /nfs/data/1/xqian/toolkit-dev/wcp-porting-img/sbnd/sbnd_xin
-                                 # 23G after the 2026-08-16 round + follow-up
-                                 #   (158G before it; 20G after 2026-08-13,
-                                 #   74G before it; 23G after 2026-08-11, 103G
-                                 #   before it)
+                                 # 52G after the 2026-08-17 round (164G before
+                                 #   it; 23G after the 2026-08-16 round +
+                                 #   follow-up, 158G before it; 20G after
+                                 #   2026-08-13, 74G before it; 23G after
+                                 #   2026-08-11, 103G before it)
+
+# the 2026-08-17 retirement round (see that section below):
+python3 scripts/retire/plan_20260817.py            # explicit 30-name KEEP + 8 asserts
+RETIRE_JOBS=24 python3 scripts/retire/archive_records_20260817.py  # integrity PASS 148/148
+scripts/retire/retire_20260817.sh A                # dry run of the removal list
+python3 scripts/retire/thin_dlruns_20260817.py      # dl_vtx_training/runs *.pth sweep, dry run
+cat scripts/retire/state-20260817/removed.tsv       # work* sweep, what was ACTUALLY removed
+cat scripts/retire/state-20260817/dlruns-removed.tsv  # dl_vtx_training *.pth, what went
 
 # the 2026-08-16 retirement round + same-day follow-up (see that section below):
 python3 scripts/retire/plan_20260816.py           # explicit 27-name KEEP + 7 asserts
@@ -131,6 +142,182 @@ Verification that the move was faithful: `python3 scripts/analysis/stm/stm_fv_ce
 repair reproduces doc 49 §4 line for line (147 contained / 96 outside / 65 %,
 median 2.88, p90 3.54, max 3.77, walls 23/61/4/8, agree 96/96), and
 `scripts/analysis/stm/stmon_stats.py` reproduces 30 events / 36 fitted clusters / 18561 fit points.
+
+## RETIREMENT ROUND 2026-08-17 — the pr/88-90 + cathode-rescue sweep, 164G → 52G
+
+**STATUS: EXECUTED.** `python3 scripts/retire/plan_20260817.py` — KEEP 30 /
+remove 148, all **8** asserts PASS (7 carried unchanged + a new ASSERT 8, see
+below). `RETIRE_JOBS=24 python3 scripts/retire/archive_records_20260817.py`
+— integrity **PASS 148/148**. `CONFIRM=yes scripts/retire/retire_20260817.sh
+A` — 148 dirs / 95 GiB removed, refused=0, broken symlinks 0 before-and-after
+the round (see "the 08-17 broken-symlink defect" below), no git-tracked file
+deleted, `work-*` **178 → 30**. `CONFIRM=yes python3
+scripts/retire/thin_dlruns_20260817.py` — 648/648 `*.pth` removed, 17.36 GiB
+freed, `dl_vtx_training` 18G → 67M. `sbnd_xin` **164G → 52G**, `/nfs/data/1`
+free 838G → 949G. Full campaign account: docs **pr/88, pr/89, pr/90**, and
+**doc 73** (the seven-knob cathode-rescue production flip, toolkit
+`2d8c9e5a`) — this round is housekeeping, not a new investigation.
+
+### Why this round exists
+
+Doc pr/89 (DL-vertex round 4: topo term NET NEGATIVE live, swap-guard killed
+`-36`, Arm B retrain CLOSED NEGATIVE), doc pr/90 (unbroken kink, rounds 1-4,
+only the D4 `teb_bragg_veto_turn=30` scope shipped) and docs 72/73 (cathode
+rescue rounds 2+3, **seven knobs flipped into SBND production the same day**
+at toolkit `2d8c9e5a`) regrew the tree from the 08-16 round's 18 survivors /
+23G to 178 `work-*` dirs / 164G in **one day**. `dl_vtx_training/runs`
+regrew 26M → 18G on top of that — 648 `.pth` checkpoints, all from doc
+pr/89's Arm B, created 2026-08-16 17:09–20:44.
+
+**`docs/work-tags.md` was one whole campaign generation stale going into
+this round** — zero mentions anywhere of `cb0816`, `harv3`, `mcp2k`, `pr89`,
+`pr90`, `cbr2`, `cbr3`. A straight fork of `plan_20260816.py` would have
+classified all of those — including what is now production — as sweepable.
+This round's KEEP dict was derived from **disk evidence** (grepping
+`wct_pr_evt*.log`/`wct_ql_evt*.log` for provenance, independently
+re-verifying doc 73 §12.9's hash-match claim), not from the doc, and this
+section closes the gap the doc had.
+
+### KEEP — 30 names, 37.85 GiB, driven by two owner requirements
+
+1. **DL-vertex training**: retire the unsuccessful arms (handled separately
+   by `thin_dlruns_20260817.py` — `dl_vtx_training` is not a `work-*` dir).
+2. **Keep the latest Q/L result for nueCC / NCpi0 / mcp1k (1000-evt data) /
+   mcp2k (2000-evt data), and the PR result built on it; retire the rest.**
+   Owner's explicit reading of "latest" (2026-08-17, asked directly): the
+   **post-flip** arms from today's seven-knob production flip, not the
+   pre-flip `cb0805`/`cb0816` + `harv3` family. `work-{mcp1k,nuecc48,ncpi0}
+   -pr87ion3` — yesterday's "latest" — is explicitly superseded and released
+   from `PROTECTED.txt` this round.
+
+- **Infrastructure / input** (11 names, 22.3 GiB): `work-img-{mcp1k,mcp2k,
+  nuecc48,ncpi0,r1qlmc,r2mc}` (imaging hubs; `work-img-mcp2k` is **new since
+  08-16**, had no KEEP_WHY entry in any prior plan) + `work-{mcp1k,nuecc48,
+  ncpi0,r1qlmc,r2mc}-cb0805` (the Q/L roots `run_valfast.sh` pins for
+  PR-tail mode — its own `[ -d "$QL" ]` check refuses every sample without
+  them, exactly how the 2026-08-05 round mechanically killed PR-tail mode
+  before).
+- **Git-tracked / not reproducible** (3 names, 6.5 MiB): `work-tfix388-r9`
+  (doc pr/28 §15.9), `work-stmcamp-d66new` (22 git-tracked
+  `nusel_labels/d66flip/*.json`, M13), `work-nuecc48-prsmoke2` (3 git-tracked
+  runner scripts) — unchanged since 08-11.
+- **PROTECTED, live on the bokeh viewers** (2 names, 28 MiB):
+  `work-{r1qlmc,r2mc}-prod0813` — ports :5017/:5018. **Not** released this
+  round (the owner released only the `pr87ion3` line).
+- **Post-flip production, the "latest"** (14 names, 15.9 GiB):
+  `work-cbr3-census-on` (9.5 GiB, Q/L over 3000 events — mcp1k 1000 + mcp2k
+  2000 — all seven flip knobs ON; doc 73 §12.9 proves it *is* production: a
+  **bare** `run_ql_batch.sh` with no envs reproduces its `mabc-all-apa.zip` +
+  `pctree` member hashes **4/4 MATCH**) + `work-cbr3-census-pr-on` (the PR
+  chain on the 40 behavior-changed events; **verified** reads
+  `work-cbr3-census-on/ql_evt`) + `work-cbr3-bare2evt` + `-bare2evt-pr` (the
+  **only on-disk evidence** the shipped jsonnet reproduces `census-on` — the
+  same role `work-pr87-postflip-*` played at 08-16, and the same lesson:
+  that arm was dropped the same day it was created and its claim became
+  text-only) + `work-{mcp1kall,ncpi0,nuecc48,r1qlmc,r2mc}-vfcbr3on`
+  (post-flip Q/L, valfast `-full` nusel roots with the tagger tail
+  `census-on` lacks) + `work-vf{mcp1k,ncpi0,nuecc48,r1qlmc,r2mc}-cbr3on`
+  (post-flip PR out-roots — **each individually verified** to read its
+  matching `-vfcbr3on/ql_evt`, not inferred by naming convention).
+
+Note: the valfast contract (`run_valfast.sh` header) declares
+`work-vf*`/`work-*-vf<tag>` **transient — delete after the gate report**.
+Keeping the `cbr3on` arms is a **deliberate exception**: they are the only
+post-flip product for four of the six samples. The tag `cbr3on` is now
+burned (`run_valfast.sh` refuses an existing root, M13) — a future round
+reusing it must pick a fresh tag.
+
+### ASSERT 8 (new) — KEEP is closed under PR-arm provenance
+
+No prior round checked whether a KEEP *PR* arm's own Q/L input was itself
+in KEEP — a KEEP name could stop being usable the moment the round ran.
+`plan_20260817.py` re-derives each of the 7 PR-arm→Q/L-root edges from the
+arm's own log (not a hardcoded table) and fails if the discovered source is
+missing or outside KEEP. All 7 passed cleanly; re-verified again after the
+sweep completed (all 7 sources still resolve on disk).
+
+### The 08-17 broken-symlink defect, found and fixed in the fork
+
+Pre-flight found **360 broken symlinks**, all self-contained inside four
+dirs already in this round's own removal set: `work-{r1qlmc,r2mc,nuecc48,
+ncpi0}-vfcbr3off` (the doc 73 §12.5 "harness fix that rode along" —
+`run_valfast.sh`'s `nusel_root()` returned RELATIVE roots on the first OFF
+attempt, so `ql_evt<N>/*.npz` symlinks resolved against the wrong
+directory). The real data those broken links pointed at lives in
+`work-img-<sample>/evt<N>/` — a KEEP imaging hub — via a **separate,
+working** symlink one level up; nothing was ever lost, only a spurious
+convenience symlink inside a dir already condemned. `retire_20260817.sh`'s
+interlock 0 was changed from an unconditional refuse to: refuse only if a
+broken link's containing top-level dir is **outside** the removal set;
+warn-and-proceed if every one is inside it (verified 0/360 were outside).
+Post-round: 0 broken symlinks, confirming the fix was correct, not a
+loophole.
+
+### Known cost, stated rather than silently absorbed
+
+- **`work-mcp2k-cb0816` (17G) + the four `work-*-harv3` arms (9.5G)
+  retire.** `vtx_rules/baselines.py`'s `deployed_dump_path()` (which
+  rewrites `-prod0813` → `-harv3`) stops resolving **again**, and
+  `vtx_rules/scankit.py:858`'s three named harv3 arms are gone. The **1543
+  `vertex_labels/` hand-scan labels** (13 tags, self-contained JSON) survive
+  — same precedent as `uitest75`/`vtxscan1` and the 08-16 `-prod0813` drop —
+  but the calib dumps they were scanned against do not.
+- **mcp2k has no complete PR product after this round** — only the 40
+  events in `work-cbr3-census-pr-on`.
+- `work-cbr3-census-offfull` (9.6G) + `work-cbr3-census-pr-off` retire: doc
+  73 §12.6's both-directions census becomes **one-sided on disk**; the
+  numbers survive in the doc text only.
+- Doc pr/89 / pr/90 A/B off-arms retire (`pr89-family` 16G, `pr90-family`
+  24.5G); a pairwise gate is not re-runnable from these arms
+  (`PROTECTED.txt`'s own "a floor is a PAIR" caution applies — accepted
+  because both rounds are **closed**: pr/89 topo REJECTED live, pr/90's
+  D1+D3 rounds A vetoed, only D4 shipped).
+- `work-{mcp1k,nuecc48,ncpi0}-pr87ion3` (3.3G) **released** from
+  `PROTECTED.txt`, superseded by today's flip; owner-confirmed 2026-08-17.
+- `work-cbr2-*` (40 dirs, 3.2G, doc 73 round-2 cathode rescue — **reverted**,
+  §11.9) retires with no loss beyond what doc 73 already absorbed.
+
+### Families this round documents for the first time
+
+`docs/work-tags.md` never named these; decoded here so 148 dirs are not
+swept with zero textual record beyond this line:
+
+| pattern | meaning | doc |
+|---|---|---|
+| `work-mcp2k-<tag>` | a SIXTH sample, the 2000-event data set (mcp2k) — extends the manifest-prefix table above | docs 72, 73, pr/82, pr/88, pr/89 |
+| `-cb0816` | the 2026-08-16 Q/L reprocessing root for mcp2k (mirrors `-cb0805` for the other five samples) | docs 72, 73, pr/88 |
+| `-harv3` | the `dl_vtx_harvest`-generation-3 PR arm (min_accept 10.0, top_k 5, harvest recording ON) | pr/88, pr/89 |
+| `-pr89*` | doc pr/89 round-4 DL-vertex arms: `base`/`swap`/`topo` (A/B legs), `-d2-{base,t310,w825,w1240}` (center/scale sweep) | pr/89 |
+| `-pr90*` / `-pr90r4*` | doc pr/90 unbroken-kink rounds 1-4; `bare`/`off`/`on` legs, `r4` = round 4, `smoke1-3` = smoke arms | pr/90 |
+| `-kink90*` | doc pr/90's earlier hand-scan probe arms (`kink90`, `kink90c`, `kink90d`) | pr/90 |
+| `cbr2` / `cbr3` | cathode-bundle-rescue rounds **2** and **3** (docs 72/73) — a DIFFERENT, later campaign than the 2026-08-02 `cbr` census; note `work-cbr2-*`/`work-cbr3-*` put the **campaign name in the sample slot**, breaking the `work-<sample>-<tag>` shape every prior convention assumed — any sample-keyed regex mis-keys these 68 dirs | docs 72, 73 |
+| `-off2` / `-on2` (and `-off3`) | second/third iteration of an off/on A/B gate leg, same convention as `d52on/d52off` etc. | docs 72, 73, pr/90 |
+| `-vfcbr3on/off/off2` | valfast `-full` nusel roots for the cbr3 rounds (Q/L side); `work-vf<sample>-cbr3<leg>` is the matching PR out-root | doc 73 §12.5 |
+
+### The measured 52G arithmetic
+
+`work-*` 38.3G (30 dirs) + `dl_vtx_training` 67M (18G before) + `archive/`
+7.9G (7.3G before + the new era's 0.65G) + `input_files_reco1` 4.5G
+(untouched) + `bee/` 728M (untouched) + `input_files` (symlink, 0) + misc =
+**52G**, measured, not projected.
+
+### `PROTECTED.txt` — rewritten for the new state
+
+The `pr87ion3` line moved from active to **RETIRED** (superseded by today's
+flip); a RETIRED note added for `work-mcp2k-cb0816` + the four `-harv3`
+arms; the post-flip family added as **real tab-delimited lines** (not a
+comment block — the 2026-08-11 failure mode this file's own history
+records) so the *next* round's ASSERT 7 sees `work-cbr3-census-on`,
+`-census-pr-on`, `-bare2evt`, `-bare2evt-pr`, the five `-vfcbr3on` Q/L roots
+and the five `vf*-cbr3on` PR roots. `work-tfix388-r9` and
+`work-{r1qlmc,r2mc}-prod0813` stay active, unchanged.
+
+### Gate labels for future re-checks
+
+`scripts/retire/state-20260817/{plan.json,removed.tsv,dlruns-removed.tsv}`,
+`scripts/retire/tierA_20260817.txt`,
+`archive/records/pr88-90-era-20260817/<group>/<tag>.{tar.gz,links.txt,manifest.tsv}`
+(148 arms).
 
 ## RETIREMENT ROUND 2026-08-16 — the pr/79-86 campaign sweep, 158G → 23G
 

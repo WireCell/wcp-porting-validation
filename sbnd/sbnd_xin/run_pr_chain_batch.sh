@@ -402,6 +402,21 @@ fi
 # is suppressed in the compiled config unless set, so an unset run is
 # byte-identical.  SBND_TRAJ_COVER_PROBE=1 turns the diagnostic lines on.
 [ "${SBND_TRAJ_COVER_PROBE:-}" = 1 ] && CATH_TLA+=(--tla-code "traj_cover_probe=true")
+# docs/73 sec 12 (round 3).  Both SBND config default FALSE; unset inherits
+# that, =1/=0 forces for an A/B arm.
+#   SBND_NU_FALLBACK_DEMOTED   when NO candidate survives TaggerCheckNeutrino's
+#                              primary loop, consider demoted mains (evt 65289)
+#   SBND_ESVA_IGNORE_EMPTY_2D  eliminate_short_vertex_activities case 5: the
+#                              empty-2D-index sentinel is "no information", not
+#                              "covered" (evt 78242 cross-cathode junction)
+case "${SBND_NU_FALLBACK_DEMOTED:-}" in
+    1) CATH_TLA+=(--tla-code "nu_fallback_demoted_mains=true") ;;
+    0) CATH_TLA+=(--tla-code "nu_fallback_demoted_mains=false") ;;
+esac
+case "${SBND_ESVA_IGNORE_EMPTY_2D:-}" in
+    1) CATH_TLA+=(--tla-code "esva_ignore_empty_2d=true") ;;
+    0) CATH_TLA+=(--tla-code "esva_ignore_empty_2d=false") ;;
+esac
 # doc pr/67 counterfactual: override find_proto_vertex's HARDCODED main-cluster
 # branch-search round budget (2).  DIAGNOSTIC ONLY -- a value > 0 changes
 # reconstruction output by design.  Unset = the hardcoded budget stands.
@@ -693,6 +708,24 @@ unset _pr74 _env _key _val
 [ -n "${SBND_STEM_BACKFILL_MIP_HI:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_mip_hi=${SBND_STEM_BACKFILL_MIP_HI}")
 [ -n "${SBND_STEM_BACKFILL_MIN_SHOWER_LEN:-}" ] && CATH_TLA+=(--tla-code "stem_backfill_min_shower_len=${SBND_STEM_BACKFILL_MIN_SHOWER_LEN}")
 [ -n "${SBND_CONN3_UNREACHABLE_MIN_LEN:-}" ] && CATH_TLA+=(--tla-code "conn3_unreachable_min_len=${SBND_CONN3_UNREACHABLE_MIN_LEN}")
+# doc pr/84 round 2.  Tri-state bools (unset = cfg default, 1 = on, 0 = off)
+# + scalar radii in cm (EMPTY = no TLA = cfg default).  F1/F2 are
+# display-only (move mc.json only); conn3_stitch_max moves fits + PF.
+for _pr84 in \
+    "SBND_PF_DIRECT_WHEN_TOUCHING:pf_direct_when_touching" \
+    "SBND_PF_TOUCH_CROSS_MAIN:pf_touch_cross_main" \
+    "SBND_PF_PSEUDO_GAP_FROM_MAIN:pf_pseudo_gap_from_main" \
+    "SBND_SHOWER_DEDUP_START_SEG:shower_dedup_start_seg" \
+    "SBND_SHOWER_ENDPOINT_SKIP_ORPHAN_VTX:shower_endpoint_skip_orphan_vtx" \
+    "SBND_PF_UNIQUE_NODE_IDS:pf_unique_node_ids" ; do
+    _env=${_pr84%%:*}; _key=${_pr84#*:}; _val=${!_env:-}
+    [ "$_val" = 1 ] && CATH_TLA+=(--tla-code "$_key=true")
+    [ "$_val" = 0 ] && CATH_TLA+=(--tla-code "$_key=false")
+done
+unset _pr84 _env _key _val
+[ -n "${SBND_PF_TOUCH_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_max=${SBND_PF_TOUCH_MAX}")
+[ -n "${SBND_PF_TOUCH_CROSS_MAX:-}" ] && CATH_TLA+=(--tla-code "pf_touch_cross_max=${SBND_PF_TOUCH_CROSS_MAX}")
+[ -n "${SBND_CONN3_STITCH_MAX:-}" ] && CATH_TLA+=(--tla-code "conn3_stitch_max=${SBND_CONN3_STITCH_MAX}")
 # doc pr/74 round 4 K6 scalar tunables.  EMPTY = no TLA = cfg default (null =
 # the C++ default: 15 cm / 45 cm / 1.3x / 40 cm / 40 deg).  Only read when
 # shower_traj_michel_stem is on.
@@ -920,6 +953,45 @@ fi
 #   SBND_MVGA_STRAIGHTEN_RADIUS
 if [ -n "${SBND_MVGA_STRAIGHTEN_RADIUS:-}" ]; then
     CATH_TLA+=(--tla-code "mvga_straighten_radius=${SBND_MVGA_STRAIGHTEN_RADIUS}")
+fi
+# doc pr/83 r3: the duplicate-corridor round.  op1-only scope radius (cm;
+# C++ default 0 = use mvga_radius, -1 = unscoped) and overlap threshold
+# (fraction; 0 = use mvga_dup_frac); post-op3 dup pass incl. created
+# segments (boolean, class A); interposed-carry prong ceiling (count; 0 =
+# unlimited); abandoned-main-cluster dup audit inside swap_main_cluster
+# (boolean, Mechanism C).  Numeric/boolean TLAs, unset/empty omits
+# (jsonnet defaults null/false => keys suppressed => byte-identical).
+#   SBND_MVGA_OP1_RADIUS
+#   SBND_MVGA_OP1_DUP_FRAC
+#   SBND_MVGA_OP1_POST
+#   SBND_MVGA_CARRY_MAX
+#   SBND_SWAP_ORPHAN_DUP_AUDIT
+if [ -n "${SBND_MVGA_OP1_RADIUS:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_op1_radius=${SBND_MVGA_OP1_RADIUS}")
+fi
+if [ -n "${SBND_MVGA_OP1_DUP_FRAC:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_op1_dup_frac=${SBND_MVGA_OP1_DUP_FRAC}")
+fi
+if [ -n "${SBND_MVGA_OP1_POST:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_op1_post=${SBND_MVGA_OP1_POST}")
+fi
+if [ -n "${SBND_MVGA_CARRY_MAX:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_carry_max=${SBND_MVGA_CARRY_MAX}")
+fi
+if [ -n "${SBND_SWAP_ORPHAN_DUP_AUDIT:-}" ]; then
+    CATH_TLA+=(--tla-code "swap_orphan_dup_audit=${SBND_SWAP_ORPHAN_DUP_AUDIT}")
+fi
+# doc pr/83 r4 -- projective duplicate collapse (see wct-pr-perevt.jsonnet)
+#   SBND_MVGA_PROJ_DUP_FRAC
+#   SBND_MVGA_PROJ_DQDX_RATIO
+if [ -n "${SBND_MVGA_PROJ_DUP_FRAC:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_proj_dup_frac=${SBND_MVGA_PROJ_DUP_FRAC}")
+fi
+if [ -n "${SBND_MVGA_PROJ_DQDX_RATIO:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_proj_dqdx_ratio=${SBND_MVGA_PROJ_DQDX_RATIO}")
+fi
+if [ -n "${SBND_MVGA_PROJ_ANGLE:-}" ]; then
+    CATH_TLA+=(--tla-code "mvga_proj_angle=${SBND_MVGA_PROJ_ANGLE}")
 fi
 # doc pr/85: carry the old vertex's arms through the snap residual below
 # this arc (cm).  Numeric TLA -- pass a bare cm value, e.g.

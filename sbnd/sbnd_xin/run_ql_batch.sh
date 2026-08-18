@@ -22,6 +22,12 @@
 #   ROOT          output root (REQUIRED)
 #   IMG1K/IMG2K   imaging roots (default work-img-mcp1k / work-img-mcp2k)
 #   any SBND_*    passed through to run_ql_evt.sh (SBND_RESCUE_* etc.)
+#   QL_EXTRA      extra flags appended to the run_ql_evt.sh command line,
+#                 word-split on purpose.  The one that matters here is
+#                 -save-pctree: docs/73 round 2 was Q/L-only and never wrote
+#                 pctree-evt<ID>.tar.gz, which is the ONLY file run_pr_chain_batch.sh
+#                 needs beyond what this script already produces (verified by
+#                 diffing an arm against the known-good work-mcp1k-cb0805).
 #   CATHODE_RESCUE_DEBUG=1  [cbrsel]/[cbrx] tracer -> $ROOT/.log_e<entry>.log
 # Internal:
 #   ./run_ql_batch.sh --worker <sample> <entry> <evt>
@@ -52,7 +58,7 @@ if [ "${1:-}" = "--worker" ]; then
         cd "$cwd" || exit 92
         SBND_INPUT_DIR=$STAGE/e$i SBND_WORK_ROOT=$ROOT \
             setarch x86_64 -R python3 "$TC" "$ROOT/.time_e$i.meta" \
-            "$SBND_DIR/run_ql_evt.sh" data 1
+            "$SBND_DIR/run_ql_evt.sh" data 1 ${QL_EXTRA:-}
     ) > "$ROOT/.log_e$i.log" 2>&1
     rc=$?
     # The rescue announces every move it makes; record the count so a firing

@@ -102,12 +102,18 @@ pinned_qlroot() {
     esac
 }
 nusel_root() {
+    # ABSOLUTE on purpose (docs/73 sec 12, first -full exercise of the four
+    # small samples): run_ql_evt.sh's opflash split does
+    # `( cd "$stage" && tar czf "$QLDIR/opflash_apa<N>.tar.gz" ... )`, and a
+    # relative SBND_WORK_ROOT makes that czf target unresolvable from inside
+    # the stage dir -- every Q/L step then fails with "Cannot open".  mcp1k
+    # never hit this because run_full1k_nusel.sh absolutizes its own root.
     case "$1" in
-        mcp1k)   echo work-mcp1kall-vf$TAG;;
-        nuecc48) echo work-nuecc48-vf$TAG;;
-        r1qlmc)  echo work-r1qlmc-vf$TAG;;
-        r2mc)    echo work-r2mc-vf$TAG;;
-        ncpi0)   echo work-ncpi0-vf$TAG;;
+        mcp1k)   echo "$SBND_DIR/work-mcp1kall-vf$TAG";;
+        nuecc48) echo "$SBND_DIR/work-nuecc48-vf$TAG";;
+        r1qlmc)  echo "$SBND_DIR/work-r1qlmc-vf$TAG";;
+        r2mc)    echo "$SBND_DIR/work-r2mc-vf$TAG";;
+        ncpi0)   echo "$SBND_DIR/work-ncpi0-vf$TAG";;
     esac
 }
 

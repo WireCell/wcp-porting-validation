@@ -1,7 +1,21 @@
 # 73 — Cathode bundle rescue, round 2: the residual one-sided crossers
 
-**Status: IMPLEMENTED + VALIDATED + ALL FOUR KNOBS SBND PRODUCTION ON**
-(owner decision 2026-08-17, on §5–§6). Toolkit `17a9929a` (code) + `8464c354` (the flip).
+**Status: IMPLEMENTED, C++ knobs shipped default OFF — briefly SBND PRODUCTION
+ON, now TURNED BACK OFF pending a round 3.**
+Toolkit `17a9929a` (code), `8464c354` (the flip), **`f3706c45` (the revert,
+owner instruction 2026-08-17: "turn off the four knobs for SBND default …
+we need fix these four knobs first")**.
+
+> **Why the revert — §11.** The full PR chain on the 9 events the knobs fix
+> removes the neutrino candidate entirely from **5 of them** and breaks a
+> previously-good trajectory fit in a 6th. The cause is the round-2 rescue, not
+> the PR chain: the join makes the in-beam main long enough to be tagged TGM/STM,
+> and the cosmic veto then discards the only in-window main. Two of the five
+> (398115, 237798) are legitimate purifications; 51128 and 78242 are not.
+>
+> The revert is gate-proven **byte-identical** to the pre-round-2 baseline (§11.9),
+> and the knobs remain fully usable via
+> `SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM}=1`.
 
 **This is NOT bit-identical.** It is a behaviour change delivered as config. The
 escape to the pre-round-2 baseline is
@@ -754,4 +768,877 @@ the two false merges.
 event; 167964 and 167744, which fail the hard tip/drift gates. And the PR-side
 effect of the rejoined halves is unmeasured — this round was Q/L-only by owner
 direction, so what the taggers do with the recovered charge needs a PR round.
+
+**That PR round is §11, and it is ADVERSE. Read it before relying on the flip.**
+
+---
+
+## 11. The PR round — the flip costs the neutrino in 5 of 9 events
+
+Owner request 2026-08-17, after the flip: *"run the PR chain on them and provide
+me the bee link — I want to confirm the PR state for these events."* Then, on
+seeing the displays, three specific questions (65289, 78242, 51128) and the
+diagnosis *"these problems were not PR problems, but with the previous fix in the
+cathode crossing tracks."* **That diagnosis is correct.** Every finding below is
+caused by the round-2 rescue, not by anything in the PR chain.
+
+**These are DATA events** (owner). There is no truth, and no guarantee any of
+them contains a neutrino.
+
+### 11.1 Repro
+
+```bash
+cd .../sbnd/sbnd_xin
+EVTS="398115 237798 281165 65289 78242 65053 51128 317427 319913"
+# Q/L with the pctree the PR chain reads (round 2 never wrote it: QL_EXTRA is new)
+ROOT=$PWD/work-cbr2-prql-off QL_EXTRA=-save-pctree \
+  SBND_RESCUE_IN_BEAM=0 SBND_RESCUE_GEOM_FIRST=0 SBND_RESCUE_PIERCE=0 \
+  SBND_RESCUE_DEST_BEAM=0 ./run_ql_batch.sh -j 6 $EVTS
+ROOT=$PWD/work-cbr2-prql-on  QL_EXTRA=-save-pctree ./run_ql_batch.sh -j 6 $EVTS
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-cbr2-prql-off work-cbr2-pr-off data $EVTS
+PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+  ./run_pr_chain_batch.sh work-cbr2-prql-on  work-cbr2-pr-on  data $EVTS
+```
+
+Both arms from ONE binary: toolkit HEAD `8464c354`,
+`build/clus/libWireCellClus.so` 2026-08-17 09:42:58, no clus source newer. 9/9
+`rc=0` in both arms. Bee: `bee/cbr2/cbr2-pr-beforeafter.index.txt`.
+
+Gates on the Q/L inputs, member-content hash (`hash_archive.py`), **9/9 each**:
+OFF-arm `pctree-evt<ID>.tar.gz` == production `cb0805`/`cb0816`; OFF-arm mabc ==
+production; ON-arm mabc == the validated `work-cbr2-contain` arm. The pctree gate
+is the one that matters — it is the file `run_pr_chain_batch.sh` actually reads,
+and gating only `mabc-all-apa.zip` would have checked the display instead of the
+PR input. *Instrument note:* `hash_archive.py` prints
+`<content-hash> <size> <path>`; hashing whole lines compares filenames and fails
+9/9 for the wrong reason.
+
+### 11.2 The headline
+
+**5 of 9 events lose the neutrino candidate entirely** — `TaggerCheckNeutrino`
+selects nothing where it previously selected a main.
+
+| event | join: beam cm + far cm @ far t0 | merged main L | tag | PR selection OFF → ON |
+|---|---|---|---|---|
+| 398115 | 75.0 + 342.9 @ **0.529 µs (in beam)** | 414.7 | TGM | L 341.9 → **none** |
+| 237798 | 252.6 + 164.8 @ **0.393 µs (in beam)** | 417.2 | TGM | L 252.4 → **none** |
+| 317427 | 286.7 + 143.6 @ 109.1 µs | 429.1 | TGM | L 286.7 → **none** |
+| 51128 | **3.8** + 283.9 @ 6.68 µs | 287.1 | TGM | L 57.7 → **none** |
+| 65289 | 160.2 + 88.9 @ −2.77 µs | 248.1 | STM | L 159.2 → **none** |
+| 281165 | 21.6 + 121.5 @ 276.7 µs | 138.4 | — | L 19.2 → L 138.4 |
+| 78242 | 201.8 + 149.7 @ **857.2 µs** | 314.4 | — | L 166.8 → L 314.4 |
+| 65053 | 46.9 + 94.2 @ 581.6 µs | — | — | L 113.9 → L 113.9 (unchanged) |
+| 319913 | 55.0 + 9.6 @ 28.9 µs | 64.4 | — | L 55.0 → L 64.4 |
+
+**Correction to §10 and to the first cut of the Bee index.** The `label` column
+of `nusel-evt<ID>.tsv` (`nu-candidate` / `TGM` / `STM` / `no-bundle`) and
+`TaggerCheckNeutrino`'s selection are **two different notions of "main"** — the
+`run_pr_chain_batch.sh` header says so explicitly ("the T_tagger row is NOT
+joinable to a nusel-evt<ID>.tsv main_id", because `unmerge_bundle` renumbers).
+Reading `label` as the PR outcome mis-scores two events: 65053 shows
+`nu-candidate → STM` in `nusel` while `TaggerCheckNeutrino` selects the *same*
+main `6 (L 113.9 cm)` in both arms, and 281165 shows `no-bundle` while PR does
+select a neutrino — its bundle simply moved from flash gid 0 (APA0) to gid
+1000007 (APA1), the same ~0.86 µs scintillation seen by the other APA. Score PR
+outcomes on the `selected main cluster` log line, never on `label`.
+
+### 11.3 The single mechanism behind all five losses
+
+Identical chain every time, and none of its links is a PR defect:
+
+1. the rescue joins the two halves, so the in-beam main gets **longer**;
+2. at 248–429 cm the object reaches through-going or stopping-muon size (SBND is
+   ~200 cm of drift per TPC, so a genuine cathode crosser tops out near 400 cm);
+3. `TaggerCheckTGM`/`TaggerCheckSTM` tag it cosmic — **correctly, for the object
+   they are shown**;
+4. `nu_skip_cosmic` skips that main, and it is the **only** in-window main;
+5. `TaggerCheckNeutrino: no main cluster selected` → no neutrino at all.
+
+The rescue's whole purpose is to make the in-beam main longer. Step 2 is
+therefore not an accident of these 9 events; it is what the knobs do.
+
+### 11.4 The owner's three questions
+
+**Q1 — 65289: two clusters in the bundle, one is STM; why is the other
+discarded? Is it because it is not identified as main? And is this a bug the
+four knobs introduced, or was it always there?** *Yes to the first; and it is
+**pre-existing behaviour, not a regression from the knobs**.*
+
+The two are cluster **13** (the merged main, L 248.1 cm, `STM=1`) and cluster
+**18**, a **demoted main** — a cluster that was a bundle main before the flash
+merge. `evaluate_demoted_mains` (doc pr/20 Part I, P3) re-adds cluster 18 to the
+*tagger* evaluation list, and it is scored there: `TGM=false`, `STM=0`,
+`FC=true`. But `TaggerCheckNeutrino`'s candidate loop opens with
+`if (!cluster->get_flag(Flags::main_cluster)) continue;`
+(`clus/src/TaggerCheckNeutrino.cxx:808`), so a demoted main is never a
+*candidate*. The log's `14 mains, 1 in-window` counts cluster 13 alone.
+
+**The multi-main machinery the owner remembers does exist and is working.** Same
+loop, lines 807–870: `nu_skip_cosmic` is applied **per main**, with the comment
+saying so explicitly — *"Per-main, so a cosmic-tagged longest bundle does not
+veto a clean runner-up"* — and when two in-window mains survive the vetoes it
+keeps the longer and logs `in-window bundle cluster N ... not selected`. There is
+also a real safety valve: `nu_skip_cosmic_bundle_min_length`, doc pr/16 design A,
+set to **15 cm in SBND production** (`cfg/.../sbnd/clus.jsonnet:927`), which
+spares an untagged in-window main ≥ 15 cm from the bundle veto.
+
+None of that is touched by the four knobs. 65289 simply has **one** in-window
+main, and the merge turned that one into an STM; there was no runner-up to fall
+back to. The pre-existing asymmetry it exposes — the taggers can see demoted
+mains (P3) but the neutrino selector cannot — predates this round and is
+unchanged by it.
+
+**But note what this means for 51128 (Q3):** the 15 cm guard is exactly the
+safety valve for "a cosmic-tagged bundle-mate should not kill a real neutrino",
+and it **could not fire**, because the guard only applies to clusters that are
+still `main_cluster`. The merge demoted the 57.7 cm neutrino out of main status
+*before* the guard was reachable. So the knobs did not break the protection —
+they stepped around it. The two clusters that did reach the guard were 1.2 cm,
+far under 15.
+
+**Q2 — 78242: `track_fit-global` is missing part of the neutrino, an EM shower
+and part of the long track. Owner: "I thought the rescue would ADD the activity
+from the other TPC — why is something missing?"** Both are true at once: the far
+half *was* added, and a stretch that used to be fit is now unfit. The charge is
+not lost — the fit is. Resolved by segment (`real_cluster_id`) rather than by
+bin, which is what makes it legible:
+
+| arm | `track_fit` segments of the main cluster |
+|---|---|
+| OFF (cid 8) | `8007` x −102.2…−90.3 · `8005` x −90.3…−54.8 · **`8004` x −54.8…−1.4 (169 pts)** · `8006` x −54.8…−50.1 |
+| ON (cid 17) | `17017` x −102.2…−90.4 · `17007` x −90.4…−54.2 · **(nothing)** · `17011` x +15.5…+16.6 · **`17012` x +16.3…+67.5 (206 pts, the added far half)** |
+
+So the join **did** add the other TPC: segment `17012`, 1489 charge points and 206
+fit points over x +1.2…+67.5, which did not exist before. What vanished is
+OFF's segment `8004` — the 54 cm of the beam-side track running up to the cathode
+— and it has no counterpart in the ON arm at all.
+
+**The charge in that stretch is untouched and still labelled *track*.** In
+`shower_track` the beam-side segment is essentially identical between arms
+(`8005` x −90.6…−0.9, 1494 pts → `17007` x −90.6…−0.9, 1498 pts), and a
+track/shower split by `q` shows 472/288/316 **track** points and **zero** shower
+points in the x = −60…0 bins *in both arms*. The newly attached far half is the
+opposite: 380/550/414/145 points at x > 0, **all shower, zero track**.
+
+Net effect: the unfit region is roughly **x ∈ [−54.8, +16.3]**, about 71 cm
+straddling the cathode — i.e. **the fit no longer crosses the junction it was
+created to make.** It fits the far half, it fits the upstream part of the beam
+half, and it drops the join. Re-running pattern recognition on the merged cluster
+re-segmented it and did not reproduce `8004`.
+
+(The EM shower's absence from `track_fit` is by design — `track_fit` holds fitted
+trajectories, showers live in `shower_track`. The *long-track* hole is the
+defect.) This event's far half is matched **857 µs** away.
+
+*Correction to an earlier reading of this event:* the beam-side loss is **not**
+PR "reclassifying the material as shower" — that happens only to the newly
+attached far half. The beam-side points keep their track label and lose only
+their trajectory segment.
+
+**§11.8 carries the resolved diagnosis** — the join here is geometrically
+excellent (a dead-straight line through the cathode), and the defect is that
+**100 % of the rescued far half is labelled EM shower** while the beam half of
+the same muon stays 100 % track. Read §11.8 before this table; an intermediate
+answer that blamed the join was retracted there.
+
+**Q3 — 51128: the neutrino is gone; should the fix consider clusters other than
+the beam-flash-matched one?** *Yes — this is the clearest defect of the round,
+and the owner's reading is exactly right.* The beam-side donor `c11` is a
+**3.8 cm fragment**, not the bundle's neutrino, which is a *different* cluster
+(L 57.7 cm, `selected main cluster 22` in the OFF arm). Sequence:
+
+1. rescue joins `c11` (3.8 cm, beam) to `c8` (283.9 cm cosmic, t0 6.68 µs);
+2. F4 `rescue_dest_beam_for_new` puts the 287.1 cm result in the **beam** bundle;
+3. longest-cluster-wins makes it the bundle **main**, demoting the real 57.7 cm
+   neutrino to associated;
+4. `TaggerCheckTGM` tags the merged main → `nu_skip_cosmic` skips it, and
+   `nu_skip_cosmic_bundle` then skips the two remaining in-window clusters
+   (`L 1.2 cm` each) *because they share flash bundle gid 1000004 with a
+   cosmic-tagged main*;
+5. `no main cluster selected (23 mains, 3 in-window)`.
+
+The real neutrino is not even in the skip log — demotion removed it from the
+candidate list before the veto ran. A 3.8 cm fragment was allowed to decide the
+fate of a 57.7 cm neutrino interaction.
+
+### 11.5 Root cause, stated once
+
+The rescue picks the beam-side donor by **cathode geometry alone**. It never asks
+(a) whether that donor is the bundle's main or a minor fragment, nor (b) what
+attaching a large far half does to the *rest* of the destination bundle. F4 then
+forces the result into the beam bundle, where "longest = main" hands the bundle
+to the newly created cosmic and the bundle-level veto discards everything else
+in-window.
+
+This is the same failure shape as the false-merge bug of §6.3, one level up:
+there, the geometry inspected two tip points while the merge re-materialised a
+whole cluster; here, the geometry inspects two clusters while the merge
+re-organises a whole *bundle*. **Check the object the code modifies.** The
+round-2 gates could not have caught it — the join metric (§5.6) scored "did the
+missing half end up in the beam bundle", which is *true* in all 9 cases and is
+precisely how the neutrino gets killed.
+
+**The assertion that would have caught it, for the next round:** a Q/L-stage
+change must be scored on **"does PR still select a neutrino main?"**, never on
+"did the clusters merge as intended". Merging as intended is the *premise* of the
+damage here, so no amount of Q/L-side checking can see it. This is the PR-stage
+twin of §6.3's complement assertion (every event with no log line must be
+byte-identical): both work by checking an object the change was not reasoning
+about. Cost is small — the PR chain is ~20 s/event on an existing pctree, so the
+whole 12-event census is minutes. Round 2 skipped it only because PR was out of
+scope by owner direction, which was the right call at the time and is why this
+sat undetected for a day rather than being a gate failure.
+
+### 11.6 What is and is not a win
+
+Not all five losses are wrong. The two events whose far half is **itself in the
+beam window** — 398115 (0.529 µs) and 237798 (0.393 µs) — are genuine
+cathode-crossing muons in the beam window; joining them is right, 415/417 cm is a
+through-going muon, and TGM is the correct verdict. For those the pre-fix
+`nu-candidate` was the artifact and the flip is a **purification**.
+
+The rest need a hand scan, and two are already indefensible: 51128 (a 3.8 cm
+donor kills a 57.7 cm neutrino) and 78242 (fit broken over 40 cm, far half
+matched 857 µs away). 317427, 65289, 281165 and 65053 join far halves whose own
+flashes are 109 / −2.8 / 277 / 582 µs away — `rescue_geom_first` asserts those
+flash matches were all wrong, which is a strong claim with no independent
+evidence behind it.
+
+### 11.7 Recommendation (owner call — §5 rules 1 and 7)
+
+**Consider setting the four SBND production defaults back OFF pending a round 3.**
+The flip is currently ON in production and, on the only 9 events where its
+behaviour has been examined end-to-end, it removes the neutrino candidate from 5
+and demonstrably damages 2 more.
+
+**The production harm rate is UNMEASURED — do not read "1%" out of this.** The
+rescue fires on 12 events per 1000 (mcp1k), but that is the *firing* rate, not
+the harm rate; the harm rate is 12/1000 × (fraction of firings that are harmful),
+and the second factor is unknown. These 9 events are doc 72's **signal** set,
+selected precisely because a beam bundle was visibly cut at the cathode — i.e.
+enriched for the exact condition that drives the mechanism of §11.3 — so 5/9 is
+not an estimate of anything in a random sample. The 12 census firings include 4
+events never scanned end-to-end (169758, 395060, 291064, 486907). Measuring the
+real rate means running the PR chain over the full census, both arms.
+
+Escape, no rebuild needed: `SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM}=0`.
+
+Round-3 directions, in the order the evidence supports them:
+
+1. **Do not let a rescued join displace a bundle's existing main.** If the
+   destination bundle already has a longer, in-window, non-cosmic main, the
+   merged object should not take the main slot (51128, and the mechanism behind
+   every loss).
+2. **Require the beam-side donor to be substantial** — a `min_beam_donor_len`
+   guard would decline 51128 (3.8 cm) and 281165 (21.6 cm) outright.
+3. **Do not demote a longer, untagged in-window main below a rescued join.**
+   SBND already runs the doc pr/16 design-A guard at 15 cm, which exists to stop
+   a cosmic bundle-mate killing a real neutrino; on 51128 it never got the
+   chance, because demotion removed the 57.7 cm neutrino from `main_cluster`
+   before the guard could see it. Preserving main status is a Q/L-side fix in
+   *this* component and is preferable to changing `TaggerCheckNeutrino` — no
+   PR-chain change is needed, and §11.4 Q1 shows the selector logic is sound.
+   (A separate, genuinely PR-side question — should the neutrino selector see
+   demoted mains the way the taggers already do via P3? — predates this round;
+   raise it with whoever owns that chain rather than folding it in here.)
+4. **Bound `rescue_geom_first` by |dt0|.** Unlimited, it asserts that a flash
+   match hundreds of µs away is wrong; 78242 (857 µs) and 65053 (582 µs) are the
+   cases to test a cap against.
 Bee for the three: `311a2d2e-1dac-4fb5-bd91-05685a6d8184`.
+
+### 11.8 Two owner follow-ups
+
+**"Should `TaggerCheckNeutrino` also examine the demoted main?" (65289)** —
+There is a real case for it, and the two events where the neutrino is lost both
+have a demoted main that looks like a candidate:
+
+| event | demoted main | verdicts | note |
+|---|---|---|---|
+| 65289 | cluster 18 | `TGM=false`, `STM=0`, **`FC=true`** | in-window, contained, ~118 cm chord |
+| 51128 | cluster 28 | `TGM=false`, `STM=0`, **`FC=true`** | in-window, contained |
+| 51128 | cluster 27 | `TGM=false`, `STM=0`, `FC=false` | 64.5 cm chord |
+
+`FC=true`, in the beam window, and untagged by both cosmic taggers is exactly
+the profile of a neutrino candidate. The verdicts already exist — doc pr/20 P3
+computes them via `evaluate_demoted_mains` — so the information is free; only the
+`Flags::main_cluster` gate at `TaggerCheckNeutrino.cxx:808` keeps them out. And
+the admission pattern is already established: the doc pr/16 design-A guard
+admits an untagged in-window main ≥ 15 cm past the bundle veto, which cluster 27
+would clear. So the asymmetry (taggers see demoted mains, the selector does not)
+is arguably an oversight rather than a design.
+
+**But it should be a separate, independently-gated change, and it should come
+after the cathode fix, not as part of it.** Three reasons:
+* **Blast radius.** Demoted mains exist in most events, not just the ~12 per 1000
+  where the rescue fires. This changes candidate selection detector-wide and needs
+  its own default-OFF knob plus a full census gate — a much larger commitment than
+  the four cathode knobs.
+* **It would mask the defect.** On 65289 it is still unknown whether the 248 cm
+  merged object is one track. Promoting a runner-up would restore a candidate
+  while leaving a possibly-wrong merge in place, and would make the round-3 A/B
+  unreadable.
+* **The cathode fix removes most of the need.** Round-3 direction 3 (do not demote
+  a longer untagged in-window main) recovers 51128 at the source. 65289 would
+  still benefit — but only if its join is correct, which is the open question.
+
+It is also PR-chain code, so it belongs to whoever owns that chain (§11.7 item 3).
+
+**"For 78242, are you implying it is a PR problem?" — and "so what IS the
+problem?"**
+
+**RETRACTION.** An earlier answer in this section called the 71 cm fit hole
+*"evidence against the join"*. **That was wrong**, on two counts, and the
+geometry disproves it.
+
+*First, the join is excellent.* The merged main's trajectory runs dead straight
+through the cathode — mean (y, z) per 10 cm slab:
+
+| x slab | −20…−10 | −10…0 | ‖ | 0…+10 | +10…+20 |
+|---|---|---|---|---|---|
+| y | 16.3 | 17.8 | ‖ | 19.2 | 20.8 |
+| z | 174.8 | 190.4 | ‖ | 205.4 | 222.0 |
+
+dz/dx is ~15.5 cm per 10 cm before the cathode and ~16 cm after; dy/dx is ~1.4
+on both sides. One continuous straight line from (−102, 16, 79) to
+(+67, 23, 322), ~300 cm long. There is nothing wrong with this merge.
+
+*Second, the "PR crosses fine elsewhere" comparison was too weak to carry the
+conclusion.* 281165 and 319913 do cross, but only to x = +7.3 and +7.9 — far
+halves of **218 and 84 points**. 78242's far half is **1489 points reaching
++67.5**. Those two never tested a substantial far half.
+
+**The actual problem: the rescued far half is classified as an EM SHOWER.**
+Track/shower labelling of the selected main, by side of the cathode:
+
+| event | beam half (x < 0) | far half (x > 0) |
+|---|---|---|
+| 281165 | 2071 track, 0 shower | 218 track, 0 shower |
+| 319913 | 524 track, 0 shower | 84 track, 0 shower |
+| **78242** | **1681 track, 0 shower** | **0 track, 1489 shower — 100 %** |
+
+Every point of the newly joined far half is labelled shower, while the beam half
+of the *same straight muon* stays 100 % track. 78242 is the only one of the three
+where this happens — and the only one whose far half is big enough to matter.
+
+That misclassification is what propagates into the display the owner saw:
+
+* the far half renders as shower, not as fitted track;
+* the PR graph is reorganised — the vertex that sat at the cathode end of the
+  track in the OFF arm, `(−1.4, 18.4, 197.1)`, **disappears**, and new vertices
+  appear at `(+15.5, 24.1, 228.8)` / `(+16.3, 21.1, 223.5)`;
+* no fitted segment covers x = −54 → +16, which includes the 54 cm that *was*
+  fit before (OFF segment `8004`).
+
+So "missing an EM shower as well as part of the long track" is **one** defect,
+not two: the far half became a shower, and the trajectory through the junction
+was lost when the object was re-fit around that labelling.
+
+**Is it a PR problem?** The misclassification happens in PR's track/shower
+separation, but it fires only on rescued far-half charge and only when that half
+is large — so it is *triggered* by the round-2 join, not independent of it. The
+neutrino vertex is unchanged between arms at `(−90.4, 8.7, 66.6)`, and the event
+keeps its candidate, so this one is a quality defect rather than a loss.
+
+### 11.8.1 Is the far half graph-connected across the cathode gap? — **YES. Lead disproven.**
+
+Checked on owner request. The "isolated component" hypothesis above is **wrong**;
+recorded here rather than deleted, because it was the obvious guess and the next
+person will have it too.
+
+**Evidence 1 — the connected-component count does not change.**
+`component_extreme_wcps` (`clus/src/TaggerCheckTGM.cxx:544-663`) reports
+`comp_pts.size()` = connected components from `connected_blobs`, and `n_used` =
+those above `component_min_length` (10 cm):
+
+| arm | main | components | above 10 cm | extreme groups |
+|---|---|---|---|---|
+| OFF | cid 8 (beam half only, 1680 pts) | 2 | **1** | 5 |
+| ON | cid 17 (merged, 3170 pts) | 2 | **1** | 5 |
+
+The ON cluster carries an extra **67 cm / 1489-point** far half. Were it a
+separate component it would be far above the 10 cm floor and the count would
+read **2 above 10 cm**. It reads 1, unchanged — the far half was absorbed into
+the single large component.
+
+**Evidence 2 — TGM's extreme pair spans both halves.** `check_tgm` on the merged
+cluster forms `CASE-B pair (1,4)` with a **straight chord of 312.0 cm**. The
+merged object is ~300 cm end to end and each half alone is ≤ 155 cm, so a 312 cm
+chord can only run from one half's far end to the other's. Both halves are
+therefore in the same component's extreme set. (That pair is then rejected for
+*"unsupported run > 30 cm"* — simply because a straight 312 cm chord does not
+follow a gently curving 300 cm track; it deviates ~20 cm mid-chord. TGM=false is
+the right answer and this is not the defect.)
+
+**The join geometry is good on every measure that matters:**
+
+| quantity | value |
+|---|---|
+| nearest 3-D approach across the cathode | **2.16 cm** — *smallest of the three crossers* (281165: 4.09, 319913: 2.14) |
+| transverse alignment of that nearest pair | Δy 0.0 cm, Δz 0.6 cm |
+| **local** direction agreement, ±30 cm of the cathode | **3.8°** (beam 58.3°, far 62.1° in the x–z plane) |
+| end-to-end direction difference | 10.7° — the track's own curvature over 300 cm, not a junction kink |
+
+Note the local-vs-end-to-end distinction: judging this join on end-to-end
+directions would call it a 10.7° mismatch and condemn it. Locally at the
+junction the two halves agree to **3.8°**, which is what a single muon looks
+like.
+
+**So the cause of the 100 % shower labelling is still unknown.** It is not
+disconnection, not the gap size, not a junction kink, and not point density
+(far half ~10 points per cm of path, beam half ~11). What is established:
+
+* the far half is **in the same cluster, the same connected component, and the
+  same PR graph** (it forms segment `17012`);
+* it is nonetheless labelled **100 % shower** while the beam half of the same
+  muon is 100 % track;
+* 281165 and 319913, whose far halves are labelled 100 % track, differ mainly in
+  **size** — 218 and 84 points against 1489.
+
+Size is the one axis that still separates the working cases from the broken one,
+so the next probe is whether the track/shower separation's behaviour on a
+rescued far half depends on its length — not on how it was attached.
+
+### 11.8.2 Step-by-step through the PR chain on 78242 (owner request)
+
+Repro — both arms, one event, per-segment PID trace un-gated:
+
+```bash
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display WCT_PID_TRACE_DEBUG=1 SBND_WCT_LOGLEVEL=trace \
+  ./run_pr_chain_batch.sh work-cbr2-prql-on  work-cbr2-pr-on-dbg  data 78242
+PR_JOBS=1 PR_EXTRA_STAGES=pr_display WCT_PID_TRACE_DEBUG=1 SBND_WCT_LOGLEVEL=trace \
+  ./run_pr_chain_batch.sh work-cbr2-prql-off work-cbr2-pr-off-dbg data 78242
+```
+
+#### (1) What the PR chain is fed — nothing is missing
+
+`run_pr_chain_batch.sh` consumes `ql_evt<ID>/pctree-evt<ID>.tar.gz` (plus the
+opflash tarballs for RSE). Comparing the two arms' pctrees: **220 tensors each,
+identical datapath structure, zero paths present in one and not the other, zero
+count differences.** What it carries:
+
+| group | contents |
+|---|---|
+| live 3-D | per-blob `x, y, z, t`, `x_t0cor`, `y_cor`, `z_cor`, per-plane `u/v/w charge_val + charge_unc`, `u/v/w wire_index`, `wpid` |
+| live per-APA charge maps | `ctpc_a{0,1}f0p{U,V,W}` — charge, charge_err, cident, slice_index, wind, x, y — **both APAs present** |
+| live dead maps | `dead_winds_a{0,1}f0p{U,V,W}`, `dead_gap_a0f0pW` |
+| cluster_scalar | `ident`, `cluster_t0`, `flash`, `matched_flash_gid`, `flag_main_cluster`, `flag_associated_cluster`, `lm_flag` |
+| perblob | `real_cluster_id`, `real_cluster_main`, `real_cluster_was_main`, `assoc_cluster_id`, `assoc_cluster_main`, `isolated` |
+| blob scalar | centre, charge, npoints, wire-index ranges, slice range, wpid |
+| light | `flash`, `opflash`, `light`, `flashlight` |
+| dead grouping | scalar, corner, cluster_scalar |
+
+So the merged cluster reaches PR complete, with **both** APAs' charge and dead
+maps. No input is lost by the rescue.
+
+#### (2) Where the trajectory is lost — inside `tagger_check_neutrino`
+
+Pipeline: `switch_scope → unmerge_bundle → unmerge_assoc → steiner →
+fiducialutils → tagger_check_tgm → tagger_check_stm → tagger_check_fc →
+protect_bundle → steiner_refresh → tagger_check_neutrino → numu_bdt → nue_bdt →
+tracking_visitor → tagger_output`.
+
+ON-arm timeline for the merged main (cluster 17):
+
+| time | stage | what happens |
+|---|---|---|
+| 55.853 | steiner | cluster 17 graph = **2499 vertices, 4451 edges**; `do_rough_path` runs from `(674.6, …)` to `(−962.2, …)` mm — i.e. **+67.5 cm to −96.2 cm, across the cathode**. Graph is joined. |
+| **57.772** | **`main_cluster initial PR`** (1936 ms) | segments are created and fitted. The trace shows **`Seg 132.53 cm Track … pdg 13, KE 320.6 MeV`** — the junction piece — alongside `Seg 122.02 cm` (far half) and `Seg 60.18 cm` (beam half). **All Track, all muon. No `S_traj` anywhere on the long segments.** |
+| 57.891 | other_clusters PR | |
+| 57.903 | deghosting | 12 ms |
+| **58.858** | **`overall main vertex`** (955 ms) | ← graph rebuilt around the chosen vertex |
+| **59.478** | **`improve_vertex + examine_direction`** (620 ms) | ← graph rebuilt again |
+| 59.538 | `shower_clustering_with_nv` | 60 ms |
+| 59.573 | Bee dump | cluster 17 dumps segments **7, 11, 12, 17 only** |
+
+The Bee dump iterates **PR-graph edges** (`ordered_edges(*pr_graph)`,
+`MultiAlgBlobClustering.cxx:846`), so only segments still in the graph appear.
+Segment ids **8, 9, 10, 13, 14, 15, 16 were created and are gone** — the
+132.53 cm junction segment among them.
+
+**Contrast with OFF, which is clean:**
+
+| arm | segments created for the main | segments surviving to the dump |
+|---|---|---|
+| OFF (cid 8) | ids 4, 5, 6, 7 | **all 4** — `8004`=169 fitted pts, `8005`=101, `8006`=11, `8007`=34 |
+| ON (cid 17) | ids 7 … 17 | **4** — `17007`=103, `17011`=12, `17012`=206, `17017`=34 |
+
+OFF's `8004` (169 fitted points, x −54.8 … −1.4) is exactly the stretch the ON
+arm ends up missing, and OFF keeps every segment it makes.
+
+**Not a fitting failure.** The doc pr/55 sentinels for an empty `fits()` or a
+missing `associate_points` cloud fire **zero times** in either arm. Every
+surviving segment has both. The junction segment was *fitted* — 132.53 cm of it
+— and then **removed from the PR graph** by one of the two vertex stages between
+57.772 and 59.573.
+
+#### (3) Why the far half paints as shower
+
+The `shower_track` layer's rule (`MultiAlgBlobClustering.cxx:866-878`):
+
+```
+is_shower = (segment ∈ seg_to_shower)          // shower membership is authoritative
+         || kShowerTrajectory || kShowerTopology || |pdg| == 11
+```
+
+The PID trace settles which disjunct fires: the far-half segments are **`Track`,
+`pdg 13`, KE 298 MeV** — so `kShowerTrajectory`, `kShowerTopology` and the
+`pdg == 11` test are all **false**. The far half is therefore painted shower
+**solely because `shower_clustering_with_nv` absorbed its segments into a shower
+object.** SBND runs `pseudo_shower_track_paint = true`
+(`wct-pr-perevt.jsonnet:1302`), which repaints a shower as track when the
+shower's `get_particle_type()` is ±13 — that override did not fire, so the shower
+is not typed as a muon.
+
+**Summary of the causal chain for 78242**
+
+1. The rescue joins the halves — geometry excellent (§11.8.1), inputs complete.
+2. The Steiner graph spans the cathode; `main_cluster initial PR` fits the whole
+   object, including a 132.5 cm junction segment, and calls every long segment a
+   **muon track**.
+3. `overall main vertex` / `improve_vertex` rebuild the graph and the junction
+   segment does not survive → the 71 cm hole in `track_fit`.
+4. `shower_clustering_with_nv` absorbs the far half into a shower object → all
+   1489 far-half points paint as EM shower despite being PID'd as muon track.
+
+Steps 3 and 4 are the two places to instrument in round 3. Both are downstream of
+a join this doc now considers sound, so neither is fixed by tightening the
+rescue's admission gates.
+
+### 11.9 The revert (owner instruction, 2026-08-17)
+
+All four SBND production defaults set back to `false` in
+`cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet` (the TLA block)
+and `cfg/pgrapher/experiment/sbnd/clus.jsonnet` (`clus_all_apa` and `all_apa`
+defaults). Toolkit `f3706c45`. **The C++ is untouched** — the knobs and the
+far-half containment veto stay in `clustering_cathode_bundle_rescue.cxx`,
+default OFF as originally shipped.
+
+Gate: the knobs-off default compiles **byte-identical** to HEAD compiled with the
+runner escape `SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM}=0`
+(`cmp`, 54115 B) — and that escape was itself gate-proven equal to the
+pre-round-2 baseline at flip time, so this restores the validated baseline
+exactly. Compiled-config proof in the other direction: all four keys
+(`rescue_allow_in_beam_far`, `rescue_geom_first`, `rescue_pierce_test`,
+`rescue_dest_beam_for_new`) are absent from the bare config and reappear as
+`true` when the runner passes the TLAs, so the knobs stay fully usable for
+round 3.
+
+```bash
+# both halves of the proof
+wcsonnet -A input=. -S anode_indices='[0,1]' -A output_dir=. -S run=0 -S subrun=0 \
+         -S event=0 -A reality=data \
+         cfg/pgrapher/experiment/sbnd/wct-clus-matching-perevt.jsonnet   # no rescue_* keys
+# ... same with -S rescue_geom_first=true etc.                          # keys present
+```
+## 12. Round 3 — the three fixes (owner direction, 2026-08-17)
+
+Owner: *"can you perform the round 3 of this cathode rescue improvements"* —
+three fixes, one per §11 event; validate on nueCC (`nuecc48`), NCpi0
+(`ncpi0`) and inclusive numu (`mcp1k`); examine the PR of **every** event
+firing the rescue; if validation passes, turn the knobs ON for SBND
+production (all together: the four round-2 knobs + the round-3 knobs).
+Owner clarifications (AskUserQuestion): inclusive numu = `mcp1k`; fix 2 =
+main-only gate; flip scope = everything together.
+
+Toolkit code commit: `812c7add` (all three knobs C++ default OFF,
+key-suppressed jsonnet, TLAs + runner escapes).
+
+### 12.1 Fix 1 — `nu_fallback_demoted_mains` (65289, new algorithm)
+
+`TaggerCheckNeutrino`'s no-candidate exit (`TaggerCheckNeutrino.cxx:898`,
+bare `return`) now has a knob-gated second pass: when the primary loop
+selects NOTHING, iterate the DEMOTED mains (`Flags::demoted_main` — set by
+`ClusteringUnmergeBundle` `restore_demoted_mains`, scored by the taggers
+under `evaluate_demoted_mains`, both SBND production ON) with the SAME
+gates as the primary loop — beam window, `nu_skip_cosmic` TGM/STM/lm
+verdicts, the bundle veto with the pr/16 design-A 15 cm guard, longest
+wins.  The winner keeps its flags (still `associated_cluster` +
+`demoted_main`); the PR chain works off the local pointer, and the
+companion block downstream gathers its bundle-mates unchanged.  If a
+main-cluster candidate exists the fallback never runs, so such events are
+byte-identical.  Runner escape: `SBND_NU_FALLBACK_DEMOTED=1`.
+
+Smoke (65289, all knobs ON):
+```
+TaggerCheckNeutrino: no main-cluster candidate; selected demoted main 18
+  (t0 1.746 us, L 112.1 cm) of 5 demoted (nu_fallback_demoted_mains)
+```
+The merged 248 cm STM stays vetoed; the examined, untagged 112.1 cm former
+main becomes the neutrino candidate.  (§11.4 Q1's "should the selector see
+demoted mains the way the taggers do?" — this is that fix.)
+
+### 12.2 Fix 2 — `rescue_beam_main_only` (51128, rescue improvement)
+
+The pass-1 beam-side donor must now be its bundle's **dominant matched
+main**: it must carry `Flags::main_cluster` AND be at least as long as
+every other member of its flash bundle (same `>=` convention as the
+a/b/c/d rule's `beam_dom`).  New `[cbrsel]` prune reasons `not_main` /
+`not_dominant`.  Runner escape: `SBND_RESCUE_BEAM_MAIN=1`.
+
+**The flag alone would NOT have fixed 51128** — measured during
+implementation: the 3.8 cm donor c11 *carries* `main_cluster`
+(`[cbrsel] ... beam 1 main 1 3.8 cm`); an SBND flash bundle can hold more
+than one main (18255/52195 precedent).  The dominance requirement is what
+rejects it:
+```
+[cbrsel] c11(gid 1000004 t0 1.670 us beam 1 3.8 cm) -> not_dominant
+[cbrsel] c19(gid 1000004 t0 1.670 us beam 1 21.7 cm) -> not_dominant
+```
+No rescue move fires on 51128; PR then selects
+`main cluster 22 (t0 1.670 us, L 57.7 cm)` — the real neutrino, identical
+to the OFF arm.  On the genuine crossers the gate is transparent: 65289
+(a=160.2 ≥ b=112.1) and 78242 (a=201.8, b=0) fire exactly as in round 2.
+
+### 12.3 Fix 3 — `esva_ignore_empty_2d` (78242, PR-stage bug)
+
+**Attribution (instrumented reruns `work-cbr3-attr78242{,b}`,
+`SBND_TRAJ_COVER_PROBE=1 WCT_DET_DEBUG=2`):** §11.8.2's "dropped by one of
+the two vertex stages" is now pinned to a single line of code.
+
+- `overall main vertex` removes nothing (no `remove_segment` in its
+  window) — `determine_overall_main_vertex` does no graph mutation at all.
+- mvga (`main_vertex_graph_audit`) never fires on this event (0 `mvga:`
+  lines) — the §11 suspect list is retired.
+- Inside `improve_vertex`, `examine_vertices_1` twice merges the junction
+  with a 2–3 cm connector stub via `merge_two_segments_into_one`
+  (WCT_DETA backtraces) — each merge **creates a NEW SegmentPtr**
+  (`create_segment_from_vertices`), so the junction object is no longer in
+  the `existing_segments` snapshot and loses its exemption.
+- The terminal removal (nfits=227, x −54.98 → +16.57) is issued by
+  **`eliminate_short_vertex_activities` case 5**
+  (`NeutrinoVertexFinder.cxx:2345-2385`), immediately after
+  `search_for_vertex_activities`.
+
+**Root cause:** case 5 deletes a non-pre-existing segment when every wcpt
+is within 0.45 cm of a pre-existing segment in ALL three 2D views.  The
+per-view distance comes from `DynamicPointCloud::get_closest_2d_point_info`,
+which returns the sentinel **−1.0** when the queried (plane, face, apa)
+2D index is empty (`DynamicPointCloud.cxx:372-374`) — i.e. when the
+pre-existing segment has no points in the query point's APA.  −1 passes
+every `< 0.45 cm` test, so on a cathode-crossing cluster (the only place a
+cluster's segments span two APAs) one other-APA segment vacuously
+"covers" every junction point in all views (the six
+`created empty 2D index l2g` lines immediately precede the removal),
+`n_good` stays 0, and the junction is unconditionally deleted with no
+replacement edge.  Single-APA clusters cannot reach this — which is why
+the bug existed since the port and only surfaced when the rescue started
+creating cross-cathode merged clusters, and why uBooNE (single TPC,
+prototype `NeutrinoID_improve_vertex.h:365-1018`) has no analogue of it.
+
+**Fix:** knob `esva_ignore_empty_2d` — case 5 maps a negative view
+distance to 1e9 ("no information") before the min.  Runner escape:
+`SBND_ESVA_IGNORE_EMPTY_2D=1`.
+
+**The shower absorption of §11.8.2(3) is downstream of the deletion, not a
+second defect.**  The attribution run shows
+`pr65 absorb_unreachable_main: 2 graph-unreachable main-cluster segment(s)`
+and `pr74 conn3_unreachable: promote gidx=12 len 123.1cm` — the muon far
+half went into a shower object *because* the junction's removal
+disconnected it from the main vertex.  With the fix, smoke on 78242 shows
+zero absorb/promote lines and a continuous `track_fit`:
+
+| segment | fit pts | x span (cm) |
+|---|---|---|
+| 17017 | 34 | −102.2 … −90.4 |
+| 17007 | 103 | −90.4 … −55.0 |
+| **17027** | **227** | **−55.0 … +16.6 (the junction — now survives)** |
+| 17011 | 11 | +15.8 … +16.7 |
+| 17012 | 202 | +16.6 … +67.5 |
+
+The §11.4 Q2 hole (x −54.8…+16.3) is exactly the span 17027 now covers.
+
+### 12.4 Local gates (all at commit `812c7add`, lib mtime 12:39)
+
+- Compiled config, knobs OFF vs HEAD `f3706c45`: Q/L job **byte-identical**
+  (`cmp`, 54115 B), PR job (production pipeline_names) **byte-identical**
+  (`cmp`, 262040 B).  Knobs ON: `rescue_beam_main_only` /
+  `nu_fallback_demoted_mains` / `esva_ignore_empty_2d` all appear = true.
+- `wcdoctest-clus`: 2105/2105 (includes new knob-default pins).
+- SBND knob-off at event level: OFF arm `work-cbr3-qloff` on the 9 §11
+  events — `pctree` + `mabc-all-apa.zip` member hashes **18/18 MATCH** vs
+  production `work-mcp1k-cb0805` / `work-mcp2k-cb0816`.
+- uBooNE: qlport sweep `cbr3_off_ub` (new binary, knobs off) vs
+  `cbr3_base_ub` (baseline binary rebuilt at `f3706c45` via stash) —
+  **35/35 zips content-identical, 35/35 tagger-compare logs identical**.
+  (The stale 2026-08-03 `cbroff_base_ub` label differs 35/35 from BOTH new
+  sweeps — inherited drift of the intervening two weeks of commits, not
+  this change.)
+- abtest (PDHD/PDVD) NOT run: neither `ClusteringCathodeBundleRescue` nor
+  `TaggerCheckNeutrino`/PR runs in those pipelines (cfg grep: zero
+  references under `cfg/pgrapher/experiment/{pdhd,protodunevd}`).
+
+### 12.5 Three-sample validation (valfast `cbr3off2` / `cbr3on`, 2026-08-17)
+
+Repro:
+
+```
+cd sbnd_xin
+setarch x86_64 -R ./valfast/run_valfast.sh cbr3off2 -full -j 32
+SBND_RESCUE_IN_BEAM=1 SBND_RESCUE_GEOM_FIRST=1 SBND_RESCUE_PIERCE=1 \
+SBND_RESCUE_DEST_BEAM=1 SBND_RESCUE_BEAM_MAIN=1 \
+SBND_NU_FALLBACK_DEMOTED=1 SBND_ESVA_IGNORE_EMPTY_2D=1 \
+  setarch x86_64 -R ./valfast/run_valfast.sh cbr3on -full -j 32
+VF_CMP_JOBS=16 ./valfast/valfast_compare_par.sh cbr3off2 cbr3on
+```
+
+Both arms: one binary (toolkit `812c7add`, `libWireCellClus.so` mtime
+2026-08-17 12:39), all five samples complete (`overall_fail=0`; mcp1k 445/445
+nusel+PR, nuecc48 48/47, r1qlmc 10/4, r2mc 13/6, ncpi0 19/19).
+
+*Harness fix that rode along*: the first OFF attempt (tag `cbr3off`, roots
+left in place per M13) failed on the four small samples because
+`run_valfast.sh`'s `nusel_root()` returned RELATIVE roots and
+`run_ql_evt.sh`'s opflash split does `( cd "$stage" && tar czf "$QLDIR/..." )`
+— "Cannot open" from inside the stage dir.  `nusel_root()` now emits absolute
+paths (the -full path for the small samples had never been exercised; mcp1k
+absolutizes its own root in `run_full1k_nusel.sh`).
+
+**OFF arm vs the cb0805 production reference** (informational — 12 days of
+production flips separate them): Q/L member hashes identical on 443/445 mcp1k
+events (movers 350935, 405432, pctree only) and 46/47 nuecc48 (evt 10550:
+same 30816 points, 7→8 cluster partition).  Attributed to the post-0805
+clustering-stage production flips (pr/53, pr/57/61/62/64); our knobs-off
+identity is proven against current HEAD by the §12.4 gates, not by this.
+
+**OFF ↔ ON (the physics diff).**  Gate-2 score movers and gate-1 archive
+movers coincide exactly with the rescue/fallback firing set:
+
+- **mcp1k (445-event manifest)**: three events move, all
+  `nu-candidate → cosmic-tagged` at the event level: 65289 (the designed fix
+  — fallback selects the true neutrino, see 12.6), 395060 and 169758
+  (owner-confirmed cosmic purifications, 2026-08-17 hand scan).
+- **nuecc48 (47 PR events)**: **48/48 nue selections unchanged.**  Two events
+  differ at archive level, both benign: 267597 (rescue fires; nue main
+  5, 127.2 cm selected in BOTH arms; t0 0.707→0.712 µs, n_assoc 65→64,
+  Enu −0.08 MeV) and 437699 (the dominance gate BLOCKS a legacy merge that
+  was donating a non-dominant 25.1 cm beam fragment to a cosmic bundle
+  [`cbrsel` c12 → `not_dominant`, 118.8 cm sibling]; nue selection
+  unchanged, n_assoc 41→42).  437699 is the knob-off↔on determinism witness:
+  single-knob bisect reproduces the diff with `SBND_RESCUE_BEAM_MAIN=1`
+  alone, byte-stable across repeat runs on both sides.
+- **r1qlmc / r2mc (MC truth) and ncpi0**: zero diffs — archives, trees,
+  scores all identical.  No true-neutrino selection lost anywhere.
+- Gate 1 over the mcp1k 445-event manifest (rerun chunk-parallel with the
+  correct list; `valfast/events-mcp1k.txt` is the legacy 572-event list, so
+  the stock report shows absent-on-both `file['MISSING']` noise for 133
+  events): tracking-pr.root trees exact on **441/445**; the only movers are
+  65053, 65289, 395060, 169758 — all rescue-firing events (65053's selection
+  is unchanged; its archives shift with the changed bundle composition).
+
+### 12.6 Full-census PR examination — 3000 events, both directions
+
+Round 2's lesson (§11) was that the Q/L-only census hides PR damage, and a
+one-sided census hides gate-blocked legacy merges (437699).  So round 3
+censused BOTH arms over full mcp1k+mcp2k (tags `work-cbr3-census-on`,
+`work-cbr3-census-offfull`, 3000/3000 rc=0 each) and ran the full PR chain
+on every behavior-changed event, both arms:
+
+```
+ROOT=$PWD/work-cbr3-census-on SBND_RESCUE_*=1 QL_EXTRA=-save-pctree \
+  setarch x86_64 -R ./run_ql_batch.sh -j 32 -f census-events-3000.txt
+ROOT=$PWD/work-cbr3-census-offfull QL_EXTRA=-save-pctree \
+  setarch x86_64 -R ./run_ql_batch.sh -j 32 -f census-events-3000.txt
+./run_pr_chain_batch.sh work-cbr3-census-off  work-cbr3-census-pr-off data <40 evts>
+SBND_NU_FALLBACK_DEMOTED=1 SBND_ESVA_IGNORE_EMPTY_2D=1 \
+  ./run_pr_chain_batch.sh work-cbr3-census-on work-cbr3-census-pr-on data <40 evts>
+```
+
+- **ON-firing: 40 events** (was 12/1000 in round 2's mcp1k-only census).
+  51128 no longer fires (dominance gate) — the round-2 worst case is now
+  structurally excluded.
+- **OFF-firing (legacy production): 20 events**, 19 of them also fire ON.
+- **Gate-blocked: exactly one — 398690** (see 12.8).
+- PR selection table OFF→ON for all 40+1, per-event rescue actions, and the
+  raw census lists live in `/home/xqian/tmp/cbr3/` and are quoted in the Bee
+  index below; batches 40/40 + 40/40 + 1/1 + 1/1 rc=0.
+
+Headline rows (full table in `census-selection-table.txt`):
+
+| class | events | outcome |
+|---|---|---|
+| designed fixes | 65289 (c14 159.2→fallback c18 112.1), 78242 (c8 166.8→c17 314.4 continuous fit) | as validated in §12.1-12.3 |
+| purifications (owner round-2 ruling) | 398115 (341.9→none), 237798 (252.4→fallback 246.9) | 237798's fallback re-admission owner-scanned GOOD |
+| new cosmic rejections | 395060, 169758, 70128, 389533, 317427 (sel→none / →fragment) | owner-scanned: cosmics, improvements |
+| fallback recoveries | 50801 (+49.7), 161725 (+181.9), 164576 (+105.4), 395148 (+198.9), 397498 (+35.5) | owner-scanned: improvements |
+| other gains/changes | 173450 (8.5→279.9), 173495 (+35.3), 281165 (19.2→138.4), 319913, 70538, 72759, 73727, 79689, 99563 | owner-scanned: improvements |
+| unchanged | 56463, 59003, 65053, 169824, 179369, 396761, 407798, + all sel-NONE-both | incl. 169824's longer-half merge — harmless |
+| accepted regression | 398690 | §12.8 |
+
+One cosmetic finding kept on the record: on 169758 ON, after the rejoined
+103.8 cm crosser is correctly TGM-killed, `TaggerCheckNeutrino` selects a
+2.3 cm leftover fragment (0 associated) whose PR run produces no display
+layers; the event still lands `cosmic-tagged`.  A general min-length floor on
+candidates would be a separate knob for a future round — not tuned here.
+
+### 12.7 Bee — before / after (all uploaded 2026-08-17)
+
+Same event order in each pair; "before" = production (knobs off at
+`812c7add`), "after" = all seven knobs ON.
+
+| set | events | before | after |
+|---|---|---|---|
+| signal 3 + first movers | 65289, 51128, 78242, 395060, 169758 | `513f9846-2eb3-49be-87c6-cfbb0503d600` | `6f765447-c110-4efa-a941-3a7a7f9f0033` |
+| census examination (18) | 237798, 317427, 70128, 389533, 50801, 161725, 164576, 395148, 397498, 173450, 173495, 281165, 319913, 70538, 72759, 73727, 79689, 99563 | `0024d08d-7a79-47d7-9e22-e987a0d9cb02` | `3b667a19-7fbd-4903-97bc-7e81a1327eac` |
+| gate-blocked | 398690 | `e9cae60d-4cd9-4714-8877-abef11e6ca7b` | `60cf79ed-f7ba-4a9f-a866-c61726284713` |
+
+(Full URLs: `https://www.phy.bnl.gov/twister/bee/set/<uuid>/event/list/`.)
+
+**Owner hand-scan verdicts (2026-08-17):** 395060 and 169758 are cosmic rays
+— the fix correctly rejects them.  The 18-event census set: "all good,
+clearly improvements."  398690: "a small regression", accepted (12.8).
+
+### 12.8 The accepted regression — 398690
+
+Production's legacy rescue merges a 255.7 cm beam-window cluster
+(t0 2.057 µs) into an out-of-time cosmic bundle (t0 −5.13 µs, far-dominant
+routing) — the same displacement mechanism that killed 51128 — and PR then
+selects nothing.  The dominance gate blocks that merge (the donor has a
+401.6 cm same-gid sibling), and the demoted-main fallback then selects the
+254.8 cm demoted main at the beam t0.  The owner's scan says that object is
+a cosmic: production was getting the right answer by the wrong mechanism,
+and round 3 re-admits it.
+
+Decision (owner, 2026-08-17): **not worth fixing now.**  It is 1 event in
+3000 (the only gate-blocked event in the full census); the re-admitted
+object re-enters downstream nu-selection which is designed to kill bare
+muon-like tracks; and any targeted fallback gate would be tuned on a single
+event — no scalar separates this 254.8 cm untagged demoted main from
+65289's 112 cm true neutrino or 395148's 198.9 cm recovery (the pr/89/90
+lesson on single-event retunes).  If future campaigns surface a pattern of
+fallback re-admissions, the fallback already applies the full
+window/cosmic/bundle-veto gate stack, so a principled criterion slots in
+cleanly.
+
+### 12.9 The production flip (owner instruction, 2026-08-17)
+
+All seven knobs SBND PRODUCTION ON in one commit, config only (C++ defaults
+stay false):
+
+- `wct-clus-matching-perevt.jsonnet` TLA defaults: `rescue_in_beam_far`,
+  `rescue_geom_first`, `rescue_pierce_test`, `rescue_dest_beam_for_new`,
+  `rescue_beam_main_only` → true (`rescue_pierce_cut` stays null = C++ 8 cm).
+- `sbnd/clus.jsonnet`: same five in `clus_all_apa` + `all_apa` defaults;
+  `nu_fallback_demoted_mains` + `esva_ignore_empty_2d` → true in the
+  `clus_pr` + `pr()` defaults.
+- `wct-pr-perevt.jsonnet` TLA defaults: `nu_fallback_demoted_mains`,
+  `esva_ignore_empty_2d` → true.
+
+Gates on the flip (all `cmp` on full compiled JSON, `/home/xqian/tmp/cbr3/flipgate/`):
+
+1. post-flip BARE Q/L compile == pre-flip compile with the five TLAs true — PASS
+2. post-flip Q/L with all-false escape TLAs == pre-flip bare (pre-round-2 baseline) — PASS
+3. post-flip BARE PR compile (production pipeline_names) == pre-flip with both TLAs true — PASS
+4. post-flip PR with false escapes == pre-flip bare — PASS
+
+Runtime invariant (doc 68: the operating point lives only in cfg, a bare run
+IS production): bare `run_ql_batch.sh` (no envs) on 65289 + 398690 —
+`mabc-all-apa.zip` + `pctree` member hashes 4/4 MATCH vs the validated
+`work-cbr3-census-on` arm; bare PR chain reproduces the validated
+selections exactly (65289: fallback demoted main 18, 112.1 cm; 398690:
+fallback demoted main 18, 254.8 cm).
+
+Escapes to the pre-round-2/3 baseline:
+`SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,DEST_BEAM,BEAM_MAIN}=0` (Q/L) and
+`SBND_NU_FALLBACK_DEMOTED=0 SBND_ESVA_IGNORE_EMPTY_2D=0` (PR) — each omits
+its key and byte-restores the pre-flip compiled config (gates 2/4).

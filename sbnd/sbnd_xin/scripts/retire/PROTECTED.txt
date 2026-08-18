@@ -29,19 +29,23 @@
 
 work-tfix388-r9	round-9 track-fit gap-jumping arm; there is no automatic protection and it is not reproducible from any surviving input	doc pr/28 sec.15.9
 
-# --- the pr87ion3 reference family (added 2026-08-16) ----------------------
-# Current production is toolkit 771f075b (doc pr/86 sec.15, the owner flip).
-# work-{mcp1k,nuecc48,ncpi0}-pr87ion3 is the knobs-on arm at exactly that
-# config -- name-protected here for the same reason the 2026-08-13 prod0813
-# family was: so the NEXT round's ASSERT 7 (plan_20260816.py) sees it and
-# cannot silently sweep it the way the 2026-08-11 family almost was.  The
-# work-{mcp1k,nuecc48,ncpi0}-cb0805 Q/L hubs it reads are protected by
-# KEEP_WHY instead (campaign INPUT, not a reference arm).  Note:
-# work-pr87-postflip-{mcp1k,nuecc48,ncpi0} -- the 21-event byte-identity
-# proof this arm rests on -- is itself RETIRED as of the SAME DAY's follow-up
-# round; see below.  Its claim ("42/42 archives == pr87ion3", doc sec.15.4)
-# is not re-verifiable on disk any more, only in the doc text.
-work-mcp1k-pr87ion3 work-nuecc48-pr87ion3 work-ncpi0-pr87ion3	current-production PR reference (toolkit 771f075b)	doc pr/86 sec.15
+# --- the post-flip cathode-rescue family (added 2026-08-17) ----------------
+# Today's owner flip (doc 73 sec.12.9, toolkit 2d8c9e5a) turned SEVEN knobs
+# ON in SBND production, superseding toolkit 771f075b (the pr87ion3 point
+# below, now RETIRED).  work-cbr3-census-on is the new production reference:
+# doc 73 sec.12.9 proves it with a BARE run_ql_batch.sh (no envs) reproducing
+# its mabc-all-apa.zip + pctree member hashes 4/4 MATCH.  work-cbr3-bare2evt
+# {,-pr} is the ONLY on-disk evidence the shipped jsonnet reproduces it --
+# same role work-pr87-postflip-* played at 08-16, and the same lesson: that
+# arm was dropped the SAME DAY it was created and its claim became text-only.
+# The five work-*-vfcbr3on Q/L roots + five work-vf*-cbr3on PR out-roots are
+# the post-flip product for the four samples census-on's tagger tail lacks
+# (r1qlmc/r2mc/plus the -full nusel stage for all).  Each PR arm's Q/L input
+# is re-verified against KEEP by plan_20260817.py ASSERT 8 on every run, not
+# just hand-checked once.
+work-cbr3-census-on work-cbr3-census-pr-on work-cbr3-bare2evt work-cbr3-bare2evt-pr	current-production Q/L + PR reference (toolkit 2d8c9e5a, doc 73 sec.12.9 seven-knob flip)	doc 73 sec.12.9
+work-mcp1kall-vfcbr3on work-ncpi0-vfcbr3on work-nuecc48-vfcbr3on work-r1qlmc-vfcbr3on work-r2mc-vfcbr3on	post-flip Q/L, valfast -full nusel roots (per-sample tagger tail census-on lacks)	doc 73 sec.12.5, docs/work-tags.md 2026-08-17
+work-vfmcp1k-cbr3on work-vfncpi0-cbr3on work-vfnuecc48-cbr3on work-vfr1qlmc-cbr3on work-vfr2mc-cbr3on	post-flip PR out-roots, one per sample; reads the -vfcbr3on Q/L root above	doc 73 sec.12.5, docs/work-tags.md 2026-08-17
 
 # --- the r1qlmc/r2mc prod0813 family (added 2026-08-13, still active) -----
 # No pr83/85/86/87 arm exists for either MC sample -- prod0813 remains their
@@ -49,6 +53,29 @@ work-mcp1k-pr87ion3 work-nuecc48-pr87ion3 work-ncpi0-pr87ion3	current-production
 work-r1qlmc-prod0813 work-r2mc-prod0813	the two sim samples of the doc pr/76 campaign; only surviving PR products for either MC sample; LIVE on bokeh :5017/:5018	doc pr/76
 
 # --- RETIRED (kept for provenance) ---------------------------------------
+# 2026-08-17 -- work-{mcp1k,nuecc48,ncpi0}-pr87ion3, SUPERSEDED by today's
+# seven-knob flip; work-mcp2k-cb0816 + the four work-*-harv3 arms, RELEASED
+# by owner narrowing "latest" to post-flip only.
+#
+# pr87ion3 (toolkit 771f075b, doc pr/86 sec.15) was yesterday's production
+# reference; today's flip (toolkit 2d8c9e5a, doc 73 sec.12.9) supersedes it.
+# See the active entry above for its replacement, work-cbr3-census-on.
+#
+# work-mcp2k-cb0816 (mcp2k's Q/L hub) and work-{mcp1k,mcp2k,nuecc48,ncpi0}
+# -harv3 (the dl_vtx_harvest-generation PR arms) are pre-flip and are not
+# "latest or input" under the owner's post-flip-only reading.  COST,
+# owner-confirmed before running: vtx_rules/baselines.py's
+# deployed_dump_path() (which rewrites -prod0813 -> -harv3) stops resolving
+# AGAIN, and vtx_rules/scankit.py:858's three named harv3 arms are gone. The
+# 1543 vertex_labels/ hand-scan labels (13 tags, self-contained JSON) survive
+# -- same precedent as uitest75/vtxscan1 and the 08-16 -prod0813 drop -- but
+# the calib dumps those scans were made against do not.  mcp2k has no
+# complete PR product after this round, only the 40 events in
+# work-cbr3-census-pr-on.
+#
+# work-mcp1k-pr87ion3 work-nuecc48-pr87ion3 work-ncpi0-pr87ion3	SUPERSEDED by work-cbr3-census-on (toolkit 2d8c9e5a); the cb0805 Q/L hubs it read remain KEEP as valfast infrastructure	doc 73 sec.12.9, docs/work-tags.md 2026-08-17
+# work-mcp2k-cb0816	SUPERSEDED by work-cbr3-census-on (mcp2k's Q/L is now inside census-on, not a standalone hub); RELEASED, owner narrowing to post-flip only	docs/work-tags.md 2026-08-17
+# work-mcp1k-harv3 work-mcp2k-harv3 work-nuecc48-harv3 work-ncpi0-harv3	pre-flip PR arms; baselines.deployed_dump_path() no longer resolves; mcp2k left with no complete PR product	docs/pr/88, docs/pr/89, docs/work-tags.md 2026-08-17
 # 2026-08-16 -- work-{mcp1k,nuecc48,ncpi0}-prod0813 and the three plain
 # -ma10 arms, SUPERSEDED / narrowed by owner request.
 #

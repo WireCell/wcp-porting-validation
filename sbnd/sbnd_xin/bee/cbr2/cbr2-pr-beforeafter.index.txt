@@ -1,0 +1,120 @@
+docs/73 round 2 -- FULL PR CHAIN on the 9 events the four round-2 cathode-rescue
+knobs fix.  Owner request 2026-08-17: "run the PR chain on them ... I want to
+confirm the PR state for these events."  SAME event order in both sets, so Bee
+event N is the same event in each: open in two tabs and flip.
+
+  BEFORE (all four knobs forced OFF -- SBND_RESCUE_{IN_BEAM,GEOM_FIRST,PIERCE,
+  DEST_BEAM}=0; the pre-round-2 production PR state):
+    https://www.phy.bnl.gov/twister/bee/set/1379aa4a-651d-437b-888e-a80dfbeb5d67/event/list/
+
+  AFTER (bare run = SBND production defaults since toolkit 8464c354, i.e. all
+  four knobs ON):
+    https://www.phy.bnl.gov/twister/bee/set/676b1ac1-db8f-4210-8cff-f1eb92870669/event/list/
+
+THESE ARE DATA EVENTS (owner, 2026-08-17).  There is no truth to appeal to, and
+no guarantee any of them contains a neutrino: in data most in-beam bundles are
+cosmic background.  Whether each label change below is a purification or a loss
+is a hand-scan call -- that is what these two sets are for.
+
+HEADLINE.  5 of 9 events LOSE THE NEUTRINO CANDIDATE ENTIRELY -- PR selects no
+main cluster at all where it previously selected one.  The mechanism is the same
+every time: the rescue joins the two cathode halves, the in-beam main gets
+LONGER, at 248-429 cm it reaches through-going/stopping-muon size, the cosmic
+taggers fire, and nu_skip_cosmic then discards the ONLY in-window main.  Full
+analysis, including the owner's three questions on 65289 / 78242 / 51128, is
+docs/73 section 11.
+
+SCORE ON THE SELECTION, NOT ON THE LABEL.  nusel-evt<ID>.tsv's `label` column and
+TaggerCheckNeutrino's selection are different notions of "main" (unmerge_bundle
+renumbers between them -- run_pr_chain_batch.sh's own header says the two are not
+joinable).  Reading `label` mis-scores 65053 (label says nu-candidate -> STM, but
+PR selects the SAME main L 113.9 cm in both arms) and 281165 (label says
+no-bundle, but PR does select a neutrino -- the bundle just moved from flash gid
+0 / APA0 to gid 1000007 / APA1, the same 0.86 us scintillation).
+
+bee  event   join: beam + far @ far t0        merged L  tag  PR selection OFF -> ON
+ 0   398115   75.0 + 342.9 @ 0.529us IN BEAM   414.7   TGM  L 341.9 -> NONE
+ 1   237798  252.6 + 164.8 @ 0.393us IN BEAM   417.2   TGM  L 252.4 -> NONE
+ 2   281165   21.6 + 121.5 @ 276.7us           138.4   --   L  19.2 -> L 138.4
+ 3    65289  160.2 +  88.9 @ -2.77us           248.1   STM  L 159.2 -> NONE
+ 4    78242  201.8 + 149.7 @ 857.2us           314.4   --   L 166.8 -> L 314.4
+ 5    65053   46.9 +  94.2 @ 581.6us            --     --   L 113.9 -> L 113.9
+ 6    51128    3.8 + 283.9 @ 6.68us            287.1   TGM  L  57.7 -> NONE
+ 7   317427  286.7 + 143.6 @ 109.1us           429.1   TGM  L 286.7 -> NONE
+ 8   319913   55.0 +   9.6 @ 28.9us             64.4   --   L  55.0 -> L  64.4
+
+NOT ALL LOSSES ARE WRONG.  398115 and 237798 join a far half that is ITSELF in
+the beam window -- genuine cathode-crossing muons, 415/417 cm, TGM is correct and
+the pre-fix nu-candidate was the artifact.  51128 (a 3.8 cm donor kills a 57.7 cm
+neutrino) and 78242 (trajectory fit broken over 40 cm) are not defensible.
+
+LAYERS.  The 4 events that still have a selected neutrino candidate in the AFTER
+set carry the full 9-layer PR display (track_fit-global, shower_track-global,
+vertices-global, mc, next to img-global / clustering-global / op).  The 5 that do
+not (398115, 237798, 65289, 51128, 317427) carry only the 5 Q/L layers -- built
+with --allow-unevaluated so the event still appears in the same Bee slot, but
+WITHOUT the degenerate whole-event PR dump that make_pr_bee.py normally refuses.
+For those five, compare clustering-global between the tabs: that is where the
+join is visible.  Their PR state is "no neutrino candidate", which is the result.
+
+THE WORST CASE, 51128 (bee 6), read from the rescue's own log:
+  c11 (gid 1000004, t0 1.670 us, 3.8 cm) + c8 (gid 2, t0 6.680 us, 283.9 cm)
+  -> gid 1000004, rule new-path-beam.
+The beam-side donor is a 3.8 cm FRAGMENT, not the bundle's neutrino -- that is a
+DIFFERENT cluster, L 57.7 cm, which the OFF arm selects as the neutrino main.
+F4 (rescue_dest_beam_for_new) puts the 287.1 cm result in the beam bundle,
+longest-cluster-wins makes it the bundle main, the real neutrino is demoted to
+associated, TGM tags the merged main, and nu_skip_cosmic_bundle then skips the
+remaining in-window clusters because they share the flash bundle with a
+cosmic-tagged main.  The neutrino is not even in the skip log -- demotion removed
+it from the candidate list before the veto ran.  A 3.8 cm fragment decided the
+fate of a 57.7 cm neutrino interaction.  This is the F2 regression risk the
+round-2 plan named ("a wrong merge re-stamps a cosmic with the beam T0"), now
+visible for the first time because PR was out of scope during the round.  It is
+NOT the false-merge bug fixed by the containment veto -- these events pass that
+veto cleanly, nothing crosses the cathode.
+
+78242 (bee 4) keeps its neutrino but the join BREAKS a fit that previously
+worked: in the main cluster, track_fit points per 20 cm bin over x = -60..0 go
+74/63/61 (OFF) -> 17/0/0 (ON), while shower_track is unchanged at 472/288/316.
+The charge is still there; the fitted trajectory now has a 40 cm hole on the beam
+side of the cathode.  Its far half is matched 857 us away.
+
+PROVENANCE (both arms, one binary).
+  toolkit HEAD  8464c354
+  build/clus/libWireCellClus.so  2026-08-17 09:42:58  (no clus source newer)
+  Q/L arms      work-cbr2-prql-off / work-cbr2-prql-on   (9 events each)
+  PR arms       work-cbr2-pr-off  / work-cbr2-pr-on      (PR_EXTRA_STAGES=pr_display,
+                reality=data, PR_JOBS=6; 9/9 rc=0 in both)
+
+GATES on the Q/L inputs, member-content hash (hash_archive.py, content+size
+columns only -- the tool prints the PATH as a third column, so hashing whole
+lines compares filenames and fails 9/9 for the wrong reason):
+  A  OFF-arm pctree-evt<ID>.tar.gz == production cb0805/cb0816   9/9 MATCH
+     (the pctree is the file run_pr_chain_batch.sh actually reads; gating only
+     mabc-all-apa.zip would have checked the display and not the PR input)
+  B  ON-arm mabc-all-apa.zip == the validated work-cbr2-contain arm  9/9 MATCH
+     (extends the bare-run==validated-arm proof from 4 events to 9)
+  C  OFF-arm mabc-all-apa.zip == production cb0805/cb0816          9/9 MATCH
+
+CAVEAT.  run_pr_chain_batch.sh runs with the DL/SCN vertex ON (production
+default), which CLAUDE.md M4 records as not bit-stable.  With 9 events, no score
+delta is attributable.  Read these as MECHANISM (the track is now one object;
+the tagger fires on its full length), never as a measured efficiency.
+
+Repro:
+  cd .../sbnd/sbnd_xin
+  EVTS="398115 237798 281165 65289 78242 65053 51128 317427 319913"
+  ROOT=$PWD/work-cbr2-prql-off QL_EXTRA=-save-pctree \
+    SBND_RESCUE_IN_BEAM=0 SBND_RESCUE_GEOM_FIRST=0 SBND_RESCUE_PIERCE=0 \
+    SBND_RESCUE_DEST_BEAM=0 ./run_ql_batch.sh -j 6 $EVTS
+  ROOT=$PWD/work-cbr2-prql-on  QL_EXTRA=-save-pctree ./run_ql_batch.sh -j 6 $EVTS
+  PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-cbr2-prql-off work-cbr2-pr-off data $EVTS
+  PR_JOBS=6 PR_EXTRA_STAGES=pr_display \
+    ./run_pr_chain_batch.sh work-cbr2-prql-on  work-cbr2-pr-on  data $EVTS
+  python3 scripts/bee/make_pr_bee.py -q work-cbr2-prql-off -p work-cbr2-pr-off \
+    -o /home/xqian/tmp/cbr2pr/cbr2-pr-before.zip --allow-unevaluated $EVTS
+  python3 scripts/bee/make_pr_bee.py -q work-cbr2-prql-on  -p work-cbr2-pr-on \
+    -o /home/xqian/tmp/cbr2pr/cbr2-pr-after.zip  --allow-unevaluated $EVTS
+  ./upload-to-bee.sh <zip>
