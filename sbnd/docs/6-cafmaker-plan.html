@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wire-Cell CAFMaker plan</title>
+<style>
+:root{
+  --bg:#fbfbfa; --fg:#1c1c1a; --muted:#63635e; --rule:#dededa;
+  --card:#ffffff; --code-bg:#f2f2ef; --accent:#2f6f4f; --warn:#8a4b1c;
+  --bad:#9c2b2b; --ok:#2f6f4f; --new:#3a4fa0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16171a; --fg:#e6e6e2; --muted:#9b9b95; --rule:#2f3237;
+    --card:#1d1f23; --code-bg:#22252a; --accent:#7fc39b; --warn:#e0a56a;
+    --bad:#e88b8b; --ok:#7fc39b; --new:#96aaf0;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16171a; --fg:#e6e6e2; --muted:#9b9b95; --rule:#2f3237;
+  --card:#1d1f23; --code-bg:#22252a; --accent:#7fc39b; --warn:#e0a56a;
+  --bad:#e88b8b; --ok:#7fc39b; --new:#96aaf0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 24px 120px}
+h1{font-size:1.9rem;line-height:1.25;margin:0 0 .3em;letter-spacing:-.01em}
+h2{font-size:1.3rem;margin:2.6em 0 .6em;padding-bottom:.25em;border-bottom:1px solid var(--rule)}
+h3{font-size:1.02rem;margin:1.8em 0 .5em}
+h4{font-size:.94rem;margin:1.4em 0 .4em;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p{margin:.7em 0}
+.lede{color:var(--muted);font-size:1.05rem;margin-bottom:0}
+code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{background:var(--code-bg);padding:.1em .35em;border-radius:3px;font-size:.87em}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:6px;overflow-x:auto;font-size:.82rem;line-height:1.5}
+pre code{background:none;padding:0;font-size:1em}
+.scroll{overflow-x:auto;margin:1em 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:.87rem;min-width:560px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);
+   border-bottom:1.5px solid var(--rule);white-space:nowrap}
+td.mono,th.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.82rem}
+.tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.05em;
+     padding:.1em .45em;border-radius:3px;text-transform:uppercase;white-space:nowrap}
+.tag.have{color:var(--ok);border:1px solid var(--ok)}
+.tag.miss{color:var(--bad);border:1px solid var(--bad)}
+.tag.add{color:var(--new);border:1px solid var(--new)}
+.tag.warn{color:var(--warn);border:1px solid var(--warn)}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin:1.2em 0}
+.card h3{margin-top:0}
+.note{border-left:3px solid var(--warn);padding:2px 0 2px 14px;margin:1.2em 0}
+.note strong{color:var(--warn)}
+.key{border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin:1.2em 0}
+.key strong{color:var(--accent)}
+ul,ol{padding-left:1.4em;margin:.6em 0}
+li{margin:.3em 0}
+.meta{color:var(--muted);font-size:.83rem;margin-top:.4em}
+.small{font-size:.85rem;color:var(--muted)}
+hr{border:0;border-top:1px solid var(--rule);margin:2.5em 0}
+.cols{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:820px){.cols{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Wire-Cell CAFMaker — plan</h1>
+<p class="lede">Getting SBND Wire-Cell reconstruction into the Common Analysis Format, as
+<code>larwirecell/CAFMaker</code>. A plan to argue with, not a design to build yet.</p>
+<p class="meta">Work dir <code>/exp/sbnd/data/users/yuhw/production-prep/cafmaker-dev</code> ·
+follows on from <a href="5-pr-chain-in-1step.html">the PR-chain port</a> (ai-helper #13) ·
+2026-08-18</p>
+
+<div class="key">
+<strong>The two answers up front.</strong>
+<strong>Q1 — can everything in <code>tracking-pr.root</code> go into CAF?</strong> Mechanically almost
+all of it can, but two of its seven trees <em>should not</em>, and ~97% of the flagship tree is BDT
+<em>input</em> features rather than reconstruction output. Recommended: a tiered block, core always,
+BDT internals behind a flag.
+<strong>Q2 — is there anything CAF needs that I can't fill?</strong> Yes, five things — and the most
+important is that <strong><code>tracking-pr.root</code> contains no truth or truth-matching
+whatsoever</strong>, which CAF requires for any MC analysis. That information exists, but in a
+different output stream.
+<br><br>
+There is also a <strong>design question that outranks both</strong>: CAFMaker should almost certainly
+not read <code>tracking-pr.root</code> at all. See <a href="#design">§6</a>.
+</div>
+
+<h2 id="example">1. How <code>sbncode/CAFMaker</code> works</h2>
+
+<p>The reference implementation is an art producer plus a set of free-function fillers.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>File</th><th>Size</th><th>Role</th></tr></thead>
+<tbody>
+<tr><td class="mono">CAFMaker_module.cc</td><td>122 KB</td><td>the art producer: opens the output file, loops slices, calls fillers, writes the tree</td></tr>
+<tr><td class="mono">FillReco.{h,cxx}</td><td>15 / 62 KB</td><td>reco → <code>SR*</code></td></tr>
+<tr><td class="mono">FillTrue.{h,cxx}</td><td>7 / 64 KB</td><td>truth → <code>SRTrueInteraction</code> / <code>SRTrueParticle</code></td></tr>
+<tr><td class="mono">FillFlashMatch, FillTrigger,<br>FillExposure, FillBlip</td><td>1–5 KB</td><td>one concern each</td></tr>
+<tr><td class="mono">CAFMakerParams.h</td><td>21 KB</td><td>fhicl config surface</td></tr>
+<tr><td class="mono">classes.h / classes_def.xml / LinkDef.h</td><td>—</td><td>ROOT dictionary</td></tr>
+</tbody></table>
+</div>
+
+<p>The filler convention is uniform and worth copying verbatim:</p>
+<pre><code>void Fill&lt;Component&gt;(const &lt;InputType&gt;&amp; input,
+                     [auxiliary data, config],
+                     caf::SR&lt;Type&gt;&amp; out,
+                     bool allowEmpty = false);</code></pre>
+<p>Const inputs, one non-const <code>SR*</code> output, modified in place. Fillers are free functions,
+not classes, so they compose and test independently of art. <code>CAFMaker</code> links
+<code>sbnanaobj::StandardRecord</code> and <code>sbnanaobj::StandardRecordFlat</code> — the data model
+lives in a <strong>separate repository</strong> from the maker, which matters for
+<a href="#design">§6</a>.</p>
+
+<h2 id="model">2. The CAF data model, and where a second reconstruction goes</h2>
+
+<p><code>caf::StandardRecord</code> is one entry per spill. Its reco content is
+<strong>slice-centric</strong>: <code>std::vector&lt;SRSlice&gt; slc</code>, one per Pandora slice,
+each carrying <code>vertex</code>, <code>truth</code>, <code>tmatch</code>, <code>fmatch</code>,
+<code>nu_score</code>, <code>crumbs_result</code>, <code>nuid</code>, and a
+<code>SRSliceRecoBranch</code> of tracks and showers.</p>
+
+<div class="key">
+<strong>The important precedent: <code>SRInteractionDLP</code>.</strong> Sitting at
+<em>top level</em> in <code>StandardRecord</code> — beside <code>slc</code>, not inside it — are
+<code>std::vector&lt;SRInteractionDLP&gt; dlp</code> and <code>dlp_true</code>. That is the ML/SPINE
+reconstruction: a <strong>second, independent reconstruction of the same event</strong>, with its own
+interaction→particle hierarchy rather than Pandora's slice→PFP one. Its 47 members
+(<code>vertex</code>, <code>is_contained</code>, <code>is_fiducial</code>, <code>is_cathode_crosser</code>,
+<code>flash_*</code>, <code>match_ids</code>, <code>particles</code>, <code>topology</code>) mirror
+<strong>duneanaobj</strong>'s <code>SRInteraction</code>/<code>SRRecoParticle</code> model.
+<br><br>
+<strong>This is the shape Wire-Cell should take.</strong> WC has no slice concept, and forcing it into
+<code>SRSlice</code> would misrepresent it. It <em>does</em> have exactly one main vertex per
+candidate and a particle-flow tree hanging off it — which is what <code>SRInteraction</code> is.
+</div>
+
+<p class="note"><strong>One thing that looked promising and is not.</strong> <code>SRNuID</code> is
+described as "neutrino ID features for BDT inputs", which sounds like a home for
+<code>T_tagger</code>. It is <strong>10 variables</strong> — Pandora's NeutrinoID features
+(<code>nufspfos</code>, <code>nutothits</code>, <code>nuvtxy</code>, …). It is not a general BDT-input
+container, and T_tagger's 1216 have no home there.</p>
+
+<h2 id="wc-output">3. What Wire-Cell actually produces</h2>
+
+<p>Measured on a real event (run 925-23 event 4, MCP2025C), not read off the source.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>Tree</th><th>Entries</th><th>Content</th><th>To CAF?</th></tr></thead>
+<tbody>
+<tr><td class="mono">T_tagger</td><td>1 / event</td>
+    <td><strong>1216 branches</strong> — 1026 scalar (1023 <code>float</code>, 3 <code>int</code>) +
+        190 <code>vector</code>. Of these, <strong>42 are <code>*_score</code></strong>; the rest are
+        BDT <em>input</em> features (<code>ssm</code> 378, <code>shw</code> 249, <code>cosmict</code> 72,
+        <code>mip</code> 62, <code>br3</code> 62, <code>tro</code> 47, …)</td>
+    <td><span class="tag warn">tiered</span></td></tr>
+<tr><td class="mono">T_kine</td><td>1 / event</td>
+    <td>21 branches. <code>kine_reco_Enu</code>, <code>kine_reco_add_energy</code>, corrected vertex,
+        the π⁰ block, and <strong>per-particle vectors</strong>
+        <code>kine_energy_particle</code> / <code>kine_particle_type</code> /
+        <code>kine_energy_info</code> / <code>kine_energy_included</code>
+        (e.g. 3 particles: 2212, 2212, 13 at 329 / 199 / 244 MeV)</td>
+    <td><span class="tag have">yes</span></td></tr>
+<tr><td class="mono">T_rec_charge</td><td><strong>308</strong></td>
+    <td>Per 3-D fit point: <code>x y z q nq chi2 ndf pu pv pw pt reduced_chi2 flag_vertex flag_shower
+        rr cluster_id real_cluster_id sub_cluster_id <strong>particle_id</strong></code></td>
+    <td><span class="tag warn">aggregate</span></td></tr>
+<tr><td class="mono">Trun</td><td>1</td><td><code>runNo subRunNo eventNo dQdx_scale dQdx_offset</code></td>
+    <td><span class="tag have">header</span></td></tr>
+<tr><td class="mono">T_proj_data</td><td>1</td><td>per-channel <code>channel time_slice charge charge_err charge_pred</code></td>
+    <td><span class="tag miss">no</span></td></tr>
+<tr><td class="mono">T_bad_ch</td><td>96</td><td>dead-channel ranges</td><td><span class="tag miss">no</span></td></tr>
+<tr><td class="mono">T_proj</td><td>1</td><td>empty (0 branches)</td><td>—</td></tr>
+</tbody></table>
+</div>
+
+<div class="key">
+<strong>The find that changes the answer: <code>T_rec_charge</code> carries
+<code>particle_id</code>.</strong> I expected per-particle geometry to be missing — it is not, it is
+just not pre-aggregated. Grouping the 308 fit points by <code>particle_id</code> yields start/end
+points, direction, length and a dQ/dx-vs-residual-range profile per particle. Combined with
+<code>T_kine</code>'s per-particle PDG and KE, that is enough to fill an
+<code>SRParticle</code>-shaped object.
+<br><br>
+<strong>Open question this raises:</strong> do <code>T_kine</code>'s particle ordering and
+<code>T_rec_charge</code>'s <code>particle_id</code> refer to the same objects in the same order?
+Nothing verifies that today. It is the first thing to check, and a silent mismatch here would
+mis-assign every energy.
+</div>
+
+<h2 id="q1">4. Q1 — can all of <code>tracking-pr.root</code> go into CAF?</h2>
+
+<p><strong>Mechanically, most of it. In practice, no — and you would not want it to.</strong> Three
+separate reasons, in decreasing order of importance.</p>
+
+<h4>4.1 Two trees are display data, not reconstruction</h4>
+<p><code>T_proj_data</code> (per-channel projections) and <code>T_bad_ch</code> (dead-channel ranges)
+exist to drive the Magnify viewer. Per-channel waveform-adjacent content is precisely what CAF is
+designed <em>not</em> to carry, and dead channels are detector state, not per-event reco. These belong
+in Bee/Magnify and should stay there.</p>
+
+<h4>4.2 ~97% of <code>T_tagger</code> is BDT input, not output</h4>
+<p>42 of 1216 branches are <code>*_score</code> — <code>numu_score</code>, <code>nue_score</code>,
+<code>cosmict_score</code> plus 39 sub-BDT scores. The other ~1174 are the <em>features</em> those BDTs
+consume (<code>br3_5_v_shower_main_length</code>, <code>tro_4_v_medium_dQ_dx</code>, …). They are
+intermediate quantities of one particular selection, not a description of the event.</p>
+<p>Two consequences. <strong>Size</strong>: 1023 floats ≈ 4.1 KB per interaction before the 190 vector
+branches — CAF is meant to be the small, widely-copied format. <strong>Meaning</strong>: these
+features encode uBooNE's selection logic. Shipping them to every analyser invites use of variables
+whose SBND behaviour nobody has characterised.</p>
+<p class="note"><strong>And the scores themselves are uncalibrated on SBND.</strong> Both BDT weight
+sets are the stock uBooNE-trained XMLs, unretrained (<a href="5-pr-chain-in-1step.html">PR-chain doc</a>
+§3.3, doc pr/2 gap G1). They are usable for availability and relative ranking, not as probabilities.
+Whatever lands in CAF must be named and documented so that is unmissable.</p>
+
+<h4>4.3 Recommended tiering</h4>
+<div class="scroll">
+<table>
+<thead><tr><th>Tier</th><th>Content</th><th>Default</th></tr></thead>
+<tbody>
+<tr><td><strong>core</strong></td><td>vertex, <code>kine_reco_Enu</code> + π⁰ block, per-particle
+    (PDG, KE, start/end, direction, length), <code>numu_score</code> / <code>nue_score</code> /
+    <code>cosmict_score</code>, the TGM/STM/FC/LM verdicts, flash t0</td><td><span class="tag have">on</span></td></tr>
+<tr><td><strong>scores</strong></td><td>the other 39 sub-BDT scores</td><td><span class="tag warn">on, cheap</span></td></tr>
+<tr><td><strong>bdt_inputs</strong></td><td>the ~1174 feature branches</td><td><span class="tag miss">off</span></td></tr>
+<tr><td><strong>trajectory</strong></td><td>per-point <code>T_rec_charge</code> rows</td><td><span class="tag miss">off</span> — aggregate by default</td></tr>
+</tbody></table>
+</div>
+
+<h2 id="q2">5. Q2 — what does CAF need that I cannot fill?</h2>
+
+<p>Five gaps. The first is the one that matters.</p>
+
+<div class="scroll">
+<table>
+<thead><tr><th></th><th>What CAF wants</th><th>Status</th><th>Where it actually is</th></tr></thead>
+<tbody>
+<tr><td><strong>1</strong></td><td><code>truth</code>, <code>tmatch</code> —
+    <code>SRTrueInteraction</code> / <code>SRTruthMatch</code>, and per-particle
+    <code>match_ids</code> / <code>match_overlaps</code></td>
+    <td><span class="tag miss">absent</span></td>
+    <td><strong>Verified: <code>tracking-pr.root</code> has zero truth or matching branches.</strong>
+        WC's truth lives in a different stream — the labeler's per-blob <code>trackid</code>, its
+        <code>truth_per_track</code> tensor and <code>nugraph.h5</code>. Every MC analysis needs this,
+        so it has to be plumbed. This is the single largest piece of work.</td></tr>
+<tr><td><strong>2</strong></td><td><code>fmatch</code> / <code>opt0</code> — flash match and t0</td>
+    <td><span class="tag miss">absent here</span></td>
+    <td>Exists as <code>cluster_t0</code> / <code>matched_flash_gid</code> / <code>lm_flag</code> on
+        the pctree cluster scalars, written by <code>QLMatching</code>. Not in this file.</td></tr>
+<tr><td><strong>3</strong></td><td>containment / cosmic verdicts, per interaction</td>
+    <td><span class="tag miss">absent here</span></td>
+    <td>TGM / STM / FC / LM are per-cluster flags in the Bee <code>tagger_*</code> layers and the log.
+        <span class="small">The <code>cosmict_*</code> family in <code>T_tagger</code> is uBooNE's
+        cosmic BDT — a different thing; do not substitute it.</span></td></tr>
+<tr><td><strong>4</strong></td><td>PID richness — <code>pid_scores[6]</code>,
+    <code>chi2_per_pid[6]</code>, <code>csda_ke</code>, <code>mcs_ke</code>,
+    <code>primary_scores[2]</code></td>
+    <td><span class="tag warn">not computed</span></td>
+    <td>WC assigns <strong>one</strong> PDG and <strong>one</strong> KE per particle. There is no
+        per-hypothesis likelihood to fill. Leave the arrays empty rather than fabricate them.</td></tr>
+<tr><td><strong>5</strong></td><td>bookkeeping — <code>size</code> (voxels),
+    <code>fragment_ids</code>, <code>ppn_ids</code>, <code>module_ids</code>, uncertainties</td>
+    <td><span class="tag warn">no analogue</span></td>
+    <td><code>cluster_id</code> / <code>real_cluster_id</code> / <code>sub_cluster_id</code> are the
+        nearest equivalents and are worth carrying under WC names. WC reports per-point
+        <code>chi2</code>/<code>ndf</code>, not propagated errors.</td></tr>
+</tbody></table>
+</div>
+
+<p class="note"><strong>A structural mismatch worth naming.</strong> <code>SRSlice</code> presumes
+Pandora slices; Wire-Cell has no slice. It has clusters, flash bundles, and one selected main vertex.
+Any attempt to populate <code>slc</code> would either invent a slice per WC cluster or claim one slice
+per event — both misleading. This is the strongest argument for the interaction model in
+<a href="#design">§6</a>.</p>
+
+<h2 id="design">6. Proposed design</h2>
+
+<div class="key">
+<strong>Decision that outranks the two questions: do not read
+<code>tracking-pr.root</code>.</strong> It is a Magnify/debug artifact, and it is
+<strong>not multi-event safe</strong> — both writers share one filename
+(<code>RECREATE</code> + <code>UPDATE</code>), so <code>lar -n N</code> silently produces an 8 KB file
+with <code>T_tagger</code> and <code>T_kine</code> <em>absent</em>
+(<a href="5-pr-chain-in-1step.html">PR-chain doc</a> G9). CAF production runs many events per process,
+so a file-parsing CAFMaker would be building on the one output that provably breaks under exactly
+that workload.
+<br><br>
+Instead, CAFMaker should take the same <code>TaggerInfo</code> / <code>KineInfo</code> /
+<code>TrackFitting</code> / PR-graph objects <em>in memory</em> that
+<code>UbooneTaggerOutputVisitor</code> and <code>SbndPrMagnifyTrackingVisitor</code> already read —
+i.e. a sibling visitor, not a downstream parser. <code>tracking-pr.root</code> then stays what it
+should be: a debug dump.
+</div>
+
+<h3>6.1 Where the data model should live</h3>
+<div class="cols">
+<div class="card">
+<h3>(a) Reuse <code>SRInteractionDLP</code></h3>
+<p>Zero new <code>sbnanaobj</code> work. But the fields are SPINE-shaped: many unfillable
+(<code>ppn_ids</code>, <code>size</code> in voxels, softmax scores), and reusing a field whose meaning
+differs is worse than leaving it out.</p>
+<p><strong>Good as a two-week prototype, bad as the destination.</strong></p>
+</div>
+<div class="card">
+<h3>(b) New <code>SRWireCell{Interaction,Particle}</code></h3>
+<p>Clean semantics, WC-native names, room for the tagger verdicts and the score tiers. Costs an
+<code>sbnanaobj</code> PR and SBN-wide review — the data model is a separate repo with its own
+review culture.</p>
+<p><strong>Recommended destination.</strong></p>
+</div>
+</div>
+<p>Suggested route: prototype against (a) to prove the fillers and the numbers, then propose (b)
+upstream with real output in hand. That converts an abstract schema discussion into a review of
+something that already works.</p>
+
+<h3>6.2 Sketch</h3>
+<pre><code>larwirecell/CAFMaker/
+  WireCellCAF_module.cc      art producer, or a wcls visitor -- see 6.1
+  FillWCInteraction.{h,cxx}  TaggerInfo + KineInfo  -> SR interaction
+  FillWCParticle.{h,cxx}     PR graph + T_rec_charge-equivalent -> SR particles
+  FillWCScores.{h,cxx}       the 42 scores, tiered
+  FillWCTruth.{h,cxx}        labeler truth -> SRTrue*   (gap 1; largest piece)
+  WireCellCAFParams.h        fhicl surface incl. the tier flags
+  classes.h / classes_def.xml / LinkDef.h</code></pre>
+<p>Mirroring <code>sbncode/CAFMaker</code>'s free-function filler convention exactly, so the code reads
+familiarly to anyone who knows that package.</p>
+
+<h3>6.3 Phasing</h3>
+<ol>
+<li><strong>Verify the particle-id join.</strong> Confirm <code>T_kine</code>'s particle ordering and
+    <code>T_rec_charge</code>'s <code>particle_id</code> agree. Everything downstream depends on it.</li>
+<li><strong>Interaction level only</strong> — vertex, Enu, 3 headline scores, verdicts. Smallest
+    end-to-end slice that produces a readable CAF.</li>
+<li><strong>Particles</strong> — PDG, KE, geometry aggregated per <code>particle_id</code>.</li>
+<li><strong>Truth</strong> (gap 1) — the big one; needs the labeler stream, not this file.</li>
+<li><strong>Score tiers + flash/verdict plumbing</strong> (gaps 2 and 3).</li>
+<li><strong>Propose the schema upstream</strong> (6.1b).</li>
+</ol>
+
+<h2 id="open">7. Open questions for you</h2>
+<ol>
+<li><strong>Who consumes this CAF?</strong> If it is SBN-wide analysis, the schema must go through
+    <code>sbnanaobj</code> review and 6.1b is mandatory. If it is our own studies for now, a private
+    block is far faster. This changes the whole shape of the work.</li>
+<li><strong>Does WC output need to sit alongside Pandora in the <em>same</em> CAF file</strong>
+    (so analysers can compare per event), or is a separate WC-only CAF acceptable? The former is much
+    more useful and much more intrusive.</li>
+<li><strong>Is truth in scope now?</strong> It is the largest single piece and the only one requiring
+    a second input stream. Deferring it gives a data-only CAF much sooner.</li>
+<li><strong>Do the BDT scores belong in CAF at all,</strong> given they are uBooNE-trained and
+    uncalibrated for SBND? Defensible either way, but it should be a decision rather than a default.</li>
+<li><strong>Which reco is authoritative for the vertex</strong> when WC and Pandora disagree? Not our
+    call to make silently.</li>
+</ol>
+
+<h2 id="risks">8. Risks</h2>
+<div class="scroll">
+<table>
+<thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr><td><strong>Schema churn.</strong> <code>sbnanaobj</code> is shared; a rejected or reworked schema
+    invalidates fillers written against it</td><td>prototype against the existing DLP block first;
+    propose with working output</td></tr>
+<tr><td><strong>Silent join errors.</strong> A <code>particle_id</code> / <code>T_kine</code> ordering
+    mismatch mis-assigns every particle energy with no error</td><td>make it phase 1; assert on
+    length and PDG consistency, not just index</td></tr>
+<tr><td><strong>CAF bloat.</strong> 1216 branches per interaction if the tiers default wrong</td>
+    <td>BDT-input tier off by default; measure bytes/event before any scale run</td></tr>
+<tr><td><strong>Building on <code>tracking-pr.root</code></strong>, which is not multi-event safe</td>
+    <td>read in memory (§6); or fix G9/T2 first</td></tr>
+<tr><td><strong>Uncalibrated scores read as probabilities</strong></td><td>name and document them so
+    the provenance is unmissable in the branch itself</td></tr>
+</tbody></table>
+</div>
+
+<hr>
+<p class="small">Sources: <code>SBNSoftware/sbncode/sbncode/CAFMaker</code>;
+<code>SBNSoftware/sbnanaobj/sbnanaobj/StandardRecord</code> (<code>StandardRecord.h</code>,
+<code>SRSlice.h</code>, <code>SRInteractionDLP.h</code>, <code>SRParticleDLP.h</code>,
+<code>SRNuID.h</code>); <code>DUNE/duneanaobj/duneanaobj/StandardRecord</code>;
+and a measured <code>tracking-pr.root</code> from run 925-23 event 4.
+Tracking: ai-helper issue #14.</p>
+
+</div>
+</body>
+</html>
